@@ -1,40 +1,418 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement
- pattern
-Date: Wed, 9 Oct 2013 11:57:52 -0400
-Message-ID: <20131009155752.GE22495@htj.dyndns.org>
-References: <cover.1380703262.git.agordeev@redhat.com>
- <20131007182117.GC27396@htj.dyndns.org>
- <20131008090716.GA10561@dhcp-26-207.brq.redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20131008090716.GA10561@dhcp-26-207.brq.redhat.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, Ralf Baechle <ralf@linux-mips.org>, Michael Ellerman <michael@ellerman.id.au>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Ingo Molnar <mingo@redhat.com>, Dan Williams <dan.j.williams@intel.com>, Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>, Matt Porter <mporter@kernel.crashing.org>, linux-pci@vger.kernel.org, linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org, linux-ide@vger.kernel.org, iss_storagedev@hp.com, linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net, linux-driver@qlogic.com, Solarflare linux maintainers <linux-net-drivers@solarflare.com>, "VMware, Inc." <pv-drivers@vmware.com>, linux-sc
+From: Andy Grover <agrover@redhat.com>
+Subject: [PATCHv2 1/4] target: Remove TF_CIT_TMPL macro
+Date: Wed,  9 Oct 2013 11:05:56 -0700
+Message-ID: <1381341959-22254-2-git-send-email-agrover@redhat.com>
+References: <1381341959-22254-1-git-send-email-agrover@redhat.com>
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1381341959-22254-1-git-send-email-agrover@redhat.com>
+Sender: target-devel-owner@vger.kernel.org
+To: target-devel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hello,
+Remove a lingering macro that just hid a dereference.
 
-On Tue, Oct 08, 2013 at 11:07:16AM +0200, Alexander Gordeev wrote:
-> Multipe MSIs is just a handful of drivers, really. MSI-X impact still
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Andy Grover <agrover@redhat.com>
+---
+ Documentation/target/tcm_mod_builder.py      |   18 ++++++------
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c           |   36 ++++++++++++------------
+ drivers/target/iscsi/iscsi_target_configfs.c |   22 +++++++-------
+ drivers/target/loopback/tcm_loop.c           |   10 +++---
+ drivers/target/sbp/sbp_target.c              |   18 ++++++------
+ drivers/target/target_core_configfs.c        |    6 ++--
+ drivers/target/target_core_fabric_configfs.c |   38 +++++++++++++-------------
+ drivers/target/tcm_fc/tfc_conf.c             |   18 ++++++------
+ drivers/usb/gadget/tcm_usb_gadget.c          |   18 ++++++------
+ drivers/vhost/scsi.c                         |   18 ++++++------
+ include/target/target_core_configfs.h        |    1 -
+ 11 files changed, 101 insertions(+), 102 deletions(-)
 
-Yes, so it's pretty nice to try out things there before going full-on.
-
-> will be huge. But if we opt a different name for the new pci_enable_msix()
-> then we could first update pci/msi, then drivers (in few stages possibly)
-> and finally remove the old implementation.
-
-Yes, that probably should be the steps to follow eventually.  My point
-was that you don't have to submit patches for all 7x conversions for
-an RFC round.  Scanning them and seeing what would be necessary
-definitely is a good idea but just giving summary of the full
-conversion with several examples should be good enough before settling
-on the way forward, which should be easier for all involved.
-
-Thanks a lot for your effort!
-
+diff --git a/Documentation/target/tcm_mod_builder.py b/Documentation/target/tcm_mod_builder.py
+index 54d29c1..230ce71 100755
+--- a/Documentation/target/tcm_mod_builder.py
++++ b/Documentation/target/tcm_mod_builder.py
+@@ -440,15 +440,15 @@ def tcm_mod_build_configfs(proto_ident, fabric_mod_dir_var, fabric_mod_name):
+ 	buf += "	/*\n"
+ 	buf += "	 * Setup default attribute lists for various fabric->tf_cit_tmpl\n"
+ 	buf += "	 */\n"
+-	buf += "	TF_CIT_TMPL(fabric)->tfc_wwn_cit.ct_attrs = " + fabric_mod_name + "_wwn_attrs;\n"
+-	buf += "	TF_CIT_TMPL(fabric)->tfc_tpg_base_cit.ct_attrs = NULL;\n"
+-	buf += "	TF_CIT_TMPL(fabric)->tfc_tpg_attrib_cit.ct_attrs = NULL;\n"
+-	buf += "	TF_CIT_TMPL(fabric)->tfc_tpg_param_cit.ct_attrs = NULL;\n"
+-	buf += "	TF_CIT_TMPL(fabric)->tfc_tpg_np_base_cit.ct_attrs = NULL;\n"
+-	buf += "	TF_CIT_TMPL(fabric)->tfc_tpg_nacl_base_cit.ct_attrs = NULL;\n"
+-	buf += "	TF_CIT_TMPL(fabric)->tfc_tpg_nacl_attrib_cit.ct_attrs = NULL;\n"
+-	buf += "	TF_CIT_TMPL(fabric)->tfc_tpg_nacl_auth_cit.ct_attrs = NULL;\n"
+-	buf += "	TF_CIT_TMPL(fabric)->tfc_tpg_nacl_param_cit.ct_attrs = NULL;\n"
++	buf += "	fabric->tf_cit_tmpl.tfc_wwn_cit.ct_attrs = " + fabric_mod_name + "_wwn_attrs;\n"
++	buf += "	fabric->tf_cit_tmpl.tfc_tpg_base_cit.ct_attrs = NULL;\n"
++	buf += "	fabric->tf_cit_tmpl.tfc_tpg_attrib_cit.ct_attrs = NULL;\n"
++	buf += "	fabric->tf_cit_tmpl.tfc_tpg_param_cit.ct_attrs = NULL;\n"
++	buf += "	fabric->tf_cit_tmpl.tfc_tpg_np_base_cit.ct_attrs = NULL;\n"
++	buf += "	fabric->tf_cit_tmpl.tfc_tpg_nacl_base_cit.ct_attrs = NULL;\n"
++	buf += "	fabric->tf_cit_tmpl.tfc_tpg_nacl_attrib_cit.ct_attrs = NULL;\n"
++	buf += "	fabric->tf_cit_tmpl.tfc_tpg_nacl_auth_cit.ct_attrs = NULL;\n"
++	buf += "	fabric->tf_cit_tmpl.tfc_tpg_nacl_param_cit.ct_attrs = NULL;\n"
+ 	buf += "	/*\n"
+ 	buf += "	 * Register the fabric for use within TCM\n"
+ 	buf += "	 */\n"
+diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+index f85b9e5..92b1654 100644
+--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
++++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+@@ -1830,16 +1830,16 @@ static int tcm_qla2xxx_register_configfs(void)
+ 	/*
+ 	 * Setup default attribute lists for various fabric->tf_cit_tmpl
+ 	 */
+-	TF_CIT_TMPL(fabric)->tfc_wwn_cit.ct_attrs = tcm_qla2xxx_wwn_attrs;
+-	TF_CIT_TMPL(fabric)->tfc_tpg_base_cit.ct_attrs = tcm_qla2xxx_tpg_attrs;
+-	TF_CIT_TMPL(fabric)->tfc_tpg_attrib_cit.ct_attrs =
++	fabric->tf_cit_tmpl.tfc_wwn_cit.ct_attrs = tcm_qla2xxx_wwn_attrs;
++	fabric->tf_cit_tmpl.tfc_tpg_base_cit.ct_attrs = tcm_qla2xxx_tpg_attrs;
++	fabric->tf_cit_tmpl.tfc_tpg_attrib_cit.ct_attrs =
+ 						tcm_qla2xxx_tpg_attrib_attrs;
+-	TF_CIT_TMPL(fabric)->tfc_tpg_param_cit.ct_attrs = NULL;
+-	TF_CIT_TMPL(fabric)->tfc_tpg_np_base_cit.ct_attrs = NULL;
+-	TF_CIT_TMPL(fabric)->tfc_tpg_nacl_base_cit.ct_attrs = NULL;
+-	TF_CIT_TMPL(fabric)->tfc_tpg_nacl_attrib_cit.ct_attrs = NULL;
+-	TF_CIT_TMPL(fabric)->tfc_tpg_nacl_auth_cit.ct_attrs = NULL;
+-	TF_CIT_TMPL(fabric)->tfc_tpg_nacl_param_cit.ct_attrs = NULL;
++	fabric->tf_cit_tmpl.tfc_tpg_param_cit.ct_attrs = NULL;
++	fabric->tf_cit_tmpl.tfc_tpg_np_base_cit.ct_attrs = NULL;
++	fabric->tf_cit_tmpl.tfc_tpg_nacl_base_cit.ct_attrs = NULL;
++	fabric->tf_cit_tmpl.tfc_tpg_nacl_attrib_cit.ct_attrs = NULL;
++	fabric->tf_cit_tmpl.tfc_tpg_nacl_auth_cit.ct_attrs = NULL;
++	fabric->tf_cit_tmpl.tfc_tpg_nacl_param_cit.ct_attrs = NULL;
+ 	/*
+ 	 * Register the fabric for use within TCM
+ 	 */
+@@ -1870,15 +1870,15 @@ static int tcm_qla2xxx_register_configfs(void)
+ 	/*
+ 	 * Setup default attribute lists for various npiv_fabric->tf_cit_tmpl
+ 	 */
+-	TF_CIT_TMPL(npiv_fabric)->tfc_wwn_cit.ct_attrs = tcm_qla2xxx_wwn_attrs;
+-	TF_CIT_TMPL(npiv_fabric)->tfc_tpg_base_cit.ct_attrs = NULL;
+-	TF_CIT_TMPL(npiv_fabric)->tfc_tpg_attrib_cit.ct_attrs = NULL;
+-	TF_CIT_TMPL(npiv_fabric)->tfc_tpg_param_cit.ct_attrs = NULL;
+-	TF_CIT_TMPL(npiv_fabric)->tfc_tpg_np_base_cit.ct_attrs = NULL;
+-	TF_CIT_TMPL(npiv_fabric)->tfc_tpg_nacl_base_cit.ct_attrs = NULL;
+-	TF_CIT_TMPL(npiv_fabric)->tfc_tpg_nacl_attrib_cit.ct_attrs = NULL;
+-	TF_CIT_TMPL(npiv_fabric)->tfc_tpg_nacl_auth_cit.ct_attrs = NULL;
+-	TF_CIT_TMPL(npiv_fabric)->tfc_tpg_nacl_param_cit.ct_attrs = NULL;
++	npiv_fabric->tf_cit_tmpl.tfc_wwn_cit.ct_attrs = tcm_qla2xxx_wwn_attrs;
++	npiv_fabric->tf_cit_tmpl.tfc_tpg_base_cit.ct_attrs = NULL;
++	npiv_fabric->tf_cit_tmpl.tfc_tpg_attrib_cit.ct_attrs = NULL;
++	npiv_fabric->tf_cit_tmpl.tfc_tpg_param_cit.ct_attrs = NULL;
++	npiv_fabric->tf_cit_tmpl.tfc_tpg_np_base_cit.ct_attrs = NULL;
++	npiv_fabric->tf_cit_tmpl.tfc_tpg_nacl_base_cit.ct_attrs = NULL;
++	npiv_fabric->tf_cit_tmpl.tfc_tpg_nacl_attrib_cit.ct_attrs = NULL;
++	npiv_fabric->tf_cit_tmpl.tfc_tpg_nacl_auth_cit.ct_attrs = NULL;
++	npiv_fabric->tf_cit_tmpl.tfc_tpg_nacl_param_cit.ct_attrs = NULL;
+ 	/*
+ 	 * Register the npiv_fabric for use within TCM
+ 	 */
+diff --git a/drivers/target/iscsi/iscsi_target_configfs.c b/drivers/target/iscsi/iscsi_target_configfs.c
+index fd14525..c2d5044 100644
+--- a/drivers/target/iscsi/iscsi_target_configfs.c
++++ b/drivers/target/iscsi/iscsi_target_configfs.c
+@@ -1995,17 +1995,17 @@ int iscsi_target_register_configfs(void)
+ 	 * Setup default attribute lists for various fabric->tf_cit_tmpl
+ 	 * sturct config_item_type's
+ 	 */
+-	TF_CIT_TMPL(fabric)->tfc_discovery_cit.ct_attrs = lio_target_discovery_auth_attrs;
+-	TF_CIT_TMPL(fabric)->tfc_wwn_cit.ct_attrs = lio_target_wwn_attrs;
+-	TF_CIT_TMPL(fabric)->tfc_tpg_base_cit.ct_attrs = lio_target_tpg_attrs;
+-	TF_CIT_TMPL(fabric)->tfc_tpg_attrib_cit.ct_attrs = lio_target_tpg_attrib_attrs;
+-	TF_CIT_TMPL(fabric)->tfc_tpg_auth_cit.ct_attrs = lio_target_tpg_auth_attrs;
+-	TF_CIT_TMPL(fabric)->tfc_tpg_param_cit.ct_attrs = lio_target_tpg_param_attrs;
+-	TF_CIT_TMPL(fabric)->tfc_tpg_np_base_cit.ct_attrs = lio_target_portal_attrs;
+-	TF_CIT_TMPL(fabric)->tfc_tpg_nacl_base_cit.ct_attrs = lio_target_initiator_attrs;
+-	TF_CIT_TMPL(fabric)->tfc_tpg_nacl_attrib_cit.ct_attrs = lio_target_nacl_attrib_attrs;
+-	TF_CIT_TMPL(fabric)->tfc_tpg_nacl_auth_cit.ct_attrs = lio_target_nacl_auth_attrs;
+-	TF_CIT_TMPL(fabric)->tfc_tpg_nacl_param_cit.ct_attrs = lio_target_nacl_param_attrs;
++	fabric->tf_cit_tmpl.tfc_discovery_cit.ct_attrs = lio_target_discovery_auth_attrs;
++	fabric->tf_cit_tmpl.tfc_wwn_cit.ct_attrs = lio_target_wwn_attrs;
++	fabric->tf_cit_tmpl.tfc_tpg_base_cit.ct_attrs = lio_target_tpg_attrs;
++	fabric->tf_cit_tmpl.tfc_tpg_attrib_cit.ct_attrs = lio_target_tpg_attrib_attrs;
++	fabric->tf_cit_tmpl.tfc_tpg_auth_cit.ct_attrs = lio_target_tpg_auth_attrs;
++	fabric->tf_cit_tmpl.tfc_tpg_param_cit.ct_attrs = lio_target_tpg_param_attrs;
++	fabric->tf_cit_tmpl.tfc_tpg_np_base_cit.ct_attrs = lio_target_portal_attrs;
++	fabric->tf_cit_tmpl.tfc_tpg_nacl_base_cit.ct_attrs = lio_target_initiator_attrs;
++	fabric->tf_cit_tmpl.tfc_tpg_nacl_attrib_cit.ct_attrs = lio_target_nacl_attrib_attrs;
++	fabric->tf_cit_tmpl.tfc_tpg_nacl_auth_cit.ct_attrs = lio_target_nacl_auth_attrs;
++	fabric->tf_cit_tmpl.tfc_tpg_nacl_param_cit.ct_attrs = lio_target_nacl_param_attrs;
+ 
+ 	ret = target_fabric_configfs_register(fabric);
+ 	if (ret < 0) {
+diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
+index 0f6d69d..150bdb4 100644
+--- a/drivers/target/loopback/tcm_loop.c
++++ b/drivers/target/loopback/tcm_loop.c
+@@ -1334,11 +1334,11 @@ static int tcm_loop_register_configfs(void)
+ 	/*
+ 	 * Setup default attribute lists for various fabric->tf_cit_tmpl
+ 	 */
+-	TF_CIT_TMPL(fabric)->tfc_wwn_cit.ct_attrs = tcm_loop_wwn_attrs;
+-	TF_CIT_TMPL(fabric)->tfc_tpg_base_cit.ct_attrs = tcm_loop_tpg_attrs;
+-	TF_CIT_TMPL(fabric)->tfc_tpg_attrib_cit.ct_attrs = NULL;
+-	TF_CIT_TMPL(fabric)->tfc_tpg_param_cit.ct_attrs = NULL;
+-	TF_CIT_TMPL(fabric)->tfc_tpg_np_base_cit.ct_attrs = NULL;
++	fabric->tf_cit_tmpl.tfc_wwn_cit.ct_attrs = tcm_loop_wwn_attrs;
++	fabric->tf_cit_tmpl.tfc_tpg_base_cit.ct_attrs = tcm_loop_tpg_attrs;
++	fabric->tf_cit_tmpl.tfc_tpg_attrib_cit.ct_attrs = NULL;
++	fabric->tf_cit_tmpl.tfc_tpg_param_cit.ct_attrs = NULL;
++	fabric->tf_cit_tmpl.tfc_tpg_np_base_cit.ct_attrs = NULL;
+ 	/*
+ 	 * Once fabric->tf_ops has been setup, now register the fabric for
+ 	 * use within TCM
+diff --git a/drivers/target/sbp/sbp_target.c b/drivers/target/sbp/sbp_target.c
+index e51b09a..24884ca 100644
+--- a/drivers/target/sbp/sbp_target.c
++++ b/drivers/target/sbp/sbp_target.c
+@@ -2556,15 +2556,15 @@ static int sbp_register_configfs(void)
+ 	/*
+ 	 * Setup default attribute lists for various fabric->tf_cit_tmpl
+ 	 */
+-	TF_CIT_TMPL(fabric)->tfc_wwn_cit.ct_attrs = sbp_wwn_attrs;
+-	TF_CIT_TMPL(fabric)->tfc_tpg_base_cit.ct_attrs = sbp_tpg_base_attrs;
+-	TF_CIT_TMPL(fabric)->tfc_tpg_attrib_cit.ct_attrs = sbp_tpg_attrib_attrs;
+-	TF_CIT_TMPL(fabric)->tfc_tpg_param_cit.ct_attrs = NULL;
+-	TF_CIT_TMPL(fabric)->tfc_tpg_np_base_cit.ct_attrs = NULL;
+-	TF_CIT_TMPL(fabric)->tfc_tpg_nacl_base_cit.ct_attrs = NULL;
+-	TF_CIT_TMPL(fabric)->tfc_tpg_nacl_attrib_cit.ct_attrs = NULL;
+-	TF_CIT_TMPL(fabric)->tfc_tpg_nacl_auth_cit.ct_attrs = NULL;
+-	TF_CIT_TMPL(fabric)->tfc_tpg_nacl_param_cit.ct_attrs = NULL;
++	fabric->tf_cit_tmpl.tfc_wwn_cit.ct_attrs = sbp_wwn_attrs;
++	fabric->tf_cit_tmpl.tfc_tpg_base_cit.ct_attrs = sbp_tpg_base_attrs;
++	fabric->tf_cit_tmpl.tfc_tpg_attrib_cit.ct_attrs = sbp_tpg_attrib_attrs;
++	fabric->tf_cit_tmpl.tfc_tpg_param_cit.ct_attrs = NULL;
++	fabric->tf_cit_tmpl.tfc_tpg_np_base_cit.ct_attrs = NULL;
++	fabric->tf_cit_tmpl.tfc_tpg_nacl_base_cit.ct_attrs = NULL;
++	fabric->tf_cit_tmpl.tfc_tpg_nacl_attrib_cit.ct_attrs = NULL;
++	fabric->tf_cit_tmpl.tfc_tpg_nacl_auth_cit.ct_attrs = NULL;
++	fabric->tf_cit_tmpl.tfc_tpg_nacl_param_cit.ct_attrs = NULL;
+ 
+ 	ret = target_fabric_configfs_register(fabric);
+ 	if (ret < 0) {
+diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
+index 82e81c5..b04edc1 100644
+--- a/drivers/target/target_core_configfs.c
++++ b/drivers/target/target_core_configfs.c
+@@ -177,16 +177,16 @@ static struct config_group *target_core_register_fabric(
+ 	 * struct target_fabric_configfs *tf will contain a usage reference.
+ 	 */
+ 	pr_debug("Target_Core_ConfigFS: REGISTER tfc_wwn_cit -> %p\n",
+-			&TF_CIT_TMPL(tf)->tfc_wwn_cit);
++			&tf->tf_cit_tmpl.tfc_wwn_cit);
+ 
+ 	tf->tf_group.default_groups = tf->tf_default_groups;
+ 	tf->tf_group.default_groups[0] = &tf->tf_disc_group;
+ 	tf->tf_group.default_groups[1] = NULL;
+ 
+ 	config_group_init_type_name(&tf->tf_group, name,
+-			&TF_CIT_TMPL(tf)->tfc_wwn_cit);
++			&tf->tf_cit_tmpl.tfc_wwn_cit);
+ 	config_group_init_type_name(&tf->tf_disc_group, "discovery_auth",
+-			&TF_CIT_TMPL(tf)->tfc_discovery_cit);
++			&tf->tf_cit_tmpl.tfc_discovery_cit);
+ 
+ 	pr_debug("Target_Core_ConfigFS: REGISTER -> Allocated Fabric:"
+ 			" %s\n", tf->tf_group.cg_item.ci_name);
+diff --git a/drivers/target/target_core_fabric_configfs.c b/drivers/target/target_core_fabric_configfs.c
+index 3503996..dae2ad6 100644
+--- a/drivers/target/target_core_fabric_configfs.c
++++ b/drivers/target/target_core_fabric_configfs.c
+@@ -385,9 +385,9 @@ static struct config_group *target_fabric_make_mappedlun(
+ 	}
+ 
+ 	config_group_init_type_name(&lacl->se_lun_group, name,
+-			&TF_CIT_TMPL(tf)->tfc_tpg_mappedlun_cit);
++			&tf->tf_cit_tmpl.tfc_tpg_mappedlun_cit);
+ 	config_group_init_type_name(&lacl->ml_stat_grps.stat_group,
+-			"statistics", &TF_CIT_TMPL(tf)->tfc_tpg_mappedlun_stat_cit);
++			"statistics", &tf->tf_cit_tmpl.tfc_tpg_mappedlun_stat_cit);
+ 	lacl_cg->default_groups[0] = &lacl->ml_stat_grps.stat_group;
+ 	lacl_cg->default_groups[1] = NULL;
+ 
+@@ -504,16 +504,16 @@ static struct config_group *target_fabric_make_nodeacl(
+ 	nacl_cg->default_groups[4] = NULL;
+ 
+ 	config_group_init_type_name(&se_nacl->acl_group, name,
+-			&TF_CIT_TMPL(tf)->tfc_tpg_nacl_base_cit);
++			&tf->tf_cit_tmpl.tfc_tpg_nacl_base_cit);
+ 	config_group_init_type_name(&se_nacl->acl_attrib_group, "attrib",
+-			&TF_CIT_TMPL(tf)->tfc_tpg_nacl_attrib_cit);
++			&tf->tf_cit_tmpl.tfc_tpg_nacl_attrib_cit);
+ 	config_group_init_type_name(&se_nacl->acl_auth_group, "auth",
+-			&TF_CIT_TMPL(tf)->tfc_tpg_nacl_auth_cit);
++			&tf->tf_cit_tmpl.tfc_tpg_nacl_auth_cit);
+ 	config_group_init_type_name(&se_nacl->acl_param_group, "param",
+-			&TF_CIT_TMPL(tf)->tfc_tpg_nacl_param_cit);
++			&tf->tf_cit_tmpl.tfc_tpg_nacl_param_cit);
+ 	config_group_init_type_name(&se_nacl->acl_fabric_stat_group,
+ 			"fabric_statistics",
+-			&TF_CIT_TMPL(tf)->tfc_tpg_nacl_stat_cit);
++			&tf->tf_cit_tmpl.tfc_tpg_nacl_stat_cit);
+ 
+ 	return &se_nacl->acl_group;
+ }
+@@ -595,7 +595,7 @@ static struct config_group *target_fabric_make_np(
+ 
+ 	se_tpg_np->tpg_np_parent = se_tpg;
+ 	config_group_init_type_name(&se_tpg_np->tpg_np_group, name,
+-			&TF_CIT_TMPL(tf)->tfc_tpg_np_base_cit);
++			&tf->tf_cit_tmpl.tfc_tpg_np_base_cit);
+ 
+ 	return &se_tpg_np->tpg_np_group;
+ }
+@@ -899,9 +899,9 @@ static struct config_group *target_fabric_make_lun(
+ 	}
+ 
+ 	config_group_init_type_name(&lun->lun_group, name,
+-			&TF_CIT_TMPL(tf)->tfc_tpg_port_cit);
++			&tf->tf_cit_tmpl.tfc_tpg_port_cit);
+ 	config_group_init_type_name(&lun->port_stat_grps.stat_group,
+-			"statistics", &TF_CIT_TMPL(tf)->tfc_tpg_port_stat_cit);
++			"statistics", &tf->tf_cit_tmpl.tfc_tpg_port_stat_cit);
+ 	lun_cg->default_groups[0] = &lun->port_stat_grps.stat_group;
+ 	lun_cg->default_groups[1] = NULL;
+ 
+@@ -1056,19 +1056,19 @@ static struct config_group *target_fabric_make_tpg(
+ 	se_tpg->tpg_group.default_groups[6] = NULL;
+ 
+ 	config_group_init_type_name(&se_tpg->tpg_group, name,
+-			&TF_CIT_TMPL(tf)->tfc_tpg_base_cit);
++			&tf->tf_cit_tmpl.tfc_tpg_base_cit);
+ 	config_group_init_type_name(&se_tpg->tpg_lun_group, "lun",
+-			&TF_CIT_TMPL(tf)->tfc_tpg_lun_cit);
++			&tf->tf_cit_tmpl.tfc_tpg_lun_cit);
+ 	config_group_init_type_name(&se_tpg->tpg_np_group, "np",
+-			&TF_CIT_TMPL(tf)->tfc_tpg_np_cit);
++			&tf->tf_cit_tmpl.tfc_tpg_np_cit);
+ 	config_group_init_type_name(&se_tpg->tpg_acl_group, "acls",
+-			&TF_CIT_TMPL(tf)->tfc_tpg_nacl_cit);
++			&tf->tf_cit_tmpl.tfc_tpg_nacl_cit);
+ 	config_group_init_type_name(&se_tpg->tpg_attrib_group, "attrib",
+-			&TF_CIT_TMPL(tf)->tfc_tpg_attrib_cit);
++			&tf->tf_cit_tmpl.tfc_tpg_attrib_cit);
+ 	config_group_init_type_name(&se_tpg->tpg_auth_group, "auth",
+-			&TF_CIT_TMPL(tf)->tfc_tpg_auth_cit);
++			&tf->tf_cit_tmpl.tfc_tpg_auth_cit);
+ 	config_group_init_type_name(&se_tpg->tpg_param_group, "param",
+-			&TF_CIT_TMPL(tf)->tfc_tpg_param_cit);
++			&tf->tf_cit_tmpl.tfc_tpg_param_cit);
+ 
+ 	return &se_tpg->tpg_group;
+ }
+@@ -1155,9 +1155,9 @@ static struct config_group *target_fabric_make_wwn(
+ 	wwn->wwn_group.default_groups[1] = NULL;
+ 
+ 	config_group_init_type_name(&wwn->wwn_group, name,
+-			&TF_CIT_TMPL(tf)->tfc_tpg_cit);
++			&tf->tf_cit_tmpl.tfc_tpg_cit);
+ 	config_group_init_type_name(&wwn->fabric_stat_group, "fabric_statistics",
+-			&TF_CIT_TMPL(tf)->tfc_wwn_fabric_stats_cit);
++			&tf->tf_cit_tmpl.tfc_wwn_fabric_stats_cit);
+ 
+ 	return &wwn->wwn_group;
+ }
+diff --git a/drivers/target/tcm_fc/tfc_conf.c b/drivers/target/tcm_fc/tfc_conf.c
+index 4e00508..c6932fb 100644
+--- a/drivers/target/tcm_fc/tfc_conf.c
++++ b/drivers/target/tcm_fc/tfc_conf.c
+@@ -571,16 +571,16 @@ int ft_register_configfs(void)
+ 	/*
+ 	 * Setup default attribute lists for various fabric->tf_cit_tmpl
+ 	 */
+-	TF_CIT_TMPL(fabric)->tfc_wwn_cit.ct_attrs = ft_wwn_attrs;
+-	TF_CIT_TMPL(fabric)->tfc_tpg_base_cit.ct_attrs = NULL;
+-	TF_CIT_TMPL(fabric)->tfc_tpg_attrib_cit.ct_attrs = NULL;
+-	TF_CIT_TMPL(fabric)->tfc_tpg_param_cit.ct_attrs = NULL;
+-	TF_CIT_TMPL(fabric)->tfc_tpg_np_base_cit.ct_attrs = NULL;
+-	TF_CIT_TMPL(fabric)->tfc_tpg_nacl_base_cit.ct_attrs =
++	fabric->tf_cit_tmpl.tfc_wwn_cit.ct_attrs = ft_wwn_attrs;
++	fabric->tf_cit_tmpl.tfc_tpg_base_cit.ct_attrs = NULL;
++	fabric->tf_cit_tmpl.tfc_tpg_attrib_cit.ct_attrs = NULL;
++	fabric->tf_cit_tmpl.tfc_tpg_param_cit.ct_attrs = NULL;
++	fabric->tf_cit_tmpl.tfc_tpg_np_base_cit.ct_attrs = NULL;
++	fabric->tf_cit_tmpl.tfc_tpg_nacl_base_cit.ct_attrs =
+ 						    ft_nacl_base_attrs;
+-	TF_CIT_TMPL(fabric)->tfc_tpg_nacl_attrib_cit.ct_attrs = NULL;
+-	TF_CIT_TMPL(fabric)->tfc_tpg_nacl_auth_cit.ct_attrs = NULL;
+-	TF_CIT_TMPL(fabric)->tfc_tpg_nacl_param_cit.ct_attrs = NULL;
++	fabric->tf_cit_tmpl.tfc_tpg_nacl_attrib_cit.ct_attrs = NULL;
++	fabric->tf_cit_tmpl.tfc_tpg_nacl_auth_cit.ct_attrs = NULL;
++	fabric->tf_cit_tmpl.tfc_tpg_nacl_param_cit.ct_attrs = NULL;
+ 	/*
+ 	 * register the fabric for use within TCM
+ 	 */
+diff --git a/drivers/usb/gadget/tcm_usb_gadget.c b/drivers/usb/gadget/tcm_usb_gadget.c
+index 0ff3339..9d89905 100644
+--- a/drivers/usb/gadget/tcm_usb_gadget.c
++++ b/drivers/usb/gadget/tcm_usb_gadget.c
+@@ -1923,15 +1923,15 @@ static int usbg_register_configfs(void)
+ 	}
+ 
+ 	fabric->tf_ops = usbg_ops;
+-	TF_CIT_TMPL(fabric)->tfc_wwn_cit.ct_attrs = usbg_wwn_attrs;
+-	TF_CIT_TMPL(fabric)->tfc_tpg_base_cit.ct_attrs = usbg_base_attrs;
+-	TF_CIT_TMPL(fabric)->tfc_tpg_attrib_cit.ct_attrs = NULL;
+-	TF_CIT_TMPL(fabric)->tfc_tpg_param_cit.ct_attrs = NULL;
+-	TF_CIT_TMPL(fabric)->tfc_tpg_np_base_cit.ct_attrs = NULL;
+-	TF_CIT_TMPL(fabric)->tfc_tpg_nacl_base_cit.ct_attrs = NULL;
+-	TF_CIT_TMPL(fabric)->tfc_tpg_nacl_attrib_cit.ct_attrs = NULL;
+-	TF_CIT_TMPL(fabric)->tfc_tpg_nacl_auth_cit.ct_attrs = NULL;
+-	TF_CIT_TMPL(fabric)->tfc_tpg_nacl_param_cit.ct_attrs = NULL;
++	fabric->tf_cit_tmpl.tfc_wwn_cit.ct_attrs = usbg_wwn_attrs;
++	fabric->tf_cit_tmpl.tfc_tpg_base_cit.ct_attrs = usbg_base_attrs;
++	fabric->tf_cit_tmpl.tfc_tpg_attrib_cit.ct_attrs = NULL;
++	fabric->tf_cit_tmpl.tfc_tpg_param_cit.ct_attrs = NULL;
++	fabric->tf_cit_tmpl.tfc_tpg_np_base_cit.ct_attrs = NULL;
++	fabric->tf_cit_tmpl.tfc_tpg_nacl_base_cit.ct_attrs = NULL;
++	fabric->tf_cit_tmpl.tfc_tpg_nacl_attrib_cit.ct_attrs = NULL;
++	fabric->tf_cit_tmpl.tfc_tpg_nacl_auth_cit.ct_attrs = NULL;
++	fabric->tf_cit_tmpl.tfc_tpg_nacl_param_cit.ct_attrs = NULL;
+ 	ret = target_fabric_configfs_register(fabric);
+ 	if (ret < 0) {
+ 		printk(KERN_ERR "target_fabric_configfs_register() failed"
+diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
+index 592b316..0225c1f 100644
+--- a/drivers/vhost/scsi.c
++++ b/drivers/vhost/scsi.c
+@@ -2163,15 +2163,15 @@ static int tcm_vhost_register_configfs(void)
+ 	/*
+ 	 * Setup default attribute lists for various fabric->tf_cit_tmpl
+ 	 */
+-	TF_CIT_TMPL(fabric)->tfc_wwn_cit.ct_attrs = tcm_vhost_wwn_attrs;
+-	TF_CIT_TMPL(fabric)->tfc_tpg_base_cit.ct_attrs = tcm_vhost_tpg_attrs;
+-	TF_CIT_TMPL(fabric)->tfc_tpg_attrib_cit.ct_attrs = NULL;
+-	TF_CIT_TMPL(fabric)->tfc_tpg_param_cit.ct_attrs = NULL;
+-	TF_CIT_TMPL(fabric)->tfc_tpg_np_base_cit.ct_attrs = NULL;
+-	TF_CIT_TMPL(fabric)->tfc_tpg_nacl_base_cit.ct_attrs = NULL;
+-	TF_CIT_TMPL(fabric)->tfc_tpg_nacl_attrib_cit.ct_attrs = NULL;
+-	TF_CIT_TMPL(fabric)->tfc_tpg_nacl_auth_cit.ct_attrs = NULL;
+-	TF_CIT_TMPL(fabric)->tfc_tpg_nacl_param_cit.ct_attrs = NULL;
++	fabric->tf_cit_tmpl.tfc_wwn_cit.ct_attrs = tcm_vhost_wwn_attrs;
++	fabric->tf_cit_tmpl.tfc_tpg_base_cit.ct_attrs = tcm_vhost_tpg_attrs;
++	fabric->tf_cit_tmpl.tfc_tpg_attrib_cit.ct_attrs = NULL;
++	fabric->tf_cit_tmpl.tfc_tpg_param_cit.ct_attrs = NULL;
++	fabric->tf_cit_tmpl.tfc_tpg_np_base_cit.ct_attrs = NULL;
++	fabric->tf_cit_tmpl.tfc_tpg_nacl_base_cit.ct_attrs = NULL;
++	fabric->tf_cit_tmpl.tfc_tpg_nacl_attrib_cit.ct_attrs = NULL;
++	fabric->tf_cit_tmpl.tfc_tpg_nacl_auth_cit.ct_attrs = NULL;
++	fabric->tf_cit_tmpl.tfc_tpg_nacl_param_cit.ct_attrs = NULL;
+ 	/*
+ 	 * Register the fabric for use within TCM
+ 	 */
+diff --git a/include/target/target_core_configfs.h b/include/target/target_core_configfs.h
+index 713c500..e080138 100644
+--- a/include/target/target_core_configfs.h
++++ b/include/target/target_core_configfs.h
+@@ -54,4 +54,3 @@ struct target_fabric_configfs {
+ 	struct target_fabric_configfs_template tf_cit_tmpl;
+ };
+ 
+-#define TF_CIT_TMPL(tf) (&(tf)->tf_cit_tmpl)
 -- 
-tejun
+1.7.1
