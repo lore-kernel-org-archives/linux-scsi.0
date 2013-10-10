@@ -1,59 +1,105 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: block layer runtime pm and udisks
-Date: Thu, 10 Oct 2013 09:52:57 +0800
-Message-ID: <52560879.8000001@intel.com>
-References: <1364010148-8584-1-git-send-email-aaron.lu@intel.com> <5256058F.3010802@ubuntu.com>
+From: sthumma@codeaurora.org
+Subject: Re: Race condition in block layer runtime PM init and scsi disk
+ driver
+Date: Thu, 10 Oct 2013 04:55:07 -0000
+Message-ID: <04811251e7b06dd74849872257d9bb7c.squirrel@www.codeaurora.org>
+References: <6c835b531761fe70209d015daa6b87e8.squirrel@www.codeaurora.org>
+    <4ed022cf2fedc9ee1049254ea274f705.squirrel@www.codeaurora.org>
+    <52551CD3.2060803@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-pm-owner@vger.kernel.org>
-In-Reply-To: <5256058F.3010802@ubuntu.com>
-Sender: linux-pm-owner@vger.kernel.org
-To: Phillip Susi <psusi@ubuntu.com>, Alan Stern <stern@rowland.harvard.edu>, Jens Axboe <axboe@kernel.dk>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, Tejun Heo <tj@kernel.org>
-Cc: linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>, Oliver Neukum <oneukum@suse.de>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.11.231]:40743 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751692Ab3JJEzI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Oct 2013 00:55:08 -0400
+In-Reply-To: <52551CD3.2060803@intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: sthumma@codeaurora.org, stern@rowland.harvard.edu, linux-scsi@vger.kernel.org
 
-On 10/10/2013 09:40 AM, Phillip Susi wrote:
-> -----BEGIN PGP SIGNED MESSAGE-----
-> Hash: SHA512
-> 
-> I have been trying out the new block layer runtime pm, and run into a
-> problem: udisks keeps waking up the disk.  Every 10 minutes it tries
-> to poll the SMART status of the drive, but it does first issue an ata
-> CHECK POWER command to see if it is in standby, and skips the check to
-> avoid waking the disk.  The problem with runtime pm is that *any*
-> request brings the drive out of suspend, and the suspend wake path
-> forces the drive to spin up by issuing a verify command on sector 0.
-> 
-> Is there a reason that the wakeup path forces the drive to spin up, or
-> could this be removed and rely on the drive waking up automatically if
-> the request requires it?
-> 
-> Or would it be possible to notice that the command being sent is a
-> check power command, and fake the reply instead of resuming the device?
-> 
-> Or does udisks just need to check the runtime pm status before trying
-> the check power command?
+> On 10/09/2013 04:32 PM, sthumma@codeaurora.org wrote:
+>>> Hi Aaron,
+>>>
+>>> I found a race condition with the block layer runtime PM due to which
+>>> the q->nr_pending is decremented to less than zero (0xFFFF_FFFF (-1))
+>>> and hence the blk pre-runtime suspend always returns -EBUSY.
+>>>
+>>>
+>>> The issue is easily reproduced with a scsi disk with disabled tagged
+>>> command queuing
+>>>
+>>> sd_probe_async() ->
+>>> 	add_disk() ->
+>>> 		disk_add_event() ->
+>>> 			schedule(disk_events_workfn)
+>>> 	sd_revalidate_disk()
+>>> 	blk_pm_runtime_init()
+>>> return;
+>>>
+>>> Let's say the disk_events_workfn() calls sd_check_events() which tries
+>>> to send test_unit_ready() and because of sd_revalidate_disk() trying to
+>>> send another commands the test_unit_ready() might be re-queued as the
+>>> tagged command queuing is disabled.
+>>>
+>>> So the race condition is -
+>>>
+>>> Thread 1 			  |		Thread 2
+>>> sd_revalidate_disk()		  |	sd_check_events()
+>>> ...nr_pending = 0 as q->dev = NULL|	scsi_queue_insert()
+>>> blk_runtime_pm_init()		  | 	blk_pm_requeue_request() ->
+>>> 				  |	nr_pending = -1 since
+>>> 				  |	q->dev != NULL
+>>>
+>>> Do you have any suggestions on how to fix this issue?
+>
+> Thanks for the report. I wonder if the following patch helps?
 
-I think the udisks can be modified to check if the drive is runtime
-suspended and if so, avoid poll the SMART status.
+Thanks it works. Would you like to send formal patch for this?
+You can add my tested-by ack.
 
-Thanks,
-Aaron
+Tested-by: Sujit Reddy Thumma <sthumma@codeaurora.org>
 
-> 
-> 
-> -----BEGIN PGP SIGNATURE-----
-> Version: GnuPG v1.4.14 (GNU/Linux)
-> Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-> 
-> iQEcBAEBCgAGBQJSVgWPAAoJEJrBOlT6nu75k/cH+gMAb9YtMS21rEt94umJpBYj
-> BcNoyGoK39tAKZHW7pXfP2hRIm1+kPTPi44Wp7kQHu7m6BSp4YetmDkqjNv+6yAy
-> 8SUvPcqRsJVbF1oBXN09phBEnk/JfxqID7n6hB1lT6NqYV72VVVUEUOlnSnpHtDJ
-> gszV+TLH37uhd5/KiDFja3J2bJC0R/klzDF1x1clc53tGJd1NZ+h9tZZBLszIdnS
-> EnjukLA02Q7ooq+445WyWth2cypTXKfRbigZW+FfCI3hfAKOShVevodlGmmrQb7Z
-> 0xzhSoO5JTpNqJPLaNL3+JZFdXwANd+7PuO9v2XVKKUkydQ9+Vl4CfydSFhqo5U=
-> =iuSZ
-> -----END PGP SIGNATURE-----
-> 
+>
+> Do the runtime init related work before add_disk, so that every request
+> is counted properly.
+>
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index e62d17d..5693f6d 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -2854,6 +2854,7 @@ static void sd_probe_async(void *data,
+> async_cookie_t cookie)
+>  		gd->events |= DISK_EVENT_MEDIA_CHANGE;
+>  	}
+>
+> +	blk_pm_runtime_init(sdp->request_queue, dev);
+>  	add_disk(gd);
+>  	if (sdkp->capacity)
+>  		sd_dif_config_host(sdkp);
+> @@ -2862,7 +2863,6 @@ static void sd_probe_async(void *data,
+> async_cookie_t cookie)
+>
+>  	sd_printk(KERN_NOTICE, sdkp, "Attached SCSI %sdisk\n",
+>  		  sdp->removable ? "removable " : "");
+> -	blk_pm_runtime_init(sdp->request_queue, dev);
+>  	scsi_autopm_put_device(sdp);
+>  	put_device(&sdkp->dev);
+>  }
+>
+> Thanks,
+> Aaron
+>
+>>>
+>>>
+>>> --
+>>> Regards,
+>>> Sujit
+>>>
+>>
+>>
+>
+>
 
