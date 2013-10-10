@@ -1,124 +1,126 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 4/8] lpfc 8.3.43: Fixed invalid fcp_rsp length fir FCP_ICMND
-Date: Thu, 10 Oct 2013 12:22:38 -0400
-Message-ID: <1381422158.20248.21.camel@myfc17>
+Subject: [PATCH 5/8] lpfc 8.3.43: Fixed invalid Total_Data_Placed value
+ received for els and ct command responses
+Date: Thu, 10 Oct 2013 12:23:10 -0400
+Message-ID: <1381422190.20248.23.camel@myfc17>
 Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:5445 "EHLO
-	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756093Ab3JJQWk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Oct 2013 12:22:40 -0400
+Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:49080 "EHLO
+	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756637Ab3JJQXL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Oct 2013 12:23:11 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Fixed invalid fcp_rsp length fir FCP_ICMND
+Fixed invalid Total_Data_Placed value received for els and ct command responses
 
 
 Signed-off-by: James Smart <james.smart@emulex.com>
 
  ---
 
- lpfc_hw4.h |   24 +++++++++++++++++++++---
- lpfc_sli.c |   19 ++++++++++++++-----
- 2 files changed, 35 insertions(+), 8 deletions(-)
+ lpfc_hw4.h |    6 ++++--
+ lpfc_sli.c |   38 ++++++++++++++++++++++++++++++++++++--
+ 2 files changed, 40 insertions(+), 4 deletions(-)
 
 
 diff -upNr a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
---- a/drivers/scsi/lpfc/lpfc_hw4.h	2013-10-09 10:39:20.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_hw4.h	2013-10-09 17:25:37.026650720 -0400
-@@ -3584,7 +3584,13 @@ struct abort_cmd_wqe {
+--- a/drivers/scsi/lpfc/lpfc_hw4.h	2013-10-09 17:25:37.026650720 -0400
++++ b/drivers/scsi/lpfc/lpfc_hw4.h	2013-10-09 17:25:38.119649602 -0400
+@@ -3439,7 +3439,8 @@ struct els_request64_wqe {
+ #define els_req64_hopcnt_SHIFT      24
+ #define els_req64_hopcnt_MASK       0x000000ff
+ #define els_req64_hopcnt_WORD       word13
+-	uint32_t reserved[2];
++	uint32_t word14;
++	uint32_t max_response_payload_len;
+ };
  
- struct fcp_iwrite64_wqe {
- 	struct ulp_bde64 bde;
--	uint32_t payload_offset_len;
-+	uint32_t word3;
-+#define	cmd_buff_len_SHIFT  16
-+#define	cmd_buff_len_MASK  0x00000ffff
-+#define	cmd_buff_len_WORD  word3
-+#define payload_offset_len_SHIFT 0
-+#define payload_offset_len_MASK 0x0000ffff
-+#define payload_offset_len_WORD word3
- 	uint32_t total_xfer_len;
- 	uint32_t initial_xfer_len;
+ struct xmit_els_rsp64_wqe {
+@@ -3554,7 +3555,8 @@ struct gen_req64_wqe {
+ 	uint32_t relative_offset;
+ 	struct wqe_rctl_dfctl wge_ctl; /* word 5 */
  	struct wqe_common wqe_com;     /* words 6-11 */
-@@ -3594,7 +3600,13 @@ struct fcp_iwrite64_wqe {
+-	uint32_t rsvd_12_15[4];
++	uint32_t rsvd_12_14[3];
++	uint32_t max_response_payload_len;
+ };
  
- struct fcp_iread64_wqe {
- 	struct ulp_bde64 bde;
--	uint32_t payload_offset_len;   /* word 3 */
-+	uint32_t word3;
-+#define	cmd_buff_len_SHIFT  16
-+#define	cmd_buff_len_MASK  0x00000ffff
-+#define	cmd_buff_len_WORD  word3
-+#define payload_offset_len_SHIFT 0
-+#define payload_offset_len_MASK 0x0000ffff
-+#define payload_offset_len_WORD word3
- 	uint32_t total_xfer_len;       /* word 4 */
- 	uint32_t rsrvd5;               /* word 5 */
- 	struct wqe_common wqe_com;     /* words 6-11 */
-@@ -3604,7 +3616,13 @@ struct fcp_iread64_wqe {
- 
- struct fcp_icmnd64_wqe {
- 	struct ulp_bde64 bde;          /* words 0-2 */
--	uint32_t rsrvd3;               /* word 3 */
-+	uint32_t word3;
-+#define	cmd_buff_len_SHIFT  16
-+#define	cmd_buff_len_MASK  0x00000ffff
-+#define	cmd_buff_len_WORD  word3
-+#define payload_offset_len_SHIFT 0
-+#define payload_offset_len_MASK 0x0000ffff
-+#define payload_offset_len_WORD word3
- 	uint32_t rsrvd4;               /* word 4 */
- 	uint32_t rsrvd5;               /* word 5 */
- 	struct wqe_common wqe_com;     /* words 6-11 */
+ struct create_xri_wqe {
 diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
---- a/drivers/scsi/lpfc/lpfc_sli.c	2013-10-09 17:25:35.740650691 -0400
-+++ b/drivers/scsi/lpfc/lpfc_sli.c	2013-10-09 17:25:37.030650720 -0400
-@@ -8232,8 +8232,10 @@ lpfc_sli4_iocb2wqe(struct lpfc_hba *phba
- 		command_type = FCP_COMMAND_DATA_OUT;
- 		/* word3 iocb=iotag wqe=payload_offset_len */
- 		/* Add the FCP_CMD and FCP_RSP sizes to get the offset */
--		wqe->fcp_iwrite.payload_offset_len =
--			xmit_len + sizeof(struct fcp_rsp);
-+		bf_set(payload_offset_len, &wqe->fcp_iwrite,
-+		       xmit_len + sizeof(struct fcp_rsp));
-+		bf_set(cmd_buff_len, &wqe->fcp_iwrite,
-+		       0);
- 		/* word4 iocb=parameter wqe=total_xfer_length memcpy */
- 		/* word5 iocb=initial_xfer_len wqe=initial_xfer_len memcpy */
- 		bf_set(wqe_erp, &wqe->fcp_iwrite.wqe_com,
-@@ -8251,8 +8253,10 @@ lpfc_sli4_iocb2wqe(struct lpfc_hba *phba
- 	case CMD_FCP_IREAD64_CR:
- 		/* word3 iocb=iotag wqe=payload_offset_len */
- 		/* Add the FCP_CMD and FCP_RSP sizes to get the offset */
--		wqe->fcp_iread.payload_offset_len =
--			xmit_len + sizeof(struct fcp_rsp);
-+		bf_set(payload_offset_len, &wqe->fcp_iread,
-+		       xmit_len + sizeof(struct fcp_rsp));
-+		bf_set(cmd_buff_len, &wqe->fcp_iread,
-+		       0);
- 		/* word4 iocb=parameter wqe=total_xfer_length memcpy */
- 		/* word5 iocb=initial_xfer_len wqe=initial_xfer_len memcpy */
- 		bf_set(wqe_erp, &wqe->fcp_iread.wqe_com,
-@@ -8268,8 +8272,13 @@ lpfc_sli4_iocb2wqe(struct lpfc_hba *phba
- 		bf_set(wqe_dbde, &wqe->fcp_iread.wqe_com, 1);
+--- a/drivers/scsi/lpfc/lpfc_sli.c	2013-10-09 17:25:37.030650720 -0400
++++ b/drivers/scsi/lpfc/lpfc_sli.c	2013-10-09 17:25:38.134650282 -0400
+@@ -8188,6 +8188,7 @@ lpfc_sli4_iocb2wqe(struct lpfc_hba *phba
+ 		bf_set(wqe_qosd, &wqe->els_req.wqe_com, 1);
+ 		bf_set(wqe_lenloc, &wqe->els_req.wqe_com, LPFC_WQE_LENLOC_NONE);
+ 		bf_set(wqe_ebde_cnt, &wqe->els_req.wqe_com, 0);
++		wqe->els_req.max_response_payload_len = total_len - xmit_len;
  		break;
- 	case CMD_FCP_ICMND64_CR:
-+		/* word3 iocb=iotag wqe=payload_offset_len */
-+		/* Add the FCP_CMD and FCP_RSP sizes to get the offset */
-+		bf_set(payload_offset_len, &wqe->fcp_icmd,
-+		       xmit_len + sizeof(struct fcp_rsp));
-+		bf_set(cmd_buff_len, &wqe->fcp_icmd,
-+		       0);
- 		/* word3 iocb=IO_TAG wqe=reserved */
--		wqe->fcp_icmd.rsrvd3 = 0;
- 		bf_set(wqe_pu, &wqe->fcp_icmd.wqe_com, 0);
- 		/* Always open the exchange */
- 		bf_set(wqe_xc, &wqe->fcp_icmd.wqe_com, 0);
+ 	case CMD_XMIT_SEQUENCE64_CX:
+ 		bf_set(wqe_ctxt_tag, &wqe->xmit_sequence.wqe_com,
+@@ -8324,6 +8325,7 @@ lpfc_sli4_iocb2wqe(struct lpfc_hba *phba
+ 		bf_set(wqe_qosd, &wqe->gen_req.wqe_com, 1);
+ 		bf_set(wqe_lenloc, &wqe->gen_req.wqe_com, LPFC_WQE_LENLOC_NONE);
+ 		bf_set(wqe_ebde_cnt, &wqe->gen_req.wqe_com, 0);
++		wqe->gen_req.max_response_payload_len = total_len - xmit_len;
+ 		command_type = OTHER_COMMAND;
+ 		break;
+ 	case CMD_XMIT_ELS_RSP64_CX:
+@@ -11195,8 +11197,11 @@ lpfc_sli4_iocb_param_transfer(struct lpf
+ 			      struct lpfc_iocbq *pIocbOut,
+ 			      struct lpfc_wcqe_complete *wcqe)
+ {
++	int numBdes, i;
+ 	unsigned long iflags;
+-	uint32_t status;
++	uint32_t status, max_response;
++	struct lpfc_dmabuf *dmabuf;
++	struct ulp_bde64 *bpl, bde;
+ 	size_t offset = offsetof(struct lpfc_iocbq, iocb);
+ 
+ 	memcpy((char *)pIocbIn + offset, (char *)pIocbOut + offset,
+@@ -11213,7 +11218,36 @@ lpfc_sli4_iocb_param_transfer(struct lpf
+ 			pIocbIn->iocb.un.ulpWord[4] = wcqe->parameter;
+ 	else {
+ 		pIocbIn->iocb.un.ulpWord[4] = wcqe->parameter;
+-		pIocbIn->iocb.un.genreq64.bdl.bdeSize = wcqe->total_data_placed;
++		switch (pIocbOut->iocb.ulpCommand) {
++		case CMD_ELS_REQUEST64_CR:
++			dmabuf = (struct lpfc_dmabuf *)pIocbOut->context3;
++			bpl  = (struct ulp_bde64 *)dmabuf->virt;
++			bde.tus.w = le32_to_cpu(bpl[1].tus.w);
++			max_response = bde.tus.f.bdeSize;
++			break;
++		case CMD_GEN_REQUEST64_CR:
++			max_response = 0;
++			if (!pIocbOut->context3)
++				break;
++			numBdes = pIocbOut->iocb.un.genreq64.bdl.bdeSize/
++					sizeof(struct ulp_bde64);
++			dmabuf = (struct lpfc_dmabuf *)pIocbOut->context3;
++			bpl = (struct ulp_bde64 *)dmabuf->virt;
++			for (i = 0; i < numBdes; i++) {
++				bde.tus.w = le32_to_cpu(bpl[i].tus.w);
++				if (bde.tus.f.bdeFlags != BUFF_TYPE_BDE_64)
++					max_response += bde.tus.f.bdeSize;
++			}
++			break;
++		default:
++			max_response = wcqe->total_data_placed;
++			break;
++		}
++		if (max_response < wcqe->total_data_placed)
++			pIocbIn->iocb.un.genreq64.bdl.bdeSize = max_response;
++		else
++			pIocbIn->iocb.un.genreq64.bdl.bdeSize =
++				wcqe->total_data_placed;
+ 	}
+ 
+ 	/* Convert BG errors for completion status */
 
 
 
