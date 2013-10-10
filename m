@@ -1,46 +1,49 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: scsi-mq updated to latest linux-block/new-queue
-Date: Wed, 09 Oct 2013 13:13:14 -0700
-Message-ID: <1381349594.19256.486.camel@haakon3.risingtidesystems.com>
-References: <1381345971.19256.461.camel@haakon3.risingtidesystems.com>
-	 <20131009194658.GA3066@dhcp-26-207.brq.redhat.com>
+From: Phillip Susi <psusi@ubuntu.com>
+Subject: Re: block layer runtime pm and udisks
+Date: Wed, 09 Oct 2013 21:40:31 -0400
+Message-ID: <5256058F.3010802@ubuntu.com>
+References: <1364010148-8584-1-git-send-email-aaron.lu@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20131009194658.GA3066@dhcp-26-207.brq.redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, Tejun Heo <tj@kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1364010148-8584-1-git-send-email-aaron.lu@intel.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>, Alan Stern <stern@rowland.harvard.edu>, Jens Axboe <axboe@kernel.dk>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, Tejun Heo <tj@kernel.org>
+Cc: linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>, Oliver Neukum <oneukum@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2013-10-09 at 21:46 +0200, Alexander Gordeev wrote:
-> On Wed, Oct 09, 2013 at 12:12:51PM -0700, Nicholas A. Bellinger wrote:
-> > Just a heads up that the scsi-mq alpha branch has been updated to Jen's
-> > latest linux-block/new-queue containing hch's recent blk-mq
-> > improvements, along with Alexander's patch for the is_flush_fua +
-> > queue_depth=1 bug.
-> 
-> 
-> Oh, I have not expected it could be picked up. In fact I agree it needs
-> to be updated with what you spotted:
-> 
-> "Also, these extra increments should probably happen only when the passed
-> queue_depth == 1 && reserved_tags == 0."
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
 
-Yes, of course.  Fixing that up now in blk_mq_init_queue().
+I have been trying out the new block layer runtime pm, and run into a
+problem: udisks keeps waking up the disk.  Every 10 minutes it tries
+to poll the SMART status of the drive, but it does first issue an ata
+CHECK POWER command to see if it is in standby, and skips the check to
+avoid waking the disk.  The problem with runtime pm is that *any*
+request brings the drive out of suspend, and the suspend wake path
+forces the drive to spin up by issuing a verify command on sector 0.
 
-> 
-> What is the criteria for patches to include in your tree? I would suggest
-> to consider this one https://lkml.org/lkml/2013/8/9/90 if it fits.
-> 
+Is there a reason that the wakeup path forces the drive to spin up, or
+could this be removed and rely on the drive waking up automatically if
+the request requires it?
 
-Since it's libata related, I'd like Tejun (CC'ed) to be comfortable with
-the approach first..
+Or would it be possible to notice that the command being sent is a
+check power command, and fake the reply instead of resuming the device?
 
-As I'm still using IDE for my rootfs with scsi-mq, I'd be fine with
-applying it for AHCI testing purposes if there are no objections.
+Or does udisks just need to check the runtime pm status before trying
+the check power command?
 
-Care to send out an updated version..?
 
---nab
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.14 (GNU/Linux)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iQEcBAEBCgAGBQJSVgWPAAoJEJrBOlT6nu75k/cH+gMAb9YtMS21rEt94umJpBYj
+BcNoyGoK39tAKZHW7pXfP2hRIm1+kPTPi44Wp7kQHu7m6BSp4YetmDkqjNv+6yAy
+8SUvPcqRsJVbF1oBXN09phBEnk/JfxqID7n6hB1lT6NqYV72VVVUEUOlnSnpHtDJ
+gszV+TLH37uhd5/KiDFja3J2bJC0R/klzDF1x1clc53tGJd1NZ+h9tZZBLszIdnS
+EnjukLA02Q7ooq+445WyWth2cypTXKfRbigZW+FfCI3hfAKOShVevodlGmmrQb7Z
+0xzhSoO5JTpNqJPLaNL3+JZFdXwANd+7PuO9v2XVKKUkydQ9+Vl4CfydSFhqo5U=
+=iuSZ
+-----END PGP SIGNATURE-----
