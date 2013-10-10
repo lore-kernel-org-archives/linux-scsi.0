@@ -1,36 +1,72 @@
-From: Alexander Gordeev <agordeev@redhat.com>
-Subject: Re: scsi-mq updated to latest linux-block/new-queue
-Date: Thu, 10 Oct 2013 21:32:41 +0200
-Message-ID: <20131010193240.GA17206@dhcp-26-207.brq.redhat.com>
-References: <1381345971.19256.461.camel@haakon3.risingtidesystems.com>
- <20131009194658.GA3066@dhcp-26-207.brq.redhat.com>
- <20131010191714.GA3098@lst.de>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: mpt2sas,mpt3sas watchdog device removal
+Date: Thu, 10 Oct 2013 15:59:28 -0600
+Message-ID: <CAErSpo4=6=3+VNgw9rKBoYO92DMnbPp0NZW5Z_j4WweKTymjmg@mail.gmail.com>
+References: <20130515132401.6a8ff7fb@jlaw-desktop.mno.stratus.com>
+ <20130515132948.7dc4c551@jlaw-desktop.mno.stratus.com> <CAErSpo4OU2LRdmBLNBMbw79fYiR4yqYVJ++2ecju0qBNhAp-vA@mail.gmail.com>
+ <20130517174237.3b4a431a@jlaw-desktop.mno.stratus.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <target-devel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20131010191714.GA3098@lst.de>
-Sender: target-devel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-pci-owner@vger.kernel.org>
+In-Reply-To: <20130517174237.3b4a431a@jlaw-desktop.mno.stratus.com>
+Sender: linux-pci-owner@vger.kernel.org
+To: Joe Lawrence <joe.lawrence@stratus.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, "Desai, Kashyap" <Kashyap.Desai@lsi.com>, Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Oct 10, 2013 at 09:17:14PM +0200, Christoph Hellwig wrote:
-> > What is the criteria for patches to include in your tree? I would suggest
-> > to consider this one https://lkml.org/lkml/2013/8/9/90 if it fits.
-> 
-> For this one you probably want to send a patch to Jens to move blk-mq-tag.h
-> to include/linux first instead of doing the relative include hack.
+On Fri, May 17, 2013 at 3:42 PM, Joe Lawrence <joe.lawrence@stratus.com> wrote:
+> On Fri, 17 May 2013 09:29:06 -0600
+> Bjorn Helgaas <bhelgaas@google.com> wrote:
+>
+>> [+cc linux-pci]
+>>
+>> On Wed, May 15, 2013 at 11:29 AM, Joe Lawrence
+>> <joe.lawrence@stratus.com> wrote:
+>> > From 84ac7a35ebd61e84d4254eae78bb967de17254c2 Mon Sep 17 00:00:00
+>> > 2001 From: Joe Lawrence <joe.lawrence@stratus.com>
+>> > Date: Wed, 15 May 2013 12:52:31 -0400
+>> > Subject: [PATCH] mpt2sas,mpt3sas: make watchdog instantiated device
+>> > removal safe
+>> >
+>> > Calling pci_stop_and_remove_bus_device from a SCSI LLD may introduce
+>> > device removal races with PCI callback functions.
+>> >
+>> > Simplify the mpt2sas watchdog mechanism by separating PCI device
+>> > removal from SCSI midlayer detachment. When the watchdog wishes to
+>> > remove a SCSI device from the topology, detach from the SCSI
+>> > midlayer, leaving the PCI device alone. Adjust various pci_driver
+>> > callbacks to account for a potentially SCSI detached PCI device.
+>>
+>> I don't know the details of the SCSI detachment, but this approach
+>> looks much cleaner to me.
+>
+> Thanks for commenting, Bjorn.  I think this approach more closely
+> represents what this watchdog is trying to accomplish.
+>
+> Off list, Sreekanth from LSI tested and noticed a few issues with this
+> patch:
+>
+>  - mpt2sas_base_stop_watchdog is called twice: The call from
+>    mpt2sas_base_detach is safe, but now unnecessary (as a call was
+>    added earlier up in the PCI driver callbacks to ensure that the
+>    watchdog was out of the way.) This second invocation can be removed.
+>
+>  - If the watchdog detects a bad IOC, the watchdog remains running:
+>    The watchdog workqueue isn't cleaned up until
+>    mpt2sas_base_stop_watchdog is called, so in the case that the
+>    watchdog removes the device from SCSI topo, the workqueue will
+>    remain unused until PCI .remove/.shutdown cleans it up. Perhaps a
+>    single watchdog that iterates over all adapters would be simpler?
+>
+> Finally, if SCSI topo detachment is all that is interesting here, would
+> it make more sense to move the watchdog into the MPT "scsi" code?  I
+> haven't looked at the code yet, but this might make an MPT fusion patch
+> easier (due to dependencies between its "scsi" and "base" modules).
 
-I wonder, if blk-mq- prefix should remain?.. This s code seems pretty much
-generic to me.
+Hi Joe,
 
-> Also the  blk_mq_*tag* routines you use aren't exported, so a modular build of
-> the driver with that patch applied will fail.
+I noticed this when looking through old email.  I can't remember if
+anything happened with this.  It seems like nice work; did it go
+anywhere?
 
-Yep, makes sense. Thanks for pointing out.
-
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+Bjorn
