@@ -1,72 +1,54 @@
-From: Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: mpt2sas,mpt3sas watchdog device removal
-Date: Thu, 10 Oct 2013 15:59:28 -0600
-Message-ID: <CAErSpo4=6=3+VNgw9rKBoYO92DMnbPp0NZW5Z_j4WweKTymjmg@mail.gmail.com>
-References: <20130515132401.6a8ff7fb@jlaw-desktop.mno.stratus.com>
- <20130515132948.7dc4c551@jlaw-desktop.mno.stratus.com> <CAErSpo4OU2LRdmBLNBMbw79fYiR4yqYVJ++2ecju0qBNhAp-vA@mail.gmail.com>
- <20130517174237.3b4a431a@jlaw-desktop.mno.stratus.com>
+From: Mark Lord <kernel@start.ca>
+Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement pattern
+Date: Thu, 10 Oct 2013 19:17:18 -0400
+Message-ID: <5257357E.8080506@start.ca>
+References: <cover.1380703262.git.agordeev@redhat.com> <5254D397.9030307@zytor.com> <1381292648.645.259.camel@pasglop> <20131010101704.GC11874@dhcp-26-207.brq.redhat.com> <5256D5AB.4050105@zytor.com> <20131010180704.GA15719@dhcp-26-207.brq.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-pci-owner@vger.kernel.org>
-In-Reply-To: <20130517174237.3b4a431a@jlaw-desktop.mno.stratus.com>
-Sender: linux-pci-owner@vger.kernel.org
-To: Joe Lawrence <joe.lawrence@stratus.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, "Desai, Kashyap" <Kashyap.Desai@lsi.com>, Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-mips-bounce@linux-mips.org>
+In-Reply-To: <20131010180704.GA15719@dhcp-26-207.brq.redhat.com>
+Sender: linux-mips-bounce@linux-mips.org
+Errors-to: linux-mips-bounce@linux-mips.org
+List-help: <mailto:ecartis@linux-mips.org?Subject=help>
+List-unsubscribe: <mailto:ecartis@linux-mips.org?subject=unsubscribe%20linux-mips>
+List-software: Ecartis version 1.0.0
+List-subscribe: <mailto:ecartis@linux-mips.org?subject=subscribe%20linux-mips>
+List-owner: <mailto:ralf@linux-mips.org>
+List-post: <mailto:linux-mips@linux-mips.org>
+List-archive: <http://www.linux-mips.org/archives/linux-mips/>
+To: Alexander Gordeev <agordeev@redhat.com>, "H. Peter Anvin" <hpa@zytor.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, Ralf Baechle <ralf@linux-mips.org>, Michael Ellerman <michael@ellerman.id.au>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>, Dan Williams <dan.j.williams@intel.com>, Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>, Matt Porter <mporter@kernel.crashing.org>, linux-pci@vger.kernel.org, linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org, linux-ide@vger.kernel.org, iss_storagedev@hp.com, linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net, linux-dr
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, May 17, 2013 at 3:42 PM, Joe Lawrence <joe.lawrence@stratus.com> wrote:
-> On Fri, 17 May 2013 09:29:06 -0600
-> Bjorn Helgaas <bhelgaas@google.com> wrote:
->
->> [+cc linux-pci]
->>
->> On Wed, May 15, 2013 at 11:29 AM, Joe Lawrence
->> <joe.lawrence@stratus.com> wrote:
->> > From 84ac7a35ebd61e84d4254eae78bb967de17254c2 Mon Sep 17 00:00:00
->> > 2001 From: Joe Lawrence <joe.lawrence@stratus.com>
->> > Date: Wed, 15 May 2013 12:52:31 -0400
->> > Subject: [PATCH] mpt2sas,mpt3sas: make watchdog instantiated device
->> > removal safe
->> >
->> > Calling pci_stop_and_remove_bus_device from a SCSI LLD may introduce
->> > device removal races with PCI callback functions.
->> >
->> > Simplify the mpt2sas watchdog mechanism by separating PCI device
->> > removal from SCSI midlayer detachment. When the watchdog wishes to
->> > remove a SCSI device from the topology, detach from the SCSI
->> > midlayer, leaving the PCI device alone. Adjust various pci_driver
->> > callbacks to account for a potentially SCSI detached PCI device.
->>
->> I don't know the details of the SCSI detachment, but this approach
->> looks much cleaner to me.
->
-> Thanks for commenting, Bjorn.  I think this approach more closely
-> represents what this watchdog is trying to accomplish.
->
-> Off list, Sreekanth from LSI tested and noticed a few issues with this
-> patch:
->
->  - mpt2sas_base_stop_watchdog is called twice: The call from
->    mpt2sas_base_detach is safe, but now unnecessary (as a call was
->    added earlier up in the PCI driver callbacks to ensure that the
->    watchdog was out of the way.) This second invocation can be removed.
->
->  - If the watchdog detects a bad IOC, the watchdog remains running:
->    The watchdog workqueue isn't cleaned up until
->    mpt2sas_base_stop_watchdog is called, so in the case that the
->    watchdog removes the device from SCSI topo, the workqueue will
->    remain unused until PCI .remove/.shutdown cleans it up. Perhaps a
->    single watchdog that iterates over all adapters would be simpler?
->
-> Finally, if SCSI topo detachment is all that is interesting here, would
-> it make more sense to move the watchdog into the MPT "scsi" code?  I
-> haven't looked at the code yet, but this might make an MPT fusion patch
-> easier (due to dependencies between its "scsi" and "base" modules).
+Just to help us all understand "the loop" issue..
 
-Hi Joe,
+Here's an example of driver code which uses the existing MSI-X interfaces,
+for a device which can work with either 16, 8, 4, 2, or 1 MSI-X interrupt.
+This is from a new driver I'm working on right now:
 
-I noticed this when looking through old email.  I can't remember if
-anything happened with this.  It seems like nice work; did it go
-anywhere?
 
-Bjorn
+static int xx_alloc_msix_irqs (struct xx_dev *dev, int nvec)
+{
+        xx_disable_all_irqs(dev);
+        do {
+                if (nvec < 2)
+                        xx_prep_for_1_msix_vector(dev);
+                else if (nvec < 4)
+                        xx_prep_for_2_msix_vectors(dev);
+                else if (nvec < 8)
+                        xx_prep_for_4_msix_vectors(dev);
+                else if (nvec < 16)
+                        xx_prep_for_8_msix_vectors(dev);
+                else
+                        xx_prep_for_16_msix_vectors(dev);
+                nvec = pci_enable_msix(dev->pdev, dev->irqs, dev->num_vectors);
+        } while (nvec > 0);
+
+        if (nvec) {
+                kerr(dev->name, "pci_enable_msix() failed, err=%d", nvec);
+                dev->num_vectors = 0;
+                return nvec;
+        }
+        return 0;       /* success */
+}
