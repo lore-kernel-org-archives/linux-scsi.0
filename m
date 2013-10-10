@@ -1,88 +1,70 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [Bug 62811] New: Don't Modify the scsi subcmd as LUN value when
- using VENDOR cmd
-Date: Thu, 10 Oct 2013 21:38:55 +0400
-Message-ID: <1381426735.2109.4.camel@dabdike>
-References: <bug-62811-11613@https.bugzilla.kernel.org/>
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement
+ pattern
+Date: Thu, 10 Oct 2013 20:07:05 +0200
+Message-ID: <20131010180704.GA15719@dhcp-26-207.brq.redhat.com>
+References: <cover.1380703262.git.agordeev@redhat.com>
+ <5254D397.9030307@zytor.com>
+ <1381292648.645.259.camel@pasglop>
+ <20131010101704.GC11874@dhcp-26-207.brq.redhat.com>
+ <5256D5AB.4050105@zytor.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:46328 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756227Ab3JJRi7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Oct 2013 13:38:59 -0400
-In-Reply-To: <bug-62811-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-mips-bounce@linux-mips.org>
+Content-Disposition: inline
+In-Reply-To: <5256D5AB.4050105@zytor.com>
+Sender: linux-mips-bounce@linux-mips.org
+Errors-to: linux-mips-bounce@linux-mips.org
+List-help: <mailto:ecartis@linux-mips.org?Subject=help>
+List-unsubscribe: <mailto:ecartis@linux-mips.org?subject=unsubscribe%20linux-mips>
+List-software: Ecartis version 1.0.0
+List-subscribe: <mailto:ecartis@linux-mips.org?subject=subscribe%20linux-mips>
+List-owner: <mailto:ralf@linux-mips.org>
+List-post: <mailto:linux-mips@linux-mips.org>
+List-archive: <http://www.linux-mips.org/archives/linux-mips/>
+To: "H. Peter Anvin" <hpa@zytor.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, Ralf Baechle <ralf@linux-mips.org>, Michael Ellerman <michael@ellerman.id.au>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>, Dan Williams <dan.j.williams@intel.com>, Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>, Matt Porter <mporter@kernel.crashing.org>, linux-pci@vger.kernel.org, linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org, linux-ide@vger.kernel.org, iss_storagedev@hp.com, linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net, linux-dr
 List-Id: linux-scsi@vger.kernel.org
-To: bugzilla-daemon@bugzilla.kernel.org
-Cc: linux-scsi@vger.kernel.org
 
-On Thu, 2013-10-10 at 17:22 +0000, bugzilla-daemon@bugzilla.kernel.org
-wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=62811
+On Thu, Oct 10, 2013 at 09:28:27AM -0700, H. Peter Anvin wrote:
+> On 10/10/2013 03:17 AM, Alexander Gordeev wrote:
+> > On Wed, Oct 09, 2013 at 03:24:08PM +1100, Benjamin Herrenschmidt wrote:
+> > 
+> > Ok, this suggestion sounded in one or another form by several people.
+> > What about name it pcim_enable_msix_range() and wrap in couple more
+> > helpers to complete an API:
+> > 
+> > int pcim_enable_msix_range(pdev, msix_entries, nvec, minvec);
+> > 	<0 - error code
+> > 	>0 - number of MSIs allocated, where minvec >= result <= nvec
+> > 
+> > int pcim_enable_msix(pdev, msix_entries, nvec);
+> > 	<0 - error code
+> > 	>0 - number of MSIs allocated, where 1 >= result <= nvec 
+> > 
+> > int pcim_enable_msix_exact(pdev, msix_entries, nvec);
+> > 	<0 - error code
+> > 	>0 - number of MSIs allocated, where result == nvec
+> > 
+> > The latter's return value seems odd, but I can not help to make
+> > it consistent with the first two.
+> > 
 > 
->             Bug ID: 62811
->            Summary: Don't Modify the scsi subcmd as LUN value when using
->                     VENDOR cmd
->            Product: SCSI Drivers
->            Version: 2.5
->     Kernel Version: 3.12rc4
->           Hardware: All
->                 OS: Linux
->               Tree: Mainline
->             Status: NEW
->           Severity: normal
->           Priority: P1
->          Component: Other
->           Assignee: scsi_drivers-other@kernel-bugs.osdl.org
->           Reporter: yilikernel@gmail.com
->         Regression: No
-> 
-> Using the VENDOR scsi cmd, We should not to modify the cmd->cmnd [1] as lun
-> value. it is useful as a subcmd for USB device, such as STEC usb device.
-> 
->  Signed-off-by: Yi Li <yilikernel@gmail.com>
-> 
-> --- linux/drivers/scsi/scsi.c_orig 2013-09-12 01:51:45.000000000 -0400
-> +++ linux/drivers/scsi/scsi.c 2013-09-12 01:59:24.000000000 -0400
-> @@ -83,6 +83,9 @@ static void scsi_done(struct scsi_cmnd *
->  /* Do not call reset on error if we just did a reset within 15 sec. */
->  #define MIN_RESET_PERIOD (15*HZ)
-> 
-> +/* Define a SCSI command VENDOR to get device info For STEC USB devcie */
-> +#define STECUSB_VENDOR_CMD_CODE 0xD8
-> +
->  /*
->  * Note - the initial logging level can be set here to log events at boot time.
->  * After the system is up, you may enable logging via the /proc interface.
-> @@ -700,8 +703,13 @@ int scsi_dispatch_cmd(struct scsi_cmnd *
->  */
->  if (cmd->device->scsi_level <= SCSI_2 &&
->  cmd->device->scsi_level != SCSI_UNKNOWN) {
->  - cmd->cmnd[1] = (cmd->cmnd[1] & 0x1f) |
-> - (cmd->device->lun << 5 & 0xe0);
-> + /*
-> + * Don't Modify the cmnd[1] as LUN value when it is a VENDOR CMD
-> + * for STEC disk.
->  + */
-> + if (STECUSB_VENDOR_CMD_CODE != cmd->cmnd[0])
-> + cmd->cmnd[1] = (cmd->cmnd[1] & 0x1f) |
-> + (cmd->device->lun << 5 & 0xe0);
+> Is there a reason for the wrappers, as opposed to just specifying either
+> 1 or nvec as the minimum?
 
-This patch is mangled, so it can't be applied (I'm guessing by bugzilla,
-so next time just send directly to the SCSI mailing list).
+The wrappers are more handy IMO.
 
-The patch isn't the way we do things: if there's a problem, we usually
-add a quirk (either in USB or SCSI) and a flag.
+I.e. can imagine people start struggling to figure out what minvec to provide:
+1 or 0? Why 1? Oh.. okay.. Or should we tolerate 0 (as opposite to -ERANGE)?
 
-However, looking at what you're trying to do, it seems that your device
-is reporting SCSI_2, which mandates in the standard the setting of the
-LUN in the first byte of the CDB.  What are these vendor commands you're
-trying to send that are out of spec?  Should your device be reporting
-compliance with a SCSI level > 2?
+Well, do not know.. pcim_enable_msix(pdev, msix_entries, nvec, nvec) is 
+less readable for me than just pcim_enable_msix_exact(pdev, msix_entries,
+nvec).
 
-James
+> 	-hpa
 
-
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
