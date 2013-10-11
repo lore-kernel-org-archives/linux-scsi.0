@@ -1,43 +1,70 @@
-From: Andy Grover <agrover@redhat.com>
-Subject: Re: [PATCH] target: Pass through I/O topology for block backstores
-Date: Fri, 11 Oct 2013 11:52:53 -0700
-Message-ID: <52584905.4080307@redhat.com>
-References: <1381513206-8155-1-git-send-email-agrover@redhat.com> <20131011180348.GA21030@infradead.org>
+From: Mark Lord <kernel@start.ca>
+Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement pattern
+Date: Fri, 11 Oct 2013 16:29:39 -0400
+Message-ID: <52585FB3.7080508@start.ca>
+References: <cover.1380703262.git.agordeev@redhat.com> <5254D397.9030307@zytor.com> <1381292648.645.259.camel@pasglop> <20131010101704.GC11874@dhcp-26-207.brq.redhat.com> <5256D5AB.4050105@zytor.com> <20131010180704.GA15719@dhcp-26-207.brq.redhat.com> <5257357E.8080506@start.ca> <20131011084108.GA25702@dhcp-26-207.brq.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20131011180348.GA21030@infradead.org>
-Sender: target-devel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, martin.petersen@oracle.com
+Return-path: <linux-mips-bounce@linux-mips.org>
+In-Reply-To: <20131011084108.GA25702@dhcp-26-207.brq.redhat.com>
+Sender: linux-mips-bounce@linux-mips.org
+Errors-to: linux-mips-bounce@linux-mips.org
+List-help: <mailto:ecartis@linux-mips.org?Subject=help>
+List-unsubscribe: <mailto:ecartis@linux-mips.org?subject=unsubscribe%20linux-mips>
+List-software: Ecartis version 1.0.0
+List-subscribe: <mailto:ecartis@linux-mips.org?subject=subscribe%20linux-mips>
+List-owner: <mailto:ralf@linux-mips.org>
+List-post: <mailto:linux-mips@linux-mips.org>
+List-archive: <http://www.linux-mips.org/archives/linux-mips/>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: "H. Peter Anvin" <hpa@zytor.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, Ralf Baechle <ralf@linux-mips.org>, Michael Ellerman <michael@ellerman.id.au>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>, Dan Williams <dan.j.williams@intel.com>, Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>, Matt Porter <mporter@kernel.crashing.org>, linux-pci@vger.kernel.org, linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org, linux-ide@vger.kernel.org, iss_storagedev@hp.com, linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, e1000-dev
 List-Id: linux-scsi@vger.kernel.org
 
-On 10/11/2013 11:03 AM, Christoph Hellwig wrote:
-> On Fri, Oct 11, 2013 at 10:40:06AM -0700, Andy Grover wrote:
->> In addition to block size (already implemented), passing through
->> alignment offset, logical-to-phys block exponent, I/O granularity and
->> optimal I/O length will allow initiators to properly handle layout on
->> LUNs with 4K block sizes.
+On 13-10-11 04:41 AM, Alexander Gordeev wrote:
+> On Thu, Oct 10, 2013 at 07:17:18PM -0400, Mark Lord wrote:
+>> Just to help us all understand "the loop" issue..
 >>
->> Tested with various weird values via scsi_debug module.
->>
->> One thing to look at with this patch is the new block limits values --
->> instead of granularity 1 optimal 8192, Lio will now be returning whatever
->> the block device says, which may affect performance.
->
-> Wouldn't it be nicer to have a single method that takes a whole
-> queue_limits structure?
+>> Here's an example of driver code which uses the existing MSI-X interfaces,
+>> for a device which can work with either 16, 8, 4, 2, or 1 MSI-X interrupt.
+>> This is from a new driver I'm working on right now:
+..
+> Now, this is a loop-free alternative:
+> 
+> static int xx_alloc_msix_irqs(struct xx_dev *dev, int nvec)
+> {
+> 	nvec = roundup_pow_of_two(nvec);	/* assume 0 > nvec <= 16 */
+> 
+> 	xx_disable_all_irqs(dev);
+> 
+> 	pci_lock_msi(dev->pdev);
+> 
+> 	rc = pci_get_msix_limit(dev->pdev, nvec);
+> 	if (rc < 0)
+> 		goto err;
+> 
+> 	nvec = min(nvec, rc);		/* if limit is more than requested */
+> 	nvec = rounddown_pow_of_two(nvec);	/* (a) */
+> 
+> 	xx_prep_for_msix_vectors(dev, nvec);
+> 
+> 	rc = pci_enable_msix(dev->pdev, dev->irqs, nvec);	/* (b)	*/
+> 	if (rc < 0)
+> 		goto err;
+> 
+> 	pci_unlock_msi(dev->pdev);
+> 
+> 	dev->num_vectors = nvec;		/* (b) */
+> 	return 0;
+> 
+> err:
+> 	pci_unlock_msi(dev->pdev);
+> 
+>         kerr(dev->name, "pci_enable_msix() failed, err=%d", rc);
+>         dev->num_vectors = 0;
+>         return rc;
+> }
 
-It seemed better to me to keep the munging from queue_limits values to 
-what the target core needed in the block backstore code, and not use a 
-block-specific structure in the backstore<->core interface.
-
-It looks like a few includes of blkdev.h slipped into target core, but 
-these can be removed safely -- lio core doesn't depend on the block layer.
-
-We could define a new struct to get the 4 values at once, but it didn't 
-seem worth it, esp. since two are only needed by emulate_readcapacity16, 
-and the other two only by emulate_evpd_b0.
-
--- Andy
+That would still need a loop, to handle the natural race between
+the calls to pci_get_msix_limit() and pci_enable_msix() -- the driver and device
+can and should fall back to a smaller number of vectors when pci_enable_msix() fails.
