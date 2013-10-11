@@ -1,40 +1,56 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 1/1] remove cpqarray from mainline kernel
-Date: Fri, 18 Oct 2013 07:52:07 +0200
-Message-ID: <5260CC87.4050503@suse.de>
-References: <20131017175226.GA31535@thumper.usa.hp.com>
+From: yili <yilikernel@gmail.com>
+Subject: Re: [Bug 62811] New: Don't Modify the scsi subcmd as LUN value when using VENDOR cmd
+Date: Fri, 11 Oct 2013 05:16:04 +0000 (UTC)
+Message-ID: <loom.20131011T070826-879@post.gmane.org>
+References: <bug-62811-11613@https.bugzilla.kernel.org/> <1381426735.2109.4.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20131017175226.GA31535@thumper.usa.hp.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Mike Miller <mike.miller@hp.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Jens Axboe <axboe@kernel.dk>, LKML-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from plane.gmane.org ([80.91.229.3]:58751 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751158Ab3JRGZG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Oct 2013 02:25:06 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <lnx-linux-scsi@m.gmane.org>)
+	id 1VX3Ud-0004Fx-7i
+	for linux-scsi@vger.kernel.org; Fri, 18 Oct 2013 08:25:03 +0200
+Received: from 110.209.192.126 ([110.209.192.126])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Fri, 18 Oct 2013 08:25:03 +0200
+Received: from yilikernel by 110.209.192.126 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Fri, 18 Oct 2013 08:25:03 +0200
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On 10/17/2013 07:52 PM, Mike Miller wrote:
-> From: Mike Miller <mike.miller@hp.com>
->=20
-> cpqarray hasn't been used in over 12 years. It's doubtful that anyone=
- still
-> uses the board. It's time the driver was removed from the mainline ke=
-rnel.
-> The only updates these days are minor and mostly done by people outsi=
-de of HP.
->=20
-> Signed-off-by: Mike Miller <mike.miller@hp.com>
-=46inally.
+James Bottomley <James.Bottomley <at> HansenPartnership.com> writes:
 
-All thumbs up for this.
 
-Acked-by: Hannes Reinecke <hare@suse.de>
 
-Cheers,
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+
+>>What are these vendor commands you'retrying to send that are out of spec?
+
+---it is STEC Vendor Command code 0xA5
+
+ 
+
+ >>>Should your device be reporting compliance with a SCSI level > 2?
+
+---it is a usb flash device, i will try do the test.
+
+
+
+Thanks for your advice.
+
+
+
+
+
+
+
+
+
