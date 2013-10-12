@@ -1,33 +1,29 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] target: Pass through I/O topology for block backstores
-Date: Sat, 12 Oct 2013 01:08:24 -0700
-Message-ID: <20131012080824.GA12362@infradead.org>
-References: <1381513206-8155-1-git-send-email-agrover@redhat.com>
- <20131011180348.GA21030@infradead.org>
- <52584905.4080307@redhat.com>
+From: "Dr. Mack Nellie" <notiffication@notiffication.onmicrosoft.com>
+Subject: I am expecting your urgent response
+Date: Sun, 13 Oct 2013 01:54:17 +0530
+Message-ID: <05a33dd8-7b3e-4b8a-9c66-510f25d77414@HKNPR03MB034.apcprd03.prod.outlook.com>
+Reply-To: <dr.macknellie@barid.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <target-devel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <52584905.4080307@redhat.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Andy Grover <agrover@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, martin.petersen@oracle.com
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from emea01-db3-ndr.ptr.protection.outlook.com ([157.56.120.105]:26093
+	"EHLO emea01-db3-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752732Ab3JLUY2 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 12 Oct 2013 16:24:28 -0400
+Content-Description: Mail message body
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Recipients <notiffication@notiffication.onmicrosoft.com>
 
-On Fri, Oct 11, 2013 at 11:52:53AM -0700, Andy Grover wrote:
-> It seemed better to me to keep the munging from queue_limits values
-> to what the target core needed in the block backstore code, and not
-> use a block-specific structure in the backstore<->core interface.
-> 
-> It looks like a few includes of blkdev.h slipped into target core,
-> but these can be removed safely -- lio core doesn't depend on the
-> block layer.
-> 
-> We could define a new struct to get the 4 values at once, but it
-> didn't seem worth it, esp. since two are only needed by
-> emulate_readcapacity16, and the other two only by emulate_evpd_b0.
+Compliment of the day.
+ 
+I am Dr. Mack Nellie. I am looking for a reliable Indian partner that understands the India local language and English as well; I have a business proposal that will benefit both of us outside our individual professions.
+Kindly contact me for the supply details on my personal email address;  dr.macknellie@barid.com  I will furnish you with more details as soon as I receive your mail.
+I am expecting your urgent response   
 
-I really don't like the influx of methods.  But given thsat you have
-done the work I'd say merge your patch for now and then we can later see
-if we can come up with something more elegant.
+Regards 
+Dr. Mack Nellie
+Tel: +447014245023 
+E-Mail(dr.macknellie@barid.com)
