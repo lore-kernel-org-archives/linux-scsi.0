@@ -1,32 +1,33 @@
-From: "Wangshen (C)" <peter.w@huawei.com>
-Subject: Is there any plan to support 64bit lun in mainline?
-Date: Sat, 12 Oct 2013 06:35:26 +0000
-Message-ID: <FD44589ECFC0AF44ABFD421806CAB1F081EC2FEA@SZXEMA502-MBX.china.huawei.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] target: Pass through I/O topology for block backstores
+Date: Sat, 12 Oct 2013 01:08:24 -0700
+Message-ID: <20131012080824.GA12362@infradead.org>
+References: <1381513206-8155-1-git-send-email-agrover@redhat.com>
+ <20131011180348.GA21030@infradead.org>
+ <52584905.4080307@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:15106 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751318Ab3JLGfi convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 12 Oct 2013 02:35:38 -0400
-Content-Language: zh-CN
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <target-devel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <52584905.4080307@redhat.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Andy Grover <agrover@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, martin.petersen@oracle.com
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "Jinbo (Justin)" <jinbo@huawei.com>
 
-Hello everyone,
+On Fri, Oct 11, 2013 at 11:52:53AM -0700, Andy Grover wrote:
+> It seemed better to me to keep the munging from queue_limits values
+> to what the target core needed in the block backstore code, and not
+> use a block-specific structure in the backstore<->core interface.
+> 
+> It looks like a few includes of blkdev.h slipped into target core,
+> but these can be removed safely -- lio core doesn't depend on the
+> block layer.
+> 
+> We could define a new struct to get the 4 values at once, but it
+> didn't seem worth it, esp. since two are only needed by
+> emulate_readcapacity16, and the other two only by emulate_evpd_b0.
 
-My name is Wang Shen.
-I am developing some scsi devices in Linux needs 64bit lun.
-Now I am in trouble in scsi driver programming.
-
-According to SAM-5, a LUN structure is 8 bytes long, but it is only 4 bytes long in kernel.
-In another word Linux kernel only supports single level LUN, except conglomerate LUN and Hierarchical LUN.
-In my project, we need support all of the LUN structures.
-
-I find an archive mail on Tue, 19 Feb 2013 which discussed "scsi: 64-bit LUN support", but it just a patchset.
-
-Is there any plan to merge this patchset to mainline?
-If there is a plan, Which version will support 64bit lun?
+I really don't like the influx of methods.  But given thsat you have
+done the work I'd say merge your patch for now and then we can later see
+if we can come up with something more elegant.
