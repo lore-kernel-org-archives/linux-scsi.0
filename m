@@ -1,29 +1,27 @@
-From: "Dr. Mack Nellie" <notiffication@notiffication.onmicrosoft.com>
-Subject: I am expecting your urgent response
-Date: Sun, 13 Oct 2013 01:54:17 +0530
-Message-ID: <05a33dd8-7b3e-4b8a-9c66-510f25d77414@HKNPR03MB034.apcprd03.prod.outlook.com>
-Reply-To: <dr.macknellie@barid.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+From: <KeithASmith@wabipyge.onmicrosoft.com>
+Subject: Sometimes things happen much quicker than you would love to.
+Date: Sun, 13 Oct 2013 09:16:04 +0000
+Message-ID: <0df08c98-0596-4ced-bafb-e5b2c6918d58@AMSPR05MB035.eurprd05.prod.outlook.com>
+Mime-Version: 1.1
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emea01-db3-ndr.ptr.protection.outlook.com ([157.56.120.105]:26093
-	"EHLO emea01-db3-obe.outbound.protection.outlook.com"
+Received: from emea01-am1-ndr.ptr.protection.outlook.com ([157.56.116.100]:63599
+	"EHLO emea01-am1-obe.outbound.protection.outlook.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752732Ab3JLUY2 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 12 Oct 2013 16:24:28 -0400
-Content-Description: Mail message body
+	id S1753924Ab3JMJQG convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 13 Oct 2013 05:16:06 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Recipients <notiffication@notiffication.onmicrosoft.com>
 
-Compliment of the day.
- 
-I am Dr. Mack Nellie. I am looking for a reliable Indian partner that understands the India local language and English as well; I have a business proposal that will benefit both of us outside our individual professions.
-Kindly contact me for the supply details on my personal email address;  dr.macknellie@barid.com  I will furnish you with more details as soon as I receive your mail.
-I am expecting your urgent response   
 
-Regards 
-Dr. Mack Nellie
-Tel: +447014245023 
-E-Mail(dr.macknellie@barid.com)
+		Dear Customer,
+
+Sometimes things happen much quicker than you would love to.
+
+Let the moment last as much as you want.
+
+http://translate.googleusercontent.com/translate_c?depth=1&hl=auto&sl=fr&url=www.google.com.cy&u=http://dl.dropboxusercontent.com/s/pzf7e2x6vtsvfba/bestpriceonline.html&usg=ALkJrhhAs7XzGasmEXY2PYhiu2T28tjHzg
+
+Best Regards, 
+		
