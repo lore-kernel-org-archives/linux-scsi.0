@@ -1,33 +1,39 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 62971] Kernel 3.11.1 and higher does not boot on VMware VM
-Date: Mon, 14 Oct 2013 22:39:00 +0000
-Message-ID: <bug-62971-11613-MaJkj9pjqg@https.bugzilla.kernel.org/>
-References: <bug-62971-11613@https.bugzilla.kernel.org/>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:40767 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757715Ab3JNWjD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Oct 2013 18:39:03 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 5268520218
-	for <linux-scsi@vger.kernel.org>; Mon, 14 Oct 2013 22:39:02 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id 48C2420213
-	for <linux-scsi@vger.kernel.org>; Mon, 14 Oct 2013 22:39:01 +0000 (UTC)
-In-Reply-To: <bug-62971-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Roland Dreier <roland@kernel.org>
+Subject: [PATCH] target: Return an error for WRITE SAME with ANCHOR==1
+Date: Mon, 14 Oct 2013 15:49:23 -0700
+Message-ID: <1381790963-14657-1-git-send-email-roland@kernel.org>
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Roland Dreier <roland@purestorage.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=62971
+From: Roland Dreier <roland@purestorage.com>
 
---- Comment #1 from Bojan Smojver <bojan@rexursive.com> ---
-That patch fixes commit 839cb99e8f748391059d10388c8aea48a88c142c, which seem to
-have introduced the problem.
+Per SBC-3, since we report ANC_SUP==0 in VPD page B2h, we need to return
+an error (ILLEGAL REQUEST/INVALID FIELD IN CDB) for all WRITE SAME
+requests with ANCHOR==1.
 
+Signed-off-by: Roland Dreier <roland@purestorage.com>
+---
+ drivers/target/target_core_sbc.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
+index 4714c6f8da4b..d9b92b2c524d 100644
+--- a/drivers/target/target_core_sbc.c
++++ b/drivers/target/target_core_sbc.c
+@@ -263,6 +263,11 @@ sbc_setup_write_same(struct se_cmd *cmd, unsigned char *flags, struct sbc_ops *o
+ 			sectors, cmd->se_dev->dev_attrib.max_write_same_len);
+ 		return TCM_INVALID_CDB_FIELD;
+ 	}
++	/* We always have ANC_SUP == 0 so setting ANCHOR is always an error */
++	if (flags[0] & 0x10) {
++		pr_warn("WRITE SAME with ANCHOR not supported\n");
++		return TCM_INVALID_CDB_FIELD;
++	}
+ 	/*
+ 	 * Special case for WRITE_SAME w/ UNMAP=1 that ends up getting
+ 	 * translated into block discard requests within backend code.
 -- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+1.8.3.2
