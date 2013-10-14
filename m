@@ -1,72 +1,33 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: Is there any plan to support 64bit lun in mainline?
-Date: Mon, 14 Oct 2013 19:30:49 +0100
-Message-ID: <1381775449.3752.9.camel@dabdike.lan>
-References: <FD44589ECFC0AF44ABFD421806CAB1F081EC2FEA@SZXEMA502-MBX.china.huawei.com>
-	 <525BC836.2030306@suse.de>
+From: "Stewart, Sean" <Sean.Stewart@netapp.com>
+Subject: [PATCH 0/2] scsi_dh_alua fixes for NetApp E-Series Storage
+Date: Mon, 14 Oct 2013 22:24:34 +0000
+Message-ID: <8255ED565A0EAA4A960625E27D49DBF24AC14D49@SACEXCMBX04-PRD.hq.netapp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:56694 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750916Ab3JNSax (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Oct 2013 14:30:53 -0400
-In-Reply-To: <525BC836.2030306@suse.de>
+Received: from mx2.netapp.com ([216.240.18.37]:38024 "EHLO mx2.netapp.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756459Ab3JNWYg convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Oct 2013 18:24:36 -0400
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Wangshen (C)" <peter.w@huawei.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Jinbo (Justin)" <jinbo@huawei.com>
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "hare@suse.de" <hare@suse.de>
 
-On Mon, 2013-10-14 at 12:32 +0200, Hannes Reinecke wrote:
-> On 10/12/2013 08:35 AM, Wangshen (C) wrote:
-> > Hello everyone,
-> > 
-> > My name is Wang Shen.
-> > I am developing some scsi devices in Linux needs 64bit lun.
-> > Now I am in trouble in scsi driver programming.
-> > 
-> > According to SAM-5, a LUN structure is 8 bytes long, but it is only 4 bytes long in kernel.
-> > In another word Linux kernel only supports single level LUN, except conglomerate LUN and Hierarchical LUN.
-> > In my project, we need support all of the LUN structures.
-> > 
-> > I find an archive mail on Tue, 19 Feb 2013 which discussed "scsi: 64-bit LUN support", but it just a patchset.
-> > 
-> > Is there any plan to merge this patchset to mainline?
-> > If there is a plan, Which version will support 64bit lun?
-> 
-> Yes, there is a plan. Sort of.
-> 
-> I have a patchset (basically an update from the original patches)
-> sitting here in my private repository.
-> 
-> However, there are two other patchsets pending (EH Deadline and
-> asynchronous command aborts), both of which have been tested
-> thoroughly _and_ have acked-by from various other parties.
-> None of these patchset had received any feedback from James
-> Bottomley, let alone any indication if or when they'll be merged.
-> 
-> So I stopped sending further patchsets, sensing some communication
-> breakdown on the line.
+This short patch series fixes a couple of issues found while testing the scsi_dh_alua 
+handler with NetApp E-Series storage, both of which would prevent the handler from 
+attaching, even though TPGS is enabled. This has been observed to lead to some paths 
+using the alua handler, some paths using the rdac handler.
 
-There's no communications breakdown, I've just been very busy.  EH
-deadline looks OK, but let me look again to make sure.  Async aborts I'm
-not necessarily keen on because I know a lot of devices where aborting
-just confuses the firmware more, so I think skipping aborts and moving
-to LUN reset might be a better form of acceleration.
+Sean Stewart (2):
+  ALUA check sense should retry device internal reset unit attention
+  ALUA handler attach should succeed while TPG is transitioning
 
-James 
+ drivers/scsi/device_handler/scsi_dh_alua.c | 31 ++++++++++++++++++++----------
+ 1 file changed, 21 insertions(+), 10 deletions(-)
 
-> I try to excite some response from James B. next week in Edinburgh.
-> At the very least there'll be other persons with whom I'll be able
-> to discuss further steps.
-> 
-> And yes, this is slightly irritating.
-> 
-> Cheers,
-> 
-> Hannes
-
-
+-- 
+1.8.3.1
 
