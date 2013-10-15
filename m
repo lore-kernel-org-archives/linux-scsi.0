@@ -1,116 +1,83 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [patch|resend] block: fix race between request completion and
- timeout handling
-Date: Tue, 15 Oct 2013 09:18:15 -0600
-Message-ID: <20131015151815.GM541@kernel.dk>
-References: <x49txgrboee.fsf@segfault.boston.devel.redhat.com>
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement
+ pattern
+Date: Tue, 15 Oct 2013 17:30:29 +0200
+Message-ID: <20131015153028.GB17687@dhcp-26-207.brq.redhat.com>
+References: <cover.1380703262.git.agordeev@redhat.com>
+ <5254D397.9030307@zytor.com>
+ <1381292648.645.259.camel@pasglop>
+ <20131010101704.GC11874@dhcp-26-207.brq.redhat.com>
+ <5256D5AB.4050105@zytor.com>
+ <20131010180704.GA15719@dhcp-26-207.brq.redhat.com>
+ <5257357E.8080506@start.ca>
+ <20131011084108.GA25702@dhcp-26-207.brq.redhat.com>
+ <52585FB3.7080508@start.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-mips-bounce@linux-mips.org>
 Content-Disposition: inline
-In-Reply-To: <x49txgrboee.fsf@segfault.boston.devel.redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Moyer <jmoyer@redhat.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, emilne@redhat.com
+In-Reply-To: <52585FB3.7080508@start.ca>
+Sender: linux-mips-bounce@linux-mips.org
+Errors-to: linux-mips-bounce@linux-mips.org
+List-help: <mailto:ecartis@linux-mips.org?Subject=help>
+List-unsubscribe: <mailto:ecartis@linux-mips.org?subject=unsubscribe%20linux-mips>
+List-software: Ecartis version 1.0.0
+List-subscribe: <mailto:ecartis@linux-mips.org?subject=subscribe%20linux-mips>
+List-owner: <mailto:ralf@linux-mips.org>
+List-post: <mailto:linux-mips@linux-mips.org>
+List-archive: <http://www.linux-mips.org/archives/linux-mips/>
+To: Mark Lord <kernel@start.ca>
+Cc: "H. Peter Anvin" <hpa@zytor.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, Ralf Baechle <ralf@linux-mips.org>, Michael Ellerman <michael@ellerman.id.au>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>, Dan Williams <dan.j.williams@intel.com>, Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>, Matt Porter <mporter@kernel.crashing.org>, linux-pci@vger.kernel.org, linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org, linux-ide@vger.kernel.org, iss_storagedev@hp.com, linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, e1000-dev
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Oct 08 2013, Jeff Moyer wrote:
-> crocode i2c_i801 i2c_core iTCO_wdt iTCO_vendor_support shpchp ioatdma dca be2net sg ses enclosure ext4 mbcache jbd2 sd_mod crc_t10dif ahci megaraid_sas(U) dm_mirror dm_region_hash dm_log dm_mod [last unloaded: scsi_wait_scan]
+On Fri, Oct 11, 2013 at 04:29:39PM -0400, Mark Lord wrote:
+> > static int xx_alloc_msix_irqs(struct xx_dev *dev, int nvec)
+> > {
+> > 	nvec = roundup_pow_of_two(nvec);	/* assume 0 > nvec <= 16 */
+> > 
+> > 	xx_disable_all_irqs(dev);
+> > 
+> > 	pci_lock_msi(dev->pdev);
+> > 
+> > 	rc = pci_get_msix_limit(dev->pdev, nvec);
+> > 	if (rc < 0)
+> > 		goto err;
+> > 
+> > 	nvec = min(nvec, rc);		/* if limit is more than requested */
+> > 	nvec = rounddown_pow_of_two(nvec);	/* (a) */
+> > 
+> > 	xx_prep_for_msix_vectors(dev, nvec);
+> > 
+> > 	rc = pci_enable_msix(dev->pdev, dev->irqs, nvec);	/* (b)	*/
+> > 	if (rc < 0)
+> > 		goto err;
+> > 
+> > 	pci_unlock_msi(dev->pdev);
+> > 
+> > 	dev->num_vectors = nvec;		/* (b) */
+> > 	return 0;
+> > 
+> > err:
+> > 	pci_unlock_msi(dev->pdev);
+> > 
+> >         kerr(dev->name, "pci_enable_msix() failed, err=%d", rc);
+> >         dev->num_vectors = 0;
+> >         return rc;
+> > }
 > 
-> Pid: 491, comm: scsi_eh_0 Tainted: G        W  ----------------   2.6.32-220.13.1.el6.x86_64 #1 IBM  -[8722PAX]-/00D1461
-> RIP: 0010:[<ffffffff8124e424>]  [<ffffffff8124e424>] blk_requeue_request+0x94/0xa0
-> RSP: 0018:ffff881057eefd60  EFLAGS: 00010012
-> RAX: ffff881d99e3e8a8 RBX: ffff881d99e3e780 RCX: ffff881d99e3e8a8
-> RDX: ffff881d99e3e8a8 RSI: ffff881d99e3e780 RDI: ffff881d99e3e780
-> RBP: ffff881057eefd80 R08: ffff881057eefe90 R09: 0000000000000000
-> R10: 0000000000000000 R11: 0000000000000000 R12: ffff881057f92338
-> R13: 0000000000000000 R14: ffff881057f92338 R15: ffff883058188000
-> FS:  0000000000000000(0000) GS:ffff880040200000(0000) knlGS:0000000000000000
-> CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
-> CR2: 00000000006d3ec0 CR3: 000000302cd7d000 CR4: 00000000000406b0
-> DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-> DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-> Process scsi_eh_0 (pid: 491, threadinfo ffff881057eee000, task ffff881057e29540)
-> Stack:
->  0000000000001057 0000000000000286 ffff8810275efdc0 ffff881057f16000
-> <0> ffff881057eefdd0 ffffffff81362323 ffff881057eefe20 ffffffff8135f393
-> <0> ffff881057e29af8 ffff8810275efdc0 ffff881057eefe78 ffff881057eefe90
-> Call Trace:
->  [<ffffffff81362323>] __scsi_queue_insert+0xa3/0x150
->  [<ffffffff8135f393>] ? scsi_eh_ready_devs+0x5e3/0x850
->  [<ffffffff81362a23>] scsi_queue_insert+0x13/0x20
->  [<ffffffff8135e4d4>] scsi_eh_flush_done_q+0x104/0x160
->  [<ffffffff8135fb6b>] scsi_error_handler+0x35b/0x660
->  [<ffffffff8135f810>] ? scsi_error_handler+0x0/0x660
->  [<ffffffff810908c6>] kthread+0x96/0xa0
->  [<ffffffff8100c14a>] child_rip+0xa/0x20
->  [<ffffffff81090830>] ? kthread+0x0/0xa0
->  [<ffffffff8100c140>] ? child_rip+0x0/0x20
-> Code: 00 00 eb d1 4c 8b 2d 3c 8f 97 00 4d 85 ed 74 bf 49 8b 45 00 49 83 c5 08 48 89 de 4c 89 e7 ff d0 49 8b 45 00 48 85 c0 75 eb eb a4 <0f> 0b eb fe 0f 1f 84 00 00 00 00 00 55 48 89 e5 0f 1f 44 00 00
-> RIP  [<ffffffff8124e424>] blk_requeue_request+0x94/0xa0
->  RSP <ffff881057eefd60>
-> 
-> The RIP is this line:
->         BUG_ON(blk_queued_rq(rq));
-> 
-> After digging through the code, I think there may be a race between the
-> request completion and the timer handler running.
-> 
-> A timer is started for each request put on the device's queue (see
-> blk_start_request->blk_add_timer).  If the request does not complete
-> before the timer expires, the timer handler (blk_rq_timed_out_timer)
-> will mark the request complete atomically:
-> 
-> static inline int blk_mark_rq_complete(struct request *rq)
-> {
->         return test_and_set_bit(REQ_ATOM_COMPLETE, &rq->atomic_flags);
-> }
-> 
-> and then call blk_rq_timed_out.  The latter function will call
-> scsi_times_out, which will return one of BLK_EH_HANDLED,
-> BLK_EH_RESET_TIMER or BLK_EH_NOT_HANDLED.  If BLK_EH_RESET_TIMER is
-> returned, blk_clear_rq_complete is called, and blk_add_timer is again
-> called to simply wait longer for the request to complete.
-> 
-> Now, if the request happens to complete while this is going on, what
-> happens?  Given that we know the completion handler will bail if it
-> finds the REQ_ATOM_COMPLETE bit set, we need to focus on the completion
-> handler running after that bit is cleared.  So, from the above
-> paragraph, after the call to blk_clear_rq_complete.  If the completion
-> sets REQ_ATOM_COMPLETE before the BUG_ON in blk_add_timer, we go boom
-> there (I haven't seen this in the cores).  Next, if we get the
-> completion before the call to list_add_tail, then the timer will
-> eventually fire for an old req, which may either be freed or reallocated
-> (there is evidence that this might be the case).  Finally, if the
-> completion comes in *after* the addition to the timeout list, I think
-> it's harmless.  The request will be removed from the timeout list,
-> req_atom_complete will be set, and all will be well.
-> 
-> This will only actually explain the coredumps *IF* the request
-> structure was freed, reallocated *and* queued before the error handler
-> thread had a chance to process it.  That is possible, but it may make
-> sense to keep digging for another race.  I think that if this is what
-> was happening, we would see other instances of this problem showing up
-> as null pointer or garbage pointer dereferences, for example when the
-> request structure was not re-used.  It looks like we actually do run
-> into that situation in other reports.
-> 
-> This patch moves the BUG_ON(test_bit(REQ_ATOM_COMPLETE,
-> &req->atomic_flags)); from blk_add_timer to the only caller that could
-> trip over it (blk_start_request).  It then inverts the calls to
-> blk_clear_rq_complete and blk_add_timer in blk_rq_timed_out to address
-> the race.  I've boot tested this patch, but nothing more.
-> 
-> Signed-off-by: Jeff Moyer <jmoyer@redhat.com>
-> Acked-by: Hannes Reinecke <hare@suse.de>
-> 
-> ---
-> 
-> Jens, I added a bit to the patch description based on Ewan's comments.
-> Last we discussed this, I thought you were in favor of taking it, so I'm
-> resending the patch to make your life easier (I hope).
+> That would still need a loop, to handle the natural race between
+> the calls to pci_get_msix_limit() and pci_enable_msix() -- the driver and device
+> can and should fall back to a smaller number of vectors when pci_enable_msix() fails.
 
-Yeah, lets get it queued up, it's definitely an improvement.
+Could you please explain why the value returned by pci_get_msix_limit()
+might change before pci_enable_msix() returned, while both protected by
+pci_lock_msi()?
+
+Anyway, although the loop-free code (IMHO) reads better, pci_lock_msi()
+it is not a part of the original proposal and the more I think about it
+the less I like it.
 
 -- 
-Jens Axboe
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
