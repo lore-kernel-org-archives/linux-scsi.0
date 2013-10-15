@@ -1,92 +1,62 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: PROBLEM: special sense code asc,ascq=04h,0Ch abort scsi scan
- in the middle
-Date: Tue, 15 Oct 2013 07:51:28 +0200
-Message-ID: <525CD7E0.7050809@suse.de>
-References: <525AD704.6040705@oracle.com> <525BD1EA.6000701@suse.de> <525CB742.4010409@oracle.com>
+Subject: Re: Is there any plan to support 64bit lun in mainline?
+Date: Tue, 15 Oct 2013 08:01:14 +0200
+Message-ID: <525CDA2A.2060308@suse.de>
+References: <FD44589ECFC0AF44ABFD421806CAB1F081EC2FEA@SZXEMA502-MBX.china.huawei.com>  <525BC836.2030306@suse.de> <1381775449.3752.9.camel@dabdike.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-15
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <525CB742.4010409@oracle.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: vaughan <vaughan.cao@oracle.com>
-Cc: JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:57245 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750769Ab3JOGBS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 15 Oct 2013 02:01:18 -0400
+In-Reply-To: <1381775449.3752.9.camel@dabdike.lan>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, James Smart <james.smart@emulex.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-On 10/15/2013 05:32 AM, vaughan wrote:
-> On 10/14/2013 07:13 PM, Hannes Reinecke wrote:
->> In the log, inquiry to LUN7 return a sense - asc,ascq=3D04h,0Ch
->> (Logical unit not accessible, target port in unavailable state).
->> And this is ignored, so scsi_probe_lun() returns -EIO and the scan
->> process is aborted.
+On 10/14/2013 08:30 PM, James Bottomley wrote:
+> On Mon, 2013-10-14 at 12:32 +0200, Hannes Reinecke wrote:
+[ .. ]
 >>
->> I have two questions:
->> 1. Is it correct for hardware to return a sense 04h,0Ch to inquiry
->> again, even after presenting this lun in responce to REPORT_LUN
->> command?
->> Yes, this is correct. 'REPORT LUNS' is supported in 'Unavailable' st=
-ate.
+>> However, there are two other patchsets pending (EH Deadline and
+>> asynchronous command aborts), both of which have been tested
+>> thoroughly _and_ have acked-by from various other parties.
+>> None of these patchset had received any feedback from James
+>> Bottomley, let alone any indication if or when they'll be merged.
 >>
->>> 2. Since windows and solaris can continue scan, is it reasonable fo=
-r
->>> linux to do the same, even for a fault-tolerance purpose?
->>>
->> Hmm. Yes, and no.
->>
->> _Actually_ this is an issue with the target, as it looks as if it
->> will return the above sense code while sending an 'INQUIRY' to the
->> device.
->> SPC explicitely states that the INQUIRY command should _not_ fail
->> for unavailable devices.
-> Hi all,
+>> So I stopped sending further patchsets, sensing some communication
+>> breakdown on the line.
 >=20
-> I found this below in spc4.
->>>>
-> 5.15.2.4.4 Target port group asymmetric access states - Standby state
-> While in the unavailable primary target port asymmetric access state,
-> the device server shall support those of
-> the following commands that it supports while in the active/optimized=
- state:
-> a) INQUIRY (the peripheral qualifier (see 6.6.2) shall be set to 001b=
-);
-> ....
-> For those commands that are not supported, the device server shall
-> terminate the command with CHECK
-> CONDITION status, with the sense key set to NOT READY, and the
-> additional sense code set to LOGICAL
-> UNIT NOT ACCESSIBLE, TARGET PORT IN UNAVAILABLE STATE.
-> <<<
-> From the above, I suppose the hardware may works very compliant with
-> spc. The case could be:
-> Storage is a alua supported target. Initiator sent REPORT_LUN to targ=
-et,
-> target return all pqual=3D000b to it.
-> Then Initiator INQUIRY lun 7 which is in standby state where pqual=3D=
-000b
-> not 001b. So this INQUIRY is regarded as
-> 'not supported', and get terminated with CHECK_CONDITION,  sense key=3D=
-NOT
-> READY, asc,ascq=3D04h,0ch.
+> There's no communications breakdown, I've just been very busy.  EH
+> deadline looks OK, but let me look again to make sure.  Async aborts =
+I'm
+> not necessarily keen on because I know a lot of devices where abortin=
+g
+> just confuses the firmware more, so I think skipping aborts and movin=
+g
+> to LUN reset might be a better form of acceleration.
 >=20
-> Could you confirm if my understanding is right or wrong?
->=20
-Wrong.
 
-The sentence states that the device server _shall_ support those
-commands, where the results should be identical as if the port would
-have been in active/optimized state.
+Hmm. I've made exactly the opposite experience with FC devices.
+A faulty SFP or wiring might cause the occasional frame drop, which
+will be happily corrected with an ABTS.
+And HBAs like lpfc or qla2xxx even have a fast command abort built
+into the firmware, where the firmware will not even wait for a
+command abort to hit the wire but rather just disable the exchange
+internally and return.
+_Not_ sending an abort but rather escalating directly to LUN reset
+will only make matters worse here.
+Plus a LUN reset won't be able to fix anything here.
 
-So INQUIRY always has to be supported, regardless of which primary
-ALUA state the port happens to be in.
+But sure, if there are some devices which are confused by aborts,
+sure we should be doing something about it.
+Just out of curiosity, which devices are we talking about?
 
-(Otherwise we'd be hard-pressed to figure out whether the port is in
-'unavailable' ALUA state in the first place, as without the INQUIRY
-data we couldn't even _tell_ if ALUA is supported.)
-
-So yeah, it really looks like a firmware issue here.
-
-But that notwithstanding, did you get a chance to test my patch?
+I would very much prefer to have inlined command aborts at least for
+=46C, as it has proven to be really beneficial there.
 
 Cheers,
 
@@ -94,6 +64,10 @@ Hannes
 --=20
 Dr. Hannes Reinecke		      zSeries & Storage
 hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
-)
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
