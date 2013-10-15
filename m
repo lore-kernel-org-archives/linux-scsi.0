@@ -1,55 +1,75 @@
-From: Praveen Murali <pmurali@logicube.com>
-Subject: eSATA Drive Detection issues on mvsas
-Date: Mon, 14 Oct 2013 17:18:27 -0700
-Message-ID: <525C89D3.5090008@logicube.com>
+From: vaughan <vaughan.cao@oracle.com>
+Subject: Re: PROBLEM: special sense code asc,ascq=04h,0Ch abort scsi scan
+ in the middle
+Date: Tue, 15 Oct 2013 11:32:18 +0800
+Message-ID: <525CB742.4010409@oracle.com>
+References: <525AD704.6040705@oracle.com> <525BD1EA.6000701@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from p01c12o142.mxlogic.net ([208.65.145.65]:38050 "EHLO
-	p01c12o142.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756435Ab3JOA0z (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Oct 2013 20:26:55 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <525BD1EA.6000701@suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-Hi,
-   I have couple of external drives (Western Digital and Seagate) that 
-have an eSATA interface. My Linux box with a Marvell HBA (9445) running 
-Ubuntu 12.04 with 3.2.48 kernel doest not seem to detect the drive. I 
-tried with the latest upstream kernel and it behaves the same. But both 
-the drives detect fine if I enter the mvsas BIOS during bootup. So I 
-have hooked up a SATA analyzer and this is what I found
-- When I tried to detect the drives in the mvsas BIOS, all the ATA 
-commands that the bios issues have the port multiplier byte set to 0.
-- If I bootup my Linux system and then connect the drives, the first 
-IDENTIFY command has the port multiplier set to 0 (this one is 
-successful) and the subsequent IDENTIFY command has port multiplier set 
-to 1 (this one fails).
-- If I connect any other SATA drives I have to the HBA, all the ATA 
-commands have port multiplier set to 1 but they detects and work fine.
+On 10/14/2013 07:13 PM, Hannes Reinecke wrote:
+> In the log, inquiry to LUN7 return a sense - asc,ascq=04h,0Ch
+> (Logical unit not accessible, target port in unavailable state).
+> And this is ignored, so scsi_probe_lun() returns -EIO and the scan
+> process is aborted.
+>
+> I have two questions:
+> 1. Is it correct for hardware to return a sense 04h,0Ch to inquiry
+> again, even after presenting this lun in responce to REPORT_LUN
+> command?
+> Yes, this is correct. 'REPORT LUNS' is supported in 'Unavailable' state.
+>
+>> 2. Since windows and solaris can continue scan, is it reasonable for
+>> linux to do the same, even for a fault-tolerance purpose?
+>>
+> Hmm. Yes, and no.
+>
+> _Actually_ this is an issue with the target, as it looks as if it
+> will return the above sense code while sending an 'INQUIRY' to the
+> device.
+> SPC explicitely states that the INQUIRY command should _not_ fail
+> for unavailable devices.
+Hi all,
 
-Just to rule out the port-multiplier possibility I changed the following 
-line in drivers/scsi/libsas/sas_ata.c - fucntion sas_ata_qc_issue()
+I found this below in spc4.
+>>>
+5.15.2.4.4 Target port group asymmetric access states - Standby state
+While in the unavailable primary target port asymmetric access state,
+the device server shall support those of
+the following commands that it supports while in the active/optimized state:
+a) INQUIRY (the peripheral qualifier (see 6.6.2) shall be set to 001b);
+....
+For those commands that are not supported, the device server shall
+terminate the command with CHECK
+CONDITION status, with the sense key set to NOT READY, and the
+additional sense code set to LOGICAL
+UNIT NOT ACCESSIBLE, TARGET PORT IN UNAVAILABLE STATE.
+<<<
+>From the above, I suppose the hardware may works very compliant with
+spc. The case could be:
+Storage is a alua supported target. Initiator sent REPORT_LUN to target,
+target return all pqual=000b to it.
+Then Initiator INQUIRY lun 7 which is in standby state where pqual=000b
+not 001b. So this INQUIRY is regarded as
+'not supported', and get terminated with CHECK_CONDITION,  sense key=NOT
+READY, asc,ascq=04h,0ch.
 
-ata_tf_to_fis(&qc->tf, 1, 0, (u8*)&task->ata_task.fis);
-
-to
-
-ata_tf_to_fis(&qc->tf, 0, 0, (u8*)&task->ata_task.fis);
-
-now all my drives seem to detect just fine. I believe, the eSATA 
-interface on these external drives is a port multiplier, which is why 
-the command fails. Also, the normal drives ignore this field thats why 
-they work fine with port multiplier being set to either 0 or 1.
-
-Question(s): Are my above assumtions correct? If so, what is the 
-reasoning behind setting the port multiplier to 1 by default in libsas 
-layer?
+Could you confirm if my understanding is right or wrong?
 
 Thanks,
-Praveen
-
-
-
+Vaughan
+> But yeah, we probably should work around this issues.
+> Nevertheless, please raise this issue with your array vendor.
+>
+> Please try the attached patch.
+>
+> Cheers,
+>
+> Hannes
