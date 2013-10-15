@@ -1,30 +1,41 @@
 From: "Stewart, Sean" <Sean.Stewart@netapp.com>
-Subject: [PATCH 0/2][RESEND] scsi_dh_alua fixes for NetApp E-Series Storage
-Date: Tue, 15 Oct 2013 15:52:24 +0000
-Message-ID: <1381852344.1593.15.camel@localhost.localdomain>
+Subject: [PATCH 1/2][RESEND] scsi_dh_alua: ALUA check sense should retry
+ device internal reset unit attention
+Date: Tue, 15 Oct 2013 15:52:39 +0000
+Message-ID: <1381852359.1593.16.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx12.netapp.com ([216.240.18.77]:59820 "EHLO mx12.netapp.com"
+Received: from mx1.netapp.com ([216.240.18.38]:14541 "EHLO mx1.netapp.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758028Ab3JOPwc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Oct 2013 11:52:32 -0400
+	id S1758875Ab3JOPwk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 15 Oct 2013 11:52:40 -0400
 Content-Language: en-US
-Content-ID: <DC945AF2C925704C8879BCC5751A101B@hq.netapp.com>
+Content-ID: <32788D00C14EDF4E9C880F9F29DD4855@hq.netapp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Hannes Reinecke <hare@suse.de>
 
-UmVzZW5kaW5nIHdpdGhvdXQgZXh0cmEgd2hpdGVzcGFjZSBjaGFyYWN0ZXJzLi4uICBBcG9sb2dp
-ZXMhDQoNClRoaXMgc2hvcnQgcGF0Y2ggc2VyaWVzIGZpeGVzIGEgY291cGxlIG9mIGlzc3VlcyBm
-b3VuZCB3aGlsZSB0ZXN0aW5nIHRoZSBzY3NpX2RoX2FsdWEgDQpoYW5kbGVyIHdpdGggTmV0QXBw
-IEUtU2VyaWVzIHN0b3JhZ2UsIGJvdGggb2Ygd2hpY2ggd291bGQgcHJldmVudCB0aGUgaGFuZGxl
-ciBmcm9tIA0KYXR0YWNoaW5nIGV2ZW4gdGhvdWdoIFRQR1MgaXMgZW5hYmxlZC4NCg0KU2VhbiBT
-dGV3YXJ0ICgyKToNCiAgQUxVQSBjaGVjayBzZW5zZSBzaG91bGQgcmV0cnkgZGV2aWNlIGludGVy
-bmFsIHJlc2V0IHVuaXQgYXR0ZW50aW9uDQogIEFMVUEgaGFuZGxlciBhdHRhY2ggc2hvdWxkIHN1
-Y2NlZWQgd2hpbGUgVFBHIGlzIHRyYW5zaXRpb25pbmcNCg0KIGRyaXZlcnMvc2NzaS9kZXZpY2Vf
-aGFuZGxlci9zY3NpX2RoX2FsdWEuYyB8IDMxICsrKysrKysrKysrKysrKysrKysrLS0tLS0tLS0t
-LQ0KIDEgZmlsZSBjaGFuZ2VkLCAyMSBpbnNlcnRpb25zKCspLCAxMCBkZWxldGlvbnMoLSkNCg0K
-LS0gDQoxLjguMy4xDQoNCg0K
+V2hlbiB0aGUgc2NzaV9kaF9hbHVhIGhhbmRsZXIgaXNzdWVzIGFuIFJUUEcgZHVyaW5nIGluaXRp
+YWxpemF0aW9uLCBpZiBpdCBnZXRzIDB4MDYvMHgyOS8weDA0IGFzIHRoZSBzZW5zZSwNCml0IHdp
+bGwgZmFpbCB0byBhdHRhY2ggdGhlIGhhbmRsZXIuICBOZXRBcHAgRS1TZXJpZXMgcmV0dXJucyAw
+eDI5LzB4MDAgZm9yIHBvd2VyIG9uLCBhbmQgMHgyOS8weDA0IGZvcg0KY29uZGl0aW9ucyB0aGF0
+IGNhdXNlIHRoZSBjb250cm9sbGVyIHRvIHJlYm9vdCBhZ2Fpbi4gIFRoZXNlIGNvbmRpdGlvbnMg
+c2hvdWxkIGJlIHRyZWF0ZWQgaWRlbnRpY2FsbHkgd2l0aGluDQp0aGUgaGFuZGxlci4NCg0KU2ln
+bmVkLW9mZi1ieTogU2VhbiBTdGV3YXJ0IDxTZWFuLlN0ZXdhcnRAbmV0YXBwLmNvbT4NCi0tLQ0K
+IGRyaXZlcnMvc2NzaS9kZXZpY2VfaGFuZGxlci9zY3NpX2RoX2FsdWEuYyB8IDUgKysrKysNCiAx
+IGZpbGUgY2hhbmdlZCwgNSBpbnNlcnRpb25zKCspDQoNCmRpZmYgLS1naXQgYS9kcml2ZXJzL3Nj
+c2kvZGV2aWNlX2hhbmRsZXIvc2NzaV9kaF9hbHVhLmMgYi9kcml2ZXJzL3Njc2kvZGV2aWNlX2hh
+bmRsZXIvc2NzaV9kaF9hbHVhLmMNCmluZGV4IDY4YWRiODkuLjc4MjA1Y2MgMTAwNjQ0DQotLS0g
+YS9kcml2ZXJzL3Njc2kvZGV2aWNlX2hhbmRsZXIvc2NzaV9kaF9hbHVhLmMNCisrKyBiL2RyaXZl
+cnMvc2NzaS9kZXZpY2VfaGFuZGxlci9zY3NpX2RoX2FsdWEuYw0KQEAgLTQ4MSw2ICs0ODEsMTEg
+QEAgc3RhdGljIGludCBhbHVhX2NoZWNrX3NlbnNlKHN0cnVjdCBzY3NpX2RldmljZSAqc2RldiwN
+CiAJCQkgKiBQb3dlciBPbiwgUmVzZXQsIG9yIEJ1cyBEZXZpY2UgUmVzZXQsIGp1c3QgcmV0cnku
+DQogCQkJICovDQogCQkJcmV0dXJuIEFERF9UT19NTFFVRVVFOw0KKwkJaWYgKHNlbnNlX2hkci0+
+YXNjID09IDB4MjkgJiYgc2Vuc2VfaGRyLT5hc2NxID09IDB4MDQpDQorCQkJLyoNCisJCQkgKiBE
+ZXZpY2UgaW50ZXJuYWwgcmVzZXQNCisJCQkgKi8NCisJCQlyZXR1cm4gQUREX1RPX01MUVVFVUU7
+DQogCQlpZiAoc2Vuc2VfaGRyLT5hc2MgPT0gMHgyYSAmJiBzZW5zZV9oZHItPmFzY3EgPT0gMHgw
+MSkNCiAJCQkvKg0KIAkJCSAqIE1vZGUgUGFyYW1ldGVycyBDaGFuZ2VkDQotLSANCjEuOC4zLjEN
+Cg0KDQo=
