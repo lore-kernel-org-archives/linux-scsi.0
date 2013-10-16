@@ -1,36 +1,80 @@
-From: "Geyslan G. Bem" <geyslan@gmail.com>
-Subject: [PATCH] drivers: scsi: lpfc: Remove useless casting in lpfc_init.c
-Date: Wed, 16 Oct 2013 13:17:16 -0300
-Message-ID: <1381940236-29531-1-git-send-email-geyslan@gmail.com>
+From: taco <tacoee@gmail.com>
+Subject: Re: How to online remove an error scsi disk from the system?
+Date: Thu, 17 Oct 2013 00:22:13 +0800
+Message-ID: <20131016162213.GA27838@taco-ThinkPad-X220>
+References: <510B5CFC.2040801@tao.ma>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <510B5CFC.2040801@tao.ma>
 Sender: linux-kernel-owner@vger.kernel.org
-To: JBottomley@parallels.com
-Cc: james.smart@emulex.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-br@googlegroups.com, "Geyslan G. Bem" <geyslan@gmail.com>
+To: Tao Ma <tm@tao.ma>
+Cc: linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Casting (void *) value returned by kzalloc is useless
-as mentioned in Documentation/CodingStyle, Chap 14.
+On Fri, Feb 01, 2013 at 02:13:16PM +0800, Tao Ma wrote:
+> Hi All,
+> 	In our product system, we have several sata disks attached to one
+> machine. So when one of the disk fails, the jbd2(yes, we use ext4) will
+> hang forever and we will get something in /var/log/messages like below.
+> It seems to me that the io sent to the scsi layer is never returned back
+> with -EIO which is a little bit surprised for me(It should be a timeout
+> somewhere, right?). We have tried echo "offline" >
+> /sys/block/sdl/device/state, but it doesn't work. So is there any way
+> for us to let the scsi device returns all the io requests back with EIO
+> so that all the end_io can be called accordingly? Am I missing something
+> here?
+> 
+> Thanks,
+> Tao
+> 
+> 
+> sd 0:0:11:0: attempting task abort! scmd(ffff88180e900580)
+It seems that IO timeout cause HBA's driver to abort scmd,
+the aborted IO came back with scmd->result = DID_RESET << 16;
+with this result code the Middle layer of scsi will retry this IO.
+IO timeout again due to Bad disk so, this IO loop forever and
+never come back.
 
-Signed-off-by: Geyslan G. Bem <geyslan@gmail.com>
----
- drivers/scsi/lpfc/lpfc_init.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+might it is a bug of mpt2sas driver.
 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 647f5bf..bc417d5 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -4733,9 +4733,8 @@ lpfc_sli_driver_resource_setup(struct lpfc_hba *phba)
- 	}
- 
- 	if (!phba->sli.ring)
--		phba->sli.ring = (struct lpfc_sli_ring *)
--			kzalloc(LPFC_SLI3_MAX_RING *
--			sizeof(struct lpfc_sli_ring), GFP_KERNEL);
-+		phba->sli.ring = kzalloc(LPFC_SLI3_MAX_RING *
-+					 sizeof(struct lpfc_sli_ring), GFP_KERNEL);
- 	if (!phba->sli.ring)
- 		return -ENOMEM;
- 
--- 
-1.8.4
+> sd 0:0:11:0: [sdl] CDB: Write(10): 2a 00 0d ca e0 3f 00 04 00 00
+> target0:0:11: handle(0x0015), sas_address(0x500e004aaaaaaa0b), phy(11)
+> target0:0:11: enclosure_logical_id(0x500e004aaaaaaa00), slot(11)
+> INFO: task jbd2/sdl1-8:4629 blocked for more than 120 seconds.
+> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> jbd2/sdl1-8   D 0000000000000000     0  4629      2 0x00000000
+>  ffff88180aa79ae0 0000000000000046 ffff88180aa79aa8 0000000000000000
+>  ffff88007ce0fe40 0000000000015f40 ffff8818102c0638 ffff8818102c0080
+>  ffff880a9184a100 ffff8818102c0638 0000000105006028 0000000100000000
+> Call Trace:
+>  [<ffffffff81236a15>] ? cpumask_next_and+0x25/0x40
+>  [<ffffffff810122b6>] ? read_tsc+0x16/0x40
+>  [<ffffffff81093cd9>] ? ktime_get_ts+0xa9/0xe0
+>  [<ffffffff810122b6>] ? read_tsc+0x16/0x40
+>  [<ffffffff81093cd9>] ? ktime_get_ts+0xa9/0xe0
+>  [<ffffffff814a8a53>] io_schedule+0x73/0xc0
+>  [<ffffffff811036a8>] sync_page+0x38/0x50
+>  [<ffffffff814a927e>] __wait_on_bit+0x5e/0x90
+>  [<ffffffff81103670>] ? sync_page+0x0/0x50
+>  [<ffffffff81103845>] wait_on_page_bit+0x75/0x80
+>  [<ffffffff81089320>] ? wake_bit_function+0x0/0x40
+>  [<ffffffff811197c7>] ? pagevec_lookup_tag+0x27/0x40
+>  [<ffffffff81118b55>] write_cache_pages+0x1d5/0x440
+>  [<ffffffff811172f0>] ? __writepage+0x0/0x40
+>  [<ffffffff81118de4>] generic_writepages+0x24/0x30
+>  [<ffffffffa02dc719>] jbd2_journal_commit_transaction+0x3e9/0x1490 [jbd2]
+>  [<ffffffff81074299>] ? try_to_del_timer_sync+0x49/0xe0
+>  [<ffffffffa02e2734>] kjournald2+0xb4/0x220 [jbd2]
+>  [<ffffffff810892e0>] ? autoremove_wake_function+0x0/0x40
+>  [<ffffffffa02e2680>] ? kjournald2+0x0/0x220 [jbd2]
+>  [<ffffffff81089166>] kthread+0x96/0xa0
+>  [<ffffffff8100c08a>] child_rip+0xa/0x20
+>  [<ffffffff810890d0>] ? kthread+0x0/0xa0
+>  [<ffffffff8100c080>] ? child_rip+0x0/0x20
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
