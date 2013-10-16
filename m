@@ -1,40 +1,36 @@
-From: James Bottomley <jbottomley@parallels.com>
-Subject: Re: [PATCH][SCSI] megaraid_sas: Fix synchronization problem between
- sysPD IO path and AEN path
-Date: Wed, 16 Oct 2013 21:44:47 +0000
-Message-ID: <1381959886.1864.25.camel@dabdike>
-References: <201310161134.r9GBYYqK021397@cosmhbs0.lsi.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 3/3] Fix device detection issues with mvsas driver
+Date: Wed, 16 Oct 2013 22:45:58 +0100
+Message-ID: <1381959958.1864.26.camel@dabdike>
+References: <1340044537.3712.23.camel@praveen-debian.lg.local>
+	 <CAA9_cmeo=2Jjyp2DSwBDM=toTydMbLHJ+J7h2UXQYb2YmV+tzg@mail.gmail.com>
+	 <1340296918.3712.54.camel@praveen-debian.lg.local>
+	 <CABE8wwtUE7ZvR=zYGc+HCL8tUi3QE2N+-k1UP+8ow9MYk-kWGg@mail.gmail.com>
+	 <1340298338.3712.55.camel@praveen-debian.lg.local>
+	 <CAA9_cmf5PwhE7XizaTwx8TdbEBYKsLyES-Gc75n-VoUXhKTtgg@mail.gmail.com>
+	 <7B4019BE-6198-47EF-804B-A7EF9889A22D@logicube.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.parallels.com ([199.115.105.18]:39400 "EHLO
-	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754040Ab3JPVot convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Oct 2013 17:44:49 -0400
-In-Reply-To: <201310161134.r9GBYYqK021397@cosmhbs0.lsi.com>
-Content-Language: en-US
-Content-ID: <0FA8E0BE393CCA4089086DCDA80EAAFC@sw.swsoft.com>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:35764 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754040Ab3JPVqF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 16 Oct 2013 17:46:05 -0400
+In-Reply-To: <7B4019BE-6198-47EF-804B-A7EF9889A22D@logicube.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Sumit.Saxena@lsi.com" <Sumit.Saxena@lsi.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "kashyap.desai@lsi.com" <kashyap.desai@lsi.com>, "aradford@gmail.com" <aradford@gmail.com>
+To: Praveen Murali <pmurali@logicube.com>
+Cc: Dan Williams <dan.j.williams@intel.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Wed, 2013-10-16 at 17:04 +0530, Sumit.Saxena@lsi.com wrote:
-> There is syncronization problem between sysPD IO path and AEN path. Driver maintains instance->pd_list[] array, which will get updated(by calling function megasas_get_pd_list[]), whenever any of below events occurs-
-> 
-> MR_EVT_PD_INSERTED
-> MR_EVT_PD_REMOVED
-> MR_EVT_CTRL_HOST_BUS_SCAN_REQUESTED
-> MR_EVT_FOREIGN_CFG_IMPORTED
-> 
-> At same time running sysPD IO will be accessing the same array instance->pd_list[], which is getting updated in AEN path, because
-> of this IO may not get correct PD info from instance->pd_list[] array.
-> 
-> Signed-off-by: Adam Radford <adam.radford@lsi.com>
-> Signed-off-by: Sumit Saxena <sumit.saxena@lsi.com>
+On Tue, 2013-10-15 at 19:40 -0700, Praveen Murali wrote:
+> Yes, I checked that today and was meaning to ask you about it. :)
 
-Explain the signoff chain: is this a joinly authored patch?
+Ideally, I need someone from Marvell to ack it ... can you prod them?
+
+Thanks,
 
 James
+
 
