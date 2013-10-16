@@ -1,106 +1,45 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: eSATA Drive Detection issues on mvsas
-Date: Tue, 15 Oct 2013 18:11:08 -0700
-Message-ID: <CAPcyv4hdCYkdxoK_1zjdRt-vDHk0K8wLV6OnpnkXVGJzKg0PMg@mail.gmail.com>
-References: <525C89D3.5090008@logicube.com>
-	<525DDABB.2040906@logicube.com>
+Subject: Re: [PATCH 3/3] Fix device detection issues with mvsas driver
+Date: Tue, 15 Oct 2013 18:33:33 -0700
+Message-ID: <CAA9_cmf5PwhE7XizaTwx8TdbEBYKsLyES-Gc75n-VoUXhKTtgg@mail.gmail.com>
+References: <1340044537.3712.23.camel@praveen-debian.lg.local>
+	<CAA9_cmeo=2Jjyp2DSwBDM=toTydMbLHJ+J7h2UXQYb2YmV+tzg@mail.gmail.com>
+	<1340296918.3712.54.camel@praveen-debian.lg.local>
+	<CABE8wwtUE7ZvR=zYGc+HCL8tUi3QE2N+-k1UP+8ow9MYk-kWGg@mail.gmail.com>
+	<1340298338.3712.55.camel@praveen-debian.lg.local>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-la0-f48.google.com ([209.85.215.48]:42791 "EHLO
-	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750981Ab3JPBLK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Oct 2013 21:11:10 -0400
-Received: by mail-la0-f48.google.com with SMTP id er20so44077lab.21
-        for <linux-scsi@vger.kernel.org>; Tue, 15 Oct 2013 18:11:08 -0700 (PDT)
-In-Reply-To: <525DDABB.2040906@logicube.com>
+Received: from mail-qa0-f42.google.com ([209.85.216.42]:64480 "EHLO
+	mail-qa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750824Ab3JPBdd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Oct 2013 21:33:33 -0400
+Received: by mail-qa0-f42.google.com with SMTP id w8so4044738qac.15
+        for <linux-scsi@vger.kernel.org>; Tue, 15 Oct 2013 18:33:33 -0700 (PDT)
+In-Reply-To: <1340298338.3712.55.camel@praveen-debian.lg.local>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Praveen Murali <pmurali@logicube.com>
-Cc: linux-scsi@vger.kernel.org, JBottomley@parallels.com
+To: pmurali@logicube.com
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, "JBottomley@parallels.com" <JBottomley@parallels.com>
 
-On Tue, Oct 15, 2013 at 5:15 PM, Praveen Murali <pmurali@logicube.com> wrote:
-> Dan/James,
->  Can you please take a look at this and let me know if I am at the right
-> place? Or point me in the right direction? As I understand, this deost not
-> look like an mvsas driver issue.
+On Thu, Jun 21, 2012 at 10:05 AM, Praveen Murali <pmurali@logicube.com> wrote:
+> here is the updated patch.
+>
+> On Thu, 2012-06-21 at 09:48 -0700, Dan Williams wrote:
+>> On Thu, Jun 21, 2012 at 9:41 AM, Praveen Murali <pmurali@logicube.com> wrote:
+>> > Ok, do you want me to regenerate the patch?
+>>
+>> Yes, James will be the one to ultimately apply it and would save him
+>> time to have a new patch.  The patch you attached had a shorter
+>> changelog I think it would be fine to include your entire 4 paragraph
+>> lead in message.
 >
 
-Looks like a latent bug in libsas to me.  Commit 110dd8f1 "[SCSI]
-libsas: fix scr_read/write users and update the libata documentation"
-looks like a compile fix when the build was broken by commit  9977126c
-"libata: add @is_cmd to ata_tf_to_fis()" where libata changed the
-interface for ata_tf_to_fis().  We were passing 0 for pmp prior to
-that and changed to 1 here, probably a typo intending 'is_cmd to
-always be 1.
+Hi Praveen,
 
-Somehow we have gotten away with is_cmd being 0?  Does the following
-patch work for you:
-
-diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index 161c98efade9..d0fb99d5da95 100644
---- a/drivers/scsi/libsas/sas_ata.c
-+++ b/drivers/scsi/libsas/sas_ata.c
-@@ -211,7 +211,7 @@ static unsigned int sas_ata_qc_issue(struct
-ata_queued_cmd *qc)
-                qc->tf.nsect = 0;
-        }
-
--       ata_tf_to_fis(&qc->tf, 1, 0, (u8*)&task->ata_task.fis);
-+       ata_tf_to_fis(&qc->tf, qc->dev->link->pmp, 1, (u8*)&task->ata_task.fis);
-        task->uldd_task = qc;
-        if (ata_is_atapi(qc->tf.protocol)) {
-                memcpy(task->ata_task.atapi_packet, qc->cdb, qc->dev->cdb_len);
-
-
-That being said I don't think anybody has really checked out
-port-multiplier support on libsas, but we shouldn't be setting this
-bit by default.
+Your last message prompted me to look back in my archives and I found
+this patch which does not appear to be upstream yet.  I assume it is
+still needed?
 
 --
 Dan
-
-
-> On 10/14/2013 05:18 PM, Praveen Murali wrote:
->>
->> Hi,
->>   I have couple of external drives (Western Digital and Seagate) that have
->> an eSATA interface. My Linux box with a Marvell HBA (9445) running Ubuntu
->> 12.04 with 3.2.48 kernel doest not seem to detect the drive. I tried with
->> the latest upstream kernel and it behaves the same. But both the drives
->> detect fine if I enter the mvsas BIOS during bootup. So I have hooked up a
->> SATA analyzer and this is what I found
->> - When I tried to detect the drives in the mvsas BIOS, all the ATA
->> commands that the bios issues have the port multiplier byte set to 0.
->> - If I bootup my Linux system and then connect the drives, the first
->> IDENTIFY command has the port multiplier set to 0 (this one is successful)
->> and the subsequent IDENTIFY command has port multiplier set to 1 (this one
->> fails).
-
-I assume the first IDENTIFY is coming from the BIOS, not Linux correct?
-
->> - If I connect any other SATA drives I have to the HBA, all the ATA
->> commands have port multiplier set to 1 but they detects and work fine.
->>
->> Just to rule out the port-multiplier possibility I changed the following
->> line in drivers/scsi/libsas/sas_ata.c - fucntion sas_ata_qc_issue()
->>
->> ata_tf_to_fis(&qc->tf, 1, 0, (u8*)&task->ata_task.fis);
->>
->> to
->>
->> ata_tf_to_fis(&qc->tf, 0, 0, (u8*)&task->ata_task.fis);
->>
->> now all my drives seem to detect just fine. I believe, the eSATA interface
->> on these external drives is a port multiplier, which is why the command
->> fails. Also, the normal drives ignore this field thats why they work fine
->> with port multiplier being set to either 0 or 1.
->>
->> Question(s): Are my above assumtions correct? If so, what is the reasoning
->> behind setting the port multiplier to 1 by default in libsas layer?
->>
->> Thanks,
->> Praveen
->>
->>
->>
