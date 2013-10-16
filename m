@@ -1,65 +1,56 @@
-From: Robert Story <rstory@tislabs.com>
-Subject: kernel cant access SATA adapter device
-Date: Wed, 16 Oct 2013 15:46:51 -0400
-Message-ID: <20131016154651.7280ce92@kvm171.vb.futz.org>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH] target: Return an error for WRITE SAME with ANCHOR==1
+Date: Wed, 16 Oct 2013 13:50:33 -0700
+Message-ID: <1381956633.19256.639.camel@haakon3.risingtidesystems.com>
+References: <1381790963-14657-1-git-send-email-roland@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from walnut.tislabs.com ([192.94.214.200]:43417 "EHLO
-	walnut.tislabs.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761621Ab3JPURd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Oct 2013 16:17:33 -0400
-Received: from nova.tislabs.com (unknown [10.66.1.77])
-	by walnut.tislabs.com (Postfix) with ESMTP id 38FB928B003A
-	for <linux-scsi@vger.kernel.org>; Wed, 16 Oct 2013 15:46:52 -0400 (EDT)
-Received: from kvm171.vb.futz.org (localhost.localdomain [127.0.0.1])
-	by nova.tislabs.com (Postfix) with ESMTP id 15E441F8033
-	for <linux-scsi@vger.kernel.org>; Wed, 16 Oct 2013 15:46:52 -0400 (EDT)
+Received: from mail.linux-iscsi.org ([67.23.28.174]:37239 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933857Ab3JPUmA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Oct 2013 16:42:00 -0400
+In-Reply-To: <1381790963-14657-1-git-send-email-roland@kernel.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Roland Dreier <roland@kernel.org>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Roland Dreier <roland@purestorage.com>
 
-Hi,
+On Mon, 2013-10-14 at 15:49 -0700, Roland Dreier wrote:
+> From: Roland Dreier <roland@purestorage.com>
+> 
+> Per SBC-3, since we report ANC_SUP==0 in VPD page B2h, we need to return
+> an error (ILLEGAL REQUEST/INVALID FIELD IN CDB) for all WRITE SAME
+> requests with ANCHOR==1.
+> 
+> Signed-off-by: Roland Dreier <roland@purestorage.com>
 
-I've got a SATA adapter for a SD card in a Dell Poweredge R610. The BIOS
-can see and boot the sdcard, (to Windows, or using syslinux/extlinux), but
-when it hands over control to the Linux kernel, the kernel cannot access it.
+Applied to target-pending/master.
 
-Here's an excerpt from dmesg:
+Thanks Roland!
 
-scsi 0:0:2:0: Direct-Access     ATA      FC-1307 SD to CF 1.1  PQ: 0 ANSI: 5
-sd 0:0:2:0: Attached scsi generic sg3 type 0
-mptsas: ioc0: mptsas_free_fw_event: kfree (fw_event=0xffff8801ab1ad8c0)
-sd 0:0:2:0: [sdc] Spinning up disk .....................not responding...
-sd 0:0:2:0: [sdc] READ CAPACITY(16) failed
-sd 0:0:2:0: [sdc] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
-sd 0:0:2:0: [sdc] Sense Key : Not Ready [current]
-sd 0:0:2:0: [sdc] Add. Sense: Logical unit not ready, initializing command required
-sd 0:0:2:0: [sdc] READ CAPACITY failed
-sd 0:0:2:0: [sdc] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
-sd 0:0:2:0: [sdc] Sense Key : Not Ready [current]
-sd 0:0:2:0: [sdc] Add. Sense: Logical unit not ready, initializing command required
-sd 0:0:2:0: [sdc] Test WP failed, assume Write Enabled
-sd 0:0:2:0: [sdc] Asking for cache data failed
-sd 0:0:2:0: [sdc] Assuming drive cache: write through
+--nab
 
-After booting and running 'sdparm --command=start /dev/sdc' I can get a
-read capacity to work, but cannot access the drive (e.g. fdisk -l /dev/sdc).
-
-If I put the SD card in a USB adapter, it works, and I was able to access
-the SD card via the SD adapter in another machine. But our production
-machines are dell's, so I really want to get it working there.
-
-I've attached more complete debug info from booting and existing CentOS 6.4
-install with the card installed, and a rdsosreport from an attempt to boot
-Fedora 20 Alpha.
-
-Any help or suggestions greatly appreciated.
+> ---
+>  drivers/target/target_core_sbc.c | 5 +++++
+>  1 file changed, 5 insertions(+)
+> 
+> diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
+> index 4714c6f8da4b..d9b92b2c524d 100644
+> --- a/drivers/target/target_core_sbc.c
+> +++ b/drivers/target/target_core_sbc.c
+> @@ -263,6 +263,11 @@ sbc_setup_write_same(struct se_cmd *cmd, unsigned char *flags, struct sbc_ops *o
+>  			sectors, cmd->se_dev->dev_attrib.max_write_same_len);
+>  		return TCM_INVALID_CDB_FIELD;
+>  	}
+> +	/* We always have ANC_SUP == 0 so setting ANCHOR is always an error */
+> +	if (flags[0] & 0x10) {
+> +		pr_warn("WRITE SAME with ANCHOR not supported\n");
+> +		return TCM_INVALID_CDB_FIELD;
+> +	}
+>  	/*
+>  	 * Special case for WRITE_SAME w/ UNMAP=1 that ends up getting
+>  	 * translated into block discard requests within backend code.
 
 
-Robert
-
---
-Senior Software Engineer
-Parsons Government Services , National Security & Defense Division
