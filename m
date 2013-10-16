@@ -1,72 +1,38 @@
-From: Praveen Murali <pmurali@logicube.com>
-Subject: Re: eSATA Drive Detection issues on mvsas
-Date: Tue, 15 Oct 2013 17:15:55 -0700
-Message-ID: <525DDABB.2040906@logicube.com>
-References: <525C89D3.5090008@logicube.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Felipe Pena <felipensp@gmail.com>
+Subject: [PATCH] drivers: scsi: lpfc: Fix typo on NULL assignment
+Date: Tue, 15 Oct 2013 21:29:50 -0300
+Message-ID: <1381883390-4200-1-git-send-email-felipensp@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from p01c11o147.mxlogic.net ([208.65.144.70]:33462 "EHLO
-	p01c11o147.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759788Ab3JPAXx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Oct 2013 20:23:53 -0400
-In-Reply-To: <525C89D3.5090008@logicube.com>
+Received: from mail-vc0-f180.google.com ([209.85.220.180]:59771 "EHLO
+	mail-vc0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759727Ab3JPA3c (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Oct 2013 20:29:32 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, dan.j.williams@intel.com, JBottomley@Parallels.com
+To: James Smart <james.smart@emulex.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Felipe Pena <felipensp@gmail.com>
 
-Dan/James,
-  Can you please take a look at this and let me know if I am at the 
-right place? Or point me in the right direction? As I understand, this 
-deost not look like an mvsas driver issue.
+In the lpfc_ct_free_iocb function after freeing associated memory to the
+ctiocb->context3, the ctiocb->context1 is set to NULL instead of context3.
 
-Thanks,
-Praveen
+Signed-off-by: Felipe Pena <felipensp@gmail.com>
+---
+ drivers/scsi/lpfc/lpfc_ct.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-On 10/14/2013 05:18 PM, Praveen Murali wrote:
-> Hi,
->   I have couple of external drives (Western Digital and Seagate) that 
-> have an eSATA interface. My Linux box with a Marvell HBA (9445) 
-> running Ubuntu 12.04 with 3.2.48 kernel doest not seem to detect the 
-> drive. I tried with the latest upstream kernel and it behaves the 
-> same. But both the drives detect fine if I enter the mvsas BIOS during 
-> bootup. So I have hooked up a SATA analyzer and this is what I found
-> - When I tried to detect the drives in the mvsas BIOS, all the ATA 
-> commands that the bios issues have the port multiplier byte set to 0.
-> - If I bootup my Linux system and then connect the drives, the first 
-> IDENTIFY command has the port multiplier set to 0 (this one is 
-> successful) and the subsequent IDENTIFY command has port multiplier 
-> set to 1 (this one fails).
-> - If I connect any other SATA drives I have to the HBA, all the ATA 
-> commands have port multiplier set to 1 but they detects and work fine.
->
-> Just to rule out the port-multiplier possibility I changed the 
-> following line in drivers/scsi/libsas/sas_ata.c - fucntion 
-> sas_ata_qc_issue()
->
-> ata_tf_to_fis(&qc->tf, 1, 0, (u8*)&task->ata_task.fis);
->
-> to
->
-> ata_tf_to_fis(&qc->tf, 0, 0, (u8*)&task->ata_task.fis);
->
-> now all my drives seem to detect just fine. I believe, the eSATA 
-> interface on these external drives is a port multiplier, which is why 
-> the command fails. Also, the normal drives ignore this field thats why 
-> they work fine with port multiplier being set to either 0 or 1.
->
-> Question(s): Are my above assumtions correct? If so, what is the 
-> reasoning behind setting the port multiplier to 1 by default in libsas 
-> layer?
->
-> Thanks,
-> Praveen
->
->
->
-> -- 
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
+index 02e8cd9..da61d8d 100644
+--- a/drivers/scsi/lpfc/lpfc_ct.c
++++ b/drivers/scsi/lpfc/lpfc_ct.c
+@@ -280,7 +280,7 @@ lpfc_ct_free_iocb(struct lpfc_hba *phba, struct lpfc_iocbq *ctiocb)
+ 		buf_ptr = (struct lpfc_dmabuf *) ctiocb->context3;
+ 		lpfc_mbuf_free(phba, buf_ptr->virt, buf_ptr->phys);
+ 		kfree(buf_ptr);
+-		ctiocb->context1 = NULL;
++		ctiocb->context3 = NULL;
+ 	}
+ 	lpfc_sli_release_iocbq(phba, ctiocb);
+ 	return 0;
+--
+1.7.10.4
 
