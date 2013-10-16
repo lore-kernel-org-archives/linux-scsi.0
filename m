@@ -1,44 +1,32 @@
-From: "Praveen Murali" <pmurali@logicube.com>
-Subject: Re: [PATCH 3/3] Fix device detection issues with mvsas driver
-Date: Tue, 15 Oct 2013 19:40:20 -0700
-Message-ID: <7B4019BE-6198-47EF-804B-A7EF9889A22D@logicube.com>
-References: <1340044537.3712.23.camel@praveen-debian.lg.local> <CAA9_cmeo=2Jjyp2DSwBDM=toTydMbLHJ+J7h2UXQYb2YmV+tzg@mail.gmail.com> <1340296918.3712.54.camel@praveen-debian.lg.local> <CABE8wwtUE7ZvR=zYGc+HCL8tUi3QE2N+-k1UP+8ow9MYk-kWGg@mail.gmail.com> <1340298338.3712.55.camel@praveen-debian.lg.local> <CAA9_cmf5PwhE7XizaTwx8TdbEBYKsLyES-Gc75n-VoUXhKTtgg@mail.gmail.com>
-Mime-Version: 1.0 (1.0)
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: Is there any plan to support 64bit lun in mainline?
+Date: Tue, 15 Oct 2013 21:11:11 -0700
+Message-ID: <525E11DF.3040004@vlnb.net>
+References: <FD44589ECFC0AF44ABFD421806CAB1F081EC2FEA@SZXEMA502-MBX.china.huawei.com>  <525BC836.2030306@suse.de> <1381775449.3752.9.camel@dabdike.lan> <525CDA2A.2060308@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from p01c11o145.mxlogic.net ([208.65.144.68]:58202 "EHLO
-	p01c11o145.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751285Ab3JPCkd convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Oct 2013 22:40:33 -0400
-In-Reply-To: <CAA9_cmf5PwhE7XizaTwx8TdbEBYKsLyES-Gc75n-VoUXhKTtgg@mail.gmail.com>
+Received: from moutng.kundenserver.de ([212.227.17.8]:62411 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751481Ab3JPELv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Oct 2013 00:11:51 -0400
+In-Reply-To: <525CDA2A.2060308@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, JBottomley@parallels.com
+To: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, James Smart <james.smart@emulex.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-Yes, I checked that today and was meaning to ask you about it. :)
+Hannes Reinecke, on 10/14/2013 11:01 PM wrote:
+> And HBAs like lpfc or qla2xxx even have a fast command abort built
+> into the firmware, where the firmware will not even wait for a
+> command abort to hit the wire but rather just disable the exchange
+> internally and return.
 
-> On Oct 15, 2013, at 6:31 PM, "Dan Williams" <dan.j.williams@intel.com> wrote:
-> 
->> On Thu, Jun 21, 2012 at 10:05 AM, Praveen Murali <pmurali@logicube.com> wrote:
->> here is the updated patch.
->> 
->>> On Thu, 2012-06-21 at 09:48 -0700, Dan Williams wrote:
->>>> On Thu, Jun 21, 2012 at 9:41 AM, Praveen Murali <pmurali@logicube.com> wrote:
->>>> Ok, do you want me to regenerate the patch?
->>> 
->>> Yes, James will be the one to ultimately apply it and would save him
->>> time to have a new patch.  The patch you attached had a shorter
->>> changelog I think it would be fine to include your entire 4 paragraph
->>> lead in message.
-> 
-> Hi Praveen,
-> 
-> Your last message prompted me to look back in my archives and I found
-> this patch which does not appear to be upstream yet.  I assume it is
-> still needed?
-> 
-> --
-> Dan
+Doing so is asking for data corruption. Aborts intended to cleanup commands on the
+target, so they could not anyhow badly interact with future commands. Otherwise it is
+possible that an old WRITE command stuck in some deep corner inside the target, be
+bypassed by such pseudo-abort and then got released AFTER its LBAs written by newer
+data, hence overwrite new data by old data.
+
+Vlad
