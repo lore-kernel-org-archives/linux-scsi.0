@@ -1,47 +1,33 @@
-From: James Smart <james.smart@emulex.com>
-Subject: Re: [PATCH] drivers: scsi: lpfc: Fix typo on NULL assignment
-Date: Wed, 16 Oct 2013 14:17:05 -0400
-Message-ID: <525ED821.80909@emulex.com>
-References: <1381883390-4200-1-git-send-email-felipensp@gmail.com>
-Reply-To: <james.smart@emulex.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [Bug] 12.864681  BUG: lock held when returning to user space!
+Date: Wed, 16 Oct 2013 14:24:57 +0100
+Message-ID: <1381929897.1864.0.camel@dabdike>
+References: <8761tilrl0.fsf@redhat.com> <874n8s2tjz.fsf@redhat.com>
+	 <5253A9E7.5030707@oracle.com> <52540C7F.8050207@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset="ISO-8859-15"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1381883390-4200-1-git-send-email-felipensp@gmail.com>
+In-Reply-To: <52540C7F.8050207@interlog.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Felipe Pena <felipensp@gmail.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: dgilbert@interlog.com
+Cc: vaughan <vaughan.cao@oracle.com>, Madper Xie <cxie@redhat.com>, linux-kernel@vger.kernel.org, SCSI development list <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Acked-by: James Smart <james.smart@emulex.com>
+On Tue, 2013-10-08 at 09:45 -0400, Douglas Gilbert wrote:
+> On 13-10-08 02:44 AM, vaughan wrote:
+> > Hi Madper,
+> >
+> > CC to Douglas to get comments.
+> > I use the rw_semaphore o_sem to protect excl open, introduced in commit
+> > 15b06f9a02406e5460001db6d5af5c738cd3d4e7 since v3.12-rc1.
+> > Is it forbidden to do like that in kernel?...
+> 
+> It appears you can not (allow sg_open() to hold a semaphore
+> then return to the user space). So you will need to do some
+> rework on that patch or revert it.
 
--- james s
+OK, there being no reply on this, I'll do the revert ... that's all four
+patches, correct?
 
-
-On 10/15/2013 8:29 PM, Felipe Pena wrote:
-> In the lpfc_ct_free_iocb function after freeing associated memory to the
-> ctiocb->context3, the ctiocb->context1 is set to NULL instead of context3.
->
-> Signed-off-by: Felipe Pena <felipensp@gmail.com>
-> ---
->   drivers/scsi/lpfc/lpfc_ct.c |    2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
-> index 02e8cd9..da61d8d 100644
-> --- a/drivers/scsi/lpfc/lpfc_ct.c
-> +++ b/drivers/scsi/lpfc/lpfc_ct.c
-> @@ -280,7 +280,7 @@ lpfc_ct_free_iocb(struct lpfc_hba *phba, struct lpfc_iocbq *ctiocb)
->   		buf_ptr = (struct lpfc_dmabuf *) ctiocb->context3;
->   		lpfc_mbuf_free(phba, buf_ptr->virt, buf_ptr->phys);
->   		kfree(buf_ptr);
-> -		ctiocb->context1 = NULL;
-> +		ctiocb->context3 = NULL;
->   	}
->   	lpfc_sli_release_iocbq(phba, ctiocb);
->   	return 0;
-> --
-> 1.7.10.4
->
->
+James
