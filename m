@@ -1,85 +1,77 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 63141] New: Linux Kernel will shows "Got wrong page" in kernel
- log when Linux kernel tries to send SCSI ModeSense command with Page code
- 0x08 (Caching Mode Page)
-Date: Wed, 16 Oct 2013 09:39:01 +0000
-Message-ID: <bug-63141-11613@https.bugzilla.kernel.org/>
+From: <Sumit.Saxena@lsi.com>
+Subject: [PATCH][SCSI] megaraid_sas: Fix synchronization problem between
+ sysPD IO path and AEN path
+Date: Wed, 16 Oct 2013 17:04:39 +0530
+Message-ID: <201310161134.r9GBYYqK021397@cosmhbs0.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:56688 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754110Ab3JPJjO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 16 Oct 2013 05:39:14 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id C5C3B20131
-	for <linux-scsi@vger.kernel.org>; Wed, 16 Oct 2013 09:39:09 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-	by mail.kernel.org (Postfix) with ESMTP id ABAAA20461
-	for <linux-scsi@vger.kernel.org>; Wed, 16 Oct 2013 09:39:07 +0000 (UTC)
+Received: from mail-db8lp0186.outbound.messaging.microsoft.com ([213.199.154.186]:24429
+	"EHLO db8outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932803Ab3JPLen (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 16 Oct 2013 07:34:43 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
+Cc: jbottomley@parallels.com, kashyap.desai@lsi.com, aradford@gmail.com
 
-https://bugzilla.kernel.org/show_bug.cgi?id=63141
+There is syncronization problem between sysPD IO path and AEN path. Driver maintains instance->pd_list[] array, which will get updated(by calling function megasas_get_pd_list[]), whenever any of below events occurs-
 
-            Bug ID: 63141
-           Summary: Linux Kernel will shows "Got wrong page" in kernel log
-                    when Linux kernel tries to send SCSI ModeSense command
-                    with Page code 0x08 (Caching Mode Page)
-           Product: IO/Storage
-           Version: 2.5
-    Kernel Version: 3.6.11
-          Hardware: All
-                OS: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: low
-          Priority: P1
-         Component: SCSI
-          Assignee: linux-scsi@vger.kernel.org
-          Reporter: leochen64@gmail.com
-        Regression: No
+MR_EVT_PD_INSERTED
+MR_EVT_PD_REMOVED
+MR_EVT_CTRL_HOST_BUS_SCAN_REQUESTED
+MR_EVT_FOREIGN_CFG_IMPORTED
 
-Created attachment 111291
-  --> https://bugzilla.kernel.org/attachment.cgi?id=111291&action=edit
-SourceCodeComparsionBetween2.6.xAnd3.9.1
+At same time running sysPD IO will be accessing the same array instance->pd_list[], which is getting updated in AEN path, because
+of this IO may not get correct PD info from instance->pd_list[] array.
 
-Reporter: Leo Chen (Li-Chung Chen)
-Report Date: 10/16/13
+Signed-off-by: Adam Radford <adam.radford@lsi.com>
+Signed-off-by: Sumit Saxena <sumit.saxena@lsi.com>
+---
+diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
+index 0c73ba4..e9e543c 100644
+--- a/drivers/scsi/megaraid/megaraid_sas.h
++++ b/drivers/scsi/megaraid/megaraid_sas.h
+@@ -1531,6 +1531,7 @@ struct megasas_instance {
+ 	struct megasas_register_set __iomem *reg_set;
+ 	u32 *reply_post_host_index_addr[MR_MAX_MSIX_REG_ARRAY];
+ 	struct megasas_pd_list          pd_list[MEGASAS_MAX_PD];
++	struct megasas_pd_list          local_pd_list[MEGASAS_MAX_PD];
+ 	u8     ld_ids[MEGASAS_MAX_LD_IDS];
+ 	s8 init_id;
+ 
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index e62ff02..83ebc75 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -3194,21 +3194,23 @@ megasas_get_pd_list(struct megasas_instance *instance)
+ 	     (le32_to_cpu(ci->count) <
+ 		  (MEGASAS_MAX_PD_CHANNELS * MEGASAS_MAX_DEV_PER_CHANNEL))) {
+ 
+-		memset(instance->pd_list, 0,
++		memset(instance->local_pd_list, 0,
+ 			MEGASAS_MAX_PD * sizeof(struct megasas_pd_list));
+ 
+ 		for (pd_index = 0; pd_index < le32_to_cpu(ci->count); pd_index++) {
+ 
+-			instance->pd_list[le16_to_cpu(pd_addr->deviceId)].tid	=
++			instance->local_pd_list[le16_to_cpu(pd_addr->deviceId)].tid	=
+ 				le16_to_cpu(pd_addr->deviceId);
+-			instance->pd_list[le16_to_cpu(pd_addr->deviceId)].driveType	=
++			instance->local_pd_list[le16_to_cpu(pd_addr->deviceId)].driveType	=
+ 							pd_addr->scsiDevType;
+-			instance->pd_list[le16_to_cpu(pd_addr->deviceId)].driveState	=
++			instance->local_pd_list[le16_to_cpu(pd_addr->deviceId)].driveState	=
+ 							MR_PD_STATE_SYSTEM;
+ 			pd_addr++;
+ 		}
+ 	}
+ 
++	memcpy(instance->pd_list, instance->local_pd_list,
++		sizeof(instance->pd_list));
+ 	pci_free_consistent(instance->pdev,
+ 				MEGASAS_MAX_PD * sizeof(struct MR_PD_LIST),
+ 				ci, ci_h);
 
-Issue Descrition: In Linux kernel 3.6.11, sd.c file, host calls
-sd_read_cache_type() function to read physical disk or volume cache type. This
-function works properly on most physical disks but will fail to read the cache
-type on LSI raid volume. The error message in Linux Kernel is "Got wrong page".
-
-However, the Linux kernel works properly in kernel 2.6.x.
-
-Suggestion: If we restore below codes from 2.6.x to 3.6.11 in
-sd.c,sd_read_cache_type()function, then the kernel won't report "got wrong
-page" in the log. 
-
-/* Take headers and block descriptors into account */
-len += data.header_length + data.block_descriptor_length;
-
-I also referenced the SPC-4(SCSI Primary Commands - 4) specification from T10
-to check if it's LSI firmware problem to response the wrong parameter length to
-the host. According to the description in SPC below, it looks like LSI logical
-volume doesn't voilate the specification to response the MODE DATA LENGTH value
-to host.
-
-[SPC-4 Description about the Mode Parameter]
-When using the MODE SENSE command, the MODE DATA LENGTH field indicates the
-length in bytes of the following
-data that is available to be transferred. The mode data length does not include
-the number of bytes in the MODE
-DATA LENGTH field. 
-[SPC-4 Description about the Mode Parameter]
-
-Therefore, I'd like to suggest the Linux Kernel to add the code above to make
-the kernel handle the cache reading properly.
-
--- 
-You are receiving this mail because:
-You are the assignee for the bug.
