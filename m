@@ -1,56 +1,28 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 00/11] target_core_mod: ALUA updates
-Date: Wed, 16 Oct 2013 15:09:40 -0700
-Message-ID: <1381961380.19256.659.camel@haakon3.risingtidesystems.com>
-References: <1381908048-82014-1-git-send-email-hare@suse.de>
+From: Brice <braxe180@yahoo.cl>
+Subject: How are you doing.
+Date: Wed, 16 Oct 2013 14:58:04 -0700 (PDT)
+Message-ID: <1381960684.20386.YahooMailBasic@web141605.mail.bf1.yahoo.com>
+Reply-To: braxe180@yahoo.cl
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1381908048-82014-1-git-send-email-hare@suse.de>
-Sender: target-devel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Nic Bellinger <nab@daterainc.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from nm47.bullet.mail.ne1.yahoo.com ([98.138.120.54]:27666 "EHLO
+	nm47.bullet.mail.ne1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755565Ab3JPWGG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 16 Oct 2013 18:06:06 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: braxe180@yahoo.cl
 
-On Wed, 2013-10-16 at 09:20 +0200, Hannes Reinecke wrote:
-> Hi Nic,
-> 
-> here are some updates to TCM ALUA handling. Apart from some
-> minor fixes and spellchecks the main features are:
-> - Make supported states configurable:
->   We should make the list of supported ALUA states configurable,
->   as some setups would possibly like to support a small subset
->   of ALUA states only.
-> - Asynchronous transitioning: I've switched 'transitioning'
->   handling to use a workqueue, that should allow us to simulate
->   asynchronous transitioning modes. IE TCM should now be capable
->   of handling requests while in transitioning, and properly terminate
->   these with the correct sense code.
-> - Include target device descriptor in VPD page 83
->   For the ALUA device handler we'd need to identify the target device
->   where a given target port belongs to. So include the respective
->   values in the VPD page.
-> 
-> Hannes Reinecke (11):
->   target core: rename (ex,im)plict -> (ex,im)plicit
->   target_core_alua: Store supported ALUA states
->   target_core_alua: Make supported states configurable
->   target_core_alua: Rename ALUA_ACCESS_STATE_OPTIMIZED
->   target_core_alua: spellcheck
->   target_core_alua: Validate ALUA state transition
->   target_core_alua: Allocate ALUA metadata on demand
->   target_core_alua: store old and pending ALUA state
->   target_core_alua: Use workqueue for ALUA transitioning
->   target_core: simplify scsi_name_len calculation
->   target_core_spc: Include target device descriptor in VPD page 83
-> 
 
-Hey Hannes,
+Dear friend  
 
-It looks like Patches #10 && #11 did not make it to the list.
+I am Mr.Axel Brice a banker from one of the international bank here in my country. Although the world is  spherical and hard place to met people because you don't know who to trust or believe, but I have developed my trust to you to confide this confidential business proposal. 
 
-Care to address the minor comments on the others and repost a -v2 with
-the missing ones..?
+4 years ago, most of the African Politicians used our bank to launder fund to overseas through the help of their Political advisers, I find out what was going because these days some of the fund where stock for politicians, I was able to divert ($15.2M) to an escrow account that belong to unknown person.
 
---nab
+So i will like you to act as the depositor of the fund because the bank do not know the owner of the fund and also the claim is legal as i have make all the good arrangement to transfer the fund to foreign account.
+
+Thanks 
+Mr. Axel Brice
