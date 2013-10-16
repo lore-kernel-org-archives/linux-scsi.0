@@ -1,115 +1,56 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 09/11] target_core_alua: Use workqueue for ALUA
- transitioning
-Date: Wed, 16 Oct 2013 15:06:17 -0700
-Message-ID: <1381961177.19256.656.camel@haakon3.risingtidesystems.com>
+Subject: Re: [PATCH 00/11] target_core_mod: ALUA updates
+Date: Wed, 16 Oct 2013 15:09:40 -0700
+Message-ID: <1381961380.19256.659.camel@haakon3.risingtidesystems.com>
 References: <1381908048-82014-1-git-send-email-hare@suse.de>
-	 <1381908048-82014-10-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:41291 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753800Ab3JPV5g (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Oct 2013 17:57:36 -0400
-In-Reply-To: <1381908048-82014-10-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1381908048-82014-1-git-send-email-hare@suse.de>
+Sender: target-devel-owner@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>
 Cc: Nic Bellinger <nab@daterainc.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
 On Wed, 2013-10-16 at 09:20 +0200, Hannes Reinecke wrote:
-> Use a workqueue for processing ALUA state transitions; this allows
-> us to process implicit delay properly.
+> Hi Nic,
 > 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> ---
->  drivers/target/target_core_alua.c | 174 +++++++++++++++++++++++++++-----------
->  include/target/target_core_base.h |   4 +
->  2 files changed, 128 insertions(+), 50 deletions(-)
+> here are some updates to TCM ALUA handling. Apart from some
+> minor fixes and spellchecks the main features are:
+> - Make supported states configurable:
+>   We should make the list of supported ALUA states configurable,
+>   as some setups would possibly like to support a small subset
+>   of ALUA states only.
+> - Asynchronous transitioning: I've switched 'transitioning'
+>   handling to use a workqueue, that should allow us to simulate
+>   asynchronous transitioning modes. IE TCM should now be capable
+>   of handling requests while in transitioning, and properly terminate
+>   these with the correct sense code.
+> - Include target device descriptor in VPD page 83
+>   For the ALUA device handler we'd need to identify the target device
+>   where a given target port belongs to. So include the respective
+>   values in the VPD page.
+> 
+> Hannes Reinecke (11):
+>   target core: rename (ex,im)plict -> (ex,im)plicit
+>   target_core_alua: Store supported ALUA states
+>   target_core_alua: Make supported states configurable
+>   target_core_alua: Rename ALUA_ACCESS_STATE_OPTIMIZED
+>   target_core_alua: spellcheck
+>   target_core_alua: Validate ALUA state transition
+>   target_core_alua: Allocate ALUA metadata on demand
+>   target_core_alua: store old and pending ALUA state
+>   target_core_alua: Use workqueue for ALUA transitioning
+>   target_core: simplify scsi_name_len calculation
+>   target_core_spc: Include target device descriptor in VPD page 83
 > 
 
-<SNIP>
+Hey Hannes,
 
-> +static int core_alua_do_transition_tg_pt(
-> +	struct t10_alua_tg_pt_gp *tg_pt_gp,
-> +	int new_state,
-> +	int explicit)
-> +{
-> +	struct se_device *dev = tg_pt_gp->tg_pt_gp_dev;
-> +	DECLARE_COMPLETION_ONSTACK(wait);
-> +
-> +	/* Nothing to be done here */
-> +	if (atomic_read(&tg_pt_gp->tg_pt_gp_alua_access_state) == new_state)
-> +		return 0;
-> +
-> +	if (new_state == ALUA_ACCESS_STATE_TRANSITION)
-> +		return -EAGAIN;
-> +
-> +	/*
-> +	 * Flush any pending transitions
-> +	 */
-> +	if (!explicit && tg_pt_gp->tg_pt_gp_implicit_trans_secs &&
-> +	    atomic_read(&tg_pt_gp->tg_pt_gp_alua_access_state) ==
-> +	    ALUA_ACCESS_STATE_TRANSITION) {
-> +		/* Just in case */
-> +		tg_pt_gp->tg_pt_gp_alua_pending_state = new_state;
-> +		tg_pt_gp->tg_pt_gp_transition_complete = &wait;
-> +		flush_delayed_work(&tg_pt_gp->tg_pt_gp_transition_work);
-> +		wait_for_completion(&wait);
-> +		tg_pt_gp->tg_pt_gp_transition_complete = NULL;
-> +		return 0;
-> +	}
-> +
-> +	/*
-> +	 * Save the old primary ALUA access state, and set the current state
-> +	 * to ALUA_ACCESS_STATE_TRANSITION.
-> +	 */
-> +	tg_pt_gp->tg_pt_gp_alua_previous_state =
-> +		atomic_read(&tg_pt_gp->tg_pt_gp_alua_access_state);
-> +	tg_pt_gp->tg_pt_gp_alua_pending_state = new_state;
-> +
-> +	atomic_set(&tg_pt_gp->tg_pt_gp_alua_access_state,
-> +			ALUA_ACCESS_STATE_TRANSITION);
-> +	tg_pt_gp->tg_pt_gp_alua_access_status = (explicit) ?
-> +				ALUA_STATUS_ALTERED_BY_EXPLICIT_STPG :
-> +				ALUA_STATUS_ALTERED_BY_IMPLICIT_ALUA;
-> +
-> +	/*
-> +	 * Check for the optional ALUA primary state transition delay
-> +	 */
-> +	if (tg_pt_gp->tg_pt_gp_trans_delay_msecs != 0)
-> +		msleep_interruptible(tg_pt_gp->tg_pt_gp_trans_delay_msecs);
-> +
-> +	/*
-> +	 * Take a reference for workqueue item
-> +	 */
-> +	spin_lock(&dev->t10_alua.tg_pt_gps_lock);
-> +	atomic_inc(&tg_pt_gp->tg_pt_gp_ref_cnt);
-> +	smp_mb__after_atomic_inc();
-> +	spin_unlock(&dev->t10_alua.tg_pt_gps_lock);
-> +
-> +	if (!explicit && tg_pt_gp->tg_pt_gp_implicit_trans_secs) {
-> +		unsigned long transition_tmo;
-> +
-> +		transition_tmo = tg_pt_gp->tg_pt_gp_implicit_trans_secs * HZ;
-> +		queue_delayed_work(tg_pt_gp->tg_pt_gp_dev->tmr_wq,
-> +				   &tg_pt_gp->tg_pt_gp_transition_work,
-> +				   transition_tmo);
-> +	} else {
-> +		tg_pt_gp->tg_pt_gp_transition_complete = &wait;
-> +		queue_delayed_work(tg_pt_gp->tg_pt_gp_dev->tmr_wq,
-> +				   &tg_pt_gp->tg_pt_gp_transition_work, 0);
-> +		wait_for_completion(&wait);
-> +		tg_pt_gp->tg_pt_gp_transition_complete = NULL;
-> +	}
+It looks like Patches #10 && #11 did not make it to the list.
 
-Mmm, the trans_delay_msecs delay seems a bit out of place now..
-
-How about dropping it's usage with msleep_interruptible() above, and
-instead combining it with the delay passed into queue_delayed_work()..?
+Care to address the minor comments on the others and repost a -v2 with
+the missing ones..?
 
 --nab
-
-
