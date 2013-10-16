@@ -1,86 +1,87 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 08/11] target_core_alua: store old and pending ALUA state
-Date: Wed, 16 Oct 2013 09:20:47 +0200
-Message-ID: <1381908048-82014-9-git-send-email-hare@suse.de>
+Subject: [PATCH 04/11] target_core_alua: Rename ALUA_ACCESS_STATE_OPTIMIZED
+Date: Wed, 16 Oct 2013 09:20:43 +0200
+Message-ID: <1381908048-82014-5-git-send-email-hare@suse.de>
 References: <1381908048-82014-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:48784 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:48770 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759016Ab3JPHUv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 16 Oct 2013 03:20:51 -0400
+	id S1755097Ab3JPHUu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 16 Oct 2013 03:20:50 -0400
 In-Reply-To: <1381908048-82014-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Nic Bellinger <nab@daterainc.com>
 Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-During state transition we should be storing both the original
-and the pending state.
+Rename ALUA_ACCESS_STATE_OPTMIZED to
+ALUA_ACCESS_STATE_OPTIMIZED.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/target/target_core_alua.c | 15 ++++++++++-----
- include/target/target_core_base.h |  6 ++++--
- 2 files changed, 14 insertions(+), 7 deletions(-)
+ drivers/target/target_core_alua.c | 10 +++++-----
+ drivers/target/target_core_alua.h |  2 +-
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/target/target_core_alua.c b/drivers/target/target_core_alua.c
-index b1d08bf..33e3f23 100644
+index 255e83c..593de80 100644
 --- a/drivers/target/target_core_alua.c
 +++ b/drivers/target/target_core_alua.c
-@@ -804,12 +804,15 @@ static int core_alua_do_transition_tg_pt(
- 	struct se_lun_acl *lacl;
- 	struct se_port *port;
- 	struct t10_alua_tg_pt_gp_member *mem;
--	int old_state = 0;
-+
+@@ -561,12 +561,12 @@ target_alua_state_check(struct se_cmd *cmd)
+ 	nonop_delay_msecs = tg_pt_gp->tg_pt_gp_nonop_delay_msecs;
+ 	spin_unlock(&tg_pt_gp_mem->tg_pt_gp_mem_lock);
  	/*
- 	 * Save the old primary ALUA access state, and set the current state
- 	 * to ALUA_ACCESS_STATE_TRANSITION.
+-	 * Process ALUA_ACCESS_STATE_ACTIVE_OPTMIZED in a separate conditional
++	 * Process ALUA_ACCESS_STATE_ACTIVE_OPTIMIZED in a separate conditional
+ 	 * statement so the compiler knows explicitly to check this case first.
+ 	 * For the Optimized ALUA access state case, we want to process the
+ 	 * incoming fabric cmd ASAP..
  	 */
--	old_state = atomic_read(&tg_pt_gp->tg_pt_gp_alua_access_state);
-+	tg_pt_gp->tg_pt_gp_alua_previous_state =
-+		atomic_read(&tg_pt_gp->tg_pt_gp_alua_access_state);
-+	tg_pt_gp->tg_pt_gp_alua_pending_state = new_state;
-+
+-	if (out_alua_state == ALUA_ACCESS_STATE_ACTIVE_OPTMIZED)
++	if (out_alua_state == ALUA_ACCESS_STATE_ACTIVE_OPTIMIZED)
+ 		return 0;
+ 
+ 	switch (out_alua_state) {
+@@ -621,7 +621,7 @@ static sense_reason_t
+ core_alua_check_transition(int state, int *primary)
+ {
+ 	switch (state) {
+-	case ALUA_ACCESS_STATE_ACTIVE_OPTMIZED:
++	case ALUA_ACCESS_STATE_ACTIVE_OPTIMIZED:
+ 	case ALUA_ACCESS_STATE_ACTIVE_NON_OPTIMIZED:
+ 	case ALUA_ACCESS_STATE_STANDBY:
+ 	case ALUA_ACCESS_STATE_UNAVAILABLE:
+@@ -649,7 +649,7 @@ core_alua_check_transition(int state, int *primary)
+ static char *core_alua_dump_state(int state)
+ {
+ 	switch (state) {
+-	case ALUA_ACCESS_STATE_ACTIVE_OPTMIZED:
++	case ALUA_ACCESS_STATE_ACTIVE_OPTIMIZED:
+ 		return "Active/Optimized";
+ 	case ALUA_ACCESS_STATE_ACTIVE_NON_OPTIMIZED:
+ 		return "Active/NonOptimized";
+@@ -1349,7 +1349,7 @@ struct t10_alua_tg_pt_gp *core_alua_allocate_tg_pt_gp(struct se_device *dev,
+ 	tg_pt_gp->tg_pt_gp_dev = dev;
+ 	tg_pt_gp->tg_pt_gp_md_buf_len = ALUA_MD_BUF_LEN;
  	atomic_set(&tg_pt_gp->tg_pt_gp_alua_access_state,
- 			ALUA_ACCESS_STATE_TRANSITION);
- 	tg_pt_gp->tg_pt_gp_alua_access_status = (explicit) ?
-@@ -890,13 +893,15 @@ static int core_alua_do_transition_tg_pt(
+-		ALUA_ACCESS_STATE_ACTIVE_OPTMIZED);
++		ALUA_ACCESS_STATE_ACTIVE_OPTIMIZED);
  	/*
- 	 * Set the current primary ALUA access state to the requested new state
+ 	 * Enable both explicit and implicit ALUA support by default
  	 */
--	atomic_set(&tg_pt_gp->tg_pt_gp_alua_access_state, new_state);
-+	atomic_set(&tg_pt_gp->tg_pt_gp_alua_access_state,
-+		   tg_pt_gp->tg_pt_gp_alua_pending_state);
- 
- 	pr_debug("Successful %s ALUA transition TG PT Group: %s ID: %hu"
- 		" from primary access state %s to %s\n", (explicit) ? "explicit" :
- 		"implicit", config_item_name(&tg_pt_gp->tg_pt_gp_group.cg_item),
--		tg_pt_gp->tg_pt_gp_id, core_alua_dump_state(old_state),
--		core_alua_dump_state(new_state));
-+		tg_pt_gp->tg_pt_gp_id,
-+		core_alua_dump_state(tg_pt_gp->tg_pt_gp_alua_previous_state),
-+		core_alua_dump_state(tg_pt_gp->tg_pt_gp_alua_pending_state));
- 
- 	return 0;
- }
-diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index 933c59d..67b6ca2 100644
---- a/include/target/target_core_base.h
-+++ b/include/target/target_core_base.h
-@@ -282,8 +282,10 @@ struct t10_alua_lu_gp_member {
- struct t10_alua_tg_pt_gp {
- 	u16	tg_pt_gp_id;
- 	int	tg_pt_gp_valid_id;
--	int	tg_pt_gp_alua_supported_states;
--	int	tg_pt_gp_alua_access_status;
-+	u8	tg_pt_gp_alua_pending_state;
-+	u8	tg_pt_gp_alua_previous_state;
-+	u8	tg_pt_gp_alua_supported_states;
-+	u8	tg_pt_gp_alua_access_status;
- 	int	tg_pt_gp_alua_access_type;
- 	int	tg_pt_gp_nonop_delay_msecs;
- 	int	tg_pt_gp_trans_delay_msecs;
+diff --git a/drivers/target/target_core_alua.h b/drivers/target/target_core_alua.h
+index e826a65..88e2e83 100644
+--- a/drivers/target/target_core_alua.h
++++ b/drivers/target/target_core_alua.h
+@@ -15,7 +15,7 @@
+  *
+  * from spc4r17 section 6.27 Table 245
+  */
+-#define ALUA_ACCESS_STATE_ACTIVE_OPTMIZED	0x0
++#define ALUA_ACCESS_STATE_ACTIVE_OPTIMIZED	0x0
+ #define ALUA_ACCESS_STATE_ACTIVE_NON_OPTIMIZED	0x1
+ #define ALUA_ACCESS_STATE_STANDBY		0x2
+ #define ALUA_ACCESS_STATE_UNAVAILABLE		0x3
 -- 
 1.7.12.4
 
