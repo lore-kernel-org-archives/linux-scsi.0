@@ -1,38 +1,106 @@
-From: Felipe Pena <felipensp@gmail.com>
-Subject: [PATCH] drivers: scsi: lpfc: Fix typo on NULL assignment
-Date: Tue, 15 Oct 2013 21:29:50 -0300
-Message-ID: <1381883390-4200-1-git-send-email-felipensp@gmail.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: eSATA Drive Detection issues on mvsas
+Date: Tue, 15 Oct 2013 18:11:08 -0700
+Message-ID: <CAPcyv4hdCYkdxoK_1zjdRt-vDHk0K8wLV6OnpnkXVGJzKg0PMg@mail.gmail.com>
+References: <525C89D3.5090008@logicube.com>
+	<525DDABB.2040906@logicube.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-vc0-f180.google.com ([209.85.220.180]:59771 "EHLO
-	mail-vc0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759727Ab3JPA3c (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Oct 2013 20:29:32 -0400
+Received: from mail-la0-f48.google.com ([209.85.215.48]:42791 "EHLO
+	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750981Ab3JPBLK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Oct 2013 21:11:10 -0400
+Received: by mail-la0-f48.google.com with SMTP id er20so44077lab.21
+        for <linux-scsi@vger.kernel.org>; Tue, 15 Oct 2013 18:11:08 -0700 (PDT)
+In-Reply-To: <525DDABB.2040906@logicube.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <james.smart@emulex.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Felipe Pena <felipensp@gmail.com>
+To: Praveen Murali <pmurali@logicube.com>
+Cc: linux-scsi@vger.kernel.org, JBottomley@parallels.com
 
-In the lpfc_ct_free_iocb function after freeing associated memory to the
-ctiocb->context3, the ctiocb->context1 is set to NULL instead of context3.
+On Tue, Oct 15, 2013 at 5:15 PM, Praveen Murali <pmurali@logicube.com> wrote:
+> Dan/James,
+>  Can you please take a look at this and let me know if I am at the right
+> place? Or point me in the right direction? As I understand, this deost not
+> look like an mvsas driver issue.
+>
 
-Signed-off-by: Felipe Pena <felipensp@gmail.com>
----
- drivers/scsi/lpfc/lpfc_ct.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Looks like a latent bug in libsas to me.  Commit 110dd8f1 "[SCSI]
+libsas: fix scr_read/write users and update the libata documentation"
+looks like a compile fix when the build was broken by commit  9977126c
+"libata: add @is_cmd to ata_tf_to_fis()" where libata changed the
+interface for ata_tf_to_fis().  We were passing 0 for pmp prior to
+that and changed to 1 here, probably a typo intending 'is_cmd to
+always be 1.
 
-diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
-index 02e8cd9..da61d8d 100644
---- a/drivers/scsi/lpfc/lpfc_ct.c
-+++ b/drivers/scsi/lpfc/lpfc_ct.c
-@@ -280,7 +280,7 @@ lpfc_ct_free_iocb(struct lpfc_hba *phba, struct lpfc_iocbq *ctiocb)
- 		buf_ptr = (struct lpfc_dmabuf *) ctiocb->context3;
- 		lpfc_mbuf_free(phba, buf_ptr->virt, buf_ptr->phys);
- 		kfree(buf_ptr);
--		ctiocb->context1 = NULL;
-+		ctiocb->context3 = NULL;
- 	}
- 	lpfc_sli_release_iocbq(phba, ctiocb);
- 	return 0;
+Somehow we have gotten away with is_cmd being 0?  Does the following
+patch work for you:
+
+diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+index 161c98efade9..d0fb99d5da95 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -211,7 +211,7 @@ static unsigned int sas_ata_qc_issue(struct
+ata_queued_cmd *qc)
+                qc->tf.nsect = 0;
+        }
+
+-       ata_tf_to_fis(&qc->tf, 1, 0, (u8*)&task->ata_task.fis);
++       ata_tf_to_fis(&qc->tf, qc->dev->link->pmp, 1, (u8*)&task->ata_task.fis);
+        task->uldd_task = qc;
+        if (ata_is_atapi(qc->tf.protocol)) {
+                memcpy(task->ata_task.atapi_packet, qc->cdb, qc->dev->cdb_len);
+
+
+That being said I don't think anybody has really checked out
+port-multiplier support on libsas, but we shouldn't be setting this
+bit by default.
+
 --
-1.7.10.4
+Dan
 
+
+> On 10/14/2013 05:18 PM, Praveen Murali wrote:
+>>
+>> Hi,
+>>   I have couple of external drives (Western Digital and Seagate) that have
+>> an eSATA interface. My Linux box with a Marvell HBA (9445) running Ubuntu
+>> 12.04 with 3.2.48 kernel doest not seem to detect the drive. I tried with
+>> the latest upstream kernel and it behaves the same. But both the drives
+>> detect fine if I enter the mvsas BIOS during bootup. So I have hooked up a
+>> SATA analyzer and this is what I found
+>> - When I tried to detect the drives in the mvsas BIOS, all the ATA
+>> commands that the bios issues have the port multiplier byte set to 0.
+>> - If I bootup my Linux system and then connect the drives, the first
+>> IDENTIFY command has the port multiplier set to 0 (this one is successful)
+>> and the subsequent IDENTIFY command has port multiplier set to 1 (this one
+>> fails).
+
+I assume the first IDENTIFY is coming from the BIOS, not Linux correct?
+
+>> - If I connect any other SATA drives I have to the HBA, all the ATA
+>> commands have port multiplier set to 1 but they detects and work fine.
+>>
+>> Just to rule out the port-multiplier possibility I changed the following
+>> line in drivers/scsi/libsas/sas_ata.c - fucntion sas_ata_qc_issue()
+>>
+>> ata_tf_to_fis(&qc->tf, 1, 0, (u8*)&task->ata_task.fis);
+>>
+>> to
+>>
+>> ata_tf_to_fis(&qc->tf, 0, 0, (u8*)&task->ata_task.fis);
+>>
+>> now all my drives seem to detect just fine. I believe, the eSATA interface
+>> on these external drives is a port multiplier, which is why the command
+>> fails. Also, the normal drives ignore this field thats why they work fine
+>> with port multiplier being set to either 0 or 1.
+>>
+>> Question(s): Are my above assumtions correct? If so, what is the reasoning
+>> behind setting the port multiplier to 1 by default in libsas layer?
+>>
+>> Thanks,
+>> Praveen
+>>
+>>
+>>
