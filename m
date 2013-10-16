@@ -1,77 +1,34 @@
-From: <Sumit.Saxena@lsi.com>
-Subject: [PATCH][SCSI] megaraid_sas: Fix synchronization problem between
- sysPD IO path and AEN path
-Date: Wed, 16 Oct 2013 17:04:39 +0530
-Message-ID: <201310161134.r9GBYYqK021397@cosmhbs0.lsi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-db8lp0186.outbound.messaging.microsoft.com ([213.199.154.186]:24429
-	"EHLO db8outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932803Ab3JPLen (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 16 Oct 2013 07:34:43 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Geyslan G. Bem" <geyslan@gmail.com>
+Subject: [PATCH] drivers: scsi: Remove useless casting in hpsa.c
+Date: Wed, 16 Oct 2013 13:10:10 -0300
+Message-ID: <1381939810-28976-1-git-send-email-geyslan@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: JBottomley@parallels.com
+Cc: scameron@beardog.cce.hp.com, iss_storagedev@hp.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-br@googlegroups.com, "Geyslan G. Bem" <geyslan@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: jbottomley@parallels.com, kashyap.desai@lsi.com, aradford@gmail.com
 
-There is syncronization problem between sysPD IO path and AEN path. Driver maintains instance->pd_list[] array, which will get updated(by calling function megasas_get_pd_list[]), whenever any of below events occurs-
+Casting (void *) value returned by kmalloc is useless
+as mentioned in Documentation/CodingStyle, Chap 14.
 
-MR_EVT_PD_INSERTED
-MR_EVT_PD_REMOVED
-MR_EVT_CTRL_HOST_BUS_SCAN_REQUESTED
-MR_EVT_FOREIGN_CFG_IMPORTED
-
-At same time running sysPD IO will be accessing the same array instance->pd_list[], which is getting updated in AEN path, because
-of this IO may not get correct PD info from instance->pd_list[] array.
-
-Signed-off-by: Adam Radford <adam.radford@lsi.com>
-Signed-off-by: Sumit Saxena <sumit.saxena@lsi.com>
+Signed-off-by: Geyslan G. Bem <geyslan@gmail.com>
 ---
-diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-index 0c73ba4..e9e543c 100644
---- a/drivers/scsi/megaraid/megaraid_sas.h
-+++ b/drivers/scsi/megaraid/megaraid_sas.h
-@@ -1531,6 +1531,7 @@ struct megasas_instance {
- 	struct megasas_register_set __iomem *reg_set;
- 	u32 *reply_post_host_index_addr[MR_MAX_MSIX_REG_ARRAY];
- 	struct megasas_pd_list          pd_list[MEGASAS_MAX_PD];
-+	struct megasas_pd_list          local_pd_list[MEGASAS_MAX_PD];
- 	u8     ld_ids[MEGASAS_MAX_LD_IDS];
- 	s8 init_id;
- 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index e62ff02..83ebc75 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -3194,21 +3194,23 @@ megasas_get_pd_list(struct megasas_instance *instance)
- 	     (le32_to_cpu(ci->count) <
- 		  (MEGASAS_MAX_PD_CHANNELS * MEGASAS_MAX_DEV_PER_CHANNEL))) {
- 
--		memset(instance->pd_list, 0,
-+		memset(instance->local_pd_list, 0,
- 			MEGASAS_MAX_PD * sizeof(struct megasas_pd_list));
- 
- 		for (pd_index = 0; pd_index < le32_to_cpu(ci->count); pd_index++) {
- 
--			instance->pd_list[le16_to_cpu(pd_addr->deviceId)].tid	=
-+			instance->local_pd_list[le16_to_cpu(pd_addr->deviceId)].tid	=
- 				le16_to_cpu(pd_addr->deviceId);
--			instance->pd_list[le16_to_cpu(pd_addr->deviceId)].driveType	=
-+			instance->local_pd_list[le16_to_cpu(pd_addr->deviceId)].driveType	=
- 							pd_addr->scsiDevType;
--			instance->pd_list[le16_to_cpu(pd_addr->deviceId)].driveState	=
-+			instance->local_pd_list[le16_to_cpu(pd_addr->deviceId)].driveState	=
- 							MR_PD_STATE_SYSTEM;
- 			pd_addr++;
- 		}
- 	}
- 
-+	memcpy(instance->pd_list, instance->local_pd_list,
-+		sizeof(instance->pd_list));
- 	pci_free_consistent(instance->pdev,
- 				MEGASAS_MAX_PD * sizeof(struct MR_PD_LIST),
- 				ci, ci_h);
+ drivers/scsi/hpsa.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 891c86b..896a57d 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -3093,8 +3093,7 @@ static int hpsa_big_passthru_ioctl(struct ctlr_info *h, void __user *argp)
+ 		return -EINVAL;
+ 	if (!capable(CAP_SYS_RAWIO))
+ 		return -EPERM;
+-	ioc = (BIG_IOCTL_Command_struct *)
+-	    kmalloc(sizeof(*ioc), GFP_KERNEL);
++	ioc = kmalloc(sizeof(*ioc), GFP_KERNEL);
+ 	if (!ioc) {
+ 		status = -ENOMEM;
+ 		goto cleanup1;
+-- 
+1.8.4
