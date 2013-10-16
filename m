@@ -1,43 +1,58 @@
-From: Andy Grover <agrover@redhat.com>
-Subject: Re: [PATCH] target: Pass through I/O topology for block backstores
-Date: Wed, 16 Oct 2013 15:29:37 -0700
-Message-ID: <525F1351.8020403@redhat.com>
-References: <1381513206-8155-1-git-send-email-agrover@redhat.com> <20131011180348.GA21030@infradead.org> <52584905.4080307@redhat.com> <20131012080824.GA12362@infradead.org>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [Bug] 12.864681  BUG: lock held when returning to user space!
+Date: Wed, 16 Oct 2013 18:41:05 -0400
+Message-ID: <525F1601.8080906@interlog.com>
+References: <8761tilrl0.fsf@redhat.com> <874n8s2tjz.fsf@redhat.com>	 <5253A9E7.5030707@oracle.com> <52540C7F.8050207@interlog.com> <1381929897.1864.0.camel@dabdike>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:30657 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753468Ab3JPWaU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 16 Oct 2013 18:30:20 -0400
-In-Reply-To: <20131012080824.GA12362@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1381929897.1864.0.camel@dabdike>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: vaughan <vaughan.cao@oracle.com>, Madper Xie <cxie@redhat.com>, linux-kernel@vger.kernel.org, SCSI development list <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, martin.petersen@oracle.com, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 
-On 10/12/2013 01:08 AM, Christoph Hellwig wrote:
-> On Fri, Oct 11, 2013 at 11:52:53AM -0700, Andy Grover wrote:
->> It seemed better to me to keep the munging from queue_limits values
->> to what the target core needed in the block backstore code, and not
->> use a block-specific structure in the backstore<->core interface.
+On 13-10-16 09:24 AM, James Bottomley wrote:
+> On Tue, 2013-10-08 at 09:45 -0400, Douglas Gilbert wrote:
+>> On 13-10-08 02:44 AM, vaughan wrote:
+>>> Hi Madper,
+>>>
+>>> CC to Douglas to get comments.
+>>> I use the rw_semaphore o_sem to protect excl open, introduced in commit
+>>> 15b06f9a02406e5460001db6d5af5c738cd3d4e7 since v3.12-rc1.
+>>> Is it forbidden to do like that in kernel?...
 >>
->> It looks like a few includes of blkdev.h slipped into target core,
->> but these can be removed safely -- lio core doesn't depend on the
->> block layer.
->>
->> We could define a new struct to get the 4 values at once, but it
->> didn't seem worth it, esp. since two are only needed by
->> emulate_readcapacity16, and the other two only by emulate_evpd_b0.
+>> It appears you can not (allow sg_open() to hold a semaphore
+>> then return to the user space). So you will need to do some
+>> rework on that patch or revert it.
 >
-> I really don't like the influx of methods.  But given thsat you have
-> done the work I'd say merge your patch for now and then we can later see
-> if we can come up with something more elegant.
+> OK, there being no reply on this, I'll do the revert ... that's all four
+> patches, correct?
 
-Nick, any cleaner ways to implement this come to mind? Happy to respin.
+That seems to be the case. Vaughan acknowledged the
+problem and forwarded it to me 8 days ago. Yes, it
+seems to be a "no-no" to hold a any kernel semaphore
+when returning to the user space; in this case from
+sg_open(). I was hoping a revised patch might
+appear from Vaughan but to date that has not been
+the case. So with only a few weeks to go before
+lk 3.12 is released, reverting the whole 4 patches
+in that series seems to be the safest course.
 
-If not, please apply.
+Also without a new patch from Vaughan in the next few
+weeks he may also miss the opportunity of getting
+his improved O_EXCL logic into the lk 3.13 series.
 
-Regards -- Andy
 
+Thinking about how to solve this problem: a field could
+be added to 'struct sg_device' with one of three states:
+no_opens, non_excl_opens and excl_open. It could be
+manipulated by sg_open() and sg_release() like a
+read-write semaphore. And the faulty 'struct
+rw_semaphore o_sem' in sg_device could be replaced by a
+normal semaphore to protect the manipulation of the new
+three-state field.
+
+Doug Gilbert
