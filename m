@@ -1,84 +1,72 @@
-From: "Stewart, Sean" <Sean.Stewart@netapp.com>
-Subject: [PATCH 2/2][RESEND] scsi_dh_alua: ALUA handler attach should
- succeed while TPG is transitioning
-Date: Tue, 15 Oct 2013 15:52:54 +0000
-Message-ID: <1381852374.1593.17.camel@localhost.localdomain>
+From: Praveen Murali <pmurali@logicube.com>
+Subject: Re: eSATA Drive Detection issues on mvsas
+Date: Tue, 15 Oct 2013 17:15:55 -0700
+Message-ID: <525DDABB.2040906@logicube.com>
+References: <525C89D3.5090008@logicube.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.netapp.com ([216.240.18.38]:43472 "EHLO mx1.netapp.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759273Ab3JOPw5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Oct 2013 11:52:57 -0400
-Content-Language: en-US
-Content-ID: <148D37BD3E488E449CA4CE9633675A4B@hq.netapp.com>
+Received: from p01c11o147.mxlogic.net ([208.65.144.70]:33462 "EHLO
+	p01c11o147.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759788Ab3JPAXx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Oct 2013 20:23:53 -0400
+In-Reply-To: <525C89D3.5090008@logicube.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Hannes Reinecke <hare@suse.de>
+To: linux-scsi@vger.kernel.org, dan.j.williams@intel.com, JBottomley@Parallels.com
 
-RHVyaW5nIHRlc3RpbmcsIGl0IHdhcyBkaXNjb3ZlcmVkIHRoYXQgd2hlbiBhIGRldmljZSB0cmll
-cyB0byBhdHRhY2ggdG8gdGhlIGFsdWEgaGFuZGxlciB3aGlsZSBpbiBUUEcNCnN0YXRlIG9mIHRy
-YW5zaXRpb25pbmcsIHRoZSBhbHVhX3J0cGcgZnVuY3Rpb24gd2lsbCB3YWl0IGZvciBpdCB0byBl
-eGl0IHRoZSBzdGF0ZSBiZWZvcmUgYWxsb3dpbmcgaXQNCnRvIGNvbnRpbnVlLiBBcyBhIHJlc3Vs
-dCwgaWYgdGhlIDYwIHNlY29uZCB0aW1lb3V0IGV4cGlyZXMsIHRoZSBhbHVhIGhhbmRsZXIgd2ls
-bCBub3QgYXR0YWNoIHRvIHRoZQ0KZGV2aWNlLg0KDQpUbyBmaXggdGhpcywgSSBoYXZlIGludHJv
-ZHVjZWQgYW4gaW5wdXQgYXJndW1lbnQgdG8gYWx1YV9ydHBnIGNhbGxlZCB3YWl0X2Zvcl90cmFu
-c2l0aW9uLiAgVGhlIGlkZWEgaXMNCnRoYXQgaXQgd2lsbCB3YWl0IGZvciB0aGUgdHJhbnNpdGlv
-biB0byBjb21wbGV0ZSBiZWZvcmUgYW4gYWN0aXZhdGlvbiAoYmVjYXVzZSB0aGUgY3VycmVudCBU
-UEcgc3RhdGUgaGFzDQpzb21lIGJlYXJpbmcgaW4gdGhhdCBjYXNlKSwgYnV0IGR1cmluZyBhIGRp
-c2NvdmVyeSBpZiBpdCBpcyB0cmFuc2l0aW9uaW5nLCBpdCB3aWxsIG5vdCB3YWl0LCBhbmQgd2ls
-bA0Kc3RvcmUgdGhlIHN0YXRlIGFzIHN0YW5kYnkgZm9yIHRoZSB0aW1lIGJlaW5nLg0KDQpJIGJl
-bGlldmUgdGhlIHByZWNlZGVudCBleGlzdHMgZm9yIHRoaXMgZnJvbSBjb21taXQgYzBkMjg5YjNl
-NTk1Nzc1MzJjNDVlZTkxMTBlZjgxYmQ3YjM0MTI3Mg0KU2luY2UgaWYgdGhlIGRldmljZSByZXBv
-cnRzIGEgc3RhdGUgb2YgdHJhbnNpdGlvbmluZywgaXQgY2FuIHRyYW5zaXRpb24gdG8gb3RoZXIg
-bW9yZSB2YWxpZCBzdGF0ZXMsIGFuZA0KaXQgaGFzIGJlZW4gZXN0YWJsaXNoZWQgVFBHUyBpcyBz
-dXBwb3J0ZWQgb24gdGhlIGRldmljZSwgaWYgaXQgaXMgYXR0YWNoaW5nLg0KDQpTaWduZWQtb2Zm
-LWJ5OiBTZWFuIFN0ZXdhcnQgPFNlYW4uU3Rld2FydEBuZXRhcHAuY29tPg0KLS0tDQogZHJpdmVy
-cy9zY3NpL2RldmljZV9oYW5kbGVyL3Njc2lfZGhfYWx1YS5jIHwgMjYgKysrKysrKysrKysrKysr
-Ky0tLS0tLS0tLS0NCiAxIGZpbGUgY2hhbmdlZCwgMTYgaW5zZXJ0aW9ucygrKSwgMTAgZGVsZXRp
-b25zKC0pDQoNCmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvZGV2aWNlX2hhbmRsZXIvc2NzaV9k
-aF9hbHVhLmMgYi9kcml2ZXJzL3Njc2kvZGV2aWNlX2hhbmRsZXIvc2NzaV9kaF9hbHVhLmMNCmlu
-ZGV4IDc4MjA1Y2MuLjUyNDhjODggMTAwNjQ0DQotLS0gYS9kcml2ZXJzL3Njc2kvZGV2aWNlX2hh
-bmRsZXIvc2NzaV9kaF9hbHVhLmMNCisrKyBiL2RyaXZlcnMvc2NzaS9kZXZpY2VfaGFuZGxlci9z
-Y3NpX2RoX2FsdWEuYw0KQEAgLTUyMiwxMiArNTIyLDEzIEBAIHN0YXRpYyBpbnQgYWx1YV9jaGVj
-a19zZW5zZShzdHJ1Y3Qgc2NzaV9kZXZpY2UgKnNkZXYsDQogLyoNCiAgKiBhbHVhX3J0cGcgLSBF
-dmFsdWF0ZSBSRVBPUlQgVEFSR0VUIEdST1VQIFNUQVRFUw0KICAqIEBzZGV2OiB0aGUgZGV2aWNl
-IHRvIGJlIGV2YWx1YXRlZC4NCisgKiBAd2FpdF9mb3JfdHJhbnNpdGlvbjogaWYgbm9uemVybywg
-d2FpdCBBTFVBX0ZBSUxPVkVSX1RJTUVPVVQgc2Vjb25kcyBmb3IgZGV2aWNlIHRvIGV4aXQgdHJh
-bnNpdGlvbmluZyBzdGF0ZQ0KICAqDQogICogRXZhbHVhdGUgdGhlIFRhcmdldCBQb3J0IEdyb3Vw
-IFN0YXRlLg0KICAqIFJldHVybnMgU0NTSV9ESF9ERVZfT0ZGTElORUQgaWYgdGhlIHBhdGggaXMN
-CiAgKiBmb3VuZCB0byBiZSB1bnVzYWJsZS4NCiAgKi8NCi1zdGF0aWMgaW50IGFsdWFfcnRwZyhz
-dHJ1Y3Qgc2NzaV9kZXZpY2UgKnNkZXYsIHN0cnVjdCBhbHVhX2RoX2RhdGEgKmgpDQorc3RhdGlj
-IGludCBhbHVhX3J0cGcoc3RydWN0IHNjc2lfZGV2aWNlICpzZGV2LCBzdHJ1Y3QgYWx1YV9kaF9k
-YXRhICpoLCBpbnQgd2FpdF9mb3JfdHJhbnNpdGlvbikNCiB7DQogCXN0cnVjdCBzY3NpX3NlbnNl
-X2hkciBzZW5zZV9oZHI7DQogCWludCBsZW4sIGssIG9mZiwgdmFsaWRfc3RhdGVzID0gMDsNCkBA
-IC01OTksNyArNjAwLDcgQEAgc3RhdGljIGludCBhbHVhX3J0cGcoc3RydWN0IHNjc2lfZGV2aWNl
-ICpzZGV2LCBzdHJ1Y3QgYWx1YV9kaF9kYXRhICpoKQ0KIAllbHNlDQogCQloLT50cmFuc2l0aW9u
-X3RtbyA9IEFMVUFfRkFJTE9WRVJfVElNRU9VVDsNCiANCi0JaWYgKG9yaWdfdHJhbnNpdGlvbl90
-bW8gIT0gaC0+dHJhbnNpdGlvbl90bW8pIHsNCisJaWYgKHdhaXRfZm9yX3RyYW5zaXRpb24gJiYg
-KG9yaWdfdHJhbnNpdGlvbl90bW8gIT0gaC0+dHJhbnNpdGlvbl90bW8pKSB7DQogCQlzZGV2X3By
-aW50ayhLRVJOX0lORk8sIHNkZXYsDQogCQkJICAgICIlczogdHJhbnNpdGlvbiB0aW1lb3V0IHNl
-dCB0byAlZCBzZWNvbmRzXG4iLA0KIAkJCSAgICBBTFVBX0RIX05BTUUsIGgtPnRyYW5zaXRpb25f
-dG1vKTsNCkBAIC02MzcsMTQgKzYzOCwxOSBAQCBzdGF0aWMgaW50IGFsdWFfcnRwZyhzdHJ1Y3Qg
-c2NzaV9kZXZpY2UgKnNkZXYsIHN0cnVjdCBhbHVhX2RoX2RhdGEgKmgpDQogDQogCXN3aXRjaCAo
-aC0+c3RhdGUpIHsNCiAJY2FzZSBUUEdTX1NUQVRFX1RSQU5TSVRJT05JTkc6DQotCQlpZiAodGlt
-ZV9iZWZvcmUoamlmZmllcywgZXhwaXJ5KSkgew0KLQkJCS8qIFN0YXRlIHRyYW5zaXRpb24sIHJl
-dHJ5ICovDQotCQkJaW50ZXJ2YWwgKz0gMjAwMDsNCi0JCQltc2xlZXAoaW50ZXJ2YWwpOw0KLQkJ
-CWdvdG8gcmV0cnk7DQorCQlpZiAod2FpdF9mb3JfdHJhbnNpdGlvbikgew0KKwkJCWlmICh0aW1l
-X2JlZm9yZShqaWZmaWVzLCBleHBpcnkpKSB7DQorCQkJCS8qIFN0YXRlIHRyYW5zaXRpb24sIHJl
-dHJ5ICovDQorCQkJCWludGVydmFsICs9IDIwMDA7DQorCQkJCW1zbGVlcChpbnRlcnZhbCk7DQor
-CQkJCWdvdG8gcmV0cnk7DQorCQkJfQ0KKwkJCWVyciA9IFNDU0lfREhfUkVUUlk7DQorCQl9IGVs
-c2Ugew0KKwkJCWVyciA9IFNDU0lfREhfT0s7DQogCQl9DQorDQogCQkvKiBUcmFuc2l0aW9uaW5n
-IHRpbWUgZXhjZWVkZWQsIHNldCBwb3J0IHRvIHN0YW5kYnkgKi8NCi0JCWVyciA9IFNDU0lfREhf
-UkVUUlk7DQogCQloLT5zdGF0ZSA9IFRQR1NfU1RBVEVfU1RBTkRCWTsNCiAJCWJyZWFrOw0KIAlj
-YXNlIFRQR1NfU1RBVEVfT0ZGTElORToNCkBAIC02NzgsNyArNjg0LDcgQEAgc3RhdGljIGludCBh
-bHVhX2luaXRpYWxpemUoc3RydWN0IHNjc2lfZGV2aWNlICpzZGV2LCBzdHJ1Y3QgYWx1YV9kaF9k
-YXRhICpoKQ0KIAlpZiAoZXJyICE9IFNDU0lfREhfT0spDQogCQlnb3RvIG91dDsNCiANCi0JZXJy
-ID0gYWx1YV9ydHBnKHNkZXYsIGgpOw0KKwllcnIgPSBhbHVhX3J0cGcoc2RldiwgaCwgMCk7DQog
-CWlmIChlcnIgIT0gU0NTSV9ESF9PSykNCiAJCWdvdG8gb3V0Ow0KIA0KQEAgLTczOCw3ICs3NDQs
-NyBAQCBzdGF0aWMgaW50IGFsdWFfYWN0aXZhdGUoc3RydWN0IHNjc2lfZGV2aWNlICpzZGV2LA0K
-IAlpbnQgZXJyID0gU0NTSV9ESF9PSzsNCiAJaW50IHN0cGcgPSAwOw0KIA0KLQllcnIgPSBhbHVh
-X3J0cGcoc2RldiwgaCk7DQorCWVyciA9IGFsdWFfcnRwZyhzZGV2LCBoLCAxKTsNCiAJaWYgKGVy
-ciAhPSBTQ1NJX0RIX09LKQ0KIAkJZ290byBvdXQ7DQogDQotLSANCjEuOC4zLjENCg0KDQo=
+Dan/James,
+  Can you please take a look at this and let me know if I am at the 
+right place? Or point me in the right direction? As I understand, this 
+deost not look like an mvsas driver issue.
+
+Thanks,
+Praveen
+
+On 10/14/2013 05:18 PM, Praveen Murali wrote:
+> Hi,
+>   I have couple of external drives (Western Digital and Seagate) that 
+> have an eSATA interface. My Linux box with a Marvell HBA (9445) 
+> running Ubuntu 12.04 with 3.2.48 kernel doest not seem to detect the 
+> drive. I tried with the latest upstream kernel and it behaves the 
+> same. But both the drives detect fine if I enter the mvsas BIOS during 
+> bootup. So I have hooked up a SATA analyzer and this is what I found
+> - When I tried to detect the drives in the mvsas BIOS, all the ATA 
+> commands that the bios issues have the port multiplier byte set to 0.
+> - If I bootup my Linux system and then connect the drives, the first 
+> IDENTIFY command has the port multiplier set to 0 (this one is 
+> successful) and the subsequent IDENTIFY command has port multiplier 
+> set to 1 (this one fails).
+> - If I connect any other SATA drives I have to the HBA, all the ATA 
+> commands have port multiplier set to 1 but they detects and work fine.
+>
+> Just to rule out the port-multiplier possibility I changed the 
+> following line in drivers/scsi/libsas/sas_ata.c - fucntion 
+> sas_ata_qc_issue()
+>
+> ata_tf_to_fis(&qc->tf, 1, 0, (u8*)&task->ata_task.fis);
+>
+> to
+>
+> ata_tf_to_fis(&qc->tf, 0, 0, (u8*)&task->ata_task.fis);
+>
+> now all my drives seem to detect just fine. I believe, the eSATA 
+> interface on these external drives is a port multiplier, which is why 
+> the command fails. Also, the normal drives ignore this field thats why 
+> they work fine with port multiplier being set to either 0 or 1.
+>
+> Question(s): Are my above assumtions correct? If so, what is the 
+> reasoning behind setting the port multiplier to 1 by default in libsas 
+> layer?
+>
+> Thanks,
+> Praveen
+>
+>
+>
+> -- 
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
