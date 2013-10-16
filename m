@@ -1,80 +1,112 @@
-From: taco <tacoee@gmail.com>
-Subject: Re: How to online remove an error scsi disk from the system?
-Date: Thu, 17 Oct 2013 00:22:13 +0800
-Message-ID: <20131016162213.GA27838@taco-ThinkPad-X220>
-References: <510B5CFC.2040801@tao.ma>
+From: Praveen Murali <pmurali@logicube.com>
+Subject: Re: eSATA Drive Detection issues on mvsas
+Date: Wed, 16 Oct 2013 10:28:21 -0700
+Message-ID: <525ECCB5.8040104@logicube.com>
+References: <525C89D3.5090008@logicube.com> <525DDABB.2040906@logicube.com> <CAPcyv4hdCYkdxoK_1zjdRt-vDHk0K8wLV6OnpnkXVGJzKg0PMg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <510B5CFC.2040801@tao.ma>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tao Ma <tm@tao.ma>
-Cc: linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from p01c11o149.mxlogic.net ([208.65.144.72]:33667 "EHLO
+	p01c11o149.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761215Ab3JPR2x (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Oct 2013 13:28:53 -0400
+In-Reply-To: <CAPcyv4hdCYkdxoK_1zjdRt-vDHk0K8wLV6OnpnkXVGJzKg0PMg@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-scsi@vger.kernel.org, JBottomley@parallels.com
 
-On Fri, Feb 01, 2013 at 02:13:16PM +0800, Tao Ma wrote:
-> Hi All,
-> 	In our product system, we have several sata disks attached to one
-> machine. So when one of the disk fails, the jbd2(yes, we use ext4) will
-> hang forever and we will get something in /var/log/messages like below.
-> It seems to me that the io sent to the scsi layer is never returned back
-> with -EIO which is a little bit surprised for me(It should be a timeout
-> somewhere, right?). We have tried echo "offline" >
-> /sys/block/sdl/device/state, but it doesn't work. So is there any way
-> for us to let the scsi device returns all the io requests back with EIO
-> so that all the end_io can be called accordingly? Am I missing something
-> here?
-> 
-> Thanks,
-> Tao
-> 
-> 
-> sd 0:0:11:0: attempting task abort! scmd(ffff88180e900580)
-It seems that IO timeout cause HBA's driver to abort scmd,
-the aborted IO came back with scmd->result = DID_RESET << 16;
-with this result code the Middle layer of scsi will retry this IO.
-IO timeout again due to Bad disk so, this IO loop forever and
-never come back.
 
-might it is a bug of mpt2sas driver.
+On 10/15/2013 06:11 PM, Dan Williams wrote:
+> On Tue, Oct 15, 2013 at 5:15 PM, Praveen Murali <pmurali@logicube.com> wrote:
+>> Dan/James,
+>>   Can you please take a look at this and let me know if I am at the right
+>> place? Or point me in the right direction? As I understand, this deost not
+>> look like an mvsas driver issue.
+>>
+> Looks like a latent bug in libsas to me.  Commit 110dd8f1 "[SCSI]
+> libsas: fix scr_read/write users and update the libata documentation"
+> looks like a compile fix when the build was broken by commit  9977126c
+> "libata: add @is_cmd to ata_tf_to_fis()" where libata changed the
+> interface for ata_tf_to_fis().  We were passing 0 for pmp prior to
+> that and changed to 1 here, probably a typo intending 'is_cmd to
+> always be 1.
+>
+> Somehow we have gotten away with is_cmd being 0?  Does the following
+> patch work for you:
+>
+> diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+> index 161c98efade9..d0fb99d5da95 100644
+> --- a/drivers/scsi/libsas/sas_ata.c
+> +++ b/drivers/scsi/libsas/sas_ata.c
+> @@ -211,7 +211,7 @@ static unsigned int sas_ata_qc_issue(struct
+> ata_queued_cmd *qc)
+>                  qc->tf.nsect = 0;
+>          }
+>
+> -       ata_tf_to_fis(&qc->tf, 1, 0, (u8*)&task->ata_task.fis);
+> +       ata_tf_to_fis(&qc->tf, qc->dev->link->pmp, 1, (u8*)&task->ata_task.fis);
+>          task->uldd_task = qc;
+>          if (ata_is_atapi(qc->tf.protocol)) {
+>                  memcpy(task->ata_task.atapi_packet, qc->cdb, qc->dev->cdb_len);
+>
+Hi Dan,
+   I tested this patch and it works great!
 
-> sd 0:0:11:0: [sdl] CDB: Write(10): 2a 00 0d ca e0 3f 00 04 00 00
-> target0:0:11: handle(0x0015), sas_address(0x500e004aaaaaaa0b), phy(11)
-> target0:0:11: enclosure_logical_id(0x500e004aaaaaaa00), slot(11)
-> INFO: task jbd2/sdl1-8:4629 blocked for more than 120 seconds.
-> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> jbd2/sdl1-8   D 0000000000000000     0  4629      2 0x00000000
->  ffff88180aa79ae0 0000000000000046 ffff88180aa79aa8 0000000000000000
->  ffff88007ce0fe40 0000000000015f40 ffff8818102c0638 ffff8818102c0080
->  ffff880a9184a100 ffff8818102c0638 0000000105006028 0000000100000000
-> Call Trace:
->  [<ffffffff81236a15>] ? cpumask_next_and+0x25/0x40
->  [<ffffffff810122b6>] ? read_tsc+0x16/0x40
->  [<ffffffff81093cd9>] ? ktime_get_ts+0xa9/0xe0
->  [<ffffffff810122b6>] ? read_tsc+0x16/0x40
->  [<ffffffff81093cd9>] ? ktime_get_ts+0xa9/0xe0
->  [<ffffffff814a8a53>] io_schedule+0x73/0xc0
->  [<ffffffff811036a8>] sync_page+0x38/0x50
->  [<ffffffff814a927e>] __wait_on_bit+0x5e/0x90
->  [<ffffffff81103670>] ? sync_page+0x0/0x50
->  [<ffffffff81103845>] wait_on_page_bit+0x75/0x80
->  [<ffffffff81089320>] ? wake_bit_function+0x0/0x40
->  [<ffffffff811197c7>] ? pagevec_lookup_tag+0x27/0x40
->  [<ffffffff81118b55>] write_cache_pages+0x1d5/0x440
->  [<ffffffff811172f0>] ? __writepage+0x0/0x40
->  [<ffffffff81118de4>] generic_writepages+0x24/0x30
->  [<ffffffffa02dc719>] jbd2_journal_commit_transaction+0x3e9/0x1490 [jbd2]
->  [<ffffffff81074299>] ? try_to_del_timer_sync+0x49/0xe0
->  [<ffffffffa02e2734>] kjournald2+0xb4/0x220 [jbd2]
->  [<ffffffff810892e0>] ? autoremove_wake_function+0x0/0x40
->  [<ffffffffa02e2680>] ? kjournald2+0x0/0x220 [jbd2]
->  [<ffffffff81089166>] kthread+0x96/0xa0
->  [<ffffffff8100c08a>] child_rip+0xa/0x20
->  [<ffffffff810890d0>] ? kthread+0x0/0xa0
->  [<ffffffff8100c080>] ? child_rip+0x0/0x20
-> 
+Thanks,
+Praveen
+> That being said I don't think anybody has really checked out
+> port-multiplier support on libsas, but we shouldn't be setting this
+> bit by default.
+>
+> --
+> Dan
+>
+>
+>> On 10/14/2013 05:18 PM, Praveen Murali wrote:
+>>> Hi,
+>>>    I have couple of external drives (Western Digital and Seagate) that have
+>>> an eSATA interface. My Linux box with a Marvell HBA (9445) running Ubuntu
+>>> 12.04 with 3.2.48 kernel doest not seem to detect the drive. I tried with
+>>> the latest upstream kernel and it behaves the same. But both the drives
+>>> detect fine if I enter the mvsas BIOS during bootup. So I have hooked up a
+>>> SATA analyzer and this is what I found
+>>> - When I tried to detect the drives in the mvsas BIOS, all the ATA
+>>> commands that the bios issues have the port multiplier byte set to 0.
+>>> - If I bootup my Linux system and then connect the drives, the first
+>>> IDENTIFY command has the port multiplier set to 0 (this one is successful)
+>>> and the subsequent IDENTIFY command has port multiplier set to 1 (this one
+>>> fails).
+> I assume the first IDENTIFY is coming from the BIOS, not Linux correct?
+>
+>>> - If I connect any other SATA drives I have to the HBA, all the ATA
+>>> commands have port multiplier set to 1 but they detects and work fine.
+>>>
+>>> Just to rule out the port-multiplier possibility I changed the following
+>>> line in drivers/scsi/libsas/sas_ata.c - fucntion sas_ata_qc_issue()
+>>>
+>>> ata_tf_to_fis(&qc->tf, 1, 0, (u8*)&task->ata_task.fis);
+>>>
+>>> to
+>>>
+>>> ata_tf_to_fis(&qc->tf, 0, 0, (u8*)&task->ata_task.fis);
+>>>
+>>> now all my drives seem to detect just fine. I believe, the eSATA interface
+>>> on these external drives is a port multiplier, which is why the command
+>>> fails. Also, the normal drives ignore this field thats why they work fine
+>>> with port multiplier being set to either 0 or 1.
+>>>
+>>> Question(s): Are my above assumtions correct? If so, what is the reasoning
+>>> behind setting the port multiplier to 1 by default in libsas layer?
+>>>
+>>> Thanks,
+>>> Praveen
+>>>
+>>>
+>>>
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
