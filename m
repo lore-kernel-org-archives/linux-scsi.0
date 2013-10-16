@@ -1,89 +1,99 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 02/11] target_core_alua: Store supported ALUA states
-Date: Wed, 16 Oct 2013 14:19:07 -0700
-Message-ID: <1381958347.19256.646.camel@haakon3.risingtidesystems.com>
+Subject: Re: [PATCH 03/11] target_core_alua: Make supported states
+ configurable
+Date: Wed, 16 Oct 2013 14:38:31 -0700
+Message-ID: <1381959511.19256.650.camel@haakon3.risingtidesystems.com>
 References: <1381908048-82014-1-git-send-email-hare@suse.de>
-	 <1381908048-82014-3-git-send-email-hare@suse.de>
+	 <1381908048-82014-4-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:50422 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754635Ab3JPVKX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Oct 2013 17:10:23 -0400
-In-Reply-To: <1381908048-82014-3-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1381908048-82014-4-git-send-email-hare@suse.de>
+Sender: target-devel-owner@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>
 Cc: Nic Bellinger <nab@daterainc.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
 On Wed, 2013-10-16 at 09:20 +0200, Hannes Reinecke wrote:
-> The supported ALUA states might be different for individual
-> devices, so store it in a separate field.
-> 
 > Signed-off-by: Hannes Reinecke <hare@suse.de>
 > ---
->  drivers/target/target_core_alua.c | 14 ++++++++------
->  drivers/target/target_core_alua.h | 11 +++++++++++
->  include/target/target_core_base.h |  1 +
->  3 files changed, 20 insertions(+), 6 deletions(-)
+>  drivers/target/target_core_configfs.c | 50 +++++++++++++++++++++++++++++++++++
+>  1 file changed, 50 insertions(+)
 > 
-> diff --git a/drivers/target/target_core_alua.c b/drivers/target/target_core_alua.c
-> index 8297d37..255e83c 100644
-> --- a/drivers/target/target_core_alua.c
-> +++ b/drivers/target/target_core_alua.c
-> @@ -117,12 +117,7 @@ target_emulate_report_target_port_groups(struct se_cmd *cmd)
->  		/*
->  		 * Set supported ASYMMETRIC ACCESS State bits
->  		 */
-> -		buf[off] = 0x80; /* T_SUP */
-> -		buf[off] |= 0x40; /* O_SUP */
-> -		buf[off] |= 0x8; /* U_SUP */
-> -		buf[off] |= 0x4; /* S_SUP */
-> -		buf[off] |= 0x2; /* AN_SUP */
-> -		buf[off++] |= 0x1; /* AO_SUP */
-> +		buf[off++] |= tg_pt_gp->tg_pt_gp_alua_supported_states;
->  		/*
->  		 * TARGET PORT GROUP
->  		 */
-> @@ -1367,6 +1362,13 @@ struct t10_alua_tg_pt_gp *core_alua_allocate_tg_pt_gp(struct se_device *dev,
->  	tg_pt_gp->tg_pt_gp_trans_delay_msecs = ALUA_DEFAULT_TRANS_DELAY_MSECS;
->  	tg_pt_gp->tg_pt_gp_implicit_trans_secs = ALUA_DEFAULT_IMPLICIT_TRANS_SECS;
->  
-> +	/*
-> +	 * Enable all supported states
-> +	 */
-> +	tg_pt_gp->tg_pt_gp_alua_supported_states =
-> +	    ALUA_T_SUP | ALUA_O_SUP | \
-> +	    ALUA_U_SUP | ALUA_S_SUP | ALUA_AN_SUP | ALUA_AO_SUP;
-> +
->  	if (def_group) {
->  		spin_lock(&dev->t10_alua.tg_pt_gps_lock);
->  		tg_pt_gp->tg_pt_gp_id =
-> diff --git a/drivers/target/target_core_alua.h b/drivers/target/target_core_alua.h
-> index 74cf0c0..e826a65 100644
-> --- a/drivers/target/target_core_alua.h
-> +++ b/drivers/target/target_core_alua.h
-> @@ -23,6 +23,17 @@
->  #define ALUA_ACCESS_STATE_TRANSITION		0xf
+> diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
+> index d4c28a3..53e9e00 100644
+> --- a/drivers/target/target_core_configfs.c
+> +++ b/drivers/target/target_core_configfs.c
+> @@ -2131,6 +2131,55 @@ static ssize_t target_core_alua_tg_pt_gp_store_attr_alua_access_type(
+>  SE_DEV_ALUA_TG_PT_ATTR(alua_access_type, S_IRUGO | S_IWUSR);
 >  
 >  /*
-> + * from spc4r36j section 6.37 Table 306
+> + * alua_supported_states
 > + */
-> +#define ALUA_T_SUP		0x80
-> +#define ALUA_O_SUP		0x40
-> +#define ALUA_LBD_SUP		0x10
-> +#define ALUA_U_SUP		0x08
-> +#define ALUA_S_SUP		0x04
-> +#define ALUA_AN_SUP		0x02
-> +#define ALUA_AO_SUP		0x01
+> +static ssize_t target_core_alua_tg_pt_gp_show_attr_alua_supported_states(
+> +	struct t10_alua_tg_pt_gp *tg_pt_gp,
+> +	char *page)
+> +{
+> +	return sprintf(page, "%02x\n",
+> +		tg_pt_gp->tg_pt_gp_alua_supported_states);
+> +}
+> +
+> +static ssize_t target_core_alua_tg_pt_gp_store_attr_alua_supported_states(
+> +	struct t10_alua_tg_pt_gp *tg_pt_gp,
+> +	const char *page,
+> +	size_t count)
+> +{
+> +	unsigned long tmp;
+> +	int new_states, valid_states, ret;
+> +
+> +	if (!tg_pt_gp->tg_pt_gp_valid_id) {
+> +		pr_err("Unable to do set supported ALUA states on non"
+> +			" valid tg_pt_gp ID: %hu\n",
+> +			tg_pt_gp->tg_pt_gp_valid_id);
+> +		return -EINVAL;
+> +	}
+> +
+> +	ret = strict_strtoul(page, 0, &tmp);
+> +	if (ret < 0) {
+> +		pr_err("Unable to extract new supported ALUA states"
+> +				" from %s\n", page);
+> +		return -EINVAL;
+> +	}
+> +	new_states = (int)tmp;
+> +	valid_states = ALUA_T_SUP | ALUA_O_SUP | ALUA_LBD_SUP | \
+> +	    ALUA_U_SUP | ALUA_S_SUP | ALUA_AN_SUP | ALUA_AO_SUP;
+> +
+> +
+> +	if (new_states & ~valid_states) {
+> +		pr_err("Illegal supported ALUA states: 0x%02x\n",
+> +				new_states);
+> +		return -EINVAL;
+> +	}
+> +
+> +	tg_pt_gp->tg_pt_gp_alua_supported_states = new_states;
+> +	return count;
+> +}
+> +
+> +SE_DEV_ALUA_TG_PT_ATTR(alua_supported_states, S_IRUGO | S_IWUSR);
 > +
 > +/*
+>   * alua_write_metadata
+>   */
+>  static ssize_t target_core_alua_tg_pt_gp_show_attr_alua_write_metadata(
+> @@ -2350,6 +2399,7 @@ static struct configfs_attribute *target_core_alua_tg_pt_gp_attrs[] = {
+>  	&target_core_alua_tg_pt_gp_alua_access_state.attr,
+>  	&target_core_alua_tg_pt_gp_alua_access_status.attr,
+>  	&target_core_alua_tg_pt_gp_alua_access_type.attr,
+> +	&target_core_alua_tg_pt_gp_alua_supported_states.attr,
+>  	&target_core_alua_tg_pt_gp_alua_write_metadata.attr,
+>  	&target_core_alua_tg_pt_gp_nonop_delay_msecs.attr,
+>  	&target_core_alua_tg_pt_gp_trans_delay_msecs.attr,
 
-How about making these the supported bits, TPGS mode, and ALUA access
-state definitions common between target_core_alua.c and
-scsi_dh_alua.c..?
+I'm thinking this might be better served by individual attributes
+representing the seven supported ALUA states, instead of a single
+attribute representing them all..
+
+That would certainly make it easier for userspace to manipulate..
 
 --nab
-
