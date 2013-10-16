@@ -1,35 +1,35 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 1/5] tcm_loop: Check for valid hba in tcm_loop_drop_nexus()
-Date: Wed, 16 Oct 2013 09:12:52 +0200
-Message-ID: <1381907576-81857-2-git-send-email-hare@suse.de>
-References: <1381907576-81857-1-git-send-email-hare@suse.de>
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1381907576-81857-1-git-send-email-hare@suse.de>
-Sender: target-devel-owner@vger.kernel.org
+Subject: [PATCH 0/5] Updates for tcm_loop
+Date: Wed, 16 Oct 2013 09:12:51 +0200
+Message-ID: <1381907576-81857-1-git-send-email-hare@suse.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:48355 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758281Ab3JPHNB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 16 Oct 2013 03:13:01 -0400
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: Nic Bellinger <nab@daterainc.com>
 Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-List-Id: linux-scsi@vger.kernel.org
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
----
- drivers/target/loopback/tcm_loop.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+Hi Nic,
 
-diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
-index 0f6d69d..57d5a95 100644
---- a/drivers/target/loopback/tcm_loop.c
-+++ b/drivers/target/loopback/tcm_loop.c
-@@ -932,7 +932,10 @@ static int tcm_loop_drop_nexus(
- 	struct tcm_loop_nexus *tl_nexus;
- 	struct tcm_loop_hba *tl_hba = tpg->tl_hba;
- 
--	tl_nexus = tpg->tl_hba->tl_nexus;
-+	if (!tl_hba)
-+		return -ENODEV;
-+
-+	tl_nexus = tl_hba->tl_nexus;
- 	if (!tl_nexus)
- 		return -ENODEV;
- 
+here are some updates to tcm_loop I've done during ALUA testing.
+I've implemented a 'transport_state' attribute to simulate
+transport failure and added command abort callbacks.
+
+Hannes Reinecke (5):
+  tcm_loop: Check for valid hba in tcm_loop_drop_nexus()
+  tcm_loop: Implement transport offline
+  tcm_loop: separate out tcm_loop_issue_tmr
+  tcm_loop: TCQ and command abort support
+  tcm_loop: Implement target reset
+
+ drivers/target/loopback/tcm_loop.c | 233 +++++++++++++++++++++++++++++++------
+ drivers/target/loopback/tcm_loop.h |   6 +
+ include/target/target_core_base.h  |   1 +
+ 3 files changed, 204 insertions(+), 36 deletions(-)
+
 -- 
 1.7.12.4
+
