@@ -1,103 +1,95 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 05/11] target_core_alua: spellcheck
-Date: Wed, 16 Oct 2013 09:20:44 +0200
-Message-ID: <1381908048-82014-6-git-send-email-hare@suse.de>
+Subject: [PATCH 02/11] target_core_alua: Store supported ALUA states
+Date: Wed, 16 Oct 2013 09:20:41 +0200
+Message-ID: <1381908048-82014-3-git-send-email-hare@suse.de>
 References: <1381908048-82014-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:48782 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:48766 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755152Ab3JPHUv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 16 Oct 2013 03:20:51 -0400
+	id S1754149Ab3JPHUu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 16 Oct 2013 03:20:50 -0400
 In-Reply-To: <1381908048-82014-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Nic Bellinger <nab@daterainc.com>
 Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
+The supported ALUA states might be different for individual
+devices, so store it in a separate field.
+
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/target/target_core_alua.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+ drivers/target/target_core_alua.c | 14 ++++++++------
+ drivers/target/target_core_alua.h | 11 +++++++++++
+ include/target/target_core_base.h |  1 +
+ 3 files changed, 20 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/target/target_core_alua.c b/drivers/target/target_core_alua.c
-index 593de80..a16115e 100644
+index 8297d37..255e83c 100644
 --- a/drivers/target/target_core_alua.c
 +++ b/drivers/target/target_core_alua.c
-@@ -325,7 +325,7 @@ target_emulate_set_target_port_groups(struct se_cmd *cmd)
- 			spin_unlock(&dev->t10_alua.tg_pt_gps_lock);
- 		} else {
- 			/*
--			 * Extact the RELATIVE TARGET PORT IDENTIFIER to identify
-+			 * Extract the RELATIVE TARGET PORT IDENTIFIER to identify
- 			 * the Target Port in question for the the incoming
- 			 * SET_TARGET_PORT_GROUPS op.
- 			 */
-@@ -482,7 +482,7 @@ static inline int core_alua_state_transition(
- 	u8 *alua_ascq)
- {
- 	/*
--	 * Allowed CDBs for ALUA_ACCESS_STATE_TRANSITIO as defined by
-+	 * Allowed CDBs for ALUA_ACCESS_STATE_TRANSITION as defined by
- 	 * spc4r17 section 5.9.2.5
- 	 */
- 	switch (cdb[0]) {
-@@ -510,9 +510,9 @@ static inline int core_alua_state_transition(
- }
+@@ -117,12 +117,7 @@ target_emulate_report_target_port_groups(struct se_cmd *cmd)
+ 		/*
+ 		 * Set supported ASYMMETRIC ACCESS State bits
+ 		 */
+-		buf[off] = 0x80; /* T_SUP */
+-		buf[off] |= 0x40; /* O_SUP */
+-		buf[off] |= 0x8; /* U_SUP */
+-		buf[off] |= 0x4; /* S_SUP */
+-		buf[off] |= 0x2; /* AN_SUP */
+-		buf[off++] |= 0x1; /* AO_SUP */
++		buf[off++] |= tg_pt_gp->tg_pt_gp_alua_supported_states;
+ 		/*
+ 		 * TARGET PORT GROUP
+ 		 */
+@@ -1367,6 +1362,13 @@ struct t10_alua_tg_pt_gp *core_alua_allocate_tg_pt_gp(struct se_device *dev,
+ 	tg_pt_gp->tg_pt_gp_trans_delay_msecs = ALUA_DEFAULT_TRANS_DELAY_MSECS;
+ 	tg_pt_gp->tg_pt_gp_implicit_trans_secs = ALUA_DEFAULT_IMPLICIT_TRANS_SECS;
+ 
++	/*
++	 * Enable all supported states
++	 */
++	tg_pt_gp->tg_pt_gp_alua_supported_states =
++	    ALUA_T_SUP | ALUA_O_SUP | \
++	    ALUA_U_SUP | ALUA_S_SUP | ALUA_AN_SUP | ALUA_AO_SUP;
++
+ 	if (def_group) {
+ 		spin_lock(&dev->t10_alua.tg_pt_gps_lock);
+ 		tg_pt_gp->tg_pt_gp_id =
+diff --git a/drivers/target/target_core_alua.h b/drivers/target/target_core_alua.h
+index 74cf0c0..e826a65 100644
+--- a/drivers/target/target_core_alua.h
++++ b/drivers/target/target_core_alua.h
+@@ -23,6 +23,17 @@
+ #define ALUA_ACCESS_STATE_TRANSITION		0xf
  
  /*
-- * return 1: Is used to signal LUN not accecsable, and check condition/not ready
-+ * return 1: Is used to signal LUN not accessible, and check condition/not ready
-  * return 0: Used to signal success
-- * reutrn -1: Used to signal failure, and invalid cdb field
-+ * return -1: Used to signal failure, and invalid cdb field
-  */
- sense_reason_t
- target_alua_state_check(struct se_cmd *cmd)
-@@ -797,7 +797,7 @@ static int core_alua_do_transition_tg_pt(
- 		 * change, a device server shall establish a unit attention
- 		 * condition for the initiator port associated with every I_T
- 		 * nexus with the additional sense code set to ASYMMETRIC
--		 * ACCESS STATE CHAGED.
-+		 * ACCESS STATE CHANGED.
- 		 *
- 		 * After an explicit target port asymmetric access state
- 		 * change, a device server shall establish a unit attention
-@@ -941,7 +941,7 @@ int core_alua_do_port_transition(
- 				continue;
- 			/*
- 			 * If the target behavior port asymmetric access state
--			 * is changed for any target port group accessiable via
-+			 * is changed for any target port group accessible via
- 			 * a logical unit within a LU group, the target port
- 			 * behavior group asymmetric access states for the same
- 			 * target port group accessible via other logical units
-@@ -1227,7 +1227,7 @@ void core_alua_free_lu_gp(struct t10_alua_lu_gp *lu_gp)
- 		 * struct se_device is released via core_alua_free_lu_gp_mem().
- 		 *
- 		 * If the passed lu_gp does NOT match the default_lu_gp, assume
--		 * we want to re-assocate a given lu_gp_mem with default_lu_gp.
-+		 * we want to re-associate a given lu_gp_mem with default_lu_gp.
- 		 */
- 		spin_lock(&lu_gp_mem->lu_gp_mem_lock);
- 		if (lu_gp != default_lu_gp)
-@@ -1467,7 +1467,7 @@ void core_alua_free_tg_pt_gp(
- 	 * been called from target_core_alua_drop_tg_pt_gp().
- 	 *
- 	 * Here we remove *tg_pt_gp from the global list so that
--	 * no assications *OR* explicit ALUA via SET_TARGET_PORT_GROUPS
-+	 * no associations *OR* explicit ALUA via SET_TARGET_PORT_GROUPS
- 	 * can be made while we are releasing struct t10_alua_tg_pt_gp.
- 	 */
- 	spin_lock(&dev->t10_alua.tg_pt_gps_lock);
-@@ -1503,7 +1503,7 @@ void core_alua_free_tg_pt_gp(
- 		 * core_alua_free_tg_pt_gp_mem().
- 		 *
- 		 * If the passed tg_pt_gp does NOT match the default_tg_pt_gp,
--		 * assume we want to re-assocate a given tg_pt_gp_mem with
-+		 * assume we want to re-associate a given tg_pt_gp_mem with
- 		 * default_tg_pt_gp.
- 		 */
- 		spin_lock(&tg_pt_gp_mem->tg_pt_gp_mem_lock);
++ * from spc4r36j section 6.37 Table 306
++ */
++#define ALUA_T_SUP		0x80
++#define ALUA_O_SUP		0x40
++#define ALUA_LBD_SUP		0x10
++#define ALUA_U_SUP		0x08
++#define ALUA_S_SUP		0x04
++#define ALUA_AN_SUP		0x02
++#define ALUA_AO_SUP		0x01
++
++/*
+  * REPORT_TARGET_PORT_GROUP STATUS CODE
+  *
+  * from spc4r17 section 6.27 Table 246
+diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
+index 1c6e54d..21f4bd5 100644
+--- a/include/target/target_core_base.h
++++ b/include/target/target_core_base.h
+@@ -282,6 +282,7 @@ struct t10_alua_lu_gp_member {
+ struct t10_alua_tg_pt_gp {
+ 	u16	tg_pt_gp_id;
+ 	int	tg_pt_gp_valid_id;
++	int	tg_pt_gp_alua_supported_states;
+ 	int	tg_pt_gp_alua_access_status;
+ 	int	tg_pt_gp_alua_access_type;
+ 	int	tg_pt_gp_nonop_delay_msecs;
 -- 
 1.7.12.4
 
