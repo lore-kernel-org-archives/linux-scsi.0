@@ -1,453 +1,82 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 2/2] target_core_alua: Referrals configfs integration
-Date: Wed, 16 Oct 2013 17:36:50 -0700
-Message-ID: <1381970210.19256.674.camel@haakon3.risingtidesystems.com>
-References: <1381908324-82135-1-git-send-email-hare@suse.de>
-	 <1381908324-82135-3-git-send-email-hare@suse.de>
+From: vaughan <vaughan.cao@oracle.com>
+Subject: Re: [Bug] 12.864681  BUG: lock held when returning to user space!
+Date: Thu, 17 Oct 2013 10:52:03 +0800
+Message-ID: <525F50D3.6090708@oracle.com>
+References: <8761tilrl0.fsf@redhat.com> <874n8s2tjz.fsf@redhat.com>	 <5253A9E7.5030707@oracle.com> <52540C7F.8050207@interlog.com> <1381929897.1864.0.camel@dabdike> <525F1601.8080906@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1381908324-82135-3-git-send-email-hare@suse.de>
-Sender: target-devel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Nic Bellinger <nab@daterainc.com>, Doug Gilber <dgilbert@interlog.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <525F1601.8080906@interlog.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: dgilbert@interlog.com, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Madper Xie <cxie@redhat.com>, linux-kernel@vger.kernel.org, SCSI development list <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2013-10-16 at 09:25 +0200, Hannes Reinecke wrote:
-> Referrals need an LBA map, which needs to be kept
-> consistent across all target port groups. So
-> instead of tying the map to the target port groups
-> I've implemented a single attribute containing the
-> entire map.
-> 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> ---
->  drivers/target/target_core_alua.c      | 101 +++++++++++++++++++
->  drivers/target/target_core_alua.h      |   8 ++
->  drivers/target/target_core_configfs.c  | 171 +++++++++++++++++++++++++++++++++
->  drivers/target/target_core_device.c    |   1 +
->  drivers/target/target_core_transport.c |  28 +++++-
->  5 files changed, 308 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/target/target_core_alua.c b/drivers/target/target_core_alua.c
-> index 8f66146..9dd01ff 100644
-> --- a/drivers/target/target_core_alua.c
-> +++ b/drivers/target/target_core_alua.c
-> @@ -1340,6 +1340,107 @@ static int core_alua_set_tg_pt_secondary_state(
->  	return 0;
->  }
->  
-> +struct t10_alua_lba_map *
-> +core_alua_allocate_lba_map(struct list_head *list,
-> +			   u64 first_lba, u64 last_lba)
-> +{
-> +	struct t10_alua_lba_map *lba_map;
-> +
-> +	lba_map = kmem_cache_zalloc(t10_alua_lba_map_cache, GFP_KERNEL);
-> +	if (!lba_map) {
-> +		pr_err("Unable to allocate struct t10_alua_lba_map\n");
-> +		return ERR_PTR(-ENOMEM);
-> +	}
-> +	INIT_LIST_HEAD(&lba_map->lba_map_mem_list);
-> +	lba_map->lba_map_first_lba = first_lba;
-> +	lba_map->lba_map_last_lba = last_lba;
-> +
-> +	list_add_tail(&lba_map->lba_map_list, list);
-> +	return lba_map;
-> +}
+On 10/17/2013 06:41 AM, Douglas Gilbert wrote:
+> That seems to be the case. Vaughan acknowledged the
+> problem and forwarded it to me 8 days ago. Yes, it
+> seems to be a "no-no" to hold a any kernel semaphore
+> when returning to the user space; in this case from
+> sg_open(). I was hoping a revised patch might
+> appear from Vaughan but to date that has not been
+> the case. So with only a few weeks to go before
+> lk 3.12 is released, reverting the whole 4 patches
+> in that series seems to be the safest course.
+>
+> Also without a new patch from Vaughan in the next few
+> weeks he may also miss the opportunity of getting
+> his improved O_EXCL logic into the lk 3.13 series.
+>
+>
+> Thinking about how to solve this problem: a field could
+> be added to 'struct sg_device' with one of three states:
+> no_opens, non_excl_opens and excl_open. It could be
+> manipulated by sg_open() and sg_release() like a
+> read-write semaphore. And the faulty 'struct
+> rw_semaphore o_sem' in sg_device could be replaced by a
+> normal semaphore to protect the manipulation of the new
+> three-state field.
+> And the new three-state field would replace (or expand)
+the 'char exclude' field in struct sg_device .
+>
+> Doug Gilbert
+Hi Doug,
 
-This list_add_tail needs to be protected, no..?
+Thanks for providing advice on how to fix this.
+However, it seems be still awkward somehow. We have to
+1. hold a lock (maybe sg_index_lock or a new one)
+2. check
+   a) the new three-state field;
+   b) if sfp list is empty;
+   c) sdp->detached field;
+if either condition fails, we may link the open process into o_excl_wait
+queue and need wakeup.
+if satisfied, we go on.
+3. then we release at least sg_index_lock to malloc a new sfp and
+initialize.
+4. try to acquire sg_index_lock again and add this sfp into sfd_siblings
+list if possible.  <== We still have to check at least sdp->detached field
+5. update three-state field to reflect the result of Step 4, and wake up
+processes waiting in o_excl_wait.
 
-> +
-> +int
-> +core_alua_allocate_lba_map_mem(struct t10_alua_lba_map *lba_map,
-> +			       int pg_id, int state)
-> +{
-> +	struct t10_alua_lba_map_member *lba_map_mem;
-> +
-> +	list_for_each_entry(lba_map_mem, &lba_map->lba_map_mem_list,
-> +			    lba_map_mem_list) {
-> +		if (lba_map_mem->lba_map_mem_alua_pg_id == pg_id) {
-> +			pr_err("Duplicate pg_id %d in lba_map\n", pg_id);
-> +			return -EINVAL;
-> +		}
-> +	}
-> +
-> +	lba_map_mem = kmem_cache_zalloc(t10_alua_lba_map_mem_cache, GFP_KERNEL);
-> +	if (!lba_map_mem) {
-> +		pr_err("Unable to allocate struct t10_alua_lba_map_mem\n");
-> +		return -ENOMEM;
-> +	}
-> +	lba_map_mem->lba_map_mem_alua_state = state;
-> +	lba_map_mem->lba_map_mem_alua_pg_id = pg_id;
-> +
-> +	list_add_tail(&lba_map_mem->lba_map_mem_list,
-> +		      &lba_map->lba_map_mem_list);
-> +	return 0;
-> +}
+This uncomfortable is introduced by releasing the sg_index_lock in the
+middle of check->malloc->add the new sfp struct.
 
-Ditto here..
+I wanna ask if it is possible to split the sg_add_sfp() into two
+functions, sg_init_sfp() and sg_add_sfp2(). We can do all initialize
+work in sg_init_sfp()
+without any lock and let sg_add_sfp2() only serve lock-check-add in one
+way. It seems more convenient for me to understand.
+But there is still some questions on this approach:
+1. memory consume can be very large if lots of sg_init_sfp in the same time;
+2. some field are initialized according to the fields of scsi device sdp
+points to, such as low_dma, sg_tablesize, max_sector, phys_segs.
+    I know scsi_device_get() would keep the underlying scsi_device
+alive, however would these fields change in the gap of our initialize
+and add?
+    The relationship of sg_device and scsi_device like above said
+confuse me somehow...
 
-> +
-> +void
-> +core_alua_free_lba_map(struct list_head *lba_list)
-> +{
-> +	struct t10_alua_lba_map *lba_map, *lba_map_tmp;
-> +	struct t10_alua_lba_map_member *lba_map_mem, *lba_map_mem_tmp;
-> +
-> +	list_for_each_entry_safe(lba_map, lba_map_tmp, lba_list,
-> +				 lba_map_list) {
-> +		list_for_each_entry_safe(lba_map_mem, lba_map_mem_tmp,
-> +					 &lba_map->lba_map_mem_list,
-> +					 lba_map_mem_list) {
-> +			list_del(&lba_map_mem->lba_map_mem_list);
-> +			kmem_cache_free(t10_alua_lba_map_mem_cache,
-> +					lba_map_mem);
-> +		}
-> +		list_del(&lba_map->lba_map_list);
-> +		kmem_cache_free(t10_alua_lba_map_cache, lba_map);
-> +	}
-> +}
-
-And here..
-
-> +
-> +void
-> +core_alua_set_lba_map(struct se_device *dev, struct list_head *lba_map_list,
-> +		      int segment_size, int segment_mult)
-> +{
-> +	struct list_head old_lba_map_list;
-> +	struct t10_alua_tg_pt_gp *tg_pt_gp;
-> +	int activate = 0, supported;
-> +
-> +	INIT_LIST_HEAD(&old_lba_map_list);
-> +	spin_lock(&dev->t10_alua.lba_map_lock);
-> +	dev->t10_alua.lba_map_segment_size = segment_size;
-> +	dev->t10_alua.lba_map_segment_multiplier = segment_mult;
-> +	list_splice_init(&dev->t10_alua.lba_map_list, &old_lba_map_list);
-> +	if (lba_map_list) {
-> +		list_splice_init(lba_map_list, &dev->t10_alua.lba_map_list);
-> +		activate = 1;
-> +	}
-> +	spin_unlock(&dev->t10_alua.lba_map_lock);
-> +	spin_lock(&dev->t10_alua.tg_pt_gps_lock);
-> +	list_for_each_entry(tg_pt_gp, &dev->t10_alua.tg_pt_gps_list,
-> +			    tg_pt_gp_list) {
-> +
-> +		if (!tg_pt_gp->tg_pt_gp_valid_id)
-> +			continue;
-> +		supported = tg_pt_gp->tg_pt_gp_alua_supported_states;
-> +		if (activate)
-> +			supported |= ALUA_LBD_SUP;
-> +		else
-> +			supported &= ~ALUA_LBD_SUP;
-> +		tg_pt_gp->tg_pt_gp_alua_supported_states = supported;
-> +	}
-> +	spin_unlock(&dev->t10_alua.tg_pt_gps_lock);
-> +	core_alua_free_lba_map(&old_lba_map_list);
-> +}
-> +
->  struct t10_alua_lu_gp *
->  core_alua_allocate_lu_gp(const char *name, int def_group)
->  {
-> diff --git a/drivers/target/target_core_alua.h b/drivers/target/target_core_alua.h
-> index 47950cd..0a7d65e 100644
-> --- a/drivers/target/target_core_alua.h
-> +++ b/drivers/target/target_core_alua.h
-> @@ -86,6 +86,8 @@ extern struct kmem_cache *t10_alua_lu_gp_cache;
->  extern struct kmem_cache *t10_alua_lu_gp_mem_cache;
->  extern struct kmem_cache *t10_alua_tg_pt_gp_cache;
->  extern struct kmem_cache *t10_alua_tg_pt_gp_mem_cache;
-> +extern struct kmem_cache *t10_alua_lba_map_cache;
-> +extern struct kmem_cache *t10_alua_lba_map_mem_cache;
->  
->  extern sense_reason_t target_emulate_report_target_port_groups(struct se_cmd *);
->  extern sense_reason_t target_emulate_set_target_port_groups(struct se_cmd *);
-> @@ -95,6 +97,12 @@ extern int core_alua_do_port_transition(struct t10_alua_tg_pt_gp *,
->  				struct se_device *, struct se_port *,
->  				struct se_node_acl *, int, int);
->  extern char *core_alua_dump_status(int);
-> +extern struct t10_alua_lba_map *core_alua_allocate_lba_map(
-> +				struct list_head *, u64, u64);
-> +extern int core_alua_allocate_lba_map_mem(struct t10_alua_lba_map *, int, int);
-> +extern void core_alua_free_lba_map(struct list_head *);
-> +extern void core_alua_set_lba_map(struct se_device *, struct list_head *,
-> +				int, int);
->  extern struct t10_alua_lu_gp *core_alua_allocate_lu_gp(const char *, int);
->  extern int core_alua_set_lu_gp_id(struct t10_alua_lu_gp *, u16);
->  extern void core_alua_free_lu_gp(struct t10_alua_lu_gp *);
-> diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
-> index 172a54e..613cafb 100644
-> --- a/drivers/target/target_core_configfs.c
-> +++ b/drivers/target/target_core_configfs.c
-> @@ -1741,6 +1741,176 @@ static struct target_core_configfs_attribute target_core_attr_dev_alua_lu_gp = {
->  	.store	= target_core_store_alua_lu_gp,
->  };
->  
-> +static ssize_t target_core_show_dev_lba_map(void *p, char *page)
-> +{
-> +	struct se_device *dev = p;
-> +	struct t10_alua_lba_map *map;
-> +	struct t10_alua_lba_map_member *mem;
-> +	char *b = page;
-> +	int bl = 0;
-> +	char state;
-> +
-> +	spin_lock(&dev->t10_alua.lba_map_lock);
-> +	if (!list_empty(&dev->t10_alua.lba_map_list))
-> +	    bl += sprintf(b + bl, "%u %u\n",
-> +			  dev->t10_alua.lba_map_segment_size,
-> +			  dev->t10_alua.lba_map_segment_multiplier);
-> +	list_for_each_entry(map, &dev->t10_alua.lba_map_list, lba_map_list) {
-> +		bl += sprintf(b + bl, "%llu %llu",
-> +			      map->lba_map_first_lba, map->lba_map_last_lba);
-> +		list_for_each_entry(mem, &map->lba_map_mem_list,
-> +				    lba_map_mem_list) {
-> +			switch (mem->lba_map_mem_alua_state) {
-> +			case ALUA_ACCESS_STATE_ACTIVE_OPTIMIZED:
-> +				state = 'O';
-> +				break;
-> +			case ALUA_ACCESS_STATE_ACTIVE_NON_OPTIMIZED:
-> +				state = 'A';
-> +				break;
-> +			case ALUA_ACCESS_STATE_STANDBY:
-> +				state = 'S';
-> +				break;
-> +			case ALUA_ACCESS_STATE_UNAVAILABLE:
-> +				state = 'U';
-> +				break;
-> +			default:
-> +				state = '.';
-> +				break;
-> +			}
-> +			bl += sprintf(b + bl, " %d:%c",
-> +				      mem->lba_map_mem_alua_pg_id, state);
-> +		}
-> +		bl += sprintf(b + bl, "\n");
-> +	}
-> +	spin_unlock(&dev->t10_alua.lba_map_lock);
-> +	return bl;
-> +}
-
-Unfortunately due to the existing limitations of configfs/sysfs
-attribute output, the writing to *page needs to be limited to PAGE_SIZE.
-
-> +
-> +static ssize_t target_core_store_dev_lba_map(
-> +	void *p,
-> +	const char *page,
-> +	size_t count)
-> +{
-> +	struct se_device *dev = p;
-> +	struct t10_alua_lba_map *lba_map = NULL;
-> +	struct list_head lba_list;
-> +	char *map_entries, *ptr;
-> +	char state;
-> +	int pg_num = -1, pg;
-> +	int ret = 0, num = 0, pg_id, alua_state;
-> +	unsigned long start_lba = -1, end_lba = -1;
-> +	unsigned long segment_size = -1, segment_mult = -1;
-> +
-> +	map_entries = kstrdup(page, GFP_KERNEL);
-> +	if (!map_entries)
-> +		return -ENOMEM;
-> +
-> +	INIT_LIST_HEAD(&lba_list);
-> +	while ((ptr = strsep(&map_entries, "\n")) != NULL) {
-> +		if (!*ptr)
-> +			continue;
-> +
-> +		if (num == 0) {
-> +			if (sscanf(ptr, "%lu %lu\n",
-> +				   &segment_size, &segment_mult) != 2) {
-> +				pr_err("Invalid line %d\n", num);
-> +				ret = -EINVAL;
-> +				break;
-> +			}
-> +			num++;
-> +			continue;
-> +		}
-> +		if (sscanf(ptr, "%lu %lu", &start_lba, &end_lba) != 2) {
-> +			pr_err("Invalid line %d\n", num);
-> +			ret = -EINVAL;
-> +			break;
-> +		}
-> +		ptr = strchr(ptr, ' ');
-> +		if (!ptr) {
-> +			pr_err("Invalid line %d, missing end lba\n", num);
-> +			ret = -EINVAL;
-> +			break;
-> +		}
-> +		ptr++;
-> +		ptr = strchr(ptr, ' ');
-> +		if (!ptr) {
-> +			pr_err("Invalid line %d, missing state definitions\n",
-> +			       num);
-> +			ret = -EINVAL;
-> +			break;
-> +		}
-> +		ptr++;
-> +		lba_map = core_alua_allocate_lba_map(&lba_list,
-> +						     start_lba, end_lba);
-> +		if (IS_ERR(lba_map)) {
-> +			ret = PTR_ERR(lba_map);
-> +			break;
-> +		}
-> +		pg = 0;
-> +		while (sscanf(ptr, "%d:%c", &pg_id, &state) == 2) {
-> +			switch (state) {
-> +			case 'O':
-> +				alua_state = ALUA_ACCESS_STATE_ACTIVE_OPTIMIZED;
-> +				break;
-> +			case 'A':
-> +				alua_state = ALUA_ACCESS_STATE_ACTIVE_NON_OPTIMIZED;
-> +				break;
-> +			case 'S':
-> +				alua_state = ALUA_ACCESS_STATE_STANDBY;
-> +				break;
-> +			case 'U':
-> +				alua_state = ALUA_ACCESS_STATE_UNAVAILABLE;
-> +				break;
-> +			default:
-> +				pr_err("Invalid ALUA state '%c'\n", state);
-> +				ret = -EINVAL;
-> +				goto out;
-> +			}
-> +
-> +			ret = core_alua_allocate_lba_map_mem(lba_map,
-> +							     pg_id, alua_state);
-> +			if (ret) {
-> +				pr_err("Invalid target descriptor %d:%c "
-> +				       "at line %d\n",
-> +				       pg_id, state, num);
-> +				break;
-> +			}
-> +			pg++;
-> +			ptr = strchr(ptr, ' ');
-> +			if (ptr)
-> +				ptr++;
-> +			else
-> +				break;
-> +		}
-> +		if (pg_num == -1)
-> +		    pg_num = pg;
-> +		else if (pg != pg_num) {
-> +			pr_err("Only %d from %d port groups definitions "
-> +			       "at line %d\n", pg, pg_num, num);
-> +			ret = -EINVAL;
-> +			break;
-> +		}
-
-Btw, checkpatch complains about conditionals that don't have matching
-brackets on both code block, eg:
-
-   if foo
-   else {
-       bar
-   }
-
-> +		num++;
-> +	}
-> +out:
-> +	if (ret) {
-> +		core_alua_free_lba_map(&lba_list);
-> +		count = ret;
-> +	} else
-> +		core_alua_set_lba_map(dev, &lba_list,
-> +				      segment_size, segment_mult);
-> +	kfree(map_entries);
-> +	return count;
-> +}
-> +
-> +static struct target_core_configfs_attribute target_core_attr_dev_lba_map = {
-> +	.attr	= { .ca_owner = THIS_MODULE,
-> +		    .ca_name = "lba_map",
-> +		    .ca_mode = S_IRUGO | S_IWUSR },
-> +	.show	= target_core_show_dev_lba_map,
-> +	.store	= target_core_store_dev_lba_map,
-> +};
-> +
->  static struct configfs_attribute *lio_core_dev_attrs[] = {
->  	&target_core_attr_dev_info.attr,
->  	&target_core_attr_dev_control.attr,
-> @@ -1748,6 +1918,7 @@ static struct configfs_attribute *lio_core_dev_attrs[] = {
->  	&target_core_attr_dev_udev_path.attr,
->  	&target_core_attr_dev_enable.attr,
->  	&target_core_attr_dev_alua_lu_gp.attr,
-> +	&target_core_attr_dev_lba_map.attr,
->  	NULL,
->  };
->  
-> diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-> index f71cc33..6db76af 100644
-> --- a/drivers/target/target_core_device.c
-> +++ b/drivers/target/target_core_device.c
-> @@ -1578,6 +1578,7 @@ void target_free_device(struct se_device *dev)
->  	}
->  
->  	core_alua_free_lu_gp_mem(dev);
-> +	core_alua_set_lba_map(dev, NULL, 0, 0);
->  	core_scsi3_free_all_registrations(dev);
->  	se_release_vpd_for_dev(dev);
->  
-> diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-> index 98bb7c4..e34d4b4 100644
-> --- a/drivers/target/target_core_transport.c
-> +++ b/drivers/target/target_core_transport.c
-> @@ -63,6 +63,8 @@ struct kmem_cache *t10_alua_lu_gp_cache;
->  struct kmem_cache *t10_alua_lu_gp_mem_cache;
->  struct kmem_cache *t10_alua_tg_pt_gp_cache;
->  struct kmem_cache *t10_alua_tg_pt_gp_mem_cache;
-> +struct kmem_cache *t10_alua_lba_map_cache;
-> +struct kmem_cache *t10_alua_lba_map_mem_cache;
->  
->  static void transport_complete_task_attr(struct se_cmd *cmd);
->  static void transport_handle_queue_full(struct se_cmd *cmd,
-> @@ -129,14 +131,36 @@ int init_se_kmem_caches(void)
->  				"mem_t failed\n");
->  		goto out_free_tg_pt_gp_cache;
->  	}
-> +	t10_alua_lba_map_cache = kmem_cache_create(
-> +			"t10_alua_lba_map_cache",
-> +			sizeof(struct t10_alua_lba_map),
-> +			__alignof__(struct t10_alua_lba_map), 0, NULL);
-> +	if (!t10_alua_lba_map_cache) {
-> +		pr_err("kmem_cache_create() for t10_alua_lba_map_"
-> +				"cache failed\n");
-> +		goto out_free_tg_pt_gp_mem_cache;
-> +	}
-> +	t10_alua_lba_map_mem_cache = kmem_cache_create(
-> +			"t10_alua_lba_map_mem_cache",
-> +			sizeof(struct t10_alua_lba_map_member),
-> +			__alignof__(struct t10_alua_lba_map_member), 0, NULL);
-> +	if (!t10_alua_lba_map_mem_cache) {
-> +		pr_err("kmem_cache_create() for t10_alua_lba_map_mem_"
-> +				"cache failed\n");
-> +		goto out_free_lba_map_cache;
-> +	}
->  
->  	target_completion_wq = alloc_workqueue("target_completion",
->  					       WQ_MEM_RECLAIM, 0);
->  	if (!target_completion_wq)
-> -		goto out_free_tg_pt_gp_mem_cache;
-> +		goto out_free_lba_map_mem_cache;
->  
->  	return 0;
->  
-> +out_free_lba_map_mem_cache:
-> +	kmem_cache_destroy(t10_alua_lba_map_mem_cache);
-> +out_free_lba_map_cache:
-> +	kmem_cache_destroy(t10_alua_lba_map_cache);
->  out_free_tg_pt_gp_mem_cache:
->  	kmem_cache_destroy(t10_alua_tg_pt_gp_mem_cache);
->  out_free_tg_pt_gp_cache:
-> @@ -165,6 +189,8 @@ void release_se_kmem_caches(void)
->  	kmem_cache_destroy(t10_alua_lu_gp_mem_cache);
->  	kmem_cache_destroy(t10_alua_tg_pt_gp_cache);
->  	kmem_cache_destroy(t10_alua_tg_pt_gp_mem_cache);
-> +	kmem_cache_destroy(t10_alua_lba_map_cache);
-> +	kmem_cache_destroy(t10_alua_lba_map_mem_cache);
->  }
->  
->  /* This code ensures unique mib indexes are handed out. */
+Thanks,
+Vaughan
