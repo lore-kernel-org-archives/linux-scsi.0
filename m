@@ -1,49 +1,25 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: eSATA Drive Detection issues on mvsas
-Date: Thu, 17 Oct 2013 12:24:33 -0700
-Message-ID: <CAPcyv4jvPYz0bpVXBG2+5dFKwPHoGrAa8pd55d1J5BNo0PV0fw@mail.gmail.com>
-References: <525C89D3.5090008@logicube.com>
-	<525DDABB.2040906@logicube.com>
-	<CAPcyv4hdCYkdxoK_1zjdRt-vDHk0K8wLV6OnpnkXVGJzKg0PMg@mail.gmail.com>
-	<525ECCB5.8040104@logicube.com>
+From: Todd E Brandt <todd.e.brandt@linux.intel.com>
+Subject: [PATCH/RESEND v2 0/2] SATA disk resume time optimization
+Date: Thu, 17 Oct 2013 12:33:32 -0700
+Message-ID: <20131017193331.GA11747@linux.intel.com>
+Reply-To: todd.e.brandt@linux.intel.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ee0-f44.google.com ([74.125.83.44]:62755 "EHLO
-	mail-ee0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762570Ab3JQTYe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Oct 2013 15:24:34 -0400
-Received: by mail-ee0-f44.google.com with SMTP id b47so1366537eek.31
-        for <linux-scsi@vger.kernel.org>; Thu, 17 Oct 2013 12:24:33 -0700 (PDT)
-In-Reply-To: <525ECCB5.8040104@logicube.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
+To: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: tj@kernel.org, JBottomley@parallels.com
 List-Id: linux-scsi@vger.kernel.org
-To: Praveen Murali <pmurali@logicube.com>
-Cc: linux-scsi@vger.kernel.org, JBottomley@parallels.com
 
-On Wed, Oct 16, 2013 at 10:28 AM, Praveen Murali <pmurali@logicube.com> wrote:
->> diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
->> index 161c98efade9..d0fb99d5da95 100644
->> --- a/drivers/scsi/libsas/sas_ata.c
->> +++ b/drivers/scsi/libsas/sas_ata.c
->> @@ -211,7 +211,7 @@ static unsigned int sas_ata_qc_issue(struct
->> ata_queued_cmd *qc)
->>                  qc->tf.nsect = 0;
->>          }
->>
->> -       ata_tf_to_fis(&qc->tf, 1, 0, (u8*)&task->ata_task.fis);
->> +       ata_tf_to_fis(&qc->tf, qc->dev->link->pmp, 1,
->> (u8*)&task->ata_task.fis);
->>          task->uldd_task = qc;
->>          if (ata_is_atapi(qc->tf.protocol)) {
->>                  memcpy(task->ata_task.atapi_packet, qc->cdb,
->> qc->dev->cdb_len);
->>
-> Hi Dan,
->   I tested this patch and it works great!
->
+The essential issue behind hard disks' lengthy resume time is the ata port driver blocking until the ATA port hardware is finished coming online. So the kernel isn't really doing anything during all those seconds that the disks are resuming, it's just blocking until the hardware says it's ready to accept commands. Applying this patch set allows SATA disks to resume asynchronously without holding up system resume, thus allowing the UI to come online much more quickly. There may be a short period after resume where the disks are still spinning up in the background, but the user shouldn't notice since the OS can function with the data left in RAM.
 
-Thanks!  I'll send it up with your Reported-by and Tested-by.
+The patch set has two parts which apply to ata_port_resume and sd_resume respectively. Both are required to achieve any real performance benefit, but they will still function independantly without a performance hit.
 
---
-Dan
+ata_port_resume patch (1/2):
+
+On resume, the ATA port driver currently waits until the AHCI controller finishes executing the port wakeup command. This patch changes the ata_port_resume callback to issue the wakeup and then return immediately, thus allowing the next device in the pm queue to resume. Any commands issued to the AHCI hardware during the wakeup will be queued up and executed once the port is physically online. Thus no information is lost.
+
+sd_resume patch (2/2):
+
+On resume, the SD driver currently waits until the block driver finishes executing a disk start command with blk_execute_rq. This patch changes the sd_resume callback to use blk_execute_rq_nowait instead, which allows it to return immediately, thus allowing the next device in the pm queue to resume. The return value of blk_execute_rq_nowait is handled in the background by sd_resume_complete. Any commands issued to the scsi disk during the startup will be queued up and executed once the disk is online. Thus no information is lost.
