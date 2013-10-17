@@ -1,74 +1,140 @@
-From: taco <tacoee@gmail.com>
-Subject: Re: kernel cant access SATA adapter device
-Date: Thu, 17 Oct 2013 23:59:24 +0800
-Message-ID: <20131017155924.GA31331@taco-ThinkPad-X220>
-References: <20131016154651.7280ce92@kvm171.vb.futz.org>
+From: "Saxena, Sumit" <Sumit.Saxena@lsi.com>
+Subject: RE: [PATCH][SCSI] megaraid_sas: Fix synchronization problem between
+ sysPD IO path and AEN path
+Date: Thu, 17 Oct 2013 21:35:37 +0530
+Message-ID: <088E451FE1854947BD9145EF8C016FF418B04DBF7B@inbmail01.lsi.com>
+References: <201310161134.r9GBYYqK021397@cosmhbs0.lsi.com>
+ <525FEE87.6070808@redhat.com>
+ <088E451FE1854947BD9145EF8C016FF418B04DBF78@inbmail01.lsi.com>
+ <526006BD.3040405@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:54922 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757641Ab3JQP7c (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Oct 2013 11:59:32 -0400
-Received: by mail-pa0-f50.google.com with SMTP id fa1so2928277pad.23
-        for <linux-scsi@vger.kernel.org>; Thu, 17 Oct 2013 08:59:32 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <20131016154651.7280ce92@kvm171.vb.futz.org>
+Received: from va3ehsobe010.messaging.microsoft.com ([216.32.180.30]:4824 "EHLO
+	va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757392Ab3JQQFs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 Oct 2013 12:05:48 -0400
+In-Reply-To: <526006BD.3040405@redhat.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Robert Story <rstory@tislabs.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Tomas Henzl <thenzl@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "jbottomley@parallels.com" <jbottomley@parallels.com>, "Desai, Kashyap" <Kashyap.Desai@lsi.com>, "aradford@gmail.com" <aradford@gmail.com>
 
-What is the version of mptsas driver?
+DQoNCj4tLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPkZyb206IFRvbWFzIEhlbnpsIFttYWls
+dG86dGhlbnpsQHJlZGhhdC5jb21dDQo+U2VudDogVGh1cnNkYXksIE9jdG9iZXIgMTcsIDIwMTMg
+OToxOCBQTQ0KPlRvOiBTYXhlbmEsIFN1bWl0OyBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZw0K
+PkNjOiBqYm90dG9tbGV5QHBhcmFsbGVscy5jb207IERlc2FpLCBLYXNoeWFwOyBhcmFkZm9yZEBn
+bWFpbC5jb20NCj5TdWJqZWN0OiBSZTogW1BBVENIXVtTQ1NJXSBtZWdhcmFpZF9zYXM6IEZpeCBz
+eW5jaHJvbml6YXRpb24gcHJvYmxlbQ0KPmJldHdlZW4gc3lzUEQgSU8gcGF0aCBhbmQgQUVOIHBh
+dGgNCj4NCj5PbiAxMC8xNy8yMDEzIDA1OjEwIFBNLCBTYXhlbmEsIFN1bWl0IHdyb3RlOg0KPj4N
+Cj4+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPj4+IEZyb206IFRvbWFzIEhlbnpsIFtt
+YWlsdG86dGhlbnpsQHJlZGhhdC5jb21dDQo+Pj4gU2VudDogVGh1cnNkYXksIE9jdG9iZXIgMTcs
+IDIwMTMgNzozNSBQTQ0KPj4+IFRvOiBTYXhlbmEsIFN1bWl0OyBsaW51eC1zY3NpQHZnZXIua2Vy
+bmVsLm9yZw0KPj4+IENjOiBqYm90dG9tbGV5QHBhcmFsbGVscy5jb207IERlc2FpLCBLYXNoeWFw
+OyBhcmFkZm9yZEBnbWFpbC5jb20NCj4+PiBTdWJqZWN0OiBSZTogW1BBVENIXVtTQ1NJXSBtZWdh
+cmFpZF9zYXM6IEZpeCBzeW5jaHJvbml6YXRpb24gcHJvYmxlbQ0KPj4+IGJldHdlZW4gc3lzUEQg
+SU8gcGF0aCBhbmQgQUVOIHBhdGgNCj4+Pg0KPj4+IE9uIDEwLzE2LzIwMTMgMDE6MzQgUE0sIFN1
+bWl0LlNheGVuYUBsc2kuY29tIHdyb3RlOg0KPj4+PiBUaGVyZSBpcyBzeW5jcm9uaXphdGlvbiBw
+cm9ibGVtIGJldHdlZW4gc3lzUEQgSU8gcGF0aCBhbmQgQUVOIHBhdGguDQo+Pj4gRHJpdmVyIG1h
+aW50YWlucyBpbnN0YW5jZS0+cGRfbGlzdFtdIGFycmF5LCB3aGljaCB3aWxsIGdldCB1cGRhdGVk
+KGJ5DQo+Pj4gY2FsbGluZyBmdW5jdGlvbiBtZWdhc2FzX2dldF9wZF9saXN0W10pLCB3aGVuZXZl
+ciBhbnkgb2YgYmVsb3cgZXZlbnRzDQo+Pj4gb2NjdXJzLQ0KPj4+DQo+Pj4gSGkgU3VtaXQsDQo+
+Pj4gLSBJJ20gYSBiaXQgY29uZnVzZWQgaGVyZS0gdGhlcmUgYXJlIHR3byB0aHJlYWRzIHdoaWNo
+IG1pZ2h0IGFjY2Vzcw0KPj4+IHRoZSBzYW1lIGFycmF5LCBidXQgdGhlIHByb2JsZW0gaXMgc3Rp
+bGwgdGhlcmUgIHdoZW4gdGhlIHNlY29uZA0KPj4+IHRocmVhZCBhY2Nlc3NlcyB0aGUgYXJyYXkg
+ZHVyaW5nIHRoZSBmaW5hbCBtZW1jcHksIEkgaGF2ZSBleHBlY3RlZA0KPj4+IHRoYXQgeW91IHdp
+bGwgYWRkIHNvbWUgbG9ja2luZywgIGJ1dCBtYXliZSBJJ20gbWlzc2luZyBzb21ldGhpbmcuDQo+
+Pj4gLSBub3cgdGhlIGNvZGUgemVyb2VzIHRoZSBwZF9saXN0IGV2ZW4gd2hlbiB0aGUgIChyZXQg
+PT0gMCAmJg0KPj4+IChjaS0+Y291bnQgPCAoTUVHQVNBU19NQVhfUERfQ0hBTk5FTFMgKg0KPj4+
+IE1FR0FTQVNfTUFYX0RFVl9QRVJfQ0hBTk5FTCkpKQ0KPj4+ICBpcyBub3QgdHJ1ZS4gVGhpcyBp
+cyBJIHRoaW5rIG5ldyAtIGlzIHRoYXQgaW50ZW50aW9uYWw/DQo+PiBUb21hcywNCj4+DQo+PiBI
+YXZpbmcgbG9jayB0byBzeW5jaHJvbml6ZSB0aGlzIHdpbGwgYmUgYSBnb29kIGNob2ljZSwgYnV0
+IHdpbGwgbmVlZA0KPmNoYW5nZXMgaW4gbXVsdGlwbGUgcGxhY2VzLg0KPj4gV2l0aG91dCB0aGlz
+IHBhdGNoOiBkcml2ZXIgbWVtc2V0cyBpbnN0YW5jZS0+cGRfbGlzdFtdIGFycmF5IHRvIHplcm8s
+DQo+c2FtZSBhcnJheSB3aWxsIGJlIGFjY2Vzc2VkIGluIHN5c1BEIElPIHBhdGgsIHRoYXQgY3Jl
+YXRlcyBwcm9ibGVtLg0KPj4NCj4+IFRvIHJlc29sdmUgdGhpcyBpc3N1ZSwgd2UgaW50cm9kdWNl
+ZCBhIG5ldyBhcnJheSAiaW5zdGFuY2UtDQo+PmxvY2FsX3BkX2xpc3RbXSIgYXJyYXksIHdoaWNo
+IHdlIHdpbGwgYmUgZmlsbGluZyBmcm9tIEZpcm13YXJlIERNQWVkDQo+ZGF0YSBhbmQgdGhlbiBm
+aW5hbGx5IG1lbWNweSB0aGF0IGFycmF5IHRvIHRoZSAiaW5zdGFuY2UtPnBkX2xpc3RbXSIuDQo+
+U2luY2UgImluc3RhbmNlLT5wZF9saXN0IiBpcyBhY2Nlc3NlZCBpbiBJTyBwYXRoLCB0aGVuIG5v
+IHByb2JsZW0gaW4NCj5tZW1zZXQgemVybyBoZXJlKG1lbXNldCBpcyBvbiAiaW5zdGFuY2UtPmxv
+Y2FsX3BkX2xpc3QiKS4NCj4+DQo+PiBGaW5hbCAiTWVtY3B5IiBvcGVyYXRpb24gaXMgbm90IHNh
+dmVkIHdpdGggbG9ja2luZywgcmVhc29uIGlzOg0KPiJpbnN0YW5jZS0+cGRfbGlzdCIgYXJyYXkg
+aXMgb2YgdHlwZSAic3RydWN0IG1lZ2FzYXNfcGRfbGlzdCIsIHdoaWNoIGlzDQo+b2YgMzItYml0
+LCBzbyBzaW5nbGUgZW50cnkgaW4gImluc3RhbmNlLT5sb2NhbF9wZF9saXN0IiBhcnJheSB3aWxs
+IGJlDQo+Y29waWVkIGluIG9uZSBDUFUgY3ljbGUsIGFuZCB3aXRoIGN1cnJlbnQgTVIgRlcgZGVz
+aWduLCBpdCB3aWxsIG5vdCBiZSBhDQo+cHJvYmxlbSBldmVuIGlmIElPIHBhdGggKG9yIGFueSBv
+dGhlciB0aHJlYWQpIGlzIGFjY2Vzc2luZyBvbGQgaW5zdGFuY2UtDQo+PnBkX2xpc3RbXS4gc28g
+d2UgYXJlIHNhZmUgaGVyZSBpbiBtZW1jcHkoKSBoZXJlLg0KPj4NCj4+IEFkZGluZyBsb2NrIHdp
+bGwgYWRkIG92ZXJoZWFkIGluIElPIHBhdGgsIHdoaWNoIGNvdWxkIGJlIGF2b2lkZWQgaXMNCj5t
+YWluIHJlYXNvbiB0byByZXNvbHZlIHRoaXMgaXNzdWUgd2l0aCB0aGlzIGZpeC4NCj4NCj5UaGFu
+a3MsIHdoYXQgcmVtYWlucyBpcyBteSBzZWNvbmQgcXVlc3Rpb24NCj4tIG5vdyB0aGUgY29kZSB6
+ZXJvZXMgdGhlIHBkX2xpc3QgZXZlbiB3aGVuIHRoZSAocmV0ID09IDAgJiYgKGNpLT5jb3VudA0K
+PjwgKE1FR0FTQVNfTUFYX1BEX0NIQU5ORUxTICogTUVHQVNBU19NQVhfREVWX1BFUl9DSEFOTkVM
+KSkpIGlzIG5vdCB0cnVlLg0KPlRoaXMgaXMgSSB0aGluayBuZXcgLSBpcyB0aGF0IGludGVudGlv
+bmFsPw0KDQpUaGFua3MgZm9yIHBvaW50aW5nIHRoaXMgb3V0LCBpdCdzIHVuaW50ZW50aW9uYWwg
+YW5kIG1lbWNweSgpIHNob3VsZCBiZSBkb25lIG9ubHkgd2hlbiAocmV0ID09IDAgJiYgKGNpLT5j
+b3VudCA8IChNRUdBU0FTX01BWF9QRF9DSEFOTkVMUyAqIE1FR0FTQVNfTUFYX0RFVl9QRVJfQ0hB
+Tk5FTCkpKSBpcyB0cnVlLCBpdCBkaWQgbm90IGNhdXNlIHByb2JsZW0gYmVjYXVzZSBpZiAocmV0
+ID09IDAgJiYgKGNpLT5jb3VudCA8IChNRUdBU0FTX01BWF9QRF9DSEFOTkVMUyAqIE1FR0FTQVNf
+TUFYX0RFVl9QRVJfQ0hBTk5FTCkpKSBpcyBub3QgdHJ1ZSwgc3RpbGwgZHJpdmVyIHdpbGwgbWVt
+Y3B5ICJpbnN0YW5jZS0+bG9jYWxfcGRfbGlzdCIgdG8gImluc3RhbmNlLT5wZF9saXN0IiwgaW5z
+cGl0ZSBvZiBib3RoIGFycmF5cyBiZWluZyANCnNhbWUoZXh0cmEgb3ZlcmhlYWQgb2YgbWVtY3B5
+LCB3aGljaCBpcyBub3QgbmVlZGVkKS4gSSB3aWxsIHNlbmQgb3V0IHRoZSB1cGRhdGVkIHBhdGNo
+Lg0KPg0KPj4NCj4+DQo+PiBUaGFua3MsDQo+PiBTdW1pdA0KPj4NCj4+DQo+Pj4gVGhhbmtzLCBU
+b21hcw0KPj4+DQo+Pj4NCj4+Pj4NCj4+Pj4NCj4+Pj4NCj4+Pj4NCj4+Pj4NCj4+Pj4gTVJfRVZU
+X1BEX0lOU0VSVEVEDQo+Pj4+IE1SX0VWVF9QRF9SRU1PVkVEDQo+Pj4+IE1SX0VWVF9DVFJMX0hP
+U1RfQlVTX1NDQU5fUkVRVUVTVEVEDQo+Pj4+IE1SX0VWVF9GT1JFSUdOX0NGR19JTVBPUlRFRA0K
+Pj4+Pg0KPj4+PiBBdCBzYW1lIHRpbWUgcnVubmluZyBzeXNQRCBJTyB3aWxsIGJlIGFjY2Vzc2lu
+ZyB0aGUgc2FtZSBhcnJheQ0KPj4+IGluc3RhbmNlLT5wZF9saXN0W10sIHdoaWNoIGlzIGdldHRp
+bmcgdXBkYXRlZCBpbiBBRU4gcGF0aCwgYmVjYXVzZQ0KPj4+PiBvZiB0aGlzIElPIG1heSBub3Qg
+Z2V0IGNvcnJlY3QgUEQgaW5mbyBmcm9tIGluc3RhbmNlLT5wZF9saXN0W10NCj5hcnJheS4NCj4+
+Pj4NCj4+Pj4gU2lnbmVkLW9mZi1ieTogQWRhbSBSYWRmb3JkIDxhZGFtLnJhZGZvcmRAbHNpLmNv
+bT4NCj4+Pj4gU2lnbmVkLW9mZi1ieTogU3VtaXQgU2F4ZW5hIDxzdW1pdC5zYXhlbmFAbHNpLmNv
+bT4NCj4+Pj4gLS0tDQo+Pj4+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVn
+YXJhaWRfc2FzLmgNCj4+PiBiL2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXMuaA0K
+Pj4+PiBpbmRleCAwYzczYmE0Li5lOWU1NDNjIDEwMDY0NA0KPj4+PiAtLS0gYS9kcml2ZXJzL3Nj
+c2kvbWVnYXJhaWQvbWVnYXJhaWRfc2FzLmgNCj4+Pj4gKysrIGIvZHJpdmVycy9zY3NpL21lZ2Fy
+YWlkL21lZ2FyYWlkX3Nhcy5oDQo+Pj4+IEBAIC0xNTMxLDYgKzE1MzEsNyBAQCBzdHJ1Y3QgbWVn
+YXNhc19pbnN0YW5jZSB7DQo+Pj4+ICAJc3RydWN0IG1lZ2FzYXNfcmVnaXN0ZXJfc2V0IF9faW9t
+ZW0gKnJlZ19zZXQ7DQo+Pj4+ICAJdTMyICpyZXBseV9wb3N0X2hvc3RfaW5kZXhfYWRkcltNUl9N
+QVhfTVNJWF9SRUdfQVJSQVldOw0KPj4+PiAgCXN0cnVjdCBtZWdhc2FzX3BkX2xpc3QgICAgICAg
+ICAgcGRfbGlzdFtNRUdBU0FTX01BWF9QRF07DQo+Pj4+ICsJc3RydWN0IG1lZ2FzYXNfcGRfbGlz
+dCAgICAgICAgICBsb2NhbF9wZF9saXN0W01FR0FTQVNfTUFYX1BEXTsNCj4+Pj4gIAl1OCAgICAg
+bGRfaWRzW01FR0FTQVNfTUFYX0xEX0lEU107DQo+Pj4+ICAJczggaW5pdF9pZDsNCj4+Pj4NCj4+
+Pj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXNfYmFzZS5j
+DQo+Pj4gYi9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJhaWRfc2FzX2Jhc2UuYw0KPj4+PiBp
+bmRleCBlNjJmZjAyLi44M2ViYzc1IDEwMDY0NA0KPj4+PiAtLS0gYS9kcml2ZXJzL3Njc2kvbWVn
+YXJhaWQvbWVnYXJhaWRfc2FzX2Jhc2UuYw0KPj4+PiArKysgYi9kcml2ZXJzL3Njc2kvbWVnYXJh
+aWQvbWVnYXJhaWRfc2FzX2Jhc2UuYw0KPj4+PiBAQCAtMzE5NCwyMSArMzE5NCwyMyBAQCBtZWdh
+c2FzX2dldF9wZF9saXN0KHN0cnVjdCBtZWdhc2FzX2luc3RhbmNlDQo+Pj4gKmluc3RhbmNlKQ0K
+Pj4+PiAgCSAgICAgKGxlMzJfdG9fY3B1KGNpLT5jb3VudCkgPA0KPj4+PiAgCQkgIChNRUdBU0FT
+X01BWF9QRF9DSEFOTkVMUyAqIE1FR0FTQVNfTUFYX0RFVl9QRVJfQ0hBTk5FTCkpKQ0KPj4+IHsN
+Cj4+Pj4gLQkJbWVtc2V0KGluc3RhbmNlLT5wZF9saXN0LCAwLA0KPj4+PiArCQltZW1zZXQoaW5z
+dGFuY2UtPmxvY2FsX3BkX2xpc3QsIDAsDQo+Pj4+ICAJCQlNRUdBU0FTX01BWF9QRCAqIHNpemVv
+ZihzdHJ1Y3QgbWVnYXNhc19wZF9saXN0KSk7DQo+Pj4+DQo+Pj4+ICAJCWZvciAocGRfaW5kZXgg
+PSAwOyBwZF9pbmRleCA8IGxlMzJfdG9fY3B1KGNpLT5jb3VudCk7DQo+Pj4gcGRfaW5kZXgrKykg
+ew0KPj4+PiAtCQkJaW5zdGFuY2UtPnBkX2xpc3RbbGUxNl90b19jcHUocGRfYWRkci0+ZGV2aWNl
+SWQpXS50aWQNCj4+PiAJPQ0KPj4+PiArCQkJaW5zdGFuY2UtPmxvY2FsX3BkX2xpc3RbbGUxNl90
+b19jcHUocGRfYWRkci0NCj4+Pj4gZGV2aWNlSWQpXS50aWQJPQ0KPj4+PiAgCQkJCWxlMTZfdG9f
+Y3B1KHBkX2FkZHItPmRldmljZUlkKTsNCj4+Pj4gLQkJCWluc3RhbmNlLT5wZF9saXN0W2xlMTZf
+dG9fY3B1KHBkX2FkZHItDQo+Pj4+IGRldmljZUlkKV0uZHJpdmVUeXBlCT0NCj4+Pj4gKwkJCWlu
+c3RhbmNlLT5sb2NhbF9wZF9saXN0W2xlMTZfdG9fY3B1KHBkX2FkZHItDQo+Pj4+IGRldmljZUlk
+KV0uZHJpdmVUeXBlCT0NCj4+Pj4gIAkJCQkJCQlwZF9hZGRyLT5zY3NpRGV2VHlwZTsNCj4+Pj4g
+LQkJCWluc3RhbmNlLT5wZF9saXN0W2xlMTZfdG9fY3B1KHBkX2FkZHItDQo+Pj4+IGRldmljZUlk
+KV0uZHJpdmVTdGF0ZQk9DQo+Pj4+ICsJCQlpbnN0YW5jZS0+bG9jYWxfcGRfbGlzdFtsZTE2X3Rv
+X2NwdShwZF9hZGRyLQ0KPj4+PiBkZXZpY2VJZCldLmRyaXZlU3RhdGUJPQ0KPj4+PiAgCQkJCQkJ
+CU1SX1BEX1NUQVRFX1NZU1RFTTsNCj4+Pj4gIAkJCXBkX2FkZHIrKzsNCj4+Pj4gIAkJfQ0KPj4+
+PiAgCX0NCj4+Pj4NCj4+Pj4gKwltZW1jcHkoaW5zdGFuY2UtPnBkX2xpc3QsIGluc3RhbmNlLT5s
+b2NhbF9wZF9saXN0LA0KPj4+PiArCQlzaXplb2YoaW5zdGFuY2UtPnBkX2xpc3QpKTsNCj4+Pj4g
+IAlwY2lfZnJlZV9jb25zaXN0ZW50KGluc3RhbmNlLT5wZGV2LA0KPj4+PiAgCQkJCU1FR0FTQVNf
+TUFYX1BEICogc2l6ZW9mKHN0cnVjdCBNUl9QRF9MSVNUKSwNCj4+Pj4gIAkJCQljaSwgY2lfaCk7
+DQo+Pj4+DQo+Pj4+IC0tDQo+Pj4+IFRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5k
+IHRoZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51eC0NCj5zY3NpIg0KPj4+IGluDQo+Pj4+IHRoZSBi
+b2R5IG9mIGEgbWVzc2FnZSB0byBtYWpvcmRvbW9Admdlci5rZXJuZWwub3JnIE1vcmUgbWFqb3Jk
+b21vDQo+Pj4+IGluZm8gYXQgIGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8u
+aHRtbA0KPg0KDQo=
 
-It seems that the mptsas's driver can't recognize the the type of SD
-card and treat it as normal hard disk drive.
-
-On Wed, Oct 16, 2013 at 03:46:51PM -0400, Robert Story wrote:
-> Hi,
-> 
-> I've got a SATA adapter for a SD card in a Dell Poweredge R610. The BIOS
-> can see and boot the sdcard, (to Windows, or using syslinux/extlinux), but
-> when it hands over control to the Linux kernel, the kernel cannot access it.
-> 
-> Here's an excerpt from dmesg:
-> 
-> scsi 0:0:2:0: Direct-Access     ATA      FC-1307 SD to CF 1.1  PQ: 0 ANSI: 5
-> sd 0:0:2:0: Attached scsi generic sg3 type 0
-> mptsas: ioc0: mptsas_free_fw_event: kfree (fw_event=0xffff8801ab1ad8c0)
-> sd 0:0:2:0: [sdc] Spinning up disk .....................not responding...
-> sd 0:0:2:0: [sdc] READ CAPACITY(16) failed
-> sd 0:0:2:0: [sdc] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
-> sd 0:0:2:0: [sdc] Sense Key : Not Ready [current]
-> sd 0:0:2:0: [sdc] Add. Sense: Logical unit not ready, initializing command required
-> sd 0:0:2:0: [sdc] READ CAPACITY failed
-> sd 0:0:2:0: [sdc] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
-> sd 0:0:2:0: [sdc] Sense Key : Not Ready [current]
-> sd 0:0:2:0: [sdc] Add. Sense: Logical unit not ready, initializing command required
-> sd 0:0:2:0: [sdc] Test WP failed, assume Write Enabled
-> sd 0:0:2:0: [sdc] Asking for cache data failed
-> sd 0:0:2:0: [sdc] Assuming drive cache: write through
-> 
-> After booting and running 'sdparm --command=start /dev/sdc' I can get a
-> read capacity to work, but cannot access the drive (e.g. fdisk -l /dev/sdc).
-> 
-> If I put the SD card in a USB adapter, it works, and I was able to access
-> the SD card via the SD adapter in another machine. But our production
-> machines are dell's, so I really want to get it working there.
-> 
-> I've attached more complete debug info from booting and existing CentOS 6.4
-> install with the card installed, and a rdsosreport from an attempt to boot
-> Fedora 20 Alpha.
-> 
-> Any help or suggestions greatly appreciated.
-> 
-> 
-> Robert
-> 
-> --
-> Senior Software Engineer
-> Parsons Government Services , National Security & Defense Division
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
