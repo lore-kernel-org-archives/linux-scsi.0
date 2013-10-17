@@ -1,100 +1,84 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH][SCSI] megaraid_sas: Fix synchronization problem between
- sysPD IO path and AEN path
-Date: Thu, 17 Oct 2013 16:04:55 +0200
-Message-ID: <525FEE87.6070808@redhat.com>
-References: <201310161134.r9GBYYqK021397@cosmhbs0.lsi.com>
+From: Ewan Milne <emilne@redhat.com>
+Subject: Re: [PATCH 7/7] scsi: Add 'eh_deadline' to limit SCSI EH runtime
+Date: Thu, 17 Oct 2013 10:27:56 -0400
+Message-ID: <1382020076.3812.78.camel@localhost.localdomain>
+References: <1372661455-122384-1-git-send-email-hare@suse.de>
+	 <1372661455-122384-8-git-send-email-hare@suse.de>
+	 <1381936290.1864.11.camel@dabdike>
+Reply-To: emilne@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38492 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:23291 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755488Ab3JQOFj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Oct 2013 10:05:39 -0400
-In-Reply-To: <201310161134.r9GBYYqK021397@cosmhbs0.lsi.com>
+	id S1756184Ab3JQO2z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 Oct 2013 10:28:55 -0400
+In-Reply-To: <1381936290.1864.11.camel@dabdike>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sumit.Saxena@lsi.com, linux-scsi@vger.kernel.org
-Cc: jbottomley@parallels.com, kashyap.desai@lsi.com, aradford@gmail.com
+To: James Bottomley <jbottomley@parallels.com>
+Cc: Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Ren Mingxin <renmx@cn.fujitsu.com>, Bart van Assche <bvanassche@acm.org>, Joern Engel <joern@logfs.org>
 
-On 10/16/2013 01:34 PM, Sumit.Saxena@lsi.com wrote:
-> There is syncronization problem between sysPD IO path and AEN path. Driver maintains instance->pd_list[] array, which will get updated(by calling function megasas_get_pd_list[]), whenever any of below events occurs-
+On Wed, 2013-10-16 at 19:22 +0000, James Bottomley wrote:
+> What about instead:
+> 
+> static int scsi_host_eh_past_deadline(struct Scsi_Host *shost, int percent) {
+> 	if (!shost->last_reset || !shost->eh_deadline)
+> 		return 0;
+> 
+> 	if (time_before(jiffies,
+> 			shost->last_reset + shost->eh_deadline * percent/100))
+> 		return 0;
+> 
+> 	return 1;
+> }
+> 
+> which allows us to have
+> 
+> if (scsi_host_eh_past_deadline(shost, 50)) {
+> 
+> in scsi_eh_abort_cmds()
+> 
+> if (scsi_host_eh_past_deadline(shost, 66) {
+> 
+> in scsi_eh_bus_device_reset()
+> 
+> say 83 in target reset, and 100 in bus reset.
+> 
+> Thus ensuring we at least get a crack at the reset chain?
+> 
+> James
+> 
 
-Hi Sumit,
-- I'm a bit confused here- there are two threads which might access the same array, but the problem is still there
-  when the second thread accesses the array during the final memcpy, I have expected that you will add some locking,
-  but maybe I'm missing something.
-- now the code zeroes the pd_list even when the 
-  (ret == 0 && (ci->count < (MEGASAS_MAX_PD_CHANNELS * MEGASAS_MAX_DEV_PER_CHANNEL)))
-  is not true. This is I think new - is that intentional?
-Thanks, Tomas
- 
+Well, conceptually that seems like a good idea, since if there
+is limited time available it is probably wiser to spend it on
+higher-level recovery instead of timing out trying to deal with
+individual devices, but we didn't do any testing on how long
+the bus device reset/target reset/bus reset take.  The host
+reset was about 10 seconds for lpfc, and the maximum time was
+(command timeout) + (eh deadline) + (host reset time).
 
->
->
->
->
->
->
-> MR_EVT_PD_INSERTED
-> MR_EVT_PD_REMOVED
-> MR_EVT_CTRL_HOST_BUS_SCAN_REQUESTED
-> MR_EVT_FOREIGN_CFG_IMPORTED
->
-> At same time running sysPD IO will be accessing the same array instance->pd_list[], which is getting updated in AEN path, because
-> of this IO may not get correct PD info from instance->pd_list[] array.
->
-> Signed-off-by: Adam Radford <adam.radford@lsi.com>
-> Signed-off-by: Sumit Saxena <sumit.saxena@lsi.com>
-> ---
-> diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-> index 0c73ba4..e9e543c 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas.h
-> +++ b/drivers/scsi/megaraid/megaraid_sas.h
-> @@ -1531,6 +1531,7 @@ struct megasas_instance {
->  	struct megasas_register_set __iomem *reg_set;
->  	u32 *reply_post_host_index_addr[MR_MAX_MSIX_REG_ARRAY];
->  	struct megasas_pd_list          pd_list[MEGASAS_MAX_PD];
-> +	struct megasas_pd_list          local_pd_list[MEGASAS_MAX_PD];
->  	u8     ld_ids[MEGASAS_MAX_LD_IDS];
->  	s8 init_id;
->  
-> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-> index e62ff02..83ebc75 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
-> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-> @@ -3194,21 +3194,23 @@ megasas_get_pd_list(struct megasas_instance *instance)
->  	     (le32_to_cpu(ci->count) <
->  		  (MEGASAS_MAX_PD_CHANNELS * MEGASAS_MAX_DEV_PER_CHANNEL))) {
->  
-> -		memset(instance->pd_list, 0,
-> +		memset(instance->local_pd_list, 0,
->  			MEGASAS_MAX_PD * sizeof(struct megasas_pd_list));
->  
->  		for (pd_index = 0; pd_index < le32_to_cpu(ci->count); pd_index++) {
->  
-> -			instance->pd_list[le16_to_cpu(pd_addr->deviceId)].tid	=
-> +			instance->local_pd_list[le16_to_cpu(pd_addr->deviceId)].tid	=
->  				le16_to_cpu(pd_addr->deviceId);
-> -			instance->pd_list[le16_to_cpu(pd_addr->deviceId)].driveType	=
-> +			instance->local_pd_list[le16_to_cpu(pd_addr->deviceId)].driveType	=
->  							pd_addr->scsiDevType;
-> -			instance->pd_list[le16_to_cpu(pd_addr->deviceId)].driveState	=
-> +			instance->local_pd_list[le16_to_cpu(pd_addr->deviceId)].driveState	=
->  							MR_PD_STATE_SYSTEM;
->  			pd_addr++;
->  		}
->  	}
->  
-> +	memcpy(instance->pd_list, instance->local_pd_list,
-> +		sizeof(instance->pd_list));
->  	pci_free_consistent(instance->pdev,
->  				MEGASAS_MAX_PD * sizeof(struct MR_PD_LIST),
->  				ci, ci_h);
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+However...
+
+With this enhancement, the maximum time could be much longer if
+we attempt to e.g. perform a bus reset right before the
+eh_deadline expires, because drivers like lpfc iterate over the
+targets and send a target reset to each one (with a timeout).
+
+The original problem that prompted this change was that a
+target became inaccessible, and nothing the EH did was ever going
+to do anything except timeout, until the host reset was performed,
+at which point the FC login would fail and the HBA would start
+failing commands immediately instead of them timing out.
+
+I guess the main thing is that there should be some way to
+explain to people what value to use for eh_deadline in order
+for I/O to complete within a specified amount of time (e.g. before
+some other node in a cluster shoots us because we are unresponsive).
+
+-Ewan
+
+
+
 
