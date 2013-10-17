@@ -1,84 +1,112 @@
-From: Ewan Milne <emilne@redhat.com>
-Subject: Re: [PATCH 7/7] scsi: Add 'eh_deadline' to limit SCSI EH runtime
-Date: Thu, 17 Oct 2013 10:27:56 -0400
-Message-ID: <1382020076.3812.78.camel@localhost.localdomain>
-References: <1372661455-122384-1-git-send-email-hare@suse.de>
-	 <1372661455-122384-8-git-send-email-hare@suse.de>
-	 <1381936290.1864.11.camel@dabdike>
-Reply-To: emilne@redhat.com
+From: "Saxena, Sumit" <Sumit.Saxena@lsi.com>
+Subject: RE: [PATCH][SCSI] megaraid_sas: Fix synchronization problem between
+ sysPD IO path and AEN path
+Date: Thu, 17 Oct 2013 20:40:20 +0530
+Message-ID: <088E451FE1854947BD9145EF8C016FF418B04DBF78@inbmail01.lsi.com>
+References: <201310161134.r9GBYYqK021397@cosmhbs0.lsi.com>
+ <525FEE87.6070808@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:23291 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756184Ab3JQO2z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Oct 2013 10:28:55 -0400
-In-Reply-To: <1381936290.1864.11.camel@dabdike>
+Received: from tx2ehsobe004.messaging.microsoft.com ([65.55.88.14]:52529 "EHLO
+	tx2outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757216Ab3JQPKa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 Oct 2013 11:10:30 -0400
+In-Reply-To: <525FEE87.6070808@redhat.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>
-Cc: Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Ren Mingxin <renmx@cn.fujitsu.com>, Bart van Assche <bvanassche@acm.org>, Joern Engel <joern@logfs.org>
+To: Tomas Henzl <thenzl@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "jbottomley@parallels.com" <jbottomley@parallels.com>, "Desai, Kashyap" <Kashyap.Desai@lsi.com>, "aradford@gmail.com" <aradford@gmail.com>
 
-On Wed, 2013-10-16 at 19:22 +0000, James Bottomley wrote:
-> What about instead:
-> 
-> static int scsi_host_eh_past_deadline(struct Scsi_Host *shost, int percent) {
-> 	if (!shost->last_reset || !shost->eh_deadline)
-> 		return 0;
-> 
-> 	if (time_before(jiffies,
-> 			shost->last_reset + shost->eh_deadline * percent/100))
-> 		return 0;
-> 
-> 	return 1;
-> }
-> 
-> which allows us to have
-> 
-> if (scsi_host_eh_past_deadline(shost, 50)) {
-> 
-> in scsi_eh_abort_cmds()
-> 
-> if (scsi_host_eh_past_deadline(shost, 66) {
-> 
-> in scsi_eh_bus_device_reset()
-> 
-> say 83 in target reset, and 100 in bus reset.
-> 
-> Thus ensuring we at least get a crack at the reset chain?
-> 
-> James
-> 
-
-Well, conceptually that seems like a good idea, since if there
-is limited time available it is probably wiser to spend it on
-higher-level recovery instead of timing out trying to deal with
-individual devices, but we didn't do any testing on how long
-the bus device reset/target reset/bus reset take.  The host
-reset was about 10 seconds for lpfc, and the maximum time was
-(command timeout) + (eh deadline) + (host reset time).
-
-However...
-
-With this enhancement, the maximum time could be much longer if
-we attempt to e.g. perform a bus reset right before the
-eh_deadline expires, because drivers like lpfc iterate over the
-targets and send a target reset to each one (with a timeout).
-
-The original problem that prompted this change was that a
-target became inaccessible, and nothing the EH did was ever going
-to do anything except timeout, until the host reset was performed,
-at which point the FC login would fail and the HBA would start
-failing commands immediately instead of them timing out.
-
-I guess the main thing is that there should be some way to
-explain to people what value to use for eh_deadline in order
-for I/O to complete within a specified amount of time (e.g. before
-some other node in a cluster shoots us because we are unresponsive).
-
--Ewan
-
-
-
+DQoNCj4tLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPkZyb206IFRvbWFzIEhlbnpsIFttYWls
+dG86dGhlbnpsQHJlZGhhdC5jb21dDQo+U2VudDogVGh1cnNkYXksIE9jdG9iZXIgMTcsIDIwMTMg
+NzozNSBQTQ0KPlRvOiBTYXhlbmEsIFN1bWl0OyBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZw0K
+PkNjOiBqYm90dG9tbGV5QHBhcmFsbGVscy5jb207IERlc2FpLCBLYXNoeWFwOyBhcmFkZm9yZEBn
+bWFpbC5jb20NCj5TdWJqZWN0OiBSZTogW1BBVENIXVtTQ1NJXSBtZWdhcmFpZF9zYXM6IEZpeCBz
+eW5jaHJvbml6YXRpb24gcHJvYmxlbQ0KPmJldHdlZW4gc3lzUEQgSU8gcGF0aCBhbmQgQUVOIHBh
+dGgNCj4NCj5PbiAxMC8xNi8yMDEzIDAxOjM0IFBNLCBTdW1pdC5TYXhlbmFAbHNpLmNvbSB3cm90
+ZToNCj4+IFRoZXJlIGlzIHN5bmNyb25pemF0aW9uIHByb2JsZW0gYmV0d2VlbiBzeXNQRCBJTyBw
+YXRoIGFuZCBBRU4gcGF0aC4NCj5Ecml2ZXIgbWFpbnRhaW5zIGluc3RhbmNlLT5wZF9saXN0W10g
+YXJyYXksIHdoaWNoIHdpbGwgZ2V0IHVwZGF0ZWQoYnkNCj5jYWxsaW5nIGZ1bmN0aW9uIG1lZ2Fz
+YXNfZ2V0X3BkX2xpc3RbXSksIHdoZW5ldmVyIGFueSBvZiBiZWxvdyBldmVudHMNCj5vY2N1cnMt
+DQo+DQo+SGkgU3VtaXQsDQo+LSBJJ20gYSBiaXQgY29uZnVzZWQgaGVyZS0gdGhlcmUgYXJlIHR3
+byB0aHJlYWRzIHdoaWNoIG1pZ2h0IGFjY2VzcyB0aGUNCj5zYW1lIGFycmF5LCBidXQgdGhlIHBy
+b2JsZW0gaXMgc3RpbGwgdGhlcmUNCj4gIHdoZW4gdGhlIHNlY29uZCB0aHJlYWQgYWNjZXNzZXMg
+dGhlIGFycmF5IGR1cmluZyB0aGUgZmluYWwgbWVtY3B5LCBJDQo+aGF2ZSBleHBlY3RlZCB0aGF0
+IHlvdSB3aWxsIGFkZCBzb21lIGxvY2tpbmcsDQo+ICBidXQgbWF5YmUgSSdtIG1pc3Npbmcgc29t
+ZXRoaW5nLg0KPi0gbm93IHRoZSBjb2RlIHplcm9lcyB0aGUgcGRfbGlzdCBldmVuIHdoZW4gdGhl
+DQo+ICAocmV0ID09IDAgJiYgKGNpLT5jb3VudCA8IChNRUdBU0FTX01BWF9QRF9DSEFOTkVMUyAq
+DQo+TUVHQVNBU19NQVhfREVWX1BFUl9DSEFOTkVMKSkpDQo+ICBpcyBub3QgdHJ1ZS4gVGhpcyBp
+cyBJIHRoaW5rIG5ldyAtIGlzIHRoYXQgaW50ZW50aW9uYWw/DQoNClRvbWFzLA0KDQpIYXZpbmcg
+bG9jayB0byBzeW5jaHJvbml6ZSB0aGlzIHdpbGwgYmUgYSBnb29kIGNob2ljZSwgYnV0IHdpbGwg
+bmVlZCBjaGFuZ2VzIGluIG11bHRpcGxlIHBsYWNlcy4NCldpdGhvdXQgdGhpcyBwYXRjaDogZHJp
+dmVyIG1lbXNldHMgaW5zdGFuY2UtPnBkX2xpc3RbXSBhcnJheSB0byB6ZXJvLCBzYW1lIGFycmF5
+IHdpbGwgYmUgYWNjZXNzZWQgaW4gc3lzUEQgSU8gcGF0aCwgdGhhdCBjcmVhdGVzIHByb2JsZW0u
+DQoNClRvIHJlc29sdmUgdGhpcyBpc3N1ZSwgd2UgaW50cm9kdWNlZCBhIG5ldyBhcnJheSAiaW5z
+dGFuY2UtPmxvY2FsX3BkX2xpc3RbXSIgYXJyYXksIHdoaWNoIHdlIHdpbGwgYmUgZmlsbGluZyBm
+cm9tIEZpcm13YXJlIERNQWVkIGRhdGEgYW5kIHRoZW4gZmluYWxseSBtZW1jcHkgdGhhdCBhcnJh
+eSB0byB0aGUgImluc3RhbmNlLT5wZF9saXN0W10iLiBTaW5jZSAiaW5zdGFuY2UtPnBkX2xpc3Qi
+IGlzIGFjY2Vzc2VkIGluIElPIHBhdGgsIHRoZW4gbm8gcHJvYmxlbSBpbiBtZW1zZXQgemVybyBo
+ZXJlKG1lbXNldCBpcyBvbiAiaW5zdGFuY2UtPmxvY2FsX3BkX2xpc3QiKS4NCg0KRmluYWwgIk1l
+bWNweSIgb3BlcmF0aW9uIGlzIG5vdCBzYXZlZCB3aXRoIGxvY2tpbmcsIHJlYXNvbiBpczogImlu
+c3RhbmNlLT5wZF9saXN0IiBhcnJheSBpcyBvZiB0eXBlICJzdHJ1Y3QgbWVnYXNhc19wZF9saXN0
+Iiwgd2hpY2ggaXMgb2YgMzItYml0LCBzbyBzaW5nbGUgZW50cnkgaW4gImluc3RhbmNlLT5sb2Nh
+bF9wZF9saXN0IiBhcnJheSB3aWxsIGJlIGNvcGllZCBpbiBvbmUgQ1BVIGN5Y2xlLCBhbmQgd2l0
+aCBjdXJyZW50IE1SIEZXIGRlc2lnbiwgaXQgd2lsbCBub3QgYmUgYSBwcm9ibGVtIGV2ZW4gaWYg
+SU8gcGF0aCAob3IgYW55IG90aGVyIHRocmVhZCkgaXMgYWNjZXNzaW5nIG9sZCBpbnN0YW5jZS0+
+cGRfbGlzdFtdLiBzbyB3ZSBhcmUgc2FmZSBoZXJlIGluIG1lbWNweSgpIGhlcmUuDQoNCkFkZGlu
+ZyBsb2NrIHdpbGwgYWRkIG92ZXJoZWFkIGluIElPIHBhdGgsIHdoaWNoIGNvdWxkIGJlIGF2b2lk
+ZWQgaXMgbWFpbiByZWFzb24gdG8gcmVzb2x2ZSB0aGlzIGlzc3VlIHdpdGggdGhpcyBmaXguDQoN
+Cg0KVGhhbmtzLA0KU3VtaXQNCg0KDQo+VGhhbmtzLCBUb21hcw0KPg0KPg0KPj4NCj4+DQo+Pg0K
+Pj4NCj4+DQo+Pg0KPj4gTVJfRVZUX1BEX0lOU0VSVEVEDQo+PiBNUl9FVlRfUERfUkVNT1ZFRA0K
+Pj4gTVJfRVZUX0NUUkxfSE9TVF9CVVNfU0NBTl9SRVFVRVNURUQNCj4+IE1SX0VWVF9GT1JFSUdO
+X0NGR19JTVBPUlRFRA0KPj4NCj4+IEF0IHNhbWUgdGltZSBydW5uaW5nIHN5c1BEIElPIHdpbGwg
+YmUgYWNjZXNzaW5nIHRoZSBzYW1lIGFycmF5DQo+aW5zdGFuY2UtPnBkX2xpc3RbXSwgd2hpY2gg
+aXMgZ2V0dGluZyB1cGRhdGVkIGluIEFFTiBwYXRoLCBiZWNhdXNlDQo+PiBvZiB0aGlzIElPIG1h
+eSBub3QgZ2V0IGNvcnJlY3QgUEQgaW5mbyBmcm9tIGluc3RhbmNlLT5wZF9saXN0W10gYXJyYXku
+DQo+Pg0KPj4gU2lnbmVkLW9mZi1ieTogQWRhbSBSYWRmb3JkIDxhZGFtLnJhZGZvcmRAbHNpLmNv
+bT4NCj4+IFNpZ25lZC1vZmYtYnk6IFN1bWl0IFNheGVuYSA8c3VtaXQuc2F4ZW5hQGxzaS5jb20+
+DQo+PiAtLS0NCj4+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJhaWRf
+c2FzLmgNCj5iL2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXMuaA0KPj4gaW5kZXgg
+MGM3M2JhNC4uZTllNTQzYyAxMDA2NDQNCj4+IC0tLSBhL2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9t
+ZWdhcmFpZF9zYXMuaA0KPj4gKysrIGIvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21lZ2FyYWlkX3Nh
+cy5oDQo+PiBAQCAtMTUzMSw2ICsxNTMxLDcgQEAgc3RydWN0IG1lZ2FzYXNfaW5zdGFuY2Ugew0K
+Pj4gIAlzdHJ1Y3QgbWVnYXNhc19yZWdpc3Rlcl9zZXQgX19pb21lbSAqcmVnX3NldDsNCj4+ICAJ
+dTMyICpyZXBseV9wb3N0X2hvc3RfaW5kZXhfYWRkcltNUl9NQVhfTVNJWF9SRUdfQVJSQVldOw0K
+Pj4gIAlzdHJ1Y3QgbWVnYXNhc19wZF9saXN0ICAgICAgICAgIHBkX2xpc3RbTUVHQVNBU19NQVhf
+UERdOw0KPj4gKwlzdHJ1Y3QgbWVnYXNhc19wZF9saXN0ICAgICAgICAgIGxvY2FsX3BkX2xpc3Rb
+TUVHQVNBU19NQVhfUERdOw0KPj4gIAl1OCAgICAgbGRfaWRzW01FR0FTQVNfTUFYX0xEX0lEU107
+DQo+PiAgCXM4IGluaXRfaWQ7DQo+Pg0KPj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9tZWdh
+cmFpZC9tZWdhcmFpZF9zYXNfYmFzZS5jDQo+Yi9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJh
+aWRfc2FzX2Jhc2UuYw0KPj4gaW5kZXggZTYyZmYwMi4uODNlYmM3NSAxMDA2NDQNCj4+IC0tLSBh
+L2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXNfYmFzZS5jDQo+PiArKysgYi9kcml2
+ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJhaWRfc2FzX2Jhc2UuYw0KPj4gQEAgLTMxOTQsMjEgKzMx
+OTQsMjMgQEAgbWVnYXNhc19nZXRfcGRfbGlzdChzdHJ1Y3QgbWVnYXNhc19pbnN0YW5jZQ0KPipp
+bnN0YW5jZSkNCj4+ICAJICAgICAobGUzMl90b19jcHUoY2ktPmNvdW50KSA8DQo+PiAgCQkgIChN
+RUdBU0FTX01BWF9QRF9DSEFOTkVMUyAqIE1FR0FTQVNfTUFYX0RFVl9QRVJfQ0hBTk5FTCkpKQ0K
+PnsNCj4+DQo+PiAtCQltZW1zZXQoaW5zdGFuY2UtPnBkX2xpc3QsIDAsDQo+PiArCQltZW1zZXQo
+aW5zdGFuY2UtPmxvY2FsX3BkX2xpc3QsIDAsDQo+PiAgCQkJTUVHQVNBU19NQVhfUEQgKiBzaXpl
+b2Yoc3RydWN0IG1lZ2FzYXNfcGRfbGlzdCkpOw0KPj4NCj4+ICAJCWZvciAocGRfaW5kZXggPSAw
+OyBwZF9pbmRleCA8IGxlMzJfdG9fY3B1KGNpLT5jb3VudCk7DQo+cGRfaW5kZXgrKykgew0KPj4N
+Cj4+IC0JCQlpbnN0YW5jZS0+cGRfbGlzdFtsZTE2X3RvX2NwdShwZF9hZGRyLT5kZXZpY2VJZCld
+LnRpZA0KPgk9DQo+PiArCQkJaW5zdGFuY2UtPmxvY2FsX3BkX2xpc3RbbGUxNl90b19jcHUocGRf
+YWRkci0NCj4+ZGV2aWNlSWQpXS50aWQJPQ0KPj4gIAkJCQlsZTE2X3RvX2NwdShwZF9hZGRyLT5k
+ZXZpY2VJZCk7DQo+PiAtCQkJaW5zdGFuY2UtPnBkX2xpc3RbbGUxNl90b19jcHUocGRfYWRkci0N
+Cj4+ZGV2aWNlSWQpXS5kcml2ZVR5cGUJPQ0KPj4gKwkJCWluc3RhbmNlLT5sb2NhbF9wZF9saXN0
+W2xlMTZfdG9fY3B1KHBkX2FkZHItDQo+PmRldmljZUlkKV0uZHJpdmVUeXBlCT0NCj4+ICAJCQkJ
+CQkJcGRfYWRkci0+c2NzaURldlR5cGU7DQo+PiAtCQkJaW5zdGFuY2UtPnBkX2xpc3RbbGUxNl90
+b19jcHUocGRfYWRkci0NCj4+ZGV2aWNlSWQpXS5kcml2ZVN0YXRlCT0NCj4+ICsJCQlpbnN0YW5j
+ZS0+bG9jYWxfcGRfbGlzdFtsZTE2X3RvX2NwdShwZF9hZGRyLQ0KPj5kZXZpY2VJZCldLmRyaXZl
+U3RhdGUJPQ0KPj4gIAkJCQkJCQlNUl9QRF9TVEFURV9TWVNURU07DQo+PiAgCQkJcGRfYWRkcisr
+Ow0KPj4gIAkJfQ0KPj4gIAl9DQo+Pg0KPj4gKwltZW1jcHkoaW5zdGFuY2UtPnBkX2xpc3QsIGlu
+c3RhbmNlLT5sb2NhbF9wZF9saXN0LA0KPj4gKwkJc2l6ZW9mKGluc3RhbmNlLT5wZF9saXN0KSk7
+DQo+PiAgCXBjaV9mcmVlX2NvbnNpc3RlbnQoaW5zdGFuY2UtPnBkZXYsDQo+PiAgCQkJCU1FR0FT
+QVNfTUFYX1BEICogc2l6ZW9mKHN0cnVjdCBNUl9QRF9MSVNUKSwNCj4+ICAJCQkJY2ksIGNpX2gp
+Ow0KPj4NCj4+IC0tDQo+PiBUbyB1bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUg
+bGluZSAidW5zdWJzY3JpYmUgbGludXgtc2NzaSINCj5pbg0KPj4gdGhlIGJvZHkgb2YgYSBtZXNz
+YWdlIHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcNCj4+IE1vcmUgbWFqb3Jkb21vIGluZm8g
+YXQgIGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0KPg0KDQo=
 
