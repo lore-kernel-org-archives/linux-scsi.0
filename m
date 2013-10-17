@@ -1,112 +1,148 @@
-From: "Saxena, Sumit" <Sumit.Saxena@lsi.com>
-Subject: RE: [PATCH][SCSI] megaraid_sas: Fix synchronization problem between
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH][SCSI] megaraid_sas: Fix synchronization problem between
  sysPD IO path and AEN path
-Date: Thu, 17 Oct 2013 20:40:20 +0530
-Message-ID: <088E451FE1854947BD9145EF8C016FF418B04DBF78@inbmail01.lsi.com>
-References: <201310161134.r9GBYYqK021397@cosmhbs0.lsi.com>
- <525FEE87.6070808@redhat.com>
+Date: Thu, 17 Oct 2013 17:48:13 +0200
+Message-ID: <526006BD.3040405@redhat.com>
+References: <201310161134.r9GBYYqK021397@cosmhbs0.lsi.com> <525FEE87.6070808@redhat.com> <088E451FE1854947BD9145EF8C016FF418B04DBF78@inbmail01.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tx2ehsobe004.messaging.microsoft.com ([65.55.88.14]:52529 "EHLO
-	tx2outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757216Ab3JQPKa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Oct 2013 11:10:30 -0400
-In-Reply-To: <525FEE87.6070808@redhat.com>
-Content-Language: en-US
+Received: from mx1.redhat.com ([209.132.183.28]:54588 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755034Ab3JQPs6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 Oct 2013 11:48:58 -0400
+In-Reply-To: <088E451FE1854947BD9145EF8C016FF418B04DBF78@inbmail01.lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: "Saxena, Sumit" <Sumit.Saxena@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 Cc: "jbottomley@parallels.com" <jbottomley@parallels.com>, "Desai, Kashyap" <Kashyap.Desai@lsi.com>, "aradford@gmail.com" <aradford@gmail.com>
 
-DQoNCj4tLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPkZyb206IFRvbWFzIEhlbnpsIFttYWls
-dG86dGhlbnpsQHJlZGhhdC5jb21dDQo+U2VudDogVGh1cnNkYXksIE9jdG9iZXIgMTcsIDIwMTMg
-NzozNSBQTQ0KPlRvOiBTYXhlbmEsIFN1bWl0OyBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZw0K
-PkNjOiBqYm90dG9tbGV5QHBhcmFsbGVscy5jb207IERlc2FpLCBLYXNoeWFwOyBhcmFkZm9yZEBn
-bWFpbC5jb20NCj5TdWJqZWN0OiBSZTogW1BBVENIXVtTQ1NJXSBtZWdhcmFpZF9zYXM6IEZpeCBz
-eW5jaHJvbml6YXRpb24gcHJvYmxlbQ0KPmJldHdlZW4gc3lzUEQgSU8gcGF0aCBhbmQgQUVOIHBh
-dGgNCj4NCj5PbiAxMC8xNi8yMDEzIDAxOjM0IFBNLCBTdW1pdC5TYXhlbmFAbHNpLmNvbSB3cm90
-ZToNCj4+IFRoZXJlIGlzIHN5bmNyb25pemF0aW9uIHByb2JsZW0gYmV0d2VlbiBzeXNQRCBJTyBw
-YXRoIGFuZCBBRU4gcGF0aC4NCj5Ecml2ZXIgbWFpbnRhaW5zIGluc3RhbmNlLT5wZF9saXN0W10g
-YXJyYXksIHdoaWNoIHdpbGwgZ2V0IHVwZGF0ZWQoYnkNCj5jYWxsaW5nIGZ1bmN0aW9uIG1lZ2Fz
-YXNfZ2V0X3BkX2xpc3RbXSksIHdoZW5ldmVyIGFueSBvZiBiZWxvdyBldmVudHMNCj5vY2N1cnMt
-DQo+DQo+SGkgU3VtaXQsDQo+LSBJJ20gYSBiaXQgY29uZnVzZWQgaGVyZS0gdGhlcmUgYXJlIHR3
-byB0aHJlYWRzIHdoaWNoIG1pZ2h0IGFjY2VzcyB0aGUNCj5zYW1lIGFycmF5LCBidXQgdGhlIHBy
-b2JsZW0gaXMgc3RpbGwgdGhlcmUNCj4gIHdoZW4gdGhlIHNlY29uZCB0aHJlYWQgYWNjZXNzZXMg
-dGhlIGFycmF5IGR1cmluZyB0aGUgZmluYWwgbWVtY3B5LCBJDQo+aGF2ZSBleHBlY3RlZCB0aGF0
-IHlvdSB3aWxsIGFkZCBzb21lIGxvY2tpbmcsDQo+ICBidXQgbWF5YmUgSSdtIG1pc3Npbmcgc29t
-ZXRoaW5nLg0KPi0gbm93IHRoZSBjb2RlIHplcm9lcyB0aGUgcGRfbGlzdCBldmVuIHdoZW4gdGhl
-DQo+ICAocmV0ID09IDAgJiYgKGNpLT5jb3VudCA8IChNRUdBU0FTX01BWF9QRF9DSEFOTkVMUyAq
-DQo+TUVHQVNBU19NQVhfREVWX1BFUl9DSEFOTkVMKSkpDQo+ICBpcyBub3QgdHJ1ZS4gVGhpcyBp
-cyBJIHRoaW5rIG5ldyAtIGlzIHRoYXQgaW50ZW50aW9uYWw/DQoNClRvbWFzLA0KDQpIYXZpbmcg
-bG9jayB0byBzeW5jaHJvbml6ZSB0aGlzIHdpbGwgYmUgYSBnb29kIGNob2ljZSwgYnV0IHdpbGwg
-bmVlZCBjaGFuZ2VzIGluIG11bHRpcGxlIHBsYWNlcy4NCldpdGhvdXQgdGhpcyBwYXRjaDogZHJp
-dmVyIG1lbXNldHMgaW5zdGFuY2UtPnBkX2xpc3RbXSBhcnJheSB0byB6ZXJvLCBzYW1lIGFycmF5
-IHdpbGwgYmUgYWNjZXNzZWQgaW4gc3lzUEQgSU8gcGF0aCwgdGhhdCBjcmVhdGVzIHByb2JsZW0u
-DQoNClRvIHJlc29sdmUgdGhpcyBpc3N1ZSwgd2UgaW50cm9kdWNlZCBhIG5ldyBhcnJheSAiaW5z
-dGFuY2UtPmxvY2FsX3BkX2xpc3RbXSIgYXJyYXksIHdoaWNoIHdlIHdpbGwgYmUgZmlsbGluZyBm
-cm9tIEZpcm13YXJlIERNQWVkIGRhdGEgYW5kIHRoZW4gZmluYWxseSBtZW1jcHkgdGhhdCBhcnJh
-eSB0byB0aGUgImluc3RhbmNlLT5wZF9saXN0W10iLiBTaW5jZSAiaW5zdGFuY2UtPnBkX2xpc3Qi
-IGlzIGFjY2Vzc2VkIGluIElPIHBhdGgsIHRoZW4gbm8gcHJvYmxlbSBpbiBtZW1zZXQgemVybyBo
-ZXJlKG1lbXNldCBpcyBvbiAiaW5zdGFuY2UtPmxvY2FsX3BkX2xpc3QiKS4NCg0KRmluYWwgIk1l
-bWNweSIgb3BlcmF0aW9uIGlzIG5vdCBzYXZlZCB3aXRoIGxvY2tpbmcsIHJlYXNvbiBpczogImlu
-c3RhbmNlLT5wZF9saXN0IiBhcnJheSBpcyBvZiB0eXBlICJzdHJ1Y3QgbWVnYXNhc19wZF9saXN0
-Iiwgd2hpY2ggaXMgb2YgMzItYml0LCBzbyBzaW5nbGUgZW50cnkgaW4gImluc3RhbmNlLT5sb2Nh
-bF9wZF9saXN0IiBhcnJheSB3aWxsIGJlIGNvcGllZCBpbiBvbmUgQ1BVIGN5Y2xlLCBhbmQgd2l0
-aCBjdXJyZW50IE1SIEZXIGRlc2lnbiwgaXQgd2lsbCBub3QgYmUgYSBwcm9ibGVtIGV2ZW4gaWYg
-SU8gcGF0aCAob3IgYW55IG90aGVyIHRocmVhZCkgaXMgYWNjZXNzaW5nIG9sZCBpbnN0YW5jZS0+
-cGRfbGlzdFtdLiBzbyB3ZSBhcmUgc2FmZSBoZXJlIGluIG1lbWNweSgpIGhlcmUuDQoNCkFkZGlu
-ZyBsb2NrIHdpbGwgYWRkIG92ZXJoZWFkIGluIElPIHBhdGgsIHdoaWNoIGNvdWxkIGJlIGF2b2lk
-ZWQgaXMgbWFpbiByZWFzb24gdG8gcmVzb2x2ZSB0aGlzIGlzc3VlIHdpdGggdGhpcyBmaXguDQoN
-Cg0KVGhhbmtzLA0KU3VtaXQNCg0KDQo+VGhhbmtzLCBUb21hcw0KPg0KPg0KPj4NCj4+DQo+Pg0K
-Pj4NCj4+DQo+Pg0KPj4gTVJfRVZUX1BEX0lOU0VSVEVEDQo+PiBNUl9FVlRfUERfUkVNT1ZFRA0K
-Pj4gTVJfRVZUX0NUUkxfSE9TVF9CVVNfU0NBTl9SRVFVRVNURUQNCj4+IE1SX0VWVF9GT1JFSUdO
-X0NGR19JTVBPUlRFRA0KPj4NCj4+IEF0IHNhbWUgdGltZSBydW5uaW5nIHN5c1BEIElPIHdpbGwg
-YmUgYWNjZXNzaW5nIHRoZSBzYW1lIGFycmF5DQo+aW5zdGFuY2UtPnBkX2xpc3RbXSwgd2hpY2gg
-aXMgZ2V0dGluZyB1cGRhdGVkIGluIEFFTiBwYXRoLCBiZWNhdXNlDQo+PiBvZiB0aGlzIElPIG1h
-eSBub3QgZ2V0IGNvcnJlY3QgUEQgaW5mbyBmcm9tIGluc3RhbmNlLT5wZF9saXN0W10gYXJyYXku
-DQo+Pg0KPj4gU2lnbmVkLW9mZi1ieTogQWRhbSBSYWRmb3JkIDxhZGFtLnJhZGZvcmRAbHNpLmNv
-bT4NCj4+IFNpZ25lZC1vZmYtYnk6IFN1bWl0IFNheGVuYSA8c3VtaXQuc2F4ZW5hQGxzaS5jb20+
-DQo+PiAtLS0NCj4+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJhaWRf
-c2FzLmgNCj5iL2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXMuaA0KPj4gaW5kZXgg
-MGM3M2JhNC4uZTllNTQzYyAxMDA2NDQNCj4+IC0tLSBhL2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9t
-ZWdhcmFpZF9zYXMuaA0KPj4gKysrIGIvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21lZ2FyYWlkX3Nh
-cy5oDQo+PiBAQCAtMTUzMSw2ICsxNTMxLDcgQEAgc3RydWN0IG1lZ2FzYXNfaW5zdGFuY2Ugew0K
-Pj4gIAlzdHJ1Y3QgbWVnYXNhc19yZWdpc3Rlcl9zZXQgX19pb21lbSAqcmVnX3NldDsNCj4+ICAJ
-dTMyICpyZXBseV9wb3N0X2hvc3RfaW5kZXhfYWRkcltNUl9NQVhfTVNJWF9SRUdfQVJSQVldOw0K
-Pj4gIAlzdHJ1Y3QgbWVnYXNhc19wZF9saXN0ICAgICAgICAgIHBkX2xpc3RbTUVHQVNBU19NQVhf
-UERdOw0KPj4gKwlzdHJ1Y3QgbWVnYXNhc19wZF9saXN0ICAgICAgICAgIGxvY2FsX3BkX2xpc3Rb
-TUVHQVNBU19NQVhfUERdOw0KPj4gIAl1OCAgICAgbGRfaWRzW01FR0FTQVNfTUFYX0xEX0lEU107
-DQo+PiAgCXM4IGluaXRfaWQ7DQo+Pg0KPj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9tZWdh
-cmFpZC9tZWdhcmFpZF9zYXNfYmFzZS5jDQo+Yi9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJh
-aWRfc2FzX2Jhc2UuYw0KPj4gaW5kZXggZTYyZmYwMi4uODNlYmM3NSAxMDA2NDQNCj4+IC0tLSBh
-L2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXNfYmFzZS5jDQo+PiArKysgYi9kcml2
-ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJhaWRfc2FzX2Jhc2UuYw0KPj4gQEAgLTMxOTQsMjEgKzMx
-OTQsMjMgQEAgbWVnYXNhc19nZXRfcGRfbGlzdChzdHJ1Y3QgbWVnYXNhc19pbnN0YW5jZQ0KPipp
-bnN0YW5jZSkNCj4+ICAJICAgICAobGUzMl90b19jcHUoY2ktPmNvdW50KSA8DQo+PiAgCQkgIChN
-RUdBU0FTX01BWF9QRF9DSEFOTkVMUyAqIE1FR0FTQVNfTUFYX0RFVl9QRVJfQ0hBTk5FTCkpKQ0K
-PnsNCj4+DQo+PiAtCQltZW1zZXQoaW5zdGFuY2UtPnBkX2xpc3QsIDAsDQo+PiArCQltZW1zZXQo
-aW5zdGFuY2UtPmxvY2FsX3BkX2xpc3QsIDAsDQo+PiAgCQkJTUVHQVNBU19NQVhfUEQgKiBzaXpl
-b2Yoc3RydWN0IG1lZ2FzYXNfcGRfbGlzdCkpOw0KPj4NCj4+ICAJCWZvciAocGRfaW5kZXggPSAw
-OyBwZF9pbmRleCA8IGxlMzJfdG9fY3B1KGNpLT5jb3VudCk7DQo+cGRfaW5kZXgrKykgew0KPj4N
-Cj4+IC0JCQlpbnN0YW5jZS0+cGRfbGlzdFtsZTE2X3RvX2NwdShwZF9hZGRyLT5kZXZpY2VJZCld
-LnRpZA0KPgk9DQo+PiArCQkJaW5zdGFuY2UtPmxvY2FsX3BkX2xpc3RbbGUxNl90b19jcHUocGRf
-YWRkci0NCj4+ZGV2aWNlSWQpXS50aWQJPQ0KPj4gIAkJCQlsZTE2X3RvX2NwdShwZF9hZGRyLT5k
-ZXZpY2VJZCk7DQo+PiAtCQkJaW5zdGFuY2UtPnBkX2xpc3RbbGUxNl90b19jcHUocGRfYWRkci0N
-Cj4+ZGV2aWNlSWQpXS5kcml2ZVR5cGUJPQ0KPj4gKwkJCWluc3RhbmNlLT5sb2NhbF9wZF9saXN0
-W2xlMTZfdG9fY3B1KHBkX2FkZHItDQo+PmRldmljZUlkKV0uZHJpdmVUeXBlCT0NCj4+ICAJCQkJ
-CQkJcGRfYWRkci0+c2NzaURldlR5cGU7DQo+PiAtCQkJaW5zdGFuY2UtPnBkX2xpc3RbbGUxNl90
-b19jcHUocGRfYWRkci0NCj4+ZGV2aWNlSWQpXS5kcml2ZVN0YXRlCT0NCj4+ICsJCQlpbnN0YW5j
-ZS0+bG9jYWxfcGRfbGlzdFtsZTE2X3RvX2NwdShwZF9hZGRyLQ0KPj5kZXZpY2VJZCldLmRyaXZl
-U3RhdGUJPQ0KPj4gIAkJCQkJCQlNUl9QRF9TVEFURV9TWVNURU07DQo+PiAgCQkJcGRfYWRkcisr
-Ow0KPj4gIAkJfQ0KPj4gIAl9DQo+Pg0KPj4gKwltZW1jcHkoaW5zdGFuY2UtPnBkX2xpc3QsIGlu
-c3RhbmNlLT5sb2NhbF9wZF9saXN0LA0KPj4gKwkJc2l6ZW9mKGluc3RhbmNlLT5wZF9saXN0KSk7
-DQo+PiAgCXBjaV9mcmVlX2NvbnNpc3RlbnQoaW5zdGFuY2UtPnBkZXYsDQo+PiAgCQkJCU1FR0FT
-QVNfTUFYX1BEICogc2l6ZW9mKHN0cnVjdCBNUl9QRF9MSVNUKSwNCj4+ICAJCQkJY2ksIGNpX2gp
-Ow0KPj4NCj4+IC0tDQo+PiBUbyB1bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUg
-bGluZSAidW5zdWJzY3JpYmUgbGludXgtc2NzaSINCj5pbg0KPj4gdGhlIGJvZHkgb2YgYSBtZXNz
-YWdlIHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcNCj4+IE1vcmUgbWFqb3Jkb21vIGluZm8g
-YXQgIGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0KPg0KDQo=
+On 10/17/2013 05:10 PM, Saxena, Sumit wrote:
+>
+>> -----Original Message-----
+>> From: Tomas Henzl [mailto:thenzl@redhat.com]
+>> Sent: Thursday, October 17, 2013 7:35 PM
+>> To: Saxena, Sumit; linux-scsi@vger.kernel.org
+>> Cc: jbottomley@parallels.com; Desai, Kashyap; aradford@gmail.com
+>> Subject: Re: [PATCH][SCSI] megaraid_sas: Fix synchronization problem
+>> between sysPD IO path and AEN path
+>>
+>> On 10/16/2013 01:34 PM, Sumit.Saxena@lsi.com wrote:
+>>> There is syncronization problem between sysPD IO path and AEN path.
+>> Driver maintains instance->pd_list[] array, which will get updated(by
+>> calling function megasas_get_pd_list[]), whenever any of below events
+>> occurs-
+>>
+>> Hi Sumit,
+>> - I'm a bit confused here- there are two threads which might access the
+>> same array, but the problem is still there
+>>  when the second thread accesses the array during the final memcpy, I
+>> have expected that you will add some locking,
+>>  but maybe I'm missing something.
+>> - now the code zeroes the pd_list even when the
+>>  (ret == 0 && (ci->count < (MEGASAS_MAX_PD_CHANNELS *
+>> MEGASAS_MAX_DEV_PER_CHANNEL)))
+>>  is not true. This is I think new - is that intentional?
+> Tomas,
+>
+> Having lock to synchronize this will be a good choice, but will need changes in multiple places.
+> Without this patch: driver memsets instance->pd_list[] array to zero, same array will be accessed in sysPD IO path, that creates problem.
+>
+> To resolve this issue, we introduced a new array "instance->local_pd_list[]" array, which we will be filling from Firmware DMAed data and then finally memcpy that array to the "instance->pd_list[]". Since "instance->pd_list" is accessed in IO path, then no problem in memset zero here(memset is on "instance->local_pd_list").
+>
+> Final "Memcpy" operation is not saved with locking, reason is: "instance->pd_list" array is of type "struct megasas_pd_list", which is of 32-bit, so single entry in "instance->local_pd_list" array will be copied in one CPU cycle, and with current MR FW design, it will not be a problem even if IO path (or any other thread) is accessing old instance->pd_list[]. so we are safe here in memcpy() here.
+>
+> Adding lock will add overhead in IO path, which could be avoided is main reason to resolve this issue with this fix.
+
+Thanks, what remains is my second question 
+- now the code zeroes the pd_list even when the (ret == 0 && (ci->count < (MEGASAS_MAX_PD_CHANNELS * MEGASAS_MAX_DEV_PER_CHANNEL)))
+is not true.
+This is I think new - is that intentional?
+
+>
+>
+> Thanks,
+> Sumit
+>
+>
+>> Thanks, Tomas
+>>
+>>
+>>>
+>>>
+>>>
+>>>
+>>>
+>>> MR_EVT_PD_INSERTED
+>>> MR_EVT_PD_REMOVED
+>>> MR_EVT_CTRL_HOST_BUS_SCAN_REQUESTED
+>>> MR_EVT_FOREIGN_CFG_IMPORTED
+>>>
+>>> At same time running sysPD IO will be accessing the same array
+>> instance->pd_list[], which is getting updated in AEN path, because
+>>> of this IO may not get correct PD info from instance->pd_list[] array.
+>>>
+>>> Signed-off-by: Adam Radford <adam.radford@lsi.com>
+>>> Signed-off-by: Sumit Saxena <sumit.saxena@lsi.com>
+>>> ---
+>>> diff --git a/drivers/scsi/megaraid/megaraid_sas.h
+>> b/drivers/scsi/megaraid/megaraid_sas.h
+>>> index 0c73ba4..e9e543c 100644
+>>> --- a/drivers/scsi/megaraid/megaraid_sas.h
+>>> +++ b/drivers/scsi/megaraid/megaraid_sas.h
+>>> @@ -1531,6 +1531,7 @@ struct megasas_instance {
+>>>  	struct megasas_register_set __iomem *reg_set;
+>>>  	u32 *reply_post_host_index_addr[MR_MAX_MSIX_REG_ARRAY];
+>>>  	struct megasas_pd_list          pd_list[MEGASAS_MAX_PD];
+>>> +	struct megasas_pd_list          local_pd_list[MEGASAS_MAX_PD];
+>>>  	u8     ld_ids[MEGASAS_MAX_LD_IDS];
+>>>  	s8 init_id;
+>>>
+>>> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c
+>> b/drivers/scsi/megaraid/megaraid_sas_base.c
+>>> index e62ff02..83ebc75 100644
+>>> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
+>>> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+>>> @@ -3194,21 +3194,23 @@ megasas_get_pd_list(struct megasas_instance
+>> *instance)
+>>>  	     (le32_to_cpu(ci->count) <
+>>>  		  (MEGASAS_MAX_PD_CHANNELS * MEGASAS_MAX_DEV_PER_CHANNEL)))
+>> {
+>>> -		memset(instance->pd_list, 0,
+>>> +		memset(instance->local_pd_list, 0,
+>>>  			MEGASAS_MAX_PD * sizeof(struct megasas_pd_list));
+>>>
+>>>  		for (pd_index = 0; pd_index < le32_to_cpu(ci->count);
+>> pd_index++) {
+>>> -			instance->pd_list[le16_to_cpu(pd_addr->deviceId)].tid
+>> 	=
+>>> +			instance->local_pd_list[le16_to_cpu(pd_addr-
+>>> deviceId)].tid	=
+>>>  				le16_to_cpu(pd_addr->deviceId);
+>>> -			instance->pd_list[le16_to_cpu(pd_addr-
+>>> deviceId)].driveType	=
+>>> +			instance->local_pd_list[le16_to_cpu(pd_addr-
+>>> deviceId)].driveType	=
+>>>  							pd_addr->scsiDevType;
+>>> -			instance->pd_list[le16_to_cpu(pd_addr-
+>>> deviceId)].driveState	=
+>>> +			instance->local_pd_list[le16_to_cpu(pd_addr-
+>>> deviceId)].driveState	=
+>>>  							MR_PD_STATE_SYSTEM;
+>>>  			pd_addr++;
+>>>  		}
+>>>  	}
+>>>
+>>> +	memcpy(instance->pd_list, instance->local_pd_list,
+>>> +		sizeof(instance->pd_list));
+>>>  	pci_free_consistent(instance->pdev,
+>>>  				MEGASAS_MAX_PD * sizeof(struct MR_PD_LIST),
+>>>  				ci, ci_h);
+>>>
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-scsi"
+>> in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
