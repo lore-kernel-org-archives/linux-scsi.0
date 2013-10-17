@@ -1,37 +1,86 @@
-From: "Praveen Murali" <pmurali@logicube.com>
-Subject: Re: [PATCH 3/3] Fix device detection issues with mvsas driver
-Date: Wed, 16 Oct 2013 19:57:24 -0700
-Message-ID: <00E6420E-23BE-463F-A01B-F29B6D26B9D8@logicube.com>
-References: <F766E4F80769BD478052FB6533FA745D4CEB81B63E@SC-VEXCH4.marvell.com> <CAP0P+NXi=owEOnpTAnKxwrHfX-nu+bQF6MeNs3sMZnQLqB1jsw@mail.gmail.com>
-Mime-Version: 1.0 (1.0)
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+From: "lindar_liu" <lindar_liu@usish.com>
+Subject: RE: [PATCH Resend] [scsi] pm8001 : fix panic when cat /sys/class/sas_phy/phy-8:0/running_disparity_error_count
+Date: Thu, 17 Oct 2013 11:37:36 +0800
+Message-ID: <003a01cecaea$3c98fbe0$b5caf3a0$@com>
+References: <33d91895.262d9.141c17a5a04.Coremail.zxh3737@163.com> <003901cecae6$1ee5f980$5cb1ec80$@com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from p01c11o143.mxlogic.net ([208.65.144.66]:46987 "EHLO
-	p01c11o143.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761432Ab3JQC5Y convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Oct 2013 22:57:24 -0400
-In-Reply-To: <CAP0P+NXi=owEOnpTAnKxwrHfX-nu+bQF6MeNs3sMZnQLqB1jsw@mail.gmail.com>
+Received: from sr-smtp.usish.com ([210.5.144.203]:45996 "EHLO msb01.usish.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761822Ab3JQDrV convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Oct 2013 23:47:21 -0400
+In-Reply-To: <003901cecae6$1ee5f980$5cb1ec80$@com>
+Content-Language: zh-cn
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: xiangliang yu <yxlraid@gmail.com>
-Cc: dan.j.williams@intel.com, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, yuxiangl@marvell.com
+To: 'zxh3737' <zxh3737@163.com>, linux-scsi@vger.kernel.org
+Cc: asanthan@gmail.com, Sangeetha.Gnanasekaran@pmcs.com
 
-The only way to reproduce this is to keep hot plugging drives. To speed it up once in a while remove the drive before the detection completes.
+>
+diff=A0--git=A0a/drivers/scsi/pm8001/pm80xx_hwi.c=A0b/drivers/scsi/pm80=
+01/pm80xx_h
+> wi.c index=A09f91030..c0ea473=A0100644
+> ---=A0a/drivers/scsi/pm8001/pm80xx_hwi.c
+> +++=A0b/drivers/scsi/pm8001/pm80xx_hwi.c
+>
+@@=A0-3076,8=A0+3076,43=A0@@=A0static=A0int=A0mpi_get_controller_config=
+_resp(struct=A0pm80
+> 01_hba_info=A0*pm8001_ha,
+> =A0static=A0int=A0mpi_get_phy_profile_resp(struct=A0pm8001_hba_info=A0=
+*pm8001_ha,
+> =A0 void=A0*piomb)
+> =A0{
+> - PM8001_MSG_DBG(pm8001_ha,
+> - pm8001_printk("=A0pm80xx_addition_functionality\n"));
+> + u8=A0page_code;
+> + struct=A0get_phy_profile_resp=A0*pPayload=A0=3D (struct=A0get_phy_p=
+rofile_resp
+> + *)(piomb=A0+=A04);
+> + u32=A0ppc_phyid=A0=3D=A0le32_to_cpu(pPayload->ppc_phyid);
+> + u32=A0status=A0=3D=A0le32_to_cpu(pPayload->status);
+> + u8=A0phy_id=A0=3D=A0(u8)(ppc_phyid=A0&=A00x00FF);
+> + page_code=A0=3D=A0(u8)((ppc_phyid=A0&=A00xFF00)=A0>>=A08); struct=A0=
+asd_sas_phy
+> + *sas_phy=A0=3D &(pm8001_ha->phy[phy_id].sas_phy);
+> + struct=A0sas_phy=A0*phy=A0=3D=A0sas_phy->phy;
+> +
+> + if=A0(status)=A0{
+> + /*=A0status=A0is=A0FAILED=A0*/
+> + PM8001_FAIL_DBG(pm8001_ha,
+> + pm8001_printk("PhyProfile=A0command=A0failed=A0=A0with=A0status=A0"
+> + "0x%08X=A0\n",=A0status));
+> + return=A0-1;
+> + }=A0else=A0{
+> + switch=A0(page_code)=A0{
+> + case=A0SAS_PHY_ERROR_PAGE:
+> + phy->invalid_dword_count=A0=3D
+> + le32_to_cpu(pPayload->ppc_specific_rsp[0]);
+> + phy->running_disparity_error_count=A0=3D
+> + le32_to_cpu(pPayload->ppc_specific_rsp[1]);
+> + phy->loss_of_dword_sync_count=A0=3D
+> + le32_to_cpu(pPayload->ppc_specific_rsp[3]);
+> + phy->phy_reset_problem_count=A0=3D
+> + le32_to_cpu(pPayload->ppc_specific_rsp[4]);
+> + complete(pm8001_ha->phy[phy_id].enable_completion);
+> + break;
+> + default:
+> + PM8001_MSG_DBG(pm8001_ha,
+> + pm8001_printk("other=A0page=A0code=A00x%X\n", page_code)); break; }=
+ }
+>=20
+> =A0 return=A00;
+> =A0}
 
-> On Oct 16, 2013, at 7:42 PM, "xiangliang yu" <yxlraid@gmail.com> wrote:
-> 
-> Hi,
-> 
-> >Subject: Re: [PATCH 3/3] Fix device detection issues with mvsas driver
-> 
-> >Hi Xiang, Can you please take a look at the attached patch and ack it?
-> >	/* cleanup and prepare the allocated FIS index */
-> >	memset( SATA_RECEIVED_D2H_FIS(mvi_dev->taskfileset), 0, 
-> >				sizeof(struct dev_to_host_fis) );
-> 
-> According to spec, the FIS memory don't need to be cleared by software.
-> can you tell me how to reproduce the issue? thanks!
-> 
-> 
+Any failure response also need to call complete() function.=20
+You can put the "complete()" at end before return.
+
+Thanks.
+Lindar
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
