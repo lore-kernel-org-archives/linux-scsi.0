@@ -1,62 +1,167 @@
-From: Robert Story <rstory@tislabs.com>
-Subject: Re: kernel cant access SATA adapter device
-Date: Fri, 18 Oct 2013 14:53:21 -0400
-Message-ID: <20131018145321.3d60711b@kvm171.vb.futz.org>
-References: <20131016154651.7280ce92@kvm171.vb.futz.org>
-	<20131017155924.GA31331@taco-ThinkPad-X220>
-	<20131017130249.4a49bd46@kvm171.vb.futz.org>
-	<20131018143745.GA2615@taco-ThinkPad-X220>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH 09/11] target_core_alua: Use workqueue for ALUA
+ transitioning
+Date: Fri, 18 Oct 2013 12:04:10 -0700
+Message-ID: <1382123050.19256.686.camel@haakon3.risingtidesystems.com>
+References: <1381908048-82014-1-git-send-email-hare@suse.de>
+	 <1381908048-82014-10-git-send-email-hare@suse.de>
+	 <1381961177.19256.656.camel@haakon3.risingtidesystems.com>
+	 <525F892A.9060309@suse.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/Pqs0r/nmbh+8texiHPMfY/7"; protocol="application/pgp-signature"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from walnut.tislabs.com ([192.94.214.200]:49248 "EHLO
-	walnut.tislabs.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755983Ab3JRSx1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Oct 2013 14:53:27 -0400
-In-Reply-To: <20131018143745.GA2615@taco-ThinkPad-X220>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <525F892A.9060309@suse.de>
+Sender: target-devel-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Nic Bellinger <nab@daterainc.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: taco <tacoee@gmail.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
---Sig_/Pqs0r/nmbh+8texiHPMfY/7
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Thu, 2013-10-17 at 08:52 +0200, Hannes Reinecke wrote:
+> On 10/17/2013 12:06 AM, Nicholas A. Bellinger wrote:
+> > On Wed, 2013-10-16 at 09:20 +0200, Hannes Reinecke wrote:
+> >> Use a workqueue for processing ALUA state transitions; this allows
+> >> us to process implicit delay properly.
+> >>
+> >> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> >> ---
+> >>  drivers/target/target_core_alua.c | 174 +++++++++++++++++++++++++++-----------
+> >>  include/target/target_core_base.h |   4 +
+> >>  2 files changed, 128 insertions(+), 50 deletions(-)
+> >>
+> > 
+> > <SNIP>
+> > 
+> >> +static int core_alua_do_transition_tg_pt(
+> >> +	struct t10_alua_tg_pt_gp *tg_pt_gp,
+> >> +	int new_state,
+> >> +	int explicit)
+> >> +{
+> >> +	struct se_device *dev = tg_pt_gp->tg_pt_gp_dev;
+> >> +	DECLARE_COMPLETION_ONSTACK(wait);
+> >> +
+> >> +	/* Nothing to be done here */
+> >> +	if (atomic_read(&tg_pt_gp->tg_pt_gp_alua_access_state) == new_state)
+> >> +		return 0;
+> >> +
+> >> +	if (new_state == ALUA_ACCESS_STATE_TRANSITION)
+> >> +		return -EAGAIN;
+> >> +
+> >> +	/*
+> >> +	 * Flush any pending transitions
+> >> +	 */
+> >> +	if (!explicit && tg_pt_gp->tg_pt_gp_implicit_trans_secs &&
+> >> +	    atomic_read(&tg_pt_gp->tg_pt_gp_alua_access_state) ==
+> >> +	    ALUA_ACCESS_STATE_TRANSITION) {
+> >> +		/* Just in case */
+> >> +		tg_pt_gp->tg_pt_gp_alua_pending_state = new_state;
+> >> +		tg_pt_gp->tg_pt_gp_transition_complete = &wait;
+> >> +		flush_delayed_work(&tg_pt_gp->tg_pt_gp_transition_work);
+> >> +		wait_for_completion(&wait);
+> >> +		tg_pt_gp->tg_pt_gp_transition_complete = NULL;
+> >> +		return 0;
+> >> +	}
+> >> +
+> >> +	/*
+> >> +	 * Save the old primary ALUA access state, and set the current state
+> >> +	 * to ALUA_ACCESS_STATE_TRANSITION.
+> >> +	 */
+> >> +	tg_pt_gp->tg_pt_gp_alua_previous_state =
+> >> +		atomic_read(&tg_pt_gp->tg_pt_gp_alua_access_state);
+> >> +	tg_pt_gp->tg_pt_gp_alua_pending_state = new_state;
+> >> +
+> >> +	atomic_set(&tg_pt_gp->tg_pt_gp_alua_access_state,
+> >> +			ALUA_ACCESS_STATE_TRANSITION);
+> >> +	tg_pt_gp->tg_pt_gp_alua_access_status = (explicit) ?
+> >> +				ALUA_STATUS_ALTERED_BY_EXPLICIT_STPG :
+> >> +				ALUA_STATUS_ALTERED_BY_IMPLICIT_ALUA;
+> >> +
+> >> +	/*
+> >> +	 * Check for the optional ALUA primary state transition delay
+> >> +	 */
+> >> +	if (tg_pt_gp->tg_pt_gp_trans_delay_msecs != 0)
+> >> +		msleep_interruptible(tg_pt_gp->tg_pt_gp_trans_delay_msecs);
+> >> +
+> >> +	/*
+> >> +	 * Take a reference for workqueue item
+> >> +	 */
+> >> +	spin_lock(&dev->t10_alua.tg_pt_gps_lock);
+> >> +	atomic_inc(&tg_pt_gp->tg_pt_gp_ref_cnt);
+> >> +	smp_mb__after_atomic_inc();
+> >> +	spin_unlock(&dev->t10_alua.tg_pt_gps_lock);
+> >> +
+> >> +	if (!explicit && tg_pt_gp->tg_pt_gp_implicit_trans_secs) {
+> >> +		unsigned long transition_tmo;
+> >> +
+> >> +		transition_tmo = tg_pt_gp->tg_pt_gp_implicit_trans_secs * HZ;
+> >> +		queue_delayed_work(tg_pt_gp->tg_pt_gp_dev->tmr_wq,
+> >> +				   &tg_pt_gp->tg_pt_gp_transition_work,
+> >> +				   transition_tmo);
+> >> +	} else {
+> >> +		tg_pt_gp->tg_pt_gp_transition_complete = &wait;
+> >> +		queue_delayed_work(tg_pt_gp->tg_pt_gp_dev->tmr_wq,
+> >> +				   &tg_pt_gp->tg_pt_gp_transition_work, 0);
+> >> +		wait_for_completion(&wait);
+> >> +		tg_pt_gp->tg_pt_gp_transition_complete = NULL;
+> >> +	}
+> > 
+> > Mmm, the trans_delay_msecs delay seems a bit out of place now..
+> > 
+> > How about dropping it's usage with msleep_interruptible() above, and
+> > instead combining it with the delay passed into queue_delayed_work()..?
+> > 
+> Yeah, we could.
+> Actually I was thinking of opening up the implicit transition time
+> to be a general transitioning time, to be used for both implicit and
+> explicit.
 
-On Fri, 18 Oct 2013 22:37:45 +0800 taco wrote:
-T>=20
-T> reproduce the problem with more debug messages with the bellow
-T> command:
-T>=20
-T> $ echo 0x2FFFF > /sys/modules/mptsas/mpt_debug_level
-T>=20
-T> and attach it here
+Sounds reasonable to me..
 
-The dmesg buffer wrapped, and it was close to 500k. That's a bit big for
-sending to the whole list, so I put it and the syslog output on my
-webserver:
+> Reasoning here is that one could kick off a userland tool once
+> 'transitioning' mode has been requested.
+> That tool would then go ahead and do whatever is required to switch
+> paths around etc, and could write the final ALUA state into configfs.
+> That would then terminate the workqueue and the system would
+> continue with the new state.
+> If the userland tool fails to execute in time the system would
+> revert to the requested state as it does now.
 
-   http://futz.org/users/linux-scsi/mpt.messages
-   http://futz.org/users/linux-scsi/mpt.dmesg=20
+Also sounds reasonable.  This timeout, along with the explicit +
+implicit timeout probably needs to be limited to a value less than the
+SCSI abort timeout on the host side..
 
+> 
+> The only problem with that approach is that it's currently
+> impossible to have an atomic implicit transition for several tpgs.
+> 
+> You can to an atomic _explicit_ transition, as SET TARGET PORT
+> GROUPS _can_ carry information about all target port groups.
+> (Mind you, scsi_dh_alua doesn't use it that way, it only sends
+> information for the active/optimized target port group).
+> But you cannot achieve a similar operation via configfs; there you
+> can only set one tpg at a time, and each of this will potentially
+> trigger a move to transitioning.
+> 
+> While this is not a violation of the spec, it is certainly
+> confusing. I'd rather have a way to set the new state for _all_ tpgs
+> at once and only then kick off the transitioning mechanism.
+> 
+> Any ideas how this could be achieved?
+> 
 
-Robert
+Two ideas..
 
---
-Senior Software Engineer
-Parsons Government Services , National Security & Defense Division
+The first would be to add a new attribute at 
 
---Sig_/Pqs0r/nmbh+8texiHPMfY/7
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+   /sys/kernel/config/target/core/$HBA/$DEV/alua/do_transition
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
+that triggers the implicit transitions for each 
+../$HBA/$DEV/alua/$TG_PT_GP that has had a queue_transition (or
+something to that effect) bit set..
 
-iEYEARECAAYFAlJhg6YACgkQ7/fVLLY1mnjAzwCePsgfWFS2fRizY8Z0Y2jzg4DO
-vjgAn1wNmJDSgdzft+iJM447pxh8xQw2
-=0lp/
------END PGP SIGNATURE-----
+The second is similar, but would involve putting the do_transition
+attribute into ../$HBA/$DEV/attrib/ instead of the ../alua directory, in
+order to avoid some minor breakage with lio-utils that incorrectly
+assumes everything in ../alua/ is a configfs directory.
 
---Sig_/Pqs0r/nmbh+8texiHPMfY/7--
+--nab
