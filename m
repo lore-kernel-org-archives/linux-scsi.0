@@ -1,70 +1,62 @@
-From: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
-Subject: RE: [PATCH 1/1] remove cpqarray from mainline kernel
-Date: Fri, 18 Oct 2013 16:57:07 +0000
-Message-ID: <48275AD710FCA34184C2B6186B4016B32D15F761@G6W2491.americas.hpqcorp.net>
-References: <20131017175226.GA31535@thumper.usa.hp.com>
- <20131017141337.425f84c630ffe1c7c61c4dc4@linux-foundation.org>
- <20131017223616.GB32575@kernel.dk>
- <48275AD710FCA34184C2B6186B4016B32D15F735@G6W2491.americas.hpqcorp.net>
- <526167ED.1010503@kernel.dk>
+From: Robert Story <rstory@tislabs.com>
+Subject: Re: kernel cant access SATA adapter device
+Date: Fri, 18 Oct 2013 14:53:21 -0400
+Message-ID: <20131018145321.3d60711b@kvm171.vb.futz.org>
+References: <20131016154651.7280ce92@kvm171.vb.futz.org>
+	<20131017155924.GA31331@taco-ThinkPad-X220>
+	<20131017130249.4a49bd46@kvm171.vb.futz.org>
+	<20131018143745.GA2615@taco-ThinkPad-X220>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <526167ED.1010503@kernel.dk>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>, Andrew Morton <akpm@linux-foundation.org>
-Cc: LKML-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/Pqs0r/nmbh+8texiHPMfY/7"; protocol="application/pgp-signature"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from walnut.tislabs.com ([192.94.214.200]:49248 "EHLO
+	walnut.tislabs.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755983Ab3JRSx1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Oct 2013 14:53:27 -0400
+In-Reply-To: <20131018143745.GA2615@taco-ThinkPad-X220>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: taco <tacoee@gmail.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+
+--Sig_/Pqs0r/nmbh+8texiHPMfY/7
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
+
+On Fri, 18 Oct 2013 22:37:45 +0800 taco wrote:
+T>=20
+T> reproduce the problem with more debug messages with the bellow
+T> command:
+T>=20
+T> $ echo 0x2FFFF > /sys/modules/mptsas/mpt_debug_level
+T>=20
+T> and attach it here
+
+The dmesg buffer wrapped, and it was close to 500k. That's a bit big for
+sending to the whole list, so I put it and the syslog output on my
+webserver:
+
+   http://futz.org/users/linux-scsi/mpt.messages
+   http://futz.org/users/linux-scsi/mpt.dmesg=20
 
 
+Robert
 
-> -----Original Message-----
-> From: Jens Axboe [mailto:axboe@kernel.dk]
-> Sent: Friday, October 18, 2013 11:55 AM
-> To: Miller, Mike (OS Dev); Andrew Morton
-> Cc: LKML-scsi; LKML
-> Subject: Re: [PATCH 1/1] remove cpqarray from mainline kernel
-> 
-> On 10/18/2013 10:22 AM, Miller, Mike (OS Dev) wrote:
-> >
-> >
-> >> -----Original Message-----
-> >> From: Jens Axboe [mailto:axboe@kernel.dk]
-> >> Sent: Thursday, October 17, 2013 5:36 PM
-> >> To: Andrew Morton
-> >> Cc: Miller, Mike (OS Dev); LKML-scsi; LKML
-> >> Subject: Re: [PATCH 1/1] remove cpqarray from mainline kernel
-> >>
-> >> On Thu, Oct 17 2013, Andrew Morton wrote:
-> >>> On Thu, 17 Oct 2013 12:52:26 -0500 Mike Miller <mike.miller@hp.com>
-> >> wrote:
-> >>>
-> >>>> cpqarray hasn't been used in over 12 years. It's doubtful that
-> >>>> anyone still uses the board. It's time the driver was removed from
-> >>>> the
-> >> mainline kernel.
-> >>>> The only updates these days are minor and mostly done by people
-> >> outside of HP.
-> >>>
-> >>> It's amazing the weird stuff people get up to.  Perhaps we should
-> >>> disable it in config for a cycle or two, see if that flushes anyone out?
-> >>
-> >> I think that would be prudent, you never know what people run...
-> >>
-> >> --
-> >> Jens Axboe
-> >
-> > I agree with Andrew's suggestion. Should I submit a patch that only
-> removes cpqarray from config?
-> 
-> I put one in yesterday:
-> 
-> http://git.kernel.dk/?p=linux-
-> block.git;a=commit;h=f504954db0ecccaded5397e3432cdaf7175602fb
-> 
-> --
-> Jens Axboe
+--
+Senior Software Engineer
+Parsons Government Services , National Security & Defense Division
 
-Thanks, Jens.
+--Sig_/Pqs0r/nmbh+8texiHPMfY/7
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iEYEARECAAYFAlJhg6YACgkQ7/fVLLY1mnjAzwCePsgfWFS2fRizY8Z0Y2jzg4DO
+vjgAn1wNmJDSgdzft+iJM447pxh8xQw2
+=0lp/
+-----END PGP SIGNATURE-----
+
+--Sig_/Pqs0r/nmbh+8texiHPMfY/7--
