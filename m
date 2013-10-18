@@ -1,56 +1,75 @@
-From: yili <yilikernel@gmail.com>
-Subject: Re: [Bug 62811] New: Don't Modify the scsi subcmd as LUN value when using VENDOR cmd
-Date: Fri, 11 Oct 2013 05:16:04 +0000 (UTC)
-Message-ID: <loom.20131011T070826-879@post.gmane.org>
-References: <bug-62811-11613@https.bugzilla.kernel.org/> <1381426735.2109.4.camel@dabdike>
+From: <Sumit.Saxena@lsi.com>
+Subject: [PATCH RESEND][SCSI] megaraid_sas: Fix synchronization problem
+ between sysPD IO path and AEN path
+Date: Fri, 18 Oct 2013 12:50:37 +0530
+Message-ID: <201310180720.r9I7KXUQ021724@cosmhbs0.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:58751 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751158Ab3JRGZG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Oct 2013 02:25:06 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <lnx-linux-scsi@m.gmane.org>)
-	id 1VX3Ud-0004Fx-7i
-	for linux-scsi@vger.kernel.org; Fri, 18 Oct 2013 08:25:03 +0200
-Received: from 110.209.192.126 ([110.209.192.126])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Fri, 18 Oct 2013 08:25:03 +0200
-Received: from yilikernel by 110.209.192.126 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Fri, 18 Oct 2013 08:25:03 +0200
+Received: from mail-db9lp0251.outbound.messaging.microsoft.com ([213.199.154.251]:59878
+	"EHLO db9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750949Ab3JRHUn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Oct 2013 03:20:43 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
+Cc: jbottomley@parallels.com, thenzl@redhat.com, sumit.saxena@lsi.com, kashyap.desai@lsi.com, aradford@gmail.com
 
-James Bottomley <James.Bottomley <at> HansenPartnership.com> writes:
+There is syncronization problem between sysPD IO path and AEN path. Driver maintains instance->pd_list[] array, which will get updated(by calling function megasas_get_pd_list[]), whenever any of below events occurs-
 
+MR_EVT_PD_INSERTED
+MR_EVT_PD_REMOVED
+MR_EVT_CTRL_HOST_BUS_SCAN_REQUESTED
+MR_EVT_FOREIGN_CFG_IMPORTED
 
+At same time running sysPD IO will be accessing the same array instance->pd_list[], which is getting updated in AEN path, because
+of this IO may not get correct PD info from instance->pd_list[] array.
 
-
-
->>What are these vendor commands you'retrying to send that are out of spec?
-
----it is STEC Vendor Command code 0xA5
-
+Signed-off-by: Adam Radford <adam.radford@lsi.com>
+Signed-off-by: Sumit Saxena <sumit.saxena@lsi.com>
+---
+diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
+index 0c73ba4..e9e543c 100644
+--- a/drivers/scsi/megaraid/megaraid_sas.h
++++ b/drivers/scsi/megaraid/megaraid_sas.h
+@@ -1531,6 +1531,7 @@ struct megasas_instance {
+ 	struct megasas_register_set __iomem *reg_set;
+ 	u32 *reply_post_host_index_addr[MR_MAX_MSIX_REG_ARRAY];
+ 	struct megasas_pd_list          pd_list[MEGASAS_MAX_PD];
++	struct megasas_pd_list          local_pd_list[MEGASAS_MAX_PD];
+ 	u8     ld_ids[MEGASAS_MAX_LD_IDS];
+ 	s8 init_id;
  
-
- >>>Should your device be reporting compliance with a SCSI level > 2?
-
----it is a usb flash device, i will try do the test.
-
-
-
-Thanks for your advice.
-
-
-
-
-
-
-
-
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index e62ff02..2cf9470 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -3194,19 +3194,21 @@ megasas_get_pd_list(struct megasas_instance *instance)
+ 	     (le32_to_cpu(ci->count) <
+ 		  (MEGASAS_MAX_PD_CHANNELS * MEGASAS_MAX_DEV_PER_CHANNEL))) {
+ 
+-		memset(instance->pd_list, 0,
++		memset(instance->local_pd_list, 0,
+ 			MEGASAS_MAX_PD * sizeof(struct megasas_pd_list));
+ 
+ 		for (pd_index = 0; pd_index < le32_to_cpu(ci->count); pd_index++) {
+ 
+-			instance->pd_list[le16_to_cpu(pd_addr->deviceId)].tid	=
++			instance->local_pd_list[le16_to_cpu(pd_addr->deviceId)].tid	=
+ 				le16_to_cpu(pd_addr->deviceId);
+-			instance->pd_list[le16_to_cpu(pd_addr->deviceId)].driveType	=
++			instance->local_pd_list[le16_to_cpu(pd_addr->deviceId)].driveType	=
+ 							pd_addr->scsiDevType;
+-			instance->pd_list[le16_to_cpu(pd_addr->deviceId)].driveState	=
++			instance->local_pd_list[le16_to_cpu(pd_addr->deviceId)].driveState	=
+ 							MR_PD_STATE_SYSTEM;
+ 			pd_addr++;
+ 		}
++		memcpy(instance->pd_list, instance->local_pd_list,
++			sizeof(instance->pd_list));
+ 	}
+ 
+ 	pci_free_consistent(instance->pdev,
 
