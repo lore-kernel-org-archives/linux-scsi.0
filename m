@@ -1,47 +1,210 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 60758] module scsi_wait_scan not found kernel panic on boot
-Date: Sat, 19 Oct 2013 15:38:59 +0000
-Message-ID: <bug-60758-11613-kIvAoCFJ2j@https.bugzilla.kernel.org/>
-References: <bug-60758-11613@https.bugzilla.kernel.org/>
+From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+Subject: Re: [PATCH 03/10] scsi_transport_srp: Add transport layer error handling
+Date: Sat, 19 Oct 2013 18:13:01 +0200
+Message-ID: <5262AF8D.7070700@acm.org>
+References: <52569806.9080201@acm.org> <525699A9.6090802@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:33681 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751258Ab3JSPjD convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Oct 2013 11:39:03 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id E7C782053A
-	for <linux-scsi@vger.kernel.org>; Sat, 19 Oct 2013 15:39:01 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id 84CCC2051F
-	for <linux-scsi@vger.kernel.org>; Sat, 19 Oct 2013 15:39:00 +0000 (UTC)
-In-Reply-To: <bug-60758-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/mixed;
+ boundary="------------070203060403040809090404"
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <525699A9.6090802-HInyCGIudOg@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>, Roland Dreier <roland-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vu Pham <vu-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Riemer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, James Bottomley <jbottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D60758
+This is a multi-part message in MIME format.
+--------------070203060403040809090404
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-newbie <kernel.tw@gmail.com> changed:
+On 10/10/13 14:12, Bart Van Assche wrote:
+> Add the necessary functions in the SRP transport module to allow
+> an SRP initiator driver to implement transport layer error handling
+> similar to the functionality already provided by the FC transport
+> layer. This includes:
+> - Support for implementing fast_io_fail_tmo, the time that should
+>    elapse after having detected a transport layer problem and
+>    before failing I/O.
+> - Support for implementing dev_loss_tmo, the time that should
+>    elapse after having detected a transport layer problem and
+>    before removing a remote port.
+[ ... ]
 
-           What    |Removed                     |Added
------------------------------------------------------------------------=
------
-                 CC|                            |kernel.tw@gmail.com
+(replying to my own e-mail)
 
---- Comment #38 from newbie <kernel.tw@gmail.com> ---
-Hi:
+Since it takes some work to figure out the state transitions from the 
+source code, I have tried to draw a diagram representing all state 
+transitions. I have attached that diagram to this e-mail. That diagram 
+probably will make it easier to review this code.
 
-=E3=80=80I had the same problem with 3.10.16 on CentOS 6.4 x86_64 too..=
-=2E
-I don't know it's my wrong when I make config, or other people too?
+Bart.
 
---=20
-You are receiving this mail because:
-You are the assignee for the bug.--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
+
+
+
+--------------070203060403040809090404
+Content-Type: image/svg+xml;
+ name="srp-initiator-states.svg"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="srp-initiator-states.svg"
+
+PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+
+CjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIKICJodHRw
+Oi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPgo8IS0tIEdl
+bmVyYXRlZCBieSBncmFwaHZpeiB2ZXJzaW9uIDIuMjguMCAoMjAxMzA5MjcuMTEwOSkKIC0t
+Pgo8IS0tIFRpdGxlOiBzcnBfaW5pdGlhdG9yIFBhZ2VzOiAxIC0tPgo8c3ZnIHdpZHRoPSI3
+MDdwdCIgaGVpZ2h0PSI1ODZwdCIKIHZpZXdCb3g9IjAuMDAgMC4wMCA3MDcuMDUgNTg2LjAw
+IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRw
+Oi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIj4KPGcgaWQ9ImdyYXBoMSIgY2xhc3M9ImdyYXBo
+IiB0cmFuc2Zvcm09InNjYWxlKDEgMSkgcm90YXRlKDApIHRyYW5zbGF0ZSg0IDU4MikiPgo8
+dGl0bGU+c3JwX2luaXRpYXRvcjwvdGl0bGU+Cjxwb2x5Z29uIGZpbGw9IndoaXRlIiBzdHJv
+a2U9IndoaXRlIiBwb2ludHM9Ii00LDUgLTQsLTU4MiA3MDQuMDUzLC01ODIgNzA0LjA1Myw1
+IC00LDUiLz4KPCEtLSBydW5uaW5nIC0tPgo8ZyBpZD0ibm9kZTEiIGNsYXNzPSJub2RlIj48
+dGl0bGU+cnVubmluZzwvdGl0bGU+CjxlbGxpcHNlIGZpbGw9Im5vbmUiIHN0cm9rZT0iYmxh
+Y2siIGN4PSIzNDEuMDUzIiBjeT0iLTUzNSIgcng9IjM4LjA1MTgiIHJ5PSIzOC4yMDgyIi8+
+CjxlbGxpcHNlIGZpbGw9Im5vbmUiIHN0cm9rZT0iYmxhY2siIGN4PSIzNDEuMDUzIiBjeT0i
+LTUzNSIgcng9IjQyLjAyMTEiIHJ5PSI0Mi4xOTM3Ii8+Cjx0ZXh0IHRleHQtYW5jaG9yPSJt
+aWRkbGUiIHg9IjM0MS4wNTMiIHk9Ii01MzEuMyIgZm9udC1mYW1pbHk9IlRpbWVzLHNlcmlm
+IiBmb250LXNpemU9IjE0LjAwIj5ydW5uaW5nPC90ZXh0Pgo8L2c+CjwhLS0gcnVubmluZ19k
+bHQgLS0+CjxnIGlkPSJub2RlMyIgY2xhc3M9Im5vZGUiPjx0aXRsZT5ydW5uaW5nX2RsdDwv
+dGl0bGU+CjxlbGxpcHNlIGZpbGw9Im5vbmUiIHN0cm9rZT0iYmxhY2siIGN4PSIxNjguMDUz
+IiBjeT0iLTM0OCIgcng9IjYyLjMzODUiIHJ5PSI2Mi40NTE2Ii8+Cjx0ZXh0IHRleHQtYW5j
+aG9yPSJtaWRkbGUiIHg9IjE2OC4wNTMiIHk9Ii0zNTkuMyIgZm9udC1mYW1pbHk9IlRpbWVz
+LHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj5ydW5uaW5nIHdpdGg8L3RleHQ+Cjx0ZXh0IHRl
+eHQtYW5jaG9yPSJtaWRkbGUiIHg9IjE2OC4wNTMiIHk9Ii0zNDQuMyIgZm9udC1mYW1pbHk9
+IlRpbWVzLHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj5kZXZfbG9zczwvdGV4dD4KPHRleHQg
+dGV4dC1hbmNob3I9Im1pZGRsZSIgeD0iMTY4LjA1MyIgeT0iLTMyOS4zIiBmb250LWZhbWls
+eT0iVGltZXMsc2VyaWYiIGZvbnQtc2l6ZT0iMTQuMDAiPnRpbWVyIHN0YXJ0ZWQ8L3RleHQ+
+CjwvZz4KPCEtLSBydW5uaW5nJiM0NTsmZ3Q7cnVubmluZ19kbHQgLS0+CjxnIGlkPSJlZGdl
+MiIgY2xhc3M9ImVkZ2UiPjx0aXRsZT5ydW5uaW5nJiM0NTsmZ3Q7cnVubmluZ19kbHQ8L3Rp
+dGxlPgo8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9ImJsYWNrIiBkPSJNMjk4LjkxNCwtNTMy
+LjgxMUMyMTguMTY5LC01MjkuNTUgNDYuNDA5NywtNTE3LjUzOSAxMC4wNTMyLC00NzQgLTI1
+LjE0NiwtNDMxLjg0NyA0Mi4yNjQ0LC0zOTQuMzggOTkuNjYwMywtMzcxLjcwOCIvPgo8cG9s
+eWdvbiBmaWxsPSJibGFjayIgc3Ryb2tlPSJibGFjayIgcG9pbnRzPSIxMDEuMDU5LC0zNzQu
+OTIgMTA5LjEzMywtMzY4LjA2MSA5OC41NDM3LC0zNjguMzg4IDEwMS4wNTksLTM3NC45MiIv
+Pgo8dGV4dCB0ZXh0LWFuY2hvcj0ibWlkZGxlIiB4PSI3OC4wNTMyIiB5PSItNDYyLjMiIGZv
+bnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+SUIgUkMgZXJyb3I7
+PC90ZXh0Pgo8dGV4dCB0ZXh0LWFuY2hvcj0ibWlkZGxlIiB4PSI3OC4wNTMyIiB5PSItNDQ3
+LjMiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+ZmFzdF9p
+b19mYWlsX3RtbyA9PSBvZmY7PC90ZXh0Pgo8dGV4dCB0ZXh0LWFuY2hvcj0ibWlkZGxlIiB4
+PSI3OC4wNTMyIiB5PSItNDMyLjMiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1z
+aXplPSIxNC4wMCI+cnBvcnQgbm90IHlldCBkZWxldGVkPC90ZXh0Pgo8L2c+CjwhLS0gYmxv
+Y2tlZCAtLT4KPGcgaWQ9Im5vZGU0IiBjbGFzcz0ibm9kZSI+PHRpdGxlPmJsb2NrZWQ8L3Rp
+dGxlPgo8ZWxsaXBzZSBmaWxsPSJub25lIiBzdHJva2U9ImJsYWNrIiBjeD0iMzk5LjA1MyIg
+Y3k9Ii0zNDgiIHJ4PSI0MC40MjAyIiByeT0iNDAuODkyOCIvPgo8dGV4dCB0ZXh0LWFuY2hv
+cj0ibWlkZGxlIiB4PSIzOTkuMDUzIiB5PSItMzQ0LjMiIGZvbnQtZmFtaWx5PSJUaW1lcyxz
+ZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+YmxvY2tlZDwvdGV4dD4KPC9nPgo8IS0tIHJ1bm5p
+bmcmIzQ1OyZndDtibG9ja2VkIC0tPgo8ZyBpZD0iZWRnZTQiIGNsYXNzPSJlZGdlIj48dGl0
+bGU+cnVubmluZyYjNDU7Jmd0O2Jsb2NrZWQ8L3RpdGxlPgo8cGF0aCBmaWxsPSJub25lIiBz
+dHJva2U9ImJsYWNrIiBkPSJNMzA0LjMyNywtNTE0LjAwOUMyODkuOTEzLC01MDQuMDU0IDI3
+NC45NTIsLTQ5MC41NzMgMjY3LjA1MywtNDc0IDI1OC4yNTcsLTQ1NS41NDQgMjU2Ljk3LC00
+NDUuNzg1IDI2Ny4wNTMsLTQyOCAyODQuOTQxLC0zOTYuNDQ4IDMyMC45OTYsLTM3Ni4xNCAz
+NTAuOTEsLTM2NC4wMjYiLz4KPHBvbHlnb24gZmlsbD0iYmxhY2siIHN0cm9rZT0iYmxhY2si
+IHBvaW50cz0iMzUyLjMwNSwtMzY3LjI0IDM2MC4zNzYsLTM2MC4zNzcgMzQ5Ljc4NywtMzYw
+LjcwOCAzNTIuMzA1LC0zNjcuMjQiLz4KPHRleHQgdGV4dC1hbmNob3I9Im1pZGRsZSIgeD0i
+MzMwLjU1MyIgeT0iLTQ2Mi4zIiBmb250LWZhbWlseT0iVGltZXMsc2VyaWYiIGZvbnQtc2l6
+ZT0iMTQuMDAiPklCIFJDIGVycm9yOzwvdGV4dD4KPHRleHQgdGV4dC1hbmNob3I9Im1pZGRs
+ZSIgeD0iMzMwLjU1MyIgeT0iLTQ0Ny4zIiBmb250LWZhbWlseT0iVGltZXMsc2VyaWYiIGZv
+bnQtc2l6ZT0iMTQuMDAiPmZhc3RfaW9fZmFpbF90bW8gJmd0Oz0gMDs8L3RleHQ+Cjx0ZXh0
+IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjMzMC41NTMiIHk9Ii00MzIuMyIgZm9udC1mYW1p
+bHk9IlRpbWVzLHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj5ycG9ydCBub3QgeWV0IGRlbGV0
+ZWQ8L3RleHQ+CjwvZz4KPCEtLSBmYWlsZmFzdCAtLT4KPGcgaWQ9Im5vZGU1IiBjbGFzcz0i
+bm9kZSI+PHRpdGxlPmZhaWxmYXN0PC90aXRsZT4KPGVsbGlwc2UgZmlsbD0ibm9uZSIgc3Ry
+b2tlPSJibGFjayIgY3g9IjQ3OC4wNTMiIGN5PSItMTYzIiByeD0iMzkuOTU5MyIgcnk9IjQw
+LjExMTEiLz4KPHRleHQgdGV4dC1hbmNob3I9Im1pZGRsZSIgeD0iNDc4LjA1MyIgeT0iLTE2
+Ni44IiBmb250LWZhbWlseT0iVGltZXMsc2VyaWYiIGZvbnQtc2l6ZT0iMTQuMDAiPmZhaWwg
+SS9PPC90ZXh0Pgo8dGV4dCB0ZXh0LWFuY2hvcj0ibWlkZGxlIiB4PSI0NzguMDUzIiB5PSIt
+MTUxLjgiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+ZmFz
+dDwvdGV4dD4KPC9nPgo8IS0tIHJ1bm5pbmcmIzQ1OyZndDtmYWlsZmFzdCAtLT4KPGcgaWQ9
+ImVkZ2UxOCIgY2xhc3M9ImVkZ2UiPjx0aXRsZT5ydW5uaW5nJiM0NTsmZ3Q7ZmFpbGZhc3Q8
+L3RpdGxlPgo8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9ImJsYWNrIiBkPSJNMzgyLjgxLC01
+MjguNDc4QzQxNS45MjYsLTUyMS42OTkgNDYwLjI5NiwtNTA2Ljc0NiA0ODMuMDUzLC00NzQg
+NTE1LjAzMiwtNDI3Ljk4NSA0OTguNjc0LC0yNzcuNjQzIDQ5Mi4wNTMsLTIyMiA0OTEuNjY4
+LC0yMTguNzYgNDkxLjE2NSwtMjE1LjQzOSA0OTAuNTgsLTIxMi4xMDYiLz4KPHBvbHlnb24g
+ZmlsbD0iYmxhY2siIHN0cm9rZT0iYmxhY2siIHBvaW50cz0iNDkzLjk4MywtMjExLjI3NCA0
+ODguNjEyLC0yMDIuMTQxIDQ4Ny4xMTYsLTIxMi42MyA0OTMuOTgzLC0yMTEuMjc0Ii8+Cjx0
+ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjU1MC41NTMiIHk9Ii0zNTEuOCIgZm9udC1m
+YW1pbHk9IlRpbWVzLHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj5JQiBSQyBlcnJvciBhZnRl
+cjwvdGV4dD4KPHRleHQgdGV4dC1hbmNob3I9Im1pZGRsZSIgeD0iNTUwLjU1MyIgeT0iLTMz
+Ni44IiBmb250LWZhbWlseT0iVGltZXMsc2VyaWYiIGZvbnQtc2l6ZT0iMTQuMDAiPnJwb3J0
+IHJlbW92YWw8L3RleHQ+CjwvZz4KPCEtLSBsb3N0IC0tPgo8ZyBpZD0ibm9kZTIiIGNsYXNz
+PSJub2RlIj48dGl0bGU+bG9zdDwvdGl0bGU+CjxlbGxpcHNlIGZpbGw9Im5vbmUiIHN0cm9r
+ZT0iYmxhY2siIGN4PSIzNjMuMDUzIiBjeT0iLTI4IiByeD0iMjQuMDY4NCIgcnk9IjI0LjA4
+OSIvPgo8ZWxsaXBzZSBmaWxsPSJub25lIiBzdHJva2U9ImJsYWNrIiBjeD0iMzYzLjA1MyIg
+Y3k9Ii0yOCIgcng9IjI4LjA3MTgiIHJ5PSIyOC4wOTU4Ii8+Cjx0ZXh0IHRleHQtYW5jaG9y
+PSJtaWRkbGUiIHg9IjM2My4wNTMiIHk9Ii0yNC4zIiBmb250LWZhbWlseT0iVGltZXMsc2Vy
+aWYiIGZvbnQtc2l6ZT0iMTQuMDAiPmxvc3Q8L3RleHQ+CjwvZz4KPCEtLSBydW5uaW5nX2Rs
+dCYjNDU7Jmd0O3J1bm5pbmcgLS0+CjxnIGlkPSJlZGdlMTAiIGNsYXNzPSJlZGdlIj48dGl0
+bGU+cnVubmluZ19kbHQmIzQ1OyZndDtydW5uaW5nPC90aXRsZT4KPHBhdGggZmlsbD0ibm9u
+ZSIgc3Ryb2tlPSJibGFjayIgZD0iTTE2MS42OTgsLTQxMC4yMDFDMTYyLjQ3OSwtNDMyLjI3
+OCAxNjcuMjQ3LC00NTYuMTMgMTgxLjA1MywtNDc0IDIwNi43NTEsLTUwNy4yNjEgMjUzLjAx
+MSwtNTIyLjA4MyAyODkuMjAzLC01MjguNjg5Ii8+Cjxwb2x5Z29uIGZpbGw9ImJsYWNrIiBz
+dHJva2U9ImJsYWNrIiBwb2ludHM9IjI4OC42NzksLTUzMi4xNSAyOTkuMTE5LC01MzAuMzQz
+IDI4OS44MzEsLTUyNS4yNDYgMjg4LjY3OSwtNTMyLjE1Ii8+Cjx0ZXh0IHRleHQtYW5jaG9y
+PSJtaWRkbGUiIHg9IjIxOC41NTMiIHk9Ii00NTQuOCIgZm9udC1mYW1pbHk9IlRpbWVzLHNl
+cmlmIiBmb250LXNpemU9IjE0LjAwIj5yZWNvbm5lY3Rpbmc8L3RleHQ+Cjx0ZXh0IHRleHQt
+YW5jaG9yPSJtaWRkbGUiIHg9IjIxOC41NTMiIHk9Ii00MzkuOCIgZm9udC1mYW1pbHk9IlRp
+bWVzLHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj5zdWNjZWVkZWQ8L3RleHQ+CjwvZz4KPCEt
+LSBydW5uaW5nX2RsdCYjNDU7Jmd0O2xvc3QgLS0+CjxnIGlkPSJlZGdlMTYiIGNsYXNzPSJl
+ZGdlIj48dGl0bGU+cnVubmluZ19kbHQmIzQ1OyZndDtsb3N0PC90aXRsZT4KPHBhdGggZmls
+bD0ibm9uZSIgc3Ryb2tlPSJibGFjayIgZD0iTTIwMC4yNTMsLTI5NC40ODlDMjQxLjAzNywt
+MjI3Ljk4MSAzMTAuMDMsLTExNS40NjggMzQzLjU3NiwtNjAuNzYzIi8+Cjxwb2x5Z29uIGZp
+bGw9ImJsYWNrIiBzdHJva2U9ImJsYWNrIiBwb2ludHM9IjM0Ni41OTQsLTYyLjUzNjYgMzQ4
+LjgzOCwtNTIuMTgyMSAzNDAuNjI2LC01OC44Nzc0IDM0Ni41OTQsLTYyLjUzNjYiLz4KPHRl
+eHQgdGV4dC1hbmNob3I9Im1pZGRsZSIgeD0iMzQzLjU1MyIgeT0iLTE2Ni44IiBmb250LWZh
+bWlseT0iVGltZXMsc2VyaWYiIGZvbnQtc2l6ZT0iMTQuMDAiPmRldl9sb3NzX3RtbzwvdGV4
+dD4KPHRleHQgdGV4dC1hbmNob3I9Im1pZGRsZSIgeD0iMzQzLjU1MyIgeT0iLTE1MS44IiBm
+b250LWZhbWlseT0iVGltZXMsc2VyaWYiIGZvbnQtc2l6ZT0iMTQuMDAiPmV4cGlyZWQ8L3Rl
+eHQ+CjwvZz4KPCEtLSBibG9ja2VkJiM0NTsmZ3Q7cnVubmluZyAtLT4KPGcgaWQ9ImVkZ2Ux
+MiIgY2xhc3M9ImVkZ2UiPjx0aXRsZT5ibG9ja2VkJiM0NTsmZ3Q7cnVubmluZzwvdGl0bGU+
+CjxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iYmxhY2siIGQ9Ik00MDQuMTE2LC0zODguNzA3
+QzQwNS43NTcsLTQxNC4wMSA0MDQuODk1LC00NDYuOTkyIDM5NC4wNTMsLTQ3NCAzOTAuNTU1
+LC00ODIuNzE0IDM4NS4yMTEsLTQ5MS4wMDggMzc5LjI0MSwtNDk4LjQ5NiIvPgo8cG9seWdv
+biBmaWxsPSJibGFjayIgc3Ryb2tlPSJibGFjayIgcG9pbnRzPSIzNzYuNDE2LC00OTYuNDE0
+IDM3Mi41NzMsLTUwNi4yODcgMzgxLjczNCwtNTAwLjk2NSAzNzYuNDE2LC00OTYuNDE0Ii8+
+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjQ0MS41NTMiIHk9Ii00NTQuOCIgZm9u
+dC1mYW1pbHk9IlRpbWVzLHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj5yZWNvbm5lY3Rpbmc8
+L3RleHQ+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjQ0MS41NTMiIHk9Ii00Mzku
+OCIgZm9udC1mYW1pbHk9IlRpbWVzLHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj5zdWNjZWVk
+ZWQ8L3RleHQ+CjwvZz4KPCEtLSBibG9ja2VkJiM0NTsmZ3Q7ZmFpbGZhc3QgLS0+CjxnIGlk
+PSJlZGdlNiIgY2xhc3M9ImVkZ2UiPjx0aXRsZT5ibG9ja2VkJiM0NTsmZ3Q7ZmFpbGZhc3Q8
+L3RpdGxlPgo8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9ImJsYWNrIiBkPSJNMzkwLjcsLTMw
+Ny43QzM4Ny4yNDcsLTI4MS45NTIgMzg2LjY5NCwtMjQ4LjMxOCA0MDAuMDUzLC0yMjIgNDA3
+LjM4NCwtMjA3LjU1OCA0MjAuMTgxLC0xOTUuNzkyIDQzMy4zMTYsLTE4Ni43MjciLz4KPHBv
+bHlnb24gZmlsbD0iYmxhY2siIHN0cm9rZT0iYmxhY2siIHBvaW50cz0iNDM1LjQzOSwtMTg5
+LjUyMiA0NDEuOTQyLC0xODEuMTU4IDQzMS42NDIsLTE4My42NDEgNDM1LjQzOSwtMTg5LjUy
+MiIvPgo8dGV4dCB0ZXh0LWFuY2hvcj0ibWlkZGxlIiB4PSI0NDYuMDUzIiB5PSItMjU2LjMi
+IGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+ZmFzdF9pb19m
+YWlsX3RtbzwvdGV4dD4KPHRleHQgdGV4dC1hbmNob3I9Im1pZGRsZSIgeD0iNDQ2LjA1MyIg
+eT0iLTI0MS4zIiBmb250LWZhbWlseT0iVGltZXMsc2VyaWYiIGZvbnQtc2l6ZT0iMTQuMDAi
+PmV4cGlyZWQgb3I8L3RleHQ+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjQ0Ni4w
+NTMiIHk9Ii0yMjYuMyIgZm9udC1mYW1pbHk9IlRpbWVzLHNlcmlmIiBmb250LXNpemU9IjE0
+LjAwIj5zcnBfcnBvcnRfZGVsKCk8L3RleHQ+CjwvZz4KPCEtLSBmYWlsZmFzdCYjNDU7Jmd0
+O3J1bm5pbmcgLS0+CjxnIGlkPSJlZGdlMTQiIGNsYXNzPSJlZGdlIj48dGl0bGU+ZmFpbGZh
+c3QmIzQ1OyZndDtydW5uaW5nPC90aXRsZT4KPHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSJi
+bGFjayIgZD0iTTUxMi4xMjIsLTE4NC40ODFDNTQzLjQ0OCwtMjA1LjUwNyA1ODcuODUxLC0y
+NDEuNDA5IDYwNy4wNTMsLTI4NiA2MjguODUxLC0zMzYuNjE3IDYzMS45MjgsLTM2MC44MjIg
+NjA3LjA1MywtNDEwIDU2Ny4wNTEsLTQ4OS4wODcgNDU4LjYwMywtNTE3Ljk0OCAzOTMuMTkx
+LC01MjguMzI0Ii8+Cjxwb2x5Z29uIGZpbGw9ImJsYWNrIiBzdHJva2U9ImJsYWNrIiBwb2lu
+dHM9IjM5Mi40NTIsLTUyNC44OTUgMzgzLjA3OSwtNTI5LjgzNSAzOTMuNDg2LC01MzEuODE4
+IDM5Mi40NTIsLTUyNC44OTUiLz4KPHRleHQgdGV4dC1hbmNob3I9Im1pZGRsZSIgeD0iNjYx
+LjU1MyIgeT0iLTM1MS44IiBmb250LWZhbWlseT0iVGltZXMsc2VyaWYiIGZvbnQtc2l6ZT0i
+MTQuMDAiPnJlY29ubmVjdGluZzwvdGV4dD4KPHRleHQgdGV4dC1hbmNob3I9Im1pZGRsZSIg
+eD0iNjYxLjU1MyIgeT0iLTMzNi44IiBmb250LWZhbWlseT0iVGltZXMsc2VyaWYiIGZvbnQt
+c2l6ZT0iMTQuMDAiPnN1Y2NlZWRlZDwvdGV4dD4KPC9nPgo8IS0tIGZhaWxmYXN0JiM0NTsm
+Z3Q7bG9zdCAtLT4KPGcgaWQ9ImVkZ2U4IiBjbGFzcz0iZWRnZSI+PHRpdGxlPmZhaWxmYXN0
+JiM0NTsmZ3Q7bG9zdDwvdGl0bGU+CjxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iYmxhY2si
+IGQ9Ik00NTEuOTU4LC0xMzEuODJDNDMyLjcxNywtMTA5LjU2OCA0MDYuNzA5LC03OS40ODg0
+IDM4Ny43OTUsLTU3LjYxNSIvPgo8cG9seWdvbiBmaWxsPSJibGFjayIgc3Ryb2tlPSJibGFj
+ayIgcG9pbnRzPSIzOTAuMzYyLC01NS4yMzI1IDM4MS4xNzQsLTQ5Ljk1NzMgMzg1LjA2Nywt
+NTkuODExIDM5MC4zNjIsLTU1LjIzMjUiLz4KPHRleHQgdGV4dC1hbmNob3I9Im1pZGRsZSIg
+eD0iNDY3LjU1MyIgeT0iLTkyLjgiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1z
+aXplPSIxNC4wMCI+ZGV2X2xvc3NfdG1vPC90ZXh0Pgo8dGV4dCB0ZXh0LWFuY2hvcj0ibWlk
+ZGxlIiB4PSI0NjcuNTUzIiB5PSItNzcuOCIgZm9udC1mYW1pbHk9IlRpbWVzLHNlcmlmIiBm
+b250LXNpemU9IjE0LjAwIj5leHBpcmVkPC90ZXh0Pgo8L2c+CjwvZz4KPC9zdmc+Cg==
+--------------070203060403040809090404--
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
