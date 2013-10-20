@@ -1,22 +1,36 @@
-From: China@srvmail-zcom.mintra.gob.pe,
-	Shenhua@srvmail-zcom.mintra.gob.pe
-Subject: E-mail Has Won 1.5M
-Date: Sun, 20 Oct 2013 17:24:37 +0530
-Message-ID: <20131020115434.CE18B588ED6__32898.9095557064$1382270144$gmane$org@srvmail-zcom.mintra.gob.pe>
-Reply-To: companylimited_c1@yahoo.com.hk
+From: Sung Lee <suzlee@aswara.edu.my>
+Subject: Greetings
+Date: Sun, 20 Oct 2013 19:47:30 +0800 (MYT)
+Message-ID: <ec9e4461-9fb7-4108-81e8-e2f0ba2fb51a__35607.8693330803$1382276463$gmane$org@zimbra>
+Reply-To: Sung Lee <sleehk24@zing.vn>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [200.37.35.8] ([200.37.35.8]:6081 "EHLO mintra.gob.pe"
-	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1751390Ab3JTLy7 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 20 Oct 2013 07:54:59 -0400
-Content-Description: Mail message body
+Received: from mail.aswara.edu.my ([211.25.235.134]:49602 "HELO
+	zimbra.aswara.edu.my" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with SMTP id S1750897Ab3JTNkM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 20 Oct 2013 09:40:12 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Recipients <China@srvmail-zcom.mintra.gob.pe>
 
-Your E-mail Has Won 1.5M USD and A Brand New Gallery 2013 BMW X6 in the
-China Coal Energy Company Grant 2013.To Receive Award send your
-Name,Add,and Number on Email:companylimited_c1@yahoo.com.hk
+
+
+
+
+DAH SING BANK LTD
+DES VOEUX RD.BRANCH,CENTRAL HONG KONG,
+HONG KONG.
+
+Greetings,
+
+I am Mr.Sung Lee, Auditing and Account Credit Officer, Dah Sing Bank Ltd,(Hong Kong). I ask for your partnership in re-profiling funds Transfer. 
+
+Further to this,details would be made known if interested but in summary the funds would be transferred from my bank and further to this other informations to facilitate the remittance of the funds will be revealed to you in due course. For your assistance, you shall receive 25% of the funds to be transferred .
+
+I will appreciate if you can reply me.
+
+I'm looking forward to it
+Sung Lee
+
+The information contained in this email and any attachments is confidential and may be subject to copyright or other intellectual property protection. If you are not the intended recipient, you are not authorized to use or disclose this information, and we request that you notify us by reply mail or telephone and delete the original message from your mail system.
