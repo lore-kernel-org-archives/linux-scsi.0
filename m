@@ -1,16 +1,17 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 09/19] libfc: Protect ep->esb_stat changes via ex_lock
-Date: Mon, 21 Oct 2013 11:01:13 -0700
-Message-ID: <20131021180113.31563.96934.stgit@fritz>
+Subject: [PATCH 10/19] libfc: Avoid that sending after an abort triggers a
+ kernel warning
+Date: Mon, 21 Oct 2013 11:01:19 -0700
+Message-ID: <20131021180119.31563.84184.stgit@fritz>
 References: <20131021180024.31563.89632.stgit@fritz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:20657 "EHLO mga02.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:47915 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752094Ab3JUSBR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Oct 2013 14:01:17 -0400
+	id S1752094Ab3JUSBU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 21 Oct 2013 14:01:20 -0400
 In-Reply-To: <20131021180024.31563.89632.stgit@fritz>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,61 +20,125 @@ Cc: Bart Van Assche <bvanassche@acm.org>, Neil Horman <nhorman@tuxdriver.com>
 
 From: Bart Van Assche <bvanassche@acm.org>
 
-This patch avoids that the WARN_ON(!(ep->esb_stat & ESB_ST_SEQ_INIT))
-statement in fc_seq_send_locked() gets triggered sporadically when
-running FCoE target code due to concurrent ep->esb_stat modifications.
+Calling fc_seq_send() after an ABTS message has been received triggers
+a kernel warning (WARN_ON(!(ep->esb_stat & ESB_ST_SEQ_INIT))). Avoid
+this by returning -ENXIO to the caller if fc_seq_send() is invoked after
+an ABTS message has been received.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 Cc: Neil Horman <nhorman@tuxdriver.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
- drivers/scsi/libfc/fc_exch.c |    9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
+ drivers/scsi/libfc/fc_exch.c |   59 ++++++++++++++++++++++++++----------------
+ 1 file changed, 37 insertions(+), 22 deletions(-)
 
 diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
-index 7000203..bc0aba4 100644
+index bc0aba4..2a7fd5a 100644
 --- a/drivers/scsi/libfc/fc_exch.c
 +++ b/drivers/scsi/libfc/fc_exch.c
-@@ -988,6 +988,7 @@ static enum fc_pf_rjt_reason fc_seq_lookup_recip(struct fc_lport *lport,
- 		}
- 	}
+@@ -463,15 +463,21 @@ static void fc_exch_delete(struct fc_exch *ep)
+ }
  
-+	spin_lock_bh(&ep->ex_lock);
- 	/*
- 	 * At this point, we have the exchange held.
- 	 * Find or create the sequence.
-@@ -1015,11 +1016,11 @@ static enum fc_pf_rjt_reason fc_seq_lookup_recip(struct fc_lport *lport,
- 				 * sending RSP, hence write request on other
- 				 * end never finishes.
- 				 */
--				spin_lock_bh(&ep->ex_lock);
- 				sp->ssb_stat |= SSB_ST_RESP;
- 				sp->id = fh->fh_seq_id;
--				spin_unlock_bh(&ep->ex_lock);
- 			} else {
-+				spin_unlock_bh(&ep->ex_lock);
+ static int fc_seq_send_locked(struct fc_lport *lport, struct fc_seq *sp,
+-		       struct fc_frame *fp)
++			      struct fc_frame *fp)
+ {
+ 	struct fc_exch *ep;
+ 	struct fc_frame_header *fh = fc_frame_header_get(fp);
+-	int error;
++	int error = -ENXIO;
+ 	u32 f_ctl;
+ 	u8 fh_type = fh->fh_type;
+ 
+ 	ep = fc_seq_exch(sp);
 +
- 				/* sequence/exch should exist */
- 				reject = FC_RJT_SEQ_ID;
- 				goto rel;
-@@ -1030,6 +1031,7 @@ static enum fc_pf_rjt_reason fc_seq_lookup_recip(struct fc_lport *lport,
- 
- 	if (f_ctl & FC_FC_SEQ_INIT)
- 		ep->esb_stat |= ESB_ST_SEQ_INIT;
-+	spin_unlock_bh(&ep->ex_lock);
- 
- 	fr_seq(fp) = sp;
- out:
-@@ -1479,8 +1481,11 @@ static void fc_exch_recv_seq_resp(struct fc_exch_mgr *mp, struct fc_frame *fp)
++	if (ep->esb_stat & (ESB_ST_COMPLETE | ESB_ST_ABNORMAL)) {
++		fc_frame_free(fp);
++		goto out;
++	}
++
+ 	WARN_ON(!(ep->esb_stat & ESB_ST_SEQ_INIT));
  
  	f_ctl = ntoh24(fh->fh_f_ctl);
- 	fr_seq(fp) = sp;
-+
-+	spin_lock_bh(&ep->ex_lock);
- 	if (f_ctl & FC_FC_SEQ_INIT)
- 		ep->esb_stat |= ESB_ST_SEQ_INIT;
-+	spin_unlock_bh(&ep->ex_lock);
+@@ -514,6 +520,9 @@ out:
+  * @lport: The local port that the exchange will be sent on
+  * @sp:	   The sequence to be sent
+  * @fp:	   The frame to be sent on the exchange
++ *
++ * Note: The frame will be freed either by a direct call to fc_frame_free(fp)
++ * or indirectly by calling libfc_function_template.frame_send().
+  */
+ static int fc_seq_send(struct fc_lport *lport, struct fc_seq *sp,
+ 		       struct fc_frame *fp)
+@@ -621,27 +630,31 @@ static int fc_exch_abort_locked(struct fc_exch *ep,
+ 	if (!sp)
+ 		return -ENOMEM;
  
- 	if (fc_sof_needs_ack(sof))
- 		fc_seq_send_ack(sp, fp);
+-	ep->esb_stat |= ESB_ST_SEQ_INIT | ESB_ST_ABNORMAL;
+ 	if (timer_msec)
+ 		fc_exch_timer_set_locked(ep, timer_msec);
+ 
+-	/*
+-	 * If not logged into the fabric, don't send ABTS but leave
+-	 * sequence active until next timeout.
+-	 */
+-	if (!ep->sid)
+-		return 0;
+-
+-	/*
+-	 * Send an abort for the sequence that timed out.
+-	 */
+-	fp = fc_frame_alloc(ep->lp, 0);
+-	if (fp) {
+-		fc_fill_fc_hdr(fp, FC_RCTL_BA_ABTS, ep->did, ep->sid,
+-			       FC_TYPE_BLS, FC_FC_END_SEQ | FC_FC_SEQ_INIT, 0);
+-		error = fc_seq_send_locked(ep->lp, sp, fp);
+-	} else
+-		error = -ENOBUFS;
++	if (ep->sid) {
++		/*
++		 * Send an abort for the sequence that timed out.
++		 */
++		fp = fc_frame_alloc(ep->lp, 0);
++		if (fp) {
++			ep->esb_stat |= ESB_ST_SEQ_INIT;
++			fc_fill_fc_hdr(fp, FC_RCTL_BA_ABTS, ep->did, ep->sid,
++				       FC_TYPE_BLS, FC_FC_END_SEQ |
++				       FC_FC_SEQ_INIT, 0);
++			error = fc_seq_send_locked(ep->lp, sp, fp);
++		} else {
++			error = -ENOBUFS;
++		}
++	} else {
++		/*
++		 * If not logged into the fabric, don't send ABTS but leave
++		 * sequence active until next timeout.
++		 */
++		error = 0;
++	}
++	ep->esb_stat |= ESB_ST_ABNORMAL;
+ 	return error;
+ }
+ 
+@@ -1299,9 +1312,10 @@ static void fc_exch_recv_abts(struct fc_exch *ep, struct fc_frame *rx_fp)
+ 		spin_unlock_bh(&ep->ex_lock);
+ 		goto reject;
+ 	}
+-	if (!(ep->esb_stat & ESB_ST_REC_QUAL))
++	if (!(ep->esb_stat & ESB_ST_REC_QUAL)) {
++		ep->esb_stat |= ESB_ST_REC_QUAL;
+ 		fc_exch_hold(ep);		/* hold for REC_QUAL */
+-	ep->esb_stat |= ESB_ST_ABNORMAL | ESB_ST_REC_QUAL;
++	}
+ 	fc_exch_timer_set_locked(ep, ep->r_a_tov);
+ 
+ 	fp = fc_frame_alloc(ep->lp, sizeof(*ap));
+@@ -1322,6 +1336,7 @@ static void fc_exch_recv_abts(struct fc_exch *ep, struct fc_frame *rx_fp)
+ 	}
+ 	sp = fc_seq_start_next_locked(sp);
+ 	fc_seq_send_last(sp, fp, FC_RCTL_BA_ACC, FC_TYPE_BLS);
++	ep->esb_stat |= ESB_ST_ABNORMAL;
+ 	spin_unlock_bh(&ep->ex_lock);
+ 	fc_frame_free(rx_fp);
+ 	return;
 
