@@ -1,16 +1,16 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 01/19] fcoe: ensure that skb placed on the fip_recv_list are
- unshared
-Date: Mon, 21 Oct 2013 11:00:29 -0700
-Message-ID: <20131021180029.31563.68208.stgit@fritz>
+Subject: [PATCH 02/19] fcoe: make sure fcoe frames are unshared prior to
+ manipulating them
+Date: Mon, 21 Oct 2013 11:00:35 -0700
+Message-ID: <20131021180035.31563.75430.stgit@fritz>
 References: <20131021180024.31563.89632.stgit@fritz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:19661 "EHLO mga03.intel.com"
+Received: from mga03.intel.com ([143.182.124.21]:11881 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752008Ab3JUSAj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1752013Ab3JUSAj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Mon, 21 Oct 2013 14:00:39 -0400
 In-Reply-To: <20131021180024.31563.89632.stgit@fritz>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -20,74 +20,33 @@ Cc: Neil Horman <nhorman@tuxdriver.com>
 
 From: Neil Horman <nhorman@tuxdriver.com>
 
-Recently had this Oops reported to me on the 3.10 kernel:
+Based on my last patch I noticed that fcoe_rcv has a simmilar problem, in that
+it manipulates the passed in skb without checking to see if it has other users.
+Making manipulations to a shared skb can result in various corruptions.
 
-[  807.554955] BUG: unable to handle kernel NULL pointer dereference at 0000000000000008
-[  807.562799] IP: [<ffffffff814e6fc7>] skb_dequeue+0x47/0x70
-[  807.568296] PGD 20c889067 PUD 20c8b8067 PMD 0
-[  807.572769] Oops: 0002 [#1] SMP
-[  807.655597] Hardware name: Dell Inc. PowerEdge R415/0DDT2D, BIOS 1.8.6 12/06/2011
-[  807.663079] Workqueue: events fcoe_ctlr_recv_work [libfcoe]
-[  807.668656] task: ffff88020b42a160 ti: ffff88020ae6c000 task.ti: ffff88020ae6c000
-[  807.676126] RIP: 0010:[<ffffffff814e6fc7>]  [<ffffffff814e6fc7>] skb_dequeue+0x47/0x70
-[  807.684046] RSP: 0000:ffff88020ae6dd70  EFLAGS: 00010097
-[  807.689349] RAX: 0000000000000246 RBX: ffff8801d04d6700 RCX: 0000000000000000
-[  807.696474] RDX: 0000000000000000 RSI: 0000000000000246 RDI: ffff88020df26434
-[  807.703598] RBP: ffff88020ae6dd88 R08: 00000000000173e0 R09: ffff880216e173e0
-[  807.710723] R10: ffffffff814e5897 R11: ffffea0007413580 R12: ffff88020df26420
-[  807.717847] R13: ffff88020df26434 R14: 0000000000000004 R15: ffff8801d04c42ce
-[  807.724972] FS:  00007fdaab6048c0(0000) GS:ffff880216e00000(0000) knlGS:0000000000000000
-[  807.733049] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-[  807.738785] CR2: 0000000000000008 CR3: 000000020cbc9000 CR4: 00000000000006f0
-[  807.745910] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-[  807.753033] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-[  807.760156] Stack:
-[  807.762162]  ffff8801d04d6700 0000000000000001 ffff88020df26400 ffff88020ae6de20
-[  807.769586]  ffffffffa0444409 ffff88020b046a00 ffff88020ae6dde8 ffffffff810105be
-[  807.777008]  ffff88020b42a868 0000000000000000 ffff88020df264a8 ffff88020df26348
-[  807.784431] Call Trace:
-[  807.786885]  [<ffffffffa0444409>] fcoe_ctlr_recv_work+0x59/0x9a0 [libfcoe]
-[  807.793755]  [<ffffffff810105be>] ? __switch_to+0x13e/0x4a0
-[  807.799324]  [<ffffffff8107d0e6>] process_one_work+0x176/0x420
-[  807.805151]  [<ffffffff8107dd0b>] worker_thread+0x11b/0x3a0
-[  807.810717]  [<ffffffff8107dbf0>] ? rescuer_thread+0x350/0x350
-[  807.816545]  [<ffffffff810842b0>] kthread+0xc0/0xd0
-[  807.821416]  [<ffffffff810841f0>] ? insert_kthread_work+0x40/0x40
-[  807.827503]  [<ffffffff8160ce2c>] ret_from_fork+0x7c/0xb0
-[  807.832897]  [<ffffffff810841f0>] ? insert_kthread_work+0x40/0x40
-[  807.858500] RIP  [<ffffffff814e6fc7>] skb_dequeue+0x47/0x70
-[  807.864076]  RSP <ffff88020ae6dd70>
-[  807.867558] CR2: 0000000000000008
-
-Looks like the root cause is the fact that the packet recieve function
-fcoe_ctlr_recv enqueues the skb to a sk_buff_head_list prior to ensuring that
-the skb is unshared.  This can happen when multiple packet listeners recieve an
-skb, as the deliver_skb function just increments skb->users for each handler.
-As a result, having multiple users of a single skb results in multiple
-manipulators of its methods, implying list corruption, and the oops recorded
-above.
-
-The fix is pretty easy, just make sure that we clone the skb if its got multiple
-users with the skb_share_check function, like other protocols do.
+Easy fix, just make sure the skb is unshared prior to doing anything with it.
 
 Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
- drivers/scsi/fcoe/fcoe_ctlr.c |    3 +++
- 1 file changed, 3 insertions(+)
+ drivers/scsi/fcoe/fcoe.c |    6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
-index 203415e..35b1fb7 100644
---- a/drivers/scsi/fcoe/fcoe_ctlr.c
-+++ b/drivers/scsi/fcoe/fcoe_ctlr.c
-@@ -1453,6 +1453,9 @@ err:
-  */
- void fcoe_ctlr_recv(struct fcoe_ctlr *fip, struct sk_buff *skb)
- {
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index 07453bb..f9b0302 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -1452,6 +1452,12 @@ static int fcoe_rcv(struct sk_buff *skb, struct net_device *netdev,
+ 			skb_tail_pointer(skb), skb_end_pointer(skb),
+ 			skb->csum, skb->dev ? skb->dev->name : "<NULL>");
+ 
++
 +	skb = skb_share_check(skb, GFP_ATOMIC);
-+	if (!skb)
-+		return;
- 	skb_queue_tail(&fip->fip_recv_list, skb);
- 	schedule_work(&fip->recv_work);
- }
++
++	if (skb == NULL)
++		return NET_RX_DROP;
++
+ 	eh = eth_hdr(skb);
+ 
+ 	if (is_fip_mode(ctlr) &&
 
