@@ -1,16 +1,16 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 08/19] libfc: Fix a race in fc_exch_timer_set_locked()
-Date: Mon, 21 Oct 2013 11:01:08 -0700
-Message-ID: <20131021180108.31563.29352.stgit@fritz>
+Subject: [PATCH 09/19] libfc: Protect ep->esb_stat changes via ex_lock
+Date: Mon, 21 Oct 2013 11:01:13 -0700
+Message-ID: <20131021180113.31563.96934.stgit@fritz>
 References: <20131021180024.31563.89632.stgit@fritz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:27348 "EHLO mga11.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:20657 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751937Ab3JUSBJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Oct 2013 14:01:09 -0400
+	id S1752094Ab3JUSBR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 21 Oct 2013 14:01:17 -0400
 In-Reply-To: <20131021180024.31563.89632.stgit@fritz>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,35 +19,61 @@ Cc: Bart Van Assche <bvanassche@acm.org>, Neil Horman <nhorman@tuxdriver.com>
 
 From: Bart Van Assche <bvanassche@acm.org>
 
-It is allowed to pass a zero timeout value to fc_seq_exch_abort().
-Avoid that this can cause the timeout function to drop the exchange
-reference before it has been increased by fc_exch_timer_set_locked().
-This patch fixes a crash when running FCoE target code with poisoning
-enabled in the memory allocator.
+This patch avoids that the WARN_ON(!(ep->esb_stat & ESB_ST_SEQ_INIT))
+statement in fc_seq_send_locked() gets triggered sporadically when
+running FCoE target code due to concurrent ep->esb_stat modifications.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 Cc: Neil Horman <nhorman@tuxdriver.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
- drivers/scsi/libfc/fc_exch.c |    7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ drivers/scsi/libfc/fc_exch.c |    9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
-index f6bb0fb..7000203 100644
+index 7000203..bc0aba4 100644
 --- a/drivers/scsi/libfc/fc_exch.c
 +++ b/drivers/scsi/libfc/fc_exch.c
-@@ -360,9 +360,10 @@ static inline void fc_exch_timer_set_locked(struct fc_exch *ep,
+@@ -988,6 +988,7 @@ static enum fc_pf_rjt_reason fc_seq_lookup_recip(struct fc_lport *lport,
+ 		}
+ 	}
  
- 	FC_EXCH_DBG(ep, "Exchange timer armed : %d msecs\n", timer_msec);
++	spin_lock_bh(&ep->ex_lock);
+ 	/*
+ 	 * At this point, we have the exchange held.
+ 	 * Find or create the sequence.
+@@ -1015,11 +1016,11 @@ static enum fc_pf_rjt_reason fc_seq_lookup_recip(struct fc_lport *lport,
+ 				 * sending RSP, hence write request on other
+ 				 * end never finishes.
+ 				 */
+-				spin_lock_bh(&ep->ex_lock);
+ 				sp->ssb_stat |= SSB_ST_RESP;
+ 				sp->id = fh->fh_seq_id;
+-				spin_unlock_bh(&ep->ex_lock);
+ 			} else {
++				spin_unlock_bh(&ep->ex_lock);
++
+ 				/* sequence/exch should exist */
+ 				reject = FC_RJT_SEQ_ID;
+ 				goto rel;
+@@ -1030,6 +1031,7 @@ static enum fc_pf_rjt_reason fc_seq_lookup_recip(struct fc_lport *lport,
  
--	if (queue_delayed_work(fc_exch_workqueue, &ep->timeout_work,
--			       msecs_to_jiffies(timer_msec)))
--		fc_exch_hold(ep);		/* hold for timer */
-+	fc_exch_hold(ep);		/* hold for timer */
-+	if (!queue_delayed_work(fc_exch_workqueue, &ep->timeout_work,
-+				msecs_to_jiffies(timer_msec)))
-+		fc_exch_release(ep);
- }
+ 	if (f_ctl & FC_FC_SEQ_INIT)
+ 		ep->esb_stat |= ESB_ST_SEQ_INIT;
++	spin_unlock_bh(&ep->ex_lock);
  
- /**
+ 	fr_seq(fp) = sp;
+ out:
+@@ -1479,8 +1481,11 @@ static void fc_exch_recv_seq_resp(struct fc_exch_mgr *mp, struct fc_frame *fp)
+ 
+ 	f_ctl = ntoh24(fh->fh_f_ctl);
+ 	fr_seq(fp) = sp;
++
++	spin_lock_bh(&ep->ex_lock);
+ 	if (f_ctl & FC_FC_SEQ_INIT)
+ 		ep->esb_stat |= ESB_ST_SEQ_INIT;
++	spin_unlock_bh(&ep->ex_lock);
+ 
+ 	if (fc_sof_needs_ack(sof))
+ 		fc_seq_send_ack(sp, fp);
 
