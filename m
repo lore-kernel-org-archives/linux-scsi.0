@@ -1,265 +1,53 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 17/19] libfcoe: Make fcoe_sysfs optional / fix fnic NULL
- exception
-Date: Mon, 21 Oct 2013 11:02:01 -0700
-Message-ID: <20131021180201.31563.62796.stgit@fritz>
+Subject: [PATCH 18/19] fcoe: Fix missing mutex_unlock in fcoe_sysfs_fcf_add
+ error path
+Date: Mon, 21 Oct 2013 11:02:06 -0700
+Message-ID: <20131021180206.31563.93023.stgit@fritz>
 References: <20131021180024.31563.89632.stgit@fritz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:63041 "EHLO mga03.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:49789 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751803Ab3JUSCC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Oct 2013 14:02:02 -0400
+	id S1751803Ab3JUSCH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 21 Oct 2013 14:02:07 -0400
 In-Reply-To: <20131021180024.31563.89632.stgit@fritz>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Hiral Patel <hiralpat@cisco.com>, Neil Horman <nhorman@tuxdriver.com>
+Cc: thenzl@redhat.com, Neil Horman <nhorman@tuxdriver.com>
 
-fnic doesn't use any of the create/destroy/enable/disable interfaces
-either from the (legacy) module paramaters or the (new) fcoe_sysfs
-interfaces. When fcoe_sysfs was introduced fnic wasn't changed since
-it wasn't using the interfaces. libfcoe incorrectly assumed that that
-all of its users were using fcoe_sysfs and when adding and deleting
-FCFs would assume the existance of a fcoe_ctlr_device. fnic was not
-allocating this structure because it doesn't care about the standard
-user interfaces (fnic starts on link only). If/When libfcoe tried to use
-the fcoe_ctlr_device's lock for the first time a NULL pointer exception
-would be triggered.
+From: Neil Horman <nhorman@tuxdriver.com>
 
-Since fnic doesn't care about sysfs or user interfaces, the solution
-is to drop libfcoe's assumption that all drivers are using fcoe_sysfs.
+In this pending patch:
+http://patchwork.open-fcoe.org/patch/104/
 
-This patch accomplishes this by changing some of the structure
-relationships.
+Tomas Henzl noted that the error path when fcoe_fcf_device_add fails, was
+missing a mutex_unlock call.
 
-We need a way to determine when a LLD is using fcoe_sysfs or not and
-we can do that by checking for the existance of the fcoe_ctlr_device.
-Prior to this patch, it was assumed that the fcoe_ctlr structure was
-allocated with the fcoe_ctlr_device and immediately followed it in
-memory. To reach the fcoe_ctlr_device we would simply go back in memory
-from the fcoe_ctlr to get the fcoe_ctlr_device.
+Not sure what staet the integration of the above patch is in, but if you could
+either merge this with it, or apply it on top of what you already have, that
+would be great.  Thanks!
 
-Since fnic doesn't allocate the fcoe_ctlr_device, we cannot keep that
-assumption. This patch adds a pointer from the fcoe_ctlr to the
-fcoe_ctlr_device. For bnx2fc and fcoe we will continue to allocate the
-two structures together, but then we'll set the ctlr->cdev pointer
-to point at the fcoe_ctlr_device. fnic will not change and will continue
-to allocate the fcoe_ctlr itself, and ctlr->cdev will remain NULL.
-
-When libfcoe adds fcoe_fcf's to the fcoe_ctlr it will check if ctlr->cdev
-is set and only if so will it continue to interact with fcoe_sysfs.
-
+Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
+CC: thenzl@redhat.com
+Reported-by: thenzl@redhat.com
 Signed-off-by: Robert Love <robert.w.love@intel.com>
-Acked-by: Neil Horman <nhorman@tuxdriver.com>
-Tested-by: Hiral Patel <hiralpat@cisco.com>
 ---
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c |    1 
- drivers/scsi/fcoe/fcoe.c          |    1 
- drivers/scsi/fcoe/fcoe_ctlr.c     |   94 +++++++++++++++++++++++++------------
- include/scsi/libfcoe.h            |    7 ++-
- 4 files changed, 71 insertions(+), 32 deletions(-)
+ drivers/scsi/fcoe/fcoe_ctlr.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-index 69ac554..27f2cc4 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-@@ -1381,6 +1381,7 @@ struct bnx2fc_interface *bnx2fc_interface_create(struct bnx2fc_hba *hba,
- 		return NULL;
- 	}
- 	ctlr = fcoe_ctlr_device_priv(ctlr_dev);
-+	ctlr->cdev = ctlr_dev;
- 	interface = fcoe_ctlr_priv(ctlr);
- 	dev_hold(netdev);
- 	kref_init(&interface->kref);
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index dff40b2..8626988 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -408,6 +408,7 @@ static struct fcoe_interface *fcoe_interface_create(struct net_device *netdev,
- 	}
- 
- 	ctlr = fcoe_ctlr_device_priv(ctlr_dev);
-+	ctlr->cdev = ctlr_dev;
- 	fcoe = fcoe_ctlr_priv(ctlr);
- 
- 	dev_hold(netdev);
 diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
-index 692c653..75efdbc 100644
+index 75efdbc..2aba32f 100644
 --- a/drivers/scsi/fcoe/fcoe_ctlr.c
 +++ b/drivers/scsi/fcoe/fcoe_ctlr.c
-@@ -160,10 +160,16 @@ void fcoe_ctlr_init(struct fcoe_ctlr *fip, enum fip_state mode)
- }
- EXPORT_SYMBOL(fcoe_ctlr_init);
+@@ -203,6 +203,7 @@ static int fcoe_sysfs_fcf_add(struct fcoe_fcf *new)
+ 		fcf_dev = fcoe_fcf_device_add(ctlr_dev, temp);
+ 		if (unlikely(!fcf_dev)) {
+ 			rc = -ENOMEM;
++			mutex_unlock(&ctlr_dev->lock);
+ 			goto out;
+ 		}
  
-+/**
-+ * fcoe_sysfs_fcf_add() - Add a fcoe_fcf{,_device} to a fcoe_ctlr{,_device}
-+ * @new: The newly discovered FCF
-+ *
-+ * Called with fip->ctlr_mutex held
-+ */
- static int fcoe_sysfs_fcf_add(struct fcoe_fcf *new)
- {
- 	struct fcoe_ctlr *fip = new->fip;
--	struct fcoe_ctlr_device *ctlr_dev = fcoe_ctlr_to_ctlr_dev(fip);
-+	struct fcoe_ctlr_device *ctlr_dev;
- 	struct fcoe_fcf_device *temp, *fcf_dev;
- 	int rc = -ENOMEM;
- 
-@@ -174,8 +180,6 @@ static int fcoe_sysfs_fcf_add(struct fcoe_fcf *new)
- 	if (!temp)
- 		goto out;
- 
--	mutex_lock(&ctlr_dev->lock);
--
- 	temp->fabric_name = new->fabric_name;
- 	temp->switch_name = new->switch_name;
- 	temp->fc_map = new->fc_map;
-@@ -185,55 +189,83 @@ static int fcoe_sysfs_fcf_add(struct fcoe_fcf *new)
- 	temp->fka_period = new->fka_period;
- 	temp->selected = 0; /* default to unselected */
- 
--	fcf_dev = fcoe_fcf_device_add(ctlr_dev, temp);
--	if (unlikely(!fcf_dev))
--		goto unlock;
--
- 	/*
--	 * The fcoe_sysfs layer can return a CONNECTED fcf that
--	 * has a priv (fcf was never deleted) or a CONNECTED fcf
--	 * that doesn't have a priv (fcf was deleted). However,
--	 * libfcoe will always delete FCFs before trying to add
--	 * them. This is ensured because both recv_adv and
--	 * age_fcfs are protected by the the fcoe_ctlr's mutex.
--	 * This means that we should never get a FCF with a
--	 * non-NULL priv pointer.
-+	 * If ctlr_dev doesn't exist then it means we're a libfcoe user
-+	 * who doesn't use fcoe_syfs and didn't allocate a fcoe_ctlr_device.
-+	 * fnic would be an example of a driver with this behavior. In this
-+	 * case we want to add the fcoe_fcf to the fcoe_ctlr list, but we
-+	 * don't want to make sysfs changes.
- 	 */
--	BUG_ON(fcf_dev->priv);
- 
--	fcf_dev->priv = new;
--	new->fcf_dev = fcf_dev;
-+	ctlr_dev = fcoe_ctlr_to_ctlr_dev(fip);
-+	if (ctlr_dev) {
-+		mutex_lock(&ctlr_dev->lock);
-+		fcf_dev = fcoe_fcf_device_add(ctlr_dev, temp);
-+		if (unlikely(!fcf_dev)) {
-+			rc = -ENOMEM;
-+			goto out;
-+		}
-+
-+		/*
-+		 * The fcoe_sysfs layer can return a CONNECTED fcf that
-+		 * has a priv (fcf was never deleted) or a CONNECTED fcf
-+		 * that doesn't have a priv (fcf was deleted). However,
-+		 * libfcoe will always delete FCFs before trying to add
-+		 * them. This is ensured because both recv_adv and
-+		 * age_fcfs are protected by the the fcoe_ctlr's mutex.
-+		 * This means that we should never get a FCF with a
-+		 * non-NULL priv pointer.
-+		 */
-+		BUG_ON(fcf_dev->priv);
-+
-+		fcf_dev->priv = new;
-+		new->fcf_dev = fcf_dev;
-+		mutex_unlock(&ctlr_dev->lock);
-+	}
- 
- 	list_add(&new->list, &fip->fcfs);
- 	fip->fcf_count++;
- 	rc = 0;
- 
--unlock:
--	mutex_unlock(&ctlr_dev->lock);
--
- out:
- 	kfree(temp);
- 	return rc;
- }
- 
-+/**
-+ * fcoe_sysfs_fcf_del() - Remove a fcoe_fcf{,_device} to a fcoe_ctlr{,_device}
-+ * @new: The FCF to be removed
-+ *
-+ * Called with fip->ctlr_mutex held
-+ */
- static void fcoe_sysfs_fcf_del(struct fcoe_fcf *new)
- {
- 	struct fcoe_ctlr *fip = new->fip;
--	struct fcoe_ctlr_device *ctlr_dev = fcoe_ctlr_to_ctlr_dev(fip);
-+	struct fcoe_ctlr_device *cdev;
- 	struct fcoe_fcf_device *fcf_dev;
- 
- 	list_del(&new->list);
- 	fip->fcf_count--;
- 
--	mutex_lock(&ctlr_dev->lock);
--
--	fcf_dev = fcoe_fcf_to_fcf_dev(new);
--	WARN_ON(!fcf_dev);
--	new->fcf_dev = NULL;
--	fcoe_fcf_device_delete(fcf_dev);
--	kfree(new);
--
--	mutex_unlock(&ctlr_dev->lock);
-+	/*
-+	 * If ctlr_dev doesn't exist then it means we're a libfcoe user
-+	 * who doesn't use fcoe_syfs and didn't allocate a fcoe_ctlr_device
-+	 * or a fcoe_fcf_device.
-+	 *
-+	 * fnic would be an example of a driver with this behavior. In this
-+	 * case we want to remove the fcoe_fcf from the fcoe_ctlr list (above),
-+	 * but we don't want to make sysfs changes.
-+	 */
-+	cdev = fcoe_ctlr_to_ctlr_dev(fip);
-+	if (cdev) {
-+		mutex_lock(&cdev->lock);
-+		fcf_dev = fcoe_fcf_to_fcf_dev(new);
-+		WARN_ON(!fcf_dev);
-+		new->fcf_dev = NULL;
-+		fcoe_fcf_device_delete(fcf_dev);
-+		kfree(new);
-+		mutex_unlock(&cdev->lock);
-+	}
- }
- 
- /**
-diff --git a/include/scsi/libfcoe.h b/include/scsi/libfcoe.h
-index 4427393..de7e3ee 100644
---- a/include/scsi/libfcoe.h
-+++ b/include/scsi/libfcoe.h
-@@ -90,6 +90,7 @@ enum fip_state {
-  * @lp:		   &fc_lport: libfc local port.
-  * @sel_fcf:	   currently selected FCF, or NULL.
-  * @fcfs:	   list of discovered FCFs.
-+ * @cdev:          (Optional) pointer to sysfs fcoe_ctlr_device.
-  * @fcf_count:	   number of discovered FCF entries.
-  * @sol_time:	   time when a multicast solicitation was last sent.
-  * @sel_time:	   time after which to select an FCF.
-@@ -127,6 +128,7 @@ struct fcoe_ctlr {
- 	struct fc_lport *lp;
- 	struct fcoe_fcf *sel_fcf;
- 	struct list_head fcfs;
-+	struct fcoe_ctlr_device *cdev;
- 	u16 fcf_count;
- 	unsigned long sol_time;
- 	unsigned long sel_time;
-@@ -168,8 +170,11 @@ static inline void *fcoe_ctlr_priv(const struct fcoe_ctlr *ctlr)
- 	return (void *)(ctlr + 1);
- }
- 
-+/*
-+ * This assumes that the fcoe_ctlr (x) is allocated with the fcoe_ctlr_device.
-+ */
- #define fcoe_ctlr_to_ctlr_dev(x)					\
--	(struct fcoe_ctlr_device *)(((struct fcoe_ctlr_device *)(x)) - 1)
-+	(x)->cdev
- 
- /**
-  * struct fcoe_fcf - Fibre-Channel Forwarder
 
