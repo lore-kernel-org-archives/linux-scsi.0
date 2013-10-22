@@ -1,38 +1,81 @@
-From: Simon Kirby <sim@hostway.ca>
-Subject: [3.12-rc] sg_open: leaving the kernel with locks still held!
-Date: Tue, 22 Oct 2013 13:56:08 -0700
-Message-ID: <20131022205608.GA6616@hostway.ca>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Vaughan Cao <vaughan.cao@oracle.com>
+From: Joe Perches <joe@perches.com>
+Subject: [PATCH 00/24] treewide: Convert use of typedef ctl_table to struct ctl_table
+Date: Tue, 22 Oct 2013 15:29:43 -0700
+Message-ID: <cover.1382480758.git.joe@perches.com>
+Return-path: <owner-linux-mm@kvack.org>
+Sender: owner-linux-mm@kvack.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org, linux-ia64@vger.kernel.org, linux-s390@vger.kernel.org, linux-rdma@vger.kernel.org, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, codalist@coda.cs.cmu.edu, linux-fsdevel@vger.kernel.org, linux-cachefs@redhat.com, linux-nfs@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, ocfs2-devel@oss.oracle.com, keyrings@linux-nfs.org, linux-mm@kvack.org, linux-security-module@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hello!
+Joe Perches (24):
+  arm: Convert use of typedef ctl_table to struct ctl_table
+  ia64: Convert use of typedef ctl_table to struct ctl_table
+  s390: Convert use of typedef ctl_table to struct ctl_table
+  tile: Convert use of typedef ctl_table to struct ctl_table
+  cdrom: Convert use of typedef ctl_table to struct ctl_table
+  random: Convert use of typedef ctl_table to struct ctl_table
+  infiniband: Convert use of typedef ctl_table to struct ctl_table
+  md: Convert use of typedef ctl_table to struct ctl_table
+  parport: Convert use of typedef ctl_table to struct ctl_table
+  scsi: Convert use of typedef ctl_table to struct ctl_table
+  coda: Convert use of typedef ctl_table to struct ctl_table
+  fscache: Convert use of typedef ctl_table to struct ctl_table
+  lockd: Convert use of typedef ctl_table to struct ctl_table
+  nfs: Convert use of typedef ctl_table to struct ctl_table
+  inotify: Convert use of typedef ctl_table to struct ctl_table
+  ntfs: Convert use of typedef ctl_table to struct ctl_table
+  ocfs2: Convert use of typedef ctl_table to struct ctl_table
+  proc: Convert use of typedef ctl_table to struct ctl_table
+  fs: Convert use of typedef ctl_table to struct ctl_table
+  key: Convert use of typedef ctl_table to struct ctl_table
+  ipc: Convert use of typedef ctl_table to struct ctl_table
+  kernel: Convert use of typedef ctl_table to struct ctl_table
+  mm: Convert use of typedef ctl_table to struct ctl_table
+  security:keys: Convert use of typedef ctl_table to struct ctl_table
 
-While trying to figure out why the request queue to sda (ext4) was
-clogging up on one of our btrfs backup boxes, I noticed a megarc process
-in D state, so enabled locking debugging, and got this (on 3.12-rc6):
+ arch/arm/kernel/isa.c              |  6 ++---
+ arch/ia64/kernel/crash.c           |  4 +--
+ arch/ia64/kernel/perfmon.c         |  6 ++---
+ arch/s390/appldata/appldata_base.c | 10 ++++----
+ arch/s390/kernel/debug.c           |  2 +-
+ arch/s390/mm/cmm.c                 |  8 +++---
+ arch/tile/kernel/proc.c            |  4 +--
+ drivers/cdrom/cdrom.c              | 10 ++++----
+ drivers/char/random.c              |  4 +--
+ drivers/infiniband/core/ucma.c     |  2 +-
+ drivers/md/md.c                    |  6 ++---
+ drivers/parport/procfs.c           | 52 ++++++++++++++++++--------------------
+ drivers/scsi/scsi_sysctl.c         |  6 ++---
+ fs/coda/sysctl.c                   |  4 +--
+ fs/dcache.c                        |  2 +-
+ fs/drop_caches.c                   |  2 +-
+ fs/eventpoll.c                     |  2 +-
+ fs/file_table.c                    |  4 +--
+ fs/fscache/main.c                  |  4 +--
+ fs/inode.c                         |  2 +-
+ fs/lockd/svc.c                     |  6 ++---
+ fs/nfs/nfs4sysctl.c                |  6 ++---
+ fs/nfs/sysctl.c                    |  6 ++---
+ fs/notify/inotify/inotify_user.c   |  2 +-
+ fs/ntfs/sysctl.c                   |  4 +--
+ fs/ocfs2/stackglue.c               |  8 +++---
+ fs/proc/proc_sysctl.c              |  2 +-
+ include/linux/key.h                |  2 +-
+ ipc/ipc_sysctl.c                   | 14 +++++-----
+ ipc/mq_sysctl.c                    | 10 ++++----
+ kernel/sysctl.c                    |  2 +-
+ kernel/utsname_sysctl.c            |  6 ++---
+ mm/page-writeback.c                |  2 +-
+ mm/page_alloc.c                    | 12 ++++-----
+ security/keys/sysctl.c             |  2 +-
+ 35 files changed, 111 insertions(+), 113 deletions(-)
 
-[  205.372823] ================================================
-[  205.372901] [ BUG: lock held when returning to user space! ]
-[  205.372979] 3.12.0-rc6-hw-debug-pagealloc+ #67 Not tainted
-[  205.373055] ------------------------------------------------
-[  205.373132] megarc.bin/5283 is leaving the kernel with locks still held!
-[  205.373212] 1 lock held by megarc.bin/5283:
-[  205.373285]  #0:  (&sdp->o_sem){.+.+..}, at: [<ffffffff8161e650>] sg_open+0x3a0/0x4d0
+-- 
+1.8.1.2.459.gbcd45b4.dirty
 
-Vaughan, it seems you touched this area last in 15b06f9a02406e, and git
-tag --contains says this went in for 3.12-rc. We didn't see this on 3.11,
-though I haven't tried with lockdep.
-
-This is caused by some of our internal RAID monitoring scripts that run
-"megarc.bin -dispCfg -a0" (even though that controller isn't present on
-this server -- a PowerEdge 2950 w/Perc 5).
-
-strace output of the program execution that causes the above message is
-here: http://0x.ca/sim/ref/3.12-rc6/megarc_strace.txt
-
-Simon-
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
