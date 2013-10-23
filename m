@@ -1,118 +1,39 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 7/7] scsi: Add 'eh_deadline' to limit SCSI EH runtime
-Date: Wed, 23 Oct 2013 11:49:18 +0200
-Message-ID: <52679B9E.5010903@suse.de>
-References: <1372661455-122384-1-git-send-email-hare@suse.de>		 <1372661455-122384-8-git-send-email-hare@suse.de>	 <1381936290.1864.11.camel@dabdike> <526795FC.6050303@suse.de> <1382514359.2081.33.camel@dabdike.quadriga.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH RESEND] sd: disk offlined prematurely from media access timeout
+Date: Wed, 23 Oct 2013 04:36:11 -0400
+Message-ID: <yq1vc0ofkp0.fsf@sermon.lab.mkp.net>
+References: <20130924194244.GA26428@fury.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:52164 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750949Ab3JWHrV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 Oct 2013 03:47:21 -0400
-In-Reply-To: <1382514359.2081.33.camel@dabdike.quadriga.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:27717 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751621Ab3JWIgZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Oct 2013 04:36:25 -0400
+In-Reply-To: <20130924194244.GA26428@fury.redhat.com> (David Jeffery's message
+	of "Tue, 24 Sep 2013 15:42:44 -0400")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Ewan Milne <emilne@redhat.com>, Ren Mingxin <renmx@cn.fujitsu.com>, Bart van Assche <bvanassche@acm.org>, Joern Engel <joern@logfs.org>
+To: David Jeffery <djeffery@redhat.com>
+Cc: linux-scsi@vger.kernel.org
 
-On 10/23/2013 09:46 AM, James Bottomley wrote:
-> On Wed, 2013-10-23 at 11:25 +0200, Hannes Reinecke wrote:
->> On 10/16/2013 09:22 PM, James Bottomley wrote:
->>> On Mon, 2013-07-01 at 08:50 +0200, Hannes Reinecke wrote:
->>>> This patchs adds an 'eh_deadline' sysfs attribute to the scsi
->>>> host which limits the overall runtime of the SCSI EH.
->>>> The 'eh_deadline' value is stored in the now obsolete field
->>>> 'resetting'.
->>>> When a command is failed the start time of the EH is stored
->>>> in 'last_reset'. If the overall runtime of the SCSI EH is longer
->>>> than last_reset + eh_deadline, the EH is short-circuited and
->>>> falls through to issue a host reset only.
->>>
->>> OK, so the specific problem with this one is that potentially it wi=
-ll
->>> spend all its time mucking about with aborts (which most often time=
- out
->>> on non FC kit because of the issue problems) and then proceed to ho=
-st
->>> reset, which mostly does nothing for failing devices.
->>>
->>> If you want to impose a deadline, then we need to spend only 50% of=
- the
->>> time attempting aborts and the rest of the time escalating the rese=
-ts.
->>>
->>> [...]
->>>> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
->>>> index f43de1e..84369f2 100644
->>>> --- a/drivers/scsi/scsi_error.c
->>>> +++ b/drivers/scsi/scsi_error.c
->>>> @@ -89,6 +89,18 @@ void scsi_schedule_eh(struct Scsi_Host *shost)
->>>>    }
->>>>    EXPORT_SYMBOL_GPL(scsi_schedule_eh);
->>>>
->>>> +static int scsi_host_eh_past_deadline(struct Scsi_Host *shost)
->>>> +{
->>>> +	if (!shost->last_reset || !shost->eh_deadline)
->>>> +		return 0;
->>>> +
->>>> +	if (time_before(jiffies,
->>>> +			shost->last_reset + shost->eh_deadline))
->>>> +		return 0;
->>>> +
->>>> +	return 1;
->>>> +}
->>>> +
->>>
->>> What about instead:
->>>
->>> static int scsi_host_eh_past_deadline(struct Scsi_Host *shost, int =
-percent) {
->>> 	if (!shost->last_reset || !shost->eh_deadline)
->>> 		return 0;
->>>
->>> 	if (time_before(jiffies,
->>> 			shost->last_reset + shost->eh_deadline * percent/100))
->>> 		return 0;
->>>
->>> 	return 1;
->>> }
->>>
->>> which allows us to have
->>>
->>> if (scsi_host_eh_past_deadline(shost, 50)) {
->>>
->>> in scsi_eh_abort_cmds()
->>>
->>> if (scsi_host_eh_past_deadline(shost, 66) {
->>>
->>> in scsi_eh_bus_device_reset()
->>>
->>> say 83 in target reset, and 100 in bus reset.
->>>
->>> Thus ensuring we at least get a crack at the reset chain?
->>>
->> Alternatively we could just escalate directly to LUN reset once the
->> first abort fails. That looks like a cleaner solution here.
->
-> I'm OK with that ... if you want this in the current merge window, yo=
-u
-> have about a week to code it up ...
->
-Patch is already compiling :-)
+>>>>> "David" == David Jeffery <djeffery@redhat.com> writes:
 
-Cheers,
+David> There is an error with the medium access timeout feature of the
+David> sd driver. The sdkp->medium_access_timed_out value is set to zero
+David> in sd_done() in the wrong place.  It is set to zero only if a
+David> command returns sense data.  If an I/O command times out, error
+David> handling succeeds, and the I/O commands complete, the value won't
+David> be reset if nothing responds with a sense buffer.  Then, another
+David> timeout (no matter how far in the future) can increment it again,
+David> causing the device to be errantly set offline.
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+David> The resetting of sdkp->medium_access_timed_out should occur
+David> before the check for sense data.
+
+David> Signed-off-by: David Jeffery <djeffery@redhat.com>
+
+Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
