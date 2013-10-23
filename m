@@ -1,97 +1,94 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 7/7] scsi: Add 'eh_deadline' to limit SCSI EH runtime
-Date: Wed, 23 Oct 2013 11:25:16 +0200
-Message-ID: <526795FC.6050303@suse.de>
-References: <1372661455-122384-1-git-send-email-hare@suse.de>	 <1372661455-122384-8-git-send-email-hare@suse.de> <1381936290.1864.11.camel@dabdike>
+Subject: Re: [PATCH 1/3] scsi: Fix erratic device offline during EH
+Date: Wed, 23 Oct 2013 11:27:28 +0200
+Message-ID: <52679680.7070209@suse.de>
+References: <1378123118-111972-1-git-send-email-hare@suse.de>	 <1378123118-111972-2-git-send-email-hare@suse.de> <1381840900.3752.19.camel@dabdike.lan>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-15;
 	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:51126 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:51187 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751111Ab3JWHXU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 Oct 2013 03:23:20 -0400
-In-Reply-To: <1381936290.1864.11.camel@dabdike>
+	id S1751111Ab3JWHZi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 23 Oct 2013 03:25:38 -0400
+In-Reply-To: <1381840900.3752.19.camel@dabdike.lan>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Ewan Milne <emilne@redhat.com>, Ren Mingxin <renmx@cn.fujitsu.com>, Bart van Assche <bvanassche@acm.org>, Joern Engel <joern@logfs.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Ewan Milne <emilne@redhat.com>, Ren Mingxin <renmx@cn.fujitsu.com>, Joern Engel <joern@logfs.org>, James Smart <james.smart@emulex.com>, Bart Van Assche <bvanassche@acm.org>, Roland Dreier <roland@purestorage.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
 On 10/16/2013 09:22 PM, James Bottomley wrote:
-> On Mon, 2013-07-01 at 08:50 +0200, Hannes Reinecke wrote:
->> This patchs adds an 'eh_deadline' sysfs attribute to the scsi
->> host which limits the overall runtime of the SCSI EH.
->> The 'eh_deadline' value is stored in the now obsolete field
->> 'resetting'.
->> When a command is failed the start time of the EH is stored
->> in 'last_reset'. If the overall runtime of the SCSI EH is longer
->> than last_reset + eh_deadline, the EH is short-circuited and
->> falls through to issue a host reset only.
->
-> OK, so the specific problem with this one is that potentially it will
-> spend all its time mucking about with aborts (which most often time o=
-ut
-> on non FC kit because of the issue problems) and then proceed to host
-> reset, which mostly does nothing for failing devices.
->
-> If you want to impose a deadline, then we need to spend only 50% of t=
-he
-> time attempting aborts and the rest of the time escalating the resets=
-=2E
->
-> [...]
+> On Mon, 2013-09-02 at 13:58 +0200, Hannes Reinecke wrote:
+>> Commit 18a4d0a22ed6c54b67af7718c305cd010f09ddf8
+>> (Handle disk devices which can not process medium access commands)
+>> was introduced to offline any device which cannot process medium
+>> access commands.
+>> However, commit 3eef6257de48ff84a5d98ca533685df8a3beaeb8
+>> (Reduce error recovery time by reducing use of TURs) reduced
+>> the number of TURs by sending it only on the first failing
+>> command, which might or might not be a medium access command.
+>> So in combination this results in an erratic device offlining
+>> during EH; if the command where the TUR was sent upon happens
+>> to be a medium access command the device will be set offline,
+>> if not everything proceeds as normal.
+>>
+>> So instead of checking the EH command in the ->eh_action
+>> callback we should rather call ->eh_action when we're
+>> about to finish the command _and_ have sent a TUR previously.
+>> This should then set the device offline as advertised.
+>>
+>> Cc: Martin K. Petersen <martin.petersen@oracle.com>
+>> Cc: Ewan Milne <emilne@redhat.com>
+>> Signed-off-by: Hannes Reinecke <hare@suse.de>
+>> ---
+>>   drivers/scsi/scsi_error.c | 28 +++++++++++++++++++---------
+>>   1 file changed, 19 insertions(+), 9 deletions(-)
+>>
 >> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
->> index f43de1e..84369f2 100644
+>> index abf0916..c88cb7e 100644
 >> --- a/drivers/scsi/scsi_error.c
 >> +++ b/drivers/scsi/scsi_error.c
->> @@ -89,6 +89,18 @@ void scsi_schedule_eh(struct Scsi_Host *shost)
->>   }
->>   EXPORT_SYMBOL_GPL(scsi_schedule_eh);
+>> @@ -941,12 +941,6 @@ retry:
 >>
->> +static int scsi_host_eh_past_deadline(struct Scsi_Host *shost)
+>>   	scsi_eh_restore_cmnd(scmd, &ses);
+>>
+>> -	if (scmd->request->cmd_type !=3D REQ_TYPE_BLOCK_PC) {
+>> -		struct scsi_driver *sdrv =3D scsi_cmd_to_driver(scmd);
+>> -		if (sdrv->eh_action)
+>> -			rtn =3D sdrv->eh_action(scmd, cmnd, cmnd_size, rtn);
+>> -	}
+>> -
+>>   	return rtn;
+>>   }
+>>
+>> @@ -964,6 +958,18 @@ static int scsi_request_sense(struct scsi_cmnd =
+*scmd)
+>>   	return scsi_send_eh_cmnd(scmd, NULL, 0, scmd->device->eh_timeout,=
+ ~0);
+>>   }
+>>
+>> +static int scsi_eh_action(struct scsi_cmnd *scmd, int rtn)
 >> +{
->> +	if (!shost->last_reset || !shost->eh_deadline)
->> +		return 0;
+>> +	static unsigned char tur_command[6] =3D {TEST_UNIT_READY, 0, 0, 0,=
+ 0, 0};
 >> +
->> +	if (time_before(jiffies,
->> +			shost->last_reset + shost->eh_deadline))
->> +		return 0;
->> +
->> +	return 1;
->> +}
->> +
+>> +	if (scmd->request->cmd_type !=3D REQ_TYPE_BLOCK_PC) {
+>> +		struct scsi_driver *sdrv =3D scsi_cmd_to_driver(scmd);
+>> +		if (sdrv->eh_action)
+>> +			rtn =3D sdrv->eh_action(scmd, tur_command, 6, rtn);
 >
-> What about instead:
+> This is all a bit pointless.  You've altered eh_action so it's always
+> input an eh TUR command, so just eliminate the check of the eh comman=
+d
+> and assume it's a TUR in the implementation (i.e. fix up sd.c)
 >
-> static int scsi_host_eh_past_deadline(struct Scsi_Host *shost, int pe=
-rcent) {
-> 	if (!shost->last_reset || !shost->eh_deadline)
-> 		return 0;
+> Once that's done, I think the patch looks like the one below, is that
+> OK?
 >
-> 	if (time_before(jiffies,
-> 			shost->last_reset + shost->eh_deadline * percent/100))
-> 		return 0;
->
-> 	return 1;
-> }
->
-> which allows us to have
->
-> if (scsi_host_eh_past_deadline(shost, 50)) {
->
-> in scsi_eh_abort_cmds()
->
-> if (scsi_host_eh_past_deadline(shost, 66) {
->
-> in scsi_eh_bus_device_reset()
->
-> say 83 in target reset, and 100 in bus reset.
->
-> Thus ensuring we at least get a crack at the reset chain?
->
-Alternatively we could just escalate directly to LUN reset once the=20
-first abort fails. That looks like a cleaner solution here.
+Yes, the patch looks okay. No objections from my side.
+
+Acked-by: Hannes Reinecke <hare@suse.de>
 
 Cheers,
 
