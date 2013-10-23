@@ -1,47 +1,55 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 1/3] scsi: Fix erratic device offline during EH
-Date: Wed, 23 Oct 2013 04:58:02 -0400
-Message-ID: <yq1mwm0fjol.fsf@sermon.lab.mkp.net>
-References: <1378123118-111972-1-git-send-email-hare@suse.de>
-	<1378123118-111972-2-git-send-email-hare@suse.de>
-	<1381840900.3752.19.camel@dabdike.lan>
+From: <Menny_Hamburger@Dell.com>
+Subject: RE: BLKDISCARD and AIO
+Date: Wed, 23 Oct 2013 10:21:55 +0100
+Message-ID: <D8C50530D6022F40A817A35C40CC06A70CDEEC2EB2@DUBX7MCDUB01.EMEA.DELL.COM>
+References: <201310221413.r9MEDQpK002617@bldi04p.dell-idc.com>
+ <yq1r4bcfkeh.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:21147 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751757Ab3JWI7T (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Oct 2013 04:59:19 -0400
-In-Reply-To: <1381840900.3752.19.camel@dabdike.lan> (James Bottomley's message
-	of "Wed, 16 Oct 2013 19:22:09 +0000")
+Received: from ausc60ps301.us.dell.com ([143.166.148.206]:33248 "EHLO
+	ausc60ps301.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751513Ab3JWJWG convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Oct 2013 05:22:06 -0400
+In-Reply-To: <yq1r4bcfkeh.fsf@sermon.lab.mkp.net>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>
-Cc: Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Ewan Milne <emilne@redhat.com>, Ren Mingxin <renmx@cn.fujitsu.com>, Joern Engel <joern@logfs.org>, James Smart <james.smart@emulex.com>, Bart Van Assche <bvanassche@acm.org>, Roland Dreier <roland@purestorage.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+To: martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org
 
->>>>> "James" == James Bottomley <jbottomley@parallels.com> writes:
+Dell - Internal Use - Confidential=20
 
-James> Once that's done, I think the patch looks like the one below, is
-James> that OK?
+Thanks,
 
-Looks OK to me.
+The issue is that we run a single threaded process (we maintain our own=
+ threads) and use eventfd to driver both networking and AIO, so blockin=
+g on BLKDISCARD will block all IO done by the process.
+
+Menny
 
 
-James> I still have qualms about the media access check because what can
-James> happen is that we abort, TUR succeeds then the next Media access
-James> command fails, we abort, TUR succeeds etc until the media access
-James> timeout goes off.  The problem is that it never gets escalated to
-James> a reset which might fix the condition.
 
-All the cases we had in the field involved devices where the command
-processing part of the device worked fine but the media access became
-impossible (think wedged read/write head assembly, dead FTL on an SSD).
-
-I haven't seen any cases where a device would respond to SPC commands
-while failing all media accesses and then be able to resume media
-accesses after a reset. Doesn't mean that such a device doesn't exist,
-of course, but the patch was originally done to handle the "irreparably
-broken" error case.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+-----Original Message-----
+=46rom: Martin K. Petersen [mailto:martin.petersen@oracle.com]
+Sent: Wednesday, October 23, 2013 11:43 AM
+To: Hamburger, Menny
+Cc: linux-scsi@vger.kernel.org
+Subject: Re: BLKDISCARD and AIO=20
+>>>>> "Menny" =3D=3D Menny Hamburger <Menny_Hamburger@Dell.com> writes:=
+=20
+Menny> I have a question regarding the use of BLKDISCARD ioctl in=20
+Menny> userland code: Is there currently a way to hook up with an=20
+Menny> asyncronous event that can be polled by userland when the=20
+Menny> operation completes?
+Not at this time, no.=20
+However, you can fork a child process to execute the ioctl and wait for=
+ that to complete.=20
+--
+Martin K. Petersen=A0=A0=A0=A0=A0 Oracle Linux Engineering=20
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
