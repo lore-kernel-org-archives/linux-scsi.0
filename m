@@ -1,47 +1,54 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: [RFC]: scsi_error: interruptible scsi_block_when_processing_errors()
-Date: Wed, 23 Oct 2013 12:02:18 -0400
-Message-ID: <5267F30A.1080800@interlog.com>
-Reply-To: dgilbert@interlog.com
+From: taco <tacoee@gmail.com>
+Subject: Re: kernel cant access SATA adapter device
+Date: Thu, 24 Oct 2013 00:09:17 +0800
+Message-ID: <20131023160916.GA24189@taco-ThinkPad-X220>
+References: <20131016154651.7280ce92@kvm171.vb.futz.org>
+ <20131017155924.GA31331@taco-ThinkPad-X220>
+ <20131017130249.4a49bd46@kvm171.vb.futz.org>
+ <20131018143745.GA2615@taco-ThinkPad-X220>
+ <20131018145321.3d60711b@kvm171.vb.futz.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:58799 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751477Ab3JWQC3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 Oct 2013 12:02:29 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by smtp.infotech.no (Postfix) with ESMTP id C5547204238
-	for <linux-scsi@vger.kernel.org>; Wed, 23 Oct 2013 18:02:26 +0200 (CEST)
-Received: from smtp.infotech.no ([127.0.0.1])
-	by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id FWsRzGm9T2u2 for <linux-scsi@vger.kernel.org>;
-	Wed, 23 Oct 2013 18:02:25 +0200 (CEST)
-Received: from [192.168.48.66] (host-192.252-171-124.dyn.295.ca [192.252.171.124])
-	by smtp.infotech.no (Postfix) with ESMTPA id B59E720411D
-	for <linux-scsi@vger.kernel.org>; Wed, 23 Oct 2013 18:02:24 +0200 (CEST)
+Received: from mail-pb0-f47.google.com ([209.85.160.47]:40759 "EHLO
+	mail-pb0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751054Ab3JWQJ0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Oct 2013 12:09:26 -0400
+Received: by mail-pb0-f47.google.com with SMTP id rq2so955179pbb.6
+        for <linux-scsi@vger.kernel.org>; Wed, 23 Oct 2013 09:09:26 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <20131018145321.3d60711b@kvm171.vb.futz.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI development list <linux-scsi@vger.kernel.org>
+To: Robert Story <rstory@tislabs.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-The existing scsi_block_when_processing_errors() function
-in scsi_error.c does a non-interruptible wait on the
-host_wait work queue. That call is made from many places
-in the scsi subsystem ULDs (e.g. the sg driver).
+Sense key [02 04 02] means LOGICAL UNIT NOT READY, INITIALIZING COMMAND REQUIRED
 
-In many cases (e.g. sg_open()) there is a direct path
-back to the user space. So why hang open(sg_device) calls
-(that don't use O_NONBLOCK) in an non-interruptible call
-for what might be a long time.
+it works on windows but not on linux?
 
-Apart from signal indications, such a non-interruptible
-version of scsi_block_when_processing_errors() could return
-useful (possibly negated) errno_s, for example indicating
-the device in question had been detached or timed out
-(possibly because the HBA was being reset).
+On Fri, Oct 18, 2013 at 02:53:21PM -0400, Robert Story wrote:
+> On Fri, 18 Oct 2013 22:37:45 +0800 taco wrote:
+> T> 
+> T> reproduce the problem with more debug messages with the bellow
+> T> command:
+> T> 
+> T> $ echo 0x2FFFF > /sys/modules/mptsas/mpt_debug_level
+> T> 
+> T> and attach it here
+> 
+> The dmesg buffer wrapped, and it was close to 500k. That's a bit big for
+> sending to the whole list, so I put it and the syslog output on my
+> webserver:
+> 
+>    http://futz.org/users/linux-scsi/mpt.messages
+>    http://futz.org/users/linux-scsi/mpt.dmesg 
+> 
+> 
+> Robert
+> 
+> --
+> Senior Software Engineer
+> Parsons Government Services , National Security & Defense Division
 
-Thoughts?
-
-Doug Gilbert
 
