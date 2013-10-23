@@ -1,33 +1,52 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: BLKDISCARD and AIO
-Date: Wed, 23 Oct 2013 04:42:30 -0400
-Message-ID: <yq1r4bcfkeh.fsf@sermon.lab.mkp.net>
-References: <201310221413.r9MEDQpK002617@bldi04p.dell-idc.com>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 3/8] advansys: Remove 'last_reset' references
+Date: Wed, 23 Oct 2013 10:51:17 +0200
+Message-ID: <1382518282-107606-4-git-send-email-hare@suse.de>
+References: <1382518282-107606-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:48772 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751349Ab3JWImg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Oct 2013 04:42:36 -0400
-In-Reply-To: <201310221413.r9MEDQpK002617@bldi04p.dell-idc.com> (Menny
-	Hamburger's message of "Tue, 22 Oct 2013 17:13:26 +0300")
+Received: from cantor2.suse.de ([195.135.220.15]:55158 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752409Ab3JWIv1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 23 Oct 2013 04:51:27 -0400
+In-Reply-To: <1382518282-107606-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Menny Hamburger <Menny_Hamburger@Dell.com>
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <jbottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>, Ren Mingxin <renmx@cn.fujitsu.com>, Hannes Reinecke <hare@suse.de>
 
->>>>> "Menny" == Menny Hamburger <Menny_Hamburger@Dell.com> writes:
+Serves no purpose whatsoever.
 
-Menny> I have a question regarding the use of BLKDISCARD ioctl in
-Menny> userland code: Is there currently a way to hook up with an
-Menny> asyncronous event that can be polled by userland when the
-Menny> operation completes? 
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/scsi/advansys.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-Not at this time, no.
-
-However, you can fork a child process to execute the ioctl and wait for
-that to complete.
-
+diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
+index c67e401..d814588 100644
+--- a/drivers/scsi/advansys.c
++++ b/drivers/scsi/advansys.c
+@@ -2511,8 +2511,8 @@ static void asc_prt_scsi_host(struct Scsi_Host *s)
+ 	struct asc_board *boardp = shost_priv(s);
+ 
+ 	printk("Scsi_Host at addr 0x%p, device %s\n", s, dev_name(boardp->dev));
+-	printk(" host_busy %u, host_no %d, last_reset %d,\n",
+-	       s->host_busy, s->host_no, (unsigned)s->last_reset);
++	printk(" host_busy %u, host_no %d,\n",
++	       s->host_busy, s->host_no);
+ 
+ 	printk(" base 0x%lx, io_port 0x%lx, irq %d,\n",
+ 	       (ulong)s->base, (ulong)s->io_port, boardp->irq);
+@@ -3345,8 +3345,8 @@ static void asc_prt_driver_conf(struct seq_file *m, struct Scsi_Host *shost)
+ 		shost->host_no);
+ 
+ 	seq_printf(m,
+-		   " host_busy %u, last_reset %lu, max_id %u, max_lun %u, max_channel %u\n",
+-		   shost->host_busy, shost->last_reset, shost->max_id,
++		   " host_busy %u, max_id %u, max_lun %u, max_channel %u\n",
++		   shost->host_busy, shost->max_id,
+ 		   shost->max_lun, shost->max_channel);
+ 
+ 	seq_printf(m,
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+1.8.1.4
+
