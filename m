@@ -1,53 +1,58 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [3.12-rc] sg_open: leaving the kernel with locks still held!
-Date: Tue, 22 Oct 2013 20:41:34 -0400
-Message-ID: <52671B3E.6070804@interlog.com>
-References: <20131022205608.GA6616@hostway.ca>
-Reply-To: dgilbert@interlog.com
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [PATCH] libsas: fix usage of ata_tf_to_fis
+Date: Tue, 22 Oct 2013 18:35:19 -0700
+Message-ID: <20131023013456.18051.96678.stgit@viggo.jf.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20131022205608.GA6616@hostway.ca>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Simon Kirby <sim@hostway.ca>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Vaughan Cao <vaughan.cao@oracle.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:64361 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755379Ab3JWBfV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 Oct 2013 21:35:21 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: JBottomley@Parallels.com
+Cc: Praveen Murali <pmurali@logicube.com>, Dave Jiang <dave.jiang@intel.com>, Maciej Patelczyk <maciej.patelczyk@intel.com>, linux-scsi@vger.kernel.org, Lukasz Dorau <lukasz.dorau@intel.com>, lindar_liu@usish.com, xjtuwjp@gmail.com, Xiangliang Yu <yuxiangl@marvell.com>, stable@vger.kernel.org
 
-On 13-10-22 04:56 PM, Simon Kirby wrote:
-> Hello!
->
-> While trying to figure out why the request queue to sda (ext4) was
-> clogging up on one of our btrfs backup boxes, I noticed a megarc process
-> in D state, so enabled locking debugging, and got this (on 3.12-rc6):
->
-> [  205.372823] ================================================
-> [  205.372901] [ BUG: lock held when returning to user space! ]
-> [  205.372979] 3.12.0-rc6-hw-debug-pagealloc+ #67 Not tainted
-> [  205.373055] ------------------------------------------------
-> [  205.373132] megarc.bin/5283 is leaving the kernel with locks still held!
-> [  205.373212] 1 lock held by megarc.bin/5283:
-> [  205.373285]  #0:  (&sdp->o_sem){.+.+..}, at: [<ffffffff8161e650>] sg_open+0x3a0/0x4d0
->
-> Vaughan, it seems you touched this area last in 15b06f9a02406e, and git
-> tag --contains says this went in for 3.12-rc. We didn't see this on 3.11,
-> though I haven't tried with lockdep.
->
-> This is caused by some of our internal RAID monitoring scripts that run
-> "megarc.bin -dispCfg -a0" (even though that controller isn't present on
-> this server -- a PowerEdge 2950 w/Perc 5).
->
-> strace output of the program execution that causes the above message is
-> here: http://0x.ca/sim/ref/3.12-rc6/megarc_strace.txt
+Since commit 110dd8f19df5 "[SCSI] libsas: fix scr_read/write users and
+update the libata documentation" we have been passing pmp=1 and is_cmd=0
+to ata_tf_to_fis().  Praveen reports that eSATA attached drives do not
+discover correctly.  His investigation found that the BIOS was passing
+pmp=0 while Linux was passing pmp=1 and failing to discover the drives.
+Update libsas to follow the libata example of pulling the pmp setting
+from the ata_link and correct is_cmd to be 1 since all tf's submitted
+through ->qc_issue are commands.  Presumably libsas lldds do not care
+about is_cmd as they have sideband mechanisms to perform link
+management.
 
-This has been reported. That patch will be reverted or,
-if there is enough time, a fix will (or at least should)
-go in before the release of lk 3.12 .
+http://marc.info/?l=linux-scsi&m=138179681726990&w=2
 
-See this thread:
-   http://marc.info/?t=138228547300001&r=1&w=2
+Cc: xjtuwjp@gmail.com
+Cc: lindar_liu@usish.com
+Cc: Lukasz Dorau <lukasz.dorau@intel.com>
+Cc: Maciej Patelczyk <maciej.patelczyk@intel.com>
+Cc: Dave Jiang <dave.jiang@intel.com>
+Cc: Xiangliang Yu <yuxiangl@marvell.com>
+Cc: stable@vger.kernel.org
+Reported-by: Praveen Murali <pmurali@logicube.com>
+Tested-by: Praveen Murali <pmurali@logicube.com>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+ drivers/scsi/libsas/sas_ata.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
+diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+index 161c98efade9..d0fb99d5da95 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -211,7 +211,7 @@ static unsigned int sas_ata_qc_issue(struct ata_queued_cmd *qc)
+ 		qc->tf.nsect = 0;
+ 	}
+ 
+-	ata_tf_to_fis(&qc->tf, 1, 0, (u8*)&task->ata_task.fis);
++	ata_tf_to_fis(&qc->tf, qc->dev->link->pmp, 1, (u8*)&task->ata_task.fis);
+ 	task->uldd_task = qc;
+ 	if (ata_is_atapi(qc->tf.protocol)) {
+ 		memcpy(task->ata_task.atapi_packet, qc->cdb, qc->dev->cdb_len);
 
-And you might test the patch and confirm that it does
-fix the problem (and report back).
-
-Doug Gilbert
