@@ -1,78 +1,47 @@
 From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [3.12-rc] sg_open: leaving the kernel with locks still held!
-Date: Wed, 23 Oct 2013 10:10:47 -0400
-Message-ID: <5267D8E7.9000806@interlog.com>
-References: <20131022205608.GA6616@hostway.ca>	 <52671B3E.6070804@interlog.com> <1382514295.2081.32.camel@dabdike.quadriga.com>
+Subject: [RFC]: scsi_error: interruptible scsi_block_when_processing_errors()
+Date: Wed, 23 Oct 2013 12:02:18 -0400
+Message-ID: <5267F30A.1080800@interlog.com>
 Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1382514295.2081.32.camel@dabdike.quadriga.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Simon Kirby <sim@hostway.ca>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Vaughan Cao <vaughan.cao@oracle.com>, Madper Xie <cxie@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.infotech.no ([82.134.31.41]:58799 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751477Ab3JWQC3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 23 Oct 2013 12:02:29 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by smtp.infotech.no (Postfix) with ESMTP id C5547204238
+	for <linux-scsi@vger.kernel.org>; Wed, 23 Oct 2013 18:02:26 +0200 (CEST)
+Received: from smtp.infotech.no ([127.0.0.1])
+	by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id FWsRzGm9T2u2 for <linux-scsi@vger.kernel.org>;
+	Wed, 23 Oct 2013 18:02:25 +0200 (CEST)
+Received: from [192.168.48.66] (host-192.252-171-124.dyn.295.ca [192.252.171.124])
+	by smtp.infotech.no (Postfix) with ESMTPA id B59E720411D
+	for <linux-scsi@vger.kernel.org>; Wed, 23 Oct 2013 18:02:24 +0200 (CEST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: SCSI development list <linux-scsi@vger.kernel.org>
 
-On 13-10-23 03:44 AM, James Bottomley wrote:
-> On Tue, 2013-10-22 at 20:41 -0400, Douglas Gilbert wrote:
->> On 13-10-22 04:56 PM, Simon Kirby wrote:
->>> Hello!
->>>
->>> While trying to figure out why the request queue to sda (ext4) was
->>> clogging up on one of our btrfs backup boxes, I noticed a megarc process
->>> in D state, so enabled locking debugging, and got this (on 3.12-rc6):
->>>
->>> [  205.372823] ================================================
->>> [  205.372901] [ BUG: lock held when returning to user space! ]
->>> [  205.372979] 3.12.0-rc6-hw-debug-pagealloc+ #67 Not tainted
->>> [  205.373055] ------------------------------------------------
->>> [  205.373132] megarc.bin/5283 is leaving the kernel with locks still held!
->>> [  205.373212] 1 lock held by megarc.bin/5283:
->>> [  205.373285]  #0:  (&sdp->o_sem){.+.+..}, at: [<ffffffff8161e650>] sg_open+0x3a0/0x4d0
->>>
->>> Vaughan, it seems you touched this area last in 15b06f9a02406e, and git
->>> tag --contains says this went in for 3.12-rc. We didn't see this on 3.11,
->>> though I haven't tried with lockdep.
->>>
->>> This is caused by some of our internal RAID monitoring scripts that run
->>> "megarc.bin -dispCfg -a0" (even though that controller isn't present on
->>> this server -- a PowerEdge 2950 w/Perc 5).
->>>
->>> strace output of the program execution that causes the above message is
->>> here: http://0x.ca/sim/ref/3.12-rc6/megarc_strace.txt
->>
->> This has been reported. That patch will be reverted or,
->> if there is enough time, a fix will (or at least should)
->> go in before the release of lk 3.12 .
->
-> I think you've got about a week to prove you can fix it (before 3.12
-> goes final).  I'll send my current set of fixes to Linus without doing
-> anything about sg.
+The existing scsi_block_when_processing_errors() function
+in scsi_error.c does a non-interruptible wait on the
+host_wait work queue. That call is made from many places
+in the scsi subsystem ULDs (e.g. the sg driver).
 
-"prove" is a big ask, especially coming from a
-mathematician. I consider it more hacking (in the
-golf sense) on my part to tweak well-meaning patches
-to the sg driver that cause collateral damage. Further,
-I suspect Vaughan's patch was an attempt to fix
-damage left be a previous sg_open() hacker.
+In many cases (e.g. sg_open()) there is a direct path
+back to the user space. So why hang open(sg_device) calls
+(that don't use O_NONBLOCK) in an non-interruptible call
+for what might be a long time.
 
-I have asked Simon Kirby to apply the patch:
-   http://marc.info/?l=linux-scsi&m=138237283432010&w=2
-and report if it fixes his problems. Further I have
-written three test programs to test O_EXCL handling on
-SCSI devices, two of which are in the examples directory
-of sg3_utils version 1.37 . The latest one (single
-exclusive writer, multiple readers) can be found in
-the News section of:
-    http://sg.danny.cz/sg/
-These tests don't check all possibilities (e.g. random
-signals, ml error processing and detached devices) but
-they are better than nothing. And, as a side issue, they
-break bsg (cause it ignores O_EXCL) and break the block
-layer (e.g. /dev/sdb) so perhaps it should be reverted :-)
+Apart from signal indications, such a non-interruptible
+version of scsi_block_when_processing_errors() could return
+useful (possibly negated) errno_s, for example indicating
+the device in question had been detached or timed out
+(possibly because the HBA was being reset).
 
-Perhaps the original bug reporter (Madper Xie) might also
-test the proposed patch and report if it fixes what he saw.
+Thoughts?
 
 Doug Gilbert
+
