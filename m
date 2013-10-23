@@ -1,58 +1,40 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH] libsas: fix usage of ata_tf_to_fis
-Date: Tue, 22 Oct 2013 18:35:19 -0700
-Message-ID: <20131023013456.18051.96678.stgit@viggo.jf.intel.com>
+From: Junliang Li <lijunliang.dna@gmail.com>
+Subject: SCSI error handle trace
+Date: Wed, 23 Oct 2013 15:01:47 +0800
+Message-ID: <1382511707.2348.36.camel@ljl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:64361 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755379Ab3JWBfV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 Oct 2013 21:35:21 -0400
+Received: from mail-pa0-f43.google.com ([209.85.220.43]:46158 "EHLO
+	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751222Ab3JWHB5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Oct 2013 03:01:57 -0400
+Received: by mail-pa0-f43.google.com with SMTP id hz1so564579pad.2
+        for <linux-scsi@vger.kernel.org>; Wed, 23 Oct 2013 00:01:57 -0700 (PDT)
+Received: from [192.168.20.26] ([119.39.124.239])
+        by mx.google.com with ESMTPSA id oj6sm38724545pab.9.2013.10.23.00.01.54
+        for <linux-scsi@vger.kernel.org>
+        (version=SSLv3 cipher=RC4-SHA bits=128/128);
+        Wed, 23 Oct 2013 00:01:56 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: JBottomley@Parallels.com
-Cc: Praveen Murali <pmurali@logicube.com>, Dave Jiang <dave.jiang@intel.com>, Maciej Patelczyk <maciej.patelczyk@intel.com>, linux-scsi@vger.kernel.org, Lukasz Dorau <lukasz.dorau@intel.com>, lindar_liu@usish.com, xjtuwjp@gmail.com, Xiangliang Yu <yuxiangl@marvell.com>, stable@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Since commit 110dd8f19df5 "[SCSI] libsas: fix scr_read/write users and
-update the libata documentation" we have been passing pmp=1 and is_cmd=0
-to ata_tf_to_fis().  Praveen reports that eSATA attached drives do not
-discover correctly.  His investigation found that the BIOS was passing
-pmp=0 while Linux was passing pmp=1 and failing to discover the drives.
-Update libsas to follow the libata example of pulling the pmp setting
-from the ata_link and correct is_cmd to be 1 since all tf's submitted
-through ->qc_issue are commands.  Presumably libsas lldds do not care
-about is_cmd as they have sideband mechanisms to perform link
-management.
+Hi, all
 
-http://marc.info/?l=linux-scsi&m=138179681726990&w=2
+Recently, fnic driver patches a feature that gathers various important
+stats for debugging issues. Sysadm can find problems via this trace
+utility, but just for fnic driver. 
+In Linux SCSI subsystem, only a few trace points are set and we can not
+trace deeply while middle layer handles error. AFAIK,
+scsi_dispatch_cmd_error is available for running command error in LLD,
+but how about Fibre Channel error or something like that?  
+A RAS tool named rasdaemon can use trace info to record errors. Now it
+supports cpu, memory and PCIe error recording. If SCSI subsystem exports
+more trace points, I think we can support SCSI error recording in
+rasdaemon.
 
-Cc: xjtuwjp@gmail.com
-Cc: lindar_liu@usish.com
-Cc: Lukasz Dorau <lukasz.dorau@intel.com>
-Cc: Maciej Patelczyk <maciej.patelczyk@intel.com>
-Cc: Dave Jiang <dave.jiang@intel.com>
-Cc: Xiangliang Yu <yuxiangl@marvell.com>
-Cc: stable@vger.kernel.org
-Reported-by: Praveen Murali <pmurali@logicube.com>
-Tested-by: Praveen Murali <pmurali@logicube.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- drivers/scsi/libsas/sas_ata.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index 161c98efade9..d0fb99d5da95 100644
---- a/drivers/scsi/libsas/sas_ata.c
-+++ b/drivers/scsi/libsas/sas_ata.c
-@@ -211,7 +211,7 @@ static unsigned int sas_ata_qc_issue(struct ata_queued_cmd *qc)
- 		qc->tf.nsect = 0;
- 	}
- 
--	ata_tf_to_fis(&qc->tf, 1, 0, (u8*)&task->ata_task.fis);
-+	ata_tf_to_fis(&qc->tf, qc->dev->link->pmp, 1, (u8*)&task->ata_task.fis);
- 	task->uldd_task = qc;
- 	if (ata_is_atapi(qc->tf.protocol)) {
- 		memcpy(task->ata_task.atapi_packet, qc->cdb, qc->dev->cdb_len);
+Best regards,
+Junliang Li
 
