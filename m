@@ -1,94 +1,47 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 1/8] dpt_i2o: Remove DPTI_STATE_IOCTL
-Date: Wed, 23 Oct 2013 10:51:15 +0200
-Message-ID: <1382518282-107606-2-git-send-email-hare@suse.de>
-References: <1382518282-107606-1-git-send-email-hare@suse.de>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 1/3] scsi: Fix erratic device offline during EH
+Date: Wed, 23 Oct 2013 04:58:02 -0400
+Message-ID: <yq1mwm0fjol.fsf@sermon.lab.mkp.net>
+References: <1378123118-111972-1-git-send-email-hare@suse.de>
+	<1378123118-111972-2-git-send-email-hare@suse.de>
+	<1381840900.3752.19.camel@dabdike.lan>
+Mime-Version: 1.0
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:55172 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752650Ab3JWIv3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 Oct 2013 04:51:29 -0400
-In-Reply-To: <1382518282-107606-1-git-send-email-hare@suse.de>
+Received: from aserp1040.oracle.com ([141.146.126.69]:21147 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751757Ab3JWI7T (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Oct 2013 04:59:19 -0400
+In-Reply-To: <1381840900.3752.19.camel@dabdike.lan> (James Bottomley's message
+	of "Wed, 16 Oct 2013 19:22:09 +0000")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>, Ren Mingxin <renmx@cn.fujitsu.com>, Hannes Reinecke <hare@suse.de>
+Cc: Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Ewan Milne <emilne@redhat.com>, Ren Mingxin <renmx@cn.fujitsu.com>, Joern Engel <joern@logfs.org>, James Smart <james.smart@emulex.com>, Bart Van Assche <bvanassche@acm.org>, Roland Dreier <roland@purestorage.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-scsi_block_host/scsi_unlock_host provides the required
-functionality.
+>>>>> "James" == James Bottomley <jbottomley@parallels.com> writes:
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
----
- drivers/scsi/dpt_i2o.c | 30 ++++++++++++------------------
- drivers/scsi/dpti.h    |  1 -
- 2 files changed, 12 insertions(+), 19 deletions(-)
+James> Once that's done, I think the patch looks like the one below, is
+James> that OK?
 
-diff --git a/drivers/scsi/dpt_i2o.c b/drivers/scsi/dpt_i2o.c
-index 19e1b42..106ff1a 100644
---- a/drivers/scsi/dpt_i2o.c
-+++ b/drivers/scsi/dpt_i2o.c
-@@ -448,15 +448,7 @@ static int adpt_queue_lck(struct scsi_cmnd * cmd, void (*done) (struct scsi_cmnd
- 	}
- 
- 	rmb();
--	/*
--	 * TODO: I need to block here if I am processing ioctl cmds
--	 * but if the outstanding cmds all finish before the ioctl,
--	 * the scsi-core will not know to start sending cmds to me again.
--	 * I need to a way to restart the scsi-cores queues or should I block
--	 * calling scsi_done on the outstanding cmds instead
--	 * for now we don't set the IOCTL state
--	 */
--	if(((pHba->state) & DPTI_STATE_IOCTL) || ((pHba->state) & DPTI_STATE_RESET)) {
-+	if((pHba->state) & DPTI_STATE_RESET) {
- 		pHba->host->last_reset = jiffies;
- 		pHba->host->resetting = 1;
- 		return 1;
-@@ -1811,21 +1803,23 @@ static int adpt_i2o_passthru(adpt_hba* pHba, u32 __user *arg)
- 	}
- 
- 	do {
--		if(pHba->host)
-+		/*
-+		 * Stop any new commands from enterring the
-+		 * controller while processing the ioctl
-+		 */
-+		if(pHba->host) {
-+			scsi_block_requests(pHba->host);
- 			spin_lock_irqsave(pHba->host->host_lock, flags);
--		// This state stops any new commands from enterring the
--		// controller while processing the ioctl
--//		pHba->state |= DPTI_STATE_IOCTL;
--//		We can't set this now - The scsi subsystem sets host_blocked and
--//		the queue empties and stops.  We need a way to restart the queue
-+		}
- 		rcode = adpt_i2o_post_wait(pHba, msg, size, FOREVER);
- 		if (rcode != 0)
- 			printk("adpt_i2o_passthru: post wait failed %d %p\n",
- 					rcode, reply);
--//		pHba->state &= ~DPTI_STATE_IOCTL;
--		if(pHba->host)
-+		if(pHba->host) {
- 			spin_unlock_irqrestore(pHba->host->host_lock, flags);
--	} while(rcode == -ETIMEDOUT);  
-+			scsi_unblock_requests(pHba->host);
-+		}
-+	} while(rcode == -ETIMEDOUT);
- 
- 	if(rcode){
- 		goto cleanup;
-diff --git a/drivers/scsi/dpti.h b/drivers/scsi/dpti.h
-index beded71..aeb0461 100644
---- a/drivers/scsi/dpti.h
-+++ b/drivers/scsi/dpti.h
-@@ -202,7 +202,6 @@ struct adpt_channel {
- 
- // HBA state flags
- #define DPTI_STATE_RESET	(0x01)
--#define DPTI_STATE_IOCTL	(0x02)
- 
- typedef struct _adpt_hba {
- 	struct _adpt_hba *next;
+Looks OK to me.
+
+
+James> I still have qualms about the media access check because what can
+James> happen is that we abort, TUR succeeds then the next Media access
+James> command fails, we abort, TUR succeeds etc until the media access
+James> timeout goes off.  The problem is that it never gets escalated to
+James> a reset which might fix the condition.
+
+All the cases we had in the field involved devices where the command
+processing part of the device worked fine but the media access became
+impossible (think wedged read/write head assembly, dead FTL on an SSD).
+
+I haven't seen any cases where a device would respond to SPC commands
+while failing all media accesses and then be able to resume media
+accesses after a reset. Doesn't mean that such a device doesn't exist,
+of course, but the patch was originally done to handle the "irreparably
+broken" error case.
+
 -- 
-1.8.1.4
-
+Martin K. Petersen	Oracle Linux Engineering
