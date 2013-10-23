@@ -1,52 +1,100 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [3.12-rc] sg_open: leaving the kernel with locks still held!
-Date: Wed, 23 Oct 2013 08:44:55 +0100
-Message-ID: <1382514295.2081.32.camel@dabdike.quadriga.com>
-References: <20131022205608.GA6616@hostway.ca>
-	 <52671B3E.6070804@interlog.com>
+From: James Bottomley <jbottomley@parallels.com>
+Subject: Re: [PATCH 7/7] scsi: Add 'eh_deadline' to limit SCSI EH runtime
+Date: Wed, 23 Oct 2013 07:46:00 +0000
+Message-ID: <1382514359.2081.33.camel@dabdike.quadriga.com>
+References: <1372661455-122384-1-git-send-email-hare@suse.de>
+		 <1372661455-122384-8-git-send-email-hare@suse.de>
+	 <1381936290.1864.11.camel@dabdike> <526795FC.6050303@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <52671B3E.6070804@interlog.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: dgilbert@interlog.com
-Cc: Simon Kirby <sim@hostway.ca>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Vaughan Cao <vaughan.cao@oracle.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.parallels.com ([199.115.105.18]:39779 "EHLO
+	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751705Ab3JWHqG convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Oct 2013 03:46:06 -0400
+In-Reply-To: <526795FC.6050303@suse.de>
+Content-Language: en-US
+Content-ID: <665A6E71E8B32B40A8633757EAAE9A9F@sw.swsoft.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Ewan Milne <emilne@redhat.com>, Ren Mingxin <renmx@cn.fujitsu.com>, Bart van Assche <bvanassche@acm.org>, Joern Engel <joern@logfs.org>
 
-On Tue, 2013-10-22 at 20:41 -0400, Douglas Gilbert wrote:
-> On 13-10-22 04:56 PM, Simon Kirby wrote:
-> > Hello!
+On Wed, 2013-10-23 at 11:25 +0200, Hannes Reinecke wrote:
+> On 10/16/2013 09:22 PM, James Bottomley wrote:
+> > On Mon, 2013-07-01 at 08:50 +0200, Hannes Reinecke wrote:
+> >> This patchs adds an 'eh_deadline' sysfs attribute to the scsi
+> >> host which limits the overall runtime of the SCSI EH.
+> >> The 'eh_deadline' value is stored in the now obsolete field
+> >> 'resetting'.
+> >> When a command is failed the start time of the EH is stored
+> >> in 'last_reset'. If the overall runtime of the SCSI EH is longer
+> >> than last_reset + eh_deadline, the EH is short-circuited and
+> >> falls through to issue a host reset only.
 > >
-> > While trying to figure out why the request queue to sda (ext4) was
-> > clogging up on one of our btrfs backup boxes, I noticed a megarc process
-> > in D state, so enabled locking debugging, and got this (on 3.12-rc6):
+> > OK, so the specific problem with this one is that potentially it will
+> > spend all its time mucking about with aborts (which most often time out
+> > on non FC kit because of the issue problems) and then proceed to host
+> > reset, which mostly does nothing for failing devices.
 > >
-> > [  205.372823] ================================================
-> > [  205.372901] [ BUG: lock held when returning to user space! ]
-> > [  205.372979] 3.12.0-rc6-hw-debug-pagealloc+ #67 Not tainted
-> > [  205.373055] ------------------------------------------------
-> > [  205.373132] megarc.bin/5283 is leaving the kernel with locks still held!
-> > [  205.373212] 1 lock held by megarc.bin/5283:
-> > [  205.373285]  #0:  (&sdp->o_sem){.+.+..}, at: [<ffffffff8161e650>] sg_open+0x3a0/0x4d0
+> > If you want to impose a deadline, then we need to spend only 50% of the
+> > time attempting aborts and the rest of the time escalating the resets.
 > >
-> > Vaughan, it seems you touched this area last in 15b06f9a02406e, and git
-> > tag --contains says this went in for 3.12-rc. We didn't see this on 3.11,
-> > though I haven't tried with lockdep.
+> > [...]
+> >> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+> >> index f43de1e..84369f2 100644
+> >> --- a/drivers/scsi/scsi_error.c
+> >> +++ b/drivers/scsi/scsi_error.c
+> >> @@ -89,6 +89,18 @@ void scsi_schedule_eh(struct Scsi_Host *shost)
+> >>   }
+> >>   EXPORT_SYMBOL_GPL(scsi_schedule_eh);
+> >>
+> >> +static int scsi_host_eh_past_deadline(struct Scsi_Host *shost)
+> >> +{
+> >> +	if (!shost->last_reset || !shost->eh_deadline)
+> >> +		return 0;
+> >> +
+> >> +	if (time_before(jiffies,
+> >> +			shost->last_reset + shost->eh_deadline))
+> >> +		return 0;
+> >> +
+> >> +	return 1;
+> >> +}
+> >> +
 > >
-> > This is caused by some of our internal RAID monitoring scripts that run
-> > "megarc.bin -dispCfg -a0" (even though that controller isn't present on
-> > this server -- a PowerEdge 2950 w/Perc 5).
+> > What about instead:
 > >
-> > strace output of the program execution that causes the above message is
-> > here: http://0x.ca/sim/ref/3.12-rc6/megarc_strace.txt
-> 
-> This has been reported. That patch will be reverted or,
-> if there is enough time, a fix will (or at least should)
-> go in before the release of lk 3.12 .
+> > static int scsi_host_eh_past_deadline(struct Scsi_Host *shost, int percent) {
+> > 	if (!shost->last_reset || !shost->eh_deadline)
+> > 		return 0;
+> >
+> > 	if (time_before(jiffies,
+> > 			shost->last_reset + shost->eh_deadline * percent/100))
+> > 		return 0;
+> >
+> > 	return 1;
+> > }
+> >
+> > which allows us to have
+> >
+> > if (scsi_host_eh_past_deadline(shost, 50)) {
+> >
+> > in scsi_eh_abort_cmds()
+> >
+> > if (scsi_host_eh_past_deadline(shost, 66) {
+> >
+> > in scsi_eh_bus_device_reset()
+> >
+> > say 83 in target reset, and 100 in bus reset.
+> >
+> > Thus ensuring we at least get a crack at the reset chain?
+> >
+> Alternatively we could just escalate directly to LUN reset once the 
+> first abort fails. That looks like a cleaner solution here.
 
-I think you've got about a week to prove you can fix it (before 3.12
-goes final).  I'll send my current set of fixes to Linus without doing
-anything about sg.
+I'm OK with that ... if you want this in the current merge window, you
+have about a week to code it up ...
 
 James
+
