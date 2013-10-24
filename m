@@ -1,16 +1,16 @@
-From: "Web Security" <infoweb@live.com>
+From: "Web Security " <infoweb@live.com>
 Subject: Account Upgrade
-Date: Thu, 24 Oct 2013 20:26:04 +0200
-Message-ID: <20131024182618.52E9F1120A16@mail.swu.bg>
+Date: Thu, 24 Oct 2013 20:47:00 +0200
+Message-ID: <20131024184723.85D093EECA5__23457.871125038$1382643242$gmane$org@srv-zimbra.quito.gob.ec>
 Reply-To: wedbest7@gmail.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.swu.bg ([194.141.86.3]:36883 "EHLO mail.swu.bg"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754747Ab3JXSep convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Oct 2013 14:34:45 -0400
+Received: from mail.quitoambiente.gob.ec ([190.11.24.210]:43152 "EHLO
+	srv-zimbra.quito.gob.ec" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753800Ab3JXTdc convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Oct 2013 15:33:32 -0400
 Content-Description: Mail message body
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
