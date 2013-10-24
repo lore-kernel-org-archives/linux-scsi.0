@@ -1,48 +1,46 @@
-From: Verified by VISA <vbv@expired.com>
-Subject: Verified by VISA Password : (expired)
-Date: 23 Oct 2013 18:45:30 +0100
-Message-ID: <20131023184530.E25FFB0F78A76C0B@expired.com>
-Reply-To: Verified@vger.kernel.org, by@vger.kernel.org,
-	  VISA@vger.kernel.org
-Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_NextPart_000_0012_C54A64FF.4F8C29F9"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from server143-media-network-omnibus.it.net ([151.1.182.143]:41655
-	"EHLO host.infoflor.net" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753296Ab3JWXC7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 Oct 2013 19:02:59 -0400
-Received: from vbv.com (83-244-250-61.cust-83.exponential-e.net [83.244.250.61])
-	by host.infoflor.net (Postfix) with ESMTPA id 3188B7B1932
-	for <linux-scsi@vger.kernel.org>; Wed, 23 Oct 2013 19:45:28 +0200 (CEST)
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Nicholas A. Bellinger" <nab@daterainc.com>
+Subject: [PATCH 0/3] target: Miscellaneous XCOPY bugfixes for v3.12-rc7 code
+Date: Thu, 24 Oct 2013 07:30:56 +0000
+Message-ID: <1382599859-13204-1-git-send-email-nab@daterainc.com>
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Thomas Glanzmann <thomas@glanzmann.de>, Douglas Gilbert <dgilbert@interlog.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-------=_NextPart_000_0012_C54A64FF.4F8C29F9
-Content-Type: text/plain
-Content-Transfer-Encoding: 8bit
+Hi folks,
 
+The following series is a handful XCOPY related fixes for v3.12-rc7 code
+based upon a recent bug-report from Thomas + Doug wrt to XCOPY local I/O
+operations across source + destination devices with non-matching block_sizes.
 
+The first patch adds the missing XCOPY I/O operation sense_buffer setup
+that was triggering the original OOPs.  The second patch addresses the
+case where a non-zero scsi_status was incorrectly returning GOOD status
+for locally generated XCOPY I/O exceptions.
 
-Dear Valued Customer,
+The final patch adds an explicit check + failure for XCOPY operations across
+source + destination devices with non-matching block_sizes.
 
+Note this limitiation is currently due to the fact that the scatterlist
+memory allocated for the XCOPY READ operation is passed zero-copy for use
+by the subsequent XCOPY WRITE operation.  For v3.12 code it makes sense to
+go ahead and explicitly prevent this from occurring, and the plan is to add
+a slow-path memcpy to address this special case in post v3.12 code.
 
-Verified by VISA Password has been terminated (expired).
+Thanks!
 
-Previous notifications have been sent regarding this matter.
+--nab
 
-To reactivate Verified by Visa , please donwloading and 
-completing the attached form
+Nicholas Bellinger (3):
+  target: Add missing XCOPY I/O operation sense_buffer
+  target: Generate failure for XCOPY I/O with non-zero scsi_status
+  target: Fail XCOPY for non matching source + destination block_size
 
-Your account will be instantly reactivated after the form is 
-completed.
+ drivers/target/target_core_xcopy.c |   22 ++++++++++++++++++----
+ 1 files changed, 18 insertions(+), 4 deletions(-)
 
-
-Best wishes,
-Verified by VISA Team
-------=_NextPart_000_0012_C54A64FF.4F8C29F9--
-
+-- 
+1.7.2.5
