@@ -1,27 +1,29 @@
-From: "Web Security " <infoweb@live.com>
-Subject: Account Upgrade
-Date: Thu, 24 Oct 2013 20:47:00 +0200
-Message-ID: <20131024184723.85D093EECA5__23457.871125038$1382643242$gmane$org@srv-zimbra.quito.gob.ec>
-Reply-To: wedbest7@gmail.com
+From: "Qatar Foundation " <infocbtd@live.com>
+Subject: You Have Been Awarded $1,000,000.00 USD
+Date: Thu, 24 Oct 2013 22:39:05 +0200
+Message-ID: <20131024203920.594F71120E34__32153.7872813225$1382650771$gmane$org@mail.swu.bg>
+Reply-To: qatarfoundation013@xd.ae
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.quitoambiente.gob.ec ([190.11.24.210]:43152 "EHLO
-	srv-zimbra.quito.gob.ec" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753800Ab3JXTdc convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Oct 2013 15:33:32 -0400
+Received: from mail.swu.bg ([194.141.86.3]:43474 "EHLO mail.swu.bg"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753857Ab3JXVjC convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Oct 2013 17:39:02 -0400
 Content-Description: Mail message body
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Recipients <infoweb@live.com>
+To: Recipients <infocbtd@live.com>
 
-Dear Email User,
+Dear Beneficiary,
 
-Your mailbox has exceeded the storage limit which is 20.00 GB as set by your administrator, you are currently running on 19.99 GB, you may not be able to send or receive new mail until you re-validate your email box. Kindly click the link below to re-validate your email account, If the page does not appear on your browser, you can copy and paste the link into your browser and fill in your account details, Click on "VERIFY" for account update.
+This is to inform you that you were among the lucky beneficiary selected to receive this donations award sum of $1,000,000.00 USD, as charity donations/aid from the Qatar Foundation held in Doha, Qatar, 24th of October 2013, to promote your business and personal Interest. Kindly get back for more details on how to claims your award via email: qatarfoundation013@xd.ae
 
-http://tiny.cc/wjqe5w
+On behalf of the foundation, we say congratulations to you.
 
-Thanks!
-WebMail Administrator!
-Case Number: 894162/2013
+Yours Sincerely,
+Dr. Mohammad Fathy Saoud.
+Reply To: qatarfoundation013@xd.ae
+
+President of Qatar Foundation.
