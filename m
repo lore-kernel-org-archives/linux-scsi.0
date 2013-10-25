@@ -1,61 +1,78 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH] vhost/scsi: Fix incorrect usage of get_user_pages_fast write
-	parameter
-Date: Fri, 25 Oct 2013 18:07:16 +0000
-Message-ID: <1382724436-28478-1-git-send-email-nab@linux-iscsi.org>
+Subject: Re: [PATCH] target/pscsi: fix return value check
+Date: Fri, 25 Oct 2013 11:36:26 -0700
+Message-ID: <1382726186.19256.715.camel@haakon3.risingtidesystems.com>
+References: <CAPgLHd9hx7fOqn5QJoxqbmnV5ueKasX_QNbSyzKBrYGKq3Hj-w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: kvm-devel <kvm@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, "Michael S. Tsirkin" <mst@redhat.com>, linux-kernel <linux-kernel@vger.kernel.org>, lf-virt <virtualization@lists.linux-foundation.org>, Stefan Hajnoczi <stefanha@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:34368 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753261Ab3JYS1V (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Oct 2013 14:27:21 -0400
+In-Reply-To: <CAPgLHd9hx7fOqn5QJoxqbmnV5ueKasX_QNbSyzKBrYGKq3Hj-w@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Wei Yongjun <weiyj.lk@gmail.com>
+Cc: yongjun_wei@trendmicro.com.cn, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+Hi Wei,
 
-This patch addresses a long-standing bug where the get_user_pages_fast()
-write parameter used for setting the underlying page table entry permission
-bits was incorrectly set to write=1 for data_direction=DMA_TO_DEVICE, and
-passed into get_user_pages_fast() via vhost_scsi_map_iov_to_sgl().
+On Fri, 2013-10-25 at 21:53 +0800, Wei Yongjun wrote:
+> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+> 
+> In case of error, the function scsi_host_lookup() returns NULL
+> pointer not ERR_PTR(). The IS_ERR() test in the return value check
+> should be replaced with NULL test.
+> 
+> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+> ---
 
-However, this parameter is intended to signal WRITEs to pinned userspace
-PTEs for the virtio-scsi DMA_FROM_DEVICE -> READ payload case, and *not*
-for the virtio-scsi DMA_TO_DEVICE -> WRITE payload case.
+Applied to target-pending/master with a CC' to stable, and including in
+the next -rc7 PULL request.
 
-This bug would manifest itself as random process segmentation faults on
-KVM host after repeated vhost starts + stops and/or with lots of vhost
-endpoints + LUNs.
+Thank you!
 
-Cc: Stefan Hajnoczi <stefanha@redhat.com>
-Cc: Michael S. Tsirkin <mst@redhat.com>
-Cc: Asias He <asias@redhat.com>
-Cc: <stable@vger.kernel.org> # 3.6+
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
----
- drivers/vhost/scsi.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+--nab
 
-diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
-index ce5221f..e663921 100644
---- a/drivers/vhost/scsi.c
-+++ b/drivers/vhost/scsi.c
-@@ -1056,7 +1056,7 @@ vhost_scsi_handle_vq(struct vhost_scsi *vs, struct vhost_virtqueue *vq)
- 		if (data_direction != DMA_NONE) {
- 			ret = vhost_scsi_map_iov_to_sgl(cmd,
- 					&vq->iov[data_first], data_num,
--					data_direction == DMA_TO_DEVICE);
-+					data_direction == DMA_FROM_DEVICE);
- 			if (unlikely(ret)) {
- 				vq_err(vq, "Failed to map iov to sgl\n");
- 				goto err_free;
--- 
-1.7.2.5
+>  drivers/target/target_core_pscsi.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
+> index 551c96c..0f199f6 100644
+> --- a/drivers/target/target_core_pscsi.c
+> +++ b/drivers/target/target_core_pscsi.c
+> @@ -134,10 +134,10 @@ static int pscsi_pmode_enable_hba(struct se_hba *hba, unsigned long mode_flag)
+>  	 * pSCSI Host ID and enable for phba mode
+>  	 */
+>  	sh = scsi_host_lookup(phv->phv_host_id);
+> -	if (IS_ERR(sh)) {
+> +	if (!sh) {
+>  		pr_err("pSCSI: Unable to locate SCSI Host for"
+>  			" phv_host_id: %d\n", phv->phv_host_id);
+> -		return PTR_ERR(sh);
+> +		return -EINVAL;
+>  	}
+>  
+>  	phv->phv_lld_host = sh;
+> @@ -515,10 +515,10 @@ static int pscsi_configure_device(struct se_device *dev)
+>  			sh = phv->phv_lld_host;
+>  		} else {
+>  			sh = scsi_host_lookup(pdv->pdv_host_id);
+> -			if (IS_ERR(sh)) {
+> +			if (!sh) {
+>  				pr_err("pSCSI: Unable to locate"
+>  					" pdv_host_id: %d\n", pdv->pdv_host_id);
+> -				return PTR_ERR(sh);
+> +				return -EINVAL;
+>  			}
+>  		}
+>  	} else {
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe target-devel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
