@@ -1,58 +1,53 @@
-From: Jasper Spaans <spaans@fox-it.com>
-Subject: [PATCH] megaraid_sas: make the log message about rescanning more
- informative.
-Date: Fri, 25 Oct 2013 14:23:20 +0200
-Message-ID: <20131025122320.GA19111@spaans-e6500>
+From: Wei Yongjun <weiyj.lk@gmail.com>
+Subject: [PATCH] target/pscsi: fix return value check
+Date: Fri, 25 Oct 2013 21:53:33 +0800
+Message-ID: <CAPgLHd9hx7fOqn5QJoxqbmnV5ueKasX_QNbSyzKBrYGKq3Hj-w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns2.fox-it.com ([178.250.144.131]:2364 "EHLO ns2.fox-it.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751284Ab3JYMb5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 25 Oct 2013 08:31:57 -0400
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: nab@linux-iscsi.org
+Cc: yongjun_wei@trendmicro.com.cn, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: megaraidlinux@lsi.com
-Cc: linux-scsi@vger.kernel.org
 
-Hi,
+From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 
-I was working on one of our servers, and saw the following interesting
-message in dmesg:
+In case of error, the function scsi_host_lookup() returns NULL
+pointer not ERR_PTR(). The IS_ERR() test in the return value check
+should be replaced with NULL test.
 
-[20961024.720972] scanning ...
-
-This scared me somewhat. Please find a patch to make it easier to see where
-this message is coming from.
-
-Cheers,
-Jasper
-
+Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 ---
- drivers/scsi/megaraid/megaraid_sas_base.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/target/target_core_pscsi.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 1f0ca68..3457289 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -5461,7 +5461,7 @@ megasas_aen_polling(struct work_struct *work)
+diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
+index 551c96c..0f199f6 100644
+--- a/drivers/target/target_core_pscsi.c
++++ b/drivers/target/target_core_pscsi.c
+@@ -134,10 +134,10 @@ static int pscsi_pmode_enable_hba(struct se_hba *hba, unsigned long mode_flag)
+ 	 * pSCSI Host ID and enable for phba mode
+ 	 */
+ 	sh = scsi_host_lookup(phv->phv_host_id);
+-	if (IS_ERR(sh)) {
++	if (!sh) {
+ 		pr_err("pSCSI: Unable to locate SCSI Host for"
+ 			" phv_host_id: %d\n", phv->phv_host_id);
+-		return PTR_ERR(sh);
++		return -EINVAL;
  	}
  
- 	if (doscan) {
--		printk(KERN_INFO "scanning ...\n");
-+		printk(KERN_INFO "Rescanning MegaRAID devices ...\n");
- 		megasas_get_pd_list(instance);
- 		for (i = 0; i < MEGASAS_MAX_PD_CHANNELS; i++) {
- 			for (j = 0; j < MEGASAS_MAX_DEV_PER_CHANNEL; j++) {
--- 
-1.7.9.5
-
-
--- 
- /\____/\   ir. Jasper Spaans // Lead Developer www.FoxDetACT.com
- \   (_)/   Fox-IT - For a more secure society!
-  \    X    T: +31-15-2847999       
-   \  / \   M: +31-6-41588725
-    \/      KvK Haaglanden 27301624
+ 	phv->phv_lld_host = sh;
+@@ -515,10 +515,10 @@ static int pscsi_configure_device(struct se_device *dev)
+ 			sh = phv->phv_lld_host;
+ 		} else {
+ 			sh = scsi_host_lookup(pdv->pdv_host_id);
+-			if (IS_ERR(sh)) {
++			if (!sh) {
+ 				pr_err("pSCSI: Unable to locate"
+ 					" pdv_host_id: %d\n", pdv->pdv_host_id);
+-				return PTR_ERR(sh);
++				return -EINVAL;
+ 			}
+ 		}
+ 	} else {
