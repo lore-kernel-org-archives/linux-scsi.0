@@ -1,41 +1,65 @@
-From: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>
-Subject: Re: [PATCH v2 0/10] IB SRP initiator patches for kernel 3.13
-Date: Sat, 26 Oct 2013 12:28:14 -0400
-Message-ID: <1382804894.7223.0.camel@haswell.thedillows.org>
-References: <526BB5AC.7010601@acm.org>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [GIT PULL] target fixes for v3.12-rc7
+Date: Sat, 26 Oct 2013 11:16:54 -0700
+Message-ID: <1382811414.19256.744.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <526BB5AC.7010601-HInyCGIudOg@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-Cc: Roland Dreier <roland-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vu Pham <vu-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Riemer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, Jack Wang <xjtuwjp-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Thomas Glanzmann <thomas@glanzmann.de>, Douglas Gilbert <dgilbert@interlog.com>, Stefan Hajnoczi <stefanha@gmail.com>, "Michael S. Tsirkin" <mst@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, 2013-10-26 at 14:29 +0200, Bart Van Assche wrote:
-> The changes since the previous version of this patch series are as follows
-> (see also http://thread.gmane.org/gmane.linux.drivers.rdma/17693):
-> - Renamed the "can_queue" parameter into "queue_size".
-> - Corrected the title of the introductory e-mail - changed kernel version
->   "3.12" into "3.13".
-> - Corrected the description of /sys/class/srp_remote_ports/port-<h>:<n>/state.
-> - Corrected sysfs kernel version and date for the newly introduced sysfs
->   attributes.
-> - Fixed a hard to trigger race condition that could be triggered only with
->   identical values of reconnect_delay and fast_io_fail_tmo and that could
->   cause failback not to occur (see also rport_fast_io_fail_timedout()). Note:
->   I don't think it's useful for anyone to set reconnect_delay identical to
->   fast_io_fail_tmo.
+Hello Linus!
 
-Looks good to me, thanks for the inter-diff.
--- 
-Dave Dillow
-National Center for Computational Science
-Oak Ridge National Laboratory
-(865) 241-6602 office
+Here are the outstanding target pending fixes for v3.12-rc7.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Please go ahead and pull from:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git master
+
+It includes a number of EXTENDED_COPY related fixes as a result of
+Thomas and Doug's continuing testing and feedback.
+
+Also included is an important vhost/scsi fix that addresses a long
+standing issue where the 'write' parameter for get_user_pages_fast() was
+incorrectly set for virtio-scsi WRITEs -> DMA_TO_DEVICE, and not for
+virtio-scsi READs -> DMA_FROM_DEVICE.
+
+This resulted in random userspace segfaults and other unpleasantness on
+KVM host, and unfortunately has been an issue since the initial merge of
+vhost/scsi in v3.6.  This patch is CC'ed to stable, along with two other
+less critical items.
+
+Thank you,
+
+--nab
+
+Nicholas Bellinger (7):
+  target: Make target_do_xcopy failures return INVALID_PARAMETER_LIST
+  target: Allow non zero ListID in EXTENDED_COPY parameter list
+  target: Reject EXTENDED_COPY when emulate_3pc is disabled
+  target: Add missing XCOPY I/O operation sense_buffer
+  target: Generate failure for XCOPY I/O with non-zero scsi_status
+  target: Fail XCOPY for non matching source + destination block_size
+  vhost/scsi: Fix incorrect usage of get_user_pages_fast write
+    parameter
+
+Roland Dreier (2):
+  target: Fix assignment of LUN in tracepoints
+  target: Return an error for WRITE SAME with ANCHOR==1
+
+Vu Pham (1):
+  iser-target: check device before dereferencing its variable
+
+Wei Yongjun (1):
+  target/pscsi: fix return value check
+
+ drivers/infiniband/ulp/isert/ib_isert.c |    2 +-
+ drivers/target/target_core_pscsi.c      |    8 ++--
+ drivers/target/target_core_sbc.c        |    5 +++
+ drivers/target/target_core_xcopy.c      |   53 +++++++++++++++++++++---------
+ drivers/vhost/scsi.c                    |    2 +-
+ include/trace/events/target.h           |    4 +-
+ 6 files changed, 50 insertions(+), 24 deletions(-)
