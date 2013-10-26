@@ -1,38 +1,30 @@
-From: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>
-Subject: Re: [PATCH 03/10] scsi_transport_srp: Add transport layer error
- handling
-Date: Fri, 25 Oct 2013 18:42:05 -0400
-Message-ID: <1382740925.17280.6.camel@frustration.ornl.gov>
-References: <52569806.9080201@acm.org> <525699A9.6090802@acm.org>
-	 <5262AF8D.7070700@acm.org>
+From: Amit Uttamchandani <auttamchandani@logicube.com>
+Subject: Backporting 'libsas: fix timeout vs completion race' and related
+ patches to 3.2.51 recommended?
+Date: Fri, 25 Oct 2013 17:47:24 -0700
+Message-ID: <20131026004724.GA18880@amit-debian.lg.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <5262AF8D.7070700-HInyCGIudOg@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-Cc: Roland Dreier <roland-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vu Pham <vu-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Riemer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, James Bottomley <jbottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from p01c12o141.mxlogic.net ([208.65.145.64]:38282 "EHLO
+	p01c12o141.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751697Ab3JZAyU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Oct 2013 20:54:20 -0400
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: dan.j.williams@intel.com
 
-On Sat, 2013-10-19 at 18:13 +0200, Bart Van Assche wrote:
-> Since it takes some work to figure out the state transitions from the 
-> source code, I have tried to draw a diagram representing all state 
-> transitions. I have attached that diagram to this e-mail. That diagram 
-> probably will make it easier to review this code.
+Hello,
 
-This is handy, Bart -- could you put it in a patch? I suppose it belongs
-under Documentation/infiniband...
+Tested kernel 3.4.62, which introduces:
 
-Thanks!
+ libsas error handling + discovery patch set
 
--- 
-Dave Dillow
-National Center for Computational Science
-Oak Ridge National Laboratory
-(865) 241-6602 office
+ http://lwn.net/Articles/476986/
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Is it advisable for me to backport this to v3.2.51?
+
+Thanks,
+Amit
