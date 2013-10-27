@@ -1,75 +1,72 @@
-From: Ben Hutchings <ben@decadent.org.uk>
-Subject: [PATCH 8/8] [SCSI] pmcraid: Pass pointers to access_ok(), not
- integers
-Date: Sun, 27 Oct 2013 21:54:46 +0000
-Message-ID: <1382910886.2994.52.camel@deadeye.wl.decadent.org.uk>
-References: <1382910437.2994.43.camel@deadeye.wl.decadent.org.uk>
+From: Asias He <asias@redhat.com>
+Subject: Re: [PATCH] vhost/scsi: Fix incorrect usage of get_user_pages_fast
+	write parameter
+Date: Mon, 28 Oct 2013 07:48:45 +0800
+Message-ID: <20131027234715.GA10138@hj.localdomain>
+References: <1382724436-28478-1-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-9EF/Kz7nWl4ndrKzjFMq"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1382910437.2994.43.camel@deadeye.wl.decadent.org.uk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+Content-Disposition: inline
+In-Reply-To: <1382724436-28478-1-git-send-email-nab@linux-iscsi.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: kvm-devel <kvm@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, "Michael S. Tsirkin" <mst@redhat.com>, linux-kernel <linux-kernel@vger.kernel.org>, lf-virt <virtualization@lists.linux-foundation.org>, target-devel <target-devel@vger.kernel.org>, Stefan Hajnoczi <stefanha@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
+On Fri, Oct 25, 2013 at 06:07:16PM +0000, Nicholas A. Bellinger wrote:
+> From: Nicholas Bellinger <nab@linux-iscsi.org>
+> 
+> This patch addresses a long-standing bug where the get_user_pages_fast()
+> write parameter used for setting the underlying page table entry permission
+> bits was incorrectly set to write=1 for data_direction=DMA_TO_DEVICE, and
+> passed into get_user_pages_fast() via vhost_scsi_map_iov_to_sgl().
+> 
+> However, this parameter is intended to signal WRITEs to pinned userspace
+> PTEs for the virtio-scsi DMA_FROM_DEVICE -> READ payload case, and *not*
+> for the virtio-scsi DMA_TO_DEVICE -> WRITE payload case.
+> 
+> This bug would manifest itself as random process segmentation faults on
+> KVM host after repeated vhost starts + stops and/or with lots of vhost
+> endpoints + LUNs.
+> 
+> Cc: Stefan Hajnoczi <stefanha@redhat.com>
+> Cc: Michael S. Tsirkin <mst@redhat.com>
+> Cc: Asias He <asias@redhat.com>
+> Cc: <stable@vger.kernel.org> # 3.6+
+> Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 
---=-9EF/Kz7nWl4ndrKzjFMq
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Reviewed-by: Asias He <asias@redhat.com>
 
-Most architectures define access_ok() as a macro that casts its
-argument such that an argument of type unsigned long will be accepted
-without complaint.  However, the proper type is void *, and passing
-unsigned long results in a warning on sparc64.
+> ---
+>  drivers/vhost/scsi.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
+> index ce5221f..e663921 100644
+> --- a/drivers/vhost/scsi.c
+> +++ b/drivers/vhost/scsi.c
+> @@ -1056,7 +1056,7 @@ vhost_scsi_handle_vq(struct vhost_scsi *vs, struct vhost_virtqueue *vq)
+>  		if (data_direction != DMA_NONE) {
+>  			ret = vhost_scsi_map_iov_to_sgl(cmd,
+>  					&vq->iov[data_first], data_num,
+> -					data_direction == DMA_TO_DEVICE);
+> +					data_direction == DMA_FROM_DEVICE);
+>  			if (unlikely(ret)) {
+>  				vq_err(vq, "Failed to map iov to sgl\n");
+>  				goto err_free;
+> -- 
+> 1.7.2.5
+> 
 
-Compile-tested only.
-
-Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
----
- drivers/scsi/pmcraid.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
-index 1eb7b028..4e0a2f3 100644
---- a/drivers/scsi/pmcraid.c
-+++ b/drivers/scsi/pmcraid.c
-@@ -3794,7 +3794,8 @@ static long pmcraid_ioctl_passthrough(
- 	}
-=20
- 	if (request_size > 0) {
--		rc =3D access_ok(access, arg, request_offset + request_size);
-+		rc =3D access_ok(access, (void *)arg,
-+			       request_offset + request_size);
-=20
- 		if (!rc) {
- 			rc =3D -EFAULT;
-
---=20
-Ben Hutchings
-If at first you don't succeed, you're doing about average.
-
---=-9EF/Kz7nWl4ndrKzjFMq
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.15 (GNU/Linux)
-
-iQIVAwUAUm2Lpue/yOyVhhEJAQogaRAApuI/XAprWm6oVY6AfWjkNkz5GOFzOpTW
-7PMjorw6tklt1T1H/eCJ5CluK6TVS8w79NEItUFpWzafUg3E7kBz9oYnkBzCmhMn
-TZ1WMzgHPhqo9iYYSyKQU2BcTwO71X3fxtjq+TS95VgZuIxHfmvi06/P34JSElkh
-w908L6i8f1Gzc8jb1gCDyCz7BKtdahwpwdo+DsirL+R1fftU+agucjInKhxqDNCQ
-sepyDeinqeoGt+0ESqvg88N25mN/yFtG6ZNcVd40tVoP9+g1GxrspYFWOH+o/36m
-I0clahiJBo8MF2jwsnkPql/yxSpCoMruPvegn7IhLT1KyeVDsBzAAZIwkDvhWowG
-fTBBwKwoDU7qbg9rUuzqUUL2IQ0+RIVVpUYjd4qpU3Hw0V+5pAtlv/CXyLE0egmN
-73pPVOrE1jn8kuPnBX0FPWVB4ViTKc/9XOOr1baqyPvb4gRfu1A+TDOceaiD+egc
-DA94zgxp0WhfvbEowRJDd3Hod6rJkxIELJosQRtPtuYLJatMMKhCBNhUyrF957ZS
-s/axzP6LSk+SGyfFu9nsWGsSqC6Dn/+mFMABANaaM/wKby7s1ZbyKUY4BCLTGpcp
-im0UveK+P9HUKgPvYMwptW1Rdgy53b1juxiB2OsBrqJxl+8V+j+scBNdMky0D44/
-cxDM/Lc2bIM=
-=Usk9
------END PGP SIGNATURE-----
-
---=-9EF/Kz7nWl4ndrKzjFMq--
+-- 
+Asias
