@@ -1,78 +1,76 @@
-From: Ben Hutchings <ben-/+tVBieCtBitmTQ+vhA3Yw@public.gmane.org>
-Subject: [PATCH 0/8] Fix minor address type errors
-Date: Sun, 27 Oct 2013 21:47:17 +0000
-Message-ID: <1382910437.2994.43.camel@deadeye.wl.decadent.org.uk>
+From: Ben Hutchings <ben@decadent.org.uk>
+Subject: [PATCH 5/8] [SCSI] tgt: Pass pointers to virt_to_page(), not
+ integers
+Date: Sun, 27 Oct 2013 21:53:13 +0000
+Message-ID: <1382910793.2994.49.camel@deadeye.wl.decadent.org.uk>
+References: <1382910437.2994.43.camel@deadeye.wl.decadent.org.uk>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-aenbMtIN47UiBrAVHmxj"
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Cc: linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rds-devel-N0ozoZBvEnrZJqsBc5GL+g@public.gmane.org
+	protocol="application/pgp-signature"; boundary="=-L81O6WD332T/xPHCNaOV"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1382910437.2994.43.camel@deadeye.wl.decadent.org.uk>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
 
---=-aenbMtIN47UiBrAVHmxj
+--=-L81O6WD332T/xPHCNaOV
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-Various bits of code are mixing making assumptions about the size of
-dma_addr_t or resource_size_t, or mixing up pointer and integer types.
+Most architectures define virt_to_page() as a macro that casts its
+argument such that an argument of type unsigned long will be accepted
+without complaint.  However, the proper type is void *, and passing
+unsigned long results in a warning on MIPS.
 
-All these fixes are based on compiler warnings and so far as I can see
-the bugs are practically harmless.
+Compile-tested only.
 
-Ben.
+Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
+---
+ drivers/scsi/scsi_tgt_if.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Ben Hutchings (8):
-  IB/cxgb4: Fix formatting of physical address
-  farsync: Fix confusion about DMA address and buffer offset types
-  drm: Do not include page offset in argument to virt_to_page()
-  drm: Pass pointers to virt_to_page()
-  [SCSI] tgt: Pass pointers to virt_to_page(), not integers
-  uio: Pass pointers to virt_to_page(), not integers
-  rds: Pass pointers to virt_to_page(), not integers
-  [SCSI] pmcraid: Pass pointers to access_ok(), not integers
-
- drivers/gpu/drm/drm_pci.c            |  4 ++--
- drivers/gpu/drm/drm_vm.c             |  2 +-
- drivers/infiniband/hw/cxgb4/device.c |  4 ++--
- drivers/net/wan/farsync.c            | 19 +++++++------------
- drivers/scsi/pmcraid.c               |  3 ++-
- drivers/scsi/scsi_tgt_if.c           |  2 +-
- drivers/uio/uio.c                    |  6 ++++--
- net/rds/message.c                    |  2 +-
- 8 files changed, 20 insertions(+), 22 deletions(-)
+diff --git a/drivers/scsi/scsi_tgt_if.c b/drivers/scsi/scsi_tgt_if.c
+index 6209110..7199753 100644
+--- a/drivers/scsi/scsi_tgt_if.c
++++ b/drivers/scsi/scsi_tgt_if.c
+@@ -286,7 +286,7 @@ static int uspace_ring_map(struct vm_area_struct *vma, =
+unsigned long addr,
+ 	int i, err;
+=20
+ 	for (i =3D 0; i < TGT_RING_PAGES; i++) {
+-		struct page *page =3D virt_to_page(ring->tr_pages[i]);
++		struct page *page =3D virt_to_page((void *)ring->tr_pages[i]);
+ 		err =3D vm_insert_page(vma, addr, page);
+ 		if (err)
+ 			return err;
 
 
 --=20
 Ben Hutchings
 If at first you don't succeed, you're doing about average.
 
---=-aenbMtIN47UiBrAVHmxj
+--=-L81O6WD332T/xPHCNaOV
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.15 (GNU/Linux)
 
-iQIVAwUAUm2J5ee/yOyVhhEJAQqGvA/9GzMeGBFRDv9lMX/TsSlwFqMeODg9ZXbI
-MMWTYKi+h5aiKrniDjtSKb7ilx0nVNnR8BEFCQcZBr4DOd+97kMEbxrZZTBKE1F6
-Nhy419nEivQcWzmVAw4q6uqQ+ozfVz5XX/bqOUvdYZtSBLkw3py6DyCnWnLHsr8Y
-QQqF9bDaa8cJWeN59moFUduSKDUHSHSgJFMNF6j1oB0n3BdaVzuqVmwNCwLG/AXk
-Zly1V6lvKj1QPzgDO3P3RDEVrOaOx6GKfuoVqj5gbqNAw1nXlnqg5myRYC7FqNnN
-EKta5bUHgkwpS867jaIMalnjVXIDgf0p2TgfgsxCgTdF6F4hirL6DZaLjIHxK7OO
-Hr22hkX64W/CppwP5653sjO2xuPwcqiVlHZdVRhhYckRldRaEaB63mwkIdRsRolW
-i8OrbYGZvUTXJ2gcCgxoYNMXYAO+EFAK4YVEM4vc7CSzi018Zz0TEapi+4abNdWp
-ckUzC8+P5uk1fBTGziOdH+derBwDo6GS9qscdIrXCbkA4zKMn+JaKynTmncFNtGn
-0uKVD/TW3ds2+tUlbuwlikWrLk7rTU+8186+K0q3xcaArPt3uLnlqSsrq6Th1r9D
-zsbWvsZAvs7yWsa+sUOla25T++Z2/o+k6IQYKNmhAWVqWVJuAF0OZ1YK5yu0NWq0
-9/1fnbEoDMw=
-=ZTmh
+iQIVAwUAUm2LSee/yOyVhhEJAQr/Bg/9GSUjk2OMlTJwZuz0Q/G41sR23SyHJ0sH
+5ntFCj7pcAKSfHdqSVyfeDBhypGG4maQOpSWss7gWd0ST2MsXtXINVBC0MnTGS6w
+aYmjJQHt1TSZz5mnytm06Jf7ukkt3l0hC0e8FWXWlExRPRLFmXrwI6fTD1Emd9JW
+GUS3DM4c6NYgnN5nSUgYKvjhm/JT668b38wIa/rR9NLMdmlRmj9guh20RkA4arN3
+DNQ5KdEUgxkdZsmoo0KNr38/GA3vz1yPDFJn6dW8XWjTC8Y37Pz7tIaJfRuHm1aC
+6k1dc0KOAGCZ3BytGtdyhzA7YmyvYzpAYV5KrrdKXj9zF3Sl7Hc0k0VjFU4MfAFQ
+1ZcEEX+vXOCGE3IaW6pFPVDwNrzHKuk1RoDKormIZnhqcfS83ua6zym+Trplpe3d
+d4eiOjYeyRRDUpHuyhNgM7g30sbbt6Uh5zEHbKi0md5tqNPuGnQjzP+tX0rK9o2S
+V8A4EFEkq5YVqjMZU6z5lYscC7zsqfO0YKz+s265k0dwABRHvifvvJPWVqTNU4BU
+sBkwb7tjLsuTzGt45WsJnJhZfJVJP2n7B08m/xQWsgbNsRgGf14rFkrhozuRXr8H
+TxPrQo7gAfym3raReBuq+YAOjqplHO1FGfqTHzdZLBuR0pBx1FAlDOpYpcXsRPfE
+RdM3I2cNRFo=
+=E4ol
 -----END PGP SIGNATURE-----
 
---=-aenbMtIN47UiBrAVHmxj--
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--=-L81O6WD332T/xPHCNaOV--
