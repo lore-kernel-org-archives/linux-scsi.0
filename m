@@ -1,36 +1,47 @@
-From: yang jun <yangjun.donglife123@gmail.com>
-Subject: [SCSI] sr: sr_mutex hurts multi-drive performance
-Date: Sun, 27 Oct 2013 18:15:50 +0800
-Message-ID: <CAO4Pk4yky7xOxBucvLXX8JMxNk=HsKsf2ermCrf_VimXumhfBQ@mail.gmail.com>
+From: "George Daniels" <georgedaniels357@yahoo.com>
+Subject: Es ist Privat
+Date: Sun, 27 Oct 2013 06:16:05 -0200
+Message-ID: <2ee61f624246553969611aa843a308b0.squirrel__21926.8321445727$1382874347$gmane$org@41.221.245.42>
+Reply-To: georgedaniels357@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=GB2312
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ob0-f194.google.com ([209.85.214.194]:44810 "EHLO
-	mail-ob0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751207Ab3J0KPu convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 27 Oct 2013 06:15:50 -0400
-Received: by mail-ob0-f194.google.com with SMTP id vb8so681516obc.1
-        for <linux-scsi@vger.kernel.org>; Sun, 27 Oct 2013 03:15:50 -0700 (PDT)
+Received: from mail.unimetro.ed.ao ([41.221.245.42]:64918 "EHLO
+	mail.unimetro.ed.ao" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751696Ab3J0LpZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 27 Oct 2013 07:45:25 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Dear Mr.Axboe,
+--=20
 
-The latest kernel sr_module still uses single mutex,it will serialise
-all sr ioctls. Otto Meta had mentioned this on Jan 1st, 2013 . Some
-record tools such as growisofs use SG_IO to write data to disc, so if
-there are multiple cdroms being recorded at the same time=A3=ACit will =
-be
-very slowly.
 
-I saw sd_module before,it had removed BKL and made "openers" atomic_t
-in scsi_disk. Shall we do the same thing to sr_module? That is, to
-remove sr_mutex and make "use_count" atomic_t in cdrom_device_info.
+Es ist Privat
 
-Yours Sincerely,
+Ich bin George Daniels, ein Banker und Credit-System-Programmierer (HSB=
+C
+Bank). Ich sah Ihre E-Mail-Adresse w=E4hrend des Surfens durch die Bank=
+ DTC
+Bildschirm in mein B=FCro gestern so beschloss ich, diese Chance zu nut=
+zen
+sehr, Sie kennenzulernen. I glaube, wir sollten jede Gelegenheit nutzen=
+,
+um einander besser kennen.
+Allerdings bin ich mit Ihnen Kontakt aufnehmen f=FCr offensichtliche Gr=
+und,
+die Sie verstehen.
+
+Ich schicke diese Mail nur wissen, ob diese E-Mail-Adresse ist OK,
+antworten Sie mir zur=FCck, damit ich mehr Details zu euch senden.
+Ich habe eine sehr wichtige Sache, um mit Ihnen zu diskutieren, ich fre=
+ue
+mich auf Empfangen Sie Ihre Antwort an
+georgedaniels@postino.net. Haben Sie einen sch=F6nen Tag.
+
+George Daniels
+
+
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
