@@ -1,26 +1,29 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: scsi-mq + open-iscsi support patches..?
-Date: Mon, 28 Oct 2013 15:03:36 -0700
-Message-ID: <1382997816.19256.767.camel@haakon3.risingtidesystems.com>
+From: "Lamacz,Debbie" <dlamacz@franklinregional.k12.pa.us>
+Subject: RE: LOAN
+Date: Mon, 28 Oct 2013 19:57:34 -0400
+Message-ID: <E898B4B5935D3C4893EB3758B473E02F2BA79ED12E@GAR-MAIL.franklinregional.k12.pa.us>
+References: <E898B4B5935D3C4893EB3758B473E02F2BA79ECEBF@GAR-MAIL.franklinregional.k12.pa.us>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>, Open iSCSI <open-iscsi@googlegroups.com>, Or Gerlitz <ogerlitz@mellanox.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.franklinregional.k12.pa.us ([166.102.99.173]:30712 "EHLO
+	mail.franklinregional.k12.pa.us" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751852Ab3J2A22 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 28 Oct 2013 20:28:28 -0400
+In-Reply-To: <E898B4B5935D3C4893EB3758B473E02F2BA79ECEBF@GAR-MAIL.franklinregional.k12.pa.us>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Lamacz,Debbie" <dlamacz@franklinregional.k12.pa.us>
 
-Hi Mike,
 
-Just curious as to the status of the scsi-mq conversion patches for
-open-iscsi that you where working on a while back..?
+________________________________
+From: Lamacz,Debbie
+Sent: Monday, October 28, 2013 5:50 PM
+To: Lamacz,Debbie
+Subject: LOAN
 
-I'm asking because recently I've been spending alot of time with scsi-mq
-+ virtio-scsi, and would really to start banging on iser-target ports
-using an scsi-mq enabled iser-initiator as well..
+Do you need a loan at 2% rate.Reply now : m_taosoon@yahoo.com.hk<mailto:m_taosoon@yahoo.com.hk>
 
-So that said, are there any blockers holding things up towards getting a
-working prototype..?
-
---nab
