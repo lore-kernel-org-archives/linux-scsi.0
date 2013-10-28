@@ -1,39 +1,26 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: Backporting 'libsas: fix timeout vs completion race' and related
- patches to 3.2.51 recommended?
-Date: Mon, 28 Oct 2013 13:33:47 -0700
-Message-ID: <CAA9_cmcwZypu7FYTN2GcbN1t1Q8p-VegAcuTr5mw=Nwrmq4LRA@mail.gmail.com>
-References: <20131026004724.GA18880@amit-debian.lg.local>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: scsi-mq + open-iscsi support patches..?
+Date: Mon, 28 Oct 2013 15:03:36 -0700
+Message-ID: <1382997816.19256.767.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-la0-f47.google.com ([209.85.215.47]:39314 "EHLO
-	mail-la0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755323Ab3J1Uds (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Oct 2013 16:33:48 -0400
-Received: by mail-la0-f47.google.com with SMTP id ep20so5593936lab.6
-        for <linux-scsi@vger.kernel.org>; Mon, 28 Oct 2013 13:33:47 -0700 (PDT)
-In-Reply-To: <20131026004724.GA18880@amit-debian.lg.local>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>, Open iSCSI <open-iscsi@googlegroups.com>, Or Gerlitz <ogerlitz@mellanox.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Amit Uttamchandani <auttamchandani@logicube.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Fri, Oct 25, 2013 at 5:47 PM, Amit Uttamchandani
-<auttamchandani@logicube.com> wrote:
-> Hello,
->
-> Tested kernel 3.4.62, which introduces:
->
->  libsas error handling + discovery patch set
->
->  http://lwn.net/Articles/476986/
->
-> Is it advisable for me to backport this to v3.2.51?
->
+Hi Mike,
 
-If you need reliable ata error handling via libsas then, yes.  Kernels
-prior to 3.4 will encounter some bugs in this area.
+Just curious as to the status of the scsi-mq conversion patches for
+open-iscsi that you where working on a while back..?
 
---
-Dan
+I'm asking because recently I've been spending alot of time with scsi-mq
++ virtio-scsi, and would really to start banging on iser-target ports
+using an scsi-mq enabled iser-initiator as well..
+
+So that said, are there any blockers holding things up towards getting a
+working prototype..?
+
+--nab
