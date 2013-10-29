@@ -1,27 +1,40 @@
-From: "Lee Hyuk" <leehyuk08@mail2world.com>
-Subject: Re:Answer back
-Date: Tue, 29 Oct 2013 11:14:57 -0000
-Message-ID: <e5f99e20cfe21f54dcda50842a7745d3.squirrel__44169.2492262975$1383068968$gmane$org@168.63.124.57>
-Reply-To: hyuk.lee1@aol.com
+From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
+Subject: [PATCH] hpsa: return 0 from driver probe function on success, not 1
+Date: Tue, 29 Oct 2013 13:39:56 -0500
+Message-ID: <20131029183956.5471.91383.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [168.63.124.57] ([168.63.124.57]:3344 "EHLO virtual.domain.tld"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1758546Ab3J2RtI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Oct 2013 13:49:08 -0400
+Received: from g4t0014.houston.hp.com ([15.201.24.17]:5279 "EHLO
+	g4t0014.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752021Ab3J2Sj6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Oct 2013 14:39:58 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: james.bottomley@hansenpartnership.com
+Cc: stephenmcameron@gmail.com, mikem@beardog.cce.hp.com, thenzl@redhat.com, linux-scsi@vger.kernel.org, scott.teel@hp.com
 
+From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
+A return value of 1 is interpreted as an error
 
+Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+---
+ drivers/scsi/hpsa.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-I would like to discuss a very important crude oil project with
-you,kindlyrevert back to me if this is your valid email address for
-further information.
-
-Regards,
-
-Lee
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 891c86b..3c97974 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -4926,7 +4926,7 @@ reinit_after_soft_reset:
+ 	hpsa_hba_inquiry(h);
+ 	hpsa_register_scsi(h);	/* hook ourselves into SCSI subsystem */
+ 	start_controller_lockup_detector(h);
+-	return 1;
++	return 0;
+ 
+ clean4:
+ 	hpsa_free_sg_chain_blocks(h);
 
