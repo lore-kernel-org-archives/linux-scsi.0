@@ -1,23 +1,21 @@
 From: Joseph Salisbury <joseph.salisbury@canonical.com>
 Subject: Re: Subject:  [v3.8][v3.11][Regression] [SCSI] sd: Update WRITE SAME
  heuristics
-Date: Tue, 29 Oct 2013 15:50:48 -0400
-Message-ID: <52701198.5040501@canonical.com>
-References: <52700AD2.6000703@canonical.com> <5270108E.5040401@itwm.fraunhofer.de>
+Date: Tue, 29 Oct 2013 15:53:33 -0400
+Message-ID: <5270123D.5030305@canonical.com>
+References: <52700AD2.6000703@canonical.com> <52700F86.4010007@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <5270108E.5040401@itwm.fraunhofer.de>
+In-Reply-To: <52700F86.4010007@interlog.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: hpa@zytor.com, JBottomley@Parallels.com, LKML <linux-kernel@vger.kernel.org>, Kamal Mostafa <kamal.mostafa@canonical.com>, linux-scsi@vger.kernel.org, Luis Henriques <luis.henriques@canonical.com>
+To: dgilbert@interlog.com, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: hpa@zytor.com, bernd.schubert@itwm.fraunhofer.de, JBottomley@Parallels.com, LKML <linux-kernel@vger.kernel.org>, Kamal Mostafa <kamal.mostafa@canonical.com>, linux-scsi@vger.kernel.org, Luis Henriques <luis.henriques@canonical.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 10/29/2013 03:46 PM, Bernd Schubert wrote:
-> Hello Joseph,
->
-> On 10/29/2013 08:21 PM, Joseph Salisbury wrote:
+On 10/29/2013 03:41 PM, Douglas Gilbert wrote:
+> On 13-10-29 03:21 PM, Joseph Salisbury wrote:
 >> Hi Martin,
 >>
 >> A bug was opened against the Ubuntu kernel[0].  After a kernel bisect,
@@ -37,17 +35,27 @@ On 10/29/2013 03:46 PM, Bernd Schubert wrote:
 >> you.  I was thinking of requesting a revert for v3.12, but I wanted to
 >> get your feedback first.
 >>
->
-> James queued this up for 3.13
->
->> http://git.kernel.org/cgit/linux/kernel/git/jejb/scsi.git/commit/?id=735e39e680256a13e7be3492acfb4d9721287a42
 >>
+>> Thanks,
+>>
+>> Joe
+>>
+>> [0] http://pad.lv/1237392
 >
-> Maybe we should try to convince James to take it into 3.12?
+> Tried the other approach?
+>
+> From your bug report: "Areca Raid Controller2: F/W v1.46 ...(etc)..."
+>
+> Then see:
+>   http://www.areca.com.tw/support/main.htm
+>
+> Doug Gilbert
 >
 >
-> Cheers,
-> Bernd
+>
+Thanks, Doug.  I'm going to give the patch[0] written by Bernd Schubert
+a try first.  If the issue still persists, I'll ask the bug reporter to
+upgrade the firmware.
 
-I'll build a 3.12 test kernel with this commit and ask the bug reporter
-to test it.  Thanks for the pointer, Bernd.
+[0]
+http://git.kernel.org/cgit/linux/kernel/git/jejb/scsi.git/commit/?id=735e39e680256a13e7be3492acfb4d9721287a42
