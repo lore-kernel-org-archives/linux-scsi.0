@@ -1,18 +1,18 @@
 From: yang jun <yangjun.donglife123@gmail.com>
 Subject: Re: [SCSI] sr: sr_mutex ,multi-drive performance is bad
-Date: Tue, 29 Oct 2013 22:06:01 +0800
-Message-ID: <CAO4Pk4x2zMSWUWFvc9Pxp23=Jm+-obe49Po-feJrCPpL+ribMw@mail.gmail.com>
+Date: Tue, 29 Oct 2013 22:08:35 +0800
+Message-ID: <CAO4Pk4yZHXeULyHZ0V6qiVF37tbaCv9UN8gUp0U43GkO-GbDsw@mail.gmail.com>
 References: <CAO4Pk4wxUN-O_m5KcdZgmTTRG2w8icqva+0dxu7HRO=rEpbArg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=GB2312
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-vc0-f179.google.com ([209.85.220.179]:61545 "EHLO
-	mail-vc0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755216Ab3J2OGD convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Oct 2013 10:06:03 -0400
-Received: by mail-vc0-f179.google.com with SMTP id hz11so3068112vcb.24
-        for <linux-scsi@vger.kernel.org>; Tue, 29 Oct 2013 07:06:02 -0700 (PDT)
+Received: from mail-ve0-f193.google.com ([209.85.128.193]:43225 "EHLO
+	mail-ve0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756296Ab3J2OIg convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Oct 2013 10:08:36 -0400
+Received: by mail-ve0-f193.google.com with SMTP id c14so920627vea.0
+        for <linux-scsi@vger.kernel.org>; Tue, 29 Oct 2013 07:08:35 -0700 (PDT)
 In-Reply-To: <CAO4Pk4wxUN-O_m5KcdZgmTTRG2w8icqva+0dxu7HRO=rEpbArg@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
