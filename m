@@ -1,9 +1,10 @@
-From: Jason Wang <jasowang@redhat.com>
+From: Wanlong Gao <gaowanlong@cn.fujitsu.com>
 Subject: Re: [PATCH] virtio-scsi: Fix hotcpu_notifier use-after-free with
 	virtscsi_freeze
-Date: Tue, 29 Oct 2013 11:27:00 +0800
-Message-ID: <526F2B04.3090004@redhat.com>
+Date: Tue, 29 Oct 2013 13:50:58 +0800
+Message-ID: <526F4CC2.3000502@cn.fujitsu.com>
 References: <1382947263-22145-1-git-send-email-asias@redhat.com>
+Reply-To: gaowanlong@cn.fujitsu.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
@@ -26,12 +27,16 @@ On 10/28/2013 04:01 PM, Asias He wrote:
 > vqs are freed in virtscsi_freeze but the hotcpu_notifier is not
 > unregistered. We will have a use-after-free usage when the notifier
 > callback is called after virtscsi_freeze.
->
+> 
 > Signed-off-by: Asias He <asias@redhat.com>
+
+Reviewed-by: Wanlong Gao <gaowanlong@cn.fujitsu.com>
+
+
 > ---
 >  drivers/scsi/virtio_scsi.c | 15 ++++++++++++++-
 >  1 file changed, 14 insertions(+), 1 deletion(-)
->
+> 
 > diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
 > index 74b88ef..b26f1a5 100644
 > --- a/drivers/scsi/virtio_scsi.c
@@ -66,4 +71,4 @@ On 10/28/2013 04:01 PM, Asias He wrote:
 >  }
 >  #endif
 >  
-Acked-by: Jason Wang <jasowang@redhat.com>
+> 
