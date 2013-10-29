@@ -1,52 +1,52 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [patch] [SCSI] aacraid: prevent ZERO_SIZE_PTR dereference
-Date: Tue, 29 Oct 2013 12:36:00 -0700
-Message-ID: <1383075360.2071.30.camel@dabdike.int.hansenpartnership.com>
-References: <20131029191007.GD21820@longonot.mountain>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: Subject:  [v3.8][v3.11][Regression] [SCSI] sd: Update WRITE SAME
+ heuristics
+Date: Tue, 29 Oct 2013 15:41:58 -0400
+Message-ID: <52700F86.4010007@interlog.com>
+References: <52700AD2.6000703@canonical.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:35144 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751044Ab3J2TgD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Oct 2013 15:36:03 -0400
-In-Reply-To: <20131029191007.GD21820@longonot.mountain>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <52700AD2.6000703@canonical.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Joseph Salisbury <joseph.salisbury@canonical.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: hpa@zytor.com, bernd.schubert@itwm.fraunhofer.de, JBottomley@Parallels.com, LKML <linux-kernel@vger.kernel.org>, Kamal Mostafa <kamal.mostafa@canonical.com>, linux-scsi@vger.kernel.org, Luis Henriques <luis.henriques@canonical.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Adaptec OEM Raid Solutions <aacraid@adaptec.com>, linux-scsi@vger.kernel.org, security@kernel.org
 
-On Tue, 2013-10-29 at 22:10 +0300, Dan Carpenter wrote:
-> If "fibsize" is zero then it leads to a ZERO_SIZE_PTR dereference when
-> we dereference user_srbcmd.
-> 
-> Due to a missing capable() check in the compat ioctls then this error
-> can be triggered without CAP_SYS_RAWIO.  I have fixed that in a separate
-> patch.
-> 
-> Reported-by: Nico Golde <nico@ngolde.de>
-> Reported-by: Fabian Yamaguchi <fabs@goesec.de>
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> 
-> diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
-> index d85ac1a..efd0ba3 100644
-> --- a/drivers/scsi/aacraid/commctrl.c
-> +++ b/drivers/scsi/aacraid/commctrl.c
-> @@ -511,7 +511,8 @@ static int aac_send_raw_srb(struct aac_dev* dev, void __user * arg)
->  		goto cleanup;
->  	}
->  
-> -	if (fibsize > (dev->max_fib_size - sizeof(struct aac_fibhdr))) {
-> +	if (fibsize == 0 ||
-> +	    fibsize > (dev->max_fib_size - sizeof(struct aac_fibhdr))) {
+On 13-10-29 03:21 PM, Joseph Salisbury wrote:
+> Hi Martin,
+>
+> A bug was opened against the Ubuntu kernel[0].  After a kernel bisect,
+> it was found that reverting the following commit resolved this bug:
+>
+> commit 66c28f97120e8a621afd5aa7a31c4b85c547d33d
+> Author: Martin K. Petersen <martin.petersen@oracle.com>
+> Date:   Thu Jun 6 22:15:55 2013 -0400
+>
+>      [SCSI] sd: Update WRITE SAME heuristics
+>
+>
+> The regression was introduced as of v3.11-rc1, but it also made it's way
+> into the stable trees.
+>
+> I see that you are the author of this patch, so I wanted to run this by
+> you.  I was thinking of requesting a revert for v3.12, but I wanted to
+> get your feedback first.
+>
+>
+> Thanks,
+>
+> Joe
+>
+> [0] http://pad.lv/1237392
 
-Not really if you want to catch actual undersize errors.  We read out of
-the allocated data structure after this, so it had better be at least
-sizeof(*user_srbcmd) rather than just not zero to make sure we aren't
-reading off the end of the allocated size.
+Tried the other approach?
 
-James
+ From your bug report: "Areca Raid Controller2: F/W v1.46 ...(etc)..."
 
+Then see:
+   http://www.areca.com.tw/support/main.htm
 
+Doug Gilbert
