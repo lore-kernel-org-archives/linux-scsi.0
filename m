@@ -1,40 +1,44 @@
-From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH] hpsa: return 0 from driver probe function on success, not 1
-Date: Tue, 29 Oct 2013 13:39:56 -0500
-Message-ID: <20131029183956.5471.91383.stgit@beardog.cce.hp.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [patch] [SCSI] aacraid: prevent ZERO_SIZE_PTR dereference
+Date: Tue, 29 Oct 2013 22:10:07 +0300
+Message-ID: <20131029191007.GD21820@longonot.mountain>
+References: <20131025144452.GA28451@ngolde.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t0014.houston.hp.com ([15.201.24.17]:5279 "EHLO
-	g4t0014.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752021Ab3J2Sj6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Oct 2013 14:39:58 -0400
+Received: from userp1040.oracle.com ([156.151.31.81]:26534 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750876Ab3J2TNS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Oct 2013 15:13:18 -0400
+Content-Disposition: inline
+In-Reply-To: <20131025144452.GA28451@ngolde.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: james.bottomley@hansenpartnership.com
-Cc: stephenmcameron@gmail.com, mikem@beardog.cce.hp.com, thenzl@redhat.com, linux-scsi@vger.kernel.org, scott.teel@hp.com
+To: Adaptec OEM Raid Solutions <aacraid@adaptec.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, security@kernel.org
 
-From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+If "fibsize" is zero then it leads to a ZERO_SIZE_PTR dereference when
+we dereference user_srbcmd.
 
-A return value of 1 is interpreted as an error
+Due to a missing capable() check in the compat ioctls then this error
+can be triggered without CAP_SYS_RAWIO.  I have fixed that in a separate
+patch.
 
-Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
----
- drivers/scsi/hpsa.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Reported-by: Nico Golde <nico@ngolde.de>
+Reported-by: Fabian Yamaguchi <fabs@goesec.de>
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 891c86b..3c97974 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -4926,7 +4926,7 @@ reinit_after_soft_reset:
- 	hpsa_hba_inquiry(h);
- 	hpsa_register_scsi(h);	/* hook ourselves into SCSI subsystem */
- 	start_controller_lockup_detector(h);
--	return 1;
-+	return 0;
+diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
+index d85ac1a..efd0ba3 100644
+--- a/drivers/scsi/aacraid/commctrl.c
++++ b/drivers/scsi/aacraid/commctrl.c
+@@ -511,7 +511,8 @@ static int aac_send_raw_srb(struct aac_dev* dev, void __user * arg)
+ 		goto cleanup;
+ 	}
  
- clean4:
- 	hpsa_free_sg_chain_blocks(h);
-
+-	if (fibsize > (dev->max_fib_size - sizeof(struct aac_fibhdr))) {
++	if (fibsize == 0 ||
++	    fibsize > (dev->max_fib_size - sizeof(struct aac_fibhdr))) {
+ 		rcode = -EINVAL;
+ 		goto cleanup;
+ 	}
