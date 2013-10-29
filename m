@@ -1,74 +1,44 @@
-From: Wanlong Gao <gaowanlong@cn.fujitsu.com>
-Subject: Re: [PATCH] virtio-scsi: Fix hotcpu_notifier use-after-free with
-	virtscsi_freeze
-Date: Tue, 29 Oct 2013 13:50:58 +0800
-Message-ID: <526F4CC2.3000502@cn.fujitsu.com>
-References: <1382947263-22145-1-git-send-email-asias@redhat.com>
-Reply-To: gaowanlong@cn.fujitsu.com
+From: Wei Yongjun <weiyj.lk@gmail.com>
+Subject: [PATCH] [SCSI] hpsa: fix return value check in start_controller_lockup_detector()
+Date: Tue, 29 Oct 2013 14:43:56 +0800
+Message-ID: <CAPgLHd8NoumfDWXN7fqDucWJ7Nr0KppW=24sCJpn9ynGOzLhcQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-In-Reply-To: <1382947263-22145-1-git-send-email-asias@redhat.com>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: Asias He <asias@redhat.com>, kvm@vger.kernel.org
-Cc: pbonzini@redhat.com, linux-scsi@vger.kernel.org, virtualization@lists.linux-foundation.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bk0-f47.google.com ([209.85.214.47]:60571 "EHLO
+	mail-bk0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751208Ab3J2Gn5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Oct 2013 02:43:57 -0400
+Received: by mail-bk0-f47.google.com with SMTP id mx12so2196630bkb.20
+        for <linux-scsi@vger.kernel.org>; Mon, 28 Oct 2013 23:43:56 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: scameron@beardog.cce.hp.com, JBottomley@parallels.com
+Cc: yongjun_wei@trendmicro.com.cn, iss_storagedev@hp.com, linux-scsi@vger.kernel.org
 
-On 10/28/2013 04:01 PM, Asias He wrote:
-> vqs are freed in virtscsi_freeze but the hotcpu_notifier is not
-> unregistered. We will have a use-after-free usage when the notifier
-> callback is called after virtscsi_freeze.
-> 
-> Signed-off-by: Asias He <asias@redhat.com>
+From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 
-Reviewed-by: Wanlong Gao <gaowanlong@cn.fujitsu.com>
+In case of error, the function kthread_run() returns ERR_PTR()
+and never returns NULL. The NULL test in the return value check
+should be replaced with IS_ERR().
 
+Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+---
+ drivers/scsi/hpsa.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-> ---
->  drivers/scsi/virtio_scsi.c | 15 ++++++++++++++-
->  1 file changed, 14 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-> index 74b88ef..b26f1a5 100644
-> --- a/drivers/scsi/virtio_scsi.c
-> +++ b/drivers/scsi/virtio_scsi.c
-> @@ -957,6 +957,10 @@ static void virtscsi_remove(struct virtio_device *vdev)
->  #ifdef CONFIG_PM
->  static int virtscsi_freeze(struct virtio_device *vdev)
->  {
-> +	struct Scsi_Host *sh = virtio_scsi_host(vdev);
-> +	struct virtio_scsi *vscsi = shost_priv(sh);
-> +
-> +	unregister_hotcpu_notifier(&vscsi->nb);
->  	virtscsi_remove_vqs(vdev);
->  	return 0;
->  }
-> @@ -965,8 +969,17 @@ static int virtscsi_restore(struct virtio_device *vdev)
->  {
->  	struct Scsi_Host *sh = virtio_scsi_host(vdev);
->  	struct virtio_scsi *vscsi = shost_priv(sh);
-> +	int err;
-> +
-> +	err = virtscsi_init(vdev, vscsi);
-> +	if (err)
-> +		return err;
-> +
-> +	err = register_hotcpu_notifier(&vscsi->nb);
-> +	if (err)
-> +		vdev->config->del_vqs(vdev);
->  
-> -	return virtscsi_init(vdev, vscsi);
-> +	return err;
->  }
->  #endif
->  
-> 
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 891c86b..f413b14 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -4757,7 +4757,8 @@ static void start_controller_lockup_detector(struct ctlr_info *h)
+ 			kthread_run(detect_controller_lockup_thread,
+ 						NULL, HPSA);
+ 	}
+-	if (!hpsa_lockup_detector) {
++	if (IS_ERR(hpsa_lockup_detector)) {
++		hpsa_lockup_detector = NULL;
+ 		dev_warn(&h->pdev->dev,
+ 			"Could not start lockup detector thread\n");
+ 		return;
+
