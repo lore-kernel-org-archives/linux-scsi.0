@@ -1,102 +1,55 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv7 0/4] New EH command timeout handler
-Date: Wed, 30 Oct 2013 09:37:48 +0100
-Message-ID: <1383122272-93572-1-git-send-email-hare@suse.de>
+Subject: [PATCH 2/4] blk-timeout: add BLK_EH_SCHEDULED return code
+Date: Wed, 30 Oct 2013 09:37:50 +0100
+Message-ID: <1383122272-93572-3-git-send-email-hare@suse.de>
+References: <1383122272-93572-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:37891 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:37892 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752750Ab3J3Ih7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1752829Ab3J3Ih7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Wed, 30 Oct 2013 04:37:59 -0400
+In-Reply-To: <1383122272-93572-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Ren Mingxin <renmx@cn.fujitsu.com>, Joern Engel <joern@logfs.org>, James Smart <james.smart@emulex.com>, Hannes Reinecke <hare@suse.de>
 
-Hi all,
+Add a 'BLK_EH_SCHEDULED' return code for blk-timeout to indicate
+that a delayed error recovery has been initiated.
 
-this patchset implements a new SCSI EH command timeout handler
-which will be sending command aborts inline without actually
-engaging SCSI EH.
-SCSI EH will only be invoked if command abort fails.
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/scsi/scsi_error.c | 4 ++++
+ include/linux/blkdev.h    | 1 +
+ 2 files changed, 5 insertions(+)
 
-In addition the commands will be returned directly
-if the command abort succeeded, cutting down recovery
-times dramatically.
-
-With the original SCSI EH I got:
-# time dd if=/dev/zero of=/dev/dm-2 bs=4k count=4k oflag=direct
-4096+0 records in
-4096+0 records out
-16777216 bytes (17 MB) copied, 142.652 s, 118 kB/s
-
-real	2m22.657s
-user	0m0.013s
-sys	0m0.145s
-
-With this patchset I got:
-# time dd if=/dev/zero of=/dev/dm-2 bs=4k count=4k oflag=direct
-4096+0 records in
-4096+0 records out
-16777216 bytes (17 MB) copied, 52.1579 s, 322 kB/s
-
-real	0m52.163s
-user	0m0.012s
-sys	0m0.145s
-
-Test was to disable RSCN on the target port, disable the
-target port, and then start the 'dd' command as indicated.
-
-Changes to the original version:
-- Use a private list in scsi_eh_abort_handler to avoid
-  list starvation (pointed out by Joern Engel)
-- Terminate command aborts when the first abort fails
-- Do not attempt command aborts if the host is already in recovery
-  or if the device is removed.
-- Flush abort workqueue if the device is removed.
-
-Changes to v2:
-- Removed eh_entry initialisation
-- Convert to per-command workqueue
-
-Changes to v3:
-- Use delayed_work
-- Enable new eh timeout handler for virtio, SAS, and FC
-- Modify logging messages to include scmd pointer
-
-Changes to v4:
-- Remove stubs when enabling new eh timeout handler
-  for other drivers
-
-Changes to v5:
-- Enable new eh timeout handler per default
-- Update documentation
-
-Changes to v6:
-- Include changes from James Bottomley for erratic device
-  offline patch
-- Rearrange patches
-- Update SCSI midlayer documentation
-
-Hannes Reinecke (3):
-  blk-timeout: add BLK_EH_SCHEDULED return code
-  scsi: improved eh timeout handler
-  scsi: Update documentation
-
-James Bottomley (1):
-  scsi: Fix erratic device offline during EH
-
- Documentation/scsi/scsi_eh.txt          |  69 +++++++------
- Documentation/scsi/scsi_mid_low_api.txt |   9 +-
- drivers/scsi/scsi.c                     |   9 +-
- drivers/scsi/scsi_error.c               | 176 ++++++++++++++++++++++++++++----
- drivers/scsi/scsi_priv.h                |   2 +
- drivers/scsi/sd.c                       |  26 +++--
- include/linux/blkdev.h                  |   1 +
- include/scsi/scsi_cmnd.h                |   2 +
- include/scsi/scsi_driver.h              |   2 +-
- include/scsi/scsi_host.h                |   5 +
- 10 files changed, 228 insertions(+), 73 deletions(-)
-
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 67c0014..af51a9c 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -161,6 +161,10 @@ enum blk_eh_timer_return scsi_times_out(struct request *req)
+ 	else if (host->hostt->eh_timed_out)
+ 		rtn = host->hostt->eh_timed_out(scmd);
+ 
++	/* Check for asynchronous command aborts */
++	if (rtn == BLK_EH_SCHEDULED)
++		return BLK_EH_NOT_HANDLED;
++
+ 	scmd->result |= DID_TIME_OUT << 16;
+ 
+ 	if (unlikely(rtn == BLK_EH_NOT_HANDLED &&
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 0e6f765..afec57c 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -238,6 +238,7 @@ enum blk_eh_timer_return {
+ 	BLK_EH_NOT_HANDLED,
+ 	BLK_EH_HANDLED,
+ 	BLK_EH_RESET_TIMER,
++	BLK_EH_SCHEDULED,
+ };
+ 
+ typedef enum blk_eh_timer_return (rq_timed_out_fn)(struct request *);
 -- 
 1.8.1.4
 
