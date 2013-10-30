@@ -1,63 +1,75 @@
 From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: [PATCH 01/22] qla2xxx: Print proper QLAFX00 product name at probe.
-Date: Wed, 30 Oct 2013 03:38:08 -0400
-Message-ID: <1383118709-5569-2-git-send-email-saurav.kashyap@qlogic.com>
+Subject: [PATCH 03/22] qla2xxx: Disable INTx interrupt for ISP82XX
+Date: Wed, 30 Oct 2013 03:38:10 -0400
+Message-ID: <1383118709-5569-4-git-send-email-saurav.kashyap@qlogic.com>
 References: <1383118709-5569-1-git-send-email-saurav.kashyap@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [67.231.148.157] ([67.231.148.157]:45341 "EHLO
+Received: from [67.231.148.157] ([67.231.148.157]:58528 "EHLO
 	mx0a-0016ce01.pphosted.com" rhost-flags-FAIL-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752693Ab3J3ILs (ORCPT
+	by vger.kernel.org with ESMTP id S1753164Ab3J3ILu (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Oct 2013 04:11:48 -0400
+	Wed, 30 Oct 2013 04:11:50 -0400
 In-Reply-To: <1383118709-5569-1-git-send-email-saurav.kashyap@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Armen Baloyan <armen.baloyan@qlogic.com>
+From: Sawan Chandak <sawan.chandak@qlogic.com>
 
-Signed-off-by: Armen Baloyan <armen.baloyan@qlogic.com>
+Signed-off-by: Sawan Chandak <sawan.chandak@qlogic.com>
 Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_dbg.c |    2 +-
- drivers/scsi/qla2xxx/qla_os.c  |    8 ++++++--
- 2 files changed, 7 insertions(+), 3 deletions(-)
+ drivers/scsi/qla2xxx/qla_isr.c |   13 +++++++------
+ 1 files changed, 7 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
-index ee5c183..acc1ea4 100644
---- a/drivers/scsi/qla2xxx/qla_dbg.c
-+++ b/drivers/scsi/qla2xxx/qla_dbg.c
-@@ -11,7 +11,7 @@
-  * ----------------------------------------------------------------------
-  * |             Level            |   Last Value Used  |     Holes	|
-  * ----------------------------------------------------------------------
-- * | Module Init and Probe        |       0x0159       | 0x4b,0xba,0xfa |
-+ * | Module Init and Probe        |       0x015a       | 0x4b,0xba,0xfa |
-  * | Mailbox commands             |       0x1181       | 0x111a-0x111b  |
-  * |                              |                    | 0x1155-0x1158  |
-  * |                              |                    | 0x1018-0x1019  |
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 9f01bbb..7d4f10d 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -2914,8 +2914,12 @@ skip_dpc:
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index ff9c86b..6e649d7 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -2937,7 +2937,7 @@ msix_out:
+ int
+ qla2x00_request_irqs(struct qla_hw_data *ha, struct rsp_que *rsp)
+ {
+-	int ret;
++	int ret = QLA_FUNCTION_FAILED;
+ 	device_reg_t __iomem *reg = ha->iobase;
+ 	scsi_qla_host_t *vha = pci_get_drvdata(ha->pdev);
  
- 	qla2x00_dfs_setup(base_vha);
+@@ -2971,10 +2971,12 @@ qla2x00_request_irqs(struct qla_hw_data *ha, struct rsp_que *rsp)
+ 		    ha->chip_revision, ha->fw_attributes);
+ 		goto clear_risc_ints;
+ 	}
+-	ql_log(ql_log_info, vha, 0x0037,
+-	    "MSI-X Falling back-to MSI mode -%d.\n", ret);
++
+ skip_msix:
  
--	ql_log(ql_log_info, base_vha, 0x00fb,
--	    "QLogic %s - %s.\n", ha->model_number, ha->model_desc);
-+	if (IS_QLAFX00(ha))
-+		ql_log(ql_log_info, base_vha, 0x015a,
-+		    "QLogic %s.\n", ha->mr.product_name);
-+	else
-+		ql_log(ql_log_info, base_vha, 0x00fb,
-+		    "QLogic %s - %s.\n", ha->model_number, ha->model_desc);
- 	ql_log(ql_log_info, base_vha, 0x00fc,
- 	    "ISP%04X: %s @ %s hdma%c host#=%ld fw=%s.\n",
- 	    pdev->device, ha->isp_ops->pci_info_str(base_vha, pci_info),
++	ql_log(ql_log_info, vha, 0x0037,
++	    "Falling back-to MSI mode -%d.\n", ret);
++
+ 	if (!IS_QLA24XX(ha) && !IS_QLA2532(ha) && !IS_QLA8432(ha) &&
+ 	    !IS_QLA8001(ha) && !IS_P3P_TYPE(ha) && !IS_QLAFX00(ha))
+ 		goto skip_msi;
+@@ -2986,14 +2988,13 @@ skip_msix:
+ 		ha->flags.msi_enabled = 1;
+ 	} else
+ 		ql_log(ql_log_warn, vha, 0x0039,
+-		    "MSI-X; Falling back-to INTa mode -- %d.\n", ret);
++		    "Falling back-to INTa mode -- %d.\n", ret);
++skip_msi:
+ 
+ 	/* Skip INTx on ISP82xx. */
+ 	if (!ha->flags.msi_enabled && IS_QLA82XX(ha))
+ 		return QLA_FUNCTION_FAILED;
+ 
+-skip_msi:
+-
+ 	ret = request_irq(ha->pdev->irq, ha->isp_ops->intr_handler,
+ 	    ha->flags.msi_enabled ? 0 : IRQF_SHARED,
+ 	    QLA2XXX_DRIVER_NAME, rsp);
 -- 
 1.7.7
 
