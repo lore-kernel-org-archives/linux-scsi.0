@@ -1,45 +1,41 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 2/4] blk-timeout: add BLK_EH_SCHEDULED return code
-Date: Wed, 30 Oct 2013 20:15:19 +0100
-Message-ID: <52715AC7.7010202@suse.de>
-References: <1383122272-93572-1-git-send-email-hare@suse.de> <1383122272-93572-3-git-send-email-hare@suse.de> <20131030084303.GA3772@infradead.org>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [patch] [SCSI] megaraid: missing bounds check in mimd_to_kioc()
+Date: Wed, 30 Oct 2013 20:13:51 +0300
+Message-ID: <20131030171351.GB4130@longonot.mountain>
+References: <20131025144452.GA28451@ngolde.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:59615 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750882Ab3J3RNZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Oct 2013 13:13:25 -0400
-In-Reply-To: <20131030084303.GA3772@infradead.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:41833 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752503Ab3J3RRH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Oct 2013 13:17:07 -0400
+Content-Disposition: inline
+In-Reply-To: <20131025144452.GA28451@ngolde.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, Ren Mingxin <renmx@cn.fujitsu.com>, Joern Engel <joern@logfs.org>, James Smart <james.smart@emulex.com>
+To: Neela Syam Kolli <megaraidlinux@lsi.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, security@kernel.org, Nico Golde <nico@ngolde.de>, Fabian Yamaguchi <fabs@goesec.de>
 
-On 10/30/2013 09:43 AM, Christoph Hellwig wrote:
-> On Wed, Oct 30, 2013 at 09:37:50AM +0100, Hannes Reinecke wrote:
->> Add a 'BLK_EH_SCHEDULED' return code for blk-timeout to indicate
->> that a delayed error recovery has been initiated.
->
-> The user introduces here gets immediately reverted in the next patch,
-> which means this patch can simply be dropped.
->
-Rah. You are right.
+pthru32->dataxferlen comes from the user so we need to check that it's
+not too large so we don't overflow the buffer.
 
-Will be redoing the patchset.
+Reported-by: Nico Golde <nico@ngolde.de>
+Reported-by: Fabian Yamaguchi <fabs@goesec.de>
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+---
+Please review this carefully because I have not tested it.
 
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/scsi/megaraid/megaraid_mm.c b/drivers/scsi/megaraid/megaraid_mm.c
+index dfffd0f..a706927 100644
+--- a/drivers/scsi/megaraid/megaraid_mm.c
++++ b/drivers/scsi/megaraid/megaraid_mm.c
+@@ -486,6 +486,8 @@ mimd_to_kioc(mimd_t __user *umimd, mraid_mmadp_t *adp, uioc_t *kioc)
+ 
+ 	pthru32->dataxferaddr	= kioc->buf_paddr;
+ 	if (kioc->data_dir & UIOC_WR) {
++		if (pthru32->dataxferlen > kioc->xferlen)
++			return -EINVAL;
+ 		if (copy_from_user(kioc->buf_vaddr, kioc->user_data,
+ 						pthru32->dataxferlen)) {
+ 			return (-EFAULT);
