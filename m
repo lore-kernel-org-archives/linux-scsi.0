@@ -1,14 +1,14 @@
 From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: [PATCH 11/22] qla2xxx: Add BSG interface for read/write serdes register.
-Date: Wed, 30 Oct 2013 03:38:18 -0400
-Message-ID: <1383118709-5569-12-git-send-email-saurav.kashyap@qlogic.com>
+Subject: [PATCH 09/22] qla2xxx: Disable adapter when we encounter a PCI disconnect.
+Date: Wed, 30 Oct 2013 03:38:16 -0400
+Message-ID: <1383118709-5569-10-git-send-email-saurav.kashyap@qlogic.com>
 References: <1383118709-5569-1-git-send-email-saurav.kashyap@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [67.231.148.157] ([67.231.148.157]:15186 "EHLO
-	mx0a-0016ce01.pphosted.com" rhost-flags-FAIL-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752684Ab3J3ILW (ORCPT
+Received: from [67.231.156.153] ([67.231.156.153]:51699 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-FAIL-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752632Ab3J3ILW (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Wed, 30 Oct 2013 04:11:22 -0400
 In-Reply-To: <1383118709-5569-1-git-send-email-saurav.kashyap@qlogic.com>
@@ -17,240 +17,403 @@ List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Joe Carnuccio <joe.carnuccio@qlogic.com>
+From: Chad Dupuis <chad.dupuis@qlogic.com>
 
-Signed-off-by: Joe Carnuccio <joe.carnuccio@qlogic.com>
+If we become disconnected from the PCI bus/PCIe fabric, there can be long delays
+in register reads which can cause erroneous decisions to be made and cause a
+soft lockup if a lock is held too long. As a preventative measure, check for a
+disconnection (register reads that return -1) and then disable the board if we
+find ourselves in this condition. For now, check in our interrupt handlers and
+the per adapter one second timer.
+
+Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
 Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_bsg.c |   44 +++++++++++++++++++++++++
- drivers/scsi/qla2xxx/qla_bsg.h |   13 +++++++
  drivers/scsi/qla2xxx/qla_dbg.c |    2 +-
- drivers/scsi/qla2xxx/qla_def.h |    3 +-
- drivers/scsi/qla2xxx/qla_gbl.h |    5 +++
- drivers/scsi/qla2xxx/qla_mbx.c |   69 ++++++++++++++++++++++++++++++++++++++++
- 6 files changed, 134 insertions(+), 2 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h |    1 +
+ drivers/scsi/qla2xxx/qla_gbl.h |    4 ++
+ drivers/scsi/qla2xxx/qla_isr.c |   50 +++++++++++++++++++++++++-
+ drivers/scsi/qla2xxx/qla_mr.c  |    2 +
+ drivers/scsi/qla2xxx/qla_nx.c  |   18 ++++++++-
+ drivers/scsi/qla2xxx/qla_os.c  |   77 ++++++++++++++++++++++++++++++++++++++-
+ 7 files changed, 148 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bsg.c
-index aa57bf0..f15d03e 100644
---- a/drivers/scsi/qla2xxx/qla_bsg.c
-+++ b/drivers/scsi/qla2xxx/qla_bsg.c
-@@ -2022,6 +2022,46 @@ done:
- }
- 
- static int
-+qla26xx_serdes_op(struct fc_bsg_job *bsg_job)
-+{
-+	struct Scsi_Host *host = bsg_job->shost;
-+	scsi_qla_host_t *vha = shost_priv(host);
-+	int rval = 0;
-+	struct qla_serdes_reg sr;
-+
-+	memset(&sr, 0, sizeof(sr));
-+
-+	sg_copy_to_buffer(bsg_job->request_payload.sg_list,
-+	    bsg_job->request_payload.sg_cnt, &sr, sizeof(sr));
-+
-+	switch (sr.cmd) {
-+	case INT_SC_SERDES_WRITE_REG:
-+		rval = qla2x00_write_serdes_word(vha, sr.addr, sr.val);
-+		bsg_job->reply->reply_payload_rcv_len = 0;
-+		break;
-+	case INT_SC_SERDES_READ_REG:
-+		rval = qla2x00_read_serdes_word(vha, sr.addr, &sr.val);
-+		sg_copy_from_buffer(bsg_job->reply_payload.sg_list,
-+		    bsg_job->reply_payload.sg_cnt, &sr, sizeof(sr));
-+		bsg_job->reply->reply_payload_rcv_len = sizeof(sr);
-+		break;
-+	default:
-+		ql_log(ql_log_warn, vha, 0x708c,
-+		    "Unknown serdes cmd %x.\n", sr.cmd);
-+		rval = -EDOM;
-+		break;
-+	}
-+
-+	bsg_job->reply->reply_data.vendor_reply.vendor_rsp[0] =
-+	    rval ? EXT_STATUS_MAILBOX : 0;
-+
-+	bsg_job->reply_len = sizeof(struct fc_bsg_reply);
-+	bsg_job->reply->result = DID_OK << 16;
-+	bsg_job->job_done(bsg_job);
-+	return 0;
-+}
-+
-+static int
- qla2x00_process_vendor_specific(struct fc_bsg_job *bsg_job)
- {
- 	switch (bsg_job->request->rqst_data.h_vendor.vendor_cmd[0]) {
-@@ -2069,6 +2109,10 @@ qla2x00_process_vendor_specific(struct fc_bsg_job *bsg_job)
- 
- 	case QL_VND_FX00_MGMT_CMD:
- 		return qlafx00_mgmt_cmd(bsg_job);
-+
-+	case QL_VND_SERDES_OP:
-+		return qla26xx_serdes_op(bsg_job);
-+
- 	default:
- 		return -ENOSYS;
- 	}
-diff --git a/drivers/scsi/qla2xxx/qla_bsg.h b/drivers/scsi/qla2xxx/qla_bsg.h
-index 04f7703..e5c2126 100644
---- a/drivers/scsi/qla2xxx/qla_bsg.h
-+++ b/drivers/scsi/qla2xxx/qla_bsg.h
-@@ -23,6 +23,7 @@
- #define QL_VND_WRITE_I2C	0x10
- #define QL_VND_READ_I2C		0x11
- #define QL_VND_FX00_MGMT_CMD	0x12
-+#define QL_VND_SERDES_OP	0x13
- 
- /* BSG Vendor specific subcode returns */
- #define EXT_STATUS_OK			0
-@@ -212,4 +213,16 @@ struct qla_i2c_access {
- 	uint8_t  buffer[0x40];
- } __packed;
- 
-+/* 26xx serdes register interface */
-+
-+/* serdes reg commands */
-+#define INT_SC_SERDES_READ_REG		1
-+#define INT_SC_SERDES_WRITE_REG		2
-+
-+struct qla_serdes_reg {
-+	uint16_t cmd;
-+	uint16_t addr;
-+	uint16_t val;
-+} __packed;
-+
- #endif
 diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
-index 66f6597..9cd767c 100644
+index acc1ea4..149a1b5 100644
 --- a/drivers/scsi/qla2xxx/qla_dbg.c
 +++ b/drivers/scsi/qla2xxx/qla_dbg.c
-@@ -12,7 +12,7 @@
+@@ -11,7 +11,7 @@
+  * ----------------------------------------------------------------------
   * |             Level            |   Last Value Used  |     Holes	|
   * ----------------------------------------------------------------------
-  * | Module Init and Probe        |       0x015b       | 0x4b,0xba,0xfa |
-- * | Mailbox commands             |       0x1181       | 0x111a-0x111b  |
-+ * | Mailbox commands             |       0x1187       | 0x111a-0x111b  |
+- * | Module Init and Probe        |       0x015a       | 0x4b,0xba,0xfa |
++ * | Module Init and Probe        |       0x015b       | 0x4b,0xba,0xfa |
+  * | Mailbox commands             |       0x1181       | 0x111a-0x111b  |
   * |                              |                    | 0x1155-0x1158  |
   * |                              |                    | 0x1018-0x1019  |
-  * |                              |                    | 0x1115-0x1116  |
 diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index ac62bca..41d6491 100644
+index 82b18c0..0fb01e1 100644
 --- a/drivers/scsi/qla2xxx/qla_def.h
 +++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -862,7 +862,6 @@ struct mbx_cmd_32 {
-  */
- #define MBC_LOAD_RAM			1	/* Load RAM. */
- #define MBC_EXECUTE_FIRMWARE		2	/* Execute firmware. */
--#define MBC_WRITE_RAM_WORD		4	/* Write RAM word. */
- #define MBC_READ_RAM_WORD		5	/* Read RAM word. */
- #define MBC_MAILBOX_REGISTER_TEST	6	/* Wrap incoming mailboxes */
- #define MBC_VERIFY_CHECKSUM		7	/* Verify checksum. */
-@@ -937,6 +936,8 @@ struct mbx_cmd_32 {
- /*
-  * ISP24xx mailbox commands
-  */
-+#define MBC_WRITE_SERDES		0x3	/* Write serdes word. */
-+#define MBC_READ_SERDES			0x4	/* Read serdes word. */
- #define MBC_SERDES_PARAMS		0x10	/* Serdes Tx Parameters. */
- #define MBC_GET_IOCB_STATUS		0x12	/* Get IOCB status command. */
- #define MBC_PORT_PARAMS			0x1A	/* Port iDMA Parameters. */
+@@ -3301,6 +3301,7 @@ struct qla_hw_data {
+ 	struct work_struct nic_core_reset;
+ 	struct work_struct idc_state_handler;
+ 	struct work_struct nic_core_unrecoverable;
++	struct work_struct board_disable;
+ 
+ 	struct mr_data_fx00 mr;
+ 
 diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
-index 359d0d9..00427e0 100644
+index df52f73..359d0d9 100644
 --- a/drivers/scsi/qla2xxx/qla_gbl.h
 +++ b/drivers/scsi/qla2xxx/qla_gbl.h
-@@ -341,6 +341,11 @@ extern int
- qla2x00_system_error(scsi_qla_host_t *);
+@@ -159,6 +159,9 @@ extern int qla83xx_clear_drv_presence(scsi_qla_host_t *vha);
+ extern int __qla83xx_clear_drv_presence(scsi_qla_host_t *vha);
+ extern int qla2x00_post_uevent_work(struct scsi_qla_host *, u32);
  
- extern int
-+qla2x00_write_serdes_word(scsi_qla_host_t *, uint16_t, uint16_t);
-+extern int
-+qla2x00_read_serdes_word(scsi_qla_host_t *, uint16_t, uint16_t *);
++extern int qla2x00_post_uevent_work(struct scsi_qla_host *, u32);
++extern void qla2x00_disable_board_on_pci_error(struct work_struct *);
 +
-+extern int
- qla2x00_set_serdes_params(scsi_qla_host_t *, uint16_t, uint16_t, uint16_t);
+ /*
+  * Global Functions in qla_mid.c source file.
+  */
+@@ -454,6 +457,7 @@ extern uint8_t *qla25xx_read_nvram_data(scsi_qla_host_t *, uint8_t *, uint32_t,
+ extern int qla25xx_write_nvram_data(scsi_qla_host_t *, uint8_t *, uint32_t,
+ 				    uint32_t);
+ extern int qla2x00_is_a_vp_did(scsi_qla_host_t *, uint32_t);
++bool qla2x00_check_reg_for_disconnect(scsi_qla_host_t *, uint32_t);
  
- extern int
-diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index 5957fee..b94511a 100644
---- a/drivers/scsi/qla2xxx/qla_mbx.c
-+++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -2800,6 +2800,75 @@ qla2x00_system_error(scsi_qla_host_t *vha)
- 	return rval;
+ extern int qla2x00_beacon_on(struct scsi_qla_host *);
+ extern int qla2x00_beacon_off(struct scsi_qla_host *);
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 2e6eae3..0b1b297 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -56,6 +56,16 @@ qla2100_intr_handler(int irq, void *dev_id)
+ 	vha = pci_get_drvdata(ha->pdev);
+ 	for (iter = 50; iter--; ) {
+ 		hccr = RD_REG_WORD(&reg->hccr);
++		/* Check for PCI disconnection */
++		if (hccr == 0xffff) {
++			/*
++			 * Schedule this on the default system workqueue so that
++			 * all the adapter workqueues and the DPC thread can be
++			 * shutdown cleanly.
++			 */
++			schedule_work(&ha->board_disable);
++			break;
++		}
+ 		if (hccr & HCCR_RISC_PAUSE) {
+ 			if (pci_channel_offline(ha->pdev))
+ 				break;
+@@ -110,6 +120,22 @@ qla2100_intr_handler(int irq, void *dev_id)
+ 	return (IRQ_HANDLED);
  }
  
-+int
-+qla2x00_write_serdes_word(scsi_qla_host_t *vha, uint16_t addr, uint16_t data)
++bool
++qla2x00_check_reg_for_disconnect(scsi_qla_host_t *vha, uint32_t reg)
 +{
-+	int rval;
-+	mbx_cmd_t mc;
-+	mbx_cmd_t *mcp = &mc;
-+
-+	if (!IS_QLA2031(vha->hw))
-+		return QLA_FUNCTION_FAILED;
-+
-+	ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x1182,
-+	    "Entered %s.\n", __func__);
-+
-+	mcp->mb[0] = MBC_WRITE_SERDES;
-+	mcp->mb[1] = addr;
-+	mcp->mb[2] = data & 0xff;
-+	mcp->mb[3] = 0;
-+	mcp->out_mb = MBX_3|MBX_2|MBX_1|MBX_0;
-+	mcp->in_mb = MBX_0;
-+	mcp->tov = MBX_TOV_SECONDS;
-+	mcp->flags = 0;
-+	rval = qla2x00_mailbox_command(vha, mcp);
-+
-+	if (rval != QLA_SUCCESS) {
-+		ql_dbg(ql_dbg_mbx, vha, 0x1183,
-+		    "Failed=%x mb[0]=%x.\n", rval, mcp->mb[0]);
-+	} else {
-+		ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x1184,
-+		    "Done %s.\n", __func__);
-+	}
-+
-+	return rval;
-+}
-+
-+int
-+qla2x00_read_serdes_word(scsi_qla_host_t *vha, uint16_t addr, uint16_t *data)
-+{
-+	int rval;
-+	mbx_cmd_t mc;
-+	mbx_cmd_t *mcp = &mc;
-+
-+	if (!IS_QLA2031(vha->hw))
-+		return QLA_FUNCTION_FAILED;
-+
-+	ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x1185,
-+	    "Entered %s.\n", __func__);
-+
-+	mcp->mb[0] = MBC_READ_SERDES;
-+	mcp->mb[1] = addr;
-+	mcp->mb[3] = 0;
-+	mcp->out_mb = MBX_3|MBX_1|MBX_0;
-+	mcp->in_mb = MBX_1|MBX_0;
-+	mcp->tov = MBX_TOV_SECONDS;
-+	mcp->flags = 0;
-+	rval = qla2x00_mailbox_command(vha, mcp);
-+
-+	*data = mcp->mb[1] & 0xff;
-+
-+	if (rval != QLA_SUCCESS) {
-+		ql_dbg(ql_dbg_mbx, vha, 0x1186,
-+		    "Failed=%x mb[0]=%x.\n", rval, mcp->mb[0]);
-+	} else {
-+		ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x1187,
-+		    "Done %s.\n", __func__);
-+	}
-+
-+	return rval;
++	/* Check for PCI disconnection */
++	if (reg == 0xffffffff) {
++		/*
++		 * Schedule this on the default system workqueue so that all the
++		 * adapter workqueues and the DPC thread can be shutdown
++		 * cleanly.
++		 */
++		schedule_work(&vha->hw->board_disable);
++		return true;
++	} else
++		return false;
 +}
 +
  /**
-  * qla2x00_set_serdes_params() -
-  * @ha: HA context
+  * qla2300_intr_handler() - Process interrupts for the ISP23xx and ISP63xx.
+  * @irq:
+@@ -148,11 +174,14 @@ qla2300_intr_handler(int irq, void *dev_id)
+ 	vha = pci_get_drvdata(ha->pdev);
+ 	for (iter = 50; iter--; ) {
+ 		stat = RD_REG_DWORD(&reg->u.isp2300.host_status);
++		if (qla2x00_check_reg_for_disconnect(vha, stat))
++			break;
+ 		if (stat & HSR_RISC_PAUSED) {
+ 			if (unlikely(pci_channel_offline(ha->pdev)))
+ 				break;
+ 
+ 			hccr = RD_REG_WORD(&reg->hccr);
++
+ 			if (hccr & (BIT_15 | BIT_13 | BIT_11 | BIT_8))
+ 				ql_log(ql_log_warn, vha, 0x5026,
+ 				    "Parity error -- HCCR=%x, Dumping "
+@@ -2571,6 +2600,8 @@ qla24xx_intr_handler(int irq, void *dev_id)
+ 	vha = pci_get_drvdata(ha->pdev);
+ 	for (iter = 50; iter--; ) {
+ 		stat = RD_REG_DWORD(&reg->host_status);
++		if (qla2x00_check_reg_for_disconnect(vha, stat))
++			break;
+ 		if (stat & HSRX_RISC_PAUSED) {
+ 			if (unlikely(pci_channel_offline(ha->pdev)))
+ 				break;
+@@ -2640,6 +2671,7 @@ qla24xx_msix_rsp_q(int irq, void *dev_id)
+ 	struct device_reg_24xx __iomem *reg;
+ 	struct scsi_qla_host *vha;
+ 	unsigned long flags;
++	uint32_t stat = 0;
+ 
+ 	rsp = (struct rsp_que *) dev_id;
+ 	if (!rsp) {
+@@ -2653,11 +2685,19 @@ qla24xx_msix_rsp_q(int irq, void *dev_id)
+ 	spin_lock_irqsave(&ha->hardware_lock, flags);
+ 
+ 	vha = pci_get_drvdata(ha->pdev);
++	/*
++	 * Use host_status register to check to PCI disconnection before we
++	 * we process the response queue.
++	 */
++	stat = RD_REG_DWORD(&reg->host_status);
++	if (qla2x00_check_reg_for_disconnect(vha, stat))
++		goto out;
+ 	qla24xx_process_response_queue(vha, rsp);
+ 	if (!ha->flags.disable_msix_handshake) {
+ 		WRT_REG_DWORD(&reg->hccr, HCCRX_CLR_RISC_INT);
+ 		RD_REG_DWORD_RELAXED(&reg->hccr);
+ 	}
++out:
+ 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
+ 
+ 	return IRQ_HANDLED;
+@@ -2667,9 +2707,11 @@ static irqreturn_t
+ qla25xx_msix_rsp_q(int irq, void *dev_id)
+ {
+ 	struct qla_hw_data *ha;
++	scsi_qla_host_t *vha;
+ 	struct rsp_que *rsp;
+ 	struct device_reg_24xx __iomem *reg;
+ 	unsigned long flags;
++	uint32_t hccr = 0;
+ 
+ 	rsp = (struct rsp_que *) dev_id;
+ 	if (!rsp) {
+@@ -2678,17 +2720,21 @@ qla25xx_msix_rsp_q(int irq, void *dev_id)
+ 		return IRQ_NONE;
+ 	}
+ 	ha = rsp->hw;
++	vha = pci_get_drvdata(ha->pdev);
+ 
+ 	/* Clear the interrupt, if enabled, for this response queue */
+ 	if (!ha->flags.disable_msix_handshake) {
+ 		reg = &ha->iobase->isp24;
+ 		spin_lock_irqsave(&ha->hardware_lock, flags);
+ 		WRT_REG_DWORD(&reg->hccr, HCCRX_CLR_RISC_INT);
+-		RD_REG_DWORD_RELAXED(&reg->hccr);
++		hccr = RD_REG_DWORD_RELAXED(&reg->hccr);
+ 		spin_unlock_irqrestore(&ha->hardware_lock, flags);
+ 	}
++	if (qla2x00_check_reg_for_disconnect(vha, hccr))
++		goto out;
+ 	queue_work_on((int) (rsp->id - 1), ha->wq, &rsp->q_work);
+ 
++out:
+ 	return IRQ_HANDLED;
+ }
+ 
+@@ -2719,6 +2765,8 @@ qla24xx_msix_default(int irq, void *dev_id)
+ 	vha = pci_get_drvdata(ha->pdev);
+ 	do {
+ 		stat = RD_REG_DWORD(&reg->host_status);
++		if (qla2x00_check_reg_for_disconnect(vha, stat))
++			break;
+ 		if (stat & HSRX_RISC_PAUSED) {
+ 			if (unlikely(pci_channel_offline(ha->pdev)))
+ 				break;
+diff --git a/drivers/scsi/qla2xxx/qla_mr.c b/drivers/scsi/qla2xxx/qla_mr.c
+index ea03f85..4e418fc 100644
+--- a/drivers/scsi/qla2xxx/qla_mr.c
++++ b/drivers/scsi/qla2xxx/qla_mr.c
+@@ -3019,6 +3019,8 @@ qlafx00_intr_handler(int irq, void *dev_id)
+ 	vha = pci_get_drvdata(ha->pdev);
+ 	for (iter = 50; iter--; clr_intr = 0) {
+ 		stat = QLAFX00_RD_INTR_REG(ha);
++		if (qla2x00_check_reg_for_disconnect(vha, stat))
++			break;
+ 		if ((stat & QLAFX00_HST_INT_STS_BITS) == 0)
+ 			break;
+ 
+diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
+index 11ce53d..3da2372 100644
+--- a/drivers/scsi/qla2xxx/qla_nx.c
++++ b/drivers/scsi/qla2xxx/qla_nx.c
+@@ -2096,6 +2096,7 @@ qla82xx_msix_default(int irq, void *dev_id)
+ 	int status = 0;
+ 	unsigned long flags;
+ 	uint32_t stat = 0;
++	uint32_t host_int = 0;
+ 	uint16_t mb[4];
+ 
+ 	rsp = (struct rsp_que *) dev_id;
+@@ -2111,7 +2112,10 @@ qla82xx_msix_default(int irq, void *dev_id)
+ 	spin_lock_irqsave(&ha->hardware_lock, flags);
+ 	vha = pci_get_drvdata(ha->pdev);
+ 	do {
+-		if (RD_REG_DWORD(&reg->host_int)) {
++		host_int = RD_REG_DWORD(&reg->host_int);
++		if (qla2x00_check_reg_for_disconnect(vha, host_int))
++			break;
++		if (host_int) {
+ 			stat = RD_REG_DWORD(&reg->host_status);
+ 
+ 			switch (stat & 0xff) {
+@@ -2156,6 +2160,7 @@ qla82xx_msix_rsp_q(int irq, void *dev_id)
+ 	struct rsp_que *rsp;
+ 	struct device_reg_82xx __iomem *reg;
+ 	unsigned long flags;
++	uint32_t host_int = 0;
+ 
+ 	rsp = (struct rsp_que *) dev_id;
+ 	if (!rsp) {
+@@ -2168,8 +2173,12 @@ qla82xx_msix_rsp_q(int irq, void *dev_id)
+ 	reg = &ha->iobase->isp82;
+ 	spin_lock_irqsave(&ha->hardware_lock, flags);
+ 	vha = pci_get_drvdata(ha->pdev);
++	host_int = RD_REG_DWORD(&reg->host_int);
++	if (qla2x00_check_reg_for_disconnect(vha, host_int))
++		goto out;
+ 	qla24xx_process_response_queue(vha, rsp);
+ 	WRT_REG_DWORD(&reg->host_int, 0);
++out:
+ 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
+ 	return IRQ_HANDLED;
+ }
+@@ -2183,6 +2192,7 @@ qla82xx_poll(int irq, void *dev_id)
+ 	struct device_reg_82xx __iomem *reg;
+ 	int status = 0;
+ 	uint32_t stat;
++	uint32_t host_int = 0;
+ 	uint16_t mb[4];
+ 	unsigned long flags;
+ 
+@@ -2198,7 +2208,10 @@ qla82xx_poll(int irq, void *dev_id)
+ 	spin_lock_irqsave(&ha->hardware_lock, flags);
+ 	vha = pci_get_drvdata(ha->pdev);
+ 
+-	if (RD_REG_DWORD(&reg->host_int)) {
++	host_int = RD_REG_DWORD(&reg->host_int);
++	if (qla2x00_check_reg_for_disconnect(vha, host_int))
++		goto out;
++	if (host_int) {
+ 		stat = RD_REG_DWORD(&reg->host_status);
+ 		switch (stat & 0xff) {
+ 		case 0x1:
+@@ -2226,6 +2239,7 @@ qla82xx_poll(int irq, void *dev_id)
+ 		}
+ 	}
+ 	WRT_REG_DWORD(&reg->host_int, 0);
++out:
+ 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
+ }
+ 
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index e683008..9c5070e 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -2742,6 +2742,8 @@ que_init:
+ 	 */
+ 	qla2xxx_wake_dpc(base_vha);
+ 
++	INIT_WORK(&ha->board_disable, qla2x00_disable_board_on_pci_error);
++
+ 	if (IS_QLA8031(ha) || IS_MCTP_CAPABLE(ha)) {
+ 		sprintf(wq_name, "qla2xxx_%lu_dpc_lp_wq", base_vha->host_no);
+ 		ha->dpc_lp_wq = create_singlethread_workqueue(wq_name);
+@@ -4678,6 +4680,66 @@ exit:
+ 	return rval;
+ }
+ 
++void
++qla2x00_disable_board_on_pci_error(struct work_struct *work)
++{
++	struct qla_hw_data *ha = container_of(work, struct qla_hw_data,
++	    board_disable);
++	struct pci_dev *pdev = ha->pdev;
++	scsi_qla_host_t *base_vha = pci_get_drvdata(ha->pdev);
++
++	ql_log(ql_log_warn, base_vha, 0x015b,
++	    "Disabling adapter.\n");
++
++	set_bit(UNLOADING, &base_vha->dpc_flags);
++
++	qla2x00_delete_all_vps(ha, base_vha);
++
++	qla2x00_abort_all_cmds(base_vha, DID_NO_CONNECT << 16);
++
++	qla2x00_dfs_remove(base_vha);
++
++	qla84xx_put_chip(base_vha);
++
++	if (base_vha->timer_active)
++		qla2x00_stop_timer(base_vha);
++
++	base_vha->flags.online = 0;
++
++	qla2x00_destroy_deferred_work(ha);
++
++	/*
++	 * Do not try to stop beacon blink as it will issue a mailbox
++	 * command.
++	 */
++	qla2x00_free_sysfs_attr(base_vha, false);
++
++	fc_remove_host(base_vha->host);
++
++	scsi_remove_host(base_vha->host);
++
++	base_vha->flags.init_done = 0;
++	qla25xx_delete_queues(base_vha);
++	qla2x00_free_irqs(base_vha);
++	qla2x00_free_fcports(base_vha);
++	qla2x00_mem_free(ha);
++	qla82xx_md_free(base_vha);
++	qla2x00_free_queues(ha);
++
++	scsi_host_put(base_vha->host);
++
++	qla2x00_unmap_iobases(ha);
++
++	pci_release_selected_regions(ha->pdev, ha->bars);
++	kfree(ha);
++	ha = NULL;
++
++	pci_disable_pcie_error_reporting(pdev);
++	pci_disable_device(pdev);
++	pci_set_drvdata(pdev, NULL);
++
++}
++
+ /**************************************************************************
+ * qla2x00_do_dpc
+ *   This kernel thread is a task that is schedule by the interrupt handler
+@@ -5031,9 +5093,20 @@ qla2x00_timer(scsi_qla_host_t *vha)
+ 		return;
+ 	}
+ 
+-	/* Hardware read to raise pending EEH errors during mailbox waits. */
+-	if (!pci_channel_offline(ha->pdev))
++	/*
++	 * Hardware read to raise pending EEH errors during mailbox waits. If
++	 * the read returns -1 then disable the board.
++	 */
++	if (!pci_channel_offline(ha->pdev)) {
+ 		pci_read_config_word(ha->pdev, PCI_VENDOR_ID, &w);
++		if (w == 0xffff)
++			/*
++			 * Schedule this on the default system workqueue so that
++			 * all the adapter workqueues and the DPC thread can be
++			 * shutdown cleanly.
++			 */
++			schedule_work(&ha->board_disable);
++	}
+ 
+ 	/* Make sure qla82xx_watchdog is run only for physical port */
+ 	if (!vha->vp_idx && IS_P3P_TYPE(ha)) {
 -- 
 1.7.7
 
