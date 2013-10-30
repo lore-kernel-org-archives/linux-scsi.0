@@ -1,43 +1,102 @@
-From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: [PATCH 04/22] qla2xxx: Correctly set mailboxes for extended init control block.
-Date: Wed, 30 Oct 2013 03:38:11 -0400
-Message-ID: <1383118709-5569-5-git-send-email-saurav.kashyap@qlogic.com>
-References: <1383118709-5569-1-git-send-email-saurav.kashyap@qlogic.com>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCHv7 0/4] New EH command timeout handler
+Date: Wed, 30 Oct 2013 09:37:48 +0100
+Message-ID: <1383122272-93572-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [67.231.148.157] ([67.231.148.157]:31030 "EHLO
-	mx0a-0016ce01.pphosted.com" rhost-flags-FAIL-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753164Ab3J3IMF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Oct 2013 04:12:05 -0400
-In-Reply-To: <1383118709-5569-1-git-send-email-saurav.kashyap@qlogic.com>
+Received: from cantor2.suse.de ([195.135.220.15]:37891 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752750Ab3J3Ih7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Oct 2013 04:37:59 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jbottomley@parallels.com
-Cc: giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
+To: James Bottomley <jbottomley@parallels.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Ren Mingxin <renmx@cn.fujitsu.com>, Joern Engel <joern@logfs.org>, James Smart <james.smart@emulex.com>, Hannes Reinecke <hare@suse.de>
 
-From: Joe Carnuccio <joe.carnuccio@qlogic.com>
+Hi all,
 
-Signed-off-by: Joe Carnuccio <joe.carnuccio@qlogic.com>
-Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
----
- drivers/scsi/qla2xxx/qla_mbx.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+this patchset implements a new SCSI EH command timeout handler
+which will be sending command aborts inline without actually
+engaging SCSI EH.
+SCSI EH will only be invoked if command abort fails.
 
-diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index a9aae50..ccc30d4 100644
---- a/drivers/scsi/qla2xxx/qla_mbx.c
-+++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -1214,7 +1214,7 @@ qla2x00_init_firmware(scsi_qla_host_t *vha, uint16_t size)
- 	mcp->mb[6] = MSW(MSD(ha->init_cb_dma));
- 	mcp->mb[7] = LSW(MSD(ha->init_cb_dma));
- 	mcp->out_mb = MBX_7|MBX_6|MBX_3|MBX_2|MBX_1|MBX_0;
--	if ((IS_QLA81XX(ha) || IS_QLA83XX(ha)) && ha->ex_init_cb->ex_version) {
-+	if (ha->ex_init_cb && ha->ex_init_cb->ex_version) {
- 		mcp->mb[1] = BIT_0;
- 		mcp->mb[10] = MSW(ha->ex_init_cb_dma);
- 		mcp->mb[11] = LSW(ha->ex_init_cb_dma);
+In addition the commands will be returned directly
+if the command abort succeeded, cutting down recovery
+times dramatically.
+
+With the original SCSI EH I got:
+# time dd if=/dev/zero of=/dev/dm-2 bs=4k count=4k oflag=direct
+4096+0 records in
+4096+0 records out
+16777216 bytes (17 MB) copied, 142.652 s, 118 kB/s
+
+real	2m22.657s
+user	0m0.013s
+sys	0m0.145s
+
+With this patchset I got:
+# time dd if=/dev/zero of=/dev/dm-2 bs=4k count=4k oflag=direct
+4096+0 records in
+4096+0 records out
+16777216 bytes (17 MB) copied, 52.1579 s, 322 kB/s
+
+real	0m52.163s
+user	0m0.012s
+sys	0m0.145s
+
+Test was to disable RSCN on the target port, disable the
+target port, and then start the 'dd' command as indicated.
+
+Changes to the original version:
+- Use a private list in scsi_eh_abort_handler to avoid
+  list starvation (pointed out by Joern Engel)
+- Terminate command aborts when the first abort fails
+- Do not attempt command aborts if the host is already in recovery
+  or if the device is removed.
+- Flush abort workqueue if the device is removed.
+
+Changes to v2:
+- Removed eh_entry initialisation
+- Convert to per-command workqueue
+
+Changes to v3:
+- Use delayed_work
+- Enable new eh timeout handler for virtio, SAS, and FC
+- Modify logging messages to include scmd pointer
+
+Changes to v4:
+- Remove stubs when enabling new eh timeout handler
+  for other drivers
+
+Changes to v5:
+- Enable new eh timeout handler per default
+- Update documentation
+
+Changes to v6:
+- Include changes from James Bottomley for erratic device
+  offline patch
+- Rearrange patches
+- Update SCSI midlayer documentation
+
+Hannes Reinecke (3):
+  blk-timeout: add BLK_EH_SCHEDULED return code
+  scsi: improved eh timeout handler
+  scsi: Update documentation
+
+James Bottomley (1):
+  scsi: Fix erratic device offline during EH
+
+ Documentation/scsi/scsi_eh.txt          |  69 +++++++------
+ Documentation/scsi/scsi_mid_low_api.txt |   9 +-
+ drivers/scsi/scsi.c                     |   9 +-
+ drivers/scsi/scsi_error.c               | 176 ++++++++++++++++++++++++++++----
+ drivers/scsi/scsi_priv.h                |   2 +
+ drivers/scsi/sd.c                       |  26 +++--
+ include/linux/blkdev.h                  |   1 +
+ include/scsi/scsi_cmnd.h                |   2 +
+ include/scsi/scsi_driver.h              |   2 +-
+ include/scsi/scsi_host.h                |   5 +
+ 10 files changed, 228 insertions(+), 73 deletions(-)
+
 -- 
-1.7.7
+1.8.1.4
 
