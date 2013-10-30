@@ -1,67 +1,123 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] [SCSI] hpsa: fix return value check in
- start_controller_lockup_detector()
-Date: Tue, 29 Oct 2013 14:52:38 -0700
-Message-ID: <1383083558.2071.38.camel@dabdike.int.hansenpartnership.com>
-References: <CAPgLHd8NoumfDWXN7fqDucWJ7Nr0KppW=24sCJpn9ynGOzLhcQ@mail.gmail.com>
-	 <20131029160927.GB31390@beardog.cce.hp.com>
+From: Mike Christie <MChristie@fusionio.com>
+Subject: Re: [PATCH 1/3] SCSI/libiscsi: Restructure iscsi_tcp r2t response
+ logic
+Date: Wed, 30 Oct 2013 01:46:06 +0000
+Message-ID: <14304D0E-704A-4FDA-9275-32A1D265DA24@fusionio.com>
+References: <1382880206-2789-1-git-send-email-ogerlitz@mellanox.com>,<1382880206-2789-2-git-send-email-ogerlitz@mellanox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:35711 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751645Ab3J2Vwk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Oct 2013 17:52:40 -0400
-In-Reply-To: <20131029160927.GB31390@beardog.cce.hp.com>
+Received: from dkim2.fusionio.com ([66.114.96.54]:55077 "EHLO
+	dkim2.fusionio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752523Ab3J3BqK convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Oct 2013 21:46:10 -0400
+Received: from mx1.fusionio.com (unknown [10.101.1.160])
+	by dkim2.fusionio.com (Postfix) with ESMTP id F0C049A06BD
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Oct 2013 19:46:09 -0600 (MDT)
+In-Reply-To: <1382880206-2789-2-git-send-email-ogerlitz@mellanox.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: scameron@beardog.cce.hp.com
-Cc: Wei Yongjun <weiyj.lk@gmail.com>, yongjun_wei@trendmicro.com.cn, iss_storagedev@hp.com, linux-scsi@vger.kernel.org
+Cc: "JBottomley@parallels.com" <JBottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "shlomop@mellanox.com" <shlomop@mellanox.com>, Or Gerlitz <ogerlitz@mellanox.com>
 
-On Tue, 2013-10-29 at 11:09 -0500, scameron@beardog.cce.hp.com wrote:
-> On Tue, Oct 29, 2013 at 02:43:56PM +0800, Wei Yongjun wrote:
-> > From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
-> > 
-> > In case of error, the function kthread_run() returns ERR_PTR()
-> > and never returns NULL. The NULL test in the return value check
-> > should be replaced with IS_ERR().
-> > 
-> > Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
-> > ---
-> >  drivers/scsi/hpsa.c | 3 ++-
-> >  1 file changed, 2 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> > index 891c86b..f413b14 100644
-> > --- a/drivers/scsi/hpsa.c
-> > +++ b/drivers/scsi/hpsa.c
-> > @@ -4757,7 +4757,8 @@ static void start_controller_lockup_detector(struct ctlr_info *h)
-> >  			kthread_run(detect_controller_lockup_thread,
-> >  						NULL, HPSA);
-> >  	}
-> > -	if (!hpsa_lockup_detector) {
-> > +	if (IS_ERR(hpsa_lockup_detector)) {
-> > +		hpsa_lockup_detector = NULL;
-> >  		dev_warn(&h->pdev->dev,
-> >  			"Could not start lockup detector thread\n");
-> >  		return;
+Patches 1-3 look ok to me.
+
+Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+
+
+
+> On Oct 27, 2013, at 9:23 AM, "Or Gerlitz" <ogerlitz@mellanox.com> wrote:
 > 
-> Ack.
-
-Hmm, this whole lockup thread start/stop thing is horribly racy with
-hotplug (and bind and unbind).
-
-Firstly, why do you need an actual thread, why not just use a workqueue?
-That way you don't need a list or a lock, you can just schedule work for
-each instance?  since they don't interfere, no global list and no lock.
-
-If you insist on a thread, it should probably start at module insertion
-and be shut down at module removal, so no races.  You can have it sleep
-forever on list_empty(&hpsa_ctlr_list) and wake it when you add a
-controller.
-
-James
-
-
+> From: Shlomo Pongratz <shlomop@mellanox.com>
+> 
+> Restructure the iscsi_tcp_r2t_rsp routine in order to avoid allocating
+> r2t from r2tpool.queue and returning it back in case the parameters
+> rhdr->data_length and or rhdr->data_offset prohibit the requing.
+> 
+> Since the values of these parameters are known prior to the allocation,
+> we can pre-check and thus avoid futile allocations.
+> 
+> Signed-off-by: Shlomo Pongratz <shlomop@mellanox.com>
+> Signed-off-by: Or Gerlitz <ogerlitz@mellanox.com>
+> ---
+> drivers/scsi/libiscsi_tcp.c |   43 ++++++++++++++++++++++---------------------
+> 1 files changed, 22 insertions(+), 21 deletions(-)
+> 
+> diff --git a/drivers/scsi/libiscsi_tcp.c b/drivers/scsi/libiscsi_tcp.c
+> index 1d58d53..7f59073 100644
+> --- a/drivers/scsi/libiscsi_tcp.c
+> +++ b/drivers/scsi/libiscsi_tcp.c
+> @@ -529,6 +529,8 @@ static int iscsi_tcp_r2t_rsp(struct iscsi_conn *conn, struct iscsi_task *task)
+>    struct iscsi_r2t_rsp *rhdr = (struct iscsi_r2t_rsp *)tcp_conn->in.hdr;
+>    struct iscsi_r2t_info *r2t;
+>    int r2tsn = be32_to_cpu(rhdr->r2tsn);
+> +    u32 data_length;
+> +    u32 data_offset;
+>    int rc;
+> 
+>    if (tcp_conn->in.datalen) {
+> @@ -554,40 +556,39 @@ static int iscsi_tcp_r2t_rsp(struct iscsi_conn *conn, struct iscsi_task *task)
+>        return 0;
+>    }
+> 
+> -    rc = kfifo_out(&tcp_task->r2tpool.queue, (void*)&r2t, sizeof(void*));
+> -    if (!rc) {
+> -        iscsi_conn_printk(KERN_ERR, conn, "Could not allocate R2T. "
+> -                  "Target has sent more R2Ts than it "
+> -                  "negotiated for or driver has leaked.\n");
+> -        return ISCSI_ERR_PROTO;
+> -    }
+> -
+> -    r2t->exp_statsn = rhdr->statsn;
+> -    r2t->data_length = be32_to_cpu(rhdr->data_length);
+> -    if (r2t->data_length == 0) {
+> +    data_length = be32_to_cpu(rhdr->data_length);
+> +    if (data_length == 0) {
+>        iscsi_conn_printk(KERN_ERR, conn,
+>                  "invalid R2T with zero data len\n");
+> -        kfifo_in(&tcp_task->r2tpool.queue, (void*)&r2t,
+> -                sizeof(void*));
+>        return ISCSI_ERR_DATALEN;
+>    }
+> 
+> -    if (r2t->data_length > session->max_burst)
+> +    if (data_length > session->max_burst)
+>        ISCSI_DBG_TCP(conn, "invalid R2T with data len %u and max "
+>                  "burst %u. Attempting to execute request.\n",
+> -                  r2t->data_length, session->max_burst);
+> +                  data_length, session->max_burst);
+> 
+> -    r2t->data_offset = be32_to_cpu(rhdr->data_offset);
+> -    if (r2t->data_offset + r2t->data_length > scsi_out(task->sc)->length) {
+> +    data_offset = be32_to_cpu(rhdr->data_offset);
+> +    if (data_offset + data_length > scsi_out(task->sc)->length) {
+>        iscsi_conn_printk(KERN_ERR, conn,
+>                  "invalid R2T with data len %u at offset %u "
+> -                  "and total length %d\n", r2t->data_length,
+> -                  r2t->data_offset, scsi_out(task->sc)->length);
+> -        kfifo_in(&tcp_task->r2tpool.queue, (void*)&r2t,
+> -                sizeof(void*));
+> +                  "and total length %d\n", data_length,
+> +                  data_offset, scsi_out(task->sc)->length);
+>        return ISCSI_ERR_DATALEN;
+>    }
+> 
+> +    rc = kfifo_out(&tcp_task->r2tpool.queue, (void*)&r2t, sizeof(void*));
+> +    if (!rc) {
+> +        iscsi_conn_printk(KERN_ERR, conn, "Could not allocate R2T. "
+> +                  "Target has sent more R2Ts than it "
+> +                  "negotiated for or driver has leaked.\n");
+> +        return ISCSI_ERR_PROTO;
+> +    }
+> +
+> +    r2t->exp_statsn = rhdr->statsn;
+> +    r2t->data_length = data_length;
+> +    r2t->data_offset = data_offset;
+> +
+>    r2t->ttt = rhdr->ttt; /* no flip */
+>    r2t->datasn = 0;
+>    r2t->sent = 0;
+> -- 
+> 1.7.1
+> 
