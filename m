@@ -1,55 +1,58 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH 29/51] DMA-API: ata: pata_octeon_cf: convert to use
-	dma_coerce_mask_and_coherent()
-Date: Wed, 30 Oct 2013 20:08:54 +0100
-Message-ID: <CAMuHMdWqAL6MN5VJrpAPC1fq3QtRWZ3UUMG3+6W5vEKSEm5N9g@mail.gmail.com>
-References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
-	<E1VMmAk-0007iq-IU@rmk-PC.arm.linux.org.uk>
+From: Joseph Salisbury <joseph.salisbury@canonical.com>
+Subject: Re: Subject:  [v3.8][v3.11][Regression] [SCSI] sd: Update WRITE SAME
+ heuristics
+Date: Wed, 30 Oct 2013 15:28:53 -0400
+Message-ID: <52715DF5.9040100@canonical.com>
+References: <52700AD2.6000703@canonical.com> <5270108E.5040401@itwm.fraunhofer.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <dri-devel-bounces@lists.freedesktop.org>
-In-Reply-To: <E1VMmAk-0007iq-IU@rmk-PC.arm.linux.org.uk>
-List-Unsubscribe: <http://lists.freedesktop.org/mailman/options/dri-devel>,
-	<mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <http://lists.freedesktop.org/archives/dri-devel>
-List-Post: <mailto:dri-devel@lists.freedesktop.org>
-List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <http://lists.freedesktop.org/mailman/listinfo/dri-devel>,
-	<mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
-Sender: dri-devel-bounces@lists.freedesktop.org
-Errors-To: dri-devel-bounces@lists.freedesktop.org
-To: Russell King <rmk+kernel@arm.linux.org.uk>
-Cc: alsa-devel@alsa-project.org, linux-doc@vger.kernel.org, Linux MMC List <linux-mmc@vger.kernel.org>, Linux Fbdev development list <linux-fbdev@vger.kernel.org>, linux-nvme@lists.infradead.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, driverdevel <devel@driverdev.osuosl.org>, linux-samsung-soc@vger.kernel.org, scsi <linux-scsi@vger.kernel.org>, e1000-devel@lists.sourceforge.net, Linux-Next <linux-next@vger.kernel.org>, b43-dev@lists.infradead.org, Linux Media Mailing List <linux-media@vger.kernel.org>, devicetree@vger.kernel.org, DRI Development <dri-devel@lists.freedesktop.org>, linux-tegra@vger.kernel.org, "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Solarflare linux maintainers <linux-net-drivers@solarflare.com>, "netdev@vger.kernel.org" <netdev@vger.kernel.o>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <5270108E.5040401@itwm.fraunhofer.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: hpa@zytor.com, JBottomley@Parallels.com, LKML <linux-kernel@vger.kernel.org>, Kamal Mostafa <kamal.mostafa@canonical.com>, linux-scsi@vger.kernel.org, Luis Henriques <luis.henriques@canonical.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Sep 19, 2013 at 11:54 PM, Russell King
-<rmk+kernel@arm.linux.org.uk> wrote:
-> diff --git a/drivers/ata/pata_octeon_cf.c b/drivers/ata/pata_octeon_cf.c
-> index c51bbb9..6231d43 100644
-> --- a/drivers/ata/pata_octeon_cf.c
-> +++ b/drivers/ata/pata_octeon_cf.c
-> @@ -1014,8 +1014,9 @@ static int octeon_cf_probe(struct platform_device *pdev)
->         }
->         cf_port->c0 = ap->ioaddr.ctl_addr;
+On 10/29/2013 03:46 PM, Bernd Schubert wrote:
+> Hello Joseph,
 >
-> -       pdev->dev.coherent_dma_mask = DMA_BIT_MASK(64);
-> -       pdev->dev.dma_mask = &pdev->dev.coherent_dma_mask;
-> +       rv = dma_coerce_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64));
-> +       if (rv)
-> +               return ret;
+> On 10/29/2013 08:21 PM, Joseph Salisbury wrote:
+>> Hi Martin,
+>>
+>> A bug was opened against the Ubuntu kernel[0].  After a kernel bisect,
+>> it was found that reverting the following commit resolved this bug:
+>>
+>> commit 66c28f97120e8a621afd5aa7a31c4b85c547d33d
+>> Author: Martin K. Petersen <martin.petersen@oracle.com>
+>> Date:   Thu Jun 6 22:15:55 2013 -0400
+>>
+>>      [SCSI] sd: Update WRITE SAME heuristics
+>>
+>>
+>> The regression was introduced as of v3.11-rc1, but it also made it's way
+>> into the stable trees.
+>>
+>> I see that you are the author of this patch, so I wanted to run this by
+>> you.  I was thinking of requesting a revert for v3.12, but I wanted to
+>> get your feedback first.
+>>
+>
+> James queued this up for 3.13
+>
+>> http://git.kernel.org/cgit/linux/kernel/git/jejb/scsi.git/commit/?id=735e39e680256a13e7be3492acfb4d9721287a42
+>>
+>
+> Maybe we should try to convince James to take it into 3.12?
+>
+>
+> Cheers,
+> Bernd
+Hi Bernd,
 
-return rv;
+The bug reporter confirms that your patch fixes the bug.  Any chance
+this patch can make it into 3.12?
 
-http://kisskb.ellerman.id.au/kisskb/buildresult/9959184/
+Thanks,
 
-Gr{oetje,eeting}s,
-
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+Joe
