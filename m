@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 2/4] blk-timeout: add BLK_EH_SCHEDULED return code
-Date: Wed, 30 Oct 2013 09:37:50 +0100
-Message-ID: <1383122272-93572-3-git-send-email-hare@suse.de>
+Subject: [PATCH 1/4] scsi: Fix erratic device offline during EH
+Date: Wed, 30 Oct 2013 09:37:49 +0100
+Message-ID: <1383122272-93572-2-git-send-email-hare@suse.de>
 References: <1383122272-93572-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:37892 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:37895 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752829Ab3J3Ih7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1753293Ab3J3Ih7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Wed, 30 Oct 2013 04:37:59 -0400
 In-Reply-To: <1383122272-93572-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,42 +14,168 @@ List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Ren Mingxin <renmx@cn.fujitsu.com>, Joern Engel <joern@logfs.org>, James Smart <james.smart@emulex.com>, Hannes Reinecke <hare@suse.de>
 
-Add a 'BLK_EH_SCHEDULED' return code for blk-timeout to indicate
-that a delayed error recovery has been initiated.
+From: James Bottomley <jbottomley@parallels.com>
+
+Commit 18a4d0a22ed6c54b67af7718c305cd010f09ddf8
+(Handle disk devices which can not process medium access commands)
+was introduced to offline any device which cannot process medium
+access commands.
+However, commit 3eef6257de48ff84a5d98ca533685df8a3beaeb8
+(Reduce error recovery time by reducing use of TURs) reduced
+the number of TURs by sending it only on the first failing
+command, which might or might not be a medium access command.
+So in combination this results in an erratic device offlining
+during EH; if the command where the TUR was sent upon happens
+to be a medium access command the device will be set offline,
+if not everything proceeds as normal.
+
+This patch moves the check to the final test, eliminating
+this problem.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: James Bottomley <jbottomley@parallels.com>
 ---
- drivers/scsi/scsi_error.c | 4 ++++
- include/linux/blkdev.h    | 1 +
- 2 files changed, 5 insertions(+)
+ drivers/scsi/scsi_error.c  | 26 +++++++++++++++++---------
+ drivers/scsi/sd.c          | 26 ++++++++++++--------------
+ include/scsi/scsi_driver.h |  2 +-
+ 3 files changed, 30 insertions(+), 24 deletions(-)
 
 diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 67c0014..af51a9c 100644
+index e8bee9f..67c0014 100644
 --- a/drivers/scsi/scsi_error.c
 +++ b/drivers/scsi/scsi_error.c
-@@ -161,6 +161,10 @@ enum blk_eh_timer_return scsi_times_out(struct request *req)
- 	else if (host->hostt->eh_timed_out)
- 		rtn = host->hostt->eh_timed_out(scmd);
+@@ -941,12 +941,6 @@ retry:
  
-+	/* Check for asynchronous command aborts */
-+	if (rtn == BLK_EH_SCHEDULED)
-+		return BLK_EH_NOT_HANDLED;
+ 	scsi_eh_restore_cmnd(scmd, &ses);
+ 
+-	if (scmd->request->cmd_type != REQ_TYPE_BLOCK_PC) {
+-		struct scsi_driver *sdrv = scsi_cmd_to_driver(scmd);
+-		if (sdrv->eh_action)
+-			rtn = sdrv->eh_action(scmd, cmnd, cmnd_size, rtn);
+-	}
+-
+ 	return rtn;
+ }
+ 
+@@ -964,6 +958,16 @@ static int scsi_request_sense(struct scsi_cmnd *scmd)
+ 	return scsi_send_eh_cmnd(scmd, NULL, 0, scmd->device->eh_timeout, ~0);
+ }
+ 
++static int scsi_eh_action(struct scsi_cmnd *scmd, int rtn)
++{
++	if (scmd->request->cmd_type != REQ_TYPE_BLOCK_PC) {
++		struct scsi_driver *sdrv = scsi_cmd_to_driver(scmd);
++		if (sdrv->eh_action)
++			rtn = sdrv->eh_action(scmd, rtn);
++	}
++	return rtn;
++}
 +
- 	scmd->result |= DID_TIME_OUT << 16;
+ /**
+  * scsi_eh_finish_cmd - Handle a cmd that eh is finished with.
+  * @scmd:	Original SCSI cmd that eh has finished.
+@@ -1142,7 +1146,9 @@ static int scsi_eh_test_devices(struct list_head *cmd_list,
  
- 	if (unlikely(rtn == BLK_EH_NOT_HANDLED &&
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 0e6f765..afec57c 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -238,6 +238,7 @@ enum blk_eh_timer_return {
- 	BLK_EH_NOT_HANDLED,
- 	BLK_EH_HANDLED,
- 	BLK_EH_RESET_TIMER,
-+	BLK_EH_SCHEDULED,
+ 		list_for_each_entry_safe(scmd, next, cmd_list, eh_entry)
+ 			if (scmd->device == sdev) {
+-				if (finish_cmds)
++				if (finish_cmds &&
++				    (try_stu ||
++				     scsi_eh_action(scmd, SUCCESS) == SUCCESS))
+ 					scsi_eh_finish_cmd(scmd, done_q);
+ 				else
+ 					list_move_tail(&scmd->eh_entry, work_q);
+@@ -1283,7 +1289,8 @@ static int scsi_eh_stu(struct Scsi_Host *shost,
+ 			    !scsi_eh_tur(stu_scmd)) {
+ 				list_for_each_entry_safe(scmd, next,
+ 							  work_q, eh_entry) {
+-					if (scmd->device == sdev)
++					if (scmd->device == sdev &&
++					    scsi_eh_action(scmd, SUCCESS) == SUCCESS)
+ 						scsi_eh_finish_cmd(scmd, done_q);
+ 				}
+ 			}
+@@ -1350,7 +1357,8 @@ static int scsi_eh_bus_device_reset(struct Scsi_Host *shost,
+ 			    !scsi_eh_tur(bdr_scmd)) {
+ 				list_for_each_entry_safe(scmd, next,
+ 							 work_q, eh_entry) {
+-					if (scmd->device == sdev)
++					if (scmd->device == sdev &&
++					    scsi_eh_action(scmd, rtn) != FAILED)
+ 						scsi_eh_finish_cmd(scmd,
+ 								   done_q);
+ 				}
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index fd874b8..1929838 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -110,7 +110,7 @@ static int sd_suspend_runtime(struct device *);
+ static int sd_resume(struct device *);
+ static void sd_rescan(struct device *);
+ static int sd_done(struct scsi_cmnd *);
+-static int sd_eh_action(struct scsi_cmnd *, unsigned char *, int, int);
++static int sd_eh_action(struct scsi_cmnd *, int);
+ static void sd_read_capacity(struct scsi_disk *sdkp, unsigned char *buffer);
+ static void scsi_disk_release(struct device *cdev);
+ static void sd_print_sense_hdr(struct scsi_disk *, struct scsi_sense_hdr *);
+@@ -1551,23 +1551,23 @@ static const struct block_device_operations sd_fops = {
+ /**
+  *	sd_eh_action - error handling callback
+  *	@scmd:		sd-issued command that has failed
+- *	@eh_cmnd:	The command that was sent during error handling
+- *	@eh_cmnd_len:	Length of eh_cmnd in bytes
+  *	@eh_disp:	The recovery disposition suggested by the midlayer
+  *
+- *	This function is called by the SCSI midlayer upon completion of
+- *	an error handling command (TEST UNIT READY, START STOP UNIT,
+- *	etc.) The command sent to the device by the error handler is
+- *	stored in eh_cmnd. The result of sending the eh command is
+- *	passed in eh_disp.
++ *	This function is called by the SCSI midlayer upon completion of an
++ *	error test command (currently TEST UNIT READY). The result of sending
++ *	the eh command is passed in eh_disp.  We're looking for devices that
++ *	fail medium access commands but are OK with non access commands like
++ *	test unit ready (so wrongly see the device as having a successful
++ *	recovery)
+  **/
+-static int sd_eh_action(struct scsi_cmnd *scmd, unsigned char *eh_cmnd,
+-			int eh_cmnd_len, int eh_disp)
++static int sd_eh_action(struct scsi_cmnd *scmd, int eh_disp)
+ {
+ 	struct scsi_disk *sdkp = scsi_disk(scmd->request->rq_disk);
+ 
+ 	if (!scsi_device_online(scmd->device) ||
+-	    !scsi_medium_access_command(scmd))
++	    !scsi_medium_access_command(scmd) ||
++	    host_byte(scmd->result) != DID_TIME_OUT ||
++	    eh_disp != SUCCESS)
+ 		return eh_disp;
+ 
+ 	/*
+@@ -1577,9 +1577,7 @@ static int sd_eh_action(struct scsi_cmnd *scmd, unsigned char *eh_cmnd,
+ 	 * process of recovering or has it suffered an internal failure
+ 	 * that prevents access to the storage medium.
+ 	 */
+-	if (host_byte(scmd->result) == DID_TIME_OUT && eh_disp == SUCCESS &&
+-	    eh_cmnd_len && eh_cmnd[0] == TEST_UNIT_READY)
+-		sdkp->medium_access_timed_out++;
++	sdkp->medium_access_timed_out++;
+ 
+ 	/*
+ 	 * If the device keeps failing read/write commands but TEST UNIT
+diff --git a/include/scsi/scsi_driver.h b/include/scsi/scsi_driver.h
+index d443aa0..20fdfc2 100644
+--- a/include/scsi/scsi_driver.h
++++ b/include/scsi/scsi_driver.h
+@@ -16,7 +16,7 @@ struct scsi_driver {
+ 
+ 	void (*rescan)(struct device *);
+ 	int (*done)(struct scsi_cmnd *);
+-	int (*eh_action)(struct scsi_cmnd *, unsigned char *, int, int);
++	int (*eh_action)(struct scsi_cmnd *, int);
  };
- 
- typedef enum blk_eh_timer_return (rq_timed_out_fn)(struct request *);
+ #define to_scsi_driver(drv) \
+ 	container_of((drv), struct scsi_driver, gendrv)
 -- 
 1.8.1.4
 
