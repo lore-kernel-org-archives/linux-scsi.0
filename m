@@ -1,14 +1,14 @@
 From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: [PATCH 15/22] qla2xxx: Add changes to obtain ISPFX00 adapters product information in accordance with firmware update.
-Date: Wed, 30 Oct 2013 03:38:22 -0400
-Message-ID: <1383118709-5569-16-git-send-email-saurav.kashyap@qlogic.com>
+Subject: [PATCH 17/22] qla2xxx: Use scnprintf() instead of snprintf() in the sysfs handlers.
+Date: Wed, 30 Oct 2013 03:38:24 -0400
+Message-ID: <1383118709-5569-18-git-send-email-saurav.kashyap@qlogic.com>
 References: <1383118709-5569-1-git-send-email-saurav.kashyap@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:58658 "EHLO
+Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:13651 "EHLO
 	mx0a-0016ce01.pphosted.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752371Ab3J3IJw (ORCPT
+	by vger.kernel.org with ESMTP id S1752515Ab3J3IJw (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Wed, 30 Oct 2013 04:09:52 -0400
 In-Reply-To: <1383118709-5569-1-git-send-email-saurav.kashyap@qlogic.com>
@@ -17,102 +17,382 @@ List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Armen Baloyan <armen.baloyan@qlogic.com>
+From: Sawan Chandak <sawan.chandak@qlogic.com>
 
-Signed-off-by: Armen Baloyan <armen.baloyan@qlogic.com>
+Signed-off-by: Sawan Chandak <sawan.chandak@qlogic.com>
 Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_attr.c |    4 ----
- drivers/scsi/qla2xxx/qla_dbg.c  |    1 +
- drivers/scsi/qla2xxx/qla_mr.c   |    4 ++--
- drivers/scsi/qla2xxx/qla_mr.h   |    5 +++--
- drivers/scsi/qla2xxx/qla_os.c   |    8 ++------
- 5 files changed, 8 insertions(+), 14 deletions(-)
+ drivers/scsi/qla2xxx/qla_attr.c |  104 +++++++++++++++++++-------------------
+ 1 files changed, 52 insertions(+), 52 deletions(-)
 
 diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
-index 2a14df8..b8c15ed 100644
+index b8c15ed..570c7fc 100644
 --- a/drivers/scsi/qla2xxx/qla_attr.c
 +++ b/drivers/scsi/qla2xxx/qla_attr.c
-@@ -956,10 +956,6 @@ qla2x00_model_name_show(struct device *dev, struct device_attribute *attr,
+@@ -890,7 +890,7 @@ static ssize_t
+ qla2x00_drvr_version_show(struct device *dev,
+ 			  struct device_attribute *attr, char *buf)
+ {
+-	return snprintf(buf, PAGE_SIZE, "%s\n", qla2x00_version_str);
++	return scnprintf(buf, PAGE_SIZE, "%s\n", qla2x00_version_str);
+ }
+ 
+ static ssize_t
+@@ -901,7 +901,7 @@ qla2x00_fw_version_show(struct device *dev,
+ 	struct qla_hw_data *ha = vha->hw;
+ 	char fw_str[128];
+ 
+-	return snprintf(buf, PAGE_SIZE, "%s\n",
++	return scnprintf(buf, PAGE_SIZE, "%s\n",
+ 	    ha->isp_ops->fw_version_str(vha, fw_str));
+ }
+ 
+@@ -914,7 +914,7 @@ qla2x00_serial_num_show(struct device *dev, struct device_attribute *attr,
+ 	uint32_t sn;
+ 
+ 	if (IS_QLAFX00(vha->hw)) {
+-		return snprintf(buf, PAGE_SIZE, "%s\n",
++		return scnprintf(buf, PAGE_SIZE, "%s\n",
+ 		    vha->hw->mr.serial_num);
+ 	} else if (IS_FWI2_CAPABLE(ha)) {
+ 		qla2xxx_get_vpd_field(vha, "SN", buf, PAGE_SIZE - 1);
+@@ -922,7 +922,7 @@ qla2x00_serial_num_show(struct device *dev, struct device_attribute *attr,
+ 	}
+ 
+ 	sn = ((ha->serial0 & 0x1f) << 16) | (ha->serial2 << 8) | ha->serial1;
+-	return snprintf(buf, PAGE_SIZE, "%c%05d\n", 'A' + sn / 100000,
++	return scnprintf(buf, PAGE_SIZE, "%c%05d\n", 'A' + sn / 100000,
+ 	    sn % 100000);
+ }
+ 
+@@ -931,7 +931,7 @@ qla2x00_isp_name_show(struct device *dev, struct device_attribute *attr,
+ 		      char *buf)
+ {
+ 	scsi_qla_host_t *vha = shost_priv(class_to_shost(dev));
+-	return snprintf(buf, PAGE_SIZE, "ISP%04X\n", vha->hw->pdev->device);
++	return scnprintf(buf, PAGE_SIZE, "ISP%04X\n", vha->hw->pdev->device);
+ }
+ 
+ static ssize_t
+@@ -942,10 +942,10 @@ qla2x00_isp_id_show(struct device *dev, struct device_attribute *attr,
+ 	struct qla_hw_data *ha = vha->hw;
+ 
+ 	if (IS_QLAFX00(vha->hw))
+-		return snprintf(buf, PAGE_SIZE, "%s\n",
++		return scnprintf(buf, PAGE_SIZE, "%s\n",
+ 		    vha->hw->mr.hw_version);
+ 
+-	return snprintf(buf, PAGE_SIZE, "%04x %04x %04x %04x\n",
++	return scnprintf(buf, PAGE_SIZE, "%04x %04x %04x %04x\n",
+ 	    ha->product_id[0], ha->product_id[1], ha->product_id[2],
+ 	    ha->product_id[3]);
+ }
+@@ -956,7 +956,7 @@ qla2x00_model_name_show(struct device *dev, struct device_attribute *attr,
  {
  	scsi_qla_host_t *vha = shost_priv(class_to_shost(dev));
  
--	if (IS_QLAFX00(vha->hw))
--		return snprintf(buf, PAGE_SIZE, "%s\n",
--		    vha->hw->mr.product_name);
--
- 	return snprintf(buf, PAGE_SIZE, "%s\n", vha->hw->model_number);
+-	return snprintf(buf, PAGE_SIZE, "%s\n", vha->hw->model_number);
++	return scnprintf(buf, PAGE_SIZE, "%s\n", vha->hw->model_number);
  }
  
-diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
-index 9cd767c..f6103f5 100644
---- a/drivers/scsi/qla2xxx/qla_dbg.c
-+++ b/drivers/scsi/qla2xxx/qla_dbg.c
-@@ -12,6 +12,7 @@
-  * |             Level            |   Last Value Used  |     Holes	|
-  * ----------------------------------------------------------------------
-  * | Module Init and Probe        |       0x015b       | 0x4b,0xba,0xfa |
-+ * |                              |                    | 0x0x015a	|
-  * | Mailbox commands             |       0x1187       | 0x111a-0x111b  |
-  * |                              |                    | 0x1155-0x1158  |
-  * |                              |                    | 0x1018-0x1019  |
-diff --git a/drivers/scsi/qla2xxx/qla_mr.c b/drivers/scsi/qla2xxx/qla_mr.c
-index b396c3b..e38965e 100644
---- a/drivers/scsi/qla2xxx/qla_mr.c
-+++ b/drivers/scsi/qla2xxx/qla_mr.c
-@@ -1969,8 +1969,8 @@ qlafx00_fx_disc(scsi_qla_host_t *vha, fc_port_t *fcport, uint16_t fx_type)
- 	if (fx_type == FXDISC_GET_CONFIG_INFO) {
- 		struct config_info_data *pinfo =
- 		    (struct config_info_data *) fdisc->u.fxiocb.rsp_addr;
--		memcpy(&vha->hw->mr.product_name, pinfo->product_name,
--		    sizeof(vha->hw->mr.product_name));
-+		strcpy(vha->hw->model_number, pinfo->model_num);
-+		strcpy(vha->hw->model_desc, pinfo->model_description);
- 		memcpy(&vha->hw->mr.symbolic_name, pinfo->symbolic_name,
- 		    sizeof(vha->hw->mr.symbolic_name));
- 		memcpy(&vha->hw->mr.serial_num, pinfo->serial_num,
-diff --git a/drivers/scsi/qla2xxx/qla_mr.h b/drivers/scsi/qla2xxx/qla_mr.h
-index c8b8acd..1416e5e 100644
---- a/drivers/scsi/qla2xxx/qla_mr.h
-+++ b/drivers/scsi/qla2xxx/qla_mr.h
-@@ -304,7 +304,9 @@ struct register_host_info {
- #define QLAFX00_TGT_NODE_LIST_SIZE (sizeof(uint32_t) * 32)
+ static ssize_t
+@@ -964,7 +964,7 @@ qla2x00_model_desc_show(struct device *dev, struct device_attribute *attr,
+ 			char *buf)
+ {
+ 	scsi_qla_host_t *vha = shost_priv(class_to_shost(dev));
+-	return snprintf(buf, PAGE_SIZE, "%s\n",
++	return scnprintf(buf, PAGE_SIZE, "%s\n",
+ 	    vha->hw->model_desc ? vha->hw->model_desc : "");
+ }
  
- struct config_info_data {
--	uint8_t		product_name[256];
-+	uint8_t		model_num[16];
-+	uint8_t		model_description[80];
-+	uint8_t		reserved0[160];
- 	uint8_t		symbolic_name[64];
- 	uint8_t		serial_num[32];
- 	uint8_t		hw_version[16];
-@@ -491,7 +493,6 @@ struct qla_mt_iocb_rsp_fx00 {
- #define FX00_DEF_RATOV	10
+@@ -975,7 +975,7 @@ qla2x00_pci_info_show(struct device *dev, struct device_attribute *attr,
+ 	scsi_qla_host_t *vha = shost_priv(class_to_shost(dev));
+ 	char pci_info[30];
  
- struct mr_data_fx00 {
--	uint8_t	product_name[256];
- 	uint8_t	symbolic_name[64];
- 	uint8_t	serial_num[32];
- 	uint8_t	hw_version[16];
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index ae447d9..edd2a52 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -2840,12 +2840,8 @@ skip_dpc:
+-	return snprintf(buf, PAGE_SIZE, "%s\n",
++	return scnprintf(buf, PAGE_SIZE, "%s\n",
+ 	    vha->hw->isp_ops->pci_info_str(vha, pci_info));
+ }
  
- 	qla2x00_dfs_setup(base_vha);
+@@ -990,29 +990,29 @@ qla2x00_link_state_show(struct device *dev, struct device_attribute *attr,
+ 	if (atomic_read(&vha->loop_state) == LOOP_DOWN ||
+ 	    atomic_read(&vha->loop_state) == LOOP_DEAD ||
+ 	    vha->device_flags & DFLG_NO_CABLE)
+-		len = snprintf(buf, PAGE_SIZE, "Link Down\n");
++		len = scnprintf(buf, PAGE_SIZE, "Link Down\n");
+ 	else if (atomic_read(&vha->loop_state) != LOOP_READY ||
+ 	    qla2x00_reset_active(vha))
+-		len = snprintf(buf, PAGE_SIZE, "Unknown Link State\n");
++		len = scnprintf(buf, PAGE_SIZE, "Unknown Link State\n");
+ 	else {
+-		len = snprintf(buf, PAGE_SIZE, "Link Up - ");
++		len = scnprintf(buf, PAGE_SIZE, "Link Up - ");
  
--	if (IS_QLAFX00(ha))
--		ql_log(ql_log_info, base_vha, 0x015a,
--		    "QLogic %s.\n", ha->mr.product_name);
--	else
--		ql_log(ql_log_info, base_vha, 0x00fb,
--		    "QLogic %s - %s.\n", ha->model_number, ha->model_desc);
-+	ql_log(ql_log_info, base_vha, 0x00fb,
-+	    "QLogic %s - %s.\n", ha->model_number, ha->model_desc);
- 	ql_log(ql_log_info, base_vha, 0x00fc,
- 	    "ISP%04X: %s @ %s hdma%c host#=%ld fw=%s.\n",
- 	    pdev->device, ha->isp_ops->pci_info_str(base_vha, pci_info),
+ 		switch (ha->current_topology) {
+ 		case ISP_CFG_NL:
+-			len += snprintf(buf + len, PAGE_SIZE-len, "Loop\n");
++			len += scnprintf(buf + len, PAGE_SIZE-len, "Loop\n");
+ 			break;
+ 		case ISP_CFG_FL:
+-			len += snprintf(buf + len, PAGE_SIZE-len, "FL_Port\n");
++			len += scnprintf(buf + len, PAGE_SIZE-len, "FL_Port\n");
+ 			break;
+ 		case ISP_CFG_N:
+-			len += snprintf(buf + len, PAGE_SIZE-len,
++			len += scnprintf(buf + len, PAGE_SIZE-len,
+ 			    "N_Port to N_Port\n");
+ 			break;
+ 		case ISP_CFG_F:
+-			len += snprintf(buf + len, PAGE_SIZE-len, "F_Port\n");
++			len += scnprintf(buf + len, PAGE_SIZE-len, "F_Port\n");
+ 			break;
+ 		default:
+-			len += snprintf(buf + len, PAGE_SIZE-len, "Loop\n");
++			len += scnprintf(buf + len, PAGE_SIZE-len, "Loop\n");
+ 			break;
+ 		}
+ 	}
+@@ -1028,10 +1028,10 @@ qla2x00_zio_show(struct device *dev, struct device_attribute *attr,
+ 
+ 	switch (vha->hw->zio_mode) {
+ 	case QLA_ZIO_MODE_6:
+-		len += snprintf(buf + len, PAGE_SIZE-len, "Mode 6\n");
++		len += scnprintf(buf + len, PAGE_SIZE-len, "Mode 6\n");
+ 		break;
+ 	case QLA_ZIO_DISABLED:
+-		len += snprintf(buf + len, PAGE_SIZE-len, "Disabled\n");
++		len += scnprintf(buf + len, PAGE_SIZE-len, "Disabled\n");
+ 		break;
+ 	}
+ 	return len;
+@@ -1071,7 +1071,7 @@ qla2x00_zio_timer_show(struct device *dev, struct device_attribute *attr,
+ {
+ 	scsi_qla_host_t *vha = shost_priv(class_to_shost(dev));
+ 
+-	return snprintf(buf, PAGE_SIZE, "%d us\n", vha->hw->zio_timer * 100);
++	return scnprintf(buf, PAGE_SIZE, "%d us\n", vha->hw->zio_timer * 100);
+ }
+ 
+ static ssize_t
+@@ -1101,9 +1101,9 @@ qla2x00_beacon_show(struct device *dev, struct device_attribute *attr,
+ 	int len = 0;
+ 
+ 	if (vha->hw->beacon_blink_led)
+-		len += snprintf(buf + len, PAGE_SIZE-len, "Enabled\n");
++		len += scnprintf(buf + len, PAGE_SIZE-len, "Enabled\n");
+ 	else
+-		len += snprintf(buf + len, PAGE_SIZE-len, "Disabled\n");
++		len += scnprintf(buf + len, PAGE_SIZE-len, "Disabled\n");
+ 	return len;
+ }
+ 
+@@ -1145,7 +1145,7 @@ qla2x00_optrom_bios_version_show(struct device *dev,
+ {
+ 	scsi_qla_host_t *vha = shost_priv(class_to_shost(dev));
+ 	struct qla_hw_data *ha = vha->hw;
+-	return snprintf(buf, PAGE_SIZE, "%d.%02d\n", ha->bios_revision[1],
++	return scnprintf(buf, PAGE_SIZE, "%d.%02d\n", ha->bios_revision[1],
+ 	    ha->bios_revision[0]);
+ }
+ 
+@@ -1155,7 +1155,7 @@ qla2x00_optrom_efi_version_show(struct device *dev,
+ {
+ 	scsi_qla_host_t *vha = shost_priv(class_to_shost(dev));
+ 	struct qla_hw_data *ha = vha->hw;
+-	return snprintf(buf, PAGE_SIZE, "%d.%02d\n", ha->efi_revision[1],
++	return scnprintf(buf, PAGE_SIZE, "%d.%02d\n", ha->efi_revision[1],
+ 	    ha->efi_revision[0]);
+ }
+ 
+@@ -1165,7 +1165,7 @@ qla2x00_optrom_fcode_version_show(struct device *dev,
+ {
+ 	scsi_qla_host_t *vha = shost_priv(class_to_shost(dev));
+ 	struct qla_hw_data *ha = vha->hw;
+-	return snprintf(buf, PAGE_SIZE, "%d.%02d\n", ha->fcode_revision[1],
++	return scnprintf(buf, PAGE_SIZE, "%d.%02d\n", ha->fcode_revision[1],
+ 	    ha->fcode_revision[0]);
+ }
+ 
+@@ -1175,7 +1175,7 @@ qla2x00_optrom_fw_version_show(struct device *dev,
+ {
+ 	scsi_qla_host_t *vha = shost_priv(class_to_shost(dev));
+ 	struct qla_hw_data *ha = vha->hw;
+-	return snprintf(buf, PAGE_SIZE, "%d.%02d.%02d %d\n",
++	return scnprintf(buf, PAGE_SIZE, "%d.%02d.%02d %d\n",
+ 	    ha->fw_revision[0], ha->fw_revision[1], ha->fw_revision[2],
+ 	    ha->fw_revision[3]);
+ }
+@@ -1188,9 +1188,9 @@ qla2x00_optrom_gold_fw_version_show(struct device *dev,
+ 	struct qla_hw_data *ha = vha->hw;
+ 
+ 	if (!IS_QLA81XX(ha) && !IS_QLA83XX(ha))
+-		return snprintf(buf, PAGE_SIZE, "\n");
++		return scnprintf(buf, PAGE_SIZE, "\n");
+ 
+-	return snprintf(buf, PAGE_SIZE, "%d.%02d.%02d (%d)\n",
++	return scnprintf(buf, PAGE_SIZE, "%d.%02d.%02d (%d)\n",
+ 	    ha->gold_fw_version[0], ha->gold_fw_version[1],
+ 	    ha->gold_fw_version[2], ha->gold_fw_version[3]);
+ }
+@@ -1200,7 +1200,7 @@ qla2x00_total_isp_aborts_show(struct device *dev,
+ 			      struct device_attribute *attr, char *buf)
+ {
+ 	scsi_qla_host_t *vha = shost_priv(class_to_shost(dev));
+-	return snprintf(buf, PAGE_SIZE, "%d\n",
++	return scnprintf(buf, PAGE_SIZE, "%d\n",
+ 	    vha->qla_stats.total_isp_aborts);
+ }
+ 
+@@ -1214,16 +1214,16 @@ qla24xx_84xx_fw_version_show(struct device *dev,
+ 	struct qla_hw_data *ha = vha->hw;
+ 
+ 	if (!IS_QLA84XX(ha))
+-		return snprintf(buf, PAGE_SIZE, "\n");
++		return scnprintf(buf, PAGE_SIZE, "\n");
+ 
+ 	if (ha->cs84xx->op_fw_version == 0)
+ 		rval = qla84xx_verify_chip(vha, status);
+ 
+ 	if ((rval == QLA_SUCCESS) && (status[0] == 0))
+-		return snprintf(buf, PAGE_SIZE, "%u\n",
++		return scnprintf(buf, PAGE_SIZE, "%u\n",
+ 			(uint32_t)ha->cs84xx->op_fw_version);
+ 
+-	return snprintf(buf, PAGE_SIZE, "\n");
++	return scnprintf(buf, PAGE_SIZE, "\n");
+ }
+ 
+ static ssize_t
+@@ -1234,9 +1234,9 @@ qla2x00_mpi_version_show(struct device *dev, struct device_attribute *attr,
+ 	struct qla_hw_data *ha = vha->hw;
+ 
+ 	if (!IS_QLA81XX(ha) && !IS_QLA8031(ha) && !IS_QLA8044(ha))
+-		return snprintf(buf, PAGE_SIZE, "\n");
++		return scnprintf(buf, PAGE_SIZE, "\n");
+ 
+-	return snprintf(buf, PAGE_SIZE, "%d.%02d.%02d (%x)\n",
++	return scnprintf(buf, PAGE_SIZE, "%d.%02d.%02d (%x)\n",
+ 	    ha->mpi_version[0], ha->mpi_version[1], ha->mpi_version[2],
+ 	    ha->mpi_capabilities);
+ }
+@@ -1249,9 +1249,9 @@ qla2x00_phy_version_show(struct device *dev, struct device_attribute *attr,
+ 	struct qla_hw_data *ha = vha->hw;
+ 
+ 	if (!IS_QLA81XX(ha) && !IS_QLA8031(ha))
+-		return snprintf(buf, PAGE_SIZE, "\n");
++		return scnprintf(buf, PAGE_SIZE, "\n");
+ 
+-	return snprintf(buf, PAGE_SIZE, "%d.%02d.%02d\n",
++	return scnprintf(buf, PAGE_SIZE, "%d.%02d.%02d\n",
+ 	    ha->phy_version[0], ha->phy_version[1], ha->phy_version[2]);
+ }
+ 
+@@ -1262,7 +1262,7 @@ qla2x00_flash_block_size_show(struct device *dev,
+ 	scsi_qla_host_t *vha = shost_priv(class_to_shost(dev));
+ 	struct qla_hw_data *ha = vha->hw;
+ 
+-	return snprintf(buf, PAGE_SIZE, "0x%x\n", ha->fdt_block_size);
++	return scnprintf(buf, PAGE_SIZE, "0x%x\n", ha->fdt_block_size);
+ }
+ 
+ static ssize_t
+@@ -1272,9 +1272,9 @@ qla2x00_vlan_id_show(struct device *dev, struct device_attribute *attr,
+ 	scsi_qla_host_t *vha = shost_priv(class_to_shost(dev));
+ 
+ 	if (!IS_CNA_CAPABLE(vha->hw))
+-		return snprintf(buf, PAGE_SIZE, "\n");
++		return scnprintf(buf, PAGE_SIZE, "\n");
+ 
+-	return snprintf(buf, PAGE_SIZE, "%d\n", vha->fcoe_vlan_id);
++	return scnprintf(buf, PAGE_SIZE, "%d\n", vha->fcoe_vlan_id);
+ }
+ 
+ static ssize_t
+@@ -1284,9 +1284,9 @@ qla2x00_vn_port_mac_address_show(struct device *dev,
+ 	scsi_qla_host_t *vha = shost_priv(class_to_shost(dev));
+ 
+ 	if (!IS_CNA_CAPABLE(vha->hw))
+-		return snprintf(buf, PAGE_SIZE, "\n");
++		return scnprintf(buf, PAGE_SIZE, "\n");
+ 
+-	return snprintf(buf, PAGE_SIZE, "%pMR\n", vha->fcoe_vn_port_mac);
++	return scnprintf(buf, PAGE_SIZE, "%pMR\n", vha->fcoe_vn_port_mac);
+ }
+ 
+ static ssize_t
+@@ -1295,7 +1295,7 @@ qla2x00_fabric_param_show(struct device *dev, struct device_attribute *attr,
+ {
+ 	scsi_qla_host_t *vha = shost_priv(class_to_shost(dev));
+ 
+-	return snprintf(buf, PAGE_SIZE, "%d\n", vha->hw->switch_cap);
++	return scnprintf(buf, PAGE_SIZE, "%d\n", vha->hw->switch_cap);
+ }
+ 
+ static ssize_t
+@@ -1316,10 +1316,10 @@ qla2x00_thermal_temp_show(struct device *dev,
+ 	}
+ 
+ 	if (qla2x00_get_thermal_temp(vha, &temp) == QLA_SUCCESS)
+-		return snprintf(buf, PAGE_SIZE, "%d\n", temp);
++		return scnprintf(buf, PAGE_SIZE, "%d\n", temp);
+ 
+ done:
+-	return snprintf(buf, PAGE_SIZE, "\n");
++	return scnprintf(buf, PAGE_SIZE, "\n");
+ }
+ 
+ static ssize_t
+@@ -1333,7 +1333,7 @@ qla2x00_fw_state_show(struct device *dev, struct device_attribute *attr,
+ 
+ 	if (IS_QLAFX00(vha->hw)) {
+ 		pstate = qlafx00_fw_state_show(dev, attr, buf);
+-		return snprintf(buf, PAGE_SIZE, "0x%x\n", pstate);
++		return scnprintf(buf, PAGE_SIZE, "0x%x\n", pstate);
+ 	}
+ 
+ 	if (qla2x00_reset_active(vha))
+@@ -1344,7 +1344,7 @@ qla2x00_fw_state_show(struct device *dev, struct device_attribute *attr,
+ 	if (rval != QLA_SUCCESS)
+ 		memset(state, -1, sizeof(state));
+ 
+-	return snprintf(buf, PAGE_SIZE, "0x%x 0x%x 0x%x 0x%x 0x%x\n", state[0],
++	return scnprintf(buf, PAGE_SIZE, "0x%x 0x%x 0x%x 0x%x 0x%x\n", state[0],
+ 	    state[1], state[2], state[3], state[4]);
+ }
+ 
+@@ -1355,9 +1355,9 @@ qla2x00_diag_requests_show(struct device *dev,
+ 	scsi_qla_host_t *vha = shost_priv(class_to_shost(dev));
+ 
+ 	if (!IS_BIDI_CAPABLE(vha->hw))
+-		return snprintf(buf, PAGE_SIZE, "\n");
++		return scnprintf(buf, PAGE_SIZE, "\n");
+ 
+-	return snprintf(buf, PAGE_SIZE, "%llu\n", vha->bidi_stats.io_count);
++	return scnprintf(buf, PAGE_SIZE, "%llu\n", vha->bidi_stats.io_count);
+ }
+ 
+ static ssize_t
+@@ -1367,9 +1367,9 @@ qla2x00_diag_megabytes_show(struct device *dev,
+ 	scsi_qla_host_t *vha = shost_priv(class_to_shost(dev));
+ 
+ 	if (!IS_BIDI_CAPABLE(vha->hw))
+-		return snprintf(buf, PAGE_SIZE, "\n");
++		return scnprintf(buf, PAGE_SIZE, "\n");
+ 
+-	return snprintf(buf, PAGE_SIZE, "%llu\n",
++	return scnprintf(buf, PAGE_SIZE, "%llu\n",
+ 	    vha->bidi_stats.transfer_bytes >> 20);
+ }
+ 
+@@ -1388,7 +1388,7 @@ qla2x00_fw_dump_size_show(struct device *dev, struct device_attribute *attr,
+ 	else
+ 		size = ha->fw_dump_len;
+ 
+-	return snprintf(buf, PAGE_SIZE, "%d\n", size);
++	return scnprintf(buf, PAGE_SIZE, "%d\n", size);
+ }
+ 
+ static DEVICE_ATTR(driver_version, S_IRUGO, qla2x00_drvr_version_show, NULL);
 -- 
 1.7.7
 
