@@ -1,34 +1,43 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/3] scsi: improved eh timeout handler
-Date: Thu, 31 Oct 2013 08:49:05 -0700
-Message-ID: <20131031154905.GA10451@infradead.org>
-References: <1383224573-113346-1-git-send-email-hare@suse.de>
- <1383224573-113346-3-git-send-email-hare@suse.de>
+Subject: Re: [PATCH v2] sg: O_EXCL and other lock handling
+Date: Thu, 31 Oct 2013 08:56:53 -0700
+Message-ID: <20131031155653.GA16944@infradead.org>
+References: <52718713.7050906@interlog.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:51965 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753789Ab3JaPtO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Oct 2013 11:49:14 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1383224573-113346-3-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <52718713.7050906@interlog.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Douglas Gilbert <dgilbert@interlog.com>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>, James Bottomley <james.bottomley@hansenpartnership.com>, vaughan <vaughan.cao@oracle.com>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Ren Mingxin <renmx@cn.fujitsu.com>, Joern Engel <joern@logfs.org>, James Smart <james.smart@emulex.com>
 
-Looks reasonable to me, but a few minor nitpicks:
+> +	struct semaphore or_sem;  /* protect co-incident opens and releases */
 
-> +	spin_lock_irqsave(sdev->host->host_lock, flags);
-> +	if (scsi_host_eh_past_deadline(sdev->host)) {
+Seems like this should be a mutex.
 
-I don't have the implementation of scsi_host_eh_past_deadline in my
-local tree, but do we really need the host lock for it?
+> sfds_list_empty(Sg_device *sdp)
+>  {
+>  	unsigned long flags;
+>  	int ret;
+>  
+> +	spin_lock_irqsave(&sdp->sfd_lock, flags);
+> +	ret = list_empty(&sdp->sfds);
+> +	spin_unlock_irqrestore(&sdp->sfd_lock, flags);
+>  	return ret;
 
-> +int
-> +scsi_abort_command(struct scsi_cmnd *scmd)
+Protecting just a list_empty check with a local will give you racy
+results.  Seems like you should take the look over the check and the
+resulting action that modifies the list.  That'd also mean replacing the
+wait_event* calls with open coded prepare_wait / finish_wait loops.
 
-Semms like this should be static and not exported in the current version
-of the code?
+> +	down(&sdp->or_sem);
+> +	alone = sfds_list_empty(sdp);
+> +	if ((flags & O_EXCL) && (O_RDONLY == (flags & O_ACCMODE))) {
+> +		retval = -EPERM; /* Don't allow O_EXCL with read only access */
+> +		goto error_out;
+> +	}
 
+Seems like the pure flags check should move to the beginning of the
+function before taking any locks.
