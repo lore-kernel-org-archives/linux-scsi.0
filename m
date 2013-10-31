@@ -1,83 +1,103 @@
-From: Mauro Carvalho Chehab <m.chehab-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
-Subject: Re: [PATCH 19/51] DMA-API: media: dt3155v4l: replace
- dma_set_mask()+dma_set_coherent_mask() with new helper
-Date: Thu, 31 Oct 2013 09:46:40 -0200
-Message-ID: <20131031094640.205840a2@samsung.com>
-References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
- <E1VMm13-0007hO-9l@rmk-PC.arm.linux.org.uk> <5249673B.5020705@xs4all.nl>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-reply-to: <5249673B.5020705-qWit8jRvyhVmR6Xm/wNWPw@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Hans Verkuil <hverkuil-qWit8jRvyhVmR6Xm/wNWPw@public.gmane.org>
-Cc: Russell King <rmk+kernel-lFZ/pmaqli7XmaaqVzeoHQ@public.gmane.org>, alsa-devel-K7yf7f+aM1XWsZ/bQMPhNw@public.gmane.org, b43-dev-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, e1000-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-crypto-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fbdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mmc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-omap-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linuxppc-dev-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org, linux-samsung-soc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Solarflare linux maintainers <linux-net-drivers-s/n/eUQHGBpZroRs9YW3xA@public.gmane.org>, uclinux-dist-devel-ZG0+EudsQA8dtHy/vicBwGD2FQJk+8+b@public.gmane.org, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Russell King <rmk+kernel@ar>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCHv8 0/3] New EH command timeout handler
+Date: Thu, 31 Oct 2013 14:02:50 +0100
+Message-ID: <1383224573-113346-1-git-send-email-hare@suse.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:35241 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751819Ab3JaNC5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 31 Oct 2013 09:02:57 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <jbottomley@parallels.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Ren Mingxin <renmx@cn.fujitsu.com>, Joern Engel <joern@logfs.org>, James Smart <james.smart@emulex.com>, Hannes Reinecke <hare@suse.de>
 
-Hi Russell,
+Hi all,
 
-Em Mon, 30 Sep 2013 13:57:47 +0200
-Hans Verkuil <hverkuil-qWit8jRvyhVmR6Xm/wNWPw@public.gmane.org> escreveu:
+this patchset implements a new SCSI EH command timeout handler
+which will be sending command aborts inline without actually
+engaging SCSI EH.
+SCSI EH will only be invoked if command abort fails.
 
-> On 09/19/2013 11:44 PM, Russell King wrote:
-> > Replace the following sequence:
-> > 
-> > 	dma_set_mask(dev, mask);
-> > 	dma_set_coherent_mask(dev, mask);
-> > 
-> > with a call to the new helper dma_set_mask_and_coherent().
-> > 
-> > Signed-off-by: Russell King <rmk+kernel-lFZ/pmaqli7XmaaqVzeoHQ@public.gmane.org>
-> 
-> Acked-by: Hans Verkuil <hans.verkuil-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org>
+In addition the commands will be returned directly
+if the command abort succeeded, cutting down recovery
+times dramatically.
 
-Somehow, I lost your original post (I got unsubscribed on a few days 
-from all vger mailing lists at the end of september).
+With the original SCSI EH I got:
+# time dd if=/dev/zero of=/dev/dm-2 bs=4k count=4k oflag=direct
+4096+0 records in
+4096+0 records out
+16777216 bytes (17 MB) copied, 142.652 s, 118 kB/s
 
-I suspect that you want to sent this via your tree, right?
-If so:
+real	2m22.657s
+user	0m0.013s
+sys	0m0.145s
 
-Acked-by: Mauro Carvalho Chehab <m.chehab-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+With this patchset I got:
+# time dd if=/dev/zero of=/dev/dm-2 bs=4k count=4k oflag=direct
+4096+0 records in
+4096+0 records out
+16777216 bytes (17 MB) copied, 52.1579 s, 322 kB/s
 
-> 
-> Regards,
-> 
-> 	Hans
-> 
-> > ---
-> >  drivers/staging/media/dt3155v4l/dt3155v4l.c |    5 +----
-> >  1 files changed, 1 insertions(+), 4 deletions(-)
-> > 
-> > diff --git a/drivers/staging/media/dt3155v4l/dt3155v4l.c b/drivers/staging/media/dt3155v4l/dt3155v4l.c
-> > index 90d6ac4..081407b 100644
-> > --- a/drivers/staging/media/dt3155v4l/dt3155v4l.c
-> > +++ b/drivers/staging/media/dt3155v4l/dt3155v4l.c
-> > @@ -901,10 +901,7 @@ dt3155_probe(struct pci_dev *pdev, const struct pci_device_id *id)
-> >  	int err;
-> >  	struct dt3155_priv *pd;
-> >  
-> > -	err = dma_set_mask(&pdev->dev, DMA_BIT_MASK(32));
-> > -	if (err)
-> > -		return -ENODEV;
-> > -	err = dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(32));
-> > +	err = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32));
-> >  	if (err)
-> >  		return -ENODEV;
-> >  	pd = kzalloc(sizeof(*pd), GFP_KERNEL);
-> > 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-media" in
-> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+real	0m52.163s
+user	0m0.012s
+sys	0m0.145s
 
+Test was to disable RSCN on the target port, disable the
+target port, and then start the 'dd' command as indicated.
+
+Changes to the original version:
+- Use a private list in scsi_eh_abort_handler to avoid
+  list starvation (pointed out by Joern Engel)
+- Terminate command aborts when the first abort fails
+- Do not attempt command aborts if the host is already in recovery
+  or if the device is removed.
+- Flush abort workqueue if the device is removed.
+
+Changes to v2:
+- Removed eh_entry initialisation
+- Convert to per-command workqueue
+
+Changes to v3:
+- Use delayed_work
+- Enable new eh timeout handler for virtio, SAS, and FC
+- Modify logging messages to include scmd pointer
+
+Changes to v4:
+- Remove stubs when enabling new eh timeout handler
+  for other drivers
+
+Changes to v5:
+- Enable new eh timeout handler per default
+- Update documentation
+
+Changes to v6:
+- Include changes from James Bottomley for erratic device
+  offline patch
+- Rearrange patches
+- Update SCSI midlayer documentation
+
+Changes to v7:
+- Merge obsolete patch
+
+Hannes Reinecke (2):
+  scsi: improved eh timeout handler
+  scsi: Update documentation
+
+James Bottomley (1):
+  scsi: Fix erratic device offline during EH
+
+ Documentation/scsi/scsi_eh.txt          |  69 +++++++------
+ Documentation/scsi/scsi_mid_low_api.txt |   9 +-
+ drivers/scsi/scsi.c                     |   9 +-
+ drivers/scsi/scsi_error.c               | 178 ++++++++++++++++++++++++++++----
+ drivers/scsi/scsi_priv.h                |   2 +
+ drivers/scsi/sd.c                       |  26 +++--
+ include/scsi/scsi_cmnd.h                |   2 +
+ include/scsi/scsi_driver.h              |   2 +-
+ include/scsi/scsi_host.h                |   5 +
+ 9 files changed, 229 insertions(+), 73 deletions(-)
 
 -- 
+1.8.1.4
 
-Cheers,
-Mauro
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
