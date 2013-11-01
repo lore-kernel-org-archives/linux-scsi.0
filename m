@@ -1,63 +1,65 @@
-From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH] hpsa: return 0 from driver probe function on success, not 1
-Date: Fri, 01 Nov 2013 11:02:25 -0500
-Message-ID: <20131101160225.17783.28237.stgit@beardog.cce.hp.com>
-References: <20131101155851.17783.73732.stgit@beardog.cce.hp.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 64171] New: Block SCSI Generic Driver does not keep data
+Date: Fri, 01 Nov 2013 19:49:52 +0000
+Message-ID: <bug-64171-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g1t0029.austin.hp.com ([15.216.28.36]:12571 "EHLO
-	g1t0029.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753402Ab3KAQC0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Nov 2013 12:02:26 -0400
-In-Reply-To: <20131101155851.17783.73732.stgit@beardog.cce.hp.com>
+Received: from mail.kernel.org ([198.145.19.201]:43977 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752511Ab3KATtz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 1 Nov 2013 15:49:55 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id BEA7B204AF
+	for <linux-scsi@vger.kernel.org>; Fri,  1 Nov 2013 19:49:53 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id AD58F203F4
+	for <linux-scsi@vger.kernel.org>; Fri,  1 Nov 2013 19:49:52 +0000 (UTC)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: james.bottomley@hansenpartnership.com
-Cc: linux-scsi@vger.kernel.org, stephenmcameron@gmail.com, thenzl@redhat.com, scott.teel@hp.com, akpm@linux-foundation.org, mikem@beardog.cce.hp.com
+To: linux-scsi@vger.kernel.org
 
-From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+https://bugzilla.kernel.org/show_bug.cgi?id=64171
 
-A return value of 1 is interpreted as an error.  See pci_driver.
-in local_pci_probe().  If you're wondering how this ever could
-have worked, it's because it used to be the case that only return
-values less than zero were interpreted as failure.  But even in
-the current kernel if the driver registers its various entry
-points with the kernel, and then returns a value which is
-interpreted as failure, those registrations aren't undone, so
-the driver still mostly works.  However, the driver's remove
-function wouldn't be called on rmmod, and pci power management
-functions wouldn't work.  In the case of Smart Array, since it
-has a battery backed cache (or else no cache) even if the driver
-is not shut down properly as long as there is no outstanding
-i/o, nothing too bad happens, which is why it took so long to
-notice.
+            Bug ID: 64171
+           Summary: Block SCSI Generic Driver does not keep data
+           Product: SCSI Drivers
+           Version: 2.5
+    Kernel Version: 2.6.32.61
+          Hardware: All
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: high
+          Priority: P1
+         Component: Other
+          Assignee: scsi_drivers-other@kernel-bugs.osdl.org
+          Reporter: af300wsm@gmail.com
+        Regression: No
 
-Requesting backport to stable because the change to pci-driver.c
-which requires driver probe functions to return 0 occurred between
-2.6.35 and 2.6.36 (the pci power management breakage) and again
-between 3.7 and 3.8 (pci_dev->driver getting set to NULL in
-local_pci_probe() preventing driver remove function from being
-called on rmmod.)
+Data written to any given file descriptor should be unique to that descriptor
+and processor space.  Currently, the BSG Driver does not keep this uniqueness. 
+As the attached simple program demonstrates, a SCSI Command queued to the
+device in one process is dequeued by another process which has opened a handle
+to the same device.
 
-Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
-Cc: stable@vger.kernel.org
----
- drivers/scsi/hpsa.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+The attached file sends the simple SCSI "Test Unit Ready" command from the SCSI
+Primary Command Spec. to the device using the BSG driver.  As the program
+demonstrates, the sg_io_v4.usr_ptr field, which is set in the "push" branch of
+the program, is dequeued from the "pop" branch of the code.
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 891c86b..3c97974 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -4926,7 +4926,7 @@ reinit_after_soft_reset:
- 	hpsa_hba_inquiry(h);
- 	hpsa_register_scsi(h);	/* hook ourselves into SCSI subsystem */
- 	start_controller_lockup_detector(h);
--	return 1;
-+	return 0;
- 
- clean4:
- 	hpsa_free_sg_chain_blocks(h);
+I also tested this behavior on Fedora 19 and the bug exists there as well.  F19
+uses kernel 3.9.5.
 
+Compile the attachment:
+g++ -o <out> combined.cpp
+
+
+Execute as follows:
+sudo combined pop /dev/bsg/0:0:0:0 &
+sudo combined push /dev/bsg/0:0:0:0
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
