@@ -1,7 +1,7 @@
 From: vaughan <vaughan.cao@oracle.com>
 Subject: Re: [PATCH v2] sg: O_EXCL and other lock handling
-Date: Fri, 01 Nov 2013 13:14:12 +0800
-Message-ID: <527338A4.5060605@oracle.com>
+Date: Fri, 01 Nov 2013 13:16:12 +0800
+Message-ID: <5273391C.2010705@oracle.com>
 References: <52718713.7050906@interlog.com> <20131031155653.GA16944@infradead.org> <5272AD80.90203@interlog.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -10,7 +10,7 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <5272AD80.90203@interlog.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: dgilbert@interlog.com, Christoph Hellwig <hch@infradead.org>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-kernel <linux-kernel@vger.kernel.org>, =?UTF-8?B?SsO2cm4gRW5nZWw=?= <joern@logfs.org>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-kernel <linux-kernel@vger.kernel.org>, =?UTF-8?B?SsO2cm4gRW5nZWw=?= <joern@logfs.org>, vaughan <vaughan.cao@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
 On 11/01/2013 03:20 AM, Douglas Gilbert wrote:
