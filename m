@@ -1,50 +1,52 @@
-From: Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH] PCI: add quirk for 3ware 9650SE controller
-Date: Thu, 31 Oct 2013 15:27:58 -0600
-Message-ID: <CAErSpo7qORQjs62zdi-5et2WnWwy3weMs56G84rWhNrW59F5WQ@mail.gmail.com>
-References: <alpine.LNX.2.00.1308271141080.2077@pobox.suse.cz>
- <alpine.LNX.2.00.1308271144420.2077@pobox.suse.cz> <alpine.LNX.2.00.1308281745460.4557@pobox.suse.cz>
- <CAErSpo6saRNMw6Js0PLXZzYDdH0M3ypSFLDxVxp0G02aetp0Dw@mail.gmail.com>
- <alpine.LNX.2.00.1309061150140.26934@pobox.suse.cz> <CAErSpo5ExXsbSd+jYP5JYwq-RBf-dx1T_AZx6CV4=6-AfTTynQ@mail.gmail.com>
- <alpine.LNX.2.00.1309271106090.18703@pobox.suse.cz> <alpine.LNX.2.00.1310301125400.19090@pobox.suse.cz>
+From: Chandran Prashant <prashant4@chandran818.onmicrosoft.com>
+Subject: Loans offer without Credit Check 100% guaranteed! For Everyone.
+Date: Fri, 1 Nov 2013 00:17:29 +0000
+Message-ID: <9bb2a4cb-46b5-4000-9bd2-4646039bb028__41862.7015119002$1383265994$gmane$org@AMSPR07MB004.eurprd07.prod.outlook.com>
+Reply-To: <chand01@qq.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-pci-owner@vger.kernel.org>
-In-Reply-To: <alpine.LNX.2.00.1310301125400.19090@pobox.suse.cz>
-Sender: linux-pci-owner@vger.kernel.org
-To: Jiri Kosina <jkosina@suse.cz>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Eric W. Biederman" <ebiederm@xmission.com>, Jesse Barnes <jbarnes@virtuousgeek.org>, Adam Radford <aradford@gmail.com>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from emea01-db3-ndr.ptr.protection.outlook.com ([157.56.120.103]:61335
+	"EHLO emea01-db3-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753645Ab3KAAcs convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Oct 2013 20:32:48 -0400
+Content-Description: Mail message body
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Recipients <prashant4@chandran818.onmicrosoft.com>
 
-On Wed, Oct 30, 2013 at 4:27 AM, Jiri Kosina <jkosina@suse.cz> wrote:
-> Attached is dmesg output leading to timeouts (that are cured by my
-> original patch in this thread) and lspci.
+hei
 
-I opened https://bugzilla.kernel.org/show_bug.cgi?id=64141 for this
-issue and attached your dmesg log and lspci output.
+Er du en bedrift mann eller kvinne? Er du i noen =F8konomisk rot eller =
+trenger du midler til =E5 starte opp din egen bedrift? Har du behov for=
+ l=E5n for =E5 gj=F8re opp din gjeld eller betale dine regninger eller =
+starte en hyggelig bedrift?
 
-> Please let me know if there is anything else I could do, or if you are
-> going to proceed with my patch adding the quirk.
+Har du en lav kreditt score og du finner det vanskelig =E5 skaffe kapit=
+al l=E5n fra lokale banker / andre finansielle institusjoner? Trenger d=
+u et l=E5n eller finansiering eller annen grunn, for eksempel:
 
-Your quirk keeps us from disabling MSIs on the device during
-enumeration.  But even if the BIOS left MSIs enabled, there's nothing
-to field the MSI until after the driver claims the device.  So I don't
-believe this has to be done as a quirk.  It should work just as well
-to do something in the driver when it claims the device.
+a) personlige l=E5n, Business Expansion,
+b) Business Start-up, utdanning,
+c) gjeld konsolidering,
+d) Hard Money L=E5n
+e) Venture Capital
+f) Home Loans
+g) L=E5n eller annen grunn!
 
-I guess another way to say this is that I don't think we understand
-what the real problem is, and if we just add a quirk to work around
-it, we might miss the chance to fix the real problem, and we may never
-be able to remove the special-case code we're adding in the generic
-path.
 
-I know you said you tried doing something in the driver, and it didn't
-work.  I don't know exactly what you tried, but twa_probe() looks
-strange to me.  The other drivers I looked at do all their PCI
-initialization before the scsi_host_alloc() / scsi_add_host() /
-scsi_scan_host() stuff.  But twa_probe() has PCI stuff scattered
-around between those three SCSI calls.  In particular, it does the MSI
-setup way down near the end, after scsi_add_host(), which seems like
-just the sort of thing that could explain this problem.
+Vi tilbyr l=E5n med lav rente p=E5 2% og uten kredittsjekk, Men V=E5r m=
+etode, gir deg sjansen til =E5 oppgi hvor mye l=E5n som trengs og ogs=E5=
+ varigheten du har r=E5d til, dette gir deg en reell sjanse til =E5 f=E5=
+ midler du trenger! Hvis interessert, vennligst kontakt oss umiddelbart=
+, v=E5r e-post p=E5: chand01@qq.com
 
-Bjorn
+beste hilsen
+Mr Chandran Prashant
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
