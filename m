@@ -1,51 +1,132 @@
-From: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
-Subject: Re: scsi-mq + open-iscsi support patches..?
-Date: Fri, 01 Nov 2013 09:46:23 -0500
-Message-ID: <5273BEBF.2090008@cs.wisc.edu>
-References: <1382997816.19256.767.camel@haakon3.risingtidesystems.com>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: yang jun <yangjun.donglife123@gmail.com>
+Subject: [PATCH][SCSI] sr: Remove sr_mutex just like sd_module to optimize
+ multi-drive performance
+Date: Fri, 1 Nov 2013 23:46:29 +0800
+Message-ID: <CAO4Pk4xtaz2qwNJcfkNqK3CMAccGqr-i7UK+=fB0yxyoLp=tmA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Return-path: <open-iscsi+bncBCZ4TFNN2YMRBRX5Z2JQKGQEOSTP7TI-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-In-Reply-To: <1382997816.19256.767.camel-XoQW25Eq2zviZyQQd+hFbcojREIfoBdhmpATvIKMPHk@public.gmane.org>
-List-Post: <http://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <http://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <http://groups.google.com/group/open-iscsi>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <http://groups.google.com/group/open-iscsi/subscribe>, <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-Cc: "Nicholas A. Bellinger" <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, target-devel <target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-vc0-f176.google.com ([209.85.220.176]:46732 "EHLO
+	mail-vc0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752383Ab3KAPqa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Nov 2013 11:46:30 -0400
+Received: by mail-vc0-f176.google.com with SMTP id ia6so2991836vcb.21
+        for <linux-scsi@vger.kernel.org>; Fri, 01 Nov 2013 08:46:29 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 10/28/13 5:03 PM, Nicholas A. Bellinger wrote:
-> Hi Mike,
->
-> Just curious as to the status of the scsi-mq conversion patches for
-> open-iscsi that you where working on a while back..?
->
-> I'm asking because recently I've been spending alot of time with scsi-mq
-> + virtio-scsi, and would really to start banging on iser-target ports
-> using an scsi-mq enabled iser-initiator as well..
->
-> So that said, are there any blockers holding things up towards getting a
-> working prototype..?
->
+The sr_mutex is not necessary, so we can delete it.
 
-Just time. Just finished a release at work and just got back from 
-vacation so hoping to work on this some more in the next weeks.
+Signed-off-by: yangjun <yangjun@kedacom.com>
+---
+ drivers/cdrom/cdrom.c |    6 +++---
+ drivers/scsi/sr.c     |    7 -------
+ include/linux/cdrom.h |    2 +-
+ 3 files changed, 4 insertions(+), 11 deletions(-)
 
-On a related note, some iscsi vendor has been hitting a crash with your 
-tree. Have you rebased it it to take in Christoph's changes and fixes 
-that are in Jens's tree? The code here
+diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
+index 8a3aff7..b1a5240 100644
+--- a/drivers/cdrom/cdrom.c
++++ b/drivers/cdrom/cdrom.c
+@@ -988,7 +988,7 @@ int cdrom_open(struct cdrom_device_info *cdi,
+struct block_device *bdev, fmode_t
 
-https://git.kernel.org/cgit/linux/kernel/git/nab/target-pending.git/log/?h=scsi-mq
+  /* if this was a O_NONBLOCK open and we should honor the flags,
+  * do a quick open without drive/disc integrity checks. */
+- cdi->use_count++;
++ atomic_inc(cdi->use_count);
+  if ((mode & FMODE_NDELAY) && (cdi->options & CDO_USE_FFLAGS)) {
+  ret = cdi->ops->open(cdi, 1);
+  } else {
+@@ -1020,7 +1020,7 @@ err_release:
+  }
+  cdi->ops->release(cdi);
+ err:
+- cdi->use_count--;
++ atomic_dec(cdi->use_count);
+  return ret;
+ }
 
-looks ok. That is the current code right?
+@@ -1196,7 +1196,7 @@ void cdrom_release(struct cdrom_device_info
+*cdi, fmode_t mode)
+  cdinfo(CD_CLOSE, "entering cdrom_release\n");
 
--- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-Visit this group at http://groups.google.com/group/open-iscsi.
-For more options, visit https://groups.google.com/groups/opt_out.
+  if (cdi->use_count > 0)
+- cdi->use_count--;
++ atomic_dec(cdi->use_count);
+
+  if (cdi->use_count == 0) {
+  cdinfo(CD_CLOSE, "Use count for \"/dev/%s\" now zero\n", cdi->name);
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index 119d67f..08c415c 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -76,7 +76,6 @@ MODULE_ALIAS_SCSI_DEVICE(TYPE_WORM);
+  CDC_CD_R|CDC_CD_RW|CDC_DVD|CDC_DVD_R|CDC_DVD_RAM|CDC_GENERIC_PACKET| \
+  CDC_MRW|CDC_MRW_W|CDC_RAM)
+
+-static DEFINE_MUTEX(sr_mutex);
+ static int sr_probe(struct device *);
+ static int sr_remove(struct device *);
+ static int sr_done(struct scsi_cmnd *);
+@@ -530,24 +529,20 @@ static int sr_block_open(struct block_device
+*bdev, fmode_t mode)
+  struct scsi_cd *cd;
+  int ret = -ENXIO;
+
+- mutex_lock(&sr_mutex);
+  cd = scsi_cd_get(bdev->bd_disk);
+  if (cd) {
+  ret = cdrom_open(&cd->cdi, bdev, mode);
+  if (ret)
+  scsi_cd_put(cd);
+  }
+- mutex_unlock(&sr_mutex);
+  return ret;
+ }
+
+ static void sr_block_release(struct gendisk *disk, fmode_t mode)
+ {
+  struct scsi_cd *cd = scsi_cd(disk);
+- mutex_lock(&sr_mutex);
+  cdrom_release(&cd->cdi, mode);
+  scsi_cd_put(cd);
+- mutex_unlock(&sr_mutex);
+ }
+
+ static int sr_block_ioctl(struct block_device *bdev, fmode_t mode,
+unsigned cmd,
+@@ -560,7 +555,6 @@ static int sr_block_ioctl(struct block_device
+*bdev, fmode_t mode, unsigned cmd,
+
+  scsi_autopm_get_device(cd->device);
+
+- mutex_lock(&sr_mutex);
+
+  /*
+  * Send SCSI addressing ioctls directly to mid level, send other
+@@ -590,7 +584,6 @@ static int sr_block_ioctl(struct block_device
+*bdev, fmode_t mode, unsigned cmd,
+  ret = scsi_ioctl(sdev, cmd, argp);
+
+ out:
+- mutex_unlock(&sr_mutex);
+  scsi_autopm_put_device(cd->device);
+  return ret;
+ }
+diff --git a/include/linux/cdrom.h b/include/linux/cdrom.h
+index 8609d57..5e67186 100644
+--- a/include/linux/cdrom.h
++++ b/include/linux/cdrom.h
+@@ -49,7 +49,7 @@ struct cdrom_device_info {
+  unsigned mc_flags : 2; /* media change buffer flags */
+  unsigned int vfs_events; /* cached events for vfs path */
+  unsigned int ioctl_events; /* cached events for ioctl path */
+-     int use_count;                  /* number of times device opened */
++     atomic_t use_count;             /* number of times device opened */
+      char name[20];                  /* name of the device type */
+ /* per-device flags */
+         __u8 sanyo_slot : 2; /* Sanyo 3 CD changer support */
+--
