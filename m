@@ -1,17 +1,18 @@
 From: Chandran Prashant <prashant4@chandran818.onmicrosoft.com>
-Subject: Loans offer without Credit Check 100% guaranteed! For Everyone.
-Date: Fri, 1 Nov 2013 00:17:29 +0000
-Message-ID: <9bb2a4cb-46b5-4000-9bd2-4646039bb028__41862.7015119002$1383265994$gmane$org@AMSPR07MB004.eurprd07.prod.outlook.com>
+Subject: =?utf-8?q?L=C3=A5n_tilby_uten_kredittsjekk_100=25_garantert!_For_Everyone?=
+ =?utf-8?q?=2E?=
+Date: Fri, 1 Nov 2013 00:32:53 +0000
+Message-ID: <d5b446a6-f34c-4fb4-abeb-26e35ebdd009__41580.9228587479$1383266919$gmane$org@AMSPR07MB004.eurprd07.prod.outlook.com>
 Reply-To: <chand01@qq.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emea01-db3-ndr.ptr.protection.outlook.com ([157.56.120.103]:61335
-	"EHLO emea01-db3-obe.outbound.protection.outlook.com"
+Received: from emea01-am1-ndr.ptr.protection.outlook.com ([157.56.116.100]:3559
+	"EHLO emea01-am1-obe.outbound.protection.outlook.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753645Ab3KAAcs convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Oct 2013 20:32:48 -0400
+	id S1754026Ab3KAAsN convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Oct 2013 20:48:13 -0400
 Content-Description: Mail message body
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
