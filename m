@@ -1,119 +1,172 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 64171] Block SCSI Generic Driver does not keep data
-Date: Sat, 02 Nov 2013 17:09:46 +0000
-Message-ID: <bug-64171-11613-moT5WALEj8@https.bugzilla.kernel.org/>
-References: <bug-64171-11613@https.bugzilla.kernel.org/>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH v2] sg: O_EXCL and other lock handling
+Date: Sat, 02 Nov 2013 14:22:27 -0400
+Message-ID: <527542E3.7090809@interlog.com>
+References: <52718713.7050906@interlog.com> <20131031155653.GA16944@infradead.org> <5272AD80.90203@interlog.com> <5273391C.2010705@oracle.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:40535 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753390Ab3KBRJu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 2 Nov 2013 13:09:50 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 199E0203DC
-	for <linux-scsi@vger.kernel.org>; Sat,  2 Nov 2013 17:09:49 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-	by mail.kernel.org (Postfix) with ESMTP id EF90220375
-	for <linux-scsi@vger.kernel.org>; Sat,  2 Nov 2013 17:09:46 +0000 (UTC)
-In-Reply-To: <bug-64171-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <5273391C.2010705@oracle.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: vaughan <vaughan.cao@oracle.com>, Christoph Hellwig <hch@infradead.org>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-kernel <linux-kernel@vger.kernel.org>, =?UTF-8?B?SsO2cm4gRW5nZWw=?= <joern@logfs.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=64171
-
---- Comment #2 from d gilbert <dgilbert@interlog.com> ---
-On 13-11-01 03:49 PM, bugzilla-daemon@bugzilla.kernel.org wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=64171
+On 13-11-01 01:16 AM, vaughan wrote:
+> On 11/01/2013 03:20 AM, Douglas Gilbert wrote:
+>> On 13-10-31 11:56 AM, Christoph Hellwig wrote:
+>>>> +    struct semaphore or_sem;  /* protect co-incident opens and
+>>>> releases */
+>>>
+>>> Seems like this should be a mutex.
+>>
+>> Yes, it is being used as a mutex. However looking at
+>> their semantics (mutex.h versus semaphore.h), a mutex
+>> takes into account the task owner. If the user space
+>> wants to pass around a sg file descriptor in a Unix
+>> domain socket (see TLPI, Kerrisk) I don't see why the
+>> sg driver should object (and pay the small performance
+>> hit for each check).
+>>
+>> A nasty side effect of a mutex taking into account the
+>> task owner is that it can't be used in interrupt
+>> context. My patch does not try to do that yet (see next
+>> section) but why bother. Give me a simple mutex and
+>> I'll use it.
+>>
+>>>> sfds_list_empty(Sg_device *sdp)
+>>>>    {
+>>>>        unsigned long flags;
+>>>>        int ret;
+>>>>
+>>>> +    spin_lock_irqsave(&sdp->sfd_lock, flags);
+>>>> +    ret =3D list_empty(&sdp->sfds);
+>>>> +    spin_unlock_irqrestore(&sdp->sfd_lock, flags);
+>>>>        return ret;
+>>>
+>>> Protecting just a list_empty check with a local will give you racy
+>>> results.  Seems like you should take the look over the check and th=
+e
+>>> resulting action that modifies the list.  That'd also mean replacin=
+g the
+>>> wait_event* calls with open coded prepare_wait / finish_wait loops.
+>>
+>> Not (usually) in this case. The sdp->sfds list can only
+>> be expanded by another sg_open(same_dev) but this has
+>> been excluded by taking down(&sdp->or_sem) prior to that
+>> call. The sdp->sfds list is only normally decreased by
+>> sg_release() which is also excluded by down(&sdp->or_sem).
+>>
+>> The abnormal case is device removal (detaching). Now an
+>> open(same_dev, O_EXCL) may start waiting just after a
+>> detach but miss the wake up on open_wait. That suggests
+>> the wake_up(open_wait) in sg_remove() should also
+>> take the sdp->or_sem semaphore.
+>> Ah, and if sg_remove() can be called from an interrupt
+>> context then that takes out using mutexes :-)
+>>
+>> The two level of locks in sg_remove() is already making me
+>> uncomfortable, adding the sdp->or_sem semaphore to the
+>> mix calls for more analysis.
+> CCed to J=C3=B6rn Engel.
 >
->              Bug ID: 64171
->             Summary: Block SCSI Generic Driver does not keep data
->             Product: SCSI Drivers
->             Version: 2.5
->      Kernel Version: 2.6.32.61
->            Hardware: All
->                  OS: Linux
->                Tree: Mainline
->              Status: NEW
->            Severity: high
->            Priority: P1
->           Component: Other
->            Assignee: scsi_drivers-other@kernel-bugs.osdl.org
->            Reporter: af300wsm@gmail.com
->          Regression: No
+> I feel the same regarding the many locks. After reviewing patches I
+> wrote these days, I suppose the version 2
+> (https://lkml.org/lkml/2013/6/17/319) may worth a re-consideration so=
+mehow.
+> The purpose of or_sem is to mutex co-incident open and allow only one
+> thread to be processing since it completes checking condition to real=
+ly
+> linking a new sfd into sfd_siblings list. My v2 re-implement a sem us=
+ing
+> sfd_lock and toopen. But as J=C3=B6rn pointed out in the following ma=
+il, what
+> I implemented is a rw_sem and that is weird and made him "having trou=
+ble
+> wrapping my head around the semantics of this variable"...
+> With wait_event involved, it's indeed no sense to use a rw_sem here.
+> However, if we restrict toopen in [0, 1], not [0, INT_MAX] as I did i=
+n
+> v2, it will act in the same way as or_sem does. Beside the same affec=
+t
+> as or_sem, this implement avoids the problem using in interrupt conte=
+xt
+> and more readable for me, rather than twisting my head among many
+> spinlocks and semaphores.
+> Although v2 seems attractive to me, things would be more complicated
+> when detached comes in...
 >
-> Data written to any given file descriptor should be unique to that descriptor
-> and processor space.  Currently, the BSG Driver does not keep this uniqueness.
-> As the attached simple program demonstrates, a SCSI Command queued to the
-> device in one process is dequeued by another process which has opened a handle
-> to the same device.
+> The following is a thought I presented previously:
+> Is it possible to split the sg_add_sfp() into two
+> functions, sg_init_sfp() and sg_add_sfp2(). We can do all initialize
+> work in sg_init_sfp()
+> without any lock and let sg_add_sfp2() only serve lock-check-add in o=
+ne
+> place. It is less flaky.
+
+I do not follow the last point but that is not important.
+
+
+=46or reasons that I listed in a private post I think
+that my patch presented in this thread is closer to
+our goals than your patch (2013/6/17/319). Timing is
+important as well since we are approaching the lk 3.13
+merge window. Regressions are what will set us back.
+
+
+The remaining flaws are in the detach device area
+which always seems to be the last one worked on,
+probably because it is uncommon and the hardest :-)
+My test code hasn't broken this area with my latest
+patch (but that may be just luck or not good enough
+test strategies).
+
+Also the ULDs should get some basic guarantees from
+the mid-level about the attach and remove/detach
+device functions. I was thinking along the lines of
+"called once and only once" per removed device; won't
+overlap with an attach for the same device; may be
+called from an interrupt context; should not wait,
+etc.
+
+>> Also note that sdp->detached is only protected by a
+>> volatile type modifier and checks on it are sprinkled
+>> around the code in a rather unscientific way.
+>>
+>> As you are no doubt aware, handling the "surprise" device
+>> removal case safely is hard, very hard. And I have tried
+>> to test this, loading up 4 processes with 100 tasks each,
+>> some with asynchronous queueing requests but most hanging
+>> on an open_wait then remove the device. So far I have not
+>> seen a hang. Again, somebody with a big machine and
+>> patience might like to try a scaled up device removal test
+>> to see what breaks.
+>>
+>>>> +    down(&sdp->or_sem);
+>>>> +    alone =3D sfds_list_empty(sdp);
+>>>> +    if ((flags & O_EXCL) && (O_RDONLY =3D=3D (flags & O_ACCMODE))=
+) {
+>>>> +        retval =3D -EPERM; /* Don't allow O_EXCL with read only
+>>>> access */
+>>>> +        goto error_out;
+>>>> +    }
+>>>
+>>> Seems like the pure flags check should move to the beginning of the
+>>> function before taking any locks.
+>>
+>> As Vaughan pointed out, just prior to that down() is a call
+>> scsi_block_when_processing_errors() for blocking open()s.
 >
-> The attached file sends the simple SCSI "Test Unit Ready" command from the SCSI
-> Primary Command Spec. to the device using the BSG driver.  As the program
-> demonstrates, the sg_io_v4.usr_ptr field, which is set in the "push" branch of
-> the program, is dequeued from the "pop" branch of the code.
->
-> I also tested this behavior on Fedora 19 and the bug exists there as well.  F19
-> uses kernel 3.9.5.
->
-> Compile the attachment:
-> g++ -o <out> combined.cpp
->
->
-> Execute as follows:
-> sudo combined pop /dev/bsg/0:0:0:0 &
-> sudo combined push /dev/bsg/0:0:0:0
+> Douglas,
+> What Christoph points out is a sanity check for the input parameter
+> flags, not the scsi_block_when_processing_errors issue.
+> I guess you misread that:)
 
-I ran this test on lk 3.11.6 and it also exhibits this
-problem.
-
-When the bsg driver was originally designed, if my memory is
-correct, it did not have an asynchronous interface, so it
-skipped the complexity of keeping a separate context for
-each file handle within each device.
-
-With the addition of the asynchronous interface, the lack of
-file handle context is exposed by your simple test. I'm
-pretty sure that parallel test programs could show that
-synchronous SG_IO ioctls can also be tricked. For example:
-send INQUIRYs continuously from one process, TURs from
-another process to the same device. Then, once in a while,
-I guess that they would pick up the other one's response.
-
-As for fixing it, that seems like a lot of work. I'm busy with
-the sg driver at the moment. The short term solution is to use
-the sg driver instead of the bsg driver in cases like these
-unless:
-   a) you want to do SCSI bidirectional commands
-   b) you want to send SCSI commands whose cdb is greater
-      that 16 bytes
-
-
-Observation:
-wc bsg.c bsg-lib.c
-  1117  2761 24144 bsg.c
-   232   797  6117 bsg-lib.c
-  1349  3558 30261 total
-
-wc sg.c
-  2669  8327 72340 sg.c
-
-Some of those sg.c lines are bloat and for backward compatibility
-(to 1992); but not all of them!
-
-The sg driver has problems which several people are looking at,
-but not as fundamental as the one reported here.
-
-
-Another random thought: if the bsg driver implemented O_EXCL
-on its open()s [it just ignores it] then that would be one
-mechanism that could be used to guard against what has been
-observed.
+Yes, you are correct I misread the above. That test can go
+to the top of sg_open() without harm and make the critical
+code sections easier to follow. IMO not a show stopper.
 
 Doug Gilbert
-
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
