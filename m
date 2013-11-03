@@ -1,35 +1,41 @@
-From: Vaughan Cao <vaughan.cao@oracle.com>
-Subject: Re: [PATCH v2] sg: O_EXCL and other lock handling
-Date: Sun, 03 Nov 2013 14:32:52 +0800
-Message-ID: <5275EE14.2000701@oracle.com>
-References: <52718713.7050906@interlog.com> <20131031155653.GA16944@infradead.org> <5272AD80.90203@interlog.com> <5273391C.2010705@oracle.com> <527542E3.7090809@interlog.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH] scsi_debug: simplify creation and destruction of driver
+ attribute files
+Date: Sun, 03 Nov 2013 14:10:41 -0500
+Message-ID: <52769FB1.7010409@interlog.com>
+References: <1381758484-26083-1-git-send-email-akinobu.mita@gmail.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <527542E3.7090809@interlog.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: dgilbert@interlog.com, Christoph Hellwig <hch@infradead.org>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-kernel <linux-kernel@vger.kernel.org>, =?UTF-8?B?SsO2cm4gRW5nZWw=?= <joern@logfs.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.infotech.no ([82.134.31.41]:35585 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754210Ab3KCTKt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 3 Nov 2013 14:10:49 -0500
+In-Reply-To: <1381758484-26083-1-git-send-email-akinobu.mita@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Akinobu Mita <akinobu.mita@gmail.com>, linux-scsi@vger.kernel.org
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
+On 13-10-14 09:48 AM, Akinobu Mita wrote:
+> Instead of repeatedly calling driver_create_file() to create driver
+> attribute files, This achieves the same thing by constructing an array
+> of driver_attribute and setting it to bus_type->drv_groups.
+>
+> This change simplifies both creation and destruction of the attribute
+> files, and also removes sparse warning caused by driver_attributes which
+> are unnecessarily declared as global.
+>
+> Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
 
-On 2013=E5=B9=B411=E6=9C=8803=E6=97=A5 02:22, Douglas Gilbert wrote:
-> On 13-11-01 01:16 AM, vaughan wrote:
->
-> I do not follow the last point but that is not important.
->
->
-> For reasons that I listed in a private post I think
-> that my patch presented in this thread is closer to
-> our goals than your patch (2013/6/17/319). Timing is
-> important as well since we are approaching the lk 3.13
-> merge window. Regressions are what will set us back.
->
-Yes, I agree with you. My v2 patch lacks much consideration on=20
-release/detach cases, which is a very significant issue we should=20
-address along with o_excl bug.
+Acked-by: Douglas Gilbert <dgilbert@interlog.com>
 
-Thanks,
-Vaughan
+> Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+> Cc: Douglas Gilbert <dgilbert@interlog.com>
+> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+> Cc: linux-scsi@vger.kernel.org
+
+<snip>
+
