@@ -1,44 +1,116 @@
-From: Phillip Susi <psusi@ubuntu.com>
-Subject: Re: [PATCH 2/2] libata: avoid waking disk to check power
-Date: Mon, 04 Nov 2013 21:45:25 -0500
-Message-ID: <52785BC5.9020205@ubuntu.com>
-References: <1383612780-6591-1-git-send-email-psusi@ubuntu.com> <1383612780-6591-2-git-send-email-psusi@ubuntu.com> <52785A5F.4060001@intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <52785A5F.4060001@intel.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>, linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <tj@kernel.org>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCHv10 0/5] New EH command timeout handler
+Date: Tue,  5 Nov 2013 08:05:40 +0100
+Message-ID: <1383635145-112651-1-git-send-email-hare@suse.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:55891 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753029Ab3KEHFy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 5 Nov 2013 02:05:54 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <jbottomley@parallels.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Ren Mingxin <renmx@cn.fujitsu.com>, Joern Engel <joern@logfs.org>, James Smart <james.smart@emulex.com>, Hannes Reinecke <hare@suse.de>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA512
+Hi all,
 
-On 11/04/2013 09:39 PM, Aaron Lu wrote:
-> If the disk entered sleep mode due to runtime PM, then udisks can
-> easily tell by checking the device's runtime status and not send
-> out the query.
-> 
-> But if the disk entered sleep mode due to other reason, the patch
-> may be necessary. So what's your scenario?
+this patchset implements a new SCSI EH command timeout handler
+which will be sending command aborts inline without actually
+engaging SCSI EH.
+SCSI EH will only be invoked if command abort fails.
 
-I am planning on patching udisks to do that as well, but if you have a
-current udsisk or manually run hdparm -C, or some other program is
-doing something similar, then this patch takes care of that.
+In addition the commands will be returned directly
+if the command abort succeeded, cutting down recovery
+times dramatically.
 
+With the original SCSI EH I got:
+# time dd if=/dev/zero of=/dev/dm-2 bs=4k count=4k oflag=direct
+4096+0 records in
+4096+0 records out
+16777216 bytes (17 MB) copied, 142.652 s, 118 kB/s
 
+real	2m22.657s
+user	0m0.013s
+sys	0m0.145s
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.14 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+With this patchset I got:
+# time dd if=/dev/zero of=/dev/dm-2 bs=4k count=4k oflag=direct
+4096+0 records in
+4096+0 records out
+16777216 bytes (17 MB) copied, 52.1579 s, 322 kB/s
 
-iQEcBAEBCgAGBQJSeFvFAAoJEJrBOlT6nu75hcYH/0YsYcs3u9Dmuqq9z5kFXL3k
-C4xYQtvOxw2z+B/vEFzdym5J3ZfVyT4+ZdcHMvRgbbPH+R8/rzNC+F3OjdGtDIRA
-5EUo0BUT2IfY0Yp2SzP44+8aRC4iF5jLLcH9XJKQx7WHedJQ7puCgJXXHAgUhpwW
-52gJ0UEHnjlBgjwxY9RKqppnJs57x2VwgwR2BeFns6Hcry0S0HN0U4gwROmb1GZR
-kjpOUUYHb3MH/gfzCaY97t0duAAp7jzZeOIuu+XHfkyV3APwsnbasLOOoRYtpbvQ
-M++xmYQdNAh2DcZLEmAo6H6HLB/Z5d9K0+SKUFnsKHFaUCH0GPHm8SZ7E/NN7ig=
-=7c7v
------END PGP SIGNATURE-----
+real	0m52.163s
+user	0m0.012s
+sys	0m0.145s
+
+Test was to disable RSCN on the target port, disable the
+target port, and then start the 'dd' command as indicated.
+
+Changes to the original version:
+- Use a private list in scsi_eh_abort_handler to avoid
+  list starvation (pointed out by Joern Engel)
+- Terminate command aborts when the first abort fails
+- Do not attempt command aborts if the host is already in recovery
+  or if the device is removed.
+- Flush abort workqueue if the device is removed.
+
+Changes to v2:
+- Removed eh_entry initialisation
+- Convert to per-command workqueue
+
+Changes to v3:
+- Use delayed_work
+- Enable new eh timeout handler for virtio, SAS, and FC
+- Modify logging messages to include scmd pointer
+
+Changes to v4:
+- Remove stubs when enabling new eh timeout handler
+  for other drivers
+
+Changes to v5:
+- Enable new eh timeout handler per default
+- Update documentation
+
+Changes to v6:
+- Include changes from James Bottomley for erratic device
+  offline patch
+- Rearrange patches
+- Update SCSI midlayer documentation
+
+Changes to v7:
+- Merge obsolete patch
+
+Changes to v8:
+- Include fixes from hch
+- Include patch from Ren Mingxin to set eh_deadline to '0'
+
+Changes to v9:
+- Unlock accesses to eh_deadline
+
+Hannes Reinecke (3):
+  scsi: improved eh timeout handler
+  scsi: Unlock accesses to eh_deadline
+  scsi: Update documentation
+
+James Bottomley (1):
+  scsi: Fix erratic device offline during EH
+
+Ren Mingxin (1):
+  scsi: Set the minimum valid value of 'eh_deadline' as 0
+
+ Documentation/scsi/scsi_eh.txt          |  69 +++++-----
+ Documentation/scsi/scsi_mid_low_api.txt |   9 +-
+ drivers/scsi/hosts.c                    |  16 ++-
+ drivers/scsi/scsi.c                     |   9 +-
+ drivers/scsi/scsi_error.c               | 229 ++++++++++++++++++++++++--------
+ drivers/scsi/scsi_priv.h                |   2 +
+ drivers/scsi/scsi_sysfs.c               |  36 +++--
+ drivers/scsi/sd.c                       |  26 ++--
+ include/scsi/scsi_cmnd.h                |   1 +
+ include/scsi/scsi_driver.h              |   2 +-
+ include/scsi/scsi_host.h                |   5 +
+ 11 files changed, 281 insertions(+), 123 deletions(-)
+
+-- 
+1.7.12.4
+
