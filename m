@@ -1,41 +1,61 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH][SCSI] sr: Remove sr_mutex just like sd_module to optimize
- multi-drive performance
-Date: Tue, 05 Nov 2013 10:03:47 -0700
-Message-ID: <527924F3.7090800@kernel.dk>
-References: <CAO4Pk4xtaz2qwNJcfkNqK3CMAccGqr-i7UK+=fB0yxyoLp=tmA@mail.gmail.com> <52792039.2020405@interlog.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: Disk wakeup on resume
+Date: Tue, 05 Nov 2013 12:04:54 -0500
+Message-ID: <52792536.6020607@interlog.com>
+References: <527859D9.3030607@ubuntu.com> <52791518.5070705@interlog.com> <52791B85.1090805@ubuntu.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from merlin.infradead.org ([205.233.59.134]:34933 "EHLO
-	merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752857Ab3KEREG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Nov 2013 12:04:06 -0500
-In-Reply-To: <52792039.2020405@interlog.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <52791B85.1090805@ubuntu.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Phillip Susi <psusi@ubuntu.com>, linux-scsi@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: dgilbert@interlog.com, yang jun <yangjun.donglife123@gmail.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 11/05/2013 09:43 AM, Douglas Gilbert wrote:
-> On 13-11-01 11:46 AM, yang jun wrote:
->> The sr_mutex is not necessary, so we can delete it.
-> 
-> It is ironic that you are removing a mutex that serializes
-> the access to various calls in the sr driver at the same
-> time we are proposing to add a mutex to the open()
-> and release() calls in the sg driver. The sg driver's
-> proposed mutex is finer grained than sr_mutex: one per
-> device.
-> 
-> My guess would be that splitting sr_mutex out to
-> a per device mutex will be safer and get the performance
-> gain that you seem to be after.
+On 13-11-05 11:23 AM, Phillip Susi wrote:
+> -----BEGIN PGP SIGNED MESSAGE-----
+> Hash: SHA1
+>
+> On 11/5/2013 10:56 AM, Douglas Gilbert wrote:
+>> I think that you might find that almost any SCSI command
+>> (translated to its ATA equivalent command) will wake up a SATA
+>> disk. Perhaps just this sequence: fd = open(<ata_bloc_device>) ;
+>> close(fd) ; is sufficient.
+>
+> No, otherwise hdparm, udisks, etc would not be able to issue the CHECK
+> POWER command without waking the disk.  Most commands do wake the
+> drive, but as far as I can see, nobody is sending down any, and more
+> importantly, the wake is happening within the kernel pm resume path,
+> not by userspace after resume.
 
-Agree - the mutex should be retained, but make it per-device instead.
-That will fix your original issue as well.
+hdparm is quite capable of using a pass-through device
+to access disks. That allows it (and smartmontools) to
+access physical disks in a RAID when the block layer
+can only see the logical disk out front.
 
--- 
-Jens Axboe
+udisks is not that smart.
+
+
+Perhaps you need to start debugging around here:
+
+static int sd_resume(struct device *dev)
+{
+         struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
+         int ret = 0;
+
+         if (!sdkp->device->manage_start_stop)
+                 goto done;
+
+         sd_printk(KERN_NOTICE, sdkp, "Starting disk\n");
+         ret = sd_start_stop_device(sdkp, 1);
+
+done:
+         scsi_disk_put(sdkp);
+         return ret;
+}
+
+to work out if it is spun up before or after that call.
+
+Doug Gilbert
 
