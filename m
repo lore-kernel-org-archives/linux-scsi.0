@@ -1,63 +1,199 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: Disk wakeup on resume
-Date: Tue, 05 Nov 2013 17:05:31 +0800
-Message-ID: <5278B4DB.7080302@intel.com>
-References: <527859D9.3030607@ubuntu.com>
+From: Saurav Kashyap <saurav.kashyap@qlogic.com>
+Subject: Re: [SCSI] qla2xxx: Add support for ISP8044.
+Date: Tue, 5 Nov 2013 09:20:09 +0000
+Message-ID: <F5D084D6342F9B479C34599BB0A03E4D8983BE43@AVMB1.qlogic.org>
+References: <20131101103030.GL29795@longonot.mountain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="_000_F5D084D6342F9B479C34599BB0A03E4D8983BE43AVMB1qlogicorg_"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:10497 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750719Ab3KEJEq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 5 Nov 2013 04:04:46 -0500
-In-Reply-To: <527859D9.3030607@ubuntu.com>
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:63620 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751070Ab3KEJUN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Nov 2013 04:20:13 -0500
+Received: from pps.filterd (m0000643.ppops.net [127.0.0.1])
+	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id rA59DjaT007938
+	for <linux-scsi@vger.kernel.org>; Tue, 5 Nov 2013 01:20:12 -0800
+Received: from avcashub1.qlogic.com (avcashub1.qlogic.com [198.70.193.115])
+	by mx0b-0016ce01.pphosted.com with ESMTP id 1fr6q1773u-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Tue, 05 Nov 2013 01:20:12 -0800
+In-Reply-To: <20131101103030.GL29795@longonot.mountain>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Phillip Susi <psusi@ubuntu.com>, linux-scsi@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Dan Carpenter <dan.carpenter@oracle.com>, Atul Deshmukh <atul.deshmukh@qlogic.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On 11/05/2013 10:37 AM, Phillip Susi wrote:
-> -----BEGIN PGP SIGNED MESSAGE-----
-> Hash: SHA512
-> 
-> I can not figure out what is waking up disks on resume from suspend.
-> I thought it was sd.c, and setting manage_start_stop = 0 should stop
-> that.  It does stop the message printed saying it is being started,
-> yet the disk is still started, and this makes the resume take nearly
-> 10 seconds.  So it seems sd_resume()'s attempt to start the disk is
-> pointless and redundant, and something else is starting up the disk.
+--_000_F5D084D6342F9B479C34599BB0A03E4D8983BE43AVMB1qlogicorg_
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <36C46588A4FF5C41AE9F73B751A3BA4D@qlogic.com>
+Content-Transfer-Encoding: quoted-printable
 
-Are you using an ATA drive?
-Last time I checked, the spin up actually happened while the ata port is
-resumed(when it will be reset):
-https://lkml.org/lkml/2013/2/4/361
+Hi Dan,
+Thanks. We will soon submit the patch to correct the smatch warning.
 
--Aaron
+Thanks,
+~Saurav
 
-> Oddly, if I unbind the sd driver ( echo 1 >
-> /sys/block/sdx/device/delete ), then after a resume the disk remains
-> off ( and spins up again on rescan ).
-> 
-> I don't see why the kernel needs to delay completing the resume until
-> after the disks have spun up when they will automatically spin up when
-> accessed, which may be never ( thus they should be left spun down ),
-> but I can not find the culprit causing this.
-> 
-> -----BEGIN PGP SIGNATURE-----
-> Version: GnuPG v1.4.14 (GNU/Linux)
-> Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-> 
-> iQEcBAEBCgAGBQJSeFnWAAoJEJrBOlT6nu758QwIAJAhlQ5o6qDG9fm98w0j7MY9
-> OYp/NTd/nO4LGPGaTob/JCyuMDPMtXCOdueLxStlqnBLnPgfANZWD+VSSbsm/uae
-> pzvjihe6uU+mTCbPW0MNPEiFpH2mfVY8NMhrAEI/n0j9fjgd7E33NI2fedymEDPk
-> LcgdOtdQP3VSMMs6pjPRpkpVBJG1g3Y6XPLV8IFj8RPz6lUj3k5qj45lsgf//Am8
-> 5vD8SRoZZd7bZghqOCeUU2I/1kntKI5qz4cDUQq6wTVwqAuhLbpjFMOk5lX3gg/h
-> Q25FGU6Rc8nMyLw4eLbRA8Tvh2aLX5anPkdJqkb132ulbmqP7b8hjUZ4qtNQ/wA=
-> =JmIT
-> -----END PGP SIGNATURE-----
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+-----Original Message-----
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Date: Fri, 1 Nov 2013 13:30:30 +0300
+To: <atul.deshmukh@qlogic.com>
+Cc: <linux-scsi@vger.kernel.org>
+Subject: re: [SCSI] qla2xxx: Add support for ISP8044.
 
+>Hello Atul Deshmukh,
+>
+>This is a semi-automatic email about new static checker warnings.
+>
+>The patch 7ec0effd30bb: "[SCSI] qla2xxx: Add support for ISP8044."
+>from Aug 27, 2013, leads to the following Smatch complaint:
+>
+>drivers/scsi/qla2xxx/qla_os.c:2958 qla2x00_probe_one()
+>	 error: we previously assumed 'base_vha' could be null (see line 2628)
+>
+>drivers/scsi/qla2xxx/qla_os.c
+>  2627		base_vha =3D qla2x00_create_host(sht, ha);
+>  2628		if (!base_vha) {
+>                    ^^^^^^^^^
+>Existing check.
+>
+>  2629			ret =3D -ENOMEM;
+>  2630			qla2x00_mem_free(ha);
+>  2631			qla2x00_free_req_que(ha, req);
+>  2632			qla2x00_free_rsp_que(ha, rsp);
+>  2633			goto probe_hw_failed;
+>  2634		}
+>
+>[ snip ]
+>
+>  2935	probe_failed:
+>  2936		if (base_vha->timer_active)
+>  2937			qla2x00_stop_timer(base_vha);
+>  2938		base_vha->flags.online =3D 0;
+>  2939		if (ha->dpc_thread) {
+>  2940			struct task_struct *t =3D ha->dpc_thread;
+>  2941=09
+>  2942			ha->dpc_thread =3D NULL;
+>  2943			kthread_stop(t);
+>  2944		}
+>  2945=09
+>  2946		qla2x00_free_device(base_vha);
+>  2947=09
+>  2948		scsi_host_put(base_vha->host);
+>  2949=09
+>  2950	probe_hw_failed:
+>  2951		if (IS_QLA82XX(ha)) {
+>  2952			qla82xx_idc_lock(ha);
+>  2953			qla82xx_clear_drv_active(ha);
+>  2954			qla82xx_idc_unlock(ha);
+>  2955		}
+>  2956		if (IS_QLA8044(ha)) {
+>  2957			qla8044_idc_lock(ha);
+>  2958			qla8044_clear_drv_active(base_vha);
+>                                                 ^^^^^^^^
+>Patch introduces new unchecked dereference.
+>
+>  2959			qla8044_idc_unlock(ha);
+>  2960		}
+>
+>regards,
+>dan carpenter
+>--
+>To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+--_000_F5D084D6342F9B479C34599BB0A03E4D8983BE43AVMB1qlogicorg_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
+
+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
+UPC/GTA9kQeBKuIk0gDAagWw2mQDcG81LjpmTQWwGeB/yse4sQIQPZAFQFqAAkBwqDovLzU9L8rH
+Lc3Cei5aUG0JUCbbFULSEAAAHwBCAAEAAAAeAAAAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBw
+AAAAAAAfAGUAAQAAADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkA
+YwAuAGMAbwBtAAAAHwBkAAEAAAAKAAAAUwBNAFQAUAAAAAAAAgFBAAEAAAB0AAAAAAAAAIErH6S+
+oxAZnW4A3QEPVAIAAACAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAUwBNAFQAUAAAAHMA
+YQB1AHIAYQB2AC4AawBhAHMAaAB5AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAJdAQAA
+ADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAA
+HwDlXwEAAAA8AAAAcwBpAHAAOgBzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBn
+AGkAYwAuAGMAbwBtAAAAHwAaDAEAAAAeAAAAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAA
+AAAfAB8MAQAAADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAu
+AGMAbwBtAAAAHwAeDAEAAAAKAAAAUwBNAFQAUAAAAAAAAgEZDAEAAAB0AAAAAAAAAIErH6S+oxAZ
+nW4A3QEPVAIAAACAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAUwBNAFQAUAAAAHMAYQB1
+AHIAYQB2AC4AawBhAHMAaAB5AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAFdAQAAADQA
+AABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwD4
+PwEAAAAeAAAAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAAAAfACNAAQAAADQAAABzAGEA
+dQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAiQAEAAAAK
+AAAAUwBNAFQAUAAAAAAAAgH5PwEAAAB0AAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAUwBhAHUA
+cgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAUwBNAFQAUAAAAHMAYQB1AHIAYQB2AC4AawBhAHMAaAB5
+AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAldAQAAADQAAABzAGEAdQByAGEAdgAuAGsA
+YQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAACwBAOgEAAAAfABoAAQAAABIAAABJ
+AFAATQAuAE4AbwB0AGUAAAAAAAMA8T8JBAAACwBAOgEAAAADAP0/5AQAAAIBCzABAAAAEAAAAGnL
+GnQP58xNgvyzJfA7IFIDABcAAQAAAEAAOQCAau04CNrOAUAACDD+jjA5CNrOAQsAAIAIIAYAAAAA
+AMAAAAAAAABGAAAAABSFAAABAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAHgAAAGEAYwBjAGUA
+cAB0AGwAYQBuAGcAdQBhAGcAZQAAAAAAAQAAAAwAAABlAG4ALQBVAFMAAAALAACACCAGAAAAAADA
+AAAAAAAARgAAAAAGhQAAAAAAAB8ANwABAAAAWgAAAFIAZQA6ACAAWwBTAEMAUwBJAF0AIABxAGwA
+YQAyAHgAeAB4ADoAIABBAGQAZAAgAHMAdQBwAHAAbwByAHQAIABmAG8AcgAgAEkAUwBQADgAMAA0
+ADQALgAAAAAAHwA9AAEAAAAKAAAAUgBlADoAIAAAAAAAAwA2AAAAAAAfAEIQAQAAAFYAAAA8ADIA
+MAAxADMAMQAxADAAMQAxADAAMwAwADMAMAAuAEcATAAyADkANwA5ADUAQABsAG8AbgBnAG8AbgBv
+AHQALgBtAG8AdQBuAHQAYQBpAG4APgAAAAAAAgFxAAEAAAAWAAAAAQHO2gg5asgLs1V300SJ60OY
+AOaPjQAAHwBwAAEAAABSAAAAWwBTAEMAUwBJAF0AIABxAGwAYQAyAHgAeAB4ADoAIABBAGQAZAAg
+AHMAdQBwAHAAbwByAHQAIABmAG8AcgAgAEkAUwBQADgAMAA0ADQALgAAAAAAHwA1EAEAAAB4AAAA
+PABGADUARAAwADgANABEADYAMwA0ADIARgA5AEIANAA3ADkAQwAzADQANQA5ADkAQgBCADAAQQAw
+ADMARQA0AEQAOAA5ADgAMwBCAEUANAAzAEAAQQBWAE0AQgAxAC4AcQBsAG8AZwBpAGMALgBvAHIA
+ZwA+AAAAAwDeP59OAABAAAcwV8/5OAjazgEDACYAAAAAAAIBRwABAAAALgAAAGM9VVM7YT0gO3A9
+UUxvZ2ljO2w9QVZNQjEtMTMxMTA1MDkyMDA5Wi0zODg1MAAAAB8AFRABAAAAWAAAADMANgBDADQA
+NgA1ADgAOABBADQARgBGADUAQwA0ADEAQQBFADkARgA3ADMAQgA3ADUAMQBBADMAQgBBADQARABA
+AHEAbABvAGcAaQBjAC4AYwBvAG0AAAACARQwAQAAAAwAAAC4AAAAApGse0gAAAAfAPo/AQAAAB4A
+AABTAGEAdQByAGEAdgAgAEsAYQBzAGgAeQBhAHAAAAAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAA
+ABYAAAB1AHMAZQByAC0AYQBnAGUAbgB0AAAAAAABAAAASAAAAE0AaQBjAHIAbwBzAG8AZgB0AC0A
+TQBhAGMATwB1AHQAbABvAG8AawAvADEANAAuADEAMAAuADAALgAxADEAMAAzADEAMAAAAB8AAIAf
+pOszqHouQr57eeGpjlSzAQAAADgAAABDAG8AbgB2AGUAcgBzAGEAdABpAG8AbgBJAG4AZABlAHgA
+VAByAGEAYwBrAGkAbgBnAEUAeAAAAAEAAAB2AQAASQBJAD0AMAAxADAAMQBDAEUARABBADAAOAAz
+ADkANgBBAEMAOAAwAEIAQgAzADUANQA3ADcARAAzADQANAA4ADkARQBCADQAMwA5ADgAMAAwAEUA
+NgA4AEYAOABEADsAUwBCAE0ASQBEAD0AMwA7AFMAQgBUAD0AMwAwADYAOwBTADIAPQA8AEQANgAz
+AEIAOQA4ADAANABDAEIANgAzAEEARAA0AEYAQQBBAEQAOQA2ADYAMAAzADcANgA5ADUANgA2ADQA
+NgA0ADYARgA4ADAANgAyADEAQABhAHYAbQBiADIALgBxAGwAbwBnAGkAYwAuAG8AcgBnAD4AOwBU
+AEgAQQA9ADIAMQA3ADgAOAAzADkANwA1ADkAOwBWAGUAcgBzAGkAbwBuAD0AVgBlAHIAcwBpAG8A
+bgAgADEANAAuADIAIAAoAEIAdQBpAGwAZAAgADMAMQA4AC4AMAApACwAIABTAHQAYQBnAGUAPQBI
+ADcAAAAAAAMADTT9PwAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAIAAAAHgALQBtAHMALQBoAGEA
+cwAtAGEAdAB0AGEAYwBoAAAAAQAAAAIAAAAAAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAIgAA
+AHgALQBvAHIAaQBnAGkAbgBhAHQAaQBuAGcALQBpAHAAAAAAAAEAAAAYAAAAWwAxADAALgAxAC4A
+NAAuADEAMABdAAAAqNk=
+
+--_000_F5D084D6342F9B479C34599BB0A03E4D8983BE43AVMB1qlogicorg_--
