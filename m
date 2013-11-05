@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 3/5] scsi: Unlock accesses to eh_deadline
-Date: Tue,  5 Nov 2013 08:05:43 +0100
-Message-ID: <1383635145-112651-4-git-send-email-hare@suse.de>
+Subject: [PATCH 4/5] scsi: Set the minimum valid value of 'eh_deadline' as 0
+Date: Tue,  5 Nov 2013 08:05:44 +0100
+Message-ID: <1383635145-112651-5-git-send-email-hare@suse.de>
 References: <1383635145-112651-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:55889 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:55892 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752804Ab3KEHFy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1752621Ab3KEHFy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Tue, 5 Nov 2013 02:05:54 -0500
 In-Reply-To: <1383635145-112651-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,221 +14,228 @@ List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Ren Mingxin <renmx@cn.fujitsu.com>, Joern Engel <joern@logfs.org>, James Smart <james.smart@emulex.com>, Hannes Reinecke <hare@suse.de>
 
-32bit accesses are guaranteed to be atomic, so we can remove
-the spinlock when checking for eh_deadline. We only need to
-make sure to catch any updates which might happened during
-the call to time_before(); if so we just recheck with the
-correct value.
+From: Ren Mingxin <renmx@cn.fujitsu.com>
 
+The former minimum valid value of 'eh_deadline' is 1s, which means
+the earliest occasion to shorten EH is 1 second later since a
+command is failed or timed out. But if we want to skip EH steps
+ASAP, we have to wait until the first EH step is finished. If the
+duration of the first EH step is long, this waiting time is
+excruciating. So, it is necessary to accept 0 as the minimum valid
+value for 'eh_deadline'.
+
+According to my test, with Hannes' patchset 'New EH command timeout
+handler' as well, the minimum IO time is improved from 73s
+(eh_deadline = 1) to 43s(eh_deadline = 0) when commands are timed
+out by disabling RSCN and target port.
+
+Signed-off-by: Ren Mingxin <renmx@cn.fujitsu.com>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/scsi_error.c | 44 +++++++++-----------------------------------
- 1 file changed, 9 insertions(+), 35 deletions(-)
+ drivers/scsi/hosts.c      | 16 ++++++++++++----
+ drivers/scsi/scsi_error.c | 34 +++++++++++++++++++++-------------
+ drivers/scsi/scsi_sysfs.c | 36 +++++++++++++++++++++++++-----------
+ 3 files changed, 58 insertions(+), 28 deletions(-)
 
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index f334859..bc8c462 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -316,11 +316,11 @@ static void scsi_host_dev_release(struct device *dev)
+ 	kfree(shost);
+ }
+ 
+-static unsigned int shost_eh_deadline;
++static int shost_eh_deadline = -1;
+ 
+-module_param_named(eh_deadline, shost_eh_deadline, uint, S_IRUGO|S_IWUSR);
++module_param_named(eh_deadline, shost_eh_deadline, int, S_IRUGO|S_IWUSR);
+ MODULE_PARM_DESC(eh_deadline,
+-		 "SCSI EH timeout in seconds (should be between 1 and 2^32-1)");
++		 "SCSI EH timeout in seconds (should be between 0 and 2^31-1)");
+ 
+ static struct device_type scsi_host_type = {
+ 	.name =		"scsi_host",
+@@ -394,7 +394,15 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+ 	shost->unchecked_isa_dma = sht->unchecked_isa_dma;
+ 	shost->use_clustering = sht->use_clustering;
+ 	shost->ordered_tag = sht->ordered_tag;
+-	shost->eh_deadline = shost_eh_deadline * HZ;
++	if (shost_eh_deadline == -1)
++		shost->eh_deadline = -1;
++	else if ((ulong) shost_eh_deadline * HZ > INT_MAX) {
++		shost_printk(KERN_WARNING, shost,
++			     "eh_deadline %u too large, setting to %u\n",
++			     shost_eh_deadline, INT_MAX / HZ);
++		shost->eh_deadline = INT_MAX;
++	} else
++		shost->eh_deadline = shost_eh_deadline * HZ;
+ 
+ 	if (sht->supported_mode == MODE_UNKNOWN)
+ 		/* means we didn't set it ... default to INITIATOR */
 diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 7eecbb5..a3f8988 100644
+index a3f8988..f2fe580 100644
 --- a/drivers/scsi/scsi_error.c
 +++ b/drivers/scsi/scsi_error.c
-@@ -94,8 +94,15 @@ static int scsi_host_eh_past_deadline(struct Scsi_Host *shost)
- 	if (!shost->last_reset || !shost->eh_deadline)
+@@ -91,18 +91,18 @@ EXPORT_SYMBOL_GPL(scsi_schedule_eh);
+ 
+ static int scsi_host_eh_past_deadline(struct Scsi_Host *shost)
+ {
+-	if (!shost->last_reset || !shost->eh_deadline)
++	if (!shost->last_reset || shost->eh_deadline == -1)
  		return 0;
  
--	if (time_before(jiffies,
--			shost->last_reset + shost->eh_deadline))
-+	/*
-+	 * 32bit accesses are guaranteed to be atomic
-+	 * (on all supported architectures), so instead
-+	 * of using a spinlock we can as well double check
-+	 * if eh_deadline has been unset during the
-+	 * time_before call.
-+	 */
-+	if (time_before(jiffies, shost->last_reset + shost->eh_deadline) &&
-+	    shost->eh_deadline != 0)
+ 	/*
+ 	 * 32bit accesses are guaranteed to be atomic
+ 	 * (on all supported architectures), so instead
+ 	 * of using a spinlock we can as well double check
+-	 * if eh_deadline has been unset during the
++	 * if eh_deadline has been set to 'off' during the
+ 	 * time_before call.
+ 	 */
+ 	if (time_before(jiffies, shost->last_reset + shost->eh_deadline) &&
+-	    shost->eh_deadline != 0)
++	    shost->eh_deadline > -1)
  		return 0;
  
  	return 1;
-@@ -111,18 +118,14 @@ scmd_eh_abort_handler(struct work_struct *work)
- 	struct scsi_cmnd *scmd =
- 		container_of(work, struct scsi_cmnd, abort_work.work);
- 	struct scsi_device *sdev = scmd->device;
--	unsigned long flags;
- 	int rtn;
- 
--	spin_lock_irqsave(sdev->host->host_lock, flags);
- 	if (scsi_host_eh_past_deadline(sdev->host)) {
--		spin_unlock_irqrestore(sdev->host->host_lock, flags);
- 		SCSI_LOG_ERROR_RECOVERY(3,
- 			scmd_printk(KERN_INFO, scmd,
- 				    "scmd %p eh timeout, not aborting\n",
- 				    scmd));
- 	} else {
--		spin_unlock_irqrestore(sdev->host->host_lock, flags);
- 		SCSI_LOG_ERROR_RECOVERY(3,
- 			scmd_printk(KERN_INFO, scmd,
- 				    "aborting command %p\n", scmd));
-@@ -1132,7 +1135,6 @@ int scsi_eh_get_sense(struct list_head *work_q,
- 	struct scsi_cmnd *scmd, *next;
- 	struct Scsi_Host *shost;
- 	int rtn;
--	unsigned long flags;
- 
- 	list_for_each_entry_safe(scmd, next, work_q, eh_entry) {
- 		if ((scmd->eh_eflags & SCSI_EH_CANCEL_CMD) ||
-@@ -1140,16 +1142,13 @@ int scsi_eh_get_sense(struct list_head *work_q,
- 			continue;
- 
- 		shost = scmd->device->host;
--		spin_lock_irqsave(shost->host_lock, flags);
- 		if (scsi_host_eh_past_deadline(shost)) {
--			spin_unlock_irqrestore(shost->host_lock, flags);
- 			SCSI_LOG_ERROR_RECOVERY(3,
- 				shost_printk(KERN_INFO, shost,
- 					    "skip %s, past eh deadline\n",
- 					     __func__));
- 			break;
- 		}
--		spin_unlock_irqrestore(shost->host_lock, flags);
- 		SCSI_LOG_ERROR_RECOVERY(2, scmd_printk(KERN_INFO, scmd,
- 						  "%s: requesting sense\n",
- 						  current->comm));
-@@ -1235,26 +1234,21 @@ static int scsi_eh_test_devices(struct list_head *cmd_list,
- 	struct scsi_cmnd *scmd, *next;
- 	struct scsi_device *sdev;
- 	int finish_cmds;
--	unsigned long flags;
- 
- 	while (!list_empty(cmd_list)) {
- 		scmd = list_entry(cmd_list->next, struct scsi_cmnd, eh_entry);
- 		sdev = scmd->device;
- 
- 		if (!try_stu) {
--			spin_lock_irqsave(sdev->host->host_lock, flags);
- 			if (scsi_host_eh_past_deadline(sdev->host)) {
- 				/* Push items back onto work_q */
- 				list_splice_init(cmd_list, work_q);
--				spin_unlock_irqrestore(sdev->host->host_lock,
--						       flags);
+@@ -132,26 +132,34 @@ scmd_eh_abort_handler(struct work_struct *work)
+ 		rtn = scsi_try_to_abort_cmd(sdev->host->hostt, scmd);
+ 		if (rtn == SUCCESS) {
+ 			scmd->result |= DID_TIME_OUT << 16;
+-			if (!scsi_noretry_cmd(scmd) &&
++			if (scsi_host_eh_past_deadline(sdev->host)) {
++				SCSI_LOG_ERROR_RECOVERY(3,
++					scmd_printk(KERN_INFO, scmd,
++						    "scmd %p eh timeout, "
++						    "not retrying aborted "
++						    "command\n", scmd));
++			} else if (!scsi_noretry_cmd(scmd) &&
+ 			    (++scmd->retries <= scmd->allowed)) {
  				SCSI_LOG_ERROR_RECOVERY(3,
- 					shost_printk(KERN_INFO, sdev->host,
- 						     "skip %s, past eh deadline",
- 						     __func__));
- 				break;
+ 					scmd_printk(KERN_WARNING, scmd,
+ 						    "scmd %p retry "
+ 						    "aborted command\n", scmd));
+ 				scsi_queue_insert(scmd, SCSI_MLQUEUE_EH_RETRY);
++				return;
+ 			} else {
+ 				SCSI_LOG_ERROR_RECOVERY(3,
+ 					scmd_printk(KERN_WARNING, scmd,
+ 						    "scmd %p finish "
+ 						    "aborted command\n", scmd));
+ 				scsi_finish_command(scmd);
++				return;
  			}
--			spin_unlock_irqrestore(sdev->host->host_lock, flags);
+-			return;
++		} else {
++			SCSI_LOG_ERROR_RECOVERY(3,
++				scmd_printk(KERN_INFO, scmd,
++					    "scmd %p abort failed, rtn %d\n",
++					    scmd, rtn));
  		}
+-		SCSI_LOG_ERROR_RECOVERY(3,
+-			scmd_printk(KERN_INFO, scmd,
+-				    "scmd %p abort failed, rtn %d\n",
+-				    scmd, rtn));
+ 	}
  
- 		finish_cmds = !scsi_device_online(scmd->device) ||
-@@ -1295,15 +1289,12 @@ static int scsi_eh_abort_cmds(struct list_head *work_q,
- 	LIST_HEAD(check_list);
- 	int rtn;
- 	struct Scsi_Host *shost;
--	unsigned long flags;
+ 	if (!scsi_eh_scmd_add(scmd, 0)) {
+@@ -202,7 +210,7 @@ scsi_abort_command(struct scsi_cmnd *scmd)
+ 		return FAILED;
+ 	}
  
- 	list_for_each_entry_safe(scmd, next, work_q, eh_entry) {
- 		if (!(scmd->eh_eflags & SCSI_EH_CANCEL_CMD))
- 			continue;
- 		shost = scmd->device->host;
--		spin_lock_irqsave(shost->host_lock, flags);
- 		if (scsi_host_eh_past_deadline(shost)) {
--			spin_unlock_irqrestore(shost->host_lock, flags);
- 			list_splice_init(&check_list, work_q);
- 			SCSI_LOG_ERROR_RECOVERY(3,
- 				shost_printk(KERN_INFO, shost,
-@@ -1311,7 +1302,6 @@ static int scsi_eh_abort_cmds(struct list_head *work_q,
- 					     __func__));
- 			return list_empty(work_q);
- 		}
--		spin_unlock_irqrestore(shost->host_lock, flags);
- 		SCSI_LOG_ERROR_RECOVERY(3, printk("%s: aborting cmd:"
- 						  "0x%p\n", current->comm,
- 						  scmd));
-@@ -1375,19 +1365,15 @@ static int scsi_eh_stu(struct Scsi_Host *shost,
+-	if (shost->eh_deadline && !shost->last_reset)
++	if (shost->eh_deadline != -1 && !shost->last_reset)
+ 		shost->last_reset = jiffies;
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
+ 
+@@ -236,7 +244,7 @@ int scsi_eh_scmd_add(struct scsi_cmnd *scmd, int eh_flag)
+ 		if (scsi_host_set_state(shost, SHOST_CANCEL_RECOVERY))
+ 			goto out_unlock;
+ 
+-	if (shost->eh_deadline && !shost->last_reset)
++	if (shost->eh_deadline != -1 && !shost->last_reset)
+ 		shost->last_reset = jiffies;
+ 
+ 	ret = 1;
+@@ -270,7 +278,7 @@ enum blk_eh_timer_return scsi_times_out(struct request *req)
+ 	trace_scsi_dispatch_cmd_timeout(scmd);
+ 	scsi_log_completion(scmd, TIMEOUT_ERROR);
+ 
+-	if (host->eh_deadline && !host->last_reset)
++	if (host->eh_deadline != -1 && !host->last_reset)
+ 		host->last_reset = jiffies;
+ 
+ 	if (host->transportt->eh_timed_out)
+@@ -2106,7 +2114,7 @@ static void scsi_unjam_host(struct Scsi_Host *shost)
+ 			scsi_eh_ready_devs(shost, &eh_work_q, &eh_done_q);
+ 
+ 	spin_lock_irqsave(shost->host_lock, flags);
+-	if (shost->eh_deadline)
++	if (shost->eh_deadline != -1)
+ 		shost->last_reset = 0;
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
+ 	scsi_eh_flush_done_q(&eh_done_q);
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 8ff62c2..9117d0b 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -287,7 +287,9 @@ show_shost_eh_deadline(struct device *dev,
  {
- 	struct scsi_cmnd *scmd, *stu_scmd, *next;
- 	struct scsi_device *sdev;
--	unsigned long flags;
+ 	struct Scsi_Host *shost = class_to_shost(dev);
  
- 	shost_for_each_device(sdev, shost) {
--		spin_lock_irqsave(shost->host_lock, flags);
- 		if (scsi_host_eh_past_deadline(shost)) {
--			spin_unlock_irqrestore(shost->host_lock, flags);
- 			SCSI_LOG_ERROR_RECOVERY(3,
- 				shost_printk(KERN_INFO, shost,
- 					    "skip %s, past eh deadline\n",
- 					     __func__));
- 			break;
- 		}
--		spin_unlock_irqrestore(shost->host_lock, flags);
- 		stu_scmd = NULL;
- 		list_for_each_entry(scmd, work_q, eh_entry)
- 			if (scmd->device == sdev && SCSI_SENSE_VALID(scmd) &&
-@@ -1441,20 +1427,16 @@ static int scsi_eh_bus_device_reset(struct Scsi_Host *shost,
+-	return sprintf(buf, "%d\n", shost->eh_deadline / HZ);
++	if (shost->eh_deadline == -1)
++		return snprintf(buf, strlen("off") + 2, "off\n");
++	return sprintf(buf, "%u\n", shost->eh_deadline / HZ);
+ }
+ 
+ static ssize_t
+@@ -296,22 +298,34 @@ store_shost_eh_deadline(struct device *dev, struct device_attribute *attr,
  {
- 	struct scsi_cmnd *scmd, *bdr_scmd, *next;
- 	struct scsi_device *sdev;
+ 	struct Scsi_Host *shost = class_to_shost(dev);
+ 	int ret = -EINVAL;
+-	int deadline;
 -	unsigned long flags;
- 	int rtn;
++	unsigned long deadline, flags;
  
- 	shost_for_each_device(sdev, shost) {
+ 	if (shost->transportt && shost->transportt->eh_strategy_handler)
+ 		return ret;
+ 
+-	if (sscanf(buf, "%d\n", &deadline) == 1) {
 -		spin_lock_irqsave(shost->host_lock, flags);
- 		if (scsi_host_eh_past_deadline(shost)) {
--			spin_unlock_irqrestore(shost->host_lock, flags);
- 			SCSI_LOG_ERROR_RECOVERY(3,
- 				shost_printk(KERN_INFO, shost,
- 					    "skip %s, past eh deadline\n",
- 					     __func__));
- 			break;
- 		}
+-		if (scsi_host_in_recovery(shost))
+-			ret = -EBUSY;
+-		else {
++	if (!strncmp(buf, "off", strlen("off")))
++		deadline = -1;
++	else {
++		ret = kstrtoul(buf, 10, &deadline);
++		if (ret)
++			return ret;
++		if (deadline * HZ > UINT_MAX)
++			return -EINVAL;
++	}
++
++	spin_lock_irqsave(shost->host_lock, flags);
++	if (scsi_host_in_recovery(shost))
++		ret = -EBUSY;
++	else {
++		if (deadline == -1)
++			shost->eh_deadline = -1;
++		else
+ 			shost->eh_deadline = deadline * HZ;
+-			ret = count;
+-		}
 -		spin_unlock_irqrestore(shost->host_lock, flags);
- 		bdr_scmd = NULL;
- 		list_for_each_entry(scmd, work_q, eh_entry)
- 			if (scmd->device == sdev) {
-@@ -1515,11 +1497,8 @@ static int scsi_eh_target_reset(struct Scsi_Host *shost,
- 		struct scsi_cmnd *next, *scmd;
- 		int rtn;
- 		unsigned int id;
--		unsigned long flags;
++
++		ret = count;
+ 	}
++	spin_unlock_irqrestore(shost->host_lock, flags);
++
+ 	return ret;
+ }
  
--		spin_lock_irqsave(shost->host_lock, flags);
- 		if (scsi_host_eh_past_deadline(shost)) {
--			spin_unlock_irqrestore(shost->host_lock, flags);
- 			/* push back on work queue for further processing */
- 			list_splice_init(&check_list, work_q);
- 			list_splice_init(&tmp_list, work_q);
-@@ -1529,7 +1508,6 @@ static int scsi_eh_target_reset(struct Scsi_Host *shost,
- 					     __func__));
- 			return list_empty(work_q);
- 		}
--		spin_unlock_irqrestore(shost->host_lock, flags);
- 
- 		scmd = list_entry(tmp_list.next, struct scsi_cmnd, eh_entry);
- 		id = scmd_id(scmd);
-@@ -1574,7 +1552,6 @@ static int scsi_eh_bus_reset(struct Scsi_Host *shost,
- 	LIST_HEAD(check_list);
- 	unsigned int channel;
- 	int rtn;
--	unsigned long flags;
- 
- 	/*
- 	 * we really want to loop over the various channels, and do this on
-@@ -1584,9 +1561,7 @@ static int scsi_eh_bus_reset(struct Scsi_Host *shost,
- 	 */
- 
- 	for (channel = 0; channel <= shost->max_channel; channel++) {
--		spin_lock_irqsave(shost->host_lock, flags);
- 		if (scsi_host_eh_past_deadline(shost)) {
--			spin_unlock_irqrestore(shost->host_lock, flags);
- 			list_splice_init(&check_list, work_q);
- 			SCSI_LOG_ERROR_RECOVERY(3,
- 				shost_printk(KERN_INFO, shost,
-@@ -1594,7 +1569,6 @@ static int scsi_eh_bus_reset(struct Scsi_Host *shost,
- 					     __func__));
- 			return list_empty(work_q);
- 		}
--		spin_unlock_irqrestore(shost->host_lock, flags);
- 
- 		chan_scmd = NULL;
- 		list_for_each_entry(scmd, work_q, eh_entry) {
 -- 
 1.7.12.4
 
