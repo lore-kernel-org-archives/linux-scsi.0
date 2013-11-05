@@ -1,35 +1,44 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: [PATCH 1/2] libata: use sleep instead of standby command
-Date: Tue, 05 Nov 2013 10:44:32 +0800
-Message-ID: <52785B90.4050807@intel.com>
-References: <1383612780-6591-1-git-send-email-psusi@ubuntu.com> <527856B6.8030901@intel.com> <52785A4E.7080006@ubuntu.com>
+From: Phillip Susi <psusi@ubuntu.com>
+Subject: Re: [PATCH 2/2] libata: avoid waking disk to check power
+Date: Mon, 04 Nov 2013 21:45:25 -0500
+Message-ID: <52785BC5.9020205@ubuntu.com>
+References: <1383612780-6591-1-git-send-email-psusi@ubuntu.com> <1383612780-6591-2-git-send-email-psusi@ubuntu.com> <52785A5F.4060001@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <52785A4E.7080006@ubuntu.com>
+In-Reply-To: <52785A5F.4060001@intel.com>
 Sender: linux-ide-owner@vger.kernel.org
-To: Phillip Susi <psusi@ubuntu.com>, linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Robert Hancock <hancockr@shaw.ca>
+To: Aaron Lu <aaron.lu@intel.com>, linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <tj@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 11/05/2013 10:39 AM, Phillip Susi wrote:
-> -----BEGIN PGP SIGNED MESSAGE-----
-> Hash: SHA512
-> 
-> On 11/04/2013 09:23 PM, Aaron Lu wrote:
->> I suppose this is mainly for runtime PM? Since for system 
->> suspend/hibernation, the disk and its controller will be powered
->> off anyway.
-> 
-> Yes, or the second patch also helps when one manually issues hdparm
-> - -Y, which otherwise will cause the drive to be woken up to answer the
-> CHECK POWER command, which udisks issues to decide if it should skip
-> polling the SMART status of the drive.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
 
-OK, I see.
-I wish udidks can do both of these(polling smart status and put the disk
-into sleep mode), so that it knows when the disk is in sleep mode and it
-will not send out the needless poll...
+On 11/04/2013 09:39 PM, Aaron Lu wrote:
+> If the disk entered sleep mode due to runtime PM, then udisks can
+> easily tell by checking the device's runtime status and not send
+> out the query.
+> 
+> But if the disk entered sleep mode due to other reason, the patch
+> may be necessary. So what's your scenario?
 
--Aaron
+I am planning on patching udisks to do that as well, but if you have a
+current udsisk or manually run hdparm -C, or some other program is
+doing something similar, then this patch takes care of that.
+
+
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.14 (GNU/Linux)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iQEcBAEBCgAGBQJSeFvFAAoJEJrBOlT6nu75hcYH/0YsYcs3u9Dmuqq9z5kFXL3k
+C4xYQtvOxw2z+B/vEFzdym5J3ZfVyT4+ZdcHMvRgbbPH+R8/rzNC+F3OjdGtDIRA
+5EUo0BUT2IfY0Yp2SzP44+8aRC4iF5jLLcH9XJKQx7WHedJQ7puCgJXXHAgUhpwW
+52gJ0UEHnjlBgjwxY9RKqppnJs57x2VwgwR2BeFns6Hcry0S0HN0U4gwROmb1GZR
+kjpOUUYHb3MH/gfzCaY97t0duAAp7jzZeOIuu+XHfkyV3APwsnbasLOOoRYtpbvQ
+M++xmYQdNAh2DcZLEmAo6H6HLB/Z5d9K0+SKUFnsKHFaUCH0GPHm8SZ7E/NN7ig=
+=7c7v
+-----END PGP SIGNATURE-----
