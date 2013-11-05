@@ -1,116 +1,181 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv10 0/5] New EH command timeout handler
-Date: Tue,  5 Nov 2013 08:05:40 +0100
-Message-ID: <1383635145-112651-1-git-send-email-hare@suse.de>
+Subject: [PATCH 1/5] scsi: Fix erratic device offline during EH
+Date: Tue,  5 Nov 2013 08:05:41 +0100
+Message-ID: <1383635145-112651-2-git-send-email-hare@suse.de>
+References: <1383635145-112651-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:55891 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:55890 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753029Ab3KEHFy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1753240Ab3KEHFy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Tue, 5 Nov 2013 02:05:54 -0500
+In-Reply-To: <1383635145-112651-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Ren Mingxin <renmx@cn.fujitsu.com>, Joern Engel <joern@logfs.org>, James Smart <james.smart@emulex.com>, Hannes Reinecke <hare@suse.de>
 
-Hi all,
+From: James Bottomley <jbottomley@parallels.com>
 
-this patchset implements a new SCSI EH command timeout handler
-which will be sending command aborts inline without actually
-engaging SCSI EH.
-SCSI EH will only be invoked if command abort fails.
+Commit 18a4d0a22ed6c54b67af7718c305cd010f09ddf8
+(Handle disk devices which can not process medium access commands)
+was introduced to offline any device which cannot process medium
+access commands.
+However, commit 3eef6257de48ff84a5d98ca533685df8a3beaeb8
+(Reduce error recovery time by reducing use of TURs) reduced
+the number of TURs by sending it only on the first failing
+command, which might or might not be a medium access command.
+So in combination this results in an erratic device offlining
+during EH; if the command where the TUR was sent upon happens
+to be a medium access command the device will be set offline,
+if not everything proceeds as normal.
 
-In addition the commands will be returned directly
-if the command abort succeeded, cutting down recovery
-times dramatically.
+This patch moves the check to the final test, eliminating
+this problem.
 
-With the original SCSI EH I got:
-# time dd if=/dev/zero of=/dev/dm-2 bs=4k count=4k oflag=direct
-4096+0 records in
-4096+0 records out
-16777216 bytes (17 MB) copied, 142.652 s, 118 kB/s
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: James Bottomley <jbottomley@parallels.com>
+---
+ drivers/scsi/scsi_error.c  | 26 +++++++++++++++++---------
+ drivers/scsi/sd.c          | 26 ++++++++++++--------------
+ include/scsi/scsi_driver.h |  2 +-
+ 3 files changed, 30 insertions(+), 24 deletions(-)
 
-real	2m22.657s
-user	0m0.013s
-sys	0m0.145s
-
-With this patchset I got:
-# time dd if=/dev/zero of=/dev/dm-2 bs=4k count=4k oflag=direct
-4096+0 records in
-4096+0 records out
-16777216 bytes (17 MB) copied, 52.1579 s, 322 kB/s
-
-real	0m52.163s
-user	0m0.012s
-sys	0m0.145s
-
-Test was to disable RSCN on the target port, disable the
-target port, and then start the 'dd' command as indicated.
-
-Changes to the original version:
-- Use a private list in scsi_eh_abort_handler to avoid
-  list starvation (pointed out by Joern Engel)
-- Terminate command aborts when the first abort fails
-- Do not attempt command aborts if the host is already in recovery
-  or if the device is removed.
-- Flush abort workqueue if the device is removed.
-
-Changes to v2:
-- Removed eh_entry initialisation
-- Convert to per-command workqueue
-
-Changes to v3:
-- Use delayed_work
-- Enable new eh timeout handler for virtio, SAS, and FC
-- Modify logging messages to include scmd pointer
-
-Changes to v4:
-- Remove stubs when enabling new eh timeout handler
-  for other drivers
-
-Changes to v5:
-- Enable new eh timeout handler per default
-- Update documentation
-
-Changes to v6:
-- Include changes from James Bottomley for erratic device
-  offline patch
-- Rearrange patches
-- Update SCSI midlayer documentation
-
-Changes to v7:
-- Merge obsolete patch
-
-Changes to v8:
-- Include fixes from hch
-- Include patch from Ren Mingxin to set eh_deadline to '0'
-
-Changes to v9:
-- Unlock accesses to eh_deadline
-
-Hannes Reinecke (3):
-  scsi: improved eh timeout handler
-  scsi: Unlock accesses to eh_deadline
-  scsi: Update documentation
-
-James Bottomley (1):
-  scsi: Fix erratic device offline during EH
-
-Ren Mingxin (1):
-  scsi: Set the minimum valid value of 'eh_deadline' as 0
-
- Documentation/scsi/scsi_eh.txt          |  69 +++++-----
- Documentation/scsi/scsi_mid_low_api.txt |   9 +-
- drivers/scsi/hosts.c                    |  16 ++-
- drivers/scsi/scsi.c                     |   9 +-
- drivers/scsi/scsi_error.c               | 229 ++++++++++++++++++++++++--------
- drivers/scsi/scsi_priv.h                |   2 +
- drivers/scsi/scsi_sysfs.c               |  36 +++--
- drivers/scsi/sd.c                       |  26 ++--
- include/scsi/scsi_cmnd.h                |   1 +
- include/scsi/scsi_driver.h              |   2 +-
- include/scsi/scsi_host.h                |   5 +
- 11 files changed, 281 insertions(+), 123 deletions(-)
-
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index e8bee9f..67c0014 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -941,12 +941,6 @@ retry:
+ 
+ 	scsi_eh_restore_cmnd(scmd, &ses);
+ 
+-	if (scmd->request->cmd_type != REQ_TYPE_BLOCK_PC) {
+-		struct scsi_driver *sdrv = scsi_cmd_to_driver(scmd);
+-		if (sdrv->eh_action)
+-			rtn = sdrv->eh_action(scmd, cmnd, cmnd_size, rtn);
+-	}
+-
+ 	return rtn;
+ }
+ 
+@@ -964,6 +958,16 @@ static int scsi_request_sense(struct scsi_cmnd *scmd)
+ 	return scsi_send_eh_cmnd(scmd, NULL, 0, scmd->device->eh_timeout, ~0);
+ }
+ 
++static int scsi_eh_action(struct scsi_cmnd *scmd, int rtn)
++{
++	if (scmd->request->cmd_type != REQ_TYPE_BLOCK_PC) {
++		struct scsi_driver *sdrv = scsi_cmd_to_driver(scmd);
++		if (sdrv->eh_action)
++			rtn = sdrv->eh_action(scmd, rtn);
++	}
++	return rtn;
++}
++
+ /**
+  * scsi_eh_finish_cmd - Handle a cmd that eh is finished with.
+  * @scmd:	Original SCSI cmd that eh has finished.
+@@ -1142,7 +1146,9 @@ static int scsi_eh_test_devices(struct list_head *cmd_list,
+ 
+ 		list_for_each_entry_safe(scmd, next, cmd_list, eh_entry)
+ 			if (scmd->device == sdev) {
+-				if (finish_cmds)
++				if (finish_cmds &&
++				    (try_stu ||
++				     scsi_eh_action(scmd, SUCCESS) == SUCCESS))
+ 					scsi_eh_finish_cmd(scmd, done_q);
+ 				else
+ 					list_move_tail(&scmd->eh_entry, work_q);
+@@ -1283,7 +1289,8 @@ static int scsi_eh_stu(struct Scsi_Host *shost,
+ 			    !scsi_eh_tur(stu_scmd)) {
+ 				list_for_each_entry_safe(scmd, next,
+ 							  work_q, eh_entry) {
+-					if (scmd->device == sdev)
++					if (scmd->device == sdev &&
++					    scsi_eh_action(scmd, SUCCESS) == SUCCESS)
+ 						scsi_eh_finish_cmd(scmd, done_q);
+ 				}
+ 			}
+@@ -1350,7 +1357,8 @@ static int scsi_eh_bus_device_reset(struct Scsi_Host *shost,
+ 			    !scsi_eh_tur(bdr_scmd)) {
+ 				list_for_each_entry_safe(scmd, next,
+ 							 work_q, eh_entry) {
+-					if (scmd->device == sdev)
++					if (scmd->device == sdev &&
++					    scsi_eh_action(scmd, rtn) != FAILED)
+ 						scsi_eh_finish_cmd(scmd,
+ 								   done_q);
+ 				}
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index fd874b8..1929838 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -110,7 +110,7 @@ static int sd_suspend_runtime(struct device *);
+ static int sd_resume(struct device *);
+ static void sd_rescan(struct device *);
+ static int sd_done(struct scsi_cmnd *);
+-static int sd_eh_action(struct scsi_cmnd *, unsigned char *, int, int);
++static int sd_eh_action(struct scsi_cmnd *, int);
+ static void sd_read_capacity(struct scsi_disk *sdkp, unsigned char *buffer);
+ static void scsi_disk_release(struct device *cdev);
+ static void sd_print_sense_hdr(struct scsi_disk *, struct scsi_sense_hdr *);
+@@ -1551,23 +1551,23 @@ static const struct block_device_operations sd_fops = {
+ /**
+  *	sd_eh_action - error handling callback
+  *	@scmd:		sd-issued command that has failed
+- *	@eh_cmnd:	The command that was sent during error handling
+- *	@eh_cmnd_len:	Length of eh_cmnd in bytes
+  *	@eh_disp:	The recovery disposition suggested by the midlayer
+  *
+- *	This function is called by the SCSI midlayer upon completion of
+- *	an error handling command (TEST UNIT READY, START STOP UNIT,
+- *	etc.) The command sent to the device by the error handler is
+- *	stored in eh_cmnd. The result of sending the eh command is
+- *	passed in eh_disp.
++ *	This function is called by the SCSI midlayer upon completion of an
++ *	error test command (currently TEST UNIT READY). The result of sending
++ *	the eh command is passed in eh_disp.  We're looking for devices that
++ *	fail medium access commands but are OK with non access commands like
++ *	test unit ready (so wrongly see the device as having a successful
++ *	recovery)
+  **/
+-static int sd_eh_action(struct scsi_cmnd *scmd, unsigned char *eh_cmnd,
+-			int eh_cmnd_len, int eh_disp)
++static int sd_eh_action(struct scsi_cmnd *scmd, int eh_disp)
+ {
+ 	struct scsi_disk *sdkp = scsi_disk(scmd->request->rq_disk);
+ 
+ 	if (!scsi_device_online(scmd->device) ||
+-	    !scsi_medium_access_command(scmd))
++	    !scsi_medium_access_command(scmd) ||
++	    host_byte(scmd->result) != DID_TIME_OUT ||
++	    eh_disp != SUCCESS)
+ 		return eh_disp;
+ 
+ 	/*
+@@ -1577,9 +1577,7 @@ static int sd_eh_action(struct scsi_cmnd *scmd, unsigned char *eh_cmnd,
+ 	 * process of recovering or has it suffered an internal failure
+ 	 * that prevents access to the storage medium.
+ 	 */
+-	if (host_byte(scmd->result) == DID_TIME_OUT && eh_disp == SUCCESS &&
+-	    eh_cmnd_len && eh_cmnd[0] == TEST_UNIT_READY)
+-		sdkp->medium_access_timed_out++;
++	sdkp->medium_access_timed_out++;
+ 
+ 	/*
+ 	 * If the device keeps failing read/write commands but TEST UNIT
+diff --git a/include/scsi/scsi_driver.h b/include/scsi/scsi_driver.h
+index d443aa0..20fdfc2 100644
+--- a/include/scsi/scsi_driver.h
++++ b/include/scsi/scsi_driver.h
+@@ -16,7 +16,7 @@ struct scsi_driver {
+ 
+ 	void (*rescan)(struct device *);
+ 	int (*done)(struct scsi_cmnd *);
+-	int (*eh_action)(struct scsi_cmnd *, unsigned char *, int, int);
++	int (*eh_action)(struct scsi_cmnd *, int);
+ };
+ #define to_scsi_driver(drv) \
+ 	container_of((drv), struct scsi_driver, gendrv)
 -- 
 1.7.12.4
 
