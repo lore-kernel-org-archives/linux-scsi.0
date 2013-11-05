@@ -1,199 +1,97 @@
-From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: Re: [SCSI] qla2xxx: Add support for ISP8044.
-Date: Tue, 5 Nov 2013 09:20:09 +0000
-Message-ID: <F5D084D6342F9B479C34599BB0A03E4D8983BE43@AVMB1.qlogic.org>
-References: <20131101103030.GL29795@longonot.mountain>
+From: Jiri Kosina <jkosina@suse.cz>
+Subject: Re: [PATCH] PCI: add quirk for 3ware 9650SE controller
+Date: Tue, 5 Nov 2013 14:06:30 +0100 (CET)
+Message-ID: <alpine.LNX.2.00.1311051402500.2779@pobox.suse.cz>
+References: <alpine.LNX.2.00.1308271141080.2077@pobox.suse.cz> <alpine.LNX.2.00.1308271144420.2077@pobox.suse.cz> <alpine.LNX.2.00.1308281745460.4557@pobox.suse.cz> <CAErSpo6saRNMw6Js0PLXZzYDdH0M3ypSFLDxVxp0G02aetp0Dw@mail.gmail.com>
+ <alpine.LNX.2.00.1309061150140.26934@pobox.suse.cz> <CAErSpo5ExXsbSd+jYP5JYwq-RBf-dx1T_AZx6CV4=6-AfTTynQ@mail.gmail.com> <alpine.LNX.2.00.1309271106090.18703@pobox.suse.cz> <alpine.LNX.2.00.1310301125400.19090@pobox.suse.cz>
+ <CAErSpo7qORQjs62zdi-5et2WnWwy3weMs56G84rWhNrW59F5WQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_000_F5D084D6342F9B479C34599BB0A03E4D8983BE43AVMB1qlogicorg_"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:63620 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751070Ab3KEJUN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Nov 2013 04:20:13 -0500
-Received: from pps.filterd (m0000643.ppops.net [127.0.0.1])
-	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id rA59DjaT007938
-	for <linux-scsi@vger.kernel.org>; Tue, 5 Nov 2013 01:20:12 -0800
-Received: from avcashub1.qlogic.com (avcashub1.qlogic.com [198.70.193.115])
-	by mx0b-0016ce01.pphosted.com with ESMTP id 1fr6q1773u-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Tue, 05 Nov 2013 01:20:12 -0800
-In-Reply-To: <20131101103030.GL29795@longonot.mountain>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-pci-owner@vger.kernel.org>
+In-Reply-To: <CAErSpo7qORQjs62zdi-5et2WnWwy3weMs56G84rWhNrW59F5WQ@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Eric W. Biederman" <ebiederm@xmission.com>, Jesse Barnes <jbarnes@virtuousgeek.org>, Adam Radford <aradford@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>, Atul Deshmukh <atul.deshmukh@qlogic.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
---_000_F5D084D6342F9B479C34599BB0A03E4D8983BE43AVMB1qlogicorg_
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <36C46588A4FF5C41AE9F73B751A3BA4D@qlogic.com>
-Content-Transfer-Encoding: quoted-printable
+On Thu, 31 Oct 2013, Bjorn Helgaas wrote:
 
-Hi Dan,
-Thanks. We will soon submit the patch to correct the smatch warning.
+> > Attached is dmesg output leading to timeouts (that are cured by my
+> > original patch in this thread) and lspci.
+> 
+> I opened https://bugzilla.kernel.org/show_bug.cgi?id=64141 for this
+> issue and attached your dmesg log and lspci output.
+> 
+> > Please let me know if there is anything else I could do, or if you are
+> > going to proceed with my patch adding the quirk.
+> 
+> Your quirk keeps us from disabling MSIs on the device during
+> enumeration.  But even if the BIOS left MSIs enabled, there's nothing
+> to field the MSI until after the driver claims the device.  So I don't
+> believe this has to be done as a quirk.  It should work just as well
+> to do something in the driver when it claims the device.
+> 
+> I guess another way to say this is that I don't think we understand
+> what the real problem is, and if we just add a quirk to work around
+> it, we might miss the chance to fix the real problem, and we may never
+> be able to remove the special-case code we're adding in the generic
+> path.
+> 
+> I know you said you tried doing something in the driver, and it didn't
+> work.  I don't know exactly what you tried, but twa_probe() looks
+> strange to me.  The other drivers I looked at do all their PCI
+> initialization before the scsi_host_alloc() / scsi_add_host() /
+> scsi_scan_host() stuff.  But twa_probe() has PCI stuff scattered
+> around between those three SCSI calls.  In particular, it does the MSI
+> setup way down near the end, after scsi_add_host(), which seems like
+> just the sort of thing that could explain this problem.
 
-Thanks,
-~Saurav
+What I tried was patch below, but it didn't have any observable effect -- 
+the commands sent to the controller would still time out the same way.
 
------Original Message-----
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Date: Fri, 1 Nov 2013 13:30:30 +0300
-To: <atul.deshmukh@qlogic.com>
-Cc: <linux-scsi@vger.kernel.org>
-Subject: re: [SCSI] qla2xxx: Add support for ISP8044.
+Debugging this is not really straightforward for me unfortunately, as I 
+don't own the system myself.
 
->Hello Atul Deshmukh,
->
->This is a semi-automatic email about new static checker warnings.
->
->The patch 7ec0effd30bb: "[SCSI] qla2xxx: Add support for ISP8044."
->from Aug 27, 2013, leads to the following Smatch complaint:
->
->drivers/scsi/qla2xxx/qla_os.c:2958 qla2x00_probe_one()
->	 error: we previously assumed 'base_vha' could be null (see line 2628)
->
->drivers/scsi/qla2xxx/qla_os.c
->  2627		base_vha =3D qla2x00_create_host(sht, ha);
->  2628		if (!base_vha) {
->                    ^^^^^^^^^
->Existing check.
->
->  2629			ret =3D -ENOMEM;
->  2630			qla2x00_mem_free(ha);
->  2631			qla2x00_free_req_que(ha, req);
->  2632			qla2x00_free_rsp_que(ha, rsp);
->  2633			goto probe_hw_failed;
->  2634		}
->
->[ snip ]
->
->  2935	probe_failed:
->  2936		if (base_vha->timer_active)
->  2937			qla2x00_stop_timer(base_vha);
->  2938		base_vha->flags.online =3D 0;
->  2939		if (ha->dpc_thread) {
->  2940			struct task_struct *t =3D ha->dpc_thread;
->  2941=09
->  2942			ha->dpc_thread =3D NULL;
->  2943			kthread_stop(t);
->  2944		}
->  2945=09
->  2946		qla2x00_free_device(base_vha);
->  2947=09
->  2948		scsi_host_put(base_vha->host);
->  2949=09
->  2950	probe_hw_failed:
->  2951		if (IS_QLA82XX(ha)) {
->  2952			qla82xx_idc_lock(ha);
->  2953			qla82xx_clear_drv_active(ha);
->  2954			qla82xx_idc_unlock(ha);
->  2955		}
->  2956		if (IS_QLA8044(ha)) {
->  2957			qla8044_idc_lock(ha);
->  2958			qla8044_clear_drv_active(base_vha);
->                                                 ^^^^^^^^
->Patch introduces new unchecked dereference.
->
->  2959			qla8044_idc_unlock(ha);
->  2960		}
->
->regards,
->dan carpenter
->--
->To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I agree that we don't fully understand what is happening, but the quirk 
+was the only way I have been able to come up with to make the device 
+functioning again (apart from reverting d5dea7d95).
+
+Any other ideas are welcome.
+
+---
+ drivers/scsi/3w-9xxx.c |   10 +++++-----
+ 1 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/scsi/3w-9xxx.c b/drivers/scsi/3w-9xxx.c
+index ba754c3..bad7faf 100644
+--- a/drivers/scsi/3w-9xxx.c
++++ b/drivers/scsi/3w-9xxx.c
+@@ -2055,6 +2055,11 @@ static int __devinit twa_probe(struct pci_dev *pdev, const struct pci_device_id
+ 			goto out_disable_device;
+ 		}
+ 
++	/* Try to enable MSI */
++	if (use_msi && (pdev->device != PCI_DEVICE_ID_3WARE_9000) &&
++	    !pci_enable_msi(pdev))
++		set_bit(TW_USING_MSI, &tw_dev->flags);
++
+ 	host = scsi_host_alloc(&driver_template, sizeof(TW_Device_Extension));
+ 	if (!host) {
+ 		TW_PRINTK(host, TW_DRIVER, 0x24, "Failed to allocate memory for device extension");
+@@ -2134,11 +2139,6 @@ static int __devinit twa_probe(struct pci_dev *pdev, const struct pci_device_id
+ 	       le32_to_cpu(*(int *)twa_get_param(tw_dev, 2, TW_INFORMATION_TABLE,
+ 				     TW_PARAM_PORTCOUNT, TW_PARAM_PORTCOUNT_LENGTH)));
+ 
+-	/* Try to enable MSI */
+-	if (use_msi && (pdev->device != PCI_DEVICE_ID_3WARE_9000) &&
+-	    !pci_enable_msi(pdev))
+-		set_bit(TW_USING_MSI, &tw_dev->flags);
+-
+ 	/* Now setup the interrupt handler */
+ 	retval = request_irq(pdev->irq, twa_interrupt, IRQF_SHARED, "3w-9xxx", tw_dev);
+ 	if (retval) {
 
 
---_000_F5D084D6342F9B479C34599BB0A03E4D8983BE43AVMB1qlogicorg_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
-
-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
-UPC/GTA9kQeBKuIk0gDAagWw2mQDcG81LjpmTQWwGeB/yse4sQIQPZAFQFqAAkBwqDovLzU9L8rH
-Lc3Cei5aUG0JUCbbFULSEAAAHwBCAAEAAAAeAAAAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBw
-AAAAAAAfAGUAAQAAADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkA
-YwAuAGMAbwBtAAAAHwBkAAEAAAAKAAAAUwBNAFQAUAAAAAAAAgFBAAEAAAB0AAAAAAAAAIErH6S+
-oxAZnW4A3QEPVAIAAACAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAUwBNAFQAUAAAAHMA
-YQB1AHIAYQB2AC4AawBhAHMAaAB5AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAJdAQAA
-ADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAA
-HwDlXwEAAAA8AAAAcwBpAHAAOgBzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBn
-AGkAYwAuAGMAbwBtAAAAHwAaDAEAAAAeAAAAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAA
-AAAfAB8MAQAAADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAu
-AGMAbwBtAAAAHwAeDAEAAAAKAAAAUwBNAFQAUAAAAAAAAgEZDAEAAAB0AAAAAAAAAIErH6S+oxAZ
-nW4A3QEPVAIAAACAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAUwBNAFQAUAAAAHMAYQB1
-AHIAYQB2AC4AawBhAHMAaAB5AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAFdAQAAADQA
-AABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwD4
-PwEAAAAeAAAAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAAAAfACNAAQAAADQAAABzAGEA
-dQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAiQAEAAAAK
-AAAAUwBNAFQAUAAAAAAAAgH5PwEAAAB0AAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAUwBhAHUA
-cgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAUwBNAFQAUAAAAHMAYQB1AHIAYQB2AC4AawBhAHMAaAB5
-AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAldAQAAADQAAABzAGEAdQByAGEAdgAuAGsA
-YQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAACwBAOgEAAAAfABoAAQAAABIAAABJ
-AFAATQAuAE4AbwB0AGUAAAAAAAMA8T8JBAAACwBAOgEAAAADAP0/5AQAAAIBCzABAAAAEAAAAGnL
-GnQP58xNgvyzJfA7IFIDABcAAQAAAEAAOQCAau04CNrOAUAACDD+jjA5CNrOAQsAAIAIIAYAAAAA
-AMAAAAAAAABGAAAAABSFAAABAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAHgAAAGEAYwBjAGUA
-cAB0AGwAYQBuAGcAdQBhAGcAZQAAAAAAAQAAAAwAAABlAG4ALQBVAFMAAAALAACACCAGAAAAAADA
-AAAAAAAARgAAAAAGhQAAAAAAAB8ANwABAAAAWgAAAFIAZQA6ACAAWwBTAEMAUwBJAF0AIABxAGwA
-YQAyAHgAeAB4ADoAIABBAGQAZAAgAHMAdQBwAHAAbwByAHQAIABmAG8AcgAgAEkAUwBQADgAMAA0
-ADQALgAAAAAAHwA9AAEAAAAKAAAAUgBlADoAIAAAAAAAAwA2AAAAAAAfAEIQAQAAAFYAAAA8ADIA
-MAAxADMAMQAxADAAMQAxADAAMwAwADMAMAAuAEcATAAyADkANwA5ADUAQABsAG8AbgBnAG8AbgBv
-AHQALgBtAG8AdQBuAHQAYQBpAG4APgAAAAAAAgFxAAEAAAAWAAAAAQHO2gg5asgLs1V300SJ60OY
-AOaPjQAAHwBwAAEAAABSAAAAWwBTAEMAUwBJAF0AIABxAGwAYQAyAHgAeAB4ADoAIABBAGQAZAAg
-AHMAdQBwAHAAbwByAHQAIABmAG8AcgAgAEkAUwBQADgAMAA0ADQALgAAAAAAHwA1EAEAAAB4AAAA
-PABGADUARAAwADgANABEADYAMwA0ADIARgA5AEIANAA3ADkAQwAzADQANQA5ADkAQgBCADAAQQAw
-ADMARQA0AEQAOAA5ADgAMwBCAEUANAAzAEAAQQBWAE0AQgAxAC4AcQBsAG8AZwBpAGMALgBvAHIA
-ZwA+AAAAAwDeP59OAABAAAcwV8/5OAjazgEDACYAAAAAAAIBRwABAAAALgAAAGM9VVM7YT0gO3A9
-UUxvZ2ljO2w9QVZNQjEtMTMxMTA1MDkyMDA5Wi0zODg1MAAAAB8AFRABAAAAWAAAADMANgBDADQA
-NgA1ADgAOABBADQARgBGADUAQwA0ADEAQQBFADkARgA3ADMAQgA3ADUAMQBBADMAQgBBADQARABA
-AHEAbABvAGcAaQBjAC4AYwBvAG0AAAACARQwAQAAAAwAAAC4AAAAApGse0gAAAAfAPo/AQAAAB4A
-AABTAGEAdQByAGEAdgAgAEsAYQBzAGgAeQBhAHAAAAAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAA
-ABYAAAB1AHMAZQByAC0AYQBnAGUAbgB0AAAAAAABAAAASAAAAE0AaQBjAHIAbwBzAG8AZgB0AC0A
-TQBhAGMATwB1AHQAbABvAG8AawAvADEANAAuADEAMAAuADAALgAxADEAMAAzADEAMAAAAB8AAIAf
-pOszqHouQr57eeGpjlSzAQAAADgAAABDAG8AbgB2AGUAcgBzAGEAdABpAG8AbgBJAG4AZABlAHgA
-VAByAGEAYwBrAGkAbgBnAEUAeAAAAAEAAAB2AQAASQBJAD0AMAAxADAAMQBDAEUARABBADAAOAAz
-ADkANgBBAEMAOAAwAEIAQgAzADUANQA3ADcARAAzADQANAA4ADkARQBCADQAMwA5ADgAMAAwAEUA
-NgA4AEYAOABEADsAUwBCAE0ASQBEAD0AMwA7AFMAQgBUAD0AMwAwADYAOwBTADIAPQA8AEQANgAz
-AEIAOQA4ADAANABDAEIANgAzAEEARAA0AEYAQQBBAEQAOQA2ADYAMAAzADcANgA5ADUANgA2ADQA
-NgA0ADYARgA4ADAANgAyADEAQABhAHYAbQBiADIALgBxAGwAbwBnAGkAYwAuAG8AcgBnAD4AOwBU
-AEgAQQA9ADIAMQA3ADgAOAAzADkANwA1ADkAOwBWAGUAcgBzAGkAbwBuAD0AVgBlAHIAcwBpAG8A
-bgAgADEANAAuADIAIAAoAEIAdQBpAGwAZAAgADMAMQA4AC4AMAApACwAIABTAHQAYQBnAGUAPQBI
-ADcAAAAAAAMADTT9PwAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAIAAAAHgALQBtAHMALQBoAGEA
-cwAtAGEAdAB0AGEAYwBoAAAAAQAAAAIAAAAAAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAIgAA
-AHgALQBvAHIAaQBnAGkAbgBhAHQAaQBuAGcALQBpAHAAAAAAAAEAAAAYAAAAWwAxADAALgAxAC4A
-NAAuADEAMABdAAAAqNk=
-
---_000_F5D084D6342F9B479C34599BB0A03E4D8983BE43AVMB1qlogicorg_--
+-- 
+Jiri Kosina
+SUSE Labs
