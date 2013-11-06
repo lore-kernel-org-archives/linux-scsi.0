@@ -1,47 +1,45 @@
 From: Phillip Susi <psusi@ubuntu.com>
 Subject: Re: Disk wakeup on resume
-Date: Tue, 05 Nov 2013 16:32:41 -0500
-Message-ID: <527963F9.5030006@ubuntu.com>
+Date: Tue, 05 Nov 2013 19:07:45 -0500
+Message-ID: <52798851.3010507@ubuntu.com>
 References: <527859D9.3030607@ubuntu.com> <5278B4DB.7080302@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:56986 "EHLO
+Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:41920 "EHLO
 	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755755Ab3KEVco (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Nov 2013 16:32:44 -0500
+	with ESMTP id S1755373Ab3KFAHr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Nov 2013 19:07:47 -0500
 In-Reply-To: <5278B4DB.7080302@intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Aaron Lu <aaron.lu@intel.com>, linux-scsi@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
 -----BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+Hash: SHA512
 
-On 11/5/2013 4:05 AM, Aaron Lu wrote:
-> Are you using an ATA drive? Last time I checked, the spin up
-> actually happened while the ata port is resumed(when it will be
-> reset): https://lkml.org/lkml/2013/2/4/361
+I found the culprit.  It seems that ata_port_reset identifies the
+device, and if it has power up in standby enabled, and requires the
+SET FEATURES command to spin up, issues the command right away.  I wonder:
 
-Is there a reason these patches weren't applied?  It looks like it
-should be pretty simple to have ata_port_resume return without
-blocking on the reset, but I wonder if that would cause a problem?
+1)  If the spinup command can't be delayed until the disk is actually
+accessed and/or
 
-Doesn't the pm core sequence the resume of the various devices, so
-that the ata device is resumed after the ata port has been resumed, so
-wouldn't returning before the reset has finished mess up the ata
-device resume, which expects that the port is already online?
+2)  If the disk is in runtime suspend when the system is suspended,
+why doesn't it remain suspended when the system is resumed, thus
+delaying the port reset until the runtime suspend is lifted ( when the
+disk is accessed ).
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.17 (MingW32)
+Version: GnuPG v1.4.14 (GNU/Linux)
 Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
 
-iQEcBAEBAgAGBQJSeWP5AAoJEJrBOlT6nu757vUIALEW810IW5FMyCQp6qx80U1w
-QnEcY212ZdBCLqCiF/u8BaoVECM7VsdwjfVeI3CKUYvemNAXPJBCTpB/5KUMWL43
-KbpK3A0EkrdEsNjescmP+i0mYEIWXhB9Kj8IDMKR3HypNESua8X8YUaiNzkxNNGz
-aK11EsNn1Ut5FC0jzWInBfUq8E9WwYmPItxddb8ISIxr8vSbI5AME8HuupH+tT8f
-6VVmCFQwxj5zbiGOJEUZPmwTvE0GgzY+rSYVKvRLRoi+Cv8C2AI/nAMEpYlzuGYT
-Ku8RzUxV3nO8AAlX4yrnvplgWV2HDX0FvW7jl38fDJsxW1306j4BECJ8Rs8tbCQ=
-=Ylq6
+iQEcBAEBCgAGBQJSeYhMAAoJEJrBOlT6nu75jUgH/A64U4GQZxzLdkM6/ewpSK31
+C+UZ+PAy3l0jUdCtYwDCca7k7bC94Jh5vrOi2WlglmRIVnRl1PzcMfOFalm0Ca2m
+uibKvA3LSLsE/ICB+gl0329au5GADO/hLcuLb8v0U7ZgTPwSwdrqFM5ApUatPFf5
+RBVZbwMojl7aXSRkmHS1L48BIRc9X4G2wLB4qgE+tJFP8s04l1cC7fWSf5e7vUNw
+4scSPzahgGAOrsy7tQQgc2vP7uM/m0LRFN4Gs6gC9axFfCTQ5oYA/0TiOVpeRDYh
+PfPfp0InoNiOuq1QPW+T9TbuAsHp7GxxoAl6ljqOUAZ3sWisEV56lYYsNjwCEs0=
+=wQsh
 -----END PGP SIGNATURE-----
