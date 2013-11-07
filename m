@@ -1,17 +1,16 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 01/11] hpsa: use workqueue instead of kernel thread for lockup
-	detection
-Date: Thu, 07 Nov 2013 10:45:29 -0600
-Message-ID: <20131107164529.3504.60292.stgit@beardog.cce.hp.com>
+Subject: [PATCH 04/11] hpsa: do not discard scsi status on aborted commands
+Date: Thu, 07 Nov 2013 10:45:45 -0600
+Message-ID: <20131107164545.3504.85284.stgit@beardog.cce.hp.com>
 References: <20131107164258.3504.5892.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t0016.houston.hp.com ([15.201.24.19]:30953 "EHLO
-	g4t0016.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754176Ab3KGQpb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Nov 2013 11:45:31 -0500
+Received: from g1t0029.austin.hp.com ([15.216.28.36]:47195 "EHLO
+	g1t0029.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753282Ab3KGQpq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Nov 2013 11:45:46 -0500
 In-Reply-To: <20131107164258.3504.5892.stgit@beardog.cce.hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,192 +19,28 @@ Cc: stephenmcameron@gmail.com, mikem@beardog.cce.hp.com, thenzl@redhat.com, linu
 
 From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-Much simpler and avoids races starting/stopping the thread.
+We inadvertantly discarded the scsi status for aborted commands.
+For some commands (e.g. reads from tape drives) these can't be retried,
+and if we discarded the scsi status, the scsi mid layer couldn't notice
+anything was wrong and the error was not reported.
 
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+Cc: stable@vger.kernel.org
 ---
- drivers/scsi/hpsa.c |  103 +++++++++++++--------------------------------------
- drivers/scsi/hpsa.h |    3 +
- 2 files changed, 28 insertions(+), 78 deletions(-)
+ drivers/scsi/hpsa.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 3c97974..1264b51 100644
+index fff5fd3..6faa4fb 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -172,10 +172,6 @@ static struct board_type products[] = {
- 
- static int number_of_controllers;
- 
--static struct list_head hpsa_ctlr_list = LIST_HEAD_INIT(hpsa_ctlr_list);
--static spinlock_t lockup_detector_lock;
--static struct task_struct *hpsa_lockup_detector;
--
- static irqreturn_t do_hpsa_intr_intx(int irq, void *dev_id);
- static irqreturn_t do_hpsa_intr_msi(int irq, void *dev_id);
- static int hpsa_ioctl(struct scsi_device *dev, int cmd, void *arg);
-@@ -4638,16 +4634,6 @@ static void hpsa_undo_allocations_after_kdump_soft_reset(struct ctlr_info *h)
- 	kfree(h);
- }
- 
--static void remove_ctlr_from_lockup_detector_list(struct ctlr_info *h)
--{
--	assert_spin_locked(&lockup_detector_lock);
--	if (!hpsa_lockup_detector)
--		return;
--	if (h->lockup_detected)
--		return; /* already stopped the lockup detector */
--	list_del(&h->lockup_list);
--}
--
- /* Called when controller lockup detected. */
- static void fail_all_cmds_on_list(struct ctlr_info *h, struct list_head *list)
- {
-@@ -4666,8 +4652,6 @@ static void controller_lockup_detected(struct ctlr_info *h)
- {
- 	unsigned long flags;
- 
--	assert_spin_locked(&lockup_detector_lock);
--	remove_ctlr_from_lockup_detector_list(h);
- 	h->access.set_intr_mask(h, HPSA_INTR_OFF);
- 	spin_lock_irqsave(&h->lock, flags);
- 	h->lockup_detected = readl(h->vaddr + SA5_SCRATCHPAD_OFFSET);
-@@ -4687,7 +4671,6 @@ static void detect_controller_lockup(struct ctlr_info *h)
- 	u32 heartbeat;
- 	unsigned long flags;
- 
--	assert_spin_locked(&lockup_detector_lock);
- 	now = get_jiffies_64();
- 	/* If we've received an interrupt recently, we're ok. */
- 	if (time_after64(h->last_intr_timestamp +
-@@ -4717,68 +4700,22 @@ static void detect_controller_lockup(struct ctlr_info *h)
- 	h->last_heartbeat_timestamp = now;
- }
- 
--static int detect_controller_lockup_thread(void *notused)
--{
--	struct ctlr_info *h;
--	unsigned long flags;
--
--	while (1) {
--		struct list_head *this, *tmp;
--
--		schedule_timeout_interruptible(HEARTBEAT_SAMPLE_INTERVAL);
--		if (kthread_should_stop())
--			break;
--		spin_lock_irqsave(&lockup_detector_lock, flags);
--		list_for_each_safe(this, tmp, &hpsa_ctlr_list) {
--			h = list_entry(this, struct ctlr_info, lockup_list);
--			detect_controller_lockup(h);
--		}
--		spin_unlock_irqrestore(&lockup_detector_lock, flags);
--	}
--	return 0;
--}
--
--static void add_ctlr_to_lockup_detector_list(struct ctlr_info *h)
-+static void hpsa_monitor_ctlr_worker(struct work_struct *work)
- {
- 	unsigned long flags;
--
--	h->heartbeat_sample_interval = HEARTBEAT_SAMPLE_INTERVAL;
--	spin_lock_irqsave(&lockup_detector_lock, flags);
--	list_add_tail(&h->lockup_list, &hpsa_ctlr_list);
--	spin_unlock_irqrestore(&lockup_detector_lock, flags);
--}
--
--static void start_controller_lockup_detector(struct ctlr_info *h)
--{
--	/* Start the lockup detector thread if not already started */
--	if (!hpsa_lockup_detector) {
--		spin_lock_init(&lockup_detector_lock);
--		hpsa_lockup_detector =
--			kthread_run(detect_controller_lockup_thread,
--						NULL, HPSA);
--	}
--	if (!hpsa_lockup_detector) {
--		dev_warn(&h->pdev->dev,
--			"Could not start lockup detector thread\n");
-+	struct ctlr_info *h = container_of(to_delayed_work(work),
-+					struct ctlr_info, monitor_ctlr_work);
-+	detect_controller_lockup(h);
-+	if (h->lockup_detected)
-+		return;
-+	spin_lock_irqsave(&h->lock, flags);
-+	if (h->remove_in_progress) {
-+		spin_unlock_irqrestore(&h->lock, flags);
- 		return;
- 	}
--	add_ctlr_to_lockup_detector_list(h);
--}
--
--static void stop_controller_lockup_detector(struct ctlr_info *h)
--{
--	unsigned long flags;
--
--	spin_lock_irqsave(&lockup_detector_lock, flags);
--	remove_ctlr_from_lockup_detector_list(h);
--	/* If the list of ctlr's to monitor is empty, stop the thread */
--	if (list_empty(&hpsa_ctlr_list)) {
--		spin_unlock_irqrestore(&lockup_detector_lock, flags);
--		kthread_stop(hpsa_lockup_detector);
--		spin_lock_irqsave(&lockup_detector_lock, flags);
--		hpsa_lockup_detector = NULL;
--	}
--	spin_unlock_irqrestore(&lockup_detector_lock, flags);
-+	schedule_delayed_work(&h->monitor_ctlr_work,
-+				h->heartbeat_sample_interval);
-+	spin_unlock_irqrestore(&h->lock, flags);
- }
- 
- static int hpsa_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
-@@ -4925,7 +4862,12 @@ reinit_after_soft_reset:
- 
- 	hpsa_hba_inquiry(h);
- 	hpsa_register_scsi(h);	/* hook ourselves into SCSI subsystem */
--	start_controller_lockup_detector(h);
-+
-+	/* Monitor the controller for firmware lockups */
-+	h->heartbeat_sample_interval = HEARTBEAT_SAMPLE_INTERVAL;
-+	INIT_DELAYED_WORK(&h->monitor_ctlr_work, hpsa_monitor_ctlr_worker);
-+	schedule_delayed_work(&h->monitor_ctlr_work,
-+				h->heartbeat_sample_interval);
- 	return 0;
- 
- clean4:
-@@ -4991,13 +4933,20 @@ static void hpsa_free_device_info(struct ctlr_info *h)
- static void hpsa_remove_one(struct pci_dev *pdev)
- {
- 	struct ctlr_info *h;
-+	unsigned long flags;
- 
- 	if (pci_get_drvdata(pdev) == NULL) {
- 		dev_err(&pdev->dev, "unable to remove device\n");
- 		return;
- 	}
- 	h = pci_get_drvdata(pdev);
--	stop_controller_lockup_detector(h);
-+
-+	/* Get rid of any controller monitoring work items */
-+	spin_lock_irqsave(&h->lock, flags);
-+	h->remove_in_progress = 1;
-+	cancel_delayed_work(&h->monitor_ctlr_work);
-+	spin_unlock_irqrestore(&h->lock, flags);
-+
- 	hpsa_unregister_scsi(h);	/* unhook from SCSI subsystem */
- 	hpsa_shutdown(pdev);
- 	iounmap(h->vaddr);
-diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
-index bc85e72..b48f1de 100644
---- a/drivers/scsi/hpsa.h
-+++ b/drivers/scsi/hpsa.h
-@@ -130,7 +130,8 @@ struct ctlr_info {
- 	u32 heartbeat_sample_interval;
- 	atomic_t firmware_flash_in_progress;
- 	u32 lockup_detected;
--	struct list_head lockup_list;
-+	struct delayed_work monitor_ctlr_work;
-+	int remove_in_progress;
- 	/* Address of h->q[x] is passed to intr handler to know which queue */
- 	u8 q[MAX_REPLY_QUEUES];
- 	u32 TMFSupportFlags; /* cache what task mgmt funcs are supported. */
+@@ -1285,7 +1285,7 @@ static void complete_scsi_command(struct CommandList *cp)
+ 					"has check condition: aborted command: "
+ 					"ASC: 0x%x, ASCQ: 0x%x\n",
+ 					cp, asc, ascq);
+-				cmd->result = DID_SOFT_ERROR << 16;
++				cmd->result |= DID_SOFT_ERROR << 16;
+ 				break;
+ 			}
+ 			/* Must be some other type of check condition */
 
