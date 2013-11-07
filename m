@@ -1,56 +1,55 @@
-From: Phillip Susi <psusi@ubuntu.com>
-Subject: [PATCH 2/3] libata: resume in the background
-Date: Wed,  6 Nov 2013 20:57:50 -0500
-Message-ID: <28bdcf248ad07b8b5d6be8bff6a8c94fdd09a435.1383789225.git.psusi@ubuntu.com>
-References: <927e15641f27b46f206f8ae8110201c8fd77b7e1.1383789225.git.psusi@ubuntu.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 2/5] scsi: improved eh timeout handler
+Date: Thu, 07 Nov 2013 07:42:49 +0100
+Message-ID: <527B3669.307@suse.de>
+References: <1383635145-112651-1-git-send-email-hare@suse.de> <1383635145-112651-3-git-send-email-hare@suse.de> <527944BF.9000507@cs.wisc.edu> <20131106144713.GA26551@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:36806 "EHLO
-	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752401Ab3KGB5x (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Nov 2013 20:57:53 -0500
-In-Reply-To: <927e15641f27b46f206f8ae8110201c8fd77b7e1.1383789225.git.psusi@ubuntu.com>
-In-Reply-To: <527AF287.7020700@ubuntu.com>
-References: <527AF287.7020700@ubuntu.com>
+Received: from cantor2.suse.de ([195.135.220.15]:43864 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757236Ab3KGGm4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 7 Nov 2013 01:42:56 -0500
+In-Reply-To: <20131106144713.GA26551@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: todd.e.brandt@linux.intel.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: tj@kernel.org, JBottomley@parallels.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, Ren Mingxin <renmx@cn.fujitsu.com>, Joern Engel <joern@logfs.org>, James Smart <james.smart@emulex.com>
 
-Don't block the resume path waiting for the disk to
-spin up.
----
- drivers/ata/libata-core.c | 10 ++++------
- 1 file changed, 4 insertions(+), 6 deletions(-)
+On 11/06/2013 03:47 PM, Christoph Hellwig wrote:
+> On Tue, Nov 05, 2013 at 11:19:27AM -0800, Mike Christie wrote:
+>>> +	scmd->eh_eflags |=3D SCSI_EH_ABORT_SCHEDULED;
+>>> +	SCSI_LOG_ERROR_RECOVERY(3,
+>>> +		scmd_printk(KERN_INFO, scmd,
+>>> +			    "scmd %p abort scheduled\n", scmd));
+>>> +	schedule_delayed_work(&scmd->abort_work, HZ / 100);
+>>> +	return SUCCESS;
+>>> +}
+>>
+>> Do we want to use our own workqueue_struct with WQ_MEM_RECLAIM set?
+>=20
+> That's probably required, I can think of all kinds of issues otherwis=
+e.
+>=20
+> Not in this patch series, but in the near future it might make sense=20
+> to convert the whole EH thread to that workqueue.
+>=20
+And given the recent issues we had with RT scheduling I guess this
+is the way to go.
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 573d151..16f45dc 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -5420,20 +5420,18 @@ static int __ata_port_resume_common(struct ata_port *ap, pm_message_t mesg,
- static int ata_port_resume_common(struct device *dev, pm_message_t mesg)
- {
- 	struct ata_port *ap = to_ata_port(dev);
-+	static int dontcare;
- 
--	return __ata_port_resume_common(ap, mesg, NULL);
-+	return __ata_port_resume_common(ap, mesg, &dontcare);
- }
- 
- static int ata_port_resume(struct device *dev)
- {
- 	int rc;
- 
-+	if (pm_runtime_suspended(dev))
-+		return 0;
- 	rc = ata_port_resume_common(dev, PMSG_RESUME);
--	if (!rc) {
--		pm_runtime_disable(dev);
--		pm_runtime_set_active(dev);
--		pm_runtime_enable(dev);
--	}
- 
- 	return rc;
- }
--- 
-1.8.3.2
+_After_ this patchset gets in, that is ...
 
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
