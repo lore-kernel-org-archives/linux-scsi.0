@@ -1,68 +1,48 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 00/11] target_core_mod: ALUA updates
-Date: Wed, 06 Nov 2013 12:54:42 -0800
-Message-ID: <1383771282.4216.67.camel@haakon3.risingtidesystems.com>
-References: <1381908048-82014-1-git-send-email-hare@suse.de>
+From: Phillip Susi <psusi@ubuntu.com>
+Subject: Re: [PATCH/RESEND v2 0/2] SATA disk resume time optimization
+Date: Wed, 06 Nov 2013 20:53:11 -0500
+Message-ID: <527AF287.7020700@ubuntu.com>
+References: <20131017193331.GA11747@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1381908048-82014-1-git-send-email-hare@suse.de>
-Sender: target-devel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Nic Bellinger <nab@daterainc.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:61657 "EHLO
+	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752842Ab3KGBxO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Nov 2013 20:53:14 -0500
+In-Reply-To: <20131017193331.GA11747@linux.intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: todd.e.brandt@linux.intel.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: tj@kernel.org, JBottomley@parallels.com
 
-Hello Hannes,
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
 
-Any updates on this series..?
+On 10/17/2013 03:33 PM, Todd E Brandt wrote:
+> The essential issue behind hard disks' lengthy resume time is the
+> ata port driver blocking until the ATA port hardware is finished
+> coming online. So the kernel isn't really doing anything during all
+> those seconds that the disks are resuming, it's just blocking until
+> the hardware says it's ready to accept commands. Applying this
+> patch set
 
-I'd really like to get the -v2 of this included for v3.13, along with
-the initial Referrals bits.
+I have been working in a similar direction and have patches to follow.
+ Instead of backgrounding the start in sd_resume, I have removed it
+entirely, and background the resume at the ata port layer, as well as
+avoid resuming Power on in Standby disks entirely.
 
---nab
 
-On Wed, 2013-10-16 at 09:20 +0200, Hannes Reinecke wrote:
-> Hi Nic,
-> 
-> here are some updates to TCM ALUA handling. Apart from some
-> minor fixes and spellchecks the main features are:
-> - Make supported states configurable:
->   We should make the list of supported ALUA states configurable,
->   as some setups would possibly like to support a small subset
->   of ALUA states only.
-> - Asynchronous transitioning: I've switched 'transitioning'
->   handling to use a workqueue, that should allow us to simulate
->   asynchronous transitioning modes. IE TCM should now be capable
->   of handling requests while in transitioning, and properly terminate
->   these with the correct sense code.
-> - Include target device descriptor in VPD page 83
->   For the ALUA device handler we'd need to identify the target device
->   where a given target port belongs to. So include the respective
->   values in the VPD page.
-> 
-> Hannes Reinecke (11):
->   target core: rename (ex,im)plict -> (ex,im)plicit
->   target_core_alua: Store supported ALUA states
->   target_core_alua: Make supported states configurable
->   target_core_alua: Rename ALUA_ACCESS_STATE_OPTIMIZED
->   target_core_alua: spellcheck
->   target_core_alua: Validate ALUA state transition
->   target_core_alua: Allocate ALUA metadata on demand
->   target_core_alua: store old and pending ALUA state
->   target_core_alua: Use workqueue for ALUA transitioning
->   target_core: simplify scsi_name_len calculation
->   target_core_spc: Include target device descriptor in VPD page 83
-> 
->  drivers/target/target_core_alua.c      | 456 ++++++++++++++++++++-------------
->  drivers/target/target_core_alua.h      |  36 ++-
->  drivers/target/target_core_configfs.c  |  76 +++++-
->  drivers/target/target_core_device.c    |   6 +-
->  drivers/target/target_core_file.c      |   2 +-
->  drivers/target/target_core_pr.c        |  24 +-
->  drivers/target/target_core_spc.c       |  62 ++++-
->  drivers/target/target_core_transport.c |   4 +-
->  drivers/target/target_core_ua.h        |   2 +-
->  include/target/target_core_base.h      |  14 +-
->  10 files changed, 442 insertions(+), 240 deletions(-)
-> 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.14 (GNU/Linux)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iQEcBAEBCgAGBQJSevKEAAoJEJrBOlT6nu75FFkIAL8mwXOuuNvY5GoppHVMcweC
+EOBz6t2Xmc/TsGYr9u4kRVXbf3G0trSM9dj/XSJ6p+Dj/su/vJ69yKxp7sUPidgz
+zqjfKlG+myMQIaAO+tPGXvMcmT74BXjgjobZw2lUyLyRPLD9elDGmrDA5ZXZ+hiz
+hzSx4gOC57j+sK/pmoZ7U/CWeWYEYQ+J9xBXm0hzbBbSTjpzVsR0T+7xU+WVkeX0
+Ox++FFBZp2b1xJgaREurRv1mORx/GJ+PfSETb49P5BWaWW+QVwOEhWOX/JQNc/Pp
+ANJmttP4WPvlRV0X3hD6FvAYSnu1qbwwGOiP/j5g7mklyfm5alA0jcuahc1w5tI=
+=9KhA
+-----END PGP SIGNATURE-----
