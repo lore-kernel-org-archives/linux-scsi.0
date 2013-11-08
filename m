@@ -1,68 +1,48 @@
-From: Mike Miller <mike.miller@hp.com>
-Subject: [PATCH 1/1] scsi: hpsa correct gen9 PCI IDs
-Date: Fri, 8 Nov 2013 16:00:04 -0600
-Message-ID: <20131108220004.GA8532@beardog.cce.hp.com>
+From: Loc Ho <lho@apm.com>
+Subject: [PATCH 0/5] ata: Add APM X-Gene SATA controller support
+Date: Fri,  8 Nov 2013 15:30:33 -0700
+Message-ID: <1383949838-25106-1-git-send-email-lho@apm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g6t0185.atlanta.hp.com ([15.193.32.62]:3903 "EHLO
-	g6t0185.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757792Ab3KHWAH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Nov 2013 17:00:07 -0500
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: tj@kernel.org, linux-scsi@vger.kernel.org
+Cc: Suman Tripathi <stripathi@apm.com>, jcm@redhat.com, devicetree-discuss@lists.ozlabs.org, patches@apm.com, Loc Ho <lho@apm.com>, Tuan Phan <tphan@apm.com>, linux-arm-kernel@lists.infradead.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, "James E. J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>, thenzl@redhat.com
 
-From: Mike Miller <mike.miller@hp.com>
+Add APM X-Gene SATA controller support
 
-This patch deletes one ID that never should have in in hpsa. It also the PCI
-ID's for two cancelled products.
-Please consider this for inclusion.
-
-Signed-off-by: Mike Miller <mike.miller@hp.com>
+Signed-off-by: Loc Ho <lho@apm.com>
+Signed-off-by: Tuan Phan <tphan@apm.com>
+Signed-off-by: Suman Tripathi <stripathi@apm.com>
 ---
- drivers/scsi/hpsa.c |    7 ++-----
- 1 files changed, 2 insertions(+), 5 deletions(-)
+Loc Ho (5):
+  ata: Export AHCI library functions required by APM X-Gene SATA driver
+  arm64: Add APM X-Gene SATA DTS binding
+  ata: Add APM X-Gene SATA driver
+  ata: Add APM X-Gene SATA serdes functions
+  Documentation: Add documentation for APM X-Gene SATA binding
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 891c86b..5ddf749 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -91,21 +91,18 @@ static const struct pci_device_id hpsa_pci_device_id[] = {
- 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C, 0x3249},
- 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C, 0x324A},
- 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C, 0x324B},
--	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C, 0x3233},
-+	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSF,     0x103C, 0x334D},
- 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSF,     0x103C, 0x3350},
- 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSF,     0x103C, 0x3351},
- 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSF,     0x103C, 0x3352},
- 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSF,     0x103C, 0x3353},
--	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSF,     0x103C, 0x334D},
- 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSF,     0x103C, 0x3354},
- 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSF,     0x103C, 0x3355},
- 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSF,     0x103C, 0x3356},
--	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C, 0x1920},
- 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C, 0x1921},
- 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C, 0x1922},
- 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C, 0x1923},
- 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C, 0x1924},
--	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C, 0x1925},
- 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C, 0x1926},
- 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C, 0x1928},
- 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C, 0x1929},
-@@ -140,11 +137,11 @@ static struct board_type products[] = {
- 	{0x3249103C, "Smart Array P812", &SA5_access},
- 	{0x324A103C, "Smart Array P712m", &SA5_access},
- 	{0x324B103C, "Smart Array P711m", &SA5_access},
-+	{0x334D103C, "Smart Array P822se", &SA5_access},
- 	{0x3350103C, "Smart Array P222", &SA5_access},
- 	{0x3351103C, "Smart Array P420", &SA5_access},
- 	{0x3352103C, "Smart Array P421", &SA5_access},
- 	{0x3353103C, "Smart Array P822", &SA5_access},
--	{0x334D103C, "Smart Array P822se", &SA5_access},
- 	{0x3354103C, "Smart Array P420i", &SA5_access},
- 	{0x3355103C, "Smart Array P220i", &SA5_access},
- 	{0x3356103C, "Smart Array P721m", &SA5_access},
+ .../devicetree/bindings/ata/apm-xgene.txt          |   84 +
+ arch/arm64/boot/dts/apm-storm.dtsi                 |   73 +
+ drivers/ata/Kconfig                                |    7 +
+ drivers/ata/Makefile                               |    2 +
+ drivers/ata/ahci.h                                 |    6 +
+ drivers/ata/libahci.c                              |   13 +-
+ drivers/ata/sata_xgene.c                           | 1385 ++++++++++++++
+ drivers/ata/sata_xgene.h                           |  112 ++
+ drivers/ata/sata_xgene_serdes.c                    | 1982 ++++++++++++++++++++
+ 9 files changed, 3659 insertions(+), 5 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/ata/apm-xgene.txt
+ create mode 100644 drivers/ata/sata_xgene.c
+ create mode 100644 drivers/ata/sata_xgene.h
+ create mode 100644 drivers/ata/sata_xgene_serdes.c
