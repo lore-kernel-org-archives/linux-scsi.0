@@ -1,13 +1,13 @@
 From: Phillip Susi <psusi@ubuntu.com>
-Subject: [PATCH 3/6] sd: don't bother spinning up disks on resume
-Date: Sat,  9 Nov 2013 16:03:25 -0500
-Message-ID: <ece4db4b486db3594ad3b97aa00f7eb5fef93c4b.1384030893.git.psusi@ubuntu.com>
+Subject: [PATCH 4/6] libata: resume in the background
+Date: Sat,  9 Nov 2013 16:03:26 -0500
+Message-ID: <6fca4cfe76c75939ec952c6a80c003e09d6f954c.1384030893.git.psusi@ubuntu.com>
 References: <cover.1384030893.git.psusi@ubuntu.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:57171 "EHLO
+Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:46914 "EHLO
 	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757553Ab3KIVDb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Nov 2013 16:03:31 -0500
+	with ESMTP id S1757319Ab3KIVDc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Nov 2013 16:03:32 -0500
 In-Reply-To: <cover.1384030893.git.psusi@ubuntu.com>
 In-Reply-To: <cover.1384030893.git.psusi@ubuntu.com>
 References: <527EA218.6010604@ubuntu.com> <cover.1384030893.git.psusi@ubuntu.com>
@@ -16,59 +16,41 @@ List-Id: linux-scsi@vger.kernel.org
 To: todd.e.brandt@linux.intel.com
 Cc: tj@kernel.org, JBottomley@parallels.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Don't bother forcing disks to spin up on resume, as they
-will do so automatically when accessed, and forcing them
-to spin up slows down the resume.  Add a second bit to the
-manage_start_stop flag to restore the previous behavior.
+Don't block the resume path waiting for the disk to
+spin up.
 ---
- drivers/scsi/sd.c          | 6 +++---
- include/scsi/scsi_device.h | 2 +-
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/ata/libata-core.c | 10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index e62d17d..3143311 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -3083,7 +3083,7 @@ static void sd_shutdown(struct device *dev)
- 		sd_sync_cache(sdkp);
- 	}
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 686c441..128ce0d 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -5421,20 +5421,18 @@ static int __ata_port_resume_common(struct ata_port *ap, pm_message_t mesg,
+ static int ata_port_resume_common(struct device *dev, pm_message_t mesg)
+ {
+ 	struct ata_port *ap = to_ata_port(dev);
++	static int dontcare;
  
--	if (system_state != SYSTEM_RESTART && sdkp->device->manage_start_stop) {
-+	if (system_state != SYSTEM_RESTART && (sdkp->device->manage_start_stop & 1)) {
- 		sd_printk(KERN_NOTICE, sdkp, "Stopping disk\n");
- 		sd_start_stop_device(sdkp, 0);
- 	}
-@@ -3107,7 +3107,7 @@ static int sd_suspend(struct device *dev)
- 			goto done;
- 	}
+-	return __ata_port_resume_common(ap, mesg, NULL);
++	return __ata_port_resume_common(ap, mesg, &dontcare);
+ }
  
--	if (sdkp->device->manage_start_stop) {
-+	if (sdkp->device->manage_start_stop & 1) {
- 		sd_printk(KERN_NOTICE, sdkp, "Stopping disk\n");
- 		ret = sd_start_stop_device(sdkp, 0);
- 	}
-@@ -3122,7 +3122,7 @@ static int sd_resume(struct device *dev)
- 	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
- 	int ret = 0;
+ static int ata_port_resume(struct device *dev)
+ {
+ 	int rc;
  
--	if (!sdkp->device->manage_start_stop)
-+	if (!(sdkp->device->manage_start_stop & 2))
- 		goto done;
++	if (pm_runtime_suspended(dev))
++		return 0;
+ 	rc = ata_port_resume_common(dev, PMSG_RESUME);
+-	if (!rc) {
+-		pm_runtime_disable(dev);
+-		pm_runtime_set_active(dev);
+-		pm_runtime_enable(dev);
+-	}
  
- 	sd_printk(KERN_NOTICE, sdkp, "Starting disk\n");
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index d65fbec..1c46d2d 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -152,7 +152,7 @@ struct scsi_device {
- 	unsigned use_192_bytes_for_3f:1; /* ask for 192 bytes from page 0x3f */
- 	unsigned no_start_on_add:1;	/* do not issue start on add */
- 	unsigned allow_restart:1; /* issue START_UNIT in error handler */
--	unsigned manage_start_stop:1;	/* Let HLD (sd) manage start/stop */
-+	unsigned manage_start_stop:2;	/* Let HLD (sd) manage start/stop */
- 	unsigned start_stop_pwr_cond:1;	/* Set power cond. in START_STOP_UNIT */
- 	unsigned no_uld_attach:1; /* disable connecting to upper level drivers */
- 	unsigned select_no_atn:1;
+ 	return rc;
+ }
 -- 
 1.8.3.2
 
