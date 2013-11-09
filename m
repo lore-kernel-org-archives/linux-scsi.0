@@ -1,42 +1,76 @@
 From: Loc Ho <lho@apm.com>
-Subject: [PATCH v2 4/5] ata: Add APM X-Gene SATA serdes functions
-Date: Sat,  9 Nov 2013 00:00:30 -0700
-Message-ID: <1383980431-6572-5-git-send-email-lho@apm.com>
+Subject: [PATCH v2 3/5] ata: Add APM X-Gene SATA driver
+Date: Sat,  9 Nov 2013 00:00:29 -0700
+Message-ID: <1383980431-6572-4-git-send-email-lho@apm.com>
 References: <1383980431-6572-1-git-send-email-lho@apm.com>
  <1383980431-6572-2-git-send-email-lho@apm.com>
  <1383980431-6572-3-git-send-email-lho@apm.com>
- <1383980431-6572-4-git-send-email-lho@apm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod5og107.obsmtp.com ([64.18.0.184]:57130 "HELO
-	exprod5og107.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1758919Ab3KIHBE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Nov 2013 02:01:04 -0500
-Received: by mail-pd0-f169.google.com with SMTP id y13so238580pdi.28
-        for <linux-scsi@vger.kernel.org>; Fri, 08 Nov 2013 23:01:02 -0800 (PST)
-In-Reply-To: <1383980431-6572-4-git-send-email-lho@apm.com>
+Received: from exprod5og116.obsmtp.com ([64.18.0.147]:55328 "HELO
+	exprod5og116.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1758927Ab3KIHA6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Nov 2013 02:00:58 -0500
+Received: by mail-pa0-f45.google.com with SMTP id kp14so3182519pab.4
+        for <linux-scsi@vger.kernel.org>; Fri, 08 Nov 2013 23:00:56 -0800 (PST)
+In-Reply-To: <1383980431-6572-3-git-send-email-lho@apm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: olof@lixom.net, tj@kernel.org, linux-scsi@vger.kernel.org
 Cc: linux-arm-kernel@lists.infradead.org, jcm@redhat.com, Loc Ho <lho@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 
-ata: Add APM X-Gene SATA serdes functions
+ata: Add APM X-Gene SATA driver
 
 Signed-off-by: Loc Ho <lho@apm.com>
 Signed-off-by: Tuan Phan <tphan@apm.com>
 Signed-off-by: Suman Tripathi <stripathi@apm.com>
 ---
- drivers/ata/sata_xgene_serdes.c | 2004 +++++++++++++++++++++++++++++++++++++++
- 1 files changed, 2004 insertions(+), 0 deletions(-)
- create mode 100644 drivers/ata/sata_xgene_serdes.c
+ drivers/ata/Kconfig      |    7 +
+ drivers/ata/Makefile     |    2 +
+ drivers/ata/sata_xgene.c | 1394 ++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/ata/sata_xgene.h |  112 ++++
+ 4 files changed, 1515 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/ata/sata_xgene.c
+ create mode 100644 drivers/ata/sata_xgene.h
 
-diff --git a/drivers/ata/sata_xgene_serdes.c b/drivers/ata/sata_xgene_serdes.c
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index 4e73772..41b9da3 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -106,6 +106,13 @@ config AHCI_IMX
+ 
+ 	  If unsure, say N.
+ 
++config SATA_XGENE
++	tristate "APM X-Gene 6.0Gbps SATA support"
++	depends on SATA_AHCI_PLATFORM
++	default y if ARM64
++	help
++	  This option enables support for APM X-Gene SoC SATA controller.
++
+ config SATA_FSL
+ 	tristate "Freescale 3.0Gbps SATA support"
+ 	depends on FSL_SOC
+diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
+index 46518c6..022f9d1 100644
+--- a/drivers/ata/Makefile
++++ b/drivers/ata/Makefile
+@@ -11,6 +11,8 @@ obj-$(CONFIG_SATA_SIL24)	+= sata_sil24.o
+ obj-$(CONFIG_SATA_DWC)		+= sata_dwc_460ex.o
+ obj-$(CONFIG_SATA_HIGHBANK)	+= sata_highbank.o libahci.o
+ obj-$(CONFIG_AHCI_IMX)		+= ahci_imx.o
++sata-xgene-objs := sata_xgene.o sata_xgene_serdes.o
++obj-$(CONFIG_SATA_XGENE)	+= sata-xgene.o
+ 
+ # SFF w/ custom DMA
+ obj-$(CONFIG_PDC_ADMA)		+= pdc_adma.o
+diff --git a/drivers/ata/sata_xgene.c b/drivers/ata/sata_xgene.c
 new file mode 100644
-index 0000000..8c07e89
+index 0000000..1f0f883
 --- /dev/null
-+++ b/drivers/ata/sata_xgene_serdes.c
-@@ -0,0 +1,2004 @@
++++ b/drivers/ata/sata_xgene.c
+@@ -0,0 +1,1394 @@
 +/*
-+ * AppliedMicro X-Gene SATA PHY driver
++ * AppliedMicro X-Gene SoC SATA Driver
 + *
 + * Copyright (c) 2013, Applied Micro Circuits Corporation
 + * Author: Loc Ho <lho@apm.com>
@@ -58,1987 +92,1495 @@ index 0000000..8c07e89
 + *
 + */
 +#include <linux/module.h>
++#include <linux/platform_device.h>
++#include <linux/of_address.h>
++#include <linux/of_irq.h>
++#include <linux/acpi.h>
++#include <linux/efi.h>
 +#include "sata_xgene.h"
 +
-+#define PHY_ERROR
-+#undef PHY_DEBUG
-+#undef PHYCSR_DEBUG
-+
-+#ifdef PHY_DEBUG
-+#define PHYDEBUG(fmt, args...)		\
-+	printk(KERN_INFO "XGENESATA PHY: " fmt "\n", ## args)
++#undef XGENE_DBG_CSR		/* Enable CSR read/write dumping */
++#ifdef XGENE_DBG_CSR
++#define XGENE_CSRDBG(fmt, args...)	\
++	printk(KERN_INFO "XGENESATA: " fmt "\n", ## args);
 +#else
-+#define PHYDEBUG(fmt, args...)
++#define XGENE_CSRDBG(fmt, args...)
 +#endif
 +
-+#ifdef PHYCSR_DEBUG
-+#define PHYCSRDEBUG(fmt, args...)	\
-+	printk(KERN_INFO "XGENESATA PHY CSR: " fmt "\n", ## args)
-+#else
-+#define PHYCSRDEBUG(fmt, args...)
-+#endif
++/* Max # of disk per a controller */
++#define MAX_AHCI_CHN_PERCTR		2
 +
-+#ifdef PHY_ERROR
-+#define PHYERROR(fmt, args...)		\
-+	printk(KERN_ERR "XGENESATA PHY ERROR: " fmt "\n", ## args)
-+#else
-+#define PHYERROR(fmt, args...)
-+#endif
++#define SATA_DIAG_OFFSET		0x0000D000
++#define SATA_GLB_OFFSET			0x0000D850
++#define SATA_SHIM_OFFSET		0x0000E000
++#define SATA_MASTER_OFFSET		0x0000F000
++#define SATA_PORT0_OFFSET		0x00000100
++#define SATA_PORT1_OFFSET		0x00000180
 +
-+/* SATA PHY CSR block offset */
-+#define SATA_ETH_MUX_OFFSET		0x00007000
-+#define SATA_SERDES_OFFSET		0x0000A000
-+#define SATA_CLK_OFFSET			0x0000C000
-+
-+/* SATA PHY common tunning parameters.
-+ *
-+ * These are the common tunning PHY parameter. This are here to quick
-+ * reference. They can be override from the control override registers.
-+ */
-+#define FBDIV_VAL_50M			0x77
-+#define REFDIV_VAL_50M			0x1
-+#define FBDIV_VAL_100M			0x3B
-+#define REFDIV_VAL_100M			0x0
-+#define FBDIV_VAL			FBDIV_VAL_50M
-+#define REFDIV_VAL			REFDIV_VAL_50M
-+
-+/* SATA Clock/Reset CSR */
-+#define SATACLKENREG_ADDR		0x00000000
-+#define SATASRESETREG_ADDR		0x00000004
-+#define  SATA_MEM_RESET_MASK		0x00000020
-+#define  SATA_MEM_RESET_RD(src)		(((src) & 0x00000020)>>5)
-+#define  SATA_SDS_RESET_MASK		0x00000004
-+#define  SATA_CSR_RESET_MASK		0x00000001
-+#define  SATA_CORE_RESET_MASK		0x00000002
-+#define  SATA_PMCLK_RESET_MASK		0x00000010
-+#define  SATA_PCLK_RESET_MASK		0x00000008
-+
-+/* SATA SDS CSR */
-+#define SATA_ENET_SDS_PCS_CTL0_ADDR	0x00000000
-+#define  REGSPEC_CFG_I_TX_WORDMODE0_SET(dst, src) \
-+		(((dst) & ~0x00070000) | (((u32)(src)<<16) & 0x00070000))
-+#define  REGSPEC_CFG_I_RX_WORDMODE0_SET(dst, src) \
-+		(((dst) & ~0x00e00000) | (((u32)(src)<<21) & 0x00e00000))
-+#define SATA_ENET_SDS_CTL1_ADDR		0x00000010
-+#define  CFG_I_SPD_SEL_CDR_OVR1_SET(dst, src) \
-+		(((dst) & ~0x0000000f) | (((u32)(src)) & 0x0000000f))
-+#define SATA_ENET_SDS_CTL0_ADDR		0x0000000c
-+#define  REGSPEC_CFG_I_CUSTOMER_PIN_MODE0_SET(dst, src) \
-+		(((dst) & ~0x00007fff) | (((u32)(src)) & 0x00007fff))
-+#define SATA_ENET_SDS_RST_CTL_ADDR	0x00000024
-+#define SATA_ENET_SDS_IND_CMD_REG_ADDR	0x0000003c
-+#define  CFG_IND_WR_CMD_MASK		0x00000001
-+#define  CFG_IND_RD_CMD_MASK		0x00000002
-+#define  CFG_IND_CMD_DONE_MASK		0x00000004
-+#define  CFG_IND_ADDR_SET(dst, src) \
-+		(((dst) & ~0x003ffff0) | (((u32)(src)<<4) & 0x003ffff0))
-+#define SATA_ENET_SDS_IND_RDATA_REG_ADDR	0x00000040
-+#define SATA_ENET_SDS_IND_WDATA_REG_ADDR	0x00000044
-+#define SATA_ENET_CLK_MACRO_REG_ADDR	0x0000004c
-+#define  I_RESET_B_SET(dst, src) \
++/* SATA host controller CSR */
++#define SLVRDERRATTRIBUTES_ADDR		0x00000000
++#define SLVWRERRATTRIBUTES_ADDR		0x00000004
++#define MSTRDERRATTRIBUTES_ADDR		0x00000008
++#define MSTWRERRATTRIBUTES_ADDR		0x0000000c
++#define BUSCTLREG_ADDR			0x00000014
++#define  MSTAWAUX_COHERENT_BYPASS_SET(dst, src) \
++		(((dst) & ~0x00000002) | (((u32)(src)<<1) & 0x00000002))
++#define  MSTARAUX_COHERENT_BYPASS_SET(dst, src) \
 +		(((dst) & ~0x00000001) | (((u32)(src)) & 0x00000001))
-+#define  I_PLL_FBDIV_SET(dst, src) \
-+		(((dst) & ~0x001ff000) | (((u32)(src)<<12) & 0x001ff000))
-+#define  I_CUSTOMEROV_SET(dst, src) \
-+		(((dst) & ~0x00000f80) | (((u32)(src)<<7) & 0x00000f80))
-+#define  O_PLL_LOCK_RD(src)		(((src) & 0x40000000)>>30)
-+#define  O_PLL_READY_RD(src)		(((src) & 0x80000000)>>31)
++#define IOFMSTRWAUX_ADDR		0x00000018
++#define INTSTATUSMASK_ADDR		0x0000002c
++#define ERRINTSTATUS_ADDR		0x00000030
++#define ERRINTSTATUSMASK_ADDR		0x00000034
 +
-+/* SATA PHY clock CSR */
-+#define KC_CLKMACRO_CMU_REGS_CMU_REG0_ADDR	0x20000
-+#define  CMU_REG0_PDOWN_MASK			0x00004000
-+#define  CMU_REG0_CAL_COUNT_RESOL_SET(dst, src) \
-+		(((dst) & ~0x000000e0) | (((u32)(src) << 0x5) & 0x000000e0))
-+#define KC_CLKMACRO_CMU_REGS_CMU_REG1_ADDR	0x20002
-+#define  CMU_REG1_PLL_CP_SET(dst, src) \
-+		(((dst) & ~0x00003c00) | (((u32)(src) << 0xa) & 0x00003c00))
-+#define  CMU_REG1_PLL_MANUALCAL_SET(dst, src) \
-+		(((dst) & ~0x00000008) | (((u32)(src) << 0x3) & 0x00000008))
-+#define  CMU_REG1_PLL_CP_SEL_SET(dst, src) \
-+		(((dst) & ~0x000003e0) | (((u32)(src) << 0x5) & 0x000003e0))
-+#define KC_CLKMACRO_CMU_REGS_CMU_REG2_ADDR	0x20004
-+#define  CMU_REG2_PLL_LFRES_SET(dst, src) \
-+		(((dst) & ~0x0000001e) | (((u32)(src) << 0x1) & 0x0000001e))
-+#define  CMU_REG2_PLL_FBDIV_SET(dst, src) \
-+		(((dst) & ~0x00003fe0) | (((u32)(src) << 0x5) & 0x00003fe0))
-+#define KC_CLKMACRO_CMU_REGS_CMU_REG3_ADDR	0x20006
-+#define  CMU_REG3_VCOVARSEL_SET(dst, src) \
-+		(((dst) & ~0x0000000f) | (((u32)(src) << 0x0) & 0x0000000f))
-+#define  CMU_REG3_VCO_MOMSEL_INIT_SET(dst, src) \
-+		(((dst) & ~0x000003f0) | (((u32)(src) << 0x4) & 0x000003f0))
-+#define KC_CLKMACRO_CMU_REGS_CMU_REG4_ADDR	0x20008
-+#define KC_CLKMACRO_CMU_REGS_CMU_REG5_ADDR	0x2000a
-+#define  CMU_REG5_PLL_LFSMCAP_SET(dst, src) \
-+		(((dst) & ~0x0000c000) | (((u32)(src) << 0xe) & 0x0000c000))
-+#define  CMU_REG5_PLL_LOCK_RESOLUTION_SET(dst, src) \
-+		(((dst) & ~0x0000000e) | (((u32)(src) << 0x1) & 0x0000000e))
-+#define  CMU_REG5_PLL_LFCAP_SET(dst, src) \
-+		(((dst) & ~0x00003000) | (((u32)(src) << 0xc) & 0x00003000))
-+#define KC_CLKMACRO_CMU_REGS_CMU_REG6_ADDR	0x2000c
-+#define  CMU_REG6_PLL_VREGTRIM_SET(dst, src) \
-+		(((dst) & ~0x00000600) | (((u32)(src) << 0x9) & 0x00000600))
-+#define  CMU_REG6_MAN_PVT_CAL_SET(dst, src) \
-+		(((dst) & ~0x00000004) | (((u32)(src) << 0x2) & 0x00000004))
-+#define KC_CLKMACRO_CMU_REGS_CMU_REG7_ADDR	0x2000e
-+#define  CMU_REG7_PLL_CALIB_DONE_RD(src) \
-+		((0x00004000 & (u32)(src)) >> 0xe)
-+#define  CMU_REG7_VCO_CAL_FAIL_RD(src) \
-+		((0x00000c00 & (u32)(src)) >> 0xa)
-+#define KC_CLKMACRO_CMU_REGS_CMU_REG8_ADDR	0x20010
-+#define KC_CLKMACRO_CMU_REGS_CMU_REG9_ADDR	0x20012
-+#define KC_CLKMACRO_CMU_REGS_CMU_REG10_ADDR	0x20014
-+#define KC_CLKMACRO_CMU_REGS_CMU_REG11_ADDR	0x20016
-+#define KC_CLKMACRO_CMU_REGS_CMU_REG12_ADDR	0x20018
-+#define KC_CLKMACRO_CMU_REGS_CMU_REG13_ADDR	0x2001a
-+#define KC_CLKMACRO_CMU_REGS_CMU_REG14_ADDR	0x2001c
-+#define KC_CLKMACRO_CMU_REGS_CMU_REG15_ADDR	0x2001e
-+#define KC_CLKMACRO_CMU_REGS_CMU_REG16_ADDR	0x20020
-+#define  CMU_REG16_PVT_DN_MAN_ENA_MASK		0x00000001
-+#define  CMU_REG16_PVT_UP_MAN_ENA_MASK		0x00000002
-+#define  CMU_REG16_VCOCAL_WAIT_BTW_CODE_SET(dst, src) \
-+		(((dst) & ~0x0000001c) | (((u32)(src) << 0x2) & 0x0000001c))
-+#define  CMU_REG16_CALIBRATION_DONE_OVERRIDE_SET(dst, src) \
-+		(((dst) & ~0x00000040) | (((u32)(src) << 0x6) & 0x00000040))
-+#define  CMU_REG16_BYPASS_PLL_LOCK_SET(dst, src) \
-+		(((dst) & ~0x00000020) | (((u32)(src) << 0x5) & 0x00000020))
-+#define KC_CLKMACRO_CMU_REGS_CMU_REG17_ADDR               0x20022
-+#define  CMU_REG17_PVT_CODE_R2A_SET(dst, src) \
-+		(((dst) & ~0x00007f00) | (((u32)(src) << 0x8) & 0x00007f00))
-+#define  CMU_REG17_RESERVED_7_SET(dst, src) \
-+		(((dst) & ~0x000000e0) | (((u32)(src) << 0x5) & 0x000000e0))
-+#define  CMU_REG17_PVT_TERM_MAN_ENA_MASK			0x00008000
-+#define KC_CLKMACRO_CMU_REGS_CMU_REG18_ADDR	0x20024
-+#define KC_CLKMACRO_CMU_REGS_CMU_REG19_ADDR	0x20026
-+#define KC_CLKMACRO_CMU_REGS_CMU_REG20_ADDR	0x20028
-+#define KC_CLKMACRO_CMU_REGS_CMU_REG21_ADDR	0x2002a
-+#define KC_CLKMACRO_CMU_REGS_CMU_REG22_ADDR	0x2002c
-+#define KC_CLKMACRO_CMU_REGS_CMU_REG23_ADDR	0x2002e
-+#define KC_CLKMACRO_CMU_REGS_CMU_REG24_ADDR	0x20030
-+#define KC_CLKMACRO_CMU_REGS_CMU_REG25_ADDR	0x20032
-+#define KC_CLKMACRO_CMU_REGS_CMU_REG26_ADDR	0x20034
-+#define  CMU_REG26_FORCE_PLL_LOCK_SET(dst, src) \
-+		(((dst) & ~0x00000001) | (((u32)(src) << 0x0) & 0x00000001))
-+#define KC_CLKMACRO_CMU_REGS_CMU_REG27_ADDR	0x20036
-+#define KC_CLKMACRO_CMU_REGS_CMU_REG28_ADDR	0x20038
-+#define KC_CLKMACRO_CMU_REGS_CMU_REG29_ADDR	0x2003a
-+#define KC_CLKMACRO_CMU_REGS_CMU_REG30_ADDR	0x2003c
-+#define  CMU_REG30_LOCK_COUNT_SET(dst, src) \
-+		(((dst) & ~0x00000006) | (((u32)(src) << 0x1) & 0x00000006))
-+#define  CMU_REG30_PCIE_MODE_SET(dst, src) \
-+		(((dst) & ~0x00000008) | (((u32)(src) << 0x3) & 0x00000008))
-+#define KC_CLKMACRO_CMU_REGS_CMU_REG31_ADDR	0x2003e
-+#define KC_CLKMACRO_CMU_REGS_CMU_REG32_ADDR	0x20040
-+#define  CMU_REG32_FORCE_VCOCAL_START_MASK	0x00004000
-+#define  CMU_REG32_PVT_CAL_WAIT_SEL_SET(dst, src) \
-+		(((dst) & ~0x00000006) | (((u32)(src) << 0x1) & 0x00000006))
-+#define  CMU_REG32_IREF_ADJ_SET(dst, src) \
-+		(((dst) & ~0x00000180) | (((u32)(src) << 0x7) & 0x00000180))
-+#define KC_CLKMACRO_CMU_REGS_CMU_REG33_ADDR	0x20042
-+#define KC_CLKMACRO_CMU_REGS_CMU_REG34_ADDR	0x20044
-+#define  CMU_REG34_VCO_CAL_VTH_LO_MAX_SET(dst, src) \
-+		(((dst) & ~0x0000000f) | (((u32)(src) << 0x0) & 0x0000000f))
-+#define  CMU_REG34_VCO_CAL_VTH_HI_MAX_SET(dst, src) \
-+		(((dst) & ~0x00000f00) | (((u32)(src) << 0x8) & 0x00000f00))
-+#define  CMU_REG34_VCO_CAL_VTH_LO_MIN_SET(dst, src) \
-+		(((dst) & ~0x000000f0) | (((u32)(src) << 0x4) & 0x000000f0))
-+#define  CMU_REG34_VCO_CAL_VTH_HI_MIN_SET(dst, src) \
-+		(((dst) & ~0x0000f000) | (((u32)(src) << 0xc) & 0x0000f000))
-+#define KC_SERDES_CMU_REGS_CMU_REG35_ADDR	0x46
-+#define  CMU_REG35_PLL_SSC_MOD_SET(dst, src) \
-+		(((dst) & ~0x0000fe00) | (((u32)(src) << 0x9) & 0x0000fe00))
-+#define KC_SERDES_CMU_REGS_CMU_REG36_ADDR	0x48
-+#define  CMU_REG36_PLL_SSC_EN_SET(dst, src) \
-+		(((dst) & ~0x00000010) | (((u32)(src) << 0x4) & 0x00000010))
-+#define  CMU_REG36_PLL_SSC_VSTEP_SET(dst, src) \
-+		(((dst) & ~0x0000ffc0) | (((u32)(src) << 0x6) & 0x0000ffc0))
-+#define  CMU_REG36_PLL_SSC_DSMSEL_SET(dst, src) \
-+		(((dst) & ~0x00000020) | (((u32)(src) << 0x5) & 0x00000020))
-+#define KC_CLKMACRO_CMU_REGS_CMU_REG35_ADDR	0x20046
-+#define KC_CLKMACRO_CMU_REGS_CMU_REG36_ADDR	0x20048
-+#define KC_CLKMACRO_CMU_REGS_CMU_REG37_ADDR	0x2004a
-+#define KC_CLKMACRO_CMU_REGS_CMU_REG38_ADDR	0x2004c
-+#define KC_CLKMACRO_CMU_REGS_CMU_REG39_ADDR	0x2004e
++/* SATA host AHCI CSR */
++#define PORTCFG_ADDR			0x000000a4
++#define  PORTADDR_SET(dst, src) \
++		(((dst) & ~0x0000003f) | (((u32)(src)) & 0x0000003f))
++#define PORTPHY1CFG_ADDR		0x000000a8
++#define PORTPHY1CFG_FRCPHYRDY_SET(dst, src) \
++		(((dst) & ~0x00100000) | (((u32)(src) << 0x14) & 0x00100000))
++#define PORTPHY2CFG_ADDR		0x000000ac
++#define PORTPHY3CFG_ADDR		0x000000b0
++#define PORTPHY4CFG_ADDR		0x000000b4
++#define PORTPHY5CFG_ADDR		0x000000b8
++#define SCTL0_ADDR			0x0000012C
++#define PORTPHY5CFG_RTCHG_SET(dst, src) \
++		(((dst) & ~0xfff00000) | (((u32)(src) << 0x14) & 0xfff00000))
++#define PORTAXICFG_EN_CONTEXT_SET(dst, src) \
++		(((dst) & ~0x01000000) | (((u32)(src) << 0x18) & 0x01000000))
++#define PORTAXICFG_ADDR			0x000000bc
++#define PORTAXICFG_OUTTRANS_SET(dst, src) \
++		(((dst) & ~0x00f00000) | (((u32)(src) << 0x14) & 0x00f00000))
 +
-+/* SATA PHY RXTX CSR */
-+#define KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG0_ADDR	0x400
-+#define  CH0_RXTX_REG0_CTLE_EQ_HR_SET(dst, src) \
-+		(((dst) & ~0x0000f800) | (((u32)(src) << 0xb) & 0x0000f800))
-+#define  CH0_RXTX_REG0_CTLE_EQ_QR_SET(dst, src) \
-+		(((dst) & ~0x000007c0) | (((u32)(src) << 0x6) & 0x000007c0))
-+#define  CH0_RXTX_REG0_CTLE_EQ_FR_SET(dst, src) \
-+		(((dst) & ~0x0000003e) | (((u32)(src) << 0x1) & 0x0000003e))
-+#define KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG1_ADDR	0x402
-+#define  CH0_RXTX_REG1_RXACVCM_SET(dst, src) \
-+		(((dst) & ~0x0000f000) | (((u32)(src) << 0xc) & 0x0000f000))
-+#define  CH0_RXTX_REG1_CTLE_EQ_SET(dst, src) \
-+		(((dst) & ~0x00000f80) | (((u32)(src) << 0x7) & 0x00000f80))
-+#define KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG2_ADDR	0x404
-+#define  CH0_RXTX_REG2_VTT_ENA_SET(dst, src) \
-+		(((dst) & ~0x00000100) | (((u32)(src) << 0x8) & 0x00000100))
-+#define  CH0_RXTX_REG2_TX_FIFO_ENA_SET(dst, src) \
-+		(((dst) & ~0x00000020) | (((u32)(src) << 0x5) & 0x00000020))
-+#define  CH0_RXTX_REG2_VTT_SEL_SET(dst, src) \
-+		(((dst) & ~0x000000c0) | (((u32)(src) << 0x6) & 0x000000c0))
-+#define KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG4_ADDR	0x408
-+#define  CH0_RXTX_REG4_TX_LOOPBACK_BUF_EN_MASK			0x00000040
-+#define  CH0_RXTX_REG4_TX_DATA_RATE_SET(dst, src) \
-+		(((dst) & ~0x0000c000) | (((u32)(src) << 0xe) & 0x0000c000))
-+#define  CH0_RXTX_REG4_TX_WORD_MODE_SET(dst, src) \
-+		(((dst) & ~0x00003800) | (((u32)(src) << 0xb) & 0x00003800))
-+#define KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG5_ADDR	0x40a
-+#define  CH0_RXTX_REG5_TX_CN1_SET(dst, src) \
-+		(((dst) & ~0x0000f800) | (((u32)(src) << 0xb) & 0x0000f800))
-+#define  CH0_RXTX_REG5_TX_CP1_SET(dst, src) \
-+		(((dst) & ~0x000007e0) | (((u32)(src) << 0x5) & 0x000007e0))
-+#define  CH0_RXTX_REG5_TX_CN2_SET(dst, src) \
-+		(((dst) & ~0x0000001f) | (((u32)(src) << 0x0) & 0x0000001f))
-+#define KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG6_ADDR	0x40c
-+#define  CH0_RXTX_REG6_TXAMP_CNTL_SET(dst, src) \
-+		(((dst) & ~0x00000780) | (((u32)(src) << 0x7) & 0x00000780))
-+#define  CH0_RXTX_REG6_TXAMP_ENA_SET(dst, src) \
-+		(((dst) & ~0x00000040) | (((u32)(src) << 0x6) & 0x00000040))
-+#define  CH0_RXTX_REG6_RX_BIST_ERRCNT_RD_SET(dst, src) \
-+		(((dst) & ~0x00000001) | (((u32)(src) << 0x0) & 0x00000001))
-+#define  CH0_RXTX_REG6_TX_IDLE_SET(dst, src) \
-+		(((dst) & ~0x00000008) | (((u32)(src) << 0x3) & 0x00000008))
-+#define  CH0_RXTX_REG6_RX_BIST_RESYNC_SET(dst, src) \
-+		(((dst) & ~0x00000002) | (((u32)(src) << 0x1) & 0x00000002))
-+#define KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG7_ADDR	0x40e
-+#define  CH0_RXTX_REG7_RESETB_RXD_MASK			0x00000100
-+#define  CH0_RXTX_REG7_RESETB_RXA_MASK			0x00000080
-+#define  CH0_RXTX_REG7_BIST_ENA_RX_SET(dst, src) \
-+		(((dst) & ~0x00000040) | (((u32)(src) << 0x6) & 0x00000040))
-+#define  CH0_RXTX_REG7_RX_WORD_MODE_SET(dst, src) \
-+		(((dst) & ~0x00003800) | (((u32)(src) << 0xb) & 0x00003800))
-+#define KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG8_ADDR	0x410
-+#define  CH0_RXTX_REG8_CDR_LOOP_ENA_SET(dst, src) \
-+		(((dst) & ~0x00004000) | (((u32)(src) << 0xe) & 0x00004000))
-+#define  CH0_RXTX_REG8_CDR_BYPASS_RXLOS_SET(dst, src) \
-+		(((dst) & ~0x00000800) | (((u32)(src) << 0xb) & 0x00000800))
-+#define  CH0_RXTX_REG8_SSC_ENABLE_SET(dst, src) \
-+		(((dst) & ~0x00000200) | (((u32)(src) << 0x9) & 0x00000200))
-+#define  CH0_RXTX_REG8_SD_VREF_SET(dst, src) \
-+		(((dst) & ~0x000000f0) | (((u32)(src) << 0x4) & 0x000000f0))
-+#define  CH0_RXTX_REG8_SD_DISABLE_SET(dst, src) \
-+		(((dst) & ~0x00000100) | (((u32)(src) << 0x8) & 0x00000100))
-+#define KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG7_ADDR	0x40e
-+#define  CH0_RXTX_REG7_RESETB_RXD_SET(dst, src) \
-+		(((dst) & ~0x00000100) | (((u32)(src) << 0x8) & 0x00000100))
-+#define  CH0_RXTX_REG7_RESETB_RXA_SET(dst, src) \
-+		(((dst) & ~0x00000080) | (((u32)(src) << 0x7) & 0x00000080))
-+#define  CH0_RXTX_REG7_LOOP_BACK_ENA_CTLE_MASK			0x00004000
-+#define  CH0_RXTX_REG7_LOOP_BACK_ENA_CTLE_SET(dst, src) \
-+		(((dst) & ~0x00004000) | (((u32)(src) << 0xe) & 0x00004000))
-+#define KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG11_ADDR	0x416
-+#define  CH0_RXTX_REG11_PHASE_ADJUST_LIMIT_SET(dst, src) \
-+		(((dst) & ~0x0000f800) | (((u32)(src) << 0xb) & 0x0000f800))
-+#define KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG12_ADDR	0x418
-+#define  CH0_RXTX_REG12_LATCH_OFF_ENA_SET(dst, src) \
-+		(((dst) & ~0x00002000) | (((u32)(src) << 0xd) & 0x00002000))
-+#define  CH0_RXTX_REG12_SUMOS_ENABLE_SET(dst, src) \
-+		(((dst) & ~0x00000004) | (((u32)(src) << 0x2) & 0x00000004))
-+#define  CH0_RXTX_REG12_RX_DET_TERM_ENABLE_MASK		0x00000002
-+#define  CH0_RXTX_REG12_RX_DET_TERM_ENABLE_SET(dst, src) \
-+		(((dst) & ~0x00000002) | (((u32)(src) << 0x1) & 0x00000002))
-+#define KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG13_ADDR	0x41a
-+#define KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG14_ADDR	0x41c
-+#define CH0_RXTX_REG14_CLTE_LATCAL_MAN_PROG_SET(dst, src) \
-+		(((dst) & ~0x0000003f) | (((u32)(src) << 0x0) & 0x0000003f))
-+#define CH0_RXTX_REG14_CTLE_LATCAL_MAN_ENA_SET(dst, src) \
-+		(((dst) & ~0x00000040) | (((u32)(src) << 0x6) & 0x00000040))
-+#define KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG26_ADDR	0x434
-+#define  CH0_RXTX_REG26_PERIOD_ERROR_LATCH_SET(dst, src) \
-+		(((dst) & ~0x00003800) | (((u32)(src) << 0xb) & 0x00003800))
-+#define  CH0_RXTX_REG26_BLWC_ENA_SET(dst, src) \
-+		(((dst) & ~0x00000008) | (((u32)(src) << 0x3) & 0x00000008))
-+#define KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG21_ADDR	0x42a
-+#define  CH0_RXTX_REG21_DO_LATCH_CALOUT_RD(src) \
-+		((0x0000fc00 & (u32)(src)) >> 0xa)
-+#define  CH0_RXTX_REG21_XO_LATCH_CALOUT_RD(src) \
-+		((0x000003f0 & (u32)(src)) >> 0x4)
-+#define  CH0_RXTX_REG21_LATCH_CAL_FAIL_ODD_RD(src) \
-+		((0x0000000f & (u32)(src)))
-+#define KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG22_ADDR	0x42c
-+#define  CH0_RXTX_REG22_SO_LATCH_CALOUT_RD(src) \
-+		((0x000003f0 & (u32)(src)) >> 0x4)
-+#define  CH0_RXTX_REG22_EO_LATCH_CALOUT_RD(src) \
-+		((0x0000fc00 & (u32)(src)) >> 0xa)
-+#define  CH0_RXTX_REG22_LATCH_CAL_FAIL_EVEN_RD(src) \
-+		((0x0000000f & (u32)(src)))
-+#define KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG23_ADDR	0x42e
-+#define  CH0_RXTX_REG23_DE_LATCH_CALOUT_RD(src) \
-+		((0x0000fc00 & (u32)(src)) >> 0xa)
-+#define  CH0_RXTX_REG23_XE_LATCH_CALOUT_RD(src) \
-+		((0x000003f0 & (u32)(src)) >> 0x4)
-+#define KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG24_ADDR	0x430
-+#define  CH0_RXTX_REG24_EE_LATCH_CALOUT_RD(src) \
-+		((0x0000fc00 & (u32)(src)) >> 0xa)
-+#define  CH0_RXTX_REG24_SE_LATCH_CALOUT_RD(src) \
-+		((0x000003f0 & (u32)(src)) >> 0x4)
-+#define KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG28_ADDR	0x438
-+#define KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG31_ADDR	0x43e
-+#define KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG38_ADDR	0x44c
-+#define KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG39_ADDR	0x44e
-+#define KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG40_ADDR	0x450
-+#define KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG41_ADDR	0x452
-+#define KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG42_ADDR	0x454
-+#define KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG43_ADDR	0x456
-+#define KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG44_ADDR	0x458
-+#define KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG45_ADDR	0x45a
-+#define KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG46_ADDR	0x45c
-+#define KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG47_ADDR	0x45e
-+#define KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG48_ADDR	0x460
-+#define KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG49_ADDR	0x462
-+#define KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG50_ADDR	0x464
-+#define KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG51_ADDR	0x466
-+#define KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG52_ADDR	0x468
-+#define KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG53_ADDR	0x46a
-+#define KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG54_ADDR	0x46c
-+#define KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG55_ADDR	0x46e
-+#define KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG61_ADDR	0x47a
-+#define  CH0_RXTX_REG61_ISCAN_INBERT_SET(dst, src) \
-+		(((dst) & ~0x00000010) | (((u32)(src) << 0x4) & 0x00000010))
-+#define  CH0_RXTX_REG61_LOADFREQ_SHIFT_SET(dst, src) \
-+		(((dst) & ~0x00000008) | (((u32)(src) << 0x3) & 0x00000008))
-+#define  CH0_RXTX_REG61_EYE_COUNT_WIDTH_SEL_SET(dst, src) \
-+		(((dst) & ~0x000000c0) | (((u32)(src) << 0x6) & 0x000000c0))
-+#define  CH0_RXTX_REG61_SPD_SEL_CDR_SET(dst, src) \
-+		(((dst) & ~0x00003c00) | (((u32)(src) << 0xa) & 0x00003c00))
-+#define KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG62_ADDR	0x47c
-+#define  CH0_RXTX_REG62_PERIOD_H1_QLATCH_SET(dst, src) \
-+		(((dst) & ~0x00003800) | (((u32)(src) << 0xb) & 0x00003800))
-+#define KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG81_ADDR	0x4a2
++/* SATA host controller slave CSR */
++#define INT_SLV_TMOMASK_ADDR		0x00000010
 +
-+#define  CH0_RXTX_REG89_MU_TH7_SET(dst, src) \
-+		(((dst) & ~0x0000f800) | (((u32)(src) << 0xb) & 0x0000f800))
-+#define  CH0_RXTX_REG89_MU_TH8_SET(dst, src) \
-+		(((dst) & ~0x000007c0) | (((u32)(src) << 0x6) & 0x000007c0))
-+#define  CH0_RXTX_REG89_MU_TH9_SET(dst, src) \
-+		(((dst) & ~0x0000003e) | (((u32)(src) << 0x1) & 0x0000003e))
-+#define KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG96_ADDR	0x4c0
-+#define  CH0_RXTX_REG96_MU_FREQ1_SET(dst, src) \
-+		(((dst) & ~0x0000f800) | (((u32)(src) << 0xb) & 0x0000f800))
-+#define  CH0_RXTX_REG96_MU_FREQ2_SET(dst, src) \
-+		(((dst) & ~0x000007c0) | (((u32)(src) << 0x6) & 0x000007c0))
-+#define  CH0_RXTX_REG96_MU_FREQ3_SET(dst, src) \
-+		(((dst) & ~0x0000003e) | (((u32)(src) << 0x1) & 0x0000003e))
-+#define KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG99_ADDR	0x4c6
-+#define  CH0_RXTX_REG99_MU_PHASE1_SET(dst, src) \
-+		(((dst) & ~0x0000f800) | (((u32)(src) << 0xb) & 0x0000f800))
-+#define  CH0_RXTX_REG99_MU_PHASE2_SET(dst, src) \
-+		(((dst) & ~0x000007c0) | (((u32)(src) << 0x6) & 0x000007c0))
-+#define  CH0_RXTX_REG99_MU_PHASE3_SET(dst, src) \
-+		(((dst) & ~0x0000003e) | (((u32)(src) << 0x1) & 0x0000003e))
-+#define KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG102_ADDR	0x4cc
-+#define  CH0_RXTX_REG102_FREQLOOP_LIMIT_SET(dst, src) \
-+		(((dst) & ~0x00000060) | (((u32)(src) << 0x5) & 0x00000060))
-+#define KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG114_ADDR	0x4e4
-+#define KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG121_ADDR	0x4f2
-+#define  CH0_RXTX_REG121_SUMOS_CAL_CODE_RD(src) \
-+		((0x0000003e & (u32)(src)) >> 0x1)
-+#define KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG125_ADDR	0x4fa
-+#define  CH0_RXTX_REG125_PQ_REG_SET(dst, src) \
-+		(((dst) & ~0x0000fe00) | (((u32)(src) << 0x9) & 0x0000fe00))
-+#define  CH0_RXTX_REG125_SIGN_PQ_SET(dst, src) \
-+		(((dst) & ~0x00000100) | (((u32)(src) << 0x8) & 0x00000100))
-+#define  CH0_RXTX_REG125_SIGN_PQ_2C_SET(dst, src) \
-+		(((dst) & ~0x00000080) | (((u32)(src) << 0x7) & 0x00000080))
-+#define  CH0_RXTX_REG125_PHZ_MANUALCODE_SET(dst, src) \
-+		(((dst) & ~0x0000007c) | (((u32)(src) << 0x2) & 0x0000007c))
-+#define  CH0_RXTX_REG125_PHZ_MANUAL_SET(dst, src) \
-+		(((dst) & ~0x00000002) | (((u32)(src) << 0x1) & 0x00000002))
-+#define KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG127_ADDR	0x4fe
-+#define  CH0_RXTX_REG127_FORCE_SUM_CAL_START_MASK	0x00000002
-+#define  CH0_RXTX_REG127_FORCE_LAT_CAL_START_MASK	0x00000004
-+#define KC_SERDES_X2_RXTX_REGS_CH1_RXTX_REG127_ADDR	0x6fe
-+#define  CH1_RXTX_REG127_FORCE_SUM_CAL_START_SET(dst, src) \
-+		(((dst) & ~0x00000002) | (((u32)(src) << 0x1) & 0x00000002))
-+#define  CH1_RXTX_REG127_FORCE_LAT_CAL_START_SET(dst, src) \
-+		(((dst) & ~0x00000004) | (((u32)(src) << 0x2) & 0x00000004))
-+#define  CH0_RXTX_REG127_LATCH_MAN_CAL_ENA_SET(dst, src) \
-+		(((dst) & ~0x00000008) | (((u32)(src) << 0x3) & 0x00000008))
-+#define  CH0_RXTX_REG127_DO_LATCH_MANCAL_SET(dst, src) \
-+		(((dst) & ~0x0000fc00) | (((u32)(src) << 0xa) & 0x0000fc00))
-+#define  CH0_RXTX_REG127_XO_LATCH_MANCAL_SET(dst, src) \
-+		(((dst) & ~0x000003f0) | (((u32)(src) << 0x4) & 0x000003f0))
-+#define KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG128_ADDR	0x500
-+#define  CH0_RXTX_REG128_LATCH_CAL_WAIT_SEL_SET(dst, src) \
-+		(((dst) & ~0x0000000c) | (((u32)(src) << 0x2) & 0x0000000c))
-+#define  CH0_RXTX_REG128_EO_LATCH_MANCAL_SET(dst, src) \
-+		(((dst) & ~0x0000fc00) | (((u32)(src) << 0xa) & 0x0000fc00))
-+#define CH0_RXTX_REG128_SO_LATCH_MANCAL_SET(dst, src) \
-+		(((dst) & ~0x000003f0) | (((u32)(src) << 0x4) & 0x000003f0))
-+#define KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG129_ADDR	0x502
-+#define CH0_RXTX_REG129_DE_LATCH_MANCAL_SET(dst, src) \
-+		(((dst) & ~0x0000fc00) | (((u32)(src) << 0xa) & 0x0000fc00))
-+#define CH0_RXTX_REG129_XE_LATCH_MANCAL_SET(dst, src) \
-+		(((dst) & ~0x000003f0) | (((u32)(src) << 0x4) & 0x000003f0))
-+#define KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG130_ADDR	0x504
-+#define  CH0_RXTX_REG130_EE_LATCH_MANCAL_SET(dst, src) \
-+		(((dst) & ~0x0000fc00) | (((u32)(src) << 0xa) & 0x0000fc00))
-+#define  CH0_RXTX_REG130_SE_LATCH_MANCAL_SET(dst, src) \
-+		(((dst) & ~0x000003f0) | (((u32)(src) << 0x4) & 0x000003f0))
-+#define KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG145_ADDR	0x522
-+#define  CH0_RXTX_REG145_TX_IDLE_SATA_SET(dst, src) \
-+		(((dst) & ~0x00000001) | (((u32)(src) << 0x0) & 0x00000001))
-+#define  CH0_RXTX_REG145_RXES_ENA_SET(dst, src) \
-+		(((dst) & ~0x00000002) | (((u32)(src) << 0x1) & 0x00000002))
-+#define  CH0_RXTX_REG145_RXDFE_CONFIG_SET(dst, src) \
-+		(((dst) & ~0x0000c000) | (((u32)(src) << 0xe) & 0x0000c000))
-+#define  CH0_RXTX_REG145_RXVWES_LATENA_SET(dst, src) \
-+		(((dst) & ~0x00000004) | (((u32)(src) << 0x2) & 0x00000004))
-+#define KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG147_ADDR	0x526
-+#define KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG148_ADDR	0x528
++/* SATA global diagnostic CSR */
++#define REGSPEC_CFG_MEM_RAM_SHUTDOWN_ADDR	0x00000070
++#define REGSPEC_BLOCK_MEM_RDY_ADDR		0x00000074
 +
-+#define KC_SERDES_X2_RXTX_REGS_CH1_RXTX_REG4_ADDR	0x608
-+#define  CH1_RXTX_REG4_TX_LOOPBACK_BUF_EN_SET(dst, src) \
-+		(((dst) & ~0x00000040) | (((u32)(src) << 0x6) & 0x00000040))
-+#define KC_SERDES_X2_RXTX_REGS_CH1_RXTX_REG7_ADDR	0x60e
-+#define KC_SERDES_X2_RXTX_REGS_CH1_RXTX_REG13_ADDR	0x61a
-+#define KC_SERDES_X2_RXTX_REGS_CH1_RXTX_REG38_ADDR	0x64c
-+#define KC_SERDES_X2_RXTX_REGS_CH1_RXTX_REG39_ADDR	0x64e
-+#define KC_SERDES_X2_RXTX_REGS_CH1_RXTX_REG40_ADDR	0x650
-+#define KC_SERDES_X2_RXTX_REGS_CH1_RXTX_REG41_ADDR	0x652
-+#define KC_SERDES_X2_RXTX_REGS_CH1_RXTX_REG42_ADDR	0x654
-+#define KC_SERDES_X2_RXTX_REGS_CH1_RXTX_REG43_ADDR	0x656
-+#define KC_SERDES_X2_RXTX_REGS_CH1_RXTX_REG44_ADDR	0x658
-+#define KC_SERDES_X2_RXTX_REGS_CH1_RXTX_REG45_ADDR	0x65a
-+#define KC_SERDES_X2_RXTX_REGS_CH1_RXTX_REG46_ADDR	0x65c
-+#define KC_SERDES_X2_RXTX_REGS_CH1_RXTX_REG47_ADDR	0x65e
-+#define KC_SERDES_X2_RXTX_REGS_CH1_RXTX_REG48_ADDR	0x660
-+#define KC_SERDES_X2_RXTX_REGS_CH1_RXTX_REG49_ADDR	0x662
-+#define KC_SERDES_X2_RXTX_REGS_CH1_RXTX_REG50_ADDR	0x664
-+#define KC_SERDES_X2_RXTX_REGS_CH1_RXTX_REG51_ADDR	0x666
-+#define KC_SERDES_X2_RXTX_REGS_CH1_RXTX_REG52_ADDR	0x668
-+#define KC_SERDES_X2_RXTX_REGS_CH1_RXTX_REG53_ADDR	0x66a
-+#define KC_SERDES_X2_RXTX_REGS_CH1_RXTX_REG54_ADDR	0x66c
-+#define KC_SERDES_X2_RXTX_REGS_CH1_RXTX_REG55_ADDR	0x66e
-+#define KC_SERDES_X2_RXTX_REGS_CH1_RXTX_REG121_ADDR	0x6f2
++/* AHBC IOB flush CSR */
++#define CFG_AMA_MODE_ADDR		0x0000e014
++#define  CFG_RD2WR_EN			0x00000002
 +
-+/* SATA/ENET Shared CSR */
-+#define SATA_ENET_CONFIG_REG_ADDR		0x00000000
-+#define  CFG_SATA_ENET_SELECT_MASK		0x00000001
++#define MAX_RETRY_COUNT			3
++#define SATA_RESET_MEM_RAM_TO		100000
 +
-+/* SATA SERDES CMU CSR */
-+#define KC_SERDES_CMU_REGS_CMU_REG0_ADDR	0x0
-+#define  CMU_REG0_PLL_REF_SEL_MASK		0x00002000
-+#define CMU_REG0_PLL_REF_SEL_SHIFT_MASK		0xd
-+#define CMU_REG0_PLL_REF_SEL_SET(dst, src)	\
-+		(((dst) & ~0x00002000) | (((u32)(src) << 0xd) & 0x00002000))
-+#define KC_SERDES_CMU_REGS_CMU_REG1_ADDR	0x2
-+#define  CMU_REG1_REFCLK_CMOS_SEL_MASK		0x00000001
-+#define CMU_REG1_REFCLK_CMOS_SEL_SHIFT_MASK	0x0
-+#define CMU_REG1_REFCLK_CMOS_SEL_SET(dst, src)	\
-+		(((dst) & ~0x00000001) | (((u32)(src) << 0x0) & 0x00000001))
-+#define KC_SERDES_CMU_REGS_CMU_REG2_ADDR	0x4
-+#define  CMU_REG2_PLL_REFDIV_SET(dst, src) \
-+		(((dst) & ~0x0000c000) | (((u32)(src) << 0xe) & 0x0000c000))
-+#define KC_SERDES_CMU_REGS_CMU_REG3_ADDR	0x6
-+#define  CMU_REG3_VCO_MANMOMSEL_SET(dst, src) \
-+		(((dst) & ~0x0000fc00) | (((u32)(src) << 0xa) & 0x0000fc00))
-+#define KC_SERDES_CMU_REGS_CMU_REG5_ADDR	0xa
-+#define  CMU_REG5_PLL_RESETB_MASK		0x00000001
-+#define KC_SERDES_CMU_REGS_CMU_REG6_ADDR	0xc
-+#define KC_SERDES_CMU_REGS_CMU_REG7_ADDR	0xe
-+#define KC_SERDES_CMU_REGS_CMU_REG9_ADDR	0x12
-+#define  CMU_REG9_TX_WORD_MODE_CH1_SET(dst, src) \
-+		(((dst) & ~0x00000380) | (((u32)(src) << 0x7) & 0x00000380))
-+#define  CMU_REG9_TX_WORD_MODE_CH0_SET(dst, src) \
-+		(((dst) & ~0x00000070) | (((u32)(src) << 0x4) & 0x00000070))
-+#define  CMU_REG9_PLL_POST_DIVBY2_SET(dst, src) \
-+		(((dst) & ~0x00000008) | (((u32)(src) << 0x3) & 0x00000008))
-+#define KC_SERDES_CMU_REGS_CMU_REG12_ADDR	0x18
-+#define  CMU_REG12_STATE_DELAY9_SET(dst, src) \
-+		(((dst) & ~0x000000f0) | (((u32)(src) << 0x4) & 0x000000f0))
-+#define KC_SERDES_CMU_REGS_CMU_REG13_ADDR	0x1a
-+#define KC_SERDES_CMU_REGS_CMU_REG14_ADDR	0x1c
-+#define KC_SERDES_CMU_REGS_CMU_REG15_ADDR	0x1e
-+#define KC_SERDES_CMU_REGS_CMU_REG16_ADDR	0x20
-+#define KC_SERDES_CMU_REGS_CMU_REG17_ADDR	0x22
-+#define KC_SERDES_CMU_REGS_CMU_REG26_ADDR	0x34
-+#define KC_SERDES_CMU_REGS_CMU_REG30_ADDR	0x3c
-+#define KC_SERDES_CMU_REGS_CMU_REG31_ADDR	0x3e
-+#define KC_SERDES_CMU_REGS_CMU_REG32_ADDR	0x40
-+#define  CMU_REG32_FORCE_VCOCAL_START_MASK	0x00004000
-+#define KC_SERDES_CMU_REGS_CMU_REG34_ADDR	0x44
-+#define KC_SERDES_CMU_REGS_CMU_REG37_ADDR	0x4a
-+
-+/* PCIE SATA Serdes CSR (CSR shared with the PCIe) */
-+#define SM_PCIE_CLKRST_CSR_PCIE_SRST_ADDR	0xc000
-+#define SM_PCIE_CLKRST_CSR_PCIE_CLKEN_ADDR	0xc008
-+#define SM_PCIE_X8_SDS_CSR_REGS_PCIE_SDS_IND_WDATA_REG_ADDR	0xa01c
-+#define SM_PCIE_X8_SDS_CSR_REGS_PCIE_SDS_IND_CMD_REG_ADDR	0xa014
-+#define  PCIE_SDS_IND_CMD_REG_CFG_IND_ADDR_SET(dst, src) \
-+		(((dst) & ~0x003ffff0) | (((u32)(src) << 0x4) & 0x003ffff0))
-+#define  PCIE_SDS_IND_CMD_REG_CFG_IND_WR_CMD_SET(dst, src) \
-+		(((dst) & ~0x00000001) | (((u32)(src) << 0x0) & 0x00000001))
-+#define SM_PCIE_X8_SDS_CSR_REGS_PCIE_SDS_IND_RDATA_REG_ADDR	0xa018
-+#define SM_PCIE_X8_SDS_CSR_REGS_PCIE_CLK_MACRO_REG_ADDR		0xa094
-+#define  PCIE_SDS_IND_CMD_REG_CFG_IND_CMD_DONE_RD(src) \
-+		((0x00000004 & (uint32_t)(src)) >> 0x2)
-+#define  PCIE_SDS_IND_CMD_REG_CFG_IND_CMD_DONE_SET(dst, src) \
-+		(((dst) & ~0x00000004) | (((u32)(src) << 0x2) & 0x00000004))
-+#define  PCIE_SDS_IND_CMD_REG_CFG_IND_RD_CMD_SET(dst, src) \
-+		(((dst) & ~0x00000002) | (((u32)(src) << 0x1) & 0x00000002))
-+#define PCIE_CLK_MACRO_REG_I_RESET_B_SET(dst, src) \
-+		(((dst) & ~0x00000001) | (((u32)(src) << 0x0) & 0x00000001))
-+#define PCIE_CLK_MACRO_REG_I_CUSTOMEROV_SET(dst, src) \
-+		(((dst) & ~0x00000f80) | (((u32)(src) << 0x7) & 0x00000f80))
-+#define PCIE_CLK_MACRO_REG_O_PLL_READY_RD(src) \
-+		((0x80000000 & (u32)(src)) >> 0x1f)
-+#define PCIE_CLK_MACRO_REG_I_PLL_FBDIV_SET(dst, src) \
-+		(((dst) & ~0x001ff000) | (((u32)(src) << 0xc) & 0x001ff000))
-+#define PCIE_CLK_MACRO_REG_O_PLL_LOCK_RD(src)	\
-+		((0x40000000 & (u32)(src)) >> 0x1e)
-+
-+static void xgene_serdes_wr(void *csr_base, u32 indirect_cmd_reg,
-+			    u32 indirect_data_reg, u32 addr, u32 data)
++void xgene_ahci_in32(void *addr, u32 *val)
 +{
-+	u32 val;
-+	u32 cmd;
-+
-+	cmd = CFG_IND_WR_CMD_MASK | CFG_IND_CMD_DONE_MASK;
-+	cmd = (addr << 4) | cmd;
-+	xgene_ahci_out32(csr_base + indirect_data_reg, data);
-+	xgene_ahci_out32(csr_base + indirect_cmd_reg, cmd);
-+	/* Add an barrier - very important please don't remove */
-+	wmb();
-+	/* Ignore first read */
-+	xgene_ahci_in32(csr_base + indirect_cmd_reg, &val);
-+	/* Allow Serdes to get reflected */
-+	xgene_ahci_delayus(1000);
-+	do {
-+		xgene_ahci_in32(csr_base + indirect_cmd_reg, &val);
-+	} while (!(val & CFG_IND_CMD_DONE_MASK));
++	*val = readl(addr);
++	XGENE_CSRDBG("SATAPHY CSR RD: 0x%p value: 0x%08x", addr, *val);
 +}
 +
-+static void xgene_serdes_rd(void *csr_base, u32 indirect_cmd_reg,
-+			    u32 indirect_data_reg, u32 addr, u32 *data)
++void xgene_ahci_out32(void *addr, u32 val)
 +{
-+	u32 val;
-+	u32 cmd;
-+
-+	cmd = CFG_IND_RD_CMD_MASK | CFG_IND_CMD_DONE_MASK;
-+	cmd = (addr << 4) | cmd;
-+	xgene_ahci_out32(csr_base + indirect_cmd_reg, cmd);
-+	/* Add an barrier - very important please don't remove */
-+	wmb();
-+	/* Ignore first read */
-+	xgene_ahci_in32(csr_base + indirect_cmd_reg, &val);
-+	/* Allow Serdes to get reflected */
-+	xgene_ahci_delayus(1000);
-+	do {
-+		xgene_ahci_in32(csr_base + indirect_cmd_reg, &val);
-+	} while (!(val & CFG_IND_CMD_DONE_MASK));
-+	xgene_ahci_in32(csr_base + indirect_data_reg, data);
++	writel(val, addr);
++	XGENE_CSRDBG("SATAPHY CSR WR: 0x%p value: 0x%08x", addr, val);
 +}
 +
-+/* X-Gene Serdes write helper for SATA port 0, 1, 2, and 3 */
-+static void xgene_sds_wr(void *csr_base, u32 addr, u32 data)
++void xgene_ahci_out32_flush(void *addr, u32 val)
 +{
-+	u32 val;
-+	xgene_serdes_wr(csr_base, SATA_ENET_SDS_IND_CMD_REG_ADDR,
-+			SATA_ENET_SDS_IND_WDATA_REG_ADDR, addr, data);
-+	xgene_serdes_rd(csr_base, SATA_ENET_SDS_IND_CMD_REG_ADDR,
-+			SATA_ENET_SDS_IND_RDATA_REG_ADDR, addr, &val);
-+	PHYCSRDEBUG("SDS WR addr 0x%X value 0x%08X <-> 0x%08X", addr, data,
-+		    val);
++	writel(val, addr);
++	XGENE_CSRDBG("SATAPHY CSR WR: 0x%p value: 0x%08x", addr, val);
++	val = readl(addr);
 +}
 +
-+/* X-Gene Serdes read helper for SATA port 0, 1, 2, and 3 */
-+static void xgene_sds_rd(void *csr_base, u32 addr, u32 *data)
++void xgene_ahci_delayus(unsigned long us)
 +{
-+	xgene_serdes_rd(csr_base, SATA_ENET_SDS_IND_CMD_REG_ADDR,
-+			SATA_ENET_SDS_IND_RDATA_REG_ADDR, addr, data);
-+	PHYCSRDEBUG("SDS RD addr 0x%X value 0x%08X", addr, *data);
++	udelay(us);
 +}
 +
-+/* X-Gene Serdes toggle helper for SATA port 0, 1, 2, and 3 */
-+static void xgene_sds_toggle1to0(void *csr_base, u32 addr, u32 bits,
-+				 u32 delayus)
++void xgene_ahci_delayms(unsigned long us)
 +{
-+	u32 val;
-+	xgene_sds_rd(csr_base, addr, &val);
-+	val |= bits;
-+	xgene_sds_wr(csr_base, addr, val);
-+	xgene_ahci_delayus(delayus);
-+	xgene_sds_rd(csr_base, addr, &val);
-+	val &= ~bits;
-+	xgene_sds_wr(csr_base, addr, val);
++	mdelay(us);
 +}
 +
-+/* X-Gene Serdes clear bits helper for SATA port 0, 1, 2, and 3 */
-+static void xgene_sds_clrbits(void *csr_base, u32 addr, u32 bits)
++static int xgene_ahci_get_channel(struct ata_host *host, struct ata_port *port)
 +{
-+	u32 val;
-+	xgene_sds_rd(csr_base, addr, &val);
-+	val &= ~bits;
-+	xgene_sds_wr(csr_base, addr, val);
-+}
-+
-+/* X-Gene Serdes set bits helper for SATA port 0, 1, 2, and 3 */
-+static void xgene_sds_setbits(void *csr_base, u32 addr, u32 bits)
-+{
-+	u32 val;
-+	xgene_sds_rd(csr_base, addr, &val);
-+	val |= bits;
-+	xgene_sds_wr(csr_base, addr, val);
-+}
-+
-+/* X-Gene Serdes write helper for SATA port 4 and 5 */
-+static void xgene_sds_pcie_wr(void *csr_base, u32 addr, u32 data)
-+{
-+	u32 val;
-+	xgene_serdes_wr(csr_base,
-+			SM_PCIE_X8_SDS_CSR_REGS_PCIE_SDS_IND_CMD_REG_ADDR,
-+			SM_PCIE_X8_SDS_CSR_REGS_PCIE_SDS_IND_WDATA_REG_ADDR,
-+			addr, data);
-+	xgene_serdes_rd(csr_base,
-+			SM_PCIE_X8_SDS_CSR_REGS_PCIE_SDS_IND_CMD_REG_ADDR,
-+			SM_PCIE_X8_SDS_CSR_REGS_PCIE_SDS_IND_RDATA_REG_ADDR,
-+			addr, &val);
-+	xgene_ahci_delayus(122);	/* Allow Serdes to get reflected */
-+	PHYCSRDEBUG("PCIE SDS WR addr 0x%X value 0x%08X <-> 0x%08X", addr,
-+		    data, val);
-+}
-+
-+/* X-Gene Serdes read helper for SATA port 4 and 5 */
-+static void xgene_sds_pcie_rd(void *csr_base, u32 addr, u32 *data)
-+{
-+	xgene_serdes_rd(csr_base,
-+			SM_PCIE_X8_SDS_CSR_REGS_PCIE_SDS_IND_CMD_REG_ADDR,
-+			SM_PCIE_X8_SDS_CSR_REGS_PCIE_SDS_IND_RDATA_REG_ADDR,
-+			addr, data);
-+	PHYCSRDEBUG("PCIE SDS RD addr 0x%X value 0x%08X", addr, *data);
-+}
-+
-+static void xgene_sds_pcie_toggle1to0(void *csr_base, u32 addr, u32 bits,
-+				      u32 delayus)
-+{
-+	u32 val;
-+	xgene_sds_pcie_rd(csr_base, addr, &val);
-+	val |= bits;
-+	xgene_sds_pcie_wr(csr_base, addr, val);
-+	if (delayus > 0)	/* Allow Serdes to get reflected */
-+		xgene_ahci_delayus(delayus);
-+	xgene_sds_pcie_rd(csr_base, addr, &val);
-+	val &= ~bits;
-+	xgene_sds_pcie_wr(csr_base, addr, val);
-+}
-+
-+static int xgene_serdes_cal_rdy_check(void *csr_serdes,
-+				      void (*serdes_rd) (void *, u32, u32 *),
-+				      void (*serdes_wr) (void *, u32, u32),
-+				      void (*serdes_toggle1to0) (void *, u32,
-+								 u32, u32))
-+{
-+	int loopcount;
-+	u32 val;
-+
-+	/* TERM CALIBRATION CH0 */
-+	serdes_rd(csr_serdes, KC_CLKMACRO_CMU_REGS_CMU_REG17_ADDR, &val);
-+	val = CMU_REG17_PVT_CODE_R2A_SET(val, 0x12);
-+	val = CMU_REG17_RESERVED_7_SET(val, 0x0);
-+	serdes_wr(csr_serdes, KC_CLKMACRO_CMU_REGS_CMU_REG17_ADDR, val);
-+	serdes_toggle1to0(csr_serdes, KC_CLKMACRO_CMU_REGS_CMU_REG17_ADDR,
-+			  CMU_REG17_PVT_TERM_MAN_ENA_MASK, 0);
-+	/* DOWN CALIBRATION CH0 */
-+	serdes_rd(csr_serdes, KC_CLKMACRO_CMU_REGS_CMU_REG17_ADDR, &val);
-+	val = CMU_REG17_PVT_CODE_R2A_SET(val, 0x26);
-+	val = CMU_REG17_RESERVED_7_SET(val, 0x0);
-+	serdes_wr(csr_serdes, KC_CLKMACRO_CMU_REGS_CMU_REG17_ADDR, val);
-+	serdes_toggle1to0(csr_serdes, KC_CLKMACRO_CMU_REGS_CMU_REG16_ADDR,
-+			  CMU_REG16_PVT_DN_MAN_ENA_MASK, 0);
-+	/* UP CALIBRATION CH0 */
-+	serdes_rd(csr_serdes, KC_CLKMACRO_CMU_REGS_CMU_REG17_ADDR, &val);
-+	val = CMU_REG17_PVT_CODE_R2A_SET(val, 0x28);
-+	val = CMU_REG17_RESERVED_7_SET(val, 0x0);
-+	serdes_wr(csr_serdes, KC_CLKMACRO_CMU_REGS_CMU_REG17_ADDR, val);
-+	serdes_toggle1to0(csr_serdes, KC_CLKMACRO_CMU_REGS_CMU_REG16_ADDR,
-+			  CMU_REG16_PVT_UP_MAN_ENA_MASK, 0);
-+
-+	/* Check for PLL calibration for 1ms */
-+	loopcount = 10;
-+	do {
-+		serdes_rd(csr_serdes, KC_CLKMACRO_CMU_REGS_CMU_REG7_ADDR, &val);
-+		if (CMU_REG7_PLL_CALIB_DONE_RD(val))
-+			return 0;
-+		xgene_ahci_delayus(222); /* Allow Serdes to get reflected */
-+	} while (!CMU_REG7_PLL_CALIB_DONE_RD(val) && --loopcount > 0);
-+
++	int i;
++	for (i = 0; i < host->n_ports; i++)
++		if (host->ports[i] == port)
++			return i;
 +	return -1;
 +}
 +
-+/* SATA port 0 - 3 PLL initialization */
-+static int xgene_serdes_macro_cal_rdy_chk(struct xgene_ahci_context *ctx)
++int xgene_ahci_init_memram(struct xgene_ahci_context *ctx)
 +{
-+	void *csr_serdes = ctx->csr_base + SATA_SERDES_OFFSET;
++	void *diagcsr = ctx->csr_base + SATA_DIAG_OFFSET;
++	int timeout;
 +	u32 val;
 +
-+	xgene_serdes_cal_rdy_check(csr_serdes, xgene_sds_rd, xgene_sds_wr,
-+				   xgene_sds_toggle1to0);
-+
-+	/* Check if PLL calibration complete sucessfully */
-+	xgene_sds_rd(csr_serdes, KC_CLKMACRO_CMU_REGS_CMU_REG7_ADDR, &val);
-+	if (CMU_REG7_PLL_CALIB_DONE_RD(val) == 0x1)
-+		PHYDEBUG("CLKMACRO PLL calibration done");
-+	/* Check for VCO FAIL */
-+	if (CMU_REG7_VCO_CAL_FAIL_RD(val) == 0x0) {
-+		PHYDEBUG("CLKMACRO VCO calibration successful");
++	xgene_ahci_in32(diagcsr + REGSPEC_CFG_MEM_RAM_SHUTDOWN_ADDR, &val);
++	if (val == 0) {
++		dev_dbg(ctx->dev, "already clear memory shutdown\n");
 +		return 0;
 +	}
-+	/* Assert SDS reset for recall calibration if required */
-+	xgene_ahci_in32(csr_serdes + SATA_ENET_CLK_MACRO_REG_ADDR, &val);
-+	xgene_ahci_out32(csr_serdes + SATA_ENET_CLK_MACRO_REG_ADDR, val);
-+	PHYERROR("CLKMACRO calibration failed due to VCO failure");
-+	return -1;
-+}
-+
-+/* SATA port 0 - 3 force power down VCO */
-+static void xgene_serdes_macro_pdwn_force_vco(struct xgene_ahci_context *ctx)
-+{
-+	xgene_sds_toggle1to0(ctx->csr_base + SATA_SERDES_OFFSET,
-+			     KC_CLKMACRO_CMU_REGS_CMU_REG0_ADDR,
-+			     CMU_REG0_PDOWN_MASK, 1000);
-+	xgene_sds_toggle1to0(ctx->csr_base + SATA_SERDES_OFFSET,
-+			     KC_CLKMACRO_CMU_REGS_CMU_REG32_ADDR,
-+			     CMU_REG32_FORCE_VCOCAL_START_MASK, 0);
-+}
-+
-+/* SATA port 4 - 5 PLL initialization */
-+static int xgene_serdes_sata45_macro_cal_rdy_chk(struct xgene_ahci_context *ctx)
-+{
-+	void *pcie_base = ctx->pcie_base;
-+	u32 val;
-+
-+	xgene_serdes_cal_rdy_check(pcie_base, xgene_sds_pcie_rd,
-+				   xgene_sds_pcie_wr,
-+				   xgene_sds_pcie_toggle1to0);
-+
-+	/* PLL Calibration DONE */
-+	xgene_sds_pcie_rd(pcie_base, KC_CLKMACRO_CMU_REGS_CMU_REG7_ADDR, &val);
-+	if (CMU_REG7_PLL_CALIB_DONE_RD(val) == 0x1)
-+		PHYDEBUG("CLKMACRO PLL CALIB done");
-+	/* Check for VCO FAIL */
-+	if (CMU_REG7_VCO_CAL_FAIL_RD(val) == 0x0) {
-+		PHYDEBUG("CLKMACRO CALIB successful");
-+		return 0;
-+	}
-+	PHYERROR("CLKMACRO CALIB failed due to VCO failure");
-+	return -1;
-+}
-+
-+static int xgene_serdes_macro_cfg(void *csr_serdes,
-+				  void (*serdes_rd) (void *, u32, u32 *),
-+				  void (*serdes_wr) (void *, u32, u32))
-+{
-+	u32 val;
-+
-+	serdes_rd(csr_serdes, KC_CLKMACRO_CMU_REGS_CMU_REG34_ADDR, &val);
-+	val = CMU_REG34_VCO_CAL_VTH_LO_MAX_SET(val, 0x7);
-+	val = CMU_REG34_VCO_CAL_VTH_HI_MAX_SET(val, 0xd);
-+	val = CMU_REG34_VCO_CAL_VTH_LO_MIN_SET(val, 0x2);
-+	val = CMU_REG34_VCO_CAL_VTH_HI_MIN_SET(val, 0x8);
-+	serdes_wr(csr_serdes, KC_CLKMACRO_CMU_REGS_CMU_REG34_ADDR, val);
-+	serdes_rd(csr_serdes, KC_CLKMACRO_CMU_REGS_CMU_REG0_ADDR, &val);
-+	val = CMU_REG0_CAL_COUNT_RESOL_SET(val, 0x4);
-+	serdes_wr(csr_serdes, KC_CLKMACRO_CMU_REGS_CMU_REG0_ADDR, val);
-+	/* CMU_REG1 */
-+	serdes_rd(csr_serdes, KC_CLKMACRO_CMU_REGS_CMU_REG1_ADDR, &val);
-+	val = CMU_REG1_PLL_CP_SET(val, 0x1);
-+	val = CMU_REG1_PLL_CP_SEL_SET(val, 0x5);
-+	val = CMU_REG1_PLL_MANUALCAL_SET(val, 0x0);
-+	serdes_wr(csr_serdes, KC_CLKMACRO_CMU_REGS_CMU_REG1_ADDR, val);
-+	/* CMU_REG2 */
-+	serdes_rd(csr_serdes, KC_CLKMACRO_CMU_REGS_CMU_REG2_ADDR, &val);
-+	val = CMU_REG2_PLL_LFRES_SET(val, 0xa);
-+	val = CMU_REG2_PLL_FBDIV_SET(val, 0x27);	/* 100Mhz refclk */
-+	val = CMU_REG2_PLL_FBDIV_SET(val, 0x4f);	/* 50Mhz refclk */
-+	val = CMU_REG2_PLL_REFDIV_SET(val, 0x1);
-+	serdes_wr(csr_serdes, KC_CLKMACRO_CMU_REGS_CMU_REG2_ADDR, val);
-+	/* CMU_REG3 */
-+	serdes_rd(csr_serdes, KC_CLKMACRO_CMU_REGS_CMU_REG3_ADDR, &val);
-+	val = CMU_REG3_VCOVARSEL_SET(val, 0xf);
-+	val = CMU_REG3_VCO_MOMSEL_INIT_SET(val, 0x10);
-+	serdes_wr(csr_serdes, KC_CLKMACRO_CMU_REGS_CMU_REG3_ADDR, val);
-+	/* CMU_REG26  */
-+	serdes_rd(csr_serdes, KC_CLKMACRO_CMU_REGS_CMU_REG26_ADDR, &val);
-+	val = CMU_REG26_FORCE_PLL_LOCK_SET(val, 0x0);
-+	serdes_wr(csr_serdes, KC_CLKMACRO_CMU_REGS_CMU_REG26_ADDR, val);
-+	/* CMU_REG5 */
-+	serdes_rd(csr_serdes, KC_CLKMACRO_CMU_REGS_CMU_REG5_ADDR, &val);
-+	val = CMU_REG5_PLL_LFSMCAP_SET(val, 0x3);
-+	val = CMU_REG5_PLL_LFCAP_SET(val, 0x3);
-+	val = CMU_REG5_PLL_LOCK_RESOLUTION_SET(val, 0x7);
-+	serdes_wr(csr_serdes, KC_CLKMACRO_CMU_REGS_CMU_REG5_ADDR, val);
-+	/* CMU_reg6 */
-+	serdes_rd(csr_serdes, KC_CLKMACRO_CMU_REGS_CMU_REG6_ADDR, &val);
-+	val = CMU_REG6_PLL_VREGTRIM_SET(val, 0x0);
-+	val = CMU_REG6_MAN_PVT_CAL_SET(val, 0x1);
-+	serdes_wr(csr_serdes, KC_CLKMACRO_CMU_REGS_CMU_REG6_ADDR, val);
-+	/* CMU_reg16 */
-+	serdes_rd(csr_serdes, KC_CLKMACRO_CMU_REGS_CMU_REG16_ADDR, &val);
-+	val = CMU_REG16_CALIBRATION_DONE_OVERRIDE_SET(val, 0x1);
-+	val = CMU_REG16_BYPASS_PLL_LOCK_SET(val, 0x1);
-+	val = CMU_REG16_VCOCAL_WAIT_BTW_CODE_SET(val, 0x4);
-+	serdes_wr(csr_serdes, KC_CLKMACRO_CMU_REGS_CMU_REG16_ADDR, val);
-+	/* CMU_reg30 */
-+	serdes_rd(csr_serdes, KC_CLKMACRO_CMU_REGS_CMU_REG30_ADDR, &val);
-+	val = CMU_REG30_PCIE_MODE_SET(val, 0x0);
-+	val = CMU_REG30_LOCK_COUNT_SET(val, 0x3);
-+	serdes_wr(csr_serdes, KC_CLKMACRO_CMU_REGS_CMU_REG30_ADDR, val);
-+	/* CMU reg31 */
-+	serdes_wr(csr_serdes, KC_CLKMACRO_CMU_REGS_CMU_REG31_ADDR, 0xF);
-+	/* CMU_reg32 */
-+	serdes_rd(csr_serdes, KC_CLKMACRO_CMU_REGS_CMU_REG32_ADDR, &val);
-+	val = CMU_REG32_PVT_CAL_WAIT_SEL_SET(val, 0x3);
-+	val = CMU_REG32_IREF_ADJ_SET(val, 0x3);
-+	serdes_wr(csr_serdes, KC_CLKMACRO_CMU_REGS_CMU_REG32_ADDR, val);
-+	/* CMU_reg34 */
-+	serdes_wr(csr_serdes, KC_CLKMACRO_CMU_REGS_CMU_REG34_ADDR, 0x8d27);
-+	/* CMU_reg37 */
-+	serdes_rd(csr_serdes, KC_CLKMACRO_CMU_REGS_CMU_REG37_ADDR, &val);
-+	serdes_wr(csr_serdes, KC_CLKMACRO_CMU_REGS_CMU_REG37_ADDR, 0xF00F);
-+
-+	return 0;
-+}
-+
-+/* SATA port 0 - 3 macro configuration */
-+static int xgene_serdes_sata_macro_cfg(struct xgene_ahci_context *ctx)
-+{
-+	void *csr_serdes = ctx->csr_base + SATA_SERDES_OFFSET;
-+	int calib_loop_count = 0;
-+	u32 val;
-+
-+	xgene_ahci_in32(csr_serdes + SATA_ENET_CLK_MACRO_REG_ADDR, &val);
-+	val = I_RESET_B_SET(val, 0x0);
-+	val = I_PLL_FBDIV_SET(val, 0x27);
-+	val = I_CUSTOMEROV_SET(val, 0x0);
-+	xgene_ahci_out32(csr_serdes + SATA_ENET_CLK_MACRO_REG_ADDR, val);
-+
-+	xgene_serdes_macro_cfg(csr_serdes, xgene_sds_rd, xgene_sds_wr);
-+
-+	xgene_ahci_in32(csr_serdes + SATA_ENET_CLK_MACRO_REG_ADDR, &val);
-+	val = I_RESET_B_SET(val, 0x1);
-+	val = I_CUSTOMEROV_SET(val, 0x0);
-+	xgene_ahci_out32(csr_serdes + SATA_ENET_CLK_MACRO_REG_ADDR, val);
-+
-+	xgene_ahci_delayus(8000);	/* Allow serdes to get reflected */
-+	while (++calib_loop_count <= 5) {
-+		if (xgene_serdes_macro_cal_rdy_chk(ctx) == 0)
-+			break;
-+		xgene_serdes_macro_pdwn_force_vco(ctx);
-+	}
-+	if (calib_loop_count > 5)
-+		return -1;
-+	xgene_ahci_in32(csr_serdes + SATA_ENET_CLK_MACRO_REG_ADDR, &val);
-+	PHYDEBUG("PLL CLKMACRO %sLOOKED...", O_PLL_LOCK_RD(val) ? "" : "UN");
-+	PHYDEBUG("PLL CLKMACRO %sREADY...", O_PLL_READY_RD(val) ? "" : "NOT");
-+
-+	return 0;
-+}
-+
-+/* SATA port 4 - 5 force power down VCO */
-+static void xgene_serdes_sata45_macro_pdwn_force_vco(struct xgene_ahci_context
-+						     *ctx)
-+{
-+	xgene_sds_pcie_toggle1to0(ctx->pcie_base,
-+				  KC_CLKMACRO_CMU_REGS_CMU_REG0_ADDR,
-+				  CMU_REG0_PDOWN_MASK, 1000);
-+	xgene_sds_pcie_toggle1to0(ctx->pcie_base,
-+				  KC_CLKMACRO_CMU_REGS_CMU_REG32_ADDR,
-+				  CMU_REG32_FORCE_VCOCAL_START_MASK, 0);
-+}
-+
-+static void xgene_serdes_sata45_cfg_internal_clk(struct xgene_ahci_context *ctx)
-+{
-+	void *pcie_base = ctx->pcie_base;
-+
-+	xgene_ahci_out32_flush(pcie_base + SM_PCIE_CLKRST_CSR_PCIE_CLKEN_ADDR,
-+			       0xff);
-+	xgene_ahci_out32_flush(pcie_base + SM_PCIE_CLKRST_CSR_PCIE_SRST_ADDR,
++	dev_dbg(ctx->dev, "clear controller %d memory shutdown\n", ctx->cid);
++	/* SATA controller memory in shutdown. Remove from shutdown. */
++	xgene_ahci_out32_flush(diagcsr + REGSPEC_CFG_MEM_RAM_SHUTDOWN_ADDR,
 +			       0x00);
-+}
-+
-+void xgene_serdes_sata45_reset_cmos(struct xgene_ahci_context *ctx)
-+{
-+	void *pcie_base = ctx->pcie_base;
-+
-+	xgene_ahci_out32(pcie_base + SM_PCIE_CLKRST_CSR_PCIE_CLKEN_ADDR, 0x00);
-+	xgene_ahci_out32(pcie_base + SM_PCIE_CLKRST_CSR_PCIE_SRST_ADDR, 0xff);
-+}
-+
-+/* SATA port 4 - 5 macro configuration */
-+static int xgene_serdes_sata45_macro_cfg(struct xgene_ahci_context *ctx)
-+{
-+	void *pcie_base = ctx->pcie_base;
-+	int calib_loop_count;
-+	u32 val;
-+
-+	xgene_serdes_sata45_cfg_internal_clk(ctx);
-+
-+	xgene_ahci_in32(pcie_base +
-+			SM_PCIE_X8_SDS_CSR_REGS_PCIE_CLK_MACRO_REG_ADDR, &val);
-+	val = PCIE_CLK_MACRO_REG_I_RESET_B_SET(val, 0x0);
-+	val = PCIE_CLK_MACRO_REG_I_CUSTOMEROV_SET(val, 0x0);
-+	xgene_ahci_out32(pcie_base +
-+			 SM_PCIE_X8_SDS_CSR_REGS_PCIE_CLK_MACRO_REG_ADDR, val);
-+	xgene_ahci_in32(pcie_base +
-+			SM_PCIE_X8_SDS_CSR_REGS_PCIE_CLK_MACRO_REG_ADDR, &val);
-+
-+	xgene_serdes_macro_cfg(pcie_base, xgene_sds_pcie_rd, xgene_sds_pcie_wr);
-+
-+	xgene_ahci_in32(pcie_base +
-+			SM_PCIE_X8_SDS_CSR_REGS_PCIE_CLK_MACRO_REG_ADDR, &val);
-+	val = PCIE_CLK_MACRO_REG_I_RESET_B_SET(val, 0x1);
-+	val = PCIE_CLK_MACRO_REG_I_CUSTOMEROV_SET(val, 0x0);
-+	xgene_ahci_out32(pcie_base +
-+			 SM_PCIE_X8_SDS_CSR_REGS_PCIE_CLK_MACRO_REG_ADDR, val);
-+
-+	xgene_ahci_delayus(8000);	/* Allow Serdes to get reflected */
-+	calib_loop_count = 5;
++	timeout = SATA_RESET_MEM_RAM_TO;
 +	do {
-+		if (xgene_serdes_sata45_macro_cal_rdy_chk(ctx) == 0)
-+			break;
-+		xgene_serdes_sata45_macro_pdwn_force_vco(ctx);
-+		xgene_ahci_delayus(8000); /* Allow Serdes to get reflected */
-+	} while (--calib_loop_count > 0);
-+	if (calib_loop_count <= 0)
-+		return -1;
-+	xgene_ahci_in32(pcie_base +
-+			SM_PCIE_X8_SDS_CSR_REGS_PCIE_CLK_MACRO_REG_ADDR, &val);
-+	PHYDEBUG("PLL CLKMACRO %sLOOKED...",
-+		 PCIE_CLK_MACRO_REG_O_PLL_LOCK_RD(val) ? "" : "UN");
-+	PHYDEBUG("PLL CLKMACRO %sREADY...",
-+		 PCIE_CLK_MACRO_REG_O_PLL_READY_RD(val) ? "" : "NOT ");
-+
++		xgene_ahci_in32(diagcsr + REGSPEC_BLOCK_MEM_RDY_ADDR, &val);
++		if (val != 0xFFFFFFFF)
++			xgene_ahci_delayus(1);
++	} while (val != 0xFFFFFFFF && timeout-- > 0);
++	if (timeout <= 0) {
++		dev_err(ctx->dev, "failed to remove memory from shutdown\n");
++		return -ENODEV;
++	}
 +	return 0;
 +}
 +
-+static void xgene_serdes_clk_rst_pre(struct xgene_ahci_context *ctx)
++/*
++ * Custom Query ID command
++ *
++ * Due to HW errata, we must stop and re-start the port state machine after
++ * read ID command.
++ */
++static unsigned int xgene_ahci_read_id(struct ata_device *dev,
++				       struct ata_taskfile *tf, u16 *id)
 +{
-+	void *clkcsr_base = ctx->csr_base + SATA_CLK_OFFSET;
-+	u32 val;
++	u32 err_mask;
++	struct ata_port *ap = dev->link->ap;
++	void *port_mmio = ahci_port_base(ap);
++	u32 data32;
 +
-+	PHYDEBUG("SATA%d controller clock enable", ctx->cid);
-+	/* disable all reset */
-+	xgene_ahci_out32_flush(clkcsr_base + SATASRESETREG_ADDR, 0x00);
++	err_mask = ata_do_dev_read_id(dev, tf, id);
++	if (err_mask)
++		return err_mask;
 +
-+	/* Enable all resets */
-+	xgene_ahci_out32_flush(clkcsr_base + SATASRESETREG_ADDR, 0xff);
-+
-+	/* Disable all clks */
-+	xgene_ahci_out32_flush(clkcsr_base + SATACLKENREG_ADDR, 0x00);
-+
-+	/* Enable all clks */
-+	xgene_ahci_out32_flush(clkcsr_base + SATACLKENREG_ADDR, 0xf9);
-+
-+	/* Get out of reset for:
-+	 *  SDS, CSR
-+	 *  CORE & MEM are still reset
++	/* Mask reserved area. Bit78 spec of Link Power Management
++	 * bit15-8: reserved
++	 * bit7: NCQ autosence
++	 * bit6: Software settings preservation supported
++	 * bit5: reserved
++	 * bit4: In-order sata delivery supported
++	 * bit3: DIPM requests supported
++	 * bit2: DMA Setup FIS Auto-Activate optimization supported
++	 * bit1: DMA Setup FIX non-Zero buffer offsets supported
++	 * bit0: Reserved
++	 *
++	 * Clear reserved bit (DEVSLP bit) as we don't support DEVSLP
 +	 */
-+	xgene_ahci_in32(clkcsr_base + SATASRESETREG_ADDR, &val);
-+	if (SATA_MEM_RESET_RD(val) == 1) {
-+		val &= ~(SATA_CSR_RESET_MASK | SATA_SDS_RESET_MASK);
-+		val |= SATA_CORE_RESET_MASK | SATA_PCLK_RESET_MASK |
-+		    SATA_PMCLK_RESET_MASK | SATA_MEM_RESET_MASK;
++	id[78] &= 0x00FF;
++
++	/* Restart the port if requred due to HW errata */
++	data32 = readl(port_mmio + PORT_CMD_ISSUE);
++	if (data32 == 0x00000000) {
++		writel(PORT_CMD_FIS_RX, port_mmio + PORT_CMD);
++		readl(port_mmio + PORT_CMD);	/* flush */
++		writel(PORT_CMD_FIS_RX | PORT_CMD_START, port_mmio + PORT_CMD);
++		readl(port_mmio + PORT_CMD);	/* flush */
 +	}
-+	xgene_ahci_out32_flush(clkcsr_base + SATASRESETREG_ADDR, val);
-+}
-+
-+void xgene_ahci_serdes_reset_rxa_rxd(struct xgene_ahci_context *ctx, int chan)
-+{
-+	void *csr_base = ctx->csr_base + SATA_SERDES_OFFSET;
-+
-+	xgene_sds_clrbits(csr_base,
-+			  KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG7_ADDR +
-+			  chan * 0x200, CH0_RXTX_REG7_RESETB_RXD_MASK);
-+	xgene_sds_clrbits(csr_base,
-+			  KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG7_ADDR +
-+			  chan * 0x200, CH0_RXTX_REG7_RESETB_RXA_MASK);
-+	xgene_sds_setbits(csr_base,
-+			  KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG7_ADDR +
-+			  chan * 0x200, CH0_RXTX_REG7_RESETB_RXA_MASK);
-+	xgene_sds_setbits(csr_base,
-+			  KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG7_ADDR +
-+			  chan * 0x200, CH0_RXTX_REG7_RESETB_RXD_MASK);
-+}
-+
-+static void xgene_serdes_reset_pclk(struct xgene_ahci_context *ctx)
-+{
-+	void *clkcsr_base = ctx->csr_base + SATA_CLK_OFFSET;
-+	u32 val;
-+
-+	xgene_ahci_in32(clkcsr_base + SATASRESETREG_ADDR, &val);
-+	val &= ~SATA_PCLK_RESET_MASK;
-+	xgene_ahci_out32(clkcsr_base + SATASRESETREG_ADDR, val);
-+}
-+
-+static void xgene_serdes_reset_sds_pmclk_core(struct xgene_ahci_context *ctx)
-+{
-+	void *clkcsr_base = ctx->csr_base + SATA_CLK_OFFSET;
-+	u32 val;
-+
-+	xgene_ahci_in32(clkcsr_base + SATASRESETREG_ADDR, &val);
-+	val &= ~(SATA_CORE_RESET_MASK |
-+		 SATA_PMCLK_RESET_MASK | SATA_SDS_RESET_MASK);
-+	xgene_ahci_out32(clkcsr_base + SATASRESETREG_ADDR, val);
-+}
-+
-+void xgene_ahci_serdes_force_lat_summer_cal(struct xgene_ahci_context *ctx,
-+					    int channel)
-+{
-+	void *csr_base = ctx->csr_base + SATA_SERDES_OFFSET;
-+	u32 os = channel * 0x200;
-+	int i;
-+	struct {
-+		u32 reg;
-+		u32 val;
-+	} serdes_reg[] = {
-+		{KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG38_ADDR, 0x0},
-+		{KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG39_ADDR, 0xff00},
-+		{KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG40_ADDR, 0xffff},
-+		{KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG41_ADDR, 0xffff},
-+		{KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG42_ADDR, 0xffff},
-+		{KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG43_ADDR, 0xffff},
-+		{KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG44_ADDR, 0xffff},
-+		{KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG45_ADDR, 0xffff},
-+		{KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG46_ADDR, 0xffff},
-+		{KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG47_ADDR, 0xfffc},
-+		{KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG48_ADDR, 0x0},
-+		{KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG49_ADDR, 0x0},
-+		{KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG50_ADDR, 0x0},
-+		{KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG51_ADDR, 0x0},
-+		{KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG52_ADDR, 0x0},
-+		{KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG53_ADDR, 0x0},
-+		{KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG54_ADDR, 0x0},
-+		{KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG55_ADDR, 0x0},
-+		{0, 0x0},
-+	};
-+
-+	/* SUMMER CALIBRATION CH0/CH1 */
-+	/* SUMMER calib toggle CHX */
-+	xgene_sds_toggle1to0(csr_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG127_ADDR + os,
-+			     CH0_RXTX_REG127_FORCE_SUM_CAL_START_MASK, 0);
-+	/* latch calib toggle CHX */
-+	xgene_sds_toggle1to0(csr_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG127_ADDR + os,
-+			     CH0_RXTX_REG127_FORCE_LAT_CAL_START_MASK, 0);
-+	/* CHX */
-+	xgene_sds_wr(csr_base,
-+		     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG28_ADDR + os, 0x7);
-+	xgene_sds_wr(csr_base,
-+		     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG31_ADDR + os, 0x7e00);
-+
-+	xgene_sds_clrbits(csr_base,
-+			  KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG4_ADDR + os,
-+			  CH0_RXTX_REG4_TX_LOOPBACK_BUF_EN_MASK);
-+	xgene_sds_clrbits(csr_base,
-+			  KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG7_ADDR + os,
-+			  CH0_RXTX_REG7_LOOP_BACK_ENA_CTLE_MASK);
-+
-+	/* RXTX_REG38-55 */
-+	for (i = 0; serdes_reg[i].reg != 0; i++)
-+		xgene_sds_wr(csr_base, serdes_reg[i].reg + os,
-+			     serdes_reg[i].val);
-+}
-+
-+void xgene_serdes_force_lat_summer_cal_get_avg(struct xgene_ahci_context *ctx,
-+					       int chan)
-+{
-+	void *csr_serdes_base = ctx->csr_base + SATA_SERDES_OFFSET;
-+	u32 os = chan * 0x200;
-+
-+	/* SUMMer calib toggle */
-+	xgene_sds_toggle1to0(csr_serdes_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG127_ADDR + os,
-+			     CH0_RXTX_REG127_FORCE_SUM_CAL_START_MASK, 0);
-+	xgene_sds_toggle1to0(csr_serdes_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG127_ADDR + os,
-+			     CH0_RXTX_REG127_FORCE_LAT_CAL_START_MASK, 0);
-+	xgene_sds_clrbits(csr_serdes_base,
-+			  KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG4_ADDR + os,
-+			  CH0_RXTX_REG4_TX_LOOPBACK_BUF_EN_MASK);
-+	xgene_sds_clrbits(csr_serdes_base,
-+			  KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG7_ADDR + os,
-+			  CH0_RXTX_REG7_LOOP_BACK_ENA_CTLE_MASK);
-+
-+	/* removing loopback after calibration cycle */
-+	xgene_sds_clrbits(csr_serdes_base,
-+			  KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG4_ADDR + os,
-+			  CH0_RXTX_REG4_TX_LOOPBACK_BUF_EN_MASK);
-+	xgene_sds_clrbits(csr_serdes_base,
-+			  KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG7_ADDR + os,
-+			  CH0_RXTX_REG7_LOOP_BACK_ENA_CTLE_MASK);
-+	/* RXTX_REG38 */
-+	xgene_sds_wr(csr_serdes_base,
-+		     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG38_ADDR + os, 0x0);
-+}
-+
-+int xgene_serdes_get_avg(int accum, int samples)
-+{
-+	return (accum + (samples / 2)) / samples;
-+}
-+
-+static void xgene_serdes_reset_rxd(struct xgene_ahci_context *ctx, int channel)
-+{
-+	void *csr_base = ctx->csr_base + SATA_SERDES_OFFSET;
-+
-+	xgene_sds_clrbits(csr_base,
-+			  KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG7_ADDR +
-+			  channel * 0x200, CH0_RXTX_REG7_RESETB_RXD_MASK);
-+	xgene_sds_setbits(csr_base,
-+			  KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG7_ADDR +
-+			  channel * 0x200, CH0_RXTX_REG7_RESETB_RXD_MASK);
-+}
-+
-+void xgene_ahci_serdes_gen_avg_val(struct xgene_ahci_context *ctx, int channel)
-+{
-+	void *csr_serdes_base = ctx->csr_base + SATA_SERDES_OFFSET;
-+	int avg_loop = 10;
-+	int MAX_LOOP = 10;
-+	int lat_do = 0, lat_xo = 0, lat_eo = 0, lat_so = 0;
-+	int lat_de = 0, lat_xe = 0, lat_ee = 0, lat_se = 0;
-+	int sum_cal = 0;
-+	int lat_do_itr = 0, lat_xo_itr = 0, lat_eo_itr = 0, lat_so_itr = 0;
-+	int lat_de_itr = 0, lat_xe_itr = 0, lat_ee_itr = 0, lat_se_itr = 0;
-+	int sum_cal_itr = 0;
-+	int fail_even = 0;
-+	int fail_odd = 0;
-+	u32 val;
-+	u32 os;
-+
-+	PHYDEBUG("Generating average calibration value for port %d", channel);
-+
-+	os = channel * 0x200;
-+
-+	/* Enable RX Hi-Z termination enable */
-+	xgene_sds_setbits(csr_serdes_base,
-+			  KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG12_ADDR + os,
-+			  CH0_RXTX_REG12_RX_DET_TERM_ENABLE_MASK);
-+	/* Turn off DFE */
-+	xgene_sds_wr(csr_serdes_base,
-+		     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG28_ADDR + os, 0x0000);
-+	/* DFE Presets to zero */
-+	xgene_sds_wr(csr_serdes_base,
-+		     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG31_ADDR + os, 0x0000);
-+
-+	while (avg_loop > 0) {
-+		xgene_ahci_serdes_force_lat_summer_cal(ctx, channel);
-+
-+		xgene_sds_rd(csr_serdes_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG21_ADDR + os,
-+			     &val);
-+		lat_do_itr = CH0_RXTX_REG21_DO_LATCH_CALOUT_RD(val);
-+		lat_xo_itr = CH0_RXTX_REG21_XO_LATCH_CALOUT_RD(val);
-+		fail_odd = CH0_RXTX_REG21_LATCH_CAL_FAIL_ODD_RD(val);
-+
-+		xgene_sds_rd(csr_serdes_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG22_ADDR + os,
-+			     &val);
-+		lat_eo_itr = CH0_RXTX_REG22_EO_LATCH_CALOUT_RD(val);
-+		lat_so_itr = CH0_RXTX_REG22_SO_LATCH_CALOUT_RD(val);
-+		fail_even = CH0_RXTX_REG22_LATCH_CAL_FAIL_EVEN_RD(val);
-+
-+		xgene_sds_rd(csr_serdes_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG23_ADDR + os,
-+			     &val);
-+		lat_de_itr = CH0_RXTX_REG23_DE_LATCH_CALOUT_RD(val);
-+		lat_xe_itr = CH0_RXTX_REG23_XE_LATCH_CALOUT_RD(val);
-+		xgene_sds_rd(csr_serdes_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG24_ADDR + os,
-+			     &val);
-+		lat_ee_itr = CH0_RXTX_REG24_EE_LATCH_CALOUT_RD(val);
-+		lat_se_itr = CH0_RXTX_REG24_SE_LATCH_CALOUT_RD(val);
-+
-+		xgene_sds_rd(csr_serdes_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG121_ADDR + os,
-+			     &val);
-+		sum_cal_itr = CH0_RXTX_REG121_SUMOS_CAL_CODE_RD(val);
-+
-+		if ((fail_even == 0 || fail_even == 1) &&
-+		    (fail_odd == 0 || fail_odd == 1)) {
-+			lat_do += lat_do_itr;
-+			lat_xo += lat_xo_itr;
-+			lat_eo += lat_eo_itr;
-+			lat_so += lat_so_itr;
-+			lat_de += lat_de_itr;
-+			lat_xe += lat_xe_itr;
-+			lat_ee += lat_ee_itr;
-+			lat_se += lat_se_itr;
-+			sum_cal += sum_cal_itr;
-+
-+			PHYDEBUG("Interation Value: %d", avg_loop);
-+			PHYDEBUG("DO 0x%x XO 0x%x EO 0x%x SO 0x%x", lat_do_itr,
-+				 lat_xo_itr, lat_eo_itr, lat_so_itr);
-+			PHYDEBUG("DE 0x%x XE 0x%x EE 0x%x SE 0x%x", lat_de_itr,
-+				 lat_xe_itr, lat_ee_itr, lat_se_itr);
-+			PHYDEBUG("sum_cal 0x%x", sum_cal_itr);
-+			avg_loop--;
-+		} else {
-+			PHYDEBUG("Interation Failed %d", avg_loop);
-+		}
-+		xgene_serdes_reset_rxd(ctx, channel);
-+	}
-+
-+	/* Update with Average Value */
-+	xgene_sds_rd(csr_serdes_base,
-+		     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG127_ADDR + os, &val);
-+	val = CH0_RXTX_REG127_DO_LATCH_MANCAL_SET(val,
-+		xgene_serdes_get_avg(lat_do, MAX_LOOP));
-+	val = CH0_RXTX_REG127_XO_LATCH_MANCAL_SET(val,
-+		xgene_serdes_get_avg(lat_xo, MAX_LOOP));
-+	xgene_sds_wr(csr_serdes_base,
-+		KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG127_ADDR + os, val);
-+
-+	xgene_sds_rd(csr_serdes_base,
-+		     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG128_ADDR + os, &val);
-+	val = CH0_RXTX_REG128_EO_LATCH_MANCAL_SET(val,
-+		xgene_serdes_get_avg(lat_eo, MAX_LOOP));
-+	val = CH0_RXTX_REG128_SO_LATCH_MANCAL_SET(val,
-+		xgene_serdes_get_avg(lat_so, MAX_LOOP));
-+	xgene_sds_wr(csr_serdes_base,
-+		     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG128_ADDR + os, val);
-+	xgene_sds_rd(csr_serdes_base,
-+		     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG129_ADDR + os, &val);
-+	val = CH0_RXTX_REG129_DE_LATCH_MANCAL_SET(val,
-+		xgene_serdes_get_avg(lat_de, MAX_LOOP));
-+	val = CH0_RXTX_REG129_XE_LATCH_MANCAL_SET(val,
-+		xgene_serdes_get_avg(lat_xe, MAX_LOOP));
-+	xgene_sds_wr(csr_serdes_base,
-+		     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG129_ADDR + os, val);
-+
-+	xgene_sds_rd(csr_serdes_base,
-+		     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG130_ADDR + os, &val);
-+	val = CH0_RXTX_REG130_EE_LATCH_MANCAL_SET(val,
-+		xgene_serdes_get_avg(lat_ee, MAX_LOOP));
-+	val = CH0_RXTX_REG130_SE_LATCH_MANCAL_SET(val,
-+		xgene_serdes_get_avg(lat_se, MAX_LOOP));
-+	xgene_sds_wr(csr_serdes_base,
-+		     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG130_ADDR + os, val);
-+	/* Summer Calibration Value */
-+	xgene_sds_rd(csr_serdes_base,
-+		     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG14_ADDR + os, &val);
-+	val = CH0_RXTX_REG14_CLTE_LATCAL_MAN_PROG_SET(val,
-+		xgene_serdes_get_avg(sum_cal, MAX_LOOP));
-+	xgene_sds_wr(csr_serdes_base,
-+		     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG14_ADDR + os, val);
-+
-+	PHYDEBUG("Average Value:");
-+	PHYDEBUG("DO 0x%x XO 0x%x EO 0x%x SO 0x%x",
-+		 xgene_serdes_get_avg(lat_do, MAX_LOOP),
-+		 xgene_serdes_get_avg(lat_xo, MAX_LOOP),
-+		 xgene_serdes_get_avg(lat_eo, MAX_LOOP),
-+		 xgene_serdes_get_avg(lat_so, MAX_LOOP));
-+	PHYDEBUG("DE 0x%x XE 0x%x EE 0x%x SE 0x%x",
-+		 xgene_serdes_get_avg(lat_de, MAX_LOOP),
-+		 xgene_serdes_get_avg(lat_xe, MAX_LOOP),
-+		 xgene_serdes_get_avg(lat_ee, MAX_LOOP),
-+		 xgene_serdes_get_avg(lat_se, MAX_LOOP));
-+	PHYDEBUG("sum_cal 0x%x", xgene_serdes_get_avg(sum_cal, MAX_LOOP));
-+
-+	/* Manual Summer Calibration */
-+	xgene_sds_rd(csr_serdes_base,
-+		     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG14_ADDR + os, &val);
-+	val = CH0_RXTX_REG14_CTLE_LATCAL_MAN_ENA_SET(val, 0x1);
-+	xgene_sds_wr(csr_serdes_base,
-+		     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG14_ADDR + os, val);
-+
-+	PHYDEBUG("Manual Summer calibration enabled");
-+	xgene_ahci_delayus(122);	/* Allow serdes to get reflected */
-+
-+	/* Manual Latch Calibration */
-+	xgene_sds_rd(csr_serdes_base,
-+		     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG127_ADDR + os, &val);
-+	val = CH0_RXTX_REG127_LATCH_MAN_CAL_ENA_SET(val, 0x1);
-+	PHYDEBUG("Manual Latch Calibration Enabled");
-+	xgene_sds_wr(csr_serdes_base,
-+		     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG127_ADDR + os, val);
-+	xgene_ahci_delayus(122);	/* Allow serdes to get reflected */
-+
-+	/* Disable RX Hi-Z termination enable */
-+	xgene_sds_rd(csr_serdes_base,
-+		     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG12_ADDR + os, &val);
-+	val = CH0_RXTX_REG12_RX_DET_TERM_ENABLE_SET(val, 0);
-+	xgene_sds_wr(csr_serdes_base,
-+		     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG12_ADDR + os, val);
-+
-+	/* Turn on DFE */
-+	xgene_sds_wr(csr_serdes_base,
-+		     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG28_ADDR + os, 0x0007);
-+
-+	/* DFE Presets to 0 */
-+	xgene_sds_wr(csr_serdes_base,
-+		     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG31_ADDR + os, 0x7e00);
-+}
-+
-+static int xgene_serdes_host_sata_select(struct xgene_ahci_context *ctx)
-+{
-+	void *muxcsr_base = ctx->csr_base + SATA_ETH_MUX_OFFSET;
-+	u32 val;
-+
-+	PHYDEBUG("SATA%d select SATA MUX", ctx->cid);
-+	xgene_ahci_in32(muxcsr_base + SATA_ENET_CONFIG_REG_ADDR, &val);
-+	val &= ~CFG_SATA_ENET_SELECT_MASK;
-+	xgene_ahci_out32(muxcsr_base + SATA_ENET_CONFIG_REG_ADDR, val);
-+	xgene_ahci_in32(muxcsr_base + SATA_ENET_CONFIG_REG_ADDR, &val);
-+	return val & CFG_SATA_ENET_SELECT_MASK ? -1 : 0;
-+}
-+
-+static void xgene_serdes_validation_CMU_cfg(struct xgene_ahci_context *ctx)
-+{
-+	void *csr_base = ctx->csr_base + SATA_SERDES_OFFSET;
-+	u32 val;
-+
-+	xgene_sds_rd(csr_base, KC_SERDES_CMU_REGS_CMU_REG0_ADDR, &val);
-+	val = CMU_REG0_CAL_COUNT_RESOL_SET(val, 0x4);
-+	xgene_sds_wr(csr_base, KC_SERDES_CMU_REGS_CMU_REG0_ADDR, val);
-+
-+	xgene_sds_rd(csr_base, KC_SERDES_CMU_REGS_CMU_REG1_ADDR, &val);
-+	val = CMU_REG1_PLL_CP_SET(val, 0x1);
-+	val = CMU_REG1_PLL_CP_SEL_SET(val, 0x5);
-+	val = CMU_REG1_PLL_MANUALCAL_SET(val, 0x0);
-+	xgene_sds_wr(csr_base, KC_SERDES_CMU_REGS_CMU_REG1_ADDR, val);
-+
-+	xgene_sds_rd(csr_base, KC_SERDES_CMU_REGS_CMU_REG2_ADDR, &val);
-+	val = CMU_REG2_PLL_LFRES_SET(val, 0xa);
-+	val = CMU_REG2_PLL_FBDIV_SET(val, FBDIV_VAL);
-+	val = CMU_REG2_PLL_REFDIV_SET(val, REFDIV_VAL);
-+	xgene_sds_wr(csr_base, KC_SERDES_CMU_REGS_CMU_REG2_ADDR, val);
-+
-+	xgene_sds_rd(csr_base, KC_SERDES_CMU_REGS_CMU_REG3_ADDR, &val);
-+	val = CMU_REG3_VCOVARSEL_SET(val, 0xF);
-+	val = CMU_REG3_VCO_MOMSEL_INIT_SET(val, 0x15);
-+	val = CMU_REG3_VCO_MANMOMSEL_SET(val, 0x15);
-+	xgene_sds_wr(csr_base, KC_SERDES_CMU_REGS_CMU_REG3_ADDR, val);
-+
-+	xgene_sds_rd(csr_base, KC_SERDES_CMU_REGS_CMU_REG26_ADDR, &val);
-+	val = CMU_REG26_FORCE_PLL_LOCK_SET(val, 0x0);
-+	xgene_sds_wr(csr_base, KC_SERDES_CMU_REGS_CMU_REG26_ADDR, val);
-+
-+	xgene_sds_rd(csr_base, KC_SERDES_CMU_REGS_CMU_REG5_ADDR, &val);
-+	val = CMU_REG5_PLL_LFSMCAP_SET(val, 0x3);
-+	val = CMU_REG5_PLL_LFCAP_SET(val, 0x3);
-+	if (xgene_ahci_is_A1())
-+		val = CMU_REG5_PLL_LOCK_RESOLUTION_SET(val, 0x7);
-+	else
-+		val = CMU_REG5_PLL_LOCK_RESOLUTION_SET(val, 0x4);
-+	xgene_sds_wr(csr_base, KC_SERDES_CMU_REGS_CMU_REG5_ADDR, val);
-+
-+	xgene_sds_rd(csr_base, KC_SERDES_CMU_REGS_CMU_REG6_ADDR, &val);
-+	val = CMU_REG6_PLL_VREGTRIM_SET(val, 0x0);
-+	val = CMU_REG6_MAN_PVT_CAL_SET(val, 0x1);
-+	xgene_sds_wr(csr_base, KC_SERDES_CMU_REGS_CMU_REG6_ADDR, val);
-+
-+	xgene_sds_rd(csr_base, KC_SERDES_CMU_REGS_CMU_REG9_ADDR, &val);
-+	val = CMU_REG9_TX_WORD_MODE_CH1_SET(val, 0x3);
-+	val = CMU_REG9_TX_WORD_MODE_CH0_SET(val, 0x3);
-+	val = CMU_REG9_PLL_POST_DIVBY2_SET(val, 0x1);
-+	xgene_sds_wr(csr_base, KC_SERDES_CMU_REGS_CMU_REG9_ADDR, val);
-+
-+	xgene_sds_rd(csr_base, KC_SERDES_CMU_REGS_CMU_REG16_ADDR, &val);
-+	val = CMU_REG16_CALIBRATION_DONE_OVERRIDE_SET(val, 0x1);
-+	val = CMU_REG16_BYPASS_PLL_LOCK_SET(val, 0x1);
-+	val = CMU_REG16_VCOCAL_WAIT_BTW_CODE_SET(val, 0x4);
-+	xgene_sds_wr(csr_base, KC_SERDES_CMU_REGS_CMU_REG16_ADDR, val);
-+
-+	xgene_sds_rd(csr_base, KC_SERDES_CMU_REGS_CMU_REG30_ADDR, &val);
-+	val = CMU_REG30_PCIE_MODE_SET(val, 0x0);
-+	val = CMU_REG30_LOCK_COUNT_SET(val, 0x3);
-+	xgene_sds_wr(csr_base, KC_SERDES_CMU_REGS_CMU_REG30_ADDR, val);
-+
-+	xgene_sds_wr(csr_base, KC_SERDES_CMU_REGS_CMU_REG31_ADDR, 0xF);
-+
-+	xgene_sds_rd(csr_base, KC_SERDES_CMU_REGS_CMU_REG32_ADDR, &val);
-+	if (xgene_ahci_is_A1())
-+		val |= 0x0006 | 0x0180;
-+	val = CMU_REG32_PVT_CAL_WAIT_SEL_SET(val, 0x3);
-+	val = CMU_REG32_IREF_ADJ_SET(val, 0x3);
-+	xgene_sds_wr(csr_base, KC_SERDES_CMU_REGS_CMU_REG32_ADDR, val);
-+
-+	xgene_sds_wr(csr_base, KC_SERDES_CMU_REGS_CMU_REG34_ADDR, 0x8d27);
-+
-+	xgene_sds_wr(csr_base, KC_SERDES_CMU_REGS_CMU_REG37_ADDR, 0xF00F);
-+}
-+
-+static void xgene_serdes_validation_rxtx_cfg(struct xgene_ahci_context *ctx,
-+					     int gen_sel)
-+{
-+	void *csr_base = ctx->csr_base + SATA_SERDES_OFFSET;
-+	u32 val;
-+	u32 reg;
-+	int i;
-+	int chan;
-+
-+	for (chan = 0; chan < 2; chan++) {
-+		u32 os = chan * 0x200;
-+
-+		if (xgene_ahci_is_A1()) {
-+			xgene_sds_wr(csr_base,
-+				     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG38_ADDR
-+				     + os, 0x40);
-+			xgene_sds_wr(csr_base,
-+				     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG38_ADDR
-+				     + os, 0x41);
-+		}
-+
-+		xgene_sds_wr(csr_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG147_ADDR + os,
-+			     0x6);
-+
-+		xgene_sds_rd(csr_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG0_ADDR + os,
-+			     &val);
-+		val = CH0_RXTX_REG0_CTLE_EQ_HR_SET(val, 0x10);
-+		val = CH0_RXTX_REG0_CTLE_EQ_QR_SET(val, 0x10);
-+		val = CH0_RXTX_REG0_CTLE_EQ_FR_SET(val, 0x10);
-+		xgene_sds_wr(csr_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG0_ADDR + os,
-+			     val);
-+
-+		xgene_sds_rd(csr_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG1_ADDR + os,
-+			     &val);
-+		val = CH0_RXTX_REG1_RXACVCM_SET(val, 0x7);
-+		if (xgene_ahci_is_A1())
-+			val = CH0_RXTX_REG1_CTLE_EQ_SET(val, ctx->ctrl_eq_A1);
-+		else
-+			val = CH0_RXTX_REG1_CTLE_EQ_SET(val, ctx->ctrl_eq);
-+		xgene_sds_wr(csr_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG1_ADDR + os,
-+			     val);
-+
-+		xgene_sds_rd(csr_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG2_ADDR + os,
-+			     &val);
-+		val = CH0_RXTX_REG2_VTT_ENA_SET(val, 0x1);
-+		val = CH0_RXTX_REG2_VTT_SEL_SET(val, 0x1);
-+		val = CH0_RXTX_REG2_TX_FIFO_ENA_SET(val, 0x1);
-+		xgene_sds_wr(csr_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG2_ADDR + os,
-+			     val);
-+
-+		xgene_sds_rd(csr_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG4_ADDR + os,
-+			     &val);
-+		val = CH0_RXTX_REG4_TX_WORD_MODE_SET(val, 0x3);
-+		if (xgene_ahci_is_A1())
-+			val = CH1_RXTX_REG4_TX_LOOPBACK_BUF_EN_SET(val,
-+					ctx->loopback_buf_en_A1);
-+		xgene_sds_wr(csr_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG4_ADDR + os,
-+			     val);
-+
-+		xgene_sds_rd(csr_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG5_ADDR + os,
-+			     &val);
-+		val = CH0_RXTX_REG5_TX_CN1_SET(val, 0x0);
-+		val = CH0_RXTX_REG5_TX_CP1_SET(val, 0xF);
-+		val = CH0_RXTX_REG5_TX_CN2_SET(val, 0x0);
-+		xgene_sds_wr(csr_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG5_ADDR + os,
-+			     val);
-+
-+		xgene_sds_rd(csr_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG6_ADDR + os,
-+			     &val);
-+		val = CH0_RXTX_REG6_TXAMP_CNTL_SET(val, 0xf);
-+		val = CH0_RXTX_REG6_TXAMP_ENA_SET(val, 0x1);
-+		val = CH0_RXTX_REG6_TX_IDLE_SET(val, 0x0);
-+		val = CH0_RXTX_REG6_RX_BIST_RESYNC_SET(val, 0x0);
-+		val = CH0_RXTX_REG6_RX_BIST_ERRCNT_RD_SET(val, 0x0);
-+		xgene_sds_wr(csr_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG6_ADDR + os,
-+			     val);
-+
-+		xgene_sds_rd(csr_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG7_ADDR + os,
-+			     &val);
-+		val = CH0_RXTX_REG7_BIST_ENA_RX_SET(val, 0x0);
-+		if (xgene_ahci_is_A1())
-+			val = CH0_RXTX_REG7_LOOP_BACK_ENA_CTLE_SET(val,
-+					ctx->loopback_ena_ctle_A1);
-+		val = CH0_RXTX_REG7_RX_WORD_MODE_SET(val, 0x3);
-+		xgene_sds_wr(csr_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG7_ADDR + os,
-+			     val);
-+
-+		xgene_sds_rd(csr_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG8_ADDR + os,
-+			     &val);
-+		val = CH0_RXTX_REG8_CDR_LOOP_ENA_SET(val, 0x1);
-+		val = CH0_RXTX_REG8_CDR_BYPASS_RXLOS_SET(val, 0x0);
-+		val = CH0_RXTX_REG8_SSC_ENABLE_SET(val, 0x1);
-+		val = CH0_RXTX_REG8_SD_DISABLE_SET(val, 0x0);
-+		val = CH0_RXTX_REG8_SD_VREF_SET(val, 0x4);
-+		xgene_sds_wr(csr_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG8_ADDR + os,
-+			     val);
-+
-+		xgene_sds_rd(csr_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG11_ADDR + os,
-+			     &val);
-+		val = CH0_RXTX_REG11_PHASE_ADJUST_LIMIT_SET(val, 0x0);
-+		xgene_sds_wr(csr_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG11_ADDR + os,
-+			     val);
-+
-+		xgene_sds_rd(csr_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG12_ADDR + os,
-+			     &val);
-+		val = CH0_RXTX_REG12_LATCH_OFF_ENA_SET(val, 0x1);
-+		val = CH0_RXTX_REG12_SUMOS_ENABLE_SET(val, 0x0);
-+		val = CH0_RXTX_REG12_RX_DET_TERM_ENABLE_SET(val, 0x0);
-+		xgene_sds_wr(csr_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG12_ADDR + os,
-+			     val);
-+
-+		xgene_sds_rd(csr_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG26_ADDR + os,
-+			     &val);
-+		val = CH0_RXTX_REG26_PERIOD_ERROR_LATCH_SET(val, 0x0);
-+		val = CH0_RXTX_REG26_BLWC_ENA_SET(val, 0x1);
-+		xgene_sds_wr(csr_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG26_ADDR + os,
-+			     val);
-+
-+		xgene_sds_wr(csr_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG28_ADDR + os,
-+			     0x0);
-+		xgene_sds_wr(csr_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG31_ADDR + os,
-+			     0x0);
-+
-+		/* RXTX REG39-55 */
-+		if (xgene_ahci_is_A1()) {
-+			for (i = 0; i < 17; i++)
-+				xgene_sds_wr(csr_base,
-+				    KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG39_ADDR
-+				    + os + i * 2, 0x0000);
-+		}
-+		xgene_sds_rd(csr_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG61_ADDR + os,
-+			     &val);
-+		val = CH0_RXTX_REG61_ISCAN_INBERT_SET(val, 0x1);
-+		if (xgene_ahci_is_A1())
-+			val = CH0_RXTX_REG61_SPD_SEL_CDR_SET(val,
-+					ctx->spd_sel_cdr_A1);
-+		val = CH0_RXTX_REG61_LOADFREQ_SHIFT_SET(val, 0x0);
-+		val = CH0_RXTX_REG61_EYE_COUNT_WIDTH_SEL_SET(val, 0x0);
-+		xgene_sds_wr(csr_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG61_ADDR + os,
-+			     val);
-+
-+		xgene_sds_rd(csr_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG62_ADDR + os,
-+			     &val);
-+		val = CH0_RXTX_REG62_PERIOD_H1_QLATCH_SET(val, 0x0);
-+		xgene_sds_wr(csr_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG62_ADDR + os,
-+			     val);
-+
-+		for (i = 0; i < 9; i++) {
-+			reg = KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG81_ADDR +
-+				os + i * 2;
-+			xgene_sds_rd(csr_base, reg, &val);
-+			val = CH0_RXTX_REG89_MU_TH7_SET(val, 0xe);
-+			val = CH0_RXTX_REG89_MU_TH8_SET(val, 0xe);
-+			val = CH0_RXTX_REG89_MU_TH9_SET(val, 0xe);
-+			xgene_sds_wr(csr_base, reg, val);
-+		}
-+
-+		for (i = 0; i < 3; i++) {
-+			reg = KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG96_ADDR +
-+				os + i * 2;
-+			xgene_sds_rd(csr_base, reg, &val);
-+			val = CH0_RXTX_REG96_MU_FREQ1_SET(val, 0x10);
-+			val = CH0_RXTX_REG96_MU_FREQ2_SET(val, 0x10);
-+			val = CH0_RXTX_REG96_MU_FREQ3_SET(val, 0x10);
-+			xgene_sds_wr(csr_base, reg, val);
-+		}
-+
-+		for (i = 0; i < 3; i++) {
-+			reg = KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG99_ADDR +
-+				os + i * 2;
-+			xgene_sds_rd(csr_base, reg, &val);
-+			val = CH0_RXTX_REG99_MU_PHASE1_SET(val, 0x7);
-+			val = CH0_RXTX_REG99_MU_PHASE2_SET(val, 0x7);
-+			val = CH0_RXTX_REG99_MU_PHASE3_SET(val, 0x7);
-+			xgene_sds_wr(csr_base, reg, val);
-+		}
-+
-+		xgene_sds_rd(csr_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG102_ADDR + os,
-+			     &val);
-+		val = CH0_RXTX_REG102_FREQLOOP_LIMIT_SET(val, 0x0);
-+		xgene_sds_wr(csr_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG102_ADDR + os,
-+			     val);
-+
-+		xgene_sds_wr(csr_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG114_ADDR + os,
-+			     0xffe0);
-+
-+		xgene_sds_rd(csr_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG125_ADDR + os,
-+			     &val);
-+		val = CH0_RXTX_REG125_SIGN_PQ_SET(val, ctx->pq_sign);
-+		if (xgene_ahci_is_A1())
-+			val = CH0_RXTX_REG125_PQ_REG_SET(val, ctx->pq_A1);
-+		else
-+			val = CH0_RXTX_REG125_PQ_REG_SET(val, ctx->pq);
-+		val = CH0_RXTX_REG125_PHZ_MANUAL_SET(val, 0x1);
-+		xgene_sds_wr(csr_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG125_ADDR + os,
-+			     val);
-+
-+		xgene_sds_rd(csr_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG127_ADDR + os,
-+			     &val);
-+		val = CH0_RXTX_REG127_LATCH_MAN_CAL_ENA_SET(val, 0x0);
-+		xgene_sds_wr(csr_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG127_ADDR + os,
-+			     val);
-+
-+		xgene_sds_rd(csr_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG128_ADDR + os,
-+			     &val);
-+		val = CH0_RXTX_REG128_LATCH_CAL_WAIT_SEL_SET(val, 0x3);
-+		xgene_sds_wr(csr_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG128_ADDR + os,
-+			     val);
-+
-+		xgene_sds_rd(csr_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG145_ADDR + os,
-+			     &val);
-+		val = CH0_RXTX_REG145_RXDFE_CONFIG_SET(val, 0x3);
-+		val = CH0_RXTX_REG145_TX_IDLE_SATA_SET(val, 0x0);
-+		val = CH0_RXTX_REG145_RXES_ENA_SET(val, 0x1);
-+		val = CH0_RXTX_REG145_RXVWES_LATENA_SET(val, 0x1);
-+		xgene_sds_wr(csr_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG145_ADDR + os,
-+			     val);
-+
-+		for (i = 0; i < 4; i++) {
-+			reg = KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG148_ADDR +
-+			    os + i * 2;
-+			xgene_sds_wr(csr_base, reg, 0xFFFF);
-+		}
-+	}
-+}
-+
-+static int xgene_serdes_cal_rdy_chk(struct xgene_ahci_context *ctx)
-+{
-+	void *csr_serdes = ctx->csr_base + SATA_SERDES_OFFSET;
-+	int loopcount;
-+	u32 val;
-+
-+	/* 4. relasase serdes main reset */
-+	xgene_ahci_out32_flush(csr_serdes + SATA_ENET_SDS_RST_CTL_ADDR,
-+			       0x000000DF);
-+	xgene_ahci_delayus(8000);	/* Allow Serdes to get reflected */
-+
-+	/* TERM CALIBRATION KC_SERDES_CMU_REGS_CMU_REG17__ADDR */
-+	/* TERM calibration for channel 0 */
-+	xgene_sds_rd(csr_serdes, KC_SERDES_CMU_REGS_CMU_REG17_ADDR, &val);
-+	val = CMU_REG17_PVT_CODE_R2A_SET(val, 0x12);
-+	val = CMU_REG17_RESERVED_7_SET(val, 0x0);
-+	xgene_sds_wr(csr_serdes, KC_SERDES_CMU_REGS_CMU_REG17_ADDR, val);
-+	xgene_sds_toggle1to0(csr_serdes, KC_SERDES_CMU_REGS_CMU_REG17_ADDR,
-+			     CMU_REG17_PVT_TERM_MAN_ENA_MASK, 0);
-+	/* DOWN CALIBRATION for channel zero */
-+	xgene_sds_rd(csr_serdes, KC_SERDES_CMU_REGS_CMU_REG17_ADDR, &val);
-+	val = CMU_REG17_PVT_CODE_R2A_SET(val, 0x29);
-+	val = CMU_REG17_RESERVED_7_SET(val, 0x0);
-+	xgene_sds_wr(csr_serdes, KC_SERDES_CMU_REGS_CMU_REG17_ADDR, val);
-+	xgene_sds_toggle1to0(csr_serdes, KC_SERDES_CMU_REGS_CMU_REG16_ADDR,
-+			     CMU_REG16_PVT_DN_MAN_ENA_MASK, 0);
-+	/* UP CALIBRATION for channel 0 */
-+	xgene_sds_rd(csr_serdes, KC_SERDES_CMU_REGS_CMU_REG17_ADDR, &val);
-+	val = CMU_REG17_PVT_CODE_R2A_SET(val, 0x28);
-+	val = CMU_REG17_RESERVED_7_SET(val, 0x0);
-+	xgene_sds_wr(csr_serdes, KC_SERDES_CMU_REGS_CMU_REG17_ADDR, val);
-+	xgene_sds_toggle1to0(csr_serdes, KC_SERDES_CMU_REGS_CMU_REG16_ADDR,
-+			     CMU_REG16_PVT_UP_MAN_ENA_MASK, 0);
-+
-+	loopcount = 10;
-+	do {
-+		xgene_sds_rd(csr_serdes,
-+			     KC_SERDES_CMU_REGS_CMU_REG7_ADDR, &val);
-+		if (CMU_REG7_PLL_CALIB_DONE_RD(val))
-+			break;
-+		xgene_ahci_delayus(2000);
-+	} while (--loopcount > 0);
-+
-+	xgene_sds_rd(csr_serdes, KC_SERDES_CMU_REGS_CMU_REG7_ADDR, &val);
-+	if (CMU_REG7_PLL_CALIB_DONE_RD(val) == 1)
-+		PHYDEBUG("SATA%d SERDES PLL calibration done", ctx->cid);
-+	if (CMU_REG7_VCO_CAL_FAIL_RD(val) == 0x0) {
-+		PHYDEBUG("SERDES CALIB successful");
-+	} else {
-+		/* Assert SDS reset and recall calib function */
-+		PHYERROR("SERDES CALIB FAILED due to VCO FAIL");
-+		return -1;
-+	}
-+	if (xgene_ahci_is_A1())
-+		xgene_ahci_out32_flush(csr_serdes + SATA_ENET_SDS_RST_CTL_ADDR,
-+				       0x000000DF);
-+
-+	PHYDEBUG("SATA%d Checking TX ready", ctx->cid);
-+	xgene_sds_rd(csr_serdes, KC_SERDES_CMU_REGS_CMU_REG15_ADDR, &val);
-+	PHYDEBUG("SERDES TX is %sready", val & 0x0300 ? "" : "NOT ");
 +	return 0;
 +}
 +
-+static void xgene_serdes_pdwn_force_vco(struct xgene_ahci_context *ctx)
++static unsigned int xgene_ahci_qc_issue(struct ata_queued_cmd *qc)
 +{
-+	void *csr_serdes = ctx->csr_base + SATA_SERDES_OFFSET;
-+	u32 val;
++	struct ata_port *ap = qc->ap;
++	void __iomem *port_mmio = ahci_port_base(ap);
++	struct ahci_port_priv *pp = ap->private_data;
 +
-+	PHYDEBUG("serdes power down VCO");
-+	xgene_sds_rd(csr_serdes, KC_SERDES_CMU_REGS_CMU_REG16_ADDR, &val);
-+	val = CMU_REG16_VCOCAL_WAIT_BTW_CODE_SET(val, 0x5);
-+	xgene_sds_wr(csr_serdes, KC_SERDES_CMU_REGS_CMU_REG16_ADDR, val);
++	/* Keep track of the currently active link.  It will be used
++	 * in completion path to determine whether NCQ phase is in
++	 * progress.
++	 */
++	pp->active_link = qc->dev->link;
 +
-+	xgene_sds_toggle1to0(csr_serdes,
-+			     KC_SERDES_CMU_REGS_CMU_REG0_ADDR,
-+			     CMU_REG0_PDOWN_MASK, 1000);
-+	xgene_sds_toggle1to0(csr_serdes, KC_SERDES_CMU_REGS_CMU_REG32_ADDR,
-+			     CMU_REG32_FORCE_VCOCAL_START_MASK, 0);
++	if (qc->tf.protocol == ATA_PROT_NCQ)
++		writel(1 << qc->tag, port_mmio + PORT_SCR_ACT);
++
++	if (pp->fbs_enabled && pp->fbs_last_dev != qc->dev->link->pmp) {
++		u32 fbs = readl(port_mmio + PORT_FBS);
++		fbs &= ~(PORT_FBS_DEV_MASK | PORT_FBS_DEC);
++		fbs |= qc->dev->link->pmp << PORT_FBS_DEV_OFFSET;
++		writel(fbs, port_mmio + PORT_FBS);
++		pp->fbs_last_dev = qc->dev->link->pmp;
++	}
++
++	writel(1 << qc->tag, port_mmio + PORT_CMD_ISSUE);
++
++	ahci_sw_activity(qc->dev->link);
++
++	/* For query ID command, restart the port if requred due to HW errata.
++	   This is needed when PMP is attached. */
++	if (qc->dev->link->pmp && qc->tf.command == ATA_CMD_ID_ATA &&
++	    readl(port_mmio + PORT_CMD_ISSUE) == 0x0) {
++		writel(PORT_CMD_FIS_RX, port_mmio + PORT_CMD);
++		readl(port_mmio + PORT_CMD);	/* flush */
++		writel(PORT_CMD_FIS_RX | PORT_CMD_START, port_mmio + PORT_CMD);
++		readl(port_mmio + PORT_CMD);	/* flush */
++	}
++
++	return 0;
 +}
 +
-+static void xgene_serdes_tx_ssc_enable(struct xgene_ahci_context *ctx)
++static void xgene_ahci_enable_phy(struct xgene_ahci_context *ctx,
++				  int channel, int enable)
 +{
-+	void *csr_serdes = ctx->csr_base + SATA_SERDES_OFFSET;
++	void *mmio = ctx->mmio_base;
 +	u32 val;
 +
-+	xgene_sds_rd(csr_serdes, KC_SERDES_CMU_REGS_CMU_REG35_ADDR, &val);
-+	val = CMU_REG35_PLL_SSC_MOD_SET(val, 0x5f);
-+	xgene_sds_wr(csr_serdes, KC_SERDES_CMU_REGS_CMU_REG35_ADDR, val);
-+
-+	xgene_sds_rd(csr_serdes, KC_SERDES_CMU_REGS_CMU_REG36_ADDR, &val);
-+	val = CMU_REG36_PLL_SSC_VSTEP_SET(val, 33);	/* Gen3 == 33 */
-+	val = CMU_REG36_PLL_SSC_EN_SET(val, 1);
-+	val = CMU_REG36_PLL_SSC_DSMSEL_SET(val, 1);
-+	xgene_sds_wr(csr_serdes, KC_SERDES_CMU_REGS_CMU_REG36_ADDR, val);
-+
-+	xgene_sds_clrbits(csr_serdes, KC_SERDES_CMU_REGS_CMU_REG5_ADDR,
-+			  CMU_REG5_PLL_RESETB_MASK);
-+	xgene_ahci_delayus(1000);	/* Allow Serdes to get reflected */
-+	xgene_sds_setbits(csr_serdes, KC_SERDES_CMU_REGS_CMU_REG5_ADDR,
-+			  CMU_REG5_PLL_RESETB_MASK);
-+	xgene_sds_toggle1to0(csr_serdes, KC_SERDES_CMU_REGS_CMU_REG32_ADDR,
-+			     CMU_REG32_FORCE_VCOCAL_START_MASK, 0);
++	xgene_ahci_in32(mmio + PORTCFG_ADDR, &val);
++	val = PORTADDR_SET(val, channel == 0 ? 2 : 3);
++	xgene_ahci_out32_flush(mmio + PORTCFG_ADDR, val);
++	xgene_ahci_in32(mmio + PORTPHY1CFG_ADDR, &val);
++	val = PORTPHY1CFG_FRCPHYRDY_SET(val, enable);
++	xgene_ahci_out32(mmio + PORTPHY1CFG_ADDR, val);
 +}
++
++void xgene_ahci_set_phy_cfg(struct xgene_ahci_context *ctx, int channel)
++{
++	void *mmio = ctx->mmio_base;
++	u32 val;
++
++	dev_dbg(ctx->dev, "SATA%d.%d port configure mmio 0x%p channel %d\n",
++		ctx->cid, channel, mmio, channel);
++	xgene_ahci_in32(mmio + PORTCFG_ADDR, &val);
++	val = PORTADDR_SET(val, channel == 0 ? 2 : 3);
++	xgene_ahci_out32_flush(mmio + PORTCFG_ADDR, val);
++	/* Disable fix rate */
++	xgene_ahci_out32_flush(mmio + PORTPHY1CFG_ADDR, 0x0001fffe);
++	xgene_ahci_out32_flush(mmio + PORTPHY2CFG_ADDR, 0x5018461c);
++	xgene_ahci_out32_flush(mmio + PORTPHY3CFG_ADDR, 0x1c081907);
++	xgene_ahci_out32_flush(mmio + PORTPHY4CFG_ADDR, 0x1c080815);
++	xgene_ahci_in32(mmio + PORTPHY5CFG_ADDR, &val);
++	/* Window negotiation 0x800 to 0x400 */
++	val = PORTPHY5CFG_RTCHG_SET(val, 0x300);
++	xgene_ahci_out32(mmio + PORTPHY5CFG_ADDR, val);
++	xgene_ahci_in32(mmio + PORTAXICFG_ADDR, &val);
++	val = PORTAXICFG_EN_CONTEXT_SET(val, 0x1); /* enable context mgmt */
++	val = PORTAXICFG_OUTTRANS_SET(val, 0xe); /* Outstanding */
++	xgene_ahci_out32_flush(mmio + PORTAXICFG_ADDR, val);
++}
++
++/* Restart the PHY in case of disparity error for Gen2/Gen1 disk only */
++static int xgene_ahci_phy_restart(struct ata_link *link)
++{
++	struct ata_port *port = link->ap;
++	struct ata_host *host = port->host;
++	struct xgene_ahci_context *ctx = host->private_data;
++	int channel;
++
++	channel = xgene_ahci_get_channel(host, port);
++	if (channel < 0 || channel >= MAX_AHCI_CHN_PERCTR)
++		return -EINVAL;
++	xgene_ahci_enable_phy(ctx, channel, 1);
++	xgene_ahci_enable_phy(ctx, channel, 0);
++	xgene_ahci_delayms(50);	/* Allow serdes to get reflected */
++	return 0;
++}
++
++static int xgene_ahci_hardreset(struct ata_link *link, unsigned int *class,
++				unsigned long deadline)
++{
++	const unsigned long *timing = sata_ehc_deb_timing(&link->eh_context);
++	struct ata_port *ap = link->ap;
++	struct ahci_port_priv *pp = ap->private_data;
++	u8 *d2h_fis = pp->rx_fis + RX_FIS_D2H_REG;
++	struct ata_taskfile tf;
++	bool online;
++	int rc;
++	struct ata_host *host = ap->host;
++	struct xgene_ahci_context *ctx = host->private_data;
++	int retry = 0;
++	u32 sstatus;
++	int channel;
++	int link_retry = 0;
++	void __iomem *port_mmio;
++	int portcmd_saved;
++	u32 portclb_saved;
++	u32 portclbhi_saved;
++	u32 portrxfis_saved;
++	u32 portrxfishi_saved;
++	u32 val;
++
++	channel = xgene_ahci_get_channel(host, ap);
++	if (channel >= MAX_AHCI_CHN_PERCTR) {
++		*class = ATA_DEV_NONE;
++		return 0;
++	}
++	ata_link_dbg(link, "SATA%d.%d APM hardreset\n", ctx->cid, channel);
++
++	/* As hardreset reset these CSR, let save it to restore later */
++	port_mmio = ahci_port_base(ap);
++	portcmd_saved = readl(port_mmio + PORT_CMD);
++	portclb_saved = readl(port_mmio + PORT_LST_ADDR);
++	portclbhi_saved = readl(port_mmio + PORT_LST_ADDR_HI);
++	portrxfis_saved = readl(port_mmio + PORT_FIS_ADDR);
++	portrxfishi_saved = readl(port_mmio + PORT_FIS_ADDR_HI);
++	ata_link_dbg(link, "SATA%d.%d PORT_CMD 0x%08X\n", ctx->cid, channel,
++		     portcmd_saved);
++
++	ahci_stop_engine(ap);
++
++hardreset_retry:
++	/* clear D2H reception area to properly wait for D2H FIS */
++	ata_tf_init(link->device, &tf);
++	tf.command = 0x80;
++	ata_tf_to_fis(&tf, 0, 0, d2h_fis);
++	if (!xgene_ahci_is_A1())
++		xgene_ahci_serdes_set_pq(ctx, channel, 1);
++	rc = sata_link_hardreset(link, timing, deadline, &online,
++				 ahci_check_ready);
++	if (!xgene_ahci_is_A1())
++		xgene_ahci_serdes_set_pq(ctx, channel, 0);
++	/* clear all errors */
++	xgene_ahci_in32(port_mmio + PORT_SCR_ERR, &val);
++	xgene_ahci_out32(port_mmio + PORT_SCR_ERR, val);
++
++	/* Check to ensure that the disk comes up in match speed */
++	if (online) {
++		sata_scr_read(link, SCR_STATUS, &sstatus);
++		if (!retry) {
++			if (((sstatus >> 4) & 0xf) == 2) {
++				/* For Gen2 and first time, let's check again
++				 * with Gen2 serdes to ensure actual Gen2 disk.
++				 */
++				xgene_ahci_serdes_force_gen(ctx, channel,
++							    SPD_SEL_GEN2);
++				xgene_ahci_phy_restart(link);
++				++retry;
++				goto hardreset_retry;
++			} else if (((sstatus >> 4) & 0xf) == 1) {
++				/* For Gen1 and first time, let's check again
++				 * with Gen1 serdes to ensure actual Gen1 disk.
++				 */
++				xgene_ahci_serdes_force_gen(ctx, channel,
++							    SPD_SEL_GEN1);
++				xgene_ahci_phy_restart(link);
++				++retry;
++				goto hardreset_retry;
++			}
++		}
++	} else if (link_retry < 4) {
++		link_retry++;
++		goto hardreset_retry;
++	}
++	ata_link_dbg(link, "SATA%d.%d post-hardrest PORT_CMD 0x%08X\n",
++		     ctx->cid, channel, readl(port_mmio + PORT_CMD));
++
++	/* As controller hardreset clear them, let restore them */
++	writel(portcmd_saved, port_mmio + PORT_CMD);
++	writel(portclb_saved, port_mmio + PORT_LST_ADDR);
++	writel(portclbhi_saved, port_mmio + PORT_LST_ADDR_HI);
++	writel(portrxfis_saved, port_mmio + PORT_FIS_ADDR);
++	writel(portrxfishi_saved, port_mmio + PORT_FIS_ADDR_HI);
++	ata_link_dbg(link, "SATA%d.%d restore PORT_CMD 0x%08X\n",
++		     ctx->cid, channel, readl(port_mmio + PORT_CMD));
++
++	ahci_start_engine(ap);
++
++	if (online)
++		*class = ahci_dev_classify(ap);
++
++	ata_link_dbg(link, "SATA%d.%d APM hardreset EXIT rc %d class %u\n",
++		     ctx->cid, channel, rc, *class);
++	return rc;
++}
++
++static const char *xgene_ahci_chip_revision(void)
++{
++	static const char *revision = NULL;
++
++	if (!revision) {
++		#define EFUSE0_SHADOW_VERSION_SHIFT     28
++		#define EFUSE0_SHADOW_VERSION_MASK      0xF
++		void *efuse;
++		void *jtag;
++		u32 efuse0;
++		u32 jtagid;
++
++		/* Part registers are fixed in X-Gene. */
++#if defined(CONFIG_ARCH_MSLIM)
++		/* MSLIM address map uses 0xC000.0000 */
++		efuse = ioremap(0xC054A000ULL, 0x100);
++#else
++		/* Potenza address map uses 0x1000.0000 */
++		efuse = ioremap(0x1054A000ULL, 0x100);
++#endif
++		jtag = ioremap(0x17000004ULL, 0x100);
++		if (efuse == NULL || jtag == NULL) {
++			if (efuse)
++				iounmap(efuse);
++			if (jtag)
++				iounmap(jtag);
++			return revision = "A1";
++		}
++		efuse0 = (readl(efuse) >> EFUSE0_SHADOW_VERSION_SHIFT)
++				& EFUSE0_SHADOW_VERSION_MASK;
++		iounmap(efuse);
++		jtagid = readl(jtag);
++		iounmap(jtag);
++		switch (efuse0) {
++		case 0x00:
++			if (jtagid & 0x10000000)
++				return revision = "A2";
++			else
++				return revision = "A1";
++		case 0x01:	/* A2 */
++			return revision = "A2";
++		case 0x02:	/* A3 */
++			return revision = "A3";
++		case 0x03:	/* B0 */
++			return revision = "B0";
++		default:	/* Unknown */
++			return revision = "Unknown";
++		}
++	}
++	return revision;
++}
++
++int xgene_ahci_is_A1(void)
++{
++	return strcmp(xgene_ahci_chip_revision(), "A1") == 0 ? 1 : 0;
++}
++
++/* Flush the IOB to ensure all SATA controller writes completed before
++   servicing the completed command. */
++static int xgene_ahci_iob_flush(struct xgene_ahci_context *ctx)
++{
++	if (ctx->ahbc_io_base == NULL) {
++		void *ahbc_base;
++		u32 val;
++
++		/* The AHBC address is fixed in X-Gene */
++		ahbc_base = devm_ioremap(ctx->dev, 0x1F2A0000, 0x80000);
++		if (!ahbc_base) {
++			dev_err(ctx->dev, "can't map AHBC resource\n");
++			return -ENODEV;
++		}
++		/* The read to flush addres is fixed in X-Gene */
++		ctx->ahbc_io_base = devm_ioremap(ctx->dev, 0x1C000200, 0x100);
++		if (!ctx->ahbc_io_base) {
++			devm_iounmap(ctx->dev, ahbc_base);
++			dev_err(ctx->dev, "can't map AHBC IO resource\n");
++			return -ENODEV;
++		}
++		/* Enable IOB flush feature */
++		val = readl(ahbc_base + CFG_AMA_MODE_ADDR);
++		val |= CFG_RD2WR_EN;
++		writel(val, ahbc_base + CFG_AMA_MODE_ADDR);
++		devm_iounmap(ctx->dev, ahbc_base);
++	}
++	readl(ctx->ahbc_io_base);
++	return 0;
++}
++
++static unsigned int xgene_ahci_fill_sg(struct ata_queued_cmd *qc, void *cmd_tbl)
++{
++	struct scatterlist *sg;
++	struct ahci_sg *ahci_sg = cmd_tbl + AHCI_CMD_TBL_HDR_SZ;
++	unsigned int si;
++
++	/*
++	 * Next, the S/G list.
++	 */
++	for_each_sg(qc->sg, sg, qc->n_elem, si) {
++		dma_addr_t addr = sg_dma_address(sg);
++		u64 dma_addr = xgene_ahci_to_axi(addr);
++		u32 sg_len = sg_dma_len(sg);
++		ahci_sg[si].addr = cpu_to_le32(dma_addr & 0xffffffff);
++		ahci_sg[si].addr_hi = cpu_to_le32((dma_addr >> 16) >> 16);
++		ahci_sg[si].flags_size = cpu_to_le32(sg_len - 1);
++		xgene_ahci_dflush((void *) __va(addr), sg_len);
++	}
++	return si;
++}
++
++static void xgene_ahci_qc_prep(struct ata_queued_cmd *qc)
++{
++	struct ata_port *ap = qc->ap;
++	struct ahci_port_priv *pp = ap->private_data;
++	int is_atapi = ata_is_atapi(qc->tf.protocol);
++	void *cmd_tbl;
++	u32 opts;
++	const u32 cmd_fis_len = 5;	/* five dwords */
++	unsigned int n_elem;
++	void *port_mmio = ahci_port_base(ap);
++	u32 fbs;
++
++	/*
++	 * Fill in command table information.  First, the header,
++	 * a SATA Register - Host to Device command FIS.
++	 */
++	cmd_tbl = pp->cmd_tbl + qc->tag * AHCI_CMD_TBL_SZ;
++
++	/* Due to hardware errata for port multipier CBS mode, enable DEV
++	   field of PxFBS in order to clear the PxCI */
++	if (qc->dev->link->pmp) {
++		fbs = readl(port_mmio + 0x40);
++		if ((fbs >> 8) & 0x0000000f) {
++			fbs &= 0xfffff0ff;
++			fbs |= qc->dev->link->pmp << 8;
++			writel(fbs, port_mmio + 0x40);
++		}
++	}
++
++	ata_tf_to_fis(&qc->tf, qc->dev->link->pmp, 1, cmd_tbl);
++	if (is_atapi) {
++		memset(cmd_tbl + AHCI_CMD_TBL_CDB, 0, 32);
++		memcpy(cmd_tbl + AHCI_CMD_TBL_CDB, qc->cdb, qc->dev->cdb_len);
++	}
++	n_elem = 0;
++	if (qc->flags & ATA_QCFLAG_DMAMAP)
++		n_elem = xgene_ahci_fill_sg(qc, cmd_tbl);
++
++	/*
++	 * Fill in command slot information.
++	 */
++	opts = cmd_fis_len | n_elem << 16 | (qc->dev->link->pmp << 12);
++	if (qc->tf.flags & ATA_TFLAG_WRITE)
++		opts |= AHCI_CMD_WRITE;
++	if (is_atapi)
++		opts |= AHCI_CMD_ATAPI | AHCI_CMD_PREFETCH;
++
++	xgene_ahci_fill_cmd_slot(pp, qc->tag, opts);
++}
++
++/* Due to HW BUG we are limited to single FIS receive area for FBS
++ * so limiting the FBS FIS area from 16 to 0
++ */
++static bool xgene_ahci_qc_fill_rtf(struct ata_queued_cmd *qc)
++{
++	struct ahci_port_priv *pp = qc->ap->private_data;
++	u8 *rx_fis = pp->rx_fis;
++
++	/*
++	 * After a successful execution of an ATA PIO data-in command,
++	 * the device doesn't send D2H Reg FIS to update the TF and
++	 * the host should take TF and E_Status from the preceding PIO
++	 * Setup FIS.
++	 */
++	if (qc->tf.protocol == ATA_PROT_PIO && qc->dma_dir == DMA_FROM_DEVICE &&
++	    !(qc->flags & ATA_QCFLAG_FAILED)) {
++		ata_tf_from_fis(rx_fis + RX_FIS_PIO_SETUP, &qc->result_tf);
++		qc->result_tf.command = (rx_fis + RX_FIS_PIO_SETUP)[15];
++	} else
++		ata_tf_from_fis(rx_fis + RX_FIS_D2H_REG, &qc->result_tf);
++
++	return true;
++}
++
++static int xgene_ahci_do_softreset(struct ata_link *link,
++				   unsigned int *class, int pmp,
++				   unsigned long deadline,
++				   int (*check_ready) (struct ata_link *link))
++{
++	struct ata_port *ap = link->ap;
++	struct ahci_host_priv *hpriv = ap->host->private_data;
++	const char *reason = NULL;
++	unsigned long now, msecs;
++	struct ata_taskfile tf;
++	int rc;
++
++	ata_link_dbg(link, "ENTER\n");
++
++	/* prepare for SRST (AHCI-1.1 10.4.1) */
++	rc = ahci_kick_engine(ap);
++	if (rc && rc != -EOPNOTSUPP)
++		ata_link_warn(link, "failed to reset engine (errno=%d)\n", rc);
++
++	ata_tf_init(link->device, &tf);
++	/* issue the first D2H Register FIS */
++	msecs = 0;
++	now = jiffies;
++	if (time_after(deadline, now))
++		msecs = jiffies_to_msecs(deadline - now);
++
++	tf.ctl |= ATA_SRST;
++	/* Must call X-Gene version in case it needs to flush the cache for
++	   MSLIM as well as AXI address translation */
++	if (xgene_ahci_exec_polled_cmd(ap, pmp, &tf, 0,
++				       AHCI_CMD_RESET | AHCI_CMD_CLR_BUSY,
++				       msecs)) {
++		rc = -EIO;
++		reason = "1st FIS failed";
++		goto fail;
++	}
++
++	/* spec says at least 5us, but be generous and sleep for 1ms */
++	ata_msleep(ap, 1);
++
++	/* issue the second D2H Register FIS */
++	tf.ctl &= ~ATA_SRST;
++	/* HW need AHCI_CMD_RESET and AHCI_CMD_CLR_BUSY */
++	xgene_ahci_exec_polled_cmd(ap, pmp, &tf, 0,
++				   AHCI_CMD_RESET | AHCI_CMD_CLR_BUSY, msecs);
++	/* wait for link to become ready */
++	rc = ata_wait_after_reset(link, deadline, check_ready);
++	if (rc == -EBUSY && hpriv->flags & AHCI_HFLAG_SRST_TOUT_IS_OFFLINE) {
++		/*
++		 * Workaround for cases where link online status can't
++		 * be trusted.  Treat device readiness timeout as link
++		 * offline.
++		 */
++		ata_link_info(link, "device not ready, treating as offline\n");
++		*class = ATA_DEV_NONE;
++	} else if (rc) {
++		/* link occupied, -ENODEV too is an error */
++		reason = "device not ready";
++		goto fail;
++	} else {
++		*class = ahci_dev_classify(ap);
++	}
++
++	ata_link_dbg(link, "EXIT, class=%u\n", *class);
++	return 0;
++
++fail:
++	ata_link_err(link, "softreset failed (%s)\n", reason);
++	return rc;
++}
++
++static int xgene_ahci_softreset(struct ata_link *link, unsigned int *class,
++				unsigned long deadline)
++{
++	int pmp = sata_srst_pmp(link);
++	return xgene_ahci_do_softreset(link, class, pmp, deadline,
++				       ahci_check_ready);
++}
++
++static struct ata_port_operations xgene_ahci_ops = {
++	.inherits = &ahci_ops,
++	.hardreset = xgene_ahci_hardreset,
++	.read_id = xgene_ahci_read_id,
++	.qc_prep = xgene_ahci_qc_prep,
++	.qc_issue = xgene_ahci_qc_issue,
++#if defined(CONFIG_ARCH_MSLIM)
++	.port_resume = xgene_ahci_port_resume,
++	.port_start = xgene_ahci_port_start,
++#endif
++	.softreset = xgene_ahci_softreset,
++	.pmp_softreset = xgene_ahci_softreset,
++	.qc_fill_rtf = xgene_ahci_qc_fill_rtf,
++};
++
++static const struct ata_port_info xgene_ahci_port_info[] = {
++	{
++	 .flags = AHCI_FLAG_COMMON,
++	 .pio_mask = ATA_PIO4,
++	 .udma_mask = ATA_UDMA6,
++	 .port_ops = &xgene_ahci_ops,
++	 },
++};
++
++static struct scsi_host_template xgene_ahci_sht = {
++	AHCI_SHT("XGene-ahci"),
++};
++
++static void xgene_ahci_port_intr(struct ata_port *ap)
++{
++	void __iomem *port_mmio = ahci_port_base(ap);
++	struct ata_eh_info *ehi = &ap->link.eh_info;
++	struct ahci_port_priv *pp = ap->private_data;
++	struct ahci_host_priv *hpriv = ap->host->private_data;
++	int resetting = !!(ap->pflags & ATA_PFLAG_RESETTING);
++	u32 status, qc_active = 0;
++	int rc;
++
++	status = readl(port_mmio + PORT_IRQ_STAT);
++	writel(status, port_mmio + PORT_IRQ_STAT);
++
++	/* ignore BAD_PMP while resetting */
++	if (unlikely(resetting))
++		status &= ~PORT_IRQ_BAD_PMP;
++
++	/* if LPM is enabled, PHYRDY doesn't mean anything */
++	if (ap->link.lpm_policy > ATA_LPM_MAX_POWER) {
++		status &= ~PORT_IRQ_PHYRDY;
++		ahci_scr_write(&ap->link, SCR_ERROR, SERR_PHYRDY_CHG);
++	}
++
++	if (unlikely(status & PORT_IRQ_ERROR)) {
++		ahci_error_intr(ap, status);
++		return;
++	}
++
++	if (status & PORT_IRQ_SDB_FIS) {
++		/* If SNotification is available, leave notification
++		 * handling to sata_async_notification().  If not,
++		 * emulate it by snooping SDB FIS RX area.
++		 *
++		 * Snooping FIS RX area is probably cheaper than
++		 * poking SNotification but some constrollers which
++		 * implement SNotification, ICH9 for example, don't
++		 * store AN SDB FIS into receive area.
++		 */
++		if (hpriv->cap & HOST_CAP_SNTF)
++			sata_async_notification(ap);
++		else {
++			/* If the 'N' bit in word 0 of the FIS is set,
++			 * we just received asynchronous notification.
++			 * Tell libata about it.
++			 *
++			 * Lack of SNotification should not appear in
++			 * ahci 1.2, so the workaround is unnecessary
++			 * when FBS is enabled.
++			 */
++			if (pp->fbs_enabled)
++				WARN_ON_ONCE(1);
++			else {
++				const __le32 *f = pp->rx_fis + RX_FIS_SDB;
++				u32 f0 = le32_to_cpu(f[0]);
++				if (f0 & (1 << 15))
++					sata_async_notification(ap);
++			}
++		}
++	}
++
++	/* pp->active_link is not reliable once FBS is enabled, both
++	 * PORT_SCR_ACT and PORT_CMD_ISSUE should be checked because
++	 * NCQ and non-NCQ commands may be in flight at the same time.
++	 */
++	if (pp->fbs_enabled) {
++		if (ap->qc_active) {
++			qc_active = readl(port_mmio + PORT_SCR_ACT);
++			qc_active |= readl(port_mmio + PORT_CMD_ISSUE);
++		}
++	} else {
++		/* pp->active_link is valid iff any command is in flight */
++		if (ap->qc_active && pp->active_link->sactive)
++			qc_active = readl(port_mmio + PORT_SCR_ACT);
++		else
++			qc_active = readl(port_mmio + PORT_CMD_ISSUE);
++	}
++
++	/* Flush the IOB before servicing interrupt to ensure all data
++	   written by the controller appears in DDR */
++	xgene_ahci_iob_flush((struct xgene_ahci_context *) hpriv);
++
++	rc = ata_qc_complete_multiple(ap, qc_active);
++
++	/* while resetting, invalid completions are expected */
++	if (unlikely(rc < 0 && !resetting)) {
++		ehi->err_mask |= AC_ERR_HSM;
++		ehi->action |= ATA_EH_RESET;
++		ata_port_freeze(ap);
++	}
++}
++
++static irqreturn_t xgene_ahci_interrupt(int irq, void *dev_instance)
++{
++	struct ata_host *host = dev_instance;
++	struct ahci_host_priv *hpriv;
++	unsigned int i, handled = 0;
++	void __iomem *mmio;
++	u32 irq_stat, irq_masked;
++
++	VPRINTK("ENTER\n");
++
++	hpriv = host->private_data;
++	mmio = hpriv->mmio;
++
++	/* sigh.  0xffffffff is a valid return from h/w */
++	irq_stat = readl(mmio + HOST_IRQ_STAT);
++	if (!irq_stat)
++		return IRQ_NONE;
++
++	irq_masked = irq_stat & hpriv->port_map;
++
++	spin_lock(&host->lock);
++
++	for (i = 0; i < host->n_ports; i++) {
++		struct ata_port *ap;
++
++		if (!(irq_masked & (1 << i)))
++			continue;
++
++		ap = host->ports[i];
++		if (ap) {
++			xgene_ahci_port_intr(ap);
++			VPRINTK("port %u\n", i);
++		} else {
++			VPRINTK("port %u (no irq)\n", i);
++			if (ata_ratelimit())
++				dev_warn(host->dev,
++					 "interrupt on disabled port %u\n", i);
++		}
++
++		handled = 1;
++	}
++
++	/* HOST_IRQ_STAT behaves as level triggered latch meaning that
++	 * it should be cleared after all the port events are cleared;
++	 * otherwise, it will raise a spurious interrupt after each
++	 * valid one.  Please read section 10.6.2 of ahci 1.1 for more
++	 * information.
++	 *
++	 * Also, use the unmasked value to clear interrupt as spurious
++	 * pending event on a dummy port might cause screaming IRQ.
++	 */
++	writel(irq_stat, mmio + HOST_IRQ_STAT);
++
++	spin_unlock(&host->lock);
++
++	VPRINTK("EXIT\n");
++
++	return IRQ_RETVAL(handled);
++}
++
++static int xgene_ahci_get_irq(struct platform_device *pdev, int index)
++{
++	if (efi_enabled(EFI_BOOT))
++		return platform_get_irq(pdev, index);
++	return irq_of_parse_and_map(pdev->dev.of_node, index);
++}
++
++static int xgene_ahci_get_resource(struct platform_device *pdev, int index,
++				   struct resource *res)
++{
++	struct resource *regs;
++	if (efi_enabled(EFI_BOOT)) {
++		regs = platform_get_resource(pdev, IORESOURCE_MEM, index);
++		if (regs == NULL)
++			return -ENODEV;
++		*res = *regs;
++		return 0;
++	}
++	return of_address_to_resource(pdev->dev.of_node, index, res);
++}
++
++static int xgene_ahci_get_u32_param(struct platform_device *pdev,
++				    const char *of_name, char *acpi_name,
++				    u32 *param)
++{
++#ifdef CONFIG_ACPI
++	if (efi_enabled(EFI_BOOT)) {
++		unsigned long long value;
++		acpi_status status;
++		if (acpi_name == NULL)
++			return -ENODEV;
++		status = acpi_evaluate_integer(ACPI_HANDLE(&pdev->dev),
++					       acpi_name, NULL, &value);
++		if (ACPI_FAILURE(status))
++			return -ENODEV;
++		*param = value;
++		return 0;
++	}
++#endif
++	if (of_name == NULL)
++		return -ENODEV;
++	return of_property_read_u32(pdev->dev.of_node, of_name, param);
++}
++
++static int xgene_ahci_get_str_param(struct platform_device *pdev,
++				    const char *of_name, char *acpi_name,
++				    char *buf, int len)
++{
++	int rc;
++	const char *param;
++#ifdef CONFIG_ACPI
++	if (efi_enabled(EFI_BOOT)) {
++		acpi_status status;
++		struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
++		union acpi_object *acpi_obj;
++
++		if (acpi_name == NULL)
++			return -ENODEV;
++		status = acpi_evaluate_object(ACPI_HANDLE(&pdev->dev),
++					      acpi_name, NULL, &buffer);
++		if (ACPI_FAILURE(status))
++			return -ENODEV;
++		acpi_obj = buffer.pointer;
++		if (acpi_obj->type != ACPI_TYPE_STRING) {
++			buf[0] = '\0';
++			kfree(buffer.pointer);
++			return -ENODEV;
++		}
++		if (acpi_obj->string.length < len) {
++			strncpy(buf, acpi_obj->string.pointer,
++				acpi_obj->string.length);
++			buf[acpi_obj->string.length] = '\0';
++		} else {
++			strncpy(buf, acpi_obj->string.pointer, len);
++			buf[len - 1] = '\0';
++		}
++		kfree(buffer.pointer);
++		return 0;
++	}
++#endif
++	if (of_name == NULL)
++		return -ENODEV;
++	rc = of_property_read_string(pdev->dev.of_node, of_name, &param);
++	if (rc == 0) {
++		strncpy(buf, param, len);
++		buf[len - 1] = '\0';
++	} else {
++		buf[0] = '\0';
++	}
++	return rc;
++}
++
++static int xgene_ahci_probe(struct platform_device *pdev)
++{
++	struct xgene_ahci_context *hpriv;
++	struct ata_port_info pi = xgene_ahci_port_info[0];
++	const struct ata_port_info *ppi[] = { &pi, NULL };
++	struct ata_host *host;
++	struct resource res;
++	char res_name[30];
++	int n_ports;
++	int rc;
++	int i;
++	u32 val;
++	u32 rxclk_inv;
++	u32 gen_sel;
++	u32 serdes_diff_clk;
++
++	/* When both ACPi and DTS are enabled, custom ACPI built-in ACPI
++	   table, and booting via DTS, we need to skip the probe of the
++	   built-in ACPI table probe. */
++	if (!efi_enabled(EFI_BOOT) && pdev->dev.of_node == NULL)
++		return -ENODEV;
++
++	/* Check if the entry is disabled for OF only */
++	if (!efi_enabled(EFI_BOOT) &&
++	    !of_device_is_available(pdev->dev.of_node))
++		return -ENODEV;
++#if defined(CONFIG_ACPI)
++	if (efi_enabled(EFI_BOOT)) {
++		struct acpi_device *device;
++
++		if (acpi_bus_get_device(ACPI_HANDLE(&pdev->dev), &device))
++			return -ENODEV;
++
++		if (acpi_bus_get_status(device) || !device->status.present)
++			return -ENODEV;
++	}
++#endif
++
++	hpriv = devm_kzalloc(&pdev->dev, sizeof(*hpriv), GFP_KERNEL);
++	if (!hpriv) {
++		dev_err(&pdev->dev, "can't allocate host context\n");
++		return -ENOMEM;
++	}
++	hpriv->dev = &pdev->dev;
++
++	rc = xgene_ahci_get_resource(pdev, 0, &res);
++	if (rc != 0) {
++		dev_err(&pdev->dev, "no AHCI resource address\n");
++		goto error;
++	}
++	hpriv->mmio_phys = res.start;
++	hpriv->mmio_base = devm_ioremap(&pdev->dev, res.start,
++					resource_size(&res));
++	if (!hpriv->mmio_base) {
++		dev_err(&pdev->dev, "can't map MMIO resource\n");
++		rc = -ENOMEM;
++		goto error;
++	}
++	hpriv->hpriv.mmio = hpriv->mmio_base;
++
++	rc = xgene_ahci_get_resource(pdev, 1, &res);
++	if (rc != 0) {
++		dev_err(&pdev->dev, "no Serdes resource address\n");
++		goto error;
++	}
++	hpriv->csr_phys = res.start;
++	hpriv->csr_base = devm_ioremap(&pdev->dev, res.start,
++				       resource_size(&res));
++	if (!hpriv->csr_base) {
++		dev_err(&pdev->dev, "can't map Serdes CSR resource\n");
++		rc = -ENOMEM;
++		goto error;
++	}
++
++	rc = xgene_ahci_get_str_param(pdev, "clock-names", "CLNM", res_name,
++				      sizeof(res_name));
++	if (rc) {
++		dev_err(&pdev->dev, "no clock name resource\n");
++		goto error;
++	}
++	hpriv->hpriv.clk = clk_get(&pdev->dev, res_name);
++	if (!IS_ERR(hpriv->hpriv.clk)) {
++		rc = clk_prepare_enable(hpriv->hpriv.clk);
++		if (rc) {
++			dev_err(&pdev->dev, "clock prepare enable failed\n");
++			goto error;
++		}
++	} else {
++		dev_warn(&pdev->dev, "no clock\n");
++	}
++	if (strcmp(res_name, "eth01clk") == 0)
++		hpriv->cid = 0;
++	else if (strcmp(res_name, "eth23clk") == 0)
++		hpriv->cid = 1;
++	else
++		hpriv->cid = 2;
++
++	if (hpriv->cid == 2) {
++		rc = xgene_ahci_get_resource(pdev, 2, &res);
++		if (rc != 0) {
++			dev_err(&pdev->dev, "no SATA/PCIE resource address\n");
++			goto error;
++		}
++		hpriv->pcie_base = devm_ioremap(&pdev->dev, res.start,
++						resource_size(&res));
++		if (!hpriv->pcie_base) {
++			dev_err(&pdev->dev, "can't map SATA/PCIe resource\n");
++			rc = -ENOMEM;
++			goto error;
++		}
++	}
++
++	/* Map in the IOB register */
++	rc = xgene_ahci_iob_flush(hpriv);
++	if (rc)
++		goto error;
++
++	dev_dbg(&pdev->dev,
++		"SATA%d PHY PAddr 0x%016LX VAddr 0x%p Mmio PAddr 0x%016LX VAddr 0x%p\n",
++		hpriv->cid, hpriv->csr_phys, hpriv->csr_base, hpriv->mmio_phys,
++		hpriv->mmio_base);
++
++	/* Custom Serdes override paraemter */
++	rc = xgene_ahci_get_u32_param(pdev, "gen-sel", "GENS", &gen_sel);
++	if (rc != 0)
++		gen_sel = 3;	/* Default to Gen3 */
++	rc = xgene_ahci_get_u32_param(pdev, "serdes-diff-clk", "SDCL",
++				      &serdes_diff_clk);
++	if (rc != 0)
++		serdes_diff_clk = SATA_CLK_EXT_DIFF; /* Default to external */
++	rc = xgene_ahci_get_u32_param(pdev, "EQA1", "EQA1",
++				      &hpriv->ctrl_eq_A1);
++	if (rc != 0)
++		hpriv->ctrl_eq_A1 = CTLE_EQ;
++	rc = xgene_ahci_get_u32_param(pdev, "EQ", "EQ00", &hpriv->ctrl_eq);
++	if (rc != 0)
++		hpriv->ctrl_eq = CTLE_EQ_A2;
++	dev_dbg(&pdev->dev, "SATA%d ctrl_eq %u %u\n", hpriv->cid,
++		hpriv->ctrl_eq_A1, hpriv->ctrl_eq);
++	rc = xgene_ahci_get_u32_param(pdev, "GENAVG", "GAVG",
++				      &hpriv->use_gen_avg);
++	if (rc != 0)
++		hpriv->use_gen_avg = xgene_ahci_is_A1() ? 0 : 1;
++	dev_dbg(&pdev->dev, "SATA%d use avg %u\n", hpriv->cid,
++		hpriv->use_gen_avg);
++	rc = xgene_ahci_get_u32_param(pdev, "LBA1", "LBA1",
++				      &hpriv->loopback_buf_en_A1);
++	if (rc != 0)
++		hpriv->loopback_buf_en_A1 = 1;
++	rc = xgene_ahci_get_u32_param(pdev, "LB", "LB00",
++				      &hpriv->loopback_buf_en);
++	if (rc != 0)
++		hpriv->loopback_buf_en = 0;
++	dev_dbg(&pdev->dev, "SATA%d loopback_buf_en %u %u\n", hpriv->cid,
++		hpriv->loopback_buf_en_A1, hpriv->loopback_buf_en);
++	rc = xgene_ahci_get_u32_param(pdev, "LCA1", "LCA1",
++				      &hpriv->loopback_ena_ctle_A1);
++	if (rc != 0)
++		hpriv->loopback_ena_ctle_A1 = 1;
++	rc = xgene_ahci_get_u32_param(pdev, "LC", "LC00",
++				      &hpriv->loopback_ena_ctle);
++	if (rc != 0)
++		hpriv->loopback_ena_ctle = 0;
++	dev_dbg(&pdev->dev, "SATA%d loopback_ena_ctle %u %u\n", hpriv->cid,
++		hpriv->loopback_ena_ctle_A1, hpriv->loopback_ena_ctle);
++	rc = xgene_ahci_get_u32_param(pdev, "CDRA1", "CDR1",
++				      &hpriv->spd_sel_cdr_A1);
++	if (rc != 0)
++		hpriv->spd_sel_cdr_A1 = SPD_SEL;
++	rc = xgene_ahci_get_u32_param(pdev, "CDR", "CDR0",
++				      &hpriv->spd_sel_cdr);
++	if (rc != 0)
++		hpriv->spd_sel_cdr = SPD_SEL;
++	dev_dbg(&pdev->dev, "SATA%d spd_sel_cdr %u %u\n", hpriv->cid,
++		hpriv->spd_sel_cdr_A1, hpriv->spd_sel_cdr);
++	rc = xgene_ahci_get_u32_param(pdev, "PQA1", "PQA1", &hpriv->pq_A1);
++	if (rc != 0)
++		hpriv->pq_A1 = PQ_REG;
++	rc = xgene_ahci_get_u32_param(pdev, "PQ", "PQ00", &hpriv->pq);
++	if (rc != 0)
++		hpriv->pq = PQ_REG_A2;
++	hpriv->pq_sign = 0x1;
++	dev_dbg(&pdev->dev, "SATA%d pq %u %u %d\n", hpriv->cid, hpriv->pq_A1,
++		hpriv->pq, hpriv->pq_sign);
++	rc = xgene_ahci_get_u32_param(pdev, "coherent", "COHT",
++				      &hpriv->coherent);
++	if (rc != 0)
++		hpriv->coherent = 1;	/* Default to coherent IO */
++
++	hpriv->irq = xgene_ahci_get_irq(pdev, 0);
++	if (hpriv->irq <= 0) {
++		dev_err(&pdev->dev, "no IRQ resource\n");
++		rc = -ENODEV;
++		goto error;
++	}
++
++	rxclk_inv = xgene_ahci_is_A1() ? 1 : 0;
++	rc = xgene_ahci_serdes_init(hpriv, gen_sel, serdes_diff_clk,
++				    rxclk_inv);
++	if (rc != 0) {
++		dev_err(&pdev->dev, "SATA%d PHY initialize failed %d\n",
++			hpriv->cid, rc);
++		rc = -ENODEV;
++		goto error;
++	}
++
++	/* Remove IP RAM out of shutdown */
++	xgene_ahci_init_memram(hpriv);
++
++	if (hpriv->use_gen_avg) {
++		xgene_ahci_serdes_gen_avg_val(hpriv, 1);
++		xgene_ahci_serdes_gen_avg_val(hpriv, 0);
++	} else {
++		xgene_ahci_serdes_force_lat_summer_cal(hpriv, 0);
++		xgene_ahci_serdes_force_lat_summer_cal(hpriv, 1);
++	}
++	if (xgene_ahci_is_A1()) {
++		xgene_ahci_serdes_reset_rxa_rxd(hpriv, 0);
++		xgene_ahci_serdes_reset_rxa_rxd(hpriv, 1);
++	}
++	for (i = 0; i < MAX_AHCI_CHN_PERCTR; i++)
++		xgene_ahci_set_phy_cfg(hpriv, i);
++
++	/* Now enable top level interrupt. Otherwise, port interrupt will
++	   not work. */
++	/* AXI disable Mask */
++	xgene_ahci_out32_flush(hpriv->mmio_base + HOST_IRQ_STAT, 0xffffffff);
++	xgene_ahci_out32(hpriv->csr_base + INTSTATUSMASK_ADDR, 0);
++	xgene_ahci_in32(hpriv->csr_base + INTSTATUSMASK_ADDR, &val);
++	dev_dbg(&pdev->dev,
++		"SATA%d top level interrupt mask 0x%X value 0x%08X\n",
++		hpriv->cid, INTSTATUSMASK_ADDR, val);
++	xgene_ahci_out32_flush(hpriv->csr_base + ERRINTSTATUSMASK_ADDR, 0x0);
++	xgene_ahci_out32_flush(hpriv->csr_base + SATA_SHIM_OFFSET +
++			       INT_SLV_TMOMASK_ADDR, 0x0);
++	/* Enable AXI Interrupt */
++	xgene_ahci_out32(hpriv->csr_base + SLVRDERRATTRIBUTES_ADDR, 0xffffffff);
++	xgene_ahci_out32(hpriv->csr_base + SLVWRERRATTRIBUTES_ADDR, 0xffffffff);
++	xgene_ahci_out32(hpriv->csr_base + MSTRDERRATTRIBUTES_ADDR, 0xffffffff);
++	xgene_ahci_out32(hpriv->csr_base + MSTWRERRATTRIBUTES_ADDR, 0xffffffff);
++
++	/* Enable coherency unless explicit disabled */
++	if (hpriv->coherent) {
++		xgene_ahci_in32(hpriv->csr_base + BUSCTLREG_ADDR, &val);
++		val = MSTAWAUX_COHERENT_BYPASS_SET(val, 0);
++		val = MSTARAUX_COHERENT_BYPASS_SET(val, 0);
++		xgene_ahci_out32(hpriv->csr_base + BUSCTLREG_ADDR, val);
++
++		xgene_ahci_in32(hpriv->csr_base + IOFMSTRWAUX_ADDR, &val);
++		val |= (1 << 3);	/* Enable read coherency */
++		val |= (1 << 9);	/* Enable write coherency */
++		xgene_ahci_out32_flush(hpriv->csr_base + IOFMSTRWAUX_ADDR, val);
++		xgene_ahci_in32(hpriv->csr_base + IOFMSTRWAUX_ADDR, &val);
++		dev_dbg(&pdev->dev,
++			"SATA%d coherency 0x%X value 0x%08X\n",
++			hpriv->cid, IOFMSTRWAUX_ADDR, val);
++	}
++	/* Setup AHCI host priv structure */
++	ahci_save_initial_config(&pdev->dev, &hpriv->hpriv, 0, 0);
++
++	/* prepare host */
++	if (hpriv->hpriv.cap & HOST_CAP_NCQ)
++		pi.flags |= ATA_FLAG_NCQ;
++	if (hpriv->hpriv.cap & HOST_CAP_PMP) {
++		pi.flags |= ATA_FLAG_PMP;
++		if (hpriv->hpriv.cap & HOST_CAP_FBS)
++			hpriv->hpriv.flags |= AHCI_HFLAG_YES_FBS;
++	}
++	ahci_set_em_messages(&hpriv->hpriv, &pi);
++
++	/* CAP.NP sometimes indicate the index of the last enabled
++	 * port, at other times, that of the last possible port, so
++	 * determining the maximum port number requires looking at
++	 * both CAP.NP and port_map.
++	 */
++	n_ports = max(ahci_nr_ports(hpriv->hpriv.cap),
++		      fls(hpriv->hpriv.port_map));
++
++	host = ata_host_alloc_pinfo(&pdev->dev, ppi, n_ports);
++	if (!host) {
++		dev_err(&pdev->dev, "can not allocate host pinfo\n");
++		rc = -ENOMEM;
++		goto error;
++	}
++
++	host->private_data = hpriv;
++
++	if (!(hpriv->hpriv.cap & HOST_CAP_SSS) || ahci_ignore_sss)
++		host->flags |= ATA_HOST_PARALLEL_SCAN;
++	else
++		dev_warn(&pdev->dev,
++			 "ahci: SSS flag set, parallel bus scan disabled\n");
++
++	if (pi.flags & ATA_FLAG_EM)
++		ahci_reset_em(host);
++
++	for (i = 0; i < host->n_ports; i++) {
++		struct ata_port *ap = host->ports[i];
++
++		ata_port_desc(ap, "mmio 0x%llX", hpriv->mmio_phys);
++		ata_port_desc(ap, "port 0x%x", 0x100 + ap->port_no * 0x80);
++
++		/* set enclosure management message type */
++		if (ap->flags & ATA_FLAG_EM)
++			ap->em_message_type = hpriv->hpriv.em_msg_type;
++
++		/* disabled/not-implemented port */
++		if (!(hpriv->hpriv.port_map & (1 << i)))
++			ap->ops = &ata_dummy_port_ops;
++	}
++
++	rc = ahci_reset_controller(host);
++	if (rc)
++		goto error;
++
++	ahci_init_controller(host);
++	ahci_print_info(host, "XGene-AHCI\n");
++
++	if (xgene_ahci_is_A1()) {
++		xgene_ahci_sht.can_queue = 1;
++		dev_warn(&pdev->dev, "SATA%d limited to 1 NCQ\n", hpriv->cid);
++	}
++
++	/* Setup DMA mask */
++	pdev->dev.dma_mask = &pdev->dev.coherent_dma_mask;
++	pdev->dev.coherent_dma_mask = DMA_BIT_MASK(64);
++
++	rc = ata_host_activate(host, hpriv->irq, xgene_ahci_interrupt,
++			       IRQF_SHARED, &xgene_ahci_sht);
++	if (rc)
++		goto error;
++
++	dev_dbg(&pdev->dev, "SATA%d PHY initialized\n", hpriv->cid);
++	return 0;
++
++error:
++	devm_kfree(&pdev->dev, hpriv);
++	return rc;
++}
++
++static int xgene_ahci_remove(struct platform_device *pdev)
++{
++	struct ata_host *host = dev_get_drvdata(&pdev->dev);
++	struct xgene_ahci_context *hpriv = host->private_data;
++
++	dev_dbg(&pdev->dev, "SATA%d remove\n", hpriv->cid);
++	devm_kfree(&pdev->dev, hpriv);
++	return 0;
++}
++
++#ifdef CONFIG_PM
++static int xgene_ahci_suspend(struct platform_device *pdev, pm_message_t state)
++{
++	struct ata_host *host = dev_get_drvdata(&pdev->dev);
++	struct xgene_ahci_context *hpriv = host->private_data;
++	void __iomem *mmio = hpriv->mmio_base;
++	u32 ctl;
++	int rc;
++
++	dev_dbg(&pdev->dev, "SATA%d suspend\n", hpriv->cid);
++
++	/*
++	 * AHCI spec rev1.1 section 8.3.3:
++	 * Software must disable interrupts prior to requesting a
++	 * transition of the HBA to D3 state.
++	 */
++	ctl = readl(mmio + HOST_CTL);
++	ctl &= ~HOST_IRQ_EN;
++	writel(ctl, mmio + HOST_CTL);
++	readl(mmio + HOST_CTL);	/* flush */
++
++	rc = ata_host_suspend(host, state);
++	if (rc)
++		return rc;
++
++	if (!IS_ERR(hpriv->hpriv.clk))
++		clk_disable_unprepare(hpriv->hpriv.clk);
++	return 0;
++}
++
++static int xgene_ahci_resume(struct platform_device *pdev)
++{
++	struct ata_host *host = dev_get_drvdata(&pdev->dev);
++	struct xgene_ahci_context *hpriv = host->private_data;
++	int rc;
++
++	dev_dbg(&pdev->dev, "SATA%d resume\n", hpriv->cid);
++
++	if (!IS_ERR(hpriv->hpriv.clk)) {
++		rc = clk_prepare_enable(hpriv->hpriv.clk);
++		if (rc) {
++			dev_err(&pdev->dev, "clock prepare enable failed\n");
++			return rc;
++		}
++	}
++
++	if (pdev->dev.power.power_state.event == PM_EVENT_SUSPEND) {
++		rc = ahci_reset_controller(host);
++		if (rc)
++			goto disable_unprepare_clk;
++
++		ahci_init_controller(host);
++	}
++
++	ata_host_resume(host);
++	return 0;
++
++disable_unprepare_clk:
++	if (!IS_ERR(hpriv->hpriv.clk))
++		clk_disable_unprepare(hpriv->hpriv.clk);
++
++	return rc;
++}
++#endif
++
++static const struct acpi_device_id xgene_ahci_acpi_match[] = {
++	{"APMC0D00", 0},
++	{},
++};
++
++MODULE_DEVICE_TABLE(acpi, xgene_ahci_acpi_match);
++
++static const struct of_device_id xgene_ahci_of_match[] = {
++	{.compatible = "apm,xgene-ahci",},
++	{},
++};
++
++MODULE_DEVICE_TABLE(of, xgene_ahci_of_match);
++
++static struct platform_driver xgene_ahci_driver = {
++	.driver = {
++		   .name = "xgene-ahci",
++		   .owner = THIS_MODULE,
++		   .of_match_table = xgene_ahci_of_match,
++		   .acpi_match_table = ACPI_PTR(xgene_ahci_acpi_match),
++		   },
++	.probe = xgene_ahci_probe,
++	.remove = xgene_ahci_remove,
++#ifdef CONFIG_PM
++	.suspend = xgene_ahci_suspend,
++	.resume = xgene_ahci_resume,
++#endif
++};
++
++module_platform_driver(xgene_ahci_driver);
++
++MODULE_DESCRIPTION("APM X-Gene AHCI SATA driver");
++MODULE_AUTHOR("Loc Ho <lho@apm.com>");
++MODULE_LICENSE("GPL");
++MODULE_VERSION("0.3");
+diff --git a/drivers/ata/sata_xgene.h b/drivers/ata/sata_xgene.h
+new file mode 100644
+index 0000000..138152e
+--- /dev/null
++++ b/drivers/ata/sata_xgene.h
+@@ -0,0 +1,112 @@
++/*
++ * AppliedMicro X-Gene SATA PHY driver
++ *
++ * Copyright (c) 2013, Applied Micro Circuits Corporation
++ * Author: Loc Ho <lho@apm.com>
++ *         Tuan Phan <tphan@apm.com>
++ *         Suman Tripathi <stripathi@apm.com>
++ *
++ * This program is free software: you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation, either version 3 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
++ */
++#ifndef __SATA_XGENE_H__
++#define __SATA_XGENE_H__
++
++#include "ahci.h"	/* for ahci_host_priv */
++
++/* Default tuning parameters */
++#define XGENE_SERDES_VAL_NOT_SET	~0x0
++#define CTLE_EQ				0x9
++#define PQ_REG				0x8
++#define CTLE_EQ_A2			0x2
++#define PQ_REG_A2			0xa
++#define SPD_SEL				0x5
++
++/*
++ * Configure Reference clock (clock type):
++ *  External differential 0
++ *  Internal differential 1
++ *  Internal single ended 2
++ */
++#define SATA_CLK_EXT_DIFF		0
++#define SATA_CLK_INT_DIFF		1
++#define SATA_CLK_INT_SING		2
++
++#define SPD_SEL_GEN2			0x3
++#define SPD_SEL_GEN1			0x1
++
++struct xgene_ahci_context {
++	struct ahci_host_priv  hpriv;
++	struct device *dev;
++	u8 cid;			/* Controller ID */
++	int irq;		/* IRQ */
++	void *csr_base;		/* CSR base address of IP - serdes */
++	void *mmio_base;	/* AHCI I/O base address */
++	void *pcie_base;	/* Shared Serdes CSR in PCIe 4/5 domain */
++	void *ahbc_io_base;	/* Used for IOB flushing */
++	u64 csr_phys;		/* Physical address of CSR base address */
++	u64 mmio_phys;		/* Physical address of MMIO base address */
++
++	/* Override Serdes parameters */
++	u32 ctrl_eq_A1; /* Serdes Reg 1 RX/TX ctrl_eq value for A1 */
++	u32 ctrl_eq;	/* Serdes Reg 1 RX/TX ctrl_eq value */
++	u32 pq_A1;	/* Serdes Reg 125 pq value for A1 */
++	u32 pq;		/* Serdes Reg 125 pq value */
++	u32 pq_sign;	/* Serdes Reg 125 pq sign */
++	u32 loopback_buf_en_A1; /* Serdes Reg 4 Tx loopback buf enable for A1 */
++	u32 loopback_buf_en;	/* Serdes Reg 4 Tx loopback buf enable */
++	u32 loopback_ena_ctle_A1; /* Serdes Reg 7 loopback enable ctrl for A1 */
++	u32 loopback_ena_ctle;	/* Serdes Reg 7 loopback enable ctrl */
++	u32 spd_sel_cdr_A1;	/* Serdes Reg 61 spd sel cdr value for A1*/
++	u32 spd_sel_cdr;	/* Serdes Reg 61 spd sel cdr value */
++	u32 use_gen_avg;	/* Use generate average value */
++
++	u32 coherent;		/* Coherent IO */
++};
++
++void xgene_ahci_in32(void *addr, u32 *val);
++void xgene_ahci_out32(void *addr, u32 val);
++void xgene_ahci_out32_flush(void *addr, u32 val);
++void xgene_ahci_delayus(unsigned long us);
++void xgene_ahci_delayms(unsigned long ms);
++int xgene_ahci_is_A1(void);
 +
 +int xgene_ahci_serdes_init(struct xgene_ahci_context *ctx,
-+			   int gen_sel, int clk_type, int rxwclk_inv)
-+{
-+	u32 val;
-+	u32 ssc_enable = 0;
-+	int calib_loop_count;
-+	int rc = 0;
-+	void *csr_base = ctx->csr_base;
-+	void *csr_serdes_base = csr_base + SATA_SERDES_OFFSET;
-+	void *clkcsr_base = ctx->csr_base + SATA_CLK_OFFSET;
++	int gen_sel, int clk_type, int rxwclk_inv);
++void xgene_ahci_serdes_gen_avg_val(struct xgene_ahci_context *ctx, int channel);
++void xgene_ahci_serdes_force_lat_summer_cal(struct xgene_ahci_context *ctx,
++	int channel);
++void xgene_ahci_serdes_reset_rxa_rxd(struct xgene_ahci_context *ctx,
++	int channel);
++void xgene_ahci_serdes_force_gen(struct xgene_ahci_context *ctx, int channel,
++	int gen);
++void xgene_ahci_serdes_set_pq(struct xgene_ahci_context *ctx, int channel,
++	int data);
++int xgene_ahci_port_start(struct ata_port *ap);
++int xgene_ahci_port_resume(struct ata_port *ap);
++#if defined(CONFIG_ARCH_MSLIM)
++void xgene_ahci_fill_cmd_slot(struct ahci_port_priv *pp,
++	unsigned int tag, u32 opts);
++u64 xgene_ahci_to_axi(dma_addr_t addr);
++void xgene_ahci_dflush(void *addr, int size);
++int xgene_ahci_exec_polled_cmd(struct ata_port *ap, int pmp,
++	struct ata_taskfile *tf, int is_cmd, u16 flags,
++	unsigned long timeout_msec);
++#else
++#define xgene_ahci_fill_cmd_slot	ahci_fill_cmd_slot
++#define xgene_ahci_exec_polled_cmd	ahci_exec_polled_cmd
++#define xgene_ahci_to_axi(x)		(x)
++#define xgene_ahci_dflush(x, ...)
++#endif
 +
-+	PHYDEBUG("SATA%d PHY init speed %d clk type %d inv clk %d",
-+		 ctx->cid, gen_sel, clk_type, rxwclk_inv);
-+	PHYDEBUG("SATA%d ctrl_eq %d %d pq %d %d loopback %d %d ena_ctle %d %d spd_sel_cdr %d %d use_gen_avg %d",
-+		 ctx->cid, ctx->ctrl_eq_A1, ctx->ctrl_eq, ctx->pq_A1, ctx->pq,
-+		 ctx->loopback_buf_en_A1, ctx->loopback_buf_en,
-+		 ctx->loopback_ena_ctle_A1, ctx->loopback_ena_ctle,
-+		 ctx->spd_sel_cdr_A1, ctx->spd_sel_cdr, ctx->use_gen_avg);
-+
-+	if (ctx->cid == 2 && (clk_type == SATA_CLK_INT_DIFF ||
-+			      clk_type == SATA_CLK_INT_SING)) {
-+		xgene_serdes_sata45_macro_cfg(ctx);
-+	}
-+
-+	/* Select SATA mux for SATA port 0 - 3 which shared with SGMII ETH */
-+	if (ctx->cid < 2) {
-+		if (xgene_serdes_host_sata_select(ctx) != 0) {
-+			PHYERROR("SATA%d can not select SATA MUX", ctx->cid);
-+			return -1;
-+		}
-+	}
-+
-+	/* Clock reset must before after select the MUX */
-+	PHYDEBUG("SATA%d enable clock", ctx->cid);
-+	xgene_serdes_clk_rst_pre(ctx);
-+
-+	if (ctx->cid != 2 && (clk_type == SATA_CLK_INT_DIFF ||
-+			      clk_type == SATA_CLK_INT_SING))
-+		xgene_serdes_sata_macro_cfg(ctx);
-+
-+	xgene_ahci_out32(csr_serdes_base + SATA_ENET_SDS_RST_CTL_ADDR, 0x00);
-+	xgene_ahci_delayus(1000);	/* Allow IP to get reflected */
-+	PHYDEBUG("SATA%d reset Serdes", ctx->cid);
-+	/* 1. Serdes main reset and Controller also under reset */
-+	xgene_ahci_out32(csr_serdes_base + SATA_ENET_SDS_RST_CTL_ADDR,
-+			 0x00000020);
-+
-+	/* Release all resets except  main reset */
-+	xgene_ahci_out32(csr_serdes_base + SATA_ENET_SDS_RST_CTL_ADDR,
-+			 0x000000DE);
-+
-+	xgene_ahci_in32(csr_serdes_base + SATA_ENET_SDS_CTL1_ADDR, &val);
-+	val = CFG_I_SPD_SEL_CDR_OVR1_SET(val, SPD_SEL);
-+	xgene_ahci_out32(csr_serdes_base + SATA_ENET_SDS_CTL1_ADDR, val);
-+
-+	PHYDEBUG("SATA%d Setting the customer pin mode", ctx->cid);
-+	/*
-+	 * Clear customer pins mode[13:0] = 0
-+	 * Set customer pins mode[14] = 1
-+	 */
-+	xgene_ahci_in32(csr_serdes_base + SATA_ENET_SDS_CTL0_ADDR, &val);
-+	val = REGSPEC_CFG_I_CUSTOMER_PIN_MODE0_SET(val, 0x4421);
-+	xgene_ahci_out32(csr_serdes_base + SATA_ENET_SDS_CTL0_ADDR, val);
-+
-+	/* CMU_REG12 tx ready delay 0x2 */
-+	xgene_sds_rd(csr_serdes_base, KC_SERDES_CMU_REGS_CMU_REG12_ADDR, &val);
-+	if (xgene_ahci_is_A1())
-+		val = CMU_REG12_STATE_DELAY9_SET(val, 0x2);
-+	else
-+		val = CMU_REG12_STATE_DELAY9_SET(val, 0x1);
-+	xgene_sds_wr(csr_serdes_base, KC_SERDES_CMU_REGS_CMU_REG12_ADDR, val);
-+	xgene_sds_wr(csr_serdes_base,
-+		     KC_SERDES_CMU_REGS_CMU_REG13_ADDR, 0xF222);
-+	xgene_sds_wr(csr_serdes_base,
-+		     KC_SERDES_CMU_REGS_CMU_REG14_ADDR, 0x2225);
-+	if (clk_type == SATA_CLK_EXT_DIFF) {
-+		xgene_sds_rd(csr_serdes_base,
-+			     KC_SERDES_CMU_REGS_CMU_REG0_ADDR, &val);
-+		val = CMU_REG0_PLL_REF_SEL_SET(val, 0x0);
-+		xgene_sds_wr(csr_serdes_base,
-+			     KC_SERDES_CMU_REGS_CMU_REG0_ADDR, val);
-+		xgene_sds_rd(csr_serdes_base,
-+			     KC_SERDES_CMU_REGS_CMU_REG1_ADDR, &val);
-+		val = CMU_REG1_REFCLK_CMOS_SEL_SET(val, 0x0);
-+		xgene_sds_wr(csr_serdes_base,
-+			     KC_SERDES_CMU_REGS_CMU_REG1_ADDR, val);
-+		PHYDEBUG("SATA%d Setting REFCLK EXTERNAL DIFF CML0", ctx->cid);
-+	} else if (clk_type == SATA_CLK_INT_DIFF) {
-+		xgene_sds_rd(csr_serdes_base,
-+			     KC_SERDES_CMU_REGS_CMU_REG0_ADDR, &val);
-+		val = CMU_REG0_PLL_REF_SEL_SET(val, 0x1);
-+		xgene_sds_wr(csr_serdes_base,
-+			     KC_SERDES_CMU_REGS_CMU_REG0_ADDR, val);
-+		xgene_sds_rd(csr_serdes_base,
-+			     KC_SERDES_CMU_REGS_CMU_REG1_ADDR, &val);
-+		val = CMU_REG1_REFCLK_CMOS_SEL_SET(val, 0x1);
-+		xgene_sds_wr(csr_serdes_base,
-+			     KC_SERDES_CMU_REGS_CMU_REG1_ADDR, val);
-+
-+		PHYDEBUG("SATA%d Setting REFCLK INTERNAL DIFF CML1", ctx->cid);
-+	} else if (clk_type == SATA_CLK_INT_SING) {
-+		xgene_sds_rd(csr_serdes_base,
-+			     KC_SERDES_CMU_REGS_CMU_REG1_ADDR, &val);
-+		val = CMU_REG1_REFCLK_CMOS_SEL_SET(val, 0x1);
-+		xgene_sds_wr(csr_serdes_base,
-+			     KC_SERDES_CMU_REGS_CMU_REG1_ADDR, val);
-+		PHYDEBUG("SATA%d Setting REFCLK INTERNAL CMOS", ctx->cid);
-+	}
-+	/* SATA4/5 no support for CML1 */
-+	if (ctx->cid == 2 && clk_type == SATA_CLK_INT_DIFF)
-+		xgene_sds_setbits(csr_serdes_base,
-+				  KC_SERDES_CMU_REGS_CMU_REG1_ADDR,
-+				  CMU_REG1_REFCLK_CMOS_SEL_MASK);
-+	/* Setup clock inversion */
-+	if (xgene_ahci_is_A1()) {
-+		xgene_sds_rd(csr_serdes_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG13_ADDR, &val);
-+		val &= ~(rxwclk_inv << 13);
-+		val |= (rxwclk_inv << 13);
-+		xgene_sds_wr(csr_serdes_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG13_ADDR, val);
-+		xgene_sds_rd(csr_serdes_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG13_ADDR, &val);
-+		xgene_sds_rd(csr_serdes_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH1_RXTX_REG13_ADDR, &val);
-+		val &= ~(rxwclk_inv << 13);
-+		val |= (rxwclk_inv << 13);
-+		xgene_sds_wr(csr_serdes_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH1_RXTX_REG13_ADDR, val);
-+		xgene_sds_rd(csr_serdes_base,
-+			     KC_SERDES_X2_RXTX_REGS_CH1_RXTX_REG13_ADDR, &val);
-+	}
-+	/* 2. Program serdes registers */
-+	xgene_serdes_validation_CMU_cfg(ctx);
-+	if (ssc_enable)
-+		xgene_serdes_tx_ssc_enable(ctx);
-+	xgene_serdes_validation_rxtx_cfg(ctx, gen_sel);
-+
-+	xgene_ahci_in32(csr_serdes_base + SATA_ENET_SDS_PCS_CTL0_ADDR, &val);
-+	val = REGSPEC_CFG_I_RX_WORDMODE0_SET(val, 0x3);
-+	val = REGSPEC_CFG_I_TX_WORDMODE0_SET(val, 0x3);
-+	xgene_ahci_out32(csr_serdes_base + SATA_ENET_SDS_PCS_CTL0_ADDR, val);
-+
-+	calib_loop_count = 10;
-+	do {
-+		rc = xgene_serdes_cal_rdy_chk(ctx);
-+		if (rc == 0)
-+			break;
-+		xgene_serdes_pdwn_force_vco(ctx);
-+	} while (++calib_loop_count > 0);
-+	if (calib_loop_count <= 0)
-+		return -1;
-+
-+	xgene_ahci_out32_flush(clkcsr_base + SATACLKENREG_ADDR, 0xff);
-+
-+	xgene_ahci_delayms(3);	/* Allow Serdes to get reflected */
-+	xgene_serdes_reset_sds_pmclk_core(ctx);
-+
-+	xgene_ahci_delayms(3);	/* Allow Serdes to get reflected */
-+	xgene_serdes_reset_pclk(ctx);
-+
-+	PHYDEBUG("SATA%d initialized PHY", ctx->cid);
-+	return 0;
-+}
-+
-+void xgene_ahci_serdes_force_gen(struct xgene_ahci_context *ctx, int chan,
-+				 int gen)
-+{
-+	void *csr_base = ctx->csr_base;
-+	void *csr_serdes = csr_base + SATA_SERDES_OFFSET;
-+	u32 val;
-+
-+	xgene_ahci_in32(csr_serdes + SATA_ENET_SDS_CTL1_ADDR, &val);
-+	val = CFG_I_SPD_SEL_CDR_OVR1_SET(val, gen);
-+	xgene_ahci_out32(csr_serdes + SATA_ENET_SDS_CTL1_ADDR, val);
-+
-+	xgene_sds_rd(csr_serdes,
-+		     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG0_ADDR + chan * 0x200,
-+		     &val);
-+	val = CH0_RXTX_REG0_CTLE_EQ_HR_SET(val, 0x1c);
-+	val = CH0_RXTX_REG0_CTLE_EQ_QR_SET(val, 0x1c);
-+	val = CH0_RXTX_REG0_CTLE_EQ_FR_SET(val, 0x1c);
-+	xgene_sds_wr(csr_serdes,
-+		     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG0_ADDR + chan * 0x200,
-+		     val);
-+}
-+
-+void xgene_ahci_serdes_set_pq(struct xgene_ahci_context *ctx, int chan,
-+			      int data)
-+{
-+	void *csr_base = ctx->csr_base;
-+	void *csr_serdes_base = csr_base + SATA_SERDES_OFFSET;
-+	u32 val;
-+
-+	xgene_sds_rd(csr_serdes_base,
-+		     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG125_ADDR + chan * 0x200,
-+		     &val);
-+	val = CH0_RXTX_REG125_SIGN_PQ_SET(val, data);
-+	if (data)
-+		val = CH0_RXTX_REG125_PQ_REG_SET(val, 3);
-+	else
-+		val = CH0_RXTX_REG125_PQ_REG_SET(val, ctx->pq);
-+	xgene_sds_wr(csr_serdes_base,
-+		     KC_SERDES_X2_RXTX_REGS_CH0_RXTX_REG125_ADDR + chan * 0x200,
-+		     val);
-+	xgene_ahci_delayus(1000);	/* Allow Serdes to get reflected */
-+}
++#endif /* __SATA_XGENE_H__ */
 -- 
 1.5.5
 
