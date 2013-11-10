@@ -1,83 +1,244 @@
 From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH v2 5/5] Documentation: Add documentation for APM X-Gene SATA DTS binding
-Date: Sun, 10 Nov 2013 21:39:09 +0100
-Message-ID: <201311102139.10082.arnd@arndb.de>
-References: <1383980431-6572-1-git-send-email-lho@apm.com> <1383980431-6572-5-git-send-email-lho@apm.com> <1383980431-6572-6-git-send-email-lho@apm.com>
+Subject: Re: [PATCH v2 3/5] ata: Add APM X-Gene SATA driver
+Date: Sun, 10 Nov 2013 22:06:46 +0100
+Message-ID: <201311102206.46551.arnd@arndb.de>
+References: <1383980431-6572-1-git-send-email-lho@apm.com>
+ <1383980431-6572-3-git-send-email-lho@apm.com>
+ <1383980431-6572-4-git-send-email-lho@apm.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.8]:62051 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752100Ab3KJUjT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 10 Nov 2013 15:39:19 -0500
-In-Reply-To: <1383980431-6572-6-git-send-email-lho@apm.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <1383980431-6572-4-git-send-email-lho@apm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
 To: linux-arm-kernel@lists.infradead.org
-Cc: Loc Ho <lho@apm.com>, olof@lixom.net, tj@kernel.org, linux-scsi@vger.kernel.org, jcm@redhat.com, Suman Tripathi <stripathi@apm.com>, Tuan Phan <tphan@apm.com>
+Cc: Suman Tripathi <stripathi@apm.com>, linux-scsi@vger.kernel.org, jcm@redhat.com, tj@kernel.org, Loc Ho <lho@apm.com>, olof@lixom.net, Tuan Phan <tphan@apm.com>
+List-Id: linux-scsi@vger.kernel.org
 
 On Saturday 09 November 2013, Loc Ho wrote:
-> Documentation: Add documentation for APM X-Gene SATA DTS binding
-> 
-> Signed-off-by: Loc Ho <lho@apm.com>
-> Signed-off-by: Tuan Phan <tphan@apm.com>
-> Signed-off-by: Suman Tripathi <stripathi@apm.com>
-> ---
->  .../devicetree/bindings/ata/apm-xgene.txt          |   84 ++++++++++++++++++++
-
-Please Cc the devicetree-discuss mailing list for the binding submission.
-
-> +SATA nodes are defined to describe on-chip Serial ATA controllers.
-> +Each SATA controller (pair of ports) have its own node.
 > +
-> +Required properties:
-> +- compatible		: Shall be "apm,xgene-ahci"
-> +- reg			: First memory resource shall be the AHCI memory resource
-> +			  Second memory resource shall be the Serdes memory resource
-> +			  Third memory resource shall be the optional Serdes
-> +			  memory resource if mux'ed with another IP
-> +- interrupt-parent	: Interrupt controller
-> +- interrupts		: Interrupt mapping for SATA IRQ
-> +- #clock-cells		: Shall be value of 1
+> +#undef XGENE_DBG_CSR		/* Enable CSR read/write dumping */
+> +#ifdef XGENE_DBG_CSR
+> +#define XGENE_CSRDBG(fmt, args...)	\
+> +	printk(KERN_INFO "XGENESATA: " fmt "\n", ## args);
+> +#else
+> +#define XGENE_CSRDBG(fmt, args...)
+> +#endif
 
-Why is there a #clock-cells entry here?
+Please kill those private debug macros and use the generic interfaces.
 
-> +- clocks		: Reference to the clock entry
-> +- clock-names		: Shall be "eth01clk", "eth23clk", or "eth45clk".
+> +void xgene_ahci_delayus(unsigned long us)
+> +{
+> +	udelay(us);
+> +}
+> +
+> +void xgene_ahci_delayms(unsigned long us)
+> +{
+> +	mdelay(us);
+> +}
 
-This makes no sense. The clock-names property needs to have a fixed
-string according to the name of the clock input signal of the hardware,
-not a name of the clock provider.
+Same for these pointless wrappers. Also every use of mdelay and ideally also udelay
+needs a good explanation about why the hardware is so broken to require it or
+why you cannot use msleep().
 
-> +- serdes-diff-clk	: Shall be 0 for external, 1 internal differential,
-> +			  or 2 internal single ended clock. Default is 0.
-> +- gen-sel		: Shall be 1 (force Gen1), 2 (Force Gen2, or 3 Gen3).
-> +			  Default is 3.
-> +- EQA1			: Serdes EQ parameter for A1 chip. Default is 9.
-> +- EQ			: Serdes EQ parameter for non-A1 chip. Default is 2.
-> +- GENAVG		: Enable averaging Serdes calculation. Default is 0 for
-> +			  A1 chip and 1 for non-A1 chip.
-> +- LBA1			: Serdes loopback buffer for A1 chip. Default is 1;
-> +- LB			: Serdes loopback buffer for non-A1 chip. Default is 0;
-> +- LCA1			: Serdes loopback enable control for A1 chip. Default
-> +			  is 1;
-> +- LC			: Serdes loopback enable control for non-A1 chip.
-> +			  Default is 0;
-> +- CDRA1			: Serdes SPD select CDR for A1 chip. Default is 5.
-> +- CDR			: Serdes SPD select CDR for non-A1 chip. Default is 5.
-> +- PQA1			: Serdes PQ for A1 chip. Default is 8.
-> +- PQ			: Serdes PQ for non-A1 chip. Default is 0xA.
-> +- coherent		: Enable coherent (1 = enable, 0 = disable).
-> +			  Default is 1.
+> +static int xgene_ahci_get_irq(struct platform_device *pdev, int index)
+> +{
+> +	if (efi_enabled(EFI_BOOT))
+> +		return platform_get_irq(pdev, index);
+> +	return irq_of_parse_and_map(pdev->dev.of_node, index);
+> +}
+> +
+> +static int xgene_ahci_get_resource(struct platform_device *pdev, int index,
+> +				   struct resource *res)
+> +{
+> +	struct resource *regs;
+> +	if (efi_enabled(EFI_BOOT)) {
+> +		regs = platform_get_resource(pdev, IORESOURCE_MEM, index);
+> +		if (regs == NULL)
+> +			return -ENODEV;
+> +		*res = *regs;
+> +		return 0;
+> +	}
+> +	return of_address_to_resource(pdev->dev.of_node, index, res);
+> +}
 
-This looks like a really bad binding. I would suggest that instead of having
-individual register values in here, you hardwire the settings in the driver
-based on the compatible string. It's pretty crazy to put register-level configuration
-in the DT like this.
+These wrappers look wrong. Why can't you always use platform_get_irq/platform_get_resource?
+What does the use of the of_* interfaces have to do with EFI?
 
-Further, you should probably use the generic PHY binding to create a separate driver
-for the serdes PHY,
+> +static int xgene_ahci_get_u32_param(struct platform_device *pdev,
+> +				    const char *of_name, char *acpi_name,
+> +				    u32 *param)
+> +{
+> +#ifdef CONFIG_ACPI
+> +	if (efi_enabled(EFI_BOOT)) {
+> +		unsigned long long value;
+> +		acpi_status status;
+> +		if (acpi_name == NULL)
+> +			return -ENODEV;
+> +		status = acpi_evaluate_integer(ACPI_HANDLE(&pdev->dev),
+> +					       acpi_name, NULL, &value);
+> +		if (ACPI_FAILURE(status))
+> +			return -ENODEV;
+> +		*param = value;
+> +		return 0;
+> +	}
+> +#endif
+> +	if (of_name == NULL)
+> +		return -ENODEV;
+> +	return of_property_read_u32(pdev->dev.of_node, of_name, param);
+> +}
+
+This is worse. A device driver is *not* the place to put abstractions for
+the bindings, those belong into common code.
+Also it seems you are trying to do register-level programming based on
+attributes you pull out of the respective firmware interfaces.
+
+While there has been some progress regarding getting a common direction
+for embedded x86 machines using ACPI, you should not assume that the same
+makes sense for ARM systems.
+
+* In case of the Open Firmware DT, the model is that we use per-subsystem
+  bindings to describe the hardware in an abstract way, e.g. using the
+  PHY controller, reset controller, clock controller, ... APIs. This is
+  how we can handle complex SoC-type systems.
+
+* In case of a server-class ACPI based machine, the model is that those
+  details are handled by the firmware and you don't need to bother the
+  device driver with them.
+
+> +	rc = xgene_ahci_get_str_param(pdev, "clock-names", "CLNM", res_name,
+> +				      sizeof(res_name));
+> +	if (rc) {
+> +		dev_err(&pdev->dev, "no clock name resource\n");
+> +		goto error;
+> +	}
+
+As mentioned in the other mail, the driver must not read the "clock-names"
+property but have a hardcoded name for the clock (or use NULL for simplicity).
+
+> +	if (strcmp(res_name, "eth01clk") == 0)
+> +		hpriv->cid = 0;
+> +	else if (strcmp(res_name, "eth23clk") == 0)
+> +		hpriv->cid = 1;
+> +	else
+> +		hpriv->cid = 2;
+> +
+> +	if (hpriv->cid == 2) {
+> +		rc = xgene_ahci_get_resource(pdev, 2, &res);
+> +		if (rc != 0) {
+> +			dev_err(&pdev->dev, "no SATA/PCIE resource address\n");
+> +			goto error;
+> +		}
+> +		hpriv->pcie_base = devm_ioremap(&pdev->dev, res.start,
+> +						resource_size(&res));
+> +		if (!hpriv->pcie_base) {
+> +			dev_err(&pdev->dev, "can't map SATA/PCIe resource\n");
+> +			rc = -ENOMEM;
+> +			goto error;
+> +		}
+> +	}
+
+This seems to incorrectly rely on side-effects of which particular clock
+gets used. What are you trying to do here?
+
+> +	/* Custom Serdes override paraemter */
+> +	rc = xgene_ahci_get_u32_param(pdev, "gen-sel", "GENS", &gen_sel);
+> +	if (rc != 0)
+> +		gen_sel = 3;	/* Default to Gen3 */
+> +	rc = xgene_ahci_get_u32_param(pdev, "serdes-diff-clk", "SDCL",
+> +				      &serdes_diff_clk);
+> +	if (rc != 0)
+> +		serdes_diff_clk = SATA_CLK_EXT_DIFF; /* Default to external */
+> +	rc = xgene_ahci_get_u32_param(pdev, "EQA1", "EQA1",
+> +				      &hpriv->ctrl_eq_A1);
+> +	if (rc != 0)
+> +		hpriv->ctrl_eq_A1 = CTLE_EQ;
+> +	rc = xgene_ahci_get_u32_param(pdev, "EQ", "EQ00", &hpriv->ctrl_eq);
+> +	if (rc != 0)
+> +		hpriv->ctrl_eq = CTLE_EQ_A2;
+> +	dev_dbg(&pdev->dev, "SATA%d ctrl_eq %u %u\n", hpriv->cid,
+> +		hpriv->ctrl_eq_A1, hpriv->ctrl_eq);
+> +	rc = xgene_ahci_get_u32_param(pdev, "GENAVG", "GAVG",
+> +				      &hpriv->use_gen_avg);
+> +	if (rc != 0)
+> +		hpriv->use_gen_avg = xgene_ahci_is_A1() ? 0 : 1;
+> +	dev_dbg(&pdev->dev, "SATA%d use avg %u\n", hpriv->cid,
+> +		hpriv->use_gen_avg);
+> +	rc = xgene_ahci_get_u32_param(pdev, "LBA1", "LBA1",
+> +				      &hpriv->loopback_buf_en_A1);
+> +	if (rc != 0)
+> +		hpriv->loopback_buf_en_A1 = 1;
+> +	rc = xgene_ahci_get_u32_param(pdev, "LB", "LB00",
+> +				      &hpriv->loopback_buf_en);
+> +	if (rc != 0)
+> +		hpriv->loopback_buf_en = 0;
+> +	dev_dbg(&pdev->dev, "SATA%d loopback_buf_en %u %u\n", hpriv->cid,
+> +		hpriv->loopback_buf_en_A1, hpriv->loopback_buf_en);
+> +	rc = xgene_ahci_get_u32_param(pdev, "LCA1", "LCA1",
+> +				      &hpriv->loopback_ena_ctle_A1);
+> +	if (rc != 0)
+> +		hpriv->loopback_ena_ctle_A1 = 1;
+> +	rc = xgene_ahci_get_u32_param(pdev, "LC", "LC00",
+> +				      &hpriv->loopback_ena_ctle);
+> +	if (rc != 0)
+> +		hpriv->loopback_ena_ctle = 0;
+> +	dev_dbg(&pdev->dev, "SATA%d loopback_ena_ctle %u %u\n", hpriv->cid,
+> +		hpriv->loopback_ena_ctle_A1, hpriv->loopback_ena_ctle);
+> +	rc = xgene_ahci_get_u32_param(pdev, "CDRA1", "CDR1",
+> +				      &hpriv->spd_sel_cdr_A1);
+> +	if (rc != 0)
+> +		hpriv->spd_sel_cdr_A1 = SPD_SEL;
+> +	rc = xgene_ahci_get_u32_param(pdev, "CDR", "CDR0",
+> +				      &hpriv->spd_sel_cdr);
+> +	if (rc != 0)
+> +		hpriv->spd_sel_cdr = SPD_SEL;
+> +	dev_dbg(&pdev->dev, "SATA%d spd_sel_cdr %u %u\n", hpriv->cid,
+> +		hpriv->spd_sel_cdr_A1, hpriv->spd_sel_cdr);
+> +	rc = xgene_ahci_get_u32_param(pdev, "PQA1", "PQA1", &hpriv->pq_A1);
+> +	if (rc != 0)
+> +		hpriv->pq_A1 = PQ_REG;
+> +	rc = xgene_ahci_get_u32_param(pdev, "PQ", "PQ00", &hpriv->pq);
+
+All this this crap can probably just go away if you have a proper PHY driver
+(in case of DT) or handle it in the firmware (in case of a server).
+
+> +	if (rc != 0)
+> +		hpriv->pq = PQ_REG_A2;
+> +	hpriv->pq_sign = 0x1;
+> +	dev_dbg(&pdev->dev, "SATA%d pq %u %u %d\n", hpriv->cid, hpriv->pq_A1,
+> +		hpriv->pq, hpriv->pq_sign);
+> +	rc = xgene_ahci_get_u32_param(pdev, "coherent", "COHT",
+> +				      &hpriv->coherent);
+
+Coherency should be managed by the DMA-mapping API, don't introduce custom
+properties for this.
+
+> +	/* Setup DMA mask */
+> +	pdev->dev.dma_mask = &pdev->dev.coherent_dma_mask;
+> +	pdev->dev.coherent_dma_mask = DMA_BIT_MASK(64);
+
+Drivers are not allowed to touch these fields directly, you have to use
+dma_set_mask/dma_set_coherent_mask so the architecture code can check
+that the bus is actually 64-bit capable.
+
+> +static int xgene_ahci_remove(struct platform_device *pdev)
+> +{
+> +	struct ata_host *host = dev_get_drvdata(&pdev->dev);
+> +	struct xgene_ahci_context *hpriv = host->private_data;
+> +
+> +	dev_dbg(&pdev->dev, "SATA%d remove\n", hpriv->cid);
+> +	devm_kfree(&pdev->dev, hpriv);
+> +	return 0;
+> +}
+
+The devm_kfree seems pointless here.
 
 	Arnd
