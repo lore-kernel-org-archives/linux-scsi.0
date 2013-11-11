@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 5/5] scsi: Update documentation
-Date: Mon, 11 Nov 2013 13:44:57 +0100
-Message-ID: <1384173897-103836-6-git-send-email-hare@suse.de>
+Subject: [PATCH 4/5] scsi: Set the minimum valid value of 'eh_deadline' as 0
+Date: Mon, 11 Nov 2013 13:44:56 +0100
+Message-ID: <1384173897-103836-5-git-send-email-hare@suse.de>
 References: <1384173897-103836-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:60247 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:60246 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753293Ab3KKMpE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1753689Ab3KKMpE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Mon, 11 Nov 2013 07:45:04 -0500
 In-Reply-To: <1384173897-103836-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,182 +14,228 @@ List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@infradead.com>, Ren Mingxin <renmx@cn.fujitsu.com>, Joern Engel <joern@logfs.org>, James Smart <james.smart@emulex.com>, Hannes Reinecke <hare@suse.de>
 
-The documentation has gone out-of-sync, so update it to
-the current status.
+From: Ren Mingxin <renmx@cn.fujitsu.com>
 
+The former minimum valid value of 'eh_deadline' is 1s, which means
+the earliest occasion to shorten EH is 1 second later since a
+command is failed or timed out. But if we want to skip EH steps
+ASAP, we have to wait until the first EH step is finished. If the
+duration of the first EH step is long, this waiting time is
+excruciating. So, it is necessary to accept 0 as the minimum valid
+value for 'eh_deadline'.
+
+According to my test, with Hannes' patchset 'New EH command timeout
+handler' as well, the minimum IO time is improved from 73s
+(eh_deadline = 1) to 43s(eh_deadline = 0) when commands are timed
+out by disabling RSCN and target port.
+
+Signed-off-by: Ren Mingxin <renmx@cn.fujitsu.com>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- Documentation/scsi/scsi_eh.txt          | 69 +++++++++++++++++++--------------
- Documentation/scsi/scsi_mid_low_api.txt |  9 ++++-
- drivers/scsi/scsi.c                     |  6 +--
- 3 files changed, 48 insertions(+), 36 deletions(-)
+ drivers/scsi/hosts.c      | 16 ++++++++++++----
+ drivers/scsi/scsi_error.c | 34 +++++++++++++++++++++-------------
+ drivers/scsi/scsi_sysfs.c | 36 +++++++++++++++++++++++++-----------
+ 3 files changed, 58 insertions(+), 28 deletions(-)
 
-diff --git a/Documentation/scsi/scsi_eh.txt b/Documentation/scsi/scsi_eh.txt
-index 6ff16b6..a0c8511 100644
---- a/Documentation/scsi/scsi_eh.txt
-+++ b/Documentation/scsi/scsi_eh.txt
-@@ -42,20 +42,14 @@ discussion.
- 
-  Once LLDD gets hold of a scmd, either the LLDD will complete the
- command by calling scsi_done callback passed from midlayer when
--invoking hostt->queuecommand() or SCSI midlayer will time it out.
-+invoking hostt->queuecommand() or the block layer will time it out.
- 
- 
- [1-2-1] Completing a scmd w/ scsi_done
- 
-  For all non-EH commands, scsi_done() is the completion callback.  It
--does the following.
--
-- 1. Delete timeout timer.  If it fails, it means that timeout timer
--    has expired and is going to finish the command.  Just return.
--
-- 2. Link scmd to per-cpu scsi_done_q using scmd->en_entry
--
-- 3. Raise SCSI_SOFTIRQ
-+just calls blk_complete_request() to delete the block layer timer and
-+raise SCSI_SOFTIRQ
- 
-  SCSI_SOFTIRQ handler scsi_softirq calls scsi_decide_disposition() to
- determine what to do with the command.  scsi_decide_disposition()
-@@ -64,10 +58,12 @@ with the command.
- 
-  - SUCCESS
- 	scsi_finish_command() is invoked for the command.  The
--	function does some maintenance choirs and notify completion by
--	calling scmd->done() callback, which, for fs requests, would
--	be HLD completion callback - sd:sd_rw_intr, sr:rw_intr,
--	st:st_intr.
-+	function does some maintenance chores and then calls
-+	scsi_io_completion() to finish the I/O.
-+	scsi_io_completion() then notifies the block layer on
-+	the completed request by calling blk_end_request and
-+	friends or figures out what to do with the remainder
-+	of the data in case of an error.
- 
-  - NEEDS_RETRY
-  - ADD_TO_MLQUEUE
-@@ -86,33 +82,45 @@ function
-  1. invokes optional hostt->eh_timed_out() callback.  Return value can
-     be one of
- 
--    - EH_HANDLED
--	This indicates that eh_timed_out() dealt with the timeout.  The
--	scmd is passed to __scsi_done() and thus linked into per-cpu
--	scsi_done_q.  Normal command completion described in [1-2-1]
--	follows.
-+    - BLK_EH_HANDLED
-+	This indicates that eh_timed_out() dealt with the timeout.
-+	The command is passed back to the block layer and completed
-+	via __blk_complete_requests().
-+
-+	*NOTE* After returning BLK_EH_HANDLED the SCSI layer is
-+	assumed to be finished with the command, and no other
-+	functions from the SCSI layer will be called. So this
-+	should typically only be returned if the eh_timed_out()
-+	handler raced with normal completion.
- 
--    - EH_RESET_TIMER
-+    - BLK_EH_RESET_TIMER
- 	This indicates that more time is required to finish the
- 	command.  Timer is restarted.  This action is counted as a
- 	retry and only allowed scmd->allowed + 1(!) times.  Once the
--	limit is reached, action for EH_NOT_HANDLED is taken instead.
-+	limit is reached, action for BLK_EH_NOT_HANDLED is taken instead.
- 
--	*NOTE* This action is racy as the LLDD could finish the scmd
--	after the timeout has expired but before it's added back.  In
--	such cases, scsi_done() would think that timeout has occurred
--	and return without doing anything.  We lose completion and the
--	command will time out again.
--
--    - EH_NOT_HANDLED
--	This is the same as when eh_timed_out() callback doesn't exist.
-+    - BLK_EH_NOT_HANDLED
-+        eh_timed_out() callback did not handle the command.
- 	Step #2 is taken.
- 
-+ 2. If the host supports asynchronous completion (as indicated by the
-+    no_async_abort setting in the host template) scsi_abort_command()
-+    is invoked to schedule an asynchrous abort. If that fails
-+    Step #3 is taken.
-+
-  2. scsi_eh_scmd_add(scmd, SCSI_EH_CANCEL_CMD) is invoked for the
-     command.  See [1-3] for more information.
- 
-+[1-3] Asynchronous command aborts
-+
-+ After a timeout occurs a command abort is scheduled from
-+ scsi_abort_command(). If the abort is successful the command
-+ will either be retried (if the number of retries is not exhausted)
-+ or terminated with DID_TIME_OUT.
-+ Otherwise scsi_eh_scmd_add() is invoked for the command.
-+ See [1-4] for more information.
- 
--[1-3] How EH takes over
-+[1-4] How EH takes over
- 
-  scmds enter EH via scsi_eh_scmd_add(), which does the following.
- 
-@@ -320,7 +328,8 @@ scmd->allowed.
- 
-     <<scsi_eh_abort_cmds>>
- 
--	This action is taken for each timed out command.
-+	This action is taken for each timed out command when
-+	no_async_abort is enabled in the host template.
- 	hostt->eh_abort_handler() is invoked for each scmd.  The
- 	handler returns SUCCESS if it has succeeded to make LLDD and
- 	all related hardware forget about the scmd.
-diff --git a/Documentation/scsi/scsi_mid_low_api.txt b/Documentation/scsi/scsi_mid_low_api.txt
-index 2b06aba..d6a9bde 100644
---- a/Documentation/scsi/scsi_mid_low_api.txt
-+++ b/Documentation/scsi/scsi_mid_low_api.txt
-@@ -882,8 +882,11 @@ Details:
-  *
-  *      Calling context: kernel thread
-  *
-- *      Notes: Invoked from scsi_eh thread. No other commands will be
-- *      queued on current host during eh.
-+ *      Notes: If 'no_async_abort' is defined this callback
-+ *  	will be invoked from scsi_eh thread. No other commands
-+ *	will then be queued on current host during eh.
-+ *	Otherwise it will be called whenever scsi_times_out()
-+ *      is called due to a command timeout.
-  *
-  *      Optionally defined in: LLD
-  **/
-@@ -1257,6 +1260,8 @@ of interest:
-                    address space
-     use_clustering - 1=>SCSI commands in mid level's queue can be merged,
-                      0=>disallow SCSI command merging
-+    no_async_abort - 1=>Asynchronous aborts are not supported
-+                     0=>Timed-out commands will be aborted asynchronously
-     hostt        - pointer to driver's struct scsi_host_template from which
-                    this struct Scsi_Host instance was spawned
-     hostt->proc_name  - name of LLD. This is the driver name that sysfs uses
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 2b04a57..d8afec8 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -745,15 +745,13 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index 3b619819..6966def 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -319,11 +319,11 @@ static void scsi_host_dev_release(struct device *dev)
+ 	kfree(shost);
  }
  
- /**
-- * scsi_done - Enqueue the finished SCSI command into the done queue.
-+ * scsi_done - Invoke completion on finished SCSI command.
-  * @cmd: The SCSI Command for which a low-level device driver (LLDD) gives
-  * ownership back to SCSI Core -- i.e. the LLDD has finished with it.
-  *
-  * Description: This function is the mid-level's (SCSI Core) interrupt routine,
-  * which regains ownership of the SCSI command (de facto) from a LLDD, and
-- * enqueues the command to the done queue for further processing.
-- *
-- * This is the producer of the done queue who enqueues at the tail.
-+ * calls blk_complete_request() for further processing.
-  *
-  * This function is interrupt context safe.
-  */
+-static unsigned int shost_eh_deadline;
++static int shost_eh_deadline = -1;
+ 
+-module_param_named(eh_deadline, shost_eh_deadline, uint, S_IRUGO|S_IWUSR);
++module_param_named(eh_deadline, shost_eh_deadline, int, S_IRUGO|S_IWUSR);
+ MODULE_PARM_DESC(eh_deadline,
+-		 "SCSI EH timeout in seconds (should be between 1 and 2^32-1)");
++		 "SCSI EH timeout in seconds (should be between 0 and 2^31-1)");
+ 
+ static struct device_type scsi_host_type = {
+ 	.name =		"scsi_host",
+@@ -396,7 +396,15 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+ 	shost->unchecked_isa_dma = sht->unchecked_isa_dma;
+ 	shost->use_clustering = sht->use_clustering;
+ 	shost->ordered_tag = sht->ordered_tag;
+-	shost->eh_deadline = shost_eh_deadline * HZ;
++	if (shost_eh_deadline == -1)
++		shost->eh_deadline = -1;
++	else if ((ulong) shost_eh_deadline * HZ > INT_MAX) {
++		shost_printk(KERN_WARNING, shost,
++			     "eh_deadline %u too large, setting to %u\n",
++			     shost_eh_deadline, INT_MAX / HZ);
++		shost->eh_deadline = INT_MAX;
++	} else
++		shost->eh_deadline = shost_eh_deadline * HZ;
+ 
+ 	if (sht->supported_mode == MODE_UNKNOWN)
+ 		/* means we didn't set it ... default to INITIATOR */
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 1d27625..04c2ce8 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -91,18 +91,18 @@ EXPORT_SYMBOL_GPL(scsi_schedule_eh);
+ 
+ static int scsi_host_eh_past_deadline(struct Scsi_Host *shost)
+ {
+-	if (!shost->last_reset || !shost->eh_deadline)
++	if (!shost->last_reset || shost->eh_deadline == -1)
+ 		return 0;
+ 
+ 	/*
+ 	 * 32bit accesses are guaranteed to be atomic
+ 	 * (on all supported architectures), so instead
+ 	 * of using a spinlock we can as well double check
+-	 * if eh_deadline has been unset during the
++	 * if eh_deadline has been set to 'off' during the
+ 	 * time_before call.
+ 	 */
+ 	if (time_before(jiffies, shost->last_reset + shost->eh_deadline) &&
+-	    shost->eh_deadline != 0)
++	    shost->eh_deadline > -1)
+ 		return 0;
+ 
+ 	return 1;
+@@ -132,26 +132,34 @@ scmd_eh_abort_handler(struct work_struct *work)
+ 		rtn = scsi_try_to_abort_cmd(sdev->host->hostt, scmd);
+ 		if (rtn == SUCCESS) {
+ 			scmd->result |= DID_TIME_OUT << 16;
+-			if (!scsi_noretry_cmd(scmd) &&
++			if (scsi_host_eh_past_deadline(sdev->host)) {
++				SCSI_LOG_ERROR_RECOVERY(3,
++					scmd_printk(KERN_INFO, scmd,
++						    "scmd %p eh timeout, "
++						    "not retrying aborted "
++						    "command\n", scmd));
++			} else if (!scsi_noretry_cmd(scmd) &&
+ 			    (++scmd->retries <= scmd->allowed)) {
+ 				SCSI_LOG_ERROR_RECOVERY(3,
+ 					scmd_printk(KERN_WARNING, scmd,
+ 						    "scmd %p retry "
+ 						    "aborted command\n", scmd));
+ 				scsi_queue_insert(scmd, SCSI_MLQUEUE_EH_RETRY);
++				return;
+ 			} else {
+ 				SCSI_LOG_ERROR_RECOVERY(3,
+ 					scmd_printk(KERN_WARNING, scmd,
+ 						    "scmd %p finish "
+ 						    "aborted command\n", scmd));
+ 				scsi_finish_command(scmd);
++				return;
+ 			}
+-			return;
++		} else {
++			SCSI_LOG_ERROR_RECOVERY(3,
++				scmd_printk(KERN_INFO, scmd,
++					    "scmd %p abort failed, rtn %d\n",
++					    scmd, rtn));
+ 		}
+-		SCSI_LOG_ERROR_RECOVERY(3,
+-			scmd_printk(KERN_INFO, scmd,
+-				    "scmd %p abort failed, rtn %d\n",
+-				    scmd, rtn));
+ 	}
+ 
+ 	if (!scsi_eh_scmd_add(scmd, 0)) {
+@@ -202,7 +210,7 @@ scsi_abort_command(struct scsi_cmnd *scmd)
+ 		return FAILED;
+ 	}
+ 
+-	if (shost->eh_deadline && !shost->last_reset)
++	if (shost->eh_deadline != -1 && !shost->last_reset)
+ 		shost->last_reset = jiffies;
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
+ 
+@@ -236,7 +244,7 @@ int scsi_eh_scmd_add(struct scsi_cmnd *scmd, int eh_flag)
+ 		if (scsi_host_set_state(shost, SHOST_CANCEL_RECOVERY))
+ 			goto out_unlock;
+ 
+-	if (shost->eh_deadline && !shost->last_reset)
++	if (shost->eh_deadline != -1 && !shost->last_reset)
+ 		shost->last_reset = jiffies;
+ 
+ 	ret = 1;
+@@ -270,7 +278,7 @@ enum blk_eh_timer_return scsi_times_out(struct request *req)
+ 	trace_scsi_dispatch_cmd_timeout(scmd);
+ 	scsi_log_completion(scmd, TIMEOUT_ERROR);
+ 
+-	if (host->eh_deadline && !host->last_reset)
++	if (host->eh_deadline != -1 && !host->last_reset)
+ 		host->last_reset = jiffies;
+ 
+ 	if (host->transportt->eh_timed_out)
+@@ -2106,7 +2114,7 @@ static void scsi_unjam_host(struct Scsi_Host *shost)
+ 			scsi_eh_ready_devs(shost, &eh_work_q, &eh_done_q);
+ 
+ 	spin_lock_irqsave(shost->host_lock, flags);
+-	if (shost->eh_deadline)
++	if (shost->eh_deadline != -1)
+ 		shost->last_reset = 0;
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
+ 	scsi_eh_flush_done_q(&eh_done_q);
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 8ff62c2..9117d0b 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -287,7 +287,9 @@ show_shost_eh_deadline(struct device *dev,
+ {
+ 	struct Scsi_Host *shost = class_to_shost(dev);
+ 
+-	return sprintf(buf, "%d\n", shost->eh_deadline / HZ);
++	if (shost->eh_deadline == -1)
++		return snprintf(buf, strlen("off") + 2, "off\n");
++	return sprintf(buf, "%u\n", shost->eh_deadline / HZ);
+ }
+ 
+ static ssize_t
+@@ -296,22 +298,34 @@ store_shost_eh_deadline(struct device *dev, struct device_attribute *attr,
+ {
+ 	struct Scsi_Host *shost = class_to_shost(dev);
+ 	int ret = -EINVAL;
+-	int deadline;
+-	unsigned long flags;
++	unsigned long deadline, flags;
+ 
+ 	if (shost->transportt && shost->transportt->eh_strategy_handler)
+ 		return ret;
+ 
+-	if (sscanf(buf, "%d\n", &deadline) == 1) {
+-		spin_lock_irqsave(shost->host_lock, flags);
+-		if (scsi_host_in_recovery(shost))
+-			ret = -EBUSY;
+-		else {
++	if (!strncmp(buf, "off", strlen("off")))
++		deadline = -1;
++	else {
++		ret = kstrtoul(buf, 10, &deadline);
++		if (ret)
++			return ret;
++		if (deadline * HZ > UINT_MAX)
++			return -EINVAL;
++	}
++
++	spin_lock_irqsave(shost->host_lock, flags);
++	if (scsi_host_in_recovery(shost))
++		ret = -EBUSY;
++	else {
++		if (deadline == -1)
++			shost->eh_deadline = -1;
++		else
+ 			shost->eh_deadline = deadline * HZ;
+-			ret = count;
+-		}
+-		spin_unlock_irqrestore(shost->host_lock, flags);
++
++		ret = count;
+ 	}
++	spin_unlock_irqrestore(shost->host_lock, flags);
++
+ 	return ret;
+ }
+ 
 -- 
 1.7.12.4
 
