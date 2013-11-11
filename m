@@ -1,49 +1,58 @@
 From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH 3/6] sd: don't bother spinning up disks on resume
-Date: Mon, 11 Nov 2013 17:08:52 +0400
-Message-ID: <5280D6E4.6010804@cogentembedded.com>
-References: <cover.1384030893.git.psusi@ubuntu.com> <ece4db4b486db3594ad3b97aa00f7eb5fef93c4b.1384030893.git.psusi@ubuntu.com>
+Subject: Re: [PATCH 4/6] libata: resume in the background
+Date: Mon, 11 Nov 2013 17:10:31 +0400
+Message-ID: <5280D747.8090204@cogentembedded.com>
+References: <cover.1384030893.git.psusi@ubuntu.com> <6fca4cfe76c75939ec952c6a80c003e09d6f954c.1384030893.git.psusi@ubuntu.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <ece4db4b486db3594ad3b97aa00f7eb5fef93c4b.1384030893.git.psusi@ubuntu.com>
+In-Reply-To: <6fca4cfe76c75939ec952c6a80c003e09d6f954c.1384030893.git.psusi@ubuntu.com>
 Sender: linux-ide-owner@vger.kernel.org
 To: Phillip Susi <psusi@ubuntu.com>, todd.e.brandt@linux.intel.com
 Cc: tj@kernel.org, JBottomley@parallels.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hello.
-
 On 10-11-2013 1:03, Phillip Susi wrote:
 
-> Don't bother forcing disks to spin up on resume, as they
-> will do so automatically when accessed, and forcing them
-> to spin up slows down the resume.  Add a second bit to the
-> manage_start_stop flag to restore the previous behavior.
+> Don't block the resume path waiting for the disk to
+> spin up.
 > ---
->   drivers/scsi/sd.c          | 6 +++---
->   include/scsi/scsi_device.h | 2 +-
->   2 files changed, 4 insertions(+), 4 deletions(-)
+>   drivers/ata/libata-core.c | 10 ++++------
+>   1 file changed, 4 insertions(+), 6 deletions(-)
 
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index e62d17d..3143311 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-[...]
-> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-> index d65fbec..1c46d2d 100644
-> --- a/include/scsi/scsi_device.h
-> +++ b/include/scsi/scsi_device.h
-> @@ -152,7 +152,7 @@ struct scsi_device {
->   	unsigned use_192_bytes_for_3f:1; /* ask for 192 bytes from page 0x3f */
->   	unsigned no_start_on_add:1;	/* do not issue start on add */
->   	unsigned allow_restart:1; /* issue START_UNIT in error handler */
-> -	unsigned manage_start_stop:1;	/* Let HLD (sd) manage start/stop */
-> +	unsigned manage_start_stop:2;	/* Let HLD (sd) manage start/stop */
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index 686c441..128ce0d 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -5421,20 +5421,18 @@ static int __ata_port_resume_common(struct ata_port *ap, pm_message_t mesg,
+>   static int ata_port_resume_common(struct device *dev, pm_message_t mesg)
+>   {
+>   	struct ata_port *ap = to_ata_port(dev);
+> +	static int dontcare;
+>
+> -	return __ata_port_resume_common(ap, mesg, NULL);
+> +	return __ata_port_resume_common(ap, mesg, &dontcare);
+>   }
+>
+>   static int ata_port_resume(struct device *dev)
+>   {
+>   	int rc;
+>
+> +	if (pm_runtime_suspended(dev))
+> +		return 0;
+>   	rc = ata_port_resume_common(dev, PMSG_RESUME);
+> -	if (!rc) {
+> -		pm_runtime_disable(dev);
+> -		pm_runtime_set_active(dev);
+> -		pm_runtime_enable(dev);
+> -	}
 
-    I think you should better document this 2-bit field, or better still, make 
-it 2 1-bit fields.
+     With this modification, you don't need 'rc' anymore.
 
-WBR, Sergei
+>   	return rc;
+>   }
+>
+
+MBR, Sergei
 
