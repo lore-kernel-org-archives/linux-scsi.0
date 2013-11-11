@@ -1,234 +1,195 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 3/5] scsi: Unlock accesses to eh_deadline
-Date: Mon, 11 Nov 2013 13:44:55 +0100
-Message-ID: <1384173897-103836-4-git-send-email-hare@suse.de>
+Subject: [PATCH 5/5] scsi: Update documentation
+Date: Mon, 11 Nov 2013 13:44:57 +0100
+Message-ID: <1384173897-103836-6-git-send-email-hare@suse.de>
 References: <1384173897-103836-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:60250 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:60247 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753688Ab3KKMpF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 11 Nov 2013 07:45:05 -0500
+	id S1753293Ab3KKMpE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 11 Nov 2013 07:45:04 -0500
 In-Reply-To: <1384173897-103836-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@infradead.com>, Ren Mingxin <renmx@cn.fujitsu.com>, Joern Engel <joern@logfs.org>, James Smart <james.smart@emulex.com>, Hannes Reinecke <hare@suse.de>
 
-32bit accesses are guaranteed to be atomic, so we can remove
-the spinlock when checking for eh_deadline. We only need to
-make sure to catch any updates which might happened during
-the call to time_before(); if so we just recheck with the
-correct value.
+The documentation has gone out-of-sync, so update it to
+the current status.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/scsi_error.c | 44 +++++++++-----------------------------------
- 1 file changed, 9 insertions(+), 35 deletions(-)
+ Documentation/scsi/scsi_eh.txt          | 69 +++++++++++++++++++--------------
+ Documentation/scsi/scsi_mid_low_api.txt |  9 ++++-
+ drivers/scsi/scsi.c                     |  6 +--
+ 3 files changed, 48 insertions(+), 36 deletions(-)
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index cab3c9b..1d27625 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -94,8 +94,15 @@ static int scsi_host_eh_past_deadline(struct Scsi_Host *shost)
- 	if (!shost->last_reset || !shost->eh_deadline)
- 		return 0;
+diff --git a/Documentation/scsi/scsi_eh.txt b/Documentation/scsi/scsi_eh.txt
+index 6ff16b6..a0c8511 100644
+--- a/Documentation/scsi/scsi_eh.txt
++++ b/Documentation/scsi/scsi_eh.txt
+@@ -42,20 +42,14 @@ discussion.
  
--	if (time_before(jiffies,
--			shost->last_reset + shost->eh_deadline))
-+	/*
-+	 * 32bit accesses are guaranteed to be atomic
-+	 * (on all supported architectures), so instead
-+	 * of using a spinlock we can as well double check
-+	 * if eh_deadline has been unset during the
-+	 * time_before call.
-+	 */
-+	if (time_before(jiffies, shost->last_reset + shost->eh_deadline) &&
-+	    shost->eh_deadline != 0)
- 		return 0;
+  Once LLDD gets hold of a scmd, either the LLDD will complete the
+ command by calling scsi_done callback passed from midlayer when
+-invoking hostt->queuecommand() or SCSI midlayer will time it out.
++invoking hostt->queuecommand() or the block layer will time it out.
  
- 	return 1;
-@@ -111,18 +118,14 @@ scmd_eh_abort_handler(struct work_struct *work)
- 	struct scsi_cmnd *scmd =
- 		container_of(work, struct scsi_cmnd, abort_work.work);
- 	struct scsi_device *sdev = scmd->device;
--	unsigned long flags;
- 	int rtn;
  
--	spin_lock_irqsave(sdev->host->host_lock, flags);
- 	if (scsi_host_eh_past_deadline(sdev->host)) {
--		spin_unlock_irqrestore(sdev->host->host_lock, flags);
- 		SCSI_LOG_ERROR_RECOVERY(3,
- 			scmd_printk(KERN_INFO, scmd,
- 				    "scmd %p eh timeout, not aborting\n",
- 				    scmd));
- 	} else {
--		spin_unlock_irqrestore(sdev->host->host_lock, flags);
- 		SCSI_LOG_ERROR_RECOVERY(3,
- 			scmd_printk(KERN_INFO, scmd,
- 				    "aborting command %p\n", scmd));
-@@ -1132,7 +1135,6 @@ int scsi_eh_get_sense(struct list_head *work_q,
- 	struct scsi_cmnd *scmd, *next;
- 	struct Scsi_Host *shost;
- 	int rtn;
--	unsigned long flags;
+ [1-2-1] Completing a scmd w/ scsi_done
  
- 	list_for_each_entry_safe(scmd, next, work_q, eh_entry) {
- 		if ((scmd->eh_eflags & SCSI_EH_CANCEL_CMD) ||
-@@ -1140,16 +1142,13 @@ int scsi_eh_get_sense(struct list_head *work_q,
- 			continue;
+  For all non-EH commands, scsi_done() is the completion callback.  It
+-does the following.
+-
+- 1. Delete timeout timer.  If it fails, it means that timeout timer
+-    has expired and is going to finish the command.  Just return.
+-
+- 2. Link scmd to per-cpu scsi_done_q using scmd->en_entry
+-
+- 3. Raise SCSI_SOFTIRQ
++just calls blk_complete_request() to delete the block layer timer and
++raise SCSI_SOFTIRQ
  
- 		shost = scmd->device->host;
--		spin_lock_irqsave(shost->host_lock, flags);
- 		if (scsi_host_eh_past_deadline(shost)) {
--			spin_unlock_irqrestore(shost->host_lock, flags);
- 			SCSI_LOG_ERROR_RECOVERY(3,
- 				shost_printk(KERN_INFO, shost,
- 					    "skip %s, past eh deadline\n",
- 					     __func__));
- 			break;
- 		}
--		spin_unlock_irqrestore(shost->host_lock, flags);
- 		SCSI_LOG_ERROR_RECOVERY(2, scmd_printk(KERN_INFO, scmd,
- 						  "%s: requesting sense\n",
- 						  current->comm));
-@@ -1235,26 +1234,21 @@ static int scsi_eh_test_devices(struct list_head *cmd_list,
- 	struct scsi_cmnd *scmd, *next;
- 	struct scsi_device *sdev;
- 	int finish_cmds;
--	unsigned long flags;
+  SCSI_SOFTIRQ handler scsi_softirq calls scsi_decide_disposition() to
+ determine what to do with the command.  scsi_decide_disposition()
+@@ -64,10 +58,12 @@ with the command.
  
- 	while (!list_empty(cmd_list)) {
- 		scmd = list_entry(cmd_list->next, struct scsi_cmnd, eh_entry);
- 		sdev = scmd->device;
+  - SUCCESS
+ 	scsi_finish_command() is invoked for the command.  The
+-	function does some maintenance choirs and notify completion by
+-	calling scmd->done() callback, which, for fs requests, would
+-	be HLD completion callback - sd:sd_rw_intr, sr:rw_intr,
+-	st:st_intr.
++	function does some maintenance chores and then calls
++	scsi_io_completion() to finish the I/O.
++	scsi_io_completion() then notifies the block layer on
++	the completed request by calling blk_end_request and
++	friends or figures out what to do with the remainder
++	of the data in case of an error.
  
- 		if (!try_stu) {
--			spin_lock_irqsave(sdev->host->host_lock, flags);
- 			if (scsi_host_eh_past_deadline(sdev->host)) {
- 				/* Push items back onto work_q */
- 				list_splice_init(cmd_list, work_q);
--				spin_unlock_irqrestore(sdev->host->host_lock,
--						       flags);
- 				SCSI_LOG_ERROR_RECOVERY(3,
- 					shost_printk(KERN_INFO, sdev->host,
- 						     "skip %s, past eh deadline",
- 						     __func__));
- 				break;
- 			}
--			spin_unlock_irqrestore(sdev->host->host_lock, flags);
- 		}
+  - NEEDS_RETRY
+  - ADD_TO_MLQUEUE
+@@ -86,33 +82,45 @@ function
+  1. invokes optional hostt->eh_timed_out() callback.  Return value can
+     be one of
  
- 		finish_cmds = !scsi_device_online(scmd->device) ||
-@@ -1295,15 +1289,12 @@ static int scsi_eh_abort_cmds(struct list_head *work_q,
- 	LIST_HEAD(check_list);
- 	int rtn;
- 	struct Scsi_Host *shost;
--	unsigned long flags;
+-    - EH_HANDLED
+-	This indicates that eh_timed_out() dealt with the timeout.  The
+-	scmd is passed to __scsi_done() and thus linked into per-cpu
+-	scsi_done_q.  Normal command completion described in [1-2-1]
+-	follows.
++    - BLK_EH_HANDLED
++	This indicates that eh_timed_out() dealt with the timeout.
++	The command is passed back to the block layer and completed
++	via __blk_complete_requests().
++
++	*NOTE* After returning BLK_EH_HANDLED the SCSI layer is
++	assumed to be finished with the command, and no other
++	functions from the SCSI layer will be called. So this
++	should typically only be returned if the eh_timed_out()
++	handler raced with normal completion.
  
- 	list_for_each_entry_safe(scmd, next, work_q, eh_entry) {
- 		if (!(scmd->eh_eflags & SCSI_EH_CANCEL_CMD))
- 			continue;
- 		shost = scmd->device->host;
--		spin_lock_irqsave(shost->host_lock, flags);
- 		if (scsi_host_eh_past_deadline(shost)) {
--			spin_unlock_irqrestore(shost->host_lock, flags);
- 			list_splice_init(&check_list, work_q);
- 			SCSI_LOG_ERROR_RECOVERY(3,
- 				shost_printk(KERN_INFO, shost,
-@@ -1311,7 +1302,6 @@ static int scsi_eh_abort_cmds(struct list_head *work_q,
- 					     __func__));
- 			return list_empty(work_q);
- 		}
--		spin_unlock_irqrestore(shost->host_lock, flags);
- 		SCSI_LOG_ERROR_RECOVERY(3, printk("%s: aborting cmd:"
- 						  "0x%p\n", current->comm,
- 						  scmd));
-@@ -1375,19 +1365,15 @@ static int scsi_eh_stu(struct Scsi_Host *shost,
- {
- 	struct scsi_cmnd *scmd, *stu_scmd, *next;
- 	struct scsi_device *sdev;
--	unsigned long flags;
+-    - EH_RESET_TIMER
++    - BLK_EH_RESET_TIMER
+ 	This indicates that more time is required to finish the
+ 	command.  Timer is restarted.  This action is counted as a
+ 	retry and only allowed scmd->allowed + 1(!) times.  Once the
+-	limit is reached, action for EH_NOT_HANDLED is taken instead.
++	limit is reached, action for BLK_EH_NOT_HANDLED is taken instead.
  
- 	shost_for_each_device(sdev, shost) {
--		spin_lock_irqsave(shost->host_lock, flags);
- 		if (scsi_host_eh_past_deadline(shost)) {
--			spin_unlock_irqrestore(shost->host_lock, flags);
- 			SCSI_LOG_ERROR_RECOVERY(3,
- 				shost_printk(KERN_INFO, shost,
- 					    "skip %s, past eh deadline\n",
- 					     __func__));
- 			break;
- 		}
--		spin_unlock_irqrestore(shost->host_lock, flags);
- 		stu_scmd = NULL;
- 		list_for_each_entry(scmd, work_q, eh_entry)
- 			if (scmd->device == sdev && SCSI_SENSE_VALID(scmd) &&
-@@ -1441,20 +1427,16 @@ static int scsi_eh_bus_device_reset(struct Scsi_Host *shost,
- {
- 	struct scsi_cmnd *scmd, *bdr_scmd, *next;
- 	struct scsi_device *sdev;
--	unsigned long flags;
- 	int rtn;
+-	*NOTE* This action is racy as the LLDD could finish the scmd
+-	after the timeout has expired but before it's added back.  In
+-	such cases, scsi_done() would think that timeout has occurred
+-	and return without doing anything.  We lose completion and the
+-	command will time out again.
+-
+-    - EH_NOT_HANDLED
+-	This is the same as when eh_timed_out() callback doesn't exist.
++    - BLK_EH_NOT_HANDLED
++        eh_timed_out() callback did not handle the command.
+ 	Step #2 is taken.
  
- 	shost_for_each_device(sdev, shost) {
--		spin_lock_irqsave(shost->host_lock, flags);
- 		if (scsi_host_eh_past_deadline(shost)) {
--			spin_unlock_irqrestore(shost->host_lock, flags);
- 			SCSI_LOG_ERROR_RECOVERY(3,
- 				shost_printk(KERN_INFO, shost,
- 					    "skip %s, past eh deadline\n",
- 					     __func__));
- 			break;
- 		}
--		spin_unlock_irqrestore(shost->host_lock, flags);
- 		bdr_scmd = NULL;
- 		list_for_each_entry(scmd, work_q, eh_entry)
- 			if (scmd->device == sdev) {
-@@ -1515,11 +1497,8 @@ static int scsi_eh_target_reset(struct Scsi_Host *shost,
- 		struct scsi_cmnd *next, *scmd;
- 		int rtn;
- 		unsigned int id;
--		unsigned long flags;
++ 2. If the host supports asynchronous completion (as indicated by the
++    no_async_abort setting in the host template) scsi_abort_command()
++    is invoked to schedule an asynchrous abort. If that fails
++    Step #3 is taken.
++
+  2. scsi_eh_scmd_add(scmd, SCSI_EH_CANCEL_CMD) is invoked for the
+     command.  See [1-3] for more information.
  
--		spin_lock_irqsave(shost->host_lock, flags);
- 		if (scsi_host_eh_past_deadline(shost)) {
--			spin_unlock_irqrestore(shost->host_lock, flags);
- 			/* push back on work queue for further processing */
- 			list_splice_init(&check_list, work_q);
- 			list_splice_init(&tmp_list, work_q);
-@@ -1529,7 +1508,6 @@ static int scsi_eh_target_reset(struct Scsi_Host *shost,
- 					     __func__));
- 			return list_empty(work_q);
- 		}
--		spin_unlock_irqrestore(shost->host_lock, flags);
++[1-3] Asynchronous command aborts
++
++ After a timeout occurs a command abort is scheduled from
++ scsi_abort_command(). If the abort is successful the command
++ will either be retried (if the number of retries is not exhausted)
++ or terminated with DID_TIME_OUT.
++ Otherwise scsi_eh_scmd_add() is invoked for the command.
++ See [1-4] for more information.
  
- 		scmd = list_entry(tmp_list.next, struct scsi_cmnd, eh_entry);
- 		id = scmd_id(scmd);
-@@ -1574,7 +1552,6 @@ static int scsi_eh_bus_reset(struct Scsi_Host *shost,
- 	LIST_HEAD(check_list);
- 	unsigned int channel;
- 	int rtn;
--	unsigned long flags;
+-[1-3] How EH takes over
++[1-4] How EH takes over
  
- 	/*
- 	 * we really want to loop over the various channels, and do this on
-@@ -1584,9 +1561,7 @@ static int scsi_eh_bus_reset(struct Scsi_Host *shost,
- 	 */
+  scmds enter EH via scsi_eh_scmd_add(), which does the following.
  
- 	for (channel = 0; channel <= shost->max_channel; channel++) {
--		spin_lock_irqsave(shost->host_lock, flags);
- 		if (scsi_host_eh_past_deadline(shost)) {
--			spin_unlock_irqrestore(shost->host_lock, flags);
- 			list_splice_init(&check_list, work_q);
- 			SCSI_LOG_ERROR_RECOVERY(3,
- 				shost_printk(KERN_INFO, shost,
-@@ -1594,7 +1569,6 @@ static int scsi_eh_bus_reset(struct Scsi_Host *shost,
- 					     __func__));
- 			return list_empty(work_q);
- 		}
--		spin_unlock_irqrestore(shost->host_lock, flags);
+@@ -320,7 +328,8 @@ scmd->allowed.
  
- 		chan_scmd = NULL;
- 		list_for_each_entry(scmd, work_q, eh_entry) {
+     <<scsi_eh_abort_cmds>>
+ 
+-	This action is taken for each timed out command.
++	This action is taken for each timed out command when
++	no_async_abort is enabled in the host template.
+ 	hostt->eh_abort_handler() is invoked for each scmd.  The
+ 	handler returns SUCCESS if it has succeeded to make LLDD and
+ 	all related hardware forget about the scmd.
+diff --git a/Documentation/scsi/scsi_mid_low_api.txt b/Documentation/scsi/scsi_mid_low_api.txt
+index 2b06aba..d6a9bde 100644
+--- a/Documentation/scsi/scsi_mid_low_api.txt
++++ b/Documentation/scsi/scsi_mid_low_api.txt
+@@ -882,8 +882,11 @@ Details:
+  *
+  *      Calling context: kernel thread
+  *
+- *      Notes: Invoked from scsi_eh thread. No other commands will be
+- *      queued on current host during eh.
++ *      Notes: If 'no_async_abort' is defined this callback
++ *  	will be invoked from scsi_eh thread. No other commands
++ *	will then be queued on current host during eh.
++ *	Otherwise it will be called whenever scsi_times_out()
++ *      is called due to a command timeout.
+  *
+  *      Optionally defined in: LLD
+  **/
+@@ -1257,6 +1260,8 @@ of interest:
+                    address space
+     use_clustering - 1=>SCSI commands in mid level's queue can be merged,
+                      0=>disallow SCSI command merging
++    no_async_abort - 1=>Asynchronous aborts are not supported
++                     0=>Timed-out commands will be aborted asynchronously
+     hostt        - pointer to driver's struct scsi_host_template from which
+                    this struct Scsi_Host instance was spawned
+     hostt->proc_name  - name of LLD. This is the driver name that sysfs uses
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 2b04a57..d8afec8 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -745,15 +745,13 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
+ }
+ 
+ /**
+- * scsi_done - Enqueue the finished SCSI command into the done queue.
++ * scsi_done - Invoke completion on finished SCSI command.
+  * @cmd: The SCSI Command for which a low-level device driver (LLDD) gives
+  * ownership back to SCSI Core -- i.e. the LLDD has finished with it.
+  *
+  * Description: This function is the mid-level's (SCSI Core) interrupt routine,
+  * which regains ownership of the SCSI command (de facto) from a LLDD, and
+- * enqueues the command to the done queue for further processing.
+- *
+- * This is the producer of the done queue who enqueues at the tail.
++ * calls blk_complete_request() for further processing.
+  *
+  * This function is interrupt context safe.
+  */
 -- 
 1.7.12.4
 
