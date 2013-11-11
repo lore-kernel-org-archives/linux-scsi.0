@@ -1,84 +1,56 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH v2 5/5] Documentation: Add documentation for APM X-Gene SATA DTS binding
-Date: Mon, 11 Nov 2013 20:06:44 +0100
-Message-ID: <201311112006.44921.arnd@arndb.de>
-References: <1383980431-6572-1-git-send-email-lho@apm.com> <201311102139.10082.arnd@arndb.de> <CAPw-ZT=pBmDERDkaX66qStqVB2bD95248GKQpVQZWjmryA4uxA@mail.gmail.com>
+From: Ondrej Zary <linux@rainbow-software.org>
+Subject: [RFC PATCH 0/2] wd719x: Introduce Western Digital WD7193/7197/7296 PCI SCSI card driver
+Date: Mon, 11 Nov 2013 22:55:04 +0100
+Message-ID: <201311112255.04967.linux@rainbow-software.org>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
-  charset="iso-8859-1"
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.8]:51600 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754119Ab3KKTG5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Nov 2013 14:06:57 -0500
-In-Reply-To: <CAPw-ZT=pBmDERDkaX66qStqVB2bD95248GKQpVQZWjmryA4uxA@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Kernel development list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Loc Ho <lho@apm.com>
-Cc: "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Olof Johansson <olof@lixom.net>, tj@kernel.org, linux-scsi@vger.kernel.org, Jon Masters <jcm@redhat.com>, Suman Tripathi <stripathi@apm.com>, Tuan Phan <tphan@apm.com>
 
-On Monday 11 November 2013, Loc Ho wrote:
-> Hi Arnd,
-> 
-> >> ---
-> >>  .../devicetree/bindings/ata/apm-xgene.txt          |   84 ++++++++++++++++++++
-> >
-> > Please Cc the devicetree-discuss mailing list for the binding submission.
-> [Loc Ho]
-> I did cc on the first version. But this email
-> 'devicetree-discuss@lists.ozlabs.org' bounced on me.
+Hello,
+this is an attempt to provide a new driver for Western Digital WD7193, WD7197 
+and WD7296 PCI SCSI controllers based on WD33C296A chip.
 
-It has recently moved to devicetree@vger.kernel.org
+It's based on old and ugly wd719x driver written back in 2.0 days, then hacked 
+to 2.2 and finally to 2.4 kernels. Most of the code is rewritten: from ~4100 
+lines to ~1200.
 
-> >> +- clocks             : Reference to the clock entry
-> >> +- clock-names                : Shall be "eth01clk", "eth23clk", or "eth45clk".
-> >
-> > This makes no sense. The clock-names property needs to have a fixed
-> > string according to the name of the clock input signal of the hardware,
-> > not a name of the clock provider.
-> [Loc Ho]
-> The clock "eth01clk", "eth23clk", and "eth45clk" are the internal
-> divider clock. They are not the physical input clock. It sounds like
-> we don't need the "clock-names" are all.
+I've tested the driver on a WD7193 card with some hard drives and CD-ROMs:
+QUANTUM  LP240S GM240S01X 4.6
+IBM      0663L12          e g
+IBM      DORS-32160       WA0A
+SONY     CD-ROM CDU-55S   1.0t
+SONY     CD-ROM CDU-415   1.1g
 
-Ok.
+The card supports TCQ and linked commands (for cmd_per_lun > 1?) but I don't 
+know how it should be implemented in a driver.
 
-> 
-> >
-> >> +- serdes-diff-clk    : Shall be 0 for external, 1 internal differential,
-> >> +                       or 2 internal single ended clock. Default is 0.
-> >> +- gen-sel            : Shall be 1 (force Gen1), 2 (Force Gen2, or 3 Gen3).
-> >> +                       Default is 3.
-> >> +- EQA1                       : Serdes EQ parameter for A1 chip. Default is 9.
-> >> +- EQ                 : Serdes EQ parameter for non-A1 chip. Default is 2.
-> >> +- GENAVG             : Enable averaging Serdes calculation. Default is 0 for
-> >> +                       A1 chip and 1 for non-A1 chip.
-> >> +- LBA1                       : Serdes loopback buffer for A1 chip. Default is 1;
-> >> +- LB                 : Serdes loopback buffer for non-A1 chip. Default is 0;
-> >> +- LCA1                       : Serdes loopback enable control for A1 chip. Default
-> >> +                       is 1;
-> >> +- LC                 : Serdes loopback enable control for non-A1 chip.
-> >> +                       Default is 0;
-> >> +- CDRA1                      : Serdes SPD select CDR for A1 chip. Default is 5.
-> >> +- CDR                        : Serdes SPD select CDR for non-A1 chip. Default is 5.
-> >> +- PQA1                       : Serdes PQ for A1 chip. Default is 8.
-> >> +- PQ                 : Serdes PQ for non-A1 chip. Default is 0xA.
-> >> +- coherent           : Enable coherent (1 = enable, 0 = disable).
-> >> +                       Default is 1.
-> >
-> > This looks like a really bad binding. I would suggest that instead of having
-> > individual register values in here, you hardwire the settings in the driver
-> > based on the compatible string. It's pretty crazy to put register-level configuration
-> > in the DT like this.
-> [Loc Ho]
-> If I hardwire them in the driver, it will NOT scale across multiple
-> board. I guess if I moved it out to the PHY driver, then we can
-> discuss in that driver.
+Device/bus/host resets seem to work fine when tested by sg_reset.
+But don't know how to test command abort.
 
-Yes, makes sense. If you need the values to change per board, it's probably best to
-come up with a somewhat higher-level representation of the same contents. Ideally
-we should be able to use the same properties for any SerDes PHY, regarless of
-how the register level interface is implemented.
+The card requires firmware that can be cut out of the Windows NT driver that 
+can be downloaded from WD at: 
+http://support.wdc.com/product/download.asp?groupid=801&sid=27&lang=en
+There is no license anywhere in the file or on the page - so I guess that the 
+firmware cannot be added to linux-firmware.
 
-	Arnd
+This script downloads and extracts the firmware:
+
+#!/bin/sh
+wget http://support.wdc.com/download/archive/pciscsi.exe
+lha xi pciscsi.exe pci-scsi.exe
+lha xi pci-scsi.exe nt/wd7296a.sys
+rm pci-scsi.exe
+dd if=wd7296a.sys of=wd719x-risc.bin bs=1 skip=5760 count=14336
+dd if=wd7296a.sys of=wd719x-wcs.bin bs=1 skip=20096 count=514
+rm wd7296a.sys
+
+
+-- 
+Ondrej Zary
