@@ -1,164 +1,81 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: CmdSN greather than MaxCmdSN protocol error in LIO Iser
-Date: Tue, 12 Nov 2013 09:37:32 -0600
-Message-ID: <52824B3C.10203@cs.wisc.edu>
-References: <697D97E420EE024FB7451B574CD4991BCA064554@NTXBOIMBX05.micron.com>  <1384204653.12281.7.camel@haakon3.risingtidesystems.com>  <1384216960.12281.24.camel@haakon3.risingtidesystems.com>  <1384217317.12281.26.camel@haakon3.risingtidesystems.com>  <1384219874.12281.42.camel@haakon3.risingtidesystems.com>  <B9FFC16A-0592-498D-A7C3-7ABB3EFA61FD@cs.wisc.edu>  <541331AC-770C-4AB8-ACB0-4964F76F9F1E@cs.wisc.edu> <1384230893.12281.72.camel@haakon3.risingtidesystems.com>
+From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Subject: Re: [PATCH v2 0/5] ata: Add APM X-Gene SATA controller support
+Date: Tue, 12 Nov 2013 16:40:12 +0100
+Message-ID: <3056580.hyyOnlSqg9@amdc1032>
+References: <1383980431-6572-1-git-send-email-lho@apm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:41586 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756069Ab3KLPhv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 Nov 2013 10:37:51 -0500
-In-Reply-To: <1384230893.12281.72.camel@haakon3.risingtidesystems.com>
+Received: from mailout2.samsung.com ([203.254.224.25]:12475 "EHLO
+	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752280Ab3KLPkZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Nov 2013 10:40:25 -0500
+In-reply-to: <1383980431-6572-1-git-send-email-lho@apm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: "Moussa Ba (moussaba)" <moussaba@micron.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, Nicholas Bellinger <nab@daterainc.com>, Or Gerlitz <ogerlitz@mellanox.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Loc Ho <lho@apm.com>, olof@lixom.net, tj@kernel.org, linux-scsi@vger.kernel.org, jcm@redhat.com, Suman Tripathi <stripathi@apm.com>, Tuan Phan <tphan@apm.com>, linux-ide@vger.kernel.org
 
-On 11/11/13 10:34 PM, Nicholas A. Bellinger wrote:
-> On Mon, 2013-11-11 at 20:39 -0600, Michael Christie wrote:
->>
->>> On Nov 11, 2013, at 8:32 PM, Michael Christie <michaelc@cs.wisc.edu> wrote:
->>>
->
-> <SNIP>
->
->>>>>>> Mike, any idea as to how this might be happening on the initiator
->>>>>>> side..?
->>>>
->>>> <SNIP>
->>>>
->>>> Mmmmm, just noticed a bit of very suspicious logic in open-iscsi.
->>>> (CC'ing linux-scsi)
->>>>
->>>> Namely, how drivers/scsi/libiscsi.c:iscsi_data_xmit() attempts to drain
->>>> conn->cmdqueue and hence call iscsi_prep_scsi_cmd_pdu() + increment
->>>> session->cmdsn, without ever checking to see if the CmdSN window may
->>>> have already closed..
->>>>
->>>> The only CmdSN window check that I see in the I/O dispatch codepath is
->>>> in iscsi_queuecommand() -> iscsi_check_cmdsn_window_closed(), but once
->>>> iscsi_conn_queue_work() is invoked and process context in
->>>> iscsi_xmitworker() -> iscsi_data_xmit() starts to execute, there is
->>>> AFAICT no further CmdSN window open checks to ensure the initiator does
->>>> not overflow MaxCmdSN..
->>>>
->>>> This would very much line up with the type of bug that is being
->>>> reported.  Before trying to determine what a possible fix might look
->>>> like, can you try the following libiscsi patch to see if your able to
->>>> hit either of the BUG's below..?
->>>>
->>>> Thanks,
->>>>
->>>> --nab
->>>>
->>>> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
->>>> index e399561..9106f63 100644
->>>> --- a/drivers/scsi/libiscsi.c
->>>> +++ b/drivers/scsi/libiscsi.c
->>>> @@ -1483,6 +1483,12 @@ check_mgmt:
->>>>                        fail_scsi_task(conn->task, DID_IMM_RETRY);
->>>>                        continue;
->>>>                }
->>>> +
->>>> +               if (iscsi_check_cmdsn_window_closed(conn)) {
->>>> +                       printk("CmdSN window already closed in iscsi_data_xmit #1\n");
->>>> +                       BUG();
->>>> +               }
->>>> +
->>>>                rc = iscsi_prep_scsi_cmd_pdu(conn->task);
->>>>                if (rc) {
->>>>                        if (rc == -ENOMEM || rc == -EACCES) {
->>>> @@ -1518,6 +1524,11 @@ check_mgmt:
->>>>                if (iscsi_check_tmf_restrictions(task, ISCSI_OP_SCSI_DATA_OUT))
->>>>                        break;
->>>>
->>>> +               if (iscsi_check_cmdsn_window_closed(conn)) {
->>>> +                       printk("CmdSN window already closed in iscsi_data_xmit #2\n");
->>>> +                       BUG();
->>>> +               }
->>>> +
->>>>                conn->task = task;
->>>>                list_del_init(&conn->task->running);
->>>>                conn->task->state = ISCSI_TASK_RUNNING;
->>>
->>> If you hit a bug there then it is probably the target or if you are
->> using the new libiscsi back/frwd lock patches it could be related to
->> them.
->
-> FYI, this is with v3.11 and RHEL 6.x open-iscsi code..
->
->> We should not need to check above because we never queue more cmds
->> from the scsi layer than the window will allow at the time. If the
->> window is 10, the queued_cmdsn check should make sure we have only
->> accepted 10 commands into the iscsi layer so we should not need to
->> recheck above.
->>>
->>> You should just enable libiscsi debug printk in
->> iscsi_check_cmdsn_window so we can see the sn related values at the
->> time of queuing. You should enable that printk whithout your patch.
->>
->> Actually that will not help because we always have the queued cmdsn
->> lower than the max in that path. I would do your patch but then also
->> print the queued cmdsn, cmdsn and also the maxcmdsn in the check
->> function.
->>
->>
->
-> Yes, notice the second test patch is doing the explicit check of
-> task->cmdsn vs. sess->max_cmdsn, instead of the one that checks
-> ->queued_cmdsn vs. ->max_cmdsn in iscsi_check_cmdsn_window_closed().
->
-> Btw, I'm surmising the bug in question does not happen from the
-> iscsi_queuecommand() submission path, but rather from the
-> iscsi_update_cmdsn() -> __iscsi_update_cmdsn() completion path, where
-> iscsi_conn_queue_work() gets called when the CmdSN window was
-> previously closed, eg:
->
->          if (max_cmdsn != session->max_cmdsn &&
->              !iscsi_sna_lt(max_cmdsn, session->max_cmdsn)) {
->                  session->max_cmdsn = max_cmdsn;
->                  /*
->                   * if the window closed with IO queued, then kick the
->                   * xmit thread
->                   */
->                  if (!list_empty(&session->leadconn->cmdqueue) ||
->                      !list_empty(&session->leadconn->mgmtqueue))
->                          iscsi_conn_queue_work(session->leadconn);
->          }
-> }
->
-> Once iscsi_conn_queue_work() is invoked here to start process context
-> execution of iscsi_xmitworker() -> iscsi_data_xmit() code, AFAICT there
-> is no logic in place within iscsi_data_xmit() to honor the last received
-> MaxCmdSN.
->
-> Or to put it another way: what is preventing iscsi_data_xmit() from
-> completely draining both conn->cmdqueue + conn->requeue, even when the
-> CmdSN window has potentially been closed again..?
->
 
-If the window was not big enough we would have not accepted the cmd from 
-scsi-ml in iscsi_queuecommand. We would have never put it on the list 
-above then.
+Hi,
 
-In the initiator we have:
+Please remember to include linux-ide@vger.kernel.org on CC: for ATA patches.
 
-session->queued_cmdsn - It will always be less than or equal to the 
-max_cmdsn, but greater than or equal to session->cmdsn. Think of it like 
-preallocating the sn we are going to give the cmd. Depending on ordering 
-it might be different (3 instead of 4), but the final value it gets will 
-be less than the max_cmdsn.
+Also from the quick look it seems that:
+- patch #4 ("ata: Add APM X-Gene SATA serdes functions") should come before
+  patch #3 ("ata: Add APM X-Gene SATA driver") as code in patch #3 depends
+  on the code in patch #4
+- patch #5 ("Documentation: Add documentation for APM X-Gene SATA DTS
+  binding") should come before patch #2 ("arm64: Add APM X-Gene DTS entry
+  for SATA controllers") or (even better) just be merged into patch #2
 
-session->cmdsn - the sn we give the cmd when we actually put it on the 
-wire. It is always less than or equal to queued_cmdsn.
+Best regards,
+--
+Bartlomiej Zolnierkiewicz
+Samsung R&D Institute Poland
+Samsung Electronics
 
-So we have cmdsn <= queued_cmdsn <= max_cmdsn.
+On Saturday, November 09, 2013 12:00:26 AM Loc Ho wrote:
+> ata: Add APM X-Gene SATA controller support
+> 
+> v2:
+>  * Clean up file sata_xgene.c with Lindent and etc
+>  * Clean up file sata_xgene_serdes.c with Lindent and etc
+>  * Add description to each patch
+> 
+> v1:
+>  * inital version
+> 
+> Signed-off-by: Loc Ho <lho@apm.com>
+> Signed-off-by: Tuan Phan <tphan@apm.com>
+> Signed-off-by: Suman Tripathi <stripathi@apm.com>
+> ---
+> Loc Ho (5):
+>   ata: Export AHCI library functions required by APM X-Gene SATA driver
+>   arm64: Add APM X-Gene DTS entry for SATA controllers
+>   ata: Add APM X-Gene SATA driver
+>   ata: Add APM X-Gene SATA serdes functions
+>   Documentation: Add documentation for APM X-Gene SATA DTS binding
+> 
+>  .../devicetree/bindings/ata/apm-xgene.txt          |   84 +
+>  arch/arm64/boot/dts/apm-storm.dtsi                 |   73 +
+>  drivers/ata/Kconfig                                |    7 +
+>  drivers/ata/Makefile                               |    2 +
+>  drivers/ata/ahci.h                                 |    6 +
+>  drivers/ata/libahci.c                              |   13 +-
+>  drivers/ata/sata_xgene.c                           | 1394 ++++++++++++++
+>  drivers/ata/sata_xgene.h                           |  112 ++
+>  drivers/ata/sata_xgene_serdes.c                    | 2004 ++++++++++++++++++++
+>  9 files changed, 3690 insertions(+), 5 deletions(-)
+>  create mode 100644 Documentation/devicetree/bindings/ata/apm-xgene.txt
+>  create mode 100644 drivers/ata/sata_xgene.c
+>  create mode 100644 drivers/ata/sata_xgene.h
+>  create mode 100644 drivers/ata/sata_xgene_serdes.c
+> 
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
 
-The iscsi_queuecommand window check makes sure we will only have put a 
-cmd on the cmdqueue list if queued_cmdsn was less than or equal to the 
-max_cmdsn. And cmdsn is less than or equal to queued_cmdsn, so we can 
-run iscsi_data_xmit without checking the window values again, because it 
-is not possible for something like max_cmdsn to decrease on us.
