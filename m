@@ -1,81 +1,56 @@
-From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: Re: [PATCH v2 0/5] ata: Add APM X-Gene SATA controller support
-Date: Tue, 12 Nov 2013 16:40:12 +0100
-Message-ID: <3056580.hyyOnlSqg9@amdc1032>
-References: <1383980431-6572-1-git-send-email-lho@apm.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: CmdSN greather than MaxCmdSN protocol error in LIO Iser
+Date: Tue, 12 Nov 2013 09:43:27 -0600
+Message-ID: <52824C9F.4000500@cs.wisc.edu>
+References: <697D97E420EE024FB7451B574CD4991BCA064554@NTXBOIMBX05.micron.com>  <1384204653.12281.7.camel@haakon3.risingtidesystems.com>  <1384216960.12281.24.camel@haakon3.risingtidesystems.com>  <1384217317.12281.26.camel@haakon3.risingtidesystems.com>  <1384219874.12281.42.camel@haakon3.risingtidesystems.com>  <B9FFC16A-0592-498D-A7C3-7ABB3EFA61FD@cs.wisc.edu>  <541331AC-770C-4AB8-ACB0-4964F76F9F1E@cs.wisc.edu> <1384230893.12281.72.camel@haakon3.risingtidesystems.com> <52824B3C.10203@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:12475 "EHLO
-	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752280Ab3KLPkZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Nov 2013 10:40:25 -0500
-In-reply-to: <1383980431-6572-1-git-send-email-lho@apm.com>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:41616 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752010Ab3KLPnl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 12 Nov 2013 10:43:41 -0500
+In-Reply-To: <52824B3C.10203@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-arm-kernel@lists.infradead.org
-Cc: Loc Ho <lho@apm.com>, olof@lixom.net, tj@kernel.org, linux-scsi@vger.kernel.org, jcm@redhat.com, Suman Tripathi <stripathi@apm.com>, Tuan Phan <tphan@apm.com>, linux-ide@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: "Moussa Ba (moussaba)" <moussaba@micron.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, Nicholas Bellinger <nab@daterainc.com>, Or Gerlitz <ogerlitz@mellanox.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
+On 11/12/13 9:37 AM, Mike Christie wrote:
+>>
+>>          if (max_cmdsn != session->max_cmdsn &&
+>>              !iscsi_sna_lt(max_cmdsn, session->max_cmdsn)) {
+>>                  session->max_cmdsn = max_cmdsn;
+>>                  /*
+>>                   * if the window closed with IO queued, then kick the
+>>                   * xmit thread
+>>                   */
+>>                  if (!list_empty(&session->leadconn->cmdqueue) ||
+>>                      !list_empty(&session->leadconn->mgmtqueue))
+>>                          iscsi_conn_queue_work(session->leadconn);
+>>          }
+>> }
+>>
+>> Once iscsi_conn_queue_work() is invoked here to start process context
+>> execution of iscsi_xmitworker() -> iscsi_data_xmit() code, AFAICT there
+>> is no logic in place within iscsi_data_xmit() to honor the last received
+>> MaxCmdSN.
+>>
+>> Or to put it another way: what is preventing iscsi_data_xmit() from
+>> completely draining both conn->cmdqueue + conn->requeue, even when the
+>> CmdSN window has potentially been closed again..?
+>>
+>
+> If the window was not big enough we would have not accepted the cmd from
+> scsi-ml in iscsi_queuecommand. We would have never put it on the list
+> above then.
 
-Hi,
+Oh yeah, if you are asking yourself why that code exists then, it is 
+because we used to internally queue cmds when the window closed. In 
+iscsi_data_xmit we then checked the window like in your patch. We 
+switched to having the scsi layer queue for us, but that code above got 
+left there.
 
-Please remember to include linux-ide@vger.kernel.org on CC: for ATA patches.
-
-Also from the quick look it seems that:
-- patch #4 ("ata: Add APM X-Gene SATA serdes functions") should come before
-  patch #3 ("ata: Add APM X-Gene SATA driver") as code in patch #3 depends
-  on the code in patch #4
-- patch #5 ("Documentation: Add documentation for APM X-Gene SATA DTS
-  binding") should come before patch #2 ("arm64: Add APM X-Gene DTS entry
-  for SATA controllers") or (even better) just be merged into patch #2
-
-Best regards,
---
-Bartlomiej Zolnierkiewicz
-Samsung R&D Institute Poland
-Samsung Electronics
-
-On Saturday, November 09, 2013 12:00:26 AM Loc Ho wrote:
-> ata: Add APM X-Gene SATA controller support
-> 
-> v2:
->  * Clean up file sata_xgene.c with Lindent and etc
->  * Clean up file sata_xgene_serdes.c with Lindent and etc
->  * Add description to each patch
-> 
-> v1:
->  * inital version
-> 
-> Signed-off-by: Loc Ho <lho@apm.com>
-> Signed-off-by: Tuan Phan <tphan@apm.com>
-> Signed-off-by: Suman Tripathi <stripathi@apm.com>
-> ---
-> Loc Ho (5):
->   ata: Export AHCI library functions required by APM X-Gene SATA driver
->   arm64: Add APM X-Gene DTS entry for SATA controllers
->   ata: Add APM X-Gene SATA driver
->   ata: Add APM X-Gene SATA serdes functions
->   Documentation: Add documentation for APM X-Gene SATA DTS binding
-> 
->  .../devicetree/bindings/ata/apm-xgene.txt          |   84 +
->  arch/arm64/boot/dts/apm-storm.dtsi                 |   73 +
->  drivers/ata/Kconfig                                |    7 +
->  drivers/ata/Makefile                               |    2 +
->  drivers/ata/ahci.h                                 |    6 +
->  drivers/ata/libahci.c                              |   13 +-
->  drivers/ata/sata_xgene.c                           | 1394 ++++++++++++++
->  drivers/ata/sata_xgene.h                           |  112 ++
->  drivers/ata/sata_xgene_serdes.c                    | 2004 ++++++++++++++++++++
->  9 files changed, 3690 insertions(+), 5 deletions(-)
->  create mode 100644 Documentation/devicetree/bindings/ata/apm-xgene.txt
->  create mode 100644 drivers/ata/sata_xgene.c
->  create mode 100644 drivers/ata/sata_xgene.h
->  create mode 100644 drivers/ata/sata_xgene_serdes.c
-> 
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
-
+Or sent a patch the other day to remove it:
+http://marc.info/?l=linux-scsi&m=138288022619303&w=2
