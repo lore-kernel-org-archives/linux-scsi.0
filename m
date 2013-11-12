@@ -1,32 +1,42 @@
-From: Loc Ho <lho@apm.com>
-Subject: Re: [PATCH v2 3/5] ata: Add APM X-Gene SATA driver
-Date: Mon, 11 Nov 2013 21:19:41 -0800
-Message-ID: <CAPw-ZT=aVyw2yducpQMD2_rPPV7abKJZOH-Fs3bT2Ja=0tUNSQ@mail.gmail.com>
-References: <1383980431-6572-1-git-send-email-lho@apm.com>
-	<1383980431-6572-4-git-send-email-lho@apm.com>
-	<CAOesGMjEpC9-i52zYb2LtmyfV7FZQQGeeo4Umg-LXOYytZ4E-A@mail.gmail.com>
-	<201311110954.32904.arnd@arndb.de>
+From: Or Gerlitz <ogerlitz@mellanox.com>
+Subject: Re: CmdSN greather than MaxCmdSN protocol error in LIO Iser
+Date: Tue, 12 Nov 2013 09:27:28 +0200
+Message-ID: <5281D860.9010605@mellanox.com>
+References: <697D97E420EE024FB7451B574CD4991BCA064554@NTXBOIMBX05.micron.com>	 <1384204653.12281.7.camel@haakon3.risingtidesystems.com>	 <1384216960.12281.24.camel@haakon3.risingtidesystems.com>	 <1384217317.12281.26.camel@haakon3.risingtidesystems.com>	 <1384219874.12281.42.camel@haakon3.risingtidesystems.com>	 <B9FFC16A-0592-498D-A7C3-7ABB3EFA61FD@cs.wisc.edu>	 <541331AC-770C-4AB8-ACB0-4964F76F9F1E@cs.wisc.edu> <1384230893.12281.72.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod5og117.obsmtp.com ([64.18.0.149]:44841 "HELO
-	exprod5og117.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751645Ab3KLFTn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Nov 2013 00:19:43 -0500
-Received: by mail-pb0-f44.google.com with SMTP id rp16so6334011pbb.31
-        for <linux-scsi@vger.kernel.org>; Mon, 11 Nov 2013 21:19:42 -0800 (PST)
-In-Reply-To: <201311110954.32904.arnd@arndb.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1384230893.12281.72.camel@haakon3.risingtidesystems.com>
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Michael Christie <michaelc@cs.wisc.edu>
+Cc: "Moussa Ba (moussaba)" <moussaba@micron.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, Nicholas Bellinger <nab@daterainc.com>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Olof Johansson <olof@lixom.net>, Suman Tripathi <stripathi@apm.com>, linux-scsi@vger.kernel.org, Jon Masters <jcm@redhat.com>, Tejun Heo <tj@kernel.org>, Tuan Phan <tphan@apm.com>
 
-Hi Arnd/Olof,
+On 12/11/2013 06:34, Nicholas A. Bellinger wrote:
+> Once iscsi_conn_queue_work() is invoked here to start process context
+> execution of iscsi_xmitworker() -> iscsi_data_xmit() code, AFAICT there
+> is no logic in place within iscsi_data_xmit() to honor the last received
+> MaxCmdSN.
+>
+> Or to put it another way: what is preventing iscsi_data_xmit() from
+> completely draining both conn->cmdqueue + conn->requeue, even when the
+> CmdSN window has potentially been closed again..?
 
-I looked over the phy code for USB and NET. There isn't such PHY
-infrastructure for SATA from what I can tell. It seems like I will
-need to put this all together. I am thinking about porting the USB
-version over (with changes for SATA) and put it under
-"./drivers/ata/phy". Any suggestion?
+Guys,
 
--Loc
+Note that the iser initiator transport uses the pass-through command 
+submission mode of libiscsi, that is
+iscsi_conn_queue_work isn't called from queuecommand at all.
+
+This is b/c we call iscsi_host_allocwith xmit_can_sleep = 0. Hence no 
+workqueue is used for the command processing/submission over the wire, 
+just a call toiscsi_prep_scsi_cmd_pdu and following that to iser's 
+xmit_task callbackwhich isiscsi_iser_task_xmit that calls 
+iser_send_command, etc.
+
+Mike, Nic is not using the new locking framework patches for libiscsi, 
+as you know they are not upstream
+yet...
+
+Or.
