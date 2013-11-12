@@ -1,7 +1,7 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: CmdSN greather than MaxCmdSN protocol error in LIO Iser
-Date: Tue, 12 Nov 2013 14:14:37 -0800
-Message-ID: <1384294477.12281.105.camel@haakon3.risingtidesystems.com>
+From: "Moussa Ba (moussaba)" <moussaba@micron.com>
+Subject: RE: CmdSN greather than MaxCmdSN protocol error in LIO Iser
+Date: Tue, 12 Nov 2013 22:15:28 +0000
+Message-ID: <697D97E420EE024FB7451B574CD4991BCA0651CA@NTXBOIMBX05.micron.com>
 References: <697D97E420EE024FB7451B574CD4991BCA064554@NTXBOIMBX05.micron.com>
 	 <1384204653.12281.7.camel@haakon3.risingtidesystems.com>
 	 <1384216960.12281.24.camel@haakon3.risingtidesystems.com>
@@ -14,194 +14,152 @@ References: <697D97E420EE024FB7451B574CD4991BCA064554@NTXBOIMBX05.micron.com>
 	 <697D97E420EE024FB7451B574CD4991BCA064F17@NTXBOIMBX05.micron.com>
 	 <1384290948.12281.91.camel@haakon3.risingtidesystems.com>
 	 <697D97E420EE024FB7451B574CD4991BCA0651A5@NTXBOIMBX05.micron.com>
+ <1384294477.12281.105.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <697D97E420EE024FB7451B574CD4991BCA0651A5@NTXBOIMBX05.micron.com>
+In-Reply-To: <1384294477.12281.105.camel@haakon3.risingtidesystems.com>
+Content-Language: en-US
 Sender: target-devel-owner@vger.kernel.org
-To: "Moussa Ba (moussaba)" <moussaba@micron.com>
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 Cc: Mike Christie <michaelc@cs.wisc.edu>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, Nicholas Bellinger <nab@daterainc.com>, Or Gerlitz <ogerlitz@mellanox.com>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 2013-11-12 at 22:11 +0000, Moussa Ba (moussaba) wrote:
-> The patch does not apply to 3.12, are you patching against 3.11? The
-> MaxCmdSN error shows up on 3.12, the 3.11 error is a different one I
-> am still chasing.
-
-It's against the target-pending/for-next tree at v3.12-rc5..
-
-Care to apply it manually..?  The effort involved should be minimal.
-
---nab
-
-> 
-> Moussa
-> 
-> > -----Original Message-----
-> > From: target-devel-owner@vger.kernel.org [mailto:target-devel-
-> > owner@vger.kernel.org] On Behalf Of Nicholas A. Bellinger
-> > Sent: Tuesday, November 12, 2013 1:16 PM
-> > To: Moussa Ba (moussaba)
-> > Cc: Mike Christie; target-devel@vger.kernel.org; Nicholas Bellinger; Or
-> > Gerlitz; linux-scsi
-> > Subject: Re: CmdSN greather than MaxCmdSN protocol error in LIO Iser
-> > 
-> > On Tue, 2013-11-12 at 18:18 +0000, Moussa Ba (moussaba) wrote:
-> > 
-> > <SNIP>
-> > 
-> > > > >
-> > > > > Or to put it another way: what is preventing iscsi_data_xmit()
-> > from
-> > > > > completely draining both conn->cmdqueue + conn->requeue, even
-> > when
-> > > > the
-> > > > > CmdSN window has potentially been closed again..?
-> > > > >
-> > > >
-> > > > If the window was not big enough we would have not accepted the cmd
-> > > > from
-> > > > scsi-ml in iscsi_queuecommand. We would have never put it on the
-> > list
-> > > > above then.
-> > > >
-> > > > In the initiator we have:
-> > > >
-> > > > session->queued_cmdsn - It will always be less than or equal to the
-> > > > max_cmdsn, but greater than or equal to session->cmdsn. Think of it
-> > > > like
-> > > > preallocating the sn we are going to give the cmd. Depending on
-> > > > ordering
-> > > > it might be different (3 instead of 4), but the final value it gets
-> > > > will
-> > > > be less than the max_cmdsn.
-> > > >
-> > > > session->cmdsn - the sn we give the cmd when we actually put it on
-> > the
-> > > > wire. It is always less than or equal to queued_cmdsn.
-> > > >
-> > > > So we have cmdsn <= queued_cmdsn <= max_cmdsn.
-> > > >
-> > > > The iscsi_queuecommand window check makes sure we will only have
-> > put a
-> > > > cmd on the cmdqueue list if queued_cmdsn was less than or equal to
-> > the
-> > > > max_cmdsn. And cmdsn is less than or equal to queued_cmdsn, so we
-> > can
-> > > > run iscsi_data_xmit without checking the window values again,
-> > because
-> > > > it
-> > > > is not possible for something like max_cmdsn to decrease on us.
-> > >
-> > >
-> > >
-> > > I am attaching error codes on the inititator that seem to coincide
-> > with the timeout errors.
-> > >
-> > > [  261.855254]  connection6:0: pdu (op 0x65 itt 0x1) rejected. Reason
-> > code 0x4
-> > > [  261.855266]  connection6:0: pdu (op 0xa itt 0x1) rejected. Reason
-> > code 0x4
-> > > [  261.855268]  connection6:0: pdu (op 0x51 itt 0x1) rejected. Reason
-> > code 0x4
-> > >
-> > >
-> > 
-> > Hi Moussa,
-> > 
-> > After a bit more review, there may be a scenario introduced with v3.10
-> > code that could cause something like the reported CmdSN > MaxCmdSN
-> > error
-> > to occur..
-> > 
-> > Care to attempt to reproduce with the following target patch..?
-> > 
-> > Thanks,
-> > 
-> > --nab
-> > 
-> > diff --git a/drivers/infiniband/ulp/isert/ib_isert.c
-> > b/drivers/infiniband/ulp/isert/ib_isert.c
-> > index bbd86e8..5661075 100644
-> > --- a/drivers/infiniband/ulp/isert/ib_isert.c
-> > +++ b/drivers/infiniband/ulp/isert/ib_isert.c
-> > @@ -2029,8 +2029,6 @@ isert_map_rdma(struct iscsi_conn *conn, struct
-> > iscsi_cmd *cmd,
-> > 
-> >         if (wr->iser_ib_op == ISER_IB_RDMA_WRITE) {
-> >                 data_left = se_cmd->data_length;
-> > -               iscsit_increment_maxcmdsn(cmd, conn->sess);
-> > -               cmd->stat_sn = conn->stat_sn++;
-> >         } else {
-> >                 sg_off = cmd->write_data_done / PAGE_SIZE;
-> >                 data_left = se_cmd->data_length - cmd->write_data_done;
-> > @@ -2242,8 +2240,6 @@ isert_reg_rdma_frwr(struct iscsi_conn *conn,
-> > struct iscsi_cmd *cmd,
-> > 
-> >         if (wr->iser_ib_op == ISER_IB_RDMA_WRITE) {
-> >                 data_left = se_cmd->data_length;
-> > -               iscsit_increment_maxcmdsn(cmd, conn->sess);
-> > -               cmd->stat_sn = conn->stat_sn++;
-> >         } else {
-> >                 sg_off = cmd->write_data_done / PAGE_SIZE;
-> >                 data_left = se_cmd->data_length - cmd->write_data_done;
-> > @@ -2352,7 +2348,7 @@ isert_put_datain(struct iscsi_conn *conn, struct
-> > iscsi_cmd *cmd)
-> >          * Build isert_conn->tx_desc for iSCSI response PDU and attach
-> >          */
-> >         isert_create_send_desc(isert_conn, isert_cmd, &isert_cmd-
-> > >tx_desc);
-> > -       iscsit_build_rsp_pdu(cmd, conn, false, (struct iscsi_scsi_rsp
-> > *)
-> > +       iscsit_build_rsp_pdu(cmd, conn, true, (struct iscsi_scsi_rsp *)
-> >                              &isert_cmd->tx_desc.iscsi_header);
-> >         isert_init_tx_hdrs(isert_conn, &isert_cmd->tx_desc);
-> >         isert_init_send_wr(isert_conn, isert_cmd,
-> > diff --git a/drivers/target/iscsi/iscsi_target_configfs.c
-> > b/drivers/target/iscsi/iscsi_target_config
-> > index 1eec37c..fde3624 100644
-> > --- a/drivers/target/iscsi/iscsi_target_configfs.c
-> > +++ b/drivers/target/iscsi/iscsi_target_configfs.c
-> > @@ -1790,6 +1790,11 @@ static int lio_queue_status(struct se_cmd
-> > *se_cmd)
-> >         struct iscsi_cmd *cmd = container_of(se_cmd, struct iscsi_cmd,
-> > se_cmd);
-> > 
-> >         cmd->i_state = ISTATE_SEND_STATUS;
-> > +
-> > +       if (cmd->se_cmd.scsi_status || cmd->sense_reason) {
-> > +               iscsit_add_cmd_to_response_queue(cmd, cmd->conn, cmd-
-> > >i_state);
-> > +               return 0;
-> > +       }
-> >         cmd->conn->conn_transport->iscsit_queue_status(cmd->conn, cmd);
-> > 
-> >         return 0;
-> > diff --git a/drivers/target/iscsi/iscsi_target_device.c
-> > b/drivers/target/iscsi/iscsi_target_device.c
-> > index 6c7a510..7087c73 100644
-> > --- a/drivers/target/iscsi/iscsi_target_device.c
-> > +++ b/drivers/target/iscsi/iscsi_target_device.c
-> > @@ -58,11 +58,7 @@ void iscsit_increment_maxcmdsn(struct iscsi_cmd
-> > *cmd, struct iscsi_session *sess
-> > 
-> >         cmd->maxcmdsn_inc = 1;
-> > 
-> > -       if (!mutex_trylock(&sess->cmdsn_mutex)) {
-> > -               sess->max_cmd_sn += 1;
-> > -               pr_debug("Updated MaxCmdSN to 0x%08x\n", sess-
-> > >max_cmd_sn);
-> > -               return;
-> > -       }
-> > +       mutex_lock(&sess->cmdsn_mutex);
-> >         sess->max_cmd_sn += 1;
-> >         pr_debug("Updated MaxCmdSN to 0x%08x\n", sess->max_cmd_sn);
-> >         mutex_unlock(&sess->cmdsn_mutex);
-> > 
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe target-devel"
-> > in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+VGhhdCBpcyB3aGF0IEkgYW0gY3VycmVudGx5IGRvaW5nLi4uVGhhbmtzLiBXaWxsIHVwZGF0ZSBz
+aG9ydGx5Lg0KDQpNb3Vzc2ENCg0KPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9t
+OiBOaWNob2xhcyBBLiBCZWxsaW5nZXIgW21haWx0bzpuYWJAbGludXgtaXNjc2kub3JnXQ0KPiBT
+ZW50OiBUdWVzZGF5LCBOb3ZlbWJlciAxMiwgMjAxMyAyOjE1IFBNDQo+IFRvOiBNb3Vzc2EgQmEg
+KG1vdXNzYWJhKQ0KPiBDYzogTWlrZSBDaHJpc3RpZTsgdGFyZ2V0LWRldmVsQHZnZXIua2VybmVs
+Lm9yZzsgTmljaG9sYXMgQmVsbGluZ2VyOyBPcg0KPiBHZXJsaXR6OyBsaW51eC1zY3NpDQo+IFN1
+YmplY3Q6IFJlOiBDbWRTTiBncmVhdGhlciB0aGFuIE1heENtZFNOIHByb3RvY29sIGVycm9yIGlu
+IExJTyBJc2VyDQo+IA0KPiBPbiBUdWUsIDIwMTMtMTEtMTIgYXQgMjI6MTEgKzAwMDAsIE1vdXNz
+YSBCYSAobW91c3NhYmEpIHdyb3RlOg0KPiA+IFRoZSBwYXRjaCBkb2VzIG5vdCBhcHBseSB0byAz
+LjEyLCBhcmUgeW91IHBhdGNoaW5nIGFnYWluc3QgMy4xMT8gVGhlDQo+ID4gTWF4Q21kU04gZXJy
+b3Igc2hvd3MgdXAgb24gMy4xMiwgdGhlIDMuMTEgZXJyb3IgaXMgYSBkaWZmZXJlbnQgb25lIEkN
+Cj4gPiBhbSBzdGlsbCBjaGFzaW5nLg0KPiANCj4gSXQncyBhZ2FpbnN0IHRoZSB0YXJnZXQtcGVu
+ZGluZy9mb3ItbmV4dCB0cmVlIGF0IHYzLjEyLXJjNS4uDQo+IA0KPiBDYXJlIHRvIGFwcGx5IGl0
+IG1hbnVhbGx5Li4/ICBUaGUgZWZmb3J0IGludm9sdmVkIHNob3VsZCBiZSBtaW5pbWFsLg0KPiAN
+Cj4gLS1uYWINCj4gDQo+ID4NCj4gPiBNb3Vzc2ENCj4gPg0KPiA+ID4gLS0tLS1PcmlnaW5hbCBN
+ZXNzYWdlLS0tLS0NCj4gPiA+IEZyb206IHRhcmdldC1kZXZlbC1vd25lckB2Z2VyLmtlcm5lbC5v
+cmcgW21haWx0bzp0YXJnZXQtZGV2ZWwtDQo+ID4gPiBvd25lckB2Z2VyLmtlcm5lbC5vcmddIE9u
+IEJlaGFsZiBPZiBOaWNob2xhcyBBLiBCZWxsaW5nZXINCj4gPiA+IFNlbnQ6IFR1ZXNkYXksIE5v
+dmVtYmVyIDEyLCAyMDEzIDE6MTYgUE0NCj4gPiA+IFRvOiBNb3Vzc2EgQmEgKG1vdXNzYWJhKQ0K
+PiA+ID4gQ2M6IE1pa2UgQ2hyaXN0aWU7IHRhcmdldC1kZXZlbEB2Z2VyLmtlcm5lbC5vcmc7IE5p
+Y2hvbGFzDQo+IEJlbGxpbmdlcjsgT3INCj4gPiA+IEdlcmxpdHo7IGxpbnV4LXNjc2kNCj4gPiA+
+IFN1YmplY3Q6IFJlOiBDbWRTTiBncmVhdGhlciB0aGFuIE1heENtZFNOIHByb3RvY29sIGVycm9y
+IGluIExJTw0KPiBJc2VyDQo+ID4gPg0KPiA+ID4gT24gVHVlLCAyMDEzLTExLTEyIGF0IDE4OjE4
+ICswMDAwLCBNb3Vzc2EgQmEgKG1vdXNzYWJhKSB3cm90ZToNCj4gPiA+DQo+ID4gPiA8U05JUD4N
+Cj4gPiA+DQo+ID4gPiA+ID4gPg0KPiA+ID4gPiA+ID4gT3IgdG8gcHV0IGl0IGFub3RoZXIgd2F5
+OiB3aGF0IGlzIHByZXZlbnRpbmcNCj4gaXNjc2lfZGF0YV94bWl0KCkNCj4gPiA+IGZyb20NCj4g
+PiA+ID4gPiA+IGNvbXBsZXRlbHkgZHJhaW5pbmcgYm90aCBjb25uLT5jbWRxdWV1ZSArIGNvbm4t
+PnJlcXVldWUsIGV2ZW4NCj4gPiA+IHdoZW4NCj4gPiA+ID4gPiB0aGUNCj4gPiA+ID4gPiA+IENt
+ZFNOIHdpbmRvdyBoYXMgcG90ZW50aWFsbHkgYmVlbiBjbG9zZWQgYWdhaW4uLj8NCj4gPiA+ID4g
+PiA+DQo+ID4gPiA+ID4NCj4gPiA+ID4gPiBJZiB0aGUgd2luZG93IHdhcyBub3QgYmlnIGVub3Vn
+aCB3ZSB3b3VsZCBoYXZlIG5vdCBhY2NlcHRlZCB0aGUNCj4gY21kDQo+ID4gPiA+ID4gZnJvbQ0K
+PiA+ID4gPiA+IHNjc2ktbWwgaW4gaXNjc2lfcXVldWVjb21tYW5kLiBXZSB3b3VsZCBoYXZlIG5l
+dmVyIHB1dCBpdCBvbg0KPiB0aGUNCj4gPiA+IGxpc3QNCj4gPiA+ID4gPiBhYm92ZSB0aGVuLg0K
+PiA+ID4gPiA+DQo+ID4gPiA+ID4gSW4gdGhlIGluaXRpYXRvciB3ZSBoYXZlOg0KPiA+ID4gPiA+
+DQo+ID4gPiA+ID4gc2Vzc2lvbi0+cXVldWVkX2NtZHNuIC0gSXQgd2lsbCBhbHdheXMgYmUgbGVz
+cyB0aGFuIG9yIGVxdWFsIHRvDQo+IHRoZQ0KPiA+ID4gPiA+IG1heF9jbWRzbiwgYnV0IGdyZWF0
+ZXIgdGhhbiBvciBlcXVhbCB0byBzZXNzaW9uLT5jbWRzbi4gVGhpbmsNCj4gb2YgaXQNCj4gPiA+
+ID4gPiBsaWtlDQo+ID4gPiA+ID4gcHJlYWxsb2NhdGluZyB0aGUgc24gd2UgYXJlIGdvaW5nIHRv
+IGdpdmUgdGhlIGNtZC4gRGVwZW5kaW5nIG9uDQo+ID4gPiA+ID4gb3JkZXJpbmcNCj4gPiA+ID4g
+PiBpdCBtaWdodCBiZSBkaWZmZXJlbnQgKDMgaW5zdGVhZCBvZiA0KSwgYnV0IHRoZSBmaW5hbCB2
+YWx1ZSBpdA0KPiBnZXRzDQo+ID4gPiA+ID4gd2lsbA0KPiA+ID4gPiA+IGJlIGxlc3MgdGhhbiB0
+aGUgbWF4X2NtZHNuLg0KPiA+ID4gPiA+DQo+ID4gPiA+ID4gc2Vzc2lvbi0+Y21kc24gLSB0aGUg
+c24gd2UgZ2l2ZSB0aGUgY21kIHdoZW4gd2UgYWN0dWFsbHkgcHV0IGl0DQo+IG9uDQo+ID4gPiB0
+aGUNCj4gPiA+ID4gPiB3aXJlLiBJdCBpcyBhbHdheXMgbGVzcyB0aGFuIG9yIGVxdWFsIHRvIHF1
+ZXVlZF9jbWRzbi4NCj4gPiA+ID4gPg0KPiA+ID4gPiA+IFNvIHdlIGhhdmUgY21kc24gPD0gcXVl
+dWVkX2NtZHNuIDw9IG1heF9jbWRzbi4NCj4gPiA+ID4gPg0KPiA+ID4gPiA+IFRoZSBpc2NzaV9x
+dWV1ZWNvbW1hbmQgd2luZG93IGNoZWNrIG1ha2VzIHN1cmUgd2Ugd2lsbCBvbmx5DQo+IGhhdmUN
+Cj4gPiA+IHB1dCBhDQo+ID4gPiA+ID4gY21kIG9uIHRoZSBjbWRxdWV1ZSBsaXN0IGlmIHF1ZXVl
+ZF9jbWRzbiB3YXMgbGVzcyB0aGFuIG9yIGVxdWFsDQo+IHRvDQo+ID4gPiB0aGUNCj4gPiA+ID4g
+PiBtYXhfY21kc24uIEFuZCBjbWRzbiBpcyBsZXNzIHRoYW4gb3IgZXF1YWwgdG8gcXVldWVkX2Nt
+ZHNuLCBzbw0KPiB3ZQ0KPiA+ID4gY2FuDQo+ID4gPiA+ID4gcnVuIGlzY3NpX2RhdGFfeG1pdCB3
+aXRob3V0IGNoZWNraW5nIHRoZSB3aW5kb3cgdmFsdWVzIGFnYWluLA0KPiA+ID4gYmVjYXVzZQ0K
+PiA+ID4gPiA+IGl0DQo+ID4gPiA+ID4gaXMgbm90IHBvc3NpYmxlIGZvciBzb21ldGhpbmcgbGlr
+ZSBtYXhfY21kc24gdG8gZGVjcmVhc2Ugb24gdXMuDQo+ID4gPiA+DQo+ID4gPiA+DQo+ID4gPiA+
+DQo+ID4gPiA+IEkgYW0gYXR0YWNoaW5nIGVycm9yIGNvZGVzIG9uIHRoZSBpbml0aXRhdG9yIHRo
+YXQgc2VlbSB0bw0KPiBjb2luY2lkZQ0KPiA+ID4gd2l0aCB0aGUgdGltZW91dCBlcnJvcnMuDQo+
+ID4gPiA+DQo+ID4gPiA+IFsgIDI2MS44NTUyNTRdICBjb25uZWN0aW9uNjowOiBwZHUgKG9wIDB4
+NjUgaXR0IDB4MSkgcmVqZWN0ZWQuDQo+IFJlYXNvbg0KPiA+ID4gY29kZSAweDQNCj4gPiA+ID4g
+WyAgMjYxLjg1NTI2Nl0gIGNvbm5lY3Rpb242OjA6IHBkdSAob3AgMHhhIGl0dCAweDEpIHJlamVj
+dGVkLg0KPiBSZWFzb24NCj4gPiA+IGNvZGUgMHg0DQo+ID4gPiA+IFsgIDI2MS44NTUyNjhdICBj
+b25uZWN0aW9uNjowOiBwZHUgKG9wIDB4NTEgaXR0IDB4MSkgcmVqZWN0ZWQuDQo+IFJlYXNvbg0K
+PiA+ID4gY29kZSAweDQNCj4gPiA+ID4NCj4gPiA+ID4NCj4gPiA+DQo+ID4gPiBIaSBNb3Vzc2Es
+DQo+ID4gPg0KPiA+ID4gQWZ0ZXIgYSBiaXQgbW9yZSByZXZpZXcsIHRoZXJlIG1heSBiZSBhIHNj
+ZW5hcmlvIGludHJvZHVjZWQgd2l0aA0KPiB2My4xMA0KPiA+ID4gY29kZSB0aGF0IGNvdWxkIGNh
+dXNlIHNvbWV0aGluZyBsaWtlIHRoZSByZXBvcnRlZCBDbWRTTiA+IE1heENtZFNODQo+ID4gPiBl
+cnJvcg0KPiA+ID4gdG8gb2NjdXIuLg0KPiA+ID4NCj4gPiA+IENhcmUgdG8gYXR0ZW1wdCB0byBy
+ZXByb2R1Y2Ugd2l0aCB0aGUgZm9sbG93aW5nIHRhcmdldCBwYXRjaC4uPw0KPiA+ID4NCj4gPiA+
+IFRoYW5rcywNCj4gPiA+DQo+ID4gPiAtLW5hYg0KPiA+ID4NCj4gPiA+IGRpZmYgLS1naXQgYS9k
+cml2ZXJzL2luZmluaWJhbmQvdWxwL2lzZXJ0L2liX2lzZXJ0LmMNCj4gPiA+IGIvZHJpdmVycy9p
+bmZpbmliYW5kL3VscC9pc2VydC9pYl9pc2VydC5jDQo+ID4gPiBpbmRleCBiYmQ4NmU4Li41NjYx
+MDc1IDEwMDY0NA0KPiA+ID4gLS0tIGEvZHJpdmVycy9pbmZpbmliYW5kL3VscC9pc2VydC9pYl9p
+c2VydC5jDQo+ID4gPiArKysgYi9kcml2ZXJzL2luZmluaWJhbmQvdWxwL2lzZXJ0L2liX2lzZXJ0
+LmMNCj4gPiA+IEBAIC0yMDI5LDggKzIwMjksNiBAQCBpc2VydF9tYXBfcmRtYShzdHJ1Y3QgaXNj
+c2lfY29ubiAqY29ubiwNCj4gc3RydWN0DQo+ID4gPiBpc2NzaV9jbWQgKmNtZCwNCj4gPiA+DQo+
+ID4gPiAgICAgICAgIGlmICh3ci0+aXNlcl9pYl9vcCA9PSBJU0VSX0lCX1JETUFfV1JJVEUpIHsN
+Cj4gPiA+ICAgICAgICAgICAgICAgICBkYXRhX2xlZnQgPSBzZV9jbWQtPmRhdGFfbGVuZ3RoOw0K
+PiA+ID4gLSAgICAgICAgICAgICAgIGlzY3NpdF9pbmNyZW1lbnRfbWF4Y21kc24oY21kLCBjb25u
+LT5zZXNzKTsNCj4gPiA+IC0gICAgICAgICAgICAgICBjbWQtPnN0YXRfc24gPSBjb25uLT5zdGF0
+X3NuKys7DQo+ID4gPiAgICAgICAgIH0gZWxzZSB7DQo+ID4gPiAgICAgICAgICAgICAgICAgc2df
+b2ZmID0gY21kLT53cml0ZV9kYXRhX2RvbmUgLyBQQUdFX1NJWkU7DQo+ID4gPiAgICAgICAgICAg
+ICAgICAgZGF0YV9sZWZ0ID0gc2VfY21kLT5kYXRhX2xlbmd0aCAtIGNtZC0NCj4gPndyaXRlX2Rh
+dGFfZG9uZTsNCj4gPiA+IEBAIC0yMjQyLDggKzIyNDAsNiBAQCBpc2VydF9yZWdfcmRtYV9mcndy
+KHN0cnVjdCBpc2NzaV9jb25uICpjb25uLA0KPiA+ID4gc3RydWN0IGlzY3NpX2NtZCAqY21kLA0K
+PiA+ID4NCj4gPiA+ICAgICAgICAgaWYgKHdyLT5pc2VyX2liX29wID09IElTRVJfSUJfUkRNQV9X
+UklURSkgew0KPiA+ID4gICAgICAgICAgICAgICAgIGRhdGFfbGVmdCA9IHNlX2NtZC0+ZGF0YV9s
+ZW5ndGg7DQo+ID4gPiAtICAgICAgICAgICAgICAgaXNjc2l0X2luY3JlbWVudF9tYXhjbWRzbihj
+bWQsIGNvbm4tPnNlc3MpOw0KPiA+ID4gLSAgICAgICAgICAgICAgIGNtZC0+c3RhdF9zbiA9IGNv
+bm4tPnN0YXRfc24rKzsNCj4gPiA+ICAgICAgICAgfSBlbHNlIHsNCj4gPiA+ICAgICAgICAgICAg
+ICAgICBzZ19vZmYgPSBjbWQtPndyaXRlX2RhdGFfZG9uZSAvIFBBR0VfU0laRTsNCj4gPiA+ICAg
+ICAgICAgICAgICAgICBkYXRhX2xlZnQgPSBzZV9jbWQtPmRhdGFfbGVuZ3RoIC0gY21kLQ0KPiA+
+d3JpdGVfZGF0YV9kb25lOw0KPiA+ID4gQEAgLTIzNTIsNyArMjM0OCw3IEBAIGlzZXJ0X3B1dF9k
+YXRhaW4oc3RydWN0IGlzY3NpX2Nvbm4gKmNvbm4sDQo+IHN0cnVjdA0KPiA+ID4gaXNjc2lfY21k
+ICpjbWQpDQo+ID4gPiAgICAgICAgICAqIEJ1aWxkIGlzZXJ0X2Nvbm4tPnR4X2Rlc2MgZm9yIGlT
+Q1NJIHJlc3BvbnNlIFBEVSBhbmQNCj4gYXR0YWNoDQo+ID4gPiAgICAgICAgICAqLw0KPiA+ID4g
+ICAgICAgICBpc2VydF9jcmVhdGVfc2VuZF9kZXNjKGlzZXJ0X2Nvbm4sIGlzZXJ0X2NtZCwgJmlz
+ZXJ0X2NtZC0NCj4gPiA+ID50eF9kZXNjKTsNCj4gPiA+IC0gICAgICAgaXNjc2l0X2J1aWxkX3Jz
+cF9wZHUoY21kLCBjb25uLCBmYWxzZSwgKHN0cnVjdA0KPiBpc2NzaV9zY3NpX3JzcA0KPiA+ID4g
+KikNCj4gPiA+ICsgICAgICAgaXNjc2l0X2J1aWxkX3JzcF9wZHUoY21kLCBjb25uLCB0cnVlLCAo
+c3RydWN0DQo+IGlzY3NpX3Njc2lfcnNwICopDQo+ID4gPiAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICZpc2VydF9jbWQtPnR4X2Rlc2MuaXNjc2lfaGVhZGVyKTsNCj4gPiA+ICAgICAgICAg
+aXNlcnRfaW5pdF90eF9oZHJzKGlzZXJ0X2Nvbm4sICZpc2VydF9jbWQtPnR4X2Rlc2MpOw0KPiA+
+ID4gICAgICAgICBpc2VydF9pbml0X3NlbmRfd3IoaXNlcnRfY29ubiwgaXNlcnRfY21kLA0KPiA+
+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvdGFyZ2V0L2lzY3NpL2lzY3NpX3RhcmdldF9jb25maWdm
+cy5jDQo+ID4gPiBiL2RyaXZlcnMvdGFyZ2V0L2lzY3NpL2lzY3NpX3RhcmdldF9jb25maWcNCj4g
+PiA+IGluZGV4IDFlZWMzN2MuLmZkZTM2MjQgMTAwNjQ0DQo+ID4gPiAtLS0gYS9kcml2ZXJzL3Rh
+cmdldC9pc2NzaS9pc2NzaV90YXJnZXRfY29uZmlnZnMuYw0KPiA+ID4gKysrIGIvZHJpdmVycy90
+YXJnZXQvaXNjc2kvaXNjc2lfdGFyZ2V0X2NvbmZpZ2ZzLmMNCj4gPiA+IEBAIC0xNzkwLDYgKzE3
+OTAsMTEgQEAgc3RhdGljIGludCBsaW9fcXVldWVfc3RhdHVzKHN0cnVjdCBzZV9jbWQNCj4gPiA+
+ICpzZV9jbWQpDQo+ID4gPiAgICAgICAgIHN0cnVjdCBpc2NzaV9jbWQgKmNtZCA9IGNvbnRhaW5l
+cl9vZihzZV9jbWQsIHN0cnVjdA0KPiBpc2NzaV9jbWQsDQo+ID4gPiBzZV9jbWQpOw0KPiA+ID4N
+Cj4gPiA+ICAgICAgICAgY21kLT5pX3N0YXRlID0gSVNUQVRFX1NFTkRfU1RBVFVTOw0KPiA+ID4g
+Kw0KPiA+ID4gKyAgICAgICBpZiAoY21kLT5zZV9jbWQuc2NzaV9zdGF0dXMgfHwgY21kLT5zZW5z
+ZV9yZWFzb24pIHsNCj4gPiA+ICsgICAgICAgICAgICAgICBpc2NzaXRfYWRkX2NtZF90b19yZXNw
+b25zZV9xdWV1ZShjbWQsIGNtZC0+Y29ubiwNCj4gY21kLQ0KPiA+ID4gPmlfc3RhdGUpOw0KPiA+
+ID4gKyAgICAgICAgICAgICAgIHJldHVybiAwOw0KPiA+ID4gKyAgICAgICB9DQo+ID4gPiAgICAg
+ICAgIGNtZC0+Y29ubi0+Y29ubl90cmFuc3BvcnQtPmlzY3NpdF9xdWV1ZV9zdGF0dXMoY21kLT5j
+b25uLA0KPiBjbWQpOw0KPiA+ID4NCj4gPiA+ICAgICAgICAgcmV0dXJuIDA7DQo+ID4gPiBkaWZm
+IC0tZ2l0IGEvZHJpdmVycy90YXJnZXQvaXNjc2kvaXNjc2lfdGFyZ2V0X2RldmljZS5jDQo+ID4g
+PiBiL2RyaXZlcnMvdGFyZ2V0L2lzY3NpL2lzY3NpX3RhcmdldF9kZXZpY2UuYw0KPiA+ID4gaW5k
+ZXggNmM3YTUxMC4uNzA4N2M3MyAxMDA2NDQNCj4gPiA+IC0tLSBhL2RyaXZlcnMvdGFyZ2V0L2lz
+Y3NpL2lzY3NpX3RhcmdldF9kZXZpY2UuYw0KPiA+ID4gKysrIGIvZHJpdmVycy90YXJnZXQvaXNj
+c2kvaXNjc2lfdGFyZ2V0X2RldmljZS5jDQo+ID4gPiBAQCAtNTgsMTEgKzU4LDcgQEAgdm9pZCBp
+c2NzaXRfaW5jcmVtZW50X21heGNtZHNuKHN0cnVjdCBpc2NzaV9jbWQNCj4gPiA+ICpjbWQsIHN0
+cnVjdCBpc2NzaV9zZXNzaW9uICpzZXNzDQo+ID4gPg0KPiA+ID4gICAgICAgICBjbWQtPm1heGNt
+ZHNuX2luYyA9IDE7DQo+ID4gPg0KPiA+ID4gLSAgICAgICBpZiAoIW11dGV4X3RyeWxvY2soJnNl
+c3MtPmNtZHNuX211dGV4KSkgew0KPiA+ID4gLSAgICAgICAgICAgICAgIHNlc3MtPm1heF9jbWRf
+c24gKz0gMTsNCj4gPiA+IC0gICAgICAgICAgICAgICBwcl9kZWJ1ZygiVXBkYXRlZCBNYXhDbWRT
+TiB0byAweCUwOHhcbiIsIHNlc3MtDQo+ID4gPiA+bWF4X2NtZF9zbik7DQo+ID4gPiAtICAgICAg
+ICAgICAgICAgcmV0dXJuOw0KPiA+ID4gLSAgICAgICB9DQo+ID4gPiArICAgICAgIG11dGV4X2xv
+Y2soJnNlc3MtPmNtZHNuX211dGV4KTsNCj4gPiA+ICAgICAgICAgc2Vzcy0+bWF4X2NtZF9zbiAr
+PSAxOw0KPiA+ID4gICAgICAgICBwcl9kZWJ1ZygiVXBkYXRlZCBNYXhDbWRTTiB0byAweCUwOHhc
+biIsIHNlc3MtPm1heF9jbWRfc24pOw0KPiA+ID4gICAgICAgICBtdXRleF91bmxvY2soJnNlc3Mt
+PmNtZHNuX211dGV4KTsNCj4gPiA+DQo+ID4gPg0KPiA+ID4gLS0NCj4gPiA+IFRvIHVuc3Vic2Ny
+aWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSB0YXJnZXQtDQo+
+IGRldmVsIg0KPiA+ID4gaW4NCj4gPiA+IHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpvcmRv
+bW9Admdlci5rZXJuZWwub3JnDQo+ID4gPiBNb3JlIG1ham9yZG9tbyBpbmZvIGF0ICBodHRwOi8v
+dmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0bWwNCj4gDQoNCg==
