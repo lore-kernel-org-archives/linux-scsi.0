@@ -1,42 +1,63 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH v2 3/5] ata: Add APM X-Gene SATA driver
-Date: Tue, 12 Nov 2013 14:11:53 +0100
-Message-ID: <201311121411.54423.arnd@arndb.de>
-References: <1383980431-6572-1-git-send-email-lho@apm.com>
- <201311110954.32904.arnd@arndb.de>
- <CAPw-ZT=aVyw2yducpQMD2_rPPV7abKJZOH-Fs3bT2Ja=0tUNSQ@mail.gmail.com>
+From: Amaury Pouly <amaury.pouly@gmail.com>
+Subject: Medium change detection
+Date: Tue, 12 Nov 2013 14:41:00 +0000
+Message-ID: <CAEJ3XJyXktJ541c3W=QuyggHoLiQ9T3qdC_xs+mpvzix-1k-bQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <CAPw-ZT=aVyw2yducpQMD2_rPPV7abKJZOH-Fs3bT2Ja=0tUNSQ@mail.gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Loc Ho <lho@apm.com>, Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Suman Tripathi <stripathi@apm.com>, linux-scsi@vger.kernel.org, Jon Masters <jcm@redhat.com>, Tejun Heo <tj@kernel.org>, Olof Johansson <olof@lixom.net>, Tuan Phan <tphan@apm.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-vb0-f41.google.com ([209.85.212.41]:40301 "EHLO
+	mail-vb0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755610Ab3KLOlV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Nov 2013 09:41:21 -0500
+Received: by mail-vb0-f41.google.com with SMTP id w8so4438319vbj.0
+        for <linux-scsi@vger.kernel.org>; Tue, 12 Nov 2013 06:41:21 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Tuesday 12 November 2013, Loc Ho wrote:
-> Hi Arnd/Olof,
-> 
-> I looked over the phy code for USB and NET. There isn't such PHY
-> infrastructure for SATA from what I can tell. It seems like I will
-> need to put this all together. I am thinking about porting the USB
-> version over (with changes for SATA) and put it under
-> "./drivers/ata/phy". Any suggestion?
+Hello,
+I am a developer of the Rockbox project and I am facing an issue
+related to how medium are handled in SCSI. I don't know if this is a
+Rockbox and/or kernel issue, or just a mistunderstanding of the
+specification. I tried with many kernel version between 2.6.38 and
+3.11.
 
-Please have a look at the patches under the subject "Generic PHY Framework"
-posted by Kishon Vijay Abraham. I thought they would have made it in
-by now, but I have not followed the recent kernels closely since I am
-on parental leave at the moment.
+I have a device with a micro-sd port and which get reported as a
+removable LUN. If the micro-sd is initially inserted, TEST UNIT READY
+will report Good and the kernel will probe capacity and everything
+works.
+If I remove the micro-sd (without ejecting on the host before),
+nothing happen until the host tries to read/write at which point it
+will:
+- on old kernel versions: error out and mark the medium as not present
+- on recent kernel versions: error out, notify capacity change to 0
+and mark medium as not present
 
-IIRC they should unify USB, SATA and other PHY codes, but not network.
+Here is my first question: the old kernel versions used to send TEST
+UNIT READY all the time, so why isn't the media change notified until
+I actually try to read/write it ? On newer kernel versions, TEST UNIT
+READY is only sent before read/write, why was this behaviour changed
+(and when ?) and has the kernel any way to get notified immediately on
+eject ?
 
-	Arnd
+At that point, if I insert my micro-sd again, nothing happen on the
+host side, both on old and recent kernels, no capacity change, no
+medium change. If I try to read/write, I always get a "No medium
+present" error even though the medium is present. This is puzzling for
+two reasons:
+- on old kernel versions: since the kernel sends TEST UNIT READY all
+the time, is has the capacity to detect insertion when LUN becomes
+Good again ?
+- on recent kernel versions: since TEST UNIT READY is not sent and the
+scsi layer somehow caches the medium state, is there any way for the
+kernel to actually detect that the medium is back ?
+
+Finally I should note that this behaviour is not Rockbox specific,
+even with the vendor implementation of Mass Storage, this problem
+arises. I am thus wondering if this the expected behaviour, because
+the device reports the LUN as removable so I assumed that removable
+meant both remove and insert !
+
+Thanks for your time
+
+Amaury Pouly
