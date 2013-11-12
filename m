@@ -1,92 +1,143 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 00/11] target_core_mod: ALUA updates
-Date: Tue, 12 Nov 2013 13:49:45 -0800
-Message-ID: <1384292985.12281.103.camel@haakon3.risingtidesystems.com>
-References: <1381908048-82014-1-git-send-email-hare@suse.de>
-	 <1383771282.4216.67.camel@haakon3.risingtidesystems.com>
+From: "Moussa Ba (moussaba)" <moussaba@micron.com>
+Subject: RE: CmdSN greather than MaxCmdSN protocol error in LIO Iser
+Date: Tue, 12 Nov 2013 22:11:40 +0000
+Message-ID: <697D97E420EE024FB7451B574CD4991BCA0651A5@NTXBOIMBX05.micron.com>
+References: <697D97E420EE024FB7451B574CD4991BCA064554@NTXBOIMBX05.micron.com>
+	 <1384204653.12281.7.camel@haakon3.risingtidesystems.com>
+	 <1384216960.12281.24.camel@haakon3.risingtidesystems.com>
+	 <1384217317.12281.26.camel@haakon3.risingtidesystems.com>
+	 <1384219874.12281.42.camel@haakon3.risingtidesystems.com>
+	 <B9FFC16A-0592-498D-A7C3-7ABB3EFA61FD@cs.wisc.edu>
+	 <541331AC-770C-4AB8-ACB0-4964F76F9F1E@cs.wisc.edu>
+	 <1384230893.12281.72.camel@haakon3.risingtidesystems.com>
+	 <52824B3C.10203@cs.wisc.edu>
+	 <697D97E420EE024FB7451B574CD4991BCA064F17@NTXBOIMBX05.micron.com>
+ <1384290948.12281.91.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:56766 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753470Ab3KLVtq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Nov 2013 16:49:46 -0500
-In-Reply-To: <1383771282.4216.67.camel@haakon3.risingtidesystems.com>
+Received: from mailout.micron.com ([137.201.242.129]:58909 "EHLO
+	mailout.micron.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757101Ab3KLWMe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Nov 2013 17:12:34 -0500
+In-Reply-To: <1384290948.12281.91.camel@haakon3.risingtidesystems.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Nic Bellinger <nab@daterainc.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, Nicholas Bellinger <nab@daterainc.com>, Or Gerlitz <ogerlitz@mellanox.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Wed, 2013-11-06 at 12:54 -0800, Nicholas A. Bellinger wrote:
-> Hello Hannes,
-> 
-> Any updates on this series..?
-> 
-> I'd really like to get the -v2 of this included for v3.13, along with
-> the initial Referrals bits.
-> 
-
-Any update Hannes..?
-
-I'm fine with merging this series without the common ALUA definition
-breakout with scsi_dh_alua for v3.13..
-
-Care to respin a -v2 with the handful of minor comments in the original
-posting..?
-
---nab
-
-> 
-> On Wed, 2013-10-16 at 09:20 +0200, Hannes Reinecke wrote:
-> > Hi Nic,
-> > 
-> > here are some updates to TCM ALUA handling. Apart from some
-> > minor fixes and spellchecks the main features are:
-> > - Make supported states configurable:
-> >   We should make the list of supported ALUA states configurable,
-> >   as some setups would possibly like to support a small subset
-> >   of ALUA states only.
-> > - Asynchronous transitioning: I've switched 'transitioning'
-> >   handling to use a workqueue, that should allow us to simulate
-> >   asynchronous transitioning modes. IE TCM should now be capable
-> >   of handling requests while in transitioning, and properly terminate
-> >   these with the correct sense code.
-> > - Include target device descriptor in VPD page 83
-> >   For the ALUA device handler we'd need to identify the target device
-> >   where a given target port belongs to. So include the respective
-> >   values in the VPD page.
-> > 
-> > Hannes Reinecke (11):
-> >   target core: rename (ex,im)plict -> (ex,im)plicit
-> >   target_core_alua: Store supported ALUA states
-> >   target_core_alua: Make supported states configurable
-> >   target_core_alua: Rename ALUA_ACCESS_STATE_OPTIMIZED
-> >   target_core_alua: spellcheck
-> >   target_core_alua: Validate ALUA state transition
-> >   target_core_alua: Allocate ALUA metadata on demand
-> >   target_core_alua: store old and pending ALUA state
-> >   target_core_alua: Use workqueue for ALUA transitioning
-> >   target_core: simplify scsi_name_len calculation
-> >   target_core_spc: Include target device descriptor in VPD page 83
-> > 
-> >  drivers/target/target_core_alua.c      | 456 ++++++++++++++++++++-------------
-> >  drivers/target/target_core_alua.h      |  36 ++-
-> >  drivers/target/target_core_configfs.c  |  76 +++++-
-> >  drivers/target/target_core_device.c    |   6 +-
-> >  drivers/target/target_core_file.c      |   2 +-
-> >  drivers/target/target_core_pr.c        |  24 +-
-> >  drivers/target/target_core_spc.c       |  62 ++++-
-> >  drivers/target/target_core_transport.c |   4 +-
-> >  drivers/target/target_core_ua.h        |   2 +-
-> >  include/target/target_core_base.h      |  14 +-
-> >  10 files changed, 442 insertions(+), 240 deletions(-)
-> > 
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe target-devel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
+VGhlIHBhdGNoIGRvZXMgbm90IGFwcGx5IHRvIDMuMTIsIGFyZSB5b3UgcGF0Y2hpbmcgYWdhaW5z
+dCAzLjExPyBUaGUgTWF4Q21kU04gZXJyb3Igc2hvd3MgdXAgb24gMy4xMiwgdGhlIDMuMTEgZXJy
+b3IgaXMgYSBkaWZmZXJlbnQgb25lIEkgYW0gc3RpbGwgY2hhc2luZy4NCg0KTW91c3NhDQoNCj4g
+LS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogdGFyZ2V0LWRldmVsLW93bmVyQHZn
+ZXIua2VybmVsLm9yZyBbbWFpbHRvOnRhcmdldC1kZXZlbC0NCj4gb3duZXJAdmdlci5rZXJuZWwu
+b3JnXSBPbiBCZWhhbGYgT2YgTmljaG9sYXMgQS4gQmVsbGluZ2VyDQo+IFNlbnQ6IFR1ZXNkYXks
+IE5vdmVtYmVyIDEyLCAyMDEzIDE6MTYgUE0NCj4gVG86IE1vdXNzYSBCYSAobW91c3NhYmEpDQo+
+IENjOiBNaWtlIENocmlzdGllOyB0YXJnZXQtZGV2ZWxAdmdlci5rZXJuZWwub3JnOyBOaWNob2xh
+cyBCZWxsaW5nZXI7IE9yDQo+IEdlcmxpdHo7IGxpbnV4LXNjc2kNCj4gU3ViamVjdDogUmU6IENt
+ZFNOIGdyZWF0aGVyIHRoYW4gTWF4Q21kU04gcHJvdG9jb2wgZXJyb3IgaW4gTElPIElzZXINCj4g
+DQo+IE9uIFR1ZSwgMjAxMy0xMS0xMiBhdCAxODoxOCArMDAwMCwgTW91c3NhIEJhIChtb3Vzc2Fi
+YSkgd3JvdGU6DQo+IA0KPiA8U05JUD4NCj4gDQo+ID4gPiA+DQo+ID4gPiA+IE9yIHRvIHB1dCBp
+dCBhbm90aGVyIHdheTogd2hhdCBpcyBwcmV2ZW50aW5nIGlzY3NpX2RhdGFfeG1pdCgpDQo+IGZy
+b20NCj4gPiA+ID4gY29tcGxldGVseSBkcmFpbmluZyBib3RoIGNvbm4tPmNtZHF1ZXVlICsgY29u
+bi0+cmVxdWV1ZSwgZXZlbg0KPiB3aGVuDQo+ID4gPiB0aGUNCj4gPiA+ID4gQ21kU04gd2luZG93
+IGhhcyBwb3RlbnRpYWxseSBiZWVuIGNsb3NlZCBhZ2Fpbi4uPw0KPiA+ID4gPg0KPiA+ID4NCj4g
+PiA+IElmIHRoZSB3aW5kb3cgd2FzIG5vdCBiaWcgZW5vdWdoIHdlIHdvdWxkIGhhdmUgbm90IGFj
+Y2VwdGVkIHRoZSBjbWQNCj4gPiA+IGZyb20NCj4gPiA+IHNjc2ktbWwgaW4gaXNjc2lfcXVldWVj
+b21tYW5kLiBXZSB3b3VsZCBoYXZlIG5ldmVyIHB1dCBpdCBvbiB0aGUNCj4gbGlzdA0KPiA+ID4g
+YWJvdmUgdGhlbi4NCj4gPiA+DQo+ID4gPiBJbiB0aGUgaW5pdGlhdG9yIHdlIGhhdmU6DQo+ID4g
+Pg0KPiA+ID4gc2Vzc2lvbi0+cXVldWVkX2NtZHNuIC0gSXQgd2lsbCBhbHdheXMgYmUgbGVzcyB0
+aGFuIG9yIGVxdWFsIHRvIHRoZQ0KPiA+ID4gbWF4X2NtZHNuLCBidXQgZ3JlYXRlciB0aGFuIG9y
+IGVxdWFsIHRvIHNlc3Npb24tPmNtZHNuLiBUaGluayBvZiBpdA0KPiA+ID4gbGlrZQ0KPiA+ID4g
+cHJlYWxsb2NhdGluZyB0aGUgc24gd2UgYXJlIGdvaW5nIHRvIGdpdmUgdGhlIGNtZC4gRGVwZW5k
+aW5nIG9uDQo+ID4gPiBvcmRlcmluZw0KPiA+ID4gaXQgbWlnaHQgYmUgZGlmZmVyZW50ICgzIGlu
+c3RlYWQgb2YgNCksIGJ1dCB0aGUgZmluYWwgdmFsdWUgaXQgZ2V0cw0KPiA+ID4gd2lsbA0KPiA+
+ID4gYmUgbGVzcyB0aGFuIHRoZSBtYXhfY21kc24uDQo+ID4gPg0KPiA+ID4gc2Vzc2lvbi0+Y21k
+c24gLSB0aGUgc24gd2UgZ2l2ZSB0aGUgY21kIHdoZW4gd2UgYWN0dWFsbHkgcHV0IGl0IG9uDQo+
+IHRoZQ0KPiA+ID4gd2lyZS4gSXQgaXMgYWx3YXlzIGxlc3MgdGhhbiBvciBlcXVhbCB0byBxdWV1
+ZWRfY21kc24uDQo+ID4gPg0KPiA+ID4gU28gd2UgaGF2ZSBjbWRzbiA8PSBxdWV1ZWRfY21kc24g
+PD0gbWF4X2NtZHNuLg0KPiA+ID4NCj4gPiA+IFRoZSBpc2NzaV9xdWV1ZWNvbW1hbmQgd2luZG93
+IGNoZWNrIG1ha2VzIHN1cmUgd2Ugd2lsbCBvbmx5IGhhdmUNCj4gcHV0IGENCj4gPiA+IGNtZCBv
+biB0aGUgY21kcXVldWUgbGlzdCBpZiBxdWV1ZWRfY21kc24gd2FzIGxlc3MgdGhhbiBvciBlcXVh
+bCB0bw0KPiB0aGUNCj4gPiA+IG1heF9jbWRzbi4gQW5kIGNtZHNuIGlzIGxlc3MgdGhhbiBvciBl
+cXVhbCB0byBxdWV1ZWRfY21kc24sIHNvIHdlDQo+IGNhbg0KPiA+ID4gcnVuIGlzY3NpX2RhdGFf
+eG1pdCB3aXRob3V0IGNoZWNraW5nIHRoZSB3aW5kb3cgdmFsdWVzIGFnYWluLA0KPiBiZWNhdXNl
+DQo+ID4gPiBpdA0KPiA+ID4gaXMgbm90IHBvc3NpYmxlIGZvciBzb21ldGhpbmcgbGlrZSBtYXhf
+Y21kc24gdG8gZGVjcmVhc2Ugb24gdXMuDQo+ID4NCj4gPg0KPiA+DQo+ID4gSSBhbSBhdHRhY2hp
+bmcgZXJyb3IgY29kZXMgb24gdGhlIGluaXRpdGF0b3IgdGhhdCBzZWVtIHRvIGNvaW5jaWRlDQo+
+IHdpdGggdGhlIHRpbWVvdXQgZXJyb3JzLg0KPiA+DQo+ID4gWyAgMjYxLjg1NTI1NF0gIGNvbm5l
+Y3Rpb242OjA6IHBkdSAob3AgMHg2NSBpdHQgMHgxKSByZWplY3RlZC4gUmVhc29uDQo+IGNvZGUg
+MHg0DQo+ID4gWyAgMjYxLjg1NTI2Nl0gIGNvbm5lY3Rpb242OjA6IHBkdSAob3AgMHhhIGl0dCAw
+eDEpIHJlamVjdGVkLiBSZWFzb24NCj4gY29kZSAweDQNCj4gPiBbICAyNjEuODU1MjY4XSAgY29u
+bmVjdGlvbjY6MDogcGR1IChvcCAweDUxIGl0dCAweDEpIHJlamVjdGVkLiBSZWFzb24NCj4gY29k
+ZSAweDQNCj4gPg0KPiA+DQo+IA0KPiBIaSBNb3Vzc2EsDQo+IA0KPiBBZnRlciBhIGJpdCBtb3Jl
+IHJldmlldywgdGhlcmUgbWF5IGJlIGEgc2NlbmFyaW8gaW50cm9kdWNlZCB3aXRoIHYzLjEwDQo+
+IGNvZGUgdGhhdCBjb3VsZCBjYXVzZSBzb21ldGhpbmcgbGlrZSB0aGUgcmVwb3J0ZWQgQ21kU04g
+PiBNYXhDbWRTTg0KPiBlcnJvcg0KPiB0byBvY2N1ci4uDQo+IA0KPiBDYXJlIHRvIGF0dGVtcHQg
+dG8gcmVwcm9kdWNlIHdpdGggdGhlIGZvbGxvd2luZyB0YXJnZXQgcGF0Y2guLj8NCj4gDQo+IFRo
+YW5rcywNCj4gDQo+IC0tbmFiDQo+IA0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9pbmZpbmliYW5k
+L3VscC9pc2VydC9pYl9pc2VydC5jDQo+IGIvZHJpdmVycy9pbmZpbmliYW5kL3VscC9pc2VydC9p
+Yl9pc2VydC5jDQo+IGluZGV4IGJiZDg2ZTguLjU2NjEwNzUgMTAwNjQ0DQo+IC0tLSBhL2RyaXZl
+cnMvaW5maW5pYmFuZC91bHAvaXNlcnQvaWJfaXNlcnQuYw0KPiArKysgYi9kcml2ZXJzL2luZmlu
+aWJhbmQvdWxwL2lzZXJ0L2liX2lzZXJ0LmMNCj4gQEAgLTIwMjksOCArMjAyOSw2IEBAIGlzZXJ0
+X21hcF9yZG1hKHN0cnVjdCBpc2NzaV9jb25uICpjb25uLCBzdHJ1Y3QNCj4gaXNjc2lfY21kICpj
+bWQsDQo+IA0KPiAgICAgICAgIGlmICh3ci0+aXNlcl9pYl9vcCA9PSBJU0VSX0lCX1JETUFfV1JJ
+VEUpIHsNCj4gICAgICAgICAgICAgICAgIGRhdGFfbGVmdCA9IHNlX2NtZC0+ZGF0YV9sZW5ndGg7
+DQo+IC0gICAgICAgICAgICAgICBpc2NzaXRfaW5jcmVtZW50X21heGNtZHNuKGNtZCwgY29ubi0+
+c2Vzcyk7DQo+IC0gICAgICAgICAgICAgICBjbWQtPnN0YXRfc24gPSBjb25uLT5zdGF0X3NuKys7
+DQo+ICAgICAgICAgfSBlbHNlIHsNCj4gICAgICAgICAgICAgICAgIHNnX29mZiA9IGNtZC0+d3Jp
+dGVfZGF0YV9kb25lIC8gUEFHRV9TSVpFOw0KPiAgICAgICAgICAgICAgICAgZGF0YV9sZWZ0ID0g
+c2VfY21kLT5kYXRhX2xlbmd0aCAtIGNtZC0+d3JpdGVfZGF0YV9kb25lOw0KPiBAQCAtMjI0Miw4
+ICsyMjQwLDYgQEAgaXNlcnRfcmVnX3JkbWFfZnJ3cihzdHJ1Y3QgaXNjc2lfY29ubiAqY29ubiwN
+Cj4gc3RydWN0IGlzY3NpX2NtZCAqY21kLA0KPiANCj4gICAgICAgICBpZiAod3ItPmlzZXJfaWJf
+b3AgPT0gSVNFUl9JQl9SRE1BX1dSSVRFKSB7DQo+ICAgICAgICAgICAgICAgICBkYXRhX2xlZnQg
+PSBzZV9jbWQtPmRhdGFfbGVuZ3RoOw0KPiAtICAgICAgICAgICAgICAgaXNjc2l0X2luY3JlbWVu
+dF9tYXhjbWRzbihjbWQsIGNvbm4tPnNlc3MpOw0KPiAtICAgICAgICAgICAgICAgY21kLT5zdGF0
+X3NuID0gY29ubi0+c3RhdF9zbisrOw0KPiAgICAgICAgIH0gZWxzZSB7DQo+ICAgICAgICAgICAg
+ICAgICBzZ19vZmYgPSBjbWQtPndyaXRlX2RhdGFfZG9uZSAvIFBBR0VfU0laRTsNCj4gICAgICAg
+ICAgICAgICAgIGRhdGFfbGVmdCA9IHNlX2NtZC0+ZGF0YV9sZW5ndGggLSBjbWQtPndyaXRlX2Rh
+dGFfZG9uZTsNCj4gQEAgLTIzNTIsNyArMjM0OCw3IEBAIGlzZXJ0X3B1dF9kYXRhaW4oc3RydWN0
+IGlzY3NpX2Nvbm4gKmNvbm4sIHN0cnVjdA0KPiBpc2NzaV9jbWQgKmNtZCkNCj4gICAgICAgICAg
+KiBCdWlsZCBpc2VydF9jb25uLT50eF9kZXNjIGZvciBpU0NTSSByZXNwb25zZSBQRFUgYW5kIGF0
+dGFjaA0KPiAgICAgICAgICAqLw0KPiAgICAgICAgIGlzZXJ0X2NyZWF0ZV9zZW5kX2Rlc2MoaXNl
+cnRfY29ubiwgaXNlcnRfY21kLCAmaXNlcnRfY21kLQ0KPiA+dHhfZGVzYyk7DQo+IC0gICAgICAg
+aXNjc2l0X2J1aWxkX3JzcF9wZHUoY21kLCBjb25uLCBmYWxzZSwgKHN0cnVjdCBpc2NzaV9zY3Np
+X3JzcA0KPiAqKQ0KPiArICAgICAgIGlzY3NpdF9idWlsZF9yc3BfcGR1KGNtZCwgY29ubiwgdHJ1
+ZSwgKHN0cnVjdCBpc2NzaV9zY3NpX3JzcCAqKQ0KPiAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICZpc2VydF9jbWQtPnR4X2Rlc2MuaXNjc2lfaGVhZGVyKTsNCj4gICAgICAgICBpc2VydF9p
+bml0X3R4X2hkcnMoaXNlcnRfY29ubiwgJmlzZXJ0X2NtZC0+dHhfZGVzYyk7DQo+ICAgICAgICAg
+aXNlcnRfaW5pdF9zZW5kX3dyKGlzZXJ0X2Nvbm4sIGlzZXJ0X2NtZCwNCj4gZGlmZiAtLWdpdCBh
+L2RyaXZlcnMvdGFyZ2V0L2lzY3NpL2lzY3NpX3RhcmdldF9jb25maWdmcy5jDQo+IGIvZHJpdmVy
+cy90YXJnZXQvaXNjc2kvaXNjc2lfdGFyZ2V0X2NvbmZpZw0KPiBpbmRleCAxZWVjMzdjLi5mZGUz
+NjI0IDEwMDY0NA0KPiAtLS0gYS9kcml2ZXJzL3RhcmdldC9pc2NzaS9pc2NzaV90YXJnZXRfY29u
+ZmlnZnMuYw0KPiArKysgYi9kcml2ZXJzL3RhcmdldC9pc2NzaS9pc2NzaV90YXJnZXRfY29uZmln
+ZnMuYw0KPiBAQCAtMTc5MCw2ICsxNzkwLDExIEBAIHN0YXRpYyBpbnQgbGlvX3F1ZXVlX3N0YXR1
+cyhzdHJ1Y3Qgc2VfY21kDQo+ICpzZV9jbWQpDQo+ICAgICAgICAgc3RydWN0IGlzY3NpX2NtZCAq
+Y21kID0gY29udGFpbmVyX29mKHNlX2NtZCwgc3RydWN0IGlzY3NpX2NtZCwNCj4gc2VfY21kKTsN
+Cj4gDQo+ICAgICAgICAgY21kLT5pX3N0YXRlID0gSVNUQVRFX1NFTkRfU1RBVFVTOw0KPiArDQo+
+ICsgICAgICAgaWYgKGNtZC0+c2VfY21kLnNjc2lfc3RhdHVzIHx8IGNtZC0+c2Vuc2VfcmVhc29u
+KSB7DQo+ICsgICAgICAgICAgICAgICBpc2NzaXRfYWRkX2NtZF90b19yZXNwb25zZV9xdWV1ZShj
+bWQsIGNtZC0+Y29ubiwgY21kLQ0KPiA+aV9zdGF0ZSk7DQo+ICsgICAgICAgICAgICAgICByZXR1
+cm4gMDsNCj4gKyAgICAgICB9DQo+ICAgICAgICAgY21kLT5jb25uLT5jb25uX3RyYW5zcG9ydC0+
+aXNjc2l0X3F1ZXVlX3N0YXR1cyhjbWQtPmNvbm4sIGNtZCk7DQo+IA0KPiAgICAgICAgIHJldHVy
+biAwOw0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy90YXJnZXQvaXNjc2kvaXNjc2lfdGFyZ2V0X2Rl
+dmljZS5jDQo+IGIvZHJpdmVycy90YXJnZXQvaXNjc2kvaXNjc2lfdGFyZ2V0X2RldmljZS5jDQo+
+IGluZGV4IDZjN2E1MTAuLjcwODdjNzMgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvdGFyZ2V0L2lz
+Y3NpL2lzY3NpX3RhcmdldF9kZXZpY2UuYw0KPiArKysgYi9kcml2ZXJzL3RhcmdldC9pc2NzaS9p
+c2NzaV90YXJnZXRfZGV2aWNlLmMNCj4gQEAgLTU4LDExICs1OCw3IEBAIHZvaWQgaXNjc2l0X2lu
+Y3JlbWVudF9tYXhjbWRzbihzdHJ1Y3QgaXNjc2lfY21kDQo+ICpjbWQsIHN0cnVjdCBpc2NzaV9z
+ZXNzaW9uICpzZXNzDQo+IA0KPiAgICAgICAgIGNtZC0+bWF4Y21kc25faW5jID0gMTsNCj4gDQo+
+IC0gICAgICAgaWYgKCFtdXRleF90cnlsb2NrKCZzZXNzLT5jbWRzbl9tdXRleCkpIHsNCj4gLSAg
+ICAgICAgICAgICAgIHNlc3MtPm1heF9jbWRfc24gKz0gMTsNCj4gLSAgICAgICAgICAgICAgIHBy
+X2RlYnVnKCJVcGRhdGVkIE1heENtZFNOIHRvIDB4JTA4eFxuIiwgc2Vzcy0NCj4gPm1heF9jbWRf
+c24pOw0KPiAtICAgICAgICAgICAgICAgcmV0dXJuOw0KPiAtICAgICAgIH0NCj4gKyAgICAgICBt
+dXRleF9sb2NrKCZzZXNzLT5jbWRzbl9tdXRleCk7DQo+ICAgICAgICAgc2Vzcy0+bWF4X2NtZF9z
+biArPSAxOw0KPiAgICAgICAgIHByX2RlYnVnKCJVcGRhdGVkIE1heENtZFNOIHRvIDB4JTA4eFxu
+Iiwgc2Vzcy0+bWF4X2NtZF9zbik7DQo+ICAgICAgICAgbXV0ZXhfdW5sb2NrKCZzZXNzLT5jbWRz
+bl9tdXRleCk7DQo+IA0KPiANCj4gLS0NCj4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6
+IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIHRhcmdldC1kZXZlbCINCj4gaW4NCj4gdGhlIGJv
+ZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcNCj4gTW9yZSBtYWpv
+cmRvbW8gaW5mbyBhdCAgaHR0cDovL3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5mby5odG1s
+DQo=
