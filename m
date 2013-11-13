@@ -1,58 +1,39 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH] scsi: avoid use of reclaimed reference
-Date: Wed, 13 Nov 2013 13:06:43 +0100
-Message-ID: <52836B53.4080204@acm.org>
-References: <cover.1384304973.git.decot@googlers.com> <643cda2192c25962f37c8bba65e22f70a57167d0.1384304973.git.decot@googlers.com>
+From: Anand <anandkumar_santhanam@pmc-sierra.com>
+Subject: [PATCH V2 0/4]: pm8001 driver bug fixes.
+Date: Wed, 13 Nov 2013 05:21:58 -0800
+Message-ID: <52837CF6.9030302@pmc-sierra.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp03.stone-is.org ([87.238.162.6]:55169 "EHLO
-	smtpgw.stone-is.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751450Ab3KMMfw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Nov 2013 07:35:52 -0500
-In-Reply-To: <643cda2192c25962f37c8bba65e22f70a57167d0.1384304973.git.decot@googlers.com>
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:50309 "EHLO
+	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752683Ab3KMNTI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 13 Nov 2013 08:19:08 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: David Decotigny <decot@googlers.com>, linux-scsi@vger.kernel.org
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-kernel@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: xjtuwjp@gmail.com, Sangeetha.Gnanasekaran@pmcs.com, Viswas.G@pmcs.com, Nikith.Ganigarakoppal@pmcs.com
 
-On 11/13/13 02:10, David Decotigny wrote:
-> This patch avoids to use an object after it was potentially reclaimed
-> by scsi_device_put().
->
-> Signed-off-by: David Decotigny <decot@googlers.com>
-> ---
->   drivers/scsi/scsi_scan.c | 6 ++++--
->   1 file changed, 4 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-> index 307a811..16e4a44 100644
-> --- a/drivers/scsi/scsi_scan.c
-> +++ b/drivers/scsi/scsi_scan.c
-> @@ -1498,12 +1498,14 @@ static int scsi_report_lun_scan(struct scsi_target *starget, int bflags,
->    out_err:
->   	kfree(lun_data);
->    out:
-> -	scsi_device_put(sdev);
-> -	if (scsi_device_created(sdev))
-> +	if (scsi_device_created(sdev)) {
->   		/*
->   		 * the sdev we used didn't appear in the report luns scan
->   		 */
->   		__scsi_remove_device(sdev);
-> +	}
-> +
-> +	scsi_device_put(sdev);
->   	return ret;
->   }
+>From 9dda7700201be93d4d2b83c2733be3d582859bc7 Mon Sep 17 00:00:00 2001
+From: Nikith Ganigarakoppal <Nikith.Ganigarakoppal@pmcs.com>
+Date: Wed, 13 Nov 2013 15:38:27 +0530
+Subject: [PATCH V2 0/4]: pm8001 driver bug fixes.
 
-It would help if you could explain why you started looking at this code. 
-Is the above patch something you came up with after having analyzed the 
-SCSI mid-layer source code or perhaps as the result of a test that 
-failed ? If so, which test was it that failed ?
 
-Thanks,
+Nikith Ganigarakoppal (4):
+  pm80xx: Module author updation.
+  pm80xx: Fix for direct attached device.
+  pm80xx: Resetting the phy state.
+  pm80xx: Tasklets synchronization fix.
 
-Bart.
+ drivers/scsi/pm8001/pm8001_hwi.c  |    2 +
+ drivers/scsi/pm8001/pm8001_hwi.h  |    4 ++
+ drivers/scsi/pm8001/pm8001_init.c |   91 +++++++++++++++++++++---------------
+ drivers/scsi/pm8001/pm8001_sas.c  |    4 +-
+ drivers/scsi/pm8001/pm8001_sas.h  |    9 +++-
+ drivers/scsi/pm8001/pm80xx_hwi.c  |    2 +
+ drivers/scsi/pm8001/pm80xx_hwi.h  |    2 +
+ 7 files changed, 72 insertions(+), 42 deletions(-)
 
