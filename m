@@ -1,48 +1,63 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 00/11] target_core_mod: ALUA updates
-Date: Wed, 13 Nov 2013 07:46:34 +0100
-Message-ID: <5283204A.80103@suse.de>
-References: <1381908048-82014-1-git-send-email-hare@suse.de>  <1383771282.4216.67.camel@haakon3.risingtidesystems.com> <1384292985.12281.103.camel@haakon3.risingtidesystems.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] scsi: avoid use of reclaimed reference
+Date: Tue, 12 Nov 2013 22:46:42 -0800
+Message-ID: <1384325202.3149.8.camel@dabdike.int.hansenpartnership.com>
+References: <cover.1384304973.git.decot@googlers.com>
+	 <643cda2192c25962f37c8bba65e22f70a57167d0.1384304973.git.decot@googlers.com>
+	 <1384307830.2248.17.camel@dabdike>
+	 <CAG88wWZyodGU7AmTX=wYWn5igr-ySm_HLs0uA1iO+Fxq3msRnA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1384292985.12281.103.camel@haakon3.risingtidesystems.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Nic Bellinger <nab@daterainc.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:39772 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751383Ab3KMGqv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 13 Nov 2013 01:46:51 -0500
+In-Reply-To: <CAG88wWZyodGU7AmTX=wYWn5igr-ySm_HLs0uA1iO+Fxq3msRnA@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: David Decotigny <decot@googlers.com>
+Cc: linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On 11/12/2013 10:49 PM, Nicholas A. Bellinger wrote:
-> On Wed, 2013-11-06 at 12:54 -0800, Nicholas A. Bellinger wrote:
->> Hello Hannes,
->>
->> Any updates on this series..?
->>
->> I'd really like to get the -v2 of this included for v3.13, along wit=
-h
->> the initial Referrals bits.
->>
->=20
-> Any update Hannes..?
->=20
-> I'm fine with merging this series without the common ALUA definition
-> breakout with scsi_dh_alua for v3.13..
->=20
-> Care to respin a -v2 with the handful of minor comments in the origin=
-al
-> posting..?
->=20
-Gnaa. I knew I've forgotten something.
+On Tue, 2013-11-12 at 18:09 -0800, David Decotigny wrote:
+> I was considering the following scenario wherein the "if
+> (scsi_device_created(sdev))" test at the end would test garbage at
+> best (or unmapped data):
 
-But yeah, I'll be posting a new series.
+Well, no, the counting isn't right:
 
-Cheers,
+>        if (!(sdev = scsi_device_lookup_by_target(starget, 0))) {  // not found
+>                sdev = scsi_alloc_sdev(starget, 0, NULL);    // -> ref cnt = 2
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
-)
+1
+
+>                if (scsi_device_get(sdev)) {  // -> ref cnt = 3
+
+2
+
+>                }
+>                ...
+>        }
+>       ...
+>                        res = scsi_probe_and_add_lun(starget,    // ->
+> ref cnt = 1
+
+No idea what you think here, where were the other puts?  If starget,lun
+is sdev, then the count goes to 3 here otherwise it stays at 2 if it
+isn't reported in the scan.
+      ...
+>        scsi_device_put(sdev);  // -> reclaimed
+
+No, it goes to either 2 or 1 here.  If it goes to 1 it's because the
+sdev was never probed and thus it remains in the created state.
+
+>        if (scsi_device_created(sdev))  // test on garbage or unmapped data (#PF)
+
+Which means this test passes and it gets garbage collected by
+__scsi_remove_device().  Otherwise we exit with refcount 2.
+
+James
+
+
