@@ -1,118 +1,180 @@
-From: Jack Wang <xjtuwjp@gmail.com>
-Subject: Re: [PATCH V1 2/3] pm80xx: Resetting the phy state.
-Date: Wed, 13 Nov 2013 10:35:41 +0100
-Message-ID: <528347ED.6050007@gmail.com>
-References: <528104C1.3050300@pmc-sierra.com>
+From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+Subject: Re: [patch] [SCSI] qla4xxx: overflow in qla4xxx_set_chap_entry()
+Date: Wed, 13 Nov 2013 11:52:37 +0000
+Message-ID: <3FC4AB8B47ECD546BCD4B361A64BEACD8C62AF37@avmb3.qlogic.org>
+References: <20131113074811.GF25541@elgon.mountain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="_000_3FC4AB8B47ECD546BCD4B361A64BEACD8C62AF37avmb3qlogicorg_"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bk0-f41.google.com ([209.85.214.41]:63865 "EHLO
-	mail-bk0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758570Ab3KMJfl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Nov 2013 04:35:41 -0500
-Received: by mail-bk0-f41.google.com with SMTP id v15so190378bkz.14
-        for <linux-scsi@vger.kernel.org>; Wed, 13 Nov 2013 01:35:40 -0800 (PST)
-In-Reply-To: <528104C1.3050300@pmc-sierra.com>
+Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:16003 "EHLO
+	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759098Ab3KMLwj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 13 Nov 2013 06:52:39 -0500
+Received: from pps.filterd (m0045602.ppops.net [127.0.0.1])
+	by mx0a-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id rADBqZIU024639
+	for <linux-scsi@vger.kernel.org>; Wed, 13 Nov 2013 03:52:38 -0800
+Received: from avcashub1.qlogic.com (avcashub2.qlogic.com [198.70.193.116])
+	by mx0a-0016ce01.pphosted.com with ESMTP id 1g0dh401ab-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Wed, 13 Nov 2013 03:52:38 -0800
+In-Reply-To: <20131113074811.GF25541@elgon.mountain>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Anand <anandkumar_santhanam@pmc-sierra.com>
-Cc: linux-scsi@vger.kernel.org, Sangeetha.Gnanasekaran@pmcs.com, Viswas.G@pmcs.com, Nikith.Ganigarakoppal@pmcs.com
+To: Dan Carpenter <dan.carpenter@oracle.com>, Adheer Chandravanshi <adheer.chandravanshi@qlogic.com>
+Cc: Dept-Eng iSCSI Driver <Dept-iSCSIDriver@qlogic.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi <linux-scsi@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
 
-On 11/11/2013 05:24 PM, Anand wrote:
-> From 800d934dd22f3ef5d7f52d900295d371d17004bd Mon Sep 17 00:00:00 2001
-> From: Nikith Ganigarakoppal <Nikith.Ganigarakoppal@pmcs.com>
-> Date: Wed, 30 Oct 2013 16:23:47 +0530
-> Subject: [PATCH V1 2/3] pm80xx: Resetting the phy state.
-> 
-> Setting the phy state for hard reset response.
-> After sending hard reset for a device ,phy down event sets
-> the phy state to zero but for phy up event it will not set
-> the phy state again.This will cause problem to successive
-> hard resets.
-> 
-> 
-> Signed-off-by: Anandkumar.Santhanam@pmcs.com
-> Signed-off-by: Nikith.Ganigarakoppal@pmcs.com
-Nice catch, Thanks
+--_000_3FC4AB8B47ECD546BCD4B361A64BEACD8C62AF37avmb3qlogicorg_
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <B86101E91DFE2C4B9BC9618CE2CAABF9@qlogic.com>
+Content-Transfer-Encoding: quoted-printable
 
-Reviewed-by: Jack Wang <jinpu.wang@profitbricks.com>
 
-PS: same about the signed-off chain.
-> ---
->  drivers/scsi/pm8001/pm8001_hwi.c |    2 ++
->  drivers/scsi/pm8001/pm8001_hwi.h |    4 ++++
->  drivers/scsi/pm8001/pm80xx_hwi.c |    2 ++
->  drivers/scsi/pm8001/pm80xx_hwi.h |    2 ++
->  4 files changed, 10 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-> index 9961616..b23f49d 100644
-> --- a/drivers/scsi/pm8001/pm8001_hwi.c
-> +++ b/drivers/scsi/pm8001/pm8001_hwi.c
-> @@ -3403,6 +3403,7 @@ hw_event_sas_phy_up(struct pm8001_hba_info *pm8001_ha, void *piomb)
->  	unsigned long flags;
->  	u8 deviceType = pPayload->sas_identify.dev_type;
->  	port->port_state =  portstate;
-> +	phy->phy_state = PHY_STATE_LINK_UP_SPC;
->  	PM8001_MSG_DBG(pm8001_ha,
->  		pm8001_printk("HW_EVENT_SAS_PHY_UP port id = %d, phy id = %d\n",
->  		port_id, phy_id));
-> @@ -3483,6 +3484,7 @@ hw_event_sata_phy_up(struct pm8001_hba_info *pm8001_ha, void *piomb)
->  		pm8001_printk("HW_EVENT_SATA_PHY_UP port id = %d,"
->  		" phy id = %d\n", port_id, phy_id));
->  	port->port_state =  portstate;
-> +	phy->phy_state = PHY_STATE_LINK_UP_SPC;
->  	port->port_attached = 1;
->  	pm8001_get_lrate_mode(phy, link_rate);
->  	phy->phy_type |= PORT_TYPE_SATA;
-> diff --git a/drivers/scsi/pm8001/pm8001_hwi.h b/drivers/scsi/pm8001/pm8001_hwi.h
-> index 6d91e24..e4867e6 100644
-> --- a/drivers/scsi/pm8001/pm8001_hwi.h
-> +++ b/drivers/scsi/pm8001/pm8001_hwi.h
-> @@ -131,6 +131,10 @@
->  #define LINKRATE_30			(0x02 << 8)
->  #define LINKRATE_60			(0x04 << 8)
->  
-> +/* for phy state */
-> +
-> +#define PHY_STATE_LINK_UP_SPC		0x1
-> +
->  /* for new SPC controllers MEMBASE III is shared between BIOS and DATA */
->  #define GSM_SM_BASE			0x4F0000
->  struct mpi_msg_hdr{
-> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-> index 4ebc79b..41bee62 100644
-> --- a/drivers/scsi/pm8001/pm80xx_hwi.c
-> +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-> @@ -2894,6 +2894,7 @@ hw_event_sas_phy_up(struct pm8001_hba_info *pm8001_ha, void *piomb)
->  	unsigned long flags;
->  	u8 deviceType = pPayload->sas_identify.dev_type;
->  	port->port_state = portstate;
-> +	phy->phy_state = PHY_STATE_LINK_UP_SPCV;
->  	PM8001_MSG_DBG(pm8001_ha, pm8001_printk(
->  		"portid:%d; phyid:%d; linkrate:%d; "
->  		"portstate:%x; devicetype:%x\n",
-> @@ -2978,6 +2979,7 @@ hw_event_sata_phy_up(struct pm8001_hba_info *pm8001_ha, void *piomb)
->  				port_id, phy_id, link_rate, portstate));
->  
->  	port->port_state = portstate;
-> +	phy->phy_state = PHY_STATE_LINK_UP_SPCV;
->  	port->port_attached = 1;
->  	pm8001_get_lrate_mode(phy, link_rate);
->  	phy->phy_type |= PORT_TYPE_SATA;
-> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.h b/drivers/scsi/pm8001/pm80xx_hwi.h
-> index c86816b..9970a38 100644
-> --- a/drivers/scsi/pm8001/pm80xx_hwi.h
-> +++ b/drivers/scsi/pm8001/pm80xx_hwi.h
-> @@ -215,6 +215,8 @@
->  #define SAS_DOPNRJT_RTRY_TMO            128
->  #define SAS_COPNRJT_RTRY_TMO            128
->  
-> +/* for phy state */
-> +#define PHY_STATE_LINK_UP_SPCV		0x2
->  /*
->    Making ORR bigger than IT NEXUS LOSS which is 2000000us = 2 second.
->    Assuming a bigger value 3 second, 3000000/128 = 23437.5 where 128
-> 
 
+-----Original Message-----
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Date: Wednesday, 13 November 2013 1:18 pm
+To: Vikas <vikas.chaudhary@qlogic.com>, Adheer Chandravanshi
+<adheer.chandravanshi@qlogic.com>
+Cc: Dept-Eng iSCSI Driver <Dept-iSCSIDriver@qlogic.com>, "James E.J.
+Bottomley" <JBottomley@parallels.com>, scsi <linux-scsi@vger.kernel.org>,
+"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
+Subject: [patch] [SCSI] qla4xxx: overflow in qla4xxx_set_chap_entry()
+
+>We should cap the size of memcpy() because it comes from the network
+>and can't be trusted.
+
+This patch is on assumption that data is coming from network,
+but in this case data come from application (iscsiadm) with correct length.
+
+
+>
+>Fixes: 26ffd7b45fe9 ('[SCSI] qla4xxx: Add support to set CHAP entries')
+>Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+>
+>diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+>index a28d5e6..cf174a4 100644
+>--- a/drivers/scsi/qla4xxx/ql4_os.c
+>+++ b/drivers/scsi/qla4xxx/ql4_os.c
+>@@ -802,6 +802,7 @@ static int qla4xxx_set_chap_entry(struct Scsi_Host
+>*shost, void *data, int len)
+> 	int type;
+> 	int rem =3D len;
+> 	int rc =3D 0;
+>+	int size;
+>=20
+> 	memset(&chap_rec, 0, sizeof(chap_rec));
+>=20
+>@@ -816,12 +817,14 @@ static int qla4xxx_set_chap_entry(struct Scsi_Host
+>*shost, void *data, int len)
+> 			chap_rec.chap_type =3D param_info->value[0];
+> 			break;
+> 		case ISCSI_CHAP_PARAM_USERNAME:
+>-			memcpy(chap_rec.username, param_info->value,
+>-			       param_info->len);
+>+			size =3D min_t(size_t, sizeof(chap_rec.username),
+>+				     param_info->len);
+>+			memcpy(chap_rec.username, param_info->value, size);
+> 			break;
+> 		case ISCSI_CHAP_PARAM_PASSWORD:
+>-			memcpy(chap_rec.password, param_info->value,
+>-			       param_info->len);
+>+			size =3D min_t(size_t, sizeof(chap_rec.password),
+>+				     param_info->len);
+>+			memcpy(chap_rec.password, param_info->value, size);
+> 			break;
+> 		case ISCSI_CHAP_PARAM_PASSWORD_LEN:
+> 			chap_rec.password_length =3D param_info->value[0];
+
+
+--_000_3FC4AB8B47ECD546BCD4B361A64BEACD8C62AF37avmb3qlogicorg_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
+
+eJ8+Im0rAQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAADEyNzBCQzdD
+NUIwRkVDNDlCMjcyNjlBNjBBMTlDOTE1ACsHAQ2ABAACAAAAAgACAAEFgAMADgAAAN0HCwANAAsA
+NAAlAAMAYwEBIIADAA4AAADdBwsADQALADQAJQADAGMBAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
+YWlsLk5vdGUAMQgBBIABAEEAAABSZTogW3BhdGNoXSBbU0NTSV0gcWxhNHh4eDogb3ZlcmZsb3cg
+aW4gcWxhNHh4eF9zZXRfY2hhcF9lbnRyeSgpACQXAQOQBgAsEQAAMgAAAAIBfwABAAAAPAAAADwz
+RkM0QUI4QjQ3RUNENTQ2QkNENEIzNjFBNjRCRUFDRDhDNjJBRjM3QGF2bWIzLnFsb2dpYy5vcmc+
+AAsAHw4BAAAAAgEJEAEAAACQBQAAjAUAAGgLAABMWkZ1h9wqL2EACmZiaWQEAABjY8BwZzEyNTIA
+/gND8HRleHQB9wKkA+MCAARjaArAc2V0MCDvB20CgwBQEU0yCoAGtAKAln0KgAjIOwliMTkOwL8J
+wxZyCjIWcQKAFWIqCbBzCfAEkGF0BbIOUANgc6JvAYAgRXgRwW4YMF0GUnYEkBe2AhByAMB0fQhQ
+bhoxECAFwAWgG2RkmiADUiAQIheyXHYIkOR3awuAZDUdUwTwB0ANF3AwCnEX8mJrbWsGcwGQACAg
+Qk1fQuBFR0lOfQr8AfEL8lpsC4BlCoEhpC0ick89BRBnC4AHQAXQB5BzYRcYMCJzIZVGA2E6IEQ1
+A5FDCsBwCfAbojxk7QBwLh5QJUVABbAA0B5weyYAA3A+IZUk4BAgJMBXCwmAGFBzJdB5LCAx+jMH
+sG8aMAbQG7EB0CjhgDE6MTggcG0hlYRUbyTAVmlrYQQgnjwdYCsxJgAR0HVkEdHYeUBxCQAi8GMn
+EyjArkEsIAngBcBDGaFkGHCadgBxaACgIaQ8YS1jTyvSLfgseiGVQ2MkwWUJBTAtRRnAIGlTQ/xT
+SSTQBRAaMSWwMcMyUyMytCx8IkphB4JFLuRKLiGVQm8CQANwHnDUeSIlsEo2N0AKsQdA/R5wbCvB
+LQME8ACQJbAhoch1eC04okB2GDAvYNZrBJE4AC4FsGctICGVUiI6BC1qAHBpGJFzHzmuNsE7TznN
+IZVTdWKqagWQdCTAWwqwdBHAHl1AUDJiQMAsgGE0eOdBkCTAKSFyZgkAB+ALgJVBRl8SAV8RwXBf
+JWFpLFAoKSGcPigwOJBo7QhgbBxgHlBwHMAtcDiQrGl6GeAZMCAHgG0OYO1D8SApYB5QdRIAMkAF
+QJ8nIQeRHIRGARhQdHcFsM5rRJYt4UWhbicFQClg/RzAckeAHEE1tipmLnAEIC9AczJABCACICAr
+QHN1um0FMGlM4UXwGIAgJdD/AZBMoichC4AyMByDSOU6tvxidQVAQnFF8E5iK0AZ4P9OE0fyHHRD
+gAtQDlAYgE2C7igEADixLxBtRyAD8EXw7RvRcglwQCAgHnAZwEXwx0sdRJZElkZpeAeQJMAEMjYB
+IGQ3YjQ16GZlOVLwJ0DuLVAcYO9NMFJQCREcwG84kBIQJRAwSEFQIEOyCJBzJ5lEFj5TIuAYUGQt
+GTDwZi1ieSTPJd8m7VZHOw3gASAgInAi8AVAYS/TLgAy0nMvOKIvQVVhwfw0XxkQXdBHMGD/YgtE
+licdsRAwTQAyOB3QZTbmLl3QAEA3NEFwKNAeoPg2NDREliJxYN9j70S0nitqUGLfaO9EtEBAYHCA
+ODAyLDYgK21C/DcgbQEfYU1wYsALgAVAX0KvQ7QfYEqwVFFTOLFf6kgZEHRElipFQR9gKMDkdm8N
+0CAqThIowG6yn1SBWzcDMAGRbqN0eV0g7xYgc78JcBywPVRydQ92EetiwHZwMHbHK3Q3RjJ2yed2
+60axEgEoJkNjVDEowC4wOIFGQRkwKHvGKSnjec9s9DE2LA6QbZFmYP9/MGagbh9vL3A/cU9yX3Nv
+/4YWG9B71SvSQ5B0wnZhN6LMbV8LgAIQLT4uMApBWFswXXbMhldiCXBhrmuJf4bBURJJMmJfWmIg
+X1BBUkEf0FVTyEVSTo2QRTpnJ4Yb/0a1hudHgQSgNTEowIg/Orb/js2TxZFahUJ4XIZXRjN2cH9O
+sYewgjBGQYewfH+Qpyn/kmeV25OIlE+Zr49vkH+RjX9GI32aii+hL4xPjVWNYFPgU1dPUkSOT52v
+hyP3CrAEEEkRZJ+Pkk+TX5u//5zPlo+Xn6gMmY+an6wPsW//py+oP5/voP+iD6MfpC+lOnBfTEVO
+pfeGD7ZcXz9UhIgPiRwhlRVCw3AfAEIAAQAAACAAAABWAGkAawBhAHMAIABDAGgAYQB1AGQAaABh
+AHIAeQAAAB8AZQABAAAANgAAAHYAaQBrAGEAcwAuAGMAaABhAHUAZABoAGEAcgB5AEAAcQBsAG8A
+ZwBpAGMALgBjAG8AbQAAAAAAHwBkAAEAAAAKAAAAUwBNAFQAUAAAAAAAAgFBAAEAAAB4AAAAAAAA
+AIErH6S+oxAZnW4A3QEPVAIAAACAVgBpAGsAYQBzACAAQwBoAGEAdQBkAGgAYQByAHkAAABTAE0A
+VABQAAAAdgBpAGsAYQBzAC4AYwBoAGEAdQBkAGgAYQByAHkAQABxAGwAbwBnAGkAYwAuAGMAbwBt
+AAAAHwACXQEAAAA2AAAAdgBpAGsAYQBzAC4AYwBoAGEAdQBkAGgAYQByAHkAQABxAGwAbwBnAGkA
+YwAuAGMAbwBtAAAAAAAfAOVfAQAAAD4AAABzAGkAcAA6AHYAaQBrAGEAcwAuAGMAaABhAHUAZABo
+AGEAcgB5AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwAaDAEAAAAgAAAAVgBpAGsAYQBzACAA
+QwBoAGEAdQBkAGgAYQByAHkAAAAfAB8MAQAAADYAAAB2AGkAawBhAHMALgBjAGgAYQB1AGQAaABh
+AHIAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AHgwBAAAACgAAAFMATQBUAFAAAAAAAAIB
+GQwBAAAAeAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgFYAaQBrAGEAcwAgAEMAaABhAHUAZABo
+AGEAcgB5AAAAUwBNAFQAUAAAAHYAaQBrAGEAcwAuAGMAaABhAHUAZABoAGEAcgB5AEAAcQBsAG8A
+ZwBpAGMALgBjAG8AbQAAAB8AAV0BAAAANgAAAHYAaQBrAGEAcwAuAGMAaABhAHUAZABoAGEAcgB5
+AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwD4PwEAAAAgAAAAVgBpAGsAYQBzACAAQwBoAGEA
+dQBkAGgAYQByAHkAAAAfACNAAQAAADYAAAB2AGkAawBhAHMALgBjAGgAYQB1AGQAaABhAHIAeQBA
+AHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AIkABAAAACgAAAFMATQBUAFAAAAAAAAIB+T8BAAAA
+eAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgFYAaQBrAGEAcwAgAEMAaABhAHUAZABoAGEAcgB5
+AAAAUwBNAFQAUAAAAHYAaQBrAGEAcwAuAGMAaABhAHUAZABoAGEAcgB5AEAAcQBsAG8AZwBpAGMA
+LgBjAG8AbQAAAB8ACV0BAAAANgAAAHYAaQBrAGEAcwAuAGMAaABhAHUAZABoAGEAcgB5AEAAcQBs
+AG8AZwBpAGMALgBjAG8AbQAAAAAACwBAOgEAAAAfABoAAQAAABIAAABJAFAATQAuAE4AbwB0AGUA
+AAAAAAMA8T8JBAAACwBAOgEAAAADAP0/5AQAAAIBCzABAAAAEAAAABJwvHxbD+xJsnJppgoZyRUD
+ABcAAQAAAEAAOQCAcN3YZuDOAUAACDBcq+PYZuDOAQsAAIAIIAYAAAAAAMAAAAAAAABGAAAAABSF
+AAABAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAHgAAAGEAYwBjAGUAcAB0AGwAYQBuAGcAdQBh
+AGcAZQAAAAAAAQAAAAwAAABlAG4ALQBVAFMAAAALAACACCAGAAAAAADAAAAAAAAARgAAAAAGhQAA
+AAAAAB8ANwABAAAAggAAAFIAZQA6ACAAWwBwAGEAdABjAGgAXQAgAFsAUwBDAFMASQBdACAAcQBs
+AGEANAB4AHgAeAA6ACAAbwB2AGUAcgBmAGwAbwB3ACAAaQBuACAAcQBsAGEANAB4AHgAeABfAHMA
+ZQB0AF8AYwBoAGEAcABfAGUAbgB0AHIAeQAoACkAAAAAAB8APQABAAAACgAAAFIAZQA6ACAAAAAA
+AAMANgAAAAAAHwBCEAEAAABQAAAAPAAyADAAMQAzADEAMQAxADMAMAA3ADQAOAAxADEALgBHAEYA
+MgA1ADUANAAxAEAAZQBsAGcAbwBuAC4AbQBvAHUAbgB0AGEAaQBuAD4AAAACAXEAAQAAABsAAAAB
+Ac7gRMHVDtMdHTx+Q59MpI/pss/8miPvdAAAHwBwAAEAAAB6AAAAWwBwAGEAdABjAGgAXQAgAFsA
+UwBDAFMASQBdACAAcQBsAGEANAB4AHgAeAA6ACAAbwB2AGUAcgBmAGwAbwB3ACAAaQBuACAAcQBs
+AGEANAB4AHgAeABfAHMAZQB0AF8AYwBoAGEAcABfAGUAbgB0AHIAeQAoACkAAAAAAB8ANRABAAAA
+eAAAADwAMwBGAEMANABBAEIAOABCADQANwBFAEMARAA1ADQANgBCAEMARAA0AEIAMwA2ADEAQQA2
+ADQAQgBFAEEAQwBEADgAQwA2ADIAQQBGADMANwBAAGEAdgBtAGIAMwAuAHEAbABvAGcAaQBjAC4A
+bwByAGcAPgAAAAMA3j+fTgAAQAAHMEKH3Nhm4M4BAwAmAAAAAAACAUcAAQAAAC4AAABjPVVTO2E9
+IDtwPVFMb2dpYztsPUFWTUIzLTEzMTExMzExNTIzN1otNTA1MDIAAAAfABUQAQAAAFgAAABCADgA
+NgAxADAAMQBFADkAMQBEAEYARQAyAEMANABCADkAQgBDADkANgAxADgAQwBFADIAQwBBAEEAQgBG
+ADkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAgEUMAEAAAAMAAAApAAAANF2WwAtAAAAHwD6PwEA
+AAAgAAAAVgBpAGsAYQBzACAAQwBoAGEAdQBkAGgAYQByAHkAAAAfAACAhgMCAAAAAADAAAAAAAAA
+RgEAAAAWAAAAdQBzAGUAcgAtAGEAZwBlAG4AdAAAAAAAAQAAAEYAAABNAGkAYwByAG8AcwBvAGYA
+dAAtAE0AYQBjAE8AdQB0AGwAbwBvAGsALwAxADQALgAzAC4ANgAuADEAMwAwADYAMQAzAAAAAAAf
+AACAH6TrM6h6LkK+e3nhqY5UswEAAAA4AAAAQwBvAG4AdgBlAHIAcwBhAHQAaQBvAG4ASQBuAGQA
+ZQB4AFQAcgBhAGMAawBpAG4AZwBFAHgAAAABAAAAIAEAAEkASQA9ADAAMQAwADEAQwBFAEUAMAA2
+ADYARAA4ADcANwBEADIAMwAzADQARQBBAEUANQAyAEMAMAA0ADYAQgAwAEUAMQBEADAARgBBAEQA
+NAA4ADUANgBCAEIAQwA7AFMAQgBNAEkARAA9ADMAOwBTADEAPQA8ADIAMAAxADMAMQAxADEAMwAw
+ADcANAA4ADEAMQAuAEcARgAyADUANQA0ADEAQABlAGwAZwBvAG4ALgBtAG8AdQBuAHQAYQBpAG4A
+PgA7AFYAZQByAHMAaQBvAG4APQBWAGUAcgBzAGkAbwBuACAAMQA0AC4AMgAgACgAQgB1AGkAbABk
+ACAAMwAxADgALgAwACkALAAgAFMAdABhAGcAZQA9AEgAMgAAAAMADTT9PwAAHwAAgIYDAgAAAAAA
+wAAAAAAAAEYBAAAAIAAAAHgALQBtAHMALQBoAGEAcwAtAGEAdAB0AGEAYwBoAAAAAQAAAAIAAAAA
+AAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAIgAAAHgALQBvAHIAaQBnAGkAbgBhAHQAaQBuAGcA
+LQBpAHAAAAAAAAEAAAAaAAAAWwAxADAALgAzADUALgA0AC4ANgA5AF0AAAAAAC3N
+
+--_000_3FC4AB8B47ECD546BCD4B361A64BEACD8C62AF37avmb3qlogicorg_--
