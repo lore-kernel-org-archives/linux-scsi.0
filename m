@@ -1,55 +1,47 @@
-From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH] target: Fix delayed Task Aborted Status (TAS) handling bug
-Date: Wed, 13 Nov 2013 22:27:50 +0000
-Message-ID: <1384381670-23670-1-git-send-email-nab@daterainc.com>
+From: Mike Miller <mike.miller@hp.com>
+Subject: [PATCH 1/1]scsi: hpsa remove P822se PCI ID
+Date: Wed, 13 Nov 2013 17:42:17 -0600
+Message-ID: <20131113234217.GA23633@beardog.cce.hp.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:47374 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750992Ab3KMWqR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Nov 2013 17:46:17 -0500
+Received: from g1t0026.austin.hp.com ([15.216.28.33]:22083 "EHLO
+	g1t0026.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751067Ab3KMXmT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Nov 2013 18:42:19 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>
+To: Andrew Morton <akpm@linux-foundation.org>, "James E. J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>, thenzl@redhat.com
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+From: Mike Miller <mike.miller@hp.com>
 
-This patch fixes a bug in delayed Task Aborted Status (TAS) handling,
-where transport_send_task_abort() was not returning for the case
-when the se_tfo->write_pending() callback indicated that last fabric
-specific WRITE PDU had not yet been received.
+Remove PCI ID for the never shipped P822se. Please consider this for
+inclusion.
 
-It also adds an explicit cmd->scsi_status = SAM_STAT_TASK_ABORTED
-assignment within transport_check_aborted_status() to avoid the case
-where se_tfo->queue_status() is called when the SAM_STAT_TASK_ABORTED
-assignment + ->queue_status() in transport_send_task_abort() does not
-occur once SCF_SENT_DELAYED_TAS has been set.
-
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+Signed-off-by: Mike Miller <mike.miller@hp.com>
 ---
- drivers/target/target_core_transport.c |    2 ++
- 1 file changed, 2 insertions(+)
+ drivers/scsi/hpsa.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 71f79f6..46d8229 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -2682,6 +2682,7 @@ int transport_check_aborted_status(struct se_cmd *cmd, int send_status)
- 		 cmd->t_task_cdb[0], cmd->se_tfo->get_task_tag(cmd));
- 
- 	cmd->se_cmd_flags |= SCF_SENT_DELAYED_TAS;
-+	cmd->scsi_status = SAM_STAT_TASK_ABORTED;
- 	trace_target_cmd_complete(cmd);
- 	cmd->se_tfo->queue_status(cmd);
- 
-@@ -2710,6 +2711,7 @@ void transport_send_task_abort(struct se_cmd *cmd)
- 		if (cmd->se_tfo->write_pending_status(cmd) != 0) {
- 			cmd->transport_state |= CMD_T_ABORTED;
- 			smp_mb__after_atomic_inc();
-+			return;
- 		}
- 	}
- 	cmd->scsi_status = SAM_STAT_TASK_ABORTED;
--- 
-1.7.10.4
-
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 891c86b..d5b9d58 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -96,7 +96,6 @@ static const struct pci_device_id hpsa_pci_device_id[] = {
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSF,     0x103C, 0x3351},
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSF,     0x103C, 0x3352},
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSF,     0x103C, 0x3353},
+-	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSF,     0x103C, 0x334D},
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSF,     0x103C, 0x3354},
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSF,     0x103C, 0x3355},
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSF,     0x103C, 0x3356},
+@@ -144,7 +143,6 @@ static struct board_type products[] = {
+ 	{0x3351103C, "Smart Array P420", &SA5_access},
+ 	{0x3352103C, "Smart Array P421", &SA5_access},
+ 	{0x3353103C, "Smart Array P822", &SA5_access},
+-	{0x334D103C, "Smart Array P822se", &SA5_access},
+ 	{0x3354103C, "Smart Array P420i", &SA5_access},
+ 	{0x3355103C, "Smart Array P220i", &SA5_access},
+ 	{0x3356103C, "Smart Array P721m", &SA5_access},
