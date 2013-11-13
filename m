@@ -1,180 +1,45 @@
-From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
 Subject: Re: [patch] [SCSI] qla4xxx: overflow in qla4xxx_set_chap_entry()
-Date: Wed, 13 Nov 2013 11:52:37 +0000
-Message-ID: <3FC4AB8B47ECD546BCD4B361A64BEACD8C62AF37@avmb3.qlogic.org>
+Date: Wed, 13 Nov 2013 15:08:12 +0300
+Message-ID: <20131113120812.GM5302@mwanda>
 References: <20131113074811.GF25541@elgon.mountain>
+ <3FC4AB8B47ECD546BCD4B361A64BEACD8C62AF37@avmb3.qlogic.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_000_3FC4AB8B47ECD546BCD4B361A64BEACD8C62AF37avmb3qlogicorg_"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:16003 "EHLO
-	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759098Ab3KMLwj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 Nov 2013 06:52:39 -0500
-Received: from pps.filterd (m0045602.ppops.net [127.0.0.1])
-	by mx0a-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id rADBqZIU024639
-	for <linux-scsi@vger.kernel.org>; Wed, 13 Nov 2013 03:52:38 -0800
-Received: from avcashub1.qlogic.com (avcashub2.qlogic.com [198.70.193.116])
-	by mx0a-0016ce01.pphosted.com with ESMTP id 1g0dh401ab-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Wed, 13 Nov 2013 03:52:38 -0800
-In-Reply-To: <20131113074811.GF25541@elgon.mountain>
-Content-Language: en-US
+Received: from aserp1040.oracle.com ([141.146.126.69]:38616 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758447Ab3KMMIX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Nov 2013 07:08:23 -0500
+Content-Disposition: inline
+In-Reply-To: <3FC4AB8B47ECD546BCD4B361A64BEACD8C62AF37@avmb3.qlogic.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>, Adheer Chandravanshi <adheer.chandravanshi@qlogic.com>
-Cc: Dept-Eng iSCSI Driver <Dept-iSCSIDriver@qlogic.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi <linux-scsi@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
+To: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+Cc: Adheer Chandravanshi <adheer.chandravanshi@qlogic.com>, Dept-Eng iSCSI Driver <Dept-iSCSIDriver@qlogic.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi <linux-scsi@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
 
---_000_3FC4AB8B47ECD546BCD4B361A64BEACD8C62AF37avmb3qlogicorg_
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <B86101E91DFE2C4B9BC9618CE2CAABF9@qlogic.com>
-Content-Transfer-Encoding: quoted-printable
+On Wed, Nov 13, 2013 at 11:52:37AM +0000, Vikas Chaudhary wrote:
+> 
+> 
+> -----Original Message-----
+> From: Dan Carpenter <dan.carpenter@oracle.com>
+> Date: Wednesday, 13 November 2013 1:18 pm
+> To: Vikas <vikas.chaudhary@qlogic.com>, Adheer Chandravanshi
+> <adheer.chandravanshi@qlogic.com>
+> Cc: Dept-Eng iSCSI Driver <Dept-iSCSIDriver@qlogic.com>, "James E.J.
+> Bottomley" <JBottomley@parallels.com>, scsi <linux-scsi@vger.kernel.org>,
+> "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
+> Subject: [patch] [SCSI] qla4xxx: overflow in qla4xxx_set_chap_entry()
+> 
+> >We should cap the size of memcpy() because it comes from the network
+> >and can't be trusted.
+> 
+> This patch is on assumption that data is coming from network,
+> but in this case data come from application (iscsiadm) with correct length.
+> 
 
+No, that doesn't work.  We don't trust user space.
 
+regards,
+dan carpenter
 
------Original Message-----
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Date: Wednesday, 13 November 2013 1:18 pm
-To: Vikas <vikas.chaudhary@qlogic.com>, Adheer Chandravanshi
-<adheer.chandravanshi@qlogic.com>
-Cc: Dept-Eng iSCSI Driver <Dept-iSCSIDriver@qlogic.com>, "James E.J.
-Bottomley" <JBottomley@parallels.com>, scsi <linux-scsi@vger.kernel.org>,
-"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
-Subject: [patch] [SCSI] qla4xxx: overflow in qla4xxx_set_chap_entry()
-
->We should cap the size of memcpy() because it comes from the network
->and can't be trusted.
-
-This patch is on assumption that data is coming from network,
-but in this case data come from application (iscsiadm) with correct length.
-
-
->
->Fixes: 26ffd7b45fe9 ('[SCSI] qla4xxx: Add support to set CHAP entries')
->Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
->
->diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
->index a28d5e6..cf174a4 100644
->--- a/drivers/scsi/qla4xxx/ql4_os.c
->+++ b/drivers/scsi/qla4xxx/ql4_os.c
->@@ -802,6 +802,7 @@ static int qla4xxx_set_chap_entry(struct Scsi_Host
->*shost, void *data, int len)
-> 	int type;
-> 	int rem =3D len;
-> 	int rc =3D 0;
->+	int size;
->=20
-> 	memset(&chap_rec, 0, sizeof(chap_rec));
->=20
->@@ -816,12 +817,14 @@ static int qla4xxx_set_chap_entry(struct Scsi_Host
->*shost, void *data, int len)
-> 			chap_rec.chap_type =3D param_info->value[0];
-> 			break;
-> 		case ISCSI_CHAP_PARAM_USERNAME:
->-			memcpy(chap_rec.username, param_info->value,
->-			       param_info->len);
->+			size =3D min_t(size_t, sizeof(chap_rec.username),
->+				     param_info->len);
->+			memcpy(chap_rec.username, param_info->value, size);
-> 			break;
-> 		case ISCSI_CHAP_PARAM_PASSWORD:
->-			memcpy(chap_rec.password, param_info->value,
->-			       param_info->len);
->+			size =3D min_t(size_t, sizeof(chap_rec.password),
->+				     param_info->len);
->+			memcpy(chap_rec.password, param_info->value, size);
-> 			break;
-> 		case ISCSI_CHAP_PARAM_PASSWORD_LEN:
-> 			chap_rec.password_length =3D param_info->value[0];
-
-
---_000_3FC4AB8B47ECD546BCD4B361A64BEACD8C62AF37avmb3qlogicorg_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
-
-eJ8+Im0rAQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAADEyNzBCQzdD
-NUIwRkVDNDlCMjcyNjlBNjBBMTlDOTE1ACsHAQ2ABAACAAAAAgACAAEFgAMADgAAAN0HCwANAAsA
-NAAlAAMAYwEBIIADAA4AAADdBwsADQALADQAJQADAGMBAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
-YWlsLk5vdGUAMQgBBIABAEEAAABSZTogW3BhdGNoXSBbU0NTSV0gcWxhNHh4eDogb3ZlcmZsb3cg
-aW4gcWxhNHh4eF9zZXRfY2hhcF9lbnRyeSgpACQXAQOQBgAsEQAAMgAAAAIBfwABAAAAPAAAADwz
-RkM0QUI4QjQ3RUNENTQ2QkNENEIzNjFBNjRCRUFDRDhDNjJBRjM3QGF2bWIzLnFsb2dpYy5vcmc+
-AAsAHw4BAAAAAgEJEAEAAACQBQAAjAUAAGgLAABMWkZ1h9wqL2EACmZiaWQEAABjY8BwZzEyNTIA
-/gND8HRleHQB9wKkA+MCAARjaArAc2V0MCDvB20CgwBQEU0yCoAGtAKAln0KgAjIOwliMTkOwL8J
-wxZyCjIWcQKAFWIqCbBzCfAEkGF0BbIOUANgc6JvAYAgRXgRwW4YMF0GUnYEkBe2AhByAMB0fQhQ
-bhoxECAFwAWgG2RkmiADUiAQIheyXHYIkOR3awuAZDUdUwTwB0ANF3AwCnEX8mJrbWsGcwGQACAg
-Qk1fQuBFR0lOfQr8AfEL8lpsC4BlCoEhpC0ick89BRBnC4AHQAXQB5BzYRcYMCJzIZVGA2E6IEQ1
-A5FDCsBwCfAbojxk7QBwLh5QJUVABbAA0B5weyYAA3A+IZUk4BAgJMBXCwmAGFBzJdB5LCAx+jMH
-sG8aMAbQG7EB0CjhgDE6MTggcG0hlYRUbyTAVmlrYQQgnjwdYCsxJgAR0HVkEdHYeUBxCQAi8GMn
-EyjArkEsIAngBcBDGaFkGHCadgBxaACgIaQ8YS1jTyvSLfgseiGVQ2MkwWUJBTAtRRnAIGlTQ/xT
-SSTQBRAaMSWwMcMyUyMytCx8IkphB4JFLuRKLiGVQm8CQANwHnDUeSIlsEo2N0AKsQdA/R5wbCvB
-LQME8ACQJbAhoch1eC04okB2GDAvYNZrBJE4AC4FsGctICGVUiI6BC1qAHBpGJFzHzmuNsE7TznN
-IZVTdWKqagWQdCTAWwqwdBHAHl1AUDJiQMAsgGE0eOdBkCTAKSFyZgkAB+ALgJVBRl8SAV8RwXBf
-JWFpLFAoKSGcPigwOJBo7QhgbBxgHlBwHMAtcDiQrGl6GeAZMCAHgG0OYO1D8SApYB5QdRIAMkAF
-QJ8nIQeRHIRGARhQdHcFsM5rRJYt4UWhbicFQClg/RzAckeAHEE1tipmLnAEIC9AczJABCACICAr
-QHN1um0FMGlM4UXwGIAgJdD/AZBMoichC4AyMByDSOU6tvxidQVAQnFF8E5iK0AZ4P9OE0fyHHRD
-gAtQDlAYgE2C7igEADixLxBtRyAD8EXw7RvRcglwQCAgHnAZwEXwx0sdRJZElkZpeAeQJMAEMjYB
-IGQ3YjQ16GZlOVLwJ0DuLVAcYO9NMFJQCREcwG84kBIQJRAwSEFQIEOyCJBzJ5lEFj5TIuAYUGQt
-GTDwZi1ieSTPJd8m7VZHOw3gASAgInAi8AVAYS/TLgAy0nMvOKIvQVVhwfw0XxkQXdBHMGD/YgtE
-licdsRAwTQAyOB3QZTbmLl3QAEA3NEFwKNAeoPg2NDREliJxYN9j70S0nitqUGLfaO9EtEBAYHCA
-ODAyLDYgK21C/DcgbQEfYU1wYsALgAVAX0KvQ7QfYEqwVFFTOLFf6kgZEHRElipFQR9gKMDkdm8N
-0CAqThIowG6yn1SBWzcDMAGRbqN0eV0g7xYgc78JcBywPVRydQ92EetiwHZwMHbHK3Q3RjJ2yed2
-60axEgEoJkNjVDEowC4wOIFGQRkwKHvGKSnjec9s9DE2LA6QbZFmYP9/MGagbh9vL3A/cU9yX3Nv
-/4YWG9B71SvSQ5B0wnZhN6LMbV8LgAIQLT4uMApBWFswXXbMhldiCXBhrmuJf4bBURJJMmJfWmIg
-X1BBUkEf0FVTyEVSTo2QRTpnJ4Yb/0a1hudHgQSgNTEowIg/Orb/js2TxZFahUJ4XIZXRjN2cH9O
-sYewgjBGQYewfH+Qpyn/kmeV25OIlE+Zr49vkH+RjX9GI32aii+hL4xPjVWNYFPgU1dPUkSOT52v
-hyP3CrAEEEkRZJ+Pkk+TX5u//5zPlo+Xn6gMmY+an6wPsW//py+oP5/voP+iD6MfpC+lOnBfTEVO
-pfeGD7ZcXz9UhIgPiRwhlRVCw3AfAEIAAQAAACAAAABWAGkAawBhAHMAIABDAGgAYQB1AGQAaABh
-AHIAeQAAAB8AZQABAAAANgAAAHYAaQBrAGEAcwAuAGMAaABhAHUAZABoAGEAcgB5AEAAcQBsAG8A
-ZwBpAGMALgBjAG8AbQAAAAAAHwBkAAEAAAAKAAAAUwBNAFQAUAAAAAAAAgFBAAEAAAB4AAAAAAAA
-AIErH6S+oxAZnW4A3QEPVAIAAACAVgBpAGsAYQBzACAAQwBoAGEAdQBkAGgAYQByAHkAAABTAE0A
-VABQAAAAdgBpAGsAYQBzAC4AYwBoAGEAdQBkAGgAYQByAHkAQABxAGwAbwBnAGkAYwAuAGMAbwBt
-AAAAHwACXQEAAAA2AAAAdgBpAGsAYQBzAC4AYwBoAGEAdQBkAGgAYQByAHkAQABxAGwAbwBnAGkA
-YwAuAGMAbwBtAAAAAAAfAOVfAQAAAD4AAABzAGkAcAA6AHYAaQBrAGEAcwAuAGMAaABhAHUAZABo
-AGEAcgB5AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwAaDAEAAAAgAAAAVgBpAGsAYQBzACAA
-QwBoAGEAdQBkAGgAYQByAHkAAAAfAB8MAQAAADYAAAB2AGkAawBhAHMALgBjAGgAYQB1AGQAaABh
-AHIAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AHgwBAAAACgAAAFMATQBUAFAAAAAAAAIB
-GQwBAAAAeAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgFYAaQBrAGEAcwAgAEMAaABhAHUAZABo
-AGEAcgB5AAAAUwBNAFQAUAAAAHYAaQBrAGEAcwAuAGMAaABhAHUAZABoAGEAcgB5AEAAcQBsAG8A
-ZwBpAGMALgBjAG8AbQAAAB8AAV0BAAAANgAAAHYAaQBrAGEAcwAuAGMAaABhAHUAZABoAGEAcgB5
-AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwD4PwEAAAAgAAAAVgBpAGsAYQBzACAAQwBoAGEA
-dQBkAGgAYQByAHkAAAAfACNAAQAAADYAAAB2AGkAawBhAHMALgBjAGgAYQB1AGQAaABhAHIAeQBA
-AHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AIkABAAAACgAAAFMATQBUAFAAAAAAAAIB+T8BAAAA
-eAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgFYAaQBrAGEAcwAgAEMAaABhAHUAZABoAGEAcgB5
-AAAAUwBNAFQAUAAAAHYAaQBrAGEAcwAuAGMAaABhAHUAZABoAGEAcgB5AEAAcQBsAG8AZwBpAGMA
-LgBjAG8AbQAAAB8ACV0BAAAANgAAAHYAaQBrAGEAcwAuAGMAaABhAHUAZABoAGEAcgB5AEAAcQBs
-AG8AZwBpAGMALgBjAG8AbQAAAAAACwBAOgEAAAAfABoAAQAAABIAAABJAFAATQAuAE4AbwB0AGUA
-AAAAAAMA8T8JBAAACwBAOgEAAAADAP0/5AQAAAIBCzABAAAAEAAAABJwvHxbD+xJsnJppgoZyRUD
-ABcAAQAAAEAAOQCAcN3YZuDOAUAACDBcq+PYZuDOAQsAAIAIIAYAAAAAAMAAAAAAAABGAAAAABSF
-AAABAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAHgAAAGEAYwBjAGUAcAB0AGwAYQBuAGcAdQBh
-AGcAZQAAAAAAAQAAAAwAAABlAG4ALQBVAFMAAAALAACACCAGAAAAAADAAAAAAAAARgAAAAAGhQAA
-AAAAAB8ANwABAAAAggAAAFIAZQA6ACAAWwBwAGEAdABjAGgAXQAgAFsAUwBDAFMASQBdACAAcQBs
-AGEANAB4AHgAeAA6ACAAbwB2AGUAcgBmAGwAbwB3ACAAaQBuACAAcQBsAGEANAB4AHgAeABfAHMA
-ZQB0AF8AYwBoAGEAcABfAGUAbgB0AHIAeQAoACkAAAAAAB8APQABAAAACgAAAFIAZQA6ACAAAAAA
-AAMANgAAAAAAHwBCEAEAAABQAAAAPAAyADAAMQAzADEAMQAxADMAMAA3ADQAOAAxADEALgBHAEYA
-MgA1ADUANAAxAEAAZQBsAGcAbwBuAC4AbQBvAHUAbgB0AGEAaQBuAD4AAAACAXEAAQAAABsAAAAB
-Ac7gRMHVDtMdHTx+Q59MpI/pss/8miPvdAAAHwBwAAEAAAB6AAAAWwBwAGEAdABjAGgAXQAgAFsA
-UwBDAFMASQBdACAAcQBsAGEANAB4AHgAeAA6ACAAbwB2AGUAcgBmAGwAbwB3ACAAaQBuACAAcQBs
-AGEANAB4AHgAeABfAHMAZQB0AF8AYwBoAGEAcABfAGUAbgB0AHIAeQAoACkAAAAAAB8ANRABAAAA
-eAAAADwAMwBGAEMANABBAEIAOABCADQANwBFAEMARAA1ADQANgBCAEMARAA0AEIAMwA2ADEAQQA2
-ADQAQgBFAEEAQwBEADgAQwA2ADIAQQBGADMANwBAAGEAdgBtAGIAMwAuAHEAbABvAGcAaQBjAC4A
-bwByAGcAPgAAAAMA3j+fTgAAQAAHMEKH3Nhm4M4BAwAmAAAAAAACAUcAAQAAAC4AAABjPVVTO2E9
-IDtwPVFMb2dpYztsPUFWTUIzLTEzMTExMzExNTIzN1otNTA1MDIAAAAfABUQAQAAAFgAAABCADgA
-NgAxADAAMQBFADkAMQBEAEYARQAyAEMANABCADkAQgBDADkANgAxADgAQwBFADIAQwBBAEEAQgBG
-ADkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAgEUMAEAAAAMAAAApAAAANF2WwAtAAAAHwD6PwEA
-AAAgAAAAVgBpAGsAYQBzACAAQwBoAGEAdQBkAGgAYQByAHkAAAAfAACAhgMCAAAAAADAAAAAAAAA
-RgEAAAAWAAAAdQBzAGUAcgAtAGEAZwBlAG4AdAAAAAAAAQAAAEYAAABNAGkAYwByAG8AcwBvAGYA
-dAAtAE0AYQBjAE8AdQB0AGwAbwBvAGsALwAxADQALgAzAC4ANgAuADEAMwAwADYAMQAzAAAAAAAf
-AACAH6TrM6h6LkK+e3nhqY5UswEAAAA4AAAAQwBvAG4AdgBlAHIAcwBhAHQAaQBvAG4ASQBuAGQA
-ZQB4AFQAcgBhAGMAawBpAG4AZwBFAHgAAAABAAAAIAEAAEkASQA9ADAAMQAwADEAQwBFAEUAMAA2
-ADYARAA4ADcANwBEADIAMwAzADQARQBBAEUANQAyAEMAMAA0ADYAQgAwAEUAMQBEADAARgBBAEQA
-NAA4ADUANgBCAEIAQwA7AFMAQgBNAEkARAA9ADMAOwBTADEAPQA8ADIAMAAxADMAMQAxADEAMwAw
-ADcANAA4ADEAMQAuAEcARgAyADUANQA0ADEAQABlAGwAZwBvAG4ALgBtAG8AdQBuAHQAYQBpAG4A
-PgA7AFYAZQByAHMAaQBvAG4APQBWAGUAcgBzAGkAbwBuACAAMQA0AC4AMgAgACgAQgB1AGkAbABk
-ACAAMwAxADgALgAwACkALAAgAFMAdABhAGcAZQA9AEgAMgAAAAMADTT9PwAAHwAAgIYDAgAAAAAA
-wAAAAAAAAEYBAAAAIAAAAHgALQBtAHMALQBoAGEAcwAtAGEAdAB0AGEAYwBoAAAAAQAAAAIAAAAA
-AAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAIgAAAHgALQBvAHIAaQBnAGkAbgBhAHQAaQBuAGcA
-LQBpAHAAAAAAAAEAAAAaAAAAWwAxADAALgAzADUALgA0AC4ANgA5AF0AAAAAAC3N
-
---_000_3FC4AB8B47ECD546BCD4B361A64BEACD8C62AF37avmb3qlogicorg_--
