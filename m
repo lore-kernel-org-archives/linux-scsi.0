@@ -1,7 +1,7 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH 1/2] iscsi-target: Fix mutex_trylock usage in iscsit_increment_maxcmdsn
-Date: Wed, 13 Nov 2013 02:11:42 +0000
-Message-ID: <1384308703-10034-2-git-send-email-nab@daterainc.com>
+Subject: [PATCH 2/2] ib_isert: Avoid duplicate iscsit_increment_maxcmdsn call
+Date: Wed, 13 Nov 2013 02:11:43 +0000
+Message-ID: <1384308703-10034-3-git-send-email-nab@daterainc.com>
 References: <1384308703-10034-1-git-send-email-nab@daterainc.com>
 Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1384308703-10034-1-git-send-email-nab@daterainc.com>
@@ -12,62 +12,51 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch fixes a >= v3.10 regression bug with mutex_trylock() usage
-within iscsit_increment_maxcmdsn(), that was originally added to allow
-for a special case where ->cmdsn_mutex was already held from the
-iscsit_execute_cmd() exception path for ib_isert.
+This patch avoids a duplicate iscsit_increment_maxcmdsn() call for
+ISER_IB_RDMA_WRITE within isert_map_rdma() + isert_reg_rdma_frwr(),
+which will already be occuring once during isert_put_datain() ->
+iscsit_build_rsp_pdu() operation.
 
-When !mutex_trylock() was occuring under contention during normal RX/TX
-process context codepaths, the bug was manifesting itself as the following
-protocol error:
+It also removes the local conn->stat_sn assignment + increment,
+and changes the third parameter to iscsit_build_rsp_pdu() to
+signal this should be done by iscsi_target_mode code.
 
-  Received CmdSN: 0x000fcbb7 is greater than MaxCmdSN: 0x000fcbb6, protocol error.
-  Received CmdSN: 0x000fcbb8 is greater than MaxCmdSN: 0x000fcbb6, protocol error.
-
-This patch simply avoids the direct ib_isert callback in lio_queue_status()
-for the special iscsi_execute_cmd() exception cases, that allows the problematic
-mutex_trylock() usage in iscsit_increment_maxcmdsn() to go away.
-
-Reported-by: Moussa Ba <moussaba@micron.com>
 Tested-by: Moussa Ba <moussaba@micron.com>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/iscsi/iscsi_target_configfs.c |    5 +++++
- drivers/target/iscsi/iscsi_target_device.c   |    6 +-----
- 2 files changed, 6 insertions(+), 5 deletions(-)
+ drivers/infiniband/ulp/isert/ib_isert.c |    6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
 
-diff --git a/drivers/target/iscsi/iscsi_target_configfs.c b/drivers/target/iscsi/iscsi_target_configfs.c
-index 1eec37c..fde3624 100644
---- a/drivers/target/iscsi/iscsi_target_configfs.c
-+++ b/drivers/target/iscsi/iscsi_target_configfs.c
-@@ -1790,6 +1790,11 @@ static int lio_queue_status(struct se_cmd *se_cmd)
- 	struct iscsi_cmd *cmd = container_of(se_cmd, struct iscsi_cmd, se_cmd);
+diff --git a/drivers/infiniband/ulp/isert/ib_isert.c b/drivers/infiniband/ulp/isert/ib_isert.c
+index bbd86e8..5661075 100644
+--- a/drivers/infiniband/ulp/isert/ib_isert.c
++++ b/drivers/infiniband/ulp/isert/ib_isert.c
+@@ -2029,8 +2029,6 @@ isert_map_rdma(struct iscsi_conn *conn, struct iscsi_cmd *cmd,
  
- 	cmd->i_state = ISTATE_SEND_STATUS;
-+
-+	if (cmd->se_cmd.scsi_status || cmd->sense_reason) {
-+		iscsit_add_cmd_to_response_queue(cmd, cmd->conn, cmd->i_state);
-+		return 0;
-+	}
- 	cmd->conn->conn_transport->iscsit_queue_status(cmd->conn, cmd);
+ 	if (wr->iser_ib_op == ISER_IB_RDMA_WRITE) {
+ 		data_left = se_cmd->data_length;
+-		iscsit_increment_maxcmdsn(cmd, conn->sess);
+-		cmd->stat_sn = conn->stat_sn++;
+ 	} else {
+ 		sg_off = cmd->write_data_done / PAGE_SIZE;
+ 		data_left = se_cmd->data_length - cmd->write_data_done;
+@@ -2242,8 +2240,6 @@ isert_reg_rdma_frwr(struct iscsi_conn *conn, struct iscsi_cmd *cmd,
  
- 	return 0;
-diff --git a/drivers/target/iscsi/iscsi_target_device.c b/drivers/target/iscsi/iscsi_target_device.c
-index 6c7a510..7087c73 100644
---- a/drivers/target/iscsi/iscsi_target_device.c
-+++ b/drivers/target/iscsi/iscsi_target_device.c
-@@ -58,11 +58,7 @@ void iscsit_increment_maxcmdsn(struct iscsi_cmd *cmd, struct iscsi_session *sess
- 
- 	cmd->maxcmdsn_inc = 1;
- 
--	if (!mutex_trylock(&sess->cmdsn_mutex)) {
--		sess->max_cmd_sn += 1;
--		pr_debug("Updated MaxCmdSN to 0x%08x\n", sess->max_cmd_sn);
--		return;
--	}
-+	mutex_lock(&sess->cmdsn_mutex);
- 	sess->max_cmd_sn += 1;
- 	pr_debug("Updated MaxCmdSN to 0x%08x\n", sess->max_cmd_sn);
- 	mutex_unlock(&sess->cmdsn_mutex);
+ 	if (wr->iser_ib_op == ISER_IB_RDMA_WRITE) {
+ 		data_left = se_cmd->data_length;
+-		iscsit_increment_maxcmdsn(cmd, conn->sess);
+-		cmd->stat_sn = conn->stat_sn++;
+ 	} else {
+ 		sg_off = cmd->write_data_done / PAGE_SIZE;
+ 		data_left = se_cmd->data_length - cmd->write_data_done;
+@@ -2352,7 +2348,7 @@ isert_put_datain(struct iscsi_conn *conn, struct iscsi_cmd *cmd)
+ 	 * Build isert_conn->tx_desc for iSCSI response PDU and attach
+ 	 */
+ 	isert_create_send_desc(isert_conn, isert_cmd, &isert_cmd->tx_desc);
+-	iscsit_build_rsp_pdu(cmd, conn, false, (struct iscsi_scsi_rsp *)
++	iscsit_build_rsp_pdu(cmd, conn, true, (struct iscsi_scsi_rsp *)
+ 			     &isert_cmd->tx_desc.iscsi_header);
+ 	isert_init_tx_hdrs(isert_conn, &isert_cmd->tx_desc);
+ 	isert_init_send_wr(isert_conn, isert_cmd,
 -- 
 1.7.10.4
