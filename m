@@ -1,27 +1,37 @@
-From: BAMBA RAHA <bambaraha@gmail.com>
-Subject: Dear Friend
-Date: Wed, 13 Nov 2013 16:16:39 +0000 (GMT)
-Message-ID: <1384359399.31599.YahooMailBasic@web173205.mail.ir2.yahoo.com>
-Reply-To: bambaraha@gmail.com
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 60711] USB drive no longer detected as removable storage media
+Date: Wed, 13 Nov 2013 16:19:51 +0000
+Message-ID: <bug-60711-11613-beNklROZ0Z@https.bugzilla.kernel.org/>
+References: <bug-60711-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm8-vm1.bullet.mail.ird.yahoo.com ([77.238.189.198]:46958 "EHLO
-	nm8-vm1.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756293Ab3KMQQl convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 Nov 2013 11:16:41 -0500
+Received: from mail.kernel.org ([198.145.19.201]:57244 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756252Ab3KMQUC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 13 Nov 2013 11:20:02 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 544ED20758
+	for <linux-scsi@vger.kernel.org>; Wed, 13 Nov 2013 16:19:57 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id 9429420748
+	for <linux-scsi@vger.kernel.org>; Wed, 13 Nov 2013 16:19:51 +0000 (UTC)
+In-Reply-To: <bug-60711-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Dear Friend,
+https://bugzilla.kernel.org/show_bug.cgi?id=60711
 
-My Name is Dr. Raha Bamba. I am a banker by profession.I hail from Ouagadougou, Burkina Faso, West Africa.My reason for contacting you is to transfer an abandoned $10, 300, 000.00 (Ten Million Three Hundred Thousand Dollars) to your account.
+Alan <alan@lxorguk.ukuu.org.uk> changed:
 
-The owner of this fund died since 2003 with his Next Of Kin. I want to present you to the bank as the Next of Kin/beneficiary of this fund.
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |alan@lxorguk.ukuu.org.uk,
+                   |                            |martin.petersen@oracle.com
+         Regression|No                          |Yes
 
-Further details of the transaction shall be forwarded to you as soon as I receive your return mail indicating your interest.
-
-Best regards
-,Dr. Raha Bamba.
+-- 
+You are receiving this mail because:
+You are the assignee for the bug.
