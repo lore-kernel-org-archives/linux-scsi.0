@@ -1,170 +1,69 @@
-From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-Subject: Re: [patch] [SCSI] qla4xxx: overflow in qla4xxx_set_chap_entry()
-Date: Thu, 14 Nov 2013 03:53:56 +0000
-Message-ID: <3FC4AB8B47ECD546BCD4B361A64BEACD8C62B35D@avmb3.qlogic.org>
-References: <20131113140600.GK5443@mwanda>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: [ANNOUNCE] ddpt, version 0.93 available
+Date: Wed, 13 Nov 2013 23:59:25 -0500
+Message-ID: <528458AD.8020300@interlog.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_000_3FC4AB8B47ECD546BCD4B361A64BEACD8C62B35Davmb3qlogicorg_"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:27019 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751260Ab3KNDyJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 Nov 2013 22:54:09 -0500
-Received: from pps.filterd (m0000643.ppops.net [127.0.0.1])
-	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id rAE3s8Ag022062
-	for <linux-scsi@vger.kernel.org>; Wed, 13 Nov 2013 19:54:08 -0800
-Received: from avcashub1.qlogic.com (avcashub2.qlogic.com [198.70.193.116])
-	by mx0b-0016ce01.pphosted.com with ESMTP id 1fr6q1kwve-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Wed, 13 Nov 2013 19:54:08 -0800
-In-Reply-To: <20131113140600.GK5443@mwanda>
-Content-Language: en-US
+Received: from smtp.infotech.no ([82.134.31.41]:58329 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751094Ab3KNE7t (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 13 Nov 2013 23:59:49 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Adheer Chandravanshi <adheer.chandravanshi@qlogic.com>, Dept-Eng iSCSI Driver <Dept-iSCSIDriver@qlogic.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi <linux-scsi@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>, "Eric W. Biederman" <ebiederm@xmission.com>
+To: SCSI development list <linux-scsi@vger.kernel.org>
+Cc: Tomas Fasth <tomfa@debian.org>, =?ISO-8859-1?Q?Dan_Hor=E1k?= <dhorak@redhat.com>, linux-kernel <linux-kernel@vger.kernel.org>
 
---_000_3FC4AB8B47ECD546BCD4B361A64BEACD8C62B35Davmb3qlogicorg_
-Content-Type: text/plain; charset="iso-8859-1"
-Content-ID: <06BC388822A6CA4E910254F24EF29386@qlogic.com>
-Content-Transfer-Encoding: quoted-printable
+ddpt is yet another variant of the venerable Unix dd command
+line utility. Some features found in ddpt which are not found
+in the current (GNU) dd implementation:
 
-
-
------Original Message-----
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Date: Wednesday, 13 November 2013 7:36 pm
-To: Vikas <vikas.chaudhary@qlogic.com>
-Cc: Adheer Chandravanshi <adheer.chandravanshi@qlogic.com>, Dept-Eng iSCSI
-Driver <Dept-iSCSIDriver@qlogic.com>, "James E.J. Bottomley"
-<JBottomley@parallels.com>, scsi <linux-scsi@vger.kernel.org>,
-"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>, "Eric
-W. Biederman" <ebiederm@xmission.com>
-Subject: Re: [patch] [SCSI] qla4xxx: overflow in qla4xxx_set_chap_entry()
-
->On Wed, Nov 13, 2013 at 03:08:12PM +0300, Dan Carpenter wrote:
->> On Wed, Nov 13, 2013 at 11:52:37AM +0000, Vikas Chaudhary wrote:
->> >=20
->> >=20
->> > -----Original Message-----
->> > From: Dan Carpenter <dan.carpenter@oracle.com>
->> > Date: Wednesday, 13 November 2013 1:18 pm
->> > To: Vikas <vikas.chaudhary@qlogic.com>, Adheer Chandravanshi
->> > <adheer.chandravanshi@qlogic.com>
->> > Cc: Dept-Eng iSCSI Driver <Dept-iSCSIDriver@qlogic.com>, "James E.J.
->> > Bottomley" <JBottomley@parallels.com>, scsi
->><linux-scsi@vger.kernel.org>,
->> > "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
->> > Subject: [patch] [SCSI] qla4xxx: overflow in qla4xxx_set_chap_entry()
->> >=20
->> > >We should cap the size of memcpy() because it comes from the network
->> > >and can't be trusted.
->> >=20
->> > This patch is on assumption that data is coming from network,
->> > but in this case data come from application (iscsiadm) with correct
->>length.
->> >=20
->>=20
->> No, that doesn't work.  We don't trust user space.
->
->Btw, the is especially true with network namespaces...  These days
->anyone who is ns_capable() could overflow the buffer after:
->df008c91f835 ('net: Allow userns root to control llc, netfilter, netlink,
->packet, and xfrm')
-
-Agreed, We can=B9t trust user space.
-
-Acked-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+   - extended copy (xcopy) support
+   - SCSI protection (DIF) support
+   - bandwidth limiting
+   - write sparing (i.e. don't write buffer if already same
+     as destination)
+   - resume (after the copy has been interrupted)
+   - trim on output of copy, self trim (pt interface only)
+   - send output to a second file (see 'of2=' option)
+   - allow access of devices directly via pass-through
+     interface, bypassing file system
+   - explicit controls over how much data is read into the
+     copy buffer and then written to output (separate from
+     the logical block sizes of any device involved)
 
 
+For more information and downloads see:
+     http://sg.danny.cz/sg/ddpt.html
 
+Changelog for ddpt-0.93 [20131113] [svn: r242]
+   - add xcopy support, new flags: xcopy, cat, dc;
+     new options: id_usage=, list_id=, prio=
+   - add intio=0|1 ; rework signal handling
+   - allow tape device in non-pt mode
+   - fix fifo read when bs is large
+   - add delay=MS,W_MS for bandwidth limiting
+   - add oflag=ignoreew,pad,nofm,nopad for tape
+   - add iseek= option, synonym for skip=
+   - add oseek= option, synonym for seek=
+   - add protect=RDP,WRP option
+   - add cdbsz=32 option for READ(32) and WRITE(32)
+   - add rarc flag for scsi read cdbs
+   - add block flag for pt (non blocking by default)
+   - fix overflow on OFILE when input fifo
+   - ./configure options:
+     - change --enable-no-linux-bsg to --disable-linuxbsg
+     - add --disable-scsistrings to reduce utility size
+       with non-libsgutils build
+   - reduce ddpt.c size by adding ddpt_pt.c
+   - win32: fixes for cygwin version 1.7.17 headers
+     - translate O_EXCL to no sharing
+   - point svn:externals to rev 522 of sg3_utils
+   - upgrade automake to version 1.13.3
 
---_000_3FC4AB8B47ECD546BCD4B361A64BEACD8C62B35Davmb3qlogicorg_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
+Changelog for ddpt-0.92 [20110217] [svn: r157]
+...
 
-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
-AAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAVgBpAGsAYQBzACAAQwBoAGEAdQBkAGgAYQByAHkA
-AABTAE0AVABQAAAAdgBpAGsAYQBzAC4AYwBoAGEAdQBkAGgAYQByAHkAQABxAGwAbwBnAGkAYwAu
-AGMAbwBtAAAAHwACXQEAAAA2AAAAdgBpAGsAYQBzAC4AYwBoAGEAdQBkAGgAYQByAHkAQABxAGwA
-bwBnAGkAYwAuAGMAbwBtAAAAAAAfAOVfAQAAAD4AAABzAGkAcAA6AHYAaQBrAGEAcwAuAGMAaABh
-AHUAZABoAGEAcgB5AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwAaDAEAAAAgAAAAVgBpAGsA
-YQBzACAAQwBoAGEAdQBkAGgAYQByAHkAAAAfAB8MAQAAADYAAAB2AGkAawBhAHMALgBjAGgAYQB1
-AGQAaABhAHIAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AHgwBAAAACgAAAFMATQBUAFAA
-AAAAAAIBGQwBAAAAeAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgFYAaQBrAGEAcwAgAEMAaABh
-AHUAZABoAGEAcgB5AAAAUwBNAFQAUAAAAHYAaQBrAGEAcwAuAGMAaABhAHUAZABoAGEAcgB5AEAA
-cQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AAV0BAAAANgAAAHYAaQBrAGEAcwAuAGMAaABhAHUAZABo
-AGEAcgB5AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwD4PwEAAAAgAAAAVgBpAGsAYQBzACAA
-QwBoAGEAdQBkAGgAYQByAHkAAAAfACNAAQAAADYAAAB2AGkAawBhAHMALgBjAGgAYQB1AGQAaABh
-AHIAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AIkABAAAACgAAAFMATQBUAFAAAAAAAAIB
-+T8BAAAAeAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgFYAaQBrAGEAcwAgAEMAaABhAHUAZABo
-AGEAcgB5AAAAUwBNAFQAUAAAAHYAaQBrAGEAcwAuAGMAaABhAHUAZABoAGEAcgB5AEAAcQBsAG8A
-ZwBpAGMALgBjAG8AbQAAAB8ACV0BAAAANgAAAHYAaQBrAGEAcwAuAGMAaABhAHUAZABoAGEAcgB5
-AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAACwBAOgEAAAAfABoAAQAAABIAAABJAFAATQAuAE4A
-bwB0AGUAAAAAAAMA8T8JBAAACwBAOgEAAAADAP0/5AQAAAIBCzABAAAAEAAAAPRtFtZQvK1Co5eE
-XOYvzcIDABcAAQAAAEAAOQAAYjok7eDOAUAACDBrHKEk7eDOAQsAAIAIIAYAAAAAAMAAAAAAAABG
-AAAAABSFAAABAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAHgAAAGEAYwBjAGUAcAB0AGwAYQBu
-AGcAdQBhAGcAZQAAAAAAAQAAAAwAAABlAG4ALQBVAFMAAAALAACACCAGAAAAAADAAAAAAAAARgAA
-AAAGhQAAAAAAAB8ANwABAAAAggAAAFIAZQA6ACAAWwBwAGEAdABjAGgAXQAgAFsAUwBDAFMASQBd
-ACAAcQBsAGEANAB4AHgAeAA6ACAAbwB2AGUAcgBmAGwAbwB3ACAAaQBuACAAcQBsAGEANAB4AHgA
-eABfAHMAZQB0AF8AYwBoAGEAcABfAGUAbgB0AHIAeQAoACkAAAAAAB8APQABAAAACgAAAFIAZQA6
-ACAAAAAAAAMANgAAAAAAHwBCEAEAAAA+AAAAPAAyADAAMQAzADEAMQAxADMAMQA0ADAANgAwADAA
-LgBHAEsANQA0ADQAMwBAAG0AdwBhAG4AZABhAD4AAAAAAAIBcQABAAAAKgAAAAEBzuBEwdUO0x0d
-PH5Dn0ykj+myz/yaI+90AP//qCsAgAAg6QCAAUODgAAAHwBwAAEAAAB6AAAAWwBwAGEAdABjAGgA
-XQAgAFsAUwBDAFMASQBdACAAcQBsAGEANAB4AHgAeAA6ACAAbwB2AGUAcgBmAGwAbwB3ACAAaQBu
-ACAAcQBsAGEANAB4AHgAeABfAHMAZQB0AF8AYwBoAGEAcABfAGUAbgB0AHIAeQAoACkAAAAAAB8A
-NRABAAAAeAAAADwAMwBGAEMANABBAEIAOABCADQANwBFAEMARAA1ADQANgBCAEMARAA0AEIAMwA2
-ADEAQQA2ADQAQgBFAEEAQwBEADgAQwA2ADIAQgAzADUARABAAGEAdgBtAGIAMwAuAHEAbABvAGcA
-aQBjAC4AbwByAGcAPgAAAAMA3j+vbwAAQAAHMPOWlyTt4M4BAwAmAAAAAAACAUcAAQAAAC4AAABj
-PVVTO2E9IDtwPVFMb2dpYztsPUFWTUIzLTEzMTExNDAzNTM1NlotNTEyNDQAAAAfABUQAQAAAFgA
-AAAwADYAQgBDADMAOAA4ADgAMgAyAEEANgBDAEEANABFADkAMQAwADIANQA0AEYAMgA0AEUARgAy
-ADkAMwA4ADYAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAgEUMAEAAAAMAAAAuwAAAGP6U/UtAAAA
-HwD6PwEAAAAgAAAAVgBpAGsAYQBzACAAQwBoAGEAdQBkAGgAYQByAHkAAAAfAACAhgMCAAAAAADA
-AAAAAAAARgEAAAAWAAAAdQBzAGUAcgAtAGEAZwBlAG4AdAAAAAAAAQAAAEYAAABNAGkAYwByAG8A
-cwBvAGYAdAAtAE0AYQBjAE8AdQB0AGwAbwBvAGsALwAxADQALgAzAC4ANgAuADEAMwAwADYAMQAz
-AAAAAAAfAACAH6TrM6h6LkK+e3nhqY5UswEAAAA4AAAAQwBvAG4AdgBlAHIAcwBhAHQAaQBvAG4A
-SQBuAGQAZQB4AFQAcgBhAGMAawBpAG4AZwBFAHgAAAABAAAAEAEAAEkASQA9ADAAMQAwADEAQwBF
-AEUAMABFAEQAMgA1ADIANgA0AEMAMAA3ADEARQBEADEANAAyADUARQA0ADUAQgBBAEIAQwBDADgA
-OQA0AEQARAA5ADUANgBCAEYANwA7AFMAQgBNAEkARAA9ADEAMgA7AFMAMQA9ADwAMgAwADEAMwAx
-ADEAMQAzADEANAAwADYAMAAwAC4ARwBLADUANAA0ADMAQABtAHcAYQBuAGQAYQA+ADsAVgBlAHIA
-cwBpAG8AbgA9AFYAZQByAHMAaQBvAG4AIAAxADQALgAyACAAKABCAHUAaQBsAGQAIAAzADEAOAAu
-ADAAKQAsACAAUwB0AGEAZwBlAD0ASAAyAAAAAwANNP0/AAAfAACAhgMCAAAAAADAAAAAAAAARgEA
-AAAgAAAAeAAtAG0AcwAtAGgAYQBzAC0AYQB0AHQAYQBjAGgAAAABAAAAAgAAAAAAAAAfAACAhgMC
-AAAAAADAAAAAAAAARgEAAAAiAAAAeAAtAG8AcgBpAGcAaQBuAGEAdABpAG4AZwAtAGkAcAAAAAAA
-AQAAABoAAABbADEAMAAuADMANQAuADQALgA2ADkAXQAAAAAA7Js=
-
---_000_3FC4AB8B47ECD546BCD4B361A64BEACD8C62B35Davmb3qlogicorg_--
+Doug Gilbert
