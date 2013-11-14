@@ -1,75 +1,42 @@
-From: Bodo Stroesser <bstroesser@ts.fujitsu.com>
-Subject: Re: PATCH: st.c: Fix blk_get_queue usage
-Date: 14 Nov 2013 20:22:40 +0100
-Message-ID: <61eb00$4bjf3p@dgate20u.abg.fsc.net>
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: base64
+From: Loc Ho <lho@apm.com>
+Subject: [PATCH 0/3] ata: Add APM X-Gene SoC 6.0Gbps SATA PHY support
+Date: Thu, 14 Nov 2013 12:31:56 -0700
+Message-ID: <1384457519-21335-1-git-send-email-lho@apm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dgate20.ts.fujitsu.com ([80.70.172.51]:34275 "EHLO
-	dgate20.ts.fujitsu.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755073Ab3KNTW6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Nov 2013 14:22:58 -0500
+Received: from exprod5og104.obsmtp.com ([64.18.0.178]:35734 "HELO
+	exprod5og104.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755945Ab3KNTcP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Nov 2013 14:32:15 -0500
+Received: by mail-pb0-f47.google.com with SMTP id rr4so999562pbb.6
+        for <linux-scsi@vger.kernel.org>; Thu, 14 Nov 2013 11:32:13 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, bstroesser@ts.fujitsu.com
+To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, jcm@redhat.com, Loc Ho <lho@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 
-T24gMTQuMTEuMjAxMywgYXQgMjAuMDUsIEthaSBNw6RraXNhcmEgKEtvbHVtYnVzKSA8a2Fp
-Lm1ha2lzYXJhQGtvbHVtYnVzLmZpPiB3cm90ZToKCj4gCj4gT24gMTQuMTEuMjAxMywgYXQg
-MTYuNDgsIEJvZG8gU3Ryb2Vzc2VyIDxic3Ryb2Vzc2VyQHRzLmZ1aml0c3UuY29tPiB3cm90
-ZToKPiAKPiA+IEhpLAo+ID4gCj4gPiBpbiBzdF9wcm9iZSgpLCBzdC5jIEkgc3R1bWJsZWQg
-YWNyb3NzIHdoYXQgSSdkIGNhbGwgYSBtaW5vciBwcm9ibGVtLgo+ID4gCj4gPiBTbyBJJ2Qg
-bGlrZSB0byBzdWdnZXN0IHRoZSBmb2xsb3dpbmcgcGF0Y2guCj4gPiAKPiA+IEJlc3QgUmVn
-YXJkcywKPiA+IEJvZG8KPiA+IAo+ID4gUC5TLjogUGxlYXNlIENDIG1lLCBJJ20gbm90IG9u
-IHRoZSBsaXN0Lgo+ID4gCj4gPiAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KPiA+IAo+ID4gCj4gPiBGcm9t
-OiBCb2RvIFN0cm9lc3NlciA8YnN0cm9lc3NlckB0cy5mdWppdHN1LmNvbT4KPiA+IERhdGU6
-IFRodSwgMTQgTm92IDIwMTMgMTQ6MzU6MDAgKzAxMDAKPiA+IFN1YmplY3Q6IFtQQVRDSF0g
-c2c6IGZpeCBibGtfZ2V0X3F1ZXVlIHVzYWdlCj4gPiAKPiA+IElmIGJsa19xdWV1ZV9nZXQo
-KSBpbiBzdF9wcm9iZSBmYWlscywgZGlzay0+cXVldWUgbXVzdCBub3QKPiA+IGJlIHNldCB0
-byBTRHAtPnJlcXVlc3RfcXVldWUsIGFzIHRoYXQgd291bGQgcmVzdWx0IGluCj4gPiBwdXRf
-ZGlzaygpIGRyb3BwaW5nIGEgbm90IHRha2VuIHJlZmVyZW5jZS4KPiA+IAo+ID4gVGh1cywg
-ZGlzay0+cXVldWUgc2hvdWxkIGJlIHNldCBvbmx5IGFmdGVyIGEgc3VjY2Vzc2Z1bAo+ID4g
-YmxrX3F1ZXVlX2dldCgpLgo+ID4gCj4gPiBTaWduZWQtb2ZmLWJ5OiBCb2RvIFN0cm9lc3Nl
-ciA8YnN0cm9lc3NlckB0cy5mdWppdHN1LmNvbT4KPiA+IAo+ID4gLS0tCj4gPiAKPiA+IC0t
-LSBhL2RyaXZlcnMvc2NzaS9zdC5jCTIwMTMtMTEtMTQgMTQ6MTA6NDAuMDAwMDAwMDAwICsw
-MTAwCj4gPiArKysgYi9kcml2ZXJzL3Njc2kvc3QuYwkyMDEzLTExLTE0IDE0OjEwOjU3LjAw
-MDAwMDAwMCArMDEwMAo+ID4gQEAgLTQxMDcsMTEgKzQxMDcsMTEgQEAKPiA+ICAJa3JlZl9p
-bml0KCZ0cG50LT5rcmVmKTsKPiA+ICAJdHBudC0+ZGlzayA9IGRpc2s7Cj4gPiAgCWRpc2st
-PnByaXZhdGVfZGF0YSA9ICZ0cG50LT5kcml2ZXI7Cj4gPiAtCWRpc2stPnF1ZXVlID0gU0Rw
-LT5yZXF1ZXN0X3F1ZXVlOwo+ID4gIAkvKiBTQ1NJIHRhcGUgZG9lc24ndCByZWdpc3RlciB0
-aGlzIGdlbmRpc2sgdmlhIGFkZF9kaXNrKCkuICBNYW51YWxseQo+ID4gIAkgKiB0YWtlIHF1
-ZXVlIHJlZmVyZW5jZSB0aGF0IHJlbGVhc2VfZGlzaygpIGV4cGVjdHMuICovCj4gCj4gV2l0
-aCB0aGlzIHBhdGNoLCBibGtfZ2V0X3F1ZXVlKCkgaXMgbm90IGNhbGxlZCB3aXRoIHRoZSBj
-b3JyZWN0IGFyZ3VtZW50Lgo+IE1heWJlIGNoYW5nZSB0aGUgY2FsbCB0byBibGtfZ2V0X3F1
-ZXVlKFNEcC0+cmVxdWVzdF9xdWV1ZSkgPwo+IAo+ID4gCWlmIChibGtfZ2V0X3F1ZXVlKGRp
-c2stPnF1ZXVlKSkKClllcywgdGhhbmsgeW91LiBZb3UgYXJlIG9idmlvdXNseSByaWdodC4g
-QmVsb3cgaXMgdGhlIHJldmlzZWQgcGF0Y2guClNvcnJ5IGZvciB0aGUgbWlzdGFrZS4KCkJv
-ZG8KCj4gPiAJCWdvdG8gb3V0X3B1dF9kaXNrOwo+ID4gKwlkaXNrLT5xdWV1ZSA9IFNEcC0+
-cmVxdWVzdF9xdWV1ZTsKPiA+IAl0cG50LT5kcml2ZXIgPSAmc3RfdGVtcGxhdGU7Cj4gPiAK
-PiA+IAl0cG50LT5kZXZpY2UgPSBTRHAtLQo+ID4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlz
-IGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LXNjc2kiIGluCj4gPiB0
-aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVsLm9yZwo+ID4g
-TW9yZSBtYWpvcmRvbW8gaW5mbyBhdCAgaHR0cDovL3ZnZXIua2VybmVsLm9yZy9tYWpvcmRv
-bW8taW5mby5odG1sCj4gPiA7Cj4gCj4gVGhhbmtzLAo+IEthaQo+IAoKRnJvbTogQm9kbyBT
-dHJvZXNzZXIgPGJzdHJvZXNzZXJAdHMuZnVqaXRzdS5jb20+CkRhdGU6IFRodSwgMTQgTm92
-IDIwMTMgMTQ6MzU6MDAgKzAxMDAKU3ViamVjdDogW1BBVENIXSBzZzogZml4IGJsa19nZXRf
-cXVldWUgdXNhZ2UKCklmIGJsa19xdWV1ZV9nZXQoKSBpbiBzdF9wcm9iZSBmYWlscywgZGlz
-ay0+cXVldWUgbXVzdCBub3QKYmUgc2V0IHRvIFNEcC0+cmVxdWVzdF9xdWV1ZSwgYXMgdGhh
-dCB3b3VsZCByZXN1bHQgaW4KcHV0X2Rpc2soKSBkcm9wcGluZyBhIG5vdCB0YWtlbiByZWZl
-cmVuY2UuCgpUaHVzLCBkaXNrLT5xdWV1ZSBzaG91bGQgYmUgc2V0IG9ubHkgYWZ0ZXIgYSBz
-dWNjZXNzZnVsCmJsa19xdWV1ZV9nZXQoKS4KUmV2aXNlZCBwYXRjaCBkdWUgdG8gYSBoaW50
-IGZyb20gS2FpIE1ha2lzYXJhLgoKU2lnbmVkLW9mZi1ieTogQm9kbyBTdHJvZXNzZXIgPGJz
-dHJvZXNzZXJAdHMuZnVqaXRzdS5jb20+CgotLS0KCi0tLSBhL2RyaXZlcnMvc2NzaS9zdC5j
-CTIwMTMtMTEtMTQgMTQ6MTA6NDAuMDAwMDAwMDAwICswMTAwCisrKyBiL2RyaXZlcnMvc2Nz
-aS9zdC5jCTIwMTMtMTEtMTQgMTQ6MTA6NTcuMDAwMDAwMDAwICswMTAwCkBAIC00MTA3LDEx
-ICs0MTA3LDExIEBACiAJa3JlZl9pbml0KCZ0cG50LT5rcmVmKTsKIAl0cG50LT5kaXNrID0g
-ZGlzazsKIAlkaXNrLT5wcml2YXRlX2RhdGEgPSAmdHBudC0+ZHJpdmVyOwotCWRpc2stPnF1
-ZXVlID0gU0RwLT5yZXF1ZXN0X3F1ZXVlOwogCS8qIFNDU0kgdGFwZSBkb2Vzbid0IHJlZ2lz
-dGVyIHRoaXMgZ2VuZGlzayB2aWEgYWRkX2Rpc2soKS4gIE1hbnVhbGx5CiAJICogdGFrZSBx
-dWV1ZSByZWZlcmVuY2UgdGhhdCByZWxlYXNlX2Rpc2soKSBleHBlY3RzLiAqLwotCWlmIChi
-bGtfZ2V0X3F1ZXVlKGRpc2stPnF1ZXVlKSkKKwlpZiAoYmxrX2dldF9xdWV1ZShTRHAtPnJl
-cXVlc3RfcXVldWUpKQogCQlnb3RvIG91dF9wdXRfZGlzazsKKwlkaXNrLT5xdWV1ZSA9IFNE
-cC0+cmVxdWVzdF9xdWV1ZTsKIAl0cG50LT5kcml2ZXIgPSAmc3RfdGVtcGxhdGU7CiAKIAl0
-cG50LT5kZXZpY2UgPSBTRHA7Cg==
+ata: Add APM X-Gene SoC 6.0Gbps SATA PHY support
 
+This patch adds support for APM X-Gene SoC 6.0Gbps SATA PHY. This is the
+physical layer interface for the corresponding SATA host controller. This
+driver uses the new PHY generic framework posted by Kishon Vijay Abrahm.
+
+Signed-off-by: Loc Ho <lho@apm.com>
+Signed-off-by: Tuan Phan <tphan@apm.com>
+Signed-off-by: Suman Tripathi <stripathi@apm.com>
+Reviewed-by: Arnd Bergmann <arnd@arndb.de>
+Reviewed-by: Olof Johansson <olof@lixom.net> 
+---
+Loc Ho (3):
+  Documentation: Add APM X-Gene SATA PHY driver binding documentation
+  ata: Add APM X-Gene SoC 6.0Gbps SATA PHY driver
+  arm64: Add APM X-Gene SoC 6.0Gbps SATA PHY DTS entries.
+
+ .../devicetree/bindings/ata/apm-xgene.txt          |   69 +
+ arch/arm64/boot/dts/apm-storm.dtsi                 |   25 +
+ drivers/ata/Kconfig                                |    6 +
+ drivers/ata/Makefile                               |    1 +
+ drivers/ata/sata_xgene_phy.c                       | 2142 ++++++++++++++++++++
+ 5 files changed, 2243 insertions(+), 0 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/ata/apm-xgene.txt
+ create mode 100644 drivers/ata/sata_xgene_phy.c
 
