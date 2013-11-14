@@ -1,54 +1,68 @@
-From: bianca72775@googlemail.com
-Subject: Re: Guaranteed Top 10 Google Placements mail-archive.com In 100 Days
-Date: Fri, 15 Nov 2013 01:26:50 +0530
-Message-ID: <52852aff.eac2440a.7a09.1dd6@mx.google.com>
-Reply-To: DIANA68371@gmail.com
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Subject: Re: PATCH: st.c: Fix blk_get_queue usage
+Date: Thu, 14 Nov 2013 23:08:53 +0200 (EET)
+Message-ID: <alpine.LSU.2.11.1311142306240.7347@kai.makisara.private>
+References: <61eb00$4bjf3p@dgate20u.abg.fsc.net>
+Mime-Version: 1.0
+Content-Type: MULTIPART/MIXED; BOUNDARY="-1463811327-718716577-1384463344=:7347"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pd0-f196.google.com ([209.85.192.196]:56266 "EHLO
-	mail-pd0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755842Ab3KNT4s (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Nov 2013 14:56:48 -0500
-Received: by mail-pd0-f196.google.com with SMTP id v10so652161pde.3
-        for <linux-scsi@vger.kernel.org>; Thu, 14 Nov 2013 11:56:48 -0800 (PST)
-Received: from localhost.localdomain ([124.253.29.188])
-        by mx.google.com with ESMTPSA id hz10sm53251310pbc.36.2013.11.14.11.56.45
-        for <linux-scsi@vger.kernel.org>
-        (version=TLSv1 cipher=RC4-SHA bits=128/128);
-        Thu, 14 Nov 2013 11:56:47 -0800 (PST)
+Received: from vs16.mail.saunalahti.fi ([62.142.117.197]:58207 "EHLO
+	vs16.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757474Ab3KNVJG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Nov 2013 16:09:06 -0500
+In-Reply-To: <61eb00$4bjf3p@dgate20u.abg.fsc.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Bodo Stroesser <bstroesser@ts.fujitsu.com>
+Cc: linux-scsi@vger.kernel.org
 
-Hello Sir / Mam,
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-We would like to have a chance to work on your website and get it positioned top 10 on major search engines around the world ( Google & Bing ). We are presently working with 500+ clients world wide and we have made sure all our clients rank top 10 for their best keywords. None of our clients have been caught in any of the recent google updates. We only use ethical white hat methods to deliver rankings. Our search engine packages include both onsite & off optimization, we provide complete SEO solution to our clients and not just link building packages.
+---1463811327-718716577-1384463344=:7347
+Content-Type: TEXT/PLAIN; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-We understand there are many SEO Scam companies mailing you each day over and over again and I am also sure you have been robbed off a few times in past with no results at all. To make sure you we show you our WORTH, we have launched 15 DAY FREE SEO TRIAL service. We want to build your faith in our service and make sure you see results before paying for our service.
+On Thu, 14 Nov 2013, Bodo Stroesser wrote:
 
-Is 15 days Enough time to deliver results ?
+...
+> From: Bodo Stroesser <bstroesser@ts.fujitsu.com>
+> Date: Thu, 14 Nov 2013 14:35:00 +0100
+> Subject: [PATCH] sg: fix blk_get_queue usage
+>=20
+> If blk_queue_get() in st_probe fails, disk->queue must not
+> be set to SDp->request_queue, as that would result in
+> put_disk() dropping a not taken reference.
+>=20
+> Thus, disk->queue should be set only after a successful
+> blk_queue_get().
+> Revised patch due to a hint from Kai Makisara.
+>=20
+> Signed-off-by: Bodo Stroesser <bstroesser@ts.fujitsu.com>
 
-15 days is good enough a time to show you huge movements in rankings for all your keywords. We start with A) choosing the best keywords for your website, B)  Approve a final list of keywords, C) Make onsite changes D) Build links for your website. If in these 15 days you are not happy with our performance, you can cancel or decide to opt-out. You will not be billed a single dime for these 15 days.
+Acked-by: Kai M=C3=A4kisara <Kai.Makisara@kolumbus.fi>
 
-Post Trial Pricing & Package
+>=20
+> ---
+>=20
+> --- a/drivers/scsi/st.c	2013-11-14 14:10:40.000000000 +0100
+> +++ b/drivers/scsi/st.c	2013-11-14 14:10:57.000000000 +0100
+> @@ -4107,11 +4107,11 @@
+>  	kref_init(&tpnt->kref);
+>  	tpnt->disk =3D disk;
+>  	disk->private_data =3D &tpnt->driver;
+> -	disk->queue =3D SDp->request_queue;
+>  	/* SCSI tape doesn't register this gendisk via add_disk().  Manually
+>  	 * take queue reference that release_disk() expects. */
+> -	if (blk_get_queue(disk->queue))
+> +	if (blk_get_queue(SDp->request_queue))
+>  		goto out_put_disk;
+> +	disk->queue =3D SDp->request_queue;
+>  	tpnt->driver =3D &st_template;
+> =20
+>  	tpnt->device =3D SDp;
 
-In the 15 days trial, we only work for 10 keywords so that we can show best possible results in the time span. Once the trial is over you pick one of the packages listed below :
+Thanks for the fix,
+Kai
 
-Package A ) $99 / month (10 keywords optimized ) Package B ) $149 / month ( 20 keywords optimized ) Package C ) $199 / month ( 30 keywords optimized )
-
-To Sign up for our free trial email us back with the information below so we can send you our sign up link.
-
-1) " Website You Want To Optimize "
-2) Keywords ( Optional )
-3) SEO Done Before ( Yes / No )
-
-Looking forward working with you, let us know if you would like to have more information about our company and procedures.
-Regards
-
-Vince G
-SEO Manager : T.O.B
-7 B Green Avenue, Amritsar Punjab
-
-----------------------------------------------------------------------------------------------------------------
-
-
-Our email above is not intended to waste your time or fill your inbox with spam. If you would not like to hear from us, email us back with NOT INTERESTED. We will never email you again.
+---1463811327-718716577-1384463344=:7347--
