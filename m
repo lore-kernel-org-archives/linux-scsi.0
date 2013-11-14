@@ -1,122 +1,137 @@
-From: Loc Ho <lho@apm.com>
-Subject: [PATCH v4 4/4] arm64: Add APM X-Gene SoC SATA DTS entries
-Date: Thu, 14 Nov 2013 14:39:13 -0700
-Message-ID: <1384465153-29902-5-git-send-email-lho@apm.com>
-References: <1384465153-29902-1-git-send-email-lho@apm.com>
- <1384465153-29902-2-git-send-email-lho@apm.com>
- <1384465153-29902-3-git-send-email-lho@apm.com>
- <1384465153-29902-4-git-send-email-lho@apm.com>
+From: Joe Lawrence <joe.lawrence@stratus.com>
+Subject: Re: PATCH: st.c: Fix blk_get_queue usage
+Date: Thu, 14 Nov 2013 16:50:10 -0500
+Message-ID: <20131114165010.1ed9d21f@jlaw-desktop.mno.stratus.com>
+References: <61eb00$4bjf3p@dgate20u.abg.fsc.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod5og117.obsmtp.com ([64.18.0.149]:36203 "HELO
-	exprod5og117.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1758096Ab3KNVjr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Nov 2013 16:39:47 -0500
-Received: by mail-pd0-f169.google.com with SMTP id y13so2551337pdi.14
-        for <linux-scsi@vger.kernel.org>; Thu, 14 Nov 2013 13:39:44 -0800 (PST)
-In-Reply-To: <1384465153-29902-4-git-send-email-lho@apm.com>
+Received: from p01c11o141.mxlogic.net ([208.65.144.64]:40740 "EHLO
+	p01c11o141.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754775Ab3KNVuS convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Nov 2013 16:50:18 -0500
+In-Reply-To: <61eb00$4bjf3p@dgate20u.abg.fsc.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, jcm@redhat.com, Loc Ho <lho@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
+To: Bodo Stroesser <bstroesser@ts.fujitsu.com>
+Cc: linux-scsi@vger.kernel.org
 
-arm64: Add APM X-Gene SoC SATA host controller and clock DTS entries
+On Thu, 14 Nov 2013 20:22:40 +0100
+Bodo Stroesser <bstroesser@ts.fujitsu.com> wrote:
 
-Signed-off-by: Loc Ho <lho@apm.com>
-Signed-off-by: Tuan Phan <tphan@apm.com>
-Signed-off-by: Suman Tripathi <stripathi@apm.com>
-Reviewed-by: Arnd Bergmann <arnd@arndb.de>
-Reviewed-by: Olof Johansson <olof@lixom.net>
----
- arch/arm64/boot/dts/apm-storm.dtsi |   70 ++++++++++++++++++++++++++++++++++++
- 1 files changed, 70 insertions(+), 0 deletions(-)
+> On 14.11.2013, at 20.05, Kai M??kisara (Kolumbus) <kai.makisara@kolumbus.fi> wrote:
+> 
+> > 
+> > On 14.11.2013, at 16.48, Bodo Stroesser <bstroesser@ts.fujitsu.com> wrote:
+> > 
+> > > Hi,
+> > > 
+> > > in st_probe(), st.c I stumbled across what I'd call a minor problem.
+> > > 
+> > > So I'd like to suggest the following patch.
+> > > 
+> > > Best Regards,
+> > > Bodo
+> > > 
+> > > P.S.: Please CC me, I'm not on the list.
+> > > 
+> > > ---------------------------------------------------------------------
+> > > 
+> > > 
+> > > From: Bodo Stroesser <bstroesser@ts.fujitsu.com>
+> > > Date: Thu, 14 Nov 2013 14:35:00 +0100
+> > > Subject: [PATCH] sg: fix blk_get_queue usage
+> > > 
+> > > If blk_queue_get() in st_probe fails, disk->queue must not
+> > > be set to SDp->request_queue, as that would result in
+> > > put_disk() dropping a not taken reference.
+> > > 
+> > > Thus, disk->queue should be set only after a successful
+> > > blk_queue_get().
+> > > 
+> > > Signed-off-by: Bodo Stroesser <bstroesser@ts.fujitsu.com>
+> > > 
+> > > ---
+> > > 
+> > > --- a/drivers/scsi/st.c	2013-11-14 14:10:40.000000000 +0100
+> > > +++ b/drivers/scsi/st.c	2013-11-14 14:10:57.000000000 +0100
+> > > @@ -4107,11 +4107,11 @@
+> > >  	kref_init(&tpnt->kref);
+> > >  	tpnt->disk = disk;
+> > >  	disk->private_data = &tpnt->driver;
+> > > -	disk->queue = SDp->request_queue;
+> > >  	/* SCSI tape doesn't register this gendisk via add_disk().  Manually
+> > >  	 * take queue reference that release_disk() expects. */
+> > 
+> > With this patch, blk_get_queue() is not called with the correct argument.
+> > Maybe change the call to blk_get_queue(SDp->request_queue) ?
+> > 
+> > > 	if (blk_get_queue(disk->queue))
+> 
+> Yes, thank you. You are obviously right. Below is the revised patch.
+> Sorry for the mistake.
+> 
+> Bodo
+> 
+> > > 		goto out_put_disk;
+> > > +	disk->queue = SDp->request_queue;
+> > > 	tpnt->driver = &st_template;
+> > > 
+> > > 	tpnt->device = SDp--
+> > > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > > ;
+> > 
+> > Thanks,
+> > Kai
+> > 
+> 
+> From: Bodo Stroesser <bstroesser@ts.fujitsu.com>
+> Date: Thu, 14 Nov 2013 14:35:00 +0100
+> Subject: [PATCH] sg: fix blk_get_queue usage
+> 
+> If blk_queue_get() in st_probe fails, disk->queue must not
+> be set to SDp->request_queue, as that would result in
+> put_disk() dropping a not taken reference.
+> 
+> Thus, disk->queue should be set only after a successful
+> blk_queue_get().
+> Revised patch due to a hint from Kai Makisara.
+> 
+> Signed-off-by: Bodo Stroesser <bstroesser@ts.fujitsu.com>
+> 
+> ---
+> 
+> --- a/drivers/scsi/st.c	2013-11-14 14:10:40.000000000 +0100
+> +++ b/drivers/scsi/st.c	2013-11-14 14:10:57.000000000 +0100
+> @@ -4107,11 +4107,11 @@
+>  	kref_init(&tpnt->kref);
+>  	tpnt->disk = disk;
+>  	disk->private_data = &tpnt->driver;
+> -	disk->queue = SDp->request_queue;
+>  	/* SCSI tape doesn't register this gendisk via add_disk().  Manually
+>  	 * take queue reference that release_disk() expects. */
+> -	if (blk_get_queue(disk->queue))
+> +	if (blk_get_queue(SDp->request_queue))
+>  		goto out_put_disk;
+> +	disk->queue = SDp->request_queue;
+>  	tpnt->driver = &st_template;
+>  
+>  	tpnt->device = SDp;
+> ??{.n?+???????+%??lzwm??b??????r??zX??
+?(??????}?????z?&j:+v???????zZ+??+zf???h???~????i???z?
+?w?????????&?)??f
 
-diff --git a/arch/arm64/boot/dts/apm-storm.dtsi b/arch/arm64/boot/dts/apm-storm.dtsi
-index b29b465..14f3d5b 100644
---- a/arch/arm64/boot/dts/apm-storm.dtsi
-+++ b/arch/arm64/boot/dts/apm-storm.dtsi
-@@ -176,6 +176,36 @@
- 				reg-names = "csr-reg";
- 				clock-output-names = "eth8clk";
- 			};
-+
-+			eth01clk: eth01clk@1f21c000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				clock-names = "eth01clk";
-+	                        reg = <0x0 0x1f21c000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "eth01clk";
-+			};
-+
-+			eth23clk: eth23clk@1f22c000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				clock-names = "eth23clk";
-+	                        reg = <0x0 0x1f22c000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "eth23clk";
-+			};
-+
-+			sata45clk: sata45clk@1f23c000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				clock-names = "sata45clk";
-+	                        reg = <0x0 0x1f23c000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "sata45clk";
-+			};
- 		};
- 
- 		serial0: serial@1c020000 {
-@@ -218,5 +248,45 @@
- 			#phy-cells = <0>;
- 			status = "ok";
- 		};
-+
-+		sata0: sata@1a000000 {
-+			compatible = "apm,xgene-ahci";
-+			id = <0>;
-+			reg =  <0x0 0x1a000000 0x0 0x100000
-+				0x0 0x1f210000 0x0 0x10000>;
-+			interrupt-parent = <&gic>;
-+			interrupts = <0x0 0x86 0x4>;
-+		        clocks = <&eth01clk 0>;
-+			status = "na";
-+			phys = <&sataphy0>;
-+			phy-names = "sataphy0";
-+		};
-+
-+		sata1: sata@1a400000 {
-+			compatible = "apm,xgene-ahci";
-+			id = <1>;
-+			reg =  <0x0 0x1a400000 0x0 0x100000
-+				0x0 0x1f220000 0x0 0x10000>;
-+			interrupt-parent = <&gic>;
-+			interrupts = <0x0 0x87 0x4>;
-+		        clocks = <&eth23clk 0>;
-+			status = "ok";
-+			phys = <&sataphy1>;
-+			phy-names = "sataphy1";
-+		};
-+
-+		sata2: sata@1a800000 {
-+			compatible = "apm,xgene-ahci";
-+			id = <2>;
-+			reg =  <0x0 0x1a800000 0x0 0x100000
-+				0x0 0x1f230000 0x0 0x10000
-+				0x0 0x1f2d0000 0x0 0x10000 >;
-+			interrupt-parent = <&gic>;
-+			interrupts = <0x0 0x88 0x4>;
-+		        clocks = <&sata45clk 0>;
-+			status = "ok";
-+			phys = <&sataphy2>;
-+			phy-names = "sataphy2";
-+		};
- 	};
- };
--- 
-1.5.5
+Hi Bodo,
 
+Minor nit, wasn't blk_get_queue modified to return false on failure?
+
+09ac46c42946 "block: misc updates to blk_get_queue()"
+
+Just curious what tree this patch was tested against.
+
+Thanks,
+
+-- Joe
