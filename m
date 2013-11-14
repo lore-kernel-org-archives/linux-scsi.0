@@ -1,32 +1,40 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 60758] module scsi_wait_scan not found kernel panic on boot
-Date: Thu, 14 Nov 2013 11:19:25 +0000
-Message-ID: <bug-60758-11613-rBuKBRTl2W@https.bugzilla.kernel.org/>
-References: <bug-60758-11613@https.bugzilla.kernel.org/>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: Bodo Stroesser <bstroesser@ts.fujitsu.com>
+Subject: PATCH: st.c: Fix blk_get_queue usage
+Date: 14 Nov 2013 15:48:02 +0100
+Message-ID: <d6437a$53lu6d@dgate10u.abg.fsc.net>
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:59911 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752973Ab3KNLT3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 14 Nov 2013 06:19:29 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id C208020984
-	for <linux-scsi@vger.kernel.org>; Thu, 14 Nov 2013 11:19:27 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id 8C2142097B
-	for <linux-scsi@vger.kernel.org>; Thu, 14 Nov 2013 11:19:25 +0000 (UTC)
-In-Reply-To: <bug-60758-11613@https.bugzilla.kernel.org/>
+Received: from dgate10.ts.fujitsu.com ([80.70.172.49]:51388 "EHLO
+	dgate10.ts.fujitsu.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753293Ab3KNO6L (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Nov 2013 09:58:11 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, bstroesser@ts.fujitsu.com
 
-https://bugzilla.kernel.org/show_bug.cgi?id=60758
+SGksCgppbiBzdF9wcm9iZSgpLCBzdC5jIEkgc3R1bWJsZWQgYWNyb3NzIHdoYXQgSSdkIGNh
+bGwgYSBtaW5vciBwcm9ibGVtLgoKU28gSSdkIGxpa2UgdG8gc3VnZ2VzdCB0aGUgZm9sbG93
+aW5nIHBhdGNoLgoKQmVzdCBSZWdhcmRzLApCb2RvCgpQLlMuOiBQbGVhc2UgQ0MgbWUsIEkn
+bSBub3Qgb24gdGhlIGxpc3QuCgotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KCgpGcm9tOiBCb2RvIFN0cm9l
+c3NlciA8YnN0cm9lc3NlckB0cy5mdWppdHN1LmNvbT4KRGF0ZTogVGh1LCAxNCBOb3YgMjAx
+MyAxNDozNTowMCArMDEwMApTdWJqZWN0OiBbUEFUQ0hdIHNnOiBmaXggYmxrX2dldF9xdWV1
+ZSB1c2FnZQoKSWYgYmxrX3F1ZXVlX2dldCgpIGluIHN0X3Byb2JlIGZhaWxzLCBkaXNrLT5x
+dWV1ZSBtdXN0IG5vdApiZSBzZXQgdG8gU0RwLT5yZXF1ZXN0X3F1ZXVlLCBhcyB0aGF0IHdv
+dWxkIHJlc3VsdCBpbgpwdXRfZGlzaygpIGRyb3BwaW5nIGEgbm90IHRha2VuIHJlZmVyZW5j
+ZS4KClRodXMsIGRpc2stPnF1ZXVlIHNob3VsZCBiZSBzZXQgb25seSBhZnRlciBhIHN1Y2Nl
+c3NmdWwKYmxrX3F1ZXVlX2dldCgpLgoKU2lnbmVkLW9mZi1ieTogQm9kbyBTdHJvZXNzZXIg
+PGJzdHJvZXNzZXJAdHMuZnVqaXRzdS5jb20+CgotLS0KCi0tLSBhL2RyaXZlcnMvc2NzaS9z
+dC5jCTIwMTMtMTEtMTQgMTQ6MTA6NDAuMDAwMDAwMDAwICswMTAwCisrKyBiL2RyaXZlcnMv
+c2NzaS9zdC5jCTIwMTMtMTEtMTQgMTQ6MTA6NTcuMDAwMDAwMDAwICswMTAwCkBAIC00MTA3
+LDExICs0MTA3LDExIEBACiAJa3JlZl9pbml0KCZ0cG50LT5rcmVmKTsKIAl0cG50LT5kaXNr
+ID0gZGlzazsKIAlkaXNrLT5wcml2YXRlX2RhdGEgPSAmdHBudC0+ZHJpdmVyOwotCWRpc2st
+PnF1ZXVlID0gU0RwLT5yZXF1ZXN0X3F1ZXVlOwogCS8qIFNDU0kgdGFwZSBkb2Vzbid0IHJl
+Z2lzdGVyIHRoaXMgZ2VuZGlzayB2aWEgYWRkX2Rpc2soKS4gIE1hbnVhbGx5CiAJICogdGFr
+ZSBxdWV1ZSByZWZlcmVuY2UgdGhhdCByZWxlYXNlX2Rpc2soKSBleHBlY3RzLiAqLwogCWlm
+IChibGtfZ2V0X3F1ZXVlKGRpc2stPnF1ZXVlKSkKIAkJZ290byBvdXRfcHV0X2Rpc2s7CisJ
+ZGlzay0+cXVldWUgPSBTRHAtPnJlcXVlc3RfcXVldWU7CiAJdHBudC0+ZHJpdmVyID0gJnN0
+X3RlbXBsYXRlOwogCiAJdHBudC0+ZGV2aWNlID0gU0RwOwo=
 
---- Comment #47 from zakrzewskim@wp.pl ---
-3.12 doesn't boot too. The same reason...
 
--- 
-You are receiving this mail because:
-You are the assignee for the bug.
