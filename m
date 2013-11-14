@@ -1,98 +1,170 @@
-From: David Decotigny <decot@googlers.com>
-Subject: Re: [PATCH] scsi: avoid use of reclaimed reference
-Date: Wed, 13 Nov 2013 18:50:58 -0800
-Message-ID: <CAG88wWa-U5LoXOvBb+eOAutidgV-cyteQ5aS5EQKDkswSJnH-w@mail.gmail.com>
-References: <cover.1384304973.git.decot@googlers.com> <643cda2192c25962f37c8bba65e22f70a57167d0.1384304973.git.decot@googlers.com>
- <52836B53.4080204@acm.org>
+From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+Subject: Re: [patch] [SCSI] qla4xxx: overflow in qla4xxx_set_chap_entry()
+Date: Thu, 14 Nov 2013 03:53:56 +0000
+Message-ID: <3FC4AB8B47ECD546BCD4B361A64BEACD8C62B35D@avmb3.qlogic.org>
+References: <20131113140600.GK5443@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <52836B53.4080204@acm.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: multipart/mixed;
+	boundary="_000_3FC4AB8B47ECD546BCD4B361A64BEACD8C62B35Davmb3qlogicorg_"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:27019 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751260Ab3KNDyJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 13 Nov 2013 22:54:09 -0500
+Received: from pps.filterd (m0000643.ppops.net [127.0.0.1])
+	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id rAE3s8Ag022062
+	for <linux-scsi@vger.kernel.org>; Wed, 13 Nov 2013 19:54:08 -0800
+Received: from avcashub1.qlogic.com (avcashub2.qlogic.com [198.70.193.116])
+	by mx0b-0016ce01.pphosted.com with ESMTP id 1fr6q1kwve-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Wed, 13 Nov 2013 19:54:08 -0800
+In-Reply-To: <20131113140600.GK5443@mwanda>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Adheer Chandravanshi <adheer.chandravanshi@qlogic.com>, Dept-Eng iSCSI Driver <Dept-iSCSIDriver@qlogic.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi <linux-scsi@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>, "Eric W. Biederman" <ebiederm@xmission.com>
 
-Hello,
+--_000_3FC4AB8B47ECD546BCD4B361A64BEACD8C62B35Davmb3qlogicorg_
+Content-Type: text/plain; charset="iso-8859-1"
+Content-ID: <06BC388822A6CA4E910254F24EF29386@qlogic.com>
+Content-Transfer-Encoding: quoted-printable
 
-Thank you for looking into this. I could reproduce the oops on some
-Dell Poweredge R720 with the following config flags, otherwise the
-problem goes un-noticed:
 
-CONFIG_DEBUG_PAGEALLOC=y
-CONFIG_DEBUG_SLAB=y
 
-[    4.924033] BUG: unable to handle kernel paging request at ffff88000004dd10
-[    4.931823] IP: [<ffffffff8139797f>] __scsi_scan_target+0x3ef/0x6f0
-[    4.938846] PGD 1ba1067 PUD 1ba2067 PMD 1ba3067 PTE 800000000004d060
-[    4.945985] Oops: 0000 [#1] SMP DEBUG_PAGEALLOC
-[    4.951074] Modules linked in:
-[    4.954492] CPU: 0 PID: 1 Comm: swapper/0 Not tainted 3.12.0-smp-scsi01 #1
+-----Original Message-----
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Date: Wednesday, 13 November 2013 7:36 pm
+To: Vikas <vikas.chaudhary@qlogic.com>
+Cc: Adheer Chandravanshi <adheer.chandravanshi@qlogic.com>, Dept-Eng iSCSI
+Driver <Dept-iSCSIDriver@qlogic.com>, "James E.J. Bottomley"
+<JBottomley@parallels.com>, scsi <linux-scsi@vger.kernel.org>,
+"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>, "Eric
+W. Biederman" <ebiederm@xmission.com>
+Subject: Re: [patch] [SCSI] qla4xxx: overflow in qla4xxx_set_chap_entry()
 
-This points to this line on the return path of scsi_report_lun_scan:
-if (scsi_device_created(sdev))
-
-Kernel is jejb/scsi/for-next at 2aee240c68ed32 and I could reproduce
-the bug with other 3.x kernels on same hardware. For me, it is 100%
-reproducible.
-
-The ref counter values I indicated in my previous email are the result
-of a basic instrumentation. It shows that ref count drops from 3 to 1
-as a result of scsi_probe_and_add_lun(). I believe this is because the
-latter calls __scsi_remove_device(sdev).
-
-Now, if sdev reclaiming is not allowed to happen at the end of
-scsi_report_lun_scan by design because someone else is expected to
-hold a reference to it, then I'd be happy to add a BUG_ON() on the
-return path and explicit the post-condition in the function
-documentation, and also try to find out where a ref is killed by
-mistake. However, if sdev relcaiming at the end of
-scsi_report_lun_scan is allowed, then I'd argue that the "if
-(scsi_device_created(sdev))" on the potentially reclaimed sdev is not
-right, that's why I was proposing this patch.
-
-Regards,
-
-On Wed, Nov 13, 2013 at 4:06 AM, Bart Van Assche <bvanassche@acm.org> wrote:
-> On 11/13/13 02:10, David Decotigny wrote:
->>
->> This patch avoids to use an object after it was potentially reclaimed
->> by scsi_device_put().
->>
->> Signed-off-by: David Decotigny <decot@googlers.com>
->> ---
->>   drivers/scsi/scsi_scan.c | 6 ++++--
->>   1 file changed, 4 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
->> index 307a811..16e4a44 100644
->> --- a/drivers/scsi/scsi_scan.c
->> +++ b/drivers/scsi/scsi_scan.c
->> @@ -1498,12 +1498,14 @@ static int scsi_report_lun_scan(struct scsi_target
->> *starget, int bflags,
->>    out_err:
->>         kfree(lun_data);
->>    out:
->> -       scsi_device_put(sdev);
->> -       if (scsi_device_created(sdev))
->> +       if (scsi_device_created(sdev)) {
->>                 /*
->>                  * the sdev we used didn't appear in the report luns scan
->>                  */
->>                 __scsi_remove_device(sdev);
->> +       }
->> +
->> +       scsi_device_put(sdev);
->>         return ret;
->>   }
+>On Wed, Nov 13, 2013 at 03:08:12PM +0300, Dan Carpenter wrote:
+>> On Wed, Nov 13, 2013 at 11:52:37AM +0000, Vikas Chaudhary wrote:
+>> >=20
+>> >=20
+>> > -----Original Message-----
+>> > From: Dan Carpenter <dan.carpenter@oracle.com>
+>> > Date: Wednesday, 13 November 2013 1:18 pm
+>> > To: Vikas <vikas.chaudhary@qlogic.com>, Adheer Chandravanshi
+>> > <adheer.chandravanshi@qlogic.com>
+>> > Cc: Dept-Eng iSCSI Driver <Dept-iSCSIDriver@qlogic.com>, "James E.J.
+>> > Bottomley" <JBottomley@parallels.com>, scsi
+>><linux-scsi@vger.kernel.org>,
+>> > "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
+>> > Subject: [patch] [SCSI] qla4xxx: overflow in qla4xxx_set_chap_entry()
+>> >=20
+>> > >We should cap the size of memcpy() because it comes from the network
+>> > >and can't be trusted.
+>> >=20
+>> > This patch is on assumption that data is coming from network,
+>> > but in this case data come from application (iscsiadm) with correct
+>>length.
+>> >=20
+>>=20
+>> No, that doesn't work.  We don't trust user space.
 >
->
-> It would help if you could explain why you started looking at this code. Is
-> the above patch something you came up with after having analyzed the SCSI
-> mid-layer source code or perhaps as the result of a test that failed ? If
-> so, which test was it that failed ?
->
-> Thanks,
->
-> Bart.
->
+>Btw, the is especially true with network namespaces...  These days
+>anyone who is ns_capable() could overflow the buffer after:
+>df008c91f835 ('net: Allow userns root to control llc, netfilter, netlink,
+>packet, and xfrm')
+
+Agreed, We can=B9t trust user space.
+
+Acked-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+
+
+
+
+--_000_3FC4AB8B47ECD546BCD4B361A64BEACD8C62B35Davmb3qlogicorg_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
+
+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
+AAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAVgBpAGsAYQBzACAAQwBoAGEAdQBkAGgAYQByAHkA
+AABTAE0AVABQAAAAdgBpAGsAYQBzAC4AYwBoAGEAdQBkAGgAYQByAHkAQABxAGwAbwBnAGkAYwAu
+AGMAbwBtAAAAHwACXQEAAAA2AAAAdgBpAGsAYQBzAC4AYwBoAGEAdQBkAGgAYQByAHkAQABxAGwA
+bwBnAGkAYwAuAGMAbwBtAAAAAAAfAOVfAQAAAD4AAABzAGkAcAA6AHYAaQBrAGEAcwAuAGMAaABh
+AHUAZABoAGEAcgB5AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwAaDAEAAAAgAAAAVgBpAGsA
+YQBzACAAQwBoAGEAdQBkAGgAYQByAHkAAAAfAB8MAQAAADYAAAB2AGkAawBhAHMALgBjAGgAYQB1
+AGQAaABhAHIAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AHgwBAAAACgAAAFMATQBUAFAA
+AAAAAAIBGQwBAAAAeAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgFYAaQBrAGEAcwAgAEMAaABh
+AHUAZABoAGEAcgB5AAAAUwBNAFQAUAAAAHYAaQBrAGEAcwAuAGMAaABhAHUAZABoAGEAcgB5AEAA
+cQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AAV0BAAAANgAAAHYAaQBrAGEAcwAuAGMAaABhAHUAZABo
+AGEAcgB5AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwD4PwEAAAAgAAAAVgBpAGsAYQBzACAA
+QwBoAGEAdQBkAGgAYQByAHkAAAAfACNAAQAAADYAAAB2AGkAawBhAHMALgBjAGgAYQB1AGQAaABh
+AHIAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AIkABAAAACgAAAFMATQBUAFAAAAAAAAIB
++T8BAAAAeAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgFYAaQBrAGEAcwAgAEMAaABhAHUAZABo
+AGEAcgB5AAAAUwBNAFQAUAAAAHYAaQBrAGEAcwAuAGMAaABhAHUAZABoAGEAcgB5AEAAcQBsAG8A
+ZwBpAGMALgBjAG8AbQAAAB8ACV0BAAAANgAAAHYAaQBrAGEAcwAuAGMAaABhAHUAZABoAGEAcgB5
+AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAACwBAOgEAAAAfABoAAQAAABIAAABJAFAATQAuAE4A
+bwB0AGUAAAAAAAMA8T8JBAAACwBAOgEAAAADAP0/5AQAAAIBCzABAAAAEAAAAPRtFtZQvK1Co5eE
+XOYvzcIDABcAAQAAAEAAOQAAYjok7eDOAUAACDBrHKEk7eDOAQsAAIAIIAYAAAAAAMAAAAAAAABG
+AAAAABSFAAABAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAHgAAAGEAYwBjAGUAcAB0AGwAYQBu
+AGcAdQBhAGcAZQAAAAAAAQAAAAwAAABlAG4ALQBVAFMAAAALAACACCAGAAAAAADAAAAAAAAARgAA
+AAAGhQAAAAAAAB8ANwABAAAAggAAAFIAZQA6ACAAWwBwAGEAdABjAGgAXQAgAFsAUwBDAFMASQBd
+ACAAcQBsAGEANAB4AHgAeAA6ACAAbwB2AGUAcgBmAGwAbwB3ACAAaQBuACAAcQBsAGEANAB4AHgA
+eABfAHMAZQB0AF8AYwBoAGEAcABfAGUAbgB0AHIAeQAoACkAAAAAAB8APQABAAAACgAAAFIAZQA6
+ACAAAAAAAAMANgAAAAAAHwBCEAEAAAA+AAAAPAAyADAAMQAzADEAMQAxADMAMQA0ADAANgAwADAA
+LgBHAEsANQA0ADQAMwBAAG0AdwBhAG4AZABhAD4AAAAAAAIBcQABAAAAKgAAAAEBzuBEwdUO0x0d
+PH5Dn0ykj+myz/yaI+90AP//qCsAgAAg6QCAAUODgAAAHwBwAAEAAAB6AAAAWwBwAGEAdABjAGgA
+XQAgAFsAUwBDAFMASQBdACAAcQBsAGEANAB4AHgAeAA6ACAAbwB2AGUAcgBmAGwAbwB3ACAAaQBu
+ACAAcQBsAGEANAB4AHgAeABfAHMAZQB0AF8AYwBoAGEAcABfAGUAbgB0AHIAeQAoACkAAAAAAB8A
+NRABAAAAeAAAADwAMwBGAEMANABBAEIAOABCADQANwBFAEMARAA1ADQANgBCAEMARAA0AEIAMwA2
+ADEAQQA2ADQAQgBFAEEAQwBEADgAQwA2ADIAQgAzADUARABAAGEAdgBtAGIAMwAuAHEAbABvAGcA
+aQBjAC4AbwByAGcAPgAAAAMA3j+vbwAAQAAHMPOWlyTt4M4BAwAmAAAAAAACAUcAAQAAAC4AAABj
+PVVTO2E9IDtwPVFMb2dpYztsPUFWTUIzLTEzMTExNDAzNTM1NlotNTEyNDQAAAAfABUQAQAAAFgA
+AAAwADYAQgBDADMAOAA4ADgAMgAyAEEANgBDAEEANABFADkAMQAwADIANQA0AEYAMgA0AEUARgAy
+ADkAMwA4ADYAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAgEUMAEAAAAMAAAAuwAAAGP6U/UtAAAA
+HwD6PwEAAAAgAAAAVgBpAGsAYQBzACAAQwBoAGEAdQBkAGgAYQByAHkAAAAfAACAhgMCAAAAAADA
+AAAAAAAARgEAAAAWAAAAdQBzAGUAcgAtAGEAZwBlAG4AdAAAAAAAAQAAAEYAAABNAGkAYwByAG8A
+cwBvAGYAdAAtAE0AYQBjAE8AdQB0AGwAbwBvAGsALwAxADQALgAzAC4ANgAuADEAMwAwADYAMQAz
+AAAAAAAfAACAH6TrM6h6LkK+e3nhqY5UswEAAAA4AAAAQwBvAG4AdgBlAHIAcwBhAHQAaQBvAG4A
+SQBuAGQAZQB4AFQAcgBhAGMAawBpAG4AZwBFAHgAAAABAAAAEAEAAEkASQA9ADAAMQAwADEAQwBF
+AEUAMABFAEQAMgA1ADIANgA0AEMAMAA3ADEARQBEADEANAAyADUARQA0ADUAQgBBAEIAQwBDADgA
+OQA0AEQARAA5ADUANgBCAEYANwA7AFMAQgBNAEkARAA9ADEAMgA7AFMAMQA9ADwAMgAwADEAMwAx
+ADEAMQAzADEANAAwADYAMAAwAC4ARwBLADUANAA0ADMAQABtAHcAYQBuAGQAYQA+ADsAVgBlAHIA
+cwBpAG8AbgA9AFYAZQByAHMAaQBvAG4AIAAxADQALgAyACAAKABCAHUAaQBsAGQAIAAzADEAOAAu
+ADAAKQAsACAAUwB0AGEAZwBlAD0ASAAyAAAAAwANNP0/AAAfAACAhgMCAAAAAADAAAAAAAAARgEA
+AAAgAAAAeAAtAG0AcwAtAGgAYQBzAC0AYQB0AHQAYQBjAGgAAAABAAAAAgAAAAAAAAAfAACAhgMC
+AAAAAADAAAAAAAAARgEAAAAiAAAAeAAtAG8AcgBpAGcAaQBuAGEAdABpAG4AZwAtAGkAcAAAAAAA
+AQAAABoAAABbADEAMAAuADMANQAuADQALgA2ADkAXQAAAAAA7Js=
+
+--_000_3FC4AB8B47ECD546BCD4B361A64BEACD8C62B35Davmb3qlogicorg_--
