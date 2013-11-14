@@ -1,66 +1,54 @@
-From: Loc Ho <lho@apm.com>
-Subject: [PATCH 3/3] arm64: Add APM X-Gene SoC 6.0Gbps SATA PHY DTS entries
-Date: Thu, 14 Nov 2013 12:31:59 -0700
-Message-ID: <1384457519-21335-4-git-send-email-lho@apm.com>
-References: <1384457519-21335-1-git-send-email-lho@apm.com>
- <1384457519-21335-2-git-send-email-lho@apm.com>
- <1384457519-21335-3-git-send-email-lho@apm.com>
+From: bianca72775@googlemail.com
+Subject: Re: Guaranteed Top 10 Google Placements mail-archive.com In 100 Days
+Date: Fri, 15 Nov 2013 01:26:50 +0530
+Message-ID: <52852aff.eac2440a.7a09.1dd6@mx.google.com>
+Reply-To: DIANA68371@gmail.com
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod5og117.obsmtp.com ([64.18.0.149]:58419 "HELO
-	exprod5og117.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755285Ab3KNTcg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Nov 2013 14:32:36 -0500
-Received: by mail-pb0-f51.google.com with SMTP id xa7so2455086pbc.38
-        for <linux-scsi@vger.kernel.org>; Thu, 14 Nov 2013 11:32:34 -0800 (PST)
-In-Reply-To: <1384457519-21335-3-git-send-email-lho@apm.com>
+Received: from mail-pd0-f196.google.com ([209.85.192.196]:56266 "EHLO
+	mail-pd0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755842Ab3KNT4s (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Nov 2013 14:56:48 -0500
+Received: by mail-pd0-f196.google.com with SMTP id v10so652161pde.3
+        for <linux-scsi@vger.kernel.org>; Thu, 14 Nov 2013 11:56:48 -0800 (PST)
+Received: from localhost.localdomain ([124.253.29.188])
+        by mx.google.com with ESMTPSA id hz10sm53251310pbc.36.2013.11.14.11.56.45
+        for <linux-scsi@vger.kernel.org>
+        (version=TLSv1 cipher=RC4-SHA bits=128/128);
+        Thu, 14 Nov 2013 11:56:47 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, jcm@redhat.com, Loc Ho <lho@apm.com>
+To: linux-scsi@vger.kernel.org
 
-arm64: Add APM X-Gene SoC 6.0Gbps SATA PHY DTS entries.
+Hello Sir / Mam,
 
-This patch adds the DTS entries for the APM X-Gene SoC 6.0Gbps SATA PHY 
-driver. The PHY for controller 0 and 1 are enabled by default.
----
- arch/arm64/boot/dts/apm-storm.dtsi |   25 +++++++++++++++++++++++++
- 1 files changed, 25 insertions(+), 0 deletions(-)
+We would like to have a chance to work on your website and get it positioned top 10 on major search engines around the world ( Google & Bing ). We are presently working with 500+ clients world wide and we have made sure all our clients rank top 10 for their best keywords. None of our clients have been caught in any of the recent google updates. We only use ethical white hat methods to deliver rankings. Our search engine packages include both onsite & off optimization, we provide complete SEO solution to our clients and not just link building packages.
 
-diff --git a/arch/arm64/boot/dts/apm-storm.dtsi b/arch/arm64/boot/dts/apm-storm.dtsi
-index 359d7b6..b29b465 100644
---- a/arch/arm64/boot/dts/apm-storm.dtsi
-+++ b/arch/arm64/boot/dts/apm-storm.dtsi
-@@ -193,5 +193,30 @@
- 			reg = <0x0 0x17000014 0x0 0x100>;
- 			mask = <0x1>;
- 		};
-+
-+		sataphy0: sataphy@1f210000 {
-+			compatible = "apm,xgene-ahci-phy";
-+			id = <0>;
-+			reg = <0x0 0x1f210000 0x0 0x10000>;
-+			#phy-cells = <0>;
-+			status = "na";
-+		};
-+
-+		sataphy1: sataphy@1f220000 {
-+			compatible = "apm,xgene-ahci-phy";
-+			id = <1>;
-+			reg = <0x0 0x1f220000 0x0 0x10000>;
-+			#phy-cells = <0>;
-+			status = "ok";
-+		};
-+
-+		sataphy2: sataphy@1f230000 {
-+			compatible = "apm,xgene-ahci-phy";
-+			id = <2>;
-+			reg = <0x0 0x1f230000 0x0 0x10000
-+			       0x0 0x1f2d0000 0x0 0x10000 >;
-+			#phy-cells = <0>;
-+			status = "ok";
-+		};
- 	};
- };
--- 
-1.5.5
+We understand there are many SEO Scam companies mailing you each day over and over again and I am also sure you have been robbed off a few times in past with no results at all. To make sure you we show you our WORTH, we have launched 15 DAY FREE SEO TRIAL service. We want to build your faith in our service and make sure you see results before paying for our service.
 
+Is 15 days Enough time to deliver results ?
+
+15 days is good enough a time to show you huge movements in rankings for all your keywords. We start with A) choosing the best keywords for your website, B)  Approve a final list of keywords, C) Make onsite changes D) Build links for your website. If in these 15 days you are not happy with our performance, you can cancel or decide to opt-out. You will not be billed a single dime for these 15 days.
+
+Post Trial Pricing & Package
+
+In the 15 days trial, we only work for 10 keywords so that we can show best possible results in the time span. Once the trial is over you pick one of the packages listed below :
+
+Package A ) $99 / month (10 keywords optimized ) Package B ) $149 / month ( 20 keywords optimized ) Package C ) $199 / month ( 30 keywords optimized )
+
+To Sign up for our free trial email us back with the information below so we can send you our sign up link.
+
+1) " Website You Want To Optimize "
+2) Keywords ( Optional )
+3) SEO Done Before ( Yes / No )
+
+Looking forward working with you, let us know if you would like to have more information about our company and procedures.
+Regards
+
+Vince G
+SEO Manager : T.O.B
+7 B Green Avenue, Amritsar Punjab
+
+----------------------------------------------------------------------------------------------------------------
+
+
+Our email above is not intended to waste your time or fill your inbox with spam. If you would not like to hear from us, email us back with NOT INTERESTED. We will never email you again.
