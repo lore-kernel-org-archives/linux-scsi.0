@@ -1,128 +1,136 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 1/1] enclosure: fix WARN_ON in dual path device removing
-Date: Fri, 15 Nov 2013 14:58:00 -0800
-Message-ID: <1384556280.2003.46.camel@dabdike.int.hansenpartnership.com>
-References: <20131115164601.223247118@linux.vnet.ibm.com>
-	 <20131115164711.585346972@linux.vnet.ibm.com>
+From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
+Subject: RE: Question on SCSI target scan
+Date: Fri, 15 Nov 2013 23:53:02 +0000
+Message-ID: <94D0CD8314A33A4D9D801C0FE68B4029547B9343@G9W0745.americas.hpqcorp.net>
+References: <5645D6F831469342AF2BC26CC827D68C5940032A27@BRM-EXCH-3.corp.brocade.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:50930 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751837Ab3KOW6L (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Nov 2013 17:58:11 -0500
-In-Reply-To: <20131115164711.585346972@linux.vnet.ibm.com>
+Received: from g4t0014.houston.hp.com ([15.201.24.17]:46625 "EHLO
+	g4t0014.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751658Ab3KOXyw convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Nov 2013 18:54:52 -0500
+In-Reply-To: <5645D6F831469342AF2BC26CC827D68C5940032A27@BRM-EXCH-3.corp.brocade.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: wenxiong@linux.vnet.ibm.com
-Cc: linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com
+To: Ramesh Chikkanayakanahally <rcnagara@Brocade.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "jbottomley@parallels.com" <jbottomley@parallels.com>
 
-On Fri, 2013-11-15 at 10:46 -0600, wenxiong@linux.vnet.ibm.com wrote:
-> The issue is happened in dual controller configuration. We got the
-> sysfs warnings when rmmod the ipr module.
-> 
-> enclosure_unregister() in drivers/msic/enclosure.c, call device_unregister()
-> for each componment deivce, device_unregister() ->device_del()->kobject_del()
-> ->sysfs_remove_dir(). In sysfs_remove_dir(), set kobj->sd = NULL.
-> 
-> For each componment device, enclosure_component_release()->enclosure_remove_links()->sysfs_remove_link() in which checking kobj->sd again, it has been set as NULL when doing device_unregister. So we saw all these sysfs WARNING.
-> 
-> sysfs: can not remove 'enclosure_device: P1-D1      2SS6', no directory
-> ------------[ cut here ]------------
-> WARNING: at fs/sysfs/inode.c:325
-> Modules linked in: fuse loop dm_mod ses enclosure ipr(-) ipv6 ibmveth libata sg ext3 jbd mbcache sd_mod crc_t10dif crct10dif_common ibmvscsi scsi_transport_srp scsi_tgt scsi_dh_rdac scsi_dh_emc scsi_dh_hp_sw scsi_dh_alua scsi_dh scsi_mod
-> CPU: 0 PID: 4006 Comm: rmmod Not tainted 3.12.0-scsi-0.11-ppc64 #1
-> task: c0000000f769aba0 ti: c0000000f8f9c000 task.ti: c0000000f8f9c000
-> NIP: c0000000002b038c LR: c0000000002b0388 CTR: 0000000000000000
-> REGS: c0000000f8f9ee70 TRAP: 0700   Not tainted  (3.12.0-scsi-0.11-ppc64)
-> MSR: 8000000000029032 <SF,EE,ME,IR,DR,RI>  CR: 28008444  XER: 20000000
-> SOFTE: 1
-> CFAR: c000000000736118
-> 
-> GPR00: c0000000002b0388 c0000000f8f9f0f0 c0000000010ed630 0000000000000047 
-> GPR04: c000000001502628 c000000001513010 0000000000000689 652027656e636c6f 
-> GPR08: 737572655f646576 c000000000ae2b7c 0000000000a20000 c000000000add630 
-> GPR12: 0000000028008442 c000000007f20000 0000000000000000 0000000010146920 
-> GPR16: 00000000100cb9d8 0000000010093088 0000000010146920 0000000000000000 
-> GPR20: 0000000000000000 0000000010161900 00000000100ce458 0000000000000000 
-> GPR24: 0000000010161940 0000000000000000 d0000000046ad440 0000000000000000 
-> GPR28: c0000000f8f9f270 0000000000000000 c0000000fcb882c8 0000000000000000 
-> NIP [c0000000002b038c] .sysfs_hash_and_remove+0xe4/0xf0
-> LR [c0000000002b0388] .sysfs_hash_and_remove+0xe0/0xf0
-> Call Trace:
-> [c0000000f8f9f0f0] [c0000000002b0388] .sysfs_hash_and_remove+0xe0/0xf0 (unreliable)
-> [c0000000f8f9f190] [c0000000002b4134] .sysfs_remove_link+0x24/0x60
-> [c0000000f8f9f200] [d000000004df037c] .enclosure_remove_links+0x64/0xa0 [enclosure]
-> [c0000000f8f9f2d0] [d000000004df0518] .enclosure_component_release+0x30/0x60 [enclosure]
-> [c0000000f8f9f350] [c000000000540068] .device_release+0x50/0xd8
-> [c0000000f8f9f3d0] [c0000000003b6f80] .kobject_cleanup+0xb8/0x230
-> [c0000000f8f9f460] [c00000000053f404] .put_device+0x1c/0x30
-> [c0000000f8f9f4d0] [d000000004df0db0] .enclosure_unregister+0xa0/0xe8 [enclosure]
-> [c0000000f8f9f560] [d000000004f90094] .ses_intf_remove_enclosure+0x8c/0xa8 [ses]
-> [c0000000f8f9f5f0] [c0000000005413ec] .device_del+0xf4/0x268
-> [c0000000f8f9f680] [c000000000541594] .device_unregister+0x34/0x88
-> [c0000000f8f9f700] [d000000001423d3c] .__scsi_remove_device+0x104/0x128 [scsi_mod]
-> [c0000000f8f9f780] [d00000000141eff8] .scsi_forget_host+0x70/0xa0 [scsi_mod]
-> [c0000000f8f9f800] [d000000001413dc0] .scsi_remove_host+0x88/0x178 [scsi_mod]
-> [c0000000f8f9f890] [d00000000469db5c] .ipr_remove+0x7c/0xf8 [ipr]
-> [c0000000f8f9f920] [c0000000003fe1f4] .pci_device_remove+0x64/0xf0
-> [c0000000f8f9f9b0] [c000000000544f10] .__device_release_driver+0xd0/0x158
-> [c0000000f8f9fa40] [c0000000005450d8] .driver_detach+0x140/0x148
-> [c0000000f8f9fae0] [c000000000543848] .bus_remove_driver+0xe0/0x188
-> [c0000000f8f9fb70] [c00000000054628c] .driver_unregister+0x3c/0x80
-> [c0000000f8f9fbf0] [c0000000003fe35c] .pci_unregister_driver+0x34/0xe8
-> [c0000000f8f9fc90] [d0000000046a5fb4] .ipr_exit+0x2c/0x44 [ipr]
-> [c0000000f8f9fd20] [c0000000001359dc] .SyS_delete_module+0x204/0x308
-> [c0000000f8f9fe30] [c000000000009f60] syscall_exit+0x0/0xa0
-> Instruction dump:
-> e8010010 eb81ffe0 7c0803a6 eba1ffe8 ebc1fff0 ebe1fff8 4e800020 3c62ff8a 
-> 7ca42b78 3863c388 48485d45 60000000 <0fe00000> 3860fffe 4bffff94 fba1ffe8 
-> o
-> Signed-off-by: Wen Xiong <wenxiong@linux.vnet.ibm.com>
-> ---
->  drivers/misc/enclosure.c |    3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> Index: b/drivers/misc/enclosure.c
-> ===================================================================
-> --- a/drivers/misc/enclosure.c	2013-11-08 12:30:25.000000000 -0600
-> +++ b/drivers/misc/enclosure.c	2013-11-08 14:47:55.527765695 -0600
-> @@ -233,7 +233,8 @@ static void enclosure_component_release(
->  	struct enclosure_component *cdev = to_enclosure_component(dev);
->  
->  	if (cdev->dev) {
-> -		enclosure_remove_links(cdev);
-> +		if (dev->kobj.sd)
-> +			enclosure_remove_links(cdev);
+That sounds similar to Broadcast (Asynchronous Event) in Serial Attache=
+d=20
+SCSI (SAS), which is defined as:
+    "Originated by an SSP target port when an event occurs (e.g., a har=
+d
+    reset) that causes one or more unit attention conditions to be esta=
+blished
+    for one or more logical units accessible through the SSP target por=
+t."
 
-This can happen everywhere for a multi path device, can't it, so the
-correct thing to do would be to check in the actual link case, like the
-below.
+The SCSI architecture model neither mandates nor precludes SCSI transpo=
+rt=20
+protocols from defining such a mechanism.  FCP-4 (SCSI over Fibre Chann=
+el)
+doesn't mention using RSCN for that purpose, but it sounds like a
+reasonable approach.
 
-James
+In SAS, there is no indication which SCSI target ports or logical unit(=
+s) sent=20
+the Broadcast, so sending the QUERY ASYNCHRONOUS EVENT task=20
+management function to each logical unit is the quickest way to find th=
+em.
+Since Fibre Channel's RSCN only identifies the SCSI target port, you st=
+ill=20
+need to check all the logical units.
 
+=46or each logical unit found with a pending unit attention condition, =
+send
+a command on which unit attention conditions are reported (a command=20
+other than INQUIRY and REPORT LUNS).  REQUEST SENSE is a good choice;=20
+it'll return GOOD status, return the unit attention condition as the=20
+parameter data, and clear the unit attention condition.  Repeat sending
+REQUEST SENSE until all the unit attention conditions have been reporte=
+d;=20
+there could be several queued up.
+
+The additional sense code advises what to do next.  REPORTED LUNS=20
+DATA HAS CHANGED means sending REPORT LUNS is appropriate.
+
+Beware that just because the LUN inventory is the same doesn't mean
+the logical units are the same.  A logical unit at LUN X might have bee=
+n=20
+deleted and another logical unit created and assigned to LUN X, but
+now containing different content.  You need to check the logical unit
+name (in the Device Identification VPD page) too.
 ---
-diff --git a/drivers/misc/enclosure.c b/drivers/misc/enclosure.c
-index 0e8df41..3491b7f 100644
---- a/drivers/misc/enclosure.c
-+++ b/drivers/misc/enclosure.c
-@@ -198,6 +198,13 @@ static void enclosure_remove_links(struct enclosure_component *cdev)
- {
- 	char name[ENCLOSURE_NAME_SIZE];
- 
-+	/*
-+	 * In odd circumstances, like multipath devices, something else may
-+	 * already have removed the links, so check for this condition first.
-+	 */
-+	if (!cdev->dev->kobj.sd)
-+		return;
-+
- 	enclosure_link_name(cdev, name);
- 	sysfs_remove_link(&cdev->dev->kobj, name);
- 	sysfs_remove_link(&cdev->cdev.kobj, "device");
+Rob Elliott    HP Server Storage
 
 
-
-
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+> owner@vger.kernel.org] On Behalf Of Ramesh Chikkanayakanahally
+> Sent: Wednesday, 06 November, 2013 8:10 AM
+> To: linux-scsi@vger.kernel.org
+> Cc: jbottomley@parallels.com
+> Subject: Question on SCSI target scan
+>=20
+> Hi,
+>=20
+> This question is related to scsi_transport_fc layer.
+>=20
+> Background:
+> =A0=A0=A0 When new LUNs are added to a target, the target can send ch=
+eck condition
+> with SK/ASC/ASCQ indicating that the reported LUNS data has changed. =
+Then
+> the initiator can send the report LUNs command to discover the change=
+s. But
+> if there are currently no LUNs or in case there is no activity on exi=
+sting LUNs,
+> then this mechanism will not be efficient. So few target implementati=
+ons
+> seem to trigger RSCN with the Event qualifier set to zeroes (event no=
+t
+> specified) and Address format set to Port address of the effected tar=
+get
+> port. The expectation here is that, if the initiator had already logg=
+ed into this
+> target, it would verify the status of this target and if found online=
+, it would
+> issue report LUNs to discover the changes to LUNs. While this mechani=
+sm
+> does not comply with SCSI or FC standards, this looks like one of the=
+ methods
+> that is used by few target implementations. Assumption here is that, =
+there is
+> no other mechanism provided by SCSI or FC standards to achieve this.
+>=20
+> Question:
+> =A0 The existing interfaces of scsi_transport_fc module does not seem=
+ to
+> provide a mechanism to trigger the SCSI target scan on a rport which =
+is
+> already registered using fc_remote_port_add() and is currently online=
+ (not
+> blocked or deleted). If this understanding is correct, would it be us=
+eful to
+> provide an interface that can be used to trigger the SCSI target scan=
+ in the
+> above mentioned scenario ?
+>=20
+> Could you please suggest ?
+>=20
+> Thanks,
+> Ramesh C N
+>=20
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
