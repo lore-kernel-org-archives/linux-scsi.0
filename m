@@ -1,41 +1,90 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 64171] Block SCSI Generic Driver does not maintain file handle
- context
-Date: Fri, 15 Nov 2013 15:55:29 +0000
-Message-ID: <bug-64171-11613-YYztU13nQS@https.bugzilla.kernel.org/>
-References: <bug-64171-11613@https.bugzilla.kernel.org/>
+From: Loc Ho <lho@apm.com>
+Subject: Re: [PATCH 2/3] ata: Add APM X-Gene SoC 6.0Gbps SATA PHY driver
+Date: Fri, 15 Nov 2013 08:14:26 -0800
+Message-ID: <CAPw-ZT=77Fc4Nyc0au74EusoQe=n8fGrJLpavLOmTcswp+8SwA@mail.gmail.com>
+References: <1384457519-21335-1-git-send-email-lho@apm.com>
+	<1384457519-21335-2-git-send-email-lho@apm.com>
+	<1384457519-21335-3-git-send-email-lho@apm.com>
+	<201311151346.17231.arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:37397 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751085Ab3KOPzd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Nov 2013 10:55:33 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id DCFB4208B3
-	for <linux-scsi@vger.kernel.org>; Fri, 15 Nov 2013 15:55:30 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id C25032095C
-	for <linux-scsi@vger.kernel.org>; Fri, 15 Nov 2013 15:55:29 +0000 (UTC)
-In-Reply-To: <bug-64171-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <201311151346.17231.arnd@arndb.de>
+Sender: linux-ide-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Olof Johansson <olof@lixom.net>, Tejun Heo <tj@kernel.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Jon Masters <jcm@redhat.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=64171
+Hi,
 
-Andrew Falanga <af300wsm@gmail.com> changed:
+>> +
+>> +/* SATA port 4 - 5 force power down VCO */
+>> +static void xgene_phy_sata45_macro_pdwn_force_vco(struct xgene_ahci_phy_ctx
+>> +                                                  *ctx)
+>> +{
+>> +     sds_pcie_toggle1to0(ctx->pcie_base, KC_CLKMACRO_CMU_REGS_CMU_REG0_ADDR,
+>> +                         CMU_REG0_PDOWN_MASK);
+>> +     sds_pcie_toggle1to0(ctx->pcie_base,
+>> +                         KC_CLKMACRO_CMU_REGS_CMU_REG32_ADDR,
+>> +                         CMU_REG32_FORCE_VCOCAL_START_MASK);
+>> +}
+>
+> I think it's bad to have knowledge of specific port numbers in the driver.
+> Can you change this so that the driver treats all PHYs the same way but
+> gets the differences between sata/eth/pcie mode from DT properties?
+[Loc Ho]
+Okay... I will get rip of the "sata45" and call this function if an
+base address is available.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-            Summary|Block SCSI Generic Driver   |Block SCSI Generic Driver
-                   |does not keep data          |does not maintain file
-                   |                            |handle context
+>
+>
+>> +void xgene_ahci_serdes_reset_rxa_rxd(struct xgene_ahci_phy_ctx *ctx, int chan)
+>
+> All functions in the driver should be 'static'. You are not calling these
+> directly from the SATA driver, are you?
+[Loc Ho]
+Okay... Not anymore.
 
---- Comment #4 from Andrew Falanga <af300wsm@gmail.com> ---
-Changed the summary to actually complete a thought.
+>
+>> +     /* Select SATA mux for SATA port 0 - 3 which shared with SGMII ETH */
+>> +     if (ctx->id < 2) {
+>> +             if (xgene_phy_host_sata_select(ctx) != 0) {
+>> +                     dev_err(ctx->dev, "SATA%d can not select SATA MUX\n",
+>> +                             ctx->id);
+>> +                     return -1;
+>> +             }
+>> +     }
+>
+> I think all checks for the "id" field are to find out what kind of PHY you
+> are talking to, the driver itself does not need to know the id, and the
+> field can be removed if you find that out in a different way.
+[Loc Ho]
+This is mainly used for debugging and detection of the 2nd resource. I
+will use another compatible type.
 
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+>
+>> +     if (ctx->id == 2) {
+>> +             /* For 3rd controller, we must also program another resource */
+>> +             res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
+>> +             if (!res) {
+>> +                     dev_err(&pdev->dev,
+>> +                             "no SATA/PCIE PHY resource address\n");
+>> +                     goto error;
+>> +             }
+>> +             ctx->pcie_base = devm_ioremap(&pdev->dev, res->start,
+>> +                                           resource_size(res));
+>> +             if (!ctx->pcie_base) {
+>> +                     dev_err(&pdev->dev,
+>> +                             "can't map SATA/PCIe PHY resource\n");
+>> +                     rc = -ENOMEM;
+>> +                     goto error;
+>> +             }
+>> +     }
+>
+> If you need a second memory resource, I take that as a hint that
+> the device is actually different from the others, so using a separate
+> "compatible" string in DT might be more appropriate.
+[Loc Ho]
+Okay..
+
+-Loc
