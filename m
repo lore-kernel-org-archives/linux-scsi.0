@@ -1,53 +1,64 @@
-From: wenxiong@linux.vnet.ibm.com
-Subject: [PATCH 1/1] ipr: Increase msi-x interrupt vectors to 16
-Date: Fri, 15 Nov 2013 10:58:15 -0600
-Message-ID: <20131115170017.815518174@linux.vnet.ibm.com>
-References: <20131115165814.252430802@linux.vnet.ibm.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [32.97.110.57] ([32.97.110.57]:60034 "HELO
-	jupiter1-lp2.austin.ibm.com" rhost-flags-FAIL-FAIL-OK-FAIL)
-	by vger.kernel.org with SMTP id S1751439Ab3KORDF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Nov 2013 12:03:05 -0500
-Content-Disposition: inline; filename=increase_msix_vector
-Sender: linux-scsi-owner@vger.kernel.org
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH 1/3] Documentation: Add APM X-Gene SoC 6.0Gbps SATA PHY driver binding documentation
+Date: Fri, 15 Nov 2013 20:26:07 +0100
+Message-ID: <201311152026.07433.arnd@arndb.de>
+References: <1384457519-21335-1-git-send-email-lho@apm.com> <201311151335.09577.arnd@arndb.de> <CAPw-ZT=x3eTd_vgVgyu0HR7j2wmSfQkkSeCMJSJ_i3MTPwiM-g@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <CAPw-ZT=x3eTd_vgVgyu0HR7j2wmSfQkkSeCMJSJ_i3MTPwiM-g@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Loc Ho <lho@apm.com>
+Cc: Olof Johansson <olof@lixom.net>, Tejun Heo <tj@kernel.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Jon Masters <jcm@redhat.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com, Wen Xiong <wenxiong@linux.vnet.ibm.com>
 
-This patch increased msix-x interrupts vectors to 16 in ipr driver.
+On Friday 15 November 2013, Loc Ho wrote:
+> >> +- CTLE0                        : PHY override parameters for channel 0 register REG1
+> >> +                         field CTLE_EQ. First value for Gen1, second value
+> >> +                         for Gen2, and third value for Gen3. Default is 0x2.
+> >> +- CTLE1                        : PHY override parameters for channel 1 register REG1
+> >> +                         field CTLE_EQ. First value for Gen1, second value
+> >> +                         for Gen2, and third value for Gen3. Default is 0x2.
+> >> +- PQ0                  : PHY override parameters for channel 0 register REG125
+> >> +                         field PQ_REG. First value for Gen1, second value
+> >> +                         for Gen2, and third value for Gen3. Default is 0xA.
+> >> +- PQ1                  : PHY override parameters for channel 1 register REG125
+> >> +                         field PQ_REG. First value for Gen1, second value
+> >> +                         for Gen2, and third value for Gen3. Default is 0xA.
+> >
+> > As mentioned before, I don't think putting register-level information into the binding
+> > is the right approach here.
+> >
+> [Loc Ho]
+> I don't want to change the driver for every possible customer or APM
+> boards out there. In general, if the board designer follows the board
+> design guideline, this isn't necessary. Unfortunately, I can not
+> control what customer do. If these setting is NOT driven by DTS, then
+> I or others may have to change the driver every time there is an new
+> board. Another option is pass them as module parameters.
 
-Signed-off-by: Wen Xiong <wenxiong@linux.vnet.ibm.com>
----
- drivers/scsi/ipr.c |    2 +-
- drivers/scsi/ipr.h |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+Module parameters are certainly not a solution for this, that would make the
+problem worse.
 
-Index: b/drivers/scsi/ipr.c
-===================================================================
---- a/drivers/scsi/ipr.c	2013-11-13 09:51:39.000000000 -0600
-+++ b/drivers/scsi/ipr.c	2013-11-13 09:54:17.247765599 -0600
-@@ -220,7 +220,7 @@ module_param_named(max_devs, ipr_max_dev
- MODULE_PARM_DESC(max_devs, "Specify the maximum number of physical devices. "
- 		 "[Default=" __stringify(IPR_DEFAULT_SIS64_DEVS) "]");
- module_param_named(number_of_msix, ipr_number_of_msix, int, 0);
--MODULE_PARM_DESC(number_of_msix, "Specify the number of MSIX interrupts to use on capable adapters (1 - 5).  (default:2)");
-+MODULE_PARM_DESC(number_of_msix, "Specify the number of MSIX interrupts to use on capable adapters (1 - 16).  (default:2)");
- MODULE_LICENSE("GPL");
- MODULE_VERSION(IPR_DRIVER_VERSION);
- 
-Index: b/drivers/scsi/ipr.h
-===================================================================
---- a/drivers/scsi/ipr.h	2013-11-13 09:52:01.000000000 -0600
-+++ b/drivers/scsi/ipr.h	2013-11-13 09:53:10.797767407 -0600
-@@ -311,7 +311,7 @@ IPR_PCII_NO_HOST_RRQ | IPR_PCII_IOARRIN_
-  * Misc literals
-  */
- #define IPR_NUM_IOADL_ENTRIES			IPR_MAX_SGLIST
--#define IPR_MAX_MSIX_VECTORS		0x5
-+#define IPR_MAX_MSIX_VECTORS		0x10
- #define IPR_MAX_HRRQ_NUM		0x10
- #define IPR_INIT_HRRQ			0x0
- 
+Would it be possible to read out the values that were set by the firmware
+at startup and reuse those during run-time? I assume that the devices are
+already brought up when the kernel starts.
 
--- 
+If that s not possible, change the properties to be named after what the
+setting does and make the values be units that are sensible to a board
+designer, e.g. (specifics are totally made up here)
+
+ - polarity:	If present, override the polarity of the signal line.
+		zero for negative polarity, one for positive polarity.
+		If absent, use the firmware default.
+ - signal-clock-frequency: If present, override the signal clock frequency.
+		This value is defined in HZ
+ - x-y-time:	If present, override the timing setting for the X/Y signal
+		time, in nanoseconds.
+
+This way, you can reuse the properties for an updated version of the device
+that has similar settings but a different register layout.
+
+	Arnd
