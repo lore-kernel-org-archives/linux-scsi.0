@@ -1,98 +1,36 @@
-From: Bodo Stroesser <bstroesser@ts.fujitsu.com>
-Subject: Re: PATCH: st.c: Fix blk_get_queue usage
-Date: 15 Nov 2013 12:23:06 +0100
-Message-ID: <61eb00$4bn226@dgate20u.abg.fsc.net>
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dgate20.ts.fujitsu.com ([80.70.172.51]:39412 "EHLO
-	dgate20.ts.fujitsu.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753471Ab3KOLXJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Nov 2013 06:23:09 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH 0/3] ata: Add APM X-Gene SoC 6.0Gbps SATA PHY support
+Date: Fri, 15 Nov 2013 13:31:45 +0100
+Message-ID: <201311151331.46341.arnd@arndb.de>
+References: <1384457519-21335-1-git-send-email-lho@apm.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1384457519-21335-1-git-send-email-lho@apm.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Loc Ho <lho@apm.com>
+Cc: olof@lixom.net, tj@kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, jcm@redhat.com, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: joe.lawrence@stratus.com, kai.makisara@kolumbus.fi, linux-scsi@vger.kernel.org
-Cc: bstroesser@ts.fujitsu.com
 
-T24gMTQuMTEuMjAxMywgYXQgMjIuNTAsIEpvZSBMYXdyZW5jZSA8am9lLmxhd3JlbmNlQHN0
-cmF0dXMuY29tPiB3cm90ZToKCj4gT24gVGh1LCAxNCBOb3YgMjAxMyAyMDoyMjo0MCArMDEw
-MAo+IEJvZG8gU3Ryb2Vzc2VyIDxic3Ryb2Vzc2VyQHRzLmZ1aml0c3UuY29tPiB3cm90ZToK
-PiAKPiA+IE9uIDE0LjExLjIwMTMsIGF0IDIwLjA1LCBLYWkgTT8/a2lzYXJhIChLb2x1bWJ1
-cykgPGthaS5tYWtpc2FyYUBrb2x1bWJ1cy5maT4gd3JvdGU6Cj4gPiAKPiA+ID4gCj4gPiA+
-IE9uIDE0LjExLjIwMTMsIGF0IDE2LjQ4LCBCb2RvIFN0cm9lc3NlciA8YnN0cm9lc3NlckB0
-cy5mdWppdHN1LmNvbT4gd3JvdGU6Cj4gPiA+IAoKPCBzbmlwID4KIAo+ID4gPiAKPiA+ID4g
-V2l0aCB0aGlzIHBhdGNoLCBibGtfZ2V0X3F1ZXVlKCkgaXMgbm90IGNhbGxlZCB3aXRoIHRo
-ZSBjb3JyZWN0IGFyZ3VtZW50Lgo+ID4gPiBNYXliZSBjaGFuZ2UgdGhlIGNhbGwgdG8gYmxr
-X2dldF9xdWV1ZShTRHAtPnJlcXVlc3RfcXVldWUpID8KPiA+ID4gCj4gPiA+ID4gCWlmIChi
-bGtfZ2V0X3F1ZXVlKGRpc2stPnF1ZXVlKSkKPiA+IAo+ID4gWWVzLCB0aGFuayB5b3UuIFlv
-dSBhcmUgb2J2aW91c2x5IHJpZ2h0LiBCZWxvdyBpcyB0aGUgcmV2aXNlZCBwYXRjaC4KPiA+
-IFNvcnJ5IGZvciB0aGUgbWlzdGFrZS4KPiA+IAo+ID4gQm9kbwo+ID4gCj4gPiA+ID4gCQln
-b3RvIG91dF9wdXRfZGlzazsKPiA+ID4gPiArCWRpc2stPnF1ZXVlID0gU0RwLT5yZXF1ZXN0
-X3F1ZXVlOwo+ID4gPiA+IAl0cG50LT5kcml2ZXIgPSAmc3RfdGVtcGxhdGU7Cj4gPiA+ID4g
-Cj4gPiA+ID4gCXRwbnQtPmRldmljZSA9IFNEcC0tCj4gPiA+ID4gVG8gdW5zdWJzY3JpYmUg
-ZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LXNjc2ki
-IGluCj4gPiA+ID4gdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2VyLmtl
-cm5lbC5vcmcKPiA+ID4gPiBNb3JlIG1ham9yZG9tbyBpbmZvIGF0ICBodHRwOi8vdmdlci5r
-ZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0bWwKPiA+ID4gPiA7Cj4gPiA+IAo+ID4gPiBU
-aGFua3MsCj4gPiA+IEthaQo+ID4gPiAKPiA+IAo+ID4gRnJvbTogQm9kbyBTdHJvZXNzZXIg
-PGJzdHJvZXNzZXJAdHMuZnVqaXRzdS5jb20+Cj4gPiBEYXRlOiBUaHUsIDE0IE5vdiAyMDEz
-IDE0OjM1OjAwICswMTAwCj4gPiBTdWJqZWN0OiBbUEFUQ0hdIHNnOiBmaXggYmxrX2dldF9x
-dWV1ZSB1c2FnZQo+ID4gCj4gPiBJZiBibGtfcXVldWVfZ2V0KCkgaW4gc3RfcHJvYmUgZmFp
-bHMsIGRpc2stPnF1ZXVlIG11c3Qgbm90Cj4gPiBiZSBzZXQgdG8gU0RwLT5yZXF1ZXN0X3F1
-ZXVlLCBhcyB0aGF0IHdvdWxkIHJlc3VsdCBpbgo+ID4gcHV0X2Rpc2soKSBkcm9wcGluZyBh
-IG5vdCB0YWtlbiByZWZlcmVuY2UuCj4gPiAKPiA+IFRodXMsIGRpc2stPnF1ZXVlIHNob3Vs
-ZCBiZSBzZXQgb25seSBhZnRlciBhIHN1Y2Nlc3NmdWwKPiA+IGJsa19xdWV1ZV9nZXQoKS4K
-PiA+IFJldmlzZWQgcGF0Y2ggZHVlIHRvIGEgaGludCBmcm9tIEthaSBNYWtpc2FyYS4KPiA+
-IAo+ID4gU2lnbmVkLW9mZi1ieTogQm9kbyBTdHJvZXNzZXIgPGJzdHJvZXNzZXJAdHMuZnVq
-aXRzdS5jb20+Cj4gPiAKPiA+IC0tLQo+ID4gCj4gPiAtLS0gYS9kcml2ZXJzL3Njc2kvc3Qu
-YwkyMDEzLTExLTE0IDE0OjEwOjQwLjAwMDAwMDAwMCArMDEwMAo+ID4gKysrIGIvZHJpdmVy
-cy9zY3NpL3N0LmMJMjAxMy0xMS0xNCAxNDoxMDo1Ny4wMDAwMDAwMDAgKzAxMDAKPiA+IEBA
-IC00MTA3LDExICs0MTA3LDExIEBACj4gPiAgCWtyZWZfaW5pdCgmdHBudC0+a3JlZik7Cj4g
-PiAgCXRwbnQtPmRpc2sgPSBkaXNrOwo+ID4gIAlkaXNrLT5wcml2YXRlX2RhdGEgPSAmdHBu
-dC0+ZHJpdmVyOwo+ID4gLQlkaXNrLT5xdWV1ZSA9IFNEcC0+cmVxdWVzdF9xdWV1ZTsKPiA+
-ICAJLyogU0NTSSB0YXBlIGRvZXNuJ3QgcmVnaXN0ZXIgdGhpcyBnZW5kaXNrIHZpYSBhZGRf
-ZGlzaygpLiAgTWFudWFsbHkKPiA+ICAJICogdGFrZSBxdWV1ZSByZWZlcmVuY2UgdGhhdCBy
-ZWxlYXNlX2Rpc2soKSBleHBlY3RzLiAqLwo+ID4gLQlpZiAoYmxrX2dldF9xdWV1ZShkaXNr
-LT5xdWV1ZSkpCj4gPiArCWlmIChibGtfZ2V0X3F1ZXVlKFNEcC0+cmVxdWVzdF9xdWV1ZSkp
-Cj4gPiAgCQlnb3RvIG91dF9wdXRfZGlzazsKPiA+ICsJZGlzay0+cXVldWUgPSBTRHAtPnJl
-cXVlc3RfcXVldWU7Cj4gPiAgCXRwbnQtPmRyaXZlciA9ICZzdF90ZW1wbGF0ZTsKPiA+ICAK
-PiA+ICAJdHBudC0+ZGV2aWNlID0gU0RwOwo+ID4gID8/ey5uPys/Pz8/Pz8/KyU/P2x6d20/
-P2I/Pz8/Pz9yPz96WD8/ICA/KD8/ID8/Pz99Pz8/Pz96PyZqOit2Pz8/Pz8/P3paKz8/K3pm
-Pz8/aD8/P34/Pz8/aT8/P3o/ID93Pz8/Pz8/Pz8/Jj8pPz8gZgo+IAo+IEhpIEJvZG8sCj4g
-Cj4gTWlub3Igbml0LCB3YXNuJ3QgYmxrX2dldF9xdWV1ZSBtb2RpZmllZCB0byByZXR1cm4g
-ZmFsc2Ugb24gZmFpbHVyZT8KPiAKPiAwOWFjNDZjNDI5NDYgImJsb2NrOiBtaXNjIHVwZGF0
-ZXMgdG8gYmxrX2dldF9xdWV1ZSgpIgo+IAo+IEp1c3QgY3VyaW91cyB3aGF0IHRyZWUgdGhp
-cyBwYXRjaCB3YXMgdGVzdGVkIGFnYWluc3QuCj4gCj4gVGhhbmtzLAo+IAo+IC0tIEpvZQo+
-IAoKSGkgSm9lLAoKd2UgYXJlIGludGVuc2l2ZWx5IHVzaW5nIFN1U0UgU0xFUzExIChjdXJy
-ZW50bHkga2VybmVsIDMuMC44MC14eHh4eCkuIEF0IHRoZSBtb21lbnQKSSdtIG5vdCBpbnZv
-bHZlZCB3aXRoIG1haW5saW5lLgoKVGhlIHBhdGNoIHJlc3VsdGVkIGZyb20gdGhlIGh1bnQg
-Zm9yIGFub3RoZXIgcHJvYmxlbSBhbmQgd2FzIGFjY2VwdGVkIGJ5IFN1U0UuIFRoZXkKdG9s
-ZCBtZSB0aGF0IHRoaXMgd291bGQgYmUgcmVsZXZhbnQgZm9yIG1haW5saW5lIGFsc28uIFNv
-IEkgcG9zdGVkIGl0IGJ1dCBkaWRuJ3QKY2hlY2sgbWFpbmxpbmUgZm9yIGNoYW5nZXMgOi0o
-CgpUaHVzLCBoZXJlIGlzIHRoZSB0aGlyZCByZXZpc2lvbiBvZiB0aGUgcGF0Y2ggdGhhdCBu
-b3cgaXMgc3VpdGVkIGZvciBtYWlubGluZS4KU29ycnkgZm9yIHRoZSBub2lzZS4KClRoYW5r
-IHlvdS4KCkJvZG8KCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KCkZyb206IEJv
-ZG8gU3Ryb2Vzc2VyIDxic3Ryb2Vzc2VyQHRzLmZ1aml0c3UuY29tPgpEYXRlOiBUaHUsIDE0
-IE5vdiAyMDEzIDE0OjM1OjAwICswMTAwClN1YmplY3Q6IFtQQVRDSF0gc2c6IGZpeCBibGtf
-Z2V0X3F1ZXVlIHVzYWdlCgpJZiBibGtfcXVldWVfZ2V0KCkgaW4gc3RfcHJvYmUgZmFpbHMs
-IGRpc2stPnF1ZXVlIG11c3Qgbm90CmJlIHNldCB0byBTRHAtPnJlcXVlc3RfcXVldWUsIGFz
-IHRoYXQgd291bGQgcmVzdWx0IGluCnB1dF9kaXNrKCkgZHJvcHBpbmcgYSBub3QgdGFrZW4g
-cmVmZXJlbmNlLgoKVGh1cywgZGlzay0+cXVldWUgc2hvdWxkIGJlIHNldCBvbmx5IGFmdGVy
-IGEgc3VjY2Vzc2Z1bApibGtfcXVldWVfZ2V0KCkuCgoybmQgcmV2aXNlZCBwYXRjaCBkdWUg
-dG8gaGludHMgZnJvbSBLYWkgTWFraXNhcmEgYW5kIEpvZSBMYXdyZW5jZS4KCk5vdyB0aGlz
-IHNob3VsZCBiZSBzdWl0ZWQgZm9yIG1haW5saW5lLgoKU2lnbmVkLW9mZi1ieTogQm9kbyBT
-dHJvZXNzZXIgPGJzdHJvZXNzZXJAdHMuZnVqaXRzdS5jb20+CgotLS0KCi0tLSBhL2RyaXZl
-cnMvc2NzaS9zdC5jCTIwMTMtMTEtMTUgMTE6NTg6MzkuMDAwMDAwMDAwICswMTAwCisrKyBi
-L2RyaXZlcnMvc2NzaS9zdC5jCTIwMTMtMTEtMTUgMTE6NTk6MTAuMDAwMDAwMDAwICswMTAw
-CkBAIC00MTExLDExICs0MTExLDExIEBAIHN0YXRpYyBpbnQgc3RfcHJvYmUoc3RydWN0IGRl
-dmljZSAqZGV2KQogCWtyZWZfaW5pdCgmdHBudC0+a3JlZik7CiAJdHBudC0+ZGlzayA9IGRp
-c2s7CiAJZGlzay0+cHJpdmF0ZV9kYXRhID0gJnRwbnQtPmRyaXZlcjsKLQlkaXNrLT5xdWV1
-ZSA9IFNEcC0+cmVxdWVzdF9xdWV1ZTsKIAkvKiBTQ1NJIHRhcGUgZG9lc24ndCByZWdpc3Rl
-ciB0aGlzIGdlbmRpc2sgdmlhIGFkZF9kaXNrKCkuICBNYW51YWxseQogCSAqIHRha2UgcXVl
-dWUgcmVmZXJlbmNlIHRoYXQgcmVsZWFzZV9kaXNrKCkgZXhwZWN0cy4gKi8KLQlpZiAoIWJs
-a19nZXRfcXVldWUoZGlzay0+cXVldWUpKQorCWlmICghYmxrX2dldF9xdWV1ZShTRHAtPnJl
-cXVlc3RfcXVldWUpKQogCQlnb3RvIG91dF9wdXRfZGlzazsKKwlkaXNrLT5xdWV1ZSA9IFNE
-cC0+cmVxdWVzdF9xdWV1ZTsKIAl0cG50LT5kcml2ZXIgPSAmc3RfdGVtcGxhdGU7CiAKIAl0
-cG50LT5kZXZpY2UgPSBTRHA7Cgo=
+On Thursday 14 November 2013, Loc Ho wrote:
+> ata: Add APM X-Gene SoC 6.0Gbps SATA PHY support
+> 
+> This patch adds support for APM X-Gene SoC 6.0Gbps SATA PHY. This is the
+> physical layer interface for the corresponding SATA host controller. This
+> driver uses the new PHY generic framework posted by Kishon Vijay Abrahm.
+> 
+> Signed-off-by: Loc Ho <lho@apm.com>
+> Signed-off-by: Tuan Phan <tphan@apm.com>
+> Signed-off-by: Suman Tripathi <stripathi@apm.com>
+> Reviewed-by: Arnd Bergmann <arnd@arndb.de>
+> Reviewed-by: Olof Johansson <olof@lixom.net> 
 
+Please remove the "Reviewed-by" tags and only add them back after you get
+a reply with the respective comment. Tags like "Reviewed-by", "Acked-by"
+or "Tested-by" are meant to signify that the reviewer or tester
+has looked at them and is happy with the results, which is not yet
+the case here.
 
+	Arnd
