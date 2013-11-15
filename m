@@ -1,90 +1,75 @@
-From: Loc Ho <lho@apm.com>
-Subject: Re: [PATCH 2/3] ata: Add APM X-Gene SoC 6.0Gbps SATA PHY driver
-Date: Fri, 15 Nov 2013 08:14:26 -0800
-Message-ID: <CAPw-ZT=77Fc4Nyc0au74EusoQe=n8fGrJLpavLOmTcswp+8SwA@mail.gmail.com>
-References: <1384457519-21335-1-git-send-email-lho@apm.com>
-	<1384457519-21335-2-git-send-email-lho@apm.com>
-	<1384457519-21335-3-git-send-email-lho@apm.com>
-	<201311151346.17231.arnd@arndb.de>
+From: Cedric Le Goater <clg@fr.ibm.com>
+Subject: Re: [PATCH 16/51] DMA-API: ppc: vio.c: replace dma_set_mask()+dma_set_coherent_mask()
+ with new helper
+Date: Fri, 15 Nov 2013 17:16:55 +0100
+Message-ID: <528648F7.20900@fr.ibm.com>
+References: <20130919212235.GD12758@n2100.arm.linux.org.uk> <E1VMly8-0007gy-Ru@rmk-PC.arm.linux.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <201311151346.17231.arnd@arndb.de>
-Sender: linux-ide-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Olof Johansson <olof@lixom.net>, Tejun Heo <tj@kernel.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Jon Masters <jcm@redhat.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-crypto-owner@vger.kernel.org>
+In-Reply-To: <E1VMly8-0007gy-Ru@rmk-PC.arm.linux.org.uk>
+Sender: linux-crypto-owner@vger.kernel.org
+To: Russell King <rmk+kernel@arm.linux.org.uk>
+Cc: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org, devel@driverdev.osuosl.org, devicetree@vger.kernel.org, dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net, linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org, linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-ide@vger.kernel.org, linux-media@vger.kernel.org, linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org, linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org, linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org, netdev@vger.kernel.org, Solarflare linux maintainers <linux-net-drivers@solarflare.com>, uclinux-dist-devel@blackfin.uclinux.org, Paul Mackerras <paulus@samba.org>, Benjamin Herrenschmidt <benh@kernel.crashing.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi,
+Hi,=20
 
->> +
->> +/* SATA port 4 - 5 force power down VCO */
->> +static void xgene_phy_sata45_macro_pdwn_force_vco(struct xgene_ahci_phy_ctx
->> +                                                  *ctx)
->> +{
->> +     sds_pcie_toggle1to0(ctx->pcie_base, KC_CLKMACRO_CMU_REGS_CMU_REG0_ADDR,
->> +                         CMU_REG0_PDOWN_MASK);
->> +     sds_pcie_toggle1to0(ctx->pcie_base,
->> +                         KC_CLKMACRO_CMU_REGS_CMU_REG32_ADDR,
->> +                         CMU_REG32_FORCE_VCOCAL_START_MASK);
->> +}
->
-> I think it's bad to have knowledge of specific port numbers in the driver.
-> Can you change this so that the driver treats all PHYs the same way but
-> gets the differences between sata/eth/pcie mode from DT properties?
-[Loc Ho]
-Okay... I will get rip of the "sata45" and call this function if an
-base address is available.
+On 09/19/2013 11:41 PM, Russell King wrote:
+> Replace the following sequence:
+>=20
+> 	dma_set_mask(dev, mask);
+> 	dma_set_coherent_mask(dev, mask);
+>=20
+> with a call to the new helper dma_set_mask_and_coherent().
+>=20
+> Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+> ---
+>  arch/powerpc/kernel/vio.c |    3 +--
+>  1 files changed, 1 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/arch/powerpc/kernel/vio.c b/arch/powerpc/kernel/vio.c
+> index 78a3506..96b6c97 100644
+> --- a/arch/powerpc/kernel/vio.c
+> +++ b/arch/powerpc/kernel/vio.c
+> @@ -1413,8 +1413,7 @@ struct vio_dev *vio_register_device_node(struct=
+ device_node *of_node)
+>=20
+>  		/* needed to ensure proper operation of coherent allocations
+>  		 * later, in case driver doesn't set it explicitly */
+> -		dma_set_mask(&viodev->dev, DMA_BIT_MASK(64));
+> -		dma_set_coherent_mask(&viodev->dev, DMA_BIT_MASK(64));
+> +		dma_set_mask_and_coherent(&viodev->dev, DMA_BIT_MASK(64));
+>  	}
+>=20
+>  	/* register with generic device framework */
+>=20
 
->
->
->> +void xgene_ahci_serdes_reset_rxa_rxd(struct xgene_ahci_phy_ctx *ctx, int chan)
->
-> All functions in the driver should be 'static'. You are not calling these
-> directly from the SATA driver, are you?
-[Loc Ho]
-Okay... Not anymore.
+The new helper routine dma_set_mask_and_coherent() breaks the=20
+initialization of the pseries vio devices which do not have an=20
+initial dev->dma_mask. I think we need to use dma_coerce_mask_and_coher=
+ent()
+instead.
 
->
->> +     /* Select SATA mux for SATA port 0 - 3 which shared with SGMII ETH */
->> +     if (ctx->id < 2) {
->> +             if (xgene_phy_host_sata_select(ctx) != 0) {
->> +                     dev_err(ctx->dev, "SATA%d can not select SATA MUX\n",
->> +                             ctx->id);
->> +                     return -1;
->> +             }
->> +     }
->
-> I think all checks for the "id" field are to find out what kind of PHY you
-> are talking to, the driver itself does not need to know the id, and the
-> field can be removed if you find that out in a different way.
-[Loc Ho]
-This is mainly used for debugging and detection of the 2nd resource. I
-will use another compatible type.
+Signed-off-by: C=E9dric Le Goater <clg@fr.ibm.com>
+---
+ arch/powerpc/kernel/vio.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
->
->> +     if (ctx->id == 2) {
->> +             /* For 3rd controller, we must also program another resource */
->> +             res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
->> +             if (!res) {
->> +                     dev_err(&pdev->dev,
->> +                             "no SATA/PCIE PHY resource address\n");
->> +                     goto error;
->> +             }
->> +             ctx->pcie_base = devm_ioremap(&pdev->dev, res->start,
->> +                                           resource_size(res));
->> +             if (!ctx->pcie_base) {
->> +                     dev_err(&pdev->dev,
->> +                             "can't map SATA/PCIe PHY resource\n");
->> +                     rc = -ENOMEM;
->> +                     goto error;
->> +             }
->> +     }
->
-> If you need a second memory resource, I take that as a hint that
-> the device is actually different from the others, so using a separate
-> "compatible" string in DT might be more appropriate.
-[Loc Ho]
-Okay..
-
--Loc
+diff --git a/arch/powerpc/kernel/vio.c b/arch/powerpc/kernel/vio.c
+index e7d0c88f..76a6482 100644
+--- a/arch/powerpc/kernel/vio.c
++++ b/arch/powerpc/kernel/vio.c
+@@ -1419,7 +1419,7 @@ struct vio_dev *vio_register_device_node(struct d=
+evice_node *of_node)
+=20
+ 		/* needed to ensure proper operation of coherent allocations
+ 		 * later, in case driver doesn't set it explicitly */
+-		dma_set_mask_and_coherent(&viodev->dev, DMA_BIT_MASK(64));
++		dma_coerce_mask_and_coherent(&viodev->dev, DMA_BIT_MASK(64));
+ 	}
+=20
+ 	/* register with generic device framework */
+--=20
+1.7.10.4
