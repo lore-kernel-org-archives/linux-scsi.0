@@ -1,53 +1,43 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 1/3] sd: don't bother spinning up disks on resume
-Date: Sat, 16 Nov 2013 10:20:31 -0800
-Message-ID: <1384626031.3614.7.camel@dabdike.int.hansenpartnership.com>
-References: <527AF287.7020700@ubuntu.com>
-	 <927e15641f27b46f206f8ae8110201c8fd77b7e1.1383789225.git.psusi@ubuntu.com>
-	 <527BDA11.6060603@interlog.com> <527C0349.5010301@ubuntu.com>
+From: James Bottomley <jbottomley@parallels.com>
+Subject: Re: [PATCH 11/11] pm80xx : gpio feature support for motherboard
+ controllers
+Date: Sat, 16 Nov 2013 18:25:56 +0000
+Message-ID: <1384626355.3614.10.camel@dabdike.int.hansenpartnership.com>
+References: <1382444455-3168-1-git-send-email-Viswas.G@pmcs.com>
+	 <526F8B95.8010900@gmail.com>
+	 <DB8BCD22E410A84DA91083F3479A3DB31C67F7A2@BBYEXM01.pmc-sierra.internal>
+	 <52777740.8070509@gmail.com>
+	 <DB8BCD22E410A84DA91083F3479A3DB31C680618@BBYEXM01.pmc-sierra.internal>
+	 <52809C23.507@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <527C0349.5010301@ubuntu.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Phillip Susi <psusi@ubuntu.com>
-Cc: dgilbert@interlog.com, todd.e.brandt@linux.intel.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, tj@kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.parallels.com ([199.115.105.18]:41273 "EHLO
+	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751344Ab3KPS0H convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 16 Nov 2013 13:26:07 -0500
+In-Reply-To: <52809C23.507@gmail.com>
+Content-Language: en-US
+Content-ID: <A226D0460D27994B906229241CE76B7E@sw.swsoft.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jack Wang <xjtuwjp@gmail.com>
+Cc: Viswas G <Viswas.G@pmcs.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Sangeetha Gnanasekaran <Sangeetha.Gnanasekaran@pmcs.com>, Nikith Ganigarakoppal <Nikith.Ganigarakoppal@pmcs.com>, Anand Kumar Santhanam <AnandKumar.Santhanam@pmcs.com>, Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
 
-On Thu, 2013-11-07 at 16:16 -0500, Phillip Susi wrote:
-> On 11/7/2013 1:21 PM, Douglas Gilbert wrote:
-> > On 13-11-06 08:57 PM, Phillip Susi wrote:
-> >> Don't bother forcing disks to spin up on resume, as they will do
-> >> so automatically when accessed, and forcing them to spin up slows
-> >> down the resume.  Add a second bit to the manage_start_stop flag
-> >> to restore the previous behavior.
-> > 
-> > SCSI disks when in STOP state do not spin up "automatically when
-> > accessed".
+On Mon, 2013-11-11 at 09:58 +0100, Jack Wang wrote:
+> Hi James,
 > 
-> The drive does not, but the scsi error handling notices when a command
-> fails because the drive needs started, starts it, and retries the command.
+> About this gpio feature, do you think it's OK to implement with IOCTL
 
-No disk does, neither SCSI nor ATA.  The error handler is not
-automatically activated for a not ready/initializing command required
-because of multi-path.  We override the default behaviour via
-allow_restart only for IBM vfc/vscsi and ATA disks.  With this patch
-SCSI devices would no longer ever restart after suspend.
+Definitely not via another strange ioctl
 
-> > And your choice of bits looks like it will favour fixing broken
-> > SATA behaviour but as a by-product break working SCSI disk
-> > behaviour.
-> 
-> No, it has nothing to do with sata behavior; it has to do with whether
-> or not all disk drives should be restarted immediately after a resume,
-> or only when they are accessed.  I happen to have a few older drives
-> that I very rarely access and would rather they not start up every
-> time I resume.
+> or we can use exist bsg interface in libsas and add another function call?
 
-As Doug said, if you don't restart a SCSI device after resume, it will
-never get started.
+My default thought is that it should go via bsg and libsas if you can
+find a SES expander type emulation, which would be nice, but perhaps
+complex.  Otherwise it should probably go via the gpio subsystem,
+possibly via a SFF-8485 driver (which I don't think exists).
 
 James
-
 
