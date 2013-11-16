@@ -1,47 +1,53 @@
-From: Phillip Susi <psusi@ubuntu.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: Re: [PATCH 1/3] sd: don't bother spinning up disks on resume
-Date: Sat, 16 Nov 2013 09:52:02 -0500
-Message-ID: <52878692.5060300@ubuntu.com>
-References: <527AF287.7020700@ubuntu.com> <927e15641f27b46f206f8ae8110201c8fd77b7e1.1383789225.git.psusi@ubuntu.com> <527BDA11.6060603@interlog.com> <52870134.6060707@start.ca>
+Date: Sat, 16 Nov 2013 10:20:31 -0800
+Message-ID: <1384626031.3614.7.camel@dabdike.int.hansenpartnership.com>
+References: <527AF287.7020700@ubuntu.com>
+	 <927e15641f27b46f206f8ae8110201c8fd77b7e1.1383789225.git.psusi@ubuntu.com>
+	 <527BDA11.6060603@interlog.com> <527C0349.5010301@ubuntu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="ISO-8859-15"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:61248 "EHLO
-	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751750Ab3KPOwG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 16 Nov 2013 09:52:06 -0500
-In-Reply-To: <52870134.6060707@start.ca>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <527C0349.5010301@ubuntu.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Phillip Susi <psusi@ubuntu.com>
+Cc: dgilbert@interlog.com, todd.e.brandt@linux.intel.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, tj@kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Lord <kernel@start.ca>, dgilbert@interlog.com, todd.e.brandt@linux.intel.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: tj@kernel.org, JBottomley@parallels.com
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA512
+On Thu, 2013-11-07 at 16:16 -0500, Phillip Susi wrote:
+> On 11/7/2013 1:21 PM, Douglas Gilbert wrote:
+> > On 13-11-06 08:57 PM, Phillip Susi wrote:
+> >> Don't bother forcing disks to spin up on resume, as they will do
+> >> so automatically when accessed, and forcing them to spin up slows
+> >> down the resume.  Add a second bit to the manage_start_stop flag
+> >> to restore the previous behavior.
+> > 
+> > SCSI disks when in STOP state do not spin up "automatically when
+> > accessed".
+> 
+> The drive does not, but the scsi error handling notices when a command
+> fails because the drive needs started, starts it, and retries the command.
 
-On 11/16/2013 12:23 AM, Mark Lord wrote:
-> Ditto for many SATA disks with "power up in standby" enabled.
+No disk does, neither SCSI nor ATA.  The error handler is not
+automatically activated for a not ready/initializing command required
+because of multi-path.  We override the default behaviour via
+allow_restart only for IBM vfc/vscsi and ATA disks.  With this patch
+SCSI devices would no longer ever restart after suspend.
 
-Ditto for my previous response; the kernel ( in this case the libata
-layer ) notices this and takes care of starting it.  The third patch I
-posted suppresses this startup at resume time so that it will be done
-on access instead.
+> > And your choice of bits looks like it will favour fixing broken
+> > SATA behaviour but as a by-product break working SCSI disk
+> > behaviour.
+> 
+> No, it has nothing to do with sata behavior; it has to do with whether
+> or not all disk drives should be restarted immediately after a resume,
+> or only when they are accessed.  I happen to have a few older drives
+> that I very rarely access and would rather they not start up every
+> time I resume.
 
-I currently have two disks with PuiS enabled that no longer have to
-spin up and down again every time I resume from suspend, but wake up
-nicely when I mount them.
+As Doug said, if you don't restart a SCSI device after resume, it will
+never get started.
+
+James
 
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.14 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iQEcBAEBCgAGBQJSh4aPAAoJEJrBOlT6nu75bV0IAImEyIJlIF6O69mqLS3A6z/r
-xtUQlxg5gfE91PteNdtNYd9v54uwCw2uldSAGOEm4DR7LOErVu54J+6rVZKFRF0L
-ocmE2VEKhzNTA21pt5rCPDsQ9BHJ7ljWXbGTUC7zFN4VCYTEkPVuO5Owedjd9sb8
-+BUHCD9+au7CRf5SLU4qSoqT8DNUPREv70WL1Ze8LhQt9R+APBclyeXHBYc+Hgpd
-Idzp/EFt+SPRGrJL+XyC6/F0Mz3kLRD/2Ij0kRSux1E5DNG1SQTq+FdqUIa2sTDf
-volJRiUS3/rtNr/2c4F9awQNbsCZRceTIq71PA3dvgxM21sjpXpLUe2A65u9gNQ=
-=jhXC
------END PGP SIGNATURE-----
