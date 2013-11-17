@@ -1,94 +1,47 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] scsi: be_iscsi: fix possible memory leak and refactor
- code
-Date: Sun, 17 Nov 2013 13:38:59 -0800
-Message-ID: <1384724339.2050.6.camel@dabdike.int.hansenpartnership.com>
-References: <1384714284-13712-1-git-send-email-geyslan@gmail.com>
-	 <1384717371.2050.2.camel@dabdike.int.hansenpartnership.com>
-	 <CAGG-pURSnEeNvmHhQ-GvrnyuMHPrTRMoCKt3P=bB23OD9Vmkpg@mail.gmail.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH 1/3] sd: don't bother spinning up disks on resume
+Date: Sun, 17 Nov 2013 18:54:34 -0500
+Message-ID: <5289573A.9070307@interlog.com>
+References: <527AF287.7020700@ubuntu.com>		 <927e15641f27b46f206f8ae8110201c8fd77b7e1.1383789225.git.psusi@ubuntu.com>		 <527BDA11.6060603@interlog.com> <527C0349.5010301@ubuntu.com>	 <1384626031.3614.7.camel@dabdike.int.hansenpartnership.com>	 <52883CE9.9040102@ubuntu.com> <1384670620.3614.24.camel@dabdike.int.hansenpartnership.com> <5288EBA6.3070609@ubuntu.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:54799 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751348Ab3KQVjK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 17 Nov 2013 16:39:10 -0500
-In-Reply-To: <CAGG-pURSnEeNvmHhQ-GvrnyuMHPrTRMoCKt3P=bB23OD9Vmkpg@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <5288EBA6.3070609@ubuntu.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Phillip Susi <psusi@ubuntu.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: todd.e.brandt@linux.intel.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, tj@kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Geyslan =?ISO-8859-1?Q?Greg=F3rio?= Bem <geyslan@gmail.com>
-Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, "open list:SERVER ENGINES 10..." <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
 
-On Sun, 2013-11-17 at 19:09 -0200, Geyslan Greg=F3rio Bem wrote:
-> 2013/11/17 James Bottomley <James.Bottomley@hansenpartnership.com>:
-> > On Sun, 2013-11-17 at 15:51 -0300, Geyslan G. Bem wrote:
-> >> This patch fix memory leakage in cases 'ISCSI_NET_PARAM_VLAN_ID' a=
-nd
-> >> 'ISCSI_NET_PARAM_VLAN_PRIORITY' and refactors code 'going out' whe=
-n
-> >> necessary.
-> >
-> > You pointlessly renamed a variable, which makes the diff hard to re=
-ad.
-> > Please don't do that.
->=20
-> Ok, I can agree. 'len' means length? What is returned in case of non
-> error?
+On 13-11-17 11:15 AM, Phillip Susi wrote:
+> -----BEGIN PGP SIGNED MESSAGE-----
+> Hash: SHA512
+>
+> On 11/17/2013 01:43 AM, James Bottomley wrote:
+>> OK, so three people have now told you that's not how the code
+>> works. Why don't you just read it?  because there's not really much
+>> point us reading your patches until you do.
+>
+> I have, which is why I said it handles it via scsi_eh_stu.  If I'm not
+> understanding it correctly, then by all means, explain.
 
-it returns the length of buf written to or negative error.
+Even if the SCSI EH code does spin-up the disk,
+it is inefficient and undesirable to send a device
+into EH for what is a normal, predictable situation
+(i.e. that a SCSI disk will need a START STOP UNIT
+(start) command as part of a resume operation).
 
-> > You missed the fact that the passed in pointer is unmodified if
-> > mgmt_get_if_info() returns non zero, so the kfree frees junk and wo=
-uld
-> > oops.
-> >
-> > There's no need for a goto; len =3D -EINVAL; does everything that's
-> > needed.
->=20
-> Well, that is a coverity catch. CID 1128954. Check it.
+A big server machine could have thousands of SCSI
+disks (many potentially virtual). Sending them all
+into EH during a resume would be a really good
+test for EH, but horrible for performance. If I was
+designing the SCSI EH I would probably assume not
+all disks would go into EH at roughly the same time.
+Also if that many devices went into EH on the same
+controller (HBA) it might be reasonable to assume
+that the controller they share needs resetting.
 
-I didn't say coverity was wrong, I said your patch was (well not wrong,
-just over complex and incomplete).  This is the way to fix both
-problems.
-
-James
-
----
-
-diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/b=
-e_iscsi.c
-index ffadbee..9dcbdfa 100644
---- a/drivers/scsi/be2iscsi/be_iscsi.c
-+++ b/drivers/scsi/be2iscsi/be_iscsi.c
-@@ -541,10 +541,8 @@ static int be2iscsi_get_if_param(struct beiscsi_hb=
-a *phba,
- 		ip_type =3D BE2_IPV6;
-=20
- 	len =3D mgmt_get_if_info(phba, ip_type, &if_info);
--	if (len) {
--		kfree(if_info);
-+	if (len)
- 		return len;
--	}
-=20
- 	switch (param) {
- 	case ISCSI_NET_PARAM_IPV4_ADDR:
-@@ -569,7 +567,7 @@ static int be2iscsi_get_if_param(struct beiscsi_hba=
- *phba,
- 		break;
- 	case ISCSI_NET_PARAM_VLAN_ID:
- 		if (if_info->vlan_priority =3D=3D BEISCSI_VLAN_DISABLE)
--			return -EINVAL;
-+			len =3D -EINVAL;
- 		else
- 			len =3D sprintf(buf, "%d\n",
- 				     (if_info->vlan_priority &
+Doug Gilbert
 
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
