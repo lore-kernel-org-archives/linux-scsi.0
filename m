@@ -1,81 +1,62 @@
-From: Ewan Milne <emilne@redhat.com>
-Subject: Re: [PATCH] scsi: Add "missing" sysfs attribute to scsi_device
- structure
-Date: Mon, 18 Nov 2013 13:28:28 -0500
-Message-ID: <1384799308.3839.25.camel@localhost.localdomain>
-References: <1384794656-9449-1-git-send-email-emilne@redhat.com>
-	 <1384796756.5985.3.camel@dabdike.int.hansenpartnership.com>
-	 <1384797558.3839.19.camel@localhost.localdomain>
-	 <1384798546.5985.7.camel@dabdike.int.hansenpartnership.com>
-Reply-To: emilne@redhat.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: "Geyslan G. Bem" <geyslan@gmail.com>
+Subject: [PATCH v2] scsi: be_iscsi: fix possible memory leak
+Date: Mon, 18 Nov 2013 16:42:57 -0300
+Message-ID: <1384803778-24987-1-git-send-email-geyslan@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:15392 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751574Ab3KRS2b (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 18 Nov 2013 13:28:31 -0500
-In-Reply-To: <1384798546.5985.7.camel@dabdike.int.hansenpartnership.com>
+Received: from mail-qe0-f52.google.com ([209.85.128.52]:46021 "EHLO
+	mail-qe0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751480Ab3KRTsV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Nov 2013 14:48:21 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org
+To: geyslan@gmail.com
+Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, "open list:SERVER ENGINES 10..." <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
 
-On Mon, 2013-11-18 at 10:15 -0800, James Bottomley wrote:
-> On Mon, 2013-11-18 at 12:59 -0500, Ewan Milne wrote:
-> > On Mon, 2013-11-18 at 09:45 -0800, James Bottomley wrote:
-> > > On Mon, 2013-11-18 at 12:10 -0500, Ewan D. Milne wrote:
-> > > > From: "Ewan D. Milne" <emilne@redhat.com>
-> > > > 
-> > > > This change adds a "missing" sysfs attribute to scsi_device
-> > > > which is set when a previously scanned device no longer appears
-> > > > in the REPORT LUNS inventory.
-> > > 
-> > > A sysfs parameter with time and external input dependent semantics
-> > > really doesn't look like a good idea.  What is it you're trying to
-> > > achieve that you can't achieve from userspace by watching for the
-> > > events?
-> > > 
-> > > James
-> > > 
-> > > 
-> > 
-> > Ideally, one would like to remove SCSI LUNs that are no longer being
-> > presented by the device.  The information about which LUNs are no
-> > longer there could, I suppose, be obtained from userspace by sending
-> > a REPORT LUNS command, but that is somewhat redundant because the
-> > kernel will issue one anyway when it is instructed to scan the target
-> > for new LUNs.  This patch just makes the information visible.
-> 
-> But that's the problem, it doesn't.  missing gets reset on every REPORT
-> LUN, that makes the information potentially inaccurate, particularly if
-> the device triggers multiple change events.
-> 
-> > Yes, the information is only valid at a point in time, but that is
-> > true of REPORT LUNS any time it is used.  If the LUN inventory changes
-> > again, there will be a new event generated that can be processed.
-> > 
-> > A udev event handler tell the kernel to scan for new LUNs, and then
-> > potentially tell the kernel to delete scsi_devices that are now missing.
-> 
-> I don't see what's wrong with sending REPORT LUNS from user space and
-> pruning devices that no longer exist.  You should probably do that
-> before you trigger a REPORT LUN scan; that way anything that reappeared
-> gets put back, so there's no chance of losing a LUN.
+This patch fix memory leakage in cases 'ISCSI_NET_PARAM_VLAN_ID' and
+'ISCSI_NET_PARAM_VLAN_PRIORITY'.
 
-Well, yes, except that deleting it first and then (potentially)
-re-adding it would leave a period of time when the LUN isn't there.
-But, that's exactly what the target reported, so I guess that's OK.
+Note:
+'if_info' will be allocated only when 'mgmt_get_if_info()' returns NULL.
 
-I appreciate the feedback, I'll look at issuing REPORT LUNS from
-userspace.
+Signed-off-by: Geyslan G. Bem <geyslan@gmail.com>
+---
+ drivers/scsi/be2iscsi/be_iscsi.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
--Ewan
-
-> 
-> James
-> 
-> 
-
+diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
+index ffadbee..889066d 100644
+--- a/drivers/scsi/be2iscsi/be_iscsi.c
++++ b/drivers/scsi/be2iscsi/be_iscsi.c
+@@ -541,10 +541,8 @@ static int be2iscsi_get_if_param(struct beiscsi_hba *phba,
+ 		ip_type = BE2_IPV6;
+ 
+ 	len = mgmt_get_if_info(phba, ip_type, &if_info);
+-	if (len) {
+-		kfree(if_info);
++	if (len)
+ 		return len;
+-	}
+ 
+ 	switch (param) {
+ 	case ISCSI_NET_PARAM_IPV4_ADDR:
+@@ -569,7 +567,7 @@ static int be2iscsi_get_if_param(struct beiscsi_hba *phba,
+ 		break;
+ 	case ISCSI_NET_PARAM_VLAN_ID:
+ 		if (if_info->vlan_priority == BEISCSI_VLAN_DISABLE)
+-			return -EINVAL;
++			len = -EINVAL;
+ 		else
+ 			len = sprintf(buf, "%d\n",
+ 				     (if_info->vlan_priority &
+@@ -577,7 +575,7 @@ static int be2iscsi_get_if_param(struct beiscsi_hba *phba,
+ 		break;
+ 	case ISCSI_NET_PARAM_VLAN_PRIORITY:
+ 		if (if_info->vlan_priority == BEISCSI_VLAN_DISABLE)
+-			return -EINVAL;
++			len = -EINVAL;
+ 		else
+ 			len = sprintf(buf, "%d\n",
+ 				     ((if_info->vlan_priority >> 13) &
+-- 
+1.8.4.2
 
