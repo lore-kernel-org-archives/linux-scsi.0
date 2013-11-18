@@ -1,152 +1,118 @@
-From: =?ISO-8859-1?Q?Geyslan_Greg=F3rio_Bem?= <geyslan@gmail.com>
-Subject: Re: [PATCH] scsi: be_iscsi: fix possible memory leak and refactor code
-Date: Mon, 18 Nov 2013 14:42:33 -0200
-Message-ID: <CAGG-pUSOa-kP7-NfyX6gizSrASc8_hAjN=Knn3cmfO2CK=txZw@mail.gmail.com>
-References: <1384714284-13712-1-git-send-email-geyslan@gmail.com>
-	<1384717371.2050.2.camel@dabdike.int.hansenpartnership.com>
-	<CAGG-pURSnEeNvmHhQ-GvrnyuMHPrTRMoCKt3P=bB23OD9Vmkpg@mail.gmail.com>
-	<1384724339.2050.6.camel@dabdike.int.hansenpartnership.com>
-	<CAGG-pUT_h1eNnHDpxRvMPWeN5zi6L2mckHMPsV92Qf3hqtf7EQ@mail.gmail.com>
-	<1384786707.2001.6.camel@dabdike.int.hansenpartnership.com>
-	<CAGG-pURDPHOGuSt7a1G=CpdgvyiUvW0ugKq0K_o7-ThCS39F-A@mail.gmail.com>
-	<1384791864.2001.19.camel@dabdike.int.hansenpartnership.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: "Ewan D. Milne" <emilne@redhat.com>
+Subject: [PATCH] scsi: Add "missing" sysfs attribute to scsi_device structure
+Date: Mon, 18 Nov 2013 12:10:56 -0500
+Message-ID: <1384794656-9449-1-git-send-email-emilne@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ie0-f172.google.com ([209.85.223.172]:58946 "EHLO
-	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751501Ab3KRQmd convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Nov 2013 11:42:33 -0500
-In-Reply-To: <1384791864.2001.19.camel@dabdike.int.hansenpartnership.com>
+Received: from mx1.redhat.com ([209.132.183.28]:48220 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751368Ab3KRRK6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 18 Nov 2013 12:10:58 -0500
+Received: from int-mx02.intmail.prod.int.phx2.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id rAIHAvPs004254
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <linux-scsi@vger.kernel.org>; Mon, 18 Nov 2013 12:10:58 -0500
+Received: from emilne.csb ([10.18.25.104])
+	by int-mx02.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP id rAIHAvUQ020318
+	for <linux-scsi@vger.kernel.org>; Mon, 18 Nov 2013 12:10:57 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, "open list:SERVER ENGINES 10..." <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-2013/11/18 James Bottomley <James.Bottomley@hansenpartnership.com>:
-> On Mon, 2013-11-18 at 14:18 -0200, Geyslan Greg=F3rio Bem wrote:
->> 2013/11/18 James Bottomley <James.Bottomley@hansenpartnership.com>:
->> > On Sun, 2013-11-17 at 23:12 -0200, Geyslan Greg=F3rio Bem wrote:
->> >> 2013/11/17 James Bottomley <James.Bottomley@hansenpartnership.com=
->:
->> >> > On Sun, 2013-11-17 at 19:09 -0200, Geyslan Greg=F3rio Bem wrote=
-:
->> >> >> 2013/11/17 James Bottomley <James.Bottomley@hansenpartnership.=
-com>:
->> >> >> > On Sun, 2013-11-17 at 15:51 -0300, Geyslan G. Bem wrote:
->> >> >> >> This patch fix memory leakage in cases 'ISCSI_NET_PARAM_VLA=
-N_ID' and
->> >> >> >> 'ISCSI_NET_PARAM_VLAN_PRIORITY' and refactors code 'going o=
-ut' when
->> >> >> >> necessary.
->> >> >> >
->> >> >> > You pointlessly renamed a variable, which makes the diff har=
-d to read.
->> >> >> > Please don't do that.
->> >> >>
->> >> >> Ok, I can agree. 'len' means length? What is returned in case =
-of non
->> >> >> error?
->> >> >
->> >> > it returns the length of buf written to or negative error.
->> >> >
->> >> >> > You missed the fact that the passed in pointer is unmodified=
- if
->> >> >> > mgmt_get_if_info() returns non zero, so the kfree frees junk=
- and would
->> >> >> > oops.
->> >> >> >
->> >> >> > There's no need for a goto; len =3D -EINVAL; does everything=
- that's
->> >> >> > needed.
->> >> >>
->> >> >> Well, that is a coverity catch. CID 1128954. Check it.
->> >> >
->> >> > I didn't say coverity was wrong, I said your patch was (well no=
-t wrong,
->> >> > just over complex and incomplete).  This is the way to fix both
->> >> > problems.
->> >> >
->> >> > James
->> >> >
->> >> > ---
->> >> >
->> >> > diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be=
-2iscsi/be_iscsi.c
->> >> > index ffadbee..9dcbdfa 100644
->> >> > --- a/drivers/scsi/be2iscsi/be_iscsi.c
->> >> > +++ b/drivers/scsi/be2iscsi/be_iscsi.c
->> >> > @@ -541,10 +541,8 @@ static int be2iscsi_get_if_param(struct be=
-iscsi_hba *phba,
->> >> >                 ip_type =3D BE2_IPV6;
->> >>
->> >> James, this approach will not prevent the leakage.
->> >
->> > I don't see why not.  The -EINVAL case goes through the kfree() no=
-w too,
->> > no?
->>
->> I'm refering to the removal of kfree in your suggestion.
->
-> That's the second bug I pointed out via code inspection.  If the
-> function returns an error (any non zero return) then the pointer isn'=
-t
-> altered, so we return without the free.  It's a standard error patter=
-n.
+From: "Ewan D. Milne" <emilne@redhat.com>
 
-Ok. So kfree is useless until the code go to the function bail. Right?
+This change adds a "missing" sysfs attribute to scsi_device
+which is set when a previously scanned device no longer appears
+in the REPORT LUNS inventory.
 
->
->> >
->> >>  We can initialize the if_info with NULL and always kfree it with=
-out
->> >> to care about junk.
->> >
->> > Why?  Error return means no allocation.
->> Setting if_info to NULL allow to kfree without concerns.
->>
->> Eg.:
->>
->> - struct be_cmd_get_if_info_resp *if_info;
->> + struct be_cmd_get_if_info_resp *if_info =3D NULL;
->>
->> ...
->>
->> +       if (len)
->> +               goto out;
->>
->> ...
->>
->> -               if (if_info->vlan_priority =3D=3D BEISCSI_VLAN_DISAB=
-LE)
->> -                       return -EINVAL;
->> +               if (if_info->vlan_priority =3D=3D BEISCSI_VLAN_DISAB=
-LE) {
->> +                       len =3D -EINVAL;
->> +                       goto out;
->> +               }
->
-> What's the point of that?  Just removing the goto out; has the code
-> going to the same place because of the break below.
->
-> James
->
->
+Signed-off-by: Ewan D. Milne <emilne@redhat.com>
+---
+ drivers/scsi/scsi_scan.c   | 30 +++++++++++++++++++++++++++++-
+ drivers/scsi/scsi_sysfs.c  |  2 ++
+ include/scsi/scsi_device.h |  1 +
+ 3 files changed, 32 insertions(+), 1 deletion(-)
 
-I agree whit you that the code goes to same place with or without goto
-out. It's just a pattern to simplify future changes in the function.
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 2e5fe58..7908c06 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -1317,9 +1317,11 @@ static int scsi_report_lun_scan(struct scsi_target *starget, int bflags,
+ 	struct scsi_lun *lunp, *lun_data;
+ 	u8 *data;
+ 	struct scsi_sense_hdr sshdr;
+-	struct scsi_device *sdev;
++	struct scsi_device *sdev, *sdev_i;
+ 	struct Scsi_Host *shost = dev_to_shost(&starget->dev);
+ 	int ret = 0;
++	unsigned long flags;
++	bool found;
+ 
+ 	/*
+ 	 * Only support SCSI-3 and up devices if BLIST_NOREPORTLUN is not set.
+@@ -1492,6 +1494,32 @@ static int scsi_report_lun_scan(struct scsi_target *starget, int bflags,
+ 		}
+ 	}
+ 
++	/*
++	 * See if all of the LUNs that we know about on the target are
++	 * still being reported in the REPORT LUNS data.  If any are not,
++	 * they have been removed from the target.  Set the "missing" flag.
++	 *
++	 * We only do this for REPORT LUNS scanning, because we do not
++	 * want to set the flag on LUNs that are inaccessible due to a
++	 * transport error.  Here, the target has responded to a command
++	 * and told us that the LUN is not present.
++	 */
++	spin_lock_irqsave(shost->host_lock, flags);
++	list_for_each_entry(sdev_i, &starget->devices, same_target_siblings) {
++		found = 0;
++		for (lunp = &lun_data[1]; lunp <= &lun_data[num_luns]; lunp++) {
++			lun = scsilun_to_int(lunp);
++			if (memcmp(&lunp->scsi_lun[sizeof(lun)], "\0\0\0\0", 4))
++				continue;
++			else if (lun == sdev_i->lun) {
++				found = 1;
++				break;
++			}
++		}
++		sdev_i->missing = !found;
++	}
++	spin_unlock_irqrestore(shost->host_lock, flags);
++
+  out_err:
+ 	kfree(lun_data);
+  out:
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 04c2a27..01635cc 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -536,6 +536,7 @@ sdev_rd_attr (scsi_level, "%d\n");
+ sdev_rd_attr (vendor, "%.8s\n");
+ sdev_rd_attr (model, "%.16s\n");
+ sdev_rd_attr (rev, "%.4s\n");
++sdev_rd_attr(missing, "%d\n");
+ 
+ /*
+  * TODO: can we make these symlinks to the block layer ones?
+@@ -721,6 +722,7 @@ static struct attribute *scsi_sdev_attrs[] = {
+ 	&dev_attr_vendor.attr,
+ 	&dev_attr_model.attr,
+ 	&dev_attr_rev.attr,
++	&dev_attr_missing.attr,
+ 	&dev_attr_rescan.attr,
+ 	&dev_attr_delete.attr,
+ 	&dev_attr_state.attr,
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 6efb2e1..79775f1 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -152,6 +152,7 @@ struct scsi_device {
+ 	unsigned no_read_disc_info:1;	/* Avoid READ_DISC_INFO cmds */
+ 	unsigned no_read_capacity_16:1; /* Avoid READ_CAPACITY_16 cmds */
+ 	unsigned is_visible:1;	/* is the device visible in sysfs */
++	unsigned missing:1;	/* No longer appears in REPORT LUNS data */
+ 
+ 	DECLARE_BITMAP(supported_events, SDEV_EVT_MAXBITS); /* supported events */
+ 	struct list_head event_list;	/* asserted events */
+-- 
+1.7.11.7
 
-But I can remove it if you want.
-
-
---=20
-Regards,
-
-Geyslan G. Bem
-hackingbits.com
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
