@@ -1,95 +1,43 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] scsi: be_iscsi: fix possible memory leak and refactor
- code
-Date: Mon, 18 Nov 2013 06:58:27 -0800
-Message-ID: <1384786707.2001.6.camel@dabdike.int.hansenpartnership.com>
-References: <1384714284-13712-1-git-send-email-geyslan@gmail.com>
-	 <1384717371.2050.2.camel@dabdike.int.hansenpartnership.com>
-	 <CAGG-pURSnEeNvmHhQ-GvrnyuMHPrTRMoCKt3P=bB23OD9Vmkpg@mail.gmail.com>
-	 <1384724339.2050.6.camel@dabdike.int.hansenpartnership.com>
-	 <CAGG-pUT_h1eNnHDpxRvMPWeN5zi6L2mckHMPsV92Qf3hqtf7EQ@mail.gmail.com>
+From: James Bottomley <jbottomley@parallels.com>
+Subject: Re: Question on SCSI target scan
+Date: Mon, 18 Nov 2013 15:28:02 +0000
+Message-ID: <1384788482.2001.16.camel@dabdike.int.hansenpartnership.com>
+References: <5645D6F831469342AF2BC26CC827D68C5940032A27@BRM-EXCH-3.corp.brocade.com>
+	 <94D0CD8314A33A4D9D801C0FE68B4029547B9343@G9W0745.americas.hpqcorp.net>
+	 <5645D6F831469342AF2BC26CC827D68C5940B2D7C5@BRM-EXCH-3.corp.brocade.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:56700 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751243Ab3KRO6d (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 18 Nov 2013 09:58:33 -0500
-In-Reply-To: <CAGG-pUT_h1eNnHDpxRvMPWeN5zi6L2mckHMPsV92Qf3hqtf7EQ@mail.gmail.com>
+Received: from mx2.parallels.com ([199.115.105.18]:59253 "EHLO
+	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751171Ab3KRP2F convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Nov 2013 10:28:05 -0500
+In-Reply-To: <5645D6F831469342AF2BC26CC827D68C5940B2D7C5@BRM-EXCH-3.corp.brocade.com>
+Content-Language: en-US
+Content-ID: <5E0CB739A31C514A8F9DDCD6F3A07A22@sw.swsoft.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Geyslan =?ISO-8859-1?Q?Greg=F3rio?= Bem <geyslan@gmail.com>
-Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, "open list:SERVER ENGINES 10..." <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+To: Ramesh Chikkanayakanahally <rcnagara@Brocade.com>
+Cc: "Elliott, Robert (Server Storage)" <Elliott@hp.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Sun, 2013-11-17 at 23:12 -0200, Geyslan Greg=F3rio Bem wrote:
-> 2013/11/17 James Bottomley <James.Bottomley@hansenpartnership.com>:
-> > On Sun, 2013-11-17 at 19:09 -0200, Geyslan Greg=F3rio Bem wrote:
-> >> 2013/11/17 James Bottomley <James.Bottomley@hansenpartnership.com>=
-:
-> >> > On Sun, 2013-11-17 at 15:51 -0300, Geyslan G. Bem wrote:
-> >> >> This patch fix memory leakage in cases 'ISCSI_NET_PARAM_VLAN_ID=
-' and
-> >> >> 'ISCSI_NET_PARAM_VLAN_PRIORITY' and refactors code 'going out' =
-when
-> >> >> necessary.
-> >> >
-> >> > You pointlessly renamed a variable, which makes the diff hard to=
- read.
-> >> > Please don't do that.
-> >>
-> >> Ok, I can agree. 'len' means length? What is returned in case of n=
-on
-> >> error?
-> >
-> > it returns the length of buf written to or negative error.
-> >
-> >> > You missed the fact that the passed in pointer is unmodified if
-> >> > mgmt_get_if_info() returns non zero, so the kfree frees junk and=
- would
-> >> > oops.
-> >> >
-> >> > There's no need for a goto; len =3D -EINVAL; does everything tha=
-t's
-> >> > needed.
-> >>
-> >> Well, that is a coverity catch. CID 1128954. Check it.
-> >
-> > I didn't say coverity was wrong, I said your patch was (well not wr=
-ong,
-> > just over complex and incomplete).  This is the way to fix both
-> > problems.
-> >
-> > James
-> >
-> > ---
-> >
-> > diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2isc=
-si/be_iscsi.c
-> > index ffadbee..9dcbdfa 100644
-> > --- a/drivers/scsi/be2iscsi/be_iscsi.c
-> > +++ b/drivers/scsi/be2iscsi/be_iscsi.c
-> > @@ -541,10 +541,8 @@ static int be2iscsi_get_if_param(struct beiscs=
-i_hba *phba,
-> >                 ip_type =3D BE2_IPV6;
->=20
-> James, this approach will not prevent the leakage.
+On Mon, 2013-11-18 at 00:52 -0700, Ramesh Chikkanayakanahally wrote:
+> Thanks for the response. 
+> 
+> If using RSCN sounds like a reasonable approach in this scenario
+> (protocol limitations),  then as per the original question  - would it
+> be acceptable to add an interface in scsi_transport_fc layer, which
+> can be invoked on receiving RSCN to trigger SCSI target re-scan
+> (REPORT LUNS) ?
 
-I don't see why not.  The -EINVAL case goes through the kfree() now too=
-,
-no?
-
->  We can initialize the if_info with NULL and always kfree it without
-> to care about junk.
-
-Why?  Error return means no allocation.
+No, but what you want to do is send a TEST UNIT READY to one of the
+target LUNs ... you can trigger that from the FC transport class, I
+think.  That should return a CHECK CONDITION/UNIT ATTENTION which will
+trigger the collection of sense and the new uevent mechanism for doing a
+rescan.  This hooks it into the standard AEN UNIT ATTENTION handling
+rather than having this all done per-transport.  The only per-transport
+thing we need is to trigger collection of the UA on the transport
+specific AEN.
 
 James
 
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
