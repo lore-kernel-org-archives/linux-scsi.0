@@ -1,7 +1,7 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 12/18] target_core_alua: Allocate ALUA metadata on demand
-Date: Tue, 19 Nov 2013 09:07:57 +0100
-Message-ID: <1384848483-3771-13-git-send-email-hare@suse.de>
+Subject: [PATCH 11/18] target_core_alua: Validate ALUA state transition
+Date: Tue, 19 Nov 2013 09:07:56 +0100
+Message-ID: <1384848483-3771-12-git-send-email-hare@suse.de>
 References: <1384848483-3771-1-git-send-email-hare@suse.de>
 Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1384848483-3771-1-git-send-email-hare@suse.de>
@@ -10,240 +10,195 @@ To: Nic Bellinger <nab@linux-iscsi.org>
 Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
-We should only allocate ALUA metadata if we're actually going
-to write them.
+As we now can modify the list of supported states we need to
+validate the requested ALUA state when doing a state transition.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/target/target_core_alua.c | 70 +++++++++++++++++----------------------
- drivers/target/target_core_alua.h |  3 ++
- include/target/target_core_base.h |  3 --
- 3 files changed, 34 insertions(+), 42 deletions(-)
+ drivers/target/target_core_alua.c | 117 +++++++++++++++++++++++---------------
+ 1 file changed, 72 insertions(+), 45 deletions(-)
 
 diff --git a/drivers/target/target_core_alua.c b/drivers/target/target_core_alua.c
-index 2e7110a..3fa535c 100644
+index 661ee1b..2e7110a 100644
 --- a/drivers/target/target_core_alua.c
 +++ b/drivers/target/target_core_alua.c
-@@ -778,16 +778,22 @@ static int core_alua_write_tpg_metadata(
-  */
- static int core_alua_update_tpg_primary_metadata(
- 	struct t10_alua_tg_pt_gp *tg_pt_gp,
--	int primary_state,
--	unsigned char *md_buf)
-+	int primary_state)
- {
-+	unsigned char *md_buf;
- 	struct t10_wwn *wwn = &tg_pt_gp->tg_pt_gp_dev->t10_wwn;
- 	char path[ALUA_METADATA_PATH_LEN];
--	int len;
-+	int len, rc;
-+
-+	md_buf = kzalloc(ALUA_MD_BUF_LEN, GFP_KERNEL);
-+	if (!md_buf) {
-+		pr_err("Unable to allocate buf for ALUA metadata\n");
-+		return -ENOMEM;
-+	}
+@@ -41,7 +41,8 @@
+ #include "target_core_alua.h"
+ #include "target_core_ua.h"
  
- 	memset(path, 0, ALUA_METADATA_PATH_LEN);
+-static sense_reason_t core_alua_check_transition(int state, int *primary);
++static sense_reason_t core_alua_check_transition(int state, int valid,
++						 int *primary);
+ static int core_alua_set_tg_pt_secondary_state(
+ 		struct t10_alua_tg_pt_gp_member *tg_pt_gp_mem,
+ 		struct se_port *port, int explicit, int offline);
+@@ -210,7 +211,7 @@ target_emulate_set_target_port_groups(struct se_cmd *cmd)
+ 	unsigned char *ptr;
+ 	sense_reason_t rc = TCM_NO_SENSE;
+ 	u32 len = 4; /* Skip over RESERVED area in header */
+-	int alua_access_state, primary = 0;
++	int alua_access_state, primary = 0, valid_states;
+ 	u16 tg_pt_id, rtpi;
  
--	len = snprintf(md_buf, tg_pt_gp->tg_pt_gp_md_buf_len,
-+	len = snprintf(md_buf, ALUA_MD_BUF_LEN,
- 			"tg_pt_gp_id=%hu\n"
- 			"alua_access_state=0x%02x\n"
- 			"alua_status_modification=0x%02x\n",
-@@ -798,14 +804,15 @@ static int core_alua_update_tpg_primary_metadata(
- 		"/var/target/alua/tpgs_%s/%s", &wwn->unit_serial[0],
- 		config_item_name(&tg_pt_gp->tg_pt_gp_group.cg_item));
+ 	if (!l_port)
+@@ -252,6 +253,7 @@ target_emulate_set_target_port_groups(struct se_cmd *cmd)
+ 		rc = TCM_UNSUPPORTED_SCSI_OPCODE;
+ 		goto out;
+ 	}
++	valid_states = l_tg_pt_gp->tg_pt_gp_alua_supported_states;
  
--	return core_alua_write_tpg_metadata(path, md_buf, len);
-+	rc = core_alua_write_tpg_metadata(path, md_buf, len);
-+	kfree(md_buf);
-+	return rc;
+ 	ptr = &buf[4]; /* Skip over RESERVED area in header */
+ 
+@@ -263,7 +265,8 @@ target_emulate_set_target_port_groups(struct se_cmd *cmd)
+ 		 * the state is a primary or secondary target port asymmetric
+ 		 * access state.
+ 		 */
+-		rc = core_alua_check_transition(alua_access_state, &primary);
++		rc = core_alua_check_transition(alua_access_state,
++						valid_states, &primary);
+ 		if (rc) {
+ 			/*
+ 			 * If the SET TARGET PORT GROUPS attempts to establish
+@@ -614,36 +617,20 @@ out:
+ 	return 0;
  }
  
- static int core_alua_do_transition_tg_pt(
- 	struct t10_alua_tg_pt_gp *tg_pt_gp,
- 	struct se_port *l_port,
- 	struct se_node_acl *nacl,
--	unsigned char *md_buf,
- 	int new_state,
- 	int explicit)
+-/*
+- * Check implicit and explicit ALUA state change request.
+- */
+-static sense_reason_t
+-core_alua_check_transition(int state, int *primary)
++int core_alua_parse_state(const char *state)
  {
-@@ -893,8 +900,7 @@ static int core_alua_do_transition_tg_pt(
- 	 */
- 	if (tg_pt_gp->tg_pt_gp_write_metadata) {
- 		mutex_lock(&tg_pt_gp->tg_pt_gp_md_mutex);
--		core_alua_update_tpg_primary_metadata(tg_pt_gp,
--					new_state, md_buf);
-+		core_alua_update_tpg_primary_metadata(tg_pt_gp, new_state);
- 		mutex_unlock(&tg_pt_gp->tg_pt_gp_md_mutex);
+-	switch (state) {
+-	case ALUA_ACCESS_STATE_ACTIVE_OPTIMIZED:
+-	case ALUA_ACCESS_STATE_ACTIVE_NON_OPTIMIZED:
+-	case ALUA_ACCESS_STATE_STANDBY:
+-	case ALUA_ACCESS_STATE_UNAVAILABLE:
+-		/*
+-		 * OPTIMIZED, NON-OPTIMIZED, STANDBY and UNAVAILABLE are
+-		 * defined as primary target port asymmetric access states.
+-		 */
+-		*primary = 1;
+-		break;
+-	case ALUA_ACCESS_STATE_OFFLINE:
+-		/*
+-		 * OFFLINE state is defined as a secondary target port
+-		 * asymmetric access state.
+-		 */
+-		*primary = 0;
+-		break;
+-	default:
+-		pr_err("Unknown ALUA access state: 0x%02x\n", state);
+-		return TCM_INVALID_PARAMETER_LIST;
+-	}
++	if (!strncasecmp(state, "Active/Optimized", 16))
++		return ALUA_ACCESS_STATE_ACTIVE_OPTIMIZED;
++	if (!strncasecmp(state, "Active/NonOptimized", 19))
++		return ALUA_ACCESS_STATE_ACTIVE_NON_OPTIMIZED;
++	if (!strncasecmp(state, "Standby", 7))
++		return ALUA_ACCESS_STATE_STANDBY;
++	if (!strncasecmp(state, "Unavailable", 11))
++		return ALUA_ACCESS_STATE_UNAVAILABLE;
++	if (!strncasecmp(state, "Offline", 7))
++		return ALUA_ACCESS_STATE_OFFLINE;
+ 
+-	return 0;
++	return -1;
+ }
+ 
+ char *core_alua_dump_state(int state)
+@@ -659,6 +646,8 @@ char *core_alua_dump_state(int state)
+ 		return "Unavailable";
+ 	case ALUA_ACCESS_STATE_OFFLINE:
+ 		return "Offline";
++	case ALUA_ACCESS_STATE_TRANSITION:
++		return "Transitioning";
+ 	default:
+ 		return "Unknown";
  	}
- 	/*
-@@ -925,19 +931,12 @@ int core_alua_do_port_transition(
- 	struct t10_alua_lu_gp *lu_gp;
+@@ -666,20 +655,57 @@ char *core_alua_dump_state(int state)
+ 	return NULL;
+ }
+ 
+-int core_alua_parse_state(const char *state)
++/*
++ * Check implicit and explicit ALUA state change request.
++ */
++static sense_reason_t
++core_alua_check_transition(int state, int valid, int *primary)
+ {
+-	if (!strncasecmp(state, "Active/Optimized", 16))
+-		return ALUA_ACCESS_STATE_ACTIVE_OPTIMIZED;
+-	if (!strncasecmp(state, "Active/NonOptimized", 19))
+-		return ALUA_ACCESS_STATE_ACTIVE_NON_OPTIMIZED;
+-	if (!strncasecmp(state, "Standby", 7))
+-		return ALUA_ACCESS_STATE_STANDBY;
+-	if (!strncasecmp(state, "Unavailable", 11))
+-		return ALUA_ACCESS_STATE_UNAVAILABLE;
+-	if (!strncasecmp(state, "Offline", 7))
+-		return ALUA_ACCESS_STATE_OFFLINE;
++	/*
++	 * OPTIMIZED, NON-OPTIMIZED, STANDBY and UNAVAILABLE are
++	 * defined as primary target port asymmetric access states.
++	 */
++	switch (state) {
++	case ALUA_ACCESS_STATE_ACTIVE_OPTIMIZED:
++		if (!(valid & ALUA_AO_SUP))
++			goto not_supported;
++		*primary = 1;
++		break;
++	case ALUA_ACCESS_STATE_ACTIVE_NON_OPTIMIZED:
++		if (!(valid & ALUA_AN_SUP))
++			goto not_supported;
++		*primary = 1;
++		break;
++	case ALUA_ACCESS_STATE_STANDBY:
++		if (!(valid & ALUA_S_SUP))
++			goto not_supported;
++		*primary = 1;
++		break;
++	case ALUA_ACCESS_STATE_UNAVAILABLE:
++		if (!(valid & ALUA_U_SUP))
++			goto not_supported;
++		*primary = 1;
++		break;
++	case ALUA_ACCESS_STATE_OFFLINE:
++		/*
++		 * OFFLINE state is defined as a secondary target port
++		 * asymmetric access state.
++		 */
++		if (!(valid & ALUA_O_SUP))
++			goto not_supported;
++		*primary = 0;
++		break;
++	default:
++		pr_err("Unknown ALUA access state: 0x%02x\n", state);
++		return TCM_INVALID_PARAMETER_LIST;
++	}
+ 
+-	return -1;
++	return 0;
++
++not_supported:
++	pr_err("ALUA access state %s not supported",
++	       core_alua_dump_state(state));
++	return TCM_INVALID_PARAMETER_LIST;
+ }
+ 
+ char *core_alua_dump_status(int status)
+@@ -900,9 +926,10 @@ int core_alua_do_port_transition(
  	struct t10_alua_lu_gp_member *lu_gp_mem, *local_lu_gp_mem;
  	struct t10_alua_tg_pt_gp *tg_pt_gp;
--	unsigned char *md_buf;
- 	int primary, valid_states;
+ 	unsigned char *md_buf;
+-	int primary;
++	int primary, valid_states;
  
- 	valid_states = l_tg_pt_gp->tg_pt_gp_alua_supported_states;
- 	if (core_alua_check_transition(new_state, valid_states, &primary) != 0)
+-	if (core_alua_check_transition(new_state, &primary) != 0)
++	valid_states = l_tg_pt_gp->tg_pt_gp_alua_supported_states;
++	if (core_alua_check_transition(new_state, valid_states, &primary) != 0)
  		return -EINVAL;
  
--	md_buf = kzalloc(l_tg_pt_gp->tg_pt_gp_md_buf_len, GFP_KERNEL);
--	if (!md_buf) {
--		pr_err("Unable to allocate buf for ALUA metadata\n");
--		return -ENOMEM;
--	}
--
- 	local_lu_gp_mem = l_dev->dev_alua_lu_gp_mem;
- 	spin_lock(&local_lu_gp_mem->lu_gp_mem_lock);
- 	lu_gp = local_lu_gp_mem->lu_gp;
-@@ -955,10 +954,9 @@ int core_alua_do_port_transition(
- 		 * success.
- 		 */
- 		core_alua_do_transition_tg_pt(l_tg_pt_gp, l_port, l_nacl,
--					md_buf, new_state, explicit);
-+					new_state, explicit);
- 		atomic_dec(&lu_gp->lu_gp_ref_cnt);
- 		smp_mb__after_atomic_dec();
--		kfree(md_buf);
- 		return 0;
- 	}
- 	/*
-@@ -1008,7 +1006,7 @@ int core_alua_do_port_transition(
- 			 * success.
- 			 */
- 			core_alua_do_transition_tg_pt(tg_pt_gp, port,
--					nacl, md_buf, new_state, explicit);
-+					nacl, new_state, explicit);
- 
- 			spin_lock(&dev->t10_alua.tg_pt_gps_lock);
- 			atomic_dec(&tg_pt_gp->tg_pt_gp_ref_cnt);
-@@ -1030,7 +1028,6 @@ int core_alua_do_port_transition(
- 
- 	atomic_dec(&lu_gp->lu_gp_ref_cnt);
- 	smp_mb__after_atomic_dec();
--	kfree(md_buf);
- 	return 0;
- }
- 
-@@ -1039,13 +1036,18 @@ int core_alua_do_port_transition(
-  */
- static int core_alua_update_tpg_secondary_metadata(
- 	struct t10_alua_tg_pt_gp_member *tg_pt_gp_mem,
--	struct se_port *port,
--	unsigned char *md_buf,
--	u32 md_buf_len)
-+	struct se_port *port)
- {
-+	unsigned char *md_buf;
- 	struct se_portal_group *se_tpg = port->sep_tpg;
- 	char path[ALUA_METADATA_PATH_LEN], wwn[ALUA_SECONDARY_METADATA_WWN_LEN];
--	int len;
-+	int len, rc;
-+
-+	md_buf = kzalloc(ALUA_MD_BUF_LEN, GFP_KERNEL);
-+	if (!md_buf) {
-+		pr_err("Unable to allocate buf for ALUA metadata\n");
-+		return -ENOMEM;
-+	}
- 
- 	memset(path, 0, ALUA_METADATA_PATH_LEN);
- 	memset(wwn, 0, ALUA_SECONDARY_METADATA_WWN_LEN);
-@@ -1057,7 +1059,7 @@ static int core_alua_update_tpg_secondary_metadata(
- 		snprintf(wwn+len, ALUA_SECONDARY_METADATA_WWN_LEN-len, "+%hu",
- 				se_tpg->se_tpg_tfo->tpg_get_tag(se_tpg));
- 
--	len = snprintf(md_buf, md_buf_len, "alua_tg_pt_offline=%d\n"
-+	len = snprintf(md_buf, ALUA_MD_BUF_LEN, "alua_tg_pt_offline=%d\n"
- 			"alua_tg_pt_status=0x%02x\n",
- 			atomic_read(&port->sep_tg_pt_secondary_offline),
- 			port->sep_tg_pt_secondary_stat);
-@@ -1066,7 +1068,10 @@ static int core_alua_update_tpg_secondary_metadata(
- 			se_tpg->se_tpg_tfo->get_fabric_name(), wwn,
- 			port->sep_lun->unpacked_lun);
- 
--	return core_alua_write_tpg_metadata(path, md_buf, len);
-+	rc = core_alua_write_tpg_metadata(path, md_buf, len);
-+	kfree(md_buf);
-+
-+	return rc;
- }
- 
- static int core_alua_set_tg_pt_secondary_state(
-@@ -1076,8 +1081,6 @@ static int core_alua_set_tg_pt_secondary_state(
- 	int offline)
- {
- 	struct t10_alua_tg_pt_gp *tg_pt_gp;
--	unsigned char *md_buf;
--	u32 md_buf_len;
- 	int trans_delay_msecs;
- 
- 	spin_lock(&tg_pt_gp_mem->tg_pt_gp_mem_lock);
-@@ -1098,7 +1101,6 @@ static int core_alua_set_tg_pt_secondary_state(
- 	else
- 		atomic_set(&port->sep_tg_pt_secondary_offline, 0);
- 
--	md_buf_len = tg_pt_gp->tg_pt_gp_md_buf_len;
- 	port->sep_tg_pt_secondary_stat = (explicit) ?
- 			ALUA_STATUS_ALTERED_BY_EXPLICIT_STPG :
- 			ALUA_STATUS_ALTERED_BY_IMPLICIT_ALUA;
-@@ -1120,18 +1122,9 @@ static int core_alua_set_tg_pt_secondary_state(
- 	 * secondary state and status
- 	 */
- 	if (port->sep_tg_pt_secondary_write_md) {
--		md_buf = kzalloc(md_buf_len, GFP_KERNEL);
--		if (!md_buf) {
--			pr_err("Unable to allocate md_buf for"
--				" secondary ALUA access metadata\n");
--			return -ENOMEM;
--		}
- 		mutex_lock(&port->sep_tg_pt_md_mutex);
--		core_alua_update_tpg_secondary_metadata(tg_pt_gp_mem, port,
--				md_buf, md_buf_len);
-+		core_alua_update_tpg_secondary_metadata(tg_pt_gp_mem, port);
- 		mutex_unlock(&port->sep_tg_pt_md_mutex);
--
--		kfree(md_buf);
- 	}
- 
- 	return 0;
-@@ -1390,7 +1383,6 @@ struct t10_alua_tg_pt_gp *core_alua_allocate_tg_pt_gp(struct se_device *dev,
- 	spin_lock_init(&tg_pt_gp->tg_pt_gp_lock);
- 	atomic_set(&tg_pt_gp->tg_pt_gp_ref_cnt, 0);
- 	tg_pt_gp->tg_pt_gp_dev = dev;
--	tg_pt_gp->tg_pt_gp_md_buf_len = ALUA_MD_BUF_LEN;
- 	atomic_set(&tg_pt_gp->tg_pt_gp_alua_access_state,
- 		ALUA_ACCESS_STATE_ACTIVE_OPTIMIZED);
- 	/*
-diff --git a/drivers/target/target_core_alua.h b/drivers/target/target_core_alua.h
-index 299dc33..f2c1ef3 100644
---- a/drivers/target/target_core_alua.h
-+++ b/drivers/target/target_core_alua.h
-@@ -78,6 +78,9 @@
-  */
- #define ALUA_SECONDARY_METADATA_WWN_LEN			256
- 
-+/* Used by core_alua_update_tpg_(primary,secondary)_metadata */
-+#define ALUA_MD_BUF_LEN					1024
-+
- extern struct kmem_cache *t10_alua_lu_gp_cache;
- extern struct kmem_cache *t10_alua_lu_gp_mem_cache;
- extern struct kmem_cache *t10_alua_tg_pt_gp_cache;
-diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index 6944c75..faf7de0 100644
---- a/include/target/target_core_base.h
-+++ b/include/target/target_core_base.h
-@@ -291,9 +291,6 @@ struct t10_alua_tg_pt_gp {
- 	int	tg_pt_gp_implicit_trans_secs;
- 	int	tg_pt_gp_pref;
- 	int	tg_pt_gp_write_metadata;
--	/* Used by struct t10_alua_tg_pt_gp->tg_pt_gp_md_buf_len */
--#define ALUA_MD_BUF_LEN				1024
--	u32	tg_pt_gp_md_buf_len;
- 	u32	tg_pt_gp_members;
- 	atomic_t tg_pt_gp_alua_access_state;
- 	atomic_t tg_pt_gp_ref_cnt;
+ 	md_buf = kzalloc(l_tg_pt_gp->tg_pt_gp_md_buf_len, GFP_KERNEL);
 -- 
 1.7.12.4
