@@ -1,7 +1,7 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 14/18] target_core_alua: Use workqueue for ALUA transitioning
-Date: Tue, 19 Nov 2013 09:07:59 +0100
-Message-ID: <1384848483-3771-15-git-send-email-hare@suse.de>
+Subject: [PATCH 12/18] target_core_alua: Allocate ALUA metadata on demand
+Date: Tue, 19 Nov 2013 09:07:57 +0100
+Message-ID: <1384848483-3771-13-git-send-email-hare@suse.de>
 References: <1384848483-3771-1-git-send-email-hare@suse.de>
 Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1384848483-3771-1-git-send-email-hare@suse.de>
@@ -10,316 +10,240 @@ To: Nic Bellinger <nab@linux-iscsi.org>
 Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
-Use a workqueue for processing ALUA state transitions; this allows
-us to process implicit delay properly.
+We should only allocate ALUA metadata if we're actually going
+to write them.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/target/target_core_alua.c | 174 +++++++++++++++++++++++++++-----------
- include/target/target_core_base.h |   4 +
- 2 files changed, 128 insertions(+), 50 deletions(-)
+ drivers/target/target_core_alua.c | 70 +++++++++++++++++----------------------
+ drivers/target/target_core_alua.h |  3 ++
+ include/target/target_core_base.h |  3 --
+ 3 files changed, 34 insertions(+), 42 deletions(-)
 
 diff --git a/drivers/target/target_core_alua.c b/drivers/target/target_core_alua.c
-index 5de2ea1..19179cf 100644
+index 2e7110a..3fa535c 100644
 --- a/drivers/target/target_core_alua.c
 +++ b/drivers/target/target_core_alua.c
-@@ -777,8 +777,7 @@ static int core_alua_write_tpg_metadata(
-  * Called with tg_pt_gp->tg_pt_gp_md_mutex held
+@@ -778,16 +778,22 @@ static int core_alua_write_tpg_metadata(
   */
  static int core_alua_update_tpg_primary_metadata(
--	struct t10_alua_tg_pt_gp *tg_pt_gp,
--	int primary_state)
-+	struct t10_alua_tg_pt_gp *tg_pt_gp)
+ 	struct t10_alua_tg_pt_gp *tg_pt_gp,
+-	int primary_state,
+-	unsigned char *md_buf)
++	int primary_state)
  {
- 	unsigned char *md_buf;
++	unsigned char *md_buf;
  	struct t10_wwn *wwn = &tg_pt_gp->tg_pt_gp_dev->t10_wwn;
-@@ -797,7 +796,8 @@ static int core_alua_update_tpg_primary_metadata(
+ 	char path[ALUA_METADATA_PATH_LEN];
+-	int len;
++	int len, rc;
++
++	md_buf = kzalloc(ALUA_MD_BUF_LEN, GFP_KERNEL);
++	if (!md_buf) {
++		pr_err("Unable to allocate buf for ALUA metadata\n");
++		return -ENOMEM;
++	}
+ 
+ 	memset(path, 0, ALUA_METADATA_PATH_LEN);
+ 
+-	len = snprintf(md_buf, tg_pt_gp->tg_pt_gp_md_buf_len,
++	len = snprintf(md_buf, ALUA_MD_BUF_LEN,
  			"tg_pt_gp_id=%hu\n"
  			"alua_access_state=0x%02x\n"
  			"alua_status_modification=0x%02x\n",
--			tg_pt_gp->tg_pt_gp_id, primary_state,
-+			tg_pt_gp->tg_pt_gp_id,
-+			tg_pt_gp->tg_pt_gp_alua_pending_state,
- 			tg_pt_gp->tg_pt_gp_alua_status_modification);
+@@ -798,14 +804,15 @@ static int core_alua_update_tpg_primary_metadata(
+ 		"/var/target/alua/tpgs_%s/%s", &wwn->unit_serial[0],
+ 		config_item_name(&tg_pt_gp->tg_pt_gp_group.cg_item));
  
- 	snprintf(path, ALUA_METADATA_PATH_LEN,
-@@ -809,36 +809,17 @@ static int core_alua_update_tpg_primary_metadata(
- 	return rc;
- }
- 
--static int core_alua_do_transition_tg_pt(
--	struct t10_alua_tg_pt_gp *tg_pt_gp,
--	struct se_port *l_port,
--	struct se_node_acl *nacl,
--	int new_state,
--	int explicit)
-+static void core_alua_do_transition_tg_pt_work(struct work_struct *work)
- {
-+	struct t10_alua_tg_pt_gp *tg_pt_gp = container_of(work,
-+		struct t10_alua_tg_pt_gp, tg_pt_gp_transition_work.work);
-+	struct se_device *dev = tg_pt_gp->tg_pt_gp_dev;
- 	struct se_dev_entry *se_deve;
- 	struct se_lun_acl *lacl;
- 	struct se_port *port;
- 	struct t10_alua_tg_pt_gp_member *mem;
--
--	/*
--	 * Save the old primary ALUA access state, and set the current state
--	 * to ALUA_ACCESS_STATE_TRANSITION.
--	 */
--	tg_pt_gp->tg_pt_gp_alua_previous_state =
--		atomic_read(&tg_pt_gp->tg_pt_gp_alua_access_state);
--	tg_pt_gp->tg_pt_gp_alua_pending_state = new_state;
--
--	atomic_set(&tg_pt_gp->tg_pt_gp_alua_access_state,
--			ALUA_ACCESS_STATE_TRANSITION);
--	tg_pt_gp->tg_pt_gp_alua_status_modification = (explicit) ?
--				ALUA_STATUS_ALTERED_BY_EXPLICIT_STPG :
--				ALUA_STATUS_ALTERED_BY_IMPLICIT_ALUA;
--	/*
--	 * Check for the optional ALUA primary state transition delay
--	 */
--	if (tg_pt_gp->tg_pt_gp_trans_delay_msecs != 0)
--		msleep_interruptible(tg_pt_gp->tg_pt_gp_trans_delay_msecs);
-+	bool explicit = (tg_pt_gp->tg_pt_gp_alua_status_modification ==
-+			 ALUA_STATUS_ALTERED_BY_EXPLICIT_STPG);
- 
- 	spin_lock(&tg_pt_gp->tg_pt_gp_lock);
- 	list_for_each_entry(mem, &tg_pt_gp->tg_pt_gp_mem_list,
-@@ -873,9 +854,12 @@ static int core_alua_do_transition_tg_pt(
- 			if (!lacl)
- 				continue;
- 
--			if (explicit &&
--			   (nacl != NULL) && (nacl == lacl->se_lun_nacl) &&
--			   (l_port != NULL) && (l_port == port))
-+			if ((tg_pt_gp->tg_pt_gp_alua_status_modification ==
-+			     ALUA_STATUS_ALTERED_BY_EXPLICIT_STPG) &&
-+			   (tg_pt_gp->tg_pt_gp_alua_nacl != NULL) &&
-+			    (tg_pt_gp->tg_pt_gp_alua_nacl == lacl->se_lun_nacl) &&
-+			   (tg_pt_gp->tg_pt_gp_alua_port != NULL) &&
-+			    (tg_pt_gp->tg_pt_gp_alua_port == port))
- 				continue;
- 
- 			core_scsi3_ua_allocate(lacl->se_lun_nacl,
-@@ -903,7 +887,7 @@ static int core_alua_do_transition_tg_pt(
- 	 */
- 	if (tg_pt_gp->tg_pt_gp_write_metadata) {
- 		mutex_lock(&tg_pt_gp->tg_pt_gp_md_mutex);
--		core_alua_update_tpg_primary_metadata(tg_pt_gp, new_state);
-+		core_alua_update_tpg_primary_metadata(tg_pt_gp);
- 		mutex_unlock(&tg_pt_gp->tg_pt_gp_md_mutex);
- 	}
- 	/*
-@@ -918,6 +902,87 @@ static int core_alua_do_transition_tg_pt(
- 		tg_pt_gp->tg_pt_gp_id,
- 		core_alua_dump_state(tg_pt_gp->tg_pt_gp_alua_previous_state),
- 		core_alua_dump_state(tg_pt_gp->tg_pt_gp_alua_pending_state));
-+	spin_lock(&dev->t10_alua.tg_pt_gps_lock);
-+	atomic_dec(&tg_pt_gp->tg_pt_gp_ref_cnt);
-+	smp_mb__after_atomic_dec();
-+	spin_unlock(&dev->t10_alua.tg_pt_gps_lock);
-+
-+	if (tg_pt_gp->tg_pt_gp_transition_complete)
-+		complete(tg_pt_gp->tg_pt_gp_transition_complete);
-+}
-+
-+static int core_alua_do_transition_tg_pt(
-+	struct t10_alua_tg_pt_gp *tg_pt_gp,
-+	int new_state,
-+	int explicit)
-+{
-+	struct se_device *dev = tg_pt_gp->tg_pt_gp_dev;
-+	DECLARE_COMPLETION_ONSTACK(wait);
-+
-+	/* Nothing to be done here */
-+	if (atomic_read(&tg_pt_gp->tg_pt_gp_alua_access_state) == new_state)
-+		return 0;
-+
-+	if (new_state == ALUA_ACCESS_STATE_TRANSITION)
-+		return -EAGAIN;
-+
-+	/*
-+	 * Flush any pending transitions
-+	 */
-+	if (!explicit && tg_pt_gp->tg_pt_gp_implicit_trans_secs &&
-+	    atomic_read(&tg_pt_gp->tg_pt_gp_alua_access_state) ==
-+	    ALUA_ACCESS_STATE_TRANSITION) {
-+		/* Just in case */
-+		tg_pt_gp->tg_pt_gp_alua_pending_state = new_state;
-+		tg_pt_gp->tg_pt_gp_transition_complete = &wait;
-+		flush_delayed_work(&tg_pt_gp->tg_pt_gp_transition_work);
-+		wait_for_completion(&wait);
-+		tg_pt_gp->tg_pt_gp_transition_complete = NULL;
-+		return 0;
-+	}
-+
-+	/*
-+	 * Save the old primary ALUA access state, and set the current state
-+	 * to ALUA_ACCESS_STATE_TRANSITION.
-+	 */
-+	tg_pt_gp->tg_pt_gp_alua_previous_state =
-+		atomic_read(&tg_pt_gp->tg_pt_gp_alua_access_state);
-+	tg_pt_gp->tg_pt_gp_alua_pending_state = new_state;
-+
-+	atomic_set(&tg_pt_gp->tg_pt_gp_alua_access_state,
-+			ALUA_ACCESS_STATE_TRANSITION);
-+	tg_pt_gp->tg_pt_gp_alua_status_modification = (explicit) ?
-+				ALUA_STATUS_ALTERED_BY_EXPLICIT_STPG :
-+				ALUA_STATUS_ALTERED_BY_IMPLICIT_ALUA;
-+
-+	/*
-+	 * Check for the optional ALUA primary state transition delay
-+	 */
-+	if (tg_pt_gp->tg_pt_gp_trans_delay_msecs != 0)
-+		msleep_interruptible(tg_pt_gp->tg_pt_gp_trans_delay_msecs);
-+
-+	/*
-+	 * Take a reference for workqueue item
-+	 */
-+	spin_lock(&dev->t10_alua.tg_pt_gps_lock);
-+	atomic_inc(&tg_pt_gp->tg_pt_gp_ref_cnt);
-+	smp_mb__after_atomic_inc();
-+	spin_unlock(&dev->t10_alua.tg_pt_gps_lock);
-+
-+	if (!explicit && tg_pt_gp->tg_pt_gp_implicit_trans_secs) {
-+		unsigned long transition_tmo;
-+
-+		transition_tmo = tg_pt_gp->tg_pt_gp_implicit_trans_secs * HZ;
-+		queue_delayed_work(tg_pt_gp->tg_pt_gp_dev->tmr_wq,
-+				   &tg_pt_gp->tg_pt_gp_transition_work,
-+				   transition_tmo);
-+	} else {
-+		tg_pt_gp->tg_pt_gp_transition_complete = &wait;
-+		queue_delayed_work(tg_pt_gp->tg_pt_gp_dev->tmr_wq,
-+				   &tg_pt_gp->tg_pt_gp_transition_work, 0);
-+		wait_for_completion(&wait);
-+		tg_pt_gp->tg_pt_gp_transition_complete = NULL;
-+	}
- 
- 	return 0;
- }
-@@ -931,12 +996,10 @@ int core_alua_do_port_transition(
- 	int explicit)
- {
- 	struct se_device *dev;
--	struct se_port *port;
--	struct se_node_acl *nacl;
- 	struct t10_alua_lu_gp *lu_gp;
- 	struct t10_alua_lu_gp_member *lu_gp_mem, *local_lu_gp_mem;
- 	struct t10_alua_tg_pt_gp *tg_pt_gp;
--	int primary, valid_states;
-+	int primary, valid_states, rc = 0;
- 
- 	valid_states = l_tg_pt_gp->tg_pt_gp_alua_supported_states;
- 	if (core_alua_check_transition(new_state, valid_states, &primary) != 0)
-@@ -958,11 +1021,13 @@ int core_alua_do_port_transition(
- 		 * core_alua_do_transition_tg_pt() will always return
- 		 * success.
- 		 */
--		core_alua_do_transition_tg_pt(l_tg_pt_gp, l_port, l_nacl,
--					new_state, explicit);
-+		l_tg_pt_gp->tg_pt_gp_alua_port = l_port;
-+		l_tg_pt_gp->tg_pt_gp_alua_nacl = l_nacl;
-+		rc = core_alua_do_transition_tg_pt(l_tg_pt_gp,
-+						   new_state, explicit);
- 		atomic_dec(&lu_gp->lu_gp_ref_cnt);
- 		smp_mb__after_atomic_dec();
--		return 0;
-+		return rc;
- 	}
- 	/*
- 	 * For all other LU groups aside from 'default_lu_gp', walk all of
-@@ -997,11 +1062,11 @@ int core_alua_do_port_transition(
- 				continue;
- 
- 			if (l_tg_pt_gp == tg_pt_gp) {
--				port = l_port;
--				nacl = l_nacl;
-+				tg_pt_gp->tg_pt_gp_alua_port = l_port;
-+				tg_pt_gp->tg_pt_gp_alua_nacl = l_nacl;
- 			} else {
--				port = NULL;
--				nacl = NULL;
-+				tg_pt_gp->tg_pt_gp_alua_port = NULL;
-+				tg_pt_gp->tg_pt_gp_alua_nacl = NULL;
- 			}
- 			atomic_inc(&tg_pt_gp->tg_pt_gp_ref_cnt);
- 			smp_mb__after_atomic_inc();
-@@ -1010,12 +1075,14 @@ int core_alua_do_port_transition(
- 			 * core_alua_do_transition_tg_pt() will always return
- 			 * success.
- 			 */
--			core_alua_do_transition_tg_pt(tg_pt_gp, port,
--					nacl, new_state, explicit);
-+			rc = core_alua_do_transition_tg_pt(tg_pt_gp,
-+					new_state, explicit);
- 
- 			spin_lock(&dev->t10_alua.tg_pt_gps_lock);
- 			atomic_dec(&tg_pt_gp->tg_pt_gp_ref_cnt);
- 			smp_mb__after_atomic_dec();
-+			if (rc)
-+				break;
- 		}
- 		spin_unlock(&dev->t10_alua.tg_pt_gps_lock);
- 
-@@ -1025,15 +1092,18 @@ int core_alua_do_port_transition(
- 	}
- 	spin_unlock(&lu_gp->lu_gp_lock);
- 
--	pr_debug("Successfully processed LU Group: %s all ALUA TG PT"
--		" Group IDs: %hu %s transition to primary state: %s\n",
--		config_item_name(&lu_gp->lu_gp_group.cg_item),
--		l_tg_pt_gp->tg_pt_gp_id, (explicit) ? "explicit" : "implicit",
--		core_alua_dump_state(new_state));
-+	if (!rc) {
-+		pr_debug("Successfully processed LU Group: %s all ALUA TG PT"
-+			 " Group IDs: %hu %s transition to primary state: %s\n",
-+			 config_item_name(&lu_gp->lu_gp_group.cg_item),
-+			 l_tg_pt_gp->tg_pt_gp_id,
-+			 (explicit) ? "explicit" : "implicit",
-+			 core_alua_dump_state(new_state));
-+	}
- 
- 	atomic_dec(&lu_gp->lu_gp_ref_cnt);
- 	smp_mb__after_atomic_dec();
--	return 0;
+-	return core_alua_write_tpg_metadata(path, md_buf, len);
++	rc = core_alua_write_tpg_metadata(path, md_buf, len);
++	kfree(md_buf);
 +	return rc;
  }
  
- /*
-@@ -1387,6 +1457,8 @@ struct t10_alua_tg_pt_gp *core_alua_allocate_tg_pt_gp(struct se_device *dev,
- 	mutex_init(&tg_pt_gp->tg_pt_gp_md_mutex);
+ static int core_alua_do_transition_tg_pt(
+ 	struct t10_alua_tg_pt_gp *tg_pt_gp,
+ 	struct se_port *l_port,
+ 	struct se_node_acl *nacl,
+-	unsigned char *md_buf,
+ 	int new_state,
+ 	int explicit)
+ {
+@@ -893,8 +900,7 @@ static int core_alua_do_transition_tg_pt(
+ 	 */
+ 	if (tg_pt_gp->tg_pt_gp_write_metadata) {
+ 		mutex_lock(&tg_pt_gp->tg_pt_gp_md_mutex);
+-		core_alua_update_tpg_primary_metadata(tg_pt_gp,
+-					new_state, md_buf);
++		core_alua_update_tpg_primary_metadata(tg_pt_gp, new_state);
+ 		mutex_unlock(&tg_pt_gp->tg_pt_gp_md_mutex);
+ 	}
+ 	/*
+@@ -925,19 +931,12 @@ int core_alua_do_port_transition(
+ 	struct t10_alua_lu_gp *lu_gp;
+ 	struct t10_alua_lu_gp_member *lu_gp_mem, *local_lu_gp_mem;
+ 	struct t10_alua_tg_pt_gp *tg_pt_gp;
+-	unsigned char *md_buf;
+ 	int primary, valid_states;
+ 
+ 	valid_states = l_tg_pt_gp->tg_pt_gp_alua_supported_states;
+ 	if (core_alua_check_transition(new_state, valid_states, &primary) != 0)
+ 		return -EINVAL;
+ 
+-	md_buf = kzalloc(l_tg_pt_gp->tg_pt_gp_md_buf_len, GFP_KERNEL);
+-	if (!md_buf) {
+-		pr_err("Unable to allocate buf for ALUA metadata\n");
+-		return -ENOMEM;
+-	}
+-
+ 	local_lu_gp_mem = l_dev->dev_alua_lu_gp_mem;
+ 	spin_lock(&local_lu_gp_mem->lu_gp_mem_lock);
+ 	lu_gp = local_lu_gp_mem->lu_gp;
+@@ -955,10 +954,9 @@ int core_alua_do_port_transition(
+ 		 * success.
+ 		 */
+ 		core_alua_do_transition_tg_pt(l_tg_pt_gp, l_port, l_nacl,
+-					md_buf, new_state, explicit);
++					new_state, explicit);
+ 		atomic_dec(&lu_gp->lu_gp_ref_cnt);
+ 		smp_mb__after_atomic_dec();
+-		kfree(md_buf);
+ 		return 0;
+ 	}
+ 	/*
+@@ -1008,7 +1006,7 @@ int core_alua_do_port_transition(
+ 			 * success.
+ 			 */
+ 			core_alua_do_transition_tg_pt(tg_pt_gp, port,
+-					nacl, md_buf, new_state, explicit);
++					nacl, new_state, explicit);
+ 
+ 			spin_lock(&dev->t10_alua.tg_pt_gps_lock);
+ 			atomic_dec(&tg_pt_gp->tg_pt_gp_ref_cnt);
+@@ -1030,7 +1028,6 @@ int core_alua_do_port_transition(
+ 
+ 	atomic_dec(&lu_gp->lu_gp_ref_cnt);
+ 	smp_mb__after_atomic_dec();
+-	kfree(md_buf);
+ 	return 0;
+ }
+ 
+@@ -1039,13 +1036,18 @@ int core_alua_do_port_transition(
+  */
+ static int core_alua_update_tpg_secondary_metadata(
+ 	struct t10_alua_tg_pt_gp_member *tg_pt_gp_mem,
+-	struct se_port *port,
+-	unsigned char *md_buf,
+-	u32 md_buf_len)
++	struct se_port *port)
+ {
++	unsigned char *md_buf;
+ 	struct se_portal_group *se_tpg = port->sep_tpg;
+ 	char path[ALUA_METADATA_PATH_LEN], wwn[ALUA_SECONDARY_METADATA_WWN_LEN];
+-	int len;
++	int len, rc;
++
++	md_buf = kzalloc(ALUA_MD_BUF_LEN, GFP_KERNEL);
++	if (!md_buf) {
++		pr_err("Unable to allocate buf for ALUA metadata\n");
++		return -ENOMEM;
++	}
+ 
+ 	memset(path, 0, ALUA_METADATA_PATH_LEN);
+ 	memset(wwn, 0, ALUA_SECONDARY_METADATA_WWN_LEN);
+@@ -1057,7 +1059,7 @@ static int core_alua_update_tpg_secondary_metadata(
+ 		snprintf(wwn+len, ALUA_SECONDARY_METADATA_WWN_LEN-len, "+%hu",
+ 				se_tpg->se_tpg_tfo->tpg_get_tag(se_tpg));
+ 
+-	len = snprintf(md_buf, md_buf_len, "alua_tg_pt_offline=%d\n"
++	len = snprintf(md_buf, ALUA_MD_BUF_LEN, "alua_tg_pt_offline=%d\n"
+ 			"alua_tg_pt_status=0x%02x\n",
+ 			atomic_read(&port->sep_tg_pt_secondary_offline),
+ 			port->sep_tg_pt_secondary_stat);
+@@ -1066,7 +1068,10 @@ static int core_alua_update_tpg_secondary_metadata(
+ 			se_tpg->se_tpg_tfo->get_fabric_name(), wwn,
+ 			port->sep_lun->unpacked_lun);
+ 
+-	return core_alua_write_tpg_metadata(path, md_buf, len);
++	rc = core_alua_write_tpg_metadata(path, md_buf, len);
++	kfree(md_buf);
++
++	return rc;
+ }
+ 
+ static int core_alua_set_tg_pt_secondary_state(
+@@ -1076,8 +1081,6 @@ static int core_alua_set_tg_pt_secondary_state(
+ 	int offline)
+ {
+ 	struct t10_alua_tg_pt_gp *tg_pt_gp;
+-	unsigned char *md_buf;
+-	u32 md_buf_len;
+ 	int trans_delay_msecs;
+ 
+ 	spin_lock(&tg_pt_gp_mem->tg_pt_gp_mem_lock);
+@@ -1098,7 +1101,6 @@ static int core_alua_set_tg_pt_secondary_state(
+ 	else
+ 		atomic_set(&port->sep_tg_pt_secondary_offline, 0);
+ 
+-	md_buf_len = tg_pt_gp->tg_pt_gp_md_buf_len;
+ 	port->sep_tg_pt_secondary_stat = (explicit) ?
+ 			ALUA_STATUS_ALTERED_BY_EXPLICIT_STPG :
+ 			ALUA_STATUS_ALTERED_BY_IMPLICIT_ALUA;
+@@ -1120,18 +1122,9 @@ static int core_alua_set_tg_pt_secondary_state(
+ 	 * secondary state and status
+ 	 */
+ 	if (port->sep_tg_pt_secondary_write_md) {
+-		md_buf = kzalloc(md_buf_len, GFP_KERNEL);
+-		if (!md_buf) {
+-			pr_err("Unable to allocate md_buf for"
+-				" secondary ALUA access metadata\n");
+-			return -ENOMEM;
+-		}
+ 		mutex_lock(&port->sep_tg_pt_md_mutex);
+-		core_alua_update_tpg_secondary_metadata(tg_pt_gp_mem, port,
+-				md_buf, md_buf_len);
++		core_alua_update_tpg_secondary_metadata(tg_pt_gp_mem, port);
+ 		mutex_unlock(&port->sep_tg_pt_md_mutex);
+-
+-		kfree(md_buf);
+ 	}
+ 
+ 	return 0;
+@@ -1390,7 +1383,6 @@ struct t10_alua_tg_pt_gp *core_alua_allocate_tg_pt_gp(struct se_device *dev,
  	spin_lock_init(&tg_pt_gp->tg_pt_gp_lock);
  	atomic_set(&tg_pt_gp->tg_pt_gp_ref_cnt, 0);
-+	INIT_DELAYED_WORK(&tg_pt_gp->tg_pt_gp_transition_work,
-+			  core_alua_do_transition_tg_pt_work);
  	tg_pt_gp->tg_pt_gp_dev = dev;
+-	tg_pt_gp->tg_pt_gp_md_buf_len = ALUA_MD_BUF_LEN;
  	atomic_set(&tg_pt_gp->tg_pt_gp_alua_access_state,
  		ALUA_ACCESS_STATE_ACTIVE_OPTIMIZED);
-@@ -1515,6 +1587,8 @@ void core_alua_free_tg_pt_gp(
- 	dev->t10_alua.alua_tg_pt_gps_counter--;
- 	spin_unlock(&dev->t10_alua.tg_pt_gps_lock);
- 
-+	flush_delayed_work(&tg_pt_gp->tg_pt_gp_transition_work);
-+
  	/*
- 	 * Allow a struct t10_alua_tg_pt_gp_member * referenced by
- 	 * core_alua_get_tg_pt_gp_by_name() in
+diff --git a/drivers/target/target_core_alua.h b/drivers/target/target_core_alua.h
+index 299dc33..f2c1ef3 100644
+--- a/drivers/target/target_core_alua.h
++++ b/drivers/target/target_core_alua.h
+@@ -78,6 +78,9 @@
+  */
+ #define ALUA_SECONDARY_METADATA_WWN_LEN			256
+ 
++/* Used by core_alua_update_tpg_(primary,secondary)_metadata */
++#define ALUA_MD_BUF_LEN					1024
++
+ extern struct kmem_cache *t10_alua_lu_gp_cache;
+ extern struct kmem_cache *t10_alua_lu_gp_mem_cache;
+ extern struct kmem_cache *t10_alua_tg_pt_gp_cache;
 diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index b8b7ec8..b95c1f1 100644
+index 6944c75..faf7de0 100644
 --- a/include/target/target_core_base.h
 +++ b/include/target/target_core_base.h
-@@ -302,6 +302,10 @@ struct t10_alua_tg_pt_gp {
- 	struct config_group tg_pt_gp_group;
- 	struct list_head tg_pt_gp_list;
- 	struct list_head tg_pt_gp_mem_list;
-+	struct se_port *tg_pt_gp_alua_port;
-+	struct se_node_acl *tg_pt_gp_alua_nacl;
-+	struct delayed_work tg_pt_gp_transition_work;
-+	struct completion *tg_pt_gp_transition_complete;
- };
- 
- struct t10_alua_tg_pt_gp_member {
+@@ -291,9 +291,6 @@ struct t10_alua_tg_pt_gp {
+ 	int	tg_pt_gp_implicit_trans_secs;
+ 	int	tg_pt_gp_pref;
+ 	int	tg_pt_gp_write_metadata;
+-	/* Used by struct t10_alua_tg_pt_gp->tg_pt_gp_md_buf_len */
+-#define ALUA_MD_BUF_LEN				1024
+-	u32	tg_pt_gp_md_buf_len;
+ 	u32	tg_pt_gp_members;
+ 	atomic_t tg_pt_gp_alua_access_state;
+ 	atomic_t tg_pt_gp_ref_cnt;
 -- 
 1.7.12.4
