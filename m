@@ -1,158 +1,131 @@
-From: =?ISO-8859-1?Q?Geyslan_Greg=F3rio_Bem?= <geyslan@gmail.com>
-Subject: Re: [PATCH] scsi: be_iscsi: fix possible memory leak and refactor code
-Date: Mon, 18 Nov 2013 17:51:44 -0200
-Message-ID: <CAGG-pUT4x0OwwMi0SCryHV5sx4WMhxdVQjTb9=a3Tf+fqczHUQ@mail.gmail.com>
-References: <1384714284-13712-1-git-send-email-geyslan@gmail.com>
-	<1384717371.2050.2.camel@dabdike.int.hansenpartnership.com>
-	<CAGG-pURSnEeNvmHhQ-GvrnyuMHPrTRMoCKt3P=bB23OD9Vmkpg@mail.gmail.com>
-	<1384724339.2050.6.camel@dabdike.int.hansenpartnership.com>
-	<CAGG-pUT_h1eNnHDpxRvMPWeN5zi6L2mckHMPsV92Qf3hqtf7EQ@mail.gmail.com>
-	<1384786707.2001.6.camel@dabdike.int.hansenpartnership.com>
-	<CAGG-pURDPHOGuSt7a1G=CpdgvyiUvW0ugKq0K_o7-ThCS39F-A@mail.gmail.com>
-	<1384791864.2001.19.camel@dabdike.int.hansenpartnership.com>
-	<CAGG-pUSOa-kP7-NfyX6gizSrASc8_hAjN=Knn3cmfO2CK=txZw@mail.gmail.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [Bug 64171] Block SCSI Generic Driver does not keep data
+Date: Tue, 19 Nov 2013 01:15:49 -0500
+Message-ID: <528B0215.5050602@interlog.com>
+References: <bug-64171-11613@https.bugzilla.kernel.org/>	 <bug-64171-11613-moT5WALEj8@https.bugzilla.kernel.org/> <1384533726.2003.10.camel@dabdike.int.hansenpartnership.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAGG-pUSOa-kP7-NfyX6gizSrASc8_hAjN=Knn3cmfO2CK=txZw@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, "open list:SERVER ENGINES 10..." <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.infotech.no ([82.134.31.41]:48973 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750762Ab3KSGQM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 19 Nov 2013 01:16:12 -0500
+In-Reply-To: <1384533726.2003.10.camel@dabdike.int.hansenpartnership.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, bugzilla-daemon@bugzilla.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
-2013/11/18 Geyslan Greg=F3rio Bem <geyslan@gmail.com>:
-> 2013/11/18 James Bottomley <James.Bottomley@hansenpartnership.com>:
->> On Mon, 2013-11-18 at 14:18 -0200, Geyslan Greg=F3rio Bem wrote:
->>> 2013/11/18 James Bottomley <James.Bottomley@hansenpartnership.com>:
->>> > On Sun, 2013-11-17 at 23:12 -0200, Geyslan Greg=F3rio Bem wrote:
->>> >> 2013/11/17 James Bottomley <James.Bottomley@hansenpartnership.co=
-m>:
->>> >> > On Sun, 2013-11-17 at 19:09 -0200, Geyslan Greg=F3rio Bem wrot=
-e:
->>> >> >> 2013/11/17 James Bottomley <James.Bottomley@hansenpartnership=
-=2Ecom>:
->>> >> >> > On Sun, 2013-11-17 at 15:51 -0300, Geyslan G. Bem wrote:
->>> >> >> >> This patch fix memory leakage in cases 'ISCSI_NET_PARAM_VL=
-AN_ID' and
->>> >> >> >> 'ISCSI_NET_PARAM_VLAN_PRIORITY' and refactors code 'going =
-out' when
->>> >> >> >> necessary.
->>> >> >> >
->>> >> >> > You pointlessly renamed a variable, which makes the diff ha=
-rd to read.
->>> >> >> > Please don't do that.
->>> >> >>
->>> >> >> Ok, I can agree. 'len' means length? What is returned in case=
- of non
->>> >> >> error?
->>> >> >
->>> >> > it returns the length of buf written to or negative error.
->>> >> >
->>> >> >> > You missed the fact that the passed in pointer is unmodifie=
-d if
->>> >> >> > mgmt_get_if_info() returns non zero, so the kfree frees jun=
-k and would
->>> >> >> > oops.
->>> >> >> >
->>> >> >> > There's no need for a goto; len =3D -EINVAL; does everythin=
-g that's
->>> >> >> > needed.
->>> >> >>
->>> >> >> Well, that is a coverity catch. CID 1128954. Check it.
->>> >> >
->>> >> > I didn't say coverity was wrong, I said your patch was (well n=
-ot wrong,
->>> >> > just over complex and incomplete).  This is the way to fix bot=
-h
->>> >> > problems.
->>> >> >
->>> >> > James
->>> >> >
->>> >> > ---
->>> >> >
->>> >> > diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/b=
-e2iscsi/be_iscsi.c
->>> >> > index ffadbee..9dcbdfa 100644
->>> >> > --- a/drivers/scsi/be2iscsi/be_iscsi.c
->>> >> > +++ b/drivers/scsi/be2iscsi/be_iscsi.c
->>> >> > @@ -541,10 +541,8 @@ static int be2iscsi_get_if_param(struct b=
-eiscsi_hba *phba,
->>> >> >                 ip_type =3D BE2_IPV6;
->>> >>
->>> >> James, this approach will not prevent the leakage.
->>> >
->>> > I don't see why not.  The -EINVAL case goes through the kfree() n=
-ow too,
->>> > no?
->>>
->>> I'm refering to the removal of kfree in your suggestion.
+On 13-11-15 11:42 AM, James Bottomley wrote:
+> On Sat, 2013-11-02 at 17:09 +0000, bugzilla-daemon@bugzilla.kernel.org
+> wrote:
+>> https://bugzilla.kernel.org/show_bug.cgi?id=64171
 >>
->> That's the second bug I pointed out via code inspection.  If the
->> function returns an error (any non zero return) then the pointer isn=
-'t
->> altered, so we return without the free.  It's a standard error patte=
-rn.
->
-> Ok. So kfree is useless until the code go to the function bail. Right=
-?
->
+>> --- Comment #2 from d gilbert <dgilbert@interlog.com> ---
+>> On 13-11-01 03:49 PM, bugzilla-daemon@bugzilla.kernel.org wrote:
+>>> https://bugzilla.kernel.org/show_bug.cgi?id=64171
+>>>
+>>>               Bug ID: 64171
+>>>              Summary: Block SCSI Generic Driver does not keep data
+>>>              Product: SCSI Drivers
+>>>              Version: 2.5
+>>>       Kernel Version: 2.6.32.61
+>>>             Hardware: All
+>>>                   OS: Linux
+>>>                 Tree: Mainline
+>>>               Status: NEW
+>>>             Severity: high
+>>>             Priority: P1
+>>>            Component: Other
+>>>             Assignee: scsi_drivers-other@kernel-bugs.osdl.org
+>>>             Reporter: af300wsm@gmail.com
+>>>           Regression: No
+>>>
+>>> Data written to any given file descriptor should be unique to that descriptor
+>>> and processor space.  Currently, the BSG Driver does not keep this uniqueness.
+>>> As the attached simple program demonstrates, a SCSI Command queued to the
+>>> device in one process is dequeued by another process which has opened a handle
+>>> to the same device.
+>>>
+>>> The attached file sends the simple SCSI "Test Unit Ready" command from the SCSI
+>>> Primary Command Spec. to the device using the BSG driver.  As the program
+>>> demonstrates, the sg_io_v4.usr_ptr field, which is set in the "push" branch of
+>>> the program, is dequeued from the "pop" branch of the code.
+>>>
+>>> I also tested this behavior on Fedora 19 and the bug exists there as well.  F19
+>>> uses kernel 3.9.5.
+>>>
+>>> Compile the attachment:
+>>> g++ -o <out> combined.cpp
+>>>
+>>>
+>>> Execute as follows:
+>>> sudo combined pop /dev/bsg/0:0:0:0 &
+>>> sudo combined push /dev/bsg/0:0:0:0
 >>
->>> >
->>> >>  We can initialize the if_info with NULL and always kfree it wit=
-hout
->>> >> to care about junk.
->>> >
->>> > Why?  Error return means no allocation.
->>> Setting if_info to NULL allow to kfree without concerns.
->>>
->>> Eg.:
->>>
->>> - struct be_cmd_get_if_info_resp *if_info;
->>> + struct be_cmd_get_if_info_resp *if_info =3D NULL;
->>>
->>> ...
->>>
->>> +       if (len)
->>> +               goto out;
->>>
->>> ...
->>>
->>> -               if (if_info->vlan_priority =3D=3D BEISCSI_VLAN_DISA=
-BLE)
->>> -                       return -EINVAL;
->>> +               if (if_info->vlan_priority =3D=3D BEISCSI_VLAN_DISA=
-BLE) {
->>> +                       len =3D -EINVAL;
->>> +                       goto out;
->>> +               }
+>> I ran this test on lk 3.11.6 and it also exhibits this
+>> problem.
 >>
->> What's the point of that?  Just removing the goto out; has the code
->> going to the same place because of the break below.
+>> When the bsg driver was originally designed, if my memory is
+>> correct, it did not have an asynchronous interface, so it
+>> skipped the complexity of keeping a separate context for
+>> each file handle within each device.
 >>
->> James
->>
->>
+>> With the addition of the asynchronous interface, the lack of
+>> file handle context is exposed by your simple test. I'm
+>> pretty sure that parallel test programs could show that
+>> synchronous SG_IO ioctls can also be tricked. For example:
+>> send INQUIRYs continuously from one process, TURs from
+>> another process to the same device. Then, once in a while,
+>> I guess that they would pick up the other one's response.
 >
-> I agree whit you that the code goes to same place with or without got=
-o
-> out. It's just a pattern to simplify future changes in the function.
->
-> But I can remove it if you want.
->
->
-> --
-> Regards,
->
-> Geyslan G. Bem
-> hackingbits.com
+> OK, so why do you both think this is a bug not a feature?  The
+> read/write interface isn't completion order safe, it was introduced
+> for /dev/sg compatibility and somehow got carried forwards when it
+> should have been deprecated.  The ioctl interface is, so just use the
+> latter.  If you can find a test case where the ioctl interface has the
+> same problem, then I'll treat it as a bug.
 
-Done:
-[PATCH v2] scsi: be_iscsi: fix possible memory leak
+sg_tst_context is a test program that sends TEST UNIT
+READY commands on one thread (or even threads) and START
+STOP UNIT commands on another thread (or odd threads).
+The SSU commands alternate between start and stop. The
+good news is the the bsg ioctl(SG_IO) doesn't break the
+way I predicted.
+
+Instead it broke like this:
+# sg_tst_context -n 100 -t 2  /dev/bsg/8:0:0:2
+   Enter work_thread id=0 num=100 share=0
+   Enter work_thread id=1 num=100 share=0
+   START STOP UNIT do_scsi_pt() submission error, id=1
+     pass through OS error: Invalid argument
+   thread id=1 FAILed at iteration: 0  [negated errno: -22]
+   thread id=0 normal exit
+   Expected not_readys on TEST UNIT READY: 0
+   UNEXPECTED not_readys on START STOP UNIT: 0
+
+Try 10 threads and the majority die in the same fashion.
+That is with a separate file handle per thread. So if
+there are multiple file handles to a bsg device then
+subsequent calls to ioctl(SG_IO) may fail with
+errno=EINVAL (for no good reason).
+
+If a single file handle is shared between the threads then
+the problem goes away:
+# sg_tst_context -n 100 -t 2 -s /dev/bsg/8:0:0:2
+   Enter work_thread id=0 num=100 share=1
+   Enter work_thread id=1 num=100 share=1
+   thread id=0 normal exit
+   thread id=1 normal exit
+   Expected not_readys on TEST UNIT READY: 55
+   UNEXPECTED not_readys on START STOP UNIT: 0
 
 
---=20
-Regards,
+Both the sg driver and the block layer (e.g.
+ioctl(/dev/sdc, SG_IO) ) perform properly in these tests.
 
-Geyslan G. Bem
-hackingbits.com
+Doug Gilbert
+
+
