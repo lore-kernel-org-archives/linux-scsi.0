@@ -1,156 +1,95 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 09/18] target_core: Rename alua_access_type in alua_mgmt_type
-Date: Tue, 19 Nov 2013 09:07:54 +0100
-Message-ID: <1384848483-3771-10-git-send-email-hare@suse.de>
+Subject: [PATCH 04/18] target_core_alua: Store supported ALUA states
+Date: Tue, 19 Nov 2013 09:07:49 +0100
+Message-ID: <1384848483-3771-5-git-send-email-hare@suse.de>
 References: <1384848483-3771-1-git-send-email-hare@suse.de>
-Return-path: <target-devel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:39479 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751841Ab3KSIIG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 19 Nov 2013 03:08:06 -0500
 In-Reply-To: <1384848483-3771-1-git-send-email-hare@suse.de>
-Sender: target-devel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: Nic Bellinger <nab@linux-iscsi.org>
 Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-List-Id: linux-scsi@vger.kernel.org
 
-'alua_access_type' is not very descriptive and leads to confusion,
-so rename it to 'alua_mgmt_type'.
+The supported ALUA states might be different for individual
+devices, so store it in a separate field.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/target/target_core_alua.c     | 10 +++++-----
- drivers/target/target_core_alua.h     |  6 +++---
- drivers/target/target_core_configfs.c | 32 ++++++++++++++++----------------
- drivers/target/target_core_spc.c      |  2 +-
- include/target/target_core_base.h     |  2 +-
- 5 files changed, 26 insertions(+), 26 deletions(-)
+ drivers/target/target_core_alua.c | 14 ++++++++------
+ drivers/target/target_core_alua.h | 11 +++++++++++
+ include/target/target_core_base.h |  1 +
+ 3 files changed, 20 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/target/target_core_alua.c b/drivers/target/target_core_alua.c
-index c4d73a4..5540aae 100644
+index 08e41e3..a16115e 100644
 --- a/drivers/target/target_core_alua.c
 +++ b/drivers/target/target_core_alua.c
-@@ -246,9 +246,9 @@ target_emulate_set_target_port_groups(struct se_cmd *cmd)
- 	}
- 	spin_unlock(&l_tg_pt_gp_mem->tg_pt_gp_mem_lock);
+@@ -117,12 +117,7 @@ target_emulate_report_target_port_groups(struct se_cmd *cmd)
+ 		/*
+ 		 * Set supported ASYMMETRIC ACCESS State bits
+ 		 */
+-		buf[off] = 0x80; /* T_SUP */
+-		buf[off] |= 0x40; /* O_SUP */
+-		buf[off] |= 0x8; /* U_SUP */
+-		buf[off] |= 0x4; /* S_SUP */
+-		buf[off] |= 0x2; /* AN_SUP */
+-		buf[off++] |= 0x1; /* AO_SUP */
++		buf[off++] |= tg_pt_gp->tg_pt_gp_alua_supported_states;
+ 		/*
+ 		 * TARGET PORT GROUP
+ 		 */
+@@ -1367,6 +1362,13 @@ struct t10_alua_tg_pt_gp *core_alua_allocate_tg_pt_gp(struct se_device *dev,
+ 	tg_pt_gp->tg_pt_gp_trans_delay_msecs = ALUA_DEFAULT_TRANS_DELAY_MSECS;
+ 	tg_pt_gp->tg_pt_gp_implicit_trans_secs = ALUA_DEFAULT_IMPLICIT_TRANS_SECS;
  
--	if (!(l_tg_pt_gp->tg_pt_gp_alua_access_type & TPGS_EXPLICIT_ALUA)) {
--		pr_debug("Unable to process SET_TARGET_PORT_GROUPS"
--				" while TPGS_EXPLICIT_ALUA is disabled\n");
-+	if (!(l_tg_pt_gp->tg_pt_gp_alua_mgmt_type & ALUA_MGMT_EXPLICIT)) {
-+		pr_debug("Unable to process SET_TARGET_PORT_GROUPS while"
-+				" explicit ALUA management is disabled\n");
- 		rc = TCM_UNSUPPORTED_SCSI_OPCODE;
- 		goto out;
- 	}
-@@ -1369,8 +1369,8 @@ struct t10_alua_tg_pt_gp *core_alua_allocate_tg_pt_gp(struct se_device *dev,
- 	/*
- 	 * Enable both explicit and implicit ALUA support by default
- 	 */
--	tg_pt_gp->tg_pt_gp_alua_access_type =
--			TPGS_EXPLICIT_ALUA | TPGS_IMPLICIT_ALUA;
-+	tg_pt_gp->tg_pt_gp_alua_mgmt_type =
-+			ALUA_MGMT_EXPLICIT | ALUA_MGMT_IMPLICIT;
- 	/*
- 	 * Set the default Active/NonOptimized Delay in milliseconds
- 	 */
++	/*
++	 * Enable all supported states
++	 */
++	tg_pt_gp->tg_pt_gp_alua_supported_states =
++	    ALUA_T_SUP | ALUA_O_SUP | \
++	    ALUA_U_SUP | ALUA_S_SUP | ALUA_AN_SUP | ALUA_AO_SUP;
++
+ 	if (def_group) {
+ 		spin_lock(&dev->t10_alua.tg_pt_gps_lock);
+ 		tg_pt_gp->tg_pt_gp_id =
 diff --git a/drivers/target/target_core_alua.h b/drivers/target/target_core_alua.h
-index 03955a9..299dc33 100644
+index d6db78b..88e2e83 100644
 --- a/drivers/target/target_core_alua.h
 +++ b/drivers/target/target_core_alua.h
-@@ -6,9 +6,9 @@
+@@ -23,6 +23,17 @@
+ #define ALUA_ACCESS_STATE_TRANSITION		0xf
+ 
+ /*
++ * from spc4r36j section 6.37 Table 306
++ */
++#define ALUA_T_SUP		0x80
++#define ALUA_O_SUP		0x40
++#define ALUA_LBD_SUP		0x10
++#define ALUA_U_SUP		0x08
++#define ALUA_S_SUP		0x04
++#define ALUA_AN_SUP		0x02
++#define ALUA_AO_SUP		0x01
++
++/*
+  * REPORT_TARGET_PORT_GROUP STATUS CODE
   *
-  * from spc4r17 section 6.4.2 Table 135
-  */
--#define TPGS_NO_ALUA				0x00
--#define TPGS_IMPLICIT_ALUA			0x10
--#define TPGS_EXPLICIT_ALUA			0x20
-+#define ALUA_MGMT_NONE				0x00
-+#define ALUA_MGMT_IMPLICIT			0x10
-+#define ALUA_MGMT_EXPLICIT			0x20
- 
- /*
-  * ASYMMETRIC ACCESS STATE field
-diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
-index 6f01a1e..c16eb87 100644
---- a/drivers/target/target_core_configfs.c
-+++ b/drivers/target/target_core_configfs.c
-@@ -2043,9 +2043,9 @@ static ssize_t target_core_alua_tg_pt_gp_store_attr_alua_access_state(
- 		return -EINVAL;
- 	}
- 
--	if (!(tg_pt_gp->tg_pt_gp_alua_access_type & TPGS_IMPLICIT_ALUA)) {
--		pr_err("Unable to process implicit configfs ALUA"
--			" transition while TPGS_IMPLICIT_ALUA is disabled\n");
-+	if (!(tg_pt_gp->tg_pt_gp_alua_mgmt_type & ALUA_MGMT_IMPLICIT)) {
-+		pr_err("Unable to process implicit configfs ALUA transition"
-+			" while implicit ALUA management is disabled\n");
- 		return -EINVAL;
- 	}
- 
-@@ -2153,19 +2153,19 @@ static ssize_t target_core_alua_tg_pt_gp_store_attr_alua_##_name(	\
- }
- 
- /*
-- * alua_access_type
-+ * alua_mgmt_type
-  */
--SE_DEV_ALUA_SUPPORT_STATE_SHOW(access_implicit,
--			       tg_pt_gp_alua_access_type, TPGS_IMPLICIT_ALUA);
--SE_DEV_ALUA_SUPPORT_STATE_STORE(access_implicit,
--				tg_pt_gp_alua_access_type, TPGS_IMPLICIT_ALUA);
--SE_DEV_ALUA_TG_PT_ATTR(alua_access_implicit, S_IRUGO | S_IWUSR);
-+SE_DEV_ALUA_SUPPORT_STATE_SHOW(management_implicit,
-+			       tg_pt_gp_alua_mgmt_type, ALUA_MGMT_IMPLICIT);
-+SE_DEV_ALUA_SUPPORT_STATE_STORE(management_implicit,
-+				tg_pt_gp_alua_mgmt_type, ALUA_MGMT_IMPLICIT);
-+SE_DEV_ALUA_TG_PT_ATTR(alua_management_implicit, S_IRUGO | S_IWUSR);
- 
--SE_DEV_ALUA_SUPPORT_STATE_SHOW(access_explicit,
--			       tg_pt_gp_alua_access_type, TPGS_EXPLICIT_ALUA);
--SE_DEV_ALUA_SUPPORT_STATE_STORE(access_explicit,
--				tg_pt_gp_alua_access_type, TPGS_EXPLICIT_ALUA);
--SE_DEV_ALUA_TG_PT_ATTR(alua_access_explicit, S_IRUGO | S_IWUSR);
-+SE_DEV_ALUA_SUPPORT_STATE_SHOW(management_explicit,
-+			       tg_pt_gp_alua_mgmt_type, ALUA_MGMT_EXPLICIT);
-+SE_DEV_ALUA_SUPPORT_STATE_STORE(management_explicit,
-+				tg_pt_gp_alua_mgmt_type, ALUA_MGMT_EXPLICIT);
-+SE_DEV_ALUA_TG_PT_ATTR(alua_management_explicit, S_IRUGO | S_IWUSR);
- 
- 
- /*
-@@ -2433,8 +2433,8 @@ CONFIGFS_EATTR_OPS(target_core_alua_tg_pt_gp, t10_alua_tg_pt_gp,
- static struct configfs_attribute *target_core_alua_tg_pt_gp_attrs[] = {
- 	&target_core_alua_tg_pt_gp_alua_access_state.attr,
- 	&target_core_alua_tg_pt_gp_alua_access_status.attr,
--	&target_core_alua_tg_pt_gp_alua_access_implicit.attr,
--	&target_core_alua_tg_pt_gp_alua_access_explicit.attr,
-+	&target_core_alua_tg_pt_gp_alua_management_implicit.attr,
-+	&target_core_alua_tg_pt_gp_alua_management_explicit.attr,
- 	&target_core_alua_tg_pt_gp_alua_support_transitioning.attr,
- 	&target_core_alua_tg_pt_gp_alua_support_offline.attr,
- 	&target_core_alua_tg_pt_gp_alua_support_lba_dependent.attr,
-diff --git a/drivers/target/target_core_spc.c b/drivers/target/target_core_spc.c
-index 021c3f4..49947f3 100644
---- a/drivers/target/target_core_spc.c
-+++ b/drivers/target/target_core_spc.c
-@@ -62,7 +62,7 @@ static void spc_fill_alua_data(struct se_port *port, unsigned char *buf)
- 	spin_lock(&tg_pt_gp_mem->tg_pt_gp_mem_lock);
- 	tg_pt_gp = tg_pt_gp_mem->tg_pt_gp;
- 	if (tg_pt_gp)
--		buf[5] |= tg_pt_gp->tg_pt_gp_alua_access_type;
-+		buf[5] |= tg_pt_gp->tg_pt_gp_alua_mgmt_type;
- 	spin_unlock(&tg_pt_gp_mem->tg_pt_gp_mem_lock);
- }
- 
+  * from spc4r17 section 6.27 Table 246
 diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index a23785f..e3e334d 100644
+index 658b356..a23785f 100644
 --- a/include/target/target_core_base.h
 +++ b/include/target/target_core_base.h
-@@ -285,7 +285,7 @@ struct t10_alua_tg_pt_gp {
+@@ -283,6 +283,7 @@ struct t10_alua_lu_gp_member {
+ struct t10_alua_tg_pt_gp {
+ 	u16	tg_pt_gp_id;
  	int	tg_pt_gp_valid_id;
- 	int	tg_pt_gp_alua_supported_states;
++	int	tg_pt_gp_alua_supported_states;
  	int	tg_pt_gp_alua_access_status;
--	int	tg_pt_gp_alua_access_type;
-+	int	tg_pt_gp_alua_mgmt_type;
+ 	int	tg_pt_gp_alua_access_type;
  	int	tg_pt_gp_nonop_delay_msecs;
- 	int	tg_pt_gp_trans_delay_msecs;
- 	int	tg_pt_gp_implicit_trans_secs;
 -- 
 1.7.12.4
+
