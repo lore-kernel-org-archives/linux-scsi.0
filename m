@@ -1,37 +1,56 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 46891] [CHECK]scsi/bnx2fc/bnx2fc_io.c:1810: bad call to memset
-Date: Tue, 19 Nov 2013 23:19:58 +0000
-Message-ID: <bug-46891-11613-SmJZTTrwhd@https.bugzilla.kernel.org/>
-References: <bug-46891-11613@https.bugzilla.kernel.org/>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCHv2 00/18] ALUA update and Referrals support
+Date: Tue, 19 Nov 2013 15:42:49 -0800
+Message-ID: <1384904569.4307.34.camel@haakon3.risingtidesystems.com>
+References: <1384848483-3771-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:35945 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751421Ab3KSXUB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 Nov 2013 18:20:01 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 8A70920675
-	for <linux-scsi@vger.kernel.org>; Tue, 19 Nov 2013 23:20:00 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id 8DA1720670
-	for <linux-scsi@vger.kernel.org>; Tue, 19 Nov 2013 23:19:59 +0000 (UTC)
-In-Reply-To: <bug-46891-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1384848483-3771-1-git-send-email-hare@suse.de>
+Sender: target-devel-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=46891
+Hey Hannes!
 
-Alan <alan@lxorguk.ukuu.org.uk> changed:
+On Tue, 2013-11-19 at 09:07 +0100, Hannes Reinecke wrote:
+> Hi Nic,
+> 
+> here's the second version of my ALUA update & Referrals support patches.
+> As per request I've split up the supported states into individual
+> attributes, and while there I've also renamed the rather confusing
+> 'alua_access_type' and 'alua_access_status' into 'alua_management_type'
+> and 'alua_status_modification', respectively.
+> 
+> The other features are:
+> 
+> - Make supported states configurable:
+>   We should make the list of supported ALUA states configurable,
+>   as some setups would possibly like to support a small subset
+>   of ALUA states only.
+> - Asynchronous transitioning: I've switched 'transitioning'
+>   handling to use a workqueue, that should allow us to simulate
+>   asynchronous transitioning modes. IE TCM should now be capable
+>   of handling requests while in transitioning, and properly terminate
+>   these with the correct sense code.
+> - Include target device descriptor in VPD page 83
+>   For the ALUA device handler we'd need to identify the target device
+>   where a given target port belongs to. So include the respective
+>   values in the VPD page.
+> 
+> And, of course, referrals support.
+> 
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-            Summary|scsi/bnx2fc/bnx2fc_io.c:181 |[CHECK]scsi/bnx2fc/bnx2fc_i
-                   |0: bad call to memset       |o.c:1810: bad call to
-                   |                            |memset
+Ok, even though it is late, I've applied this series to for-next.
 
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+So the one main concern here is that the user visible changes to
+existing ALUA configfs attributes end up breaking the lio-utils code
+related to ALUA that depend upon them, which will need to be resolved
+separately.
+
+However, this breakage is pretty minor and having more sensible +
+consistent attribute naming is worth the inconvenience.
+
+--nab
