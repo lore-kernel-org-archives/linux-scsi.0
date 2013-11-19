@@ -1,51 +1,72 @@
 From: Loc Ho <lho@apm.com>
-Subject: [PATCH v2 0/4] ata: Add APM X-Gene SoC 6.0Gbps SATA PHY support
-Date: Tue, 19 Nov 2013 16:53:13 -0700
-Message-ID: <1384905197-3566-1-git-send-email-lho@apm.com>
+Subject: [PATCH v2 1/4] PHY: Add function set_speed to generic PHY framework
+Date: Tue, 19 Nov 2013 16:53:14 -0700
+Message-ID: <1384905197-3566-2-git-send-email-lho@apm.com>
+References: <1384905197-3566-1-git-send-email-lho@apm.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1384905197-3566-1-git-send-email-lho@apm.com>
 Sender: linux-ide-owner@vger.kernel.org
 To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, jcm@redhat.com, Loc Ho <lho@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, jcm@redhat.com, Loc Ho <lho@apm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-ata: Add APM X-Gene SoC 6.0Gbps SATA PHY support
+PHY: Add function set_speed to generic PHY framework
 
-This patch adds support for APM X-Gene SoC 6.0Gbps SATA PHY. This is the
-physical layer interface for the corresponding SATA host controller. This
-driver uses the new PHY generic framework posted by Kishon Vijay Abrahm.
-In addition, the new PHY generic framework is patched to provide an
-function to set the speed of the PHY.
-
-v2
-* Remove port knowledge from functions
-* Make all functions static
-* Remove ID completely
-* Make resource requirement based on compatible type
-* Rename override PHY parameters with more descriptive name
-* Add override PHY parameter for per controller, per port, and per speed
-* Patch the generic PHY frame to expose set_speed operation
-
-v1
-* Initial version
+This patch adds function set_speed to the generic PHY
+framework operation structure. This function can be
+called to instruct the PHY underlying layer at specified
+lane to configure for specified speed in hertz.
 
 Signed-off-by: Loc Ho <lho@apm.com>
-Signed-off-by: Tuan Phan <tphan@apm.com>
-Signed-off-by: Suman Tripathi <stripathi@apm.com>
 ---
-Loc Ho (4):
-  PHY: Add function set_speed to generic PHY framework
-  Documentation: Add APM X-Gene SoC 6.0Gbps SATA PHY driver binding
-    documentation
-  ata: add APM X-Gene SoC 6.0Gbps SATA PHY driver
-  arm64: Add APM X-Gene SoC 6.0Gbps SATA PHY DTS entries
+ include/linux/phy/phy.h |   22 ++++++++++++++++++++++
+ 1 files changed, 22 insertions(+), 0 deletions(-)
 
- .../devicetree/bindings/ata/apm-xgene-phy.txt      |   61 +
- arch/arm64/boot/dts/apm-storm.dtsi                 |   28 +
- drivers/ata/Kconfig                                |    6 +
- drivers/ata/Makefile                               |    1 +
- drivers/ata/sata_xgene_phy.c                       | 2067 ++++++++++++++++++++
- include/linux/phy/phy.h                            |   22 +
- 6 files changed, 2185 insertions(+), 0 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/ata/apm-xgene-phy.txt
- create mode 100644 drivers/ata/sata_xgene_phy.c
+diff --git a/include/linux/phy/phy.h b/include/linux/phy/phy.h
+index 9351a16..df9b1d1 100644
+--- a/include/linux/phy/phy.h
++++ b/include/linux/phy/phy.h
+@@ -32,6 +32,7 @@ struct phy;
+  * @exit: operation to be performed while exiting
+  * @power_on: powering on the phy
+  * @power_off: powering off the phy
++ * @set_speed: set operation speed in hz
+  * @owner: the module owner containing the ops
+  */
+ struct phy_ops {
+@@ -39,6 +40,7 @@ struct phy_ops {
+ 	int	(*exit)(struct phy *phy);
+ 	int	(*power_on)(struct phy *phy);
+ 	int	(*power_off)(struct phy *phy);
++	int	(*set_speed)(struct phy *phy, int lane, u64 speed);
+ 	struct module *owner;
+ };
+ 
+@@ -341,4 +343,24 @@ out:
+ 	return ret;
+ }
+ 
++static inline int phy_set_speed(struct phy *phy, int lane, u64 speed)
++{
++	int ret = -ENOTSUPP;
++
++	mutex_lock(&phy->mutex);
++	if (phy->ops->set_speed) {
++		ret =  phy->ops->set_speed(phy, lane, speed);
++		if (ret < 0) {
++			dev_err(&phy->dev, "phy set speed failed --> %d\n",
++				ret);
++			goto out;
++		}
++	}
++
++out:
++	mutex_unlock(&phy->mutex);
++
++	return ret;
++}
++
+ #endif /* __DRIVERS_PHY_H */
+-- 
+1.5.5
 
