@@ -1,42 +1,36 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH v2 3/4] ata: add APM X-Gene SoC 6.0Gbps SATA PHY driver
-Date: Wed, 20 Nov 2013 13:06:56 +0100
-Message-ID: <40736575.jvgUcOHqUx@wuerfel>
-References: <1384905197-3566-1-git-send-email-lho@apm.com>
- <1384905197-3566-4-git-send-email-lho@apm.com>
- <20131120113704.GT5914@e106331-lin.cambridge.arm.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 46891] [CHECK]scsi/bnx2fc/bnx2fc_io.c:1810: bad call to memset
+Date: Wed, 20 Nov 2013 13:32:55 +0000
+Message-ID: <bug-46891-11613-Hi4Ps4YItL@https.bugzilla.kernel.org/>
+References: <bug-46891-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <20131120113704.GT5914@e106331-lin.cambridge.arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Mark Rutland <mark.rutland@arm.com>
-Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Suman Tripathi <stripathi@apm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "jcm@redhat.com" <jcm@redhat.com>, "tj@kernel.org" <tj@kernel.org>, Loc Ho <lho@apm.com>, "olof@lixom.net" <olof@lixom.net>, Tuan Phan <tphan@apm.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.19.201]:39684 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750727Ab3KTNdA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Nov 2013 08:33:00 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 23AD92072F
+	for <linux-scsi@vger.kernel.org>; Wed, 20 Nov 2013 13:32:59 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+	by mail.kernel.org (Postfix) with ESMTP id 2D9832072D
+	for <linux-scsi@vger.kernel.org>; Wed, 20 Nov 2013 13:32:57 +0000 (UTC)
+In-Reply-To: <bug-46891-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Wednesday 20 November 2013 11:37:05 Mark Rutland wrote:
-> > +static void phy_rd(void *addr, u32 *val)
-> > +{
-> > +       *val = readl(addr);
-> > +#if defined(XGENE_DBG1_CSR)
-> > +       pr_debug("SATAPHY CSR RD: 0x%p value: 0x%08x\n", addr, *val);
-> 
-> Can you not use dev_dbg here as you do elsehere?
-> 
-> Either that or make your own debug print function, with the ifdefs
-> hidden in its definition.
-> 
+https://bugzilla.kernel.org/show_bug.cgi?id=46891
 
-pr_debug() is already conditional on #ifdef DEBUG, the extra #if
-can just get removed here.
+Alan <alan@lxorguk.ukuu.org.uk> changed:
 
-	Arnd
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|NEW                         |RESOLVED
+         Resolution|---                         |CODE_FIX
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
