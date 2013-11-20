@@ -1,32 +1,72 @@
-From: Ming Lei <tom.leiming@gmail.com>
-Subject: Re: [PATCH v2 3/4] ata: add APM X-Gene SoC 6.0Gbps SATA PHY driver
-Date: Wed, 20 Nov 2013 16:57:33 +0800
-Message-ID: <CACVXFVPnRCtaFULYf307gfu4jvYpV7cgFOjmq5fOgyfb0Gp+SA@mail.gmail.com>
-References: <1384905197-3566-1-git-send-email-lho@apm.com>
-	<1384905197-3566-2-git-send-email-lho@apm.com>
-	<1384905197-3566-3-git-send-email-lho@apm.com>
-	<1384905197-3566-4-git-send-email-lho@apm.com>
+From: Jack Wang <xjtuwjp@gmail.com>
+Subject: Re: [PATCH 6/6] pm80xx : Fixed return value issue
+Date: Wed, 20 Nov 2013 10:37:46 +0100
+Message-ID: <528C82EA.7060405@gmail.com>
+References: <1384932135-16936-1-git-send-email-Viswas.G@pmcs.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1384905197-3566-4-git-send-email-lho@apm.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Loc Ho <lho@apm.com>
-Cc: Olof Johansson <olof@lixom.net>, Tejun Heo <tj@kernel.org>, Arnd Bergmann <arnd@arndb.de>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Suman Tripathi <stripathi@apm.com>, Linux SCSI List <linux-scsi@vger.kernel.org>, jcm@redhat.com, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tuan Phan <tphan@apm.com>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ea0-f172.google.com ([209.85.215.172]:45577 "EHLO
+	mail-ea0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751492Ab3KTJhc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Nov 2013 04:37:32 -0500
+Received: by mail-ea0-f172.google.com with SMTP id q10so1503478ead.17
+        for <linux-scsi@vger.kernel.org>; Wed, 20 Nov 2013 01:37:31 -0800 (PST)
+In-Reply-To: <1384932135-16936-1-git-send-email-Viswas.G@pmcs.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Viswas G <Viswas.G@pmcs.com>
+Cc: linux-scsi@vger.kernel.org, Vasanthalakshmi.Tharmarajan@pmcs.com, Suresh.Thiagarajan@pmcs.com
 
-On Wed, Nov 20, 2013 at 7:53 AM, Loc Ho <lho@apm.com> wrote:
-> +
-> +       sprintf(name, "xgene-ahci-phy-%08X", (u32) ctx->csr_phys);
-> +       ctx->phy = devm_phy_create(ctx->dev, (u32) ctx->csr_phys,
-> +                                  &xgene_phy_ops, name);
+On 11/20/2013 08:22 AM, Viswas G wrote:
+> pm8001_get_gsm_dump() was returning "1" in error case
+> instead of negative error code.
+> 
+> Signed-off-by: Viswas G <Viswas.G@pmcs.com>
+Looks good, thanks
+Reviewed-by: Jack Wang <jinpu.wang@profitbricks.com>
 
-The devm_phy_create() API has changed, so suggest you make your
-patch against -next tree.
+> ---
+>  drivers/scsi/pm8001/pm8001_hwi.c |    8 ++++----
+>  1 files changed, 4 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
+> index f6ea277..e2932ef 100644
+> --- a/drivers/scsi/pm8001/pm8001_hwi.c
+> +++ b/drivers/scsi/pm8001/pm8001_hwi.c
+> @@ -5020,7 +5020,7 @@ pm8001_get_gsm_dump(struct device *cdev, u32 length, char* buf)
+>  	/* check max is 1 Mbytes */
+>  	if ((length > 0x100000) || (gsm_dump_offset & 3) ||
+>  		((gsm_dump_offset + length) > 0x1000000))
+> -			return 1;
+> +			return -EINVAL;
+>  
+>  	if (pm8001_ha->chip_id == chip_8001)
+>  		bar = 2;
+> @@ -5048,12 +5048,12 @@ pm8001_get_gsm_dump(struct device *cdev, u32 length, char* buf)
+>  				gsm_base = GSM_BASE;
+>  				if (-1 == pm8001_bar4_shift(pm8001_ha,
+>  						(gsm_base + shift_value)))
+> -					return 1;
+> +					return -EINVAL;
+>  			} else {
+>  				gsm_base = 0;
+>  				if (-1 == pm80xx_bar4_shift(pm8001_ha,
+>  						(gsm_base + shift_value)))
+> -					return 1;
+> +					return -EINVAL;
+>  			}
+>  			gsm_dump_offset = (gsm_dump_offset + offset) &
+>  						0xFFFF0000;
+> @@ -5073,7 +5073,7 @@ pm8001_get_gsm_dump(struct device *cdev, u32 length, char* buf)
+>  	}
+>  	/* Shift back to BAR4 original address */
+>  	if (-1 == pm8001_bar4_shift(pm8001_ha, 0))
+> -			return 1;
+> +			return -EINVAL;
+>  	pm8001_ha->fatal_forensic_shift_offset += 1024;
+>  
+>  	if (pm8001_ha->fatal_forensic_shift_offset >= 0x100000)
+> 
 
-Thanks,
---
-Ming Lei
-
--- 
-Ming Lei
