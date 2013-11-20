@@ -1,74 +1,80 @@
-From: Loc Ho <lho@apm.com>
-Subject: [PATCH v2 4/4] arm64: Add APM X-Gene SoC 6.0Gbps SATA PHY DTS entries
-Date: Tue, 19 Nov 2013 16:53:17 -0700
-Message-ID: <1384905197-3566-5-git-send-email-lho@apm.com>
-References: <1384905197-3566-1-git-send-email-lho@apm.com>
- <1384905197-3566-2-git-send-email-lho@apm.com>
- <1384905197-3566-3-git-send-email-lho@apm.com>
- <1384905197-3566-4-git-send-email-lho@apm.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCHv2 00/18] ALUA update and Referrals support
+Date: Tue, 19 Nov 2013 16:06:16 -0800
+Message-ID: <1384905976.4307.39.camel@haakon3.risingtidesystems.com>
+References: <1384848483-3771-1-git-send-email-hare@suse.de>
+	 <1384904569.4307.34.camel@haakon3.risingtidesystems.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod5og115.obsmtp.com ([64.18.0.246]:58700 "HELO
-	exprod5og115.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753505Ab3KSXxt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Nov 2013 18:53:49 -0500
-Received: by mail-pd0-f179.google.com with SMTP id r10so5891418pdi.10
-        for <linux-scsi@vger.kernel.org>; Tue, 19 Nov 2013 15:53:48 -0800 (PST)
-In-Reply-To: <1384905197-3566-4-git-send-email-lho@apm.com>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:34860 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753123Ab3KTAG1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Nov 2013 19:06:27 -0500
+In-Reply-To: <1384904569.4307.34.camel@haakon3.risingtidesystems.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, jcm@redhat.com, Loc Ho <lho@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
+To: Hannes Reinecke <hare@suse.de>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-arm64: Add APM X-Gene SoC 6.0Gbps SATA PHY DTS entries
+On Tue, 2013-11-19 at 15:42 -0800, Nicholas A. Bellinger wrote:
+> Hey Hannes!
+> 
+> On Tue, 2013-11-19 at 09:07 +0100, Hannes Reinecke wrote:
+> > Hi Nic,
+> > 
+> > here's the second version of my ALUA update & Referrals support patches.
+> > As per request I've split up the supported states into individual
+> > attributes, and while there I've also renamed the rather confusing
+> > 'alua_access_type' and 'alua_access_status' into 'alua_management_type'
+> > and 'alua_status_modification', respectively.
+> > 
+> > The other features are:
+> > 
+> > - Make supported states configurable:
+> >   We should make the list of supported ALUA states configurable,
+> >   as some setups would possibly like to support a small subset
+> >   of ALUA states only.
+> > - Asynchronous transitioning: I've switched 'transitioning'
+> >   handling to use a workqueue, that should allow us to simulate
+> >   asynchronous transitioning modes. IE TCM should now be capable
+> >   of handling requests while in transitioning, and properly terminate
+> >   these with the correct sense code.
+> > - Include target device descriptor in VPD page 83
+> >   For the ALUA device handler we'd need to identify the target device
+> >   where a given target port belongs to. So include the respective
+> >   values in the VPD page.
+> > 
+> > And, of course, referrals support.
+> > 
+> 
+> Ok, even though it is late, I've applied this series to for-next.
+> 
+> So the one main concern here is that the user visible changes to
+> existing ALUA configfs attributes end up breaking the lio-utils code
+> related to ALUA that depend upon them, which will need to be resolved
+> separately.
+> 
+> However, this breakage is pretty minor and having more sensible +
+> consistent attribute naming is worth the inconvenience.
+> 
 
-This patch adds the DTS entries for the APM X-Gene SoC 6.0Gbps SATA PHY
-driver. The PHY for controller 0 and 1 are enabled by default.
+OK, I'm having second thoughts about the user-visible changes to
+existing configfs attributes..
 
-Signed-off-by: Loc Ho <lho@apm.com>
-Signed-off-by: Tuan Phan <tphan@apm.com>
-Signed-off-by: Suman Tripathi <stripathi@apm.com>
----
- arch/arm64/boot/dts/apm-storm.dtsi |   28 ++++++++++++++++++++++++++++
- 1 files changed, 28 insertions(+), 0 deletions(-)
+I'm fine with these types of changes, but need some more time to sort
+out how it's going to effect existing userspace dependencies.  The one
+that immediately made do a double take is changing 'alua_access_state'
+to change input/output, but keep the same attribute name which makes
+backwards compatibility alot more tricky.
 
-diff --git a/arch/arm64/boot/dts/apm-storm.dtsi b/arch/arm64/boot/dts/apm-storm.dtsi
-index 359d7b6..1d1c8bc 100644
---- a/arch/arm64/boot/dts/apm-storm.dtsi
-+++ b/arch/arm64/boot/dts/apm-storm.dtsi
-@@ -193,5 +193,33 @@
- 			reg = <0x0 0x17000014 0x0 0x100>;
- 			mask = <0x1>;
- 		};
-+
-+		sataphy0: sataphy@1f210000 {
-+			compatible = "apm,xgene-ahci-phy";
-+			reg = <0x0 0x1f210000 0x0 0x10000>;
-+			#phy-cells = <0>;
-+			status = "na";
-+			txbooster = <0x2 0x2 0x2 0x2 0x2 0x2>;
-+			txskew = <0xa 0xa 0xa 0xa 0xa 0xa>;
-+		};
-+
-+		sataphy1: sataphy@1f220000 {
-+			compatible = "apm,xgene-ahci-phy";
-+			reg = <0x0 0x1f220000 0x0 0x10000>;
-+			#phy-cells = <0>;
-+			status = "ok";
-+			txbooster = <0x2 0x2 0x2 0x2 0x2 0x2>;
-+			txskew = <0xa 0xa 0xa 0x5 0x5 0x5>;
-+		};
-+
-+		sataphy2: sataphy@1f230000 {
-+			compatible = "apm,xgene-ahci-phy2";
-+			reg = <0x0 0x1f230000 0x0 0x10000
-+			       0x0 0x1f2d0000 0x0 0x10000>;
-+			#phy-cells = <0>;
-+			status = "ok";
-+			txbooster = <0x3 0x3 0x3 0x3 0x3 0x3>;
-+			txskew = <0xa 0xa 0xa 0xc 0xc 0xc>;
-+		};
- 	};
- };
--- 
-1.5.5
+So all that said, let's defer to v3.14 for this particular series, and
+sort out the user visable changes first, and make adjustments as
+necessary from there.
+
+WDYT..?
+
+--nab
+
 
