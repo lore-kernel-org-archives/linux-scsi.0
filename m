@@ -1,27 +1,92 @@
-From: Loc Ho <lho@apm.com>
-Subject: Re: [PATCH v2 4/4] arm64: Add APM X-Gene SoC 6.0Gbps SATA PHY DTS entries
-Date: Tue, 19 Nov 2013 16:08:42 -0800
-Message-ID: <CAPw-ZTm8a2jj1ggu0wBgEgaZFphTpAsSROXE0_BjQFqH12crYw@mail.gmail.com>
-References: <1384905197-3566-1-git-send-email-lho@apm.com>
-	<1384905197-3566-2-git-send-email-lho@apm.com>
-	<1384905197-3566-3-git-send-email-lho@apm.com>
-	<1384905197-3566-4-git-send-email-lho@apm.com>
-	<1384905197-3566-5-git-send-email-lho@apm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1384905197-3566-5-git-send-email-lho@apm.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Olof Johansson <olof@lixom.net>, Tejun Heo <tj@kernel.org>, Arnd Bergmann <arnd@arndb.de>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Jon Masters <jcm@redhat.com>, Loc Ho <lho@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
+From: Viswas G <Viswas.G@pmcs.com>
+Subject: [PATCH 5/6] pm80xx : Removing redundant code snippets
+Date: Wed, 20 Nov 2013 12:51:04 +0530
+Message-ID: <1384932064-16870-1-git-send-email-Viswas.G@pmcs.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:60302 "EHLO
+	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751080Ab3KTHZ5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Nov 2013 02:25:57 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: xjtuwjp@gmail.com, Vasanthalakshmi.Tharmarajan@pmcs.com, Suresh.Thiagarajan@pmcs.com, Viswas.G@pmcs.com
 
- Hi,
+Removed redundant code snipptes in pm8001_hwi.c
+and pm8001_ctl.c
 
-> +                       txbooster = <0x2 0x2 0x2 0x2 0x2 0x2>;
-> +                       txskew = <0xa 0xa 0xa 0xa 0xa 0xa>;
-[Loc Ho]
-These isn't correct. They should be txboostgain and txeyetuning. I
-will fix these in the next version.
+Signed-off-by: Viswas G <Viswas.G@pmcs.com>
+---
+ drivers/scsi/pm8001/pm8001_ctl.c |   22 ++++++++--------------
+ drivers/scsi/pm8001/pm8001_hwi.c |    7 +------
+ 2 files changed, 9 insertions(+), 20 deletions(-)
 
--Loc
+diff --git a/drivers/scsi/pm8001/pm8001_ctl.c b/drivers/scsi/pm8001/pm8001_ctl.c
+index a04b4ff..1e055ae 100644
+--- a/drivers/scsi/pm8001/pm8001_ctl.c
++++ b/drivers/scsi/pm8001/pm8001_ctl.c
+@@ -323,16 +323,13 @@ static ssize_t pm8001_ctl_ib_queue_log_show(struct device *cdev,
+ 	int offset;
+ 	char *str = buf;
+ 	int start = 0;
+-#define IB_MEMMAP(c)		\
+-		(*(u32 *)((u8 *)pm8001_ha->		\
+-		memoryMap.region[IB].virt_ptr +		\
++#define IB_MEMMAP(c)	\
++		(*(u32 *)((u8 *)pm8001_ha->	\
++		memoryMap.region[IB].virt_ptr +	\
+ 		pm8001_ha->evtlog_ib_offset + (c)))
+ 
+ 	for (offset = 0; offset < IB_OB_READ_TIMES; offset++) {
+-		if (pm8001_ha->chip_id != chip_8001)
+-			str += sprintf(str, "0x%08x\n", IB_MEMMAP(start));
+-		else
+-			str += sprintf(str, "0x%08x\n", IB_MEMMAP(start));
++		str += sprintf(str, "0x%08x\n", IB_MEMMAP(start));
+ 		start = start + 4;
+ 	}
+ 	pm8001_ha->evtlog_ib_offset += SYSFS_OFFSET;
+@@ -363,16 +360,13 @@ static ssize_t pm8001_ctl_ob_queue_log_show(struct device *cdev,
+ 	int offset;
+ 	char *str = buf;
+ 	int start = 0;
+-#define OB_MEMMAP(c)		\
+-		(*(u32 *)((u8 *)pm8001_ha->		\
+-		memoryMap.region[OB].virt_ptr +		\
++#define OB_MEMMAP(c)	\
++		(*(u32 *)((u8 *)pm8001_ha->	\
++		memoryMap.region[OB].virt_ptr +	\
+ 		pm8001_ha->evtlog_ob_offset + (c)))
+ 
+ 	for (offset = 0; offset < IB_OB_READ_TIMES; offset++) {
+-		if (pm8001_ha->chip_id != chip_8001)
+-			str += sprintf(str, "0x%08x\n", OB_MEMMAP(start));
+-		else
+-			str += sprintf(str, "0x%08x\n", OB_MEMMAP(start));
++		str += sprintf(str, "0x%08x\n", OB_MEMMAP(start));
+ 		start = start + 4;
+ 	}
+ 	pm8001_ha->evtlog_ob_offset += SYSFS_OFFSET;
+diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
+index b23f49d..f6ea277 100644
+--- a/drivers/scsi/pm8001/pm8001_hwi.c
++++ b/drivers/scsi/pm8001/pm8001_hwi.c
+@@ -5072,13 +5072,8 @@ pm8001_get_gsm_dump(struct device *cdev, u32 length, char* buf)
+ 		direct_data += sprintf(direct_data, "%08x ", value);
+ 	}
+ 	/* Shift back to BAR4 original address */
+-	if (pm8001_ha->chip_id == chip_8001) {
+-		if (-1 == pm8001_bar4_shift(pm8001_ha, 0))
++	if (-1 == pm8001_bar4_shift(pm8001_ha, 0))
+ 			return 1;
+-	} else {
+-		if (-1 == pm80xx_bar4_shift(pm8001_ha, 0))
+-			return 1;
+-	}
+ 	pm8001_ha->fatal_forensic_shift_offset += 1024;
+ 
+ 	if (pm8001_ha->fatal_forensic_shift_offset >= 0x100000)
+-- 
+1.7.1
+
