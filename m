@@ -1,114 +1,61 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCHv2 00/18] ALUA update and Referrals support
-Date: Wed, 20 Nov 2013 08:44:48 +0100
-Message-ID: <528C6870.6090607@suse.de>
-References: <1384848483-3771-1-git-send-email-hare@suse.de>	 <1384904569.4307.34.camel@haakon3.risingtidesystems.com> <1384905976.4307.39.camel@haakon3.risingtidesystems.com>
+From: <vmohan@brocade.com>
+Subject: [PATCH 5/8] bfa: Observed auto D-port mode instead of manual
+Date: Tue, 19 Nov 2013 23:05:43 -0800
+Message-ID: <1384931146-3702-6-git-send-email-vmohan@brocade.com>
+References: <1384931146-3702-1-git-send-email-vmohan@brocade.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1384905976.4307.39.camel@haakon3.risingtidesystems.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:58152 "EHLO
+	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751353Ab3KTHsK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Nov 2013 02:48:10 -0500
+In-Reply-To: <1384931146-3702-1-git-send-email-vmohan@brocade.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: agurumur@brocade.com, james.bottomley@hansenpartnership.com
 
-On 11/20/2013 01:06 AM, Nicholas A. Bellinger wrote:
-> On Tue, 2013-11-19 at 15:42 -0800, Nicholas A. Bellinger wrote:
->> Hey Hannes!
->>
->> On Tue, 2013-11-19 at 09:07 +0100, Hannes Reinecke wrote:
->>> Hi Nic,
->>>
->>> here's the second version of my ALUA update & Referrals support pat=
-ches.
->>> As per request I've split up the supported states into individual
->>> attributes, and while there I've also renamed the rather confusing
->>> 'alua_access_type' and 'alua_access_status' into 'alua_management_t=
-ype'
->>> and 'alua_status_modification', respectively.
->>>
->>> The other features are:
->>>
->>> - Make supported states configurable:
->>>   We should make the list of supported ALUA states configurable,
->>>   as some setups would possibly like to support a small subset
->>>   of ALUA states only.
->>> - Asynchronous transitioning: I've switched 'transitioning'
->>>   handling to use a workqueue, that should allow us to simulate
->>>   asynchronous transitioning modes. IE TCM should now be capable
->>>   of handling requests while in transitioning, and properly termina=
-te
->>>   these with the correct sense code.
->>> - Include target device descriptor in VPD page 83
->>>   For the ALUA device handler we'd need to identify the target devi=
-ce
->>>   where a given target port belongs to. So include the respective
->>>   values in the VPD page.
->>>
->>> And, of course, referrals support.
->>>
->>
->> Ok, even though it is late, I've applied this series to for-next.
->>
->> So the one main concern here is that the user visible changes to
->> existing ALUA configfs attributes end up breaking the lio-utils code
->> related to ALUA that depend upon them, which will need to be resolve=
-d
->> separately.
->>
->> However, this breakage is pretty minor and having more sensible +
->> consistent attribute naming is worth the inconvenience.
->>
->=20
-> OK, I'm having second thoughts about the user-visible changes to
-> existing configfs attributes..
->=20
-> I'm fine with these types of changes, but need some more time to sort
-> out how it's going to effect existing userspace dependencies.  The on=
-e
-> that immediately made do a double take is changing 'alua_access_state=
-'
-> to change input/output, but keep the same attribute name which makes
-> backwards compatibility alot more tricky.
->=20
-It's just a matter of parsing, innit?
+From: Vijaya Mohan Guvva <vmohan@brocade.com>
 
-> So all that said, let's defer to v3.14 for this particular series, an=
-d
-> sort out the user visable changes first, and make adjustments as
-> necessary from there.
->=20
-> WDYT..?
->=20
-Sigh.
-Another patchset getting nowhere.
+Observed Auto mode in the HBA side while doing manual D-Port test on the
+switch side. Mode is not passed to BFA from firmware when the test is
+triggered by switch side. BFA just blindly using Auto mode.
 
-Okay, here's the thing:
-The patchset can be split into three individual parts:
-The ALUA update proper, which affects only the internal flow of
-control (patches 1-6 and 11-16), then there's the ALUA configfs
-modifications (patches 7-10) and the Referrals support (17 and 18).
-If you have second thoughts you should be able to pull patches 7-10;
-the rest will work as designed even without them.
+Signed-off-by: Vijaya Mohan Guvva <vmohan@brocade.com>
+---
+ drivers/scsi/bfa/bfa_svc.c | 2 +-
+ drivers/scsi/bfa/bfi.h     | 3 ++-
+ 2 files changed, 3 insertions(+), 2 deletions(-)
 
-But then, there's not much difference on having all the patches in
-for 3.13, and sort out the userspace then, or wait for the next
-round and adjust the userspace during that time.
+diff --git a/drivers/scsi/bfa/bfa_svc.c b/drivers/scsi/bfa/bfa_svc.c
+index 6c41e57..625225f 100644
+--- a/drivers/scsi/bfa/bfa_svc.c
++++ b/drivers/scsi/bfa/bfa_svc.c
+@@ -6758,7 +6758,7 @@ bfa_dport_scn(struct bfa_dport_s *dport, struct bfi_diag_dport_scn_s *msg)
+ 		dport->rp_pwwn = msg->info.teststart.pwwn;
+ 		dport->rp_nwwn = msg->info.teststart.nwwn;
+ 		dport->lpcnt = cpu_to_be32(msg->info.teststart.numfrm);
+-		bfa_dport_result_start(dport, BFA_DPORT_OPMODE_AUTO);
++		bfa_dport_result_start(dport, msg->info.teststart.mode);
+ 		break;
+ 
+ 	case BFI_DPORT_SCN_SUBTESTSTART:
+diff --git a/drivers/scsi/bfa/bfi.h b/drivers/scsi/bfa/bfi.h
+index 7192e99..1d97a22 100644
+--- a/drivers/scsi/bfa/bfi.h
++++ b/drivers/scsi/bfa/bfi.h
+@@ -1144,7 +1144,8 @@ struct bfi_diag_dport_scn_teststart_s {
+ 	wwn_t	pwwn;	/* switch port wwn. 8 bytes */
+ 	wwn_t	nwwn;	/* switch node wwn. 8 bytes */
+ 	u8	type;	/* bfa_diag_dport_test_type_e */
+-	u8	rsvd[3];
++	u8	mode;	/* bfa_diag_dport_test_opmode */
++	u8	rsvd[2];
+ 	u32	numfrm; /* from switch uint in 1M */
+ };
+ 
+-- 
+1.8.2.1
 
-Anyway, I don't mind either way. You're the maintainer, you get to
-decide. As least I got feedback about the patchset, which is more
-than one can hope for nowadays :-(
-
-Give me a shout what you prefer, and I'll adapt the patchset
-accordingly.
-
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
-)
