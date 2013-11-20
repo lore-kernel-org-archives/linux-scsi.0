@@ -1,16 +1,16 @@
 From: <vmohan@brocade.com>
-Subject: [PATCH 8/8] bfa: Driver version upgrade to 3.2.23.0
-Date: Tue, 19 Nov 2013 23:05:46 -0800
-Message-ID: <1384931146-3702-9-git-send-email-vmohan@brocade.com>
+Subject: [PATCH 4/8] bfa: Fix for bcu or hcm faa query hang
+Date: Tue, 19 Nov 2013 23:05:42 -0800
+Message-ID: <1384931146-3702-5-git-send-email-vmohan@brocade.com>
 References: <1384931146-3702-1-git-send-email-vmohan@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:36175 "EHLO
+Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:58152 "EHLO
 	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751080Ab3KTHmH (ORCPT
+	by vger.kernel.org with ESMTP id S1751080Ab3KTHoH (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Nov 2013 02:42:07 -0500
+	Wed, 20 Nov 2013 02:44:07 -0500
 In-Reply-To: <1384931146-3702-1-git-send-email-vmohan@brocade.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,45 +19,42 @@ Cc: agurumur@brocade.com, james.bottomley@hansenpartnership.com
 
 From: Vijaya Mohan Guvva <vmohan@brocade.com>
 
-Patch includes changes to upgrade bfa driver version to 3.2.23.0 and use
-firmware version 3.2.3.0
+This patch set fixes the issue of brocade management utility hang
+(bcu/HCM) when faa attributes are queried from multiple application
+threads. Hang was due to race between the threads and completion handler
+corruption.
 
 Signed-off-by: Vijaya Mohan Guvva <vmohan@brocade.com>
 ---
- drivers/scsi/bfa/bfad.c     | 6 +++---
- drivers/scsi/bfa/bfad_drv.h | 2 +-
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/bfa/bfa_core.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
-index bd17757..e85926c 100644
---- a/drivers/scsi/bfa/bfad.c
-+++ b/drivers/scsi/bfa/bfad.c
-@@ -63,9 +63,9 @@ int		max_rport_logins = BFA_FCS_MAX_RPORT_LOGINS;
- u32	bfi_image_cb_size, bfi_image_ct_size, bfi_image_ct2_size;
- u32	*bfi_image_cb, *bfi_image_ct, *bfi_image_ct2;
+diff --git a/drivers/scsi/bfa/bfa_core.c b/drivers/scsi/bfa/bfa_core.c
+index 520540a..e3f67b0 100644
+--- a/drivers/scsi/bfa/bfa_core.c
++++ b/drivers/scsi/bfa/bfa_core.c
+@@ -1367,10 +1367,6 @@ bfa_faa_query(struct bfa_s *bfa, struct bfa_faa_attr_s *attr,
+ 	struct bfa_iocfc_s      *iocfc = &bfa->iocfc;
+ 	bfa_status_t            status;
  
--#define BFAD_FW_FILE_CB		"cbfw-3.2.1.1.bin"
--#define BFAD_FW_FILE_CT		"ctfw-3.2.1.1.bin"
--#define BFAD_FW_FILE_CT2	"ct2fw-3.2.1.1.bin"
-+#define BFAD_FW_FILE_CB		"cbfw-3.2.3.0.bin"
-+#define BFAD_FW_FILE_CT		"ctfw-3.2.3.0.bin"
-+#define BFAD_FW_FILE_CT2	"ct2fw-3.2.3.0.bin"
+-	iocfc->faa_args.faa_attr = attr;
+-	iocfc->faa_args.faa_cb.faa_cbfn = cbfn;
+-	iocfc->faa_args.faa_cb.faa_cbarg = cbarg;
+-
+ 	status = bfa_faa_validate_request(bfa);
+ 	if (status != BFA_STATUS_OK)
+ 		return status;
+@@ -1378,6 +1374,10 @@ bfa_faa_query(struct bfa_s *bfa, struct bfa_faa_attr_s *attr,
+ 	if (iocfc->faa_args.busy == BFA_TRUE)
+ 		return BFA_STATUS_DEVBUSY;
  
- static u32 *bfad_load_fwimg(struct pci_dev *pdev);
- static void bfad_free_fwimg(void);
-diff --git a/drivers/scsi/bfa/bfad_drv.h b/drivers/scsi/bfa/bfad_drv.h
-index cf56d3d..8b97877 100644
---- a/drivers/scsi/bfa/bfad_drv.h
-+++ b/drivers/scsi/bfa/bfad_drv.h
-@@ -57,7 +57,7 @@
- #ifdef BFA_DRIVER_VERSION
- #define BFAD_DRIVER_VERSION    BFA_DRIVER_VERSION
- #else
--#define BFAD_DRIVER_VERSION    "3.2.21.1"
-+#define BFAD_DRIVER_VERSION    "3.2.23.0"
- #endif
- 
- #define BFAD_PROTO_NAME FCPI_NAME
++	iocfc->faa_args.faa_attr = attr;
++	iocfc->faa_args.faa_cb.faa_cbfn = cbfn;
++	iocfc->faa_args.faa_cb.faa_cbarg = cbarg;
++
+ 	iocfc->faa_args.busy = BFA_TRUE;
+ 	memset(&faa_attr_req, 0, sizeof(struct bfi_faa_query_s));
+ 	bfi_h2i_set(faa_attr_req.mh, BFI_MC_IOCFC,
 -- 
 1.8.2.1
 
