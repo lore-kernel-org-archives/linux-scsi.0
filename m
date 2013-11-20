@@ -1,38 +1,40 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH v2 1/4] PHY: Add function set_speed to generic PHY framework
-Date: Wed, 20 Nov 2013 22:06:57 +0400
-Message-ID: <528CFA41.7020207@cogentembedded.com>
-References: <1384905197-3566-1-git-send-email-lho@apm.com> <1384905197-3566-2-git-send-email-lho@apm.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v2 3/4] ata: add APM X-Gene SoC 6.0Gbps SATA PHY driver
+Date: Wed, 20 Nov 2013 19:46:52 +0100
+Message-ID: <201311201946.52659.arnd@arndb.de>
+References: <1384905197-3566-1-git-send-email-lho@apm.com>
+ <201311201641.20230.arnd@arndb.de>
+ <CAOS58YMEXhuUApywcOBGh4mFHKhiDJw2pKLN5i80ocvqRX4UiQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-lb0-f169.google.com ([209.85.217.169]:61797 "EHLO
-	mail-lb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754462Ab3KTSHP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Nov 2013 13:07:15 -0500
-Received: by mail-lb0-f169.google.com with SMTP id y6so2183994lbh.0
-        for <linux-scsi@vger.kernel.org>; Wed, 20 Nov 2013 10:07:14 -0800 (PST)
-In-Reply-To: <1384905197-3566-2-git-send-email-lho@apm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <CAOS58YMEXhuUApywcOBGh4mFHKhiDJw2pKLN5i80ocvqRX4UiQ@mail.gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Tejun Heo <tj@kernel.org>
+Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Suman Tripathi <stripathi@apm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, jcm@redhat.com, linux-ide <linux-ide@vger.kernel.org>, Loc Ho <lho@apm.com>, olof@lixom.net, Tuan Phan <tphan@apm.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Loc Ho <lho@apm.com>, olof@lixom.net, tj@kernel.org, arnd@arndb.de
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, jcm@redhat.com
 
-Hello.
+On Wednesday 20 November 2013, Tejun Heo wrote:
 
-On 20=11-2013 3:53, Loc Ho wrote:
+> On Wed, Nov 20, 2013 at 10:41 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+> > It needs to be in drivers/phy, which is currently being prepared for
+> > the next merge window and which contains the generic interface used
+> > in this driver.
+> 
+> Ah, cool, so I don't need to worry about this one, right?
 
-> PHY: Add function set_speed to generic PHY framework
+Right, we just need to make sure the patches are staged the right
+way when they go through different subsystem maintainers. There
+should not be any build-time dependencies, so I think it won't
+be an issue.
 
-    There's no need to duplicate the subject in the changelog verbatim.
-
-> This patch adds function set_speed to the generic PHY
-> framework operation structure. This function can be
-> called to instruct the PHY underlying layer at specified
-> lane to configure for specified speed in hertz.
-
-> Signed-off-by: Loc Ho <lho@apm.com>
-
-WBR, Sergei
-
+	Arnd
