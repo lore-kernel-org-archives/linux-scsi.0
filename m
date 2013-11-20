@@ -1,45 +1,35 @@
-From: Phillip Susi <psusi@ubuntu.com>
-Subject: Re: [PATCH 1/3] sd: don't bother spinning up disks on resume
-Date: Wed, 20 Nov 2013 09:48:35 -0500
-Message-ID: <528CCBC3.3030002@ubuntu.com>
-References: <527AF287.7020700@ubuntu.com>		 <927e15641f27b46f206f8ae8110201c8fd77b7e1.1383789225.git.psusi@ubuntu.com>		 <527BDA11.6060603@interlog.com> <527C0349.5010301@ubuntu.com>	 <1384626031.3614.7.camel@dabdike.int.hansenpartnership.com>	 <52883CE9.9040102@ubuntu.com> <1384670620.3614.24.camel@dabdike.int.hansenpartnership.com> <5288EBA6.3070609@ubuntu.com> <5289573A.9070307@interlog.com> <52896806.4040907@ubuntu.com> <528A382E.10400@ubuntu.com> <528CC5C8.6080700@start.ca>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v2 3/4] ata: add APM X-Gene SoC 6.0Gbps SATA PHY driver
+Date: Wed, 20 Nov 2013 10:06:58 -0500
+Message-ID: <20131120150658.GB28946@htj.dyndns.org>
+References: <1384905197-3566-1-git-send-email-lho@apm.com>
+ <1384905197-3566-2-git-send-email-lho@apm.com>
+ <1384905197-3566-3-git-send-email-lho@apm.com>
+ <1384905197-3566-4-git-send-email-lho@apm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <528CC5C8.6080700@start.ca>
+Content-Disposition: inline
+In-Reply-To: <1384905197-3566-4-git-send-email-lho@apm.com>
 Sender: linux-ide-owner@vger.kernel.org
-To: Mark Lord <kernel@start.ca>, dgilbert@interlog.com, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: todd.e.brandt@linux.intel.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, tj@kernel.org
+To: Loc Ho <lho@apm.com>
+Cc: olof@lixom.net, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, jcm@redhat.com, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 List-Id: linux-scsi@vger.kernel.org
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+Hey, guys.
 
-On 11/20/2013 9:23 AM, Mark Lord wrote:
-> Yeah, solve that, and you're golden. I totally understand the
-> motivation for this patch, and would love to have it working on my
-> machines here too.
-> 
-> But it may have to be some kind of sysfs optional setting, 
-> defaulting to current behaviour, to keep the server keepers happy.
+On Tue, Nov 19, 2013 at 04:53:16PM -0700, Loc Ho wrote:
+> This patch adds support for APM X-Gene SoC 6.0Gbps SATA PHY. This is the
+> physical layer interface for the corresponding SATA host controller. This
+> driver uses the new PHY generic framework posted by Kishon Vijay Abrahm.
 
-My original idea was actually to just have the system resume force the
-runtime pm status to suspended, then it will take care of calling the
-runtime resume which can easily start the drive, but I was hoping to
-get it working whether or not runtime pm is configured.  I may just
-have to fall back to that.
+Hmm... this is related to ahci but isn't even a libata driver and is
+the first such driver proposed.  Are we sure drivers/ata is the best
+home for this?  Shouldn't we create a separate directory somewhere?
+It's confusing, at least to me, to have non-libata driver under
+drivers/ata.
 
+Thanks.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.17 (MingW32)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iQEcBAEBAgAGBQJSjMvDAAoJEJrBOlT6nu75J5QH/2APABstv5HejNp5R4uvmAuL
-xTZyHHOFvcMBDpCFLtlWK6PhnKmN7C/eFlzc7xaadtd0wmgjOqZVLTgfYSWBON6X
-/kRz/QtDMhsppah7t1T/QzPPQ/z2j4j2/ffwDRRN4bCdM39B/QQCUeVCxVK0mEx3
-w5A2Xiro1gAknh1xb/0SfSb9M35H5bLBt4Pz5Ql/75to9jEeH0MlTthZmm+CJPC/
-RcBgCkOG6kEOeqCj4tehnTOrs4a8ghdeGNnR6W6UDaeRh3QjRwOvAmwIbZsxkXgs
-XSP52adzt5fnZi8uQAzV0bIGN+8Zttx0PHdl3AsVt56CMfdfAHVbL1RVo+Pl85E=
-=fnz3
------END PGP SIGNATURE-----
+-- 
+tejun
