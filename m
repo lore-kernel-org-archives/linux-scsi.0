@@ -1,75 +1,61 @@
-From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Subject: RE: Question on SCSI target scan
-Date: Thu, 21 Nov 2013 17:37:04 +0000
-Message-ID: <94D0CD8314A33A4D9D801C0FE68B4029547CE0FB@G4W3202.americas.hpqcorp.net>
-References: <5645D6F831469342AF2BC26CC827D68C5940032A27@BRM-EXCH-3.corp.brocade.com>
-	 <94D0CD8314A33A4D9D801C0FE68B4029547B9343@G9W0745.americas.hpqcorp.net>
- <1384795712.3839.6.camel@localhost.localdomain>
+From: Loc Ho <lho@apm.com>
+Subject: Re: [PATCH v4 2/4] Documentation:: Add documentation for APM X-Gene
+ SoC SATA host controller DTS binding
+Date: Thu, 21 Nov 2013 09:49:42 -0800
+Message-ID: <CAPw-ZTmyUjqcHhcqpjvwY-+xOKSyJh1MwA=KgjdDzmWpPXE3GA@mail.gmail.com>
+References: <1385014298-15700-1-git-send-email-lho@apm.com>
+	<1385014298-15700-2-git-send-email-lho@apm.com>
+	<1385014298-15700-3-git-send-email-lho@apm.com>
+	<201311211316.03647.arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t0016.houston.hp.com ([15.201.24.19]:8095 "EHLO
-	g4t0016.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751373Ab3KURiC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Nov 2013 12:38:02 -0500
-In-Reply-To: <1384795712.3839.6.camel@localhost.localdomain>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <201311211316.03647.arnd@arndb.de>
+Sender: linux-ide-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Olof Johansson <olof@lixom.net>, Tejun Heo <tj@kernel.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Jon Masters <jcm@redhat.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "emilne@redhat.com" <emilne@redhat.com>
-Cc: Ramesh Chikkanayakanahally <rcnagara@Brocade.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jbottomley@parallels.com" <jbottomley@parallels.com>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogRXdhbiBNaWxuZSBbbWFp
-bHRvOmVtaWxuZUByZWRoYXQuY29tXQ0KPiBTZW50OiBNb25kYXksIDE4IE5vdmVtYmVyLCAyMDEz
-IDExOjI5IEFNDQo+IFRvOiBFbGxpb3R0LCBSb2JlcnQgKFNlcnZlciBTdG9yYWdlKQ0KPiBDYzog
-UmFtZXNoIENoaWtrYW5heWFrYW5haGFsbHk7IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnOw0K
-PiBqYm90dG9tbGV5QHBhcmFsbGVscy5jb20NCj4gU3ViamVjdDogUkU6IFF1ZXN0aW9uIG9uIFND
-U0kgdGFyZ2V0IHNjYW4NCj4gDQo+IE9uIEZyaSwgMjAxMy0xMS0xNSBhdCAyMzo1MyArMDAwMCwg
-RWxsaW90dCwgUm9iZXJ0IChTZXJ2ZXIgU3RvcmFnZSkNCj4gd3JvdGU6DQo+ID4gQmV3YXJlIHRo
-YXQganVzdCBiZWNhdXNlIHRoZSBMVU4gaW52ZW50b3J5IGlzIHRoZSBzYW1lIGRvZXNuJ3QgbWVh
-bg0KPiA+IHRoZSBsb2dpY2FsIHVuaXRzIGFyZSB0aGUgc2FtZS4gIEEgbG9naWNhbCB1bml0IGF0
-IExVTiBYIG1pZ2h0IGhhdmUgYmVlbg0KPiA+IGRlbGV0ZWQgYW5kIGFub3RoZXIgbG9naWNhbCB1
-bml0IGNyZWF0ZWQgYW5kIGFzc2lnbmVkIHRvIExVTiBYLCBidXQNCj4gPiBub3cgY29udGFpbmlu
-ZyBkaWZmZXJlbnQgY29udGVudC4gIFlvdSBuZWVkIHRvIGNoZWNrIHRoZSBsb2dpY2FsIHVuaXQN
-Cj4gPiBuYW1lIChpbiB0aGUgRGV2aWNlIElkZW50aWZpY2F0aW9uIFZQRCBwYWdlKSB0b28uDQo+
-ID4gLS0tDQo+ID4gUm9iIEVsbGlvdHQgICAgSFAgU2VydmVyIFN0b3JhZ2UNCj4gPg0KPiANCj4g
-SWYgdGhlIHByb3BlcnRpZXMgb2YgdGhlIHZvbHVtZSBiZWhpbmQgYSBwYXJ0aWN1bGFyIExVTiBh
-cmUgY2hhbmdlZCwNCj4gc2hvdWxkbid0IHNvbWV0aGluZyBsaWtlIEFTQy9BU0NRIDNGIDAzIElO
-UVVJUlkgREFUQSBIQVMgQ0hBTkdFRCwNCj4gM0YgMDQgREVWSUNFIElERU5USUZJRVIgQ0hBTkdF
-RCBiZSByZXBvcnRlZD8gIE9yIGNhbiB3ZSBub3QgZXhwZWN0DQo+IHRoaXMgaWYgYSBMVU4gaXMg
-cmVtb3ZlZCBhbmQgdGhlbiByZS1hZGRlZCB3aXRob3V0IGFuIGludGVydmVuaW5nDQo+IFJFUE9S
-VCBMVU5TIGNvbW1hbmQ/ICAoSW4gdGhhdCBjYXNlLCB0aGUgUkVQT1JUIExVTlMgZGF0YSByZXR1
-cm5lZA0KPiB3aWxsIGJlIG5vIGRpZmZlcmVudC4pDQo+IA0KPiAtRXdhbg0KPiANCg0KSXQgbWln
-aHQgcmVwb3J0IHRoYXQsIGFuZC9vciB0aGVzZToNClZPTFVNRSBTRVQgQ1JFQVRFRCBPUiBNT0RJ
-RklFRCAoM0ZoLzBBaCkNCk5PVCBSRUFEWSBUTyBSRUFEWSBDSEFOR0UsIE1FRElVTSBNQVkgSEFW
-RSBDSEFOR0VEICgyOGgvMDBoKQ0KDQpIb3dldmVyLCB0aGUgZGV2aWNlIHNlcnZlciBpbiB0aGUg
-bmV3IGxvZ2ljYWwgdW5pdCBtaWdodCBub3Qga25vdyB0aGF0IA0KdGhlcmUgd2FzIGEgcHJldmlv
-dXMgbG9naWNhbCB1bml0IGFzc2lnbmVkIHRvIHRoYXQgTFVOIGFuZCBtaWdodCBub3Qga25vdyAN
-CmFsbCB0aGUgSU5RVUlSWSBkYXRhLCBtb2RlIHBhZ2UgdmFsdWVzLCBsb2cgcGFnZSB2YWx1ZXMs
-IGV0Yy4gdmFsdWVzIHRoYXQgDQp3ZXJlIGluIHVzZSB0byBjb21wYXJlIHRoZW0gdG8gdGhlIGN1
-cnJlbnQgdmFsdWVzLCBzbyBpcyBwcm9iYWJseSB1bmFibGUgDQp0byByZXBvcnQgdGhlIHNwZWNp
-ZmljcyBvZiB3aGF0IGNoYW5nZWQuICBJdCB3aWxsIHByb2JhYmx5IGp1c3QgcmVwb3J0IGFuIA0K
-YWRkaXRpb25hbCBzZW5zZSBjb2RlIHdpdGggQVNDPTI5aCBsaWtlIFBPV0VSIE9OIE9DQ1VSUkVE
-ICgyOWgvMDFoKS4gIA0KDQpQZXIgdGhlIHVuaXQgYXR0ZW50aW9uIGNvbmRpdGlvbiBwcmVjZWRl
-bmNlIGxldmVsIHJ1bGVzIChzZWUgU0FNLTUNCnJldmlzaW9uIDE1IHRhYmxlIDUzKSwgdGhlIGFk
-ZGl0aW9uYWwgc2Vuc2UgY29kZXMgd2l0aCBBU0M9MjloIGltcGx5IHRoYXQgDQphbGwgb3RoZXIg
-dW5pdCBhdHRlbnRpb24gY29uZGl0aW9ucyBtaWdodCBhbHNvIGhhdmUgaGFwcGVuZWQgKElOUVVJ
-UlkgDQpkYXRhIGNoYW5nZWQsIG1vZGUgcGFnZXMgY2hhbmdlZCwgbG9nIHBhZ2VzIGNoYW5nZWQs
-IGNhcGFjaXR5DQpjaGFuZ2VkLCBldGMuKS4gIFNvZnR3YXJlIGlzIHN1cHBvc2VkIHRvIGFzc3Vt
-ZSB0aGUgd29yc3QgYW5kIGNoZWNrIA0KZXZlcnl0aGluZyBhZ2Fpbi4gIEknbSBub3QgY29uZmlk
-ZW50IHRoYXQgbXVjaCBzb2Z0d2FyZSByZWFsbHkgZG9lcyB0aGF0LCANCnRob3VnaC4NCg0KVGhl
-IHVuaXQgYXR0ZW50aW9uIGNvbmRpdGlvbiBwcmVjZWRlbmNlIGlzOg0KMS4gUE9XRVIgT04sIFJF
-U0VULCBPUiBCVVMgREVWSUNFIFJFU0VUIE9DQ1VSUkVEICgyOWgvMDBoKQ0KMi4gUE9XRVIgT04g
-T0NDVVJSRUQgICgyOWgvMDFoKSBvciANCiAgIERFVklDRSBJTlRFUk5BTCBSRVNFVCAgKDI5aC8w
-NGgpDQozLiBTQ1NJIEJVUyBSRVNFVCBPQ0NVUlJFRCAgKDI5aC8wMmgpIG9yIA0KICAgTUlDUk9D
-T0RFIEhBUyBCRUVOIENIQU5HRUQgICgzRmgvMDFoKSBvciANCiAgIHByb3RvY29sIHNwZWNpZmlj
-IChlLmcuLCBUUkFOU0NFSVZFUiBNT0RFIENIQU5HRUQNCiAgIFRPIExWRCAyOWgvMDZoIGluIHBh
-cmFsbGVsIFNDU0kpDQo0LiBCVVMgREVWSUNFIFJFU0VUIEZVTkNUSU9OIE9DQ1VSUkVEICgyOWgv
-MDNoKQ0KNS4gSV9UIE5FWFVTIExPU1MgT0NDVVJSRUQgKDI5aC8wN2gpDQo2LiBDT01NQU5EUyBD
-TEVBUkVEIEJZIFBPV0VSIExPU1MgTk9USUZJQ0FUSU9OICgyRmgvMDFoKQ0KNy4gQWxsIG90aGVy
-cw0KDQpBbHNvLCBmb3IgZWFjaCBBU0MgdmFsdWUsIEFTQ1E9MDBoIGhhcyBwcmVjZWRlbmNlIG92
-ZXIgYWxsIEFTQ1EgdmFsdWVzDQp0aGF0IGFyZSBub256ZXJvLiBGb3IgZXhhbXBsZSwgUEFSQU1F
-VEVSUyBDSEFOR0VEICgyQWgvMDBoKSBpbXBsaWVzIA0KdGhhdCBhbGwgdGhlIG90aGVyIDJBaC94
-eGggY29kZXMgbWlnaHQgaGF2ZSBoYXBwZW5lZC4NCg0KLS0tDQpSb2IgRWxsaW90dCAgICBIUCBT
-ZXJ2ZXIgU3RvcmFnZQ0KDQoNCg0KDQo=
+Hi,
+
+>> +SATA host controller nodes are defined to describe on-chip Serial ATA
+>> +controllers. Each SATA controller (pair of ports) have its own node.
+>> +
+>> +Required properties:
+>> +- compatible         : Shall be "apm,xgene-ahci"
+>> +- reg                        : First memory resource shall be the AHCI memory
+>> +                       resource.
+>> +                       Second memory resource shall be the host controller
+>> +                       memory resource.
+>> +- interrupt-parent   : Interrupt controller
+>> +- interrupts         : Interrupt mapping for SATA host controller IRQ
+>> +- clocks             : Reference to the clock entry
+>> +- phys                       : PHY reference
+>> +- phy-names          : Name of the PHY reference. The name should be
+>> +                       formed by "sataphy" plus lower case hex for the
+>> +                       lower 32-bit PHY CSR address (2nd memory resource)
+>
+> I've tried to explain this before, but apparently you missed the point:
+>
+> Any "*-names" property is supposed to be the identifier inside the device you
+> are describing, *not* an identifier for what it points to, as that already
+> has a name. The idea is that the driver can ask for phy (or clock, irq,
+> memory, etc) "foo" here, with foo identifying the functionality in the
+> device. If you only have one phy, you probably don't want to name it at
+> all. If you imagine a device that was connected to two different phys
+> depending on the mode it's used in (e.g. SATA-II vs SATA-6G), you would
+> list this as
+>
+>  - phy-names            : one name per references in the "phys" property.
+>                           valid names are "sata-ii" and "sata-6g".
+>
+> If the generic phy subsystem requires you to name this, I'd suggest either
+> changing the phy subsystem to make the name optional, or to just call it
+> "serdes", as that is the kind of phy you are connected to.
+>
+> Does this make more sense to you now?
+>
+[Loc Ho]
+Okay... Got it. I will name it as 'sata-6g'
+
+-Loc
