@@ -1,44 +1,75 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: ATA PASSTHROUGH command support issue
-Date: Thu, 21 Nov 2013 07:37:30 -0800
-Message-ID: <1385048250.2172.11.camel@dabdike.int.hansenpartnership.com>
-References: <F9AEE99A65F8B04980BD286E8FF728861FAEBE40@chn-hclt-mbs04.HCLT.CORP.HCL.IN>
+From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
+Subject: RE: Question on SCSI target scan
+Date: Thu, 21 Nov 2013 17:37:04 +0000
+Message-ID: <94D0CD8314A33A4D9D801C0FE68B4029547CE0FB@G4W3202.americas.hpqcorp.net>
+References: <5645D6F831469342AF2BC26CC827D68C5940032A27@BRM-EXCH-3.corp.brocade.com>
+	 <94D0CD8314A33A4D9D801C0FE68B4029547B9343@G9W0745.americas.hpqcorp.net>
+ <1384795712.3839.6.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <F9AEE99A65F8B04980BD286E8FF728861FAEBE40@chn-hclt-mbs04.HCLT.CORP.HCL.IN>
-Sender: linux-ide-owner@vger.kernel.org
-To: Sangeetha Gnanasekaran <sangeetha_g@hcl.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Krishna Bilash Paul - ERS, HCL Tech" <Krishna.Paul@hcl.com>, "Anand Kumar S - ERS, HCL Tech" <sanandkumar@hcl.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from g4t0016.houston.hp.com ([15.201.24.19]:8095 "EHLO
+	g4t0016.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751373Ab3KURiC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Nov 2013 12:38:02 -0500
+In-Reply-To: <1384795712.3839.6.camel@localhost.localdomain>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "emilne@redhat.com" <emilne@redhat.com>
+Cc: Ramesh Chikkanayakanahally <rcnagara@Brocade.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jbottomley@parallels.com" <jbottomley@parallels.com>
 
-On Thu, 2013-11-21 at 12:37 +0000, Sangeetha Gnanasekaran wrote:
-> Hi,
-> 
-> We are implementing utility for testing ATA compliance of drives.
-> We faced issues while sending some commands using ATA PASSTHROUGH supported by libata.
-> Below list of protocols are not supported by libata and hence we are not able to send  commands which follow below protocols.
-> 
-> Protocol field value		Details
-> 
-> 0					Hard Reset
-> 1					SRST
-> 7					DMA-Queued
-> 8					Device Diagnostic
-> 9					Device Reset
-> 12					FPDMA
-> 15					Return Response Info
-> 
-> Can anybody give us input as why it is not supported? 
-
-Well, firstly this is the SCSI list not the ATA list (cc'd).  Secondly
-those are all protocol messages.  The command pass through is well for
-commands.  It's designed to inject commands into a stream in a way that
-won't disrupt the device.  You can get at the resets via other means
-since they're complete but all the rest are partial messages that are
-used as part of command dispatch.
-
-James
-
-
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogRXdhbiBNaWxuZSBbbWFp
+bHRvOmVtaWxuZUByZWRoYXQuY29tXQ0KPiBTZW50OiBNb25kYXksIDE4IE5vdmVtYmVyLCAyMDEz
+IDExOjI5IEFNDQo+IFRvOiBFbGxpb3R0LCBSb2JlcnQgKFNlcnZlciBTdG9yYWdlKQ0KPiBDYzog
+UmFtZXNoIENoaWtrYW5heWFrYW5haGFsbHk7IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnOw0K
+PiBqYm90dG9tbGV5QHBhcmFsbGVscy5jb20NCj4gU3ViamVjdDogUkU6IFF1ZXN0aW9uIG9uIFND
+U0kgdGFyZ2V0IHNjYW4NCj4gDQo+IE9uIEZyaSwgMjAxMy0xMS0xNSBhdCAyMzo1MyArMDAwMCwg
+RWxsaW90dCwgUm9iZXJ0IChTZXJ2ZXIgU3RvcmFnZSkNCj4gd3JvdGU6DQo+ID4gQmV3YXJlIHRo
+YXQganVzdCBiZWNhdXNlIHRoZSBMVU4gaW52ZW50b3J5IGlzIHRoZSBzYW1lIGRvZXNuJ3QgbWVh
+bg0KPiA+IHRoZSBsb2dpY2FsIHVuaXRzIGFyZSB0aGUgc2FtZS4gIEEgbG9naWNhbCB1bml0IGF0
+IExVTiBYIG1pZ2h0IGhhdmUgYmVlbg0KPiA+IGRlbGV0ZWQgYW5kIGFub3RoZXIgbG9naWNhbCB1
+bml0IGNyZWF0ZWQgYW5kIGFzc2lnbmVkIHRvIExVTiBYLCBidXQNCj4gPiBub3cgY29udGFpbmlu
+ZyBkaWZmZXJlbnQgY29udGVudC4gIFlvdSBuZWVkIHRvIGNoZWNrIHRoZSBsb2dpY2FsIHVuaXQN
+Cj4gPiBuYW1lIChpbiB0aGUgRGV2aWNlIElkZW50aWZpY2F0aW9uIFZQRCBwYWdlKSB0b28uDQo+
+ID4gLS0tDQo+ID4gUm9iIEVsbGlvdHQgICAgSFAgU2VydmVyIFN0b3JhZ2UNCj4gPg0KPiANCj4g
+SWYgdGhlIHByb3BlcnRpZXMgb2YgdGhlIHZvbHVtZSBiZWhpbmQgYSBwYXJ0aWN1bGFyIExVTiBh
+cmUgY2hhbmdlZCwNCj4gc2hvdWxkbid0IHNvbWV0aGluZyBsaWtlIEFTQy9BU0NRIDNGIDAzIElO
+UVVJUlkgREFUQSBIQVMgQ0hBTkdFRCwNCj4gM0YgMDQgREVWSUNFIElERU5USUZJRVIgQ0hBTkdF
+RCBiZSByZXBvcnRlZD8gIE9yIGNhbiB3ZSBub3QgZXhwZWN0DQo+IHRoaXMgaWYgYSBMVU4gaXMg
+cmVtb3ZlZCBhbmQgdGhlbiByZS1hZGRlZCB3aXRob3V0IGFuIGludGVydmVuaW5nDQo+IFJFUE9S
+VCBMVU5TIGNvbW1hbmQ/ICAoSW4gdGhhdCBjYXNlLCB0aGUgUkVQT1JUIExVTlMgZGF0YSByZXR1
+cm5lZA0KPiB3aWxsIGJlIG5vIGRpZmZlcmVudC4pDQo+IA0KPiAtRXdhbg0KPiANCg0KSXQgbWln
+aHQgcmVwb3J0IHRoYXQsIGFuZC9vciB0aGVzZToNClZPTFVNRSBTRVQgQ1JFQVRFRCBPUiBNT0RJ
+RklFRCAoM0ZoLzBBaCkNCk5PVCBSRUFEWSBUTyBSRUFEWSBDSEFOR0UsIE1FRElVTSBNQVkgSEFW
+RSBDSEFOR0VEICgyOGgvMDBoKQ0KDQpIb3dldmVyLCB0aGUgZGV2aWNlIHNlcnZlciBpbiB0aGUg
+bmV3IGxvZ2ljYWwgdW5pdCBtaWdodCBub3Qga25vdyB0aGF0IA0KdGhlcmUgd2FzIGEgcHJldmlv
+dXMgbG9naWNhbCB1bml0IGFzc2lnbmVkIHRvIHRoYXQgTFVOIGFuZCBtaWdodCBub3Qga25vdyAN
+CmFsbCB0aGUgSU5RVUlSWSBkYXRhLCBtb2RlIHBhZ2UgdmFsdWVzLCBsb2cgcGFnZSB2YWx1ZXMs
+IGV0Yy4gdmFsdWVzIHRoYXQgDQp3ZXJlIGluIHVzZSB0byBjb21wYXJlIHRoZW0gdG8gdGhlIGN1
+cnJlbnQgdmFsdWVzLCBzbyBpcyBwcm9iYWJseSB1bmFibGUgDQp0byByZXBvcnQgdGhlIHNwZWNp
+ZmljcyBvZiB3aGF0IGNoYW5nZWQuICBJdCB3aWxsIHByb2JhYmx5IGp1c3QgcmVwb3J0IGFuIA0K
+YWRkaXRpb25hbCBzZW5zZSBjb2RlIHdpdGggQVNDPTI5aCBsaWtlIFBPV0VSIE9OIE9DQ1VSUkVE
+ICgyOWgvMDFoKS4gIA0KDQpQZXIgdGhlIHVuaXQgYXR0ZW50aW9uIGNvbmRpdGlvbiBwcmVjZWRl
+bmNlIGxldmVsIHJ1bGVzIChzZWUgU0FNLTUNCnJldmlzaW9uIDE1IHRhYmxlIDUzKSwgdGhlIGFk
+ZGl0aW9uYWwgc2Vuc2UgY29kZXMgd2l0aCBBU0M9MjloIGltcGx5IHRoYXQgDQphbGwgb3RoZXIg
+dW5pdCBhdHRlbnRpb24gY29uZGl0aW9ucyBtaWdodCBhbHNvIGhhdmUgaGFwcGVuZWQgKElOUVVJ
+UlkgDQpkYXRhIGNoYW5nZWQsIG1vZGUgcGFnZXMgY2hhbmdlZCwgbG9nIHBhZ2VzIGNoYW5nZWQs
+IGNhcGFjaXR5DQpjaGFuZ2VkLCBldGMuKS4gIFNvZnR3YXJlIGlzIHN1cHBvc2VkIHRvIGFzc3Vt
+ZSB0aGUgd29yc3QgYW5kIGNoZWNrIA0KZXZlcnl0aGluZyBhZ2Fpbi4gIEknbSBub3QgY29uZmlk
+ZW50IHRoYXQgbXVjaCBzb2Z0d2FyZSByZWFsbHkgZG9lcyB0aGF0LCANCnRob3VnaC4NCg0KVGhl
+IHVuaXQgYXR0ZW50aW9uIGNvbmRpdGlvbiBwcmVjZWRlbmNlIGlzOg0KMS4gUE9XRVIgT04sIFJF
+U0VULCBPUiBCVVMgREVWSUNFIFJFU0VUIE9DQ1VSUkVEICgyOWgvMDBoKQ0KMi4gUE9XRVIgT04g
+T0NDVVJSRUQgICgyOWgvMDFoKSBvciANCiAgIERFVklDRSBJTlRFUk5BTCBSRVNFVCAgKDI5aC8w
+NGgpDQozLiBTQ1NJIEJVUyBSRVNFVCBPQ0NVUlJFRCAgKDI5aC8wMmgpIG9yIA0KICAgTUlDUk9D
+T0RFIEhBUyBCRUVOIENIQU5HRUQgICgzRmgvMDFoKSBvciANCiAgIHByb3RvY29sIHNwZWNpZmlj
+IChlLmcuLCBUUkFOU0NFSVZFUiBNT0RFIENIQU5HRUQNCiAgIFRPIExWRCAyOWgvMDZoIGluIHBh
+cmFsbGVsIFNDU0kpDQo0LiBCVVMgREVWSUNFIFJFU0VUIEZVTkNUSU9OIE9DQ1VSUkVEICgyOWgv
+MDNoKQ0KNS4gSV9UIE5FWFVTIExPU1MgT0NDVVJSRUQgKDI5aC8wN2gpDQo2LiBDT01NQU5EUyBD
+TEVBUkVEIEJZIFBPV0VSIExPU1MgTk9USUZJQ0FUSU9OICgyRmgvMDFoKQ0KNy4gQWxsIG90aGVy
+cw0KDQpBbHNvLCBmb3IgZWFjaCBBU0MgdmFsdWUsIEFTQ1E9MDBoIGhhcyBwcmVjZWRlbmNlIG92
+ZXIgYWxsIEFTQ1EgdmFsdWVzDQp0aGF0IGFyZSBub256ZXJvLiBGb3IgZXhhbXBsZSwgUEFSQU1F
+VEVSUyBDSEFOR0VEICgyQWgvMDBoKSBpbXBsaWVzIA0KdGhhdCBhbGwgdGhlIG90aGVyIDJBaC94
+eGggY29kZXMgbWlnaHQgaGF2ZSBoYXBwZW5lZC4NCg0KLS0tDQpSb2IgRWxsaW90dCAgICBIUCBT
+ZXJ2ZXIgU3RvcmFnZQ0KDQoNCg0KDQo=
