@@ -1,65 +1,112 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH v4 2/4] Documentation:: Add documentation for APM X-Gene
- SoC SATA host controller DTS binding
-Date: Thu, 21 Nov 2013 13:16:03 +0100
-Message-ID: <201311211316.03647.arnd@arndb.de>
-References: <1385014298-15700-1-git-send-email-lho@apm.com>
- <1385014298-15700-2-git-send-email-lho@apm.com>
- <1385014298-15700-3-git-send-email-lho@apm.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH 6/6] pm80xx : Fixed return value issue
+Date: Thu, 21 Nov 2013 13:32:46 +0100
+Message-ID: <528DFD6E.5020302@redhat.com>
+References: <1384932135-16936-1-git-send-email-Viswas.G@pmcs.com> <528CE765.80108@redhat.com> <DB8BCD22E410A84DA91083F3479A3DB31C681CEA@BBYEXM01.pmc-sierra.internal>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <1385014298-15700-3-git-send-email-lho@apm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Loc Ho <lho@apm.com>
-Cc: devicetree@vger.kernel.org, Suman Tripathi <stripathi@apm.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jcm@redhat.com, tj@kernel.org, olof@lixom.net, Tuan Phan <tphan@apm.com>, linux-arm-kernel@lists.infradead.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:53628 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750976Ab3KUMcu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 21 Nov 2013 07:32:50 -0500
+In-Reply-To: <DB8BCD22E410A84DA91083F3479A3DB31C681CEA@BBYEXM01.pmc-sierra.internal>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Viswas G <Viswas.G@pmcs.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "xjtuwjp@gmail.com" <xjtuwjp@gmail.com>, Vasanthalakshmi Tharmarajan <Vasanthalakshmi.Tharmarajan@pmcs.com>, Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
 
-On Thursday 21 November 2013, Loc Ho wrote:
-> +SATA host controller nodes are defined to describe on-chip Serial ATA
-> +controllers. Each SATA controller (pair of ports) have its own node.
-> +
-> +Required properties:
-> +- compatible		: Shall be "apm,xgene-ahci"
-> +- reg			: First memory resource shall be the AHCI memory
-> +			  resource.
-> +			  Second memory resource shall be the host controller
-> +			  memory resource.
-> +- interrupt-parent	: Interrupt controller
-> +- interrupts		: Interrupt mapping for SATA host controller IRQ
-> +- clocks		: Reference to the clock entry
-> +- phys			: PHY reference
-> +- phy-names		: Name of the PHY reference. The name should be
-> +			  formed by "sataphy" plus lower case hex for the
-> +			  lower 32-bit PHY CSR address (2nd memory resource)
+On 11/21/2013 04:56 AM, Viswas G wrote:
+> Hi Tomas,
+>
+> Patches 1-4 are submitted with subject "[PATCH V2 0/4]: pm8001 driver bug fixes".
+>
+> As this patch has to be applied after those four patches, we submitted this as 5/6 and 6/6.
 
-I've tried to explain this before, but apparently you missed the point:
+I was confused because the series 1-4/4 was send by another person,
+thanks for clarification.
 
-Any "*-names" property is supposed to be the identifier inside the device you
-are describing, *not* an identifier for what it points to, as that already
-has a name. The idea is that the driver can ask for phy (or clock, irq,
-memory, etc) "foo" here, with foo identifying the functionality in the
-device. If you only have one phy, you probably don't want to name it at
-all. If you imagine a device that was connected to two different phys
-depending on the mode it's used in (e.g. SATA-II vs SATA-6G), you would
-list this as
+>
+> We will resend the modified  patch.
+>
+> Regards,
+> Viswas G
+>  
+>  
+> -----Original Message-----
+> From: Tomas Henzl [mailto:thenzl@redhat.com] 
+> Sent: Wednesday, November 20, 2013 10:16 PM
+> To: Viswas G; linux-scsi@vger.kernel.org
+> Cc: xjtuwjp@gmail.com; Vasanthalakshmi Tharmarajan; Suresh Thiagarajan
+> Subject: Re: [PATCH 6/6] pm80xx : Fixed return value issue
+>
+> On 11/20/2013 08:22 AM, Viswas G wrote:
+>> pm8001_get_gsm_dump() was returning "1" in error case instead of 
+>> negative error code.
+> Hi,
+>
+> the pm8001_get_gsm_dum return value is used here I think:
+> ----------------
+> static ssize_t pm8001_ctl_gsm_log_show(struct device *cdev,
+>        struct device_attribute *attr, char *buf) {
+>        u32 count;
+>
+>        count = pm8001_get_gsm_dump(cdev, SYSFS_OFFSET, buf);
+> ---------------
+> could you also change the 'count' from unsigned to a signed type?
+>
+> Maybe in some cases another errno would make more sense (ENODEV, EIO?), but I'll leave this up to you.
+>
+> I have noticed in this series only patches 5/6 and 6/6, I miss the 1-4/6, could you help me find them ? What are the subjects of 1-4/6?
+>
+> Thanks, Tomas
+>
+>> Signed-off-by: Viswas G <Viswas.G@pmcs.com>
+>> ---
+>>  drivers/scsi/pm8001/pm8001_hwi.c |    8 ++++----
+>>  1 files changed, 4 insertions(+), 4 deletions(-)
+>>
+>> diff --git a/drivers/scsi/pm8001/pm8001_hwi.c 
+>> b/drivers/scsi/pm8001/pm8001_hwi.c
+>> index f6ea277..e2932ef 100644
+>> --- a/drivers/scsi/pm8001/pm8001_hwi.c
+>> +++ b/drivers/scsi/pm8001/pm8001_hwi.c
+>> @@ -5020,7 +5020,7 @@ pm8001_get_gsm_dump(struct device *cdev, u32 length, char* buf)
+>>  	/* check max is 1 Mbytes */
+>>  	if ((length > 0x100000) || (gsm_dump_offset & 3) ||
+>>  		((gsm_dump_offset + length) > 0x1000000))
+>> -			return 1;
+>> +			return -EINVAL;
+>>  
+>>  	if (pm8001_ha->chip_id == chip_8001)
+>>  		bar = 2;
+>> @@ -5048,12 +5048,12 @@ pm8001_get_gsm_dump(struct device *cdev, u32 length, char* buf)
+>>  				gsm_base = GSM_BASE;
+>>  				if (-1 == pm8001_bar4_shift(pm8001_ha,
+>>  						(gsm_base + shift_value)))
+>> -					return 1;
+>> +					return -EINVAL;
+>>  			} else {
+>>  				gsm_base = 0;
+>>  				if (-1 == pm80xx_bar4_shift(pm8001_ha,
+>>  						(gsm_base + shift_value)))
+>> -					return 1;
+>> +					return -EINVAL;
+>>  			}
+>>  			gsm_dump_offset = (gsm_dump_offset + offset) &
+>>  						0xFFFF0000;
+>> @@ -5073,7 +5073,7 @@ pm8001_get_gsm_dump(struct device *cdev, u32 length, char* buf)
+>>  	}
+>>  	/* Shift back to BAR4 original address */
+>>  	if (-1 == pm8001_bar4_shift(pm8001_ha, 0))
+>> -			return 1;
+>> +			return -EINVAL;
+>>  	pm8001_ha->fatal_forensic_shift_offset += 1024;
+>>  
+>>  	if (pm8001_ha->fatal_forensic_shift_offset >= 0x100000)
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
- - phy-names		: one name per references in the "phys" property.
-			  valid names are "sata-ii" and "sata-6g".
-
-If the generic phy subsystem requires you to name this, I'd suggest either
-changing the phy subsystem to make the name optional, or to just call it
-"serdes", as that is the kind of phy you are connected to.
-
-Does this make more sense to you now?
-
-	Arnd
