@@ -1,15 +1,15 @@
 From: <vmohan@brocade.com>
-Subject: [PATCH RESEND 2/8] bfa: Register port with SCSI even on port init failure
-Date: Thu, 21 Nov 2013 01:37:33 -0800
-Message-ID: <1385026653-6945-1-git-send-email-vmohan@brocade.com>
+Subject: [PATCH RESEND 3/8] bfa: LUN discovery issue in direct attach mode
+Date: Thu, 21 Nov 2013 01:37:45 -0800
+Message-ID: <1385026670-7006-1-git-send-email-vmohan@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:11146 "EHLO
-	mx0a-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753021Ab3KUJhe (ORCPT
+Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:18832 "EHLO
+	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753190Ab3KUJhx (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Nov 2013 04:37:34 -0500
+	Thu, 21 Nov 2013 04:37:53 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
@@ -17,217 +17,43 @@ Cc: agurumur@brocade.com, james.bottomley@hansenpartnership.com
 
 From: Vijaya Mohan Guvva <vmohan@brocade.com>
 
-This patch addresses the issue of port not being registered with SCSI
-layer on bfa or firmware initialization failure and subsequently failure
-in collecting driver traces for debugging port init failures. Also it
-has minor changes related to bfad state machine clean up.
+In direct attach mode, if port features like QoS/Trunk/FEC/CR are
+enabled, driver can receive PLOGI from the target before firmware
+notifies lport online to the driver. In case the lport is not yet online
+and a PLOGI is received, send a reject to the peer port, instead of
+dropping it on the floor.
 
 Signed-off-by: Vijaya Mohan Guvva <vmohan@brocade.com>
 ---
- drivers/scsi/bfa/bfad.c     | 85 ++++++++++++++++++++++-----------------------
- drivers/scsi/bfa/bfad_drv.h |  4 +--
- 2 files changed, 43 insertions(+), 46 deletions(-)
+ drivers/scsi/bfa/bfa_fcs_lport.c | 15 ++++++++++++++-
+ 1 file changed, 14 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
-index f8ca7be..bd17757 100644
---- a/drivers/scsi/bfa/bfad.c
-+++ b/drivers/scsi/bfa/bfad.c
-@@ -204,6 +204,7 @@ static void
- bfad_sm_created(struct bfad_s *bfad, enum bfad_sm_event event)
- {
- 	unsigned long flags;
-+	bfa_status_t ret;
+diff --git a/drivers/scsi/bfa/bfa_fcs_lport.c b/drivers/scsi/bfa/bfa_fcs_lport.c
+index 2f61a5a..06bae2b 100644
+--- a/drivers/scsi/bfa/bfa_fcs_lport.c
++++ b/drivers/scsi/bfa/bfa_fcs_lport.c
+@@ -773,7 +773,20 @@ bfa_fcs_lport_uf_recv(struct bfa_fcs_lport_s *lport,
+ 	bfa_trc(lport->fcs, fchs->type);
  
- 	bfa_trc(bfad, event);
- 
-@@ -217,7 +218,7 @@ bfad_sm_created(struct bfad_s *bfad, enum bfad_sm_event event)
- 		if (bfad_setup_intr(bfad)) {
- 			printk(KERN_WARNING "bfad%d: bfad_setup_intr failed\n",
- 					bfad->inst_no);
--			bfa_sm_send_event(bfad, BFAD_E_INTR_INIT_FAILED);
-+			bfa_sm_send_event(bfad, BFAD_E_INIT_FAILED);
- 			break;
- 		}
- 
-@@ -242,8 +243,26 @@ bfad_sm_created(struct bfad_s *bfad, enum bfad_sm_event event)
- 			printk(KERN_WARNING
- 				"bfa %s: bfa init failed\n",
- 				bfad->pci_name);
-+			spin_lock_irqsave(&bfad->bfad_lock, flags);
-+			bfa_fcs_init(&bfad->bfa_fcs);
-+			spin_unlock_irqrestore(&bfad->bfad_lock, flags);
+ 	if (!bfa_fcs_lport_is_online(lport)) {
+-		bfa_stats(lport, uf_recv_drops);
++		/*
++		 * In direct attach topology, it is possible to get a PLOGI
++		 * before the lport is online due to port feature
++		 * (QoS/Trunk/FEC/CR), so send a rjt
++		 */
++		if ((fchs->type == FC_TYPE_ELS) &&
++			(els_cmd->els_code == FC_ELS_PLOGI)) {
++			bfa_fcs_lport_send_ls_rjt(lport, fchs,
++				FC_LS_RJT_RSN_UNABLE_TO_PERF_CMD,
++				FC_LS_RJT_EXP_NO_ADDL_INFO);
++			bfa_stats(lport, plogi_rcvd);
++		} else
++			bfa_stats(lport, uf_recv_drops);
 +
-+			ret = bfad_cfg_pport(bfad, BFA_LPORT_ROLE_FCP_IM);
-+			if (ret != BFA_STATUS_OK) {
-+				init_completion(&bfad->comp);
-+
-+				spin_lock_irqsave(&bfad->bfad_lock, flags);
-+				bfad->pport.flags |= BFAD_PORT_DELETE;
-+				bfa_fcs_exit(&bfad->bfa_fcs);
-+				spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+
-+				wait_for_completion(&bfad->comp);
-+
-+				bfa_sm_send_event(bfad, BFAD_E_INIT_FAILED);
-+				break;
-+			}
- 			bfad->bfad_flags |= BFAD_HAL_INIT_FAIL;
--			bfa_sm_send_event(bfad, BFAD_E_INIT_FAILED);
-+			bfa_sm_send_event(bfad, BFAD_E_HAL_INIT_FAILED);
- 		}
- 
- 		break;
-@@ -273,12 +292,14 @@ bfad_sm_initializing(struct bfad_s *bfad, enum bfad_sm_event event)
- 		spin_unlock_irqrestore(&bfad->bfad_lock, flags);
- 
- 		retval = bfad_start_ops(bfad);
--		if (retval != BFA_STATUS_OK)
-+		if (retval != BFA_STATUS_OK) {
-+			bfa_sm_set_state(bfad, bfad_sm_failed);
- 			break;
-+		}
- 		bfa_sm_set_state(bfad, bfad_sm_operational);
- 		break;
- 
--	case BFAD_E_INTR_INIT_FAILED:
-+	case BFAD_E_INIT_FAILED:
- 		bfa_sm_set_state(bfad, bfad_sm_uninit);
- 		kthread_stop(bfad->bfad_tsk);
- 		spin_lock_irqsave(&bfad->bfad_lock, flags);
-@@ -286,7 +307,7 @@ bfad_sm_initializing(struct bfad_s *bfad, enum bfad_sm_event event)
- 		spin_unlock_irqrestore(&bfad->bfad_lock, flags);
- 		break;
- 
--	case BFAD_E_INIT_FAILED:
-+	case BFAD_E_HAL_INIT_FAILED:
- 		bfa_sm_set_state(bfad, bfad_sm_failed);
- 		break;
- 	default:
-@@ -310,13 +331,8 @@ bfad_sm_failed(struct bfad_s *bfad, enum bfad_sm_event event)
- 		break;
- 
- 	case BFAD_E_STOP:
--		if (bfad->bfad_flags & BFAD_CFG_PPORT_DONE)
--			bfad_uncfg_pport(bfad);
--		if (bfad->bfad_flags & BFAD_FC4_PROBE_DONE) {
--			bfad_im_probe_undo(bfad);
--			bfad->bfad_flags &= ~BFAD_FC4_PROBE_DONE;
--		}
--		bfad_stop(bfad);
-+		bfa_sm_set_state(bfad, bfad_sm_fcs_exit);
-+		bfa_sm_send_event(bfad, BFAD_E_FCS_EXIT_COMP);
- 		break;
- 
- 	case BFAD_E_EXIT_COMP:
-@@ -854,7 +870,7 @@ bfad_drv_init(struct bfad_s *bfad)
- 		printk(KERN_WARNING
- 			"Not enough memory to attach all Brocade HBA ports, %s",
- 			"System may need more memory.\n");
--		goto out_hal_mem_alloc_failure;
-+		return BFA_STATUS_FAILED;
+ 		return;
  	}
  
- 	bfad->bfa.trcmod = bfad->trcmod;
-@@ -871,31 +887,11 @@ bfad_drv_init(struct bfad_s *bfad)
- 	bfad->bfa_fcs.trcmod = bfad->trcmod;
- 	bfa_fcs_attach(&bfad->bfa_fcs, &bfad->bfa, bfad, BFA_FALSE);
- 	bfad->bfa_fcs.fdmi_enabled = fdmi_enable;
--	bfa_fcs_init(&bfad->bfa_fcs);
- 	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
- 
- 	bfad->bfad_flags |= BFAD_DRV_INIT_DONE;
- 
--	/* configure base port */
--	rc = bfad_cfg_pport(bfad, BFA_LPORT_ROLE_FCP_IM);
--	if (rc != BFA_STATUS_OK)
--		goto out_cfg_pport_fail;
--
- 	return BFA_STATUS_OK;
--
--out_cfg_pport_fail:
--	/* fcs exit - on cfg pport failure */
--	spin_lock_irqsave(&bfad->bfad_lock, flags);
--	init_completion(&bfad->comp);
--	bfad->pport.flags |= BFAD_PORT_DELETE;
--	bfa_fcs_exit(&bfad->bfa_fcs);
--	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
--	wait_for_completion(&bfad->comp);
--	/* bfa detach - free hal memory */
--	bfa_detach(&bfad->bfa);
--	bfad_hal_mem_release(bfad);
--out_hal_mem_alloc_failure:
--	return BFA_STATUS_FAILED;
- }
- 
- void
-@@ -1039,13 +1035,19 @@ bfad_start_ops(struct bfad_s *bfad) {
- 	/* FCS driver info init */
- 	spin_lock_irqsave(&bfad->bfad_lock, flags);
- 	bfa_fcs_driver_info_init(&bfad->bfa_fcs, &driver_info);
-+
-+	if (bfad->bfad_flags & BFAD_CFG_PPORT_DONE)
-+		bfa_fcs_update_cfg(&bfad->bfa_fcs);
-+	else
-+		bfa_fcs_init(&bfad->bfa_fcs);
-+
- 	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
- 
--	/*
--	 * FCS update cfg - reset the pwwn/nwwn of fabric base logical port
--	 * with values learned during bfa_init firmware GETATTR REQ.
--	 */
--	bfa_fcs_update_cfg(&bfad->bfa_fcs);
-+	if (!(bfad->bfad_flags & BFAD_CFG_PPORT_DONE)) {
-+		retval = bfad_cfg_pport(bfad, BFA_LPORT_ROLE_FCP_IM);
-+		if (retval != BFA_STATUS_OK)
-+			return BFA_STATUS_FAILED;
-+	}
- 
- 	/* Setup fc host fixed attribute if the lk supports */
- 	bfad_fc_host_init(bfad->pport.im_port);
-@@ -1056,10 +1058,6 @@ bfad_start_ops(struct bfad_s *bfad) {
- 		printk(KERN_WARNING "bfad_im_probe failed\n");
- 		if (bfa_sm_cmp_state(bfad, bfad_sm_initializing))
- 			bfa_sm_set_state(bfad, bfad_sm_failed);
--		bfad_im_probe_undo(bfad);
--		bfad->bfad_flags &= ~BFAD_FC4_PROBE_DONE;
--		bfad_uncfg_pport(bfad);
--		bfad_stop(bfad);
- 		return BFA_STATUS_FAILED;
- 	} else
- 		bfad->bfad_flags |= BFAD_FC4_PROBE_DONE;
-@@ -1429,7 +1427,6 @@ bfad_pci_probe(struct pci_dev *pdev, const struct pci_device_id *pid)
- 	return 0;
- 
- out_bfad_sm_failure:
--	bfa_detach(&bfad->bfa);
- 	bfad_hal_mem_release(bfad);
- out_drv_init_failure:
- 	/* Remove the debugfs node for this bfad */
-@@ -1564,7 +1561,7 @@ restart_bfa(struct bfad_s *bfad)
- 	if (bfad_setup_intr(bfad)) {
- 		dev_printk(KERN_WARNING, &pdev->dev,
- 			   "%s: bfad_setup_intr failed\n", bfad->pci_name);
--		bfa_sm_send_event(bfad, BFAD_E_INTR_INIT_FAILED);
-+		bfa_sm_send_event(bfad, BFAD_E_INIT_FAILED);
- 		return -1;
- 	}
- 
-diff --git a/drivers/scsi/bfa/bfad_drv.h b/drivers/scsi/bfa/bfad_drv.h
-index 78d3401..cf56d3d 100644
---- a/drivers/scsi/bfa/bfad_drv.h
-+++ b/drivers/scsi/bfa/bfad_drv.h
-@@ -240,8 +240,8 @@ enum bfad_sm_event {
- 	BFAD_E_KTHREAD_CREATE_FAILED	= 2,
- 	BFAD_E_INIT			= 3,
- 	BFAD_E_INIT_SUCCESS		= 4,
--	BFAD_E_INIT_FAILED		= 5,
--	BFAD_E_INTR_INIT_FAILED		= 6,
-+	BFAD_E_HAL_INIT_FAILED		= 5,
-+	BFAD_E_INIT_FAILED		= 6,
- 	BFAD_E_FCS_EXIT_COMP		= 7,
- 	BFAD_E_EXIT_COMP		= 8,
- 	BFAD_E_STOP			= 9
 -- 
 1.8.2.1
 
