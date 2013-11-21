@@ -1,99 +1,49 @@
-From: Ewan Milne <emilne@redhat.com>
-Subject: RE: Question on SCSI target scan
-Date: Thu, 21 Nov 2013 13:45:30 -0500
-Message-ID: <1385059530.3839.90.camel@localhost.localdomain>
-References: <5645D6F831469342AF2BC26CC827D68C5940032A27@BRM-EXCH-3.corp.brocade.com>
-	 <94D0CD8314A33A4D9D801C0FE68B4029547B9343@G9W0745.americas.hpqcorp.net>
-	 <1384795712.3839.6.camel@localhost.localdomain>
-	 <94D0CD8314A33A4D9D801C0FE68B4029547CE0FB@G4W3202.americas.hpqcorp.net>
-Reply-To: emilne@redhat.com
+From: Loc Ho <lho@apm.com>
+Subject: Re: [PATCH v3 3/4] ata: Add APM X-Gene SoC SATA host controller driver
+Date: Thu, 21 Nov 2013 11:01:04 -0800
+Message-ID: <CAPw-ZTnRbZid1Bzg6r62LjoEPRWpbDU7TAg=d=qVazEWVaUGjA@mail.gmail.com>
+References: <1384465153-29902-1-git-send-email-lho@apm.com>
+	<201311151448.16279.arnd@arndb.de>
+	<CAPw-ZTmaz3nnV3ThRgecT_RaYYW0bmfWvL8Kr-S3z1aKyUWc+w@mail.gmail.com>
+	<201311211420.28509.arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:13136 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751558Ab3KUSqK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Nov 2013 13:46:10 -0500
-In-Reply-To: <94D0CD8314A33A4D9D801C0FE68B4029547CE0FB@G4W3202.americas.hpqcorp.net>
+Received: from exprod5og102.obsmtp.com ([64.18.0.143]:54456 "HELO
+	exprod5og102.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754517Ab3KUTBF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Nov 2013 14:01:05 -0500
+Received: by mail-pb0-f44.google.com with SMTP id rq2so162802pbb.31
+        for <linux-scsi@vger.kernel.org>; Thu, 21 Nov 2013 11:01:04 -0800 (PST)
+In-Reply-To: <201311211420.28509.arnd@arndb.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Cc: Ramesh Chikkanayakanahally <rcnagara@Brocade.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jbottomley@parallels.com" <jbottomley@parallels.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Kishon Vijay Abraham I <kishon@ti.com>, Olof Johansson <olof@lixom.net>, Tejun Heo <tj@kernel.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Jon Masters <jcm@redhat.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 
-On Thu, 2013-11-21 at 17:37 +0000, Elliott, Robert (Server Storage)
-wrote:
-> 
-> > -----Original Message-----
-> > From: Ewan Milne [mailto:emilne@redhat.com]
-> > Sent: Monday, 18 November, 2013 11:29 AM
-> > To: Elliott, Robert (Server Storage)
-> > Cc: Ramesh Chikkanayakanahally; linux-scsi@vger.kernel.org;
-> > jbottomley@parallels.com
-> > Subject: RE: Question on SCSI target scan
-> > 
-> > On Fri, 2013-11-15 at 23:53 +0000, Elliott, Robert (Server Storage)
-> > wrote:
-> > > Beware that just because the LUN inventory is the same doesn't mean
-> > > the logical units are the same.  A logical unit at LUN X might have been
-> > > deleted and another logical unit created and assigned to LUN X, but
-> > > now containing different content.  You need to check the logical unit
-> > > name (in the Device Identification VPD page) too.
-> > > ---
-> > > Rob Elliott    HP Server Storage
-> > >
-> > 
-> > If the properties of the volume behind a particular LUN are changed,
-> > shouldn't something like ASC/ASCQ 3F 03 INQUIRY DATA HAS CHANGED,
-> > 3F 04 DEVICE IDENTIFIER CHANGED be reported?  Or can we not expect
-> > this if a LUN is removed and then re-added without an intervening
-> > REPORT LUNS command?  (In that case, the REPORT LUNS data returned
-> > will be no different.)
-> > 
-> > -Ewan
-> > 
-> 
-> It might report that, and/or these:
-> VOLUME SET CREATED OR MODIFIED (3Fh/0Ah)
-> NOT READY TO READY CHANGE, MEDIUM MAY HAVE CHANGED (28h/00h)
-> 
-> However, the device server in the new logical unit might not know that 
-> there was a previous logical unit assigned to that LUN and might not know 
-> all the INQUIRY data, mode page values, log page values, etc. values that 
-> were in use to compare them to the current values, so is probably unable 
-> to report the specifics of what changed.  It will probably just report an 
-> additional sense code with ASC=29h like POWER ON OCCURRED (29h/01h).  
-> 
-> Per the unit attention condition precedence level rules (see SAM-5
-> revision 15 table 53), the additional sense codes with ASC=29h imply that 
-> all other unit attention conditions might also have happened (INQUIRY 
-> data changed, mode pages changed, log pages changed, capacity
-> changed, etc.).  Software is supposed to assume the worst and check 
-> everything again.  I'm not confident that much software really does that, 
-> though.
-> 
-> The unit attention condition precedence is:
-> 1. POWER ON, RESET, OR BUS DEVICE RESET OCCURRED (29h/00h)
-> 2. POWER ON OCCURRED  (29h/01h) or 
->    DEVICE INTERNAL RESET  (29h/04h)
-> 3. SCSI BUS RESET OCCURRED  (29h/02h) or 
->    MICROCODE HAS BEEN CHANGED  (3Fh/01h) or 
->    protocol specific (e.g., TRANSCEIVER MODE CHANGED
->    TO LVD 29h/06h in parallel SCSI)
-> 4. BUS DEVICE RESET FUNCTION OCCURRED (29h/03h)
-> 5. I_T NEXUS LOSS OCCURRED (29h/07h)
-> 6. COMMANDS CLEARED BY POWER LOSS NOTIFICATION (2Fh/01h)
-> 7. All others
-> 
-> Also, for each ASC value, ASCQ=00h has precedence over all ASCQ values
-> that are nonzero. For example, PARAMETERS CHANGED (2Ah/00h) implies 
-> that all the other 2Ah/xxh codes might have happened.
-> 
-> ---
-> Rob Elliott    HP Server Storage
+Hi,
 
-Useful information, thanks for the reply.
+>> >> diff --git a/drivers/ata/sata_xgene.h b/drivers/ata/sata_xgene.h
+>> >> new file mode 100644
+>> >> index 0000000..51e73f6
+>> >> --- /dev/null
+>> >> +++ b/drivers/ata/sata_xgene.h
+>> >
+>> > This file should probably just be folded into the driver, since it contains no
+>> > interfaces between  modules, just internal definitions.
+>> [Loc Ho]
+>> I can get rip this header file now. But in the future I may need to
+>> add this back as I intended this driver to also support running from
+>> our co-processor (ARMv7 32-bit). For that, I will need anothe file and
+>> other function that will need knowledge of the context structure and
+>> etc.
+>
+> Hmm, is the code for that coprocessor compiled from the kernel source?
+> If not, it shouldn't really make a difference as it won't live in a shared
+> code repository.
+>
+[Loc Ho]
+The co-processors are just ARM based core and the same kernel can be
+build to support it. Let's not worry about this yet.
 
--Ewan
-
-
+-Loc
