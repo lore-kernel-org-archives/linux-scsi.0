@@ -1,14 +1,14 @@
 From: <vmohan@brocade.com>
-Subject: [PATCH RESEND 5/8] bfa: Observed auto D-port mode instead of manual
-Date: Thu, 21 Nov 2013 01:37:47 -0800
-Message-ID: <1385026670-7006-3-git-send-email-vmohan@brocade.com>
+Subject: [PATCH RESEND 4/8] bfa: Fix for bcu or hcm faa query hang
+Date: Thu, 21 Nov 2013 01:37:46 -0800
+Message-ID: <1385026670-7006-2-git-send-email-vmohan@brocade.com>
 References: <1385026670-7006-1-git-send-email-vmohan@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:59441 "EHLO
+Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:50161 "EHLO
 	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753318Ab3KUJhx (ORCPT
+	by vger.kernel.org with ESMTP id S1753021Ab3KUJhx (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Thu, 21 Nov 2013 04:37:53 -0500
 In-Reply-To: <1385026670-7006-1-git-send-email-vmohan@brocade.com>
@@ -19,43 +19,42 @@ Cc: agurumur@brocade.com, james.bottomley@hansenpartnership.com
 
 From: Vijaya Mohan Guvva <vmohan@brocade.com>
 
-Observed Auto mode in the HBA side while doing manual D-Port test on the
-switch side. Mode is not passed to BFA from firmware when the test is
-triggered by switch side. BFA just blindly using Auto mode.
+This patch set fixes the issue of brocade management utility hang
+(bcu/HCM) when faa attributes are queried from multiple application
+threads. Hang was due to race between the threads and completion handler
+corruption.
 
 Signed-off-by: Vijaya Mohan Guvva <vmohan@brocade.com>
 ---
- drivers/scsi/bfa/bfa_svc.c | 2 +-
- drivers/scsi/bfa/bfi.h     | 3 ++-
- 2 files changed, 3 insertions(+), 2 deletions(-)
+ drivers/scsi/bfa/bfa_core.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfa_svc.c b/drivers/scsi/bfa/bfa_svc.c
-index 6c41e57..625225f 100644
---- a/drivers/scsi/bfa/bfa_svc.c
-+++ b/drivers/scsi/bfa/bfa_svc.c
-@@ -6758,7 +6758,7 @@ bfa_dport_scn(struct bfa_dport_s *dport, struct bfi_diag_dport_scn_s *msg)
- 		dport->rp_pwwn = msg->info.teststart.pwwn;
- 		dport->rp_nwwn = msg->info.teststart.nwwn;
- 		dport->lpcnt = cpu_to_be32(msg->info.teststart.numfrm);
--		bfa_dport_result_start(dport, BFA_DPORT_OPMODE_AUTO);
-+		bfa_dport_result_start(dport, msg->info.teststart.mode);
- 		break;
+diff --git a/drivers/scsi/bfa/bfa_core.c b/drivers/scsi/bfa/bfa_core.c
+index 520540a..e3f67b0 100644
+--- a/drivers/scsi/bfa/bfa_core.c
++++ b/drivers/scsi/bfa/bfa_core.c
+@@ -1367,10 +1367,6 @@ bfa_faa_query(struct bfa_s *bfa, struct bfa_faa_attr_s *attr,
+ 	struct bfa_iocfc_s      *iocfc = &bfa->iocfc;
+ 	bfa_status_t            status;
  
- 	case BFI_DPORT_SCN_SUBTESTSTART:
-diff --git a/drivers/scsi/bfa/bfi.h b/drivers/scsi/bfa/bfi.h
-index 7192e99..1d97a22 100644
---- a/drivers/scsi/bfa/bfi.h
-+++ b/drivers/scsi/bfa/bfi.h
-@@ -1144,7 +1144,8 @@ struct bfi_diag_dport_scn_teststart_s {
- 	wwn_t	pwwn;	/* switch port wwn. 8 bytes */
- 	wwn_t	nwwn;	/* switch node wwn. 8 bytes */
- 	u8	type;	/* bfa_diag_dport_test_type_e */
--	u8	rsvd[3];
-+	u8	mode;	/* bfa_diag_dport_test_opmode */
-+	u8	rsvd[2];
- 	u32	numfrm; /* from switch uint in 1M */
- };
+-	iocfc->faa_args.faa_attr = attr;
+-	iocfc->faa_args.faa_cb.faa_cbfn = cbfn;
+-	iocfc->faa_args.faa_cb.faa_cbarg = cbarg;
+-
+ 	status = bfa_faa_validate_request(bfa);
+ 	if (status != BFA_STATUS_OK)
+ 		return status;
+@@ -1378,6 +1374,10 @@ bfa_faa_query(struct bfa_s *bfa, struct bfa_faa_attr_s *attr,
+ 	if (iocfc->faa_args.busy == BFA_TRUE)
+ 		return BFA_STATUS_DEVBUSY;
  
++	iocfc->faa_args.faa_attr = attr;
++	iocfc->faa_args.faa_cb.faa_cbfn = cbfn;
++	iocfc->faa_args.faa_cb.faa_cbarg = cbarg;
++
+ 	iocfc->faa_args.busy = BFA_TRUE;
+ 	memset(&faa_attr_req, 0, sizeof(struct bfi_faa_query_s));
+ 	bfi_h2i_set(faa_attr_req.mh, BFI_MC_IOCFC,
 -- 
 1.8.2.1
 
