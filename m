@@ -1,14 +1,14 @@
 From: <vmohan@brocade.com>
-Subject: [PATCH RESEND 8/8] bfa: Driver version upgrade to 3.2.23.0
-Date: Thu, 21 Nov 2013 01:37:50 -0800
-Message-ID: <1385026670-7006-6-git-send-email-vmohan@brocade.com>
+Subject: [PATCH RESEND 7/8] bfa: Fix crash when symb name set for offline vport
+Date: Thu, 21 Nov 2013 01:37:49 -0800
+Message-ID: <1385026670-7006-5-git-send-email-vmohan@brocade.com>
 References: <1385026670-7006-1-git-send-email-vmohan@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:28208 "EHLO
+Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:33501 "EHLO
 	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754057Ab3KUJhy (ORCPT
+	by vger.kernel.org with ESMTP id S1754049Ab3KUJhy (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Thu, 21 Nov 2013 04:37:54 -0500
 In-Reply-To: <1385026670-7006-1-git-send-email-vmohan@brocade.com>
@@ -19,45 +19,79 @@ Cc: agurumur@brocade.com, james.bottomley@hansenpartnership.com
 
 From: Vijaya Mohan Guvva <vmohan@brocade.com>
 
-Patch includes changes to upgrade bfa driver version to 3.2.23.0 and use
-firmware version 3.2.3.0
+This patch fixes a crash when tried setting symbolic name for an offline
+vport through sysfs. Crash is due to uninitialized pointer lport->ns,
+which gets initialized only on linkup (port online).
 
 Signed-off-by: Vijaya Mohan Guvva <vmohan@brocade.com>
 ---
- drivers/scsi/bfa/bfad.c     | 6 +++---
- drivers/scsi/bfa/bfad_drv.h | 2 +-
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/bfa/bfa_fcs.h       |  1 +
+ drivers/scsi/bfa/bfa_fcs_lport.c | 14 +++++++++++---
+ drivers/scsi/bfa/bfad_attr.c     |  7 ++-----
+ 3 files changed, 14 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
-index bd17757..e85926c 100644
---- a/drivers/scsi/bfa/bfad.c
-+++ b/drivers/scsi/bfa/bfad.c
-@@ -63,9 +63,9 @@ int		max_rport_logins = BFA_FCS_MAX_RPORT_LOGINS;
- u32	bfi_image_cb_size, bfi_image_ct_size, bfi_image_ct2_size;
- u32	*bfi_image_cb, *bfi_image_ct, *bfi_image_ct2;
+diff --git a/drivers/scsi/bfa/bfa_fcs.h b/drivers/scsi/bfa/bfa_fcs.h
+index 94d5d01..42bcb97 100644
+--- a/drivers/scsi/bfa/bfa_fcs.h
++++ b/drivers/scsi/bfa/bfa_fcs.h
+@@ -296,6 +296,7 @@ wwn_t bfa_fcs_lport_get_rport(struct bfa_fcs_lport_s *port, wwn_t wwn,
+ struct bfa_fcs_lport_s *bfa_fcs_lookup_port(struct bfa_fcs_s *fcs,
+ 					    u16 vf_id, wwn_t lpwwn);
  
--#define BFAD_FW_FILE_CB		"cbfw-3.2.1.1.bin"
--#define BFAD_FW_FILE_CT		"ctfw-3.2.1.1.bin"
--#define BFAD_FW_FILE_CT2	"ct2fw-3.2.1.1.bin"
-+#define BFAD_FW_FILE_CB		"cbfw-3.2.3.0.bin"
-+#define BFAD_FW_FILE_CT		"ctfw-3.2.3.0.bin"
-+#define BFAD_FW_FILE_CT2	"ct2fw-3.2.3.0.bin"
++void bfa_fcs_lport_set_symname(struct bfa_fcs_lport_s *port, char *symname);
+ void bfa_fcs_lport_get_info(struct bfa_fcs_lport_s *port,
+ 			    struct bfa_lport_info_s *port_info);
+ void bfa_fcs_lport_get_attr(struct bfa_fcs_lport_s *port,
+diff --git a/drivers/scsi/bfa/bfa_fcs_lport.c b/drivers/scsi/bfa/bfa_fcs_lport.c
+index 06bae2b..ff75ef8 100644
+--- a/drivers/scsi/bfa/bfa_fcs_lport.c
++++ b/drivers/scsi/bfa/bfa_fcs_lport.c
+@@ -1110,6 +1110,17 @@ bfa_fcs_lport_init(struct bfa_fcs_lport_s *lport,
+ 	bfa_sm_send_event(lport, BFA_FCS_PORT_SM_CREATE);
+ }
  
- static u32 *bfad_load_fwimg(struct pci_dev *pdev);
- static void bfad_free_fwimg(void);
-diff --git a/drivers/scsi/bfa/bfad_drv.h b/drivers/scsi/bfa/bfad_drv.h
-index cf56d3d..8b97877 100644
---- a/drivers/scsi/bfa/bfad_drv.h
-+++ b/drivers/scsi/bfa/bfad_drv.h
-@@ -57,7 +57,7 @@
- #ifdef BFA_DRIVER_VERSION
- #define BFAD_DRIVER_VERSION    BFA_DRIVER_VERSION
- #else
--#define BFAD_DRIVER_VERSION    "3.2.21.1"
-+#define BFAD_DRIVER_VERSION    "3.2.23.0"
- #endif
++void
++bfa_fcs_lport_set_symname(struct bfa_fcs_lport_s *port,
++				char *symname)
++{
++	strcpy(port->port_cfg.sym_name.symname, symname);
++
++	if (bfa_sm_cmp_state(port, bfa_fcs_lport_sm_online))
++		bfa_fcs_lport_ns_util_send_rspn_id(
++			BFA_FCS_GET_NS_FROM_PORT(port), NULL);
++}
++
+ /*
+  *  fcs_lport_api
+  */
+@@ -5153,9 +5164,6 @@ bfa_fcs_lport_ns_util_send_rspn_id(void *cbarg, struct bfa_fcxp_s *fcxp_alloced)
+ 	u8 *psymbl = &symbl[0];
+ 	int len;
  
- #define BFAD_PROTO_NAME FCPI_NAME
+-	if (!bfa_sm_cmp_state(port, bfa_fcs_lport_sm_online))
+-		return;
+-
+ 	/* Avoid sending RSPN in the following states. */
+ 	if (bfa_sm_cmp_state(ns, bfa_fcs_lport_ns_sm_offline) ||
+ 	    bfa_sm_cmp_state(ns, bfa_fcs_lport_ns_sm_plogi_sending) ||
+diff --git a/drivers/scsi/bfa/bfad_attr.c b/drivers/scsi/bfa/bfad_attr.c
+index e9a681d..40be670 100644
+--- a/drivers/scsi/bfa/bfad_attr.c
++++ b/drivers/scsi/bfa/bfad_attr.c
+@@ -593,11 +593,8 @@ bfad_im_vport_set_symbolic_name(struct fc_vport *fc_vport)
+ 		return;
+ 
+ 	spin_lock_irqsave(&bfad->bfad_lock, flags);
+-	if (strlen(sym_name) > 0) {
+-		strcpy(fcs_vport->lport.port_cfg.sym_name.symname, sym_name);
+-		bfa_fcs_lport_ns_util_send_rspn_id(
+-			BFA_FCS_GET_NS_FROM_PORT((&fcs_vport->lport)), NULL);
+-	}
++	if (strlen(sym_name) > 0)
++		bfa_fcs_lport_set_symname(&fcs_vport->lport, sym_name);
+ 	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
+ }
+ 
 -- 
 1.8.2.1
 
