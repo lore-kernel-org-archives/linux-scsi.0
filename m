@@ -1,40 +1,42 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [PATCH 1/1] ipr: Increase msi-x interrupt vectors to 16
-Date: Thu, 21 Nov 2013 09:24:35 -0600
-Message-ID: <528E25B3.7090307@linux.vnet.ibm.com>
-References: <20131115165814.252430802@linux.vnet.ibm.com> <20131115170017.815518174@linux.vnet.ibm.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 6/6] pm80xx : Fixed return value issue
+Date: Thu, 21 Nov 2013 07:25:24 -0800
+Message-ID: <1385047524.2172.7.camel@dabdike.int.hansenpartnership.com>
+References: <1384932135-16936-1-git-send-email-Viswas.G@pmcs.com>
+	 <528CE765.80108@redhat.com>
+	 <DB8BCD22E410A84DA91083F3479A3DB31C681CEA@BBYEXM01.pmc-sierra.internal>
+	 <528DFD6E.5020302@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="ISO-8859-15"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e9.ny.us.ibm.com ([32.97.182.139]:37645 "EHLO e9.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753575Ab3KUPYp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Nov 2013 10:24:45 -0500
-Received: from /spool/local
-	by e9.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
-	Thu, 21 Nov 2013 10:24:44 -0500
-Received: from b01cxnp23034.gho.pok.ibm.com (b01cxnp23034.gho.pok.ibm.com [9.57.198.29])
-	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id 4D5F2C90046
-	for <linux-scsi@vger.kernel.org>; Thu, 21 Nov 2013 10:24:36 -0500 (EST)
-Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
-	by b01cxnp23034.gho.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id rALFObiw2163164
-	for <linux-scsi@vger.kernel.org>; Thu, 21 Nov 2013 15:24:37 GMT
-Received: from d01av01.pok.ibm.com (localhost [127.0.0.1])
-	by d01av01.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id rALFOaJd004711
-	for <linux-scsi@vger.kernel.org>; Thu, 21 Nov 2013 10:24:37 -0500
-In-Reply-To: <20131115170017.815518174@linux.vnet.ibm.com>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:41074 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752149Ab3KUPZb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 21 Nov 2013 10:25:31 -0500
+In-Reply-To: <528DFD6E.5020302@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: wenxiong@linux.vnet.ibm.com
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
+To: Tomas Henzl <thenzl@redhat.com>
+Cc: Viswas G <Viswas.G@pmcs.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "xjtuwjp@gmail.com" <xjtuwjp@gmail.com>, Vasanthalakshmi Tharmarajan <Vasanthalakshmi.Tharmarajan@pmcs.com>, Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
 
-Acked-by: Brian King <brking@linux.vnet.ibm.com>
+On Thu, 2013-11-21 at 13:32 +0100, Tomas Henzl wrote:
+> On 11/21/2013 04:56 AM, Viswas G wrote:
+> > Hi Tomas,
+> >
+> > Patches 1-4 are submitted with subject "[PATCH V2 0/4]: pm8001 driver bug fixes".
+> >
+> > As this patch has to be applied after those four patches, we submitted this as 5/6 and 6/6.
+> 
+> I was confused because the series 1-4/4 was send by another person,
 
--- 
-Brian King
-Power Linux I/O
-IBM Linux Technology Center
+And it was labelled 1-4/4 so it's not really natural to think of 5 and 6
+following on ... you weren't the only one confused.
+
+James
+
+> thanks for clarification.
+
 
 
