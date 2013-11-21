@@ -1,70 +1,117 @@
-From: Loc Ho <lho@apm.com>
-Subject: [PATCH] arm64: Add APM X-Gene SoC SATA host controller DTS entries
-Date: Wed, 20 Nov 2013 23:11:38 -0700
-Message-ID: <1385014298-15700-5-git-send-email-lho@apm.com>
-References: <1385014298-15700-1-git-send-email-lho@apm.com>
- <1385014298-15700-2-git-send-email-lho@apm.com>
- <1385014298-15700-3-git-send-email-lho@apm.com>
- <1385014298-15700-4-git-send-email-lho@apm.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1385014298-15700-4-git-send-email-lho@apm.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, jcm@redhat.com, Loc Ho <lho@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
+From: "Saxena, Sumit" <Sumit.Saxena@lsi.com>
+Subject: RE: [PATCH] megaraid: Use resource_size_t for PCI resources, not
+ long
+Date: Thu, 21 Nov 2013 06:08:11 +0000
+Message-ID: <3cb483c7123b4be194d819d526b74102@DM2PR07MB400.namprd07.prod.outlook.com>
+References: <D74A8430-BF73-488F-8CD1-0E00B5FE75A6@servergy.com>
+ <088E451FE1854947BD9145EF8C016FF413A01F373F@inbmail01.lsi.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-by2lp0243.outbound.protection.outlook.com ([207.46.163.243]:17365
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752232Ab3KUGXc convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Nov 2013 01:23:32 -0500
+In-Reply-To: <088E451FE1854947BD9145EF8C016FF413A01F373F@inbmail01.lsi.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Saxena, Sumit" <Sumit.Saxena@lsi.com>, Ben Collins <ben.c@servergy.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: DL-MegaRAID Linux <megaraidlinux@lsi.com>
 
-arm64: Add APM X-Gene SoC SATA host controller DTS entries
 
-Signed-off-by: Loc Ho <lho@apm.com>
-Signed-off-by: Tuan Phan <tphan@apm.com>
-Signed-off-by: Suman Tripathi <stripathi@apm.com>
----
- arch/arm64/boot/dts/apm-storm.dtsi |   33 +++++++++++++++++++++++++++++++++
- 1 files changed, 33 insertions(+), 0 deletions(-)
 
-diff --git a/arch/arm64/boot/dts/apm-storm.dtsi b/arch/arm64/boot/dts/apm-storm.dtsi
-index 359d7b6..592485c 100644
---- a/arch/arm64/boot/dts/apm-storm.dtsi
-+++ b/arch/arm64/boot/dts/apm-storm.dtsi
-@@ -193,5 +193,38 @@
- 			reg = <0x0 0x17000014 0x0 0x100>;
- 			mask = <0x1>;
- 		};
-+
-+		sata0: sata@1a000000 {
-+			compatible = "apm,xgene-ahci";
-+			reg = <0x0 0x1a000000 0x0 0x100000>,
-+			      <0x0 0x1f210000 0x0 0x10000>;
-+			interrupt-parent = <&gic>;
-+			interrupts = <0x0 0x86 0x4>;
-+			status = "disabled";
-+			phys = <&sataphy0>;
-+			phy-names = "sataphy1f210000";
-+		};
-+
-+		sata1: sata@1a400000 {
-+			compatible = "apm,xgene-ahci";
-+			reg = <0x0 0x1a400000 0x0 0x100000>,
-+			      <0x0 0x1f220000 0x0 0x10000>;
-+			interrupt-parent = <&gic>;
-+			interrupts = <0x0 0x87 0x4>;
-+			status = "ok";
-+			phys = <&sataphy1>;
-+			phy-names = "sataphy1f220000";
-+		};
-+
-+		sata2: sata@1a800000 {
-+			compatible = "apm,xgene-ahci";
-+			reg = <0x0 0x1a800000 0x0 0x100000>,
-+			      <0x0 0x1f230000 0x0 0x10000>;
-+			interrupt-parent = <&gic>;
-+			interrupts = <0x0 0x88 0x4>;
-+			status = "ok";
-+			phys = <&sataphy2>;
-+			phy-names = "sataphy1f230000";
-+		};
- 	};
- };
--- 
-1.5.5
+>-----Original Message-----
+>From: Saxena, Sumit
+>Sent: Friday, September 13, 2013 10:40 PM
+>To: Ben Collins; linux-scsi
+>Cc: DL-MegaRAID Linux
+>Subject: RE: [PATCH] megaraid: Use resource_size_t for PCI resources,
+>not long
+>
+>
+>
+>>-----Original Message-----
+>>From: Ben Collins [mailto:ben.c@servergy.com]
+>>Sent: Friday, September 13, 2013 10:17 PM
+>>To: linux-scsi
+>>Cc: Saxena, Sumit; DL-MegaRAID Linux
+>>Subject: [PATCH] megaraid: Use resource_size_t for PCI resources, not
+>>long
+>>
+>>The assumption that sizeof(long) >= sizeof(resource_size_t) can lead to
+>>truncation of the PCI resource address, meaning this driver didn't work
+>>on 32-bit systems with 64-bit PCI adressing ranges.
+>>
+>>Signed-off-by: Ben Collins <ben.c@servergy.com>
+>>Cc: Sumit Saxena <Sumit.Saxena@lsi.com>
+>>Cc: DL-MegaRAID Linux <megaraidlinux@lsi.com>
+>>---
+>> drivers/scsi/megaraid/megaraid_sas.h      | 1 -
+>> drivers/scsi/megaraid/megaraid_sas_base.c | 5 +++--
+>> 2 files changed, 3 insertions(+), 3 deletions(-)
+>>
+>>diff --git a/drivers/scsi/megaraid/megaraid_sas.h
+>>b/drivers/scsi/megaraid/megaraid_sas.h
+>>index 04a42a5..2f58758 100644
+>>--- a/drivers/scsi/megaraid/megaraid_sas.h
+>>+++ b/drivers/scsi/megaraid/megaraid_sas.h
+>>@@ -1460,7 +1460,6 @@ struct megasas_instance {
+>> 	u32 *reply_queue;
+>> 	dma_addr_t reply_queue_h;
+>>
+>>-	unsigned long base_addr;
+>> 	struct megasas_register_set __iomem *reg_set;
+>> 	u32 *reply_post_host_index_addr[MR_MAX_MSIX_REG_ARRAY];
+>> 	struct megasas_pd_list          pd_list[MEGASAS_MAX_PD];
+>>diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c
+>>b/drivers/scsi/megaraid/megaraid_sas_base.c
+>>index 1f0ca68..5df5522 100644
+>>--- a/drivers/scsi/megaraid/megaraid_sas_base.c
+>>+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+>>@@ -3498,6 +3498,7 @@ static int megasas_init_fw(struct
+>>megasas_instance
+>>*instance)
+>> 	u32 max_sectors_1;
+>> 	u32 max_sectors_2;
+>> 	u32 tmp_sectors, msix_enable, scratch_pad_2;
+>>+	resource_size_t base_addr;
+>> 	struct megasas_register_set __iomem *reg_set;
+>> 	struct megasas_ctrl_info *ctrl_info;
+>> 	unsigned long bar_list;
+>>@@ -3506,14 +3507,14 @@ static int megasas_init_fw(struct
+>>megasas_instance *instance)
+>> 	/* Find first memory bar */
+>> 	bar_list = pci_select_bars(instance->pdev, IORESOURCE_MEM);
+>> 	instance->bar = find_first_bit(&bar_list, sizeof(unsigned long));
+>>-	instance->base_addr = pci_resource_start(instance->pdev, instance-
+>>>bar);
+>> 	if (pci_request_selected_regions(instance->pdev, instance->bar,
+>> 					 "megasas: LSI")) {
+>> 		printk(KERN_DEBUG "megasas: IO memory region busy!\n");
+>> 		return -EBUSY;
+>> 	}
+>>
+>>-	instance->reg_set = ioremap_nocache(instance->base_addr, 8192);
+>>+	base_addr = pci_resource_start(instance->pdev, instance->bar);
+>>+	instance->reg_set = ioremap_nocache(base_addr, 8192);
+>>
+>> 	if (!instance->reg_set) {
+>> 		printk(KERN_DEBUG "megasas: Failed to map IO mem\n");
+>>--
+>>1.8.3.2
+>>
+>>
+>>--
+>>Ben Collins - Principal Architect
+>>Servergy, Inc. - www.servergy.com
+>
+>Acked-by: Sumit Saxena <sumit.saxena@lsi.com>
+James,
+
+It's gentle ping. Please consider this patch. It's critical for 32-bit systems with 64-bit PCI addressing range.
+
+Sumit
 
