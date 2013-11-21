@@ -1,45 +1,61 @@
-From: Loc Ho <lho@apm.com>
-Subject: Re: [PATCH v2 3/4] ata: add APM X-Gene SoC 6.0Gbps SATA PHY driver
-Date: Wed, 20 Nov 2013 14:23:07 -0800
-Message-ID: <CAPw-ZTmGvjyfgpiJy-9G26g5KDVmkYv85418H3RgCPCnq_0CTg@mail.gmail.com>
-References: <1384905197-3566-1-git-send-email-lho@apm.com>
-	<1384905197-3566-4-git-send-email-lho@apm.com>
-	<20131120150658.GB28946@htj.dyndns.org>
-	<201311201641.20230.arnd@arndb.de>
+From: Kees Cook <keescook@google.com>
+Subject: Re: [patch] [SCSI] megaraid: missing bounds check in mimd_to_kioc()
+Date: Wed, 20 Nov 2013 16:40:14 -0800
+Message-ID: <CAGXu5j+nz5jhDSpuGhNY2bUxDW4indEjo5qj5fGaS8uQxSt3Fg@mail.gmail.com>
+References: <20131025144452.GA28451@ngolde.de>
+	<20131030171351.GB4130@longonot.mountain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod5og105.obsmtp.com ([64.18.0.180]:36772 "HELO
-	exprod5og105.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752146Ab3KTWXJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Nov 2013 17:23:09 -0500
-Received: by mail-pa0-f49.google.com with SMTP id kx10so4206905pab.36
-        for <linux-scsi@vger.kernel.org>; Wed, 20 Nov 2013 14:23:08 -0800 (PST)
-In-Reply-To: <201311201641.20230.arnd@arndb.de>
+Received: from mail-oa0-f43.google.com ([209.85.219.43]:45665 "EHLO
+	mail-oa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754481Ab3KUAkP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Nov 2013 19:40:15 -0500
+Received: by mail-oa0-f43.google.com with SMTP id i7so775002oag.30
+        for <linux-scsi@vger.kernel.org>; Wed, 20 Nov 2013 16:40:14 -0800 (PST)
+In-Reply-To: <20131030171351.GB4130@longonot.mountain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Tejun Heo <tj@kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Suman Tripathi <stripathi@apm.com>, Linux SCSI List <linux-scsi@vger.kernel.org>, Jon Masters <jcm@redhat.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Olof Johansson <olof@lixom.net>, Tuan Phan <tphan@apm.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Neela Syam Kolli <megaraidlinux@lsi.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, "security@kernel.org" <security@kernel.org>, Nico Golde <nico@ngolde.de>, Fabian Yamaguchi <fabs@goesec.de>
 
 Hi,
 
-> On Wednesday 20 November 2013, Tejun Heo wrote:
->> On Tue, Nov 19, 2013 at 04:53:16PM -0700, Loc Ho wrote:
->> > This patch adds support for APM X-Gene SoC 6.0Gbps SATA PHY. This is the
->> > physical layer interface for the corresponding SATA host controller. This
->> > driver uses the new PHY generic framework posted by Kishon Vijay Abrahm.
->>
->> Hmm... this is related to ahci but isn't even a libata driver and is
->> the first such driver proposed.  Are we sure drivers/ata is the best
->> home for this?  Shouldn't we create a separate directory somewhere?
->> It's confusing, at least to me, to have non-libata driver under
->> drivers/ata.
+On Wed, Oct 30, 2013 at 10:13 AM, Dan Carpenter
+<dan.carpenter@oracle.com> wrote:
+> pthru32->dataxferlen comes from the user so we need to check that it's
+> not too large so we don't overflow the buffer.
 >
-> It needs to be in drivers/phy, which is currently being prepared for
-> the next merge window and which contains the generic interface used
-> in this driver.
-[Loc Ho]
-I will move it to drivers/phy. The PHY framework did make it to the
-final release of 3.12.00.
+> Reported-by: Nico Golde <nico@ngolde.de>
+> Reported-by: Fabian Yamaguchi <fabs@goesec.de>
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
--Loc
+I don't see this in Linus's tree nor linux-next yet. Can someone pick this up?
+
+Thanks!
+
+-Kees
+
+> ---
+> Please review this carefully because I have not tested it.
+>
+> diff --git a/drivers/scsi/megaraid/megaraid_mm.c b/drivers/scsi/megaraid/megaraid_mm.c
+> index dfffd0f..a706927 100644
+> --- a/drivers/scsi/megaraid/megaraid_mm.c
+> +++ b/drivers/scsi/megaraid/megaraid_mm.c
+> @@ -486,6 +486,8 @@ mimd_to_kioc(mimd_t __user *umimd, mraid_mmadp_t *adp, uioc_t *kioc)
+>
+>         pthru32->dataxferaddr   = kioc->buf_paddr;
+>         if (kioc->data_dir & UIOC_WR) {
+> +               if (pthru32->dataxferlen > kioc->xferlen)
+> +                       return -EINVAL;
+>                 if (copy_from_user(kioc->buf_vaddr, kioc->user_data,
+>                                                 pthru32->dataxferlen)) {
+>                         return (-EFAULT);
+>
+
+
+
+-- 
+Kees Cook
+Chrome OS Security
