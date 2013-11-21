@@ -1,108 +1,78 @@
-From: Viswas G <Viswas.G@pmcs.com>
-Subject: RE: [PATCH 6/6] pm80xx : Fixed return value issue
-Date: Thu, 21 Nov 2013 03:56:34 +0000
-Message-ID: <DB8BCD22E410A84DA91083F3479A3DB31C681CEA@BBYEXM01.pmc-sierra.internal>
-References: <1384932135-16936-1-git-send-email-Viswas.G@pmcs.com>
- <528CE765.80108@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+From: Loc Ho <lho@apm.com>
+Subject: [PATCH v4 0/4] ata: Add APM X-Gene SoC SATA host controller support
+Date: Wed, 20 Nov 2013 23:11:34 -0700
+Message-ID: <1385014298-15700-1-git-send-email-lho@apm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:34125 "EHLO
-	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751613Ab3KUD4f convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Nov 2013 22:56:35 -0500
-In-Reply-To: <528CE765.80108@redhat.com>
-Content-Language: en-US
+Received: from exprod5og113.obsmtp.com ([64.18.0.26]:56846 "HELO
+	exprod5og113.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750862Ab3KUGLv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Nov 2013 01:11:51 -0500
+Received: by mail-pd0-f180.google.com with SMTP id q10so5527215pdj.11
+        for <linux-scsi@vger.kernel.org>; Wed, 20 Nov 2013 22:11:50 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "xjtuwjp@gmail.com" <xjtuwjp@gmail.com>, Vasanthalakshmi Tharmarajan <Vasanthalakshmi.Tharmarajan@pmcs.com>, Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
+To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, jcm@redhat.com, Loc Ho <lho@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 
-Hi Tomas,
+ata: Add APM X-Gene SoC SATA host controller support
 
-Patches 1-4 are submitted with subject "[PATCH V2 0/4]: pm8001 driver bug fixes".
+This patch adds support for the APM X-Gene SoC SATA host controller. In
+order for the host controller to work, the corresponding SATA PHY driver
+musts also be available.
 
-As this patch has to be applied after those four patches, we submitted this as 5/6 and 6/6.
+v4:
+ * Remove the ID property in DT
+ * Remove the temporary PHY direct function call and use PHY function
+ * Change printk to pr_debug
+ * Move the IOB flush addresses into the DT
+ * Remove the parameters retrieval function as no longer needed
+ * Remove the header file as no longer needed 
+ * Require v2 patch of the SATA PHY driver. Require slightly modification
+   in the Kconfig as it is moved to folder driver/phy and use Kconfig
+   PHY_XGENE_SATA instead SATA_XGENE_PHY.
 
-We will resend the modified  patch.
+v3:
+ * Move out the SATA PHY to another driver
+ * Remove the clock-cells entry from DTS
+ * Remove debug wrapper
+ * Remove delay functions wrapper
+ * Clean up resource and IRQ query
+ * Remove query clock name
+ * Switch to use dma_set_mask/dma_coherent_mask
+ * Remove un-necessary devm_kfree
+ * Update GPL license header to v2
+ * Spilt up function xgene_ahci_hardreset
+ * Spilt up function xgene_ahci_probe
+ * Remove all reference of CONFIG_ARCH_MSLIM
+ * Clean up chip revision code
 
-Regards,
-Viswas G
- 
- 
------Original Message-----
-From: Tomas Henzl [mailto:thenzl@redhat.com] 
-Sent: Wednesday, November 20, 2013 10:16 PM
-To: Viswas G; linux-scsi@vger.kernel.org
-Cc: xjtuwjp@gmail.com; Vasanthalakshmi Tharmarajan; Suresh Thiagarajan
-Subject: Re: [PATCH 6/6] pm80xx : Fixed return value issue
+v2:
+ * Clean up file sata_xgene.c with Lindent and etc
+ * Clean up file sata_xgene_serdes.c with Lindent and etc
+ * Add description to each patch
 
-On 11/20/2013 08:22 AM, Viswas G wrote:
-> pm8001_get_gsm_dump() was returning "1" in error case instead of 
-> negative error code.
+v1:
+ * inital version
 
-Hi,
+Signed-off-by: Loc Ho <lho@apm.com>
+Signed-off-by: Tuan Phan <tphan@apm.com>
+Signed-off-by: Suman Tripathi <stripathi@apm.com>
+---
+Loc Ho (4):
+  ata: Export required functions by APM X-Gene SATA driver
+  Documentation:: Add documentation for APM X-Gene SoC SATA host
+    controller DTS binding
+  ata: Add APM X-Gene SoC SATA host controller driver
+  arm64: Add APM X-Gene SoC SATA host controller DTS entries
 
-the pm8001_get_gsm_dum return value is used here I think:
-----------------
-static ssize_t pm8001_ctl_gsm_log_show(struct device *cdev,
-       struct device_attribute *attr, char *buf) {
-       u32 count;
-
-       count = pm8001_get_gsm_dump(cdev, SYSFS_OFFSET, buf);
----------------
-could you also change the 'count' from unsigned to a signed type?
-
-Maybe in some cases another errno would make more sense (ENODEV, EIO?), but I'll leave this up to you.
-
-I have noticed in this series only patches 5/6 and 6/6, I miss the 1-4/6, could you help me find them ? What are the subjects of 1-4/6?
-
-Thanks, Tomas
-
->
-> Signed-off-by: Viswas G <Viswas.G@pmcs.com>
-> ---
->  drivers/scsi/pm8001/pm8001_hwi.c |    8 ++++----
->  1 files changed, 4 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/scsi/pm8001/pm8001_hwi.c 
-> b/drivers/scsi/pm8001/pm8001_hwi.c
-> index f6ea277..e2932ef 100644
-> --- a/drivers/scsi/pm8001/pm8001_hwi.c
-> +++ b/drivers/scsi/pm8001/pm8001_hwi.c
-> @@ -5020,7 +5020,7 @@ pm8001_get_gsm_dump(struct device *cdev, u32 length, char* buf)
->  	/* check max is 1 Mbytes */
->  	if ((length > 0x100000) || (gsm_dump_offset & 3) ||
->  		((gsm_dump_offset + length) > 0x1000000))
-> -			return 1;
-> +			return -EINVAL;
->  
->  	if (pm8001_ha->chip_id == chip_8001)
->  		bar = 2;
-> @@ -5048,12 +5048,12 @@ pm8001_get_gsm_dump(struct device *cdev, u32 length, char* buf)
->  				gsm_base = GSM_BASE;
->  				if (-1 == pm8001_bar4_shift(pm8001_ha,
->  						(gsm_base + shift_value)))
-> -					return 1;
-> +					return -EINVAL;
->  			} else {
->  				gsm_base = 0;
->  				if (-1 == pm80xx_bar4_shift(pm8001_ha,
->  						(gsm_base + shift_value)))
-> -					return 1;
-> +					return -EINVAL;
->  			}
->  			gsm_dump_offset = (gsm_dump_offset + offset) &
->  						0xFFFF0000;
-> @@ -5073,7 +5073,7 @@ pm8001_get_gsm_dump(struct device *cdev, u32 length, char* buf)
->  	}
->  	/* Shift back to BAR4 original address */
->  	if (-1 == pm8001_bar4_shift(pm8001_ha, 0))
-> -			return 1;
-> +			return -EINVAL;
->  	pm8001_ha->fatal_forensic_shift_offset += 1024;
->  
->  	if (pm8001_ha->fatal_forensic_shift_offset >= 0x100000)
+ .../devicetree/bindings/ata/apm-xgene.txt          |   56 +
+ arch/arm64/boot/dts/apm-storm.dtsi                 |   33 +
+ drivers/ata/Kconfig                                |    8 +
+ drivers/ata/Makefile                               |    1 +
+ drivers/ata/ahci.h                                 |    6 +
+ drivers/ata/libahci.c                              |   13 +-
+ drivers/ata/sata_xgene.c                           | 1128 ++++++++++++++++++++
+ 7 files changed, 1240 insertions(+), 5 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/ata/apm-xgene.txt
+ create mode 100644 drivers/ata/sata_xgene.c
 
