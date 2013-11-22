@@ -1,177 +1,270 @@
 From: <vikas.chaudhary@qlogic.com>
-Subject: [PATCH 7/8] qla4xxx: Recreate chap data list during get chap operation
-Date: Fri, 22 Nov 2013 05:28:23 -0500
-Message-ID: <1385116104-19784-8-git-send-email-vikas.chaudhary@qlogic.com>
+Subject: [PATCH 2/8] scsi_transport_iscsi: Add host statistics support
+Date: Fri, 22 Nov 2013 05:28:18 -0500
+Message-ID: <1385116104-19784-3-git-send-email-vikas.chaudhary@qlogic.com>
 References: <1385116104-19784-1-git-send-email-vikas.chaudhary@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:52945 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755308Ab3KVLBP (ORCPT
+Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:2258 "EHLO
+	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755267Ab3KVLBP (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Fri, 22 Nov 2013 06:01:15 -0500
 In-Reply-To: <1385116104-19784-1-git-send-email-vikas.chaudhary@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com, michaelc@cs.wisc.edu
-Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, Adheer Chandravanshi <adheer.chandravanshi@qlogic.com>
+Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com
 
-From: Adheer Chandravanshi <adheer.chandravanshi@qlogic.com>
+From: Lalit Chandivade <lalit.chandivade@qlogic.com>
 
-Recreate the chap data list during the get chap operation in
-qla4xxx_get_chap_list().
+Add transport_iscsi hooks to get aggregate host statistics.
+The statistics include MAC, TCP/IP & iSCSI statistics.
 
-Signed-off-by: Adheer Chandravanshi <adheer.chandravanshi@qlogic.com>
+Signed-off-by: Lalit Chandivade <lalit.chandivade@qlogic.com>
 Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 ---
- drivers/scsi/qla4xxx/ql4_os.c | 119 ++++++++++++++++++++++--------------------
- 1 file changed, 61 insertions(+), 58 deletions(-)
+ drivers/scsi/scsi_transport_iscsi.c |  70 ++++++++++++++++++++++
+ include/scsi/iscsi_if.h             | 112 ++++++++++++++++++++++++++++++++++++
+ include/scsi/scsi_transport_iscsi.h |   1 +
+ 3 files changed, 183 insertions(+)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index 4181758..1c05f84 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -573,6 +573,65 @@ static umode_t qla4_attr_is_visible(int param_type, int param)
- 	return 0;
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index 9477f84..4cf918a 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -3416,6 +3416,73 @@ exit_logout_sid:
  }
  
-+/**
-+ * qla4xxx_create chap_list - Create CHAP list from FLASH
-+ * @ha: pointer to adapter structure
-+ *
-+ * Read flash and make a list of CHAP entries, during login when a CHAP entry
-+ * is received, it will be checked in this list. If entry exist then the CHAP
-+ * entry index is set in the DDB. If CHAP entry does not exist in this list
-+ * then a new entry is added in FLASH in CHAP table and the index obtained is
-+ * used in the DDB.
-+ **/
-+static void qla4xxx_create_chap_list(struct scsi_qla_host *ha)
+ static int
++iscsi_get_host_stats(struct iscsi_transport *transport, struct nlmsghdr *nlh)
 +{
-+	int rval = 0;
-+	uint8_t *chap_flash_data = NULL;
-+	uint32_t offset;
-+	dma_addr_t chap_dma;
-+	uint32_t chap_size = 0;
++	struct iscsi_uevent *ev = nlmsg_data(nlh);
++	struct Scsi_Host *shost = NULL;
++	struct iscsi_internal *priv;
++	struct sk_buff *skbhost_stats;
++	struct nlmsghdr *nlhhost_stats;
++	struct iscsi_uevent *evhost_stats;
++	int host_stats_size = 0;
++	int len, err = 0;
++	char *buf;
 +
-+	if (is_qla40XX(ha))
-+		chap_size = MAX_CHAP_ENTRIES_40XX *
-+			    sizeof(struct ql4_chap_table);
-+	else	/* Single region contains CHAP info for both
-+		 * ports which is divided into half for each port.
-+		 */
-+		chap_size = ha->hw.flt_chap_size / 2;
++	if (!transport->get_host_stats)
++		return -EINVAL;
 +
-+	chap_flash_data = dma_alloc_coherent(&ha->pdev->dev, chap_size,
-+					     &chap_dma, GFP_KERNEL);
-+	if (!chap_flash_data) {
-+		ql4_printk(KERN_ERR, ha, "No memory for chap_flash_data\n");
-+		return;
++	priv = iscsi_if_transport_lookup(transport);
++	if (!priv)
++		return -EINVAL;
++
++	host_stats_size = sizeof(struct iscsi_offload_host_stats);
++	len = nlmsg_total_size(sizeof(*ev) + host_stats_size);
++
++	shost = scsi_host_lookup(ev->u.get_host_stats.host_no);
++	if (!shost) {
++		pr_err("%s: failed. Cound not find host no %u\n",
++		       __func__, ev->u.get_host_stats.host_no);
++		return -ENODEV;
 +	}
 +
-+	if (is_qla40XX(ha)) {
-+		offset = FLASH_CHAP_OFFSET;
-+	} else {
-+		offset = FLASH_RAW_ACCESS_ADDR + (ha->hw.flt_region_chap << 2);
-+		if (ha->port_num == 1)
-+			offset += chap_size;
-+	}
++	do {
++		int actual_size;
 +
-+	rval = qla4xxx_get_flash(ha, chap_dma, offset, chap_size);
-+	if (rval != QLA_SUCCESS)
-+		goto exit_chap_list;
++		skbhost_stats = alloc_skb(len, GFP_KERNEL);
++		if (!skbhost_stats) {
++			pr_err("cannot deliver host stats: OOM\n");
++			err = -ENOMEM;
++			goto exit_host_stats;
++		}
 +
-+	if (ha->chap_list == NULL)
-+		ha->chap_list = vmalloc(chap_size);
-+	if (ha->chap_list == NULL) {
-+		ql4_printk(KERN_ERR, ha, "No memory for ha->chap_list\n");
-+		goto exit_chap_list;
-+	}
++		nlhhost_stats = __nlmsg_put(skbhost_stats, 0, 0, 0,
++				      (len - sizeof(*nlhhost_stats)), 0);
++		evhost_stats = nlmsg_data(nlhhost_stats);
++		memset(evhost_stats, 0, sizeof(*evhost_stats));
++		evhost_stats->transport_handle = iscsi_handle(transport);
++		evhost_stats->type = nlh->nlmsg_type;
++		evhost_stats->u.get_host_stats.host_no =
++					ev->u.get_host_stats.host_no;
++		buf = (char *)((char *)evhost_stats + sizeof(*evhost_stats));
++		memset(buf, 0, host_stats_size);
 +
-+	memset(ha->chap_list, 0, chap_size);
-+	memcpy(ha->chap_list, chap_flash_data, chap_size);
++		err = transport->get_host_stats(shost, buf, host_stats_size);
 +
-+exit_chap_list:
-+	dma_free_coherent(&ha->pdev->dev, chap_size, chap_flash_data, chap_dma);
++		actual_size = nlmsg_total_size(sizeof(*ev) + host_stats_size);
++		skb_trim(skbhost_stats, NLMSG_ALIGN(actual_size));
++		nlhhost_stats->nlmsg_len = actual_size;
++
++		err = iscsi_multicast_skb(skbhost_stats, ISCSI_NL_GRP_ISCSID,
++					  GFP_KERNEL);
++	} while (err < 0 && err != -ECONNREFUSED);
++
++exit_host_stats:
++	scsi_host_put(shost);
++	return err;
 +}
 +
- static int qla4xxx_get_chap_by_index(struct scsi_qla_host *ha,
- 				     int16_t chap_index,
- 				     struct ql4_chap_table **chap_entry)
-@@ -686,6 +745,8 @@ static int qla4xxx_get_chap_list(struct Scsi_Host *shost, uint16_t chap_tbl_idx,
- 		goto exit_get_chap_list;
- 	}
- 
-+	qla4xxx_create_chap_list(ha);
 +
- 	chap_rec = (struct iscsi_chap_rec *) buf;
- 	mutex_lock(&ha->chap_sem);
- 	for (i = chap_tbl_idx; i < max_chap_entries; i++) {
-@@ -6121,64 +6182,6 @@ kset_free:
- }
- 
- 
--/**
-- * qla4xxx_create chap_list - Create CHAP list from FLASH
-- * @ha: pointer to adapter structure
-- *
-- * Read flash and make a list of CHAP entries, during login when a CHAP entry
-- * is received, it will be checked in this list. If entry exist then the CHAP
-- * entry index is set in the DDB. If CHAP entry does not exist in this list
-- * then a new entry is added in FLASH in CHAP table and the index obtained is
-- * used in the DDB.
-- **/
--static void qla4xxx_create_chap_list(struct scsi_qla_host *ha)
--{
--	int rval = 0;
--	uint8_t *chap_flash_data = NULL;
--	uint32_t offset;
--	dma_addr_t chap_dma;
--	uint32_t chap_size = 0;
--
--	if (is_qla40XX(ha))
--		chap_size = MAX_CHAP_ENTRIES_40XX  *
--					sizeof(struct ql4_chap_table);
--	else	/* Single region contains CHAP info for both
--		 * ports which is divided into half for each port.
--		 */
--		chap_size = ha->hw.flt_chap_size / 2;
--
--	chap_flash_data = dma_alloc_coherent(&ha->pdev->dev, chap_size,
--					  &chap_dma, GFP_KERNEL);
--	if (!chap_flash_data) {
--		ql4_printk(KERN_ERR, ha, "No memory for chap_flash_data\n");
--		return;
--	}
--	if (is_qla40XX(ha))
--		offset = FLASH_CHAP_OFFSET;
--	else {
--		offset = FLASH_RAW_ACCESS_ADDR + (ha->hw.flt_region_chap << 2);
--		if (ha->port_num == 1)
--			offset += chap_size;
--	}
--
--	rval = qla4xxx_get_flash(ha, chap_dma, offset, chap_size);
--	if (rval != QLA_SUCCESS)
--		goto exit_chap_list;
--
--	if (ha->chap_list == NULL)
--		ha->chap_list = vmalloc(chap_size);
--	if (ha->chap_list == NULL) {
--		ql4_printk(KERN_ERR, ha, "No memory for ha->chap_list\n");
--		goto exit_chap_list;
--	}
--
--	memcpy(ha->chap_list, chap_flash_data, chap_size);
--
--exit_chap_list:
--	dma_free_coherent(&ha->pdev->dev, chap_size,
--			chap_flash_data, chap_dma);
--}
--
- static void qla4xxx_get_param_ddb(struct ddb_entry *ddb_entry,
- 				  struct ql4_tuple_ddb *tddb)
++static int
+ iscsi_if_recv_msg(struct sk_buff *skb, struct nlmsghdr *nlh, uint32_t *group)
  {
+ 	int err = 0;
+@@ -3594,6 +3661,9 @@ iscsi_if_recv_msg(struct sk_buff *skb, struct nlmsghdr *nlh, uint32_t *group)
+ 		err = iscsi_set_chap(transport, ev,
+ 				     nlmsg_attrlen(nlh, sizeof(*ev)));
+ 		break;
++	case ISCSI_UEVENT_GET_HOST_STATS:
++		err = iscsi_get_host_stats(transport, nlh);
++		break;
+ 	default:
+ 		err = -ENOSYS;
+ 		break;
+diff --git a/include/scsi/iscsi_if.h b/include/scsi/iscsi_if.h
+index a572083..3851a73 100644
+--- a/include/scsi/iscsi_if.h
++++ b/include/scsi/iscsi_if.h
+@@ -70,6 +70,7 @@ enum iscsi_uevent_e {
+ 	ISCSI_UEVENT_LOGOUT_FLASHNODE	= UEVENT_BASE + 29,
+ 	ISCSI_UEVENT_LOGOUT_FLASHNODE_SID	= UEVENT_BASE + 30,
+ 	ISCSI_UEVENT_SET_CHAP		= UEVENT_BASE + 31,
++	ISCSI_UEVENT_GET_HOST_STATS	= UEVENT_BASE + 32,
+ 
+ 	/* up events */
+ 	ISCSI_KEVENT_RECV_PDU		= KEVENT_BASE + 1,
+@@ -242,6 +243,9 @@ struct iscsi_uevent {
+ 			uint32_t	host_no;
+ 			uint32_t	sid;
+ 		} logout_flashnode_sid;
++		struct msg_get_host_stats {
++			uint32_t host_no;
++		} get_host_stats;
+ 	} u;
+ 	union {
+ 		/* messages k -> u */
+@@ -845,4 +849,112 @@ struct iscsi_chap_rec {
+ 	uint8_t password_length;
+ };
+ 
++#define ISCSI_HOST_STATS_CUSTOM_MAX             32
++#define ISCSI_HOST_STATS_CUSTOM_DESC_MAX        64
++struct iscsi_host_stats_custom {
++	char desc[ISCSI_HOST_STATS_CUSTOM_DESC_MAX];
++	uint64_t value;
++};
++
++/* struct iscsi_offload_host_stats: Host statistics,
++ * Include statistics for MAC, IP, TCP & iSCSI.
++ */
++struct iscsi_offload_host_stats {
++	/* MAC */
++	uint64_t mactx_frames;
++	uint64_t mactx_bytes;
++	uint64_t mactx_multicast_frames;
++	uint64_t mactx_broadcast_frames;
++	uint64_t mactx_pause_frames;
++	uint64_t mactx_control_frames;
++	uint64_t mactx_deferral;
++	uint64_t mactx_excess_deferral;
++	uint64_t mactx_late_collision;
++	uint64_t mactx_abort;
++	uint64_t mactx_single_collision;
++	uint64_t mactx_multiple_collision;
++	uint64_t mactx_collision;
++	uint64_t mactx_frames_dropped;
++	uint64_t mactx_jumbo_frames;
++	uint64_t macrx_frames;
++	uint64_t macrx_bytes;
++	uint64_t macrx_unknown_control_frames;
++	uint64_t macrx_pause_frames;
++	uint64_t macrx_control_frames;
++	uint64_t macrx_dribble;
++	uint64_t macrx_frame_length_error;
++	uint64_t macrx_jabber;
++	uint64_t macrx_carrier_sense_error;
++	uint64_t macrx_frame_discarded;
++	uint64_t macrx_frames_dropped;
++	uint64_t mac_crc_error;
++	uint64_t mac_encoding_error;
++	uint64_t macrx_length_error_large;
++	uint64_t macrx_length_error_small;
++	uint64_t macrx_multicast_frames;
++	uint64_t macrx_broadcast_frames;
++	/* IP */
++	uint64_t iptx_packets;
++	uint64_t iptx_bytes;
++	uint64_t iptx_fragments;
++	uint64_t iprx_packets;
++	uint64_t iprx_bytes;
++	uint64_t iprx_fragments;
++	uint64_t ip_datagram_reassembly;
++	uint64_t ip_invalid_address_error;
++	uint64_t ip_error_packets;
++	uint64_t ip_fragrx_overlap;
++	uint64_t ip_fragrx_outoforder;
++	uint64_t ip_datagram_reassembly_timeout;
++	uint64_t ipv6tx_packets;
++	uint64_t ipv6tx_bytes;
++	uint64_t ipv6tx_fragments;
++	uint64_t ipv6rx_packets;
++	uint64_t ipv6rx_bytes;
++	uint64_t ipv6rx_fragments;
++	uint64_t ipv6_datagram_reassembly;
++	uint64_t ipv6_invalid_address_error;
++	uint64_t ipv6_error_packets;
++	uint64_t ipv6_fragrx_overlap;
++	uint64_t ipv6_fragrx_outoforder;
++	uint64_t ipv6_datagram_reassembly_timeout;
++	/* TCP */
++	uint64_t tcptx_segments;
++	uint64_t tcptx_bytes;
++	uint64_t tcprx_segments;
++	uint64_t tcprx_byte;
++	uint64_t tcp_duplicate_ack_retx;
++	uint64_t tcp_retx_timer_expired;
++	uint64_t tcprx_duplicate_ack;
++	uint64_t tcprx_pure_ackr;
++	uint64_t tcptx_delayed_ack;
++	uint64_t tcptx_pure_ack;
++	uint64_t tcprx_segment_error;
++	uint64_t tcprx_segment_outoforder;
++	uint64_t tcprx_window_probe;
++	uint64_t tcprx_window_update;
++	uint64_t tcptx_window_probe_persist;
++	/* ECC */
++	uint64_t ecc_error_correction;
++	/* iSCSI */
++	uint64_t iscsi_pdu_tx;
++	uint64_t iscsi_data_bytes_tx;
++	uint64_t iscsi_pdu_rx;
++	uint64_t iscsi_data_bytes_rx;
++	uint64_t iscsi_io_completed;
++	uint64_t iscsi_unexpected_io_rx;
++	uint64_t iscsi_format_error;
++	uint64_t iscsi_hdr_digest_error;
++	uint64_t iscsi_data_digest_error;
++	uint64_t iscsi_sequence_error;
++	/*
++	 * iSCSI Custom Host Statistics support, i.e. Transport could
++	 * extend existing host statistics with its own specific statistics
++	 * up to ISCSI_HOST_STATS_CUSTOM_MAX
++	 */
++	uint32_t custom_length;
++	struct iscsi_host_stats_custom custom[0]
++		__aligned(sizeof(uint64_t));
++};
++
+ #endif
+diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
+index 2ac11fe..88640a4 100644
+--- a/include/scsi/scsi_transport_iscsi.h
++++ b/include/scsi/scsi_transport_iscsi.h
+@@ -166,6 +166,7 @@ struct iscsi_transport {
+ 	int (*logout_flashnode) (struct iscsi_bus_flash_session *fnode_sess,
+ 				 struct iscsi_bus_flash_conn *fnode_conn);
+ 	int (*logout_flashnode_sid) (struct iscsi_cls_session *cls_sess);
++	int (*get_host_stats) (struct Scsi_Host *shost, char *buf, int len);
+ };
+ 
+ /*
 -- 
 1.8.2.GIT
 
