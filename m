@@ -1,39 +1,37 @@
-From: <vikas.chaudhary@qlogic.com>
-Subject: [PATCH 8/8] qla4xxx: Update driver version to 5.04.00-k3
-Date: Fri, 22 Nov 2013 05:28:24 -0500
-Message-ID: <1385116104-19784-9-git-send-email-vikas.chaudhary@qlogic.com>
-References: <1385116104-19784-1-git-send-email-vikas.chaudhary@qlogic.com>
+From: Pamela Collins Greson <collinz42@gmail.com>
+Subject: Hej =?iso-8859-1?b?S+RyYQ==?=
+Date: Sat, 23 Nov 2013 00:38:55 +0200
+Message-ID: <20131123003855.58211wk377k13egv@www.pamelagreson.co.za>
+Reply-To: pamelagreson@live.com
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1;
+	DelSp=Yes	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:26225 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755311Ab3KVLBP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Nov 2013 06:01:15 -0500
-In-Reply-To: <1385116104-19784-1-git-send-email-vikas.chaudhary@qlogic.com>
+Received: from chs3.ampledns.com ([216.246.23.156]:56253 "EHLO
+	chs3.ampledns.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755635Ab3KWA41 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Nov 2013 19:56:27 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jbottomley@parallels.com, michaelc@cs.wisc.edu
-Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com
 
-From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+Hej K=E4ra,
+=A0=A0 Jag =E4r Pamela Greson med namn, jag =E4r fr=E5n Norge :)
+Jag =E4r romantisk, och singel.
+Jag s=F6ker en trevlig och snygg man ..!
+Jag fick e-post fr=E5n Sverige gul sida.
+Svara p=E5 min mail, och jag kommer att skicka mycket bilder av mig och=
+ =20
+ber=E4tta om mig sj=E4lv.
+Tycker du om kyssar?
+Tycker du 69?
+Talar du engelska?
+Skriv mig snart!
+Pamela Greson
 
-Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
----
- drivers/scsi/qla4xxx/ql4_version.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/qla4xxx/ql4_version.h b/drivers/scsi/qla4xxx/ql4_version.h
-index 7427d94..9b29466 100644
---- a/drivers/scsi/qla4xxx/ql4_version.h
-+++ b/drivers/scsi/qla4xxx/ql4_version.h
-@@ -5,4 +5,4 @@
-  * See LICENSE.qla4xxx for copyright and licensing details.
-  */
- 
--#define QLA4XXX_DRIVER_VERSION	"5.04.00-k2"
-+#define QLA4XXX_DRIVER_VERSION	"5.04.00-k3"
--- 
-1.8.2.GIT
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
