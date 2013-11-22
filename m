@@ -1,659 +1,76 @@
 From: <vikas.chaudhary@qlogic.com>
-Subject: [PATCH 1/8] qla4xxx: Added support for Diagnostics MBOX command
-Date: Fri, 22 Nov 2013 05:28:17 -0500
-Message-ID: <1385116104-19784-2-git-send-email-vikas.chaudhary@qlogic.com>
+Subject: [PATCH 5/8] libiscsi: Add local_ipaddr parameter in iscsi_conn struct
+Date: Fri, 22 Nov 2013 05:28:21 -0500
+Message-ID: <1385116104-19784-6-git-send-email-vikas.chaudhary@qlogic.com>
 References: <1385116104-19784-1-git-send-email-vikas.chaudhary@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:49789 "EHLO
+Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:15539 "EHLO
 	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755242Ab3KVLBP (ORCPT
+	by vger.kernel.org with ESMTP id S1755149Ab3KVLBP (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Fri, 22 Nov 2013 06:01:15 -0500
 In-Reply-To: <1385116104-19784-1-git-send-email-vikas.chaudhary@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com, michaelc@cs.wisc.edu
-Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com
+Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, Adheer Chandravanshi <adheer.chandravanshi@qlogic.com>
 
-From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+From: Adheer Chandravanshi <adheer.chandravanshi@qlogic.com>
 
-Added support for Diagnostics MBOX command via BSG Vendor
-HST_VENDOR interface.
-This command provides various tests for validating hardware
-functionality.
+Add local_ipaddr param and support get/set operations on it.
 
+Signed-off-by: Adheer Chandravanshi <adheer.chandravanshi@qlogic.com>
 Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 ---
- drivers/scsi/qla4xxx/ql4_bsg.c  | 360 ++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/qla4xxx/ql4_bsg.h  |  13 ++
- drivers/scsi/qla4xxx/ql4_def.h  |   8 +
- drivers/scsi/qla4xxx/ql4_fw.h   |  14 +-
- drivers/scsi/qla4xxx/ql4_glbl.h |   2 +
- drivers/scsi/qla4xxx/ql4_isr.c  |  19 ++-
- drivers/scsi/qla4xxx/ql4_mbx.c  |  43 +++++
- drivers/scsi/qla4xxx/ql4_os.c   |   3 +
- 8 files changed, 455 insertions(+), 7 deletions(-)
+ drivers/scsi/libiscsi.c | 6 ++++++
+ include/scsi/libiscsi.h | 1 +
+ 2 files changed, 7 insertions(+)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_bsg.c b/drivers/scsi/qla4xxx/ql4_bsg.c
-index cf8fdf1..04a0027 100644
---- a/drivers/scsi/qla4xxx/ql4_bsg.c
-+++ b/drivers/scsi/qla4xxx/ql4_bsg.c
-@@ -446,6 +446,363 @@ leave:
- 	return rval;
- }
- 
-+static void ql4xxx_execute_diag_cmd(struct bsg_job *bsg_job)
-+{
-+	struct Scsi_Host *host = iscsi_job_to_shost(bsg_job);
-+	struct scsi_qla_host *ha = to_qla_host(host);
-+	struct iscsi_bsg_request *bsg_req = bsg_job->request;
-+	struct iscsi_bsg_reply *bsg_reply = bsg_job->reply;
-+	uint8_t *rsp_ptr = NULL;
-+	uint32_t mbox_cmd[MBOX_REG_COUNT];
-+	uint32_t mbox_sts[MBOX_REG_COUNT];
-+	int status = QLA_ERROR;
-+
-+	DEBUG2(ql4_printk(KERN_INFO, ha, "%s: in\n", __func__));
-+
-+	if (test_bit(DPC_RESET_HA, &ha->dpc_flags)) {
-+		ql4_printk(KERN_INFO, ha, "%s: Adapter reset in progress. Invalid Request\n",
-+			   __func__);
-+		bsg_reply->result = DID_ERROR << 16;
-+		goto exit_diag_mem_test;
-+	}
-+
-+	bsg_reply->reply_payload_rcv_len = 0;
-+	memcpy(mbox_cmd, &bsg_req->rqst_data.h_vendor.vendor_cmd[1],
-+	       sizeof(uint32_t) * MBOX_REG_COUNT);
-+
-+	DEBUG2(ql4_printk(KERN_INFO, ha,
-+			  "%s: mbox_cmd: %08X %08X %08X %08X %08X %08X %08X %08X\n",
-+			  __func__, mbox_cmd[0], mbox_cmd[1], mbox_cmd[2],
-+			  mbox_cmd[3], mbox_cmd[4], mbox_cmd[5], mbox_cmd[6],
-+			  mbox_cmd[7]));
-+
-+	status = qla4xxx_mailbox_command(ha, MBOX_REG_COUNT, 8, &mbox_cmd[0],
-+					 &mbox_sts[0]);
-+
-+	DEBUG2(ql4_printk(KERN_INFO, ha,
-+			  "%s: mbox_sts: %08X %08X %08X %08X %08X %08X %08X %08X\n",
-+			  __func__, mbox_sts[0], mbox_sts[1], mbox_sts[2],
-+			  mbox_sts[3], mbox_sts[4], mbox_sts[5], mbox_sts[6],
-+			  mbox_sts[7]));
-+
-+	if (status == QLA_SUCCESS)
-+		bsg_reply->result = DID_OK << 16;
-+	else
-+		bsg_reply->result = DID_ERROR << 16;
-+
-+	/* Send mbox_sts to application */
-+	bsg_job->reply_len = sizeof(struct iscsi_bsg_reply) + sizeof(mbox_sts);
-+	rsp_ptr = ((uint8_t *)bsg_reply) + sizeof(struct iscsi_bsg_reply);
-+	memcpy(rsp_ptr, mbox_sts, sizeof(mbox_sts));
-+
-+exit_diag_mem_test:
-+	DEBUG2(ql4_printk(KERN_INFO, ha,
-+			  "%s: bsg_reply->result = x%x, status = %s\n",
-+			  __func__, bsg_reply->result, STATUS(status)));
-+
-+	bsg_job_done(bsg_job, bsg_reply->result,
-+		     bsg_reply->reply_payload_rcv_len);
-+}
-+
-+static int qla4_83xx_wait_for_loopback_config_comp(struct scsi_qla_host *ha,
-+						   int wait_for_link)
-+{
-+	int status = QLA_SUCCESS;
-+
-+	if (!wait_for_completion_timeout(&ha->idc_comp, (IDC_COMP_TOV * HZ))) {
-+		ql4_printk(KERN_INFO, ha, "%s: IDC Complete notification not received, Waiting for another %d timeout",
-+			   __func__, ha->idc_extend_tmo);
-+		if (ha->idc_extend_tmo) {
-+			if (!wait_for_completion_timeout(&ha->idc_comp,
-+						(ha->idc_extend_tmo * HZ))) {
-+				ha->notify_idc_comp = 0;
-+				ha->notify_link_up_comp = 0;
-+				ql4_printk(KERN_WARNING, ha, "%s: IDC Complete notification not received",
-+					   __func__);
-+				status = QLA_ERROR;
-+				goto exit_wait;
-+			} else {
-+				DEBUG2(ql4_printk(KERN_INFO, ha,
-+						  "%s: IDC Complete notification received\n",
-+						  __func__));
-+			}
-+		}
-+	} else {
-+		DEBUG2(ql4_printk(KERN_INFO, ha,
-+				  "%s: IDC Complete notification received\n",
-+				  __func__));
-+	}
-+	ha->notify_idc_comp = 0;
-+
-+	if (wait_for_link) {
-+		if (!wait_for_completion_timeout(&ha->link_up_comp,
-+						 (IDC_COMP_TOV * HZ))) {
-+			ha->notify_link_up_comp = 0;
-+			ql4_printk(KERN_WARNING, ha, "%s: LINK UP notification not received",
-+				   __func__);
-+			status = QLA_ERROR;
-+			goto exit_wait;
-+		} else {
-+			DEBUG2(ql4_printk(KERN_INFO, ha,
-+					  "%s: LINK UP notification received\n",
-+					  __func__));
-+		}
-+		ha->notify_link_up_comp = 0;
-+	}
-+
-+exit_wait:
-+	return status;
-+}
-+
-+static int qla4_83xx_pre_loopback_config(struct scsi_qla_host *ha,
-+					 uint32_t *mbox_cmd)
-+{
-+	uint32_t config = 0;
-+	int status = QLA_SUCCESS;
-+
-+	DEBUG2(ql4_printk(KERN_INFO, ha, "%s: in\n", __func__));
-+
-+	status = qla4_83xx_get_port_config(ha, &config);
-+	if (status != QLA_SUCCESS)
-+		goto exit_pre_loopback_config;
-+
-+	DEBUG2(ql4_printk(KERN_INFO, ha, "%s: Default port config=%08X\n",
-+			  __func__, config));
-+
-+	if ((config & ENABLE_INTERNAL_LOOPBACK) ||
-+	    (config & ENABLE_EXTERNAL_LOOPBACK)) {
-+		ql4_printk(KERN_INFO, ha, "%s: Loopback diagnostics already in progress. Invalid requiest\n",
-+			   __func__);
-+		goto exit_pre_loopback_config;
-+	}
-+
-+	if (mbox_cmd[1] == QL_DIAG_CMD_TEST_INT_LOOPBACK)
-+		config |= ENABLE_INTERNAL_LOOPBACK;
-+
-+	if (mbox_cmd[1] == QL_DIAG_CMD_TEST_EXT_LOOPBACK)
-+		config |= ENABLE_EXTERNAL_LOOPBACK;
-+
-+	config &= ~ENABLE_DCBX;
-+
-+	DEBUG2(ql4_printk(KERN_INFO, ha, "%s: New port config=%08X\n",
-+			  __func__, config));
-+
-+	ha->notify_idc_comp = 1;
-+	ha->notify_link_up_comp = 1;
-+
-+	/* get the link state */
-+	qla4xxx_get_firmware_state(ha);
-+
-+	status = qla4_83xx_set_port_config(ha, &config);
-+	if (status != QLA_SUCCESS) {
-+		ha->notify_idc_comp = 0;
-+		ha->notify_link_up_comp = 0;
-+		goto exit_pre_loopback_config;
-+	}
-+exit_pre_loopback_config:
-+	DEBUG2(ql4_printk(KERN_INFO, ha, "%s: status = %s\n", __func__,
-+			  STATUS(status)));
-+	return status;
-+}
-+
-+static int qla4_83xx_post_loopback_config(struct scsi_qla_host *ha,
-+					  uint32_t *mbox_cmd)
-+{
-+	int status = QLA_SUCCESS;
-+	uint32_t config = 0;
-+
-+	DEBUG2(ql4_printk(KERN_INFO, ha, "%s: in\n", __func__));
-+
-+	status = qla4_83xx_get_port_config(ha, &config);
-+	if (status != QLA_SUCCESS)
-+		goto exit_post_loopback_config;
-+
-+	DEBUG2(ql4_printk(KERN_INFO, ha, "%s: port config=%08X\n", __func__,
-+			  config));
-+
-+	if (mbox_cmd[1] == QL_DIAG_CMD_TEST_INT_LOOPBACK)
-+		config &= ~ENABLE_INTERNAL_LOOPBACK;
-+	else if (mbox_cmd[1] == QL_DIAG_CMD_TEST_EXT_LOOPBACK)
-+		config &= ~ENABLE_EXTERNAL_LOOPBACK;
-+
-+	config |= ENABLE_DCBX;
-+
-+	DEBUG2(ql4_printk(KERN_INFO, ha,
-+			  "%s: Restore default port config=%08X\n", __func__,
-+			  config));
-+
-+	ha->notify_idc_comp = 1;
-+	if (ha->addl_fw_state & FW_ADDSTATE_LINK_UP)
-+		ha->notify_link_up_comp = 1;
-+
-+	status = qla4_83xx_set_port_config(ha, &config);
-+	if (status != QLA_SUCCESS) {
-+		ql4_printk(KERN_INFO, ha, "%s: Scheduling adapter reset\n",
-+			   __func__);
-+		set_bit(DPC_RESET_HA, &ha->dpc_flags);
-+		clear_bit(AF_LOOPBACK, &ha->flags);
-+		goto exit_post_loopback_config;
-+	}
-+
-+exit_post_loopback_config:
-+	DEBUG2(ql4_printk(KERN_INFO, ha, "%s: status = %s\n", __func__,
-+			  STATUS(status)));
-+	return status;
-+}
-+
-+static void qla4xxx_execute_diag_loopback_cmd(struct bsg_job *bsg_job)
-+{
-+	struct Scsi_Host *host = iscsi_job_to_shost(bsg_job);
-+	struct scsi_qla_host *ha = to_qla_host(host);
-+	struct iscsi_bsg_request *bsg_req = bsg_job->request;
-+	struct iscsi_bsg_reply *bsg_reply = bsg_job->reply;
-+	uint8_t *rsp_ptr = NULL;
-+	uint32_t mbox_cmd[MBOX_REG_COUNT];
-+	uint32_t mbox_sts[MBOX_REG_COUNT];
-+	int wait_for_link = 1;
-+	int status = QLA_ERROR;
-+
-+	DEBUG2(ql4_printk(KERN_INFO, ha, "%s: in\n", __func__));
-+
-+	bsg_reply->reply_payload_rcv_len = 0;
-+
-+	if (test_bit(AF_LOOPBACK, &ha->flags)) {
-+		ql4_printk(KERN_INFO, ha, "%s: Loopback Diagnostics already in progress. Invalid Request\n",
-+			   __func__);
-+		bsg_reply->result = DID_ERROR << 16;
-+		goto exit_loopback_cmd;
-+	}
-+
-+	if (test_bit(DPC_RESET_HA, &ha->dpc_flags)) {
-+		ql4_printk(KERN_INFO, ha, "%s: Adapter reset in progress. Invalid Request\n",
-+			   __func__);
-+		bsg_reply->result = DID_ERROR << 16;
-+		goto exit_loopback_cmd;
-+	}
-+
-+	memcpy(mbox_cmd, &bsg_req->rqst_data.h_vendor.vendor_cmd[1],
-+	       sizeof(uint32_t) * MBOX_REG_COUNT);
-+
-+	if (is_qla8032(ha) || is_qla8042(ha)) {
-+		status = qla4_83xx_pre_loopback_config(ha, mbox_cmd);
-+		if (status != QLA_SUCCESS) {
-+			bsg_reply->result = DID_ERROR << 16;
-+			goto exit_loopback_cmd;
-+		}
-+
-+		status = qla4_83xx_wait_for_loopback_config_comp(ha,
-+								 wait_for_link);
-+		if (status != QLA_SUCCESS) {
-+			bsg_reply->result = DID_TIME_OUT << 16;
-+			goto restore;
-+		}
-+	}
-+
-+	DEBUG2(ql4_printk(KERN_INFO, ha,
-+			  "%s: mbox_cmd: %08X %08X %08X %08X %08X %08X %08X %08X\n",
-+			  __func__, mbox_cmd[0], mbox_cmd[1], mbox_cmd[2],
-+			  mbox_cmd[3], mbox_cmd[4], mbox_cmd[5], mbox_cmd[6],
-+			  mbox_cmd[7]));
-+
-+	status = qla4xxx_mailbox_command(ha, MBOX_REG_COUNT, 8, &mbox_cmd[0],
-+				&mbox_sts[0]);
-+
-+	if (status == QLA_SUCCESS)
-+		bsg_reply->result = DID_OK << 16;
-+	else
-+		bsg_reply->result = DID_ERROR << 16;
-+
-+	DEBUG2(ql4_printk(KERN_INFO, ha,
-+			  "%s: mbox_sts: %08X %08X %08X %08X %08X %08X %08X %08X\n",
-+			  __func__, mbox_sts[0], mbox_sts[1], mbox_sts[2],
-+			  mbox_sts[3], mbox_sts[4], mbox_sts[5], mbox_sts[6],
-+			  mbox_sts[7]));
-+
-+	/* Send mbox_sts to application */
-+	bsg_job->reply_len = sizeof(struct iscsi_bsg_reply) + sizeof(mbox_sts);
-+	rsp_ptr = ((uint8_t *)bsg_reply) + sizeof(struct iscsi_bsg_reply);
-+	memcpy(rsp_ptr, mbox_sts, sizeof(mbox_sts));
-+restore:
-+	if (is_qla8032(ha) || is_qla8042(ha)) {
-+		status = qla4_83xx_post_loopback_config(ha, mbox_cmd);
-+		if (status != QLA_SUCCESS) {
-+			bsg_reply->result = DID_ERROR << 16;
-+			goto exit_loopback_cmd;
-+		}
-+
-+		/* for pre_loopback_config() wait for LINK UP only
-+		 * if PHY LINK is UP */
-+		if (!(ha->addl_fw_state & FW_ADDSTATE_LINK_UP))
-+			wait_for_link = 0;
-+
-+		status = qla4_83xx_wait_for_loopback_config_comp(ha,
-+								 wait_for_link);
-+		if (status != QLA_SUCCESS) {
-+			bsg_reply->result = DID_TIME_OUT << 16;
-+			goto exit_loopback_cmd;
-+		}
-+	}
-+exit_loopback_cmd:
-+	DEBUG2(ql4_printk(KERN_INFO, ha,
-+			  "%s: bsg_reply->result = x%x, status = %s\n",
-+			  __func__, bsg_reply->result, STATUS(status)));
-+	bsg_job_done(bsg_job, bsg_reply->result,
-+		     bsg_reply->reply_payload_rcv_len);
-+}
-+
-+static int qla4xxx_execute_diag_test(struct bsg_job *bsg_job)
-+{
-+	struct Scsi_Host *host = iscsi_job_to_shost(bsg_job);
-+	struct scsi_qla_host *ha = to_qla_host(host);
-+	struct iscsi_bsg_request *bsg_req = bsg_job->request;
-+	uint32_t diag_cmd;
-+	int rval = -EINVAL;
-+
-+	DEBUG2(ql4_printk(KERN_INFO, ha, "%s: in\n", __func__));
-+
-+	diag_cmd = bsg_req->rqst_data.h_vendor.vendor_cmd[1];
-+	if (diag_cmd == MBOX_CMD_DIAG_TEST) {
-+		switch (bsg_req->rqst_data.h_vendor.vendor_cmd[2]) {
-+		case QL_DIAG_CMD_TEST_DDR_SIZE:
-+		case QL_DIAG_CMD_TEST_DDR_RW:
-+		case QL_DIAG_CMD_TEST_ONCHIP_MEM_RW:
-+		case QL_DIAG_CMD_TEST_NVRAM:
-+		case QL_DIAG_CMD_TEST_FLASH_ROM:
-+		case QL_DIAG_CMD_TEST_DMA_XFER:
-+		case QL_DIAG_CMD_SELF_DDR_RW:
-+		case QL_DIAG_CMD_SELF_ONCHIP_MEM_RW:
-+			/* Execute diag test for adapter RAM/FLASH */
-+			ql4xxx_execute_diag_cmd(bsg_job);
-+			/* Always return success as we want to sent bsg_reply
-+			 * to Application */
-+			rval = QLA_SUCCESS;
-+			break;
-+
-+		case QL_DIAG_CMD_TEST_INT_LOOPBACK:
-+		case QL_DIAG_CMD_TEST_EXT_LOOPBACK:
-+			/* Execute diag test for Network */
-+			qla4xxx_execute_diag_loopback_cmd(bsg_job);
-+			/* Always return success as we want to sent bsg_reply
-+			 * to Application */
-+			rval = QLA_SUCCESS;
-+			break;
-+		default:
-+			ql4_printk(KERN_ERR, ha, "%s: Invalid diag test: 0x%x\n",
-+				   __func__,
-+				   bsg_req->rqst_data.h_vendor.vendor_cmd[2]);
-+		}
-+	} else if ((diag_cmd == MBOX_CMD_SET_LED_CONFIG) ||
-+		   (diag_cmd == MBOX_CMD_GET_LED_CONFIG)) {
-+		ql4xxx_execute_diag_cmd(bsg_job);
-+		rval = QLA_SUCCESS;
-+	} else {
-+		ql4_printk(KERN_ERR, ha, "%s: Invalid diag cmd: 0x%x\n",
-+			   __func__, diag_cmd);
-+	}
-+
-+	return rval;
-+}
-+
- /**
-  * qla4xxx_process_vendor_specific - handle vendor specific bsg request
-  * @job: iscsi_bsg_job to handle
-@@ -479,6 +836,9 @@ int qla4xxx_process_vendor_specific(struct bsg_job *bsg_job)
- 	case QLISCSI_VND_GET_ACB:
- 		return qla4xxx_bsg_get_acb(bsg_job);
- 
-+	case QLISCSI_VND_DIAG_TEST:
-+		return qla4xxx_execute_diag_test(bsg_job);
-+
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index e399561..4046241 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -2945,6 +2945,7 @@ void iscsi_conn_teardown(struct iscsi_cls_conn *cls_conn)
+ 	free_pages((unsigned long) conn->data,
+ 		   get_order(ISCSI_DEF_MAX_RECV_SEG_LEN));
+ 	kfree(conn->persistent_address);
++	kfree(conn->local_ipaddr);
+ 	kfifo_in(&session->cmdpool.queue, (void*)&conn->login_task,
+ 		    sizeof(void*));
+ 	if (session->leadconn == conn)
+@@ -3269,6 +3270,8 @@ int iscsi_set_param(struct iscsi_cls_conn *cls_conn,
+ 		sscanf(buf, "%d", &val);
+ 		session->discovery_sess = !!val;
+ 		break;
++	case ISCSI_PARAM_LOCAL_IPADDR:
++		return iscsi_switch_str_param(&conn->local_ipaddr, buf);
  	default:
- 		ql4_printk(KERN_ERR, ha, "%s: invalid BSG vendor command: "
- 			   "0x%x\n", __func__, bsg_req->msgcode);
-diff --git a/drivers/scsi/qla4xxx/ql4_bsg.h b/drivers/scsi/qla4xxx/ql4_bsg.h
-index c6a03645..88c2401 100644
---- a/drivers/scsi/qla4xxx/ql4_bsg.h
-+++ b/drivers/scsi/qla4xxx/ql4_bsg.h
-@@ -15,5 +15,18 @@
- #define QLISCSI_VND_UPDATE_NVRAM	5
- #define QLISCSI_VND_RESTORE_DEFAULTS	6
- #define QLISCSI_VND_GET_ACB		7
-+#define QLISCSI_VND_DIAG_TEST		8
-+
-+/* QLISCSI_VND_DIAG_CMD sub code */
-+#define QL_DIAG_CMD_TEST_DDR_SIZE	0x2
-+#define QL_DIAG_CMD_TEST_DDR_RW		0x3
-+#define QL_DIAG_CMD_TEST_ONCHIP_MEM_RW	0x4
-+#define QL_DIAG_CMD_TEST_NVRAM		0x5	/* Only ISP4XXX */
-+#define QL_DIAG_CMD_TEST_FLASH_ROM	0x6
-+#define QL_DIAG_CMD_TEST_INT_LOOPBACK	0x7
-+#define QL_DIAG_CMD_TEST_EXT_LOOPBACK	0x8
-+#define QL_DIAG_CMD_TEST_DMA_XFER	0x9	/* Only ISP4XXX */
-+#define QL_DIAG_CMD_SELF_DDR_RW		0xC
-+#define QL_DIAG_CMD_SELF_ONCHIP_MEM_RW	0xD
+ 		return -ENOSYS;
+ 	}
+@@ -3542,6 +3545,9 @@ int iscsi_conn_get_param(struct iscsi_cls_conn *cls_conn,
+ 	case ISCSI_PARAM_TCP_RECV_WSF:
+ 		len = sprintf(buf, "%u\n", conn->tcp_recv_wsf);
+ 		break;
++	case ISCSI_PARAM_LOCAL_IPADDR:
++		len = sprintf(buf, "%s\n", conn->local_ipaddr);
++		break;
+ 	default:
+ 		return -ENOSYS;
+ 	}
+diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
+index 6ac9e17a..309f513 100644
+--- a/include/scsi/libiscsi.h
++++ b/include/scsi/libiscsi.h
+@@ -231,6 +231,7 @@ struct iscsi_conn {
+ 	uint8_t			ipv6_traffic_class;
+ 	uint8_t			ipv6_flow_label;
+ 	uint8_t			is_fw_assigned_ipv6;
++	char			*local_ipaddr;
  
- #endif
-diff --git a/drivers/scsi/qla4xxx/ql4_def.h b/drivers/scsi/qla4xxx/ql4_def.h
-index e2be308..aa67bb9 100644
---- a/drivers/scsi/qla4xxx/ql4_def.h
-+++ b/drivers/scsi/qla4xxx/ql4_def.h
-@@ -73,6 +73,7 @@
- 
- #define QLA_SUCCESS			0
- #define QLA_ERROR			1
-+#define STATUS(status)		status == QLA_ERROR ? "FAILED" : "SUCCEEDED"
- 
- /*
-  * Data bit definitions
-@@ -210,6 +211,8 @@
- #define MAX_RESET_HA_RETRIES		2
- #define FW_ALIVE_WAIT_TOV		3
- #define IDC_EXTEND_TOV			8
-+#define IDC_COMP_TOV			5
-+#define LINK_UP_COMP_TOV		30
- 
- #define CMD_SP(Cmnd)			((Cmnd)->SCp.ptr)
- 
-@@ -822,6 +825,11 @@ struct scsi_qla_host {
- 	uint32_t pf_bit;
- 	struct qla4_83xx_idc_information idc_info;
- 	struct addr_ctrl_blk *saved_acb;
-+	int notify_idc_comp;
-+	int notify_link_up_comp;
-+	int idc_extend_tmo;
-+	struct completion idc_comp;
-+	struct completion link_up_comp;
- };
- 
- struct ql4_task_data {
-diff --git a/drivers/scsi/qla4xxx/ql4_fw.h b/drivers/scsi/qla4xxx/ql4_fw.h
-index 3060652..fef311d 100644
---- a/drivers/scsi/qla4xxx/ql4_fw.h
-+++ b/drivers/scsi/qla4xxx/ql4_fw.h
-@@ -410,6 +410,7 @@ struct qla_flt_region {
- #define DDB_DS_LOGIN_IN_PROCESS			0x07
- #define MBOX_CMD_GET_FW_STATE			0x0069
- #define MBOX_CMD_GET_INIT_FW_CTRL_BLOCK_DEFAULTS 0x006A
-+#define MBOX_CMD_DIAG_TEST			0x0075
- #define MBOX_CMD_GET_SYS_INFO			0x0078
- #define MBOX_CMD_GET_NVRAM			0x0078	/* For 40xx */
- #define MBOX_CMD_SET_NVRAM			0x0079	/* For 40xx */
-@@ -425,8 +426,17 @@ struct qla_flt_region {
- #define MBOX_CMD_GET_IP_ADDR_STATE		0x0091
- #define MBOX_CMD_SEND_IPV6_ROUTER_SOL		0x0092
- #define MBOX_CMD_GET_DB_ENTRY_CURRENT_IP_ADDR	0x0093
-+#define MBOX_CMD_SET_PORT_CONFIG		0x0122
-+#define MBOX_CMD_GET_PORT_CONFIG		0x0123
-+#define MBOX_CMD_SET_LED_CONFIG			0x0125
-+#define MBOX_CMD_GET_LED_CONFIG			0x0126
- #define MBOX_CMD_MINIDUMP			0x0129
- 
-+/* Port Config */
-+#define ENABLE_INTERNAL_LOOPBACK		0x04
-+#define ENABLE_EXTERNAL_LOOPBACK		0x08
-+#define ENABLE_DCBX				0x10
-+
- /* Minidump subcommand */
- #define MINIDUMP_GET_SIZE_SUBCOMMAND		0x00
- #define MINIDUMP_GET_TMPLT_SUBCOMMAND		0x01
-@@ -535,10 +545,6 @@ struct qla_flt_region {
- #define FLASH_OPT_COMMIT	2
- #define FLASH_OPT_RMW_COMMIT	3
- 
--/* Loopback type */
--#define ENABLE_INTERNAL_LOOPBACK	0x04
--#define ENABLE_EXTERNAL_LOOPBACK	0x08
--
- /* generic defines to enable/disable params */
- #define QL4_PARAM_DISABLE	0
- #define QL4_PARAM_ENABLE	1
-diff --git a/drivers/scsi/qla4xxx/ql4_glbl.h b/drivers/scsi/qla4xxx/ql4_glbl.h
-index b8e87b3..d67c50e 100644
---- a/drivers/scsi/qla4xxx/ql4_glbl.h
-+++ b/drivers/scsi/qla4xxx/ql4_glbl.h
-@@ -277,6 +277,8 @@ int qla4_84xx_config_acb(struct scsi_qla_host *ha, int acb_config);
- int qla4_83xx_ms_mem_write_128b(struct scsi_qla_host *ha,
- 				uint64_t addr, uint32_t *data, uint32_t count);
- uint8_t qla4xxx_set_ipaddr_state(uint8_t fw_ipaddr_state);
-+int qla4_83xx_get_port_config(struct scsi_qla_host *ha, uint32_t *config);
-+int qla4_83xx_set_port_config(struct scsi_qla_host *ha, uint32_t *config);
- 
- extern int ql4xextended_error_logging;
- extern int ql4xdontresethba;
-diff --git a/drivers/scsi/qla4xxx/ql4_isr.c b/drivers/scsi/qla4xxx/ql4_isr.c
-index 66cc9c1..a3c8bc7 100644
---- a/drivers/scsi/qla4xxx/ql4_isr.c
-+++ b/drivers/scsi/qla4xxx/ql4_isr.c
-@@ -650,6 +650,7 @@ static void qla4xxx_isr_decode_mailbox(struct scsi_qla_host * ha,
- 	int i;
- 	uint32_t mbox_sts[MBOX_AEN_REG_COUNT];
- 	__le32 __iomem *mailbox_out;
-+	uint32_t opcode = 0;
- 
- 	if (is_qla8032(ha) || is_qla8042(ha))
- 		mailbox_out = &ha->qla4_83xx_reg->mailbox_out[0];
-@@ -728,6 +729,11 @@ static void qla4xxx_isr_decode_mailbox(struct scsi_qla_host * ha,
- 			qla4xxx_post_aen_work(ha, ISCSI_EVENT_LINKUP,
- 					      sizeof(mbox_sts),
- 					      (uint8_t *) mbox_sts);
-+
-+			if ((is_qla8032(ha) || is_qla8042(ha)) &&
-+			    ha->notify_link_up_comp)
-+				complete(&ha->link_up_comp);
-+
- 			break;
- 
- 		case MBOX_ASTS_LINK_DOWN:
-@@ -873,8 +879,6 @@ static void qla4xxx_isr_decode_mailbox(struct scsi_qla_host * ha,
- 			break;
- 
- 		case MBOX_ASTS_IDC_REQUEST_NOTIFICATION:
--		{
--			uint32_t opcode;
- 			if (is_qla8032(ha) || is_qla8042(ha)) {
- 				DEBUG2(ql4_printk(KERN_INFO, ha,
- 						  "scsi%ld: AEN %04x, mbox_sts[1]=%08x, mbox_sts[2]=%08x, mbox_sts[3]=%08x, mbox_sts[4]=%08x\n",
-@@ -894,7 +898,6 @@ static void qla4xxx_isr_decode_mailbox(struct scsi_qla_host * ha,
- 				}
- 			}
- 			break;
--		}
- 
- 		case MBOX_ASTS_IDC_COMPLETE:
- 			if (is_qla8032(ha) || is_qla8042(ha)) {
-@@ -907,6 +910,14 @@ static void qla4xxx_isr_decode_mailbox(struct scsi_qla_host * ha,
- 						  "scsi:%ld: AEN %04x IDC Complete notification\n",
- 						  ha->host_no, mbox_sts[0]));
- 
-+				opcode = mbox_sts[1] >> 16;
-+				if (ha->notify_idc_comp)
-+					complete(&ha->idc_comp);
-+
-+				if ((opcode == MBOX_CMD_SET_PORT_CONFIG) ||
-+				    (opcode == MBOX_CMD_PORT_RESET))
-+					ha->idc_info.info2 = mbox_sts[3];
-+
- 				if (qla4_83xx_loopback_in_progress(ha)) {
- 					set_bit(AF_LOOPBACK, &ha->flags);
- 				} else {
-@@ -939,6 +950,8 @@ static void qla4xxx_isr_decode_mailbox(struct scsi_qla_host * ha,
- 			DEBUG2(ql4_printk(KERN_INFO, ha,
- 					  "scsi%ld: AEN %04x Received IDC Extend Timeout notification\n",
- 					  ha->host_no, mbox_sts[0]));
-+			/* new IDC timeout */
-+			ha->idc_extend_tmo = mbox_sts[1];
- 			break;
- 
- 		case MBOX_ASTS_INITIALIZATION_FAILED:
-diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
-index 3c0ea1e..7da0646 100644
---- a/drivers/scsi/qla4xxx/ql4_mbx.c
-+++ b/drivers/scsi/qla4xxx/ql4_mbx.c
-@@ -2416,3 +2416,46 @@ exit_config_acb:
- 			  rval == QLA_SUCCESS ? "SUCCEEDED" : "FAILED"));
- 	return rval;
- }
-+
-+int qla4_83xx_get_port_config(struct scsi_qla_host *ha, uint32_t *config)
-+{
-+	uint32_t mbox_cmd[MBOX_REG_COUNT];
-+	uint32_t mbox_sts[MBOX_REG_COUNT];
-+	int status;
-+
-+	memset(&mbox_cmd, 0, sizeof(mbox_cmd));
-+	memset(&mbox_sts, 0, sizeof(mbox_sts));
-+
-+	mbox_cmd[0] = MBOX_CMD_GET_PORT_CONFIG;
-+
-+	status = qla4xxx_mailbox_command(ha, MBOX_REG_COUNT, MBOX_REG_COUNT,
-+					 mbox_cmd, mbox_sts);
-+	if (status == QLA_SUCCESS)
-+		*config = mbox_sts[1];
-+	else
-+		ql4_printk(KERN_ERR, ha, "%s: failed status %04X\n", __func__,
-+			   mbox_sts[0]);
-+
-+	return status;
-+}
-+
-+int qla4_83xx_set_port_config(struct scsi_qla_host *ha, uint32_t *config)
-+{
-+	uint32_t mbox_cmd[MBOX_REG_COUNT];
-+	uint32_t mbox_sts[MBOX_REG_COUNT];
-+	int status;
-+
-+	memset(&mbox_cmd, 0, sizeof(mbox_cmd));
-+	memset(&mbox_sts, 0, sizeof(mbox_sts));
-+
-+	mbox_cmd[0] = MBOX_CMD_SET_PORT_CONFIG;
-+	mbox_cmd[1] = *config;
-+
-+	status = qla4xxx_mailbox_command(ha, MBOX_REG_COUNT, MBOX_REG_COUNT,
-+				mbox_cmd, mbox_sts);
-+	if (status != QLA_SUCCESS)
-+		ql4_printk(KERN_ERR, ha, "%s: failed status %04X\n", __func__,
-+			   mbox_sts[0]);
-+
-+	return status;
-+}
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index da9fdcc..60d050e 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -8397,6 +8397,9 @@ static int qla4xxx_probe_adapter(struct pci_dev *pdev,
- 	mutex_init(&ha->chap_sem);
- 	init_completion(&ha->mbx_intr_comp);
- 	init_completion(&ha->disable_acb_comp);
-+	init_completion(&ha->idc_comp);
-+	init_completion(&ha->link_up_comp);
-+	init_completion(&ha->disable_acb_comp);
- 
- 	spin_lock_init(&ha->hardware_lock);
- 	spin_lock_init(&ha->work_lock);
+ 	/* MIB-statistics */
+ 	uint64_t		txdata_octets;
 -- 
 1.8.2.GIT
 
