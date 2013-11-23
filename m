@@ -1,37 +1,25 @@
-From: Pamela Collins Greson <collinz42@gmail.com>
-Subject: Hej =?iso-8859-1?b?S+RyYQ==?=
-Date: Sat, 23 Nov 2013 00:38:55 +0200
-Message-ID: <20131123003855.58211wk377k13egv@www.pamelagreson.co.za>
-Reply-To: pamelagreson@live.com
+From: OSBORNES SOLICITORS LLP <djholditch@crimson.ua.edu>
+Subject: PRIVATE MESSAGE
+Date: Sat, 23 Nov 2013 11:36:37 +0100
+Message-ID: <CAES10a717CqU=CM7sp160n9k2z+rs7xRjJ1-0ygc_+a+ofv0Lw__8156.08151392571$1385203052$gmane$org@mail.gmail.com>
+Reply-To: Osbornes@mail2world.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	DelSp=Yes	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from chs3.ampledns.com ([216.246.23.156]:56253 "EHLO
-	chs3.ampledns.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755635Ab3KWA41 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Nov 2013 19:56:27 -0500
-Content-Disposition: inline
+Received: from mail-lb0-f193.google.com ([209.85.217.193]:60981 "EHLO
+	mail-lb0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755795Ab3KWKgr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 23 Nov 2013 05:36:47 -0500
+Received: by mail-lb0-f193.google.com with SMTP id w7so405848lbi.0
+        for <linux-scsi@vger.kernel.org>; Sat, 23 Nov 2013 02:36:46 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hej K=E4ra,
-=A0=A0 Jag =E4r Pamela Greson med namn, jag =E4r fr=E5n Norge :)
-Jag =E4r romantisk, och singel.
-Jag s=F6ker en trevlig och snygg man ..!
-Jag fick e-post fr=E5n Sverige gul sida.
-Svara p=E5 min mail, och jag kommer att skicka mycket bilder av mig och=
- =20
-ber=E4tta om mig sj=E4lv.
-Tycker du om kyssar?
-Tycker du 69?
-Talar du engelska?
-Skriv mig snart!
-Pamela Greson
+-- 
+This is to inform you that an inheritance was bequeathed in your
+favour. Letters were posted to you to this regards, but returned
+undelivered. Kindly contact me once you recieve this email for more
+information.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Sincerely
+Barr Mark Freedman
