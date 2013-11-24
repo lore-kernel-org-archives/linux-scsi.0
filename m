@@ -1,152 +1,137 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH v4 3/4] ata: Add APM X-Gene SoC SATA host controller driver
-Date: Sun, 24 Nov 2013 20:35:11 +0100
-Message-ID: <201311242035.11411.arnd@arndb.de>
-References: <1385014298-15700-1-git-send-email-lho@apm.com> <201311211401.14836.arnd@arndb.de> <CAPw-ZTnt0QnXxb_dkDpkXbz4xFOcMM2Z-oOVJdH9o9u3S+DuPg@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <CAPw-ZTnt0QnXxb_dkDpkXbz4xFOcMM2Z-oOVJdH9o9u3S+DuPg@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Loc Ho <lho@apm.com>
-Cc: Olof Johansson <olof@lixom.net>, Tejun Heo <tj@kernel.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Jon Masters <jcm@redhat.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
+From: Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH 3.13] genetlink/pmcraid: use proper genetlink multicast API
+Date: Sun, 24 Nov 2013 21:09:26 +0100
+Message-ID: <1385323766-30356-1-git-send-email-johannes@sipsolutions.net>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from s3.sipsolutions.net ([144.76.43.152]:35071 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752333Ab3KXUJk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 24 Nov 2013 15:09:40 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: netdev@vger.kernel.org
+Cc: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, Johannes Berg <johannes.berg@intel.com>
 
-On Sunday 24 November 2013, Loc Ho wrote:
-> 
-> > > +struct xgene_ahci_context {
-> > > +     struct ahci_host_priv  hpriv;
-> > > +     struct device *dev;
-> > > +     int irq;                /* IRQ */
-> > > +     void __iomem *csr_base; /* CSR base address of IP */
-> > > +     u64 csr_phys;           /* Physical address of CSR base address */
-> > > +     void __iomem *mmio_base; /* AHCI I/O base address */
-> > > +     u64 mmio_phys;          /* Physical address of MMIO base address */
-> > > +     void __iomem *ahbc_csr_base; /* Used for IOB flushing if non-zero
-> > */
-> > > +     void __iomem *ahbc_io_base;  /* Used for IOB flushing if non-zero *
-> >
-> > I still think the flushing should be split out into a separate subsystem
-> > of some
-> > sort, or into common code. Can you explain why it is needed in this
-> > driver, and
-> > what other parts of your SoC also need to do the same thing?
-> >
-> [Loc Ho]
-> Due to HW bug, the read to flush does not function properly with the SATA
-> and SD IP's. For this reason, to ensure that data has reached the DDR after
-> reading the CI register of the AHCI, we need to flush the bus. This will
-> ensure data for the corresponding CI bit are available before the SATA
-> upper layer consumed the data. The chance of this happen is extremely lower
-> but this will ensure 100% data consistency. As the SD IP is single
-> operation at a time, it will never need this. Also, if it does, by enable
-> the feature itself, any read on the SD register is enough to handle the bus
-> flush. So, SD don't needs this as SATA will enable it. This will not be fix
-> in the first generation of the chip and this explicit flush is required for
-> SATA.
-> 
-> 
-> >
-> > Maybe we can have custom dma_map_ops for your platform so the flushing
-> > automatically
-> > happens in dma_unmap_sg().
-> >
-> [Loc Ho]
-> We don't want this for other IP as it will affact performance for the other
-> IP's.
+From: Johannes Berg <johannes.berg@intel.com>
 
-The dma_map_ops can be set per device, so it would still be possible to do,
-but if the AHCI is the only one that needs it, I guess it makes
-sense to do it the currect way.
+The pmcraid driver is abusing the genetlink API and is using its
+family ID as the multicast group ID, which is invalid and may
+belong to somebody else (and likely will.)
 
-> > > +static void xgene_wr_flush(void *addr, u32 val)
-> > > +{
-> > > +     writel(val, addr);
-> > > +     pr_debug("X-Gene SATA CSR WR: 0x%p value: 0x%08x\n", addr, val);
-> > > +     val = readl(addr);
-> > > +}
-> >
-> > This seems to be a rather expensive operation. Can you explain what the
-> > extra
-> > flush is trying to achieve here? Normally you'd want to eliminate any
-> > readl()
-> > from high-performance device drivers if you can. Is this used in any fast
-> > path?
-> >
-> [Loc Ho]
-> This is only for configuration barrier. Will not be used for IO.
+Make it use the correct API, but since this may already be used
+as-is by userspace, reserve a family ID for this code and also
+reserve that group ID to not break userspace assumptions.
 
-Ok.
+My previous patch broke event delivery in the driver as I missed
+that it wasn't using the right API and forgot to update it later
+in my series.
 
-> > > +static int xgene_ahci_init_memram(struct xgene_ahci_context *ctx)
-> > > +{
-> > > +     void *diagcsr = ctx->csr_base + SATA_DIAG_OFFSET;
-> > > +     int timeout;
-> > > +     u32 val;
-> > > +
-> > > +     xgene_rd(diagcsr + REGSPEC_CFG_MEM_RAM_SHUTDOWN_ADDR, &val);
-> > > +     if (val == 0) {
-> > > +             dev_dbg(ctx->dev, "memory already released from
-> > shutdown\n");
-> > > +             return 0;
-> > > +     }
-> > > +     dev_dbg(ctx->dev, "Release memory from shutdown\n");
-> > > +     /* SATA controller memory in shutdown. Remove from shutdown. */
-> > > +     xgene_wr_flush(diagcsr + REGSPEC_CFG_MEM_RAM_SHUTDOWN_ADDR, 0x00);
-> > > +     timeout = SATA_RESET_MEM_RAM_TO;
-> > > +     do {
-> > > +             xgene_rd(diagcsr + REGSPEC_BLOCK_MEM_RDY_ADDR, &val);
-> > > +             if (val != 0xFFFFFFFF)
-> > > +                     udelay(1);
-> > > +     } while (val != 0xFFFFFFFF && timeout-- > 0);
-> >
-> > With SATA_RESET_MEM_RAM_TO == 100000, this is an awfully long busy-loop.
-> > Can you replace the udelay with usleep_range() providing a reasonable
-> > wide range, and the replace the retry count with a time_before(jiffies(),
-> > timeout) comparision?
-> >
-> [Loc Ho]
-> I reduce to 1000. It only takes about one or two reads.
+While changing this, I noticed that the genetlink code could use
+the static group ID instead of a strcmp(), so also do that for
+the VFS_DQUOT family.
 
-It's still over two miliseconds for the (unlikely) timeout in that case,
-plus the time it takes to do the 1000 reads. The important part of my
-comment was about using usleep_range(), which lets another process run
-in the meantime rather than blocking the CPU.
+Cc: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/scsi/pmcraid.c         | 20 +++++++++++++++-----
+ include/uapi/linux/genetlink.h |  1 +
+ net/netlink/genetlink.c        | 11 +++++++++--
+ 3 files changed, 25 insertions(+), 7 deletions(-)
 
-If you want to keep using a retry count rather than a timeout, don't
-call it "timeout".
+diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
+index bd6f743..892ea61 100644
+--- a/drivers/scsi/pmcraid.c
++++ b/drivers/scsi/pmcraid.c
+@@ -1404,11 +1404,22 @@ enum {
+ };
+ #define PMCRAID_AEN_CMD_MAX (__PMCRAID_AEN_CMD_MAX - 1)
+ 
++static struct genl_multicast_group pmcraid_mcgrps[] = {
++	{ .name = "events", /* not really used - see ID discussion below */ },
++};
++
+ static struct genl_family pmcraid_event_family = {
+-	.id = GENL_ID_GENERATE,
++	/*
++	 * Due to prior multicast group abuse (the code having assumed that
++	 * the family ID can be used as a multicast group ID) we need to
++	 * statically allocate a family (and thus group) ID.
++	 */
++	.id = GENL_ID_PMCRAID,
+ 	.name = "pmcraid",
+ 	.version = 1,
+-	.maxattr = PMCRAID_AEN_ATTR_MAX
++	.maxattr = PMCRAID_AEN_ATTR_MAX,
++	.mcgrps = pmcraid_mcgrps,
++	.n_mcgrps = ARRAY_SIZE(pmcraid_mcgrps),
+ };
+ 
+ /**
+@@ -1511,9 +1522,8 @@ static int pmcraid_notify_aen(
+ 		return result;
+ 	}
+ 
+-	result =
+-		genlmsg_multicast(&pmcraid_event_family, skb, 0,
+-				  pmcraid_event_family.id, GFP_ATOMIC);
++	result = genlmsg_multicast(&pmcraid_event_family, skb,
++				   0, 0, GFP_ATOMIC);
+ 
+ 	/* If there are no listeners, genlmsg_multicast may return non-zero
+ 	 * value.
+diff --git a/include/uapi/linux/genetlink.h b/include/uapi/linux/genetlink.h
+index 1af72d82..c3363ba 100644
+--- a/include/uapi/linux/genetlink.h
++++ b/include/uapi/linux/genetlink.h
+@@ -28,6 +28,7 @@ struct genlmsghdr {
+ #define GENL_ID_GENERATE	0
+ #define GENL_ID_CTRL		NLMSG_MIN_TYPE
+ #define GENL_ID_VFS_DQUOT	(NLMSG_MIN_TYPE + 1)
++#define GENL_ID_PMCRAID		(NLMSG_MIN_TYPE + 2)
+ 
+ /**************************************************************************
+  * Controller
+diff --git a/net/netlink/genetlink.c b/net/netlink/genetlink.c
+index 4518a57..1e393aa 100644
+--- a/net/netlink/genetlink.c
++++ b/net/netlink/genetlink.c
+@@ -74,9 +74,12 @@ static struct list_head family_ht[GENL_FAM_TAB_SIZE];
+  * Bit 17 is marked as already used since the VFS quota code
+  * also abused this API and relied on family == group ID, we
+  * cater to that by giving it a static family and group ID.
++ * Bit 18 is marked as already used since the PMCRAID driver
++ * did the same thing as the VFS quota code (maybe copied?)
+  */
+ static unsigned long mc_group_start = 0x3 | BIT(GENL_ID_CTRL) |
+-				      BIT(GENL_ID_VFS_DQUOT);
++				      BIT(GENL_ID_VFS_DQUOT) |
++				      BIT(GENL_ID_PMCRAID);
+ static unsigned long *mc_groups = &mc_group_start;
+ static unsigned long mc_groups_longs = 1;
+ 
+@@ -139,6 +142,7 @@ static u16 genl_generate_id(void)
+ 
+ 	for (i = 0; i <= GENL_MAX_ID - GENL_MIN_ID; i++) {
+ 		if (id_gen_idx != GENL_ID_VFS_DQUOT &&
++		    id_gen_idx != GENL_ID_PMCRAID &&
+ 		    !genl_family_find_byid(id_gen_idx))
+ 			return id_gen_idx;
+ 		if (++id_gen_idx > GENL_MAX_ID)
+@@ -236,9 +240,12 @@ static int genl_validate_assign_mc_groups(struct genl_family *family)
+ 	} else if (strcmp(family->name, "NET_DM") == 0) {
+ 		first_id = 1;
+ 		BUG_ON(n_groups != 1);
+-	} else if (strcmp(family->name, "VFS_DQUOT") == 0) {
++	} else if (family->id == GENL_ID_VFS_DQUOT) {
+ 		first_id = GENL_ID_VFS_DQUOT;
+ 		BUG_ON(n_groups != 1);
++	} else if (family->id == GENL_ID_PMCRAID) {
++		first_id = GENL_ID_PMCRAID;
++		BUG_ON(n_groups != 1);
+ 	} else {
+ 		groups_allocated = true;
+ 		err = genl_allocate_reserve_groups(n_groups, &first_id);
+-- 
+1.8.4.rc3
 
-> > > +/* Flush the IOB to ensure all SATA controller writes completed before
-> > > +   servicing the completed command. This is needed due to the
-> > possibility
-> > > +   that interrupt serviced before the data actually written to the
-> > cache/DDR.
-> > > +   Writes from the IP to the CPU domain is not synchronized with the IRQ
-> > > +   line or the IP core toggled the CI bits before the data write
-> > completed. */
-> > > +static int xgene_ahci_iob_flush(struct xgene_ahci_context *ctx)
-> > > +{
-> > > +     if (ctx->ahbc_io_base)
-> > > +             readl(ctx->ahbc_io_base);
-> > > +     return 0;
-> > > +}
-> >
-> > Normally the synchronization should be guaranteed by using MSI interrupts
-> > rather than edge or level interrupt pins. Do you have MSI support in your
-> > hardware? Using that would get rid of this ugly hack and likely improve
-> > performance significantly.
-> >
-> [Loc Ho]
-> The SATA IP is built into the chip and NOT on the PCIe bus. The need for
-> this is already mentioned above.
-
-I don't understand the comment about PCIe. MSI should work regardless of
-where the device resides in the system, unless you have the MSI controller
-integrated into the PCIe host, which would be a bug because it causes the
-same problem that you have on this device for any PCIe add-on device
-(the MSI would no longer flush the a PCIe bus master DMA transfer
-all the way to memory if the message is consumed by the PCIe host).
-
-	Arnd
