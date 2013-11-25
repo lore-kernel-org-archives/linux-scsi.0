@@ -1,286 +1,58 @@
-From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: Re: [PATCH 1/1 linux-scs-ml] qla2xxx: Update ql2{4,5}00_fw.bin to
- version 7.01.00
-Date: Mon, 25 Nov 2013 14:14:27 +0000
-Message-ID: <F5D084D6342F9B479C34599BB0A03E4D89843DE0@AVMB1.qlogic.org>
-References: <5290A6DE.8080008@gmail.com>
+From: Benjamin ESTRABAUD <be@mpstor.com>
+Subject: qla2xxx: automatically rescan removed luns.
+Date: Mon, 25 Nov 2013 15:37:24 +0000
+Message-ID: <52936EB4.4090508@mpstor.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_000_F5D084D6342F9B479C34599BB0A03E4D89843DE0AVMB1qlogicorg_"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:41233 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756670Ab3KYOOb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Nov 2013 09:14:31 -0500
-Received: from pps.filterd (m0000643.ppops.net [127.0.0.1])
-	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id rAPEDkn5031664
-	for <linux-scsi@vger.kernel.org>; Mon, 25 Nov 2013 06:14:30 -0800
-Received: from avcashub1.qlogic.com (avcashub1.qlogic.com [198.70.193.115])
-	by mx0b-0016ce01.pphosted.com with ESMTP id 1g98msdsgn-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Mon, 25 Nov 2013 06:14:30 -0800
-In-Reply-To: <5290A6DE.8080008@gmail.com>
-Content-Language: en-US
+Received: from relay2.blacknight.com ([78.153.203.205]:49301 "EHLO
+	relay2.blacknight.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753947Ab3KYPos (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Nov 2013 10:44:48 -0500
+Received: from [10.0.2.163] (unknown [91.123.228.39])
+	by relay2.blacknight.com (Postfix) with ESMTP id A368339407A
+	for <linux-scsi@vger.kernel.org>; Mon, 25 Nov 2013 15:37:24 +0000 (GMT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>, linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Chad Dupuis <chad.dupuis@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Dept-Eng Linux Driver <Linux-Driver@qlogic.com>, David Woodhouse <dwmw2@infradead.org>, Ben Hutchings <ben@decadent.org.uk>
+To: linux-scsi@vger.kernel.org
 
---_000_F5D084D6342F9B479C34599BB0A03E4D89843DE0AVMB1qlogicorg_
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <BD4AB6F8BE95D74AB8FA10155462B594@qlogic.com>
-Content-Transfer-Encoding: quoted-printable
+Hi,
 
-Acked-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
+Using the qla2xxx driver from Linux 3.10.1 (release), if a LUN from the 
+target side (multiple drives exported over a LIO IBlock qla2xxx export) 
+is removed at the LIO level, the initiator side will not automatically 
+detect that this LUN was removed.
 
+All commands to this LUN will fail (sg_inq, read, writes) but the 
+qla2xxx will never kick the drive out.
 
+If another drive was to be exported on the target side using the same 
+lun as the previously removed drive, commands sent to the same block id 
+would now work again but be sent to the new LUN.
 
->resent to linux-scsi-ml, without the binary blob(316K).
->
->fw and licence were taken from http://ldriver.qlogic.com/firmware/
->
->Cc: Chad Dupuis <chad.dupuis@qlogic.com>
->Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>
->Cc: linux-driver@qlogic.com
->Cc: David Woodhouse <dwmw2@infradead.org>
->Cc: Ben Hutchings <ben@decadent.org.uk>
->Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
->---
-> LICENCE.qla2xxx |  60
->++++++++++++++++++++++++--------------------------------
-> WHENCE          |   4 ++--
-> ql2400_fw.bin   | Bin 257108 -> 259332 bytes
-> ql2500_fw.bin   | Bin 260064 -> 265420 bytes
-> 4 files changed, 28 insertions(+), 36 deletions(-)
->
->diff --git a/LICENCE.qla2xxx b/LICENCE.qla2xxx
->index f669ae0..df67a9b 100644
->--- a/LICENCE.qla2xxx
->+++ b/LICENCE.qla2xxx
->@@ -1,39 +1,31 @@
->-Copyright (c)  2003-2006 QLogic Corporation
->-QLogic Linux Fibre Channel HBA Firmware
->+Copyright (c) 2003-2010 QLogic Corporation
->+QLogic Linux Fibre Channel Adapter Firmware
-> -You may redistribute the hardware specific firmware binary file
->-under the following terms:
->+Redistribution and use in binary form, without modification, for use in
->conjunction
->+with QLogic authorized products is permitted provided that the following
->conditions
->+are met:
-> -	1. Redistribution of source code (only if applicable),
->-	   must retain the above copyright notice, this list of
->-	   conditions and the following disclaimer.
->+1. Redistribution in binary form must reproduce the above copyright
->notice, this
->+   list of conditions and the following disclaimer in the documentation
->and/or
->+   other materials provided with the distribution.
->+2. The name of QLogic Corporation may not be used to endorse or promote
->products
->+   derived from this software without specific prior written permission.
->+3. Reverse engineering, decompilation, or disassembly of this firmware
->is not
->+   permitted.
-> -	2. Redistribution in binary form must reproduce the above
->-	   copyright notice, this list of conditions and the
->-	   following disclaimer in the documentation and/or other
->-	   materials provided with the distribution.
->+REGARDLESS OF WHAT LICENSING MECHANISM IS USED OR APPLICABLE,THIS
->PROGRAM IS
->+PROVIDED BY QLOGIC CORPORATION "AS IS'' AND ANY EXPRESS OR IMPLIED
->WARRANTIES,
->+INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
->AND
->+FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
->AUTHOR
->+BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
->+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
->SUBSTITUTE
->+GOODS OR SERVICES; LOSS OF USE,DATA, OR PROFITS; OR BUSINESS
->INTERRUPTION)
->+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
->STRICT
->+LIABILITY,OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
->+OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
->SUCH DAMAGE.
-> -	3. The name of QLogic Corporation may not be used to
->-	   endorse or promote products derived from this software
->-	   without specific prior written permission
->-
->-REGARDLESS OF WHAT LICENSING MECHANISM IS USED OR APPLICABLE,
->-THIS PROGRAM IS PROVIDED BY QLOGIC CORPORATION "AS IS'' AND ANY
->-EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
->-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
->-PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR
->-BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
->-EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
->-TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
->-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
->-ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
->-OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
->-OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
->-POSSIBILITY OF SUCH DAMAGE.
->-
->-USER ACKNOWLEDGES AND AGREES THAT USE OF THIS PROGRAM WILL NOT
->-CREATE OR GIVE GROUNDS FOR A LICENSE BY IMPLICATION, ESTOPPEL, OR
->-OTHERWISE IN ANY INTELLECTUAL PROPERTY RIGHTS (PATENT, COPYRIGHT,
->-TRADE SECRET, MASK WORK, OR OTHER PROPRIETARY RIGHT) EMBODIED IN
->-ANY OTHER QLOGIC HARDWARE OR SOFTWARE EITHER SOLELY OR IN
->+USER ACKNOWLEDGES AND AGREES THAT USE OF THIS PROGRAM WILL NOT CREATE OR
->GIVE
->+GROUNDS FOR A LICENSE BY IMPLICATION, ESTOPPEL, OR OTHERWISE IN ANY
->INTELLECTUAL
->+PROPERTY RIGHTS (PATENT, COPYRIGHT, TRADE SECRET, MASK WORK, OR OTHER
->PROPRIETARY
->+RIGHT) EMBODIED IN ANY OTHER QLOGIC HARDWARE OR SOFTWARE EITHER SOLELY
->OR IN
-> COMBINATION WITH THIS PROGRAM.
->diff --git a/WHENCE b/WHENCE
->index 2d52804..94f28a5 100644
->--- a/WHENCE
->+++ b/WHENCE
->@@ -429,9 +429,9 @@ Version: 3.03.28 IPX
-> File: ql2322_fw.bin
-> Version: 3.03.28 IPX
-> File: ql2400_fw.bin
->-Version: 5.08.00 MID
->+Version: 7.01.00 MID
-> File: ql2500_fw.bin
->-Version: 5.08.00 MIDQ
->+Version: 7.01.00 MIDQ
->  Licence: Redistributable. See LICENCE.qla2xxx for details
-> diff --git a/ql2400_fw.bin b/ql2400_fw.bin
->[...]
-> diff --git a/ql2500_fw.bin b/ql2500_fw.bin
->[...]
->--=20
->1.8.3.1
->
->
->--
->To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I tried to echo "- - -" in the scsi_host sysfs "scan" file corresponding 
+to the FC port. This worked to detect new LUNs but not to "clear" 
+removed ones.
 
+I tried issuing a lip_reset on both sides, but no change.
 
---_000_F5D084D6342F9B479C34599BB0A03E4D89843DE0AVMB1qlogicorg_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
+Looking through Google, I realized that, on RedHat, a /proc/scsi/qla2xxx 
+virtual FS exists which allows to send a "scsi-qlascan" command to the 
+driver that apparently can detect removed LUNs. Unfortunately I don't 
+have this FS visible on my Linux kernel, and I made sure /proc/scsi was 
+enabled.
 
-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
-aAB5AGEAcAAAAFMATQBUAFAAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBn
-AGkAYwAuAGMAbwBtAAAAHwACXQEAAAA0AAAAcwBhAHUAcgBhAHYALgBrAGEAcwBoAHkAYQBwAEAA
-cQBsAG8AZwBpAGMALgBjAG8AbQAAAB8A5V8BAAAAPAAAAHMAaQBwADoAcwBhAHUAcgBhAHYALgBr
-AGEAcwBoAHkAYQBwAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AGgwBAAAAHgAAAFMAYQB1AHIA
-YQB2ACAASwBhAHMAaAB5AGEAcAAAAAAAHwAfDAEAAAA0AAAAcwBhAHUAcgBhAHYALgBrAGEAcwBo
-AHkAYQBwAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AHgwBAAAACgAAAFMATQBUAFAAAAAAAAIB
-GQwBAAAAdAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgFMAYQB1AHIAYQB2ACAASwBhAHMAaAB5
-AGEAcAAAAFMATQBUAFAAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkA
-YwAuAGMAbwBtAAAAHwABXQEAAAA0AAAAcwBhAHUAcgBhAHYALgBrAGEAcwBoAHkAYQBwAEAAcQBs
-AG8AZwBpAGMALgBjAG8AbQAAAB8A+D8BAAAAHgAAAFMAYQB1AHIAYQB2ACAASwBhAHMAaAB5AGEA
-cAAAAAAAHwAjQAEAAAA0AAAAcwBhAHUAcgBhAHYALgBrAGEAcwBoAHkAYQBwAEAAcQBsAG8AZwBp
-AGMALgBjAG8AbQAAAB8AIkABAAAACgAAAFMATQBUAFAAAAAAAAIB+T8BAAAAdAAAAAAAAACBKx+k
-vqMQGZ1uAN0BD1QCAAAAgFMAYQB1AHIAYQB2ACAASwBhAHMAaAB5AGEAcAAAAFMATQBUAFAAAABz
-AGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAJXQEA
-AAA0AAAAcwBhAHUAcgBhAHYALgBrAGEAcwBoAHkAYQBwAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAA
-AAsAQDoBAAAAHwAaAAEAAAASAAAASQBQAE0ALgBOAG8AdABlAAAAAAADAPE/CQQAAAsAQDoBAAAA
-AwD9P+QEAAACAQswAQAAABAAAAAwtF3l5o2DQZ+QwDSNmjK1AwAXAAEAAABAADkAgGMtpujpzgFA
-AAgwmYdhpujpzgELAACACCAGAAAAAADAAAAAAAAARgAAAAAUhQAAAQAAAB8AAICGAwIAAAAAAMAA
-AAAAAABGAQAAAB4AAABhAGMAYwBlAHAAdABsAGEAbgBnAHUAYQBnAGUAAAAAAAEAAAAMAAAAZQBu
-AC0AVQBTAAAACwAAgAggBgAAAAAAwAAAAAAAAEYAAAAABoUAAAAAAAAfADcAAQAAAKQAAABSAGUA
-OgAgAFsAUABBAFQAQwBIACAAMQAvADEAIABsAGkAbgB1AHgALQBzAGMAcwAtAG0AbABdACAAcQBs
-AGEAMgB4AHgAeAA6ACAAVQBwAGQAYQB0AGUAIABxAGwAMgB7ADQALAA1AH0AMAAwAF8AZgB3AC4A
-YgBpAG4AIAB0AG8AIAB2AGUAcgBzAGkAbwBuACAANwAuADAAMQAuADAAMAAAAB8APQABAAAACgAA
-AFIAZQA6ACAAAAAAAAMANgAAAAAAHwBCEAEAAAA6AAAAPAA1ADIAOQAwAEEANgBEAEUALgA4ADAA
-OAAwADAAMAA4AEAAZwBtAGEAaQBsAC4AYwBvAG0APgAAAAAAAgFxAAEAAAAWAAAAAQHO6eimQg+F
-UPd2C0SUSPh1MpLWUwAAHwBwAAEAAACcAAAAWwBQAEEAVABDAEgAIAAxAC8AMQAgAGwAaQBuAHUA
-eAAtAHMAYwBzAC0AbQBsAF0AIABxAGwAYQAyAHgAeAB4ADoAIABVAHAAZABhAHQAZQAgAHEAbAAy
-AHsANAAsADUAfQAwADAAXwBmAHcALgBiAGkAbgAgAHQAbwAgAHYAZQByAHMAaQBvAG4AIAA3AC4A
-MAAxAC4AMAAwAAAAHwA1EAEAAAB4AAAAPABGADUARAAwADgANABEADYAMwA0ADIARgA5AEIANAA3
-ADkAQwAzADQANQA5ADkAQgBCADAAQQAwADMARQA0AEQAOAA5ADgANAAzAEQARQAwAEAAQQBWAE0A
-QgAxAC4AcQBsAG8AZwBpAGMALgBvAHIAZwA+AAAAAwDeP59OAABAAAcwl3xOpujpzgEDACYAAAAA
-AAIBRwABAAAALgAAAGM9VVM7YT0gO3A9UUxvZ2ljO2w9QVZNQjEtMTMxMTI1MTQxNDI3Wi01MTI5
-OAAAAB8AFRABAAAAWAAAAEIARAA0AEEAQgA2AEYAOABCAEUAOQA1AEQANwA0AEEAQgA4AEYAQQAx
-ADAAMQA1ADUANAA2ADIAQgA1ADkANABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAACARQwAQAAAAwA
-AABeAgAAD2C+8EEAAAAfAPo/AQAAAB4AAABTAGEAdQByAGEAdgAgAEsAYQBzAGgAeQBhAHAAAAAA
-AB8AAICGAwIAAAAAAMAAAAAAAABGAQAAABYAAAB1AHMAZQByAC0AYQBnAGUAbgB0AAAAAAABAAAA
-SAAAAE0AaQBjAHIAbwBzAG8AZgB0AC0ATQBhAGMATwB1AHQAbABvAG8AawAvADEANAAuADEAMAAu
-ADAALgAxADEAMAAzADEAMAAAAB8AAIAfpOszqHouQr57eeGpjlSzAQAAADgAAABDAG8AbgB2AGUA
-cgBzAGEAdABpAG8AbgBJAG4AZABlAHgAVAByAGEAYwBrAGkAbgBnAEUAeAAAAAEAAAD4AAAASQBJ
-AD0AMAAxADAAMQBDAEUARQA5AEUAOABBADYANAAyADAARgA4ADUANQAwAEYANwA3ADYAMABCADQA
-NAA5ADQANAA4AEYAOAA3ADUAMwAyADkAMgBEADYANQAzADsAUwBCAE0ASQBEAD0AMQAzADsAUwBC
-AFQAPQAxADIAOwBUAEgAQQA9ADMANAA3ADAAOQA4ADkANgAwADQAOwBWAGUAcgBzAGkAbwBuAD0A
-VgBlAHIAcwBpAG8AbgAgADEANAAuADIAIAAoAEIAdQBpAGwAZAAgADMAMQA4AC4AMAApACwAIABT
-AHQAYQBnAGUAPQBIADcAAAADAA00/T8AAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAACAAAAB4AC0A
-bQBzAC0AaABhAHMALQBhAHQAdABhAGMAaAAAAAEAAAACAAAAAAAAAB8AAICGAwIAAAAAAMAAAAAA
-AABGAQAAACIAAAB4AC0AbwByAGkAZwBpAG4AYQB0AGkAbgBnAC0AaQBwAAAAAAABAAAAGAAAAFsA
-MQAwAC4AMQAuADQALgAxADAAXQAAALvY
+The only way I found was to "echo 1 > /sys/block/sdX/device/delete" to 
+the stale device (that corresponds to the removed LUN from the target 
+side), then replace the removed LUN on the target side before finally 
+issuing a "scan" command on the initiator side.
 
---_000_F5D084D6342F9B479C34599BB0A03E4D89843DE0AVMB1qlogicorg_--
+Am I missing something here? Is there a way to rescan a Qlogic FC port 
+using the "qla2xxx" driver from the official, stock kernel?
+
+Thank you very much in advance for your help!
+
+Regards,
+
+Ben - MPSTOR
