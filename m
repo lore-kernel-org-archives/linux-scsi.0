@@ -1,151 +1,134 @@
 From: Loc Ho <lho@apm.com>
-Subject: [PATCH v5 1/4] ata: Export required functions by APM X-Gene SATA driver
-Date: Tue, 26 Nov 2013 00:01:22 -0700
-Message-ID: <1385449285-30764-2-git-send-email-lho@apm.com>
+Subject: [PATCH v5 2/4] Documentation: Add documentation for APM X-Gene SoC SATA host controller DTS binding
+Date: Tue, 26 Nov 2013 00:01:23 -0700
+Message-ID: <1385449285-30764-3-git-send-email-lho@apm.com>
 References: <1385449285-30764-1-git-send-email-lho@apm.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod5og113.obsmtp.com ([64.18.0.26]:34632 "HELO
-	exprod5og113.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754501Ab3KZHBk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Nov 2013 02:01:40 -0500
-Received: by mail-pd0-f176.google.com with SMTP id w10so7128207pde.35
-        for <linux-scsi@vger.kernel.org>; Mon, 25 Nov 2013 23:01:39 -0800 (PST)
-In-Reply-To: <1385449285-30764-1-git-send-email-lho@apm.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+ <1385449285-30764-2-git-send-email-lho@apm.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1385449285-30764-2-git-send-email-lho@apm.com>
+Sender: linux-ide-owner@vger.kernel.org
 To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
 Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
+List-Id: linux-scsi@vger.kernel.org
 
-ata: Export required functions by APM X-Gene SATA driver
-
-This patch exports functions required by APM X-Gene SoC SATA host
-controller driver to avoid duplication of code.
+Documentation: Add documentation for APM X-Gene SoC SATA host controller DTS binding
 
 Signed-off-by: Loc Ho <lho@apm.com>
 Signed-off-by: Tuan Phan <tphan@apm.com>
 Signed-off-by: Suman Tripathi <stripathi@apm.com>
 ---
- drivers/ata/ahci.h    |    9 +++++++++
- drivers/ata/libahci.c |   16 ++++++++++------
- 2 files changed, 19 insertions(+), 6 deletions(-)
+ .../devicetree/bindings/ata/apm-xgene.txt          |  102 ++++++++++++++++++++
+ 1 files changed, 102 insertions(+), 0 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/ata/apm-xgene.txt
 
-diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index 2289efd..8163b59 100644
---- a/drivers/ata/ahci.h
-+++ b/drivers/ata/ahci.h
-@@ -370,6 +370,15 @@ irqreturn_t ahci_thread_fn(int irq, void *dev_instance);
- void ahci_print_info(struct ata_host *host, const char *scc_s);
- int ahci_host_activate(struct ata_host *host, int irq, unsigned int n_msis);
- void ahci_error_handler(struct ata_port *ap);
-+void ahci_sw_activity(struct ata_link *link);
-+int ahci_scr_write(struct ata_link *link, unsigned int sc_reg, u32 val);
-+void ahci_error_intr(struct ata_port *ap, u32 irq_stat);
-+int ahci_exec_polled_cmd(struct ata_port *ap, int pmp,
-+			 struct ata_taskfile *tf, int is_cmd, u16 flags,
-+			 unsigned long timeout_msec);
-+void ahci_fill_cmd_slot(struct ahci_port_priv *pp, unsigned int tag,
-+                        u32 opts);
-+unsigned int ahci_fill_sg(struct ata_queued_cmd *qc, void *cmd_tbl);
- 
- static inline void __iomem *__ahci_port_base(struct ata_host *host,
- 					     unsigned int port_no)
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index c482f8c..1d24bf5 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -68,7 +68,6 @@ static ssize_t ahci_transmit_led_message(struct ata_port *ap, u32 state,
- 
- 
- static int ahci_scr_read(struct ata_link *link, unsigned int sc_reg, u32 *val);
--static int ahci_scr_write(struct ata_link *link, unsigned int sc_reg, u32 val);
- static unsigned int ahci_qc_issue(struct ata_queued_cmd *qc);
- static bool ahci_qc_fill_rtf(struct ata_queued_cmd *qc);
- static int ahci_port_start(struct ata_port *ap);
-@@ -553,7 +552,7 @@ static int ahci_scr_read(struct ata_link *link, unsigned int sc_reg, u32 *val)
- 	return -EINVAL;
- }
- 
--static int ahci_scr_write(struct ata_link *link, unsigned int sc_reg, u32 val)
-+int ahci_scr_write(struct ata_link *link, unsigned int sc_reg, u32 val)
- {
- 	void __iomem *port_mmio = ahci_port_base(link->ap);
- 	int offset = ahci_scr_offset(link->ap, sc_reg);
-@@ -564,6 +563,7 @@ static int ahci_scr_write(struct ata_link *link, unsigned int sc_reg, u32 val)
- 	}
- 	return -EINVAL;
- }
-+EXPORT_SYMBOL_GPL(ahci_scr_write);
- 
- void ahci_start_engine(struct ata_port *ap)
- {
-@@ -869,7 +869,7 @@ int ahci_reset_controller(struct ata_host *host)
- }
- EXPORT_SYMBOL_GPL(ahci_reset_controller);
- 
--static void ahci_sw_activity(struct ata_link *link)
-+void ahci_sw_activity(struct ata_link *link)
- {
- 	struct ata_port *ap = link->ap;
- 	struct ahci_port_priv *pp = ap->private_data;
-@@ -882,6 +882,7 @@ static void ahci_sw_activity(struct ata_link *link)
- 	if (!timer_pending(&emp->timer))
- 		mod_timer(&emp->timer, jiffies + msecs_to_jiffies(10));
- }
-+EXPORT_SYMBOL_GPL(ahci_sw_activity);
- 
- static void ahci_sw_activity_blink(unsigned long arg)
- {
-@@ -1239,7 +1240,7 @@ int ahci_kick_engine(struct ata_port *ap)
- }
- EXPORT_SYMBOL_GPL(ahci_kick_engine);
- 
--static int ahci_exec_polled_cmd(struct ata_port *ap, int pmp,
-+int ahci_exec_polled_cmd(struct ata_port *ap, int pmp,
- 				struct ata_taskfile *tf, int is_cmd, u16 flags,
- 				unsigned long timeout_msec)
- {
-@@ -1268,6 +1269,7 @@ static int ahci_exec_polled_cmd(struct ata_port *ap, int pmp,
- 
- 	return 0;
- }
-+EXPORT_SYMBOL_GPL(ahci_exec_polled_cmd);
- 
- int ahci_do_softreset(struct ata_link *link, unsigned int *class,
- 		      int pmp, unsigned long deadline,
-@@ -1472,7 +1474,7 @@ static void ahci_postreset(struct ata_link *link, unsigned int *class)
- 	}
- }
- 
--static unsigned int ahci_fill_sg(struct ata_queued_cmd *qc, void *cmd_tbl)
-+unsigned int ahci_fill_sg(struct ata_queued_cmd *qc, void *cmd_tbl)
- {
- 	struct scatterlist *sg;
- 	struct ahci_sg *ahci_sg = cmd_tbl + AHCI_CMD_TBL_HDR_SZ;
-@@ -1494,6 +1496,7 @@ static unsigned int ahci_fill_sg(struct ata_queued_cmd *qc, void *cmd_tbl)
- 
- 	return si;
- }
-+EXPORT_SYMBOL_GPL(ahci_fill_sg);
- 
- static int ahci_pmp_qc_defer(struct ata_queued_cmd *qc)
- {
-@@ -1568,7 +1571,7 @@ static void ahci_fbs_dec_intr(struct ata_port *ap)
- 		dev_err(ap->host->dev, "failed to clear device error\n");
- }
- 
--static void ahci_error_intr(struct ata_port *ap, u32 irq_stat)
-+void ahci_error_intr(struct ata_port *ap, u32 irq_stat)
- {
- 	struct ahci_host_priv *hpriv = ap->host->private_data;
- 	struct ahci_port_priv *pp = ap->private_data;
-@@ -1678,6 +1681,7 @@ static void ahci_error_intr(struct ata_port *ap, u32 irq_stat)
- 	} else
- 		ata_port_abort(ap);
- }
-+EXPORT_SYMBOL_GPL(ahci_error_intr);
- 
- static void ahci_handle_port_interrupt(struct ata_port *ap,
- 				       void __iomem *port_mmio, u32 status)
+diff --git a/Documentation/devicetree/bindings/ata/apm-xgene.txt b/Documentation/devicetree/bindings/ata/apm-xgene.txt
+new file mode 100644
+index 0000000..879eee7
+--- /dev/null
++++ b/Documentation/devicetree/bindings/ata/apm-xgene.txt
+@@ -0,0 +1,102 @@
++* APM X-Gene 6.0 Gb/s SATA host controller and clock nodes
++
++SATA host controller nodes are defined to describe on-chip Serial ATA
++controllers. Each SATA controller (pair of ports) have its own node. Its
++corresponding clock nodes are shown below.
++
++Required properties:
++- compatible		: Shall be "apm,xgene-ahci-sgmii" if mux'ed with SGMII
++			  or "apm,xgene-ahci-pcie" if mux'ed with PCIe.
++- reg			: First memory resource shall be the AHCI memory
++			  resource.
++			  Second memory resource shall be the host controller
++			  memory resource.
++- interrupt-parent	: Interrupt controller.
++- interrupts		: Interrupt mapping for SATA host controller IRQ.
++- clocks		: Reference to the clock entry.
++- phys			: PHY reference with parameter 0.
++- phy-names		: Name of the PHY. Shall be "sata-6g".
++
++Optional properties:
++- status		: Shall be "ok" if enabled or "na" if disabled.
++			  Default is "ok".
++
++Example:
++		sata01clk: sata01clk@1f21c000 {
++			compatible = "apm,xgene-device-clock";
++			#clock-cells = <1>;
++			clocks = <&socplldiv2 0>;
++			clock-names = "sata01clk";
++			reg = <0x0 0x1f21c000 0x0 0x1000>;
++			reg-names = "csr-reg";
++			clock-output-names = "sata01clk";
++			status = "ok";
++			csr-offset = <0x4>;
++			csr-mask = <0x3f>;
++			enable-offset = <0x0>;
++			enable-mask = <0x3f>;
++		};
++
++		sata23clk: sata23clk@1f22c000 {
++			compatible = "apm,xgene-device-clock";
++			#clock-cells = <1>;
++			clocks = <&socplldiv2 0>;
++			clock-names = "sata23clk";
++			reg = <0x0 0x1f22c000 0x0 0x1000>;
++			reg-names = "csr-reg";
++			clock-output-names = "sata23clk";
++			csr-offset = <0x4>;
++			csr-mask = <0x3f>;
++			enable-offset = <0x0>;
++			enable-mask = <0x3f>;
++		};
++
++		sata45clk: sata45clk@1f23c000 {
++			compatible = "apm,xgene-device-clock";
++			#clock-cells = <1>;
++			clocks = <&socplldiv2 0>;
++			clock-names = "sata45clk";
++			reg = <0x0 0x1f23c000 0x0 0x1000>;
++			reg-names = "csr-reg";
++			clock-output-names = "sata45clk";
++			csr-offset = <0x4>;
++			csr-mask = <0x3f>;
++			enable-offset = <0x0>;
++			enable-mask = <0x3f>;
++		};
++
++		sata1: sata@1a000000 {
++			compatible = "apm,xgene-ahci-sgmii";
++			reg = <0x0 0x1a000000 0x0 0x1000>,
++			      <0x0 0x1f210000 0x0 0x10000>;
++			interrupt-parent = <&gic>;
++			interrupts = <0x0 0x86 0x4>;
++			status = "disabled";
++			clocks = <&sata01clk 0>;
++			phys = <&phy1 0>;
++			phy-names = "sata-6g";
++		};
++
++		sata2: sata@1a400000 {
++			compatible = "apm,xgene-ahci-sgmii";
++			reg = <0x0 0x1a400000 0x0 0x1000>,
++			      <0x0 0x1f220000 0x0 0x10000>;
++			interrupt-parent = <&gic>;
++			interrupts = <0x0 0x87 0x4>;
++			status = "ok";
++			clocks = <&sata23clk 0>;
++			phys = <&phy2 0>;
++			phy-names = "sata-6g";
++		};
++
++		sata3: sata@1a800000 {
++			compatible = "apm,xgene-ahci-pcie";
++			reg = <0x0 0x1a800000 0x0 0x1000>,
++			      <0x0 0x1f230000 0x0 0x10000>;
++			interrupt-parent = <&gic>;
++			interrupts = <0x0 0x88 0x4>;
++			status = "ok";
++			clocks = <&sata45clk 0>;
++			phys = <&phy3 0>;
++			phy-names = "sata-6g";
++		};
 -- 
 1.5.5
 
