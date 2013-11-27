@@ -1,86 +1,57 @@
-From: Viswas G <Viswas.G@pmcs.com>
-Subject: [PATCH 2/2] pm80xx : Fixed return value issue.
-Date: Wed, 27 Nov 2013 11:12:33 +0530
-Message-ID: <1385530953-4267-1-git-send-email-Viswas.G@pmcs.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:56537 "EHLO
-	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750953Ab3K0Frl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 27 Nov 2013 00:47:41 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Subject: Re: [PATCH v3 3/4] ata: Add APM X-Gene SoC SATA host controller driver
+Date: Wed, 27 Nov 2013 11:22:53 +0530
+Message-ID: <529588B5.1070109@ti.com>
+References: <1384465153-29902-1-git-send-email-lho@apm.com>	<1384465153-29902-3-git-send-email-lho@apm.com>	<1384465153-29902-4-git-send-email-lho@apm.com>	<201311151448.16279.arnd@arndb.de>	<CAPw-ZTmaz3nnV3ThRgecT_RaYYW0bmfWvL8Kr-S3z1aKyUWc+w@mail.gmail.com>	<CAPw-ZTn1N7+EFu9L6U+P9=9ii3k1BjycYXdNCdxCVPb8SaJWxA@mail.gmail.com>	<529473DD.1090804@ti.com>
+ <CAPw-ZTmPgYA+saJPVvB17VOPouDGvR0rd0nrZWi0j3zE7cc2rg@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <CAPw-ZTmPgYA+saJPVvB17VOPouDGvR0rd0nrZWi0j3zE7cc2rg@mail.gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Loc Ho <lho@apm.com>
+Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Suman Tripathi <stripathi@apm.com>, Arnd Bergmann <arnd@arndb.de>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Jon Masters <jcm@redhat.com>, Tejun Heo <tj@kernel.org>, Olof Johansson <olof@lixom.net>, Tuan Phan <tphan@apm.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: xjtuwjp@gmail.com, Vasanthalakshmi.Tharmarajan@pmcs.com, Suresh.Thiagarajan@pmcs.com, Viswas.G@pmcs.com
 
-pm80xx_get_gsm_dump() was returning "1" in error case instead of
-negative error value.
+On Tuesday 26 November 2013 10:11 PM, Loc Ho wrote:
+> Hi,
+> 
+>>> int set_speed(struct *phy, int lane, u64 speed);
+>>
+>> it should be phy_set_speed.
+> [Loc Ho]
+> But your other functions don't repeat the prefix "phy"?
 
-Signed-off-by: Viswas G <Viswas.G@pmcs.com>
----
- drivers/scsi/pm8001/pm8001_ctl.c |    4 ++--
- drivers/scsi/pm8001/pm8001_hwi.c |    8 ++++----
- 2 files changed, 6 insertions(+), 6 deletions(-)
+refer include/linux/phy/phy.h..
 
-diff --git a/drivers/scsi/pm8001/pm8001_ctl.c b/drivers/scsi/pm8001/pm8001_ctl.c
-index 1e055ae..ce91852 100644
---- a/drivers/scsi/pm8001/pm8001_ctl.c
-+++ b/drivers/scsi/pm8001/pm8001_ctl.c
-@@ -460,7 +460,7 @@ static DEVICE_ATTR(iop_log, S_IRUGO, pm8001_ctl_iop_log_show, NULL);
- static ssize_t pm8001_ctl_fatal_log_show(struct device *cdev,
- 	struct device_attribute *attr, char *buf)
- {
--	u32 count;
-+	ssize_t count;
- 
- 	count = pm80xx_get_fatal_dump(cdev, attr, buf);
- 	return count;
-@@ -478,7 +478,7 @@ static DEVICE_ATTR(fatal_log, S_IRUGO, pm8001_ctl_fatal_log_show, NULL);
- static ssize_t pm8001_ctl_gsm_log_show(struct device *cdev,
- 	struct device_attribute *attr, char *buf)
- {
--	u32 count;
-+	ssize_t count;
- 
- 	count = pm8001_get_gsm_dump(cdev, SYSFS_OFFSET, buf);
- 	return count;
-diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-index 2aa0681..46ace52 100644
---- a/drivers/scsi/pm8001/pm8001_hwi.c
-+++ b/drivers/scsi/pm8001/pm8001_hwi.c
-@@ -5020,7 +5020,7 @@ pm8001_get_gsm_dump(struct device *cdev, u32 length, char *buf)
- 	/* check max is 1 Mbytes */
- 	if ((length > 0x100000) || (gsm_dump_offset & 3) ||
- 		((gsm_dump_offset + length) > 0x1000000))
--			return 1;
-+			return -EINVAL;
- 
- 	if (pm8001_ha->chip_id == chip_8001)
- 		bar = 2;
-@@ -5048,12 +5048,12 @@ pm8001_get_gsm_dump(struct device *cdev, u32 length, char *buf)
- 				gsm_base = GSM_BASE;
- 				if (-1 == pm8001_bar4_shift(pm8001_ha,
- 						(gsm_base + shift_value)))
--					return 1;
-+					return -EIO;
- 			} else {
- 				gsm_base = 0;
- 				if (-1 == pm80xx_bar4_shift(pm8001_ha,
- 						(gsm_base + shift_value)))
--					return 1;
-+					return -EIO;
- 			}
- 			gsm_dump_offset = (gsm_dump_offset + offset) &
- 						0xFFFF0000;
-@@ -5073,7 +5073,7 @@ pm8001_get_gsm_dump(struct device *cdev, u32 length, char *buf)
- 	}
- 	/* Shift back to BAR4 original address */
- 	if (-1 == pm8001_bar4_shift(pm8001_ha, 0))
--			return 1;
-+			return -EIO;
- 	pm8001_ha->fatal_forensic_shift_offset += 1024;
- 
- 	if (pm8001_ha->fatal_forensic_shift_offset >= 0x100000)
--- 
-1.7.1
+int phy_init(struct phy *phy);
+int phy_exit(struct phy *phy);
+int phy_power_on(struct phy *phy);
+int phy_power_off(struct phy *phy);
 
+??
+
+> 
+>>>
+>>> where lane indicates the lane of the PHY and speed is the PHY speed in hertz.
+>>
+>> Does lane here means the number of lanes? Is the lane also obtained after the
+>> training sequence?
+> [Loc Ho]
+> Lane here is the lane with you are changing the speed. If there are
+> two lanes, then 0 parameter would change lane 0. 1 would change lane
+> 1.
+
+can different lanes operate at different speed at the same time?
+
+Thanks
+Kishon
