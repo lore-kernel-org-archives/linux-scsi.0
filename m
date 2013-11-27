@@ -1,41 +1,43 @@
-From: Phillip Susi <psusi@ubuntu.com>
-Subject: Re: [PATCH/RESEND v2 0/2] SATA disk resume time optimization
-Date: Wed, 27 Nov 2013 11:18:54 -0500
-Message-ID: <52961B6E.9070505@ubuntu.com>
-References: <20131017193331.GA11747@linux.intel.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: Re: scsi-mq + open-iscsi support patches..?
+Date: Wed, 27 Nov 2013 10:43:40 -0800
+Message-ID: <1385577820.4307.144.camel@haakon3.risingtidesystems.com>
+References: <1382997816.19256.767.camel@haakon3.risingtidesystems.com>
+	 <5273BEBF.2090008@cs.wisc.edu>
+	 <1383338230.4216.9.camel@haakon3.risingtidesystems.com>
+	 <37724B2049F71D4C9B086F99DDB2DE1126E31C7C@CMEXMB1.ad.emulex.com>
+	 ,  <1383591411.4216.25.camel@haakon3.risingtidesystems.com>
+	 <201311271046199969490@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20131017193331.GA11747@linux.intel.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: todd.e.brandt@linux.intel.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: tj@kernel.org, JBottomley@parallels.com
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <201311271046199969490@gmail.com>
+Sender: target-devel-owner@vger.kernel.org
+To: kedacomkernel <kedacomkernel@gmail.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+Hi Jianpeng,
 
-On 10/17/2013 3:33 PM, Todd E Brandt wrote:
-> sd_resume patch (2/2):
-> 
-> On resume, the SD driver currently waits until the block driver 
-> finishes executing a disk start command with blk_execute_rq. This 
-> patch changes the sd_resume callback to use blk_execute_rq_nowait 
-> instead, which allows it to return immediately, thus allowing the
+(Trimming CC's)
 
-Can another request in the queue race with the start/stop command and
-possibly beat it to dispatch?
+On Wed, 2013-11-27 at 10:46 +0800, kedacomkernel wrote:
+> Hi all=EF=BC=8C
+> 	I used target-pending/scsi-mq to test intel ahci=EF=BC=8Cbut it can'=
+t work.I
+> modify some places, now it can work.But still met hung task or oops.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.17 (MingW32)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+So after looking at your patches sent offlist, I don't exactly
+understand why they are necessary for AHCI to function.
 
-iQEcBAEBAgAGBQJSlhtuAAoJEI5FoCIzSKrwgJ0H/ioXLuLHh4aJ3ZNs9LZ3gloA
-hQb9bTbUOFpC2HM0GpWntNs9V1KXKha7zqiW7alqmmiaUor7mN8CoVILIrwgEe10
-9Fd8z0DNBjCM+BdhdSO1g2opjMYif9ID74E/nA4tP3cXV2TiPjax/lF861iirEAl
-xaK5WdI7Ua5qbpIc1Xr6t8EbH1DSwEbiFOkN5HGs2ldFWB+f3jTRMZiGwh2RhUzV
-OZt2UKIsCAhwO6opnUPJ3Vv4IHQR248uijGxcuy5KDERVbKtfz8If6CG43FVdSr/
-c59AEXgUFtvPm/J9DRO/rVO7Dp2e+DTwJ67Mx9TDqtcKwuRxzsdaxn1yJEXoZfk=
-=IOxx
------END PGP SIGNATURE-----
+> Who can receive my patch for that?
+
+Please repost your patches to linux-scsi, with the specifics of each bu=
+g
+you've encountered, and why each patch is necessary to address the
+issue.
+
+Thanks!
+
+--nab
