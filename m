@@ -1,46 +1,46 @@
-From: "Justin Piszcz" <jpiszcz@lucidpixels.com>
-Subject: RE: 3.12.0: sda2: WRITE SAME failed. Manually zeroing. with 3w-xxxx driver
-Date: Thu, 28 Nov 2013 16:52:36 -0500
-Message-ID: <010b01ceec84$27643580$762ca080$@lucidpixels.com>
-References: <CAO9zADw-k+Qghk79yzwzaiYiPSoQnKwjjTBwrhcOrJxTWc-fOQ@mail.gmail.com> <yq1iovclm0m.fsf@sermon.lab.mkp.net> <00c701ceec3a$c8bcfc90$5a36f5b0$@lucidpixels.com> <yq1d2lkllek.fsf@sermon.lab.mkp.net>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH 3.13] genetlink/pmcraid: use proper genetlink multicast
+ API
+Date: Thu, 28 Nov 2013 18:27:02 -0500 (EST)
+Message-ID: <20131128.182702.413058319099526285.davem@davemloft.net>
+References: <1385323766-30356-1-git-send-email-johannes@sipsolutions.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qa0-f43.google.com ([209.85.216.43]:42512 "EHLO
-	mail-qa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750859Ab3K1Vwj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Nov 2013 16:52:39 -0500
-Received: by mail-qa0-f43.google.com with SMTP id ii20so1198854qab.9
-        for <linux-scsi@vger.kernel.org>; Thu, 28 Nov 2013 13:52:38 -0800 (PST)
-In-Reply-To: <yq1d2lkllek.fsf@sermon.lab.mkp.net>
-Content-Language: en-us
+Received: from shards.monkeyblade.net ([149.20.54.216]:47375 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751177Ab3K1X1E (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Nov 2013 18:27:04 -0500
+In-Reply-To: <1385323766-30356-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "'Martin K. Petersen'" <martin.petersen@oracle.com>
-Cc: 'open list' <linux-kernel@vger.kernel.org>, linux-ext4@vger.kernel.org, linux-scsi@vger.kernel.org, gregkh@linuxfoundation.org
+To: johannes@sipsolutions.net
+Cc: netdev@vger.kernel.org, anil_ravindranath@pmc-sierra.com, JBottomley@parallels.com, linux-scsi@vger.kernel.org, johannes.berg@intel.com
 
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Sun, 24 Nov 2013 21:09:26 +0100
 
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> The pmcraid driver is abusing the genetlink API and is using its
+> family ID as the multicast group ID, which is invalid and may
+> belong to somebody else (and likely will.)
+> 
+> Make it use the correct API, but since this may already be used
+> as-is by userspace, reserve a family ID for this code and also
+> reserve that group ID to not break userspace assumptions.
+> 
+> My previous patch broke event delivery in the driver as I missed
+> that it wasn't using the right API and forgot to update it later
+> in my series.
+> 
+> While changing this, I noticed that the genetlink code could use
+> the static group ID instead of a strcmp(), so also do that for
+> the VFS_DQUOT family.
+> 
+> Cc: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
+> Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 
------Original Message-----
-From: Martin K. Petersen [mailto:martin.petersen@oracle.com] 
-Sent: Thursday, November 28, 2013 8:13 AM
-
-[ .. ]
-
-Martin>	http://marc.info/?l=linux-scsi&m=138252394614920&w=2
-
-Justin> Awesome, thank you!  This patch is over a month old, do you know
-Justin> if is currently in mainline? 
-
-Nope. - James?
-
-[ .. ]
-
-Could it possibly get added to 3.12.x -stable as well? I've patched against
-3.12.0 for now -- I'll let you know if there are any issues-- so far so
-good, thanks again.
-
-Justin.
-
+Applied, thanks Johannes.
