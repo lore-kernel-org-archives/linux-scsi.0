@@ -1,41 +1,54 @@
-From: Newtech Tan <tan@newtech.co.jp>
-Subject: how to use SES driver to send SES commands?
-Date: Fri, 29 Nov 2013 19:07:30 +0900
-Message-ID: <20131129190730.B2FC.46AD7750@newtech.co.jp>
+From: Jack Wang <xjtuwjp@gmail.com>
+Subject: Re: [PATCH 0/2] pm8001 driver code cleanup
+Date: Fri, 29 Nov 2013 12:34:18 +0100
+Message-ID: <52987BBA.506@gmail.com>
+References: <1385530846-4187-1-git-send-email-Viswas.G@pmcs.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dc31.etius.jp ([119.245.209.2]:40770 "EHLO dc31.etius.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752224Ab3K2KOD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 29 Nov 2013 05:14:03 -0500
+Received: from mail-bk0-f51.google.com ([209.85.214.51]:34346 "EHLO
+	mail-bk0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751089Ab3K2Ldr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Nov 2013 06:33:47 -0500
+Received: by mail-bk0-f51.google.com with SMTP id 6so4187090bkj.24
+        for <linux-scsi@vger.kernel.org>; Fri, 29 Nov 2013 03:33:45 -0800 (PST)
+In-Reply-To: <1385530846-4187-1-git-send-email-Viswas.G@pmcs.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Viswas G <Viswas.G@pmcs.com>
+Cc: linux-scsi@vger.kernel.org, Vasanthalakshmi.Tharmarajan@pmcs.com, Suresh.Thiagarajan@pmcs.com
 
-Hi friends
+On 11/27/2013 06:40 AM, Viswas G wrote:
+> We are resubmitting the following patches in the new patch set
+> 
+> pm80xx : Removing redundant code snippets
+> pm80xx : Fixed return value issue 
+> 
+> Please discard the previous patches we submitted for the same.
+> 
+> [PATCH 5/6] pm80xx : Removing redundant code snippets
+> http://marc.info/?l=linux-scsi&m=138493235925253&w=2
+> 
+> [PATCH 6/6] pm80xx : Fixed return value issue
+> http://marc.info/?l=linux-scsi&m=138493243028701&w=2
+> 
+> Sorry for the confusion.
+> 
+> This patch set has to be applied after the below patch set 
+> submitted by Anand.
+> 
+> http://marc.info/?l=linux-scsi&m=138434875025909&w=2
+> 
+> 
+> Viswas G (2):
+>   pm80xx : Removing redundant code snippets
+>   pm80xx : Fixed return value issue.
+> 
+>  drivers/scsi/pm8001/pm8001_ctl.c |   26 ++++++++++----------------
+>  drivers/scsi/pm8001/pm8001_hwi.c |   15 +++++----------
+>  2 files changed, 15 insertions(+), 26 deletions(-)
+> 
+You can add my reviewed-by if need.
 
-    I subscribed the mailing list just now. Would you please to give me help? 
-
-    Who can tell me how to use SES driver(linux/driver/scsi/ses.c) to send SES command(SEND DIAGNOSTIC, RECEIVE DIAGNOSTIC RESULTS) in my linux program?
-(I don't want to use sg_ses.)
-
-The following is my system info. /dev/sg2 is my SES device.
-
-[root@tan-sl dev]# lsscsi -g
-[0:0:0:0]    cd/dvd  HL-DT-ST DVD+-RW GSA-H53N B104  /dev/sr0   /dev/sg0
-[3:0:0:0]    disk    ATA      TOSHIBA MK8061GS ME0A  /dev/sda   /dev/sg1
-[4:0:0:0]    enclosu LSI      SAS616x          0502  -         /dev/sg2
-
-[root@tan-sl enclosure]# pwd
-/sys/class/enclosure
-[root@tan-sl enclosure]# ls -l
-total 0
-lrwxrwxrwx 1 root root 0 Nov 29 14:51 4:0:0:0 -> ../../devices/pci0000:00/0000:00:1c.0/0000:02:00.0/host4/port-4:0/expan
-der-4:0/port-4:0:0/end_device-4:0:0/target4:0:0/4:0:0:0/enclosure/4:0:0:0
-
-in linux, I can't find ses device.  Under /sys/class/enclosure, folder 4:0:0:0 existed. 
-
-I will apprectiate for your help.
-
+Jack
