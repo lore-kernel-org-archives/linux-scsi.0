@@ -1,48 +1,55 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: how to use SES driver to send SES commands?
-Date: Fri, 29 Nov 2013 07:50:25 -0500
-Message-ID: <52988D91.1070803@interlog.com>
-References: <20131129190730.B2FC.46AD7750@newtech.co.jp>
-Reply-To: dgilbert@interlog.com
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: scsi-mq prototype
+Date: Fri, 29 Nov 2013 15:08:54 +0100
+Message-ID: <52989FF6.4020307@acm.org>
+References: <1373588612.7397.447.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:53545 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751813Ab3K2MvG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 29 Nov 2013 07:51:06 -0500
-In-Reply-To: <20131129190730.B2FC.46AD7750@newtech.co.jp>
+Received: from smtp03.stone-is.org ([87.238.162.66]:47447 "EHLO
+	smtpgw.stone-is.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756385Ab3K2OI6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Nov 2013 09:08:58 -0500
+In-Reply-To: <1373588612.7397.447.camel@haakon3.risingtidesystems.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Newtech Tan <tan@newtech.co.jp>, linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On 13-11-29 05:07 AM, Newtech Tan wrote:
-> Hi friends
->
->      I subscribed the mailing list just now. Would you please to give me help?
->
->      Who can tell me how to use SES driver(linux/driver/scsi/ses.c) to send SES command(SEND DIAGNOSTIC, RECEIVE DIAGNOSTIC RESULTS) in my linux program?
-> (I don't want to use sg_ses.)
+On 07/12/13 02:23, Nicholas A. Bellinger wrote:
+> [ ... ] I would like to discuss scsi-mq, a high performance SCSI
+> initiator prototype that utilizes blk-mq [ ... ]
 
-Then look at the source for sg_senddiag (sg_senddiag.c).
-Your SES device is either /dev/sg2 or /dev/bsg/4:0:0:0
+(replying to an e-mail of four months ago)
 
-> The following is my system info. /dev/sg2 is my SES device.
->
-> [root@tan-sl dev]# lsscsi -g
-> [0:0:0:0]    cd/dvd  HL-DT-ST DVD+-RW GSA-H53N B104  /dev/sr0   /dev/sg0
-> [3:0:0:0]    disk    ATA      TOSHIBA MK8061GS ME0A  /dev/sda   /dev/sg1
-> [4:0:0:0]    enclosu LSI      SAS616x          0502  -         /dev/sg2
->
-> [root@tan-sl enclosure]# pwd
-> /sys/class/enclosure
-> [root@tan-sl enclosure]# ls -l
-> total 0
-> lrwxrwxrwx 1 root root 0 Nov 29 14:51 4:0:0:0 -> ../../devices/pci0000:00/0000:00:1c.0/0000:02:00.0/host4/port-4:0/expan
-> der-4:0/port-4:0:0/end_device-4:0:0/target4:0:0/4:0:0:0/enclosure/4:0:0:0
->
-> in linux, I can't find ses device.  Under /sys/class/enclosure, folder 4:0:0:0 existed.
->
-> I will apprectiate for your help.
+It took a while but I finally found some time to look further into
+blk-mq and scsi-mq. Did I see correctly that the scsi-mq prototype
+implements the so-called hw queues in the SCSI core and not in the SCSI
+LLDs ? Sorry but that approach looks wrong to me. Several high-end
+storage adapters already support multiple queues today. E.g. the NVMe
+specification supports up to 64.000 I/O queues. With InfiniBand HCA's it
+is possible to create multiple queues between initiator and target for
+e.g. the iSER and SRP protocols to increase throughput. When there are
+multiple queues between initiator and target there is a potential that
+SCSI commands get reordered. The SCSI specifications define whether or
+not it is allowed to change the submission order of commands. As an
+example, if two atomic writes are submitted by the same CPU neither the
+block layer nor the SCSI core nor the SCSI LLD nor the SCSI target is
+allowed to reorder these. With the scsi-mq prototype present in your
+repo the only way for a SCSI LLD to guarantee that SCSI commands for
+which the submission order must be preserved do not get reordered is
+either to limit the queue depth to one or to use a single queue for
+communication with the target. I don't think this is what we want.
+
+In other words, the so-called hw queue concept must be mapped onto
+queues managed by the SCSI LLD and not onto queues managed by the SCSI
+core. That will allow the block layer and the SCSI core to preserve SCSI
+command submission order when necessary by queueing ordered commands on
+the same hardware queue.
+
+See also
+https://git.kernel.org/cgit/linux/kernel/git/nab/target-pending.git/log/?h=scsi-mq.
+
+Bart.
 
