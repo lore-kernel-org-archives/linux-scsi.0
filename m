@@ -1,44 +1,34 @@
 From: majianpeng <majianpeng@gmail.com>
-Subject: [PATCH 2/6] scsi-mq: add operations about device_busy/target_busy/host_busy in scsi_mq_queue_rq().
-Date: Fri, 29 Nov 2013 16:41:47 +0800
-Message-ID: <201311291641444406166@gmail.com>
+Subject: [PATCH 3/6] scsi-mq: Don't set QUEUE_FLAG_NONROT in scsi_mq_alloc_queue().
+Date: Fri, 29 Nov 2013 16:42:00 +0800
+Message-ID: <201311291641544409087@gmail.com>
 Reply-To: majianpeng <majianpeng@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f52.google.com ([209.85.160.52]:58939 "EHLO
-	mail-pb0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751852Ab3K2Ilx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Nov 2013 03:41:53 -0500
-Received: by mail-pb0-f52.google.com with SMTP id uo5so14074886pbc.11
-        for <linux-scsi@vger.kernel.org>; Fri, 29 Nov 2013 00:41:53 -0800 (PST)
+Received: from mail-pd0-f181.google.com ([209.85.192.181]:46767 "EHLO
+	mail-pd0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750985Ab3K2ImG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Nov 2013 03:42:06 -0500
+Received: by mail-pd0-f181.google.com with SMTP id p10so13324403pdj.40
+        for <linux-scsi@vger.kernel.org>; Fri, 29 Nov 2013 00:42:05 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: nab <nab@linux-iscsi.org>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-VG8gbWFrZSB0aGUgc2NzaS1tcSB3b3JrLCBhZGQgdGhvc2Ugb3BlcmF0aW9ucyBpbiBzY3NpX21x
-X3F1ZXVlX3JxKCkuDQoNClNpZ25lZC1vZmYtYnk6IEppYW5wZW5nIE1hIDxtYWppYW5wZW5nQGdt
-YWlsLmNvbT4NCi0tLQ0KIGRyaXZlcnMvc2NzaS9zY3NpLW1xLmMgfCAgICA4ICsrKysrKysrDQog
-MSBmaWxlIGNoYW5nZWQsIDggaW5zZXJ0aW9ucygrKQ0KDQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9z
-Y3NpL3Njc2ktbXEuYyBiL2RyaXZlcnMvc2NzaS9zY3NpLW1xLmMNCmluZGV4IDkxOGI0NDMuLmVj
-Y2RiZDUgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL3Njc2kvc2NzaS1tcS5jDQorKysgYi9kcml2ZXJz
-L3Njc2kvc2NzaS1tcS5jDQpAQCAtMjAsOCArMjAsMTAgQEAgc3RhdGljIGludCBzY3NpX21xX3F1
-ZXVlX3JxKHN0cnVjdCBibGtfbXFfaHdfY3R4ICpoY3R4LCBzdHJ1Y3QgcmVxdWVzdCAqcnEpDQog
-CXN0cnVjdCBzY3NpX2RldmljZSAqc2RldiA9IHEtPnF1ZXVlZGF0YTsNCiAJc3RydWN0IHNjc2lf
-Y21uZCAqc2MgPSBycS0+c3BlY2lhbDsNCiAJc3RydWN0IHNjYXR0ZXJsaXN0ICpzZyA9IHNjLT5t
-cV9zZ2w7DQorCXN0cnVjdCBTY3NpX0hvc3QgKnNob3N0ID0gc2Rldi0+aG9zdDsNCiAJdW5zaWdu
-ZWQgY2hhciAqc2Vuc2VfYnVmID0gc2MtPnNlbnNlX2J1ZmZlcjsNCiAJaW50IHJjOw0KKw0KIAkv
-Kg0KIAkgKiBXaXRoIGJsay1tcSBycS0+c3BlY2lhbCBwcmUtYWxsb2NhdGlvbiwgc2NzaV9nZXRf
-Y21kX2Zyb21fcmVxKCkNCiAJICogaXMgdXNpbmcgdGhlIGhhcmR3YXJlIGNvbnRleHQgKnNjIGRl
-c2NyaXB0b3INCkBAIC02Niw2ICs2OCwxMiBAQCBzdGF0aWMgaW50IHNjc2lfbXFfcXVldWVfcnEo
-c3RydWN0IGJsa19tcV9od19jdHggKmhjdHgsIHN0cnVjdCByZXF1ZXN0ICpycSkNCiAJaWYgKHNk
-ZXYtPmhvc3QtPmhvc3R0LT5jbWRfc2l6ZSkNCiAJCXNjLT5TQ3AucHRyID0gYmxrX21xX3JxX3Rv
-X3BkdShycSkgKyBzaXplb2Yoc3RydWN0IHNjc2lfY21uZCk7DQogDQorCXNwaW5fbG9ja19pcnEo
-c2hvc3QtPmhvc3RfbG9jayk7DQorCXNkZXYtPmRldmljZV9idXN5Kys7DQorCXNjc2lfdGFyZ2V0
-KHNkZXYpLT50YXJnZXRfYnVzeSsrOw0KKwlzaG9zdC0+aG9zdF9idXN5Kys7DQorCXNwaW5fdW5s
-b2NrX2lycShzaG9zdC0+aG9zdF9sb2NrKTsNCisNCiAJcmMgPSBzY3NpX2Rpc3BhdGNoX2NtZChz
-Yyk7DQogCXN3aXRjaCAocmMpIHsNCiAJY2FzZSAwOg0KLS0gDQoxLjcuMTAuNA==
+VGhpcyBmbGFnIHdpbGwgYmUgc2V0IGluIHNkX3JldmFsaWRhdGVfZGlzaygpLlNvIHJlbW92ZSB0
+aGlzIG9wZXJhdGlvbi4NCg0KU2lnbmVkLW9mZi1ieTogSmlhbnBlbmcgTWEgPG1hamlhbnBlbmdA
+Z21haWwuY29tPg0KLS0tDQogZHJpdmVycy9zY3NpL3Njc2ktbXEuYyB8ICAgIDIgLS0NCiAxIGZp
+bGUgY2hhbmdlZCwgMiBkZWxldGlvbnMoLSkNCg0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9z
+Y3NpLW1xLmMgYi9kcml2ZXJzL3Njc2kvc2NzaS1tcS5jDQppbmRleCBlY2NkYmQ1Li45MzNiYTBm
+IDEwMDY0NA0KLS0tIGEvZHJpdmVycy9zY3NpL3Njc2ktbXEuYw0KKysrIGIvZHJpdmVycy9zY3Np
+L3Njc2ktbXEuYw0KQEAgLTIwNiw4ICsyMDYsNiBAQCBpbnQgc2NzaV9tcV9hbGxvY19xdWV1ZShz
+dHJ1Y3QgU2NzaV9Ib3N0ICpzaCwgc3RydWN0IHNjc2lfZGV2aWNlICpzZGV2KQ0KIAkJCX0NCiAJ
+CX0NCiAJfQ0KLS8vRklYTUU6IENoZWNrIGZvciAhTk9OUk9UIHVzYWdlDQotCXF1ZXVlX2ZsYWdf
+c2V0X3VubG9ja2VkKFFVRVVFX0ZMQUdfTk9OUk9ULCBxKTsNCiANCiAJcHJpbnRrKCJzY3NpX21x
+X2FsbG9jX3F1ZXVlKCkgY29tcGxldGUgISEgPj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+XG4i
+KTsNCiAJcmV0dXJuIDA7DQotLSANCjEuNy4xMC40DQo=
 
