@@ -1,41 +1,60 @@
-From: majianpeng <majianpeng@gmail.com>
-Subject: [PATCH 5/6] scsi-mq: fix 'BUG_ON(count > sdb->table.nents)' in scsi_init_sgtable().
-Date: Fri, 29 Nov 2013 16:42:39 +0800
-Message-ID: <2013112916422942442410@gmail.com>
-Reply-To: majianpeng <majianpeng@gmail.com>
+From: Meelis Roos <mroos@linux.ee>
+Subject: [PATCH] qla1280: Annotate timer on stack so object debug does not
+ complain
+Date: Fri, 29 Nov 2013 11:05:47 +0200 (EET)
+Message-ID: <alpine.SOC.1.00.1311291058320.5464@math.ut.ee>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pd0-f169.google.com ([209.85.192.169]:62208 "EHLO
-	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752273Ab3K2Imt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Nov 2013 03:42:49 -0500
-Received: by mail-pd0-f169.google.com with SMTP id v10so13467934pde.14
-        for <linux-scsi@vger.kernel.org>; Fri, 29 Nov 2013 00:42:49 -0800 (PST)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Michael Reed <mdr@sgi.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, Linux Kernel list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: nab <nab@linux-iscsi.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-VGVzdCBjZHJvbSBvbiBpbnRlbCBhaGNpLCBpdCB3aWxsIHRyaWdnZXIgdGhpcyBjb25kaXRpb24u
-DQpUaGlzIGlzIGJlY2F1c2Ugc2NzaS1tcSBkb24nIHRlc3QgJ3EtPmRtYV9kcmFpbl9zaXplICYm
-DQpibGtfcnFfYnl0ZXMocnEpJyBsaWtlIGluIGJsa19wZWVrX3JlcXVlc3QoKS4NCg0KU2lnbmVk
-LW9mZi1ieTogSmlhbnBlbmcgTWEgPG1hamlhbnBlbmdAZ21haWwuY29tPg0KLS0tDQogZHJpdmVy
-cy9zY3NpL3Njc2ktbXEuYyB8ICAgMTAgKysrKysrKysrKw0KIDEgZmlsZSBjaGFuZ2VkLCAxMCBp
-bnNlcnRpb25zKCspDQoNCmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvc2NzaS1tcS5jIGIvZHJp
-dmVycy9zY3NpL3Njc2ktbXEuYw0KaW5kZXggOTMzYmEwZi4uNzhiMDVjMSAxMDA2NDQNCi0tLSBh
-L2RyaXZlcnMvc2NzaS9zY3NpLW1xLmMNCisrKyBiL2RyaXZlcnMvc2NzaS9zY3NpLW1xLmMNCkBA
-IC0zNSw2ICszNSwxNiBAQCBzdGF0aWMgaW50IHNjc2lfbXFfcXVldWVfcnEoc3RydWN0IGJsa19t
-cV9od19jdHggKmhjdHgsIHN0cnVjdCByZXF1ZXN0ICpycSkNCiAJc2MtPmRldmljZSA9IHNkZXY7
-DQogCXNjLT5zZW5zZV9idWZmZXIgPSBzZW5zZV9idWY7DQogCXNjLT5tcV9zZ2wgPSBzZzsNCisN
-CisJaWYgKHEtPmRtYV9kcmFpbl9zaXplICYmIGJsa19ycV9ieXRlcyhycSkpIHsNCisJCS8qDQor
-CQkgKiBtYWtlIHN1cmUgc3BhY2UgZm9yIHRoZSBkcmFpbiBhcHBlYXJzIHdlDQorCQkgKiBrbm93
-IHdlIGNhbiBkbyB0aGlzIGJlY2F1c2UgbWF4X2h3X3NlZ21lbnRzDQorCQkgKiBoYXMgYmVlbiBh
-ZGp1c3RlZCB0byBiZSBvbmUgZmV3ZXIgdGhhbiB0aGUNCisJCSAqIGRldmljZSBjYW4gaGFuZGxl
-DQorCQkgKi8NCisJCXJxLT5ucl9waHlzX3NlZ21lbnRzKys7DQorCX0NCiAJLyoNCiAJICogTWFy
-ayB0aGUgZW5kIG9mIHRoZSBwcmUtYWxsb2NhdGVkIFNHTCBiYXNlZCB1cG9uIHRoZQ0KIAkgKiBp
-bmNvbWluZyBudW1iZXIgb2YgcGh5c2ljYWwgc2VnbWVudHMgZnJvbSBibGstbXENCi0tIA0KMS43
-LjEwLjQNCg==
+Object Debug option in 3.13-rc1 resultsin  the following warning, cure 
+it by annotating the timer to be on stack. The timer is deleted in the 
+same function so stack seems OK.
 
+ODEBUG: object is on stack, but not annotated
+------------[ cut here ]------------
+WARNING: CPU: 6 PID: 18 at lib/debugobjects.c:300 __debug_object_init+0x184/0x240()
+Modules linked in:
+CPU: 6 PID: 18 Comm: kworker/u4:1 Tainted: G        W    3.13.0-rc1 #16
+Workqueue: events_unbound async_run_entry_fn
+Call Trace:
+[00000000004585cc] warn_slowpath_common+0x4c/0x80
+[0000000000458614] warn_slowpath_null+0x14/0x40
+[000000000063d524] __debug_object_init+0x184/0x240
+[000000000063d5fc] debug_object_init+0x1c/0x40
+[00000000004645ec] init_timer_key+0xc/0x60
+[00000000006cca60] qla1280_mailbox_command+0xc0/0x2a0
+[00000000006ccdd4] qla1280_set_target_parameters+0x194/0x220
+[00000000006cd324] qla1280_slave_configure+0x384/0x3c0
+[00000000006a5d48] scsi_add_lun+0x5c8/0x640
+[00000000006a62b8] scsi_probe_and_add_lun+0x1b8/0x2e0
+[00000000006a6c2c] __scsi_scan_target+0x8c/0x100
+[00000000006a6cf4] scsi_scan_channel+0x54/0xa0
+[00000000006a7008] scsi_scan_host_selected+0xc8/0x120
+[00000000006a70e0] do_scsi_scan_host+0x80/0xa0
+[00000000006a7164] do_scan_async+0x4/0x20
+[00000000004817b8] async_run_entry_fn+0x58/0x120
+---[ end trace 9a1420108ebfd590 ]---
+
+Signed-off-by: Meelis Roos <mroos@linux.ee>
+
+diff --git a/drivers/scsi/qla1280.c b/drivers/scsi/qla1280.c
+index 5a522c5..97dabd3 100644
+--- a/drivers/scsi/qla1280.c
++++ b/drivers/scsi/qla1280.c
+@@ -2502,7 +2502,7 @@ qla1280_mailbox_command(struct scsi_qla_host *ha, uint8_t mr, uint16_t *mb)
+ 	/* Issue set host interrupt command. */
+ 
+ 	/* set up a timer just in case we're really jammed */
+-	init_timer(&timer);
++	init_timer_on_stack(&timer);
+ 	timer.expires = jiffies + 20*HZ;
+ 	timer.data = (unsigned long)ha;
+ 	timer.function = qla1280_mailbox_timeout;
+
+-- 
+Meelis Roos (mroos@linux.ee)
