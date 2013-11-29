@@ -1,60 +1,41 @@
-From: Meelis Roos <mroos@linux.ee>
-Subject: [PATCH] qla1280: Annotate timer on stack so object debug does not
- complain
-Date: Fri, 29 Nov 2013 11:05:47 +0200 (EET)
-Message-ID: <alpine.SOC.1.00.1311291058320.5464@math.ut.ee>
+From: Newtech Tan <tan@newtech.co.jp>
+Subject: how to use SES driver to send SES commands?
+Date: Fri, 29 Nov 2013 19:07:30 +0900
+Message-ID: <20131129190730.B2FC.46AD7750@newtech.co.jp>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Michael Reed <mdr@sgi.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, Linux Kernel list <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from dc31.etius.jp ([119.245.209.2]:40770 "EHLO dc31.etius.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752224Ab3K2KOD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 29 Nov 2013 05:14:03 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Object Debug option in 3.13-rc1 resultsin  the following warning, cure 
-it by annotating the timer to be on stack. The timer is deleted in the 
-same function so stack seems OK.
+Hi friends
 
-ODEBUG: object is on stack, but not annotated
-------------[ cut here ]------------
-WARNING: CPU: 6 PID: 18 at lib/debugobjects.c:300 __debug_object_init+0x184/0x240()
-Modules linked in:
-CPU: 6 PID: 18 Comm: kworker/u4:1 Tainted: G        W    3.13.0-rc1 #16
-Workqueue: events_unbound async_run_entry_fn
-Call Trace:
-[00000000004585cc] warn_slowpath_common+0x4c/0x80
-[0000000000458614] warn_slowpath_null+0x14/0x40
-[000000000063d524] __debug_object_init+0x184/0x240
-[000000000063d5fc] debug_object_init+0x1c/0x40
-[00000000004645ec] init_timer_key+0xc/0x60
-[00000000006cca60] qla1280_mailbox_command+0xc0/0x2a0
-[00000000006ccdd4] qla1280_set_target_parameters+0x194/0x220
-[00000000006cd324] qla1280_slave_configure+0x384/0x3c0
-[00000000006a5d48] scsi_add_lun+0x5c8/0x640
-[00000000006a62b8] scsi_probe_and_add_lun+0x1b8/0x2e0
-[00000000006a6c2c] __scsi_scan_target+0x8c/0x100
-[00000000006a6cf4] scsi_scan_channel+0x54/0xa0
-[00000000006a7008] scsi_scan_host_selected+0xc8/0x120
-[00000000006a70e0] do_scsi_scan_host+0x80/0xa0
-[00000000006a7164] do_scan_async+0x4/0x20
-[00000000004817b8] async_run_entry_fn+0x58/0x120
----[ end trace 9a1420108ebfd590 ]---
+    I subscribed the mailing list just now. Would you please to give me help? 
 
-Signed-off-by: Meelis Roos <mroos@linux.ee>
+    Who can tell me how to use SES driver(linux/driver/scsi/ses.c) to send SES command(SEND DIAGNOSTIC, RECEIVE DIAGNOSTIC RESULTS) in my linux program?
+(I don't want to use sg_ses.)
 
-diff --git a/drivers/scsi/qla1280.c b/drivers/scsi/qla1280.c
-index 5a522c5..97dabd3 100644
---- a/drivers/scsi/qla1280.c
-+++ b/drivers/scsi/qla1280.c
-@@ -2502,7 +2502,7 @@ qla1280_mailbox_command(struct scsi_qla_host *ha, uint8_t mr, uint16_t *mb)
- 	/* Issue set host interrupt command. */
- 
- 	/* set up a timer just in case we're really jammed */
--	init_timer(&timer);
-+	init_timer_on_stack(&timer);
- 	timer.expires = jiffies + 20*HZ;
- 	timer.data = (unsigned long)ha;
- 	timer.function = qla1280_mailbox_timeout;
+The following is my system info. /dev/sg2 is my SES device.
 
--- 
-Meelis Roos (mroos@linux.ee)
+[root@tan-sl dev]# lsscsi -g
+[0:0:0:0]    cd/dvd  HL-DT-ST DVD+-RW GSA-H53N B104  /dev/sr0   /dev/sg0
+[3:0:0:0]    disk    ATA      TOSHIBA MK8061GS ME0A  /dev/sda   /dev/sg1
+[4:0:0:0]    enclosu LSI      SAS616x          0502  -         /dev/sg2
+
+[root@tan-sl enclosure]# pwd
+/sys/class/enclosure
+[root@tan-sl enclosure]# ls -l
+total 0
+lrwxrwxrwx 1 root root 0 Nov 29 14:51 4:0:0:0 -> ../../devices/pci0000:00/0000:00:1c.0/0000:02:00.0/host4/port-4:0/expan
+der-4:0/port-4:0:0/end_device-4:0:0/target4:0:0/4:0:0:0/enclosure/4:0:0:0
+
+in linux, I can't find ses device.  Under /sys/class/enclosure, folder 4:0:0:0 existed. 
+
+I will apprectiate for your help.
+
