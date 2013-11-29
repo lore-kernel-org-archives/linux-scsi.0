@@ -1,24 +1,41 @@
-From: "Amministrazione Belvedere - Pisa"
-	<amministrazione@relaisbelvedere.pisa.it>
-Subject: (unknown)
-Date: Fri, 29 Nov 2013 03:00:17 +0100
-Message-ID: <78421089332878245912@Reception>
-Reply-To: amministrazione@relaisbelvedere.pisa.it
+From: majianpeng <majianpeng@gmail.com>
+Subject: [RFC PATCH 0/6] scsi-mq: make the scsi-mq work.
+Date: Fri, 29 Nov 2013 16:41:20 +0800
+Message-ID: <201311291641178322454@gmail.com>
+Reply-To: majianpeng <majianpeng@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtpauth.relaisbelvedere.pisa.it ([89.31.75.105]:57555 "EHLO
-	smtpauth.relaisbelvedere.pisa.it" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753845Ab3K2CIP convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 Nov 2013 21:08:15 -0500
-Received: from Reception (unknown [195.81.110.2])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by smtpauth.relaisbelvedere.pisa.it (Postfix) with ESMTPSA id 2E6BEC421F
-	for <linux-scsi@vger.kernel.org>; Fri, 29 Nov 2013 03:00:12 +0100 (CET)
+Received: from mail-pd0-f174.google.com ([209.85.192.174]:36559 "EHLO
+	mail-pd0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751089Ab3K2Il2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Nov 2013 03:41:28 -0500
+Received: by mail-pd0-f174.google.com with SMTP id y13so13319427pdi.5
+        for <linux-scsi@vger.kernel.org>; Fri, 29 Nov 2013 00:41:27 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: nab <nab@linux-iscsi.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
+
+SGkgbmFiOg0KCVRlc3QgaHR0cDovL2dpdC5rZXJuZWwub3JnL3B1Yi9zY20vbGludXgva2VybmVs
+L2dpdC9uYWIvdGFyZ2V0LXBlbmRpbmcuZ2l0L3Njc2ktbXEsIGl0IGNhbid0IHdvcmsgZm9yIG15
+IG1hY2hpbmUodXNpbmcgYWhjaSBkcml2ZXIpLg0KRnJvbSB0aGlzIGJyYW5jaCwgaSBrbm93IGl0
+IHN1cHBvcnQgYWhjaSB3aXRoIHNjc2ktbXEvYmxvY2stbXEuU28gaSBtb2RpZnkgc29tZSBwbGFj
+ZSB0byBtYWtlIGl0IGNhbiB3b3JrLg0KRm9yIHRoaXMgcGF0Y2hzZXQsIGkgb25seSB0ZXN0IHJl
+YWQvd3JpdGUgYW5kIG9uIG9vcHMvaHVuZ190YXNrIG9jY3VyLg0KDQpKaWFucGVuZyBNYSAoNik6
+DQogIGJsb2NrOiBzdXBwb3J0IGJsay1tcSBvbiBibGtfcnVuX3F1ZXVlL2Jsa19ydW5fcXVldWVf
+YXN5bmMuDQogIHNjc2ktbXE6IGFkZCBvcGVyYXRpb25zIGFib3V0IGRldmljZV9idXN5L3Rhcmdl
+dF9idXN5L2hvc3RfYnVzeSBpbiAgIA0KICAgICBzY3NpX21xX3F1ZXVlX3JxKCkuDQogIHNjc2kt
+bXE6IERvbid0IHNldCBRVUVVRV9GTEFHX05PTlJPVCBpbiBzY3NpX21xX2FsbG9jX3F1ZXVlKCku
+DQogIHNjc2ktbXE6IGluaXQgc2cgaW4gc2NzaV9pbml0X2lvLg0KICBzY3NpLW1xOiBmaXggJ0JV
+R19PTihjb3VudCA+IHNkYi0+dGFibGUubmVudHMpJyBpbg0KICAgIHNjc2lfaW5pdF9zZ3RhYmxl
+KCkuDQogIHNjc2ktbXE6IFByZS1hbGxvY2F0aW9uIG9mIHNnIHRhYmxlcyBiYXNlIG9uDQogICAg
+bWluKGhvc3QtPmhvc3R0LT5zZ190YWJsZXNpemUsIFNDU0lfTVFfTUFYX1NHX1NFR01FTlRTKS4N
+Cg0KIGJsb2NrL2Jsay1jb3JlLmMgICAgICAgIHwgICAyMSArKysrKysrKysrKysrKy0tLS0tLS0N
+CiBkcml2ZXJzL3Njc2kvc2NzaS1tcS5jICB8ICAgMzMgKysrKysrKysrKysrKysrKysrKysrKysr
+KysrKy0tLS0tDQogZHJpdmVycy9zY3NpL3Njc2lfbGliLmMgfCAgICA0ICsrKy0NCiAzIGZpbGVz
+IGNoYW5nZWQsIDQ1IGluc2VydGlvbnMoKyksIDEzIGRlbGV0aW9ucygtKQ0KDQotLSANCjEuNy4x
+MC40DQo=
 
