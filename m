@@ -1,114 +1,61 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 03/11] hpsa: add 5 second delay after doorbell reset
-Date: Sat, 30 Nov 2013 16:42:02 -0800
-Message-ID: <1385858522.1815.1.camel@dabdike>
-References: <20131107164258.3504.5892.stgit@beardog.cce.hp.com>
-	 <20131107164540.3504.61950.stgit@beardog.cce.hp.com>
-	 <527CEC69.6090408@redhat.com> <20131108144402.GK31390@beardog.cce.hp.com>
-	 <527CFCFC.6000500@redhat.com> <20131108153128.GN31390@beardog.cce.hp.com>
+From: Stefano Stabellini <stefano.stabellini@eu.citrix.com>
+Subject: Re: "swiotlb buffer is full" with 3.13-rc1+ but not 3.4.
+Date: Sun, 1 Dec 2013 17:06:00 +0000
+Message-ID: <alpine.DEB.2.02.1312011659500.3198@kaball.uk.xensource.com>
+References: <21144.47873.639231.96901@mariner.uk.xensource.com>  <20131130185639.GA13039@pegasus.dumpdata.com> <1385844524.2170.10.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:45855 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750896Ab3LAQuW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 1 Dec 2013 11:50:22 -0500
-In-Reply-To: <20131108153128.GN31390@beardog.cce.hp.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="US-ASCII"
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <1385844524.2170.10.camel@dabdike>
+Sender: netdev-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, Ian Jackson <Ian.Jackson@eu.citrix.com>, netdev@vger.kernel.org, Michael Chan <mchan@broadcom.com>, dl-mptfusionlinux@lsi.com, linux-scsi@vger.kernel.org, support@lsi.com, Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>, xen-devel@lists.xenproject.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: scameron@beardog.cce.hp.com
-Cc: Tomas Henzl <thenzl@redhat.com>, stephenmcameron@gmail.com, mikem@beardog.cce.hp.com, linux-scsi@vger.kernel.org, scott.teel@hp.com
 
-On Fri, 2013-11-08 at 09:31 -0600, scameron@beardog.cce.hp.com wrote:
-> On Fri, Nov 08, 2013 at 04:02:20PM +0100, Tomas Henzl wrote:
-> > On 11/08/2013 03:44 PM, scameron@beardog.cce.hp.com wrote:
-> > > On Fri, Nov 08, 2013 at 02:51:37PM +0100, Tomas Henzl wrote:
-> > >> On 11/07/2013 05:45 PM, Stephen M. Cameron wrote:
-> > >>> From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
-> > >>>
-> > >>> The hardware guys tell us that after initiating a software
-> > >>> reset via the doorbell register we need to wait 5 seconds before
-> > >>> attempting to talk to the board *at all*.  This means that we
-> > >>> cannot watch the board to verify it transitions from "ready" to
-> > >>> to "not ready" then back "ready", since this transition will
-> > >>> most likely happen during those 5 seconds (though we can still
-> > >>> verify the reset happens by watching the "driver version" field
-> > >>> get cleared.)
-> > >>>
-> > >>> Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
-> > >>> ---
-> > >>>  drivers/scsi/hpsa.c |   32 +++++++++++++++++++++++---------
-> > >>>  1 files changed, 23 insertions(+), 9 deletions(-)
-> > >>>
-> > >>> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> > >>> index 20fc598..fff5fd3 100644
-> > >>> --- a/drivers/scsi/hpsa.c
-> > >>> +++ b/drivers/scsi/hpsa.c
-> > >>> @@ -3781,6 +3781,13 @@ static int hpsa_controller_hard_reset(struct pci_dev *pdev,
-> > >>>  		 */
-> > >>>  		dev_info(&pdev->dev, "using doorbell to reset controller\n");
-> > >>>  		writel(use_doorbell, vaddr + SA5_DOORBELL);
-> > >>> +
-> > >>> +		/* PMC hardware guys tell us we need a 5 second delay after
-> > >>> +		 * doorbell reset and before any attempt to talk to the board
-> > >>> +		 * at all to ensure that this actually works and doesn't fall
-> > >>> +		 * over in some weird corner cases.
-> > >>> +		 */
-> > >>> +		msleep(5000);
-> > >>>  	} else { /* Try to do it the PCI power state way */
-> > >>>  
-> > >>>  		/* Quoting from the Open CISS Specification: "The Power
-> > >>> @@ -3977,15 +3984,22 @@ static int hpsa_kdump_hard_reset_controller(struct pci_dev *pdev)
-> > >>>  	   need a little pause here */
-> > >>>  	msleep(HPSA_POST_RESET_PAUSE_MSECS);
-> > >> I know it's complicated with a lot of different devices and fw versions,
-> > >> but here^ we wait for 3sec - isn't the method - wait for 3s then wait for board not ready
-> > >> a bit fragile, what if a board comes up faster?
-> > >> When the method "watching the "driver version"" works why don't you want to use it  
-> > >> regardless of the reset method used?
-> > > The "watching the driver version" thing is only there to catch if
-> > > the firmware guys break things and turn the reset into a no-op
-> > > (which happened with the PCI power manaegment based reset and we
-> > > didn't catch it for a year or so because we didn't have that check)
-> > >
-> > > We aren't supposed to look at the driver version field (or anything)
-> > > until we first verify the scratch pad register says the firmware is
-> > > ready.  In the case of those boards that use the "doorbell" reset,
-> > > we aren't supposed to look at *anything* for the first five seconds.
-> > >
-> > > I have been bugging the firmware/hardware guys for a sane reset
-> > > procedure that actually works reliably for years with no luck.
-> > >
-> > > For the SCSI over PCIe driver, being tired of this crap, I simply
-> > > unconditionally reset the device on driver load every single time,
-> > > and did this from the beginning.  This kind of forced the firmware
-> > > and hardware guys to make the reset on that thing work reliably
-> > > and quickly, and since I did that from the earliest days, they didn't
-> > > have a chance to screw it up without it being caught immediately.
-> > > For Smart Array, obviously it's too late for that approach.
+On Sat, 30 Nov 2013, James Bottomley wrote:
+> On Sat, 2013-11-30 at 13:56 -0500, Konrad Rzeszutek Wilk wrote:
+> > My theory is that the SWIOTLB is not full - it is just that the request
+> > is for a compound page that is more than 512kB. Please note that
+> > SWIOTLB highest "chunk" of buffer it can deal with is 512kb.
 > > 
-> > OK, my question was more or less if this:
-> > msleep(HPSA_POST_RESET_PAUSE_MSECS);
-> > just before waiting for the board to enter BOARD_NOT_READY state
-> > isn't dangerous - when the board enters a ready state in the first 3sec
-> > it will wait indefinitely for the not_ready state
-> > thus whether the test for not ready state shouldn't be removed.
-> > The mechanism now works somehow and maybe it's better
-> > not to touch it, I just wanted to draw your attention to that
-> > potential problem.
+> > And that is of course the question comes out - why would it try to
+> > bounce buffer it. In Xen the answer is simple - the sg chunks cross page
+> > boundaries which means that they are not physically contingous - so we
+> > have to use the bounce buffer. It would be better if the the sg list
+> > provided a large list of 4KB pages instead of compound pages as that
+> > could help in avoiding the bounce buffer.
+> > 
+> > But I digress - this is a theory - I don't know whether the SCSI layer
+> > does any colescing of the sg list - and if so, whether there is any
+> > easy knob to tell it to not do it.
 > 
-> Oh ok, I see.  Thanks, yes that does look questionable.  So you
-> are suggesting to skip the check for transition from NOT READY to 
-> READY in the scratch pad register in all cases, since we have all
-> these ridiculous delay requirements preventing us from watching the
-> board closely enough and so that may mean that we would miss such a
-> transition.
+> Well, SCSI doesn't, but block does.  It's actually an efficiency thing
+> since most firmware descriptor formats cope with multiple pages and the
+> more descriptors you have for a transaction, the more work the on-board
+> processor on the HBA has to do.  If you have an emulated HBA, like
+> virtio, you could turn off physical coalesing by setting the
+> use_clustering flag to DISABLE_CLUSTERING.  But you can't do that for a
+> real card.  I assume the problem here is that the host is passing the
+> card directly to the guest and the guest clusters based on its idea of
+> guest pages which don't map to contiguous physical pages?
 > 
-> Let me talk it over with Mike Miller, but it seems reasonable.
+> The way you tell how many physically contiguous pages block is willing
+> to merge is by looking at /sys/block/<dev>/queue/max_segment_size if
+> that's 4k then it won't merge, if it's greater than 4k, then it will.
+> 
+> I'm not quite sure what to do ... you can't turn of clustering globally
+> in the guest because the virtio drivers use it to reduce ring descriptor
+> pressure, what you probably want is some way to flag a pass through
+> device.
 
-Is there a resolution on this?  It's holding up the patch series.
+Given that we don't use virtio on Xen, we could actually turn off
+clustering globally (if we are running on Xen).
 
-James
+In fact for example BIOVEC_PHYS_MERGEABLE is defined:
 
++#define BIOVEC_PHYS_MERGEABLE(vec1, vec2)				\
++	(__BIOVEC_PHYS_MERGEABLE(vec1, vec2) &&				\
++	 (!xen_domain() || xen_biovec_phys_mergeable(vec1, vec2)))
 
+so that we can disable it if the two bv_page are not actually physical
+contiguous.
