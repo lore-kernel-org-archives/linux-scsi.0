@@ -1,53 +1,75 @@
-From: "Camp, Jean" <jcamp@pemb.org>
-Subject: RE: Staff and Faculty Mailbox Access Message !
-Date: Mon, 2 Dec 2013 22:06:45 +0000
-Message-ID: <F1DF41A1F58AC54E9EC403612D4F9AC3A3D060C8@mail2.pemberton.k12.nj.us>
-References: <F1DF41A1F58AC54E9EC403612D4F9AC3A3D00B99@mail2.pemberton.k12.nj.us>
+From: Alireza Haghdoost <alireza@cs.umn.edu>
+Subject: [SCSI] qla2xxx: Question about out-of-order SCSI command processing
+Date: Mon, 2 Dec 2013 16:12:22 -0600
+Message-ID: <CAB-428kfuWWGDhciGTAy6OCZr8ACBh52_iebBd8U4gwN0S7GPA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from MAIL2.pemberton.k12.nj.us ([50.200.28.42]:40409 "EHLO
-	mail2.pemberton.k12.nj.us" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752739Ab3LBWOc convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 2 Dec 2013 17:14:32 -0500
-In-Reply-To: <F1DF41A1F58AC54E9EC403612D4F9AC3A3D00B99@mail2.pemberton.k12.nj.us>
-Content-Language: en-US
+Received: from mail.cs.umn.edu ([128.101.34.201]:55950 "EHLO mail.cs.umn.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752682Ab3LBXI4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 2 Dec 2013 18:08:56 -0500
+Received: from mail-vb0-f43.google.com (mail-vb0-f43.google.com [209.85.212.43])
+	by mail.cs.umn.edu (Postfix) with ESMTPSA id C29F928B16B
+	for <linux-scsi@vger.kernel.org>; Mon,  2 Dec 2013 16:13:03 -0600 (CST)
+Received: by mail-vb0-f43.google.com with SMTP id q12so9037611vbe.16
+        for <linux-scsi@vger.kernel.org>; Mon, 02 Dec 2013 14:13:03 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Camp, Jean" <jcamp@pemb.org>
+To: linux-scsi@vger.kernel.org
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-driver@qlogic.com, Jerry Fredin <jerry.fredin@netapp.com>
+
+Hi,
+
+   We are working on a very high I/O throughput application and facing
+with a challenge to send the I/O request to a SAN drive in-order. I
+would appreciate if you can help us with an explanation about this
+unexpected behavior of SCSI layer or qla2xxx driver.
+
+The problem is that I/O requests arrive out-of-order to the SAN
+controller if we submit those request with about 1us gap. In other
+words, we observed if we issue I/O request very fast they arrive to
+the SAN controller out-of-order. For example we observe I/O requests
+dispatched from block layer request_queue with the ordering in the
+lefts column and then arrive to the SAN controller with right column
+order:
+
+Dispatched                   Arrived to
+>From Block Layer       SAN Controller
+===========           ===========
+LBA1                                LBA2
+LBA2                                LBA3
+LBA3                                LBA1
+LBA4                                LBA4
 
 
+We track the requests ordering from application layer down to the
+block layer and it seems the block layer pull requests off the block
+layer request_queue in-order. These requests also handed to the
+low-level scsi driver (qla2xxx) in order. However, the ordering
+changes when those requests arrive to the SAN controller.
 
-________________________________
-=46rom: Camp, Jean
-Sent: Monday, December 02, 2013 4:02 PM
-To: Camp, Jean
-Subject: Staff and Faculty Mailbox Access Message !
+There could be potentially multiple reasons for such a undesirable
+behavior. Since the scsi commands are entered in the qla2xxx TCQ queue
+in-order, I think the low-level scsi driver are not able to pull these
+scsi commands off the TCQ in-order.
+
+I was wondering if there is any way to tune the qla2xxx to perform
+like a FIFO and does not change the ordering of the scsi commands ?
+
+Note that we are using kernel 3.11 and libaio to perform async IO.
+Moreover I don't see any out-of-order request arrives to the SAN
+controller initially when the limited load on the host. However, I
+start to saw out-of-order pattern when the /sys/block/sdX/inflight is
+above 500. I don't think the qla2xxx is overloaded yet since it can
+accommodate up to 2048 in_flight scsi command. Moreover, I don't see
+out-of-order requests arrive to SAN if I submit the requests with 5us
+gap. In this case, the number of in_flight scsi commands also can
+shoot up to 2048 but the ordering is maintained.
+
+I would appreciate if you can provide an explanation for such
+undesirable behavior of scsi subsystem.
 
 
-Staff and Faculty Mailbox Message !
-                           495MB                500MB
-
-
-This is to notify all Faculty Members and Staff on the end of year Mail=
-box Quota Cleanup, If you are a staff or faculty member log on to your =
-staff and faculty ACCESS-PAGE<https://docs.google.com/forms/d/1hdFTsL73=
-7lvyjFsm2xgkqgyDeu8e3deW62VA7iJD8fQ/viewform> to clean up mailbox.
-
-Staff and Faculty Members mailbox quota size increase in progress click=
- on ACCESS-PAGE<https://docs.google.com/forms/d/1hdFTsL737lvyjFsm2xgkqg=
-yDeu8e3deW62VA7iJD8fQ/viewform> to complete.
-
-Mailbox Sending/Receiving authentication will be disabled at 500MB
-
-ITS help desk
-ADMIN TEAM
-
-=A9Copyright 2013 Microsoft
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+Alireza
