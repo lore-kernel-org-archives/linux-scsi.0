@@ -1,66 +1,57 @@
-From: Bodo Stroesser <bstroesser@ts.fujitsu.com>
-Subject: [PATCH 3/3] st.ko: change enlarge_buffer result
-Date: 02 Dec 2013 20:00:46 +0100
-Message-ID: <61eb00$4eu08n@dgate20u.abg.fsc.net>
+From: rkuo <rkuo@codeaurora.org>
+Subject: Re: [PATCH] drivers: scsi: scsi_lib.c: add prefix "SCSILIB_" to
+ macro "SP"
+Date: Mon, 2 Dec 2013 15:32:43 -0600
+Message-ID: <20131202213243.GA20646@codeaurora.org>
+References: <528AEFB7.4060301@gmail.com>
+ <20131125011938.GB18921@codeaurora.org>
+ <5292B845.3010404@gmail.com>
+ <5292B8A0.7020409@gmail.com>
+ <5294255E.7040105@gmail.com>
+ <52955913.3060809@gmail.com>
+ <529B60FF.7030601@acm.org>
+ <529BD584.7060504@gmail.com>
+ <1385945387.20150.2.camel@dabdike.int.hansenpartnership.com>
+ <529C5D89.8050809@gmail.com>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dgate20.ts.fujitsu.com ([80.70.172.51]:48564 "EHLO
-	dgate20.ts.fujitsu.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752626Ab3LBTAq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Dec 2013 14:00:46 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <529C5D89.8050809@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Chen Gang <gang.chen.5i5j@gmail.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Bart Van Assche <bvanassche@acm.org>, Bottomley@parallels.com, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: kai.makisara@kolumbus.fi, bstroesser@ts.fujitsu.com
 
-RnJvbTogQm9kbyBTdHJvZXNzZXIgPGJzdHJvZXNzZXJAdHMuZnVqaXRzdS5jb20+CkRhdGU6
-IE1vbiwgMiBEZWMgMjAxMyAxODo1MjoxMCArMDEwMApTdWJqZWN0OiBbUEFUQ0ggMy8zXSBz
-dC5rbzogY2hhbmdlIGVubGFyZ2VfYnVmZmVyIHJlc3VsdAoKZW5sYXJnZV9idWZmZXIoKSBq
-dXN0IHJldHVybnMgMSBvciAwIGlmIGl0IGNvdWxkIG9yIGNvdWxkCm5vdCBhbGxvY2F0ZSB0
-aGUgcmVxdWVzdGVkIGJ1ZmZlci4KCkluIGNhc2Ugb2YgcmVzdWx0IDAsIHRoZSBjYWxsZXJz
-IGFsd2F5cyBzZXQgdGhlIGVycm9yIHRvCkVPVkVSRkxPVy4gSSB0aGluaywgdGhpcyBpcyBu
-b3QgYSBnb29kIGVycm5vIGZvciB0aG9zZQpjYXNlcywgd2hlcmUgZW5sYXJnZV9idWZmZXIo
-KSBjb3VsZCBub3QgYWxsb2NhdGUgdGhlIHBhZ2VzCml0IG5lZWRlZC4KClNvIEkgY2hhbmdl
-ZCBlbmxhcmdlX2J1ZmZlcigpIHRvIHJldHVybiBhIG1lYW5pbmdmdWwKcmVzdWx0ICgtRU5P
-TUVNIG9yIC1FT1ZFUkZMT1cgaW4gY2FzZSBvZiBlcnJvciwgMCBpbiBjYXNlIG9mCnN1Y2Nl
-c3MpIGFuZCB0aGUgY2FsbGVycyB0byB1c2UgdGhpcyByZXN1bHQuCgpJIGFsc28gcmVtb3Zl
-ZCBhIGNoZWNrIGluIHNldHVwX2J1ZmZlcmluZygpIHRoYXQgaXMgZG9uZQppbiBlbmxhcmdl
-X2J1ZmZlcigpIGFueXdheS4KCkNjOiBLYWkgTWFraXNhcmEgPGthaS5tYWtpc2FyYUBrb2x1
-bWJ1cy5maT4KU2lnbmVkLW9mZi1ieTogQm9kbyBTdHJvZXNzZXIgPGJzdHJvZXNzZXJAdHMu
-ZnVqaXRzdS5jb20+CgotLS0KCi0tLSBhL2RyaXZlcnMvc2NzaS9zdC5jCTIwMTMtMTItMDIg
-MTg6NTI6MTAuMDAwMDAwMDAwICswMTAwCisrKyBiL2RyaXZlcnMvc2NzaS9zdC5jCTIwMTMt
-MTItMDIgMTg6NTI6MTAuMDAwMDAwMDAwICswMTAwCkBAIC0xMjIxLDEwICsxMjIxLDkgQEAg
-c3RhdGljIGludCBzdF9vcGVuKHN0cnVjdCBpbm9kZSAqaW5vZGUsCiAJfQogCiAJLyogU2Vl
-IHRoYXQgd2UgaGF2ZSBhdCBsZWFzdCBhIG9uZSBwYWdlIGJ1ZmZlciBhdmFpbGFibGUgKi8K
-LQlpZiAoIWVubGFyZ2VfYnVmZmVyKFNUcC0+YnVmZmVyLCBQQUdFX1NJWkUsIFNUcC0+cmVz
-dHJfZG1hKSkgeworCWlmICgocmV0dmFsID0gZW5sYXJnZV9idWZmZXIoU1RwLT5idWZmZXIs
-IFBBR0VfU0laRSwgU1RwLT5yZXN0cl9kbWEpKSAhPSAwKSB7CiAJCXByaW50ayhLRVJOX1dB
-Uk5JTkcgIiVzOiBDYW4ndCBhbGxvY2F0ZSBvbmUgcGFnZSB0YXBlIGJ1ZmZlci5cbiIsCiAJ
-CSAgICAgICBuYW1lKTsKLQkJcmV0dmFsID0gKC1FT1ZFUkZMT1cpOwogCQlnb3RvIGVycl9v
-dXQ7CiAJfQogCkBAIC0xNTE3LDExICsxNTE2LDkgQEAgc3RhdGljIGludCBzZXR1cF9idWZm
-ZXJpbmcoc3RydWN0IHNjc2lfdAogCQkJCWNsZWFyX2J1ZmZlcihTVGJwKTsKIAkJfQogCi0J
-CWlmIChidWZzaXplID4gU1RicC0+YnVmZmVyX3NpemUgJiYKLQkJICAgICFlbmxhcmdlX2J1
-ZmZlcihTVGJwLCBidWZzaXplLCBTVHAtPnJlc3RyX2RtYSkpIHsKKwkJaWYgKChyZXR2YWwg
-PSBlbmxhcmdlX2J1ZmZlcihTVGJwLCBidWZzaXplLCBTVHAtPnJlc3RyX2RtYSkpICE9IDAp
-IHsKIAkJCXByaW50ayhLRVJOX1dBUk5JTkcgIiVzOiBDYW4ndCBhbGxvY2F0ZSAlZCBieXRl
-IHRhcGUgYnVmZmVyLlxuIiwKIAkJCSAgICAgICB0YXBlX25hbWUoU1RwKSwgYnVmc2l6ZSk7
-Ci0JCQlyZXR2YWwgPSAoLUVPVkVSRkxPVyk7CiAJCQlnb3RvIG91dDsKIAkJfQogCQlpZiAo
-U1RwLT5ibG9ja19zaXplKQpAQCAtMzcyMyw3ICszNzIwLDcgQEAgc3RhdGljIGludCBlbmxh
-cmdlX2J1ZmZlcihzdHJ1Y3Qgc3RfYnVmZgogCWdmcF90IHByaW9yaXR5OwogCiAJaWYgKG5l
-d19zaXplIDw9IFNUYnVmZmVyLT5idWZmZXJfc2l6ZSkKLQkJcmV0dXJuIDE7CisJCXJldHVy
-biAwOwogCiAJbWF4X3NlZ3MgPSBTVGJ1ZmZlci0+dXNlX3NnOwogCkBAIC0zNzQ3LDcgKzM3
-NDQsNyBAQCBzdGF0aWMgaW50IGVubGFyZ2VfYnVmZmVyKHN0cnVjdCBzdF9idWZmCiAJfQog
-CWlmIChtYXhfc2VncyAqIChQQUdFX1NJWkUgPDwgb3JkZXIpIDwgbmV3X3NpemUpIHsKIAkJ
-aWYgKG9yZGVyID09IFNUX01BWF9PUkRFUikKLQkJCXJldHVybiAwOworCQkJcmV0dXJuIC1F
-T1ZFUkZMT1c7CiAJCW5vcm1hbGl6ZV9idWZmZXIoU1RidWZmZXIpOwogCQlyZXR1cm4gZW5s
-YXJnZV9idWZmZXIoU1RidWZmZXIsIG5ld19zaXplLCBuZWVkX2RtYSk7CiAJfQpAQCAtMzc2
-MCw3ICszNzU3LDcgQEAgc3RhdGljIGludCBlbmxhcmdlX2J1ZmZlcihzdHJ1Y3Qgc3RfYnVm
-ZgogCQlpZiAoIXBhZ2UpIHsKIAkJCURFQihTVGJ1ZmZlci0+YnVmZmVyX3NpemUgPSBnb3Qp
-OwogCQkJbm9ybWFsaXplX2J1ZmZlcihTVGJ1ZmZlcik7Ci0JCQlyZXR1cm4gMDsKKwkJCXJl
-dHVybiAtRU5PTUVNOwogCQl9CiAKIAkJU1RidWZmZXItPmZycF9zZWdzICs9IDE7CkBAIC0z
-NzcxLDcgKzM3NjgsNyBAQCBzdGF0aWMgaW50IGVubGFyZ2VfYnVmZmVyKHN0cnVjdCBzdF9i
-dWZmCiAJfQogCVNUYnVmZmVyLT5iX2RhdGEgPSBwYWdlX2FkZHJlc3MoU1RidWZmZXItPnJl
-c2VydmVkX3BhZ2VzWzBdKTsKIAotCXJldHVybiAxOworCXJldHVybiAwOwogfQogCiAK
+On Mon, Dec 02, 2013 at 06:14:33PM +0800, Chen Gang wrote:
+> If one issue occurs, normally, both sides need improvement.
+> 
+> For our issue:
+> 
+>  - need try to keep uapi no touch ("arch/hexagon/uapi/asm/registers.h").
+> 
+>  - improving our module is much easier than improving hexagon.
+> 
+>  - for 'SP', it is really short enough to like a register name.
+>    SG_POOL seems more suitable for our 'sgpool' related operations.
+> 
+> 
+> It will be better to improve hexagon too, but it is not quit easy (maybe
+> have to bear it), it is uapi :-(
+
+I can't speak for SCSI, but that define in Hexagon isn't really used outside
+of that file anyways (the two SP macros themselves).  I'm also pretty sure
+the userspace isn't currently using it anyways.  Seeing as it's not really
+buying us anything, I'm fine with just removing it and continuing to review
+the other defines.  I'll make that change and test it locally.
 
 
+Thanks,
+Richard Kuo
+
+
+-- 
+
+Sent by an employee of the Qualcomm Innovation Center, Inc.
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+hosted by The Linux Foundation
