@@ -1,61 +1,90 @@
-From: Stefano Stabellini <stefano.stabellini@eu.citrix.com>
-Subject: Re: "swiotlb buffer is full" with 3.13-rc1+ but not 3.4.
-Date: Sun, 1 Dec 2013 17:06:00 +0000
-Message-ID: <alpine.DEB.2.02.1312011659500.3198@kaball.uk.xensource.com>
-References: <21144.47873.639231.96901@mariner.uk.xensource.com>  <20131130185639.GA13039@pegasus.dumpdata.com> <1385844524.2170.10.camel@dabdike>
+From: Chen Gang <gang.chen.5i5j@gmail.com>
+Subject: Re: [PATCH] drivers: scsi: scsi_lib.c: add prefix "SCSILIB_" to macro
+ "SP"
+Date: Mon, 02 Dec 2013 08:34:12 +0800
+Message-ID: <529BD584.7060504@gmail.com>
+References: <528AEFB7.4060301@gmail.com> <20131125011938.GB18921@codeaurora.org> <5292B845.3010404@gmail.com> <5292B8A0.7020409@gmail.com> <5294255E.7040105@gmail.com> <52955913.3060809@gmail.com> <529B60FF.7030601@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <1385844524.2170.10.camel@dabdike>
-Sender: netdev-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, Ian Jackson <Ian.Jackson@eu.citrix.com>, netdev@vger.kernel.org, Michael Chan <mchan@broadcom.com>, dl-mptfusionlinux@lsi.com, linux-scsi@vger.kernel.org, support@lsi.com, Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>, xen-devel@lists.xenproject.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pd0-f169.google.com ([209.85.192.169]:52026 "EHLO
+	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751412Ab3LBAeV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 1 Dec 2013 19:34:21 -0500
+In-Reply-To: <529B60FF.7030601@acm.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: Bottomley@parallels.com, linux-scsi@vger.kernel.org, rkuo <rkuo@codeaurora.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On Sat, 30 Nov 2013, James Bottomley wrote:
-> On Sat, 2013-11-30 at 13:56 -0500, Konrad Rzeszutek Wilk wrote:
-> > My theory is that the SWIOTLB is not full - it is just that the request
-> > is for a compound page that is more than 512kB. Please note that
-> > SWIOTLB highest "chunk" of buffer it can deal with is 512kb.
-> > 
-> > And that is of course the question comes out - why would it try to
-> > bounce buffer it. In Xen the answer is simple - the sg chunks cross page
-> > boundaries which means that they are not physically contingous - so we
-> > have to use the bounce buffer. It would be better if the the sg list
-> > provided a large list of 4KB pages instead of compound pages as that
-> > could help in avoiding the bounce buffer.
-> > 
-> > But I digress - this is a theory - I don't know whether the SCSI layer
-> > does any colescing of the sg list - and if so, whether there is any
-> > easy knob to tell it to not do it.
+On 12/02/2013 12:17 AM, Bart Van Assche wrote:
+> On 11/27/13 03:29, Chen Gang wrote:
+>> the macro "SP" is too common to make conflict with some architectures,
+>> so recommend to add prefix for it.
+>>
+>> The related warning (with allmodconfig for hexagon):
+>>
+>>     CC [M]  drivers/scsi/scsi_lib.o
+>>   drivers/scsi/scsi_lib.c:46:0: warning: "SP" redefined [enabled by default]
+>>   arch/hexagon/include/uapi/asm/registers.h:9:0: note: this is the location of the previous definition
+>>
+>>
+>> Signed-off-by: Chen Gang <gang.chen.5i5j@gmail.com>
+>> ---
+>>  drivers/scsi/scsi_lib.c |   16 ++++++++--------
+>>  1 files changed, 8 insertions(+), 8 deletions(-)
+>>
+>> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+>> index 7bd7f0d..f78e21b 100644
+>> --- a/drivers/scsi/scsi_lib.c
+>> +++ b/drivers/scsi/scsi_lib.c
+>> @@ -43,28 +43,28 @@ struct scsi_host_sg_pool {
+>>  	mempool_t	*pool;
+>>  };
+>>  
+>> -#define SP(x) { x, "sgpool-" __stringify(x) }
+>> +#define SCSILIB_SP(x) { x, "sgpool-" __stringify(x) }
+>>  #if (SCSI_MAX_SG_SEGMENTS < 32)
+>>  #error SCSI_MAX_SG_SEGMENTS is too small (must be 32 or greater)
+>>  #endif
+>>  static struct scsi_host_sg_pool scsi_sg_pools[] = {
+>> -	SP(8),
+>> -	SP(16),
+>> +	SCSILIB_SP(8),
+>> +	SCSILIB_SP(16),
+>>  #if (SCSI_MAX_SG_SEGMENTS > 32)
+>> -	SP(32),
+>> +	SCSILIB_SP(32),
+>>  #if (SCSI_MAX_SG_SEGMENTS > 64)
+>> -	SP(64),
+>> +	SCSILIB_SP(64),
+>>  #if (SCSI_MAX_SG_SEGMENTS > 128)
+>> -	SP(128),
+>> +	SCSILIB_SP(128),
+>>  #if (SCSI_MAX_SG_SEGMENTS > 256)
+>>  #error SCSI_MAX_SG_SEGMENTS is too large (256 MAX)
+>>  #endif
+>>  #endif
+>>  #endif
+>>  #endif
+>> -	SP(SCSI_MAX_SG_SEGMENTS)
+>> +	SCSILIB_SP(SCSI_MAX_SG_SEGMENTS)
+>>  };
+>> -#undef SP
+>> +#undef SCSILIB_SP
+>>  
+>>  struct kmem_cache *scsi_sdb_cache;
 > 
-> Well, SCSI doesn't, but block does.  It's actually an efficiency thing
-> since most firmware descriptor formats cope with multiple pages and the
-> more descriptors you have for a transaction, the more work the on-board
-> processor on the HBA has to do.  If you have an emulated HBA, like
-> virtio, you could turn off physical coalesing by setting the
-> use_clustering flag to DISABLE_CLUSTERING.  But you can't do that for a
-> real card.  I assume the problem here is that the host is passing the
-> card directly to the guest and the guest clusters based on its idea of
-> guest pages which don't map to contiguous physical pages?
+> Sorry but the "SCSILIB_SP" name doesn't look very descriptive to me.
+> There are probably better choices possible. How about using e.g.
+> SG_POOL() instead ?
 > 
-> The way you tell how many physically contiguous pages block is willing
-> to merge is by looking at /sys/block/<dev>/queue/max_segment_size if
-> that's 4k then it won't merge, if it's greater than 4k, then it will.
-> 
-> I'm not quite sure what to do ... you can't turn of clustering globally
-> in the guest because the virtio drivers use it to reduce ring descriptor
-> pressure, what you probably want is some way to flag a pass through
-> device.
 
-Given that we don't use virtio on Xen, we could actually turn off
-clustering globally (if we are running on Xen).
+That sounds good to me, I will send patch v2, tomorrow (today I have
+to do some another urgent things, if this patch is also urgent, please
+help send). :-)
 
-In fact for example BIOVEC_PHYS_MERGEABLE is defined:
-
-+#define BIOVEC_PHYS_MERGEABLE(vec1, vec2)				\
-+	(__BIOVEC_PHYS_MERGEABLE(vec1, vec2) &&				\
-+	 (!xen_domain() || xen_biovec_phys_mergeable(vec1, vec2)))
-
-so that we can disable it if the two bv_page are not actually physical
-contiguous.
+Thanks.
+-- 
+Chen Gang
