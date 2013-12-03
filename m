@@ -1,55 +1,56 @@
-From: Chen Gang <gang.chen.5i5j@gmail.com>
-Subject: Re: [PATCH] drivers: scsi: scsi_lib.c: add prefix "SCSILIB_" to macro
- "SP"
-Date: Tue, 03 Dec 2013 19:42:01 +0800
-Message-ID: <529DC389.6060102@gmail.com>
-References: <528AEFB7.4060301@gmail.com> <20131125011938.GB18921@codeaurora.org> <5292B845.3010404@gmail.com> <5292B8A0.7020409@gmail.com> <5294255E.7040105@gmail.com> <52955913.3060809@gmail.com> <529B60FF.7030601@acm.org> <529BD584.7060504@gmail.com> <1385945387.20150.2.camel@dabdike.int.hansenpartnership.com> <529C5D89.8050809@gmail.com> <20131202213243.GA20646@codeaurora.org>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [SCSI] qla2xxx: Question about out-of-order SCSI command processing
+Date: Tue, 03 Dec 2013 13:26:13 +0100
+Message-ID: <529DCDE5.6010304@acm.org>
+References: <CAB-428kfuWWGDhciGTAy6OCZr8ACBh52_iebBd8U4gwN0S7GPA@mail.gmail.com> <1386027526.2014.2.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-15
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pd0-f180.google.com ([209.85.192.180]:38324 "EHLO
-	mail-pd0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751902Ab3LCLmG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Dec 2013 06:42:06 -0500
-In-Reply-To: <20131202213243.GA20646@codeaurora.org>
+Received: from 87.238.162.66 ([87.238.162.66]:36993 "EHLO smtpgw.stone-is.be"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752865Ab3LCM0R (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 3 Dec 2013 07:26:17 -0500
+In-Reply-To: <1386027526.2014.2.camel@dabdike.int.hansenpartnership.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: rkuo <rkuo@codeaurora.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Bart Van Assche <bvanassche@acm.org>, Bottomley@parallels.com, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, Alireza Haghdoost <alireza@cs.umn.edu>
+Cc: linux-scsi@vger.kernel.org, Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-driver@qlogic.com, Jerry Fredin <jerry.fredin@netapp.com>
 
-On 12/03/2013 05:32 AM, rkuo wrote:
-> On Mon, Dec 02, 2013 at 06:14:33PM +0800, Chen Gang wrote:
->> If one issue occurs, normally, both sides need improvement.
->>
->> For our issue:
->>
->>  - need try to keep uapi no touch ("arch/hexagon/uapi/asm/registers.h").
->>
->>  - improving our module is much easier than improving hexagon.
->>
->>  - for 'SP', it is really short enough to like a register name.
->>    SG_POOL seems more suitable for our 'sgpool' related operations.
->>
->>
->> It will be better to improve hexagon too, but it is not quit easy (maybe
->> have to bear it), it is uapi :-(
-> 
-> I can't speak for SCSI, but that define in Hexagon isn't really used outside
-> of that file anyways (the two SP macros themselves).  I'm also pretty sure
-> the userspace isn't currently using it anyways.  Seeing as it's not really
-> buying us anything, I'm fine with just removing it and continuing to review
-> the other defines.  I'll make that change and test it locally.
-> 
+On 12/03/13 00:38, James Bottomley wrote:
+> Well this would be because we don't guarantee order at any granularity
+> below barriers.  We won't reorder across barriers but below them we can
+> reorder the commands and, of course, we use simple tags for queuing
+> which entitles the underlying storage hardware to reorder within its
+> internal queue.  Previously, when everything was single threaded issue,
+> you mostly got FIFO behaviour because reorder really only occurred on
+> error or busy, but I would imagine that's changing now with multiqueue.
 
-OK, thanks.
+Reordering SCSI commands was fine as long as hard disks were the only
+supported storage medium. This is because most hard disk controllers do
+not perform writes in the order these writes are submitted to their
+controller. However, with several SSD models it is possible to tell the
+controller to preserve write order. Furthermore, the optimizations that
+are possible by using atomic writes are only safe if it is guaranteed
+that none of the layers between the application and the SCSI target
+changes the order in which an application submitted these atomic writes.
+In other words, although it was safe in the past to reorder the writes
+submitted between two successive barriers such reordering would
+eliminate several of the benefits of atomic writes. A quote from the
+draft SCSI atomics specification
+(http://www.t10.org/cgi-bin/ac.pl?t=d&f=13-064r7.pdf):
+<quote>
+Atomic writes may:
+  a) increase write endurance
+    A) reducing writes increases the life of a flash-based SSD
+  b) increase performance
+    A) reducing writes results in fewer system calls, fewer I/Os over
+       the SCSI transport protocol, and fewer interrupts
+  c) improve reliability for non-journaled data
+  d) simplify applications
+    A) reduce or eliminate journaling
+    B) keep applications from managing atomicity
+</quote>
 
-> 
-> Thanks,
-> Richard Kuo
-> 
-> 
+Bart.
 
-
--- 
-Chen Gang
