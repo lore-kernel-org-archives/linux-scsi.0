@@ -1,26 +1,51 @@
-From: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH/RESEND v2 1/2] Hard disk resume time optimization,
- asynchronous ata_port_resume
-Date: Tue, 3 Dec 2013 16:35:58 +0000
-Message-ID: <20131203163558.354e2efd@alan.etchedpixels.co.uk>
-References: <20131203162735.GB12554@linux.intel.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: [PATCH] hpsa: increase the probability of a reported success after
+ a device reset
+Date: Tue, 03 Dec 2013 17:45:02 +0100
+Message-ID: <529E0A8E.4050102@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20131203162735.GB12554@linux.intel.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: todd.e.brandt@linux.intel.com
-Cc: JBottomley@parallels.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, tj@kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:23007 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752314Ab3LCQqT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 3 Dec 2013 11:46:19 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+Cc: scott.teel@hp.com, mikem@beardog.cce.hp.com, stephenmcameron@gmail.com, james.bottomley@hansenpartnership.com
 
-> thus allowing the UI to come online sooner. There may be a short period after 
-> resume where the disks are still spinning up in the background, but the user 
-> shouldn't notice since the OS can function with the data left in RAM.
+rc is set in the loop, and it isn't set back to zero anywhere
+this patch fixes it
 
-I wonder how many marginal power supplies this will find 8)
+Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+---
+ drivers/scsi/hpsa.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-I still think it's the right thing to do. In the SCSI world a bit more
-caution was needed however.
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index fb5a898..e46b609 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -2379,7 +2379,7 @@ static int hpsa_register_scsi(struct ctlr_info *h)
+ static int wait_for_device_to_become_ready(struct ctlr_info *h,
+ 	unsigned char lunaddr[])
+ {
+-	int rc = 0;
++	int rc;
+ 	int count = 0;
+ 	int waittime = 1; /* seconds */
+ 	struct CommandList *c;
+@@ -2399,6 +2399,7 @@ static int wait_for_device_to_become_ready(struct ctlr_info *h,
+ 		 */
+ 		msleep(1000 * waittime);
+ 		count++;
++		rc = 0; /* device ready. */
+ 
+ 		/* Increase wait time with each try, up to a point. */
+ 		if (waittime < HPSA_MAX_WAIT_INTERVAL_SECS)
+-- 
+1.8.3.1
 
-Alan
+
