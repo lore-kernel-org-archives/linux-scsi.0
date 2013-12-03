@@ -1,97 +1,57 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: "swiotlb buffer is full" with 3.13-rc1+ but not 3.4.
-Date: Tue, 03 Dec 2013 09:45:59 -0800
-Message-ID: <1386092759.2166.85.camel@dabdike.int.hansenpartnership.com>
-References: <21144.47873.639231.96901@mariner.uk.xensource.com>
-	 <20131130185639.GA13039@pegasus.dumpdata.com>
-	 <1385844524.2170.10.camel@dabdike>
-	 <20131203173332.GE3734@phenom.dumpdata.com>
+From: Alireza Haghdoost <alireza@cs.umn.edu>
+Subject: Re: [SCSI] qla2xxx: Question about out-of-order SCSI command processing
+Date: Tue, 3 Dec 2013 11:46:36 -0600
+Message-ID: <CAB-428mPDKLKB_20jsUudU1OZ2rphYrjWx00ikAe1gK3_AnuPQ@mail.gmail.com>
+References: <CAB-428kfuWWGDhciGTAy6OCZr8ACBh52_iebBd8U4gwN0S7GPA@mail.gmail.com>
+ <1386027526.2014.2.camel@dabdike.int.hansenpartnership.com>
+ <529DCDE5.6010304@acm.org> <1386077157.2166.16.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20131203173332.GE3734@phenom.dumpdata.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Ian Jackson <Ian.Jackson@eu.citrix.com>, netdev@vger.kernel.org, Michael Chan <mchan@broadcom.com>, dl-mptfusionlinux@lsi.com, linux-scsi@vger.kernel.org, support@lsi.com, Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>, xen-devel@lists.xenproject.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.cs.umn.edu ([128.101.32.201]:59576 "EHLO mail.cs.umn.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754174Ab3LCRrU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 3 Dec 2013 12:47:20 -0500
+Received: from mail-vc0-f171.google.com (mail-vc0-f171.google.com [209.85.220.171])
+	by mail.cs.umn.edu (Postfix) with ESMTPSA id E7F702AC2A3
+	for <linux-scsi@vger.kernel.org>; Tue,  3 Dec 2013 11:47:17 -0600 (CST)
+Received: by mail-vc0-f171.google.com with SMTP id ik5so9999904vcb.2
+        for <linux-scsi@vger.kernel.org>; Tue, 03 Dec 2013 09:47:17 -0800 (PST)
+In-Reply-To: <1386077157.2166.16.camel@dabdike.int.hansenpartnership.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org, Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-driver@qlogic.com, Jerry Fredin <jerry.fredin@netapp.com>
 
-On Tue, 2013-12-03 at 12:33 -0500, Konrad Rzeszutek Wilk wrote:
-> On Sat, Nov 30, 2013 at 03:48:44PM -0500, James Bottomley wrote:
-> > On Sat, 2013-11-30 at 13:56 -0500, Konrad Rzeszutek Wilk wrote:
-> > > My theory is that the SWIOTLB is not full - it is just that the request
-> > > is for a compound page that is more than 512kB. Please note that
-> > > SWIOTLB highest "chunk" of buffer it can deal with is 512kb.
-> > > 
-> > > And that is of course the question comes out - why would it try to
-> > > bounce buffer it. In Xen the answer is simple - the sg chunks cross page
-> > > boundaries which means that they are not physically contingous - so we
-> > > have to use the bounce buffer. It would be better if the the sg list
-> > > provided a large list of 4KB pages instead of compound pages as that
-> > > could help in avoiding the bounce buffer.
-> > > 
-> > > But I digress - this is a theory - I don't know whether the SCSI layer
-> > > does any colescing of the sg list - and if so, whether there is any
-> > > easy knob to tell it to not do it.
-> > 
-> > Well, SCSI doesn't, but block does.  It's actually an efficiency thing
-> > since most firmware descriptor formats cope with multiple pages and the
-> > more descriptors you have for a transaction, the more work the on-board
-> > processor on the HBA has to do.  If you have an emulated HBA, like
-> > virtio, you could turn off physical coalesing by setting the
-> > use_clustering flag to DISABLE_CLUSTERING.  But you can't do that for a
-> > real card.  I assume the problem here is that the host is passing the
-> > card directly to the guest and the guest clusters based on its idea of
-> > guest pages which don't map to contiguous physical pages?
-> 
-> Kind of. Except that in this case the guest does know that it can't map
-> them contingously - and resorts to using the bounce buffer so that it
-> can provide a nice chunk of contingous area. This is detected by
-> the SWIOTLB layer and also the block layer to discourage coalescing
-> there.
-> 
-> But since SCSI is all about sg list I think it gets tangled up here:
-> 
-> 537         for_each_sg(sgl, sg, nelems, i) {                                       
-> 538                 phys_addr_t paddr = sg_phys(sg);                                
-> 539                 dma_addr_t dev_addr = xen_phys_to_bus(paddr);                   
-> 540                                                                                 
-> 541                 if (swiotlb_force ||                                            
-> 542                     !dma_capable(hwdev, dev_addr, sg->length) ||                
-> 543                     range_straddles_page_boundary(paddr, sg->length)) {         
-> 544                         phys_addr_t map = swiotlb_tbl_map_single(hwdev,         
-> 545                                                                  start_dma_addr,
-> 546                                                                  sg_phys(sg),   
-> 547                                                                  sg->length,    
-> 548                                                                  dir);          
-> 
-> So it is either not capable of reaching that physical address (so DMA
-> mask, but I doubt it - this is LSI which can do 64bit).
+On Tue, Dec 3, 2013 at 7:25 AM, James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
+> Well, no, we could have used Ordered instead of Simple tags ... that
+> would preserve submission order according to spec.  This wouldn't really
+> work for SATA because NCQ only has simple tags.
 
-Right, so no bouncing.
+Thanks a lot James for your comments. Is it possible to configure TCQ
+mode to the Ordered tag instead of Simple tags? I understand that NCQ
+does not support Ordered tags but I think it would be nice to keep
+this functionality as an option for other SCSI targets like qla2xxx.
+I can see the discussion about TAG ordering in the mailing list.
+However, I am not sure if it is functional right now or not.
 
->  Or the pages
-> straddle. They can straddle it by well, being offset at odd locations, or
-> compound pages.
 
-All modern filesystems have 4k+ block sizes, so no offsets at all.  For
-DIO you can get offsets at the beginning and end of the transfer, but
-they will be offsets within the page, so the problem can only be
-clustering (physical merging).
+> The point is that our
+> granular unit of ordering is between two barriers, which is way above
+> the request/tag level so we didn't bother to enforce tag ordering.
 
-> But why would they in the first place - and so many of them - considering
-> the flow of those printks Ian's is seeing.
+Does a barrier force flush all in_flight SCSI commands ? Based on my
+understanding if we put a barrier between multiple requests, it wont
+return until TCQ process all in_flight scsi commands. Which means we
+can not keep a fixed load on TCQ and it would certainly reduce the
+throughput of our application.
 
-Probably because compaction and our allocators are designed to give out
-physically contiguous pages, which work their way back into the block
-layer in order.  On a lot of I/O workloads, we see 30%+ physical
-merging.
+> However, handling
+> strict ordering in the face of requeuing events like QUEUE FULL or BUSY
+> is hard so we didn't bother.
 
-> James,
-> The SCSI layer wouldn't do any funny business here right - no reording
-> of bios? That is all left to the block layer right?
-
-We don't see bios ... they're top of block.  SCSI sees requests but the
-block layer does all our request and sg list manipulation for us.
-
-James
+We have a peace of code to monitor in_flight requests and avoid
+QUEUE_FULL events. However, would you please let us know a case that
+cause a BUSY events ? Does it means the scsi target is busy processing
+other requests with-in the same host machine ?
