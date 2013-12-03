@@ -1,57 +1,130 @@
-From: Alireza Haghdoost <alireza@cs.umn.edu>
-Subject: Re: [SCSI] qla2xxx: Question about out-of-order SCSI command processing
-Date: Tue, 3 Dec 2013 11:46:36 -0600
-Message-ID: <CAB-428mPDKLKB_20jsUudU1OZ2rphYrjWx00ikAe1gK3_AnuPQ@mail.gmail.com>
-References: <CAB-428kfuWWGDhciGTAy6OCZr8ACBh52_iebBd8U4gwN0S7GPA@mail.gmail.com>
- <1386027526.2014.2.camel@dabdike.int.hansenpartnership.com>
- <529DCDE5.6010304@acm.org> <1386077157.2166.16.camel@dabdike.int.hansenpartnership.com>
+From: Joe Lawrence <joe.lawrence@stratus.com>
+Subject: Re: sysfs group not found for kobject on mpt2sas unload
+Date: Tue, 3 Dec 2013 13:03:05 -0500
+Message-ID: <20131203130305.1d414258@jlaw-desktop.mno.stratus.com>
+References: <20131120140840.4d1f23ca@jlaw-desktop.mno.stratus.com>
+	<20131125112339.45e279db@jlaw-desktop.mno.stratus.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.cs.umn.edu ([128.101.32.201]:59576 "EHLO mail.cs.umn.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754174Ab3LCRrU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 3 Dec 2013 12:47:20 -0500
-Received: from mail-vc0-f171.google.com (mail-vc0-f171.google.com [209.85.220.171])
-	by mail.cs.umn.edu (Postfix) with ESMTPSA id E7F702AC2A3
-	for <linux-scsi@vger.kernel.org>; Tue,  3 Dec 2013 11:47:17 -0600 (CST)
-Received: by mail-vc0-f171.google.com with SMTP id ik5so9999904vcb.2
-        for <linux-scsi@vger.kernel.org>; Tue, 03 Dec 2013 09:47:17 -0800 (PST)
-In-Reply-To: <1386077157.2166.16.camel@dabdike.int.hansenpartnership.com>
+Received: from p01c12o144.mxlogic.net ([208.65.145.67]:52381 "EHLO
+	p01c12o144.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753015Ab3LCSDH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Dec 2013 13:03:07 -0500
+In-Reply-To: <20131125112339.45e279db@jlaw-desktop.mno.stratus.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org, Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-driver@qlogic.com, Jerry Fredin <jerry.fredin@netapp.com>
+To: Joe Lawrence <joe.lawrence@stratus.com>
+Cc: linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>
 
-On Tue, Dec 3, 2013 at 7:25 AM, James Bottomley
-<James.Bottomley@hansenpartnership.com> wrote:
-> Well, no, we could have used Ordered instead of Simple tags ... that
-> would preserve submission order according to spec.  This wouldn't really
-> work for SATA because NCQ only has simple tags.
+On Mon, 25 Nov 2013 11:23:39 -0500
+Joe Lawrence <joe.lawrence@stratus.com> wrote:
 
-Thanks a lot James for your comments. Is it possible to configure TCQ
-mode to the Ordered tag instead of Simple tags? I understand that NCQ
-does not support Ordered tags but I think it would be nice to keep
-this functionality as an option for other SCSI targets like qla2xxx.
-I can see the discussion about TAG ordering in the mailing list.
-However, I am not sure if it is functional right now or not.
+> On Wed, 20 Nov 2013 14:08:40 -0500
+> Joe Lawrence <joe.lawrence@stratus.com> wrote:
+> 
+> > Starting in 3.12, when loading and unloading the mpt2sas driver, I see
+> > the following warning:
+> > 
+> > ------------[ cut here ]------------
+> > WARNING: CPU: 20 PID: 19096 at fs/sysfs/group.c:214 sysfs_remove_group+0xc6/0xd0()
+> > sysfs group ffffffff81ca2f40 not found for kobject 'end_device-30:0'
+> > Modules linked in: mpt2sas(-) stap_edcc1781e2697fc53c3d320bc2530218_19063(OF) ebtable_nat osst nf_conntrack_netbios_ns nf_conntrack_broadcast ipt_MASQUERADE ip6table_nat nf_nat_ipv6 ip6table_mangle ip6t_REJECT nf_conntrack_ipv6 nf_defrag_ipv6 iptable_nat nf_nat_ipv4 nf_nat iptable_mangle nf_conntrack_ipv4 nf_defrag_ipv4 xt_conntrack nf_conntrack bonding ebtable_filter ebtables ip6table_filter ip6_tables ixgbe igb x86_pkg_temp_thermal ptp coretemp pps_core joydev mdio crc32_pclmul crc32c_intel raid_class pcspkr ghash_clmulni_intel scsi_transport_sas ipmi_si dca ipmi_msghandler ntb uinput dm_round_robin sd_mod qla2xxx syscopyarea sysfillrect sysimgblt i2c_algo_bit drm_kms_helper ttm drm scsi_transport_fc scsi_tgt usb_storage i2c_core dm_multipath [last unloaded: stap_2da929a187c82c607a23
+ 237c27bf2d06_18803]
+> > CPU: 20 PID: 19096 Comm: rmmod Tainted: GF       W  O 3.12.0+ #4
+> > Hardware name: Stratus ftServer 6400/G7LAZ, BIOS BIOS Version 6.2:52 04/09/2013
+> >  0000000000000009 ffff88083ad3bb88 ffffffff8165265e ffff88083ad3bbd0
+> >  ffff88083ad3bbc0 ffffffff8105514d 0000000000000000 ffffffff81ca2f40
+> >  ffff880851f46ef8 ffff88007a73cf38 ffff88083fb8c6e8 ffff88083ad3bc20
+> > Call Trace:
+> >  [<ffffffff8165265e>] dump_stack+0x4d/0x66
+> >  [<ffffffff8105514d>] warn_slowpath_common+0x7d/0xa0
+> >  [<ffffffff810551bc>] warn_slowpath_fmt+0x4c/0x50
+> >  [<ffffffff8121873e>] ? sysfs_get_dirent_ns+0x4e/0x70
+> >  [<ffffffff81219a46>] sysfs_remove_group+0xc6/0xd0
+> >  [<ffffffff813edb43>] dpm_sysfs_remove+0x43/0x50
+> >  [<ffffffff813e38c5>] device_del+0x45/0x1c0
+> >  [<ffffffff813e3a5e>] device_unregister+0x1e/0x60
+> >  [<ffffffff812eb9ce>] bsg_unregister_queue+0x5e/0xa0
+> >  [<ffffffffa00dd0ba>] sas_rphy_free+0x7a/0xb0 [scsi_transport_sas]
+> >  [<ffffffffa00def95>] sas_port_delete+0x35/0x160 [scsi_transport_sas]
+> >  [<ffffffff81218c53>] ? sysfs_remove_link+0x23/0x30
+> >  [<ffffffffa023662a>] mpt2sas_transport_port_remove+0x19a/0x1e0 [mpt2sas]
+> >  [<ffffffffa0227b10>] _scsih_remove_device+0xb0/0x100 [mpt2sas]
+> >  [<ffffffffa022f519>] mpt2sas_device_remove_by_sas_address.part.54+0x59/0x80 [mpt2sas]
+> >  [<ffffffffa02322f9>] _scsih_remove+0xf9/0x210 [mpt2sas]
+> >  [<ffffffff8133108b>] pci_device_remove+0x3b/0xb0
+> >  [<ffffffff813e759f>] __device_release_driver+0x7f/0xf0
+> >  [<ffffffff813e7f20>] driver_detach+0xc0/0xd0
+> >  [<ffffffff813e71d5>] bus_remove_driver+0x55/0xd0
+> >  [<ffffffff813e853c>] driver_unregister+0x2c/0x50
+> >  [<ffffffff8132fbb3>] pci_unregister_driver+0x23/0x80
+> >  [<ffffffffa023b713>] _scsih_exit+0x25/0x912 [mpt2sas]
+> >  [<ffffffff810c93ed>] SyS_delete_module+0x16d/0x2d0
+> >  [<ffffffff8165d81e>] ? do_page_fault+0xe/0x10
+> >  [<ffffffff81661dd2>] system_call_fastpath+0x16/0x1b
+> > ---[ end trace b4eef98870c871fd ]---
+> > 
+> > Instrumenting the module loading/unloading cycle with systemtap, it
+> > reports the following sequence of events:
+> > 
+> > modprobe
+> >   device_add(A)
+> >   device_add(B child of A)
+> >   device_add(C child of A)
+> >   device_add(D child of A)
+> > 
+> > rmmod
+> >   device_del(B child of A)
+> >   device_del(C child of A)
+> >   device_del(A)
+> >   device_del(D child of A)             << WARNING
+> > 
+> > The same sequence of device_add/del events occur in 3.11, but without
+> > the warning.  Git bisect shows bcdde7e221a8750f9b62b6d0bd31b72ea4ad9309
+> > "sysfs: make __sysfs_remove_dir() recursive" as the first bad commit.
+> > 
+> 
+> FWIW, I applied Mika's patch that Tejun posted the other day, "sysfs:
+> handle duplicate removal attempts in sysfs_remove_group()" [1] and the
+> warning goes away on mpt2sas unload.
+> 
+> [1] http://git.kernel.org/cgit/linux/kernel/git/tj/misc.git/commit/?h=review-sysfs-fixes&id=a69cc96d8c434c6cb64847f37caa890af705fc5c
+> 
+> -- Joe
 
+Hi James,
 
-> The point is that our
-> granular unit of ordering is between two barriers, which is way above
-> the request/tag level so we didn't bother to enforce tag ordering.
+(Correction, the sysfs change introducing the warning is 3.13-rc1+, not
+3.12.)
 
-Does a barrier force flush all in_flight SCSI commands ? Based on my
-understanding if we put a barrier between multiple requests, it wont
-return until TCQ process all in_flight scsi commands. Which means we
-can not keep a fixed load on TCQ and it would certainly reduce the
-throughput of our application.
+Also, it seems that in 3.13-rc2, the patch from Mika that I had
+referenced was reverted and that bug handled separately.
 
-> However, handling
-> strict ordering in the face of requeuing events like QUEUE FULL or BUSY
-> is hard so we didn't bother.
+  81440e7 Revert "sysfs: handle duplicate removal attempts in sysfs_remove_group()"
+  54d7114 sysfs: handle duplicate removal attempts in sysfs_remove_group()
 
-We have a peace of code to monitor in_flight requests and avoid
-QUEUE_FULL events. However, would you please let us know a case that
-cause a BUSY events ? Does it means the scsi target is busy processing
-other requests with-in the same host machine ?
+So in 3.13-rc2, the warning persists when loading and unloading the
+mpt2sas driver.
+
+I looked at the code again, and I'm not sure why the sas_bsg_remove call
+was placed in sas_rphy_free and not sas_rphy_remove.
+
+The sas_rphy_remove function is tasked with undoing the actions of
+sas_rphy_add ... so callers of sas_rphy_free are expecting that
+everything sas_rphy_add had setup (if it was even called) has been
+cleaned up.
+
+Since bsg components are initialized by sas_rphy_add, does it make sense
+for their destructor to live in sas_rphy_remove?
+
+I've tested that change against a few mpt2sas driver load and unload
+cycles without incident or sysfs warning.  If the placement of the
+sas_bsg_remove call is important where it is, then a more substantial
+change may be required to delete devices in an order that appeases
+sysfs.
+
+Thanks,
+
+-- Joe
