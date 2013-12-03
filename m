@@ -1,85 +1,61 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH/RESEND v2 0/2] Hard disk resume time optimization
-Date: Tue, 03 Dec 2013 18:20:03 +0100
-Message-ID: <529E12C3.3070708@interlog.com>
-References: <20131203162537.GA12554@linux.intel.com>
-Reply-To: dgilbert@interlog.com
+From: Benjamin ESTRABAUD <be@mpstor.com>
+Subject: Re: qla2xxx: automatically rescan removed luns.
+Date: Tue, 03 Dec 2013 17:35:07 +0000
+Message-ID: <529E164B.4080009@mpstor.com>
+References: <52936EB4.4090508@mpstor.com> <1385399823.3839.116.camel@localhost.localdomain> <5294C721.4070802@mpstor.com> <5294CBC7.3000604@interlog.com> <52974533.3030508@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:60164 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754329Ab3LCRUj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 3 Dec 2013 12:20:39 -0500
-In-Reply-To: <20131203162537.GA12554@linux.intel.com>
+Received: from relay2.blacknight.com ([78.153.203.205]:55340 "EHLO
+	relay2.blacknight.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754509Ab3LCRfJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Dec 2013 12:35:09 -0500
+In-Reply-To: <52974533.3030508@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: todd.e.brandt@linux.intel.com, JBottomley@parallels.com
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, tj@kernel.org
+To: Hannes Reinecke <hare@suse.de>, dgilbert@interlog.com
+Cc: emilne@redhat.com, linux-scsi@vger.kernel.org
 
-On 13-12-03 05:25 PM, Todd E Brandt wrote:
-> Hi James, can you give me some feedback on this patch set? It includes
-> changes based on your feedback to v1.
+On 28/11/13 13:29, Hannes Reinecke wrote:
+> On 11/26/2013 05:26 PM, Douglas Gilbert wrote:
+>> On 13-11-26 11:06 AM, Benjamin ESTRABAUD wrote:
+> [ .. ]
+>>> "rescan-scsi-bus.sh" did detect new LUN, but apparently not
+>>> removed ones.
+>>> However I need to test it on a system with a compatible bash shell
+>>> as I wasn't
+>>> able to run the script without errors.
+>>
+>> Did you try the rescan-scsi-bus.sh from sg3_utils v 1.37 or
+>> earlier? The reason I ask is that a fair amount of work
+>> was done on the rescan-scsi-bus.sh found in version 1.37
+>> including syncing with Kurt Garloff's version 1.57 plus
+>> patches from Hannes Reinecke and Sean Stewart.
+>>
+> Plus you need to call it with '-r', otherwise it won't remove any
+> stale LUNs. I'm sure it's documented somewhere ...
 >
-> The essential issue behind hard disks' lengthy resume time is the ata port
-> driver blocking until the ATA port hardware is finished coming online. So
-> the kernel isn't really doing anything during all those seconds that the
-> disks are resuming, it's just blocking until the hardware says it's ready
-> to accept commands. Applying this patch set allows SATA disks to resume
-> asynchronously without holding up system resume, thus allowing the UI to
-> come online much more quickly. There may be a short period after resume
-> where the disks are still spinning up in the background, but the user
-> shouldn't notice since the OS can function with the data left in RAM.
+Hi Doug and Hannes,
+
+I did indeed try but I was using an older version and without specifying 
+"-r" so it didn't remove anything.
+
+I looked at the latest version's "remove" code (at around line 445 from 
+rescan-scsi-bus.sh) and it seems to delete disks using the scsi_device 
+sysfs "delete" function (which is the function I'm using right now).
+
+I was unable to tell how the script detects whether a drive is gone or 
+has been replaced with another backend storage at the same LUN, which in 
+fact turns out to be the thing I'm more interested in (since I can now 
+delete stale luns).
+
+Thanks in advance for your help!
+
+> Cheers,
 >
-> The patch set has two parts which apply to ata_port_resume and sd_resume
-> respectively. Both are required to achieve any real performance benefit,
-> but they will still function independantly without a performance hit.
+> Hannes
 >
-> ata_port_resume patch (1/2):
->
-> On resume, the ATA port driver currently waits until the AHCI controller
-> finishes executing the port wakeup command. This patch changes the
-> ata_port_resume callback to issue the wakeup and then return immediately,
-> thus allowing the next device in the pm queue to resume. Any commands
-> issued to the AHCI hardware during the wakeup will be queued up and
-> executed once the port is physically online. Thus no information is lost.
->
-> sd_resume patch (2/2):
->
-> On resume, the SD driver currently waits until the block driver finishes
-> executing a disk start command with blk_execute_rq. This patch changes
-> the sd_resume callback to use blk_execute_rq_nowait instead, which allows
-> it to return immediately, thus allowing the next device in the pm queue
-> to resume. The return value of blk_execute_rq_nowait is handled in the
-> background by sd_resume_complete. Any commands issued to the scsi disk
-> during the startup will be queued up and executed once the disk is online.
-> Thus no information is lost.
 
-There was some fuzziness in the SCSI drafts as to how a disk
-would react to medium access commands (e.g. READ) when it
-was transitioning from stopped state (plus other lower powered
-states) to active. There are two options:
-   a) hold the medium access command in the target until
-      it becomes active, then act on it, or
-   b) send back a NOT READY sense key with LOGICAL UNIT IS IN
-      PROCESS OF BECOMING READY immediately.
-
-This has recently been resolved with the CFF STOPPED field in
-the Power condition mode page. "Recently" is the operative word
-so you should expect to see next to no support for the CFF
-STOPPED field now. Thus SCSI disks can take their pick between
-the above two options. Does your patch cope with that?
-
-
-Also the START STOP UNIT SCSI command has an IMMED bit. It
-makes more sense to send this command with the IMMED bit set
-and wait for it to complete since that should be fast. You
-may receive an unexpected UNIT ATTENTION or a transport error.
-Those two imply your command has not, or can not do what has
-been requested.
-
-Doug Gilbert
-
-
-
+Regards,
+Ben.
