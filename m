@@ -1,30 +1,85 @@
-From: Alireza Haghdoost <alireza@cs.umn.edu>
-Subject: Re: [SCSI] qla2xxx: Question about out-of-order SCSI command processing
-Date: Tue, 3 Dec 2013 11:19:09 -0600
-Message-ID: <CAB-428k3qiTr8sWeotueP3DQxnM3LKq2LRYrkmU+6CMyOaT_0A@mail.gmail.com>
-References: <CAB-428kfuWWGDhciGTAy6OCZr8ACBh52_iebBd8U4gwN0S7GPA@mail.gmail.com>
- <529DC9FF.6030109@acm.org>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH/RESEND v2 0/2] Hard disk resume time optimization
+Date: Tue, 03 Dec 2013 18:20:03 +0100
+Message-ID: <529E12C3.3070708@interlog.com>
+References: <20131203162537.GA12554@linux.intel.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.cs.umn.edu ([128.101.36.201]:60134 "EHLO mail.cs.umn.edu"
+Received: from smtp.infotech.no ([82.134.31.41]:60164 "EHLO smtp.infotech.no"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753478Ab3LCRTv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 3 Dec 2013 12:19:51 -0500
-Received: from mail-vc0-f175.google.com (mail-vc0-f175.google.com [209.85.220.175])
-	by mail.cs.umn.edu (Postfix) with ESMTPSA id 2CF3A2A529D
-	for <linux-scsi@vger.kernel.org>; Tue,  3 Dec 2013 11:19:49 -0600 (CST)
-Received: by mail-vc0-f175.google.com with SMTP id ld13so9956164vcb.20
-        for <linux-scsi@vger.kernel.org>; Tue, 03 Dec 2013 09:19:49 -0800 (PST)
-In-Reply-To: <529DC9FF.6030109@acm.org>
+	id S1754329Ab3LCRUj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 3 Dec 2013 12:20:39 -0500
+In-Reply-To: <20131203162537.GA12554@linux.intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: linux-scsi@vger.kernel.org, Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-driver@qlogic.com, Jerry Fredin <jerry.fredin@netapp.com>
+To: todd.e.brandt@linux.intel.com, JBottomley@parallels.com
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, tj@kernel.org
 
-On Tue, Dec 3, 2013 at 6:09 AM, Bart Van Assche <bvanassche@acm.org> wrote:
-> I think libaio can reorder commands before these reach the SCSI core.
+On 13-12-03 05:25 PM, Todd E Brandt wrote:
+> Hi James, can you give me some feedback on this patch set? It includes
+> changes based on your feedback to v1.
+>
+> The essential issue behind hard disks' lengthy resume time is the ata port
+> driver blocking until the ATA port hardware is finished coming online. So
+> the kernel isn't really doing anything during all those seconds that the
+> disks are resuming, it's just blocking until the hardware says it's ready
+> to accept commands. Applying this patch set allows SATA disks to resume
+> asynchronously without holding up system resume, thus allowing the UI to
+> come online much more quickly. There may be a short period after resume
+> where the disks are still spinning up in the background, but the user
+> shouldn't notice since the OS can function with the data left in RAM.
+>
+> The patch set has two parts which apply to ata_port_resume and sd_resume
+> respectively. Both are required to achieve any real performance benefit,
+> but they will still function independantly without a performance hit.
+>
+> ata_port_resume patch (1/2):
+>
+> On resume, the ATA port driver currently waits until the AHCI controller
+> finishes executing the port wakeup command. This patch changes the
+> ata_port_resume callback to issue the wakeup and then return immediately,
+> thus allowing the next device in the pm queue to resume. Any commands
+> issued to the AHCI hardware during the wakeup will be queued up and
+> executed once the port is physically online. Thus no information is lost.
+>
+> sd_resume patch (2/2):
+>
+> On resume, the SD driver currently waits until the block driver finishes
+> executing a disk start command with blk_execute_rq. This patch changes
+> the sd_resume callback to use blk_execute_rq_nowait instead, which allows
+> it to return immediately, thus allowing the next device in the pm queue
+> to resume. The return value of blk_execute_rq_nowait is handled in the
+> background by sd_resume_complete. Any commands issued to the scsi disk
+> during the startup will be queued up and executed once the disk is online.
+> Thus no information is lost.
 
-Thanks for your comments. I think the libaio is above the block layer.
-Therefore, since we observed the ordering is maintained in the block
-layer, I don't think libaio reorder IO requests with in an IO context.
+There was some fuzziness in the SCSI drafts as to how a disk
+would react to medium access commands (e.g. READ) when it
+was transitioning from stopped state (plus other lower powered
+states) to active. There are two options:
+   a) hold the medium access command in the target until
+      it becomes active, then act on it, or
+   b) send back a NOT READY sense key with LOGICAL UNIT IS IN
+      PROCESS OF BECOMING READY immediately.
+
+This has recently been resolved with the CFF STOPPED field in
+the Power condition mode page. "Recently" is the operative word
+so you should expect to see next to no support for the CFF
+STOPPED field now. Thus SCSI disks can take their pick between
+the above two options. Does your patch cope with that?
+
+
+Also the START STOP UNIT SCSI command has an IMMED bit. It
+makes more sense to send this command with the IMMED bit set
+and wait for it to complete since that should be fast. You
+may receive an unexpected UNIT ATTENTION or a transport error.
+Those two imply your command has not, or can not do what has
+been requested.
+
+Doug Gilbert
+
+
+
