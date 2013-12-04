@@ -1,80 +1,88 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [SCSI] qla2xxx: Question about out-of-order SCSI command
- processing
-Date: Tue, 03 Dec 2013 10:34:09 -0800
-Message-ID: <1386095649.2166.104.camel@dabdike.int.hansenpartnership.com>
-References: <CAB-428kfuWWGDhciGTAy6OCZr8ACBh52_iebBd8U4gwN0S7GPA@mail.gmail.com>
-	 <1386027526.2014.2.camel@dabdike.int.hansenpartnership.com>
-	 <529DCDE5.6010304@acm.org>
-	 <1386077157.2166.16.camel@dabdike.int.hansenpartnership.com>
-	 <CAB-428mPDKLKB_20jsUudU1OZ2rphYrjWx00ikAe1gK3_AnuPQ@mail.gmail.com>
+From: Newtech Tan <tan@newtech.co.jp>
+Subject: Re: how to use SES driver to send SES commands?
+Date: Wed, 04 Dec 2013 09:42:40 +0900
+Message-ID: <20131204094239.3EEF.46AD7750@newtech.co.jp>
+References: <20131202101210.62B1.46AD7750@newtech.co.jp> <529C9ED3.8080600@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
+Content-Type: text/plain; charset="ISO-2022-JP"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:52291 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752412Ab3LCSeL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Dec 2013 13:34:11 -0500
-In-Reply-To: <CAB-428mPDKLKB_20jsUudU1OZ2rphYrjWx00ikAe1gK3_AnuPQ@mail.gmail.com>
+Received: from dc31.etius.jp ([119.245.209.2]:49376 "EHLO dc31.etius.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754729Ab3LDAmj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 3 Dec 2013 19:42:39 -0500
+In-Reply-To: <529C9ED3.8080600@interlog.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alireza Haghdoost <alireza@cs.umn.edu>
-Cc: Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org, Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-driver@qlogic.com, Jerry Fredin <jerry.fredin@netapp.com>
+To: dgilbert@interlog.com
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, 2013-12-03 at 11:46 -0600, Alireza Haghdoost wrote:
-> On Tue, Dec 3, 2013 at 7:25 AM, James Bottomley
-> <James.Bottomley@hansenpartnership.com> wrote:
-> > Well, no, we could have used Ordered instead of Simple tags ... that
-> > would preserve submission order according to spec.  This wouldn't really
-> > work for SATA because NCQ only has simple tags.
+Hi Douglas
+
+Thanks! 
+
+I am using MIPs CPU on embedded system, after cross-compliled sg3_utils package, 
+I will try to use sg_senddiag to send ses command.
+
+> I'm not sure what you expect from the ses driver
+> in the kernel. If it likes an SES device (and it
+> doesn't like some of them) then you will get a
+> small, but useful, set of "knobs" to twiddle and
+> read in sysfs. As far as I can see the ses driver does
+> not create any device nodes (as found in /dev). This
+> means there is no way to extend it by using the SG_IO
+> ioctl to send SCSI commands to the enclosure via
+> the ses driver. And there is no need since the sg and
+> bsg drivers already give you that capability.
 > 
-> Thanks a lot James for your comments. Is it possible to configure TCQ
-> mode to the Ordered tag instead of Simple tags? I understand that NCQ
-> does not support Ordered tags but I think it would be nice to keep
-> this functionality as an option for other SCSI targets like qla2xxx.
-> I can see the discussion about TAG ordering in the mailing list.
-> However, I am not sure if it is functional right now or not.
-
-It's set in the scsi_populate_tag() inline function (scsi_tcq.h).
-That's currently hard coded to simple tags.
-
-> > The point is that our
-> > granular unit of ordering is between two barriers, which is way above
-> > the request/tag level so we didn't bother to enforce tag ordering.
+> Your question is vague, if by "send SES commands" you
+> are referring to SCSI commands then again my advice is
+> to look at what sg_senddiag and sg_ses do. If that is not
+> what you want then write something yourself using the
+> SG_IO ioctl on a bsg or sg device node.
 > 
-> Does a barrier force flush all in_flight SCSI commands ?
-
-A flush barrier does, yes ... that's the predominant implementation.
-
->  Based on my
-> understanding if we put a barrier between multiple requests, it wont
-> return until TCQ process all in_flight scsi commands. Which means we
-> can not keep a fixed load on TCQ and it would certainly reduce the
-> throughput of our application.
-
-Yes, that's what we see in filesystems with barriers enabled.  It's the
-price we pay for integrity.
-
-> > However, handling
-> > strict ordering in the face of requeuing events like QUEUE FULL or BUSY
-> > is hard so we didn't bother.
+> Doug Gilbert
 > 
-> We have a peace of code to monitor in_flight requests and avoid
-> QUEUE_FULL events. However, would you please let us know a case that
-> cause a BUSY events ? Does it means the scsi target is busy processing
-> other requests with-in the same host machine ?
+> 
+> On 13-12-02 02:12 AM, Newtech Tan wrote:
+> > Hi Douglas
+> >
+> >       Thanks for your kind reply.
+> >
+> >       sg_senddiag is the sg_ses utility. But i want to use SES driver(linux/driver/scsi/ses.c), do you have any advice?
+> >
+> >
+> >> On 13-11-29 05:07 AM, Newtech Tan wrote:
+> >>> Hi friends
+> >>>
+> >>>       I subscribed the mailing list just now. Would you please to give me help?
+> >>>
+> >>>       Who can tell me how to use SES driver(linux/driver/scsi/ses.c) to send SES command(SEND DIAGNOSTIC, RECEIVE DIAGNOSTIC RESULTS) in my linux program?
+> >>> (I don't want to use sg_ses.)
+> >>
+> >> Then look at the source for sg_senddiag (sg_senddiag.c).
+> >> Your SES device is either /dev/sg2 or /dev/bsg/4:0:0:0
+> >>
+> >>> The following is my system info. /dev/sg2 is my SES device.
+> >>>
+> >>> [root@tan-sl dev]# lsscsi -g
+> >>> [0:0:0:0]    cd/dvd  HL-DT-ST DVD+-RW GSA-H53N B104  /dev/sr0   /dev/sg0
+> >>> [3:0:0:0]    disk    ATA      TOSHIBA MK8061GS ME0A  /dev/sda   /dev/sg1
+> >>> [4:0:0:0]    enclosu LSI      SAS616x          0502  -         /dev/sg2
+> >>>
+> >>> [root@tan-sl enclosure]# pwd
+> >>> /sys/class/enclosure
+> >>> [root@tan-sl enclosure]# ls -l
+> >>> total 0
+> >>> lrwxrwxrwx 1 root root 0 Nov 29 14:51 4:0:0:0 -> ../../devices/pci0000:00/0000:00:1c.0/0000:02:00.0/host4/port-4:0/expan
+> >>> der-4:0/port-4:0:0/end_device-4:0:0/target4:0:0/4:0:0:0/enclosure/4:0:0:0
+> >>>
+> >>> in linux, I can't find ses device.  Under /sys/class/enclosure, folder 4:0:0:0 existed.
+> >>>
+> >>> I will apprectiate for your help.
 
-BUSY is a catch all status.  It's different from QUEUE FULL because
-queue tracking algorithms use QUEUE FULL to determine the optimal number
-of in-flight commands (we can do that in the mid-layer today with the
-queue full tracking code).  BUSY means the command needs retrying
-because of some other condition on the initiator that isn't connected
-with the task queues, so it isn't counted against the queue full status
-tracking for reducing command flows.  It's most often returned by
-multi-initiator devices in the presence of management (or even
-statistics type) conditions, or because of scheduling or caching issues.
+お疲れ様です。譚です。
 
-James
 
+以上、よろしくお願いいたします。
 
