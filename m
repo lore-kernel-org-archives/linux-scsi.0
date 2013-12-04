@@ -1,78 +1,65 @@
-From: Chen Gang <gang.chen.5i5j@gmail.com>
-Subject: [PATCH v2] drivers: scsi: scsi_lib.c: use SG_POOL instead of SP
-Date: Wed, 04 Dec 2013 10:42:41 +0800
-Message-ID: <529E96A1.3060400@gmail.com>
-References: <528AEFB7.4060301@gmail.com> <20131125011938.GB18921@codeaurora.org> <5292B845.3010404@gmail.com> <5292B8A0.7020409@gmail.com> <5294255E.7040105@gmail.com> <52955913.3060809@gmail.com> <529B60FF.7030601@acm.org> <529BD584.7060504@gmail.com> <1385945387.20150.2.camel@dabdike.int.hansenpartnership.com> <529C5D89.8050809@gmail.com> <20131202213243.GA20646@codeaurora.org>
+From: Vijaya Mohan Guvva <vmohan@brocade.com>
+Subject: [PATCH] bfa: Chinook quad port 16G FC HBA claim issue
+Date: Wed, 4 Dec 2013 05:43:58 -0800
+Message-ID: <1386164638-31693-1-git-send-email-vmohan@Brocade.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pd0-f179.google.com ([209.85.192.179]:62873 "EHLO
-	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754373Ab3LDCk2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Dec 2013 21:40:28 -0500
-In-Reply-To: <20131202213243.GA20646@codeaurora.org>
+Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:18769 "EHLO
+	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932462Ab3LDNoC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Dec 2013 08:44:02 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: rkuo <rkuo@codeaurora.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Bart Van Assche <bvanassche@acm.org>, Bottomley@parallels.com, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Anil Gurumurthy <agurumur@Brocade.com>, Adapter Linux Open Src Ext Team <AdapterLinuxOpenSrcExtTeam@Brocade.com>
 
-the macro SP is too common to make conflict with others, so recommend
-to use another more readable and non-conflict macro SG_POOL instead of
-(and recommend others do not use SP either).
+From: Vijaya Mohan Guvva <vmohan@brocade.com>
 
-The related warning (with allmodconfig for hexagon):
+Bfa driver crash is observed while pushing the firmware on to chinook
+quad port card due to uninitialized bfi_image_ct2 access which gets
+initialized only for CT2 ASIC based cards after request_firmware().
+For quard port chinook (CT2 ASIC based), bfi_image_ct2 is not getting
+initialized as there is no check for chinook PCI device ID before
+request_firmware and instead bfi_image_cb is initialized as it is the
+default case for card type check.
 
-    CC [M]  drivers/scsi/scsi_lib.o
-  drivers/scsi/scsi_lib.c:46:0: warning: "SP" redefined [enabled by default]
-  arch/hexagon/include/uapi/asm/registers.h:9:0: note: this is the location of the previous definition
+This patch includes changes to read the right firmware for quad port chinook.
 
-
-Signed-off-by: Chen Gang <gang.chen.5i5j@gmail.com>
+Signed-off-by: Vijaya Mohan Guvva <vmohan@brocade.com>
 ---
- drivers/scsi/scsi_lib.c |   16 ++++++++--------
- 1 files changed, 8 insertions(+), 8 deletions(-)
+ drivers/scsi/bfa/bfad.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 7bd7f0d..19967fa 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -43,28 +43,28 @@ struct scsi_host_sg_pool {
- 	mempool_t	*pool;
- };
+diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
+index e85926c..1392547 100644
+--- a/drivers/scsi/bfa/bfad.c
++++ b/drivers/scsi/bfa/bfad.c
+@@ -1829,7 +1829,7 @@ out:
+ static u32 *
+ bfad_load_fwimg(struct pci_dev *pdev)
+ {
+-	if (pdev->device == BFA_PCI_DEVICE_ID_CT2) {
++	if (bfa_asic_id_ct2(pdev->device)) {
+ 		if (bfi_image_ct2_size == 0)
+ 			bfad_read_firmware(pdev, &bfi_image_ct2,
+ 				&bfi_image_ct2_size, BFAD_FW_FILE_CT2);
+@@ -1839,12 +1839,14 @@ bfad_load_fwimg(struct pci_dev *pdev)
+ 			bfad_read_firmware(pdev, &bfi_image_ct,
+ 				&bfi_image_ct_size, BFAD_FW_FILE_CT);
+ 		return bfi_image_ct;
+-	} else {
++	} else if (bfa_asic_id_cb(pdev->device)) {
+ 		if (bfi_image_cb_size == 0)
+ 			bfad_read_firmware(pdev, &bfi_image_cb,
+ 				&bfi_image_cb_size, BFAD_FW_FILE_CB);
+ 		return bfi_image_cb;
+ 	}
++
++	return NULL;
+ }
  
--#define SP(x) { x, "sgpool-" __stringify(x) }
-+#define SG_POOL(x) { x, "sgpool-" __stringify(x) }
- #if (SCSI_MAX_SG_SEGMENTS < 32)
- #error SCSI_MAX_SG_SEGMENTS is too small (must be 32 or greater)
- #endif
- static struct scsi_host_sg_pool scsi_sg_pools[] = {
--	SP(8),
--	SP(16),
-+	SG_POOL(8),
-+	SG_POOL(16),
- #if (SCSI_MAX_SG_SEGMENTS > 32)
--	SP(32),
-+	SG_POOL(32),
- #if (SCSI_MAX_SG_SEGMENTS > 64)
--	SP(64),
-+	SG_POOL(64),
- #if (SCSI_MAX_SG_SEGMENTS > 128)
--	SP(128),
-+	SG_POOL(128),
- #if (SCSI_MAX_SG_SEGMENTS > 256)
- #error SCSI_MAX_SG_SEGMENTS is too large (256 MAX)
- #endif
- #endif
- #endif
- #endif
--	SP(SCSI_MAX_SG_SEGMENTS)
-+	SG_POOL(SCSI_MAX_SG_SEGMENTS)
- };
--#undef SP
-+#undef SG_POOL
- 
- struct kmem_cache *scsi_sdb_cache;
- 
+ static void
 -- 
-1.7.7.6
+1.8.2.1
+
