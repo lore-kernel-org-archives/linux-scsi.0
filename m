@@ -1,17 +1,17 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 1/9] hpsa: revert bring logical drives online when format
-	completes
-Date: Wed, 04 Dec 2013 17:09:51 -0600
-Message-ID: <20131204230951.21798.75512.stgit@beardog.cce.hp.com>
+Subject: [PATCH 2/9] hpsa: revert hide logical drives with format in progress
+	from linux
+Date: Wed, 04 Dec 2013 17:09:57 -0600
+Message-ID: <20131204230957.21798.39979.stgit@beardog.cce.hp.com>
 References: <20131204230123.21798.93593.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t0014.houston.hp.com ([15.201.24.17]:11218 "EHLO
-	g4t0014.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752100Ab3LDXJx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Dec 2013 18:09:53 -0500
+Received: from g4t0017.houston.hp.com ([15.201.24.20]:39580 "EHLO
+	g4t0017.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752563Ab3LDXJ5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Dec 2013 18:09:57 -0500
 In-Reply-To: <20131204230123.21798.93593.stgit@beardog.cce.hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,221 +20,102 @@ Cc: stephenmcameron@gmail.com, mikem@beardog.cce.hp.com, thenzl@redhat.com, linu
 
 From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-This relies on a kernel thread which I wish to remove and
-replace with a work queue based solution.
+This relies on a kernel thread which I wish to replace with a
+work queue based solution.
 
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- drivers/scsi/hpsa.c |  128 ---------------------------------------------------
- drivers/scsi/hpsa.h |   13 -----
- 2 files changed, 1 insertions(+), 140 deletions(-)
+ drivers/scsi/hpsa.c |   50 ++------------------------------------------------
+ drivers/scsi/hpsa.h |    1 -
+ 2 files changed, 2 insertions(+), 49 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 89f50c3..961332b 100644
+index 961332b..75800f7 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -220,8 +220,6 @@ static int hpsa_lookup_board_id(struct pci_dev *pdev, u32 *board_id);
- static int hpsa_wait_for_board_state(struct pci_dev *pdev, void __iomem *vaddr,
- 				     int wait_for_ready);
- static inline void finish_cmd(struct CommandList *c);
--static unsigned char hpsa_format_in_progress(struct ctlr_info *h,
--		unsigned char scsi3addr[]);
- #define BOARD_NOT_READY 0
- #define BOARD_READY 1
- 
-@@ -945,112 +943,6 @@ static int hpsa_scsi_find_entry(struct hpsa_scsi_dev_t *needle,
- 	return DEVICE_NOT_FOUND;
+@@ -1007,20 +1007,6 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h, int hostno,
+ 	for (i = 0; i < nsds; i++) {
+ 		if (!sd[i]) /* if already added above. */
+ 			continue;
+-
+-		/* Don't add devices which are NOT READY, FORMAT IN PROGRESS
+-		 * as the SCSI mid-layer does not handle such devices well.
+-		 * It relentlessly loops sending TUR at 3Hz, then READ(10)
+-		 * at 160Hz, and prevents the system from coming up.
+-		 */
+-		if (sd[i]->format_in_progress) {
+-			dev_info(&h->pdev->dev,
+-				"Logical drive format in progress, device c%db%dt%dl%d offline.\n",
+-				h->scsi_host->host_no,
+-				sd[i]->bus, sd[i]->target, sd[i]->lun);
+-			continue;
+-		}
+-
+ 		device_change = hpsa_scsi_find_entry(sd[i], h->dev,
+ 					h->ndevices, &entry);
+ 		if (device_change == DEVICE_NOT_FOUND) {
+@@ -1726,34 +1712,6 @@ static inline void hpsa_set_bus_target_lun(struct hpsa_scsi_dev_t *device,
+ 	device->lun = lun;
  }
  
--#define OFFLINE_DEVICE_POLL_INTERVAL (120 * HZ)
--static int hpsa_offline_device_thread(void *v)
+-static unsigned char hpsa_format_in_progress(struct ctlr_info *h,
+-		unsigned char scsi3addr[])
 -{
--	struct ctlr_info *h = v;
--	unsigned long flags;
--	struct offline_device_entry *d;
--	unsigned char need_rescan = 0;
--	struct list_head *this, *tmp;
+-	struct CommandList *c;
+-	unsigned char *sense, sense_key, asc, ascq;
+-#define ASC_LUN_NOT_READY 0x04
+-#define ASCQ_LUN_NOT_READY_FORMAT_IN_PROGRESS 0x04
 -
--	while (1) {
--		schedule_timeout_interruptible(OFFLINE_DEVICE_POLL_INTERVAL);
--		if (kthread_should_stop())
--			break;
 -
--		/* Check if any of the offline devices have become ready */
--		spin_lock_irqsave(&h->offline_device_lock, flags);
--		list_for_each_safe(this, tmp, &h->offline_device_list) {
--			d = list_entry(this, struct offline_device_entry,
--					offline_list);
--			spin_unlock_irqrestore(&h->offline_device_lock, flags);
--			if (!hpsa_format_in_progress(h, d->scsi3addr)) {
--				need_rescan = 1;
--				goto do_rescan;
--			}
--			spin_lock_irqsave(&h->offline_device_lock, flags);
--		}
--		spin_unlock_irqrestore(&h->offline_device_lock, flags);
--	}
--
--do_rescan:
--
--	/* Remove all entries from the list and rescan and exit this thread.
--	 * If there are still offline devices, the rescan will make a new list
--	 * and create a new offline device monitor thread.
--	 */
--	spin_lock_irqsave(&h->offline_device_lock, flags);
--	list_for_each_safe(this, tmp, &h->offline_device_list) {
--		d = list_entry(this, struct offline_device_entry, offline_list);
--		list_del_init(this);
--		kfree(d);
--	}
--	h->offline_device_monitor = NULL;
--	h->offline_device_thread_state = OFFLINE_DEVICE_THREAD_STOPPED;
--	spin_unlock_irqrestore(&h->offline_device_lock, flags);
--	if (need_rescan)
--		hpsa_scan_start(h->scsi_host);
+-	c = cmd_special_alloc(h);
+-	if (!c)
+-		return 0;
+-	fill_cmd(c, TEST_UNIT_READY, h, NULL, 0, 0, scsi3addr, TYPE_CMD);
+-	hpsa_scsi_do_simple_cmd_core(h, c);
+-	sense = c->err_info->SenseInfo;
+-	sense_key = sense[2];
+-	asc = sense[12];
+-	ascq = sense[13];
+-	if (c->err_info->CommandStatus == CMD_TARGET_STATUS &&
+-		c->err_info->ScsiStatus == SAM_STAT_CHECK_CONDITION &&
+-		sense_key == NOT_READY &&
+-		asc == ASC_LUN_NOT_READY &&
+-		ascq == ASCQ_LUN_NOT_READY_FORMAT_IN_PROGRESS)
+-		return 1;
+-	cmd_special_free(h, c);
 -	return 0;
 -}
 -
--static void hpsa_monitor_offline_device(struct ctlr_info *h,
--					unsigned char scsi3addr[])
--{
--	struct offline_device_entry *device;
--	unsigned long flags;
--
--	/* Check to see if device is already on the list */
--	spin_lock_irqsave(&h->offline_device_lock, flags);
--	list_for_each_entry(device, &h->offline_device_list, offline_list) {
--		if (memcmp(device->scsi3addr, scsi3addr,
--				sizeof(device->scsi3addr)) == 0) {
--			spin_unlock_irqrestore(&h->offline_device_lock, flags);
--			return;
--		}
--	}
--	spin_unlock_irqrestore(&h->offline_device_lock, flags);
--
--	/* Device is not on the list, add it. */
--	device = kmalloc(sizeof(*device), GFP_KERNEL);
--	if (!device) {
--		dev_warn(&h->pdev->dev, "out of memory in %s\n", __func__);
--		return;
--	}
--	memcpy(device->scsi3addr, scsi3addr, sizeof(device->scsi3addr));
--	spin_lock_irqsave(&h->offline_device_lock, flags);
--	list_add_tail(&device->offline_list, &h->offline_device_list);
--	if (h->offline_device_thread_state == OFFLINE_DEVICE_THREAD_STOPPED) {
--		h->offline_device_thread_state = OFFLINE_DEVICE_THREAD_RUNNING;
--		spin_unlock_irqrestore(&h->offline_device_lock, flags);
--		h->offline_device_monitor =
--			kthread_run(hpsa_offline_device_thread, h, HPSA "-odm");
--		spin_lock_irqsave(&h->offline_device_lock, flags);
--	}
--	if (!h->offline_device_monitor) {
--		dev_warn(&h->pdev->dev, "failed to start offline device monitor thread.\n");
--		h->offline_device_thread_state = OFFLINE_DEVICE_THREAD_STOPPED;
--	}
--	spin_unlock_irqrestore(&h->offline_device_lock, flags);
--}
--
--static void stop_offline_device_monitor(struct ctlr_info *h)
--{
--	unsigned long flags;
--	int stop_thread;
--
--	spin_lock_irqsave(&h->offline_device_lock, flags);
--	stop_thread = (h->offline_device_thread_state ==
--				OFFLINE_DEVICE_THREAD_RUNNING);
--	if (stop_thread)
--		/* STOPPING state prevents new thread from starting. */
--		h->offline_device_thread_state =
--				OFFLINE_DEVICE_THREAD_STOPPING;
--	spin_unlock_irqrestore(&h->offline_device_lock, flags);
--	if (stop_thread)
--		kthread_stop(h->offline_device_monitor);
--}
--
- static void adjust_hpsa_scsi_table(struct ctlr_info *h, int hostno,
- 	struct hpsa_scsi_dev_t *sd[], int nsds)
- {
-@@ -1123,10 +1015,7 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h, int hostno,
- 		 */
- 		if (sd[i]->format_in_progress) {
- 			dev_info(&h->pdev->dev,
--				"c%db%dt%dl%d: Logical drive parity initialization, erase or format in progress\n",
--				h->scsi_host->host_no,
--				sd[i]->bus, sd[i]->target, sd[i]->lun);
--			dev_info(&h->pdev->dev, "c%db%dt%dl%d: temporarily offline\n",
-+				"Logical drive format in progress, device c%db%dt%dl%d offline.\n",
- 				h->scsi_host->host_no,
- 				sd[i]->bus, sd[i]->target, sd[i]->lun);
- 			continue;
-@@ -1150,17 +1039,6 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h, int hostno,
- 	}
- 	spin_unlock_irqrestore(&h->devlock, flags);
+ static int hpsa_update_device_info(struct ctlr_info *h,
+ 	unsigned char scsi3addr[], struct hpsa_scsi_dev_t *this_device,
+ 	unsigned char *is_OBDR_device)
+@@ -1792,14 +1750,10 @@ static int hpsa_update_device_info(struct ctlr_info *h,
+ 		sizeof(this_device->device_id));
  
--	/* Monitor devices which are NOT READY, FORMAT IN PROGRESS to be
--	 * brought online later. This must be done without holding h->devlock,
--	 * so don't touch h->dev[]
--	 */
--	for (i = 0; i < nsds; i++) {
--		if (!sd[i]) /* if already added above. */
--			continue;
--		if (sd[i]->format_in_progress)
--			hpsa_monitor_offline_device(h, sd[i]->scsi3addr);
+ 	if (this_device->devtype == TYPE_DISK &&
+-		is_logical_dev_addr_mode(scsi3addr)) {
++		is_logical_dev_addr_mode(scsi3addr))
+ 		hpsa_get_raid_level(h, scsi3addr, &this_device->raid_level);
+-		this_device->format_in_progress =
+-			hpsa_format_in_progress(h, scsi3addr);
+-	} else {
++	else
+ 		this_device->raid_level = RAID_UNKNOWN;
+-		this_device->format_in_progress = 0;
 -	}
--
- 	/* Don't notify scsi mid layer of any changes the first time through
- 	 * (or if there are no changes) scsi_scan_host will do it later the
- 	 * first time through.
-@@ -5065,10 +4943,8 @@ reinit_after_soft_reset:
- 	h->intr_mode = hpsa_simple_mode ? SIMPLE_MODE_INT : PERF_MODE_INT;
- 	INIT_LIST_HEAD(&h->cmpQ);
- 	INIT_LIST_HEAD(&h->reqQ);
--	INIT_LIST_HEAD(&h->offline_device_list);
- 	spin_lock_init(&h->lock);
- 	spin_lock_init(&h->scan_lock);
--	spin_lock_init(&h->offline_device_lock);
- 	spin_lock_init(&h->passthru_count_lock);
- 	rc = hpsa_pci_init(h);
- 	if (rc != 0)
-@@ -5077,7 +4953,6 @@ reinit_after_soft_reset:
- 	sprintf(h->devname, HPSA "%d", number_of_controllers);
- 	h->ctlr = number_of_controllers;
- 	number_of_controllers++;
--	h->offline_device_thread_state = OFFLINE_DEVICE_THREAD_STOPPED;
  
- 	/* configure PCI DMA stuff */
- 	rc = pci_set_dma_mask(pdev, DMA_BIT_MASK(64));
-@@ -5256,7 +5131,6 @@ static void hpsa_remove_one(struct pci_dev *pdev)
- 	}
- 	h = pci_get_drvdata(pdev);
- 	stop_controller_lockup_detector(h);
--	stop_offline_device_monitor(h);
- 	hpsa_unregister_scsi(h);	/* unhook from SCSI subsystem */
- 	hpsa_shutdown(pdev);
- 	iounmap(h->vaddr);
+ 	if (is_OBDR_device) {
+ 		/* See if this is a One-Button-Disaster-Recovery device
 diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
-index bea2365..04074f5 100644
+index 04074f5..5f3f72f 100644
 --- a/drivers/scsi/hpsa.h
 +++ b/drivers/scsi/hpsa.h
-@@ -161,20 +161,7 @@ struct ctlr_info {
- #define HPSATMF_LOG_QRY_TASK    (1 << 23)
- #define HPSATMF_LOG_QRY_TSET    (1 << 24)
- #define HPSATMF_LOG_QRY_ASYNC   (1 << 25)
--	spinlock_t offline_device_lock;
--	struct list_head offline_device_list;
--	struct task_struct *offline_device_monitor;
--	unsigned char offline_device_thread_state;
--#define OFFLINE_DEVICE_THREAD_STOPPED 0
--#define OFFLINE_DEVICE_THREAD_STOPPING 1
--#define OFFLINE_DEVICE_THREAD_RUNNING 2
+@@ -46,7 +46,6 @@ struct hpsa_scsi_dev_t {
+ 	unsigned char vendor[8];        /* bytes 8-15 of inquiry data */
+ 	unsigned char model[16];        /* bytes 16-31 of inquiry data */
+ 	unsigned char raid_level;	/* from inquiry page 0xC1 */
+-	unsigned char format_in_progress;
  };
--
--struct offline_device_entry {
--	unsigned char scsi3addr[8];
--	struct list_head offline_list;
--};
--
- #define HPSA_ABORT_MSG 0
- #define HPSA_DEVICE_RESET_MSG 1
- #define HPSA_RESET_TYPE_CONTROLLER 0x00
+ 
+ struct reply_pool {
 
