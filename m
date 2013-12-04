@@ -1,17 +1,17 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 3/9] hpsa: return 0 from driver probe function on success,
-	not 1
-Date: Wed, 04 Dec 2013 17:10:02 -0600
-Message-ID: <20131204231002.21798.8681.stgit@beardog.cce.hp.com>
+Subject: [PATCH 4/9] hpsa: use workqueue instead of kernel thread for lockup
+	detection
+Date: Wed, 04 Dec 2013 17:10:07 -0600
+Message-ID: <20131204231007.21798.94005.stgit@beardog.cce.hp.com>
 References: <20131204230123.21798.93593.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g6t0185.atlanta.hp.com ([15.193.32.62]:17849 "EHLO
-	g6t0185.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752563Ab3LDXKE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Dec 2013 18:10:04 -0500
+Received: from g1t0026.austin.hp.com ([15.216.28.33]:10756 "EHLO
+	g1t0026.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752951Ab3LDXKM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Dec 2013 18:10:12 -0500
 In-Reply-To: <20131204230123.21798.93593.stgit@beardog.cce.hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,46 +20,192 @@ Cc: stephenmcameron@gmail.com, mikem@beardog.cce.hp.com, thenzl@redhat.com, linu
 
 From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-A return value of 1 is interpreted as an error.  See
-pci-driver.c in local_pci_probe().  If you're wondering how
-this ever could have worked, it's because it used to be the
-case that only return values less than zero were interpreted
-as failure.  But even in the current kernel if the driver
-registers its various entry points with the kernel, and then
-returns a value which is interpreted as failure, those
-registrations aren't undone, so the driver still mostly works.
-However, the driver's remove function wouldn't be called on
-rmmod, and pci power management functions wouldn't work.  In
-the case of Smart Array, since it has a battery backed cache
-(or else no cache) even if the driver is not shut down
-properly as long as there is no outstanding i/o, nothing too
-bad happens, which is why it took so long to
-notice.
-
-Requesting backport to stable because the change to pci-driver.c
-which requires driver probe functions to return 0 occurred between
-2.6.35 and 2.6.36 (the pci power management breakage) and again
-between 3.7 and 3.8 (pci_dev->driver getting set to NULL in
-local_pci_probe() preventing driver remove function from being
-called on rmmod.)
+Much simpler and avoids races starting/stopping the thread.
 
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
-Cc: stable@vger.kernel.org
 ---
- drivers/scsi/hpsa.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/scsi/hpsa.c |  103 +++++++++++++--------------------------------------
+ drivers/scsi/hpsa.h |    3 +
+ 2 files changed, 28 insertions(+), 78 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 75800f7..14f662d 100644
+index 14f662d..a502718 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -5004,7 +5004,7 @@ reinit_after_soft_reset:
+@@ -168,10 +168,6 @@ static struct board_type products[] = {
+ 
+ static int number_of_controllers;
+ 
+-static struct list_head hpsa_ctlr_list = LIST_HEAD_INIT(hpsa_ctlr_list);
+-static spinlock_t lockup_detector_lock;
+-static struct task_struct *hpsa_lockup_detector;
+-
+ static irqreturn_t do_hpsa_intr_intx(int irq, void *dev_id);
+ static irqreturn_t do_hpsa_intr_msi(int irq, void *dev_id);
+ static int hpsa_ioctl(struct scsi_device *dev, int cmd, void *arg);
+@@ -4715,16 +4711,6 @@ static void hpsa_undo_allocations_after_kdump_soft_reset(struct ctlr_info *h)
+ 	kfree(h);
+ }
+ 
+-static void remove_ctlr_from_lockup_detector_list(struct ctlr_info *h)
+-{
+-	assert_spin_locked(&lockup_detector_lock);
+-	if (!hpsa_lockup_detector)
+-		return;
+-	if (h->lockup_detected)
+-		return; /* already stopped the lockup detector */
+-	list_del(&h->lockup_list);
+-}
+-
+ /* Called when controller lockup detected. */
+ static void fail_all_cmds_on_list(struct ctlr_info *h, struct list_head *list)
+ {
+@@ -4743,8 +4729,6 @@ static void controller_lockup_detected(struct ctlr_info *h)
+ {
+ 	unsigned long flags;
+ 
+-	assert_spin_locked(&lockup_detector_lock);
+-	remove_ctlr_from_lockup_detector_list(h);
+ 	h->access.set_intr_mask(h, HPSA_INTR_OFF);
+ 	spin_lock_irqsave(&h->lock, flags);
+ 	h->lockup_detected = readl(h->vaddr + SA5_SCRATCHPAD_OFFSET);
+@@ -4764,7 +4748,6 @@ static void detect_controller_lockup(struct ctlr_info *h)
+ 	u32 heartbeat;
+ 	unsigned long flags;
+ 
+-	assert_spin_locked(&lockup_detector_lock);
+ 	now = get_jiffies_64();
+ 	/* If we've received an interrupt recently, we're ok. */
+ 	if (time_after64(h->last_intr_timestamp +
+@@ -4794,68 +4777,22 @@ static void detect_controller_lockup(struct ctlr_info *h)
+ 	h->last_heartbeat_timestamp = now;
+ }
+ 
+-static int detect_controller_lockup_thread(void *notused)
+-{
+-	struct ctlr_info *h;
+-	unsigned long flags;
+-
+-	while (1) {
+-		struct list_head *this, *tmp;
+-
+-		schedule_timeout_interruptible(HEARTBEAT_SAMPLE_INTERVAL);
+-		if (kthread_should_stop())
+-			break;
+-		spin_lock_irqsave(&lockup_detector_lock, flags);
+-		list_for_each_safe(this, tmp, &hpsa_ctlr_list) {
+-			h = list_entry(this, struct ctlr_info, lockup_list);
+-			detect_controller_lockup(h);
+-		}
+-		spin_unlock_irqrestore(&lockup_detector_lock, flags);
+-	}
+-	return 0;
+-}
+-
+-static void add_ctlr_to_lockup_detector_list(struct ctlr_info *h)
++static void hpsa_monitor_ctlr_worker(struct work_struct *work)
+ {
+ 	unsigned long flags;
+-
+-	h->heartbeat_sample_interval = HEARTBEAT_SAMPLE_INTERVAL;
+-	spin_lock_irqsave(&lockup_detector_lock, flags);
+-	list_add_tail(&h->lockup_list, &hpsa_ctlr_list);
+-	spin_unlock_irqrestore(&lockup_detector_lock, flags);
+-}
+-
+-static void start_controller_lockup_detector(struct ctlr_info *h)
+-{
+-	/* Start the lockup detector thread if not already started */
+-	if (!hpsa_lockup_detector) {
+-		spin_lock_init(&lockup_detector_lock);
+-		hpsa_lockup_detector =
+-			kthread_run(detect_controller_lockup_thread,
+-						NULL, HPSA);
+-	}
+-	if (!hpsa_lockup_detector) {
+-		dev_warn(&h->pdev->dev,
+-			"Could not start lockup detector thread\n");
++	struct ctlr_info *h = container_of(to_delayed_work(work),
++					struct ctlr_info, monitor_ctlr_work);
++	detect_controller_lockup(h);
++	if (h->lockup_detected)
++		return;
++	spin_lock_irqsave(&h->lock, flags);
++	if (h->remove_in_progress) {
++		spin_unlock_irqrestore(&h->lock, flags);
+ 		return;
+ 	}
+-	add_ctlr_to_lockup_detector_list(h);
+-}
+-
+-static void stop_controller_lockup_detector(struct ctlr_info *h)
+-{
+-	unsigned long flags;
+-
+-	spin_lock_irqsave(&lockup_detector_lock, flags);
+-	remove_ctlr_from_lockup_detector_list(h);
+-	/* If the list of ctlr's to monitor is empty, stop the thread */
+-	if (list_empty(&hpsa_ctlr_list)) {
+-		spin_unlock_irqrestore(&lockup_detector_lock, flags);
+-		kthread_stop(hpsa_lockup_detector);
+-		spin_lock_irqsave(&lockup_detector_lock, flags);
+-		hpsa_lockup_detector = NULL;
+-	}
+-	spin_unlock_irqrestore(&lockup_detector_lock, flags);
++	schedule_delayed_work(&h->monitor_ctlr_work,
++				h->heartbeat_sample_interval);
++	spin_unlock_irqrestore(&h->lock, flags);
+ }
+ 
+ static int hpsa_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+@@ -5003,7 +4940,12 @@ reinit_after_soft_reset:
+ 
  	hpsa_hba_inquiry(h);
  	hpsa_register_scsi(h);	/* hook ourselves into SCSI subsystem */
- 	start_controller_lockup_detector(h);
--	return 1;
-+	return 0;
+-	start_controller_lockup_detector(h);
++
++	/* Monitor the controller for firmware lockups */
++	h->heartbeat_sample_interval = HEARTBEAT_SAMPLE_INTERVAL;
++	INIT_DELAYED_WORK(&h->monitor_ctlr_work, hpsa_monitor_ctlr_worker);
++	schedule_delayed_work(&h->monitor_ctlr_work,
++				h->heartbeat_sample_interval);
+ 	return 0;
  
  clean4:
- 	hpsa_free_sg_chain_blocks(h);
+@@ -5078,13 +5020,20 @@ static void hpsa_free_device_info(struct ctlr_info *h)
+ static void hpsa_remove_one(struct pci_dev *pdev)
+ {
+ 	struct ctlr_info *h;
++	unsigned long flags;
+ 
+ 	if (pci_get_drvdata(pdev) == NULL) {
+ 		dev_err(&pdev->dev, "unable to remove device\n");
+ 		return;
+ 	}
+ 	h = pci_get_drvdata(pdev);
+-	stop_controller_lockup_detector(h);
++
++	/* Get rid of any controller monitoring work items */
++	spin_lock_irqsave(&h->lock, flags);
++	h->remove_in_progress = 1;
++	cancel_delayed_work(&h->monitor_ctlr_work);
++	spin_unlock_irqrestore(&h->lock, flags);
++
+ 	hpsa_unregister_scsi(h);	/* unhook from SCSI subsystem */
+ 	hpsa_shutdown(pdev);
+ 	iounmap(h->vaddr);
+diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
+index 5f3f72f..01c3283 100644
+--- a/drivers/scsi/hpsa.h
++++ b/drivers/scsi/hpsa.h
+@@ -135,7 +135,8 @@ struct ctlr_info {
+ 	u32 heartbeat_sample_interval;
+ 	atomic_t firmware_flash_in_progress;
+ 	u32 lockup_detected;
+-	struct list_head lockup_list;
++	struct delayed_work monitor_ctlr_work;
++	int remove_in_progress;
+ 	u32 fifo_recently_full;
+ 	/* Address of h->q[x] is passed to intr handler to know which queue */
+ 	u8 q[MAX_REPLY_QUEUES];
 
