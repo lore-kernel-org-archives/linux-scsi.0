@@ -1,32 +1,24 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: 3.12.0: sda2: WRITE SAME failed. Manually zeroing. with 3w-xxxx driver
-Date: Thu, 05 Dec 2013 19:35:38 -0500
-Message-ID: <yq1ob4uhl45.fsf@sermon.lab.mkp.net>
-References: <CAO9zADw-k+Qghk79yzwzaiYiPSoQnKwjjTBwrhcOrJxTWc-fOQ@mail.gmail.com>
-	<yq1iovclm0m.fsf@sermon.lab.mkp.net>
-	<00c701ceec3a$c8bcfc90$5a36f5b0$@lucidpixels.com>
-	<yq1d2lkllek.fsf@sermon.lab.mkp.net>
-	<010b01ceec84$27643580$762ca080$@lucidpixels.com>
-	<018b01cef213$d34d1df0$79e759d0$@lucidpixels.com>
+From: <miguelreno9@miguelreno.onmicrosoft.com>
+Subject: PROPOSAL(STRICTLY CONFIDENTIAL).
+Date: Fri, 6 Dec 2013 13:26:02 +0100
+Message-ID: <7d5ceeea-8683-4e45-8f30-832a60a08352@AMSPR05MB131.eurprd05.prod.outlook.com>
+Reply-To: <morenomiguelmartinez@aol.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <018b01cef213$d34d1df0$79e759d0$@lucidpixels.com> (Justin
-	Piszcz's message of "Thu, 5 Dec 2013 18:43:39 -0500")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: "'Martin K. Petersen'" <martin.petersen@oracle.com>, 'open list' <linux-kernel@vger.kernel.org>, linux-ext4@vger.kernel.org, linux-scsi@vger.kernel.org, gregkh@linuxfoundation.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from emea01-db3-ndr.ptr.protection.outlook.com ([157.56.120.104]:1235
+	"EHLO emea01-db3-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753402Ab3LFMlO convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Dec 2013 07:41:14 -0500
+Content-Description: Mail message body
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Recipients <miguelreno9@miguelreno.onmicrosoft.com>
 
->>>>> "Justin" == Justin Piszcz <jpiszcz@lucidpixels.com> writes:
+I am Martinez M.Moreno, a lawyer resident in Spain. I am contacting you with regards to a discreet and confidential proposal.
+I will furnish you with further details once I receive your affirmatory response.Contact me for more information if interested through my personal email: morenomiguelmartinez@aol.com
 
-Justin> Update: System uptime with the patch is 7+ days under extensive
-Justin> load at times and I've had no issues to date.  I just checked
-Justin> the current linux git repo (3.13-rc2) and found this patch has
-Justin> not been included.
-
-James has it queued in scsi/fixes. It'll make it to Linus on the next
-pull and it has been tagged for inclusion in stable.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Regards,
+Martinez M.Moreno.
