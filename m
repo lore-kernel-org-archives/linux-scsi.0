@@ -1,32 +1,40 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 60758] module scsi_wait_scan not found kernel panic on boot
-Date: Fri, 06 Dec 2013 21:19:44 +0000
-Message-ID: <bug-60758-11613-RPgM1QlJMj@https.bugzilla.kernel.org/>
-References: <bug-60758-11613@https.bugzilla.kernel.org/>
+From: "Mr. SUN Zhijun" <sunzhi@hotmail.com>
+Subject: Reply Please
+Date: Fri, 06 Dec 2013 20:58:12 +0100
+Message-ID: <MAINSERVERRacUtI9dm000018be__7020.44330905682$1386419339$gmane$org@connova.ru>
+Reply-To: zhijunsun66@yahoo.com.hk
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:48767 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753458Ab3LFVTr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 6 Dec 2013 16:19:47 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 83DB3204D1
-	for <linux-scsi@vger.kernel.org>; Fri,  6 Dec 2013 21:19:46 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id D4A7420439
-	for <linux-scsi@vger.kernel.org>; Fri,  6 Dec 2013 21:19:44 +0000 (UTC)
-In-Reply-To: <bug-60758-11613@https.bugzilla.kernel.org/>
+Received: from ns.connova.ru ([193.25.11.102]:30620 "EHLO connova.ru"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754296Ab3LGM23 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 7 Dec 2013 07:28:29 -0500
+Content-Description: Mail message body
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Recipients <sunzhi@hotmail.com>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=60758
+Guten Tag,
 
---- Comment #49 from zakrzewskim@wp.pl ---
-Can someone test it on H87-G43 board ?
+Mein Name ist Mr.SUN Zhijun, ich mit der Bank of China zu arbeiten. Ich=
+ brauche Ihre Unterst=FCtzung in Durchf=FChrung einer Transaktion bei $=
+ 18,5 Millionen Dollar gesch=E4tzt, m=F6chte ich Ihnen 30% der gesamten=
+ Mittel als Ausgleich f=FCr Ihre Unterst=FCtzung in dieser Transaktion.=
+ Ich werde Sie =FCber die vollst=E4ndige Transaktion benachrichtigt nac=
+h Eingang Ihrer Antwort, wenn interessiert, bitte senden Sie mir Ihren =
+vollst=E4ndigen detials als unten, um meine E-Mail aufgef=FChrt: zhijun=
+sun66@yahoo.com.hk
 
--- 
-You are receiving this mail because:
-You are the assignee for the bug.
+1. Vollst=E4ndiger Name
+2.Private Telefonnummer
+3.Current Wohnadresse
+
+Mit freundlichen Gr=FC=DFen,
+Mr.SUN Zhijun
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
