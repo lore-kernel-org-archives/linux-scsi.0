@@ -1,43 +1,24 @@
-From: "Irma Schmid" <Irma89452@photographer.net>
-Subject: Kreditkarte mit bereits genehmigtem Limit von ^^20.ooo Euro^^ ohne
- ^^Schufa^^
-Date: Sun, 08 Dec 2013 08:52:31 -0500
-Message-ID: <20131208135232.196540@gmx.com>
+From: "Jack Kofi (ESQ)." <edi@tst.jus.br>
+Subject: Please Confirm
+Date: Sun, 8 Dec 2013 17:01:09 -0200 (BRST)
+Message-ID: <1744388227.50488335.1386529269469.JavaMail.root@tst.jus.br>
+Reply-To: "Jack Kofi (ESQ)." <jackkofiesq@aol.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.gmx.net ([74.208.4.201]:50298 "EHLO mout.gmx.net"
+Received: from mx1.tst.jus.br ([201.49.155.57]:50222 "EHLO vm266.tst.jus.br"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754130Ab3LHNwd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 8 Dec 2013 08:52:33 -0500
-Received: from mailout-us.gmx.com ([172.19.198.45]) by mrigmx.server.lan
- (mrigmxus001) with ESMTP (Nemesis) id 0LedUw-1VDnCA3svm-00qVwv for
- <linux-scsi@vger.kernel.org>; Sun, 08 Dec 2013 14:52:32 +0100
+	id S1755384Ab3LHV7q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 8 Dec 2013 16:59:46 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-Guten Tag,
+Greetings to you, 
 
-gehen Sie den leichten Weg und nehmen Sie die Kreditkarte aus S=C3=BCda=
-merika ohne spezielle Bonit=C3=A4tspr=C3=BCfung.
-Sie k=C3=B6nnen sofort Ihre Karte je nach Einkommen mit 10, 15 oder 2oo=
-oo Euro =C3=BCberziehen.=20
+I want you to assist me in transferring the sum of US$9.5M left behind by my dead client. I am willing to offer 50% to you as the sole beneficiary after the funds has been transferred to you.
 
-Also ideal f=C3=BCr Selbst=C3=A4ndige, Angestellte und Pension=C3=A4re.
-Bestellen Sie jetzt das neue Konto mit Karte. Haben wir Ihr Interesse g=
-eweckt? Hier geht es weiter:  =20
-unicashcard und f=C3=BCgen Sie an ohne die F=C3=BCllzeichen:=20
-c^o^m.
+Get back to me if you are interested so that i can provide you with more details
 
-Bis bald
-
-Anton Becker
-
-Mitarbeiter im support
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Regards,
+Jack Kofi, esq
