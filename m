@@ -1,86 +1,73 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [usb-storage] Re: CONFIG_SCSI_MULTI_LUN default
-Date: Mon, 9 Dec 2013 15:25:22 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1312091459330.1439-100000@iolanthe.rowland.org>
-References: <1386617756.2028.104.camel@dabdike.int.hansenpartnership.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: scsi-mq prototype
+Date: Mon, 09 Dec 2013 13:05:51 -0800
+Message-ID: <1386623151.20247.43.camel@haakon3.risingtidesystems.com>
+References: <1373588612.7397.447.camel@haakon3.risingtidesystems.com>
+	 <52989FF6.4020307@acm.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:39904 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753970Ab3LIUZX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Dec 2013 15:25:23 -0500
-In-Reply-To: <1386617756.2028.104.camel@dabdike.int.hansenpartnership.com>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:48944 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755833Ab3LIVFT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Dec 2013 16:05:19 -0500
+In-Reply-To: <52989FF6.4020307@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: USB Storage list <usb-storage@lists.one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Mon, 9 Dec 2013, James Bottomley wrote:
-
-> On Mon, 2013-12-09 at 14:28 -0500, Alan Stern wrote:
-> > On Mon, 9 Dec 2013, James Bottomley wrote:
-> > 
-> > > On Mon, 2013-12-09 at 13:24 -0500, Alan Stern wrote:
-> > > > James:
-> > > > 
-> > > > Is there any good reason why CONFIG_SCSI_MULTI_LUN still doesn't 
-> > > > default to Y?
-> > > 
-> > > Assuming we've got all the screw ups (mostly CD ROMS) blacklisted, I
-> > > think the only real reason is that some SCSI-2 devices don't respond to
-> > > stuff not on LUN 0, so it keeps the boot process quick.
-> > > 
-> > > There isn't really any reason to change it, though, is there?  The
-> > > option only applies to SCSI-2 and below devices which should be a self
-> > > obsoleting class as their motors start to burn out.
-> > 
-> > I'm asking because every now and then we hear from somebody who built a
-> > kernel without SCSI_MULTI_LUN and then doesn't understand why his USB
-> > card reader seems to support only one type of card.  (The interfaces
-> > for different digital card types typically are presented as different
-> > logical units on USB card readers.)
-> > 
-> > This isn't a big deal; if boot-up time is a real reason for not
-> > defaulting to Y, that's fine.
+On Fri, 2013-11-29 at 15:08 +0100, Bart Van Assche wrote:
+> On 07/12/13 02:23, Nicholas A. Bellinger wrote:
+> > [ ... ] I would like to discuss scsi-mq, a high performance SCSI
+> > initiator prototype that utilizes blk-mq [ ... ]
 > 
-> How about we fix this in another way?  If you can identify the class of
-> devices which constitute card readers can't we just set BLIST_FORCELUN
-> for them.  That way the config option can continue to die.
+> (replying to an e-mail of four months ago)
+> 
+> It took a while but I finally found some time to look further into
+> blk-mq and scsi-mq. Did I see correctly that the scsi-mq prototype
+> implements the so-called hw queues in the SCSI core and not in the SCSI
+> LLDs ?
 
-All right, how does this patch look?  us->max_lun gets set before we
-call scsi_scan_host(), and devices with protocol equal to US_PR_BULK
-actually tell us how many LUNs they have.  (Devices with other protocol
-values may have more than one LUN, but they don't tell us.  These other
-protocols are pactically never used nowadays, and I want to avoid
-regressions on older equipment.)
+No.  The hw queues are coming from blk-mq, and there is no extra queues
+implemented by scsi-mq.
 
-Alan Stern
+>  Sorry but that approach looks wrong to me. Several high-end
+> storage adapters already support multiple queues today. E.g. the NVMe
+> specification supports up to 64.000 I/O queues. With InfiniBand HCA's it
+> is possible to create multiple queues between initiator and target for
+> e.g. the iSER and SRP protocols to increase throughput. When there are
+> multiple queues between initiator and target there is a potential that
+> SCSI commands get reordered. The SCSI specifications define whether or
+> not it is allowed to change the submission order of commands. As an
+> example, if two atomic writes are submitted by the same CPU neither the
+> block layer nor the SCSI core nor the SCSI LLD nor the SCSI target is
+> allowed to reorder these. With the scsi-mq prototype present in your
+> repo the only way for a SCSI LLD to guarantee that SCSI commands for
+> which the submission order must be preserved do not get reordered is
+> either to limit the queue depth to one or to use a single queue for
+> communication with the target. I don't think this is what we want.
+> 
 
+In case you haven't already noticed, all of the scsi-mq logic is running
+with nr_hw_queues=1, which by itself gives a huge performance + latency
+improvement vs. existing scsi_request_fn() based logic.
 
+Frankly, getting this to work properly for all cases is currently higher
+on my priority list than enabling nr_hw_queues > 1.
 
-Index: usb-3.13/drivers/usb/storage/scsiglue.c
-===================================================================
---- usb-3.13.orig/drivers/usb/storage/scsiglue.c
-+++ usb-3.13/drivers/usb/storage/scsiglue.c
-@@ -78,6 +78,8 @@ static const char* host_info(struct Scsi
- 
- static int slave_alloc (struct scsi_device *sdev)
- {
-+	struct us_data *us = host_to_us(sdev->host);
-+
- 	/*
- 	 * Set the INQUIRY transfer length to 36.  We don't use any of
- 	 * the extra data and many devices choke if asked for more or
-@@ -102,6 +104,10 @@ static int slave_alloc (struct scsi_devi
- 	 */
- 	blk_queue_update_dma_alignment(sdev->request_queue, (512 - 1));
- 
-+	/* Tell the SCSI layer if we know there is more than one LUN */
-+	if (us->protocol == USB_PR_BULK && us->max_lun > 0)
-+		sdev->sdev_bflags = BLIST_FORCELUN;
-+
- 	return 0;
- }
- 
+> In other words, the so-called hw queue concept must be mapped onto
+> queues managed by the SCSI LLD and not onto queues managed by the SCSI
+> core. That will allow the block layer and the SCSI core to preserve SCSI
+> command submission order when necessary by queueing ordered commands on
+> the same hardware queue.
+> 
+
+Perhaps once nr_hw_queues > 1 logic is enabled in scsi-mq, you can send
+a patch series to address your concerns.
+
+Without patches, your observations aren't particular helpful.
+
+--nab
 
