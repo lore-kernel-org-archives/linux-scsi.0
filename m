@@ -1,41 +1,23 @@
-From: "Mr. SUN Zhijun" <sunzhi@hotmail.com>
-Subject: Guten Tag!!!
-Date: Mon, 09 Dec 2013 18:45:08 +0100
-Message-ID: <DE-SERVER1FGIUUJlNK00002a9d__10504.0617323995$1386612037$gmane$org@de-server1.de-autism-anglia.local>
-Reply-To: sun_zhijun001@qq.com
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: CONFIG_SCSI_MULTI_LUN default
+Date: Mon, 9 Dec 2013 13:24:34 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1312091322070.1439-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from host81-136-163-73.in-addr.btopenworld.com ([81.136.163.73]:56340
-	"EHLO de-server1.de-autism-anglia.local" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1755755Ab3LISAK convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 9 Dec 2013 13:00:10 -0500
-Content-Description: Mail message body
+Received: from iolanthe.rowland.org ([192.131.102.54]:39772 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753229Ab3LISYf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Dec 2013 13:24:35 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Recipients <sunzhi@hotmail.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: USB Storage list <usb-storage@lists.one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
 
-Guten Tag,
+James:
 
-Mein Name ist Mr.SUN Zhijun, ich mit der Bank of China zu arbeiten. Ich=
- brauche Ihre Unterst=FCtzung in Durchf=FChrung einer Transaktion bei $=
- 18,5 Millionen Dollar gesch=E4tzt, m=F6chte ich Ihnen 30% der gesamten=
- Mittel als Ausgleich f=FCr Ihre Unterst=FCtzung in dieser Transaktion.=
- Ich werde Sie =FCber die vollst=E4ndige Transaktion benachrichtigt nac=
-h Eingang Ihrer Antwort, wenn interessiert, bitte senden Sie mir Ihren =
-vollst=E4ndigen detials als unten, um meine E-Mail aufgef=FChrt: sun_zh=
-ijun001@qq.com
+Is there any good reason why CONFIG_SCSI_MULTI_LUN still doesn't 
+default to Y?
 
-1. Vollst=E4ndiger Name
-2.Private Telefonnummer
-3.Current Wohnadresse
+Alan Stern
 
-Mit freundlichen Gr=FC=DFen,
-Mr.SUN Zhijun
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
