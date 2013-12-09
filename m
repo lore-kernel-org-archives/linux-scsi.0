@@ -1,32 +1,36 @@
-From: "Partnership Request" <l0920903901@gmail.com>
-Subject: Profitable & Important
-Date: Sun, 8 Dec 2013 08:39:32 -0200
-Message-ID: <3ec98aaf03e67a0571ba75b4e06150bb.squirrel__11757.4137090289$1386560027$gmane$org@41.221.245.42>
-Reply-To: shu60w@qq.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.unimetro.ed.ao ([41.221.245.42]:48584 "EHLO
-	mail.unimetro.ed.ao" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760502Ab3LIDdM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 8 Dec 2013 22:33:12 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+From: Michael Opdenacker <michael.opdenacker@free-electrons.com>
+Subject: [PATCH][RESEND] [SCSI] NCR5380: remove deprecated IRQF_DISABLED
+Date: Mon,  9 Dec 2013 10:44:50 +0100
+Message-ID: <1386582290-4755-1-git-send-email-michael.opdenacker@free-electrons.com>
+References: <1381036403-10245-1-git-send-email-michael.opdenacker@free-electrons.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1381036403-10245-1-git-send-email-michael.opdenacker@free-electrons.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: JBottomley@parallels.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Michael Opdenacker <michael.opdenacker@free-electrons.com>
 List-Id: linux-scsi@vger.kernel.org
 
+This patch proposes to remove the use of the IRQF_DISABLED flag
 
-Good day,
+It's a NOOP since 2.6.35 and it will be removed one day.
 
-I have a business proposal which will be of
-great benefit to you. Contact me for details
-through:
+Signed-off-by: Michael Opdenacker <michael.opdenacker@free-electrons.com>
+---
+ drivers/scsi/NCR5380.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Email: shu60w@qq.com
-
-I await your prompt response.
-
-Thanks.
-shu60w@qq.com
-
-
-
+diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
+index 1e9d6ad9302b..bcd223868227 100644
+--- a/drivers/scsi/NCR5380.c
++++ b/drivers/scsi/NCR5380.c
+@@ -584,7 +584,7 @@ static int __init __maybe_unused NCR5380_probe_irq(struct Scsi_Host *instance,
+ 	NCR5380_setup(instance);
+ 
+ 	for (trying_irqs = i = 0, mask = 1; i < 16; ++i, mask <<= 1)
+-		if ((mask & possible) && (request_irq(i, &probe_intr, IRQF_DISABLED, "NCR-probe", NULL) == 0))
++		if ((mask & possible) && (request_irq(i, &probe_intr, 0, "NCR-probe", NULL) == 0))
+ 			trying_irqs |= mask;
+ 
+ 	timeout = jiffies + (250 * HZ / 1000);
+-- 
+1.8.3.2
