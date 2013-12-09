@@ -1,47 +1,39 @@
 From: Michael Opdenacker <michael.opdenacker@free-electrons.com>
-Subject: [PATCH][RESEND] [SCSI] aha152x: remove deprecated IRQF_DISABLED
-Date: Mon,  9 Dec 2013 10:53:01 +0100
-Message-ID: <1386582781-4882-1-git-send-email-michael.opdenacker@free-electrons.com>
-References: <1381037293-11215-1-git-send-email-michael.opdenacker@free-electrons.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1381037293-11215-1-git-send-email-michael.opdenacker@free-electrons.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: fischer@norbit.de, JBottomley@parallels.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Michael Opdenacker <michael.opdenacker@free-electrons.com>
+Subject: [PATCH][RESEND] [SCSI] aic7xxx: remove duplicate define
+Date: Mon,  9 Dec 2013 10:55:56 +0100
+Message-ID: <1386582956-4942-1-git-send-email-michael.opdenacker@free-electrons.com>
+References: <1382524483-3167-1-git-send-email-michael.opdenacker@free-electrons.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from top.free-electrons.com ([176.31.233.9]:34270 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932268Ab3LIJ4B (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Dec 2013 04:56:01 -0500
+In-Reply-To: <1382524483-3167-1-git-send-email-michael.opdenacker@free-electrons.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: hare@suse.de, JBottomley@parallels.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Michael Opdenacker <michael.opdenacker@free-electrons.com>
 
-This patch proposes to remove the use of the IRQF_DISABLED flag
-
-It's a NOOP since 2.6.35 and it will be removed one day.
-
-Also taking the opportunity to fix checkpatch issues on the lines I modified
+Remove duplicate define
+in drivers/scsi/aic7xxx/aicasm/aicasm_insformat.h
 
 Signed-off-by: Michael Opdenacker <michael.opdenacker@free-electrons.com>
 ---
- drivers/scsi/aha152x.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/aic7xxx/aicasm/aicasm_insformat.h | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/scsi/aha152x.c b/drivers/scsi/aha152x.c
-index 3f7b6fee0a74..e86eb6a921fc 100644
---- a/drivers/scsi/aha152x.c
-+++ b/drivers/scsi/aha152x.c
-@@ -857,7 +857,7 @@ struct Scsi_Host *aha152x_probe_one(struct aha152x_setup *setup)
- 	SETPORT(SIMODE0, 0);
- 	SETPORT(SIMODE1, 0);
+diff --git a/drivers/scsi/aic7xxx/aicasm/aicasm_insformat.h b/drivers/scsi/aic7xxx/aicasm/aicasm_insformat.h
+index 9df9e2ce3538..8373447bd7d3 100644
+--- a/drivers/scsi/aic7xxx/aicasm/aicasm_insformat.h
++++ b/drivers/scsi/aic7xxx/aicasm/aicasm_insformat.h
+@@ -209,7 +209,6 @@ struct instruction {
+ #define AIC_OP_JC16	0x9105
+ #define AIC_OP_JNC16	0x9205
+ #define AIC_OP_CALL16	0x9305
+-#define AIC_OP_CALL16	0x9305
  
--	if( request_irq(shpnt->irq, swintr, IRQF_DISABLED|IRQF_SHARED, "aha152x", shpnt) ) {
-+	if (request_irq(shpnt->irq, swintr, IRQF_SHARED, "aha152x", shpnt)) {
- 		printk(KERN_ERR "aha152x%d: irq %d busy.\n", shpnt->host_no, shpnt->irq);
- 		goto out_host_put;
- 	}
-@@ -891,7 +891,7 @@ struct Scsi_Host *aha152x_probe_one(struct aha152x_setup *setup)
- 	SETPORT(SSTAT0, 0x7f);
- 	SETPORT(SSTAT1, 0xef);
- 
--	if ( request_irq(shpnt->irq, intr, IRQF_DISABLED|IRQF_SHARED, "aha152x", shpnt) ) {
-+	if (request_irq(shpnt->irq, intr, IRQF_SHARED, "aha152x", shpnt)) {
- 		printk(KERN_ERR "aha152x%d: failed to reassign irq %d.\n", shpnt->host_no, shpnt->irq);
- 		goto out_host_put;
- 	}
+ /* Page extension is low three bits of second opcode byte. */
+ #define AIC_OP_JMPF	0xA005
 -- 
 1.8.3.2
+
