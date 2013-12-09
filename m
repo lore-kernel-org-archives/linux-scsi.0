@@ -1,24 +1,27 @@
-From: "Jack Kofi (ESQ)." <edi@tst.jus.br>
-Subject: Please Confirm
-Date: Sun, 8 Dec 2013 17:01:09 -0200 (BRST)
-Message-ID: <1744388227.50488335.1386529269469.JavaMail.root@tst.jus.br>
-Reply-To: "Jack Kofi (ESQ)." <jackkofiesq@aol.com>
+From: ''Yael Ronen'' <info@imyea.onmicrosoft.com>
+Subject: Good Day
+Date: Mon, 9 Dec 2013 08:29:15 +0530
+Message-ID: <d68cb834-9c7c-4e34-9ffc-38cb7b0991a2__5470.38941081173$1386558037$gmane$org@HKNPR03MB292.apcprd03.prod.outlook.com>
+Reply-To: <yael.ronen@aol.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.tst.jus.br ([201.49.155.57]:50222 "EHLO vm266.tst.jus.br"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755384Ab3LHV7q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 8 Dec 2013 16:59:46 -0500
+Received: from emea01-am1-ndr.ptr.protection.outlook.com ([157.56.116.106]:41898
+	"EHLO emea01-am1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1760336Ab3LIDAE convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 8 Dec 2013 22:00:04 -0500
+Content-Description: Mail message body
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Recipients <info@imyea.onmicrosoft.com>
 
-Greetings to you, 
+Good Day
 
-I want you to assist me in transferring the sum of US$9.5M left behind by my dead client. I am willing to offer 50% to you as the sole beneficiary after the funds has been transferred to you.
+I am Ms. Yael Ronen, I am getting in touch with you regarding an extremely 
+important and urgent matter. If you would oblige me the opportunity, I shall 
+provide you with details upon your response.
 
-Get back to me if you are interested so that i can provide you with more details
-
-Regards,
-Jack Kofi, esq
+Faithfully,
+Ms. Yael Ronen 
