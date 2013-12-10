@@ -1,74 +1,66 @@
-From: Shivaram Upadhyayula <shivaram.u@quadstor.com>
-Subject: [PATCH] qla2xxx: Fix schedule_delayed_work() timeout calculations
-Date: Tue, 10 Dec 2013 16:06:40 +0530
-Message-ID: <CAN-_EfwQc=L6nQy2+eSuBhjMkPB0Z_0e6Uc-k5D51GY6Mj9aDQ@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 2/5] scsi_scan: Restrict sequential scan to 256 LUNs
+Date: Tue, 10 Dec 2013 12:05:12 +0100
+Message-ID: <1386673515-87133-3-git-send-email-hare@suse.de>
+References: <1386673515-87133-1-git-send-email-hare@suse.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:35933 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750887Ab3LJLFU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 10 Dec 2013 06:05:20 -0500
+In-Reply-To: <1386673515-87133-1-git-send-email-hare@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <jbottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-Hi,
+Sequential scan for more than 256 LUNs is very fragile as
+LUNs might not be numbered sequentially after that point.
 
-The following patch is a fix for the timeout/delay passed to
-scheduled_delayed_work.
+SAM revisions later than SCSI-3 impose a structure on
+LUNs larger than 256, making LUN numbers between 256
+and 16384 illegal.
+SCSI-3, however allows for plain 64-bit numbers with
+no internal structure.
 
-Regards,
-Shivaram U
+So restrict sequential LUN scan to 256 LUNs and add a
+new blacklist flag 'BLIST_SCSI3LUN' to scan up to
+max_lun devices.
 
-commit 1e0ea25bb6c834c1f4b2485f49d36a6c314cb7a4
-Author: Shivaram U <shivaram.u@quadstor.com>
-Date:   Tue Dec 10 15:38:14 2013 +0530
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/scsi/scsi_scan.c    | 6 ++++++
+ include/scsi/scsi_devinfo.h | 2 ++
+ 2 files changed, 8 insertions(+)
 
-    Fix schedule_delayed_work() timeout calculations
-
-    Signed-off-by: Shivaram U <shivaram.u@quadstor.com>
-
-diff --git a/drivers/scsi/qla2xxx/qla_target.c
-b/drivers/scsi/qla2xxx/qla_target.c
-index 5964800..3bb0a1d 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -471,7 +471,7 @@ static void qlt_schedule_sess_for_deletion(struct
-qla_tgt_sess *sess,
- 		schedule_delayed_work(&tgt->sess_del_work, 0);
- 	else
- 		schedule_delayed_work(&tgt->sess_del_work,
--		    jiffies - sess->expires);
-+		    sess->expires - jiffies);
- }
-
- /* ha->hardware_lock supposed to be held on entry */
-@@ -550,13 +550,14 @@ static void qlt_del_sess_work_fn(struct
-delayed_work *work)
- 	struct scsi_qla_host *vha = tgt->vha;
- 	struct qla_hw_data *ha = vha->hw;
- 	struct qla_tgt_sess *sess;
--	unsigned long flags;
-+	unsigned long flags, elapsed;
-
- 	spin_lock_irqsave(&ha->hardware_lock, flags);
- 	while (!list_empty(&tgt->del_sess_list)) {
- 		sess = list_entry(tgt->del_sess_list.next, typeof(*sess),
- 		    del_list_entry);
--		if (time_after_eq(jiffies, sess->expires)) {
-+		elapsed = jiffies;
-+		if (time_after_eq(elapsed, sess->expires)) {
- 			qlt_undelete_sess(sess);
-
- 			ql_dbg(ql_dbg_tgt_mgt, vha, 0xf004,
-@@ -566,7 +567,7 @@ static void qlt_del_sess_work_fn(struct delayed_work *work)
- 			ha->tgt.tgt_ops->put_sess(sess);
- 		} else {
- 			schedule_delayed_work(&tgt->sess_del_work,
--			    jiffies - sess->expires);
-+			    sess->expires - elapsed);
- 			break;
- 		}
- 	}
-
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index e289fb3..f4a9c3e 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -1208,6 +1208,12 @@ static void scsi_sequential_lun_scan(struct scsi_target *starget,
+ 		max_dev_lun = min(8U, max_dev_lun);
+ 
+ 	/*
++	 * Stop scanning at 255 unless BLIST_SCSI3LUN
++	 */
++	if (!(bflags & BLIST_SCSI3LUN))
++		max_dev_lun = min(256U, max_dev_lun);
++
++	/*
+ 	 * We have already scanned LUN 0, so start at LUN 1. Keep scanning
+ 	 * until we reach the max, or no LUN is found and we are not
+ 	 * sparse_lun.
+diff --git a/include/scsi/scsi_devinfo.h b/include/scsi/scsi_devinfo.h
+index 447d2d7..8670c04 100644
+--- a/include/scsi/scsi_devinfo.h
++++ b/include/scsi/scsi_devinfo.h
+@@ -32,4 +32,6 @@
+ #define BLIST_ATTACH_PQ3	0x1000000 /* Scan: Attach to PQ3 devices */
+ #define BLIST_NO_DIF		0x2000000 /* Disable T10 PI (DIF) */
+ #define BLIST_SKIP_VPD_PAGES	0x4000000 /* Ignore SBC-3 VPD pages */
++#define BLIST_SCSI3LUN		0x8000000 /* Scan more than 256 LUNs
++					     for sequential scan */
+ #endif
 -- 
-QUADStor Open Source Storage Virtualization : Thin Provisioning, Data
-Deduplication, VAAI, High Availability, Virtual Tape Library
-http://www.quadstor.com
+1.7.12.4
+
