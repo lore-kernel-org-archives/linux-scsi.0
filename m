@@ -1,66 +1,74 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: Do anybody know the format of bsg device node name?
-Date: Tue, 10 Dec 2013 11:04:49 +0100
-Message-ID: <52A6E741.8060609@interlog.com>
-References: <20131209194650.27687.56358.stgit@viggo.jf.intel.com> <20131210103247.9151.46AD7750@newtech.co.jp>
-Reply-To: dgilbert@interlog.com
+From: Shivaram Upadhyayula <shivaram.u@quadstor.com>
+Subject: [PATCH] qla2xxx: Fix schedule_delayed_work() timeout calculations
+Date: Tue, 10 Dec 2013 16:06:40 +0530
+Message-ID: <CAN-_EfwQc=L6nQy2+eSuBhjMkPB0Z_0e6Uc-k5D51GY6Mj9aDQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:36811 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750789Ab3LJKEz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Dec 2013 05:04:55 -0500
-In-Reply-To: <20131210103247.9151.46AD7750@newtech.co.jp>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Newtech Tan <tan@newtech.co.jp>, linux-scsi@vger.kernel.org
 
-On 13-12-10 02:32 AM, Newtech Tan wrote:
->
-> For example of bsg device node name:
-> [4:0:0:0]
->
-> Each field is Hex or Dec?
->
-> [BackGroup]
-> I am using lsscsi -g command to get SCSI device list as the following.
-> If bsg device name's target number field is over ten, Will it display [4:0:10:0] or [4:0:a:0]?
->
-> # lsscsi -g
-> [0:0:0:0]    cd/dvd  HL-DT-ST DVD+-RW GSA-H53N B104  /dev/sr0   /dev/sg0
-> [3:0:0:0]    disk    ATA      WDC WD1600AAJS-1 05.0  /dev/sda   /dev/sg1
-> [4:0:0:0]    disk    ATA      Hitachi HDT72102 A31B  /dev/sdb   /dev/sg2
-> [4:0:1:0]    disk    ATA      Hitachi HDT72502 A73A  /dev/sdc   /dev/sg3
-> [4:0:2:0]    disk    ATA      Hitachi HDT72502 A73A  /dev/sdd   /dev/sg4
-> [4:0:3:0]    disk    ATA      Hitachi HDT72502 A73A  /dev/sde   /dev/sg5
-> [4:0:4:0]    disk    ATA      Hitachi HDT72502 A73A  /dev/sdf   /dev/sg6
-> [4:0:5:0]    disk    ATA      Hitachi HDT72502 A73A  /dev/sdg   /dev/sg7
-> [4:0:6:0]    disk    ATA      Hitachi HDT72502 A73A  /dev/sdh   /dev/sg8
-> [4:0:7:0]    disk    ATA      Hitachi HDT72502 A73A  /dev/sdi   /dev/sg9
-> [4:0:8:0]    enclosu LSI      SAS616x          0502  -         /dev/sg10
+Hi,
 
-/dev/bsg/0:0:0:0
-/dev/bsg/3:0:0:0
-/dev/bsg/4:0:0:0
-etc
+The following patch is a fix for the timeout/delay passed to
+scheduled_delayed_work.
 
-Depending on your shell you may need to escape the ":"
-characters (or surround the whole string in quotes).
+Regards,
+Shivaram U
 
-Also CONFIG_BLK_DEV_BSG needs to be defined in your kernel
-build but as udev needs that, that is probably already the
-case.
+commit 1e0ea25bb6c834c1f4b2485f49d36a6c314cb7a4
+Author: Shivaram U <shivaram.u@quadstor.com>
+Date:   Tue Dec 10 15:38:14 2013 +0530
 
-Looks like you have a SAS expander there as well. It will
-have a bsg node name like:
-   /dev/bsg/expander-4:0
-that my smp_utils package can use. There might also be a
-SAS host node like this:
-   /dev/bsg/sas_host4
+    Fix schedule_delayed_work() timeout calculations
 
+    Signed-off-by: Shivaram U <shivaram.u@quadstor.com>
 
-Doug Gilbert
+diff --git a/drivers/scsi/qla2xxx/qla_target.c
+b/drivers/scsi/qla2xxx/qla_target.c
+index 5964800..3bb0a1d 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -471,7 +471,7 @@ static void qlt_schedule_sess_for_deletion(struct
+qla_tgt_sess *sess,
+ 		schedule_delayed_work(&tgt->sess_del_work, 0);
+ 	else
+ 		schedule_delayed_work(&tgt->sess_del_work,
+-		    jiffies - sess->expires);
++		    sess->expires - jiffies);
+ }
 
+ /* ha->hardware_lock supposed to be held on entry */
+@@ -550,13 +550,14 @@ static void qlt_del_sess_work_fn(struct
+delayed_work *work)
+ 	struct scsi_qla_host *vha = tgt->vha;
+ 	struct qla_hw_data *ha = vha->hw;
+ 	struct qla_tgt_sess *sess;
+-	unsigned long flags;
++	unsigned long flags, elapsed;
 
+ 	spin_lock_irqsave(&ha->hardware_lock, flags);
+ 	while (!list_empty(&tgt->del_sess_list)) {
+ 		sess = list_entry(tgt->del_sess_list.next, typeof(*sess),
+ 		    del_list_entry);
+-		if (time_after_eq(jiffies, sess->expires)) {
++		elapsed = jiffies;
++		if (time_after_eq(elapsed, sess->expires)) {
+ 			qlt_undelete_sess(sess);
+
+ 			ql_dbg(ql_dbg_tgt_mgt, vha, 0xf004,
+@@ -566,7 +567,7 @@ static void qlt_del_sess_work_fn(struct delayed_work *work)
+ 			ha->tgt.tgt_ops->put_sess(sess);
+ 		} else {
+ 			schedule_delayed_work(&tgt->sess_del_work,
+-			    jiffies - sess->expires);
++			    sess->expires - elapsed);
+ 			break;
+ 		}
+ 	}
+
+-- 
+QUADStor Open Source Storage Virtualization : Thin Provisioning, Data
+Deduplication, VAAI, High Availability, Virtual Tape Library
+http://www.quadstor.com
