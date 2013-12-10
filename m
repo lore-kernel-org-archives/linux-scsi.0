@@ -1,42 +1,66 @@
-From: Niall Drievers <nialler17@hotmail.com>
-Subject: pm8001 issue
-Date: Tue, 10 Dec 2013 09:20:36 +0000
-Message-ID: <DUB109-W96A382886123231F1B89A2B8D20@phx.gbl>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: Do anybody know the format of bsg device node name?
+Date: Tue, 10 Dec 2013 11:04:49 +0100
+Message-ID: <52A6E741.8060609@interlog.com>
+References: <20131209194650.27687.56358.stgit@viggo.jf.intel.com> <20131210103247.9151.46AD7750@newtech.co.jp>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dub0-omc4-s31.dub0.hotmail.com ([157.55.2.106]:30442 "EHLO
-	dub0-omc4-s31.dub0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753980Ab3LJJUi convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Dec 2013 04:20:38 -0500
+Received: from smtp.infotech.no ([82.134.31.41]:36811 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750789Ab3LJKEz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 10 Dec 2013 05:04:55 -0500
+In-Reply-To: <20131210103247.9151.46AD7750@newtech.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Newtech Tan <tan@newtech.co.jp>, linux-scsi@vger.kernel.org
 
-Hi,=A0
+On 13-12-10 02:32 AM, Newtech Tan wrote:
+>
+> For example of bsg device node name:
+> [4:0:0:0]
+>
+> Each field is Hex or Dec?
+>
+> [BackGroup]
+> I am using lsscsi -g command to get SCSI device list as the following.
+> If bsg device name's target number field is over ten, Will it display [4:0:10:0] or [4:0:a:0]?
+>
+> # lsscsi -g
+> [0:0:0:0]    cd/dvd  HL-DT-ST DVD+-RW GSA-H53N B104  /dev/sr0   /dev/sg0
+> [3:0:0:0]    disk    ATA      WDC WD1600AAJS-1 05.0  /dev/sda   /dev/sg1
+> [4:0:0:0]    disk    ATA      Hitachi HDT72102 A31B  /dev/sdb   /dev/sg2
+> [4:0:1:0]    disk    ATA      Hitachi HDT72502 A73A  /dev/sdc   /dev/sg3
+> [4:0:2:0]    disk    ATA      Hitachi HDT72502 A73A  /dev/sdd   /dev/sg4
+> [4:0:3:0]    disk    ATA      Hitachi HDT72502 A73A  /dev/sde   /dev/sg5
+> [4:0:4:0]    disk    ATA      Hitachi HDT72502 A73A  /dev/sdf   /dev/sg6
+> [4:0:5:0]    disk    ATA      Hitachi HDT72502 A73A  /dev/sdg   /dev/sg7
+> [4:0:6:0]    disk    ATA      Hitachi HDT72502 A73A  /dev/sdh   /dev/sg8
+> [4:0:7:0]    disk    ATA      Hitachi HDT72502 A73A  /dev/sdi   /dev/sg9
+> [4:0:8:0]    enclosu LSI      SAS616x          0502  -         /dev/sg10
 
-I've recently been trying install Linux on to a piece of hardware I pic=
-ked up and I've noticed this error in the dmesg output when the kernel =
-is loading. The error can be produced in version 0.1.36 and 0.1.37 of t=
-he pm8001 module. I was hoping that when I updated it, I might be able =
-to resolve it, but alas. My knowledge of MPI is rather limited and I wa=
-s hoping someone might be able to point me in the right direction with =
-regards to tackling this... increasing the max wait count, changing the=
- firmware, etc?
+/dev/bsg/0:0:0:0
+/dev/bsg/3:0:0:0
+/dev/bsg/4:0:0:0
+etc
+
+Depending on your shell you may need to escape the ":"
+characters (or surround the whole string in quotes).
+
+Also CONFIG_BLK_DEV_BSG needs to be defined in your kernel
+build but as udev needs that, that is probably already the
+case.
+
+Looks like you have a SAS expander there as well. It will
+have a bsg node name like:
+   /dev/bsg/expander-4:0
+that my smp_utils package can use. There might also be a
+SAS host node like this:
+   /dev/bsg/sas_host4
 
 
-[ =A0 23.874307] mpi_uninit_check 663:TIMEOUT:IBDB value/=3D0x2
-[ =A0 23.937847] soft_reset_ready_check 697:MPI state is not ready
-[ =A0 24.006578] pm8001_chip_soft_rst 761:FW is not ready
-[ =A0 26.449013] pm8001_chip_init 609:Firmware is not ready!
+Doug Gilbert
 
 
-Regards,
-
-Niall 		 	   		  --
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
