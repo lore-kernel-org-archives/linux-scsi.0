@@ -1,52 +1,32 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: 64-bit LUN support in Linux kernel?
-Date: Tue, 10 Dec 2013 12:14:11 +0100
-Message-ID: <52A6F783.6080605@suse.de>
-References: <1385381014.92441.YahooMailNeo@web121101.mail.ne1.yahoo.com> <52933F99.7060300@suse.de> <1385390632.22761.YahooMailNeo@web121104.mail.ne1.yahoo.com> <1385645372.8003.YahooMailNeo@web121105.mail.ne1.yahoo.com>
+From: "Dorau, Lukasz" <lukasz.dorau@intel.com>
+Subject: RE: [PATCH] isci: fix reset timeout handling
+Date: Tue, 10 Dec 2013 13:18:15 +0000
+Message-ID: <D9FFE20C522965449E182ACE73889AEB1A696FF9@IRSMSX105.ger.corp.intel.com>
+References: <20131209194650.27687.56358.stgit@viggo.jf.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:36299 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752095Ab3LJLON (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Dec 2013 06:14:13 -0500
-In-Reply-To: <1385645372.8003.YahooMailNeo@web121105.mail.ne1.yahoo.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20131209194650.27687.56358.stgit@viggo.jf.intel.com>
+Content-Language: en-US
+Sender: stable-owner@vger.kernel.org
+To: "Williams, Dan J" <dan.j.williams@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "Ni, Xun" <xun.ni@intel.com>, "Jiang, Dave" <dave.jiang@intel.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "Patelczyk, Maciej" <maciej.patelczyk@intel.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Aleksey Dashevsky <alekseyd@yahoo.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On 11/28/2013 02:29 PM, Aleksey Dashevsky wrote:
-> Hannes,
->=20
-> thanks a lot for your detailed response.  It would be really great
-> if you can give access to your local git repository with all these
-> patches --  I'm mainly interested in 64-bit LUNs stuff right now,
-> but I'm pretty sure  improvements into error handling mechanism are
-> crucial. Hope I will be able to provide you with a feedback rather
-> soon. If you need me to settle any legal issue -- please let me know.
->=20
-So, as you might've seen I've posted the 64-bit LUN patchset to
-linux-scsi.
-
-You can access the patches also from my git repository at
-
-git://git.kernel.org/pub/scm/linux/kernel/hare/scsi-devel.git branch
-64bit-luns
-
-HTH.
-
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+T24gTW9uZGF5LCBEZWNlbWJlciAwOSwgMjAxMyA4OjQ3IFBNIFdpbGxpYW1zLCBEYW4gSiA8ZGFu
+Lmoud2lsbGlhbXNAaW50ZWwuY29tPiB3cm90ZToNCj4gUmVtb3ZlIGFuIGVycm9uZW91cyBCVUdf
+T04oKSBpbiB0aGUgY2FzZSBvZiBhIGhhcmQgcmVzZXQgdGltZW91dC4gIElmIGENCj4gU0FUQSBk
+ZXZpY2UgaXMgdW5hYmxlIHRvIHJlc3RvcmUgdGhlIGxpbmsgaW4gdGltZSB3ZSBleHBlY3QgdGhl
+IHBvcnQgdG8NCj4gZ28gYmFjayB0byB0aGUgImF3YWl0aW5nIGxpbmstdXAiIHN0YXRlLiAgU2lu
+Y2UgdGhlIHRpbWVvdXQgcGF0aA0KPiBub3RpZmllZCBsaWJzYXMgdGhhdCB0aGUgcG9ydCBpcyBk
+b3duLCB3ZSB3YW50IHRvIG5vdGlmeSBsaWJzYXMgd2hlbiBpdA0KPiByZXR1cm5zIGFuZCBleHBl
+Y3QgdGhhdCB0aGUgcG9ydCBtYXkgbm90IGJlIGluIHRoZSAicmVzZXR0aW5nIiBzdGF0ZS4NCj4g
+DQo+IEFsc28sIG9uY2Ugd2UgaGF2ZSBub3RpZmllZCB0aGF0IHRoZSBwb3J0IGlzIGRvd24sIGlu
+LXByb2dyZXNzIHJlc2V0cyBzaG91bGQNCj4gYWJvcnQgaW1tZWRpYXRlbHkuICBSZXR1cm4gLUVO
+T0RFViBmcm9tIC0+bGxkZF9JX1RfbmV4dXNfcmVzZXQoKSB0byBpbmRpY2F0ZQ0KPiB0aGF0IGxp
+YmF0YSBlcnJvciBoYW5kbGluZyBzaG91bGQgZW5kLg0KPiANCj4gQ2M6IDxzdGFibGVAdmdlci5r
+ZXJuZWwub3JnPg0KPiBSZXBvcnRlZC1ieTogWHVuIE5pIDx4dW4ubmlAaW50ZWwuY29tPg0KPiBU
+ZXN0ZWQtYnk6IFh1biBOaSA8eHVuLm5pQGludGVsLmNvbT4NCj4gU2lnbmVkLW9mZi1ieTogRGFu
+IFdpbGxpYW1zIDxkYW4uai53aWxsaWFtc0BpbnRlbC5jb20+DQoNCkFja2VkLWJ5OiBMdWthc3og
+RG9yYXUgPGx1a2Fzei5kb3JhdUBpbnRlbC5jb20+DQoNCg==
