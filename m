@@ -1,85 +1,98 @@
-From: Eddie Wai <eddie.wai@broadcom.com>
-Subject: [PATCH 1/3] BNX2FC: Fixed scsi_remove_target soft lockup when rmmod bnx2x
-Date: Wed, 11 Dec 2013 15:30:21 -0800
-Message-ID: <1386804623-22376-1-git-send-email-eddie.wai@broadcom.com>
+From: Eddie Wai <eddie.wai-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
+Subject: [PATCH 2/3] BNX2FC: Fixed the handling for the SCSI
+	retry delay
+Date: Wed, 11 Dec 2013 15:30:22 -0800
+Message-ID: <1386804623-22376-2-git-send-email-eddie.wai@broadcom.com>
 References: <eddie.wai@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:35205 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751203Ab3LKXei (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Dec 2013 18:34:38 -0500
-In-Reply-To: <eddie.wai@broadcom.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+In-Reply-To: <eddie.wai-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
+List-Unsubscribe: <http://lists.open-fcoe.org/mailman/options/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.open-fcoe.org/pipermail/fcoe-devel>
+List-Post: <mailto:fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+List-Help: <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.open-fcoe.org/mailman/listinfo/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
+Errors-To: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+Sender: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+To: James Bottomley <jbottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: fcoe-devel <fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>
-Cc: Robert Love <robert.w.love@intel.com>, fcoe-devel <fcoe-devel@open-fcoe.org>, linux-scsi <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>, Eddie Wai <eddie.wai@broadcom.com>
 
-The problem has been identified to be a change in the scsi_remove_device
-path where a call to the pm_runtime_set_memalloc_noio was added when
-del_gendisk is called in this path.  Note that the new pm routine
-attempts to cycle through all parent devices from the FC target device
-to set the memalloc_noio flag.  Because of this new change, a dependency
-was created between the FC target device and the parent netdev device
-in the destroy path.
+SCSI retry delay upon SAM_STAT_BUSY/_SET_FULL was not being handled
+in bnx2fc.  This patch adds such handling by returning TARGET_BUSY
+to the SCSI ML for the corresponding LUN until the retry timer expires.
 
-In order to synchronized the destroy paths, bnx2fc has been modified
-to flush all destroy workqueues in the NETDEV_UNREGISTER return path.
-
-[    4.123584] BUG: soft lockup - CPU#8 stuck for 22s! [kworker/8:3:8082]
-[    4.123713] Call Trace:
-[    4.123719]  [<ffffffff815dfbe0>] klist_next+0x20/0xf0
-[    4.123725]  [<ffffffff813e9220>] ? pm_save_wakeup_count+0x70/0x70
-[    4.123731]  [<ffffffff813d9e4e>] device_for_each_child+0x4e/0x70
-[    4.123735]  [<ffffffff813e9554>] pm_runtime_set_memalloc_noio+0x94/0xf0
-[    4.123740]  [<ffffffff812d4d74>] del_gendisk+0x264/0x2a0
-[    4.123747]  [<ffffffffa00c6dc9>] sd_remove+0x69/0xb0 [sd_mod]
-[    4.123751]  [<ffffffff813de24f>] __device_release_driver+0x7f/0xf0
-[    4.123754]  [<ffffffff813de2e3>] device_release_driver+0x23/0x30
-[    4.123757]  [<ffffffff813ddab4>] bus_remove_device+0xf4/0x170
-[    4.123760]  [<ffffffff813da475>] device_del+0x135/0x1d0
-[    4.123765]  [<ffffffff81411b75>] __scsi_remove_device+0xc5/0xd0
-[    4.123768]  [<ffffffff81411ba6>] scsi_remove_device+0x26/0x40
-[    4.123770]  [<ffffffff81411d40>] scsi_remove_target+0x160/0x210
-[    4.123775]  [<ffffffffa0420e4c>] fc_rport_final_delete+0xac/0x1f0 [scsi_transport_fc]
-[    4.123780]  [<ffffffff810774ab>] process_one_work+0x17b/0x460
-[    4.123783]  [<ffffffff8107825b>] worker_thread+0x11b/0x400
-[    4.123786]  [<ffffffff81078140>] ? rescuer_thread+0x3e0/0x3e0
-[    4.123791]  [<ffffffff8107e9c0>] kthread+0xc0/0xd0
-[    4.123794]  [<ffffffff8107e900>] ? kthread_create_on_node+0x110/0x110
-[    4.123798]  [<ffffffff8160ceec>] ret_from_fork+0x7c/0xb0
-[    4.123801]  [<ffffffff8107e900>] ? kthread_create_on_node+0x110/0x110
-
-Signed-off-by: Eddie Wai <eddie.wai@broadcom.com>
+Signed-off-by: Eddie Wai <eddie.wai-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
 ---
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+ drivers/scsi/bnx2fc/bnx2fc.h     |    1 +
+ drivers/scsi/bnx2fc/bnx2fc_io.c  |   19 ++++++++++++++++++-
+ drivers/scsi/bnx2fc/bnx2fc_tgt.c |    1 +
+ 3 files changed, 20 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-index 9b94850..4cabd3e 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-@@ -850,6 +850,9 @@ static void bnx2fc_indicate_netevent(void *context, unsigned long event,
- 				__bnx2fc_destroy(interface);
+diff --git a/drivers/scsi/bnx2fc/bnx2fc.h b/drivers/scsi/bnx2fc/bnx2fc.h
+index 1ebf3fb..2e984e3 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc.h
++++ b/drivers/scsi/bnx2fc/bnx2fc.h
+@@ -367,6 +367,7 @@ struct bnx2fc_rport {
+ 	atomic_t num_active_ios;
+ 	u32 flush_in_prog;
+ 	unsigned long timestamp;
++	unsigned long retry_delay_timestamp;
+ 	struct list_head free_task_list;
+ 	struct bnx2fc_cmd *pending_queue[BNX2FC_SQ_WQES_MAX+1];
+ 	struct list_head active_cmd_queue;
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
+index ed88089..d2cabc9 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_io.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
+@@ -1871,7 +1871,15 @@ int bnx2fc_queuecommand(struct Scsi_Host *host,
+ 		rc = SCSI_MLQUEUE_TARGET_BUSY;
+ 		goto exit_qcmd;
+ 	}
+-
++	if (tgt->retry_delay_timestamp) {
++		if (time_after(jiffies, tgt->retry_delay_timestamp)) {
++			tgt->retry_delay_timestamp = 0;
++		} else {
++			/* If retry_delay timer is active, flow off the ML */
++			rc = SCSI_MLQUEUE_TARGET_BUSY;
++			goto exit_qcmd;
++		}
++	}
+ 	io_req = bnx2fc_cmd_alloc(tgt);
+ 	if (!io_req) {
+ 		rc = SCSI_MLQUEUE_HOST_BUSY;
+@@ -1961,6 +1969,15 @@ void bnx2fc_process_scsi_cmd_compl(struct bnx2fc_cmd *io_req,
+ 				 " fcp_resid = 0x%x\n",
+ 				io_req->cdb_status, io_req->fcp_resid);
+ 			sc_cmd->result = (DID_OK << 16) | io_req->cdb_status;
++
++			if (io_req->cdb_status == SAM_STAT_TASK_SET_FULL ||
++			    io_req->cdb_status == SAM_STAT_BUSY) {
++				/* Set the jiffies + retry_delay_timer * 100ms
++				   for the rport/tgt */
++				tgt->retry_delay_timestamp = jiffies +
++					fcp_rsp->retry_delay_timer * HZ / 10;
++			}
++
  		}
- 		mutex_unlock(&bnx2fc_dev_lock);
-+
-+		/* Ensure ALL destroy work has been completed before return */
-+		flush_workqueue(bnx2fc_wq);
- 		return;
+ 		if (io_req->fcp_resid)
+ 			scsi_set_resid(sc_cmd, io_req->fcp_resid);
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_tgt.c b/drivers/scsi/bnx2fc/bnx2fc_tgt.c
+index 4d93177..68948b7 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_tgt.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_tgt.c
+@@ -386,6 +386,7 @@ static int bnx2fc_init_tgt(struct bnx2fc_rport *tgt,
+ 	tgt->rq_prod_idx = 0x8000;
+ 	tgt->rq_cons_idx = 0;
+ 	atomic_set(&tgt->num_active_ios, 0);
++	tgt->retry_delay_timestamp = 0;
  
- 	default:
-@@ -2389,6 +2392,9 @@ static void bnx2fc_ulp_exit(struct cnic_dev *dev)
- 			__bnx2fc_destroy(interface);
- 	mutex_unlock(&bnx2fc_dev_lock);
- 
-+	/* Ensure ALL destroy work has been completed before return */
-+	flush_workqueue(bnx2fc_wq);
-+
- 	bnx2fc_ulp_stop(hba);
- 	/* unregister cnic device */
- 	if (test_and_clear_bit(BNX2FC_CNIC_REGISTERED, &hba->reg_with_cnic))
+ 	if (rdata->flags & FC_RP_FLAGS_RETRY &&
+ 	    rdata->ids.roles & FC_RPORT_ROLE_FCP_TARGET &&
 -- 
 1.7.1
-
