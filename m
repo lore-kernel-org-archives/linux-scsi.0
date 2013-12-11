@@ -1,115 +1,189 @@
-From: Hugo Mills <hugo@carfax.org.uk>
-Subject: Re: BTRFS doesn't handle USB device disconnect
-Date: Wed, 11 Dec 2013 16:18:17 +0000
-Message-ID: <20131211161817.GL9738@carfax.org.uk>
-References: <20131211011755.GA3574@xanatos>
- <Pine.LNX.4.44L0.1312111058340.1531-100000@iolanthe.rowland.org>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH v2 2/2] pm80xx : Fixed return value issue
+Date: Wed, 11 Dec 2013 17:36:16 +0100
+Message-ID: <52A89480.1010104@redhat.com>
+References: <1386651698-4331-1-git-send-email-Viswas.G@pmcs.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="DheUW4aQn8WJk6WR"
-Return-path: <linux-btrfs-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.1312111058340.1531-100000@iolanthe.rowland.org>
-Sender: linux-btrfs-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Sarah Sharp <sarah.a.sharp@linux.intel.com>, Chris Mason <chris.mason@fusionio.com>, linux-btrfs@vger.kernel.org, linux-usb@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:29860 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750759Ab3LKQg1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 11 Dec 2013 11:36:27 -0500
+In-Reply-To: <1386651698-4331-1-git-send-email-Viswas.G@pmcs.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Viswas G <Viswas.G@pmcs.com>, linux-scsi@vger.kernel.org
+Cc: xjtuwjp@gmail.com, Vasanthalakshmi.Tharmarajan@pmcs.com, Suresh.Thiagarajan@pmcs.com
+
+On 12/10/2013 06:01 AM, Viswas G wrote:
+> pm80xx_get_gsm_dump() was returning "1" in error case
+> instead of negative error value.
+>
+> Signed-off-by: Viswas G <Viswas.G@pmcs.com>
+> Reviewed-by: Jack Wang <jinpu.wang@profitbricks.com>
+> Acked-by: TomasHenzl <thenzl@redhat.com>
+
+Hi Viswas,
+
+I've ack-ed a different patch before, so I don't think you should add that acked-by line.
+The V2 patch is fine for me too, so again -
+Acked-by: Tomas Henzl <thenzl@redhat.com>
+
+And, when you refer to my name, please add me to the cc-list, otherwise I could miss the mail.
+
+Tomas
 
 
---DheUW4aQn8WJk6WR
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+> ---
+>  drivers/scsi/pm8001/pm8001_ctl.c |    4 ++--
+>  drivers/scsi/pm8001/pm8001_hwi.c |    8 ++++----
+>  drivers/scsi/pm8001/pm80xx_hwi.c |   15 ++++-----------
+>  3 files changed, 10 insertions(+), 17 deletions(-)
+>
+> diff --git a/drivers/scsi/pm8001/pm8001_ctl.c b/drivers/scsi/pm8001/pm8001_ctl.c
+> index 1738965..28b4e81 100644
+> --- a/drivers/scsi/pm8001/pm8001_ctl.c
+> +++ b/drivers/scsi/pm8001/pm8001_ctl.c
+> @@ -452,7 +452,7 @@ static DEVICE_ATTR(iop_log, S_IRUGO, pm8001_ctl_iop_log_show, NULL);
+>  static ssize_t pm8001_ctl_fatal_log_show(struct device *cdev,
+>  	struct device_attribute *attr, char *buf)
+>  {
+> -	u32 count;
+> +	ssize_t count;
+>  
+>  	count = pm80xx_get_fatal_dump(cdev, attr, buf);
+>  	return count;
+> @@ -470,7 +470,7 @@ static DEVICE_ATTR(fatal_log, S_IRUGO, pm8001_ctl_fatal_log_show, NULL);
+>  static ssize_t pm8001_ctl_gsm_log_show(struct device *cdev,
+>  	struct device_attribute *attr, char *buf)
+>  {
+> -	u32 count;
+> +	ssize_t count;
+>  
+>  	count = pm8001_get_gsm_dump(cdev, SYSFS_OFFSET, buf);
+>  	return count;
+> diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
+> index 2aa0681..46ace52 100644
+> --- a/drivers/scsi/pm8001/pm8001_hwi.c
+> +++ b/drivers/scsi/pm8001/pm8001_hwi.c
+> @@ -5020,7 +5020,7 @@ pm8001_get_gsm_dump(struct device *cdev, u32 length, char *buf)
+>  	/* check max is 1 Mbytes */
+>  	if ((length > 0x100000) || (gsm_dump_offset & 3) ||
+>  		((gsm_dump_offset + length) > 0x1000000))
+> -			return 1;
+> +			return -EINVAL;
+>  
+>  	if (pm8001_ha->chip_id == chip_8001)
+>  		bar = 2;
+> @@ -5048,12 +5048,12 @@ pm8001_get_gsm_dump(struct device *cdev, u32 length, char *buf)
+>  				gsm_base = GSM_BASE;
+>  				if (-1 == pm8001_bar4_shift(pm8001_ha,
+>  						(gsm_base + shift_value)))
+> -					return 1;
+> +					return -EIO;
+>  			} else {
+>  				gsm_base = 0;
+>  				if (-1 == pm80xx_bar4_shift(pm8001_ha,
+>  						(gsm_base + shift_value)))
+> -					return 1;
+> +					return -EIO;
+>  			}
+>  			gsm_dump_offset = (gsm_dump_offset + offset) &
+>  						0xFFFF0000;
+> @@ -5073,7 +5073,7 @@ pm8001_get_gsm_dump(struct device *cdev, u32 length, char *buf)
+>  	}
+>  	/* Shift back to BAR4 original address */
+>  	if (-1 == pm8001_bar4_shift(pm8001_ha, 0))
+> -			return 1;
+> +			return -EIO;
+>  	pm8001_ha->fatal_forensic_shift_offset += 1024;
+>  
+>  	if (pm8001_ha->fatal_forensic_shift_offset >= 0x100000)
+> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
+> index c950dc5..65de79c 100644
+> --- a/drivers/scsi/pm8001/pm80xx_hwi.c
+> +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+> @@ -91,7 +91,6 @@ ssize_t pm80xx_get_fatal_dump(struct device *cdev,
+>  	struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
+>  	struct pm8001_hba_info *pm8001_ha = sha->lldd_ha;
+>  	void __iomem *fatal_table_address = pm8001_ha->fatal_tbl_addr;
+> -	u32 status = 1;
+>  	u32 accum_len , reg_val, index, *temp;
+>  	unsigned long start;
+>  	u8 *direct_data;
+> @@ -111,13 +110,10 @@ ssize_t pm80xx_get_fatal_dump(struct device *cdev,
+>  		direct_data = (u8 *)fatal_error_data;
+>  		pm8001_ha->forensic_info.data_type = TYPE_NON_FATAL;
+>  		pm8001_ha->forensic_info.data_buf.direct_len = SYSFS_OFFSET;
+> -		pm8001_ha->forensic_info.data_buf.direct_offset = 0;
+>  		pm8001_ha->forensic_info.data_buf.read_len = 0;
+>  
+>  		pm8001_ha->forensic_info.data_buf.direct_data = direct_data;
+> -	}
+> -
+> -	if (pm8001_ha->forensic_info.data_buf.direct_offset == 0) {
+> +
+>  		/* start to get data */
+>  		/* Program the MEMBASE II Shifting Register with 0x00.*/
+>  		pm8001_cw32(pm8001_ha, 0, MEMBASE_II_SHIFT_REGISTER,
+> @@ -126,6 +122,7 @@ ssize_t pm80xx_get_fatal_dump(struct device *cdev,
+>  		pm8001_ha->forensic_fatal_step = 0;
+>  		pm8001_ha->fatal_bar_loc = 0;
+>  	}
+> +
+>  	/* Read until accum_len is retrived */
+>  	accum_len = pm8001_mr32(fatal_table_address,
+>  				MPI_FATAL_EDUMP_TABLE_ACCUM_LEN);
+> @@ -135,7 +132,7 @@ ssize_t pm80xx_get_fatal_dump(struct device *cdev,
+>  		PM8001_IO_DBG(pm8001_ha,
+>  			pm8001_printk("Possible PCI issue 0x%x not expected\n",
+>  				accum_len));
+> -		return status;
+> +		return -EIO;
+>  	}
+>  	if (accum_len == 0 || accum_len >= 0x100000) {
+>  		pm8001_ha->forensic_info.data_buf.direct_data +=
+> @@ -178,7 +175,6 @@ moreData:
+>  			pm8001_ha->forensic_fatal_step = 1;
+>  			pm8001_ha->fatal_forensic_shift_offset = 0;
+>  			pm8001_ha->forensic_last_offset	= 0;
+> -			status = 0;
+>  			return (char *)pm8001_ha->
+>  				forensic_info.data_buf.direct_data -
+>  				(char *)buf;
+> @@ -194,7 +190,6 @@ moreData:
+>  					forensic_info.data_buf.direct_data,
+>  					"%08x ", *(temp + index));
+>  			}
+> -			status = 0;
+>  			return (char *)pm8001_ha->
+>  				forensic_info.data_buf.direct_data -
+>  				(char *)buf;
+> @@ -214,7 +209,6 @@ moreData:
+>  		pm8001_cw32(pm8001_ha, 0, MEMBASE_II_SHIFT_REGISTER,
+>  			pm8001_ha->fatal_forensic_shift_offset);
+>  		pm8001_ha->fatal_bar_loc = 0;
+> -		status = 0;
+>  		return (char *)pm8001_ha->forensic_info.data_buf.direct_data -
+>  			(char *)buf;
+>  	}
+> @@ -239,7 +233,7 @@ moreData:
+>  			PM8001_FAIL_DBG(pm8001_ha,
+>  			pm8001_printk("TIMEOUT:MEMBASE_II_SHIFT_REGISTER"
+>  			" = 0x%x\n", reg_val));
+> -			return -1;
+> +			return -EIO;
+>  		}
+>  
+>  		/* Read the next 64K of the debug data. */
+> @@ -259,7 +253,6 @@ moreData:
+>  			pm8001_ha->forensic_info.data_buf.direct_len =  0;
+>  			pm8001_ha->forensic_info.data_buf.direct_offset = 0;
+>  			pm8001_ha->forensic_info.data_buf.read_len = 0;
+> -			status = 0;
+>  		}
+>  	}
+>  
 
-On Wed, Dec 11, 2013 at 11:03:09AM -0500, Alan Stern wrote:
-> On Tue, 10 Dec 2013, Sarah Sharp wrote:
-> 
-> > In order to stress test the uas driver (next-gen USB storage driver), I
-> > decided to run some tests with a USB 3.0 storage device with four 10GB
-> > partitions: BTRFS, ext3, ext4, and fat32.
-> > 
-> > It seems that BTRFS doesn't handle unexpected USB disconnect very well.
-> > Is that expected behavior?
-
-   It's something that's been known about for a while, but is clearly
-undesirable behaviour. I don't think anyone with the detailed
-knowledge of the FS code has investigated in enough depth to get to
-the point of proposing patches. I suspect it's just not shown up with
-enough disastrous consequences to bubble to the top of the stack of
-things to fix yet.
-
-   I think we're still at the point of "you can use USB if you like,
-but don't be surprised if, sometimes, Bad Things happen when the bus
-disconnects briefly".
-
-   The problems you show below do look quite like the kind of things
-we've seen btrfs doing on USB disconnects, so on only this evidence I
-wouldn't be quick to point any fingers at the USB layer (unless other
-filesystems corroborate the behaviour).
-
-   Hugo.
-
-   (I'm not a btrfs developer, but I do a reasonable amount of
-first-line support for it on IRC and linux-btrfs; we see these things
-every week or two).
-
-> > The BTRFS partition was created on an Ubuntu 13.10 system, with
-> > btrfs-tools version 0.19+20130705-1.
-> > 
-> > On 3.12-rc6, if all partitions are mounted, and I yank the USB cable,
-> > the BTRFS filesystem still shows up as mounted.  If I yank it multiple
-> > times, sometimes it's listed twice when the device is disconnected:
-> > 
-> > /dev/sdb3 on /media/sarah/9f21ef28-0eac-4736-9964-db5378b877e4 type btrfs (rw,nosuid,nodev,uhelper=udisks2)
-> > /dev/sdc3 on /media/sarah/9f21ef28-0eac-4736-9964-db5378b877e41 type btrfs (rw,nosuid,nodev,uhelper=udisks2)
-> > 
-> > Sometimes (but not always) when I plug it back in, I can get /dev/sdc3
-> > listed twice:
-> > 
-> > /dev/sdb3 on /media/sarah/9f21ef28-0eac-4736-9964-db5378b877e4 type btrfs (rw,nosuid,nodev,uhelper=udisks2)
-> > /dev/sdc3 on /media/sarah/9f21ef28-0eac-4736-9964-db5378b877e42 type btrfs (rw,nosuid,nodev,uhelper=udisks2)
-> > /dev/sdc1 on /media/sarah/ext3-part type ext3 (rw,nosuid,nodev,uhelper=udisks2)
-> > /dev/sdc2 on /media/sarah/ext4-part type ext4 (rw,nosuid,nodev,uhelper=udisks2)
-> > /dev/sdc4 on /media/sarah/fat32-part type vfat (rw,nosuid,nodev,uid=1000,gid=1000,shortname=mixed,dmask=0077,utf8=1,showexec,flush,uhelper=udisks2)
-> > /dev/sdc3 on /media/sarah/9f21ef28-0eac-4736-9964-db5378b877e41 type btrfs (rw,nosuid,nodev,uhelper=udisks2)
-
-> > On 3.13-rc1, the btrfs partion from the disconnected USB device
-> > continues to be listed as mounted.  Yanking the cable produces some
-> > additional oops messages.  It also produced a couple hard-hangs.
-> > Unfortunately, I didn't capture the dmesg during the hard-hangs, so I
-> > can't tell for sure which driver is to blame (uas, btrfs, or xhci).
-> 
-> Does this happen with usb-storage instead of uas?
-> 
-> What about with ehci-hcd instead of xhci-hcd?
-> 
-> And just to be exotic, what about with dummy-hcd and the uas or
-> g_mass_storage gadget driver?
-
--- 
-=== Hugo Mills: hugo@... carfax.org.uk | darksatanic.net | lug.org.uk ===
-  PGP key: 65E74AC0 from wwwkeys.eu.pgp.net or http://www.carfax.org.uk
-      --- UNIX: British manufacturer of modular shelving units. ---      
-
---DheUW4aQn8WJk6WR
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.14 (GNU/Linux)
-
-iQIVAwUBUqiQSVheFHXiqx3kAQLK+g//ckRFICvgTZSjj+vEZHLnnAZ8VTPzGvwT
-GFAziaoyBxXh95WQPyQDPg/rEyzrxiWg+maRboUO0jzrNs1t80KYDk8MtAgPHy/2
-px6k/MneQDJGaHiI4UDufGeqp/Vp8WVZ26qgh29kslKDIm28g+PMF9FNOkqX5gKW
-1GvqC9hxU0zlJ8CyhbHI5g+5jvXhgfrLW7wdBgiT0h3dT0/LJzqxAJ7gtiAwTOBU
-CvF9V8AwUyOytFXYNH9ozeMJ9S9t8kRR9vkfEAtVcAZv+QaMJ5tCCjliHon67i40
-SNO0TOMynsTcPnquFuEW8OIzIumWKA2xrYMlJnUb+xv/AEGDBwP/PXu+JtnLdjTt
-cT8Zi42gsFwhE309qwkJ4/t7FHMDNflw0u/51iRwi1XWnQegZuPkvri1ckgy40OQ
-UZgMH08KCaoj77FdSkqoq70SsQiYs7ZYuPram2OIc/znLTBQEoY612nUdFdTAVq2
-OIupO8jUMaU2tn5lgV+ndi/eRog9Ph39M5/2NNMHo93+gY0qBuGkp3t3Q/2WCkgN
-5inPmaLunjhsuB3yj9wmui4a5Fh8TL+Jzfa0MpYCg0yh11VPqK1C1TucFk4/ez8Z
-MttO/KX83Y+ea2ZHXEbBw5yKfnqVlnhG7ETDZg2Eooh+ZOwpWGLsPZIgHw8vGkfL
-iUQ1KZ9FgkE=
-=Ptdu
------END PGP SIGNATURE-----
-
---DheUW4aQn8WJk6WR--
