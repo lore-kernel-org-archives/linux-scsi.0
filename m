@@ -1,62 +1,37 @@
-From: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
-Subject: Re: pm8001 =?utf-8?b?aXNzdWXigI8=?=
-Date: Wed, 11 Dec 2013 08:48:34 +0000 (UTC)
-Message-ID: <loom.20131211T094126-284@post.gmane.org>
-References: <DUB109-W122F89F52D37E0B3FD1C137B8DD0@phx.gbl>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 26692] Fusion MPT SPI bringup takes 80 seconds when the kernel
+ is quiet
+Date: Wed, 11 Dec 2013 11:59:03 +0000
+Message-ID: <bug-26692-11613-kzOLElsFty@https.bugzilla.kernel.org/>
+References: <bug-26692-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:52211 "EHLO plane.gmane.org"
+Received: from mail.kernel.org ([198.145.19.201]:51508 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750836Ab3LKIzG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 Dec 2013 03:55:06 -0500
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <lnx-linux-scsi@m.gmane.org>)
-	id 1VqfZP-00089x-R7
-	for linux-scsi@vger.kernel.org; Wed, 11 Dec 2013 09:55:04 +0100
-Received: from 59.160.135.215.ill-bgl.static.vsnl.net.in ([59.160.135.215.ill-bgl.static.vsnl.net.in])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Wed, 11 Dec 2013 09:55:03 +0100
-Received: from Suresh.Thiagarajan by 59.160.135.215.ill-bgl.static.vsnl.net.in with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Wed, 11 Dec 2013 09:55:03 +0100
+	id S1751507Ab3LKL7L (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 11 Dec 2013 06:59:11 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 4BEF22076B
+	for <linux-scsi@vger.kernel.org>; Wed, 11 Dec 2013 11:59:10 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id 01E9420774
+	for <linux-scsi@vger.kernel.org>; Wed, 11 Dec 2013 11:59:05 +0000 (UTC)
+In-Reply-To: <bug-26692-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Niall Drievers <nialler17 <at> hotmail.com> writes:
+https://bugzilla.kernel.org/show_bug.cgi?id=26692
 
->=20
-> Jack, Suresh
->=20
-> Thanks for your response! Here's what I get from lspci -=C2=A030:00.0=
- Serial=20
-Attached SCSI controller:
-> PMC-Sierra Inc. Device 8001 (rev 05)=C2=A0
->=20
-> cat /sys/class/scsi_host/host7/version_product=C2=A0
-> PM8001=C2=A0
->=20
-> cat /sys/class/scsi_host/host7/version_fw=C2=A0
-> 01.12.02.00
+Alan <alan@lxorguk.ukuu.org.uk> changed:
 
-=46irmware version looks old. Please update and let us know.
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|NEEDINFO                    |RESOLVED
+         Resolution|---                         |INSUFFICIENT_DATA
 
->=20
-> The Kernel version is=C2=A03.13.0-rc2-1.1.
->=20
-> Regards,
->=20
-> Niall 		 	   		 =20
-
-Regards,
-Suresh
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
