@@ -1,42 +1,42 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH v2 2/2] pm80xx : Fixed return value issue
-Date: Wed, 11 Dec 2013 11:47:00 -0800
-Message-ID: <1386791220.2109.0.camel@dabdike.int.hansenpartnership.com>
-References: <1386651698-4331-1-git-send-email-Viswas.G@pmcs.com>
-	 <52A89480.1010104@redhat.com>
+From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Subject: Re: BTRFS doesn't handle USB device disconnect
+Date: Wed, 11 Dec 2013 15:20:05 -0800
+Message-ID: <20131211232005.GA2620@xanatos>
+References: <20131211011755.GA3574@xanatos>
+ <Pine.LNX.4.44L0.1312111058340.1531-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:44682 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750865Ab3LKTrJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 Dec 2013 14:47:09 -0500
-In-Reply-To: <52A89480.1010104@redhat.com>
+Received: from mga09.intel.com ([134.134.136.24]:53525 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751267Ab3LKXUE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 11 Dec 2013 18:20:04 -0500
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.1312111058340.1531-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>
-Cc: Viswas G <Viswas.G@pmcs.com>, linux-scsi@vger.kernel.org, xjtuwjp@gmail.com, Vasanthalakshmi.Tharmarajan@pmcs.com, Suresh.Thiagarajan@pmcs.com
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Chris Mason <chris.mason@fusionio.com>, linux-btrfs@vger.kernel.org, linux-usb@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>, linux-scsi@vger.kernel.org
 
-On Wed, 2013-12-11 at 17:36 +0100, Tomas Henzl wrote:
-> On 12/10/2013 06:01 AM, Viswas G wrote:
-> > pm80xx_get_gsm_dump() was returning "1" in error case
-> > instead of negative error value.
-> >
-> > Signed-off-by: Viswas G <Viswas.G@pmcs.com>
-> > Reviewed-by: Jack Wang <jinpu.wang@profitbricks.com>
-> > Acked-by: TomasHenzl <thenzl@redhat.com>
+On Wed, Dec 11, 2013 at 11:03:09AM -0500, Alan Stern wrote:
+> On Tue, 10 Dec 2013, Sarah Sharp wrote:
+> > On 3.13-rc1, the btrfs partion from the disconnected USB device
+> > continues to be listed as mounted.  Yanking the cable produces some
+> > additional oops messages.  It also produced a couple hard-hangs.
+> > Unfortunately, I didn't capture the dmesg during the hard-hangs, so I
+> > can't tell for sure which driver is to blame (uas, btrfs, or xhci).
 > 
-> Hi Viswas,
+> Does this happen with usb-storage instead of uas?
 > 
-> I've ack-ed a different patch before, so I don't think you should add that acked-by line.
-> The V2 patch is fine for me too, so again -
-> Acked-by: Tomas Henzl <thenzl@redhat.com>
+> What about with ehci-hcd instead of xhci-hcd?
+> 
+> And just to be exotic, what about with dummy-hcd and the uas or
+> g_mass_storage gadget driver?
 
-Actually, it can't be acked-by; that's for maintainers agreeing to
-patches not via them ... I assume it should be reviewed by?
+I can't reproduce the hard-hangs (with xhci and uas), but I did manage
+to reproduce a bug in uas where the disconnect function hangs, and hangs
+the khubd thread as well.  This happens even with the btrfs partition
+wiped from the drive, so it's not a btrfs issue.  I'll send a separate
+bug report to Hans.
 
-James
-
-
+Sarah Sharp
