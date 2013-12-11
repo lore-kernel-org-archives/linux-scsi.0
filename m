@@ -1,189 +1,53 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH v2 2/2] pm80xx : Fixed return value issue
-Date: Wed, 11 Dec 2013 17:36:16 +0100
-Message-ID: <52A89480.1010104@redhat.com>
-References: <1386651698-4331-1-git-send-email-Viswas.G@pmcs.com>
+From: Mike Miller <mike.miller@hp.com>
+Subject: [PATCH 1/2] hpsa: add 4 new PCI ID's for HP Gen9 servers
+Date: Wed, 11 Dec 2013 12:44:13 -0600
+Message-ID: <20131211184413.GA11427@beardog.cce.hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:29860 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750759Ab3LKQg1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 Dec 2013 11:36:27 -0500
-In-Reply-To: <1386651698-4331-1-git-send-email-Viswas.G@pmcs.com>
+Received: from g1t0027.austin.hp.com ([15.216.28.34]:42065 "EHLO
+	g1t0027.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750836Ab3LKSoP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Dec 2013 13:44:15 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Viswas G <Viswas.G@pmcs.com>, linux-scsi@vger.kernel.org
-Cc: xjtuwjp@gmail.com, Vasanthalakshmi.Tharmarajan@pmcs.com, Suresh.Thiagarajan@pmcs.com
+To: Andrew Morton <akpm@linux-foundation.org>, "James E. J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>, thenzl@redhat.com
 
-On 12/10/2013 06:01 AM, Viswas G wrote:
-> pm80xx_get_gsm_dump() was returning "1" in error case
-> instead of negative error value.
->
-> Signed-off-by: Viswas G <Viswas.G@pmcs.com>
-> Reviewed-by: Jack Wang <jinpu.wang@profitbricks.com>
-> Acked-by: TomasHenzl <thenzl@redhat.com>
+From: Mike Miller <mike.miller@hp.com>
 
-Hi Viswas,
+This patch adds 4 more PCI ID's for HP Gen9 servers. These new ID's were
+just made known this week.
 
-I've ack-ed a different patch before, so I don't think you should add that acked-by line.
-The V2 patch is fine for me too, so again -
-Acked-by: Tomas Henzl <thenzl@redhat.com>
+Signed-off-by: Mike Miller <mike.miller@hp.com>
+---
+ drivers/scsi/hpsa.c |    8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-And, when you refer to my name, please add me to the cc-list, otherwise I could miss the mail.
-
-Tomas
-
-
-> ---
->  drivers/scsi/pm8001/pm8001_ctl.c |    4 ++--
->  drivers/scsi/pm8001/pm8001_hwi.c |    8 ++++----
->  drivers/scsi/pm8001/pm80xx_hwi.c |   15 ++++-----------
->  3 files changed, 10 insertions(+), 17 deletions(-)
->
-> diff --git a/drivers/scsi/pm8001/pm8001_ctl.c b/drivers/scsi/pm8001/pm8001_ctl.c
-> index 1738965..28b4e81 100644
-> --- a/drivers/scsi/pm8001/pm8001_ctl.c
-> +++ b/drivers/scsi/pm8001/pm8001_ctl.c
-> @@ -452,7 +452,7 @@ static DEVICE_ATTR(iop_log, S_IRUGO, pm8001_ctl_iop_log_show, NULL);
->  static ssize_t pm8001_ctl_fatal_log_show(struct device *cdev,
->  	struct device_attribute *attr, char *buf)
->  {
-> -	u32 count;
-> +	ssize_t count;
->  
->  	count = pm80xx_get_fatal_dump(cdev, attr, buf);
->  	return count;
-> @@ -470,7 +470,7 @@ static DEVICE_ATTR(fatal_log, S_IRUGO, pm8001_ctl_fatal_log_show, NULL);
->  static ssize_t pm8001_ctl_gsm_log_show(struct device *cdev,
->  	struct device_attribute *attr, char *buf)
->  {
-> -	u32 count;
-> +	ssize_t count;
->  
->  	count = pm8001_get_gsm_dump(cdev, SYSFS_OFFSET, buf);
->  	return count;
-> diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-> index 2aa0681..46ace52 100644
-> --- a/drivers/scsi/pm8001/pm8001_hwi.c
-> +++ b/drivers/scsi/pm8001/pm8001_hwi.c
-> @@ -5020,7 +5020,7 @@ pm8001_get_gsm_dump(struct device *cdev, u32 length, char *buf)
->  	/* check max is 1 Mbytes */
->  	if ((length > 0x100000) || (gsm_dump_offset & 3) ||
->  		((gsm_dump_offset + length) > 0x1000000))
-> -			return 1;
-> +			return -EINVAL;
->  
->  	if (pm8001_ha->chip_id == chip_8001)
->  		bar = 2;
-> @@ -5048,12 +5048,12 @@ pm8001_get_gsm_dump(struct device *cdev, u32 length, char *buf)
->  				gsm_base = GSM_BASE;
->  				if (-1 == pm8001_bar4_shift(pm8001_ha,
->  						(gsm_base + shift_value)))
-> -					return 1;
-> +					return -EIO;
->  			} else {
->  				gsm_base = 0;
->  				if (-1 == pm80xx_bar4_shift(pm8001_ha,
->  						(gsm_base + shift_value)))
-> -					return 1;
-> +					return -EIO;
->  			}
->  			gsm_dump_offset = (gsm_dump_offset + offset) &
->  						0xFFFF0000;
-> @@ -5073,7 +5073,7 @@ pm8001_get_gsm_dump(struct device *cdev, u32 length, char *buf)
->  	}
->  	/* Shift back to BAR4 original address */
->  	if (-1 == pm8001_bar4_shift(pm8001_ha, 0))
-> -			return 1;
-> +			return -EIO;
->  	pm8001_ha->fatal_forensic_shift_offset += 1024;
->  
->  	if (pm8001_ha->fatal_forensic_shift_offset >= 0x100000)
-> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-> index c950dc5..65de79c 100644
-> --- a/drivers/scsi/pm8001/pm80xx_hwi.c
-> +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-> @@ -91,7 +91,6 @@ ssize_t pm80xx_get_fatal_dump(struct device *cdev,
->  	struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
->  	struct pm8001_hba_info *pm8001_ha = sha->lldd_ha;
->  	void __iomem *fatal_table_address = pm8001_ha->fatal_tbl_addr;
-> -	u32 status = 1;
->  	u32 accum_len , reg_val, index, *temp;
->  	unsigned long start;
->  	u8 *direct_data;
-> @@ -111,13 +110,10 @@ ssize_t pm80xx_get_fatal_dump(struct device *cdev,
->  		direct_data = (u8 *)fatal_error_data;
->  		pm8001_ha->forensic_info.data_type = TYPE_NON_FATAL;
->  		pm8001_ha->forensic_info.data_buf.direct_len = SYSFS_OFFSET;
-> -		pm8001_ha->forensic_info.data_buf.direct_offset = 0;
->  		pm8001_ha->forensic_info.data_buf.read_len = 0;
->  
->  		pm8001_ha->forensic_info.data_buf.direct_data = direct_data;
-> -	}
-> -
-> -	if (pm8001_ha->forensic_info.data_buf.direct_offset == 0) {
-> +
->  		/* start to get data */
->  		/* Program the MEMBASE II Shifting Register with 0x00.*/
->  		pm8001_cw32(pm8001_ha, 0, MEMBASE_II_SHIFT_REGISTER,
-> @@ -126,6 +122,7 @@ ssize_t pm80xx_get_fatal_dump(struct device *cdev,
->  		pm8001_ha->forensic_fatal_step = 0;
->  		pm8001_ha->fatal_bar_loc = 0;
->  	}
-> +
->  	/* Read until accum_len is retrived */
->  	accum_len = pm8001_mr32(fatal_table_address,
->  				MPI_FATAL_EDUMP_TABLE_ACCUM_LEN);
-> @@ -135,7 +132,7 @@ ssize_t pm80xx_get_fatal_dump(struct device *cdev,
->  		PM8001_IO_DBG(pm8001_ha,
->  			pm8001_printk("Possible PCI issue 0x%x not expected\n",
->  				accum_len));
-> -		return status;
-> +		return -EIO;
->  	}
->  	if (accum_len == 0 || accum_len >= 0x100000) {
->  		pm8001_ha->forensic_info.data_buf.direct_data +=
-> @@ -178,7 +175,6 @@ moreData:
->  			pm8001_ha->forensic_fatal_step = 1;
->  			pm8001_ha->fatal_forensic_shift_offset = 0;
->  			pm8001_ha->forensic_last_offset	= 0;
-> -			status = 0;
->  			return (char *)pm8001_ha->
->  				forensic_info.data_buf.direct_data -
->  				(char *)buf;
-> @@ -194,7 +190,6 @@ moreData:
->  					forensic_info.data_buf.direct_data,
->  					"%08x ", *(temp + index));
->  			}
-> -			status = 0;
->  			return (char *)pm8001_ha->
->  				forensic_info.data_buf.direct_data -
->  				(char *)buf;
-> @@ -214,7 +209,6 @@ moreData:
->  		pm8001_cw32(pm8001_ha, 0, MEMBASE_II_SHIFT_REGISTER,
->  			pm8001_ha->fatal_forensic_shift_offset);
->  		pm8001_ha->fatal_bar_loc = 0;
-> -		status = 0;
->  		return (char *)pm8001_ha->forensic_info.data_buf.direct_data -
->  			(char *)buf;
->  	}
-> @@ -239,7 +233,7 @@ moreData:
->  			PM8001_FAIL_DBG(pm8001_ha,
->  			pm8001_printk("TIMEOUT:MEMBASE_II_SHIFT_REGISTER"
->  			" = 0x%x\n", reg_val));
-> -			return -1;
-> +			return -EIO;
->  		}
->  
->  		/* Read the next 64K of the debug data. */
-> @@ -259,7 +253,6 @@ moreData:
->  			pm8001_ha->forensic_info.data_buf.direct_len =  0;
->  			pm8001_ha->forensic_info.data_buf.direct_offset = 0;
->  			pm8001_ha->forensic_info.data_buf.read_len = 0;
-> -			status = 0;
->  		}
->  	}
->  
-
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 67112a8..4af97d6 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -117,6 +117,10 @@ static const struct pci_device_id hpsa_pci_device_id[] = {
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C, 0x21C7},
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C, 0x21C8},
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C, 0x21C9},
++	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C, 0x21CA},
++	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C, 0x21CC},
++	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C, 0x21CD},
++	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C, 0x21CE},
+ 	{PCI_VENDOR_ID_HP,     PCI_ANY_ID,	PCI_ANY_ID, PCI_ANY_ID,
+ 		PCI_CLASS_STORAGE_RAID << 8, 0xffff << 8, 0},
+ 	{0,}
+@@ -162,6 +166,10 @@ static struct board_type products[] = {
+ 	{0x21C7103C, "Smart Array", &SA5_access},
+ 	{0x21C8103C, "Smart Array", &SA5_access},
+ 	{0x21C9103C, "Smart Array", &SA5_access},
++	{0x21CA103C, "Smart Array", &SA5_access},
++	{0x21CC103C, "Smart Array", &SA5_access},
++	{0x21CD103C, "Smart Array", &SA5_access},
++	{0x21CE103C, "Smart Array", &SA5_access},
+ 	{0xFFFF103C, "Unknown Smart Array", &SA5_access},
+ };
+ 
