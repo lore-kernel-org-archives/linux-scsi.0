@@ -1,36 +1,42 @@
-From: Mike Miller <mike.miller@hp.com>
-Subject: [PATCH 2/2] hpsa: bump driver version to 3.4.2-1
-Date: Wed, 11 Dec 2013 12:55:33 -0600
-Message-ID: <20131211185533.GB11427@beardog.cce.hp.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH v2 2/2] pm80xx : Fixed return value issue
+Date: Wed, 11 Dec 2013 11:47:00 -0800
+Message-ID: <1386791220.2109.0.camel@dabdike.int.hansenpartnership.com>
+References: <1386651698-4331-1-git-send-email-Viswas.G@pmcs.com>
+	 <52A89480.1010104@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, "James E. J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>, thenzl@redhat.com, mike.miller@hp.com
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:44682 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750865Ab3LKTrJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 11 Dec 2013 14:47:09 -0500
+In-Reply-To: <52A89480.1010104@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tomas Henzl <thenzl@redhat.com>
+Cc: Viswas G <Viswas.G@pmcs.com>, linux-scsi@vger.kernel.org, xjtuwjp@gmail.com, Vasanthalakshmi.Tharmarajan@pmcs.com, Suresh.Thiagarajan@pmcs.com
 
-From: Mike Miller <mike.miller@hp.com>
+On Wed, 2013-12-11 at 17:36 +0100, Tomas Henzl wrote:
+> On 12/10/2013 06:01 AM, Viswas G wrote:
+> > pm80xx_get_gsm_dump() was returning "1" in error case
+> > instead of negative error value.
+> >
+> > Signed-off-by: Viswas G <Viswas.G@pmcs.com>
+> > Reviewed-by: Jack Wang <jinpu.wang@profitbricks.com>
+> > Acked-by: TomasHenzl <thenzl@redhat.com>
+> 
+> Hi Viswas,
+> 
+> I've ack-ed a different patch before, so I don't think you should add that acked-by line.
+> The V2 patch is fine for me too, so again -
+> Acked-by: Tomas Henzl <thenzl@redhat.com>
 
-Bump the driver version so we can tell appoximately where it lines up with our
-internal svn repository.
+Actually, it can't be acked-by; that's for maintainers agreeing to
+patches not via them ... I assume it should be reviewed by?
 
-Signe-off-by: Mike Miller <mike.miller@hp.com>
----
- drivers/scsi/hpsa.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+James
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 8a27d7b..4f7589d 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -54,7 +54,7 @@
- #include "hpsa.h"
- 
- /* HPSA_DRIVER_VERSION must be 3 byte values (0-255) separated by '.' */
--#define HPSA_DRIVER_VERSION "3.4.0-1"
-+#define HPSA_DRIVER_VERSION "3.4.2-5"
- #define DRIVER_NAME "HP HPSA Driver (v " HPSA_DRIVER_VERSION ")"
- #define HPSA "hpsa"
- 
+
