@@ -1,94 +1,62 @@
-From: Ben Hutchings <ben@decadent.org.uk>
-Subject: [PATCH RESEND] mvsas: Recognise device/subsystem 9485/9485 as
- 88SE9485
-Date: Wed, 11 Dec 2013 15:02:09 +0000
-Message-ID: <1386774129.12186.82.camel@deadeye.wl.decadent.org.uk>
+From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Subject: Re: BTRFS doesn't handle USB device disconnect
+Date: Wed, 11 Dec 2013 11:03:09 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1312111058340.1531-100000@iolanthe.rowland.org>
+References: <20131211011755.GA3574@xanatos>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-SRdLUglDE8VQpRs4b4zf"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:60282 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751350Ab3LKPCa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 Dec 2013 10:02:30 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20131211011755.GA3574@xanatos>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Sarah Sharp <sarah.a.sharp-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Cc: Chris Mason <chris.mason-5c4llco8/ftWk0Htik3J/w@public.gmane.org>, linux-btrfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Matt Taggart <taggart@debian.org>, Debian kernel maintainers <debian-kernel@lists.debian.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
+On Tue, 10 Dec 2013, Sarah Sharp wrote:
 
---=-SRdLUglDE8VQpRs4b4zf
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+> In order to stress test the uas driver (next-gen USB storage driver), I
+> decided to run some tests with a USB 3.0 storage device with four 10GB
+> partitions: BTRFS, ext3, ext4, and fat32.
+> 
+> It seems that BTRFS doesn't handle unexpected USB disconnect very well.
+> Is that expected behavior?
+> 
+> The BTRFS partition was created on an Ubuntu 13.10 system, with
+> btrfs-tools version 0.19+20130705-1.
+> 
+> On 3.12-rc6, if all partitions are mounted, and I yank the USB cable,
+> the BTRFS filesystem still shows up as mounted.  If I yank it multiple
+> times, sometimes it's listed twice when the device is disconnected:
+> 
+> /dev/sdb3 on /media/sarah/9f21ef28-0eac-4736-9964-db5378b877e4 type btrfs (rw,nosuid,nodev,uhelper=udisks2)
+> /dev/sdc3 on /media/sarah/9f21ef28-0eac-4736-9964-db5378b877e41 type btrfs (rw,nosuid,nodev,uhelper=udisks2)
+> 
+> Sometimes (but not always) when I plug it back in, I can get /dev/sdc3
+> listed twice:
+> 
+> /dev/sdb3 on /media/sarah/9f21ef28-0eac-4736-9964-db5378b877e4 type btrfs (rw,nosuid,nodev,uhelper=udisks2)
+> /dev/sdc3 on /media/sarah/9f21ef28-0eac-4736-9964-db5378b877e42 type btrfs (rw,nosuid,nodev,uhelper=udisks2)
+> /dev/sdc1 on /media/sarah/ext3-part type ext3 (rw,nosuid,nodev,uhelper=udisks2)
+> /dev/sdc2 on /media/sarah/ext4-part type ext4 (rw,nosuid,nodev,uhelper=udisks2)
+> /dev/sdc4 on /media/sarah/fat32-part type vfat (rw,nosuid,nodev,uid=1000,gid=1000,shortname=mixed,dmask=0077,utf8=1,showexec,flush,uhelper=udisks2)
+> /dev/sdc3 on /media/sarah/9f21ef28-0eac-4736-9964-db5378b877e41 type btrfs (rw,nosuid,nodev,uhelper=udisks2)
+> 
+> On 3.13-rc1, the btrfs partion from the disconnected USB device
+> continues to be listed as mounted.  Yanking the cable produces some
+> additional oops messages.  It also produced a couple hard-hangs.
+> Unfortunately, I didn't capture the dmesg during the hard-hangs, so I
+> can't tell for sure which driver is to blame (uas, btrfs, or xhci).
 
-Matt Taggart reported that mvsas didn't bind to the Marvell
-SAS controller on a Supermicro AOC-SAS2LP-MV8 board.
+Does this happen with usb-storage instead of uas?
 
-lspci reports it as:
+What about with ehci-hcd instead of xhci-hcd?
 
-01:00.0 RAID bus controller [0104]: Marvell Technology Group Ltd. Device [1=
-b4b:9485] (rev 03)
-        Subsystem: Marvell Technology Group Ltd. Device [1b4b:9485]
-[...]
+And just to be exotic, what about with dummy-hcd and the uas or
+g_mass_storage gadget driver?
 
-Add it to the device table as chip_9485.
+Alan Stern
 
-Reported-by: Matt Taggart <taggart@debian.org>
-Tested-by: Matt Taggart <taggart@debian.org>
-Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
----
- drivers/scsi/mvsas/mv_init.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
-
-diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
-index 7b7381d..83fa5f8 100644
---- a/drivers/scsi/mvsas/mv_init.c
-+++ b/drivers/scsi/mvsas/mv_init.c
-@@ -729,6 +729,15 @@ static struct pci_device_id mvs_pci_table[] =3D {
- 		.class_mask	=3D 0,
- 		.driver_data	=3D chip_9485,
- 	},
-+	{
-+		.vendor		=3D PCI_VENDOR_ID_MARVELL_EXT,
-+		.device		=3D 0x9485,
-+		.subvendor	=3D PCI_ANY_ID,
-+		.subdevice	=3D 0x9485,
-+		.class		=3D 0,
-+		.class_mask	=3D 0,
-+		.driver_data	=3D chip_9485,
-+	},
- 	{ PCI_VDEVICE(OCZ, 0x1021), chip_9485}, /* OCZ RevoDrive3 */
- 	{ PCI_VDEVICE(OCZ, 0x1022), chip_9485}, /* OCZ RevoDrive3/zDriveR4 (exact=
- model unknown) */
- 	{ PCI_VDEVICE(OCZ, 0x1040), chip_9485}, /* OCZ RevoDrive3/zDriveR4 (exact=
- model unknown) */
-
-
---=20
-Ben Hutchings
-One of the nice things about standards is that there are so many of them.
-
---=-SRdLUglDE8VQpRs4b4zf
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.15 (GNU/Linux)
-
-iQIVAwUAUqh+cee/yOyVhhEJAQrC8hAAleYogQ6LUA+Slwu6ghWaHgocVhtNp9uw
-xYz5srT+kvpvwX31XAdab4iBb3XzNF18XnU+R05GQS0dkPY/24iayyJ/MTG97MKw
-u1zf/AyRdkmTOVlFD7b0THtAHvhIqk0fQdGZuSUQuRLuZOk0fyHa4pbgTjuWyxRo
-+2unC9RVdbL+qvlg/GXaptTRH8EhVb46MxWuTV4v0gAqG51iuUeTIefpQHIJDhKu
-WbULqGfbb8RcD0hWMKgvJIx0y2slSI2DZ0lDQvq5JWolB/r1NzjO2oxmhbDg5wx/
-2QBI6Hvy1gAyyO77BLp7NXfsLsK28dgM8/4vHkDZtoMLgPmQSgSUbA8N0JmMbWiH
-GCmdlxlZIZ38F2cm8qYBU1FOn31hEdF7reQCxpFYCw4oxHJTSqi0EryhfWBZ4Rio
-hCzx4C8p8KBp85s3w9eoTrPjWskwNUpS7J/5L1ukkSyla06hSrtx4fecqzZjhGYh
-kbGao4q5gIKtmD4pRq/a8MPm+QT8mzaXM6+LGTwDckE/S1+4h+XVixYMTw0uIHax
-7uBvHXFD52UCfa9qTXwsct30947OgbXFKhgsUTsx0o1c4IBPSD75+Ozs4vtWr7oq
-EjB1zgYGTgzL8F5e48MzIZuZm2ZGtL5dV9mLeGDUT5msgHu3M6KXvU2ahdXIhqWp
-wgIob9cbAlg=
-=4chK
------END PGP SIGNATURE-----
-
---=-SRdLUglDE8VQpRs4b4zf--
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
