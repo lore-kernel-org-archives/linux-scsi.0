@@ -1,222 +1,306 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH 2/3] scsi_transport_srp: Fix a race condition
-Date: Wed, 11 Dec 2013 17:06:14 +0100
-Message-ID: <52A88D76.1090105@acm.org>
+From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+Subject: [PATCH 3/3] scsi_transport_srp: Add rport state diagram
+Date: Wed, 11 Dec 2013 17:08:43 +0100
+Message-ID: <52A88E0B.5050600@acm.org>
 References: <52A88CF9.206@acm.org>
 Mime-Version: 1.0
+Content-Type: multipart/mixed;
+ boundary="------------020708080506060601090809"
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <52A88CF9.206-HInyCGIudOg@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>
+Cc: Vu Pham <vu-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Riemer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, James Bottomley <JBottomley-MU7nAjRaF3makBO8gow8eQ@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+List-Id: linux-scsi@vger.kernel.org
+
+This is a multi-part message in MIME format.
+--------------020708080506060601090809
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp03.stone-is.org ([87.238.162.66]:33803 "EHLO
-	smtpgw.stone-is.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750759Ab3LKQGS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Dec 2013 11:06:18 -0500
-In-Reply-To: <52A88CF9.206@acm.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
-To: David Dillow <dillowda@ornl.gov>
-Cc: Vu Pham <vu@mellanox.com>, Sebastian Riemer <sebastian.riemer@profitbricks.com>, James Bottomley <JBottomley@Parallels.com>, linux-rdma <linux-rdma@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-The rport timers must be stopped before the SRP initiator destroys the
-resources associated with the SCSI host. This is necessary because
-otherwise the callback functions invoked from the SRP transport layer
-could trigger a use-after-free. Stopping the rport timers before
-invoking scsi_remove_host() can trigger long delays in the SCSI error
-handler if a transport layer failure occurs while scsi_remove_host()
-is in progress. Hence move the code for stopping the rport timers
-from srp_rport_release() into a new function and invoke that function
-after scsi_remove_host() has finished. This patch fixes the following
-sporadic kernel crash:
+Add a diagram in Documentation/scsi/scsi_transport_srp that
+illustrates the rport state transitions.
 
-kernel BUG at include/asm-generic/dma-mapping-common.h:64!
-invalid opcode: 0000 [#1] SMP
-RIP: 0010:[<ffffffffa03b20b1>]  [<ffffffffa03b20b1>] srp_unmap_data+0x121/0x130 [ib_srp]
-Call Trace:
-[<ffffffffa03b20fc>] srp_free_req+0x3c/0x80 [ib_srp]
-[<ffffffffa03b2188>] srp_finish_req+0x48/0x70 [ib_srp]
-[<ffffffffa03b21fb>] srp_terminate_io+0x4b/0x60 [ib_srp]
-[<ffffffffa03a6fb5>] __rport_fail_io_fast+0x75/0x80 [scsi_transport_srp]
-[<ffffffffa03a7438>] rport_fast_io_fail_timedout+0x88/0xc0 [scsi_transport_srp]
-[<ffffffff8108b370>] worker_thread+0x170/0x2a0
-[<ffffffff81090876>] kthread+0x96/0xa0
-[<ffffffff8100c0ca>] child_rip+0xa/0x20
-
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-Cc: David Dillow <dillowda@ornl.gov>
-Cc: Vu Pham <vu@mellanox.com>
-Cc: Sebastian Riemer <sebastian.riemer@profitbricks.com>
-Cc: James Bottomley <JBottomley@Parallels.com>
+Signed-off-by: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+Cc: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>
+Cc: Vu Pham <vu-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Cc: Sebastian Riemer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>
+Cc: James Bottomley <JBottomley-MU7nAjRaF3makBO8gow8eQ@public.gmane.org>
 ---
- drivers/infiniband/ulp/srp/ib_srp.c |  1 +
- drivers/scsi/scsi_transport_srp.c   | 83 +++++++++++++++++++------------------
- include/scsi/scsi_transport_srp.h   |  4 +-
- 3 files changed, 46 insertions(+), 42 deletions(-)
+ Documentation/scsi/scsi_transport_srp/Makefile     |  7 ++++++
+ .../scsi_transport_srp/rport_state_diagram.dot     | 26 ++++++++++++++++++++++
+ 2 files changed, 33 insertions(+)
+ create mode 100644 Documentation/scsi/scsi_transport_srp/Makefile
+ create mode 100644 Documentation/scsi/scsi_transport_srp/rport_state_diagram.dot
 
-diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp/srp/ib_srp.c
-index 6787d7b..91bb991 100644
---- a/drivers/infiniband/ulp/srp/ib_srp.c
-+++ b/drivers/infiniband/ulp/srp/ib_srp.c
-@@ -695,6 +695,7 @@ static void srp_remove_target(struct srp_target_port *target)
- 	srp_rport_get(target->rport);
- 	srp_remove_host(target->scsi_host);
- 	scsi_remove_host(target->scsi_host);
-+	srp_stop_rport_timers(target->rport);
- 	srp_disconnect_target(target);
- 	ib_destroy_cm_id(target->cm_id);
- 	srp_free_target_ib(target);
-diff --git a/drivers/scsi/scsi_transport_srp.c b/drivers/scsi/scsi_transport_srp.c
-index 8b9cb22..a349d44 100644
---- a/drivers/scsi/scsi_transport_srp.c
-+++ b/drivers/scsi/scsi_transport_srp.c
-@@ -456,37 +456,29 @@ static void __srp_start_tl_fail_timers(struct srp_rport *rport)
- 
- 	lockdep_assert_held(&rport->mutex);
- 
--	if (!rport->deleted) {
--		delay = rport->reconnect_delay;
--		fast_io_fail_tmo = rport->fast_io_fail_tmo;
--		dev_loss_tmo = rport->dev_loss_tmo;
--		pr_debug("%s current state: %d\n",
--			 dev_name(&shost->shost_gendev), rport->state);
-+	delay = rport->reconnect_delay;
-+	fast_io_fail_tmo = rport->fast_io_fail_tmo;
-+	dev_loss_tmo = rport->dev_loss_tmo;
-+	pr_debug("%s current state: %d\n", dev_name(&shost->shost_gendev),
-+		 rport->state);
- 
--		if (delay > 0)
-+	if (rport->state == SRP_RPORT_LOST)
-+		return;
-+	if (delay > 0)
-+		queue_delayed_work(system_long_wq, &rport->reconnect_work,
-+				   1UL * delay * HZ);
-+	if (srp_rport_set_state(rport, SRP_RPORT_BLOCKED) == 0) {
-+		pr_debug("%s new state: %d\n", dev_name(&shost->shost_gendev),
-+			 rport->state);
-+		scsi_target_block(&shost->shost_gendev);
-+		if (fast_io_fail_tmo >= 0)
- 			queue_delayed_work(system_long_wq,
--					   &rport->reconnect_work,
--					   1UL * delay * HZ);
--		if (srp_rport_set_state(rport, SRP_RPORT_BLOCKED) == 0) {
--			pr_debug("%s new state: %d\n",
--				 dev_name(&shost->shost_gendev),
--				 rport->state);
--			scsi_target_block(&shost->shost_gendev);
--			if (fast_io_fail_tmo >= 0)
--				queue_delayed_work(system_long_wq,
--						   &rport->fast_io_fail_work,
--						   1UL * fast_io_fail_tmo * HZ);
--			if (dev_loss_tmo >= 0)
--				queue_delayed_work(system_long_wq,
--						   &rport->dev_loss_work,
--						   1UL * dev_loss_tmo * HZ);
--		}
--	} else {
--		pr_debug("%s has already been deleted\n",
--			 dev_name(&shost->shost_gendev));
--		srp_rport_set_state(rport, SRP_RPORT_FAIL_FAST);
--		scsi_target_unblock(&shost->shost_gendev,
--				    SDEV_TRANSPORT_OFFLINE);
-+					   &rport->fast_io_fail_work,
-+					   1UL * fast_io_fail_tmo * HZ);
-+		if (dev_loss_tmo >= 0)
-+			queue_delayed_work(system_long_wq,
-+					   &rport->dev_loss_work,
-+					   1UL * dev_loss_tmo * HZ);
- 	}
- }
- 
-@@ -560,7 +552,7 @@ int srp_reconnect_rport(struct srp_rport *rport)
- 	scsi_target_block(&shost->shost_gendev);
- 	while (scsi_request_fn_active(shost))
- 		msleep(20);
--	res = i->f->reconnect(rport);
-+	res = rport->state != SRP_RPORT_LOST ? i->f->reconnect(rport) : -ENODEV;
- 	pr_debug("%s (state %d): transport.reconnect() returned %d\n",
- 		 dev_name(&shost->shost_gendev), rport->state, res);
- 	if (res == 0) {
-@@ -626,10 +618,6 @@ static void srp_rport_release(struct device *dev)
- {
- 	struct srp_rport *rport = dev_to_rport(dev);
- 
--	cancel_delayed_work_sync(&rport->reconnect_work);
--	cancel_delayed_work_sync(&rport->fast_io_fail_work);
--	cancel_delayed_work_sync(&rport->dev_loss_work);
--
- 	put_device(dev->parent);
- 	kfree(rport);
- }
-@@ -784,12 +772,6 @@ void srp_rport_del(struct srp_rport *rport)
- 	device_del(dev);
- 	transport_destroy_device(dev);
- 
--	mutex_lock(&rport->mutex);
--	if (rport->state == SRP_RPORT_BLOCKED)
--		__rport_fail_io_fast(rport);
--	rport->deleted = true;
--	mutex_unlock(&rport->mutex);
--
- 	put_device(dev);
- }
- EXPORT_SYMBOL_GPL(srp_rport_del);
-@@ -814,6 +796,27 @@ void srp_remove_host(struct Scsi_Host *shost)
- }
- EXPORT_SYMBOL_GPL(srp_remove_host);
- 
-+/**
-+ * srp_stop_rport_timers - stop the transport layer recovery timers
-+ *
-+ * Must be called after srp_remove_host() and scsi_remove_host(). The caller
-+ * must hold a reference on the rport (rport->dev) and on the SCSI host
-+ * (rport->dev.parent).
-+ */
-+void srp_stop_rport_timers(struct srp_rport *rport)
-+{
-+	mutex_lock(&rport->mutex);
-+	if (rport->state == SRP_RPORT_BLOCKED)
-+		__rport_fail_io_fast(rport);
-+	srp_rport_set_state(rport, SRP_RPORT_LOST);
-+	mutex_unlock(&rport->mutex);
+diff --git a/Documentation/scsi/scsi_transport_srp/Makefile b/Documentation/scsi/scsi_transport_srp/Makefile
+new file mode 100644
+index 0000000..5f6b567
+--- /dev/null
++++ b/Documentation/scsi/scsi_transport_srp/Makefile
+@@ -0,0 +1,7 @@
++all: rport_state_diagram.svg rport_state_diagram.png
 +
-+	cancel_delayed_work_sync(&rport->reconnect_work);
-+	cancel_delayed_work_sync(&rport->fast_io_fail_work);
-+	cancel_delayed_work_sync(&rport->dev_loss_work);
++rport_state_diagram.svg: rport_state_diagram.dot
++	dot -Tsvg -o $@ $<
++
++rport_state_diagram.png: rport_state_diagram.dot
++	dot -Tpng -o $@ $<
+diff --git a/Documentation/scsi/scsi_transport_srp/rport_state_diagram.dot b/Documentation/scsi/scsi_transport_srp/rport_state_diagram.dot
+new file mode 100644
+index 0000000..75d610d
+--- /dev/null
++++ b/Documentation/scsi/scsi_transport_srp/rport_state_diagram.dot
+@@ -0,0 +1,26 @@
++digraph srp_initiator {
++	node [shape = doublecircle]; running lost;
++	node [shape = circle];
++
++	{
++	  rank = min;
++	  running_rta	[ label = "running;\nreconnect\ntimer\nactive" ];
++	};
++	running		[ label = "running;\nreconnect\ntimer\nstopped" ];
++	blocked;
++	failfast	[ label = "fail I/O\nfast" ];
++	lost;
++
++	running -> running_rta		[ label = "fast_io_fail_tmo = off and\ndev_loss_tmo = off;\nsrp_start_tl_fail_timers()" ];
++	running_rta -> running		[ label = "fast_io_fail_tmo = off and\ndev_loss_tmo = off;\nreconnecting succeeded" ];
++	running -> blocked		[ label = "fast_io_fail_tmo >= 0 or\ndev_loss_tmo >= 0;\nsrp_start_tl_fail_timers()" ];
++	running -> failfast		[ label = "fast_io_fail_tmo = off and\ndev_loss_tmo = off;\nreconnecting failed\n" ];
++	blocked -> failfast		[ label = "fast_io_fail_tmo\nexpired or\nreconnecting\nfailed" ];
++	blocked -> lost			[ label = "dev_loss_tmo\nexpired or\nsrp_stop_rport_timers()" ];
++	failfast -> lost		[ label = "dev_loss_tmo\nexpired or\nsrp_stop_rport_timers()" ];
++	blocked -> running		[ label = "reconnecting\nsucceeded" ];
++	failfast -> failfast		[ label = "reconnecting\nfailed" ];
++	failfast -> running		[ label = "reconnecting\nsucceeded" ];
++	running -> lost			[ label = "srp_stop_rport_timers()" ];
++	running_rta -> lost		[ label = "srp_stop_rport_timers()" ];
 +}
-+EXPORT_SYMBOL_GPL(srp_stop_rport_timers);
-+
- static int srp_tsk_mgmt_response(struct Scsi_Host *shost, u64 nexus, u64 tm_id,
- 				 int result)
- {
-diff --git a/include/scsi/scsi_transport_srp.h b/include/scsi/scsi_transport_srp.h
-index 4ebf691..f24e763 100644
---- a/include/scsi/scsi_transport_srp.h
-+++ b/include/scsi/scsi_transport_srp.h
-@@ -19,7 +19,7 @@ struct srp_rport_identifiers {
-  * @SRP_RPORT_BLOCKED:   Transport layer not operational; fast I/O fail timer
-  *                       is running and I/O has been blocked.
-  * @SRP_RPORT_FAIL_FAST: Fast I/O fail timer has expired; fail I/O fast.
-- * @SRP_RPORT_LOST:      Device loss timer has expired; port is being removed.
-+ * @SRP_RPORT_LOST:      Port is being removed.
-  */
- enum srp_rport_state {
- 	SRP_RPORT_RUNNING,
-@@ -48,7 +48,6 @@ struct srp_rport {
- 
- 	struct mutex		mutex;
- 	enum srp_rport_state	state;
--	bool			deleted;
- 	int			reconnect_delay;
- 	int			failed_reconnects;
- 	struct delayed_work	reconnect_work;
-@@ -101,6 +100,7 @@ extern int srp_tmo_valid(int reconnect_delay, int fast_io_fail_tmo,
- extern int srp_reconnect_rport(struct srp_rport *rport);
- extern void srp_start_tl_fail_timers(struct srp_rport *rport);
- extern void srp_remove_host(struct Scsi_Host *);
-+extern void srp_stop_rport_timers(struct srp_rport *rport);
- 
- /**
-  * srp_chkready() - evaluate the transport layer state before I/O
 -- 
 1.8.1.4
 
+
+--------------020708080506060601090809
+Content-Type: image/svg+xml;
+ name="rport_state_diagram.svg"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="rport_state_diagram.svg"
+
+PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+
+CjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIKICJodHRw
+Oi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPgo8IS0tIEdl
+bmVyYXRlZCBieSBncmFwaHZpeiB2ZXJzaW9uIDIuMjguMCAoMjAxMzA5MjcuMTEwOSkKIC0t
+Pgo8IS0tIFRpdGxlOiBzcnBfaW5pdGlhdG9yIFBhZ2VzOiAxIC0tPgo8c3ZnIHdpZHRoPSI3
+MjFwdCIgaGVpZ2h0PSI3ODZwdCIKIHZpZXdCb3g9IjAuMDAgMC4wMCA3MjEuMjAgNzg2LjAw
+IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRw
+Oi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIj4KPGcgaWQ9ImdyYXBoMSIgY2xhc3M9ImdyYXBo
+IiB0cmFuc2Zvcm09InNjYWxlKDEgMSkgcm90YXRlKDApIHRyYW5zbGF0ZSg0IDc4MikiPgo8
+dGl0bGU+c3JwX2luaXRpYXRvcjwvdGl0bGU+Cjxwb2x5Z29uIGZpbGw9IndoaXRlIiBzdHJv
+a2U9IndoaXRlIiBwb2ludHM9Ii00LDUgLTQsLTc4MiA3MTguMjAzLC03ODIgNzE4LjIwMyw1
+IC00LDUiLz4KPCEtLSBydW5uaW5nIC0tPgo8ZyBpZD0ibm9kZTEiIGNsYXNzPSJub2RlIj48
+dGl0bGU+cnVubmluZzwvdGl0bGU+CjxlbGxpcHNlIGZpbGw9Im5vbmUiIHN0cm9rZT0iYmxh
+Y2siIGN4PSIyMjEuMjAzIiBjeT0iLTUzNiIgcng9IjUxLjQ0MTUiIHJ5PSI1MS43MjkzIi8+
+CjxlbGxpcHNlIGZpbGw9Im5vbmUiIHN0cm9rZT0iYmxhY2siIGN4PSIyMjEuMjAzIiBjeT0i
+LTUzNiIgcng9IjU1LjQyNzgiIHJ5PSI1NS43Mzc4Ii8+Cjx0ZXh0IHRleHQtYW5jaG9yPSJt
+aWRkbGUiIHg9IjIyMS4yMDMiIHk9Ii01NTQuOCIgZm9udC1mYW1pbHk9IlRpbWVzLHNlcmlm
+IiBmb250LXNpemU9IjE0LjAwIj5ydW5uaW5nOzwvdGV4dD4KPHRleHQgdGV4dC1hbmNob3I9
+Im1pZGRsZSIgeD0iMjIxLjIwMyIgeT0iLTUzOS44IiBmb250LWZhbWlseT0iVGltZXMsc2Vy
+aWYiIGZvbnQtc2l6ZT0iMTQuMDAiPnJlY29ubmVjdDwvdGV4dD4KPHRleHQgdGV4dC1hbmNo
+b3I9Im1pZGRsZSIgeD0iMjIxLjIwMyIgeT0iLTUyNC44IiBmb250LWZhbWlseT0iVGltZXMs
+c2VyaWYiIGZvbnQtc2l6ZT0iMTQuMDAiPnRpbWVyPC90ZXh0Pgo8dGV4dCB0ZXh0LWFuY2hv
+cj0ibWlkZGxlIiB4PSIyMjEuMjAzIiB5PSItNTA5LjgiIGZvbnQtZmFtaWx5PSJUaW1lcyxz
+ZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+c3RvcHBlZDwvdGV4dD4KPC9nPgo8IS0tIGxvc3Qg
+LS0+CjxnIGlkPSJub2RlMiIgY2xhc3M9Im5vZGUiPjx0aXRsZT5sb3N0PC90aXRsZT4KPGVs
+bGlwc2UgZmlsbD0ibm9uZSIgc3Ryb2tlPSJibGFjayIgY3g9IjIwMS4yMDMiIGN5PSItMjgi
+IHJ4PSIyNC4wNjg0IiByeT0iMjQuMDg5Ii8+CjxlbGxpcHNlIGZpbGw9Im5vbmUiIHN0cm9r
+ZT0iYmxhY2siIGN4PSIyMDEuMjAzIiBjeT0iLTI4IiByeD0iMjguMDcxOCIgcnk9IjI4LjA5
+NTgiLz4KPHRleHQgdGV4dC1hbmNob3I9Im1pZGRsZSIgeD0iMjAxLjIwMyIgeT0iLTI0LjMi
+IGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+bG9zdDwvdGV4
+dD4KPC9nPgo8IS0tIHJ1bm5pbmcmIzQ1OyZndDtsb3N0IC0tPgo8ZyBpZD0iZWRnZTIzIiBj
+bGFzcz0iZWRnZSI+PHRpdGxlPnJ1bm5pbmcmIzQ1OyZndDtsb3N0PC90aXRsZT4KPHBhdGgg
+ZmlsbD0ibm9uZSIgc3Ryb2tlPSJibGFjayIgZD0iTTE2NS45NjcsLTUzMC44MDhDMTE5LjYx
+MiwtNTI0LjEwNSA1NS43NDYzLC01MDYuNzYyIDIyLjIwMzMsLTQ2MiAtMjEuNjA0MiwtNDAz
+LjU0IDEzLjY0OTEsLTM3MS4wMTIgMTEuMjAzMywtMjk4IDEwLjMxMDUsLTI3MS4zNDggMS44
+MDI0MiwtMjYyLjk1NSAxMS4yMDMzLC0yMzggNDUuMzk4NywtMTQ3LjIyOCA4OC40ODYzLC0x
+NDQuNDEgMTU1LjIwMywtNzQgMTYxLjE2OCwtNjcuNzA0OSAxNjcuNzQ1LC02MS4wOSAxNzQu
+MDE0LC01NC45Mjc5Ii8+Cjxwb2x5Z29uIGZpbGw9ImJsYWNrIiBzdHJva2U9ImJsYWNrIiBw
+b2ludHM9IjE3Ni40NTgsLTU3LjQzNCAxODEuMTc4LC00Ny45NDg2IDE3MS41NzMsLTUyLjQy
+MDMgMTc2LjQ1OCwtNTcuNDM0Ii8+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9Ijc3
+LjcwMzMiIHk9Ii0yNjQuMyIgZm9udC1mYW1pbHk9IlRpbWVzLHNlcmlmIiBmb250LXNpemU9
+IjE0LjAwIj5zcnBfc3RvcF9ycG9ydF90aW1lcnMoKTwvdGV4dD4KPC9nPgo8IS0tIHJ1bm5p
+bmdfcnRhIC0tPgo8ZyBpZD0ibm9kZTQiIGNsYXNzPSJub2RlIj48dGl0bGU+cnVubmluZ19y
+dGE8L3RpdGxlPgo8ZWxsaXBzZSBmaWxsPSJub25lIiBzdHJva2U9ImJsYWNrIiBjeD0iMzky
+LjIwMyIgY3k9Ii03MjYiIHJ4PSI1MS40Mjc4IiByeT0iNTEuNzM3OSIvPgo8dGV4dCB0ZXh0
+LWFuY2hvcj0ibWlkZGxlIiB4PSIzOTIuMjAzIiB5PSItNzQ0LjgiIGZvbnQtZmFtaWx5PSJU
+aW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+cnVubmluZzs8L3RleHQ+Cjx0ZXh0IHRl
+eHQtYW5jaG9yPSJtaWRkbGUiIHg9IjM5Mi4yMDMiIHk9Ii03MjkuOCIgZm9udC1mYW1pbHk9
+IlRpbWVzLHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj5yZWNvbm5lY3Q8L3RleHQ+Cjx0ZXh0
+IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjM5Mi4yMDMiIHk9Ii03MTQuOCIgZm9udC1mYW1p
+bHk9IlRpbWVzLHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj50aW1lcjwvdGV4dD4KPHRleHQg
+dGV4dC1hbmNob3I9Im1pZGRsZSIgeD0iMzkyLjIwMyIgeT0iLTY5OS44IiBmb250LWZhbWls
+eT0iVGltZXMsc2VyaWYiIGZvbnQtc2l6ZT0iMTQuMDAiPmFjdGl2ZTwvdGV4dD4KPC9nPgo8
+IS0tIHJ1bm5pbmcmIzQ1OyZndDtydW5uaW5nX3J0YSAtLT4KPGcgaWQ9ImVkZ2UzIiBjbGFz
+cz0iZWRnZSI+PHRpdGxlPnJ1bm5pbmcmIzQ1OyZndDtydW5uaW5nX3J0YTwvdGl0bGU+Cjxw
+YXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iYmxhY2siIGQ9Ik0yNzQuODczLC01NTAuMTUzQzMw
+Ny4zNDgsLTU2MC44OTcgMzQ2Ljg2NSwtNTc5LjQzNiAzNzAuMjAzLC02MTAgMzgxLjk2Nywt
+NjI1LjQwNyAzODguMDIsLTY0NS4yOTMgMzkwLjk4MywtNjY0LjE4MyIvPgo8cG9seWdvbiBm
+aWxsPSJibGFjayIgc3Ryb2tlPSJibGFjayIgcG9pbnRzPSIzODcuNTMxLC02NjQuNzc3IDM5
+Mi4yOTcsLTY3NC4yNCAzOTQuNDcyLC02NjMuODcxIDM4Ny41MzEsLTY2NC43NzciLz4KPHRl
+eHQgdGV4dC1hbmNob3I9Im1pZGRsZSIgeD0iNDYzLjIwMyIgeT0iLTY0NC4zIiBmb250LWZh
+bWlseT0iVGltZXMsc2VyaWYiIGZvbnQtc2l6ZT0iMTQuMDAiPmZhc3RfaW9fZmFpbF90bW8g
+PSBvZmYgYW5kPC90ZXh0Pgo8dGV4dCB0ZXh0LWFuY2hvcj0ibWlkZGxlIiB4PSI0NjMuMjAz
+IiB5PSItNjI5LjMiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4w
+MCI+ZGV2X2xvc3NfdG1vID0gb2ZmOzwvdGV4dD4KPHRleHQgdGV4dC1hbmNob3I9Im1pZGRs
+ZSIgeD0iNDYzLjIwMyIgeT0iLTYxNC4zIiBmb250LWZhbWlseT0iVGltZXMsc2VyaWYiIGZv
+bnQtc2l6ZT0iMTQuMDAiPnNycF9zdGFydF90bF9mYWlsX3RpbWVycygpPC90ZXh0Pgo8L2c+
+CjwhLS0gYmxvY2tlZCAtLT4KPGcgaWQ9Im5vZGU1IiBjbGFzcz0ibm9kZSI+PHRpdGxlPmJs
+b2NrZWQ8L3RpdGxlPgo8ZWxsaXBzZSBmaWxsPSJub25lIiBzdHJva2U9ImJsYWNrIiBjeD0i
+MTYxLjIwMyIgY3k9Ii0zNTciIHJ4PSI0MC40MjAyIiByeT0iNDAuODkyOCIvPgo8dGV4dCB0
+ZXh0LWFuY2hvcj0ibWlkZGxlIiB4PSIxNjEuMjAzIiB5PSItMzUzLjMiIGZvbnQtZmFtaWx5
+PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+YmxvY2tlZDwvdGV4dD4KPC9nPgo8
+IS0tIHJ1bm5pbmcmIzQ1OyZndDtibG9ja2VkIC0tPgo8ZyBpZD0iZWRnZTciIGNsYXNzPSJl
+ZGdlIj48dGl0bGU+cnVubmluZyYjNDU7Jmd0O2Jsb2NrZWQ8L3RpdGxlPgo8cGF0aCBmaWxs
+PSJub25lIiBzdHJva2U9ImJsYWNrIiBkPSJNMTY1Ljg1OCwtNTI5Ljg3NEMxMjIuMDM3LC01
+MjIuNTczIDYzLjQ5NDcsLTUwNC44NzkgMzQuMjAzMywtNDYyIDIyLjY3MTIsLTQ0NS4xMTgg
+MjMuMTUwMywtNDMzLjE5OSAzNC4yMDMzLC00MTYgNTEuMTg1LC0zODkuNTc2IDgzLjUxNjMs
+LTM3NS4wNDIgMTExLjMwNiwtMzY3LjEzMSIvPgo8cG9seWdvbiBmaWxsPSJibGFjayIgc3Ry
+b2tlPSJibGFjayIgcG9pbnRzPSIxMTIuNTE5LC0zNzAuNDMxIDEyMS4zMDIsLTM2NC41MDYg
+MTEwLjc0MSwtMzYzLjY2MSAxMTIuNTE5LC0zNzAuNDMxIi8+Cjx0ZXh0IHRleHQtYW5jaG9y
+PSJtaWRkbGUiIHg9IjEwMy43MDMiIHk9Ii00NTAuMyIgZm9udC1mYW1pbHk9IlRpbWVzLHNl
+cmlmIiBmb250LXNpemU9IjE0LjAwIj5mYXN0X2lvX2ZhaWxfdG1vICZndDs9IDAgb3I8L3Rl
+eHQ+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjEwMy43MDMiIHk9Ii00MzUuMyIg
+Zm9udC1mYW1pbHk9IlRpbWVzLHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj5kZXZfbG9zc190
+bW8gJmd0Oz0gMDs8L3RleHQ+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjEwMy43
+MDMiIHk9Ii00MjAuMyIgZm9udC1mYW1pbHk9IlRpbWVzLHNlcmlmIiBmb250LXNpemU9IjE0
+LjAwIj5zcnBfc3RhcnRfdGxfZmFpbF90aW1lcnMoKTwvdGV4dD4KPC9nPgo8IS0tIGZhaWxm
+YXN0IC0tPgo8ZyBpZD0ibm9kZTYiIGNsYXNzPSJub2RlIj48dGl0bGU+ZmFpbGZhc3Q8L3Rp
+dGxlPgo8ZWxsaXBzZSBmaWxsPSJub25lIiBzdHJva2U9ImJsYWNrIiBjeD0iMzM2LjIwMyIg
+Y3k9Ii0xNzkiIHJ4PSIzOS45NTkzIiByeT0iNDAuMTExMSIvPgo8dGV4dCB0ZXh0LWFuY2hv
+cj0ibWlkZGxlIiB4PSIzMzYuMjAzIiB5PSItMTgyLjgiIGZvbnQtZmFtaWx5PSJUaW1lcyxz
+ZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+ZmFpbCBJL088L3RleHQ+Cjx0ZXh0IHRleHQtYW5j
+aG9yPSJtaWRkbGUiIHg9IjMzNi4yMDMiIHk9Ii0xNjcuOCIgZm9udC1mYW1pbHk9IlRpbWVz
+LHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj5mYXN0PC90ZXh0Pgo8L2c+CjwhLS0gcnVubmlu
+ZyYjNDU7Jmd0O2ZhaWxmYXN0IC0tPgo8ZyBpZD0iZWRnZTkiIGNsYXNzPSJlZGdlIj48dGl0
+bGU+cnVubmluZyYjNDU7Jmd0O2ZhaWxmYXN0PC90aXRsZT4KPHBhdGggZmlsbD0ibm9uZSIg
+c3Ryb2tlPSJibGFjayIgZD0iTTI1NC45NjcsLTQ5MS44OTZDMjYxLjEzLC00ODIuNDQ5IDI2
+Ni45NDcsLTQ3Mi4yMDggMjcxLjIwMywtNDYyIDI5Ni42MjksLTQwMS4wMTcgMjg0LjI5OCwt
+MzgwLjM2OCAyOTkuMjAzLC0zMTYgMzA2LjAyNiwtMjg2LjUzNyAzMTQuODg1LC0yNTMuODIz
+IDMyMi4yMjQsLTIyNy44NjUiLz4KPHBvbHlnb24gZmlsbD0iYmxhY2siIHN0cm9rZT0iYmxh
+Y2siIHBvaW50cz0iMzI1LjY4NiwtMjI4LjQ4NCAzMjUuMDU4LC0yMTcuOTA4IDMxOC45NTQs
+LTIyNi41NjggMzI1LjY4NiwtMjI4LjQ4NCIvPgo8dGV4dCB0ZXh0LWFuY2hvcj0ibWlkZGxl
+IiB4PSIzNzMuMjAzIiB5PSItMzY4LjMiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9u
+dC1zaXplPSIxNC4wMCI+ZmFzdF9pb19mYWlsX3RtbyA9IG9mZiBhbmQ8L3RleHQ+Cjx0ZXh0
+IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjM3My4yMDMiIHk9Ii0zNTMuMyIgZm9udC1mYW1p
+bHk9IlRpbWVzLHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj5kZXZfbG9zc190bW8gPSBvZmY7
+PC90ZXh0Pgo8dGV4dCB0ZXh0LWFuY2hvcj0ibWlkZGxlIiB4PSIzNzMuMjAzIiB5PSItMzM4
+LjMiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+cmVjb25u
+ZWN0aW5nIGZhaWxlZDwvdGV4dD4KPC9nPgo8IS0tIHJ1bm5pbmdfcnRhJiM0NTsmZ3Q7cnVu
+bmluZyAtLT4KPGcgaWQ9ImVkZ2U1IiBjbGFzcz0iZWRnZSI+PHRpdGxlPnJ1bm5pbmdfcnRh
+JiM0NTsmZ3Q7cnVubmluZzwvdGl0bGU+CjxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iYmxh
+Y2siIGQ9Ik0zNDEuMDksLTcxOS45NzdDMzAwLjI1NiwtNzEyLjk3IDI0NS41LC02OTYuMTg5
+IDIxOC4yMDMsLTY1NiAyMDcuMjI4LC02MzkuODQgMjA0Ljc2NiwtNjE5LjM5MSAyMDYuMDI4
+LC02MDAuMDIyIi8+Cjxwb2x5Z29uIGZpbGw9ImJsYWNrIiBzdHJva2U9ImJsYWNrIiBwb2lu
+dHM9IjIwOS41MTYsLTYwMC4zMTIgMjA3LjAwMSwtNTkwLjAyIDIwMi41NDksLTU5OS42MzQg
+MjA5LjUxNiwtNjAwLjMxMiIvPgo8dGV4dCB0ZXh0LWFuY2hvcj0ibWlkZGxlIiB4PSIyOTIu
+MjAzIiB5PSItNjQ0LjMiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIx
+NC4wMCI+ZmFzdF9pb19mYWlsX3RtbyA9IG9mZiBhbmQ8L3RleHQ+Cjx0ZXh0IHRleHQtYW5j
+aG9yPSJtaWRkbGUiIHg9IjI5Mi4yMDMiIHk9Ii02MjkuMyIgZm9udC1mYW1pbHk9IlRpbWVz
+LHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj5kZXZfbG9zc190bW8gPSBvZmY7PC90ZXh0Pgo8
+dGV4dCB0ZXh0LWFuY2hvcj0ibWlkZGxlIiB4PSIyOTIuMjAzIiB5PSItNjE0LjMiIGZvbnQt
+ZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+cmVjb25uZWN0aW5nIHN1
+Y2NlZWRlZDwvdGV4dD4KPC9nPgo8IS0tIHJ1bm5pbmdfcnRhJiM0NTsmZ3Q7bG9zdCAtLT4K
+PGcgaWQ9ImVkZ2UyNSIgY2xhc3M9ImVkZ2UiPjx0aXRsZT5ydW5uaW5nX3J0YSYjNDU7Jmd0
+O2xvc3Q8L3RpdGxlPgo8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9ImJsYWNrIiBkPSJNNDQy
+LjAzNCwtNzEzLjA1QzQ3NC40MDIsLTcwMi44OTIgNTE1LjI0OSwtNjg1LjE4MyA1NDEuMjAz
+LC02NTYgNTc4LjE5MSwtNjE0LjQxMSA1ODAuMjAzLC01OTIuNjU3IDU4MC4yMDMsLTUzNyA1
+ODAuMjAzLC01MzcgNTgwLjIwMywtNTM3IDU4MC4yMDMsLTE3OCA1ODAuMjAzLC05Mi40NDAx
+IDQ5Ny40MTYsLTEwNi4zMzggNDE4LjIwMywtNzQgMzU4LjM0OSwtNDkuNTY0OSAyODMuNTgx
+LC0zNy44MTk4IDIzOS4yNjIsLTMyLjYzMzIiLz4KPHBvbHlnb24gZmlsbD0iYmxhY2siIHN0
+cm9rZT0iYmxhY2siIHBvaW50cz0iMjM5LjU0MSwtMjkuMTQyNiAyMjkuMjE0LC0zMS41MDkx
+IDIzOC43NjMsLTM2LjA5OTIgMjM5LjU0MSwtMjkuMTQyNiIvPgo8dGV4dCB0ZXh0LWFuY2hv
+cj0ibWlkZGxlIiB4PSI2NDYuNzAzIiB5PSItMzUzLjMiIGZvbnQtZmFtaWx5PSJUaW1lcyxz
+ZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+c3JwX3N0b3BfcnBvcnRfdGltZXJzKCk8L3RleHQ+
+CjwvZz4KPCEtLSBibG9ja2VkJiM0NTsmZ3Q7cnVubmluZyAtLT4KPGcgaWQ9ImVkZ2UxNyIg
+Y2xhc3M9ImVkZ2UiPjx0aXRsZT5ibG9ja2VkJiM0NTsmZ3Q7cnVubmluZzwvdGl0bGU+Cjxw
+YXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iYmxhY2siIGQ9Ik0xNzMuOTU1LC0zOTYuMDUxQzE4
+MC41NjgsLTQxNS43NDUgMTg4Ljc5MywtNDQwLjE3MiAxOTYuMjAzLC00NjIgMTk3LjQ3NSwt
+NDY1Ljc0NiAxOTguNzg2LC00NjkuNTk5IDIwMC4xMSwtNDczLjQ4NSIvPgo8cG9seWdvbiBm
+aWxsPSJibGFjayIgc3Ryb2tlPSJibGFjayIgcG9pbnRzPSIxOTYuODczLC00NzQuODM1IDIw
+My40MTUsLTQ4My4xNjkgMjAzLjQ5OCwtNDcyLjU3NCAxOTYuODczLC00NzQuODM1Ii8+Cjx0
+ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjIzMy43MDMiIHk9Ii00NDIuOCIgZm9udC1m
+YW1pbHk9IlRpbWVzLHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj5yZWNvbm5lY3Rpbmc8L3Rl
+eHQ+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjIzMy43MDMiIHk9Ii00MjcuOCIg
+Zm9udC1mYW1pbHk9IlRpbWVzLHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj5zdWNjZWVkZWQ8
+L3RleHQ+CjwvZz4KPCEtLSBibG9ja2VkJiM0NTsmZ3Q7bG9zdCAtLT4KPGcgaWQ9ImVkZ2Ux
+MyIgY2xhc3M9ImVkZ2UiPjx0aXRsZT5ibG9ja2VkJiM0NTsmZ3Q7bG9zdDwvdGl0bGU+Cjxw
+YXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iYmxhY2siIGQ9Ik0xNTQuNDQ4LC0zMTYuNTQxQzE0
+OC4xNzIsLTI3Mi41MDYgMTQxLjUzNSwtMTk5LjM3NiAxNTQuMjAzLC0xMzggMTU5LjczMSwt
+MTExLjIyMiAxNzIuMTUzLC04Mi45MjIxIDE4Mi44MzksLTYxLjg3MDciLz4KPHBvbHlnb24g
+ZmlsbD0iYmxhY2siIHN0cm9rZT0iYmxhY2siIHBvaW50cz0iMTg2LjA4LC02My4yMjU5IDE4
+Ny41OTYsLTUyLjc0MDEgMTc5Ljg3MiwtNTkuOTkxOCAxODYuMDgsLTYzLjIyNTkiLz4KPHRl
+eHQgdGV4dC1hbmNob3I9Im1pZGRsZSIgeD0iMjIwLjcwMyIgeT0iLTE5MC4zIiBmb250LWZh
+bWlseT0iVGltZXMsc2VyaWYiIGZvbnQtc2l6ZT0iMTQuMDAiPmRldl9sb3NzX3RtbzwvdGV4
+dD4KPHRleHQgdGV4dC1hbmNob3I9Im1pZGRsZSIgeD0iMjIwLjcwMyIgeT0iLTE3NS4zIiBm
+b250LWZhbWlseT0iVGltZXMsc2VyaWYiIGZvbnQtc2l6ZT0iMTQuMDAiPmV4cGlyZWQgb3I8
+L3RleHQ+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjIyMC43MDMiIHk9Ii0xNjAu
+MyIgZm9udC1mYW1pbHk9IlRpbWVzLHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj5zcnBfc3Rv
+cF9ycG9ydF90aW1lcnMoKTwvdGV4dD4KPC9nPgo8IS0tIGJsb2NrZWQmIzQ1OyZndDtmYWls
+ZmFzdCAtLT4KPGcgaWQ9ImVkZ2UxMSIgY2xhc3M9ImVkZ2UiPjx0aXRsZT5ibG9ja2VkJiM0
+NTsmZ3Q7ZmFpbGZhc3Q8L3RpdGxlPgo8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9ImJsYWNr
+IiBkPSJNMTU2LjM3NSwtMzE2LjA4NEMxNTUuNjE1LC0yOTAuNDIzIDE1OS40MTksLTI1OC4y
+MTcgMTc5LjIwMywtMjM4IDIxMS43MDYsLTIwNC43ODYgMjM5LjQ5NiwtMjM4LjMyMyAyODIu
+MjAzLC0yMjAgMjg3LjU2MSwtMjE3LjcwMSAyOTIuODg0LC0yMTQuNzc2IDI5Ny45ODMsLTIx
+MS41NTciLz4KPHBvbHlnb24gZmlsbD0iYmxhY2siIHN0cm9rZT0iYmxhY2siIHBvaW50cz0i
+Mjk5Ljk5NSwtMjE0LjQyMSAzMDYuMzE3LC0yMDUuOTE5IDI5Ni4wNzMsLTIwOC42MjMgMjk5
+Ljk5NSwtMjE0LjQyMSIvPgo8dGV4dCB0ZXh0LWFuY2hvcj0ibWlkZGxlIiB4PSIyMjUuMjAz
+IiB5PSItMjg2LjgiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4w
+MCI+ZmFzdF9pb19mYWlsX3RtbzwvdGV4dD4KPHRleHQgdGV4dC1hbmNob3I9Im1pZGRsZSIg
+eD0iMjI1LjIwMyIgeT0iLTI3MS44IiBmb250LWZhbWlseT0iVGltZXMsc2VyaWYiIGZvbnQt
+c2l6ZT0iMTQuMDAiPmV4cGlyZWQgb3I8L3RleHQ+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRk
+bGUiIHg9IjIyNS4yMDMiIHk9Ii0yNTYuOCIgZm9udC1mYW1pbHk9IlRpbWVzLHNlcmlmIiBm
+b250LXNpemU9IjE0LjAwIj5yZWNvbm5lY3Rpbmc8L3RleHQ+Cjx0ZXh0IHRleHQtYW5jaG9y
+PSJtaWRkbGUiIHg9IjIyNS4yMDMiIHk9Ii0yNDEuOCIgZm9udC1mYW1pbHk9IlRpbWVzLHNl
+cmlmIiBmb250LXNpemU9IjE0LjAwIj5mYWlsZWQ8L3RleHQ+CjwvZz4KPCEtLSBmYWlsZmFz
+dCYjNDU7Jmd0O3J1bm5pbmcgLS0+CjxnIGlkPSJlZGdlMjEiIGNsYXNzPSJlZGdlIj48dGl0
+bGU+ZmFpbGZhc3QmIzQ1OyZndDtydW5uaW5nPC90aXRsZT4KPHBhdGggZmlsbD0ibm9uZSIg
+c3Ryb2tlPSJibGFjayIgZD0iTTM2Ni43MDUsLTIwNS44NzRDNDExLjQzMSwtMjQ3LjA4IDQ4
+NS41NTEsLTMyOS45MSA0NDcuMjAzLC0zOTggNDEyLjUyOSwtNDU5LjU2OCAzMzcuNzg1LC00
+OTYuNjM5IDI4My43MywtNTE2LjQwNyIvPgo8cG9seWdvbiBmaWxsPSJibGFjayIgc3Ryb2tl
+PSJibGFjayIgcG9pbnRzPSIyODIuNDgxLC01MTMuMTM2IDI3NC4yMywtNTE5Ljc4MiAyODQu
+ODI1LC01MTkuNzMyIDI4Mi40ODEsLTUxMy4xMzYiLz4KPHRleHQgdGV4dC1hbmNob3I9Im1p
+ZGRsZSIgeD0iNDk0LjcwMyIgeT0iLTM2MC44IiBmb250LWZhbWlseT0iVGltZXMsc2VyaWYi
+IGZvbnQtc2l6ZT0iMTQuMDAiPnJlY29ubmVjdGluZzwvdGV4dD4KPHRleHQgdGV4dC1hbmNo
+b3I9Im1pZGRsZSIgeD0iNDk0LjcwMyIgeT0iLTM0NS44IiBmb250LWZhbWlseT0iVGltZXMs
+c2VyaWYiIGZvbnQtc2l6ZT0iMTQuMDAiPnN1Y2NlZWRlZDwvdGV4dD4KPC9nPgo8IS0tIGZh
+aWxmYXN0JiM0NTsmZ3Q7bG9zdCAtLT4KPGcgaWQ9ImVkZ2UxNSIgY2xhc3M9ImVkZ2UiPjx0
+aXRsZT5mYWlsZmFzdCYjNDU7Jmd0O2xvc3Q8L3RpdGxlPgo8cGF0aCBmaWxsPSJub25lIiBz
+dHJva2U9ImJsYWNrIiBkPSJNMzA5LjUzMiwtMTQ4LjU2MkMyODUuNDM3LC0xMjEuOTY5IDI1
+MC4yMjQsLTgzLjEwNDcgMjI2LjU0OSwtNTYuOTczOSIvPgo8cG9seWdvbiBmaWxsPSJibGFj
+ayIgc3Ryb2tlPSJibGFjayIgcG9pbnRzPSIyMjguOTA1LC01NC4zNjE1IDIxOS41OTcsLTQ5
+LjMwMDkgMjIzLjcxNywtNTkuMDYxNSAyMjguOTA1LC01NC4zNjE1Ii8+Cjx0ZXh0IHRleHQt
+YW5jaG9yPSJtaWRkbGUiIHg9IjM0Ny43MDMiIHk9Ii0xMDguMyIgZm9udC1mYW1pbHk9IlRp
+bWVzLHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj5kZXZfbG9zc190bW88L3RleHQ+Cjx0ZXh0
+IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjM0Ny43MDMiIHk9Ii05My4zIiBmb250LWZhbWls
+eT0iVGltZXMsc2VyaWYiIGZvbnQtc2l6ZT0iMTQuMDAiPmV4cGlyZWQgb3I8L3RleHQ+Cjx0
+ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjM0Ny43MDMiIHk9Ii03OC4zIiBmb250LWZh
+bWlseT0iVGltZXMsc2VyaWYiIGZvbnQtc2l6ZT0iMTQuMDAiPnNycF9zdG9wX3Jwb3J0X3Rp
+bWVycygpPC90ZXh0Pgo8L2c+CjwhLS0gZmFpbGZhc3QmIzQ1OyZndDtmYWlsZmFzdCAtLT4K
+PGcgaWQ9ImVkZ2UxOSIgY2xhc3M9ImVkZ2UiPjx0aXRsZT5mYWlsZmFzdCYjNDU7Jmd0O2Zh
+aWxmYXN0PC90aXRsZT4KPHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSJibGFjayIgZD0iTTM3
+My41NzksLTE5NC4zNkMzODUuMTMxLC0xOTQuMDUgMzk0LjIwMywtMTg4LjkzIDM5NC4yMDMs
+LTE3OSAzOTQuMjAzLC0xNzIuMTczIDM4OS45MTUsLTE2Ny42MiAzODMuNDgxLC0xNjUuMzQi
+Lz4KPHBvbHlnb24gZmlsbD0iYmxhY2siIHN0cm9rZT0iYmxhY2siIHBvaW50cz0iMzg0LjAy
+NywtMTYxLjg4MyAzNzMuNTc5LC0xNjMuNjQgMzgyLjg0MiwtMTY4Ljc4MiAzODQuMDI3LC0x
+NjEuODgzIi8+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjQzMS43MDMiIHk9Ii0x
+ODIuOCIgZm9udC1mYW1pbHk9IlRpbWVzLHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj5yZWNv
+bm5lY3Rpbmc8L3RleHQ+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjQzMS43MDMi
+IHk9Ii0xNjcuOCIgZm9udC1mYW1pbHk9IlRpbWVzLHNlcmlmIiBmb250LXNpemU9IjE0LjAw
+Ij5mYWlsZWQ8L3RleHQ+CjwvZz4KPC9nPgo8L3N2Zz4K
+--------------020708080506060601090809--
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
