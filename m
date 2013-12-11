@@ -1,35 +1,24 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 15950] Hang in dc395x driver
-Date: Tue, 10 Dec 2013 22:15:21 +0000
-Message-ID: <bug-15950-11613-NkpumqPimn@https.bugzilla.kernel.org/>
-References: <bug-15950-11613@https.bugzilla.kernel.org/>
+From: Niall Drievers <nialler17@hotmail.com>
+Subject: =?windows-1256?Q?pm8001_iss?= =?windows-1256?Q?ue=FE?=
+Date: Wed, 11 Dec 2013 00:12:40 +0000
+Message-ID: <DUB109-W122F89F52D37E0B3FD1C137B8DD0@phx.gbl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="windows-1256"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:46629 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751226Ab3LJWPY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Dec 2013 17:15:24 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 4F5682069C
-	for <linux-scsi@vger.kernel.org>; Tue, 10 Dec 2013 22:15:23 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-	by mail.kernel.org (Postfix) with ESMTP id 2410220699
-	for <linux-scsi@vger.kernel.org>; Tue, 10 Dec 2013 22:15:22 +0000 (UTC)
-In-Reply-To: <bug-15950-11613@https.bugzilla.kernel.org/>
+Received: from dub0-omc4-s32.dub0.hotmail.com ([157.55.2.107]:24396 "EHLO
+	dub0-omc4-s32.dub0.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750965Ab3LKAMl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 10 Dec 2013 19:12:41 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "Suresh.Thiagarajan@pmcs.com" <suresh.thiagarajan@pmcs.com>, "xjtuwjp@gmail.com" <xjtuwjp@gmail.com>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=15950
-
---- Comment #8 from ltskinol@gmail.com ---
-Could be.  Haven't found another inexpensive SCSI adapter.
-
-I say the driver probably needs to get fixed or removed, though.  No point in
-having it in the kernel giving folks false hope that it'll work!
-
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+SmFjaywgU3VyZXNoCgoKVGhhbmtzIGZvciB5b3VyIHJlc3BvbnNlISBIZXJlJ3Mgd2hhdCBJIGdl
+dCBmcm9tIGxzcGNpIC2gMzA6MDAuMCBTZXJpYWwgQXR0YWNoZWQgU0NTSSBjb250cm9sbGVyOiBQ
+TUMtU2llcnJhIEluYy4gRGV2aWNlIDgwMDEgKHJldiAwNSmgCgpjYXQgL3N5cy9jbGFzcy9zY3Np
+X2hvc3QvaG9zdDcvdmVyc2lvbl9wcm9kdWN0oApQTTgwMDGgCgpjYXQgL3N5cy9jbGFzcy9zY3Np
+X2hvc3QvaG9zdDcvdmVyc2lvbl9md6AKMDEuMTIuMDIuMDAKClRoZSBLZXJuZWwgdmVyc2lvbiBp
+c6AzLjEzLjAtcmMyLTEuMS4KClJlZ2FyZHMsCgpOaWFsbCAJCSAJICAgCQkgIA==
