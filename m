@@ -1,42 +1,85 @@
-From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-Subject: Re: BTRFS doesn't handle USB device disconnect
-Date: Wed, 11 Dec 2013 15:20:05 -0800
-Message-ID: <20131211232005.GA2620@xanatos>
-References: <20131211011755.GA3574@xanatos>
- <Pine.LNX.4.44L0.1312111058340.1531-100000@iolanthe.rowland.org>
+From: Eddie Wai <eddie.wai@broadcom.com>
+Subject: [PATCH 1/3] BNX2FC: Fixed scsi_remove_target soft lockup when rmmod bnx2x
+Date: Wed, 11 Dec 2013 15:30:21 -0800
+Message-ID: <1386804623-22376-1-git-send-email-eddie.wai@broadcom.com>
+References: <eddie.wai@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:53525 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751267Ab3LKXUE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 Dec 2013 18:20:04 -0500
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.1312111058340.1531-100000@iolanthe.rowland.org>
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:35205 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751203Ab3LKXei (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Dec 2013 18:34:38 -0500
+In-Reply-To: <eddie.wai@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Chris Mason <chris.mason@fusionio.com>, linux-btrfs@vger.kernel.org, linux-usb@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>, linux-scsi@vger.kernel.org
+To: James Bottomley <jbottomley@parallels.com>
+Cc: Robert Love <robert.w.love@intel.com>, fcoe-devel <fcoe-devel@open-fcoe.org>, linux-scsi <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>, Eddie Wai <eddie.wai@broadcom.com>
 
-On Wed, Dec 11, 2013 at 11:03:09AM -0500, Alan Stern wrote:
-> On Tue, 10 Dec 2013, Sarah Sharp wrote:
-> > On 3.13-rc1, the btrfs partion from the disconnected USB device
-> > continues to be listed as mounted.  Yanking the cable produces some
-> > additional oops messages.  It also produced a couple hard-hangs.
-> > Unfortunately, I didn't capture the dmesg during the hard-hangs, so I
-> > can't tell for sure which driver is to blame (uas, btrfs, or xhci).
-> 
-> Does this happen with usb-storage instead of uas?
-> 
-> What about with ehci-hcd instead of xhci-hcd?
-> 
-> And just to be exotic, what about with dummy-hcd and the uas or
-> g_mass_storage gadget driver?
+The problem has been identified to be a change in the scsi_remove_device
+path where a call to the pm_runtime_set_memalloc_noio was added when
+del_gendisk is called in this path.  Note that the new pm routine
+attempts to cycle through all parent devices from the FC target device
+to set the memalloc_noio flag.  Because of this new change, a dependency
+was created between the FC target device and the parent netdev device
+in the destroy path.
 
-I can't reproduce the hard-hangs (with xhci and uas), but I did manage
-to reproduce a bug in uas where the disconnect function hangs, and hangs
-the khubd thread as well.  This happens even with the btrfs partition
-wiped from the drive, so it's not a btrfs issue.  I'll send a separate
-bug report to Hans.
+In order to synchronized the destroy paths, bnx2fc has been modified
+to flush all destroy workqueues in the NETDEV_UNREGISTER return path.
 
-Sarah Sharp
+[    4.123584] BUG: soft lockup - CPU#8 stuck for 22s! [kworker/8:3:8082]
+[    4.123713] Call Trace:
+[    4.123719]  [<ffffffff815dfbe0>] klist_next+0x20/0xf0
+[    4.123725]  [<ffffffff813e9220>] ? pm_save_wakeup_count+0x70/0x70
+[    4.123731]  [<ffffffff813d9e4e>] device_for_each_child+0x4e/0x70
+[    4.123735]  [<ffffffff813e9554>] pm_runtime_set_memalloc_noio+0x94/0xf0
+[    4.123740]  [<ffffffff812d4d74>] del_gendisk+0x264/0x2a0
+[    4.123747]  [<ffffffffa00c6dc9>] sd_remove+0x69/0xb0 [sd_mod]
+[    4.123751]  [<ffffffff813de24f>] __device_release_driver+0x7f/0xf0
+[    4.123754]  [<ffffffff813de2e3>] device_release_driver+0x23/0x30
+[    4.123757]  [<ffffffff813ddab4>] bus_remove_device+0xf4/0x170
+[    4.123760]  [<ffffffff813da475>] device_del+0x135/0x1d0
+[    4.123765]  [<ffffffff81411b75>] __scsi_remove_device+0xc5/0xd0
+[    4.123768]  [<ffffffff81411ba6>] scsi_remove_device+0x26/0x40
+[    4.123770]  [<ffffffff81411d40>] scsi_remove_target+0x160/0x210
+[    4.123775]  [<ffffffffa0420e4c>] fc_rport_final_delete+0xac/0x1f0 [scsi_transport_fc]
+[    4.123780]  [<ffffffff810774ab>] process_one_work+0x17b/0x460
+[    4.123783]  [<ffffffff8107825b>] worker_thread+0x11b/0x400
+[    4.123786]  [<ffffffff81078140>] ? rescuer_thread+0x3e0/0x3e0
+[    4.123791]  [<ffffffff8107e9c0>] kthread+0xc0/0xd0
+[    4.123794]  [<ffffffff8107e900>] ? kthread_create_on_node+0x110/0x110
+[    4.123798]  [<ffffffff8160ceec>] ret_from_fork+0x7c/0xb0
+[    4.123801]  [<ffffffff8107e900>] ? kthread_create_on_node+0x110/0x110
+
+Signed-off-by: Eddie Wai <eddie.wai@broadcom.com>
+---
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+index 9b94850..4cabd3e 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+@@ -850,6 +850,9 @@ static void bnx2fc_indicate_netevent(void *context, unsigned long event,
+ 				__bnx2fc_destroy(interface);
+ 		}
+ 		mutex_unlock(&bnx2fc_dev_lock);
++
++		/* Ensure ALL destroy work has been completed before return */
++		flush_workqueue(bnx2fc_wq);
+ 		return;
+ 
+ 	default:
+@@ -2389,6 +2392,9 @@ static void bnx2fc_ulp_exit(struct cnic_dev *dev)
+ 			__bnx2fc_destroy(interface);
+ 	mutex_unlock(&bnx2fc_dev_lock);
+ 
++	/* Ensure ALL destroy work has been completed before return */
++	flush_workqueue(bnx2fc_wq);
++
+ 	bnx2fc_ulp_stop(hba);
+ 	/* unregister cnic device */
+ 	if (test_and_clear_bit(BNX2FC_CNIC_REGISTERED, &hba->reg_with_cnic))
+-- 
+1.7.1
+
