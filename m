@@ -1,306 +1,115 @@
-From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-Subject: [PATCH 3/3] scsi_transport_srp: Add rport state diagram
-Date: Wed, 11 Dec 2013 17:08:43 +0100
-Message-ID: <52A88E0B.5050600@acm.org>
-References: <52A88CF9.206@acm.org>
+From: Hugo Mills <hugo@carfax.org.uk>
+Subject: Re: BTRFS doesn't handle USB device disconnect
+Date: Wed, 11 Dec 2013 16:18:17 +0000
+Message-ID: <20131211161817.GL9738@carfax.org.uk>
+References: <20131211011755.GA3574@xanatos>
+ <Pine.LNX.4.44L0.1312111058340.1531-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------020708080506060601090809"
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <52A88CF9.206-HInyCGIudOg@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>
-Cc: Vu Pham <vu-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Riemer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, James Bottomley <JBottomley-MU7nAjRaF3makBO8gow8eQ@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="DheUW4aQn8WJk6WR"
+Return-path: <linux-btrfs-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.1312111058340.1531-100000@iolanthe.rowland.org>
+Sender: linux-btrfs-owner@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Sarah Sharp <sarah.a.sharp@linux.intel.com>, Chris Mason <chris.mason@fusionio.com>, linux-btrfs@vger.kernel.org, linux-usb@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------020708080506060601090809
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
 
-Add a diagram in Documentation/scsi/scsi_transport_srp that
-illustrates the rport state transitions.
+--DheUW4aQn8WJk6WR
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Signed-off-by: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-Cc: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>
-Cc: Vu Pham <vu-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
-Cc: Sebastian Riemer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>
-Cc: James Bottomley <JBottomley-MU7nAjRaF3makBO8gow8eQ@public.gmane.org>
----
- Documentation/scsi/scsi_transport_srp/Makefile     |  7 ++++++
- .../scsi_transport_srp/rport_state_diagram.dot     | 26 ++++++++++++++++++++++
- 2 files changed, 33 insertions(+)
- create mode 100644 Documentation/scsi/scsi_transport_srp/Makefile
- create mode 100644 Documentation/scsi/scsi_transport_srp/rport_state_diagram.dot
+On Wed, Dec 11, 2013 at 11:03:09AM -0500, Alan Stern wrote:
+> On Tue, 10 Dec 2013, Sarah Sharp wrote:
+> 
+> > In order to stress test the uas driver (next-gen USB storage driver), I
+> > decided to run some tests with a USB 3.0 storage device with four 10GB
+> > partitions: BTRFS, ext3, ext4, and fat32.
+> > 
+> > It seems that BTRFS doesn't handle unexpected USB disconnect very well.
+> > Is that expected behavior?
 
-diff --git a/Documentation/scsi/scsi_transport_srp/Makefile b/Documentation/scsi/scsi_transport_srp/Makefile
-new file mode 100644
-index 0000000..5f6b567
---- /dev/null
-+++ b/Documentation/scsi/scsi_transport_srp/Makefile
-@@ -0,0 +1,7 @@
-+all: rport_state_diagram.svg rport_state_diagram.png
-+
-+rport_state_diagram.svg: rport_state_diagram.dot
-+	dot -Tsvg -o $@ $<
-+
-+rport_state_diagram.png: rport_state_diagram.dot
-+	dot -Tpng -o $@ $<
-diff --git a/Documentation/scsi/scsi_transport_srp/rport_state_diagram.dot b/Documentation/scsi/scsi_transport_srp/rport_state_diagram.dot
-new file mode 100644
-index 0000000..75d610d
---- /dev/null
-+++ b/Documentation/scsi/scsi_transport_srp/rport_state_diagram.dot
-@@ -0,0 +1,26 @@
-+digraph srp_initiator {
-+	node [shape = doublecircle]; running lost;
-+	node [shape = circle];
-+
-+	{
-+	  rank = min;
-+	  running_rta	[ label = "running;\nreconnect\ntimer\nactive" ];
-+	};
-+	running		[ label = "running;\nreconnect\ntimer\nstopped" ];
-+	blocked;
-+	failfast	[ label = "fail I/O\nfast" ];
-+	lost;
-+
-+	running -> running_rta		[ label = "fast_io_fail_tmo = off and\ndev_loss_tmo = off;\nsrp_start_tl_fail_timers()" ];
-+	running_rta -> running		[ label = "fast_io_fail_tmo = off and\ndev_loss_tmo = off;\nreconnecting succeeded" ];
-+	running -> blocked		[ label = "fast_io_fail_tmo >= 0 or\ndev_loss_tmo >= 0;\nsrp_start_tl_fail_timers()" ];
-+	running -> failfast		[ label = "fast_io_fail_tmo = off and\ndev_loss_tmo = off;\nreconnecting failed\n" ];
-+	blocked -> failfast		[ label = "fast_io_fail_tmo\nexpired or\nreconnecting\nfailed" ];
-+	blocked -> lost			[ label = "dev_loss_tmo\nexpired or\nsrp_stop_rport_timers()" ];
-+	failfast -> lost		[ label = "dev_loss_tmo\nexpired or\nsrp_stop_rport_timers()" ];
-+	blocked -> running		[ label = "reconnecting\nsucceeded" ];
-+	failfast -> failfast		[ label = "reconnecting\nfailed" ];
-+	failfast -> running		[ label = "reconnecting\nsucceeded" ];
-+	running -> lost			[ label = "srp_stop_rport_timers()" ];
-+	running_rta -> lost		[ label = "srp_stop_rport_timers()" ];
-+}
+   It's something that's been known about for a while, but is clearly
+undesirable behaviour. I don't think anyone with the detailed
+knowledge of the FS code has investigated in enough depth to get to
+the point of proposing patches. I suspect it's just not shown up with
+enough disastrous consequences to bubble to the top of the stack of
+things to fix yet.
+
+   I think we're still at the point of "you can use USB if you like,
+but don't be surprised if, sometimes, Bad Things happen when the bus
+disconnects briefly".
+
+   The problems you show below do look quite like the kind of things
+we've seen btrfs doing on USB disconnects, so on only this evidence I
+wouldn't be quick to point any fingers at the USB layer (unless other
+filesystems corroborate the behaviour).
+
+   Hugo.
+
+   (I'm not a btrfs developer, but I do a reasonable amount of
+first-line support for it on IRC and linux-btrfs; we see these things
+every week or two).
+
+> > The BTRFS partition was created on an Ubuntu 13.10 system, with
+> > btrfs-tools version 0.19+20130705-1.
+> > 
+> > On 3.12-rc6, if all partitions are mounted, and I yank the USB cable,
+> > the BTRFS filesystem still shows up as mounted.  If I yank it multiple
+> > times, sometimes it's listed twice when the device is disconnected:
+> > 
+> > /dev/sdb3 on /media/sarah/9f21ef28-0eac-4736-9964-db5378b877e4 type btrfs (rw,nosuid,nodev,uhelper=udisks2)
+> > /dev/sdc3 on /media/sarah/9f21ef28-0eac-4736-9964-db5378b877e41 type btrfs (rw,nosuid,nodev,uhelper=udisks2)
+> > 
+> > Sometimes (but not always) when I plug it back in, I can get /dev/sdc3
+> > listed twice:
+> > 
+> > /dev/sdb3 on /media/sarah/9f21ef28-0eac-4736-9964-db5378b877e4 type btrfs (rw,nosuid,nodev,uhelper=udisks2)
+> > /dev/sdc3 on /media/sarah/9f21ef28-0eac-4736-9964-db5378b877e42 type btrfs (rw,nosuid,nodev,uhelper=udisks2)
+> > /dev/sdc1 on /media/sarah/ext3-part type ext3 (rw,nosuid,nodev,uhelper=udisks2)
+> > /dev/sdc2 on /media/sarah/ext4-part type ext4 (rw,nosuid,nodev,uhelper=udisks2)
+> > /dev/sdc4 on /media/sarah/fat32-part type vfat (rw,nosuid,nodev,uid=1000,gid=1000,shortname=mixed,dmask=0077,utf8=1,showexec,flush,uhelper=udisks2)
+> > /dev/sdc3 on /media/sarah/9f21ef28-0eac-4736-9964-db5378b877e41 type btrfs (rw,nosuid,nodev,uhelper=udisks2)
+
+> > On 3.13-rc1, the btrfs partion from the disconnected USB device
+> > continues to be listed as mounted.  Yanking the cable produces some
+> > additional oops messages.  It also produced a couple hard-hangs.
+> > Unfortunately, I didn't capture the dmesg during the hard-hangs, so I
+> > can't tell for sure which driver is to blame (uas, btrfs, or xhci).
+> 
+> Does this happen with usb-storage instead of uas?
+> 
+> What about with ehci-hcd instead of xhci-hcd?
+> 
+> And just to be exotic, what about with dummy-hcd and the uas or
+> g_mass_storage gadget driver?
+
 -- 
-1.8.1.4
+=== Hugo Mills: hugo@... carfax.org.uk | darksatanic.net | lug.org.uk ===
+  PGP key: 65E74AC0 from wwwkeys.eu.pgp.net or http://www.carfax.org.uk
+      --- UNIX: British manufacturer of modular shelving units. ---      
 
+--DheUW4aQn8WJk6WR
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 
---------------020708080506060601090809
-Content-Type: image/svg+xml;
- name="rport_state_diagram.svg"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
- filename="rport_state_diagram.svg"
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.14 (GNU/Linux)
 
-PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+
-CjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIKICJodHRw
-Oi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPgo8IS0tIEdl
-bmVyYXRlZCBieSBncmFwaHZpeiB2ZXJzaW9uIDIuMjguMCAoMjAxMzA5MjcuMTEwOSkKIC0t
-Pgo8IS0tIFRpdGxlOiBzcnBfaW5pdGlhdG9yIFBhZ2VzOiAxIC0tPgo8c3ZnIHdpZHRoPSI3
-MjFwdCIgaGVpZ2h0PSI3ODZwdCIKIHZpZXdCb3g9IjAuMDAgMC4wMCA3MjEuMjAgNzg2LjAw
-IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRw
-Oi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIj4KPGcgaWQ9ImdyYXBoMSIgY2xhc3M9ImdyYXBo
-IiB0cmFuc2Zvcm09InNjYWxlKDEgMSkgcm90YXRlKDApIHRyYW5zbGF0ZSg0IDc4MikiPgo8
-dGl0bGU+c3JwX2luaXRpYXRvcjwvdGl0bGU+Cjxwb2x5Z29uIGZpbGw9IndoaXRlIiBzdHJv
-a2U9IndoaXRlIiBwb2ludHM9Ii00LDUgLTQsLTc4MiA3MTguMjAzLC03ODIgNzE4LjIwMyw1
-IC00LDUiLz4KPCEtLSBydW5uaW5nIC0tPgo8ZyBpZD0ibm9kZTEiIGNsYXNzPSJub2RlIj48
-dGl0bGU+cnVubmluZzwvdGl0bGU+CjxlbGxpcHNlIGZpbGw9Im5vbmUiIHN0cm9rZT0iYmxh
-Y2siIGN4PSIyMjEuMjAzIiBjeT0iLTUzNiIgcng9IjUxLjQ0MTUiIHJ5PSI1MS43MjkzIi8+
-CjxlbGxpcHNlIGZpbGw9Im5vbmUiIHN0cm9rZT0iYmxhY2siIGN4PSIyMjEuMjAzIiBjeT0i
-LTUzNiIgcng9IjU1LjQyNzgiIHJ5PSI1NS43Mzc4Ii8+Cjx0ZXh0IHRleHQtYW5jaG9yPSJt
-aWRkbGUiIHg9IjIyMS4yMDMiIHk9Ii01NTQuOCIgZm9udC1mYW1pbHk9IlRpbWVzLHNlcmlm
-IiBmb250LXNpemU9IjE0LjAwIj5ydW5uaW5nOzwvdGV4dD4KPHRleHQgdGV4dC1hbmNob3I9
-Im1pZGRsZSIgeD0iMjIxLjIwMyIgeT0iLTUzOS44IiBmb250LWZhbWlseT0iVGltZXMsc2Vy
-aWYiIGZvbnQtc2l6ZT0iMTQuMDAiPnJlY29ubmVjdDwvdGV4dD4KPHRleHQgdGV4dC1hbmNo
-b3I9Im1pZGRsZSIgeD0iMjIxLjIwMyIgeT0iLTUyNC44IiBmb250LWZhbWlseT0iVGltZXMs
-c2VyaWYiIGZvbnQtc2l6ZT0iMTQuMDAiPnRpbWVyPC90ZXh0Pgo8dGV4dCB0ZXh0LWFuY2hv
-cj0ibWlkZGxlIiB4PSIyMjEuMjAzIiB5PSItNTA5LjgiIGZvbnQtZmFtaWx5PSJUaW1lcyxz
-ZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+c3RvcHBlZDwvdGV4dD4KPC9nPgo8IS0tIGxvc3Qg
-LS0+CjxnIGlkPSJub2RlMiIgY2xhc3M9Im5vZGUiPjx0aXRsZT5sb3N0PC90aXRsZT4KPGVs
-bGlwc2UgZmlsbD0ibm9uZSIgc3Ryb2tlPSJibGFjayIgY3g9IjIwMS4yMDMiIGN5PSItMjgi
-IHJ4PSIyNC4wNjg0IiByeT0iMjQuMDg5Ii8+CjxlbGxpcHNlIGZpbGw9Im5vbmUiIHN0cm9r
-ZT0iYmxhY2siIGN4PSIyMDEuMjAzIiBjeT0iLTI4IiByeD0iMjguMDcxOCIgcnk9IjI4LjA5
-NTgiLz4KPHRleHQgdGV4dC1hbmNob3I9Im1pZGRsZSIgeD0iMjAxLjIwMyIgeT0iLTI0LjMi
-IGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+bG9zdDwvdGV4
-dD4KPC9nPgo8IS0tIHJ1bm5pbmcmIzQ1OyZndDtsb3N0IC0tPgo8ZyBpZD0iZWRnZTIzIiBj
-bGFzcz0iZWRnZSI+PHRpdGxlPnJ1bm5pbmcmIzQ1OyZndDtsb3N0PC90aXRsZT4KPHBhdGgg
-ZmlsbD0ibm9uZSIgc3Ryb2tlPSJibGFjayIgZD0iTTE2NS45NjcsLTUzMC44MDhDMTE5LjYx
-MiwtNTI0LjEwNSA1NS43NDYzLC01MDYuNzYyIDIyLjIwMzMsLTQ2MiAtMjEuNjA0MiwtNDAz
-LjU0IDEzLjY0OTEsLTM3MS4wMTIgMTEuMjAzMywtMjk4IDEwLjMxMDUsLTI3MS4zNDggMS44
-MDI0MiwtMjYyLjk1NSAxMS4yMDMzLC0yMzggNDUuMzk4NywtMTQ3LjIyOCA4OC40ODYzLC0x
-NDQuNDEgMTU1LjIwMywtNzQgMTYxLjE2OCwtNjcuNzA0OSAxNjcuNzQ1LC02MS4wOSAxNzQu
-MDE0LC01NC45Mjc5Ii8+Cjxwb2x5Z29uIGZpbGw9ImJsYWNrIiBzdHJva2U9ImJsYWNrIiBw
-b2ludHM9IjE3Ni40NTgsLTU3LjQzNCAxODEuMTc4LC00Ny45NDg2IDE3MS41NzMsLTUyLjQy
-MDMgMTc2LjQ1OCwtNTcuNDM0Ii8+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9Ijc3
-LjcwMzMiIHk9Ii0yNjQuMyIgZm9udC1mYW1pbHk9IlRpbWVzLHNlcmlmIiBmb250LXNpemU9
-IjE0LjAwIj5zcnBfc3RvcF9ycG9ydF90aW1lcnMoKTwvdGV4dD4KPC9nPgo8IS0tIHJ1bm5p
-bmdfcnRhIC0tPgo8ZyBpZD0ibm9kZTQiIGNsYXNzPSJub2RlIj48dGl0bGU+cnVubmluZ19y
-dGE8L3RpdGxlPgo8ZWxsaXBzZSBmaWxsPSJub25lIiBzdHJva2U9ImJsYWNrIiBjeD0iMzky
-LjIwMyIgY3k9Ii03MjYiIHJ4PSI1MS40Mjc4IiByeT0iNTEuNzM3OSIvPgo8dGV4dCB0ZXh0
-LWFuY2hvcj0ibWlkZGxlIiB4PSIzOTIuMjAzIiB5PSItNzQ0LjgiIGZvbnQtZmFtaWx5PSJU
-aW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+cnVubmluZzs8L3RleHQ+Cjx0ZXh0IHRl
-eHQtYW5jaG9yPSJtaWRkbGUiIHg9IjM5Mi4yMDMiIHk9Ii03MjkuOCIgZm9udC1mYW1pbHk9
-IlRpbWVzLHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj5yZWNvbm5lY3Q8L3RleHQ+Cjx0ZXh0
-IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjM5Mi4yMDMiIHk9Ii03MTQuOCIgZm9udC1mYW1p
-bHk9IlRpbWVzLHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj50aW1lcjwvdGV4dD4KPHRleHQg
-dGV4dC1hbmNob3I9Im1pZGRsZSIgeD0iMzkyLjIwMyIgeT0iLTY5OS44IiBmb250LWZhbWls
-eT0iVGltZXMsc2VyaWYiIGZvbnQtc2l6ZT0iMTQuMDAiPmFjdGl2ZTwvdGV4dD4KPC9nPgo8
-IS0tIHJ1bm5pbmcmIzQ1OyZndDtydW5uaW5nX3J0YSAtLT4KPGcgaWQ9ImVkZ2UzIiBjbGFz
-cz0iZWRnZSI+PHRpdGxlPnJ1bm5pbmcmIzQ1OyZndDtydW5uaW5nX3J0YTwvdGl0bGU+Cjxw
-YXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iYmxhY2siIGQ9Ik0yNzQuODczLC01NTAuMTUzQzMw
-Ny4zNDgsLTU2MC44OTcgMzQ2Ljg2NSwtNTc5LjQzNiAzNzAuMjAzLC02MTAgMzgxLjk2Nywt
-NjI1LjQwNyAzODguMDIsLTY0NS4yOTMgMzkwLjk4MywtNjY0LjE4MyIvPgo8cG9seWdvbiBm
-aWxsPSJibGFjayIgc3Ryb2tlPSJibGFjayIgcG9pbnRzPSIzODcuNTMxLC02NjQuNzc3IDM5
-Mi4yOTcsLTY3NC4yNCAzOTQuNDcyLC02NjMuODcxIDM4Ny41MzEsLTY2NC43NzciLz4KPHRl
-eHQgdGV4dC1hbmNob3I9Im1pZGRsZSIgeD0iNDYzLjIwMyIgeT0iLTY0NC4zIiBmb250LWZh
-bWlseT0iVGltZXMsc2VyaWYiIGZvbnQtc2l6ZT0iMTQuMDAiPmZhc3RfaW9fZmFpbF90bW8g
-PSBvZmYgYW5kPC90ZXh0Pgo8dGV4dCB0ZXh0LWFuY2hvcj0ibWlkZGxlIiB4PSI0NjMuMjAz
-IiB5PSItNjI5LjMiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4w
-MCI+ZGV2X2xvc3NfdG1vID0gb2ZmOzwvdGV4dD4KPHRleHQgdGV4dC1hbmNob3I9Im1pZGRs
-ZSIgeD0iNDYzLjIwMyIgeT0iLTYxNC4zIiBmb250LWZhbWlseT0iVGltZXMsc2VyaWYiIGZv
-bnQtc2l6ZT0iMTQuMDAiPnNycF9zdGFydF90bF9mYWlsX3RpbWVycygpPC90ZXh0Pgo8L2c+
-CjwhLS0gYmxvY2tlZCAtLT4KPGcgaWQ9Im5vZGU1IiBjbGFzcz0ibm9kZSI+PHRpdGxlPmJs
-b2NrZWQ8L3RpdGxlPgo8ZWxsaXBzZSBmaWxsPSJub25lIiBzdHJva2U9ImJsYWNrIiBjeD0i
-MTYxLjIwMyIgY3k9Ii0zNTciIHJ4PSI0MC40MjAyIiByeT0iNDAuODkyOCIvPgo8dGV4dCB0
-ZXh0LWFuY2hvcj0ibWlkZGxlIiB4PSIxNjEuMjAzIiB5PSItMzUzLjMiIGZvbnQtZmFtaWx5
-PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+YmxvY2tlZDwvdGV4dD4KPC9nPgo8
-IS0tIHJ1bm5pbmcmIzQ1OyZndDtibG9ja2VkIC0tPgo8ZyBpZD0iZWRnZTciIGNsYXNzPSJl
-ZGdlIj48dGl0bGU+cnVubmluZyYjNDU7Jmd0O2Jsb2NrZWQ8L3RpdGxlPgo8cGF0aCBmaWxs
-PSJub25lIiBzdHJva2U9ImJsYWNrIiBkPSJNMTY1Ljg1OCwtNTI5Ljg3NEMxMjIuMDM3LC01
-MjIuNTczIDYzLjQ5NDcsLTUwNC44NzkgMzQuMjAzMywtNDYyIDIyLjY3MTIsLTQ0NS4xMTgg
-MjMuMTUwMywtNDMzLjE5OSAzNC4yMDMzLC00MTYgNTEuMTg1LC0zODkuNTc2IDgzLjUxNjMs
-LTM3NS4wNDIgMTExLjMwNiwtMzY3LjEzMSIvPgo8cG9seWdvbiBmaWxsPSJibGFjayIgc3Ry
-b2tlPSJibGFjayIgcG9pbnRzPSIxMTIuNTE5LC0zNzAuNDMxIDEyMS4zMDIsLTM2NC41MDYg
-MTEwLjc0MSwtMzYzLjY2MSAxMTIuNTE5LC0zNzAuNDMxIi8+Cjx0ZXh0IHRleHQtYW5jaG9y
-PSJtaWRkbGUiIHg9IjEwMy43MDMiIHk9Ii00NTAuMyIgZm9udC1mYW1pbHk9IlRpbWVzLHNl
-cmlmIiBmb250LXNpemU9IjE0LjAwIj5mYXN0X2lvX2ZhaWxfdG1vICZndDs9IDAgb3I8L3Rl
-eHQ+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjEwMy43MDMiIHk9Ii00MzUuMyIg
-Zm9udC1mYW1pbHk9IlRpbWVzLHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj5kZXZfbG9zc190
-bW8gJmd0Oz0gMDs8L3RleHQ+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjEwMy43
-MDMiIHk9Ii00MjAuMyIgZm9udC1mYW1pbHk9IlRpbWVzLHNlcmlmIiBmb250LXNpemU9IjE0
-LjAwIj5zcnBfc3RhcnRfdGxfZmFpbF90aW1lcnMoKTwvdGV4dD4KPC9nPgo8IS0tIGZhaWxm
-YXN0IC0tPgo8ZyBpZD0ibm9kZTYiIGNsYXNzPSJub2RlIj48dGl0bGU+ZmFpbGZhc3Q8L3Rp
-dGxlPgo8ZWxsaXBzZSBmaWxsPSJub25lIiBzdHJva2U9ImJsYWNrIiBjeD0iMzM2LjIwMyIg
-Y3k9Ii0xNzkiIHJ4PSIzOS45NTkzIiByeT0iNDAuMTExMSIvPgo8dGV4dCB0ZXh0LWFuY2hv
-cj0ibWlkZGxlIiB4PSIzMzYuMjAzIiB5PSItMTgyLjgiIGZvbnQtZmFtaWx5PSJUaW1lcyxz
-ZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+ZmFpbCBJL088L3RleHQ+Cjx0ZXh0IHRleHQtYW5j
-aG9yPSJtaWRkbGUiIHg9IjMzNi4yMDMiIHk9Ii0xNjcuOCIgZm9udC1mYW1pbHk9IlRpbWVz
-LHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj5mYXN0PC90ZXh0Pgo8L2c+CjwhLS0gcnVubmlu
-ZyYjNDU7Jmd0O2ZhaWxmYXN0IC0tPgo8ZyBpZD0iZWRnZTkiIGNsYXNzPSJlZGdlIj48dGl0
-bGU+cnVubmluZyYjNDU7Jmd0O2ZhaWxmYXN0PC90aXRsZT4KPHBhdGggZmlsbD0ibm9uZSIg
-c3Ryb2tlPSJibGFjayIgZD0iTTI1NC45NjcsLTQ5MS44OTZDMjYxLjEzLC00ODIuNDQ5IDI2
-Ni45NDcsLTQ3Mi4yMDggMjcxLjIwMywtNDYyIDI5Ni42MjksLTQwMS4wMTcgMjg0LjI5OCwt
-MzgwLjM2OCAyOTkuMjAzLC0zMTYgMzA2LjAyNiwtMjg2LjUzNyAzMTQuODg1LC0yNTMuODIz
-IDMyMi4yMjQsLTIyNy44NjUiLz4KPHBvbHlnb24gZmlsbD0iYmxhY2siIHN0cm9rZT0iYmxh
-Y2siIHBvaW50cz0iMzI1LjY4NiwtMjI4LjQ4NCAzMjUuMDU4LC0yMTcuOTA4IDMxOC45NTQs
-LTIyNi41NjggMzI1LjY4NiwtMjI4LjQ4NCIvPgo8dGV4dCB0ZXh0LWFuY2hvcj0ibWlkZGxl
-IiB4PSIzNzMuMjAzIiB5PSItMzY4LjMiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9u
-dC1zaXplPSIxNC4wMCI+ZmFzdF9pb19mYWlsX3RtbyA9IG9mZiBhbmQ8L3RleHQ+Cjx0ZXh0
-IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjM3My4yMDMiIHk9Ii0zNTMuMyIgZm9udC1mYW1p
-bHk9IlRpbWVzLHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj5kZXZfbG9zc190bW8gPSBvZmY7
-PC90ZXh0Pgo8dGV4dCB0ZXh0LWFuY2hvcj0ibWlkZGxlIiB4PSIzNzMuMjAzIiB5PSItMzM4
-LjMiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+cmVjb25u
-ZWN0aW5nIGZhaWxlZDwvdGV4dD4KPC9nPgo8IS0tIHJ1bm5pbmdfcnRhJiM0NTsmZ3Q7cnVu
-bmluZyAtLT4KPGcgaWQ9ImVkZ2U1IiBjbGFzcz0iZWRnZSI+PHRpdGxlPnJ1bm5pbmdfcnRh
-JiM0NTsmZ3Q7cnVubmluZzwvdGl0bGU+CjxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iYmxh
-Y2siIGQ9Ik0zNDEuMDksLTcxOS45NzdDMzAwLjI1NiwtNzEyLjk3IDI0NS41LC02OTYuMTg5
-IDIxOC4yMDMsLTY1NiAyMDcuMjI4LC02MzkuODQgMjA0Ljc2NiwtNjE5LjM5MSAyMDYuMDI4
-LC02MDAuMDIyIi8+Cjxwb2x5Z29uIGZpbGw9ImJsYWNrIiBzdHJva2U9ImJsYWNrIiBwb2lu
-dHM9IjIwOS41MTYsLTYwMC4zMTIgMjA3LjAwMSwtNTkwLjAyIDIwMi41NDksLTU5OS42MzQg
-MjA5LjUxNiwtNjAwLjMxMiIvPgo8dGV4dCB0ZXh0LWFuY2hvcj0ibWlkZGxlIiB4PSIyOTIu
-MjAzIiB5PSItNjQ0LjMiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIx
-NC4wMCI+ZmFzdF9pb19mYWlsX3RtbyA9IG9mZiBhbmQ8L3RleHQ+Cjx0ZXh0IHRleHQtYW5j
-aG9yPSJtaWRkbGUiIHg9IjI5Mi4yMDMiIHk9Ii02MjkuMyIgZm9udC1mYW1pbHk9IlRpbWVz
-LHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj5kZXZfbG9zc190bW8gPSBvZmY7PC90ZXh0Pgo8
-dGV4dCB0ZXh0LWFuY2hvcj0ibWlkZGxlIiB4PSIyOTIuMjAzIiB5PSItNjE0LjMiIGZvbnQt
-ZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+cmVjb25uZWN0aW5nIHN1
-Y2NlZWRlZDwvdGV4dD4KPC9nPgo8IS0tIHJ1bm5pbmdfcnRhJiM0NTsmZ3Q7bG9zdCAtLT4K
-PGcgaWQ9ImVkZ2UyNSIgY2xhc3M9ImVkZ2UiPjx0aXRsZT5ydW5uaW5nX3J0YSYjNDU7Jmd0
-O2xvc3Q8L3RpdGxlPgo8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9ImJsYWNrIiBkPSJNNDQy
-LjAzNCwtNzEzLjA1QzQ3NC40MDIsLTcwMi44OTIgNTE1LjI0OSwtNjg1LjE4MyA1NDEuMjAz
-LC02NTYgNTc4LjE5MSwtNjE0LjQxMSA1ODAuMjAzLC01OTIuNjU3IDU4MC4yMDMsLTUzNyA1
-ODAuMjAzLC01MzcgNTgwLjIwMywtNTM3IDU4MC4yMDMsLTE3OCA1ODAuMjAzLC05Mi40NDAx
-IDQ5Ny40MTYsLTEwNi4zMzggNDE4LjIwMywtNzQgMzU4LjM0OSwtNDkuNTY0OSAyODMuNTgx
-LC0zNy44MTk4IDIzOS4yNjIsLTMyLjYzMzIiLz4KPHBvbHlnb24gZmlsbD0iYmxhY2siIHN0
-cm9rZT0iYmxhY2siIHBvaW50cz0iMjM5LjU0MSwtMjkuMTQyNiAyMjkuMjE0LC0zMS41MDkx
-IDIzOC43NjMsLTM2LjA5OTIgMjM5LjU0MSwtMjkuMTQyNiIvPgo8dGV4dCB0ZXh0LWFuY2hv
-cj0ibWlkZGxlIiB4PSI2NDYuNzAzIiB5PSItMzUzLjMiIGZvbnQtZmFtaWx5PSJUaW1lcyxz
-ZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+c3JwX3N0b3BfcnBvcnRfdGltZXJzKCk8L3RleHQ+
-CjwvZz4KPCEtLSBibG9ja2VkJiM0NTsmZ3Q7cnVubmluZyAtLT4KPGcgaWQ9ImVkZ2UxNyIg
-Y2xhc3M9ImVkZ2UiPjx0aXRsZT5ibG9ja2VkJiM0NTsmZ3Q7cnVubmluZzwvdGl0bGU+Cjxw
-YXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iYmxhY2siIGQ9Ik0xNzMuOTU1LC0zOTYuMDUxQzE4
-MC41NjgsLTQxNS43NDUgMTg4Ljc5MywtNDQwLjE3MiAxOTYuMjAzLC00NjIgMTk3LjQ3NSwt
-NDY1Ljc0NiAxOTguNzg2LC00NjkuNTk5IDIwMC4xMSwtNDczLjQ4NSIvPgo8cG9seWdvbiBm
-aWxsPSJibGFjayIgc3Ryb2tlPSJibGFjayIgcG9pbnRzPSIxOTYuODczLC00NzQuODM1IDIw
-My40MTUsLTQ4My4xNjkgMjAzLjQ5OCwtNDcyLjU3NCAxOTYuODczLC00NzQuODM1Ii8+Cjx0
-ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjIzMy43MDMiIHk9Ii00NDIuOCIgZm9udC1m
-YW1pbHk9IlRpbWVzLHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj5yZWNvbm5lY3Rpbmc8L3Rl
-eHQ+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjIzMy43MDMiIHk9Ii00MjcuOCIg
-Zm9udC1mYW1pbHk9IlRpbWVzLHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj5zdWNjZWVkZWQ8
-L3RleHQ+CjwvZz4KPCEtLSBibG9ja2VkJiM0NTsmZ3Q7bG9zdCAtLT4KPGcgaWQ9ImVkZ2Ux
-MyIgY2xhc3M9ImVkZ2UiPjx0aXRsZT5ibG9ja2VkJiM0NTsmZ3Q7bG9zdDwvdGl0bGU+Cjxw
-YXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iYmxhY2siIGQ9Ik0xNTQuNDQ4LC0zMTYuNTQxQzE0
-OC4xNzIsLTI3Mi41MDYgMTQxLjUzNSwtMTk5LjM3NiAxNTQuMjAzLC0xMzggMTU5LjczMSwt
-MTExLjIyMiAxNzIuMTUzLC04Mi45MjIxIDE4Mi44MzksLTYxLjg3MDciLz4KPHBvbHlnb24g
-ZmlsbD0iYmxhY2siIHN0cm9rZT0iYmxhY2siIHBvaW50cz0iMTg2LjA4LC02My4yMjU5IDE4
-Ny41OTYsLTUyLjc0MDEgMTc5Ljg3MiwtNTkuOTkxOCAxODYuMDgsLTYzLjIyNTkiLz4KPHRl
-eHQgdGV4dC1hbmNob3I9Im1pZGRsZSIgeD0iMjIwLjcwMyIgeT0iLTE5MC4zIiBmb250LWZh
-bWlseT0iVGltZXMsc2VyaWYiIGZvbnQtc2l6ZT0iMTQuMDAiPmRldl9sb3NzX3RtbzwvdGV4
-dD4KPHRleHQgdGV4dC1hbmNob3I9Im1pZGRsZSIgeD0iMjIwLjcwMyIgeT0iLTE3NS4zIiBm
-b250LWZhbWlseT0iVGltZXMsc2VyaWYiIGZvbnQtc2l6ZT0iMTQuMDAiPmV4cGlyZWQgb3I8
-L3RleHQ+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjIyMC43MDMiIHk9Ii0xNjAu
-MyIgZm9udC1mYW1pbHk9IlRpbWVzLHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj5zcnBfc3Rv
-cF9ycG9ydF90aW1lcnMoKTwvdGV4dD4KPC9nPgo8IS0tIGJsb2NrZWQmIzQ1OyZndDtmYWls
-ZmFzdCAtLT4KPGcgaWQ9ImVkZ2UxMSIgY2xhc3M9ImVkZ2UiPjx0aXRsZT5ibG9ja2VkJiM0
-NTsmZ3Q7ZmFpbGZhc3Q8L3RpdGxlPgo8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9ImJsYWNr
-IiBkPSJNMTU2LjM3NSwtMzE2LjA4NEMxNTUuNjE1LC0yOTAuNDIzIDE1OS40MTksLTI1OC4y
-MTcgMTc5LjIwMywtMjM4IDIxMS43MDYsLTIwNC43ODYgMjM5LjQ5NiwtMjM4LjMyMyAyODIu
-MjAzLC0yMjAgMjg3LjU2MSwtMjE3LjcwMSAyOTIuODg0LC0yMTQuNzc2IDI5Ny45ODMsLTIx
-MS41NTciLz4KPHBvbHlnb24gZmlsbD0iYmxhY2siIHN0cm9rZT0iYmxhY2siIHBvaW50cz0i
-Mjk5Ljk5NSwtMjE0LjQyMSAzMDYuMzE3LC0yMDUuOTE5IDI5Ni4wNzMsLTIwOC42MjMgMjk5
-Ljk5NSwtMjE0LjQyMSIvPgo8dGV4dCB0ZXh0LWFuY2hvcj0ibWlkZGxlIiB4PSIyMjUuMjAz
-IiB5PSItMjg2LjgiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4w
-MCI+ZmFzdF9pb19mYWlsX3RtbzwvdGV4dD4KPHRleHQgdGV4dC1hbmNob3I9Im1pZGRsZSIg
-eD0iMjI1LjIwMyIgeT0iLTI3MS44IiBmb250LWZhbWlseT0iVGltZXMsc2VyaWYiIGZvbnQt
-c2l6ZT0iMTQuMDAiPmV4cGlyZWQgb3I8L3RleHQ+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRk
-bGUiIHg9IjIyNS4yMDMiIHk9Ii0yNTYuOCIgZm9udC1mYW1pbHk9IlRpbWVzLHNlcmlmIiBm
-b250LXNpemU9IjE0LjAwIj5yZWNvbm5lY3Rpbmc8L3RleHQ+Cjx0ZXh0IHRleHQtYW5jaG9y
-PSJtaWRkbGUiIHg9IjIyNS4yMDMiIHk9Ii0yNDEuOCIgZm9udC1mYW1pbHk9IlRpbWVzLHNl
-cmlmIiBmb250LXNpemU9IjE0LjAwIj5mYWlsZWQ8L3RleHQ+CjwvZz4KPCEtLSBmYWlsZmFz
-dCYjNDU7Jmd0O3J1bm5pbmcgLS0+CjxnIGlkPSJlZGdlMjEiIGNsYXNzPSJlZGdlIj48dGl0
-bGU+ZmFpbGZhc3QmIzQ1OyZndDtydW5uaW5nPC90aXRsZT4KPHBhdGggZmlsbD0ibm9uZSIg
-c3Ryb2tlPSJibGFjayIgZD0iTTM2Ni43MDUsLTIwNS44NzRDNDExLjQzMSwtMjQ3LjA4IDQ4
-NS41NTEsLTMyOS45MSA0NDcuMjAzLC0zOTggNDEyLjUyOSwtNDU5LjU2OCAzMzcuNzg1LC00
-OTYuNjM5IDI4My43MywtNTE2LjQwNyIvPgo8cG9seWdvbiBmaWxsPSJibGFjayIgc3Ryb2tl
-PSJibGFjayIgcG9pbnRzPSIyODIuNDgxLC01MTMuMTM2IDI3NC4yMywtNTE5Ljc4MiAyODQu
-ODI1LC01MTkuNzMyIDI4Mi40ODEsLTUxMy4xMzYiLz4KPHRleHQgdGV4dC1hbmNob3I9Im1p
-ZGRsZSIgeD0iNDk0LjcwMyIgeT0iLTM2MC44IiBmb250LWZhbWlseT0iVGltZXMsc2VyaWYi
-IGZvbnQtc2l6ZT0iMTQuMDAiPnJlY29ubmVjdGluZzwvdGV4dD4KPHRleHQgdGV4dC1hbmNo
-b3I9Im1pZGRsZSIgeD0iNDk0LjcwMyIgeT0iLTM0NS44IiBmb250LWZhbWlseT0iVGltZXMs
-c2VyaWYiIGZvbnQtc2l6ZT0iMTQuMDAiPnN1Y2NlZWRlZDwvdGV4dD4KPC9nPgo8IS0tIGZh
-aWxmYXN0JiM0NTsmZ3Q7bG9zdCAtLT4KPGcgaWQ9ImVkZ2UxNSIgY2xhc3M9ImVkZ2UiPjx0
-aXRsZT5mYWlsZmFzdCYjNDU7Jmd0O2xvc3Q8L3RpdGxlPgo8cGF0aCBmaWxsPSJub25lIiBz
-dHJva2U9ImJsYWNrIiBkPSJNMzA5LjUzMiwtMTQ4LjU2MkMyODUuNDM3LC0xMjEuOTY5IDI1
-MC4yMjQsLTgzLjEwNDcgMjI2LjU0OSwtNTYuOTczOSIvPgo8cG9seWdvbiBmaWxsPSJibGFj
-ayIgc3Ryb2tlPSJibGFjayIgcG9pbnRzPSIyMjguOTA1LC01NC4zNjE1IDIxOS41OTcsLTQ5
-LjMwMDkgMjIzLjcxNywtNTkuMDYxNSAyMjguOTA1LC01NC4zNjE1Ii8+Cjx0ZXh0IHRleHQt
-YW5jaG9yPSJtaWRkbGUiIHg9IjM0Ny43MDMiIHk9Ii0xMDguMyIgZm9udC1mYW1pbHk9IlRp
-bWVzLHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj5kZXZfbG9zc190bW88L3RleHQ+Cjx0ZXh0
-IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjM0Ny43MDMiIHk9Ii05My4zIiBmb250LWZhbWls
-eT0iVGltZXMsc2VyaWYiIGZvbnQtc2l6ZT0iMTQuMDAiPmV4cGlyZWQgb3I8L3RleHQ+Cjx0
-ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjM0Ny43MDMiIHk9Ii03OC4zIiBmb250LWZh
-bWlseT0iVGltZXMsc2VyaWYiIGZvbnQtc2l6ZT0iMTQuMDAiPnNycF9zdG9wX3Jwb3J0X3Rp
-bWVycygpPC90ZXh0Pgo8L2c+CjwhLS0gZmFpbGZhc3QmIzQ1OyZndDtmYWlsZmFzdCAtLT4K
-PGcgaWQ9ImVkZ2UxOSIgY2xhc3M9ImVkZ2UiPjx0aXRsZT5mYWlsZmFzdCYjNDU7Jmd0O2Zh
-aWxmYXN0PC90aXRsZT4KPHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSJibGFjayIgZD0iTTM3
-My41NzksLTE5NC4zNkMzODUuMTMxLC0xOTQuMDUgMzk0LjIwMywtMTg4LjkzIDM5NC4yMDMs
-LTE3OSAzOTQuMjAzLC0xNzIuMTczIDM4OS45MTUsLTE2Ny42MiAzODMuNDgxLC0xNjUuMzQi
-Lz4KPHBvbHlnb24gZmlsbD0iYmxhY2siIHN0cm9rZT0iYmxhY2siIHBvaW50cz0iMzg0LjAy
-NywtMTYxLjg4MyAzNzMuNTc5LC0xNjMuNjQgMzgyLjg0MiwtMTY4Ljc4MiAzODQuMDI3LC0x
-NjEuODgzIi8+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjQzMS43MDMiIHk9Ii0x
-ODIuOCIgZm9udC1mYW1pbHk9IlRpbWVzLHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj5yZWNv
-bm5lY3Rpbmc8L3RleHQ+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjQzMS43MDMi
-IHk9Ii0xNjcuOCIgZm9udC1mYW1pbHk9IlRpbWVzLHNlcmlmIiBmb250LXNpemU9IjE0LjAw
-Ij5mYWlsZWQ8L3RleHQ+CjwvZz4KPC9nPgo8L3N2Zz4K
---------------020708080506060601090809--
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+iQIVAwUBUqiQSVheFHXiqx3kAQLK+g//ckRFICvgTZSjj+vEZHLnnAZ8VTPzGvwT
+GFAziaoyBxXh95WQPyQDPg/rEyzrxiWg+maRboUO0jzrNs1t80KYDk8MtAgPHy/2
+px6k/MneQDJGaHiI4UDufGeqp/Vp8WVZ26qgh29kslKDIm28g+PMF9FNOkqX5gKW
+1GvqC9hxU0zlJ8CyhbHI5g+5jvXhgfrLW7wdBgiT0h3dT0/LJzqxAJ7gtiAwTOBU
+CvF9V8AwUyOytFXYNH9ozeMJ9S9t8kRR9vkfEAtVcAZv+QaMJ5tCCjliHon67i40
+SNO0TOMynsTcPnquFuEW8OIzIumWKA2xrYMlJnUb+xv/AEGDBwP/PXu+JtnLdjTt
+cT8Zi42gsFwhE309qwkJ4/t7FHMDNflw0u/51iRwi1XWnQegZuPkvri1ckgy40OQ
+UZgMH08KCaoj77FdSkqoq70SsQiYs7ZYuPram2OIc/znLTBQEoY612nUdFdTAVq2
+OIupO8jUMaU2tn5lgV+ndi/eRog9Ph39M5/2NNMHo93+gY0qBuGkp3t3Q/2WCkgN
+5inPmaLunjhsuB3yj9wmui4a5Fh8TL+Jzfa0MpYCg0yh11VPqK1C1TucFk4/ez8Z
+MttO/KX83Y+ea2ZHXEbBw5yKfnqVlnhG7ETDZg2Eooh+ZOwpWGLsPZIgHw8vGkfL
+iUQ1KZ9FgkE=
+=Ptdu
+-----END PGP SIGNATURE-----
+
+--DheUW4aQn8WJk6WR--
