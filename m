@@ -1,92 +1,313 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] qla2xxx: Fix schedule_delayed_work() timeout
- calculations
-Date: Wed, 11 Dec 2013 16:05:56 -0800
-Message-ID: <1386806756.20247.113.camel@haakon3.risingtidesystems.com>
-References: <CAN-_EfwQc=L6nQy2+eSuBhjMkPB0Z_0e6Uc-k5D51GY6Mj9aDQ@mail.gmail.com>
+From: Saurav Kashyap <saurav.kashyap@qlogic.com>
+Subject: Re: qla2xxx: kernel oops with ql2xmultique_tag=1
+Date: Thu, 12 Dec 2013 02:31:39 +0000
+Message-ID: <F5D084D6342F9B479C34599BB0A03E4D89848F72@AVMB1.qlogic.org>
+References: <52A85832.2050701@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <CAN-_EfwQc=L6nQy2+eSuBhjMkPB0Z_0e6Uc-k5D51GY6Mj9aDQ@mail.gmail.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Shivaram Upadhyayula <shivaram.u@quadstor.com>
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, Chad Dupuis <chad.dupuis@qlogic.com>
+Content-Type: multipart/mixed;
+	boundary="_000_F5D084D6342F9B479C34599BB0A03E4D89848F72AVMB1qlogicorg_"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:9602 "EHLO
+	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751168Ab3LLCbn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 11 Dec 2013 21:31:43 -0500
+Received: from pps.filterd (m0045602.ppops.net [127.0.0.1])
+	by mx0a-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id rBC28vJD002983
+	for <linux-scsi@vger.kernel.org>; Wed, 11 Dec 2013 18:31:42 -0800
+Received: from avcashub1.qlogic.com (avcashub3.qlogic.com [198.70.193.117])
+	by mx0a-0016ce01.pphosted.com with ESMTP id 1gpxux0b8j-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Wed, 11 Dec 2013 18:31:42 -0800
+In-Reply-To: <52A85832.2050701@acm.org>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-Hi Shivaram,
+--_000_F5D084D6342F9B479C34599BB0A03E4D89848F72AVMB1qlogicorg_
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <510C45145D59034E8F678BB8C400C1B9@qlogic.com>
+Content-Transfer-Encoding: quoted-printable
 
-On Tue, 2013-12-10 at 16:06 +0530, Shivaram Upadhyayula wrote:
-> Hi,
-> 
-> The following patch is a fix for the timeout/delay passed to
-> scheduled_delayed_work.
-> 
+Hi Bart,
+We are looking into it.
 
-Thanks, patch applied to target-pending/master with a CC' to v3.6.y+
-stable code.
+Thanks,
+~Saurav
 
-Also just for future reference, this patch has extra carriage returns
-and did not apply without some light massaging.
 
-Fixed that up for this particular case, but please fix your email client
-for future patches.
+>Hello,
+>
+>Apparently trying to load the qla2xxx kernel module with parameter
+>ql2xmultique_tag=3D1 triggers a kernel oops. This is 100% reproducible
+>with at least kernel versions 3.11.8 and 3.13-rc3. Has anybody else
+>run into this before ?
+>
+>Thanks,
+>
+>Bart.
+>
+># rmmod qla2xxx; dmesg -c >/dev/null; insmod
+>/lib/modules/3.13.0-rc3+/kernel/drivers/scsi/qla2xxx/qla2xxx.ko
+>ql2xmultique_tag=3D1; ql2xextended_error_logging=3D0x40100000; dmesg -c
+>Segmentation fault
+>
+>qla2xxx [0000:00:00.0]-0005: : QLogic Fibre Channel HBA Driver:
+>8.06.00.08-k-debug.
+>qla2xxx [0000:01:00.0]-0807: : Mem only adapter.
+>qla2xxx [0000:01:00.0]-0808: : Bars=3D74.
+>qla2xxx [0000:01:00.0]-080a: : Memory allocated for ha=3Dffff8800bf148000.
+>qla2xxx [0000:01:00.0]-080b: : device_type=3D0x9c000800 port=3D1
+>fw_srisc_address=3D0x100000.
+>qla2xxx [0000:01:00.0]-081e: : mbx_count=3D32, req_length=3D2048,
+>rsp_length=3D512, max_loop_id=3D2047, init_cb_size=3D5252,
+>gid_list_info_size=3D8, optrom_size=3D2097152, nvram_npiv_size=3D256,
+>max_fibre_devices=3D2048.
+>qla2xxx [0000:01:00.0]-081f: : isp_ops=3Dffffffffa056ca80,
+>flash_conf_off=3D2147287040, flash_data_off=3D2146435072,
+>nvram_conf_off=3D2147418112, nvram_data_off=3D2147352576.
+>qla2xxx [0000:01:00.0]-0818: : MQIO Base=3Dffffc90015080000.
+>qla2xxx [0000:01:00.0]-001a: : MSI-X vector count: 31.
+>qla2xxx [0000:01:00.0]-081c: : MSIX Count:6.
+>qla2xxx [0000:01:00.0]-001d: : Found an ISP2532 irq 16 iobase
+>0xffffc9000007a000.
+>qla2xxx [0000:01:00.0]-0820: : 64 Bit addressing is enable.
+>qla2xxx [0000:01:00.0]-0822: : init_cb=3Dffff8800877ba000
+>gid_list=3Dffff88008dfac000, srb_mempool=3Dffff88008dffeeb8
+>s_dma_pool=3Dffff88008dffe080.
+>qla2xxx [0000:01:00.0]-0825: : dl_dma_pool=3Dffff88008dfff2c8
+>fcp_cmnd_dma_pool=3Dffff88008dffc820.
+>qla2xxx [0000:01:00.0]-0827: : ms_iocb=3Dffff8800872e4000
+>ct_sns=3Dffff8800d7b98000.
+>qla2xxx [0000:01:00.0]-082c: : req=3Dffff88008dffc208 req->length=3D2048
+>req->ring=3Dffff880087240000 rsp=3Dffff8800bdcf9b60 rsp->length=3D512
+>rsp->ring=3Dffff88008df70000.
+>qla2xxx [0000:01:00.0]-0923: : loop_id_map=3Dffff8800bdcf8ff8.
+>qla2xxx [0000:01:00.0]-0841:16: Allocated the host=3Dffff8800d36bb3d8
+>hw=3Dffff8800bf148000 vha=3Dffff8800d36bbd50 dev_name=3D0000:01:00.0
+>qla2xxx [0000:01:00.0]-0832:16: can_queue=3D2176, req=3Dffff88008dffc208,
+>mgmt_svr_loop_id=3D10, sg_tablesize=3D1024.
+>qla2xxx [0000:01:00.0]-0833:16: max_id=3D2048 this_id=3D-1 cmd_per_len=3D3
+>unique_id=3D16 max_cmd_len=3D16 max_channel=3D0 max_lun=3D65535
+>transportt=3Dffff8800a971d668, vendor_id=3D72057594037932151.
+>qla2xxx 0000:01:00.0: irq 49 for MSI/MSI-X
+>qla2xxx 0000:01:00.0: irq 50 for MSI/MSI-X
+>qla2xxx 0000:01:00.0: irq 67 for MSI/MSI-X
+>qla2xxx 0000:01:00.0: irq 68 for MSI/MSI-X
+>qla2xxx 0000:01:00.0: irq 69 for MSI/MSI-X
+>qla2xxx 0000:01:00.0: irq 70 for MSI/MSI-X
+>general protection fault: 0000 [#1] SMP
+>Modules linked in: qla2xxx(+) fuse ip6table_filter ip6_tables
+>iptable_filter ip_tables ebtable_nat ebtables x_tables af_packet bridge
+>stp llc rdma_ucm rdma_cm iw_cm ib_addr ib_srp scsi_transport_srp scsi_tgt
+>ib_ipoib ib_cm ib_uverbs ib_umad mlx4_en mlx4_ib ib_sa ib_mad ib_core
+>hid_generic usbhid hid snd_hda_codec_hdmi snd_hda_codec_realtek
+>snd_hda_intel snd_hda_codec r8169 snd_hwdep snd_pcm x86_pkg_temp_thermal
+>kvm_intel snd_seq kvm mii crc32c_intel snd_timer snd_seq_device i2c_i801
+>mlx4_core snd lpc_ich sr_mod pcspkr mfd_core microcode soundcore ehci_pci
+>snd_page_alloc sg cdrom acpi_cpufreq ehci_hcd scsi_transport_fc wmi
+>autofs4 ext4 jbd2 mbcache crc16 raid456 async_raid6_recov async_pq
+>raid6_pq async_xor xor async_memcpy async_tx raid10 raid0 raid1 sd_mod
+>crc_t10dif crct10dif_common ahci xhci_hcd libahci usbcore usb_common i915
+>drm_kms_helper drm intel_agp i2c_algo_bit intel_gtt agpgart i2c_core fan
+>thermal video button processor thermal_sys hwmon scsi_dh_alua scsi_dh
+>pata_
+> acpi liba
+>ta scsi_mod [last unloaded: qla2xxx]
+>CPU: 3 PID: 4173 Comm: insmod Tainted: G        W    3.13.0-rc3+ #1
+>Hardware name: Gigabyte Technology Co., Ltd. To be filled by
+>O.E.M./Z68X-UD3H-B3, BIOS U1l 03/08/2013
+>task: ffff8800a80cb330 ti: ffff880087740000 task.ti: ffff880087740000
+>RIP: 0010:[<ffffffff812484ad>]  [<ffffffff812484ad>] strnlen+0xd/0x40
+>RSP: 0018:ffff880087741758  EFLAGS: 00010286
+>RAX: ffffffff817800c2 RBX: ffff880087741888 RCX: fffffffffffffffe
+>RDX: 5f78783532616c71 RSI: ffffffffffffffff RDI: 5f78783532616c71
+>RBP: ffff880087741758 R08: 000000000000ffff R09: 000000000000ffff
+>R10: 0000000000000000 R11: 0000000000000001 R12: 5f78783532616c71
+>R13: ffff880087741908 R14: 000000000000ffff R15: 0000000000000000
+>FS:  00007fdd76627700(0000) GS:ffff88011f380000(0000)
+>knlGS:0000000000000000
+>CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+>CR2: 00007fdd75d5b00f CR3: 00000000bf270000 CR4: 00000000000407e0
+>Stack:
+>ffff880087741798 ffffffff81249f0e ffff88011a814000 ffff880087741888
+>ffff880087741908 ffff880087741830 ffffffff8177d4ab ffffffff8177d4ab
+>ffff880087741818 ffffffff8124bcf9 0000000000000000 0000000000000000
+>Call Trace:
+>[<ffffffff81249f0e>] string.isra.3+0x3e/0xd0
+>[<ffffffff8124bcf9>] vsnprintf+0x309/0x5f0
+>[<ffffffff8124c084>] snprintf+0x34/0x40
+>[<ffffffff810964ed>] ? trace_hardirqs_on+0xd/0x10
+>[<ffffffff810a4c6d>] register_handler_proc+0xed/0x120
+>[<ffffffff810a1303>] __setup_irq+0x263/0x540
+>[<ffffffff810a16b7>] request_threaded_irq+0xd7/0x180
+>[<ffffffffa0519b2c>] qla2x00_request_irqs+0x28c/0x6d0 [qla2xxx]
+>[<ffffffffa04f6f09>] qla2x00_probe_one+0xc29/0x22e0 [qla2xxx]
+>[<ffffffff8131bcce>] ? __pm_runtime_resume+0x4e/0xa0
+>[<ffffffff8109641d>] ? trace_hardirqs_on_caller+0x10d/0x1d0
+>[<ffffffff810964ed>] ? trace_hardirqs_on+0xd/0x10
+>[<ffffffff8127674c>] pci_device_probe+0x9c/0xf0
+>[<ffffffff8131334b>] driver_probe_device+0x8b/0x390
+>[<ffffffff813136fb>] __driver_attach+0xab/0xb0
+>[<ffffffff81313650>] ? driver_probe_device+0x390/0x390
+>[<ffffffff813112dd>] bus_for_each_dev+0x5d/0xa0
+>[<ffffffff81312cae>] driver_attach+0x1e/0x20
+>[<ffffffff813128d7>] bus_add_driver+0x127/0x250
+>[<ffffffffa08ae000>] ? 0xffffffffa08adfff
+>[<ffffffff81313ba4>] driver_register+0x64/0xf0
+>[<ffffffffa08ae000>] ? 0xffffffffa08adfff
+>[<ffffffff81276024>] __pci_register_driver+0x64/0x70
+>[<ffffffffa08ae000>] ? 0xffffffffa08adfff
+>[<ffffffffa08ae1ce>] qla2x00_module_init+0x1ce/0x21d [qla2xxx]
+>[<ffffffff810002ea>] do_one_initcall+0xda/0x180
+>[<ffffffff8103da73>] ? set_memory_nx+0x43/0x50
+>[<ffffffff8148beb2>] ? set_section_ro_nx+0x6d/0x74
+>[<ffffffff810c00ff>] load_module+0x1caf/0x2750
+>[<ffffffff810bb840>] ? __unlink_module+0x30/0x30
+>[<ffffffff81140cdf>] ? might_fault+0x5f/0xb0
+>[<ffffffff810c0c4e>] SyS_init_module+0xae/0x110
+>[<ffffffff8149f722>] tracesys+0xd0/0xd5
+>Code: c0 01 80 38 00 75 f7 48 29 f8 5d c3 31 c0 5d c3 66 66 66 66 66 2e
+>0f 1f 84 00 00 00 00 00 55 48 8d 4e ff 48 85 f6 48 89 e5 74 2a <80> 3f 00
+>74 25 48 89 f8 31 d2 eb 10 0f 1f 80 00 00 00 00 48 83
+>RIP  [<ffffffff812484ad>] strnlen+0xd/0x40
+>RSP <ffff880087741758>
+>---[ end trace 2f850debe173d2e4 ]---
 
-Thank you,
 
---nab
+--_000_F5D084D6342F9B479C34599BB0A03E4D89848F72AVMB1qlogicorg_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
 
-> Regards,
-> Shivaram U
-> 
-> commit 1e0ea25bb6c834c1f4b2485f49d36a6c314cb7a4
-> Author: Shivaram U <shivaram.u@quadstor.com>
-> Date:   Tue Dec 10 15:38:14 2013 +0530
-> 
->     Fix schedule_delayed_work() timeout calculations
-> 
->     Signed-off-by: Shivaram U <shivaram.u@quadstor.com>
-> 
-> diff --git a/drivers/scsi/qla2xxx/qla_target.c
-> b/drivers/scsi/qla2xxx/qla_target.c
-> index 5964800..3bb0a1d 100644
-> --- a/drivers/scsi/qla2xxx/qla_target.c
-> +++ b/drivers/scsi/qla2xxx/qla_target.c
-> @@ -471,7 +471,7 @@ static void qlt_schedule_sess_for_deletion(struct
-> qla_tgt_sess *sess,
->  		schedule_delayed_work(&tgt->sess_del_work, 0);
->  	else
->  		schedule_delayed_work(&tgt->sess_del_work,
-> -		    jiffies - sess->expires);
-> +		    sess->expires - jiffies);
->  }
-> 
->  /* ha->hardware_lock supposed to be held on entry */
-> @@ -550,13 +550,14 @@ static void qlt_del_sess_work_fn(struct
-> delayed_work *work)
->  	struct scsi_qla_host *vha = tgt->vha;
->  	struct qla_hw_data *ha = vha->hw;
->  	struct qla_tgt_sess *sess;
-> -	unsigned long flags;
-> +	unsigned long flags, elapsed;
-> 
->  	spin_lock_irqsave(&ha->hardware_lock, flags);
->  	while (!list_empty(&tgt->del_sess_list)) {
->  		sess = list_entry(tgt->del_sess_list.next, typeof(*sess),
->  		    del_list_entry);
-> -		if (time_after_eq(jiffies, sess->expires)) {
-> +		elapsed = jiffies;
-> +		if (time_after_eq(elapsed, sess->expires)) {
->  			qlt_undelete_sess(sess);
-> 
->  			ql_dbg(ql_dbg_tgt_mgt, vha, 0xf004,
-> @@ -566,7 +567,7 @@ static void qlt_del_sess_work_fn(struct delayed_work *work)
->  			ha->tgt.tgt_ops->put_sess(sess);
->  		} else {
->  			schedule_delayed_work(&tgt->sess_del_work,
-> -			    jiffies - sess->expires);
-> +			    sess->expires - elapsed);
->  			break;
->  		}
->  	}
-> 
+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
+AGkAYwAuAGMAbwBtAAAAHwBkAAEAAAAKAAAAUwBNAFQAUAAAAAAAAgFBAAEAAAB0AAAAAAAAAIEr
+H6S+oxAZnW4A3QEPVAIAAACAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAUwBNAFQAUAAA
+AHMAYQB1AHIAYQB2AC4AawBhAHMAaAB5AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAJd
+AQAAADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBt
+AAAAHwDlXwEAAAA8AAAAcwBpAHAAOgBzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwA
+bwBnAGkAYwAuAGMAbwBtAAAAHwAaDAEAAAAeAAAAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBw
+AAAAAAAfAB8MAQAAADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkA
+YwAuAGMAbwBtAAAAHwAeDAEAAAAKAAAAUwBNAFQAUAAAAAAAAgEZDAEAAAB0AAAAAAAAAIErH6S+
+oxAZnW4A3QEPVAIAAACAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAUwBNAFQAUAAAAHMA
+YQB1AHIAYQB2AC4AawBhAHMAaAB5AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAFdAQAA
+ADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAA
+HwD4PwEAAAAeAAAAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAAAAfACNAAQAAADQAAABz
+AGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAiQAEA
+AAAKAAAAUwBNAFQAUAAAAAAAAgH5PwEAAAB0AAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAUwBh
+AHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAUwBNAFQAUAAAAHMAYQB1AHIAYQB2AC4AawBhAHMA
+aAB5AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAldAQAAADQAAABzAGEAdQByAGEAdgAu
+AGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAACwBAOgEAAAAfABoAAQAAABIA
+AABJAFAATQAuAE4AbwB0AGUAAAAAAAMA8T8JBAAACwBAOgEAAAADAP0/5AQAAAIBCzABAAAAEAAA
+AL0l4jMdDFZDvSO05voqqFsDABcAAQAAAEAAOQCA9xxJ4vbOAUAACDBEmKZJ4vbOAQsAAIAIIAYA
+AAAAAMAAAAAAAABGAAAAABSFAAABAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAHgAAAGEAYwBj
+AGUAcAB0AGwAYQBuAGcAdQBhAGcAZQAAAAAAAQAAAAwAAABlAG4ALQBVAFMAAAALAACACCAGAAAA
+AADAAAAAAAAARgAAAAAGhQAAAAAAAB8ANwABAAAAYgAAAFIAZQA6ACAAcQBsAGEAMgB4AHgAeAA6
+ACAAawBlAHIAbgBlAGwAIABvAG8AcABzACAAdwBpAHQAaAAgAHEAbAAyAHgAbQB1AGwAdABpAHEA
+dQBlAF8AdABhAGcAPQAxAAAAAAAfAD0AAQAAAAoAAABSAGUAOgAgAAAAAAADADYAAAAAAB8AQhAB
+AAAANgAAADwANQAyAEEAOAA1ADgAMwAyAC4AMgAwADUAMAA3ADAAMQBAAGEAYwBtAC4AbwByAGcA
+PgAAAAAAAgFxAAEAAAAbAAAAAQHO9msujwmI43AJLU2iX57uNNH0YJpP17uAAB8AcAABAAAAWgAA
+AHEAbABhADIAeAB4AHgAOgAgAGsAZQByAG4AZQBsACAAbwBvAHAAcwAgAHcAaQB0AGgAIABxAGwA
+MgB4AG0AdQBsAHQAaQBxAHUAZQBfAHQAYQBnAD0AMQAAAAAAHwA1EAEAAAB4AAAAPABGADUARAAw
+ADgANABEADYAMwA0ADIARgA5AEIANAA3ADkAQwAzADQANQA5ADkAQgBCADAAQQAwADMARQA0AEQA
+OAA5ADgANAA4AEYANwAyAEAAQQBWAE0AQgAxAC4AcQBsAG8AZwBpAGMALgBvAHIAZwA+AAAAAwDe
+P59OAABAAAcwwxKdSeL2zgEDACYAAAAAAAIBRwABAAAALgAAAGM9VVM7YT0gO3A9UUxvZ2ljO2w9
+QVZNQjEtMTMxMjEyMDIzMTM5Wi02MTA2NgAAAB8AFRABAAAAWAAAADUAMQAwAEMANAA1ADEANAA1
+AEQANQA5ADAAMwA0AEUAOABGADYANwA4AEIAQgA4AEMANAAwADAAQwAxAEIAOQBAAHEAbABvAGcA
+aQBjAC4AYwBvAG0AAAACARQwAQAAAAwAAADnAQAANG3WoUgAAAAfAPo/AQAAAB4AAABTAGEAdQBy
+AGEAdgAgAEsAYQBzAGgAeQBhAHAAAAAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAABYAAAB1AHMA
+ZQByAC0AYQBnAGUAbgB0AAAAAAABAAAASAAAAE0AaQBjAHIAbwBzAG8AZgB0AC0ATQBhAGMATwB1
+AHQAbABvAG8AawAvADEANAAuADEAMAAuADAALgAxADEAMAAzADEAMAAAAB8AAIAfpOszqHouQr57
+eeGpjlSzAQAAADgAAABDAG8AbgB2AGUAcgBzAGEAdABpAG8AbgBJAG4AZABlAHgAVAByAGEAYwBr
+AGkAbgBnAEUAeAAAAAEAAAAIAQAASQBJAD0AMAAxADAAMQBDAEUARgA2AEUAMgA0AEEAOQA5ADUA
+RQBEAEYARgA5ADAAQQBBADkARAA0ADQARAA5ADUARgBGAEYAMQBDADUAQQBEADUANwBDAEEAOQBD
+ADsAUwBCAE0ASQBEAD0AMwAwADsAUwAxAD0APAA1ADIAQQA4ADUAOAAzADIALgAyADAANQAwADcA
+MAAxAEAAYQBjAG0ALgBvAHIAZwA+ADsAVgBlAHIAcwBpAG8AbgA9AFYAZQByAHMAaQBvAG4AIAAx
+ADQALgAyACAAKABCAHUAaQBsAGQAIAAzADEAOAAuADAAKQAsACAAUwB0AGEAZwBlAD0ASAAyAAAA
+AwANNP0/AAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAgAAAAeAAtAG0AcwAtAGgAYQBzAC0AYQB0
+AHQAYQBjAGgAAAABAAAAAgAAAAAAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAiAAAAeAAtAG8A
+cgBpAGcAaQBuAGEAdABpAG4AZwAtAGkAcAAAAAAAAQAAABoAAABbADEAMAAuADgALgA2AC4AMgAz
+ADgAXQAAAAAAToA=
+
+--_000_F5D084D6342F9B479C34599BB0A03E4D89848F72AVMB1qlogicorg_--
