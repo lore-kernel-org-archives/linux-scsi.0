@@ -1,126 +1,138 @@
-From: Loc Ho <lho@apm.com>
-Subject: [PATCH v6 4/4] arm64: Add APM X-Gene SoC SATA host controller DTS entries
-Date: Thu, 12 Dec 2013 00:55:40 -0700
-Message-ID: <1386834940-30875-5-git-send-email-lho@apm.com>
-References: <1386834940-30875-1-git-send-email-lho@apm.com>
- <1386834940-30875-2-git-send-email-lho@apm.com>
- <1386834940-30875-3-git-send-email-lho@apm.com>
- <1386834940-30875-4-git-send-email-lho@apm.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1386834940-30875-4-git-send-email-lho@apm.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH] iscsi_target: race condition on shutdown
+Date: Wed, 11 Dec 2013 23:54:12 -0800
+Message-ID: <1386834852.20247.121.camel@haakon3.risingtidesystems.com>
+References: <1386251665-39173-1-git-send-email-hare@suse.de>
+	 <1386805475.20247.109.camel@haakon3.risingtidesystems.com>
+	 <52A96352.3050107@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:48433 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751385Ab3LLIED (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Dec 2013 03:04:03 -0500
+In-Reply-To: <52A96352.3050107@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Nic Bellinger <nab@daterainc.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Signed-off-by: Loc Ho <lho@apm.com>
-Signed-off-by: Tuan Phan <tphan@apm.com>
-Signed-off-by: Suman Tripathi <stripathi@apm.com>
----
- arch/arm64/boot/dts/apm-storm.dtsi |   84 ++++++++++++++++++++++++++++++++++++
- 1 files changed, 84 insertions(+), 0 deletions(-)
+On Thu, 2013-12-12 at 08:18 +0100, Hannes Reinecke wrote:
+> On 12/12/2013 12:44 AM, Nicholas A. Bellinger wrote:
 
-diff --git a/arch/arm64/boot/dts/apm-storm.dtsi b/arch/arm64/boot/dts/apm-storm.dtsi
-index e967676..4d7fe65 100644
---- a/arch/arm64/boot/dts/apm-storm.dtsi
-+++ b/arch/arm64/boot/dts/apm-storm.dtsi
-@@ -176,6 +176,51 @@
- 				reg-names = "csr-reg";
- 				clock-output-names = "eth8clk";
- 			};
-+
-+			sata01clk: sata01clk@1f21c000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				clock-names = "sata01clk";
-+				reg = <0x0 0x1f21c000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "sata01clk";
-+				status = "disabled";
-+				csr-offset = <0x4>;
-+				csr-mask = <0x3f>;
-+				enable-offset = <0x0>;
-+				enable-mask = <0x3f>;
-+			};
-+
-+			sata23clk: sata23clk@1f22c000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				clock-names = "sata23clk";
-+				reg = <0x0 0x1f22c000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "sata23clk";
-+				status = "ok";
-+				csr-offset = <0x4>;
-+				csr-mask = <0x3f>;
-+				enable-offset = <0x0>;
-+				enable-mask = <0x3f>;
-+			};
-+
-+			sata45clk: sata45clk@1f23c000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				clock-names = "sata45clk";
-+				reg = <0x0 0x1f23c000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "sata45clk";
-+				status = "ok";
-+				csr-offset = <0x4>;
-+				csr-mask = <0x3f>;
-+				enable-offset = <0x0>;
-+				enable-mask = <0x3f>;
-+			};
- 		};
+<SNIP>
 
- 		serial0: serial@1c020000 {
-@@ -224,5 +269,44 @@
- 			apm,tx-boost-gain = <0x2 0x3 0x3 0x2 0x3 0x3>;
- 			apm,tx-eye-tuning = <0x2 0xa 0xa 0x2 0xa 0xc>;
- 		};
-+
-+		sata1: sata@1a000000 {
-+			compatible = "apm,xgene-ahci-sgmii";
-+			reg = <0x0 0x1a000000 0x0 0x1000>,
-+			      <0x0 0x1f210000 0x0 0x10000>,
-+			      <0x0 0x1f2a0000 0x0 0x10000>,
-+			      <0x0 0x1c000200 0x0 0x100>;
-+			interrupts = <0x0 0x86 0x4>;
-+			status = "disabled";
-+			clocks = <&sata01clk 0>;
-+			phys = <&phy1 0>;
-+			phy-names = "sata-6g";
-+		};
-+
-+		sata2: sata@1a400000 {
-+			compatible = "apm,xgene-ahci-sgmii";
-+			reg = <0x0 0x1a400000 0x0 0x1000>,
-+			      <0x0 0x1f220000 0x0 0x10000>,
-+			      <0x0 0x1f2a0000 0x0 0x10000>,
-+			      <0x0 0x1c000200 0x0 0x100>;
-+			interrupts = <0x0 0x87 0x4>;
-+			status = "ok";
-+			clocks = <&sata23clk 0>;
-+			phys = <&phy2 0>;
-+			phy-names = "sata-6g";
-+		};
-+
-+		sata3: sata@1a800000 {
-+			compatible = "apm,xgene-ahci-pcie";
-+			reg = <0x0 0x1a800000 0x0 0x1000>,
-+			      <0x0 0x1f230000 0x0 0x10000>,
-+			      <0x0 0x1f2a0000 0x0 0x10000>,
-+			      <0x0 0x1c000200 0x0 0x100>;
-+			interrupts = <0x0 0x88 0x4>;
-+			status = "ok";
-+			clocks = <&sata45clk 0>;
-+			phys = <&phy3 0>;
-+			phy-names = "sata-6g";
-+		};
- 	};
- };
---
-1.5.5
+> > I'm not sure this extra logic is necessary.  How about just clearing
+> > np->np_thread in iscsit_del_np instead..?
+> > 
+> > Care to verify on your side with the following patch..?
+> > 
+> > --nab
+> > 
+> > diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+> > index 02182ab..0086719 100644
+> > --- a/drivers/target/iscsi/iscsi_target.c
+> > +++ b/drivers/target/iscsi/iscsi_target.c
+> > @@ -465,6 +465,7 @@ int iscsit_del_np(struct iscsi_np *np)
+> >                  */
+> >                 send_sig(SIGINT, np->np_thread, 1);
+> >                 kthread_stop(np->np_thread);
+> > +               np->np_thread = NULL;
+> >         }
+> >  
+> >         np->np_transport->iscsit_free_np(np);
+> > diff --git a/drivers/target/iscsi/iscsi_target_login.c b/drivers/target/iscsi/iscsi_target_login.c
+> > index 4eb93b2..6ab43b6 100644
+> > --- a/drivers/target/iscsi/iscsi_target_login.c
+> > +++ b/drivers/target/iscsi/iscsi_target_login.c
+> > @@ -1415,7 +1415,6 @@ exit:
+> >         iscsi_stop_login_thread_timer(np);
+> >         spin_lock_bh(&np->np_thread_lock);
+> >         np->np_thread_state = ISCSI_NP_THREAD_EXIT;
+> > -       np->np_thread = NULL;
+> >         spin_unlock_bh(&np->np_thread_lock);
+> >  
+> >         return 0;
+> > 
+> > 
+> The problem here is that 'kthread_stop()' is supposed to be called
+> with a _valid_ task structure.
+> 
+> There is this race window:
+> 
+> 	np->np_thread_state = ISCSI_NP_THREAD_SHUTDOWN;
+> 	spin_unlock_bh(&np->np_thread_lock);
+> here ->
+> 	if (np->np_thread) {
+> 		/*
+> 
+> If the login thread exits before we evaluate 'np->np_thread'
+> the pointer is stale and kthread_stop will be called with
+> an invalid task structure.
+> 
+> So at the very least we need to check the thread_state before
+> evaluating 'np->np_thread' (which will evaluate to 'true' anyway if
+> we were to follow up with your patch).
+> But in doing so we would need to protect is by the thread_lock
+> to synchronize the state.
+> And we'll end up with quite the same patch as I've send originally.
+>
+> In fact, it was an invalid call to kthread_stop() which triggered
+> the whole patch in the first place :-)
+> 
+
+Mmmm, point taken..
+
+> I would love to be proven wrong, as I'm not keen on the 'schedule()'
+> in there. But I fail to see another way out here, short of
+> converting the entire kthread into a workqueue item ...
+
+Thinking about this a bit more, I think the pre-kthread API
+np_thead_state check to exit at the out: label in
+__iscsi_target_login_thread() is the culprit..
+
+How about following to only exit when iscsit_del_np() -> kthread_stop()
+has been called, and kthread_should_stop() is true..?
+
+--nab
+
+diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+index 02182ab..0086719 100644
+--- a/drivers/target/iscsi/iscsi_target.c
++++ b/drivers/target/iscsi/iscsi_target.c
+@@ -465,6 +465,7 @@ int iscsit_del_np(struct iscsi_np *np)
+                 */
+                send_sig(SIGINT, np->np_thread, 1);
+                kthread_stop(np->np_thread);
++               np->np_thread = NULL;
+        }
+ 
+        np->np_transport->iscsit_free_np(np);
+diff --git a/drivers/target/iscsi/iscsi_target_login.c b/drivers/target/iscsi/iscsi_target_login.c
+index 4eb93b2..e29279e 100644
+--- a/drivers/target/iscsi/iscsi_target_login.c
++++ b/drivers/target/iscsi/iscsi_target_login.c
+@@ -1403,11 +1403,6 @@ old_sess_out:
+ 
+ out:
+        stop = kthread_should_stop();
+-       if (!stop && signal_pending(current)) {
+-               spin_lock_bh(&np->np_thread_lock);
+-               stop = (np->np_thread_state == ISCSI_NP_THREAD_SHUTDOWN);
+-               spin_unlock_bh(&np->np_thread_lock);
+-       }
+        /* Wait for another socket.. */
+        if (!stop)
+                return 1;
+@@ -1415,7 +1410,6 @@ exit:
+        iscsi_stop_login_thread_timer(np);
+        spin_lock_bh(&np->np_thread_lock);
+        np->np_thread_state = ISCSI_NP_THREAD_EXIT;
+-       np->np_thread = NULL;
+        spin_unlock_bh(&np->np_thread_lock);
+ 
+        return 0;
+
 
