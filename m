@@ -1,111 +1,57 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH v4 2/4] Documentation: Add APM X-Gene SoC 15Gbps
- Multi-purpose PHY driver binding documentation
-Date: Thu, 12 Dec 2013 08:55:53 -0800
-Message-ID: <1386867353.5985.7.camel@dabdike>
-References: <1386833435-30498-1-git-send-email-lho@apm.com>
-	 <1386833435-30498-2-git-send-email-lho@apm.com>
-	 <1386833435-30498-3-git-send-email-lho@apm.com>
-	 <201312121427.20040.arnd@arndb.de> <52A9C8C5.8030809@interlog.com>
+From: Wakko Warner <wakko@animx.eu.org>
+Subject: Help with mpt2sas kernel message
+Date: Thu, 12 Dec 2013 12:04:59 -0500
+Message-ID: <20131212170459.GD13674@animx.eu.org>
+Reply-To: Wakko Warner <wakko@animx.eu.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <52A9C8C5.8030809@interlog.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: dgilbert@interlog.com
-Cc: Arnd Bergmann <arnd@arndb.de>, Loc Ho <lho@apm.com>, olof@lixom.net, tj@kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, jcm@redhat.com, patches@apm.com, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from tn-76-7-162-101.sta.embarqhsd.net ([76.7.162.101]:45399 "EHLO
+	animx.eu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751710Ab3LLRZT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 12 Dec 2013 12:25:19 -0500
+Received: from wakko by animx.eu.org with local
+	(Exim 4.69 #3 (Debian Bug?  What bug /\oo/\))
+	id 1Vr9h5-000114-JY
+	for linux-scsi@vger.kernel.org; Thu, 12 Dec 2013 12:04:59 -0500
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Thu, 2013-12-12 at 15:31 +0100, Douglas Gilbert wrote:
-> On 13-12-12 02:27 PM, Arnd Bergmann wrote:
-> > On Thursday 12 December 2013, Loc Ho wrote:
-> >> +- reg                  : First PHY memory resource is the SDS PHY access
-> >> +                         resource.
-> >> +                         Second PHY memory resoruce is the clock and reset
-> >> +                         resources.
-> >> +                         Third PHY memory resource is the SDS PHY access
-> >> +                         resource outside of the IP if it is type
-> >> +                         "apm,xgene-phy-ext".
-> >
-> > Why do the "clock and reset" resources not use a clock driver and a reset
-> > driver?
-> >
-> > I would expect these to get replaced with
-> >
-> > 	clocks		: Reference to external clock input
-> > 	resets		: Reference to reset controller input
-> >
-> >> +Optional properties:
-> >> +- status		: Shall be "ok" if enabled or "disabled" if disabled.
-> >> +			  Default is "ok".
-> >> +- apm,tx-eye-tuning	: Manual control to fine tune the capture of the serial
-> >> +			  bit lines from the automatic calibrated position.
-> >> +			  Two set of 3-tuple setting for Gen1, Gen2, and Gen3.
-> >> +			  Range from 0 to 0x7f in unit of one bit period.
-> >> +			  Default is 0xa.
-> >
-> > What does gen1, gen2 and gen3 refer to? Is this PCIe, SATA or serdes generations
-> > or all of them?
-> >
-> > Why are there two sets?
-> >
-> > Will this have to change if you add PCIe support?
-> >
-> > I would suggest using decimal notation here instead of hexadecimal since you
-> > are dealing with numbers couting things. Same for the others.
-> >
-> >> +- apm,tx-eye-direction	: Eye tuning manual control direction. 0 means sample
-> >> +			  data earlier than the nominal sampling point. 1 means
-> >> +			  sample data later than the nominal sampling point.
-> >> +			  Two set of 3-tuple setting for Gen1, Gen2, and Gen3.
-> >> +			  Default is 0x0.
-> >> +
-> >> +- apm,tx-boost-gain	: Frequency boost AC (LSB 3-bit) and DC (2-bit)
-> >> +			  gain control. Two set of 3-tuple setting for Gen1,
-> >> +			  Gen2, and Gen3. Range is between 0 to 0x1f in unit
-> >> +			  of dB. Default is 0x3.
-> >> +
-> >> +- apm,tx-amplitude	: Amplitude control. Two set of 3-tuple setting for
-> >> +			  Gen1, Gen2, and Gen3. Range is between 0 to 0xf in
-> >> +			  unit of 13.3mV. Default is 0xf.
-> >
-> > Units of 13.3mV don't seem to be useful as a generic measurement. I'd
-> > recommend using milivolts or microvolts.
-> >
-> >> +- apm,tx-pre-cursor1	: 1st pre-cursor emphasis taps control. Two set of
-> >> +			  3-tuple setting for Gen1, Gen2, and Gen3. Range is
-> >> +			  between 0 to 0xf in unit of 18.2mV. Default is 0x0.
-> >> +- apm,tx-pre-cursor2	: 2st pre-cursor emphasis taps control. Two set of
-> >> +			  3-tuple setting for Gen1, Gen2, and Gen3. Range is
-> >> +			  between 0 to 0x7 in unit of 18.2mV. Default is 0x0.
-> >> +- apm,tx-post-cursor	: Post-cursor emphasis taps control. Two set of
-> >> +			  3-tuple setting for Gen1, Gen2, and Gen3. Range is
-> >> +			  between 0 to 0x1f in unit of 18.2mV. Default is 0xf.
-> >
-> > Same here.
-> >
-> >> +- apm,tx-speed		: Tx operating speed. One set of 3-tuple for
-> >> +			  Gen1 (0x1), Gen2 (0x3), and Gen3 (0x7). Default is
-> >> +			  0x7.
-> >
-> > I'm completely confused by this description. Can you rephrase this?
-> > It sounds like the only possible values are <1 3 7> for this property.
-> 
-> Most likely Gen1, Gen2 and Gen3 are SATA-speak corresponding to SAS's
-> G1, G2 and G3:
-> 
-> G1   Gen1     1.5 Gbps
-> G2   Gen2     3 Gbps
-> G3   Gen3     6 Gbps
-> G4   -        12 Gbps
-> G5   -        24 Gbps
+Kernel: vanilla 3.7.2.
 
-Electrically, SAS phys and SATA phys are identical.  We already have a
-SAS phy abstraction in libsas ... when looking at a separable phy
-implementation, shouldn't we be doing something that works for both
-instead of just SATA?
+I have 2 mpt2sas controllers.  I'm running a md check on the 2 arrays that I
+have (one per card).  I'm seeing this in my kernel log (last 4 lines):
+2013-12-10 19:52:10 kame kernel:[1558186.193904] mpt2sas0: log_info(0x31080000): originator(PL), code(0x08), sub_code(0x0000)
+2013-12-10 19:52:35 kame kernel:[1558211.606908] mpt2sas0: log_info(0x31080000): originator(PL), code(0x08), sub_code(0x0000)
+2013-12-10 19:53:02 kame kernel:[1558237.954502] mpt2sas0: log_info(0x31080000): originator(PL), code(0x08), sub_code(0x0000)
+2013-12-10 19:53:50 kame kernel:[1558286.227318] mpt2sas0: log_info(0x31080000): originator(PL), code(0x08), sub_code(0x0000)
 
-James
+Can someone tell me if there is a problem here?
 
+I'd also like to know which card mpt2sas0 is.  Is it the one that has the
+lower numbered pci bus?  I was unable to figure that out from
+/sys/bus/pci/drivers/mpt2sas.
 
+The contents are:
+lrwxrwxrwx 1 root root    0 Dec 10 19:49 0000:03:00.0 -> ../../../../devices/pci0000:00/0000:00:05.0/0000:03:00.0/
+lrwxrwxrwx 1 root root    0 Dec 10 19:49 0000:04:00.0 -> ../../../../devices/pci0000:00/0000:00:07.0/0000:04:00.0/
+
+lspci for those:
+03:00.0 Serial Attached SCSI controller: LSI Logic / Symbios Logic SAS2008 PCI-Express Fusion-MPT SAS-2 [Falcon] (rev 03)
+04:00.0 Serial Attached SCSI controller: LSI Logic / Symbios Logic SAS2008 PCI-Express Fusion-MPT SAS-2 [Falcon] (rev 02)
+
+I am able to figure out which drives are on which of these controllers from
+/sys/block
+
+So far, I'm not seeing any data errors.  Although drives on 03:00.0 appear
+to be running slower than the ones on 04:00.0 according to /proc/mdstat.  No
+drives are actually in use other than the check that is running.
+
+I posted to linux-kernel@ but I didn't receive a reply and thought this list
+would be better suited.
+
+-- 
+ Microsoft has beaten Volkswagen's world record.  Volkswagen only created 22
+ million bugs.
