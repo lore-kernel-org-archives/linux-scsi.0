@@ -1,141 +1,95 @@
 From: Andy Grover <agrover@redhat.com>
-Subject: [PATCH 10/32] target: Change sep_tg_pt_ref_cnt to use kref
-Date: Fri, 13 Dec 2013 15:58:58 -0800
-Message-ID: <1386979160-6928-11-git-send-email-agrover@redhat.com>
+Subject: [PATCH 16/32] target: Rename core_tpg_{pre,post}_addlun for clarity
+Date: Fri, 13 Dec 2013 15:59:04 -0800
+Message-ID: <1386979160-6928-17-git-send-email-agrover@redhat.com>
 References: <1386979160-6928-1-git-send-email-agrover@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:64586 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:28158 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753518Ab3LMX7a (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 Dec 2013 18:59:30 -0500
+	id S1753544Ab3LMX7e (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 13 Dec 2013 18:59:34 -0500
 In-Reply-To: <1386979160-6928-1-git-send-email-agrover@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: target-devel@vger.kernel.org
 Cc: linux-scsi@vger.kernel.org
 
-Use the kernel's std kref for refcounting.
+"pre" is really an allocation function. The only time it isn't called is
+for virtual_lun0, which is statically allocated. Renaming that to "alloc"
+lets the other function not need to be "post", and just be called
+core_tpg_add_lun.
 
 Signed-off-by: Andy Grover <agrover@redhat.com>
 ---
- drivers/target/target_core_device.c   |   12 ++----------
- drivers/target/target_core_internal.h |   10 ++++++++++
- drivers/target/target_core_pr.c       |   12 ++++--------
- include/target/target_core_base.h     |    2 +-
- 4 files changed, 17 insertions(+), 19 deletions(-)
+ drivers/target/target_core_device.c   |    4 ++--
+ drivers/target/target_core_internal.h |    4 ++--
+ drivers/target/target_core_tpg.c      |    6 +++---
+ 3 files changed, 7 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-index 3350467..1954b0f 100644
+index da290f6..faa17a4 100644
 --- a/drivers/target/target_core_device.c
 +++ b/drivers/target/target_core_device.c
-@@ -472,6 +472,7 @@ static struct se_port *core_alloc_port(struct se_device *dev)
- 	atomic_set(&port->sep_tg_pt_secondary_offline, 0);
- 	spin_lock_init(&port->sep_alua_lock);
- 	mutex_init(&port->sep_tg_pt_md_mutex);
-+	kref_init(&port->refcount);
+@@ -1101,11 +1101,11 @@ struct se_lun *core_dev_add_lun(
+ 	struct se_lun *lun;
+ 	int rc;
  
- 	spin_lock(&dev->se_port_lock);
- 	if (dev->dev_port_count == 0x0000ffff) {
-@@ -555,20 +556,11 @@ static void core_export_port(
- static void core_release_port(struct se_device *dev, struct se_port *port)
- 	__releases(&dev->se_port_lock) __acquires(&dev->se_port_lock)
- {
--	/*
--	 * Wait for any port reference for PR ALL_TG_PT=1 operation
--	 * to complete in __core_scsi3_alloc_registration()
--	 */
--	spin_unlock(&dev->se_port_lock);
--	if (atomic_read(&port->sep_tg_pt_ref_cnt))
--		cpu_relax();
--	spin_lock(&dev->se_port_lock);
--
- 	core_alua_free_tg_pt_gp_mem(port);
+-	lun = core_tpg_pre_addlun(tpg, unpacked_lun);
++	lun = core_tpg_alloc_lun(tpg, unpacked_lun);
+ 	if (IS_ERR(lun))
+ 		return lun;
  
- 	list_del(&port->sep_node);
- 	dev->dev_port_count--;
--	kfree(port);
-+	put_port(port);
- }
- 
- int core_dev_export(
+-	rc = core_tpg_post_addlun(tpg, lun,
++	rc = core_tpg_add_lun(tpg, lun,
+ 				TRANSPORT_LUNFLAGS_READ_WRITE, dev);
+ 	if (rc < 0)
+ 		return ERR_PTR(rc);
 diff --git a/drivers/target/target_core_internal.h b/drivers/target/target_core_internal.h
-index 47b63b0..b11512c 100644
+index fddf44c..4093936 100644
 --- a/drivers/target/target_core_internal.h
 +++ b/drivers/target/target_core_internal.h
-@@ -60,6 +60,16 @@ struct se_device *target_alloc_device(struct se_hba *hba, const char *name);
- int	target_configure_device(struct se_device *dev);
- void	target_free_device(struct se_device *);
+@@ -87,8 +87,8 @@ struct se_node_acl *__core_tpg_get_initiator_node_acl(struct se_portal_group *tp
+ 		const char *);
+ void	core_tpg_add_node_to_devs(struct se_node_acl *, struct se_portal_group *);
+ void	core_tpg_wait_for_nacl_pr_ref(struct se_node_acl *);
+-struct se_lun *core_tpg_pre_addlun(struct se_portal_group *, u32);
+-int	core_tpg_post_addlun(struct se_portal_group *, struct se_lun *,
++struct se_lun *core_tpg_alloc_lun(struct se_portal_group *, u32);
++int	core_tpg_add_lun(struct se_portal_group *, struct se_lun *,
+ 		u32, void *);
+ struct se_lun *core_tpg_pre_dellun(struct se_portal_group *, u32 unpacked_lun);
+ int	core_tpg_post_dellun(struct se_portal_group *, struct se_lun *);
+diff --git a/drivers/target/target_core_tpg.c b/drivers/target/target_core_tpg.c
+index 2f6df57..55a9d38 100644
+--- a/drivers/target/target_core_tpg.c
++++ b/drivers/target/target_core_tpg.c
+@@ -658,7 +658,7 @@ static int core_tpg_setup_virtual_lun0(struct se_portal_group *se_tpg)
+ 	spin_lock_init(&lun->lun_sep_lock);
+ 	init_completion(&lun->lun_ref_comp);
  
-+static inline void release_port(struct kref *ref)
-+{
-+	struct se_port *port = container_of(ref, struct se_port, refcount);
-+
-+	kfree(port);
-+}
-+
-+#define get_port(x) kref_get(&x->refcount)
-+#define put_port(x) kref_put(&x->refcount, release_port)
-+
- /* target_core_hba.c */
- struct se_hba *core_alloc_hba(const char *, u32, u32);
- int	core_delete_hba(struct se_hba *);
-diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
-index d141c7f..fc6029b 100644
---- a/drivers/target/target_core_pr.c
-+++ b/drivers/target/target_core_pr.c
-@@ -674,8 +674,7 @@ static struct t10_pr_registration *__core_scsi3_alloc_registration(
- 	 */
- 	spin_lock(&dev->se_port_lock);
- 	list_for_each_entry_safe(port, port_tmp, &dev->dev_sep_list, sep_node) {
--		atomic_inc(&port->sep_tg_pt_ref_cnt);
--		smp_mb__after_atomic_inc();
-+		get_port(port);
- 		spin_unlock(&dev->se_port_lock);
+-	ret = core_tpg_post_addlun(se_tpg, lun, lun_access, dev);
++	ret = core_tpg_add_lun(se_tpg, lun, lun_access, dev);
+ 	if (ret < 0) {
+ 		percpu_ref_cancel_init(&lun->lun_ref);
+ 		return ret;
+@@ -785,7 +785,7 @@ int core_tpg_deregister(struct se_portal_group *se_tpg)
+ }
+ EXPORT_SYMBOL(core_tpg_deregister);
  
- 		spin_lock_bh(&port->sep_alua_lock);
-@@ -722,8 +721,7 @@ static struct t10_pr_registration *__core_scsi3_alloc_registration(
- 			if (ret < 0) {
- 				pr_err("core_scsi3_lunacl_depend"
- 						"_item() failed\n");
--				atomic_dec(&port->sep_tg_pt_ref_cnt);
--				smp_mb__after_atomic_dec();
-+				put_port(port);
- 				atomic_dec(&deve_tmp->pr_ref_count);
- 				smp_mb__after_atomic_dec();
- 				goto out;
-@@ -739,8 +737,7 @@ static struct t10_pr_registration *__core_scsi3_alloc_registration(
- 						nacl_tmp, deve_tmp, NULL,
- 						sa_res_key, all_tg_pt, aptpl);
- 			if (!pr_reg_atp) {
--				atomic_dec(&port->sep_tg_pt_ref_cnt);
--				smp_mb__after_atomic_dec();
-+				put_port(port);
- 				atomic_dec(&deve_tmp->pr_ref_count);
- 				smp_mb__after_atomic_dec();
- 				core_scsi3_lunacl_undepend_item(deve_tmp);
-@@ -754,8 +751,7 @@ static struct t10_pr_registration *__core_scsi3_alloc_registration(
- 		spin_unlock_bh(&port->sep_alua_lock);
+-struct se_lun *core_tpg_pre_addlun(
++struct se_lun *core_tpg_alloc_lun(
+ 	struct se_portal_group *tpg,
+ 	u32 unpacked_lun)
+ {
+@@ -815,7 +815,7 @@ struct se_lun *core_tpg_pre_addlun(
+ 	return lun;
+ }
  
- 		spin_lock(&dev->se_port_lock);
--		atomic_dec(&port->sep_tg_pt_ref_cnt);
--		smp_mb__after_atomic_dec();
-+		put_port(port);
- 	}
- 	spin_unlock(&dev->se_port_lock);
- 
-diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index 6c517cd..f0bc5c1 100644
---- a/include/target/target_core_base.h
-+++ b/include/target/target_core_base.h
-@@ -773,7 +773,7 @@ struct se_port {
- 	/* Used for ALUA Target Port Groups membership */
- 	atomic_t	sep_tg_pt_secondary_offline;
- 	/* Used for PR ALL_TG_PT=1 */
--	atomic_t	sep_tg_pt_ref_cnt;
-+	struct kref refcount;
- 	spinlock_t	sep_alua_lock;
- 	struct mutex	sep_tg_pt_md_mutex;
- 	struct t10_alua_tg_pt_gp_member *sep_alua_tg_pt_gp_mem;
+-int core_tpg_post_addlun(
++int core_tpg_add_lun(
+ 	struct se_portal_group *tpg,
+ 	struct se_lun *lun,
+ 	u32 lun_access,
 -- 
 1.7.1
 
