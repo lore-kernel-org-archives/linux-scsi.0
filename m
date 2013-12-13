@@ -1,14 +1,14 @@
 From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: [PATCH 10/20] scsi_transport_fc: Add 32Gbps speed definition.
-Date: Fri, 13 Dec 2013 15:03:50 -0500
-Message-ID: <1386965040-20611-11-git-send-email-saurav.kashyap@qlogic.com>
+Subject: [PATCH 20/20] qla2xxx: Update the driver version to 8.07.00.02-k.
+Date: Fri, 13 Dec 2013 15:04:00 -0500
+Message-ID: <1386965040-20611-21-git-send-email-saurav.kashyap@qlogic.com>
 References: <1386965040-20611-1-git-send-email-saurav.kashyap@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:11119 "EHLO
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:36499 "EHLO
 	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753253Ab3LMUgu (ORCPT
+	by vger.kernel.org with ESMTP id S1753118Ab3LMUgu (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Fri, 13 Dec 2013 15:36:50 -0500
 In-Reply-To: <1386965040-20611-1-git-send-email-saurav.kashyap@qlogic.com>
@@ -17,39 +17,28 @@ List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Chad Dupuis <chad.dupuis@qlogic.com>
-
-Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
 Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
+Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
 ---
- drivers/scsi/scsi_transport_fc.c |    1 +
- include/scsi/scsi_transport_fc.h |    1 +
- 2 files changed, 2 insertions(+), 0 deletions(-)
+ drivers/scsi/qla2xxx/qla_version.h |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-index 4628fd5..f80908f 100644
---- a/drivers/scsi/scsi_transport_fc.c
-+++ b/drivers/scsi/scsi_transport_fc.c
-@@ -261,6 +261,7 @@ static const struct {
- 	{ FC_PORTSPEED_10GBIT,		"10 Gbit" },
- 	{ FC_PORTSPEED_8GBIT,		"8 Gbit" },
- 	{ FC_PORTSPEED_16GBIT,		"16 Gbit" },
-+	{ FC_PORTSPEED_32GBIT,		"32 Gbit" },
- 	{ FC_PORTSPEED_NOT_NEGOTIATED,	"Not Negotiated" },
- };
- fc_bitfield_name_search(port_speed, fc_port_speed_names)
-diff --git a/include/scsi/scsi_transport_fc.h b/include/scsi/scsi_transport_fc.h
-index b797e8f..8c79980 100644
---- a/include/scsi/scsi_transport_fc.h
-+++ b/include/scsi/scsi_transport_fc.h
-@@ -130,6 +130,7 @@ enum fc_vport_state {
- #define FC_PORTSPEED_4GBIT		8
- #define FC_PORTSPEED_8GBIT		0x10
- #define FC_PORTSPEED_16GBIT		0x20
-+#define FC_PORTSPEED_32GBIT		0x40
- #define FC_PORTSPEED_NOT_NEGOTIATED	(1 << 15) /* Speed not established */
- 
+diff --git a/drivers/scsi/qla2xxx/qla_version.h b/drivers/scsi/qla2xxx/qla_version.h
+index 31d1953..e36b947 100644
+--- a/drivers/scsi/qla2xxx/qla_version.h
++++ b/drivers/scsi/qla2xxx/qla_version.h
+@@ -7,9 +7,9 @@
  /*
+  * Driver version
+  */
+-#define QLA2XXX_VERSION      "8.06.00.12-k"
++#define QLA2XXX_VERSION      "8.07.00.02-k"
+ 
+ #define QLA_DRIVER_MAJOR_VER	8
+-#define QLA_DRIVER_MINOR_VER	6
++#define QLA_DRIVER_MINOR_VER	7
+ #define QLA_DRIVER_PATCH_VER	0
+ #define QLA_DRIVER_BETA_VER	0
 -- 
 1.7.7
 
