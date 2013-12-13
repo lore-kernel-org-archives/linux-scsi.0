@@ -1,14 +1,14 @@
 From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: [PATCH 17/20] qla2xxx: Read capture firmware dump on mailbox timeout for ISP8044 and ISP82XX.
-Date: Fri, 13 Dec 2013 15:03:57 -0500
-Message-ID: <1386965040-20611-18-git-send-email-saurav.kashyap@qlogic.com>
+Subject: [PATCH 08/20] qla2xxx: Properly handle 32 bit mailbox register for ISPFX00.
+Date: Fri, 13 Dec 2013 15:03:48 -0500
+Message-ID: <1386965040-20611-9-git-send-email-saurav.kashyap@qlogic.com>
 References: <1386965040-20611-1-git-send-email-saurav.kashyap@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:31709 "EHLO
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:14366 "EHLO
 	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753118Ab3LMUgr (ORCPT
+	by vger.kernel.org with ESMTP id S1753161Ab3LMUgr (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Fri, 13 Dec 2013 15:36:47 -0500
 In-Reply-To: <1386965040-20611-1-git-send-email-saurav.kashyap@qlogic.com>
@@ -17,180 +17,51 @@ List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Chad Dupuis <chad.dupuis@qlogic.com>
-
-Allow for the capture of a firmware dump but have a sysfs node
-(allow_cna_fw_dump) to allow the feature to be enabled/disabled dynamically.
-
-The default is off.
-
-Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
 Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
+Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_attr.c |   35 +++++++++++++++++++++++++++++++++++
- drivers/scsi/qla2xxx/qla_def.h  |    1 +
- drivers/scsi/qla2xxx/qla_gbl.h  |    2 ++
- drivers/scsi/qla2xxx/qla_nx.c   |   17 +++++++++++++++++
- drivers/scsi/qla2xxx/qla_nx2.c  |   16 ++++++++++++++++
- drivers/scsi/qla2xxx/qla_os.c   |    4 ++--
- 6 files changed, 73 insertions(+), 2 deletions(-)
+ drivers/scsi/qla2xxx/qla_mr.c |   12 ++++++------
+ 1 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
-index 7e5bcaf..b918bd4 100644
---- a/drivers/scsi/qla2xxx/qla_attr.c
-+++ b/drivers/scsi/qla2xxx/qla_attr.c
-@@ -1503,6 +1503,37 @@ qla2x00_fw_dump_size_show(struct device *dev, struct device_attribute *attr,
- 	return scnprintf(buf, PAGE_SIZE, "%d\n", size);
+diff --git a/drivers/scsi/qla2xxx/qla_mr.c b/drivers/scsi/qla2xxx/qla_mr.c
+index 9839da8..ed44ec6 100644
+--- a/drivers/scsi/qla2xxx/qla_mr.c
++++ b/drivers/scsi/qla2xxx/qla_mr.c
+@@ -2916,9 +2916,9 @@ qlafx00_async_event(scsi_qla_host_t *vha)
+ 		break;
+ 
+ 	case QLAFX00_MBA_PORT_UPDATE:		/* Port database update */
+-		ha->aenmb[1] = RD_REG_WORD(&reg->aenmailbox1);
+-		ha->aenmb[2] = RD_REG_WORD(&reg->aenmailbox2);
+-		ha->aenmb[3] = RD_REG_WORD(&reg->aenmailbox3);
++		ha->aenmb[1] = RD_REG_DWORD(&reg->aenmailbox1);
++		ha->aenmb[2] = RD_REG_DWORD(&reg->aenmailbox2);
++		ha->aenmb[3] = RD_REG_DWORD(&reg->aenmailbox3);
+ 		ql_dbg(ql_dbg_async, vha, 0x5077,
+ 		    "Asynchronous port Update received "
+ 		    "aenmb[0]: %x, aenmb[1]: %x, aenmb[2]: %x, aenmb[3]: %x\n",
+@@ -2975,7 +2975,7 @@ static void
+ qlafx00_mbx_completion(scsi_qla_host_t *vha, uint32_t mb0)
+ {
+ 	uint16_t	cnt;
+-	uint16_t __iomem *wptr;
++	uint32_t __iomem *wptr;
+ 	struct qla_hw_data *ha = vha->hw;
+ 	struct device_reg_fx00 __iomem *reg = &ha->iobase->ispfx00;
+ 
+@@ -2985,10 +2985,10 @@ qlafx00_mbx_completion(scsi_qla_host_t *vha, uint32_t mb0)
+ 	/* Load return mailbox registers. */
+ 	ha->flags.mbox_int = 1;
+ 	ha->mailbox_out32[0] = mb0;
+-	wptr = (uint16_t __iomem *)&reg->mailbox17;
++	wptr = (uint32_t __iomem *)&reg->mailbox17;
+ 
+ 	for (cnt = 1; cnt < ha->mbx_count; cnt++) {
+-		ha->mailbox_out32[cnt] = RD_REG_WORD(wptr);
++		ha->mailbox_out32[cnt] = RD_REG_DWORD(wptr);
+ 		wptr++;
+ 	}
  }
- 
-+static ssize_t
-+qla2x00_allow_cna_fw_dump_show(struct device *dev,
-+	struct device_attribute *attr, char *buf)
-+{
-+	scsi_qla_host_t *vha = shost_priv(class_to_shost(dev));
-+
-+	if (!IS_P3P_TYPE(vha->hw))
-+		return scnprintf(buf, PAGE_SIZE, "\n");
-+	else
-+		return scnprintf(buf, PAGE_SIZE, "%s\n",
-+		    vha->hw->allow_cna_fw_dump ? "true" : "false");
-+}
-+
-+static ssize_t
-+qla2x00_allow_cna_fw_dump_store(struct device *dev,
-+	struct device_attribute *attr, const char *buf, size_t count)
-+{
-+	scsi_qla_host_t *vha = shost_priv(class_to_shost(dev));
-+	int val = 0;
-+
-+	if (!IS_P3P_TYPE(vha->hw))
-+		return -EINVAL;
-+
-+	if (sscanf(buf, "%d", &val) != 1)
-+		return -EINVAL;
-+
-+	vha->hw->allow_cna_fw_dump = val != 0;
-+
-+	return strlen(buf);
-+}
-+
- static DEVICE_ATTR(driver_version, S_IRUGO, qla2x00_drvr_version_show, NULL);
- static DEVICE_ATTR(fw_version, S_IRUGO, qla2x00_fw_version_show, NULL);
- static DEVICE_ATTR(serial_num, S_IRUGO, qla2x00_serial_num_show, NULL);
-@@ -1544,6 +1575,9 @@ static DEVICE_ATTR(thermal_temp, S_IRUGO, qla2x00_thermal_temp_show, NULL);
- static DEVICE_ATTR(diag_requests, S_IRUGO, qla2x00_diag_requests_show, NULL);
- static DEVICE_ATTR(diag_megabytes, S_IRUGO, qla2x00_diag_megabytes_show, NULL);
- static DEVICE_ATTR(fw_dump_size, S_IRUGO, qla2x00_fw_dump_size_show, NULL);
-+static DEVICE_ATTR(allow_cna_fw_dump, S_IRUGO | S_IWUSR,
-+		   qla2x00_allow_cna_fw_dump_show,
-+		   qla2x00_allow_cna_fw_dump_store);
- 
- struct device_attribute *qla2x00_host_attrs[] = {
- 	&dev_attr_driver_version,
-@@ -1576,6 +1610,7 @@ struct device_attribute *qla2x00_host_attrs[] = {
- 	&dev_attr_diag_requests,
- 	&dev_attr_diag_megabytes,
- 	&dev_attr_fw_dump_size,
-+	&dev_attr_allow_cna_fw_dump,
- 	NULL,
- };
- 
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 143fe4f..f8521da 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -3299,6 +3299,7 @@ struct qla_hw_data {
- 	struct mr_data_fx00 mr;
- 
- 	struct qlt_hw_data tgt;
-+	int	allow_cna_fw_dump;
- };
- 
- /*
-diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
-index 19a0662..dcd084a 100644
---- a/drivers/scsi/qla2xxx/qla_gbl.h
-+++ b/drivers/scsi/qla2xxx/qla_gbl.h
-@@ -511,6 +511,8 @@ extern void qla2300_fw_dump(scsi_qla_host_t *, int);
- extern void qla24xx_fw_dump(scsi_qla_host_t *, int);
- extern void qla25xx_fw_dump(scsi_qla_host_t *, int);
- extern void qla81xx_fw_dump(scsi_qla_host_t *, int);
-+extern void qla82xx_fw_dump(scsi_qla_host_t *, int);
-+extern void qla8044_fw_dump(scsi_qla_host_t *, int);
- 
- extern void qla27xx_fwdump(scsi_qla_host_t *, int);
- extern ulong qla27xx_fwdt_calculate_dump_size(struct scsi_qla_host *);
-diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
-index 26326f3..5511e24 100644
---- a/drivers/scsi/qla2xxx/qla_nx.c
-+++ b/drivers/scsi/qla2xxx/qla_nx.c
-@@ -4502,3 +4502,20 @@ exit:
- 	qla82xx_idc_unlock(ha);
- 	return rval;
- }
-+
-+void
-+qla82xx_fw_dump(scsi_qla_host_t *vha, int hardware_locked)
-+{
-+	struct qla_hw_data *ha = vha->hw;
-+
-+	if (!ha->allow_cna_fw_dump)
-+		return;
-+
-+	scsi_block_requests(vha->host);
-+	ha->flags.isp82xx_no_md_cap = 1;
-+	qla82xx_idc_lock(ha);
-+	qla82xx_set_reset_owner(vha);
-+	qla82xx_idc_unlock(ha);
-+	qla2x00_wait_for_chip_reset(vha);
-+	scsi_unblock_requests(vha->host);
-+}
-diff --git a/drivers/scsi/qla2xxx/qla_nx2.c b/drivers/scsi/qla2xxx/qla_nx2.c
-index 0350a59..0ea061b 100644
---- a/drivers/scsi/qla2xxx/qla_nx2.c
-+++ b/drivers/scsi/qla2xxx/qla_nx2.c
-@@ -3713,3 +3713,19 @@ exit_isp_reset:
- 	return rval;
- }
- 
-+void
-+qla8044_fw_dump(scsi_qla_host_t *vha, int hardware_locked)
-+{
-+	struct qla_hw_data *ha = vha->hw;
-+
-+	if (!ha->allow_cna_fw_dump)
-+		return;
-+
-+	scsi_block_requests(vha->host);
-+	ha->flags.isp82xx_no_md_cap = 1;
-+	qla8044_idc_lock(ha);
-+	qla82xx_set_reset_owner(vha);
-+	qla8044_idc_unlock(ha);
-+	qla2x00_wait_for_chip_reset(vha);
-+	scsi_unblock_requests(vha->host);
-+}
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index cace917..3f69e7c 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -1975,7 +1975,7 @@ static struct isp_operations qla82xx_isp_ops = {
- 	.prep_ms_fdmi_iocb	= qla24xx_prep_ms_fdmi_iocb,
- 	.read_nvram		= qla24xx_read_nvram_data,
- 	.write_nvram		= qla24xx_write_nvram_data,
--	.fw_dump		= qla24xx_fw_dump,
-+	.fw_dump		= qla82xx_fw_dump,
- 	.beacon_on		= qla82xx_beacon_on,
- 	.beacon_off		= qla82xx_beacon_off,
- 	.beacon_blink		= NULL,
-@@ -2013,7 +2013,7 @@ static struct isp_operations qla8044_isp_ops = {
- 	.prep_ms_fdmi_iocb	= qla24xx_prep_ms_fdmi_iocb,
- 	.read_nvram		= NULL,
- 	.write_nvram		= NULL,
--	.fw_dump		= qla24xx_fw_dump,
-+	.fw_dump		= qla8044_fw_dump,
- 	.beacon_on		= qla82xx_beacon_on,
- 	.beacon_off		= qla82xx_beacon_off,
- 	.beacon_blink		= NULL,
 -- 
 1.7.7
 
