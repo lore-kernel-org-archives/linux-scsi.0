@@ -1,97 +1,101 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: Re: [usb-storage] UAS hangs khubd on USB disconnect
-Date: Fri, 13 Dec 2013 22:24:33 +0100
-Message-ID: <52AB7B11.7020900@redhat.com>
-References: <20131213180907.GB10727@xanatos>	 <Pine.LNX.4.44L0.1312131316470.1185-100000@iolanthe.rowland.org>	 <20131213183343.GC27070@htj.dyndns.org>	 <1386962327.2055.54.camel@dabdike.int.hansenpartnership.com> <1386964999.2055.59.camel@dabdike.int.hansenpartnership.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCHv2 00/18] ALUA update and Referrals support
+Date: Fri, 13 Dec 2013 15:43:50 -0800
+Message-ID: <1386978230.20247.164.camel@haakon3.risingtidesystems.com>
+References: <1384848483-3771-1-git-send-email-hare@suse.de>
+	 <1384904569.4307.34.camel@haakon3.risingtidesystems.com>
+	 <1384905976.4307.39.camel@haakon3.risingtidesystems.com>
+	 <528C6870.6090607@suse.de>
+	 <1384975373.4307.64.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52498 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752727Ab3LMVYn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 Dec 2013 16:24:43 -0500
-In-Reply-To: <1386964999.2055.59.camel@dabdike.int.hansenpartnership.com>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:50484 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752016Ab3LMXnE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Dec 2013 18:43:04 -0500
+In-Reply-To: <1384975373.4307.64.camel@haakon3.risingtidesystems.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, Tejun Heo <tj@kernel.org>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Sarah Sharp <sarah.a.sharp@linux.intel.com>, USB list <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>, USB Storage List <usb-storage@lists.one-eyed-alien.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Hannes Reinecke <hare@suse.de>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Hi,
+On Wed, 2013-11-20 at 11:22 -0800, Nicholas A. Bellinger wrote:
+> On Wed, 2013-11-20 at 08:44 +0100, Hannes Reinecke wrote:
+> > On 11/20/2013 01:06 AM, Nicholas A. Bellinger wrote:
+> > > On Tue, 2013-11-19 at 15:42 -0800, Nicholas A. Bellinger wrote:
+> > >> Hey Hannes!
+> > >>
+> > >> On Tue, 2013-11-19 at 09:07 +0100, Hannes Reinecke wrote:
+> > >>> Hi Nic,
+> > >>>
+> > >>> here's the second version of my ALUA update & Referrals support patches.
+> > >>> As per request I've split up the supported states into individual
+> > >>> attributes, and while there I've also renamed the rather confusing
+> > >>> 'alua_access_type' and 'alua_access_status' into 'alua_management_type'
+> > >>> and 'alua_status_modification', respectively.
+> > >>>
+> 
 
-On 12/13/2013 09:03 PM, James Bottomley wrote:
+<SNIP>
 
-<snip>
+> > Okay, here's the thing:
+> > The patchset can be split into three individual parts:
+> > The ALUA update proper, which affects only the internal flow of
+> > control (patches 1-6 and 11-16), then there's the ALUA configfs
+> > modifications (patches 7-10) and the Referrals support (17 and 18).
+> > If you have second thoughts you should be able to pull patches 7-10;
+> > the rest will work as designed even without them.
+> 
+> Ok, I'm completely fine with patches 1-6, which only add new attributes
+> and don't change input/output or rename existing attributes.
+> 
+> It's 7-10 that introduce the changes that are of concern..
+> 
+> > But then, there's not much difference on having all the patches in
+> > for 3.13, and sort out the userspace then, or wait for the next
+> > round and adjust the userspace during that time.
+> > 
+> 
+> As much as I'd like to merge this now, the changes to existing
+> attributes is what needs to be thought out some more, to avoid overt
+> backwards compatibility ugliness.
+> 
+> > Anyway, I don't mind either way. You're the maintainer, you get to
+> > decide. As least I got feedback about the patchset, which is more
+> > than one can hope for nowadays :-(
+> 
+> Lets merge 1-6 now for v3.13, and I'll merge the rest for v3.14 into
+> for-next as soon as -rc1 is released, and we can duke it out on the
+> specific details starting next week.
+> 
 
-> Actually, I think I have this figured out.  There's a thinko in one of
-> the scsi_target_reap() cases.  The original (and still existing) problem
-> with targets is that nothing creates them and nothing destroys them, so,
-> while we could rely on the refcounting of the device model to preserve
-> the actual target object, we had no idea when to remove it from
-> visibility.  That was the job of the reap reference, to track
-> visibility.  It looks like the reap on device last put is occurring too
-> late.  I think we should reap immediately after doing the sdev
-> device_del, so does this fix the warn on? (I'm not sure because no-one
-> has actually posted a backtrace, but it sounds like this is the
-> problem).
->
-> James
->
-> ---
->
-> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-> index 8ff62c2..98d4eb3 100644
-> --- a/drivers/scsi/scsi_sysfs.c
-> +++ b/drivers/scsi/scsi_sysfs.c
-> @@ -399,8 +399,6 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
->   	/* NULL queue means the device can't be used */
->   	sdev->request_queue = NULL;
->
-> -	scsi_target_reap(scsi_target(sdev));
-> -
->   	kfree(sdev->inquiry);
->   	kfree(sdev);
->
-> @@ -1044,6 +1042,8 @@ void __scsi_remove_device(struct scsi_device *sdev)
->   	} else
->   		put_device(&sdev->sdev_dev);
->
-> +	scsi_target_reap(scsi_target(sdev));
-> +
->   	/*
->   	 * Stop accepting new requests and wait until all queuecommand() and
->   	 * scsi_run_queue() invocations have finished before tearing down the
+Ok, a bit longer than next week for getting back to this series, but now
+I've a better idea where the user visable changes should end up.. 
 
-I've given this patch a try and it fixes the blk-tag.c: 89 BUG() I was seeing.
+What I'd really like to see for -v3 is:
 
-As for the other patch you (James) have send for that problem:
+Patch 7: Keep alua_access_state attribute store/show formatting (as is).
+Patch 8: Keep alua_access_type attribute store/show formatting (as is)
+         within a single attribute + drop support_* prefix to
+         alua_supported_states attributes merged in v3.13
+Patch 9: Drop alua_access_type attribute rename
 
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 8ff62c2..98d4eb3 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -399,8 +399,6 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
-  	/* NULL queue means the device can't be used */
-  	sdev->request_queue = NULL;
+So AFAICT none of these changes are strictly required to support
+Referrals.  Granted, some of the early formatting decisions for these
+ALUA attributes did not make a ton of sense, but regardless I very much
+do not want name + formatting changes for existing attributes without a
+really good reason.
 
--	scsi_target_reap(scsi_target(sdev));
--
-  	kfree(sdev->inquiry);
-  	kfree(sdev);
+I do like the usability aspects of the proposed name + formatting
+changes, but these types of user facing things really should be
+implemented at the rtslib + targetcli level, and not as changes to
+existing configfs attributes.
 
-@@ -1044,6 +1042,8 @@ void __scsi_remove_device(struct scsi_device *sdev)
-  	} else
-  		put_device(&sdev->sdev_dev);
+That said, care to respin the series minus the above bits..?  ;)
 
-+	scsi_target_reap(scsi_target(sdev));
-+
-  	/*
-  	 * Stop accepting new requests and wait until all queuecommand() and
-  	 * scsi_run_queue() invocations have finished before tearing down the
+Thank you,
 
-That too fixes the blk-tag.c: 89 BUG() I was seeing. Either patch by itself
-seems to be enough to fix this issue for me.
+--nab
 
-Thanks & Regards,
-
-Hans
