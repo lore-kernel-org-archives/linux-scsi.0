@@ -1,14 +1,14 @@
 From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: [PATCH 16/20] qla2xxx: Simplyfy the ISPFX00 interrupt handler code for ISPFX00.
-Date: Fri, 13 Dec 2013 15:03:56 -0500
-Message-ID: <1386965040-20611-17-git-send-email-saurav.kashyap@qlogic.com>
+Subject: [PATCH 15/20] qla2xxx: Avoid poisoining in the response queue for ISPFX00.
+Date: Fri, 13 Dec 2013 15:03:55 -0500
+Message-ID: <1386965040-20611-16-git-send-email-saurav.kashyap@qlogic.com>
 References: <1386965040-20611-1-git-send-email-saurav.kashyap@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:29747 "EHLO
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:50335 "EHLO
 	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753284Ab3LMUhh (ORCPT
+	by vger.kernel.org with ESMTP id S1753329Ab3LMUhh (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Fri, 13 Dec 2013 15:37:37 -0500
 In-Reply-To: <1386965040-20611-1-git-send-email-saurav.kashyap@qlogic.com>
@@ -20,81 +20,57 @@ Cc: giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.vasquez@qlog
 Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
 Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_mr.c |   25 +++++++++----------------
- drivers/scsi/qla2xxx/qla_mr.h |    4 ----
- 2 files changed, 9 insertions(+), 20 deletions(-)
+ drivers/scsi/qla2xxx/qla_mr.c |   15 ++++++++-------
+ 1 files changed, 8 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/scsi/qla2xxx/qla_mr.c b/drivers/scsi/qla2xxx/qla_mr.c
-index 290322f..046a169 100644
+index 03e2050..290322f 100644
 --- a/drivers/scsi/qla2xxx/qla_mr.c
 +++ b/drivers/scsi/qla2xxx/qla_mr.c
-@@ -3014,6 +3014,7 @@ qlafx00_intr_handler(int irq, void *dev_id)
- 	struct rsp_que *rsp;
- 	unsigned long	flags;
- 	uint32_t clr_intr = 0;
-+	uint32_t intr_stat = 0;
+@@ -2821,16 +2821,22 @@ qlafx00_process_response_queue(struct scsi_qla_host *vha,
+ {
+ 	struct sts_entry_fx00 *pkt;
+ 	response_t *lptr;
++	uint16_t lreq_q_in = 0;
++	uint16_t lreq_q_out = 0;
  
- 	rsp = (struct rsp_que *) dev_id;
- 	if (!rsp) {
-@@ -3035,34 +3036,26 @@ qlafx00_intr_handler(int irq, void *dev_id)
- 		stat = QLAFX00_RD_INTR_REG(ha);
- 		if (qla2x00_check_reg_for_disconnect(vha, stat))
- 			break;
--		if ((stat & QLAFX00_HST_INT_STS_BITS) == 0)
-+		intr_stat = stat & QLAFX00_HST_INT_STS_BITS;
-+		if (!intr_stat)
- 			break;
- 
--		switch (stat & QLAFX00_HST_INT_STS_BITS) {
--		case QLAFX00_INTR_MB_CMPLT:
--		case QLAFX00_INTR_MB_RSP_CMPLT:
--		case QLAFX00_INTR_MB_ASYNC_CMPLT:
--		case QLAFX00_INTR_ALL_CMPLT:
-+		if (stat & QLAFX00_INTR_MB_CMPLT) {
- 			mb[0] = RD_REG_WORD(&reg->mailbox16);
- 			qlafx00_mbx_completion(vha, mb[0]);
- 			status |= MBX_INTERRUPT;
- 			clr_intr |= QLAFX00_INTR_MB_CMPLT;
--			break;
--		case QLAFX00_INTR_ASYNC_CMPLT:
--		case QLAFX00_INTR_RSP_ASYNC_CMPLT:
-+		}
-+		if (intr_stat & QLAFX00_INTR_ASYNC_CMPLT) {
- 			ha->aenmb[0] = RD_REG_WORD(&reg->aenmailbox0);
- 			qlafx00_async_event(vha);
- 			clr_intr |= QLAFX00_INTR_ASYNC_CMPLT;
--			break;
--		case QLAFX00_INTR_RSP_CMPLT:
-+		}
-+		if (intr_stat & QLAFX00_INTR_RSP_CMPLT) {
- 			qlafx00_process_response_queue(vha, rsp);
- 			clr_intr |= QLAFX00_INTR_RSP_CMPLT;
--			break;
--		default:
--			ql_dbg(ql_dbg_async, vha, 0x507a,
--			    "Unrecognized interrupt type (%d).\n", stat);
--			break;
- 		}
+-	while (RD_REG_DWORD((void __iomem *)&(rsp->ring_ptr->signature)) !=
+-	    RESPONSE_PROCESSED) {
++	lreq_q_in = RD_REG_DWORD(rsp->rsp_q_in);
++	lreq_q_out = RD_REG_DWORD(rsp->rsp_q_out);
 +
- 		QLAFX00_CLR_INTR_REG(ha, clr_intr);
- 		QLAFX00_RD_INTR_REG(ha);
++	while (lreq_q_in != lreq_q_out) {
+ 		lptr = rsp->ring_ptr;
+ 		memcpy_fromio(rsp->rsp_pkt, (void __iomem *)lptr,
+ 		    sizeof(rsp->rsp_pkt));
+ 		pkt = (struct sts_entry_fx00 *)rsp->rsp_pkt;
+ 
+ 		rsp->ring_index++;
++		lreq_q_out++;
+ 		if (rsp->ring_index == rsp->length) {
++			lreq_q_out = 0;
+ 			rsp->ring_index = 0;
+ 			rsp->ring_ptr = rsp->ring;
+ 		} else {
+@@ -2842,7 +2848,6 @@ qlafx00_process_response_queue(struct scsi_qla_host *vha,
+ 			qlafx00_error_entry(vha, rsp,
+ 			    (struct sts_entry_fx00 *)pkt, pkt->entry_status,
+ 			    pkt->entry_type);
+-			goto next_iter;
+ 			continue;
+ 		}
+ 
+@@ -2876,10 +2881,6 @@ qlafx00_process_response_queue(struct scsi_qla_host *vha,
+ 			    pkt->entry_type, pkt->entry_status);
+ 			break;
+ 		}
+-next_iter:
+-		WRT_REG_DWORD((void __iomem *)&lptr->signature,
+-		    RESPONSE_PROCESSED);
+-		wmb();
  	}
-diff --git a/drivers/scsi/qla2xxx/qla_mr.h b/drivers/scsi/qla2xxx/qla_mr.h
-index 3cf5ddc..e529dfa 100644
---- a/drivers/scsi/qla2xxx/qla_mr.h
-+++ b/drivers/scsi/qla2xxx/qla_mr.h
-@@ -336,11 +336,7 @@ struct config_info_data {
  
- #define QLAFX00_INTR_MB_CMPLT		0x1
- #define QLAFX00_INTR_RSP_CMPLT		0x2
--#define QLAFX00_INTR_MB_RSP_CMPLT	0x3
- #define QLAFX00_INTR_ASYNC_CMPLT	0x4
--#define QLAFX00_INTR_MB_ASYNC_CMPLT	0x5
--#define QLAFX00_INTR_RSP_ASYNC_CMPLT	0x6
--#define QLAFX00_INTR_ALL_CMPLT		0x7
- 
- #define QLAFX00_MBA_SYSTEM_ERR		0x8002
- #define QLAFX00_MBA_TEMP_OVER		0x8005
+ 	/* Adjust ring index */
 -- 
 1.7.7
 
