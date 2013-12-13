@@ -1,14 +1,14 @@
 From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: [PATCH 09/20] qla2xxx: Set host can_queue value based on available resources.
-Date: Fri, 13 Dec 2013 15:03:49 -0500
-Message-ID: <1386965040-20611-10-git-send-email-saurav.kashyap@qlogic.com>
+Subject: [PATCH 02/20] qla2xxx: Add handling for boot indication progress AENs for ISPFX00.
+Date: Fri, 13 Dec 2013 15:03:42 -0500
+Message-ID: <1386965040-20611-3-git-send-email-saurav.kashyap@qlogic.com>
 References: <1386965040-20611-1-git-send-email-saurav.kashyap@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:56314 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753289Ab3LMUhG (ORCPT
+Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:11151 "EHLO
+	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753266Ab3LMUhG (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Fri, 13 Dec 2013 15:37:06 -0500
 In-Reply-To: <1386965040-20611-1-git-send-email-saurav.kashyap@qlogic.com>
@@ -17,62 +17,42 @@ List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Chad Dupuis <chad.dupuis@qlogic.com>
+From: Armen Baloyan <armen.baloyan@qlogic.com>
 
-Tell the mid-layer that number of commands we can queue is the available
-resources we have minus a small amount for internal commands.
-
-Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
+Signed-off-by: Armen Baloyan <armen.baloyan@qlogic.com>
 Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_os.c |   20 +++++++++++---------
- 1 files changed, 11 insertions(+), 9 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h |    2 +-
+ drivers/scsi/qla2xxx/qla_mr.c  |    3 +++
+ 2 files changed, 4 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index c698e10..464bb2b 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -2561,10 +2561,6 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index 859c63a..02ad5d8 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -808,7 +808,7 @@ struct mbx_cmd_32 {
+ 					   Notification */
+ #define MBA_FW_POLL_STATE	0x8600  /* Firmware in poll diagnostic state */
+ #define MBA_FW_RESET_FCT	0x8502	/* Firmware reset factory defaults */
+-
++#define MBA_FW_INIT_INPROGRESS	0x8500	/* Firmware boot in progress */
+ /* 83XX FCoE specific */
+ #define MBA_IDC_AEN		0x8200  /* FCoE: NIC Core state change AEN */
  
- 	host = base_vha->host;
- 	base_vha->req = req;
--	if (IS_QLAFX00(ha))
--		host->can_queue = QLAFX00_MAX_CANQUEUE;
--	else
--		host->can_queue = req->length + 128;
- 	if (IS_QLA2XXX_MIDTYPE(ha))
- 		base_vha->mgmt_svr_loop_id = 10 + base_vha->vp_idx;
- 	else
-@@ -2587,11 +2583,6 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 		if (!IS_QLA82XX(ha))
- 			host->sg_tablesize = QLA_SG_ALL;
- 	}
--	ql_dbg(ql_dbg_init, base_vha, 0x0032,
--	    "can_queue=%d, req=%p, "
--	    "mgmt_svr_loop_id=%d, sg_tablesize=%d.\n",
--	    host->can_queue, base_vha->req,
--	    base_vha->mgmt_svr_loop_id, host->sg_tablesize);
- 	host->max_id = ha->max_fibre_devices;
- 	host->cmd_per_lun = 3;
- 	host->unique_id = host->host_no;
-@@ -2707,6 +2698,17 @@ que_init:
- 		goto probe_failed;
- 	}
+diff --git a/drivers/scsi/qla2xxx/qla_mr.c b/drivers/scsi/qla2xxx/qla_mr.c
+index ba6f8b1..6ca4807 100644
+--- a/drivers/scsi/qla2xxx/qla_mr.c
++++ b/drivers/scsi/qla2xxx/qla_mr.c
+@@ -997,6 +997,9 @@ qlafx00_init_fw_ready(scsi_qla_host_t *vha)
+ 			break;
  
-+	if (IS_QLAFX00(ha))
-+		host->can_queue = QLAFX00_MAX_CANQUEUE;
-+	else
-+		host->can_queue = req->num_outstanding_cmds - 10;
+ 		default:
++			if ((aenmbx & 0xFF00) == MBA_FW_INIT_INPROGRESS)
++				break;
 +
-+	ql_dbg(ql_dbg_init, base_vha, 0x0032,
-+	    "can_queue=%d, req=%p, "
-+	    "mgmt_svr_loop_id=%d, sg_tablesize=%d.\n",
-+	    host->can_queue, base_vha->req,
-+	    base_vha->mgmt_svr_loop_id, host->sg_tablesize);
-+
- 	if (ha->mqenable) {
- 		if (qla25xx_setup_mode(base_vha)) {
- 			ql_log(ql_log_warn, base_vha, 0x00ec,
+ 			/* If fw is apparently not ready. In order to continue,
+ 			 * we might need to issue Mbox cmd, but the problem is
+ 			 * that the DoorBell vector values that come with the
 -- 
 1.7.7
 
