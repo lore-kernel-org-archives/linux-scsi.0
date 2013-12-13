@@ -1,14 +1,14 @@
 From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: [PATCH 07/20] qla2xxx: Enable the Flash Access Control (FAC) mailbox command.
-Date: Fri, 13 Dec 2013 15:03:47 -0500
-Message-ID: <1386965040-20611-8-git-send-email-saurav.kashyap@qlogic.com>
+Subject: [PATCH 16/20] qla2xxx: Simplyfy the ISPFX00 interrupt handler code for ISPFX00.
+Date: Fri, 13 Dec 2013 15:03:56 -0500
+Message-ID: <1386965040-20611-17-git-send-email-saurav.kashyap@qlogic.com>
 References: <1386965040-20611-1-git-send-email-saurav.kashyap@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:45894 "EHLO
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:29747 "EHLO
 	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753238Ab3LMUhh (ORCPT
+	by vger.kernel.org with ESMTP id S1753284Ab3LMUhh (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Fri, 13 Dec 2013 15:37:37 -0500
 In-Reply-To: <1386965040-20611-1-git-send-email-saurav.kashyap@qlogic.com>
@@ -17,37 +17,84 @@ List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Joe Carnuccio <joe.carnuccio@qlogic.com>
-
-Signed-off-by: Joe Carnuccio <joe.carnuccio@qlogic.com>
+Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
 Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_init.c |    5 +----
- 1 files changed, 1 insertions(+), 4 deletions(-)
+ drivers/scsi/qla2xxx/qla_mr.c |   25 +++++++++----------------
+ drivers/scsi/qla2xxx/qla_mr.h |    4 ----
+ 2 files changed, 9 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index e7e5f4f..9b271cc 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -1718,9 +1718,6 @@ enable_82xx_npiv:
- 		spin_unlock_irqrestore(&ha->hardware_lock, flags);
- 	}
+diff --git a/drivers/scsi/qla2xxx/qla_mr.c b/drivers/scsi/qla2xxx/qla_mr.c
+index 290322f..046a169 100644
+--- a/drivers/scsi/qla2xxx/qla_mr.c
++++ b/drivers/scsi/qla2xxx/qla_mr.c
+@@ -3014,6 +3014,7 @@ qlafx00_intr_handler(int irq, void *dev_id)
+ 	struct rsp_que *rsp;
+ 	unsigned long	flags;
+ 	uint32_t clr_intr = 0;
++	uint32_t intr_stat = 0;
  
--	if (IS_QLA83XX(ha))
--		goto skip_fac_check;
--
- 	if (rval == QLA_SUCCESS && IS_FAC_REQUIRED(ha)) {
- 		uint32_t size;
+ 	rsp = (struct rsp_que *) dev_id;
+ 	if (!rsp) {
+@@ -3035,34 +3036,26 @@ qlafx00_intr_handler(int irq, void *dev_id)
+ 		stat = QLAFX00_RD_INTR_REG(ha);
+ 		if (qla2x00_check_reg_for_disconnect(vha, stat))
+ 			break;
+-		if ((stat & QLAFX00_HST_INT_STS_BITS) == 0)
++		intr_stat = stat & QLAFX00_HST_INT_STS_BITS;
++		if (!intr_stat)
+ 			break;
  
-@@ -1733,7 +1730,7 @@ enable_82xx_npiv:
- 			    "Unsupported FAC firmware (%d.%02d.%02d).\n",
- 			    ha->fw_major_version, ha->fw_minor_version,
- 			    ha->fw_subminor_version);
--skip_fac_check:
+-		switch (stat & QLAFX00_HST_INT_STS_BITS) {
+-		case QLAFX00_INTR_MB_CMPLT:
+-		case QLAFX00_INTR_MB_RSP_CMPLT:
+-		case QLAFX00_INTR_MB_ASYNC_CMPLT:
+-		case QLAFX00_INTR_ALL_CMPLT:
++		if (stat & QLAFX00_INTR_MB_CMPLT) {
+ 			mb[0] = RD_REG_WORD(&reg->mailbox16);
+ 			qlafx00_mbx_completion(vha, mb[0]);
+ 			status |= MBX_INTERRUPT;
+ 			clr_intr |= QLAFX00_INTR_MB_CMPLT;
+-			break;
+-		case QLAFX00_INTR_ASYNC_CMPLT:
+-		case QLAFX00_INTR_RSP_ASYNC_CMPLT:
++		}
++		if (intr_stat & QLAFX00_INTR_ASYNC_CMPLT) {
+ 			ha->aenmb[0] = RD_REG_WORD(&reg->aenmailbox0);
+ 			qlafx00_async_event(vha);
+ 			clr_intr |= QLAFX00_INTR_ASYNC_CMPLT;
+-			break;
+-		case QLAFX00_INTR_RSP_CMPLT:
++		}
++		if (intr_stat & QLAFX00_INTR_RSP_CMPLT) {
+ 			qlafx00_process_response_queue(vha, rsp);
+ 			clr_intr |= QLAFX00_INTR_RSP_CMPLT;
+-			break;
+-		default:
+-			ql_dbg(ql_dbg_async, vha, 0x507a,
+-			    "Unrecognized interrupt type (%d).\n", stat);
+-			break;
+ 		}
 +
- 			if (IS_QLA83XX(ha)) {
- 				ha->flags.fac_supported = 0;
- 				rval = QLA_SUCCESS;
+ 		QLAFX00_CLR_INTR_REG(ha, clr_intr);
+ 		QLAFX00_RD_INTR_REG(ha);
+ 	}
+diff --git a/drivers/scsi/qla2xxx/qla_mr.h b/drivers/scsi/qla2xxx/qla_mr.h
+index 3cf5ddc..e529dfa 100644
+--- a/drivers/scsi/qla2xxx/qla_mr.h
++++ b/drivers/scsi/qla2xxx/qla_mr.h
+@@ -336,11 +336,7 @@ struct config_info_data {
+ 
+ #define QLAFX00_INTR_MB_CMPLT		0x1
+ #define QLAFX00_INTR_RSP_CMPLT		0x2
+-#define QLAFX00_INTR_MB_RSP_CMPLT	0x3
+ #define QLAFX00_INTR_ASYNC_CMPLT	0x4
+-#define QLAFX00_INTR_MB_ASYNC_CMPLT	0x5
+-#define QLAFX00_INTR_RSP_ASYNC_CMPLT	0x6
+-#define QLAFX00_INTR_ALL_CMPLT		0x7
+ 
+ #define QLAFX00_MBA_SYSTEM_ERR		0x8002
+ #define QLAFX00_MBA_TEMP_OVER		0x8005
 -- 
 1.7.7
 
