@@ -1,90 +1,184 @@
 From: Andy Grover <agrover@redhat.com>
-Subject: [PATCH 31/32] target: Don't release and re-acquire some spinlocks in loops
-Date: Fri, 13 Dec 2013 15:59:19 -0800
-Message-ID: <1386979160-6928-32-git-send-email-agrover@redhat.com>
+Subject: [PATCH 18/32] target: More core_dev_del cleanups
+Date: Fri, 13 Dec 2013 15:59:06 -0800
+Message-ID: <1386979160-6928-19-git-send-email-agrover@redhat.com>
 References: <1386979160-6928-1-git-send-email-agrover@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:8810 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:51745 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753538Ab3LMX7i (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 Dec 2013 18:59:38 -0500
+	id S1753532Ab3LMX7d (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 13 Dec 2013 18:59:33 -0500
 In-Reply-To: <1386979160-6928-1-git-send-email-agrover@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: target-devel@vger.kernel.org
 Cc: linux-scsi@vger.kernel.org
 
-Here are some instances where we're looping, but then dropping the
-spinlock around the loop in the loop, because we need to be able to
-sleep in the calls. Since everything is refcounted now, this should no
-longer be needed and we can just hold the locks the whole time.
+core_dev_del_lun needs no return value. Also change it to take a se_lun*
+instead of the unpacked lun.
+
+Rename core_tpg_pre_dellun to core_tpg_free_lun, and post_dellun to
+remove_lun. Swap the order they are called, and hold off on setting
+lun_status to STATUS_FREE until the end of free_lun.
 
 Signed-off-by: Andy Grover <agrover@redhat.com>
 ---
- drivers/target/target_core_device.c |    4 ----
- drivers/target/target_core_tpg.c    |    5 -----
- 2 files changed, 0 insertions(+), 9 deletions(-)
+ drivers/target/target_core_device.c          |   16 ++++---------
+ drivers/target/target_core_fabric_configfs.c |    2 +-
+ drivers/target/target_core_internal.h        |    6 ++--
+ drivers/target/target_core_tpg.c             |   32 +++++++++-----------------
+ 4 files changed, 20 insertions(+), 36 deletions(-)
 
 diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-index a432d7b..3896c99 100644
+index faa17a4..af12456 100644
 --- a/drivers/target/target_core_device.c
 +++ b/drivers/target/target_core_device.c
-@@ -463,7 +463,6 @@ void core_clear_lun_from_tpg(struct se_lun *lun, struct se_portal_group *tpg)
+@@ -1140,24 +1140,18 @@ struct se_lun *core_dev_add_lun(
+  *
+  *
+  */
+-int core_dev_del_lun(
++void core_dev_del_lun(
+ 	struct se_portal_group *tpg,
+-	u32 unpacked_lun)
++	struct se_lun *lun)
+ {
+-	struct se_lun *lun;
+-
+-	lun = core_tpg_pre_dellun(tpg, unpacked_lun);
+-	if (IS_ERR(lun))
+-		return PTR_ERR(lun);
+-
+-	core_tpg_post_dellun(tpg, lun);
++	core_tpg_remove_lun(tpg, lun);
  
- 	spin_lock_irq(&tpg->acl_node_lock);
- 	list_for_each_entry(nacl, &tpg->acl_node_list, acl_node) {
--		spin_unlock_irq(&tpg->acl_node_lock);
+ 	pr_debug("%s_TPG[%u]_LUN[%u] - Deactivated %s Logical Unit from"
+ 		" device object\n", tpg->se_tpg_tfo->get_fabric_name(),
+-		tpg->se_tpg_tfo->tpg_get_tag(tpg), unpacked_lun,
++		tpg->se_tpg_tfo->tpg_get_tag(tpg), lun->unpacked_lun,
+ 		tpg->se_tpg_tfo->get_fabric_name());
  
- 		spin_lock_irq(&nacl->device_list_lock);
- 		rbtree_postorder_for_each_entry_safe(deve, _tmp, &nacl->rb_device_list, rb_node) {
-@@ -473,7 +472,6 @@ void core_clear_lun_from_tpg(struct se_lun *lun, struct se_portal_group *tpg)
- 		}
- 		spin_unlock_irq(&nacl->device_list_lock);
- 
--		spin_lock_irq(&tpg->acl_node_lock);
- 	}
- 	spin_unlock_irq(&tpg->acl_node_lock);
+-	return 0;
++	core_tpg_free_lun(tpg, lun);
  }
-@@ -1141,9 +1139,7 @@ int core_dev_add_lun(
- 			if (acl->dynamic_node_acl &&
- 			    (!tpg->se_tpg_tfo->tpg_check_demo_mode_login_only ||
- 			     !tpg->se_tpg_tfo->tpg_check_demo_mode_login_only(tpg))) {
--				spin_unlock_irq(&tpg->acl_node_lock);
- 				core_tpg_add_node_to_devs(acl, tpg);
--				spin_lock_irq(&tpg->acl_node_lock);
- 			}
- 		}
- 		spin_unlock_irq(&tpg->acl_node_lock);
+ 
+ struct se_lun *core_get_lun_from_tpg(struct se_portal_group *tpg, u32 unpacked_lun)
+diff --git a/drivers/target/target_core_fabric_configfs.c b/drivers/target/target_core_fabric_configfs.c
+index 7de9f04..64cc4dc 100644
+--- a/drivers/target/target_core_fabric_configfs.c
++++ b/drivers/target/target_core_fabric_configfs.c
+@@ -821,7 +821,7 @@ static int target_fabric_port_unlink(
+ 		tf->tf_ops.fabric_pre_unlink(se_tpg, lun);
+ 	}
+ 
+-	core_dev_del_lun(se_tpg, lun->unpacked_lun);
++	core_dev_del_lun(se_tpg, lun);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/target/target_core_internal.h b/drivers/target/target_core_internal.h
+index aabb730..5d1e4ec 100644
+--- a/drivers/target/target_core_internal.h
++++ b/drivers/target/target_core_internal.h
+@@ -44,7 +44,7 @@ int	se_dev_set_fabric_max_sectors(struct se_device *, u32);
+ int	se_dev_set_optimal_sectors(struct se_device *, u32);
+ int	se_dev_set_block_size(struct se_device *, u32);
+ struct se_lun *core_dev_add_lun(struct se_portal_group *, struct se_device *, u32);
+-int	core_dev_del_lun(struct se_portal_group *, u32);
++void	core_dev_del_lun(struct se_portal_group *, struct se_lun *);
+ struct se_lun *core_get_lun_from_tpg(struct se_portal_group *, u32);
+ struct se_lun_acl *core_dev_init_initiator_node_lun_acl(struct se_portal_group *,
+ 		struct se_node_acl *, u32, int *);
+@@ -90,8 +90,8 @@ void	core_tpg_wait_for_nacl_pr_ref(struct se_node_acl *);
+ struct se_lun *core_tpg_alloc_lun(struct se_portal_group *, u32);
+ int	core_tpg_add_lun(struct se_portal_group *, struct se_lun *,
+ 		u32, struct se_device *);
+-struct se_lun *core_tpg_pre_dellun(struct se_portal_group *, u32 unpacked_lun);
+-int	core_tpg_post_dellun(struct se_portal_group *, struct se_lun *);
++void core_tpg_free_lun(struct se_portal_group *, struct se_lun *);
++void core_tpg_remove_lun(struct se_portal_group *, struct se_lun *);
+ 
+ static inline void release_deve(struct kref *kref)
+ {
 diff --git a/drivers/target/target_core_tpg.c b/drivers/target/target_core_tpg.c
-index 30af019..1bcb665 100644
+index da7febb..e6f9dfb 100644
 --- a/drivers/target/target_core_tpg.c
 +++ b/drivers/target/target_core_tpg.c
-@@ -172,8 +172,6 @@ void core_tpg_add_node_to_devs(
- 	for (node = rb_first(&tpg->rb_tpg_lun_list); node; node = rb_next(node)) {
- 		struct se_lun *lun = rb_entry(node, struct se_lun, rb_node);
- 
--		spin_unlock(&tpg->tpg_lun_lock);
--
- 		dev = lun->lun_se_dev;
- 		/*
- 		 * By default in LIO-Target $FABRIC_MOD,
-@@ -201,7 +199,6 @@ void core_tpg_add_node_to_devs(
- 
- 		core_enable_device_list_for_node(lun, NULL, lun->unpacked_lun,
- 				lun_access, acl, tpg);
--		spin_lock(&tpg->tpg_lun_lock);
- 	}
- 	spin_unlock(&tpg->tpg_lun_lock);
- }
-@@ -299,9 +296,7 @@ void core_tpg_clear_object_luns(struct se_portal_group *tpg)
- 		if (!lun->lun_se_dev)
+@@ -336,7 +336,7 @@ void core_tpg_clear_object_luns(struct se_portal_group *tpg)
  			continue;
  
--		spin_unlock(&tpg->tpg_lun_lock);
- 		core_dev_del_lun(tpg, lun);
--		spin_lock(&tpg->tpg_lun_lock);
+ 		spin_unlock(&tpg->tpg_lun_lock);
+-		core_dev_del_lun(tpg, lun->unpacked_lun);
++		core_dev_del_lun(tpg, lun);
+ 		spin_lock(&tpg->tpg_lun_lock);
  	}
  	spin_unlock(&tpg->tpg_lun_lock);
+@@ -671,7 +671,7 @@ static void core_tpg_release_virtual_lun0(struct se_portal_group *se_tpg)
+ {
+ 	struct se_lun *lun = &se_tpg->tpg_virt_lun0;
+ 
+-	core_tpg_post_dellun(se_tpg, lun);
++	core_tpg_remove_lun(se_tpg, lun);
+ }
+ 
+ int core_tpg_register(
+@@ -841,48 +841,38 @@ int core_tpg_add_lun(
+ 	return 0;
+ }
+ 
+-struct se_lun *core_tpg_pre_dellun(
++void core_tpg_free_lun(
+ 	struct se_portal_group *tpg,
+-	u32 unpacked_lun)
++	struct se_lun *lun)
+ {
+-	struct se_lun *lun;
+ 
+-	if (unpacked_lun > (TRANSPORT_MAX_LUNS_PER_TPG-1)) {
++	if (lun->unpacked_lun > (TRANSPORT_MAX_LUNS_PER_TPG-1)) {
+ 		pr_err("%s LUN: %u exceeds TRANSPORT_MAX_LUNS_PER_TPG"
+ 			"-1: %u for Target Portal Group: %u\n",
+-			tpg->se_tpg_tfo->get_fabric_name(), unpacked_lun,
++			tpg->se_tpg_tfo->get_fabric_name(), lun->unpacked_lun,
+ 			TRANSPORT_MAX_LUNS_PER_TPG-1,
+ 			tpg->se_tpg_tfo->tpg_get_tag(tpg));
+-		return ERR_PTR(-EOVERFLOW);
++		return;
+ 	}
+ 
+ 	spin_lock(&tpg->tpg_lun_lock);
+-	lun = tpg->tpg_lun_list[unpacked_lun];
+ 	if (lun->lun_status != TRANSPORT_LUN_STATUS_ACTIVE) {
+ 		pr_err("%s Logical Unit Number: %u is not active on"
+ 			" Target Portal Group: %u, ignoring request.\n",
+-			tpg->se_tpg_tfo->get_fabric_name(), unpacked_lun,
++			tpg->se_tpg_tfo->get_fabric_name(), lun->unpacked_lun,
+ 			tpg->se_tpg_tfo->tpg_get_tag(tpg));
+ 		spin_unlock(&tpg->tpg_lun_lock);
+-		return ERR_PTR(-ENODEV);
++		return;
+ 	}
++	lun->lun_status = TRANSPORT_LUN_STATUS_FREE;
+ 	spin_unlock(&tpg->tpg_lun_lock);
+-
+-	return lun;
+ }
+ 
+-int core_tpg_post_dellun(
++void core_tpg_remove_lun(
+ 	struct se_portal_group *tpg,
+ 	struct se_lun *lun)
+ {
+ 	core_clear_lun_from_tpg(lun, tpg);
+ 	transport_clear_lun_ref(lun);
+-
+ 	core_dev_unexport(lun->lun_se_dev, tpg, lun);
+-
+-	spin_lock(&tpg->tpg_lun_lock);
+-	lun->lun_status = TRANSPORT_LUN_STATUS_FREE;
+-	spin_unlock(&tpg->tpg_lun_lock);
+-
+-	return 0;
  }
 -- 
 1.7.1
