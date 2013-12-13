@@ -1,96 +1,53 @@
 From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: [PATCH 00/20] qla2xxx: Patches for scsi "misc" branch.
-Date: Fri, 13 Dec 2013 15:03:40 -0500
-Message-ID: <1386965040-20611-1-git-send-email-saurav.kashyap@qlogic.com>
+Subject: [PATCH 07/20] qla2xxx: Enable the Flash Access Control (FAC) mailbox command.
+Date: Fri, 13 Dec 2013 15:03:47 -0500
+Message-ID: <1386965040-20611-8-git-send-email-saurav.kashyap@qlogic.com>
+References: <1386965040-20611-1-git-send-email-saurav.kashyap@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:29137 "EHLO
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:45894 "EHLO
 	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753295Ab3LMUhG (ORCPT
+	by vger.kernel.org with ESMTP id S1753238Ab3LMUhh (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 Dec 2013 15:37:06 -0500
+	Fri, 13 Dec 2013 15:37:37 -0500
+In-Reply-To: <1386965040-20611-1-git-send-email-saurav.kashyap@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-Hi James,
+From: Joe Carnuccio <joe.carnuccio@qlogic.com>
 
-Please apply the following patches to the scsi tree at your earliest
-convenience for inclusion in the next mainline merge window.
+Signed-off-by: Joe Carnuccio <joe.carnuccio@qlogic.com>
+Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
+---
+ drivers/scsi/qla2xxx/qla_init.c |    5 +----
+ 1 files changed, 1 insertions(+), 4 deletions(-)
 
-Note: This patch set contains a change to the FC transport (10/20)
-as one of the patches in this patch set is dependent on that change.
-
-Thanks,
-~Saurav 
-
-Armen Baloyan (4):
-  qla2xxx: Add handling for boot indication progress AENs for ISPFX00.
-  qla2xxx: Replace constant value for IOCTL IOCB abort execution status
-    with a macro for ISPFX00.
-  qla2xxx: Remove Marker type IOCB logic for ISPFX00.
-  qla2xxx: Add changes in the IOCB structures to adjust driver source
-    codes to ISPFX00 firmware spec.
-
-Atul Deshmukh (2):
-  qla2xxx: Use proper message for Non owner reset ACK Timeout.
-  qla2xxx: Remove ISP_ABORT_NEEDED and ISP_ABORT_RETRY checks from
-    watchdog function for ISP8044.
-
-Chad Dupuis (6):
-  qla2xxx: Add mutex around optrom calls to serialize accesses.
-  qla2xxx: Set host can_queue value based on available resources.
-  scsi_transport_fc: Add 32Gbps speed definition.
-  qla2xxx: Add support for ISP2701.
-  qla2xxx: Read capture firmware dump on mailbox timeout for ISP8044
-    and ISP82XX.
-  qla2xxx: Fix multiqueue MSI-X registration.
-
-Joe Carnuccio (1):
-  qla2xxx: Enable the Flash Access Control (FAC) mailbox command.
-
-Saurav Kashyap (7):
-  qla2xxx: Remove init control block related dead code for ISPFX00.
-  qla2xxx: Select correct request queue for error type IOCB for
-    ISPFX00.
-  qla2xxx: Properly handle 32 bit mailbox register for ISPFX00.
-  qla2xxx: Avoid poisoining in the response queue for ISPFX00.
-  qla2xxx: Simplyfy the ISPFX00 interrupt handler code for ISPFX00.
-  qla2xxx: Correctly set the read_optrom pointer for ISP8044.
-  qla2xxx: Update the driver version to 8.07.00.02-k.
-
- drivers/scsi/qla2xxx/Makefile      |    2 +-
- drivers/scsi/qla2xxx/qla_attr.c    |  193 +++++++-
- drivers/scsi/qla2xxx/qla_bsg.c     |   12 +-
- drivers/scsi/qla2xxx/qla_dbg.c     |  133 +++++-
- drivers/scsi/qla2xxx/qla_dbg.h     |    7 +
- drivers/scsi/qla2xxx/qla_def.h     |   65 ++--
- drivers/scsi/qla2xxx/qla_dfs.c     |    3 +-
- drivers/scsi/qla2xxx/qla_fw.h      |    4 +
- drivers/scsi/qla2xxx/qla_gbl.h     |   10 +
- drivers/scsi/qla2xxx/qla_gs.c      |   11 +
- drivers/scsi/qla2xxx/qla_init.c    |  261 ++++++++++-
- drivers/scsi/qla2xxx/qla_iocb.c    |   15 +-
- drivers/scsi/qla2xxx/qla_isr.c     |   72 ++--
- drivers/scsi/qla2xxx/qla_mbx.c     |   47 ++-
- drivers/scsi/qla2xxx/qla_mid.c     |    4 +-
- drivers/scsi/qla2xxx/qla_mr.c      |   98 ++---
- drivers/scsi/qla2xxx/qla_mr.h      |   57 +--
- drivers/scsi/qla2xxx/qla_nx.c      |   21 +-
- drivers/scsi/qla2xxx/qla_nx2.c     |   22 +-
- drivers/scsi/qla2xxx/qla_os.c      |  152 +++++--
- drivers/scsi/qla2xxx/qla_sup.c     |   65 ++-
- drivers/scsi/qla2xxx/qla_tmpl.c    |  909 ++++++++++++++++++++++++++++++++++++
- drivers/scsi/qla2xxx/qla_tmpl.h    |  205 ++++++++
- drivers/scsi/qla2xxx/qla_version.h |    4 +-
- drivers/scsi/scsi_transport_fc.c   |    1 +
- include/scsi/scsi_transport_fc.h   |    1 +
- 26 files changed, 2040 insertions(+), 334 deletions(-)
- create mode 100644 drivers/scsi/qla2xxx/qla_tmpl.c
- create mode 100644 drivers/scsi/qla2xxx/qla_tmpl.h
-
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index e7e5f4f..9b271cc 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -1718,9 +1718,6 @@ enable_82xx_npiv:
+ 		spin_unlock_irqrestore(&ha->hardware_lock, flags);
+ 	}
+ 
+-	if (IS_QLA83XX(ha))
+-		goto skip_fac_check;
+-
+ 	if (rval == QLA_SUCCESS && IS_FAC_REQUIRED(ha)) {
+ 		uint32_t size;
+ 
+@@ -1733,7 +1730,7 @@ enable_82xx_npiv:
+ 			    "Unsupported FAC firmware (%d.%02d.%02d).\n",
+ 			    ha->fw_major_version, ha->fw_minor_version,
+ 			    ha->fw_subminor_version);
+-skip_fac_check:
++
+ 			if (IS_QLA83XX(ha)) {
+ 				ha->flags.fac_supported = 0;
+ 				rval = QLA_SUCCESS;
 -- 
 1.7.7
 
