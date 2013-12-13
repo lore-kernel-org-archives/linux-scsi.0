@@ -1,185 +1,192 @@
 From: Andy Grover <agrover@redhat.com>
-Subject: [PATCH 18/32] target: More core_dev_del cleanups
-Date: Fri, 13 Dec 2013 15:59:06 -0800
-Message-ID: <1386979160-6928-19-git-send-email-agrover@redhat.com>
+Subject: [PATCH 29/32] target: Simplify params to core_tpg_del_initiator_node_acl
+Date: Fri, 13 Dec 2013 15:59:17 -0800
+Message-ID: <1386979160-6928-30-git-send-email-agrover@redhat.com>
 References: <1386979160-6928-1-git-send-email-agrover@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51745 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:18939 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753532Ab3LMX7d (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 Dec 2013 18:59:33 -0500
+	id S1753532Ab3LMX7i (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 13 Dec 2013 18:59:38 -0500
 In-Reply-To: <1386979160-6928-1-git-send-email-agrover@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: target-devel@vger.kernel.org
 Cc: linux-scsi@vger.kernel.org
 
-core_dev_del_lun needs no return value. Also change it to take a se_lun*
-instead of the unpacked lun.
+'force' parameter is not used.
 
-Rename core_tpg_pre_dellun to core_tpg_free_lun, and post_dellun to
-remove_lun. Swap the order they are called, and hold off on setting
-lun_status to STATUS_FREE until the end of free_lun.
+tpg parameter is not needed, since we have acl->se_tpg.
 
 Signed-off-by: Andy Grover <agrover@redhat.com>
 ---
- drivers/target/target_core_device.c          |   16 ++++---------
- drivers/target/target_core_fabric_configfs.c |    2 +-
- drivers/target/target_core_internal.h        |    6 ++--
- drivers/target/target_core_tpg.c             |   32 +++++++++-----------------
- 4 files changed, 20 insertions(+), 36 deletions(-)
+ Documentation/target/tcm_mod_builder.py      |    2 +-
+ drivers/infiniband/ulp/srpt/ib_srpt.c        |    2 +-
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c           |    2 +-
+ drivers/target/iscsi/iscsi_target_configfs.c |    5 ++---
+ drivers/target/sbp/sbp_target.c              |    2 +-
+ drivers/target/target_core_tpg.c             |    6 ++----
+ drivers/target/tcm_fc/tfc_conf.c             |    2 +-
+ drivers/usb/gadget/tcm_usb_gadget.c          |    2 +-
+ drivers/vhost/scsi.c                         |    2 +-
+ include/target/target_core_fabric.h          |    3 +--
+ 10 files changed, 12 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-index faa17a4..af12456 100644
---- a/drivers/target/target_core_device.c
-+++ b/drivers/target/target_core_device.c
-@@ -1140,24 +1140,18 @@ struct se_lun *core_dev_add_lun(
+diff --git a/Documentation/target/tcm_mod_builder.py b/Documentation/target/tcm_mod_builder.py
+index c8e0572..bfebc66 100755
+--- a/Documentation/target/tcm_mod_builder.py
++++ b/Documentation/target/tcm_mod_builder.py
+@@ -284,7 +284,7 @@ def tcm_mod_build_configfs(proto_ident, fabric_mod_dir_var, fabric_mod_name):
+ 	buf += "{\n"
+ 	buf += "	struct " + fabric_mod_name + "_nacl *nacl = container_of(se_acl,\n"
+ 	buf += "				struct " + fabric_mod_name + "_nacl, se_node_acl);\n"
+-	buf += "	core_tpg_del_initiator_node_acl(se_acl->se_tpg, se_acl, 1);\n"
++	buf += "	core_tpg_del_initiator_node_acl(se_acl);\n"
+ 	buf += "}\n\n"
+ 
+ 	buf += "static struct se_portal_group *" + fabric_mod_name + "_make_tpg(\n"
+diff --git a/drivers/infiniband/ulp/srpt/ib_srpt.c b/drivers/infiniband/ulp/srpt/ib_srpt.c
+index 4995b91..7a23e75 100644
+--- a/drivers/infiniband/ulp/srpt/ib_srpt.c
++++ b/drivers/infiniband/ulp/srpt/ib_srpt.c
+@@ -3644,7 +3644,7 @@ static void srpt_drop_nodeacl(struct se_node_acl *se_nacl)
+ 	spin_lock_irq(&sport->port_acl_lock);
+ 	list_del(&nacl->list);
+ 	spin_unlock_irq(&sport->port_acl_lock);
+-	core_tpg_del_initiator_node_acl(&sport->port_tpg_1, se_nacl, 1);
++	core_tpg_del_initiator_node_acl(se_nacl);
+ }
+ 
+ static ssize_t srpt_tpg_attrib_show_srp_max_rdma_size(
+diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+index 4fe684a..05967eb 100644
+--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
++++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+@@ -828,7 +828,7 @@ static struct se_node_acl *tcm_qla2xxx_make_nodeacl(
+ 
+ static void tcm_qla2xxx_drop_nodeacl(struct se_node_acl *se_acl)
+ {
+-	core_tpg_del_initiator_node_acl(se_acl->se_tpg, se_acl, 1);
++	core_tpg_del_initiator_node_acl(se_acl);
+ }
+ 
+ /* Start items for tcm_qla2xxx_tpg_attrib_cit */
+diff --git a/drivers/target/iscsi/iscsi_target_configfs.c b/drivers/target/iscsi/iscsi_target_configfs.c
+index bd05ab5..3bc1443 100644
+--- a/drivers/target/iscsi/iscsi_target_configfs.c
++++ b/drivers/target/iscsi/iscsi_target_configfs.c
+@@ -915,7 +915,7 @@ static struct se_node_acl *lio_target_make_nodeacl(
+ 	if (!stats_cg->default_groups) {
+ 		pr_err("Unable to allocate memory for"
+ 				" stats_cg->default_groups\n");
+-		core_tpg_del_initiator_node_acl(se_tpg, se_nacl, 1);
++		core_tpg_del_initiator_node_acl(se_nacl);
+ 		return ERR_PTR(-ENOMEM);
+ 	}
+ 
+@@ -930,7 +930,6 @@ static struct se_node_acl *lio_target_make_nodeacl(
+ static void lio_target_drop_nodeacl(
+ 	struct se_node_acl *se_nacl)
+ {
+-	struct se_portal_group *se_tpg = se_nacl->se_tpg;
+ 	struct iscsi_node_acl *acl = container_of(se_nacl,
+ 			struct iscsi_node_acl, se_node_acl);
+ 	struct config_item *df_item;
+@@ -945,7 +944,7 @@ static void lio_target_drop_nodeacl(
+ 	}
+ 	kfree(stats_cg->default_groups);
+ 
+-	core_tpg_del_initiator_node_acl(se_tpg, se_nacl, 1);
++	core_tpg_del_initiator_node_acl(se_nacl);
+ }
+ 
+ /* End items for lio_target_acl_cit */
+diff --git a/drivers/target/sbp/sbp_target.c b/drivers/target/sbp/sbp_target.c
+index 6fabd9c..1078ee6 100644
+--- a/drivers/target/sbp/sbp_target.c
++++ b/drivers/target/sbp/sbp_target.c
+@@ -2126,7 +2126,7 @@ static struct se_node_acl *sbp_make_nodeacl(
+ 
+ static void sbp_drop_nodeacl(struct se_node_acl *se_acl)
+ {
+-	core_tpg_del_initiator_node_acl(se_acl->se_tpg, se_acl, 1);
++	core_tpg_del_initiator_node_acl(se_acl);
+ }
+ 
+ static int sbp_post_link_lun(
+diff --git a/drivers/target/target_core_tpg.c b/drivers/target/target_core_tpg.c
+index 6aaf50f..1233d04 100644
+--- a/drivers/target/target_core_tpg.c
++++ b/drivers/target/target_core_tpg.c
+@@ -402,13 +402,11 @@ EXPORT_SYMBOL(core_tpg_add_initiator_node_acl);
   *
   *
   */
--int core_dev_del_lun(
-+void core_dev_del_lun(
- 	struct se_portal_group *tpg,
--	u32 unpacked_lun)
-+	struct se_lun *lun)
+-int core_tpg_del_initiator_node_acl(
+-	struct se_portal_group *tpg,
+-	struct se_node_acl *acl,
+-	int force)
++int core_tpg_del_initiator_node_acl(struct se_node_acl *acl)
  {
--	struct se_lun *lun;
--
--	lun = core_tpg_pre_dellun(tpg, unpacked_lun);
--	if (IS_ERR(lun))
--		return PTR_ERR(lun);
--
--	core_tpg_post_dellun(tpg, lun);
-+	core_tpg_remove_lun(tpg, lun);
+ 	LIST_HEAD(sess_list);
+ 	struct se_session *sess, *sess_tmp;
++	struct se_portal_group *tpg = acl->se_tpg;
+ 	unsigned long flags;
+ 	int rc;
  
- 	pr_debug("%s_TPG[%u]_LUN[%u] - Deactivated %s Logical Unit from"
- 		" device object\n", tpg->se_tpg_tfo->get_fabric_name(),
--		tpg->se_tpg_tfo->tpg_get_tag(tpg), unpacked_lun,
-+		tpg->se_tpg_tfo->tpg_get_tag(tpg), lun->unpacked_lun,
- 		tpg->se_tpg_tfo->get_fabric_name());
+diff --git a/drivers/target/tcm_fc/tfc_conf.c b/drivers/target/tcm_fc/tfc_conf.c
+index 2a44ad6..171950b 100644
+--- a/drivers/target/tcm_fc/tfc_conf.c
++++ b/drivers/target/tcm_fc/tfc_conf.c
+@@ -238,7 +238,7 @@ static void ft_del_acl(struct se_node_acl *se_acl)
+ 	pr_debug("del acl %p se_acl %p tpg %p se_tpg %p\n",
+ 		    acl, se_acl, tpg, &tpg->se_tpg);
  
--	return 0;
-+	core_tpg_free_lun(tpg, lun);
+-	core_tpg_del_initiator_node_acl(&tpg->se_tpg, se_acl, 1);
++	core_tpg_del_initiator_node_acl(se_acl);
  }
  
- struct se_lun *core_get_lun_from_tpg(struct se_portal_group *tpg, u32 unpacked_lun)
-diff --git a/drivers/target/target_core_fabric_configfs.c b/drivers/target/target_core_fabric_configfs.c
-index 7de9f04..64cc4dc 100644
---- a/drivers/target/target_core_fabric_configfs.c
-+++ b/drivers/target/target_core_fabric_configfs.c
-@@ -821,7 +821,7 @@ static int target_fabric_port_unlink(
- 		tf->tf_ops.fabric_pre_unlink(se_tpg, lun);
- 	}
+ struct ft_node_acl *ft_acl_get(struct ft_tpg *tpg, struct fc_rport_priv *rdata)
+diff --git a/drivers/usb/gadget/tcm_usb_gadget.c b/drivers/usb/gadget/tcm_usb_gadget.c
+index 2cedb4b..ffbbed1 100644
+--- a/drivers/usb/gadget/tcm_usb_gadget.c
++++ b/drivers/usb/gadget/tcm_usb_gadget.c
+@@ -1526,7 +1526,7 @@ static struct se_node_acl *usbg_make_nodeacl(
  
--	core_dev_del_lun(se_tpg, lun->unpacked_lun);
-+	core_dev_del_lun(se_tpg, lun);
- 	return 0;
- }
- 
-diff --git a/drivers/target/target_core_internal.h b/drivers/target/target_core_internal.h
-index aabb730..5d1e4ec 100644
---- a/drivers/target/target_core_internal.h
-+++ b/drivers/target/target_core_internal.h
-@@ -44,7 +44,7 @@ int	se_dev_set_fabric_max_sectors(struct se_device *, u32);
- int	se_dev_set_optimal_sectors(struct se_device *, u32);
- int	se_dev_set_block_size(struct se_device *, u32);
- struct se_lun *core_dev_add_lun(struct se_portal_group *, struct se_device *, u32);
--int	core_dev_del_lun(struct se_portal_group *, u32);
-+void	core_dev_del_lun(struct se_portal_group *, struct se_lun *);
- struct se_lun *core_get_lun_from_tpg(struct se_portal_group *, u32);
- struct se_lun_acl *core_dev_init_initiator_node_lun_acl(struct se_portal_group *,
- 		struct se_node_acl *, u32, int *);
-@@ -90,8 +90,8 @@ void	core_tpg_wait_for_nacl_pr_ref(struct se_node_acl *);
- struct se_lun *core_tpg_alloc_lun(struct se_portal_group *, u32);
- int	core_tpg_add_lun(struct se_portal_group *, struct se_lun *,
- 		u32, struct se_device *);
--struct se_lun *core_tpg_pre_dellun(struct se_portal_group *, u32 unpacked_lun);
--int	core_tpg_post_dellun(struct se_portal_group *, struct se_lun *);
-+void core_tpg_free_lun(struct se_portal_group *, struct se_lun *);
-+void core_tpg_remove_lun(struct se_portal_group *, struct se_lun *);
- 
- static inline void release_deve(struct kref *kref)
+ static void usbg_drop_nodeacl(struct se_node_acl *se_acl)
  {
-diff --git a/drivers/target/target_core_tpg.c b/drivers/target/target_core_tpg.c
-index da7febb..e6f9dfb 100644
---- a/drivers/target/target_core_tpg.c
-+++ b/drivers/target/target_core_tpg.c
-@@ -336,7 +336,7 @@ void core_tpg_clear_object_luns(struct se_portal_group *tpg)
- 			continue;
+-	core_tpg_del_initiator_node_acl(se_acl->se_tpg, se_acl, 1);
++	core_tpg_del_initiator_node_acl(se_acl);
+ }
  
- 		spin_unlock(&tpg->tpg_lun_lock);
--		core_dev_del_lun(tpg, lun->unpacked_lun);
-+		core_dev_del_lun(tpg, lun);
- 		spin_lock(&tpg->tpg_lun_lock);
- 	}
- 	spin_unlock(&tpg->tpg_lun_lock);
-@@ -671,7 +671,7 @@ static void core_tpg_release_virtual_lun0(struct se_portal_group *se_tpg)
+ struct usbg_tpg *the_only_tpg_I_currently_have;
+diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
+index a93169b..96171db 100644
+--- a/drivers/vhost/scsi.c
++++ b/drivers/vhost/scsi.c
+@@ -1687,7 +1687,7 @@ tcm_vhost_make_nodeacl(struct se_portal_group *se_tpg,
+ 
+ static void tcm_vhost_drop_nodeacl(struct se_node_acl *se_acl)
  {
- 	struct se_lun *lun = &se_tpg->tpg_virt_lun0;
- 
--	core_tpg_post_dellun(se_tpg, lun);
-+	core_tpg_remove_lun(se_tpg, lun);
+-	core_tpg_del_initiator_node_acl(se_acl->se_tpg, se_acl, 1);
++	core_tpg_del_initiator_node_acl(se_acl);
  }
  
- int core_tpg_register(
-@@ -841,48 +841,38 @@ int core_tpg_add_lun(
- 	return 0;
- }
- 
--struct se_lun *core_tpg_pre_dellun(
-+void core_tpg_free_lun(
- 	struct se_portal_group *tpg,
--	u32 unpacked_lun)
-+	struct se_lun *lun)
- {
--	struct se_lun *lun;
- 
--	if (unpacked_lun > (TRANSPORT_MAX_LUNS_PER_TPG-1)) {
-+	if (lun->unpacked_lun > (TRANSPORT_MAX_LUNS_PER_TPG-1)) {
- 		pr_err("%s LUN: %u exceeds TRANSPORT_MAX_LUNS_PER_TPG"
- 			"-1: %u for Target Portal Group: %u\n",
--			tpg->se_tpg_tfo->get_fabric_name(), unpacked_lun,
-+			tpg->se_tpg_tfo->get_fabric_name(), lun->unpacked_lun,
- 			TRANSPORT_MAX_LUNS_PER_TPG-1,
- 			tpg->se_tpg_tfo->tpg_get_tag(tpg));
--		return ERR_PTR(-EOVERFLOW);
-+		return;
- 	}
- 
- 	spin_lock(&tpg->tpg_lun_lock);
--	lun = tpg->tpg_lun_list[unpacked_lun];
- 	if (lun->lun_status != TRANSPORT_LUN_STATUS_ACTIVE) {
- 		pr_err("%s Logical Unit Number: %u is not active on"
- 			" Target Portal Group: %u, ignoring request.\n",
--			tpg->se_tpg_tfo->get_fabric_name(), unpacked_lun,
-+			tpg->se_tpg_tfo->get_fabric_name(), lun->unpacked_lun,
- 			tpg->se_tpg_tfo->tpg_get_tag(tpg));
- 		spin_unlock(&tpg->tpg_lun_lock);
--		return ERR_PTR(-ENODEV);
-+		return;
- 	}
-+	lun->lun_status = TRANSPORT_LUN_STATUS_FREE;
- 	spin_unlock(&tpg->tpg_lun_lock);
--
--	return lun;
- }
- 
--int core_tpg_post_dellun(
-+void core_tpg_remove_lun(
- 	struct se_portal_group *tpg,
- 	struct se_lun *lun)
- {
- 	core_clear_lun_from_tpg(lun, tpg);
- 	transport_clear_lun_ref(lun);
--
- 	core_dev_unexport(lun->lun_se_dev, tpg, lun);
--
--	spin_lock(&tpg->tpg_lun_lock);
--	lun->lun_status = TRANSPORT_LUN_STATUS_FREE;
--	spin_unlock(&tpg->tpg_lun_lock);
--
--	return 0;
- }
+ static void tcm_vhost_free_cmd_map_res(struct tcm_vhost_nexus *nexus,
+diff --git a/include/target/target_core_fabric.h b/include/target/target_core_fabric.h
+index 0267780..35a77af 100644
+--- a/include/target/target_core_fabric.h
++++ b/include/target/target_core_fabric.h
+@@ -144,8 +144,7 @@ struct se_node_acl *core_tpg_check_initiator_node_acl(struct se_portal_group *,
+ void	core_tpg_clear_object_luns(struct se_portal_group *);
+ struct se_node_acl *core_tpg_add_initiator_node_acl(struct se_portal_group *,
+ 		struct se_node_acl *, const char *, u32);
+-int	core_tpg_del_initiator_node_acl(struct se_portal_group *,
+-		struct se_node_acl *, int);
++int	core_tpg_del_initiator_node_acl(struct se_node_acl *);
+ int	core_tpg_set_initiator_node_queue_depth(struct se_portal_group *,
+ 		unsigned char *, u32, int);
+ int	core_tpg_set_initiator_node_tag(struct se_portal_group *,
 -- 
 1.7.1
 
