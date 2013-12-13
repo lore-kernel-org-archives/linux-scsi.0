@@ -1,135 +1,196 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: blk-tag.c: 89 BUG() triggering + initial analysis
-Date: Fri, 13 Dec 2013 12:32:36 -0800
-Message-ID: <1386966756.2055.68.camel@dabdike.int.hansenpartnership.com>
-References: <5284AF58.5070901@redhat.com>
+From: Saurav Kashyap <saurav.kashyap@qlogic.com>
+Subject: [PATCH 17/20] qla2xxx: Read capture firmware dump on mailbox timeout for ISP8044 and ISP82XX.
+Date: Fri, 13 Dec 2013 15:03:57 -0500
+Message-ID: <1386965040-20611-18-git-send-email-saurav.kashyap@qlogic.com>
+References: <1386965040-20611-1-git-send-email-saurav.kashyap@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:53235 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752696Ab3LMUcj (ORCPT
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:31709 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753118Ab3LMUgr (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 Dec 2013 15:32:39 -0500
-In-Reply-To: <5284AF58.5070901@redhat.com>
+	Fri, 13 Dec 2013 15:36:47 -0500
+In-Reply-To: <1386965040-20611-1-git-send-email-saurav.kashyap@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hans de Goede <hdegoede@redhat.com>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>, Sarah Sharp <sarah.a.sharp@linux.intel.com>
+To: jbottomley@parallels.com
+Cc: giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-On Thu, 2013-11-14 at 12:09 +0100, Hans de Goede wrote:
-> Hi All,
-> 
-> I hope linux-scsi is the right list for this, if not let me know.
-> 
-> I've been working on getting the uas (Usb Attached Scsi) driver into
-> working shape for the last 3 weeks, so that it can be enabled in 3.14 .
-> 
-> My latest tests where performed on top of 3.11 + a bunch of xhci and
-> of course uas fixes.
-> 
-> I can reliable trigger the BUG() in blk-tag.c line 89:
-> 
-> void blk_free_tags(struct blk_queue_tag *bqt)
-> {
->          if (unlikely(!__blk_free_tags(bqt)))
->                  BUG();
-> }
-> 
-> I believe this is not an uas driver bug, but rather a bug which
-> any scsi host which uses scsi_init_shared_tag_map() can trigger,
-> which is likely not seen before because almost no hosts actually
-> use scsi_init_shared_tag_map().
+From: Chad Dupuis <chad.dupuis@qlogic.com>
 
-Um, well, no, stex, qla4xxx and fnic do.  Of those, I think fnic and
-qla4xxx have quite large install bases.
+Allow for the capture of a firmware dump but have a sysfs node
+(allow_cna_fw_dump) to allow the feature to be enabled/disabled dynamically.
 
-> The above test triggering the BUG() assumes that blk_free_tags()
-> caller holds the last reference to the bqt. For scsi hosts using
-> scsi_init_shared_tag_map() this assumes that the release of the
-> block_queue through blk-sysfs.c: blk_release_queue() happens before
-> the release of the host through scsi/hosts.c: scsi_host_dev_release()
+The default is off.
 
-The devices all hold parent references to the host.  The last action of
-a device release is a put on its parent (this is after the last put of
-the device queue).  The host release function shouldn't be called until
-every device has released its reference ... unless something has gone
-wrong with the device model, of course.
-
-> I've added some strategic debug printk-s to debug this problem
-> (and removed the BUG()) and in some cases this is not true.
-> 
-> Here is the output of my debug scripts on a normal unplug of
-> the uas usb-device:
-> 
-> [ 7678.202540] blk-sysfs.c: blk_release_queue queue_tags ffff88022d4d59e0
-> [ 7678.202551] blk-tag.c: __blk_queue_free_tags bqt ffff88022d4d59e0
-> [ 7678.202553] blk-tag.c: __blk_free_tags refcnt before dec: 2
-> [ 7678.202626] scsi/hosts.c: scsi_host_dev_release bqt ffff88022d4d59e0
-> [ 7678.202654] blk-tag.c: blk_free_tags bqt ffff88022d4d59e0
-> [ 7678.202655] blk-tag.c: __blk_free_tags refcnt before dec: 1
-> [ 7678.202657] blk-tag.c: __blk_free_tags free-ed: ffff88022d4d59e0
-> 
-> Which does not trigger the BUG().
-> 
-> If however I do the following:
-> 1) plug in uas usb-device
-> 2) let udisks auto-mount it under:
->     /run/media/hans/4e82585c-3c40-48ac-81ad-11d2a7bad0fc
-> 3) cd into that dir to keep it busy
-> 4) unplug
-> 5) cd out of the directory, at which points udisks will umount it
-> 
-> 
-> Then with an unpatched kernel I hit the BUG() at step 5, and with
-> a kernel with the BUG() removed I get the following debug trace:
-> 
-> [ 9089.808021] scsi/hosts.c: scsi_host_dev_release bqt ffff88022c02ae40
-> [ 9089.808040] blk-tag.c: blk_free_tags bqt ffff88022c02ae40
-> [ 9089.808041] blk-tag.c: __blk_free_tags refcnt before dec: 2
-> [ 9089.808046] blk-sysfs.c: blk_release_queue queue_tags ffff88022c02ae40
-> [ 9089.808057] blk-tag.c: __blk_queue_free_tags bqt ffff88022c02ae40
-> [ 9089.808058] blk-tag.c: __blk_free_tags refcnt before dec: 1
-> [ 9089.808059] blk-tag.c: __blk_free_tags free-ed: ffff88022c02ae40
-> 
-> Notice how in this case scsi_host_dev_release() runs before
-> blk_release_queue(), breaking the assumption the BUG() tests for.
-> 
-> I think this may be caused by userspace holding a reference to the
-> kobj which has blk_release_queue as release callback when doing the
-> umount. But I simply don't know the code in question well enough to do
-> a more detailed analysis of the problem.
-> 
-> A naive fix, which seems to work, would be to simply remove the BUG()
-> but I'm not sure if that is the right solution...
-
-So this looks like an induced failure caused by the filesystem holding a
-queue reference which you force by holding the directory, meaning that
-the blk_queue_put in the sdev release function isn't the last put.  The
-fix for this is probably to release the tags once the queue is dead and
-can accept no I/O.  That would be this, does that fix it?
-
-This isn't the whole fix, we can likely now remove the queue free from
-last put as well ... I'm just not sure if there's any block devices that
-don't call blk_cleanup_queue, which keeping it in would catch.
-
-James
-
+Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
+Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 ---
+ drivers/scsi/qla2xxx/qla_attr.c |   35 +++++++++++++++++++++++++++++++++++
+ drivers/scsi/qla2xxx/qla_def.h  |    1 +
+ drivers/scsi/qla2xxx/qla_gbl.h  |    2 ++
+ drivers/scsi/qla2xxx/qla_nx.c   |   17 +++++++++++++++++
+ drivers/scsi/qla2xxx/qla_nx2.c  |   16 ++++++++++++++++
+ drivers/scsi/qla2xxx/qla_os.c   |    4 ++--
+ 6 files changed, 73 insertions(+), 2 deletions(-)
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 8bdd012..03c0bf9 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -506,6 +506,8 @@ void blk_cleanup_queue(struct request_queue *q)
- 	del_timer_sync(&q->backing_dev_info.laptop_mode_wb_timer);
- 	blk_sync_queue(q);
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+index 7e5bcaf..b918bd4 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -1503,6 +1503,37 @@ qla2x00_fw_dump_size_show(struct device *dev, struct device_attribute *attr,
+ 	return scnprintf(buf, PAGE_SIZE, "%d\n", size);
+ }
  
-+	__blk_queue_free_tags(q);
++static ssize_t
++qla2x00_allow_cna_fw_dump_show(struct device *dev,
++	struct device_attribute *attr, char *buf)
++{
++	scsi_qla_host_t *vha = shost_priv(class_to_shost(dev));
 +
- 	spin_lock_irq(lock);
- 	if (q->queue_lock != &q->__queue_lock)
- 		q->queue_lock = &q->__queue_lock;
-
++	if (!IS_P3P_TYPE(vha->hw))
++		return scnprintf(buf, PAGE_SIZE, "\n");
++	else
++		return scnprintf(buf, PAGE_SIZE, "%s\n",
++		    vha->hw->allow_cna_fw_dump ? "true" : "false");
++}
++
++static ssize_t
++qla2x00_allow_cna_fw_dump_store(struct device *dev,
++	struct device_attribute *attr, const char *buf, size_t count)
++{
++	scsi_qla_host_t *vha = shost_priv(class_to_shost(dev));
++	int val = 0;
++
++	if (!IS_P3P_TYPE(vha->hw))
++		return -EINVAL;
++
++	if (sscanf(buf, "%d", &val) != 1)
++		return -EINVAL;
++
++	vha->hw->allow_cna_fw_dump = val != 0;
++
++	return strlen(buf);
++}
++
+ static DEVICE_ATTR(driver_version, S_IRUGO, qla2x00_drvr_version_show, NULL);
+ static DEVICE_ATTR(fw_version, S_IRUGO, qla2x00_fw_version_show, NULL);
+ static DEVICE_ATTR(serial_num, S_IRUGO, qla2x00_serial_num_show, NULL);
+@@ -1544,6 +1575,9 @@ static DEVICE_ATTR(thermal_temp, S_IRUGO, qla2x00_thermal_temp_show, NULL);
+ static DEVICE_ATTR(diag_requests, S_IRUGO, qla2x00_diag_requests_show, NULL);
+ static DEVICE_ATTR(diag_megabytes, S_IRUGO, qla2x00_diag_megabytes_show, NULL);
+ static DEVICE_ATTR(fw_dump_size, S_IRUGO, qla2x00_fw_dump_size_show, NULL);
++static DEVICE_ATTR(allow_cna_fw_dump, S_IRUGO | S_IWUSR,
++		   qla2x00_allow_cna_fw_dump_show,
++		   qla2x00_allow_cna_fw_dump_store);
+ 
+ struct device_attribute *qla2x00_host_attrs[] = {
+ 	&dev_attr_driver_version,
+@@ -1576,6 +1610,7 @@ struct device_attribute *qla2x00_host_attrs[] = {
+ 	&dev_attr_diag_requests,
+ 	&dev_attr_diag_megabytes,
+ 	&dev_attr_fw_dump_size,
++	&dev_attr_allow_cna_fw_dump,
+ 	NULL,
+ };
+ 
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index 143fe4f..f8521da 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -3299,6 +3299,7 @@ struct qla_hw_data {
+ 	struct mr_data_fx00 mr;
+ 
+ 	struct qlt_hw_data tgt;
++	int	allow_cna_fw_dump;
+ };
+ 
+ /*
+diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
+index 19a0662..dcd084a 100644
+--- a/drivers/scsi/qla2xxx/qla_gbl.h
++++ b/drivers/scsi/qla2xxx/qla_gbl.h
+@@ -511,6 +511,8 @@ extern void qla2300_fw_dump(scsi_qla_host_t *, int);
+ extern void qla24xx_fw_dump(scsi_qla_host_t *, int);
+ extern void qla25xx_fw_dump(scsi_qla_host_t *, int);
+ extern void qla81xx_fw_dump(scsi_qla_host_t *, int);
++extern void qla82xx_fw_dump(scsi_qla_host_t *, int);
++extern void qla8044_fw_dump(scsi_qla_host_t *, int);
+ 
+ extern void qla27xx_fwdump(scsi_qla_host_t *, int);
+ extern ulong qla27xx_fwdt_calculate_dump_size(struct scsi_qla_host *);
+diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
+index 26326f3..5511e24 100644
+--- a/drivers/scsi/qla2xxx/qla_nx.c
++++ b/drivers/scsi/qla2xxx/qla_nx.c
+@@ -4502,3 +4502,20 @@ exit:
+ 	qla82xx_idc_unlock(ha);
+ 	return rval;
+ }
++
++void
++qla82xx_fw_dump(scsi_qla_host_t *vha, int hardware_locked)
++{
++	struct qla_hw_data *ha = vha->hw;
++
++	if (!ha->allow_cna_fw_dump)
++		return;
++
++	scsi_block_requests(vha->host);
++	ha->flags.isp82xx_no_md_cap = 1;
++	qla82xx_idc_lock(ha);
++	qla82xx_set_reset_owner(vha);
++	qla82xx_idc_unlock(ha);
++	qla2x00_wait_for_chip_reset(vha);
++	scsi_unblock_requests(vha->host);
++}
+diff --git a/drivers/scsi/qla2xxx/qla_nx2.c b/drivers/scsi/qla2xxx/qla_nx2.c
+index 0350a59..0ea061b 100644
+--- a/drivers/scsi/qla2xxx/qla_nx2.c
++++ b/drivers/scsi/qla2xxx/qla_nx2.c
+@@ -3713,3 +3713,19 @@ exit_isp_reset:
+ 	return rval;
+ }
+ 
++void
++qla8044_fw_dump(scsi_qla_host_t *vha, int hardware_locked)
++{
++	struct qla_hw_data *ha = vha->hw;
++
++	if (!ha->allow_cna_fw_dump)
++		return;
++
++	scsi_block_requests(vha->host);
++	ha->flags.isp82xx_no_md_cap = 1;
++	qla8044_idc_lock(ha);
++	qla82xx_set_reset_owner(vha);
++	qla8044_idc_unlock(ha);
++	qla2x00_wait_for_chip_reset(vha);
++	scsi_unblock_requests(vha->host);
++}
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index cace917..3f69e7c 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -1975,7 +1975,7 @@ static struct isp_operations qla82xx_isp_ops = {
+ 	.prep_ms_fdmi_iocb	= qla24xx_prep_ms_fdmi_iocb,
+ 	.read_nvram		= qla24xx_read_nvram_data,
+ 	.write_nvram		= qla24xx_write_nvram_data,
+-	.fw_dump		= qla24xx_fw_dump,
++	.fw_dump		= qla82xx_fw_dump,
+ 	.beacon_on		= qla82xx_beacon_on,
+ 	.beacon_off		= qla82xx_beacon_off,
+ 	.beacon_blink		= NULL,
+@@ -2013,7 +2013,7 @@ static struct isp_operations qla8044_isp_ops = {
+ 	.prep_ms_fdmi_iocb	= qla24xx_prep_ms_fdmi_iocb,
+ 	.read_nvram		= NULL,
+ 	.write_nvram		= NULL,
+-	.fw_dump		= qla24xx_fw_dump,
++	.fw_dump		= qla8044_fw_dump,
+ 	.beacon_on		= qla82xx_beacon_on,
+ 	.beacon_off		= qla82xx_beacon_off,
+ 	.beacon_blink		= NULL,
+-- 
+1.7.7
 
