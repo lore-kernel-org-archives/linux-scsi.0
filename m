@@ -1,316 +1,71 @@
-From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: Re: qla2xxx: kernel oops with ql2xmultique_tag=1
-Date: Fri, 13 Dec 2013 20:48:43 +0000
-Message-ID: <F5D084D6342F9B479C34599BB0A03E4D89849D5C@AVMB1.qlogic.org>
-References: <52A85832.2050701@acm.org>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [usb-storage] UAS hangs khubd on USB disconnect
+Date: Fri, 13 Dec 2013 16:06:22 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1312131602520.1185-100000@iolanthe.rowland.org>
+References: <1386964999.2055.59.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_000_F5D084D6342F9B479C34599BB0A03E4D89849D5CAVMB1qlogicorg_"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:29523 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752800Ab3LMUss (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 Dec 2013 15:48:48 -0500
-Received: from pps.filterd (m0000643.ppops.net [127.0.0.1])
-	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id rBDKiwj9018538
-	for <linux-scsi@vger.kernel.org>; Fri, 13 Dec 2013 12:48:47 -0800
-Received: from avcashub1.qlogic.com (avcashub2.qlogic.com [198.70.193.116])
-	by mx0b-0016ce01.pphosted.com with ESMTP id 1g98mt68nd-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Fri, 13 Dec 2013 12:48:47 -0800
-In-Reply-To: <52A85832.2050701@acm.org>
-Content-Language: en-US
+Received: from iolanthe.rowland.org ([192.131.102.54]:60588 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750822Ab3LMVGX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Dec 2013 16:06:23 -0500
+In-Reply-To: <1386964999.2055.59.camel@dabdike.int.hansenpartnership.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>, linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Tejun Heo <tj@kernel.org>, Sarah Sharp <sarah.a.sharp@linux.intel.com>, Hans de Goede <hdegoede@redhat.com>, USB list <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>, USB Storage List <usb-storage@lists.one-eyed-alien.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
---_000_F5D084D6342F9B479C34599BB0A03E4D89849D5CAVMB1qlogicorg_
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <FE0241E2A3E69E4CBA75C8F96B9BB1FF@qlogic.com>
-Content-Transfer-Encoding: quoted-printable
+On Fri, 13 Dec 2013, James Bottomley wrote:
 
-Hi Bart,
+> Actually, I think I have this figured out.  There's a thinko in one of
+> the scsi_target_reap() cases.  The original (and still existing) problem
+> with targets is that nothing creates them and nothing destroys them, so,
+> while we could rely on the refcounting of the device model to preserve
+> the actual target object, we had no idea when to remove it from
+> visibility.  That was the job of the reap reference, to track
+> visibility.  It looks like the reap on device last put is occurring too
+> late.  I think we should reap immediately after doing the sdev
+> device_del, so does this fix the warn on? (I'm not sure because no-one
+> has actually posted a backtrace, but it sounds like this is the
+> problem).
+> 
+> James
+> 
+> ---
+> 
+> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+> index 8ff62c2..98d4eb3 100644
+> --- a/drivers/scsi/scsi_sysfs.c
+> +++ b/drivers/scsi/scsi_sysfs.c
+> @@ -399,8 +399,6 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
+>  	/* NULL queue means the device can't be used */
+>  	sdev->request_queue = NULL;
+>  
+> -	scsi_target_reap(scsi_target(sdev));
+> -
+>  	kfree(sdev->inquiry);
+>  	kfree(sdev);
+>  
+> @@ -1044,6 +1042,8 @@ void __scsi_remove_device(struct scsi_device *sdev)
+>  	} else
+>  		put_device(&sdev->sdev_dev);
+>  
+> +	scsi_target_reap(scsi_target(sdev));
+> +
+>  	/*
+>  	 * Stop accepting new requests and wait until all queuecommand() and
+>  	 * scsi_run_queue() invocations have finished before tearing down the
 
-The fix (http://marc.info/?l=3Dlinux-scsi&m=3D138696701824443&w=3D2) for th=
-is
-issue is submitted today.
+This is not right.  The problem is that you don't keep track explicitly 
+of the number of references to a target; you rely implicitly on 
+starget->devices being non-empty.  starget->reap_ref is only a count of 
+local operations that should block removal.
 
-~Saurav
+Consider, for example, what would happen if there is more than one LUN.  
+What if one of them is removed while the other remains?
 
+A more invasive change is needed.
 
->Hello,
->
->Apparently trying to load the qla2xxx kernel module with parameter
->ql2xmultique_tag=3D1 triggers a kernel oops. This is 100% reproducible
->with at least kernel versions 3.11.8 and 3.13-rc3. Has anybody else
->run into this before ?
->
->Thanks,
->
->Bart.
->
-># rmmod qla2xxx; dmesg -c >/dev/null; insmod
->/lib/modules/3.13.0-rc3+/kernel/drivers/scsi/qla2xxx/qla2xxx.ko
->ql2xmultique_tag=3D1; ql2xextended_error_logging=3D0x40100000; dmesg -c
->Segmentation fault
->
->qla2xxx [0000:00:00.0]-0005: : QLogic Fibre Channel HBA Driver:
->8.06.00.08-k-debug.
->qla2xxx [0000:01:00.0]-0807: : Mem only adapter.
->qla2xxx [0000:01:00.0]-0808: : Bars=3D74.
->qla2xxx [0000:01:00.0]-080a: : Memory allocated for ha=3Dffff8800bf148000.
->qla2xxx [0000:01:00.0]-080b: : device_type=3D0x9c000800 port=3D1
->fw_srisc_address=3D0x100000.
->qla2xxx [0000:01:00.0]-081e: : mbx_count=3D32, req_length=3D2048,
->rsp_length=3D512, max_loop_id=3D2047, init_cb_size=3D5252,
->gid_list_info_size=3D8, optrom_size=3D2097152, nvram_npiv_size=3D256,
->max_fibre_devices=3D2048.
->qla2xxx [0000:01:00.0]-081f: : isp_ops=3Dffffffffa056ca80,
->flash_conf_off=3D2147287040, flash_data_off=3D2146435072,
->nvram_conf_off=3D2147418112, nvram_data_off=3D2147352576.
->qla2xxx [0000:01:00.0]-0818: : MQIO Base=3Dffffc90015080000.
->qla2xxx [0000:01:00.0]-001a: : MSI-X vector count: 31.
->qla2xxx [0000:01:00.0]-081c: : MSIX Count:6.
->qla2xxx [0000:01:00.0]-001d: : Found an ISP2532 irq 16 iobase
->0xffffc9000007a000.
->qla2xxx [0000:01:00.0]-0820: : 64 Bit addressing is enable.
->qla2xxx [0000:01:00.0]-0822: : init_cb=3Dffff8800877ba000
->gid_list=3Dffff88008dfac000, srb_mempool=3Dffff88008dffeeb8
->s_dma_pool=3Dffff88008dffe080.
->qla2xxx [0000:01:00.0]-0825: : dl_dma_pool=3Dffff88008dfff2c8
->fcp_cmnd_dma_pool=3Dffff88008dffc820.
->qla2xxx [0000:01:00.0]-0827: : ms_iocb=3Dffff8800872e4000
->ct_sns=3Dffff8800d7b98000.
->qla2xxx [0000:01:00.0]-082c: : req=3Dffff88008dffc208 req->length=3D2048
->req->ring=3Dffff880087240000 rsp=3Dffff8800bdcf9b60 rsp->length=3D512
->rsp->ring=3Dffff88008df70000.
->qla2xxx [0000:01:00.0]-0923: : loop_id_map=3Dffff8800bdcf8ff8.
->qla2xxx [0000:01:00.0]-0841:16: Allocated the host=3Dffff8800d36bb3d8
->hw=3Dffff8800bf148000 vha=3Dffff8800d36bbd50 dev_name=3D0000:01:00.0
->qla2xxx [0000:01:00.0]-0832:16: can_queue=3D2176, req=3Dffff88008dffc208,
->mgmt_svr_loop_id=3D10, sg_tablesize=3D1024.
->qla2xxx [0000:01:00.0]-0833:16: max_id=3D2048 this_id=3D-1 cmd_per_len=3D3
->unique_id=3D16 max_cmd_len=3D16 max_channel=3D0 max_lun=3D65535
->transportt=3Dffff8800a971d668, vendor_id=3D72057594037932151.
->qla2xxx 0000:01:00.0: irq 49 for MSI/MSI-X
->qla2xxx 0000:01:00.0: irq 50 for MSI/MSI-X
->qla2xxx 0000:01:00.0: irq 67 for MSI/MSI-X
->qla2xxx 0000:01:00.0: irq 68 for MSI/MSI-X
->qla2xxx 0000:01:00.0: irq 69 for MSI/MSI-X
->qla2xxx 0000:01:00.0: irq 70 for MSI/MSI-X
->general protection fault: 0000 [#1] SMP
->Modules linked in: qla2xxx(+) fuse ip6table_filter ip6_tables
->iptable_filter ip_tables ebtable_nat ebtables x_tables af_packet bridge
->stp llc rdma_ucm rdma_cm iw_cm ib_addr ib_srp scsi_transport_srp scsi_tgt
->ib_ipoib ib_cm ib_uverbs ib_umad mlx4_en mlx4_ib ib_sa ib_mad ib_core
->hid_generic usbhid hid snd_hda_codec_hdmi snd_hda_codec_realtek
->snd_hda_intel snd_hda_codec r8169 snd_hwdep snd_pcm x86_pkg_temp_thermal
->kvm_intel snd_seq kvm mii crc32c_intel snd_timer snd_seq_device i2c_i801
->mlx4_core snd lpc_ich sr_mod pcspkr mfd_core microcode soundcore ehci_pci
->snd_page_alloc sg cdrom acpi_cpufreq ehci_hcd scsi_transport_fc wmi
->autofs4 ext4 jbd2 mbcache crc16 raid456 async_raid6_recov async_pq
->raid6_pq async_xor xor async_memcpy async_tx raid10 raid0 raid1 sd_mod
->crc_t10dif crct10dif_common ahci xhci_hcd libahci usbcore usb_common i915
->drm_kms_helper drm intel_agp i2c_algo_bit intel_gtt agpgart i2c_core fan
->thermal video button processor thermal_sys hwmon scsi_dh_alua scsi_dh
->pata_
-> acpi liba
->ta scsi_mod [last unloaded: qla2xxx]
->CPU: 3 PID: 4173 Comm: insmod Tainted: G        W    3.13.0-rc3+ #1
->Hardware name: Gigabyte Technology Co., Ltd. To be filled by
->O.E.M./Z68X-UD3H-B3, BIOS U1l 03/08/2013
->task: ffff8800a80cb330 ti: ffff880087740000 task.ti: ffff880087740000
->RIP: 0010:[<ffffffff812484ad>]  [<ffffffff812484ad>] strnlen+0xd/0x40
->RSP: 0018:ffff880087741758  EFLAGS: 00010286
->RAX: ffffffff817800c2 RBX: ffff880087741888 RCX: fffffffffffffffe
->RDX: 5f78783532616c71 RSI: ffffffffffffffff RDI: 5f78783532616c71
->RBP: ffff880087741758 R08: 000000000000ffff R09: 000000000000ffff
->R10: 0000000000000000 R11: 0000000000000001 R12: 5f78783532616c71
->R13: ffff880087741908 R14: 000000000000ffff R15: 0000000000000000
->FS:  00007fdd76627700(0000) GS:ffff88011f380000(0000)
->knlGS:0000000000000000
->CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
->CR2: 00007fdd75d5b00f CR3: 00000000bf270000 CR4: 00000000000407e0
->Stack:
->ffff880087741798 ffffffff81249f0e ffff88011a814000 ffff880087741888
->ffff880087741908 ffff880087741830 ffffffff8177d4ab ffffffff8177d4ab
->ffff880087741818 ffffffff8124bcf9 0000000000000000 0000000000000000
->Call Trace:
->[<ffffffff81249f0e>] string.isra.3+0x3e/0xd0
->[<ffffffff8124bcf9>] vsnprintf+0x309/0x5f0
->[<ffffffff8124c084>] snprintf+0x34/0x40
->[<ffffffff810964ed>] ? trace_hardirqs_on+0xd/0x10
->[<ffffffff810a4c6d>] register_handler_proc+0xed/0x120
->[<ffffffff810a1303>] __setup_irq+0x263/0x540
->[<ffffffff810a16b7>] request_threaded_irq+0xd7/0x180
->[<ffffffffa0519b2c>] qla2x00_request_irqs+0x28c/0x6d0 [qla2xxx]
->[<ffffffffa04f6f09>] qla2x00_probe_one+0xc29/0x22e0 [qla2xxx]
->[<ffffffff8131bcce>] ? __pm_runtime_resume+0x4e/0xa0
->[<ffffffff8109641d>] ? trace_hardirqs_on_caller+0x10d/0x1d0
->[<ffffffff810964ed>] ? trace_hardirqs_on+0xd/0x10
->[<ffffffff8127674c>] pci_device_probe+0x9c/0xf0
->[<ffffffff8131334b>] driver_probe_device+0x8b/0x390
->[<ffffffff813136fb>] __driver_attach+0xab/0xb0
->[<ffffffff81313650>] ? driver_probe_device+0x390/0x390
->[<ffffffff813112dd>] bus_for_each_dev+0x5d/0xa0
->[<ffffffff81312cae>] driver_attach+0x1e/0x20
->[<ffffffff813128d7>] bus_add_driver+0x127/0x250
->[<ffffffffa08ae000>] ? 0xffffffffa08adfff
->[<ffffffff81313ba4>] driver_register+0x64/0xf0
->[<ffffffffa08ae000>] ? 0xffffffffa08adfff
->[<ffffffff81276024>] __pci_register_driver+0x64/0x70
->[<ffffffffa08ae000>] ? 0xffffffffa08adfff
->[<ffffffffa08ae1ce>] qla2x00_module_init+0x1ce/0x21d [qla2xxx]
->[<ffffffff810002ea>] do_one_initcall+0xda/0x180
->[<ffffffff8103da73>] ? set_memory_nx+0x43/0x50
->[<ffffffff8148beb2>] ? set_section_ro_nx+0x6d/0x74
->[<ffffffff810c00ff>] load_module+0x1caf/0x2750
->[<ffffffff810bb840>] ? __unlink_module+0x30/0x30
->[<ffffffff81140cdf>] ? might_fault+0x5f/0xb0
->[<ffffffff810c0c4e>] SyS_init_module+0xae/0x110
->[<ffffffff8149f722>] tracesys+0xd0/0xd5
->Code: c0 01 80 38 00 75 f7 48 29 f8 5d c3 31 c0 5d c3 66 66 66 66 66 2e
->0f 1f 84 00 00 00 00 00 55 48 8d 4e ff 48 85 f6 48 89 e5 74 2a <80> 3f 00
->74 25 48 89 f8 31 d2 eb 10 0f 1f 80 00 00 00 00 48 83
->RIP  [<ffffffff812484ad>] strnlen+0xd/0x40
->RSP <ffff880087741758>
->---[ end trace 2f850debe173d2e4 ]---
+Alan Stern
 
-
---_000_F5D084D6342F9B479C34599BB0A03E4D89849D5CAVMB1qlogicorg_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
-
-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
-AHYAIABLAGEAcwBoAHkAYQBwAAAAAAAfAGUAAQAAADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgA
-eQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwBkAAEAAAAKAAAAUwBNAFQAUAAAAAAAAgFB
-AAEAAAB0AAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkA
-YQBwAAAAUwBNAFQAUAAAAHMAYQB1AHIAYQB2AC4AawBhAHMAaAB5AGEAcABAAHEAbABvAGcAaQBj
-AC4AYwBvAG0AAAAfAAJdAQAAADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwA
-bwBnAGkAYwAuAGMAbwBtAAAAHwDlXwEAAAA8AAAAcwBpAHAAOgBzAGEAdQByAGEAdgAuAGsAYQBz
-AGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAaDAEAAAAeAAAAUwBhAHUAcgBhAHYA
-IABLAGEAcwBoAHkAYQBwAAAAAAAfAB8MAQAAADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBh
-AHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAeDAEAAAAKAAAAUwBNAFQAUAAAAAAAAgEZDAEA
-AAB0AAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBw
-AAAAUwBNAFQAUAAAAHMAYQB1AHIAYQB2AC4AawBhAHMAaAB5AGEAcABAAHEAbABvAGcAaQBjAC4A
-YwBvAG0AAAAfAAFdAQAAADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBn
-AGkAYwAuAGMAbwBtAAAAHwD4PwEAAAAeAAAAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAA
-AAAfACNAAQAAADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAu
-AGMAbwBtAAAAHwAiQAEAAAAKAAAAUwBNAFQAUAAAAAAAAgH5PwEAAAB0AAAAAAAAAIErH6S+oxAZ
-nW4A3QEPVAIAAACAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAUwBNAFQAUAAAAHMAYQB1
-AHIAYQB2AC4AawBhAHMAaAB5AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAldAQAAADQA
-AABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAACwBA
-OgEAAAAfABoAAQAAABIAAABJAFAATQAuAE4AbwB0AGUAAAAAAAMA8T8JBAAACwBAOgEAAAADAP0/
-5AQAAAIBCzABAAAAEAAAAASHByY/ry5AkCeyH48Hy+wDABcAAQAAAEAAOQCAB7C1RPjOAUAACDDK
-khS2RPjOAQsAAIAIIAYAAAAAAMAAAAAAAABGAAAAABSFAAABAAAAHwAAgIYDAgAAAAAAwAAAAAAA
-AEYBAAAAHgAAAGEAYwBjAGUAcAB0AGwAYQBuAGcAdQBhAGcAZQAAAAAAAQAAAAwAAABlAG4ALQBV
-AFMAAAALAACACCAGAAAAAADAAAAAAAAARgAAAAAGhQAAAAAAAB8ANwABAAAAYgAAAFIAZQA6ACAA
-cQBsAGEAMgB4AHgAeAA6ACAAawBlAHIAbgBlAGwAIABvAG8AcABzACAAdwBpAHQAaAAgAHEAbAAy
-AHgAbQB1AGwAdABpAHEAdQBlAF8AdABhAGcAPQAxAAAAAAAfAD0AAQAAAAoAAABSAGUAOgAgAAAA
-AAADADYAAAAAAB8AQhABAAAANgAAADwANQAyAEEAOAA1ADgAMwAyAC4AMgAwADUAMAA3ADAAMQBA
-AGEAYwBtAC4AbwByAGcAPgAAAAAAAgFxAAEAAAAbAAAAAQHO9msujwmI43AJLU2iX57uNNH0YJpS
-nJWAAB8AcAABAAAAWgAAAHEAbABhADIAeAB4AHgAOgAgAGsAZQByAG4AZQBsACAAbwBvAHAAcwAg
-AHcAaQB0AGgAIABxAGwAMgB4AG0AdQBsAHQAaQBxAHUAZQBfAHQAYQBnAD0AMQAAAAAAHwA1EAEA
-AAB4AAAAPABGADUARAAwADgANABEADYAMwA0ADIARgA5AEIANAA3ADkAQwAzADQANQA5ADkAQgBC
-ADAAQQAwADMARQA0AEQAOAA5ADgANAA5AEQANQBDAEAAQQBWAE0AQgAxAC4AcQBsAG8AZwBpAGMA
-LgBvAHIAZwA+AAAAAwDeP59OAABAAAcwSA0LtkT4zgEDACYAAAAAAAIBRwABAAAALgAAAGM9VVM7
-YT0gO3A9UUxvZ2ljO2w9QVZNQjEtMTMxMjEzMjA0ODQzWi02MjQxNwAAAB8AFRABAAAAWAAAAEYA
-RQAwADIANAAxAEUAMgBBADMARQA2ADkARQA0AEMAQgBBADcANQBDADgARgA5ADYAQgA5AEIAQgAx
-AEYARgBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAACARQwAQAAAAwAAADqAQAAq/1XYUgAAAAfAPo/
-AQAAAB4AAABTAGEAdQByAGEAdgAgAEsAYQBzAGgAeQBhAHAAAAAAAB8AAICGAwIAAAAAAMAAAAAA
-AABGAQAAABYAAAB1AHMAZQByAC0AYQBnAGUAbgB0AAAAAAABAAAASAAAAE0AaQBjAHIAbwBzAG8A
-ZgB0AC0ATQBhAGMATwB1AHQAbABvAG8AawAvADEANAAuADEAMAAuADAALgAxADEAMAAzADEAMAAA
-AB8AAIAfpOszqHouQr57eeGpjlSzAQAAADgAAABDAG8AbgB2AGUAcgBzAGEAdABpAG8AbgBJAG4A
-ZABlAHgAVAByAGEAYwBrAGkAbgBnAEUAeAAAAAEAAAAIAQAASQBJAD0AMAAxADAAMQBDAEUARgA4
-ADQANABCADYARQBBADcAMwBCADYANABEADcANQBCAEEAOQAwADQAQgA5ADIAMwA2AEIAMAAwAEEA
-NgA5ADcAOAA0ADcAMABCADsAUwBCAE0ASQBEAD0AMQA1ADsAUwAxAD0APAA1ADIAQQA4ADUAOAAz
-ADIALgAyADAANQAwADcAMAAxAEAAYQBjAG0ALgBvAHIAZwA+ADsAVgBlAHIAcwBpAG8AbgA9AFYA
-ZQByAHMAaQBvAG4AIAAxADQALgAyACAAKABCAHUAaQBsAGQAIAAzADEAOAAuADAAKQAsACAAUwB0
-AGEAZwBlAD0ASAAyAAAAAwANNP0/AAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAgAAAAeAAtAG0A
-cwAtAGgAYQBzAC0AYQB0AHQAYQBjAGgAAAABAAAAAgAAAAAAAAAfAACAhgMCAAAAAADAAAAAAAAA
-RgEAAAAiAAAAeAAtAG8AcgBpAGcAaQBuAGEAdABpAG4AZwAtAGkAcAAAAAAAAQAAABgAAABbADEA
-MAAuADgALgA2AC4AOQA5AF0AAAD6sA==
-
---_000_F5D084D6342F9B479C34599BB0A03E4D89849D5CAVMB1qlogicorg_--
