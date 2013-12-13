@@ -1,51 +1,45 @@
-From: Wakko Warner <wakko@animx.eu.org>
-Subject: Re: Help with mpt2sas kernel message
-Date: Thu, 12 Dec 2013 20:32:27 -0500
-Message-ID: <20131213013227.GC6136@animx.eu.org>
-References: <20131212170459.GD13674@animx.eu.org>
- <CAF2xp_EbEkaR3+2ac8+yvLVyEw548890tknLDa5yGyRGfp88EQ@mail.gmail.com>
-Reply-To: Wakko Warner <wakko@animx.eu.org>
+From: Rashika Kheria <rashika.kheria@gmail.com>
+Subject: [PATCH 1/3] drivers: message: Mark function mpt_SoftResetHandler()
+ as static in mptbase.c
+Date: Fri, 13 Dec 2013 11:33:11 +0530
+Message-ID: <0a6b017550306ed600769dbe4fac868aa88cd9d6.1386914148.git.rashika.kheria@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tn-76-7-162-101.sta.embarqhsd.net ([76.7.162.101]:45618 "EHLO
-	animx.eu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751502Ab3LMBc3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 12 Dec 2013 20:32:29 -0500
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <CAF2xp_EbEkaR3+2ac8+yvLVyEw548890tknLDa5yGyRGfp88EQ@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>, Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, support@lsi.com, DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org, josh@joshtriplett.org
 List-Id: linux-scsi@vger.kernel.org
-To: Peter Chang <dpf@google.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Peter Chang wrote:
-> 2013/12/12 Wakko Warner <wakko@animx.eu.org>:
-> > Kernel: vanilla 3.7.2.
-> >
-> > I have 2 mpt2sas controllers.  I'm running a md check on the 2 arrays that I
-> > have (one per card).  I'm seeing this in my kernel log (last 4 lines):
-> > 2013-12-10 19:52:10 kame kernel:[1558186.193904] mpt2sas0: log_info(0x31080000): originator(PL), code(0x08), sub_code(0x0000)
-> 
-> 'all ncq IOs fail when one ncq io encounters an error'
+This patch marks the function mpt_SoftResetHandler() as static in mptba=
+se.c
+because it is not used outside this file.
 
-Can you point me to a list of codes?  Is this message something that I
-should be concerned about?  I haven't seen this message before, however, I
-changed all the disks in the array and replaced the controller (The mptsas
-wouldn't support 3tb disks).  The chassis is external and the card has 2
-external minisas connectors.  About the only thing that didn't change was
-the chassis and the computer.
+Thus, it also eliminates the following warning in fusion/mptbase.c:
+drivers/message/fusion/mptbase.c:7011:1: warning: no previous prototype=
+ for =E2=80=98mpt_SoftResetHandler=E2=80=99 [-Wmissing-prototypes]
 
-> > I'd also like to know which card mpt2sas0 is.  Is it the one that has the
-> > lower numbered pci bus?
-> 
-> it's the first controller enumerated on pci, so probably the lowest number.
+Signed-off-by: Rashika Kheria <rashika.kheria@gmail.com>
+---
+ drivers/message/fusion/mptbase.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-That would be the 2 minisas controller then.  The disks on this controller
-is 8x 3tb in raid6 with 128k chunk.
-
-Thanks for your response.
-
--- 
- Microsoft has beaten Volkswagen's world record.  Volkswagen only created 22
- million bugs.
+diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/=
+mptbase.c
+index 767ff4d..c783a42 100644
+--- a/drivers/message/fusion/mptbase.c
++++ b/drivers/message/fusion/mptbase.c
+@@ -7007,7 +7007,7 @@ EXPORT_SYMBOL(mpt_halt_firmware);
+  *	IOC doesn't reply to any outstanding request. This will transfer IO=
+C
+  *	to READY state.
+  **/
+-int
++static int
+ mpt_SoftResetHandler(MPT_ADAPTER *ioc, int sleepFlag)
+ {
+ 	int		 rc;
+--=20
+1.7.9.5
