@@ -1,21 +1,21 @@
-From: "Mr. SUN Zhijun" <sunzh@live.hk>
-Subject: Guten Tag!
-Date: Sat, 14 Dec 2013 17:13:29 +0100
-Message-ID: <TAUNTON1yu7G81Gp7pr000070ab__44424.6392268271$1387038048$gmane$org@mail.matrix.uk.com>
+From: "Mr. SUN Zhijun" <zhijun@live.com>
+Subject: Guten Tag
+Date: Sat, 14 Dec 2013 17:13:55 +0100
+Message-ID: <TAUNTON1V7mcDCF5TM3000070e3__31187.5392370441$1387038065$gmane$org@mail.matrix.uk.com>
 Reply-To: s_zhijun001@qq.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail1.bemta3.messagelabs.com ([195.245.230.173]:20711 "EHLO
-	mail1.bemta3.messagelabs.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753729Ab3LNQUZ convert rfc822-to-8bit
+Received: from mail1.bemta14.messagelabs.com ([193.109.254.114]:25820 "EHLO
+	mail1.bemta14.messagelabs.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753807Ab3LNQUh convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 14 Dec 2013 11:20:25 -0500
+	Sat, 14 Dec 2013 11:20:37 -0500
 Content-Description: Mail message body
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Recipients <sunzh@live.hk>
+To: Recipients <zhijun@live.com>
 
 Guten Tag,
 
