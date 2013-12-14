@@ -1,103 +1,124 @@
 From: Loc Ho <lho@apm.com>
-Subject: [PATCH v5 1/4] PHY: Add function set_speed to generic PHY framework
-Date: Sat, 14 Dec 2013 01:32:47 -0700
-Message-ID: <1387009970-737-2-git-send-email-lho@apm.com>
+Subject: [PATCH v5 2/4] Documentation: Add APM X-Gene SoC 15Gbps Multi-purpose PHY driver binding documentation
+Date: Sat, 14 Dec 2013 01:32:48 -0700
+Message-ID: <1387009970-737-3-git-send-email-lho@apm.com>
 References: <1387009970-737-1-git-send-email-lho@apm.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod5og102.obsmtp.com ([64.18.0.143]:39520 "HELO
-	exprod5og102.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752637Ab3LNIdG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 14 Dec 2013 03:33:06 -0500
-Received: by mail-pb0-f46.google.com with SMTP id md12so3492278pbc.5
-        for <linux-scsi@vger.kernel.org>; Sat, 14 Dec 2013 00:33:05 -0800 (PST)
-In-Reply-To: <1387009970-737-1-git-send-email-lho@apm.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+ <1387009970-737-2-git-send-email-lho@apm.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1387009970-737-2-git-send-email-lho@apm.com>
+Sender: linux-ide-owner@vger.kernel.org
 To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>
-
-This patch adds function set_speed to the generic PHY framework operation
-structure. This function can be called to instruct the PHY underlying layer
-at specified lane to configure for specified speed in hertz.
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
+List-Id: linux-scsi@vger.kernel.org
 
 Signed-off-by: Loc Ho <lho@apm.com>
+Signed-off-by: Tuan Phan <tphan@apm.com>
+Signed-off-by: Suman Tripathi <stripathi@apm.com>
 ---
- drivers/phy/phy-core.c  |   21 +++++++++++++++++++++
- include/linux/phy/phy.h |    8 ++++++++
- 2 files changed, 29 insertions(+), 0 deletions(-)
+ .../devicetree/bindings/ata/apm-xgene-phy.txt      |   94 ++++++++++++++++++++
+ 1 files changed, 94 insertions(+), 0 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/ata/apm-xgene-phy.txt
 
-diff --git a/drivers/phy/phy-core.c b/drivers/phy/phy-core.c
-index 03cf8fb..b525e72 100644
---- a/drivers/phy/phy-core.c
-+++ b/drivers/phy/phy-core.c
-@@ -239,6 +239,27 @@ out:
- }
- EXPORT_SYMBOL_GPL(phy_power_off);
- 
-+int phy_set_speed(struct phy *phy, int lane, u64 speed)
-+{
-+        int ret = -ENOTSUPP;
+diff --git a/Documentation/devicetree/bindings/ata/apm-xgene-phy.txt b/Documentation/devicetree/bindings/ata/apm-xgene-phy.txt
+new file mode 100644
+index 0000000..4ffbae0
+--- /dev/null
++++ b/Documentation/devicetree/bindings/ata/apm-xgene-phy.txt
+@@ -0,0 +1,94 @@
++* APM X-Gene 15Gbps Multi-purpose PHY nodes
 +
-+        mutex_lock(&phy->mutex);
-+        if (phy->ops->set_speed) {
-+                ret =  phy->ops->set_speed(phy, lane, speed);
-+                if (ret < 0) {
-+                        dev_err(&phy->dev, "phy set speed failed --> %d\n",
-+                                ret);
-+                        goto out;
-+                }
-+        }
++PHY nodes are defined to describe on-chip 15Gbps Multi-purpose PHY. Each
++PHY (pair of lanes) has its own node.
 +
-+out:
-+        mutex_unlock(&phy->mutex);
++Required properties:
++- compatible		: Shall be "apm,xgene-phy" or
++			  "apm,xgene-phy-ext". The "apm,xgene-phy" describes
++			  an PHY with internal reference PLL located within
++			  the IP. The "apm,xgene-phy-ext" describes an PHY
++			  where the internal reference PLL located outside of
++			  the IP.
++- reg			: First PHY memory resource is the SDS PHY access
++			  resource.
++			  Second PHY memory resource is the SDS PHY access
++			  resource outside of the IP if it is type
++			  "apm,xgene-phy-ext".
++- #phy-cells		: Shall be 1 as it expects one argument for setting
++			  the mode of the PHY. Possible values are 0 (SATA),
++			  1 (SGMII), 2 (PCIe), 3 (USB), and 4 (XFI).
 +
-+        return ret;
-+}
-+EXPORT_SYMBOL_GPL(phy_set_speed);
++Optional properties:
++- status		: Shall be "ok" if enabled or "disabled" if disabled.
++			  Default is "ok".
++- apm,tx-eye-tuning	: Manual control to fine tune the capture of the serial
++			  bit lines from the automatic calibrated position.
++			  Two set of 3-tuple setting for each (up to 3)
++			  supported link speed on the host. Range from 0 to
++			  127 in unit of one bit period. Default is 10.
++- apm,tx-eye-direction	: Eye tuning manual control direction. 0 means sample
++			  data earlier than the nominal sampling point. 1 means
++			  sample data later than the nominal sampling point.
++			  Two set of 3-tuple setting for each (up to 3)
++			  supported link speed on the host. Default is 0.
++- apm,tx-boost-gain	: Frequency boost AC (LSB 3-bit) and DC (2-bit)
++			  gain control. Two set of 3-tuple setting for each
++			  (up to 3) supported link speed on the host. Range is
++			  between 0 to 31 in unit of dB. Default is 3.
++- apm,tx-amplitude	: Amplitude control. Two set of 3-tuple setting for
++			  each (up to 3) supported link speed on the host.
++			  Range is between 0 to 199500 in unit of uV.
++			  Default is 199500 uV.
++- apm,tx-pre-cursor1	: 1st pre-cursor emphasis taps control. Two set of
++			  3-tuple setting for each (up to 3) supported link
++			  speed on the host. Range is 0 to 273000 in unit of
++			  uV. Default is 0.
++- apm,tx-pre-cursor2	: 2st pre-cursor emphasis taps control. Two set of
++			  3-tuple setting for each (up to 3) supported link
++			  speed on the host. Range is 0 to 127400 in unit uV.
++			  Default is 0x0.
++- apm,tx-post-cursor	: Post-cursor emphasis taps control. Two set of
++			  3-tuple setting for Gen1, Gen2, and Gen3. Range is
++			  between 0 to 0x1f in unit of 18.2mV. Default is 0xf.
++- apm,tx-speed		: Tx operating speed. One set of 3-tuple for each
++			  supported link speed on the host.
++			   0 = 1-2Gbps
++			   1 = 2-4Gbps (1st tuple default)
++			   2 = 4-8Gbps
++			   3 = 8-15Gbps (2nd tuple default)
++			   4 = 2.5-4Gbps
++			   5 = 4-5Gbps
++			   6 = 5-6Gbps
++			   7 = 6-16Gbps (3rd tuple default)
 +
- /**
-  * of_phy_get() - lookup and obtain a reference to a phy by phandle
-  * @dev: device that requests this phy
-diff --git a/include/linux/phy/phy.h b/include/linux/phy/phy.h
-index 6d72269..ed2b897 100644
---- a/include/linux/phy/phy.h
-+++ b/include/linux/phy/phy.h
-@@ -27,6 +27,7 @@ struct phy;
-  * @exit: operation to be performed while exiting
-  * @power_on: powering on the phy
-  * @power_off: powering off the phy
-+ * @set_speed: set operation speed in hz
-  * @owner: the module owner containing the ops
-  */
- struct phy_ops {
-@@ -34,6 +35,7 @@ struct phy_ops {
- 	int	(*exit)(struct phy *phy);
- 	int	(*power_on)(struct phy *phy);
- 	int	(*power_off)(struct phy *phy);
-+	int	(*set_speed)(struct phy *phy, int lane, u64 speed);
- 	struct module *owner;
- };
- 
-@@ -127,6 +129,7 @@ int phy_init(struct phy *phy);
- int phy_exit(struct phy *phy);
- int phy_power_on(struct phy *phy);
- int phy_power_off(struct phy *phy);
-+int phy_set_speed(struct phy *phy, int lane, u64 speed);
- struct phy *phy_get(struct device *dev, const char *string);
- struct phy *devm_phy_get(struct device *dev, const char *string);
- void phy_put(struct phy *phy);
-@@ -199,6 +202,11 @@ static inline int phy_power_off(struct phy *phy)
- 	return -ENOSYS;
- }
- 
-+static inline int phy_set_speed(struct phy *phy, int lane, u64 speed)
-+{
-+	return -ENOSYS;
-+}
++NOTE: PHY override parameters are board specific setting.
 +
- static inline struct phy *phy_get(struct device *dev, const char *string)
- {
- 	return ERR_PTR(-ENOSYS);
++Example:
++		phy1: phy@1f21a000 {
++			compatible = "apm,xgene-phy";
++			reg = <0x0 0x1f21a000 0x0 0x100>;
++			#phy-cells = <1>;
++			status = "disabled";
++			apm,tx-boost-gain = <2 2 2 2 2 2>;
++			apm,tx-eye-tuning = <10 10 10 10 10 10>;
++		};
++
++		phy2: phy@1f22a000 {
++			compatible = "apm,xgene-phy";
++			reg = <0x0 0x1f22a000 0x0 0x100>;
++			#phy-cells = <1>;
++			status = "ok";
++			apm,tx-boost-gain = <2 2 2 2 2 2>;
++			apm,tx-eye-tuning = <10 10 10 5 5 5>;
++		};
++
++		phy3: phy@1f23a000 {
++			compatible = "apm,xgene-phy-ext";
++			reg = <0x0 0x1f23a000 0x0 0x100>,
++			      <0x0 0x1f2d0000 0x0 0x100>;
++			#phy-cells = <1>;
++			status = "ok";
++			apm,tx-boost-gain = <3 3 3 3 3 3>;
++			apm,tx-eye-tuning = <10 10 10 12 12 12>;
++		};
 -- 
 1.5.5
 
