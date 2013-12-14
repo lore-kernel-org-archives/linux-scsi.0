@@ -1,41 +1,26 @@
-From: "Mr. SUN Zhijun" <zhijun@live.com>
-Subject: Guten Tag
-Date: Sat, 14 Dec 2013 11:57:29 +0100
-Message-ID: <TAUNTON1860EWmRj4fX00002207__6921.26708240739$1387019069$gmane$org@mail.matrix.uk.com>
-Reply-To: s_zhijun001@qq.com
+From: Veronica Coxsome <VCoxsome@bmhsc.org>
+Subject: This is an Email Service Alert from Helpdesk
+Date: Sat, 14 Dec 2013 12:04:48 +0000
+Message-ID: <49B8F74AD1B0A54E8AB451EB4C50ACB52E47ECF7__35929.0284839973$1387023370$gmane$org@EXCHANGEDAG01.bmhsc.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail1.bemta5.messagelabs.com ([195.245.231.151]:31162 "EHLO
-	mail1.bemta5.messagelabs.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751625Ab3LNLEM convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 14 Dec 2013 06:04:12 -0500
-Content-Description: Mail message body
+Received: from mail.bmhsc.org ([67.238.81.72]:4725 "EHLO ironport.bmhsc.org"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753379Ab3LNMOz convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 14 Dec 2013 07:14:55 -0500
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Recipients <zhijun@live.com>
 
-Guten Tag,
 
-Mein Name ist Mr.SUN Zhijun, ich mit der Bank of China zu arbeiten. Ich=
- brauche Ihre Unterst=FCtzung in Durchf=FChrung einer Transaktion bei $=
- 18,5 Millionen Dollar gesch=E4tzt, m=F6chte ich Ihnen 30% der gesamten=
- Mittel als Ausgleich f=FCr Ihre Unterst=FCtzung in dieser Transaktion.=
- Ich werde Sie =FCber die vollst=E4ndige Transaktion benachrichtigt nac=
-h Eingang Ihrer Antwort, wenn interessiert, bitte senden Sie mir Ihren =
-vollst=E4ndigen detials als unten, um meine E-Mail aufgef=FChrt: s_zhij=
-un001@qq.com
 
-1. Vollst=E4ndiger Name
-2.Private Telefonnummer
-3.Current Wohnadresse
 
-Mit freundlichen Gr=FC=DFen,
-Mr.SUN Zhijun
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+This is an Email Service Alert from Helpdesk. This is to inform you that your mailbox has exceeds its storage limit, you will be unable to receive and send emails. To
+
+re-set your Account Space on our database, prior to maintain your INBOX from 20G to 20.9G. CLICK HERE http://www.flynet.pp.ua/-4./ to Activate.
+
+Warm Regards,
+Helpdesk Administrator.
