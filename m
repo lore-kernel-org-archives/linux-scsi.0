@@ -1,47 +1,247 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [usb-storage] UAS hangs khubd on USB disconnect
-Date: Fri, 13 Dec 2013 22:00:15 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1312132147001.7197-100000@netrider.rowland.org>
-References: <1386984423.2055.92.camel@dabdike.int.hansenpartnership.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [RFC] fix our current target reap infrastructure.
+Date: Fri, 13 Dec 2013 19:03:33 -0800
+Message-ID: <1386990213.2055.97.camel@dabdike.int.hansenpartnership.com>
+References: <Pine.LNX.4.44L0.1312131933320.3688-100000@saphir.localdomain>
+	 <1386984423.2055.92.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:49563 "HELO
-	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753178Ab3LNDAQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Dec 2013 22:00:16 -0500
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:54450 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753012Ab3LNDDn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 13 Dec 2013 22:03:43 -0500
 In-Reply-To: <1386984423.2055.92.camel@dabdike.int.hansenpartnership.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Alan Stern <stern@rowland.harvard.edu>
 Cc: Tejun Heo <tj@kernel.org>, Sarah Sharp <sarah.a.sharp@linux.intel.com>, Hans de Goede <hdegoede@redhat.com>, USB list <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>, USB Storage List <usb-storage@lists.one-eyed-alien.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
-On Fri, 13 Dec 2013, James Bottomley wrote:
+This patch eliminates the reap_ref and replaces it with a proper kref.
+On last put of this kref, the target is removed from visibility in
+sysfs.  The final call to scsi_target_reap() for the device is done from
+__scsi_remove_device() and only if the device was made visible.  This
+ensures that the target disappears as soon as the last device is gone
+rather than waiting until final release of the device (which is often
+too long).
 
-> > Sorry, but you're wrong.  starget->reap_ref is _not_ incremented every 
-> > time we add a device to the target.  That's one of the things we need to 
-> > fix.
-> 
-> Well, then we would have a pretty astonishing cockup in the code.  The
-> found case of scsi_alloc_target increments the reference each time it's
-> called, so scsi_add_device() definitely behaves like this.
+---
 
-You forgot that __scsi_add_device() calls scsi_target_reap() at the 
-end.  So the reference count is incremented and then decremented again.
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 307a811..d966e36 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -371,6 +371,31 @@ static struct scsi_target *__scsi_find_target(struct device *parent,
+ }
+ 
+ /**
++ * scsi_target_reap_ref_release - remove target from visibility
++ * @kref: the reap_ref in the target being released
++ *
++ * Called on last put of reap_ref, which is the indication that no device
++ * under this target is visible anymore, so render the target invisible in
++ * sysfs.  Note: we have to be in user context here because the target reaps
++ * should be done in places where the scsi device visibility is being removed.
++ */
++static void scsi_target_reap_ref_release(struct kref *kref)
++{
++	struct scsi_target *starget
++		= container_of(kref, struct scsi_target, reap_ref);
++
++	transport_remove_device(&starget->dev);
++	device_del(&starget->dev);
++	starget->state = STARGET_DEL;
++	scsi_target_destroy(starget);
++}
++
++static void scsi_target_reap_ref_put(struct scsi_target *starget)
++{
++	kref_put(&starget->reap_ref, scsi_target_reap_ref_release);
++}
++
++/**
+  * scsi_alloc_target - allocate a new or find an existing target
+  * @parent:	parent of the target (need not be a scsi host)
+  * @channel:	target channel number (zero if no channels)
+@@ -401,7 +426,7 @@ static struct scsi_target *scsi_alloc_target(struct device *parent,
+ 	}
+ 	dev = &starget->dev;
+ 	device_initialize(dev);
+-	starget->reap_ref = 1;
++	kref_init(&starget->reap_ref);
+ 	dev->parent = get_device(parent);
+ 	dev_set_name(dev, "target%d:%d:%d", shost->host_no, channel, id);
+ 	dev->bus = &scsi_bus_type;
+@@ -441,29 +466,26 @@ static struct scsi_target *scsi_alloc_target(struct device *parent,
+ 	return starget;
+ 
+  found:
+-	found_target->reap_ref++;
++	kref_get(&found_target->reap_ref);
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
+ 	if (found_target->state != STARGET_DEL) {
+ 		put_device(dev);
+ 		return found_target;
+ 	}
+-	/* Unfortunately, we found a dying target; need to
+-	 * wait until it's dead before we can get a new one */
++	/*
++	 * Unfortunately, we found a dying target; need to wait until it's
++	 * dead before we can get a new one.  There is an anomaly here.  We
++	 * *should* call scsi_target_reap() to balance the kref_get() of the
++	 * reap_ref above.  However, since the target is in state STARGET_DEL,
++	 * it's already invisible and the reap_ref is irrelevant.  If we call
++	 * scsi_target_reap() we might spuriously do another device_del() on
++	 * an already invisible target.
++	 */
+ 	put_device(&found_target->dev);
+ 	flush_scheduled_work();
+ 	goto retry;
+ }
+ 
+-static void scsi_target_reap_usercontext(struct work_struct *work)
+-{
+-	struct scsi_target *starget =
+-		container_of(work, struct scsi_target, ew.work);
+-
+-	transport_remove_device(&starget->dev);
+-	device_del(&starget->dev);
+-	scsi_target_destroy(starget);
+-}
+-
+ /**
+  * scsi_target_reap - check to see if target is in use and destroy if not
+  * @starget: target to be checked
+@@ -474,28 +496,11 @@ static void scsi_target_reap_usercontext(struct work_struct *work)
+  */
+ void scsi_target_reap(struct scsi_target *starget)
+ {
+-	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
+-	unsigned long flags;
+-	enum scsi_target_state state;
+-	int empty = 0;
+-
+-	spin_lock_irqsave(shost->host_lock, flags);
+-	state = starget->state;
+-	if (--starget->reap_ref == 0 && list_empty(&starget->devices)) {
+-		empty = 1;
+-		starget->state = STARGET_DEL;
+-	}
+-	spin_unlock_irqrestore(shost->host_lock, flags);
+-
+-	if (!empty)
+-		return;
+-
+-	BUG_ON(state == STARGET_DEL);
+-	if (state == STARGET_CREATED)
++	BUG_ON(starget->state == STARGET_DEL);
++	if (starget->state == STARGET_CREATED)
+ 		scsi_target_destroy(starget);
+ 	else
+-		execute_in_process_context(scsi_target_reap_usercontext,
+-					   &starget->ew);
++		scsi_target_reap_ref_put(starget);
+ }
+ 
+ /**
+@@ -1532,6 +1537,10 @@ struct scsi_device *__scsi_add_device(struct Scsi_Host *shost, uint channel,
+ 	}
+ 	mutex_unlock(&shost->scan_mutex);
+ 	scsi_autopm_put_target(starget);
++	/*
++	 * paired with scsi_alloc_target().  Target will be destroyed unless
++	 * scsi_probe_and_add_lun made an underlying device visible
++	 */
+ 	scsi_target_reap(starget);
+ 	put_device(&starget->dev);
+ 
+@@ -1612,8 +1621,10 @@ static void __scsi_scan_target(struct device *parent, unsigned int channel,
+ 
+  out_reap:
+ 	scsi_autopm_put_target(starget);
+-	/* now determine if the target has any children at all
+-	 * and if not, nuke it */
++	/*
++	 * paired with scsi_alloc_target(): determine if the target has
++	 * any children at all and if not, nuke it
++	 */
+ 	scsi_target_reap(starget);
+ 
+ 	put_device(&starget->dev);
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 9117d0b..7b3770b 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -393,7 +393,6 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
+ 	starget = to_scsi_target(parent);
+ 
+ 	spin_lock_irqsave(sdev->host->host_lock, flags);
+-	starget->reap_ref++;
+ 	list_del(&sdev->siblings);
+ 	list_del(&sdev->same_target_siblings);
+ 	list_del(&sdev->starved_entry);
+@@ -413,8 +412,6 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
+ 	/* NULL queue means the device can't be used */
+ 	sdev->request_queue = NULL;
+ 
+-	scsi_target_reap(scsi_target(sdev));
+-
+ 	kfree(sdev->inquiry);
+ 	kfree(sdev);
+ 
+@@ -1001,6 +998,7 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
+ 		return error;
+ 	}
+ 	transport_add_device(&sdev->sdev_gendev);
++	kref_get(&starget->reap_ref); /* device now visible, so target is held */
+ 	sdev->is_visible = 1;
+ 
+ 	/* create queue files, which may be writable, depending on the host */
+@@ -1055,6 +1053,13 @@ void __scsi_remove_device(struct scsi_device *sdev)
+ 		device_unregister(&sdev->sdev_dev);
+ 		transport_remove_device(dev);
+ 		device_del(dev);
++		/*
++		 * Paired with the kref_get() in scsi_sysfs_add_sdev().  We're
++		 * removing sysfs visibility from the device, so make the
++		 * target invisible if this was the last device underneath it.
++		 */
++		scsi_target_reap(scsi_target(sdev));
++
+ 	} else
+ 		put_device(&sdev->sdev_dev);
+ 
+@@ -1133,7 +1138,7 @@ void scsi_remove_target(struct device *dev)
+ 			continue;
+ 		if (starget->dev.parent == dev || &starget->dev == dev) {
+ 			/* assuming new targets arrive at the end */
+-			starget->reap_ref++;
++			kref_get(&starget->reap_ref);
+ 			spin_unlock_irqrestore(shost->host_lock, flags);
+ 			if (last)
+ 				scsi_target_reap(last);
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index d65fbec..24b9e06 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -257,7 +257,7 @@ struct scsi_target {
+ 	struct list_head	siblings;
+ 	struct list_head	devices;
+ 	struct device		dev;
+-	unsigned int		reap_ref; /* protected by the host lock */
++	struct kref		reap_ref; /* last put renders device invisible */
+ 	unsigned int		channel;
+ 	unsigned int		id; /* target id ... replace
+ 				     * scsi_device.id eventually */
+@@ -284,7 +284,6 @@ struct scsi_target {
+ #define SCSI_DEFAULT_TARGET_BLOCKED	3
+ 
+ 	char			scsi_level;
+-	struct execute_work	ew;
+ 	enum scsi_target_state	state;
+ 	void 			*hostdata; /* available to low-level driver */
+ 	unsigned long		starget_data[0]; /* for the transport */
 
-It's easy enough to check that the scsi_probe_and_add_lun pathway
-doesn't elevate the refcount.  Print out the value of starget->reap_ref
-just after __scsi_add_device() calls scsi_alloc_target() and just
-before it calls scsi_target_reap().
-
->  I suppose
-> it's possible the list_empty() check is covering a miscount in some of
-> the other probing routines, but that would mean we have stale targets
-> for a lot of our use cases.  I'll audit the code.
-
-That's probably right; whenever a target has more than one LUN we must 
-end up leaking the target.  In the common case of one LUN it works out, 
-because the list is empty by the time the scsi_device is released.
-
-Alan Stern
 
