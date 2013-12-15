@@ -1,78 +1,98 @@
-From: Ben Hutchings <ben@decadent.org.uk>
-Subject: Re: [PATCH 1/1 linux-scs-ml] qla2xxx: Update ql2{4,5}00_fw.bin to
- version 7.01.00
-Date: Sun, 15 Dec 2013 18:02:11 +0000
-Message-ID: <1387130531.12172.94.camel@deadeye.wl.decadent.org.uk>
-References: <5290A6DE.8080008@gmail.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [RFC] fix our current target reap infrastructure.
+Date: Sun, 15 Dec 2013 16:32:18 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1312151550380.32133-100000@netrider.rowland.org>
+References: <1387065313.6096.16.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-KdSlKQ1WxcyGapn2uDCn"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:44295 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751679Ab3LOSCd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 15 Dec 2013 13:02:33 -0500
-In-Reply-To: <5290A6DE.8080008@gmail.com>
+Received: from netrider.rowland.org ([192.131.102.5]:51099 "HELO
+	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751975Ab3LOVcT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 15 Dec 2013 16:32:19 -0500
+In-Reply-To: <1387065313.6096.16.camel@dabdike.int.hansenpartnership.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Cc: linux-scsi@vger.kernel.org, Chad Dupuis <chad.dupuis@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-driver@qlogic.com, David Woodhouse <dwmw2@infradead.org>, Saurav Kashyap <saurav.kashyap@qlogic.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Tejun Heo <tj@kernel.org>, Sarah Sharp <sarah.a.sharp@linux.intel.com>, Hans de Goede <hdegoede@redhat.com>, USB list <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>, USB Storage List <usb-storage@lists.one-eyed-alien.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
+On Sat, 14 Dec 2013, James Bottomley wrote:
 
---=-KdSlKQ1WxcyGapn2uDCn
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+> > The refcount test and state change race with scsi_alloc_target().  
+> > Maybe the race won't occur in practice, but to be safe you should hold
+> > shost->host_lock throughout that time interval, as the original code
+> > here does.
+> 
+> You mean the fact that using a state model to indicate whether we should
+> destroy a target without bothering to refcount isn't robust against two
+> threads of execution running through a scan on the same target?
 
-On Sat, 2013-11-23 at 14:00 +0100, Xose Vazquez Perez wrote:
-> resent to linux-scsi-ml, without the binary blob(316K).
->=20
-> fw and licence were taken from http://ldriver.qlogic.com/firmware/
->=20
-> Cc: Chad Dupuis <chad.dupuis@qlogic.com>
-> Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>
-> Cc: linux-driver@qlogic.com
-> Cc: David Woodhouse <dwmw2@infradead.org>
-> Cc: Ben Hutchings <ben@decadent.org.uk>
-> Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
-> ---
->  LICENCE.qla2xxx |  60 ++++++++++++++++++++++++--------------------------=
-------
->  WHENCE          |   4 ++--
->  ql2400_fw.bin   | Bin 257108 -> 259332 bytes
->  ql2500_fw.bin   | Bin 260064 -> 265420 bytes
->  4 files changed, 28 insertions(+), 36 deletions(-)
-[...]
+I meant that the patch you posted suffers from a race when one thread
+is adding a device to a target and another thread is removing an
+existing device below that target at the same time.  Suppose the
+target's reap_ref count is initially equal to 1:
 
-Applied, thanks.
+	Thread 0			Thread 1
+	--------			--------
+	In scsi_alloc_target():		In scsi_target_reap():
+	lock host_lock			scsi_target_reap_ref_put():
+	find existing starget		starget->reap_ref drops to 0
+	incr starget->reap_ref		In scsi_target_reap_ref_release():
+	unlock host_lock		device_del(&starget->dev);
+	starget->state == STARGET_DEL?
+	No => okay to use starget	set starget->state = STARGET_DEL
 
-Ben.
+Result: We end up using starget _and_ removing it.  The only way to
+avoid this race would be to guarantee that we never add and remove
+devices below the same target at the same time.  In theory this is 
+feasible, but I don't know if you want to do it.
 
---=20
-Ben Hutchings
-Q.  Which is the greater problem in the world today, ignorance or apathy?
-A.  I don't know and I couldn't care less.
+This doesn't seem to be what you are talking about above.  In any case, 
+it is a bug.
 
---=-KdSlKQ1WxcyGapn2uDCn
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+>  Yes, it
+> could be construed as a bug, but it's a bug in the old code as well.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.15 (GNU/Linux)
+The old code is immune to the bug I just described, because the
+existing scsi_target_reap() holds the host_lock while manipulating
+starget->state.
 
-iQIVAwUAUq3uo+e/yOyVhhEJAQo5/xAAl36gQu5WceO9kBYM1GhRiPYUyE0pws4B
-JM5uBo6PoCf90HLm7oEFtgDFLBYIgVx6KvjKb/4PAer+cJ1iOHF5LGc4OjkgmwpH
-PKyRItoSXylEfC0WHTtZxRraTiGL9SE+4H9myiRhjImgrBg2jgLx+uuna1b+/mGW
-aXbRY+C7zVnhhmqi/0plSYwq7cRZ/Hrk7mcHXzKY52058YhjIHAKalGv/BJlRQIb
-5MkWmBNb+p+APQisXUBsm29+HuARUXadme8e6eqFBN/fDOQMCtyxe/pbMlWKFIAd
-efdrjPMD5U2AKiVWImGBHcrHqbUo3QSR35BLH74KGUXWieh5M6mjWWyL4poKnR1E
-Jw37/V1jl5RZ+FIYzBACueOgWraghn5eUn5T8XeqmKJdBBehkjt4zmN4DSZ0LRqB
-b5gPFFbTuBmois4nU3IS3PoO+Gv0sJOcmcSVNPVlGnquEj9c2lY9m8Ojdg1U5AUM
-/racFz3H/zof3MvSiCyvHDLJu9VlGYKN2msasUhGdQfKWZpWYOD+aXbvz8R3nbqM
-gXJGd0Ks1Pj6vi0GLAt0Oa4dpBw7df/keMU0L5X9vTpS5nCCTD7amBpyTIvntn10
-8FvTUGUxvOAAaNmg238s1TkVAUwir1/R0jtrsRZJdV557Gvh6ap2BQXxV4v7Os3V
-BPMk4LvjOS8=
-=TQ3H
------END PGP SIGNATURE-----
+	Case A: Thread 0 acquires the host_lock first.  Then thread 0
+	increments reap_ref while holding the lock.  Later on, thread 1
+	acquires the lock and decrements reap_ref, but the value 
+	doesn't drop to 0 (because of the prior increment).  Thus the
+	target doesn't get reaped.
 
---=-KdSlKQ1WxcyGapn2uDCn--
+	Case B: Thread 1 acquires the host_lock first.  Then thread 1
+	decrements reap_ref, sees that it drop to 0, and sets the state
+	to STARGET_DEL, all before releasing the lock.  Later on, 
+	thread 0 acquires the lock and increments reap_ref futilely, 
+	but sees that the state has already been changed to 
+	STARGET_DEL.  Thus, it delays and retries instead of using 
+	starget.
+
+> > This means the kref approach won't work so easily.  You might as well
+> > leave reap_ref as an ordinary int.
+> 
+> Actually, no, we can better fix it using krefs.  We just force
+> everything through the kref put instead of special casing the not made
+> visible destruction case.  We can then case the release routine to fix
+> this, like below.  I suppose since this is a separate bug I'll keep it
+> as a separate patch.
+
+It looks like you misunderstood the problem; the description in my
+previous email was perhaps excessively brief.  Hopefully the
+explanation above is sufficiently explicit to make everything clear.  
+This new, separate patch doesn't fix it.
+
+To fix this bug while using krefs would require that you hold the
+host_lock while doing the kref_put().  The release routine could set
+the state to STARGET_DEL, but then you would have to use the
+execute_in_usercontext mechanism to do the rest of the release work.  
+
+That's doable, but it seems simpler to keep the code the way it is.  
+In which case there's no need to change reap_ref into an atomic kref,
+because it is never modified outside the scope of the host_lock.
+
+Alan Stern
+
