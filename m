@@ -1,87 +1,77 @@
-From: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Subject: Re: [RFC] fix our current target reap infrastructure.
-Date: Sun, 15 Dec 2013 14:14:34 -0800
-Message-ID: <1387145674.2284.60.camel@dabdike.int.hansenpartnership.com>
-References: <Pine.LNX.4.44L0.1312151550380.32133-100000@netrider.rowland.org>
+From: Ben Hutchings <ben@decadent.org.uk>
+Subject: Re: [net-next 1/1] linux-firmware: 3.2.23.0 Firmware for Brocade
+ Adapters
+Date: Mon, 16 Dec 2013 00:14:33 +0000
+Message-ID: <1387152873.2803.8.camel@deadeye.wl.decadent.org.uk>
+References: <1386482407-984-1-git-send-email-rmody@brocade.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <Pine.LNX.4.44L0.1312151550380.32133-100000-pYrvlCTfrz9XsRXLowluHWD2FQJk+8+b@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Sarah Sharp <sarah.a.sharp-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, USB Storage List <usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-MhlaJl0yD0ZAf6T2Gq/p"
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <1386482407-984-1-git-send-email-rmody@brocade.com>
+Sender: netdev-owner@vger.kernel.org
+To: Rasesh Mody <rmody@brocade.com>
+Cc: dwmw2@infradead.org, netdev@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, 2013-12-15 at 16:32 -0500, Alan Stern wrote:
-> On Sat, 14 Dec 2013, James Bottomley wrote:
-> 
-> > > The refcount test and state change race with scsi_alloc_target().  
-> > > Maybe the race won't occur in practice, but to be safe you should hold
-> > > shost->host_lock throughout that time interval, as the original code
-> > > here does.
-> > 
-> > You mean the fact that using a state model to indicate whether we should
-> > destroy a target without bothering to refcount isn't robust against two
-> > threads of execution running through a scan on the same target?
-> 
-> I meant that the patch you posted suffers from a race when one thread
-> is adding a device to a target and another thread is removing an
-> existing device below that target at the same time.  Suppose the
-> target's reap_ref count is initially equal to 1:
-> 
-> 	Thread 0			Thread 1
-> 	--------			--------
-> 	In scsi_alloc_target():		In scsi_target_reap():
-> 	lock host_lock			scsi_target_reap_ref_put():
-> 	find existing starget		starget->reap_ref drops to 0
-> 	incr starget->reap_ref		In scsi_target_reap_ref_release():
-> 	unlock host_lock		device_del(&starget->dev);
-> 	starget->state == STARGET_DEL?
-> 	No => okay to use starget	set starget->state = STARGET_DEL
-> 
-> Result: We end up using starget _and_ removing it.  The only way to
-> avoid this race would be to guarantee that we never add and remove
-> devices below the same target at the same time.  In theory this is 
-> feasible, but I don't know if you want to do it.
-> 
-> This doesn't seem to be what you are talking about above.  In any case, 
-> it is a bug.
 
-No, I was thinking of the two thread scan bug (i.e. two scan threads)
-not one scan and one remove, which is a bug in the old code.  This is a
-race between put and get when the kref is incremented from zero (an
-illegal operation which triggers a warn on).
+--=-MhlaJl0yD0ZAf6T2Gq/p
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-The way to mediate this is to check for the kref already being zero
-condition, like below.
+On Sat, 2013-12-07 at 22:00 -0800, Rasesh Mody wrote:
+> This is the firmware patch for Brocade 3.2.23.0 BFA and BNA drivers.
+>=20
+> Signed-off-by: Rasesh Mody <rmody@brocade.com>
+> ---
+>  WHENCE            |   3 +++
+>  cbfw-3.2.3.0.bin  | Bin 0 -> 414016 bytes
+>  ct2fw-3.2.3.0.bin | Bin 0 -> 583688 bytes
+>  ctfw-3.2.3.0.bin  | Bin 0 -> 538712 bytes
+>  4 files changed, 3 insertions(+)
+>  create mode 100644 cbfw-3.2.3.0.bin
+>  create mode 100644 ct2fw-3.2.3.0.bin
+>  create mode 100644 ctfw-3.2.3.0.bin
+[...]
 
-James
+This patch seems to have been truncated in transit:
 
----
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 327c0e92..303d471 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -473,7 +473,13 @@ static struct scsi_target *scsi_alloc_target(struct device *parent,
- 	return starget;
- 
-  found:
--	kref_get(&found_target->reap_ref);
-+	if (!kref_get_unless_zero(&found_target->reap_ref))
-+		/*
-+		 * release routine already fired.  Target is dead, but
-+		 * STARGET_DEL may not yet be set (set in the release
-+		 * routine), so set here as well, just in case
-+		 */
-+		found_target->state = STARGET_DEL;
- 	spin_unlock_irqrestore(shost->host_lock, flags);
- 	if (found_target->state != STARGET_DEL) {
- 		put_device(dev);
+$ git am -s ~/tmp/\[net-next_1_1\]_linux-firmware\:_3.2.23.0_Firmware_for_B=
+rocade_Adapters.mbox
+Applying: linux-firmware: 3.2.23.0 Firmware for Brocade Adapters
+error: corrupt binary patch at line 13542: znHIKNgBV5>FJqIQgo|#@us1Wq_D(J
 
+Please re-send (but not to the mailing lists; it's pointless to send
+binaries there).
 
+Ben.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--=20
+Ben Hutchings
+Lowery's Law:
+             If it jams, force it. If it breaks, it needed replacing anyway=
+.
+
+--=-MhlaJl0yD0ZAf6T2Gq/p
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.15 (GNU/Linux)
+
+iQIVAwUAUq5F6ee/yOyVhhEJAQri9w/9EaUkIjzaVo9ZJNDUUpvnkg5BU+9HtWnN
+AqW053xdNEOiwkxFQOMCDaDhsddDC9acqF334FP/Xl1Eb6JDKj/IJL/FkcmeXSWG
+oySFUlrNTTEFOTi0ajiQyMvHNY5bY74hGsHD1jX/56jqLw1leHD5eCBDxvtM8Pd5
+r5ITH1lc4JmAC9ACVzgLU+V8O2kqVCcyw5Owtc4lgFhOPx9KkKsSx9mNQWe9n6rX
+xP+jKx+4/CsbEFkWrMmPjIT/prfWo0opZyGnKsBj/jqM9s0HyctwwPJzqeCs6a+Y
+nj8xQ3pbqP8UpQBrwzKsjMWRb/RbYZgMT1sGeFc6tHYBReSNZwdg+OMrHrs0GhT1
+9qaMStKvbOm1miLkDY3kR8pbktu3bFn9uhZiLzET/K3HmgKL3jXqol6RcucUeydt
+UHr+qhgZxIOUWWU3JeR8TKicjrDc+F18tcSCIj9cezntB1B9m9Gwyyu7ossS2vw9
+9r74RYXN1798FKyNc/F7080gnORvUoBnnLyTEjPEey89F5/lzS4jCFMKNmeGEVWx
+cp5p3MN8meOZDTZrqzarfpa9bZ4VGvXrbU/gKMkl4PC9LEbNPS6mIX18tiGxKQd9
+rXzPD9FmGp1nTrdJerHPexmfPK1TjVMIXQx61HmzkydXR2QXxhuyQAHixI6dkxJ1
+ICKcgtAGtY0=
+=oaoF
+-----END PGP SIGNATURE-----
+
+--=-MhlaJl0yD0ZAf6T2Gq/p--
