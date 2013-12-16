@@ -1,58 +1,50 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 04/32] target: Fix sizeof in kmalloc for some
- default_groups arrays
-Date: Mon, 16 Dec 2013 12:43:34 -0800
-Message-ID: <1387226614.20247.195.camel@haakon3.risingtidesystems.com>
+Subject: Re: [PATCH 05/32] target: Rename some list heads used as nodes
+Date: Mon, 16 Dec 2013 12:45:10 -0800
+Message-ID: <1387226710.20247.196.camel@haakon3.risingtidesystems.com>
 References: <1386979160-6928-1-git-send-email-agrover@redhat.com>
-	 <1386979160-6928-5-git-send-email-agrover@redhat.com>
+	 <1386979160-6928-6-git-send-email-agrover@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1386979160-6928-5-git-send-email-agrover@redhat.com>
+In-Reply-To: <1386979160-6928-6-git-send-email-agrover@redhat.com>
 Sender: target-devel-owner@vger.kernel.org
 To: Andy Grover <agrover@redhat.com>
 Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 On Fri, 2013-12-13 at 15:58 -0800, Andy Grover wrote:
-> Allocating an array of pointers, not the objects themselves. These two
-> sites now match all the other sites.
+> Since everything's a list_head, naming it _node makes it clearer it's
+> to put the struct on a list, not a list head itself.
+> 
+> Rename ua_nacl_list to ua_nacl_node
+> Rename alua_port_list to alua_port_node
+> Rename lu_gp_mem_list to lu_gp_mem_node
+> Rename tg_pt_gp_mem_list to tg_pt_gp_mem_node
+> Rename sep_list to sep_node
+> Rename tg_pt_gp_list to tg_pt_gp_node
+> Rename se_session sess_list to sess_node
+> Rename se_node_acl acl_list to acl_node
 > 
 > Signed-off-by: Andy Grover <agrover@redhat.com>
 > ---
->  drivers/target/target_core_configfs.c        |    2 +-
->  drivers/target/target_core_fabric_configfs.c |    2 +-
->  2 files changed, 2 insertions(+), 2 deletions(-)
-> 
+>  drivers/target/iscsi/iscsi_target.c       |    2 +-
+>  drivers/target/iscsi/iscsi_target_login.c |    4 +-
+>  drivers/target/sbp/sbp_target.c           |    6 ++--
+>  drivers/target/target_core_alua.c         |   52 ++++++++++++++--------------
+>  drivers/target/target_core_configfs.c     |    4 +-
+>  drivers/target/target_core_device.c       |   18 +++++-----
+>  drivers/target/target_core_pr.c           |    8 ++--
+>  drivers/target/target_core_tpg.c          |   20 +++++-----
+>  drivers/target/target_core_transport.c    |    8 ++--
+>  drivers/target/target_core_ua.c           |   28 ++++++++--------
+>  drivers/target/target_core_xcopy.c        |    6 ++--
+>  drivers/target/tcm_fc/tfc_conf.c          |    2 +-
+>  include/target/target_core_base.h         |   16 ++++----
+>  13 files changed, 87 insertions(+), 87 deletions(-)
 
-Applied to for-next.
+Holding off on this one for the moment, as it conflict's with Hannes's
+patches for ALUA + Referrals.
 
 --nab
-
-> diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
-> index 272755d..a1c23d1 100644
-> --- a/drivers/target/target_core_configfs.c
-> +++ b/drivers/target/target_core_configfs.c
-> @@ -2937,7 +2937,7 @@ static int __init target_core_init_configfs(void)
->  	 * and ALUA Logical Unit Group and Target Port Group infrastructure.
->  	 */
->  	target_cg = &subsys->su_group;
-> -	target_cg->default_groups = kmalloc(sizeof(struct config_group) * 2,
-> +	target_cg->default_groups = kmalloc(sizeof(struct config_group *) * 2,
->  				GFP_KERNEL);
->  	if (!target_cg->default_groups) {
->  		pr_err("Unable to allocate target_cg->default_groups\n");
-> diff --git a/drivers/target/target_core_fabric_configfs.c b/drivers/target/target_core_fabric_configfs.c
-> index fdadc4d..7de9f04 100644
-> --- a/drivers/target/target_core_fabric_configfs.c
-> +++ b/drivers/target/target_core_fabric_configfs.c
-> @@ -906,7 +906,7 @@ static struct config_group *target_fabric_make_lun(
->  	lun_cg->default_groups[1] = NULL;
->  
->  	port_stat_grp = &lun->port_stat_grps.stat_group;
-> -	port_stat_grp->default_groups =  kzalloc(sizeof(struct config_group) * 4,
-> +	port_stat_grp->default_groups =  kzalloc(sizeof(struct config_group *) * 4,
->  				GFP_KERNEL);
->  	if (!port_stat_grp->default_groups) {
->  		pr_err("Unable to allocate port_stat_grp->default_groups\n");
