@@ -1,73 +1,91 @@
-From: =?Windows-1252?Q?Str=F6sser=2C_Bodo?=
-	<bodo.stroesser@ts.fujitsu.com>
-Subject: RE: [PATCH 3/3] st.ko: change enlarge_buffer result
-Date: Mon, 16 Dec 2013 20:20:00 +0100
-Message-ID: <8B06D1E6480A6747B23FEC34909D2B5E96D3F453BE@ABGEX70E.FSC.NET>
-References: <61eb00$4eu08n@dgate20u.abg.fsc.net>
- <E0B3592D-FAC1-4830-AFC3-9643F27CA9DF@kolumbus.fi>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH] iscsi_target: race condition on shutdown
+Date: Mon, 16 Dec 2013 11:49:14 -0800
+Message-ID: <1387223354.20247.190.camel@haakon3.risingtidesystems.com>
+References: <1386251665-39173-1-git-send-email-hare@suse.de>
+	 <1386805475.20247.109.camel@haakon3.risingtidesystems.com>
+	 <52A96352.3050107@suse.de>
+	 <1386834852.20247.121.camel@haakon3.risingtidesystems.com>
+	 <52A96E4F.2070406@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=Windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dgate10.ts.fujitsu.com ([80.70.172.49]:60488 "EHLO
-	dgate10.ts.fujitsu.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754466Ab3LPTbL convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Dec 2013 14:31:11 -0500
-In-Reply-To: <E0B3592D-FAC1-4830-AFC3-9643F27CA9DF@kolumbus.fi>
-Content-Language: de-DE
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <52A96E4F.2070406@suse.de>
+Sender: target-devel-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Nic Bellinger <nab@daterainc.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
+Hey Hannes,
 
+On Thu, 2013-12-12 at 09:05 +0100, Hannes Reinecke wrote:
+> On 12/12/2013 08:54 AM, Nicholas A. Bellinger wrote:
+> > On Thu, 2013-12-12 at 08:18 +0100, Hannes Reinecke wrote:
+> [ .. ]
 
-> -----Original Message-----
-> From: "Kai M=E4kisara (Kolumbus)" [mailto:kai.makisara@kolumbus.fi]
-> Sent: Monday, December 16, 2013 7:49 PM
-> To: Str=F6sser, Bodo
-> Cc: linux-scsi@vger.kernel.org
-> Subject: Re: [PATCH 3/3] st.ko: change enlarge_buffer result
->=20
->=20
-> On 2.12.2013, at 21.00, Bodo Stroesser <bstroesser@ts.fujitsu.com> wr=
-ote:
->=20
-> > From: Bodo Stroesser <bstroesser@ts.fujitsu.com>
-> > Date: Mon, 2 Dec 2013 18:52:10 +0100
-> > Subject: [PATCH 3/3] st.ko: change enlarge_buffer result
-> >
-> > enlarge_buffer() just returns 1 or 0 if it could or could
-> > not allocate the requested buffer.
-> >
-> > In case of result 0, the callers always set the error to
-> > EOVERFLOW. I think, this is not a good errno for those
-> > cases, where enlarge_buffer() could not allocate the pages
-> > it needed.
-> >
-> > So I changed enlarge_buffer() to return a meaningful
-> > result (-ENOMEM or -EOVERFLOW in case of error, 0 in case of
-> > success) and the callers to use this result.
-> >
-> ENOMEM is used for telling the user that, in variable block mode, the=
- byte count in read()
-> is smaller than the next block. This may not sound like proper use of=
- this code but this
-> is how the tape drivers have done.
+<SNIP>
 
-Oops, sorry, I missed that. So I agree fully, that the patch does not
-make sense.
+> > Mmmm, point taken..
+> > 
+> >> I would love to be proven wrong, as I'm not keen on the 'schedule()'
+> >> in there. But I fail to see another way out here, short of
+> >> converting the entire kthread into a workqueue item ...
+> > 
+> > Thinking about this a bit more, I think the pre-kthread API
+> > np_thead_state check to exit at the out: label in
+> > __iscsi_target_login_thread() is the culprit..
+> > 
+> > How about following to only exit when iscsit_del_np() -> kthread_stop()
+> > has been called, and kthread_should_stop() is true..?
+> > 
+> > --nab
+> > 
+> > diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+> > index 02182ab..0086719 100644
+> > --- a/drivers/target/iscsi/iscsi_target.c
+> > +++ b/drivers/target/iscsi/iscsi_target.c
+> > @@ -465,6 +465,7 @@ int iscsit_del_np(struct iscsi_np *np)
+> >                  */
+> >                 send_sig(SIGINT, np->np_thread, 1);
+> >                 kthread_stop(np->np_thread);
+> > +               np->np_thread = NULL;
+> >         }
+> >  
+> >         np->np_transport->iscsit_free_np(np);
+> > diff --git a/drivers/target/iscsi/iscsi_target_login.c b/drivers/target/iscsi/iscsi_target_login.c
+> > index 4eb93b2..e29279e 100644
+> > --- a/drivers/target/iscsi/iscsi_target_login.c
+> > +++ b/drivers/target/iscsi/iscsi_target_login.c
+> > @@ -1403,11 +1403,6 @@ old_sess_out:
+> >  
+> >  out:
+> >         stop = kthread_should_stop();
+> > -       if (!stop && signal_pending(current)) {
+> > -               spin_lock_bh(&np->np_thread_lock);
+> > -               stop = (np->np_thread_state == ISCSI_NP_THREAD_SHUTDOWN);
+> > -               spin_unlock_bh(&np->np_thread_lock);
+> > -       }
+> >         /* Wait for another socket.. */
+> >         if (!stop)
+> >                 return 1;
+> > @@ -1415,7 +1410,6 @@ exit:
+> >         iscsi_stop_login_thread_timer(np);
+> >         spin_lock_bh(&np->np_thread_lock);
+> >         np->np_thread_state = ISCSI_NP_THREAD_EXIT;
+> > -       np->np_thread = NULL;
+> >         spin_unlock_bh(&np->np_thread_lock);
+> >  
+> >         return 0;
+> > 
+> > 
+> Yes. Far better.
+> 
+> I'll give it a spin.
+> 
 
-Thank you,
-Bodo
+Any chance to confirm this patch..?
 
-> When ENOMEM is not used, the patch would be only cosmetic.
+I'd like to include this in the -rc5 PULL request over the next days.
 
->=20
-> Thanks,
-> Kai
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--nab
