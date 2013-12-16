@@ -1,95 +1,87 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 31/32] target: Don't release and re-acquire some
- spinlocks in loops
-Date: Mon, 16 Dec 2013 14:01:36 -0800
-Message-ID: <1387231296.20247.257.camel@haakon3.risingtidesystems.com>
+Subject: Re: [PATCH 32/32] target: Increase MAX_LUNS_PER_TPG to 16384
+Date: Mon, 16 Dec 2013 14:01:56 -0800
+Message-ID: <1387231316.20247.258.camel@haakon3.risingtidesystems.com>
 References: <1386979160-6928-1-git-send-email-agrover@redhat.com>
-	 <1386979160-6928-32-git-send-email-agrover@redhat.com>
+	 <1386979160-6928-33-git-send-email-agrover@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1386979160-6928-32-git-send-email-agrover@redhat.com>
-Sender: target-devel-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:38125 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751059Ab3LPWBE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Dec 2013 17:01:04 -0500
+In-Reply-To: <1386979160-6928-33-git-send-email-agrover@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: Andy Grover <agrover@redhat.com>
 Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
 
 On Fri, 2013-12-13 at 15:59 -0800, Andy Grover wrote:
-> Here are some instances where we're looping, but then dropping the
-> spinlock around the loop in the loop, because we need to be able to
-> sleep in the calls. Since everything is refcounted now, this should no
-> longer be needed and we can just hold the locks the whole time.
+> Indicate support for hierarchical LUN addressing.
+> 
+> Set address method field in each LUN reported by REPORT LUNS to 1, in
+> accordance with SCSI SAM specs.
 > 
 > Signed-off-by: Andy Grover <agrover@redhat.com>
 > ---
->  drivers/target/target_core_device.c |    4 ----
->  drivers/target/target_core_tpg.c    |    5 -----
->  2 files changed, 0 insertions(+), 9 deletions(-)
+>  drivers/target/target_core_spc.c  |    8 ++++++--
+>  include/target/target_core_base.h |    4 ++--
+>  2 files changed, 8 insertions(+), 4 deletions(-)
 > 
 
-Ignoring, given the other NAKs.
+And ignoring, given the other NAKs.
 
 --nab
 
-> diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-> index a432d7b..3896c99 100644
-> --- a/drivers/target/target_core_device.c
-> +++ b/drivers/target/target_core_device.c
-> @@ -463,7 +463,6 @@ void core_clear_lun_from_tpg(struct se_lun *lun, struct se_portal_group *tpg)
+> diff --git a/drivers/target/target_core_spc.c b/drivers/target/target_core_spc.c
+> index 0b678fc..04690bf 100644
+> --- a/drivers/target/target_core_spc.c
+> +++ b/drivers/target/target_core_spc.c
+> @@ -79,7 +79,7 @@ spc_emulate_inquiry_std(struct se_cmd *cmd, unsigned char *buf)
+>  	buf[2] = 0x05; /* SPC-3 */
 >  
->  	spin_lock_irq(&tpg->acl_node_lock);
->  	list_for_each_entry(nacl, &tpg->acl_node_list, acl_node) {
-> -		spin_unlock_irq(&tpg->acl_node_lock);
+>  	/*
+> -	 * NORMACA and HISUP = 0, RESPONSE DATA FORMAT = 2
+> +	 * NORMACA = 0, HISUP = 1, RESPONSE DATA FORMAT = 2
+>  	 *
+>  	 * SPC4 says:
+>  	 *   A RESPONSE DATA FORMAT field set to 2h indicates that the
+> @@ -88,7 +88,7 @@ spc_emulate_inquiry_std(struct se_cmd *cmd, unsigned char *buf)
+>  	 *   obsolete. Response data format values greater than 2h are
+>  	 *   reserved.
+>  	 */
+> -	buf[3] = 2;
+> +	buf[3] = 0x12;
 >  
->  		spin_lock_irq(&nacl->device_list_lock);
->  		rbtree_postorder_for_each_entry_safe(deve, _tmp, &nacl->rb_device_list, rb_node) {
-> @@ -473,7 +472,6 @@ void core_clear_lun_from_tpg(struct se_lun *lun, struct se_portal_group *tpg)
->  		}
->  		spin_unlock_irq(&nacl->device_list_lock);
+>  	/*
+>  	 * Enable SCCS and TPGS fields for Emulated ALUA
+> @@ -1164,6 +1164,10 @@ sense_reason_t spc_emulate_report_luns(struct se_cmd *cmd)
+>  			break;
 >  
-> -		spin_lock_irq(&tpg->acl_node_lock);
+>  		int_to_scsilun(deve->mapped_lun, (struct scsi_lun *)&buf[offset]);
+> +
+> +		/* Address method 1 for hier flat-space address. see SAM-5 */
+> +		buf[offset] |= (1 << 6);
+> +
+>  		offset += 8;
 >  	}
->  	spin_unlock_irq(&tpg->acl_node_lock);
->  }
-> @@ -1141,9 +1139,7 @@ int core_dev_add_lun(
->  			if (acl->dynamic_node_acl &&
->  			    (!tpg->se_tpg_tfo->tpg_check_demo_mode_login_only ||
->  			     !tpg->se_tpg_tfo->tpg_check_demo_mode_login_only(tpg))) {
-> -				spin_unlock_irq(&tpg->acl_node_lock);
->  				core_tpg_add_node_to_devs(acl, tpg);
-> -				spin_lock_irq(&tpg->acl_node_lock);
->  			}
->  		}
->  		spin_unlock_irq(&tpg->acl_node_lock);
-> diff --git a/drivers/target/target_core_tpg.c b/drivers/target/target_core_tpg.c
-> index 30af019..1bcb665 100644
-> --- a/drivers/target/target_core_tpg.c
-> +++ b/drivers/target/target_core_tpg.c
-> @@ -172,8 +172,6 @@ void core_tpg_add_node_to_devs(
->  	for (node = rb_first(&tpg->rb_tpg_lun_list); node; node = rb_next(node)) {
->  		struct se_lun *lun = rb_entry(node, struct se_lun, rb_node);
+>  	spin_unlock_irq(&sess->se_node_acl->device_list_lock);
+> diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
+> index 08ecfed..537cc67 100644
+> --- a/include/target/target_core_base.h
+> +++ b/include/target/target_core_base.h
+> @@ -14,8 +14,8 @@
+>  #define TARGET_CORE_VERSION		TARGET_CORE_MOD_VERSION
 >  
-> -		spin_unlock(&tpg->tpg_lun_lock);
-> -
->  		dev = lun->lun_se_dev;
->  		/*
->  		 * By default in LIO-Target $FABRIC_MOD,
-> @@ -201,7 +199,6 @@ void core_tpg_add_node_to_devs(
->  
->  		core_enable_device_list_for_node(lun, NULL, lun->unpacked_lun,
->  				lun_access, acl, tpg);
-> -		spin_lock(&tpg->tpg_lun_lock);
->  	}
->  	spin_unlock(&tpg->tpg_lun_lock);
->  }
-> @@ -299,9 +296,7 @@ void core_tpg_clear_object_luns(struct se_portal_group *tpg)
->  		if (!lun->lun_se_dev)
->  			continue;
->  
-> -		spin_unlock(&tpg->tpg_lun_lock);
->  		core_dev_del_lun(tpg, lun);
-> -		spin_lock(&tpg->tpg_lun_lock);
->  	}
->  	spin_unlock(&tpg->tpg_lun_lock);
->  }
+>  /* Maximum Number of LUNs per Target Portal Group */
+> -/* Don't raise above 511 or REPORT_LUNS needs to handle >1 page */
+> -#define TRANSPORT_MAX_LUNS_PER_TPG		256
+> +/* Don't raise above 16384 or a different format in report_luns is needed */
+> +#define TRANSPORT_MAX_LUNS_PER_TPG		16384
+>  /*
+>   * By default we use 32-byte CDBs in TCM Core and subsystem plugin code.
+>   *
+
+
