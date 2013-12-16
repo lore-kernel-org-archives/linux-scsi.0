@@ -1,136 +1,95 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 30/32] target: Change nacl's session refcount to use
- existing refcount
-Date: Mon, 16 Dec 2013 14:01:02 -0800
-Message-ID: <1387231262.20247.256.camel@haakon3.risingtidesystems.com>
+Subject: Re: [PATCH 31/32] target: Don't release and re-acquire some
+ spinlocks in loops
+Date: Mon, 16 Dec 2013 14:01:36 -0800
+Message-ID: <1387231296.20247.257.camel@haakon3.risingtidesystems.com>
 References: <1386979160-6928-1-git-send-email-agrover@redhat.com>
-	 <1386979160-6928-31-git-send-email-agrover@redhat.com>
+	 <1386979160-6928-32-git-send-email-agrover@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1386979160-6928-31-git-send-email-agrover@redhat.com>
+In-Reply-To: <1386979160-6928-32-git-send-email-agrover@redhat.com>
 Sender: target-devel-owner@vger.kernel.org
 To: Andy Grover <agrover@redhat.com>
 Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 On Fri, 2013-12-13 at 15:59 -0800, Andy Grover wrote:
-> core_tpg_del_initiator_node_acl is now safe to call with spinlocks, since
-> it no longer potentially sleeps.
+> Here are some instances where we're looping, but then dropping the
+> spinlock around the loop in the loop, because we need to be able to
+> sleep in the calls. Since everything is refcounted now, this should no
+> longer be needed and we can just hold the locks the whole time.
 > 
 > Signed-off-by: Andy Grover <agrover@redhat.com>
 > ---
->  drivers/target/target_core_tpg.c       |   10 ----------
->  drivers/target/target_core_transport.c |   17 ++---------------
->  include/target/target_core_base.h      |    2 --
->  include/target/target_core_fabric.h    |    1 -
->  4 files changed, 2 insertions(+), 28 deletions(-)
+>  drivers/target/target_core_device.c |    4 ----
+>  drivers/target/target_core_tpg.c    |    5 -----
+>  2 files changed, 0 insertions(+), 9 deletions(-)
 > 
 
 Ignoring, given the other NAKs.
 
 --nab
 
+> diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
+> index a432d7b..3896c99 100644
+> --- a/drivers/target/target_core_device.c
+> +++ b/drivers/target/target_core_device.c
+> @@ -463,7 +463,6 @@ void core_clear_lun_from_tpg(struct se_lun *lun, struct se_portal_group *tpg)
+>  
+>  	spin_lock_irq(&tpg->acl_node_lock);
+>  	list_for_each_entry(nacl, &tpg->acl_node_list, acl_node) {
+> -		spin_unlock_irq(&tpg->acl_node_lock);
+>  
+>  		spin_lock_irq(&nacl->device_list_lock);
+>  		rbtree_postorder_for_each_entry_safe(deve, _tmp, &nacl->rb_device_list, rb_node) {
+> @@ -473,7 +472,6 @@ void core_clear_lun_from_tpg(struct se_lun *lun, struct se_portal_group *tpg)
+>  		}
+>  		spin_unlock_irq(&nacl->device_list_lock);
+>  
+> -		spin_lock_irq(&tpg->acl_node_lock);
+>  	}
+>  	spin_unlock_irq(&tpg->acl_node_lock);
+>  }
+> @@ -1141,9 +1139,7 @@ int core_dev_add_lun(
+>  			if (acl->dynamic_node_acl &&
+>  			    (!tpg->se_tpg_tfo->tpg_check_demo_mode_login_only ||
+>  			     !tpg->se_tpg_tfo->tpg_check_demo_mode_login_only(tpg))) {
+> -				spin_unlock_irq(&tpg->acl_node_lock);
+>  				core_tpg_add_node_to_devs(acl, tpg);
+> -				spin_lock_irq(&tpg->acl_node_lock);
+>  			}
+>  		}
+>  		spin_unlock_irq(&tpg->acl_node_lock);
 > diff --git a/drivers/target/target_core_tpg.c b/drivers/target/target_core_tpg.c
-> index 1233d04..30af019 100644
+> index 30af019..1bcb665 100644
 > --- a/drivers/target/target_core_tpg.c
 > +++ b/drivers/target/target_core_tpg.c
-> @@ -247,8 +247,6 @@ struct se_node_acl *core_tpg_check_initiator_node_acl(
+> @@ -172,8 +172,6 @@ void core_tpg_add_node_to_devs(
+>  	for (node = rb_first(&tpg->rb_tpg_lun_list); node; node = rb_next(node)) {
+>  		struct se_lun *lun = rb_entry(node, struct se_lun, rb_node);
 >  
->  	INIT_LIST_HEAD(&acl->acl_node);
->  	INIT_LIST_HEAD(&acl->acl_sess_list);
-> -	kref_init(&acl->acl_kref);
-> -	init_completion(&acl->acl_free_comp);
->  	spin_lock_init(&acl->device_list_lock);
->  	spin_lock_init(&acl->nacl_sess_lock);
->  	kref_init(&acl->refcount);
-> @@ -363,8 +361,6 @@ struct se_node_acl *core_tpg_add_initiator_node_acl(
->  
->  	INIT_LIST_HEAD(&acl->acl_node);
->  	INIT_LIST_HEAD(&acl->acl_sess_list);
-> -	kref_init(&acl->acl_kref);
-> -	init_completion(&acl->acl_free_comp);
->  	spin_lock_init(&acl->device_list_lock);
->  	spin_lock_init(&acl->nacl_sess_lock);
->  	kref_init(&acl->refcount);
-> @@ -440,12 +436,6 @@ int core_tpg_del_initiator_node_acl(struct se_node_acl *acl)
->  			continue;
->  		target_put_session(sess);
->  	}
-> -	target_put_nacl(acl);
-> -	/*
-> -	 * Wait for last target_put_nacl() to complete in target_complete_nacl()
-> -	 * for active fabric session transport_deregister_session() callbacks.
-> -	 */
-> -	wait_for_completion(&acl->acl_free_comp);
->  
->  	put_nacl(acl);
->  
-> diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-> index 51e294b..e5e054e 100644
-> --- a/drivers/target/target_core_transport.c
-> +++ b/drivers/target/target_core_transport.c
-> @@ -311,7 +311,7 @@ void __transport_register_session(
->  					&buf[0], PR_REG_ISID_LEN);
->  			se_sess->sess_bin_isid = get_unaligned_be64(&buf[0]);
->  		}
-> -		kref_get(&se_nacl->acl_kref);
-> +		get_nacl(se_nacl);
->  
->  		spin_lock_irq(&se_nacl->nacl_sess_lock);
+> -		spin_unlock(&tpg->tpg_lun_lock);
+> -
+>  		dev = lun->lun_se_dev;
 >  		/*
-> @@ -372,19 +372,6 @@ void target_put_session(struct se_session *se_sess)
+>  		 * By default in LIO-Target $FABRIC_MOD,
+> @@ -201,7 +199,6 @@ void core_tpg_add_node_to_devs(
+>  
+>  		core_enable_device_list_for_node(lun, NULL, lun->unpacked_lun,
+>  				lun_access, acl, tpg);
+> -		spin_lock(&tpg->tpg_lun_lock);
+>  	}
+>  	spin_unlock(&tpg->tpg_lun_lock);
 >  }
->  EXPORT_SYMBOL(target_put_session);
+> @@ -299,9 +296,7 @@ void core_tpg_clear_object_luns(struct se_portal_group *tpg)
+>  		if (!lun->lun_se_dev)
+>  			continue;
 >  
-> -static void target_complete_nacl(struct kref *kref)
-> -{
-> -	struct se_node_acl *nacl = container_of(kref,
-> -				struct se_node_acl, acl_kref);
-> -
-> -	complete(&nacl->acl_free_comp);
-> -}
-> -
-> -void target_put_nacl(struct se_node_acl *nacl)
-> -{
-> -	kref_put(&nacl->acl_kref, target_complete_nacl);
-> -}
-> -
->  void transport_deregister_session_configfs(struct se_session *se_sess)
->  {
->  	struct se_node_acl *se_nacl;
-> @@ -471,7 +458,7 @@ void transport_deregister_session(struct se_session *se_sess)
->  	 * removal context.
->  	 */
->  	if (se_nacl)
-> -		target_put_nacl(se_nacl);
-> +		put_nacl(se_nacl);
->  
->  	transport_free_session(se_sess);
+> -		spin_unlock(&tpg->tpg_lun_lock);
+>  		core_dev_del_lun(tpg, lun);
+> -		spin_lock(&tpg->tpg_lun_lock);
+>  	}
+>  	spin_unlock(&tpg->tpg_lun_lock);
 >  }
-> diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-> index 393bcfd..08ecfed 100644
-> --- a/include/target/target_core_base.h
-> +++ b/include/target/target_core_base.h
-> @@ -527,8 +527,6 @@ struct se_node_acl {
->  	struct config_group	*acl_default_groups[5];
->  	struct list_head	acl_node;
->  	struct list_head	acl_sess_list;
-> -	struct completion	acl_free_comp;
-> -	struct kref		acl_kref;
->  };
->  
->  struct se_session {
-> diff --git a/include/target/target_core_fabric.h b/include/target/target_core_fabric.h
-> index 35a77af..c6b9303 100644
-> --- a/include/target/target_core_fabric.h
-> +++ b/include/target/target_core_fabric.h
-> @@ -94,7 +94,6 @@ void	transport_register_session(struct se_portal_group *,
->  void	target_get_session(struct se_session *);
->  void	target_put_session(struct se_session *);
->  void	transport_free_session(struct se_session *);
-> -void	target_put_nacl(struct se_node_acl *);
->  void	transport_deregister_session_configfs(struct se_session *);
->  void	transport_deregister_session(struct se_session *);
->  
