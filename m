@@ -1,170 +1,134 @@
 From: Phillip Susi <psusi@ubuntu.com>
-Subject: [PATCH 5/6] sd: don't start disks on system resume
-Date: Mon, 16 Dec 2013 18:30:56 -0500
-Message-ID: <1387236657-4852-6-git-send-email-psusi@ubuntu.com>
+Subject: [PATCH 4/6] libata: don't start disks on resume
+Date: Mon, 16 Dec 2013 18:30:55 -0500
+Message-ID: <1387236657-4852-5-git-send-email-psusi@ubuntu.com>
 References: <cover.1384030893.git.psusi@ubuntu.com>
  <1387236657-4852-1-git-send-email-psusi@ubuntu.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:33888 "EHLO
+	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751037Ab3LPXbB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Dec 2013 18:31:01 -0500
 In-Reply-To: <1387236657-4852-1-git-send-email-psusi@ubuntu.com>
-Sender: linux-ide-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: todd.e.brandt@linux.intel.com
 Cc: tj@kernel.org, JBottomley@parallels.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
 
-Instead of forcing a disk to start up with the START STOP UNIT
-command when the system resumes, let it stay asleep if runtime
-pm is enabled, and it will start the drive when it is accessed.
-Query the drive to see if it starts up on its own ( like most
-ATA disks do ) and update the runtime pm status if so.
+Disks with Power Up In Standby enabled that required the
+SET FEATURES command to start up were being issued the
+command during resume.  Suppress this until the disk
+is actually accessed.
 ---
- drivers/scsi/sd.c | 94 +++++++++++++++++++++++++++++++++++++++++++++++++------
- drivers/scsi/sd.h |  1 +
- 2 files changed, 86 insertions(+), 9 deletions(-)
+ drivers/ata/libata-core.c | 12 ++++++++++--
+ drivers/ata/libata-eh.c   | 10 ++++++++--
+ drivers/ata/libata.h      |  1 +
+ include/linux/libata.h    |  1 +
+ 4 files changed, 20 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index e6c4bff..98c082a 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -107,7 +107,8 @@ static int  sd_remove(struct device *);
- static void sd_shutdown(struct device *);
- static int sd_suspend_system(struct device *);
- static int sd_suspend_runtime(struct device *);
--static int sd_resume(struct device *);
-+static int sd_resume_system(struct device *);
-+static int sd_resume_runtime(struct device *dev);
- static void sd_rescan(struct device *);
- static int sd_done(struct scsi_cmnd *);
- static int sd_eh_action(struct scsi_cmnd *, unsigned char *, int, int);
-@@ -486,11 +487,11 @@ static struct class sd_disk_class = {
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 4a28caf..c9a1fa5a 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -1993,7 +1993,13 @@ retry:
+ 			goto err_out;
+ 	}
  
- static const struct dev_pm_ops sd_pm_ops = {
- 	.suspend		= sd_suspend_system,
--	.resume			= sd_resume,
-+	.resume			= sd_resume_system,
- 	.poweroff		= sd_suspend_system,
--	.restore		= sd_resume,
-+	.restore		= sd_resume_system,
- 	.runtime_suspend	= sd_suspend_runtime,
--	.runtime_resume		= sd_resume,
-+	.runtime_resume		= sd_resume_runtime,
- };
- 
- static struct scsi_driver sd_template = {
-@@ -3166,22 +3167,97 @@ static int sd_suspend_runtime(struct device *dev)
- 	return sd_suspend_common(dev, false);
- }
- 
--static int sd_resume(struct device *dev)
-+static int sd_resume_runtime(struct device *dev)
- {
- 	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
- 	int ret = 0;
- 
--	if (!sdkp->device->manage_start_stop)
--		goto done;
--
- 	sd_printk(KERN_NOTICE, sdkp, "Starting disk\n");
-+	dump_stack();
- 	ret = sd_start_stop_device(sdkp, 1);
- 
--done:
- 	scsi_disk_put(sdkp);
- 	return ret;
- }
- 
-+#ifdef CONFIG_PM_RUNTIME
-+static void sd_resume_work(struct work_struct *work)
-+{
-+	struct scsi_disk *sdkp = container_of(work, struct scsi_disk, resume_work.work);
-+	struct scsi_device *sdp = sdkp->device;
-+	struct device *dev = &sdkp->dev;
-+	int res;
-+	unsigned char cmd[10] = { 0 };
-+	struct scsi_sense_hdr sshdr;
-+	const int timeout = sdp->request_queue->rq_timeout;
-+
-+	cmd[0] = REQUEST_SENSE;
-+	printk(KERN_NOTICE "Requesting sense\n");
-+	res = scsi_execute_req_flags(sdp, cmd, DMA_NONE, NULL, 0,
-+				     &sshdr, timeout, SD_MAX_RETRIES,
-+				     NULL, REQ_PM);
-+	if (res) {
-+		sd_print_result(sdkp, res);
-+		goto wakeup;
-+	}
-+	if (driver_byte(res) & DRIVER_SENSE)
-+		sd_print_sense_hdr(sdkp, &sshdr);
-+	/* we need to evaluate the error return  */
-+	if (scsi_sense_valid(&sshdr) &&
-+	    sshdr.sense_key == 0 &&
-+	    sshdr.asc == 0 &&
-+	    sshdr.ascq == 0)
-+		goto wakeup;
-+
-+	/* finalize suspend */
-+	printk(KERN_NOTICE "Finalizing suspend\n");
-+	pm_runtime_disable(dev);
-+	pm_runtime_set_suspended(dev);
-+	pm_runtime_enable(dev);
-+	blk_post_runtime_suspend(sdp->request_queue, 0);
-+	scsi_disk_put(sdkp);
-+	return;
-+
-+wakeup:
-+	/* abort suspend */
-+	sd_printk(KERN_NOTICE, sdkp, "Activating disk %s\n", kobject_name(&dev->kobj));
-+	blk_post_runtime_suspend(sdp->request_queue, -EBUSY);
-+	scsi_disk_put(sdkp);
-+}
-+#endif
-+
-+
-+static int sd_resume_system(struct device *dev)
-+{
-+	struct scsi_disk *sdkp;
-+#ifdef CONFIG_PM_RUNTIME
-+	struct scsi_device *sdp;
-+	int ret = 0;
-+
-+	sdkp = scsi_disk_get_from_dev(dev);
-+	sdp = sdkp->device;
-+	if (!scsi_device_online(sdp))
+-	if (!tried_spinup && (id[2] == 0x37c8 || id[2] == 0x738c)) {
++	if (flags & ATA_READID_NOSTART && id[2] == 0x37c8)
 +	{
-+		ret = -ENODEV;
-+		goto err;
++		dev->flags |= ATA_DFLAG_SLEEPING;
++		return -EAGAIN;
 +	}
-+	sd_printk(KERN_NOTICE, sdkp, "Suspending disk\n");
-+	/* force runtime pm status to suspending */
-+	blk_pre_runtime_suspend(sdp->request_queue);
-+	execute_in_process_context(sd_resume_work,
-+				   &sdkp->resume_work);
-+
-+err:
-+	scsi_disk_put(sdkp);
-+	return ret;
-+#else
-+	if (sdkp->device->manage_start_stop)
-+		return sd_resume_runtime(dev);
-+	return 0;
-+#endif
-+}
-+
-+
- /**
-  *	init_sd - entry point for this driver (both when built in or when
-  *	a module).
-diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
-index 26895ff..0b8afb3 100644
---- a/drivers/scsi/sd.h
-+++ b/drivers/scsi/sd.h
-@@ -90,6 +90,7 @@ struct scsi_disk {
- 	unsigned	lbpvpd : 1;
- 	unsigned	ws10 : 1;
- 	unsigned	ws16 : 1;
-+	struct execute_work resume_work;
- };
- #define to_scsi_disk(obj) container_of(obj,struct scsi_disk,dev)
++	if (!(flags & ATA_READID_NOSTART) &&
++	    !tried_spinup && (id[2] == 0x37c8 || id[2] == 0x738c)) {
+ 		tried_spinup = 1;
+ 		/*
+ 		 * Drive powered-up in standby mode, and requires a specific
+@@ -4024,6 +4030,8 @@ int ata_dev_revalidate(struct ata_device *dev, unsigned int new_class,
  
+ 	/* re-read ID */
+ 	rc = ata_dev_reread_id(dev, readid_flags);
++	if (rc == -EAGAIN)
++		return rc;
+ 	if (rc)
+ 		goto fail;
+ 
+@@ -5423,7 +5431,7 @@ static int __ata_port_resume_common(struct ata_port *ap, pm_message_t mesg,
+ 	int rc;
+ 
+ 	rc = ata_port_request_pm(ap, mesg, ATA_EH_RESET,
+-		ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET, async);
++		ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET | ATA_EHI_NOSTART, async);
+ 	return rc;
+ }
+ 
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 92d7797..0147b0d 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -3094,6 +3094,8 @@ static int ata_eh_revalidate_and_attach(struct ata_link *link,
+ 
+ 		if (ehc->i.flags & ATA_EHI_DID_RESET)
+ 			readid_flags |= ATA_READID_POSTRESET;
++		if (ehc->i.flags & ATA_EHI_NOSTART)
++			readid_flags |= ATA_READID_NOSTART;
+ 
+ 		if ((action & ATA_EH_REVALIDATE) && ata_dev_enabled(dev)) {
+ 			WARN_ON(dev->class == ATA_DEV_PMP);
+@@ -3106,6 +3108,10 @@ static int ata_eh_revalidate_and_attach(struct ata_link *link,
+ 			ata_eh_about_to_do(link, dev, ATA_EH_REVALIDATE);
+ 			rc = ata_dev_revalidate(dev, ehc->classes[dev->devno],
+ 						readid_flags);
++			if (rc == -EAGAIN) {
++				rc = 0; /* start required but suppressed, handle later */
++				continue;
++			}
+ 			if (rc)
+ 				goto err;
+ 
+@@ -3432,7 +3438,7 @@ static int ata_eh_set_lpm(struct ata_link *link, enum ata_lpm_policy policy,
+ 			hints &= ~ATA_LPM_HIPM;
+ 
+ 		/* disable DIPM before changing link config */
+-		if (policy != ATA_LPM_MIN_POWER && dipm) {
++		if (policy != ATA_LPM_MIN_POWER && dipm && !(dev->flags & ATA_DFLAG_SLEEPING)) {
+ 			err_mask = ata_dev_set_feature(dev,
+ 					SETFEATURES_SATA_DISABLE, SATA_DIPM);
+ 			if (err_mask && err_mask != AC_ERR_DEV) {
+@@ -3476,7 +3482,7 @@ static int ata_eh_set_lpm(struct ata_link *link, enum ata_lpm_policy policy,
+ 	/* host config updated, enable DIPM if transitioning to MIN_POWER */
+ 	ata_for_each_dev(dev, link, ENABLED) {
+ 		if (policy == ATA_LPM_MIN_POWER && !no_dipm &&
+-		    ata_id_has_dipm(dev->id)) {
++		    ata_id_has_dipm(dev->id) && !(dev->flags & ATA_DFLAG_SLEEPING)) {
+ 			err_mask = ata_dev_set_feature(dev,
+ 					SETFEATURES_SATA_ENABLE, SATA_DIPM);
+ 			if (err_mask && err_mask != AC_ERR_DEV) {
+diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+index 45b5ab3..8939345 100644
+--- a/drivers/ata/libata.h
++++ b/drivers/ata/libata.h
+@@ -42,6 +42,7 @@ struct ata_scsi_args {
+ enum {
+ 	/* flags for ata_dev_read_id() */
+ 	ATA_READID_POSTRESET	= (1 << 0), /* reading ID after reset */
++	ATA_READID_NOSTART	= (1 << 1), /* do not start drive */
+ 
+ 	/* selector for ata_down_xfermask_limit() */
+ 	ATA_DNXFER_PIO		= 0,	/* speed down PIO */
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 0e23c26..3929bb8 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -362,6 +362,7 @@ enum {
+ 
+ 	/* ata_eh_info->flags */
+ 	ATA_EHI_HOTPLUGGED	= (1 << 0),  /* could have been hotplugged */
++	ATA_EHI_NOSTART		= (1 << 1),  /* don't start the disk */
+ 	ATA_EHI_NO_AUTOPSY	= (1 << 2),  /* no autopsy */
+ 	ATA_EHI_QUIET		= (1 << 3),  /* be quiet */
+ 	ATA_EHI_NO_RECOVERY	= (1 << 4),  /* no recovery */
 -- 
 1.8.3.2
 
