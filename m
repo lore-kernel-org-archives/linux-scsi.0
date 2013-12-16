@@ -1,123 +1,224 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 21/32] target: Remove lun_link and device magic
-Date: Mon, 16 Dec 2013 13:44:06 -0800
-Message-ID: <1387230246.20247.241.camel@haakon3.risingtidesystems.com>
+Subject: Re: [PATCH 22/32] target: Convert percpu_ref to kref
+Date: Mon, 16 Dec 2013 13:44:40 -0800
+Message-ID: <1387230280.20247.242.camel@haakon3.risingtidesystems.com>
 References: <1386979160-6928-1-git-send-email-agrover@redhat.com>
-	 <1386979160-6928-22-git-send-email-agrover@redhat.com>
+	 <1386979160-6928-23-git-send-email-agrover@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:46539 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751865Ab3LPVnN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Dec 2013 16:43:13 -0500
-In-Reply-To: <1386979160-6928-22-git-send-email-agrover@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1386979160-6928-23-git-send-email-agrover@redhat.com>
+Sender: target-devel-owner@vger.kernel.org
 To: Andy Grover <agrover@redhat.com>
 Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
 On Fri, 2013-12-13 at 15:59 -0800, Andy Grover wrote:
-> Not needed.
+> Wasn't getting release called when I expected, so punted and went down
+> to krefs. Much simpler.
 > 
 
-Big NAK on this one.  It most certainly is still required in order to
-prevent any random pointer from being passed into a configfs symlink
-sink for Port/LUN and MappedLUN creation.
+This is not an acceptable reason.
+
+NAK.
 
 --nab
 
 > Signed-off-by: Andy Grover <agrover@redhat.com>
 > ---
->  drivers/target/target_core_device.c          |    1 -
->  drivers/target/target_core_fabric_configfs.c |   11 -----------
->  drivers/target/target_core_tpg.c             |    2 --
->  include/target/target_core_base.h            |    4 ----
->  4 files changed, 0 insertions(+), 18 deletions(-)
+>  drivers/target/target_core_device.c    |    5 ++---
+>  drivers/target/target_core_internal.h  |   10 ++++++++++
+>  drivers/target/target_core_tpg.c       |   29 ++++-------------------------
+>  drivers/target/target_core_transport.c |   29 +----------------------------
+>  include/target/target_core_base.h      |    3 +--
+>  5 files changed, 18 insertions(+), 58 deletions(-)
 > 
 > diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-> index f2e1415..e85a647 100644
+> index e85a647..753e7ca 100644
 > --- a/drivers/target/target_core_device.c
 > +++ b/drivers/target/target_core_device.c
-> @@ -1350,7 +1350,6 @@ struct se_device *target_alloc_device(struct se_hba *hba, const char *name)
->  	if (!dev)
->  		return NULL;
+> @@ -138,7 +138,7 @@ transport_lookup_cmd_lun(struct se_cmd *se_cmd, u32 unpacked_lun)
+>  		se_cmd->orig_fe_lun = unpacked_lun;
+>  		se_cmd->se_cmd_flags |= SCF_SE_LUN_CMD;
 >  
-> -	dev->dev_link_magic = SE_DEV_LINK_MAGIC;
->  	dev->se_hba = hba;
->  	dev->transport = hba->transport;
+> -		percpu_ref_get(&se_lun->lun_ref);
+> +		get_lun(se_lun);
+>  		se_cmd->lun_ref_active = true;
+>  	}
+>  	spin_unlock_irqrestore(&se_sess->se_node_acl->device_list_lock, flags);
+> @@ -168,7 +168,7 @@ transport_lookup_cmd_lun(struct se_cmd *se_cmd, u32 unpacked_lun)
+>  		se_cmd->orig_fe_lun = 0;
+>  		se_cmd->se_cmd_flags |= SCF_SE_LUN_CMD;
 >  
-> diff --git a/drivers/target/target_core_fabric_configfs.c b/drivers/target/target_core_fabric_configfs.c
-> index 1a31b46..4715836 100644
-> --- a/drivers/target/target_core_fabric_configfs.c
-> +++ b/drivers/target/target_core_fabric_configfs.c
-> @@ -71,11 +71,6 @@ static int target_fabric_mappedlun_link(
->  	struct config_item *nacl_ci, *tpg_ci, *tpg_ci_s, *wwn_ci, *wwn_ci_s;
->  	int ret = 0, lun_access;
+> -		percpu_ref_get(&se_lun->lun_ref);
+> +		get_lun(se_lun);
+>  		se_cmd->lun_ref_active = true;
+>  	}
 >  
-> -	if (lun->lun_link_magic != SE_LUN_LINK_MAGIC) {
-> -		pr_err("Bad lun->lun_link_magic, not a valid lun_ci pointer:"
-> -			" %p to struct lun: %p\n", lun_ci, lun);
-> -		return -EFAULT;
-> -	}
->  	/*
->  	 * Ensure that the source port exists
->  	 */
-> @@ -762,12 +757,6 @@ static int target_fabric_port_link(
->  	struct target_fabric_configfs *tf;
->  	int ret;
+> @@ -1411,7 +1411,6 @@ struct se_device *target_alloc_device(struct se_hba *hba, const char *name)
+>  	INIT_LIST_HEAD(&xcopy_lun->lun_acl_list);
+>  	spin_lock_init(&xcopy_lun->lun_acl_lock);
+>  	spin_lock_init(&xcopy_lun->lun_sep_lock);
+> -	init_completion(&xcopy_lun->lun_ref_comp);
 >  
-> -	if (dev->dev_link_magic != SE_DEV_LINK_MAGIC) {
-> -		pr_err("Bad dev->dev_link_magic, not a valid se_dev_ci pointer:"
-> -			" %p to struct se_device: %p\n", se_dev_ci, dev);
-> -		return -EFAULT;
-> -	}
-> -
->  	if (!(dev->dev_flags & DF_CONFIGURED)) {
->  		pr_err("se_device not configured yet, cannot port link\n");
->  		return -ENODEV;
+>  	return dev;
+>  }
+> diff --git a/drivers/target/target_core_internal.h b/drivers/target/target_core_internal.h
+> index ed4d514..4d3b559 100644
+> --- a/drivers/target/target_core_internal.h
+> +++ b/drivers/target/target_core_internal.h
+> @@ -107,6 +107,16 @@ static inline void release_deve(struct kref *kref)
+>  #define get_deve(x) kref_get(&x->refcount)
+>  #define put_deve(x) kref_put(&x->refcount, release_deve)
+>  
+> +static inline void release_lun(struct kref *kref)
+> +{
+> +	struct se_lun *lun = container_of(kref, struct se_lun, refcount);
+> +
+> +	core_tpg_free_lun(lun->lun_tpg, lun);
+> +}
+> +
+> +#define get_lun(x) kref_get(&x->refcount)
+> +#define put_lun(x) kref_put(&x->refcount, release_lun)
+> +
+>  /* target_core_transport.c */
+>  extern struct kmem_cache *se_tmr_req_cache;
+>  
 > diff --git a/drivers/target/target_core_tpg.c b/drivers/target/target_core_tpg.c
-> index 0467ad8..977b05c 100644
+> index 977b05c..6b4b0e6 100644
 > --- a/drivers/target/target_core_tpg.c
 > +++ b/drivers/target/target_core_tpg.c
-> @@ -617,7 +617,6 @@ static int core_tpg_setup_virtual_lun0(struct se_portal_group *se_tpg)
->  	int ret;
+> @@ -601,20 +601,12 @@ int core_tpg_set_initiator_node_tag(
+>  }
+>  EXPORT_SYMBOL(core_tpg_set_initiator_node_tag);
+>  
+> -static void core_tpg_lun_ref_release(struct percpu_ref *ref)
+> -{
+> -	struct se_lun *lun = container_of(ref, struct se_lun, lun_ref);
+> -
+> -	complete(&lun->lun_ref_comp);
+> -}
+> -
+>  static int core_tpg_setup_virtual_lun0(struct se_portal_group *se_tpg)
+>  {
+>  	/* Set in core_dev_setup_virtual_lun0() */
+>  	struct se_device *dev = g_lun0_dev;
+>  	struct se_lun *lun = &se_tpg->tpg_virt_lun0;
+>  	u32 lun_access = TRANSPORT_LUNFLAGS_READ_ONLY;
+> -	int ret;
 >  
 >  	lun->unpacked_lun = 0;
-> -	lun->lun_link_magic = SE_LUN_LINK_MAGIC;
 >  	atomic_set(&lun->lun_acl_count, 0);
->  	init_completion(&lun->lun_shutdown_comp);
+> @@ -622,15 +614,8 @@ static int core_tpg_setup_virtual_lun0(struct se_portal_group *se_tpg)
 >  	INIT_LIST_HEAD(&lun->lun_acl_list);
-> @@ -749,7 +748,6 @@ struct se_lun *core_tpg_alloc_lun(
->  		return ERR_PTR(-ENOMEM);
+>  	spin_lock_init(&lun->lun_acl_lock);
+>  	spin_lock_init(&lun->lun_sep_lock);
+> -	init_completion(&lun->lun_ref_comp);
+> -
+> -	ret = core_tpg_add_lun(se_tpg, lun, lun_access, dev);
+> -	if (ret < 0) {
+> -		percpu_ref_cancel_init(&lun->lun_ref);
+> -		return ret;
+> -	}
 >  
->  	lun->unpacked_lun = unpacked_lun;
-> -	lun->lun_link_magic = SE_LUN_LINK_MAGIC;
->  	atomic_set(&lun->lun_acl_count, 0);
->  	init_completion(&lun->lun_shutdown_comp);
+> -	return 0;
+> +	return core_tpg_add_lun(se_tpg, lun, lun_access, dev);
+>  }
+>  
+>  static void core_tpg_release_virtual_lun0(struct se_portal_group *se_tpg)
+> @@ -753,7 +738,7 @@ struct se_lun *core_tpg_alloc_lun(
 >  	INIT_LIST_HEAD(&lun->lun_acl_list);
+>  	spin_lock_init(&lun->lun_acl_lock);
+>  	spin_lock_init(&lun->lun_sep_lock);
+> -	init_completion(&lun->lun_ref_comp);
+> +	kref_init(&lun->refcount);
+>  
+>  	spin_lock(&tpg->tpg_lun_lock);
+>  	if (!core_insert_lun(tpg, lun)) {
+> @@ -778,15 +763,9 @@ int core_tpg_add_lun(
+>  {
+>  	int ret;
+>  
+> -	ret = percpu_ref_init(&lun->lun_ref, core_tpg_lun_ref_release);
+> -	if (ret < 0)
+> -		return ret;
+> -
+>  	ret = core_dev_export(dev, tpg, lun);
+> -	if (ret < 0) {
+> -		percpu_ref_cancel_init(&lun->lun_ref);
+> +	if (ret < 0)
+>  		return ret;
+> -	}
+>  
+>  	spin_lock(&tpg->tpg_lun_lock);
+>  	lun->lun_access = lun_access;
+> @@ -822,6 +801,6 @@ void core_tpg_remove_lun(
+>  	struct se_lun *lun)
+>  {
+>  	core_clear_lun_from_tpg(lun, tpg);
+> -	transport_clear_lun_ref(lun);
+>  	core_dev_unexport(lun->lun_se_dev, tpg, lun);
+> +	put_lun(lun);
+>  }
+> diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+> index accaca5..a6ef32a 100644
+> --- a/drivers/target/target_core_transport.c
+> +++ b/drivers/target/target_core_transport.c
+> @@ -571,7 +571,7 @@ static void transport_lun_remove_cmd(struct se_cmd *cmd)
+>  	if (!lun || !cmd->lun_ref_active)
+>  		return;
+>  
+> -	percpu_ref_put(&lun->lun_ref);
+> +	put_lun(lun);
+>  }
+>  
+>  void transport_cmd_finish_abort(struct se_cmd *cmd, int remove)
+> @@ -2364,33 +2364,6 @@ void target_wait_for_sess_cmds(struct se_session *se_sess)
+>  }
+>  EXPORT_SYMBOL(target_wait_for_sess_cmds);
+>  
+> -static int transport_clear_lun_ref_thread(void *p)
+> -{
+> -	struct se_lun *lun = p;
+> -
+> -	percpu_ref_kill(&lun->lun_ref);
+> -
+> -	wait_for_completion(&lun->lun_ref_comp);
+> -	complete(&lun->lun_shutdown_comp);
+> -
+> -	return 0;
+> -}
+> -
+> -int transport_clear_lun_ref(struct se_lun *lun)
+> -{
+> -	struct task_struct *kt;
+> -
+> -	kt = kthread_run(transport_clear_lun_ref_thread, lun,
+> -			"tcm_cl_%u", lun->unpacked_lun);
+> -	if (IS_ERR(kt)) {
+> -		pr_err("Unable to start clear_lun thread\n");
+> -		return PTR_ERR(kt);
+> -	}
+> -	wait_for_completion(&lun->lun_shutdown_comp);
+> -
+> -	return 0;
+> -}
+> -
+>  /**
+>   * transport_wait_for_tasks - wait for completion to occur
+>   * @cmd:	command to wait
 > diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-> index 06f9bea..2c0a595 100644
+> index 2c0a595..6d67c31 100644
 > --- a/include/target/target_core_base.h
 > +++ b/include/target/target_core_base.h
-> @@ -629,8 +629,6 @@ struct se_port_stat_grps {
->  
->  struct se_lun {
->  	struct rb_node		rb_node;
-> -#define SE_LUN_LINK_MAGIC			0xffff7771
-> -	u32			lun_link_magic;
->  	u32			lun_access;
->  	u32			lun_flags;
->  	u32			unpacked_lun;
-> @@ -655,8 +653,6 @@ struct se_dev_stat_grps {
+> @@ -641,8 +641,7 @@ struct se_lun {
+>  	struct se_port		*lun_sep;
+>  	struct config_group	lun_group;
+>  	struct se_port_stat_grps port_stat_grps;
+> -	struct completion	lun_ref_comp;
+> -	struct percpu_ref	lun_ref;
+> +	struct kref		refcount;
 >  };
 >  
->  struct se_device {
-> -#define SE_DEV_LINK_MAGIC			0xfeeddeef
-> -	u32			dev_link_magic;
->  	/* RELATIVE TARGET PORT IDENTIFER Counter */
->  	u16			dev_rpti_counter;
->  	/* Used for SAM Task Attribute ordering */
-
-
+>  struct se_dev_stat_grps {
