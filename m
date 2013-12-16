@@ -1,14 +1,14 @@
 From: <vikas.chaudhary@qlogic.com>
-Subject: [PATCH 04/24] qla4xxx: Use IDC_CTRL bit1 directly instead of AF_83XX_NO_FWDUMP flag.
-Date: Mon, 16 Dec 2013 06:49:34 -0500
-Message-ID: <1387194594-29817-5-git-send-email-vikas.chaudhary@qlogic.com>
+Subject: [PATCH 18/24] qla4xxx: Updated print for device login, logout path
+Date: Mon, 16 Dec 2013 06:49:48 -0500
+Message-ID: <1387194594-29817-19-git-send-email-vikas.chaudhary@qlogic.com>
 References: <1387194594-29817-1-git-send-email-vikas.chaudhary@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:2737 "EHLO
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:7912 "EHLO
 	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754049Ab3LPMXZ (ORCPT
+	by vger.kernel.org with ESMTP id S1754299Ab3LPMXZ (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Mon, 16 Dec 2013 07:23:25 -0500
 In-Reply-To: <1387194594-29817-1-git-send-email-vikas.chaudhary@qlogic.com>
@@ -19,92 +19,198 @@ Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlo
 
 From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 
-Removed AF_83XX_NO_FWDUMP flag and directly checking IDC_CTRL bit1
-while taking minidump, to check for graceful reset.
-
 Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 ---
- drivers/scsi/qla4xxx/ql4_83xx.c | 16 ++++++++++++++--
- drivers/scsi/qla4xxx/ql4_def.h  |  1 -
- drivers/scsi/qla4xxx/ql4_nx.c   | 15 +--------------
- 3 files changed, 15 insertions(+), 17 deletions(-)
+ drivers/scsi/qla4xxx/ql4_os.c | 59 +++++++++++++++++++++++++++++++------------
+ 1 file changed, 43 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_83xx.c b/drivers/scsi/qla4xxx/ql4_83xx.c
-index 43c1688..e80e82f 100644
---- a/drivers/scsi/qla4xxx/ql4_83xx.c
-+++ b/drivers/scsi/qla4xxx/ql4_83xx.c
-@@ -1304,12 +1304,24 @@ static void qla4_83xx_process_init_seq(struct scsi_qla_host *ha)
- static int qla4_83xx_restart(struct scsi_qla_host *ha)
- {
- 	int ret_val = QLA_SUCCESS;
-+	uint32_t idc_ctrl;
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index ce20c75..d0a8695 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -1670,16 +1670,13 @@ qla4xxx_ep_connect(struct Scsi_Host *shost, struct sockaddr *dst_addr,
+ 	struct sockaddr_in *addr;
+ 	struct sockaddr_in6 *addr6;
  
- 	qla4_83xx_process_stop_seq(ha);
+-	DEBUG2(printk(KERN_INFO "Func: %s\n", __func__));
+ 	if (!shost) {
+ 		ret = -ENXIO;
+-		printk(KERN_ERR "%s: shost is NULL\n",
+-		       __func__);
++		pr_err("%s: shost is NULL\n", __func__);
+ 		return ERR_PTR(ret);
+ 	}
  
--	/* Collect minidump*/
--	if (!test_and_clear_bit(AF_83XX_NO_FW_DUMP, &ha->flags))
-+	/*
-+	 * Collect minidump.
-+	 * If IDC_CTRL BIT1 is set, clear it on going to INIT state and
-+	 * don't collect minidump
-+	 */
-+	idc_ctrl = qla4_83xx_rd_reg(ha, QLA83XX_IDC_DRV_CTRL);
-+	if (idc_ctrl & GRACEFUL_RESET_BIT1) {
-+		qla4_83xx_wr_reg(ha, QLA83XX_IDC_DRV_CTRL,
-+				 (idc_ctrl & ~GRACEFUL_RESET_BIT1));
-+		ql4_printk(KERN_INFO, ha, "%s: Graceful RESET: Not collecting minidump\n",
-+			   __func__);
+ 	ha = iscsi_host_priv(shost);
+-
+ 	ep = iscsi_create_endpoint(sizeof(struct qla_endpoint));
+ 	if (!ep) {
+ 		ret = -ENOMEM;
+@@ -1699,6 +1696,9 @@ qla4xxx_ep_connect(struct Scsi_Host *shost, struct sockaddr *dst_addr,
+ 		addr6 = (struct sockaddr_in6 *)&qla_ep->dst_addr;
+ 		DEBUG2(ql4_printk(KERN_INFO, ha, "%s: %pI6\n", __func__,
+ 				  (char *)&addr6->sin6_addr));
 +	} else {
- 		qla4_8xxx_get_minidump(ha);
++		ql4_printk(KERN_WARNING, ha, "%s: Invalid endpoint\n",
++			   __func__);
+ 	}
+ 
+ 	qla_ep->host = shost;
+@@ -1712,9 +1712,9 @@ static int qla4xxx_ep_poll(struct iscsi_endpoint *ep, int timeout_ms)
+ 	struct scsi_qla_host *ha;
+ 	int ret = 0;
+ 
+-	DEBUG2(printk(KERN_INFO "Func: %s\n", __func__));
+ 	qla_ep = ep->dd_data;
+ 	ha = to_qla_host(qla_ep->host);
++	DEBUG2(pr_info_ratelimited("%s: host: %ld\n", __func__, ha->host_no));
+ 
+ 	if (adapter_up(ha) && !test_bit(AF_BUILD_DDB_LIST, &ha->flags))
+ 		ret = 1;
+@@ -1724,7 +1724,13 @@ static int qla4xxx_ep_poll(struct iscsi_endpoint *ep, int timeout_ms)
+ 
+ static void qla4xxx_ep_disconnect(struct iscsi_endpoint *ep)
+ {
+-	DEBUG2(printk(KERN_INFO "Func: %s\n", __func__));
++	struct qla_endpoint *qla_ep;
++	struct scsi_qla_host *ha;
++
++	qla_ep = ep->dd_data;
++	ha = to_qla_host(qla_ep->host);
++	DEBUG2(ql4_printk(KERN_INFO, ha, "%s: host: %ld\n", __func__,
++			  ha->host_no));
+ 	iscsi_destroy_endpoint(ep);
+ }
+ 
+@@ -1734,8 +1740,11 @@ static int qla4xxx_get_ep_param(struct iscsi_endpoint *ep,
+ {
+ 	struct qla_endpoint *qla_ep = ep->dd_data;
+ 	struct sockaddr *dst_addr;
++	struct scsi_qla_host *ha;
+ 
+-	DEBUG2(printk(KERN_INFO "Func: %s\n", __func__));
++	ha = to_qla_host(qla_ep->host);
++	DEBUG2(ql4_printk(KERN_INFO, ha, "%s: host: %ld\n", __func__,
++			  ha->host_no));
+ 
+ 	switch (param) {
+ 	case ISCSI_PARAM_CONN_PORT:
+@@ -1766,13 +1775,13 @@ static void qla4xxx_conn_get_stats(struct iscsi_cls_conn *cls_conn,
+ 	int ret;
+ 	dma_addr_t iscsi_stats_dma;
+ 
+-	DEBUG2(printk(KERN_INFO "Func: %s\n", __func__));
+-
+ 	cls_sess = iscsi_conn_to_session(cls_conn);
+ 	sess = cls_sess->dd_data;
+ 	ddb_entry = sess->dd_data;
+ 	ha = ddb_entry->ha;
+ 
++	DEBUG2(ql4_printk(KERN_INFO, ha, "%s: host: %ld\n", __func__,
++			  ha->host_no));
+ 	stats_size = PAGE_ALIGN(sizeof(struct ql_iscsi_stats));
+ 	/* Allocate memory */
+ 	ql_iscsi_stats = dma_alloc_coherent(&ha->pdev->dev, stats_size,
+@@ -3045,7 +3054,6 @@ qla4xxx_session_create(struct iscsi_endpoint *ep,
+ 	struct sockaddr *dst_addr;
+ 	int ret;
+ 
+-	DEBUG2(printk(KERN_INFO "Func: %s\n", __func__));
+ 	if (!ep) {
+ 		printk(KERN_ERR "qla4xxx: missing ep.\n");
+ 		return NULL;
+@@ -3054,6 +3062,8 @@ qla4xxx_session_create(struct iscsi_endpoint *ep,
+ 	qla_ep = ep->dd_data;
+ 	dst_addr = (struct sockaddr *)&qla_ep->dst_addr;
+ 	ha = to_qla_host(qla_ep->host);
++	DEBUG2(ql4_printk(KERN_INFO, ha, "%s: host: %ld\n", __func__,
++			  ha->host_no));
+ 
+ 	ret = qla4xxx_get_ddb_index(ha, &ddb_index);
+ 	if (ret == QLA_ERROR)
+@@ -3093,10 +3103,11 @@ static void qla4xxx_session_destroy(struct iscsi_cls_session *cls_sess)
+ 	uint32_t ddb_state;
+ 	int ret;
+ 
+-	DEBUG2(printk(KERN_INFO "Func: %s\n", __func__));
+ 	sess = cls_sess->dd_data;
+ 	ddb_entry = sess->dd_data;
+ 	ha = ddb_entry->ha;
++	DEBUG2(ql4_printk(KERN_INFO, ha, "%s: host: %ld\n", __func__,
++			  ha->host_no));
+ 
+ 	fw_ddb_entry = dma_alloc_coherent(&ha->pdev->dev, sizeof(*fw_ddb_entry),
+ 					  &fw_ddb_entry_dma, GFP_KERNEL);
+@@ -3143,17 +3154,23 @@ qla4xxx_conn_create(struct iscsi_cls_session *cls_sess, uint32_t conn_idx)
+ 	struct iscsi_cls_conn *cls_conn;
+ 	struct iscsi_session *sess;
+ 	struct ddb_entry *ddb_entry;
++	struct scsi_qla_host *ha;
+ 
+-	DEBUG2(printk(KERN_INFO "Func: %s\n", __func__));
+ 	cls_conn = iscsi_conn_setup(cls_sess, sizeof(struct qla_conn),
+ 				    conn_idx);
+-	if (!cls_conn)
++	if (!cls_conn) {
++		pr_info("%s: Can not create connection for conn_idx = %u\n",
++			__func__, conn_idx);
+ 		return NULL;
 +	}
  
- 	qla4_83xx_process_init_seq(ha);
+ 	sess = cls_sess->dd_data;
+ 	ddb_entry = sess->dd_data;
+ 	ddb_entry->conn = cls_conn;
  
-diff --git a/drivers/scsi/qla4xxx/ql4_def.h b/drivers/scsi/qla4xxx/ql4_def.h
-index e9df4ad..5236337 100644
---- a/drivers/scsi/qla4xxx/ql4_def.h
-+++ b/drivers/scsi/qla4xxx/ql4_def.h
-@@ -580,7 +580,6 @@ struct scsi_qla_host {
- #define AF_82XX_FW_DUMPED		24 /* 0x01000000 */
- #define AF_8XXX_RST_OWNER		25 /* 0x02000000 */
- #define AF_82XX_DUMP_READING		26 /* 0x04000000 */
--#define AF_83XX_NO_FW_DUMP		27 /* 0x08000000 */
- #define AF_83XX_IOCB_INTR_ON		28 /* 0x10000000 */
- #define AF_83XX_MBOX_INTR_ON		29 /* 0x20000000 */
++	ha = ddb_entry->ha;
++	DEBUG2(ql4_printk(KERN_INFO, ha, "%s: conn_idx = %u\n", __func__,
++			  conn_idx));
+ 	return cls_conn;
+ }
  
-diff --git a/drivers/scsi/qla4xxx/ql4_nx.c b/drivers/scsi/qla4xxx/ql4_nx.c
-index bbe8361..0ec07ec 100644
---- a/drivers/scsi/qla4xxx/ql4_nx.c
-+++ b/drivers/scsi/qla4xxx/ql4_nx.c
-@@ -2821,7 +2821,7 @@ int qla4_8xxx_device_bootstrap(struct scsi_qla_host *ha)
- {
- 	int rval = QLA_ERROR;
- 	int i, timeout;
--	uint32_t old_count, count, idc_ctrl;
-+	uint32_t old_count, count;
- 	int need_reset = 0, peg_stuck = 1;
+@@ -3164,8 +3181,16 @@ static int qla4xxx_conn_bind(struct iscsi_cls_session *cls_session,
+ 	struct iscsi_conn *conn;
+ 	struct qla_conn *qla_conn;
+ 	struct iscsi_endpoint *ep;
++	struct ddb_entry *ddb_entry;
++	struct scsi_qla_host *ha;
++	struct iscsi_session *sess;
  
- 	need_reset = ha->isp_ops->need_reset(ha);
-@@ -2864,19 +2864,6 @@ dev_initialize:
- 	qla4_8xxx_wr_direct(ha, QLA8XXX_CRB_DEV_STATE,
- 			    QLA8XXX_DEV_INITIALIZING);
+-	DEBUG2(printk(KERN_INFO "Func: %s\n", __func__));
++	sess = cls_session->dd_data;
++	ddb_entry = sess->dd_data;
++	ha = ddb_entry->ha;
++
++	DEBUG2(ql4_printk(KERN_INFO, ha, "%s: sid = %d, cid = %d\n", __func__,
++			  cls_session->sid, cls_conn->cid));
  
--	/*
--	 * For ISP8324 and ISP8042, if IDC_CTRL GRACEFUL_RESET_BIT1 is set,
--	 * reset it after device goes to INIT state.
--	 */
--	if (is_qla8032(ha) || is_qla8042(ha)) {
--		idc_ctrl = qla4_83xx_rd_reg(ha, QLA83XX_IDC_DRV_CTRL);
--		if (idc_ctrl & GRACEFUL_RESET_BIT1) {
--			qla4_83xx_wr_reg(ha, QLA83XX_IDC_DRV_CTRL,
--					 (idc_ctrl & ~GRACEFUL_RESET_BIT1));
--			set_bit(AF_83XX_NO_FW_DUMP, &ha->flags);
--		}
--	}
--
- 	ha->isp_ops->idc_unlock(ha);
+ 	if (iscsi_conn_bind(cls_session, cls_conn, is_leading))
+ 		return -EINVAL;
+@@ -3188,10 +3213,11 @@ static int qla4xxx_conn_start(struct iscsi_cls_conn *cls_conn)
+ 	int ret = 0;
+ 	int status = QLA_SUCCESS;
  
- 	if (is_qla8022(ha))
+-	DEBUG2(printk(KERN_INFO "Func: %s\n", __func__));
+ 	sess = cls_sess->dd_data;
+ 	ddb_entry = sess->dd_data;
+ 	ha = ddb_entry->ha;
++	DEBUG2(ql4_printk(KERN_INFO, ha, "%s: sid = %d, cid = %d\n", __func__,
++			  cls_sess->sid, cls_conn->cid));
+ 
+ 	/* Check if we have  matching FW DDB, if yes then do not
+ 	 * login to this target. This could cause target to logout previous
+@@ -3265,10 +3291,11 @@ static void qla4xxx_conn_destroy(struct iscsi_cls_conn *cls_conn)
+ 	struct ddb_entry *ddb_entry;
+ 	int options;
+ 
+-	DEBUG2(printk(KERN_INFO "Func: %s\n", __func__));
+ 	sess = cls_sess->dd_data;
+ 	ddb_entry = sess->dd_data;
+ 	ha = ddb_entry->ha;
++	DEBUG2(ql4_printk(KERN_INFO, ha, "%s: cid = %d\n", __func__,
++			  cls_conn->cid));
+ 
+ 	options = LOGOUT_OPTION_CLOSE_SESSION;
+ 	if (qla4xxx_session_logout_ddb(ha, ddb_entry, options) == QLA_ERROR)
 -- 
 1.8.2.GIT
 
