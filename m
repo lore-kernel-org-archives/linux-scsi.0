@@ -1,66 +1,45 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 13/32] target: Move spinlock inside core_release_port
-Date: Mon, 16 Dec 2013 13:21:36 -0800
-Message-ID: <1387228896.20247.227.camel@haakon3.risingtidesystems.com>
+Subject: Re: [PATCH 14/32] target: Remove extra percpu_ref_init
+Date: Mon, 16 Dec 2013 13:23:57 -0800
+Message-ID: <1387229037.20247.228.camel@haakon3.risingtidesystems.com>
 References: <1386979160-6928-1-git-send-email-agrover@redhat.com>
-	 <1386979160-6928-14-git-send-email-agrover@redhat.com>
+	 <1386979160-6928-15-git-send-email-agrover@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1386979160-6928-14-git-send-email-agrover@redhat.com>
+In-Reply-To: <1386979160-6928-15-git-send-email-agrover@redhat.com>
 Sender: target-devel-owner@vger.kernel.org
 To: Andy Grover <agrover@redhat.com>
 Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 On Fri, 2013-12-13 at 15:59 -0800, Andy Grover wrote:
-> Keep locks closer to things they need to lock.
-> 
-> sparse annotation no longer needed.
+> lun->lun_ref is also initialized in core_tpg_post_addlun, so it doesn't
+> need to be done in core_tpg_setup_virtual_lun0.
 > 
 > Signed-off-by: Andy Grover <agrover@redhat.com>
 > ---
->  drivers/target/target_core_device.c |   10 +++-------
->  1 files changed, 3 insertions(+), 7 deletions(-)
+>  drivers/target/target_core_tpg.c |    4 ----
+>  1 files changed, 0 insertions(+), 4 deletions(-)
 > 
+> diff --git a/drivers/target/target_core_tpg.c b/drivers/target/target_core_tpg.c
+> index 8771b23..2f6df57 100644
+> --- a/drivers/target/target_core_tpg.c
+> +++ b/drivers/target/target_core_tpg.c
+> @@ -658,10 +658,6 @@ static int core_tpg_setup_virtual_lun0(struct se_portal_group *se_tpg)
+>  	spin_lock_init(&lun->lun_sep_lock);
+>  	init_completion(&lun->lun_ref_comp);
+>  
+> -	ret = percpu_ref_init(&lun->lun_ref, core_tpg_lun_ref_release);
+> -	if (ret < 0)
+> -		return ret;
+> -
+>  	ret = core_tpg_post_addlun(se_tpg, lun, lun_access, dev);
+>  	if (ret < 0) {
+>  		percpu_ref_cancel_init(&lun->lun_ref);
 
-I'll take this one, but it needs to be re-posted without the other
-patches.
+Applied to target-pending/queue, and will be including in the next -rc5
+PULL request.
 
 --nab
-
-> diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-> index 295b5e4..7b5697a 100644
-> --- a/drivers/target/target_core_device.c
-> +++ b/drivers/target/target_core_device.c
-> @@ -546,16 +546,14 @@ static void core_export_port(
->  	port->sep_index = port->sep_rtpi; /* RELATIVE TARGET PORT IDENTIFIER */
->  }
->  
-> -/*
-> - *	Called with struct se_device->se_port_lock spinlock held.
-> - */
->  static void core_release_port(struct se_device *dev, struct se_port *port)
-> -	__releases(&dev->se_port_lock) __acquires(&dev->se_port_lock)
->  {
-> +	spin_lock(&dev->se_port_lock);
->  	core_alua_free_tg_pt_gp_mem(port);
-> -
->  	list_del(&port->sep_node);
->  	dev->dev_port_count--;
-> +	spin_unlock(&dev->se_port_lock);
-> +
->  	put_port(port);
->  }
->  
-> @@ -596,9 +594,7 @@ void core_dev_unexport(
->  	}
->  	spin_unlock(&lun->lun_sep_lock);
->  
-> -	spin_lock(&dev->se_port_lock);
->  	core_release_port(dev, port);
-> -	spin_unlock(&dev->se_port_lock);
->  
->  	spin_lock(&hba->device_lock);
->  	dev->export_count--;
