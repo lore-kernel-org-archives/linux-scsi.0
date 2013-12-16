@@ -1,77 +1,41 @@
-From: Ben Hutchings <ben@decadent.org.uk>
-Subject: Re: [net-next 1/1] linux-firmware: 3.2.23.0 Firmware for Brocade
- Adapters
-Date: Mon, 16 Dec 2013 00:14:33 +0000
-Message-ID: <1387152873.2803.8.camel@deadeye.wl.decadent.org.uk>
-References: <1386482407-984-1-git-send-email-rmody@brocade.com>
+From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Subject: Re: [RFC] fix our current target reap infrastructure.
+Date: Sun, 15 Dec 2013 21:44:15 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1312152134580.3175-100000@netrider.rowland.org>
+References: <1387145674.2284.60.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-MhlaJl0yD0ZAf6T2Gq/p"
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <1386482407-984-1-git-send-email-rmody@brocade.com>
-Sender: netdev-owner@vger.kernel.org
-To: Rasesh Mody <rmody@brocade.com>
-Cc: dwmw2@infradead.org, netdev@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1387145674.2284.60.camel-sFMDBYUN5F8GjUHQrlYNx2Wm91YjaHnnhRte9Li2A+AAvxtiuMwx3w@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Sarah Sharp <sarah.a.sharp-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, USB Storage List <usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
+On Sun, 15 Dec 2013, James Bottomley wrote:
 
---=-MhlaJl0yD0ZAf6T2Gq/p
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+> No, I was thinking of the two thread scan bug (i.e. two scan threads)
+> not one scan and one remove, which is a bug in the old code.  This is a
+> race between put and get when the kref is incremented from zero (an
+> illegal operation which triggers a warn on).
+> 
+> The way to mediate this is to check for the kref already being zero
+> condition, like below.
 
-On Sat, 2013-12-07 at 22:00 -0800, Rasesh Mody wrote:
-> This is the firmware patch for Brocade 3.2.23.0 BFA and BNA drivers.
->=20
-> Signed-off-by: Rasesh Mody <rmody@brocade.com>
-> ---
->  WHENCE            |   3 +++
->  cbfw-3.2.3.0.bin  | Bin 0 -> 414016 bytes
->  ct2fw-3.2.3.0.bin | Bin 0 -> 583688 bytes
->  ctfw-3.2.3.0.bin  | Bin 0 -> 538712 bytes
->  4 files changed, 3 insertions(+)
->  create mode 100644 cbfw-3.2.3.0.bin
->  create mode 100644 ct2fw-3.2.3.0.bin
->  create mode 100644 ctfw-3.2.3.0.bin
-[...]
+Yes, that seems reasonable.  Consider now: Having done this, to what
+extent do starget->reap_ref and starget->state really need to be
+protected by the host_lock?  Maybe only the linked lists require
+protection.  (I haven't checked.)
 
-This patch seems to have been truncated in transit:
+Can you post a single, combined patch incorporating all your proposed
+changes?  It's little hard to review them in pieces...
 
-$ git am -s ~/tmp/\[net-next_1_1\]_linux-firmware\:_3.2.23.0_Firmware_for_B=
-rocade_Adapters.mbox
-Applying: linux-firmware: 3.2.23.0 Firmware for Brocade Adapters
-error: corrupt binary patch at line 13542: znHIKNgBV5>FJqIQgo|#@us1Wq_D(J
+Alan Stern
 
-Please re-send (but not to the mailing lists; it's pointless to send
-binaries there).
+P.S.: Would you agree that the phrase "pretty astonishing cockup" did
+indeed turn out to be appropriate?  :-)
 
-Ben.
-
---=20
-Ben Hutchings
-Lowery's Law:
-             If it jams, force it. If it breaks, it needed replacing anyway=
-.
-
---=-MhlaJl0yD0ZAf6T2Gq/p
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.15 (GNU/Linux)
-
-iQIVAwUAUq5F6ee/yOyVhhEJAQri9w/9EaUkIjzaVo9ZJNDUUpvnkg5BU+9HtWnN
-AqW053xdNEOiwkxFQOMCDaDhsddDC9acqF334FP/Xl1Eb6JDKj/IJL/FkcmeXSWG
-oySFUlrNTTEFOTi0ajiQyMvHNY5bY74hGsHD1jX/56jqLw1leHD5eCBDxvtM8Pd5
-r5ITH1lc4JmAC9ACVzgLU+V8O2kqVCcyw5Owtc4lgFhOPx9KkKsSx9mNQWe9n6rX
-xP+jKx+4/CsbEFkWrMmPjIT/prfWo0opZyGnKsBj/jqM9s0HyctwwPJzqeCs6a+Y
-nj8xQ3pbqP8UpQBrwzKsjMWRb/RbYZgMT1sGeFc6tHYBReSNZwdg+OMrHrs0GhT1
-9qaMStKvbOm1miLkDY3kR8pbktu3bFn9uhZiLzET/K3HmgKL3jXqol6RcucUeydt
-UHr+qhgZxIOUWWU3JeR8TKicjrDc+F18tcSCIj9cezntB1B9m9Gwyyu7ossS2vw9
-9r74RYXN1798FKyNc/F7080gnORvUoBnnLyTEjPEey89F5/lzS4jCFMKNmeGEVWx
-cp5p3MN8meOZDTZrqzarfpa9bZ4VGvXrbU/gKMkl4PC9LEbNPS6mIX18tiGxKQd9
-rXzPD9FmGp1nTrdJerHPexmfPK1TjVMIXQx61HmzkydXR2QXxhuyQAHixI6dkxJ1
-ICKcgtAGtY0=
-=oaoF
------END PGP SIGNATURE-----
-
---=-MhlaJl0yD0ZAf6T2Gq/p--
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
