@@ -1,81 +1,82 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [RFC 1/2] fix our current target reap infrastructure.
-Date: Mon, 16 Dec 2013 10:57:28 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1312161050390.1266-100000@iolanthe.rowland.org>
-References: <1387206772.2200.7.camel@dabdike.int.hansenpartnership.com>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+From: =?iso-8859-1?Q?=22Kai_M=E4kisara_=28Kolumbus=29=22?=
+	<kai.makisara@kolumbus.fi>
+Subject: Re: [PATCH 1/3] st.ko: fix enlarge_buffer
+Date: Mon, 16 Dec 2013 20:39:36 +0200
+Message-ID: <673E19EA-2460-4392-BBF5-B4923DE67093@kolumbus.fi>
+References: <d6437a$579to8@dgate10u.abg.fsc.net>
+Mime-Version: 1.0 (Mac OS X Mail 7.0 \(1822\))
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:38738 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754500Ab3LPP53 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Dec 2013 10:57:29 -0500
-In-Reply-To: <1387206772.2200.7.camel@dabdike.int.hansenpartnership.com>
+Received: from vs19.mail.saunalahti.fi ([62.142.117.200]:41348 "EHLO
+	vs19.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754565Ab3LPSjm convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Dec 2013 13:39:42 -0500
+In-Reply-To: <d6437a$579to8@dgate10u.abg.fsc.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, USB list <linux-usb@vger.kernel.org>
+To: Bodo Stroesser <bstroesser@ts.fujitsu.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Mon, 16 Dec 2013, James Bottomley wrote:
 
-> This patch eliminates the reap_ref and replaces it with a proper kref.
-> On last put of this kref, the target is removed from visibility in
-> sysfs.  The final call to scsi_target_reap() for the device is done from
-> __scsi_remove_device() and only if the device was made visible.  This
-> ensures that the target disappears as soon as the last device is gone
-> rather than waiting until final release of the device (which is often
-> too long).
+On 2.12.2013, at 21.00, Bodo Stroesser <bstroesser@ts.fujitsu.com> wrot=
+e:
 
-Reviewed-by: Alan Stern <stern@rowland.harvard.edu>
+> From: Bodo Stroesser <bstroesser@ts.fujitsu.com>
+> Date: Mon, 2 Dec 2013 18:52:10 +0100
+> Subject: [PATCH 1/3] st.ko: fix enlarge_buffer
+>=20
+> This patch removes a bug in enlarge_buffer() that can make a
+> read or write fail under special conditions.
+>=20
+> After changing TRY_DIRECT_IO to 0 and ST_MAX_SG to 32 in
+> st_options.h, a program that writes a first block of 128k and
+> than a second bigger block (e.g. 256k) fails. The second write
+> returns errno EOVERFLOW, as enlarge_buffer() checks the sg list
+> and detects that it already is full.
+> As enlarge_buffer uses different page allocation orders
+> depending on the size of the buffer needed, the check does not
+> make sense.
+>=20
+Yes, it is not useful any more. It may have been necessary at some time=
+ but I am now not sure about that either ;-)
 
-Two small suggested changes:
+> Cc: Kai Makisara <kai.makisara@kolumbus.fi>
 
-> @@ -441,29 +466,32 @@ static struct scsi_target *scsi_alloc_target(struct device *parent,
->  	return starget;
->  
->   found:
-> -	found_target->reap_ref++;
-> +	if (!kref_get_unless_zero(&found_target->reap_ref))
-> +		/*
-> +		 * release routine already fired.  Target is dead, but
-> +		 * STARGET_DEL may not yet be set (set in the release
-> +		 * routine), so set here as well, just in case
-> +		 */
-> +		found_target->state = STARGET_DEL;
->  	spin_unlock_irqrestore(shost->host_lock, flags);
->  	if (found_target->state != STARGET_DEL) {
->  		put_device(dev);
->  		return found_target;
->  	}
-> -	/* Unfortunately, we found a dying target; need to
-> -	 * wait until it's dead before we can get a new one */
-> +	/*
-> +	 * Unfortunately, we found a dying target; need to wait until it's
-> +	 * dead before we can get a new one.  There is an anomaly here.  We
-> +	 * *should* call scsi_target_reap() to balance the kref_get() of the
-> +	 * reap_ref above.  However, since the target is in state STARGET_DEL,
-> +	 * it's already invisible and the reap_ref is irrelevant.  If we call
-> +	 * scsi_target_reap() we might spuriously do another device_del() on
-> +	 * an already invisible target.
-> +	 */
->  	put_device(&found_target->dev);
->  	flush_scheduled_work();
->  	goto retry;
+Acked-by: Kai M=E4kisara <kai.makisara@kolumbus.fi>
 
-Since scsi_target_reap_usercontext() is now gone, scsi_target_destroy()
-doesn't rely on a work queue any more.  Therefore something like
-msleep(1) would be more appropriate than flush_scheduled_work().
+Thanks,
+Kai
 
-> --- a/include/scsi/scsi_device.h
-> +++ b/include/scsi/scsi_device.h
-> @@ -257,7 +257,7 @@ struct scsi_target {
->  	struct list_head	siblings;
->  	struct list_head	devices;
->  	struct device		dev;
-> -	unsigned int		reap_ref; /* protected by the host lock */
-> +	struct kref		reap_ref; /* last put renders device invisible */
+> Signed-off-by: Bodo Stroesser <bstroesser@ts.fujitsu.com>
+>=20
+> ---
+>=20
+> --- a/drivers/scsi/st.c	2013-12-02 18:52:10.000000000 +0100
+> +++ b/drivers/scsi/st.c	2013-12-02 18:52:10.000000000 +0100
+> @@ -3719,7 +3719,7 @@ static struct st_buffer *new_tape_buffer
+>=20
+> static int enlarge_buffer(struct st_buffer * STbuffer, int new_size, =
+int need_dma)
+> {
+> -	int segs, nbr, max_segs, b_size, order, got;
+> +	int segs, max_segs, b_size, order, got;
+> 	gfp_t priority;
+>=20
+> 	if (new_size <=3D STbuffer->buffer_size)
+> @@ -3729,9 +3729,6 @@ static int enlarge_buffer(struct st_buff
+> 		normalize_buffer(STbuffer);  /* Avoid extra segment */
+>=20
+> 	max_segs =3D STbuffer->use_sg;
+> -	nbr =3D max_segs - STbuffer->frp_segs;
+> -	if (nbr <=3D 0)
+> -		return 0;
+>=20
+> 	priority =3D GFP_KERNEL | __GFP_NOWARN;
+> 	if (need_dma)
 
-s/device/target/
-
-Alan Stern
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
