@@ -1,116 +1,138 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 32/32] target: Increase MAX_LUNS_PER_TPG to 16384
-Date: Mon, 16 Dec 2013 10:24:42 +0100
-Message-ID: <52AEC6DA.6030600@suse.de>
-References: <1386979160-6928-1-git-send-email-agrover@redhat.com> <1386979160-6928-33-git-send-email-agrover@redhat.com> <52AEC5CC.9050701@suse.de>
+From: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
+Subject: RE: Possible locking bug in pm8xxx/pm8001
+Date: Mon, 16 Dec 2013 12:11:35 +0000
+Message-ID: <CE2C58F938F4C44EA74FFF880BAA7E5E1C688AFC@BBYEXM01.pmc-sierra.internal>
+References: <CAD0Z9TJpOZ6CEq5-x-TC5QSwqqtTUdojfwxO+x1X_kSvTCj9Fg@mail.gmail.com>
+ <CAKt8eUm1z61e7QS=n1phZzbAzW+zsqWYgzh71Tx6VSgbN7-=yg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <52AEC5CC.9050701@suse.de>
-Sender: target-devel-owner@vger.kernel.org
-To: Andy Grover <agrover@redhat.com>, target-devel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:54140 "EHLO
+	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752195Ab3LPMLm convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 16 Dec 2013 07:11:42 -0500
+In-Reply-To: <CAKt8eUm1z61e7QS=n1phZzbAzW+zsqWYgzh71Tx6VSgbN7-=yg@mail.gmail.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jason Seba <jason.seba42@gmail.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 12/16/2013 10:20 AM, Hannes Reinecke wrote:
-> On 12/14/2013 12:59 AM, Andy Grover wrote:
->> Indicate support for hierarchical LUN addressing.
->>
->> Set address method field in each LUN reported by REPORT LUNS to 1, i=
-n
->> accordance with SCSI SAM specs.
->>
->> Signed-off-by: Andy Grover <agrover@redhat.com>
->> ---
->>  drivers/target/target_core_spc.c  |    8 ++++++--
->>  include/target/target_core_base.h |    4 ++--
->>  2 files changed, 8 insertions(+), 4 deletions(-)
->>
->> diff --git a/drivers/target/target_core_spc.c b/drivers/target/targe=
-t_core_spc.c
->> index 0b678fc..04690bf 100644
->> --- a/drivers/target/target_core_spc.c
->> +++ b/drivers/target/target_core_spc.c
->> @@ -79,7 +79,7 @@ spc_emulate_inquiry_std(struct se_cmd *cmd, unsign=
-ed char *buf)
->>  	buf[2] =3D 0x05; /* SPC-3 */
->> =20
->>  	/*
->> -	 * NORMACA and HISUP =3D 0, RESPONSE DATA FORMAT =3D 2
->> +	 * NORMACA =3D 0, HISUP =3D 1, RESPONSE DATA FORMAT =3D 2
->>  	 *
->>  	 * SPC4 says:
->>  	 *   A RESPONSE DATA FORMAT field set to 2h indicates that the
->> @@ -88,7 +88,7 @@ spc_emulate_inquiry_std(struct se_cmd *cmd, unsign=
-ed char *buf)
->>  	 *   obsolete. Response data format values greater than 2h are
->>  	 *   reserved.
->>  	 */
->> -	buf[3] =3D 2;
->> +	buf[3] =3D 0x12;
->> =20
->>  	/*
->>  	 * Enable SCCS and TPGS fields for Emulated ALUA
->> @@ -1164,6 +1164,10 @@ sense_reason_t spc_emulate_report_luns(struct=
- se_cmd *cmd)
->>  			break;
->> =20
->>  		int_to_scsilun(deve->mapped_lun, (struct scsi_lun *)&buf[offset])=
-;
->> +
->> +		/* Address method 1 for hier flat-space address. see SAM-5 */
->> +		buf[offset] |=3D (1 << 6);
->> +
->>  		offset +=3D 8;
->>  	}
->>  	spin_unlock_irq(&sess->se_node_acl->device_list_lock);
->> diff --git a/include/target/target_core_base.h b/include/target/targ=
-et_core_base.h
->> index 08ecfed..537cc67 100644
->> --- a/include/target/target_core_base.h
->> +++ b/include/target/target_core_base.h
->> @@ -14,8 +14,8 @@
->>  #define TARGET_CORE_VERSION		TARGET_CORE_MOD_VERSION
->> =20
->>  /* Maximum Number of LUNs per Target Portal Group */
->> -/* Don't raise above 511 or REPORT_LUNS needs to handle >1 page */
->> -#define TRANSPORT_MAX_LUNS_PER_TPG		256
->> +/* Don't raise above 16384 or a different format in report_luns is =
-needed */
->> +#define TRANSPORT_MAX_LUNS_PER_TPG		16384
->>  /*
->>   * By default we use 32-byte CDBs in TCM Core and subsystem plugin =
-code.
->>   *
->>
-> NO WAY.
->=20
-> TCM is (currently) keeping the LUNs in a static array.
-> Which is sort-of-okay if the number of LUNs is somewhat reasonable,
-> as it was for 256.
-> But 16k is way beyond any sensible number and will increase the
-> memory footprint by a massive amount, irrespective whether someone
-> will actually _use_ such a large number of LUNs.
->=20
-> Before attempting that one would need to convert the LUN array into
-> something scalable, like a linked list or somesuch.
->=20
-Ouch.
+Jason,
 
-Please ignore this mail.
+I have sent you the patch for testing. Could you please help testing this patch?
+Will submit it here once it is tested by you.
 
-One should _really_ read the entire patchset before jumping to
-conclusions.
-Monday morning and all that ...
+Regards,
+Suresh
 
-Sorry for the noise.
+-----Original Message-----
+From: Suresh Thiagarajan [mailto:sureshkalki@gmail.com] 
+Sent: Wednesday, November 27, 2013 11:11 AM
+To: Jason Seba
+Cc: linux-scsi@vger.kernel.org; Suresh Thiagarajan
+Subject: Re: Possible locking bug in pm8xxx/pm8001
 
-Cheers,
+Hi Jason
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+On Sat, Oct 12, 2013 at 2:02 AM, Jason Seba <jason.seba42@gmail.com> wrote:
+> The pm8xxx driver uses a per-adapter spinlock (pm8001_ha->lock) which 
+> is usually acquired and released with the irqsave routines. However, 
+> some functions which are called with the lock held 
+> (mpi_sata_completion, mpi_sata_event, pm8001_chip_sata_req) will 
+> temporary release the lock to complete a task. However, when releasing 
+> and reacquiring the lock in this case, the irqsave routine are not 
+> used; instead spin_unlock_irq/spin_lock_irq are used. As far as I can 
+> tell, this is wrong and dangerous, and appears to result in the hard 
+> lockup shown below.
+>
+> It isn't obvious to me what the best way to fix this is. Suggestions?
+
+This can be fixed by using flag variable from pm8001_hba_info structure instead of taking it as local variable in all the functions.
+Will send out a patch soon to fix this.
+
+Regards,
+Suresh
+>
+>
+>
+> [ 2048.017802] ------------[ cut here ]------------ [ 2048.022621] 
+> WARNING: CPU: 0 PID: 1606 at kernel/watchdog.c:245
+> watchdog_overflow_callback+0xac/0xd0()
+> [ 2048.031827] Watchdog detected hard LOCKUP on cpu 0 [ 2048.036439] 
+> Modules linked in: ses enclosure xt_CHECKSUM iptable_mangle 
+> ipt_MASQUERADE iptable_nat nf_nat_ipv4 nf_nat bridge sunrpc fcoe 8021q 
+> mrp garp libfcoe libfc scsi_transport_fc stp llc scsi_tgt xt_physdev 
+> nf_conntrack_ipv4 nf_defrag_ipv4 ip6t_REJECT
+> nf_conntrack_ipv6 nf_defrag_ipv6 xt_state nf_conntrack ip6table_filter 
+> ip6_tables binfmt_misc uinput iTCO_wdt iTCO_vendor_support mgag200 ttm 
+> drm_kms_helper drm i2c_algo_bit sysimgblt sysfillrect syscopyarea 
+> pm80xx libsas scsi_transport_sas joydev dcdbas pcspkr i2c_i801 
+> i2c_core lpc_ich mfd_core tg3 ptp pps_core [last unloaded:
+> speedstep_lib]
+> [ 2048.090159] CPU: 0 PID: 1606 Comm: libvirtd Not tainted 3.11.0-rc5+ 
+> #2 [ 2048.096682] Hardware name: Dell Inc. PowerEdge T110 II/015TH9, 
+> BIOS
+> 2.0.5 03/13/2012
+> [ 2048.104410] 000000f5 f3401828 c1580fe3 c1710301 f3401858 c10418e4 
+> c17061bc f3401884 [ 2048.112277] 00000646 c1710301 000000f5 c10c415c 
+> c10c415c f5822800
+> c10c40b0 00000000
+> [ 2048.120153] f3401870 c10419a3 00000009 f3401868 c17061bc f3401884
+> f3401888 c10c415c
+> [ 2048.128022] Call Trace:
+> [ 2048.130476] [<c1580fe3>] dump_stack+0x41/0x56 [ 2048.134921] 
+> [<c10418e4>] warn_slowpath_common+0x84/0xa0 [ 2048.140231] 
+> [<c10c415c>] ? watchdog_overflow_callback+0xac/0xd0
+> [ 2048.146236] [<c10c415c>] ? watchdog_overflow_callback+0xac/0xd0
+> [ 2048.152239] [<c10c40b0>] ? watchdog_cleanup+0x10/0x10 [ 
+> 2048.157369] [<c10419a3>] warn_slowpath_fmt+0x33/0x40 [ 2048.162420] 
+> [<c10c415c>] watchdog_overflow_callback+0xac/0xd0
+> [ 2048.168243] [<c10fbbef>] __perf_event_overflow+0xaf/0x280 [ 
+> 2048.173729] [<c101322a>] ? x86_perf_event_set_period+0x12a/0x1e0
+> [ 2048.179819] [<c10fc685>] perf_event_overflow+0x15/0x20 [ 
+> 2048.185043] [<c1019d9b>] intel_pmu_handle_irq+0x1bb/0x390 [ 
+> 2048.190519] [<c107019d>] ? sched_clock_cpu+0x11d/0x1a0 [ 2048.195744] 
+> [<c1586871>] perf_event_nmi_handler+0x31/0x50 [ 2048.201229] 
+> [<c1585f52>] nmi_handle+0x52/0x190 [ 2048.205762] [<c1342b60>] ? 
+> serial8250_modem_status+0xb0/0xb0 [ 2048.211504] [<c1586172>] 
+> do_nmi+0xe2/0x3d0 [ 2048.215681] [<c15856bb>] 
+> nmi_stack_correct+0x2f/0x34 [ 2048.220732] [<c15800d8>] ? 
+> __pci_bus_size_bridges+0x868/0x890
+> [ 2048.226563] [<c1584c12>] ? _raw_spin_lock_irqsave+0x22/0x30 [ 
+> 2048.232215] [<f80f018e>] process_oq+0x6ae/0x1820 [pm80xx] [ 
+> 2048.237698] [<f80f1323>] pm8001_chip_isr+0x23/0x40 [pm80xx] [ 
+> 2048.243356] [<f80e501f>] pm8001_tasklet+0x1f/0x30 [pm80xx] [ 
+> 2048.248925] [<c10458de>] tasklet_action+0x8e/0xa0 [ 2048.253709] 
+> [<c104616f>] __do_softirq+0xaf/0x200 [ 2048.258406] [<c10463a5>] 
+> irq_exit+0xa5/0xb0 [ 2048.262676] [<c158c45b>] do_IRQ+0x4b/0xc0 [ 
+> 2048.266768] [<c105f67b>] ? add_wait_queue+0x3b/0x50 [ 2048.271730] 
+> [<c158c333>] common_interrupt+0x33/0x38 [ 2048.276687] [<c14800d8>] ? 
+> qi_flush_dev_iotlb+0x98/0xf0 [ 2048.282001] [<c1167fb1>] ? 
+> poll_schedule_timeout+0x1/0xb0 [ 2048.287483] [<c1168eed>] ? 
+> do_sys_poll+0x4ad/0x530 [ 2048.292352] [<c11681e0>] ? 
+> __pollwait+0xe0/0xe0 [ 2048.296962] [<c11681e0>] ? 
+> __pollwait+0xe0/0xe0 [ 2048.301581] [<c11681e0>] ? 
+> __pollwait+0xe0/0xe0 [ 2048.306197] [<c11681e0>] ? 
+> __pollwait+0xe0/0xe0 [ 2048.310808] [<c11681e0>] ? 
+> __pollwait+0xe0/0xe0 [ 2048.315416] [<c11681e0>] ? 
+> __pollwait+0xe0/0xe0 [ 2048.320026] [<c14c4ef4>] ? 
+> netlink_recvmsg+0x294/0x340 [ 2048.325244] [<c123827d>] ? 
+> selinux_socket_recvmsg+0x1d/0x20 [ 2048.330901] [<c148d5b0>] ? 
+> sock_recvmsg+0xc0/0xf0 [ 2048.335692] [<c10733c7>] ? 
+> update_curr+0x1e7/0x290 [ 2048.340572] [<c148b56d>] ? 
+> move_addr_to_user+0x7d/0xb0 [ 2048.345796] [<c148db52>] ? 
+> ___sys_recvmsg+0x142/0x1e0 [ 2048.350933] [<c148d4f0>] ? 
+> kernel_sendmsg+0x50/0x50 [ 2048.355898] [<c148de0f>] ? 
+> __sys_recvmsg+0x5f/0x70 [ 2048.360775] [<c148de36>] ? 
+> SyS_recvmsg+0x16/0x20 [ 2048.365473] [<c148e617>] ? 
+> SyS_socketcall+0x107/0x2e0 [ 2048.370609] [<c1168fca>] 
+> SyS_poll+0x5a/0xd0 [ 2048.374873] [<c158be81>] 
+> sysenter_do_call+0x12/0x22 [ 2048.379828] ---[ end trace 
+> 723e25b4ff5b3a4f ]---
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" 
+> in the body of a message to majordomo@vger.kernel.org More majordomo 
+> info at  http://vger.kernel.org/majordomo-info.html
