@@ -1,107 +1,87 @@
 From: <vikas.chaudhary@qlogic.com>
-Subject: [PATCH 10/24] qla4xxx: Clear DDB index map upon connection close failure
-Date: Mon, 16 Dec 2013 06:49:40 -0500
-Message-ID: <1387194594-29817-11-git-send-email-vikas.chaudhary@qlogic.com>
+Subject: [PATCH 02/24] qla4xxx: Print WARN_ONCE() if iSCSI function presence bit removed
+Date: Mon, 16 Dec 2013 06:49:32 -0500
+Message-ID: <1387194594-29817-3-git-send-email-vikas.chaudhary@qlogic.com>
 References: <1387194594-29817-1-git-send-email-vikas.chaudhary@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:25723 "EHLO
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:50698 "EHLO
 	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754386Ab3LPMYD (ORCPT
+	by vger.kernel.org with ESMTP id S1754381Ab3LPMYD (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Mon, 16 Dec 2013 07:24:03 -0500
 In-Reply-To: <1387194594-29817-1-git-send-email-vikas.chaudhary@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com, michaelc@cs.wisc.edu
-Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, Nilesh Javali <nilesh.javali@qlogic.com>
+Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com
 
-From: Nilesh Javali <nilesh.javali@qlogic.com>
+From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 
-Issue:
-qla4xxx Unable to clear DDB indices when logout fails due to
-failure of connection close mbox command.
-
-Root cause:
-If login to session fail, iscsiadm make call to destroy_session.
-qla4xxx driver does not free ddb index map before free_ddb()
-
-Fix:
-Clear DDB Index map before free_ddb in "destroy_session"
-in case of connection close mailbox command failure with 4005h.
-
-Signed-off-by: Nilesh Javali <nilesh.javali@qlogic.com>
 Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 ---
- drivers/scsi/qla4xxx/ql4_def.h | 2 ++
- drivers/scsi/qla4xxx/ql4_fw.h  | 1 +
- drivers/scsi/qla4xxx/ql4_mbx.c | 4 ++++
- drivers/scsi/qla4xxx/ql4_os.c  | 4 +++-
- 4 files changed, 10 insertions(+), 1 deletion(-)
+ drivers/scsi/qla4xxx/ql4_83xx.c | 20 ++++++++++++++++++++
+ drivers/scsi/qla4xxx/ql4_glbl.h |  1 +
+ drivers/scsi/qla4xxx/ql4_os.c   |  5 +++++
+ 3 files changed, 26 insertions(+)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_def.h b/drivers/scsi/qla4xxx/ql4_def.h
-index 4e11133..33eae2e 100644
---- a/drivers/scsi/qla4xxx/ql4_def.h
-+++ b/drivers/scsi/qla4xxx/ql4_def.h
-@@ -297,6 +297,8 @@ struct ddb_entry {
- 
- 	/* Driver Re-login  */
- 	unsigned long flags;		  /* DDB Flags */
-+#define DDB_CONN_CLOSE_FAILURE		0 /* 0x00000001 */
+diff --git a/drivers/scsi/qla4xxx/ql4_83xx.c b/drivers/scsi/qla4xxx/ql4_83xx.c
+index 8196c2f..43c1688 100644
+--- a/drivers/scsi/qla4xxx/ql4_83xx.c
++++ b/drivers/scsi/qla4xxx/ql4_83xx.c
+@@ -1664,3 +1664,23 @@ void qla4_83xx_disable_pause(struct scsi_qla_host *ha)
+ 	__qla4_83xx_disable_pause(ha);
+ 	ha->isp_ops->idc_unlock(ha);
+ }
 +
- 	uint16_t default_relogin_timeout; /*  Max time to wait for
- 					   *  relogin to complete */
- 	atomic_t retry_relogin_timer;	  /* Min Time between relogins
-diff --git a/drivers/scsi/qla4xxx/ql4_fw.h b/drivers/scsi/qla4xxx/ql4_fw.h
-index e3242df..a94593a 100644
---- a/drivers/scsi/qla4xxx/ql4_fw.h
-+++ b/drivers/scsi/qla4xxx/ql4_fw.h
-@@ -390,6 +390,7 @@ struct qla_flt_region {
- #define MBOX_CMD_CLEAR_DATABASE_ENTRY		0x0031
- #define MBOX_CMD_CONN_OPEN			0x0074
- #define MBOX_CMD_CONN_CLOSE_SESS_LOGOUT		0x0056
-+#define DDB_NOT_LOGGED_IN			0x09
- #define LOGOUT_OPTION_CLOSE_SESSION		0x0002
- #define LOGOUT_OPTION_RELOGIN			0x0004
- #define LOGOUT_OPTION_FREE_DDB			0x0008
-diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
-index 7da0646..023f2dd 100644
---- a/drivers/scsi/qla4xxx/ql4_mbx.c
-+++ b/drivers/scsi/qla4xxx/ql4_mbx.c
-@@ -1002,6 +1002,10 @@ int qla4xxx_session_logout_ddb(struct scsi_qla_host *ha,
- 				  "%s: MBOX_CMD_CONN_CLOSE_SESS_LOGOUT "
- 				  "failed sts %04X %04X", __func__,
- 				  mbox_sts[0], mbox_sts[1]));
-+		if ((mbox_sts[0] == MBOX_STS_COMMAND_ERROR) &&
-+		    (mbox_sts[1] == DDB_NOT_LOGGED_IN)) {
-+			set_bit(DDB_CONN_CLOSE_FAILURE, &ddb_entry->flags);
-+		}
- 	}
++/**
++ * qla4_83xx_is_detached - Check if we are marked invisible.
++ * @ha: Pointer to host adapter structure.
++ **/
++int qla4_83xx_is_detached(struct scsi_qla_host *ha)
++{
++	uint32_t drv_active;
++
++	drv_active = qla4_8xxx_rd_direct(ha, QLA8XXX_CRB_DRV_ACTIVE);
++
++	if (test_bit(AF_INIT_DONE, &ha->flags) &&
++	    !(drv_active & (1 << ha->func_num))) {
++		DEBUG2(ql4_printk(KERN_INFO, ha, "%s: drv_active = 0x%X\n",
++				  __func__, drv_active));
++		return QLA_SUCCESS;
++	}
++
++	return QLA_ERROR;
++}
+diff --git a/drivers/scsi/qla4xxx/ql4_glbl.h b/drivers/scsi/qla4xxx/ql4_glbl.h
+index 6d72e1d..b1a19cd 100644
+--- a/drivers/scsi/qla4xxx/ql4_glbl.h
++++ b/drivers/scsi/qla4xxx/ql4_glbl.h
+@@ -280,6 +280,7 @@ uint8_t qla4xxx_set_ipaddr_state(uint8_t fw_ipaddr_state);
+ int qla4_83xx_get_port_config(struct scsi_qla_host *ha, uint32_t *config);
+ int qla4_83xx_set_port_config(struct scsi_qla_host *ha, uint32_t *config);
+ int qla4_8xxx_check_init_adapter_retry(struct scsi_qla_host *ha);
++int qla4_83xx_is_detached(struct scsi_qla_host *ha);
  
- 	return status;
+ extern int ql4xextended_error_logging;
+ extern int ql4xdontresethba;
 diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index a78edc3..3fec116 100644
+index 9803c9e..e6fa19c 100644
 --- a/drivers/scsi/qla4xxx/ql4_os.c
 +++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -3074,6 +3074,7 @@ qla4xxx_session_create(struct iscsi_endpoint *ep,
- 	ddb_entry->sess = cls_sess;
- 	ddb_entry->unblock_sess = qla4xxx_unblock_ddb;
- 	ddb_entry->ddb_change = qla4xxx_ddb_change;
-+	clear_bit(DDB_CONN_CLOSE_FAILURE, &ddb_entry->flags);
- 	cls_sess->recovery_tmo = ql4xsess_recovery_tmo;
- 	ha->fw_ddb_index_map[ddb_entry->fw_ddb_index] = ddb_entry;
- 	ha->tot_ddbs++;
-@@ -3123,7 +3124,8 @@ static void qla4xxx_session_destroy(struct iscsi_cls_session *cls_sess)
+@@ -4372,6 +4372,11 @@ void qla4_8xxx_watchdog(struct scsi_qla_host *ha)
+ 	uint32_t dev_state;
+ 	uint32_t idc_ctrl;
  
- destroy_session:
- 	qla4xxx_clear_ddb_entry(ha, ddb_entry->fw_ddb_index);
--
-+	if (test_and_clear_bit(DDB_CONN_CLOSE_FAILURE, &ddb_entry->flags))
-+		clear_bit(ddb_entry->fw_ddb_index, ha->ddb_idx_map);
- 	spin_lock_irqsave(&ha->hardware_lock, flags);
- 	qla4xxx_free_ddb(ha, ddb_entry);
- 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
++	if (is_qla8032(ha) &&
++	    (qla4_83xx_is_detached(ha) == QLA_SUCCESS))
++		WARN_ONCE(1, "%s: iSCSI function %d marked invisible\n",
++			  __func__, ha->func_num);
++
+ 	/* don't poll if reset is going on */
+ 	if (!(test_bit(DPC_RESET_ACTIVE, &ha->dpc_flags) ||
+ 	    test_bit(DPC_RESET_HA, &ha->dpc_flags) ||
 -- 
 1.8.2.GIT
 
