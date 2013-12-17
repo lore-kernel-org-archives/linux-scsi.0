@@ -1,70 +1,107 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 5/8] target_core: simplify scsi_name_len calculation
-Date: Tue, 17 Dec 2013 11:32:59 -0800
-Message-ID: <1387308779.20247.297.camel@haakon3.risingtidesystems.com>
+Subject: Re: [PATCH 6/8] target_core_spc: Include target device descriptor
+ in VPD page 83
+Date: Tue, 17 Dec 2013 11:50:49 -0800
+Message-ID: <1387309849.20247.306.camel@haakon3.risingtidesystems.com>
 References: <1387268330-121064-1-git-send-email-hare@suse.de>
-	 <1387268330-121064-6-git-send-email-hare@suse.de>
+	 <1387268330-121064-7-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:35626 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752095Ab3LQTcE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Dec 2013 14:32:04 -0500
-In-Reply-To: <1387268330-121064-6-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1387268330-121064-7-git-send-email-hare@suse.de>
+Sender: target-devel-owner@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>
 Cc: Nic Bellinger <nab@daterainc.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
 On Tue, 2013-12-17 at 09:18 +0100, Hannes Reinecke wrote:
-> scsi_name_len in spc_emulate_evpd_83 is calculated twice, with
-> the results of the first calculation discarded. So remove it.
-> And check for the maximum allowed length, too.
+> We should be including a descriptor referring to the target device
+> to allow identification of different TCM instances.
 > 
 > Signed-off-by: Hannes Reinecke <hare@suse.de>
 > ---
->  drivers/target/target_core_spc.c | 13 +++----------
->  1 file changed, 3 insertions(+), 10 deletions(-)
+>  drivers/target/target_core_spc.c | 43 +++++++++++++++++++++++++++++++++++++++-
+>  1 file changed, 42 insertions(+), 1 deletion(-)
 > 
 
-Applied to for-next.
+One issue with this patch.  The local buffer in spc_emulate_inquiry is
+currently hardcoded to SE_INQUIRY_BUF=512, so two large scsi name
+designators could overflow here..
+
+So for the largest case with EVPD=0x83, this would be:
+
+4 bytes for header +
+20 bytes for NAA IEEE Registered Extended Assigned designator +
+56 bytes for T10 Vendor Identifier +
+8 bytes for Relative target port +
+8 bytes for Target port group +
+8 bytes for Logical unit group +
+256 bytes for SCSI name (target port) +
+256 bytes for SCSI name (target device) == 616 bytes.
+
+So for good measure, bumping up SE_INQUIRY_BUF to 1024.
 
 --nab
 
 > diff --git a/drivers/target/target_core_spc.c b/drivers/target/target_core_spc.c
-> index 021c3f4..603c411 100644
+> index 603c411..39054d9 100644
 > --- a/drivers/target/target_core_spc.c
 > +++ b/drivers/target/target_core_spc.c
-> @@ -365,16 +365,6 @@ check_lu_gp:
->  		 * section 7.5.1 Table 362
->  		 */
->  check_scsi_name:
-> -		scsi_name_len = strlen(tpg->se_tpg_tfo->tpg_get_wwn(tpg));
-> -		/* UTF-8 ",t,0x<16-bit TPGT>" + NULL Terminator */
-> -		scsi_name_len += 10;
-> -		/* Check for 4-byte padding */
-> -		padding = ((-scsi_name_len) & 3);
-> -		if (padding != 0)
-> -			scsi_name_len += padding;
-> -		/* Header size + Designation descriptor */
-> -		scsi_name_len += 4;
-> -
->  		buf[off] =
->  			(tpg->se_tpg_tfo->get_fabric_proto_ident(tpg) << 4);
->  		buf[off++] |= 0x3; /* CODE SET == UTF-8 */
-> @@ -402,8 +392,11 @@ check_scsi_name:
->  		 * shall be no larger than 256 and shall be a multiple
->  		 * of four.
->  		 */
-> +		padding = ((-scsi_name_len) & 3);
->  		if (padding)
->  			scsi_name_len += padding;
+> @@ -267,7 +267,7 @@ check_t10_vend_desc:
+>  	port = lun->lun_sep;
+>  	if (port) {
+>  		struct t10_alua_lu_gp *lu_gp;
+> -		u32 padding, scsi_name_len;
+> +		u32 padding, scsi_name_len, scsi_target_len;
+>  		u16 lu_gp_id = 0;
+>  		u16 tg_pt_gp_id = 0;
+>  		u16 tpgt;
+> @@ -402,6 +402,47 @@ check_scsi_name:
+>  		off += scsi_name_len;
+>  		/* Header size + Designation descriptor */
+>  		len += (scsi_name_len + 4);
+> +
+> +		/*
+> +		 * Target device designator
+> +		 */
+> +		buf[off] =
+> +			(tpg->se_tpg_tfo->get_fabric_proto_ident(tpg) << 4);
+> +		buf[off++] |= 0x3; /* CODE SET == UTF-8 */
+> +		buf[off] = 0x80; /* Set PIV=1 */
+> +		/* Set ASSOCIATION == target device: 10b */
+> +		buf[off] |= 0x20;
+> +		/* DESIGNATOR TYPE == SCSI name string */
+> +		buf[off++] |= 0x8;
+> +		off += 2; /* Skip over Reserved and length */
+> +		/*
+> +		 * SCSI name string identifer containing, $FABRIC_MOD
+> +		 * dependent information.  For LIO-Target and iSCSI
+> +		 * Target Port, this means "<iSCSI name>" in
+> +		 * UTF-8 encoding.
+> +		 */
+> +		scsi_target_len = sprintf(&buf[off], "%s",
+> +					  tpg->se_tpg_tfo->tpg_get_wwn(tpg));
+> +		scsi_target_len += 1 /* Include  NULL terminator */;
+> +		/*
+> +		 * The null-terminated, null-padded (see 4.4.2) SCSI
+> +		 * NAME STRING field contains a UTF-8 format string.
+> +		 * The number of bytes in the SCSI NAME STRING field
+> +		 * (i.e., the value in the DESIGNATOR LENGTH field)
+> +		 * shall be no larger than 256 and shall be a multiple
+> +		 * of four.
+> +		 */
+> +		padding = ((-scsi_target_len) & 3);
+> +		if (padding)
+> +			scsi_target_len += padding;
 > +		if (scsi_name_len > 256)
 > +			scsi_name_len = 256;
->  
->  		buf[off-1] = scsi_name_len;
->  		off += scsi_name_len;
-
-
+> +
+> +		buf[off-1] = scsi_target_len;
+> +		off += scsi_target_len;
+> +
+> +		/* Header size + Designation descriptor */
+> +		len += (scsi_target_len + 4);
+>  	}
+>  	buf[2] = ((len >> 8) & 0xff);
+>  	buf[3] = (len & 0xff); /* Page Length for VPD 0x83 */
