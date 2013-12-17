@@ -1,44 +1,46 @@
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+From: Bradley Grove <bgrove@attotech.com>
 Subject: Re: [RESEND][PATCH] scsi: esas2r: fix potential format string flaw
-Date: Tue, 17 Dec 2013 13:54:36 -0800
-Message-ID: <20131217215436.GA19898@kroah.com>
+Date: Tue, 17 Dec 2013 16:45:00 -0500
+Message-ID: <52B0C5DC.3000407@attotech.com>
 References: <20131217182733.GA16202@www.outflux.net>
- <20131217200022.GD28274@kroah.com>
- <CAGXu5j+wwkiz9=s3DBnmDXmtR_YdtqvXOe5PJsNbRcs_UCGajA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAGXu5j+wwkiz9=s3DBnmDXmtR_YdtqvXOe5PJsNbRcs_UCGajA@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Kees Cook <keescook@chromium.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, Bradley Grove <linuxdrivers@attotech.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sw.attotech.com ([208.69.85.34]:21159 "EHLO
+	NOTESERV1.attotech.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751219Ab3LQWAK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Dec 2013 17:00:10 -0500
+In-Reply-To: <20131217182733.GA16202@www.outflux.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Kees Cook <keescook@chromium.org>, "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-kernel@vger.kernel.org, Bradley Grove <linuxdrivers@attotech.com>, linux-scsi@vger.kernel.org
 
-On Tue, Dec 17, 2013 at 01:17:51PM -0800, Kees Cook wrote:
-> On Tue, Dec 17, 2013 at 12:00 PM, Greg Kroah-Hartman
-> <gregkh@linuxfoundation.org> wrote:
-> > On Tue, Dec 17, 2013 at 10:27:33AM -0800, Kees Cook wrote:
-> >> This makes sure format strings cannot leak into the printk call via the
-> >> constructed buffer.
-> >>
-> >> Signed-off-by: Kees Cook <keescook@chromium.org>
-> >> ---
-> >>  drivers/scsi/esas2r/esas2r_log.c |    2 +-
-> >>  1 file changed, 1 insertion(+), 1 deletion(-)
-> >
-> > Why is this patch "To:" me?  I'm not the author of this driver, or the
-> > maintainer of it or the subsystem, and there's not much, if anything I
-> > can do with it...
-> 
-> I've resent this before, and since it lived in "drivers", I figured
-> you would be the next up the chain to take it (since it's been
-> ignored).
+Acked-by: Bradley Grove <bgrove@attotech.com>
 
-Heh, while I do seem to maintain a ton of the drivers/ tree, I don't
-take everything there.  This needs to go through James's tree, he can
-handle it :)
 
-thanks,
+On 12/17/2013 01:27 PM, Kees Cook wrote:
+> This makes sure format strings cannot leak into the printk call via the
+> constructed buffer.
+>
+> Signed-off-by: Kees Cook <keescook@chromium.org>
+> ---
+>   drivers/scsi/esas2r/esas2r_log.c |    2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/scsi/esas2r/esas2r_log.c b/drivers/scsi/esas2r/esas2r_log.c
+> index 9bf285df58dd..61fc19d296bd 100644
+> --- a/drivers/scsi/esas2r/esas2r_log.c
+> +++ b/drivers/scsi/esas2r/esas2r_log.c
+> @@ -171,7 +171,7 @@ static int esas2r_log_master(const long level,
+>   		if (strlen(event_buffer) < buflen)
+>   			strcat(buffer, "\n");
+>
+> -		printk(event_buffer);
+> +		printk("%s", event_buffer);
+>
+>   		spin_unlock_irqrestore(&event_buffer_lock, flags);
+>   	}
+>
 
-greg k-h
