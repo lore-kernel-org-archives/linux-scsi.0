@@ -1,51 +1,61 @@
-From: Phillip Susi <psusi@ubuntu.com>
-Subject: Re: [PATCH/RESEND v2 0/2] SATA disk resume time optimization
-Date: Tue, 17 Dec 2013 09:24:54 -0500
-Message-ID: <52B05EB6.5070905@ubuntu.com>
-References: <20131017193331.GA11747@linux.intel.com> <527AF287.7020700@ubuntu.com> <20131109012023.GA8978@linux.intel.com> <527EA218.6010604@ubuntu.com> <20131111165920.GA25366@linux.intel.com> <52810F21.9070605@ubuntu.com> <20131217121527.GB29989@htj.dyndns.org>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: re: [SCSI] bfa: Firmware patch simplification
+Date: Tue, 17 Dec 2013 17:57:15 +0300
+Message-ID: <20131217145715.GA32365@elgon.mountain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20131217121527.GB29989@htj.dyndns.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: todd.e.brandt@linux.intel.com, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, JBottomley@parallels.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:46711 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752358Ab3LQO53 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Dec 2013 09:57:29 -0500
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: vmohan@brocade.com
+Cc: linux-scsi@vger.kernel.org
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+Hello Vijaya Mohan Guvva,
 
-On 12/17/2013 7:15 AM, Tejun Heo wrote:
-> On Mon, Nov 11, 2013 at 12:08:49PM -0500, Phillip Susi wrote:
->> No, I did not tune my system; I fixed the kernel so that
->> userspace's activities do not start those disks.
-> 
-> So, umm, implementing things in kernel to facilitate userland is
-> great but please don't try to work around userland from kernel.  It
-> may be easy now but inevitably becomes a maintenance burden where
-> we don't have much visibility into what userland is depending on.
-> If a certain feature needs cooperation from userland, update
-> userland accordingly.
+The patch 4e88a72d1574: "[SCSI] bfa: Firmware patch simplification"
+from Nov 21, 2013, leads to the following Smatch warning:
+	drivers/scsi/bfa/bfa_ioc.c:6859 bfa_flash_status_read()
+	warn: unsigned 'status' is never less than zero.
 
-udisks already cooperates by checking the power status before issuing
-more commands that would cause the drive to spin up.  I suppose I
-could have added a sysfs flag exposing the sleep state and had
-userspace check that first, but it seems silly to add a whole new ABI
-and to check the power state rather than simply fixing the existing
-command to not wake the disk in order to tell userspace what we
-already know using a code path we already have.
+drivers/scsi/bfa/bfa_ioc.c
+  6851  bfa_flash_status_read(void __iomem *pci_bar)
+  6852  {
+  6853          union bfa_flash_dev_status_reg_u        dev_status;
+  6854          u32                             status;
+  6855          u32                     ret_status;
+  6856          int                             i;
+  6857  
+  6858          status = bfa_flash_fifo_flush(pci_bar);
+  6859          if (status < 0)
+                    ^^^^^^^^^^
+"status" is unsigned.
 
+  6860                  return status;
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.17 (MingW32)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+There are some other Smatch warnings as well:
 
-iQEcBAEBAgAGBQJSsF61AAoJEI5FoCIzSKrwMvEH/3IOti/mKMvwm6b0ie3+knMT
-QLDPuq7K/7qkbHPuSD/Bm2OwJR69SRFYSUYLpLL/u8r1JAgRKJJx1YywFgpmRJm9
-43bE+R3uXhpYxSy5zf0s8T1VbNalWWVZKjfrrXjJic+H37y0E/lZcUtq8fSPnNu9
-xNXLZ2/dkmWbAw+zu2Zszao3zPeYtP3bqhYa6HFZYDKxFEl4IPg9uKnQ9rAq7D/Y
-/WtqOlckSqWdPSLKbQh3nbEd9dvdIqEx2wuqK8jthoHR0+HFoAGRqRHY6PKLKal5
-bnxl7T8Wr6dRlb13vZZy6TwHU6HRxK6w9vCmRhSg04hHvtA8q2DmDM5Go+4PZEg=
-=w2m9
------END PGP SIGNATURE-----
+drivers/scsi/bfa/bfa_ioc.c:3882 bfa_sfp_show_comp() error: memcpy() 'des' too small (64 vs 248)
+
+This is not a real bug, it's just an over-sight.  The code uses:
+	u8 *des = (u8 *) &(sfp->sfpmem->srlid_base);
+but the intent was:
+	void *dest = &sfp->sfpmem;
+
+The two assignments are equivalent in terms of pointer math, but we are
+refering to the whole struct and not the first member.
+
+The other warnings are real:
+
+drivers/scsi/bfa/bfa_ioc.c:6859 bfa_flash_status_read() warn: unsigned 'status' is never less than zero.
+drivers/scsi/bfa/bfa_ioc.c:6881 bfa_flash_status_read() warn: unsigned 'status' is never less than zero.
+drivers/scsi/bfa/bfa_ioc.c:6917 bfa_flash_read_start() warn: unsigned 'status' is never less than zero.
+drivers/scsi/bfa/bfa_ioc.c:7043 bfa_flash_raw_read() warn: unsigned 'status' is never less than zero.
+
+regards,
+dan carpenter
+
