@@ -1,43 +1,166 @@
-From: Phillip Susi <psusi@ubuntu.com>
-Subject: Re: [PATCH 6/6] libata: return power status in REQUEST SENSE command
-Date: Tue, 17 Dec 2013 13:35:01 -0500
-Message-ID: <52B09955.6000106@ubuntu.com>
-References: <cover.1384030893.git.psusi@ubuntu.com> <1387236657-4852-1-git-send-email-psusi@ubuntu.com> <1387236657-4852-7-git-send-email-psusi@ubuntu.com> <52B091C6.4050106@cogentembedded.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH 1/8] target_core_alua: validate ALUA state transition
+Date: Tue, 17 Dec 2013 11:32:00 -0800
+Message-ID: <1387308720.20247.293.camel@haakon3.risingtidesystems.com>
+References: <1387268330-121064-1-git-send-email-hare@suse.de>
+	 <1387268330-121064-2-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:56903 "EHLO
-	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932435Ab3LQSfC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Dec 2013 13:35:02 -0500
-In-Reply-To: <52B091C6.4050106@cogentembedded.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1387268330-121064-2-git-send-email-hare@suse.de>
+Sender: target-devel-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Nic Bellinger <nab@daterainc.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, todd.e.brandt@linux.intel.com
-Cc: tj@kernel.org, JBottomley@parallels.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+On Tue, 2013-12-17 at 09:18 +0100, Hannes Reinecke wrote:
+> As we now can modify the list of supported states we need to
+> validate the requested ALUA state when doing a state transition.
+> 
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> ---
+>  drivers/target/target_core_alua.c | 55 ++++++++++++++++++++++++++++++++-------
+>  1 file changed, 45 insertions(+), 10 deletions(-)
+> 
 
-On 12/17/2013 1:02 PM, Sergei Shtylyov wrote:
-> Isn't it an optional command, belonging to the power management 
-> feature set?
+Applied to for-next.
 
-Seems to be required.  ATA-8 section 4.16 says:
+Thanks Hannes!
 
-"A General feature set device shall implement power management"
+--nab
 
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.17 (MingW32)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iQEcBAEBAgAGBQJSsJlVAAoJEI5FoCIzSKrwieEIAKA6y3RdJO20gUyyxBQ8lRYV
-jcEOcZpbBZPXNAFKXG8HvGwIIOiFNmygoSmq2q4WL2M2PUjBMkdltqcKIJgyxjW5
-071HdiwAclt/KibVM2CC2PaZBVTMlCBb615B+wwjmiRveVMED9nh7htqxiKWHX16
-u7T9J6Lq6nuTsoYrwGbd7c/oB5AQE6M1qDIJFtw6V7otRPYaL+P2zofhrcmBeOAe
-COi/SZiQXksUHA0aSIvTpOS2zMnuHu8Uo9cpIS++gsUqsfuIkqqsyp79fbPIvqvm
-WaZg43lzrFhoiZmyy/cvPm7Ty4dTkRbGo7BQ0V4S9GeSGcGRki8eZBIkHd1F4d8=
-=i1f0
------END PGP SIGNATURE-----
+> diff --git a/drivers/target/target_core_alua.c b/drivers/target/target_core_alua.c
+> index fdcee32..292ecce 100644
+> --- a/drivers/target/target_core_alua.c
+> +++ b/drivers/target/target_core_alua.c
+> @@ -41,11 +41,14 @@
+>  #include "target_core_alua.h"
+>  #include "target_core_ua.h"
+>  
+> -static sense_reason_t core_alua_check_transition(int state, int *primary);
+> +static sense_reason_t core_alua_check_transition(int state, int valid,
+> +						 int *primary);
+>  static int core_alua_set_tg_pt_secondary_state(
+>  		struct t10_alua_tg_pt_gp_member *tg_pt_gp_mem,
+>  		struct se_port *port, int explicit, int offline);
+>  
+> +static char *core_alua_dump_state(int state);
+> +
+>  static u16 alua_lu_gps_counter;
+>  static u32 alua_lu_gps_count;
+>  
+> @@ -210,7 +213,7 @@ target_emulate_set_target_port_groups(struct se_cmd *cmd)
+>  	unsigned char *ptr;
+>  	sense_reason_t rc = TCM_NO_SENSE;
+>  	u32 len = 4; /* Skip over RESERVED area in header */
+> -	int alua_access_state, primary = 0;
+> +	int alua_access_state, primary = 0, valid_states;
+>  	u16 tg_pt_id, rtpi;
+>  
+>  	if (!l_port)
+> @@ -252,6 +255,7 @@ target_emulate_set_target_port_groups(struct se_cmd *cmd)
+>  		rc = TCM_UNSUPPORTED_SCSI_OPCODE;
+>  		goto out;
+>  	}
+> +	valid_states = l_tg_pt_gp->tg_pt_gp_alua_supported_states;
+>  
+>  	ptr = &buf[4]; /* Skip over RESERVED area in header */
+>  
+> @@ -263,7 +267,8 @@ target_emulate_set_target_port_groups(struct se_cmd *cmd)
+>  		 * the state is a primary or secondary target port asymmetric
+>  		 * access state.
+>  		 */
+> -		rc = core_alua_check_transition(alua_access_state, &primary);
+> +		rc = core_alua_check_transition(alua_access_state,
+> +						valid_states, &primary);
+>  		if (rc) {
+>  			/*
+>  			 * If the SET TARGET PORT GROUPS attempts to establish
+> @@ -618,17 +623,31 @@ out:
+>   * Check implicit and explicit ALUA state change request.
+>   */
+>  static sense_reason_t
+> -core_alua_check_transition(int state, int *primary)
+> +core_alua_check_transition(int state, int valid, int *primary)
+>  {
+> +	/*
+> +	 * OPTIMIZED, NON-OPTIMIZED, STANDBY and UNAVAILABLE are
+> +	 * defined as primary target port asymmetric access states.
+> +	 */
+>  	switch (state) {
+>  	case ALUA_ACCESS_STATE_ACTIVE_OPTIMIZED:
+> +		if (!(valid & ALUA_AO_SUP))
+> +			goto not_supported;
+> +		*primary = 1;
+> +		break;
+>  	case ALUA_ACCESS_STATE_ACTIVE_NON_OPTIMIZED:
+> +		if (!(valid & ALUA_AN_SUP))
+> +			goto not_supported;
+> +		*primary = 1;
+> +		break;
+>  	case ALUA_ACCESS_STATE_STANDBY:
+> +		if (!(valid & ALUA_S_SUP))
+> +			goto not_supported;
+> +		*primary = 1;
+> +		break;
+>  	case ALUA_ACCESS_STATE_UNAVAILABLE:
+> -		/*
+> -		 * OPTIMIZED, NON-OPTIMIZED, STANDBY and UNAVAILABLE are
+> -		 * defined as primary target port asymmetric access states.
+> -		 */
+> +		if (!(valid & ALUA_U_SUP))
+> +			goto not_supported;
+>  		*primary = 1;
+>  		break;
+>  	case ALUA_ACCESS_STATE_OFFLINE:
+> @@ -636,14 +655,27 @@ core_alua_check_transition(int state, int *primary)
+>  		 * OFFLINE state is defined as a secondary target port
+>  		 * asymmetric access state.
+>  		 */
+> +		if (!(valid & ALUA_O_SUP))
+> +			goto not_supported;
+>  		*primary = 0;
+>  		break;
+> +	case ALUA_ACCESS_STATE_TRANSITION:
+> +		/*
+> +		 * Transitioning is set internally, and
+> +		 * cannot be selected manually.
+> +		 */
+> +		goto not_supported;
+>  	default:
+>  		pr_err("Unknown ALUA access state: 0x%02x\n", state);
+>  		return TCM_INVALID_PARAMETER_LIST;
+>  	}
+>  
+>  	return 0;
+> +
+> +not_supported:
+> +	pr_err("ALUA access state %s not supported",
+> +	       core_alua_dump_state(state));
+> +	return TCM_INVALID_PARAMETER_LIST;
+>  }
+>  
+>  static char *core_alua_dump_state(int state)
+> @@ -659,6 +691,8 @@ static char *core_alua_dump_state(int state)
+>  		return "Unavailable";
+>  	case ALUA_ACCESS_STATE_OFFLINE:
+>  		return "Offline";
+> +	case ALUA_ACCESS_STATE_TRANSITION:
+> +		return "Transitioning";
+>  	default:
+>  		return "Unknown";
+>  	}
+> @@ -884,9 +918,10 @@ int core_alua_do_port_transition(
+>  	struct t10_alua_lu_gp_member *lu_gp_mem, *local_lu_gp_mem;
+>  	struct t10_alua_tg_pt_gp *tg_pt_gp;
+>  	unsigned char *md_buf;
+> -	int primary;
+> +	int primary, valid_states;
+>  
+> -	if (core_alua_check_transition(new_state, &primary) != 0)
+> +	valid_states = l_tg_pt_gp->tg_pt_gp_alua_supported_states;
+> +	if (core_alua_check_transition(new_state, valid_states, &primary) != 0)
+>  		return -EINVAL;
+>  
+>  	md_buf = kzalloc(l_tg_pt_gp->tg_pt_gp_md_buf_len, GFP_KERNEL);
