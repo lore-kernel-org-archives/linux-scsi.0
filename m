@@ -1,127 +1,39 @@
-From: James Smart <james.smart@emulex.com>
-Subject: Re: [PATCH 1/7] lpfc 8.3.44: Fixed IO hang when in msi mode.
-Date: Tue, 17 Dec 2013 16:08:08 -0500
-Message-ID: <52B0BD38.20108@emulex.com>
-References: <1386006499.11046.9.camel@myfc17> <1387312244.2213.76.camel@dabdike.int.hansenpartnership.com>
-Reply-To: <james.smart@emulex.com>
+From: Kees Cook <keescook@chromium.org>
+Subject: Re: [RESEND][PATCH] scsi: esas2r: fix potential format string flaw
+Date: Tue, 17 Dec 2013 13:17:51 -0800
+Message-ID: <CAGXu5j+wwkiz9=s3DBnmDXmtR_YdtqvXOe5PJsNbRcs_UCGajA@mail.gmail.com>
+References: <20131217182733.GA16202@www.outflux.net>
+	<20131217200022.GD28274@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:48437 "EHLO
-	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751332Ab3LQVIM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Dec 2013 16:08:12 -0500
-In-Reply-To: <1387312244.2213.76.camel@dabdike.int.hansenpartnership.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20131217200022.GD28274@kroah.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, Bradley Grove <linuxdrivers@attotech.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org
 
-yep.  Sorry.  Will resend shortly.
-
--- james
-
-
-On 12/17/2013 3:30 PM, James Bottomley wrote:
-> On Mon, 2013-12-02 at 12:48 -0500, James Smart wrote:
->> Fixed IO hang when in msi mode.
+On Tue, Dec 17, 2013 at 12:00 PM, Greg Kroah-Hartman
+<gregkh@linuxfoundation.org> wrote:
+> On Tue, Dec 17, 2013 at 10:27:33AM -0800, Kees Cook wrote:
+>> This makes sure format strings cannot leak into the printk call via the
+>> constructed buffer.
 >>
->>
->> Signed-off-by: James Smart <james.smart@emulex.com>
-> There seems to be a lot of tab vs space checkpatch warnings in this
-> series:
+>> Signed-off-by: Kees Cook <keescook@chromium.org>
+>> ---
+>>  drivers/scsi/esas2r/esas2r_log.c |    2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
 >
-> ERROR: code indent should use tabs where possible
-> #24: FILE: drivers/scsi/lpfc/lpfc_scsi.c:4792:
-> +                                 cmnd->device ? cmnd->device->lun :
-> 0xffff,$
->
-> WARNING: please, no spaces at the start of a line
-> #24: FILE: drivers/scsi/lpfc/lpfc_scsi.c:4792:
-> +                                 cmnd->device ? cmnd->device->lun :
-> 0xffff,$
->
-> ERROR: code indent should use tabs where possible
-> #25: FILE: drivers/scsi/lpfc/lpfc_scsi.c:4793:
-> +                                 vport->fc_myDID, ndlp->nlp_DID,$
->
-> WARNING: please, no spaces at the start of a line
-> #25: FILE: drivers/scsi/lpfc/lpfc_scsi.c:4793:
-> +                                 vport->fc_myDID, ndlp->nlp_DID,$
->
-> ERROR: code indent should use tabs where possible
-> #26: FILE: drivers/scsi/lpfc/lpfc_scsi.c:4794:
-> +                                 phba->sli_rev == LPFC_SLI_REV4 ?$
->
-> WARNING: please, no spaces at the start of a line
-> #26: FILE: drivers/scsi/lpfc/lpfc_scsi.c:4794:
-> +                                 phba->sli_rev == LPFC_SLI_REV4 ?$
->
-> ERROR: code indent should use tabs where possible
-> #27: FILE: drivers/scsi/lpfc/lpfc_scsi.c:4795:
-> +                                 lpfc_cmd->cur_iocbq.sli4_xritag :
-> 0xffff,$
->
-> WARNING: please, no spaces at the start of a line
-> #27: FILE: drivers/scsi/lpfc/lpfc_scsi.c:4795:
-> +                                 lpfc_cmd->cur_iocbq.sli4_xritag :
-> 0xffff,$
->
-> ERROR: code indent should use tabs where possible
-> #28: FILE: drivers/scsi/lpfc/lpfc_scsi.c:4796:
-> +                                 lpfc_cmd->cur_iocbq.iocb.ulpContext,$
->
-> WARNING: please, no spaces at the start of a line
-> #28: FILE: drivers/scsi/lpfc/lpfc_scsi.c:4796:
-> +                                 lpfc_cmd->cur_iocbq.iocb.ulpContext,$
->
-> ERROR: code indent should use tabs where possible
-> #29: FILE: drivers/scsi/lpfc/lpfc_scsi.c:4797:
-> +                                 lpfc_cmd->cur_iocbq.iocb.ulpIoTag,$
->
-> WARNING: please, no spaces at the start of a line
-> #29: FILE: drivers/scsi/lpfc/lpfc_scsi.c:4797:
-> +                                 lpfc_cmd->cur_iocbq.iocb.ulpIoTag,$
->
-> ERROR: code indent should use tabs where possible
-> #30: FILE: drivers/scsi/lpfc/lpfc_scsi.c:4798:
-> +                                 lpfc_cmd->cur_iocbq.iocb.ulpTimeout,$
->
-> WARNING: please, no spaces at the start of a line
-> #30: FILE: drivers/scsi/lpfc/lpfc_scsi.c:4798:
-> +                                 lpfc_cmd->cur_iocbq.iocb.ulpTimeout,$
->
-> ERROR: code indent should use tabs where possible
-> #31: FILE: drivers/scsi/lpfc/lpfc_scsi.c:4799:
-> +                                 (uint32_t)$
->
-> WARNING: please, no spaces at the start of a line
-> #31: FILE: drivers/scsi/lpfc/lpfc_scsi.c:4799:
-> +                                 (uint32_t)$
->
-> ERROR: code indent should use tabs where possible
-> #32: FILE: drivers/scsi/lpfc/lpfc_scsi.c:4800:
-> +                                  (cmnd->request->timeout / 1000));$
->
-> WARNING: please, no spaces at the start of a line
-> #32: FILE: drivers/scsi/lpfc/lpfc_scsi.c:4800:
-> +                                  (cmnd->request->timeout / 1000));$
->
-> total: 9 errors, 9 warnings, 33 lines checked
->
-> NOTE: whitespace errors detected, you may wish to use scripts/cleanpatch
-> or
->        scripts/cleanfile
->
-> I don't think it's your mailer otherwise the patch wouldn't have
-> applied.  Could you fix and resend the series?
->
-> Thanks,
->
-> James
->
->
->
->
+> Why is this patch "To:" me?  I'm not the author of this driver, or the
+> maintainer of it or the subsystem, and there's not much, if anything I
+> can do with it...
 
+I've resent this before, and since it lived in "drivers", I figured
+you would be the next up the chain to take it (since it's been
+ignored).
+
+-Kees
+
+-- 
+Kees Cook
+Chrome OS Security
