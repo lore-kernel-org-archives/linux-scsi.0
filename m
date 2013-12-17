@@ -1,72 +1,44 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH v4] sg: relax 16 byte cdb restriction
-Date: Tue, 17 Dec 2013 16:53:25 -0500
-Message-ID: <52B0C7D5.8060808@interlog.com>
-References: <529B6044.9010809@interlog.com> <1387311664.2213.73.camel@dabdike.int.hansenpartnership.com>
-Reply-To: dgilbert@interlog.com
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [RESEND][PATCH] scsi: esas2r: fix potential format string flaw
+Date: Tue, 17 Dec 2013 13:54:36 -0800
+Message-ID: <20131217215436.GA19898@kroah.com>
+References: <20131217182733.GA16202@www.outflux.net>
+ <20131217200022.GD28274@kroah.com>
+ <CAGXu5j+wwkiz9=s3DBnmDXmtR_YdtqvXOe5PJsNbRcs_UCGajA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:46853 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753028Ab3LQVxa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Dec 2013 16:53:30 -0500
-In-Reply-To: <1387311664.2213.73.camel@dabdike.int.hansenpartnership.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CAGXu5j+wwkiz9=s3DBnmDXmtR_YdtqvXOe5PJsNbRcs_UCGajA@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Kees Cook <keescook@chromium.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, Bradley Grove <linuxdrivers@attotech.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-On 13-12-17 03:21 PM, James Bottomley wrote:
-> On Sun, 2013-12-01 at 17:13 +0100, Douglas Gilbert wrote:
->> ChangeLog:
->>           - remove the 16 byte CDB (SCSI command) length limit
->>             from the sg driver by handling longer CDBs the same
->>             way as the bsg driver. Remove comment from sg.h
->>             public interface about the cmd_len field being
->>             limited to 16 bytes.
->>           - remove some dead code caused by this change
->>           - cleanup comment block at the top of sg.h, fix urls
->>
->> Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
->
-> This doesn't apply:
->
-> patching file drivers/scsi/sg.c
-> Hunk #1 succeeded at 74 (offset 1 line).
-> Hunk #2 succeeded at 164 (offset 2 lines).
-> Hunk #3 succeeded at 569 (offset -5 lines).
-> Hunk #4 FAILED at 606.
-> Hunk #5 succeeded at 678 (offset -6 lines).
-> Hunk #6 FAILED at 1660.
-> Hunk #7 succeeded at 1742 (offset -11 lines).
-> 2 out of 7 hunks FAILED -- saving rejects to file drivers/scsi/sg.c.rej
->
-> It looks like there's a missing intermediate patch changing the way
-> logging is done within the driver ... I don't recall seeing such a patch
-> on the list.
+On Tue, Dec 17, 2013 at 01:17:51PM -0800, Kees Cook wrote:
+> On Tue, Dec 17, 2013 at 12:00 PM, Greg Kroah-Hartman
+> <gregkh@linuxfoundation.org> wrote:
+> > On Tue, Dec 17, 2013 at 10:27:33AM -0800, Kees Cook wrote:
+> >> This makes sure format strings cannot leak into the printk call via the
+> >> constructed buffer.
+> >>
+> >> Signed-off-by: Kees Cook <keescook@chromium.org>
+> >> ---
+> >>  drivers/scsi/esas2r/esas2r_log.c |    2 +-
+> >>  1 file changed, 1 insertion(+), 1 deletion(-)
+> >
+> > Why is this patch "To:" me?  I'm not the author of this driver, or the
+> > maintainer of it or the subsystem, and there's not much, if anything I
+> > can do with it...
+> 
+> I've resent this before, and since it lived in "drivers", I figured
+> you would be the next up the chain to take it (since it's been
+> ignored).
 
-It based on this patch:
-     http://www.spinics.net/lists/linux-scsi/msg69957.html
-sent to the list on 12 November titled:
-    [PATCH v3] sg: O_EXCL and other lock handling
+Heh, while I do seem to maintain a ton of the drivers/ tree, I don't
+take everything there.  This needs to go through James's tree, he can
+handle it :)
 
-and it was followed in the same day by:
-    [PATCH v3] sg: relax 16 byte cdb restriction
-which you commented on, hence "v4" that started this thread.
+thanks,
 
-
-The vagueness in the "O_EXCL" post about the reported failure
-in the vicinity of sg_remove() was cleared up a few days later
-by this post:
-     http://www.spinics.net/lists/linux-scsi/msg70006.html
-You might check if the fix to the st driver for this matter has
-made it into your tree or further.
-
-I'm told the "O_EXCL" patch has been tested by a major vendor
-with help from another frequent correspondent to this list.
-
-Doug Gilbert
-
-
+greg k-h
