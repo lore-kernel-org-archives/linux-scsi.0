@@ -1,102 +1,93 @@
 From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: [PATCH V2 05/20] qla2xxx: Remove init control block related dead code for ISPFX00.
-Date: Mon, 16 Dec 2013 22:28:28 -0500
-Message-ID: <1387250923-1041-6-git-send-email-saurav.kashyap@qlogic.com>
-References: <1387250923-1041-1-git-send-email-saurav.kashyap@qlogic.com>
+Subject: [PATCH V2 00/20] qla2xxx: Patches for 3.13 scsi "misc" branch.
+Date: Mon, 16 Dec 2013 22:28:23 -0500
+Message-ID: <1387250923-1041-1-git-send-email-saurav.kashyap@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:45153 "EHLO
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:46409 "EHLO
 	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752197Ab3LQECJ (ORCPT
+	by vger.kernel.org with ESMTP id S1752738Ab3LQECK (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 Dec 2013 23:02:09 -0500
-In-Reply-To: <1387250923-1041-1-git-send-email-saurav.kashyap@qlogic.com>
+	Mon, 16 Dec 2013 23:02:10 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
-Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
----
- drivers/scsi/qla2xxx/qla_def.h |   24 ------------------------
- drivers/scsi/qla2xxx/qla_mr.c  |   14 --------------
- drivers/scsi/qla2xxx/qla_os.c  |    1 -
- 3 files changed, 0 insertions(+), 39 deletions(-)
+Hi James,
 
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 02ad5d8..d7184f5 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -1197,30 +1197,6 @@ typedef struct {
- 	uint8_t  reserved_3[26];
- } init_cb_t;
- 
--
--struct init_cb_fx {
--	uint16_t	version;
--	uint16_t	reserved_1[13];
--	__le16		request_q_outpointer;
--	__le16		response_q_inpointer;
--	uint16_t	reserved_2[2];
--	__le16		response_q_length;
--	__le16		request_q_length;
--	uint16_t	reserved_3[2];
--	__le32		request_q_address[2];
--	__le32		response_q_address[2];
--	uint16_t	reserved_4[4];
--	uint8_t		response_q_msivec;
--	uint8_t		reserved_5[19];
--	uint16_t	interrupt_delay_timer;
--	uint16_t	reserved_6;
--	uint32_t	fwoptions1;
--	uint32_t	fwoptions2;
--	uint32_t	fwoptions3;
--	uint8_t		reserved_7[24];
--};
--
--
- /*
-  * Get Link Status mailbox command return buffer.
-  */
-diff --git a/drivers/scsi/qla2xxx/qla_mr.c b/drivers/scsi/qla2xxx/qla_mr.c
-index 7c7849d..4542247 100644
---- a/drivers/scsi/qla2xxx/qla_mr.c
-+++ b/drivers/scsi/qla2xxx/qla_mr.c
-@@ -631,20 +631,6 @@ qlafx00_config_rings(struct scsi_qla_host *vha)
- {
- 	struct qla_hw_data *ha = vha->hw;
- 	struct device_reg_fx00 __iomem *reg = &ha->iobase->ispfx00;
--	struct init_cb_fx *icb;
--	struct req_que *req = ha->req_q_map[0];
--	struct rsp_que *rsp = ha->rsp_q_map[0];
--
--	/* Setup ring parameters in initialization control block. */
--	icb = (struct init_cb_fx *)ha->init_cb;
--	icb->request_q_outpointer = __constant_cpu_to_le16(0);
--	icb->response_q_inpointer = __constant_cpu_to_le16(0);
--	icb->request_q_length = cpu_to_le16(req->length);
--	icb->response_q_length = cpu_to_le16(rsp->length);
--	icb->request_q_address[0] = cpu_to_le32(LSD(req->dma));
--	icb->request_q_address[1] = cpu_to_le32(MSD(req->dma));
--	icb->response_q_address[0] = cpu_to_le32(LSD(rsp->dma));
--	icb->response_q_address[1] = cpu_to_le32(MSD(rsp->dma));
- 
- 	WRT_REG_DWORD(&reg->req_q_in, 0);
- 	WRT_REG_DWORD(&reg->req_q_out, 0);
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 53edc4b..c698e10 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -2489,7 +2489,6 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 		ha->aen_mbx_count = AEN_MAILBOX_REGISTER_COUNT_FX00;
- 		req_length = REQUEST_ENTRY_CNT_FX00;
- 		rsp_length = RESPONSE_ENTRY_CNT_FX00;
--		ha->init_cb_size = sizeof(struct init_cb_fx);
- 		ha->isp_ops = &qlafx00_isp_ops;
- 		ha->port_down_retry_count = 30; /* default value */
- 		ha->mr.fw_hbt_cnt = QLAFX00_HEARTBEAT_INTERVAL;
+Please apply the following patches to the scsi tree, misc branch  at your
+earliest convenience.
+
+Thanks,
+~Saurav
+
+Armen Baloyan (4):
+  qla2xxx: Add handling for boot indication progress AENs for ISPFX00.
+  qla2xxx: Replace constant value for IOCTL IOCB abort execution status
+    with a macro for ISPFX00.
+  qla2xxx: Remove Marker type IOCB logic for ISPFX00.
+  qla2xxx: Add changes in the IOCB structures to adjust driver source
+    codes to ISPFX00 firmware spec.
+
+Atul Deshmukh (2):
+  qla2xxx: Use proper message for Non owner reset ACK Timeout.
+  qla2xxx: Remove ISP_ABORT_NEEDED and ISP_ABORT_RETRY checks from
+    watchdog function for ISP8044.
+
+Chad Dupuis (6):
+  qla2xxx: Add mutex around optrom calls to serialize accesses.
+  qla2xxx: Set host can_queue value based on available resources.
+  scsi_transport_fc: Add 32Gbps speed definition.
+  qla2xxx: Add support for ISP2071.
+  qla2xxx: Read capture firmware dump on mailbox timeout for ISP8044
+    and ISP82XX.
+  qla2xxx: Fix multiqueue MSI-X registration.
+
+Joe Carnuccio (1):
+  qla2xxx: Enable the Flash Access Control (FAC) mailbox command.
+
+Saurav Kashyap (7):
+  qla2xxx: Remove init control block related dead code for ISPFX00.
+  qla2xxx: Select correct request queue for error type IOCB for
+    ISPFX00.
+  qla2xxx: Properly handle 32 bit mailbox register for ISPFX00.
+  qla2xxx: Avoid poisoning in the response queue for ISPFX00.
+  qla2xxx: Simplify the ISPFX00 interrupt handler code for ISPFX00.
+  qla2xxx: Correctly set the read_optrom pointer for ISP8044.
+  qla2xxx: Update the driver version to 8.07.00.02-k.
+
+ drivers/scsi/qla2xxx/Makefile      |    2 +-
+ drivers/scsi/qla2xxx/qla_attr.c    |  193 +++++++-
+ drivers/scsi/qla2xxx/qla_bsg.c     |   12 +-
+ drivers/scsi/qla2xxx/qla_dbg.c     |  133 +++++-
+ drivers/scsi/qla2xxx/qla_dbg.h     |    7 +
+ drivers/scsi/qla2xxx/qla_def.h     |   65 ++--
+ drivers/scsi/qla2xxx/qla_dfs.c     |    3 +-
+ drivers/scsi/qla2xxx/qla_fw.h      |    4 +
+ drivers/scsi/qla2xxx/qla_gbl.h     |   10 +
+ drivers/scsi/qla2xxx/qla_gs.c      |   11 +
+ drivers/scsi/qla2xxx/qla_init.c    |  261 ++++++++++-
+ drivers/scsi/qla2xxx/qla_iocb.c    |   15 +-
+ drivers/scsi/qla2xxx/qla_isr.c     |   72 ++--
+ drivers/scsi/qla2xxx/qla_mbx.c     |   47 ++-
+ drivers/scsi/qla2xxx/qla_mid.c     |    4 +-
+ drivers/scsi/qla2xxx/qla_mr.c      |   98 ++---
+ drivers/scsi/qla2xxx/qla_mr.h      |   57 +--
+ drivers/scsi/qla2xxx/qla_nx.c      |   21 +-
+ drivers/scsi/qla2xxx/qla_nx2.c     |   22 +-
+ drivers/scsi/qla2xxx/qla_os.c      |  152 +++++--
+ drivers/scsi/qla2xxx/qla_sup.c     |   65 ++-
+ drivers/scsi/qla2xxx/qla_tmpl.c    |  909 ++++++++++++++++++++++++++++++++++++
+ drivers/scsi/qla2xxx/qla_tmpl.h    |  205 ++++++++
+ drivers/scsi/qla2xxx/qla_version.h |    4 +-
+ drivers/scsi/scsi_transport_fc.c   |    1 +
+ include/scsi/scsi_transport_fc.h   |    1 +
+ 26 files changed, 2040 insertions(+), 334 deletions(-)
+ create mode 100644 drivers/scsi/qla2xxx/qla_tmpl.c
+ create mode 100644 drivers/scsi/qla2xxx/qla_tmpl.h
+
 -- 
 1.7.7
 
