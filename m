@@ -1,39 +1,83 @@
-From: Alan <gnomes@lxorguk.ukuu.org.uk>
-Subject: [PATCH RESEND] scsi: Fix crash on out of memory with MAC SCSI
-Date: Tue, 17 Dec 2013 15:06:47 +0000
-Message-ID: <20131217150620.29475.79924.stgit@alan.etchedpixels.co.uk>
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Subject: Re: [PATCH 6/6] libata: return power status in REQUEST SENSE command
+Date: Tue, 17 Dec 2013 21:02:46 +0300
+Message-ID: <52B091C6.4050106@cogentembedded.com>
+References: <cover.1384030893.git.psusi@ubuntu.com> <1387236657-4852-1-git-send-email-psusi@ubuntu.com> <1387236657-4852-7-git-send-email-psusi@ubuntu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:44661 "EHLO
-	alan.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753733Ab3LQPHJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Dec 2013 10:07:09 -0500
+Received: from mail-la0-f52.google.com ([209.85.215.52]:54686 "EHLO
+	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753933Ab3LQRCn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Dec 2013 12:02:43 -0500
+Received: by mail-la0-f52.google.com with SMTP id y1so3264796lam.25
+        for <linux-scsi@vger.kernel.org>; Tue, 17 Dec 2013 09:02:42 -0800 (PST)
+In-Reply-To: <1387236657-4852-7-git-send-email-psusi@ubuntu.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jbottomley@parallels.com, linux-scsi@vger.kernel.org
+To: Phillip Susi <psusi@ubuntu.com>, todd.e.brandt@linux.intel.com
+Cc: tj@kernel.org, JBottomley@parallels.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-From: Alan <alan@gnomes@lxorguk.ukuu.org.uk>
+Hello.
 
-Missing check on scsi_register
+On 12/17/2013 02:30 AM, Phillip Susi wrote:
 
-Signed-off-by: Alan Cox <gnomes@lxorguk.ukuu.org.uk>
----
- drivers/scsi/mac_scsi.c |    2 ++
- 1 file changed, 2 insertions(+)
+> SAT-3 says REQUEST SENSE should issue CHECK POWER and return
+> a sense status indicating the drive's power status.
+> ---
+>   drivers/ata/libata-scsi.c | 40 ++++++++++++++++++++++++++++++++++------
+>   1 file changed, 34 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/mac_scsi.c b/drivers/scsi/mac_scsi.c
-index 8580757..f5cdc68 100644
---- a/drivers/scsi/mac_scsi.c
-+++ b/drivers/scsi/mac_scsi.c
-@@ -260,6 +260,8 @@ int __init macscsi_detect(struct scsi_host_template * tpnt)
-     /* Once we support multiple 5380s (e.g. DuoDock) we'll do
-        something different here */
-     instance = scsi_register (tpnt, sizeof(struct NCR5380_hostdata));
-+    if (instance == NULL)
-+	return 0;
- 
-     if (macintosh_config->ident == MAC_MODEL_IIFX) {
- 	mac_scsi_regp  = via1+0x8000;
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index f92eb21..8b17352 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -3313,6 +3313,38 @@ static unsigned int ata_scsi_mode_select_xlat(struct ata_queued_cmd *qc)
+>   	return 1;
+>   }
+>
+> +static void ata_scsi_request_sense_complete(struct ata_queued_cmd *qc)
+> +{
+> +	struct scsi_cmnd *cmd = qc->scsicmd;
+
+    Please insert empty line here, after declaration.
+
+> +	cmd->result = (DRIVER_SENSE << 24);
+
+    () not needed.
+
+> +	if (qc->result_tf.nsect == 0)
+> +		/* POWER STATE CHANGE TO STANDBY */
+> +	{
+
+    Wrong *if* style, should be "*if* () {" on the same line.
+
+> +		scsi_build_sense_buffer(0, cmd->sense_buffer, 0, 0x5E, 0x43);
+> +	}
+> +	else scsi_build_sense_buffer(0, cmd->sense_buffer, 0, 0, 0);
+
+    Wrong style again, scsi_build_sense_buffer() should be on its own line, 
+and {} must be used in both branches of *if* if used in one.
+
+> +	qc->scsidone(cmd);
+> +	ata_qc_free(qc);
+> +}
+> +
+> +/**
+> + *	ata_scsi_request_sense_xlat - Simulate REQUEST SENSE command
+> + *	@qc: Storage for translated ATA taskfile
+> + *
+> + *	Converts a REQUEST SENSE command to an ATA CHECK POWER MODE taskfile.
+> + *
+> + *	LOCKING:
+> + *	spin_lock_irqsave(host lock)
+> + */
+> +static unsigned int ata_scsi_request_sense_xlat(struct ata_queued_cmd *qc)
+> +{
+> +	qc->tf.command = ATA_CMD_CHK_POWER;
+
+    Isn't it an optional command, belonging to the power management feature set?
+
+WBR, Sergei
 
