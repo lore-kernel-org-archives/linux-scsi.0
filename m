@@ -1,81 +1,125 @@
-From: Rusty Russell <rusty@rustcorp.com.au>
-Subject: Re: [PATCH] virtio-scsi: Fix hotcpu_notifier use-after-free with
-	virtscsi_freeze
-Date: Tue, 17 Dec 2013 13:39:16 +1030
-Message-ID: <87zjo0maw3.fsf@rustcorp.com.au>
-References: <1382947263-22145-1-git-send-email-asias@redhat.com>
-	<52A95882.2020000@redhat.com>
+From: Saurav Kashyap <saurav.kashyap@qlogic.com>
+Subject: Re: [PATCH 16/20] qla2xxx: Simplyfy the ISPFX00 interrupt handler
+ code for ISPFX00.
+Date: Tue, 17 Dec 2013 04:01:05 +0000
+Message-ID: <F5D084D6342F9B479C34599BB0A03E4D8984CC8C@AVMB1.qlogic.org>
+References: <52AEA422.4020602@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-In-Reply-To: <52A95882.2020000@redhat.com>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: Jason Wang <jasowang@redhat.com>
-Cc: linux-scsi@vger.kernel.org, kvm@vger.kernel.org, virtualization@lists.linux-foundation.org, pbonzini@redhat.com, Asias He <asias@redhat.com>
+Content-Type: multipart/mixed;
+	boundary="_000_F5D084D6342F9B479C34599BB0A03E4D8984CC8CAVMB1qlogicorg_"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:36746 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751169Ab3LQEBK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 16 Dec 2013 23:01:10 -0500
+Received: from pps.filterd (m0000643.ppops.net [127.0.0.1])
+	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id rBH3sVRd017150
+	for <linux-scsi@vger.kernel.org>; Mon, 16 Dec 2013 20:01:09 -0800
+Received: from avcashub1.qlogic.com (avcashub3.qlogic.com [198.70.193.117])
+	by mx0b-0016ce01.pphosted.com with ESMTP id 1g98mta5bg-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Mon, 16 Dec 2013 20:01:08 -0800
+In-Reply-To: <52AEA422.4020602@acm.org>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>, James Bottomley <jbottomley@parallels.com>
+Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Jason Wang <jasowang@redhat.com> writes:
-> On 10/28/2013 04:01 PM, Asias He wrote:
->> vqs are freed in virtscsi_freeze but the hotcpu_notifier is not
->> unregistered. We will have a use-after-free usage when the notifier
->> callback is called after virtscsi_freeze.
->>
->> Signed-off-by: Asias He <asias@redhat.com>
+--_000_F5D084D6342F9B479C34599BB0A03E4D8984CC8CAVMB1qlogicorg_
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <C846DB9B4AAF0B4FAB1B2251967BD5A9@qlogic.com>
+Content-Transfer-Encoding: quoted-printable
 
-Please include a Fixes: line, especially if you want the CC: stable.
+Hi Bart,
+
+Thanks for the feedback, I will be submitting the updated patches soon.
 
 Thanks,
-Rusty.
+~Saurav
 
 
->> ---
->>  drivers/scsi/virtio_scsi.c | 15 ++++++++++++++-
->>  1 file changed, 14 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
->> index 74b88ef..b26f1a5 100644
->> --- a/drivers/scsi/virtio_scsi.c
->> +++ b/drivers/scsi/virtio_scsi.c
->> @@ -957,6 +957,10 @@ static void virtscsi_remove(struct virtio_device *vdev)
->>  #ifdef CONFIG_PM
->>  static int virtscsi_freeze(struct virtio_device *vdev)
->>  {
->> +	struct Scsi_Host *sh = virtio_scsi_host(vdev);
->> +	struct virtio_scsi *vscsi = shost_priv(sh);
->> +
->> +	unregister_hotcpu_notifier(&vscsi->nb);
->>  	virtscsi_remove_vqs(vdev);
->>  	return 0;
->>  }
->> @@ -965,8 +969,17 @@ static int virtscsi_restore(struct virtio_device *vdev)
->>  {
->>  	struct Scsi_Host *sh = virtio_scsi_host(vdev);
->>  	struct virtio_scsi *vscsi = shost_priv(sh);
->> +	int err;
->> +
->> +	err = virtscsi_init(vdev, vscsi);
->> +	if (err)
->> +		return err;
->> +
->> +	err = register_hotcpu_notifier(&vscsi->nb);
->> +	if (err)
->> +		vdev->config->del_vqs(vdev);
->>  
->> -	return virtscsi_init(vdev, vscsi);
->> +	return err;
->>  }
->>  #endif
->>  
+>On 12/13/13 21:03, Saurav Kashyap wrote:
+>> [ ... ]
 >
-> Ping. Rusty, could you please review and apply this patch?
+>Shouldn't the subject of this patch read "Simplify" instead of "Simplyfy"
+>?
 >
-> Thanks
+>Bart.
+>
+
+
+--_000_F5D084D6342F9B479C34599BB0A03E4D8984CC8CAVMB1qlogicorg_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
+
+eJ8+IokLAQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAAEFCRTQ1N0E0
+RDEwQjFDNEI4QTQ4NkM3MERFRTI1RTc5AF0HAQ2ABAACAAAAAgACAAEFgAMADgAAAN0HDAARAAQA
+AQAFAAIADQEBIIADAA4AAADdBwwAEQAEAAEABQACAA0BAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
+YWlsLk5vdGUAMQgBBIABAFQAAABSZTogW1BBVENIIDE2LzIwXSBxbGEyeHh4OiBTaW1wbHlmeSB0
+aGUgSVNQRlgwMCBpbnRlcnJ1cHQgaGFuZGxlciBjb2RlIGZvciBJU1BGWDAwLgDQGgEDkAYAZA0A
+ADIAAAACAX8AAQAAADwAAAA8RjVEMDg0RDYzNDJGOUI0NzlDMzQ1OTlCQjBBMDNFNEQ4OTg0Q0M4
+Q0BBVk1CMS5xbG9naWMub3JnPgALAB8OAQAAAAIBCRABAAAA0QEAAM0BAACrAgAATFpGdeQwSKph
+AApmYmlkBAAAY2PAcGcxMjUyAP4DQ/B0ZXh0AfcCpAPjAgAEY2gKwHNldDAg7wdtAoMAUBFNMgqA
+BrQCgJZ9CoAIyDsJYjE5DsC/CcMWcgoyFnECgBViKgmwcwnwBJBhdAWyDlADYHOibwGAIEV4EcFu
+GDBdBlJ2BJAXtgIQcgDAdH0IUG4aMRAgBcAFoBtkZJogA1IgECIXslx2CJDkd2sLgGQ1HVME8AdA
+DRdwMApxF/Jia21rBnMBkAAgIEJNX0LgRUdJTn0K/AHxC/EYIEhpH7AfgSxcbO0LgGUKgSI0VBmh
+H1AccCkFsXRoGeBmCeBkYkEA0GssIEkgA/BsBQMgYhngc3VibWmLAkALgGcjo3VwZBiAexxRCrB0
+EcAHkRkgAiAuNyIvIzEiFn4GEAhwYXYzJ3wndT5PA6AOkC8xAjMrUSAyMTowMwMkcClEIEthc2h5
+XGFwJKADYBAgOiqGPpAgWyAuLkAgXSqGCSqGU2gIYGxkbif3BUAjsiUxagWQBUAZMCOhKwQAJpQg
+CXBhHGAiU8cHcAtQBpB5IiALgB9gtzHiMPEyJHkykSqGPy6ePyHSJ2YvBid1FUI3oAAAAB8AQgAB
+AAAAHgAAAFMAYQB1AHIAYQB2ACAASwBhAHMAaAB5AGEAcAAAAAAAHwBlAAEAAAA0AAAAcwBhAHUA
+cgBhAHYALgBrAGEAcwBoAHkAYQBwAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AZAABAAAACgAA
+AFMATQBUAFAAAAAAAAIBQQABAAAAdAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgFMAYQB1AHIA
+YQB2ACAASwBhAHMAaAB5AGEAcAAAAFMATQBUAFAAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBh
+AHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwACXQEAAAA0AAAAcwBhAHUAcgBhAHYALgBrAGEA
+cwBoAHkAYQBwAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8A5V8BAAAAPAAAAHMAaQBwADoAcwBh
+AHUAcgBhAHYALgBrAGEAcwBoAHkAYQBwAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AGgwBAAAA
+HgAAAFMAYQB1AHIAYQB2ACAASwBhAHMAaAB5AGEAcAAAAAAAHwAfDAEAAAA0AAAAcwBhAHUAcgBh
+AHYALgBrAGEAcwBoAHkAYQBwAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AHgwBAAAACgAAAFMA
+TQBUAFAAAAAAAAIBGQwBAAAAdAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgFMAYQB1AHIAYQB2
+ACAASwBhAHMAaAB5AGEAcAAAAFMATQBUAFAAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAA
+QABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwABXQEAAAA0AAAAcwBhAHUAcgBhAHYALgBrAGEAcwBo
+AHkAYQBwAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8A+D8BAAAAHgAAAFMAYQB1AHIAYQB2ACAA
+SwBhAHMAaAB5AGEAcAAAAAAAHwAjQAEAAAA0AAAAcwBhAHUAcgBhAHYALgBrAGEAcwBoAHkAYQBw
+AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AIkABAAAACgAAAFMATQBUAFAAAAAAAAIB+T8BAAAA
+dAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgFMAYQB1AHIAYQB2ACAASwBhAHMAaAB5AGEAcAAA
+AFMATQBUAFAAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMA
+bwBtAAAAHwAJXQEAAAA0AAAAcwBhAHUAcgBhAHYALgBrAGEAcwBoAHkAYQBwAEAAcQBsAG8AZwBp
+AGMALgBjAG8AbQAAAAsAQDoBAAAAHwAaAAEAAAASAAAASQBQAE0ALgBOAG8AdABlAAAAAAADAPE/
+CQQAAAsAQDoBAAAAAwD9P+QEAAACAQswAQAAABAAAACr5Fek0QscS4pIbHDe4l55AwAXAAEAAABA
+ADkAgFaQm9z6zgFAAAgwZ5Pvm9z6zgELAACACCAGAAAAAADAAAAAAAAARgAAAAAUhQAAAQAAAB8A
+AICGAwIAAAAAAMAAAAAAAABGAQAAAB4AAABhAGMAYwBlAHAAdABsAGEAbgBnAHUAYQBnAGUAAAAA
+AAEAAAAMAAAAZQBuAC0AVQBTAAAACwAAgAggBgAAAAAAwAAAAAAAAEYAAAAABoUAAAAAAAAfADcA
+AQAAAKgAAABSAGUAOgAgAFsAUABBAFQAQwBIACAAMQA2AC8AMgAwAF0AIABxAGwAYQAyAHgAeAB4
+ADoAIABTAGkAbQBwAGwAeQBmAHkAIAB0AGgAZQAgAEkAUwBQAEYAWAAwADAAIABpAG4AdABlAHIA
+cgB1AHAAdAAgAGgAYQBuAGQAbABlAHIAIABjAG8AZABlACAAZgBvAHIAIABJAFMAUABGAFgAMAAw
+AC4AAAAfAD0AAQAAAAoAAABSAGUAOgAgAAAAAAADADYAAAAAAB8AQhABAAAANgAAADwANQAyAEEA
+RQBBADQAMgAyAC4ANAAwADIAMAA2ADAAMgBAAGEAYwBtAC4AbwByAGcAPgAAAAAAAgFxAAEAAAAg
+AAAAAQHO+EMJYrw70NDN6UWJDOPinnGeFZpW7YAAgADbMYAfAHAAAQAAAKAAAABbAFAAQQBUAEMA
+SAAgADEANgAvADIAMABdACAAcQBsAGEAMgB4AHgAeAA6ACAAUwBpAG0AcABsAHkAZgB5ACAAdABo
+AGUAIABJAFMAUABGAFgAMAAwACAAaQBuAHQAZQByAHIAdQBwAHQAIABoAGEAbgBkAGwAZQByACAA
+YwBvAGQAZQAgAGYAbwByACAASQBTAFAARgBYADAAMAAuAAAAHwA1EAEAAAB4AAAAPABGADUARAAw
+ADgANABEADYAMwA0ADIARgA5AEIANAA3ADkAQwAzADQANQA5ADkAQgBCADAAQQAwADMARQA0AEQA
+OAA5ADgANABDAEMAOABDAEAAQQBWAE0AQgAxAC4AcQBsAG8AZwBpAGMALgBvAHIAZwA+AAAAAwDe
+P59OAABAAAcwRm/om9z6zgEDACYAAAAAAAIBRwABAAAALgAAAGM9VVM7YT0gO3A9UUxvZ2ljO2w9
+QVZNQjEtMTMxMjE3MDQwMTA1Wi02MzY2MgAAAB8AFRABAAAAWAAAAEMAOAA0ADYARABCADkAQgA0
+AEEAQQBGADAAQgA0AEYAQQBCADEAQgAyADIANQAxADkANgA3AEIARAA1AEEAOQBAAHEAbABvAGcA
+aQBjAC4AYwBvAG0AAAACARQwAQAAAAwAAAAgAAAA5mR8HkgAAAAfAPo/AQAAAB4AAABTAGEAdQBy
+AGEAdgAgAEsAYQBzAGgAeQBhAHAAAAAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAABYAAAB1AHMA
+ZQByAC0AYQBnAGUAbgB0AAAAAAABAAAASAAAAE0AaQBjAHIAbwBzAG8AZgB0AC0ATQBhAGMATwB1
+AHQAbABvAG8AawAvADEANAAuADEAMAAuADAALgAxADEAMAAzADEAMAAAAB8AAIAfpOszqHouQr57
+eeGpjlSzAQAAADgAAABDAG8AbgB2AGUAcgBzAGEAdABpAG8AbgBJAG4AZABlAHgAVAByAGEAYwBr
+AGkAbgBnAEUAeAAAAAEAAAAIAQAASQBJAD0AMAAxADAAMQBDAEUARgBBAEQAQwA5AEMAOAA2ADMA
+RQAwADMAQgBDADEAQgBCAEQAMgBEADQAOQBBADgAQwBEADYARABCAEYAQgBEADYANAA1ADYAQgAy
+ADsAUwBCAE0ASQBEAD0AMgA4ADsAUwAxAD0APAA1ADIAQQBFAEEANAAyADIALgA0ADAAMgAwADYA
+MAAyAEAAYQBjAG0ALgBvAHIAZwA+ADsAVgBlAHIAcwBpAG8AbgA9AFYAZQByAHMAaQBvAG4AIAAx
+ADQALgAyACAAKABCAHUAaQBsAGQAIAAzADEAOAAuADAAKQAsACAAUwB0AGEAZwBlAD0ASAAyAAAA
+AwANNP0/AAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAgAAAAeAAtAG0AcwAtAGgAYQBzAC0AYQB0
+AHQAYQBjAGgAAAABAAAAAgAAAAAAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAiAAAAeAAtAG8A
+cgBpAGcAaQBuAGEAdABpAG4AZwAtAGkAcAAAAAAAAQAAABoAAABbADEAMAAuADgALgA2AC4AMQA0
+ADIAXQAAAAAAOVg=
+
+--_000_F5D084D6342F9B479C34599BB0A03E4D8984CC8CAVMB1qlogicorg_--
