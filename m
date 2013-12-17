@@ -1,31 +1,55 @@
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [RESEND][PATCH] scsi: esas2r: fix potential format string flaw
-Date: Tue, 17 Dec 2013 12:00:22 -0800
-Message-ID: <20131217200022.GD28274@kroah.com>
-References: <20131217182733.GA16202@www.outflux.net>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH 6/8] target_core_spc: Include target device descriptor
+ in VPD page 83
+Date: Tue, 17 Dec 2013 12:01:45 -0800
+Message-ID: <1387310505.20247.309.camel@haakon3.risingtidesystems.com>
+References: <1387268330-121064-1-git-send-email-hare@suse.de>
+	 <1387268330-121064-7-git-send-email-hare@suse.de>
+	 <1387309849.20247.306.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20131217182733.GA16202@www.outflux.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Kees Cook <keescook@chromium.org>
-Cc: linux-kernel@vger.kernel.org, Bradley Grove <linuxdrivers@attotech.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1387309849.20247.306.camel@haakon3.risingtidesystems.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Nic Bellinger <nab@daterainc.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Dec 17, 2013 at 10:27:33AM -0800, Kees Cook wrote:
-> This makes sure format strings cannot leak into the printk call via the
-> constructed buffer.
+On Tue, 2013-12-17 at 11:50 -0800, Nicholas A. Bellinger wrote:
+> On Tue, 2013-12-17 at 09:18 +0100, Hannes Reinecke wrote:
+> > We should be including a descriptor referring to the target device
+> > to allow identification of different TCM instances.
+> > 
+> > Signed-off-by: Hannes Reinecke <hare@suse.de>
+> > ---
+> >  drivers/target/target_core_spc.c | 43 +++++++++++++++++++++++++++++++++++++++-
+> >  1 file changed, 42 insertions(+), 1 deletion(-)
+> > 
 > 
-> Signed-off-by: Kees Cook <keescook@chromium.org>
-> ---
->  drivers/scsi/esas2r/esas2r_log.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> One issue with this patch.  The local buffer in spc_emulate_inquiry is
+> currently hardcoded to SE_INQUIRY_BUF=512, so two large scsi name
+> designators could overflow here..
+> 
+> So for the largest case with EVPD=0x83, this would be:
+> 
+> 4 bytes for header +
+> 20 bytes for NAA IEEE Registered Extended Assigned designator +
+> 56 bytes for T10 Vendor Identifier +
+> 8 bytes for Relative target port +
+> 8 bytes for Target port group +
+> 8 bytes for Logical unit group +
+> 256 bytes for SCSI name (target port) +
+> 256 bytes for SCSI name (target device) == 616 bytes.
+> 
+> So for good measure, bumping up SE_INQUIRY_BUF to 1024.
+> 
 
-Why is this patch "To:" me?  I'm not the author of this driver, or the
-maintainer of it or the subsystem, and there's not much, if anything I
-can do with it...
+Mmmm, looking at this again, is reporting back two SCSI names in
+EVPD=0x83 with different associations (one for target port, and one for
+target device) really necessary..?
 
-confused,
+Doesn't the existing target port association report back the same
+information..?
 
-greg k-h
+--nab
