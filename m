@@ -1,83 +1,53 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH 6/6] libata: return power status in REQUEST SENSE command
-Date: Tue, 17 Dec 2013 21:02:46 +0300
-Message-ID: <52B091C6.4050106@cogentembedded.com>
-References: <cover.1384030893.git.psusi@ubuntu.com> <1387236657-4852-1-git-send-email-psusi@ubuntu.com> <1387236657-4852-7-git-send-email-psusi@ubuntu.com>
+From: Andy Grover <agrover@redhat.com>
+Subject: Re: [PATCH 0/32] Refcounts and rbtrees to increase luns above 255
+Date: Tue, 17 Dec 2013 09:10:32 -0800
+Message-ID: <52B08588.6080102@redhat.com>
+References: <1386979160-6928-1-git-send-email-agrover@redhat.com> <1387231426.20247.260.camel@haakon3.risingtidesystems.com> <52B02D13.9000207@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-la0-f52.google.com ([209.85.215.52]:54686 "EHLO
-	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753933Ab3LQRCn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Dec 2013 12:02:43 -0500
-Received: by mail-la0-f52.google.com with SMTP id y1so3264796lam.25
-        for <linux-scsi@vger.kernel.org>; Tue, 17 Dec 2013 09:02:42 -0800 (PST)
-In-Reply-To: <1387236657-4852-7-git-send-email-psusi@ubuntu.com>
+Received: from mx1.redhat.com ([209.132.183.28]:51646 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751279Ab3LQRKg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 Dec 2013 12:10:36 -0500
+In-Reply-To: <52B02D13.9000207@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Phillip Susi <psusi@ubuntu.com>, todd.e.brandt@linux.intel.com
-Cc: tj@kernel.org, JBottomley@parallels.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Hello.
+On 12/17/2013 02:53 AM, Hannes Reinecke wrote:
 
-On 12/17/2013 02:30 AM, Phillip Susi wrote:
-
-> SAT-3 says REQUEST SENSE should issue CHECK POWER and return
-> a sense status indicating the drive's power status.
-> ---
->   drivers/ata/libata-scsi.c | 40 ++++++++++++++++++++++++++++++++++------
->   1 file changed, 34 insertions(+), 6 deletions(-)
-
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index f92eb21..8b17352 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -3313,6 +3313,38 @@ static unsigned int ata_scsi_mode_select_xlat(struct ata_queued_cmd *qc)
->   	return 1;
->   }
+> But the LUN addressing improvements is interesting.
 >
-> +static void ata_scsi_request_sense_complete(struct ata_queued_cmd *qc)
-> +{
-> +	struct scsi_cmnd *cmd = qc->scsicmd;
+> What I found during development of the 64bit LUN patchset is
+> that the target core stuff has a very rudimentary LUN handling:
+> - 256 LUNs only
+> - LUNs are kept in a static array
+> - Identity mapping between LUN numbers and array indices.
+>
+> What I _really_ would like to have is to do away with the
+> LUN array, and introduce a dynamic LUN mapping.
+> This will allow us to easily implement different LUN enumeration
+> methods (Think of hierarchical LUNs ...).
+>
+> Also the assumption that a static array is always faster for
+> lookup than a linked list is wrong.
+> A static array is faster if the entire array fits into the processor
+> cache. If it doesn't we basically have an immediate
+> cache miss _for every array access_.
+> Then linked lists etc really are faster.
+>
+> So do not take things at face value; only real measurements
+> count here.
 
-    Please insert empty line here, after declaration.
+Yeah, seems true. So do either of you have any tips for how best to do 
+measurements?
 
-> +	cmd->result = (DRIVER_SENSE << 24);
+BTW I was looking a little more and am now inclined to think a radix 
+tree is more suitable than rbtree. It seems ideally suited for our case: 
+want to lookup by an index (i.e. LUN) that is usually a small integer, 
+very fast lookups, yet also can grow and still be space-efficient.
 
-    () not needed.
-
-> +	if (qc->result_tf.nsect == 0)
-> +		/* POWER STATE CHANGE TO STANDBY */
-> +	{
-
-    Wrong *if* style, should be "*if* () {" on the same line.
-
-> +		scsi_build_sense_buffer(0, cmd->sense_buffer, 0, 0x5E, 0x43);
-> +	}
-> +	else scsi_build_sense_buffer(0, cmd->sense_buffer, 0, 0, 0);
-
-    Wrong style again, scsi_build_sense_buffer() should be on its own line, 
-and {} must be used in both branches of *if* if used in one.
-
-> +	qc->scsidone(cmd);
-> +	ata_qc_free(qc);
-> +}
-> +
-> +/**
-> + *	ata_scsi_request_sense_xlat - Simulate REQUEST SENSE command
-> + *	@qc: Storage for translated ATA taskfile
-> + *
-> + *	Converts a REQUEST SENSE command to an ATA CHECK POWER MODE taskfile.
-> + *
-> + *	LOCKING:
-> + *	spin_lock_irqsave(host lock)
-> + */
-> +static unsigned int ata_scsi_request_sense_xlat(struct ata_queued_cmd *qc)
-> +{
-> +	qc->tf.command = ATA_CMD_CHK_POWER;
-
-    Isn't it an optional command, belonging to the power management feature set?
-
-WBR, Sergei
-
+Regards -- Andy
