@@ -1,113 +1,100 @@
 From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: [PATCH V2 19/20] qla2xxx: Fix multiqueue MSI-X registration.
-Date: Mon, 16 Dec 2013 22:28:42 -0500
-Message-ID: <1387250923-1041-20-git-send-email-saurav.kashyap@qlogic.com>
+Subject: [PATCH V2 16/20] qla2xxx: Simplify the ISPFX00 interrupt handler code for ISPFX00.
+Date: Mon, 16 Dec 2013 22:28:39 -0500
+Message-ID: <1387250923-1041-17-git-send-email-saurav.kashyap@qlogic.com>
 References: <1387250923-1041-1-git-send-email-saurav.kashyap@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:11280 "EHLO
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:56496 "EHLO
 	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752666Ab3LQEBi (ORCPT
+	by vger.kernel.org with ESMTP id S1752312Ab3LQEBh (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 Dec 2013 23:01:38 -0500
+	Mon, 16 Dec 2013 23:01:37 -0500
 In-Reply-To: <1387250923-1041-1-git-send-email-saurav.kashyap@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Chad Dupuis <chad.dupuis@qlogic.com>
-
-This fixes requesting of the MSI-X vectors for the base response queue.
-The iteration in the for loop in qla24xx_enable_msix() was incorrect.
-We should only iterate of the first two MSI-X vectors and not the total
-number of MSI-X vectors that have given to the driver for this device
-from pci_enable_msix() in this function.
-
-Cc: <stable@vger.kernel.org>
-Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
+Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
 Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_isr.c |   46 ++++++++++++++++++++++++++--------------
- 1 files changed, 30 insertions(+), 16 deletions(-)
+ drivers/scsi/qla2xxx/qla_mr.c |   25 +++++++++----------------
+ drivers/scsi/qla2xxx/qla_mr.h |    4 ----
+ 2 files changed, 9 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index da5f466..c2aaf6a 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -2882,6 +2882,7 @@ static int
- qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
- {
- #define MIN_MSIX_COUNT	2
-+#define ATIO_VECTOR	2
- 	int i, ret;
- 	struct msix_entry *entries;
- 	struct qla_msix_entry *qentry;
-@@ -2938,34 +2939,47 @@ msix_failed:
- 	}
+diff --git a/drivers/scsi/qla2xxx/qla_mr.c b/drivers/scsi/qla2xxx/qla_mr.c
+index 290322f..046a169 100644
+--- a/drivers/scsi/qla2xxx/qla_mr.c
++++ b/drivers/scsi/qla2xxx/qla_mr.c
+@@ -3014,6 +3014,7 @@ qlafx00_intr_handler(int irq, void *dev_id)
+ 	struct rsp_que *rsp;
+ 	unsigned long	flags;
+ 	uint32_t clr_intr = 0;
++	uint32_t intr_stat = 0;
  
- 	/* Enable MSI-X vectors for the base queue */
--	for (i = 0; i < ha->msix_count; i++) {
-+	for (i = 0; i < 2; i++) {
- 		qentry = &ha->msix_entries[i];
--		if (QLA_TGT_MODE_ENABLED() && IS_ATIO_MSIX_CAPABLE(ha)) {
--			ret = request_irq(qentry->vector,
--				qla83xx_msix_entries[i].handler,
--				0, qla83xx_msix_entries[i].name, rsp);
--		} else if (IS_P3P_TYPE(ha)) {
-+		if (IS_P3P_TYPE(ha))
- 			ret = request_irq(qentry->vector,
- 				qla82xx_msix_entries[i].handler,
- 				0, qla82xx_msix_entries[i].name, rsp);
--		} else {
-+		else
- 			ret = request_irq(qentry->vector,
- 				msix_entries[i].handler,
- 				0, msix_entries[i].name, rsp);
--		}
--		if (ret) {
--			ql_log(ql_log_fatal, vha, 0x00cb,
--			    "MSI-X: unable to register handler -- %x/%d.\n",
--			    qentry->vector, ret);
--			qla24xx_disable_msix(ha);
--			ha->mqenable = 0;
--			goto msix_out;
--		}
-+		if (ret)
-+			goto msix_register_fail;
- 		qentry->have_irq = 1;
- 		qentry->rsp = rsp;
- 		rsp->msix = qentry;
- 	}
+ 	rsp = (struct rsp_que *) dev_id;
+ 	if (!rsp) {
+@@ -3035,34 +3036,26 @@ qlafx00_intr_handler(int irq, void *dev_id)
+ 		stat = QLAFX00_RD_INTR_REG(ha);
+ 		if (qla2x00_check_reg_for_disconnect(vha, stat))
+ 			break;
+-		if ((stat & QLAFX00_HST_INT_STS_BITS) == 0)
++		intr_stat = stat & QLAFX00_HST_INT_STS_BITS;
++		if (!intr_stat)
+ 			break;
  
-+	/*
-+	 * If target mode is enable, also request the vector for the ATIO
-+	 * queue.
-+	 */
-+	if (QLA_TGT_MODE_ENABLED() && IS_ATIO_MSIX_CAPABLE(ha)) {
-+		qentry = &ha->msix_entries[ATIO_VECTOR];
-+		ret = request_irq(qentry->vector,
-+			qla83xx_msix_entries[ATIO_VECTOR].handler,
-+			0, qla83xx_msix_entries[ATIO_VECTOR].name, rsp);
-+		qentry->have_irq = 1;
-+		qentry->rsp = rsp;
-+		rsp->msix = qentry;
-+	}
+-		switch (stat & QLAFX00_HST_INT_STS_BITS) {
+-		case QLAFX00_INTR_MB_CMPLT:
+-		case QLAFX00_INTR_MB_RSP_CMPLT:
+-		case QLAFX00_INTR_MB_ASYNC_CMPLT:
+-		case QLAFX00_INTR_ALL_CMPLT:
++		if (stat & QLAFX00_INTR_MB_CMPLT) {
+ 			mb[0] = RD_REG_WORD(&reg->mailbox16);
+ 			qlafx00_mbx_completion(vha, mb[0]);
+ 			status |= MBX_INTERRUPT;
+ 			clr_intr |= QLAFX00_INTR_MB_CMPLT;
+-			break;
+-		case QLAFX00_INTR_ASYNC_CMPLT:
+-		case QLAFX00_INTR_RSP_ASYNC_CMPLT:
++		}
++		if (intr_stat & QLAFX00_INTR_ASYNC_CMPLT) {
+ 			ha->aenmb[0] = RD_REG_WORD(&reg->aenmailbox0);
+ 			qlafx00_async_event(vha);
+ 			clr_intr |= QLAFX00_INTR_ASYNC_CMPLT;
+-			break;
+-		case QLAFX00_INTR_RSP_CMPLT:
++		}
++		if (intr_stat & QLAFX00_INTR_RSP_CMPLT) {
+ 			qlafx00_process_response_queue(vha, rsp);
+ 			clr_intr |= QLAFX00_INTR_RSP_CMPLT;
+-			break;
+-		default:
+-			ql_dbg(ql_dbg_async, vha, 0x507a,
+-			    "Unrecognized interrupt type (%d).\n", stat);
+-			break;
+ 		}
 +
-+msix_register_fail:
-+	if (ret) {
-+		ql_log(ql_log_fatal, vha, 0x00cb,
-+		    "MSI-X: unable to register handler -- %x/%d.\n",
-+		    qentry->vector, ret);
-+		qla24xx_disable_msix(ha);
-+		ha->mqenable = 0;
-+		goto msix_out;
-+	}
-+
- 	/* Enable MSI-X vector for response queue update for queue 0 */
- 	if (IS_QLA83XX(ha) || IS_QLA27XX(ha)) {
- 		if (ha->msixbase && ha->mqiobase &&
+ 		QLAFX00_CLR_INTR_REG(ha, clr_intr);
+ 		QLAFX00_RD_INTR_REG(ha);
+ 	}
+diff --git a/drivers/scsi/qla2xxx/qla_mr.h b/drivers/scsi/qla2xxx/qla_mr.h
+index 3cf5ddc..e529dfa 100644
+--- a/drivers/scsi/qla2xxx/qla_mr.h
++++ b/drivers/scsi/qla2xxx/qla_mr.h
+@@ -336,11 +336,7 @@ struct config_info_data {
+ 
+ #define QLAFX00_INTR_MB_CMPLT		0x1
+ #define QLAFX00_INTR_RSP_CMPLT		0x2
+-#define QLAFX00_INTR_MB_RSP_CMPLT	0x3
+ #define QLAFX00_INTR_ASYNC_CMPLT	0x4
+-#define QLAFX00_INTR_MB_ASYNC_CMPLT	0x5
+-#define QLAFX00_INTR_RSP_ASYNC_CMPLT	0x6
+-#define QLAFX00_INTR_ALL_CMPLT		0x7
+ 
+ #define QLAFX00_MBA_SYSTEM_ERR		0x8002
+ #define QLAFX00_MBA_TEMP_OVER		0x8005
 -- 
 1.7.7
 
