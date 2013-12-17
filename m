@@ -1,94 +1,51 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [RFC 1/2] fix our current target reap infrastructure.
-Date: Tue, 17 Dec 2013 05:38:57 -0800
-Message-ID: <1387287537.2213.2.camel@dabdike.int.hansenpartnership.com>
-References: <Pine.LNX.4.44L0.1312161050390.1266-100000@iolanthe.rowland.org>
+From: Phillip Susi <psusi@ubuntu.com>
+Subject: Re: [PATCH/RESEND v2 0/2] SATA disk resume time optimization
+Date: Tue, 17 Dec 2013 09:24:54 -0500
+Message-ID: <52B05EB6.5070905@ubuntu.com>
+References: <20131017193331.GA11747@linux.intel.com> <527AF287.7020700@ubuntu.com> <20131109012023.GA8978@linux.intel.com> <527EA218.6010604@ubuntu.com> <20131111165920.GA25366@linux.intel.com> <52810F21.9070605@ubuntu.com> <20131217121527.GB29989@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:37320 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753389Ab3LQNjA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Dec 2013 08:39:00 -0500
-In-Reply-To: <Pine.LNX.4.44L0.1312161050390.1266-100000@iolanthe.rowland.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20131217121527.GB29989@htj.dyndns.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: todd.e.brandt@linux.intel.com, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, JBottomley@parallels.com
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, USB list <linux-usb@vger.kernel.org>
 
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-On Mon, 2013-12-16 at 10:57 -0500, Alan Stern wrote:
-> On Mon, 16 Dec 2013, James Bottomley wrote:
+On 12/17/2013 7:15 AM, Tejun Heo wrote:
+> On Mon, Nov 11, 2013 at 12:08:49PM -0500, Phillip Susi wrote:
+>> No, I did not tune my system; I fixed the kernel so that
+>> userspace's activities do not start those disks.
 > 
-> > This patch eliminates the reap_ref and replaces it with a proper kref.
-> > On last put of this kref, the target is removed from visibility in
-> > sysfs.  The final call to scsi_target_reap() for the device is done from
-> > __scsi_remove_device() and only if the device was made visible.  This
-> > ensures that the target disappears as soon as the last device is gone
-> > rather than waiting until final release of the device (which is often
-> > too long).
-> 
-> Reviewed-by: Alan Stern <stern@rowland.harvard.edu>
-> 
-> Two small suggested changes:
-> 
-> > @@ -441,29 +466,32 @@ static struct scsi_target *scsi_alloc_target(struct device *parent,
-> >  	return starget;
-> >  
-> >   found:
-> > -	found_target->reap_ref++;
-> > +	if (!kref_get_unless_zero(&found_target->reap_ref))
-> > +		/*
-> > +		 * release routine already fired.  Target is dead, but
-> > +		 * STARGET_DEL may not yet be set (set in the release
-> > +		 * routine), so set here as well, just in case
-> > +		 */
-> > +		found_target->state = STARGET_DEL;
-> >  	spin_unlock_irqrestore(shost->host_lock, flags);
-> >  	if (found_target->state != STARGET_DEL) {
-> >  		put_device(dev);
-> >  		return found_target;
-> >  	}
-> > -	/* Unfortunately, we found a dying target; need to
-> > -	 * wait until it's dead before we can get a new one */
-> > +	/*
-> > +	 * Unfortunately, we found a dying target; need to wait until it's
-> > +	 * dead before we can get a new one.  There is an anomaly here.  We
-> > +	 * *should* call scsi_target_reap() to balance the kref_get() of the
-> > +	 * reap_ref above.  However, since the target is in state STARGET_DEL,
-> > +	 * it's already invisible and the reap_ref is irrelevant.  If we call
-> > +	 * scsi_target_reap() we might spuriously do another device_del() on
-> > +	 * an already invisible target.
-> > +	 */
-> >  	put_device(&found_target->dev);
-> >  	flush_scheduled_work();
-> >  	goto retry;
-> 
-> Since scsi_target_reap_usercontext() is now gone, scsi_target_destroy()
-> doesn't rely on a work queue any more.  Therefore something like
-> msleep(1) would be more appropriate than flush_scheduled_work().
+> So, umm, implementing things in kernel to facilitate userland is
+> great but please don't try to work around userland from kernel.  It
+> may be easy now but inevitably becomes a maintenance burden where
+> we don't have much visibility into what userland is depending on.
+> If a certain feature needs cooperation from userland, update
+> userland accordingly.
 
-I suppose so.  In theory with the removal of the work queue, going from
-final release to list del should be deterministic, so we should run into
-this less.  I quite like the flush_scheduled_work, because it pushes out
-all the pending work for devices on other targets (so accelerates host
-remove).  However, I suppose it does now look wrong in this context.
-
-> > --- a/include/scsi/scsi_device.h
-> > +++ b/include/scsi/scsi_device.h
-> > @@ -257,7 +257,7 @@ struct scsi_target {
-> >  	struct list_head	siblings;
-> >  	struct list_head	devices;
-> >  	struct device		dev;
-> > -	unsigned int		reap_ref; /* protected by the host lock */
-> > +	struct kref		reap_ref; /* last put renders device invisible */
-> 
-> s/device/target/
-
-Will update, thanks.
-
-James
+udisks already cooperates by checking the power status before issuing
+more commands that would cause the drive to spin up.  I suppose I
+could have added a sysfs flag exposing the sleep state and had
+userspace check that first, but it seems silly to add a whole new ABI
+and to check the power state rather than simply fixing the existing
+command to not wake the disk in order to tell userspace what we
+already know using a code path we already have.
 
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.17 (MingW32)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iQEcBAEBAgAGBQJSsF61AAoJEI5FoCIzSKrwMvEH/3IOti/mKMvwm6b0ie3+knMT
+QLDPuq7K/7qkbHPuSD/Bm2OwJR69SRFYSUYLpLL/u8r1JAgRKJJx1YywFgpmRJm9
+43bE+R3uXhpYxSy5zf0s8T1VbNalWWVZKjfrrXjJic+H37y0E/lZcUtq8fSPnNu9
+xNXLZ2/dkmWbAw+zu2Zszao3zPeYtP3bqhYa6HFZYDKxFEl4IPg9uKnQ9rAq7D/Y
+/WtqOlckSqWdPSLKbQh3nbEd9dvdIqEx2wuqK8jthoHR0+HFoAGRqRHY6PKLKal5
+bnxl7T8Wr6dRlb13vZZy6TwHU6HRxK6w9vCmRhSg04hHvtA8q2DmDM5Go+4PZEg=
+=w2m9
+-----END PGP SIGNATURE-----
