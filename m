@@ -1,61 +1,72 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 0/32] Refcounts and rbtrees to increase luns above 255
-Date: Tue, 17 Dec 2013 13:25:06 -0800
-Message-ID: <1387315506.20247.320.camel@haakon3.risingtidesystems.com>
-References: <1386979160-6928-1-git-send-email-agrover@redhat.com>
-	 <1387231426.20247.260.camel@haakon3.risingtidesystems.com>
-	 <52B02D13.9000207@suse.de> <52B08588.6080102@redhat.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH v4] sg: relax 16 byte cdb restriction
+Date: Tue, 17 Dec 2013 16:53:25 -0500
+Message-ID: <52B0C7D5.8060808@interlog.com>
+References: <529B6044.9010809@interlog.com> <1387311664.2213.73.camel@dabdike.int.hansenpartnership.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <52B08588.6080102@redhat.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Andy Grover <agrover@redhat.com>
-Cc: Hannes Reinecke <hare@suse.de>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.infotech.no ([82.134.31.41]:46853 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753028Ab3LQVxa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 Dec 2013 16:53:30 -0500
+In-Reply-To: <1387311664.2213.73.camel@dabdike.int.hansenpartnership.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-On Tue, 2013-12-17 at 09:10 -0800, Andy Grover wrote:
-> On 12/17/2013 02:53 AM, Hannes Reinecke wrote:
-> 
-> > But the LUN addressing improvements is interesting.
-> >
-> > What I found during development of the 64bit LUN patchset is
-> > that the target core stuff has a very rudimentary LUN handling:
-> > - 256 LUNs only
-> > - LUNs are kept in a static array
-> > - Identity mapping between LUN numbers and array indices.
-> >
-> > What I _really_ would like to have is to do away with the
-> > LUN array, and introduce a dynamic LUN mapping.
-> > This will allow us to easily implement different LUN enumeration
-> > methods (Think of hierarchical LUNs ...).
-> >
-> > Also the assumption that a static array is always faster for
-> > lookup than a linked list is wrong.
-> > A static array is faster if the entire array fits into the processor
-> > cache. If it doesn't we basically have an immediate
-> > cache miss _for every array access_.
-> > Then linked lists etc really are faster.
-> >
-> > So do not take things at face value; only real measurements
-> > count here.
-> 
-> Yeah, seems true. So do either of you have any tips for how best to do 
-> measurements?
-> 
+On 13-12-17 03:21 PM, James Bottomley wrote:
+> On Sun, 2013-12-01 at 17:13 +0100, Douglas Gilbert wrote:
+>> ChangeLog:
+>>           - remove the 16 byte CDB (SCSI command) length limit
+>>             from the sg driver by handling longer CDBs the same
+>>             way as the bsg driver. Remove comment from sg.h
+>>             public interface about the cmd_len field being
+>>             limited to 16 bytes.
+>>           - remove some dead code caused by this change
+>>           - cleanup comment block at the top of sg.h, fix urls
+>>
+>> Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+>
+> This doesn't apply:
+>
+> patching file drivers/scsi/sg.c
+> Hunk #1 succeeded at 74 (offset 1 line).
+> Hunk #2 succeeded at 164 (offset 2 lines).
+> Hunk #3 succeeded at 569 (offset -5 lines).
+> Hunk #4 FAILED at 606.
+> Hunk #5 succeeded at 678 (offset -6 lines).
+> Hunk #6 FAILED at 1660.
+> Hunk #7 succeeded at 1742 (offset -11 lines).
+> 2 out of 7 hunks FAILED -- saving rejects to file drivers/scsi/sg.c.rej
+>
+> It looks like there's a missing intermediate patch changing the way
+> logging is done within the driver ... I don't recall seeing such a patch
+> on the list.
 
-perf mem -t all record -a sleep 20
+It based on this patch:
+     http://www.spinics.net/lists/linux-scsi/msg69957.html
+sent to the list on 12 November titled:
+    [PATCH v3] sg: O_EXCL and other lock handling
 
-perf mem report --sort=mem,sym,dso,symbol_daddr,dso_daddr,tlb,locked
+and it was followed in the same day by:
+    [PATCH v3] sg: relax 16 byte cdb restriction
+which you commented on, hence "v4" that started this thread.
 
-> BTW I was looking a little more and am now inclined to think a radix 
-> tree is more suitable than rbtree. It seems ideally suited for our case: 
-> want to lookup by an index (i.e. LUN) that is usually a small integer, 
-> very fast lookups, yet also can grow and still be space-efficient.
-> 
 
-My understanding is that radix trees would involve less memory accesses
-vs. rbtrees, and less misses when cache is cold.
+The vagueness in the "O_EXCL" post about the reported failure
+in the vicinity of sg_remove() was cleared up a few days later
+by this post:
+     http://www.spinics.net/lists/linux-scsi/msg70006.html
+You might check if the fix to the st driver for this matter has
+made it into your tree or further.
 
---nab
+I'm told the "O_EXCL" patch has been tested by a major vendor
+with help from another frequent correspondent to this list.
+
+Doug Gilbert
+
+
