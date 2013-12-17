@@ -1,48 +1,55 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 0/8] qla4xxx: 5.04.00-k3: Updates for scsi "misc" branch
-Date: Tue, 17 Dec 2013 01:23:46 -0600
-Message-ID: <52AFFC02.4030709@cs.wisc.edu>
-References: <1385116104-19784-1-git-send-email-vikas.chaudhary@qlogic.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:53898 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750972Ab3LQHYp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Dec 2013 02:24:45 -0500
-In-Reply-To: <1385116104-19784-1-git-send-email-vikas.chaudhary@qlogic.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCHv3 0/8] Referrals support
+Date: Tue, 17 Dec 2013 09:18:42 +0100
+Message-ID: <1387268330-121064-1-git-send-email-hare@suse.de>
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: Nic Bellinger <nab@daterainc.com>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: vikas.chaudhary@qlogic.com
-Cc: jbottomley@parallels.com, linux-scsi@vger.kernel.org, lalit.chandivade@qlogic.com
 
-On 11/22/13 4:28 AM, vikas.chaudhary@qlogic.com wrote:
-> From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
->
-> James,
->
-> Please apply the following patches to the scsi tree at your earliest convenience.
->
-> These patches are on top of other qla4xxx patch posted on list here:
-> http://marc.info/?l=linux-scsi&m=138210321629250&w=2
->
-> Adheer Chandravanshi (4):
->        scsi_transport_iscsi: Export ISCSI_PARAM_LOCAL_IPADDR attr for iscsi_connection
->        libiscsi: Add local_ipaddr parameter in iscsi_conn struct
->        qla4xxx: Add support for ISCSI_PARAM_LOCAL_IPADDR sysfs attr
->        qla4xxx: Recreate chap data list during get chap operation
->
-> Lalit Chandivade (2):
->        scsi_transport_iscsi: Add host statistics support
->        qla4xxx: Add host statistics support
->
-> Vikas Chaudhary (2):
->        qla4xxx: Added support for Diagnostics MBOX command
->        qla4xxx: Update driver version to 5.04.00-k3
->
+Hi Nic,
 
-Patches look ok.
+as discussed here is now the third version of the referrals
+infrastructure. All the configfs layout changes have been
+removed as requested.
 
-Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
+Main features of this patchset:
 
+- Asynchronous transitioning: I've switched 'transitioning'
+  handling to use a workqueue, that should allow us to simulate
+  asynchronous transitioning modes. IE TCM should now be capable
+  of handling requests while in transitioning, and properly terminate
+  these with the correct sense code.
+- Include target device descriptor in VPD page 83
+  For the ALUA device handler we'd need to identify the target device
+  where a given target port belongs to. So include the respective
+  values in the VPD page.
+- Referrals support: Adding a new configfs attribute 'lba_map'
+  which contains the referrals access mapping. The 'LBD Dependent'
+  ALUA state can only be selected if an lba_map is present; also
+  explicit ALUA has to be disabled.
+
+Hannes Reinecke (8):
+  target_core_alua: validate ALUA state transition
+  target_core_alua: Allocate ALUA metadata on demand
+  target_core_alua: store old and pending ALUA state
+  target_core_alua: Use workqueue for ALUA transitioning
+  target_core: simplify scsi_name_len calculation
+  target_core_spc: Include target device descriptor in VPD page 83
+  target_core_alua: Referrals infrastructure
+  target_core_alua: Referrals configfs integration
+
+ drivers/target/target_core_alua.c      | 546 +++++++++++++++++++++++++++------
+ drivers/target/target_core_alua.h      |  15 +-
+ drivers/target/target_core_configfs.c  | 180 ++++++++++-
+ drivers/target/target_core_device.c    |   3 +
+ drivers/target/target_core_sbc.c       |   5 +-
+ drivers/target/target_core_spc.c       |  76 ++++-
+ drivers/target/target_core_transport.c |  28 +-
+ include/scsi/scsi.h                    |   1 +
+ include/target/target_core_base.h      |  27 +-
+ 9 files changed, 770 insertions(+), 111 deletions(-)
+
+-- 
+1.7.12.4
