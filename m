@@ -1,112 +1,87 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 8/8] target_core_alua: Referrals configfs integration
-Date: Wed, 18 Dec 2013 09:15:21 +0100
-Message-ID: <52B15999.9090207@suse.de>
-References: <1387268330-121064-1-git-send-email-hare@suse.de>	 <1387268330-121064-9-git-send-email-hare@suse.de> <1387313347.20247.316.camel@haakon3.risingtidesystems.com>
+Subject: Re: [PATCH 6/8] target_core_spc: Include target device descriptor
+ in VPD page 83
+Date: Wed, 18 Dec 2013 10:20:53 +0100
+Message-ID: <52B168F5.9060300@suse.de>
+References: <1387268330-121064-1-git-send-email-hare@suse.de>	 <1387268330-121064-7-git-send-email-hare@suse.de>	 <1387309849.20247.306.camel@haakon3.risingtidesystems.com> <1387310505.20247.309.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1387313347.20247.316.camel@haakon3.risingtidesystems.com>
-Sender: target-devel-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:46723 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752736Ab3LRJUy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 18 Dec 2013 04:20:54 -0500
+In-Reply-To: <1387310505.20247.309.camel@haakon3.risingtidesystems.com>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 Cc: Nic Bellinger <nab@daterainc.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
 
-On 12/17/2013 09:49 PM, Nicholas A. Bellinger wrote:
-> On Tue, 2013-12-17 at 09:18 +0100, Hannes Reinecke wrote:
->> Referrals need an LBA map, which needs to be kept
->> consistent across all target port groups. So
->> instead of tying the map to the target port groups
->> I've implemented a single attribute containing the
->> entire map.
+On 12/17/2013 09:01 PM, Nicholas A. Bellinger wrote:
+> On Tue, 2013-12-17 at 11:50 -0800, Nicholas A. Bellinger wrote:
+>> On Tue, 2013-12-17 at 09:18 +0100, Hannes Reinecke wrote:
+>>> We should be including a descriptor referring to the target device
+>>> to allow identification of different TCM instances.
+>>>
+>>> Signed-off-by: Hannes Reinecke <hare@suse.de>
+>>> ---
+>>>  drivers/target/target_core_spc.c | 43 ++++++++++++++++++++++++++++=
++++++++++++-
+>>>  1 file changed, 42 insertions(+), 1 deletion(-)
+>>>
 >>
->> Signed-off-by: Hannes Reinecke <hare@suse.de>
->> ---
->>  drivers/target/target_core_alua.c      | 101 +++++++++++++++++++
->>  drivers/target/target_core_alua.h      |   8 ++
->>  drivers/target/target_core_configfs.c  | 171 ++++++++++++++++++++++=
-+++++++++++
->>  drivers/target/target_core_device.c    |   1 +
->>  drivers/target/target_core_transport.c |  28 +++++-
->>  5 files changed, 308 insertions(+), 1 deletion(-)
+>> One issue with this patch.  The local buffer in spc_emulate_inquiry =
+is
+>> currently hardcoded to SE_INQUIRY_BUF=3D512, so two large scsi name
+>> designators could overflow here..
+>>
+>> So for the largest case with EVPD=3D0x83, this would be:
+>>
+>> 4 bytes for header +
+>> 20 bytes for NAA IEEE Registered Extended Assigned designator +
+>> 56 bytes for T10 Vendor Identifier +
+>> 8 bytes for Relative target port +
+>> 8 bytes for Target port group +
+>> 8 bytes for Logical unit group +
+>> 256 bytes for SCSI name (target port) +
+>> 256 bytes for SCSI name (target device) =3D=3D 616 bytes.
+>>
+>> So for good measure, bumping up SE_INQUIRY_BUF to 1024.
 >>
 >=20
-> Applied, with one comment below..
+> Mmmm, looking at this again, is reporting back two SCSI names in
+> EVPD=3D0x83 with different associations (one for target port, and one=
+ for
+> target device) really necessary..?
 >=20
-> <SNIP>
+> Doesn't the existing target port association report back the same
+> information..?
 >=20
->> diff --git a/drivers/target/target_core_configfs.c b/drivers/target/=
-target_core_configfs.c
->> index e74ef8c..1dbc1bc 100644
->> --- a/drivers/target/target_core_configfs.c
->> +++ b/drivers/target/target_core_configfs.c
->> @@ -1741,6 +1741,176 @@ static struct target_core_configfs_attribute=
- target_core_attr_dev_alua_lu_gp =3D {
->>  	.store	=3D target_core_store_alua_lu_gp,
->>  };
->> =20
->> +static ssize_t target_core_show_dev_lba_map(void *p, char *page)
->> +{
->> +	struct se_device *dev =3D p;
->> +	struct t10_alua_lba_map *map;
->> +	struct t10_alua_lba_map_member *mem;
->> +	char *b =3D page;
->> +	int bl =3D 0;
->> +	char state;
->> +
->> +	spin_lock(&dev->t10_alua.lba_map_lock);
->> +	if (!list_empty(&dev->t10_alua.lba_map_list))
->> +	    bl +=3D sprintf(b + bl, "%u %u\n",
->> +			  dev->t10_alua.lba_map_segment_size,
->> +			  dev->t10_alua.lba_map_segment_multiplier);
->> +	list_for_each_entry(map, &dev->t10_alua.lba_map_list, lba_map_list=
-) {
->> +		bl +=3D sprintf(b + bl, "%llu %llu",
->> +			      map->lba_map_first_lba, map->lba_map_last_lba);
->> +		list_for_each_entry(mem, &map->lba_map_mem_list,
->> +				    lba_map_mem_list) {
->> +			switch (mem->lba_map_mem_alua_state) {
->> +			case ALUA_ACCESS_STATE_ACTIVE_OPTIMIZED:
->> +				state =3D 'O';
->> +				break;
->> +			case ALUA_ACCESS_STATE_ACTIVE_NON_OPTIMIZED:
->> +				state =3D 'A';
->> +				break;
->> +			case ALUA_ACCESS_STATE_STANDBY:
->> +				state =3D 'S';
->> +				break;
->> +			case ALUA_ACCESS_STATE_UNAVAILABLE:
->> +				state =3D 'U';
->> +				break;
->> +			default:
->> +				state =3D '.';
->> +				break;
->> +			}
->> +			bl +=3D sprintf(b + bl, " %d:%c",
->> +				      mem->lba_map_mem_alua_pg_id, state);
->> +		}
->> +		bl +=3D sprintf(b + bl, "\n");
->> +	}
->> +	spin_unlock(&dev->t10_alua.lba_map_lock);
->=20
-> The above loop can possibly overflow the passed *page..
->=20
-No. This is the reverse operation to the constructor in
-target_core_store_dev_lba_map().
+No.
+'Target port' is the identification for the port handling the
+request, which is contained within a target device.
 
-Which (per definition) can only handle maps up to one page in size.
+The reason why we need this is that we want to identify the scope of
+the Target port group number.
 
-And hence the resulting (formatted) map as constructed by
-target_core_show_dev_lba_map() will also fit on one page.
+Target port group numbers are relative to the encompassing target
+device, so when we're having _several_ target devices they might
+well provide us with identical target port group numbers.
 
-> Care to send an incremental patch for this as well..?
->=20
-> Btw, I assume this is not the only method for extracting the LBA map
-> from a running system, right..?
->=20
-Of course you can run 'sg_referrals' here. But other than that it
-would be the only method.
+=46or explicit ALUA each target port group within a target device can
+be thought of a 'scheduling domain', ie if I sent STPG to one of the
+devices in that domain there is a _high_ likelihood that _every_
+device within that scheduling domain will be affected.
+So I can be slightly smarter here and just send one STPG and then
+wait for the resulting states on all affected devices.
+
+If I don't have this information I am required to send STPG to each
+and every device, thereby flooding the target controller with STPGs
+for the same target port group.
+
+So yes, we should be furnishing both.
+In addition it's the only sane way of identifying the array :-)
 
 Cheers,
 
@@ -117,3 +92,8 @@ hare@suse.de			      +49 911 74053 688
 SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
 GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
 )
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
