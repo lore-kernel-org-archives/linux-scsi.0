@@ -1,45 +1,57 @@
-From: Joe Perches <joe@perches.com>
-Subject: Re: [RESEND][PATCH] scsi: esas2r: fix potential format string flaw
-Date: Tue, 17 Dec 2013 21:42:50 -0800
-Message-ID: <1387345370.13593.10.camel@joe-AO722>
-References: <20131217182733.GA16202@www.outflux.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
+From: Vaughan Cao <vaughan.cao@oracle.com>
+Subject: [PATCH] iscsi: conn error (1020) each time iscsi session logout
+Date: Wed, 18 Dec 2013 14:47:01 +0800
+Message-ID: <1387349221-18501-1-git-send-email-vaughan.cao@oracle.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtprelay0238.hostedemail.com ([216.40.44.238]:60605 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751241Ab3LRFmy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 Dec 2013 00:42:54 -0500
-In-Reply-To: <20131217182733.GA16202@www.outflux.net>
+Received: from aserp1040.oracle.com ([141.146.126.69]:29112 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750933Ab3LRGoj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Dec 2013 01:44:39 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kees Cook <keescook@chromium.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-kernel@vger.kernel.org, Bradley Grove <linuxdrivers@attotech.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
+To: michaelc@cs.wisc.edu
+Cc: James.Bottomley@suse.de, vaughan.cao@oracle.com, open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, 2013-12-17 at 10:27 -0800, Kees Cook wrote:
-> This makes sure format strings cannot leak into the printk call via the
-> constructed buffer.
-[]
-> diff --git a/drivers/scsi/esas2r/esas2r_log.c b/drivers/scsi/esas2r/esas2r_log.c
-[]
-> @@ -171,7 +171,7 @@ static int esas2r_log_master(const long level,
->  		if (strlen(event_buffer) < buflen)
->  			strcat(buffer, "\n");
->  
-> -		printk(event_buffer);
-> +		printk("%s", event_buffer);
+We do a normal login/logout process to iscsi server. iscsiadm report success,
+but we always see the following error just before conn shutdown in dmesg.
 
-It's probably better to remove the
+Oct 15 05:30:09 vmhodtest019 iscsid: Connection1:0 to [target:
+iqn.1986-03.com.sun:02:7b863a18-045a-cb04-c686-841f17df2f9c, portal:
+10.182.32.162,3260] through [iface: default] is operational now
+Oct 15 05:30:42 vmhodtest019 kernel:  connection1:0: detected conn error
+(1020)
+Oct 15 05:30:42 vmhodtest019 iscsid: Connection1:0 to [target:
+iqn.1986-03.com.sun:02:7b863a18-045a-cb04-c686-841f17df2f9c, portal:
+10.182.32.162,3260] through [iface: default] is shutdown.
 
-		if (strlen(event_buffer) < buflen)
-			strcat(buffer, "\n");
+It's because iscsi_tcp module evaluates socket state in data_ready() callback,
+ and that detect the socket close. However, this socket close on target peer 
+is in response to the logout request from initiator. So this is not an error 
+that should be reported out. I quiesce it by checking session state and err 
+value accordingly.
 
-and use
+Signed-off-by: Vaughan Cao <vaughan.cao@oracle.com>
+---
+ drivers/scsi/libiscsi.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-	printk("%s\n", event_buffer);
-
-so that the output is always newline terminated.
-
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index 415f2c0..84171ef 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -1360,6 +1360,12 @@ void iscsi_conn_failure(struct iscsi_conn *conn, enum iscsi_err err)
+ 		spin_unlock_bh(&session->lock);
+ 		return;
+ 	}
++	/* Target closed the connection in response to logout */
++	if (session->state == ISCSI_STATE_LOGGING_OUT &&
++		err == ISCSI_ERR_TCP_CONN_CLOSE) {
++		spin_unlock_bh(&session->lock);
++		return;
++	}
+ 
+ 	if (conn->stop_stage == 0)
+ 		session->state = ISCSI_STATE_FAILED;
+-- 
+1.8.3.1
 
