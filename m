@@ -1,73 +1,74 @@
-From: Rashika Kheria <rashika.kheria@gmail.com>
-Subject: [PATCH 4/4] drivers: target: Mark functions and structures as static
- in tfc_conf.c
-Date: Thu, 19 Dec 2013 00:05:59 +0530
-Message-ID: <94a49e2b29220b2a3fb93449a7b2c96fb6ea4667.1387390091.git.rashika.kheria@gmail.com>
+From: josh@joshtriplett.org
+Subject: Re: [PATCH 1/4] drivers: target: Move prototype declaration of
+ function to header file target_core_pr.h
+Date: Wed, 18 Dec 2013 10:37:41 -0800
+Message-ID: <20131218183741.GA24229@cloud>
 References: <1a63603bc5ff05147c419a301d59b135cd0c8406.1387390091.git.rashika.kheria@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <target-devel-owner@vger.kernel.org>
 Content-Disposition: inline
 In-Reply-To: <1a63603bc5ff05147c419a301d59b135cd0c8406.1387390091.git.rashika.kheria@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Jingoo Han <jg1.han@samsung.com>, Andy Grover <agrover@redhat.com>, Rashika Kheria <rashika.kheria@gmail.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, josh@joshtriplett.org
+Sender: target-devel-owner@vger.kernel.org
+To: Rashika Kheria <rashika.kheria@gmail.com>
+Cc: linux-kernel@vger.kernel.org, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Mark functions ft_tpg_alloc_fabric_acl(), ft_register_configfs() and
-ft_deregister_configfs() as static in tcm_fc/tfc_conf.c because they ar=
-e
-not used outside this file.
+On Wed, Dec 18, 2013 at 11:54:32PM +0530, Rashika Kheria wrote:
+> Move prototype declaration of function
+> spc_parse_naa_6h_vendor_specific() from target_core_xcopy.c to header
+> file target_core_pr.h because it is used by more than one file.
+>=20
+> This eliminates the following warning in target_core_spc.c:
+> drivers/target/target_core_spc.c:138:6: warning: no previous prototyp=
+e for =E2=80=98spc_parse_naa_6h_vendor_specific=E2=80=99 [-Wmissing-pro=
+totypes]
+>=20
+> Signed-off-by: Rashika Kheria <rashika.kheria@gmail.com>
 
-This eliminates the following warnings in tcm_fc/tfc_conf.c:
-drivers/target/tcm_fc/tfc_conf.c:270:21: warning: no previous prototype=
- for =E2=80=98ft_tpg_alloc_fabric_acl=E2=80=99 [-Wmissing-prototypes]
-drivers/target/tcm_fc/tfc_conf.c:555:5: warning: no previous prototype =
-for =E2=80=98ft_register_configfs=E2=80=99 [-Wmissing-prototypes]
-drivers/target/tcm_fc/tfc_conf.c:602:6: warning: no previous prototype =
-for =E2=80=98ft_deregister_configfs=E2=80=99 [-Wmissing-prototypes]
+Reviewed-by: Josh Triplett <josh@joshtriplett.org>
 
-Signed-off-by: Rashika Kheria <rashika.kheria@gmail.com>
----
- drivers/target/tcm_fc/tfc_conf.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/target/tcm_fc/tfc_conf.c b/drivers/target/tcm_fc/t=
-fc_conf.c
-index c6932fb..e879da8 100644
---- a/drivers/target/tcm_fc/tfc_conf.c
-+++ b/drivers/target/tcm_fc/tfc_conf.c
-@@ -267,7 +267,7 @@ struct ft_node_acl *ft_acl_get(struct ft_tpg *tpg, =
-struct fc_rport_priv *rdata)
- 	return found;
- }
-=20
--struct se_node_acl *ft_tpg_alloc_fabric_acl(struct se_portal_group *se=
-_tpg)
-+static struct se_node_acl *ft_tpg_alloc_fabric_acl(struct se_portal_gr=
-oup *se_tpg)
- {
- 	struct ft_node_acl *acl;
-=20
-@@ -552,7 +552,7 @@ static struct target_core_fabric_ops ft_fabric_ops =
-=3D {
- 	.fabric_drop_nodeacl =3D		&ft_del_acl,
- };
-=20
--int ft_register_configfs(void)
-+static int ft_register_configfs(void)
- {
- 	struct target_fabric_configfs *fabric;
- 	int ret;
-@@ -599,7 +599,7 @@ int ft_register_configfs(void)
- 	return 0;
- }
-=20
--void ft_deregister_configfs(void)
-+static void ft_deregister_configfs(void)
- {
- 	if (!ft_configfs)
- 		return;
---=20
-1.7.9.5
+>  drivers/target/target_core_pr.h    |    5 +++++
+>  drivers/target/target_core_xcopy.c |    4 ----
+>  2 files changed, 5 insertions(+), 4 deletions(-)
+>=20
+> diff --git a/drivers/target/target_core_pr.h b/drivers/target/target_=
+core_pr.h
+> index ed75cdd..2ee2936 100644
+> --- a/drivers/target/target_core_pr.h
+> +++ b/drivers/target/target_core_pr.h
+> @@ -43,6 +43,11 @@
+>  #define PR_APTPL_MAX_IPORT_LEN			256
+>  #define PR_APTPL_MAX_TPORT_LEN			256
+> =20
+> +/*
+> + *  Function defined in target_core_spc.c
+> + */
+> +void spc_parse_naa_6h_vendor_specific(struct se_device *, unsigned c=
+har *);
+> +
+>  extern struct kmem_cache *t10_pr_reg_cache;
+> =20
+>  extern void core_pr_dump_initiator_port(struct t10_pr_registration *=
+,
+> diff --git a/drivers/target/target_core_xcopy.c b/drivers/target/targ=
+et_core_xcopy.c
+> index 6b88a99..669c536 100644
+> --- a/drivers/target/target_core_xcopy.c
+> +++ b/drivers/target/target_core_xcopy.c
+> @@ -40,10 +40,6 @@
+> =20
+>  static struct workqueue_struct *xcopy_wq =3D NULL;
+>  /*
+> - * From target_core_spc.c
+> - */
+> -extern void spc_parse_naa_6h_vendor_specific(struct se_device *, uns=
+igned char *);
+> -/*
+>   * From target_core_device.c
+>   */
+>  extern struct mutex g_device_mutex;
+> --=20
+> 1.7.9.5
+>=20
