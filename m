@@ -1,46 +1,51 @@
 From: Kees Cook <keescook@chromium.org>
-Subject: Re: [RESEND][PATCH] scsi: esas2r: fix potential format string flaw
-Date: Wed, 18 Dec 2013 10:01:00 -0800
-Message-ID: <CAGXu5jLxVxKtXmrSvtChfApH+p4Ag--KygPNWZs3KEuw4XvZrA@mail.gmail.com>
-References: <20131217182733.GA16202@www.outflux.net>
-	<1387345370.13593.10.camel@joe-AO722>
+Subject: [PATCH v2] scsi: esas2r: fix potential format string flaw
+Date: Wed, 18 Dec 2013 10:00:54 -0800
+Message-ID: <20131218180054.GA5739@www.outflux.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1387345370.13593.10.camel@joe-AO722>
+Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: Joe Perches <joe@perches.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, LKML <linux-kernel@vger.kernel.org>, Bradley Grove <linuxdrivers@attotech.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Bradley Grove <linuxdrivers@attotech.com>, Joe Perches <joe@perches.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Dec 17, 2013 at 9:42 PM, Joe Perches <joe@perches.com> wrote:
-> On Tue, 2013-12-17 at 10:27 -0800, Kees Cook wrote:
->> This makes sure format strings cannot leak into the printk call via the
->> constructed buffer.
-> []
->> diff --git a/drivers/scsi/esas2r/esas2r_log.c b/drivers/scsi/esas2r/esas2r_log.c
-> []
->> @@ -171,7 +171,7 @@ static int esas2r_log_master(const long level,
->>               if (strlen(event_buffer) < buflen)
->>                       strcat(buffer, "\n");
->>
->> -             printk(event_buffer);
->> +             printk("%s", event_buffer);
->
-> It's probably better to remove the
->
->                 if (strlen(event_buffer) < buflen)
->                         strcat(buffer, "\n");
->
-> and use
->
->         printk("%s\n", event_buffer);
->
-> so that the output is always newline terminated.
+This makes sure format strings cannot leak into the printk call via the
+constructed buffer.
 
-Ah! Yes, good call.
+Signed-off-by: Kees Cook <keescook@chromium.org>
+Acked-by: Bradley Grove <bgrove@attotech.com>
+---
+v2:
+ - add newline via printk instead.
+---
+ drivers/scsi/esas2r/esas2r_log.c |    8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
 
--Kees
+diff --git a/drivers/scsi/esas2r/esas2r_log.c b/drivers/scsi/esas2r/esas2r_log.c
+index 9bf285df58dd..a82030aa8577 100644
+--- a/drivers/scsi/esas2r/esas2r_log.c
++++ b/drivers/scsi/esas2r/esas2r_log.c
+@@ -165,13 +165,9 @@ static int esas2r_log_master(const long level,
+ 
+ 		/*
+ 		 * Put a line break at the end of the formatted string so that
+-		 * we don't wind up with run-on messages.  only append if there
+-		 * is enough space in the buffer.
++		 * we don't wind up with run-on messages.
+ 		 */
+-		if (strlen(event_buffer) < buflen)
+-			strcat(buffer, "\n");
+-
+-		printk(event_buffer);
++		printk("%s\n", event_buffer);
+ 
+ 		spin_unlock_irqrestore(&event_buffer_lock, flags);
+ 	}
+-- 
+1.7.9.5
+
 
 -- 
 Kees Cook
