@@ -1,51 +1,47 @@
-From: Daniel Mack <zonque-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Suspend issues with a LaCie USB hard disk connected
-Date: Wed, 18 Dec 2013 17:22:52 +0100
-Message-ID: <52B1CBDC.1070203@gmail.com>
+From: Kees Cook <keescook@chromium.org>
+Subject: Re: [RESEND][PATCH] scsi: esas2r: fix potential format string flaw
+Date: Wed, 18 Dec 2013 10:01:00 -0800
+Message-ID: <CAGXu5jLxVxKtXmrSvtChfApH+p4Ag--KygPNWZs3KEuw4XvZrA@mail.gmail.com>
+References: <20131217182733.GA16202@www.outflux.net>
+	<1387345370.13593.10.camel@joe-AO722>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Oliver Neukum <oliver-GvhC2dPhHPQdnm+yROfE0A@public.gmane.org>, Aaron Lu <aaron.lu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "James E.J. Bottomley" <JBottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1387345370.13593.10.camel@joe-AO722>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Joe Perches <joe@perches.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, LKML <linux-kernel@vger.kernel.org>, Bradley Grove <linuxdrivers@attotech.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi,
+On Tue, Dec 17, 2013 at 9:42 PM, Joe Perches <joe@perches.com> wrote:
+> On Tue, 2013-12-17 at 10:27 -0800, Kees Cook wrote:
+>> This makes sure format strings cannot leak into the printk call via the
+>> constructed buffer.
+> []
+>> diff --git a/drivers/scsi/esas2r/esas2r_log.c b/drivers/scsi/esas2r/esas2r_log.c
+> []
+>> @@ -171,7 +171,7 @@ static int esas2r_log_master(const long level,
+>>               if (strlen(event_buffer) < buflen)
+>>                       strcat(buffer, "\n");
+>>
+>> -             printk(event_buffer);
+>> +             printk("%s", event_buffer);
+>
+> It's probably better to remove the
+>
+>                 if (strlen(event_buffer) < buflen)
+>                         strcat(buffer, "\n");
+>
+> and use
+>
+>         printk("%s\n", event_buffer);
+>
+> so that the output is always newline terminated.
 
-I'm facing an issue putting an embedded system to sleep while a Lacie
-external USB hard disk is connected. Relevant kernel messages that occur
-at the attempt are:
+Ah! Yes, good call.
 
-[   13.834731] PM: Sending message for entering DeepSleep mode
-[   13.846575] sd 0:0:0:0: [sda] Synchronizing SCSI cache
-[   13.858818] sd 0:0:0:0: [sda]
-[   13.862432] Result: hostbyte=0x00 driverbyte=0x08
-[   13.867349] sd 0:0:0:0: [sda]
-[   13.870626] Sense Key : 0x5 [current]
-[   13.874602] sd 0:0:0:0: [sda]
-[   13.877879] ASC=0x20 ASCQ=0x0
-[   13.885053] dpm_run_callback(): scsi_bus_suspend+0x0/0x20 returns -5
-[   13.901130] PM: Device 0:0:0:0 failed to suspend async: error -5
-[   13.907507] PM: Some devices failed to suspend, or early wake event
-detected
+-Kees
 
-What happens is that in sd_sync_cache(), scsi_execute_req_flags()
-returns 0x08000002, so driver_byte(res) evaluates to DRIVER_SENSE and
-host_byte(res) is DID_OK, which is an unhandled case that leads to -EIO
-eventually.
-
-I have admittedly not much clue about the SCSI layer, so I wonder what
-would be the best way to fix this. Should DID_OK just be handled as
-non-error condition in the switch? Should the suspend call chain ignore
-such errors from sd_sync_cache()?
-
-I'm open to suggestions and happy to test patches.
-
-
-Thanks,
-Daniel
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Kees Cook
+Chrome OS Security
