@@ -1,44 +1,40 @@
-From: Vaughan Cao <vaughan.cao@oracle.com>
-Subject: Re: PROBLEM: special sense code asc,ascq=04h,0Ch abort scsi scan
- in the middle
-Date: Wed, 18 Dec 2013 21:51:35 +0800
-Message-ID: <52B1A867.60808@oracle.com>
-References: <525AD704.6040705@oracle.com> <525BD1EA.6000701@suse.de> <525BE8C1.5090606@linux.vnet.ibm.com> <525BEF2B.2030907@suse.de> <525BF256.6060707@suse.de> <525C0CAE.3030803@linux.vnet.ibm.com> <525E37CA.2000605@suse.de> <5264C48A.80900@oracle.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 67091] scsi/be2iscsi/be_main.c:328: possible bad if expression
+ ?
+Date: Wed, 18 Dec 2013 14:24:38 +0000
+Message-ID: <bug-67091-11613-8nIo1tBSXu@https.bugzilla.kernel.org/>
+References: <bug-67091-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:49702 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753195Ab3LRNwT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Dec 2013 08:52:19 -0500
-In-Reply-To: <5264C48A.80900@oracle.com>
+Received: from mail.kernel.org ([198.145.19.201]:38536 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754067Ab3LROYt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 18 Dec 2013 09:24:49 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id EB367204D3
+	for <linux-scsi@vger.kernel.org>; Wed, 18 Dec 2013 14:24:47 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+	by mail.kernel.org (Postfix) with ESMTP id 4BA2A204E0
+	for <linux-scsi@vger.kernel.org>; Wed, 18 Dec 2013 14:24:43 +0000 (UTC)
+In-Reply-To: <bug-67091-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Steffen Maier <maier@linux.vnet.ibm.com>, JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
+https://bugzilla.kernel.org/show_bug.cgi?id=67091
 
-On 2013=E5=B9=B410=E6=9C=8821=E6=97=A5 14:07, vaughan wrote:
-> On 10/16/2013 02:52 PM, Hannes Reinecke wrote:
->> But seeing that this approach raises quite some issues I've attached=
- a
->> different patch. Vaughan, could you test with that, too? Should be
->> functionally equivalent to the previous one. Cheers, Hannes
-> Hi Hannes,
->
-> We only tested the later patch which returns _TARGET_PRESENT after
-> parsing sense, it works as expected.
->
-Hi Hannes,
+Alan <alan@lxorguk.ukuu.org.uk> changed:
 
-Will your second patch be included in mainline?
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |alan@lxorguk.ukuu.org.uk
+          Component|Other                       |Other
+           Assignee|drivers_other@kernel-bugs.o |scsi_drivers-other@kernel-b
+                   |sdl.org                     |ugs.osdl.org
+            Product|Drivers                     |SCSI Drivers
 
-Thanks,
-Vaughan
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
