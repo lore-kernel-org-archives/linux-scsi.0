@@ -1,98 +1,67 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] iscsi_target: race condition on shutdown
-Date: Tue, 17 Dec 2013 18:27:32 -0800
-Message-ID: <1387333652.20247.334.camel@haakon3.risingtidesystems.com>
-References: <1386251665-39173-1-git-send-email-hare@suse.de>
-	 <1386805475.20247.109.camel@haakon3.risingtidesystems.com>
-	 <52A96352.3050107@suse.de>
-	 <1386834852.20247.121.camel@haakon3.risingtidesystems.com>
-	 <52A96E4F.2070406@suse.de>
-	 <1387223354.20247.190.camel@haakon3.risingtidesystems.com>
+From: Yu Chen <chyyuu@gmail.com>
+Subject: Re: [PATCH] scsi: int overflow in st_ioctl()
+Date: Wed, 18 Dec 2013 12:00:20 +0800
+Message-ID: <CAAdffVH3pPpvu+GWwikPpGynTRRMW2unbyRvP2jQWpUU-=R6qw@mail.gmail.com>
+References: <1387291383-25126-1-git-send-email-xuyongjiande@gmail.com>
+	<F1B567DD-C322-4BA7-BFEA-E7C4B1F82697@kolumbus.fi>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1387223354.20247.190.camel@haakon3.risingtidesystems.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Nic Bellinger <nab@daterainc.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <F1B567DD-C322-4BA7-BFEA-E7C4B1F82697@kolumbus.fi>
+Sender: linux-kernel-owner@vger.kernel.org
+To: =?ISO-8859-1?Q?Kai_M=E4kisara_=28Kolumbus=29?= <kai.makisara@kolumbus.fi>
+Cc: =?GB2312?B?0OzTwL2h?= <xuyongjiande@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hey Hannes,
+Because the local variable of st_int_ioctl function, such as long ltmp
+be assigned by arg.
+I think  we should limit the parameter arg of st_int_ioctl function to
+the range of 24-bit signed integer.
+Yong Jianxu, please update your patch.
 
-On Mon, 2013-12-16 at 11:49 -0800, Nicholas A. Bellinger wrote:
-> Hey Hannes,
-> 
-> On Thu, 2013-12-12 at 09:05 +0100, Hannes Reinecke wrote:
-> > On 12/12/2013 08:54 AM, Nicholas A. Bellinger wrote:
-> > > On Thu, 2013-12-12 at 08:18 +0100, Hannes Reinecke wrote:
-> > [ .. ]
-> 
-> <SNIP>
-> 
-> > > Mmmm, point taken..
-> > > 
-> > >> I would love to be proven wrong, as I'm not keen on the 'schedule()'
-> > >> in there. But I fail to see another way out here, short of
-> > >> converting the entire kthread into a workqueue item ...
-> > > 
-> > > Thinking about this a bit more, I think the pre-kthread API
-> > > np_thead_state check to exit at the out: label in
-> > > __iscsi_target_login_thread() is the culprit..
-> > > 
-> > > How about following to only exit when iscsit_del_np() -> kthread_stop()
-> > > has been called, and kthread_should_stop() is true..?
-> > > 
-> > > --nab
-> > > 
-> > > diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-> > > index 02182ab..0086719 100644
-> > > --- a/drivers/target/iscsi/iscsi_target.c
-> > > +++ b/drivers/target/iscsi/iscsi_target.c
-> > > @@ -465,6 +465,7 @@ int iscsit_del_np(struct iscsi_np *np)
-> > >                  */
-> > >                 send_sig(SIGINT, np->np_thread, 1);
-> > >                 kthread_stop(np->np_thread);
-> > > +               np->np_thread = NULL;
-> > >         }
-> > >  
-> > >         np->np_transport->iscsit_free_np(np);
-> > > diff --git a/drivers/target/iscsi/iscsi_target_login.c b/drivers/target/iscsi/iscsi_target_login.c
-> > > index 4eb93b2..e29279e 100644
-> > > --- a/drivers/target/iscsi/iscsi_target_login.c
-> > > +++ b/drivers/target/iscsi/iscsi_target_login.c
-> > > @@ -1403,11 +1403,6 @@ old_sess_out:
-> > >  
-> > >  out:
-> > >         stop = kthread_should_stop();
-> > > -       if (!stop && signal_pending(current)) {
-> > > -               spin_lock_bh(&np->np_thread_lock);
-> > > -               stop = (np->np_thread_state == ISCSI_NP_THREAD_SHUTDOWN);
-> > > -               spin_unlock_bh(&np->np_thread_lock);
-> > > -       }
-> > >         /* Wait for another socket.. */
-> > >         if (!stop)
-> > >                 return 1;
-> > > @@ -1415,7 +1410,6 @@ exit:
-> > >         iscsi_stop_login_thread_timer(np);
-> > >         spin_lock_bh(&np->np_thread_lock);
-> > >         np->np_thread_state = ISCSI_NP_THREAD_EXIT;
-> > > -       np->np_thread = NULL;
-> > >         spin_unlock_bh(&np->np_thread_lock);
-> > >  
-> > >         return 0;
-> > > 
-> > > 
-> > Yes. Far better.
-> > 
-> > I'll give it a spin.
-> > 
-> 
-> Any chance to confirm this patch..?
-> 
-> I'd like to include this in the -rc5 PULL request over the next days.
+2013/12/18 "Kai M=E4kisara (Kolumbus)" <kai.makisara@kolumbus.fi>:
+> On 17.12.2013, at 16.43, Yongjian Xu xuyongjiande@gmail.com wrote:
+>
+>> From: Yongjian Xu <xuyongjiande@gmail.com>
+>>
+>> mtc.mt_count comes from user-space.
+>> int overflow may occur:
+>> mtc.mt_count++;
+>> mtc.mt_count=97;
+>
+> I agree that this is a problem. However, it seems that there is also =
+another problem: the SPACE command uses a 24-bit count field and this o=
+verflows far below INT_MAX. Should the count in MTFSF etc. be limited t=
+o (2<<24-2)? This would make the checks you suggest unnecessary. (-2 so=
+ that the behavior does not depend on whether we are at file mark or no=
+t.)
+>
+> I am a bit hesitant with this suggestion because someone may use coun=
+t INT_MAX to space to the end of the tape. This probably succeeds now b=
+ut after the fix it would return an error.
+>
+> Thanks,
+> Kai
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kerne=
+l" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
 
-Any testing feedback on this..?  Waiting for your Reviewed-by +
-Tested-by before pushing this one.
 
---nab
+
+--=20
+Best Regards
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+Yu Chen
+Ph.D.  Associate Professor
+System Software&Software Engineering Group,
+Dept. of Computer Science and Technology
+Tsinghua University, Beijing 100084, P.R. China
+E-Mail: mailto:yuchen@tsinghua.edu.cn  chyyuu@gmail.com
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
