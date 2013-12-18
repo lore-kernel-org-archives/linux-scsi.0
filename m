@@ -1,67 +1,45 @@
-From: Yu Chen <chyyuu@gmail.com>
-Subject: Re: [PATCH] scsi: int overflow in st_ioctl()
-Date: Wed, 18 Dec 2013 12:00:20 +0800
-Message-ID: <CAAdffVH3pPpvu+GWwikPpGynTRRMW2unbyRvP2jQWpUU-=R6qw@mail.gmail.com>
-References: <1387291383-25126-1-git-send-email-xuyongjiande@gmail.com>
-	<F1B567DD-C322-4BA7-BFEA-E7C4B1F82697@kolumbus.fi>
+From: Joe Perches <joe@perches.com>
+Subject: Re: [RESEND][PATCH] scsi: esas2r: fix potential format string flaw
+Date: Tue, 17 Dec 2013 21:42:50 -0800
+Message-ID: <1387345370.13593.10.camel@joe-AO722>
+References: <20131217182733.GA16202@www.outflux.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <F1B567DD-C322-4BA7-BFEA-E7C4B1F82697@kolumbus.fi>
-Sender: linux-kernel-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Kai_M=E4kisara_=28Kolumbus=29?= <kai.makisara@kolumbus.fi>
-Cc: =?GB2312?B?0OzTwL2h?= <xuyongjiande@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtprelay0238.hostedemail.com ([216.40.44.238]:60605 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751241Ab3LRFmy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 18 Dec 2013 00:42:54 -0500
+In-Reply-To: <20131217182733.GA16202@www.outflux.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Kees Cook <keescook@chromium.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-kernel@vger.kernel.org, Bradley Grove <linuxdrivers@attotech.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
 
-Because the local variable of st_int_ioctl function, such as long ltmp
-be assigned by arg.
-I think  we should limit the parameter arg of st_int_ioctl function to
-the range of 24-bit signed integer.
-Yong Jianxu, please update your patch.
+On Tue, 2013-12-17 at 10:27 -0800, Kees Cook wrote:
+> This makes sure format strings cannot leak into the printk call via the
+> constructed buffer.
+[]
+> diff --git a/drivers/scsi/esas2r/esas2r_log.c b/drivers/scsi/esas2r/esas2r_log.c
+[]
+> @@ -171,7 +171,7 @@ static int esas2r_log_master(const long level,
+>  		if (strlen(event_buffer) < buflen)
+>  			strcat(buffer, "\n");
+>  
+> -		printk(event_buffer);
+> +		printk("%s", event_buffer);
 
-2013/12/18 "Kai M=E4kisara (Kolumbus)" <kai.makisara@kolumbus.fi>:
-> On 17.12.2013, at 16.43, Yongjian Xu xuyongjiande@gmail.com wrote:
->
->> From: Yongjian Xu <xuyongjiande@gmail.com>
->>
->> mtc.mt_count comes from user-space.
->> int overflow may occur:
->> mtc.mt_count++;
->> mtc.mt_count=97;
->
-> I agree that this is a problem. However, it seems that there is also =
-another problem: the SPACE command uses a 24-bit count field and this o=
-verflows far below INT_MAX. Should the count in MTFSF etc. be limited t=
-o (2<<24-2)? This would make the checks you suggest unnecessary. (-2 so=
- that the behavior does not depend on whether we are at file mark or no=
-t.)
->
-> I am a bit hesitant with this suggestion because someone may use coun=
-t INT_MAX to space to the end of the tape. This probably succeeds now b=
-ut after the fix it would return an error.
->
-> Thanks,
-> Kai
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kerne=
-l" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+It's probably better to remove the
+
+		if (strlen(event_buffer) < buflen)
+			strcat(buffer, "\n");
+
+and use
+
+	printk("%s\n", event_buffer);
+
+so that the output is always newline terminated.
 
 
-
---=20
-Best Regards
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-Yu Chen
-Ph.D.  Associate Professor
-System Software&Software Engineering Group,
-Dept. of Computer Science and Technology
-Tsinghua University, Beijing 100084, P.R. China
-E-Mail: mailto:yuchen@tsinghua.edu.cn  chyyuu@gmail.com
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
