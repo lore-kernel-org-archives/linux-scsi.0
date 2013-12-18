@@ -1,78 +1,71 @@
-From: josh@joshtriplett.org
-Subject: Re: [PATCH 4/4] drivers: target: Mark functions and structures as
- static in tfc_conf.c
-Date: Wed, 18 Dec 2013 10:40:36 -0800
-Message-ID: <20131218184036.GE24229@cloud>
-References: <1a63603bc5ff05147c419a301d59b135cd0c8406.1387390091.git.rashika.kheria@gmail.com>
- <94a49e2b29220b2a3fb93449a7b2c96fb6ea4667.1387390091.git.rashika.kheria@gmail.com>
+From: Sarah Sharp <sarah.a.sharp-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Subject: Re: [RFC 0/2] target refcounting infrastructure fixes for usb
+Date: Wed, 18 Dec 2013 12:36:04 -0800
+Message-ID: <20131218203604.GB3573@xanatos>
+References: <1387206619.2200.6.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <94a49e2b29220b2a3fb93449a7b2c96fb6ea4667.1387390091.git.rashika.kheria@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Rashika Kheria <rashika.kheria@gmail.com>
-Cc: linux-kernel@vger.kernel.org, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Jingoo Han <jg1.han@samsung.com>, Andy Grover <agrover@redhat.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+In-Reply-To: <1387206619.2200.6.camel-sFMDBYUN5F8GjUHQrlYNx2Wm91YjaHnnhRte9Li2A+AAvxtiuMwx3w@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
+Cc: linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Dec 19, 2013 at 12:05:59AM +0530, Rashika Kheria wrote:
-> Mark functions ft_tpg_alloc_fabric_acl(), ft_register_configfs() and
-> ft_deregister_configfs() as static in tcm_fc/tfc_conf.c because they =
-are
-> not used outside this file.
->=20
-> This eliminates the following warnings in tcm_fc/tfc_conf.c:
-> drivers/target/tcm_fc/tfc_conf.c:270:21: warning: no previous prototy=
-pe for =E2=80=98ft_tpg_alloc_fabric_acl=E2=80=99 [-Wmissing-prototypes]
-> drivers/target/tcm_fc/tfc_conf.c:555:5: warning: no previous prototyp=
-e for =E2=80=98ft_register_configfs=E2=80=99 [-Wmissing-prototypes]
-> drivers/target/tcm_fc/tfc_conf.c:602:6: warning: no previous prototyp=
-e for =E2=80=98ft_deregister_configfs=E2=80=99 [-Wmissing-prototypes]
->=20
-> Signed-off-by: Rashika Kheria <rashika.kheria@gmail.com>
+On Mon, Dec 16, 2013 at 07:10:19AM -0800, James Bottomley wrote:
+> This set should fix our target problems with USB by making the target
+> visibility properly reference counted.  Since it's a major change to the
+> infrastructure, we'll incubate upstream first before backporting to
+> stable.
+> 
+> James
 
-Reviewed-by: Josh Triplett <josh@joshtriplett.org>
+I tried these patches, and they cause an oops when a USB mass storage
+device is plugged in.  Note that this device uses the usb-storage
+driver, not the uas driver.
 
->  drivers/target/tcm_fc/tfc_conf.c |    6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
->=20
-> diff --git a/drivers/target/tcm_fc/tfc_conf.c b/drivers/target/tcm_fc=
-/tfc_conf.c
-> index c6932fb..e879da8 100644
-> --- a/drivers/target/tcm_fc/tfc_conf.c
-> +++ b/drivers/target/tcm_fc/tfc_conf.c
-> @@ -267,7 +267,7 @@ struct ft_node_acl *ft_acl_get(struct ft_tpg *tpg=
-, struct fc_rport_priv *rdata)
->  	return found;
->  }
-> =20
-> -struct se_node_acl *ft_tpg_alloc_fabric_acl(struct se_portal_group *=
-se_tpg)
-> +static struct se_node_acl *ft_tpg_alloc_fabric_acl(struct se_portal_=
-group *se_tpg)
->  {
->  	struct ft_node_acl *acl;
-> =20
-> @@ -552,7 +552,7 @@ static struct target_core_fabric_ops ft_fabric_op=
-s =3D {
->  	.fabric_drop_nodeacl =3D		&ft_del_acl,
->  };
-> =20
-> -int ft_register_configfs(void)
-> +static int ft_register_configfs(void)
->  {
->  	struct target_fabric_configfs *fabric;
->  	int ret;
-> @@ -599,7 +599,7 @@ int ft_register_configfs(void)
->  	return 0;
->  }
-> =20
-> -void ft_deregister_configfs(void)
-> +static void ft_deregister_configfs(void)
->  {
->  	if (!ft_configfs)
->  		return;
-> --=20
-> 1.7.9.5
->=20
+[14248.340064] scsi6 : usb-storage 2-2:1.0
+[14248.341083] usbcore: registered new interface driver usb-storage
+[14248.346211] usbcore: registered new interface driver uas
+[14249.339937] scsi 6:0:0:0: Direct-Access     Lexar    JumpDrive        1.00 PQ: 0 ANSI: 6
+[14249.340988] ------------[ cut here ]------------
+[14249.340999] WARNING: CPU: 3 PID: 5578 at lib/kobject.c:227 kobject_add_internal+0x13f/0x350()
+[14249.341003] kobject_add_internal failed for 6:0:0:0 (error: -2 parent: target6:0:0)
+[14249.341005] Modules linked in: uas usb_storage ctr ccm cuse dm_crypt uvcvideo videobuf2_vmalloc videobuf2_memops videobuf2_core videodev btusb x86_pkg_temp_thermal coretemp ghash_clmulni_intel aesni_intel aes_x86_64 lrw gf128mul glue_helper ablk_helper cryptd arc4 iwldvm mac80211 microcode snd_hda_codec_hdmi iwlwifi psmouse snd_hda_codec_realtek serio_raw snd_hda_intel snd_usb_audio snd_hda_codec thinkpad_acpi cfg80211 joydev snd_usbmidi_lib nvram snd_hwdep snd_seq_midi snd_pcm snd_seq_midi_event snd_rawmidi lpc_ich rfcomm bnep snd_seq bluetooth snd_seq_device snd_page_alloc ehci_pci snd_timer ehci_hcd snd soundcore tpm_tis binfmt_misc btrfs libcrc32c xor raid6_pq hid_generic usbhid hid i915 ahci libahci e1000e sdhci_pci sdhci i2c_algo_bit drm_kms_helper ptp pps_core drm xhci_hcd video
+[14249.341095] CPU: 3 PID: 5578 Comm: kworker/u16:0 Not tainted 3.13.0-rc1+ #142
+[14249.341098] Hardware name: LENOVO 2325AP7/2325AP7, BIOS G2ET82WW (2.02 ) 09/11/2012
+[14249.341105] Workqueue: events_unbound async_run_entry_fn
+[14249.341108]  0000000000000009 ffff88003aa9db60 ffffffff81658a4e ffff88003aa9dba8
+[14249.341115]  ffff88003aa9db98 ffffffff81048c3d ffff88006bc551b0 00000000fffffffe
+[14249.341121]  0000000000000000 ffff8800bec22838 0000000000000200 ffff88003aa9dbf8
+[14249.341127] Call Trace:
+[14249.341135]  [<ffffffff81658a4e>] dump_stack+0x4d/0x66
+[14249.341142]  [<ffffffff81048c3d>] warn_slowpath_common+0x7d/0xa0
+[14249.341148]  [<ffffffff81048cac>] warn_slowpath_fmt+0x4c/0x50
+[14249.341154]  [<ffffffff81660f17>] ? _raw_spin_unlock+0x27/0x40
+[14249.341159]  [<ffffffff8133748f>] kobject_add_internal+0x13f/0x350
+[14249.341163]  [<ffffffff813379b5>] kobject_add+0x65/0xb0
+[14249.341170]  [<ffffffff81425b40>] ? get_device+0x30/0x30
+[14249.341175]  [<ffffffff81649781>] ? klist_init+0x31/0x40
+[14249.341181]  [<ffffffff81427208>] device_add+0x128/0x660
+[14249.341186]  [<ffffffff814369cc>] ? __pm_runtime_resume+0x5c/0x90
+[14249.341193]  [<ffffffff8145bcdc>] scsi_sysfs_add_sdev+0xac/0x340
+[14249.341199]  [<ffffffff8145a443>] do_scan_async+0x83/0x180
+[14249.341204]  [<ffffffff81074247>] async_run_entry_fn+0x37/0x130
+[14249.341210]  [<ffffffff81066524>] process_one_work+0x1f4/0x550
+[14249.341215]  [<ffffffff810664c2>] ? process_one_work+0x192/0x550
+[14249.341220]  [<ffffffff81067261>] worker_thread+0x121/0x3a0
+[14249.341225]  [<ffffffff81067140>] ? manage_workers.isra.22+0x2a0/0x2a0
+[14249.341231]  [<ffffffff8106dc8c>] kthread+0xfc/0x120
+[14249.341238]  [<ffffffff8106db90>] ? kthread_create_on_node+0x230/0x230
+[14249.341243]  [<ffffffff81669cac>] ret_from_fork+0x7c/0xb0
+[14249.341249]  [<ffffffff8106db90>] ? kthread_create_on_node+0x230/0x230
+[14249.341253] ---[ end trace 7f1d8a449e6af5aa ]---
+[14249.341259] scsi 6:0:0:0: failed to add device: -2
+
+Sarah Sharp
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
