@@ -1,60 +1,279 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 2/7 V2] lpfc 8.3.44: Fixed stopped FCF discovery on failed
- FCF record read
-Date: Tue, 17 Dec 2013 20:29:22 -0500
-Message-ID: <1387330162.1011.10.camel@myfc17>
+Subject: [PATCH 3/7 V2] lpfc 8.3.44: Fix Crash in lpfc_els_timeout_handler
+Date: Tue, 17 Dec 2013 20:29:36 -0500
+Message-ID: <1387330176.1011.11.camel@myfc17>
 Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:22609 "EHLO
-	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751072Ab3LRB30 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Dec 2013 20:29:26 -0500
+Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:41167 "EHLO
+	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751072Ab3LRB3k (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Dec 2013 20:29:40 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Fixed stopped FCF discovery on failed FCF record read. 
+Fix Crash in lpfc_els_timeout_handler
 
 
 Signed-off-by: James Smart <james.smart@emulex.com>
 
  ---
 
- lpfc_hbadisc.c |   12 +++++++++---
- 1 file changed, 9 insertions(+), 3 deletions(-)
+ lpfc_els.c       |  101 +++++++++++++++++++++++++++----------------------------
+ lpfc_nportdisc.c |   56 ++++++++++++++++++------------
+ 2 files changed, 84 insertions(+), 73 deletions(-)
 
 
-diff -upNr a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c	2013-11-26 21:45:44.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c	2013-12-02 11:52:11.575242041 -0500
-@@ -2545,8 +2545,11 @@ lpfc_mbx_cmpl_fcf_rr_read_fcf_rec(struct
- 	if (!new_fcf_record) {
- 		lpfc_printf_log(phba, KERN_WARNING, LOG_FIP,
- 				"2766 Mailbox command READ_FCF_RECORD "
--				"failed to retrieve a FCF record.\n");
--		goto error_out;
-+				"failed to retrieve a FCF record. "
-+				"hba_flg x%x fcf_flg x%x\n", phba->hba_flag,
-+				phba->fcf.fcf_flag);
-+		lpfc_unregister_fcf_rescan(phba);
-+		goto out;
+diff -upNr a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+--- a/drivers/scsi/lpfc/lpfc_els.c	2013-11-26 21:45:44.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_els.c	2013-12-02 11:52:13.063242075 -0500
+@@ -6223,19 +6223,17 @@ lpfc_els_timeout_handler(struct lpfc_vpo
+ 	uint32_t els_command = 0;
+ 	uint32_t timeout;
+ 	uint32_t remote_ID = 0xffffffff;
+-	LIST_HEAD(txcmplq_completions);
+ 	LIST_HEAD(abort_list);
+ 
+ 
+ 	timeout = (uint32_t)(phba->fc_ratov << 1);
+ 
+ 	pring = &phba->sli.ring[LPFC_ELS_RING];
+-
+ 	spin_lock_irq(&phba->hbalock);
+-	list_splice_init(&pring->txcmplq, &txcmplq_completions);
+-	spin_unlock_irq(&phba->hbalock);
++	if (phba->sli_rev == LPFC_SLI_REV4)
++		spin_lock(&pring->ring_lock);
+ 
+-	list_for_each_entry_safe(piocb, tmp_iocb, &txcmplq_completions, list) {
++	list_for_each_entry_safe(piocb, tmp_iocb, &pring->txcmplq, list) {
+ 		cmd = &piocb->iocb;
+ 
+ 		if ((piocb->iocb_flag & LPFC_IO_LIBDFC) != 0 ||
+@@ -6274,8 +6272,8 @@ lpfc_els_timeout_handler(struct lpfc_vpo
+ 		}
+ 		list_add_tail(&piocb->dlist, &abort_list);
+ 	}
+-	spin_lock_irq(&phba->hbalock);
+-	list_splice(&txcmplq_completions, &pring->txcmplq);
++	if (phba->sli_rev == LPFC_SLI_REV4)
++		spin_unlock(&pring->ring_lock);
+ 	spin_unlock_irq(&phba->hbalock);
+ 
+ 	list_for_each_entry_safe(piocb, tmp_iocb, &abort_list, dlist) {
+@@ -6317,15 +6315,50 @@ lpfc_els_timeout_handler(struct lpfc_vpo
+ void
+ lpfc_els_flush_cmd(struct lpfc_vport *vport)
+ {
+-	LIST_HEAD(completions);
++	LIST_HEAD(abort_list);
+ 	struct lpfc_hba  *phba = vport->phba;
+ 	struct lpfc_sli_ring *pring = &phba->sli.ring[LPFC_ELS_RING];
+ 	struct lpfc_iocbq *tmp_iocb, *piocb;
+ 	IOCB_t *cmd = NULL;
+ 
+ 	lpfc_fabric_abort_vport(vport);
++	/*
++	 * For SLI3, only the hbalock is required.  But SLI4 needs to coordinate
++	 * with the ring insert operation.  Because lpfc_sli_issue_abort_iotag
++	 * ultimately grabs the ring_lock, the driver must splice the list into
++	 * a working list and release the locks before calling the abort.
++	 */
++	spin_lock_irq(&phba->hbalock);
++	if (phba->sli_rev == LPFC_SLI_REV4)
++		spin_lock(&pring->ring_lock);
++
++	list_for_each_entry_safe(piocb, tmp_iocb, &pring->txcmplq, list) {
++		if (piocb->iocb_flag & LPFC_IO_LIBDFC)
++			continue;
++
++		if (piocb->vport != vport)
++			continue;
++		list_add_tail(&piocb->dlist, &abort_list);
++	}
++	if (phba->sli_rev == LPFC_SLI_REV4)
++		spin_unlock(&pring->ring_lock);
++	spin_unlock_irq(&phba->hbalock);
++	/* Abort each iocb on the aborted list and remove the dlist links. */
++	list_for_each_entry_safe(piocb, tmp_iocb, &abort_list, dlist) {
++		spin_lock_irq(&phba->hbalock);
++		list_del_init(&piocb->dlist);
++		lpfc_sli_issue_abort_iotag(phba, pring, piocb);
++		spin_unlock_irq(&phba->hbalock);
++	}
++	if (!list_empty(&abort_list))
++		lpfc_printf_vlog(vport, KERN_ERR, LOG_ELS,
++				 "3387 abort list for txq not empty\n");
++	INIT_LIST_HEAD(&abort_list);
+ 
+ 	spin_lock_irq(&phba->hbalock);
++	if (phba->sli_rev == LPFC_SLI_REV4)
++		spin_lock(&pring->ring_lock);
++
+ 	list_for_each_entry_safe(piocb, tmp_iocb, &pring->txq, list) {
+ 		cmd = &piocb->iocb;
+ 
+@@ -6343,24 +6376,16 @@ lpfc_els_flush_cmd(struct lpfc_vport *vp
+ 		if (piocb->vport != vport)
+ 			continue;
+ 
+-		list_move_tail(&piocb->list, &completions);
+-	}
+-
+-	list_for_each_entry_safe(piocb, tmp_iocb, &pring->txcmplq, list) {
+-		if (piocb->iocb_flag & LPFC_IO_LIBDFC) {
+-			continue;
+-		}
+-
+-		if (piocb->vport != vport)
+-			continue;
+-
+-		lpfc_sli_issue_abort_iotag(phba, pring, piocb);
++		list_del_init(&piocb->list);
++		list_add_tail(&piocb->list, &abort_list);
+ 	}
++	if (phba->sli_rev == LPFC_SLI_REV4)
++		spin_unlock(&pring->ring_lock);
+ 	spin_unlock_irq(&phba->hbalock);
+ 
+ 	/* Cancell all the IOCBs from the completions list */
+-	lpfc_sli_cancel_iocbs(phba, &completions, IOSTAT_LOCAL_REJECT,
+-			      IOERR_SLI_ABORTED);
++	lpfc_sli_cancel_iocbs(phba, &abort_list,
++			      IOSTAT_LOCAL_REJECT, IOERR_SLI_ABORTED);
+ 
+ 	return;
+ }
+@@ -6385,35 +6410,9 @@ lpfc_els_flush_cmd(struct lpfc_vport *vp
+ void
+ lpfc_els_flush_all_cmd(struct lpfc_hba  *phba)
+ {
+-	LIST_HEAD(completions);
+-	struct lpfc_sli_ring *pring = &phba->sli.ring[LPFC_ELS_RING];
+-	struct lpfc_iocbq *tmp_iocb, *piocb;
+-	IOCB_t *cmd = NULL;
+-
+-	lpfc_fabric_abort_hba(phba);
+-	spin_lock_irq(&phba->hbalock);
+-	list_for_each_entry_safe(piocb, tmp_iocb, &pring->txq, list) {
+-		cmd = &piocb->iocb;
+-		if (piocb->iocb_flag & LPFC_IO_LIBDFC)
+-			continue;
+-		/* Do not flush out the QUE_RING and ABORT/CLOSE iocbs */
+-		if (cmd->ulpCommand == CMD_QUE_RING_BUF_CN ||
+-		    cmd->ulpCommand == CMD_QUE_RING_BUF64_CN ||
+-		    cmd->ulpCommand == CMD_CLOSE_XRI_CN ||
+-		    cmd->ulpCommand == CMD_ABORT_XRI_CN)
+-			continue;
+-		list_move_tail(&piocb->list, &completions);
+-	}
+-	list_for_each_entry_safe(piocb, tmp_iocb, &pring->txcmplq, list) {
+-		if (piocb->iocb_flag & LPFC_IO_LIBDFC)
+-			continue;
+-		lpfc_sli_issue_abort_iotag(phba, pring, piocb);
+-	}
+-	spin_unlock_irq(&phba->hbalock);
+-
+-	/* Cancel all the IOCBs from the completions list */
+-	lpfc_sli_cancel_iocbs(phba, &completions, IOSTAT_LOCAL_REJECT,
+-			      IOERR_SLI_ABORTED);
++	struct lpfc_vport *vport;
++	list_for_each_entry(vport, &phba->port_list, listentry)
++		lpfc_els_flush_cmd(vport);
+ 
+ 	return;
+ }
+diff -upNr a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
+--- a/drivers/scsi/lpfc/lpfc_nportdisc.c	2013-11-26 21:45:44.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_nportdisc.c	2013-12-02 11:52:13.065242075 -0500
+@@ -203,8 +203,6 @@ lpfc_check_elscmpl_iocb(struct lpfc_hba
+ int
+ lpfc_els_abort(struct lpfc_hba *phba, struct lpfc_nodelist *ndlp)
+ {
+-	LIST_HEAD(completions);
+-	LIST_HEAD(txcmplq_completions);
+ 	LIST_HEAD(abort_list);
+ 	struct lpfc_sli  *psli = &phba->sli;
+ 	struct lpfc_sli_ring *pring = &psli->ring[LPFC_ELS_RING];
+@@ -216,32 +214,27 @@ lpfc_els_abort(struct lpfc_hba *phba, st
+ 			 "Data: x%x x%x x%x\n",
+ 			 ndlp->nlp_DID, ndlp->nlp_flag, ndlp->nlp_state,
+ 			 ndlp->nlp_rpi);
+-
++	/* Clean up all fabric IOs first.*/
+ 	lpfc_fabric_abort_nport(ndlp);
+ 
+-	/* First check the txq */
++	/*
++	 * Lock the ELS ring txcmplq for SLI3/SLI4 and build a local list
++	 * of all ELS IOs that need an ABTS.  The IOs need to stay on the
++	 * txcmplq so that the abort operation completes them successfully.
++	 */
+ 	spin_lock_irq(&phba->hbalock);
+-	list_for_each_entry_safe(iocb, next_iocb, &pring->txq, list) {
+-		/* Check to see if iocb matches the nport we are looking for */
+-		if (lpfc_check_sli_ndlp(phba, pring, iocb, ndlp)) {
+-			/* It matches, so deque and call compl with anp error */
+-			list_move_tail(&iocb->list, &completions);
+-		}
+-	}
+-
+-	/* Next check the txcmplq */
+-	list_splice_init(&pring->txcmplq, &txcmplq_completions);
+-	spin_unlock_irq(&phba->hbalock);
+-
+-	list_for_each_entry_safe(iocb, next_iocb, &txcmplq_completions, list) {
+-		/* Check to see if iocb matches the nport we are looking for */
++	if (phba->sli_rev == LPFC_SLI_REV4)
++		spin_lock(&pring->ring_lock);
++	list_for_each_entry_safe(iocb, next_iocb, &pring->txcmplq, list) {
++	/* Add to abort_list on on NDLP match. */
+ 		if (lpfc_check_sli_ndlp(phba, pring, iocb, ndlp))
+ 			list_add_tail(&iocb->dlist, &abort_list);
+ 	}
+-	spin_lock_irq(&phba->hbalock);
+-	list_splice(&txcmplq_completions, &pring->txcmplq);
++	if (phba->sli_rev == LPFC_SLI_REV4)
++		spin_unlock(&pring->ring_lock);
+ 	spin_unlock_irq(&phba->hbalock);
+ 
++	/* Abort the targeted IOs and remove them from the abort list. */
+ 	list_for_each_entry_safe(iocb, next_iocb, &abort_list, dlist) {
+ 			spin_lock_irq(&phba->hbalock);
+ 			list_del_init(&iocb->dlist);
+@@ -249,9 +242,28 @@ lpfc_els_abort(struct lpfc_hba *phba, st
+ 			spin_unlock_irq(&phba->hbalock);
  	}
  
- 	/* Get the needed parameters from FCF record */
-@@ -3973,7 +3976,10 @@ lpfc_nlp_counters(struct lpfc_vport *vpo
- 		vport->fc_map_cnt += count;
- 		break;
- 	case NLP_STE_NPR_NODE:
--		vport->fc_npr_cnt += count;
-+		if (vport->fc_npr_cnt == 0 && count == -1)
-+			vport->fc_npr_cnt = 0;
-+		else
-+			vport->fc_npr_cnt += count;
- 		break;
- 	}
- 	spin_unlock_irq(shost->host_lock);
++	INIT_LIST_HEAD(&abort_list);
++
++	/* Now process the txq */
++	spin_lock_irq(&phba->hbalock);
++	if (phba->sli_rev == LPFC_SLI_REV4)
++		spin_lock(&pring->ring_lock);
++
++	list_for_each_entry_safe(iocb, next_iocb, &pring->txq, list) {
++		/* Check to see if iocb matches the nport we are looking for */
++		if (lpfc_check_sli_ndlp(phba, pring, iocb, ndlp)) {
++			list_del_init(&iocb->list);
++			list_add_tail(&iocb->list, &abort_list);
++		}
++	}
++
++	if (phba->sli_rev == LPFC_SLI_REV4)
++		spin_unlock(&pring->ring_lock);
++	spin_unlock_irq(&phba->hbalock);
++
+ 	/* Cancel all the IOCBs from the completions list */
+-	lpfc_sli_cancel_iocbs(phba, &completions, IOSTAT_LOCAL_REJECT,
+-			      IOERR_SLI_ABORTED);
++	lpfc_sli_cancel_iocbs(phba, &abort_list,
++			      IOSTAT_LOCAL_REJECT, IOERR_SLI_ABORTED);
+ 
+ 	lpfc_cancel_retry_delay_tmo(phba->pport, ndlp);
+ 	return 0;
 
 
