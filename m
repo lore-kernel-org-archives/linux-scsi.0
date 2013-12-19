@@ -1,51 +1,31 @@
-From: Levente Kurusa <levex@linux.com>
-Subject: [PATCH 33/38] scsi: transport: add missing put_device call
-Date: Thu, 19 Dec 2013 16:06:47 +0100
-Message-ID: <1387465612-3673-34-git-send-email-levex@linux.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 33/38] scsi: transport: add missing put_device call
+Date: Thu, 19 Dec 2013 07:19:10 -0800
+Message-ID: <1387466350.2210.5.camel@dabdike.int.hansenpartnership.com>
 References: <1387465612-3673-33-git-send-email-levex@linux.com>
+	 <1387465612-3673-34-git-send-email-levex@linux.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1387465612-3673-33-git-send-email-levex@linux.com>
+In-Reply-To: <1387465612-3673-34-git-send-email-levex@linux.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: LKML <linux-kernel@vger.kernel.org>
-Cc: Levente Kurusa <levex@linux.com>, Mike Christie <michaelc@cs.wisc.edu>, "James E.J. Bottomley" <JBottomley@parallels.com>, open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org
+To: Levente Kurusa <levex@linux.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, Mike Christie <michaelc@cs.wisc.edu>, open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-This is required so that we give up the last reference to the device.
-Remove the kfree() as well, because the put_device() will result in
-iscsi_endpoint_release being called and hence it will be kfree'd.
+On Thu, 2013-12-19 at 16:06 +0100, Levente Kurusa wrote:
+> This is required so that we give up the last reference to the device.
 
-Signed-off-by: Levente Kurusa <levex@linux.com>
----
- drivers/scsi/scsi_transport_iscsi.c | 10 ++++------
- 1 file changed, 4 insertions(+), 6 deletions(-)
+This isn't true.
 
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index 63a6ca4..ff20f35 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -219,8 +219,10 @@ iscsi_create_endpoint(int dd_size)
- 	ep->dev.class = &iscsi_endpoint_class;
- 	dev_set_name(&ep->dev, "ep-%llu", (unsigned long long) id);
- 	err = device_register(&ep->dev);
--        if (err)
--                goto free_ep;
-+        if (err) {
-+        	put_device(&ep->dev);
-+	        return NULL;
-+	}
- 
- 	err = sysfs_create_group(&ep->dev.kobj, &iscsi_endpoint_group);
- 	if (err)
-@@ -233,10 +235,6 @@ iscsi_create_endpoint(int dd_size)
- unregister_dev:
- 	device_unregister(&ep->dev);
- 	return NULL;
--
--free_ep:
--	kfree(ep);
--	return NULL;
- }
- EXPORT_SYMBOL_GPL(iscsi_create_endpoint);
- 
--- 
-1.8.3.1
+> Remove the kfree() as well, because the put_device() will result in
+> iscsi_endpoint_release being called and hence it will be kfree'd.
+
+There's no real point to this patch.  The use case where we own the
+device absolutely up until the point we hand out references is well
+established and there are a number of destroy paths running through SCSI
+code which don't go via refcounting and this is one of them.  They're
+almost universally on error legs on device bring up as this one is.
+
+James
