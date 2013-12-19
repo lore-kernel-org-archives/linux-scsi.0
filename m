@@ -1,13 +1,13 @@
 From: Bradley Grove <bgrove@attotech.com>
-Subject: [PATCH 2/2] pm80xx: Enable BAR shift to avoid BIOS conflict with MPI space for ATTO pm8001 based HBAs.
-Date: Thu, 19 Dec 2013 10:50:57 -0500
-Message-ID: <1387468257-3177-3-git-send-email-bgrove@attotech.com>
+Subject: [PATCH 1/2] pm80xx: Read saved WWN from NVMD for ATTO pm8001 based HBAs.
+Date: Thu, 19 Dec 2013 10:50:56 -0500
+Message-ID: <1387468257-3177-2-git-send-email-bgrove@attotech.com>
 References: <1387468257-3177-1-git-send-email-bgrove@attotech.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sw.attotech.com ([208.69.85.34]:49148 "EHLO
+Received: from sw.attotech.com ([208.69.85.34]:12269 "EHLO
 	NOTESERV1.attotech.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754746Ab3LSPvb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Dec 2013 10:51:31 -0500
+	with ESMTP id S1754488Ab3LSPva (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Dec 2013 10:51:30 -0500
 In-Reply-To: <1387468257-3177-1-git-send-email-bgrove@attotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -16,40 +16,44 @@ Cc: jbottomley@parallels.com, xjtuwjp@gmail.com, vasanthalakshmi.tharmarajan@pmc
 
 Signed-off-by: Bradley Grove <bgrove@attotech.com>
 ---
- drivers/scsi/pm8001/pm8001_hwi.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/pm8001/pm8001_init.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-index 46ace52..561ca2c 100644
---- a/drivers/scsi/pm8001/pm8001_hwi.c
-+++ b/drivers/scsi/pm8001/pm8001_hwi.c
-@@ -644,7 +644,7 @@ static int pm8001_chip_init(struct pm8001_hba_info *pm8001_ha)
- 	pci_read_config_word(pm8001_ha->pdev, PCI_DEVICE_ID, &deviceid);
- 	/* 8081 controllers need BAR shift to access MPI space
- 	* as this is shared with BIOS data */
--	if (deviceid == 0x8081) {
-+	if (deviceid == 0x8081 || deviceid == 0x0042) {
- 		if (-1 == pm8001_bar4_shift(pm8001_ha, GSM_SM_BASE)) {
- 			PM8001_FAIL_DBG(pm8001_ha,
- 				pm8001_printk("Shift Bar4 to 0x%x failed\n",
-@@ -673,7 +673,7 @@ static int pm8001_chip_init(struct pm8001_hba_info *pm8001_ha)
- 	for (i = 0; i < PM8001_MAX_OUTB_NUM; i++)
- 		update_outbnd_queue_table(pm8001_ha, i);
- 	/* 8081 controller donot require these operations */
--	if (deviceid != 0x8081) {
-+	if (deviceid != 0x8081 && deviceid != 0x0042) {
- 		mpi_set_phys_g3_with_ssc(pm8001_ha, 0);
- 		/* 7->130ms, 34->500ms, 119->1.5s */
- 		mpi_set_open_retry_interval_reg(pm8001_ha, 119);
-@@ -701,7 +701,7 @@ static int mpi_uninit_check(struct pm8001_hba_info *pm8001_ha)
- 	u32 gst_len_mpistate;
- 	u16 deviceid;
- 	pci_read_config_word(pm8001_ha->pdev, PCI_DEVICE_ID, &deviceid);
--	if (deviceid == 0x8081) {
-+	if (deviceid == 0x8081 || deviceid == 0x0042) {
- 		if (-1 == pm8001_bar4_shift(pm8001_ha, GSM_SM_BASE)) {
- 			PM8001_FAIL_DBG(pm8001_ha,
- 				pm8001_printk("Shift Bar4 to 0x%x failed\n",
+diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+index 73a120d..cb89d15 100644
+--- a/drivers/scsi/pm8001/pm8001_init.c
++++ b/drivers/scsi/pm8001/pm8001_init.c
+@@ -625,7 +625,7 @@ static void pm8001_init_sas_add(struct pm8001_hba_info *pm8001_ha)
+ 	pm8001_ha->nvmd_completion = &completion;
+ 
+ 	if (pm8001_ha->chip_id == chip_8001) {
+-		if (deviceid == 0x8081) {
++		if (deviceid == 0x8081 || deviceid == 0x0042) {
+ 			payload.minor_function = 4;
+ 			payload.length = 4096;
+ 		} else {
+@@ -646,6 +646,9 @@ static void pm8001_init_sas_add(struct pm8001_hba_info *pm8001_ha)
+ 			if (deviceid == 0x8081)
+ 				pm8001_ha->sas_addr[j] =
+ 					payload.func_specific[0x704 + i];
++			else if (deviceid == 0x0042)
++				pm8001_ha->sas_addr[j] =
++					payload.func_specific[0x010 + i];
+ 		} else
+ 			pm8001_ha->sas_addr[j] =
+ 					payload.func_specific[0x804 + i];
+@@ -1072,10 +1075,7 @@ err_out_enable:
+  */
+ static struct pci_device_id pm8001_pci_table[] = {
+ 	{ PCI_VDEVICE(PMC_Sierra, 0x8001), chip_8001 },
+-	{
+-		PCI_DEVICE(0x117c, 0x0042),
+-		.driver_data = chip_8001
+-	},
++	{ PCI_VDEVICE(ATTO, 0x0042), chip_8001 },
+ 	/* Support for SPC/SPCv/SPCve controllers */
+ 	{ PCI_VDEVICE(ADAPTEC2, 0x8001), chip_8001 },
+ 	{ PCI_VDEVICE(PMC_Sierra, 0x8008), chip_8008 },
 -- 
 1.8.3.1
 
