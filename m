@@ -1,79 +1,114 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 4/4] drivers: target: Mark functions and structures as
- static in tfc_conf.c
-Date: Wed, 18 Dec 2013 16:12:19 -0800
-Message-ID: <1387411939.5567.11.camel@haakon3.risingtidesystems.com>
-References: <1a63603bc5ff05147c419a301d59b135cd0c8406.1387390091.git.rashika.kheria@gmail.com>
-	 <94a49e2b29220b2a3fb93449a7b2c96fb6ea4667.1387390091.git.rashika.kheria@gmail.com>
+Subject: Re: [PATCH 8/8] target_core_alua: Referrals configfs integration
+Date: Wed, 18 Dec 2013 22:25:02 -0800
+Message-ID: <1387434302.5567.35.camel@haakon3.risingtidesystems.com>
+References: <1387268330-121064-1-git-send-email-hare@suse.de>
+	 <1387268330-121064-9-git-send-email-hare@suse.de>
+	 <1387313347.20247.316.camel@haakon3.risingtidesystems.com>
+	 <52B15999.9090207@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <94a49e2b29220b2a3fb93449a7b2c96fb6ea4667.1387390091.git.rashika.kheria@gmail.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Rashika Kheria <rashika.kheria@gmail.com>
-Cc: linux-kernel@vger.kernel.org, Jingoo Han <jg1.han@samsung.com>, Andy Grover <agrover@redhat.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, josh@joshtriplett.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:51347 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751332Ab3LSGYF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Dec 2013 01:24:05 -0500
+In-Reply-To: <52B15999.9090207@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Nic Bellinger <nab@daterainc.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Thu, 2013-12-19 at 00:05 +0530, Rashika Kheria wrote:
-> Mark functions ft_tpg_alloc_fabric_acl(), ft_register_configfs() and
-> ft_deregister_configfs() as static in tcm_fc/tfc_conf.c because they =
-are
-> not used outside this file.
->=20
-> This eliminates the following warnings in tcm_fc/tfc_conf.c:
-> drivers/target/tcm_fc/tfc_conf.c:270:21: warning: no previous prototy=
-pe for =E2=80=98ft_tpg_alloc_fabric_acl=E2=80=99 [-Wmissing-prototypes]
-> drivers/target/tcm_fc/tfc_conf.c:555:5: warning: no previous prototyp=
-e for =E2=80=98ft_register_configfs=E2=80=99 [-Wmissing-prototypes]
-> drivers/target/tcm_fc/tfc_conf.c:602:6: warning: no previous prototyp=
-e for =E2=80=98ft_deregister_configfs=E2=80=99 [-Wmissing-prototypes]
->=20
-> Signed-off-by: Rashika Kheria <rashika.kheria@gmail.com>
-> ---
->  drivers/target/tcm_fc/tfc_conf.c |    6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
->=20
+On Wed, 2013-12-18 at 09:15 +0100, Hannes Reinecke wrote:
+> On 12/17/2013 09:49 PM, Nicholas A. Bellinger wrote:
+> > On Tue, 2013-12-17 at 09:18 +0100, Hannes Reinecke wrote:
+> >> Referrals need an LBA map, which needs to be kept
+> >> consistent across all target port groups. So
+> >> instead of tying the map to the target port groups
+> >> I've implemented a single attribute containing the
+> >> entire map.
+> >>
+> >> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> >> ---
+> >>  drivers/target/target_core_alua.c      | 101 +++++++++++++++++++
+> >>  drivers/target/target_core_alua.h      |   8 ++
+> >>  drivers/target/target_core_configfs.c  | 171 +++++++++++++++++++++++++++++++++
+> >>  drivers/target/target_core_device.c    |   1 +
+> >>  drivers/target/target_core_transport.c |  28 +++++-
+> >>  5 files changed, 308 insertions(+), 1 deletion(-)
+> >>
+> > 
+> > Applied, with one comment below..
+> > 
+> > <SNIP>
+> > 
+> >> diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
+> >> index e74ef8c..1dbc1bc 100644
+> >> --- a/drivers/target/target_core_configfs.c
+> >> +++ b/drivers/target/target_core_configfs.c
+> >> @@ -1741,6 +1741,176 @@ static struct target_core_configfs_attribute target_core_attr_dev_alua_lu_gp = {
+> >>  	.store	= target_core_store_alua_lu_gp,
+> >>  };
+> >>  
+> >> +static ssize_t target_core_show_dev_lba_map(void *p, char *page)
+> >> +{
+> >> +	struct se_device *dev = p;
+> >> +	struct t10_alua_lba_map *map;
+> >> +	struct t10_alua_lba_map_member *mem;
+> >> +	char *b = page;
+> >> +	int bl = 0;
+> >> +	char state;
+> >> +
+> >> +	spin_lock(&dev->t10_alua.lba_map_lock);
+> >> +	if (!list_empty(&dev->t10_alua.lba_map_list))
+> >> +	    bl += sprintf(b + bl, "%u %u\n",
+> >> +			  dev->t10_alua.lba_map_segment_size,
+> >> +			  dev->t10_alua.lba_map_segment_multiplier);
+> >> +	list_for_each_entry(map, &dev->t10_alua.lba_map_list, lba_map_list) {
+> >> +		bl += sprintf(b + bl, "%llu %llu",
+> >> +			      map->lba_map_first_lba, map->lba_map_last_lba);
+> >> +		list_for_each_entry(mem, &map->lba_map_mem_list,
+> >> +				    lba_map_mem_list) {
+> >> +			switch (mem->lba_map_mem_alua_state) {
+> >> +			case ALUA_ACCESS_STATE_ACTIVE_OPTIMIZED:
+> >> +				state = 'O';
+> >> +				break;
+> >> +			case ALUA_ACCESS_STATE_ACTIVE_NON_OPTIMIZED:
+> >> +				state = 'A';
+> >> +				break;
+> >> +			case ALUA_ACCESS_STATE_STANDBY:
+> >> +				state = 'S';
+> >> +				break;
+> >> +			case ALUA_ACCESS_STATE_UNAVAILABLE:
+> >> +				state = 'U';
+> >> +				break;
+> >> +			default:
+> >> +				state = '.';
+> >> +				break;
+> >> +			}
+> >> +			bl += sprintf(b + bl, " %d:%c",
+> >> +				      mem->lba_map_mem_alua_pg_id, state);
+> >> +		}
+> >> +		bl += sprintf(b + bl, "\n");
+> >> +	}
+> >> +	spin_unlock(&dev->t10_alua.lba_map_lock);
+> > 
+> > The above loop can possibly overflow the passed *page..
+> > 
+> No. This is the reverse operation to the constructor in
+> target_core_store_dev_lba_map().
+> 
+> Which (per definition) can only handle maps up to one page in size.
+> 
+> And hence the resulting (formatted) map as constructed by
+> target_core_show_dev_lba_map() will also fit on one page.
+> 
 
-Applied to target-pending/for-next.
-
-Thanks Rashika + Josh!
+Sure, but AFAICT nothing prevents target_core_store_dev_lba_map() ->
+core_alua_set_lba_map() from being called multiple times, and thus
+potentially increasing target_core_show_dev_lba_map() output to larger
+than PAGE_SIZE..
 
 --nab
 
-> diff --git a/drivers/target/tcm_fc/tfc_conf.c b/drivers/target/tcm_fc=
-/tfc_conf.c
-> index c6932fb..e879da8 100644
-> --- a/drivers/target/tcm_fc/tfc_conf.c
-> +++ b/drivers/target/tcm_fc/tfc_conf.c
-> @@ -267,7 +267,7 @@ struct ft_node_acl *ft_acl_get(struct ft_tpg *tpg=
-, struct fc_rport_priv *rdata)
->  	return found;
->  }
-> =20
-> -struct se_node_acl *ft_tpg_alloc_fabric_acl(struct se_portal_group *=
-se_tpg)
-> +static struct se_node_acl *ft_tpg_alloc_fabric_acl(struct se_portal_=
-group *se_tpg)
->  {
->  	struct ft_node_acl *acl;
-> =20
-> @@ -552,7 +552,7 @@ static struct target_core_fabric_ops ft_fabric_op=
-s =3D {
->  	.fabric_drop_nodeacl =3D		&ft_del_acl,
->  };
-> =20
-> -int ft_register_configfs(void)
-> +static int ft_register_configfs(void)
->  {
->  	struct target_fabric_configfs *fabric;
->  	int ret;
-> @@ -599,7 +599,7 @@ int ft_register_configfs(void)
->  	return 0;
->  }
-> =20
-> -void ft_deregister_configfs(void)
-> +static void ft_deregister_configfs(void)
->  {
->  	if (!ft_configfs)
->  		return;
