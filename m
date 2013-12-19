@@ -1,31 +1,20 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 33/38] scsi: transport: add missing put_device call
-Date: Thu, 19 Dec 2013 07:19:10 -0800
-Message-ID: <1387466350.2210.5.camel@dabdike.int.hansenpartnership.com>
-References: <1387465612-3673-33-git-send-email-levex@linux.com>
-	 <1387465612-3673-34-git-send-email-levex@linux.com>
+From: johnsmith <loan8@Mrjohnsmithloanfirms072.onmicrosoft.com>
+Subject: URGENT LOAN OFFER!!
+Date: Thu, 19 Dec 2013 21:10:18 +0530
+Message-ID: <0b240ac3-f296-497b-bc70-fa16c8e29eb1__4130.71227162636$1387467671$gmane$org@HKXPR02MB312.apcprd02.prod.outlook.com>
+Reply-To: <mr.johnsmithloanfirm@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1387465612-3673-34-git-send-email-levex@linux.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Levente Kurusa <levex@linux.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, Mike Christie <michaelc@cs.wisc.edu>, open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from emea01-am1-ndr.ptr.protection.outlook.com ([157.56.116.101]:3715
+	"EHLO emea01-am1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752165Ab3LSPkk convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Dec 2013 10:40:40 -0500
+Content-Description: Mail message body
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Recipients <loan8@Mrjohnsmithloanfirms072.onmicrosoft.com>
 
-On Thu, 2013-12-19 at 16:06 +0100, Levente Kurusa wrote:
-> This is required so that we give up the last reference to the device.
-
-This isn't true.
-
-> Remove the kfree() as well, because the put_device() will result in
-> iscsi_endpoint_release being called and hence it will be kfree'd.
-
-There's no real point to this patch.  The use case where we own the
-device absolutely up until the point we hand out references is well
-established and there are a number of destroy paths running through SCSI
-code which don't go via refcounting and this is one of them.  They're
-almost universally on error legs on device bring up as this one is.
-
-James
+DO YOU NEED A LOAN IF YES,CONTACT US WITH:LOAN AMOUNT,LOAN DURATION,COUNTRY,PHONE,MOBILE NO:CONTACT US VIA EMAIL:(mr.johnsmithloanfirm@gmail.com)
