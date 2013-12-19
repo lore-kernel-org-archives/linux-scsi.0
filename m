@@ -1,69 +1,69 @@
-From: Ben Hutchings <ben@decadent.org.uk>
-Subject: Re: [net-next 1/1] linux-firmware: 3.2.3.0 Firmware for Brocade
- Adapters
-Date: Thu, 19 Dec 2013 10:47:13 +0000
-Message-ID: <1387450033.21926.42.camel@deadeye.wl.decadent.org.uk>
-References: <1387329122-27702-1-git-send-email-rmody@brocade.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-pBZ4vZKsqcg7P/rdhrGc"
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <1387329122-27702-1-git-send-email-rmody@brocade.com>
-Sender: netdev-owner@vger.kernel.org
-To: Rasesh Mody <rmody@brocade.com>
-Cc: dwmw2@infradead.org, netdev <netdev@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 1/2] target_core_alua: check for buffer overflow
+Date: Thu, 19 Dec 2013 14:36:11 +0100
+Message-ID: <1387460172-27396-2-git-send-email-hare@suse.de>
+References: <1387460172-27396-1-git-send-email-hare@suse.de>
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1387460172-27396-1-git-send-email-hare@suse.de>
+Sender: target-devel-owner@vger.kernel.org
+To: Nic Bellinger <nab@daterainc.com>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
+When a writing to a command-provided buffer we need to ensure
+that we're not writing past the end of it.
+At the same time we need to continue processing as typically
+the final data length (ie the required size of the buffer)
+need to be returned.
 
---=-pBZ4vZKsqcg7P/rdhrGc
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/target/target_core_alua.c | 23 +++++++++++++++++------
+ 1 file changed, 17 insertions(+), 6 deletions(-)
 
-On Tue, 2013-12-17 at 17:12 -0800, Rasesh Mody wrote:
-> This is the 3.2.3.0 firmware patch for Brocade 3.2.23.0 BFA and BNA drive=
-rs.
->=20
-> Signed-off-by: Rasesh Mody <rmody@brocade.com>
-> ---
->  WHENCE            |   3 +++
->  cbfw-3.2.3.0.bin  | Bin 0 -> 414016 bytes
->  ct2fw-3.2.3.0.bin | Bin 0 -> 583688 bytes
->  ctfw-3.2.3.0.bin  | Bin 0 -> 538712 bytes
->  4 files changed, 3 insertions(+)
->  create mode 100644 cbfw-3.2.3.0.bin
->  create mode 100644 ct2fw-3.2.3.0.bin
->  create mode 100644 ctfw-3.2.3.0.bin
-[...]
-
-Applied, thanks.
-
-Ben.
-
---=20
-Ben Hutchings
-It is easier to write an incorrect program than to understand a correct one=
-.
-
---=-pBZ4vZKsqcg7P/rdhrGc
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.15 (GNU/Linux)
-
-iQIVAwUAUrLOsee/yOyVhhEJAQrzHQ/9GdAdSiswIOmb9Rywn2gnt/4Yu1XMo6ab
-wvcKfhauF7hfm+Yqgo1ayDJmVluWPKiWZSaYpb1xE/fBIkdw998eS+emxJ+VxNnO
-DquEmvX1w7o6OSuyYxtt7HcHL2GpSpjscEG+uCxZCA0yiDifh3dQjgTFAMzoprN0
-Rt9Q3fv6mBakJT6qaopvIubloiN6VE+7YzIuQD2B/2qGFLaaKO0Nemv1DiGQM47v
-Zfw/LRrdTsp4k5K1fAhQ79M3iJZs93Z6qULghNN8xiYz90VSUu4prOKmTHMhKoMH
-dn/MsCW9F8D1RbKFem4Sxz9Nu4EbEFF2LJeiqAn39oLNaaZeret/v3rLbuwLEpd2
-/N7R9AqaDqe0+Typ3LTQYIudAb3qZ1uUgUZuIw8VSMiQuHWmJ8d3ij3J3NxIWn8T
-vHo7hzdXplS4zW59Rb3M5lP5GiUdDrezBNMQXKzcwMD3gAJqJ4p6Sgt7k4+xs0Gq
-nqYnbb+yzfcUK8c5a+n/zTHWyxNz/dsvWLLifNMHS7KA/pYf+LYWxZJ5YpB85Fi+
-U52ehmFi+PSZJM8i83PMPo+Jho21uRmt18vqpXjR2CVT25QfwjI0rmnJOyehahCM
-/aIg1ATOnI957Bdtgi7O6lo0LqWjzAH0tYZ9nF9BRGBjYPpsMOzOU1reZUQBWcnW
-DlH2nodrEmI=
-=jz+U
------END PGP SIGNATURE-----
-
---=-pBZ4vZKsqcg7P/rdhrGc--
+diff --git a/drivers/target/target_core_alua.c b/drivers/target/target_core_alua.c
+index 104847e..9b1856d 100644
+--- a/drivers/target/target_core_alua.c
++++ b/drivers/target/target_core_alua.c
+@@ -96,22 +96,33 @@ target_emulate_report_referrals(struct se_cmd *cmd)
+ 		int pg_num;
+ 
+ 		off += 4;
+-		put_unaligned_be64(map->lba_map_first_lba, &buf[off]);
++		if (cmd->data_length > off)
++			put_unaligned_be64(map->lba_map_first_lba, &buf[off]);
+ 		off += 8;
+-		put_unaligned_be64(map->lba_map_last_lba, &buf[off]);
++		if (cmd->data_length > off)
++			put_unaligned_be64(map->lba_map_last_lba, &buf[off]);
+ 		off += 8;
+ 		rd_len += 20;
+ 		pg_num = 0;
+ 		list_for_each_entry(map_mem, &map->lba_map_mem_list,
+ 				    lba_map_mem_list) {
+-			buf[off++] = map_mem->lba_map_mem_alua_state & 0x0f;
++			int alua_state = map_mem->lba_map_mem_alua_state;
++			int alua_pg_id = map_mem->lba_map_mem_alua_pg_id;
++
++			if (cmd->data_length > off)
++				buf[off] = alua_state & 0x0f;
++			off += 2;
++			if (cmd->data_length > off)
++				buf[off] = (alua_pg_id >> 8) & 0xff;
++			off++;
++			if (cmd->data_length > off)
++				buf[off] = (alua_pg_id & 0xff);
+ 			off++;
+-			buf[off++] = (map_mem->lba_map_mem_alua_pg_id >> 8) & 0xff;
+-			buf[off++] = (map_mem->lba_map_mem_alua_pg_id & 0xff);
+ 			rd_len += 4;
+ 			pg_num++;
+ 		}
+-		buf[desc_num] = pg_num;
++		if (cmd->data_length > desc_num)
++			buf[desc_num] = pg_num;
+ 	}
+ 	spin_unlock(&dev->t10_alua.lba_map_lock);
+ 
+-- 
+1.7.12.4
