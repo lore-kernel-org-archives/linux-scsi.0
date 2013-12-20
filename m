@@ -1,37 +1,88 @@
-From: Jack Wang <xjtuwjp@gmail.com>
-Subject: Re: [PATCH 0/2] pm80xx: Fix ATTO pm8001 based HBA support
-Date: Fri, 20 Dec 2013 11:50:48 +0100
-Message-ID: <52B42108.4040408@gmail.com>
-References: <1387468257-3177-1-git-send-email-bgrove@attotech.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 02/16] scsi_dh_alua: use flag for RTPG extended header
+Date: Fri, 20 Dec 2013 13:13:27 +0100
+Message-ID: <1387541621-54967-3-git-send-email-hare@suse.de>
+References: <1387541621-54967-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bk0-f54.google.com ([209.85.214.54]:49354 "EHLO
-	mail-bk0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932292Ab3LTKuv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Dec 2013 05:50:51 -0500
-Received: by mail-bk0-f54.google.com with SMTP id v16so1148371bkz.27
-        for <linux-scsi@vger.kernel.org>; Fri, 20 Dec 2013 02:50:50 -0800 (PST)
-In-Reply-To: <1387468257-3177-1-git-send-email-bgrove@attotech.com>
+Received: from cantor2.suse.de ([195.135.220.15]:46603 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756014Ab3LTMNn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 20 Dec 2013 07:13:43 -0500
+In-Reply-To: <1387541621-54967-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bradley Grove <bgrove@attotech.com>
-Cc: linux-scsi@vger.kernel.org, jbottomley@parallels.com, vasanthalakshmi.tharmarajan@pmcs.com, suresh.thiagarajan@pmcs.com, viswas.g@pmcs.com
+To: James Bottomley <jbottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org, Sean Stewart <sean.stewart@netapp.com>, Martin George <marting@netapp.com>, Hannes Reinecke <hare@suse.de>
 
-On 12/19/2013 04:50 PM, Bradley Grove wrote:
-> Addresses issues that we uncovered during testing with our HBAs.
-> For the most part, we just enabled code that was already being used 
-> for other vendor's HBAs.
-> 
-> Bradley Grove (2):
->   pm80xx: Read saved WWN from NVMD for ATTO pm8001 based HBAs.
->   pm80xx: Enable BAR shift to avoid BIOS conflict with MPI space for    
->     ATTO pm8001 based HBAs.
-> 
->  drivers/scsi/pm8001/pm8001_hwi.c  |  6 +++---
->  drivers/scsi/pm8001/pm8001_init.c | 10 +++++-----
->  2 files changed, 8 insertions(+), 8 deletions(-)
-> 
-Looks fine, thanks
- Acked-by: Jack Wang <xjtuwjp@gmail.com>
+We should be using a flag when RTPG extended header is not
+supported, that saves us sending RTPG twice for older arrays.
+
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/scsi/device_handler/scsi_dh_alua.c | 13 ++++++-------
+ 1 file changed, 6 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+index e4e5497..ece2255 100644
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+@@ -61,6 +61,7 @@
+ 
+ /* flags passed from user level */
+ #define ALUA_OPTIMIZE_STPG		1
++#define ALUA_RTPG_EXT_HDR_UNSUPP	2
+ 
+ struct alua_dh_data {
+ 	int			group_id;
+@@ -181,8 +182,7 @@ done:
+  * submit_rtpg - Issue a REPORT TARGET GROUP STATES command
+  * @sdev: sdev the command should be sent to
+  */
+-static unsigned submit_rtpg(struct scsi_device *sdev, struct alua_dh_data *h,
+-			    bool rtpg_ext_hdr_req)
++static unsigned submit_rtpg(struct scsi_device *sdev, struct alua_dh_data *h)
+ {
+ 	struct request *rq;
+ 	int err;
+@@ -195,7 +195,7 @@ static unsigned submit_rtpg(struct scsi_device *sdev, struct alua_dh_data *h,
+ 
+ 	/* Prepare the command. */
+ 	rq->cmd[0] = MAINTENANCE_IN;
+-	if (rtpg_ext_hdr_req)
++	if (!(h->flags & ALUA_RTPG_EXT_HDR_UNSUPP))
+ 		rq->cmd[1] = MI_REPORT_TARGET_PGS | MI_EXT_HDR_PARAM_FMT;
+ 	else
+ 		rq->cmd[1] = MI_REPORT_TARGET_PGS;
+@@ -565,7 +565,6 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_dh_data *h, int wait_
+ 	int len, k, off, valid_states = 0;
+ 	unsigned char *ucp;
+ 	unsigned err, retval;
+-	bool rtpg_ext_hdr_req = 1;
+ 	unsigned long expiry, interval = 0;
+ 	unsigned int tpg_desc_tbl_off;
+ 	unsigned char orig_transition_tmo;
+@@ -576,7 +575,7 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_dh_data *h, int wait_
+ 		expiry = round_jiffies_up(jiffies + h->transition_tmo * HZ);
+ 
+  retry:
+-	retval = submit_rtpg(sdev, h, rtpg_ext_hdr_req);
++	retval = submit_rtpg(sdev, h);
+ 
+ 	if (retval) {
+ 		if (h->senselen == 0 ||
+@@ -600,10 +599,10 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_dh_data *h, int wait_
+ 		 * The retry without rtpg_ext_hdr_req set
+ 		 * handles this.
+ 		 */
+-		if (rtpg_ext_hdr_req == 1 &&
++		if (!(h->flags & ALUA_RTPG_EXT_HDR_UNSUPP) &&
+ 		    sense_hdr.sense_key == ILLEGAL_REQUEST &&
+ 		    sense_hdr.asc == 0x24 && sense_hdr.ascq == 0) {
+-			rtpg_ext_hdr_req = 0;
++			h->flags |= ALUA_RTPG_EXT_HDR_UNSUPP;
+ 			goto retry;
+ 		}
+ 
+-- 
+1.7.12.4
+
