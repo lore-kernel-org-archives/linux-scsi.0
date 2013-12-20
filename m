@@ -1,55 +1,26 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [LSF/MM TOPIC] [ATTEND] scsi_eh updates
-Date: Fri, 20 Dec 2013 15:54:13 +0100
-Message-ID: <52B45A15.4090009@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: michaelc@cs.wisc.edu
+Subject: [PATCH 0/6] iscsi changes for scsi-misc
+Date: Fri, 20 Dec 2013 12:53:41 -0600
+Message-ID: <1387565627-5218-1-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:49997 "EHLO mx2.suse.de"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:33111 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751101Ab3LTOyP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Dec 2013 09:54:15 -0500
+	id S1750866Ab3LTSx7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 20 Dec 2013 13:53:59 -0500
+Received: from localhost.localdomain (c-24-245-27-162.hsd1.mn.comcast.net [24.245.27.162])
+	(authenticated bits=0)
+	by sabe.cs.wisc.edu (8.14.1/8.14.1) with ESMTP id rBKIrs2W010889
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Fri, 20 Dec 2013 12:53:58 -0600
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: lsf-pc@lists.linux-foundation.org
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-Hi all,
+The following patches are some features and fixes for scsi-misc.
 
-(before leaving for holiday ...)
+James, if you were going to merge the libiscsi locking changes here
+http://www.spinics.net/lists/linux-scsi/msg69903.html
+do not bother. The qlogic patches that were just merged had a conflict.
+The patches in the following emails should apply cleanly to misc.
 
-I'd like to attend LSF 2014.
 
-During that I'd like to discuss the current status of the SCSI EH
-and the future planned updates.
-
-As discussed during last year's LSF the SCSI error handler should be
-updated to handle modern SCSI transports better.
-While some patchsets are already merged, there are some issues which
-are still open:
-- Handling of requests during host reset:
-  Do we need to keep hold of outstanding requests during host reset?
-  Or is it save to return them prior to host reset?
-- Check for transport status prior to sending TMFs.
-  Task management functions typically need a working I_T nexus,
-  so it does make sense to first check the transport status
-  prior to attempting any TMFs
-- Further steps for updating SCSI EH
-As these are tricky issues which have possible repercussions on the
-entire subsystem and LLDDs it'd be good to have a broader discussion
-here.
-
-Happy X-mas,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
