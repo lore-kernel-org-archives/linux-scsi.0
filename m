@@ -1,92 +1,51 @@
-From: Tomas Henzl <thenzl@redhat.com>
+From: Hannes Reinecke <hare@suse.de>
 Subject: Re: [PATCH 00/10] scsi: avoid linebreaks in syslog output
-Date: Fri, 20 Dec 2013 14:25:28 +0100
-Message-ID: <52B44548.8020308@redhat.com>
-References: <1350030830-25614-1-git-send-email-hare@suse.de>
+Date: Fri, 20 Dec 2013 14:31:42 +0100
+Message-ID: <52B446BE.20901@suse.de>
+References: <1350030830-25614-1-git-send-email-hare@suse.de> <52B44548.8020308@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37397 "EHLO mx1.redhat.com"
+Received: from cantor2.suse.de ([195.135.220.15]:48386 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932881Ab3LTNZd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Dec 2013 08:25:33 -0500
-In-Reply-To: <1350030830-25614-1-git-send-email-hare@suse.de>
+	id S932542Ab3LTNbo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 20 Dec 2013 08:31:44 -0500
+In-Reply-To: <52B44548.8020308@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>
+To: Tomas Henzl <thenzl@redhat.com>, James Bottomley <jbottomley@parallels.com>
 Cc: linux-scsi@vger.kernel.org
 
-Hi Hannes, James,
+On 12/20/2013 02:25 PM, Tomas Henzl wrote:
+> Hi Hannes, James,
+>=20
+> I'm wondering what happened to this patch-set? I think it could
+> make parsing of the output for userspace programs much easier.
+> Are there some problems still to solve or is this just forgotten?
+>=20
+Oh, no. Quite the contrary.
+As James has now merged my previous patchsets I'm in the process of
+updating this one, too.
 
-I'm wondering what happened to this patch-set? I think it could
-make parsing of the output for userspace programs much easier.
-Are there some problems still to solve or is this just forgotten?
+It'll be part of a larger patchset having a per-device
+scsi_logging_level; something I was wanting to have for a _LONG_
+time now.
 
-Thanks,
-Tomas
+Currently I'm fiddling with sense code printing, so I won't be able
+to send anything this year. But early next year I should have
+something presentable.
 
-On 10/12/2012 10:33 AM, Hannes Reinecke wrote:
+Cheers,
 
-> This patchset updates the SCSI midlayer to use dev_printk() instead
-> of the simple printk(). The main objective here is to avoid line-breaks
-> in syslog output; with the current state it's nearly impossible to match
-> the output to the occurring device; under high load even the CDB will
-> be split off into individual bytes, spread randomly across the lines.
-> Which makes debugging via scsi_logging_level _really_ hard.
-> In addition we'll be getting the syslog messages nicely prefixed with
-> the device, which will make userspace logging daemons happy.
->
-> Before:
-> [  297.300605] sd 2:0:3:2: Send: 
-> [  297.300607] 0xffff8802348b0980 
-> [  297.300610] sd 2:0:3:2: CDB: 
-> [  297.300615] Test Unit Ready: 00 00 00 00 00 00
-> [  297.300747] sd 2:0:3:2: Done: 
-> [  297.300750] 0xffff8802348b0980 SUCCESS
-> [  297.300753] sd 2:0:3:2:  
-> [  297.300755] Result: hostbyte=DID_OK driverbyte=DRIVER_OK
-> [  297.300758] sd 2:0:3:2: CDB: 
-> [  297.300764] Test Unit Ready: 00 00 00 00 00 00
-> [  297.300766] sd 2:0:3:2:  
-> [  297.300769] Sense Key : Unit Attention [current] 
-> [  297.300771] Info fld=0x0
-> [  297.300772] sd 2:0:3:2:  
-> [  297.300776] Add. Sense: Capacity data has changed
->
-> After:
-> [  636.683556] sd 2:0:3:2: Send: 0xffff88043145eec0
-> [  636.727856] sd 2:0:3:2: CDB: Test Unit Ready: 00 00 00 00 00 00
-> [  636.785330] sd 2:0:3:2: Done: 0xffff88043145eec0 SUCCESS
-> [  636.838228] sd 2:0:3:2: Result: hostbyte=DID_OK driverbyte=DRIVER_OK
-> [  636.899099] sd 2:0:3:2: CDB: Test Unit Ready: 00 00 00 00 00 00
-> [  636.955905] sd 2:0:3:2: Sense Key : Unit Attention [current] 
-> [  637.069179] sd 2:0:3:2: Add. Sense: Capacity data has changed
->
->
-> Hannes Reinecke (10):
->   sg: Use dev_printk
->   sr: Use dev_printk()
->   scsi: Avoid linebreaks in syslog output
->   scsi: Use sdev_printk() for logging
->   scsi: use buffer for print_opcode_name()
->   scsi: use single printk call in scsi_print_command()
->   scsi: use buffer for scsi_show_result()
->   scsi: open-code scsi_decode_sense_buffer()
->   scsi: decode descriptor sense
->   scsi: use local buffer for decoding sense data
->
->  drivers/scsi/constants.c  |  406 +++++++++++++++++++++++++--------------------
->  drivers/scsi/scsi.c       |   54 ++++---
->  drivers/scsi/scsi_error.c |  190 ++++++++++++++-------
->  drivers/scsi/scsi_lib.c   |   13 +-
->  drivers/scsi/scsi_scan.c  |   68 ++++----
->  drivers/scsi/sd.c         |   16 +-
->  drivers/scsi/sg.c         |  187 ++++++++++++---------
->  drivers/scsi/sr.c         |   47 +++---
->  drivers/scsi/sr.h         |    4 +
->  include/scsi/scsi_dbg.h   |    6 +-
->  include/scsi/scsi_eh.h    |    8 +-
->  11 files changed, 588 insertions(+), 411 deletions(-)
->
-
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
