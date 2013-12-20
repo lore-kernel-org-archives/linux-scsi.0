@@ -1,46 +1,55 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH 00/10] scsi: avoid linebreaks in syslog output
-Date: Fri, 20 Dec 2013 14:35:38 +0100
-Message-ID: <52B447AA.70508@redhat.com>
-References: <1350030830-25614-1-git-send-email-hare@suse.de> <52B44548.8020308@redhat.com> <52B446BE.20901@suse.de>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [LSF/MM TOPIC] [ATTEND] scsi_eh updates
+Date: Fri, 20 Dec 2013 15:54:13 +0100
+Message-ID: <52B45A15.4090009@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:12424 "EHLO mx1.redhat.com"
+Received: from cantor2.suse.de ([195.135.220.15]:49997 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932292Ab3LTNfn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Dec 2013 08:35:43 -0500
-In-Reply-To: <52B446BE.20901@suse.de>
+	id S1751101Ab3LTOyP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 20 Dec 2013 09:54:15 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org
+To: lsf-pc@lists.linux-foundation.org
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On 12/20/2013 02:31 PM, Hannes Reinecke wrote:
-> On 12/20/2013 02:25 PM, Tomas Henzl wrote:
->> Hi Hannes, James,
->>
->> I'm wondering what happened to this patch-set? I think it could
->> make parsing of the output for userspace programs much easier.
->> Are there some problems still to solve or is this just forgotten?
->>
-> Oh, no. Quite the contrary.
-> As James has now merged my previous patchsets I'm in the process of
-> updating this one, too.
->
-> It'll be part of a larger patchset having a per-device
-> scsi_logging_level; something I was wanting to have for a _LONG_
-> time now.
->
-> Currently I'm fiddling with sense code printing, so I won't be able
-> to send anything this year. But early next year I should have
-> something presentable.
+Hi all,
 
-Great news! thanks.
+(before leaving for holiday ...)
 
->
-> Cheers,
->
-> Hannes
+I'd like to attend LSF 2014.
 
+During that I'd like to discuss the current status of the SCSI EH
+and the future planned updates.
+
+As discussed during last year's LSF the SCSI error handler should be
+updated to handle modern SCSI transports better.
+While some patchsets are already merged, there are some issues which
+are still open:
+- Handling of requests during host reset:
+  Do we need to keep hold of outstanding requests during host reset?
+  Or is it save to return them prior to host reset?
+- Check for transport status prior to sending TMFs.
+  Task management functions typically need a working I_T nexus,
+  so it does make sense to first check the transport status
+  prior to attempting any TMFs
+- Further steps for updating SCSI EH
+As these are tricky issues which have possible repercussions on the
+entire subsystem and LLDDs it'd be good to have a broader discussion
+here.
+
+Happy X-mas,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
