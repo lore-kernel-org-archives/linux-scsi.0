@@ -1,70 +1,106 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 2/2] target_core_spc: bounds check for spc_emulate_inquiry()
-Date: Fri, 20 Dec 2013 07:47:25 +0100
-Message-ID: <52B3E7FD.9030504@suse.de>
-References: <1387460172-27396-1-git-send-email-hare@suse.de>	 <1387460172-27396-3-git-send-email-hare@suse.de> <1387491087.5567.62.camel@haakon3.risingtidesystems.com>
+From: Mel Gorman <mgorman@suse.de>
+Subject: LSF/MM 2014 Call For Proposals
+Date: Fri, 20 Dec 2013 09:30:22 +0000
+Message-ID: <20131220093022.GV11295@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:41997 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752317Ab3LTGr0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Dec 2013 01:47:26 -0500
-In-Reply-To: <1387491087.5567.62.camel@haakon3.risingtidesystems.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-15
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+Sender: owner-linux-mm@kvack.org
+To: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, lsf-pc@lists.linux-foundation.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Nic Bellinger <nab@daterainc.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On 12/19/2013 11:11 PM, Nicholas A. Bellinger wrote:
-> On Thu, 2013-12-19 at 14:36 +0100, Hannes Reinecke wrote:
->> Instead of using a static buffer for inquiry data we should
->> rather use the command-provided buffer and implement proper
->> bounds checking when writing to it.
->> Inquiry is by no means time-critical ...
->>
->> Signed-off-by: Hannes Reinecke <hare@suse.de>
->> ---
->>  drivers/target/target_core_spc.c     | 391 +++++++++++++++++++++---=
------------
->>  include/target/target_core_backend.h |   2 +-
->>  2 files changed, 235 insertions(+), 158 deletions(-)
->>
->=20
-> Mmmmm, so this used to be the case once upon a time, and was changed =
-to
-> the current local buffer copy + possible truncate for simplicities sa=
-ke.
->=20
-> I still favor the copy to an oversized local buffer vs. adding explic=
-it
-> size checks to every possible assignment..
->=20
-> How about changing the local buffer to heap memory instead, and bumpi=
-ng
-> SE_INQUIRY_BUF to 1024 bytes..?
->=20
-Ok. But then we should have a quick check at the start
+The annual Linux Storage, Filesystem and Memory Management Summit for
+2014 will be held on March 24th and 25th before the Linux Foundation
+Collaboration summit at The Meritage Resort, Napa Valley, CA.
 
-if (cmd->data_length > SE_INQUIRY_BUF)
-  len =3D cmd->data_length
-else
-  len =3D SE_INQUIRY_BUF
+	http://events.linuxfoundation.org/events/linux-storage-filesystem-and-mm-summit
+	http://events.linuxfoundation.org/events/collaboration-summit
 
-to catch oversized requests.
+Note that we are running LSF/MM a little earlier in 2014 than in previous
+years.
 
-Cheers,
+On behalf of the committee I would like to issue a call for agenda proposals
+that are suitable for cross-track discussion as well as more technical
+subjects for discussion in the breakout sessions.
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
-)
+1) Suggestions for agenda topics should be sent before January 31st
+2014 to:
+
+	lsf-pc@lists.linux-foundation.org
+
+and cc the Linux list or lists that are most interested in it:
+
+	ATA: linux-ide@vger.kernel.org
+	FS: linux-fsdevel@vger.kernel.org
+	MM: linux-mm@kvack.org
+	SCSI: linux-scsi@vger.kernel.org
+
+People who need more time for visa applications should send proposals before
+January 15th. The committee will complete the first round of selections
+on that date to accommodate applications.
+
+Please remember to tag your subject with [LSF/MM TOPIC] to make it
+easier to track. Agenda topics and attendees will be selected by the
+program committee, but the final agenda will be formed by consensus of
+the attendees on the day.
+
+We will try to cap attendance at around 25-30 per track to facilitate
+discussions although the final numbers will depend on the room sizes at
+the venue.
+
+2) Requests to attend the summit should be sent to:
+
+	lsf-pc@lists.linux-foundation.org
+
+Please summarize what expertise you will bring to the meeting, and what
+you would like to discuss. Please also tag your email with [LSF/MM ATTEND]
+so there is less chance of it getting lost in the large mail pile.
+
+Presentations are allowed to guide discussion, but are strongly
+discouraged. There will be no recording or audio bridge. However, we expect
+that written minutes will be published as we did in previous years
+
+2013:
+	http://lwn.net/Articles/548089/
+
+2012:
+	http://lwn.net/Articles/490114/
+	http://lwn.net/Articles/490501/
+
+2011:
+	http://lwn.net/Articles/436871/
+	http://lwn.net/Articles/437066/
+
+3) If you have feedback on last year's meeting that we can use to
+improve this year's, please also send that to:
+
+	lsf-pc@lists.linux-foundation.org
+
+Thank you on behalf of the program committee:
+
+Storage:
+	James Bottomley
+	Martin K. Petersen
+
+Filesystems:
+	Trond Myklebust
+	Jeff Layton
+	Dave Chinner
+	Jan Kara
+	Ted Ts'o
+
+MM:
+	Rik van Riel
+	Michel Lespinasse
+
+-- 
+Mel Gorman
+SUSE Labs
+
 --
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
