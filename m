@@ -1,70 +1,69 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [RFC 0/2] target refcounting infrastructure fixes for usb
-Date: Sat, 21 Dec 2013 15:51:25 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1312211547490.12252-100000@netrider.rowland.org>
-References: <20131220231810.GA2835@xanatos>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [GIT PULL] target fixes for v3.13-rc5
+Date: Sat, 21 Dec 2013 18:39:17 -0800
+Message-ID: <1387679957.5567.80.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:43945 "HELO
-	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755870Ab3LUUv0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 21 Dec 2013 15:51:26 -0500
-In-Reply-To: <20131220231810.GA2835@xanatos>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:48449 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755718Ab3LVCiO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 21 Dec 2013 21:38:14 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, USB list <linux-usb@vger.kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 
-On Fri, 20 Dec 2013, Sarah Sharp wrote:
+Hi Linus,
 
-> On Thu, Dec 19, 2013 at 11:48:47AM -0800, James Bottomley wrote:
-> > It should apply incrementally on top of the previous two.  If it
-> > actually works, I'll fold it into the first patch.
-> 
-> Well, it doesn't oops anymore, but it does generate a pile of warnings:
+Here are the outstanding target pending fixes for v3.13-rc5.
 
-This was a simple oversight.  scsi_target_reap() was called at the
-start of __scsi_remove_device(), but it should be called at the end.
-The patch below, applied on top of James's three patches, will fix the
-warnings.
+Please go ahead and pull from:
 
-Alan Stern
+   git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git master 
 
-P.S.: The comment isn't entirely correct any more...
+Mostly minor items this time around, the most notable being a FILEIO
+backend change to enforce hw_max_sectors based upon the current
+block_size to address a bug where large sized I/Os (> 1M) where being
+rejected.
 
+Thank you,
 
+--nab
 
-Index: usb-3.13/drivers/scsi/scsi_sysfs.c
-===================================================================
---- usb-3.13.orig/drivers/scsi/scsi_sysfs.c
-+++ usb-3.13/drivers/scsi/scsi_sysfs.c
-@@ -1028,13 +1028,6 @@ void __scsi_remove_device(struct scsi_de
- {
- 	struct device *dev = &sdev->sdev_gendev;
- 
--	/*
--	 * Paired with the kref_get() in scsi_sysfs_initialize().  We're
--	 * removing sysfs visibility from the device, so make the target
--	 * invisible if this was the last device underneath it.
--	 */
--	scsi_target_reap(scsi_target(sdev));
--
- 	if (sdev->is_visible) {
- 		if (scsi_device_set_state(sdev, SDEV_CANCEL) != 0)
- 			return;
-@@ -1059,6 +1052,13 @@ void __scsi_remove_device(struct scsi_de
- 		sdev->host->hostt->slave_destroy(sdev);
- 	transport_destroy_device(dev);
- 
-+	/*
-+	 * Paired with the kref_get() in scsi_sysfs_initialize().  We're
-+	 * removing sysfs visibility from the device, so make the target
-+	 * invisible if this was the last device underneath it.
-+	 */
-+	scsi_target_reap(scsi_target(sdev));
-+
- 	put_device(dev);
- }
- 
+Andy Grover (1):
+  target: Remove extra percpu_ref_init
+
+Eric Seppanen (1):
+  iscsi-target: return -EINVAL on oversized configfs parameter
+
+Nicholas Bellinger (5):
+  iscsi-target: Fix-up all zero data-length CDBs with R/W_BIT set
+  iscsi-target: Fix incorrect np->np_thread NULL assignment
+  iser-target: Move INIT_WORK setup into isert_create_device_ib_res
+  target/file: Update hw_max_sectors based on current block_size
+  qla2xxx: Fix scsi_host leak on qlt_lport_register callback failure
+
+Roland Dreier (1):
+  target: Remove write-only stats fields and lock from struct
+    se_node_acl
+
+Shivaram Upadhyayula (1):
+  qla2xxx: Fix schedule_delayed_work() for target timeout calculations
+
+Wei Yongjun (1):
+  iser-target: fix error return code in isert_create_device_ib_res()
+
+ drivers/infiniband/ulp/isert/ib_isert.c      |   22 +++++++++++++++------
+ drivers/scsi/qla2xxx/qla_target.c            |   10 ++++++----
+ drivers/target/iscsi/iscsi_target.c          |   27 +++++++++++++-------------
+ drivers/target/iscsi/iscsi_target_configfs.c |    3 ++-
+ drivers/target/iscsi/iscsi_target_login.c    |    6 ------
+ drivers/target/target_core_device.c          |    5 +++++
+ drivers/target/target_core_file.c            |    8 ++++----
+ drivers/target/target_core_file.h            |    5 ++++-
+ drivers/target/target_core_tpg.c             |   10 +---------
+ include/target/target_core_base.h            |    5 +----
+ 10 files changed, 52 insertions(+), 49 deletions(-)
 
