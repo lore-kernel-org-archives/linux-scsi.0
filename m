@@ -1,93 +1,91 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [scsi-mq] WARNING: CPU: 0 PID: 99 at block/elevator.c:193
- elevator_init()
-Date: Sun, 22 Dec 2013 21:54:28 -0800
-Message-ID: <1387778068.5567.104.camel@haakon3.risingtidesystems.com>
-References: <20131223031624.GB23200@localhost>
+Subject: Re: [PATCH 1/6] block: support blk-mq on
+ blk_run_queue/blk_run_queue_async.
+Date: Sun, 22 Dec 2013 22:27:31 -0800
+Message-ID: <1387780051.5567.126.camel@haakon3.risingtidesystems.com>
+References: <201311291641305594235@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20131223031624.GB23200@localhost>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Fengguang Wu <fengguang.wu@intel.com>
-Cc: LKP <fnstml-lkp@cn.fujitsu.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:49078 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750730Ab3LWG0Z (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Dec 2013 01:26:25 -0500
+In-Reply-To: <201311291641305594235@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: majianpeng <majianpeng@gmail.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>
 
-On Mon, 2013-12-23 at 11:16 +0800, Fengguang Wu wrote:
-> Greetings,
-> 
-> I got the below dmesg and the first bad commit is
-> 
-> commit 29ff818720ce09b044652b83e9c70ef474800d54
-> Author:     Nicholas Bellinger <nab@linux-iscsi.org>
-> AuthorDate: Thu May 23 22:11:38 2013 -0700
-> Commit:     Nicholas Bellinger <nab@linux-iscsi.org>
-> CommitDate: Sun Dec 22 13:00:48 2013 +0000
-> 
->     scsi-debug: Enable scsi-mq operation
->     
->     v4 changes:
->       - Bump can_queue to 64 for performance testing
->       - Enable scsi-mq DIF support
->       - Add nop_fs_io module parameter for performance testing
->     
->     Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
-> 
-> +-----------------------------------------------------+----+
-> |                                                     |    |
-> +-----------------------------------------------------+----+
-> | boot_successes                                      | 0  |
-> | boot_failures                                       | 19 |
-> | WARNING:CPU:PID:at_block/elevator.c:elevator_init() | 19 |
-> +-----------------------------------------------------+----+
-> 
-> [    4.763205]   CPU 1 -> Queue 0
-> [    4.764566] ------------[ cut here ]------------
-> [    4.764566] ------------[ cut here ]------------
-> [    4.765951] WARNING: CPU: 0 PID: 99 at block/elevator.c:193 elevator_init+0xf0/0xfb()
-> 
-> Attached are the full dmesg and kconfig.
-> 
+Hi Jianpeng,
 
-Mmm, so elevator_init() is now expecting q->sysfs_lock to be held after:
+Apologies for the long delayed response on this series. 
 
-commit eb1c160b22655fd4ec44be732d6594fd1b1e44f4
-Author: Tomoki Sekiyama <tomoki.sekiyama@hds.com>
-Date:   Tue Oct 15 16:42:16 2013 -0600
+Comments are inline.
 
-    elevator: Fix a race in elevator switching and md device initialization
+On Fri, 2013-11-29 at 16:41 +0800, majianpeng wrote:
+> Signed-off-by: Jianpeng Ma <majianpeng@gmail.com>
+> ---
+>  block/blk-core.c |   21 ++++++++++++++-------
+>  1 file changed, 14 insertions(+), 7 deletions(-)
+> 
+> diff --git a/block/blk-core.c b/block/blk-core.c
+> index bf44ca0..549d83e 100644
+> --- a/block/blk-core.c
+> +++ b/block/blk-core.c
+> @@ -304,8 +304,12 @@ EXPORT_SYMBOL(__blk_run_queue);
+>   */
+>  void blk_run_queue_async(struct request_queue *q)
+>  {
+> -	if (likely(!blk_queue_stopped(q) && !blk_queue_dead(q)))
+> -		mod_delayed_work(kblockd_workqueue, &q->delay_work, 0);
+> +	if (likely(!blk_queue_stopped(q) && !blk_queue_dead(q))) {
+> +		if (q->mq_ops)
+> +			blk_mq_run_queues(q, 1);
+> +		else
+> +			mod_delayed_work(kblockd_workqueue, &q->delay_work, 0);
+> +	}
+>  }
+>  EXPORT_SYMBOL(blk_run_queue_async);
+>  
+> @@ -319,11 +323,14 @@ EXPORT_SYMBOL(blk_run_queue_async);
+>   */
+>  void blk_run_queue(struct request_queue *q)
+>  {
+> -	unsigned long flags;
+> -
+> -	spin_lock_irqsave(q->queue_lock, flags);
+> -	__blk_run_queue(q);
+> -	spin_unlock_irqrestore(q->queue_lock, flags);
+> +	if (q->mq_ops)
+> +		blk_mq_run_queues(q, 0);
+> +	else {
+> +		unsigned long flags;
+> +		spin_lock_irqsave(q->queue_lock, flags);
+> +		__blk_run_queue(q);
+> +		spin_unlock_irqrestore(q->queue_lock, flags);
+> +	}
+>  }
+>  EXPORT_SYMBOL(blk_run_queue);
+>  
 
-Adding the following scsi_mq_alloc_queue() patch to quiet this warning.
+OK, after playing with QEMU AHCI + TYPE_ROM emulation recently to test
+your series I can now RO mount an ISO image with a subset of the
+patches.  That, plus some minor QEMU atapi.c hacks make cdrom.c do it's
+thing.
 
-Thanks Fengguang!
+Btw, I've encountered a QEMU ahci emulation CHECK_CONDITION exception
+hangswith scsi-mq, which are due to the current lack of scsi-eh support
+which libata depends upon to complete these failed commands.  (Currently
+avoiding this bug with QEMU atapi hacks..)
+
+AFAICT this particular patch doesn't seem to be required to make basic
+QEMU AHCI emulation work with GOOD or CHECK_CONDITION status.  Just
+curious, do you have a particular case with hw AHCI + TYPE_ROM where
+this is strictly required..?
+
+Thank you,
 
 --nab
 
-diff --git a/drivers/scsi/scsi-mq.c b/drivers/scsi/scsi-mq.c
-index dad720a..188509d 100644
---- a/drivers/scsi/scsi-mq.c
-+++ b/drivers/scsi/scsi-mq.c
-@@ -151,7 +151,7 @@ int scsi_mq_alloc_queue(struct Scsi_Host *sh, struct scsi_device *sdev)
-        struct request_queue *q;
-        struct request *rq;
-        struct scsi_cmnd *sc;
--       int i, j, sgl_size;
-+       int i, j, rc, sgl_size;
-        bool prot = true;
- 
-        sdev->sdev_mq_reg.ops = &scsi_mq_ops;
-@@ -181,8 +181,11 @@ int scsi_mq_alloc_queue(struct Scsi_Host *sh, struct scsi_device *sdev)
- 
-        q->sg_reserved_size = INT_MAX;
- 
--       if (elevator_init(q, NULL)) {
--               dump_stack();
-+       mutex_lock(&q->sysfs_lock);
-+       rc = elevator_init(q, NULL);
-+       mutex_unlock(&q->sysfs_lock);
-+       if (rc) {
-+               pr_err("elevator_init failed for scsi-mq: %d\n", rc);
-                return -ENOMEM;
-        }
-        /*
