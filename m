@@ -1,77 +1,49 @@
-From: Anton Blanchard <anton@samba.org>
-Subject: [PATCH] ibmvscsi: Speed up kexec boot
-Date: Mon, 23 Dec 2013 18:28:16 +1100
-Message-ID: <20131223182816.0e8985af@kryten>
+From: Vijaya Mohan Guvva <vmohan@Brocade.com>
+Subject: RE: [PATCH] [SCSI] bfa: fix missing unlock on error in
+ bfad_iocmd_cfg_trunk()
+Date: Mon, 23 Dec 2013 01:11:34 -0700
+Message-ID: <51BD2AE8016AE441B63F5661159C99024A51E75C48@BRM-EXCH-3.corp.brocade.com>
+References: <CAPgLHd9prpLF_sjwoj_QmiAZtwQG=Yig2FsYgd2OE5HXHpb04A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.10.76.45]:43337 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750730Ab3LWH2S (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 Dec 2013 02:28:18 -0500
+Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:11470 "EHLO
+	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757007Ab3LWILk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 23 Dec 2013 03:11:40 -0500
+Received: from pps.filterd (m0000700 [127.0.0.1])
+	by mx0b-000f0801.pphosted.com (8.14.5/8.14.5) with SMTP id rBN7aOFv007531
+	for <linux-scsi@vger.kernel.org>; Mon, 23 Dec 2013 00:11:39 -0800
+Received: from hq1wp-exchub01.corp.brocade.com ([144.49.131.13])
+	by mx0b-000f0801.pphosted.com with ESMTP id 1gvmdn4kum-4
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Mon, 23 Dec 2013 00:11:39 -0800
+In-Reply-To: <CAPgLHd9prpLF_sjwoj_QmiAZtwQG=Yig2FsYgd2OE5HXHpb04A@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Brian King <brking@linux.vnet.ibm.com>, Robert Jennings <rcj@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org
+To: Wei Yongjun <weiyj.lk@gmail.com>, Anil Gurumurthy <agurumur@Brocade.com>, "JBottomley@parallels.com" <JBottomley@parallels.com>
+Cc: "yongjun_wei@trendmicro.com.cn" <yongjun_wei@trendmicro.com.cn>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
+> -----Original Message-----
+> From: Wei Yongjun [mailto:weiyj.lk@gmail.com]
+> Sent: Friday, December 20, 2013 8:21 AM
+> To: Anil Gurumurthy; Vijaya Mohan Guvva; JBottomley@parallels.com
+> Cc: yongjun_wei@trendmicro.com.cn; linux-scsi@vger.kernel.org
+> Subject: [PATCH] [SCSI] bfa: fix missing unlock on error in
+> bfad_iocmd_cfg_trunk()
+> 
+> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+> 
+> Add the missing unlock before return from function bfad_iocmd_cfg_trunk()
+> in the error handling case.
+> 
+> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+> ---
+>  drivers/scsi/bfa/bfad_bsg.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
 
-During kexec boot we call ibmvscsi_release_crq_queue() to tear down
-the old CRQ from the previous kernel. ibmvscsi_release_crq_queue()
-does this by calling H_FREE_CRQ. The hypervisor breaks this work
-down so as limit the time spent in any one hcall, so we have to loop
-until complete.
+Looks fine, thanks, Vijay
+Acked-by: Vijaya Mohan Guvva <vmohan@brocade.com>
 
-At the moment we delay 0.1 seconds between every H_FREE_CRQ call.
-I see us calling H_FREE_CRQ 60 times on my box which means we
-delayed a total of 6 seconds.
-
-This delay is overkill, we are free to handle all busy return codes
-from the hypervisor as we see fit. Cut the delay down to something
-more reasonable - 1 ms. This improves my boot time by 6 seconds.
-
-Fix the other places we have arbitrary 100 ms delays.
-
-Signed-off-by: Anton Blanchard <anton@samba.org>
----
-
-diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
-index fa76440..ed7b52e 100644
---- a/drivers/scsi/ibmvscsi/ibmvscsi.c
-+++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
-@@ -159,7 +159,7 @@ static void ibmvscsi_release_crq_queue(struct crq_queue *queue,
- 	tasklet_kill(&hostdata->srp_task);
- 	do {
- 		if (rc)
--			msleep(100);
-+			msleep(1);
- 		rc = plpar_hcall_norets(H_FREE_CRQ, vdev->unit_address);
- 	} while ((rc == H_BUSY) || (H_IS_LONG_BUSY(rc)));
- 	dma_unmap_single(hostdata->dev,
-@@ -292,7 +292,7 @@ static int ibmvscsi_reset_crq_queue(struct crq_queue *queue,
- 	/* Close the CRQ */
- 	do {
- 		if (rc)
--			msleep(100);
-+			msleep(1);
- 		rc = plpar_hcall_norets(H_FREE_CRQ, vdev->unit_address);
- 	} while ((rc == H_BUSY) || (H_IS_LONG_BUSY(rc)));
- 
-@@ -392,7 +392,7 @@ static int ibmvscsi_init_crq_queue(struct crq_queue *queue,
- 	rc = 0;
- 	do {
- 		if (rc)
--			msleep(100);
-+			msleep(1);
- 		rc = plpar_hcall_norets(H_FREE_CRQ, vdev->unit_address);
- 	} while ((rc == H_BUSY) || (H_IS_LONG_BUSY(rc)));
-       reg_crq_failed:
-@@ -420,7 +420,7 @@ static int ibmvscsi_reenable_crq_queue(struct crq_queue *queue,
- 	/* Re-enable the CRQ */
- 	do {
- 		if (rc)
--			msleep(100);
-+			msleep(1);
- 		rc = plpar_hcall_norets(H_ENABLE_CRQ, vdev->unit_address);
- 	} while ((rc == H_IN_PROGRESS) || (rc == H_BUSY) || (H_IS_LONG_BUSY(rc)));
- 
