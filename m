@@ -1,37 +1,93 @@
-From: Loc Ho <lho@apm.com>
-Subject: Re: [PATCH v6 0/4] ata: Add APM X-Gene SoC SATA host controller support
-Date: Sun, 22 Dec 2013 21:50:45 -0800
-Message-ID: <CAPw-ZTn2n-HFa+1nExdEKZ6ETjODFjU4+ts5JxDhnn5dbG3xMw@mail.gmail.com>
-References: <1386834940-30875-1-git-send-email-lho@apm.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [scsi-mq] WARNING: CPU: 0 PID: 99 at block/elevator.c:193
+ elevator_init()
+Date: Sun, 22 Dec 2013 21:54:28 -0800
+Message-ID: <1387778068.5567.104.camel@haakon3.risingtidesystems.com>
+References: <20131223031624.GB23200@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1386834940-30875-1-git-send-email-lho@apm.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Olof Johansson <olof@lixom.net>, Tejun Heo <tj@kernel.org>, Arnd Bergmann <arnd@arndb.de>
-Cc: Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Jon Masters <jcm@redhat.com>, "patches@apm.com" <patches@apm.com>, Loc Ho <lho@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20131223031624.GB23200@localhost>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Fengguang Wu <fengguang.wu@intel.com>
+Cc: LKP <fnstml-lkp@cn.fujitsu.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi All,
+On Mon, 2013-12-23 at 11:16 +0800, Fengguang Wu wrote:
+> Greetings,
+> 
+> I got the below dmesg and the first bad commit is
+> 
+> commit 29ff818720ce09b044652b83e9c70ef474800d54
+> Author:     Nicholas Bellinger <nab@linux-iscsi.org>
+> AuthorDate: Thu May 23 22:11:38 2013 -0700
+> Commit:     Nicholas Bellinger <nab@linux-iscsi.org>
+> CommitDate: Sun Dec 22 13:00:48 2013 +0000
+> 
+>     scsi-debug: Enable scsi-mq operation
+>     
+>     v4 changes:
+>       - Bump can_queue to 64 for performance testing
+>       - Enable scsi-mq DIF support
+>       - Add nop_fs_io module parameter for performance testing
+>     
+>     Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+> 
+> +-----------------------------------------------------+----+
+> |                                                     |    |
+> +-----------------------------------------------------+----+
+> | boot_successes                                      | 0  |
+> | boot_failures                                       | 19 |
+> | WARNING:CPU:PID:at_block/elevator.c:elevator_init() | 19 |
+> +-----------------------------------------------------+----+
+> 
+> [    4.763205]   CPU 1 -> Queue 0
+> [    4.764566] ------------[ cut here ]------------
+> [    4.764566] ------------[ cut here ]------------
+> [    4.765951] WARNING: CPU: 0 PID: 99 at block/elevator.c:193 elevator_init+0xf0/0xfb()
+> 
+> Attached are the full dmesg and kconfig.
+> 
 
-Any comment on v6 SATA host controller driver before I post v7 which
-fix the clock DTS entry and etc due to the clock change in v5 of the
-PHY driver?
+Mmm, so elevator_init() is now expecting q->sysfs_lock to be held after:
 
--Loc
+commit eb1c160b22655fd4ec44be732d6594fd1b1e44f4
+Author: Tomoki Sekiyama <tomoki.sekiyama@hds.com>
+Date:   Tue Oct 15 16:42:16 2013 -0600
 
-On Wed, Dec 11, 2013 at 11:55 PM, Loc Ho <lho@apm.com> wrote:
-> This patch adds support for the APM X-Gene SoC SATA host controller. In
-> order for the host controller to work, the corresponding PHY driver
-> musts also be available.
->
-> v6:
->  * Update binding documentation
->  * Change select PHY_XGENE_SATA to PHY_XGENE
->  * Add ULL to constants
->  * Change indentation and comments
->  * Clean up the probe functions a bit more
->  * Remove xgene_ahci_remove function
->  * Add the flush register to DTS
->  * Remove the interrupt-parent from DTS
->
+    elevator: Fix a race in elevator switching and md device initialization
+
+Adding the following scsi_mq_alloc_queue() patch to quiet this warning.
+
+Thanks Fengguang!
+
+--nab
+
+diff --git a/drivers/scsi/scsi-mq.c b/drivers/scsi/scsi-mq.c
+index dad720a..188509d 100644
+--- a/drivers/scsi/scsi-mq.c
++++ b/drivers/scsi/scsi-mq.c
+@@ -151,7 +151,7 @@ int scsi_mq_alloc_queue(struct Scsi_Host *sh, struct scsi_device *sdev)
+        struct request_queue *q;
+        struct request *rq;
+        struct scsi_cmnd *sc;
+-       int i, j, sgl_size;
++       int i, j, rc, sgl_size;
+        bool prot = true;
+ 
+        sdev->sdev_mq_reg.ops = &scsi_mq_ops;
+@@ -181,8 +181,11 @@ int scsi_mq_alloc_queue(struct Scsi_Host *sh, struct scsi_device *sdev)
+ 
+        q->sg_reserved_size = INT_MAX;
+ 
+-       if (elevator_init(q, NULL)) {
+-               dump_stack();
++       mutex_lock(&q->sysfs_lock);
++       rc = elevator_init(q, NULL);
++       mutex_unlock(&q->sysfs_lock);
++       if (rc) {
++               pr_err("elevator_init failed for scsi-mq: %d\n", rc);
+                return -ENOMEM;
+        }
+        /*
