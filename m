@@ -1,117 +1,146 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: scsi-mq WIP updated to v3.13-rc3
-Date: Mon, 23 Dec 2013 11:03:41 -0800
-Message-ID: <1387825421.5567.169.camel@haakon3.risingtidesystems.com>
+Subject: Re: [Scst-devel] [SPF:fail] Re: FC initiator performance tanks once
+ target mode is enabled
+Date: Mon, 23 Dec 2013 12:20:52 -0800
+Message-ID: <1387830052.5567.194.camel@haakon3.risingtidesystems.com>
+References: <201312141651.rBEGpZ59028749@wind.enjellic.com>
+	 <1387811608.1722.20.camel@iscandar.digidescorp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, James Bottomley <James.Bottomley@HansenPartnership.com>, Hannes Reinecke <hare@suse.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:44945 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757639Ab3LWUTr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Dec 2013 15:19:47 -0500
+In-Reply-To: <1387811608.1722.20.camel@iscandar.digidescorp.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Steve Magnani <steve.magnani@digidescorp.com>
+Cc: greg@enjellic.com, scst-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
 
-Hi Folks,
-
-Just a heads up that scsi-mq alpha code has been updated to v3.13-rc3
-using the freshly upstreamed blk-mq logic.  The working branch is
-available here:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git scsi-mq
-
-The changelog since the last v3.12-rc3 rev includes:
-
-   - Use Scsi_Host to check for can_queue + cmd_per_lun
-   - Add explicit struct scsi_cmnd memset in scsi_mq_alloc_queue()
-   - Add support for cmd->prot_sdb pre-allocation
-   - Add support for cmd->mq_prot_sgl pre-allocation
-   - Honor request_queue->dma_drain_size in scsi_mq_queue_rq (Jianpeng Ma)
-   - Drop unnecessary QUEUE_FLAG_NONROT in scsi_mq_alloc_queue (Jianpeng Ma)
-   - Add bio_integrity setup to blk_mq_make_request
-   - Pre-allocation of sg tables based on host sg_tablesize (Jianpeng Ma)
-   - Pre-allocation of protection sg tables based on host sg_tablesize
-   - Updates for DIF prot_sdb->table.sgl pre-allocation in scsi_init_io
-   - Acquire q->sysfs_lock for elevator_init (Fengguang)
-   - Only reference scsi_cmd_to_driver with valid req->rq_disk in
-     scsi_finish_command()
-
-Also, basic DIF functionality is now working!  Here's a quick snippet of
-DIF TYPE1 in action using scsi_debug dif=1 dix=1:
-
-[   34.331249] scsi_debug_init: dif_storep 16777216 bytes @ ffffc90001459000
-[   34.338588] scsi_debug: host protection DIF1 DIX1
-[   34.339490] scsi6 : scsi_debug, version 1.82 [20100324], dev_size_mb=1024, opts=0x0
-[   34.341026] Calling blk_mq_init_queue: scsi_mq_ops: ffffffff8163e760, queue_depth: 64, cmd_size: 304 SCSI cmd_size: 0
-[   34.343031] blk-mq: CPU -> queue map
-[   34.343689]   CPU 0 -> Queue 0
-[   34.344322]   CPU 1 -> Queue 0
-[   34.344869]   CPU 2 -> Queue 0
-[   34.345422]   CPU 3 -> Queue 0
-[   34.346005] Performing sc map setup on q: ffff880030180000 hctx: ffff880034e3de00 i: 0
-[   34.348146] scsi_mq_alloc_queue() complete >>>>>>>>>>>>>>>>>>>>>>>>>>>
-[   34.349393] scsi 6:0:0:0: Direct-Access     Linux    scsi_debug       0004 PQ: 0 ANSI: 5
-[   34.351013] sd 6:0:0:0: Attached scsi generic sg1 type 0
-[   34.352067] sd 6:0:0:0: [sda] Enabling DIF Type 1 protection
-[   34.352075] sd 6:0:0:0: [sda] 2097152 512-byte logical blocks: (1.07 GB/1.00 GiB)
-[   34.360115] sd 6:0:0:0: [sda] Write Protect is off
-[   34.363006] sd 6:0:0:0: [sda] Mode Sense: 73 00 10 08
-[   34.372176] sd 6:0:0:0: [sda] Write cache: enabled, read cache: enabled, supports DPO and FUA
-[   34.416255]  sda: unknown partition table
-[   34.419315] sd 6:0:0:0: [sda] Enabling DIX T10-DIF-TYPE1-CRC protection
-[   34.423194] sd 6:0:0:0: [sda] DIF application tag size 2
-[   34.444172] sd 6:0:0:0: [sda] Attached SCSI disk
-[   68.554153] scsi_mq: sc: ffff880030198568 SCSI CDB: : 0x00
-[   68.554164] scsi_mq: scsi_bufflen: 0 rq->cmd_len: 6
-[   68.554178] scsi_mq_end_request: sc: ffff880030198568 sc->tag: 48 error: 0
-[   68.554243] Entering sd_dif_type1_generate >>>>>>>>>>>>>>>
-[   68.554264] TYPE1 Generate: sector: 0 sdt->guard_tag: 0xdfcc sdt->app_tag: 0x0000 sdt->ref_tag: 0
-[   68.554281] TYPE1 Generate: sector: 1 sdt->guard_tag: 0xd693 sdt->app_tag: 0x0000 sdt->ref_tag: 1
-[   68.554297] TYPE1 Generate: sector: 2 sdt->guard_tag: 0xd8ea sdt->app_tag: 0x0000 sdt->ref_tag: 2
-[   68.554309] TYPE1 Generate: sector: 3 sdt->guard_tag: 0x64a3 sdt->app_tag: 0x0000 sdt->ref_tag: 3
-[   68.554322] TYPE1 Generate: sector: 4 sdt->guard_tag: 0xd194 sdt->app_tag: 0x0000 sdt->ref_tag: 4
-[   68.554334] TYPE1 Generate: sector: 5 sdt->guard_tag: 0x0c30 sdt->app_tag: 0x0000 sdt->ref_tag: 5
-[   68.554346] TYPE1 Generate: sector: 6 sdt->guard_tag: 0xcbff sdt->app_tag: 0x0000 sdt->ref_tag: 6
-[   68.554359] TYPE1 Generate: sector: 7 sdt->guard_tag: 0x5c4e sdt->app_tag: 0x0000 sdt->ref_tag: 7
-[   68.554384] scsi_mq: sc: ffff880030198568 SCSI CDB: : 0x2a
-[   68.554389] scsi_mq: scsi_bufflen: 4096 rq->cmd_len: 16
-[   68.554396] Enering prot_verify_write sector: 8 ei_lba: 0
-[   68.554402] WRITE sector: 0 sdt->guard_tag: 0xdfcc sdt->app_tag: 0x0000 sdt->ref_tag: 0
-[   68.554414] WRITE sector: 1 sdt->guard_tag: 0xd693 sdt->app_tag: 0x0000 sdt->ref_tag: 1
-[   68.554427] WRITE sector: 2 sdt->guard_tag: 0xd8ea sdt->app_tag: 0x0000 sdt->ref_tag: 2
-[   68.554439] WRITE sector: 3 sdt->guard_tag: 0x64a3 sdt->app_tag: 0x0000 sdt->ref_tag: 3
-[   68.554451] WRITE sector: 4 sdt->guard_tag: 0xd194 sdt->app_tag: 0x0000 sdt->ref_tag: 4
-[   68.554463] WRITE sector: 5 sdt->guard_tag: 0x0c30 sdt->app_tag: 0x0000 sdt->ref_tag: 5
-[   68.554475] WRITE sector: 6 sdt->guard_tag: 0xcbff sdt->app_tag: 0x0000 sdt->ref_tag: 6
-[   68.554488] WRITE sector: 7 sdt->guard_tag: 0x5c4e sdt->app_tag: 0x0000 sdt->ref_tag: 7
+On Mon, 2013-12-23 at 09:13 -0600, Steve Magnani wrote:
+> Nicholas,
+> 
+> On Sat, 2013-12-14 at 10:51 -0600, Dr. Greg Wettstein wrote:
+> > On Dec 12, 11:45am, "Nicholas A. Bellinger" wrote:
 
 <SNIP>
 
-[   68.572734] scsi_mq: sc: ffff880030198568 SCSI CDB: : 0x28
-[   68.572741] scsi_mq: scsi_bufflen: 4096 rq->cmd_len: 16
-[   68.572750] Entering prot_verify_read: sector: 8 ei_lba: 0
-[   68.572758] READ sector: 0 sdt->guard_tag: 0xdfcc sdt->app_tag: 0x0000 sdt->ref_tag: 0
-[   68.572774] READ sector: 1 sdt->guard_tag: 0xd693 sdt->app_tag: 0x0000 sdt->ref_tag: 1
-[   68.572786] READ sector: 2 sdt->guard_tag: 0xd8ea sdt->app_tag: 0x0000 sdt->ref_tag: 2
-[   68.572799] READ sector: 3 sdt->guard_tag: 0x64a3 sdt->app_tag: 0x0000 sdt->ref_tag: 3
-[   68.572811] READ sector: 4 sdt->guard_tag: 0xd194 sdt->app_tag: 0x0000 sdt->ref_tag: 4
-[   68.572823] READ sector: 5 sdt->guard_tag: 0x0c30 sdt->app_tag: 0x0000 sdt->ref_tag: 5
-[   68.572835] READ sector: 6 sdt->guard_tag: 0xcbff sdt->app_tag: 0x0000 sdt->ref_tag: 6
-[   68.572847] READ sector: 7 sdt->guard_tag: 0x5c4e sdt->app_tag: 0x0000 sdt->ref_tag: 7
-[   68.576195] scsi_mq_end_request: sc: ffff880030198568 sc->tag: 48 error: 0
-[   68.576383] TYPE1 Verify sector: 0 sdt->guard_tag: 0xdfcc sdt->app_tag: 0x0000 sdt->ref_tag: 0
-[   68.576397] TYPE1 Verify sector: 1 sdt->guard_tag: 0xd693 sdt->app_tag: 0x0000 sdt->ref_tag: 1
-[   68.576409] TYPE1 Verify sector: 2 sdt->guard_tag: 0xd8ea sdt->app_tag: 0x0000 sdt->ref_tag: 2
-[   68.576422] TYPE1 Verify sector: 3 sdt->guard_tag: 0x64a3 sdt->app_tag: 0x0000 sdt->ref_tag: 3
-[   68.576434] TYPE1 Verify sector: 4 sdt->guard_tag: 0xd194 sdt->app_tag: 0x0000 sdt->ref_tag: 4
-[   68.576446] TYPE1 Verify sector: 5 sdt->guard_tag: 0x0c30 sdt->app_tag: 0x0000 sdt->ref_tag: 5
-[   68.576458] TYPE1 Verify sector: 6 sdt->guard_tag: 0xcbff sdt->app_tag: 0x0000 sdt->ref_tag: 6
-[   68.576490] TYPE1 Verify sector: 7 sdt->guard_tag: 0x5c4e sdt->app_tag: 0x0000 sdt->ref_tag: 7
+> > > We don't add interfaces into mainline drive code to support
+> > > out-of-tree projects, because quite frankly, it gives less incentive
+> > > for the out-of-tree holdouts to use, improve and contribute to
+> > > mainline target code.
+> > 
+> > But the kernel does provide services to external users through a
+> > binary API supplied by exported symbols.  Your work on the Qlogic
+> > fibre-channel target driver includes all but one small function needed
+> > to allow SCST to use the in kernel driver.
+> > 
+> > To Nicholas' credit, the engineering work done on the qla2x00t driver,
+> > as a component of porting it into the kernel, provides almost all of
+> > the resources needed for a straight forward integration of SCST.
+> > Having anticipated this debate we focused on designing the sqatgt
+> > interface driver so it would integrate cleanly with the architectural
+> > model selected for the kernel.
+> > 
+> > Bart, if you could review the in-kernel Qlogic driver you will find
+> > the the tcm_qla2xxx.c module interfaces the Qlogic driver with the
+> > in-kernel SCSI target engine.  Similar functionality is provided by
+> > the scst_qla2xxx.c in the sqatgt driver for SCST.  So there is a
+> > reasonably straight forward and standardized approach for getting both
+> > projects on a common driver infrastructure, which as you note benefits
+> > everyone.
+> > 
+> > The only missing piece of the puzzle is an exported function to
+> > enumerate the target interfaces which are available.  Since there are
+> > exported functions to enable/disable interfaces, handle session
+> > management and a variety of other functions it doesn't seem
+> > unreasonable to provide a method of enumerating which interfaces are
+> > available for target mode.
+> > 
+> > So Nicholas in the spirit of everyone working for the common good of
+> > the storage community I'm hoping you will support our proposal of the
+> > following patch to Andrew Vasquez and the Qlogic maintainers:
+> > 
+> > ---------------------------------------------------------------------------
+> > +void
+> > +qlt_get_target_list(void (*callback)(struct scsi_qla_host *))
+> > +{
+> > +       struct qla_tgt *tgt;
+> > +
+> > +        mutex_lock(&qla_tgt_mutex);
+> > +        list_for_each_entry(tgt, &qla_tgt_glist, tgt_list_entry) {
+> > +               (*callback)(tgt->vha);
+> > +       }
+> > +        mutex_unlock(&qla_tgt_mutex);
+> > +
+> > +       return;
+> > +}
+> > +EXPORT_SYMBOL(qlt_get_target_list);
+> > ---------------------------------------------------------------------------
+> > 
+> > Which provides the only missing piece needed for SCST to live happily
+> > on as a modular extension to the kernel.  With this in place we can
+> > all focus on more pressing issues, such as why Steve Magnani can't get
+> > two ports on the same ISP chip to run in different modes.
+> 
+> I have code from QLogic that appears to resolve the issue with which I
+> started this thread, namely crummy initiator performance when the same
+> physical port is configured for dual initiator and target mode. QLogic's
+> code appears to be a fusion of the mainline qla2xxx driver and SCST,
+> which makes it taxonomically close to Greg's sqatgt proposal.
+> 
 
+Glad to hear that you where able to resolve the issue on your setup.
 
-So now with some of the lower-hanging bugs out of the way, I'll next be
-focusing identifying outstanding TODO items over the holidays for those
-who are interested in contributing in 2014.
+However, as you've noticed mixed mode operation is currently unsupported
+in mainline qla_target.c code, due to the fact that there is not yet a
+clean method to transition between target + initiator mode for a given
+qla2xxx port.
 
-Enjoy.
+All of the methods for doing this in the original out-of-tree code where
+terribly ugly hacks (and continue to be), and hence where left-out for
+the mainline merge.
+
+> Once I figure out which portions of QLogic's code resolve the issue I
+> would be happy to post them as patches to mainline. But I can't justify
+> the effort to do that if Greg's proposal is DOA, since I wouldn't be
+> able to make use of the resulting patched code.
+> 
+
+My issue with Greg's proposal is the additional of new interfaces
+specific to out-of-tree code, that no mainline code utilizes.  To
+repeat, we do not add interfaces that are specific to out-of-tree code,
+regardless of what subsystem / driver they reside.
+
+So what needs to happen with Greg's effort is to convert to using
+existing interfaces for qla2xxx port registration that tcm_qla2xxx is
+already using, eg: qlt_lport_register() + qlt_lport_deregister(), and
+make them work for his use-case.
+
+They already provide what is required for an a mainline or out-of-tree
+target stack to function, and yes, even ensure that multiple target
+stacks can play nicely with qla_target.c logic at the same time.
+
+> As an engineer with a problem to solve and a deadline, I don't much care
+> whether the name of the solution is LIO or SCST. But it is a necessity
+> of my project that the target implementation reside in userland. AFAIK
+> LIO does not support this, nor plan to. 
+> 
+
+Not true.  The patches for target_core_user.c where posted last month by
+Shaohua Li, and after review over the next weeks will end up being a
+v3.14 -> v3.15 item for mainline.
+
+> I agree with core kernel maintainers that encouraging out-of-tree binary
+> drivers (a la NVidia) is a Bad Thing, but that's not what's being
+> requested here. Please don't throw the baby out with the bathwater.
+> 
+
+That's not the issue here.  Greg's effort needs to use existing qla2xxx
+port registration interfaces instead of creating a new one specific to
+out-of-tree code.
 
 --nab
+
