@@ -1,54 +1,81 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 4/6] scsi-mq: init sg in scsi_init_io.
-Date: Sun, 22 Dec 2013 22:43:10 -0800
-Message-ID: <1387780990.5567.145.camel@haakon3.risingtidesystems.com>
-References: <201311291642081351818@gmail.com>
+Subject: Re: [PATCH] drivers: target: target_core_mod: use div64_u64_rem()
+ instead of operator '%' for u64
+Date: Sun, 22 Dec 2013 22:51:27 -0800
+Message-ID: <1387781487.5567.147.camel@haakon3.risingtidesystems.com>
+References: <52B4F837.1010403@gmail.com>
+	 <1387680997.5567.91.camel@haakon3.risingtidesystems.com>
+	 <52B6AE19.80401@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:38645 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751392Ab3LWGmD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Dec 2013 01:42:03 -0500
-In-Reply-To: <201311291642081351818@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <52B6AE19.80401@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Chen Gang <gang.chen.5i5j@gmail.com>
+Cc: James Hogan <james.hogan@imgtec.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, hare@suse.de, Fengguang Wu <fengguang.wu@intel.com>
 List-Id: linux-scsi@vger.kernel.org
-To: majianpeng <majianpeng@gmail.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Fri, 2013-11-29 at 16:42 +0800, majianpeng wrote:
-> Make scsi-mq support blk-pc-command.
+On Sun, 2013-12-22 at 17:17 +0800, Chen Gang wrote:
+> On 12/22/2013 10:56 AM, Nicholas A. Bellinger wrote:
+> > Hi Chen,
+> > 
+> > On Sat, 2013-12-21 at 10:08 +0800, Chen Gang wrote:
+> >> In kernel, need use div64_u64_rem() instead of operator '%' for u64, or
+> >> can not pass compiling (with allmodconfig under metag):
+> >>
+> >>     MODPOST 2909 modules
+> >>   ERROR: "__umoddi3" [drivers/target/target_core_mod.ko] undefined!
+> >>
+> >> Also need u64 type cast for u32 variable multiply u32 variable, or will
+> >> cause type overflow issue.
+> >>
+> >>
+> >> Signed-off-by: Chen Gang <gang.chen.5i5j@gmail.com>
+> >> ---
+> >>  drivers/target/target_core_alua.c | 3 ++-
+> >>  1 file changed, 2 insertions(+), 1 deletion(-)
+> >>
+> > 
+> > FYI, this unsigned long long division in core_alua_state_lba_dependent()
+> > was fixed for 32-bit in linux-next >= 12192013 code.
+> > 
 > 
-> Signed-off-by: Jianpeng Ma <majianpeng@gmail.com>
-> ---
->  drivers/scsi/scsi_lib.c |    4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index bed596e..679e840 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -1059,9 +1059,11 @@ int scsi_init_io(struct scsi_cmnd *cmd, gfp_t gfp_mask)
->  	/*
->  	 * Use pre-allocation of cmd->sdb scatterlists with scsi-mq..
->  	 */
-> -//FIXME: scsi-mq dif descriptor init within scsi_init_io
->  	if (rq->mq_ctx) {
->  		BUG_ON(rq->nr_phys_segments > SCSI_MAX_SG_SEGMENTS);
-> +		cmd->sdb.table.sgl = cmd->mq_sgl;
-> +		cmd->sdb.table.nents = rq->nr_phys_segments;
-> +		sg_init_table(cmd->sdb.table.sgl, rq->nr_phys_segments);
->  		scsi_init_sgtable(rq, &cmd->sdb);
->  		return BLKPREP_OK;
->  	}
+> OK, thanks.
+> 
+> The related fix patch changed "start_lba = lba % ..." to "start_lba =
+> lba / ...", and also assumed "segment_size * segment_mult" is still
+> within u32 (can not cause type over flow).
+> 
+> I guess the original author already knew about them, and intended to do
+> like that (if not, please let me know, thanks).
+> 
 
-Doesn't seem to be necessary for TYPE_ROM either..?
+Sorry, your correct that the original code is using modulo division to
+calculate start_lba.
 
-So requests of REQ_TYPE_BLOCK_PC for TYPE_ROM with scsi-mq are having
-their sc->sdb.table setup from pre-allocated SGLs at the start of
-scsi_mq_queue_rq(), before q->prep_rq_fn() -> sr_prep_fn() ->
-scsi_setup_blk_pc_cmnd() is called.
+Hannes, can you please double check this below..?
+
+Thank you,
 
 --nab
 
+> > 
+> >> diff --git a/drivers/target/target_core_alua.c b/drivers/target/target_core_alua.c
+> >> index dc0d399..ff2aadc 100644
+> >> --- a/drivers/target/target_core_alua.c
+> >> +++ b/drivers/target/target_core_alua.c
+> >> @@ -489,7 +489,8 @@ static inline int core_alua_state_lba_dependent(
+> >>  			u64 first_lba = map->lba_map_first_lba;
+> >>  
+> >>  			if (segment_mult) {
+> >> -				start_lba = lba % (segment_size * segment_mult);
+> >> +				u64 tmp = (u64)segment_size * segment_mult;
+> >> +				div64_u64_rem(lba, tmp, &start_lba);
+> >>  				last_lba = first_lba + segment_size - 1;
+> >>  				if (start_lba >= first_lba &&
+> >>  				    start_lba <= last_lba) {
+> > 
+> > 
+> 
+> 
