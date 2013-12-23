@@ -1,38 +1,77 @@
-From: Peter Wong <petwong34@wongpet.onmicrosoft.com>
-Subject: Vorschlag
-Date: Mon, 23 Dec 2013 07:50:25 +0100
-Message-ID: <aea9cee2-300d-4d13-97a1-97a1ef88660c__43190.9684361473$1387781609$gmane$org@AMXPR07MB152.eurprd07.prod.outlook.com>
-Reply-To: <ppwong12@aol.jp>
+From: Anton Blanchard <anton@samba.org>
+Subject: [PATCH] ibmvscsi: Speed up kexec boot
+Date: Mon, 23 Dec 2013 18:28:16 +1100
+Message-ID: <20131223182816.0e8985af@kryten>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [157.56.120.104] ([157.56.120.104]:4190 "EHLO
-	emea01-db3-obe.outbound.protection.outlook.com"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751403Ab3LWGxC convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Dec 2013 01:53:02 -0500
-Content-Description: Mail message body
+Received: from ozlabs.org ([203.10.76.45]:43337 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750730Ab3LWH2S (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 23 Dec 2013 02:28:18 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Recipients <petwong34@wongpet.onmicrosoft.com>
+To: Brian King <brking@linux.vnet.ibm.com>, Robert Jennings <rcj@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org
 
-Hallo
 
-Ich habe ein Investment-Portfolio, das Geld in meiner Bank in China, di=
-e ich einfach f=FCr Sie als Empf=E4nger =FCbertragen k=F6nnen hinterleg=
-t beinhaltet. Die Transaktion ist ohne Risiko, weil es strategisch gepl=
-ant worden zu vervollst=E4ndigen erfolgreich.
+During kexec boot we call ibmvscsi_release_crq_queue() to tear down
+the old CRQ from the previous kernel. ibmvscsi_release_crq_queue()
+does this by calling H_FREE_CRQ. The hypervisor breaks this work
+down so as limit the time spent in any one hcall, so we have to loop
+until complete.
 
-Kontaktieren Sie mich auf meiner E-Mail-Adresse unten f=FCr weitere Det=
-ails.
+At the moment we delay 0.1 seconds between every H_FREE_CRQ call.
+I see us calling H_FREE_CRQ 60 times on my box which means we
+delayed a total of 6 seconds.
 
-Mit freundlichen Gr=FC=DFen,
+This delay is overkill, we are free to handle all busy return codes
+from the hypervisor as we see fit. Cut the delay down to something
+more reasonable - 1 ms. This improves my boot time by 6 seconds.
 
-Peter Wong
-Email: ppwong12@aol.jp
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Fix the other places we have arbitrary 100 ms delays.
+
+Signed-off-by: Anton Blanchard <anton@samba.org>
+---
+
+diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
+index fa76440..ed7b52e 100644
+--- a/drivers/scsi/ibmvscsi/ibmvscsi.c
++++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
+@@ -159,7 +159,7 @@ static void ibmvscsi_release_crq_queue(struct crq_queue *queue,
+ 	tasklet_kill(&hostdata->srp_task);
+ 	do {
+ 		if (rc)
+-			msleep(100);
++			msleep(1);
+ 		rc = plpar_hcall_norets(H_FREE_CRQ, vdev->unit_address);
+ 	} while ((rc == H_BUSY) || (H_IS_LONG_BUSY(rc)));
+ 	dma_unmap_single(hostdata->dev,
+@@ -292,7 +292,7 @@ static int ibmvscsi_reset_crq_queue(struct crq_queue *queue,
+ 	/* Close the CRQ */
+ 	do {
+ 		if (rc)
+-			msleep(100);
++			msleep(1);
+ 		rc = plpar_hcall_norets(H_FREE_CRQ, vdev->unit_address);
+ 	} while ((rc == H_BUSY) || (H_IS_LONG_BUSY(rc)));
+ 
+@@ -392,7 +392,7 @@ static int ibmvscsi_init_crq_queue(struct crq_queue *queue,
+ 	rc = 0;
+ 	do {
+ 		if (rc)
+-			msleep(100);
++			msleep(1);
+ 		rc = plpar_hcall_norets(H_FREE_CRQ, vdev->unit_address);
+ 	} while ((rc == H_BUSY) || (H_IS_LONG_BUSY(rc)));
+       reg_crq_failed:
+@@ -420,7 +420,7 @@ static int ibmvscsi_reenable_crq_queue(struct crq_queue *queue,
+ 	/* Re-enable the CRQ */
+ 	do {
+ 		if (rc)
+-			msleep(100);
++			msleep(1);
+ 		rc = plpar_hcall_norets(H_ENABLE_CRQ, vdev->unit_address);
+ 	} while ((rc == H_IN_PROGRESS) || (rc == H_BUSY) || (H_IS_LONG_BUSY(rc)));
+ 
