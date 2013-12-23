@@ -1,49 +1,80 @@
-From: Vijaya Mohan Guvva <vmohan@Brocade.com>
-Subject: RE: [PATCH] [SCSI] bfa: fix missing unlock on error in
- bfad_iocmd_cfg_trunk()
-Date: Mon, 23 Dec 2013 01:11:34 -0700
-Message-ID: <51BD2AE8016AE441B63F5661159C99024A51E75C48@BRM-EXCH-3.corp.brocade.com>
-References: <CAPgLHd9prpLF_sjwoj_QmiAZtwQG=Yig2FsYgd2OE5HXHpb04A@mail.gmail.com>
+From: Vijaya Mohan Guvva <vmohan@brocade.com>
+Subject: [PATCH] bfa: Fix smatch warnings
+Date: Mon, 23 Dec 2013 00:18:21 -0800
+Message-ID: <1387786701-7876-1-git-send-email-vmohan@Brocade.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:11470 "EHLO
-	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757007Ab3LWILk (ORCPT
+Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:24510 "EHLO
+	mx0a-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757191Ab3LWIS0 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 Dec 2013 03:11:40 -0500
-Received: from pps.filterd (m0000700 [127.0.0.1])
-	by mx0b-000f0801.pphosted.com (8.14.5/8.14.5) with SMTP id rBN7aOFv007531
-	for <linux-scsi@vger.kernel.org>; Mon, 23 Dec 2013 00:11:39 -0800
-Received: from hq1wp-exchub01.corp.brocade.com ([144.49.131.13])
-	by mx0b-000f0801.pphosted.com with ESMTP id 1gvmdn4kum-4
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Mon, 23 Dec 2013 00:11:39 -0800
-In-Reply-To: <CAPgLHd9prpLF_sjwoj_QmiAZtwQG=Yig2FsYgd2OE5HXHpb04A@mail.gmail.com>
-Content-Language: en-US
+	Mon, 23 Dec 2013 03:18:26 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Wei Yongjun <weiyj.lk@gmail.com>, Anil Gurumurthy <agurumur@Brocade.com>, "JBottomley@parallels.com" <JBottomley@parallels.com>
-Cc: "yongjun_wei@trendmicro.com.cn" <yongjun_wei@trendmicro.com.cn>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Dan Carpenter <dan.carpenter@oracle.com>
 
-> -----Original Message-----
-> From: Wei Yongjun [mailto:weiyj.lk@gmail.com]
-> Sent: Friday, December 20, 2013 8:21 AM
-> To: Anil Gurumurthy; Vijaya Mohan Guvva; JBottomley@parallels.com
-> Cc: yongjun_wei@trendmicro.com.cn; linux-scsi@vger.kernel.org
-> Subject: [PATCH] [SCSI] bfa: fix missing unlock on error in
-> bfad_iocmd_cfg_trunk()
-> 
-> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
-> 
-> Add the missing unlock before return from function bfad_iocmd_cfg_trunk()
-> in the error handling case.
-> 
-> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
-> ---
->  drivers/scsi/bfa/bfad_bsg.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
+From: Vijaya Mohan Guvva <vguvva@redhat.com>
 
-Looks fine, thanks, Vijay
-Acked-by: Vijaya Mohan Guvva <vmohan@brocade.com>
+Fixed following smatch warnings in bfa.
+drivers/scsi/bfa/bfa_ioc.c:3882 bfa_sfp_show_comp() error: memcpy()
+'des' too small (64 vs 248)
+drivers/scsi/bfa/bfa_ioc.c:6859 bfa_flash_status_read() warn: unsigned
+'status' is never less than zero.
+drivers/scsi/bfa/bfa_ioc.c:6881 bfa_flash_status_read() warn: unsigned
+'status' is never less than zero.
+drivers/scsi/bfa/bfa_ioc.c:6917 bfa_flash_read_start() warn: unsigned
+'status' is never less than zero.
+drivers/scsi/bfa/bfa_ioc.c:7043 bfa_flash_raw_read() warn: unsigned
+'status' is never less than zero.
+
+Signed-off-by: Vijaya Mohan Guvva <vmohan@brocade.com>
+---
+ drivers/scsi/bfa/bfa_ioc.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/scsi/bfa/bfa_ioc.c b/drivers/scsi/bfa/bfa_ioc.c
+index 65180e1..7e256ef 100644
+--- a/drivers/scsi/bfa/bfa_ioc.c
++++ b/drivers/scsi/bfa/bfa_ioc.c
+@@ -3878,7 +3878,7 @@ bfa_sfp_show_comp(struct bfa_sfp_s *sfp, struct bfi_mbmsg_s *msg)
+ 		bfa_trc(sfp, sfp->data_valid);
+ 		if (sfp->data_valid) {
+ 			u32	size = sizeof(struct sfp_mem_s);
+-			u8 *des = (u8 *) &(sfp->sfpmem->srlid_base);
++			u8 *des = (u8 *) &(sfp->sfpmem);
+ 			memcpy(des, sfp->dbuf_kva, size);
+ 		}
+ 		/*
+@@ -6851,7 +6851,7 @@ static u32
+ bfa_flash_status_read(void __iomem *pci_bar)
+ {
+ 	union bfa_flash_dev_status_reg_u	dev_status;
+-	u32				status;
++	int				status;
+ 	u32			ret_status;
+ 	int				i;
+ 
+@@ -6899,7 +6899,7 @@ static u32
+ bfa_flash_read_start(void __iomem *pci_bar, u32 offset, u32 len,
+ 			 char *buf)
+ {
+-	u32 status;
++	int status;
+ 
+ 	/*
+ 	 * len must be mutiple of 4 and not exceeding fifo size
+@@ -7021,7 +7021,8 @@ bfa_status_t
+ bfa_flash_raw_read(void __iomem *pci_bar, u32 offset, char *buf,
+ 		       u32 len)
+ {
+-	u32 n, status;
++	u32 n;
++	int status;
+ 	u32 off, l, s, residue, fifo_sz;
+ 
+ 	residue = len;
+-- 
+1.8.2.1
 
