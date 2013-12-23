@@ -1,45 +1,47 @@
-From: Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH] megaraid_sas: Quirk mmio hook for 1078 MR controller
-Date: Mon, 23 Dec 2013 10:57:46 -0700
-Message-ID: <CAErSpo7X4khuPOp5s4MdunOmwww0V4JZipJa3iEOA=Y5nnCwqA@mail.gmail.com>
-References: <201312231512.rBNFC6mo008974@cosmhbs0.lsi.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: spinlock_irqsave() && flags (Was: pm80xx: Spinlock fix)
+Date: Mon, 23 Dec 2013 10:12:57 -0800
+Message-ID: <CA+55aFy_y45feJNJgFa=Taks0GpxiXEMJexhjVVYH-vVFkPmkA@mail.gmail.com>
+References: <1387366123-3950-1-git-send-email-Viswas.G@pmcs.com>
+	<52B8357D.60202@redhat.com>
+	<52B83B89.9040700@gmail.com>
+	<CE2C58F938F4C44EA74FFF880BAA7E5E1C68AA8A@BBYEXM01.pmc-sierra.internal>
+	<CAD0Z9T+69VoSnDY-Sj7a1QfJ-KLJYVyL9=WQ123XMfRvQmGdsg@mail.gmail.com>
+	<52B8518B.4060204@gmail.com>
+	<52B8569D.4050101@redhat.com>
+	<CAD0Z9TK-cn=X3ywSzPnEQN-FB+ue+0dHQ3EHuwonC+KfgrmPMA@mail.gmail.com>
+	<20131223163410.GA28220@redhat.com>
+	<20131223172744.GA2069@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-pci-owner@vger.kernel.org>
-In-Reply-To: <201312231512.rBNFC6mo008974@cosmhbs0.lsi.com>
-Sender: linux-pci-owner@vger.kernel.org
-To: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "James E.J. Bottomley" <jbottomley@parallels.com>, sumit.saxena@lsi.com, Adam Radford <aradford@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20131223172744.GA2069@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Oleg Nesterov <oleg@redhat.com>
+Cc: Jason Seba <jason.seba42@gmail.com>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, Tomas Henzl <thenzl@redhat.com>, Jack Wang <xjtuwjp@gmail.com>, Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>, Viswas G <Viswas.G@pmcs.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "JBottomley@parallels.com" <JBottomley@parallels.com>, Vasanthalakshmi Tharmarajan <Vasanthalakshmi.Tharmarajan@pmcs.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Dec 23, 2013 at 8:13 AM,  <Kashyap.Desai@lsi.com> wrote:
-> This patch has fix for LSI Gen-1 MR controller issue which only pop-up on
-> few systems and it is not generic.
+On Mon, Dec 23, 2013 at 9:27 AM, Oleg Nesterov <oleg@redhat.com> wrote:
 >
-> On few system, MR 1078 MR controller is not working if mmio decoding is off.
-> This patch proposed early quirck entry for Device id 0x1000/0x0411 to enable mmio.
+> In short, is this code
 >
-> Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
-> ---
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index f6c31fa..a20fe41 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -43,6 +43,10 @@ static void quirk_mmio_always_on(struct pci_dev *dev)
->  }
->  DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_ANY_ID, PCI_ANY_ID,
->                                 PCI_CLASS_BRIDGE_HOST, 8, quirk_mmio_always_on);
-> +/* LSI controller device id 0x0411 has some issues if mmio_always_on is not set.
-> + * It pop-up only on few specific system, where decoding disable is not working.
-> + */
-> +DECLARE_PCI_FIXUP_EARLY(0x1000, 0x0411, quirk_mmio_always_on);
+>         spinlock_t LOCK;
+>         unsigned long FLAGS;
+>
+>         void my_lock(void)
+>         {
+>                 spin_lock_irqsave(&LOCK, FLAGS);
+>         }
+>
+>         void my_unlock(void)
+>         {
+>                 spin_unlock_irqrestore(&LOCK, FLAGS);
+>         }
+>
+> correct or not?
 
-What is the actual problem that happens without this quirk?  Is there
-some hardware defect in the MR 1078 that makes it fail when we disable
-decoding?
+Hell no. "flags" needs to be a thread-private variable, or at least
+protected some way (ie the above could work if everything is inside a
+bigger lock, to serialize access to FLAGS).
 
-Disabling decoding is important because it prevents conflicts with
-other devices while sizing and updating BARs, so I don't want to use
-this quirk unless it's really necessary.
-
-Bjorn
+                    Linus
