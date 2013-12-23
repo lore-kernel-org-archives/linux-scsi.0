@@ -1,79 +1,54 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 6/6] scsi-mq: Pre-allocation of sg tables base on
- min(host->hostt->sg_tablesize,SCSI_MQ_MAX_SG_SEGMENTS).
-Date: Sun, 22 Dec 2013 22:33:41 -0800
-Message-ID: <1387780421.5567.135.camel@haakon3.risingtidesystems.com>
-References: <201311291642208390779@gmail.com>
+Subject: Re: [PATCH 4/6] scsi-mq: init sg in scsi_init_io.
+Date: Sun, 22 Dec 2013 22:43:10 -0800
+Message-ID: <1387780990.5567.145.camel@haakon3.risingtidesystems.com>
+References: <201311291642081351818@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:46088 "EHLO
+Received: from mail.linux-iscsi.org ([67.23.28.174]:38645 "EHLO
 	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750730Ab3LWGce (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Dec 2013 01:32:34 -0500
-In-Reply-To: <201311291642208390779@gmail.com>
+	with ESMTP id S1751392Ab3LWGmD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Dec 2013 01:42:03 -0500
+In-Reply-To: <201311291642081351818@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: majianpeng <majianpeng@gmail.com>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
 On Fri, 2013-11-29 at 16:42 +0800, majianpeng wrote:
+> Make scsi-mq support blk-pc-command.
+> 
 > Signed-off-by: Jianpeng Ma <majianpeng@gmail.com>
 > ---
->  drivers/scsi/scsi-mq.c |   13 ++++++++++---
->  1 file changed, 10 insertions(+), 3 deletions(-)
-> 
+>  drivers/scsi/scsi_lib.c |    4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index bed596e..679e840 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -1059,9 +1059,11 @@ int scsi_init_io(struct scsi_cmnd *cmd, gfp_t gfp_mask)
+>  	/*
+>  	 * Use pre-allocation of cmd->sdb scatterlists with scsi-mq..
+>  	 */
+> -//FIXME: scsi-mq dif descriptor init within scsi_init_io
+>  	if (rq->mq_ctx) {
+>  		BUG_ON(rq->nr_phys_segments > SCSI_MAX_SG_SEGMENTS);
+> +		cmd->sdb.table.sgl = cmd->mq_sgl;
+> +		cmd->sdb.table.nents = rq->nr_phys_segments;
+> +		sg_init_table(cmd->sdb.table.sgl, rq->nr_phys_segments);
+>  		scsi_init_sgtable(rq, &cmd->sdb);
+>  		return BLKPREP_OK;
+>  	}
 
-Applied, + squashed into current target-pending/scsi-mq code.
+Doesn't seem to be necessary for TYPE_ROM either..?
 
-Thanks Jianpeng!
+So requests of REQ_TYPE_BLOCK_PC for TYPE_ROM with scsi-mq are having
+their sc->sdb.table setup from pre-allocated SGLs at the start of
+scsi_mq_queue_rq(), before q->prep_rq_fn() -> sr_prep_fn() ->
+scsi_setup_blk_pc_cmnd() is called.
 
 --nab
-
-> diff --git a/drivers/scsi/scsi-mq.c b/drivers/scsi/scsi-mq.c
-> index 78b05c1..7b8137b 100644
-> --- a/drivers/scsi/scsi-mq.c
-> +++ b/drivers/scsi/scsi-mq.c
-> @@ -154,6 +154,7 @@ int scsi_mq_alloc_queue(struct Scsi_Host *sh, struct scsi_device *sdev)
->  	struct request *rq;
->  	struct scsi_cmnd *sc;
->  	int i, j;
-> +	int sgl_size;
->  
->  	sdev->sdev_mq_reg.ops = &scsi_mq_ops;
->  	sdev->sdev_mq_reg.queue_depth = min((short)sh->hostt->can_queue,
-> @@ -186,13 +187,20 @@ int scsi_mq_alloc_queue(struct Scsi_Host *sh, struct scsi_device *sdev)
->  	 * Set existing Scsi_Host based hardware limits from scsi_lib.c
->  	 */
->  	scsi_init_request_queue(q, sh);
-> +
-> +	if (sh->hostt->sg_tablesize > SCSI_MQ_MAX_SG_SEGMENTS) {
-> +		printk(KERN_ERR"Host%d sg_tablesize too larger than %d\n",
-> +			sh->host_no, SCSI_MQ_MAX_SG_SEGMENTS);
-> +		sh->hostt->sg_tablesize = SCSI_MQ_MAX_SG_SEGMENTS;
-> +	}
-> +	sgl_size = sh->hostt->sg_tablesize * sizeof(struct scatterlist);
-> +
->  	/*
->  	 * Do remaining setup of pre-allocated scsi_cmnd descriptor map for
->  	 * each scsi-mq hctx
->  	 */
->  //FIXME: Do cmd->prot_sdb setup for DIF from scsi_host_alloc_command
->  	queue_for_each_hw_ctx(q, hctx, i) {
-> -
->  		printk("Performing sc map setup on q: %p hctx: %p i: %d\n", q, hctx, i);
->  
->  		for (j = 0; j < hctx->queue_depth; j++) {
-> @@ -201,8 +209,7 @@ int scsi_mq_alloc_queue(struct Scsi_Host *sh, struct scsi_device *sdev)
->  			sc->device = sdev;
->  			sc->ll_list.next = NULL;
->  
-> -//FIXME: Pre-allocation of sg tables based upon max_sectors
-> -			sc->mq_sgl = kzalloc_node(SCSI_MQ_SGL_SIZE,
-> +			sc->mq_sgl = kzalloc_node(sgl_size,
->  					GFP_KERNEL, sdev->sdev_mq_reg.numa_node);
->  			if (!sc->mq_sgl) {
->  				pr_err("Unable to pre-allocate sc->sdb\n");
-
 
