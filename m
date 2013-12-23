@@ -1,940 +1,423 @@
-From: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
-Subject: RE: [PATCH] pm80xx: Spinlock fix
-Date: Mon, 23 Dec 2013 13:45:33 +0000
-Message-ID: <CE2C58F938F4C44EA74FFF880BAA7E5E1C68AA8A@BBYEXM01.pmc-sierra.internal>
-References: <1387366123-3950-1-git-send-email-Viswas.G@pmcs.com>
- <52B8357D.60202@redhat.com> <52B83B89.9040700@gmail.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: status of block-integrity
+Date: Mon, 23 Dec 2013 05:48:13 -0800
+Message-ID: <20131223134813.GA4737@infradead.org>
+References: <20131222192128.GA28532@infradead.org>
+ <yq11u134rmt.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:43399 "EHLO
-	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752138Ab3LWNpf convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 Dec 2013 08:45:35 -0500
-In-Reply-To: <52B83B89.9040700@gmail.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <yq11u134rmt.fsf@sermon.lab.mkp.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Martin K. Petersen" <mkp@mkp.net>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jack Wang <xjtuwjp@gmail.com>, Tomas Henzl <thenzl@redhat.com>, Viswas G <Viswas.G@pmcs.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jason.seba42@gmail.com" <jason.seba42@gmail.com>, "JBottomley@parallels.com" <JBottomley@parallels.com>, Vasanthalakshmi Tharmarajan <Vasanthalakshmi.Tharmarajan@pmcs.com>
 
-
-
------Original Message-----
-From: Jack Wang [mailto:xjtuwjp@gmail.com] 
-Sent: Monday, December 23, 2013 7:03 PM
-To: Tomas Henzl; Viswas G
-Cc: linux-scsi@vger.kernel.org; jason.seba42@gmail.com; JBottomley@parallels.com; Vasanthalakshmi Tharmarajan; Suresh Thiagarajan
-Subject: Re: [PATCH] pm80xx: Spinlock fix
-
-On 12/23/2013 02:07 PM, Tomas Henzl wrote:
-> On 12/18/2013 12:28 PM, Viswas G wrote:
->> From 9338d4bc92b23b4c283f9bd6812646ab74866a40 Mon Sep 17 00:00:00 
->> 2001
->> From: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
->> Date: Mon, 16 Dec 2013 21:15:20 +0530
->> Subject: [PATCH] pm80xx: Spinlock fix
->>
->> spin_unlock was used instead of spin_unlock_irqrestore. To fix this 
->> lock_flags per-adapter is added and used across all the places where pm8001_ha->lock is used.
+On Mon, Dec 23, 2013 at 08:35:22AM -0500, Martin K. Petersen wrote:
+> >>>>> "Christoph" == Christoph Hellwig <hch@infradead.org> writes:
 > 
-> I think this could have been fixed but just using spin_unlock_irqsave 
-> instead of spin_unlock_irq why the change to global lock_flags?  I'm not a spinlock expert, but is this safe?
+> Christoph> We have the block integrity code to support DIF/DIX in the
+> Christoph> the tree for about 5 and a half years, and we still don't
+> Christoph> have a single consumer of it.  
 > 
-Agree with Tomas, it's dangerous to change to global lock_flags.
+> What do you mean? If you have a DIX-capable HBA (lpfc, qla2xxx, zfcp)
+> then integrity protection is active from the block layer down. The only
+> code that's not currently being exercised are the tag interleaving
+> functions.  I was hoping the FS people would use them for back pointers
+> but nobody seemed to bite.
 
-Have you reproduce the bug reported from Jason, and verify the patch?
-I think better just to change the spin_lock_irq to spin_lock_irqsave if that is the cause.
+With single consumer of it I obviously meant the various symbols for the
+consumer side as well as the application tag support.
 
-Suresh: We could not reproduce this issue and Jason(in CC) also could not reproduce it for now. spin_lock_irqsave and spin_unlock_irqrestore were called from multiple functions. Earlier flags was declared as a local variable wherever spinlock was used. This was not correct since irq information was saved in one function's flag which is a local to that function and restored in other function where again flags was declared as local variable to that function. So the data stored in flags while irq save was not used while restoring. Since we have lock per card, we are associating flag also per card for that lock.
--Suresh
+Patch to remove the dead code below:
 
-Jack
->>
->> Reported-by: Jason Seba <jason.seba42@gmail.com>
->> Signed-off-by: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
->> Signed-off-by: Viswas G <Viswas.G@pmcs.com>
->> ---
->>  drivers/scsi/pm8001/pm8001_hwi.c |  158 ++++++++++++++++++++++----------------
->>  drivers/scsi/pm8001/pm8001_sas.c |   50 ++++++------
->>  drivers/scsi/pm8001/pm8001_sas.h |    1 +
->>  drivers/scsi/pm8001/pm80xx_hwi.c |   69 ++++++++++-------
->>  4 files changed, 160 insertions(+), 118 deletions(-)
->>
->> diff --git a/drivers/scsi/pm8001/pm8001_hwi.c 
->> b/drivers/scsi/pm8001/pm8001_hwi.c
->> index 0a1296a..3901c40 100644
->> --- a/drivers/scsi/pm8001/pm8001_hwi.c
->> +++ b/drivers/scsi/pm8001/pm8001_hwi.c
->> @@ -411,7 +411,6 @@ static void mpi_set_phys_g3_with_ssc(struct pm8001_hba_info *pm8001_ha,
->>  				     u32 SSCbit)
->>  {
->>  	u32 value, offset, i;
->> -	unsigned long flags;
->>  
->>  #define SAS2_SETTINGS_LOCAL_PHY_0_3_SHIFT_ADDR 0x00030000  #define 
->> SAS2_SETTINGS_LOCAL_PHY_4_7_SHIFT_ADDR 0x00040000 @@ -425,10 +424,10 
->> @@ static void mpi_set_phys_g3_with_ssc(struct pm8001_hba_info *pm8001_ha,
->>      * Using shifted destination address 0x3_0000:0x1074 + 0x4000*N (N=0:3)
->>      * Using shifted destination address 0x4_0000:0x1074 + 0x4000*(N-4) (N=4:7)
->>      */
->> -	spin_lock_irqsave(&pm8001_ha->lock, flags);
->> +	spin_lock_irqsave(&pm8001_ha->lock, pm8001_ha->lock_flags);
->>  	if (-1 == pm8001_bar4_shift(pm8001_ha,
->>  				SAS2_SETTINGS_LOCAL_PHY_0_3_SHIFT_ADDR)) {
->> -		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->> +		spin_unlock_irqrestore(&pm8001_ha->lock, pm8001_ha->lock_flags);
->>  		return;
->>  	}
->>  
->> @@ -439,7 +438,7 @@ static void mpi_set_phys_g3_with_ssc(struct pm8001_hba_info *pm8001_ha,
->>  	/* shift membase 3 for SAS2_SETTINGS_LOCAL_PHY 4 - 7 */
->>  	if (-1 == pm8001_bar4_shift(pm8001_ha,
->>  				SAS2_SETTINGS_LOCAL_PHY_4_7_SHIFT_ADDR)) {
->> -		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->> +		spin_unlock_irqrestore(&pm8001_ha->lock, pm8001_ha->lock_flags);
->>  		return;
->>  	}
->>  	for (i = 4; i < 8; i++) {
->> @@ -466,7 +465,7 @@ static void mpi_set_phys_g3_with_ssc(struct 
->> pm8001_hba_info *pm8001_ha,
->>  
->>  	/*set the shifted destination address to 0x0 to avoid error operation */
->>  	pm8001_bar4_shift(pm8001_ha, 0x0);
->> -	spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->> +	spin_unlock_irqrestore(&pm8001_ha->lock, pm8001_ha->lock_flags);
->>  	return;
->>  }
->>  
->> @@ -481,7 +480,6 @@ static void mpi_set_open_retry_interval_reg(struct pm8001_hba_info *pm8001_ha,
->>  	u32 offset;
->>  	u32 value;
->>  	u32 i;
->> -	unsigned long flags;
->>  
->>  #define OPEN_RETRY_INTERVAL_PHY_0_3_SHIFT_ADDR 0x00030000  #define 
->> OPEN_RETRY_INTERVAL_PHY_4_7_SHIFT_ADDR 0x00040000 @@ -490,11 +488,11 
->> @@ static void mpi_set_open_retry_interval_reg(struct pm8001_hba_info 
->> *pm8001_ha,  #define OPEN_RETRY_INTERVAL_REG_MASK 0x0000FFFF
->>  
->>  	value = interval & OPEN_RETRY_INTERVAL_REG_MASK;
->> -	spin_lock_irqsave(&pm8001_ha->lock, flags);
->> +	spin_lock_irqsave(&pm8001_ha->lock, pm8001_ha->lock_flags);
->>  	/* shift bar and set the OPEN_REJECT(RETRY) interval time of PHY 0 -3.*/
->>  	if (-1 == pm8001_bar4_shift(pm8001_ha,
->>  			     OPEN_RETRY_INTERVAL_PHY_0_3_SHIFT_ADDR)) {
->> -		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->> +		spin_unlock_irqrestore(&pm8001_ha->lock, pm8001_ha->lock_flags);
->>  		return;
->>  	}
->>  	for (i = 0; i < 4; i++) {
->> @@ -504,7 +502,7 @@ static void 
->> mpi_set_open_retry_interval_reg(struct pm8001_hba_info *pm8001_ha,
->>  
->>  	if (-1 == pm8001_bar4_shift(pm8001_ha,
->>  			     OPEN_RETRY_INTERVAL_PHY_4_7_SHIFT_ADDR)) {
->> -		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->> +		spin_unlock_irqrestore(&pm8001_ha->lock, pm8001_ha->lock_flags);
->>  		return;
->>  	}
->>  	for (i = 4; i < 8; i++) {
->> @@ -513,7 +511,7 @@ static void mpi_set_open_retry_interval_reg(struct pm8001_hba_info *pm8001_ha,
->>  	}
->>  	/*set the shifted destination address to 0x0 to avoid error operation */
->>  	pm8001_bar4_shift(pm8001_ha, 0x0);
->> -	spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->> +	spin_unlock_irqrestore(&pm8001_ha->lock, pm8001_ha->lock_flags);
->>  	return;
->>  }
->>  
->> @@ -768,11 +766,11 @@ static u32 soft_reset_ready_check(struct pm8001_hba_info *pm8001_ha)
->>  		PM8001_INIT_DBG(pm8001_ha,
->>  			pm8001_printk("Firmware is ready for reset .\n"));
->>  	} else {
->> -		unsigned long flags;
->>  		/* Trigger NMI twice via RB6 */
->> -		spin_lock_irqsave(&pm8001_ha->lock, flags);
->> +		spin_lock_irqsave(&pm8001_ha->lock, pm8001_ha->lock_flags);
->>  		if (-1 == pm8001_bar4_shift(pm8001_ha, RB6_ACCESS_REG)) {
->> -			spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->> +			spin_unlock_irqrestore(&pm8001_ha->lock,
->> +						pm8001_ha->lock_flags);
->>  			PM8001_FAIL_DBG(pm8001_ha,
->>  				pm8001_printk("Shift Bar4 to 0x%x failed\n",
->>  					RB6_ACCESS_REG));
->> @@ -798,10 +796,11 @@ static u32 soft_reset_ready_check(struct pm8001_hba_info *pm8001_ha)
->>  			PM8001_FAIL_DBG(pm8001_ha,
->>  				pm8001_printk("SCRATCH_PAD3 value = 0x%x\n",
->>  				pm8001_cr32(pm8001_ha, 0, MSGU_SCRATCH_PAD_3)));
->> -			spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->> +			spin_unlock_irqrestore(&pm8001_ha->lock,
->> +						pm8001_ha->lock_flags);
->>  			return -1;
->>  		}
->> -		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->> +		spin_unlock_irqrestore(&pm8001_ha->lock, pm8001_ha->lock_flags);
->>  	}
->>  	return 0;
->>  }
->> @@ -818,7 +817,6 @@ pm8001_chip_soft_rst(struct pm8001_hba_info *pm8001_ha)
->>  	u32	max_wait_count;
->>  	u32	regVal1, regVal2, regVal3;
->>  	u32	signature = 0x252acbcd; /* for host scratch pad0 */
->> -	unsigned long flags;
->>  
->>  	/* step1: Check FW is ready for soft reset */
->>  	if (soft_reset_ready_check(pm8001_ha) != 0) { @@ -829,9 +827,9 @@ 
->> pm8001_chip_soft_rst(struct pm8001_hba_info *pm8001_ha)
->>  	/* step 2: clear NMI status register on AAP1 and IOP, write the same
->>  	value to clear */
->>  	/* map 0x60000 to BAR4(0x20), BAR2(win) */
->> -	spin_lock_irqsave(&pm8001_ha->lock, flags);
->> +	spin_lock_irqsave(&pm8001_ha->lock, pm8001_ha->lock_flags);
->>  	if (-1 == pm8001_bar4_shift(pm8001_ha, MBIC_AAP1_ADDR_BASE)) {
->> -		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->> +		spin_unlock_irqrestore(&pm8001_ha->lock, pm8001_ha->lock_flags);
->>  		PM8001_FAIL_DBG(pm8001_ha,
->>  			pm8001_printk("Shift Bar4 to 0x%x failed\n",
->>  			MBIC_AAP1_ADDR_BASE));
->> @@ -843,7 +841,7 @@ pm8001_chip_soft_rst(struct pm8001_hba_info *pm8001_ha)
->>  	pm8001_cw32(pm8001_ha, 2, MBIC_NMI_ENABLE_VPE0_IOP, 0x0);
->>  	/* map 0x70000 to BAR4(0x20), BAR2(win) */
->>  	if (-1 == pm8001_bar4_shift(pm8001_ha, MBIC_IOP_ADDR_BASE)) {
->> -		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->> +		spin_unlock_irqrestore(&pm8001_ha->lock, pm8001_ha->lock_flags);
->>  		PM8001_FAIL_DBG(pm8001_ha,
->>  			pm8001_printk("Shift Bar4 to 0x%x failed\n",
->>  			MBIC_IOP_ADDR_BASE));
->> @@ -886,7 +884,7 @@ pm8001_chip_soft_rst(struct pm8001_hba_info *pm8001_ha)
->>  	/* read required registers for confirmming */
->>  	/* map 0x0700000 to BAR4(0x20), BAR2(win) */
->>  	if (-1 == pm8001_bar4_shift(pm8001_ha, GSM_ADDR_BASE)) {
->> -		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->> +		spin_unlock_irqrestore(&pm8001_ha->lock, pm8001_ha->lock_flags);
->>  		PM8001_FAIL_DBG(pm8001_ha,
->>  			pm8001_printk("Shift Bar4 to 0x%x failed\n",
->>  			GSM_ADDR_BASE));
->> @@ -953,7 +951,7 @@ pm8001_chip_soft_rst(struct pm8001_hba_info *pm8001_ha)
->>  	udelay(10);
->>  	/* step 5-b: set GPIO-0 output control to tristate anyway */
->>  	if (-1 == pm8001_bar4_shift(pm8001_ha, GPIO_ADDR_BASE)) {
->> -		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->> +		spin_unlock_irqrestore(&pm8001_ha->lock, pm8001_ha->lock_flags);
->>  		PM8001_INIT_DBG(pm8001_ha,
->>  				pm8001_printk("Shift Bar4 to 0x%x failed\n",
->>  				GPIO_ADDR_BASE));
->> @@ -970,7 +968,7 @@ pm8001_chip_soft_rst(struct pm8001_hba_info *pm8001_ha)
->>  	/* Step 6: Reset the IOP and AAP1 */
->>  	/* map 0x00000 to BAR4(0x20), BAR2(win) */
->>  	if (-1 == pm8001_bar4_shift(pm8001_ha, SPC_TOP_LEVEL_ADDR_BASE)) {
->> -		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->> +		spin_unlock_irqrestore(&pm8001_ha->lock, pm8001_ha->lock_flags);
->>  		PM8001_FAIL_DBG(pm8001_ha,
->>  			pm8001_printk("SPC Shift Bar4 to 0x%x failed\n",
->>  			SPC_TOP_LEVEL_ADDR_BASE));
->> @@ -1008,7 +1006,7 @@ pm8001_chip_soft_rst(struct pm8001_hba_info *pm8001_ha)
->>  	/* step 11: reads and sets the GSM Configuration and Reset Register */
->>  	/* map 0x0700000 to BAR4(0x20), BAR2(win) */
->>  	if (-1 == pm8001_bar4_shift(pm8001_ha, GSM_ADDR_BASE)) {
->> -		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->> +		spin_unlock_irqrestore(&pm8001_ha->lock, pm8001_ha->lock_flags);
->>  		PM8001_FAIL_DBG(pm8001_ha,
->>  			pm8001_printk("SPC Shift Bar4 to 0x%x failed\n",
->>  			GSM_ADDR_BASE));
->> @@ -1062,7 +1060,7 @@ pm8001_chip_soft_rst(struct pm8001_hba_info *pm8001_ha)
->>  	/* step 13: bring the IOP and AAP1 out of reset */
->>  	/* map 0x00000 to BAR4(0x20), BAR2(win) */
->>  	if (-1 == pm8001_bar4_shift(pm8001_ha, SPC_TOP_LEVEL_ADDR_BASE)) {
->> -		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->> +		spin_unlock_irqrestore(&pm8001_ha->lock, pm8001_ha->lock_flags);
->>  		PM8001_FAIL_DBG(pm8001_ha,
->>  			pm8001_printk("Shift Bar4 to 0x%x failed\n",
->>  			SPC_TOP_LEVEL_ADDR_BASE));
->> @@ -1104,7 +1102,8 @@ pm8001_chip_soft_rst(struct pm8001_hba_info *pm8001_ha)
->>  				pm8001_printk("SCRATCH_PAD3 value = 0x%x\n",
->>  				pm8001_cr32(pm8001_ha, 0,
->>  				MSGU_SCRATCH_PAD_3)));
->> -			spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->> +			spin_unlock_irqrestore(&pm8001_ha->lock,
->> +						pm8001_ha->lock_flags);
->>  			return -1;
->>  		}
->>  
->> @@ -1134,12 +1133,13 @@ pm8001_chip_soft_rst(struct pm8001_hba_info *pm8001_ha)
->>  				pm8001_printk("SCRATCH_PAD3 value = 0x%x\n",
->>  				pm8001_cr32(pm8001_ha, 0,
->>  				MSGU_SCRATCH_PAD_3)));
->> -			spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->> +			spin_unlock_irqrestore(&pm8001_ha->lock,
->> +						pm8001_ha->lock_flags);
->>  			return -1;
->>  		}
->>  	}
->>  	pm8001_bar4_shift(pm8001_ha, 0);
->> -	spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->> +	spin_unlock_irqrestore(&pm8001_ha->lock, pm8001_ha->lock_flags);
->>  
->>  	PM8001_INIT_DBG(pm8001_ha,
->>  		pm8001_printk("SPC soft reset Complete\n")); @@ -1517,18 +1517,19 
->> @@ void pm8001_work_fn(struct work_struct *work)
->>  		u32 tag;
->>  		struct pm8001_ccb_info *ccb;
->>  		struct pm8001_hba_info *pm8001_ha = pw->pm8001_ha;
->> -		unsigned long flags, flags1;
->> +		unsigned long flags1;
->>  		struct task_status_struct *ts;
->>  		int i;
->>  
->>  		if (pm8001_query_task(t) == TMF_RESP_FUNC_SUCC)
->>  			break; /* Task still on lu */
->> -		spin_lock_irqsave(&pm8001_ha->lock, flags);
->> +		spin_lock_irqsave(&pm8001_ha->lock, pm8001_ha->lock_flags);
->>  
->>  		spin_lock_irqsave(&t->task_state_lock, flags1);
->>  		if (unlikely((t->task_state_flags & SAS_TASK_STATE_DONE))) {
->>  			spin_unlock_irqrestore(&t->task_state_lock, flags1);
->> -			spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->> +			spin_unlock_irqrestore(&pm8001_ha->lock,
->> +						pm8001_ha->lock_flags);
->>  			break; /* Task got completed by another */
->>  		}
->>  		spin_unlock_irqrestore(&t->task_state_lock, flags1); @@ -1541,7 
->> +1542,8 @@ void pm8001_work_fn(struct work_struct *work)
->>  				break;
->>  		}
->>  		if (!ccb) {
->> -			spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->> +			spin_unlock_irqrestore(&pm8001_ha->lock,
->> +						pm8001_ha->lock_flags);
->>  			break; /* Task got freed by another */
->>  		}
->>  		ts = &t->task_status;
->> @@ -1562,12 +1564,14 @@ void pm8001_work_fn(struct work_struct *work)
->>  				" aborted by upper layer!\n",
->>  				t, pw->handler, ts->resp, ts->stat));
->>  			pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
->> -			spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->> +			spin_unlock_irqrestore(&pm8001_ha->lock,
->> +						pm8001_ha->lock_flags);
->>  		} else {
->>  			spin_unlock_irqrestore(&t->task_state_lock, flags1);
->>  			pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
->>  			mb();/* in order to force CPU ordering */
->> -			spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->> +			spin_unlock_irqrestore(&pm8001_ha->lock,
->> +						pm8001_ha->lock_flags);
->>  			t->task_done(t);
->>  		}
->>  	}	break;
->> @@ -1577,7 +1581,7 @@ void pm8001_work_fn(struct work_struct *work)
->>  		u32 tag;
->>  		struct pm8001_ccb_info *ccb;
->>  		struct pm8001_hba_info *pm8001_ha = pw->pm8001_ha;
->> -		unsigned long flags, flags1;
->> +		unsigned long flags1;
->>  		int i, ret = 0;
->>  
->>  		PM8001_IO_DBG(pm8001_ha,
->> @@ -1600,13 +1604,14 @@ void pm8001_work_fn(struct work_struct *work)
->>  				break;
->>  			});
->>  
->> -		spin_lock_irqsave(&pm8001_ha->lock, flags);
->> +		spin_lock_irqsave(&pm8001_ha->lock, pm8001_ha->lock_flags);
->>  
->>  		spin_lock_irqsave(&t->task_state_lock, flags1);
->>  
->>  		if (unlikely((t->task_state_flags & SAS_TASK_STATE_DONE))) {
->>  			spin_unlock_irqrestore(&t->task_state_lock, flags1);
->> -			spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->> +			spin_unlock_irqrestore(&pm8001_ha->lock,
->> +						pm8001_ha->lock_flags);
->>  			if (ret == TMF_RESP_FUNC_SUCC) /* task on lu */
->>  				(void)pm8001_abort_task(t);
->>  			break; /* Task got completed by another */ @@ -1622,7 +1627,8 @@ 
->> void pm8001_work_fn(struct work_struct *work)
->>  				break;
->>  		}
->>  		if (!ccb) {
->> -			spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->> +			spin_unlock_irqrestore(&pm8001_ha->lock,
->> +						pm8001_ha->lock_flags);
->>  			if (ret == TMF_RESP_FUNC_SUCC) /* task on lu */
->>  				(void)pm8001_abort_task(t);
->>  			break; /* Task got freed by another */ @@ -1634,7 +1640,8 @@ void 
->> pm8001_work_fn(struct work_struct *work)
->>  		switch (ret) {
->>  		case TMF_RESP_FUNC_SUCC: /* task on lu */
->>  			ccb->open_retry = 1; /* Snub completion */
->> -			spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->> +			spin_unlock_irqrestore(&pm8001_ha->lock,
->> +						pm8001_ha->lock_flags);
->>  			ret = pm8001_abort_task(t);
->>  			ccb->open_retry = 0;
->>  			switch (ret) {
->> @@ -1651,12 +1658,14 @@ void pm8001_work_fn(struct work_struct *work)
->>  			break;
->>  
->>  		case TMF_RESP_FUNC_COMPLETE: /* task not on lu */
->> -			spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->> +			spin_unlock_irqrestore(&pm8001_ha->lock,
->> +						pm8001_ha->lock_flags);
->>  			/* Do we need to abort the task locally? */
->>  			break;
->>  
->>  		default: /* device misbehavior */
->> -			spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->> +			spin_unlock_irqrestore(&pm8001_ha->lock,
->> +						pm8001_ha->lock_flags);
->>  			ret = TMF_RESP_FUNC_FAILED;
->>  			PM8001_IO_DBG(pm8001_ha,
->>  				pm8001_printk("...Reset phy\n")); @@ -2504,9 +2513,11 @@ 
->> mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
->>  			ts->stat = SAS_QUEUE_FULL;
->>  			pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
->>  			mb();/*in order to force CPU ordering*/
->> -			spin_unlock_irq(&pm8001_ha->lock);
->> +			spin_unlock_irqrestore(&pm8001_ha->lock,
->> +						pm8001_ha->lock_flags);
->>  			t->task_done(t);
->> -			spin_lock_irq(&pm8001_ha->lock);
->> +			spin_lock_irqsave(&pm8001_ha->lock,
->> +						pm8001_ha->lock_flags);
->>  			return;
->>  		}
->>  		break;
->> @@ -2524,9 +2535,11 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
->>  			ts->stat = SAS_QUEUE_FULL;
->>  			pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
->>  			mb();/*ditto*/
->> -			spin_unlock_irq(&pm8001_ha->lock);
->> +			spin_unlock_irqrestore(&pm8001_ha->lock,
->> +						pm8001_ha->lock_flags);
->>  			t->task_done(t);
->> -			spin_lock_irq(&pm8001_ha->lock);
->> +			spin_lock_irqsave(&pm8001_ha->lock,
->> +						pm8001_ha->lock_flags);
->>  			return;
->>  		}
->>  		break;
->> @@ -2552,9 +2565,11 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
->>  			ts->stat = SAS_QUEUE_FULL;
->>  			pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
->>  			mb();/* ditto*/
->> -			spin_unlock_irq(&pm8001_ha->lock);
->> +			spin_unlock_irqrestore(&pm8001_ha->lock,
->> +						pm8001_ha->lock_flags);
->>  			t->task_done(t);
->> -			spin_lock_irq(&pm8001_ha->lock);
->> +			spin_lock_irqsave(&pm8001_ha->lock,
->> +						pm8001_ha->lock_flags);
->>  			return;
->>  		}
->>  		break;
->> @@ -2619,9 +2634,11 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
->>  			ts->stat = SAS_QUEUE_FULL;
->>  			pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
->>  			mb();/*ditto*/
->> -			spin_unlock_irq(&pm8001_ha->lock);
->> +			spin_unlock_irqrestore(&pm8001_ha->lock,
->> +						pm8001_ha->lock_flags);
->>  			t->task_done(t);
->> -			spin_lock_irq(&pm8001_ha->lock);
->> +			spin_lock_irqsave(&pm8001_ha->lock,
->> +						pm8001_ha->lock_flags);
->>  			return;
->>  		}
->>  		break;
->> @@ -2643,9 +2660,11 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
->>  			ts->stat = SAS_QUEUE_FULL;
->>  			pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
->>  			mb();/*ditto*/
->> -			spin_unlock_irq(&pm8001_ha->lock);
->> +			spin_unlock_irqrestore(&pm8001_ha->lock,
->> +						pm8001_ha->lock_flags);
->>  			t->task_done(t);
->> -			spin_lock_irq(&pm8001_ha->lock);
->> +			spin_lock_irqsave(&pm8001_ha->lock,
->> +						pm8001_ha->lock_flags);
->>  			return;
->>  		}
->>  		break;
->> @@ -2678,16 +2697,16 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
->>  		spin_unlock_irqrestore(&t->task_state_lock, flags);
->>  		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
->>  		mb();/* ditto */
->> -		spin_unlock_irq(&pm8001_ha->lock);
->> +		spin_unlock_irqrestore(&pm8001_ha->lock, pm8001_ha->lock_flags);
->>  		t->task_done(t);
->> -		spin_lock_irq(&pm8001_ha->lock);
->> +		spin_lock_irqsave(&pm8001_ha->lock, pm8001_ha->lock_flags);
->>  	} else if (!t->uldd_task) {
->>  		spin_unlock_irqrestore(&t->task_state_lock, flags);
->>  		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
->>  		mb();/*ditto*/
->> -		spin_unlock_irq(&pm8001_ha->lock);
->> +		spin_unlock_irqrestore(&pm8001_ha->lock, pm8001_ha->lock_flags);
->>  		t->task_done(t);
->> -		spin_lock_irq(&pm8001_ha->lock);
->> +		spin_lock_irqsave(&pm8001_ha->lock, pm8001_ha->lock_flags);
->>  	}
->>  }
->>  
->> @@ -2798,9 +2817,11 @@ static void mpi_sata_event(struct pm8001_hba_info *pm8001_ha , void *piomb)
->>  			ts->stat = SAS_QUEUE_FULL;
->>  			pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
->>  			mb();/*ditto*/
->> -			spin_unlock_irq(&pm8001_ha->lock);
->> +			spin_unlock_irqrestore(&pm8001_ha->lock,
->> +						pm8001_ha->lock_flags);
->>  			t->task_done(t);
->> -			spin_lock_irq(&pm8001_ha->lock);
->> +			spin_lock_irqsave(&pm8001_ha->lock,
->> +						pm8001_ha->lock_flags);
->>  			return;
->>  		}
->>  		break;
->> @@ -2913,16 +2934,16 @@ static void mpi_sata_event(struct pm8001_hba_info *pm8001_ha , void *piomb)
->>  		spin_unlock_irqrestore(&t->task_state_lock, flags);
->>  		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
->>  		mb();/* ditto */
->> -		spin_unlock_irq(&pm8001_ha->lock);
->> +		spin_unlock_irqrestore(&pm8001_ha->lock, pm8001_ha->lock_flags);
->>  		t->task_done(t);
->> -		spin_lock_irq(&pm8001_ha->lock);
->> +		spin_lock_irqsave(&pm8001_ha->lock, pm8001_ha->lock_flags);
->>  	} else if (!t->uldd_task) {
->>  		spin_unlock_irqrestore(&t->task_state_lock, flags);
->>  		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
->>  		mb();/*ditto*/
->> -		spin_unlock_irq(&pm8001_ha->lock);
->> +		spin_unlock_irqrestore(&pm8001_ha->lock, pm8001_ha->lock_flags);
->>  		t->task_done(t);
->> -		spin_lock_irq(&pm8001_ha->lock);
->> +		spin_lock_irqsave(&pm8001_ha->lock, pm8001_ha->lock_flags);
->>  	}
->>  }
->>  
->> @@ -4194,9 +4215,8 @@ static int process_oq(struct pm8001_hba_info *pm8001_ha, u8 vec)
->>  	void *pMsg1 = NULL;
->>  	u8 uninitialized_var(bc);
->>  	u32 ret = MPI_IO_STATUS_FAIL;
->> -	unsigned long flags;
->>  
->> -	spin_lock_irqsave(&pm8001_ha->lock, flags);
->> +	spin_lock_irqsave(&pm8001_ha->lock, pm8001_ha->lock_flags);
->>  	circularQ = &pm8001_ha->outbnd_q_tbl[vec];
->>  	do {
->>  		ret = pm8001_mpi_msg_consume(pm8001_ha, circularQ, &pMsg1, &bc); 
->> @@ -4217,7 +4237,7 @@ static int process_oq(struct pm8001_hba_info *pm8001_ha, u8 vec)
->>  				break;
->>  		}
->>  	} while (1);
->> -	spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->> +	spin_unlock_irqrestore(&pm8001_ha->lock, pm8001_ha->lock_flags);
->>  	return ret;
->>  }
->>  
->> @@ -4472,18 +4492,22 @@ static int pm8001_chip_sata_req(struct pm8001_hba_info *pm8001_ha,
->>  							flags);
->>  				pm8001_ccb_task_free(pm8001_ha, task, ccb, tag);
->>  				mb();/* ditto */
->> -				spin_unlock_irq(&pm8001_ha->lock);
->> +				spin_unlock_irqrestore(&pm8001_ha->lock,
->> +							pm8001_ha->lock_flags);
->>  				task->task_done(task);
->> -				spin_lock_irq(&pm8001_ha->lock);
->> +				spin_lock_irqsave(&pm8001_ha->lock,
->> +							pm8001_ha->lock_flags);
->>  				return 0;
->>  			} else if (!task->uldd_task) {
->>  				spin_unlock_irqrestore(&task->task_state_lock,
->>  							flags);
->>  				pm8001_ccb_task_free(pm8001_ha, task, ccb, tag);
->>  				mb();/*ditto*/
->> -				spin_unlock_irq(&pm8001_ha->lock);
->> +				spin_unlock_irqrestore(&pm8001_ha->lock,
->> +							pm8001_ha->lock_flags);
->>  				task->task_done(task);
->> -				spin_lock_irq(&pm8001_ha->lock);
->> +				spin_lock_irqsave(&pm8001_ha->lock,
->> +							pm8001_ha->lock_flags);
->>  				return 0;
->>  			}
->>  		}
->> diff --git a/drivers/scsi/pm8001/pm8001_sas.c 
->> b/drivers/scsi/pm8001/pm8001_sas.c
->> index f50ac44..eac1b81 100644
->> --- a/drivers/scsi/pm8001/pm8001_sas.c
->> +++ b/drivers/scsi/pm8001/pm8001_sas.c
->> @@ -166,7 +166,6 @@ int pm8001_phy_control(struct asd_sas_phy *sas_phy, enum phy_func func,
->>  	struct pm8001_hba_info *pm8001_ha = NULL;
->>  	struct sas_phy_linkrates *rates;
->>  	DECLARE_COMPLETION_ONSTACK(completion);
->> -	unsigned long flags;
->>  	pm8001_ha = sas_phy->ha->lldd_ha;
->>  	pm8001_ha->phy[phy_id].enable_completion = &completion;
->>  	switch (func) {
->> @@ -211,11 +210,12 @@ int pm8001_phy_control(struct asd_sas_phy *sas_phy, enum phy_func func,
->>  		PM8001_CHIP_DISP->phy_stop_req(pm8001_ha, phy_id);
->>  		break;
->>  	case PHY_FUNC_GET_EVENTS:
->> -		spin_lock_irqsave(&pm8001_ha->lock, flags);
->> +		spin_lock_irqsave(&pm8001_ha->lock, pm8001_ha->lock_flags);
->>  		if (pm8001_ha->chip_id == chip_8001) {
->>  			if (-1 == pm8001_bar4_shift(pm8001_ha,
->>  					(phy_id < 4) ? 0x30000 : 0x40000)) {
->> -				spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->> +				spin_unlock_irqrestore(&pm8001_ha->lock,
->> +							pm8001_ha->lock_flags);
->>  				return -EINVAL;
->>  			}
->>  		}
->> @@ -232,7 +232,7 @@ int pm8001_phy_control(struct asd_sas_phy *sas_phy, enum phy_func func,
->>  		}
->>  		if (pm8001_ha->chip_id == chip_8001)
->>  			pm8001_bar4_shift(pm8001_ha, 0);
->> -		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->> +		spin_unlock_irqrestore(&pm8001_ha->lock, pm8001_ha->lock_flags);
->>  		return 0;
->>  	default:
->>  		rc = -EOPNOTSUPP;
->> @@ -369,7 +369,6 @@ static int pm8001_task_exec(struct sas_task *task, const int num,
->>  	struct pm8001_ccb_info *ccb;
->>  	u32 tag = 0xdeadbeef, rc, n_elem = 0;
->>  	u32 n = num;
->> -	unsigned long flags = 0;
->>  
->>  	if (!dev->port) {
->>  		struct task_status_struct *tsm = &t->task_status; @@ -380,8 +379,8 
->> @@ static int pm8001_task_exec(struct sas_task *task, const int num,
->>  		return 0;
->>  	}
->>  	pm8001_ha = pm8001_find_ha_by_dev(task->dev);
->> -	PM8001_IO_DBG(pm8001_ha, pm8001_printk("pm8001_task_exec device \n "));
->> -	spin_lock_irqsave(&pm8001_ha->lock, flags);
->> +	PM8001_IO_DBG(pm8001_ha, pm8001_printk("pm8001_task_exec device\n"));
->> +	spin_lock_irqsave(&pm8001_ha->lock, pm8001_ha->lock_flags);
->>  	do {
->>  		dev = t->dev;
->>  		pm8001_dev = dev->lldd_dev;
->> @@ -392,9 +391,11 @@ static int pm8001_task_exec(struct sas_task *task, const int num,
->>  				ts->resp = SAS_TASK_UNDELIVERED;
->>  				ts->stat = SAS_PHY_DOWN;
->>  
->> -				spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->> +				spin_unlock_irqrestore(&pm8001_ha->lock,
->> +							pm8001_ha->lock_flags);
->>  				t->task_done(t);
->> -				spin_lock_irqsave(&pm8001_ha->lock, flags);
->> +				spin_lock_irqsave(&pm8001_ha->lock,
->> +							pm8001_ha->lock_flags);
->>  				if (n > 1)
->>  					t = list_entry(t->list.next,
->>  							struct sas_task, list);
->> @@ -482,7 +483,7 @@ err_out:
->>  			dma_unmap_sg(pm8001_ha->dev, t->scatter, n_elem,
->>  				t->data_dir);
->>  out_done:
->> -	spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->> +	spin_unlock_irqrestore(&pm8001_ha->lock, pm8001_ha->lock_flags);
->>  	return rc;
->>  }
->>  
->> @@ -607,7 +608,6 @@ static void pm8001_free_dev(struct pm8001_device *pm8001_dev)
->>    */
->>  static int pm8001_dev_found_notify(struct domain_device *dev)  {
->> -	unsigned long flags = 0;
->>  	int res = 0;
->>  	struct pm8001_hba_info *pm8001_ha = NULL;
->>  	struct domain_device *parent_dev = dev->parent; @@ -615,7 +615,7 @@ 
->> static int pm8001_dev_found_notify(struct domain_device *dev)
->>  	DECLARE_COMPLETION_ONSTACK(completion);
->>  	u32 flag = 0;
->>  	pm8001_ha = pm8001_find_ha_by_dev(dev);
->> -	spin_lock_irqsave(&pm8001_ha->lock, flags);
->> +	spin_lock_irqsave(&pm8001_ha->lock, pm8001_ha->lock_flags);
->>  
->>  	pm8001_device = pm8001_alloc_dev(pm8001_ha);
->>  	if (!pm8001_device) {
->> @@ -654,14 +654,14 @@ static int pm8001_dev_found_notify(struct domain_device *dev)
->>  	} /*register this device to HBA*/
->>  	PM8001_DISC_DBG(pm8001_ha, pm8001_printk("Found device\n"));
->>  	PM8001_CHIP_DISP->reg_dev_req(pm8001_ha, pm8001_device, flag);
->> -	spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->> +	spin_unlock_irqrestore(&pm8001_ha->lock, pm8001_ha->lock_flags);
->>  	wait_for_completion(&completion);
->>  	if (dev->dev_type == SAS_END_DEVICE)
->>  		msleep(50);
->>  	pm8001_ha->flags = PM8001F_RUN_TIME;
->>  	return 0;
->>  found_out:
->> -	spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->> +	spin_unlock_irqrestore(&pm8001_ha->lock, pm8001_ha->lock_flags);
->>  	return res;
->>  }
->>  
->> @@ -864,13 +864,12 @@ ex_err:
->>    */
->>  static void pm8001_dev_gone_notify(struct domain_device *dev)  {
->> -	unsigned long flags = 0;
->>  	u32 tag;
->>  	struct pm8001_hba_info *pm8001_ha;
->>  	struct pm8001_device *pm8001_dev = dev->lldd_dev;
->>  
->>  	pm8001_ha = pm8001_find_ha_by_dev(dev);
->> -	spin_lock_irqsave(&pm8001_ha->lock, flags);
->> +	spin_lock_irqsave(&pm8001_ha->lock, pm8001_ha->lock_flags);
->>  	pm8001_tag_alloc(pm8001_ha, &tag);
->>  	if (pm8001_dev) {
->>  		u32 device_id = pm8001_dev->device_id; @@ -879,10 +878,12 @@ 
->> static void pm8001_dev_gone_notify(struct domain_device *dev)
->>  			pm8001_printk("found dev[%d:%x] is gone.\n",
->>  			pm8001_dev->device_id, pm8001_dev->dev_type));
->>  		if (pm8001_dev->running_req) {
->> -			spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->> +			spin_unlock_irqrestore(&pm8001_ha->lock,
->> +						pm8001_ha->lock_flags);
->>  			pm8001_exec_internal_task_abort(pm8001_ha, pm8001_dev ,
->>  				dev, 1, 0);
->> -			spin_lock_irqsave(&pm8001_ha->lock, flags);
->> +			spin_lock_irqsave(&pm8001_ha->lock,
->> +						pm8001_ha->lock_flags);
->>  		}
->>  		PM8001_CHIP_DISP->dereg_dev_req(pm8001_ha, device_id);
->>  		pm8001_free_dev(pm8001_dev);
->> @@ -891,7 +892,7 @@ static void pm8001_dev_gone_notify(struct domain_device *dev)
->>  			pm8001_printk("Found dev has gone.\n"));
->>  	}
->>  	dev->lldd_dev = NULL;
->> -	spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->> +	spin_unlock_irqrestore(&pm8001_ha->lock, pm8001_ha->lock_flags);
->>  }
->>  
->>  void pm8001_dev_gone(struct domain_device *dev) @@ -918,12 +919,11 
->> @@ void pm8001_open_reject_retry(
->>  	struct pm8001_device *device_to_close)  {
->>  	int i;
->> -	unsigned long flags;
->>  
->>  	if (pm8001_ha == NULL)
->>  		return;
->>  
->> -	spin_lock_irqsave(&pm8001_ha->lock, flags);
->> +	spin_lock_irqsave(&pm8001_ha->lock, pm8001_ha->lock_flags);
->>  
->>  	for (i = 0; i < PM8001_MAX_CCB; i++) {
->>  		struct sas_task *task;
->> @@ -973,13 +973,15 @@ void pm8001_open_reject_retry(
->>  				flags1);
->>  			pm8001_ccb_task_free(pm8001_ha, task, ccb, tag);
->>  			mb();/* in order to force CPU ordering */
->> -			spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->> +			spin_unlock_irqrestore(&pm8001_ha->lock,
->> +						pm8001_ha->lock_flags);
->>  			task->task_done(task);
->> -			spin_lock_irqsave(&pm8001_ha->lock, flags);
->> +			spin_lock_irqsave(&pm8001_ha->lock,
->> +						pm8001_ha->lock_flags);
->>  		}
->>  	}
->>  
->> -	spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->> +	spin_unlock_irqrestore(&pm8001_ha->lock, pm8001_ha->lock_flags);
->>  }
->>  
->>  /**
->> diff --git a/drivers/scsi/pm8001/pm8001_sas.h 
->> b/drivers/scsi/pm8001/pm8001_sas.h
->> index 6c5fd5e..2b8065c 100644
->> --- a/drivers/scsi/pm8001/pm8001_sas.h
->> +++ b/drivers/scsi/pm8001/pm8001_sas.h
->> @@ -475,6 +475,7 @@ struct pm8001_hba_info {
->>  	struct list_head	list;
->>  	unsigned long		flags;
->>  	spinlock_t		lock;/* host-wide lock */
->> +	unsigned long		lock_flags;
->>  	struct pci_dev		*pdev;/* our device */
->>  	struct device		*dev;
->>  	struct pm8001_hba_memspace io_mem[6]; diff --git 
->> a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
->> index c950dc5..3ac024a 100644
->> --- a/drivers/scsi/pm8001/pm80xx_hwi.c
->> +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
->> @@ -2177,9 +2177,11 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
->>  			ts->stat = SAS_QUEUE_FULL;
->>  			pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
->>  			mb();/*in order to force CPU ordering*/
->> -			spin_unlock_irq(&pm8001_ha->lock);
->> +			spin_unlock_irqrestore(&pm8001_ha->lock,
->> +						pm8001_ha->lock_flags);
->>  			t->task_done(t);
->> -			spin_lock_irq(&pm8001_ha->lock);
->> +			spin_lock_irqsave(&pm8001_ha->lock,
->> +						pm8001_ha->lock_flags);
->>  			return;
->>  		}
->>  		break;
->> @@ -2197,9 +2199,11 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
->>  			ts->stat = SAS_QUEUE_FULL;
->>  			pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
->>  			mb();/*ditto*/
->> -			spin_unlock_irq(&pm8001_ha->lock);
->> +			spin_unlock_irqrestore(&pm8001_ha->lock,
->> +						pm8001_ha->lock_flags);
->>  			t->task_done(t);
->> -			spin_lock_irq(&pm8001_ha->lock);
->> +			spin_lock_irqsave(&pm8001_ha->lock,
->> +						pm8001_ha->lock_flags);
->>  			return;
->>  		}
->>  		break;
->> @@ -2223,9 +2227,11 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
->>  			ts->stat = SAS_QUEUE_FULL;
->>  			pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
->>  			mb();/* ditto*/
->> -			spin_unlock_irq(&pm8001_ha->lock);
->> +			spin_unlock_irqrestore(&pm8001_ha->lock,
->> +						pm8001_ha->lock_flags);
->>  			t->task_done(t);
->> -			spin_lock_irq(&pm8001_ha->lock);
->> +			spin_lock_irqsave(&pm8001_ha->lock,
->> +						pm8001_ha->lock_flags);
->>  			return;
->>  		}
->>  		break;
->> @@ -2290,9 +2296,11 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
->>  			ts->stat = SAS_QUEUE_FULL;
->>  			pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
->>  			mb();/*ditto*/
->> -			spin_unlock_irq(&pm8001_ha->lock);
->> +			spin_unlock_irqrestore(&pm8001_ha->lock,
->> +						pm8001_ha->lock_flags);
->>  			t->task_done(t);
->> -			spin_lock_irq(&pm8001_ha->lock);
->> +			spin_lock_irqsave(&pm8001_ha->lock,
->> +						pm8001_ha->lock_flags);
->>  			return;
->>  		}
->>  		break;
->> @@ -2314,9 +2322,11 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
->>  			ts->stat = SAS_QUEUE_FULL;
->>  			pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
->>  			mb();/*ditto*/
->> -			spin_unlock_irq(&pm8001_ha->lock);
->> +			spin_unlock_irqrestore(&pm8001_ha->lock,
->> +						pm8001_ha->lock_flags);
->>  			t->task_done(t);
->> -			spin_lock_irq(&pm8001_ha->lock);
->> +			spin_lock_irqsave(&pm8001_ha->lock,
->> +						pm8001_ha->lock_flags);
->>  			return;
->>  		}
->>  		break;
->> @@ -2349,16 +2359,16 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
->>  		spin_unlock_irqrestore(&t->task_state_lock, flags);
->>  		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
->>  		mb();/* ditto */
->> -		spin_unlock_irq(&pm8001_ha->lock);
->> +		spin_unlock_irqrestore(&pm8001_ha->lock, pm8001_ha->lock_flags);
->>  		t->task_done(t);
->> -		spin_lock_irq(&pm8001_ha->lock);
->> +		spin_lock_irqsave(&pm8001_ha->lock, pm8001_ha->lock_flags);
->>  	} else if (!t->uldd_task) {
->>  		spin_unlock_irqrestore(&t->task_state_lock, flags);
->>  		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
->>  		mb();/*ditto*/
->> -		spin_unlock_irq(&pm8001_ha->lock);
->> +		spin_unlock_irqrestore(&pm8001_ha->lock, pm8001_ha->lock_flags);
->>  		t->task_done(t);
->> -		spin_lock_irq(&pm8001_ha->lock);
->> +		spin_lock_irqsave(&pm8001_ha->lock, pm8001_ha->lock_flags);
->>  	}
->>  }
->>  
->> @@ -2472,9 +2482,11 @@ static void mpi_sata_event(struct pm8001_hba_info *pm8001_ha , void *piomb)
->>  			ts->stat = SAS_QUEUE_FULL;
->>  			pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
->>  			mb();/*ditto*/
->> -			spin_unlock_irq(&pm8001_ha->lock);
->> +			spin_unlock_irqrestore(&pm8001_ha->lock,
->> +						pm8001_ha->lock_flags);
->>  			t->task_done(t);
->> -			spin_lock_irq(&pm8001_ha->lock);
->> +			spin_lock_irqsave(&pm8001_ha->lock,
->> +						pm8001_ha->lock_flags);
->>  			return;
->>  		}
->>  		break;
->> @@ -2600,16 +2612,16 @@ static void mpi_sata_event(struct pm8001_hba_info *pm8001_ha , void *piomb)
->>  		spin_unlock_irqrestore(&t->task_state_lock, flags);
->>  		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
->>  		mb();/* ditto */
->> -		spin_unlock_irq(&pm8001_ha->lock);
->> +		spin_unlock_irqrestore(&pm8001_ha->lock, pm8001_ha->lock_flags);
->>  		t->task_done(t);
->> -		spin_lock_irq(&pm8001_ha->lock);
->> +		spin_lock_irqsave(&pm8001_ha->lock, pm8001_ha->lock_flags);
->>  	} else if (!t->uldd_task) {
->>  		spin_unlock_irqrestore(&t->task_state_lock, flags);
->>  		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
->>  		mb();/*ditto*/
->> -		spin_unlock_irq(&pm8001_ha->lock);
->> +		spin_unlock_irqrestore(&pm8001_ha->lock, pm8001_ha->lock_flags);
->>  		t->task_done(t);
->> -		spin_lock_irq(&pm8001_ha->lock);
->> +		spin_lock_irqsave(&pm8001_ha->lock, pm8001_ha->lock_flags);
->>  	}
->>  }
->>  
->> @@ -3705,9 +3717,8 @@ static int process_oq(struct pm8001_hba_info *pm8001_ha, u8 vec)
->>  	void *pMsg1 = NULL;
->>  	u8 uninitialized_var(bc);
->>  	u32 ret = MPI_IO_STATUS_FAIL;
->> -	unsigned long flags;
->>  
->> -	spin_lock_irqsave(&pm8001_ha->lock, flags);
->> +	spin_lock_irqsave(&pm8001_ha->lock, pm8001_ha->lock_flags);
->>  	circularQ = &pm8001_ha->outbnd_q_tbl[vec];
->>  	do {
->>  		ret = pm8001_mpi_msg_consume(pm8001_ha, circularQ, &pMsg1, &bc); 
->> @@ -3728,7 +3739,7 @@ static int process_oq(struct pm8001_hba_info *pm8001_ha, u8 vec)
->>  				break;
->>  		}
->>  	} while (1);
->> -	spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->> +	spin_unlock_irqrestore(&pm8001_ha->lock, pm8001_ha->lock_flags);
->>  	return ret;
->>  }
->>  
->> @@ -4309,18 +4320,22 @@ static int pm80xx_chip_sata_req(struct pm8001_hba_info *pm8001_ha,
->>  							flags);
->>  				pm8001_ccb_task_free(pm8001_ha, task, ccb, tag);
->>  				mb();/* ditto */
->> -				spin_unlock_irq(&pm8001_ha->lock);
->> +				spin_unlock_irqrestore(&pm8001_ha->lock,
->> +							pm8001_ha->lock_flags);
->>  				task->task_done(task);
->> -				spin_lock_irq(&pm8001_ha->lock);
->> +				spin_lock_irqsave(&pm8001_ha->lock,
->> +							pm8001_ha->lock_flags);
->>  				return 0;
->>  			} else if (!task->uldd_task) {
->>  				spin_unlock_irqrestore(&task->task_state_lock,
->>  							flags);
->>  				pm8001_ccb_task_free(pm8001_ha, task, ccb, tag);
->>  				mb();/*ditto*/
->> -				spin_unlock_irq(&pm8001_ha->lock);
->> +				spin_unlock_irqrestore(&pm8001_ha->lock,
->> +							pm8001_ha->lock_flags);
->>  				task->task_done(task);
->> -				spin_lock_irq(&pm8001_ha->lock);
->> +				spin_lock_irqsave(&pm8001_ha->lock,
->> +							pm8001_ha->lock_flags);
->>  				return 0;
->>  			}
->>  		}
-> 
+---
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] block: remove dead on arrival integrity code
 
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+diff --git a/block/blk-integrity.c b/block/blk-integrity.c
+index 03cf717..0b14db7 100644
+--- a/block/blk-integrity.c
++++ b/block/blk-integrity.c
+@@ -194,7 +194,6 @@ int blk_integrity_merge_rq(struct request_queue *q, struct request *req,
+ 
+ 	return 0;
+ }
+-EXPORT_SYMBOL(blk_integrity_merge_rq);
+ 
+ int blk_integrity_merge_bio(struct request_queue *q, struct request *req,
+ 			    struct bio *bio)
+@@ -214,7 +213,6 @@ int blk_integrity_merge_bio(struct request_queue *q, struct request *req,
+ 
+ 	return 0;
+ }
+-EXPORT_SYMBOL(blk_integrity_merge_bio);
+ 
+ struct integrity_sysfs_entry {
+ 	struct attribute attr;
+@@ -414,8 +412,6 @@ int blk_integrity_register(struct gendisk *disk, struct blk_integrity *template)
+ 		bi->generate_fn = template->generate_fn;
+ 		bi->verify_fn = template->verify_fn;
+ 		bi->tuple_size = template->tuple_size;
+-		bi->set_tag_fn = template->set_tag_fn;
+-		bi->get_tag_fn = template->get_tag_fn;
+ 		bi->tag_size = template->tag_size;
+ 	} else
+ 		bi->name = bi_unsupported_name;
+diff --git a/drivers/scsi/sd_dif.c b/drivers/scsi/sd_dif.c
+index 6174ca4..e32035a 100644
+--- a/drivers/scsi/sd_dif.c
++++ b/drivers/scsi/sd_dif.c
+@@ -128,39 +128,10 @@ static int sd_dif_type1_verify_ip(struct blk_integrity_exchg *bix)
+ 	return sd_dif_type1_verify(bix, sd_dif_ip_fn);
+ }
+ 
+-/*
+- * Functions for interleaving and deinterleaving application tags
+- */
+-static void sd_dif_type1_set_tag(void *prot, void *tag_buf, unsigned int sectors)
+-{
+-	struct sd_dif_tuple *sdt = prot;
+-	u8 *tag = tag_buf;
+-	unsigned int i, j;
+-
+-	for (i = 0, j = 0 ; i < sectors ; i++, j += 2, sdt++) {
+-		sdt->app_tag = tag[j] << 8 | tag[j+1];
+-		BUG_ON(sdt->app_tag == 0xffff);
+-	}
+-}
+-
+-static void sd_dif_type1_get_tag(void *prot, void *tag_buf, unsigned int sectors)
+-{
+-	struct sd_dif_tuple *sdt = prot;
+-	u8 *tag = tag_buf;
+-	unsigned int i, j;
+-
+-	for (i = 0, j = 0 ; i < sectors ; i++, j += 2, sdt++) {
+-		tag[j] = (sdt->app_tag & 0xff00) >> 8;
+-		tag[j+1] = sdt->app_tag & 0xff;
+-	}
+-}
+-
+ static struct blk_integrity dif_type1_integrity_crc = {
+ 	.name			= "T10-DIF-TYPE1-CRC",
+ 	.generate_fn		= sd_dif_type1_generate_crc,
+ 	.verify_fn		= sd_dif_type1_verify_crc,
+-	.get_tag_fn		= sd_dif_type1_get_tag,
+-	.set_tag_fn		= sd_dif_type1_set_tag,
+ 	.tuple_size		= sizeof(struct sd_dif_tuple),
+ 	.tag_size		= 0,
+ };
+@@ -169,8 +140,6 @@ static struct blk_integrity dif_type1_integrity_ip = {
+ 	.name			= "T10-DIF-TYPE1-IP",
+ 	.generate_fn		= sd_dif_type1_generate_ip,
+ 	.verify_fn		= sd_dif_type1_verify_ip,
+-	.get_tag_fn		= sd_dif_type1_get_tag,
+-	.set_tag_fn		= sd_dif_type1_set_tag,
+ 	.tuple_size		= sizeof(struct sd_dif_tuple),
+ 	.tag_size		= 0,
+ };
+@@ -245,42 +214,10 @@ static int sd_dif_type3_verify_ip(struct blk_integrity_exchg *bix)
+ 	return sd_dif_type3_verify(bix, sd_dif_ip_fn);
+ }
+ 
+-static void sd_dif_type3_set_tag(void *prot, void *tag_buf, unsigned int sectors)
+-{
+-	struct sd_dif_tuple *sdt = prot;
+-	u8 *tag = tag_buf;
+-	unsigned int i, j;
+-
+-	for (i = 0, j = 0 ; i < sectors ; i++, j += 6, sdt++) {
+-		sdt->app_tag = tag[j] << 8 | tag[j+1];
+-		sdt->ref_tag = tag[j+2] << 24 | tag[j+3] << 16 |
+-			tag[j+4] << 8 | tag[j+5];
+-	}
+-}
+-
+-static void sd_dif_type3_get_tag(void *prot, void *tag_buf, unsigned int sectors)
+-{
+-	struct sd_dif_tuple *sdt = prot;
+-	u8 *tag = tag_buf;
+-	unsigned int i, j;
+-
+-	for (i = 0, j = 0 ; i < sectors ; i++, j += 2, sdt++) {
+-		tag[j] = (sdt->app_tag & 0xff00) >> 8;
+-		tag[j+1] = sdt->app_tag & 0xff;
+-		tag[j+2] = (sdt->ref_tag & 0xff000000) >> 24;
+-		tag[j+3] = (sdt->ref_tag & 0xff0000) >> 16;
+-		tag[j+4] = (sdt->ref_tag & 0xff00) >> 8;
+-		tag[j+5] = sdt->ref_tag & 0xff;
+-		BUG_ON(sdt->app_tag == 0xffff || sdt->ref_tag == 0xffffffff);
+-	}
+-}
+-
+ static struct blk_integrity dif_type3_integrity_crc = {
+ 	.name			= "T10-DIF-TYPE3-CRC",
+ 	.generate_fn		= sd_dif_type3_generate_crc,
+ 	.verify_fn		= sd_dif_type3_verify_crc,
+-	.get_tag_fn		= sd_dif_type3_get_tag,
+-	.set_tag_fn		= sd_dif_type3_set_tag,
+ 	.tuple_size		= sizeof(struct sd_dif_tuple),
+ 	.tag_size		= 0,
+ };
+@@ -289,8 +226,6 @@ static struct blk_integrity dif_type3_integrity_ip = {
+ 	.name			= "T10-DIF-TYPE3-IP",
+ 	.generate_fn		= sd_dif_type3_generate_ip,
+ 	.verify_fn		= sd_dif_type3_verify_ip,
+-	.get_tag_fn		= sd_dif_type3_get_tag,
+-	.set_tag_fn		= sd_dif_type3_set_tag,
+ 	.tuple_size		= sizeof(struct sd_dif_tuple),
+ 	.tag_size		= 0,
+ };
+diff --git a/fs/bio-integrity.c b/fs/bio-integrity.c
+index fc60b31..793eaa4 100644
+--- a/fs/bio-integrity.c
++++ b/fs/bio-integrity.c
+@@ -32,6 +32,8 @@
+ static struct kmem_cache *bip_slab;
+ static struct workqueue_struct *kintegrityd_wq;
+ 
++static void bio_integrity_endio(struct bio *bio, int error);
++
+ /**
+  * bio_integrity_alloc - Allocate integrity payload and attach it to bio
+  * @bio:	bio to attach integrity metadata to
+@@ -42,7 +44,7 @@ static struct workqueue_struct *kintegrityd_wq;
+  * metadata.  nr_vecs specifies the maximum number of pages containing
+  * integrity metadata that can be attached.
+  */
+-struct bio_integrity_payload *bio_integrity_alloc(struct bio *bio,
++static struct bio_integrity_payload *bio_integrity_alloc(struct bio *bio,
+ 						  gfp_t gfp_mask,
+ 						  unsigned int nr_vecs)
+ {
+@@ -83,7 +85,6 @@ err:
+ 	mempool_free(bip, bs->bio_integrity_pool);
+ 	return NULL;
+ }
+-EXPORT_SYMBOL(bio_integrity_alloc);
+ 
+ /**
+  * bio_integrity_free - Free bio integrity payload
+@@ -112,7 +113,6 @@ void bio_integrity_free(struct bio *bio)
+ 
+ 	bio->bi_integrity = NULL;
+ }
+-EXPORT_SYMBOL(bio_integrity_free);
+ 
+ /**
+  * bio_integrity_add_page - Attach integrity metadata
+@@ -123,7 +123,7 @@ EXPORT_SYMBOL(bio_integrity_free);
+  *
+  * Description: Attach a page containing integrity metadata to bio.
+  */
+-int bio_integrity_add_page(struct bio *bio, struct page *page,
++static int bio_integrity_add_page(struct bio *bio, struct page *page,
+ 			   unsigned int len, unsigned int offset)
+ {
+ 	struct bio_integrity_payload *bip = bio->bi_integrity;
+@@ -144,7 +144,6 @@ int bio_integrity_add_page(struct bio *bio, struct page *page,
+ 
+ 	return len;
+ }
+-EXPORT_SYMBOL(bio_integrity_add_page);
+ 
+ static int bdev_integrity_enabled(struct block_device *bdev, int rw)
+ {
+@@ -181,7 +180,6 @@ int bio_integrity_enabled(struct bio *bio)
+ 
+ 	return bdev_integrity_enabled(bio->bi_bdev, bio_data_dir(bio));
+ }
+-EXPORT_SYMBOL(bio_integrity_enabled);
+ 
+ /**
+  * bio_integrity_hw_sectors - Convert 512b sectors to hardware ditto
+@@ -204,89 +202,6 @@ static inline unsigned int bio_integrity_hw_sectors(struct blk_integrity *bi,
+ }
+ 
+ /**
+- * bio_integrity_tag_size - Retrieve integrity tag space
+- * @bio:	bio to inspect
+- *
+- * Description: Returns the maximum number of tag bytes that can be
+- * attached to this bio. Filesystems can use this to determine how
+- * much metadata to attach to an I/O.
+- */
+-unsigned int bio_integrity_tag_size(struct bio *bio)
+-{
+-	struct blk_integrity *bi = bdev_get_integrity(bio->bi_bdev);
+-
+-	BUG_ON(bio->bi_size == 0);
+-
+-	return bi->tag_size * (bio->bi_size / bi->sector_size);
+-}
+-EXPORT_SYMBOL(bio_integrity_tag_size);
+-
+-int bio_integrity_tag(struct bio *bio, void *tag_buf, unsigned int len, int set)
+-{
+-	struct bio_integrity_payload *bip = bio->bi_integrity;
+-	struct blk_integrity *bi = bdev_get_integrity(bio->bi_bdev);
+-	unsigned int nr_sectors;
+-
+-	BUG_ON(bip->bip_buf == NULL);
+-
+-	if (bi->tag_size == 0)
+-		return -1;
+-
+-	nr_sectors = bio_integrity_hw_sectors(bi,
+-					DIV_ROUND_UP(len, bi->tag_size));
+-
+-	if (nr_sectors * bi->tuple_size > bip->bip_size) {
+-		printk(KERN_ERR "%s: tag too big for bio: %u > %u\n",
+-		       __func__, nr_sectors * bi->tuple_size, bip->bip_size);
+-		return -1;
+-	}
+-
+-	if (set)
+-		bi->set_tag_fn(bip->bip_buf, tag_buf, nr_sectors);
+-	else
+-		bi->get_tag_fn(bip->bip_buf, tag_buf, nr_sectors);
+-
+-	return 0;
+-}
+-
+-/**
+- * bio_integrity_set_tag - Attach a tag buffer to a bio
+- * @bio:	bio to attach buffer to
+- * @tag_buf:	Pointer to a buffer containing tag data
+- * @len:	Length of the included buffer
+- *
+- * Description: Use this function to tag a bio by leveraging the extra
+- * space provided by devices formatted with integrity protection.  The
+- * size of the integrity buffer must be <= to the size reported by
+- * bio_integrity_tag_size().
+- */
+-int bio_integrity_set_tag(struct bio *bio, void *tag_buf, unsigned int len)
+-{
+-	BUG_ON(bio_data_dir(bio) != WRITE);
+-
+-	return bio_integrity_tag(bio, tag_buf, len, 1);
+-}
+-EXPORT_SYMBOL(bio_integrity_set_tag);
+-
+-/**
+- * bio_integrity_get_tag - Retrieve a tag buffer from a bio
+- * @bio:	bio to retrieve buffer from
+- * @tag_buf:	Pointer to a buffer for the tag data
+- * @len:	Length of the target buffer
+- *
+- * Description: Use this function to retrieve the tag buffer from a
+- * completed I/O. The size of the integrity buffer must be <= to the
+- * size reported by bio_integrity_tag_size().
+- */
+-int bio_integrity_get_tag(struct bio *bio, void *tag_buf, unsigned int len)
+-{
+-	BUG_ON(bio_data_dir(bio) != READ);
+-
+-	return bio_integrity_tag(bio, tag_buf, len, 0);
+-}
+-EXPORT_SYMBOL(bio_integrity_get_tag);
+-
+-/**
+  * bio_integrity_generate - Generate integrity metadata for a bio
+  * @bio:	bio to generate integrity metadata for
+  *
+@@ -427,7 +342,6 @@ int bio_integrity_prep(struct bio *bio)
+ 
+ 	return 0;
+ }
+-EXPORT_SYMBOL(bio_integrity_prep);
+ 
+ /**
+  * bio_integrity_verify - Verify integrity metadata for a bio
+@@ -510,7 +424,7 @@ static void bio_integrity_verify_fn(struct work_struct *work)
+  * in process context.	This function postpones completion
+  * accordingly.
+  */
+-void bio_integrity_endio(struct bio *bio, int error)
++static void bio_integrity_endio(struct bio *bio, int error)
+ {
+ 	struct bio_integrity_payload *bip = bio->bi_integrity;
+ 
+@@ -530,14 +444,13 @@ void bio_integrity_endio(struct bio *bio, int error)
+ 	INIT_WORK(&bip->bip_work, bio_integrity_verify_fn);
+ 	queue_work(kintegrityd_wq, &bip->bip_work);
+ }
+-EXPORT_SYMBOL(bio_integrity_endio);
+ 
+ /**
+  * bio_integrity_mark_head - Advance bip_vec skip bytes
+  * @bip:	Integrity vector to advance
+  * @skip:	Number of bytes to advance it
+  */
+-void bio_integrity_mark_head(struct bio_integrity_payload *bip,
++static void bio_integrity_mark_head(struct bio_integrity_payload *bip,
+ 			     unsigned int skip)
+ {
+ 	struct bio_vec *iv;
+@@ -563,7 +476,7 @@ void bio_integrity_mark_head(struct bio_integrity_payload *bip,
+  * @bip:	Integrity vector to truncate
+  * @len:	New length of integrity vector
+  */
+-void bio_integrity_mark_tail(struct bio_integrity_payload *bip,
++static void bio_integrity_mark_tail(struct bio_integrity_payload *bip,
+ 			     unsigned int len)
+ {
+ 	struct bio_vec *iv;
+@@ -603,7 +516,6 @@ void bio_integrity_advance(struct bio *bio, unsigned int bytes_done)
+ 	nr_sectors = bio_integrity_hw_sectors(bi, bytes_done >> 9);
+ 	bio_integrity_mark_head(bip, nr_sectors * bi->tuple_size);
+ }
+-EXPORT_SYMBOL(bio_integrity_advance);
+ 
+ /**
+  * bio_integrity_trim - Trim integrity vector
+@@ -676,7 +588,6 @@ void bio_integrity_split(struct bio *bio, struct bio_pair *bp, int sectors)
+ 	bp->bip1.bip_vcnt = bp->bip2.bip_vcnt = 1;
+ 	bp->bip1.bip_idx = bp->bip2.bip_idx = 0;
+ }
+-EXPORT_SYMBOL(bio_integrity_split);
+ 
+ /**
+  * bio_integrity_clone - Callback for cloning bios with integrity metadata
+diff --git a/include/linux/bio.h b/include/linux/bio.h
+index 060ff69..4ff2d82 100644
+--- a/include/linux/bio.h
++++ b/include/linux/bio.h
+@@ -576,14 +576,9 @@ struct biovec_slab {
+ 
+ #define bio_integrity(bio) (bio->bi_integrity != NULL)
+ 
+-extern struct bio_integrity_payload *bio_integrity_alloc(struct bio *, gfp_t, unsigned int);
+ extern void bio_integrity_free(struct bio *);
+-extern int bio_integrity_add_page(struct bio *, struct page *, unsigned int, unsigned int);
+ extern int bio_integrity_enabled(struct bio *bio);
+-extern int bio_integrity_set_tag(struct bio *, void *, unsigned int);
+-extern int bio_integrity_get_tag(struct bio *, void *, unsigned int);
+ extern int bio_integrity_prep(struct bio *);
+-extern void bio_integrity_endio(struct bio *, int);
+ extern void bio_integrity_advance(struct bio *, unsigned int);
+ extern void bio_integrity_trim(struct bio *, unsigned int, unsigned int);
+ extern void bio_integrity_split(struct bio *, struct bio_pair *, int);
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 1b135d4..d6db54e 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -1430,14 +1430,10 @@ struct blk_integrity_exchg {
+ 
+ typedef void (integrity_gen_fn) (struct blk_integrity_exchg *);
+ typedef int (integrity_vrfy_fn) (struct blk_integrity_exchg *);
+-typedef void (integrity_set_tag_fn) (void *, void *, unsigned int);
+-typedef void (integrity_get_tag_fn) (void *, void *, unsigned int);
+ 
+ struct blk_integrity {
+ 	integrity_gen_fn	*generate_fn;
+ 	integrity_vrfy_fn	*verify_fn;
+-	integrity_set_tag_fn	*set_tag_fn;
+-	integrity_get_tag_fn	*get_tag_fn;
+ 
+ 	unsigned short		flags;
+ 	unsigned short		tuple_size;
