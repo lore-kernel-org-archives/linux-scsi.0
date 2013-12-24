@@ -1,87 +1,67 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: bio_integrity_verify() bug causing READ verify to be silently
- skipped
-Date: Mon, 23 Dec 2013 20:20:26 -0800
-Message-ID: <1387858826.5567.236.camel@haakon3.risingtidesystems.com>
+From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
+Subject: RE: [PATCH] megaraid_sas: Quirk mmio hook for 1078 MR controller
+Date: Tue, 24 Dec 2013 08:20:11 +0000
+Message-ID: <49ee1c68150946e0b972b6b047a07126@BN1PR07MB247.namprd07.prod.outlook.com>
+References: <201312231512.rBNFC6mo008974@cosmhbs0.lsi.com>
+ <CAErSpo7X4khuPOp5s4MdunOmwww0V4JZipJa3iEOA=Y5nnCwqA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-by2lp0236.outbound.protection.outlook.com ([207.46.163.236]:28668
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751151Ab3LXIUP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Dec 2013 03:20:15 -0500
+In-Reply-To: <CAErSpo7X4khuPOp5s4MdunOmwww0V4JZipJa3iEOA=Y5nnCwqA@mail.gmail.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "James E.J. Bottomley" <jbottomley@parallels.com>, "Saxena, Sumit" <Sumit.Saxena@lsi.com>, Adam Radford <aradford@gmail.com>, "Yang, Bo" <Bo.Yang@lsi.com>
 
-Hi Martin & Co,
-
-So after playing with the mainline DIF client against an initial WIP
-target DIF support patch, I've started hitting a bug in
-bio_integrity_verify() that causes READ verify logic to be silently
-skipped for both WIP target and existing scsi_debug DIF code.
-
-The issue is with the scsi_end_request() -> blk_end_request() completion
-path, where eventually blk_update_request() -> req_bio_endio() ->
-bio_advance() is called to increment bio->bi_idx to a non-zero value.
-
-Given that bio_integrity_verify() is using bio_for_each_segment(), the
-loop starts from the updated bio->bi_idx, and not a zero value, which
-ends up skipping individual bio segment calls to bi->verify_fn().
-
-The following patch changes bio_integrity_verify() to use
-bio_for_each_segment_all() instead of bio_for_each_segment() to ensure
-that the segment walk always starts from zero, regardless of the current
-bio->bi_idx value after bio_advance().
-
-Note this bug has been observed with v3.13-rc3 code, and I haven't yet
-looked back to figure out when this bug was first introduced..  Any
-ideas..?
-
-Interestingly enough, the scsi-mq alpha code does not suffer from this
-bug, as blk_end_request() is never called from scsi_mq_end_request() ->
-blk_mq_end_io() completion path code.
-
-Thank you,
-
---nab
-
->From 32242942edca095e8dd126cb1408f2842340773e Mon Sep 17 00:00:00 2001
-From: Nicholas Bellinger <nab@linux-iscsi.org>
-Date: Tue, 24 Dec 2013 04:00:24 +0000
-Subject: [PATCH] bio-integrity: Fix bio_integrity_verify segment start bug
-
-This patch addresses a bug in bio_integrity_verify() code that has
-been causing DIF READ verify operations to be silently skipped.
-
-The issue is that bio->bi_idx will have been incremented within
-bio_advance() code in the normal blk_update_request() ->
-req_bio_endio() completion path, and bio_integrity_verify() is
-using bio_for_each_segment() which starts the bio segment walk
-at the current bio->bi_idx.
-
-So instead use bio_for_each_segment_all() to always start the bio
-segment walk from zero, regardless of the current bio->bi_idx
-value after bio_advance() has been called.
-
-Cc: Martin K. Petersen <martin.petersen@oracle.com>
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
----
- fs/bio-integrity.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/fs/bio-integrity.c b/fs/bio-integrity.c
-index fc60b31..f1d5cde 100644
---- a/fs/bio-integrity.c
-+++ b/fs/bio-integrity.c
-@@ -450,7 +450,7 @@ static int bio_integrity_verify(struct bio *bio)
- 	bix.disk_name = bio->bi_bdev->bd_disk->disk_name;
- 	bix.sector_size = bi->sector_size;
- 
--	bio_for_each_segment(bv, bio, i) {
-+	bio_for_each_segment_all(bv, bio, i) {
- 		void *kaddr = kmap_atomic(bv->bv_page);
- 		bix.data_buf = kaddr + bv->bv_offset;
- 		bix.data_size = bv->bv_len;
--- 
-1.7.10.4
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQmpvcm4gSGVsZ2FhcyBb
+bWFpbHRvOmJoZWxnYWFzQGdvb2dsZS5jb21dDQo+IFNlbnQ6IE1vbmRheSwgRGVjZW1iZXIgMjMs
+IDIwMTMgMTE6MjggUE0NCj4gVG86IERlc2FpLCBLYXNoeWFwDQo+IENjOiBsaW51eC1zY3NpQHZn
+ZXIua2VybmVsLm9yZzsgbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsgSmFtZXMgRS5KLg0KPiBC
+b3R0b21sZXk7IFNheGVuYSwgU3VtaXQ7IEFkYW0gUmFkZm9yZA0KPiBTdWJqZWN0OiBSZTogW1BB
+VENIXSBtZWdhcmFpZF9zYXM6IFF1aXJrIG1taW8gaG9vayBmb3IgMTA3OCBNUiBjb250cm9sbGVy
+DQo+IA0KPiBPbiBNb24sIERlYyAyMywgMjAxMyBhdCA4OjEzIEFNLCAgPEthc2h5YXAuRGVzYWlA
+bHNpLmNvbT4gd3JvdGU6DQo+ID4gVGhpcyBwYXRjaCBoYXMgZml4IGZvciBMU0kgR2VuLTEgTVIg
+Y29udHJvbGxlciBpc3N1ZSB3aGljaCBvbmx5IHBvcC11cA0KPiA+IG9uIGZldyBzeXN0ZW1zIGFu
+ZCBpdCBpcyBub3QgZ2VuZXJpYy4NCj4gPg0KPiA+IE9uIGZldyBzeXN0ZW0sIE1SIDEwNzggTVIg
+Y29udHJvbGxlciBpcyBub3Qgd29ya2luZyBpZiBtbWlvIGRlY29kaW5nIGlzDQo+IG9mZi4NCj4g
+PiBUaGlzIHBhdGNoIHByb3Bvc2VkIGVhcmx5IHF1aXJjayBlbnRyeSBmb3IgRGV2aWNlIGlkIDB4
+MTAwMC8weDA0MTEgdG8NCj4gZW5hYmxlIG1taW8uDQo+ID4NCj4gPiBTaWduZWQtb2ZmLWJ5OiBL
+YXNoeWFwIERlc2FpIDxrYXNoeWFwLmRlc2FpQGxzaS5jb20+DQo+ID4gLS0tDQo+ID4gZGlmZiAt
+LWdpdCBhL2RyaXZlcnMvcGNpL3F1aXJrcy5jIGIvZHJpdmVycy9wY2kvcXVpcmtzLmMgaW5kZXgN
+Cj4gPiBmNmMzMWZhLi5hMjBmZTQxIDEwMDY0NA0KPiA+IC0tLSBhL2RyaXZlcnMvcGNpL3F1aXJr
+cy5jDQo+ID4gKysrIGIvZHJpdmVycy9wY2kvcXVpcmtzLmMNCj4gPiBAQCAtNDMsNiArNDMsMTAg
+QEAgc3RhdGljIHZvaWQgcXVpcmtfbW1pb19hbHdheXNfb24oc3RydWN0IHBjaV9kZXYNCj4gPiAq
+ZGV2KSAgfSAgREVDTEFSRV9QQ0lfRklYVVBfQ0xBU1NfRUFSTFkoUENJX0FOWV9JRCwgUENJX0FO
+WV9JRCwNCj4gPiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFBDSV9DTEFTU19CUklE
+R0VfSE9TVCwgOCwNCj4gPiBxdWlya19tbWlvX2Fsd2F5c19vbik7DQo+ID4gKy8qIExTSSBjb250
+cm9sbGVyIGRldmljZSBpZCAweDA0MTEgaGFzIHNvbWUgaXNzdWVzIGlmIG1taW9fYWx3YXlzX29u
+IGlzDQo+IG5vdCBzZXQuDQo+ID4gKyAqIEl0IHBvcC11cCBvbmx5IG9uIGZldyBzcGVjaWZpYyBz
+eXN0ZW0sIHdoZXJlIGRlY29kaW5nIGRpc2FibGUgaXMgbm90DQo+IHdvcmtpbmcuDQo+ID4gKyAq
+Lw0KPiA+ICtERUNMQVJFX1BDSV9GSVhVUF9FQVJMWSgweDEwMDAsIDB4MDQxMSwgcXVpcmtfbW1p
+b19hbHdheXNfb24pOw0KPiANCj4gV2hhdCBpcyB0aGUgYWN0dWFsIHByb2JsZW0gdGhhdCBoYXBw
+ZW5zIHdpdGhvdXQgdGhpcyBxdWlyaz8gIElzIHRoZXJlIHNvbWUNCj4gaGFyZHdhcmUgZGVmZWN0
+IGluIHRoZSBNUiAxMDc4IHRoYXQgbWFrZXMgaXQgZmFpbCB3aGVuIHdlIGRpc2FibGUgZGVjb2Rp
+bmc/DQo+IA0KPiBEaXNhYmxpbmcgZGVjb2RpbmcgaXMgaW1wb3J0YW50IGJlY2F1c2UgaXQgcHJl
+dmVudHMgY29uZmxpY3RzIHdpdGggb3RoZXINCj4gZGV2aWNlcyB3aGlsZSBzaXppbmcgYW5kIHVw
+ZGF0aW5nIEJBUnMsIHNvIEkgZG9uJ3Qgd2FudCB0byB1c2UgdGhpcyBxdWlyaw0KPiB1bmxlc3Mg
+aXQncyByZWFsbHkgbmVjZXNzYXJ5Lg0KTFNJIGlzIHN0aWxsIGludmVzdGlnYXRpbmcgb24gaC93
+IGlzc3VlLiBJdCB3YXMgb3JpZ2luYWxseSByZXBvcnRlZCBmcm9tIGN1c3RvbWVyIHNpdGUgYW5k
+IHRoZXkgaGF2ZSBmb3VuZCB0aGlzIGlzc3VlIHdoZW4gdGhleSB1cGdyYWRlIFJIRUw2LjMgdG8g
+UkhFTDYuNC4NCg0KS2VybmVsL0RyaXZlciBmYXVsdCB3aXRoIG1hY2hpbmUgY2hlY2sgb24gUkhF
+TDYuNCBhdCB0aGUgdGltZSBvZiBkcml2ZXIgcmVhZGluZyBiYXNlIGFkZHJlc3MgcmVnaXN0ZXJz
+LiBOZXcgd2F5LCB1c2VkIGluIFJIRUw2LjQgKHNpbWlsYXIgdG8gdXBzdHJlYW0ga2VybmVsKSBp
+cyB0byBkaXNhYmxlIG1taW8gbWVtb3J5IG1hcHBpbmcgYSBhbmQgaS9vIHRvIHRoZSBkZXZpY2Us
+IHJlYWQgdGhlIHZhbHVlIGFuZCB0aGVuIHJlLWVuYWJsZSBtbWlvIG1lbW9yeSBtYXBwaW5nIGFu
+ZCBpL28uICBUaGlzIHNlZW1zIHRvIGNhdXNlIHByb2JsZW1zIG9uIGN1c3RvbWVyIHNldHVwLg0K
+DQoxMDc4IE1SIGNvbnRyb2xsZXIgaXMgcHJldHR5IG9sZCBoL3cgYW5kIHdlIG1heSBuZWVkIG1v
+cmUgdGltZSB0byBhY3R1YWxseSBmaWd1cmUgb3V0IHdoeSBuZXcgcGNpX3JlYWQgbWV0aG9kIGlz
+IGZhaWxpbmcgb24gY3VzdG9tZXIgc3lzdGVtLiAgQXMgYW4gYWx0ZXJuYXRpdmUgKGNvbnNpZGVy
+IHRoYXQgTFNJIGgvdyBoYXMgc29tZSBpc3N1ZSksIHdlIG9wdCB0byBlbmFibGUgbW1pbyB2aWEg
+cXVpcmsgZW50cnkuIA0KDQogfiBLYXNoeWFwDQoNCj4gDQo+IEJqb3JuDQo+IA0KDQo=
