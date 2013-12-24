@@ -1,87 +1,103 @@
-From: Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH] megaraid_sas: Quirk mmio hook for 1078 MR controller
-Date: Tue, 24 Dec 2013 07:46:33 -0700
-Message-ID: <CAErSpo6Q7XnDhxKJOt2ZRUMzTY-Jj2dD=FJdh_DsLx2XB=zxrw@mail.gmail.com>
-References: <201312231512.rBNFC6mo008974@cosmhbs0.lsi.com> <CAErSpo7X4khuPOp5s4MdunOmwww0V4JZipJa3iEOA=Y5nnCwqA@mail.gmail.com>
- <49ee1c68150946e0b972b6b047a07126@BN1PR07MB247.namprd07.prod.outlook.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: spinlock_irqsave() && flags (Was: pm80xx: Spinlock fix)
+Date: Tue, 24 Dec 2013 09:29:31 -0800
+Message-ID: <1387906171.2343.7.camel@dabdike.int.hansenpartnership.com>
+References: <52B83B89.9040700@gmail.com>
+	 <CE2C58F938F4C44EA74FFF880BAA7E5E1C68AA8A@BBYEXM01.pmc-sierra.internal>
+	 <CAD0Z9T+69VoSnDY-Sj7a1QfJ-KLJYVyL9=WQ123XMfRvQmGdsg@mail.gmail.com>
+	 <52B8518B.4060204@gmail.com> <52B8569D.4050101@redhat.com>
+	 <CAD0Z9TK-cn=X3ywSzPnEQN-FB+ue+0dHQ3EHuwonC+KfgrmPMA@mail.gmail.com>
+	 <20131223163410.GA28220@redhat.com> <20131223172744.GA2069@redhat.com>
+	 <20131223182323.GA8656@gmail.com> <20131223183341.GA6082@redhat.com>
+	 <20131224082931.GA20471@gmail.com>
+	 <CE2C58F938F4C44EA74FFF880BAA7E5E1C68AD12@BBYEXM01.pmc-sierra.internal>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-pci-owner@vger.kernel.org>
-In-Reply-To: <49ee1c68150946e0b972b6b047a07126@BN1PR07MB247.namprd07.prod.outlook.com>
-Sender: linux-pci-owner@vger.kernel.org
-To: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "James E.J. Bottomley" <jbottomley@parallels.com>, "Saxena, Sumit" <Sumit.Saxena@lsi.com>, Adam Radford <aradford@gmail.com>, "Yang, Bo" <Bo.Yang@lsi.com>, Myron Stowe <myron.stowe@redhat.com>
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CE2C58F938F4C44EA74FFF880BAA7E5E1C68AD12@BBYEXM01.pmc-sierra.internal>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
+Cc: Ingo Molnar <mingo@kernel.org>, Oleg Nesterov <oleg@redhat.com>, Jason Seba <jason.seba42@gmail.com>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, Linus Torvalds <torvalds@linux-foundation.org>, Tomas Henzl <thenzl@redhat.com>, Jack Wang <xjtuwjp@gmail.com>, Viswas G <Viswas.G@pmcs.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Vasanthalakshmi Tharmarajan <Vasanthalakshmi.Tharmarajan@pmcs.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-[+cc Myron]
+On Tue, 2013-12-24 at 09:13 +0000, Suresh Thiagarajan wrote:
+> 
+> On Tue, Dec 24, 2013 at 1:59 PM, Ingo Molnar <mingo@kernel.org> wrote:
+> >
+> > * Oleg Nesterov <oleg@redhat.com> wrote:
+> >
+> >> On 12/23, Ingo Molnar wrote:
+> >> >
+> >> > * Oleg Nesterov <oleg@redhat.com> wrote:
+> >> >
+> >> > > Initially I thought that this is obviously wrong, irqsave/irqrestore
+> >> > > assume that "flags" is owned by the caller, not by the lock. And
+> >> > > iirc this was certainly wrong in the past.
+> >> > >
+> >> > > But when I look at spinlock.c it seems that this code can actually
+> >> > > work. _irqsave() writes to FLAGS after it takes the lock, and
+> >> > > _irqrestore() has a copy of FLAGS before it drops this lock.
+> >> >
+> >> > I don't think that's true: if it was then the lock would not be
+> >> > irqsave, a hardware-irq could come in after the lock has been taken
+> >> > and before flags are saved+disabled.
+> >>
+> >> I do agree that this pattern is not safe, that is why I decided to ask.
+> >>
+> >> But, unless I missed something, with the current implementation
+> >> spin_lock_irqsave(lock, global_flags) does:
+> >>
+> >>       unsigned long local_flags;
+> >>
+> >>       local_irq_save(local_flags);
+> >>       spin_lock(lock);
+> >>
+> >>       global_flags = local_flags;
+> >>
+> >> so the access to global_flags is actually serialized by lock.
+> 
+> Below is a small pseudo code on protecting/serializing the flag for global access.
+> struct temp
+> {
+> 	...
+> 	spinlock_t lock;
+> 	unsigned long lock_flags;
+> };
+> void my_lock(struct temp *t)
+> {
+>                unsigned long flag; // thread-private variable as suggested
+>                spin_lock_irqsave(&t->lock, flag);
+>                t->lock_flags = flag; //updating inside critical section now to serialize the access to flag
+> }
+> 
+> void my_unlock(struct temp *t)
+> {
+>                unsigned long flag = t->lock_flags;
+>                t->lock_flags = 0;  //clearing it before getting out of critical section
+>                spin_unlock_irqrestore(&t->lock, flag);
+> }
+> 
+> Here for unlocking, I could even use spin_unlock_irqrestore(&t->lock,
+> t->lock_flags) directly instead of my_unlock() since t->lock_flags is
+> updated only in my_lock and so there is no need to explicitly clear
+> t->lock_flags. Please let me know if I miss anything here in
+> serializing the global lock flag.
 
-On Tue, Dec 24, 2013 at 1:20 AM, Desai, Kashyap <Kashyap.Desai@lsi.com> wrote:
->
->
->> -----Original Message-----
->> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
->> Sent: Monday, December 23, 2013 11:28 PM
->> To: Desai, Kashyap
->> Cc: linux-scsi@vger.kernel.org; linux-pci@vger.kernel.org; James E.J.
->> Bottomley; Saxena, Sumit; Adam Radford
->> Subject: Re: [PATCH] megaraid_sas: Quirk mmio hook for 1078 MR controller
->>
->> On Mon, Dec 23, 2013 at 8:13 AM,  <Kashyap.Desai@lsi.com> wrote:
->> > This patch has fix for LSI Gen-1 MR controller issue which only pop-up
->> > on few systems and it is not generic.
->> >
->> > On few system, MR 1078 MR controller is not working if mmio decoding is
->> off.
->> > This patch proposed early quirck entry for Device id 0x1000/0x0411 to
->> enable mmio.
->> >
->> > Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
->> > ---
->> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c index
->> > f6c31fa..a20fe41 100644
->> > --- a/drivers/pci/quirks.c
->> > +++ b/drivers/pci/quirks.c
->> > @@ -43,6 +43,10 @@ static void quirk_mmio_always_on(struct pci_dev
->> > *dev)  }  DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_ANY_ID, PCI_ANY_ID,
->> >                                 PCI_CLASS_BRIDGE_HOST, 8,
->> > quirk_mmio_always_on);
->> > +/* LSI controller device id 0x0411 has some issues if mmio_always_on is
->> not set.
->> > + * It pop-up only on few specific system, where decoding disable is not
->> working.
->> > + */
->> > +DECLARE_PCI_FIXUP_EARLY(0x1000, 0x0411, quirk_mmio_always_on);
->>
->> What is the actual problem that happens without this quirk?  Is there some
->> hardware defect in the MR 1078 that makes it fail when we disable decoding?
->>
->> Disabling decoding is important because it prevents conflicts with other
->> devices while sizing and updating BARs, so I don't want to use this quirk
->> unless it's really necessary.
-> LSI is still investigating on h/w issue. It was originally reported from customer site and they have found this issue when they upgrade RHEL6.3 to RHEL6.4.
->
-> Kernel/Driver fault with machine check on RHEL6.4 at the time of driver reading base address registers. New way, used in RHEL6.4 (similar to upstream kernel) is to disable mmio memory mapping a and i/o to the device, read the value and then re-enable mmio memory mapping and i/o.  This seems to cause problems on customer setup.
+I don't think anyone's arguing that you can't do this.  The argument is
+more you shouldn't: Lock contention is one of the biggest killers of
+performance and getting locking right (avoiding inversions, or even
+nested locks at all) is hard.  Therefore you need to keep the shortest
+and clearest critical sections in Linux that you can, so the pattern for
+locking is to lock and unlock in the same routine with a local flags
+variable.
 
-Is there a bug report we can look at?  Maybe a dmesg or console log of
-the issue happening, along with "lspci -vv" output and contents of
-/proc/iomem and /proc/ioports?
+So, rather than develop a primitive that supports and encourages uses of
+locking that violate the pattern and is far more likely to cause
+performance and other problems, could you just audit the code to see if
+the need to carry a lock across a routine could be eliminated (either by
+shortening the critical section or by better nesting the calls).
 
-Unless there's some 1078 hardware defect related to writing the
-command register, the current code should be safe.  It's possible
-there's a driver defect or something else that causes an access to the
-device while it is disabled.  If that's happening, *that* is what
-needs to be fixed.
+Thanks,
 
-I am opposed to making a change like this to upstream until we
-understand what's actually going on.  Of course, RH may want to put
-the change in their kernel as a pragmatic measure.
-
-> 1078 MR controller is pretty old h/w and we may need more time to actually figure out why new pci_read method is failing on customer system.  As an alternative (consider that LSI h/w has some issue), we opt to enable mmio via quirk entry.
->
->  ~ Kashyap
->
->>
->> Bjorn
->>
->
+James
