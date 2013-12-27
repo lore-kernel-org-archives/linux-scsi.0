@@ -1,37 +1,19 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 49241] [PATCH]Unsafe dereference of pointer after allocing
- memory
-Date: Fri, 27 Dec 2013 18:14:22 +0000
-Message-ID: <bug-49241-11613-OuB0alLIft@https.bugzilla.kernel.org/>
-References: <bug-49241-11613@https.bugzilla.kernel.org/>
+From: zoranristoki@iprimus.com.au
+Subject: Deal
+Date: Sat, 28 Dec 2013 06:06:08 +1100
+Message-ID: <52B1E4DF000057C1__31915.5479352505$1388171805$gmane$org@cpms01.int.iprimus.net.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:60653 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754216Ab3L0SOZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 27 Dec 2013 13:14:25 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id DD76A2015A
-	for <linux-scsi@vger.kernel.org>; Fri, 27 Dec 2013 18:14:23 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id 23B4820161
-	for <linux-scsi@vger.kernel.org>; Fri, 27 Dec 2013 18:14:23 +0000 (UTC)
-In-Reply-To: <bug-49241-11613@https.bugzilla.kernel.org/>
+Received: from mail05.syd.iprimus.net.au ([210.50.30.229]:24792 "EHLO
+	mail05.syd.iprimus.net.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753709Ab3L0TQU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Dec 2013 14:16:20 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=49241
+Ich suche eine Partnerschaft bei der Beschaffung von 50Millionen US-Dollar
+hinter sich gelassen um einen bestimmten verstorbenen Kunden (Anthony).Kontakt
+per E-mail unten f?r mehr Details; philip.thompson1@yahoo.co.uk
 
-Alan <alan@lxorguk.ukuu.org.uk> changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|ASSIGNED                    |RESOLVED
-         Resolution|---                         |CODE_FIX
-
--- 
-You are receiving this mail because:
-You are on the CC list for the bug.
