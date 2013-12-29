@@ -1,13 +1,13 @@
 From: Julia Lawall <Julia.Lawall@lip6.fr>
-Subject: [PATCH 24/25]  fix error return code
-Date: Sun, 29 Dec 2013 23:47:39 +0100
-Message-ID: <1388357260-4843-25-git-send-email-Julia.Lawall@lip6.fr>
+Subject: [PATCH 19/25]  fix error return code
+Date: Sun, 29 Dec 2013 23:47:34 +0100
+Message-ID: <1388357260-4843-20-git-send-email-Julia.Lawall@lip6.fr>
 References: <1388357260-4843-1-git-send-email-Julia.Lawall@lip6.fr>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1388357260-4843-1-git-send-email-Julia.Lawall@lip6.fr>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Eddie Wai <eddie.wai@broadcom.com>
-Cc: kernel-janitors@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Geoff Levand <geoff@infradead.org>
+Cc: kernel-janitors@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, linuxppc-dev@lists.ozlabs.org, cbe-oss-dev@lists.ozlabs.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 From: Julia Lawall <Julia.Lawall@lip6.fr>
@@ -40,18 +40,18 @@ Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
 ---
 Not tested.
 
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c |    1 +
+ drivers/scsi/ps3rom.c |    1 +
  1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-index 9b94850..d8cb194 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-@@ -2199,6 +2199,7 @@ static int _bnx2fc_create(struct net_device *netdev,
- 	interface = bnx2fc_interface_create(hba, netdev, fip_mode);
- 	if (!interface) {
- 		printk(KERN_ERR PFX "bnx2fc_interface_create failed\n");
-+		rc = -ENOMEM;
- 		goto ifput_err;
+diff --git a/drivers/scsi/ps3rom.c b/drivers/scsi/ps3rom.c
+index e6e2a30..04d77ce 100644
+--- a/drivers/scsi/ps3rom.c
++++ b/drivers/scsi/ps3rom.c
+@@ -387,6 +387,7 @@ static int ps3rom_probe(struct ps3_system_bus_device *_dev)
+ 	if (!host) {
+ 		dev_err(&dev->sbd.core, "%s:%u: scsi_host_alloc failed\n",
+ 			__func__, __LINE__);
++		error = -ENOMEM;
+ 		goto fail_teardown;
  	}
  
