@@ -1,72 +1,104 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH 19/25] fix error return code
-Date: Sun, 29 Dec 2013 22:58:02 +0100
-Message-ID: <CAMuHMdWQ5oiXsL7j3T0yuDhFe6uumwcv0S1Ym-L+uTwqqAvCcA@mail.gmail.com>
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+Subject: [PATCH 1/25]  fix error return code
+Date: Sun, 29 Dec 2013 23:47:16 +0100
+Message-ID: <1388357260-4843-2-git-send-email-Julia.Lawall@lip6.fr>
 References: <1388357260-4843-1-git-send-email-Julia.Lawall@lip6.fr>
-	<1388357260-4843-20-git-send-email-Julia.Lawall@lip6.fr>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1388357260-4843-20-git-send-email-Julia.Lawall@lip6.fr>
+In-Reply-To: <1388357260-4843-1-git-send-email-Julia.Lawall@lip6.fr>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Julia Lawall <Julia.Lawall@lip6.fr>
-Cc: Geoff Levand <geoff@infradead.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>, "cbe-oss-dev@lists.ozlabs.org" <cbe-oss-dev@lists.ozlabs.org>, scsi <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+Cc: kernel-janitors@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, Dec 29, 2013 at 11:47 PM, Julia Lawall <Julia.Lawall@lip6.fr> wrote:
-> From: Julia Lawall <Julia.Lawall@lip6.fr>
->
-> Set the return variable to an error code as done elsewhere in the function.
->
-> A simplified version of the semantic match that finds this problem is as
-> follows: (http://coccinelle.lip6.fr/)
->
-> // <smpl>
-> (
-> if@p1 (\(ret < 0\|ret != 0\))
->  { ... return ret; }
-> |
-> ret@p1 = 0
-> )
-> ... when != ret = e1
->     when != &ret
-> *if(...)
-> {
->   ... when != ret = e2
->       when forall
->  return ret;
-> }
->
-> // </smpl>
->
-> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+From: Julia Lawall <Julia.Lawall@lip6.fr>
 
-Acked-by: Geert Uytterhoeven <geert@linux-m68k.org>
+Set the return variable to an error code as done elsewhere in the function.
 
-> ---
-> Not tested.
->
->  drivers/scsi/ps3rom.c |    1 +
->  1 file changed, 1 insertion(+)
->
-> diff --git a/drivers/scsi/ps3rom.c b/drivers/scsi/ps3rom.c
-> index e6e2a30..04d77ce 100644
-> --- a/drivers/scsi/ps3rom.c
-> +++ b/drivers/scsi/ps3rom.c
-> @@ -387,6 +387,7 @@ static int ps3rom_probe(struct ps3_system_bus_device *_dev)
->         if (!host) {
->                 dev_err(&dev->sbd.core, "%s:%u: scsi_host_alloc failed\n",
->                         __func__, __LINE__);
-> +               error = -ENOMEM;
->                 goto fail_teardown;
+Additionally, in each case there is no need to initialize ret to 0, since
+its value is immediately overwritten.
 
-Gr{oetje,eeting}s,
+A simplified version of the semantic match that finds the first problem is as
+follows: (http://coccinelle.lip6.fr/)
 
-                        Geert
+// <smpl>
+(
+if@p1 (\(ret < 0\|ret != 0\))
+ { ... return ret; }
+|
+ret@p1 = 0
+)
+... when != ret = e1
+    when != &ret
+*if(...)
+{
+  ... when != ret = e2
+      when forall
+ return ret;
+}
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+// </smpl>
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+
+---
+Not tested.
+
+ drivers/scsi/be2iscsi/be_main.c |   10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index 1f37505..82f4587 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -4326,7 +4326,7 @@ static int beiscsi_get_boot_info(struct beiscsi_hba *phba)
+ 	struct be_dma_mem nonemb_cmd;
+ 	unsigned int tag;
+ 	unsigned int s_handle;
+-	int ret = -ENOMEM;
++	int ret;
+ 
+ 	/* Get the session handle of the boot target */
+ 	ret = be_mgmt_get_boot_shandle(phba, &s_handle);
+@@ -4356,6 +4356,7 @@ static int beiscsi_get_boot_info(struct beiscsi_hba *phba)
+ 			    BEISCSI_LOG_INIT | BEISCSI_LOG_CONFIG,
+ 			    "BM_%d : beiscsi_get_session_info"
+ 			    " Failed\n");
++		ret = -ENOMEM;
+ 
+ 		goto boot_freemem;
+ 	}
+@@ -4455,7 +4456,8 @@ static int beiscsi_init_port(struct beiscsi_hba *phba)
+ 		goto do_cleanup_ctrlr;
+ 	}
+ 
+-	if (hba_setup_cid_tbls(phba)) {
++	ret = hba_setup_cid_tbls(phba);
++	if (ret < 0) {
+ 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
+ 			    "BM_%d : Failed in hba_setup_cid_tbls\n");
+ 		kfree(phba->io_sgl_hndl_base);
+@@ -5479,7 +5481,7 @@ static int beiscsi_dev_probe(struct pci_dev *pcidev,
+ 	struct hwi_controller *phwi_ctrlr;
+ 	struct hwi_context_memory *phwi_context;
+ 	struct be_eq_obj *pbe_eq;
+-	int ret = 0, i;
++	int ret, i;
+ 
+ 	ret = beiscsi_enable_pci(pcidev);
+ 	if (ret < 0) {
+@@ -5492,6 +5494,7 @@ static int beiscsi_dev_probe(struct pci_dev *pcidev,
+ 	if (!phba) {
+ 		dev_err(&pcidev->dev,
+ 			"beiscsi_dev_probe - Failed in beiscsi_hba_alloc\n");
++		ret = -ENOMEM;
+ 		goto disable_pci;
+ 	}
+ 
+@@ -5586,6 +5589,7 @@ static int beiscsi_dev_probe(struct pci_dev *pcidev,
+ 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
+ 			    "BM_%d : beiscsi_dev_probe-"
+ 			    "Failed in beiscsi_init_port\n");
++		ret = -ENOMEM;
+ 		goto free_port;
+ 	}
+ 
