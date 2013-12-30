@@ -1,104 +1,90 @@
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-Subject: [PATCH 1/25]  fix error return code
-Date: Sun, 29 Dec 2013 23:47:16 +0100
-Message-ID: <1388357260-4843-2-git-send-email-Julia.Lawall@lip6.fr>
-References: <1388357260-4843-1-git-send-email-Julia.Lawall@lip6.fr>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1388357260-4843-1-git-send-email-Julia.Lawall@lip6.fr>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
-Cc: kernel-janitors@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Ben Hutchings <ben@decadent.org.uk>
+Subject: Re: Bug#733565: SIX messages per on boot console should be TWO
+Date: Mon, 30 Dec 2013 04:14:41 +0100
+Message-ID: <1388373281.2900.42.camel@deadeye.wl.decadent.org.uk>
+References: <87vby7l08j.fsf@jidanni.org>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-DTxWV1mfUcCDJ6l2OlJd"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:58747 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753422Ab3L3DOx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 29 Dec 2013 22:14:53 -0500
+In-Reply-To: <87vby7l08j.fsf@jidanni.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jidanni@jidanni.org
+Cc: 733565@bugs.debian.org, linux-scsi <linux-scsi@vger.kernel.org>
 
-From: Julia Lawall <Julia.Lawall@lip6.fr>
 
-Set the return variable to an error code as done elsewhere in the function.
+--=-DTxWV1mfUcCDJ6l2OlJd
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Additionally, in each case there is no need to initialize ret to 0, since
-its value is immediately overwritten.
+Control: reassign -1 src:linux 3.12.6-1
 
-A simplified version of the semantic match that finds the first problem is as
-follows: (http://coccinelle.lip6.fr/)
+On Mon, 2013-12-30 at 07:13 +0800, jidanni@jidanni.org wrote:
+> Package: linux-image-3.12-1-686-pae
+>=20
+> Currently any such devices as below that are attached during boot still
+> produce the below SIX messages per device when they should only produce
+> TWO:
+>=20
+> # dmesg |egrep Caching\|Assuming
+> [    3.960663] sd 3:0:0:0: [sdb] No Caching mode page found
+> [    3.960701] sd 3:0:0:0: [sdb] Assuming drive cache: write through
+> [    3.978659] sd 3:0:0:0: [sdb] No Caching mode page found
+> [    3.978694] sd 3:0:0:0: [sdb] Assuming drive cache: write through
+> [    3.998652] sd 3:0:0:0: [sdb] No Caching mode page found
+> [    3.998689] sd 3:0:0:0: [sdb] Assuming drive cache: write through
+> [    4.174630] sd 2:0:0:2: [sde] No Caching mode page found
+> [    4.174669] sd 2:0:0:2: [sde] Assuming drive cache: write through
+> [    4.196628] sd 2:0:0:2: [sde] No Caching mode page found
+> [    4.196664] sd 2:0:0:2: [sde] Assuming drive cache: write through
+> [    4.220624] sd 2:0:0:2: [sde] No Caching mode page found
+> [    4.220661] sd 2:0:0:2: [sde] Assuming drive cache: write through
+>=20
+> Please confirm that you also see the six messages right there on the
+> console stderr.
 
-// <smpl>
-(
-if@p1 (\(ret < 0\|ret != 0\))
- { ... return ret; }
-|
-ret@p1 = 0
-)
-... when != ret = e1
-    when != &ret
-*if(...)
-{
-  ... when != ret = e2
-      when forall
- return ret;
-}
+I'm not seeing it at all here as my SSD apparently does implement the
+caching mode page.
 
-// </smpl>
+I can see that it is emitted by sd_read_cache_type(), which is called by
+sd_revalidate_disk(), and that is apparently now called 3 times during
+probe.  Which is quite ridiculous.
 
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+And I wonder whether this situation (no caching mode page) is really
+serious enough to deserve logging at ERR severity?
 
----
-Not tested.
+Ben.
 
- drivers/scsi/be2iscsi/be_main.c |   10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
+--=20
+Ben Hutchings
+Logic doesn't apply to the real world. - Marvin Minsky
 
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 1f37505..82f4587 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -4326,7 +4326,7 @@ static int beiscsi_get_boot_info(struct beiscsi_hba *phba)
- 	struct be_dma_mem nonemb_cmd;
- 	unsigned int tag;
- 	unsigned int s_handle;
--	int ret = -ENOMEM;
-+	int ret;
- 
- 	/* Get the session handle of the boot target */
- 	ret = be_mgmt_get_boot_shandle(phba, &s_handle);
-@@ -4356,6 +4356,7 @@ static int beiscsi_get_boot_info(struct beiscsi_hba *phba)
- 			    BEISCSI_LOG_INIT | BEISCSI_LOG_CONFIG,
- 			    "BM_%d : beiscsi_get_session_info"
- 			    " Failed\n");
-+		ret = -ENOMEM;
- 
- 		goto boot_freemem;
- 	}
-@@ -4455,7 +4456,8 @@ static int beiscsi_init_port(struct beiscsi_hba *phba)
- 		goto do_cleanup_ctrlr;
- 	}
- 
--	if (hba_setup_cid_tbls(phba)) {
-+	ret = hba_setup_cid_tbls(phba);
-+	if (ret < 0) {
- 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
- 			    "BM_%d : Failed in hba_setup_cid_tbls\n");
- 		kfree(phba->io_sgl_hndl_base);
-@@ -5479,7 +5481,7 @@ static int beiscsi_dev_probe(struct pci_dev *pcidev,
- 	struct hwi_controller *phwi_ctrlr;
- 	struct hwi_context_memory *phwi_context;
- 	struct be_eq_obj *pbe_eq;
--	int ret = 0, i;
-+	int ret, i;
- 
- 	ret = beiscsi_enable_pci(pcidev);
- 	if (ret < 0) {
-@@ -5492,6 +5494,7 @@ static int beiscsi_dev_probe(struct pci_dev *pcidev,
- 	if (!phba) {
- 		dev_err(&pcidev->dev,
- 			"beiscsi_dev_probe - Failed in beiscsi_hba_alloc\n");
-+		ret = -ENOMEM;
- 		goto disable_pci;
- 	}
- 
-@@ -5586,6 +5589,7 @@ static int beiscsi_dev_probe(struct pci_dev *pcidev,
- 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
- 			    "BM_%d : beiscsi_dev_probe-"
- 			    "Failed in beiscsi_init_port\n");
-+		ret = -ENOMEM;
- 		goto free_port;
- 	}
- 
+--=-DTxWV1mfUcCDJ6l2OlJd
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.15 (GNU/Linux)
+
+iQIVAwUAUsDlIee/yOyVhhEJAQqDcRAAjYjdEyiewrc2jj9gmj/ALewavF92TGrM
+XOHaKQN+vSTfpniLyWMwJFPxsk2dZLSC358N7PD/xiZ2clqbmNSM3i/tYyny/ewz
+WvHK+9M7RUO2QyKbJ+q1XrtYFDAygLFeXN2KAXoPoj5zQFtClZ93GFlIBmntCmZ2
+y1wnH4wuZEDYSx/DBe9wJobjmbl5p21rzcLPGc5ow0ydvArpPC6IMb8i1RCd8Bl2
+N5RuaFBWJhTw0+sLOxYpzFhOSc39yDlzUhwgFs8+WcH9VBXYiesqgtqBgK0nDOWK
+u/6KbGBtdspNfidI9ahuOIv8npeWphyybINN+Da0ATVAHV7eAPhBa5H0LXLkV4cO
+UhDjh6MZejKKhmmvQpksoON7ZKWO1461w94rFsiG6Yxe9LGXPdShYq6t+oosj7AA
+e8xbOphwtOmHmYoCUBs7acGGpHt0sbIU9EJ2+brmlZr0ouo2G5DOiLhVpH0r9qt+
+QGMeUVoTMtYwW8MyR7yioNco88MMn7HS5VmzakB/P0Myew3a7QS+6c445Hpn1qJg
+a5UAiO6v5b/OkcXdT9W8UaVvX9MU30s5Dk2Nqgu3AyAEf3rhDzy1kQFAWMdsS5q7
+B4nMZrbSLcRQKimcBBf8H9Uk8M5PLVJI70nRGO4HkW2wsMNYlvercXhaA2CiaJLJ
+E9hokXxdIJs=
+=S14j
+-----END PGP SIGNATURE-----
+
+--=-DTxWV1mfUcCDJ6l2OlJd--
