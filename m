@@ -1,48 +1,150 @@
-From: "berthiaume, wayne" <wayne.berthiaume@emc.com>
-Subject: RE: status of block-integrity
-Date: Tue, 31 Dec 2013 14:41:35 -0500
-Message-ID: <7B999F046DA9D54B825BD537939A3E2F023284EC69@MX23A.corp.emc.com>
-References: <20131222192128.GA28532@infradead.org>
- <yq11u134rmt.fsf@sermon.lab.mkp.net>
+From: Larkin Lowrey <llowrey@nuclearwinter.com>
+Subject: mpt2sas SATA spinup behavior
+Date: Tue, 31 Dec 2013 17:42:28 -0600
+Message-ID: <52C35664.7000006@nuclearwinter.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq11u134rmt.fsf@sermon.lab.mkp.net>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <mkp@mkp.net>
-Cc: Jens Axboe <axboe@kernel.dk>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from titan.nuclearwinter.com ([174.136.96.186]:40779 "EHLO
+	mail.nuclearwinter.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756592AbaAAAHT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Dec 2013 19:07:19 -0500
+Received: from [10.0.0.100] ([10.0.0.100])
+	(authenticated bits=0)
+	by mail.nuclearwinter.com (8.14.4/8.14.4) with ESMTP id rBVNgMGo026037
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Tue, 31 Dec 2013 17:42:23 -0600
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-You can add there are SCSI targets out there employing this feature as well. =;^)
+I'm seeing odd behavior while spinning up SATA drives on my LSI SAS 2008
+controller.
 
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Martin K. Petersen
-Sent: Monday, December 23, 2013 8:35 AM
-To: Christoph Hellwig
-Cc: Jens Axboe; linux-kernel@vger.kernel.org; linux-scsi@vger.kernel.org
-Subject: Re: status of block-integrity
+I have 8 drives I keep spun down (most of the time).  I wrote a tool to
+spin them all up at the same time by reading a sector from each drive
+(one thread per drive). Four of the drives are connected to a Marvell
+controller (mvsas) and the other four to an LSI 2008 (mpt2sas).
 
->>>>> "Christoph" == Christoph Hellwig <hch@infradead.org> writes:
+The four on the mvsas controller all finish spinning up after ~13s. The
+four on the mpt2sas controller finish after 40s. The mpt2sas drives,
+when spun up individually, will complete spin up in ~9s (except one at
+13s). It appears that each of the four drives are being accessed
+sequentially instead of in parallel and that they must all complete
+their spin up before any can complete their I/O. The mvsas drives, on
+the other hand, perform their spin-up I/O in parallel (different brand
+drive, 13s spin-up).
 
-Christoph> We have the block integrity code to support DIF/DIX in the 
-Christoph> the tree for about 5 and a half years, and we still don't 
-Christoph> have a single consumer of it.
+Is there something unique to the LSI 2008 that requires SATA spin-up to
+be handled this way (sequentially)?
 
-What do you mean? If you have a DIX-capable HBA (lpfc, qla2xxx, zfcp) then integrity protection is active from the block layer down. The only code that's not currently being exercised are the tag interleaving functions.  I was hoping the FS people would use them for back pointers but nobody seemed to bite.
+I see no errors in dmesg/syslog. Are there any debug facilities that
+might shed light on what's going on?
 
+Can anyone recommend areas in the source code where I might start
+hunting for a root cause?
 
-Christoph> Given that we'll have a lot of work to do in this area with 
-Christoph> block multiqueue I think it's time to either kill it off for 
-Christoph> good or make sure we can actually use and test it.
+Here's some additional detail. My tool watches for activity on any
+member drive and when there is activity on one it will spin up the
+remaining drives. In this first case I kicked an mpt2sas drive so the
+remaining 3 would be spun up along with the 4 mvsas drives. The three
+large numbers in brackets are milliseconds since the beginning of time.
+The first is the timestamp right before the block device is opened
+(O_DIRECT), the second is after open but before read(), and the third is
+after the read has completed.
 
-I don't understand why multiqueue would require a lot of work? It's just an extra scatterlist per request.
+Interestingly, the open() does not complete for the 3 mpt2sas drives
+until 9s after the trigger drive was kicked. So, it appears that all I/O
+for the remaining drives was blocked while the controller waited for the
+first drive to respond. That seems bad.
 
-And obviously, if there's anything that needs to be done in this area I'll be happy to do so...
+Dec 31 16:26:14 fubar hdpwr[5941]: Now spinning: /dev/sdf
+ST4000DM000-1F2168 s/n:#####NRE
+Dec 31 16:26:14 fubar hdpwr[5941]: Spinning up /dev/sdg
+ST4000DM000-1F2168 s/n:#####C85
+Dec 31 16:26:14 fubar hdpwr[5941]: Spinning up /dev/sdh
+ST4000DM000-1F2168 s/n:#####C8M
+Dec 31 16:26:14 fubar hdpwr[5941]: Spinning up /dev/sde Hitachi
+HDS724040ALE640 s/n:#####4AT
+Dec 31 16:26:14 fubar hdpwr[5941]: Spinning up /dev/sdm Hitachi
+HDS724040ALE640 s/n:#####7TW
+Dec 31 16:26:14 fubar hdpwr[5941]: Spinning up /dev/sdn Hitachi
+HDS724040ALE640 s/n:#####R2T
+Dec 31 16:26:14 fubar hdpwr[5941]: Spinning up /dev/sdo Hitachi
+HDS724040ALE640 s/n:#####BST
+Dec 31 16:26:14 fubar hdpwr[5941]: Spinning up /dev/sdp Hitachi
+HDS724040ALE640 s/n:#####M3T
+Dec 31 16:26:28 fubar hdpwr[5941]: Spinup completed in 13.366s for
+/dev/sdp Hitachi HDS724040ALE640 s/n:#####M3T [1388528774946
+1388528774946 1388528788312]
+Dec 31 16:26:28 fubar hdpwr[5941]: Spinup completed in 13.441s for
+/dev/sdm Hitachi HDS724040ALE640 s/n:#####7TW [1388528774945
+1388528774945 1388528788386]
+Dec 31 16:26:28 fubar hdpwr[5941]: Spinup completed in 13.464s for
+/dev/sdn Hitachi HDS724040ALE640 s/n:#####R2T [1388528774946
+1388528774946 1388528788410]
+Dec 31 16:26:28 fubar hdpwr[5941]: Spinup completed in 13.501s for
+/dev/sdo Hitachi HDS724040ALE640 s/n:#####BST [1388528774946
+1388528774946 1388528788447]
+Dec 31 16:26:56 fubar hdpwr[5941]: Spinup completed in 41.199s for
+/dev/sde Hitachi HDS724040ALE640 s/n:#####4AT [1388528774945
+1388528784021 1388528816144]
+Dec 31 16:26:57 fubar hdpwr[5941]: Spinup completed in 41.207s for
+/dev/sdh ST4000DM000-1F2168 s/n:#####C8M [1388528774945 1388528784021
+1388528816152]
+Dec 31 16:26:57 fubar hdpwr[5941]: Spinup completed in 41.226s for
+/dev/sdg ST4000DM000-1F2168 s/n:#####C85 [1388528774945 1388528784021
+1388528816171]
+Dec 31 16:26:57 fubar hdpwr[5941]: Spinup complete
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Here's another example:
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in the body of a message to majordomo@vger.kernel.org More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Dec 31 16:47:35 fubar hdpwr[5941]: Now spinning: /dev/sdp Hitachi
+HDS724040ALE640 s/n:#####M3T
+Dec 31 16:47:35 fubar hdpwr[5941]: Spinning up /dev/sdm Hitachi
+HDS724040ALE640 s/n:#####7TW
+Dec 31 16:47:35 fubar hdpwr[5941]: Spinning up /dev/sdh
+ST4000DM000-1F2168 s/n:#####C8M
+Dec 31 16:47:35 fubar hdpwr[5941]: Spinning up /dev/sde Hitachi
+HDS724040ALE640 s/n:#####4AT
+Dec 31 16:47:35 fubar hdpwr[5941]: Spinning up /dev/sdg
+ST4000DM000-1F2168 s/n:#####C85
+Dec 31 16:47:35 fubar hdpwr[5941]: Spinning up /dev/sdn Hitachi
+HDS724040ALE640 s/n:#####R2T
+Dec 31 16:47:35 fubar hdpwr[5941]: Spinning up /dev/sdf
+ST4000DM000-1F2168 s/n:#####NRE
+Dec 31 16:47:35 fubar hdpwr[5941]: Spinning up /dev/sdo Hitachi
+HDS724040ALE640 s/n:#####BST
+Dec 31 16:47:49 fubar hdpwr[5941]: Spinup completed in 13.394s for
+/dev/sdm Hitachi HDS724040ALE640 s/n:#####7TW [1388530055877
+1388530055877 1388530069271]
+Dec 31 16:47:49 fubar hdpwr[5941]: Spinup completed in 13.431s for
+/dev/sdn Hitachi HDS724040ALE640 s/n:#####R2T [1388530055877
+1388530055877 1388530069308]
+Dec 31 16:47:49 fubar hdpwr[5941]: Spinup completed in 13.434s for
+/dev/sdo Hitachi HDS724040ALE640 s/n:#####BST [1388530055879
+1388530055879 1388530069313]
+Dec 31 16:48:07 fubar hdpwr[5941]: Spinup completed in 31.496s for
+/dev/sde Hitachi HDS724040ALE640 s/n:#####4AT [1388530055877
+1388530055877 1388530087373]
+Dec 31 16:48:16 fubar hdpwr[5941]: Spinup completed in 31.497s for
+/dev/sdh ST4000DM000-1F2168 s/n:#####C8M [1388530055877 1388530055877
+1388530087374]
+Dec 31 16:48:16 fubar hdpwr[5941]: Spinup completed in 40.768s for
+/dev/sdg ST4000DM000-1F2168 s/n:#####C85 [1388530055877 1388530055877
+1388530096645]
+Dec 31 16:48:16 fubar hdpwr[5941]: Spinup completed in 40.911s for
+/dev/sdf ST4000DM000-1F2168 s/n:#####NRE [1388530055877 1388530078331
+1388530096788]
+Dec 31 16:48:16 fubar hdpwr[5941]: Spinup complete
+
+In this case I kicked an mvsas drive so all 4 mpt2sas drives would spin
+up together. For three mpt2sas drives the open() calls completed at the
+same time but the fourth open() was delayed 23s (13-ish + 9-ish). The
+first two mpt2sas drives seem to be batched together and both I/O's had
+to wait until both had spun up sequentially. The second two drives had
+to wait until the first two drives had completed and both of them seem
+to have been batched together.
+
+--Larkin
