@@ -1,19 +1,40 @@
-From: "Mr. Tom Hook" <tomhook230@outlook.com>
-Subject: Good day
-Date: Fri, 3 Jan 2014 02:15:04 +0700
-Message-ID: <0866ba53-6f74-4765-80e9-2b0e379ab1b3__11428.9680067033$1388691976$gmane$org@COSEXCH10.lsi.com>
-Reply-To: <tomhook230@yahoo.com>
+From: Mark Lord <mlord@pobox.com>
+Subject: Re: [PATCH 3.12 033/118] usb: xhci: Link TRB must not occur within
+ a USB payload burst
+Date: Thu, 02 Jan 2014 16:01:29 -0500
+Message-ID: <52C5D3A9.60708@pobox.com>
+References: <20131218211219.461663463@linuxfoundation.org> <20131218211220.412278148@linuxfoundation.org> <52C32BB0.90600@gmail.com> <20140102191510.GA9621@xanatos>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="Windows-1251"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn1hn0126.outbound.protection.outlook.com ([157.56.110.126]:57464
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751067AbaABTqD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 2 Jan 2014 14:46:03 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20140102191510.GA9621@xanatos>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Sarah Sharp <sarah.a.sharp@linux.intel.com>, walt <w41ter@gmail.com>, Alan Stern <stern@rowland.harvard.edu>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-kernel@vger.kernel.org, stable@vger.kernel.org, David Laight <david.laight@aculab.com>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Can we invest in your country.My name is Mr.Tom Hook a banker here; there is an unfinished business transaction in my branch. This is a business that will profit both of us, if you are interested get back to me for more details please because the money needs to invest outside my country. I wait for your quick response
-Mr. Tom Hook
+On 14-01-02 02:15 PM, Sarah Sharp wrote:
+> On Tue, Dec 31, 2013 at 12:40:16PM -0800, walt wrote:
+..
+>> Unfortunately this patch causes a regression when copying large files to my
+>> outboard USB3 drive. (Nothing at all to do with networking.)
+>>
+>> When I try to copy a large (20GB) file to the USB3 drive, the copy dies after
+>> about 7GB, the ext4 journal aborts and the drive is remounted read-only.
+>>
+>> This bug is 100% reproducible (always pretty close to 7GB) and reverting this
+>> patch completely fixes the problem.
+> 
+> Ok, I had feared that would be a consequence of this patch.  I think the
+> problem is that the usb-storage driver submitted an URB with more
+> scatter-gather entries than would fit on the ring segment, the xHCI
+> driver rejected the URB with -ENOMEM, and the SCSI core eventually gave
+> up on the SCSI command.
+
+
+Is there not a block layer / scheduler tunable for max sg entries or something?
+-- 
+Mark Lord
+Real-Time Remedies Inc.
+mlord@pobox.com
