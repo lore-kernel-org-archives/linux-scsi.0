@@ -1,42 +1,86 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 60644] MPT2SAS drops all HDDs when under high I/O
-Date: Thu, 02 Jan 2014 14:40:44 +0000
-Message-ID: <bug-60644-11613-anrRlIFuwb@https.bugzilla.kernel.org/>
-References: <bug-60644-11613@https.bugzilla.kernel.org/>
+From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Subject: Re: [PATCH 3.12 033/118] usb: xhci: Link TRB must not occur within a
+ USB payload burst
+Date: Thu, 2 Jan 2014 11:15:10 -0800
+Message-ID: <20140102191510.GA9621@xanatos>
+References: <20131218211219.461663463@linuxfoundation.org>
+ <20131218211220.412278148@linuxfoundation.org>
+ <52C32BB0.90600@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:56820 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750814AbaABOkt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 2 Jan 2014 09:40:49 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id E9DF520172
-	for <linux-scsi@vger.kernel.org>; Thu,  2 Jan 2014 14:40:46 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-	by mail.kernel.org (Postfix) with ESMTP id BB43020160
-	for <linux-scsi@vger.kernel.org>; Thu,  2 Jan 2014 14:40:45 +0000 (UTC)
-In-Reply-To: <bug-60644-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <stable-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <52C32BB0.90600@gmail.com>
+Sender: stable-owner@vger.kernel.org
+To: walt <w41ter@gmail.com>, Alan Stern <stern@rowland.harvard.edu>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-kernel@vger.kernel.org, stable@vger.kernel.org, David Laight <david.laight@aculab.com>, Mark Lord <mlord@pobox.com>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=60644
+On Tue, Dec 31, 2013 at 12:40:16PM -0800, walt wrote:
+> On 12/18/2013 01:11 PM, Greg Kroah-Hartman wrote:
+> > 3.12-stable review patch.  If anyone has any objections, please let me know.
+> > 
+> > ------------------
+> > 
+> > From: David Laight <David.Laight@ACULAB.COM>
+> > 
+> > commit 35773dac5f862cb1c82ea151eba3e2f6de51ec3e upstream.
+> > 
+> > Section 4.11.7.1 of rev 1.0 of the xhci specification states that a link TRB
+> > can only occur at a boundary between underlying USB frames (512 bytes for
+> > high speed devices).
+> > 
+> > If this isn't done the USB frames aren't formatted correctly and, for example,
+> > the USB3 ethernet ax88179_178a card will stop sending...
+> 
+> 
+> Unfortunately this patch causes a regression when copying large files to my
+> outboard USB3 drive. (Nothing at all to do with networking.)
+> 
+> When I try to copy a large (20GB) file to the USB3 drive, the copy dies after
+> about 7GB, the ext4 journal aborts and the drive is remounted read-only.
+> 
+> This bug is 100% reproducible (always pretty close to 7GB) and reverting this
+> patch completely fixes the problem.
 
-Tommy Apel <tommyapeldk@gmail.com> changed:
+Ok, I had feared that would be a consequence of this patch.  I think the
+problem is that the usb-storage driver submitted an URB with more
+scatter-gather entries than would fit on the ring segment, the xHCI
+driver rejected the URB with -ENOMEM, and the SCSI core eventually gave
+up on the SCSI command.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |tommyapeldk@gmail.com
+Do you have CONFIG_USB_DEBUG turned on for 3.13?  If so, you should see
+dmesg output from this statement shortly before your drive fails:
 
---- Comment #36 from Tommy Apel <tommyapeldk@gmail.com> ---
-Hello all,
+if (num_trbs >= TRBS_PER_SEGMENT) {
+	xhci_err(xhci, "Too many fragments %d, max %d\n",
+		num_trbs, TRBS_PER_SEGMENT - 1);
+	return -ENOMEM;
+}
 
-I'm currently hitting this problem consistently with kernel 3.10.25 during
-MDRAID6 resync, one thing that I found that will stop this from happening is to
-disable SERR and PERR in BIOS, I don't know if that helps.
+> (Note to Sarah:  I recently emailed you about this problem, and I *wrongly*
+> said that reverting the patch doesn't help.  That was a mistake, sorry.)
+> 
+> I'm happy to try any debugging suggestions/tricks.
 
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+Unfortunately a real fix for this is going to take a bit.  I have a
+couple different solutions to the bug the patch solved, but they're much
+more invasive than the original patch and will take a couple weeks to
+implement and thoroughly test.
+
+If David's patch is just reverted, USB ethernet on 3.12 and later breaks
+under xHCI.  The networking folks added scatter-gather support in 3.12.
+Those patches could be reverted, but I suspect David Miller will not be
+happy with that solution, since the real problem is the xHCI driver
+itself, and EHCI scatter-gather works fine.
+
+I think the short term solution is to simply turn off scatter-gather all
+together under xHCI until this gets fixed.  It could mean a big
+performance hit for USB storage devices, but that means we get correct
+behavior for both USB ethernet and USB storage.
+
+> BTW, please tell me if I've cc'd too many people.
+
+Nope, you're fine.  I've Cc'ed the USB and SCSI mailing lists as well.
+
+Sarah Sharp
