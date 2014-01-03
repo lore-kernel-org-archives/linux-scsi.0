@@ -1,84 +1,176 @@
-From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-Subject: Re: [RFC 0/2] target refcounting infrastructure fixes for usb
-Date: Fri, 3 Jan 2014 14:00:41 -0800
-Message-ID: <20140103220041.GC4193@xanatos>
-References: <20131220231810.GA2835@xanatos>
- <Pine.LNX.4.44L0.1312211547490.12252-100000@netrider.rowland.org>
- <20140103004551.GA2970@xanatos>
- <52C67B4D.9060101@redhat.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: Bug#733565: SIX messages per on boot console should be TWO
+Date: Fri, 03 Jan 2014 18:19:26 -0500
+Message-ID: <yq14n5kzm9t.fsf@sermon.lab.mkp.net>
+References: <87vby7l08j.fsf@jidanni.org>
+	<1388373281.2900.42.camel@deadeye.wl.decadent.org.uk>
+	<yq1ob3szun7.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:9867 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753105AbaACWAn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 3 Jan 2014 17:00:43 -0500
-Content-Disposition: inline
-In-Reply-To: <52C67B4D.9060101@redhat.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:32440 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753872AbaACXTu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Jan 2014 18:19:50 -0500
+In-Reply-To: <yq1ob3szun7.fsf@sermon.lab.mkp.net> (Martin K. Petersen's
+	message of "Fri, 03 Jan 2014 15:18:36 -0500")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hans de Goede <hdegoede@redhat.com>, Greg KH <gregkh@linuxfoundation.org>
-Cc: Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, USB list <linux-usb@vger.kernel.org>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Ben Hutchings <ben@decadent.org.uk>, jidanni@jidanni.org, 733565@bugs.debian.org, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Fri, Jan 03, 2014 at 09:56:45AM +0100, Hans de Goede wrote:
-> Hi,
-> 
-> On 01/03/2014 01:45 AM, Sarah Sharp wrote:
-> >Ok, Alan's additional patch fixed the warnings I was seeing on UAS
-> >device unplug.  James, can you Cc me on the finished patch when you send
-> >it in?
-> >
-> >Hans, I don't want to send the UAS patches off to Greg until James'
-> >patches get into mainline.  I believe Greg's usb-next tree is frozen at
-> >this point, so they'll have to wait until 3.15.
-> 
-> Ugh, I must say I'm rather unhappy about this, waiting till 3.14 to give
-> time to shake things out was fine. But since the start of the 3.13 cycle,
-> there have been no issues found in the xhci / uas code.
+>>>>> "Martin" == Martin K Petersen <martin.petersen@oracle.com> writes:
 
-I completely understand why you're unhappy.  I agree that the pull
-request you sent me on Nov 18th is fine (aside from not being a GPG
-signed git tag). [1]  I also agree that the UAS and xHCI driver changes
-have been stable during my testing, other than triggering the SCSI oops
-on UAS disconnect.
+Martin> I guess we could extend the first_scan logic to cover the error
+Martin> case scenarios.
 
-> Yes it triggered an existing problem in another subsys, but the code itself
-> has been issue free all this time. If Greg's tree is indeed already frozen I
-> would rather have us asking an exception for this.
+[SCSI] sd: Quiesce mode sense error messages
 
-Detach yourself emotionally from your code and look at this request from
-a maintainer's perspective.
+Messages about discovered disk properties are only printed once unless
+they are found to have changed. Errors encountered during mode sense,
+however, are printed every time we revalidate.
 
-You're asking me to push 69 patches to Greg after -rc6 is out, for a
-driver that's been marked broken for several kernel releases (uas).  The
-patches enable a feature that's been basically untested across all xHCI
-host controllers (streams), and they add new userspace API for usbfs to
-expose streams.
+Quiesce mode sense errors so they are only printed during the first
+scan.
 
-In the meantime, there's a big push to get code into linux-next at least
-a week or two before the merge window opens.  I sent my last pull request
-on Dec 20th, and Felipe closed his USB gadget tree on Dec 26th.  I had
-hoped to get the SCSI issue settled so I could send in the UAS patches
-on the 20th, but that didn't happen.  My tree is closed.
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 
-These fixes should get merged (and will!), but I will not ask Greg for
-an exception to get these patches into 3.14.
-
-> Alternatively we could add all of it to 3.14 except for the patch removing
-> the BROKEN marking from uas. Or at least all the non uas bits, which are
-> useful to have by themselves.
-
-I think the best way to proceed with this is for me to queue all the
-xHCI patches in that pull request for usb-next once 3.14-rc1 is out, and
-then you send a separate pull request to Greg.  You're going to need to
-be able to send him pull requests with a signed git tag in the future
-anyway.
-
-> James, what is the status of getting the fix for the refcount issue into
-> mainline ?
-
-(Greg, James will be queuing the SCSI fix for the 3.14 merge window.)
-
-Sarah Sharp
-
-[1] http://marc.info/?l=linux-usb&m=138478555324055&w=2
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 69725f7c32c1..14d601ed1956 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -2283,7 +2283,7 @@ sd_read_write_protect_flag(struct scsi_disk *sdkp, unsigned char *buffer)
+ 
+ 	set_disk_ro(sdkp->disk, 0);
+ 	if (sdp->skip_ms_page_3f) {
+-		sd_printk(KERN_NOTICE, sdkp, "Assuming Write Enabled\n");
++		sd_first_printk(KERN_NOTICE, sdkp, "Assuming Write Enabled\n");
+ 		return;
+ 	}
+ 
+@@ -2315,7 +2315,7 @@ sd_read_write_protect_flag(struct scsi_disk *sdkp, unsigned char *buffer)
+ 	}
+ 
+ 	if (!scsi_status_is_good(res)) {
+-		sd_printk(KERN_WARNING, sdkp,
++		sd_first_printk(KERN_WARNING, sdkp,
+ 			  "Test WP failed, assume Write Enabled\n");
+ 	} else {
+ 		sdkp->write_prot = ((data.device_specific & 0x80) != 0);
+@@ -2383,7 +2383,8 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
+ 	if (!data.header_length) {
+ 		modepage = 6;
+ 		first_len = 0;
+-		sd_printk(KERN_ERR, sdkp, "Missing header in MODE_SENSE response\n");
++		sd_first_printk(KERN_ERR, sdkp,
++				"Missing header in MODE_SENSE response\n");
+ 	}
+ 
+ 	/* that went OK, now ask for the proper length */
+@@ -2396,7 +2397,7 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
+ 	if (len < 3)
+ 		goto bad_sense;
+ 	else if (len > SD_BUF_SIZE) {
+-		sd_printk(KERN_NOTICE, sdkp, "Truncating mode parameter "
++		sd_first_printk(KERN_NOTICE, sdkp, "Truncating mode parameter "
+ 			  "data from %d to %d bytes\n", len, SD_BUF_SIZE);
+ 		len = SD_BUF_SIZE;
+ 	}
+@@ -2419,8 +2420,9 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
+ 				/* We're interested only in the first 3 bytes.
+ 				 */
+ 				if (len - offset <= 2) {
+-					sd_printk(KERN_ERR, sdkp, "Incomplete "
+-						  "mode parameter data\n");
++					sd_first_printk(KERN_ERR, sdkp,
++						"Incomplete mode parameter "
++							"data\n");
+ 					goto defaults;
+ 				} else {
+ 					modepage = page_code;
+@@ -2434,14 +2436,15 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
+ 				else if (!spf && len - offset > 1)
+ 					offset += 2 + buffer[offset+1];
+ 				else {
+-					sd_printk(KERN_ERR, sdkp, "Incomplete "
+-						  "mode parameter data\n");
++					sd_first_printk(KERN_ERR, sdkp,
++							"Incomplete mode "
++							"parameter data\n");
+ 					goto defaults;
+ 				}
+ 			}
+ 		}
+ 
+-		sd_printk(KERN_ERR, sdkp, "No Caching mode page found\n");
++		sd_first_printk(KERN_ERR, sdkp, "No Caching mode page found\n");
+ 		goto defaults;
+ 
+ 	Page_found:
+@@ -2455,7 +2458,7 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
+ 
+ 		sdkp->DPOFUA = (data.device_specific & 0x10) != 0;
+ 		if (sdkp->DPOFUA && !sdkp->device->use_10_for_rw) {
+-			sd_printk(KERN_NOTICE, sdkp,
++			sd_first_printk(KERN_NOTICE, sdkp,
+ 				  "Uses READ/WRITE(6), disabling FUA\n");
+ 			sdkp->DPOFUA = 0;
+ 		}
+@@ -2477,16 +2480,19 @@ bad_sense:
+ 	    sshdr.sense_key == ILLEGAL_REQUEST &&
+ 	    sshdr.asc == 0x24 && sshdr.ascq == 0x0)
+ 		/* Invalid field in CDB */
+-		sd_printk(KERN_NOTICE, sdkp, "Cache data unavailable\n");
++		sd_first_printk(KERN_NOTICE, sdkp, "Cache data unavailable\n");
+ 	else
+-		sd_printk(KERN_ERR, sdkp, "Asking for cache data failed\n");
++		sd_first_printk(KERN_ERR, sdkp,
++				"Asking for cache data failed\n");
+ 
+ defaults:
+ 	if (sdp->wce_default_on) {
+-		sd_printk(KERN_NOTICE, sdkp, "Assuming drive cache: write back\n");
++		sd_first_printk(KERN_NOTICE, sdkp,
++				"Assuming drive cache: write back\n");
+ 		sdkp->WCE = 1;
+ 	} else {
+-		sd_printk(KERN_ERR, sdkp, "Assuming drive cache: write through\n");
++		sd_first_printk(KERN_ERR, sdkp,
++				"Assuming drive cache: write through\n");
+ 		sdkp->WCE = 0;
+ 	}
+ 	sdkp->RCD = 0;
+@@ -2515,7 +2521,7 @@ static void sd_read_app_tag_own(struct scsi_disk *sdkp, unsigned char *buffer)
+ 
+ 	if (!scsi_status_is_good(res) || !data.header_length ||
+ 	    data.length < 6) {
+-		sd_printk(KERN_WARNING, sdkp,
++		sd_first_printk(KERN_WARNING, sdkp,
+ 			  "getting Control mode page failed, assume no ATO\n");
+ 
+ 		if (scsi_sense_valid(&sshdr))
+@@ -2527,7 +2533,7 @@ static void sd_read_app_tag_own(struct scsi_disk *sdkp, unsigned char *buffer)
+ 	offset = data.header_length + data.block_descriptor_length;
+ 
+ 	if ((buffer[offset] & 0x3f) != 0x0a) {
+-		sd_printk(KERN_ERR, sdkp, "ATO Got wrong page\n");
++		sd_first_printk(KERN_ERR, sdkp, "ATO Got wrong page\n");
+ 		return;
+ 	}
+ 
+diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+index 26895ff247c5..59956e9a5b80 100644
+--- a/drivers/scsi/sd.h
++++ b/drivers/scsi/sd.h
+@@ -104,6 +104,11 @@ static inline struct scsi_disk *scsi_disk(struct gendisk *disk)
+ 		    (sdsk)->disk->disk_name, ##a) :			\
+ 	sdev_printk(prefix, (sdsk)->device, fmt, ##a)
+ 
++#define sd_first_printk(prefix,sdsk, fmt, a...)				\
++	do {								\
++	if ((sdkp)->first_scan) sd_printk(prefix, sdsk, fmt, ##a);	\
++	} while (0)
++
+ static inline int scsi_medium_access_command(struct scsi_cmnd *scmd)
+ {
+ 	switch (scmd->cmnd[0]) {
