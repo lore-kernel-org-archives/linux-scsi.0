@@ -1,66 +1,42 @@
-From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [RFC 0/2] target refcounting infrastructure fixes for usb
-Date: Fri, 03 Jan 2014 09:56:45 +0100
-Message-ID: <52C67B4D.9060101@redhat.com>
-References: <20131220231810.GA2835@xanatos> <Pine.LNX.4.44L0.1312211547490.12252-100000@netrider.rowland.org> <20140103004551.GA2970@xanatos>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: status of block-integrity
+Date: Fri, 03 Jan 2014 16:01:47 +0100
+Message-ID: <52C6D0DB.1050906@suse.de>
+References: <20131222192128.GA28532@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20140103004551.GA2970@xanatos>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Sarah Sharp <sarah.a.sharp-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Cc: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20131222192128.GA28532@infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi,
-
-On 01/03/2014 01:45 AM, Sarah Sharp wrote:
-> On Sat, Dec 21, 2013 at 03:51:25PM -0500, Alan Stern wrote:
->> On Fri, 20 Dec 2013, Sarah Sharp wrote:
->>
->>> On Thu, Dec 19, 2013 at 11:48:47AM -0800, James Bottomley wrote:
->>>> It should apply incrementally on top of the previous two.  If it
->>>> actually works, I'll fold it into the first patch.
->>>
->>> Well, it doesn't oops anymore, but it does generate a pile of warnings:
->>
->> This was a simple oversight.  scsi_target_reap() was called at the
->> start of __scsi_remove_device(), but it should be called at the end.
->> The patch below, applied on top of James's three patches, will fix the
->> warnings.
->>
->> Alan Stern
->>
->> P.S.: The comment isn't entirely correct any more...
+On 12/22/2013 08:21 PM, Christoph Hellwig wrote:
+> We have the block integrity code to support DIF/DIX in the the tree f=
+or
+> about 5 and a half years, and we still don't have a single consumer o=
+f
+> it.  By normal kernel rules it should never have been merged, or at
+> least the bitrot long removed.
 >
-> Ok, Alan's additional patch fixed the warnings I was seeing on UAS
-> device unplug.  James, can you Cc me on the finished patch when you send
-> it in?
->
-> Hans, I don't want to send the UAS patches off to Greg until James'
-> patches get into mainline.  I believe Greg's usb-next tree is frozen at
-> this point, so they'll have to wait until 3.15.
+> Given that we'll have a lot of work to do in this area with block
+> multiqueue I think it's time to either kill it off for good or make s=
+ure
+> we can actually use and test it.
 
-Ugh, I must say I'm rather unhappy about this, waiting till 3.14 to give
-time to shake things out was fine. But since the start of the 3.13 cycle,
-there have been no issues found in the xhci / uas code.
+Which would make an ideal topic for LSF, wouldn't it?
 
-Yes it triggered an existing problem in another subsys, but the code itself
-has been issue free all this time. If Greg's tree is indeed already frozen I
-would rather have us asking an exception for this.
+Personally, I doubt it's a good idea to kill it off, but
+a proper (userland) API for it has been a long time missing.
 
-Alternatively we could add all of it to 3.14 except for the patch removing
-the BROKEN marking from uas. Or at least all the non uas bits, which are
-useful to have by themselves.
+Cheers,
 
-James, what is the status of getting the fix for the refcount issue into
-mainline ?
-
-Regards,
-
-Hans
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
