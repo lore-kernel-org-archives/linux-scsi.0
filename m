@@ -1,23 +1,98 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH v7 4/4] arm64: Add APM X-Gene SoC SATA host controller DTS entries
-Date: Fri, 3 Jan 2014 20:28:05 +0100
-Message-ID: <201401032028.05488.arnd@arndb.de>
-References: <1388708539-333-1-git-send-email-lho@apm.com> <201401031633.18110.arnd@arndb.de> <CAPw-ZTnpG_qOWs7tZjDc2z+1nG0h7p6ojfuk5ZOLAYxRrb7N=A@mail.gmail.com>
+From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Subject: Re: [PATCH 3.12 033/118] usb: xhci: Link TRB must not occur within a
+ USB payload burst
+Date: Fri, 3 Jan 2014 11:54:55 -0800
+Message-ID: <20140103195455.GA4193@xanatos>
+References: <20131218211219.461663463@linuxfoundation.org>
+ <20131218211220.412278148@linuxfoundation.org>
+ <52C32BB0.90600@gmail.com>
+ <20140102191510.GA9621@xanatos>
+ <52C6D9F1.9000709@gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <CAPw-ZTnpG_qOWs7tZjDc2z+1nG0h7p6ojfuk5ZOLAYxRrb7N=A@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Loc Ho <lho@apm.com>
-Cc: Olof Johansson <olof@lixom.net>, Tejun Heo <tj@kernel.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Jon Masters <jcm@redhat.com>, "patches@apm.com" <patches@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <52C6D9F1.9000709@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: walt <w41ter@gmail.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-kernel@vger.kernel.org, stable@vger.kernel.org, David Laight <david.laight@aculab.com>, Mark Lord <mlord@pobox.com>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Friday 03 January 2014, Loc Ho wrote:
-> Okay I miss understood this... I will need to fix the X-Gene device
-> parent clocks as well in an separate patch to the clock driver owner.
+On Fri, Jan 03, 2014 at 07:40:33AM -0800, walt wrote:
+> On 01/02/2014 11:15 AM, Sarah Sharp wrote:
+> > On Tue, Dec 31, 2013 at 12:40:16PM -0800, walt wrote:
+> >> On 12/18/2013 01:11 PM, Greg Kroah-Hartman wrote:
+> >>> 3.12-stable review patch.  If anyone has any objections, please let me know.
+> >>>
+> >>> ------------------
+> >>>
+> >>> From: David Laight <David.Laight@ACULAB.COM>
+> >>>
+> >>> commit 35773dac5f862cb1c82ea151eba3e2f6de51ec3e upstream.
+> >>>
+> >>> Section 4.11.7.1 of rev 1.0 of the xhci specification states that a link TRB
+> >>> can only occur at a boundary between underlying USB frames (512 bytes for
+> >>> high speed devices).
+> >>>
+> >>> If this isn't done the USB frames aren't formatted correctly and, for example,
+> >>> the USB3 ethernet ax88179_178a card will stop sending...
+> >>
+> >>
+> >> Unfortunately this patch causes a regression when copying large files to my
+> >> outboard USB3 drive. (Nothing at all to do with networking.)
+> 
+> > Do you have CONFIG_USB_DEBUG turned on for 3.13?  If so, you should see
+> > dmesg output from this statement shortly before your drive fails:
+> > 
+> > if (num_trbs >= TRBS_PER_SEGMENT) {
+> > 	xhci_err(xhci, "Too many fragments %d, max %d\n",
+> > 		num_trbs, TRBS_PER_SEGMENT - 1);
+> > 	return -ENOMEM;
+> > }
+> 
+> Well, the answers depend on whether the usb3 drive uses logical volumes or not
+> (lvm2), which I can't explain.  What I've described so far is with lvm2.
+> 
+> When using lvm2 on the usb3 drive, turning on USB_DEBUG has *no* effect -- the
+> console prints two or three lines stating that the ext4 journal has quit and
+> the drive is remounted ro.  That particular drive stays wedged until the next
+> reboot, but no other ill effects to the system.
 
-Ok, thanks!
+Odd. In 3.12 xHCI has dynamic debugging, and turning on CONFIG_USB_DEBUG
+should turn on debugging by default, so it's confusing that you didn't
+see any messages.
 
-	Arnd
+Can I see your .config from /boot/?  Also, did you try capturing dmesg
+with `tail -f /var/log/kern.log` or just dmesg?  Perhaps you need to run
+`sudo dmesg -n 7`?
+
+> OTOH, when I put a disk with just an ordinary ext4 partition in the usb3 dock,
+> (no logical volumes) the copy failure becomes catastrophic, with kernel panic
+> messages, leaving the system unresponsive and needing a hard reset to recover.
+> 
+> I also tried your other suggestion:
+> 
+> diff --git a/drivers/usb/host/xhci.c b/drivers/usb/host/xhci.c
+> index 4265b48..1a6a43d 100644
+> --- a/drivers/usb/host/xhci.c
+> +++ b/drivers/usb/host/xhci.c
+> @@ -4714,7 +4714,7 @@ int xhci_gen_setup(struct usb_hcd *hcd, xhci_get_quirks_t get_quirks)
+>         int                     retval;
+>  
+>         /* Accept arbitrarily long scatter-gather lists */
+> -       hcd->self.sg_tablesize = ~0;
+> +       hcd->self.sg_tablesize = 31;
+>  
+>         /* support to build packet from discontinuous buffers */
+>         hcd->self.no_sg_constraint = 1;
+> 
+> Sadly it didn't fix the problem.  Did I get the patch right?
+
+Yes, you did.  So perhaps the patch triggers a different bug.  I can't
+tell until I see xHCI debugging output.
+
+> Thanks for your help, and I'm happy to try more ideas, as always.
+
+Thanks for your patience. :)
+
+Sarah Sharp
