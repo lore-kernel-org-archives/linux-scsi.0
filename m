@@ -1,88 +1,53 @@
-From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Subject: Re: [RFC 2/2] dual scan thread bug fix
-Date: Fri, 3 Jan 2014 10:58:20 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1401031047150.15237-100000@netrider.rowland.org>
-References: <1388709533.2399.34.camel@dabdike.int.hansenpartnership.com>
+From: Loc Ho <lho@apm.com>
+Subject: Re: [PATCH v7 4/4] arm64: Add APM X-Gene SoC SATA host controller DTS entries
+Date: Fri, 3 Jan 2014 09:23:55 -0800
+Message-ID: <CAPw-ZTnpG_qOWs7tZjDc2z+1nG0h7p6ojfuk5ZOLAYxRrb7N=A@mail.gmail.com>
+References: <1388708539-333-1-git-send-email-lho@apm.com>
+	<1388708539-333-4-git-send-email-lho@apm.com>
+	<1388708539-333-5-git-send-email-lho@apm.com>
+	<201401031633.18110.arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1388709533.2399.34.camel-sFMDBYUN5F8GjUHQrlYNx2Wm91YjaHnnhRte9Li2A+AAvxtiuMwx3w@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Cc: linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from exprod5og105.obsmtp.com ([64.18.0.180]:52341 "HELO
+	exprod5og105.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751217AbaACRX4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Jan 2014 12:23:56 -0500
+Received: by mail-qc0-f177.google.com with SMTP id m20so14791914qcx.22
+        for <linux-scsi@vger.kernel.org>; Fri, 03 Jan 2014 09:23:55 -0800 (PST)
+In-Reply-To: <201401031633.18110.arnd@arndb.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Olof Johansson <olof@lixom.net>, Tejun Heo <tj@kernel.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Jon Masters <jcm@redhat.com>, "patches@apm.com" <patches@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 
-On Thu, 2 Jan 2014, James Bottomley wrote:
+Hi,
 
-> In the highly unusual case where two threads are running concurrently through
-> the scanning code scanning the same target, we run into the situation where
-> one may allocate the target while the other is still using it.  In this case,
-> because the reap checks for STARGET_CREATED and kills the target without
-> reference counting, the second thread will do the wrong thing on reap.
-> 
-> Fix this by reference counting even creates and doing the STARGET_CREATED
-> check in the final put.
+>> +                       sata23clk: sata23clk@1f22c000 {
+>> +                               compatible = "apm,xgene-device-clock";
+>> +                               #clock-cells = <1>;
+>> +                               clocks = <&socplldiv2 0>;
+>> +                               clock-names = "sata23clk";
+>
+>> +                       };
+>> +
+>> +                       sata45clk: sata45clk@1f23c000 {
+>> +                               compatible = "apm,xgene-device-clock";
+>> +                               #clock-cells = <1>;
+>> +                               clocks = <&socplldiv2 0>;
+>> +                               clock-names = "sata45clk";
+>
+> Something is wrong here: You have two devices with the same "compatible"
+> string but using different "clock-names" strings. The binding document
+> lists this as an optional property with the description  "shall be
+> the name of the device clock. If missing, use the device name", which
+> doesn't seem to make any sense.
+>
+> Please fix the binding and the existing users of this, and don't introduce
+> any more broken instances. Since each device clock is documented to
+> have only one parent anyway, please just make it an anonymous clock.
 
-I'm still concerned about one thing.  The previous patch does this in
-scsi_alloc_target():
+Okay I miss understood this... I will need to fix the X-Gene device
+parent clocks as well in an separate patch to the clock driver owner.
 
->   found:
-> -	found_target->reap_ref++;
-> +	if (!kref_get_unless_zero(&found_target->reap_ref))
-> +		/*
-> +		 * release routine already fired.  Target is dead, but
-> +		 * STARGET_DEL may not yet be set (set in the release
-> +		 * routine), so set here as well, just in case
-> +		 */
-> +		found_target->state = STARGET_DEL;
->  	spin_unlock_irqrestore(shost->host_lock, flags);
-
-As a result, the two comments in this patch aren't right:
-
-> @@ -384,9 +385,15 @@ static void scsi_target_reap_ref_release(struct kref *kref)
->  	struct scsi_target *starget
->  		= container_of(kref, struct scsi_target, reap_ref);
->  
-> -	transport_remove_device(&starget->dev);
-> -	device_del(&starget->dev);
-> -	starget->state = STARGET_DEL;
-> +	/*
-> +	 * if we get here and the target is still in the CREATED state that
-> +	 * means it was allocated but never made visible (because a scan
-> +	 * turned up no LUNs), so don't call device_del() on it.
-> +	 */
-> +	if (starget->state == STARGET_RUNNING) {
-> +		transport_remove_device(&starget->dev);
-> +		device_del(&starget->dev);
-> +	}
-
-Here the state could already be STARGET_DEL, even though the target is
-still visible.
-
-Also, it's a little odd that the comment talks about CREATED but the 
-code really checks for RUNNING.  They should be consistent.
-
-> @@ -506,11 +513,13 @@ static struct scsi_target *scsi_alloc_target(struct device *parent,
->   */
->  void scsi_target_reap(struct scsi_target *starget)
->  {
-> +	/*
-> +	 * serious problem if this triggers: STARGET_DEL is only set in the
-> +	 * kref release routine, so we're doing another final put on an
-> +	 * already released kref
-> +	 */
->  	BUG_ON(starget->state == STARGET_DEL);
-
-Here the code is okay but the comment is wrong: STARGET_DEL is set in 
-_two_ places (but neither of them runs until reap_ref has reached 0).
-
-Would it be better in scsi_alloc_target() to behave as though the state 
-were STARGET_DEL without actually setting it?
-
-Alan Stern
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-Loc
