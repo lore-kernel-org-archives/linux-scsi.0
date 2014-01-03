@@ -1,86 +1,80 @@
-From: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Subject: [RFC 2/2] dual scan thread bug fix
-Date: Thu, 02 Jan 2014 16:38:53 -0800
-Message-ID: <1388709533.2399.34.camel@dabdike.int.hansenpartnership.com>
-References: <1388709362.2399.31.camel@dabdike.int.hansenpartnership.com>
+From: Sarah Sharp <sarah.a.sharp-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Subject: Re: [RFC 0/2] target refcounting infrastructure fixes for usb
+Date: Thu, 2 Jan 2014 16:45:51 -0800
+Message-ID: <20140103004551.GA2970@xanatos>
+References: <20131220231810.GA2835@xanatos>
+ <Pine.LNX.4.44L0.1312211547490.12252-100000@netrider.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1388709362.2399.31.camel-sFMDBYUN5F8GjUHQrlYNx2Wm91YjaHnnhRte9Li2A+AAvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.1312211547490.12252-100000-pYrvlCTfrz9XsRXLowluHWD2FQJk+8+b@public.gmane.org>
 Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Cc: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Cc: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-In the highly unusual case where two threads are running concurrently through
-the scanning code scanning the same target, we run into the situation where
-one may allocate the target while the other is still using it.  In this case,
-because the reap checks for STARGET_CREATED and kills the target without
-reference counting, the second thread will do the wrong thing on reap.
+On Sat, Dec 21, 2013 at 03:51:25PM -0500, Alan Stern wrote:
+> On Fri, 20 Dec 2013, Sarah Sharp wrote:
+> 
+> > On Thu, Dec 19, 2013 at 11:48:47AM -0800, James Bottomley wrote:
+> > > It should apply incrementally on top of the previous two.  If it
+> > > actually works, I'll fold it into the first patch.
+> > 
+> > Well, it doesn't oops anymore, but it does generate a pile of warnings:
+> 
+> This was a simple oversight.  scsi_target_reap() was called at the
+> start of __scsi_remove_device(), but it should be called at the end.
+> The patch below, applied on top of James's three patches, will fix the
+> warnings.
+> 
+> Alan Stern
+> 
+> P.S.: The comment isn't entirely correct any more...
 
-Fix this by reference counting even creates and doing the STARGET_CREATED
-check in the final put.
+Ok, Alan's additional patch fixed the warnings I was seeing on UAS
+device unplug.  James, can you Cc me on the finished patch when you send
+it in?
 
-Signed-off-by: James Bottomley <JBottomley-MU7nAjRaF3makBO8gow8eQ@public.gmane.org>
----
- drivers/scsi/scsi_scan.c | 23 ++++++++++++++++-------
- 1 file changed, 16 insertions(+), 7 deletions(-)
+Hans, I don't want to send the UAS patches off to Greg until James'
+patches get into mainline.  I believe Greg's usb-next tree is frozen at
+this point, so they'll have to wait until 3.15.
 
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index ef3f958..82cf902 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -320,6 +320,7 @@ static void scsi_target_destroy(struct scsi_target *starget)
- 	struct Scsi_Host *shost = dev_to_shost(dev->parent);
- 	unsigned long flags;
- 
-+	starget->state = STARGET_DEL;
- 	transport_destroy_device(dev);
- 	spin_lock_irqsave(shost->host_lock, flags);
- 	if (shost->hostt->target_destroy)
-@@ -384,9 +385,15 @@ static void scsi_target_reap_ref_release(struct kref *kref)
- 	struct scsi_target *starget
- 		= container_of(kref, struct scsi_target, reap_ref);
- 
--	transport_remove_device(&starget->dev);
--	device_del(&starget->dev);
--	starget->state = STARGET_DEL;
-+	/*
-+	 * if we get here and the target is still in the CREATED state that
-+	 * means it was allocated but never made visible (because a scan
-+	 * turned up no LUNs), so don't call device_del() on it.
-+	 */
-+	if (starget->state == STARGET_RUNNING) {
-+		transport_remove_device(&starget->dev);
-+		device_del(&starget->dev);
-+	}
- 	scsi_target_destroy(starget);
- }
- 
-@@ -506,11 +513,13 @@ static struct scsi_target *scsi_alloc_target(struct device *parent,
-  */
- void scsi_target_reap(struct scsi_target *starget)
- {
-+	/*
-+	 * serious problem if this triggers: STARGET_DEL is only set in the
-+	 * kref release routine, so we're doing another final put on an
-+	 * already released kref
-+	 */
- 	BUG_ON(starget->state == STARGET_DEL);
--	if (starget->state == STARGET_CREATED)
--		scsi_target_destroy(starget);
--	else
--		scsi_target_reap_ref_put(starget);
-+	scsi_target_reap_ref_put(starget);
- }
- 
- /**
--- 
-1.8.4.3
+Sarah Sharp
 
-
-
+> Index: usb-3.13/drivers/scsi/scsi_sysfs.c
+> ===================================================================
+> --- usb-3.13.orig/drivers/scsi/scsi_sysfs.c
+> +++ usb-3.13/drivers/scsi/scsi_sysfs.c
+> @@ -1028,13 +1028,6 @@ void __scsi_remove_device(struct scsi_de
+>  {
+>  	struct device *dev = &sdev->sdev_gendev;
+>  
+> -	/*
+> -	 * Paired with the kref_get() in scsi_sysfs_initialize().  We're
+> -	 * removing sysfs visibility from the device, so make the target
+> -	 * invisible if this was the last device underneath it.
+> -	 */
+> -	scsi_target_reap(scsi_target(sdev));
+> -
+>  	if (sdev->is_visible) {
+>  		if (scsi_device_set_state(sdev, SDEV_CANCEL) != 0)
+>  			return;
+> @@ -1059,6 +1052,13 @@ void __scsi_remove_device(struct scsi_de
+>  		sdev->host->hostt->slave_destroy(sdev);
+>  	transport_destroy_device(dev);
+>  
+> +	/*
+> +	 * Paired with the kref_get() in scsi_sysfs_initialize().  We're
+> +	 * removing sysfs visibility from the device, so make the target
+> +	 * invisible if this was the last device underneath it.
+> +	 */
+> +	scsi_target_reap(scsi_target(sdev));
+> +
+>  	put_device(dev);
+>  }
+>  
+> 
 --
 To unsubscribe from this list: send the line "unsubscribe linux-usb" in
 the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
