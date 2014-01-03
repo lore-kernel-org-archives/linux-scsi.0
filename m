@@ -1,42 +1,78 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH v7 4/4] arm64: Add APM X-Gene SoC SATA host controller DTS entries
-Date: Fri, 3 Jan 2014 16:33:17 +0100
-Message-ID: <201401031633.18110.arnd@arndb.de>
-References: <1388708539-333-1-git-send-email-lho@apm.com> <1388708539-333-4-git-send-email-lho@apm.com> <1388708539-333-5-git-send-email-lho@apm.com>
+From: walt <w41ter@gmail.com>
+Subject: Re: [PATCH 3.12 033/118] usb: xhci: Link TRB must not occur within
+ a USB payload burst
+Date: Fri, 03 Jan 2014 07:40:33 -0800
+Message-ID: <52C6D9F1.9000709@gmail.com>
+References: <20131218211219.461663463@linuxfoundation.org> <20131218211220.412278148@linuxfoundation.org> <52C32BB0.90600@gmail.com> <20140102191510.GA9621@xanatos>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1388708539-333-5-git-send-email-lho@apm.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Loc Ho <lho@apm.com>
-Cc: olof@lixom.net, tj@kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, jcm@redhat.com, patches@apm.com, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20140102191510.GA9621@xanatos>
+Sender: stable-owner@vger.kernel.org
+To: Sarah Sharp <sarah.a.sharp@linux.intel.com>, Alan Stern <stern@rowland.harvard.edu>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-kernel@vger.kernel.org, stable@vger.kernel.org, David Laight <david.laight@aculab.com>, Mark Lord <mlord@pobox.com>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Friday 03 January 2014, Loc Ho wrote:
-> +                       sata23clk: sata23clk@1f22c000 {
-> +                               compatible = "apm,xgene-device-clock";
-> +                               #clock-cells = <1>;
-> +                               clocks = <&socplldiv2 0>;
-> +                               clock-names = "sata23clk";
+On 01/02/2014 11:15 AM, Sarah Sharp wrote:
+> On Tue, Dec 31, 2013 at 12:40:16PM -0800, walt wrote:
+>> On 12/18/2013 01:11 PM, Greg Kroah-Hartman wrote:
+>>> 3.12-stable review patch.  If anyone has any objections, please let me know.
+>>>
+>>> ------------------
+>>>
+>>> From: David Laight <David.Laight@ACULAB.COM>
+>>>
+>>> commit 35773dac5f862cb1c82ea151eba3e2f6de51ec3e upstream.
+>>>
+>>> Section 4.11.7.1 of rev 1.0 of the xhci specification states that a link TRB
+>>> can only occur at a boundary between underlying USB frames (512 bytes for
+>>> high speed devices).
+>>>
+>>> If this isn't done the USB frames aren't formatted correctly and, for example,
+>>> the USB3 ethernet ax88179_178a card will stop sending...
+>>
+>>
+>> Unfortunately this patch causes a regression when copying large files to my
+>> outboard USB3 drive. (Nothing at all to do with networking.)
 
-> +                       };
-> +
-> +                       sata45clk: sata45clk@1f23c000 {
-> +                               compatible = "apm,xgene-device-clock";
-> +                               #clock-cells = <1>;
-> +                               clocks = <&socplldiv2 0>;
-> +                               clock-names = "sata45clk";
+> Do you have CONFIG_USB_DEBUG turned on for 3.13?  If so, you should see
+> dmesg output from this statement shortly before your drive fails:
+> 
+> if (num_trbs >= TRBS_PER_SEGMENT) {
+> 	xhci_err(xhci, "Too many fragments %d, max %d\n",
+> 		num_trbs, TRBS_PER_SEGMENT - 1);
+> 	return -ENOMEM;
+> }
 
-Something is wrong here: You have two devices with the same "compatible"
-string but using different "clock-names" strings. The binding document
-lists this as an optional property with the description  "shall be
-the name of the device clock. If missing, use the device name", which
-doesn't seem to make any sense.
+Well, the answers depend on whether the usb3 drive uses logical volumes or not
+(lvm2), which I can't explain.  What I've described so far is with lvm2.
 
-Please fix the binding and the existing users of this, and don't introduce
-any more broken instances. Since each device clock is documented to
-have only one parent anyway, please just make it an anonymous clock.
+When using lvm2 on the usb3 drive, turning on USB_DEBUG has *no* effect -- the
+console prints two or three lines stating that the ext4 journal has quit and
+the drive is remounted ro.  That particular drive stays wedged until the next
+reboot, but no other ill effects to the system.
 
-	Arnd
+OTOH, when I put a disk with just an ordinary ext4 partition in the usb3 dock,
+(no logical volumes) the copy failure becomes catastrophic, with kernel panic
+messages, leaving the system unresponsive and needing a hard reset to recover.
+
+I also tried your other suggestion:
+
+diff --git a/drivers/usb/host/xhci.c b/drivers/usb/host/xhci.c
+index 4265b48..1a6a43d 100644
+--- a/drivers/usb/host/xhci.c
++++ b/drivers/usb/host/xhci.c
+@@ -4714,7 +4714,7 @@ int xhci_gen_setup(struct usb_hcd *hcd, xhci_get_quirks_t get_quirks)
+        int                     retval;
+ 
+        /* Accept arbitrarily long scatter-gather lists */
+-       hcd->self.sg_tablesize = ~0;
++       hcd->self.sg_tablesize = 31;
+ 
+        /* support to build packet from discontinuous buffers */
+        hcd->self.no_sg_constraint = 1;
+
+Sadly it didn't fix the problem.  Did I get the patch right?
+
+Thanks for your help, and I'm happy to try more ideas, as always.
