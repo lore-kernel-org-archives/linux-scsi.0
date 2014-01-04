@@ -1,86 +1,84 @@
-From: Mark Lord <mlord@pobox.com>
-Subject: Re: [PATCH 3.12 033/118] usb: xhci: Link TRB must not occur within
- a USB payload burst
-Date: Sat, 04 Jan 2014 09:03:26 -0500
-Message-ID: <52C814AE.2040402@pobox.com>
-References: <20131218211219.461663463@linuxfoundation.org> <20131218211220.412278148@linuxfoundation.org> <52C32BB0.90600@gmail.com> <20140102191510.GA9621@xanatos> <52C6D9F1.9000709@gmail.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [RFC 2/2] dual scan thread bug fix
+Date: Sat, 4 Jan 2014 11:27:35 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1401041119030.31700-100000@netrider.rowland.org>
+References: <1388814065.6687.0.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <52C6D9F1.9000709@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: walt <w41ter@gmail.com>, Sarah Sharp <sarah.a.sharp@linux.intel.com>, Alan Stern <stern@rowland.harvard.edu>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-kernel@vger.kernel.org, stable@vger.kernel.org, David Laight <david.laight@aculab.com>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from netrider.rowland.org ([192.131.102.5]:36694 "HELO
+	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754513AbaADQ1i (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 4 Jan 2014 11:27:38 -0500
+In-Reply-To: <1388814065.6687.0.camel@dabdike.int.hansenpartnership.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, USB list <linux-usb@vger.kernel.org>
 
-On 14-01-03 10:40 AM, walt wrote:
-> On 01/02/2014 11:15 AM, Sarah Sharp wrote:
->> On Tue, Dec 31, 2013 at 12:40:16PM -0800, walt wrote:
->>> On 12/18/2013 01:11 PM, Greg Kroah-Hartman wrote:
->>>> 3.12-stable review patch.  If anyone has any objections, please let me know.
->>>>
->>>> ------------------
->>>>
->>>> From: David Laight <David.Laight@ACULAB.COM>
->>>>
->>>> commit 35773dac5f862cb1c82ea151eba3e2f6de51ec3e upstream.
->>>>
->>>> Section 4.11.7.1 of rev 1.0 of the xhci specification states that a link TRB
->>>> can only occur at a boundary between underlying USB frames (512 bytes for
->>>> high speed devices).
->>>>
->>>> If this isn't done the USB frames aren't formatted correctly and, for example,
->>>> the USB3 ethernet ax88179_178a card will stop sending...
->>>
->>>
->>> Unfortunately this patch causes a regression when copying large files to my
->>> outboard USB3 drive. (Nothing at all to do with networking.)
-> 
->> Do you have CONFIG_USB_DEBUG turned on for 3.13?  If so, you should see
->> dmesg output from this statement shortly before your drive fails:
->>
->> if (num_trbs >= TRBS_PER_SEGMENT) {
->> 	xhci_err(xhci, "Too many fragments %d, max %d\n",
->> 		num_trbs, TRBS_PER_SEGMENT - 1);
->> 	return -ENOMEM;
->> }
-> 
-> Well, the answers depend on whether the usb3 drive uses logical volumes or not
-> (lvm2), which I can't explain.  What I've described so far is with lvm2.
-> 
-> When using lvm2 on the usb3 drive, turning on USB_DEBUG has *no* effect -- the
-> console prints two or three lines stating that the ext4 journal has quit and
-> the drive is remounted ro.  That particular drive stays wedged until the next
-> reboot, but no other ill effects to the system.
-> 
-> OTOH, when I put a disk with just an ordinary ext4 partition in the usb3 dock,
-> (no logical volumes) the copy failure becomes catastrophic, with kernel panic
-> messages, leaving the system unresponsive and needing a hard reset to recover.
-> 
-> I also tried your other suggestion:
-> 
-> diff --git a/drivers/usb/host/xhci.c b/drivers/usb/host/xhci.c
-> index 4265b48..1a6a43d 100644
-> --- a/drivers/usb/host/xhci.c
-> +++ b/drivers/usb/host/xhci.c
-> @@ -4714,7 +4714,7 @@ int xhci_gen_setup(struct usb_hcd *hcd, xhci_get_quirks_t get_quirks)
->         int                     retval;
->  
->         /* Accept arbitrarily long scatter-gather lists */
-> -       hcd->self.sg_tablesize = ~0;
-> +       hcd->self.sg_tablesize = 31;
->  
->         /* support to build packet from discontinuous buffers */
->         hcd->self.no_sg_constraint = 1;
-> 
-> Sadly it didn't fix the problem.  Did I get the patch right?
+On Fri, 3 Jan 2014, James Bottomley wrote:
 
+> > I'm still concerned about one thing.  The previous patch does this in
+> > scsi_alloc_target():
+> > 
+> > >   found:
+> > > -	found_target->reap_ref++;
+> > > +	if (!kref_get_unless_zero(&found_target->reap_ref))
+> > > +		/*
+> > > +		 * release routine already fired.  Target is dead, but
+> > > +		 * STARGET_DEL may not yet be set (set in the release
+> > > +		 * routine), so set here as well, just in case
+> > > +		 */
+> > > +		found_target->state = STARGET_DEL;
+> > >  	spin_unlock_irqrestore(shost->host_lock, flags);
+> > 
+> > As a result, the two comments in this patch aren't right:
+> > 
+> > > @@ -384,9 +385,15 @@ static void scsi_target_reap_ref_release(struct kref *kref)
+> > >  	struct scsi_target *starget
+> > >  		= container_of(kref, struct scsi_target, reap_ref);
+> > >  
+> > > -	transport_remove_device(&starget->dev);
+> > > -	device_del(&starget->dev);
+> > > -	starget->state = STARGET_DEL;
+> > > +	/*
+> > > +	 * if we get here and the target is still in the CREATED state that
+> > > +	 * means it was allocated but never made visible (because a scan
+> > > +	 * turned up no LUNs), so don't call device_del() on it.
+> > > +	 */
+> > > +	if (starget->state == STARGET_RUNNING) {
+> > > +		transport_remove_device(&starget->dev);
+> > > +		device_del(&starget->dev);
+> > > +	}
+> > 
+> > Here the state could already be STARGET_DEL, even though the target is
+> > still visible.
+> 
+> Well, I agree with the theory.  In practise, there are only a few
+> machine instructions between the kref going to zero and us reaching that
+> point, because kref_release will jump into this routine next, so the
+> condition would be very hard to see.
 
-That sounds almost as if the old version is still being loaded/run,
-possibly from the initramfs image?
+It's true that the window is very small and not at all likely to be
+hit.  Still, I prefer eliminating such things entirely.
 
--- 
-Mark Lord
-Real-Time Remedies Inc.
-mlord@pobox.com
+>  However, I suppose it's easy to
+> close by checking for != STARGET_CREATED and there's no reason not to do
+> that, so I'll change it.
+
+Checking for != STARGET_CREATED is also wrong in principle.  The state
+could already be STARGET_DEL even though the target was never made
+visible.
+
+The basic problem is that you are relying on the state to be an
+accurate description of the target's visibility, but
+scsi_alloc_target() changes the state without changing the visibility.  
+I really think you should get rid of that extra assignment in
+scsi_alloc_target().
+
+> How does the attached diff look?
+
+Better but still not right.
+
+Alan Stern
+
