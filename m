@@ -1,234 +1,45 @@
-From: Randy Dunlap <rdunlap@infradead.org>
-Subject: Re: [PATCH] scsi_transport_srp: Fix kernel-doc warnings
-Date: Sun, 05 Jan 2014 12:39:26 -0800
-Message-ID: <52C9C2FE.5000800@infradead.org>
-References: <52C0FE81.4080209@infradead.org> <52C8BB31.7020709@infradead.org> <52C92238.6060007@acm.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Akinobu Mita <akinobu.mita@gmail.com>
+Subject: [PATCH 0/6] scsi_debug: a few bug fixes and enable clustering support
+Date: Mon,  6 Jan 2014 08:33:06 +0900
+Message-ID: <1388964792-3546-1-git-send-email-akinobu.mita@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from merlin.infradead.org ([205.233.59.134]:45447 "EHLO
-	merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752040AbaAEUjc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 5 Jan 2014 15:39:32 -0500
-In-Reply-To: <52C92238.6060007@acm.org>
+Received: from mail-pd0-f170.google.com ([209.85.192.170]:35727 "EHLO
+	mail-pd0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751405AbaAEXdZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 5 Jan 2014 18:33:25 -0500
+Received: by mail-pd0-f170.google.com with SMTP id g10so17418518pdj.15
+        for <linux-scsi@vger.kernel.org>; Sun, 05 Jan 2014 15:33:24 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>, "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, David Dillow <dillowda@ornl.gov>, Vu Pham <vu@mellanox.com>, Sebastian Riemer <sebastian.riemer@profitbricks.com>, Douglas Gilbert <dgilbert@interlog.com>
+To: linux-scsi@vger.kernel.org
+Cc: Akinobu Mita <akinobu.mita@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Douglas Gilbert <dgilbert@interlog.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-On 01/05/14 01:13, Bart Van Assche wrote:
-> The following command has been used to verify that the kernel-doc
-> tool no longer complains about undocumented fields:
-> 
-> scripts/kernel-doc -html drivers/scsi/scsi_transport_srp.c \
->   include/scsi/scsi_transport_srp.h >srp-transport-doc.html
+This patch set includes a few bug fixes and patches for enabling
+clustering support for scsi_debug.  Some of bug fixes were already
+sent before.
 
-Thanks for the patch.
-I guess that your tree is different from mine.  Using 3.13-rc7, I still get
-3 warnings:
+The reason why I would like to enable clustering is to test commands
+with huge transfer length.  Without enabling clustering support, the
+transfer length for read and write scsi commands is limited upto 8MB
+when page size is 4KB and sg_tablesize is 2048
+(= SCSI_MAX_SG_CHAIN_SEGMENTS).
 
-Warning(drivers/scsi/scsi_transport_srp.c:620): No description found for parameter 'scmd'
-Warning(drivers/scsi/scsi_transport_srp.c:688): No description found for parameter 'rport'
-Warning(drivers/scsi/scsi_transport_srp.c:697): No description found for parameter 'rport'
+Akinobu Mita (6):
+  scsi_debug: fix false positive logical block reference tag check fail
+  scsi_debug: make pseudo_primary static
+  scsi_debug: fix duplicate dif_errors increment
+  scsi_debug: fix resp_xdwriteread() return value when running out of
+    memory
+  scsi_debug: prepare to enable clustering
+  scsi_debug: add ability to enable clustering
 
+ drivers/scsi/scsi_debug.c | 137 +++++++++++++++++++++++++++-------------------
+ 1 file changed, 80 insertions(+), 57 deletions(-)
 
-I also had some trouble with the patch itself -- looks like some of its longer
-lines were broken (split) by your mail app (I'm guessing).
-The first split line is marked below.
-
-
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> Cc: David Dillow <dillowda@ornl.gov>
-> Cc: Vu Pham <vu@mellanox.com>
-> Cc: Sebastian Riemer <sebastian.riemer@profitbricks.com>
-> Cc: James Bottomley <jbottomley@parallels.com>
-> Cc: Randy Dunlap <rdunlap@infradead.org>
-> ---
->  drivers/scsi/scsi_transport_srp.c | 12 ++++++++++++
->  include/scsi/scsi_transport_srp.h | 32 ++++++++++++++++++++++++++++----
->  2 files changed, 40 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_transport_srp.c
-> b/drivers/scsi/scsi_transport_srp.c
-> index 2700a5a..96ffc46 100644
-> --- a/drivers/scsi/scsi_transport_srp.c
-> +++ b/drivers/scsi/scsi_transport_srp.c
-> @@ -64,6 +64,9 @@ static inline struct Scsi_Host *rport_to_shost(struct
-> srp_rport *r)
->  
->  /**
->   * srp_tmo_valid() - check timeout combination validity
-> + * @reconnect_delay: Reconnect delay in seconds.
-> + * @fast_io_fail_tmo: Fast I/O fail timeout in seconds.
-> + * @dev_loss_tmo: Device loss timeout in seconds.
->   *
->   * The combination of the timeout parameters must be such that SCSI
-> commands
-
-^^^^^^^^^^^^^^^ "commands" should be at the end of the line above.
-I corrected about 8 (or more) lines like this so that the patch would apply cleanly.
-
-http://marc.info/?l=linux-scsi&m=138891322826100&w=2 shows the same problem.
-
->   * are finished in a reasonable time. Hence do not allow the fast I/O fail
-> @@ -368,6 +371,7 @@ invalid:
->  
->  /**
->   * srp_reconnect_work() - reconnect and schedule a new attempt if necessary
-> + * @work: Work structure used for scheduling this operation.
->   */
->  static void srp_reconnect_work(struct work_struct *work)
->  {
-> @@ -408,6 +412,7 @@ static void __rport_fail_io_fast(struct srp_rport
-> *rport)
->  
->  /**
->   * rport_fast_io_fail_timedout() - fast I/O failure timeout handler
-> + * @work: Work structure used for scheduling this operation.
->   */
->  static void rport_fast_io_fail_timedout(struct work_struct *work)
->  {
-> @@ -426,6 +431,7 @@ static void rport_fast_io_fail_timedout(struct
-> work_struct *work)
->  
->  /**
->   * rport_dev_loss_timedout() - device loss timeout handler
-> + * @work: Work structure used for scheduling this operation.
->   */
->  static void rport_dev_loss_timedout(struct work_struct *work)
->  {
-> @@ -488,6 +494,7 @@ static void __srp_start_tl_fail_timers(struct
-> srp_rport *rport)
->  
->  /**
->   * srp_start_tl_fail_timers() - start the transport layer failure timers
-> + * @rport: SRP target port.
->   *
->   * Start the transport layer fast I/O failure and device loss timers.
-> Do not
->   * modify a timer that was already started.
-> @@ -502,6 +509,7 @@ EXPORT_SYMBOL(srp_start_tl_fail_timers);
->  
->  /**
->   * scsi_request_fn_active() - number of kernel threads inside
-> scsi_request_fn()
-> + * @shost: SCSI host for which to count the number of scsi_request_fn()
-> callers.
->   */
->  static int scsi_request_fn_active(struct Scsi_Host *shost)
->  {
-> @@ -522,6 +530,7 @@ static int scsi_request_fn_active(struct Scsi_Host
-> *shost)
->  
->  /**
->   * srp_reconnect_rport() - reconnect to an SRP target port
-> + * @rport: SRP target port.
->   *
->   * Blocks SCSI command queueing before invoking reconnect() such that
->   * queuecommand() won't be invoked concurrently with reconnect() from
-> outside
-> @@ -599,6 +608,7 @@ EXPORT_SYMBOL(srp_reconnect_rport);
->  
->  /**
->   * srp_timed_out() - SRP transport intercept of the SCSI timeout EH
-> + * @scmd: SCSI command.
->   *
->   * If a timeout occurs while an rport is in the blocked state, ask the SCSI
->   * EH to continue waiting (BLK_EH_RESET_TIMER). Otherwise let the SCSI core
-> @@ -674,6 +684,7 @@ static int srp_host_match(struct attribute_container
-> *cont, struct device *dev)
->  
->  /**
->   * srp_rport_get() - increment rport reference count
-> + * @rport: SRP target port.
->   */
->  void srp_rport_get(struct srp_rport *rport)
->  {
-> @@ -683,6 +694,7 @@ EXPORT_SYMBOL(srp_rport_get);
->  
->  /**
->   * srp_rport_put() - decrement rport reference count
-> + * @rport: SRP target port.
->   */
->  void srp_rport_put(struct srp_rport *rport)
->  {
-> diff --git a/include/scsi/scsi_transport_srp.h
-> b/include/scsi/scsi_transport_srp.h
-> index 4ebf691..69eb021 100644
-> --- a/include/scsi/scsi_transport_srp.h
-> +++ b/include/scsi/scsi_transport_srp.h
-> @@ -29,10 +29,26 @@ enum srp_rport_state {
->  };
->  
->  /**
-> - * struct srp_rport
-> - * @lld_data: LLD private data.
-> - * @mutex:    Protects against concurrent rport reconnect / fast_io_fail /
-> - *   dev_loss_tmo activity.
-> + * struct srp_rport - SRP initiator or target port
-> + *
-> + * Fields that are relevant for SRP initiator and SRP target drivers:
-> + * @dev:               Device associated with this rport.
-> + * @port_id:           16-byte port identifier.
-> + * @roles:             Role of this port - initiator or target.
-> + *
-> + * Fields that are only relevant for SRP initiator drivers:
-> + * @lld_data:          LLD private data.
-> + * @mutex:             Protects against concurrent rport reconnect /
-> + *                     fast_io_fail / dev_loss_tmo activity.
-> + * @state:             rport state.
-> + * @deleted:           Whether or not srp_rport_del() has already been
-> invoked.
-> + * @reconnect_delay:   Reconnect delay in seconds.
-> + * @failed_reconnects: Number of failed reconnect attempts.
-> + * @reconnect_work:    Work structure used for scheduling reconnect
-> attempts.
-> + * @fast_io_fail_tmo:  Fast I/O fail timeout in seconds.
-> + * @dev_loss_tmo:      Device loss timeout in seconds.
-> + * @fast_io_fail_work: Work structure used for scheduling fast I/O fail
-> work.
-> + * @dev_loss_work:     Work structure used for scheduling device loss work.
->   */
->  struct srp_rport {
->      /* for initiator and target drivers */
-> @@ -60,6 +76,8 @@ struct srp_rport {
->  
->  /**
->   * struct srp_function_template
-> + *
-> + * Fields that are only relevant for SRP initiator drivers:
->   * @has_rport_state: Whether or not to create the state,
-> fast_io_fail_tmo and
->   *     dev_loss_tmo sysfs attribute for an rport.
->   * @reset_timer_if_blocked: Whether or srp_timed_out() should reset the
-> command
-> @@ -71,6 +89,11 @@ struct srp_rport {
->   *     srp_reconnect_rport().
->   * @terminate_rport_io: Callback function for terminating all
-> outstanding I/O
->   *     requests for an rport.
-> + * @rport_delete: Callback function that deletes an rport.
-> + *
-> + * Fields that are only relevant for SRP target drivers:
-> + * @tsk_mgmt_response: Callback function for sending a task management
-> response.
-> + * @it_nexus_response: Callback function for processing an IT nexus
-> response.
->   */
->  struct srp_function_template {
->      /* for initiator drivers */
-> @@ -104,6 +127,7 @@ extern void srp_remove_host(struct Scsi_Host *);
->  
->  /**
->   * srp_chkready() - evaluate the transport layer state before I/O
-> + * @rport: SRP target port pointer.
->   *
->   * Returns a SCSI result code that can be returned by the LLD
-> queuecommand()
->   * implementation. The role of this function is similar to that of
-> 
-
-
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Douglas Gilbert <dgilbert@interlog.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
 -- 
-~Randy
+1.8.3.2
+
