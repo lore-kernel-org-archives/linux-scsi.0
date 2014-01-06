@@ -1,127 +1,105 @@
-From: Loc Ho <lho@apm.com>
-Subject: [PATCH v6 4/4] arm64: Add APM X-Gene SoC 15Gbps Multi-purpose PHY DTS entries
-Date: Mon,  6 Jan 2014 11:11:02 -0700
-Message-ID: <1389031862-4285-5-git-send-email-lho@apm.com>
-References: <1389031862-4285-1-git-send-email-lho@apm.com>
- <1389031862-4285-2-git-send-email-lho@apm.com>
- <1389031862-4285-3-git-send-email-lho@apm.com>
- <1389031862-4285-4-git-send-email-lho@apm.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod5og115.obsmtp.com ([64.18.0.246]:59158 "HELO
-	exprod5og115.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755492AbaAFSLo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Jan 2014 13:11:44 -0500
-Received: by mail-pd0-f174.google.com with SMTP id x10so18558226pdj.33
-        for <linux-scsi@vger.kernel.org>; Mon, 06 Jan 2014 10:11:42 -0800 (PST)
-In-Reply-To: <1389031862-4285-4-git-send-email-lho@apm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Loc Ho <lho-qTEPVZfXA3Y@public.gmane.org>
+Subject: [PATCH v8 0/4] ata: Add APM X-Gene SoC SATA host controller support
+Date: Mon,  6 Jan 2014 11:11:58 -0700
+Message-ID: <1389031922-4309-1-git-send-email-lho@apm.com>
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: olof-nZhT3qVonbNeoWH0uzbU5w@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org
+Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, jcm-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, patches-qTEPVZfXA3Y@public.gmane.org, Loc Ho <lho-qTEPVZfXA3Y@public.gmane.org>, Tuan Phan <tphan-qTEPVZfXA3Y@public.gmane.org>, Suman Tripathi <stripathi-qTEPVZfXA3Y@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 
-This patch adds the DTS entries for the APM X-Gene SoC 15Gbps Multi-purpose
-PHY driver. The PHY for SATA controller 0 and 1 are enabled by default.
+This patch adds support for the APM X-Gene SoC SATA host controller. In
+order for the host controller to work, the corresponding PHY driver
+musts also be available.
 
-Signed-off-by: Loc Ho <lho@apm.com>
-Signed-off-by: Tuan Phan <tphan@apm.com>
-Signed-off-by: Suman Tripathi <stripathi@apm.com>
+v8:
+ * Remove _ADDR from defines
+ * Remove define MSTAWAUX_COHERENT_BYPASS_SET and
+   STARAUX_COHERENT_BYPASS_SET and use direct coding
+ * Remove the un-necessary check for DTS boot with built in ACPI table
+ * Switch to use dma_set_mask_and_coherent for setting DMA mask
+ * Remove ACPI table matching code
+ * Update clock-names for sata01clk, sata23clk, and sata45clk
+
+v7:
+ * Update the clock code by toggle the clock
+ * Update the DTS clock mask values due to the clock spilt between host and
+   v5 of the PHY drivers
+
+v6:
+ * Update binding documentation
+ * Change select PHY_XGENE_SATA to PHY_XGENE
+ * Add ULL to constants
+ * Change indentation and comments
+ * Clean up the probe functions a bit more
+ * Remove xgene_ahci_remove function
+ * Add the flush register to DTS
+ * Remove the interrupt-parent from DTS
+
+v5:
+ * Sync up to v3 of the PHY driver
+ * Remove MSLIM wrapper functions
+ * Change the memory shutdown loop to use usleep_range
+ * Use devm_ioremap_resource instead devm_ioremap
+ * Remove suspend/resume functions as not needed
+
+v4:
+ * Remove the ID property in DT
+ * Remove the temporary PHY direct function call and use PHY function
+ * Change printk to pr_debug
+ * Move the IOB flush addresses into the DT
+ * Remove the parameters retrieval function as no longer needed
+ * Remove the header file as no longer needed
+ * Require v2 patch of the SATA PHY driver. Require slightly modification
+   in the Kconfig as it is moved to folder driver/phy and use Kconfig
+   PHY_XGENE_SATA instead SATA_XGENE_PHY.
+
+v3:
+ * Move out the SATA PHY to another driver
+ * Remove the clock-cells entry from DTS
+ * Remove debug wrapper
+ * Remove delay functions wrapper
+ * Clean up resource and IRQ query
+ * Remove query clock name
+ * Switch to use dma_set_mask/dma_coherent_mask
+ * Remove un-necessary devm_kfree
+ * Update GPL license header to v2
+ * Spilt up function xgene_ahci_hardreset
+ * Spilt up function xgene_ahci_probe
+ * Remove all reference of CONFIG_ARCH_MSLIM
+ * Clean up chip revision code
+
+v2:
+ * Clean up file sata_xgene.c with Lindent and etc
+ * Clean up file sata_xgene_serdes.c with Lindent and etc
+ * Add description to each patch
+
+v1:
+ * inital version
+
+Signed-off-by: Loc Ho <lho-qTEPVZfXA3Y@public.gmane.org>
+Signed-off-by: Tuan Phan <tphan-qTEPVZfXA3Y@public.gmane.org>
+Signed-off-by: Suman Tripathi <stripathi-qTEPVZfXA3Y@public.gmane.org>
 ---
- arch/arm64/boot/dts/apm-storm.dtsi |   76 ++++++++++++++++++++++++++++++++++++
- 1 files changed, 76 insertions(+), 0 deletions(-)
+Loc Ho (4):
+  ata: Export required functions by APM X-Gene SATA driver
+  Documentation: Add documentation for APM X-Gene SoC SATA host
+    controller DTS binding
+  ata: Add APM X-Gene SoC SATA host controller driver
+  arm64: Add APM X-Gene SoC SATA host controller DTS entries
 
-diff --git a/arch/arm64/boot/dts/apm-storm.dtsi b/arch/arm64/boot/dts/apm-storm.dtsi
-index 359d7b6..7e0466a 100644
---- a/arch/arm64/boot/dts/apm-storm.dtsi
-+++ b/arch/arm64/boot/dts/apm-storm.dtsi
-@@ -176,6 +176,51 @@
- 				reg-names = "csr-reg";
- 				clock-output-names = "eth8clk";
- 			};
-+
-+			sataphy1clk: sataphy1clk@1f21c000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				clock-names = "socplldiv2";
-+				reg = <0x0 0x1f21c000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "sataphy1clk";
-+				status = "disabled";
-+				csr-offset = <0x4>;
-+				csr-mask = <0x00>;
-+				enable-offset = <0x0>;
-+				enable-mask = <0x06>;
-+			};
-+
-+			sataphy2clk: sataphy1clk@1f22c000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				clock-names = "socplldiv2";
-+				reg = <0x0 0x1f22c000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "sataphy2clk";
-+				status = "ok";
-+				csr-offset = <0x4>;
-+				csr-mask = <0x3a>;
-+				enable-offset = <0x0>;
-+				enable-mask = <0x06>;
-+			};
-+
-+			sataphy3clk: sataphy1clk@1f23c000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				clock-names = "socplldiv2";
-+				reg = <0x0 0x1f23c000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "sataphy3clk";
-+				status = "ok";
-+				csr-offset = <0x4>;
-+				csr-mask = <0x3a>;
-+				enable-offset = <0x0>;
-+				enable-mask = <0x06>;
-+			};
- 		};
- 
- 		serial0: serial@1c020000 {
-@@ -193,5 +238,36 @@
- 			reg = <0x0 0x17000014 0x0 0x100>;
- 			mask = <0x1>;
- 		};
-+
-+		phy1: phy@1f21a000 {
-+			compatible = "apm,xgene-phy";
-+			reg = <0x0 0x1f21a000 0x0 0x100>;
-+			#phy-cells = <1>;
-+			clocks = <&sataphy1clk 0>;
-+			status = "disabled";
-+			apm,tx-boost-gain = <2 3 3 2 3 3>;
-+			apm,tx-eye-tuning = <2 10 10 2 10 10>;
-+		};
-+
-+		phy2: phy@1f22a000 {
-+			compatible = "apm,xgene-phy";
-+			reg = <0x0 0x1f22a000 0x0 0x100>;
-+			#phy-cells = <1>;
-+			clocks = <&sataphy2clk 0>;
-+			status = "ok";
-+			apm,tx-boost-gain = <2 3 2 2 3 2>;
-+			apm,tx-eye-tuning = <1 10 10 2 10 5>;
-+		};
-+
-+		phy3: phy@1f23a000 {
-+			compatible = "apm,xgene-phy-ext";
-+			reg = <0x0 0x1f23a000 0x0 0x100>,
-+			      <0x0 0x1f2d0000 0x0 0x100>;
-+			#phy-cells = <1>;
-+			clocks = <&sataphy3clk 0>;
-+			status = "ok";
-+			apm,tx-boost-gain = <2 3 3 2 3 3>;
-+			apm,tx-eye-tuning = <2 10 10 2 10 12>;
-+		};
- 	};
- };
--- 
-1.5.5
+ .../devicetree/bindings/ata/apm-xgene.txt          |   68 ++
+ arch/arm64/boot/dts/apm-storm.dtsi                 |   81 ++
+ drivers/ata/Kconfig                                |    8 +
+ drivers/ata/Makefile                               |    1 +
+ drivers/ata/ahci.h                                 |    9 +
+ drivers/ata/libahci.c                              |   16 +-
+ drivers/ata/sata_xgene.c                           | 1047 ++++++++++++++++++++
+ 7 files changed, 1224 insertions(+), 6 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/ata/apm-xgene.txt
+ create mode 100644 drivers/ata/sata_xgene.c
 
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
