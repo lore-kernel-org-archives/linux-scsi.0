@@ -1,60 +1,63 @@
-From: "faibish, sorin" <faibish_sorin@emc.com>
-Subject: RE: [LSF/MM TOPIC] [ATTEND] persistent memory progress, management
- of storage & file systems
-Date: Mon, 6 Jan 2014 17:32:56 -0500
-Message-ID: <2512424DBC01FD48843E938C780FA97C02B002A583@MX23A.corp.emc.com>
-References: <20131220093022.GV11295@suse.de> <52CB2C3A.3010207@gmail.com>
+From: Matthias Eble <psychotrahe@gmail.com>
+Subject: Re: Persistent reservation behaviour/compliance with redundant controllers
+Date: Mon, 6 Jan 2014 23:53:44 +0100
+Message-ID: <CAKbOo_+LxN7UN11nxrD7pQ5Evffb-jdbW9BmPJ47NWiSXG-=nQ@mail.gmail.com>
+References: <CAKbOo_KMG+M8F06S4wo9vta6PJjpgXzMX9ri-vr=PY0QYASPLg@mail.gmail.com>
+	<52CB2C44.7040503@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <52CB2C3A.3010207@gmail.com>
-Content-Language: en-US
-Sender: owner-linux-mm@kvack.org
-To: Ric Wheeler <ricwheeler@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-lb0-f171.google.com ([209.85.217.171]:39599 "EHLO
+	mail-lb0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933441AbaAFWxq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Jan 2014 17:53:46 -0500
+Received: by mail-lb0-f171.google.com with SMTP id w7so10220436lbi.2
+        for <linux-scsi@vger.kernel.org>; Mon, 06 Jan 2014 14:53:44 -0800 (PST)
+In-Reply-To: <52CB2C44.7040503@suse.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Lee Duncan <lduncan@suse.com>
+Cc: linux-scsi@vger.kernel.org
 
-Speaking of persistent memory I would like to discuss the PMFS as well as R=
-DMA aspects of the persistent memory model. Also I would like to discuss KV=
- stores and object stores on persistent memory. I was involved in the PMFS =
-as a tester and I found several issues that I would like to discuss with th=
-e community. I assume that maybe others from Intel could join this discussi=
-on except for Andy and Matt which already asked for this topic. Thanks
+2014/1/6 Lee Duncan <lduncan@suse.com>:
+> On 12/25/2013 03:00 PM, Matthias Eble wrote:
+>> Here's the dmmp map
+>> 360002ac0000000000000000a00006e6b dm-6 3PARdata,VV
+>> size=2.0T features='0' hwhandler='0' wp=rw
+>> `-+- policy='round-robin 0' prio=1 status=active
+>>   |- 3:0:1:4  sdg  8:96    active ready running
+>>   |- 3:0:3:4  sdl  8:176   active ready running
+>>   |- 5:0:3:4  sdbg 67:160  active ready running
+>>   `- 5:0:1:4  sdce 69:32   active ready running
+>>
+>> There can only be two registrations at a time: (sdg XOR sdl) and (sdbg XOR sdce)
+>> Now my question is: Does this comply to the standard?
+>>
+>
+> I _believe_ the problem is that you are re-registering the same
+> I_T_Nexus through /dev/sdl, your second attempt at registration, as you
+> did when you used /dev/sdg, your original registration.
 
-./Sorin
 
------Original Message-----
-From: linux-fsdevel-owner@vger.kernel.org [mailto:linux-fsdevel-owner@vger.=
-kernel.org] On Behalf Of Ric Wheeler
-Sent: Monday, January 06, 2014 5:21 PM
-To: linux-scsi@vger.kernel.org; linux-ide@vger.kernel.org; linux-mm@kvack.o=
-rg; linux-fsdevel@vger.kernel.org; lsf-pc@lists.linux-foundation.org
-Cc: linux-kernel@vger.kernel.org
-Subject: [LSF/MM TOPIC] [ATTEND] persistent memory progress, management of =
-storage & file systems
+Can sdg and sdl be the same I_T_Nexus at a time?
+Right now, they are handled like that.
+In my understanding, every scsi disk device represents an I_T_Nexus.
 
 
-I would like to attend this year and continue to talk about the work on ena=
-bling the new class of persistent memory devices. Specifically, very intere=
-sted in talking about both using a block driver under our existing stack an=
-d also progress at the file system layer (adding xip/mmap tweaks to existin=
-g file systems and looking at new file systems).
+# lsscsi -t | egrep '/dev/sd(g|l|bg|ce)'
+    [3:0:1:4]    disk    fc:0x20120002ac006e6b,0x14ad40  /dev/sdg
+    [3:0:3:4]    disk    fc:0x21120002ac006e6b,0x14ad80  /dev/sdl
+    [5:0:1:4]    disk    fc:0x22110002ac006e6b,0x0aad40  /dev/sdce
+    [5:0:3:4]    disk    fc:0x23110002ac006e6b,0x0aad80  /dev/sdbg
 
-We also have a lot of work left to do on unifying management, it would be g=
-ood to resync on that.
 
-Regards,
+> What are you really trying to do? Are you testing that persistent
+> reservations "work" or trying to figure them out?
 
-Ric
+I am testing PR on a specific storage system, which seems to behave differently
+like the ones before.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in=
- the body of a message to majordomo@vger.kernel.org More majordomo info at =
- http://vger.kernel.org/majordomo-info.html
+> I have a "persistent reservations for dummies" document I wrote that I
+> can send you off list, if you like.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+I think I know how PRs work. Yet I'd be happy about your document.
