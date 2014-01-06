@@ -1,99 +1,77 @@
-From: Nikola Ciprich <nikola.ciprich@linuxbox.cz>
-Subject: arcmsr - device going offline under 3.10.x (regression?)
-Date: Mon, 6 Jan 2014 07:36:00 +0100
-Message-ID: <20140106063600.GU16278@pcnci.linuxbox.cz>
+From: Sujit Reddy Thumma <sthumma@codeaurora.org>
+Subject: Re: REQ_PM vs REQ_TYPE_PM_RESUME
+Date: Mon, 06 Jan 2014 13:06:20 +0530
+Message-ID: <52CA5CF4.2080708@codeaurora.org>
+References: <cover.1384030893.git.psusi@ubuntu.com> <1387236657-4852-1-git-send-email-psusi@ubuntu.com> <52CA1191.8060804@ubuntu.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="tn/+KOyBVBGpvvUM"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gwu.lbox.cz ([62.245.111.132]:47946 "EHLO gwu.lbox.cz"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752652AbaAFHCM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 6 Jan 2014 02:02:12 -0500
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <52CA1191.8060804@ubuntu.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Phillip Susi <psusi@ubuntu.com>, Aaron Lu <aaron.lu@intel.com>
+Cc: todd.e.brandt@linux.intel.com, tj@kernel.org, JBottomley@parallels.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: nikola.ciprich@linuxbox.cz
+
+On 1/6/2014 7:44 AM, Phillip Susi wrote:
+> -----BEGIN PGP SIGNED MESSAGE-----
+> Hash: SHA512
+>
+> On 12/16/2013 06:30 PM, Phillip Susi wrote:
+>> For some reason, the system hangs on resume if I issue the REQUEST
+>> SENSE command after blk_pre_runtime_suspend.  My understanding is
+>> that the REQ_PM flag should make the command process even though
+>> the queue is RPM_SUSPENDING, but it doesn't seem to work.  Anyone
+>> have any idea why?
+>
+> So I found the problem but I'm confused by it.  I thought that the
+> REQ_PM flag was supposed to make sure the request was dispatched even
+> though the device was still suspended ( or suspending ).  It seems
+> that this is not the case, and only requests with the type set to
+> REQ_TYPE_PM_RESUME are dispatched during suspend/resume.  The
+> following patch fixes the hang, but I'm not sure why it is needed or
+> if it is generally appropriate:
+>
+
+Adding Aaron Lu, author of block layer runtime PM.
+I have seen similar issue and fixed it by relaxing the rpm_status check
+to allow processing of requests while suspended -
+
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 6853ef6..f99165b 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -2140,8 +2140,7 @@ static void blk_account_io_done(struct request *req)
+  static struct request *blk_pm_peek_request(struct request_queue *q,
+  					   struct request *rq)
+  {
+-	if (q->dev && (q->rpm_status == RPM_SUSPENDED ||
+-	    (q->rpm_status != RPM_ACTIVE && !(rq->cmd_flags & REQ_PM))))
++	if (q->dev && q->rpm_status != RPM_ACTIVE && !(rq->cmd_flags & REQ_PM))
+  		return NULL;
+  	else
+  		return rq;
 
 
---tn/+KOyBVBGpvvUM
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 7bd7f0d..c5ce50d 100644
+> - --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -227,7 +227,9 @@ int scsi_execute(struct scsi_device *sdev, const
+> unsigned char *cmd,
+>          req->sense_len = 0;
+>          req->retries = retries;
+>          req->timeout = timeout;
+> - -       req->cmd_type = REQ_TYPE_BLOCK_PC;
+> +       if (flags & REQ_PM)
+> +               req->cmd_type = REQ_TYPE_PM_RESUME;
+> +       else req->cmd_type = REQ_TYPE_BLOCK_PC;
+>          req->cmd_flags |= flags | REQ_QUIET | REQ_PREEMPT;
+>
+>          /*
+>
+>
 
-Hi,
-
-we're experiencing strange trouble with new box using areca based
-RAID and 3.10.x kernel.
-
-When I load disk subsystem (ie with fio benchmark), system seems to be
-working fine, but after some time (usually next day), device seems to die:
-
-
-<3>[43567.763088] EXT4-fs (dm-4): previous I/O error to superblock detected
-<3>[43567.763091] sd 0:0:1:0: rejecting I/O to offline device
-<2>[43567.763093] EXT4-fs error (device dm-4): __ext4_get_inode_loc:4039: i=
-node #135868: block 524619: comm syslog-ng: unable to read itable block
-<2>[43567.763094] EXT4-fs error (device dm-4) in ext4_reserve_inode_write:4=
-962: IO failure
-<3>[43567.763095] EXT4-fs (dm-4): previous I/O error to superblock detected
-<3>[43567.763097] sd 0:0:1:0: rejecting I/O to offline device
-<4>[43567.763099] EXT4-fs warning (device dm-4): ext4_evict_inode:258: coul=
-dn't mark inode dirty (err -5)
-<3>[43567.763143] sd 0:0:1:0: rejecting I/O to offline device
-<3>[43567.763150] sd 0:0:1:0: rejecting I/O to offline device
-
-
-Hardware is Supermicro X9DRW/X9DRW with 6 core E5-2620, 64GB RAM, running c=
-entos6 + vanilla
-3.10.x kernel. I tried with two different adapters (1223 and 1882). Since b=
-ox uses redundant
-powersupplies, I don't think it could be power issue as I found in some are=
-ca FAQ. I'm using
-westerdn digital raid edition SATA drives.
-
-we've experienced this problem with 3.10.22 and 3.10.25. I wasn't able to r=
-eproduce this
-with 3.0.101 (yet, I'm torturing the box for ~2 days now, so I can't be sur=
-e).
-
-Since the problem takes quite long to reproduce (and I'm not sure after how=
- long I can tell
-the system works fine), I'd like to ask about your oppinions before trying =
-to bisect this..
-
-any ideas?
-
-thanks a lot in advance!
-
-BR
-
-nik
---=20
--------------------------------------
-Ing. Nikola CIPRICH
-LinuxBox.cz, s.r.o.
-28.rijna 168, 709 00 Ostrava
-
-tel.:   +420 591 166 214
-fax:    +420 596 621 273
-mobil:  +420 777 093 799
-www.linuxbox.cz
-
-mobil servis: +420 737 238 656
-email servis: servis@linuxbox.cz
--------------------------------------
-
---tn/+KOyBVBGpvvUM
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.14 (GNU/Linux)
-
-iEYEARECAAYFAlLKTtAACgkQ3xdJJrLygV4XSwCgg65lg6PaohmURa5h9DyB6kdk
-upEAn0pnV4CpiQH7ZyWcMHZ5QivvT1Xy
-=9quM
------END PGP SIGNATURE-----
-
---tn/+KOyBVBGpvvUM--
+-- 
+Regards,
+Sujit
