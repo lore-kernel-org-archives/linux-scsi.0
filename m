@@ -1,178 +1,96 @@
-From: =?ISO-8859-2?Q?Ji=F8=ED_Pinkava?= <j-pi@seznam.cz>
-Subject: Re: [PATCH] scsi-sg: pass flag to inhibit setting LUN
-Date: Mon, 06 Jan 2014 15:09:55 +0100
-Message-ID: <52CAB933.8030601@seznam.cz>
-References: <52C56755.7060709@seznam.cz> <52C7193C.20806@interlog.com>
+From: Phillip Susi <psusi@ubuntu.com>
+Subject: Re: REQ_PM vs REQ_TYPE_PM_RESUME
+Date: Mon, 06 Jan 2014 09:40:39 -0500
+Message-ID: <52CAC067.20601@ubuntu.com>
+References: <cover.1384030893.git.psusi@ubuntu.com> <1387236657-4852-1-git-send-email-psusi@ubuntu.com> <52CA1191.8060804@ubuntu.com> <52CA5CF4.2080708@codeaurora.org> <52CA744F.2080609@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.seznam.cz ([77.75.72.43]:35729 "EHLO smtp1.seznam.cz"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751115AbaAFOKX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 6 Jan 2014 09:10:23 -0500
-In-Reply-To: <52C7193C.20806@interlog.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <52CA744F.2080609@intel.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>, Sujit Reddy Thumma <sthumma@codeaurora.org>
+Cc: todd.e.brandt@linux.intel.com, tj@kernel.org, JBottomley@parallels.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>
 List-Id: linux-scsi@vger.kernel.org
-To: dgilbert@interlog.com
-Cc: linux-scsi@vger.kernel.org, JBottomley@parallels.com
 
-Dne 3.1.2014 21:10, Douglas Gilbert napsal(a):
-> On 14-01-02 08:19 AM, Ji=F8=ED Pinkava wrote:
->> Hi,
->>
->> This patch implements support for inhibiting setting LUN number
->> for SCSI custom command send via /dev/sgX with ioctl(.., SG_IO, ...)
->> call.
->>
->> This solves problems with some devices which claim support of
->> SCSI v1/v2, but for some special purposes use custom commands
->> which does not conform with standard message format.
->> (Like mine Pentax digital single-lens reflex camera)
->> It does not affect devices with SCSI v3 or latter.
->>
->> For this purpose was earlier introduced
->> SG_FLAG_LUN_INHIBIT / SG_FLAG_UNUSED_LUN_INHIBIT (glibc/kernel) flag=
-,
->> but the implementation was lost in some earlier code refactor.
->>
->> The only possible issue I see is current implementation supports onl=
-y
->> SG driver but there is few more code paths where the similar ioctl c=
-an
->> be invoked
->> (eg. anny SCSI device?). I'm not sure about, feel free to say anythi=
-ng
->> about it.
->
-> Hi,
-> SG_FLAG_LUN_INHIBIT was added to the sg driver around 15
-> years ago. The code to centralize the masking in scsi.c
-> and remove the "LUN inhibit" capability arrived about
-> 10 years ago. A handful of people have complained about
-> it since. An you are the first to do something about it!
->
-> I have a few comments about the code (see below) but the
-> logic seems okay to me. That said I would be very surprised
-> if this is allowed back in the kernel. If you manage to do
-> that then I'll be studying your technique (because many of my
-> patches to the sg driver are not accepted).
->
-> So you can takes that as an "ack" with comments and good luck.
-> I'll let others judge.
->
->> ---
->>   drivers/scsi/scsi.c       | 3 ++-
->>   drivers/scsi/sg.c         | 3 +++
->>   include/linux/blk_types.h | 2 ++
->>   3 files changed, 7 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
->> index fe0bcb1..f6d5fc9 100644
->> --- a/drivers/scsi/scsi.c
->> +++ b/drivers/scsi/scsi.c
->> @@ -693,7 +693,8 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
->>        * If SCSI-2 or lower, store the LUN value in cmnd.
->>        */
->>       if (cmd->device->scsi_level <=3D SCSI_2 &&
->> -        cmd->device->scsi_level !=3D SCSI_UNKNOWN) {
->> +        cmd->device->scsi_level !=3D SCSI_UNKNOWN &&
->> +        !(cmd->request->cmd_flags & REQ_LUN_INHIBIT)) {
->>           cmd->cmnd[1] =3D (cmd->cmnd[1] & 0x1f) |
->>                      (cmd->device->lun << 5 & 0xe0);
->>       }
->
-> The above being time sensitive code I was thinking a switch
-> might make it clearer and give the compiler more chances to
-> optimize:
->       switch(cmd->device->scsi_level) {
->       case SCSI_2:
->       case SCSI_1_CCS:
->       case SCSI_1:
->               if (!(cmd->request->cmd_flags & REQ_LUN_INHIBIT)) {
->                       cmd->cmnd[1] =3D (cmd->cmnd[1] & 0x1f) |
->                                      (cmd->device->lun << 5 & 0xe0);
->               }
->               break;
->       default:
->               ;
->       }
->
-> Hmm, can a switch's default be made "likely"?
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-In switch can be used only __branch_check__ (E, C) or
-__builtin_expect(E, C), which
-have too many '_' in name and I'm too afraid to use them.
+On 1/6/2014 4:15 AM, Aaron Lu wrote:
+> My guess why it doesn't work for you is that, when you call 
+> blk_pre_runtime_suspend in sd_resume_work, there are requests left
+> in the queue so that call will simply fail, it's not meant to be
+> used that way.
 
-switch (__builtin_expect(var, const)) {
-=2E..
+There should be no other requests during the system resume callback.
 
-if there is such a pressure for speed, unlikely(cmd->device->scsi_level
-<=3D SCSI_2)
-might be used, but i does not have statistics about how much modern
-high-speed devices report itself as scsi_level <=3D SCSI_2 or scsi_leve=
-l
-=3D=3D SCSI_UNKNOWN.
-(suppose the rate is pretty low).
+> It seems you are making use of runtime PM to speed up disk resume,
+> if that is the case, I think we can simply make sure the disk's
+> block queue is put into the same state as runtime suspended and
+> then mark it as runtime suspended during system suspend phase; on
+> system resume, call
 
-The switch solution look more elegant.
+I think I tried that and it didn't work; when it is runtime suspended
+when the system suspends, it's no longer runtime suspended when the
+system resume function was called.  Hence why I'm using the
+blk_pre_runtime_suspend to force it into RPM_SUSPENDING so as to make
+sure that after the system resume function returns, user space IO will
+be blocked until we can verify whether the disk has spun up on its own
+or not.
 
->
-> More generally folks, with SAS SSDs available that can read at
-> 1100 MB/sec we may want to spend time looking at the fast
-> paths through the SCSI subsystem.
->
->
->> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
->> index df5e961..8e09015 100644
->> --- a/drivers/scsi/sg.c
->> +++ b/drivers/scsi/sg.c
->> @@ -1663,6 +1663,9 @@ static int sg_start_req(Sg_request *srp, unsig=
-ned
->> char *cmd)
->>       rq->sense =3D srp->sense_b;
->>       rq->retries =3D SG_DEFAULT_RETRIES;
->>
->> +    if (hp->flags & SG_FLAG_UNUSED_LUN_INHIBIT)
->> +        rq->cmd_flags |=3D  REQ_LUN_INHIBIT;
->> +
->>       if ((dxfer_len <=3D 0) || (dxfer_dir =3D=3D SG_DXFER_NONE))
->>           return 0;
->>
->> diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
->> index 238ef0e..35d436b 100644
->> --- a/include/linux/blk_types.h
->> +++ b/include/linux/blk_types.h
->> @@ -178,6 +178,7 @@ enum rq_flag_bits {
->>       __REQ_MIXED_MERGE,    /* merge of different types, fail
->> separately */
->>       __REQ_KERNEL,         /* direct IO to kernel pages */
->>       __REQ_PM,        /* runtime pm request */
->> +    __REQ_LUN_INHIBIT,    /* pass through for
->> SG_FLAG_UNUSED_LUN_INHIBIT flag */
->>       __REQ_END,        /* last of chain of requests */
->>       __REQ_NR_BITS,        /* stops here */
->>   };
->> @@ -230,6 +231,7 @@ enum rq_flag_bits {
->>   #define REQ_SECURE        (1ULL << __REQ_SECURE)
->>   #define REQ_KERNEL        (1ULL << __REQ_KERNEL)
->>   #define REQ_PM            (1ULL << __REQ_PM)
->> +#define REQ_LUN_INHIBIT    (1ULL << __REQ_LUN_INHIBIT)
->>   #define REQ_END            (1ULL << __REQ_END)
->>
->>   #endif /* __LINUX_BLK_TYPES_H */
->>
->
-> And I think the SG_FLAG_LUN_INHIBIT define should be re-instated
-> to sg.h . For backward compatibility (for the last 10 years)
-> please leave the SG_FLAG_UNUSED_LUN_INHIBIT define there. Both
-> defines should have the same value.
->
-> Doug Gilbert
->
+> pm_request_resume for the device in its system resume callback
+> should be enough, or if you want to further delay it, just leave it
+> as it is. Once there is a new request comes in, it will be
+> automatically runtime resumed(actually, there are some user space
+> tools accessing it during system resume, so it will be resumed
+> pretty soon after kernel thaw user space process, unless you have
+> made those app gone). It's simple and clean. The only problem is,
+> it depends on RUNTIME_PM, while Todd's implementation doesn't.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Yes, that's the idea; leave it runtime suspended until someone
+actually tries to access it.  Unless the drive spins up on its own (
+as ATA disks without PuiS enabled do ).
+
+>>> that this is not the case, and only requests with the type set
+>>> to REQ_TYPE_PM_RESUME are dispatched during suspend/resume.
+>>> The following patch fixes the hang, but I'm not sure why it is
+>>> needed or if it is generally appropriate:
+>>> 
+>> 
+>> Adding Aaron Lu, author of block layer runtime PM. I have seen
+>> similar issue and fixed it by relaxing the rpm_status check to
+>> allow processing of requests while suspended -
+> 
+> I'm not sure what exactly the issue you have is, care to explain?
+
+The issue is that the REQ_PM flagged REQUEST SENSE command issued
+during the system_resume is never dispatched.  I patched scsi_execute
+to make the request type REQ_TYPE_PM_RESUME and that got the request
+dispatched.
+
+Looking at the code a bit more today, it looks like REQ_PM has
+blk_peek_request return the request to scsi_request_fn, but it refuses
+to dispatch it unless it is of type REQ_TYPE_PM_RESUME apparently
+because the queue is stopped.  I suppose now the question is why is it
+stopped?
+
+> The queue is not supposed to get a REQ_PM request while it is in 
+> RPM_SUSPENDED state, at least, this is the case when we first made
+> this function.
+
+Right... that's why I forced it into RPM_SUSPENDING; so I can issue
+the REQUEST SENSE, but other IO is blocked.  Then either complete the
+transition to RPM_SUSPENDED, or abort and go back to RPM_ACTIVE.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.17 (MingW32)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iQEcBAEBAgAGBQJSysBnAAoJEI5FoCIzSKrwM5MH/R+Pvk2hdzk1adSrxuvi28RV
+bGxHSRc2RCqU0CyIwpZtNnZlUiqk34xuM1hzcqsPMdRStmOCpQciGuBhxynoODDW
+Lm2XLtCfaNihsfuOHrc/nVmBZGPtzXP+OdOWEi9JfkUEcsS8ePFRh9YNXJOl1g26
+pU41dmTwWrPYSnN7SRO+xArb1TWh7jcCSGqyxY2BVJL1aSpSicIlbnJDzijFSQ2h
++Rs7fZwnnzRLbQFmNcpems++vIVIYLRbuOJNFjeMLKt1KEX+Eiq4q/p5bJmt1H9n
+zre1zoz7P5kU2zW90W+seFfAW2ka8stq4BAQGvz4KwEiV+altbEpYHLbtanXXEo=
+=ZDJw
+-----END PGP SIGNATURE-----
