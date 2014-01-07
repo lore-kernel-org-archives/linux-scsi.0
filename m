@@ -1,49 +1,53 @@
-From: Phillip Susi <psusi@ubuntu.com>
-Subject: Re: REQ_PM vs REQ_TYPE_PM_RESUME
-Date: Tue, 07 Jan 2014 09:50:10 -0500
-Message-ID: <52CC1422.1020101@ubuntu.com>
-References: <cover.1384030893.git.psusi@ubuntu.com> <1387236657-4852-1-git-send-email-psusi@ubuntu.com> <52CA1191.8060804@ubuntu.com> <52CA5CF4.2080708@codeaurora.org> <52CA744F.2080609@intel.com> <52CAC067.20601@ubuntu.com> <52CBB188.2080707@intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <52CBB188.2080707@intel.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>, Sujit Reddy Thumma <sthumma@codeaurora.org>
-Cc: todd.e.brandt@linux.intel.com, tj@kernel.org, JBottomley@parallels.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>, Linux-pm mailing list <linux-pm@vger.kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>
+From: Chuck Lever <chuck.lever@oracle.com>
+Subject: Re: status of block-integrity
+Date: Tue, 7 Jan 2014 10:06:14 -0500
+Message-ID: <DECA4257-97BB-4E25-96D7-612B500630AC@oracle.com>
+References: <20131222192128.GA28532@infradead.org> <52C6D0DB.1050906@suse.de> <yq1wqigzvc1.fsf@sermon.lab.mkp.net> <20140107013646.GB10297@birch.djwong.org>
+Mime-Version: 1.0 (Mac OS X Mail 7.1 \(1827\))
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:26550 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751600AbaAGPG5 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jan 2014 10:06:57 -0500
+In-Reply-To: <20140107013646.GB10297@birch.djwong.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
-
-On 1/7/2014 2:49 AM, Aaron Lu wrote:
-> We can modify the device's system resume callback. To better
-> illustrate the idea, I just made two patches to do this and I did
-> some quick tests and didn't find anything wrong.
-
-That misses one key aspect I was trying to capture: it always leaves
-the disk runtime suspended after a resume.  If the disk spins up on
-its own, as most ata disks do, then the runtime status doesn't
-correctly reflect the actual state of the disk.  This means that
-applications that delay activities due to the runtime pm status to
-avoid waking a disk won't run, and any runtime autosuspend won't kick
-in to actually put the disk back to sleep.
-
-To do that, you need to be able to issue a REQUEST SENSE and
-conditionally resume the device.  Of course, you can't do that unless
-you first get it into a transitional state, but you can't just request
-a resume and then conditionally fail it.
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>, LKML Kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.17 (MingW32)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+On Jan 6, 2014, at 8:36 PM, Darrick J. Wong <darrick.wong@oracle.com> wrote:
 
-iQEcBAEBAgAGBQJSzBQiAAoJEI5FoCIzSKrwH9UH/3Z3TfKKKYhNsjr26YsKOge2
-EQzbcFCg4H5irnKL/olR5fnRKpZYi1Er2ydV6zsHdcCJLFQoqvzVE4ZInl42STI0
-IWQ65n5q+U1OaZY+ttGkOBjixi5VIlkb9izZVbzBTi4n5cLEDwyQsE4Rgd9STwjm
-gPkNrmGNGPUoY+4O6bLHu0/WvwTX3L/OgxcSsQd1gsdCX3qZzB+UIzfM31W9/4Yl
-3sP/tN8mBYcpqR9jIpw2u7m0XEe9Wc71Nepdv2+6sT5uZJ5knTY6epH5Of4FJsyp
-CxslFXf6Jb2FZaey8EJB1ocABnePYluQNHrpdRO4gjY+Au/mtzk15tJjoYx3WXg=
-=VlKV
------END PGP SIGNATURE-----
+> On Fri, Jan 03, 2014 at 03:03:42PM -0500, Martin K. Petersen wrote:
+>>>>>>> "Hannes" == Hannes Reinecke <hare@suse.de> writes:
+>> 
+>> Hannes> Personally, I doubt it's a good idea to kill it off, but a
+>> Hannes> proper (userland) API for it has been a long time missing.
+>> 
+>> Before we throw the baby out with the bath water, maybe Darrick can fill
+>> us in on the progress of the aio passthrough interface?
+> 
+> I haven't made much progress on it -- I haven't seen any earnest demand for it.
+> 
+> Last year Chuck Lever said that some NFS working group was looking defining an
+> interface it... has there been any progress?  It doesn't sound like there has
+> been.
+
+You must be thinking of some other Chuck Lever ;-)
+
+What I promised to deliver was plumbing in the NFS protocol to support end-to-end data integrity.  That's here:
+
+  https://datatracker.ietf.org/doc/draft-cel-nfsv4-end2end-data-protection/
+
+The issue of system call API is as sticky for NFS as it is for other e2e implementations.  Without an API, other projects have been allowed to take up the time I would have spent on an NFS prototype.
+
+What's more, some of the fields in the T10 tag are meaningless for byte-stream: an application, for example, will know nothing of block addresses, since those are chosen by the underlying filesystem.  NFS (or any byte stream e2e integrity API) will have to define a different protection envelope with perhaps different tag contents.
+
+But we do have a range of potential use cases for NFS: hypervisors that emulate block devices using NFS files, strong cryptographic data checksums, and of course the Oracle database.  No real demand, as others have said.
+
+-- 
+Chuck Lever
+chuck[dot]lever[at]oracle[dot]com
+
