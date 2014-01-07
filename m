@@ -1,79 +1,41 @@
-From: Ewan Milne <emilne@redhat.com>
-Subject: Re: [PATCH] scsi_error: disable eh_deadline if no
- host_reset_handler is set
-Date: Tue, 07 Jan 2014 08:33:45 -0500
-Message-ID: <1389101625.3817.1042.camel@localhost.localdomain>
-References: <1386846513-122051-1-git-send-email-hare@suse.de>
-Reply-To: emilne@redhat.com
+From: David Laight <David.Laight@ACULAB.COM>
+Subject: RE: [PATCH 3.12 033/118] usb: xhci: Link TRB must not occur within
+ a USB payload burst
+Date: Tue, 7 Jan 2014 13:51:57 +0000
+Message-ID: <063D6719AE5E284EB5DD2968C1650D6D453DD4@AcuExch.aculab.com>
+References: <20131218211219.461663463@linuxfoundation.org>
+ <20131218211220.412278148@linuxfoundation.org> <52C32BB0.90600@gmail.com>
+ <20140102191510.GA9621@xanatos> <52C6D9F1.9000709@gmail.com>
+ <20140103195455.GA4193@xanatos> <52C729CE.9050307@gmail.com>
+ <20140103232929.GD4193@xanatos> <20140107003157.GA7963@xanatos>
+ <52CC014C.5060604@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:63892 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750904AbaAGNdv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 7 Jan 2014 08:33:51 -0500
-In-Reply-To: <1386846513-122051-1-git-send-email-hare@suse.de>
+Received: from mx0.aculab.com ([213.249.233.131]:42218 "HELO mx0.aculab.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1751102AbaAGNxh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 7 Jan 2014 08:53:37 -0500
+Received: from mx0.aculab.com ([127.0.0.1])
+ by localhost (mx0.aculab.com [127.0.0.1]) (amavisd-new, port 10024) with SMTP
+ id 29879-07 for <linux-scsi@vger.kernel.org>;
+ Tue,  7 Jan 2014 13:53:35 +0000 (GMT)
+In-Reply-To: <52CC014C.5060604@gmail.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org
+To: 'walt' <w41ter@gmail.com>, Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Linux Kernel <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Thu, 2013-12-12 at 12:08 +0100, Hannes Reinecke wrote:
-> When the host template doesn't declare an eh_host_reset_handler
-> the eh_deadline mechanism is pointless and will set the
-> device to offline. So disable eh_deadline if no
-> eh_host_reset_handler is present.
-> 
-> Cc: Ewan Milne <emilne@redhat.com>
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> ---
->  drivers/scsi/hosts.c      | 2 +-
->  drivers/scsi/scsi_sysfs.c | 4 +++-
->  2 files changed, 4 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-> index 6966def..351afa4 100644
-> --- a/drivers/scsi/hosts.c
-> +++ b/drivers/scsi/hosts.c
-> @@ -396,7 +396,7 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
->  	shost->unchecked_isa_dma = sht->unchecked_isa_dma;
->  	shost->use_clustering = sht->use_clustering;
->  	shost->ordered_tag = sht->ordered_tag;
-> -	if (shost_eh_deadline == -1)
-> +	if (shost_eh_deadline == -1 || !sht->eh_host_reset_handler)
->  		shost->eh_deadline = -1;
->  	else if ((ulong) shost_eh_deadline * HZ > INT_MAX) {
->  		shost_printk(KERN_WARNING, shost,
-> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-> index 9117d0b..7434e26 100644
-> --- a/drivers/scsi/scsi_sysfs.c
-> +++ b/drivers/scsi/scsi_sysfs.c
-> @@ -300,7 +300,9 @@ store_shost_eh_deadline(struct device *dev, struct device_attribute *attr,
->  	int ret = -EINVAL;
->  	unsigned long deadline, flags;
->  
-> -	if (shost->transportt && shost->transportt->eh_strategy_handler)
-> +	if (shost->transportt &&
-> +	    (shost->transportt->eh_strategy_handler ||
-> +	     !shost->transportt->eh_host_reset_handler))
-
-I think this bit is supposed to be:
-
-        if ((shost->transportt &&
-             shost->transportt->eh_strategy_handler) ||
-            !shost->hostt->eh_host_reset_handler)
-                return ret;
-
-because the field is in the scsi_host_template structure, right?
-
-But, otherwise, this patch is necessary because some drivers don't
-implement host reset (e.g. hpsa).
-
--Ewan
-
->  		return ret;
->  
->  	if (!strncmp(buf, "off", strlen("off")))
-
-
+PiBGcm9tOiB3YWx0DQouLi4NCj4gVGhhbmtzIFNhcmFoLiAgZG1lc2cwIGlzIGZyb20gdGhlIGRp
+YWdub3N0aWMgcGF0Y2ggb25seS4gIGRtZXNnMSBoYXMgYWxsDQo+IHRocmVlIHBhdGNoZXMgYXBw
+bGllZC4gIFNvbWUgb2YgdGhlIG1lc3NhZ2VzIGluIGRtZXNnMSBmZWxsIG9mZiB0aGUgZW5kIG9m
+DQo+IHRoZSBrZXJuZWwgYnVmZmVyLCBzbyBJIG1heSBuZWVkIHRvIG1ha2UgdGhlIGJ1ZmZlciBs
+YXJnZXIgbmV4dCB0aW1lIGJ1dA0KPiBJJ2xsIG5lZWQgYSByZW1pbmRlciBvZiBob3cgdG8gZG8g
+aXQuDQo+IA0KPiBBcyB5b3Ugc3VzcGVjdGVkLCB0aGUgcGF0Y2hlcyBkaWRuJ3QgZml4IHRoZSBw
+cm9ibGVtLCBzb3JyeS4NCg0KSSB0aGluayBTYXJhaCB3aWxsIHdhbnQgdGhlIHRyYWNlcyBvZiB0
+aGUgdHJhbnNmZXIgYmVpbmcgc2V0dXAgKGllIGp1c3QNCmJlZm9yZSB0aGUgZXJyb3IpLiBTb21l
+ICdub3JtYWwnIGNvbXBsZXRpbmcgdHJhbnNmZXJzIGFyZSBhbHNvIHVzZWZ1bC4NCg0KWW91IG1p
+Z2h0IGFsc28gZmluZCB0aGUgZnVsbCB0cmFjZSBvdXRwdXQgaW4gb25lIG9mIHRoZSBmaWxlcyBp
+biAvdmFyL2xvZy4NCg0KCURhdmlkDQoNCg==
