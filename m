@@ -1,53 +1,43 @@
-From: Chuck Lever <chuck.lever@oracle.com>
-Subject: Re: status of block-integrity
-Date: Tue, 7 Jan 2014 10:06:14 -0500
-Message-ID: <DECA4257-97BB-4E25-96D7-612B500630AC@oracle.com>
-References: <20131222192128.GA28532@infradead.org> <52C6D0DB.1050906@suse.de> <yq1wqigzvc1.fsf@sermon.lab.mkp.net> <20140107013646.GB10297@birch.djwong.org>
-Mime-Version: 1.0 (Mac OS X Mail 7.1 \(1827\))
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:26550 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751600AbaAGPG5 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jan 2014 10:06:57 -0500
-In-Reply-To: <20140107013646.GB10297@birch.djwong.org>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: REQ_PM vs REQ_TYPE_PM_RESUME
+Date: Tue, 7 Jan 2014 10:20:29 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1401071015120.1296-100000@iolanthe.rowland.org>
+References: <52CB6A22.2000203@ubuntu.com>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <52CB6A22.2000203@ubuntu.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Phillip Susi <psusi@ubuntu.com>
+Cc: Aaron Lu <aaron.lu@intel.com>, Sujit Reddy Thumma <sthumma@codeaurora.org>, todd.e.brandt@linux.intel.com, tj@kernel.org, JBottomley@parallels.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>, LKML Kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
+On Mon, 6 Jan 2014, Phillip Susi wrote:
 
-On Jan 6, 2014, at 8:36 PM, Darrick J. Wong <darrick.wong@oracle.com> wrote:
-
-> On Fri, Jan 03, 2014 at 03:03:42PM -0500, Martin K. Petersen wrote:
->>>>>>> "Hannes" == Hannes Reinecke <hare@suse.de> writes:
->> 
->> Hannes> Personally, I doubt it's a good idea to kill it off, but a
->> Hannes> proper (userland) API for it has been a long time missing.
->> 
->> Before we throw the baby out with the bath water, maybe Darrick can fill
->> us in on the progress of the aio passthrough interface?
+> On 01/06/2014 10:38 AM, Alan Stern wrote:
+> > Indeed.  I can't see any place where the SCSI or block layers
+> > would stop the queue of a device when it gets runtime suspended.
+> > Maybe some other layer is doing this.
 > 
-> I haven't made much progress on it -- I haven't seen any earnest demand for it.
-> 
-> Last year Chuck Lever said that some NFS working group was looking defining an
-> interface it... has there been any progress?  It doesn't sound like there has
-> been.
+> So I've stepped through it in qemu a good bit, and found some strange
+> things.  At the time that sd_resume_system is called, the host is
+> still in the recovery state as a result of ata_port_resume, so this is
+> why scsi_request_fn doesn't dispatch the request.  It requeues it for
+> after the eh finishes, but when the eh finishes and sets the state
+> back to running, scsi_request_fn calls blk_peek_request, and it
+> returns NULL rather than the requeued REQUEST SENSE.  It's like the
+> request is lost rather than having been requeued.
 
-You must be thinking of some other Chuck Lever ;-)
+This raises two questions:
 
-What I promised to deliver was plumbing in the NFS protocol to support end-to-end data integrity.  That's here:
+	Should the host's resume be allowed to complete while the
+	host is still in error recovery?  Wouldn't it be better to
+	wait until the recovery is finished?
 
-  https://datatracker.ietf.org/doc/draft-cel-nfsv4-end2end-data-protection/
+	How does the queue end up in a stopped state?  (The stopped
+	queue explains why blk_peek_request returns NULL.)
 
-The issue of system call API is as sticky for NFS as it is for other e2e implementations.  Without an API, other projects have been allowed to take up the time I would have spent on an NFS prototype.
+You're in a better position than I am to answer these questions.
 
-What's more, some of the fields in the T10 tag are meaningless for byte-stream: an application, for example, will know nothing of block addresses, since those are chosen by the underlying filesystem.  NFS (or any byte stream e2e integrity API) will have to define a different protection envelope with perhaps different tag contents.
-
-But we do have a range of potential use cases for NFS: hypervisors that emulate block devices using NFS files, strong cryptographic data checksums, and of course the Oracle database.  No real demand, as others have said.
-
--- 
-Chuck Lever
-chuck[dot]lever[at]oracle[dot]com
+Alan Stern
 
