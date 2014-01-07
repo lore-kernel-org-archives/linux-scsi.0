@@ -1,46 +1,83 @@
-From: Sergey Meirovich <rathamahata@gmail.com>
-Subject: Re: Terrible performance of sequential O_DIRECT 4k writes in SAN
- environment. ~3 times slower then Solars 10 with the same HBA/Storage.
-Date: Tue, 7 Jan 2014 20:37:23 +0200
-Message-ID: <CA+QCeVRiwHU+C5utaLQXf_MpjoYMYEF4LKRyDPaqcd=H6n-RRw@mail.gmail.com>
-References: <CA+QCeVQRrqx=CrxyuAe7k0e0y4Nqo7x_8jtkuD99VM8L9Dxp+g@mail.gmail.com>
- <20140106201032.GA13491@quack.suse.cz> <20140107155830.GA28395@infradead.org>
+From: Phillip Susi <psusi@ubuntu.com>
+Subject: Re: REQ_PM vs REQ_TYPE_PM_RESUME
+Date: Tue, 07 Jan 2014 13:43:36 -0500
+Message-ID: <52CC4AD8.8080901@ubuntu.com>
+References: <Pine.LNX.4.44L0.1401071251330.1296-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wg0-f54.google.com ([74.125.82.54]:48637 "EHLO
-	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752349AbaAGShq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jan 2014 13:37:46 -0500
-In-Reply-To: <20140107155830.GA28395@infradead.org>
+Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:50126 "EHLO
+	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752610AbaAGSnj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jan 2014 13:43:39 -0500
+In-Reply-To: <Pine.LNX.4.44L0.1401071251330.1296-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Jan Kara <jack@suse.cz>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Gluk <git.user@gmail.com>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Aaron Lu <aaron.lu@intel.com>, Sujit Reddy Thumma <sthumma@codeaurora.org>, todd.e.brandt@linux.intel.com, tj@kernel.org, JBottomley@parallels.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Linux-pm mailing list <linux-pm@vger.kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>
 
-Hi Christoph,
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-On 7 January 2014 17:58, Christoph Hellwig <hch@infradead.org> wrote:
-> On Mon, Jan 06, 2014 at 09:10:32PM +0100, Jan Kara wrote:
->>   This is likely a problem of Linux direct IO implementation. The thing is
->> that in Linux when you are doing appending direct IO (i.e., direct IO which
->> changes file size), the IO is performed synchronously so that we have our
->> life simpler with inode size update etc. (and frankly our current locking
->> rules make inode size update on IO completion almost impossible). Since
->> appending direct IO isn't very common, we seem to get away with this
->> simplification just fine...
->
-> Shouldn't be too much of a problem at least for XFS and maybe even ext4
-> with the workqueue based I/O end handler.  For XFS we protect size
-> updates by the ilock which we already taken in that handler, not sure
-> what ext4 would do there.
->
+On 1/7/2014 1:05 PM, Alan Stern wrote:
+> I disagree with your argument.  If you aren't using autosuspend at
+> all then you don't mind having your disks spin all the time.
+> Therefore you don't mind if the disks spin up during system
+> resume.
 
-Actually my initial report (14.67Mb/sec  3755.41 Requests/sec) was about ext4
-However I have tried XFS as well. It was a bit slower than ext4 on all
-occasions.
-On the same machine results for XFS were:
+I prefer to manually spin the disk down when I don't plan on using it
+for a while instead of letting it auto suspend using a timeout since
+the timeout often either is too short and spins the disk down before
+I'm done with it, or too long, and doesn't let it sleep as much as it
+could.  Yet, I do mind that the disk must spin up whenever I resume,
+even though I don't plan on using it any time soon.
 
-    13.97Mb/sec  3576..27 Requests/sec
+> If you're using a long timeout and you don't like the way the timer
+>  gets reset by a system sleep, then you have set the timeout too
+> long.
 
-/dev/mapper/mpathc on /mnt/xfs type xfs (rw,noatime,nodiratime,nobarrier)
+It isn't reset, it simply hasn't timed out at the time I suspend.
+This isn't very hard to do with even only a 5 minute auto suspend
+delay.  If I do something with the disk then suspend the whole system
+3 minutes later, it would spin up again when I resume even though I
+finished my use of the disk before suspending the system.
+
+> Now, a more reasonable argument might be that for some disks, the 
+> kernel doesn't need to do an explicit spin-up or spin-down (for
+> runtime suspend) at all; instead we can rely on the drive's
+> internal power management.  In fact there already is a
+> "manage_start_stop" attribute to control this.  (Well, almost -- if
+> the attribute is set to 0 then the kernel won't issue a spin-down
+> command even for system suspend.)
+
+This flag is broken and unusable and should be removed.  First, SCSI
+disks *require* the start command after a suspend, and secondly, not
+stopping the drive before suspend causes an emergency head retract,
+which damages the drive.
+
+> I don't understand.  Under what circumstances would this happen?
+> Are you saying this would happen during system resume?  Why would
+> the disk spin up of its own accord at that time?
+
+By default, ATA disks spin up on their own when they are powered on.
+
+> And if it does spin up of its own accord, what makes you think the
+>  kernel can do anything to prevent it from spinning up?
+
+It can't.  What it should do is notice when this has happened and not
+claim the device is runtime suspended when it is in fact, spinning.
+
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.17 (MingW32)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iQEcBAEBAgAGBQJSzErYAAoJEI5FoCIzSKrw8R4H/RZZfPxQYcFEw1oVlkVY1gdM
+TCi0MJoSBVAg9Iepplbl3RPZKb4DR9W+k6ICcZyOdw155B8mRzznn9RYoqkDEXX8
+u2mqGfqx4TRf1OJo8jGKyJhPW6tJjwHM+G5Dx4WO6XAoVtwAvJHrFiNfuG9wQa1t
+DswH0IOm6ZfEH0Z4hjeq6vnyEtmB3ecrMpvplM5+tRchE1SuvP+OkD3J6EXIlL3c
+J7+b7pmu3Cx/+2vz92NlWHLpFXeC1fnOAy2+jJhwia1X3tVtf+wN1KIrQBK9Lq+i
+Dmgmd++DUr4//CwKftPUx/cmv/RUgSnfd7MLfHZvxJrBOsOHFoI8BYbDHqoGWEU=
+=O0Xo
+-----END PGP SIGNATURE-----
