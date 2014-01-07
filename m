@@ -1,56 +1,46 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: REQ_PM vs REQ_TYPE_PM_RESUME
-Date: Tue, 7 Jan 2014 13:05:17 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1401071251330.1296-100000@iolanthe.rowland.org>
-References: <52CC2D5F.6030905@ubuntu.com>
+From: Sergey Meirovich <rathamahata@gmail.com>
+Subject: Re: Terrible performance of sequential O_DIRECT 4k writes in SAN
+ environment. ~3 times slower then Solars 10 with the same HBA/Storage.
+Date: Tue, 7 Jan 2014 20:37:23 +0200
+Message-ID: <CA+QCeVRiwHU+C5utaLQXf_MpjoYMYEF4LKRyDPaqcd=H6n-RRw@mail.gmail.com>
+References: <CA+QCeVQRrqx=CrxyuAe7k0e0y4Nqo7x_8jtkuD99VM8L9Dxp+g@mail.gmail.com>
+ <20140106201032.GA13491@quack.suse.cz> <20140107155830.GA28395@infradead.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-pm-owner@vger.kernel.org>
-In-Reply-To: <52CC2D5F.6030905@ubuntu.com>
-Sender: linux-pm-owner@vger.kernel.org
-To: Phillip Susi <psusi@ubuntu.com>
-Cc: Aaron Lu <aaron.lu@intel.com>, Sujit Reddy Thumma <sthumma@codeaurora.org>, todd.e.brandt@linux.intel.com, tj@kernel.org, JBottomley@parallels.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Linux-pm mailing list <linux-pm@vger.kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wg0-f54.google.com ([74.125.82.54]:48637 "EHLO
+	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752349AbaAGShq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jan 2014 13:37:46 -0500
+In-Reply-To: <20140107155830.GA28395@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Jan Kara <jack@suse.cz>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Gluk <git.user@gmail.com>
 
-On Tue, 7 Jan 2014, Phillip Susi wrote:
+Hi Christoph,
 
-> On 1/7/2014 11:08 AM, Alan Stern wrote:
-> > Okay, that's a different matter.  There's a much simpler way to 
-> > accomplish this.  The patch below will avoid spinning up drives
-> > that were already in runtime suspend when the system sleep started.
-> >  (If a drive wasn't in runtime suspend then presumably it was used
-> >  recently; therefore it's likely to be used again in the near
-> > future and so it _should_ be spun up.)
-> 
-> This is a poor assumption.  You may not be using autosuspend at all,
-> or with a rather long timeout, so it is fairly normal to not be
-> runtime suspended at suspend time, and yet not likely to access the
-> disk for some time after resume.
+On 7 January 2014 17:58, Christoph Hellwig <hch@infradead.org> wrote:
+> On Mon, Jan 06, 2014 at 09:10:32PM +0100, Jan Kara wrote:
+>>   This is likely a problem of Linux direct IO implementation. The thing is
+>> that in Linux when you are doing appending direct IO (i.e., direct IO which
+>> changes file size), the IO is performed synchronously so that we have our
+>> life simpler with inode size update etc. (and frankly our current locking
+>> rules make inode size update on IO completion almost impossible). Since
+>> appending direct IO isn't very common, we seem to get away with this
+>> simplification just fine...
+>
+> Shouldn't be too much of a problem at least for XFS and maybe even ext4
+> with the workqueue based I/O end handler.  For XFS we protect size
+> updates by the ilock which we already taken in that handler, not sure
+> what ext4 would do there.
+>
 
-I disagree with your argument.  If you aren't using autosuspend at all 
-then you don't mind having your disks spin all the time.  Therefore you 
-don't mind if the disks spin up during system resume.
+Actually my initial report (14.67Mb/sec  3755.41 Requests/sec) was about ext4
+However I have tried XFS as well. It was a bit slower than ext4 on all
+occasions.
+On the same machine results for XFS were:
 
-If you're using a long timeout and you don't like the way the timer 
-gets reset by a system sleep, then you have set the timeout too long.
+    13.97Mb/sec  3576..27 Requests/sec
 
-Now, a more reasonable argument might be that for some disks, the
-kernel doesn't need to do an explicit spin-up or spin-down (for runtime
-suspend) at all; instead we can rely on the drive's internal power
-management.  In fact there already is a "manage_start_stop" attribute
-to control this.  (Well, almost -- if the attribute is set to 0 then
-the kernel won't issue a spin-down command even for system suspend.)
-
->  It also still suffers from the issue
-> of claiming the device is runtime suspended while the disk has in
-> fact, spun up of its own accord.
-
-I don't understand.  Under what circumstances would this happen?  Are 
-you saying this would happen during system resume?  Why would the disk 
-spin up of its own accord at that time?
-
-And if it does spin up of its own accord, what makes you think the 
-kernel can do anything to prevent it from spinning up?
-
-Alan Stern
-
+/dev/mapper/mpathc on /mnt/xfs type xfs (rw,noatime,nodiratime,nobarrier)
