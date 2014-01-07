@@ -1,45 +1,48 @@
-From: Alexander Gordeev <agordeev@redhat.com>
-Subject: [PATCH 0/7] Phase out pci_enable_msi_block()
-Date: Tue,  7 Jan 2014 19:05:35 +0100
-Message-ID: <cover.1389103215.git.agordeev@redhat.com>
-Return-path: <kvm-owner@vger.kernel.org>
-Sender: kvm-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>, Brian King <brking@us.ibm.com>, Tejun Heo <tj@kernel.org>, Matthew Wilcox <willy@linux.intel.com>, Alex Williamson <alex.williamson@redhat.com>, Kalle Valo <kvalo@qca.qualcomm.com>, Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>, linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com, ath10k@lists.infradead.org, linux-nvme@lists.infradead.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, kvm@vger.kernel.org, linux-pci@vger.kernel.org
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: status of block-integrity
+Date: Tue, 07 Jan 2014 16:43:40 -0500
+Message-ID: <yq1a9f7wjqr.fsf@sermon.lab.mkp.net>
+References: <20131222192128.GA28532@infradead.org> <52C6D0DB.1050906@suse.de>
+	<yq1wqigzvc1.fsf@sermon.lab.mkp.net>
+	<20140107013646.GB10297@birch.djwong.org> <52CBAA1B.7000509@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:28442 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753480AbaAGVoO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jan 2014 16:44:14 -0500
+In-Reply-To: <52CBAA1B.7000509@suse.de> (Hannes Reinecke's message of "Tue, 07
+	Jan 2014 08:17:47 +0100")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, chuck.lever@oracle.com, Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-As result of recent deprecation of MSI-X/MSI enablement
-interfaces pci_enable_msi_block(), pci_enable_msi() and
-pci_enable_msix() all drivers need to be updated to use
-new pci_enable_msi_range() and pci_enable_msix_range()
-interfaces.
+>>>>> "Hannes" == Hannes Reinecke <hare@suse.de> writes:
 
-This is the first in a series of updates, to phase out
-pci_enable_msi_block() function.
+Hannes> Plus (as hch rightly pointed out) as there is no defined
+Hannes> userland interface the question is why we bother with all the
+Hannes> DIX stuff in the block layer.  
 
-This series is against pci/msi branch in Bjorn Helgaas's repo:
-git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
+Because it catches problems in the path between block layer and HBA
+ASIC? FWIW, we find more issues there than we do between initiator and
+target.
 
-Thanks!
+API issues aside, another reason adoption has been slow is that very few
+applications truly care about this stuff. The current approach in which
+data is protected when the I/O is submitted by the filesystem is good
+enough for most things. Saves the filesystem people the trouble of
+dealing with it too.
 
-Alexander Gordeev (7):
-  ipr: Do not call pci_disable_msi/msix() if pci_enable_msi/msix()
-    failed
-  ipr: Use new interfaces for MSI/MSI-X enablement
-  ahci: Use new interfaces for MSI/MSI-X enablement
-  nvme: Use new interfaces for MSI/MSI-X enablement
-  vfio: Use new interfaces for MSI/MSI-X enablement
-  ath10k: Use new interfaces for MSI enablement
-  wil6210: Use new interfaces for MSI enablement
+In reality there are only a handful of applications that would actually
+benefit from an explicit userland API. Mostly in the database
+department. All the potential consumers of an interface I talked to
+wanted to use aio so that's why we've focused our efforts there.
 
- drivers/ata/ahci.c                          |   15 +++-----
- drivers/block/nvme-core.c                   |   33 ++++-------------
- drivers/net/wireless/ath/ath10k/pci.c       |   22 ++++++------
- drivers/net/wireless/ath/wil6210/pcie_bus.c |   36 ++++++++++---------
- drivers/scsi/ipr.c                          |   51 +++++++++-----------------
- drivers/vfio/pci/vfio_pci_intrs.c           |    8 ++--
- 6 files changed, 66 insertions(+), 99 deletions(-)
+Both Darrick and I have been busy with other projects the last little
+while. I'll start looking at this again when I'm done with copy
+offload...
 
 -- 
-1.7.7.6
-
+Martin K. Petersen	Oracle Linux Engineering
