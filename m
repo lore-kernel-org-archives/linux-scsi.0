@@ -1,99 +1,79 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: status of block-integrity
-Date: Tue, 07 Jan 2014 14:33:10 +0100
-Message-ID: <52CC0216.5060900@suse.de>
-References: <20131222192128.GA28532@infradead.org> <yq11u134rmt.fsf@sermon.lab.mkp.net> <52CBBABD.50902@gmail.com>
+From: Ewan Milne <emilne@redhat.com>
+Subject: Re: [PATCH] scsi_error: disable eh_deadline if no
+ host_reset_handler is set
+Date: Tue, 07 Jan 2014 08:33:45 -0500
+Message-ID: <1389101625.3817.1042.camel@localhost.localdomain>
+References: <1386846513-122051-1-git-send-email-hare@suse.de>
+Reply-To: emilne@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:59800 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:63892 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751971AbaAGNdM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 7 Jan 2014 08:33:12 -0500
-In-Reply-To: <52CBBABD.50902@gmail.com>
+	id S1750904AbaAGNdv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 7 Jan 2014 08:33:51 -0500
+In-Reply-To: <1386846513-122051-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ric Wheeler <ricwheeler@gmail.com>, "Martin K. Petersen" <mkp@mkp.net>, Christoph Hellwig <hch@infradead.org>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Linux FS Devel <linux-fsdevel@vger.kernel.org>
+To: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org
 
-On 01/07/2014 09:28 AM, Ric Wheeler wrote:
-> On 12/23/2013 09:35 PM, Martin K. Petersen wrote:
->>>>>>> "Christoph" =3D=3D Christoph Hellwig <hch@infradead.org> writes=
-:
->> Christoph> We have the block integrity code to support DIF/DIX in th=
-e
->> Christoph> the tree for about 5 and a half years, and we still don't
->> Christoph> have a single consumer of it.
->>
->> What do you mean? If you have a DIX-capable HBA (lpfc, qla2xxx, zfcp=
-)
->> then integrity protection is active from the block layer down. The
->> only
->> code that's not currently being exercised are the tag interleaving
->> functions.  I was hoping the FS people would use them for back
->> pointers
->> but nobody seemed to bite.
->>
->>
->> Christoph> Given that we'll have a lot of work to do in this area
->> with
->> Christoph> block multiqueue I think it's time to either kill it
->> off for
->> Christoph> good or make sure we can actually use and test it.
->>
->> I don't understand why multiqueue would require a lot of work?
->> It's just
->> an extra scatterlist per request.
->>
->> And obviously, if there's anything that needs to be done in this are=
-a
->> I'll be happy to do so...
->>
->=20
-> One of the major knocks on linux file systems (except for btrfs)
-> that I hear is the lack of full data path checksums. DIF/DIX + xfs
-> or ext4 done right will give us another answer here.  I don't think
-> it will be common, it is a request that comes in for very large
-> storage customers most commonly.
->=20
-> We do have devices that support this and are working to get more
-> vendor testing done, so I would hate to see us throw out the code
-> instead of fixing it up for the end users that see value here.
->=20
-> I think that we can get this working & agree with the call to
-> continue this discussion (here and at LSF :))
->=20
-I would indeed like to have a discussion at LSF about the future of
-DIX. DIF is not an issue, as most HBAs support it already and we
-actually need it for proper connectivity.
+On Thu, 2013-12-12 at 12:08 +0100, Hannes Reinecke wrote:
+> When the host template doesn't declare an eh_host_reset_handler
+> the eh_deadline mechanism is pointless and will set the
+> device to offline. So disable eh_deadline if no
+> eh_host_reset_handler is present.
+> 
+> Cc: Ewan Milne <emilne@redhat.com>
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> ---
+>  drivers/scsi/hosts.c      | 2 +-
+>  drivers/scsi/scsi_sysfs.c | 4 +++-
+>  2 files changed, 4 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+> index 6966def..351afa4 100644
+> --- a/drivers/scsi/hosts.c
+> +++ b/drivers/scsi/hosts.c
+> @@ -396,7 +396,7 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+>  	shost->unchecked_isa_dma = sht->unchecked_isa_dma;
+>  	shost->use_clustering = sht->use_clustering;
+>  	shost->ordered_tag = sht->ordered_tag;
+> -	if (shost_eh_deadline == -1)
+> +	if (shost_eh_deadline == -1 || !sht->eh_host_reset_handler)
+>  		shost->eh_deadline = -1;
+>  	else if ((ulong) shost_eh_deadline * HZ > INT_MAX) {
+>  		shost_printk(KERN_WARNING, shost,
+> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+> index 9117d0b..7434e26 100644
+> --- a/drivers/scsi/scsi_sysfs.c
+> +++ b/drivers/scsi/scsi_sysfs.c
+> @@ -300,7 +300,9 @@ store_shost_eh_deadline(struct device *dev, struct device_attribute *attr,
+>  	int ret = -EINVAL;
+>  	unsigned long deadline, flags;
+>  
+> -	if (shost->transportt && shost->transportt->eh_strategy_handler)
+> +	if (shost->transportt &&
+> +	    (shost->transportt->eh_strategy_handler ||
+> +	     !shost->transportt->eh_host_reset_handler))
 
-DIX, OTOH, has been left dormant since time immemorial, with the
-only known (supposed) user being Oracle.
-(I actually talked to the DB/2 folks about it, and the response
-was a polite feigned interest ...)
+I think this bit is supposed to be:
 
-We need to come up with a concise story here (either integrate with
-filesystems or have a userland interface), otherwise it's just dead
-code and indeed should be removed.
+        if ((shost->transportt &&
+             shost->transportt->eh_strategy_handler) ||
+            !shost->hostt->eh_host_reset_handler)
+                return ret;
 
-Plus so far I've had exactly _one_ request for DIX, and even that
-came from a company which has its own custom storage array firmware.
-Making me wonder if DIF/DIX is really that important or more of an
-tick-mark during procuring ...
+because the field is in the scsi_host_template structure, right?
 
-Even so, it would warrant a discussion at LSF.
+But, otherwise, this patch is necessary because some drivers don't
+implement host reset (e.g. hpsa).
 
-Cheers,
+-Ewan
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>  		return ret;
+>  
+>  	if (!strncmp(buf, "off", strlen("off")))
+
+
