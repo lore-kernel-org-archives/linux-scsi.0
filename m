@@ -1,138 +1,105 @@
-From: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Subject: Re: [RFC 2/2] dual scan thread bug fix
-Date: Wed, 08 Jan 2014 07:42:36 +0800
-Message-ID: <1389138156.2064.7.camel@dabdike.pnp.gw>
-References: <Pine.LNX.4.44L0.1401041119030.31700-100000@netrider.rowland.org>
+From: Phillip Susi <psusi@ubuntu.com>
+Subject: Re: REQ_PM vs REQ_TYPE_PM_RESUME
+Date: Tue, 07 Jan 2014 18:47:57 -0500
+Message-ID: <52CC922D.9070208@ubuntu.com>
+References: <Pine.LNX.4.44L0.1401071352080.1296-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <Pine.LNX.4.44L0.1401041119030.31700-100000-pYrvlCTfrz9XsRXLowluHWD2FQJk+8+b@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Cc: linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-pm-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.44L0.1401071352080.1296-100000@iolanthe.rowland.org>
+Sender: linux-pm-owner@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Aaron Lu <aaron.lu@intel.com>, Sujit Reddy Thumma <sthumma@codeaurora.org>, todd.e.brandt@linux.intel.com, tj@kernel.org, JBottomley@parallels.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Linux-pm mailing list <linux-pm@vger.kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, 2014-01-04 at 11:27 -0500, Alan Stern wrote:
-> On Fri, 3 Jan 2014, James Bottomley wrote:
-> 
-> > > I'm still concerned about one thing.  The previous patch does this in
-> > > scsi_alloc_target():
-> > > 
-> > > >   found:
-> > > > -	found_target->reap_ref++;
-> > > > +	if (!kref_get_unless_zero(&found_target->reap_ref))
-> > > > +		/*
-> > > > +		 * release routine already fired.  Target is dead, but
-> > > > +		 * STARGET_DEL may not yet be set (set in the release
-> > > > +		 * routine), so set here as well, just in case
-> > > > +		 */
-> > > > +		found_target->state = STARGET_DEL;
-> > > >  	spin_unlock_irqrestore(shost->host_lock, flags);
-> > > 
-> > > As a result, the two comments in this patch aren't right:
-> > > 
-> > > > @@ -384,9 +385,15 @@ static void scsi_target_reap_ref_release(struct kref *kref)
-> > > >  	struct scsi_target *starget
-> > > >  		= container_of(kref, struct scsi_target, reap_ref);
-> > > >  
-> > > > -	transport_remove_device(&starget->dev);
-> > > > -	device_del(&starget->dev);
-> > > > -	starget->state = STARGET_DEL;
-> > > > +	/*
-> > > > +	 * if we get here and the target is still in the CREATED state that
-> > > > +	 * means it was allocated but never made visible (because a scan
-> > > > +	 * turned up no LUNs), so don't call device_del() on it.
-> > > > +	 */
-> > > > +	if (starget->state == STARGET_RUNNING) {
-> > > > +		transport_remove_device(&starget->dev);
-> > > > +		device_del(&starget->dev);
-> > > > +	}
-> > > 
-> > > Here the state could already be STARGET_DEL, even though the target is
-> > > still visible.
-> > 
-> > Well, I agree with the theory.  In practise, there are only a few
-> > machine instructions between the kref going to zero and us reaching that
-> > point, because kref_release will jump into this routine next, so the
-> > condition would be very hard to see.
-> 
-> It's true that the window is very small and not at all likely to be
-> hit.  Still, I prefer eliminating such things entirely.
-> 
-> >  However, I suppose it's easy to
-> > close by checking for != STARGET_CREATED and there's no reason not to do
-> > that, so I'll change it.
-> 
-> Checking for != STARGET_CREATED is also wrong in principle.  The state
-> could already be STARGET_DEL even though the target was never made
-> visible.
-> 
-> The basic problem is that you are relying on the state to be an
-> accurate description of the target's visibility, but
-> scsi_alloc_target() changes the state without changing the visibility.  
-> I really think you should get rid of that extra assignment in
-> scsi_alloc_target().
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
 
-OK, Agreed, but that means modifying the 1/2 patch with the below.  This
-should make the proposed diff to 2/2 correct.
+On 01/07/2014 02:18 PM, Alan Stern wrote:
+> I don't know how you manually spin down your disk, but one
+> reasonable way to do it is to set the autosuspend timeout to 0.  If
+> you use this approach and apply my patch, the disk should remain
+> spun down when the system resumes.
 
-James
+The traditional method before the recently added block pm feature was
+with hdparm -y.
 
----
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index ef3f958..5fad646 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -417,7 +417,7 @@ static struct scsi_target *scsi_alloc_target(struct device *parent,
- 		+ shost->transportt->target_size;
- 	struct scsi_target *starget;
- 	struct scsi_target *found_target;
--	int error;
-+	int error, ref_got;
- 
- 	starget = kzalloc(size, GFP_KERNEL);
- 	if (!starget) {
-@@ -466,15 +466,15 @@ static struct scsi_target *scsi_alloc_target(struct device *parent,
- 	return starget;
- 
-  found:
--	if (!kref_get_unless_zero(&found_target->reap_ref))
--		/*
--		 * release routine already fired.  Target is dead, but
--		 * STARGET_DEL may not yet be set (set in the release
--		 * routine), so set here as well, just in case
--		 */
--		found_target->state = STARGET_DEL;
-+	/*
-+	 * release routine already fired if kref is zero, so if we can still
-+	 * take the reference, the target must be alive.  If we can't, it must
-+	 * be dying and we need to wait for a new target
-+	 */
-+	ref_got = kref_get_unless_zero(&found_target->reap_ref);
-+
- 	spin_unlock_irqrestore(shost->host_lock, flags);
--	if (found_target->state != STARGET_DEL) {
-+	if (ref_got) {
- 		put_device(dev);
- 		return found_target;
- 	}
-@@ -482,8 +482,8 @@ static struct scsi_target *scsi_alloc_target(struct device *parent,
- 	 * Unfortunately, we found a dying target; need to wait until it's
- 	 * dead before we can get a new one.  There is an anomaly here.  We
- 	 * *should* call scsi_target_reap() to balance the kref_get() of the
--	 * reap_ref above.  However, since the target is in state STARGET_DEL,
--	 * it's already invisible and the reap_ref is irrelevant.  If we call
-+	 * reap_ref above.  However, since the target being released, it's
-+	 * already invisible and the reap_ref is irrelevant.  If we call
- 	 * scsi_target_reap() we might spuriously do another device_del() on
- 	 * an already invisible target.
- 	 */
+> Right.  If you hadn't put the whole system to sleep, the disk
+> would have gone into runtime suspend 2 minutes later (assuming you
+> didn't use it in the meantime).  Whereas since you did put the
+> whole system to sleep, the disk will go into runtime suspend 5
+> minutes after the system wakes up -- not 2 minutes later.  I.e.,
+> the timer has been reset from 2 minutes back to 5.
 
+What resets the timer?  It should only be reset when IO is done.  And
+yes, it is exactly that wakeup and turn around and suspend again that
+I'm trying to avoid; it puts unnecessary wear and tear on the disk.
 
+> How is the kernel supposed to know that you finished using the
+> disk before suspending the system?  After all, by setting the
+> autosuspend timeout to 5 minutes, you have already told the kernel
+> to keep the disk spun up if it has been used any time in the last 5
+> minutes, and you used it only 3 minutes ago.  As far as the kernel
+> can tell, you still want the disk to be spun up and ready for use.
+> That remains true at the time of the system resume.
 
+That's the whole point: it doesn't know.  What it does know is that
+the disk is spun down on resume, and it has no reason to believe that
+you will need it again soon.  This is especially true given that your
+typical single ATA disk system will spin up the drive on its own
+anyhow, so on systems with multiple scsi or ATA disks that explicitly
+have been set to power up in standby, it is at least an even bet that
+you won't be touching them all soon.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> You're forgetting that the same sd driver manages other types of 
+> devices than disk drives.  Card readers and USB flash drives have
+> no heads to retract and no spinning platters.  They don't need
+> START STOP commands (in fact, some of them probably would crash if
+> they received such a command).
+
+They are irrelevant since they ignore the command anyhow.
+
+> Irrelevant, unless you are also claiming that all ATA disks always
+> get powered on whenever the system resumes, something which is not
+> at all evident to me.  Particularly if the disk was in runtime
+> suspend before the system went to sleep.
+
+I'm saying that most do.  It doesn't require 100% to be relevant.
+There will also be plenty of disks at least for some time that are
+still using the internal standby timer rather than runtime pm.
+
+> Now I'm really getting confused.  Here, you are saying that ATA
+> disks will always spin up, all by themselves, whenever the system
+> resumes, and there's nothing the kernel can do to prevent it.  But
+> earlier you wrote:
+
+No, I'm saying some ( most in fact ) do, and some do not.  Both cases
+need to be handled.  Runtime pm must not indicate the disk is
+suspended when it spins up on its own after power on, which ATA disks
+do by default.  Oddly, the SCSI standard says that SCSI disks can be
+configured behave this way as well rather than requiring an explicit
+start command, though it doesn't say how and I've not heard of a way
+to do this.  I suppose this also applies to the USB flash drives and
+SD card readers you mentioned that are managed by sd.
+
+> Isn't this a contradiction?  Or are you making a distinction
+> between ATA and non-ATA disks?
+
+What?  I have some disk drives that I rarely access.  I simply don't
+want them starting up and spinning back down every time I resume.  In
+my case they are ATA with PuiS enabled, but it applies to SCSI the
+same way.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.14 (GNU/Linux)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iQEcBAEBCgAGBQJSzJItAAoJEI5FoCIzSKrwhCQIAIclA7u+FJ1PSZRYWcvFQg0B
+n/WIupSCAXfiSo4uVZpC9m4W8TR9CawEorIPZGE+G/Hv+zRz3YKqA3OOuOQc1S5i
+5IK019yY4EsOHsUK8RlBsgKu1bW0SdFsa73COzqT65bxNqUb5PUK5ed/Z1Kg7cTn
+QM7jCMYz0wE7cqAQQ8eV56Y1Nolb6T3WmqKqoGl+qJj+IvebCuJ9vsYXf7MhSd9b
+yb2Iq/ThR81vm68c6+KOFQkOkL3zPZ6QWCh5Xj4mRkvXtsd7htNKpxTkM7OC6azF
+Z0I5xreArN9SQ8GLHtzB2Lrs+SzlMSvIE1HKQdieBcy//LImk8DajbddupJy7Bk=
+=dYPC
+-----END PGP SIGNATURE-----
