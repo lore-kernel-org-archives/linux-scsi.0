@@ -1,143 +1,58 @@
-From: Todd E Brandt <todd.e.brandt@linux.intel.com>
-Subject: [PATCH/RESEND v2 2/2] Hard disk S3 resume time optimization
-Date: Tue, 7 Jan 2014 16:56:59 -0800
-Message-ID: <20140108005659.GC29556@linux.intel.com>
-Reply-To: todd.e.brandt@linux.intel.com
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: REQ_PM vs REQ_TYPE_PM_RESUME
+Date: Wed, 08 Jan 2014 09:03:11 +0800
+Message-ID: <52CCA3CF.5050308@intel.com>
+References: <cover.1384030893.git.psusi@ubuntu.com> <1387236657-4852-1-git-send-email-psusi@ubuntu.com> <52CA1191.8060804@ubuntu.com> <52CA5CF4.2080708@codeaurora.org> <52CA744F.2080609@intel.com> <52CAC067.20601@ubuntu.com> <52CBB188.2080707@intel.com> <52CC1422.1020101@ubuntu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:42809 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754411AbaAHA55 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 7 Jan 2014 19:57:57 -0500
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <52CC1422.1020101@ubuntu.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Phillip Susi <psusi@ubuntu.com>, Sujit Reddy Thumma <sthumma@codeaurora.org>
+Cc: todd.e.brandt@linux.intel.com, tj@kernel.org, JBottomley@parallels.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>, Linux-pm mailing list <linux-pm@vger.kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>
 List-Id: linux-scsi@vger.kernel.org
-To: tj@kernel.org, James.Bottomley@HansenPartnership.com
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On resume, the SD driver currently waits until the block driver finishes
-executing a disk start command with blk_execute_rq. This patch changes
-the sd_resume callback to use blk_execute_rq_nowait instead, which allows
-it to return immediately, thus allowing the next device in the pm queue
-to resume. The return value of blk_execute_rq_nowait is handled in the
-background by sd_resume_complete. Any commands issued to the scsi disk
-during the startup will be queued up and executed once the disk is online.
-Thus no information is lost.
+On 01/07/2014 10:50 PM, Phillip Susi wrote:
+> -----BEGIN PGP SIGNED MESSAGE-----
+> Hash: SHA1
+> 
+> On 1/7/2014 2:49 AM, Aaron Lu wrote:
+>> We can modify the device's system resume callback. To better
+>> illustrate the idea, I just made two patches to do this and I did
+>> some quick tests and didn't find anything wrong.
+> 
+> That misses one key aspect I was trying to capture: it always leaves
+> the disk runtime suspended after a resume.  If the disk spins up on
 
-This patch applies to all three resume callbacks: resume, restore, and
-runtime-resume. There is only a performance benefit for resume, but for
-simplicity both restore and runtime-resume use the same code path.
+You mean you want to leave the disk runtime suspended after a system
+resume and in the meantime make sure the disk is indeed not spun up?
 
-The execution flow has changed from a single, synchronous call, to two
-calls: one called to start sd_resume asynchronously, the other called on
-completion. Thus the dmesg log will now show two prints for each drive
-resume, on resume start and complete. The scsi sense data is managed
-the same, but is now analyzed and freed in sd_resume_complete.
+-Aaron
 
-This code copies a portion of sd_start_stop_device, scsi_execute_req_flags,
-and scsi_execute directly into sd_resume: effectively circumventing
-sd_start_stop_device to start disks. This is to enable only the START_STOP
-command to use blk_execute_rq_nowait instead of blk_execute_rq. So
-sd_start_stop_device is now only used to stop the device. The disk is
-started from within the sd_resume call itself. Another approach might be to
-create an async version of scsi_execute to better preserve the code path
-but I'm reticent to allow any other scsi commands to execute asynchronously.
-
-Signed-off-by: Todd Brandt <todd.e.brandt@intel.com>
-Signed-off-by: Arjan van de Ven <arjan@linux.intel.com>
-
- drivers/scsi/sd.c | 70 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 67 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index e6c4bff..eed8ea2 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -3166,18 +3166,82 @@ static int sd_suspend_runtime(struct device *dev)
-        return sd_suspend_common(dev, false);
- }
-
-+static void sd_resume_complete(struct request *rq, int error)
-+{
-+       struct scsi_sense_hdr sshdr;
-+       struct scsi_disk *sdkp = rq->end_io_data;
-+       char *sense = rq->sense;
-+
-+       if (error) {
-+               sd_printk(KERN_WARNING, sdkp, "START FAILED\n");
-+               sd_print_result(sdkp, error);
-+               if (sense && (driver_byte(error) & DRIVER_SENSE)) {
-+                       scsi_normalize_sense(sense,
-+                               SCSI_SENSE_BUFFERSIZE, &sshdr);
-+                       sd_print_sense_hdr(sdkp, &sshdr);
-+               }
-+       } else {
-+               sd_printk(KERN_NOTICE, sdkp, "START SUCCESS\n");
-+       }
-+
-+       kfree(sense);
-+       rq->sense = NULL;
-+       rq->end_io_data = NULL;
-+       __blk_put_request(rq->q, rq);
-+       scsi_disk_put(sdkp);
-+}
-+
- static int sd_resume(struct device *dev)
- {
-+       unsigned char cmd[6] = { START_STOP };
-        struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
-+       struct request *req;
-+       char *sense = NULL;
-        int ret = 0;
-
-        if (!sdkp->device->manage_start_stop)
--               goto done;
-+               goto error;
-
-        sd_printk(KERN_NOTICE, sdkp, "Starting disk\n");
--       ret = sd_start_stop_device(sdkp, 1);
-
--done:
-+       cmd[4] |= 1;
-+
-+       if (sdkp->device->start_stop_pwr_cond)
-+               cmd[4] |= 1 << 4;       /* Active or Standby */
-+
-+       if (!scsi_device_online(sdkp->device)) {
-+               ret = -ENODEV;
-+               goto error;
-+       }
-+
-+       req = blk_get_request(sdkp->device->request_queue, 0, __GFP_WAIT);
-+       if (!req) {
-+               ret = -ENOMEM;
-+               goto error;
-+       }
-+        
-+       sense = kzalloc(SCSI_SENSE_BUFFERSIZE, GFP_NOIO);
-+       if (!sense) {
-+               ret = -ENOMEM;
-+               goto error_sense;
-+       }
-+       
-+       req->cmd_len = COMMAND_SIZE(cmd[0]);
-+       memcpy(req->cmd, cmd, req->cmd_len);
-+       req->sense = sense;
-+       req->sense_len = 0;
-+       req->retries = SD_MAX_RETRIES;
-+       req->timeout = SD_TIMEOUT;
-+       req->cmd_type = REQ_TYPE_BLOCK_PC;
-+       req->cmd_flags |= REQ_PM | REQ_QUIET | REQ_PREEMPT;
-+
-+       req->end_io_data = sdkp;
-+       blk_execute_rq_nowait(req->q, NULL, req, 1, sd_resume_complete);
-+       return 0;
-+
-+ error_sense:
-+       __blk_put_request(req->q, req);
-+ error:
-        scsi_disk_put(sdkp);
-        return ret;
- }
+> its own, as most ata disks do, then the runtime status doesn't
+> correctly reflect the actual state of the disk.  This means that
+> applications that delay activities due to the runtime pm status to
+> avoid waking a disk won't run, and any runtime autosuspend won't kick
+> in to actually put the disk back to sleep.
+> 
+> To do that, you need to be able to issue a REQUEST SENSE and
+> conditionally resume the device.  Of course, you can't do that unless
+> you first get it into a transitional state, but you can't just request
+> a resume and then conditionally fail it.
+> 
+> 
+> -----BEGIN PGP SIGNATURE-----
+> Version: GnuPG v2.0.17 (MingW32)
+> Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+> 
+> iQEcBAEBAgAGBQJSzBQiAAoJEI5FoCIzSKrwH9UH/3Z3TfKKKYhNsjr26YsKOge2
+> EQzbcFCg4H5irnKL/olR5fnRKpZYi1Er2ydV6zsHdcCJLFQoqvzVE4ZInl42STI0
+> IWQ65n5q+U1OaZY+ttGkOBjixi5VIlkb9izZVbzBTi4n5cLEDwyQsE4Rgd9STwjm
+> gPkNrmGNGPUoY+4O6bLHu0/WvwTX3L/OgxcSsQd1gsdCX3qZzB+UIzfM31W9/4Yl
+> 3sP/tN8mBYcpqR9jIpw2u7m0XEe9Wc71Nepdv2+6sT5uZJ5knTY6epH5Of4FJsyp
+> CxslFXf6Jb2FZaey8EJB1ocABnePYluQNHrpdRO4gjY+Au/mtzk15tJjoYx3WXg=
+> =VlKV
+> -----END PGP SIGNATURE-----
+> 
 
