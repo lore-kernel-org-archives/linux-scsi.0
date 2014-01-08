@@ -1,64 +1,50 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: status of block-integrity
-Date: Wed, 08 Jan 2014 08:05:10 +0800
-Message-ID: <1389139510.2064.22.camel@dabdike.pnp.gw>
-References: <20131222192128.GA28532@infradead.org>
-	 <yq11u134rmt.fsf@sermon.lab.mkp.net> <52CBBABD.50902@gmail.com>
-	 <52CC0216.5060900@suse.de> <20140107233410.GA1263@parisc-linux.org>
+From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Subject: Re: [PATCH 3.12 033/118] usb: xhci: Link TRB must not occur within a
+ USB payload burst
+Date: Tue, 7 Jan 2014 16:47:24 -0800
+Message-ID: <20140108004724.GA14082@xanatos>
+References: <52CC944C.50702@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:33338 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752310AbaAHAFQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jan 2014 19:05:16 -0500
-In-Reply-To: <20140107233410.GA1263@parisc-linux.org>
+Received: from mga09.intel.com ([134.134.136.24]:5123 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753876AbaAHArY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 7 Jan 2014 19:47:24 -0500
+Content-Disposition: inline
+In-Reply-To: <52CC944C.50702@gmail.com>
+ <20140107212101.GA4199@xanatos>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Hannes Reinecke <hare@suse.de>, Ric Wheeler <ricwheeler@gmail.com>, "Martin K. Petersen" <mkp@mkp.net>, Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Linux FS Devel <linux-fsdevel@vger.kernel.org>
+To: walt <w41ter@gmail.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Linux Kernel <linux-kernel@vger.kernel.org>, stable@vger.kernel.org, David Laight <david.laight@aculab.com>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Tue, 2014-01-07 at 16:34 -0700, Matthew Wilcox wrote:
-> On Tue, Jan 07, 2014 at 02:33:10PM +0100, Hannes Reinecke wrote:
-> > I would indeed like to have a discussion at LSF about the future of
-> > DIX. DIF is not an issue, as most HBAs support it already and we
-> > actually need it for proper connectivity.
-> > 
-> > DIX, OTOH, has been left dormant since time immemorial, with the
-> > only known (supposed) user being Oracle.
-> > (I actually talked to the DB/2 folks about it, and the response
-> > was a polite feigned interest ...)
+On Tue, Jan 07, 2014 at 03:57:00PM -0800, walt wrote:
+> On 01/07/2014 01:21 PM, Sarah Sharp wrote:
 > 
-> I think there's a terminology confusion here; you seem to be using DIX
-> to mean the TCP CRC and DIF to mean T10DIF.  I've seen other people use
-> DIX to mean separate SGLs for metadata and DIF to mean interleaved data.
-> Can you confirm which thing you mean here?
+> > Can you please try the attached patch, on top of the previous three
+> > patches, and send me dmesg?
+> 
+> Hi Sarah, I just now finished running 0001-More-debugging.patch for the
+> first time.  The previous dmesg didn't include that patch, but this one
+> does.
+> 
+> I read through this dmesg but I nodded off somewhere around line 500.
+> I hope you can stay awake :)
 
-No, I think you're confusing algorithms with protocols.  DIF and DIX are
-two names for protection envelopes.  DIF verifies integrity from the HBA
-to the device surface.  DIX verifies integrity from an application to
-the HBA.  Both DIF and DIX have pluggable checksum algorithms (and, in
-theory, as long as the HBA does the conversion, they don't have to use
-the same one, although the confusion over protection types and
-algorithms is so dense already that the only way not to go insane is to
-use the same end to end one).  Oracle has the best data sources to
-explain this, including Martin's slides:
+Well, it has all the info I need, but the results don't make me too
+happy.  Everything I've checked seems consistent, and I don't know why
+the host stopped.  The link TRBs are intact, the dequeue pointer for the
+endpoint was pointing to the transfer that timed out and it had the
+cycle bit set correctly, etc.  Perhaps the no-op TRBs are really the
+issue.
 
-https://oss.oracle.com/projects/data-integrity/documentation/
+I'll have to take a look at the log again tomorrow.  I posted the dmesg
+on pastebin if David wants to check it out as well:
+http://pastebin.com/a4AUpsL1
 
-The specific problem is that there's no defined interface for any
-application to use DIX easily because it has to supply additional
-protection information when it reads or writes data and there's no
-agreed way to extend read/write to do this and, as Martin has said,
-thinging about trying to do this with mmap leads to a "bonghit bonanza".
+Can you send me the output of `sudo lspci -vvv -n`?  Maybe we can just
+turn off scatter-gather for your host controller until we get a proper
+fix in that uses link TRBs instead of no-op TRBs.
 
-So, the question is do we need to bother with DIX at all?  No filesystem
-uses it and there seems to be weak user demand at best.  We could just
-strip DIX, losing the protection envelope from the application to the
-HBA but keeping DIF, which is the protection envelope from the HBA to
-the device.  
-
-James
-
-
+Sarah Sharp
