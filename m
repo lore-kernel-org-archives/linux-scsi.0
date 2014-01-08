@@ -1,28 +1,26 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH 11/14] target/rd: Refactor rd_build_device_space + rd_release_device_space
-Date: Wed,  8 Jan 2014 20:15:54 +0000
-Message-ID: <1389212157-14540-12-git-send-email-nab@daterainc.com>
+Subject: [PATCH 09/14] target/configfs: Expose protection device attributes
+Date: Wed,  8 Jan 2014 20:15:52 +0000
+Message-ID: <1389212157-14540-10-git-send-email-nab@daterainc.com>
 References: <1389212157-14540-1-git-send-email-nab@daterainc.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:49894 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757521AbaAHUga (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jan 2014 15:36:30 -0500
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1389212157-14540-1-git-send-email-nab@daterainc.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Sagi Grimberg <sagig@mellanox.com>, Or Gerlitz <ogerlitz@mellanox.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch refactors rd_build_device_space() + rd_release_device_space()
-into rd_allocate_sgl_table() + rd_release_device_space() so that they
-may be used seperatly for setup + release of protection information
-scatterlists.
+This patch adds support for exposing DIF protection device
+attributes via configfs.  This includes:
 
-Also add explicit memset of pages within rd_allocate_sgl_table() based
-upon passed 'init_payload' value.
+   pi_prot_type: Protection Type (0, 1, 3 currently support)
+   pi_prot_version: Protection Version (DIF v1 currently supported)
+   pi_guard_type: Guard Type (1=DIF CRC, 2=IP CRC)
+
+Within se_dev_set_pi_prot_type() it also adds the se_subsystem_api
+device callbacks to setup per device protection information.
 
 Cc: Martin K. Petersen <martin.petersen@oracle.com>
 Cc: Christoph Hellwig <hch@lst.de>
@@ -31,181 +29,143 @@ Cc: Sagi Grimberg <sagig@mellanox.com>
 Cc: Or Gerlitz <ogerlitz@mellanox.com>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_rd.c |  116 ++++++++++++++++++++++++---------------
- 1 file changed, 71 insertions(+), 45 deletions(-)
+ drivers/target/target_core_configfs.c |   12 ++++++
+ drivers/target/target_core_device.c   |   65 +++++++++++++++++++++++++++++++++
+ drivers/target/target_core_internal.h |    2 +
+ 3 files changed, 79 insertions(+)
 
-diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core_rd.c
-index 4ffe5f2..fdc5022 100644
---- a/drivers/target/target_core_rd.c
-+++ b/drivers/target/target_core_rd.c
-@@ -78,23 +78,14 @@ static void rd_detach_hba(struct se_hba *hba)
- 	hba->hba_ptr = NULL;
+diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
+index 272755d..0f1101c 100644
+--- a/drivers/target/target_core_configfs.c
++++ b/drivers/target/target_core_configfs.c
+@@ -643,6 +643,15 @@ SE_DEV_ATTR(emulate_caw, S_IRUGO | S_IWUSR);
+ DEF_DEV_ATTRIB(emulate_3pc);
+ SE_DEV_ATTR(emulate_3pc, S_IRUGO | S_IWUSR);
+ 
++DEF_DEV_ATTRIB(pi_prot_type);
++SE_DEV_ATTR(pi_prot_type, S_IRUGO | S_IWUSR);
++
++DEF_DEV_ATTRIB_RO(pi_prot_version);
++SE_DEV_ATTR_RO(pi_prot_version);
++
++DEF_DEV_ATTRIB(pi_guard_type);
++SE_DEV_ATTR(pi_guard_type, S_IRUGO | S_IWUSR);
++
+ DEF_DEV_ATTRIB(enforce_pr_isids);
+ SE_DEV_ATTR(enforce_pr_isids, S_IRUGO | S_IWUSR);
+ 
+@@ -702,6 +711,9 @@ static struct configfs_attribute *target_core_dev_attrib_attrs[] = {
+ 	&target_core_dev_attrib_emulate_tpws.attr,
+ 	&target_core_dev_attrib_emulate_caw.attr,
+ 	&target_core_dev_attrib_emulate_3pc.attr,
++	&target_core_dev_attrib_pi_prot_type.attr,
++	&target_core_dev_attrib_pi_prot_version.attr,
++	&target_core_dev_attrib_pi_guard_type.attr,
+ 	&target_core_dev_attrib_enforce_pr_isids.attr,
+ 	&target_core_dev_attrib_is_nonrot.attr,
+ 	&target_core_dev_attrib_emulate_rest_reord.attr,
+diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
+index 207b340..2b59beb 100644
+--- a/drivers/target/target_core_device.c
++++ b/drivers/target/target_core_device.c
+@@ -918,6 +918,67 @@ int se_dev_set_emulate_3pc(struct se_device *dev, int flag)
+ 	return 0;
  }
  
--/*	rd_release_device_space():
-- *
-- *
-- */
--static void rd_release_device_space(struct rd_dev *rd_dev)
-+static u32 rd_release_sgl_table(struct rd_dev *rd_dev, struct rd_dev_sg_table *sg_table,
-+				 u32 sg_table_count)
- {
--	u32 i, j, page_count = 0, sg_per_table;
--	struct rd_dev_sg_table *sg_table;
- 	struct page *pg;
- 	struct scatterlist *sg;
-+	u32 i, j, page_count = 0, sg_per_table;
- 
--	if (!rd_dev->sg_table_array || !rd_dev->sg_table_count)
--		return;
--
--	sg_table = rd_dev->sg_table_array;
--
--	for (i = 0; i < rd_dev->sg_table_count; i++) {
-+	for (i = 0; i < sg_table_count; i++) {
- 		sg = sg_table[i].sg_table;
- 		sg_per_table = sg_table[i].rd_sg_count;
- 
-@@ -105,16 +96,31 @@ static void rd_release_device_space(struct rd_dev *rd_dev)
- 				page_count++;
- 			}
- 		}
--
- 		kfree(sg);
- 	}
- 
-+	kfree(sg_table);
-+	return page_count;
-+}
-+
-+static void rd_release_device_space(struct rd_dev *rd_dev)
++int se_dev_set_pi_prot_type(struct se_device *dev, int flag)
 +{
-+	struct rd_dev_sg_table *sg_table;
-+	u32 page_count;
++	int rc, old_prot = dev->dev_attrib.pi_prot_type;
 +
-+	if (!rd_dev->sg_table_array || !rd_dev->sg_table_count)
-+		return;
-+
-+	sg_table = rd_dev->sg_table_array;
-+
-+	page_count = rd_release_sgl_table(rd_dev, rd_dev->sg_table_array,
-+					  rd_dev->sg_table_count);
-+
- 	pr_debug("CORE_RD[%u] - Released device space for Ramdisk"
- 		" Device ID: %u, pages %u in %u tables total bytes %lu\n",
- 		rd_dev->rd_host->rd_host_id, rd_dev->rd_dev_id, page_count,
- 		rd_dev->sg_table_count, (unsigned long)page_count * PAGE_SIZE);
- 
--	kfree(sg_table);
- 	rd_dev->sg_table_array = NULL;
- 	rd_dev->sg_table_count = 0;
- }
-@@ -124,38 +130,15 @@ static void rd_release_device_space(struct rd_dev *rd_dev)
-  *
-  *
-  */
--static int rd_build_device_space(struct rd_dev *rd_dev)
-+static int rd_allocate_sgl_table(struct rd_dev *rd_dev, struct rd_dev_sg_table *sg_table,
-+				 u32 total_sg_needed, unsigned char init_payload)
- {
--	u32 i = 0, j, page_offset = 0, sg_per_table, sg_tables, total_sg_needed;
-+	u32 i = 0, j, page_offset = 0, sg_per_table;
- 	u32 max_sg_per_table = (RD_MAX_ALLOCATION_SIZE /
- 				sizeof(struct scatterlist));
--	struct rd_dev_sg_table *sg_table;
- 	struct page *pg;
- 	struct scatterlist *sg;
--
--	if (rd_dev->rd_page_count <= 0) {
--		pr_err("Illegal page count: %u for Ramdisk device\n",
--			rd_dev->rd_page_count);
--		return -EINVAL;
--	}
--
--	/* Don't need backing pages for NULLIO */
--	if (rd_dev->rd_flags & RDF_NULLIO)
--		return 0;
--
--	total_sg_needed = rd_dev->rd_page_count;
--
--	sg_tables = (total_sg_needed / max_sg_per_table) + 1;
--
--	sg_table = kzalloc(sg_tables * sizeof(struct rd_dev_sg_table), GFP_KERNEL);
--	if (!sg_table) {
--		pr_err("Unable to allocate memory for Ramdisk"
--			" scatterlist tables\n");
--		return -ENOMEM;
--	}
--
--	rd_dev->sg_table_array = sg_table;
--	rd_dev->sg_table_count = sg_tables;
-+	unsigned char *p;
- 
- 	while (total_sg_needed) {
- 		sg_per_table = (total_sg_needed > max_sg_per_table) ?
-@@ -186,16 +169,59 @@ static int rd_build_device_space(struct rd_dev *rd_dev)
- 			}
- 			sg_assign_page(&sg[j], pg);
- 			sg[j].length = PAGE_SIZE;
-+
-+			p = kmap(pg);
-+			memset(p, init_payload, PAGE_SIZE);
-+			kunmap(pg);
- 		}
- 
- 		page_offset += sg_per_table;
- 		total_sg_needed -= sg_per_table;
- 	}
- 
-+	return 0;
-+}
-+
-+static int rd_build_device_space(struct rd_dev *rd_dev)
-+{
-+	struct rd_dev_sg_table *sg_table;
-+	u32 sg_tables, total_sg_needed;
-+	u32 max_sg_per_table = (RD_MAX_ALLOCATION_SIZE /
-+				sizeof(struct scatterlist));
-+	int rc;
-+
-+	if (rd_dev->rd_page_count <= 0) {
-+		pr_err("Illegal page count: %u for Ramdisk device\n",
-+		       rd_dev->rd_page_count);
++	if (flag != 0 && flag != 1 && flag != 2 && flag != 3) {
++		pr_err("Illegal value %d for pi_prot_type\n", flag);
++		return -EINVAL;
++	}
++	if (flag == 2) {
++		pr_err("DIF TYPE2 protection currently not supported\n");
++		return -ENOSYS;
++	}
++	if (!dev->transport->init_prot || !dev->transport->free_prot) {
++		pr_err("DIF protection not supported by backend: %s\n",
++		       dev->transport->name);
++		return -ENOSYS;
++	}
++	if (!(dev->dev_flags & DF_CONFIGURED)) {
++		pr_err("DIF protection requires device to be configured\n");
++		return -ENODEV;
++	}
++	if (dev->export_count) {
++		pr_err("dev[%p]: Unable to change SE Device PROT type while"
++		       " export_count is %d\n", dev, dev->export_count);
 +		return -EINVAL;
 +	}
 +
-+	/* Don't need backing pages for NULLIO */
-+	if (rd_dev->rd_flags & RDF_NULLIO)
-+		return 0;
++	dev->dev_attrib.pi_prot_type = flag;
 +
-+	total_sg_needed = rd_dev->rd_page_count;
++	if (flag && !old_prot) {
++		rc = dev->transport->init_prot(dev);
++		if (rc) {
++			dev->dev_attrib.pi_prot_type = old_prot;
++			return rc;
++		}
++	} else if (!flag && old_prot) {
++		dev->transport->free_prot(dev);
++	}
++	pr_debug("dev[%p]: SE Device Protection Type: %d\n", dev, flag);
 +
-+	sg_tables = (total_sg_needed / max_sg_per_table) + 1;
++	return 0;
++}
 +
-+	sg_table = kzalloc(sg_tables * sizeof(struct rd_dev_sg_table), GFP_KERNEL);
-+	if (!sg_table) {
-+		pr_err("Unable to allocate memory for Ramdisk"
-+		       " scatterlist tables\n");
-+		return -ENOMEM;
++int se_dev_set_pi_guard_type(struct se_device *dev, int flag)
++{
++	if (flag != 1 && flag != 2) {
++		pr_err("Illegal value %d for pi_guard_type\n", flag);
++		return -EINVAL;
++	}
++	if (dev->export_count) {
++		pr_err("dev[%p]: Unable to change SE Device GUARD type while"
++		       " export_count is %d\n", dev, dev->export_count);
++		return -EINVAL;
 +	}
 +
-+	rd_dev->sg_table_array = sg_table;
-+	rd_dev->sg_table_count = sg_tables;
++	dev->dev_attrib.pi_guard_type = flag;
++	pr_debug("dev[%p]: SE Device Guard Type: %d\n", dev, flag);
 +
-+	rc = rd_allocate_sgl_table(rd_dev, sg_table, total_sg_needed, 0x00);
-+	if (rc)
-+		return rc;
++	return 0;
++}
 +
- 	pr_debug("CORE_RD[%u] - Built Ramdisk Device ID: %u space of"
--		" %u pages in %u tables\n", rd_dev->rd_host->rd_host_id,
--		rd_dev->rd_dev_id, rd_dev->rd_page_count,
--		rd_dev->sg_table_count);
-+		 " %u pages in %u tables\n", rd_dev->rd_host->rd_host_id,
-+		 rd_dev->rd_dev_id, rd_dev->rd_page_count,
-+		 rd_dev->sg_table_count);
+ int se_dev_set_enforce_pr_isids(struct se_device *dev, int flag)
+ {
+ 	if ((flag != 0) && (flag != 1)) {
+@@ -1415,6 +1476,7 @@ struct se_device *target_alloc_device(struct se_hba *hba, const char *name)
+ 	dev->dev_link_magic = SE_DEV_LINK_MAGIC;
+ 	dev->se_hba = hba;
+ 	dev->transport = hba->transport;
++	dev->prot_length = sizeof(struct se_dif_v1_tuple);
  
- 	return 0;
- }
+ 	INIT_LIST_HEAD(&dev->dev_list);
+ 	INIT_LIST_HEAD(&dev->dev_sep_list);
+@@ -1455,6 +1517,9 @@ struct se_device *target_alloc_device(struct se_hba *hba, const char *name)
+ 	dev->dev_attrib.emulate_tpws = DA_EMULATE_TPWS;
+ 	dev->dev_attrib.emulate_caw = DA_EMULATE_CAW;
+ 	dev->dev_attrib.emulate_3pc = DA_EMULATE_3PC;
++	dev->dev_attrib.pi_prot_type = TARGET_DIF_TYPE0_PROT;
++	dev->dev_attrib.pi_prot_version = TARGET_DIF_V1;
++	dev->dev_attrib.pi_guard_type = TARGET_DIX_GUARD_CRC;
+ 	dev->dev_attrib.enforce_pr_isids = DA_ENFORCE_PR_ISIDS;
+ 	dev->dev_attrib.is_nonrot = DA_IS_NONROT;
+ 	dev->dev_attrib.emulate_rest_reord = DA_EMULATE_REST_REORD;
+diff --git a/drivers/target/target_core_internal.h b/drivers/target/target_core_internal.h
+index 47b63b0..79d3bc3 100644
+--- a/drivers/target/target_core_internal.h
++++ b/drivers/target/target_core_internal.h
+@@ -35,6 +35,8 @@ int	se_dev_set_emulate_tpu(struct se_device *, int);
+ int	se_dev_set_emulate_tpws(struct se_device *, int);
+ int	se_dev_set_emulate_caw(struct se_device *, int);
+ int	se_dev_set_emulate_3pc(struct se_device *, int);
++int	se_dev_set_pi_prot_type(struct se_device *, int);
++int	se_dev_set_pi_guard_type(struct se_device *, int);
+ int	se_dev_set_enforce_pr_isids(struct se_device *, int);
+ int	se_dev_set_is_nonrot(struct se_device *, int);
+ int	se_dev_set_emulate_rest_reord(struct se_device *dev, int);
 -- 
 1.7.10.4
-
