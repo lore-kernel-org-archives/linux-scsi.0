@@ -1,101 +1,44 @@
-From: Chen Gang <gang.chen.5i5j@gmail.com>
-Subject: Re: [PATCH] drivers: target: target_core_mod: use div64_u64_rem()
- instead of operator '%' for u64
-Date: Wed, 08 Jan 2014 22:40:24 +0800
-Message-ID: <52CD6358.7010706@gmail.com>
-References: <52B4F837.1010403@gmail.com>  <1387680997.5567.91.camel@haakon3.risingtidesystems.com>  <52B6AE19.80401@gmail.com> <1387781487.5567.147.camel@haakon3.risingtidesystems.com> <52B90111.5050203@gmail.com> <52CCFF0C.7070704@suse.de>
+From: Sergey Meirovich <rathamahata@gmail.com>
+Subject: Re: Terrible performance of sequential O_DIRECT 4k writes in SAN
+ environment. ~3 times slower then Solars 10 with the same HBA/Storage.
+Date: Wed, 8 Jan 2014 16:43:07 +0200
+Message-ID: <CA+QCeVQy08m9oBM1ULE_KAjd-36ao35p7-BCWErJewyr3m6NGg@mail.gmail.com>
+References: <CA+QCeVQRrqx=CrxyuAe7k0e0y4Nqo7x_8jtkuD99VM8L9Dxp+g@mail.gmail.com>
+ <20140106201032.GA13491@quack.suse.cz> <20140107155830.GA28395@infradead.org>
+ <CA+QCeVRiwHU+C5utaLQXf_MpjoYMYEF4LKRyDPaqcd=H6n-RRw@mail.gmail.com> <20140108140307.GA588@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <52CCFF0C.7070704@suse.de>
+In-Reply-To: <20140108140307.GA588@infradead.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, James Hogan <james.hogan@imgtec.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Fengguang Wu <fengguang.wu@intel.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Jan Kara <jack@suse.cz>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Gluk <git.user@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 01/08/2014 03:32 PM, Hannes Reinecke wrote:
-> On 12/24/2013 04:35 AM, Chen Gang wrote:
->> On 12/23/2013 02:51 PM, Nicholas A. Bellinger wrote:
->>> On Sun, 2013-12-22 at 17:17 +0800, Chen Gang wrote:
->>>> On 12/22/2013 10:56 AM, Nicholas A. Bellinger wrote:
->>>>> Hi Chen,
->>>>>
->>>>> On Sat, 2013-12-21 at 10:08 +0800, Chen Gang wrote:
->>>>>> In kernel, need use div64_u64_rem() instead of operator '%' for u64, or
->>>>>> can not pass compiling (with allmodconfig under metag):
->>>>>>
->>>>>>     MODPOST 2909 modules
->>>>>>   ERROR: "__umoddi3" [drivers/target/target_core_mod.ko] undefined!
->>>>>>
->>>>>> Also need u64 type cast for u32 variable multiply u32 variable, or will
->>>>>> cause type overflow issue.
->>>>>>
->>>>>>
->>>>>> Signed-off-by: Chen Gang <gang.chen.5i5j@gmail.com>
->>>>>> ---
->>>>>>  drivers/target/target_core_alua.c | 3 ++-
->>>>>>  1 file changed, 2 insertions(+), 1 deletion(-)
->>>>>>
->>>>>
->>>>> FYI, this unsigned long long division in core_alua_state_lba_dependent()
->>>>> was fixed for 32-bit in linux-next >= 12192013 code.
->>>>>
->>>>
->>>> OK, thanks.
->>>>
->>>> The related fix patch changed "start_lba = lba % ..." to "start_lba =
->>>> lba / ...", and also assumed "segment_size * segment_mult" is still
->>>> within u32 (can not cause type over flow).
->>>>
->>>> I guess the original author already knew about them, and intended to do
->>>> like that (if not, please let me know, thanks).
->>>>
->>>
->>> Sorry, your correct that the original code is using modulo division to
->>> calculate start_lba.
->>>
->>
->> Oh, that's all right, (in fact, don't need sorry), I am not quite
->> familiar with the details, so need related member help check it.  :-)
->>
->>> Hannes, can you please double check this below..?
->>>
->>
->> Please help check when have time, thanks.
->>
-> I would even convert segment_size and segment_mult to u64,
-> to ensure no overflows occur:
-> 
-> diff --git a/drivers/target/target_core_alua.c
-> b/drivers/target/target_core_alua
-> .c
-> index 9b1856d..54b1e52 100644
-> --- a/drivers/target/target_core_alua.c
-> +++ b/drivers/target/target_core_alua.c
-> @@ -477,8 +477,7 @@ static inline int core_alua_state_lba_dependent(
->         u8 *alua_ascq)
->  {
->         struct se_device *dev = cmd->se_dev;
-> -       u32 segment_size, segment_mult, sectors;
-> -       u64 lba;
-> +       u64 segment_size, segment_mult, sectors, lba;
-> 
->         /* Only need to check for cdb actually containing LBAs */
->         if (!(cmd->se_cmd_flags & SCF_SCSI_DATA_CDB))
-> 
-> 
+Hi Christoph,
 
-OK, thanks.
+On 8 January 2014 16:03, Christoph Hellwig <hch@infradead.org> wrote:
+> On Tue, Jan 07, 2014 at 08:37:23PM +0200, Sergey Meirovich wrote:
+>> Actually my initial report (14.67Mb/sec  3755.41 Requests/sec) was about ext4
+>> However I have tried XFS as well. It was a bit slower than ext4 on all
+>> occasions.
+>
+> I wasn't trying to say XFS fixes your problem, but that we could
+> implement appending AIO writes in XFS fairly easily.
+>
+> To verify Jan's theory, can you try to preallocate the file to the full
+> size and then run the benchmark by doing a:
+>
+> # fallocate -l <size> <filename>
+>
+> and then run it?  If that's indeed the issue I'd be happy to implement
+> the "real aio" append support for you as well.
+>
 
-> Other than that the sector_div() patch is correct.
-> 
+After fallocate:
+[root@illin01 ext4]# du -k test_file.* | awk '{print $1}' |sort |uniq
+81920
+[root@illin01 ext4]# fallocate -l 81920k test_file.*
 
-So we really need use '/' instead of original '%'?
-
-
-Thanks
--- 
-Chen Gang
-
-Open, share and attitude like air, water and life which God blessed
+Results are almost the same:
+    14.68Mb/sec  3758.02 Requests/sec
