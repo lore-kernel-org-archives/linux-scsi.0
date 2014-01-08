@@ -1,113 +1,158 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] drivers: target: target_core_mod: use div64_u64_rem()
- instead of operator '%' for u64
-Date: Wed, 08 Jan 2014 08:32:28 +0100
-Message-ID: <52CCFF0C.7070704@suse.de>
-References: <52B4F837.1010403@gmail.com>  <1387680997.5567.91.camel@haakon3.risingtidesystems.com>  <52B6AE19.80401@gmail.com> <1387781487.5567.147.camel@haakon3.risingtidesystems.com> <52B90111.5050203@gmail.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: re: [SCSI] fnic: FIP VLAN Discovery Feature Support
+Date: Wed, 8 Jan 2014 12:57:41 +0300
+Message-ID: <20140108095741.GA10666@elgon.mountain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:48023 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753753AbaAHHca (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 8 Jan 2014 02:32:30 -0500
-In-Reply-To: <52B90111.5050203@gmail.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:47740 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755832AbaAHJ5c (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jan 2014 04:57:32 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chen Gang <gang.chen.5i5j@gmail.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: James Hogan <james.hogan@imgtec.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Fengguang Wu <fengguang.wu@intel.com>
+To: hiralpat@cisco.com
+Cc: linux-scsi@vger.kernel.org
 
-On 12/24/2013 04:35 AM, Chen Gang wrote:
-> On 12/23/2013 02:51 PM, Nicholas A. Bellinger wrote:
->> On Sun, 2013-12-22 at 17:17 +0800, Chen Gang wrote:
->>> On 12/22/2013 10:56 AM, Nicholas A. Bellinger wrote:
->>>> Hi Chen,
->>>>
->>>> On Sat, 2013-12-21 at 10:08 +0800, Chen Gang wrote:
->>>>> In kernel, need use div64_u64_rem() instead of operator '%' for u=
-64, or
->>>>> can not pass compiling (with allmodconfig under metag):
->>>>>
->>>>>     MODPOST 2909 modules
->>>>>   ERROR: "__umoddi3" [drivers/target/target_core_mod.ko] undefine=
-d!
->>>>>
->>>>> Also need u64 type cast for u32 variable multiply u32 variable, o=
-r will
->>>>> cause type overflow issue.
->>>>>
->>>>>
->>>>> Signed-off-by: Chen Gang <gang.chen.5i5j@gmail.com>
->>>>> ---
->>>>>  drivers/target/target_core_alua.c | 3 ++-
->>>>>  1 file changed, 2 insertions(+), 1 deletion(-)
->>>>>
->>>>
->>>> FYI, this unsigned long long division in core_alua_state_lba_depen=
-dent()
->>>> was fixed for 32-bit in linux-next >=3D 12192013 code.
->>>>
->>>
->>> OK, thanks.
->>>
->>> The related fix patch changed "start_lba =3D lba % ..." to "start_l=
-ba =3D
->>> lba / ...", and also assumed "segment_size * segment_mult" is still
->>> within u32 (can not cause type over flow).
->>>
->>> I guess the original author already knew about them, and intended t=
-o do
->>> like that (if not, please let me know, thanks).
->>>
->>
->> Sorry, your correct that the original code is using modulo division =
-to
->> calculate start_lba.
->>
->=20
-> Oh, that's all right, (in fact, don't need sorry), I am not quite
-> familiar with the details, so need related member help check it.  :-)
->=20
->> Hannes, can you please double check this below..?
->>
->=20
-> Please help check when have time, thanks.
->=20
-I would even convert segment_size and segment_mult to u64,
-to ensure no overflows occur:
+Hello Hiral Patel,
 
-diff --git a/drivers/target/target_core_alua.c
-b/drivers/target/target_core_alua
-=2Ec
-index 9b1856d..54b1e52 100644
---- a/drivers/target/target_core_alua.c
-+++ b/drivers/target/target_core_alua.c
-@@ -477,8 +477,7 @@ static inline int core_alua_state_lba_dependent(
-        u8 *alua_ascq)
- {
-        struct se_device *dev =3D cmd->se_dev;
--       u32 segment_size, segment_mult, sectors;
--       u64 lba;
-+       u64 segment_size, segment_mult, sectors, lba;
+The patch d3c995f1dcf9: "[SCSI] fnic: FIP VLAN Discovery Feature
+Support" from Feb 25, 2013, leads to the following
+static checker warning:
 
-        /* Only need to check for cdb actually containing LBAs */
-        if (!(cmd->se_cmd_flags & SCF_SCSI_DATA_CDB))
+	drivers/scsi/fnic/fnic_fcs.c:278 is_fnic_fip_flogi_reject()
+	warn: is it ok to set 'els_len' to negative?
 
+This is some unpushable debug code on my Smatch system.  It is sort of
+a nonsense warning because Smatch has run into an "impossible" condition
+because of a bug in Smatch but also because of bug in
+fnic_fcoe_send_vlan_req().
 
-Other than that the sector_div() patch is correct.
+drivers/scsi/fnic/fnic_fcs.c
+   251          fiph = (struct fip_header *)skb->data;
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+fiph is untrusted data.  We don't trust the network.  This is a rule of
+Linux.
 
-Cheers,
+   252          op = ntohs(fiph->fip_op);
+   253          sub = fiph->fip_subcode;
+   254  
+   255          if (op != FIP_OP_LS)
+   256                  return 0;
+   257  
+   258          if (sub != FIP_SC_REP)
+   259                  return 0;
+   260  
+   261          rlen = ntohs(fiph->fip_dl_len) * 4;
+   262          if (rlen + sizeof(*fiph) > skb->len)
+   263                  return 0;
+   264  
+   265          desc = (struct fip_desc *)(fiph + 1);
+   266          dlen = desc->fip_dlen * FIP_BPW;
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+desc->fip_dlen is u8 type so it could be a number between 0-255.  That's
+fine.
+FIP_BPW is 4.
+Here is the bug in Smatch.  It looks at the sender code and says that
+desc->fip_dlen is set to either 2 or 4.  So now dlen is in 8-16 range.
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
-)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+   267  
+   268          if (desc->fip_dtype == FIP_DT_FLOGI) {
+   269  
+   270                  shost_printk(KERN_DEBUG, lport->host,
+   271                            " FIP TYPE FLOGI: fab name:%llx "
+   272                            "vfid:%d map:%x\n",
+   273                            fip->sel_fcf->fabric_name, fip->sel_fcf->vfid,
+   274                            fip->sel_fcf->fc_map);
+   275                  if (dlen < sizeof(*els) + sizeof(*fh) + 1)
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+8-16 is always less than 29 so this condition is always true.
+
+   276                          return 0;
+   277  
+   278                  els_len = dlen - sizeof(*els);
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+We are in an impossible condition and Smatch doesn't know the possible
+values of "dlen" any more so it generates the warning.
+
+   279                  els = (struct fip_encaps *)desc;
+   280                  fh = (struct fc_frame_header *)(els + 1);
+   281                  els_dtype = desc->fip_dtype;
+   282  
+   283                  if (!fh)
+   284                          return 0;
+   285  
+   286                  /*
+   287                   * ELS command code, reason and explanation should be = Reject,
+   288                   * unsupported command and insufficient resource
+   289                   */
+   290                  els_op = *(u8 *)(fh + 1);
+   291                  if (els_op == ELS_LS_RJT) {
+   292                          shost_printk(KERN_INFO, lport->host,
+   293                                    "Flogi Request Rejected by Switch\n");
+   294                          return 1;
+   295                  }
+   296                  shost_printk(KERN_INFO, lport->host,
+   297                                  "Flogi Request Accepted by Switch\n");
+   298          }
+   299          return 0;
+   300  }
+   301  
+   302  static void fnic_fcoe_send_vlan_req(struct fnic *fnic)
+   303  {
+   304          struct fcoe_ctlr *fip = &fnic->ctlr;
+   305          struct fnic_stats *fnic_stats = &fnic->fnic_stats;
+   306          struct sk_buff *skb;
+   307          char *eth_fr;
+   308          int fr_len;
+   309          struct fip_vlan *vlan;
+   310          u64 vlan_tov;
+   311  
+   312          fnic_fcoe_reset_vlans(fnic);
+   313          fnic->set_vlan(fnic, 0);
+   314          FNIC_FCS_DBG(KERN_INFO, fnic->lport->host,
+   315                    "Sending VLAN request...\n");
+   316          skb = dev_alloc_skb(sizeof(struct fip_vlan));
+   317          if (!skb)
+   318                  return;
+   319  
+   320          fr_len = sizeof(*vlan);
+   321          eth_fr = (char *)skb->data;
+   322          vlan = (struct fip_vlan *)eth_fr;
+   323  
+   324          memset(vlan, 0, sizeof(*vlan));
+   325          memcpy(vlan->eth.h_source, fip->ctl_src_addr, ETH_ALEN);
+   326          memcpy(vlan->eth.h_dest, fcoe_all_fcfs, ETH_ALEN);
+   327          vlan->eth.h_proto = htons(ETH_P_FIP);
+   328  
+   329          vlan->fip.fip_ver = FIP_VER_ENCAPS(FIP_VER);
+   330          vlan->fip.fip_op = htons(FIP_OP_VLAN);
+   331          vlan->fip.fip_subcode = FIP_SC_VL_REQ;
+   332          vlan->fip.fip_dl_len = htons(sizeof(vlan->desc) / FIP_BPW);
+   333  
+   334          vlan->desc.mac.fd_desc.fip_dtype = FIP_DT_MAC;
+   335          vlan->desc.mac.fd_desc.fip_dlen = sizeof(vlan->desc.mac) / FIP_BPW;
+
+8 / 4 = 2.  We are setting ->fib_dlen to 2.
+
+   336          memcpy(&vlan->desc.mac.fd_mac, fip->ctl_src_addr, ETH_ALEN);
+   337  
+   338          vlan->desc.wwnn.fd_desc.fip_dtype = FIP_DT_NAME;
+   339          vlan->desc.wwnn.fd_desc.fip_dlen = sizeof(vlan->desc.wwnn) / FIP_BPW;
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+This is actually a second Smatch bug which it inherited from Sparse.  It
+doesn't understand packed structs correctly and think we are setting
+->fib_dlen to 4 but we are setting it to 3.
+
+   340          put_unaligned_be64(fip->lp->wwnn, &vlan->desc.wwnn.fd_wwn);
+   341          atomic64_inc(&fnic_stats->vlan_stats.vlan_disc_reqs);
+   342  
+
+I suspect that the size calculation is not taking
+sizeof(struct fc_frame_header) into consideration properly in
+fnic_fcoe_send_vlan_req()?
+
+regards,
+dan carpenter
+
