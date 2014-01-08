@@ -1,44 +1,54 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Terrible performance of sequential O_DIRECT 4k writes in SAN
- environment. ~3 times slower then Solars 10 with the same HBA/Storage.
-Date: Wed, 8 Jan 2014 07:26:10 -0800
-Message-ID: <20140108152610.GA5863@infradead.org>
-References: <CA+QCeVQRrqx=CrxyuAe7k0e0y4Nqo7x_8jtkuD99VM8L9Dxp+g@mail.gmail.com>
- <20140106201032.GA13491@quack.suse.cz>
- <20140107155830.GA28395@infradead.org>
- <CA+QCeVRiwHU+C5utaLQXf_MpjoYMYEF4LKRyDPaqcd=H6n-RRw@mail.gmail.com>
- <20140108140307.GA588@infradead.org>
- <CA+QCeVQy08m9oBM1ULE_KAjd-36ao35p7-BCWErJewyr3m6NGg@mail.gmail.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: status of block-integrity
+Date: Wed, 08 Jan 2014 10:43:11 -0500
+Message-ID: <yq1ha9ev5rk.fsf@sermon.lab.mkp.net>
+References: <20131222192128.GA28532@infradead.org>
+	<yq11u134rmt.fsf@sermon.lab.mkp.net> <52CBBABD.50902@gmail.com>
+	<52CC0216.5060900@suse.de> <20140107233410.GA1263@parisc-linux.org>
+	<1389139510.2064.22.camel@dabdike.pnp.gw>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CA+QCeVQy08m9oBM1ULE_KAjd-36ao35p7-BCWErJewyr3m6NGg@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Sergey Meirovich <rathamahata@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Gluk <git.user@gmail.com>
+Content-Type: text/plain
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <1389139510.2064.22.camel@dabdike.pnp.gw> (James Bottomley's
+	message of "Wed, 08 Jan 2014 08:05:10 +0800")
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, Hannes Reinecke <hare@suse.de>, Ric Wheeler <ricwheeler@gmail.com>, Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Linux FS Devel <linux-fsdevel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Jan 08, 2014 at 04:43:07PM +0200, Sergey Meirovich wrote:
-> Results are almost the same:
->     14.68Mb/sec  3758.02 Requests/sec
->
+>>>>> "James" == James Bottomley <James.Bottomley@HansenPartnership.com> writes:
 
-On my laptop SSD I get the following results (sometimes up to 200MB/s,
-sometimes down to 100MB/s, always in the 40k to 50k IOps range):
+James> No, I think you're confusing algorithms with protocols.  DIF and
+James> DIX are two names for protection envelopes.  DIF verifies
+James> integrity from the HBA to the device surface.  DIX verifies
+James> integrity from an application to the HBA. 
 
-time elapsed (sec.):	5
-bandwidth (MiB/s):	160.00
-IOps:			40960.00
+Actually, DIX is a data integrity-aware HBA programming interface. We
+have an implementation of that interface in the SCSI layer and in some
+of the initiator drivers (lpfc, qla2xxx, mptNsas).
 
-The IOps are more than the hardware is physically capable of, but given
-that you didn't specify O_SYNC this seems sensible given that we never
-have to flush the disk cache.
+There is no single name for stuff above DIX. Other than "block layer
+data integrity goo", "page cache black magic" and "let's add a few
+fields to struct iocb".
 
-Could it be that your array has WCE=0?  In Linux we'll never enable the
-cache automatically, but Solaris does at least when using ZFS.  Try
-running:
+James> So, the question is do we need to bother with DIX at all?  No
+James> filesystem uses it 
 
-   sdparm --set=WCE /dev/sdX
+...explicitly. Every filesystem uses it implicitly. There are only two
+reasons for filesystems to want to be explicitly "block layer data
+integrity goo"-aware:
 
-and try again.
+     1. To be able to use the application tag space for back pointers or
+        other metadata without requiring disk format changes.
+
+     2. To facilitate passthrough of protection information submitted
+        via the $TBD application programming interface.
+
+I was hoping the extN folks would be interested in (1) but there were no
+takers. (2) is hard but not forgotten. In any case the status quo is
+that there is no point in filesystems manually generating protection
+information when the block layer is going to do it for them when the bio
+is submitted.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
