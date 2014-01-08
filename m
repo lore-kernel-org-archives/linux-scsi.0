@@ -1,50 +1,75 @@
-From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-Subject: Re: [PATCH 3.12 033/118] usb: xhci: Link TRB must not occur within a
- USB payload burst
-Date: Tue, 7 Jan 2014 16:47:24 -0800
-Message-ID: <20140108004724.GA14082@xanatos>
-References: <52CC944C.50702@gmail.com>
+From: Todd E Brandt <todd.e.brandt@linux.intel.com>
+Subject: [PATCH/RESEND v2 0/2] Hard disk S3 resume time optimization
+Date: Tue, 7 Jan 2014 16:55:00 -0800
+Message-ID: <20140108005500.GA29556@linux.intel.com>
+Reply-To: todd.e.brandt@linux.intel.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:5123 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753876AbaAHArY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 7 Jan 2014 19:47:24 -0500
+Return-path: <linux-ide-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <52CC944C.50702@gmail.com>
- <20140107212101.GA4199@xanatos>
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
+To: tj@kernel.org, James.Bottomley@HansenPartnership.com
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: walt <w41ter@gmail.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Linux Kernel <linux-kernel@vger.kernel.org>, stable@vger.kernel.org, David Laight <david.laight@aculab.com>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Tue, Jan 07, 2014 at 03:57:00PM -0800, walt wrote:
-> On 01/07/2014 01:21 PM, Sarah Sharp wrote:
-> 
-> > Can you please try the attached patch, on top of the previous three
-> > patches, and send me dmesg?
-> 
-> Hi Sarah, I just now finished running 0001-More-debugging.patch for the
-> first time.  The previous dmesg didn't include that patch, but this one
-> does.
-> 
-> I read through this dmesg but I nodded off somewhere around line 500.
-> I hope you can stay awake :)
+This patch reduces S3 resume time from 10+ seconds to less than a second
+on systems with SATA drives. It does this by making ata port and scsi disk
+resume non-blocking.
 
-Well, it has all the info I need, but the results don't make me too
-happy.  Everything I've checked seems consistent, and I don't know why
-the host stopped.  The link TRBs are intact, the dequeue pointer for the
-endpoint was pointing to the transfer that timed out and it had the
-cycle bit set correctly, etc.  Perhaps the no-op TRBs are really the
-issue.
+This is another resend of the patch I send out in early December. I've
+addressed all the feedback I received from list members, so all I really
+need is a yay or nay from Tejun Huo and James Bottomley (since it touches
+both subsystems).
 
-I'll have to take a look at the log again tomorrow.  I posted the dmesg
-on pastebin if David wants to check it out as well:
-http://pastebin.com/a4AUpsL1
+The notes below include the performance results and patch description.
 
-Can you send me the output of `sudo lspci -vvv -n`?  Maybe we can just
-turn off scatter-gather for your host controller until we get a proper
-fix in that uses link TRBs instead of no-op TRBs.
+[Computer One Test - 10.5X speedup on S3 resume]
+Platform: Ubuntu Raring Ringtail (13.04) kernel 3.11.0-rc7
+Cpu: Intel(R) Core(TM) i7-3960X CPU @ 3.30GHz
+Ahci: Intel C600/X79 series chipset 6-Port SATA AHCI (r5)
+Disk config (using all 6 ahci ports): 
+240 GB SSD, 3 TB HD, 500 GB HD, DVD-ROM (with cd inserted), 2 TB HD, 1 TB HD
+Resume time: [unpatched 11656ms] [patched 1110ms]
 
-Sarah Sharp
+[Computer Two Test - 12X speedup on S3 resume]
+Platform: Ubuntu Raring Ringtail (13.04) kernel 3.11.0-rc7
+Cpu: Intel(R) Core(TM) i7-3770 CPU @ 3.40GHz
+Ahci: Intel 7 Series/C210 Series Chipset Family 6-port SATA [AHCI mode] (r4)
+Disk config (using 1 ahci port): 320 GB Hard Disk
+Resume time: [unpatched 5416 ms] [patched 448 ms]
+
+[Computer Three Test - 7.8X speedup on S3 resume]
+Platform: Ubuntu Raring Ringtail (13.04) kernel 3.11.0-rc7
+Cpu: Intel(R) Core(TM) i7-4770S CPU @ 3.10GHz
+Ahci: Intel Lynx Point 6-port SATA Controller 1 [AHCI mode] (r2)
+Disk config (using 2 ahci ports): DVD-ROM (empty), 500 GB Hard Disk
+Resume time: [unpatched 5385ms] [patched 688ms]
+
+The essential issue behind hard disks' lengthy resume time is the ata port
+driver blocking until the ATA port hardware is finished coming online. So
+the kernel isn't really doing anything during all those seconds that the
+disks are resuming, it's just blocking until the hardware says it's ready
+to accept commands. Applying this patch set allows SATA disks to resume
+asynchronously without holding up system resume, thus allowing the UI to
+come online much more quickly. There may be a short period after resume
+where the disks are still spinning up in the background, but it will only
+momentarily affect applications using that disk.
+
+The patch set has two parts which apply to ata_port_resume and sd_resume
+respectively. Both are required to achieve any real performance benefit,
+but they will still function independantly without a performance hit.
+
+ata_port_resume patch (1/2):
+sd_resume patch (2/2):
+
+v2:
+ [in response to Oliver Neukum]
+ - Added scsi cmd error reporting through the scsi_sense_hdr
+ [in response to James Bottomley]
+ - unified the sd_resume code path by just making sd_resume async. Thus all
+   three resume callbacks: resume, restore, and runtime-resume will use it,
+   but there is a performance benefit for resume only.
+ [in response to Bartlomiej Zolnierkiewicz]
+ - unified the __ata_port_resume_common code path to include an async
+   parameter. This way there's no need to re-implement ata_port_request_pm.
+
