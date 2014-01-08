@@ -1,39 +1,59 @@
-From: Phillip Susi <psusi@ubuntu.com>
-Subject: Re: REQ_PM vs REQ_TYPE_PM_RESUME
-Date: Wed, 08 Jan 2014 14:30:48 -0500
-Message-ID: <52CDA768.4080304@ubuntu.com>
-References: <cover.1384030893.git.psusi@ubuntu.com> <1387236657-4852-1-git-send-email-psusi@ubuntu.com> <52CA1191.8060804@ubuntu.com> <52CA5CF4.2080708@codeaurora.org> <52CA744F.2080609@intel.com> <52CAC067.20601@ubuntu.com> <52CBB188.2080707@intel.com> <52CC1422.1020101@ubuntu.com> <52CCA3CF.5050308@intel.com> <52CCA6E3.2090400@ubuntu.com> <52CCAAA7.4070104@intel.com> <52CCAF8C.7040407@ubuntu.com> <52CCB3E8.5010101@intel.com> <52CCB5C4.7020206@ubuntu.com> <52CCB99A.4090201@intel.com> <52CCE11A.3040609@ubuntu.com> <52CCF775.3010303@intel.com>
+From: Paul Bolle <pebolle@tiscali.nl>
+Subject: Re: [PATCH] [SCSI] advansys: change buildtime warning into runtime
+ error
+Date: Wed, 08 Jan 2014 21:05:14 +0100
+Message-ID: <1389211514.14754.10.camel@x220>
+References: <1352113082.1434.31.camel@x61.thuisdomein>
+	 <1359454842.1345.40.camel@x61.thuisdomein>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <52CCF775.3010303@intel.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>, Sujit Reddy Thumma <sthumma@codeaurora.org>
-Cc: todd.e.brandt@linux.intel.com, tj@kernel.org, JBottomley@parallels.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>, Linux-pm mailing list <linux-pm@vger.kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1359454842.1345.40.camel@x61.thuisdomein>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+On Tue, 2013-01-29 at 11:20 +0100, Paul Bolle wrote:
+> On Mon, 2012-11-05 at 11:58 +0100, Paul Bolle wrote:
+> > Building advansys.o triggers this warning:
+> >     drivers/scsi/advansys.c:71:2: warning: #warning this driver is still not properly converted to the DMA API [-Wcpp]
+> > 
+> > This warning can be traced back to a patch called "advansys: add warning
+> > and convert #includes" which was included in v2.6.10. That patch also
+> > marked the driver as BROKEN.
+> > 
+> > Commit 4661e3eace2c7b8433476b5bf0ee437ab3c7dfd4 ("[SCSI] advansys
+> > driver: limp along on x86") enabled this driver for x86-32. And commit
+> > 9d511a4b29de6764931343d03e493f2e04df0271 ("[SCSI] advansys: Changes to
+> > work on parisc") enabled this driver for all architectures. But the
+> > commit explanation stated:
+> >     I haven't removed the #warning yet because virt_to_bus/bus_to_virt are
+> >     only eliminated for narrow boards.  Wide boards need more work.
+> > 
+> > Five years have passed and, apparently, those wide boards still need
+> > more work. So let's change the buildtime warning into a runtime error,
+> > only printed for those wide boards. Perhaps that might push the people
+> > using those wide boards to convert this driver. And for all others
+> > there's now one less buildtime warning to ignore.
+> > 
+> > Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
+> > ---
+> > Compile tested only. I don't have any AdvanSys SCSI boards (neither
+> > narrow nor wide).
+> 
+> The date of this message suggests I submitted this patch for a warning
+> seen while building v3.7-rc4. An identical warning can be seen while
+> building v3.8-rc5. What's the status of my patch? Did anyone find some
+> time to have a look at it?
 
-On 1/8/2014 2:00 AM, Aaron Lu wrote:
-> Then I would say we just keep the pm_request_resume call in their
-> system resume callback. For drives that have that cool feature
-> turned on, it will be in runtime active state while it's actually
-> in standby mode, not
+I've been carrying this patch locally for over a year. Is there any
+chance of someone trying to remove this buildtime warning?
 
-No, it won't since the runtime resume starts the drive.
+I'm inclined to submit a path to Fedora - my local builds use
+their .config as a base - to just disable this driver. It seems that
+would increase my chances of finally shutting down this warning.
 
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.17 (MingW32)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iQEcBAEBAgAGBQJSzadoAAoJEI5FoCIzSKrwQWsIAKt/F+eiYYrxxjx58hFCwLxV
-3E+CDiuf+pTyUUqPFgcGjyNrfoBO2nWXiCyg5XZ//pjPwbD4GenwSajgUIvKRw/6
-0mDw4bb4CyU9/vqVKwHUHfM2jgsAuK9VFn+1fSomODy6B9ZYX6pDPr3jw5S7kDko
-nDaYhBX9L2/AE4oPo2qPLpAPMxiYFD9qIi8LcfW/Ha2Av7AneIyTXEvFZzyeDv2K
-WoH/KF59snFz9t4wwwfdqu1l1w93b+Tcn2zCpFBaA63TyrJKq4qpx9/W+INgBGol
-HKEyv1vh5UkaVSvffiFE/2b1lR4n0hL7LVMe1egazAlNPcsjXdBZv1amYJ7NltI=
-=N8WO
------END PGP SIGNATURE-----
+Paul Bolle
