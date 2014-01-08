@@ -1,63 +1,75 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: REQ_PM vs REQ_TYPE_PM_RESUME
-Date: Wed, 08 Jan 2014 15:00:05 +0800
-Message-ID: <52CCF775.3010303@intel.com>
-References: <cover.1384030893.git.psusi@ubuntu.com> <1387236657-4852-1-git-send-email-psusi@ubuntu.com> <52CA1191.8060804@ubuntu.com> <52CA5CF4.2080708@codeaurora.org> <52CA744F.2080609@intel.com> <52CAC067.20601@ubuntu.com> <52CBB188.2080707@intel.com> <52CC1422.1020101@ubuntu.com> <52CCA3CF.5050308@intel.com> <52CCA6E3.2090400@ubuntu.com> <52CCAAA7.4070104@intel.com> <52CCAF8C.7040407@ubuntu.com> <52CCB3E8.5010101@intel.com> <52CCB5C4.7020206@ubuntu.com> <52CCB99A.4090201@intel.com> <52CCE11A.3040609@ubuntu.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: status of block-integrity
+Date: Wed, 08 Jan 2014 08:14:35 +0100
+Message-ID: <52CCFADB.6080909@suse.de>
+References: <20131222192128.GA28532@infradead.org> <52C6D0DB.1050906@suse.de>	<yq1wqigzvc1.fsf@sermon.lab.mkp.net>	<20140107013646.GB10297@birch.djwong.org> <52CBAA1B.7000509@suse.de> <yq1a9f7wjqr.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:6343 "EHLO mga09.intel.com"
+Received: from cantor2.suse.de ([195.135.220.15]:47859 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751291AbaAHG7v (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 8 Jan 2014 01:59:51 -0500
-In-Reply-To: <52CCE11A.3040609@ubuntu.com>
+	id S1750790AbaAHHOh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 8 Jan 2014 02:14:37 -0500
+In-Reply-To: <yq1a9f7wjqr.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Phillip Susi <psusi@ubuntu.com>, Sujit Reddy Thumma <sthumma@codeaurora.org>
-Cc: todd.e.brandt@linux.intel.com, tj@kernel.org, JBottomley@parallels.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>, Linux-pm mailing list <linux-pm@vger.kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, chuck.lever@oracle.com, Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On 01/08/2014 01:24 PM, Phillip Susi wrote:
-> On 01/07/2014 09:36 PM, Aaron Lu wrote:
->> Oh, of course, my stupid :-) Then I suddenly think my patches can
->> kind of work - let's say we have done the hdparm setting thing
->> before suspend and the disk will be spun up in standby mode next
->> time it is powered. Then during system resume phase, remove the
->> pm_request_resume call in both SCSI and ATA's system resume
->> callback, - if the disk is powered, it will be in standby mode and
->> its runtime status is RPM_SUSPENDED, match its real status(sort
->> of); - if the disk is not powered due to some host feature or
->> whatever, it will be in unpowered mode and its runtime status is
->> RPM_SUSPENDED, still match its real status.
-> 
-> Right, but if the disk is a run of the mill ATA disk not configured
-> for power up in standby, then you end up with runtime pm saying that
-> it is suspended, when in fact, it spun up on its own and is sitting
-> there waiting for commands.
-> 
-> The PuiS setting isn't something we can or want to twiggle on our own
-> during suspend, that's an admin decision that they set more or less
-> permanently either with hdparm or the hardware jumper.  We just need
+On 01/07/2014 10:43 PM, Martin K. Petersen wrote:
+>>>>>> "Hannes" =3D=3D Hannes Reinecke <hare@suse.de> writes:
+>=20
+> Hannes> Plus (as hch rightly pointed out) as there is no defined
+> Hannes> userland interface the question is why we bother with all the
+> Hannes> DIX stuff in the block layer. =20
+>=20
+> Because it catches problems in the path between block layer and HBA
+> ASIC? FWIW, we find more issues there than we do between initiator an=
+d
+> target.
+>=20
+But how should it do that exactly?
+As there is no user (apart from oracleasm) no-one can attach
+protection information to any data, so even the most dedicated admin
+cannot exercise this path, let alone find issues here.
 
-OK, I see.
+> API issues aside, another reason adoption has been slow is that very =
+few
+> applications truly care about this stuff. The current approach in whi=
+ch
+> data is protected when the I/O is submitted by the filesystem is good
+> enough for most things. Saves the filesystem people the trouble of
+> dealing with it too.
+>=20
+> In reality there are only a handful of applications that would actual=
+ly
+> benefit from an explicit userland API. Mostly in the database
+> department. All the potential consumers of an interface I talked to
+> wanted to use aio so that's why we've focused our efforts there.
+>=20
+aio is perfectly fine; all I care is to have _any_ way of feeding
+protection information into the kernel.
 
-> to detect what the drive has done and update the runtime pm status to
-> match.
+> Both Darrick and I have been busy with other projects the last little
+> while. I'll start looking at this again when I'm done with copy
+> offload...
+>=20
+Speaking of which, are there any patches?
+Doug Gilbert and I are currently discussing LID4 / ROD Token copy
+for sg3_utils and the block layer, so any patches would be very
+helpful here.
 
-Then I would say we just keep the pm_request_resume call in their system
-resume callback. For drives that have that cool feature turned on, it
-will be in runtime active state while it's actually in standby mode, not
-a big deal since it should go to runtime suspended state once the
-autosuspend timer is due(the runtime PM core will schedule an idle call
-for newly resumed device); For drives that don't have that feature turned
-on, it will be in runtime active state while it's actually spun up, no
-problem here.
+Cheers,
 
-For the PuiS set drive, there is a time window the drive's power mode
-doesn't agree with its runtime status, the window is the length of the
-autosuspend time interval. Not a big deal I suppose, considering that
-time interval isn't eternal? And I wouldn't say the runtime status for
-the drive is wrong even in this case, since the runtime status is a
-reflection of whether the device is in use or not from kernel's view,
-instead of whether it is in a low power mode. But I agree we better
-align them.
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
