@@ -1,60 +1,78 @@
 From: "Saxena, Sumit" <Sumit.Saxena@lsi.com>
-Subject: RE: [patch] [SCSI] megaraid: missing bounds check in mimd_to_kioc()
-Date: Wed, 8 Jan 2014 12:27:30 +0000
-Message-ID: <bd7f5bb0d19c45e2af9702c1cb6068ea@DM2PR07MB400.namprd07.prod.outlook.com>
-References: <20131025144452.GA28451@ngolde.de>
- <20131030171351.GB4130@longonot.mountain>
+Subject: RE: [PATCH] megaraid_sas: make the log message about rescanning
+ more informative.
+Date: Wed, 8 Jan 2014 12:28:15 +0000
+Message-ID: <ed904388f93d4981a2bdefc6a622acdd@DM2PR07MB400.namprd07.prod.outlook.com>
+References: <20131025122320.GA19111@spaans-e6500>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn1lp0151.outbound.protection.outlook.com ([207.46.163.151]:33985
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755889AbaAHM1e convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jan 2014 07:27:34 -0500
-In-Reply-To: <20131030171351.GB4130@longonot.mountain>
+Received: from mail-bl2lp0211.outbound.protection.outlook.com ([207.46.163.211]:35453
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755684AbaAHM2b convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jan 2014 07:28:31 -0500
+In-Reply-To: <20131025122320.GA19111@spaans-e6500>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>, DL-MegaRAID Linux <megaraidlinux@lsi.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "security@kernel.org" <security@kernel.org>, Nico Golde <nico@ngolde.de>, Fabian Yamaguchi <fabs@goesec.de>
+To: Jasper Spaans <spaans@fox-it.com>, DL-MegaRAID Linux <megaraidlinux@lsi.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
 
 
 >-----Original Message-----
->From: Dan Carpenter [mailto:dan.carpenter@oracle.com]
->Sent: Wednesday, October 30, 2013 10:44 PM
+>From: Jasper Spaans [mailto:spaans@fox-it.com]
+>Sent: Friday, October 25, 2013 5:53 PM
 >To: DL-MegaRAID Linux
->Cc: James E.J. Bottomley; linux-scsi@vger.kernel.org; security@kernel.org;
->Nico Golde; Fabian Yamaguchi
->Subject: [patch] [SCSI] megaraid: missing bounds check in mimd_to_kioc()
+>Cc: linux-scsi@vger.kernel.org
+>Subject: [PATCH] megaraid_sas: make the log message about rescanning
+>more informative.
 >
->pthru32->dataxferlen comes from the user so we need to check that it's
->not too large so we don't overflow the buffer.
+>Hi,
 >
->Reported-by: Nico Golde <nico@ngolde.de>
->Reported-by: Fabian Yamaguchi <fabs@goesec.de>
->Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+>I was working on one of our servers, and saw the following interesting
+>message in dmesg:
+>
+>[20961024.720972] scanning ...
+>
+>This scared me somewhat. Please find a patch to make it easier to see where
+>this message is coming from.
+>
+>Cheers,
+>Jasper
+>
 >---
->Please review this carefully because I have not tested it.
+> drivers/scsi/megaraid/megaraid_sas_base.c |    2 +-
+> 1 file changed, 1 insertion(+), 1 deletion(-)
 >
->diff --git a/drivers/scsi/megaraid/megaraid_mm.c
->b/drivers/scsi/megaraid/megaraid_mm.c
->index dfffd0f..a706927 100644
->--- a/drivers/scsi/megaraid/megaraid_mm.c
->+++ b/drivers/scsi/megaraid/megaraid_mm.c
->@@ -486,6 +486,8 @@ mimd_to_kioc(mimd_t __user *umimd,
->mraid_mmadp_t *adp, uioc_t *kioc)
+>diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c
+>b/drivers/scsi/megaraid/megaraid_sas_base.c
+>index 1f0ca68..3457289 100644
+>--- a/drivers/scsi/megaraid/megaraid_sas_base.c
+>+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+>@@ -5461,7 +5461,7 @@ megasas_aen_polling(struct work_struct *work)
+> 	}
 >
-> 	pthru32->dataxferaddr	= kioc->buf_paddr;
-> 	if (kioc->data_dir & UIOC_WR) {
->+		if (pthru32->dataxferlen > kioc->xferlen)
->+			return -EINVAL;
-> 		if (copy_from_user(kioc->buf_vaddr, kioc->user_data,
-> 						pthru32->dataxferlen)) {
-> 			return (-EFAULT);
-
+> 	if (doscan) {
+>-		printk(KERN_INFO "scanning ...\n");
+>+		printk(KERN_INFO "Rescanning MegaRAID devices ...\n");
+> 		megasas_get_pd_list(instance);
+> 		for (i = 0; i < MEGASAS_MAX_PD_CHANNELS; i++) {
+> 			for (j = 0; j < MEGASAS_MAX_DEV_PER_CHANNEL;
+>j++) {
+>--
+>1.7.9.5
 Acked-by: Sumit Saxena <sumit.saxena@lsi.com>
 
 Sumit
+>
+>
+>--
+> /\____/\   ir. Jasper Spaans // Lead Developer www.FoxDetACT.com
+> \   (_)/   Fox-IT - For a more secure society!
+>  \    X    T: +31-15-2847999
+>   \  / \   M: +31-6-41588725
+>    \/      KvK Haaglanden 27301624
+
