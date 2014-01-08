@@ -1,40 +1,49 @@
-From: Phillip Susi <psusi@ubuntu.com>
-Subject: Re: REQ_PM vs REQ_TYPE_PM_RESUME
-Date: Tue, 07 Jan 2014 20:16:19 -0500
-Message-ID: <52CCA6E3.2090400@ubuntu.com>
-References: <cover.1384030893.git.psusi@ubuntu.com> <1387236657-4852-1-git-send-email-psusi@ubuntu.com> <52CA1191.8060804@ubuntu.com> <52CA5CF4.2080708@codeaurora.org> <52CA744F.2080609@intel.com> <52CAC067.20601@ubuntu.com> <52CBB188.2080707@intel.com> <52CC1422.1020101@ubuntu.com> <52CCA3CF.5050308@intel.com>
+From: Jan Kara <jack@suse.cz>
+Subject: Re: Terrible performance of sequential O_DIRECT 4k writes in SAN
+ environment. ~3 times slower then Solars 10 with the same HBA/Storage.
+Date: Wed, 8 Jan 2014 02:17:13 +0100
+Message-ID: <20140108011713.GA5212@quack.suse.cz>
+References: <CA+QCeVQRrqx=CrxyuAe7k0e0y4Nqo7x_8jtkuD99VM8L9Dxp+g@mail.gmail.com>
+ <20140106201032.GA13491@quack.suse.cz>
+ <20140107155830.GA28395@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <52CCA3CF.5050308@intel.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>, Sujit Reddy Thumma <sthumma@codeaurora.org>
-Cc: todd.e.brandt@linux.intel.com, tj@kernel.org, JBottomley@parallels.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>, Linux-pm mailing list <linux-pm@vger.kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:44123 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754654AbaAHBRS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 7 Jan 2014 20:17:18 -0500
+Content-Disposition: inline
+In-Reply-To: <20140107155830.GA28395@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Jan Kara <jack@suse.cz>, Sergey Meirovich <rathamahata@gmail.com>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Gluk <git.user@gmail.com>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA512
+On Tue 07-01-14 07:58:30, Christoph Hellwig wrote:
+> On Mon, Jan 06, 2014 at 09:10:32PM +0100, Jan Kara wrote:
+> >   This is likely a problem of Linux direct IO implementation. The thing is
+> > that in Linux when you are doing appending direct IO (i.e., direct IO which
+> > changes file size), the IO is performed synchronously so that we have our
+> > life simpler with inode size update etc. (and frankly our current locking
+> > rules make inode size update on IO completion almost impossible). Since
+> > appending direct IO isn't very common, we seem to get away with this
+> > simplification just fine...
+> 
+> Shouldn't be too much of a problem at least for XFS and maybe even ext4
+> with the workqueue based I/O end handler.  For XFS we protect size
+> updates by the ilock which we already taken in that handler, not sure
+> what ext4 would do there.
+  Well, I was specifically worried about i_mutex locking. In particular:
+Before we report appending IO completion we need to update i_size.
+To update i_size we need to grab i_mutex.
 
-On 01/07/2014 08:03 PM, Aaron Lu wrote:
-> You mean you want to leave the disk runtime suspended after a
-> system resume and in the meantime make sure the disk is indeed not
-> spun up?
+Now this is unpleasant because inode_dio_wait() happens under i_mutex so
+the above would create lock inversion. And we cannot really do
+inode_dio_done() before grabbing i_mutex as that would open interesting
+races between truncate decreasing i_size and DIO increasing it.
 
-Yep.  If it is spun up, then the runtime status should be updated to
-reflect that, otherwise it tricks user space programs into avoiding
-doing IO to the disk for fear of waking it, and prevents the runtime
-autosuspend timer from kicking in.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.14 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iQEcBAEBCgAGBQJSzKbjAAoJEI5FoCIzSKrwhEsH/3WXEJm2+uPR2zIeGVvZ/I2X
-yu0KpcMto0Ox/v2htII/SjQsmhAPbyphTcbJeZJTmbA5EZmNixZXrZAS1vy3vK06
-n2Azmywuf0mihfZV1ORg1GuwjgqSSW9MNRw+IuJ7NkxtOZWvWFRNvpcVdyfcig6d
-26CP0drDH/j9VL5L1UFWensESswAWV9l1Ht45FUemQw5QDQK6hwUpOAfhbnurz06
-OCOs4QRC+O/zWyxzMVKQtQnCEd5tRnKQq0K6d2ZmCKe368KNUrKZ+sk3SPabYtjI
-3CEv1+ytG8VajzxJ0cj4TuePK2O+lcd0TWddARJqxZg7o/JYWAyN4yMFoPsAUPo=
-=oDcD
------END PGP SIGNATURE-----
+								Honza
+-- 
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
