@@ -1,78 +1,61 @@
 From: "Saxena, Sumit" <Sumit.Saxena@lsi.com>
-Subject: RE: [PATCH] megaraid_sas: make the log message about rescanning
- more informative.
-Date: Wed, 8 Jan 2014 12:28:15 +0000
-Message-ID: <ed904388f93d4981a2bdefc6a622acdd@DM2PR07MB400.namprd07.prod.outlook.com>
-References: <20131025122320.GA19111@spaans-e6500>
+Subject: RE: [PATCH] [SCSI] megaraid: use GFP_ATOMIC under spin lock
+Date: Wed, 8 Jan 2014 12:16:02 +0000
+Message-ID: <811b9a4297a34f07be49db76acb84afb@DM2PR07MB400.namprd07.prod.outlook.com>
+References: <CAPgLHd82Wqz_sG9s5RPJ+ad+N73JA+_R+5kG-NQwaTYmzik2Wg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2lp0211.outbound.protection.outlook.com ([207.46.163.211]:35453
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+Received: from mail-bn1blp0182.outbound.protection.outlook.com ([207.46.163.182]:40070
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755684AbaAHM2b convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jan 2014 07:28:31 -0500
-In-Reply-To: <20131025122320.GA19111@spaans-e6500>
+	id S1755441AbaAHMcE convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jan 2014 07:32:04 -0500
+In-Reply-To: <CAPgLHd82Wqz_sG9s5RPJ+ad+N73JA+_R+5kG-NQwaTYmzik2Wg@mail.gmail.com>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jasper Spaans <spaans@fox-it.com>, DL-MegaRAID Linux <megaraidlinux@lsi.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Wei Yongjun <weiyj.lk@gmail.com>, DL-MegaRAID Linux <megaraidlinux@lsi.com>, "JBottomley@parallels.com" <JBottomley@parallels.com>, "simon.puels@gmail.com" <simon.puels@gmail.com>, "jkosina@suse.cz" <jkosina@suse.cz>
+Cc: "yongjun_wei@trendmicro.com.cn" <yongjun_wei@trendmicro.com.cn>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
 
 
 >-----Original Message-----
->From: Jasper Spaans [mailto:spaans@fox-it.com]
->Sent: Friday, October 25, 2013 5:53 PM
->To: DL-MegaRAID Linux
->Cc: linux-scsi@vger.kernel.org
->Subject: [PATCH] megaraid_sas: make the log message about rescanning
->more informative.
+>From: Wei Yongjun [mailto:weiyj.lk@gmail.com]
+>Sent: Friday, December 20, 2013 8:38 AM
+>To: DL-MegaRAID Linux; JBottomley@parallels.com; simon.puels@gmail.com;
+>jkosina@suse.cz
+>Cc: yongjun_wei@trendmicro.com.cn; linux-scsi@vger.kernel.org
+>Subject: [PATCH] [SCSI] megaraid: use GFP_ATOMIC under spin lock
 >
->Hi,
+>From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 >
->I was working on one of our servers, and saw the following interesting
->message in dmesg:
+>A spin lock is taken here so we should use GFP_ATOMIC.
 >
->[20961024.720972] scanning ...
->
->This scared me somewhat. Please find a patch to make it easier to see where
->this message is coming from.
->
->Cheers,
->Jasper
->
+>Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 >---
-> drivers/scsi/megaraid/megaraid_sas_base.c |    2 +-
+> drivers/scsi/megaraid/megaraid_mm.c | 2 +-
 > 1 file changed, 1 insertion(+), 1 deletion(-)
 >
->diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c
->b/drivers/scsi/megaraid/megaraid_sas_base.c
->index 1f0ca68..3457289 100644
->--- a/drivers/scsi/megaraid/megaraid_sas_base.c
->+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
->@@ -5461,7 +5461,7 @@ megasas_aen_polling(struct work_struct *work)
-> 	}
+>diff --git a/drivers/scsi/megaraid/megaraid_mm.c
+>b/drivers/scsi/megaraid/megaraid_mm.c
+>index a706927..99fa5d3 100644
+>--- a/drivers/scsi/megaraid/megaraid_mm.c
+>+++ b/drivers/scsi/megaraid/megaraid_mm.c
+>@@ -570,7 +570,7 @@ mraid_mm_attach_buf(mraid_mmadp_t *adp, uioc_t
+>*kioc, int xferlen)
 >
-> 	if (doscan) {
->-		printk(KERN_INFO "scanning ...\n");
->+		printk(KERN_INFO "Rescanning MegaRAID devices ...\n");
-> 		megasas_get_pd_list(instance);
-> 		for (i = 0; i < MEGASAS_MAX_PD_CHANNELS; i++) {
-> 			for (j = 0; j < MEGASAS_MAX_DEV_PER_CHANNEL;
->j++) {
->--
->1.7.9.5
+> 	kioc->pool_index	= right_pool;
+> 	kioc->free_buf		= 1;
+>-	kioc->buf_vaddr 	= pci_pool_alloc(pool->handle, GFP_KERNEL,
+>+	kioc->buf_vaddr		= pci_pool_alloc(pool->handle,
+>GFP_ATOMIC,
+> 							&kioc->buf_paddr);
+> 	spin_unlock_irqrestore(&pool->lock, flags);
+>
+>
 Acked-by: Sumit Saxena <sumit.saxena@lsi.com>
 
 Sumit
->
->
->--
-> /\____/\   ir. Jasper Spaans // Lead Developer www.FoxDetACT.com
-> \   (_)/   Fox-IT - For a more secure society!
->  \    X    T: +31-15-2847999
->   \  / \   M: +31-6-41588725
->    \/      KvK Haaglanden 27301624
 
