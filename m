@@ -1,95 +1,80 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [RFC 2/2] dual scan thread bug fix
-Date: Thu, 09 Jan 2014 06:37:10 +0800
-Message-ID: <1389220630.2440.10.camel@dabdike.pnp.gw>
-References: <Pine.LNX.4.44L0.1401081051160.1659-100000@iolanthe.rowland.org>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH] drivers: target: target_core_mod: use div64_u64_rem()
+ instead of operator '%' for u64
+Date: Wed, 08 Jan 2014 15:18:37 -0800
+Message-ID: <1389223117.5567.271.camel@haakon3.risingtidesystems.com>
+References: <52B4F837.1010403@gmail.com>
+	 <1387680997.5567.91.camel@haakon3.risingtidesystems.com>
+	 <52B6AE19.80401@gmail.com>
+	 <1387781487.5567.147.camel@haakon3.risingtidesystems.com>
+	 <52B90111.5050203@gmail.com> <52CCFF0C.7070704@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:42575 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752717AbaAHWhO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jan 2014 17:37:14 -0500
-In-Reply-To: <Pine.LNX.4.44L0.1401081051160.1659-100000@iolanthe.rowland.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <52CCFF0C.7070704@suse.de>
+Sender: target-devel-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Chen Gang <gang.chen.5i5j@gmail.com>, James Hogan <james.hogan@imgtec.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Fengguang Wu <fengguang.wu@intel.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, USB list <linux-usb@vger.kernel.org>
 
-On Wed, 2014-01-08 at 10:57 -0500, Alan Stern wrote:
-> On Wed, 8 Jan 2014, James Bottomley wrote:
-> 
-> > OK, Agreed, but that means modifying the 1/2 patch with the below.  This
-> > should make the proposed diff to 2/2 correct.
+On Wed, 2014-01-08 at 08:32 +0100, Hannes Reinecke wrote:
+> On 12/24/2013 04:35 AM, Chen Gang wrote:
+> > On 12/23/2013 02:51 PM, Nicholas A. Bellinger wrote:
+> >> On Sun, 2013-12-22 at 17:17 +0800, Chen Gang wrote:
+
+<SNIP>
+
+> >>> The related fix patch changed "start_lba = lba % ..." to "start_lba =
+> >>> lba / ...", and also assumed "segment_size * segment_mult" is still
+> >>> within u32 (can not cause type over flow).
+> >>>
+> >>> I guess the original author already knew about them, and intended to do
+> >>> like that (if not, please let me know, thanks).
+> >>>
+> >>
+> >> Sorry, your correct that the original code is using modulo division to
+> >> calculate start_lba.
+> >>
 > > 
-> > James
+> > Oh, that's all right, (in fact, don't need sorry), I am not quite
+> > familiar with the details, so need related member help check it.  :-)
 > > 
-> > ---
-> > diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-> > index ef3f958..5fad646 100644
-> > --- a/drivers/scsi/scsi_scan.c
-> > +++ b/drivers/scsi/scsi_scan.c
-> > @@ -417,7 +417,7 @@ static struct scsi_target *scsi_alloc_target(struct device *parent,
-> >  		+ shost->transportt->target_size;
-> >  	struct scsi_target *starget;
-> >  	struct scsi_target *found_target;
-> > -	int error;
-> > +	int error, ref_got;
-> >  
-> >  	starget = kzalloc(size, GFP_KERNEL);
-> >  	if (!starget) {
-> > @@ -466,15 +466,15 @@ static struct scsi_target *scsi_alloc_target(struct device *parent,
-> >  	return starget;
-> >  
-> >   found:
-> > -	if (!kref_get_unless_zero(&found_target->reap_ref))
-> > -		/*
-> > -		 * release routine already fired.  Target is dead, but
-> > -		 * STARGET_DEL may not yet be set (set in the release
-> > -		 * routine), so set here as well, just in case
-> > -		 */
-> > -		found_target->state = STARGET_DEL;
-> > +	/*
-> > +	 * release routine already fired if kref is zero, so if we can still
-> > +	 * take the reference, the target must be alive.  If we can't, it must
-> > +	 * be dying and we need to wait for a new target
-> > +	 */
-> > +	ref_got = kref_get_unless_zero(&found_target->reap_ref);
-> > +
-> >  	spin_unlock_irqrestore(shost->host_lock, flags);
-> > -	if (found_target->state != STARGET_DEL) {
-> > +	if (ref_got) {
-> >  		put_device(dev);
-> >  		return found_target;
-> >  	}
-> > @@ -482,8 +482,8 @@ static struct scsi_target *scsi_alloc_target(struct device *parent,
-> >  	 * Unfortunately, we found a dying target; need to wait until it's
-> >  	 * dead before we can get a new one.  There is an anomaly here.  We
-> >  	 * *should* call scsi_target_reap() to balance the kref_get() of the
-> > -	 * reap_ref above.  However, since the target is in state STARGET_DEL,
-> > -	 * it's already invisible and the reap_ref is irrelevant.  If we call
-> > +	 * reap_ref above.  However, since the target being released, it's
-> > +	 * already invisible and the reap_ref is irrelevant.  If we call
-> >  	 * scsi_target_reap() we might spuriously do another device_del() on
-> >  	 * an already invisible target.
-> >  	 */
+> >> Hannes, can you please double check this below..?
+> >>
+> > 
+> > Please help check when have time, thanks.
+> > 
+> I would even convert segment_size and segment_mult to u64,
+> to ensure no overflows occur:
 > 
-> In fact, most of this comment (everything after the first sentence) is
-> no longer needed.  If the target is dying then kref_get_unless_zero
-> must have failed, so there is no need to worry about unbalanced
-> refcounts.
+> diff --git a/drivers/target/target_core_alua.c
+> b/drivers/target/target_core_alua
+> .c
+> index 9b1856d..54b1e52 100644
+> --- a/drivers/target/target_core_alua.c
+> +++ b/drivers/target/target_core_alua.c
+> @@ -477,8 +477,7 @@ static inline int core_alua_state_lba_dependent(
+>         u8 *alua_ascq)
+>  {
+>         struct se_device *dev = cmd->se_dev;
+> -       u32 segment_size, segment_mult, sectors;
+> -       u64 lba;
+> +       u64 segment_size, segment_mult, sectors, lba;
+> 
+>         /* Only need to check for cdb actually containing LBAs */
+>         if (!(cmd->se_cmd_flags & SCF_SCSI_DATA_CDB))
+> 
+> 
 
-I'd like to keep the comment: I get a lot of email from people who write
-static checkers for this.  In principle, I agree, they should treat
-kref_get_unless_zero() as a spin_trylock(), but it's nice to have
-something concrete in the code to point to when the email arrives.
+Will squash the above into the original patch shortly in for-next..
 
-> Otherwise this looks good.
+> Other than that the sector_div() patch is correct.
+> 
 
-Great, thanks, I'll re-roll and repost.
+<nod> Thanks for confirming that sector_div() is correct here vs. the
+original code using modulo that Chen had pointed out.
 
-James
+Thanks Hannes!
 
-
-
+--nab
