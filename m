@@ -1,55 +1,95 @@
-From: Phillip Susi <psusi@ubuntu.com>
-Subject: Re: REQ_PM vs REQ_TYPE_PM_RESUME
-Date: Wed, 08 Jan 2014 16:50:46 -0500
-Message-ID: <52CDC836.4000201@ubuntu.com>
-References: <Pine.LNX.4.44L0.1401081547490.1659-100000@iolanthe.rowland.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [RFC 2/2] dual scan thread bug fix
+Date: Thu, 09 Jan 2014 06:37:10 +0800
+Message-ID: <1389220630.2440.10.camel@dabdike.pnp.gw>
+References: <Pine.LNX.4.44L0.1401081051160.1659-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="ISO-8859-15"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44L0.1401081547490.1659-100000@iolanthe.rowland.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Aaron Lu <aaron.lu@intel.com>, Sujit Reddy Thumma <sthumma@codeaurora.org>, todd.e.brandt@linux.intel.com, tj@kernel.org, JBottomley@parallels.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Linux-pm mailing list <linux-pm@vger.kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:42575 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752717AbaAHWhO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jan 2014 17:37:14 -0500
+In-Reply-To: <Pine.LNX.4.44L0.1401081051160.1659-100000@iolanthe.rowland.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, USB list <linux-usb@vger.kernel.org>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+On Wed, 2014-01-08 at 10:57 -0500, Alan Stern wrote:
+> On Wed, 8 Jan 2014, James Bottomley wrote:
+> 
+> > OK, Agreed, but that means modifying the 1/2 patch with the below.  This
+> > should make the proposed diff to 2/2 correct.
+> > 
+> > James
+> > 
+> > ---
+> > diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+> > index ef3f958..5fad646 100644
+> > --- a/drivers/scsi/scsi_scan.c
+> > +++ b/drivers/scsi/scsi_scan.c
+> > @@ -417,7 +417,7 @@ static struct scsi_target *scsi_alloc_target(struct device *parent,
+> >  		+ shost->transportt->target_size;
+> >  	struct scsi_target *starget;
+> >  	struct scsi_target *found_target;
+> > -	int error;
+> > +	int error, ref_got;
+> >  
+> >  	starget = kzalloc(size, GFP_KERNEL);
+> >  	if (!starget) {
+> > @@ -466,15 +466,15 @@ static struct scsi_target *scsi_alloc_target(struct device *parent,
+> >  	return starget;
+> >  
+> >   found:
+> > -	if (!kref_get_unless_zero(&found_target->reap_ref))
+> > -		/*
+> > -		 * release routine already fired.  Target is dead, but
+> > -		 * STARGET_DEL may not yet be set (set in the release
+> > -		 * routine), so set here as well, just in case
+> > -		 */
+> > -		found_target->state = STARGET_DEL;
+> > +	/*
+> > +	 * release routine already fired if kref is zero, so if we can still
+> > +	 * take the reference, the target must be alive.  If we can't, it must
+> > +	 * be dying and we need to wait for a new target
+> > +	 */
+> > +	ref_got = kref_get_unless_zero(&found_target->reap_ref);
+> > +
+> >  	spin_unlock_irqrestore(shost->host_lock, flags);
+> > -	if (found_target->state != STARGET_DEL) {
+> > +	if (ref_got) {
+> >  		put_device(dev);
+> >  		return found_target;
+> >  	}
+> > @@ -482,8 +482,8 @@ static struct scsi_target *scsi_alloc_target(struct device *parent,
+> >  	 * Unfortunately, we found a dying target; need to wait until it's
+> >  	 * dead before we can get a new one.  There is an anomaly here.  We
+> >  	 * *should* call scsi_target_reap() to balance the kref_get() of the
+> > -	 * reap_ref above.  However, since the target is in state STARGET_DEL,
+> > -	 * it's already invisible and the reap_ref is irrelevant.  If we call
+> > +	 * reap_ref above.  However, since the target being released, it's
+> > +	 * already invisible and the reap_ref is irrelevant.  If we call
+> >  	 * scsi_target_reap() we might spuriously do another device_del() on
+> >  	 * an already invisible target.
+> >  	 */
+> 
+> In fact, most of this comment (everything after the first sentence) is
+> no longer needed.  If the target is dying then kref_get_unless_zero
+> must have failed, so there is no need to worry about unbalanced
+> refcounts.
 
-On 1/8/2014 4:21 PM, Alan Stern wrote:
-> I never saw your patches.  Where were they posted?
+I'd like to keep the comment: I get a lot of email from people who write
+static checkers for this.  In principle, I agree, they should treat
+kref_get_unless_zero() as a spin_trylock(), but it's nice to have
+something concrete in the code to point to when the email arrives.
 
-Higher up in this thread on linux-ide and linux-scsi.  Subject was Let
-sleeping disks lie.
+> Otherwise this looks good.
 
-> If you issue the REQUEST SENSE command in the usual way (going
-> through the SCSI and block layers), and the disk is already in
-> runtime suspend, it won't do what you want.  The block layer won't
-> deliver requests until the device leaves the RPM_SUSPENDED state.
-> In addition, when it receives the command the block layer will
-> submit a deferred runtime-resume request, which rather defeats the
-> whole purpose.
+Great, thanks, I'll re-roll and repost.
 
-Right, which is why I left the device in the active state and used the
-pre/post_suspend functions to change the queue into the RPM_SUSPENDING
-state, then either complete the transition to RPM_SUSPENDED, or bail
-out and go back to RPM_ACTIVE.
-
-> What happens with non-ATA disks?
-
-Same thing: they return a sense status that either says they are
-suspended, stopped, or normal.
+James
 
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.17 (MingW32)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
 
-iQEcBAEBAgAGBQJSzcg2AAoJEI5FoCIzSKrw7wcIAJLiliMYnoHLm/dGWHhhfcnb
-ELJLLAhhWsOIQmHiV1svdy0F7EuKi3KF9qJ9JwCaAspO0w8q24UGhvQW20uSH9Md
-JliKhn6eBY/NFTctaVP2tnOcc4vevCndJfEScBlWxI82MWMC1TV3lA7xPtcJ5ocX
-LMBLPXpr0qypisgmu/tAnwTPQVyU4WUkgMmG9us4w3BgCkvI/oXf4oDKFkCNgUye
-FX16NTZPR6iaIK+YJMG3uKCSD4CQjTnKJNXGR89XKJG+Z9v04jyQgWs7kgvqCov9
-F5j+yueyMVlveGPHmNwhElHEPT2UWSoyQbonuOrYQZ+Db+xJBOxzoY8Jgq9lWVI=
-=+vwf
------END PGP SIGNATURE-----
