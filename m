@@ -1,59 +1,44 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: status of block-integrity
-Date: Wed, 08 Jan 2014 10:23:51 -0500
-Message-ID: <yq1lhyqv6ns.fsf@sermon.lab.mkp.net>
-References: <20131222192128.GA28532@infradead.org> <52C6D0DB.1050906@suse.de>
-	<yq1wqigzvc1.fsf@sermon.lab.mkp.net>
-	<20140107013646.GB10297@birch.djwong.org> <52CBAA1B.7000509@suse.de>
-	<yq1a9f7wjqr.fsf@sermon.lab.mkp.net> <52CCFADB.6080909@suse.de>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Terrible performance of sequential O_DIRECT 4k writes in SAN
+ environment. ~3 times slower then Solars 10 with the same HBA/Storage.
+Date: Wed, 8 Jan 2014 07:26:10 -0800
+Message-ID: <20140108152610.GA5863@infradead.org>
+References: <CA+QCeVQRrqx=CrxyuAe7k0e0y4Nqo7x_8jtkuD99VM8L9Dxp+g@mail.gmail.com>
+ <20140106201032.GA13491@quack.suse.cz>
+ <20140107155830.GA28395@infradead.org>
+ <CA+QCeVRiwHU+C5utaLQXf_MpjoYMYEF4LKRyDPaqcd=H6n-RRw@mail.gmail.com>
+ <20140108140307.GA588@infradead.org>
+ <CA+QCeVQy08m9oBM1ULE_KAjd-36ao35p7-BCWErJewyr3m6NGg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <52CCFADB.6080909@suse.de> (Hannes Reinecke's message of "Wed, 08
-	Jan 2014 08:14:35 +0100")
+Content-Disposition: inline
+In-Reply-To: <CA+QCeVQy08m9oBM1ULE_KAjd-36ao35p7-BCWErJewyr3m6NGg@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, chuck.lever@oracle.com, Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Sergey Meirovich <rathamahata@gmail.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Gluk <git.user@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "Hannes" == Hannes Reinecke <hare@suse.de> writes:
+On Wed, Jan 08, 2014 at 04:43:07PM +0200, Sergey Meirovich wrote:
+> Results are almost the same:
+>     14.68Mb/sec  3758.02 Requests/sec
+>
 
-Hannes,
+On my laptop SSD I get the following results (sometimes up to 200MB/s,
+sometimes down to 100MB/s, always in the 40k to 50k IOps range):
 
-Hannes> As there is no user (apart from oracleasm) no-one can attach
-Hannes> protection information to any data, so even the most dedicated
-Hannes> admin cannot exercise this path, let alone find issues here.
+time elapsed (sec.):	5
+bandwidth (MiB/s):	160.00
+IOps:			40960.00
 
-That's not how it works!
+The IOps are more than the hardware is physically capable of, but given
+that you didn't specify O_SYNC this seems sensible given that we never
+have to flush the disk cache.
 
-If the filesystem has not attached protection information to a bio the
-block layer will do it for you. The block layer generates protection
-information for writes and verifies it for reads. That's how it's worked
-since day one. The code is there, it is used by everyone with a
-DIX-capable HBA. See Documentation/block/data-integrity.txt.
+Could it be that your array has WCE=0?  In Linux we'll never enable the
+cache automatically, but Solaris does at least when using ZFS.  Try
+running:
 
-Normal applications do not want to have to deal with generating
-protection information, using an async I/O model, keeping completion
-state around for extended periods of time to figure out whether the I/O
-actually completed or not and so on. So the kernel-to-platter protection
-scheme we have in place now is good enough.
+   sdparm --set=WCE /dev/sdX
 
-That doesn't mean that I'm not interested in augmenting libaio. I
-am. Very. And I know of several applications that are keen to use
-it. But getting page cache passthrough and filesystem interaction
-working is non-trivial. That's what has inhibited progress, not
-extending the libaio API.
-
-Hannes> Doug Gilbert and I are currently discussing LID4 / ROD Token
-Hannes> copy for sg3_utils and the block layer, so any patches would be
-Hannes> very helpful here.
-
-I'm only doing LID1 right now. Any particular reason you are exploring
-LID4 and ROD?
-
-I resumed my efforts before Christmas but I keep running into issues.
-I'm guessing I'm a week or two from having something that is suitable
-for consumption.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+and try again.
