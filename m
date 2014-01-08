@@ -1,7 +1,7 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH 14/14] tcm_loop: Enable DIF/DIX modes in SCSI host LLD
-Date: Wed,  8 Jan 2014 20:15:57 +0000
-Message-ID: <1389212157-14540-15-git-send-email-nab@daterainc.com>
+Subject: [PATCH 13/14] target/rd: Add DIF protection into rd_execute_rw
+Date: Wed,  8 Jan 2014 20:15:56 +0000
+Message-ID: <1389212157-14540-14-git-send-email-nab@daterainc.com>
 References: <1389212157-14540-1-git-send-email-nab@daterainc.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1389212157-14540-1-git-send-email-nab@daterainc.com>
@@ -12,14 +12,11 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch updates tcm_loop_driver_probe() to set protection
-information using scsi_host_set_prot() and scsi_host_set_guard(),
-which currently enabled all modes of DIF/DIX protection, minus
-DIF TYPE0.
+This patch adds support for DIF protection into rd_execute_rw() code
+for WRITE/READ I/O using sbc_dif_verify_[write,read]() logic.
 
-Also, update tcm_loop_submission_work() to pass struct scsi_cmnd
-related protection into target_submit_cmd_map_sgls() during CDB
-dispatch.
+It also adds rd_get_prot_table() for locating protection SGLs
+assoicated with the ramdisk backend device.
 
 Cc: Martin K. Petersen <martin.petersen@oracle.com>
 Cc: Christoph Hellwig <hch@lst.de>
@@ -28,45 +25,107 @@ Cc: Sagi Grimberg <sagig@mellanox.com>
 Cc: Or Gerlitz <ogerlitz@mellanox.com>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/loopback/tcm_loop.c |   12 ++++++++++--
- 1 file changed, 10 insertions(+), 2 deletions(-)
+ drivers/target/target_core_rd.c |   67 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 67 insertions(+)
 
-diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
-index c6f1427..8d3355f 100644
---- a/drivers/target/loopback/tcm_loop.c
-+++ b/drivers/target/loopback/tcm_loop.c
-@@ -217,7 +217,8 @@ static void tcm_loop_submission_work(struct work_struct *work)
- 			scsi_bufflen(sc), tcm_loop_sam_attr(sc),
- 			sc->sc_data_direction, 0,
- 			scsi_sglist(sc), scsi_sg_count(sc),
--			sgl_bidi, sgl_bidi_count, NULL, 0);
-+			sgl_bidi, sgl_bidi_count,
-+			scsi_prot_sglist(sc), scsi_prot_sg_count(sc));
- 	if (rc < 0) {
- 		set_host_byte(sc, DID_NO_CONNECT);
- 		goto out_done;
-@@ -462,7 +463,7 @@ static int tcm_loop_driver_probe(struct device *dev)
- {
- 	struct tcm_loop_hba *tl_hba;
- 	struct Scsi_Host *sh;
--	int error;
-+	int error, host_prot;
+diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core_rd.c
+index dd99844..3fd51eb 100644
+--- a/drivers/target/target_core_rd.c
++++ b/drivers/target/target_core_rd.c
+@@ -363,6 +363,26 @@ static struct rd_dev_sg_table *rd_get_sg_table(struct rd_dev *rd_dev, u32 page)
+ 	return NULL;
+ }
  
- 	tl_hba = to_tcm_loop_hba(dev);
- 
-@@ -486,6 +487,13 @@ static int tcm_loop_driver_probe(struct device *dev)
- 	sh->max_channel = 0;
- 	sh->max_cmd_len = TL_SCSI_MAX_CMD_LEN;
- 
-+	host_prot = SHOST_DIF_TYPE1_PROTECTION | SHOST_DIF_TYPE2_PROTECTION |
-+		    SHOST_DIF_TYPE3_PROTECTION | SHOST_DIX_TYPE1_PROTECTION |
-+		    SHOST_DIX_TYPE2_PROTECTION | SHOST_DIX_TYPE3_PROTECTION;
++static struct rd_dev_sg_table *rd_get_prot_table(struct rd_dev *rd_dev, u32 page)
++{
++	struct rd_dev_sg_table *sg_table;
++	u32 i, sg_per_table = (RD_MAX_ALLOCATION_SIZE /
++				sizeof(struct scatterlist));
 +
-+	scsi_host_set_prot(sh, host_prot);
-+	scsi_host_set_guard(sh, SHOST_DIX_GUARD_CRC);
++	i = page / sg_per_table;
++	if (i < rd_dev->sg_prot_count) {
++		sg_table = &rd_dev->sg_prot_array[i];
++		if ((sg_table->page_start_offset <= page) &&
++		     (sg_table->page_end_offset >= page))
++			return sg_table;
++	}
 +
- 	error = scsi_add_host(sh, &tl_hba->dev);
- 	if (error) {
- 		pr_err("%s: scsi_add_host failed\n", __func__);
++	pr_err("Unable to locate struct prot rd_dev_sg_table for page: %u\n",
++			page);
++
++	return NULL;
++}
++
+ static sense_reason_t
+ rd_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+ 	      enum dma_data_direction data_direction)
+@@ -377,6 +397,7 @@ rd_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+ 	u32 rd_page;
+ 	u32 src_len;
+ 	u64 tmp;
++	sense_reason_t rc;
+ 
+ 	if (dev->rd_flags & RDF_NULLIO) {
+ 		target_complete_cmd(cmd, SAM_STAT_GOOD);
+@@ -399,6 +420,29 @@ rd_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+ 			data_direction == DMA_FROM_DEVICE ? "Read" : "Write",
+ 			cmd->t_task_lba, rd_size, rd_page, rd_offset);
+ 
++	if ((cmd->se_cmd_flags & SCF_PROT) && se_dev->dev_attrib.pi_prot_type &&
++	    data_direction == DMA_TO_DEVICE) {
++		sector_t sector = cmd->data_length / se_dev->dev_attrib.block_size;
++		struct rd_dev_sg_table *prot_table;
++		struct scatterlist *prot_sg;
++		u32 prot_offset, prot_page;
++
++		tmp = cmd->t_task_lba * se_dev->prot_length;
++		prot_offset = do_div(tmp, PAGE_SIZE);
++		prot_page = tmp;
++
++		prot_table = rd_get_prot_table(dev, prot_page);
++		if (!prot_table)
++			return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
++
++		prot_sg = &prot_table->sg_table[prot_page - prot_table->page_start_offset];
++
++		rc = sbc_dif_verify_write(cmd, cmd->t_task_lba, sector, 0,
++					  prot_sg, prot_offset);
++		if (rc)
++			return rc;
++	}
++
+ 	src_len = PAGE_SIZE - rd_offset;
+ 	sg_miter_start(&m, sgl, sgl_nents,
+ 			data_direction == DMA_FROM_DEVICE ?
+@@ -460,6 +504,29 @@ rd_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+ 	}
+ 	sg_miter_stop(&m);
+ 
++	if ((cmd->se_cmd_flags & SCF_PROT) && se_dev->dev_attrib.pi_prot_type &&
++	    data_direction == DMA_FROM_DEVICE) {
++		sector_t sector = cmd->data_length / se_dev->dev_attrib.block_size;
++		struct rd_dev_sg_table *prot_table;
++		struct scatterlist *prot_sg;
++		u32 prot_offset, prot_page;
++
++		tmp = cmd->t_task_lba * se_dev->prot_length;
++		prot_offset = do_div(tmp, PAGE_SIZE);
++		prot_page = tmp;
++
++		prot_table = rd_get_prot_table(dev, prot_page);
++		if (!prot_table)
++			return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
++
++		prot_sg = &prot_table->sg_table[prot_page - prot_table->page_start_offset];
++
++		rc = sbc_dif_verify_read(cmd, cmd->t_task_lba, sector, 0,
++					 prot_sg, prot_offset);
++		if (rc)
++			return rc;
++	}
++
+ 	target_complete_cmd(cmd, SAM_STAT_GOOD);
+ 	return 0;
+ }
 -- 
 1.7.10.4
