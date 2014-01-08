@@ -1,61 +1,80 @@
-From: Phillip Susi <psusi@ubuntu.com>
-Subject: Re: REQ_PM vs REQ_TYPE_PM_RESUME
-Date: Wed, 08 Jan 2014 00:24:42 -0500
-Message-ID: <52CCE11A.3040609@ubuntu.com>
-References: <cover.1384030893.git.psusi@ubuntu.com> <1387236657-4852-1-git-send-email-psusi@ubuntu.com> <52CA1191.8060804@ubuntu.com> <52CA5CF4.2080708@codeaurora.org> <52CA744F.2080609@intel.com> <52CAC067.20601@ubuntu.com> <52CBB188.2080707@intel.com> <52CC1422.1020101@ubuntu.com> <52CCA3CF.5050308@intel.com> <52CCA6E3.2090400@ubuntu.com> <52CCAAA7.4070104@intel.com> <52CCAF8C.7040407@ubuntu.com> <52CCB3E8.5010101@intel.com> <52CCB5C4.7020206@ubuntu.com> <52CCB99A.4090201@intel.com>
+From: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
+Subject: RE: [PATCH 1/1] aacraid: kdump fix
+Date: Wed, 8 Jan 2014 06:34:52 +0000
+Message-ID: <B539A9786201A44A91E34268415A2B1A1E275A99@BBYEXM01.pmc-sierra.internal>
+References: <1387793273-7284-1-git-send-email-Mahesh.Rajashekhara@pmcs.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <52CCB99A.4090201@intel.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>, Sujit Reddy Thumma <sthumma@codeaurora.org>
-Cc: todd.e.brandt@linux.intel.com, tj@kernel.org, JBottomley@parallels.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>, Linux-pm mailing list <linux-pm@vger.kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:35484 "EHLO
+	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750790AbaAHGev convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 8 Jan 2014 01:34:51 -0500
+In-Reply-To: <1387793273-7284-1-git-send-email-Mahesh.Rajashekhara@pmcs.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "JBottomley@Parallels.com" <JBottomley@Parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "aacraid@pmc-sierra.com" <aacraid@pmc-sierra.com>, Harry Yang <Harry.Yang@pmcs.com>, Achim Leubner <Achim.Leubner@pmcs.com>, Rich Bono <Rich.Bono@pmcs.com>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA512
+Hi James,
 
-On 01/07/2014 09:36 PM, Aaron Lu wrote:
-> I think the host controller can decide not to power all its ports,
-> only when a specific reg in the port's memory range is set, it will
-> give power to that port and thus spin up the drive. Makes sense?
+Can you please let me know the status of this patch which I submitted sometime back.
 
-The port doesn't supply power to the drive, it gets it straight from
-the system PSU.
+Thanks & Regards,
+Mahesh
 
-> Oh, of course, my stupid :-) Then I suddenly think my patches can
-> kind of work - let's say we have done the hdparm setting thing
-> before suspend and the disk will be spun up in standby mode next
-> time it is powered. Then during system resume phase, remove the
-> pm_request_resume call in both SCSI and ATA's system resume
-> callback, - if the disk is powered, it will be in standby mode and
-> its runtime status is RPM_SUSPENDED, match its real status(sort
-> of); - if the disk is not powered due to some host feature or
-> whatever, it will be in unpowered mode and its runtime status is
-> RPM_SUSPENDED, still match its real status.
+-----Original Message-----
+From: Mahesh Rajashekhara 
+Sent: Monday, December 23, 2013 3:38 PM
+To: JBottomley@Parallels.com; linux-scsi@vger.kernel.org
+Cc: aacraid@pmc-sierra.com; Harry Yang; Achim Leubner; Rich Bono; Mahesh Rajashekhara
+Subject: [PATCH 1/1] aacraid: kdump fix
 
-Right, but if the disk is a run of the mill ATA disk not configured
-for power up in standby, then you end up with runtime pm saying that
-it is suspended, when in fact, it spun up on its own and is sitting
-there waiting for commands.
+This patch fixes kernel panic issue while booting into the kdump kernel.
 
-The PuiS setting isn't something we can or want to twiggle on our own
-during suspend, that's an admin decision that they set more or less
-permanently either with hdparm or the hardware jumper.  We just need
-to detect what the drive has done and update the runtime pm status to
-match.
+We have triggered crash and kdump vmcore was successful. No issues seen while booting into the OS.
 
+Signed-off-by: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
+---
+ drivers/scsi/aacraid/aacraid.h |    2 +-
+ drivers/scsi/aacraid/rx.c      |    5 +++--
+ 2 files changed, 4 insertions(+), 3 deletions(-)
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.14 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h index 9323d05..eaaf870 100644
+--- a/drivers/scsi/aacraid/aacraid.h
++++ b/drivers/scsi/aacraid/aacraid.h
+@@ -12,7 +12,7 @@
+  *----------------------------------------------------------------------------*/
+ 
+ #ifndef AAC_DRIVER_BUILD
+-# define AAC_DRIVER_BUILD 30200
++# define AAC_DRIVER_BUILD 30300
+ # define AAC_DRIVER_BRANCH "-ms"
+ #endif
+ #define MAXIMUM_NUM_CONTAINERS	32
+diff --git a/drivers/scsi/aacraid/rx.c b/drivers/scsi/aacraid/rx.c index dada38a..9f2d88f 100644
+--- a/drivers/scsi/aacraid/rx.c
++++ b/drivers/scsi/aacraid/rx.c
+@@ -500,13 +500,14 @@ static int aac_rx_restart_adapter(struct aac_dev *dev, int bled)
+ 		if (bled && (bled != -ETIMEDOUT))
+ 			return -EINVAL;
+ 	}
+-	if (bled || (var == 0x3803000F)) { /* USE_OTHER_METHOD */
++	if (bled && (var == 0x3803000F)) { /* USE_OTHER_METHOD */
+ 		rx_writel(dev, MUnit.reserved2, 3);
+ 		msleep(5000); /* Delay 5 seconds */
+ 		var = 0x00000001;
+ 	}
+-	if (var != 0x00000001)
++	if (bled && (var != 0x00000001))
+ 		return -EINVAL;
++	ssleep(5);
+ 	if (rx_readl(dev, MUnit.OMRx[0]) & KERNEL_PANIC)
+ 		return -ENODEV;
+ 	if (startup_timeout < 300)
+--
+1.7.7.3
 
-iQEcBAEBCgAGBQJSzOEaAAoJEI5FoCIzSKrwIVoH/1sszQsK1buyg9hDvemd84m6
-EMkMUsab4qYZlxGcQpnUUlJbQpGKnhDXjxBstjD8zfnC6WQfOCySTqkqBzZqEXzE
-QEt5IV7mWn43tGbu4pyYlw4SrEOmOmmYJxl5yh033MAPNsP/rhToXZoEPOTRCro4
-GdkZpxx0A9Y/rnzLN29RoFw41T5G4aG0O7FyTuZGPW/uWhhdUqxpUQt7ACCD+fdD
-GaHWf2WInU7vSrDcg6daxvarqQ8GJavc1rafM45EkGMCzGwRhvIR+PCBk8E9t1qA
-eB/1b9q8DiBJVCiMxcZVOLY8PY0bm1eBRRqhMef0l7Ppvl8N23f84o7tcN57lWY=
-=RCPv
------END PGP SIGNATURE-----
