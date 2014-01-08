@@ -1,51 +1,86 @@
-From: "Dr. Musa Hamed" <drmusahamed01@gmail.com>
-Subject: I have a very lucrative Business
-Date: Wed, 8 Jan 2014 21:47:31 +0100
-Message-ID: <CALS90i9nMs6jMoH2O5S68sPF=juYOV2sfMAwaBekL8ccz3eSOQ__6011.55474219031$1389215638$gmane$org@mail.gmail.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: REQ_PM vs REQ_TYPE_PM_RESUME
+Date: Wed, 8 Jan 2014 16:21:37 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1401081547490.1659-100000@iolanthe.rowland.org>
+References: <52CDB32A.6000702@ubuntu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wg0-f65.google.com ([74.125.82.65]:42343 "EHLO
-	mail-wg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932232AbaAHVNj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jan 2014 16:13:39 -0500
-Received: by mail-wg0-f65.google.com with SMTP id k14so447401wgh.4
-        for <linux-scsi@vger.kernel.org>; Wed, 08 Jan 2014 13:13:38 -0800 (PST)
+Received: from iolanthe.rowland.org ([192.131.102.54]:59275 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756896AbaAHVVi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jan 2014 16:21:38 -0500
+In-Reply-To: <52CDB32A.6000702@ubuntu.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Phillip Susi <psusi@ubuntu.com>
+Cc: Aaron Lu <aaron.lu@intel.com>, Sujit Reddy Thumma <sthumma@codeaurora.org>, todd.e.brandt@linux.intel.com, tj@kernel.org, JBottomley@parallels.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Linux-pm mailing list <linux-pm@vger.kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>
 
-ATTN: Dear,
+On Wed, 8 Jan 2014, Phillip Susi wrote:
 
-I am Dr. Musa Hamed Executive Director of the Bank of Africa
-Plc B.O.A,Cotonou Benin Rep. I have a very lucrative Business proposal
-worth of 21,500,000.00 USD.
+> > In essence, you want your disk's state to move directly from
+> > unpowered (system asleep) to runtime-suspended with no intermediate
+> > active -- but only if the disk doesn't spin up all by itself.
+> > 
+> > One problem: How can the kernel tell whether the disk has spun up
+> > by itself?  I don't think it can be done at the SCSI level.  Can it
+> > be done at the ATA level (and without using the SCSI stack, as that
+> > would require the disk to go out of runtime suspend and spin up
+> > anyway)?
+> 
+> You issue a REQUEST SENSE command and that returns status indicating
+> whether the drive is stopped, or in standby.  See my patches.  One of
 
-An Iraqi named Hamadi Hashem a business man made a fixed deposit of
-21,500,000.00 USD . Upon maturity several notices was sent to him,
-even during the war,eleven years ago (2003) up till this date. Again
-after the war another notification was sent and still no response came
-from him. it has been found out that Hamadi Hashem and his family had
-been killed during the war in bomb blast that hit their home at
-Mukaradeeb where his personal oil well was. I am prepared to split the
-funds with you 50%:50%.By placing you as the NEXT OF KIN to his
-deposit.
+I never saw your patches.  Where were they posted?
 
-Should you be interested in doing this deal with me, please send me
-the following information:
+If you issue the REQUEST SENSE command in the usual way (going through
+the SCSI and block layers), and the disk is already in runtime suspend,
+it won't do what you want.  The block layer won't deliver requests
+until the device leaves the RPM_SUSPENDED state.  In addition, when it
+receives the command the block layer will submit a deferred
+runtime-resume request, which rather defeats the whole purpose.
 
-(1) Your Name
-(2) Resident Address
-(3) Your Occupation
-(4) Your Phone Number
-(5) Date of Birth
-(6) Resident Country
+(I guess you actually saw some of this happen, and that's what led to
+this email thread in the first place.)
 
-And I will prefer you to reach me privately and securely on my personal
-email address: dr.musahamed30@yahoo.fr
-Tel: +229-988-400-97
+It's a knotty situation.  The only way to find out whether the disk is
+spinning is to ask it, which requires doing I/O, which requires
+spinning up the disk.  Maybe we need to add a mechanism to the block
+layer's runtime PM implementation for addressing just this situation.
 
-I will provide you with further information as soon as I hear
-positively from you.
+> them fixes the scsi-ata translation to issue the ATA CHECK power
+> command to see if the drive is suspended, as SAT-3 calls for.
 
-Regards,
-Dr. Musa Hamed
+What happens with non-ATA disks?
+
+
+> > Actually, it does have a reason.  Namely, you told it earlier to
+> > assume the disk will be needed again if it was used within the last
+> > 5 minutes.  At the time of the system resume, the disk was last
+> > used 3 minutes ago (not counting the time the system was asleep).
+> 
+> You're looking at it backwards.  You aren't telling it to assume the
+> disk will be needed again if it was used within the last 5 minutes;
+> you are telling it that it can assume it *won't* be needed again soon
+> if not used in the last 5 minutes, and therefore, it is ok to shut it
+> down.
+
+Okay, yes, the autosuspend timeout affects when devices should be
+powered down, not when they should be powered back up.
+
+> Also the act of suspending the system is a pretty clear breaking point
+> in general activity.  You normally stop your work and quiesce the
+> system before you suspend it.  If I finish my work and copy it to my
+> backup drive, then suspend the system, and my wife comes by an hour
+> later to browse the web, she's not going to be touching my backup disk.
+
+While that's true, it's also true that any userspace processes running 
+before the system suspend will continue running, with no perceptible 
+break, after the system wakes up.  If they were accessing the disk 
+before, they will most likely continue to access it afterward.
+
+But never mind all this; it's a pointless discussion.  The real 
+question is how to implement what you want.
+
+Alan Stern
+
