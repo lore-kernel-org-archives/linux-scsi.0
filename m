@@ -1,80 +1,63 @@
-From: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
-Subject: RE: [PATCH 1/1] aacraid: kdump fix
-Date: Wed, 8 Jan 2014 06:34:52 +0000
-Message-ID: <B539A9786201A44A91E34268415A2B1A1E275A99@BBYEXM01.pmc-sierra.internal>
-References: <1387793273-7284-1-git-send-email-Mahesh.Rajashekhara@pmcs.com>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: REQ_PM vs REQ_TYPE_PM_RESUME
+Date: Wed, 08 Jan 2014 15:00:05 +0800
+Message-ID: <52CCF775.3010303@intel.com>
+References: <cover.1384030893.git.psusi@ubuntu.com> <1387236657-4852-1-git-send-email-psusi@ubuntu.com> <52CA1191.8060804@ubuntu.com> <52CA5CF4.2080708@codeaurora.org> <52CA744F.2080609@intel.com> <52CAC067.20601@ubuntu.com> <52CBB188.2080707@intel.com> <52CC1422.1020101@ubuntu.com> <52CCA3CF.5050308@intel.com> <52CCA6E3.2090400@ubuntu.com> <52CCAAA7.4070104@intel.com> <52CCAF8C.7040407@ubuntu.com> <52CCB3E8.5010101@intel.com> <52CCB5C4.7020206@ubuntu.com> <52CCB99A.4090201@intel.com> <52CCE11A.3040609@ubuntu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:35484 "EHLO
-	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750790AbaAHGev convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 8 Jan 2014 01:34:51 -0500
-In-Reply-To: <1387793273-7284-1-git-send-email-Mahesh.Rajashekhara@pmcs.com>
-Content-Language: en-US
+Received: from mga09.intel.com ([134.134.136.24]:6343 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751291AbaAHG7v (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 8 Jan 2014 01:59:51 -0500
+In-Reply-To: <52CCE11A.3040609@ubuntu.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "JBottomley@Parallels.com" <JBottomley@Parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "aacraid@pmc-sierra.com" <aacraid@pmc-sierra.com>, Harry Yang <Harry.Yang@pmcs.com>, Achim Leubner <Achim.Leubner@pmcs.com>, Rich Bono <Rich.Bono@pmcs.com>
+To: Phillip Susi <psusi@ubuntu.com>, Sujit Reddy Thumma <sthumma@codeaurora.org>
+Cc: todd.e.brandt@linux.intel.com, tj@kernel.org, JBottomley@parallels.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>, Linux-pm mailing list <linux-pm@vger.kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>
 
-Hi James,
+On 01/08/2014 01:24 PM, Phillip Susi wrote:
+> On 01/07/2014 09:36 PM, Aaron Lu wrote:
+>> Oh, of course, my stupid :-) Then I suddenly think my patches can
+>> kind of work - let's say we have done the hdparm setting thing
+>> before suspend and the disk will be spun up in standby mode next
+>> time it is powered. Then during system resume phase, remove the
+>> pm_request_resume call in both SCSI and ATA's system resume
+>> callback, - if the disk is powered, it will be in standby mode and
+>> its runtime status is RPM_SUSPENDED, match its real status(sort
+>> of); - if the disk is not powered due to some host feature or
+>> whatever, it will be in unpowered mode and its runtime status is
+>> RPM_SUSPENDED, still match its real status.
+> 
+> Right, but if the disk is a run of the mill ATA disk not configured
+> for power up in standby, then you end up with runtime pm saying that
+> it is suspended, when in fact, it spun up on its own and is sitting
+> there waiting for commands.
+> 
+> The PuiS setting isn't something we can or want to twiggle on our own
+> during suspend, that's an admin decision that they set more or less
+> permanently either with hdparm or the hardware jumper.  We just need
 
-Can you please let me know the status of this patch which I submitted sometime back.
+OK, I see.
 
-Thanks & Regards,
-Mahesh
+> to detect what the drive has done and update the runtime pm status to
+> match.
 
------Original Message-----
-From: Mahesh Rajashekhara 
-Sent: Monday, December 23, 2013 3:38 PM
-To: JBottomley@Parallels.com; linux-scsi@vger.kernel.org
-Cc: aacraid@pmc-sierra.com; Harry Yang; Achim Leubner; Rich Bono; Mahesh Rajashekhara
-Subject: [PATCH 1/1] aacraid: kdump fix
+Then I would say we just keep the pm_request_resume call in their system
+resume callback. For drives that have that cool feature turned on, it
+will be in runtime active state while it's actually in standby mode, not
+a big deal since it should go to runtime suspended state once the
+autosuspend timer is due(the runtime PM core will schedule an idle call
+for newly resumed device); For drives that don't have that feature turned
+on, it will be in runtime active state while it's actually spun up, no
+problem here.
 
-This patch fixes kernel panic issue while booting into the kdump kernel.
-
-We have triggered crash and kdump vmcore was successful. No issues seen while booting into the OS.
-
-Signed-off-by: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
----
- drivers/scsi/aacraid/aacraid.h |    2 +-
- drivers/scsi/aacraid/rx.c      |    5 +++--
- 2 files changed, 4 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h index 9323d05..eaaf870 100644
---- a/drivers/scsi/aacraid/aacraid.h
-+++ b/drivers/scsi/aacraid/aacraid.h
-@@ -12,7 +12,7 @@
-  *----------------------------------------------------------------------------*/
- 
- #ifndef AAC_DRIVER_BUILD
--# define AAC_DRIVER_BUILD 30200
-+# define AAC_DRIVER_BUILD 30300
- # define AAC_DRIVER_BRANCH "-ms"
- #endif
- #define MAXIMUM_NUM_CONTAINERS	32
-diff --git a/drivers/scsi/aacraid/rx.c b/drivers/scsi/aacraid/rx.c index dada38a..9f2d88f 100644
---- a/drivers/scsi/aacraid/rx.c
-+++ b/drivers/scsi/aacraid/rx.c
-@@ -500,13 +500,14 @@ static int aac_rx_restart_adapter(struct aac_dev *dev, int bled)
- 		if (bled && (bled != -ETIMEDOUT))
- 			return -EINVAL;
- 	}
--	if (bled || (var == 0x3803000F)) { /* USE_OTHER_METHOD */
-+	if (bled && (var == 0x3803000F)) { /* USE_OTHER_METHOD */
- 		rx_writel(dev, MUnit.reserved2, 3);
- 		msleep(5000); /* Delay 5 seconds */
- 		var = 0x00000001;
- 	}
--	if (var != 0x00000001)
-+	if (bled && (var != 0x00000001))
- 		return -EINVAL;
-+	ssleep(5);
- 	if (rx_readl(dev, MUnit.OMRx[0]) & KERNEL_PANIC)
- 		return -ENODEV;
- 	if (startup_timeout < 300)
---
-1.7.7.3
-
+For the PuiS set drive, there is a time window the drive's power mode
+doesn't agree with its runtime status, the window is the length of the
+autosuspend time interval. Not a big deal I suppose, considering that
+time interval isn't eternal? And I wouldn't say the runtime status for
+the drive is wrong even in this case, since the runtime status is a
+reflection of whether the device is in use or not from kernel's view,
+instead of whether it is in a low power mode. But I agree we better
+align them.
