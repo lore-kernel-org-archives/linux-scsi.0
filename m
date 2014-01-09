@@ -1,63 +1,82 @@
-From: "Saxena, Sumit" <Sumit.Saxena@lsi.com>
-Subject: RE: [patch] [SCSI] megaraid: missing bounds check in mimd_to_kioc()
-Date: Thu, 9 Jan 2014 19:53:25 +0000
-Message-ID: <341c8929f76f46d19027677af9d6f532@DM2PR07MB400.namprd07.prod.outlook.com>
-References: <20131025144452.GA28451@ngolde.de>
-	<20131030171351.GB4130@longonot.mountain>
-	<bd7f5bb0d19c45e2af9702c1cb6068ea@DM2PR07MB400.namprd07.prod.outlook.com>
- <CAGXu5j+WvAckRNyiSU8WYzWriWU2Y4+KMwxe17xxn8Y_w=kSPA@mail.gmail.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: Terrible performance of sequential O_DIRECT 4k writes in SAN
+ environment. ~3 times slower then Solars 10 with the same HBA/Storage.
+Date: Thu, 09 Jan 2014 14:54:10 -0500
+Message-ID: <52CEFE62.7070009@interlog.com>
+References: <CA+QCeVQRrqx=CrxyuAe7k0e0y4Nqo7x_8jtkuD99VM8L9Dxp+g@mail.gmail.com> <20140106201032.GA13491@quack.suse.cz> <52CC6A53.9010508@emulex.com> <CA+QCeVSruYZCQOGapU_y613ucaptkzQN34X83DmYiPXTkWFVzg@mail.gmail.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2lp0212.outbound.protection.outlook.com ([207.46.163.212]:35027
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756934AbaAITxk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 9 Jan 2014 14:53:40 -0500
-In-Reply-To: <CAGXu5j+WvAckRNyiSU8WYzWriWU2Y4+KMwxe17xxn8Y_w=kSPA@mail.gmail.com>
-Content-Language: en-US
+Received: from smtp.infotech.no ([82.134.31.41]:60677 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755082AbaAITyh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 9 Jan 2014 14:54:37 -0500
+In-Reply-To: <CA+QCeVSruYZCQOGapU_y613ucaptkzQN34X83DmYiPXTkWFVzg@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kees Cook <keescook@google.com>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>, DL-MegaRAID Linux <megaraidlinux@lsi.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "security@kernel.org" <security@kernel.org>, Nico Golde <nico@ngolde.de>, Fabian Yamaguchi <fabs@goesec.de>
+To: Sergey Meirovich <rathamahata@gmail.com>, James Smart <james.smart@emulex.com>
+Cc: Jan Kara <jack@suse.cz>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Gluk <git.user@gmail.com>
 
-DQoNCj4tLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPkZyb206IEtlZXMgQ29vayBbbWFpbHRv
-OmtlZXNjb29rQGdvb2dsZS5jb21dDQo+U2VudDogRnJpZGF5LCBKYW51YXJ5IDEwLCAyMDE0IDEy
-OjA1IEFNDQo+VG86IFNheGVuYSwgU3VtaXQNCj5DYzogRGFuIENhcnBlbnRlcjsgREwtTWVnYVJB
-SUQgTGludXg7IEphbWVzIEUuSi4gQm90dG9tbGV5OyBsaW51eC0NCj5zY3NpQHZnZXIua2VybmVs
-Lm9yZzsgc2VjdXJpdHlAa2VybmVsLm9yZzsgTmljbyBHb2xkZTsgRmFiaWFuIFlhbWFndWNoaQ0K
-PlN1YmplY3Q6IFJlOiBbcGF0Y2hdIFtTQ1NJXSBtZWdhcmFpZDogbWlzc2luZyBib3VuZHMgY2hl
-Y2sgaW4gbWltZF90b19raW9jKCkNCj4NCj5PbiBXZWQsIEphbiA4LCAyMDE0IGF0IDQ6MjcgQU0s
-IFNheGVuYSwgU3VtaXQgPFN1bWl0LlNheGVuYUBsc2kuY29tPg0KPndyb3RlOg0KPj4NCj4+DQo+
-Pj4tLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPj4+RnJvbTogRGFuIENhcnBlbnRlciBbbWFp
-bHRvOmRhbi5jYXJwZW50ZXJAb3JhY2xlLmNvbV0NCj4+PlNlbnQ6IFdlZG5lc2RheSwgT2N0b2Jl
-ciAzMCwgMjAxMyAxMDo0NCBQTQ0KPj4+VG86IERMLU1lZ2FSQUlEIExpbnV4DQo+Pj5DYzogSmFt
-ZXMgRS5KLiBCb3R0b21sZXk7IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnOw0KPj4+c2VjdXJp
-dHlAa2VybmVsLm9yZzsgTmljbyBHb2xkZTsgRmFiaWFuIFlhbWFndWNoaQ0KPj4+U3ViamVjdDog
-W3BhdGNoXSBbU0NTSV0gbWVnYXJhaWQ6IG1pc3NpbmcgYm91bmRzIGNoZWNrIGluDQo+Pj5taW1k
-X3RvX2tpb2MoKQ0KPj4+DQo+Pj5wdGhydTMyLT5kYXRheGZlcmxlbiBjb21lcyBmcm9tIHRoZSB1
-c2VyIHNvIHdlIG5lZWQgdG8gY2hlY2sgdGhhdCBpdCdzDQo+Pj5ub3QgdG9vIGxhcmdlIHNvIHdl
-IGRvbid0IG92ZXJmbG93IHRoZSBidWZmZXIuDQo+Pj4NCj4+PlJlcG9ydGVkLWJ5OiBOaWNvIEdv
-bGRlIDxuaWNvQG5nb2xkZS5kZT4NCj4+PlJlcG9ydGVkLWJ5OiBGYWJpYW4gWWFtYWd1Y2hpIDxm
-YWJzQGdvZXNlYy5kZT4NCj4+PlNpZ25lZC1vZmYtYnk6IERhbiBDYXJwZW50ZXIgPGRhbi5jYXJw
-ZW50ZXJAb3JhY2xlLmNvbT4NCj4+Pi0tLQ0KPj4+UGxlYXNlIHJldmlldyB0aGlzIGNhcmVmdWxs
-eSBiZWNhdXNlIEkgaGF2ZSBub3QgdGVzdGVkIGl0Lg0KPj4+DQo+Pj5kaWZmIC0tZ2l0IGEvZHJp
-dmVycy9zY3NpL21lZ2FyYWlkL21lZ2FyYWlkX21tLmMNCj4+PmIvZHJpdmVycy9zY3NpL21lZ2Fy
-YWlkL21lZ2FyYWlkX21tLmMNCj4+PmluZGV4IGRmZmZkMGYuLmE3MDY5MjcgMTAwNjQ0DQo+Pj4t
-LS0gYS9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJhaWRfbW0uYw0KPj4+KysrIGIvZHJpdmVy
-cy9zY3NpL21lZ2FyYWlkL21lZ2FyYWlkX21tLmMNCj4+PkBAIC00ODYsNiArNDg2LDggQEAgbWlt
-ZF90b19raW9jKG1pbWRfdCBfX3VzZXIgKnVtaW1kLA0KPm1yYWlkX21tYWRwX3QNCj4+PiphZHAs
-IHVpb2NfdCAqa2lvYykNCj4+Pg0KPj4+ICAgICAgIHB0aHJ1MzItPmRhdGF4ZmVyYWRkciAgID0g
-a2lvYy0+YnVmX3BhZGRyOw0KPj4+ICAgICAgIGlmIChraW9jLT5kYXRhX2RpciAmIFVJT0NfV1Ip
-IHsNCj4+PisgICAgICAgICAgICAgIGlmIChwdGhydTMyLT5kYXRheGZlcmxlbiA+IGtpb2MtPnhm
-ZXJsZW4pDQo+Pj4rICAgICAgICAgICAgICAgICAgICAgIHJldHVybiAtRUlOVkFMOw0KPj4+ICAg
-ICAgICAgICAgICAgaWYgKGNvcHlfZnJvbV91c2VyKGtpb2MtPmJ1Zl92YWRkciwga2lvYy0+dXNl
-cl9kYXRhLA0KPj4+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICBwdGhydTMyLT5kYXRheGZlcmxlbikpIHsNCj4+PiAgICAgICAgICAgICAgICAgICAgICAgcmV0
-dXJuICgtRUZBVUxUKTsNCj4+DQo+PiBBY2tlZC1ieTogU3VtaXQgU2F4ZW5hIDxzdW1pdC5zYXhl
-bmFAbHNpLmNvbT4NCj4+DQo+PiBTdW1pdA0KPj4NCj4NCj5UaGFua3MgZm9yIHRoZSBBY2suIFdo
-byBub3JtYWxseSBwaWNrcyBwYXRjaGVzIGZvciB0aGlzIGFyZWE/DQo+DQo+LUtlZXMNCj4NCkph
-bWVzIEJvdHRvbWxleShMaW51eCBTQ1NJIHN1YnN5c3RlbSBtYWludGFpbmVyKSBzaG91bGQgcGlj
-ayB0aGlzIHBhdGNoLg0KDQpTdW1pdA0KPi0tDQo+S2VlcyBDb29rDQo+Q2hyb21lIE9TIFNlY3Vy
-aXR5DQoNCg==
+On 14-01-08 08:57 AM, Sergey Meirovich wrote:
+> Hi James,
+>
+> On 7 January 2014 22:57, James Smart <james.smart@emulex.com> wrote:
+>> Sergey,
+>>
+>> The Thor chipset is a bit old - a 4Gig adapter.  Most of our performance
+>> improvements, including parallelization, have gone into the 8G and 16G
+>> adapters. But you still should have seen significantly beyond what you
+>> reported.
+>
+> First of all - thanks a lot!
+>
+> I took Thor because we have exactly the same Thors in some of our
+> Solaris servers. I've also tried 6 different qlogics (mostly 8G) and
+> fnic (10G) as well. Surprisingly enough Thor was the fastest one for
+> seqwr 4k. Though in most of the cases machines were from our different
+> DCs and hence each one connected to yet another storage.
+>
+>>
+>> We did a sanity check some hardware we already had set up with a Thor
+>> adapter.  We saw 23555 iop/s and 92.1 MB/s without needing to do much, well
+>> beyond what you've reported, and still not up to what we know the card can
+>> do.  There are some inefficiencies from the linux kernel and some locking
+>> deltas between our solaris and linux drivers - but not enough to account for
+>> what you are seeing.
+>>
+>> I expect the Direct IO filesystem behavior is the root issue.
+>
+> The strangest thing to me that this is the problem with sequential
+> write. For example the fnic one machine is zoned to EMC XtremIO and
+> had results: 14.43Mb/sec 3693.65 Requests/sec for sequential 4k. The
+> same fnic machine perfrormed rather impressive for random 4k
+> 451.11Mb/sec 115485.02 Requests/sec
+
+You could bypass O_DIRECT and use ddpt together with
+a bsg pass-through (bsg is a little faster than sg
+for these purposes).
+
+For example:
+
+# lsscsi -g
+[0:0:0:0]    disk    ATA    INTEL SSDSC2CW12 400i  /dev/sda /dev/sg0
+[14:0:0:0]   disk    Linux  scsi_debug       0004  -        /dev/sg1
+
+# ddpt if=/dev/bsg/14:0:0:0 bs=512 bpt=128 count=1m
+Output file not specified so no copy, just reading input
+1048576+0 records in
+0+0 records out
+time to read data: 0.283566 secs at 1893.28 MB/sec
+
+bs= should match the block size of the storage device and
+the size of each SCSI READ is dictated by bpt= (so 64 KB
+in this case).
+
+Such a test should show you if your performance problem
+is in the block layer or below, or above the block layer
+(at least the point where pass-through commands are
+injected).
+
+Doug Gilbert
