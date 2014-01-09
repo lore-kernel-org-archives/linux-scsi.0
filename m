@@ -1,39 +1,45 @@
-From: Alan Stern <stern@rowland.harvard.edu>
+From: Phillip Susi <psusi@ubuntu.com>
 Subject: Re: REQ_PM vs REQ_TYPE_PM_RESUME
-Date: Thu, 9 Jan 2014 10:40:28 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1401091032430.1493-100000@iolanthe.rowland.org>
-References: <52CDFB97.9080303@intel.com>
+Date: Thu, 09 Jan 2014 10:53:19 -0500
+Message-ID: <52CEC5EF.4030201@ubuntu.com>
+References: <Pine.LNX.4.44L0.1401091032430.1493-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-pm-owner@vger.kernel.org>
-In-Reply-To: <52CDFB97.9080303@intel.com>
-Sender: linux-pm-owner@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>
-Cc: Phillip Susi <psusi@ubuntu.com>, Sujit Reddy Thumma <sthumma@codeaurora.org>, todd.e.brandt@linux.intel.com, tj@kernel.org, JBottomley@parallels.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Linux-pm mailing list <linux-pm@vger.kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.44L0.1401091032430.1493-100000@iolanthe.rowland.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>, Aaron Lu <aaron.lu@intel.com>
+Cc: Sujit Reddy Thumma <sthumma@codeaurora.org>, todd.e.brandt@linux.intel.com, tj@kernel.org, JBottomley@parallels.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Linux-pm mailing list <linux-pm@vger.kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 9 Jan 2014, Aaron Lu wrote:
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-> > It's a knotty situation.  The only way to find out whether the disk is
-> > spinning is to ask it, which requires doing I/O, which requires
-> > spinning up the disk.  Maybe we need to add a mechanism to the block
-> > layer's runtime PM implementation for addressing just this situation.
-> 
-> I think it's knotty because the runtime PM status is a view from the
-> kernel/host side, i.e. it is runtime suspended if it is not being used,
-> no matter which power state it is in. The trigger for the PM state
-> transition are all based on this, if we want to do it the other way
-> around(update device's runtime PM status based on device's actual power
-> state), we are in a knotty situation.
+On 1/9/2014 10:40 AM, Alan Stern wrote:
+> We should change the code in the block layer.  blk_pm_peek_request
+>  should allow requests with REQ_PM set to go through, no matter
+> what the rpm_status is.  Then the disk driver could query the disk
+> (to see whether it is spinning) while the disk remains in runtime
+> suspend.
 
-No, that's not the problem.  The problem is that the block layer does
-not permit any requests to go through if the queue's rpm_status is
-RPM_SUSPENDED.
+No, because if the disk is RPM_SUSPENDED, the port may be
+RPM_SUSPENDED, which likely means that you CAN'T send down requests to
+the device.
 
-We should change the code in the block layer.  blk_pm_peek_request 
-should allow requests with REQ_PM set to go through, no matter what the 
-rpm_status is.  Then the disk driver could query the disk (to see 
-whether it is spinning) while the disk remains in runtime suspend.
+We need to put the device into one of the transitioning states to
+block other IO, without allowing the port to suspend.
 
-Alan Stern
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.17 (MingW32)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iQEcBAEBAgAGBQJSzsXvAAoJEI5FoCIzSKrwg30H/A52cy6+GAzE372KVMkP/bI+
+LQe4FTTIjo8PDBuYeASzmjdiD8x51++w/QfUQEtSTEhr7qWhyXdMbb1B6eGuDlv/
+KqOBTTuhC7eiLArGLTGyLRiLOLEiQb7lHStw4ZCpQpZ88f9pNPdcLCslp8zrz4Of
+6pt2lLztdG8zexmKyu0Zq/oSe6ajKqVgrSqjoCO9jQL7NUecZNlBnOnsF4jri0MY
+GPk3HIb0gZjtVVfeWAiEE9s4MpRlMYHfx+dg8uxNJiAhJcMQeHJLCTKAKyEMKG68
+45Ehqp5XITJG8Mx/Mb6gOzA/mFDShzqRiA0i6MtKBcnr+zNeRnWKRV1UbDKcrxk=
+=B5lj
+-----END PGP SIGNATURE-----
