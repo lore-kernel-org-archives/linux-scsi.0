@@ -1,61 +1,125 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] iscsi: fix wrong order of opcode and itt in iscsi_handle_reject
- prompt
-Date: Thu, 09 Jan 2014 00:50:54 -0600
-Message-ID: <52CE46CE.2030903@cs.wisc.edu>
-References: <1389234094-6134-1-git-send-email-vaughan.cao@oracle.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] drivers: target: target_core_mod: use div64_u64_rem()
+ instead of operator '%' for u64
+Date: Thu, 09 Jan 2014 11:17:04 +0100
+Message-ID: <52CE7720.6060809@suse.de>
+References: <52B4F837.1010403@gmail.com>	 <1387680997.5567.91.camel@haakon3.risingtidesystems.com>	 <52B6AE19.80401@gmail.com>	 <1387781487.5567.147.camel@haakon3.risingtidesystems.com>	 <52B90111.5050203@gmail.com> <52CCFF0C.7070704@suse.de> <1389223117.5567.271.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1389234094-6134-1-git-send-email-vaughan.cao@oracle.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: open-iscsi@googlegroups.com
-Cc: Vaughan Cao <vaughan.cao@oracle.com>, JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1389223117.5567.271.camel@haakon3.risingtidesystems.com>
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Chen Gang <gang.chen.5i5j@gmail.com>, James Hogan <james.hogan@imgtec.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Fengguang Wu <fengguang.wu@intel.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 01/08/2014 08:21 PM, Vaughan Cao wrote:
-> This patch makes reject messages show right value for opcode and itt, which
-> is converse previously.
-> 
-> Signed-off-by: Vaughan Cao <vaughan.cao@oracle.com>
-> ---
->  drivers/scsi/libiscsi.c | 8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-> index e399561..27547ff 100644
-> --- a/drivers/scsi/libiscsi.c
-> +++ b/drivers/scsi/libiscsi.c
-> @@ -1013,13 +1013,13 @@ static int iscsi_handle_reject(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
->  		iscsi_conn_printk(KERN_ERR, conn,
->  				  "pdu (op 0x%x itt 0x%x) rejected "
->  				  "due to DataDigest error.\n",
-> -				  rejected_pdu.itt, opcode);
-> +				  opcode, rejected_pdu.itt);
->  		break;
->  	case ISCSI_REASON_IMM_CMD_REJECT:
->  		iscsi_conn_printk(KERN_ERR, conn,
->  				  "pdu (op 0x%x itt 0x%x) rejected. Too many "
->  				  "immediate commands.\n",
-> -				  rejected_pdu.itt, opcode);
-> +				  opcode, rejected_pdu.itt);
->  		/*
->  		 * We only send one TMF at a time so if the target could not
->  		 * handle it, then it should get fixed (RFC mandates that
-> @@ -1059,8 +1059,8 @@ static int iscsi_handle_reject(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
->  	default:
->  		iscsi_conn_printk(KERN_ERR, conn,
->  				  "pdu (op 0x%x itt 0x%x) rejected. Reason "
-> -				  "code 0x%x\n", rejected_pdu.itt,
-> -				  rejected_pdu.opcode, reject->reason);
-> +				  "code 0x%x\n", rejected_pdu.opcode,
-> +				  rejected_pdu.itt, reject->reason);
->  		break;
->  	}
->  	return rc;
-> 
+On 01/09/2014 12:18 AM, Nicholas A. Bellinger wrote:
+> On Wed, 2014-01-08 at 08:32 +0100, Hannes Reinecke wrote:
+>> On 12/24/2013 04:35 AM, Chen Gang wrote:
+>>> On 12/23/2013 02:51 PM, Nicholas A. Bellinger wrote:
+>>>> On Sun, 2013-12-22 at 17:17 +0800, Chen Gang wrote:
+>
+> <SNIP>
+>
+>>>>> The related fix patch changed "start_lba =3D lba % ..." to "start=
+_lba =3D
+>>>>> lba / ...", and also assumed "segment_size * segment_mult" is sti=
+ll
+>>>>> within u32 (can not cause type over flow).
+>>>>>
+>>>>> I guess the original author already knew about them, and intended=
+ to do
+>>>>> like that (if not, please let me know, thanks).
+>>>>>
+>>>>
+>>>> Sorry, your correct that the original code is using modulo divisio=
+n to
+>>>> calculate start_lba.
+>>>>
+>>>
+>>> Oh, that's all right, (in fact, don't need sorry), I am not quite
+>>> familiar with the details, so need related member help check it.  :=
+-)
+>>>
+>>>> Hannes, can you please double check this below..?
+>>>>
+>>>
+>>> Please help check when have time, thanks.
+>>>
+>> I would even convert segment_size and segment_mult to u64,
+>> to ensure no overflows occur:
+>>
+>> diff --git a/drivers/target/target_core_alua.c
+>> b/drivers/target/target_core_alua
+>> .c
+>> index 9b1856d..54b1e52 100644
+>> --- a/drivers/target/target_core_alua.c
+>> +++ b/drivers/target/target_core_alua.c
+>> @@ -477,8 +477,7 @@ static inline int core_alua_state_lba_dependent(
+>>          u8 *alua_ascq)
+>>   {
+>>          struct se_device *dev =3D cmd->se_dev;
+>> -       u32 segment_size, segment_mult, sectors;
+>> -       u64 lba;
+>> +       u64 segment_size, segment_mult, sectors, lba;
+>>
+>>          /* Only need to check for cdb actually containing LBAs */
+>>          if (!(cmd->se_cmd_flags & SCF_SCSI_DATA_CDB))
+>>
+>>
+>
+> Will squash the above into the original patch shortly in for-next..
+>
+>> Other than that the sector_div() patch is correct.
+>>
+>
+> <nod> Thanks for confirming that sector_div() is correct here vs. the
+> original code using modulo that Chen had pointed out.
+>
+Ah, _that_ was the issue.
+I was wondering why you kept on poking me ...
 
-Thanks.
+Well.
+No, that's actually _not_ correct.
+The correct fix would be
 
-Acked-by: Mike Christie <michaelc@cs.wisc.edu>
+diff --git a/drivers/target/target_core_alua.c=20
+b/drivers/target/target_core_alua.c
+index 54b1e52..12da9b3 100644
+--- a/drivers/target/target_core_alua.c
++++ b/drivers/target/target_core_alua.c
+@@ -500,8 +500,7 @@ static inline int core_alua_state_lba_dependent(
+
+                         if (segment_mult) {
+                                 u64 tmp =3D lba;
+-                               sector_div(tmp, segment_size *=20
+segment_mult);
+-                               start_lba =3D tmp;
++                               start_lba =3D sector_div(tmp, segment_s=
+ize=20
+* segment_mult);
+
+                                 last_lba =3D first_lba + segment_size =
+- 1;
+                                 if (start_lba >=3D first_lba &&
+(beware of line breaks ...)
+Thing is, we need to calculate the offset into the segment to figure ou=
+t=20
+which map entry to use.
+The actual number of the segment (as had been calculated with the=20
+original fix) is immaterial here.
+
+Sorry for this. The email thread just flew past me during Xmas
+with me not paying real attention.
+
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
+)
