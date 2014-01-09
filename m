@@ -1,69 +1,45 @@
-From: Phillip Susi <psusi@ubuntu.com>
-Subject: Re: [PATCH/RESEND v2 1/2] Hard disk S3 resume time optimization
-Date: Thu, 09 Jan 2014 12:03:58 -0500
-Message-ID: <52CED67E.7080706@ubuntu.com>
-References: <20140108005607.GB29556@linux.intel.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: REQ_PM vs REQ_TYPE_PM_RESUME
+Date: Thu, 9 Jan 2014 12:06:02 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1401091204450.1493-100000@iolanthe.rowland.org>
+References: <52CECF91.10206@ubuntu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20140108005607.GB29556@linux.intel.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: todd.e.brandt@linux.intel.com, tj@kernel.org, James.Bottomley@HansenPartnership.com
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-pm-owner@vger.kernel.org>
+In-Reply-To: <52CECF91.10206@ubuntu.com>
+Sender: linux-pm-owner@vger.kernel.org
+To: Phillip Susi <psusi@ubuntu.com>
+Cc: Aaron Lu <aaron.lu@intel.com>, Sujit Reddy Thumma <sthumma@codeaurora.org>, todd.e.brandt@linux.intel.com, tj@kernel.org, JBottomley@parallels.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Linux-pm mailing list <linux-pm@vger.kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>
 List-Id: linux-scsi@vger.kernel.org
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+On Thu, 9 Jan 2014, Phillip Susi wrote:
 
-On 1/7/2014 7:56 PM, Todd E Brandt wrote:
-> On resume, the ATA port driver currently waits until the AHCI
-> controller finishes executing the port wakeup command. This patch
-> changes the ata_port_resume callback to issue the wakeup and then
-> return immediately, thus allowing the next device in the pm queue
-> to resume. Any commands issued to the AHCI hardware during the
-> wakeup will be queued up and executed once the port is physically
-> online. Thus no information is lost.
+> -----BEGIN PGP SIGNED MESSAGE-----
+> Hash: SHA1
 > 
-> This patch only changes the behavior of the resume callback, not
-> restore, thaw, or runtime-resume. This is because thaw and restore
-> are used after a suspend-to-disk, which means that an image needs
-> to be read from swap and reloaded into RAM. The swap disk will
-> always need to be fully restored/thawed in order for resume to
-> continue.
+> On 1/9/2014 11:14 AM, Alan Stern wrote:
+> > That's true, but it isn't a problem.  We know that requests with
+> > REQ_PM are sent only at certain, controlled times.  In particular,
+> > the only time such a request would be sent while the disk is
+> > RPM_SUSPENDED is during a system resume.
 > 
-> The return value from ata_resume_async is now an indicator of
-> whether the resume was initiated, rather than if it was completed.
-> I'm letting the ata driver assume control over its own error
-> reporting in this case (which it does already). If you look at the
-> ata_port resume code you'll see that the ata_port_resume callback
-> returns the status of the ahci_port_resume callback, which is
-> always 0. So I don't see any harm in ignoring it.
+> Yes, but if the disk and port were both already RPM_SUSPENDED when the
+> system was suspended, and so the port is still RPM_SUSPENDED when the
+> disk's system resume method is called, then it can't communicate with
+> the disk.
+
+The port should not be runtime suspended during system resume.  It 
+should always go to runtime active.
+ 
+> >> We need to put the device into one of the transitioning states
+> >> to block other IO, without allowing the port to suspend.
+> > 
+> > No, we only need to make sure that the port doesn't go into runtime
+> >  suspend while we carry out the "is the disk spinning" test.
 > 
-> If somebody requests suspend while ATA port resume is still
-> running, the request is queued until the resume has completed. I've
-> tested that case very heavily. Basically if you do two suspends in
-> a row (within seconds of each other) you lose any performance
-> benefit, but that's a use case that should happen only very rarerly
-> (and wouldn't be expected to be of any power benefit since too many
-> sequential suspends actually takes more power than just letting the
-> machine stay in run mode).
+> Well how else do you do that other than with the transition states?
 
-I think my patch for this "libata: resume in the background" was a LOT
-simpler.  It just used the existing behavior of becoming async when
-the async argument was !NULL, and fixed the one caller that didn't
-actually care about the result to pass in a pointer anyhow.
+pm_runtime_get_noresume(dev->parent).
 
+Alan Stern
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.17 (MingW32)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iQEcBAEBAgAGBQJSztZ+AAoJEI5FoCIzSKrwQ6QH/jA1kIDsDC5LBQDGtDjZ/cvB
-hLddAkDmqswfMXDmtD+u5lQuc+a0GbjINvrMYtq6bilDuPO39ccR//jUL69PULDo
-qcn3RMjzSIIqyfCiKj6iAIZyuTTR9SLgA9F9V2b0RBPn1FFD84y+qEitzrqb+/z6
-pBjVYbbjfpj+Sfr00dbk7a6BTzB2FHTSEwA/Kv5gM2MJKGPrjmML8awl3gSG+lGT
-mOYV8yR+kycrnkp8Rcr+7hNb6LfJlKWBh33UA4TKxrE5WZg0nX+kU83BoCpRgvCm
-nfYynvakJ1E0Wz2fiYQq1NeNy1ZUZ7iyDdsl70KslaAhPFBQUH/tsoXL1syHSRo=
-=rXVR
------END PGP SIGNATURE-----
