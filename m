@@ -1,43 +1,66 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: REQ_PM vs REQ_TYPE_PM_RESUME
-Date: Thu, 09 Jan 2014 09:29:59 +0800
-Message-ID: <52CDFB97.9080303@intel.com>
-References: <Pine.LNX.4.44L0.1401081547490.1659-100000@iolanthe.rowland.org>
+From: Vaughan Cao <vaughan.cao-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH] iscsi: fix wrong order of opcode and itt in iscsi_handle_reject prompt
+Date: Thu,  9 Jan 2014 10:21:34 +0800
+Message-ID: <1389234094-6134-1-git-send-email-vaughan.cao@oracle.com>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-pm-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44L0.1401081547490.1659-100000@iolanthe.rowland.org>
-Sender: linux-pm-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>, Phillip Susi <psusi@ubuntu.com>
-Cc: Sujit Reddy Thumma <sthumma@codeaurora.org>, todd.e.brandt@linux.intel.com, tj@kernel.org, JBottomley@parallels.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Linux-pm mailing list <linux-pm@vger.kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <open-iscsi+bncBDCN5SUNYEERBY4PXCLAKGQELFSIOOI-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Post: <http://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <http://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <http://groups.google.com/group/open-iscsi>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <http://groups.google.com/group/open-iscsi/subscribe>, <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+To: michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org
+Cc: JBottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vaughan.cao-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 01/09/2014 05:21 AM, Alan Stern wrote:
-> On Wed, 8 Jan 2014, Phillip Susi wrote:
->> You issue a REQUEST SENSE command and that returns status indicating
->> whether the drive is stopped, or in standby.  See my patches.  One of
-> 
-> I never saw your patches.  Where were they posted?
-> 
-> If you issue the REQUEST SENSE command in the usual way (going through
-> the SCSI and block layers), and the disk is already in runtime suspend,
-> it won't do what you want.  The block layer won't deliver requests
-> until the device leaves the RPM_SUSPENDED state.  In addition, when it
-> receives the command the block layer will submit a deferred
-> runtime-resume request, which rather defeats the whole purpose.
-> 
-> (I guess you actually saw some of this happen, and that's what led to
-> this email thread in the first place.)
-> 
-> It's a knotty situation.  The only way to find out whether the disk is
-> spinning is to ask it, which requires doing I/O, which requires
-> spinning up the disk.  Maybe we need to add a mechanism to the block
-> layer's runtime PM implementation for addressing just this situation.
+This patch makes reject messages show right value for opcode and itt, which
+is converse previously.
 
-I think it's knotty because the runtime PM status is a view from the
-kernel/host side, i.e. it is runtime suspended if it is not being used,
-no matter which power state it is in. The trigger for the PM state
-transition are all based on this, if we want to do it the other way
-around(update device's runtime PM status based on device's actual power
-state), we are in a knotty situation.
+Signed-off-by: Vaughan Cao <vaughan.cao-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+---
+ drivers/scsi/libiscsi.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index e399561..27547ff 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -1013,13 +1013,13 @@ static int iscsi_handle_reject(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+ 		iscsi_conn_printk(KERN_ERR, conn,
+ 				  "pdu (op 0x%x itt 0x%x) rejected "
+ 				  "due to DataDigest error.\n",
+-				  rejected_pdu.itt, opcode);
++				  opcode, rejected_pdu.itt);
+ 		break;
+ 	case ISCSI_REASON_IMM_CMD_REJECT:
+ 		iscsi_conn_printk(KERN_ERR, conn,
+ 				  "pdu (op 0x%x itt 0x%x) rejected. Too many "
+ 				  "immediate commands.\n",
+-				  rejected_pdu.itt, opcode);
++				  opcode, rejected_pdu.itt);
+ 		/*
+ 		 * We only send one TMF at a time so if the target could not
+ 		 * handle it, then it should get fixed (RFC mandates that
+@@ -1059,8 +1059,8 @@ static int iscsi_handle_reject(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+ 	default:
+ 		iscsi_conn_printk(KERN_ERR, conn,
+ 				  "pdu (op 0x%x itt 0x%x) rejected. Reason "
+-				  "code 0x%x\n", rejected_pdu.itt,
+-				  rejected_pdu.opcode, reject->reason);
++				  "code 0x%x\n", rejected_pdu.opcode,
++				  rejected_pdu.itt, reject->reason);
+ 		break;
+ 	}
+ 	return rc;
+-- 
+1.8.3.1
+
+-- 
+You received this message because you are subscribed to the Google Groups "open-iscsi" group.
+To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+Visit this group at http://groups.google.com/group/open-iscsi.
+For more options, visit https://groups.google.com/groups/opt_out.
