@@ -1,111 +1,40 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: status of block-integrity
-Date: Thu, 09 Jan 2014 12:19:34 +0100
-Message-ID: <52CE85C6.8000405@suse.de>
-References: <20131222192128.GA28532@infradead.org> <52C6D0DB.1050906@suse.de>	<yq1wqigzvc1.fsf@sermon.lab.mkp.net>	<20140107013646.GB10297@birch.djwong.org> <52CBAA1B.7000509@suse.de>	<yq1a9f7wjqr.fsf@sermon.lab.mkp.net> <52CCFADB.6080909@suse.de> <yq1lhyqv6ns.fsf@sermon.lab.mkp.net>
+From: David Laight <David.Laight@ACULAB.COM>
+Subject: RE: [PATCH 3.12 033/118] usb: xhci: Link TRB must not occur within
+ a USB payload burst
+Date: Thu, 9 Jan 2014 10:05:11 +0000
+Message-ID: <063D6719AE5E284EB5DD2968C1650D6D455F92@AcuExch.aculab.com>
+References: <20131218211219.461663463@linuxfoundation.org>
+ <20131218211220.412278148@linuxfoundation.org> <52C32BB0.90600@gmail.com>
+ <20140102191510.GA9621@xanatos> <52C6D9F1.9000709@gmail.com>
+ <20140103195455.GA4193@xanatos> <52C729CE.9050307@gmail.com>
+ <20140103232929.GD4193@xanatos> <52CDF9CD.8010402@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:47750 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751354AbaAIJRB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 9 Jan 2014 04:17:01 -0500
-In-Reply-To: <yq1lhyqv6ns.fsf@sermon.lab.mkp.net>
+Received: from mx0.aculab.com ([213.249.233.131]:46698 "HELO mx0.aculab.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1751530AbaAIKG5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 9 Jan 2014 05:06:57 -0500
+Received: from mx0.aculab.com ([127.0.0.1])
+ by localhost (mx0.aculab.com [127.0.0.1]) (amavisd-new, port 10024) with SMTP
+ id 08692-08 for <linux-scsi@vger.kernel.org>;
+ Thu,  9 Jan 2014 10:06:55 +0000 (GMT)
+In-Reply-To: <52CDF9CD.8010402@gmail.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, chuck.lever@oracle.com, Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Doug Gilbert <dgilbert@interlog.com>
+To: 'walt' <w41ter@gmail.com>, Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Linux Kernel <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 01/08/2014 04:23 PM, Martin K. Petersen wrote:
->>>>>> "Hannes" =3D=3D Hannes Reinecke <hare@suse.de> writes:
->
-> Hannes,
->
-> Hannes> As there is no user (apart from oracleasm) no-one can attach
-> Hannes> protection information to any data, so even the most dedicate=
-d
-> Hannes> admin cannot exercise this path, let alone find issues here.
->
-> That's not how it works!
->
-> If the filesystem has not attached protection information to a bio th=
-e
-> block layer will do it for you. The block layer generates protection
-> information for writes and verifies it for reads. That's how it's wor=
-ked
-> since day one. The code is there, it is used by everyone with a
-> DIX-capable HBA. See Documentation/block/data-integrity.txt.
->
-> Normal applications do not want to have to deal with generating
-> protection information, using an async I/O model, keeping completion
-> state around for extended periods of time to figure out whether the I=
-/O
-> actually completed or not and so on. So the kernel-to-platter protect=
-ion
-> scheme we have in place now is good enough.
->
-Ah. I stand corrected.
-Sorry.
-
-> That doesn't mean that I'm not interested in augmenting libaio. I
-> am. Very. And I know of several applications that are keen to use
-> it. But getting page cache passthrough and filesystem interaction
-> working is non-trivial. That's what has inhibited progress, not
-> extending the libaio API.
->
-Same here. Actually I _like_ DIX, but the missing libaio / userland API=
-=20
-makes it very hard to utilize it.
-
-> Hannes> Doug Gilbert and I are currently discussing LID4 / ROD Token
-> Hannes> copy for sg3_utils and the block layer, so any patches would =
-be
-> Hannes> very helpful here.
->
-> I'm only doing LID1 right now. Any particular reason you are explorin=
-g
-> LID4 and ROD?
->
-Yes. LID4/ROD token is far easier to use (conceptually).
-With LID1/XCopy you have the ambiguity on where to actually send the=20
-command to; the spec is silent in this area.
-Also for LID1/XCopy you have three steps:
-- Query the source disk
-- Query the target disk
-- Send the command to either source or target
-Which is very awkward and one has to think really carefully on how to=20
-implement this without all sorts of layering violations.
-And you have to mix-and-match between all the various xcopy descriptors=
-;
-if there's only one it's easy enough, but when several things are=20
-getting interesting.
-
-With LID4/ROD Token copy you basically have _two_ steps:
-- Get the ROD Token from the source device
-- Send the ROD Token to the target device
-
-Which is far easier (conceptually).
-Or that's the hope, anyway.
-Also, the ROD Token in principle has an independent lifetime, so
-you could take an arbitrary amount of time between those steps.
-It might expire, though, but then failure is always an option when
-working with copy offload.
-
-As said, Doug and me are working on putting this into sg3_utils, then
-we'll have a better idea on the actual workings.
-
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+PiBGcm9tOiB3YWx0DQouLi4NCj4gSSdtIHN0aWxsIHdvbmRlcmluZyBpZiBJJ20gc3VmZmVyaW5n
+IGZyb20gaGFyZHdhcmUgcXVpcmtzLiAgRnJvbSB0aGUNCj4gZmlyc3QgZGF5IEkgaW5zdGFsbGVk
+IG15IHVzYjMgYWRhcHRlciBjYXJkIGFuZCB0aGUgdXNiMyBkaXNrIGRvY2tpbmcNCj4gc3RhdGlv
+biBJJ3ZlIG5vdGljZWQgc29tZSBxdWlya3kgYmVoYXZpb3IuDQoNCkFoIC0gdGhpcyBpc24ndCBh
+biAnb24gY2hpcCcgdXNiMyBhZGFwdGVyLg0KU29tZSBraW5kIG9mIFBDSWUgY2FyZCA/DQoNCj4g
+ZS5nLiBJIGJvb3QgdGhlIG1hY2hpbmUgd2l0aCB0aGUgZG9ja2luZyBzdGF0aW9uIHBvd2VyZWQt
+b2ZmLCBhbmQgdGhlbg0KPiBsYXRlciBJIHBvd2VyIGl0IG9uLCB0aGUgdXNiMyBkaXNrIGlzIG5v
+dCBkZXRlY3RlZCBhdCBhbGwgLS0gdW50aWwgSQ0KPiByZWJvb3QgdGhlIG1hY2hpbmUgd2l0aCB0
+aGUgZG9ja2luZyBzdGF0aW9uIHN0aWxsIHBvd2VyZWQgb24uDQoNClRoYXQgd2lsbCBiZSBzb21l
+dGhpbmcgY29tcGxldGVseSBkaWZmZXJlbnQgdG8gZmFpbHVyZXMgd2hlbiBydW5uaW5nLg0KDQoJ
+RGF2aWQNCg0K
