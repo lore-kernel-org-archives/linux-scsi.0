@@ -1,82 +1,104 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: Terrible performance of sequential O_DIRECT 4k writes in SAN
- environment. ~3 times slower then Solars 10 with the same HBA/Storage.
-Date: Thu, 09 Jan 2014 14:54:10 -0500
-Message-ID: <52CEFE62.7070009@interlog.com>
-References: <CA+QCeVQRrqx=CrxyuAe7k0e0y4Nqo7x_8jtkuD99VM8L9Dxp+g@mail.gmail.com> <20140106201032.GA13491@quack.suse.cz> <52CC6A53.9010508@emulex.com> <CA+QCeVSruYZCQOGapU_y613ucaptkzQN34X83DmYiPXTkWFVzg@mail.gmail.com>
-Reply-To: dgilbert@interlog.com
+From: Kees Cook <keescook@google.com>
+Subject: Re: [patch] [SCSI] megaraid: missing bounds check in mimd_to_kioc()
+Date: Thu, 9 Jan 2014 12:03:10 -0800
+Message-ID: <CAGXu5jLniOyrRrJFXdxQL1ojb=0RW1w8XLAL+UXWp7h2J49Xbw@mail.gmail.com>
+References: <20131025144452.GA28451@ngolde.de>
+	<20131030171351.GB4130@longonot.mountain>
+	<bd7f5bb0d19c45e2af9702c1cb6068ea@DM2PR07MB400.namprd07.prod.outlook.com>
+	<CAGXu5j+WvAckRNyiSU8WYzWriWU2Y4+KMwxe17xxn8Y_w=kSPA@mail.gmail.com>
+	<341c8929f76f46d19027677af9d6f532@DM2PR07MB400.namprd07.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:60677 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755082AbaAITyh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 9 Jan 2014 14:54:37 -0500
-In-Reply-To: <CA+QCeVSruYZCQOGapU_y613ucaptkzQN34X83DmYiPXTkWFVzg@mail.gmail.com>
+Received: from mail-oa0-f41.google.com ([209.85.219.41]:57560 "EHLO
+	mail-oa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752543AbaAIUDL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Jan 2014 15:03:11 -0500
+Received: by mail-oa0-f41.google.com with SMTP id i4so2997094oah.0
+        for <linux-scsi@vger.kernel.org>; Thu, 09 Jan 2014 12:03:11 -0800 (PST)
+In-Reply-To: <341c8929f76f46d19027677af9d6f532@DM2PR07MB400.namprd07.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sergey Meirovich <rathamahata@gmail.com>, James Smart <james.smart@emulex.com>
-Cc: Jan Kara <jack@suse.cz>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Gluk <git.user@gmail.com>
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: "Saxena, Sumit" <Sumit.Saxena@lsi.com>, Dan Carpenter <dan.carpenter@oracle.com>, DL-MegaRAID Linux <megaraidlinux@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "security@kernel.org" <security@kernel.org>, Nico Golde <nico@ngolde.de>, Fabian Yamaguchi <fabs@goesec.de>
 
-On 14-01-08 08:57 AM, Sergey Meirovich wrote:
-> Hi James,
+On Thu, Jan 9, 2014 at 11:53 AM, Saxena, Sumit <Sumit.Saxena@lsi.com> wrote:
 >
-> On 7 January 2014 22:57, James Smart <james.smart@emulex.com> wrote:
->> Sergey,
+>
+>>-----Original Message-----
+>>From: Kees Cook [mailto:keescook@google.com]
+>>Sent: Friday, January 10, 2014 12:05 AM
+>>To: Saxena, Sumit
+>>Cc: Dan Carpenter; DL-MegaRAID Linux; James E.J. Bottomley; linux-
+>>scsi@vger.kernel.org; security@kernel.org; Nico Golde; Fabian Yamaguchi
+>>Subject: Re: [patch] [SCSI] megaraid: missing bounds check in mimd_to_kioc()
 >>
->> The Thor chipset is a bit old - a 4Gig adapter.  Most of our performance
->> improvements, including parallelization, have gone into the 8G and 16G
->> adapters. But you still should have seen significantly beyond what you
->> reported.
->
-> First of all - thanks a lot!
->
-> I took Thor because we have exactly the same Thors in some of our
-> Solaris servers. I've also tried 6 different qlogics (mostly 8G) and
-> fnic (10G) as well. Surprisingly enough Thor was the fastest one for
-> seqwr 4k. Though in most of the cases machines were from our different
-> DCs and hence each one connected to yet another storage.
->
+>>On Wed, Jan 8, 2014 at 4:27 AM, Saxena, Sumit <Sumit.Saxena@lsi.com>
+>>wrote:
+>>>
+>>>
+>>>>-----Original Message-----
+>>>>From: Dan Carpenter [mailto:dan.carpenter@oracle.com]
+>>>>Sent: Wednesday, October 30, 2013 10:44 PM
+>>>>To: DL-MegaRAID Linux
+>>>>Cc: James E.J. Bottomley; linux-scsi@vger.kernel.org;
+>>>>security@kernel.org; Nico Golde; Fabian Yamaguchi
+>>>>Subject: [patch] [SCSI] megaraid: missing bounds check in
+>>>>mimd_to_kioc()
+>>>>
+>>>>pthru32->dataxferlen comes from the user so we need to check that it's
+>>>>not too large so we don't overflow the buffer.
+>>>>
+>>>>Reported-by: Nico Golde <nico@ngolde.de>
+>>>>Reported-by: Fabian Yamaguchi <fabs@goesec.de>
+>>>>Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+>>>>---
+>>>>Please review this carefully because I have not tested it.
+>>>>
+>>>>diff --git a/drivers/scsi/megaraid/megaraid_mm.c
+>>>>b/drivers/scsi/megaraid/megaraid_mm.c
+>>>>index dfffd0f..a706927 100644
+>>>>--- a/drivers/scsi/megaraid/megaraid_mm.c
+>>>>+++ b/drivers/scsi/megaraid/megaraid_mm.c
+>>>>@@ -486,6 +486,8 @@ mimd_to_kioc(mimd_t __user *umimd,
+>>mraid_mmadp_t
+>>>>*adp, uioc_t *kioc)
+>>>>
+>>>>       pthru32->dataxferaddr   = kioc->buf_paddr;
+>>>>       if (kioc->data_dir & UIOC_WR) {
+>>>>+              if (pthru32->dataxferlen > kioc->xferlen)
+>>>>+                      return -EINVAL;
+>>>>               if (copy_from_user(kioc->buf_vaddr, kioc->user_data,
+>>>>                                               pthru32->dataxferlen)) {
+>>>>                       return (-EFAULT);
+>>>
+>>> Acked-by: Sumit Saxena <sumit.saxena@lsi.com>
+>>>
+>>> Sumit
+>>>
 >>
->> We did a sanity check some hardware we already had set up with a Thor
->> adapter.  We saw 23555 iop/s and 92.1 MB/s without needing to do much, well
->> beyond what you've reported, and still not up to what we know the card can
->> do.  There are some inefficiencies from the linux kernel and some locking
->> deltas between our solaris and linux drivers - but not enough to account for
->> what you are seeing.
+>>Thanks for the Ack. Who normally picks patches for this area?
 >>
->> I expect the Direct IO filesystem behavior is the root issue.
+>>-Kees
+>>
+> James Bottomley(Linux SCSI subsystem maintainer) should pick this patch.
+
+Okay, thanks. James, can you pick up this patch as well?
+https://lkml.org/lkml/2013/12/18/477
+
+Thanks,
+
+-Kees
+
 >
-> The strangest thing to me that this is the problem with sequential
-> write. For example the fnic one machine is zoned to EMC XtremIO and
-> had results: 14.43Mb/sec 3693.65 Requests/sec for sequential 4k. The
-> same fnic machine perfrormed rather impressive for random 4k
-> 451.11Mb/sec 115485.02 Requests/sec
+> Sumit
+>>--
+>>Kees Cook
+>>Chrome OS Security
+>
 
-You could bypass O_DIRECT and use ddpt together with
-a bsg pass-through (bsg is a little faster than sg
-for these purposes).
 
-For example:
 
-# lsscsi -g
-[0:0:0:0]    disk    ATA    INTEL SSDSC2CW12 400i  /dev/sda /dev/sg0
-[14:0:0:0]   disk    Linux  scsi_debug       0004  -        /dev/sg1
-
-# ddpt if=/dev/bsg/14:0:0:0 bs=512 bpt=128 count=1m
-Output file not specified so no copy, just reading input
-1048576+0 records in
-0+0 records out
-time to read data: 0.283566 secs at 1893.28 MB/sec
-
-bs= should match the block size of the storage device and
-the size of each SCSI READ is dictated by bpt= (so 64 KB
-in this case).
-
-Such a test should show you if your performance problem
-is in the block layer or below, or above the block layer
-(at least the point where pass-through commands are
-injected).
-
-Doug Gilbert
+-- 
+Kees Cook
+Chrome OS Security
