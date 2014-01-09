@@ -1,97 +1,70 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: REQ_PM vs REQ_TYPE_PM_RESUME
-Date: Thu, 09 Jan 2014 13:29:53 -0500
-Message-ID: <52CEEAA1.2010904@interlog.com>
-References: <Pine.LNX.4.44L0.1401071015120.1296-100000@iolanthe.rowland.org> <52CC1FF2.1020301@ubuntu.com>
-Reply-To: dgilbert@interlog.com
+From: Kees Cook <keescook@google.com>
+Subject: Re: [patch] [SCSI] megaraid: missing bounds check in mimd_to_kioc()
+Date: Thu, 9 Jan 2014 10:34:36 -0800
+Message-ID: <CAGXu5j+WvAckRNyiSU8WYzWriWU2Y4+KMwxe17xxn8Y_w=kSPA@mail.gmail.com>
+References: <20131025144452.GA28451@ngolde.de>
+	<20131030171351.GB4130@longonot.mountain>
+	<bd7f5bb0d19c45e2af9702c1cb6068ea@DM2PR07MB400.namprd07.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:60051 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755977AbaAISaV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 9 Jan 2014 13:30:21 -0500
-In-Reply-To: <52CC1FF2.1020301@ubuntu.com>
+Received: from mail-oa0-f43.google.com ([209.85.219.43]:35290 "EHLO
+	mail-oa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751705AbaAISeh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Jan 2014 13:34:37 -0500
+Received: by mail-oa0-f43.google.com with SMTP id m1so3857401oag.2
+        for <linux-scsi@vger.kernel.org>; Thu, 09 Jan 2014 10:34:37 -0800 (PST)
+In-Reply-To: <bd7f5bb0d19c45e2af9702c1cb6068ea@DM2PR07MB400.namprd07.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Phillip Susi <psusi@ubuntu.com>, Alan Stern <stern@rowland.harvard.edu>
-Cc: Aaron Lu <aaron.lu@intel.com>, Sujit Reddy Thumma <sthumma@codeaurora.org>, todd.e.brandt@linux.intel.com, tj@kernel.org, JBottomley@parallels.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: "Saxena, Sumit" <Sumit.Saxena@lsi.com>
+Cc: Dan Carpenter <dan.carpenter@oracle.com>, DL-MegaRAID Linux <megaraidlinux@lsi.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "security@kernel.org" <security@kernel.org>, Nico Golde <nico@ngolde.de>, Fabian Yamaguchi <fabs@goesec.de>
 
-On 14-01-07 10:40 AM, Phillip Susi wrote:
-> -----BEGIN PGP SIGNED MESSAGE-----
-> Hash: SHA1
+On Wed, Jan 8, 2014 at 4:27 AM, Saxena, Sumit <Sumit.Saxena@lsi.com> wrote:
 >
-> On 1/7/2014 10:20 AM, Alan Stern wrote:
->> This raises two questions:
+>
+>>-----Original Message-----
+>>From: Dan Carpenter [mailto:dan.carpenter@oracle.com]
+>>Sent: Wednesday, October 30, 2013 10:44 PM
+>>To: DL-MegaRAID Linux
+>>Cc: James E.J. Bottomley; linux-scsi@vger.kernel.org; security@kernel.org;
+>>Nico Golde; Fabian Yamaguchi
+>>Subject: [patch] [SCSI] megaraid: missing bounds check in mimd_to_kioc()
 >>
->> Should the host's resume be allowed to complete while the host is
->> still in error recovery?  Wouldn't it be better to wait until the
->> recovery is finished?
+>>pthru32->dataxferlen comes from the user so we need to check that it's
+>>not too large so we don't overflow the buffer.
+>>
+>>Reported-by: Nico Golde <nico@ngolde.de>
+>>Reported-by: Fabian Yamaguchi <fabs@goesec.de>
+>>Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+>>---
+>>Please review this carefully because I have not tested it.
+>>
+>>diff --git a/drivers/scsi/megaraid/megaraid_mm.c
+>>b/drivers/scsi/megaraid/megaraid_mm.c
+>>index dfffd0f..a706927 100644
+>>--- a/drivers/scsi/megaraid/megaraid_mm.c
+>>+++ b/drivers/scsi/megaraid/megaraid_mm.c
+>>@@ -486,6 +486,8 @@ mimd_to_kioc(mimd_t __user *umimd,
+>>mraid_mmadp_t *adp, uioc_t *kioc)
+>>
+>>       pthru32->dataxferaddr   = kioc->buf_paddr;
+>>       if (kioc->data_dir & UIOC_WR) {
+>>+              if (pthru32->dataxferlen > kioc->xferlen)
+>>+                      return -EINVAL;
+>>               if (copy_from_user(kioc->buf_vaddr, kioc->user_data,
+>>                                               pthru32->dataxferlen)) {
+>>                       return (-EFAULT);
 >
-> Ahh, right, my other patch changed the ata_port stuff to schedule the
-> eh, and return  from resume, so that IT doesn't block the system
-> resume path for a long period of time while IT tries to spin up the
-> disk.  Both the libata and sd layers were spinning up the disk.
+> Acked-by: Sumit Saxena <sumit.saxena@lsi.com>
 >
-> Still, the sd request should just wait in the queue until after the
-> recovery completes shouldn't it?
+> Sumit
 >
->> How does the queue end up in a stopped state?  (The stopped queue
->> explains why blk_peek_request returns NULL.)
->
-> I was guessing that was the cause from reading the code, after
-> stepping through it with gdb and qemu, it turned out it was in
-> SHOST_RECOVERY rather that stopped.  I suppose it may be stopped as
-> well, so I guess I'll have to go do another debug session and make
-> sure, but I think that was a red herring.
->
-> The flow seems to simply be:
->
-> host is in recovery
-> sd_resume queues REQUEST SENSE
 
-You need to be careful with the SCSI REQUEST SENSE command
-when used for getting power management information from
-SCSI devices (mainly disks and tape drives).
+Thanks for the Ack. Who normally picks patches for this area?
 
-Many moons ago REQUEST SENSE was used to explicitly fetch
-sense data when the previous SCSI command failed and only
-yielded a single byte status: CHECK CONDITION.
+-Kees
 
-All modern SCSI transports have "autosense" so the original
-semantics of REQUEST SENSE became pointless. So some crafty
-folks at T10 decided to re-purpose REQUEST SENSE into what
-it is today. That transition has been going on for around
-10 years (and may not have finished).
-
-When REQUEST SENSE had its original semantics, TEST UNIT
-READY was the only game in town for monitoring power
-management. From my reading of spc4r36n.pdf section  5.1.2
-"Important commands for all SCSI device servers" TEST UNIT
-READY should be called before REQUEST SENSE during device
-initialization (including resume). If the responses to TEST
-UNIT READY and REQUEST SENSE contradict then the former is
-correct.
-
-There are SCSI devices out caught in that transition. For
-example with sg_format I monitor progress with either TEST
-UNIT READY or REQUEST SENSE, defaulting to the former.
-[Progress indication is another new role for REQUEST SENSE.]
-
-Note that the billion or so USB keys out there that say that
-they comply with SCSI-2 should respond to a REQUEST SENSE
-with its original semantics.
-
-The ATA REQUEST SENSE DATA EXT command refers to the SPC-4
-"standard" (not yet it ain't) which is naturally the new
-SCSI semantics of REQUEST SENSE. I believe the ATA REQUEST
-SENSE DATA EXT command is a relatively new ATA command so
-it does not carry the historical baggage of its SCSI
-counterpart.
-
-
-Just a little more hand waving for Phillip's amusement.
-
-Doug Gilbert
-
+-- 
+Kees Cook
+Chrome OS Security
