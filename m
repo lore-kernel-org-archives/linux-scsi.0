@@ -1,80 +1,37 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] drivers: target: target_core_mod: use div64_u64_rem()
- instead of operator '%' for u64
-Date: Wed, 08 Jan 2014 15:18:37 -0800
-Message-ID: <1389223117.5567.271.camel@haakon3.risingtidesystems.com>
-References: <52B4F837.1010403@gmail.com>
-	 <1387680997.5567.91.camel@haakon3.risingtidesystems.com>
-	 <52B6AE19.80401@gmail.com>
-	 <1387781487.5567.147.camel@haakon3.risingtidesystems.com>
-	 <52B90111.5050203@gmail.com> <52CCFF0C.7070704@suse.de>
+From: walt <w41ter-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH 3.12 033/118] usb: xhci: Link TRB must not occur within
+ a USB payload burst
+Date: Wed, 08 Jan 2014 17:22:21 -0800
+Message-ID: <52CDF9CD.8010402@gmail.com>
+References: <20131218211219.461663463@linuxfoundation.org> <20131218211220.412278148@linuxfoundation.org> <52C32BB0.90600@gmail.com> <20140102191510.GA9621@xanatos> <52C6D9F1.9000709@gmail.com> <20140103195455.GA4193@xanatos> <52C729CE.9050307@gmail.com> <20140103232929.GD4193@xanatos>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <52CCFF0C.7070704@suse.de>
-Sender: target-devel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Chen Gang <gang.chen.5i5j@gmail.com>, James Hogan <james.hogan@imgtec.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Fengguang Wu <fengguang.wu@intel.com>
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20140103232929.GD4193@xanatos>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Sarah Sharp <sarah.a.sharp-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Cc: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Linux Kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, David Laight <david.laight-JxhZ9S5GRejQT0dZR+AlfA@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2014-01-08 at 08:32 +0100, Hannes Reinecke wrote:
-> On 12/24/2013 04:35 AM, Chen Gang wrote:
-> > On 12/23/2013 02:51 PM, Nicholas A. Bellinger wrote:
-> >> On Sun, 2013-12-22 at 17:17 +0800, Chen Gang wrote:
+On 01/03/2014 03:29 PM, Sarah Sharp wrote:
 
-<SNIP>
+> I'll let you know when I have some diagnostic patches ready.
 
-> >>> The related fix patch changed "start_lba = lba % ..." to "start_lba =
-> >>> lba / ...", and also assumed "segment_size * segment_mult" is still
-> >>> within u32 (can not cause type over flow).
-> >>>
-> >>> I guess the original author already knew about them, and intended to do
-> >>> like that (if not, please let me know, thanks).
-> >>>
-> >>
-> >> Sorry, your correct that the original code is using modulo division to
-> >> calculate start_lba.
-> >>
-> > 
-> > Oh, that's all right, (in fact, don't need sorry), I am not quite
-> > familiar with the details, so need related member help check it.  :-)
-> > 
-> >> Hannes, can you please double check this below..?
-> >>
-> > 
-> > Please help check when have time, thanks.
-> > 
-> I would even convert segment_size and segment_mult to u64,
-> to ensure no overflows occur:
-> 
-> diff --git a/drivers/target/target_core_alua.c
-> b/drivers/target/target_core_alua
-> .c
-> index 9b1856d..54b1e52 100644
-> --- a/drivers/target/target_core_alua.c
-> +++ b/drivers/target/target_core_alua.c
-> @@ -477,8 +477,7 @@ static inline int core_alua_state_lba_dependent(
->         u8 *alua_ascq)
->  {
->         struct se_device *dev = cmd->se_dev;
-> -       u32 segment_size, segment_mult, sectors;
-> -       u64 lba;
-> +       u64 segment_size, segment_mult, sectors, lba;
-> 
->         /* Only need to check for cdb actually containing LBAs */
->         if (!(cmd->se_cmd_flags & SCF_SCSI_DATA_CDB))
-> 
-> 
+Hi Sarah.  I see today gregkh committed the patches you've already sent
+me, so I assume someone (other than me) has tested those patches and
+discovered some benefit from them?
 
-Will squash the above into the original patch shortly in for-next..
+I'm still wondering if I'm suffering from hardware quirks.  From the
+first day I installed my usb3 adapter card and the usb3 disk docking
+station I've noticed some quirky behavior.
 
-> Other than that the sector_div() patch is correct.
-> 
+e.g. I boot the machine with the docking station powered-off, and then
+later I power it on, the usb3 disk is not detected at all -- until I
+reboot the machine with the docking station still powered on.
 
-<nod> Thanks for confirming that sector_div() is correct here vs. the
-original code using modulo that Chen had pointed out.
-
-Thanks Hannes!
-
---nab
+Minor stuff, yes, but maybe relevant?  I dunno.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
