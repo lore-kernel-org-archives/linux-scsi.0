@@ -1,35 +1,39 @@
-From: walt <w41ter-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 3.12 033/118] usb: xhci: Link TRB must not occur within
- a USB payload burst
-Date: Thu, 09 Jan 2014 07:10:40 -0800
-Message-ID: <52CEBBF0.6040603@gmail.com>
-References: <20131218211219.461663463@linuxfoundation.org> <20131218211220.412278148@linuxfoundation.org> <52C32BB0.90600@gmail.com> <20140102191510.GA9621@xanatos> <52C6D9F1.9000709@gmail.com> <20140103195455.GA4193@xanatos> <52C729CE.9050307@gmail.com> <20140103232929.GD4193@xanatos> <52CDF9CD.8010402@gmail.com> <063D6719AE5E284EB5DD2968C1650D6D455F92@AcuExch.aculab.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: REQ_PM vs REQ_TYPE_PM_RESUME
+Date: Thu, 9 Jan 2014 10:40:28 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1401091032430.1493-100000@iolanthe.rowland.org>
+References: <52CDFB97.9080303@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6D455F92-VkEWCZq2GCInGFn1LkZF6NBPR1lH4CV8@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: David Laight <David.Laight-ZS65k/vG3HxXrIkS9f7CXA@public.gmane.org>, Sarah Sharp <sarah.a.sharp-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Cc: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Linux Kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-pm-owner@vger.kernel.org>
+In-Reply-To: <52CDFB97.9080303@intel.com>
+Sender: linux-pm-owner@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: Phillip Susi <psusi@ubuntu.com>, Sujit Reddy Thumma <sthumma@codeaurora.org>, todd.e.brandt@linux.intel.com, tj@kernel.org, JBottomley@parallels.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Linux-pm mailing list <linux-pm@vger.kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>
 List-Id: linux-scsi@vger.kernel.org
 
-On 01/09/2014 02:05 AM, David Laight wrote:
->> From: walt
-> ...
->> I'm still wondering if I'm suffering from hardware quirks.  From the
->> first day I installed my usb3 adapter card and the usb3 disk docking
->> station I've noticed some quirky behavior.
+On Thu, 9 Jan 2014, Aaron Lu wrote:
+
+> > It's a knotty situation.  The only way to find out whether the disk is
+> > spinning is to ask it, which requires doing I/O, which requires
+> > spinning up the disk.  Maybe we need to add a mechanism to the block
+> > layer's runtime PM implementation for addressing just this situation.
 > 
-> Ah - this isn't an 'on chip' usb3 adapter.
-> Some kind of PCIe card ?
+> I think it's knotty because the runtime PM status is a view from the
+> kernel/host side, i.e. it is runtime suspended if it is not being used,
+> no matter which power state it is in. The trigger for the PM state
+> transition are all based on this, if we want to do it the other way
+> around(update device's runtime PM status based on device's actual power
+> state), we are in a knotty situation.
 
-This one:
+No, that's not the problem.  The problem is that the block layer does
+not permit any requests to go through if the queue's rpm_status is
+RPM_SUSPENDED.
 
-http://www.sabrent.com/category/controller-cards/PCIX-USB3/
- 
+We should change the code in the block layer.  blk_pm_peek_request 
+should allow requests with REQ_PM set to go through, no matter what the 
+rpm_status is.  Then the disk driver could query the disk (to see 
+whether it is spinning) while the disk remains in runtime suspend.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Alan Stern
+
