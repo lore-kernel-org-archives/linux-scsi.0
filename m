@@ -1,107 +1,62 @@
-From: vaughan <vaughan.cao@oracle.com>
-Subject: iSCSI request keep rejected by microsoft iSCSI target because of
- write_same check
-Date: Thu, 09 Jan 2014 18:20:43 +0800
-Message-ID: <52CE77FB.8020100@oracle.com>
+From: Sagi Grimberg <sagig@mellanox.com>
+Subject: Re: [PATCH 07/14] target/sbc: Add P_TYPE + PROT_EN bits to READ_CAPACITY_16
+Date: Thu, 9 Jan 2014 12:24:43 +0200
+Message-ID: <52CE78EB.60108@mellanox.com>
+References: <1389212157-14540-1-git-send-email-nab@daterainc.com> <1389212157-14540-8-git-send-email-nab@daterainc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:40070 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750800AbaAIKVZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Jan 2014 05:21:25 -0500
+Received: from eu1sys200aog107.obsmtp.com ([207.126.144.123]:52844 "EHLO
+	eu1sys200aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750806AbaAIKZF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Jan 2014 05:25:05 -0500
+In-Reply-To: <1389212157-14540-8-git-send-email-nab@daterainc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: open-iscsi <open-iscsi@googlegroups.com>, SCSI development list <linux-scsi@vger.kernel.org>, michaelc@cs.wisc.edu
+To: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Or Gerlitz <ogerlitz@mellanox.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 
-We are testing linux iscsi boot under UEFI mode with Microsoft iSCSI
-Software Target. But failed for rejected by target.
-When do a normal iscsi connection, iscsi connection is keeping rejected
-and recover. See below:
+On 1/8/2014 10:36 PM, Nicholas A. Bellinger wrote:
+> From: Nicholas Bellinger <nab@linux-iscsi.org>
+>
+> This patch updates sbc_emulate_readcapacity_16() to set
+> P_TYPE and PROT_EN bits when DIF emulation is enabled by
+> the backend device.
+>
+> Cc: Martin K. Petersen <martin.petersen@oracle.com>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Hannes Reinecke <hare@suse.de>
+> Cc: Sagi Grimberg <sagig@mellanox.com>
+> Cc: Or Gerlitz <ogerlitz@mellanox.com>
+> Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+> ---
+>   drivers/target/target_core_sbc.c |    5 +++++
+>   1 file changed, 5 insertions(+)
+>
+> diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
+> index 366b9bb..22599e8 100644
+> --- a/drivers/target/target_core_sbc.c
+> +++ b/drivers/target/target_core_sbc.c
+> @@ -106,6 +106,11 @@ sbc_emulate_readcapacity_16(struct se_cmd *cmd)
+>   	buf[9] = (dev->dev_attrib.block_size >> 16) & 0xff;
+>   	buf[10] = (dev->dev_attrib.block_size >> 8) & 0xff;
+>   	buf[11] = dev->dev_attrib.block_size & 0xff;
+> +	/*
+> +	 * Set P_TYPE and PROT_EN bits for DIF support
+> +	 */
+> +	if (dev->dev_attrib.pi_prot_type)
+> +		buf[12] = (dev->dev_attrib.pi_prot_type - 1) << 1 | 0x1;
+>   
+>   	if (dev->transport->get_lbppbe)
+>   		buf[13] = dev->transport->get_lbppbe(dev) & 0x0f;
 
-Dec 15 20:09:07 ol6u4gx64 kernel: scsi11 : iSCSI Initiator over TCP/IP
-Dec 15 20:09:08 ol6u4gx64 kernel: scsi 11:0:0:0: Direct-Access    
-MSFT     Virtual HD       3.3  PQ: 0 ANSI: 5
-Dec 15 20:09:08 ol6u4gx64 kernel: sd 11:0:0:0: Attached scsi generic sg3
-type 0
-Dec 15 20:09:08 ol6u4gx64 kernel: sd 11:0:0:0: [sdc] 307200 512-byte
-logical blocks: (157 MB/150 MiB)
-Dec 15 20:09:08 ol6u4gx64 kernel: sd 11:0:0:0: [sdc] Write Protect is off
-Dec 15 20:09:08 ol6u4gx64 kernel: sd 11:0:0:0: [sdc] Got wrong page
-Dec 15 20:09:08 ol6u4gx64 kernel: sd 11:0:0:0: [sdc] Assuming drive
-cache: write through
-Dec 15 20:09:08 ol6u4gx64 kernel: connection1:0: pdu (op 0x1 itt 0xa)
-rejected. Reason code 0x9
-Dec 15 20:09:08 ol6u4gx64 iscsid: Connection1:0 to [target:
-iqn.1991-05.com.microsoft:test1, portal: 10.182.92.118,3260] through
-[iface: default] is operational now
-Dec 15 20:09:08 ol6u4gx64 kernel: rejected iscsi cmd hdr:op 0x1, flags
-0xc1, itt 0xa, data_length 512CDB: a3 c 1 12 0 0 0 0 2 0 0 0 0 0 0 0
-connection1:0: detected conn error (1020)
-Dec 15 20:09:09 ol6u4gx64 iscsid: Kernel reported iSCSI connection 1:0
-error (1020 - ISCSI_ERR_TCP_CONN_CLOSE: TCP connection closed) state (3)
-Dec 15 20:09:11 ol6u4gx64 kernel: connection1:0: pdu (op 0x1 itt
-0x1000000b) rejected. Reason code 0x9
-Dec 15 20:09:11 ol6u4gx64 kernel: rejected iscsi cmd hdr:op 0x1, flags
-0xc1, itt 0x1000000b, data_length 512CDB: a3 c 1 12 0 0 0 0 2 0 0 0 0 0
-0 0 connection1:0: detected conn error (1020)
-Dec 15 20:09:11 ol6u4gx64 iscsid: connection1:0 is operational after
-recovery (1 attempts)
-Dec 15 20:09:12 ol6u4gx64 iscsid: Kernel reported iSCSI connection 1:0
-error (1020 - ISCSI_ERR_TCP_CONN_CLOSE: TCP connection closed) state (3)
-Dec 15 20:09:14 ol6u4gx64 kernel: connection1:0: pdu (op 0x1 itt
-0x2000000c) rejected. Reason code 0x9
-Dec 15 20:09:14 ol6u4gx64 kernel: rejected iscsi cmd hdr:op 0x1, flags
-0xc1, itt 0x2000000c, data_length 512CDB: a3 c 1 12 0 0 0 0 2 0 0 0 0 0
-0 0 connection1:0: detected conn error (1020)
-...
-Dec 15 20:09:30 ol6u4gx64 kernel: connection1:0: pdu (op 0x1 itt
-0x70000011) rejected. Reason code 0x9
-Dec 15 20:09:30 ol6u4gx64 kernel: rejected iscsi cmd hdr:op 0x1, flags
-0xc1, itt 0x70000011, data_length 512CDB: a3 c 1 93 0 0 0 0 2 0 0 0 0 0
-0 0 connection1:0: detected conn error (1020)
-Dec 15 20:09:31 ol6u4gx64 iscsid: connection1:0 is operational after
-recovery (1 attempts)
-Dec 15 20:09:31 ol6u4gx64 iscsid: Kernel reported iSCSI connection 1:0
-error (1020 - ISCSI_ERR_TCP_CONN_CLOSE: TCP connection closed) state (3)
-Dec 15 20:09:33 ol6u4gx64 kernel: connection1:0: pdu (op 0x1 itt
-0x80000012) rejected. Reason code 0x9
-Dec 15 20:09:34 ol6u4gx64 kernel: rejected iscsi cmd hdr:op 0x1, flags
-0xc1, itt 0x80000012, data_length 512CDB: a3 c 1 41 0 0 0 0 2 0 0 0 0 0
-0 0 connection1:0: detected conn error (1020)
-Dec 15 20:09:34 ol6u4gx64 iscsid: connection1:0 is operational after
-recovery (1 attempts)
-Dec 15 20:09:34 ol6u4gx64 iscsid: Kernel reported iSCSI connection 1:0
-error (1020 - ISCSI_ERR_TCP_CONN_CLOSE: TCP connection closed) state (3)
+Hey Nic,
 
-Digging the code, I found it's because sd_read_write_same() use
-scsi_report_opcode() to check if write_same is supported, but rejected
-by target.
-dd to the iSCSI disk is ok.  This issue doesn't occur with Linux stgt
-target.
+What about FORMAT_UNIT emulation?
+The backstore protection configuration is done at the target side via 
+configfs/targetcli, if you publish DIF support in 
+INQUERY_EVPD/READ_CAPACITY you need to accept protection information format?
+Did I miss that one? or is it still under WIP?
 
-There are some questions:
-1. Why stgt target don't has this issue? Does it support report_opcode
-because it has a embeded controller lun0? Or it just returns INVALID in
-response?
-2. report_opcode is optional in SPC-3, so it's possible that not all
-iscsi target support it. But is it correct for microsoft iSCSI target to
-reject the command rather than return it with normal SCSI response?
-3. Why it didn't do the same recovery in iSCSI boot case as did in
-normal connection?
-4. if report_opcode is not supported, shall write_same be disabled for
-iSCSI?
-5. Shall write_same be disabled for iSCSI by default?
-
-Details of my test components:
-  Target is setup with Microsoft iSCSI Software Target: 3.3.16563.
-  stgt: scsi-target-utils-1.0.38-1.fc19.x86_64
-  Kernel: 3.11.10-200.fc19.x86_64
- 
-
--- 
-Regards,
-Vaughan
-
+Sagi.
