@@ -1,37 +1,43 @@
-From: walt <w41ter-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 3.12 033/118] usb: xhci: Link TRB must not occur within
- a USB payload burst
-Date: Wed, 08 Jan 2014 17:22:21 -0800
-Message-ID: <52CDF9CD.8010402@gmail.com>
-References: <20131218211219.461663463@linuxfoundation.org> <20131218211220.412278148@linuxfoundation.org> <52C32BB0.90600@gmail.com> <20140102191510.GA9621@xanatos> <52C6D9F1.9000709@gmail.com> <20140103195455.GA4193@xanatos> <52C729CE.9050307@gmail.com> <20140103232929.GD4193@xanatos>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: REQ_PM vs REQ_TYPE_PM_RESUME
+Date: Thu, 09 Jan 2014 09:29:59 +0800
+Message-ID: <52CDFB97.9080303@intel.com>
+References: <Pine.LNX.4.44L0.1401081547490.1659-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20140103232929.GD4193@xanatos>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Sarah Sharp <sarah.a.sharp-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Cc: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Linux Kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, David Laight <david.laight-JxhZ9S5GRejQT0dZR+AlfA@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-pm-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.44L0.1401081547490.1659-100000@iolanthe.rowland.org>
+Sender: linux-pm-owner@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>, Phillip Susi <psusi@ubuntu.com>
+Cc: Sujit Reddy Thumma <sthumma@codeaurora.org>, todd.e.brandt@linux.intel.com, tj@kernel.org, JBottomley@parallels.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Linux-pm mailing list <linux-pm@vger.kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>
 List-Id: linux-scsi@vger.kernel.org
 
-On 01/03/2014 03:29 PM, Sarah Sharp wrote:
+On 01/09/2014 05:21 AM, Alan Stern wrote:
+> On Wed, 8 Jan 2014, Phillip Susi wrote:
+>> You issue a REQUEST SENSE command and that returns status indicating
+>> whether the drive is stopped, or in standby.  See my patches.  One of
+> 
+> I never saw your patches.  Where were they posted?
+> 
+> If you issue the REQUEST SENSE command in the usual way (going through
+> the SCSI and block layers), and the disk is already in runtime suspend,
+> it won't do what you want.  The block layer won't deliver requests
+> until the device leaves the RPM_SUSPENDED state.  In addition, when it
+> receives the command the block layer will submit a deferred
+> runtime-resume request, which rather defeats the whole purpose.
+> 
+> (I guess you actually saw some of this happen, and that's what led to
+> this email thread in the first place.)
+> 
+> It's a knotty situation.  The only way to find out whether the disk is
+> spinning is to ask it, which requires doing I/O, which requires
+> spinning up the disk.  Maybe we need to add a mechanism to the block
+> layer's runtime PM implementation for addressing just this situation.
 
-> I'll let you know when I have some diagnostic patches ready.
-
-Hi Sarah.  I see today gregkh committed the patches you've already sent
-me, so I assume someone (other than me) has tested those patches and
-discovered some benefit from them?
-
-I'm still wondering if I'm suffering from hardware quirks.  From the
-first day I installed my usb3 adapter card and the usb3 disk docking
-station I've noticed some quirky behavior.
-
-e.g. I boot the machine with the docking station powered-off, and then
-later I power it on, the usb3 disk is not detected at all -- until I
-reboot the machine with the docking station still powered on.
-
-Minor stuff, yes, but maybe relevant?  I dunno.
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I think it's knotty because the runtime PM status is a view from the
+kernel/host side, i.e. it is runtime suspended if it is not being used,
+no matter which power state it is in. The trigger for the PM state
+transition are all based on this, if we want to do it the other way
+around(update device's runtime PM status based on device's actual power
+state), we are in a knotty situation.
