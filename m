@@ -1,66 +1,63 @@
-From: Phillip Susi <psusi@ubuntu.com>
-Subject: Re: REQ_PM vs REQ_TYPE_PM_RESUME
-Date: Thu, 09 Jan 2014 14:20:44 -0500
-Message-ID: <52CEF68C.40703@ubuntu.com>
-References: <Pine.LNX.4.44L0.1401071015120.1296-100000@iolanthe.rowland.org> <52CC1FF2.1020301@ubuntu.com> <52CEEAA1.2010904@interlog.com>
+From: "Saxena, Sumit" <Sumit.Saxena@lsi.com>
+Subject: RE: [patch] [SCSI] megaraid: missing bounds check in mimd_to_kioc()
+Date: Thu, 9 Jan 2014 19:53:25 +0000
+Message-ID: <341c8929f76f46d19027677af9d6f532@DM2PR07MB400.namprd07.prod.outlook.com>
+References: <20131025144452.GA28451@ngolde.de>
+	<20131030171351.GB4130@longonot.mountain>
+	<bd7f5bb0d19c45e2af9702c1cb6068ea@DM2PR07MB400.namprd07.prod.outlook.com>
+ <CAGXu5j+WvAckRNyiSU8WYzWriWU2Y4+KMwxe17xxn8Y_w=kSPA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <52CEEAA1.2010904@interlog.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: dgilbert@interlog.com, Alan Stern <stern@rowland.harvard.edu>
-Cc: Aaron Lu <aaron.lu@intel.com>, Sujit Reddy Thumma <sthumma@codeaurora.org>, todd.e.brandt@linux.intel.com, tj@kernel.org, JBottomley@parallels.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bl2lp0212.outbound.protection.outlook.com ([207.46.163.212]:35027
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1756934AbaAITxk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 9 Jan 2014 14:53:40 -0500
+In-Reply-To: <CAGXu5j+WvAckRNyiSU8WYzWriWU2Y4+KMwxe17xxn8Y_w=kSPA@mail.gmail.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Kees Cook <keescook@google.com>
+Cc: Dan Carpenter <dan.carpenter@oracle.com>, DL-MegaRAID Linux <megaraidlinux@lsi.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "security@kernel.org" <security@kernel.org>, Nico Golde <nico@ngolde.de>, Fabian Yamaguchi <fabs@goesec.de>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
-
-On 1/9/2014 1:29 PM, Douglas Gilbert wrote:
-> When REQUEST SENSE had its original semantics, TEST UNIT READY was
-> the only game in town for monitoring power management. From my
-> reading of spc4r36n.pdf section  5.1.2 "Important commands for all
-> SCSI device servers" TEST UNIT READY should be called before
-> REQUEST SENSE during device initialization (including resume). If
-> the responses to TEST UNIT READY and REQUEST SENSE contradict then
-> the former is correct.
-
-I don't see language there remotely like that.  How did you arrive at
-this conclusion?
-
-> There are SCSI devices out caught in that transition. For example
-> with sg_format I monitor progress with either TEST UNIT READY or
-> REQUEST SENSE, defaulting to the former. [Progress indication is
-> another new role for REQUEST SENSE.]
-> 
-> Note that the billion or so USB keys out there that say that they
-> comply with SCSI-2 should respond to a REQUEST SENSE with its
-> original semantics.
-
-Then they will return 0/0/0, so we will assume they are up and
-running, which is correct.  SPC-2 is coming up on 13 years old and
-listed this usage for REQUEST SENSE.  Are there any actual disk drives
-out there ( and still in use ) that return 0/0/0 when in the stopped
-state?  I can't imagine there would be.
-
-> The ATA REQUEST SENSE DATA EXT command refers to the SPC-4 
-> "standard" (not yet it ain't) which is naturally the new SCSI
-> semantics of REQUEST SENSE. I believe the ATA REQUEST SENSE DATA
-> EXT command is a relatively new ATA command so it does not carry
-> the historical baggage of its SCSI counterpart.
-
-It is also only for ATAPI devices.
-
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.17 (MingW32)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iQEcBAEBAgAGBQJSzvaMAAoJEI5FoCIzSKrwcxIH/3Y7DdnXr6Fj9MiWs/Hn2kte
-EZVkHbj5jN4/OdKj3gnR3BK8gjrA7AEtbD3J6g7zJSj50UM1EA5RqMYAutZQkvYk
-UsKNuV+qIcN3OpSltAGK5TQPGUo2M9apcYuy9NKTZEaWI9dXejGJ/2GitxYXO35H
-drsTNlzEErnQvJwBhEYq6+rtferv7/vdZOljSGM1pP48gK0IWz+r2cwXxojkUvk1
-lsiU97BxHCVNJc7kHmKVzBw0JV4R2mrtI/I/bE/VZzeljvjA9fNoXqdQxFU1RPDT
-PNLHBecjgbDlc70l1CNKNc4ApqBDSYg9SwBtG1nCa36MLgLoN1ZDEatzqT9IdYw=
-=qsZP
------END PGP SIGNATURE-----
+DQoNCj4tLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPkZyb206IEtlZXMgQ29vayBbbWFpbHRv
+OmtlZXNjb29rQGdvb2dsZS5jb21dDQo+U2VudDogRnJpZGF5LCBKYW51YXJ5IDEwLCAyMDE0IDEy
+OjA1IEFNDQo+VG86IFNheGVuYSwgU3VtaXQNCj5DYzogRGFuIENhcnBlbnRlcjsgREwtTWVnYVJB
+SUQgTGludXg7IEphbWVzIEUuSi4gQm90dG9tbGV5OyBsaW51eC0NCj5zY3NpQHZnZXIua2VybmVs
+Lm9yZzsgc2VjdXJpdHlAa2VybmVsLm9yZzsgTmljbyBHb2xkZTsgRmFiaWFuIFlhbWFndWNoaQ0K
+PlN1YmplY3Q6IFJlOiBbcGF0Y2hdIFtTQ1NJXSBtZWdhcmFpZDogbWlzc2luZyBib3VuZHMgY2hl
+Y2sgaW4gbWltZF90b19raW9jKCkNCj4NCj5PbiBXZWQsIEphbiA4LCAyMDE0IGF0IDQ6MjcgQU0s
+IFNheGVuYSwgU3VtaXQgPFN1bWl0LlNheGVuYUBsc2kuY29tPg0KPndyb3RlOg0KPj4NCj4+DQo+
+Pj4tLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPj4+RnJvbTogRGFuIENhcnBlbnRlciBbbWFp
+bHRvOmRhbi5jYXJwZW50ZXJAb3JhY2xlLmNvbV0NCj4+PlNlbnQ6IFdlZG5lc2RheSwgT2N0b2Jl
+ciAzMCwgMjAxMyAxMDo0NCBQTQ0KPj4+VG86IERMLU1lZ2FSQUlEIExpbnV4DQo+Pj5DYzogSmFt
+ZXMgRS5KLiBCb3R0b21sZXk7IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnOw0KPj4+c2VjdXJp
+dHlAa2VybmVsLm9yZzsgTmljbyBHb2xkZTsgRmFiaWFuIFlhbWFndWNoaQ0KPj4+U3ViamVjdDog
+W3BhdGNoXSBbU0NTSV0gbWVnYXJhaWQ6IG1pc3NpbmcgYm91bmRzIGNoZWNrIGluDQo+Pj5taW1k
+X3RvX2tpb2MoKQ0KPj4+DQo+Pj5wdGhydTMyLT5kYXRheGZlcmxlbiBjb21lcyBmcm9tIHRoZSB1
+c2VyIHNvIHdlIG5lZWQgdG8gY2hlY2sgdGhhdCBpdCdzDQo+Pj5ub3QgdG9vIGxhcmdlIHNvIHdl
+IGRvbid0IG92ZXJmbG93IHRoZSBidWZmZXIuDQo+Pj4NCj4+PlJlcG9ydGVkLWJ5OiBOaWNvIEdv
+bGRlIDxuaWNvQG5nb2xkZS5kZT4NCj4+PlJlcG9ydGVkLWJ5OiBGYWJpYW4gWWFtYWd1Y2hpIDxm
+YWJzQGdvZXNlYy5kZT4NCj4+PlNpZ25lZC1vZmYtYnk6IERhbiBDYXJwZW50ZXIgPGRhbi5jYXJw
+ZW50ZXJAb3JhY2xlLmNvbT4NCj4+Pi0tLQ0KPj4+UGxlYXNlIHJldmlldyB0aGlzIGNhcmVmdWxs
+eSBiZWNhdXNlIEkgaGF2ZSBub3QgdGVzdGVkIGl0Lg0KPj4+DQo+Pj5kaWZmIC0tZ2l0IGEvZHJp
+dmVycy9zY3NpL21lZ2FyYWlkL21lZ2FyYWlkX21tLmMNCj4+PmIvZHJpdmVycy9zY3NpL21lZ2Fy
+YWlkL21lZ2FyYWlkX21tLmMNCj4+PmluZGV4IGRmZmZkMGYuLmE3MDY5MjcgMTAwNjQ0DQo+Pj4t
+LS0gYS9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJhaWRfbW0uYw0KPj4+KysrIGIvZHJpdmVy
+cy9zY3NpL21lZ2FyYWlkL21lZ2FyYWlkX21tLmMNCj4+PkBAIC00ODYsNiArNDg2LDggQEAgbWlt
+ZF90b19raW9jKG1pbWRfdCBfX3VzZXIgKnVtaW1kLA0KPm1yYWlkX21tYWRwX3QNCj4+PiphZHAs
+IHVpb2NfdCAqa2lvYykNCj4+Pg0KPj4+ICAgICAgIHB0aHJ1MzItPmRhdGF4ZmVyYWRkciAgID0g
+a2lvYy0+YnVmX3BhZGRyOw0KPj4+ICAgICAgIGlmIChraW9jLT5kYXRhX2RpciAmIFVJT0NfV1Ip
+IHsNCj4+PisgICAgICAgICAgICAgIGlmIChwdGhydTMyLT5kYXRheGZlcmxlbiA+IGtpb2MtPnhm
+ZXJsZW4pDQo+Pj4rICAgICAgICAgICAgICAgICAgICAgIHJldHVybiAtRUlOVkFMOw0KPj4+ICAg
+ICAgICAgICAgICAgaWYgKGNvcHlfZnJvbV91c2VyKGtpb2MtPmJ1Zl92YWRkciwga2lvYy0+dXNl
+cl9kYXRhLA0KPj4+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICBwdGhydTMyLT5kYXRheGZlcmxlbikpIHsNCj4+PiAgICAgICAgICAgICAgICAgICAgICAgcmV0
+dXJuICgtRUZBVUxUKTsNCj4+DQo+PiBBY2tlZC1ieTogU3VtaXQgU2F4ZW5hIDxzdW1pdC5zYXhl
+bmFAbHNpLmNvbT4NCj4+DQo+PiBTdW1pdA0KPj4NCj4NCj5UaGFua3MgZm9yIHRoZSBBY2suIFdo
+byBub3JtYWxseSBwaWNrcyBwYXRjaGVzIGZvciB0aGlzIGFyZWE/DQo+DQo+LUtlZXMNCj4NCkph
+bWVzIEJvdHRvbWxleShMaW51eCBTQ1NJIHN1YnN5c3RlbSBtYWludGFpbmVyKSBzaG91bGQgcGlj
+ayB0aGlzIHBhdGNoLg0KDQpTdW1pdA0KPi0tDQo+S2VlcyBDb29rDQo+Q2hyb21lIE9TIFNlY3Vy
+aXR5DQoNCg==
