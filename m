@@ -1,32 +1,47 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
 Subject: Re: [PATCH 07/14] target/sbc: Add P_TYPE + PROT_EN bits to READ_CAPACITY_16
-Date: Fri, 10 Jan 2014 15:40:37 -0500
-Message-ID: <yq1iotrr2nu.fsf@sermon.lab.mkp.net>
+Date: Fri, 10 Jan 2014 15:46:17 -0500
+Message-ID: <yq1eh4fr2ee.fsf@sermon.lab.mkp.net>
 References: <1389212157-14540-1-git-send-email-nab@daterainc.com>
 	<1389212157-14540-8-git-send-email-nab@daterainc.com>
 	<52CE78EB.60108@mellanox.com>
 	<1389334891.5567.373.camel@haakon3.risingtidesystems.com>
+	<52D04F1A.2000808@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1389334891.5567.373.camel@haakon3.risingtidesystems.com>
-	(Nicholas A. Bellinger's message of "Thu, 09 Jan 2014 22:21:31 -0800")
+In-Reply-To: <52D04F1A.2000808@redhat.com> (Andy Grover's message of "Fri, 10
+	Jan 2014 11:50:50 -0800")
 Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Sagi Grimberg <sagig@mellanox.com>, "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Or Gerlitz <ogerlitz@mellanox.com>
+To: Andy Grover <agrover@redhat.com>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Sagi Grimberg <sagig@mellanox.com>, "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Or Gerlitz <ogerlitz@mellanox.com>
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "nab" == Nicholas A Bellinger <nab@linux-iscsi.org> writes:
+>>>>> "Andy" == Andy Grover <agrover@redhat.com> writes:
 
->> The backstore protection configuration is done at the target side via
->> configfs/targetcli, if you publish DIF support in
->> INQUERY_EVPD/READ_CAPACITY you need to accept protection information
->> format?
+Andy> Yes, don't you need FORMAT UNIT because protection information is
+Andy> going to mean the pi-enabled lun will need to report less blocks?
 
-nab> Mmmm, these two bits bits are following what scsi_debug is
-nab> currently exposing minus FORMAT_UNIT support..?
+Modern disk drives won't shrink when you reformat them with PI. This is
+a result of an IDEMA agreement about LBA counts.
 
-PROT_EN and P_TYPE should be fine for now.
+And if you create a 10GB PI LUN on an array you'll get 10GB for data.
+
+Andy> The ramdisk backstore changes in this series allocate extra space
+Andy> for PI info, but my understanding was that especially for
+Andy> emulation with block and fileio backstores, everything needs to go
+Andy> in the same amount of space.
+
+For both file and block I'd recommend we store the PI in a separate
+block device or file unless the backing device is PI-capable.
+
+Andy> Furthermore, if we want PI info stored along with the blocks, then
+Andy> block and fileio backstore formats are no longer going to be 1:1
+Andy> -- requiring offset calculations, non-aligned read-modify-write,
+Andy> and all that unpleasantness to be handled?
+
+I only think interleaved makes sense if you're passing the PI through
+instead of emulating.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
