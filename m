@@ -1,42 +1,40 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: iSCSI request keep rejected by microsoft iSCSI target because of write_same check
-Date: Thu, 09 Jan 2014 20:43:42 -0500
-Message-ID: <yq1zjn4sjap.fsf@sermon.lab.mkp.net>
-References: <52CE77FB.8020100@oracle.com> <52CEEC97.8050108@cs.wisc.edu>
+Subject: Re: status of block-integrity
+Date: Thu, 09 Jan 2014 20:49:53 -0500
+Message-ID: <yq1vbxssj0e.fsf@sermon.lab.mkp.net>
+References: <20131222192128.GA28532@infradead.org> <52C6D0DB.1050906@suse.de>
+	<yq1wqigzvc1.fsf@sermon.lab.mkp.net>
+	<20140107013646.GB10297@birch.djwong.org> <52CBAA1B.7000509@suse.de>
+	<yq1a9f7wjqr.fsf@sermon.lab.mkp.net> <52CCFADB.6080909@suse.de>
+	<yq1lhyqv6ns.fsf@sermon.lab.mkp.net> <52CE85C6.8000405@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:29345 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752920AbaAJBop (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Jan 2014 20:44:45 -0500
-In-Reply-To: <52CEEC97.8050108@cs.wisc.edu> (Mike Christie's message of "Thu,
-	09 Jan 2014 12:38:15 -0600")
+Received: from aserp1040.oracle.com ([141.146.126.69]:18439 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751330AbaAJBu3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Jan 2014 20:50:29 -0500
+In-Reply-To: <52CE85C6.8000405@suse.de> (Hannes Reinecke's message of "Thu, 09
+	Jan 2014 12:19:34 +0100")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: vaughan <vaughan.cao@oracle.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, open-iscsi <open-iscsi@googlegroups.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, chuck.lever@oracle.com, Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Doug Gilbert <dgilbert@interlog.com>
 
->>>>> "Mike" == Mike Christie <michaelc@cs.wisc.edu> writes:
+>>>>> "Hannes" == Hannes Reinecke <hare@suse.de> writes:
 
->> 2. report_opcode is optional in SPC-3, so it's possible that not all
->> iscsi target support it. But is it correct for microsoft iSCSI target
->> to reject the command rather than return it with normal SCSI
->> response?
+Hannes> With LID1/XCopy you have the ambiguity on where to actually send
+Hannes> the command to; the spec is silent in this area.
 
-Mike> The iscsi spec has the reason code "command not supported" so I
-Mike> guess it is ok for the target to do this. I do not think I have
-Mike> ever seen that reason code used in production level targets, so it
-Mike> is probably not common.
+Yeah, right now it's a coin toss.
 
-It's kind of unfriendly to not send a check condition...
+However, thanks to VAAI most arrays support LID1. I'm trying to leverage
+that. Doesn't in any way preclude LID4 being supported as well.
 
+Hannes> As said, Doug and me are working on putting this into sg3_utils,
+Hannes> then we'll have a better idea on the actual workings.
 
-Mike> I think we should implement handling in the iscsi layer for it. I
-Mike> can make a patch if you have not already.
-
-It would be awfully nice to get it turned into an ILLEGAL
-REQUEST/0x20/0x0.
+Cool! That'll save me some headaches when we start seeing LID4 devices.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
