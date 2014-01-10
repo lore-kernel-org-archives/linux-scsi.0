@@ -1,72 +1,28 @@
-From: Chen Gang <gang.chen.5i5j@gmail.com>
-Subject: Re: [PATCH] drivers: target: target_core_mod: use div64_u64_rem()
- instead of operator '%' for u64
-Date: Sat, 11 Jan 2014 00:06:03 +0800
-Message-ID: <52D01A6B.2020105@gmail.com>
-References: <52B4F837.1010403@gmail.com>  <1387680997.5567.91.camel@haakon3.risingtidesystems.com>  <52B6AE19.80401@gmail.com>  <1387781487.5567.147.camel@haakon3.risingtidesystems.com>  <52B90111.5050203@gmail.com> <52CCFF0C.7070704@suse.de>  <1389223117.5567.271.camel@haakon3.risingtidesystems.com>  <52CE7720.6060809@suse.de> <1389332871.5567.358.camel@haakon3.risingtidesystems.com>
+From: James Bottomley <jbottomley@parallels.com>
+Subject: Re: [PATCH] gdth: Fixup section annotations
+Date: Fri, 10 Jan 2014 17:07:24 +0000
+Message-ID: <1389373643.4066.0.camel@dabdike>
+References: <1389367888-117607-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1389332871.5567.358.camel@haakon3.risingtidesystems.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Hannes Reinecke <hare@suse.de>, James Hogan <james.hogan@imgtec.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Fengguang Wu <fengguang.wu@intel.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.parallels.com ([199.115.105.18]:42122 "EHLO
+	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751762AbaAJRH1 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Jan 2014 12:07:27 -0500
+In-Reply-To: <1389367888-117607-1-git-send-email-hare@suse.de>
+Content-Language: en-US
+Content-ID: <73B5BA4F53730D4DA865D238C35892E1@sw.swsoft.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 01/10/2014 01:47 PM, Nicholas A. Bellinger wrote:
-> On Thu, 2014-01-09 at 11:17 +0100, Hannes Reinecke wrote:
->> On 01/09/2014 12:18 AM, Nicholas A. Bellinger wrote:
->>> On Wed, 2014-01-08 at 08:32 +0100, Hannes Reinecke wrote:
-> 
-> <SNIP>
-> 
->>>> Other than that the sector_div() patch is correct.
->>>>
->>>
->>> <nod> Thanks for confirming that sector_div() is correct here vs. the
->>> original code using modulo that Chen had pointed out.
->>>
->> Ah, _that_ was the issue.
->> I was wondering why you kept on poking me ...
->>
->> Well.
->> No, that's actually _not_ correct.
->> The correct fix would be
->>
->> diff --git a/drivers/target/target_core_alua.c 
->> b/drivers/target/target_core_alua.c
->> index 54b1e52..12da9b3 100644
->> --- a/drivers/target/target_core_alua.c
->> +++ b/drivers/target/target_core_alua.c
->> @@ -500,8 +500,7 @@ static inline int core_alua_state_lba_dependent(
->>
->>                          if (segment_mult) {
->>                                  u64 tmp = lba;
->> -                               sector_div(tmp, segment_size * segment_mult);
->> -                               start_lba = tmp;
->> +                               start_lba = sector_div(tmp, segment_size * segment_mult);
->>
->>                                  last_lba = first_lba + segment_size - 1;
->>                                  if (start_lba >= first_lba &&
->> (beware of line breaks ...)
->> Thing is, we need to calculate the offset into the segment to figure out 
->> which map entry to use.
->> The actual number of the segment (as had been calculated with the 
->> original fix) is immaterial here.
->>
->> Sorry for this. The email thread just flew past me during Xmas
->> with me not paying real attention.
->>
-> 
-> Applied + squashed.  Apologies for the initial pre-holiday BUG..
-> 
-> Thanks Hannes!
-> 
+On Fri, 2014-01-10 at 16:31 +0100, Hannes Reinecke wrote:
+> Fixup section annotations so that kbuild doesn't complain anymore.
 
-Thank all of you.
+This doesn't look right: __devinit is now an obsolete annotation.
 
--- 
-Chen Gang
+James
 
-Open, share and attitude like air, water and life which God blessed
