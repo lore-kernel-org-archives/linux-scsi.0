@@ -1,61 +1,63 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 07/14] target/sbc: Add P_TYPE + PROT_EN bits to
- READ_CAPACITY_16
-Date: Fri, 10 Jan 2014 12:15:08 -0800
-Message-ID: <1389384908.5567.428.camel@haakon3.risingtidesystems.com>
-References: <1389212157-14540-1-git-send-email-nab@daterainc.com>
-	 <1389212157-14540-8-git-send-email-nab@daterainc.com>
-	 <52CE78EB.60108@mellanox.com>
-	 <1389334891.5567.373.camel@haakon3.risingtidesystems.com>
-	 <52D04F1A.2000808@redhat.com>
+From: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
+Subject: Re: iSCSI request keep rejected by microsoft iSCSI target because
+ of write_same check
+Date: Fri, 10 Jan 2014 14:24:09 -0600
+Message-ID: <52D056E9.8080008@cs.wisc.edu>
+References: <52CE77FB.8020100@oracle.com> <52CEEC97.8050108@cs.wisc.edu> <52CF8F0C.3040304@oracle.com> <52CFA440.7030104@cs.wisc.edu> <52CFAA9F.5010706@oracle.com>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <52D04F1A.2000808@redhat.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Andy Grover <agrover@redhat.com>
-Cc: Sagi Grimberg <sagig@mellanox.com>, "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Or Gerlitz <ogerlitz@mellanox.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <open-iscsi+bncBCZ4TFNN2YMRB4FNYGLAKGQET3NZTDY-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+In-Reply-To: <52CFAA9F.5010706-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+List-Post: <http://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <http://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <http://groups.google.com/group/open-iscsi>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <http://groups.google.com/group/open-iscsi/subscribe>, <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+To: vaughan <vaughan.cao-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Cc: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, open-iscsi <open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, 2014-01-10 at 11:50 -0800, Andy Grover wrote:
-> On 01/09/2014 10:21 PM, Nicholas A. Bellinger wrote:
-> >> What about FORMAT_UNIT emulation?
-> >
-> > Would certainly be useful to have..
-> >
-> >> The backstore protection configuration is done at the target side via
-> >> configfs/targetcli, if you publish DIF support in
-> >> INQUERY_EVPD/READ_CAPACITY you need to accept protection information format?
-> >
-> > Mmmm, these two bits bits are following what scsi_debug is currently
-> > exposing minus FORMAT_UNIT support..?
-> >
-> > MKP..?
-> 
-> Yes, don't you need FORMAT UNIT because protection information is going 
-> to mean the pi-enabled lun will need to report less blocks?
+On 01/10/2014 02:09 AM, vaughan wrote:
+> On 01/10/2014 03:41 PM, Mike Christie wrote:
+>> On 1/10/14 12:11 AM, vaughan wrote:
+>>> I haven't figure out why it's rejected with "bookmark invalid"(9)
+>>> reason, rather than "command not supported". IMO "bookmark invalid" is
+>>> used when minor protocol conflict such as final flag not set with
+>>> non-write command. However, I haven't find error of this kind in
+>>> report_opcode, so I guess it's not supported on the target.
+>>>
+>>
+>> Is it possible to get a wireshark/tcpdump trace? It does not have to
+>> be during boot. We just need to see what commands are sent and the
+>> response the target is returning.
+>>
+>> I forgot we know some microsoft iscsi target people. We can just email
+>> them with the trace to confirm what is going on with the target. The
+>> trace seems to be easier for them than them interpreting linux kernel
+>> logs.
+> I enabled debug_iscsi_tcp, here is a more detailed log in normal connection.
+> Does "conn error (1020)" mean it's target peer who disconnect the
+> connection at the same time of reject report_opcode?
 
-FORMAT_UNIT is simply a mechanism that allows the client to setup the
-protection information remotely, to complement the per device configfs
-attribute that does the same thing from the target side.
+Yes.
 
-> The ramdisk backstore changes in this series allocate extra space for
-> PI info, but my understanding was that especially for emulation with
-> block and fileio backstores, everything needs to go in the same amount
-> of space.
-> 
+> If it is, I think iSCSI boot failure can't be avoided without disable
+> write_same check on OEL.
 
-No, that's only for the interleaved case.
+Yes, you are right. Due to how more distros do boot, iscsid will not be
+up and you will hang. If are talking about disablement though I think it
+should not be done at the iscsi layer. It should be some sort of
+white/black list at the scsi device layer or something like that.
 
-> Furthermore, if we want PI info stored along with the blocks, then block 
-> and fileio backstore formats are no longer going to be 1:1 -- requiring 
-> offset calculations, non-aligned read-modify-write, and all that 
-> unpleasantness to be handled?
-> 
+However, I will ping Microsoft and cc you and we can see what is up for
+sure. Maybe we will get lucky and they will have a release with a fix on
+their side.
 
-I'm currently not intending to support interleaved mode into the
-backend, given that backends not doing emulation expect these to be in
-seperate SGLs to start.
-
---nab
+-- 
+You received this message because you are subscribed to the Google Groups "open-iscsi" group.
+To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+Visit this group at http://groups.google.com/group/open-iscsi.
+For more options, visit https://groups.google.com/groups/opt_out.
