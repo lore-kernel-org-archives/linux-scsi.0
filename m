@@ -1,33 +1,35 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 13/14] target/rd: Add DIF protection into rd_execute_rw
-Date: Thu, 09 Jan 2014 22:52:41 -0800
-Message-ID: <1389336761.5567.403.camel@haakon3.risingtidesystems.com>
+Subject: Re: [PATCH 02/14] target: Add DIF CHECK_CONDITION ASC/ASCQ
+ exception cases
+Date: Thu, 09 Jan 2014 22:53:36 -0800
+Message-ID: <1389336816.5567.404.camel@haakon3.risingtidesystems.com>
 References: <1389212157-14540-1-git-send-email-nab@daterainc.com>
-	 <1389212157-14540-14-git-send-email-nab@daterainc.com>
-	 <52CE7ABA.9080403@mellanox.com>
+	 <1389212157-14540-3-git-send-email-nab@daterainc.com>
+	 <52CE7D3F.7030308@mellanox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:45091 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750793AbaAJGu7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Jan 2014 01:50:59 -0500
-In-Reply-To: <52CE7ABA.9080403@mellanox.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <52CE7D3F.7030308@mellanox.com>
+Sender: target-devel-owner@vger.kernel.org
 To: Sagi Grimberg <sagig@mellanox.com>
 Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Or Gerlitz <ogerlitz@mellanox.com>
+List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 2014-01-09 at 12:32 +0200, Sagi Grimberg wrote:
+On Thu, 2014-01-09 at 12:43 +0200, Sagi Grimberg wrote:
 > On 1/8/2014 10:36 PM, Nicholas A. Bellinger wrote:
 > > From: Nicholas Bellinger <nab@linux-iscsi.org>
 > >
-> > This patch adds support for DIF protection into rd_execute_rw() code
-> > for WRITE/READ I/O using sbc_dif_verify_[write,read]() logic.
+> > This patch adds support for DIF related CHECK_CONDITION ASC/ASCQ
+> > exception cases into transport_send_check_condition_and_sense().
 > >
-> > It also adds rd_get_prot_table() for locating protection SGLs
-> > assoicated with the ramdisk backend device.
+> > This includes:
+> >
+> >    LOGICAL BLOCK GUARD CHECK FAILED
+> >    LOGICAL BLOCK APPLICATION TAG CHECK FAILED
+> >    LOGICAL BLOCK REFERENCE TAG CHECK FAILED
+> >
+> > that used by DIF TYPE1 and TYPE3 failure cases.
 > >
 > > Cc: Martin K. Petersen <martin.petersen@oracle.com>
 > > Cc: Christoph Hellwig <hch@lst.de>
@@ -36,124 +38,32 @@ On Thu, 2014-01-09 at 12:32 +0200, Sagi Grimberg wrote:
 > > Cc: Or Gerlitz <ogerlitz@mellanox.com>
 > > Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 > > ---
-> >   drivers/target/target_core_rd.c |   67 +++++++++++++++++++++++++++++++++++++++
-> >   1 file changed, 67 insertions(+)
+> >   drivers/target/target_core_transport.c |   30 ++++++++++++++++++++++++++++++
+> >   include/target/target_core_base.h      |    3 +++
+> >   2 files changed, 33 insertions(+)
 > >
-> > diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core_rd.c
-> > index dd99844..3fd51eb 100644
-> > --- a/drivers/target/target_core_rd.c
-> > +++ b/drivers/target/target_core_rd.c
-> > @@ -363,6 +363,26 @@ static struct rd_dev_sg_table *rd_get_sg_table(struct rd_dev *rd_dev, u32 page)
-> >   	return NULL;
-> >   }
-> >   
-> > +static struct rd_dev_sg_table *rd_get_prot_table(struct rd_dev *rd_dev, u32 page)
-> > +{
-> > +	struct rd_dev_sg_table *sg_table;
-> > +	u32 i, sg_per_table = (RD_MAX_ALLOCATION_SIZE /
-> > +				sizeof(struct scatterlist));
-> > +
-> > +	i = page / sg_per_table;
-> > +	if (i < rd_dev->sg_prot_count) {
-> > +		sg_table = &rd_dev->sg_prot_array[i];
-> > +		if ((sg_table->page_start_offset <= page) &&
-> > +		     (sg_table->page_end_offset >= page))
-> > +			return sg_table;
-> > +	}
-> > +
-> > +	pr_err("Unable to locate struct prot rd_dev_sg_table for page: %u\n",
-> > +			page);
-> > +
-> > +	return NULL;
-> > +}
-> > +
-> >   static sense_reason_t
-> >   rd_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
-> >   	      enum dma_data_direction data_direction)
-> > @@ -377,6 +397,7 @@ rd_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
-> >   	u32 rd_page;
-> >   	u32 src_len;
-> >   	u64 tmp;
-> > +	sense_reason_t rc;
-> >   
-> >   	if (dev->rd_flags & RDF_NULLIO) {
-> >   		target_complete_cmd(cmd, SAM_STAT_GOOD);
-> > @@ -399,6 +420,29 @@ rd_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
-> >   			data_direction == DMA_FROM_DEVICE ? "Read" : "Write",
-> >   			cmd->t_task_lba, rd_size, rd_page, rd_offset);
-> >   
-> > +	if ((cmd->se_cmd_flags & SCF_PROT) && se_dev->dev_attrib.pi_prot_type &&
-> > +	    data_direction == DMA_TO_DEVICE) {
-> > +		sector_t sector = cmd->data_length / se_dev->dev_attrib.block_size;
-> > +		struct rd_dev_sg_table *prot_table;
-> > +		struct scatterlist *prot_sg;
-> > +		u32 prot_offset, prot_page;
-> > +
-> > +		tmp = cmd->t_task_lba * se_dev->prot_length;
-> > +		prot_offset = do_div(tmp, PAGE_SIZE);
-> > +		prot_page = tmp;
-> > +
-> > +		prot_table = rd_get_prot_table(dev, prot_page);
-> > +		if (!prot_table)
-> > +			return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
-> > +
-> > +		prot_sg = &prot_table->sg_table[prot_page - prot_table->page_start_offset];
-> > +
-> > +		rc = sbc_dif_verify_write(cmd, cmd->t_task_lba, sector, 0,
-> > +					  prot_sg, prot_offset);
-> > +		if (rc)
-> > +			return rc;
-> > +	}
-> > +
-> >   	src_len = PAGE_SIZE - rd_offset;
-> >   	sg_miter_start(&m, sgl, sgl_nents,
-> >   			data_direction == DMA_FROM_DEVICE ?
-> > @@ -460,6 +504,29 @@ rd_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
-> >   	}
-> >   	sg_miter_stop(&m);
-> >   
-> > +	if ((cmd->se_cmd_flags & SCF_PROT) && se_dev->dev_attrib.pi_prot_type &&
-> > +	    data_direction == DMA_FROM_DEVICE) {
-> > +		sector_t sector = cmd->data_length / se_dev->dev_attrib.block_size;
-> > +		struct rd_dev_sg_table *prot_table;
-> > +		struct scatterlist *prot_sg;
-> > +		u32 prot_offset, prot_page;
-> > +
-> > +		tmp = cmd->t_task_lba * se_dev->prot_length;
-> > +		prot_offset = do_div(tmp, PAGE_SIZE);
-> > +		prot_page = tmp;
-> > +
-> > +		prot_table = rd_get_prot_table(dev, prot_page);
-> > +		if (!prot_table)
-> > +			return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
-> > +
-> > +		prot_sg = &prot_table->sg_table[prot_page - prot_table->page_start_offset];
-> > +
-> > +		rc = sbc_dif_verify_read(cmd, cmd->t_task_lba, sector, 0,
-> > +					 prot_sg, prot_offset);
-> > +		if (rc)
-> > +			return rc;
-> > +	}
-> > +
-> >   	target_complete_cmd(cmd, SAM_STAT_GOOD);
-> >   	return 0;
-> >   }
+> > diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+> > index 91953da..707ee17 100644
+> > --- a/drivers/target/target_core_transport.c
+> > +++ b/drivers/target/target_core_transport.c
+> > @@ -2648,6 +2648,36 @@ transport_send_check_condition_and_sense(struct se_cmd *cmd,
+> >   		buffer[SPC_ASC_KEY_OFFSET] = 0x1d;
+> >   		buffer[SPC_ASCQ_KEY_OFFSET] = 0x00;
+> >   		break;
+> > +	case TCM_LOGICAL_BLOCK_GUARD_CHECK_FAILED:
+> > +		/* CURRENT ERROR */
+> > +		buffer[0] = 0x70;
+> > +		buffer[SPC_ADD_SENSE_LEN_OFFSET] = 10;
+> > +		/* ILLEGAL REQUEST */
+> > +		buffer[SPC_SENSE_KEY_OFFSET] = ILLEGAL_REQUEST;
+> > +		/* LOGICAL BLOCK GUARD CHECK FAILED */
+> > +		buffer[SPC_ASC_KEY_OFFSET] = 0x10;
+> > +		buffer[SPC_ASCQ_KEY_OFFSET] = 0x01;
 > 
-> I wander how we can skip  sbc_dif_verify_xxxx if the transport already 
-> offloaded DIF verify.
-> I think that the transport should signal the core layer that it is able 
-> to offload DIF (ADD/STRIP/PASS/VERIFY), in which case the core should 
-> turn off the backstore DIF verify emulation to sustain performance.
+> You have Enums for ASCQs (TARGET_GUARD_CHECK_FAILED, 
+> TARGET_APPTAG_CHECK_FAILED, TARGET_REFTAG_CHECK_FAILED). either use them 
+> or loose them.
 
-So IBLOCK + PSCSI backends will need to be a non interleaved protection
-PASS for fast path operation, and backend protection emulation is
-reserved for RAMDISK and perhaps a special FILEIO full emulation mode.
-
->  I assume that if backstore DIF verify is offloaded as well it does not 
-> really matter.
-
-That is my assumption of well..
+<nod>, dropping these extra definitions.
 
 --nab
-
-
