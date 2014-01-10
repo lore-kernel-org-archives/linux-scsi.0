@@ -1,37 +1,72 @@
-From: Wei Yongjun <weiyj.lk@gmail.com>
-Subject: [PATCH -next] target/sbc: Fix sparse non static symbol warning
-Date: Fri, 10 Jan 2014 23:39:01 +0800
-Message-ID: <CAPgLHd_yj=Te74XPRaKit5SdHerr2ywPgAMArETZ3YE3CCL=tQ@mail.gmail.com>
+From: Chen Gang <gang.chen.5i5j@gmail.com>
+Subject: Re: [PATCH] drivers: target: target_core_mod: use div64_u64_rem()
+ instead of operator '%' for u64
+Date: Sat, 11 Jan 2014 00:06:03 +0800
+Message-ID: <52D01A6B.2020105@gmail.com>
+References: <52B4F837.1010403@gmail.com>  <1387680997.5567.91.camel@haakon3.risingtidesystems.com>  <52B6AE19.80401@gmail.com>  <1387781487.5567.147.camel@haakon3.risingtidesystems.com>  <52B90111.5050203@gmail.com> <52CCFF0C.7070704@suse.de>  <1389223117.5567.271.camel@haakon3.risingtidesystems.com>  <52CE7720.6060809@suse.de> <1389332871.5567.358.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
-To: nab@linux-iscsi.org
-Cc: yongjun_wei@trendmicro.com.cn, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1389332871.5567.358.camel@haakon3.risingtidesystems.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Hannes Reinecke <hare@suse.de>, James Hogan <james.hogan@imgtec.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Fengguang Wu <fengguang.wu@intel.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+On 01/10/2014 01:47 PM, Nicholas A. Bellinger wrote:
+> On Thu, 2014-01-09 at 11:17 +0100, Hannes Reinecke wrote:
+>> On 01/09/2014 12:18 AM, Nicholas A. Bellinger wrote:
+>>> On Wed, 2014-01-08 at 08:32 +0100, Hannes Reinecke wrote:
+> 
+> <SNIP>
+> 
+>>>> Other than that the sector_div() patch is correct.
+>>>>
+>>>
+>>> <nod> Thanks for confirming that sector_div() is correct here vs. the
+>>> original code using modulo that Chen had pointed out.
+>>>
+>> Ah, _that_ was the issue.
+>> I was wondering why you kept on poking me ...
+>>
+>> Well.
+>> No, that's actually _not_ correct.
+>> The correct fix would be
+>>
+>> diff --git a/drivers/target/target_core_alua.c 
+>> b/drivers/target/target_core_alua.c
+>> index 54b1e52..12da9b3 100644
+>> --- a/drivers/target/target_core_alua.c
+>> +++ b/drivers/target/target_core_alua.c
+>> @@ -500,8 +500,7 @@ static inline int core_alua_state_lba_dependent(
+>>
+>>                          if (segment_mult) {
+>>                                  u64 tmp = lba;
+>> -                               sector_div(tmp, segment_size * segment_mult);
+>> -                               start_lba = tmp;
+>> +                               start_lba = sector_div(tmp, segment_size * segment_mult);
+>>
+>>                                  last_lba = first_lba + segment_size - 1;
+>>                                  if (start_lba >= first_lba &&
+>> (beware of line breaks ...)
+>> Thing is, we need to calculate the offset into the segment to figure out 
+>> which map entry to use.
+>> The actual number of the segment (as had been calculated with the 
+>> original fix) is immaterial here.
+>>
+>> Sorry for this. The email thread just flew past me during Xmas
+>> with me not paying real attention.
+>>
+> 
+> Applied + squashed.  Apologies for the initial pre-holiday BUG..
+> 
+> Thanks Hannes!
+> 
 
-Fixes the following sparse warning:
+Thank all of you.
 
-drivers/target/target_core_sbc.c:573:1: warning:
- symbol 'sbc_check_prot' was not declared. Should it be static?
+-- 
+Chen Gang
 
-Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
----
- drivers/target/target_core_sbc.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
-index 77d7ae2..ec49257 100644
---- a/drivers/target/target_core_sbc.c
-+++ b/drivers/target/target_core_sbc.c
-@@ -569,7 +569,7 @@ sbc_compare_and_write(struct se_cmd *cmd)
- 	return TCM_NO_SENSE;
- }
- 
--bool
-+static bool
- sbc_check_prot(struct se_device *dev, struct se_cmd *cmd, unsigned char *cdb)
- {
- 	if (!dev->dev_attrib.pi_prot_type)
+Open, share and attitude like air, water and life which God blessed
