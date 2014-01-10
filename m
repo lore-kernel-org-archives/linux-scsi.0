@@ -1,43 +1,91 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH 3.12 033/118] usb: xhci: Link TRB must not occur within
- a USB payload burst
-Date: Fri, 10 Jan 2014 10:12:37 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1401101007330.1399-100000@iolanthe.rowland.org>
-References: <20140109235045.GA17660@xanatos>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20140109235045.GA17660@xanatos>
-Sender: stable-owner@vger.kernel.org
-To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-Cc: walt <w41ter@gmail.com>, David Laight <David.Laight@ACULAB.COM>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Linux Kernel <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] gdth: Fixup section annotations
+Date: Fri, 10 Jan 2014 16:31:28 +0100
+Message-ID: <1389367888-117607-1-git-send-email-hare@suse.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:48168 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750944AbaAJPbb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 10 Jan 2014 10:31:31 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <jbottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-On Thu, 9 Jan 2014, Sarah Sharp wrote:
+Fixup section annotations so that kbuild doesn't complain anymore.
 
-> > I can't see anything obvious either.
-> > However there is no response to the 'stop endpoint' command.
-> > Section 4.6.9 (page 107 of rev1.0) states that the controller will complete
-> > any USB IN or OUT transaction before raising the command completion event.
-> > Possibly it is too 'stuck' to complete the transaction?
-> 
-> The host has to stop processing the transaction, it can't "wait" for the
-> transaction to finish.  "The Stop Endpoint Command is expected to stop
-> endpoint activity as soon as possible, which may mean that it stops in
-> the middle of a TRB."
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/scsi/gdth.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-Just to clarify for Walt: There's a difference between a transaction 
-and a transfer.  Transfers can take an indefinitely long time to 
-complete, because the device doesn't have to accept or send any data 
-until it is ready.
+diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
+index ce5ef01..98bd66e 100644
+--- a/drivers/scsi/gdth.c
++++ b/drivers/scsi/gdth.c
+@@ -329,7 +329,7 @@ static int irq[MAXHA] __initdata =
+ {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,
+  0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
+ /* disable driver flag */
+-static int disable __initdata = 0;
++static int disable = 0;
+ /* reserve flag */
+ static int reserve_mode = 1;                  
+ /* reserve list */
+@@ -658,7 +658,7 @@ static int gdth_pci_init_one(struct pci_dev *pdev,
+ #endif /* CONFIG_PCI */
+ 
+ #ifdef CONFIG_EISA
+-static int __init gdth_init_eisa(u16 eisa_adr,gdth_ha_str *ha)
++static int __devinit gdth_init_eisa(u16 eisa_adr,gdth_ha_str *ha)
+ {
+     u32 retries,id;
+     u8 prot_ver,eisacf,i,irq_found;
+@@ -752,7 +752,7 @@ static int __init gdth_init_eisa(u16 eisa_adr,gdth_ha_str *ha)
+ #endif /* CONFIG_EISA */
+ 
+ #ifdef CONFIG_ISA
+-static int __init gdth_init_isa(u32 bios_adr,gdth_ha_str *ha)
++static int __devinit gdth_init_isa(u32 bios_adr,gdth_ha_str *ha)
+ {
+     register gdt2_dpram_str __iomem *dp2_ptr;
+     int i;
+@@ -4688,7 +4688,7 @@ static struct scsi_host_template gdth_template = {
+ };
+ 
+ #ifdef CONFIG_ISA
+-static int __init gdth_isa_probe_one(u32 isa_bios)
++static int __devinit gdth_isa_probe_one(u32 isa_bios)
+ {
+ 	struct Scsi_Host *shp;
+ 	gdth_ha_str *ha;
+@@ -4820,7 +4820,7 @@ static int __init gdth_isa_probe_one(u32 isa_bios)
+ #endif /* CONFIG_ISA */
+ 
+ #ifdef CONFIG_EISA
+-static int __init gdth_eisa_probe_one(u16 eisa_slot)
++static int __devinit gdth_eisa_probe_one(u16 eisa_slot)
+ {
+ 	struct Scsi_Host *shp;
+ 	gdth_ha_str *ha;
+@@ -5155,7 +5155,7 @@ static struct notifier_block gdth_notifier = {
+     gdth_halt, NULL, 0
+ };
+ 
+-static int __init gdth_init(void)
++static int __devinit gdth_init(void)
+ {
+ 	if (disable) {
+ 		printk("GDT-HA: Controller driver disabled from"
+@@ -5209,7 +5209,7 @@ static int __init gdth_init(void)
+ 	return 0;
+ }
+ 
+-static void __exit gdth_exit(void)
++static void __devexit gdth_exit(void)
+ {
+ 	gdth_ha_str *ha;
+ 
+-- 
+1.7.12.4
 
-By contrast, transactions have sharply bounded lifetimes.  A
-transaction consists of some maximum number of packets (usually 3,
-sometimes a little more) with upper limits on the time intervals
-between them.
-
-A TRB lies somewhere between a transfer and a transaction.  A single 
-TRB can encompass a single transaction or multiple transactions, and a 
-single transfer can involve more than one TRB.
-
-Alan Stern
