@@ -1,7 +1,7 @@
 From: Wei Yongjun <weiyj.lk@gmail.com>
-Subject: [PATCH -next] target/rd: remove unused variable from target_core_rd.c
-Date: Fri, 10 Jan 2014 23:38:25 +0800
-Message-ID: <CAPgLHd_JGz6g4_4_+yOoHOQr0Lq0+g9-WV-7dGCnvWZn2L5-uw@mail.gmail.com>
+Subject: [PATCH -next] target/sbc: Fix sparse non static symbol warning
+Date: Fri, 10 Jan 2014 23:39:01 +0800
+Message-ID: <CAPgLHd_yj=Te74XPRaKit5SdHerr2ywPgAMArETZ3YE3CCL=tQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <target-devel-owner@vger.kernel.org>
@@ -12,45 +12,26 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 
-The variable 'sg_table' is initialized but never used
-otherwise, so remove the unused variable.
+Fixes the following sparse warning:
+
+drivers/target/target_core_sbc.c:573:1: warning:
+ symbol 'sbc_check_prot' was not declared. Should it be static?
 
 Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 ---
- drivers/target/target_core_rd.c | 6 ------
- 1 file changed, 6 deletions(-)
+ drivers/target/target_core_sbc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core_rd.c
-index 3fd51eb..9a107c0 100644
---- a/drivers/target/target_core_rd.c
-+++ b/drivers/target/target_core_rd.c
-@@ -105,14 +105,11 @@ static u32 rd_release_sgl_table(struct rd_dev *rd_dev, struct rd_dev_sg_table *s
+diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
+index 77d7ae2..ec49257 100644
+--- a/drivers/target/target_core_sbc.c
++++ b/drivers/target/target_core_sbc.c
+@@ -569,7 +569,7 @@ sbc_compare_and_write(struct se_cmd *cmd)
+ 	return TCM_NO_SENSE;
+ }
  
- static void rd_release_device_space(struct rd_dev *rd_dev)
+-bool
++static bool
+ sbc_check_prot(struct se_device *dev, struct se_cmd *cmd, unsigned char *cdb)
  {
--	struct rd_dev_sg_table *sg_table;
- 	u32 page_count;
- 
- 	if (!rd_dev->sg_table_array || !rd_dev->sg_table_count)
- 		return;
- 
--	sg_table = rd_dev->sg_table_array;
--
- 	page_count = rd_release_sgl_table(rd_dev, rd_dev->sg_table_array,
- 					  rd_dev->sg_table_count);
- 
-@@ -228,14 +225,11 @@ static int rd_build_device_space(struct rd_dev *rd_dev)
- 
- static void rd_release_prot_space(struct rd_dev *rd_dev)
- {
--	struct rd_dev_sg_table *sg_table;
- 	u32 page_count;
- 
- 	if (!rd_dev->sg_prot_array || !rd_dev->sg_prot_count)
- 		return;
- 
--	sg_table = rd_dev->sg_prot_array;
--
- 	page_count = rd_release_sgl_table(rd_dev, rd_dev->sg_prot_array,
- 					  rd_dev->sg_prot_count);
- 
+ 	if (!dev->dev_attrib.pi_prot_type)
