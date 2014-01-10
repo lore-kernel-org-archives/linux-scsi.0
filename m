@@ -1,10 +1,10 @@
 From: Tejun Heo <tj@kernel.org>
 Subject: [PATCH 12/14] scsi: use device_remove_file_self() instead of device_schedule_callback()
-Date: Fri, 10 Jan 2014 08:46:58 -0500
-Message-ID: <1389361620-5086-13-git-send-email-tj@kernel.org>
-References: <1389361620-5086-1-git-send-email-tj@kernel.org>
+Date: Fri, 10 Jan 2014 08:57:29 -0500
+Message-ID: <1389362251-8128-13-git-send-email-tj@kernel.org>
+References: <1389362251-8128-1-git-send-email-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1389361620-5086-1-git-send-email-tj@kernel.org>
+In-Reply-To: <1389362251-8128-1-git-send-email-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: gregkh@linuxfoundation.org
 Cc: linux-kernel@vger.kernel.org, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, stern@rowland.harvard.edu, JBottomley@parallels.com, bhelgaas@google.com, Tejun Heo <tj@kernel.org>, linux-scsi@vger.kernel.org
