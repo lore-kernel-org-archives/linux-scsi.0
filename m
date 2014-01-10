@@ -1,46 +1,38 @@
-From: walt <w41ter@gmail.com>
-Subject: Re: [PATCH 3.12 033/118] usb: xhci: Link TRB must not occur within
+From: David Laight <David.Laight@ACULAB.COM>
+Subject: RE: [PATCH 3.12 033/118] usb: xhci: Link TRB must not occur within
  a USB payload burst
-Date: Fri, 10 Jan 2014 06:40:27 -0800
-Message-ID: <52D0065B.4060905@gmail.com>
-References: <20140109235045.GA17660@xanatos>
+Date: Fri, 10 Jan 2014 14:58:03 +0000
+Message-ID: <063D6719AE5E284EB5DD2968C1650D6D457C16@AcuExch.aculab.com>
+References: <20140109235045.GA17660@xanatos> <52D0065B.4060905@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140109235045.GA17660@xanatos>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Sarah Sharp <sarah.a.sharp@linux.intel.com>, David Laight <David.Laight@ACULAB.COM>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Linux Kernel <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0.aculab.com ([213.249.233.131]:43137 "HELO mx0.aculab.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1751388AbaAJO7y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 10 Jan 2014 09:59:54 -0500
+Received: from mx0.aculab.com ([127.0.0.1])
+ by localhost (mx0.aculab.com [127.0.0.1]) (amavisd-new, port 10024) with SMTP
+ id 25564-10 for <linux-scsi@vger.kernel.org>;
+ Fri, 10 Jan 2014 14:59:53 +0000 (GMT)
+In-Reply-To: <52D0065B.4060905@gmail.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: 'walt' <w41ter@gmail.com>, Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Linux Kernel <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 01/09/2014 03:50 PM, Sarah Sharp wrote:
-
->>> On Tue, Jan 07, 2014 at 03:57:00PM -0800, walt wrote:
->>
->> The aftermarket usb3 adapter card and the usb3 outboard hard-drive docking
->> station are the only two usb3 devices I have.
->>
->> I've wondered if my xhci problems might be caused by hardware quirks, and
->> wondering why I seem to be the only one who has this problem.
->>
->> Maybe I could "take one for the team" by buying new hardware toys that I
->> don't really need but I could use to test the xhci driver?  (I do enjoy
->> buying new toys, necessary, or, um, maybe not :)
-> 
-> It would be appreciated if you could see if your device causes other
-> host controllers to fail.  Who am I to keep a geek from new toys? ;)
-
-Thanks :)  Just to clarify, when you say 'your device' do you mean the
-outboard disk docking station?  So I need to buy other host controllers,
-not new docking stations?
-
-> 
-> In the meantime, try this patch, which is something of a long shot.
-
-No difference.  But I notice the code enables the TRB quirk only if the
-xhci_version is specifically 0x95.  My debug messages claim that "xHCI
-doesn't need link TRB QUIRK" so I'm wondering if adding my asmedia device
-to the quirks list really doesn't change anything unless it's xhci 0.95.
-
-Does lspci provide that information?  I'm not seeing anything obvious.
+RnJvbTogd2FsdA0KPiA+IEluIHRoZSBtZWFudGltZSwgdHJ5IHRoaXMgcGF0Y2gsIHdoaWNoIGlz
+IHNvbWV0aGluZyBvZiBhIGxvbmcgc2hvdC4NCj4gDQo+IE5vIGRpZmZlcmVuY2UuICBCdXQgSSBu
+b3RpY2UgdGhlIGNvZGUgZW5hYmxlcyB0aGUgVFJCIHF1aXJrIG9ubHkgaWYgdGhlDQo+IHhoY2lf
+dmVyc2lvbiBpcyBzcGVjaWZpY2FsbHkgMHg5NS4gIE15IGRlYnVnIG1lc3NhZ2VzIGNsYWltIHRo
+YXQgInhIQ0kNCj4gZG9lc24ndCBuZWVkIGxpbmsgVFJCIFFVSVJLIiBzbyBJJ20gd29uZGVyaW5n
+IGlmIGFkZGluZyBteSBhc21lZGlhIGRldmljZQ0KPiB0byB0aGUgcXVpcmtzIGxpc3QgcmVhbGx5
+IGRvZXNuJ3QgY2hhbmdlIGFueXRoaW5nIHVubGVzcyBpdCdzIHhoY2kgMC45NS4NCg0KSSB0aGlu
+ayB0aGUgaW50ZW50aW9uIHdhcyB0aGF0IHRoZSBxdWlyayB3b3VsZCBiZSBhcHBsaWVkIGZvciB5
+b3VyDQpoYXJkd2FyZSBldmVuIHRob3VnaCBpdCBjbGFpbXMgdG8gYmUgdmVyc2lvbiAwLjk2Lg0K
+VGhhdCB3YXMgZ3VzdCBhIGhvcGVmdWwgZ3Vlc3MgdGhhdCB0aGUgc2FtZSBjaGFuZ2Ugd291bGQg
+aGVscC4NCg0KPiBEb2VzIGxzcGNpIHByb3ZpZGUgdGhhdCBpbmZvcm1hdGlvbj8gIEknbSBub3Qg
+c2VlaW5nIGFueXRoaW5nIG9idmlvdXMuDQpJJ3ZlIG9ubHkgc2VlbiBpdCBpbiB0aGUgZGlhZ25v
+c3RpYyBwcmludHMgKHRoYXQgYXJlbid0IG5vcm1hbGx5IG91dHB1dCkuDQoNCglEYXZpZA0KDQo=
