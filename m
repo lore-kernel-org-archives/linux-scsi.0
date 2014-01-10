@@ -1,91 +1,56 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH] gdth: Fixup section annotations
-Date: Fri, 10 Jan 2014 16:31:28 +0100
-Message-ID: <1389367888-117607-1-git-send-email-hare@suse.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:48168 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750944AbaAJPbb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Jan 2014 10:31:31 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+From: Wei Yongjun <weiyj.lk@gmail.com>
+Subject: [PATCH -next] target/rd: remove unused variable from target_core_rd.c
+Date: Fri, 10 Jan 2014 23:38:25 +0800
+Message-ID: <CAPgLHd_JGz6g4_4_+yOoHOQr0Lq0+g9-WV-7dGCnvWZn2L5-uw@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: nab@linux-iscsi.org
+Cc: yongjun_wei@trendmicro.com.cn, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-Fixup section annotations so that kbuild doesn't complain anymore.
+From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
+The variable 'sg_table' is initialized but never used
+otherwise, so remove the unused variable.
+
+Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 ---
- drivers/scsi/gdth.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+ drivers/target/target_core_rd.c | 6 ------
+ 1 file changed, 6 deletions(-)
 
-diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
-index ce5ef01..98bd66e 100644
---- a/drivers/scsi/gdth.c
-+++ b/drivers/scsi/gdth.c
-@@ -329,7 +329,7 @@ static int irq[MAXHA] __initdata =
- {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,
-  0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
- /* disable driver flag */
--static int disable __initdata = 0;
-+static int disable = 0;
- /* reserve flag */
- static int reserve_mode = 1;                  
- /* reserve list */
-@@ -658,7 +658,7 @@ static int gdth_pci_init_one(struct pci_dev *pdev,
- #endif /* CONFIG_PCI */
+diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core_rd.c
+index 3fd51eb..9a107c0 100644
+--- a/drivers/target/target_core_rd.c
++++ b/drivers/target/target_core_rd.c
+@@ -105,14 +105,11 @@ static u32 rd_release_sgl_table(struct rd_dev *rd_dev, struct rd_dev_sg_table *s
  
- #ifdef CONFIG_EISA
--static int __init gdth_init_eisa(u16 eisa_adr,gdth_ha_str *ha)
-+static int __devinit gdth_init_eisa(u16 eisa_adr,gdth_ha_str *ha)
+ static void rd_release_device_space(struct rd_dev *rd_dev)
  {
-     u32 retries,id;
-     u8 prot_ver,eisacf,i,irq_found;
-@@ -752,7 +752,7 @@ static int __init gdth_init_eisa(u16 eisa_adr,gdth_ha_str *ha)
- #endif /* CONFIG_EISA */
+-	struct rd_dev_sg_table *sg_table;
+ 	u32 page_count;
  
- #ifdef CONFIG_ISA
--static int __init gdth_init_isa(u32 bios_adr,gdth_ha_str *ha)
-+static int __devinit gdth_init_isa(u32 bios_adr,gdth_ha_str *ha)
+ 	if (!rd_dev->sg_table_array || !rd_dev->sg_table_count)
+ 		return;
+ 
+-	sg_table = rd_dev->sg_table_array;
+-
+ 	page_count = rd_release_sgl_table(rd_dev, rd_dev->sg_table_array,
+ 					  rd_dev->sg_table_count);
+ 
+@@ -228,14 +225,11 @@ static int rd_build_device_space(struct rd_dev *rd_dev)
+ 
+ static void rd_release_prot_space(struct rd_dev *rd_dev)
  {
-     register gdt2_dpram_str __iomem *dp2_ptr;
-     int i;
-@@ -4688,7 +4688,7 @@ static struct scsi_host_template gdth_template = {
- };
+-	struct rd_dev_sg_table *sg_table;
+ 	u32 page_count;
  
- #ifdef CONFIG_ISA
--static int __init gdth_isa_probe_one(u32 isa_bios)
-+static int __devinit gdth_isa_probe_one(u32 isa_bios)
- {
- 	struct Scsi_Host *shp;
- 	gdth_ha_str *ha;
-@@ -4820,7 +4820,7 @@ static int __init gdth_isa_probe_one(u32 isa_bios)
- #endif /* CONFIG_ISA */
+ 	if (!rd_dev->sg_prot_array || !rd_dev->sg_prot_count)
+ 		return;
  
- #ifdef CONFIG_EISA
--static int __init gdth_eisa_probe_one(u16 eisa_slot)
-+static int __devinit gdth_eisa_probe_one(u16 eisa_slot)
- {
- 	struct Scsi_Host *shp;
- 	gdth_ha_str *ha;
-@@ -5155,7 +5155,7 @@ static struct notifier_block gdth_notifier = {
-     gdth_halt, NULL, 0
- };
+-	sg_table = rd_dev->sg_prot_array;
+-
+ 	page_count = rd_release_sgl_table(rd_dev, rd_dev->sg_prot_array,
+ 					  rd_dev->sg_prot_count);
  
--static int __init gdth_init(void)
-+static int __devinit gdth_init(void)
- {
- 	if (disable) {
- 		printk("GDT-HA: Controller driver disabled from"
-@@ -5209,7 +5209,7 @@ static int __init gdth_init(void)
- 	return 0;
- }
- 
--static void __exit gdth_exit(void)
-+static void __devexit gdth_exit(void)
- {
- 	gdth_ha_str *ha;
- 
--- 
-1.7.12.4
-
