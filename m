@@ -1,40 +1,27 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: status of block-integrity
-Date: Thu, 09 Jan 2014 20:49:53 -0500
-Message-ID: <yq1vbxssj0e.fsf@sermon.lab.mkp.net>
-References: <20131222192128.GA28532@infradead.org> <52C6D0DB.1050906@suse.de>
-	<yq1wqigzvc1.fsf@sermon.lab.mkp.net>
-	<20140107013646.GB10297@birch.djwong.org> <52CBAA1B.7000509@suse.de>
-	<yq1a9f7wjqr.fsf@sermon.lab.mkp.net> <52CCFADB.6080909@suse.de>
-	<yq1lhyqv6ns.fsf@sermon.lab.mkp.net> <52CE85C6.8000405@suse.de>
+Subject: Re: [PATCH 00/14] target: Initial support for DIF Type1+Type3 emulation
+Date: Thu, 09 Jan 2014 21:00:46 -0500
+Message-ID: <yq1mwj4sii9.fsf@sermon.lab.mkp.net>
+References: <1389212157-14540-1-git-send-email-nab@daterainc.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:18439 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751330AbaAJBu3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Jan 2014 20:50:29 -0500
-In-Reply-To: <52CE85C6.8000405@suse.de> (Hannes Reinecke's message of "Thu, 09
-	Jan 2014 12:19:34 +0100")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1389212157-14540-1-git-send-email-nab@daterainc.com> (Nicholas
+	A. Bellinger's message of "Wed, 8 Jan 2014 20:15:43 +0000")
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@daterainc.com>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Sagi Grimberg <sagig@mellanox.com>, Or Gerlitz <ogerlitz@mellanox.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, chuck.lever@oracle.com, Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Doug Gilbert <dgilbert@interlog.com>
 
->>>>> "Hannes" == Hannes Reinecke <hare@suse.de> writes:
+>>>>> "Nic" == Nicholas A Bellinger <nab@daterainc.com> writes:
 
-Hannes> With LID1/XCopy you have the ambiguity on where to actually send
-Hannes> the command to; the spec is silent in this area.
+Nic> This series contains initial support for target mode DIF
+Nic> Type1+Type3 emulation within target core, RAMDISK_MCP device
+Nic> backend, and tcm_loop fabric driver.
 
-Yeah, right now it's a coin toss.
+Super cool! Do you have a git tree so I can start tinkering with this?
 
-However, thanks to VAAI most arrays support LID1. I'm trying to leverage
-that. Doesn't in any way preclude LID4 being supported as well.
-
-Hannes> As said, Doug and me are working on putting this into sg3_utils,
-Hannes> then we'll have a better idea on the actual workings.
-
-Cool! That'll save me some headaches when we start seeing LID4 devices.
+I'll start reviewing the pieces tomorrow.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
