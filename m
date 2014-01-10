@@ -1,7 +1,7 @@
 From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Subject: [PATCH 9/9] Xen / PCI: Use global PCI rescan-remove locking
-Date: Fri, 10 Jan 2014 15:29:19 +0100
-Message-ID: <2217895.SUZgMb7DfC@vostro.rjw.lan>
+Subject: [PATCH 8/9] powerpc / eeh_driver: Use global PCI rescan-remove locking
+Date: Fri, 10 Jan 2014 15:28:38 +0100
+Message-ID: <4447911.Q1f9tEzrXs@vostro.rjw.lan>
 References: <1385429290-25397-1-git-send-email-yinghai@kernel.org> <1992931.Zv6xBcN8V4@vostro.rjw.lan> <20440867.YaQfKrcfsQ@vostro.rjw.lan>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -15,70 +15,93 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Multiple race conditions are possible between the Xen pcifront
-device addition and removal and the generic PCI device addition
-and removal that can be triggered via sysfs.
+Race conditions are theoretically possible between the PCI device
+addition and removal in the PPC64 PCI error recovery driver and
+the generic PCI bus rescan and device removal that can be triggered
+via sysfs.
 
-To avoid those race conditions make the Xen pcifront code use global
-PCI rescan-remove locking.
+To avoid those race conditions make PPC64 PCI error recovery driver
+use global PCI rescan-remove locking around PCI device addition and
+removal.
 
 Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
- drivers/pci/xen-pcifront.c |    8 ++++++++
- 1 file changed, 8 insertions(+)
+ arch/powerpc/kernel/eeh_driver.c |   19 ++++++++++++++++---
+ 1 file changed, 16 insertions(+), 3 deletions(-)
 
-Index: linux-pm/drivers/pci/xen-pcifront.c
+Index: linux-pm/arch/powerpc/kernel/eeh_driver.c
 ===================================================================
---- linux-pm.orig/drivers/pci/xen-pcifront.c
-+++ linux-pm/drivers/pci/xen-pcifront.c
-@@ -471,12 +471,15 @@ static int pcifront_scan_root(struct pci
- 	}
- 	pcifront_init_sd(sd, domain, bus, pdev);
+--- linux-pm.orig/arch/powerpc/kernel/eeh_driver.c
++++ linux-pm/arch/powerpc/kernel/eeh_driver.c
+@@ -369,7 +369,9 @@ static void *eeh_rmv_device(void *data,
+ 	edev->mode |= EEH_DEV_DISCONNECTED;
+ 	(*removed)++;
+ 
++	pci_lock_rescan_remove();
+ 	pci_stop_and_remove_bus_device(dev);
++	pci_unlock_rescan_remove();
+ 
+ 	return NULL;
+ }
+@@ -416,10 +418,13 @@ static int eeh_reset_device(struct eeh_p
+ 	 * into pcibios_add_pci_devices().
+ 	 */
+ 	eeh_pe_state_mark(pe, EEH_PE_KEEP);
+-	if (bus)
++	if (bus) {
++		pci_lock_rescan_remove();
+ 		pcibios_remove_pci_devices(bus);
+-	else if (frozen_bus)
++		pci_unlock_rescan_remove();
++	} else if (frozen_bus) {
+ 		eeh_pe_dev_traverse(pe, eeh_rmv_device, &removed);
++	}
+ 
+ 	/* Reset the pci controller. (Asserts RST#; resets config space).
+ 	 * Reconfigure bridges and devices. Don't try to bring the system
+@@ -429,6 +434,8 @@ static int eeh_reset_device(struct eeh_p
+ 	if (rc)
+ 		return rc;
  
 +	pci_lock_rescan_remove();
 +
- 	b = pci_scan_bus_parented(&pdev->xdev->dev, bus,
- 				  &pcifront_bus_ops, sd);
- 	if (!b) {
- 		dev_err(&pdev->xdev->dev,
- 			"Error creating PCI Frontend Bus!\n");
- 		err = -ENOMEM;
-+		pci_unlock_rescan_remove();
- 		goto err_out;
- 	}
- 
-@@ -494,6 +497,7 @@ static int pcifront_scan_root(struct pci
- 	/* Create SysFS and notify udev of the devices. Aka: "going live" */
- 	pci_bus_add_devices(b);
+ 	/* Restore PE */
+ 	eeh_ops->configure_bridge(pe);
+ 	eeh_pe_restore_bars(pe);
+@@ -462,6 +469,7 @@ static int eeh_reset_device(struct eeh_p
+ 	pe->tstamp = tstamp;
+ 	pe->freeze_count = cnt;
  
 +	pci_unlock_rescan_remove();
- 	return err;
- 
- err_out:
-@@ -556,6 +560,7 @@ static void pcifront_free_roots(struct p
- 
- 	dev_dbg(&pdev->xdev->dev, "cleaning up root buses\n");
- 
-+	pci_lock_rescan_remove();
- 	list_for_each_entry_safe(bus_entry, t, &pdev->root_buses, list) {
- 		list_del(&bus_entry->list);
- 
-@@ -568,6 +573,7 @@ static void pcifront_free_roots(struct p
- 
- 		kfree(bus_entry);
- 	}
-+	pci_unlock_rescan_remove();
+ 	return 0;
  }
  
- static pci_ers_result_t pcifront_common_process(int cmd,
-@@ -1043,8 +1049,10 @@ static int pcifront_detach_devices(struc
- 				domain, bus, slot, func);
- 			continue;
- 		}
-+		pci_lock_rescan_remove();
- 		pci_stop_and_remove_bus_device(pci_dev);
- 		pci_dev_put(pci_dev);
-+		pci_unlock_rescan_remove();
+@@ -618,8 +626,11 @@ perm_error:
+ 	eeh_pe_dev_traverse(pe, eeh_report_failure, NULL);
  
- 		dev_dbg(&pdev->xdev->dev,
- 			"PCI device %04x:%02x:%02x.%d removed.\n",
+ 	/* Shut down the device drivers for good. */
+-	if (frozen_bus)
++	if (frozen_bus) {
++		pci_lock_rescan_remove();
+ 		pcibios_remove_pci_devices(frozen_bus);
++		pci_unlock_rescan_remove();
++	}
+ }
+ 
+ static void eeh_handle_special_event(void)
+@@ -692,6 +703,7 @@ static void eeh_handle_special_event(voi
+ 	if (rc == 2 || rc == 1)
+ 		eeh_handle_normal_event(pe);
+ 	else {
++		lock_pci_remove_rescan();
+ 		list_for_each_entry_safe(hose, tmp,
+ 			&hose_list, list_node) {
+ 			phb_pe = eeh_phb_pe_get(hose);
+@@ -703,6 +715,7 @@ static void eeh_handle_special_event(voi
+ 			eeh_pe_dev_traverse(pe, eeh_report_failure, NULL);
+ 			pcibios_remove_pci_devices(bus);
+ 		}
++		unlock_pci_remove_rescan();
+ 	}
+ }
+ 
