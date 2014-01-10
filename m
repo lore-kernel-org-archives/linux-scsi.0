@@ -1,31 +1,36 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 13/14] target/rd: Add DIF protection into rd_execute_rw
-Date: Fri, 10 Jan 2014 16:06:28 -0500
-Message-ID: <yq11u0fr1gr.fsf@sermon.lab.mkp.net>
+Subject: Re: [PATCH 14/14] tcm_loop: Enable DIF/DIX modes in SCSI host LLD
+Date: Fri, 10 Jan 2014 16:09:26 -0500
+Message-ID: <yq1wqi7pmrd.fsf@sermon.lab.mkp.net>
 References: <1389212157-14540-1-git-send-email-nab@daterainc.com>
-	<1389212157-14540-14-git-send-email-nab@daterainc.com>
-	<52CE7ABA.9080403@mellanox.com>
+	<1389212157-14540-15-git-send-email-nab@daterainc.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <52CE7ABA.9080403@mellanox.com> (Sagi Grimberg's message of "Thu,
-	9 Jan 2014 12:32:26 +0200")
-Sender: target-devel-owner@vger.kernel.org
-To: Sagi Grimberg <sagig@mellanox.com>
-Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Or Gerlitz <ogerlitz@mellanox.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:18029 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751998AbaAJVJn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Jan 2014 16:09:43 -0500
+In-Reply-To: <1389212157-14540-15-git-send-email-nab@daterainc.com> (Nicholas
+	A. Bellinger's message of "Wed, 8 Jan 2014 20:15:57 +0000")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@daterainc.com>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Sagi Grimberg <sagig@mellanox.com>, Or Gerlitz <ogerlitz@mellanox.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 
->>>>> "Sagi" == Sagi Grimberg <sagig@mellanox.com> writes:
+>>>>> "nab" == Nicholas A Bellinger <nab@daterainc.com> writes:
 
-Sagi> I wander how we can skip sbc_dif_verify_xxxx if the transport
-Sagi> already offloaded DIF verify.  I think that the transport should
-Sagi> signal the core layer that it is able to offload DIF
-Sagi> (ADD/STRIP/PASS/VERIFY), in which case the core should turn off
-Sagi> the backstore DIF verify emulation to sustain performance.
+nab> This patch updates tcm_loop_driver_probe() to set protection
+nab> information using scsi_host_set_prot() and scsi_host_set_guard(),
+nab> which currently enabled all modes of DIF/DIX protection, minus DIF
+nab> TYPE0.
 
-Yeah, for SAS and FC it would be nice to leverage DIX and let the ASIC
-do the actual checking and splitting. I assume the same is true for your
-hw.
+ITYM, DIX Type 0. And ideally you'd have a way to choose between IP and
+T10 CRC for the guard type.
+
+Otherwise OK.
+
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
