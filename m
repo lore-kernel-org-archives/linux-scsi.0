@@ -1,28 +1,33 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 07/14] target/sbc: Add P_TYPE + PROT_EN bits to
- READ_CAPACITY_16
-Date: Thu, 09 Jan 2014 22:21:31 -0800
-Message-ID: <1389334891.5567.373.camel@haakon3.risingtidesystems.com>
+Subject: Re: [PATCH 13/14] target/rd: Add DIF protection into rd_execute_rw
+Date: Thu, 09 Jan 2014 22:52:41 -0800
+Message-ID: <1389336761.5567.403.camel@haakon3.risingtidesystems.com>
 References: <1389212157-14540-1-git-send-email-nab@daterainc.com>
-	 <1389212157-14540-8-git-send-email-nab@daterainc.com>
-	 <52CE78EB.60108@mellanox.com>
+	 <1389212157-14540-14-git-send-email-nab@daterainc.com>
+	 <52CE7ABA.9080403@mellanox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <52CE78EB.60108@mellanox.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:45091 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750793AbaAJGu7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Jan 2014 01:50:59 -0500
+In-Reply-To: <52CE7ABA.9080403@mellanox.com>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: Sagi Grimberg <sagig@mellanox.com>
 Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Or Gerlitz <ogerlitz@mellanox.com>
-List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 2014-01-09 at 12:24 +0200, Sagi Grimberg wrote:
+On Thu, 2014-01-09 at 12:32 +0200, Sagi Grimberg wrote:
 > On 1/8/2014 10:36 PM, Nicholas A. Bellinger wrote:
 > > From: Nicholas Bellinger <nab@linux-iscsi.org>
 > >
-> > This patch updates sbc_emulate_readcapacity_16() to set
-> > P_TYPE and PROT_EN bits when DIF emulation is enabled by
-> > the backend device.
+> > This patch adds support for DIF protection into rd_execute_rw() code
+> > for WRITE/READ I/O using sbc_dif_verify_[write,read]() logic.
+> >
+> > It also adds rd_get_prot_table() for locating protection SGLs
+> > assoicated with the ramdisk backend device.
 > >
 > > Cc: Martin K. Petersen <martin.petersen@oracle.com>
 > > Cc: Christoph Hellwig <hch@lst.de>
@@ -31,39 +36,124 @@ On Thu, 2014-01-09 at 12:24 +0200, Sagi Grimberg wrote:
 > > Cc: Or Gerlitz <ogerlitz@mellanox.com>
 > > Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 > > ---
-> >   drivers/target/target_core_sbc.c |    5 +++++
-> >   1 file changed, 5 insertions(+)
+> >   drivers/target/target_core_rd.c |   67 +++++++++++++++++++++++++++++++++++++++
+> >   1 file changed, 67 insertions(+)
 > >
-> > diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
-> > index 366b9bb..22599e8 100644
-> > --- a/drivers/target/target_core_sbc.c
-> > +++ b/drivers/target/target_core_sbc.c
-> > @@ -106,6 +106,11 @@ sbc_emulate_readcapacity_16(struct se_cmd *cmd)
-> >   	buf[9] = (dev->dev_attrib.block_size >> 16) & 0xff;
-> >   	buf[10] = (dev->dev_attrib.block_size >> 8) & 0xff;
-> >   	buf[11] = dev->dev_attrib.block_size & 0xff;
-> > +	/*
-> > +	 * Set P_TYPE and PROT_EN bits for DIF support
-> > +	 */
-> > +	if (dev->dev_attrib.pi_prot_type)
-> > +		buf[12] = (dev->dev_attrib.pi_prot_type - 1) << 1 | 0x1;
+> > diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core_rd.c
+> > index dd99844..3fd51eb 100644
+> > --- a/drivers/target/target_core_rd.c
+> > +++ b/drivers/target/target_core_rd.c
+> > @@ -363,6 +363,26 @@ static struct rd_dev_sg_table *rd_get_sg_table(struct rd_dev *rd_dev, u32 page)
+> >   	return NULL;
+> >   }
 > >   
-> >   	if (dev->transport->get_lbppbe)
-> >   		buf[13] = dev->transport->get_lbppbe(dev) & 0x0f;
+> > +static struct rd_dev_sg_table *rd_get_prot_table(struct rd_dev *rd_dev, u32 page)
+> > +{
+> > +	struct rd_dev_sg_table *sg_table;
+> > +	u32 i, sg_per_table = (RD_MAX_ALLOCATION_SIZE /
+> > +				sizeof(struct scatterlist));
+> > +
+> > +	i = page / sg_per_table;
+> > +	if (i < rd_dev->sg_prot_count) {
+> > +		sg_table = &rd_dev->sg_prot_array[i];
+> > +		if ((sg_table->page_start_offset <= page) &&
+> > +		     (sg_table->page_end_offset >= page))
+> > +			return sg_table;
+> > +	}
+> > +
+> > +	pr_err("Unable to locate struct prot rd_dev_sg_table for page: %u\n",
+> > +			page);
+> > +
+> > +	return NULL;
+> > +}
+> > +
+> >   static sense_reason_t
+> >   rd_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+> >   	      enum dma_data_direction data_direction)
+> > @@ -377,6 +397,7 @@ rd_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+> >   	u32 rd_page;
+> >   	u32 src_len;
+> >   	u64 tmp;
+> > +	sense_reason_t rc;
+> >   
+> >   	if (dev->rd_flags & RDF_NULLIO) {
+> >   		target_complete_cmd(cmd, SAM_STAT_GOOD);
+> > @@ -399,6 +420,29 @@ rd_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+> >   			data_direction == DMA_FROM_DEVICE ? "Read" : "Write",
+> >   			cmd->t_task_lba, rd_size, rd_page, rd_offset);
+> >   
+> > +	if ((cmd->se_cmd_flags & SCF_PROT) && se_dev->dev_attrib.pi_prot_type &&
+> > +	    data_direction == DMA_TO_DEVICE) {
+> > +		sector_t sector = cmd->data_length / se_dev->dev_attrib.block_size;
+> > +		struct rd_dev_sg_table *prot_table;
+> > +		struct scatterlist *prot_sg;
+> > +		u32 prot_offset, prot_page;
+> > +
+> > +		tmp = cmd->t_task_lba * se_dev->prot_length;
+> > +		prot_offset = do_div(tmp, PAGE_SIZE);
+> > +		prot_page = tmp;
+> > +
+> > +		prot_table = rd_get_prot_table(dev, prot_page);
+> > +		if (!prot_table)
+> > +			return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+> > +
+> > +		prot_sg = &prot_table->sg_table[prot_page - prot_table->page_start_offset];
+> > +
+> > +		rc = sbc_dif_verify_write(cmd, cmd->t_task_lba, sector, 0,
+> > +					  prot_sg, prot_offset);
+> > +		if (rc)
+> > +			return rc;
+> > +	}
+> > +
+> >   	src_len = PAGE_SIZE - rd_offset;
+> >   	sg_miter_start(&m, sgl, sgl_nents,
+> >   			data_direction == DMA_FROM_DEVICE ?
+> > @@ -460,6 +504,29 @@ rd_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+> >   	}
+> >   	sg_miter_stop(&m);
+> >   
+> > +	if ((cmd->se_cmd_flags & SCF_PROT) && se_dev->dev_attrib.pi_prot_type &&
+> > +	    data_direction == DMA_FROM_DEVICE) {
+> > +		sector_t sector = cmd->data_length / se_dev->dev_attrib.block_size;
+> > +		struct rd_dev_sg_table *prot_table;
+> > +		struct scatterlist *prot_sg;
+> > +		u32 prot_offset, prot_page;
+> > +
+> > +		tmp = cmd->t_task_lba * se_dev->prot_length;
+> > +		prot_offset = do_div(tmp, PAGE_SIZE);
+> > +		prot_page = tmp;
+> > +
+> > +		prot_table = rd_get_prot_table(dev, prot_page);
+> > +		if (!prot_table)
+> > +			return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+> > +
+> > +		prot_sg = &prot_table->sg_table[prot_page - prot_table->page_start_offset];
+> > +
+> > +		rc = sbc_dif_verify_read(cmd, cmd->t_task_lba, sector, 0,
+> > +					 prot_sg, prot_offset);
+> > +		if (rc)
+> > +			return rc;
+> > +	}
+> > +
+> >   	target_complete_cmd(cmd, SAM_STAT_GOOD);
+> >   	return 0;
+> >   }
 > 
-> Hey Nic,
-> 
-> What about FORMAT_UNIT emulation?
+> I wander how we can skip  sbc_dif_verify_xxxx if the transport already 
+> offloaded DIF verify.
+> I think that the transport should signal the core layer that it is able 
+> to offload DIF (ADD/STRIP/PASS/VERIFY), in which case the core should 
+> turn off the backstore DIF verify emulation to sustain performance.
 
-Would certainly be useful to have..
+So IBLOCK + PSCSI backends will need to be a non interleaved protection
+PASS for fast path operation, and backend protection emulation is
+reserved for RAMDISK and perhaps a special FILEIO full emulation mode.
 
-> The backstore protection configuration is done at the target side via 
-> configfs/targetcli, if you publish DIF support in 
-> INQUERY_EVPD/READ_CAPACITY you need to accept protection information format?
+>  I assume that if backstore DIF verify is offloaded as well it does not 
+> really matter.
 
-Mmmm, these two bits bits are following what scsi_debug is currently
-exposing minus FORMAT_UNIT support..?
-
-MKP..?
+That is my assumption of well..
 
 --nab
+
+
