@@ -1,45 +1,73 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: randconfig build error with next-20140110, in
- drivers/target/target_core_sbc.c
-Date: Fri, 10 Jan 2014 11:37:45 -0800
-Message-ID: <1389382665.5567.418.camel@haakon3.risingtidesystems.com>
-References: <CA+r1ZhiKhGJrki8X_bcKC3LrALRHj61uFpAmiGRfePO0g9tU4w@mail.gmail.com>
+Subject: Re: [PATCH -next] target/rd: remove unused variable from
+ target_core_rd.c
+Date: Fri, 10 Jan 2014 11:41:26 -0800
+Message-ID: <1389382886.5567.421.camel@haakon3.risingtidesystems.com>
+References: <CAPgLHd_JGz6g4_4_+yOoHOQr0Lq0+g9-WV-7dGCnvWZn2L5-uw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <CA+r1ZhiKhGJrki8X_bcKC3LrALRHj61uFpAmiGRfePO0g9tU4w@mail.gmail.com>
-Sender: linux-next-owner@vger.kernel.org
-To: Jim Davis <jim.epost@gmail.com>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <CAPgLHd_JGz6g4_4_+yOoHOQr0Lq0+g9-WV-7dGCnvWZn2L5-uw@mail.gmail.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Wei Yongjun <weiyj.lk@gmail.com>
+Cc: yongjun_wei@trendmicro.com.cn, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Jim,
-
-On Fri, 2014-01-10 at 06:57 -0700, Jim Davis wrote:
-> Building with the attached random configuration file,
+On Fri, 2014-01-10 at 23:38 +0800, Wei Yongjun wrote:
+> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 > 
->   LD      init/built-in.o
-> drivers/built-in.o: In function `sbc_dif_v1_verify':
-> /home/jim/linux/drivers/target/target_core_sbc.c:1019: undefined
-> reference to `crc_t10dif'
-> make: *** [vmlinux] Error 1
+> The variable 'sg_table' is initialized but never used
+> otherwise, so remove the unused variable.
+> 
+> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+> ---
+>  drivers/target/target_core_rd.c | 6 ------
+>  1 file changed, 6 deletions(-)
+> 
 
-Applying the following patch to address this build failure.
+Applied + squashed into the original commits.
 
-Thanks for the heads up!
+Thanks Wei!
 
 --nab
 
-diff --git a/drivers/target/Kconfig b/drivers/target/Kconfig
-index 1830368..50aad2e 100644
---- a/drivers/target/Kconfig
-+++ b/drivers/target/Kconfig
-@@ -3,6 +3,7 @@ menuconfig TARGET_CORE
-        tristate "Generic Target Core Mod (TCM) and ConfigFS Infrastructure"
-        depends on SCSI && BLOCK
-        select CONFIGFS_FS
-+       select CRC_T10DIF
-        default n
-        help
-        Say Y or M here to enable the TCM Storage Engine and ConfigFS enabled
+> diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core_rd.c
+> index 3fd51eb..9a107c0 100644
+> --- a/drivers/target/target_core_rd.c
+> +++ b/drivers/target/target_core_rd.c
+> @@ -105,14 +105,11 @@ static u32 rd_release_sgl_table(struct rd_dev *rd_dev, struct rd_dev_sg_table *s
+>  
+>  static void rd_release_device_space(struct rd_dev *rd_dev)
+>  {
+> -	struct rd_dev_sg_table *sg_table;
+>  	u32 page_count;
+>  
+>  	if (!rd_dev->sg_table_array || !rd_dev->sg_table_count)
+>  		return;
+>  
+> -	sg_table = rd_dev->sg_table_array;
+> -
+>  	page_count = rd_release_sgl_table(rd_dev, rd_dev->sg_table_array,
+>  					  rd_dev->sg_table_count);
+>  
+> @@ -228,14 +225,11 @@ static int rd_build_device_space(struct rd_dev *rd_dev)
+>  
+>  static void rd_release_prot_space(struct rd_dev *rd_dev)
+>  {
+> -	struct rd_dev_sg_table *sg_table;
+>  	u32 page_count;
+>  
+>  	if (!rd_dev->sg_prot_array || !rd_dev->sg_prot_count)
+>  		return;
+>  
+> -	sg_table = rd_dev->sg_prot_array;
+> -
+>  	page_count = rd_release_sgl_table(rd_dev, rd_dev->sg_prot_array,
+>  					  rd_dev->sg_prot_count);
+>  
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe target-devel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
