@@ -1,38 +1,78 @@
-From: Dan Williams <dan.j.williams@intel.com>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: [PATCH/RESEND v2 1/2] Hard disk S3 resume time optimization
-Date: Fri, 10 Jan 2014 19:13:11 -0800
-Message-ID: <CAA9_cmdkNNfE8-b60x4ULw6OA+zxrVZoJhEX3a5XZOQKnsqfHg@mail.gmail.com>
+Date: Sat, 11 Jan 2014 14:13:15 -0500
+Message-ID: <20140111191315.GC3257@mtj.dyndns.org>
 References: <20140108005607.GB29556@linux.intel.com>
-	<52CED67E.7080706@ubuntu.com>
-	<11E08D716F0541429B7042699DD5C1A17073C362@FMSMSX103.amr.corp.intel.com>
-	<52D0A8B4.90905@ubuntu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qa0-f48.google.com ([209.85.216.48]:45529 "EHLO
-	mail-qa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751205AbaAKDNM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Jan 2014 22:13:12 -0500
-In-Reply-To: <52D0A8B4.90905@ubuntu.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20140108005607.GB29556@linux.intel.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Todd E Brandt <todd.e.brandt@linux.intel.com>
+Cc: James.Bottomley@HansenPartnership.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Phillip Susi <psusi@ubuntu.com>
-Cc: "Brandt, Todd E" <todd.e.brandt@intel.com>, "todd.e.brandt@linux.intel.com" <todd.e.brandt@linux.intel.com>, "tj@kernel.org" <tj@kernel.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@hansenpartnership.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Fri, Jan 10, 2014 at 6:13 PM, Phillip Susi <psusi@ubuntu.com> wrote:
-> -----BEGIN PGP SIGNED MESSAGE-----
-> Hash: SHA512
->
-> On 01/10/2014 06:11 PM, Brandt, Todd E wrote:
->> Yes yours is simpler, but it also opens a potential memory issue
->> by passing a static int as the return location for the error value.
->> I think it's just safer to tell the callback to attempt no return
->> value at all, and for that you need to expand it into two
->> arguments, one for selection, the other for the output address.
->
-> What sort of memory issue?  Also isn't there a system NULL page
-> somewhere that could be used?
->
+Hello,
 
-I think the static variable is ok.  We can be sure that all eh threads
-are torn down before libata.ko is unloaded.
+On Tue, Jan 07, 2014 at 04:56:07PM -0800, Todd E Brandt wrote:
+> On resume, the ATA port driver currently waits until the AHCI controller
+> finishes executing the port wakeup command. This patch changes the
+
+Is there anything ahci specific about this?  There shouldn't be.
+
+> This patch only changes the behavior of the resume callback, not restore,
+> thaw, or runtime-resume. This is because thaw and restore are used after a
+> suspend-to-disk, which means that an image needs to be read from swap and
+> reloaded into RAM. The swap disk will always need to be fully restored/thawed
+> in order for resume to continue.
+
+If the system has multiple devices, wouldn't that still reduce the
+latency?  Do we really need to deviate behavior among different
+resume/unfreeze paths?
+
+> The return value from ata_resume_async is now an indicator of whether 
+> the resume was initiated, rather than if it was completed. I'm letting the ata
+> driver assume control over its own error reporting in this case (which it does
+> already). If you look at the ata_port resume code you'll see that the
+> ata_port_resume callback returns the status of the ahci_port_resume callback,
+> which is always 0. So I don't see any harm in ignoring it.
+
+I've been always kinda doubtful about the usefulness of resume return
+code.  It's not like there's anything resume path can do differently
+upon being notified that resume of a device failed.  Just reporting
+success and deal with error conditions as usual should work fine,
+right?
+
+Well, in fact, I don't think even the return code of suspend is
+useful.  Failing suspend is most likely wrong.  The only action PM
+core can take is aborting suspend and AFAICS none of the libata
+drivers has suspend failure conditions whose recoverability is made
+worse by just proceeding with suspend.  The hardware is recycled after
+all anyway.  The device is inoperational anyway, so aborting suspend
+doens't buy us anything other than failing suspend, which is almost
+always wrong.  So, I'd actually prefer just removing all returns from
+suspend/resume operations, but yeah this might be out of scope for
+this series.
+
+> +static int ata_port_resume_async(struct device *dev)
+> +{
+> +       int rc;
+> +
+> +       rc = ata_port_resume_common(dev, PMSG_RESUME, true);
+> +       if (!rc) {
+> +               pm_runtime_disable(dev);
+> +               pm_runtime_set_active(dev);
+> +               pm_runtime_enable(dev);
+> +       }
+> +
+> +       return rc;
+>  }
+
+So, can't just everything become async?  Are there cases where we
+*need* synchronous PM behaviors?
+
+Thanks.
+
+-- 
+tejun
