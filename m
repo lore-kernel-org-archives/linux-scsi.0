@@ -1,31 +1,38 @@
 From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [PATCH 13/14] target/rd: Add DIF protection into rd_execute_rw
-Date: Sun, 12 Jan 2014 14:23:34 +0200
-Message-ID: <52D28946.3000202@dev.mellanox.co.il>
-References: <1389212157-14540-1-git-send-email-nab@daterainc.com>	<1389212157-14540-14-git-send-email-nab@daterainc.com>	<52CE7ABA.9080403@mellanox.com> <yq11u0fr1gr.fsf@sermon.lab.mkp.net>
+Subject: Re: [PATCH 09/11] IB/isert: Accept RDMA_WRITE completions
+Date: Sun, 12 Jan 2014 14:32:41 +0200
+Message-ID: <52D28B69.6010304@dev.mellanox.co.il>
+References: <1389285658-7037-1-git-send-email-sagig@mellanox.com>	<1389285658-7037-10-git-send-email-sagig@mellanox.com> <CAJZOPZKAH6+4XPv-ua13C5skGYZHXB=tnOFT-7FSNZ5SXKhZMA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <yq11u0fr1gr.fsf@sermon.lab.mkp.net>
+In-Reply-To: <CAJZOPZKAH6+4XPv-ua13C5skGYZHXB=tnOFT-7FSNZ5SXKhZMA@mail.gmail.com>
 Sender: target-devel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagig@mellanox.com>
-Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Or Gerlitz <ogerlitz@mellanox.com>, Nicholas Bellinger <nab@linux-iscsi.org>, Oren Duer <oren@mellanox.com>
+To: Or Gerlitz <or.gerlitz@gmail.com>, Sagi Grimberg <sagig@mellanox.com>
+Cc: target-devel <target-devel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-rdma <linux-rdma@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, "oren@mellanox.com" <oren@mellanox.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 1/10/2014 11:06 PM, Martin K. Petersen wrote:
->>>>>> "Sagi" == Sagi Grimberg <sagig@mellanox.com> writes:
-> Sagi> I wander how we can skip sbc_dif_verify_xxxx if the transport
-> Sagi> already offloaded DIF verify.  I think that the transport should
-> Sagi> signal the core layer that it is able to offload DIF
-> Sagi> (ADD/STRIP/PASS/VERIFY), in which case the core should turn off
-> Sagi> the backstore DIF verify emulation to sustain performance.
->
-> Yeah, for SAS and FC it would be nice to leverage DIX and let the ASIC
-> do the actual checking and splitting. I assume the same is true for your
-> hw.
->
+On 1/11/2014 11:14 PM, Or Gerlitz wrote:
+> On Thu, Jan 9, 2014 at 6:40 PM, Sagi Grimberg <sagig@mellanox.com> wrote:
+>> In case of protected transactions, we will need to check the
+>> protection status of the transaction before sending SCSI response.
+>> So be ready for RDMA_WRITE completions. currently we don't ask
+>> for these completions, but for T10-PI we will.
+>> @@ -1721,9 +1735,9 @@ __isert_send_completion(struct iser_tx_desc *tx_desc,
+>>                                            isert_conn, ib_dev);
+>>                  break;
+>>          case ISER_IB_RDMA_WRITE:
+>> -               pr_err("isert_send_completion: Got ISER_IB_RDMA_WRITE\n");
+>> -               dump_stack();
+>> -               break;
+>> +               pr_debug("isert_send_completion: Got ISER_IB_RDMA_WRITE\n");
+>> +               atomic_dec(&isert_conn->post_send_buf_count);
+>> +               isert_completion_rdma_write(tx_desc, isert_cmd);
+> are we doing fall through here? why?
 
-Correct! we should avoid a duplicate DIF processing. if the HW supports 
-offloading DIF processing, target core can shutdown backstore 
-verfy_read/verify_write methods.
+Ohhhh, somehow i missed it in squash... Will fix, Thanks!
+
+>>          case ISER_IB_RDMA_READ:
+>>                  pr_debug("isert_send_completion: Got ISER_IB_RDMA_READ:\n");
+>
