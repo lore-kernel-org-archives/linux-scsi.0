@@ -1,35 +1,47 @@
 From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [PATCH 13/14] target/rd: Add DIF protection into rd_execute_rw
-Date: Sun, 12 Jan 2014 13:53:28 +0200
-Message-ID: <52D28238.5010903@dev.mellanox.co.il>
-References: <1389212157-14540-1-git-send-email-nab@daterainc.com>	 <1389212157-14540-14-git-send-email-nab@daterainc.com>	 <52CE7ABA.9080403@mellanox.com> <1389336761.5567.403.camel@haakon3.risingtidesystems.com>
+Subject: Re: [PATCH 09/14] target/configfs: Expose protection device attributes
+Date: Sun, 12 Jan 2014 13:56:16 +0200
+Message-ID: <52D282E0.2060800@dev.mellanox.co.il>
+References: <1389212157-14540-1-git-send-email-nab@daterainc.com>	 <1389212157-14540-10-git-send-email-nab@daterainc.com>	 <52CE817B.9070203@mellanox.com> <1389337238.5567.408.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ee0-f42.google.com ([74.125.83.42]:55203 "EHLO
-	mail-ee0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751198AbaALLxc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 12 Jan 2014 06:53:32 -0500
-Received: by mail-ee0-f42.google.com with SMTP id e49so928716eek.29
-        for <linux-scsi@vger.kernel.org>; Sun, 12 Jan 2014 03:53:31 -0800 (PST)
-In-Reply-To: <1389336761.5567.403.camel@haakon3.risingtidesystems.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1389337238.5567.408.camel@haakon3.risingtidesystems.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Sagi Grimberg <sagig@mellanox.com>
 Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Or Gerlitz <ogerlitz@mellanox.com>
+List-Id: linux-scsi@vger.kernel.org
 
-<SNIP>
+On 1/10/2014 9:00 AM, Nicholas A. Bellinger wrote:
+> On Thu, 2014-01-09 at 13:01 +0200, Sagi Grimberg wrote:
+>> On 1/8/2014 10:36 PM, Nicholas A. Bellinger wrote:
+>>> From: Nicholas Bellinger <nab@linux-iscsi.org>
+>>>
+>>> This patch adds support for exposing DIF protection device
+>>> attributes via configfs.  This includes:
+>>>
+>>>      pi_prot_type: Protection Type (0, 1, 3 currently support)
+>>>      pi_prot_version: Protection Version (DIF v1 currently supported)
+>>>      pi_guard_type: Guard Type (1=DIF CRC, 2=IP CRC)
+>>>
+>>> Within se_dev_set_pi_prot_type() it also adds the se_subsystem_api
+>>> device callbacks to setup per device protection information.
+>> Suggestion, expose pi_prot_format and call transport->init_prot() there.
+>> It is more explicit
+>> and this routine should be called upon getting FORMAT_UNIT as well.
+> <nod>, working on this next for FILEIO following your original example
+> code.
 
->> I wander how we can skip  sbc_dif_verify_xxxx if the transport already
->> offloaded DIF verify.
->> I think that the transport should signal the core layer that it is able
->> to offload DIF (ADD/STRIP/PASS/VERIFY), in which case the core should
->> turn off the backstore DIF verify emulation to sustain performance.
-> So IBLOCK + PSCSI backends will need to be a non interleaved protection
-> PASS for fast path operation, and backend protection emulation is
-> reserved for RAMDISK and perhaps a special FILEIO full emulation mode.
+I would suggest to keep user interface the same for all backstores.
+Let me send you my latest WIP example for FILEIO that follows the 
+pi_prot_format notation and you can arrange it as you wish.
 
-But can't we avoid that if transport already verified? This will kill 
-performance.
-
+> Thanks Sagi!
+>
+> --nab
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe target-devel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
