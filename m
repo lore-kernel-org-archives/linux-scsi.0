@@ -1,44 +1,40 @@
-From: Or Gerlitz <or.gerlitz@gmail.com>
-Subject: Re: [PATCH 09/11] IB/isert: Accept RDMA_WRITE completions
-Date: Sat, 11 Jan 2014 23:14:57 +0200
-Message-ID: <CAJZOPZKAH6+4XPv-ua13C5skGYZHXB=tnOFT-7FSNZ5SXKhZMA@mail.gmail.com>
-References: <1389285658-7037-1-git-send-email-sagig@mellanox.com>
-	<1389285658-7037-10-git-send-email-sagig@mellanox.com>
+From: Akinobu Mita <akinobu.mita@gmail.com>
+Subject: Re: [PATCH 5/6] scsi_debug: prepare to enable clustering
+Date: Sun, 12 Jan 2014 10:28:52 +0900
+Message-ID: <CAC5umyhUnzVfcAqzFTpNWD1JqgGSB5rYN92cgtQc5nsUDS=vew@mail.gmail.com>
+References: <1388964792-3546-1-git-send-email-akinobu.mita@gmail.com>
+	<1388964792-3546-6-git-send-email-akinobu.mita@gmail.com>
+	<yq1bnzjpl9g.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1389285658-7037-10-git-send-email-sagig@mellanox.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Sagi Grimberg <sagig@mellanox.com>
-Cc: target-devel <target-devel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-rdma <linux-rdma@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, "oren@mellanox.com" <oren@mellanox.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-oa0-f43.google.com ([209.85.219.43]:52047 "EHLO
+	mail-oa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750821AbaALB2x (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 11 Jan 2014 20:28:53 -0500
+Received: by mail-oa0-f43.google.com with SMTP id m1so6659835oag.2
+        for <linux-scsi@vger.kernel.org>; Sat, 11 Jan 2014 17:28:52 -0800 (PST)
+In-Reply-To: <yq1bnzjpl9g.fsf@sermon.lab.mkp.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Douglas Gilbert <dgilbert@interlog.com>
 
-On Thu, Jan 9, 2014 at 6:40 PM, Sagi Grimberg <sagig@mellanox.com> wrote:
-> In case of protected transactions, we will need to check the
-> protection status of the transaction before sending SCSI response.
-> So be ready for RDMA_WRITE completions. currently we don't ask
-> for these completions, but for T10-PI we will.
-> @@ -1721,9 +1735,9 @@ __isert_send_completion(struct iser_tx_desc *tx_desc,
->                                           isert_conn, ib_dev);
->                 break;
->         case ISER_IB_RDMA_WRITE:
-> -               pr_err("isert_send_completion: Got ISER_IB_RDMA_WRITE\n");
-> -               dump_stack();
-> -               break;
-> +               pr_debug("isert_send_completion: Got ISER_IB_RDMA_WRITE\n");
-> +               atomic_dec(&isert_conn->post_send_buf_count);
-> +               isert_completion_rdma_write(tx_desc, isert_cmd);
-
-are we doing fall through here? why?
->         case ISER_IB_RDMA_READ:
->                 pr_debug("isert_send_completion: Got ISER_IB_RDMA_READ:\n");
-
-
+2014/1/11 Martin K. Petersen <martin.petersen@oracle.com>:
+>>>>>> "Akinobu" == Akinobu Mita <akinobu.mita@gmail.com> writes:
 >
-> --
-> 1.7.1
+> Akinobu> This replaces these for_each_sg() loops with sg mapping
+> Akinobu> iterator which is capable of handling each sg list element is
+> Akinobu> consisted with multiple pages.
 >
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Looks good in general but what's with disabling interrupts? Would it be
+
+Disabling interrupts look unnecessary and removing these simplies the
+change.  I was blindly borrowing the code from sg_copy_{from,to}_buffer().
+I'll fix it in the next version.
+
+> better to move the PI verification in under atomic_rw?
+
+It also looks right.  Besides that, I realized that resp_unmap() calls
+unmap_region() which also needs atomic_rw write lock, but it doesn't
+lock.  I'll do it in another patch.
