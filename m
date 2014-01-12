@@ -1,40 +1,44 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: Re: [PATCH 5/6] scsi_debug: prepare to enable clustering
-Date: Sun, 12 Jan 2014 10:28:52 +0900
-Message-ID: <CAC5umyhUnzVfcAqzFTpNWD1JqgGSB5rYN92cgtQc5nsUDS=vew@mail.gmail.com>
-References: <1388964792-3546-1-git-send-email-akinobu.mita@gmail.com>
-	<1388964792-3546-6-git-send-email-akinobu.mita@gmail.com>
-	<yq1bnzjpl9g.fsf@sermon.lab.mkp.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oa0-f43.google.com ([209.85.219.43]:52047 "EHLO
-	mail-oa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750821AbaALB2x (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 11 Jan 2014 20:28:53 -0500
-Received: by mail-oa0-f43.google.com with SMTP id m1so6659835oag.2
-        for <linux-scsi@vger.kernel.org>; Sat, 11 Jan 2014 17:28:52 -0800 (PST)
-In-Reply-To: <yq1bnzjpl9g.fsf@sermon.lab.mkp.net>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Loc Ho <lho@apm.com>
+Subject: Re: [PATCH v8 3/4] ata: Add APM X-Gene SoC SATA host controller driver
+Date: Sat, 11 Jan 2014 19:58:04 -0800
+Message-ID: <6EB44142-06DA-4C9D-8999-CFA9EE30E03D@apm.com>
+References: <1389031922-4309-1-git-send-email-lho@apm.com> <1389031922-4309-2-git-send-email-lho@apm.com> <1389031922-4309-3-git-send-email-lho@apm.com> <1389031922-4309-4-git-send-email-lho@apm.com> <52D052F9.8050703@redhat.com> <20140111193104.GD3257@mtj.dyndns.org>
+Mime-Version: 1.0 (1.0)
+Content-Type: text/plain;
+	charset=us-ascii
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20140111193104.GD3257@mtj.dyndns.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: David Milburn <dmilburn@redhat.com>, "olof@lixom.net" <olof@lixom.net>, "arnd@arndb.de" <arnd@arndb.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "jcm@redhat.com" <jcm@redhat.com>, "patches@apm.com" <patches@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Douglas Gilbert <dgilbert@interlog.com>
 
-2014/1/11 Martin K. Petersen <martin.petersen@oracle.com>:
->>>>>> "Akinobu" == Akinobu Mita <akinobu.mita@gmail.com> writes:
->
-> Akinobu> This replaces these for_each_sg() loops with sg mapping
-> Akinobu> iterator which is capable of handling each sg list element is
-> Akinobu> consisted with multiple pages.
->
-> Looks good in general but what's with disabling interrupts? Would it be
+Hi,
 
-Disabling interrupts look unnecessary and removing these simplies the
-change.  I was blindly borrowing the code from sg_copy_{from,to}_buffer().
-I'll fix it in the next version.
+> On Jan 11, 2014, at 11:31 AM, Tejun Heo <tj@kernel.org> wrote:
+> 
+> Hello, David.
+> 
+>> On Fri, Jan 10, 2014 at 02:07:21PM -0600, David Milburn wrote:
+>> Tejun, to avoid some of the interrupt handling code duplication, would
+>> it better to have a AHCI_HFLAG_FLUSH and then change
+>> 
+>> this driver to set flush
+>> 
+>> hpriv->hpriv.flush = (void *) xgene_ahci_iob_flush;
+>> 
+>> and then standard code flush when necessary
+>> 
+>> ahci_handle_port_interrupt
+>> 
+>>       /* board-specific flush before servicing completed cmds */
+>>       if (hpriv-> flags & AHCI_HFLAG_FLUSH)
+>>               hpriv->flush(hpriv);
+> 
+> And this would be the only spot that this would be necessary?  If so,
+> why not just wrap the interrupt handler?
 
-> better to move the PI verification in under atomic_rw?
+The flush has to occurred immediately after reading the CI register. It can not wrap around the isr routine and issue the flush after or before the library ahci isr routine.
 
-It also looks right.  Besides that, I realized that resp_unmap() calls
-unmap_region() which also needs atomic_rw write lock, but it doesn't
-lock.  I'll do it in another patch.
+-Loc
