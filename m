@@ -1,45 +1,48 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 09/14] target/configfs: Expose protection device
- attributes
-Date: Mon, 13 Jan 2014 12:24:03 -0800
-Message-ID: <1389644643.12062.42.camel@dabdike.int.hansenpartnership.com>
-References: <1389212157-14540-1-git-send-email-nab@daterainc.com>
-	 <1389212157-14540-10-git-send-email-nab@daterainc.com>
-	 <yq161prr1p8.fsf@sermon.lab.mkp.net>
-	 <1389637859.5567.431.camel@haakon3.risingtidesystems.com>
-	 <1389639177.12062.21.camel@dabdike.int.hansenpartnership.com>
-	 <1389641243.5567.445.camel@haakon3.risingtidesystems.com>
-	 <yq1a9ezocrg.fsf@sermon.lab.mkp.net>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH/RESEND v2 1/2] Hard disk S3 resume time optimization
+Date: Mon, 13 Jan 2014 15:30:07 -0500
+Message-ID: <20140113203007.GA3480@mtj.dyndns.org>
+References: <20140108005607.GB29556@linux.intel.com>
+ <20140111191315.GC3257@mtj.dyndns.org>
+ <20140113195544.GA13900@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq1a9ezocrg.fsf@sermon.lab.mkp.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Sagi Grimberg <sagig@mellanox.com>, Or Gerlitz <ogerlitz@mellanox.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20140113195544.GA13900@linux.intel.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Todd E Brandt <todd.e.brandt@linux.intel.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, rjw@rjwysocki.net
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 2014-01-13 at 15:19 -0500, Martin K. Petersen wrote:
-> >>>>> "nab" == Nicholas A Bellinger <nab@linux-iscsi.org> writes:
-> 
-> >> What proposed 16 byte scheme?  The only DIF proposals I know for
-> >> SBC-4 are 13-185R0 and 12-369R0 and that's a couple of new algorithms
-> >> and types because we cannot change the 8 byte PI.
-> 
-> nab> Then I'm probably getting the SBC version wrong..  It's the one
-> nab> that includes using CRC32C for the block guard, and larger space
-> nab> for reference tag as mentioned by MKP.
-> 
-> This is the Type 4 we have been shopping among various vendors. It
-> predates and is simpler than HP's proposal (which met resistance in T10
-> and was subsequently dropped). So we revived our original Type 4
-> proposal which is 16 bytes of protection information per interval
-> (CRC32C, 48-bit LBA and 6 bytes of app tag). The proposal has been
-> sitting around for a while waiting for SBC-4 to open.
+Hello,
 
-I'm intrigued by this: how do you get the extra space, since I heard all
-the drive vendors were adamant that 520 was it for the current
-manufacturing processes.
+On Mon, Jan 13, 2014 at 11:55:44AM -0800, Todd E Brandt wrote:
+> I see your point, why have two paths if one will do. The only thing that
+> worries me is that the PM resume from hibernate function doesn't have
+> an error handler. What happens when it tries to read the image from swap
+> and the disk is still spinning up? The scsi layer has an error handler so
 
-James
+The request gets blocked on EH.
+
+> it just keeps retrying every few seconds, but the PM core reads directly
+> from the swap disk's block device.
+
+Why would that matter?  Resume is handled by EH.  While EH is in
+progress, all commands are blocked.  Am I missing something?
+
+> > So, can't just everything become async?  Are there cases where we
+> > *need* synchronous PM behaviors?
+> 
+> I think suspend still needs to be synchronous, because the PM core needs
+> to be sure that the disks are actually spun down before it can attempt
+> to shut the system down. I'm adding Raphael to the thread. Raphael, is 
+> this correct?
+
+Yeah, we definitely should wait for suspend to complete before
+entering suspend state.  I was referring to the resume path.
+
+Thanks.
+
+-- 
+tejun
