@@ -1,38 +1,41 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 14/14] tcm_loop: Enable DIF/DIX modes in SCSI host LLD
-Date: Mon, 13 Jan 2014 10:45:11 -0800
-Message-ID: <1389638711.5567.437.camel@haakon3.risingtidesystems.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 09/14] target/configfs: Expose protection device
+ attributes
+Date: Mon, 13 Jan 2014 10:52:57 -0800
+Message-ID: <1389639177.12062.21.camel@dabdike.int.hansenpartnership.com>
 References: <1389212157-14540-1-git-send-email-nab@daterainc.com>
-	 <1389212157-14540-15-git-send-email-nab@daterainc.com>
-	 <yq1wqi7pmrd.fsf@sermon.lab.mkp.net>
+	 <1389212157-14540-10-git-send-email-nab@daterainc.com>
+	 <yq161prr1p8.fsf@sermon.lab.mkp.net>
+	 <1389637859.5567.431.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="ISO-8859-15"
 Content-Transfer-Encoding: 7bit
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <yq1wqi7pmrd.fsf@sermon.lab.mkp.net>
+In-Reply-To: <1389637859.5567.431.camel@haakon3.risingtidesystems.com>
 Sender: target-devel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Sagi Grimberg <sagig@mellanox.com>, Or Gerlitz <ogerlitz@mellanox.com>
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Sagi Grimberg <sagig@mellanox.com>, Or Gerlitz <ogerlitz@mellanox.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, 2014-01-10 at 16:09 -0500, Martin K. Petersen wrote:
-> >>>>> "nab" == Nicholas A Bellinger <nab@daterainc.com> writes:
+On Mon, 2014-01-13 at 10:30 -0800, Nicholas A. Bellinger wrote:
+> Hey MKP,
 > 
-> nab> This patch updates tcm_loop_driver_probe() to set protection
-> nab> information using scsi_host_set_prot() and scsi_host_set_guard(),
-> nab> which currently enabled all modes of DIF/DIX protection, minus DIF
-> nab> TYPE0.
+> On Fri, 2014-01-10 at 16:01 -0500, Martin K. Petersen wrote:
+> > >>>>> "nab" == Nicholas A Bellinger <nab@daterainc.com> writes:
+> > 
+> > nab> This patch adds support for exposing DIF protection device
+> > nab> attributes via configfs.  This includes:
+> > 
+> > nab>    pi_prot_type: Protection Type (0, 1, 3 currently support)
+> > nab>    pi_prot_version: Protection Version (DIF v1 currently supported)
+> > 
+> > What's DIF v2?
+> > 
 > 
-> ITYM, DIX Type 0.
+> This would be the proposed 16-byte protection scheme for SBC4.
 
-Yes.  Fixed up the commit message.
+What proposed 16 byte scheme?  The only DIF proposals I know for SBC-4
+are 13-185R0 and 12-369R0 and that's a couple of new algorithms and
+types because we cannot change the 8 byte PI.
 
->  And ideally you'd have a way to choose between IP and
-> T10 CRC for the guard type.
-> 
-
-Sure, this can be exposed at a tcm_loop configfs attribute that is
-accessible after scsi_add_host() has been called, which I assume is OK
-to do..
-
---nab
+James
