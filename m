@@ -1,38 +1,48 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 60644] MPT2SAS drops all HDDs when under high I/O
-Date: Mon, 13 Jan 2014 18:02:40 +0000
-Message-ID: <bug-60644-11613-n3A744JR6N@https.bugzilla.kernel.org/>
-References: <bug-60644-11613@https.bugzilla.kernel.org/>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH 09/14] target/configfs: Expose protection device
+ attributes
+Date: Mon, 13 Jan 2014 10:30:59 -0800
+Message-ID: <1389637859.5567.431.camel@haakon3.risingtidesystems.com>
+References: <1389212157-14540-1-git-send-email-nab@daterainc.com>
+	 <1389212157-14540-10-git-send-email-nab@daterainc.com>
+	 <yq161prr1p8.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:37174 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752616AbaAMSCo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Jan 2014 13:02:44 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 5C81720149
-	for <linux-scsi@vger.kernel.org>; Mon, 13 Jan 2014 18:02:43 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-	by mail.kernel.org (Postfix) with ESMTP id 3E4A620155
-	for <linux-scsi@vger.kernel.org>; Mon, 13 Jan 2014 18:02:41 +0000 (UTC)
-In-Reply-To: <bug-60644-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <yq161prr1p8.fsf@sermon.lab.mkp.net>
+Sender: target-devel-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Sagi Grimberg <sagig@mellanox.com>, Or Gerlitz <ogerlitz@mellanox.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=60644
+Hey MKP,
 
---- Comment #39 from Sreekanth Reddy <sreekanth.reddy@lsi.com> ---
-I am on vacation till 17th Janury 2014. I will have limited access to emails
-during this time. For urgent issues, please contact my manager Krishna
-(Krishnaraddi.Mankani@lsi.com<mailto:Krishnaraddi.Mankani@lsi.com>), or call on
-my mobile (+91 8722810905).
+On Fri, 2014-01-10 at 16:01 -0500, Martin K. Petersen wrote:
+> >>>>> "nab" == Nicholas A Bellinger <nab@daterainc.com> writes:
+> 
+> nab> This patch adds support for exposing DIF protection device
+> nab> attributes via configfs.  This includes:
+> 
+> nab>    pi_prot_type: Protection Type (0, 1, 3 currently support)
+> nab>    pi_prot_version: Protection Version (DIF v1 currently supported)
+> 
+> What's DIF v2?
+> 
 
-Regards,
-Sreekanth Reddy
+This would be the proposed 16-byte protection scheme for SBC4.
 
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+> nab>    pi_guard_type: Guard Type (1=DIF CRC, 2=IP CRC)
+> 
+> The IP checksum is only supported by DIX between OS and initiator, not
+> by the target. I guess we could signal to the initiator via a
+> vendor-private VPD that IP checksum is supported directly. But now what
+> we have hardware-accelerated T10 CRC I don't think it's a big deal.
+> 
+> (scsi_debug supports IP checksum because it's both initiator and
+> target).
+> 
+
+In that case, dropping the IP checksum related code now..
+
+--nab
