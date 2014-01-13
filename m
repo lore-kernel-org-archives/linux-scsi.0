@@ -1,44 +1,49 @@
-From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [PATCH 07/14] target/sbc: Add P_TYPE + PROT_EN bits to READ_CAPACITY_16
-Date: Mon, 13 Jan 2014 18:33:39 +0200
-Message-ID: <52D41563.9050309@dev.mellanox.co.il>
-References: <1389212157-14540-1-git-send-email-nab@daterainc.com>	<1389212157-14540-8-git-send-email-nab@daterainc.com>	<52CE78EB.60108@mellanox.com> <yq1mwj3r2py.fsf@sermon.lab.mkp.net>	<52D286D9.5050500@dev.mellanox.co.il> <52D2C4C2.2040800@interlog.com> <yq1ppnxnmj4.fsf@sermon.lab.mkp.net> <52D2E4A9.7010004@interlog.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 60644] MPT2SAS drops all HDDs when under high I/O
+Date: Mon, 13 Jan 2014 17:27:49 +0000
+Message-ID: <bug-60644-11613-iBsRRFvzOM@https.bugzilla.kernel.org/>
+References: <bug-60644-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ea0-f170.google.com ([209.85.215.170]:52375 "EHLO
-	mail-ea0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754711AbaAMQdp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jan 2014 11:33:45 -0500
-Received: by mail-ea0-f170.google.com with SMTP id k10so3420642eaj.15
-        for <linux-scsi@vger.kernel.org>; Mon, 13 Jan 2014 08:33:44 -0800 (PST)
-In-Reply-To: <52D2E4A9.7010004@interlog.com>
+Received: from mail.kernel.org ([198.145.19.201]:35257 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752178AbaAMR1x (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 13 Jan 2014 12:27:53 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 4608E20125
+	for <linux-scsi@vger.kernel.org>; Mon, 13 Jan 2014 17:27:52 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id B8C8720149
+	for <linux-scsi@vger.kernel.org>; Mon, 13 Jan 2014 17:27:50 +0000 (UTC)
+In-Reply-To: <bug-60644-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dgilbert@interlog.com, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Sagi Grimberg <sagig@mellanox.com>, "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Or Gerlitz <ogerlitz@mellanox.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+To: linux-scsi@vger.kernel.org
 
+https://bugzilla.kernel.org/show_bug.cgi?id=60644
 
-> Back to the original question, I don't think Sagi was
-> asking if it was valid to do a legacy/unprotected READ,
-> it was what to expect with a protected READ on
-> unwritten blocks:
->
-> > So this takes me to a corner I still don't understand, if
-> > a LUN is pre-formatted as T10-protected, what happens to
-> > unwritten blocks read?
->
-> So the precise answer is: the PI will be all 0xff bytes,
-> unless logical provisioning is enabled, LBPRZ=0 and the
-> device's compliance predates sbc3r34.pdf (November 2012).
->
-> Doug Gilbert
->
->
+--- Comment #37 from Jeff Johnson <jeff.johnson@aeoncomputing.com> ---
+I can confirm Tommy's observations about disabling PERR and SERR solving the
+issue.
 
-Thanks Doug,
+The motherboard I am using (Supermicro X8DTH-iF) does not have those exact BIOS
+settings to control. In my case the following BIOS changes and kernel command
+line arguments eliminated the issue:
 
-This answer translates directly into a fix in my T10-PI offload API.
+MB BIOS: BIOS->Advanced->Advanced Chipset Configuration->North Bridge
+Configuration->ASPM=Disabled
 
-Sagi.
+Linux boot command line options: pcie_aspm=off disable_msi=1 
+
+With these changes a very intense fio run has gone four days without a single
+error or issue on a Linux-ZFS filesystem.
+
+Before these changes I could not go four hours without multiple HBAs
+disappearing (in my config there are three HBAs). Sometimes the HBAs would
+disappear within 15-20 minutes of benchmark runtime.
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
