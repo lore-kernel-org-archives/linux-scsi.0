@@ -1,169 +1,138 @@
 From: Jayamohan Kallickal <jayamohank@gmail.com>
-Subject: [PATCH 5/7] be2iscsi: Fix doorbell format for EQ/CQ/RQ s per SLI spec.
-Date: Sun, 12 Jan 2014 16:42:18 -0800
-Message-ID: <1389573741-3523-5-git-send-email-jayamohan.kallickal@emulex.com>
+Subject: [PATCH 6/7] be2iscsi: Fix the session cleanup when reboot/shutdown happens
+Date: Sun, 12 Jan 2014 16:42:19 -0800
+Message-ID: <1389573741-3523-6-git-send-email-jayamohan.kallickal@emulex.com>
 References: <1389573741-3523-1-git-send-email-jayamohan.kallickal@emulex.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f44.google.com ([209.85.160.44]:38181 "EHLO
-	mail-pb0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751192AbaAMCiS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 12 Jan 2014 21:38:18 -0500
-Received: by mail-pb0-f44.google.com with SMTP id rr13so35545pbb.17
-        for <linux-scsi@vger.kernel.org>; Sun, 12 Jan 2014 18:38:17 -0800 (PST)
+Received: from mail-pd0-f174.google.com ([209.85.192.174]:52998 "EHLO
+	mail-pd0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751219AbaAMCiT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 12 Jan 2014 21:38:19 -0500
+Received: by mail-pd0-f174.google.com with SMTP id w10so2154031pde.19
+        for <linux-scsi@vger.kernel.org>; Sun, 12 Jan 2014 18:38:19 -0800 (PST)
 In-Reply-To: <1389573741-3523-1-git-send-email-jayamohan.kallickal@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
 Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, John Soni Jose <sony.john-n@emulex.com>
 
- The doorbel format has been updated to support additonal functionalities
- of SKH-R adapter. These changes are made such that older FW also works fine.
+ In iSCSI Boot scenario, when machine is reboot/shutdown phase
+ the active sessions are not closed. Driver queue cleanup is
+ done as part of unload and device is disabled.
+
+ Sessions are still active, iSCSI commands are issued from
+ session which comes to driver, as driver cleanup and device
+ disabled there is kernel stack dump with errors.
+
+ Fix is invoking iscsi_session_failure with ISCSI_ERR_INVALID_HOST
+ on all the active sessions when shutdown routine is called.
 
 Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
 Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 ---
- drivers/scsi/be2iscsi/be_cmds.c |   12 +++++++++++-
- drivers/scsi/be2iscsi/be_cmds.h |    6 +++---
- drivers/scsi/be2iscsi/be_main.c |   23 +++++++++++++++++++++--
- drivers/scsi/be2iscsi/be_main.h |   13 +++++++++++--
- 4 files changed, 46 insertions(+), 8 deletions(-)
+ drivers/scsi/be2iscsi/be.h       |    1 +
+ drivers/scsi/be2iscsi/be_cmds.c  |   17 ++++++++++++++++-
+ drivers/scsi/be2iscsi/be_cmds.h  |    1 +
+ drivers/scsi/be2iscsi/be_iscsi.c |    1 +
+ drivers/scsi/be2iscsi/be_main.c  |    2 ++
+ drivers/scsi/be2iscsi/be_main.h  |    5 +++++
+ 6 files changed, 26 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/scsi/be2iscsi/be.h b/drivers/scsi/be2iscsi/be.h
+index 23c73fe..1bfb0bd 100644
+--- a/drivers/scsi/be2iscsi/be.h
++++ b/drivers/scsi/be2iscsi/be.h
+@@ -139,6 +139,7 @@ struct be_ctrl_info {
+ #define PAGE_SHIFT_4K 12
+ #define PAGE_SIZE_4K (1 << PAGE_SHIFT_4K)
+ #define mcc_timeout		120000 /* 12s timeout */
++#define BEISCSI_LOGOUT_SYNC_DELAY	250
+ 
+ /* Returns number of pages spanned by the data starting at the given addr */
+ #define PAGES_4K_SPANNED(_address, size)				\
 diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
-index b14949a..4e1074a 100644
+index 4e1074a..757d10d 100644
 --- a/drivers/scsi/be2iscsi/be_cmds.c
 +++ b/drivers/scsi/be2iscsi/be_cmds.c
-@@ -436,10 +436,20 @@ static void beiscsi_cq_notify(struct beiscsi_hba *phba, u16 qid, bool arm,
- 		       u16 num_popped)
+@@ -400,8 +400,23 @@ static struct be_mcc_compl *be_mcc_compl_get(struct beiscsi_hba *phba)
+ 	return NULL;
+ }
+ 
+-static void be2iscsi_fail_session(struct iscsi_cls_session *cls_session)
++/**
++ * be2iscsi_fail_session(): Closing session with appropriate error
++ * @cls_session: ptr to session
++ *
++ * Depending on adapter state appropriate error flag is passed.
++ **/
++void be2iscsi_fail_session(struct iscsi_cls_session *cls_session)
  {
- 	u32 val = 0;
--	val |= qid & DB_CQ_RING_ID_MASK;
++	struct Scsi_Host *shost = iscsi_session_to_shost(cls_session);
++	struct beiscsi_hba *phba = iscsi_host_priv(shost);
++	uint32_t iscsi_err_flag;
 +
- 	if (arm)
- 		val |= 1 << DB_CQ_REARM_SHIFT;
++	if (phba->state & BE_ADAPTER_STATE_SHUTDOWN)
++		iscsi_err_flag = ISCSI_ERR_INVALID_HOST;
++	else
++		iscsi_err_flag = ISCSI_ERR_CONN_FAILED;
 +
- 	val |= num_popped << DB_CQ_NUM_POPPED_SHIFT;
-+
-+	/* Setting lower order CQ_ID Bits */
-+	val |= qid & DB_CQ_RING_ID_LOW_MASK;
-+
-+	/* Setting Higher order CQ_ID Bits */
-+	val |= (((qid >> DB_CQ_HIGH_FEILD_SHIFT) &
-+		  DB_CQ_RING_ID_HIGH_MASK)
-+		  << DB_CQ_HIGH_SET_SHIFT);
-+
- 	iowrite32(val, phba->db_va + DB_CQ_OFFSET);
+ 	iscsi_session_failure(cls_session->dd_data, ISCSI_ERR_CONN_FAILED);
  }
  
 diff --git a/drivers/scsi/be2iscsi/be_cmds.h b/drivers/scsi/be2iscsi/be_cmds.h
-index 69f849e..59abd27 100644
+index 59abd27..64b60e7 100644
 --- a/drivers/scsi/be2iscsi/be_cmds.h
 +++ b/drivers/scsi/be2iscsi/be_cmds.h
-@@ -103,7 +103,7 @@ struct be_mcc_compl {
+@@ -1325,4 +1325,5 @@ void be_wrb_hdr_prepare(struct be_mcc_wrb *wrb, int payload_len,
+ void be_cmd_hdr_prepare(struct be_cmd_req_hdr *req_hdr,
+ 			u8 subsystem, u8 opcode, int cmd_len);
  
- /********** MCC door bell ************/
- #define DB_MCCQ_OFFSET 0x140
--#define DB_MCCQ_RING_ID_MASK 0x7FF		/* bits 0 - 10 */
-+#define DB_MCCQ_RING_ID_MASK 0xFFFF		/* bits 0 - 15 */
- /* Number of entries posted */
- #define DB_MCCQ_NUM_POSTED_SHIFT 16		/* bits 16 - 29 */
- 
-@@ -1025,8 +1025,8 @@ struct be_mcc_wrb_context {
- 	int *users_final_status;
- } __packed;
- 
--#define DB_DEF_PDU_RING_ID_MASK		0x3FF	/* bits 0 - 9 */
--#define DB_DEF_PDU_CQPROC_MASK		0x3FFF	/* bits 0 - 9 */
-+#define DB_DEF_PDU_RING_ID_MASK	0x3FFF	/* bits 0 - 13 */
-+#define DB_DEF_PDU_CQPROC_MASK		0x3FFF	/* bits 16 - 29 */
- #define DB_DEF_PDU_REARM_SHIFT		14
- #define DB_DEF_PDU_EVENT_SHIFT		15
- #define DB_DEF_PDU_CQPROC_SHIFT		16
++void be2iscsi_fail_session(struct iscsi_cls_session *cls_session);
+ #endif /* !BEISCSI_CMDS_H */
+diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
+index 9ba2a64..0a605cd 100644
+--- a/drivers/scsi/be2iscsi/be_iscsi.c
++++ b/drivers/scsi/be2iscsi/be_iscsi.c
+@@ -1371,6 +1371,7 @@ void beiscsi_ep_disconnect(struct iscsi_endpoint *ep)
+ 	beiscsi_mccq_compl(phba, tag, NULL, NULL);
+ 	beiscsi_close_conn(beiscsi_ep, tcp_upload_flag);
+ free_ep:
++	msleep(BEISCSI_LOGOUT_SYNC_DELAY);
+ 	beiscsi_free_ep(beiscsi_ep);
+ 	beiscsi_unbind_conn_to_cid(phba, beiscsi_ep->ep_cid);
+ 	iscsi_destroy_endpoint(beiscsi_ep->openiscsi_ep);
 diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index a045f06..8e19b90 100644
+index 8e19b90..89da085 100644
 --- a/drivers/scsi/be2iscsi/be_main.c
 +++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -811,14 +811,23 @@ static void hwi_ring_eq_db(struct beiscsi_hba *phba,
- 			   unsigned char rearm, unsigned char event)
- {
- 	u32 val = 0;
--	val |= id & DB_EQ_RING_ID_MASK;
-+
- 	if (rearm)
- 		val |= 1 << DB_EQ_REARM_SHIFT;
- 	if (clr_interrupt)
- 		val |= 1 << DB_EQ_CLR_SHIFT;
- 	if (event)
- 		val |= 1 << DB_EQ_EVNT_SHIFT;
-+
- 	val |= num_processed << DB_EQ_NUM_POPPED_SHIFT;
-+	/* Setting lower order EQ_ID Bits */
-+	val |= (id & DB_EQ_RING_ID_LOW_MASK);
-+
-+	/* Setting Higher order EQ_ID Bits */
-+	val |= (((id >> DB_EQ_HIGH_FEILD_SHIFT) &
-+		  DB_EQ_RING_ID_HIGH_MASK)
-+		  << DB_EQ_HIGH_SET_SHIFT);
-+
- 	iowrite32(val, phba->db_va + DB_EQ_OFFSET);
- }
+@@ -5411,6 +5411,8 @@ static void beiscsi_shutdown(struct pci_dev *pcidev)
+ 		return;
+ 	}
  
-@@ -1155,10 +1164,20 @@ static void hwi_ring_cq_db(struct beiscsi_hba *phba,
- 			   unsigned char rearm, unsigned char event)
- {
- 	u32 val = 0;
--	val |= id & DB_CQ_RING_ID_MASK;
-+
- 	if (rearm)
- 		val |= 1 << DB_CQ_REARM_SHIFT;
-+
- 	val |= num_processed << DB_CQ_NUM_POPPED_SHIFT;
-+
-+	/* Setting lower order CQ_ID Bits */
-+	val |= (id & DB_CQ_RING_ID_LOW_MASK);
-+
-+	/* Setting Higher order CQ_ID Bits */
-+	val |= (((id >> DB_CQ_HIGH_FEILD_SHIFT) &
-+		  DB_CQ_RING_ID_HIGH_MASK)
-+		  << DB_CQ_HIGH_SET_SHIFT);
-+
- 	iowrite32(val, phba->db_va + DB_CQ_OFFSET);
++	phba->state = BE_ADAPTER_STATE_SHUTDOWN;
++	iscsi_host_for_each_session(phba->shost, be2iscsi_fail_session);
+ 	beiscsi_quiesce(phba, BEISCSI_CLEAN_UNLOAD);
+ 	pci_disable_device(pcidev);
  }
- 
 diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
-index d21ad9e..62c5a24 100644
+index 62c5a24..3806a09 100644
 --- a/drivers/scsi/be2iscsi/be_main.h
 +++ b/drivers/scsi/be2iscsi/be_main.h
-@@ -135,11 +135,15 @@
- #define DB_RXULP0_OFFSET 0xA0
- /********* Event Q door bell *************/
- #define DB_EQ_OFFSET			DB_CQ_OFFSET
--#define DB_EQ_RING_ID_MASK		0x1FF	/* bits 0 - 8 */
-+#define DB_EQ_RING_ID_LOW_MASK		0x1FF	/* bits 0 - 8 */
- /* Clear the interrupt for this eq */
- #define DB_EQ_CLR_SHIFT			(9)	/* bit 9 */
- /* Must be 1 */
- #define DB_EQ_EVNT_SHIFT		(10)	/* bit 10 */
-+/* Higher Order EQ_ID bit */
-+#define DB_EQ_RING_ID_HIGH_MASK	0x1F /* bits 11 - 15 */
-+#define DB_EQ_HIGH_SET_SHIFT	11
-+#define DB_EQ_HIGH_FEILD_SHIFT	9
- /* Number of event entries processed */
- #define DB_EQ_NUM_POPPED_SHIFT		(16)	/* bits 16 - 28 */
- /* Rearm bit */
-@@ -147,7 +151,12 @@
+@@ -97,9 +97,14 @@
  
- /********* Compl Q door bell *************/
- #define DB_CQ_OFFSET			0x120
--#define DB_CQ_RING_ID_MASK		0x3FF	/* bits 0 - 9 */
-+#define DB_CQ_RING_ID_LOW_MASK		0x3FF	/* bits 0 - 9 */
-+/* Higher Order CQ_ID bit */
-+#define DB_CQ_RING_ID_HIGH_MASK	0x1F /* bits 11 - 15 */
-+#define DB_CQ_HIGH_SET_SHIFT	11
-+#define DB_CQ_HIGH_FEILD_SHIFT	10
+ #define INVALID_SESS_HANDLE	0xFFFFFFFF
+ 
++/**
++ * Adapter States
++ **/
+ #define BE_ADAPTER_LINK_UP	0x001
+ #define BE_ADAPTER_LINK_DOWN	0x002
+ #define BE_ADAPTER_PCI_ERR	0x004
++#define BE_ADAPTER_STATE_SHUTDOWN	0x008
 +
- /* Number of event entries processed */
- #define DB_CQ_NUM_POPPED_SHIFT		(16)	/* bits 16 - 28 */
- /* Rearm bit */
+ 
+ #define BEISCSI_CLEAN_UNLOAD	0x01
+ #define BEISCSI_EEH_UNLOAD	0x02
 -- 
 1.7.10.4
 
