@@ -1,44 +1,41 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 60644] MPT2SAS drops all HDDs when under high I/O
-Date: Mon, 13 Jan 2014 19:41:17 +0000
-Message-ID: <bug-60644-11613-ZyWlFDR1Es@https.bugzilla.kernel.org/>
-References: <bug-60644-11613@https.bugzilla.kernel.org/>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH 02/11] IB/isert: seperate connection protection domains
+ and dma MRs
+Date: Mon, 13 Jan 2014 11:44:27 -0800
+Message-ID: <1389642267.5567.448.camel@haakon3.risingtidesystems.com>
+References: <1389285658-7037-1-git-send-email-sagig@mellanox.com>
+	 <1389285658-7037-3-git-send-email-sagig@mellanox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:41935 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752418AbaAMTlU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Jan 2014 14:41:20 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 155A62017A
-	for <linux-scsi@vger.kernel.org>; Mon, 13 Jan 2014 19:41:19 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-	by mail.kernel.org (Postfix) with ESMTP id 0C1792015E
-	for <linux-scsi@vger.kernel.org>; Mon, 13 Jan 2014 19:41:18 +0000 (UTC)
-In-Reply-To: <bug-60644-11613@https.bugzilla.kernel.org/>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:35143 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752527AbaAMTmg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jan 2014 14:42:36 -0500
+In-Reply-To: <1389285658-7037-3-git-send-email-sagig@mellanox.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Sagi Grimberg <sagig@mellanox.com>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org, martin.petersen@oracle.com, ogerlitz@mellanox.com, oren@mellanox.com
 
-https://bugzilla.kernel.org/show_bug.cgi?id=60644
+Hi Sagi,
 
---- Comment #40 from Tommy Apel <tommyapeldk@gmail.com> ---
-Hello all,
+On Thu, 2014-01-09 at 18:40 +0200, Sagi Grimberg wrote:
+> It is more correct to seperate connections protection domains
+> and dma_mr handles. protection information support requires to
+> do so.
+> 
+> Signed-off-by: Sagi Grimberg <sagig@mellanox.com>
+> ---
+>  drivers/infiniband/ulp/isert/ib_isert.c |   46 ++++++++++++++++---------------
+>  drivers/infiniband/ulp/isert/ib_isert.h |    2 -
+>  2 files changed, 24 insertions(+), 24 deletions(-)
+> 
 
-I've actually been playing around with this a bit more and found out that the
-PERR and SERR might only hide problem for a while, sustained load over longer
-periods (4-5 hours) will still unfold in a crash, I have re-enabled the PERR
-and SERR and I'm running with ASPM enabled aswell, but the change that made it
-all go away was that to switch encoding on the PCIe to use "Above 4G", now the
-thing I noted was aswell that I had changed from using a PCIe2.0 SAS HBA to a
-PCIe3.0 SAS HBA and the problem manifested it self only with the latter, anoter
-thing to note is that I have mixed PCIe2 and PCIe3 devices with a PCIe3 capable
-cpu.
+Applied to for-next, given this patch does not depend on the proposed
+VERBS protection changes.
 
-/Tommy
+--nab 
 
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+
