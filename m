@@ -1,66 +1,48 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 03/14] target/sbc: Add sbc_check_prot + update
- sbc_parse_cdb for DIF
-Date: Mon, 13 Jan 2014 11:23:02 -0800
-Message-ID: <1389640982.5567.442.camel@haakon3.risingtidesystems.com>
+Subject: Re: [PATCH 09/14] target/configfs: Expose protection device
+ attributes
+Date: Mon, 13 Jan 2014 11:27:23 -0800
+Message-ID: <1389641243.5567.445.camel@haakon3.risingtidesystems.com>
 References: <1389212157-14540-1-git-send-email-nab@daterainc.com>
-	 <1389212157-14540-4-git-send-email-nab@daterainc.com>
-	 <52CEB901.6030504@mellanox.com>
-	 <1389337456.5567.412.camel@haakon3.risingtidesystems.com>
-	 <52D283B8.6050108@dev.mellanox.co.il>
+	 <1389212157-14540-10-git-send-email-nab@daterainc.com>
+	 <yq161prr1p8.fsf@sermon.lab.mkp.net>
+	 <1389637859.5567.431.camel@haakon3.risingtidesystems.com>
+	 <1389639177.12062.21.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <52D283B8.6050108@dev.mellanox.co.il>
-Sender: target-devel-owner@vger.kernel.org
-To: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Cc: Sagi Grimberg <sagig@mellanox.com>, "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Or Gerlitz <ogerlitz@mellanox.com>, oren Duer <oren@mellanox.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1389639177.12062.21.camel@dabdike.int.hansenpartnership.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Sagi Grimberg <sagig@mellanox.com>, Or Gerlitz <ogerlitz@mellanox.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, 2014-01-12 at 13:59 +0200, Sagi Grimberg wrote:
-> On 1/10/2014 9:04 AM, Nicholas A. Bellinger wrote:
-> > On Thu, 2014-01-09 at 16:58 +0200, Sagi Grimberg wrote:
-> >> On 1/8/2014 10:36 PM, Nicholas A. Bellinger wrote:
-
-<SNIP>
-
-> >>> diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
-> >>> index 52ae54e..600ffcb 100644
-> >>> --- a/drivers/target/target_core_sbc.c
-> >>> +++ b/drivers/target/target_core_sbc.c
-> >>> @@ -563,6 +563,27 @@ sbc_compare_and_write(struct se_cmd *cmd)
-> >>>    	return TCM_NO_SENSE;
-> >>>    }
-> >>>    
-> >>> +bool
-> >>> +sbc_check_prot(struct se_device *dev, struct se_cmd *cmd, unsigned char *cdb)
-> >>> +{
-> >>> +	if (!dev->dev_attrib.pi_prot_type)
-> >>> +		return true;
-> >>> +
-> >>> +	if (dev->dev_attrib.pi_prot_type == TARGET_DIF_TYPE2_PROT &&
-> >>> +	   (cdb[1] & 0xe0))
-> >>> +		return false;
-> >>> +
-> >>> +	if (!(cdb[1] & 0xe0)) {
-> >>> +		pr_warn("Target: Unprotected READ/WRITE to DIF device\n");
-> >>> +		return true;
-> >>> +	}
-> >>> +	if (!cmd->t_prot_sg || !cmd->t_prot_nents)
-> >>> +		return true;
-> >>> +
-> >>> +	cmd->se_cmd_flags |= SCF_PROT;
-> >> Isn't this the place to fill the se_cmd DIF execution parameters?
-> >> prot_op, prot_type, guard_type, initial_reftag, apptag etc...
-> >> Next, all parties interested in DIF execution should look in se_cmd
-> >> (backstore, transport).
-> > Yes, working on this for -v2 as well.  :)
+On Mon, 2014-01-13 at 10:52 -0800, James Bottomley wrote:
+> On Mon, 2014-01-13 at 10:30 -0800, Nicholas A. Bellinger wrote:
+> > Hey MKP,
+> > 
+> > On Fri, 2014-01-10 at 16:01 -0500, Martin K. Petersen wrote:
+> > > >>>>> "nab" == Nicholas A Bellinger <nab@daterainc.com> writes:
+> > > 
+> > > nab> This patch adds support for exposing DIF protection device
+> > > nab> attributes via configfs.  This includes:
+> > > 
+> > > nab>    pi_prot_type: Protection Type (0, 1, 3 currently support)
+> > > nab>    pi_prot_version: Protection Version (DIF v1 currently supported)
+> > > 
+> > > What's DIF v2?
+> > > 
+> > 
+> > This would be the proposed 16-byte protection scheme for SBC4.
 > 
-> OK, so just to be clear, both the transport and the backstore will be 
-> look in se_cmd protection attributes when executing IO correct?
+> What proposed 16 byte scheme?  The only DIF proposals I know for SBC-4
+> are 13-185R0 and 12-369R0 and that's a couple of new algorithms and
+> types because we cannot change the 8 byte PI.
 > 
 
-Correct.
+Then I'm probably getting the SBC version wrong..  It's the one that
+includes using CRC32C for the block guard, and larger space for
+reference tag as mentioned by MKP.
 
 --nab
