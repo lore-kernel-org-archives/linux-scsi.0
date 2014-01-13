@@ -1,49 +1,41 @@
-From: Loc Ho <lho@apm.com>
-Subject: Re: [PATCH v8 3/4] ata: Add APM X-Gene SoC SATA host controller driver
-Date: Sun, 12 Jan 2014 20:01:59 -0800
-Message-ID: <CAPw-ZTmfKfPY3DRfJT6FQP78ULwfcjGG76cNfr9yk7UMdrO4wg@mail.gmail.com>
-References: <1389031922-4309-1-git-send-email-lho@apm.com>
-	<1389031922-4309-2-git-send-email-lho@apm.com>
-	<1389031922-4309-3-git-send-email-lho@apm.com>
-	<1389031922-4309-4-git-send-email-lho@apm.com>
-	<52D052F9.8050703@redhat.com>
-	<20140111193104.GD3257@mtj.dyndns.org>
-	<6EB44142-06DA-4C9D-8999-CFA9EE30E03D@apm.com>
-	<20140112114958.GA8509@mtj.dyndns.org>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] gdth: Fixup section annotations
+Date: Mon, 13 Jan 2014 09:23:48 +0100
+Message-ID: <52D3A294.2040108@suse.de>
+References: <1389367888-117607-1-git-send-email-hare@suse.de> <1389373643.4066.0.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20140112114958.GA8509@mtj.dyndns.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: David Milburn <dmilburn@redhat.com>, "olof@lixom.net" <olof@lixom.net>, "arnd@arndb.de" <arnd@arndb.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "jcm@redhat.com" <jcm@redhat.com>, "patches@apm.com" <patches@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:54333 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751291AbaAMIXu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 13 Jan 2014 03:23:50 -0500
+In-Reply-To: <1389373643.4066.0.camel@dabdike>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <jbottomley@parallels.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Hi,
+On 01/10/2014 06:07 PM, James Bottomley wrote:
+> On Fri, 2014-01-10 at 16:31 +0100, Hannes Reinecke wrote:
+>> Fixup section annotations so that kbuild doesn't complain anymore.
+>=20
+> This doesn't look right: __devinit is now an obsolete annotation.
+>=20
+Hmm. Patch has been in our internal kernel repository for ages.
+I'll be checking.
 
-> On Sat, Jan 11, 2014 at 07:58:04PM -0800, Loc Ho wrote:
->> The flush has to occurred immediately after reading the CI
->> register. It can not wrap around the isr routine and issue the flush
->> after or before the library ahci isr routine.
->
-> I see.  So, you're saying that if PMP support is disabled for the
-> controller, the driver would need to reimplement only the interrupt
-> handler?
->
+Cheers,
 
-Yes but Let me summary what overrides are required for this X-Gene
-SATA controller driver:
-
-1. For Query ID, these two functions - ahci_read_id and ahci_qc_issue
-requires override.
-2. For PMP support, these two functions - ahci_qc_prep and
-ahci_qc_fill_rtf requires override.
-3. For softreset, softreset requires override to add additional flags
-in call to ahci_exec_polled_cmd.
-4. For IRQ and ensure data consistent for read operation, function
-ahci_interrupt and ahci_port_intr requires override. But it only
-requires an flush call right after reading from the CI register.
-5. For hardreset, no need to explain this one as all SATA drivers
-require its only method.
-
--Loc
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
