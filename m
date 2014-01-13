@@ -1,86 +1,413 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH 07/14] target/sbc: Add P_TYPE + PROT_EN bits to READ_CAPACITY_16
-Date: Sun, 12 Jan 2014 13:53:29 -0500
-Message-ID: <52D2E4A9.7010004@interlog.com>
-References: <1389212157-14540-1-git-send-email-nab@daterainc.com>	<1389212157-14540-8-git-send-email-nab@daterainc.com>	<52CE78EB.60108@mellanox.com> <yq1mwj3r2py.fsf@sermon.lab.mkp.net>	<52D286D9.5050500@dev.mellanox.co.il> <52D2C4C2.2040800@interlog.com> <yq1ppnxnmj4.fsf@sermon.lab.mkp.net>
-Reply-To: dgilbert@interlog.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <yq1ppnxnmj4.fsf@sermon.lab.mkp.net>
-Sender: target-devel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Sagi Grimberg <sagig@dev.mellanox.co.il>, Sagi Grimberg <sagig@mellanox.com>, "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Or Gerlitz <ogerlitz@mellanox.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+From: Jayamohan Kallickal <jayamohank@gmail.com>
+Subject: [PATCH 1/7] be2iscsi: Fix handling timed out MBX completion from FW
+Date: Sun, 12 Jan 2014 16:42:14 -0800
+Message-ID: <1389573741-3523-1-git-send-email-jayamohan.kallickal@emulex.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pb0-f53.google.com ([209.85.160.53]:62079 "EHLO
+	mail-pb0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751102AbaAMCiM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 12 Jan 2014 21:38:12 -0500
+Received: by mail-pb0-f53.google.com with SMTP id ma3so6696749pbc.40
+        for <linux-scsi@vger.kernel.org>; Sun, 12 Jan 2014 18:38:11 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jbottomley@parallels.com, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
+Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, John Soni Jose <sony.john-n@emulex.com>
 
-On 14-01-12 12:21 PM, Martin K. Petersen wrote:
->>>>>> "Doug" == Douglas Gilbert <dgilbert@interlog.com> writes:
->
->>> So this takes me to a corner I still don't understand, if a LUN is
->>> pre-formatted as T10-protected, what happens to unwritten blocks
->>> read?  I mean, SCSI login executes some reads from sevel LBAs which
->>> will probably fail as blocks are unwritten.
->
-> Doug> Some observations: I haven't seen any disks pre-formatted with
-> Doug> T10-protection, they usually come pre-formatted without
-> Doug> T10-protection.
->
-> Depends where you buy them. All the drives we ship arrive formatted with
-> T10 PI from the manufacturer.
->
-> However, nobody expects you to format a LUN on an array. When you create
-> a LUN on a PI-capable storage array, T10 PI is a storage management
-> interface option just like size, RAID level, etc. Upon creation, arrays
-> zero out newly provisioned LUN blocks and write parity, etc. If PI is
-> enabled on a LUN, blocks are written with all zeroes in the data block
-> and all ones in the trailing PI tuple. This is all part of the regular
-> LUN setup procedure.
->
-> In any case. The usage model is that you never format a disk unless you
-> are a tinkerer and bought a retail SAS drive at Fry's. Drives will be
-> delivered by your server vendor formatted with PI and ready to go.
+When an MBX command timeout happens,the resources associated with
+ the MBX command were freed. If FW were to give the response to
+ host after the timeout value set by driver then driver crashes as the MBX Cmd
+ resources were already freed.
 
-Only tinkerers would contribute to something like
-the scsi_debug driver. After all, the pros could
-rely on their T10 compliant vendor equipment :-)
+ This patch fixes this issue by maintaing a state flag for each of
+ the MBX command posted/timedout/completed.
 
-And you are right, I do like to test sg_format
-against something real. Perhaps sg_format is the
-utility those server vendors use. Another
-tinkerer called James Bottomley wrote the original
-sg_format code, according to my notes.
+Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
+Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+---
+ drivers/scsi/be2iscsi/be.h       |   10 +++++
+ drivers/scsi/be2iscsi/be_cmds.c  |   90 ++++++++++++++++++++++++++++----------
+ drivers/scsi/be2iscsi/be_cmds.h  |    3 +-
+ drivers/scsi/be2iscsi/be_iscsi.c |   10 +++--
+ drivers/scsi/be2iscsi/be_main.c  |   27 ++++++++----
+ drivers/scsi/be2iscsi/be_mgmt.c  |   22 +++++-----
+ 6 files changed, 117 insertions(+), 45 deletions(-)
 
-> If you use a non-disk storage device, whether or not to enable PI is
-> part of the LUN provisioning procedure (array management console, RAID
-> or flash controller card config utility, etc.)
->
-> Doug> So a tentative READ, for example checking if a disk has a
-> Doug> partition table, could be preceded by a GET LBA STATUS
-> Doug> command. IMO, if provisioning is enabled, LBPRZ=0 then the GET LBA
-> Doug> STATUS command should be mandatory.  Otherwise a tentative READ is
-> Doug> a lucky dip.
->
-> It's perfectly valid to do a legacy/unprotected READ from a T10 PI
-> device. Doesn't matter whether the blocks are unwritten or not.
+diff --git a/drivers/scsi/be2iscsi/be.h b/drivers/scsi/be2iscsi/be.h
+index 2e28f6c..23c73fe 100644
+--- a/drivers/scsi/be2iscsi/be.h
++++ b/drivers/scsi/be2iscsi/be.h
+@@ -98,6 +98,14 @@ struct be_mcc_obj {
+ 	struct be_queue_info cq;
+ };
+ 
++struct beiscsi_mcc_tag_state {
++#define MCC_TAG_STATE_COMPLETED 0x00
++#define MCC_TAG_STATE_RUNNING   0x01
++#define MCC_TAG_STATE_TIMEOUT   0x02
++	uint8_t tag_state;
++	struct be_dma_mem tag_mem_state;
++};
++
+ struct be_ctrl_info {
+ 	u8 __iomem *csr;
+ 	u8 __iomem *db;		/* Door Bell */
+@@ -122,6 +130,8 @@ struct be_ctrl_info {
+ 	unsigned short mcc_alloc_index;
+ 	unsigned short mcc_free_index;
+ 	unsigned int mcc_tag_available;
++
++	struct beiscsi_mcc_tag_state ptag_state[MAX_MCC_CMD + 1];
+ };
+ 
+ #include "be_cmds.h"
+diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
+index 3338391..b14949a 100644
+--- a/drivers/scsi/be2iscsi/be_cmds.c
++++ b/drivers/scsi/be2iscsi/be_cmds.c
+@@ -138,7 +138,7 @@ unsigned int alloc_mcc_tag(struct beiscsi_hba *phba)
+  * @phba: Driver private structure
+  * @tag: Tag for the MBX Command
+  * @wrb: the WRB used for the MBX Command
+- * @cmd_hdr: IOCTL Hdr for the MBX Cmd
++ * @mbx_cmd_mem: ptr to memory allocated for MBX Cmd
+  *
+  * Waits for MBX completion with the passed TAG.
+  *
+@@ -148,21 +148,26 @@ unsigned int alloc_mcc_tag(struct beiscsi_hba *phba)
+  **/
+ int beiscsi_mccq_compl(struct beiscsi_hba *phba,
+ 		uint32_t tag, struct be_mcc_wrb **wrb,
+-		void *cmd_hdr)
++		struct be_dma_mem *mbx_cmd_mem)
+ {
+ 	int rc = 0;
+ 	uint32_t mcc_tag_response;
+ 	uint16_t status = 0, addl_status = 0, wrb_num = 0;
+ 	struct be_mcc_wrb *temp_wrb;
+-	struct be_cmd_req_hdr *ioctl_hdr;
+-	struct be_cmd_resp_hdr *ioctl_resp_hdr;
++	struct be_cmd_req_hdr *mbx_hdr;
++	struct be_cmd_resp_hdr *mbx_resp_hdr;
+ 	struct be_queue_info *mccq = &phba->ctrl.mcc_obj.q;
+ 
+ 	if (beiscsi_error(phba)) {
+ 		free_mcc_tag(&phba->ctrl, tag);
+-		return -EIO;
++		return -EPERM;
+ 	}
+ 
++	/* Set MBX Tag state to Active */
++	spin_lock(&phba->ctrl.mbox_lock);
++	phba->ctrl.ptag_state[tag].tag_state = MCC_TAG_STATE_RUNNING;
++	spin_unlock(&phba->ctrl.mbox_lock);
++
+ 	/* wait for the mccq completion */
+ 	rc = wait_event_interruptible_timeout(
+ 				phba->ctrl.mcc_wait[tag],
+@@ -171,56 +176,71 @@ int beiscsi_mccq_compl(struct beiscsi_hba *phba,
+ 				BEISCSI_HOST_MBX_TIMEOUT));
+ 
+ 	if (rc <= 0) {
++		struct be_dma_mem *tag_mem;
++		/* Set MBX Tag state to timeout */
++		spin_lock(&phba->ctrl.mbox_lock);
++		phba->ctrl.ptag_state[tag].tag_state = MCC_TAG_STATE_TIMEOUT;
++		spin_unlock(&phba->ctrl.mbox_lock);
++
++		/* Store resource addr to be freed later */
++		tag_mem = &phba->ctrl.ptag_state[tag].tag_mem_state;
++		if (mbx_cmd_mem) {
++			tag_mem->size = mbx_cmd_mem->size;
++			tag_mem->va = mbx_cmd_mem->va;
++			tag_mem->dma = mbx_cmd_mem->dma;
++		} else
++			tag_mem->size = 0;
++
+ 		beiscsi_log(phba, KERN_ERR,
+ 			    BEISCSI_LOG_INIT | BEISCSI_LOG_EH |
+ 			    BEISCSI_LOG_CONFIG,
+ 			    "BC_%d : MBX Cmd Completion timed out\n");
+-		rc = -EBUSY;
+-
+-		/* decrement the mccq used count */
+-		atomic_dec(&phba->ctrl.mcc_obj.q.used);
+-
+-		goto release_mcc_tag;
+-	} else
++		return -EBUSY;
++	} else {
+ 		rc = 0;
++		/* Set MBX Tag state to completed */
++		spin_lock(&phba->ctrl.mbox_lock);
++		phba->ctrl.ptag_state[tag].tag_state = MCC_TAG_STATE_COMPLETED;
++		spin_unlock(&phba->ctrl.mbox_lock);
++	}
+ 
+ 	mcc_tag_response = phba->ctrl.mcc_numtag[tag];
+ 	status = (mcc_tag_response & CQE_STATUS_MASK);
+ 	addl_status = ((mcc_tag_response & CQE_STATUS_ADDL_MASK) >>
+ 			CQE_STATUS_ADDL_SHIFT);
+ 
+-	if (cmd_hdr) {
+-		ioctl_hdr = (struct be_cmd_req_hdr *)cmd_hdr;
++	if (mbx_cmd_mem) {
++		mbx_hdr = (struct be_cmd_req_hdr *)mbx_cmd_mem->va;
+ 	} else {
+ 		wrb_num = (mcc_tag_response & CQE_STATUS_WRB_MASK) >>
+ 			   CQE_STATUS_WRB_SHIFT;
+ 		temp_wrb = (struct be_mcc_wrb *)queue_get_wrb(mccq, wrb_num);
+-		ioctl_hdr = embedded_payload(temp_wrb);
++		mbx_hdr = embedded_payload(temp_wrb);
+ 
+ 		if (wrb)
+ 			*wrb = temp_wrb;
+ 	}
+ 
+ 	if (status || addl_status) {
+-		beiscsi_log(phba, KERN_ERR,
++		beiscsi_log(phba, KERN_WARNING,
+ 			    BEISCSI_LOG_INIT | BEISCSI_LOG_EH |
+ 			    BEISCSI_LOG_CONFIG,
+ 			    "BC_%d : MBX Cmd Failed for "
+ 			    "Subsys : %d Opcode : %d with "
+ 			    "Status : %d and Extd_Status : %d\n",
+-			    ioctl_hdr->subsystem,
+-			    ioctl_hdr->opcode,
++			    mbx_hdr->subsystem,
++			    mbx_hdr->opcode,
+ 			    status, addl_status);
+ 
+ 		if (status == MCC_STATUS_INSUFFICIENT_BUFFER) {
+-			ioctl_resp_hdr = (struct be_cmd_resp_hdr *) ioctl_hdr;
++			mbx_resp_hdr = (struct be_cmd_resp_hdr *) mbx_hdr;
+ 			beiscsi_log(phba, KERN_WARNING,
+ 				    BEISCSI_LOG_INIT | BEISCSI_LOG_EH |
+ 				    BEISCSI_LOG_CONFIG,
+ 				    "BC_%d : Insufficent Buffer Error "
+ 				    "Resp_Len : %d Actual_Resp_Len : %d\n",
+-				    ioctl_resp_hdr->response_length,
+-				    ioctl_resp_hdr->actual_resp_len);
++				    mbx_resp_hdr->response_length,
++				    mbx_resp_hdr->actual_resp_len);
+ 
+ 			rc = -EAGAIN;
+ 			goto release_mcc_tag;
+@@ -319,6 +339,7 @@ static int be_mcc_compl_process(struct be_ctrl_info *ctrl,
+ int be_mcc_compl_process_isr(struct be_ctrl_info *ctrl,
+ 				    struct be_mcc_compl *compl)
+ {
++	struct beiscsi_hba *phba = pci_get_drvdata(ctrl->pdev);
+ 	u16 compl_status, extd_status;
+ 	unsigned short tag;
+ 
+@@ -338,7 +359,32 @@ int be_mcc_compl_process_isr(struct be_ctrl_info *ctrl,
+ 	ctrl->mcc_numtag[tag] |= (compl->tag0 & 0x00FF0000);
+ 	ctrl->mcc_numtag[tag] |= (extd_status & 0x000000FF) << 8;
+ 	ctrl->mcc_numtag[tag] |= (compl_status & 0x000000FF);
+-	wake_up_interruptible(&ctrl->mcc_wait[tag]);
++
++	if (ctrl->ptag_state[tag].tag_state == MCC_TAG_STATE_RUNNING) {
++		wake_up_interruptible(&ctrl->mcc_wait[tag]);
++	} else if (ctrl->ptag_state[tag].tag_state == MCC_TAG_STATE_TIMEOUT) {
++		struct be_dma_mem *tag_mem;
++		tag_mem = &ctrl->ptag_state[tag].tag_mem_state;
++
++		beiscsi_log(phba, KERN_WARNING,
++			    BEISCSI_LOG_MBOX | BEISCSI_LOG_INIT |
++			    BEISCSI_LOG_CONFIG,
++			    "BC_%d : MBX Completion for timeout Command "
++			    "from FW\n");
++		/* Check if memory needs to be freed */
++		if (tag_mem->size)
++			pci_free_consistent(ctrl->pdev, tag_mem->size,
++					    tag_mem->va, tag_mem->dma);
++
++		/* Change tag state */
++		spin_lock(&phba->ctrl.mbox_lock);
++		ctrl->ptag_state[tag].tag_state = MCC_TAG_STATE_COMPLETED;
++		spin_unlock(&phba->ctrl.mbox_lock);
++
++		/* Free MCC Tag */
++		free_mcc_tag(ctrl, tag);
++	}
++
+ 	return 0;
+ }
+ 
+diff --git a/drivers/scsi/be2iscsi/be_cmds.h b/drivers/scsi/be2iscsi/be_cmds.h
+index 627ebbe..770b6c8 100644
+--- a/drivers/scsi/be2iscsi/be_cmds.h
++++ b/drivers/scsi/be2iscsi/be_cmds.h
+@@ -709,7 +709,8 @@ unsigned int be_cmd_get_port_speed(struct beiscsi_hba *phba);
+ void free_mcc_tag(struct be_ctrl_info *ctrl, unsigned int tag);
+ 
+ int beiscsi_mccq_compl(struct beiscsi_hba *phba,
+-			uint32_t tag, struct be_mcc_wrb **wrb, void *cmd_va);
++			uint32_t tag, struct be_mcc_wrb **wrb,
++			struct be_dma_mem *mbx_cmd_mem);
+ /*ISCSI Functuions */
+ int be_cmd_fw_initialize(struct be_ctrl_info *ctrl);
+ int be_cmd_fw_uninit(struct be_ctrl_info *ctrl);
+diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
+index ffadbee..867f3d3 100644
+--- a/drivers/scsi/be2iscsi/be_iscsi.c
++++ b/drivers/scsi/be2iscsi/be_iscsi.c
+@@ -1155,16 +1155,18 @@ static int beiscsi_open_conn(struct iscsi_endpoint *ep,
+ 		return -EAGAIN;
+ 	}
+ 
+-	ret = beiscsi_mccq_compl(phba, tag, NULL, nonemb_cmd.va);
++	ret = beiscsi_mccq_compl(phba, tag, NULL, &nonemb_cmd);
+ 	if (ret) {
+ 		beiscsi_log(phba, KERN_ERR,
+ 			    BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX,
+ 			    "BS_%d : mgmt_open_connection Failed");
+ 
+-		pci_free_consistent(phba->ctrl.pdev, nonemb_cmd.size,
+-			    nonemb_cmd.va, nonemb_cmd.dma);
++		if (ret != -EBUSY)
++			pci_free_consistent(phba->ctrl.pdev, nonemb_cmd.size,
++					    nonemb_cmd.va, nonemb_cmd.dma);
++
+ 		beiscsi_free_ep(beiscsi_ep);
+-		return -EBUSY;
++		return ret;
+ 	}
+ 
+ 	ptcpcnct_out = (struct tcp_connect_and_offload_out *)nonemb_cmd.va;
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index 1f37505..1a1729b 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -228,6 +228,7 @@ static int beiscsi_eh_abort(struct scsi_cmnd *sc)
+ 	struct invalidate_command_table *inv_tbl;
+ 	struct be_dma_mem nonemb_cmd;
+ 	unsigned int cid, tag, num_invalidate;
++	int rc;
+ 
+ 	cls_session = starget_to_session(scsi_target(sc->device));
+ 	session = cls_session->dd_data;
+@@ -285,9 +286,11 @@ static int beiscsi_eh_abort(struct scsi_cmnd *sc)
+ 		return FAILED;
+ 	}
+ 
+-	beiscsi_mccq_compl(phba, tag, NULL, nonemb_cmd.va);
+-	pci_free_consistent(phba->ctrl.pdev, nonemb_cmd.size,
+-			    nonemb_cmd.va, nonemb_cmd.dma);
++	rc = beiscsi_mccq_compl(phba, tag, NULL, &nonemb_cmd);
++	if (rc != -EBUSY)
++		pci_free_consistent(phba->ctrl.pdev, nonemb_cmd.size,
++				    nonemb_cmd.va, nonemb_cmd.dma);
++
+ 	return iscsi_eh_abort(sc);
+ }
+ 
+@@ -303,6 +306,7 @@ static int beiscsi_eh_device_reset(struct scsi_cmnd *sc)
+ 	struct invalidate_command_table *inv_tbl;
+ 	struct be_dma_mem nonemb_cmd;
+ 	unsigned int cid, tag, i, num_invalidate;
++	int rc;
+ 
+ 	/* invalidate iocbs */
+ 	cls_session = starget_to_session(scsi_target(sc->device));
+@@ -363,9 +367,10 @@ static int beiscsi_eh_device_reset(struct scsi_cmnd *sc)
+ 		return FAILED;
+ 	}
+ 
+-	beiscsi_mccq_compl(phba, tag, NULL, nonemb_cmd.va);
+-	pci_free_consistent(phba->ctrl.pdev, nonemb_cmd.size,
+-			    nonemb_cmd.va, nonemb_cmd.dma);
++	rc = beiscsi_mccq_compl(phba, tag, NULL, &nonemb_cmd);
++	if (rc != -EBUSY)
++		pci_free_consistent(phba->ctrl.pdev, nonemb_cmd.size,
++				    nonemb_cmd.va, nonemb_cmd.dma);
+ 	return iscsi_eh_device_reset(sc);
+ }
+ 
+@@ -4360,12 +4365,16 @@ static int beiscsi_get_boot_info(struct beiscsi_hba *phba)
+ 		goto boot_freemem;
+ 	}
+ 
+-	ret = beiscsi_mccq_compl(phba, tag, NULL, nonemb_cmd.va);
++	ret = beiscsi_mccq_compl(phba, tag, NULL, &nonemb_cmd);
+ 	if (ret) {
+ 		beiscsi_log(phba, KERN_ERR,
+ 			    BEISCSI_LOG_INIT | BEISCSI_LOG_CONFIG,
+ 			    "BM_%d : beiscsi_get_session_info Failed");
+-		goto boot_freemem;
++
++		if (ret != -EBUSY)
++			goto boot_freemem;
++		else
++			return ret;
+ 	}
+ 
+ 	session_resp = nonemb_cmd.va ;
+@@ -5594,6 +5603,8 @@ static int beiscsi_dev_probe(struct pci_dev *pcidev,
+ 		phba->ctrl.mcc_tag[i] = i + 1;
+ 		phba->ctrl.mcc_numtag[i + 1] = 0;
+ 		phba->ctrl.mcc_tag_available++;
++		memset(&phba->ctrl.ptag_state[i].tag_mem_state, 0,
++		       sizeof(struct beiscsi_mcc_tag_state));
+ 	}
+ 
+ 	phba->ctrl.mcc_alloc_index = phba->ctrl.mcc_free_index = 0;
+diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
+index b2fcac7..088bdf7 100644
+--- a/drivers/scsi/be2iscsi/be_mgmt.c
++++ b/drivers/scsi/be2iscsi/be_mgmt.c
+@@ -828,22 +828,25 @@ static int mgmt_exec_nonemb_cmd(struct beiscsi_hba *phba,
+ 	be_mcc_notify(phba);
+ 	spin_unlock(&ctrl->mbox_lock);
+ 
+-	rc = beiscsi_mccq_compl(phba, tag, NULL, nonemb_cmd->va);
++	rc = beiscsi_mccq_compl(phba, tag, NULL, nonemb_cmd);
++
++	if (resp_buf)
++		memcpy(resp_buf, nonemb_cmd->va, resp_buf_len);
++
+ 	if (rc) {
+-		/* Check if the IOCTL needs to be re-issued */
++		/* Check if the MBX Cmd needs to be re-issued */
+ 		if (rc == -EAGAIN)
+ 			return rc;
+ 
+-		beiscsi_log(phba, KERN_ERR,
++		beiscsi_log(phba, KERN_WARNING,
+ 			    BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX,
+ 			    "BG_%d : mgmt_exec_nonemb_cmd Failed status\n");
+ 
+-		goto free_cmd;
++		if (rc != -EBUSY)
++			goto free_cmd;
++		else
++			return rc;
+ 	}
+-
+-	if (resp_buf)
+-		memcpy(resp_buf, nonemb_cmd->va, resp_buf_len);
+-
+ free_cmd:
+ 	pci_free_consistent(ctrl->pdev, nonemb_cmd->size,
+ 			    nonemb_cmd->va, nonemb_cmd->dma);
+@@ -1348,7 +1351,6 @@ int mgmt_set_vlan(struct beiscsi_hba *phba,
+ {
+ 	int rc;
+ 	unsigned int tag;
+-	struct be_mcc_wrb *wrb = NULL;
+ 
+ 	tag = be_cmd_set_vlan(phba, vlan_tag);
+ 	if (!tag) {
+@@ -1358,7 +1360,7 @@ int mgmt_set_vlan(struct beiscsi_hba *phba,
+ 		return -EBUSY;
+ 	}
+ 
+-	rc = beiscsi_mccq_compl(phba, tag, &wrb, NULL);
++	rc = beiscsi_mccq_compl(phba, tag, NULL, NULL);
+ 	if (rc) {
+ 		beiscsi_log(phba, KERN_ERR,
+ 			    (BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX),
+-- 
+1.7.10.4
 
-Ah, the current SBC-3 draft (sbc3r36.pdf) does say if one
-does a READ from a disk with logical provisioning enabled
-and LBPRZ=0 then the block data is "vendor specific" and
-the PI, if any, is all 0xff bytes. That last bit was added
-in sbc3r34.pdf (and it was "any value" prior to that).
-
-Back to the original question, I don't think Sagi was
-asking if it was valid to do a legacy/unprotected READ,
-it was what to expect with a protected READ on
-unwritten blocks:
-
- > So this takes me to a corner I still don't understand, if
- > a LUN is pre-formatted as T10-protected, what happens to
- > unwritten blocks read?
-
-So the precise answer is: the PI will be all 0xff bytes,
-unless logical provisioning is enabled, LBPRZ=0 and the
-device's compliance predates sbc3r34.pdf (November 2012).
-
-Doug Gilbert
