@@ -1,46 +1,66 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 13/14] target/rd: Add DIF protection into rd_execute_rw
-Date: Mon, 13 Jan 2014 11:22:10 -0800
-Message-ID: <1389640930.5567.441.camel@haakon3.risingtidesystems.com>
+Subject: Re: [PATCH 03/14] target/sbc: Add sbc_check_prot + update
+ sbc_parse_cdb for DIF
+Date: Mon, 13 Jan 2014 11:23:02 -0800
+Message-ID: <1389640982.5567.442.camel@haakon3.risingtidesystems.com>
 References: <1389212157-14540-1-git-send-email-nab@daterainc.com>
-	 <1389212157-14540-14-git-send-email-nab@daterainc.com>
-	 <52CE7ABA.9080403@mellanox.com>
-	 <1389336761.5567.403.camel@haakon3.risingtidesystems.com>
-	 <52D28238.5010903@dev.mellanox.co.il>
+	 <1389212157-14540-4-git-send-email-nab@daterainc.com>
+	 <52CEB901.6030504@mellanox.com>
+	 <1389337456.5567.412.camel@haakon3.risingtidesystems.com>
+	 <52D283B8.6050108@dev.mellanox.co.il>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:50669 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751317AbaAMTUU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jan 2014 14:20:20 -0500
-In-Reply-To: <52D28238.5010903@dev.mellanox.co.il>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <52D283B8.6050108@dev.mellanox.co.il>
+Sender: target-devel-owner@vger.kernel.org
 To: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Cc: Sagi Grimberg <sagig@mellanox.com>, "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Or Gerlitz <ogerlitz@mellanox.com>
+Cc: Sagi Grimberg <sagig@mellanox.com>, "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Or Gerlitz <ogerlitz@mellanox.com>, oren Duer <oren@mellanox.com>
+List-Id: linux-scsi@vger.kernel.org
 
-On Sun, 2014-01-12 at 13:53 +0200, Sagi Grimberg wrote:
-> <SNIP>
+On Sun, 2014-01-12 at 13:59 +0200, Sagi Grimberg wrote:
+> On 1/10/2014 9:04 AM, Nicholas A. Bellinger wrote:
+> > On Thu, 2014-01-09 at 16:58 +0200, Sagi Grimberg wrote:
+> >> On 1/8/2014 10:36 PM, Nicholas A. Bellinger wrote:
+
+<SNIP>
+
+> >>> diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
+> >>> index 52ae54e..600ffcb 100644
+> >>> --- a/drivers/target/target_core_sbc.c
+> >>> +++ b/drivers/target/target_core_sbc.c
+> >>> @@ -563,6 +563,27 @@ sbc_compare_and_write(struct se_cmd *cmd)
+> >>>    	return TCM_NO_SENSE;
+> >>>    }
+> >>>    
+> >>> +bool
+> >>> +sbc_check_prot(struct se_device *dev, struct se_cmd *cmd, unsigned char *cdb)
+> >>> +{
+> >>> +	if (!dev->dev_attrib.pi_prot_type)
+> >>> +		return true;
+> >>> +
+> >>> +	if (dev->dev_attrib.pi_prot_type == TARGET_DIF_TYPE2_PROT &&
+> >>> +	   (cdb[1] & 0xe0))
+> >>> +		return false;
+> >>> +
+> >>> +	if (!(cdb[1] & 0xe0)) {
+> >>> +		pr_warn("Target: Unprotected READ/WRITE to DIF device\n");
+> >>> +		return true;
+> >>> +	}
+> >>> +	if (!cmd->t_prot_sg || !cmd->t_prot_nents)
+> >>> +		return true;
+> >>> +
+> >>> +	cmd->se_cmd_flags |= SCF_PROT;
+> >> Isn't this the place to fill the se_cmd DIF execution parameters?
+> >> prot_op, prot_type, guard_type, initial_reftag, apptag etc...
+> >> Next, all parties interested in DIF execution should look in se_cmd
+> >> (backstore, transport).
+> > Yes, working on this for -v2 as well.  :)
 > 
-> >> I wander how we can skip  sbc_dif_verify_xxxx if the transport already
-> >> offloaded DIF verify.
-> >> I think that the transport should signal the core layer that it is able
-> >> to offload DIF (ADD/STRIP/PASS/VERIFY), in which case the core should
-> >> turn off the backstore DIF verify emulation to sustain performance.
-> > So IBLOCK + PSCSI backends will need to be a non interleaved protection
-> > PASS for fast path operation, and backend protection emulation is
-> > reserved for RAMDISK and perhaps a special FILEIO full emulation mode.
-> 
-> But can't we avoid that if transport already verified? This will kill 
-> performance.
+> OK, so just to be clear, both the transport and the backstore will be 
+> look in se_cmd protection attributes when executing IO correct?
 > 
 
-Sure, this will end up being configurable per backend if the fabric does
-a CHECK + STRIP, or CHECK + PASS.
+Correct.
 
 --nab
-
-
-
