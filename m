@@ -1,48 +1,39 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH/RESEND v2 1/2] Hard disk S3 resume time optimization
-Date: Mon, 13 Jan 2014 15:30:07 -0500
-Message-ID: <20140113203007.GA3480@mtj.dyndns.org>
-References: <20140108005607.GB29556@linux.intel.com>
- <20140111191315.GC3257@mtj.dyndns.org>
- <20140113195544.GA13900@linux.intel.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 09/14] target/configfs: Expose protection device attributes
+Date: Mon, 13 Jan 2014 15:30:12 -0500
+Message-ID: <yq138kroca3.fsf@sermon.lab.mkp.net>
+References: <1389212157-14540-1-git-send-email-nab@daterainc.com>
+	<1389212157-14540-10-git-send-email-nab@daterainc.com>
+	<yq161prr1p8.fsf@sermon.lab.mkp.net>
+	<1389637859.5567.431.camel@haakon3.risingtidesystems.com>
+	<1389639177.12062.21.camel@dabdike.int.hansenpartnership.com>
+	<1389641243.5567.445.camel@haakon3.risingtidesystems.com>
+	<yq1a9ezocrg.fsf@sermon.lab.mkp.net>
+	<1389644643.12062.42.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20140113195544.GA13900@linux.intel.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Todd E Brandt <todd.e.brandt@linux.intel.com>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, rjw@rjwysocki.net
+Content-Type: text/plain
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1389644643.12062.42.camel@dabdike.int.hansenpartnership.com>
+	(James Bottomley's message of "Mon, 13 Jan 2014 12:24:03 -0800")
+Sender: target-devel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Sagi Grimberg <sagig@mellanox.com>, Or Gerlitz <ogerlitz@mellanox.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hello,
+>>>>> "James" == James Bottomley <James.Bottomley@HansenPartnership.com> writes:
 
-On Mon, Jan 13, 2014 at 11:55:44AM -0800, Todd E Brandt wrote:
-> I see your point, why have two paths if one will do. The only thing that
-> worries me is that the PM resume from hibernate function doesn't have
-> an error handler. What happens when it tries to read the image from swap
-> and the disk is still spinning up? The scsi layer has an error handler so
+James> I'm intrigued by this: how do you get the extra space, since I
+James> heard all the drive vendors were adamant that 520 was it for the
+James> current manufacturing processes.
 
-The request gets blocked on EH.
+Well, you've been able to get 528-byte sector drives for a long
+time. They are used inside arrays that use both PI and internal
+metadata.
 
-> it just keeps retrying every few seconds, but the PM core reads directly
-> from the swap disk's block device.
-
-Why would that matter?  Resume is handled by EH.  While EH is in
-progress, all commands are blocked.  Am I missing something?
-
-> > So, can't just everything become async?  Are there cases where we
-> > *need* synchronous PM behaviors?
-> 
-> I think suspend still needs to be synchronous, because the PM core needs
-> to be sure that the disks are actually spun down before it can attempt
-> to shut the system down. I'm adding Raphael to the thread. Raphael, is 
-> this correct?
-
-Yeah, we definitely should wait for suspend to complete before
-entering suspend state.  I was referring to the resume path.
-
-Thanks.
+In any case Type 4 was never intended for 512-byte sectors. The existing
+16-bit T10 CRC is pretty useless for 4096-byte blocks so the proposal
+was aimed at 4096+16 (but obviously that tidbit is outside of the T10
+spec that doesn't mandate block sizes or accompanying PI types).
 
 -- 
-tejun
+Martin K. Petersen	Oracle Linux Engineering
