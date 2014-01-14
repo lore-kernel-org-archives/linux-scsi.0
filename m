@@ -1,41 +1,34 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH/RESEND v2 1/2] Hard disk S3 resume time optimization
-Date: Tue, 14 Jan 2014 09:31:08 -0500
-Message-ID: <20140114143108.GB12131@htj.dyndns.org>
-References: <20140108005607.GB29556@linux.intel.com>
- <20140111191315.GC3257@mtj.dyndns.org>
- <20140113195544.GA13900@linux.intel.com>
- <20140113203007.GA3480@mtj.dyndns.org>
- <20140113233026.GA3200@linux.intel.com>
+Subject: Re: [PATCH/RESEND v2 0/2] Hard disk S3 resume time optimization
+Date: Tue, 14 Jan 2014 09:43:25 -0500
+Message-ID: <20140114144325.GC12131@htj.dyndns.org>
+References: <20140108005500.GA29556@linux.intel.com>
+ <CAMHSBOXzU3Y=oH1Nzxash0wJvuc6Y9hoOcbvdstyOaO77QQLkA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qe0-f43.google.com ([209.85.128.43]:63609 "EHLO
-	mail-qe0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751576AbaANObM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jan 2014 09:31:12 -0500
+Return-path: <linux-ide-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20140113233026.GA3200@linux.intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <CAMHSBOXzU3Y=oH1Nzxash0wJvuc6Y9hoOcbvdstyOaO77QQLkA@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Gwendal Grignou <gwendal@google.com>
+Cc: todd.e.brandt@linux.intel.com, Jej B <James.Bottomley@hansenpartnership.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Todd E Brandt <todd.e.brandt@linux.intel.com>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, rjw@rjwysocki.net
 
-Hello, Todd.
+Hello, Gwendal.
 
-On Mon, Jan 13, 2014 at 03:30:26PM -0800, Todd E Brandt wrote:
-> Ahh, sorry, yea I think async should work for the entire resume pathway. Would
-> you be willing to accept this ata patch separately from the scsi one? It
-> wouldn't provide any performance benefit on its own, but would pave the way
-> for performance benefit by removing the ATA resume lag time (Which would then
-> put the ball in the scsi layer's court to finish the optimization). I've 
-> tested both patches separately and both work without issue. Also, this patch
-> appears to be a pre-requisite to both mine and Phillip Susi's solution, so 
-> it would really hope move things along regardless of which direction is
-> ultimately chosen in the SCSI layer.
+On Mon, Jan 13, 2014 at 04:36:52PM -0800, Gwendal Grignou wrote:
+> Won't this patch defeat staggered spinup at resume? If you have a jbod
+> with a smallish power supply, with a 12V rail designed for the steady
+> state and 1 or 2 devices spinning up at once, you may be in trouble
+> when all the disks will want to spinup in same second.
 
-Let's do it together.  It's not like this involves huge number of
-patches which would be helped by staging things.
+Yeah, I think it would.  We never fully solved the staggered spinup
+problem and it probably is too late to invest into proper mechanism
+for that.  I think an easy workaround would be, say, have a kernel
+param which limits the max number of concurrent async wakeups and set
+the value to something reasonable - say, 2, which should give us most
+of benefits of async wakeup in vast majority of cases while avoiding
+blowing up PSUs on larger setups.
 
 Thanks.
 
