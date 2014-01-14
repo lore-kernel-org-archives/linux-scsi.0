@@ -1,143 +1,88 @@
-From: Todd E Brandt <todd.e.brandt@linux.intel.com>
-Subject: [PATCH v3 2/2] Hard disk S3 resume time optimization
-Date: Tue, 14 Jan 2014 16:32:26 -0800
-Message-ID: <20140115003226.GC15067@linux.intel.com>
-References: <20140108005607.GB29556@linux.intel.com>
- <20140111191315.GC3257@mtj.dyndns.org>
- <20140113195544.GA13900@linux.intel.com>
- <20140113203007.GA3480@mtj.dyndns.org>
-Reply-To: todd.e.brandt@linux.intel.com
+From: Rusty Russell <rusty@rustcorp.com.au>
+Subject: Re: [PATCH V2] virtio-scsi: Fix hotcpu_notifier use-after-free with
+	virtscsi_freeze
+Date: Wed, 15 Jan 2014 10:08:12 +1030
+Message-ID: <87fvoqxhgb.fsf@rustcorp.com.au>
+References: <1387258568-11309-1-git-send-email-jasowang@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20140113203007.GA3480@mtj.dyndns.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, rjw@rjwysocki.net
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+In-Reply-To: <1387258568-11309-1-git-send-email-jasowang@redhat.com>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: Jason Wang <jasowang@redhat.com>, kvm@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, stable@vger.kernel.org, virtualization@lists.linux-foundation.org
 List-Id: linux-scsi@vger.kernel.org
 
-On resume, the SD driver currently waits until the block driver finishes
-executing a disk start command with blk_execute_rq. This patch changes
-the sd_resume callback to use blk_execute_rq_nowait instead, which allows
-it to return immediately, thus allowing the next device in the pm queue
-to resume. The return value of blk_execute_rq_nowait is handled in the
-background by sd_resume_complete. Any commands issued to the scsi disk
-during the startup will be queued up and executed once the disk is online.
-Thus no information is lost.
+Jason Wang <jasowang@redhat.com> writes:
+> From: Asias He <asias.hejun@gmail.com>
+>
+> vqs are freed in virtscsi_freeze but the hotcpu_notifier is not
+> unregistered. We will have a use-after-free usage when the notifier
+> callback is called after virtscsi_freeze.
+>
+> Fixes: 285e71ea6f3583a85e27cb2b9a7d8c35d4c0d558
+> ("virtio-scsi: reset virtqueue affinity when doing cpu hotplug")
 
-This patch applies to all three resume callbacks: resume, restore, and
-runtime-resume. There is only a performance benefit for resume, but for
-simplicity both restore and runtime-resume use the same code path.
+Sorry, I missed this in my earlier sweep (I was only skimming emails
+during the break).
 
-The execution flow has changed from a single, synchronous call, to two
-calls: one called to start sd_resume asynchronously, the other called on
-completion. Thus the dmesg log will now show two prints for each drive
-resume, on resume start and complete. The scsi sense data is managed
-the same, but is now analyzed and freed in sd_resume_complete.
+Applied,
+Rusty.
 
-This code copies a portion of sd_start_stop_device, scsi_execute_req_flags,
-and scsi_execute directly into sd_resume: effectively circumventing
-sd_start_stop_device to start disks. This is to enable only the START_STOP
-command to use blk_execute_rq_nowait instead of blk_execute_rq. So
-sd_start_stop_device is now only used to stop the device. The disk is
-started from within the sd_resume call itself. Another approach might be to
-create an async version of scsi_execute to better preserve the code path
-but I'm reticent to allow any other scsi commands to execute asynchronously.
-
-Signed-off-by: Todd Brandt <todd.e.brandt@intel.com>
-Signed-off-by: Arjan van de Ven <arjan@linux.intel.com>
-
- drivers/scsi/sd.c | 70 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 67 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 69725f7..c780f75 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -3172,18 +3172,82 @@ static int sd_suspend_runtime(struct device *dev)
- 	return sd_suspend_common(dev, false);
- }
- 
-+static void sd_resume_complete(struct request *rq, int error)
-+{
-+	struct scsi_sense_hdr sshdr;
-+	struct scsi_disk *sdkp = rq->end_io_data;
-+	char *sense = rq->sense;
-+
-+	if (error) {
-+		sd_printk(KERN_WARNING, sdkp, "START FAILED\n");
-+		sd_print_result(sdkp, error);
-+		if (sense && (driver_byte(error) & DRIVER_SENSE)) {
-+			scsi_normalize_sense(sense,
-+				SCSI_SENSE_BUFFERSIZE, &sshdr);
-+			sd_print_sense_hdr(sdkp, &sshdr);
-+		}
-+	} else {
-+		sd_printk(KERN_NOTICE, sdkp, "START SUCCESS\n");
-+	}
-+
-+	kfree(sense);
-+	rq->sense = NULL;
-+	rq->end_io_data = NULL;
-+	__blk_put_request(rq->q, rq);
-+	scsi_disk_put(sdkp);
-+}
-+
- static int sd_resume(struct device *dev)
- {
-+	unsigned char cmd[6] = { START_STOP };
- 	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
-+	struct request *req;
-+	char *sense = NULL;
- 	int ret = 0;
- 
- 	if (!sdkp->device->manage_start_stop)
--		goto done;
-+		goto error;
- 
- 	sd_printk(KERN_NOTICE, sdkp, "Starting disk\n");
--	ret = sd_start_stop_device(sdkp, 1);
- 
--done:
-+	cmd[4] |= 1;
-+
-+	if (sdkp->device->start_stop_pwr_cond)
-+		cmd[4] |= 1 << 4;	/* Active or Standby */
-+
-+	if (!scsi_device_online(sdkp->device)) {
-+		ret = -ENODEV;
-+		goto error;
-+	}
-+
-+	req = blk_get_request(sdkp->device->request_queue, 0, __GFP_WAIT);
-+	if (!req) {
-+		ret = -ENOMEM;
-+		goto error;
-+	}
-+
-+	sense = kzalloc(SCSI_SENSE_BUFFERSIZE, GFP_NOIO);
-+	if (!sense) {
-+		ret = -ENOMEM;
-+		goto error_sense;
-+	}
-+
-+	req->cmd_len = COMMAND_SIZE(cmd[0]);
-+	memcpy(req->cmd, cmd, req->cmd_len);
-+	req->sense = sense;
-+	req->sense_len = 0;
-+	req->retries = SD_MAX_RETRIES;
-+	req->timeout = SD_TIMEOUT;
-+	req->cmd_type = REQ_TYPE_BLOCK_PC;
-+	req->cmd_flags |= REQ_PM | REQ_QUIET | REQ_PREEMPT;
-+
-+	req->end_io_data = sdkp;
-+	blk_execute_rq_nowait(req->q, NULL, req, 1, sd_resume_complete);
-+	return 0;
-+
-+ error_sense:
-+	__blk_put_request(req->q, req);
-+ error:
- 	scsi_disk_put(sdkp);
- 	return ret;
- }
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Asias He <asias.hejun@gmail.com>
+> Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
+> Signed-off-by: Jason Wang <jasowang@redhat.com>
+> ---
+> Changes from V1:
+> - Add "Fixes" line
+> - CC stable
+> ---
+>  drivers/scsi/virtio_scsi.c | 15 ++++++++++++++-
+>  1 file changed, 14 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+> index c3173dc..16bfd50 100644
+> --- a/drivers/scsi/virtio_scsi.c
+> +++ b/drivers/scsi/virtio_scsi.c
+> @@ -956,6 +956,10 @@ static void virtscsi_remove(struct virtio_device *vdev)
+>  #ifdef CONFIG_PM_SLEEP
+>  static int virtscsi_freeze(struct virtio_device *vdev)
+>  {
+> +	struct Scsi_Host *sh = virtio_scsi_host(vdev);
+> +	struct virtio_scsi *vscsi = shost_priv(sh);
+> +
+> +	unregister_hotcpu_notifier(&vscsi->nb);
+>  	virtscsi_remove_vqs(vdev);
+>  	return 0;
+>  }
+> @@ -964,8 +968,17 @@ static int virtscsi_restore(struct virtio_device *vdev)
+>  {
+>  	struct Scsi_Host *sh = virtio_scsi_host(vdev);
+>  	struct virtio_scsi *vscsi = shost_priv(sh);
+> +	int err;
+> +
+> +	err = virtscsi_init(vdev, vscsi);
+> +	if (err)
+> +		return err;
+> +
+> +	err = register_hotcpu_notifier(&vscsi->nb);
+> +	if (err)
+> +		vdev->config->del_vqs(vdev);
+>  
+> -	return virtscsi_init(vdev, vscsi);
+> +	return err;
+>  }
+>  #endif
+>  
+> -- 
+> 1.8.3.2
