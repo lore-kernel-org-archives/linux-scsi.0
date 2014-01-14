@@ -1,36 +1,49 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v8 3/4] ata: Add APM X-Gene SoC SATA host controller
- driver
-Date: Tue, 14 Jan 2014 11:46:14 -0500
-Message-ID: <20140114164540.GK12131@htj.dyndns.org>
-References: <6EB44142-06DA-4C9D-8999-CFA9EE30E03D@apm.com>
- <20140112114958.GA8509@mtj.dyndns.org>
- <CAPw-ZTmfKfPY3DRfJT6FQP78ULwfcjGG76cNfr9yk7UMdrO4wg@mail.gmail.com>
- <20140113160843.GB29053@htj.dyndns.org>
- <CAPw-ZT=A=c9-3BfP-LoDBXByQqfvATpAdS4NPPWB9+R1+GHfDA@mail.gmail.com>
- <20140114160312.GH12131@htj.dyndns.org>
- <20140114160419.GI12131@htj.dyndns.org>
- <CAPw-ZTmn6JiDku=vz=m9v5MNuFrK_-d0ehU_88drCYGHM8Wv=Q@mail.gmail.com>
- <20140114163008.GJ12131@htj.dyndns.org>
- <CAPw-ZTn7QZkPGLMYkd0m4uS_vC53bOfv-N7M=jUTnzMSVJkMrw@mail.gmail.com>
+From: Mike Miller <mike.miller@hp.com>
+Subject: [PATCH 1/2] scsi: hpsa, add new PCI Ids
+Date: Tue, 14 Jan 2014 10:59:46 -0600
+Message-ID: <20140114165946.GA12564@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <CAPw-ZTn7QZkPGLMYkd0m4uS_vC53bOfv-N7M=jUTnzMSVJkMrw@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Loc Ho <lho@apm.com>
-Cc: David Milburn <dmilburn@redhat.com>, "olof@lixom.net" <olof@lixom.net>, "arnd@arndb.de" <arnd@arndb.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "jcm@redhat.com" <jcm@redhat.com>, "patches@apm.com" <patches@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, "James E. J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Jan 14, 2014 at 08:37:18AM -0800, Loc Ho wrote:
-> This issue has NOT been observed but the design has this issue and
-> observed from verification. As a mean to ensure that this never occur
-> from design itself, this is the workaround and only apply to SATA and
-> SDIO. The SDIO don't need this special flush as discussed in earlier
-> email.
+From: Mike Miller <mike.miller@hp.com>
 
-Urgh... can't say I'm a big fan of this hardware. :(
+This patch adds 4 more PCI ID's for HP Gen9 servers. These new ID's were
+just made known this week.
 
--- 
-tejun
+Signed-off-by: Mike Miller <mike.miller@hp.com>
+---
+ drivers/scsi/hpsa.c |    8 ++++++++
+ 1 files changed, 8 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 20a5e6e..8a27d7b 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -120,6 +120,10 @@ static const struct pci_device_id hpsa_pci_device_id[] = {
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C, 0x21C7},
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C, 0x21C8},
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C, 0x21C9},
++	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C, 0x21CA},
++	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C, 0x21CC},
++	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C, 0x21CD},
++	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C, 0x21CE},
+ 	{PCI_VENDOR_ID_HP,     PCI_ANY_ID,	PCI_ANY_ID, PCI_ANY_ID,
+ 		PCI_CLASS_STORAGE_RAID << 8, 0xffff << 8, 0},
+ 	{0,}
+@@ -166,6 +170,10 @@ static struct board_type products[] = {
+ 	{0x21C7103C, "Smart Array", &SA5_access},
+ 	{0x21C8103C, "Smart Array", &SA5_access},
+ 	{0x21C9103C, "Smart Array", &SA5_access},
++	{0x21CA103C, "Smart Array", &SA5_access},
++	{0x21CC103C, "Smart Array", &SA5_access},
++	{0x21CD103C, "Smart Array", &SA5_access},
++	{0x21CE103C, "Smart Array", &SA5_access},
+ 	{0xFFFF103C, "Unknown Smart Array", &SA5_access},
+ };
+ 
