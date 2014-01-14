@@ -1,89 +1,267 @@
-From: Gwendal Grignou <gwendal@google.com>
-Subject: Re: [PATCH/RESEND v2 0/2] Hard disk S3 resume time optimization
-Date: Mon, 13 Jan 2014 16:36:52 -0800
-Message-ID: <CAMHSBOXzU3Y=oH1Nzxash0wJvuc6Y9hoOcbvdstyOaO77QQLkA@mail.gmail.com>
-References: <20140108005500.GA29556@linux.intel.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH] qla2xxx: Enhancements to enable NPIV support for QLOGIC
+ ISPs with TCM/LIO.
+Date: Mon, 13 Jan 2014 17:36:15 -0800
+Message-ID: <1389663375.5567.482.camel@haakon3.risingtidesystems.com>
+References: <1389298424-10371-1-git-send-email-saurav.kashyap@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20140108005500.GA29556@linux.intel.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: todd.e.brandt@linux.intel.com
-Cc: Tejun Heo <tj@kernel.org>, Jej B <James.Bottomley@hansenpartnership.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1389298424-10371-1-git-send-email-saurav.kashyap@qlogic.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Saurav Kashyap <saurav.kashyap@qlogic.com>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, giridhar.malavali@qlogic.com, andrew.vasquez@qlogic.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Jan 7, 2014 at 4:55 PM, Todd E Brandt
-<todd.e.brandt@linux.intel.com> wrote:
->
-> This patch reduces S3 resume time from 10+ seconds to less than a second
-> on systems with SATA drives. It does this by making ata port and scsi disk
-> resume non-blocking.
->
-> This is another resend of the patch I send out in early December. I've
-> addressed all the feedback I received from list members, so all I really
-> need is a yay or nay from Tejun Huo and James Bottomley (since it touches
-> both subsystems).
->
-> The notes below include the performance results and patch description.
->
-> [Computer One Test - 10.5X speedup on S3 resume]
-> Platform: Ubuntu Raring Ringtail (13.04) kernel 3.11.0-rc7
-> Cpu: Intel(R) Core(TM) i7-3960X CPU @ 3.30GHz
-> Ahci: Intel C600/X79 series chipset 6-Port SATA AHCI (r5)
-> Disk config (using all 6 ahci ports):
-> 240 GB SSD, 3 TB HD, 500 GB HD, DVD-ROM (with cd inserted), 2 TB HD, 1 TB HD
-> Resume time: [unpatched 11656ms] [patched 1110ms]
->
-> [Computer Two Test - 12X speedup on S3 resume]
-> Platform: Ubuntu Raring Ringtail (13.04) kernel 3.11.0-rc7
-> Cpu: Intel(R) Core(TM) i7-3770 CPU @ 3.40GHz
-> Ahci: Intel 7 Series/C210 Series Chipset Family 6-port SATA [AHCI mode] (r4)
-> Disk config (using 1 ahci port): 320 GB Hard Disk
-> Resume time: [unpatched 5416 ms] [patched 448 ms]
->
-> [Computer Three Test - 7.8X speedup on S3 resume]
-> Platform: Ubuntu Raring Ringtail (13.04) kernel 3.11.0-rc7
-> Cpu: Intel(R) Core(TM) i7-4770S CPU @ 3.10GHz
-> Ahci: Intel Lynx Point 6-port SATA Controller 1 [AHCI mode] (r2)
-> Disk config (using 2 ahci ports): DVD-ROM (empty), 500 GB Hard Disk
-> Resume time: [unpatched 5385ms] [patched 688ms]
->
-> The essential issue behind hard disks' lengthy resume time is the ata port
-> driver blocking until the ATA port hardware is finished coming online. So
-> the kernel isn't really doing anything during all those seconds that the
-> disks are resuming, it's just blocking until the hardware says it's ready
-> to accept commands. Applying this patch set allows SATA disks to resume
-> asynchronously without holding up system resume, thus allowing the UI to
-> come online much more quickly.
-Won't this patch defeat staggered spinup at resume? If you have a jbod
-with a smallish power supply, with a 12V rail designed for the steady
-state and 1 or 2 devices spinning up at once, you may be in trouble
-when all the disks will want to spinup in same second.
+Hi Saurav & Co,
 
-Gwendal.
-> There may be a short period after resume
-> where the disks are still spinning up in the background, but it will only
-> momentarily affect applications using that disk.
->
-> The patch set has two parts which apply to ata_port_resume and sd_resume
-> respectively. Both are required to achieve any real performance benefit,
-> but they will still function independantly without a performance hit.
->
-> ata_port_resume patch (1/2):
-> sd_resume patch (2/2):
->
-> v2:
->  [in response to Oliver Neukum]
->  - Added scsi cmd error reporting through the scsi_sense_hdr
->  [in response to James Bottomley]
->  - unified the sd_resume code path by just making sd_resume async. Thus all
->    three resume callbacks: resume, restore, and runtime-resume will use it,
->    but there is a performance benefit for resume only.
->  [in response to Bartlomiej Zolnierkiewicz]
->  - unified the __ata_port_resume_common code path to include an async
->    parameter. This way there's no need to re-implement ata_port_request_pm.
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks for posting, and apologies for the slight delay.
+
+Comments are below.
+
+On Thu, 2014-01-09 at 15:13 -0500, Saurav Kashyap wrote:
+> Signed-off-by: Sawan Chandak <sawan.chandak@qlogic.com>
+> Signed-off-by: Quinn Tran <quinn.tran@qlogic.com>
+> Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
+> ---
+>  drivers/scsi/qla2xxx/qla_attr.c    |    2 +
+>  drivers/scsi/qla2xxx/qla_def.h     |   12 ++-
+>  drivers/scsi/qla2xxx/qla_target.c  |  150 +++++++++++++++++++-----------------
+>  drivers/scsi/qla2xxx/tcm_qla2xxx.c |  110 +++++++++++++++-----------
+>  drivers/scsi/qla2xxx/tcm_qla2xxx.h |    4 -
+>  5 files changed, 153 insertions(+), 125 deletions(-)
+
+<SNIP>
+
+> diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+> index 7eb19be..113ca95 100644
+> --- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+> +++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+
+<SNIP>
+
+> @@ -1650,6 +1645,9 @@ static struct se_wwn *tcm_qla2xxx_npiv_make_lport(
+>  	struct tcm_qla2xxx_lport *lport;
+>  	u64 npiv_wwpn, npiv_wwnn;
+>  	int ret;
+> +	struct scsi_qla_host *vha = NULL;
+> +	struct qla_hw_data *ha = NULL;
+> +	scsi_qla_host_t *base_vha = NULL;
+>  
+>  	if (tcm_qla2xxx_npiv_parse_wwn(name, strlen(name)+1,
+>  				&npiv_wwpn, &npiv_wwnn) < 0)
+> @@ -1666,12 +1664,29 @@ static struct se_wwn *tcm_qla2xxx_npiv_make_lport(
+>  			TCM_QLA2XXX_NAMELEN, npiv_wwpn, npiv_wwnn);
+>  	sprintf(lport->lport_naa_name, "naa.%016llx", (unsigned long long) npiv_wwpn);
+>  
+> -/* FIXME: tcm_qla2xxx_npiv_make_lport */
+> -	ret = -ENOSYS;
+> +	ret = tcm_qla2xxx_init_lport(lport);
+>  	if (ret != 0)
+>  		goto out;
+>  
+> +	ret = qlt_lport_register(&tcm_qla2xxx_template, npiv_wwpn,
+> +				tcm_qla2xxx_lport_register_cb, lport);
+> +
+> +	if (ret != 0)
+> +		goto out_lport;
+> +
+> +	vha = lport->qla_vha;
+> +	ha = vha->hw;
+> +	base_vha = pci_get_drvdata(ha->pdev);
+> +
+> +	if (!qla_tgt_mode_enabled(base_vha)) {
+> +		ret = -EPERM;
+> +		goto out_lport;
+> +	}
+> +
+
+As discussed off-list, I'd rather perform the fc_vport creation using
+fc_vport_create() from within tcm_qla2xxx_npiv_make_lport() context,
+instead of using external sysfs attributes separate from the NPIV
+specific TFO->make_wwpn() configfs call.
+
+This makes life easier for existing userspace code that persists
+configurations across target restart when metadata required to do NPIV
+configuration is entirely encapsulated within the configfs hierarchy. 
+
+For /sys/kernel/config/target/qla2xxx_npiv/$WWPN, I'd like to propose
+the following format:
+
+      $PARENT_WWPN@$NPIV_WWPN:$NPIV_WWNN
+
+which would appear under configfs as:
+
+      21:00:00:24:ff:31:4c:49@21000000deadbeef:200000000000ffff
+
+The changes required look something like the following below, that
+applies atop your current patch.
+
+The qlt_lport_register() (*callback) has been modified to accept the
+passed npiv_wwpn + npiv_wwnn, and then tcm_qla2xxx code calls a NPIV
+specific tcm_qla2xxx_lport_register_npiv_cb() to invoke
+fc_vport_create() directly.
+
+>From there, the struct scsi_qla_host *npiv_vha is extracted from
+vport->dd_data, and pointer assignment set in lport->qla_vha.
+
+Btw, this code needs a bit more work to extract phys_wwpn from the
+passed configfs name, but should give an idea of how this can work.
+
+Any objections to this approach..?
+
+--nab
+
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index 202060d..cebe356 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -4235,8 +4235,10 @@ static void qlt_lport_dump(struct scsi_qla_host *vha, u64 wwpn,
+  * @callback:  lport initialization callback for tcm_qla2xxx code
+  * @target_lport_ptr: pointer for tcm_qla2xxx specific lport data
+  */
+-int qlt_lport_register(struct qla_tgt_func_tmpl *qla_tgt_ops, u64 wwpn,
+-	int (*callback)(struct scsi_qla_host *), void *target_lport_ptr)
++int qlt_lport_register(struct qla_tgt_func_tmpl *qla_tgt_ops, u64 phys_wwpn,
++		       u64 npiv_wwpn, u64 npiv_wwnn,
++		       int (*callback)(struct scsi_qla_host *, u64, u64),
++		       void *target_lport_ptr)
+ {
+ 	struct qla_tgt *tgt;
+ 	struct scsi_qla_host *vha;
+@@ -4259,7 +4261,7 @@ int qlt_lport_register(struct qla_tgt_func_tmpl *qla_tgt_ops, u64 wwpn,
+ 			continue;
+ 
+ 		spin_lock_irqsave(&ha->hardware_lock, flags);
+-		if (host->active_mode & MODE_TARGET) {
++		if ((!npiv_wwpn || !npiv_wwnn) && host->active_mode & MODE_TARGET) {
+ 			pr_debug("MODE_TARGET already active on qla2xxx(%d)\n",
+ 			    host->host_no);
+ 			spin_unlock_irqrestore(&ha->hardware_lock, flags);
+@@ -4273,7 +4275,7 @@ int qlt_lport_register(struct qla_tgt_func_tmpl *qla_tgt_ops, u64 wwpn,
+ 			    " qla2xxx scsi_host\n");
+ 			continue;
+ 		}
+-		qlt_lport_dump(vha, wwpn, b);
++		qlt_lport_dump(vha, phys_wwpn, b);
+ 
+ 		if (memcmp(vha->port_name, b, WWN_SIZE)) {
+ 			scsi_host_put(host);
+@@ -4284,7 +4286,7 @@ int qlt_lport_register(struct qla_tgt_func_tmpl *qla_tgt_ops, u64 wwpn,
+ 		 */
+ 		ha->tgt.tgt_ops = qla_tgt_ops;
+ 		vha->vha_tgt.target_lport_ptr = target_lport_ptr;
+-		rc = (*callback)(vha);
++		rc = (*callback)(vha, npiv_wwpn, npiv_wwnn);
+ 		if (rc != 0) {
+ 			ha->tgt.tgt_ops = NULL;
+ 			vha->vha_tgt.target_lport_ptr = NULL;
+diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
+index b33e411..2a5d3cb 100644
+--- a/drivers/scsi/qla2xxx/qla_target.h
++++ b/drivers/scsi/qla2xxx/qla_target.h
+@@ -932,8 +932,8 @@ void qlt_disable_vha(struct scsi_qla_host *);
+  */
+ extern int qlt_add_target(struct qla_hw_data *, struct scsi_qla_host *);
+ extern int qlt_remove_target(struct qla_hw_data *, struct scsi_qla_host *);
+-extern int qlt_lport_register(struct qla_tgt_func_tmpl *, u64,
+-			int (*callback)(struct scsi_qla_host *), void *);
++extern int qlt_lport_register(struct qla_tgt_func_tmpl *, u64, u64, u64,
++			int (*callback)(struct scsi_qla_host *, u64, u64), void *);
+ extern void qlt_lport_deregister(struct scsi_qla_host *);
+ extern void qlt_unreg_sess(struct qla_tgt_sess *);
+ extern void qlt_fc_port_added(struct scsi_qla_host *, fc_port_t *);
+diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+index 113ca95..080fae2 100644
+--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
++++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+@@ -1559,7 +1559,8 @@ static int tcm_qla2xxx_init_lport(struct tcm_qla2xxx_lport *lport)
+ 	return 0;
+ }
+ 
+-static int tcm_qla2xxx_lport_register_cb(struct scsi_qla_host *vha)
++static int tcm_qla2xxx_lport_register_cb(struct scsi_qla_host *vha,
++					 u64 npiv_wwpn, u64 npiv_wwnn)
+ {
+ 	struct tcm_qla2xxx_lport *lport;
+ 	/*
+@@ -1598,7 +1599,7 @@ static struct se_wwn *tcm_qla2xxx_make_lport(
+ 	if (ret != 0)
+ 		goto out;
+ 
+-	ret = qlt_lport_register(&tcm_qla2xxx_template, wwpn,
++	ret = qlt_lport_register(&tcm_qla2xxx_template, wwpn, 0, 0,
+ 				tcm_qla2xxx_lport_register_cb, lport);
+ 	if (ret != 0)
+ 		goto out_lport;
+@@ -1637,17 +1638,53 @@ static void tcm_qla2xxx_drop_lport(struct se_wwn *wwn)
+ 	kfree(lport);
+ }
+ 
++static int tcm_qla2xxx_lport_register_npiv_cb(struct scsi_qla_host *vha,
++					      u64 npiv_wwpn, u64 npiv_wwnn)
++{
++	struct fc_vport *vport;
++	struct Scsi_Host *sh;
++	struct scsi_qla_host *npiv_vha;
++	struct tcm_qla2xxx_lport *lport;
++	struct fc_vport_identifiers vport_id;
++
++	lport = (struct tcm_qla2xxx_lport *)vha->vha_tgt.target_lport_ptr;
++	sh = vha->host;;
++
++	memset(&vport_id, 0, sizeof(vport_id));
++	vport_id.port_name = npiv_wwpn;
++	vport_id.node_name = npiv_wwnn;
++	vport_id.roles = FC_PORT_ROLE_FCP_INITIATOR;
++	vport_id.vport_type = FC_PORTTYPE_NPIV;
++	vport_id.disable = false;
++
++	vport = fc_vport_create(sh, 0, &vport_id);
++	if (!vport) {
++		lport->qla_vha = NULL;
++		return -ENODEV;
++	}
++	/*
++	 * Setup local pointer to NPIV vhba
++	 */
++	npiv_vha = *(struct scsi_qla_host **)vport->dd_data;
++	lport->qla_vha = npiv_vha;
++
++	return 0;
++}
++
++
+ static struct se_wwn *tcm_qla2xxx_npiv_make_lport(
+ 	struct target_fabric_configfs *tf,
+ 	struct config_group *group,
+ 	const char *name)
+ {
+ 	struct tcm_qla2xxx_lport *lport;
+-	u64 npiv_wwpn, npiv_wwnn;
++	u64 phys_wwpn, npiv_wwpn, npiv_wwnn;
+ 	int ret;
+ 	struct scsi_qla_host *vha = NULL;
+ 	struct qla_hw_data *ha = NULL;
+ 	scsi_qla_host_t *base_vha = NULL;
++#warning FIXME: Extract phys_wwpn from passed *name
++	phys_wwpn = 0;
+ 
+ 	if (tcm_qla2xxx_npiv_parse_wwn(name, strlen(name)+1,
+ 				&npiv_wwpn, &npiv_wwnn) < 0)
+@@ -1668,9 +1705,9 @@ static struct se_wwn *tcm_qla2xxx_npiv_make_lport(
+ 	if (ret != 0)
+ 		goto out;
+ 
+-	ret = qlt_lport_register(&tcm_qla2xxx_template, npiv_wwpn,
+-				tcm_qla2xxx_lport_register_cb, lport);
+-
++	ret = qlt_lport_register(&tcm_qla2xxx_template, phys_wwpn, npiv_wwpn,
++				 npiv_wwnn, tcm_qla2xxx_lport_register_npiv_cb,
++				 lport);
+ 	if (ret != 0)
+ 		goto out_lport;
+ 
+-- 
+1.7.10.4
