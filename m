@@ -1,78 +1,48 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 02/14] target: Add DIF CHECK_CONDITION ASC/ASCQ
- exception cases
-Date: Tue, 14 Jan 2014 00:53:27 -0800
-Message-ID: <1389689607.5567.525.camel@haakon3.risingtidesystems.com>
-References: <1389212157-14540-1-git-send-email-nab@daterainc.com>
-	 <1389212157-14540-3-git-send-email-nab@daterainc.com>
-	 <52CE7D3F.7030308@mellanox.com>
-	 <1389336816.5567.404.camel@haakon3.risingtidesystems.com>
-	 <52D4EADC.60300@dev.mellanox.co.il>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <52D4EADC.60300@dev.mellanox.co.il>
-Sender: target-devel-owner@vger.kernel.org
-To: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Or Gerlitz <ogerlitz@mellanox.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] bfa: set correct command return code
+Date: Tue, 14 Jan 2014 10:26:25 +0100
+Message-ID: <1389691585-84227-1-git-send-email-hare@suse.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:48556 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751024AbaANJ01 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 14 Jan 2014 04:26:27 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <jbottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org, Vijaya Mohan Guvva <vmohan@brocade.com>, Hannes Reinecke <hare@suse.de>
 
-On Tue, 2014-01-14 at 09:44 +0200, Sagi Grimberg wrote:
-> On 1/10/2014 8:53 AM, Nicholas A. Bellinger wrote:
-> > On Thu, 2014-01-09 at 12:43 +0200, Sagi Grimberg wrote:
-> >> On 1/8/2014 10:36 PM, Nicholas A. Bellinger wrote:
-> >>> From: Nicholas Bellinger <nab@linux-iscsi.org>
-> >>>
-> >>> This patch adds support for DIF related CHECK_CONDITION ASC/ASCQ
-> >>> exception cases into transport_send_check_condition_and_sense().
-> >>>
-> >>> This includes:
-> >>>
-> >>>     LOGICAL BLOCK GUARD CHECK FAILED
-> >>>     LOGICAL BLOCK APPLICATION TAG CHECK FAILED
-> >>>     LOGICAL BLOCK REFERENCE TAG CHECK FAILED
-> >>>
-> >>> that used by DIF TYPE1 and TYPE3 failure cases.
-> >>>
-> >>> Cc: Martin K. Petersen <martin.petersen@oracle.com>
-> >>> Cc: Christoph Hellwig <hch@lst.de>
-> >>> Cc: Hannes Reinecke <hare@suse.de>
-> >>> Cc: Sagi Grimberg <sagig@mellanox.com>
-> >>> Cc: Or Gerlitz <ogerlitz@mellanox.com>
-> >>> Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
-> >>> ---
-> >>>    drivers/target/target_core_transport.c |   30 ++++++++++++++++++++++++++++++
-> >>>    include/target/target_core_base.h      |    3 +++
-> >>>    2 files changed, 33 insertions(+)
-> >>>
-> >>> diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-> >>> index 91953da..707ee17 100644
-> >>> --- a/drivers/target/target_core_transport.c
-> >>> +++ b/drivers/target/target_core_transport.c
-> >>> @@ -2648,6 +2648,36 @@ transport_send_check_condition_and_sense(struct se_cmd *cmd,
-> >>>    		buffer[SPC_ASC_KEY_OFFSET] = 0x1d;
-> >>>    		buffer[SPC_ASCQ_KEY_OFFSET] = 0x00;
-> >>>    		break;
-> >>> +	case TCM_LOGICAL_BLOCK_GUARD_CHECK_FAILED:
-> >>> +		/* CURRENT ERROR */
-> >>> +		buffer[0] = 0x70;
-> >>> +		buffer[SPC_ADD_SENSE_LEN_OFFSET] = 10;
-> >>> +		/* ILLEGAL REQUEST */
-> >>> +		buffer[SPC_SENSE_KEY_OFFSET] = ILLEGAL_REQUEST;
-> >>> +		/* LOGICAL BLOCK GUARD CHECK FAILED */
-> >>> +		buffer[SPC_ASC_KEY_OFFSET] = 0x10;
-> >>> +		buffer[SPC_ASCQ_KEY_OFFSET] = 0x01;
-> >>
-> 
-> Hey Nic,
-> 
-> In my iSER patches I constructed the same sense buffer (call 
-> isert_pi_err_sense_buffer) and called isert_put_rsponse. So I should 
-> call this routine instead correct?
+For various error conditions the bfa driver just returns
+'DID_ERROR', which carries no information at all about the
+actual source of error.
+This patch updates the error handling to return a correct
+error code, depending on the type of error occurred.
 
-Yes, it should be OK to use this for generating CHECK_CONDITION from
-fabric protection failures in isert_completion_rdma_write() code after
-device->unreg_rdma_mem() has been called.
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/scsi/bfa/bfad_im.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
---nab
+diff --git a/drivers/scsi/bfa/bfad_im.c b/drivers/scsi/bfa/bfad_im.c
+index 9967f9c..f067332 100644
+--- a/drivers/scsi/bfa/bfad_im.c
++++ b/drivers/scsi/bfa/bfad_im.c
+@@ -73,9 +73,14 @@ bfa_cb_ioim_done(void *drv, struct bfad_ioim_s *dio,
+ 
+ 		break;
+ 
+-	case BFI_IOIM_STS_ABORTED:
+ 	case BFI_IOIM_STS_TIMEDOUT:
++		host_status = DID_TIME_OUT;
++		cmnd->result = ScsiResult(host_status, 0);
++		break;
+ 	case BFI_IOIM_STS_PATHTOV:
++		host_status = DID_TRANSPORT_DISRUPTED;
++		cmnd->result = ScsiResult(host_status, 0);
++		break;
+ 	default:
+ 		host_status = DID_ERROR;
+ 		cmnd->result = ScsiResult(host_status, 0);
+-- 
+1.7.12.4
+
