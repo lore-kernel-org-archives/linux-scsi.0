@@ -1,180 +1,43 @@
-From: Sergey Meirovich <rathamahata@gmail.com>
-Subject: Re: Terrible performance of sequential O_DIRECT 4k writes in SAN
-	environment. ~3 times slower then Solars 10 with the same HBA/Storage.
-Date: Tue, 14 Jan 2014 15:30:11 +0200
-Message-ID: <CA+QCeVRuvNtZ8+9D-NtMOD=B9UEA5HMvKaGdXOQCjO-KTnZdbw@mail.gmail.com>
-References: <CA+QCeVQRrqx=CrxyuAe7k0e0y4Nqo7x_8jtkuD99VM8L9Dxp+g@mail.gmail.com>
-	<20140106201032.GA13491@quack.suse.cz>
-	<20140107155830.GA28395@infradead.org>
-	<CA+QCeVRiwHU+C5utaLQXf_MpjoYMYEF4LKRyDPaqcd=H6n-RRw@mail.gmail.com>
-	<20140108140307.GA588@infradead.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH/RESEND v2 1/2] Hard disk S3 resume time optimization
+Date: Tue, 14 Jan 2014 09:31:08 -0500
+Message-ID: <20140114143108.GB12131@htj.dyndns.org>
+References: <20140108005607.GB29556@linux.intel.com>
+ <20140111191315.GC3257@mtj.dyndns.org>
+ <20140113195544.GA13900@linux.intel.com>
+ <20140113203007.GA3480@mtj.dyndns.org>
+ <20140113233026.GA3200@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <xfs-bounces@oss.sgi.com>
-In-Reply-To: <20140108140307.GA588@infradead.org>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
-Cc: Gluk <git.user@gmail.com>, Jan Kara <jack@suse.cz>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-qe0-f43.google.com ([209.85.128.43]:63609 "EHLO
+	mail-qe0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751576AbaANObM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jan 2014 09:31:12 -0500
+Content-Disposition: inline
+In-Reply-To: <20140113233026.GA3200@linux.intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Todd E Brandt <todd.e.brandt@linux.intel.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, rjw@rjwysocki.net
 
-Hi Cristoph,
+Hello, Todd.
 
-On 8 January 2014 16:03, Christoph Hellwig <hch@infradead.org> wrote:
-> On Tue, Jan 07, 2014 at 08:37:23PM +0200, Sergey Meirovich wrote:
->> Actually my initial report (14.67Mb/sec  3755.41 Requests/sec) was about ext4
->> However I have tried XFS as well. It was a bit slower than ext4 on all
->> occasions.
->
-> I wasn't trying to say XFS fixes your problem, but that we could
-> implement appending AIO writes in XFS fairly easily.
->
-> To verify Jan's theory, can you try to preallocate the file to the full
-> size and then run the benchmark by doing a:
->
-> # fallocate -l <size> <filename>
->
-> and then run it?  If that's indeed the issue I'd be happy to implement
-> the "real aio" append support for you as well.
->
+On Mon, Jan 13, 2014 at 03:30:26PM -0800, Todd E Brandt wrote:
+> Ahh, sorry, yea I think async should work for the entire resume pathway. Would
+> you be willing to accept this ata patch separately from the scsi one? It
+> wouldn't provide any performance benefit on its own, but would pave the way
+> for performance benefit by removing the ATA resume lag time (Which would then
+> put the ball in the scsi layer's court to finish the optimization). I've 
+> tested both patches separately and both work without issue. Also, this patch
+> appears to be a pre-requisite to both mine and Phillip Susi's solution, so 
+> it would really hope move things along regardless of which direction is
+> ultimately chosen in the SCSI layer.
 
-I've resorted to write simple wrapper around io_submit() and ran it
-against preallocated file (exactly to avoid append AIO scenario).
-Random data was used to avoid XtremIO online deduplication but results
-were still wonderfull for 4k sequential AIO write:
+Let's do it together.  It's not like this involves huge number of
+patches which would be helped by staging things.
 
-744.77 MB/s   190660.17 Req/sec
+Thanks.
 
-Clearly Linux lacks "rial aio" append to be available for any FS.
-Seems that you are thinking that it would be relatively easy to
-implement it for XFS on Linux? If so - I will really appreciate your
-afford.
-
-[root@dca-poc-gtsxdb3 mnt]# dd if=/dev/zero of=4k.data bs=4096 count=524288
-524288+0 records in
-524288+0 records out
-2147483648 bytes (2.1 GB) copied, 5.75357 s, 373 MB/s
-[root@dca-poc-gtsxdb3 mnt]# /root/4k
-rnd generation (sec.):    195.63
-io_submit() accepted 524288 IOs
-io_getevents() returned 524288 events
-time elapsed (sec.):        2.75
-bandwidth (MiB/s):        744.77
-IOps:                                     190660.17
-[root@dca-poc-gtsxdb3 mnt]#
-
-========================== io_submit() wrapper =============================
-#define _GNU_SOURCE
-
-#include <errno.h>
-#include <libaio.h>
-
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include <unistd.h>
-#include <sys/time.h>
-
-
-#define FNAME           "4k.data"
-#define IOSIZE          4096
-#define    REQUESTS    524288
-
-/*  gcc 4k.c -std=gnu99 -laio -o 4k */
-
-int main(void) {
-    io_context_t ctx;
-    int ret;
-
-    int flag = O_RDWR | O_DIRECT;
-    int fd = open(FNAME, flag);
-    struct timeval start, end;
-        if (fd == -1) {
-        printf("open(%s, %d) - failed!\nExiting.\n"
-        "If file doesn't exist please precreate it "
-        "with dd if=/dev/zero of=%s bs=%d count=%d\n",
-        FNAME, flag, FNAME, IOSIZE, REQUESTS);
-                return errno;
-        }
-
-    memset(&ctx, 0, sizeof(io_context_t));
-    if (io_setup(REQUESTS, &ctx)) {
-        printf("io_setup(%d, &ctx) failed\n", REQUESTS);
-        return -ret;
-    }
-
-    void *mem = NULL;
-    posix_memalign(&mem, 4096, (size_t) IOSIZE * REQUESTS);
-    /* memset(mem, 9, IOSIZE); */
-    int urnd = open("/dev/urandom", O_RDONLY);
-    void *cur = mem;
-    gettimeofday(&start, NULL);
-    for (int i = 0;  i < REQUESTS; i++, cur += IOSIZE) {
-        read(urnd, cur, IOSIZE);
-    }
-    gettimeofday(&end, NULL);
-    close(urnd);
-    double elapsed = (end.tv_sec - start.tv_sec) +
-              ((end.tv_usec - start.tv_usec)/1000000.0);
-    printf("rnd generation (sec.):\t%.2f\n", elapsed);
-
-    struct iocb *aio = malloc(sizeof(struct iocb) * REQUESTS);
-    memset(aio, 0, sizeof(struct iocb) * REQUESTS);
-    struct iocb **lio = malloc(sizeof(void *) * REQUESTS);
-    memset(lio, 0, sizeof(void *) * REQUESTS);
-    struct io_event *event = malloc(sizeof(struct io_event) * REQUESTS);
-    memset(event, 0, sizeof(struct io_event) * REQUESTS);
-
-    cur = mem;
-    for (int i = 0; i < REQUESTS; i++, cur += IOSIZE) {
-        io_prep_pwrite(&aio[i], fd, cur, IOSIZE, i * IOSIZE);
-        lio[i] = &aio[i];
-    }
-    gettimeofday(&start, NULL);
-    ret = io_submit(ctx, REQUESTS, lio);
-    printf("io_submit() accepted %d IOs\n", ret);
-    fdatasync(fd);
-
-    ret = io_getevents(ctx, REQUESTS, REQUESTS, event, NULL);
-    printf("io_getevents() returned %d events\n", ret);
-    gettimeofday(&end, NULL);
-
-    elapsed = (end.tv_sec - start.tv_sec) +
-              ((end.tv_usec - start.tv_usec)/1000000.0);
-    printf("time elapsed (sec.):\t%.2f\n", elapsed);
-        printf("bandwidth (MiB/s):\t%.2f\n",
-        (double) (((long long) IOSIZE * REQUESTS) / (1024 * 1024))
-            / elapsed);
-        printf("IOps:\t\t\t%.2f\n", (double) REQUESTS
-            / elapsed);
-
-    if (io_destroy(ctx)) {
-                perror("io_destroy");
-                return -1;
-        }
-    close(fd);
-    free(mem);
-    free(aio);
-    free(lio);
-    free(event);
-
-    return 0;
-}
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+-- 
+tejun
