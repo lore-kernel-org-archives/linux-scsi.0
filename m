@@ -1,65 +1,89 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH/RESEND v2 1/2] Hard disk S3 resume time optimization
-Date: Mon, 13 Jan 2014 16:05:21 -0800
-Message-ID: <CAPcyv4j3TFNd7ues+YbaFfEhTU_W-t30Vi9SEhgW5G-+FDrnow@mail.gmail.com>
-References: <20140108005607.GB29556@linux.intel.com>
-	<52CED67E.7080706@ubuntu.com>
-	<11E08D716F0541429B7042699DD5C1A17073C362@FMSMSX103.amr.corp.intel.com>
-	<52D0A8B4.90905@ubuntu.com>
-	<CAA9_cmdkNNfE8-b60x4ULw6OA+zxrVZoJhEX3a5XZOQKnsqfHg@mail.gmail.com>
-	<20140113200648.GB13900@linux.intel.com>
-	<CAA9_cmfPREP=hN_2bjVCdWhbAYSRxM_g4iuUE2sBaQ3nuSY4Qg@mail.gmail.com>
-	<20140113235120.GA4127@linux.intel.com>
+From: Gwendal Grignou <gwendal@google.com>
+Subject: Re: [PATCH/RESEND v2 0/2] Hard disk S3 resume time optimization
+Date: Mon, 13 Jan 2014 16:36:52 -0800
+Message-ID: <CAMHSBOXzU3Y=oH1Nzxash0wJvuc6Y9hoOcbvdstyOaO77QQLkA@mail.gmail.com>
+References: <20140108005500.GA29556@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20140113235120.GA4127@linux.intel.com>
+In-Reply-To: <20140108005500.GA29556@linux.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 To: todd.e.brandt@linux.intel.com
-Cc: Tejun Heo <tj@kernel.org>, Jej B <James.Bottomley@hansenpartnership.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Phillip Susi <psusi@ubuntu.com>
+Cc: Tejun Heo <tj@kernel.org>, Jej B <James.Bottomley@hansenpartnership.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Jan 13, 2014 at 3:51 PM, Todd E Brandt
+On Tue, Jan 7, 2014 at 4:55 PM, Todd E Brandt
 <todd.e.brandt@linux.intel.com> wrote:
-> On Mon, Jan 13, 2014 at 12:37:01PM -0800, Dan Williams wrote:
->> On Mon, Jan 13, 2014 at 12:06 PM, Todd E Brandt
->> > Actually there's one other reason. In the ata_port_request_pm function it
->> > checks to see if there's a previous resume operation pending, and if so
->> > it calls ata_port_wait_eh in order to wait for it to complete before
->> > issuing the new suspend. If you just use the (int*)async parameter it
->> > will return immediately and defer to the caller to try again, like is does
->> > with SAS. But in our case we *don't* try again, so it would result in the
->> > resume being skipped. There needs to be a new case where the caller wants
->> > the call to be asynchronous, and it wants ata_port_request_pm to do its
->> > own waiting, but doesn't care about the return value. Thus the additional
->> > parameter.
->>
->> I think that is specifically for the libata case of a suspend request
->> arriving while an async resume is still in flight.  Given libata
 >
-> Accoring to the comments it's for a previous resume, not a previous suspend.
+> This patch reduces S3 resume time from 10+ seconds to less than a second
+> on systems with SATA drives. It does this by making ata port and scsi disk
+> resume non-blocking.
 >
->         /* Previous resume operation might still be in
->          * progress.  Wait for PM_PENDING to clear.
->          */
->         if (ap->pflags & ATA_PFLAG_PM_PENDING) {
->                 if (async) {
->                         *async = -EAGAIN;
->                         return 0;
->                 }
->                 ata_port_wait_eh(ap);
->                 WARN_ON(ap->pflags & ATA_PFLAG_PM_PENDING);
->         }
+> This is another resend of the patch I send out in early December. I've
+> addressed all the feedback I received from list members, so all I really
+> need is a yay or nay from Tejun Huo and James Bottomley (since it touches
+> both subsystems).
+>
+> The notes below include the performance results and patch description.
+>
+> [Computer One Test - 10.5X speedup on S3 resume]
+> Platform: Ubuntu Raring Ringtail (13.04) kernel 3.11.0-rc7
+> Cpu: Intel(R) Core(TM) i7-3960X CPU @ 3.30GHz
+> Ahci: Intel C600/X79 series chipset 6-Port SATA AHCI (r5)
+> Disk config (using all 6 ahci ports):
+> 240 GB SSD, 3 TB HD, 500 GB HD, DVD-ROM (with cd inserted), 2 TB HD, 1 TB HD
+> Resume time: [unpatched 11656ms] [patched 1110ms]
+>
+> [Computer Two Test - 12X speedup on S3 resume]
+> Platform: Ubuntu Raring Ringtail (13.04) kernel 3.11.0-rc7
+> Cpu: Intel(R) Core(TM) i7-3770 CPU @ 3.40GHz
+> Ahci: Intel 7 Series/C210 Series Chipset Family 6-port SATA [AHCI mode] (r4)
+> Disk config (using 1 ahci port): 320 GB Hard Disk
+> Resume time: [unpatched 5416 ms] [patched 448 ms]
+>
+> [Computer Three Test - 7.8X speedup on S3 resume]
+> Platform: Ubuntu Raring Ringtail (13.04) kernel 3.11.0-rc7
+> Cpu: Intel(R) Core(TM) i7-4770S CPU @ 3.10GHz
+> Ahci: Intel Lynx Point 6-port SATA Controller 1 [AHCI mode] (r2)
+> Disk config (using 2 ahci ports): DVD-ROM (empty), 500 GB Hard Disk
+> Resume time: [unpatched 5385ms] [patched 688ms]
+>
+> The essential issue behind hard disks' lengthy resume time is the ata port
+> driver blocking until the ATA port hardware is finished coming online. So
+> the kernel isn't really doing anything during all those seconds that the
+> disks are resuming, it's just blocking until the hardware says it's ready
+> to accept commands. Applying this patch set allows SATA disks to resume
+> asynchronously without holding up system resume, thus allowing the UI to
+> come online much more quickly.
+Won't this patch defeat staggered spinup at resume? If you have a jbod
+with a smallish power supply, with a 12V rail designed for the steady
+state and 1 or 2 devices spinning up at once, you may be in trouble
+when all the disks will want to spinup in same second.
 
-Right, but that should only happen when ata_port_request_pm() is
-called for 'suspend' and 'resume' is in flight.  I think it's a core
-device-power-management bug if ->resume() is called twice without an
-intervening ->suspend().
-
-> I'm going to assume that it was added for a reason, so I've structured my
-> patch in such a way that it doesn't alter the existing logic. Removing that
-> particular check would be a completely different discussion and is out of
-> the scope of this patch.
-
-You're right that logic should stay, I don't think removing it was
-ever proposed?
+Gwendal.
+> There may be a short period after resume
+> where the disks are still spinning up in the background, but it will only
+> momentarily affect applications using that disk.
+>
+> The patch set has two parts which apply to ata_port_resume and sd_resume
+> respectively. Both are required to achieve any real performance benefit,
+> but they will still function independantly without a performance hit.
+>
+> ata_port_resume patch (1/2):
+> sd_resume patch (2/2):
+>
+> v2:
+>  [in response to Oliver Neukum]
+>  - Added scsi cmd error reporting through the scsi_sense_hdr
+>  [in response to James Bottomley]
+>  - unified the sd_resume code path by just making sd_resume async. Thus all
+>    three resume callbacks: resume, restore, and runtime-resume will use it,
+>    but there is a performance benefit for resume only.
+>  [in response to Bartlomiej Zolnierkiewicz]
+>  - unified the __ata_port_resume_common code path to include an async
+>    parameter. This way there's no need to re-implement ata_port_request_pm.
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
