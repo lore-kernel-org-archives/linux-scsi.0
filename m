@@ -1,36 +1,75 @@
-From: David Laight <David.Laight@ACULAB.COM>
-Subject: RE: [PATCH 3.12 033/118] usb: xhci: Link TRB must not occur within
- a USB payload burst [NEW HARDWARE]
-Date: Tue, 14 Jan 2014 09:43:57 +0000
-Message-ID: <063D6719AE5E284EB5DD2968C1650D6D45B08A@AcuExch.aculab.com>
-References: <20140109235045.GA17660@xanatos> <52D4791B.3030309@gmail.com>
+From: Sagi Grimberg <sagig@dev.mellanox.co.il>
+Subject: Re: [PATCH 02/14] target: Add DIF CHECK_CONDITION ASC/ASCQ exception
+ cases
+Date: Tue, 14 Jan 2014 12:56:30 +0200
+Message-ID: <52D517DE.50009@dev.mellanox.co.il>
+References: <1389212157-14540-1-git-send-email-nab@daterainc.com>	 <1389212157-14540-3-git-send-email-nab@daterainc.com>	 <52CE7D3F.7030308@mellanox.com>	 <1389336816.5567.404.camel@haakon3.risingtidesystems.com>	 <52D4EADC.60300@dev.mellanox.co.il> <1389689607.5567.525.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <52D4791B.3030309@gmail.com>
-Content-Language: en-US
-Sender: stable-owner@vger.kernel.org
-To: 'walt' <w41ter@gmail.com>, Sarah Sharp <sarah.a.sharp@linux.intel.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Linux Kernel <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1389689607.5567.525.camel@haakon3.risingtidesystems.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Or Gerlitz <ogerlitz@mellanox.com>
 List-Id: linux-scsi@vger.kernel.org
 
-RnJvbTogd2FsdA0KPiBPbiAwMS8wOS8yMDE0IDAzOjUwIFBNLCBTYXJhaCBTaGFycCB3cm90ZToN
-Cj4gDQo+ID4+PiBPbiBUdWUsIEphbiAwNywgMjAxNCBhdCAwMzo1NzowMFBNIC0wODAwLCB3YWx0
-IHdyb3RlOg0KPiA+Pg0KPiA+PiBJJ3ZlIHdvbmRlcmVkIGlmIG15IHhoY2kgcHJvYmxlbXMgbWln
-aHQgYmUgY2F1c2VkIGJ5IGhhcmR3YXJlIHF1aXJrcywgYW5kDQo+ID4+IHdvbmRlcmluZyB3aHkg
-SSBzZWVtIHRvIGJlIHRoZSBvbmx5IG9uZSB3aG8gaGFzIHRoaXMgcHJvYmxlbS4NCj4gPj4NCj4g
-Pj4gTWF5YmUgSSBjb3VsZCAidGFrZSBvbmUgZm9yIHRoZSB0ZWFtIiBieSBidXlpbmcgbmV3IGhh
-cmR3YXJlIHRveXMgdGhhdCBJDQo+ID4+IGRvbid0IHJlYWxseSBuZWVkIGJ1dCBJIGNvdWxkIHVz
-ZSB0byB0ZXN0IHRoZSB4aGNpIGRyaXZlcj8gIChJIGRvIGVuam95DQo+ID4+IGJ1eWluZyBuZXcg
-dG95cywgbmVjZXNzYXJ5LCBvciwgdW0sIG1heWJlIG5vdCA6KQ0KPiA+DQo+ID4gSXQgd291bGQg
-YmUgYXBwcmVjaWF0ZWQgaWYgeW91IGNvdWxkIHNlZSBpZiB5b3VyIGRldmljZSBjYXVzZXMgb3Ro
-ZXINCj4gPiBob3N0IGNvbnRyb2xsZXJzIHRvIGZhaWwuICBXaG8gYW0gSSB0byBrZWVwIGEgZ2Vl
-ayBmcm9tIG5ldyB0b3lzPyA7KQ0KPiANCj4gU2FyYWgsIEkganVzdCBmaXhlZCBteSB4aGNpIGJ1
-ZyBmb3IgVVMkMTkuOTkgOikNCj4gDQo+ICNsc3BjaSB8IHRhaWwgLTENCj4gMDQ6MDAuMCBVU0Ig
-Y29udHJvbGxlcjogTkVDIENvcnBvcmF0aW9uIHVQRDcyMDIwMCBVU0IgMy4wIEhvc3QgQ29udHJv
-bGxlciAocmV2IDAzKQ0KDQpEbyB5b3Uga25vdyB3aGljaCB2ZXJzaW9uIG9mIHRoZSB4aGNpIHNw
-ZWMgaXQgY29uZm9ybXMgdG8/DQooV2lsbCBwcm9iYWJseSBiZSAwLjk2IG9yIDEuMDApLg0KDQpP
-ZiBjb3Vyc2UsIEFTTWVkaWEgd2lsbCBwcm9iYWJseSBjaGFuZ2UgdGhlIHNpbGljb24gdGhleSBh
-cmUgdXNpbmcgd2l0aG91dA0KY2hhbmdpbmcgYW55dGhpbmcgb24gdGhlIHBhY2thZ2luZy4NCg0K
-CURhdmlkDQo=
+On 1/14/2014 10:53 AM, Nicholas A. Bellinger wrote:
+> On Tue, 2014-01-14 at 09:44 +0200, Sagi Grimberg wrote:
+>> On 1/10/2014 8:53 AM, Nicholas A. Bellinger wrote:
+>>> On Thu, 2014-01-09 at 12:43 +0200, Sagi Grimberg wrote:
+>>>> On 1/8/2014 10:36 PM, Nicholas A. Bellinger wrote:
+>>>>> From: Nicholas Bellinger <nab@linux-iscsi.org>
+>>>>>
+>>>>> This patch adds support for DIF related CHECK_CONDITION ASC/ASCQ
+>>>>> exception cases into transport_send_check_condition_and_sense().
+>>>>>
+>>>>> This includes:
+>>>>>
+>>>>>      LOGICAL BLOCK GUARD CHECK FAILED
+>>>>>      LOGICAL BLOCK APPLICATION TAG CHECK FAILED
+>>>>>      LOGICAL BLOCK REFERENCE TAG CHECK FAILED
+>>>>>
+>>>>> that used by DIF TYPE1 and TYPE3 failure cases.
+>>>>>
+>>>>> Cc: Martin K. Petersen <martin.petersen@oracle.com>
+>>>>> Cc: Christoph Hellwig <hch@lst.de>
+>>>>> Cc: Hannes Reinecke <hare@suse.de>
+>>>>> Cc: Sagi Grimberg <sagig@mellanox.com>
+>>>>> Cc: Or Gerlitz <ogerlitz@mellanox.com>
+>>>>> Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+>>>>> ---
+>>>>>     drivers/target/target_core_transport.c |   30 ++++++++++++++++++++++++++++++
+>>>>>     include/target/target_core_base.h      |    3 +++
+>>>>>     2 files changed, 33 insertions(+)
+>>>>>
+>>>>> diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+>>>>> index 91953da..707ee17 100644
+>>>>> --- a/drivers/target/target_core_transport.c
+>>>>> +++ b/drivers/target/target_core_transport.c
+>>>>> @@ -2648,6 +2648,36 @@ transport_send_check_condition_and_sense(struct se_cmd *cmd,
+>>>>>     		buffer[SPC_ASC_KEY_OFFSET] = 0x1d;
+>>>>>     		buffer[SPC_ASCQ_KEY_OFFSET] = 0x00;
+>>>>>     		break;
+>>>>> +	case TCM_LOGICAL_BLOCK_GUARD_CHECK_FAILED:
+>>>>> +		/* CURRENT ERROR */
+>>>>> +		buffer[0] = 0x70;
+>>>>> +		buffer[SPC_ADD_SENSE_LEN_OFFSET] = 10;
+>>>>> +		/* ILLEGAL REQUEST */
+>>>>> +		buffer[SPC_SENSE_KEY_OFFSET] = ILLEGAL_REQUEST;
+>>>>> +		/* LOGICAL BLOCK GUARD CHECK FAILED */
+>>>>> +		buffer[SPC_ASC_KEY_OFFSET] = 0x10;
+>>>>> +		buffer[SPC_ASCQ_KEY_OFFSET] = 0x01;
+>> Hey Nic,
+>>
+>> In my iSER patches I constructed the same sense buffer (call
+>> isert_pi_err_sense_buffer) and called isert_put_rsponse. So I should
+>> call this routine instead correct?
+> Yes, it should be OK to use this for generating CHECK_CONDITION from
+> fabric protection failures in isert_completion_rdma_write() code after
+> device->unreg_rdma_mem() has been called.
+>
+> --nab
+>
+
+Will do that.
