@@ -1,48 +1,45 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH] bfa: set correct command return code
-Date: Tue, 14 Jan 2014 10:26:25 +0100
-Message-ID: <1389691585-84227-1-git-send-email-hare@suse.de>
+From: XinHong Zhu <zxh3737@163.com>
+Subject: [PATCH] [scsi] : pm80xx : fix problem of pm8001_work_fn reseting uncorrect phy device
+Date: Tue, 14 Jan 2014 17:41:05 +0800
+Message-ID: <1389692465-7628-1-git-send-email-zxh3737@163.com>
+References: <y>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:48556 "EHLO mx2.suse.de"
+Received: from m12-13.163.com ([220.181.12.13]:53788 "EHLO m12-13.163.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751024AbaANJ01 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Jan 2014 04:26:27 -0500
+	id S1751524AbaANJlX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 14 Jan 2014 04:41:23 -0500
+In-Reply-To: <y>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org, Vijaya Mohan Guvva <vmohan@brocade.com>, Hannes Reinecke <hare@suse.de>
+To: linux-scsi@vger.kernel.org
+Cc: XinHong Zhu <zxh3737@163.com>
 
-For various error conditions the bfa driver just returns
-'DID_ERROR', which carries no information at all about the
-actual source of error.
-This patch updates the error handling to return a correct
-error code, depending on the type of error occurred.
-
-Signed-off-by: Hannes Reinecke <hare@suse.de>
+If a phy device is removed ,the device can get error of I/O and HBA maybe receieve
+IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS of event which causes pm8001_work_fn to reset the phy
+device ,but in pm8001_task_exec don't assign a value for field device of ccb  and in
+other case a ccb used have device field set , when  ccb is freeed the field device of
+the ccb don't be set NULL.So there is possibility of getting another devcie reset in fun
+of mpi_ssp_completion .Also there are another way to solve problem by adding following
+code in mpi_SSP_completion:
+  pm8001_dev = t->dev->lldd_dev;
+Signed-off-by: zhuxh <zxh3737@163.com>
 ---
- drivers/scsi/bfa/bfad_im.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ drivers/scsi/pm8001/pm8001_sas.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfad_im.c b/drivers/scsi/bfa/bfad_im.c
-index 9967f9c..f067332 100644
---- a/drivers/scsi/bfa/bfad_im.c
-+++ b/drivers/scsi/bfa/bfad_im.c
-@@ -73,9 +73,14 @@ bfa_cb_ioim_done(void *drv, struct bfad_ioim_s *dio,
- 
- 		break;
- 
--	case BFI_IOIM_STS_ABORTED:
- 	case BFI_IOIM_STS_TIMEDOUT:
-+		host_status = DID_TIME_OUT;
-+		cmnd->result = ScsiResult(host_status, 0);
-+		break;
- 	case BFI_IOIM_STS_PATHTOV:
-+		host_status = DID_TRANSPORT_DISRUPTED;
-+		cmnd->result = ScsiResult(host_status, 0);
-+		break;
- 	default:
- 		host_status = DID_ERROR;
- 		cmnd->result = ScsiResult(host_status, 0);
+diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
+index f50ac44..f0ea5db 100644
+--- a/drivers/scsi/pm8001/pm8001_sas.c
++++ b/drivers/scsi/pm8001/pm8001_sas.c
+@@ -434,6 +434,7 @@ static int pm8001_task_exec(struct sas_task *task, const int num,
+ 		ccb->n_elem = n_elem;
+ 		ccb->ccb_tag = tag;
+ 		ccb->task = t;
++		ccb->device = pm8001_dev;
+ 		switch (t->task_proto) {
+ 		case SAS_PROTOCOL_SMP:
+ 			rc = pm8001_task_prep_smp(pm8001_ha, ccb);
 -- 
-1.7.12.4
+1.7.9
+
 
