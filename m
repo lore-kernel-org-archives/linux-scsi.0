@@ -1,45 +1,31 @@
-From: sagi grimberg <sagig@mellanox.com>
-Subject: Re: [PATCH 00/14] target: Initial support for DIF Type1+Type3 emulation
-Date: Wed, 15 Jan 2014 20:03:28 +0200
-Message-ID: <52D6CD70.20706@mellanox.com>
-References: <1389212157-14540-1-git-send-email-nab@daterainc.com>
+From: Loc Ho <lho@apm.com>
+Subject: Re: [PATCH v9 2/4] Documentation: Add documentation for APM X-Gene
+ SoC SATA host controller DTS binding
+Date: Wed, 15 Jan 2014 12:04:02 -0800
+Message-ID: <CAPw-ZT=wJVQ2Qw47Ehgu6rJZ4HkpADrGuhZr8Yjf4XA6z+-xbA@mail.gmail.com>
+References: <1389769910-15505-1-git-send-email-lho@apm.com>
+	<1389769910-15505-2-git-send-email-lho@apm.com>
+	<1389769910-15505-3-git-send-email-lho@apm.com>
+	<20140115111839.GB25824@e106331-lin.cambridge.arm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1389212157-14540-1-git-send-email-nab@daterainc.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Or Gerlitz <ogerlitz@mellanox.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20140115111839.GB25824@e106331-lin.cambridge.arm.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Mark Rutland <mark.rutland@arm.com>
+Cc: "olof@lixom.net" <olof@lixom.net>, "tj@kernel.org" <tj@kernel.org>, "arnd@arndb.de" <arnd@arndb.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "dmilburn@redhat.com" <dmilburn@redhat.com>, "jcm@redhat.com" <jcm@redhat.com>, "patches@apm.com" <patches@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 1/8/2014 10:36 PM, Nicholas A. Bellinger wrote:
-> From: Nicholas Bellinger <nab@linux-iscsi.org>
->
-> Hi MKP & SCSI folks,
->
-> This series contains initial support for target mode DIF Type1+Type3
-> emulation within target core, RAMDISK_MCP device backend, and tcm_loop
-> fabric driver.
->
-> DIF emulation is enabled via a new 'pi_prot_type' device attribute
-> within configfs, which is set after initial device configuration and
-> before target fabric LUN export occurs.
->
-> The DIF read/write verify emulation has been made generic enough so
-> it can be used by other backend drivers (eg: FILEIO), as well as
-> DIF v2 in the near future.  Also note that the majority of the logic
-> has been groked from existing scsi_debug.c code.
->
-> The current plan is to enable basic support for emulated backends with
-> tcm_loop for v3.14 code, and then move onto IBLOCK backend support
-> (that requires BLOCK layer changes)
+Hi,
 
-Hey Nic,
-Can you please elaborate on what BLOCK layer changes are required?
-I didn't spot any misses from Looking at 
-Documentation/block/data-integrity.txt.
+>> +- clocks             : Reference to the clock entry.
+>> +- phys                       : PHY reference with parameter 0.
+>
+> The specific value of the phy-specifier shouldn't matter to this
+> binding. What should matter is what it logically corresponds to.
 
-Am I missing something?
+I not quite following this. Are you suggest that I drop the value 0.
+In the binding, one needs to specify the mode of operation - 0 is for
+SATA. Can you explain more?
 
-Sagi.
+-Loc
