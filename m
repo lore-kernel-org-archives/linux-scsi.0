@@ -1,16 +1,16 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 28/41] hpsa: complete the ioaccel raidmap code
-Date: Wed, 15 Jan 2014 16:38:42 -0600
-Message-ID: <20140115223842.5061.33087.stgit@beardog.cce.hp.com>
+Subject: [PATCH 30/41] hpsa: rescan devices on ioaccel2 error
+Date: Wed, 15 Jan 2014 16:38:52 -0600
+Message-ID: <20140115223852.5061.26708.stgit@beardog.cce.hp.com>
 References: <20140115223354.5061.50276.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t0014.houston.hp.com ([15.201.24.17]:21334 "EHLO
+Received: from g4t0014.houston.hp.com ([15.201.24.17]:21418 "EHLO
 	g4t0014.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752410AbaAOVin (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jan 2014 16:38:43 -0500
+	with ESMTP id S1752410AbaAOVix (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jan 2014 16:38:53 -0500
 In-Reply-To: <20140115223354.5061.50276.stgit@beardog.cce.hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,233 +19,88 @@ Cc: stephenmcameron@gmail.com, mikem@beardog.cce.hp.com, matthew.gates@hp.com, l
 
 From: Scott Teel <scott.teel@hp.com>
 
-Load balance across members of a N-way mirror set, and
-handle the meta-RAID levels: R10, R50, R60.
+Allow driver to schedule a rescan whenever a request fails on the ioaccel2 path.
+This eliminates the possibility of driver getting stuck in non-ioaccel mode.
+
+IOaccel mode (HP SSD Smart Path) is disabled by driver upon error detection.
+Driver relied on idea that request would be retried through normal path, and
+a subsequent error would occur on that path, and be processed by controller firmware.
+As part of that process, controller disables ioaccel mode and later reinstates it,
+signalling driver to change modes.
+
+In some error cases, the error will not duplicate on the standard path,
+so the driver could get stuck in non-ioaccel mode.
+To avoid that, we allow driver to request a rescan during the next run of the
+rescan thread.
 
 Signed-off-by: Scott Teel <scott.teel@hp.com>
 Acked-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- drivers/scsi/hpsa.c |  174 +++++++++++++++++++++++++++++++++++++++++++++++++--
- 1 files changed, 168 insertions(+), 6 deletions(-)
+ drivers/scsi/hpsa.c |   12 ++++++++++--
+ drivers/scsi/hpsa.h |    1 +
+ 2 files changed, 11 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index cf208e5..0109bf7 100644
+index 8e357f0..8f9a9fe 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -423,6 +423,13 @@ static inline int is_logical_dev_addr_mode(unsigned char scsi3addr[])
- static const char *raid_label[] = { "0", "4", "1(1+0)", "5", "5+1", "ADG",
- 	"1(ADM)", "UNKNOWN"
- };
-+#define HPSA_RAID_0	0
-+#define HPSA_RAID_4	1
-+#define HPSA_RAID_1	2	/* also used for RAID 10 */
-+#define HPSA_RAID_5	3	/* also used for RAID 50 */
-+#define HPSA_RAID_51	4
-+#define HPSA_RAID_6	5	/* also used for RAID 60 */
-+#define HPSA_RAID_ADM	6	/* also used for RAID 1+0 ADM */
- #define RAID_UNKNOWN (ARRAY_SIZE(raid_label) - 1)
+@@ -1457,6 +1457,7 @@ static void process_ioaccel2_completion(struct ctlr_info *h,
+ 				"%s: Error 0x%02x, Retrying on standard path.\n",
+ 				"HP SSD Smart Path", c2->error_data.status);
+ 		dev->offload_enabled = 0;
++		h->drv_req_rescan = 1;	/* schedule controller for a rescan */
+ 		cmd->result = DID_SOFT_ERROR << 16;
+ 		cmd_free(h, c);
+ 		cmd->scsi_done(cmd);
+@@ -6145,6 +6146,9 @@ static int hpsa_kickoff_rescan(struct ctlr_info *h)
+ 	int i;
+ 	char *event_type;
  
- static ssize_t raid_level_show(struct device *dev,
-@@ -2947,6 +2954,31 @@ static int hpsa_scsi_ioaccel_queue_command(struct ctlr_info *h,
- 						cdb, cdb_len, scsi3addr);
- }
- 
-+static void raid_map_helper(struct raid_map_data *map,
-+		int offload_to_mirror, u32 *map_index, u32 *current_group)
-+{
-+	if (offload_to_mirror == 0)  {
-+		/* use physical disk in the first mirrored group. */
-+		*map_index %= map->data_disks_per_row;
-+		return;
-+	}
-+	do {
-+		/* determine mirror group that *map_index indicates */
-+		*current_group = *map_index / map->data_disks_per_row;
-+		if (offload_to_mirror == *current_group)
-+			continue;
-+		if (*current_group < (map->layout_map_count - 1)) {
-+			/* select map index from next group */
-+			*map_index += map->data_disks_per_row;
-+			(*current_group)++;
-+		} else {
-+			/* select map index from first group */
-+			*map_index %= map->data_disks_per_row;
-+			*current_group = 0;
-+		}
-+	} while (offload_to_mirror != *current_group);
-+}
++	/* Clear the driver-requested rescan flag */
++	h->drv_req_rescan = 0;
 +
- /*
-  * Attempt to perform offload RAID mapping for a logical volume I/O.
+ 	/* Ask the controller to clear the events we're handling. */
+ 	if ((h->transMethod & (CFGTBL_Trans_io_accel1
+ 			| CFGTBL_Trans_io_accel2)) &&
+@@ -6192,7 +6196,9 @@ static int hpsa_kickoff_rescan(struct ctlr_info *h)
+ 
+ /* Check a register on the controller to see if there are configuration
+  * changes (added/changed/removed logical drives, etc.) which mean that
+- * we should rescan the controller for devices.  If so, add the controller
++ * we should rescan the controller for devices.
++ * Also check flag for driver-initiated rescan.
++ * If either flag or controller event indicate rescan, add the controller
+  * to the list of controllers needing to be rescanned, and gets a
+  * reference to the associated scsi_host.
   */
-@@ -2965,6 +2997,14 @@ static int hpsa_scsi_ioaccel_raid_map(struct ctlr_info *h,
- 	u64 first_row, last_row;
- 	u32 first_row_offset, last_row_offset;
- 	u32 first_column, last_column;
-+	u64 r0_first_row, r0_last_row;
-+	u32 r5or6_blocks_per_row;
-+	u64 r5or6_first_row, r5or6_last_row;
-+	u32 r5or6_first_row_offset, r5or6_last_row_offset;
-+	u32 r5or6_first_column, r5or6_last_column;
-+	u32 total_disks_per_row;
-+	u32 stripesize;
-+	u32 first_group, last_group, current_group;
- 	u32 map_row;
- 	u32 disk_handle;
- 	u64 disk_block;
-@@ -2974,6 +3014,7 @@ static int hpsa_scsi_ioaccel_raid_map(struct ctlr_info *h,
- #if BITS_PER_LONG == 32
- 	u64 tmpdiv;
- #endif
-+	int offload_to_mirror;
+@@ -6202,7 +6208,7 @@ static void hpsa_ctlr_needs_rescan(struct ctlr_info *h)
+ 		return;
  
- 	BUG_ON(!(dev->offload_config && dev->offload_enabled));
+ 	h->events = readl(&(h->cfgtable->event_notify));
+-	if (!h->events)
++	if (!h->events && !h->drv_req_rescan)
+ 		return;
  
-@@ -3076,19 +3117,140 @@ static int hpsa_scsi_ioaccel_raid_map(struct ctlr_info *h,
- 		return IO_ACCEL_INELIGIBLE;
+ 	/*
+@@ -6376,6 +6382,8 @@ reinit_after_soft_reset:
+ 	/* Enable Accelerated IO path at driver layer */
+ 	h->acciopath_status = 1;
  
- 	/* proceeding with driver mapping */
-+	total_disks_per_row = map->data_disks_per_row +
-+				map->metadata_disks_per_row;
- 	map_row = ((u32)(first_row >> map->parity_rotation_shift)) %
- 				map->row_cnt;
--	map_index = (map_row * (map->data_disks_per_row +
--				map->metadata_disks_per_row)) + first_column;
--	if (dev->raid_level == 2) {
--		/* simple round-robin balancing of RAID 1+0 reads across
--		 * primary and mirror members.  this is appropriate for SSD
--		 * but not optimal for HDD.
-+	map_index = (map_row * total_disks_per_row) + first_column;
++	h->drv_req_rescan = 0;
 +
-+	switch (dev->raid_level) {
-+	case HPSA_RAID_0:
-+		break; /* nothing special to do */
-+	case HPSA_RAID_1:
-+		/* Handles load balance across RAID 1 members.
-+		 * (2-drive R1 and R10 with even # of drives.)
-+		 * Appropriate for SSDs, not optimal for HDDs
- 		 */
-+		BUG_ON(map->layout_map_count != 2);
- 		if (dev->offload_to_mirror)
- 			map_index += map->data_disks_per_row;
- 		dev->offload_to_mirror = !dev->offload_to_mirror;
-+		break;
-+	case HPSA_RAID_ADM:
-+		/* Handles N-way mirrors  (R1-ADM)
-+		 * and R10 with # of drives divisible by 3.)
-+		 */
-+		BUG_ON(map->layout_map_count != 3);
-+
-+		offload_to_mirror = dev->offload_to_mirror;
-+		raid_map_helper(map, offload_to_mirror,
-+				&map_index, &current_group);
-+		/* set mirror group to use next time */
-+		offload_to_mirror =
-+			(offload_to_mirror >= map->layout_map_count - 1)
-+			? 0 : offload_to_mirror + 1;
-+		/* FIXME: remove after debug/dev */
-+		BUG_ON(offload_to_mirror >= map->layout_map_count);
-+		dev_warn(&h->pdev->dev,
-+			"DEBUG: Using physical disk map index %d from mirror group %d\n",
-+			map_index, offload_to_mirror);
-+		dev->offload_to_mirror = offload_to_mirror;
-+		/* Avoid direct use of dev->offload_to_mirror within this
-+		 * function since multiple threads might simultaneously
-+		 * increment it beyond the range of dev->layout_map_count -1.
-+		 */
-+		break;
-+	case HPSA_RAID_5:
-+	case HPSA_RAID_6:
-+		if (map->layout_map_count <= 1)
-+			break;
-+
-+		/* Verify first and last block are in same RAID group */
-+		r5or6_blocks_per_row =
-+			map->strip_size * map->data_disks_per_row;
-+		BUG_ON(r5or6_blocks_per_row == 0);
-+		stripesize = r5or6_blocks_per_row * map->layout_map_count;
-+#if BITS_PER_LONG == 32
-+		tmpdiv = first_block;
-+		first_group = do_div(tmpdiv, stripesize);
-+		tmpdiv = first_group;
-+		(void) do_div(tmpdiv, r5or6_blocks_per_row);
-+		first_group = tmpdiv;
-+		tmpdiv = last_block;
-+		last_group = do_div(tmpdiv, stripesize);
-+		tmpdiv = last_group;
-+		(void) do_div(tmpdiv, r5or6_blocks_per_row);
-+		last_group = tmpdiv;
-+#else
-+		first_group = (first_block % stripesize) / r5or6_blocks_per_row;
-+		last_group = (last_block % stripesize) / r5or6_blocks_per_row;
-+		if (first_group != last_group)
-+#endif
-+			return IO_ACCEL_INELIGIBLE;
-+
-+		/* Verify request is in a single row of RAID 5/6 */
-+#if BITS_PER_LONG == 32
-+		tmpdiv = first_block;
-+		(void) do_div(tmpdiv, stripesize);
-+		first_row = r5or6_first_row = r0_first_row = tmpdiv;
-+		tmpdiv = last_block;
-+		(void) do_div(tmpdiv, stripesize);
-+		r5or6_last_row = r0_last_row = tmpdiv;
-+#else
-+		first_row = r5or6_first_row = r0_first_row =
-+						first_block / stripesize;
-+		r5or6_last_row = r0_last_row = last_block / stripesize;
-+#endif
-+		if (r5or6_first_row != r5or6_last_row)
-+			return IO_ACCEL_INELIGIBLE;
-+
-+
-+		/* Verify request is in a single column */
-+#if BITS_PER_LONG == 32
-+		tmpdiv = first_block;
-+		first_row_offset = do_div(tmpdiv, stripesize);
-+		tmpdiv = first_row_offset;
-+		first_row_offset = (u32) do_div(tmpdiv, r5or6_blocks_per_row);
-+		r5or6_first_row_offset = first_row_offset;
-+		tmpdiv = last_block;
-+		r5or6_last_row_offset = do_div(tmpdiv, stripesize);
-+		tmpdiv = r5or6_last_row_offset;
-+		r5or6_last_row_offset = do_div(tmpdiv, r5or6_blocks_per_row);
-+		tmpdiv = r5or6_first_row_offset;
-+		(void) do_div(tmpdiv, map->strip_size);
-+		first_column = r5or6_first_column = tmpdiv;
-+		tmpdiv = r5or6_last_row_offset;
-+		(void) do_div(tmpdiv, map->strip_size);
-+		r5or6_last_column = tmpdiv;
-+#else
-+		first_row_offset = r5or6_first_row_offset =
-+			(u32)((first_block % stripesize) %
-+						r5or6_blocks_per_row);
-+
-+		r5or6_last_row_offset =
-+			(u32)((last_block % stripesize) %
-+						r5or6_blocks_per_row);
-+
-+		first_column = r5or6_first_column =
-+			r5or6_first_row_offset / map->strip_size;
-+		r5or6_last_column =
-+			r5or6_last_row_offset / map->strip_size;
-+#endif
-+		if (r5or6_first_column != r5or6_last_column)
-+			return IO_ACCEL_INELIGIBLE;
-+
-+		/* Request is eligible */
-+		map_row = ((u32)(first_row >> map->parity_rotation_shift)) %
-+			map->row_cnt;
-+
-+		map_index = (first_group *
-+			(map->row_cnt * total_disks_per_row)) +
-+			(map_row * total_disks_per_row) + first_column;
-+		break;
-+	default:
-+		return IO_ACCEL_INELIGIBLE;
- 	}
-+
- 	disk_handle = dd[map_index].ioaccel_handle;
- 	disk_block = map->disk_starting_blk + (first_row * map->strip_size) +
- 			(first_row_offset - (first_column * map->strip_size));
+ 	/* Turn the interrupts on so we can service requests */
+ 	h->access.set_intr_mask(h, HPSA_INTR_ON);
+ 
+diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
+index 1d3340d..2e7521f 100644
+--- a/drivers/scsi/hpsa.h
++++ b/drivers/scsi/hpsa.h
+@@ -182,6 +182,7 @@ struct ctlr_info {
+ #define HPSATMF_LOG_QRY_ASYNC   (1 << 25)
+ 	u32 events;
+ 	int	acciopath_status;
++	int	drv_req_rescan;	/* flag for driver to request rescan event */
+ };
+ #define HPSA_ABORT_MSG 0
+ #define HPSA_DEVICE_RESET_MSG 1
 
