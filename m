@@ -1,123 +1,150 @@
-From: Loc Ho <lho@apm.com>
-Subject: [PATCH v9 4/4] arm64: Add APM X-Gene SoC SATA host controller DTS entries
-Date: Wed, 15 Jan 2014 00:11:50 -0700
-Message-ID: <1389769910-15505-5-git-send-email-lho@apm.com>
-References: <1389769910-15505-1-git-send-email-lho@apm.com>
- <1389769910-15505-2-git-send-email-lho@apm.com>
- <1389769910-15505-3-git-send-email-lho@apm.com>
- <1389769910-15505-4-git-send-email-lho@apm.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod5og113.obsmtp.com ([64.18.0.26]:57742 "HELO
-	exprod5og113.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751314AbaAOHM1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jan 2014 02:12:27 -0500
-Received: by mail-pb0-f53.google.com with SMTP id ma3so748405pbc.26
-        for <linux-scsi@vger.kernel.org>; Tue, 14 Jan 2014 23:12:26 -0800 (PST)
-In-Reply-To: <1389769910-15505-4-git-send-email-lho@apm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Daniel Mack <zonque-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: Suspend issues with a LaCie USB hard disk connected
+Date: Wed, 15 Jan 2014 11:58:55 +0100
+Message-ID: <52D669EF.30405@gmail.com>
+References: <Pine.LNX.4.44L0.1312181542280.1029-100000@iolanthe.rowland.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <Pine.LNX.4.44L0.1312181542280.1029-100000-IYeN2dnnYyZXsRXLowluHWD2FQJk+8+b@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Cc: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Oliver Neukum <oliver-GvhC2dPhHPQdnm+yROfE0A@public.gmane.org>, Aaron Lu <aaron.lu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "James E.J. Bottomley" <JBottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Sven Neumann <s.neumann-5g8ninUHluJWk0Htik3J/w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, dmilburn@redhat.com, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 
-Signed-off-by: Loc Ho <lho@apm.com>
-Signed-off-by: Tuan Phan <tphan@apm.com>
-Signed-off-by: Suman Tripathi <stripathi@apm.com>
----
- arch/arm64/boot/dts/apm-storm.dtsi |   75 ++++++++++++++++++++++++++++++++++++
- 1 files changed, 75 insertions(+), 0 deletions(-)
+Hi,
 
-diff --git a/arch/arm64/boot/dts/apm-storm.dtsi b/arch/arm64/boot/dts/apm-storm.dtsi
-index a1f475d..34900d2 100644
---- a/arch/arm64/boot/dts/apm-storm.dtsi
-+++ b/arch/arm64/boot/dts/apm-storm.dtsi
-@@ -221,6 +221,48 @@
- 				enable-offset = <0x0>;
- 				enable-mask = <0x06>;
- 			};
-+
-+			sata01clk: sata01clk@1f21c000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				clock-names = "socplldiv2";
-+				reg = <0x0 0x1f21c000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "sata01clk";
-+				csr-offset = <0x4>;
-+				csr-mask = <0x05>;
-+				enable-offset = <0x0>;
-+				enable-mask = <0x39>;
-+			};
-+
-+			sata23clk: sata23clk@1f22c000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				clock-names = "socplldiv2";
-+				reg = <0x0 0x1f22c000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "sata23clk";
-+				csr-offset = <0x4>;
-+				csr-mask = <0x05>;
-+				enable-offset = <0x0>;
-+				enable-mask = <0x39>;
-+			};
-+
-+			sata45clk: sata45clk@1f23c000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				clock-names = "socplldiv2";
-+				reg = <0x0 0x1f23c000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "sata45clk";
-+				csr-offset = <0x4>;
-+				csr-mask = <0x05>;
-+				enable-offset = <0x0>;
-+				enable-mask = <0x39>;
-+			};
- 		};
- 
- 		serial0: serial@1c020000 {
-@@ -269,5 +311,38 @@
- 			apm,tx-boost-gain = <31 31 31 31 31 31>;
- 			apm,tx-eye-tuning = <2 10 10 2 10 10>;
- 		};
-+
-+		sata1: sata@1a000000 {
-+			compatible = "apm,xgene-ahci-sgmii";
-+			reg = <0x0 0x1a000000 0x0 0x1000>,
-+			      <0x0 0x1f210000 0x0 0x10000>;
-+			interrupts = <0x0 0x86 0x4>;
-+			status = "disabled";
-+			clocks = <&sata01clk 0>;
-+			phys = <&phy1 0>;
-+			phy-names = "sata-6g";
-+		};
-+
-+		sata2: sata@1a400000 {
-+			compatible = "apm,xgene-ahci-sgmii";
-+			reg = <0x0 0x1a400000 0x0 0x1000>,
-+			      <0x0 0x1f220000 0x0 0x10000>;
-+			interrupts = <0x0 0x87 0x4>;
-+			status = "ok";
-+			clocks = <&sata23clk 0>;
-+			phys = <&phy2 0>;
-+			phy-names = "sata-6g";
-+		};
-+
-+		sata3: sata@1a800000 {
-+			compatible = "apm,xgene-ahci-pcie";
-+			reg = <0x0 0x1a800000 0x0 0x1000>,
-+			      <0x0 0x1f230000 0x0 0x10000>;
-+			interrupts = <0x0 0x88 0x4>;
-+			status = "ok";
-+			clocks = <&sata45clk 0>;
-+			phys = <&phy3 0>;
-+			phy-names = "sata-6g";
-+		};
- 	};
- };
--- 
-1.5.5
+Sorry for the long, primarily holiday-related delay on this.
 
+On 12/18/2013 09:46 PM, Alan Stern wrote:
+> On Wed, 18 Dec 2013, Daniel Mack wrote:
+>> I'm facing an issue putting an embedded system to sleep while a Lacie
+>> external USB hard disk is connected. Relevant kernel messages that occur
+>> at the attempt are:
+>>
+>> [   13.834731] PM: Sending message for entering DeepSleep mode
+>> [   13.846575] sd 0:0:0:0: [sda] Synchronizing SCSI cache
+>> [   13.858818] sd 0:0:0:0: [sda]
+>> [   13.862432] Result: hostbyte=0x00 driverbyte=0x08
+>> [   13.867349] sd 0:0:0:0: [sda]
+>> [   13.870626] Sense Key : 0x5 [current]
+>> [   13.874602] sd 0:0:0:0: [sda]
+>> [   13.877879] ASC=0x20 ASCQ=0x0
+>> [   13.885053] dpm_run_callback(): scsi_bus_suspend+0x0/0x20 returns -5
+>> [   13.901130] PM: Device 0:0:0:0 failed to suspend async: error -5
+>> [   13.907507] PM: Some devices failed to suspend, or early wake event
+>> detected
+>>
+>> What happens is that in sd_sync_cache(), scsi_execute_req_flags()
+>> returns 0x08000002, so driver_byte(res) evaluates to DRIVER_SENSE and
+>> host_byte(res) is DID_OK, which is an unhandled case that leads to -EIO
+>> eventually.
+>>
+>> I have admittedly not much clue about the SCSI layer, so I wonder what
+>> would be the best way to fix this. Should DID_OK just be handled as
+>> non-error condition in the switch? Should the suspend call chain ignore
+>> such errors from sd_sync_cache()?
+>>
+>> I'm open to suggestions and happy to test patches.
+> 
+> The Sense Key and ASC values indicate that the drive did not understand
+> the SYNCHRONIZE CACHE command.  A usbmon trace would verify this; see
+> the instructions in Documentation/usb/usbmon.txt.
+> 
+> Assuming that really is what happened, we have to decide how to handle 
+> the situation.
+
+Ok, this is the usbmon trace that I captured when the system goes to
+suspend with the USB storage media connected but unmounted:
+
+cebe5e00 3629314504 S Bo:1:003:2 -115 31 = 55534243 10000000 00000000
+00000a35 00000000 00000000 00000000 000000
+cebe5e00 3629315214 C Bo:1:003:2 0 31 >
+cebe5e00 3629315413 S Bi:1:003:1 -115 13 <
+cebe5e00 3629315492 C Bi:1:003:1 0 13 = 55534253 10000000 00000000 01
+cebe5e00 3629315571 S Bo:1:003:2 -115 31 = 55534243 11000000 12000000
+80000603 00000012 00000000 00000000 000000
+cebe5e00 3629315606 C Bo:1:003:2 0 31 >
+cecd4580 3629315681 S Bi:1:003:1 -115 18 <
+cecd4580 3629315744 C Bi:1:003:1 0 18 = 70000500 0000000a 00000000
+20000000 0000
+cebe5e00 3629315772 S Bi:1:003:1 -115 13 <
+cebe5e00 3629315817 C Bi:1:003:1 0 13 = 55534253 11000000 00000000 00
+cebe5e00 3629319750 S Bo:1:003:2 -115 31 = 55534243 12000000 00000000
+00000a35 00000000 00000000 00000000 000000
+cebe5e00 3629319826 C Bo:1:003:2 0 31 >
+cebe5e00 3629319856 S Bi:1:003:1 -115 13 <
+cebe5e00 3629319910 C Bi:1:003:1 0 13 = 55534253 12000000 00000000 01
+cebe5e00 3629319964 S Bo:1:003:2 -115 31 = 55534243 13000000 12000000
+80000603 00000012 00000000 00000000 000000
+cebe5e00 3629319996 C Bo:1:003:2 0 31 >
+cecd4300 3629320026 S Bi:1:003:1 -115 18 <
+cecd4300 3629320086 C Bi:1:003:1 0 18 = 70000500 0000000a 00000000
+20000000 0000
+cebe5e00 3629320111 S Bi:1:003:1 -115 13 <
+cebe5e00 3629320152 C Bi:1:003:1 0 13 = 55534253 13000000 00000000 00
+cebe5e00 3629320360 S Bo:1:003:2 -115 31 = 55534243 14000000 00000000
+00000a35 00000000 00000000 00000000 000000
+cebe5e00 3629320610 C Bo:1:003:2 0 31 >
+cebe5e00 3629320670 S Bi:1:003:1 -115 13 <
+cebe5e00 3629320714 C Bi:1:003:1 0 13 = 55534253 14000000 00000000 01
+cebe5e00 3629320752 S Bo:1:003:2 -115 31 = 55534243 15000000 12000000
+80000603 00000012 00000000 00000000 000000
+cebe5e00 3629320809 C Bo:1:003:2 0 31 >
+cecd4300 3629320834 S Bi:1:003:1 -115 18 <
+cecd4300 3629320863 C Bi:1:003:1 0 18 = 70000500 0000000a 00000000
+20000000 0000
+cebe5e00 3629320885 S Bi:1:003:1 -115 13 <
+cebe5e00 3629320923 C Bi:1:003:1 0 13 = 55534253 15000000 00000000 00
+ceb36280 3629350243 C Ii:1:001:1 -2:2048 0
+cecd4800 3630011191 S Ci:1:001:0 s a3 00 0000 0001 0004 4 <
+cecd4800 3630011333 C Ci:1:001:0 0 4 = 07051200
+cecd4800 3630011574 S Co:1:001:0 s 23 01 0011 0001 0000 0
+cecd4800 3630011699 C Co:1:001:0 0 0
+cecd4800 3630011745 S Co:1:001:0 s 23 01 0014 0001 0000 0
+cecd4800 3630011789 C Co:1:001:0 0 0
+ceb36280 3630112579 S Ii:1:001:1 -115:2048 4 <
+cecd4500 3630112825 S Ci:1:001:0 s a3 00 0000 0001 0004 4 <
+cecd4500 3630112952 C Ci:1:001:0 0 4 = 07050000
+cecd4500 3630113001 S Co:1:001:0 s 23 01 0002 0001 0000 0
+cecd4500 3630113084 C Co:1:001:0 0 0
+ceb36280 3630122552 C Ii:1:001:1 0:2048 1 = 02
+ceb36280 3630122566 S Ii:1:001:1 -115:2048 4 <
+cecd4500 3630152573 S Ci:1:001:0 s a3 00 0000 0001 0004 4 <
+cecd4500 3630152625 C Ci:1:001:0 0 4 = 03050000
+cecd4500 3630172588 S Ci:1:003:0 s 80 00 0000 0000 0002 2 <
+cecd4500 3630172603 E Ci:1:003:0 -19 0
+cecd4500 3630172744 S Co:1:001:0 s 23 03 0004 0001 0000 0
+cecd4500 3630184219 C Co:1:001:0 0 0
+cecd4500 3630242590 S Ci:1:001:0 s a3 00 0000 0001 0004 4 <
+cecd4500 3630242657 C Ci:1:001:0 0 4 = 13050000
+cecd4500 3630302564 S Ci:1:001:0 s a3 00 0000 0001 0004 4 <
+cecd4500 3630302609 C Ci:1:001:0 0 4 = 13050000
+ceb36280 3630315035 C Ii:1:001:1 0:2048 1 = 02
+
+FWIW, the following patch seems to work fine on our machines, but as I
+said, I'm uncertain wrt to whether that's the right approach.
+
+
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 69725f7..ec99787 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1469,6 +1469,7 @@ static int sd_sync_cache(struct scsi_disk *sdkp)
+                                return 0;
+
+                switch (host_byte(res)) {
++               case DID_OK:
+                /* ignore errors due to racing a disconnection */
+                case DID_BAD_TARGET:
+                case DID_NO_CONNECT:
+
+
+Thanks,
+Daniel
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
