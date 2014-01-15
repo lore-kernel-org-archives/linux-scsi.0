@@ -1,17 +1,16 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 20/41] hpsa: Acknowledge controller events in ioaccell mode 2
-	as well as mode 1
-Date: Wed, 15 Jan 2014 16:38:01 -0600
-Message-ID: <20140115223801.5061.11209.stgit@beardog.cce.hp.com>
+Subject: [PATCH 21/41] hpsa: do ioaccel mode 2 resource allocations
+Date: Wed, 15 Jan 2014 16:38:06 -0600
+Message-ID: <20140115223806.5061.5716.stgit@beardog.cce.hp.com>
 References: <20140115223354.5061.50276.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g6t0184.atlanta.hp.com ([15.193.32.61]:45455 "EHLO
+Received: from g6t0184.atlanta.hp.com ([15.193.32.61]:45490 "EHLO
 	g6t0184.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752339AbaAOViC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jan 2014 16:38:02 -0500
+	with ESMTP id S1752359AbaAOViH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jan 2014 16:38:07 -0500
 In-Reply-To: <20140115223354.5061.50276.stgit@beardog.cce.hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,36 +19,114 @@ Cc: stephenmcameron@gmail.com, mikem@beardog.cce.hp.com, matthew.gates@hp.com, l
 
 From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+Signed-off-by: Mike Miller <mikem@beardog.cce.hp.com>
+Acked-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- drivers/scsi/hpsa.c     |    3 ++-
- drivers/scsi/hpsa_cmd.h |    1 +
- 2 files changed, 3 insertions(+), 1 deletions(-)
+ drivers/scsi/hpsa.c |   50 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/hpsa.h |    3 +++
+ 2 files changed, 53 insertions(+), 0 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index ebca59b..fbf41c7 100644
+index fbf41c7..f0bd511 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -5490,7 +5490,8 @@ static int hpsa_kickoff_rescan(struct ctlr_info *h)
- 	char *event_type;
+@@ -5295,6 +5295,10 @@ static void hpsa_free_cmd_pool(struct ctlr_info *h)
+ 		pci_free_consistent(h->pdev,
+ 			    h->nr_cmds * sizeof(struct CommandList),
+ 			    h->cmd_pool, h->cmd_pool_dhandle);
++	if (h->ioaccel2_cmd_pool)
++		pci_free_consistent(h->pdev,
++			h->nr_cmds * sizeof(*h->ioaccel2_cmd_pool),
++			h->ioaccel2_cmd_pool, h->ioaccel2_cmd_pool_dhandle);
+ 	if (h->errinfo_pool)
+ 		pci_free_consistent(h->pdev,
+ 			    h->nr_cmds * sizeof(struct ErrorInfo),
+@@ -5834,6 +5838,7 @@ static void hpsa_remove_one(struct pci_dev *pdev)
+ 	kfree(h->cmd_pool_bits);
+ 	kfree(h->blockFetchTable);
+ 	kfree(h->ioaccel1_blockFetchTable);
++	kfree(h->ioaccel2_blockFetchTable);
+ 	kfree(h->hba_inquiry_data);
+ 	pci_disable_device(pdev);
+ 	pci_release_regions(pdev);
+@@ -6053,6 +6058,44 @@ clean_up:
+ 	return 1;
+ }
  
- 	/* Ask the controller to clear the events we're handling. */
--	if (h->transMethod & (CFGTBL_Trans_io_accel1) &&
-+	if ((h->transMethod & (CFGTBL_Trans_io_accel1
-+			| CFGTBL_Trans_io_accel2)) &&
- 		(h->events & HPSA_EVENT_NOTIFY_ACCEL_IO_PATH_STATE_CHANGE ||
- 		 h->events & HPSA_EVENT_NOTIFY_ACCEL_IO_PATH_CONFIG_CHANGE)) {
++static int ioaccel2_alloc_cmds_and_bft(struct ctlr_info *h)
++{
++	/* Allocate ioaccel2 mode command blocks and block fetch table */
++
++	h->ioaccel_maxsg =
++		readl(&(h->cfgtable->io_accel_max_embedded_sg_count));
++	if (h->ioaccel_maxsg > IOACCEL2_MAXSGENTRIES)
++		h->ioaccel_maxsg = IOACCEL2_MAXSGENTRIES;
++
++#define IOACCEL2_COMMANDLIST_ALIGNMENT 128
++	BUILD_BUG_ON(sizeof(struct io_accel2_cmd) %
++			IOACCEL2_COMMANDLIST_ALIGNMENT);
++	h->ioaccel2_cmd_pool =
++		pci_alloc_consistent(h->pdev,
++			h->nr_cmds * sizeof(*h->ioaccel2_cmd_pool),
++			&(h->ioaccel2_cmd_pool_dhandle));
++
++	h->ioaccel2_blockFetchTable =
++		kmalloc(((h->ioaccel_maxsg + 1) *
++				sizeof(u32)), GFP_KERNEL);
++
++	if ((h->ioaccel2_cmd_pool == NULL) ||
++		(h->ioaccel2_blockFetchTable == NULL))
++		goto clean_up;
++
++	memset(h->ioaccel2_cmd_pool, 0,
++		h->nr_cmds * sizeof(*h->ioaccel2_cmd_pool));
++	return 0;
++
++clean_up:
++	if (h->ioaccel2_cmd_pool)
++		pci_free_consistent(h->pdev,
++			h->nr_cmds * sizeof(*h->ioaccel2_cmd_pool),
++			h->ioaccel2_cmd_pool, h->ioaccel2_cmd_pool_dhandle);
++	kfree(h->ioaccel2_blockFetchTable);
++	return 1;
++}
++
+ static void hpsa_put_ctlr_into_performant_mode(struct ctlr_info *h)
+ {
+ 	u32 trans_support;
+@@ -6073,6 +6116,13 @@ static void hpsa_put_ctlr_into_performant_mode(struct ctlr_info *h)
+ 				CFGTBL_Trans_enable_directed_msix;
+ 		if (hpsa_alloc_ioaccel_cmd_and_bft(h))
+ 			goto clean_up;
++	} else {
++		if (trans_support & CFGTBL_Trans_io_accel2) {
++				transMethod |= CFGTBL_Trans_io_accel2 |
++				CFGTBL_Trans_enable_directed_msix;
++		if (ioaccel2_alloc_cmds_and_bft(h))
++			goto clean_up;
++		}
+ 	}
  
-diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
-index 9e00988..6b336e8 100644
---- a/drivers/scsi/hpsa_cmd.h
-+++ b/drivers/scsi/hpsa_cmd.h
-@@ -133,6 +133,7 @@
- #define CFGTBL_Trans_Simple     0x00000002l
- #define CFGTBL_Trans_Performant 0x00000004l
- #define CFGTBL_Trans_io_accel1	0x00000080l
-+#define CFGTBL_Trans_io_accel2	0x00000100l
- #define CFGTBL_Trans_use_short_tags 0x20000000l
- #define CFGTBL_Trans_enable_directed_msix (1 << 30)
- 
+ 	/* TODO, check that this next line h->nreply_queues is correct */
+diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
+index 74eb22a..2a4a0cb 100644
+--- a/drivers/scsi/hpsa.h
++++ b/drivers/scsi/hpsa.h
+@@ -105,6 +105,8 @@ struct ctlr_info {
+ 	dma_addr_t		cmd_pool_dhandle;
+ 	struct io_accel1_cmd	*ioaccel_cmd_pool;
+ 	dma_addr_t		ioaccel_cmd_pool_dhandle;
++	struct io_accel2_cmd	*ioaccel2_cmd_pool;
++	dma_addr_t		ioaccel2_cmd_pool_dhandle;
+ 	struct ErrorInfo 	*errinfo_pool;
+ 	dma_addr_t		errinfo_pool_dhandle;
+ 	unsigned long  		*cmd_pool_bits;
+@@ -139,6 +141,7 @@ struct ctlr_info {
+ 	dma_addr_t reply_pool_dhandle;
+ 	u32 *blockFetchTable;
+ 	u32 *ioaccel1_blockFetchTable;
++	u32 *ioaccel2_blockFetchTable;
+ 	unsigned char *hba_inquiry_data;
+ 	u32 driver_support;
+ 	u32 fw_support;
 
