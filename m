@@ -1,112 +1,67 @@
-From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 32/41] hpsa: do not inquire for unsupported ioaccel status vpd
-	page
-Date: Wed, 15 Jan 2014 16:39:02 -0600
-Message-ID: <20140115223902.5061.40752.stgit@beardog.cce.hp.com>
-References: <20140115223354.5061.50276.stgit@beardog.cce.hp.com>
+From: Loc Ho <lho@apm.com>
+Subject: Re: [PATCH v9 2/4] Documentation: Add documentation for APM X-Gene
+ SoC SATA host controller DTS binding
+Date: Wed, 15 Jan 2014 14:07:18 -0800
+Message-ID: <CAPw-ZTmn-aNJcLd1mZPRtog_ncq=GC94ULCJb-400oYqERYK5g@mail.gmail.com>
+References: <1389769910-15505-1-git-send-email-lho@apm.com>
+	<5905127.tqJ3nFt5cj@wuerfel>
+	<CAPw-ZTmVYfPLUVmtes3Gn8Z=+gyFtLoZxc-QUdHH7-ePjKAG9A@mail.gmail.com>
+	<4632602.a1zUZOeMuh@wuerfel>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g9t1613g.houston.hp.com ([15.240.0.71]:33045 "EHLO
-	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751354AbaAOVs2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jan 2014 16:48:28 -0500
-Received: from g5t0007.atlanta.hp.com (g5t0007.atlanta.hp.com [15.192.0.44])
-	(using TLSv1 with cipher ADH-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by g9t1613g.houston.hp.com (Postfix) with ESMTPS id EB73D60D85
-	for <linux-scsi@vger.kernel.org>; Wed, 15 Jan 2014 21:39:27 +0000 (UTC)
-In-Reply-To: <20140115223354.5061.50276.stgit@beardog.cce.hp.com>
+Received: from exprod5og118.obsmtp.com ([64.18.0.160]:59472 "HELO
+	exprod5og118.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753364AbaAOWHT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jan 2014 17:07:19 -0500
+Received: by mail-qc0-f178.google.com with SMTP id m20so1584957qcx.23
+        for <linux-scsi@vger.kernel.org>; Wed, 15 Jan 2014 14:07:18 -0800 (PST)
+In-Reply-To: <4632602.a1zUZOeMuh@wuerfel>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jbottomley@parallels.com
-Cc: stephenmcameron@gmail.com, mikem@beardog.cce.hp.com, matthew.gates@hp.com, linux-scsi@vger.kernel.org, scott.teel@hp.com
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Mark Rutland <mark.rutland@arm.com>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Suman Tripathi <stripathi@apm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "jcm@redhat.com" <jcm@redhat.com>, "patches@apm.com" <patches@apm.com>, "tj@kernel.org" <tj@kernel.org>, "dmilburn@redhat.com" <dmilburn@redhat.com>, "olof@lixom.net" <olof@lixom.net>, Tuan Phan <tphan@apm.com>
 
-From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+Hi,
 
-Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
----
- drivers/scsi/hpsa.c     |   45 +++++++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/hpsa_cmd.h |    2 ++
- 2 files changed, 47 insertions(+), 0 deletions(-)
+>> >> >> +- clocks             : Reference to the clock entry.
+>> >> >> +- phys                       : PHY reference with parameter 0.
+>> >> >
+>> >> > The specific value of the phy-specifier shouldn't matter to this
+>> >> > binding. What should matter is what it logically corresponds to.
+>> >>
+>> >> I not quite following this. Are you suggest that I drop the value 0.
+>> >> In the binding, one needs to specify the mode of operation - 0 is for
+>> >> SATA. Can you explain more?
+>> >
+>> > The SATA device should not care what the argument for the PHY
+>> > device is. You could connect the same device to another PHY
+>> > that has a different set of arguments, which is the whole point
+>> > of abstracting it.
+>> >
+>>
+>> I understand what you wrote here. We should not have an argument from
+>> the host controller. Then my question is how should the PHY node
+>> indicates that it needs to be configured itself as an SATA PHY?
+>
+> The "phys" property should specify whatever the configuration of
+> the phy device is supposed to be. It's just not the business of
+> the sata driver or the sata binding to know what that configuration
+> is.
+>
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 14862f9..f78d08b 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -2063,6 +2063,49 @@ static int hpsa_get_raid_map(struct ctlr_info *h,
- 	return rc;
- }
- 
-+static int hpsa_vpd_page_supported(struct ctlr_info *h,
-+	unsigned char scsi3addr[], u8 page)
-+{
-+        int rc;
-+	int i;
-+	int pages;
-+	unsigned char *buf, bufsize;
-+
-+	buf = kzalloc(256, GFP_KERNEL);
-+	if (!buf)
-+		return 0;
-+
-+	/* Get the size of the page list first */
-+	rc = hpsa_scsi_do_inquiry(h, scsi3addr,
-+				VPD_PAGE | HPSA_VPD_SUPPORTED_PAGES,
-+				buf, HPSA_VPD_HEADER_SZ);
-+	if (rc != 0)
-+		goto exit_unsupported;
-+	pages = buf[3];
-+	if ((pages + HPSA_VPD_HEADER_SZ) <= 255)
-+		bufsize = pages + HPSA_VPD_HEADER_SZ;
-+	else
-+		bufsize = 255;
-+
-+	/* Get the whole VPD page list */
-+	rc = hpsa_scsi_do_inquiry(h, scsi3addr,
-+				VPD_PAGE | HPSA_VPD_SUPPORTED_PAGES,
-+				buf, bufsize);
-+	if (rc != 0)
-+		goto exit_unsupported;
-+
-+	pages = buf[3];
-+	for (i = 1; i <= pages; i++)
-+		if (buf[3 + i] == page)
-+			goto exit_supported;
-+exit_unsupported:
-+	kfree(buf);
-+	return 0;
-+exit_supported:
-+	kfree(buf);
-+	return 1;
-+}
-+
- static void hpsa_get_ioaccel_status(struct ctlr_info *h,
- 	unsigned char *scsi3addr, struct hpsa_scsi_dev_t *this_device)
- {
-@@ -2076,6 +2119,8 @@ static void hpsa_get_ioaccel_status(struct ctlr_info *h,
- 	buf = kzalloc(64, GFP_KERNEL);
- 	if (!buf)
- 		return;
-+	if (!hpsa_vpd_page_supported(h, scsi3addr, HPSA_VPD_LV_IOACCEL_STATUS))
-+		goto out;
- 	rc = hpsa_scsi_do_inquiry(h, scsi3addr,
- 			VPD_PAGE | HPSA_VPD_LV_IOACCEL_STATUS, buf, 64);
- 	if (rc != 0)
-diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
-index e048167..769fd2a 100644
---- a/drivers/scsi/hpsa_cmd.h
-+++ b/drivers/scsi/hpsa_cmd.h
-@@ -144,8 +144,10 @@
- #define CFGTBL_BusType_Fibre2G  0x00000200l
- 
- /* VPD Inquiry types */
-+#define HPSA_VPD_SUPPORTED_PAGES        0x00
- #define HPSA_VPD_LV_DEVICE_GEOMETRY     0xC1
- #define HPSA_VPD_LV_IOACCEL_STATUS      0xC2
-+#define HPSA_VPD_HEADER_SZ              4
- 
- struct vals32 {
- 	u32   lower;
+Here is what I have and I am trying to piece this together:
 
+phy1 {
+   #phy-cells = <0>;  /* No parameter as suggest by Mark */
+};
+
+sata1 {
+    :::
+    phys = <&phy1>;
+};
+
+What I don't get is how does one specify the mode
+(SATA/USB/SGMII/etc)? As another parameter in the phy1 node?
+
+-Loc
