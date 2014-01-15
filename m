@@ -1,50 +1,120 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v3 1/2] Hard disk S3 resume time optimization
-Date: Wed, 15 Jan 2014 08:01:04 -0500
-Message-ID: <20140115130104.GC7950@htj.dyndns.org>
-References: <20140108005607.GB29556@linux.intel.com>
- <20140111191315.GC3257@mtj.dyndns.org>
- <20140113195544.GA13900@linux.intel.com>
- <20140113203007.GA3480@mtj.dyndns.org>
- <20140115003140.GB15067@linux.intel.com>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Subject: [Update][PATCH 8/9] powerpc / eeh_driver: Use global PCI rescan-remove locking
+Date: Wed, 15 Jan 2014 14:36:36 +0100
+Message-ID: <1476201.kR505WbUas@vostro.rjw.lan>
+References: <1385429290-25397-1-git-send-email-yinghai@kernel.org> <20440867.YaQfKrcfsQ@vostro.rjw.lan> <4447911.Q1f9tEzrXs@vostro.rjw.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20140115003140.GB15067@linux.intel.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Todd E Brandt <todd.e.brandt@linux.intel.com>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, rjw@rjwysocki.net
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from v094114.home.net.pl ([79.96.170.134]:61384 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751664AbaAONWh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jan 2014 08:22:37 -0500
+In-Reply-To: <4447911.Q1f9tEzrXs@vostro.rjw.lan>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yinghai Lu <yinghai@kernel.org>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, Gu Zheng <guz.fnst@cn.fujitsu.com>, Guo Chao <yan@linux.vnet.ibm.com>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Mika Westerberg <mika.westerberg@linux.intel.com>, Myron Stowe <myron.stowe@gmail.com>, Benjamin Herrenschmidt <benh@au1.ibm.com>, linux-scsi@vger.kernel.org, Matthew Garrett <mjg59@srcf.ucam.org>, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
 
-Hello,
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Subject: powerpc / eeh_driver: Use global PCI rescan-remove locking
 
-On Tue, Jan 14, 2014 at 04:31:40PM -0800, Todd E Brandt wrote:
-....
-> Signed-off-by: Todd Brandt <todd.e.brandt@intel.com>
-> Signed-off-by: Arjan van de Ven <arjan@linux.intel.com>
-> 
->  drivers/ata/libata-core.c | 32 +++++++++++++++++---------------
->  1 file changed, 17 insertions(+), 15 deletions(-)
-> 
-> Signed-off-by: Todd Brandt <todd.e.brandt@intel.com>
-> Signed-off-by: Arjan van de Ven <arjan@linux.intel.com>
+Race conditions are theoretically possible between the PCI device
+addition and removal in the PPC64 PCI error recovery driver and
+the generic PCI bus rescan and device removal that can be triggered
+via sysfs.
 
-Hmmm?  Duplicate SOBs and there's supposed to be "---" separator
-between patch description and the rest.
+To avoid those race conditions make PPC64 PCI error recovery driver
+use global PCI rescan-remove locking around PCI device addition and
+removal.
 
-> @@ -5326,7 +5326,7 @@ bool ata_link_offline(struct ata_link *link)
->  #ifdef CONFIG_PM
->  static int ata_port_request_pm(struct ata_port *ap, pm_message_t mesg,
->  			       unsigned int action, unsigned int ehi_flags,
-> -			       int *async)
-> +			       bool async, int *async_result)
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
 
-Do we still need @async_result?  Only resume is async and resume
-doesn't care about the result.  Suspend is always synchronous and thus
-can just return the result, no?
+The previous version had wrong function names in the last hunk, sorry about
+that.
 
-Thanks.
+Rafael
 
--- 
-tejun
+---
+ arch/powerpc/kernel/eeh_driver.c |   19 ++++++++++++++++---
+ 1 file changed, 16 insertions(+), 3 deletions(-)
+
+Index: linux-pm/arch/powerpc/kernel/eeh_driver.c
+===================================================================
+--- linux-pm.orig/arch/powerpc/kernel/eeh_driver.c
++++ linux-pm/arch/powerpc/kernel/eeh_driver.c
+@@ -369,7 +369,9 @@ static void *eeh_rmv_device(void *data,
+ 	edev->mode |= EEH_DEV_DISCONNECTED;
+ 	(*removed)++;
+ 
++	pci_lock_rescan_remove();
+ 	pci_stop_and_remove_bus_device(dev);
++	pci_unlock_rescan_remove();
+ 
+ 	return NULL;
+ }
+@@ -416,10 +418,13 @@ static int eeh_reset_device(struct eeh_p
+ 	 * into pcibios_add_pci_devices().
+ 	 */
+ 	eeh_pe_state_mark(pe, EEH_PE_KEEP);
+-	if (bus)
++	if (bus) {
++		pci_lock_rescan_remove();
+ 		pcibios_remove_pci_devices(bus);
+-	else if (frozen_bus)
++		pci_unlock_rescan_remove();
++	} else if (frozen_bus) {
+ 		eeh_pe_dev_traverse(pe, eeh_rmv_device, &removed);
++	}
+ 
+ 	/* Reset the pci controller. (Asserts RST#; resets config space).
+ 	 * Reconfigure bridges and devices. Don't try to bring the system
+@@ -429,6 +434,8 @@ static int eeh_reset_device(struct eeh_p
+ 	if (rc)
+ 		return rc;
+ 
++	pci_lock_rescan_remove();
++
+ 	/* Restore PE */
+ 	eeh_ops->configure_bridge(pe);
+ 	eeh_pe_restore_bars(pe);
+@@ -462,6 +469,7 @@ static int eeh_reset_device(struct eeh_p
+ 	pe->tstamp = tstamp;
+ 	pe->freeze_count = cnt;
+ 
++	pci_unlock_rescan_remove();
+ 	return 0;
+ }
+ 
+@@ -618,8 +626,11 @@ perm_error:
+ 	eeh_pe_dev_traverse(pe, eeh_report_failure, NULL);
+ 
+ 	/* Shut down the device drivers for good. */
+-	if (frozen_bus)
++	if (frozen_bus) {
++		pci_lock_rescan_remove();
+ 		pcibios_remove_pci_devices(frozen_bus);
++		pci_unlock_rescan_remove();
++	}
+ }
+ 
+ static void eeh_handle_special_event(void)
+@@ -692,6 +703,7 @@ static void eeh_handle_special_event(voi
+ 	if (rc == 2 || rc == 1)
+ 		eeh_handle_normal_event(pe);
+ 	else {
++		pci_lock_rescan_remove();
+ 		list_for_each_entry_safe(hose, tmp,
+ 			&hose_list, list_node) {
+ 			phb_pe = eeh_phb_pe_get(hose);
+@@ -703,6 +715,7 @@ static void eeh_handle_special_event(voi
+ 			eeh_pe_dev_traverse(pe, eeh_report_failure, NULL);
+ 			pcibios_remove_pci_devices(bus);
+ 		}
++		pci_unlock_rescan_remove();
+ 	}
+ }
+ 
+
