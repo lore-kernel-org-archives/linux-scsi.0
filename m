@@ -1,94 +1,80 @@
-From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 00/41] hpsa January 2014 driver updates
-Date: Wed, 15 Jan 2014 16:36:17 -0600
-Message-ID: <20140115223354.5061.50276.stgit@beardog.cce.hp.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH] qla2xxx: Configure NPIV fc_vport via
+ tcm_qla2xxx_npiv_make_lport
+Date: Wed, 15 Jan 2014 13:45:03 -0800
+Message-ID: <1389822303.5567.551.camel@haakon3.risingtidesystems.com>
+References: <1389764525-24453-1-git-send-email-nab@daterainc.com>
+	 <987039D6-194C-4CB2-910E-4FEEBB9630B9@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g9t1613g.houston.hp.com ([15.240.0.71]:60622 "EHLO
-	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750952AbaAOVnE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jan 2014 16:43:04 -0500
-Received: from g5t0007.atlanta.hp.com (g5t0007.atlanta.hp.com [15.192.0.44])
-	(using TLSv1 with cipher ADH-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by g9t1613g.houston.hp.com (Postfix) with ESMTPS id 75E956161C
-	for <linux-scsi@vger.kernel.org>; Wed, 15 Jan 2014 21:36:29 +0000 (UTC)
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <987039D6-194C-4CB2-910E-4FEEBB9630B9@qlogic.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Giridhar Malavali <giridhar.malavali@qlogic.com>
+Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Quinn Tran <quinn.tran@qlogic.com>, Sawan Chandak <sawan.chandak@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>
 List-Id: linux-scsi@vger.kernel.org
-To: jbottomley@parallels.com
-Cc: stephenmcameron@gmail.com, mikem@beardog.cce.hp.com, matthew.gates@hp.com, linux-scsi@vger.kernel.org, scott.teel@hp.com
 
-This series applies to kernel/git/jejb/scsi.git for-next branch
+Hi Giridhar & Co,
 
-This is a big patch series.  Most of the changes have to do
-with enabling alternate command submission paths for certain i/os
-to bypass the Smart Array RAID firmware stack and submit i/o's
-more directly to physical devices -- solid state disks --
-for increased performance.
+A few more questions below..
 
----
+On Wed, 2014-01-15 at 16:06 +0000, Giridhar Malavali wrote:
+>
+> > On Jan 14, 2014, at 10:02 PM, "Nicholas A. Bellinger" <nab@daterainc.com> wrote:
+> > 
+> > From: Nicholas Bellinger <nab@linux-iscsi.org>
+> > 
+> > Hi Saurav & Co,
+> > 
+> > Here is the updated NPIV patch on top of the original here:
+> > 
+> >  [PATCH] qla2xxx: Enhancements to enable NPIV support for QLOGIC ISPs with TCM/LIO.
+> >  http://marc.info/?l=linux-scsi&m=138930044930212&w=2
+> > 
+> Thanks. We will review and get back.
+> 
+> 
+> > As previously dicussed, it moves fc_vport creation into tcm_qla2xxx
+> > control plane code thus allowing everything required for NPIV port
+> > creation to be encapsulated within configfs.
+> > 
+> > There are still some bugs to be resolved.  Namely:
+> > 
+> > * Determine how to save 'point-to-point' NVRAM settings across target restart
+> 
+> We will look into this. 
+> 
+> > * Figure out why the initiator logs in, but doesn't perform LUN scan on
+> >   the first login attempt
 
-Matt Gates (4):
-      hpsa: allow SCSI mid layer to handle unit attention
-      hpsa: use extended report luns command for HP SSD SmartPath
-      hpsa: mark last scatter gather element as the last
-      hpsa: add support for 'fastpath' i/o
+Not sure what's happening here, but the same issue with the original
+patch too.
 
-Mike MIller (1):
-      hpsa: get physical device handles for io accel mode 2 as well as mode 1
+> > * Determine if it's possible to collapse the name formatting further,
+> >   by generating $NPIV_WWNN internally
 
-Mike Miller (1):
-      hpsa: add ioaccel mode 2 structure definitions
+Wrt to this bit..  There is never a case where the trailing bytes for
+$NPIV_WWPN + $NPIV_WWNN would be different, right..?
 
-Scott Teel (12):
-      hpsa: fix task management for mode-1 ioaccell path
-      hpsa: add hp_ssd_smart_path_enabled sysfs attribute
-      hpsa: complain if physical or logical aborts are not supported
-      hpsa: get ioaccel mode 2 i/o working
-      hpsa: teach hpsa_device_reset to do either target or lun reset
-      hpsa: add task management for ioaccel mode 2
-      hpsa: complete the ioaccel raidmap code
-      hpsa: allow user to disable accelerated i/o path
-      hpsa: rescan devices on ioaccel2 error
-      hpsa: retry certain ioaccel error cases on the RAID path
-      hpsa: update source file copyrights
-      hpsa: add controller base data-at-rest encryption compatibility ioaccel2
+If that's the case, then collapsing the /sys/kernel/config/target/qla2xxx/
+formatting to $PHYSICAL_WWPN:$NPIV_WWPN makes sense here, and simply
+generate the $NPIV_WWNN required for fc_vport_create() internally in
+tcm_qla2xxx code.
 
-Stephen M. Cameron (23):
-      hpsa: revert bring logical drives online when format completes
-      hpsa: revert hide logical drives with format in progress from linux
-      hpsa: use workqueue instead of kernel thread for lockup detection
-      hpsa: rename scsi prefetch field
-      hpsa: enable unit attention reporting
-      hpsa: do not require board "not ready" status after hard reset
-      hpsa: only allow REQ_TYPE_FS to use fast path
-      hpsa: add ioaccell mode 1 RAID offload support.
-      hpsa: update raid offload status on device rescan
-      hpsa: poll controller to detect device change event
-      hpsa: do not rescan controllers known to be locked up
-      hpsa: Acknowledge controller events in ioaccell mode 2 as well as mode 1
-      hpsa: do ioaccel mode 2 resource allocations
-      hpsa: initialize controller to perform io accelerator mode 2
-      hpsa: make device update copy the raid map also
-      hpsa: allow VPD page zero to be queried
-      hpsa: do not inquire for unsupported ioaccel status vpd page
-      hpsa: when switching out of accel mode await only accel command completions
-      hpsa: only do device rescan for certain events
-      hpsa: improve error messages for driver initiated commands
-      hpsa add sysfs debug switch for raid map debugging messages
-      pci: add HP/3PAR vendor id to pci_ids.h
-      hpsa: Add support for a few HP Storage controllers
+> > * Determine proper NPIV format for EVPD=0x83 SCSI name string
+> > 
 
+AFAICT this should be the $NPIV_WWN + port_id, correct..?
 
- Documentation/ABI/testing/sysfs-class-scsi_host |   16 
- drivers/scsi/hpsa.c                             | 2584 ++++++++++++++++++++---
- drivers/scsi/hpsa.h                             |  138 +
- drivers/scsi/hpsa_cmd.h                         |  255 ++
- include/linux/pci_ids.h                         |    1 
- 5 files changed, 2591 insertions(+), 403 deletions(-)
+> > Aside from these remaining issues, multiple NPIV ports can be configured
+> > on a single physical FC port, and initial I/O appears to be functioning
+> > as expected.
+> > 
+> 
+> That's good.
+> > 
 
--- 
--- steve
+:-)
 
+--nab
