@@ -1,80 +1,49 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] qla2xxx: Configure NPIV fc_vport via
- tcm_qla2xxx_npiv_make_lport
-Date: Wed, 15 Jan 2014 13:45:03 -0800
-Message-ID: <1389822303.5567.551.camel@haakon3.risingtidesystems.com>
-References: <1389764525-24453-1-git-send-email-nab@daterainc.com>
-	 <987039D6-194C-4CB2-910E-4FEEBB9630B9@qlogic.com>
+From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
+Subject: [PATCH 27/41] hpsa: make device update copy the raid map also
+Date: Wed, 15 Jan 2014 16:38:37 -0600
+Message-ID: <20140115223837.5061.25843.stgit@beardog.cce.hp.com>
+References: <20140115223354.5061.50276.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <987039D6-194C-4CB2-910E-4FEEBB9630B9@qlogic.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Giridhar Malavali <giridhar.malavali@qlogic.com>
-Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Quinn Tran <quinn.tran@qlogic.com>, Sawan Chandak <sawan.chandak@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from g9t1613g.houston.hp.com ([15.240.0.71]:33020 "EHLO
+	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751354AbaAOVs1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jan 2014 16:48:27 -0500
+Received: from g5t0007.atlanta.hp.com (g5t0007.atlanta.hp.com [15.192.0.44])
+	(using TLSv1 with cipher ADH-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by g9t1613g.houston.hp.com (Postfix) with ESMTPS id B859760B6D
+	for <linux-scsi@vger.kernel.org>; Wed, 15 Jan 2014 21:38:47 +0000 (UTC)
+In-Reply-To: <20140115223354.5061.50276.stgit@beardog.cce.hp.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jbottomley@parallels.com
+Cc: stephenmcameron@gmail.com, mikem@beardog.cce.hp.com, matthew.gates@hp.com, linux-scsi@vger.kernel.org, scott.teel@hp.com
 
-Hi Giridhar & Co,
+From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-A few more questions below..
+Otherwise we could wind up using incorrect raid map data, and
+then very bad things would likely happen.
 
-On Wed, 2014-01-15 at 16:06 +0000, Giridhar Malavali wrote:
->
-> > On Jan 14, 2014, at 10:02 PM, "Nicholas A. Bellinger" <nab@daterainc.com> wrote:
-> > 
-> > From: Nicholas Bellinger <nab@linux-iscsi.org>
-> > 
-> > Hi Saurav & Co,
-> > 
-> > Here is the updated NPIV patch on top of the original here:
-> > 
-> >  [PATCH] qla2xxx: Enhancements to enable NPIV support for QLOGIC ISPs with TCM/LIO.
-> >  http://marc.info/?l=linux-scsi&m=138930044930212&w=2
-> > 
-> Thanks. We will review and get back.
-> 
-> 
-> > As previously dicussed, it moves fc_vport creation into tcm_qla2xxx
-> > control plane code thus allowing everything required for NPIV port
-> > creation to be encapsulated within configfs.
-> > 
-> > There are still some bugs to be resolved.  Namely:
-> > 
-> > * Determine how to save 'point-to-point' NVRAM settings across target restart
-> 
-> We will look into this. 
-> 
-> > * Figure out why the initiator logs in, but doesn't perform LUN scan on
-> >   the first login attempt
+Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+---
+ drivers/scsi/hpsa.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-Not sure what's happening here, but the same issue with the original
-patch too.
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 6a6026b..cf208e5 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -891,6 +891,9 @@ static void hpsa_scsi_update_entry(struct ctlr_info *h, int hostno,
+ 	/* Raid offload parameters changed. */
+ 	h->dev[entry]->offload_config = new_entry->offload_config;
+ 	h->dev[entry]->offload_enabled = new_entry->offload_enabled;
++	h->dev[entry]->ioaccel_handle = new_entry->ioaccel_handle;
++	h->dev[entry]->offload_to_mirror = new_entry->offload_to_mirror;
++	h->dev[entry]->raid_map = new_entry->raid_map;
+ 
+ 	dev_info(&h->pdev->dev, "%s device c%db%dt%dl%d updated.\n",
+ 		scsi_device_type(new_entry->devtype), hostno, new_entry->bus,
 
-> > * Determine if it's possible to collapse the name formatting further,
-> >   by generating $NPIV_WWNN internally
-
-Wrt to this bit..  There is never a case where the trailing bytes for
-$NPIV_WWPN + $NPIV_WWNN would be different, right..?
-
-If that's the case, then collapsing the /sys/kernel/config/target/qla2xxx/
-formatting to $PHYSICAL_WWPN:$NPIV_WWPN makes sense here, and simply
-generate the $NPIV_WWNN required for fc_vport_create() internally in
-tcm_qla2xxx code.
-
-> > * Determine proper NPIV format for EVPD=0x83 SCSI name string
-> > 
-
-AFAICT this should be the $NPIV_WWN + port_id, correct..?
-
-> > Aside from these remaining issues, multiple NPIV ports can be configured
-> > on a single physical FC port, and initial I/O appears to be functioning
-> > as expected.
-> > 
-> 
-> That's good.
-> > 
-
-:-)
-
---nab
