@@ -1,119 +1,31 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH] hpsa: fixup MSI-X registration
-Date: Wed, 15 Jan 2014 13:30:53 +0100
-Message-ID: <1389789053-95698-1-git-send-email-hare@suse.de>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v3 0/2] Hard disk S3 resume time optimization
+Date: Wed, 15 Jan 2014 07:55:04 -0500
+Message-ID: <20140115125504.GB7950@htj.dyndns.org>
+References: <20140108005607.GB29556@linux.intel.com>
+ <20140111191315.GC3257@mtj.dyndns.org>
+ <20140113195544.GA13900@linux.intel.com>
+ <20140113203007.GA3480@mtj.dyndns.org>
+ <20140115003100.GA15067@linux.intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:46948 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751253AbaAOMa4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Jan 2014 07:30:56 -0500
+Received: from mail-qa0-f53.google.com ([209.85.216.53]:54651 "EHLO
+	mail-qa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751725AbaAOMzH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jan 2014 07:55:07 -0500
+Content-Disposition: inline
+In-Reply-To: <20140115003100.GA15067@linux.intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
+To: Todd E Brandt <todd.e.brandt@linux.intel.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, rjw@rjwysocki.net
 
-Commit 254f796b9f22b1944c64caabc356a56caaa2facd updated
-the driver to use 16 MSI-X vectors, despite the fact that
-older controllers would provide only 4.
-This was causing MSI-X registration to drop down to INTx
-mode. But as the controller support performant mode, the
-initialisation will become confused and cause the machine
-to stall during boot.
+Please start a new thread when you're posting a new version of the
+whole series && don't use the same patch title for the patches.  They
+do different things.  They need different names.
 
-This patch fixes up the MSI-X registration to re-issue
-the pci_enable_msix() call with the correct number of
-MSI-X vectors. With that the hpsa driver continues to
-works on older controllers like the P200.
+Thanks.
 
-Cc: Stephen M. Cameron <scameron@beardog.cce.hp.com>
-Signed-off-by: Hannes Reinecke <hare@suse.de>
----
- drivers/scsi/hpsa.c | 31 +++++++++++++++++--------------
- 1 file changed, 17 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 868318a..40989ee 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -598,7 +598,7 @@ static void set_performant_mode(struct ctlr_info *h, struct CommandList *c)
- {
- 	if (likely(h->transMethod & CFGTBL_Trans_Performant)) {
- 		c->busaddr |= 1 | (h->blockFetchTable[c->Header.SGList] << 1);
--		if (likely(h->msix_vector))
-+		if (likely(h->msix_vector > 0))
- 			c->Header.ReplyQueue =
- 				raw_smp_processor_id() % h->nreply_queues;
- 	}
-@@ -4169,21 +4169,24 @@ static void hpsa_interrupt_mode(struct ctlr_info *h)
- 		goto default_int_mode;
- 	if (pci_find_capability(h->pdev, PCI_CAP_ID_MSIX)) {
- 		dev_info(&h->pdev->dev, "MSIX\n");
-+		h->msix_vector = MAX_REPLY_QUEUES;
- 		err = pci_enable_msix(h->pdev, hpsa_msix_entries,
--						MAX_REPLY_QUEUES);
--		if (!err) {
--			for (i = 0; i < MAX_REPLY_QUEUES; i++)
--				h->intr[i] = hpsa_msix_entries[i].vector;
--			h->msix_vector = 1;
--			return;
--		}
-+				      h->msix_vector);
- 		if (err > 0) {
- 			dev_warn(&h->pdev->dev, "only %d MSI-X vectors "
- 			       "available\n", err);
--			goto default_int_mode;
-+			h->msix_vector = err;
-+			err = pci_enable_msix(h->pdev, hpsa_msix_entries,
-+					      h->msix_vector);
-+		}
-+		if (!err) {
-+			for (i = 0; i < h->msix_vector; i++)
-+				h->intr[i] = hpsa_msix_entries[i].vector;
-+			return;
- 		} else {
- 			dev_warn(&h->pdev->dev, "MSI-X init failed %d\n",
- 			       err);
-+			h->msix_vector = 0;
- 			goto default_int_mode;
- 		}
- 	}
-@@ -4597,15 +4600,15 @@ static int hpsa_request_irq(struct ctlr_info *h,
- 	for (i = 0; i < MAX_REPLY_QUEUES; i++)
- 		h->q[i] = (u8) i;
- 
--	if (h->intr_mode == PERF_MODE_INT && h->msix_vector) {
-+	if (h->intr_mode == PERF_MODE_INT && h->msix_vector > 0) {
- 		/* If performant mode and MSI-X, use multiple reply queues */
--		for (i = 0; i < MAX_REPLY_QUEUES; i++)
-+		for (i = 0; i < h->msix_vector; i++)
- 			rc = request_irq(h->intr[i], msixhandler,
- 					0, h->devname,
- 					&h->q[i]);
- 	} else {
- 		/* Use single reply pool */
--		if (h->msix_vector || h->msi_vector) {
-+		if (h->msix_vector > 0 || h->msi_vector) {
- 			rc = request_irq(h->intr[h->intr_mode],
- 				msixhandler, 0, h->devname,
- 				&h->q[h->intr_mode]);
-@@ -4658,7 +4661,7 @@ static void free_irqs(struct ctlr_info *h)
- 		return;
- 	}
- 
--	for (i = 0; i < MAX_REPLY_QUEUES; i++)
-+	for (i = 0; i < h->msix_vector; i++)
- 		free_irq(h->intr[i], &h->q[i]);
- }
- 
-@@ -5178,7 +5181,7 @@ static void hpsa_put_ctlr_into_performant_mode(struct ctlr_info *h)
- 	if (!(trans_support & PERFORMANT_MODE))
- 		return;
- 
--	h->nreply_queues = h->msix_vector ? MAX_REPLY_QUEUES : 1;
-+	h->nreply_queues = h->msix_vector > 0 ? h->msix_vector : 1;
- 	hpsa_get_max_perf_mode_cmds(h);
- 	/* Performant mode ring buffer and supporting data structures */
- 	h->reply_pool_size = h->max_commands * sizeof(u64) * h->nreply_queues;
 -- 
-1.7.12.4
-
+tejun
