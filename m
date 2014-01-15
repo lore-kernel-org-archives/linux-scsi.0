@@ -1,21 +1,22 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 27/41] hpsa: make device update copy the raid map also
-Date: Wed, 15 Jan 2014 16:38:37 -0600
-Message-ID: <20140115223837.5061.25843.stgit@beardog.cce.hp.com>
+Subject: [PATCH 32/41] hpsa: do not inquire for unsupported ioaccel status vpd
+	page
+Date: Wed, 15 Jan 2014 16:39:02 -0600
+Message-ID: <20140115223902.5061.40752.stgit@beardog.cce.hp.com>
 References: <20140115223354.5061.50276.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g9t1613g.houston.hp.com ([15.240.0.71]:33020 "EHLO
+Received: from g9t1613g.houston.hp.com ([15.240.0.71]:33045 "EHLO
 	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751354AbaAOVs1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jan 2014 16:48:27 -0500
+	with ESMTP id S1751354AbaAOVs2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jan 2014 16:48:28 -0500
 Received: from g5t0007.atlanta.hp.com (g5t0007.atlanta.hp.com [15.192.0.44])
 	(using TLSv1 with cipher ADH-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by g9t1613g.houston.hp.com (Postfix) with ESMTPS id B859760B6D
-	for <linux-scsi@vger.kernel.org>; Wed, 15 Jan 2014 21:38:47 +0000 (UTC)
+	by g9t1613g.houston.hp.com (Postfix) with ESMTPS id EB73D60D85
+	for <linux-scsi@vger.kernel.org>; Wed, 15 Jan 2014 21:39:27 +0000 (UTC)
 In-Reply-To: <20140115223354.5061.50276.stgit@beardog.cce.hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -24,26 +25,88 @@ Cc: stephenmcameron@gmail.com, mikem@beardog.cce.hp.com, matthew.gates@hp.com, l
 
 From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-Otherwise we could wind up using incorrect raid map data, and
-then very bad things would likely happen.
-
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- drivers/scsi/hpsa.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+ drivers/scsi/hpsa.c     |   45 +++++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/hpsa_cmd.h |    2 ++
+ 2 files changed, 47 insertions(+), 0 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 6a6026b..cf208e5 100644
+index 14862f9..f78d08b 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -891,6 +891,9 @@ static void hpsa_scsi_update_entry(struct ctlr_info *h, int hostno,
- 	/* Raid offload parameters changed. */
- 	h->dev[entry]->offload_config = new_entry->offload_config;
- 	h->dev[entry]->offload_enabled = new_entry->offload_enabled;
-+	h->dev[entry]->ioaccel_handle = new_entry->ioaccel_handle;
-+	h->dev[entry]->offload_to_mirror = new_entry->offload_to_mirror;
-+	h->dev[entry]->raid_map = new_entry->raid_map;
+@@ -2063,6 +2063,49 @@ static int hpsa_get_raid_map(struct ctlr_info *h,
+ 	return rc;
+ }
  
- 	dev_info(&h->pdev->dev, "%s device c%db%dt%dl%d updated.\n",
- 		scsi_device_type(new_entry->devtype), hostno, new_entry->bus,
++static int hpsa_vpd_page_supported(struct ctlr_info *h,
++	unsigned char scsi3addr[], u8 page)
++{
++        int rc;
++	int i;
++	int pages;
++	unsigned char *buf, bufsize;
++
++	buf = kzalloc(256, GFP_KERNEL);
++	if (!buf)
++		return 0;
++
++	/* Get the size of the page list first */
++	rc = hpsa_scsi_do_inquiry(h, scsi3addr,
++				VPD_PAGE | HPSA_VPD_SUPPORTED_PAGES,
++				buf, HPSA_VPD_HEADER_SZ);
++	if (rc != 0)
++		goto exit_unsupported;
++	pages = buf[3];
++	if ((pages + HPSA_VPD_HEADER_SZ) <= 255)
++		bufsize = pages + HPSA_VPD_HEADER_SZ;
++	else
++		bufsize = 255;
++
++	/* Get the whole VPD page list */
++	rc = hpsa_scsi_do_inquiry(h, scsi3addr,
++				VPD_PAGE | HPSA_VPD_SUPPORTED_PAGES,
++				buf, bufsize);
++	if (rc != 0)
++		goto exit_unsupported;
++
++	pages = buf[3];
++	for (i = 1; i <= pages; i++)
++		if (buf[3 + i] == page)
++			goto exit_supported;
++exit_unsupported:
++	kfree(buf);
++	return 0;
++exit_supported:
++	kfree(buf);
++	return 1;
++}
++
+ static void hpsa_get_ioaccel_status(struct ctlr_info *h,
+ 	unsigned char *scsi3addr, struct hpsa_scsi_dev_t *this_device)
+ {
+@@ -2076,6 +2119,8 @@ static void hpsa_get_ioaccel_status(struct ctlr_info *h,
+ 	buf = kzalloc(64, GFP_KERNEL);
+ 	if (!buf)
+ 		return;
++	if (!hpsa_vpd_page_supported(h, scsi3addr, HPSA_VPD_LV_IOACCEL_STATUS))
++		goto out;
+ 	rc = hpsa_scsi_do_inquiry(h, scsi3addr,
+ 			VPD_PAGE | HPSA_VPD_LV_IOACCEL_STATUS, buf, 64);
+ 	if (rc != 0)
+diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
+index e048167..769fd2a 100644
+--- a/drivers/scsi/hpsa_cmd.h
++++ b/drivers/scsi/hpsa_cmd.h
+@@ -144,8 +144,10 @@
+ #define CFGTBL_BusType_Fibre2G  0x00000200l
+ 
+ /* VPD Inquiry types */
++#define HPSA_VPD_SUPPORTED_PAGES        0x00
+ #define HPSA_VPD_LV_DEVICE_GEOMETRY     0xC1
+ #define HPSA_VPD_LV_IOACCEL_STATUS      0xC2
++#define HPSA_VPD_HEADER_SZ              4
+ 
+ struct vals32 {
+ 	u32   lower;
 
