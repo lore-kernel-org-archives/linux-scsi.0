@@ -1,102 +1,108 @@
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Terrible performance of sequential O_DIRECT 4k writes in SAN
-	environment. ~3 times slower then Solars 10 with the same HBA/Storage.
-Date: Thu, 16 Jan 2014 09:07:21 +1100
-Message-ID: <20140115220721.GY3469@dastard>
-References: <CA+QCeVQRrqx=CrxyuAe7k0e0y4Nqo7x_8jtkuD99VM8L9Dxp+g@mail.gmail.com>
-	<20140106201032.GA13491@quack.suse.cz>
-	<20140107155830.GA28395@infradead.org>
-	<CA+QCeVRiwHU+C5utaLQXf_MpjoYMYEF4LKRyDPaqcd=H6n-RRw@mail.gmail.com>
-	<20140108140307.GA588@infradead.org>
-	<CA+QCeVRuvNtZ8+9D-NtMOD=B9UEA5HMvKaGdXOQCjO-KTnZdbw@mail.gmail.com>
+From: Quinn Tran <quinn.tran@qlogic.com>
+Subject: Re: [PATCH] qla2xxx: Configure NPIV fc_vport via
+ tcm_qla2xxx_npiv_make_lport
+Date: Wed, 15 Jan 2014 22:14:16 +0000
+Message-ID: <504EB66DAC8D234EB8E8560985C2D7AD46CCE451@avmb2.qlogic.org>
+References: <1389764525-24453-1-git-send-email-nab@daterainc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <xfs-bounces@oss.sgi.com>
-Content-Disposition: inline
-In-Reply-To: <CA+QCeVRuvNtZ8+9D-NtMOD=B9UEA5HMvKaGdXOQCjO-KTnZdbw@mail.gmail.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: Sergey Meirovich <rathamahata@gmail.com>
-Cc: Jan Kara <jack@suse.cz>, linux-scsi <linux-scsi@vger.kernel.org>, Gluk <git.user@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>
+Content-Transfer-Encoding: 8BIT
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1389764525-24453-1-git-send-email-nab@daterainc.com>
+Content-Language: en-US
+Content-ID: <DD4F682F6E4CF6448B18A55D28055C7B@qlogic.com>
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Sawan Chandak <sawan.chandak@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Jan 14, 2014 at 03:30:11PM +0200, Sergey Meirovich wrote:
-> Hi Cristoph,
-> 
-> On 8 January 2014 16:03, Christoph Hellwig <hch@infradead.org> wrote:
-> > On Tue, Jan 07, 2014 at 08:37:23PM +0200, Sergey Meirovich wrote:
-> >> Actually my initial report (14.67Mb/sec  3755.41 Requests/sec) was about ext4
-> >> However I have tried XFS as well. It was a bit slower than ext4 on all
-> >> occasions.
-> >
-> > I wasn't trying to say XFS fixes your problem, but that we could
-> > implement appending AIO writes in XFS fairly easily.
-> >
-> > To verify Jan's theory, can you try to preallocate the file to the full
-> > size and then run the benchmark by doing a:
-> >
-> > # fallocate -l <size> <filename>
-> >
-> > and then run it?  If that's indeed the issue I'd be happy to implement
-> > the "real aio" append support for you as well.
-> >
-> 
-> I've resorted to write simple wrapper around io_submit() and ran it
-> against preallocated file (exactly to avoid append AIO scenario).
-> Random data was used to avoid XtremIO online deduplication but results
-> were still wonderfull for 4k sequential AIO write:
-> 
-> 744.77 MB/s   190660.17 Req/sec
-> 
-> Clearly Linux lacks "rial aio" append to be available for any FS.
-> Seems that you are thinking that it would be relatively easy to
-> implement it for XFS on Linux? If so - I will really appreciate your
-> afford.
+Nicholas,
 
-Yes, I think it can be done relatively simply. We'd have to change
-the code in xfs_file_aio_write_checks() to check whether EOF zeroing
-was required rather than always taking an exclusive lock (for block
-aligned IO at EOF sub-block zeroing isn't required), and then we'd
-have to modify the direct IO code to set the is_async flag
-appropriately. We'd probably need a new flag to say tell the DIO
-code that AIO beyond EOF is OK, but that isn't hard to do....
+Answer for the following is below.
 
-And for those that are wondering about the stale data exposure problem
-documented in the aio code:
+<SNIP>
+There are still some bugs to be resolved.  Namely:
 
-        /*
-         * For file extending writes updating i_size before data
-         * writeouts complete can expose uninitialized blocks. So
-         * even for AIO, we need to wait for i/o to complete before
-         * returning in this case.
-         */
+* Determine how to save 'point-to-point' NVRAM settings across target
+restart
+* Figure out why the initiator logs in, but doesn't perform LUN scan on
+   the first login attempt
+* Determine if it's possible to collapse the name formatting further,
+   by generating $NPIV_WWNN internally
+* Determine proper NPIV format for EVPD=0x83 SCSI name string
 
-This is fixed in XFS by removing a single if() check in
-xfs_iomap_write_direct(). We already use unwritten extents for DIO
-within EOF to avoid races that could expose uninitialised blocks, so
-we just need to make that unconditional behaviour.  Hence racing IO
-on concurrent appending i_size updates will only ever see a hole
-(zeros), an unwritten region (zeros) or the written data.
+Aside from these remaining issues, multiple NPIV ports can be configured
+on a single physical FC port, and initial I/O appears to be functioning
+as expected.
 
-Christoph, are you going to get any time to look at doing this in
-the next few days?
+<SNIP>
+---
 
-Cheers,
+Bullet 1) After additional analysis by the team of the problem, what you
+have bumped into is a driver design decision and firmware design decision.
+ At the time of the problem, the problem signature did not match with what
+we saw in house and we forgot to reiterate during code submission that you
+must follow the step listed in the setup script.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+The original problem is the driver have not had a chance to get the switch
+capabilities (i.e. NPIV Support bit).  When you attempt to create an NPIV
+host, NPIV creation failed due to a prelim check of the capability.
 
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+         if (!(ha->switch_cap & FLOGI_MID_SUPPORT))
+                return VPCERR_NO_FABRIC_SUPP;
+
+
+When we suggested the "qaucli -n <host #> CO 1", that allows you to
+proceed further.  What happened there is a chip reset was happening behind
+the scene, follow with link up and get the switch capabilities.  However,
+the problem persist on driver unload/load.  When reload, you need another
+nudge to get moving again.
+
+Driver design: When you load the driver, it most likely that you've used
+driver param "qlini_mode=disabled" (i.e. target mode=on) for all physical
+ports.  In this case, qla driver will not "Initialize the firmware" (i.e.
+not Link up) & will not get the switch capabilities from firmware.  The
+reason for not link up as target port at load time is due to TCM resources
+are not available yet.  If we do linkup as target mode, then remote
+initiator will start LUN discovery and ends up with time out problem due
+to TCM not there to handle the commands.  Because the link is not up, the
+switch capability flags is not read (i.e. NPIV creation failed)
+
+Firmware design:  Qlogic firmware requires the physical port(i.e. Virtual
+Port 0) to be enabled 1st, before NPIV creation (other VP's).
+
+This imply that TCM configuration have to enable the physical port 1st
+also (echo 1 > enable), before any NPIV creation can happen. This will be
+the procedure in exercising  this feature.
+
+
+
+Bullet 2) As to why the LUN scan did not happen on the initial login,
+could be due to the mode the port was told to come up as.   Initiator will
+not scan the lun, if the remote port is also an initiator.  We'll keep an
+eye on this during testing.  Please let us know the steps to recreate.
+
+
+Bullet 3) Generating NPIV WWPN id:  Qlogic overall strategy for this
+question is: Qla2xxx driver is a common driver being used by various
+hardware vendors(HP, IBM, Dell, etc..).  Each vendors have a different
+scheme on how to generate the WWPN value.  QLogic's design decision is to
+push that up to the user app to generate these values rather having
+QLA2xxx generating it dynamically.
+
+
+Bullet 4) VPD Page 83h, SCSI name string.  If you implying to use the WWPN
+as part of the "SCSI name string", the answer is the same as previous
+bullet.  In this case, the setup up script would have to extract the data
+from configfs in order to generate the "SCSI name string"
+
+
+
+Regards,
+Quinn Tran
+
+
+
+________________________________
+
+This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
