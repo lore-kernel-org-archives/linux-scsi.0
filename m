@@ -1,97 +1,84 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 08/41] hpsa: use extended report luns command for HP SSD
-	SmartPath
-Date: Wed, 15 Jan 2014 16:36:59 -0600
-Message-ID: <20140115223659.5061.54254.stgit@beardog.cce.hp.com>
+Subject: [PATCH 09/41] hpsa: mark last scatter gather element as the last
+Date: Wed, 15 Jan 2014 16:37:04 -0600
+Message-ID: <20140115223704.5061.16851.stgit@beardog.cce.hp.com>
 References: <20140115223354.5061.50276.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t0017.houston.hp.com ([15.201.24.20]:9020 "EHLO
+Received: from g4t0017.houston.hp.com ([15.201.24.20]:9082 "EHLO
 	g4t0017.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751374AbaAOVhA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jan 2014 16:37:00 -0500
+	with ESMTP id S1752144AbaAOVhF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jan 2014 16:37:05 -0500
 In-Reply-To: <20140115223354.5061.50276.stgit@beardog.cce.hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: stephenmcameron@gmail.com, mikem@beardog.cce.hp.com, matthew.gates@hp.com, linux-scsi@vger.kernel.org, scott.teel@hp.com
 
-From: Matt Gates <matthew.gates@hp.com>
+From: Matt Gates <matt.gates@hp.com>
 
-There is an extended report luns command which contains
-additional information about physical devices.  In particular
-we need to get the physical device handle so we can use an
-alternate i/o path for fast physical devices like SSDs so
-we can speed up certain i/o's by bypassing the RAID stack
-code in the controller firmware.
+This is normally optional, but for SSD Smart Path support (in
+subsequent patches) it is required.
 
 Signed-off-by: Matt Gates <matthew.gates@hp.com>
-Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+Acked-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- drivers/scsi/hpsa.c     |   13 ++++++++-----
+ drivers/scsi/hpsa.c     |    8 ++++----
  drivers/scsi/hpsa_cmd.h |    1 +
- 2 files changed, 9 insertions(+), 5 deletions(-)
+ 2 files changed, 5 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 6b53170..7eef25c 100644
+index 7eef25c..fd8158c 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -1888,11 +1888,12 @@ static int hpsa_gather_lun_info(struct ctlr_info *h,
- 	struct ReportLUNdata *physdev, u32 *nphysicals,
- 	struct ReportLUNdata *logdev, u32 *nlogicals)
- {
--	if (hpsa_scsi_do_report_phys_luns(h, physdev, reportlunsize, 0)) {
-+	if (hpsa_scsi_do_report_phys_luns(h, physdev, reportlunsize,
-+					HPSA_REPORT_PHYS_EXTENDED)) {
- 		dev_err(&h->pdev->dev, "report physical LUNs failed.\n");
- 		return -1;
+@@ -1438,6 +1438,7 @@ static int hpsa_map_one(struct pci_dev *pdev,
+ 	cp->SG[0].Addr.upper =
+ 	  (u32) ((addr64 >> 32) & (u64) 0x00000000FFFFFFFF);
+ 	cp->SG[0].Len = buflen;
++	cp->SG[0].Ext = HPSA_SG_LAST; /* we are not chaining */
+ 	cp->Header.SGList = (u8) 1;   /* no. SGs contig in this cmd */
+ 	cp->Header.SGTotal = (u16) 1; /* total sgs in this cmd list */
+ 	return 0;
+@@ -2139,7 +2140,7 @@ static int hpsa_scatter_gather(struct ctlr_info *h,
+ 		curr_sg->Addr.lower = (u32) (addr64 & 0x0FFFFFFFFULL);
+ 		curr_sg->Addr.upper = (u32) ((addr64 >> 32) & 0x0FFFFFFFFULL);
+ 		curr_sg->Len = len;
+-		curr_sg->Ext = 0;  /* we are not chaining */
++		curr_sg->Ext = (i < scsi_sg_count(cmd) - 1) ? 0 : HPSA_SG_LAST;
+ 		curr_sg++;
  	}
--	*nphysicals = be32_to_cpu(*((__be32 *)physdev->LUNListLength)) / 8;
-+	*nphysicals = be32_to_cpu(*((__be32 *)physdev->LUNListLength)) / 24;
- 	if (*nphysicals > HPSA_MAX_PHYS_LUN) {
- 		dev_warn(&h->pdev->dev, "maximum physical LUNs (%d) exceeded."
- 			"  %d LUNs ignored.\n", HPSA_MAX_PHYS_LUN,
-@@ -1923,7 +1924,8 @@ static int hpsa_gather_lun_info(struct ctlr_info *h,
- }
  
- u8 *figure_lunaddrbytes(struct ctlr_info *h, int raid_ctlr_position, int i,
--	int nphysicals, int nlogicals, struct ReportLUNdata *physdev_list,
-+	int nphysicals, int nlogicals,
-+	struct ReportExtendedLUNdata *physdev_list,
- 	struct ReportLUNdata *logdev_list)
- {
- 	/* Helper function, figure out where the LUN ID info is coming from
-@@ -1959,7 +1961,7 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h, int hostno)
- 	 * tell which devices we already know about, vs. new
- 	 * devices, vs.  disappearing devices.
- 	 */
--	struct ReportLUNdata *physdev_list = NULL;
-+	struct ReportExtendedLUNdata *physdev_list = NULL;
- 	struct ReportLUNdata *logdev_list = NULL;
- 	u32 nphysicals = 0;
- 	u32 nlogicals = 0;
-@@ -1982,7 +1984,8 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h, int hostno)
+@@ -3041,7 +3042,7 @@ static int hpsa_passthru_ioctl(struct ctlr_info *h, void __user *argp)
+ 		c->SG[0].Addr.lower = temp64.val32.lower;
+ 		c->SG[0].Addr.upper = temp64.val32.upper;
+ 		c->SG[0].Len = iocommand.buf_size;
+-		c->SG[0].Ext = 0; /* we are not chaining*/
++		c->SG[0].Ext = HPSA_SG_LAST; /* we are not chaining*/
  	}
- 	memset(lunzerobits, 0, sizeof(lunzerobits));
- 
--	if (hpsa_gather_lun_info(h, reportlunsize, physdev_list, &nphysicals,
-+	if (hpsa_gather_lun_info(h, reportlunsize,
-+			(struct ReportLUNdata *) physdev_list, &nphysicals,
- 			logdev_list, &nlogicals))
- 		goto out;
- 
+ 	hpsa_scsi_do_simple_cmd_core_if_no_lockup(h, c);
+ 	if (iocommand.buf_size > 0)
+@@ -3171,8 +3172,7 @@ static int hpsa_big_passthru_ioctl(struct ctlr_info *h, void __user *argp)
+ 			c->SG[i].Addr.lower = temp64.val32.lower;
+ 			c->SG[i].Addr.upper = temp64.val32.upper;
+ 			c->SG[i].Len = buff_size[i];
+-			/* we are not chaining */
+-			c->SG[i].Ext = 0;
++			c->SG[i].Ext = i < sg_used - 1 ? 0 : HPSA_SG_LAST;
+ 		}
+ 	}
+ 	hpsa_scsi_do_simple_cmd_core_if_no_lockup(h, c);
 diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
-index bfc8c4e..3f96b66 100644
+index 3f96b66..22cf799 100644
 --- a/drivers/scsi/hpsa_cmd.h
 +++ b/drivers/scsi/hpsa_cmd.h
-@@ -162,6 +162,7 @@ struct InquiryData {
+@@ -25,6 +25,7 @@
+ #define SENSEINFOBYTES          32 /* may vary between hbas */
+ #define SG_ENTRIES_IN_CMD	32 /* Max SG entries excluding chain blocks */
+ #define HPSA_SG_CHAIN		0x80000000
++#define HPSA_SG_LAST		0x40000000
+ #define MAXREPLYQS              256
  
- #define HPSA_REPORT_LOG 0xc2    /* Report Logical LUNs */
- #define HPSA_REPORT_PHYS 0xc3   /* Report Physical LUNs */
-+#define HPSA_REPORT_PHYS_EXTENDED 0x02
- struct ReportLUNdata {
- 	u8 LUNListLength[4];
- 	u32 reserved;
+ /* Command Status value */
 
