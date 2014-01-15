@@ -1,317 +1,102 @@
-From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH] qla2xxx: Configure NPIV fc_vport via tcm_qla2xxx_npiv_make_lport
-Date: Wed, 15 Jan 2014 05:42:05 +0000
-Message-ID: <1389764525-24453-1-git-send-email-nab@daterainc.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:40165 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750757AbaAOGCf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jan 2014 01:02:35 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+From: Loc Ho <lho@apm.com>
+Subject: [PATCH v7 0/4] PHY: Add APM X-Gene SoC 15Gbps Multi-purpose PHY support
+Date: Wed, 15 Jan 2014 00:10:36 -0700
+Message-ID: <1389769840-15469-1-git-send-email-lho@apm.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, dmilburn@redhat.com, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Quinn Tran <quinn.tran@qlogic.com>, Sawan Chandak <sawan.chandak@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+This patch adds support for APM X-Gene SoC 15Gbps Multi-purpose PHY. This
+is the physical layer interface for the corresponding host controller. This
+driver uses the new PHY generic framework posted by Kishon Vijay Abrahm.
+In addition, the new PHY generic framework is patched to provide an
+function to set the speed of the PHY.
 
-Hi Saurav & Co,
+v7
+* Add/Update PHY CMU/lane parameters and its default values
+* Rename variable enable_manual_cal to preA3Chip
+* Remove function phy_rd, phy_wr, and phy_wr_flush
+* Change function cmu_wr, cmu_rd, cmu_toggle1to0, cmu_clrbits, cmu_setbits,
+  serdes_wr, serdes_rd, serdes_clrbits, and serdes_setbits to take context
+  instead void *
+* Remove function serdes_toggle1to0
+* Decrease the polling time from 10ms to 1ms on CMU calibration complete
+  detection
+* Move all SATA specify code in function xgene_phy_hw_initialize into
+  function xgene_phy_hw_init_sata
+* Add usleep_range after starting summer/latch calibrations
+* Add usleep_range between receiver reset (function xgene_phy_reset_rxd)
+* Save and restore PHY register 31 instead writing 0 in function
+  xgene_phy_gen_avg_val
+* Update function xgene_phy_sata_force_gen programming sequences
+* Add support to reset the receiver lane in function xgene_phy_set_speed
+  if speed is 0
+* Update PHY parameters in DTS per controller
+* Some minor code clean up
 
-Here is the updated NPIV patch on top of the original here:
+v6
+* Move PHY document to Documentation/devicetree/binding/phy
+* Remove _ADDR from all register defines
+* Update clock-names property for sataphy1clk, sataphy2clk, and sataphy3clk
 
-  [PATCH] qla2xxx: Enhancements to enable NPIV support for QLOGIC ISPs with TCM/LIO.
-  http://marc.info/?l=linux-scsi&m=138930044930212&w=2
-   
-As previously dicussed, it moves fc_vport creation into tcm_qla2xxx
-control plane code thus allowing everything required for NPIV port
-creation to be encapsulated within configfs.
+v5
+* Update DTS binding documentation
+* Remove direct clock access and use clock interface instead
+* Change override parameters to decimal instead hex values
+* Change apm,tx-amplitude, apm,tx-pre-cursor1, apm,tx-pre-cursor2,
+  apm,tx-post-cursor to be unit of uV
 
-There are still some bugs to be resolved.  Namely:
+v4
+* Update documentation with 'apm,' instead 'apm-'
+* Change DTS override parameter to have 'apm,'
+* Add select GENERIC_PHY to Kconfig PHY_XGENE
+* Make override parameters to be pair of three values instead one
+* Some minor comment and indentation changes
+* Remove error register addition offset
+* Add ULL to constants
+* Use module_init instead subsys_initcall
+* Make DTS node based on first register address
+* Update override setting values
 
- * Determine how to save 'point-to-point' NVRAM settings across target restart
- * Figure out why the initiator logs in, but doesn't perform LUN scan on
-   the first login attempt
- * Determine if it's possible to collapse the name formatting further,
-   by generating $NPIV_WWNN internally
- * Determine proper NPIV format for EVPD=0x83 SCSI name string
+v3
+* Major re-write of the code based on various review comments
+* Support external clock only at the moment
+* Support SATA mode only at the moment
+* No UEFI support at the moment
 
-Aside from these remaining issues, multiple NPIV ports can be configured
-on a single physical FC port, and initial I/O appears to be functioning
-as expected.
+v2
+* Remove port knowledge from functions
+* Make all functions static
+* Remove ID completely
+* Make resource requirement based on compatible type
+* Rename override PHY parameters with more descriptive name
+* Add override PHY parameter for per controller, per port, and per speed
+* Patch the generic PHY frame to expose set_speed operation
 
-Please review.
+v1
+* Initial version
 
-Thank you,
-
---nab
-
---------------------------------------------------------------------
-
-This patch changes qla2xxx qlt_lport_register() code to accept
-target_lport_ptr + npiv_wwpn + npiv_wwnn parameters, and updates
-tcm_qla2xxx to use the new tcm_qla2xxx_lport_register_npiv_cb()
-callback for invoking fc_vport_create() from configfs context
-via tcm_qla2xxx_npiv_make_lport() code.
-
-In order for this to work, the qlt_lport_register() callback is
-now called without holding qla_tgt_mutex, as the fc_vport creation
-process will call qlt_vport_create() -> qlt_add_target(), which
-already expects to acquire it.
-
-It enforces /sys/kernel/config/target/qla2xxx_npiv/$NPIV_WWPN
-naming in the following format:
-
-     $PHYSICAL_WWPN@$NPIV_WWPN:$NPIV_WWNN
-
-and assumes the $PHYSICAL_WWPN in question has already had been
-configured for target mode in non NPIV mode.
-
-Finally, it updates existing tcm_qla2xxx_lport_register_cb() logic
-to setup the non NPIV assignments that have now been moved out of
-qlt_lport_register() code.
-
-Cc: Sawan Chandak <sawan.chandak@qlogic.com>
-Cc: Quinn Tran <quinn.tran@qlogic.com>
-Cc: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+Signed-off-by: Loc Ho <lho@apm.com>
+Signed-off-by: Tuan Phan <tphan@apm.com>
+Signed-off-by: Suman Tripathi <stripathi@apm.com>
 ---
- drivers/scsi/qla2xxx/qla_target.c  |   25 ++++-----
- drivers/scsi/qla2xxx/qla_target.h  |    4 +-
- drivers/scsi/qla2xxx/tcm_qla2xxx.c |  106 ++++++++++++++++++++++++++----------
- 3 files changed, 88 insertions(+), 47 deletions(-)
+Loc Ho (4):
+  PHY: Add function set_speed to generic PHY framework
+  Documentation: Add APM X-Gene SoC 15Gbps Multi-purpose PHY driver
+    binding documentation
+  PHY: add APM X-Gene SoC 15Gbps Multi-purpose PHY driver
+  arm64: Add APM X-Gene SoC 15Gbps Multi-purpose PHY DTS entries
 
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 34ed246..b596f8b 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -4235,8 +4235,9 @@ static void qlt_lport_dump(struct scsi_qla_host *vha, u64 wwpn,
-  * @callback:  lport initialization callback for tcm_qla2xxx code
-  * @target_lport_ptr: pointer for tcm_qla2xxx specific lport data
-  */
--int qlt_lport_register(struct qla_tgt_func_tmpl *qla_tgt_ops, u64 wwpn,
--	int (*callback)(struct scsi_qla_host *), void *target_lport_ptr)
-+int qlt_lport_register(void *target_lport_ptr, u64 phys_wwpn,
-+		       u64 npiv_wwpn, u64 npiv_wwnn,
-+		       int (*callback)(struct scsi_qla_host *, void *, u64, u64))
- {
- 	struct qla_tgt *tgt;
- 	struct scsi_qla_host *vha;
-@@ -4259,7 +4260,7 @@ int qlt_lport_register(struct qla_tgt_func_tmpl *qla_tgt_ops, u64 wwpn,
- 			continue;
- 
- 		spin_lock_irqsave(&ha->hardware_lock, flags);
--		if (host->active_mode & MODE_TARGET) {
-+		if ((!npiv_wwpn || !npiv_wwnn) && host->active_mode & MODE_TARGET) {
- 			pr_debug("MODE_TARGET already active on qla2xxx(%d)\n",
- 			    host->host_no);
- 			spin_unlock_irqrestore(&ha->hardware_lock, flags);
-@@ -4273,24 +4274,18 @@ int qlt_lport_register(struct qla_tgt_func_tmpl *qla_tgt_ops, u64 wwpn,
- 			    " qla2xxx scsi_host\n");
- 			continue;
- 		}
--		qlt_lport_dump(vha, wwpn, b);
-+		qlt_lport_dump(vha, phys_wwpn, b);
- 
- 		if (memcmp(vha->port_name, b, WWN_SIZE)) {
- 			scsi_host_put(host);
- 			continue;
- 		}
--		/*
--		 * Setup passed parameters ahead of invoking callback
--		 */
--		ha->tgt.tgt_ops = qla_tgt_ops;
--		vha->vha_tgt.target_lport_ptr = target_lport_ptr;
--		rc = (*callback)(vha);
--		if (rc != 0) {
--			ha->tgt.tgt_ops = NULL;
--			vha->vha_tgt.target_lport_ptr = NULL;
--			scsi_host_put(host);
--		}
- 		mutex_unlock(&qla_tgt_mutex);
-+
-+		rc = (*callback)(vha, target_lport_ptr, npiv_wwpn, npiv_wwnn);
-+		if (rc != 0)
-+			scsi_host_put(host);
-+
- 		return rc;
- 	}
- 	mutex_unlock(&qla_tgt_mutex);
-diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
-index b33e411..1d10eec 100644
---- a/drivers/scsi/qla2xxx/qla_target.h
-+++ b/drivers/scsi/qla2xxx/qla_target.h
-@@ -932,8 +932,8 @@ void qlt_disable_vha(struct scsi_qla_host *);
-  */
- extern int qlt_add_target(struct qla_hw_data *, struct scsi_qla_host *);
- extern int qlt_remove_target(struct qla_hw_data *, struct scsi_qla_host *);
--extern int qlt_lport_register(struct qla_tgt_func_tmpl *, u64,
--			int (*callback)(struct scsi_qla_host *), void *);
-+extern int qlt_lport_register(void *, u64, u64, u64,
-+			int (*callback)(struct scsi_qla_host *, void *, u64, u64));
- extern void qlt_lport_deregister(struct scsi_qla_host *);
- extern void qlt_unreg_sess(struct qla_tgt_sess *);
- extern void qlt_fc_port_added(struct scsi_qla_host *, fc_port_t *);
-diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-index 113ca95..75a141b 100644
---- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-+++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-@@ -1559,14 +1559,18 @@ static int tcm_qla2xxx_init_lport(struct tcm_qla2xxx_lport *lport)
- 	return 0;
- }
- 
--static int tcm_qla2xxx_lport_register_cb(struct scsi_qla_host *vha)
-+static int tcm_qla2xxx_lport_register_cb(struct scsi_qla_host *vha,
-+					 void *target_lport_ptr,
-+					 u64 npiv_wwpn, u64 npiv_wwnn)
- {
--	struct tcm_qla2xxx_lport *lport;
-+	struct qla_hw_data *ha = vha->hw;
-+	struct tcm_qla2xxx_lport *lport =
-+			(struct tcm_qla2xxx_lport *)target_lport_ptr;
- 	/*
--	 * Setup local pointer to vha, NPIV VP pointer (if present) and
--	 * vha->tcm_lport pointer
-+	 * Setup tgt_ops, local pointer to vha and target_lport_ptr
- 	 */
--	lport = (struct tcm_qla2xxx_lport *)vha->vha_tgt.target_lport_ptr;
-+	ha->tgt.tgt_ops = &tcm_qla2xxx_template;
-+	vha->vha_tgt.target_lport_ptr = target_lport_ptr;
- 	lport->qla_vha = vha;
- 
- 	return 0;
-@@ -1598,8 +1602,8 @@ static struct se_wwn *tcm_qla2xxx_make_lport(
- 	if (ret != 0)
- 		goto out;
- 
--	ret = qlt_lport_register(&tcm_qla2xxx_template, wwpn,
--				tcm_qla2xxx_lport_register_cb, lport);
-+	ret = qlt_lport_register(lport, wwpn, 0, 0,
-+				 tcm_qla2xxx_lport_register_cb);
- 	if (ret != 0)
- 		goto out_lport;
- 
-@@ -1637,20 +1641,70 @@ static void tcm_qla2xxx_drop_lport(struct se_wwn *wwn)
- 	kfree(lport);
- }
- 
-+static int tcm_qla2xxx_lport_register_npiv_cb(struct scsi_qla_host *base_vha,
-+					      void *target_lport_ptr,
-+					      u64 npiv_wwpn, u64 npiv_wwnn)
-+{
-+	struct fc_vport *vport;
-+	struct Scsi_Host *sh = base_vha->host;
-+	struct scsi_qla_host *npiv_vha;
-+	struct tcm_qla2xxx_lport *lport =
-+			(struct tcm_qla2xxx_lport *)target_lport_ptr;
-+	struct fc_vport_identifiers vport_id;
-+
-+	if (!qla_tgt_mode_enabled(base_vha)) {
-+		pr_err("qla2xxx base_vha not enabled for target mode\n");
-+		return -EPERM;
-+	}
-+
-+	memset(&vport_id, 0, sizeof(vport_id));
-+	vport_id.port_name = npiv_wwpn;
-+	vport_id.node_name = npiv_wwnn;
-+	vport_id.roles = FC_PORT_ROLE_FCP_INITIATOR;
-+	vport_id.vport_type = FC_PORTTYPE_NPIV;
-+	vport_id.disable = false;
-+
-+	vport = fc_vport_create(sh, 0, &vport_id);
-+	if (!vport) {
-+		pr_err("fc_vport_create failed for qla2xxx_npiv\n");
-+		return -ENODEV;
-+	}
-+	/*
-+	 * Setup local pointer to NPIV vhba + target_lport_ptr
-+	 */
-+	npiv_vha = (struct scsi_qla_host *)vport->dd_data;
-+	npiv_vha->vha_tgt.target_lport_ptr = target_lport_ptr;
-+	lport->qla_vha = npiv_vha;
-+
-+	scsi_host_get(npiv_vha->host);
-+	return 0;
-+}
-+
-+
- static struct se_wwn *tcm_qla2xxx_npiv_make_lport(
- 	struct target_fabric_configfs *tf,
- 	struct config_group *group,
- 	const char *name)
- {
- 	struct tcm_qla2xxx_lport *lport;
--	u64 npiv_wwpn, npiv_wwnn;
-+	u64 phys_wwpn, npiv_wwpn, npiv_wwnn;
-+	char *p, tmp[128];
- 	int ret;
--	struct scsi_qla_host *vha = NULL;
--	struct qla_hw_data *ha = NULL;
--	scsi_qla_host_t *base_vha = NULL;
- 
--	if (tcm_qla2xxx_npiv_parse_wwn(name, strlen(name)+1,
--				&npiv_wwpn, &npiv_wwnn) < 0)
-+	snprintf(tmp, 128, "%s", name);
-+
-+	p = strchr(tmp, '@');
-+	if (!p) {
-+		pr_err("Unable to locate NPIV '@' seperator\n");
-+		return ERR_PTR(-EINVAL);
-+	}
-+	*p++ = '\0';
-+
-+	if (tcm_qla2xxx_parse_wwn(tmp, &phys_wwpn, 1) < 0)
-+		return ERR_PTR(-EINVAL);
-+
-+	if (tcm_qla2xxx_npiv_parse_wwn(p, strlen(p)+1,
-+				       &npiv_wwpn, &npiv_wwnn) < 0)
- 		return ERR_PTR(-EINVAL);
- 
- 	lport = kzalloc(sizeof(struct tcm_qla2xxx_lport), GFP_KERNEL);
-@@ -1668,21 +1722,11 @@ static struct se_wwn *tcm_qla2xxx_npiv_make_lport(
- 	if (ret != 0)
- 		goto out;
- 
--	ret = qlt_lport_register(&tcm_qla2xxx_template, npiv_wwpn,
--				tcm_qla2xxx_lport_register_cb, lport);
--
-+	ret = qlt_lport_register(lport, phys_wwpn, npiv_wwpn, npiv_wwnn,
-+				 tcm_qla2xxx_lport_register_npiv_cb);
- 	if (ret != 0)
- 		goto out_lport;
- 
--	vha = lport->qla_vha;
--	ha = vha->hw;
--	base_vha = pci_get_drvdata(ha->pdev);
--
--	if (!qla_tgt_mode_enabled(base_vha)) {
--		ret = -EPERM;
--		goto out_lport;
--	}
--
- 	return &lport->lport_wwn;
- out_lport:
- 	vfree(lport->lport_loopid_map);
-@@ -1696,14 +1740,16 @@ static void tcm_qla2xxx_npiv_drop_lport(struct se_wwn *wwn)
- {
- 	struct tcm_qla2xxx_lport *lport = container_of(wwn,
- 			struct tcm_qla2xxx_lport, lport_wwn);
--	struct scsi_qla_host *vha = lport->qla_vha;
--	struct Scsi_Host *sh = vha->host;
-+	struct scsi_qla_host *npiv_vha = lport->qla_vha;
-+	struct qla_hw_data *ha = npiv_vha->hw;
-+	scsi_qla_host_t *base_vha = pci_get_drvdata(ha->pdev);
-+
-+	scsi_host_put(npiv_vha->host);
- 	/*
- 	 * Notify libfc that we want to release the vha->fc_vport
- 	 */
--	fc_vport_terminate(vha->fc_vport);
--
--	scsi_host_put(sh);
-+	fc_vport_terminate(npiv_vha->fc_vport);
-+	scsi_host_put(base_vha->host);
- 	kfree(lport);
- }
- 
--- 
-1.7.10.4
+ .../devicetree/bindings/phy/apm-xgene-phy.txt      |   94 +
+ arch/arm64/boot/dts/apm-storm.dtsi                 |   76 +
+ drivers/phy/Kconfig                                |    7 +
+ drivers/phy/Makefile                               |    2 +
+ drivers/phy/phy-core.c                             |   21 +
+ drivers/phy/phy-xgene.c                            | 1894 ++++++++++++++++++++
+ include/linux/phy/phy.h                            |    8 +
+ 7 files changed, 2102 insertions(+), 0 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/phy/apm-xgene-phy.txt
+ create mode 100644 drivers/phy/phy-xgene.c
 
