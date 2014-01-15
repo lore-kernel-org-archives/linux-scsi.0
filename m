@@ -1,58 +1,86 @@
 From: Todd E Brandt <todd.e.brandt@linux.intel.com>
-Subject: Re: [PATCH/RESEND v2 0/2] Hard disk S3 resume time optimization
-Date: Tue, 14 Jan 2014 13:45:03 -0800
-Message-ID: <20140114214503.GA1260@linux.intel.com>
-References: <20140108005500.GA29556@linux.intel.com>
- <CAMHSBOXzU3Y=oH1Nzxash0wJvuc6Y9hoOcbvdstyOaO77QQLkA@mail.gmail.com>
- <20140114144325.GC12131@htj.dyndns.org>
+Subject: [PATCH v3 0/2] Hard disk S3 resume time optimization
+Date: Tue, 14 Jan 2014 16:31:01 -0800
+Message-ID: <20140115003100.GA15067@linux.intel.com>
+References: <20140108005607.GB29556@linux.intel.com>
+ <20140111191315.GC3257@mtj.dyndns.org>
+ <20140113195544.GA13900@linux.intel.com>
+ <20140113203007.GA3480@mtj.dyndns.org>
 Reply-To: todd.e.brandt@linux.intel.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:63015 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751367AbaANVpV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Jan 2014 16:45:21 -0500
+Return-path: <linux-ide-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20140114144325.GC12131@htj.dyndns.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+In-Reply-To: <20140113203007.GA3480@mtj.dyndns.org>
+Sender: linux-ide-owner@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
-Cc: Gwendal Grignou <gwendal@google.com>, Jej B <James.Bottomley@hansenpartnership.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, rjw@rjwysocki.net
+List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Jan 14, 2014 at 09:43:25AM -0500, Tejun Heo wrote:
-> Hello, Gwendal.
-> 
-> On Mon, Jan 13, 2014 at 04:36:52PM -0800, Gwendal Grignou wrote:
-> > Won't this patch defeat staggered spinup at resume? If you have a jbod
-> > with a smallish power supply, with a 12V rail designed for the steady
-> > state and 1 or 2 devices spinning up at once, you may be in trouble
-> > when all the disks will want to spinup in same second.
-> 
-> Yeah, I think it would.  We never fully solved the staggered spinup
-> problem and it probably is too late to invest into proper mechanism
-> for that.  I think an easy workaround would be, say, have a kernel
-> param which limits the max number of concurrent async wakeups and set
-> the value to something reasonable - say, 2, which should give us most
-> of benefits of async wakeup in vast majority of cases while avoiding
-> blowing up PSUs on larger setups.
+This patch reduces S3 resume time from 10+ seconds to less than a second
+on systems with SATA drives. It does this by making ata port and scsi disk
+resume non-blocking.
 
-Does my patch actually have any affect on staggered spinup? I see that when
-the HOST_CAP_SSS flag is detected it causes a PORT_CMD_SPIN_UP to be issued
-during each port's resume. But the port resume calls themselves appear to
-always be asynchronous, regardless of my patch's changes. (The ata_port
-devices all have their power.async_suspend flags set, so the dpm_resume
-call issues them all in parallel) So as far as I can tell I don't think 
-I'm causing any harm.
+This is another resend of the patch I send out in early December. I've
+addressed all the feedback I received from list members, so all I really
+need is a yay or nay from Tejun Huo and James Bottomley (since it touches
+both subsystems).
 
-I do see how my patch might hinder future attempts at staggered resume
-handling, since it would effectively render the power.async_suspend flag
-useless. Would it be wise for ata_port_resume to check the ata_port's 
-power.async_suspend flag and only use asynchronous ata_port_request_pm 
-if it's enabled?
+The notes below include the performance results and patch description.
 
-> 
-> Thanks.
-> 
-> -- 
-> tejun
+[Computer One Test - 10.5X speedup on S3 resume]
+Platform: Ubuntu Raring Ringtail (13.04) kernel 3.11.0-rc7
+Cpu: Intel(R) Core(TM) i7-3960X CPU @ 3.30GHz
+Ahci: Intel C600/X79 series chipset 6-Port SATA AHCI (r5)
+Disk config (using all 6 ahci ports): 
+240 GB SSD, 3 TB HD, 500 GB HD, DVD-ROM (with cd inserted), 2 TB HD, 1 TB HD
+Resume time: [unpatched 11656ms] [patched 1110ms]
+
+[Computer Two Test - 12X speedup on S3 resume]
+Platform: Ubuntu Raring Ringtail (13.04) kernel 3.11.0-rc7
+Cpu: Intel(R) Core(TM) i7-3770 CPU @ 3.40GHz
+Ahci: Intel 7 Series/C210 Series Chipset Family 6-port SATA [AHCI mode] (r4)
+Disk config (using 1 ahci port): 320 GB Hard Disk
+Resume time: [unpatched 5416 ms] [patched 448 ms]
+
+[Computer Three Test - 7.8X speedup on S3 resume]
+Platform: Ubuntu Raring Ringtail (13.04) kernel 3.11.0-rc7
+Cpu: Intel(R) Core(TM) i7-4770S CPU @ 3.10GHz
+Ahci: Intel Lynx Point 6-port SATA Controller 1 [AHCI mode] (r2)
+Disk config (using 2 ahci ports): DVD-ROM (empty), 500 GB Hard Disk
+Resume time: [unpatched 5385ms] [patched 688ms]
+
+The essential issue behind hard disks' lengthy resume time is the ata port
+driver blocking until the ATA port hardware is finished coming online. So
+the kernel isn't really doing anything during all those seconds that the
+disks are resuming, it's just blocking until the hardware says it's ready
+to accept commands. Applying this patch set allows SATA disks to resume
+asynchronously without holding up system resume, thus allowing the UI to
+come online much more quickly. There may be a short period after resume
+where the disks are still spinning up in the background, but it will only
+momentarily affect applications using that disk.
+
+The patch set has two parts which apply to ata_port_resume and sd_resume
+respectively. Both are required to achieve any real performance benefit,
+but they will still function independantly without a performance hit.
+
+ata_port_resume patch (1/2):
+sd_resume patch (2/2):
+
+v3: Jan 14, 2014
+ [in response to Tejun Huo]
+ - respun the ata patch to merge the entire code path into async resume
+   i.e. resume, restore, and thaw.
+ - re-tested the changes in hibernate to verify there are no issues
+ - respun the sd patch to apply clean over 3.13 rc8, no other changes
+v2:
+ [in response to Oliver Neukum]
+ - Added scsi cmd error reporting through the scsi_sense_hdr
+ [in response to James Bottomley]
+ - unified the sd_resume code path by just making sd_resume async. Thus all
+   three resume callbacks: resume, restore, and runtime-resume will use it,
+   but there is a performance benefit for resume only.
+ [in response to Bartlomiej Zolnierkiewicz]
+ - unified the __ata_port_resume_common code path to include an async
+   parameter. This way there's no need to re-implement ata_port_request_pm.
+
