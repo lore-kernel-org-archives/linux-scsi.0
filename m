@@ -1,67 +1,102 @@
-From: Loc Ho <lho@apm.com>
-Subject: Re: [PATCH v9 2/4] Documentation: Add documentation for APM X-Gene
- SoC SATA host controller DTS binding
-Date: Wed, 15 Jan 2014 14:07:18 -0800
-Message-ID: <CAPw-ZTmn-aNJcLd1mZPRtog_ncq=GC94ULCJb-400oYqERYK5g@mail.gmail.com>
-References: <1389769910-15505-1-git-send-email-lho@apm.com>
-	<5905127.tqJ3nFt5cj@wuerfel>
-	<CAPw-ZTmVYfPLUVmtes3Gn8Z=+gyFtLoZxc-QUdHH7-ePjKAG9A@mail.gmail.com>
-	<4632602.a1zUZOeMuh@wuerfel>
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Terrible performance of sequential O_DIRECT 4k writes in SAN
+	environment. ~3 times slower then Solars 10 with the same HBA/Storage.
+Date: Thu, 16 Jan 2014 09:07:21 +1100
+Message-ID: <20140115220721.GY3469@dastard>
+References: <CA+QCeVQRrqx=CrxyuAe7k0e0y4Nqo7x_8jtkuD99VM8L9Dxp+g@mail.gmail.com>
+	<20140106201032.GA13491@quack.suse.cz>
+	<20140107155830.GA28395@infradead.org>
+	<CA+QCeVRiwHU+C5utaLQXf_MpjoYMYEF4LKRyDPaqcd=H6n-RRw@mail.gmail.com>
+	<20140108140307.GA588@infradead.org>
+	<CA+QCeVRuvNtZ8+9D-NtMOD=B9UEA5HMvKaGdXOQCjO-KTnZdbw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod5og118.obsmtp.com ([64.18.0.160]:59472 "HELO
-	exprod5og118.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753364AbaAOWHT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jan 2014 17:07:19 -0500
-Received: by mail-qc0-f178.google.com with SMTP id m20so1584957qcx.23
-        for <linux-scsi@vger.kernel.org>; Wed, 15 Jan 2014 14:07:18 -0800 (PST)
-In-Reply-To: <4632602.a1zUZOeMuh@wuerfel>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <xfs-bounces@oss.sgi.com>
+Content-Disposition: inline
+In-Reply-To: <CA+QCeVRuvNtZ8+9D-NtMOD=B9UEA5HMvKaGdXOQCjO-KTnZdbw@mail.gmail.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
+To: Sergey Meirovich <rathamahata@gmail.com>
+Cc: Jan Kara <jack@suse.cz>, linux-scsi <linux-scsi@vger.kernel.org>, Gluk <git.user@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Mark Rutland <mark.rutland@arm.com>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Suman Tripathi <stripathi@apm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "jcm@redhat.com" <jcm@redhat.com>, "patches@apm.com" <patches@apm.com>, "tj@kernel.org" <tj@kernel.org>, "dmilburn@redhat.com" <dmilburn@redhat.com>, "olof@lixom.net" <olof@lixom.net>, Tuan Phan <tphan@apm.com>
 
-Hi,
+On Tue, Jan 14, 2014 at 03:30:11PM +0200, Sergey Meirovich wrote:
+> Hi Cristoph,
+> 
+> On 8 January 2014 16:03, Christoph Hellwig <hch@infradead.org> wrote:
+> > On Tue, Jan 07, 2014 at 08:37:23PM +0200, Sergey Meirovich wrote:
+> >> Actually my initial report (14.67Mb/sec  3755.41 Requests/sec) was about ext4
+> >> However I have tried XFS as well. It was a bit slower than ext4 on all
+> >> occasions.
+> >
+> > I wasn't trying to say XFS fixes your problem, but that we could
+> > implement appending AIO writes in XFS fairly easily.
+> >
+> > To verify Jan's theory, can you try to preallocate the file to the full
+> > size and then run the benchmark by doing a:
+> >
+> > # fallocate -l <size> <filename>
+> >
+> > and then run it?  If that's indeed the issue I'd be happy to implement
+> > the "real aio" append support for you as well.
+> >
+> 
+> I've resorted to write simple wrapper around io_submit() and ran it
+> against preallocated file (exactly to avoid append AIO scenario).
+> Random data was used to avoid XtremIO online deduplication but results
+> were still wonderfull for 4k sequential AIO write:
+> 
+> 744.77 MB/s   190660.17 Req/sec
+> 
+> Clearly Linux lacks "rial aio" append to be available for any FS.
+> Seems that you are thinking that it would be relatively easy to
+> implement it for XFS on Linux? If so - I will really appreciate your
+> afford.
 
->> >> >> +- clocks             : Reference to the clock entry.
->> >> >> +- phys                       : PHY reference with parameter 0.
->> >> >
->> >> > The specific value of the phy-specifier shouldn't matter to this
->> >> > binding. What should matter is what it logically corresponds to.
->> >>
->> >> I not quite following this. Are you suggest that I drop the value 0.
->> >> In the binding, one needs to specify the mode of operation - 0 is for
->> >> SATA. Can you explain more?
->> >
->> > The SATA device should not care what the argument for the PHY
->> > device is. You could connect the same device to another PHY
->> > that has a different set of arguments, which is the whole point
->> > of abstracting it.
->> >
->>
->> I understand what you wrote here. We should not have an argument from
->> the host controller. Then my question is how should the PHY node
->> indicates that it needs to be configured itself as an SATA PHY?
->
-> The "phys" property should specify whatever the configuration of
-> the phy device is supposed to be. It's just not the business of
-> the sata driver or the sata binding to know what that configuration
-> is.
->
+Yes, I think it can be done relatively simply. We'd have to change
+the code in xfs_file_aio_write_checks() to check whether EOF zeroing
+was required rather than always taking an exclusive lock (for block
+aligned IO at EOF sub-block zeroing isn't required), and then we'd
+have to modify the direct IO code to set the is_async flag
+appropriately. We'd probably need a new flag to say tell the DIO
+code that AIO beyond EOF is OK, but that isn't hard to do....
 
-Here is what I have and I am trying to piece this together:
+And for those that are wondering about the stale data exposure problem
+documented in the aio code:
 
-phy1 {
-   #phy-cells = <0>;  /* No parameter as suggest by Mark */
-};
+        /*
+         * For file extending writes updating i_size before data
+         * writeouts complete can expose uninitialized blocks. So
+         * even for AIO, we need to wait for i/o to complete before
+         * returning in this case.
+         */
 
-sata1 {
-    :::
-    phys = <&phy1>;
-};
+This is fixed in XFS by removing a single if() check in
+xfs_iomap_write_direct(). We already use unwritten extents for DIO
+within EOF to avoid races that could expose uninitialised blocks, so
+we just need to make that unconditional behaviour.  Hence racing IO
+on concurrent appending i_size updates will only ever see a hole
+(zeros), an unwritten region (zeros) or the written data.
 
-What I don't get is how does one specify the mode
-(SATA/USB/SGMII/etc)? As another parameter in the phy1 node?
+Christoph, are you going to get any time to look at doing this in
+the next few days?
 
--Loc
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
