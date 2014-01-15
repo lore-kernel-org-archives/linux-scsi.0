@@ -1,206 +1,55 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 19/41] hpsa: add ioaccel mode 2 structure definitions
-Date: Wed, 15 Jan 2014 16:37:55 -0600
-Message-ID: <20140115223755.5061.58982.stgit@beardog.cce.hp.com>
+Subject: [PATCH 20/41] hpsa: Acknowledge controller events in ioaccell mode 2
+	as well as mode 1
+Date: Wed, 15 Jan 2014 16:38:01 -0600
+Message-ID: <20140115223801.5061.11209.stgit@beardog.cce.hp.com>
 References: <20140115223354.5061.50276.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g5t0006.atlanta.hp.com ([15.192.0.43]:1951 "EHLO
-	g5t0006.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752329AbaAOVh5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jan 2014 16:37:57 -0500
+Received: from g6t0184.atlanta.hp.com ([15.193.32.61]:45455 "EHLO
+	g6t0184.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752339AbaAOViC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jan 2014 16:38:02 -0500
 In-Reply-To: <20140115223354.5061.50276.stgit@beardog.cce.hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: stephenmcameron@gmail.com, mikem@beardog.cce.hp.com, matthew.gates@hp.com, linux-scsi@vger.kernel.org, scott.teel@hp.com
 
-From: Mike Miller <mikem@beardog.cce.hp.com>
+From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-Signed-off-by: Mike Miller <mikem@beardog.cce.hp.com>
-Acked-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- drivers/scsi/hpsa.c     |   22 ++++++++++
- drivers/scsi/hpsa.h     |    8 ++++
- drivers/scsi/hpsa_cmd.h |   99 +++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 129 insertions(+), 0 deletions(-)
+ drivers/scsi/hpsa.c     |    3 ++-
+ drivers/scsi/hpsa_cmd.h |    1 +
+ 2 files changed, 3 insertions(+), 1 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 3db772f..ebca59b 100644
+index ebca59b..fbf41c7 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -6139,6 +6139,28 @@ static void __exit hpsa_cleanup(void)
- static void __attribute__((unused)) verify_offsets(void)
- {
- #define VERIFY_OFFSET(member, offset) \
-+	BUILD_BUG_ON(offsetof(struct io_accel2_cmd, member) != offset)
-+
-+	VERIFY_OFFSET(IU_type, 0);
-+	VERIFY_OFFSET(direction, 1);
-+	VERIFY_OFFSET(reply_queue, 2);
-+	/* VERIFY_OFFSET(reserved1, 3);  */
-+	VERIFY_OFFSET(scsi_nexus, 4);
-+	VERIFY_OFFSET(Tag, 8);
-+	VERIFY_OFFSET(cdb, 16);
-+	VERIFY_OFFSET(cciss_lun, 32);
-+	VERIFY_OFFSET(data_len, 40);
-+	VERIFY_OFFSET(cmd_priority_task_attr, 44);
-+	VERIFY_OFFSET(sg_count, 45);
-+	/* VERIFY_OFFSET(reserved3 */
-+	VERIFY_OFFSET(err_ptr, 48);
-+	VERIFY_OFFSET(err_len, 56);
-+	/* VERIFY_OFFSET(reserved4  */
-+	VERIFY_OFFSET(sg, 64);
-+
-+#undef VERIFY_OFFSET
-+
-+#define VERIFY_OFFSET(member, offset) \
- 	BUILD_BUG_ON(offsetof(struct io_accel1_cmd, member) != offset)
+@@ -5490,7 +5490,8 @@ static int hpsa_kickoff_rescan(struct ctlr_info *h)
+ 	char *event_type;
  
- 	VERIFY_OFFSET(dev_handle, 0x00);
-diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
-index df2f88d..74eb22a 100644
---- a/drivers/scsi/hpsa.h
-+++ b/drivers/scsi/hpsa.h
-@@ -258,6 +258,14 @@ struct ctlr_info {
+ 	/* Ask the controller to clear the events we're handling. */
+-	if (h->transMethod & (CFGTBL_Trans_io_accel1) &&
++	if ((h->transMethod & (CFGTBL_Trans_io_accel1
++			| CFGTBL_Trans_io_accel2)) &&
+ 		(h->events & HPSA_EVENT_NOTIFY_ACCEL_IO_PATH_STATE_CHANGE ||
+ 		 h->events & HPSA_EVENT_NOTIFY_ACCEL_IO_PATH_CONFIG_CHANGE)) {
  
- #define HPSA_INTR_ON 	1
- #define HPSA_INTR_OFF	0
-+
-+/*
-+ * Inbound Post Queue offsets for IO Accelerator Mode 2
-+ */
-+#define IOACCEL2_INBOUND_POSTQ_32	0x48
-+#define IOACCEL2_INBOUND_POSTQ_64_LOW	0xd0
-+#define IOACCEL2_INBOUND_POSTQ_64_HI	0xd4
-+
- /*
- 	Send the command to the hardware
- */
 diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
-index 21f8a61..9e00988 100644
+index 9e00988..6b336e8 100644
 --- a/drivers/scsi/hpsa_cmd.h
 +++ b/drivers/scsi/hpsa_cmd.h
-@@ -332,6 +332,7 @@ struct ErrorInfo {
- #define CMD_IOCTL_PEND  0x01
- #define CMD_SCSI	0x03
- #define CMD_IOACCEL1	0x04
-+#define CMD_IOACCEL2	0x05
+@@ -133,6 +133,7 @@
+ #define CFGTBL_Trans_Simple     0x00000002l
+ #define CFGTBL_Trans_Performant 0x00000004l
+ #define CFGTBL_Trans_io_accel1	0x00000080l
++#define CFGTBL_Trans_io_accel2	0x00000100l
+ #define CFGTBL_Trans_use_short_tags 0x20000000l
+ #define CFGTBL_Trans_enable_directed_msix (1 << 30)
  
- #define DIRECT_LOOKUP_SHIFT 5
- #define DIRECT_LOOKUP_BIT 0x10
-@@ -384,6 +385,7 @@ struct CommandList {
- 
- /* Max S/G elements in I/O accelerator command */
- #define IOACCEL1_MAXSGENTRIES           24
-+#define IOACCEL2_MAXSGENTRIES		28
- 
- /*
-  * Structure for I/O accelerator (mode 1) commands.
-@@ -444,6 +446,103 @@ struct io_accel1_cmd {
- 
- #define IOACCEL1_BUSADDR_CMDTYPE        0x00000060
- 
-+struct ioaccel2_sg_element {
-+	u64 address;
-+	u32 length;
-+	u8 reserved[3];
-+	u8 chain_indicator;
-+#define IOACCEL2_CHAIN 0x80
-+};
-+
-+/*
-+ * SCSI Response Format structure for IO Accelerator Mode 2
-+ */
-+struct io_accel2_scsi_response {
-+	u8 IU_type;
-+#define IOACCEL2_IU_TYPE_SRF			0x60
-+	u8 reserved1[3];
-+	u8 req_id[4];		/* request identifier */
-+	u8 reserved2[4];
-+	u8 serv_response;		/* service response */
-+#define IOACCEL2_SERV_RESPONSE_COMPLETE		0x000
-+#define IOACCEL2_SERV_RESPONSE_FAILURE		0x001
-+#define IOACCEL2_SERV_RESPONSE_TMF_COMPLETE	0x002
-+#define IOACCEL2_SERV_RESPONSE_TMF_SUCCESS	0x003
-+#define IOACCEL2_SERV_RESPONSE_TMF_REJECTED	0x004
-+#define IOACCEL2_SERV_RESPONSE_TMF_WRONG_LUN	0x005
-+	u8 status;			/* status */
-+#define IOACCEL2_STATUS_SR_TASK_COMP_GOOD	0x00
-+#define IOACCEL2_STATUS_SR_TASK_COMP_CHK_COND	0x02
-+#define IOACCEL2_STATUS_SR_TASK_COMP_BUSY	0x08
-+#define IOACCEL2_STATUS_SR_TASK_COMP_RES_CON	0x18
-+#define IOACCEL2_STATUS_SR_TASK_COMP_SET_FULL	0x28
-+#define IOACCEL2_STATUS_SR_TASK_COMP_ABORTED	0x40
-+	u8 data_present;		/* low 2 bits */
-+#define IOACCEL2_NO_DATAPRESENT		0x000
-+#define IOACCEL2_RESPONSE_DATAPRESENT	0x001
-+#define IOACCEL2_SENSE_DATA_PRESENT	0x002
-+#define IOACCEL2_RESERVED		0x003
-+	u8 sense_data_len;		/* sense/response data length */
-+	u8 resid_cnt[4];		/* residual count */
-+	u8 sense_data_buff[32];		/* sense/response data buffer */
-+};
-+
-+#define IOACCEL2_64_PAD 76
-+#define IOACCEL2_32_PAD 76
-+#define IOACCEL2_PAD (IS_32_BIT * IOACCEL2_32_PAD + \
-+			IS_64_BIT * IOACCEL2_64_PAD)
-+/*
-+ * Structure for I/O accelerator (mode 2 or m2) commands.
-+ * Note that this structure must be 128-byte aligned in size.
-+ */
-+struct io_accel2_cmd {
-+	u8  IU_type;			/* IU Type */
-+	u8  direction;                  /* Transfer direction, 2 bits */
-+	u8  reply_queue;		/* Reply Queue ID */
-+	u8  reserved1;			/* Reserved */
-+	u32 scsi_nexus;			/* Device Handle */
-+	struct vals32 Tag;		/* cciss tag */
-+	u8  cdb[16];			/* SCSI Command Descriptor Block */
-+	u8  cciss_lun[8];		/* 8 byte SCSI address */
-+	u32 data_len;			/* Total bytes to transfer */
-+	u8  cmd_priority_task_attr;	/* priority and task attrs */
-+#define IOACCEL2_PRIORITY_MASK 0x78
-+#define IOACCEL2_ATTR_MASK 0x07
-+	u8  sg_count;			/* Number of sg elements */
-+	u8  reserved3[2];		/* Reserved */
-+	u64 err_ptr;			/* Error Pointer */
-+	u32 err_len;			/* Error Length*/
-+	u8 reserved4[4];		/* Reserved */
-+	struct ioaccel2_sg_element sg[IOACCEL2_MAXSGENTRIES];
-+	struct io_accel2_scsi_response error_data;
-+	u8 pad[IOACCEL2_PAD];
-+};
-+
-+/*
-+ * defines for Mode 2 command struct
-+ * FIXME: this can't be all I need mfm
-+ */
-+#define IOACCEL2_IU_TYPE	0x40
-+#define IU_TYPE_TMF		0x41
-+#define IOACCEL2_DIR_NO_DATA	0x00
-+#define IOACCEL2_DIR_DATA_IN	0x01
-+#define IOACCEL2_DIR_DATA_OUT	0x02
-+/*
-+ * SCSI Task Management Request format for Accelerator Mode 2
-+ */
-+struct hpsa_tmf_struct {
-+	u8 iu_type;		/* Information Unit Type */
-+	u8 reply_queue;		/* Reply Queue ID */
-+	u8 tmf;			/* Task Management Function */
-+	u8 reserved1;		/* byte 3 Reserved */
-+	u32 it_nexus;		/* SCSI I-T Nexus */
-+	u8 lun_id[8];		/* LUN ID for TMF request */
-+	struct vals32 Tag;	/* cciss tag associated w/ request */
-+	struct vals32 abort_tag;/* cciss tag of SCSI cmd or task to abort */
-+	u64 error_ptr;		/* Error Pointer */
-+	u32 error_len;		/* Error Length */
-+};
-+
- /* Configuration Table Structure */
- struct HostWrite {
- 	u32 TransportRequest;
 
