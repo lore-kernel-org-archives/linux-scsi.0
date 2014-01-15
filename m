@@ -1,101 +1,119 @@
-From: Mark Rutland <mark.rutland@arm.com>
-Subject: Re: [PATCH v7 3/4] PHY: add APM X-Gene SoC 15Gbps Multi-purpose
- PHY driver
-Date: Wed, 15 Jan 2014 12:09:46 +0000
-Message-ID: <20140115120946.GD25824@e106331-lin.cambridge.arm.com>
-References: <1389769840-15469-1-git-send-email-lho@apm.com>
- <1389769840-15469-2-git-send-email-lho@apm.com>
- <1389769840-15469-3-git-send-email-lho@apm.com>
- <1389769840-15469-4-git-send-email-lho@apm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1389769840-15469-4-git-send-email-lho@apm.com>
-Content-Language: en-US
-Sender: linux-ide-owner@vger.kernel.org
-To: Loc Ho <lho@apm.com>
-Cc: "olof@lixom.net" <olof@lixom.net>, "tj@kernel.org" <tj@kernel.org>, "arnd@arndb.de" <arnd@arndb.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "dmilburn@redhat.com" <dmilburn@redhat.com>, "jcm@redhat.com" <jcm@redhat.com>, "patches@apm.com" <patches@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] hpsa: fixup MSI-X registration
+Date: Wed, 15 Jan 2014 13:30:53 +0100
+Message-ID: <1389789053-95698-1-git-send-email-hare@suse.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:46948 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751253AbaAOMa4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 15 Jan 2014 07:30:56 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <jbottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
 
-On Wed, Jan 15, 2014 at 07:10:39AM +0000, Loc Ho wrote:
+Commit 254f796b9f22b1944c64caabc356a56caaa2facd updated
+the driver to use 16 MSI-X vectors, despite the fact that
+older controllers would provide only 4.
+This was causing MSI-X registration to drop down to INTx
+mode. But as the controller support performant mode, the
+initialisation will become confused and cause the machine
+to stall during boot.
 
-[...]
+This patch fixes up the MSI-X registration to re-issue
+the pci_enable_msix() call with the correct number of
+MSI-X vectors. With that the hpsa driver continues to
+works on older controllers like the P200.
 
-> + * The APM X-Gene PHY consists of two PLL clock macro's (CMU) and lanes.
-> + * The first PLL clock macro is used for internal reference clock. The second
-> + * PLL clock macro is used to generate the clock for the PHY. This driver
-> + * configures the first PLL CMU, the second PLL CMU, and programs the PHY to
-> + * operate according to the mode of operation. The first PLL CMU is only
-> + * required if internal clock is enabled.
-> + *
-> + * Logical Layer Out Of HW module units:
-> + *
-> + * -----------------
-> + * | Internal      |    |------|
-> + * | Ref PLL CMU   |----|      |     -------------    ---------
-> + * ------------ ----    | MUX  |-----|PHY PLL CMU|----| Serdes|
-> + *                      |      |     |           |    ---------
-> + * External Clock ------|      |     -------------
-> + *                      |------|
-> + *
-> + * The Ref PLL CMU CSR (Configureation System Registers) is accessed
-> + * indirectly from the SDS offset at 0x2000. It is only required for
-> + * internal reference clock.
-> + * The PHY PLL CMU CSR is accessed indirectly from the SDS offset at 0x0000.
-> + * The Serdes CSR is accessed indirectly from the SDS offset at 0x0400.
-> + *
-> + * The Ref PLL CMU can be located within the same PHY IP or outside the PHY IP
-> + * due to shared Ref PLL CMU. For PHY with Ref PLL CMU shared with another IP,
-> + * it is located outside the PHY IP. This is the case for the PHY located
-> + * at 0x1f23a000 (SATA Port 4/5). For such PHY, another resource is required
-> + * to located the SDS/Ref PLL CMU module and its clock for that IP enabled.
-> + *
-> + * Currently, this driver only supports SATA mode with external clock.
-> + */
+Cc: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/scsi/hpsa.c | 31 +++++++++++++++++--------------
+ 1 file changed, 17 insertions(+), 14 deletions(-)
 
-Having looked at this and the binding, I'm confused as to why we need an
-additional reg entry when we're using the external clock.
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 868318a..40989ee 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -598,7 +598,7 @@ static void set_performant_mode(struct ctlr_info *h, struct CommandList *c)
+ {
+ 	if (likely(h->transMethod & CFGTBL_Trans_Performant)) {
+ 		c->busaddr |= 1 | (h->blockFetchTable[c->Header.SGList] << 1);
+-		if (likely(h->msix_vector))
++		if (likely(h->msix_vector > 0))
+ 			c->Header.ReplyQueue =
+ 				raw_smp_processor_id() % h->nreply_queues;
+ 	}
+@@ -4169,21 +4169,24 @@ static void hpsa_interrupt_mode(struct ctlr_info *h)
+ 		goto default_int_mode;
+ 	if (pci_find_capability(h->pdev, PCI_CAP_ID_MSIX)) {
+ 		dev_info(&h->pdev->dev, "MSIX\n");
++		h->msix_vector = MAX_REPLY_QUEUES;
+ 		err = pci_enable_msix(h->pdev, hpsa_msix_entries,
+-						MAX_REPLY_QUEUES);
+-		if (!err) {
+-			for (i = 0; i < MAX_REPLY_QUEUES; i++)
+-				h->intr[i] = hpsa_msix_entries[i].vector;
+-			h->msix_vector = 1;
+-			return;
+-		}
++				      h->msix_vector);
+ 		if (err > 0) {
+ 			dev_warn(&h->pdev->dev, "only %d MSI-X vectors "
+ 			       "available\n", err);
+-			goto default_int_mode;
++			h->msix_vector = err;
++			err = pci_enable_msix(h->pdev, hpsa_msix_entries,
++					      h->msix_vector);
++		}
++		if (!err) {
++			for (i = 0; i < h->msix_vector; i++)
++				h->intr[i] = hpsa_msix_entries[i].vector;
++			return;
+ 		} else {
+ 			dev_warn(&h->pdev->dev, "MSI-X init failed %d\n",
+ 			       err);
++			h->msix_vector = 0;
+ 			goto default_int_mode;
+ 		}
+ 	}
+@@ -4597,15 +4600,15 @@ static int hpsa_request_irq(struct ctlr_info *h,
+ 	for (i = 0; i < MAX_REPLY_QUEUES; i++)
+ 		h->q[i] = (u8) i;
+ 
+-	if (h->intr_mode == PERF_MODE_INT && h->msix_vector) {
++	if (h->intr_mode == PERF_MODE_INT && h->msix_vector > 0) {
+ 		/* If performant mode and MSI-X, use multiple reply queues */
+-		for (i = 0; i < MAX_REPLY_QUEUES; i++)
++		for (i = 0; i < h->msix_vector; i++)
+ 			rc = request_irq(h->intr[i], msixhandler,
+ 					0, h->devname,
+ 					&h->q[i]);
+ 	} else {
+ 		/* Use single reply pool */
+-		if (h->msix_vector || h->msi_vector) {
++		if (h->msix_vector > 0 || h->msi_vector) {
+ 			rc = request_irq(h->intr[h->intr_mode],
+ 				msixhandler, 0, h->devname,
+ 				&h->q[h->intr_mode]);
+@@ -4658,7 +4661,7 @@ static void free_irqs(struct ctlr_info *h)
+ 		return;
+ 	}
+ 
+-	for (i = 0; i < MAX_REPLY_QUEUES; i++)
++	for (i = 0; i < h->msix_vector; i++)
+ 		free_irq(h->intr[i], &h->q[i]);
+ }
+ 
+@@ -5178,7 +5181,7 @@ static void hpsa_put_ctlr_into_performant_mode(struct ctlr_info *h)
+ 	if (!(trans_support & PERFORMANT_MODE))
+ 		return;
+ 
+-	h->nreply_queues = h->msix_vector ? MAX_REPLY_QUEUES : 1;
++	h->nreply_queues = h->msix_vector > 0 ? h->msix_vector : 1;
+ 	hpsa_get_max_perf_mode_cmds(h);
+ 	/* Performant mode ring buffer and supporting data structures */
+ 	h->reply_pool_size = h->max_commands * sizeof(u64) * h->nreply_queues;
+-- 
+1.7.12.4
 
-Surely the second resource (the external CMU base) is a property of the
-shared ref PLL clock, rather than the PHY itself. How do you handle two
-units trying to use the shared PLL?
-
-I think makes sense to model the ref PLL CMU as a separate clock, and
-use clock-names to differentiate between the two inputs to the mux:
-
-external: external_clock {
-        compatible = "fixed-clock";
-        clock-frequency = < ... >;
-	#clock-cells = <0>;
-};
-
-ref_pll: reference_clock {
-        compatible = "apm,xgene-ref-pll";
-        reg = < .... >;
-        #clock-cells = <0>;
-};
-
-phy {
-        compatible = "apm,xgene-phy";
-        reg = < ... >;
-        clocks = <&ref_pll>, <&external>;
-        clock-names = "ref-pll", "external";
-	...
-};
-
-
-That also means the phy only needs a single compatible string -- you can
-figure out what to do by probing the set of clocks.
-
-Does that make sense? Is there something I'm missing?
-
-[...]
-
-> +       /* Retrieve optional clock */
-> +       ctx->clk = clk_get(&pdev->dev, NULL);
-
-There's no clocks proeprty in the binding. Please add one.
-
-Cheers,
-Mark.
