@@ -1,150 +1,77 @@
-From: Daniel Mack <zonque-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: Suspend issues with a LaCie USB hard disk connected
-Date: Wed, 15 Jan 2014 11:58:55 +0100
-Message-ID: <52D669EF.30405@gmail.com>
-References: <Pine.LNX.4.44L0.1312181542280.1029-100000@iolanthe.rowland.org>
+From: Mark Rutland <mark.rutland@arm.com>
+Subject: Re: [PATCH v9 2/4] Documentation: Add documentation for APM X-Gene
+ SoC SATA host controller DTS binding
+Date: Wed, 15 Jan 2014 11:18:39 +0000
+Message-ID: <20140115111839.GB25824@e106331-lin.cambridge.arm.com>
+References: <1389769910-15505-1-git-send-email-lho@apm.com>
+ <1389769910-15505-2-git-send-email-lho@apm.com>
+ <1389769910-15505-3-git-send-email-lho@apm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <Pine.LNX.4.44L0.1312181542280.1029-100000-IYeN2dnnYyZXsRXLowluHWD2FQJk+8+b@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Cc: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Oliver Neukum <oliver-GvhC2dPhHPQdnm+yROfE0A@public.gmane.org>, Aaron Lu <aaron.lu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "James E.J. Bottomley" <JBottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Sven Neumann <s.neumann-5g8ninUHluJWk0Htik3J/w@public.gmane.org>
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+Content-Disposition: inline
+In-Reply-To: <1389769910-15505-3-git-send-email-lho@apm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Loc Ho <lho@apm.com>
+Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Suman Tripathi <stripathi@apm.com>, "arnd@arndb.de" <arnd@arndb.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "jcm@redhat.com" <jcm@redhat.com>, "patches@apm.com" <patches@apm.com>, "tj@kernel.org" <tj@kernel.org>, "dmilburn@redhat.com" <dmilburn@redhat.com>, "olof@lixom.net" <olof@lixom.net>, Tuan Phan <tphan@apm.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi,
-
-Sorry for the long, primarily holiday-related delay on this.
-
-On 12/18/2013 09:46 PM, Alan Stern wrote:
-> On Wed, 18 Dec 2013, Daniel Mack wrote:
->> I'm facing an issue putting an embedded system to sleep while a Lacie
->> external USB hard disk is connected. Relevant kernel messages that occur
->> at the attempt are:
->>
->> [   13.834731] PM: Sending message for entering DeepSleep mode
->> [   13.846575] sd 0:0:0:0: [sda] Synchronizing SCSI cache
->> [   13.858818] sd 0:0:0:0: [sda]
->> [   13.862432] Result: hostbyte=0x00 driverbyte=0x08
->> [   13.867349] sd 0:0:0:0: [sda]
->> [   13.870626] Sense Key : 0x5 [current]
->> [   13.874602] sd 0:0:0:0: [sda]
->> [   13.877879] ASC=0x20 ASCQ=0x0
->> [   13.885053] dpm_run_callback(): scsi_bus_suspend+0x0/0x20 returns -5
->> [   13.901130] PM: Device 0:0:0:0 failed to suspend async: error -5
->> [   13.907507] PM: Some devices failed to suspend, or early wake event
->> detected
->>
->> What happens is that in sd_sync_cache(), scsi_execute_req_flags()
->> returns 0x08000002, so driver_byte(res) evaluates to DRIVER_SENSE and
->> host_byte(res) is DID_OK, which is an unhandled case that leads to -EIO
->> eventually.
->>
->> I have admittedly not much clue about the SCSI layer, so I wonder what
->> would be the best way to fix this. Should DID_OK just be handled as
->> non-error condition in the switch? Should the suspend call chain ignore
->> such errors from sd_sync_cache()?
->>
->> I'm open to suggestions and happy to test patches.
+On Wed, Jan 15, 2014 at 07:11:48AM +0000, Loc Ho wrote:
+> Signed-off-by: Loc Ho <lho@apm.com>
+> Signed-off-by: Tuan Phan <tphan@apm.com>
+> Signed-off-by: Suman Tripathi <stripathi@apm.com>
+> ---
+>  .../devicetree/bindings/ata/apm-xgene.txt          |   68 ++++++++++++++++++++
+>  1 files changed, 68 insertions(+), 0 deletions(-)
+>  create mode 100644 Documentation/devicetree/bindings/ata/apm-xgene.txt
 > 
-> The Sense Key and ASC values indicate that the drive did not understand
-> the SYNCHRONIZE CACHE command.  A usbmon trace would verify this; see
-> the instructions in Documentation/usb/usbmon.txt.
-> 
-> Assuming that really is what happened, we have to decide how to handle 
-> the situation.
+> diff --git a/Documentation/devicetree/bindings/ata/apm-xgene.txt b/Documentation/devicetree/bindings/ata/apm-xgene.txt
+> new file mode 100644
+> index 0000000..3d1421a
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/ata/apm-xgene.txt
+> @@ -0,0 +1,68 @@
+> +* APM X-Gene 6.0 Gb/s SATA host controller nodes
+> +
+> +SATA host controller nodes are defined to describe on-chip Serial ATA
+> +controllers. Each SATA controller (pair of ports) have its own node.
+> +
+> +Required properties:
+> +- compatible		: Shall be "apm,xgene-ahci-sgmii" if mux'ed with SGMII
+> +			  or "apm,xgene-ahci-pcie" if mux'ed with PCIe.
+> +- reg			: First memory resource shall be the AHCI memory
+> +			  resource.
+> +			  Second memory resource shall be the host controller
+> +			  memory resource.
+> +- interrupts		: Interrupt mapping for SATA host controller IRQ.
 
-Ok, this is the usbmon trace that I captured when the system goes to
-suspend with the USB storage media connected but unmounted:
+s/Interrupt-mapping/interrupt-specifier/
 
-cebe5e00 3629314504 S Bo:1:003:2 -115 31 = 55534243 10000000 00000000
-00000a35 00000000 00000000 00000000 000000
-cebe5e00 3629315214 C Bo:1:003:2 0 31 >
-cebe5e00 3629315413 S Bi:1:003:1 -115 13 <
-cebe5e00 3629315492 C Bi:1:003:1 0 13 = 55534253 10000000 00000000 01
-cebe5e00 3629315571 S Bo:1:003:2 -115 31 = 55534243 11000000 12000000
-80000603 00000012 00000000 00000000 000000
-cebe5e00 3629315606 C Bo:1:003:2 0 31 >
-cecd4580 3629315681 S Bi:1:003:1 -115 18 <
-cecd4580 3629315744 C Bi:1:003:1 0 18 = 70000500 0000000a 00000000
-20000000 0000
-cebe5e00 3629315772 S Bi:1:003:1 -115 13 <
-cebe5e00 3629315817 C Bi:1:003:1 0 13 = 55534253 11000000 00000000 00
-cebe5e00 3629319750 S Bo:1:003:2 -115 31 = 55534243 12000000 00000000
-00000a35 00000000 00000000 00000000 000000
-cebe5e00 3629319826 C Bo:1:003:2 0 31 >
-cebe5e00 3629319856 S Bi:1:003:1 -115 13 <
-cebe5e00 3629319910 C Bi:1:003:1 0 13 = 55534253 12000000 00000000 01
-cebe5e00 3629319964 S Bo:1:003:2 -115 31 = 55534243 13000000 12000000
-80000603 00000012 00000000 00000000 000000
-cebe5e00 3629319996 C Bo:1:003:2 0 31 >
-cecd4300 3629320026 S Bi:1:003:1 -115 18 <
-cecd4300 3629320086 C Bi:1:003:1 0 18 = 70000500 0000000a 00000000
-20000000 0000
-cebe5e00 3629320111 S Bi:1:003:1 -115 13 <
-cebe5e00 3629320152 C Bi:1:003:1 0 13 = 55534253 13000000 00000000 00
-cebe5e00 3629320360 S Bo:1:003:2 -115 31 = 55534243 14000000 00000000
-00000a35 00000000 00000000 00000000 000000
-cebe5e00 3629320610 C Bo:1:003:2 0 31 >
-cebe5e00 3629320670 S Bi:1:003:1 -115 13 <
-cebe5e00 3629320714 C Bi:1:003:1 0 13 = 55534253 14000000 00000000 01
-cebe5e00 3629320752 S Bo:1:003:2 -115 31 = 55534243 15000000 12000000
-80000603 00000012 00000000 00000000 000000
-cebe5e00 3629320809 C Bo:1:003:2 0 31 >
-cecd4300 3629320834 S Bi:1:003:1 -115 18 <
-cecd4300 3629320863 C Bi:1:003:1 0 18 = 70000500 0000000a 00000000
-20000000 0000
-cebe5e00 3629320885 S Bi:1:003:1 -115 13 <
-cebe5e00 3629320923 C Bi:1:003:1 0 13 = 55534253 15000000 00000000 00
-ceb36280 3629350243 C Ii:1:001:1 -2:2048 0
-cecd4800 3630011191 S Ci:1:001:0 s a3 00 0000 0001 0004 4 <
-cecd4800 3630011333 C Ci:1:001:0 0 4 = 07051200
-cecd4800 3630011574 S Co:1:001:0 s 23 01 0011 0001 0000 0
-cecd4800 3630011699 C Co:1:001:0 0 0
-cecd4800 3630011745 S Co:1:001:0 s 23 01 0014 0001 0000 0
-cecd4800 3630011789 C Co:1:001:0 0 0
-ceb36280 3630112579 S Ii:1:001:1 -115:2048 4 <
-cecd4500 3630112825 S Ci:1:001:0 s a3 00 0000 0001 0004 4 <
-cecd4500 3630112952 C Ci:1:001:0 0 4 = 07050000
-cecd4500 3630113001 S Co:1:001:0 s 23 01 0002 0001 0000 0
-cecd4500 3630113084 C Co:1:001:0 0 0
-ceb36280 3630122552 C Ii:1:001:1 0:2048 1 = 02
-ceb36280 3630122566 S Ii:1:001:1 -115:2048 4 <
-cecd4500 3630152573 S Ci:1:001:0 s a3 00 0000 0001 0004 4 <
-cecd4500 3630152625 C Ci:1:001:0 0 4 = 03050000
-cecd4500 3630172588 S Ci:1:003:0 s 80 00 0000 0000 0002 2 <
-cecd4500 3630172603 E Ci:1:003:0 -19 0
-cecd4500 3630172744 S Co:1:001:0 s 23 03 0004 0001 0000 0
-cecd4500 3630184219 C Co:1:001:0 0 0
-cecd4500 3630242590 S Ci:1:001:0 s a3 00 0000 0001 0004 4 <
-cecd4500 3630242657 C Ci:1:001:0 0 4 = 13050000
-cecd4500 3630302564 S Ci:1:001:0 s a3 00 0000 0001 0004 4 <
-cecd4500 3630302609 C Ci:1:001:0 0 4 = 13050000
-ceb36280 3630315035 C Ii:1:001:1 0:2048 1 = 02
+> +- clocks		: Reference to the clock entry.
+> +- phys			: PHY reference with parameter 0.
 
-FWIW, the following patch seems to work fine on our machines, but as I
-said, I'm uncertain wrt to whether that's the right approach.
+The specific value of the phy-specifier shouldn't matter to this
+binding. What should matter is what it logically corresponds to.
 
+> +- phy-names		: Name of the PHY. Shall be "sata-6g".
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 69725f7..ec99787 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1469,6 +1469,7 @@ static int sd_sync_cache(struct scsi_disk *sdkp)
-                                return 0;
+Could you define phys in terms of phy-names please? It makes the
+relationship clearer:
 
-                switch (host_byte(res)) {
-+               case DID_OK:
-                /* ignore errors due to racing a disconnection */
-                case DID_BAD_TARGET:
-                case DID_NO_CONNECT:
+- phys: a list of phandles + phy-sciefiers, one for each entry in
+  phy-names
 
+- phy-names: Should contain:
+  * "sata-6g" for the SATA PHY <notes about requirements go here>
 
-Thanks,
-Daniel
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Cheers,
+Mark.
