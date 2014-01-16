@@ -1,274 +1,146 @@
 From: Todd E Brandt <todd.e.brandt@linux.intel.com>
-Subject: [PATCH v4 1/2] asynchronous ata port resume
-Date: Wed, 15 Jan 2014 20:38:54 -0800
-Message-ID: <20140116043853.GB27413@linux.intel.com>
+Subject: [PATCH v4 2/2] asynchronous scsi disk resume
+Date: Wed, 15 Jan 2014 20:40:22 -0800
+Message-ID: <20140116044022.GC27413@linux.intel.com>
 Reply-To: todd.e.brandt@linux.intel.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:26994 "EHLO mga02.intel.com"
+Received: from mga03.intel.com ([143.182.124.21]:25023 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751520AbaAPEiu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Jan 2014 23:38:50 -0500
+	id S1750900AbaAPEkS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 15 Jan 2014 23:40:18 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: tj@kernel.org
 Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
 
-On resume, the ATA port driver currently waits until the AHCI controller
-finishes executing the port wakeup command. This patch changes the
-ata_port_resume callback to issue the wakeup and then return immediately,
-thus allowing the next device in the pm queue to resume. Any commands
-issued to the AHCI hardware during the wakeup will be queued up and
-executed once the port is physically online. Thus no information is lost.
+On resume, the SD driver currently waits until the block driver finishes
+executing a disk start command with blk_execute_rq. This patch changes
+the sd_resume callback to use blk_execute_rq_nowait instead, which allows
+it to return immediately, thus allowing the next device in the pm queue
+to resume. The return value of blk_execute_rq_nowait is handled in the
+background by sd_resume_complete. Any commands issued to the scsi disk
+during the startup will be queued up and executed once the disk is online.
+Thus no information is lost.
 
-This patch applies to all ata resume callbacks: resume, restore, and thaw for
-code simplicity. The primary benefit is to S3 resume.
+This patch applies to all three resume callbacks: resume, restore, and
+runtime-resume. There is only a performance benefit for resume, but for
+simplicity both restore and runtime-resume use the same code path.
 
-The return value from ata_resume_async is now an indicator of whether 
-the resume was initiated, rather than if it was completed. I'm letting the ata
-driver assume control over its own error reporting in this case (which it does
-already). If you look at the ata_port resume code you'll see that the
-ata_port_resume callback returns the status of the ahci_port_resume callback,
-which is always 0. So I don't see any harm in ignoring it.
+The execution flow has changed from a single, synchronous call, to two
+calls: one called to start sd_resume asynchronously, the other called on
+completion. Thus the dmesg log will now show two prints for each drive
+resume, on resume start and complete. The scsi sense data is managed
+the same, but is now analyzed and freed in sd_resume_complete.
 
-If somebody requests suspend while ATA port resume is still running, the
-request is queued until the resume has completed. I've tested
-that case very heavily. Basically if you do two suspends in a row (within
-seconds of each other) you lose any performance benefit, but that's a use
-case that should happen only very rarerly (and wouldn't be expected to
-be of any power benefit since too many sequential suspends actually
-takes more power than just letting the machine stay in run mode).
+This code copies a portion of sd_start_stop_device, scsi_execute_req_flags,
+and scsi_execute directly into sd_resume: effectively circumventing
+sd_start_stop_device to start disks. This is to enable the START_STOP
+command to use blk_execute_rq_nowait instead of blk_execute_rq. So
+sd_start_stop_device is now only used to stop the device. The disk is
+started from within the sd_resume call itself.
 
 v4: Jan 15, 2014
- [in response to Tejun Huo]
- - completely removed the pm_result member of the ata_port struct
- - result from ata_port_suspend/resume is now returned from the function
-   instead of into a pointer location
- - ata_port_request_pm now only returns 0/-EAGAIN for pass/fail
+ [fixes]
+ - moved the scsi_disk_put call from sd_resume_complete into sd_resume
+   since it needs to be called from the same context
 
 Signed-off-by: Todd Brandt <todd.e.brandt@intel.com>
 Signed-off-by: Arjan van de Ven <arjan@linux.intel.com>
 ---
- drivers/ata/libata-core.c     | 44 +++++++++++++++++++++-----------------------
- drivers/ata/libata-eh.c       | 13 ++-----------
- drivers/scsi/libsas/sas_ata.c |  6 ++----
- include/linux/libata.h        |  5 ++---
- 4 files changed, 27 insertions(+), 41 deletions(-)
+ drivers/scsi/sd.c | 70 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 67 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 1393a58..a98f6f1 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -5326,20 +5326,17 @@ bool ata_link_offline(struct ata_link *link)
- #ifdef CONFIG_PM
- static int ata_port_request_pm(struct ata_port *ap, pm_message_t mesg,
- 			       unsigned int action, unsigned int ehi_flags,
--			       int *async)
-+			       bool async)
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 69725f7..7c02e46 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -3172,18 +3172,82 @@ static int sd_suspend_runtime(struct device *dev)
+ 	return sd_suspend_common(dev, false);
+ }
+ 
++static void sd_resume_complete(struct request *rq, int error)
++{
++	struct scsi_sense_hdr sshdr;
++	struct scsi_disk *sdkp = rq->end_io_data;
++	char *sense = rq->sense;
++
++	if (error) {
++		sd_printk(KERN_WARNING, sdkp, "START FAILED\n");
++		sd_print_result(sdkp, error);
++		if (sense && (driver_byte(error) & DRIVER_SENSE)) {
++			scsi_normalize_sense(sense,
++				SCSI_SENSE_BUFFERSIZE, &sshdr);
++			sd_print_sense_hdr(sdkp, &sshdr);
++		}
++	} else {
++		sd_printk(KERN_NOTICE, sdkp, "START SUCCESS\n");
++	}
++
++	kfree(sense);
++	rq->sense = NULL;
++	rq->end_io_data = NULL;
++	__blk_put_request(rq->q, rq);
++}
++
+ static int sd_resume(struct device *dev)
  {
- 	struct ata_link *link;
- 	unsigned long flags;
--	int rc = 0;
++	unsigned char cmd[6] = { START_STOP };
+ 	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
++	struct request *req;
++	char *sense = NULL;
+ 	int ret = 0;
  
- 	/* Previous resume operation might still be in
- 	 * progress.  Wait for PM_PENDING to clear.
- 	 */
- 	if (ap->pflags & ATA_PFLAG_PM_PENDING) {
--		if (async) {
--			*async = -EAGAIN;
--			return 0;
--		}
-+		if (async)
-+			return -EAGAIN;
- 		ata_port_wait_eh(ap);
- 		WARN_ON(ap->pflags & ATA_PFLAG_PM_PENDING);
- 	}
-@@ -5348,11 +5345,6 @@ static int ata_port_request_pm(struct ata_port *ap, pm_message_t mesg,
- 	spin_lock_irqsave(ap->lock, flags);
+ 	if (!sdkp->device->manage_start_stop)
+-		goto done;
++		goto error;
  
- 	ap->pm_mesg = mesg;
--	if (async)
--		ap->pm_result = async;
--	else
--		ap->pm_result = &rc;
--
- 	ap->pflags |= ATA_PFLAG_PM_PENDING;
- 	ata_for_each_link(link, ap, HOST_FIRST) {
- 		link->eh_info.action |= action;
-@@ -5369,10 +5361,11 @@ static int ata_port_request_pm(struct ata_port *ap, pm_message_t mesg,
- 		WARN_ON(ap->pflags & ATA_PFLAG_PM_PENDING);
- 	}
+ 	sd_printk(KERN_NOTICE, sdkp, "Starting disk\n");
+-	ret = sd_start_stop_device(sdkp, 1);
  
--	return rc;
+-done:
++	cmd[4] |= 1;
++
++	if (sdkp->device->start_stop_pwr_cond)
++		cmd[4] |= 1 << 4;	/* Active or Standby */
++
++	if (!scsi_device_online(sdkp->device)) {
++		ret = -ENODEV;
++		goto error;
++	}
++
++	req = blk_get_request(sdkp->device->request_queue, 0, __GFP_WAIT);
++	if (!req) {
++		ret = -ENOMEM;
++		goto error;
++	}
++
++	sense = kzalloc(SCSI_SENSE_BUFFERSIZE, GFP_NOIO);
++	if (!sense) {
++		ret = -ENOMEM;
++		goto error_sense;
++	}
++
++	req->cmd_len = COMMAND_SIZE(cmd[0]);
++	memcpy(req->cmd, cmd, req->cmd_len);
++	req->sense = sense;
++	req->sense_len = 0;
++	req->retries = SD_MAX_RETRIES;
++	req->timeout = SD_TIMEOUT;
++	req->cmd_type = REQ_TYPE_BLOCK_PC;
++	req->cmd_flags |= REQ_PM | REQ_QUIET | REQ_PREEMPT;
++
++	req->end_io_data = sdkp;
++	blk_execute_rq_nowait(req->q, NULL, req, 1, sd_resume_complete);
++	scsi_disk_put(sdkp);
 +	return 0;
++
++ error_sense:
++	__blk_put_request(req->q, req);
++ error:
+ 	scsi_disk_put(sdkp);
+ 	return ret;
  }
- 
--static int __ata_port_suspend_common(struct ata_port *ap, pm_message_t mesg, int *async)
-+static int __ata_port_suspend_common(struct ata_port *ap, pm_message_t mesg,
-+				     bool async)
- {
- 	/*
- 	 * On some hardware, device fails to respond after spun down
-@@ -5391,7 +5384,7 @@ static int ata_port_suspend_common(struct device *dev, pm_message_t mesg)
- {
- 	struct ata_port *ap = to_ata_port(dev);
- 
--	return __ata_port_suspend_common(ap, mesg, NULL);
-+	return __ata_port_suspend_common(ap, mesg, false);
- }
- 
- static int ata_port_suspend(struct device *dev)
-@@ -5416,7 +5409,7 @@ static int ata_port_poweroff(struct device *dev)
- }
- 
- static int __ata_port_resume_common(struct ata_port *ap, pm_message_t mesg,
--				    int *async)
-+				    bool async)
- {
- 	int rc;
- 
-@@ -5425,18 +5418,19 @@ static int __ata_port_resume_common(struct ata_port *ap, pm_message_t mesg,
- 	return rc;
- }
- 
--static int ata_port_resume_common(struct device *dev, pm_message_t mesg)
-+static int ata_port_resume_common(struct device *dev, pm_message_t mesg,
-+				  bool async)
- {
- 	struct ata_port *ap = to_ata_port(dev);
- 
--	return __ata_port_resume_common(ap, mesg, NULL);
-+	return __ata_port_resume_common(ap, mesg, async);
- }
- 
- static int ata_port_resume(struct device *dev)
- {
- 	int rc;
- 
--	rc = ata_port_resume_common(dev, PMSG_RESUME);
-+	rc = ata_port_resume_common(dev, PMSG_RESUME, true);
- 	if (!rc) {
- 		pm_runtime_disable(dev);
- 		pm_runtime_set_active(dev);
-@@ -5477,7 +5471,7 @@ static int ata_port_runtime_suspend(struct device *dev)
- 
- static int ata_port_runtime_resume(struct device *dev)
- {
--	return ata_port_resume_common(dev, PMSG_AUTO_RESUME);
-+	return ata_port_resume_common(dev, PMSG_AUTO_RESUME, false);
- }
- 
- static const struct dev_pm_ops ata_port_pm_ops = {
-@@ -5498,15 +5492,19 @@ static const struct dev_pm_ops ata_port_pm_ops = {
-  * level. sas suspend/resume is async to allow parallel port recovery
-  * since sas has multiple ata_port instances per Scsi_Host.
-  */
--int ata_sas_port_async_suspend(struct ata_port *ap, int *async)
-+int ata_sas_port_async_suspend(struct ata_port *ap)
- {
--	return __ata_port_suspend_common(ap, PMSG_SUSPEND, async);
-+	int rc;
-+	rc = __ata_port_suspend_common(ap, PMSG_SUSPEND, true);
-+	return rc;
- }
- EXPORT_SYMBOL_GPL(ata_sas_port_async_suspend);
- 
--int ata_sas_port_async_resume(struct ata_port *ap, int *async)
-+int ata_sas_port_async_resume(struct ata_port *ap)
- {
--	return __ata_port_resume_common(ap, PMSG_RESUME, async);
-+	int rc;
-+	rc = __ata_port_resume_common(ap, PMSG_RESUME, true);
-+	return rc;
- }
- EXPORT_SYMBOL_GPL(ata_sas_port_async_resume);
- 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 92d7797..a71dac9 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -4070,7 +4070,7 @@ static void ata_eh_handle_port_suspend(struct ata_port *ap)
- 
- 	ata_acpi_set_state(ap, ap->pm_mesg);
-  out:
--	/* report result */
-+	/* update the flags */
- 	spin_lock_irqsave(ap->lock, flags);
- 
- 	ap->pflags &= ~ATA_PFLAG_PM_PENDING;
-@@ -4079,11 +4079,6 @@ static void ata_eh_handle_port_suspend(struct ata_port *ap)
- 	else if (ap->pflags & ATA_PFLAG_FROZEN)
- 		ata_port_schedule_eh(ap);
- 
--	if (ap->pm_result) {
--		*ap->pm_result = rc;
--		ap->pm_result = NULL;
--	}
--
- 	spin_unlock_irqrestore(ap->lock, flags);
- 
- 	return;
-@@ -4135,13 +4130,9 @@ static void ata_eh_handle_port_resume(struct ata_port *ap)
- 	/* tell ACPI that we're resuming */
- 	ata_acpi_on_resume(ap);
- 
--	/* report result */
-+	/* update the flags */
- 	spin_lock_irqsave(ap->lock, flags);
- 	ap->pflags &= ~(ATA_PFLAG_PM_PENDING | ATA_PFLAG_SUSPENDED);
--	if (ap->pm_result) {
--		*ap->pm_result = rc;
--		ap->pm_result = NULL;
--	}
- 	spin_unlock_irqrestore(ap->lock, flags);
- }
- #endif /* CONFIG_PM */
-diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index d289583..9a3c78c 100644
---- a/drivers/scsi/libsas/sas_ata.c
-+++ b/drivers/scsi/libsas/sas_ata.c
-@@ -751,8 +751,7 @@ void sas_suspend_sata(struct asd_sas_port *port)
- 		if (sata->ap->pm_mesg.event == PM_EVENT_SUSPEND)
- 			continue;
- 
--		sata->pm_result = -EIO;
--		ata_sas_port_async_suspend(sata->ap, &sata->pm_result);
-+		sata->pm_result = ata_sas_port_async_suspend(sata->ap);
- 	}
- 	mutex_unlock(&port->ha->disco_mutex);
- 
-@@ -776,8 +775,7 @@ void sas_resume_sata(struct asd_sas_port *port)
- 		if (sata->ap->pm_mesg.event == PM_EVENT_ON)
- 			continue;
- 
--		sata->pm_result = -EIO;
--		ata_sas_port_async_resume(sata->ap, &sata->pm_result);
-+		sata->pm_result = ata_sas_port_async_resume(sata->ap);
- 	}
- 	mutex_unlock(&port->ha->disco_mutex);
- 
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 9b50337..770525e 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -846,7 +846,6 @@ struct ata_port {
- 	struct completion	park_req_pending;
- 
- 	pm_message_t		pm_mesg;
--	int			*pm_result;
- 	enum ata_lpm_policy	target_lpm_policy;
- 
- 	struct timer_list	fastdrain_timer;
-@@ -1138,8 +1137,8 @@ extern bool ata_link_offline(struct ata_link *link);
- #ifdef CONFIG_PM
- extern int ata_host_suspend(struct ata_host *host, pm_message_t mesg);
- extern void ata_host_resume(struct ata_host *host);
--extern int ata_sas_port_async_suspend(struct ata_port *ap, int *async);
--extern int ata_sas_port_async_resume(struct ata_port *ap, int *async);
-+extern int ata_sas_port_async_suspend(struct ata_port *ap);
-+extern int ata_sas_port_async_resume(struct ata_port *ap);
- #else
- static inline int ata_sas_port_async_suspend(struct ata_port *ap, int *async)
- {
+
