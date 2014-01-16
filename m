@@ -1,89 +1,59 @@
-From: "Gates, Matt" <matthew.gates@hp.com>
-Subject: RE: [PATCH 25/41] hpsa: teach hpsa_device_reset to do either target
- or lun reset
-Date: Thu, 16 Jan 2014 13:33:07 +0000
-Message-ID: <5D28DBE3F277E24398C603139EA7DD3E0CACC0BC@G6W2500.americas.hpqcorp.net>
-References: <20140115223354.5061.50276.stgit@beardog.cce.hp.com>
- <20140115223826.5061.13848.stgit@beardog.cce.hp.com>
- <52D79A1A.5060409@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g6t0185.atlanta.hp.com ([15.193.32.62]:47559 "EHLO
-	g6t0185.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752346AbaAPNeJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Jan 2014 08:34:09 -0500
-In-Reply-To: <52D79A1A.5060409@suse.de>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+From: Sagi Grimberg <sagig@mellanox.com>
+Subject: [PATCH v1 5/7] IB/isert: Accept RDMA_WRITE completions
+Date: Thu, 16 Jan 2014 15:55:54 +0200
+Message-ID: <1389880556-21059-6-git-send-email-sagig@mellanox.com>
+References: <1389880556-21059-1-git-send-email-sagig@mellanox.com>
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1389880556-21059-1-git-send-email-sagig@mellanox.com>
+Sender: target-devel-owner@vger.kernel.org
+To: nab@daterainc.com
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, martin.petersen@oracle.com, oren@mellanox.com
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, "Stephen M. Cameron" <scameron@beardog.cce.hp.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>
-Cc: "stephenmcameron@gmail.com" <stephenmcameron@gmail.com>, "mikem@beardog.cce.hp.com" <mikem@beardog.cce.hp.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Teel, Scott Stacy" <scott.stacy.teel@hp.com>
 
-SGkgSGFubmVzLA0KDQpKdXN0IHdhbnQgdG8gY2hpbWUgaW4gdG8gY2xhcmlmeSB0aGF0IGluIHRo
-ZSBjYXNlIG9mIGEgJ2RldmljZSByZXNldCcsIEkgdGhpbmsgdGhlIGRyaXZlcidzIHVzZSBvZiBM
-VU4gUmVzZXQgdG8gdGhlIFNtYXJ0IEFycmF5IGNvbnRyb2xsZXIgaXMgdGhlIGNvcnJlY3QgY2hv
-aWNlIGhlcmUuICBUaGlzIGlzIGJlY2F1c2UgdGhlICdkZXZpY2UnIGlzIGFjdHVhbGx5IGEgc2lu
-Z2xlIGxvZ2ljYWwgdW5pdCBvbiB0aGUgY29udHJvbGxlciAobG9naWNhbCBSQUlEIHZvbHVtZSku
-ICBTZW5kaW5nIGEgVGFyZ2V0IFJlc2V0IHRvIHRoZSBjb250cm9sbGVyIHdvdWxkIGNhdXNlIGl0
-IHRvIHJlc2V0ICphbGwqIGl0cyBsb2dpY2FsIHVuaXRzIChpLmUuLCBhYm9ydCAqYWxsKiBwZW5k
-aW5nIGNvbW1hbmRzIG9uIHRoZSBlbnRpcmUgY29udHJvbGxlciwgbm90IGp1c3QgdGhpcyBzaW5n
-bGUgZGV2aWNlKSwgd2hpY2ggaXNuJ3Qgd2hhdCB3ZSB3YW50IGhlcmUsIEkgZG9uJ3QgdGhpbmsu
-DQoNClNvLCBJIGxpa2UgdGhlIGNvZGUgYXMgd3JpdHRlbiBpbiB0aGUgc2Vuc2UgdGhhdCBpdCdz
-IGRvaW5nIGEgTFVOIFJlc2V0IHRvIHRoZSBjb250cm9sbGVyLiAgSSB3YXNuJ3Qgc3VyZSBpZiB5
-b3VyIHJlcGx5IGJlbG93IGltcGxpZWQgeW91IHRob3VnaHQgYSBUYXJnZXQgUmVzZXQgd2FzIGNv
-cnJlY3QgaW5zdGVhZCwgb3IgaWYgeW91IHdlcmUganVzdCBzdWdnZXN0aW5nIHRoZSBjb3JyZWN0
-IHVzZSBvZiBlaF9YIGNhbGxiYWNrcy4uLiBzbyBhZ2FpbiwganVzdCB3YW50ZWQgdG8gY2xhcmlm
-eSB0aGlzIG9uZSBkZXRhaWwuDQoNClRoYW5rcywNCg0KTWF0dA0KDQo+IC0tLS0tT3JpZ2luYWwg
-TWVzc2FnZS0tLS0tDQo+IEZyb206IEhhbm5lcyBSZWluZWNrZSBbbWFpbHRvOmhhcmVAc3VzZS5k
-ZV0NCj4gU2VudDogVGh1cnNkYXksIEphbnVhcnkgMTYsIDIwMTQgMjozNyBBTQ0KPiBUbzogU3Rl
-cGhlbiBNLiBDYW1lcm9uOyBqYm90dG9tbGV5QHBhcmFsbGVscy5jb20NCj4gQ2M6IHN0ZXBoZW5t
-Y2FtZXJvbkBnbWFpbC5jb207IG1pa2VtQGJlYXJkb2cuY2NlLmhwLmNvbTsgR2F0ZXMsIE1hdHQ7
-DQo+IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnOyBUZWVsLCBTY290dCBTdGFjeQ0KPiBTdWJq
-ZWN0OiBSZTogW1BBVENIIDI1LzQxXSBocHNhOiB0ZWFjaCBocHNhX2RldmljZV9yZXNldCB0byBk
-byBlaXRoZXINCj4gdGFyZ2V0IG9yIGx1biByZXNldA0KPiANCj4gT24gMDEvMTUvMjAxNCAxMToz
-OCBQTSwgU3RlcGhlbiBNLiBDYW1lcm9uIHdyb3RlOg0KPiA+IEZyb206IFNjb3R0IFRlZWwgPHNj
-b3R0LnRlZWxAaHAuY29tPg0KPiA+DQo+ID4gU2lnbmVkLW9mZi1ieTogU2NvdHQgVGVlbCA8c2Nv
-dHQudGVlbEBocC5jb20+DQo+ID4gQWNrZWQtYnk6IFN0ZXBoZW4gTS4gQ2FtZXJvbiA8c2NhbWVy
-b25AYmVhcmRvZy5jY2UuaHAuY29tPg0KPiA+IC0tLQ0KPiA+ICBkcml2ZXJzL3Njc2kvaHBzYS5j
-IHwgICAgOSArKysrKy0tLS0NCj4gPiAgMSBmaWxlcyBjaGFuZ2VkLCA1IGluc2VydGlvbnMoKyks
-IDQgZGVsZXRpb25zKC0pDQo+ID4NCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL2hwc2Eu
-YyBiL2RyaXZlcnMvc2NzaS9ocHNhLmMNCj4gPiBpbmRleCA5NjI4ZTEyLi43Y2FiOTVmIDEwMDY0
-NA0KPiA+IC0tLSBhL2RyaXZlcnMvc2NzaS9ocHNhLmMNCj4gPiArKysgYi9kcml2ZXJzL3Njc2kv
-aHBzYS5jDQo+ID4gQEAgLTE4NTgsNyArMTg1OCw4IEBAIG91dDoNCj4gPiAgCXJldHVybiByYzsN
-Cj4gPiAgfQ0KPiA+DQo+ID4gLXN0YXRpYyBpbnQgaHBzYV9zZW5kX3Jlc2V0KHN0cnVjdCBjdGxy
-X2luZm8gKmgsIHVuc2lnbmVkIGNoYXINCj4gKnNjc2kzYWRkcikNCj4gPiArc3RhdGljIGludCBo
-cHNhX3NlbmRfcmVzZXQoc3RydWN0IGN0bHJfaW5mbyAqaCwgdW5zaWduZWQgY2hhcg0KPiAqc2Nz
-aTNhZGRyLA0KPiA+ICsJdTggcmVzZXRfdHlwZSkNCj4gPiAgew0KPiA+ICAJaW50IHJjID0gSU9f
-T0s7DQo+ID4gIAlzdHJ1Y3QgQ29tbWFuZExpc3QgKmM7DQo+ID4gQEAgLTE4NzIsOCArMTg3Myw4
-IEBAIHN0YXRpYyBpbnQgaHBzYV9zZW5kX3Jlc2V0KHN0cnVjdCBjdGxyX2luZm8gKmgsDQo+IHVu
-c2lnbmVkIGNoYXIgKnNjc2kzYWRkcikNCj4gPiAgCX0NCj4gPg0KPiA+ICAJLyogZmlsbF9jbWQg
-Y2FuJ3QgZmFpbCBoZXJlLCBubyBkYXRhIGJ1ZmZlciB0byBtYXAuICovDQo+ID4gLQkodm9pZCkg
-ZmlsbF9jbWQoYywgSFBTQV9ERVZJQ0VfUkVTRVRfTVNHLCBoLA0KPiA+IC0JCQlOVUxMLCAwLCAw
-LCBzY3NpM2FkZHIsIFRZUEVfTVNHKTsNCj4gPiArCSh2b2lkKSBmaWxsX2NtZChjLCBIUFNBX0RF
-VklDRV9SRVNFVF9NU0csIGgsIE5VTEwsIDAsIDAsIHNjc2kzYWRkciwNCj4gVFlQRV9NU0cpOw0K
-PiA+ICsJYy0+UmVxdWVzdC5DREJbMV0gPSByZXNldF90eXBlOyAvKiBmaWxsX2NtZCBkZWZhdWx0
-cyB0byBMVU4gcmVzZXQNCj4gdHlwZSAqLw0KPiA+ICAJaHBzYV9zY3NpX2RvX3NpbXBsZV9jbWRf
-Y29yZShoLCBjKTsNCj4gPiAgCS8qIG5vIHVubWFwIG5lZWRlZCBoZXJlIGJlY2F1c2Ugbm8gZGF0
-YSB4ZmVyLiAqLw0KPiA+DQo+ID4gQEAgLTMzOTcsNyArMzM5OCw3IEBAIHN0YXRpYyBpbnQgaHBz
-YV9laF9kZXZpY2VfcmVzZXRfaGFuZGxlcihzdHJ1Y3QNCj4gc2NzaV9jbW5kICpzY3NpY21kKQ0K
-PiA+ICAJZGV2X3dhcm4oJmgtPnBkZXYtPmRldiwgInJlc2V0dGluZyBkZXZpY2UgJWQ6JWQ6JWQ6
-JWRcbiIsDQo+ID4gIAkJaC0+c2NzaV9ob3N0LT5ob3N0X25vLCBkZXYtPmJ1cywgZGV2LT50YXJn
-ZXQsIGRldi0+bHVuKTsNCj4gPiAgCS8qIHNlbmQgYSByZXNldCB0byB0aGUgU0NTSSBMVU4gd2hp
-Y2ggdGhlIGNvbW1hbmQgd2FzIHNlbnQgdG8gKi8NCj4gPiAtCXJjID0gaHBzYV9zZW5kX3Jlc2V0
-KGgsIGRldi0+c2NzaTNhZGRyKTsNCj4gPiArCXJjID0gaHBzYV9zZW5kX3Jlc2V0KGgsIGRldi0+
-c2NzaTNhZGRyLCBIUFNBX1JFU0VUX1RZUEVfTFVOKTsNCj4gPiAgCWlmIChyYyA9PSAwICYmIHdh
-aXRfZm9yX2RldmljZV90b19iZWNvbWVfcmVhZHkoaCwgZGV2LT5zY3NpM2FkZHIpID09DQo+IDAp
-DQo+ID4gIAkJcmV0dXJuIFNVQ0NFU1M7DQo+ID4NCj4gPg0KPiBXb3VsZCB5b3UgbWluZCB1c2lu
-ZyB0aGUgY29ycmVjdCBlaF9YIGNhbGxiYWNrcyBoZXJlPw0KPiBMVU4gUmVzZXQgaXMgX25vdF8g
-aWRlbnRpY2FsIHRvIFRBUkdFVCBSZXNldCAoY29uY2VwdHVhbGx5LCBhdA0KPiBsZWFzdCkuIEFu
-ZCBJJ20gY3VycmVudGx5IHRyeWluZyB0byBkaXNlbnRhbmdsZSB0aG9zZTsNCj4gaWRlYSBpcyB0
-byBoYXZlIHRoZSBhY3R1YWwgZGV2aWNlIGFzIHRoZSBhcmd1bWVudCwgbm90IHRoZSBjb21tYW5k
-Lg0KPiANCj4gSGF2aW5nIHlldCBhbm90aGVyIGRyaXZlciB3aGljaCBtYW5nbGVzIHRob3NlIG9u
-bHkgc2VydmVzIHRvDQo+IGluY3JlYXNlIHRoZSBwYXRjaCBoZXJlIC4uLg0KPiANCj4gVGhhbmtz
-Lg0KPiANCj4gQ2hlZXJzLA0KPiANCj4gSGFubmVzDQo+IC0tDQo+IERyLiBIYW5uZXMgUmVpbmVj
-a2UJCSAgICAgIHpTZXJpZXMgJiBTdG9yYWdlDQo+IGhhcmVAc3VzZS5kZQkJCSAgICAgICs0OSA5
-MTEgNzQwNTMgNjg4DQo+IFNVU0UgTElOVVggUHJvZHVjdHMgR21iSCwgTWF4ZmVsZHN0ci4gNSwg
-OTA0MDkgTsO8cm5iZXJnDQo+IEdGOiBKLiBIYXduLCBKLiBHdWlsZCwgRi4gSW1lbmTDtnJmZmVy
-LCBIUkIgMTY3NDYgKEFHIE7DvHJuYmVyZykNCg==
+In case of protected transactions, we will need to check the
+protection status of the transaction before sending SCSI response.
+So be ready for RDMA_WRITE completions. currently we don't ask
+for these completions, but for T10-PI we will.
+
+Signed-off-by: Sagi Grimberg <sagig@mellanox.com>
+---
+ drivers/infiniband/ulp/isert/ib_isert.c |   17 +++++++++++++++--
+ 1 files changed, 15 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/infiniband/ulp/isert/ib_isert.c b/drivers/infiniband/ulp/isert/ib_isert.c
+index e5159ee..e4352c8 100644
+--- a/drivers/infiniband/ulp/isert/ib_isert.c
++++ b/drivers/infiniband/ulp/isert/ib_isert.c
+@@ -1602,6 +1602,18 @@ isert_completion_put(struct iser_tx_desc *tx_desc, struct isert_cmd *isert_cmd,
+ }
+ 
+ static void
++isert_completion_rdma_write(struct iser_tx_desc *tx_desc,
++			    struct isert_cmd *isert_cmd)
++{
++	struct iscsi_cmd *cmd = isert_cmd->iscsi_cmd;
++	struct isert_conn *isert_conn = isert_cmd->conn;
++	struct isert_device *device = isert_conn->conn_device;
++
++	device->unreg_rdma_mem(isert_cmd, isert_conn);
++	isert_put_response(isert_conn->conn, cmd);
++}
++
++static void
+ isert_completion_rdma_read(struct iser_tx_desc *tx_desc,
+ 			   struct isert_cmd *isert_cmd)
+ {
+@@ -1721,8 +1733,9 @@ __isert_send_completion(struct iser_tx_desc *tx_desc,
+ 					  isert_conn, ib_dev);
+ 		break;
+ 	case ISER_IB_RDMA_WRITE:
+-		pr_err("isert_send_completion: Got ISER_IB_RDMA_WRITE\n");
+-		dump_stack();
++		pr_debug("isert_send_completion: Got ISER_IB_RDMA_WRITE\n");
++		atomic_dec(&isert_conn->post_send_buf_count);
++		isert_completion_rdma_write(tx_desc, isert_cmd);
+ 		break;
+ 	case ISER_IB_RDMA_READ:
+ 		pr_debug("isert_send_completion: Got ISER_IB_RDMA_READ:\n");
+-- 
+1.7.1
