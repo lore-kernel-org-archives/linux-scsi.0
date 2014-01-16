@@ -1,113 +1,120 @@
-From: Loc Ho <lho-qTEPVZfXA3Y@public.gmane.org>
-Subject: [PATCH v8 2/4] Documentation: Add APM X-Gene SoC 15Gbps Multi-purpose PHY driver binding documentation
-Date: Thu, 16 Jan 2014 09:09:56 -0700
-Message-ID: <1389888598-29690-3-git-send-email-lho@apm.com>
+From: Loc Ho <lho@apm.com>
+Subject: [PATCH v8 4/4] arm64: Add APM X-Gene SoC 15Gbps Multi-purpose PHY DTS entries
+Date: Thu, 16 Jan 2014 09:09:58 -0700
+Message-ID: <1389888598-29690-5-git-send-email-lho@apm.com>
 References: <1389888598-29690-1-git-send-email-lho@apm.com>
  <1389888598-29690-2-git-send-email-lho@apm.com>
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1389888598-29690-2-git-send-email-lho-qTEPVZfXA3Y@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: olof-nZhT3qVonbNeoWH0uzbU5w@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, dmilburn-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, jcm-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, patches-qTEPVZfXA3Y@public.gmane.org, Loc Ho <lho-qTEPVZfXA3Y@public.gmane.org>, Tuan Phan <tphan-qTEPVZfXA3Y@public.gmane.org>, Suman Tripathi <stripathi-qTEPVZfXA3Y@public.gmane.org>
+ <1389888598-29690-3-git-send-email-lho@apm.com>
+ <1389888598-29690-4-git-send-email-lho@apm.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1389888598-29690-4-git-send-email-lho@apm.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, dmilburn@redhat.com, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Signed-off-by: Loc Ho <lho-qTEPVZfXA3Y@public.gmane.org>
-Signed-off-by: Tuan Phan <tphan-qTEPVZfXA3Y@public.gmane.org>
-Signed-off-by: Suman Tripathi <stripathi-qTEPVZfXA3Y@public.gmane.org>
----
- .../devicetree/bindings/phy/apm-xgene-phy.txt      |   79 ++++++++++++++++++++
- 1 files changed, 79 insertions(+), 0 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/phy/apm-xgene-phy.txt
+This patch adds the DTS entries for the APM X-Gene SoC 15Gbps Multi-purpose
+PHY driver. The PHY for SATA controller 2 and 3 are enabled by default.
 
-diff --git a/Documentation/devicetree/bindings/phy/apm-xgene-phy.txt b/Documentation/devicetree/bindings/phy/apm-xgene-phy.txt
-new file mode 100644
-index 0000000..5f3a65a
---- /dev/null
-+++ b/Documentation/devicetree/bindings/phy/apm-xgene-phy.txt
-@@ -0,0 +1,79 @@
-+* APM X-Gene 15Gbps Multi-purpose PHY nodes
+Signed-off-by: Loc Ho <lho@apm.com>
+Signed-off-by: Tuan Phan <tphan@apm.com>
+Signed-off-by: Suman Tripathi <stripathi@apm.com>
+---
+ arch/arm64/boot/dts/apm-storm.dtsi |   75 ++++++++++++++++++++++++++++++++++++
+ 1 files changed, 75 insertions(+), 0 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/apm-storm.dtsi b/arch/arm64/boot/dts/apm-storm.dtsi
+index 359d7b6..b1e9cc9 100644
+--- a/arch/arm64/boot/dts/apm-storm.dtsi
++++ b/arch/arm64/boot/dts/apm-storm.dtsi
+@@ -176,6 +176,51 @@
+ 				reg-names = "csr-reg";
+ 				clock-output-names = "eth8clk";
+ 			};
 +
-+PHY nodes are defined to describe on-chip 15Gbps Multi-purpose PHY. Each
-+PHY (pair of lanes) has its own node.
++			sataphy1clk: sataphy1clk@1f21c000 {
++				compatible = "apm,xgene-device-clock";
++				#clock-cells = <1>;
++				clocks = <&socplldiv2 0>;
++				clock-names = "socplldiv2";
++				reg = <0x0 0x1f21c000 0x0 0x1000>;
++				reg-names = "csr-reg";
++				clock-output-names = "sataphy1clk";
++				status = "disabled";
++				csr-offset = <0x4>;
++				csr-mask = <0x00>;
++				enable-offset = <0x0>;
++				enable-mask = <0x06>;
++			};
 +
-+Required properties:
-+- compatible		: Shall be "apm,xgene-phy".
-+- reg			: PHY memory resource is the SDS PHY access resource.
-+- #phy-cells		: Shall be 1 as it expects one argument for setting
-+			  the mode of the PHY. Possible values are 0 (SATA),
-+			  1 (SGMII), 2 (PCIe), 3 (USB), and 4 (XFI).
++			sataphy2clk: sataphy1clk@1f22c000 {
++				compatible = "apm,xgene-device-clock";
++				#clock-cells = <1>;
++				clocks = <&socplldiv2 0>;
++				clock-names = "socplldiv2";
++				reg = <0x0 0x1f22c000 0x0 0x1000>;
++				reg-names = "csr-reg";
++				clock-output-names = "sataphy2clk";
++				status = "ok";
++				csr-offset = <0x4>;
++				csr-mask = <0x3a>;
++				enable-offset = <0x0>;
++				enable-mask = <0x06>;
++			};
 +
-+Optional properties:
-+- status		: Shall be "ok" if enabled or "disabled" if disabled.
-+			  Default is "ok".
-+- clocks		: Reference to the clock entry.
-+- apm,tx-eye-tuning	: Manual control to fine tune the capture of the serial
-+			  bit lines from the automatic calibrated position.
-+			  Two set of 3-tuple setting for each (up to 3)
-+			  supported link speed on the host. Range from 0 to
-+			  127 in unit of one bit period. Default is 10.
-+- apm,tx-eye-direction	: Eye tuning manual control direction. 0 means sample
-+			  data earlier than the nominal sampling point. 1 means
-+			  sample data later than the nominal sampling point.
-+			  Two set of 3-tuple setting for each (up to 3)
-+			  supported link speed on the host. Default is 0.
-+- apm,tx-boost-gain	: Frequency boost AC (LSB 3-bit) and DC (2-bit)
-+			  gain control. Two set of 3-tuple setting for each
-+			  (up to 3) supported link speed on the host. Range is
-+			  between 0 to 31 in unit of dB. Default is 3.
-+- apm,tx-amplitude	: Amplitude control. Two set of 3-tuple setting for
-+			  each (up to 3) supported link speed on the host.
-+			  Range is between 0 to 199500 in unit of uV.
-+			  Default is 199500 uV.
-+- apm,tx-pre-cursor1	: 1st pre-cursor emphasis taps control. Two set of
-+			  3-tuple setting for each (up to 3) supported link
-+			  speed on the host. Range is 0 to 273000 in unit of
-+			  uV. Default is 0.
-+- apm,tx-pre-cursor2	: 2st pre-cursor emphasis taps control. Two set of
-+			  3-tuple setting for each (up to 3) supported link
-+			  speed on the host. Range is 0 to 127400 in unit uV.
-+			  Default is 0x0.
-+- apm,tx-post-cursor	: Post-cursor emphasis taps control. Two set of
-+			  3-tuple setting for Gen1, Gen2, and Gen3. Range is
-+			  between 0 to 0x1f in unit of 18.2mV. Default is 0xf.
-+- apm,tx-speed		: Tx operating speed. One set of 3-tuple for each
-+			  supported link speed on the host.
-+			   0 = 1-2Gbps
-+			   1 = 2-4Gbps (1st tuple default)
-+			   2 = 4-8Gbps
-+			   3 = 8-15Gbps (2nd tuple default)
-+			   4 = 2.5-4Gbps
-+			   5 = 4-5Gbps
-+			   6 = 5-6Gbps
-+			   7 = 6-16Gbps (3rd tuple default)
++			sataphy3clk: sataphy1clk@1f23c000 {
++				compatible = "apm,xgene-device-clock";
++				#clock-cells = <1>;
++				clocks = <&socplldiv2 0>;
++				clock-names = "socplldiv2";
++				reg = <0x0 0x1f23c000 0x0 0x1000>;
++				reg-names = "csr-reg";
++				clock-output-names = "sataphy3clk";
++				status = "ok";
++				csr-offset = <0x4>;
++				csr-mask = <0x3a>;
++				enable-offset = <0x0>;
++				enable-mask = <0x06>;
++			};
+ 		};
+ 
+ 		serial0: serial@1c020000 {
+@@ -193,5 +238,35 @@
+ 			reg = <0x0 0x17000014 0x0 0x100>;
+ 			mask = <0x1>;
+ 		};
 +
-+NOTE: PHY override parameters are board specific setting.
-+
-+Example:
 +		phy1: phy@1f21a000 {
 +			compatible = "apm,xgene-phy";
 +			reg = <0x0 0x1f21a000 0x0 0x100>;
 +			#phy-cells = <1>;
++			clocks = <&sataphy1clk 0>;
 +			status = "disabled";
++			apm,tx-boost-gain = <30 30 30 30 30 30>;
++			apm,tx-eye-tuning = <2 10 10 2 10 10>;
 +		};
 +
 +		phy2: phy@1f22a000 {
 +			compatible = "apm,xgene-phy";
 +			reg = <0x0 0x1f22a000 0x0 0x100>;
 +			#phy-cells = <1>;
++			clocks = <&sataphy2clk 0>;
 +			status = "ok";
++			apm,tx-boost-gain = <30 30 30 30 30 30>;
++			apm,tx-eye-tuning = <1 10 10 2 10 10>;
 +		};
 +
 +		phy3: phy@1f23a000 {
 +			compatible = "apm,xgene-phy";
 +			reg = <0x0 0x1f23a000 0x0 0x100>;
 +			#phy-cells = <1>;
++			clocks = <&sataphy3clk 0>;
 +			status = "ok";
++			apm,tx-boost-gain = <31 31 31 31 31 31>;
++			apm,tx-eye-tuning = <2 10 10 2 10 10>;
 +		};
+ 	};
+ };
 -- 
 1.5.5
 
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
