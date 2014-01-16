@@ -1,82 +1,91 @@
-From: Loc Ho <lho@apm.com>
-Subject: Re: [PATCH v9 2/4] Documentation: Add documentation for APM X-Gene
- SoC SATA host controller DTS binding
-Date: Wed, 15 Jan 2014 15:59:27 -0800
-Message-ID: <CAPw-ZT=QXwOVvpgJSL5qU8J2eEuAt3nnXJDfDwPXTTo7z4Fe-A@mail.gmail.com>
-References: <1389769910-15505-1-git-send-email-lho@apm.com>
-	<5905127.tqJ3nFt5cj@wuerfel>
-	<CAPw-ZTmVYfPLUVmtes3Gn8Z=+gyFtLoZxc-QUdHH7-ePjKAG9A@mail.gmail.com>
-	<4632602.a1zUZOeMuh@wuerfel>
-	<CAPw-ZTmn-aNJcLd1mZPRtog_ncq=GC94ULCJb-400oYqERYK5g@mail.gmail.com>
+From: Douglas Gilbert <dgilbert-qazKcTl6WRFWk0Htik3J/w@public.gmane.org>
+Subject: Re: [LSF/MM TOPIC] copy offloading
+Date: Wed, 15 Jan 2014 19:46:34 -0500
+Message-ID: <52D72BEA.4050200@interlog.com>
+References: <20140115202754.GL8102@lenny.home.zabbo.net> <1389827455.5567.602.camel@haakon3.risingtidesystems.com>
+Reply-To: dgilbert-qazKcTl6WRFWk0Htik3J/w@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod5og112.obsmtp.com ([64.18.0.24]:32946 "HELO
-	exprod5og112.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751890AbaAOX7a (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jan 2014 18:59:30 -0500
-Received: by mail-qc0-f172.google.com with SMTP id c9so1711992qcz.3
-        for <linux-scsi@vger.kernel.org>; Wed, 15 Jan 2014 15:59:29 -0800 (PST)
-In-Reply-To: <CAPw-ZTmn-aNJcLd1mZPRtog_ncq=GC94ULCJb-400oYqERYK5g@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1389827455.5567.602.camel-XoQW25Eq2zviZyQQd+hFbcojREIfoBdhmpATvIKMPHk@public.gmane.org>
+Sender: linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: "Nicholas A. Bellinger" <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>, Zach Brown <zab-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: lsf-pc-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Mark Rutland <mark.rutland@arm.com>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Suman Tripathi <stripathi@apm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "jcm@redhat.com" <jcm@redhat.com>, "patches@apm.com" <patches@apm.com>, "tj@kernel.org" <tj@kernel.org>, "dmilburn@redhat.com" <dmilburn@redhat.com>, "olof@lixom.net" <olof@lixom.net>, Tuan Phan <tphan@apm.com>
 
-Hi,
-
->>> >> >> +- clocks             : Reference to the clock entry.
->>> >> >> +- phys                       : PHY reference with parameter 0.
->>> >> >
->>> >> > The specific value of the phy-specifier shouldn't matter to this
->>> >> > binding. What should matter is what it logically corresponds to.
->>> >>
->>> >> I not quite following this. Are you suggest that I drop the value 0.
->>> >> In the binding, one needs to specify the mode of operation - 0 is for
->>> >> SATA. Can you explain more?
->>> >
->>> > The SATA device should not care what the argument for the PHY
->>> > device is. You could connect the same device to another PHY
->>> > that has a different set of arguments, which is the whole point
->>> > of abstracting it.
->>> >
->>>
->>> I understand what you wrote here. We should not have an argument from
->>> the host controller. Then my question is how should the PHY node
->>> indicates that it needs to be configured itself as an SATA PHY?
+On 14-01-15 06:10 PM, Nicholas A. Bellinger wrote:
+> On Wed, 2014-01-15 at 12:27 -0800, Zach Brown wrote:
+>> Discussing copy offloading at LSF is appropriate because it can involve
+>> so many layers of the stack:
 >>
->> The "phys" property should specify whatever the configuration of
->> the phy device is supposed to be. It's just not the business of
->> the sata driver or the sata binding to know what that configuration
->> is.
+>>   - high level syscall interface
+>>   - in-kernel high level entry point for nfsd
+>>   - fs specific implementations (btrfs and ocfs2 cow, nfs)
+>>   - vfs helper for offloading block copies for ext*,xfs
+>>   - bio offload requests for cow block devices like bcache/dm-cache
+>>   - encoding offload bios into scsi reqs
+>>   - processing virt guest device offload requests with host syscalls
+>>
+>> Getting the user and in-kernel interfaces right to support all these
+>> moving parts has proven tricky.  The more input, the better.
+>>
+>> It's been a while since I sent out a refreshed version of the series.
+>> That'll be remedied before LSF rolls around :).
 >>
 >
-> Here is what I have and I am trying to piece this together:
+> +1
 >
-> phy1 {
->    #phy-cells = <0>;  /* No parameter as suggest by Mark */
-> };
->
-> sata1 {
->     :::
->     phys = <&phy1>;
-> };
->
-> What I don't get is how does one specify the mode
-> (SATA/USB/SGMII/etc)? As another parameter in the phy1 node?
->
+> Now that EXTENDED_COPY LID1 target mode logic is upstream, I'm really
+> eager to start utilizing it Linux host side.  ;)
 
-May be I misread what Mark mentioned. The binding documentation should
-not specify the requirement of 0. And the binding of the dts should be
-as is:
+Hannes Reinecke and I are preparing a proposal for a
+talk about ODX (a Microsoft acronym: offloaded data
+transfer) also know as "xcopy version 2, lite" by HP.
 
-phy1 {
-   #phy-cells = <1>;
-};
+ODX is a subset of the SCSI xcopy(LID4) for disk to disk
+copies. It uses the new SBC-3 POPULATE TOKEN and WRITE
+USING TOKEN commands. Most uses of xcopy(LID1) today are
+also disk to disk copies so ODX can be considered as an
+enhancement.
 
-sata1 {
-   :::
-   phys = <&phy1 0>;     where 0 indicates the mode of operation?
-};
+There is nothing wrong with xcopy(LID1); at around 15
+years old it has been a little slow to gain traction.
+While we have the file system guys' attention, why not
+show them some new tricks that ODX can do?
 
--Loc
+
+Consider this: (virtual) machines A and B share a storage
+device that supports ODX; machine A wants to send a large
+file to machine B. Machine A can do a POPULATE TOKEN with
+a gather list and gets back a "ROD _token_" which is around
+512 bytes long. It writes that ROD token to a file and
+uses the network to send that file to machine B. Then
+machine B calls WRITE USING TOKEN with that ROD token
+and supplies a scatter list (where it wants to write).
+
+The actual ROD (representation of data) was created
+by the POPULATE TOKEN command and is sitting in
+storage device with "point in time" semantics. This
+trick doesn't depend on a common storage device:
+several storage devices that support xcopy(LID4) and
+that share a SCSI domain can "talk amongst themselves"
+to effect a ROD based copy of data.
+
+We also plan to have a Linux utility showing ODX
+in action.
+
+Doug Gilbert
+
+
+BTW LID1 and LID4 are simply SCSI/T10 jargon often used
+     to distinguish the older generation of xcopy from
+     the recent version. Both will be supported when
+     SPC-4 and SBC-3 become standards, probably later
+     this year. "LID1" actually means a "list identifier
+     length of 1 byte", guess what LID4 stands for.
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
