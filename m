@@ -1,91 +1,31 @@
-From: Douglas Gilbert <dgilbert-qazKcTl6WRFWk0Htik3J/w@public.gmane.org>
-Subject: Re: [LSF/MM TOPIC] copy offloading
-Date: Wed, 15 Jan 2014 19:46:34 -0500
-Message-ID: <52D72BEA.4050200@interlog.com>
-References: <20140115202754.GL8102@lenny.home.zabbo.net> <1389827455.5567.602.camel@haakon3.risingtidesystems.com>
-Reply-To: dgilbert-qazKcTl6WRFWk0Htik3J/w@public.gmane.org
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 00/14] target: Initial support for DIF Type1+Type3 emulation
+Date: Wed, 15 Jan 2014 20:42:11 -0500
+Message-ID: <yq1wqi0wvm4.fsf@sermon.lab.mkp.net>
+References: <1389212157-14540-1-git-send-email-nab@daterainc.com>
+	<52D6CD70.20706@mellanox.com>
+	<1389822920.5567.560.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1389827455.5567.602.camel-XoQW25Eq2zviZyQQd+hFbcojREIfoBdhmpATvIKMPHk@public.gmane.org>
-Sender: linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: "Nicholas A. Bellinger" <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>, Zach Brown <zab-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: lsf-pc-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1389822920.5567.560.camel@haakon3.risingtidesystems.com>
+	(Nicholas A. Bellinger's message of "Wed, 15 Jan 2014 13:55:20 -0800")
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: sagi grimberg <sagig@mellanox.com>, "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Or Gerlitz <ogerlitz@mellanox.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 14-01-15 06:10 PM, Nicholas A. Bellinger wrote:
-> On Wed, 2014-01-15 at 12:27 -0800, Zach Brown wrote:
->> Discussing copy offloading at LSF is appropriate because it can involve
->> so many layers of the stack:
->>
->>   - high level syscall interface
->>   - in-kernel high level entry point for nfsd
->>   - fs specific implementations (btrfs and ocfs2 cow, nfs)
->>   - vfs helper for offloading block copies for ext*,xfs
->>   - bio offload requests for cow block devices like bcache/dm-cache
->>   - encoding offload bios into scsi reqs
->>   - processing virt guest device offload requests with host syscalls
->>
->> Getting the user and in-kernel interfaces right to support all these
->> moving parts has proven tricky.  The more input, the better.
->>
->> It's been a while since I sent out a refreshed version of the series.
->> That'll be remedied before LSF rolls around :).
->>
->
-> +1
->
-> Now that EXTENDED_COPY LID1 target mode logic is upstream, I'm really
-> eager to start utilizing it Linux host side.  ;)
+>>>>> "nab" == Nicholas A Bellinger <nab@linux-iscsi.org> writes:
 
-Hannes Reinecke and I are preparing a proposal for a
-talk about ODX (a Microsoft acronym: offloaded data
-transfer) also know as "xcopy version 2, lite" by HP.
+nab> The issue is that existing fs/bio-integrity.c code always assumes
+nab> client/initiator mode, in that it will attempt to
+nab> bio_integrity_generate() protection information in the submit_bio
+nab> WRITE path, and bio_integrity_verify() of protection information in
+nab> the bio_endio READ completion path.
 
-ODX is a subset of the SCSI xcopy(LID4) for disk to disk
-copies. It uses the new SBC-3 POPULATE TOKEN and WRITE
-USING TOKEN commands. Most uses of xcopy(LID1) today are
-also disk to disk copies so ODX can be considered as an
-enhancement.
+Only if the submit_bio() caller hasn't attached protection information
+already. If you submit a bio with a bip already attached the block layer
+will not generate/verify.
 
-There is nothing wrong with xcopy(LID1); at around 15
-years old it has been a little slow to gain traction.
-While we have the file system guys' attention, why not
-show them some new tricks that ODX can do?
-
-
-Consider this: (virtual) machines A and B share a storage
-device that supports ODX; machine A wants to send a large
-file to machine B. Machine A can do a POPULATE TOKEN with
-a gather list and gets back a "ROD _token_" which is around
-512 bytes long. It writes that ROD token to a file and
-uses the network to send that file to machine B. Then
-machine B calls WRITE USING TOKEN with that ROD token
-and supplies a scatter list (where it wants to write).
-
-The actual ROD (representation of data) was created
-by the POPULATE TOKEN command and is sitting in
-storage device with "point in time" semantics. This
-trick doesn't depend on a common storage device:
-several storage devices that support xcopy(LID4) and
-that share a SCSI domain can "talk amongst themselves"
-to effect a ROD based copy of data.
-
-We also plan to have a Linux utility showing ODX
-in action.
-
-Doug Gilbert
-
-
-BTW LID1 and LID4 are simply SCSI/T10 jargon often used
-     to distinguish the older generation of xcopy from
-     the recent version. Both will be supported when
-     SPC-4 and SBC-3 become standards, probably later
-     this year. "LID1" actually means a "list identifier
-     length of 1 byte", guess what LID4 stands for.
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Martin K. Petersen	Oracle Linux Engineering
