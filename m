@@ -1,66 +1,134 @@
-From: Todd E Brandt <todd.e.brandt@linux.intel.com>
-Subject: Re: Disk spin-up optimization during system resume
-Date: Thu, 16 Jan 2014 14:04:11 -0800
-Message-ID: <20140116220409.GA1183@linux.intel.com>
-References: <20140116180415.GA14515@linux.intel.com>
- <Pine.LNX.4.44L0.1401161441030.1109-100000@iolanthe.rowland.org>
-Reply-To: todd.e.brandt@linux.intel.com
+From: Giridhar Malavali <giridhar.malavali@qlogic.com>
+Subject: Re: [LSF/MM ATTEND] interest in blk-mq, scsi-mq, dm-cache,
+ dm-thinp, dm-*
+Date: Thu, 16 Jan 2014 22:35:46 +0000
+Message-ID: <D63B9804CB63AD4FAAD966037695664647023F7E@avmb2.qlogic.org>
+References: <20140110182714.GA11731@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+	boundary="_000_D63B9804CB63AD4FAAD966037695664647023F7Eavmb2qlogicorg_"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:30007 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750750AbaAPWEJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Jan 2014 17:04:09 -0500
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.1401161441030.1109-100000@iolanthe.rowland.org>
+Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:46689 "EHLO
+	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750750AbaAPWfs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 16 Jan 2014 17:35:48 -0500
+Received: from pps.filterd (m0045602.ppops.net [127.0.0.1])
+	by mx0a-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id s0GMYwOH019840
+	for <linux-scsi@vger.kernel.org>; Thu, 16 Jan 2014 14:35:48 -0800
+Received: from avcashub1.qlogic.com (avcashub2.qlogic.com [198.70.193.116])
+	by mx0a-0016ce01.pphosted.com with ESMTP id 1h9ybuk7ap-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Thu, 16 Jan 2014 14:35:48 -0800
+In-Reply-To: <20140110182714.GA11731@redhat.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Phillip Susi <psusi@ubuntu.com>, Aaron Lu <aaron.lu@intel.com>, Tejun Heo <tj@kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Mike Snitzer <snitzer@redhat.com>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Thu, Jan 16, 2014 at 03:05:40PM -0500, Alan Stern wrote:
-> On Thu, 16 Jan 2014, Todd E Brandt wrote:
-> 
-> > > Does this plan sound reasonable to everyone?  Are there important
-> > > aspects I haven't considered (such as interactions between the SCSI and
-> > > ATA layers)?
-> > > 
-> > > Alan Stern
-> > > 
-> > 
-> > Both approaches employ non-blocking resume of the scsi disks so why don't
-> > we treat these two patch sets as parts one and two. My patch just spins
-> > everything up but sets everything to non-blocking, so it will take care
-> > of the most common use cases. Your patch will then fine-tune that behavior
-> > to only spin up those disks that are actually needed. I don't think there
-> > are any serious conflicts between the two patch sets.
-> 
-> Hmmm.  In your 2/2 patch, sd_resume_complete() gets called in atomic
-> context.  I would need a process context in order to carry out a
-> runtime resume.  Any suggestions?
+--_000_D63B9804CB63AD4FAAD966037695664647023F7Eavmb2qlogicorg_
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <FFBDCE9C33CF8E428F878ED77BE6A758@qlogic.com>
+Content-Transfer-Encoding: quoted-printable
 
-The complete call is really just there to printk any errors and free
-the sense buffer. Why would you want to carry out a runtime resume in
-it?
 
-> 
-> Also, I don't understand the point of your 1/2 patch.  If the whole
-> point of that patch was to carry out the ATA port resume asynchronously
-> ("thus allowing the next device in the pm queue to resume"), doesn't
-> device_enable_async_suspend() already do that for you?
-> 
-> Alan Stern
-> 
 
-The device_enable_async_suspend call is used to set a pm flag which lets
-the power manager know that this device can be added to the async suspend
-queue. Basically that means that it can be suspended/resumed in parallel
-with all the other async devices, but resume still waits for all those
-devices to finish before completing system resume.
+On 1/10/14 10:27 AM, "Mike Snitzer" <snitzer@redhat.com> wrote:
 
-My patch makes ata port and scsi disk resume 'non-blocking' (asynchronous
-with respect to system resume). Which means once they're called the power
-manager pays no more attention to them and will complete system resume
-whenever. Both the power manager and the ata subsystems call these 
-features 'asynchronous' so it can be confusing.
+>I would like to attend to participate in discussions related to topics
+>listed in the subject.  As a maintainer of DM I'd be interested to
+>learn/discuss areas that should become a development focus in the months
+>following LSF.
+
++1 for scsi-mq.=20
+
+-- Giri
+
+>
+>Thanks,
+>Mike
+>--
+>To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+--_000_D63B9804CB63AD4FAAD966037695664647023F7Eavmb2qlogicorg_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
+
+eJ8+Ij1QAQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAADBEREE5NzA5
+Nzc4MUQ0NERCQ0UwNDMwM0U4MjZGMUMxAC0HAQ2ABAACAAAAAgACAAEFgAMADgAAAN4HAQAQABYA
+IwAuAAQAYQEBIIADAA4AAADeBwEAEAAWACMALgAEAGEBAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
+YWlsLk5vdGUAMQgBBIABAEoAAABSZTogW0xTRi9NTSBBVFRFTkRdIGludGVyZXN0IGluIGJsay1t
+cSwgc2NzaS1tcSwgZG0tY2FjaGUsIGRtLXRoaW5wLCBkbS0qAGgXAQOQBgCsDgAAMgAAAAIBfwAB
+AAAAPAAAADxENjNCOTgwNENCNjNBRDRGQUFEOTY2MDM3Njk1NjY0NjQ3MDIzRjdFQGF2bWIyLnFs
+b2dpYy5vcmc+AAsAHw4BAAAAAgEJEAEAAAC5AgAAtQIAAOkDAABMWkZ1lkbqB2EACmZiaWQEAABj
+Y8BwZzEyNTIA/gND8HRleHQB9wKkA+MCAARjaArAc2V0MCDvB20CgwBQEU0yCoAGtAKAln0KgAjI
+OwliMTkOwL8JwxZyCjIWcQKAFWIqCbBzCfAEkGF0BbIOUANgc6JvAYAgRXgRwW4YMF0GUnYEkBe2
+AhByAMB0fQhQbhoxECAFwAWgG2RkmiADUiAQIheyXHYIkOR3awuAZDUdUwTwB0ANF3AwCnEX8mJr
+bWsGcwGQACAgQk1fQuBFR0lOfQr8AfEL8lpsC4BlCoEhpE8DoDEWLx6QIrA0IpAwOjKANyBBTSwg
+IhjQJmsZ4QMAdHoEkCIgNDxzJDRACXER0HQuYQWgbT4gdwNgECA62SGcPkkl8AhgbBxgIaD7I/EY
+kCAYgBAgHcAoEgqxvnQOUAUgGIAZ4AuAIA3h9GN1BBBpAiAEIAlwC2D3HEIoIRiQcA5QDgAm5SGg
+Jx9gHFEpsXRoGeBzdWxiagWQJZAgI3AEIGF+IADAC4ABkCGxBcAZMCCgRE0gSSccYGIpki8boQeQ
+KuQrt2UKwG4v9ynlKEAJcGEEICzQGIAtAP5oJ4MvUCWxGeAt4AEAGjDdCQBwB4ACMBxwbyoRLJbb
+BGACMGgrpwIQbAkAA/BBGcAgTFNGLiGcKx4xNBEFwATwAJAtbXGDLYAhnC0tIEdpBRDbJm0m1lQZ
+oR9QLCbWI9LvJtY5cDrXKDB1AIAtIATyuy9RHIRoBAAnwR9gOi0APyiDLOEhoiOwPdohoXV4fi04
+AiSQC4Em5SzSBuBkznkuoi3hB5BzYRnRKCEVAMBqBbBkA3BvQHa5GDByLiPwBKAqsC4FsP5nO8cF
+sDTRREYpoQIQKEGFLZBoAkBwOi8vRN2qL0Q3LUcyLkfAbQlQByGrFUJLgAAAAB8AQgABAAAAJAAA
+AEcAaQByAGkAZABoAGEAcgAgAE0AYQBsAGEAdgBhAGwAaQAAAB8AZQABAAAAOgAAAGcAaQByAGkA
+ZABoAGEAcgAuAG0AYQBsAGEAdgBhAGwAaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AZAAB
+AAAACgAAAFMATQBUAFAAAAAAAAIBQQABAAAAgAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgEcA
+aQByAGkAZABoAGEAcgAgAE0AYQBsAGEAdgBhAGwAaQAAAFMATQBUAFAAAABnAGkAcgBpAGQAaABh
+AHIALgBtAGEAbABhAHYAYQBsAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwACXQEAAAA6AAAA
+ZwBpAHIAaQBkAGgAYQByAC4AbQBhAGwAYQB2AGEAbABpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAA
+AAAAHwDlXwEAAABCAAAAcwBpAHAAOgBnAGkAcgBpAGQAaABhAHIALgBtAGEAbABhAHYAYQBsAGkA
+QABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfABoMAQAAACQAAABHAGkAcgBpAGQAaABhAHIAIABN
+AGEAbABhAHYAYQBsAGkAAAAfAB8MAQAAADoAAABnAGkAcgBpAGQAaABhAHIALgBtAGEAbABhAHYA
+YQBsAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfAB4MAQAAAAoAAABTAE0AVABQAAAAAAAC
+ARkMAQAAAIAAAAAAAAAAgSsfpL6jEBmdbgDdAQ9UAgAAAIBHAGkAcgBpAGQAaABhAHIAIABNAGEA
+bABhAHYAYQBsAGkAAABTAE0AVABQAAAAZwBpAHIAaQBkAGgAYQByAC4AbQBhAGwAYQB2AGEAbABp
+AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AAV0BAAAAOgAAAGcAaQByAGkAZABoAGEAcgAuAG0A
+YQBsAGEAdgBhAGwAaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8A+D8BAAAAJAAAAEcAaQBy
+AGkAZABoAGEAcgAgAE0AYQBsAGEAdgBhAGwAaQAAAB8AI0ABAAAAOgAAAGcAaQByAGkAZABoAGEA
+cgAuAG0AYQBsAGEAdgBhAGwAaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AIkABAAAACgAA
+AFMATQBUAFAAAAAAAAIB+T8BAAAAgAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgEcAaQByAGkA
+ZABoAGEAcgAgAE0AYQBsAGEAdgBhAGwAaQAAAFMATQBUAFAAAABnAGkAcgBpAGQAaABhAHIALgBt
+AGEAbABhAHYAYQBsAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAJXQEAAAA6AAAAZwBpAHIA
+aQBkAGgAYQByAC4AbQBhAGwAYQB2AGEAbABpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAACwBA
+OgEAAAAfABoAAQAAABIAAABJAFAATQAuAE4AbwB0AGUAAAAAAAMA8T8JBAAACwBAOgEAAAADAP0/
+5AQAAAIBCzABAAAAEAAAAA3alwl3gdRNvOBDA+gm8cEDABcAAQAAAEAAOQAAjSNMCxPPAUAACDAH
+SmVMCxPPAQsAAIAIIAYAAAAAAMAAAAAAAABGAAAAABSFAAABAAAAHwAAgIYDAgAAAAAAwAAAAAAA
+AEYBAAAAHgAAAGEAYwBjAGUAcAB0AGwAYQBuAGcAdQBhAGcAZQAAAAAAAQAAAAwAAABlAG4ALQBV
+AFMAAAALAACACCAGAAAAAADAAAAAAAAARgAAAAAGhQAAAAAAAB8ANwABAAAAlAAAAFIAZQA6ACAA
+WwBMAFMARgAvAE0ATQAgAEEAVABUAEUATgBEAF0AIABpAG4AdABlAHIAZQBzAHQAIABpAG4AIABi
+AGwAawAtAG0AcQAsACAAcwBjAHMAaQAtAG0AcQAsACAAZABtAC0AYwBhAGMAaABlACwAIABkAG0A
+LQB0AGgAaQBuAHAALAAgAGQAbQAtACoAAAAfAD0AAQAAAAoAAABSAGUAOgAgAAAAAAADADYAAAAA
+AB8AQhABAAAASAAAADwAMgAwADEANAAwADEAMQAwADEAOAAyADcAMQA0AC4ARwBBADEAMQA3ADMA
+MQBAAHIAZQBkAGgAYQB0AC4AYwBvAG0APgAAAAIBcQABAAAAGwAAAAEBzw4xmlHZKRRVAaVNgvMj
+CtUUKreah/ozgAAfAHAAAQAAAIwAAABbAEwAUwBGAC8ATQBNACAAQQBUAFQARQBOAEQAXQAgAGkA
+bgB0AGUAcgBlAHMAdAAgAGkAbgAgAGIAbABrAC0AbQBxACwAIABzAGMAcwBpAC0AbQBxACwAIABk
+AG0ALQBjAGEAYwBoAGUALAAgAGQAbQAtAHQAaABpAG4AcAAsACAAZABtAC0AKgAAAB8ANRABAAAA
+eAAAADwARAA2ADMAQgA5ADgAMAA0AEMAQgA2ADMAQQBEADQARgBBAEEARAA5ADYANgAwADMANwA2
+ADkANQA2ADYANAA2ADQANwAwADIAMwBGADcARQBAAGEAdgBtAGIAMgAuAHEAbABvAGcAaQBjAC4A
+bwByAGcAPgAAAAMA3j+fTgAAQAAHMEeHYEwLE88BAwAmAAAAAAACAUcAAQAAAC4AAABjPVVTO2E9
+IDtwPVFMb2dpYztsPUFWTUIyLTE0MDExNjIyMzU0NlotNzk0NDIAAAAfABUQAQAAAFgAAABGAEYA
+QgBEAEMARQA5AEMAMwAzAEMARgA4AEUANAAyADgARgA4ADcAOABFAEQANwA3AEIARQA2AEEANwA1
+ADgAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAgEUMAEAAAAMAAAAQgAAALtmi11PAAAAHwD6PwEA
+AAAkAAAARwBpAHIAaQBkAGgAYQByACAATQBhAGwAYQB2AGEAbABpAAAAHwAAgIYDAgAAAAAAwAAA
+AAAAAEYBAAAAFgAAAHUAcwBlAHIALQBhAGcAZQBuAHQAAAAAAAEAAABGAAAATQBpAGMAcgBvAHMA
+bwBmAHQALQBNAGEAYwBPAHUAdABsAG8AbwBrAC8AMQA0AC4AMwAuADgALgAxADMAMAA5ADEAMwAA
+AAAAHwAAgB+k6zOoei5Cvnt54amOVLMBAAAAOAAAAEMAbwBuAHYAZQByAHMAYQB0AGkAbwBuAEkA
+bgBkAGUAeABUAHIAYQBjAGsAaQBuAGcARQB4AAAAAQAAABgBAABJAEkAPQAwADEAMAAxAEMARgAx
+ADMAMABCADQAQwA1ADcAMQA0ADgANABCAEQAMwBBADkAMABCADMANAAwADgANAA2ADkAMQBDADgA
+QwBDAEQARQAzADMAMQA1ADMAOwBTAEIATQBJAEQAPQAzADsAUwAxAD0APAAyADAAMQA0ADAAMQAx
+ADAAMQA4ADIANwAxADQALgBHAEEAMQAxADcAMwAxAEAAcgBlAGQAaABhAHQALgBjAG8AbQA+ADsA
+VgBlAHIAcwBpAG8AbgA9AFYAZQByAHMAaQBvAG4AIAAxADQALgAyACAAKABCAHUAaQBsAGQAIAAz
+ADEAOAAuADAAKQAsACAAUwB0AGEAZwBlAD0ASAAyAAAAAwANNP0/AAAfAACAhgMCAAAAAADAAAAA
+AAAARgEAAAAgAAAAeAAtAG0AcwAtAGgAYQBzAC0AYQB0AHQAYQBjAGgAAAABAAAAAgAAAAAAAAAf
+AACAhgMCAAAAAADAAAAAAAAARgEAAAAiAAAAeAAtAG8AcgBpAGcAaQBuAGEAdABpAG4AZwAtAGkA
+cAAAAAAAAQAAABwAAABbADEAMAAuADIAOQAuADIALgAyADEANgBdAAAA160=
+
+--_000_D63B9804CB63AD4FAAD966037695664647023F7Eavmb2qlogicorg_--
