@@ -1,134 +1,66 @@
-From: Giridhar Malavali <giridhar.malavali@qlogic.com>
-Subject: Re: [LSF/MM ATTEND] interest in blk-mq, scsi-mq, dm-cache,
- dm-thinp, dm-*
-Date: Thu, 16 Jan 2014 22:35:46 +0000
-Message-ID: <D63B9804CB63AD4FAAD966037695664647023F7E@avmb2.qlogic.org>
-References: <20140110182714.GA11731@redhat.com>
+From: Gwendal Grignou <gwendal@google.com>
+Subject: Re: [PATCH/RESEND v2 0/2] Hard disk S3 resume time optimization
+Date: Thu, 16 Jan 2014 14:43:40 -0800
+Message-ID: <CAMHSBOWBPWY=prExE9yX1O0cbejikfCcABbttge9W-9hCbv4Kg@mail.gmail.com>
+References: <20140108005500.GA29556@linux.intel.com> <CAMHSBOXzU3Y=oH1Nzxash0wJvuc6Y9hoOcbvdstyOaO77QQLkA@mail.gmail.com>
+ <20140114144325.GC12131@htj.dyndns.org> <20140114214503.GA1260@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_000_D63B9804CB63AD4FAAD966037695664647023F7Eavmb2qlogicorg_"
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:46689 "EHLO
-	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750750AbaAPWfs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Jan 2014 17:35:48 -0500
-Received: from pps.filterd (m0045602.ppops.net [127.0.0.1])
-	by mx0a-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id s0GMYwOH019840
-	for <linux-scsi@vger.kernel.org>; Thu, 16 Jan 2014 14:35:48 -0800
-Received: from avcashub1.qlogic.com (avcashub2.qlogic.com [198.70.193.116])
-	by mx0a-0016ce01.pphosted.com with ESMTP id 1h9ybuk7ap-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Thu, 16 Jan 2014 14:35:48 -0800
-In-Reply-To: <20140110182714.GA11731@redhat.com>
-Content-Language: en-US
+Received: from mail-qe0-f44.google.com ([209.85.128.44]:49777 "EHLO
+	mail-qe0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751172AbaAPWoA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Jan 2014 17:44:00 -0500
+Received: by mail-qe0-f44.google.com with SMTP id 1so3294374qee.31
+        for <linux-scsi@vger.kernel.org>; Thu, 16 Jan 2014 14:44:00 -0800 (PST)
+In-Reply-To: <20140114214503.GA1260@linux.intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: todd.e.brandt@linux.intel.com
+Cc: Tejun Heo <tj@kernel.org>, Jej B <James.Bottomley@hansenpartnership.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi@vger.kernel.org
 
---_000_D63B9804CB63AD4FAAD966037695664647023F7Eavmb2qlogicorg_
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <FFBDCE9C33CF8E428F878ED77BE6A758@qlogic.com>
-Content-Transfer-Encoding: quoted-printable
+You're right, staggered spinup is not enforced today when the disks
+are behind several ATA ports. Only the disks behind a port multiplier
+are spun up one at a time.
+We are currently waiting for all the device(s) on the slowest port to
+resume to continue.
+Gwendal.
 
-
-
-On 1/10/14 10:27 AM, "Mike Snitzer" <snitzer@redhat.com> wrote:
-
->I would like to attend to participate in discussions related to topics
->listed in the subject.  As a maintainer of DM I'd be interested to
->learn/discuss areas that should become a development focus in the months
->following LSF.
-
-+1 for scsi-mq.=20
-
--- Giri
-
+On Tue, Jan 14, 2014 at 1:45 PM, Todd E Brandt
+<todd.e.brandt@linux.intel.com> wrote:
+> On Tue, Jan 14, 2014 at 09:43:25AM -0500, Tejun Heo wrote:
+>> Hello, Gwendal.
+>>
+>> On Mon, Jan 13, 2014 at 04:36:52PM -0800, Gwendal Grignou wrote:
+>> > Won't this patch defeat staggered spinup at resume? If you have a jbod
+>> > with a smallish power supply, with a 12V rail designed for the steady
+>> > state and 1 or 2 devices spinning up at once, you may be in trouble
+>> > when all the disks will want to spinup in same second.
+>>
+>> Yeah, I think it would.  We never fully solved the staggered spinup
+>> problem and it probably is too late to invest into proper mechanism
+>> for that.  I think an easy workaround would be, say, have a kernel
+>> param which limits the max number of concurrent async wakeups and set
+>> the value to something reasonable - say, 2, which should give us most
+>> of benefits of async wakeup in vast majority of cases while avoiding
+>> blowing up PSUs on larger setups.
 >
->Thanks,
->Mike
->--
->To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
---_000_D63B9804CB63AD4FAAD966037695664647023F7Eavmb2qlogicorg_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
-
-eJ8+Ij1QAQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAADBEREE5NzA5
-Nzc4MUQ0NERCQ0UwNDMwM0U4MjZGMUMxAC0HAQ2ABAACAAAAAgACAAEFgAMADgAAAN4HAQAQABYA
-IwAuAAQAYQEBIIADAA4AAADeBwEAEAAWACMALgAEAGEBAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
-YWlsLk5vdGUAMQgBBIABAEoAAABSZTogW0xTRi9NTSBBVFRFTkRdIGludGVyZXN0IGluIGJsay1t
-cSwgc2NzaS1tcSwgZG0tY2FjaGUsIGRtLXRoaW5wLCBkbS0qAGgXAQOQBgCsDgAAMgAAAAIBfwAB
-AAAAPAAAADxENjNCOTgwNENCNjNBRDRGQUFEOTY2MDM3Njk1NjY0NjQ3MDIzRjdFQGF2bWIyLnFs
-b2dpYy5vcmc+AAsAHw4BAAAAAgEJEAEAAAC5AgAAtQIAAOkDAABMWkZ1lkbqB2EACmZiaWQEAABj
-Y8BwZzEyNTIA/gND8HRleHQB9wKkA+MCAARjaArAc2V0MCDvB20CgwBQEU0yCoAGtAKAln0KgAjI
-OwliMTkOwL8JwxZyCjIWcQKAFWIqCbBzCfAEkGF0BbIOUANgc6JvAYAgRXgRwW4YMF0GUnYEkBe2
-AhByAMB0fQhQbhoxECAFwAWgG2RkmiADUiAQIheyXHYIkOR3awuAZDUdUwTwB0ANF3AwCnEX8mJr
-bWsGcwGQACAgQk1fQuBFR0lOfQr8AfEL8lpsC4BlCoEhpE8DoDEWLx6QIrA0IpAwOjKANyBBTSwg
-IhjQJmsZ4QMAdHoEkCIgNDxzJDRACXER0HQuYQWgbT4gdwNgECA62SGcPkkl8AhgbBxgIaD7I/EY
-kCAYgBAgHcAoEgqxvnQOUAUgGIAZ4AuAIA3h9GN1BBBpAiAEIAlwC2D3HEIoIRiQcA5QDgAm5SGg
-Jx9gHFEpsXRoGeBzdWxiagWQJZAgI3AEIGF+IADAC4ABkCGxBcAZMCCgRE0gSSccYGIpki8boQeQ
-KuQrt2UKwG4v9ynlKEAJcGEEICzQGIAtAP5oJ4MvUCWxGeAt4AEAGjDdCQBwB4ACMBxwbyoRLJbb
-BGACMGgrpwIQbAkAA/BBGcAgTFNGLiGcKx4xNBEFwATwAJAtbXGDLYAhnC0tIEdpBRDbJm0m1lQZ
-oR9QLCbWI9LvJtY5cDrXKDB1AIAtIATyuy9RHIRoBAAnwR9gOi0APyiDLOEhoiOwPdohoXV4fi04
-AiSQC4Em5SzSBuBkznkuoi3hB5BzYRnRKCEVAMBqBbBkA3BvQHa5GDByLiPwBKAqsC4FsP5nO8cF
-sDTRREYpoQIQKEGFLZBoAkBwOi8vRN2qL0Q3LUcyLkfAbQlQByGrFUJLgAAAAB8AQgABAAAAJAAA
-AEcAaQByAGkAZABoAGEAcgAgAE0AYQBsAGEAdgBhAGwAaQAAAB8AZQABAAAAOgAAAGcAaQByAGkA
-ZABoAGEAcgAuAG0AYQBsAGEAdgBhAGwAaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AZAAB
-AAAACgAAAFMATQBUAFAAAAAAAAIBQQABAAAAgAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgEcA
-aQByAGkAZABoAGEAcgAgAE0AYQBsAGEAdgBhAGwAaQAAAFMATQBUAFAAAABnAGkAcgBpAGQAaABh
-AHIALgBtAGEAbABhAHYAYQBsAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwACXQEAAAA6AAAA
-ZwBpAHIAaQBkAGgAYQByAC4AbQBhAGwAYQB2AGEAbABpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAA
-AAAAHwDlXwEAAABCAAAAcwBpAHAAOgBnAGkAcgBpAGQAaABhAHIALgBtAGEAbABhAHYAYQBsAGkA
-QABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfABoMAQAAACQAAABHAGkAcgBpAGQAaABhAHIAIABN
-AGEAbABhAHYAYQBsAGkAAAAfAB8MAQAAADoAAABnAGkAcgBpAGQAaABhAHIALgBtAGEAbABhAHYA
-YQBsAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfAB4MAQAAAAoAAABTAE0AVABQAAAAAAAC
-ARkMAQAAAIAAAAAAAAAAgSsfpL6jEBmdbgDdAQ9UAgAAAIBHAGkAcgBpAGQAaABhAHIAIABNAGEA
-bABhAHYAYQBsAGkAAABTAE0AVABQAAAAZwBpAHIAaQBkAGgAYQByAC4AbQBhAGwAYQB2AGEAbABp
-AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AAV0BAAAAOgAAAGcAaQByAGkAZABoAGEAcgAuAG0A
-YQBsAGEAdgBhAGwAaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8A+D8BAAAAJAAAAEcAaQBy
-AGkAZABoAGEAcgAgAE0AYQBsAGEAdgBhAGwAaQAAAB8AI0ABAAAAOgAAAGcAaQByAGkAZABoAGEA
-cgAuAG0AYQBsAGEAdgBhAGwAaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AIkABAAAACgAA
-AFMATQBUAFAAAAAAAAIB+T8BAAAAgAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgEcAaQByAGkA
-ZABoAGEAcgAgAE0AYQBsAGEAdgBhAGwAaQAAAFMATQBUAFAAAABnAGkAcgBpAGQAaABhAHIALgBt
-AGEAbABhAHYAYQBsAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAJXQEAAAA6AAAAZwBpAHIA
-aQBkAGgAYQByAC4AbQBhAGwAYQB2AGEAbABpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAACwBA
-OgEAAAAfABoAAQAAABIAAABJAFAATQAuAE4AbwB0AGUAAAAAAAMA8T8JBAAACwBAOgEAAAADAP0/
-5AQAAAIBCzABAAAAEAAAAA3alwl3gdRNvOBDA+gm8cEDABcAAQAAAEAAOQAAjSNMCxPPAUAACDAH
-SmVMCxPPAQsAAIAIIAYAAAAAAMAAAAAAAABGAAAAABSFAAABAAAAHwAAgIYDAgAAAAAAwAAAAAAA
-AEYBAAAAHgAAAGEAYwBjAGUAcAB0AGwAYQBuAGcAdQBhAGcAZQAAAAAAAQAAAAwAAABlAG4ALQBV
-AFMAAAALAACACCAGAAAAAADAAAAAAAAARgAAAAAGhQAAAAAAAB8ANwABAAAAlAAAAFIAZQA6ACAA
-WwBMAFMARgAvAE0ATQAgAEEAVABUAEUATgBEAF0AIABpAG4AdABlAHIAZQBzAHQAIABpAG4AIABi
-AGwAawAtAG0AcQAsACAAcwBjAHMAaQAtAG0AcQAsACAAZABtAC0AYwBhAGMAaABlACwAIABkAG0A
-LQB0AGgAaQBuAHAALAAgAGQAbQAtACoAAAAfAD0AAQAAAAoAAABSAGUAOgAgAAAAAAADADYAAAAA
-AB8AQhABAAAASAAAADwAMgAwADEANAAwADEAMQAwADEAOAAyADcAMQA0AC4ARwBBADEAMQA3ADMA
-MQBAAHIAZQBkAGgAYQB0AC4AYwBvAG0APgAAAAIBcQABAAAAGwAAAAEBzw4xmlHZKRRVAaVNgvMj
-CtUUKreah/ozgAAfAHAAAQAAAIwAAABbAEwAUwBGAC8ATQBNACAAQQBUAFQARQBOAEQAXQAgAGkA
-bgB0AGUAcgBlAHMAdAAgAGkAbgAgAGIAbABrAC0AbQBxACwAIABzAGMAcwBpAC0AbQBxACwAIABk
-AG0ALQBjAGEAYwBoAGUALAAgAGQAbQAtAHQAaABpAG4AcAAsACAAZABtAC0AKgAAAB8ANRABAAAA
-eAAAADwARAA2ADMAQgA5ADgAMAA0AEMAQgA2ADMAQQBEADQARgBBAEEARAA5ADYANgAwADMANwA2
-ADkANQA2ADYANAA2ADQANwAwADIAMwBGADcARQBAAGEAdgBtAGIAMgAuAHEAbABvAGcAaQBjAC4A
-bwByAGcAPgAAAAMA3j+fTgAAQAAHMEeHYEwLE88BAwAmAAAAAAACAUcAAQAAAC4AAABjPVVTO2E9
-IDtwPVFMb2dpYztsPUFWTUIyLTE0MDExNjIyMzU0NlotNzk0NDIAAAAfABUQAQAAAFgAAABGAEYA
-QgBEAEMARQA5AEMAMwAzAEMARgA4AEUANAAyADgARgA4ADcAOABFAEQANwA3AEIARQA2AEEANwA1
-ADgAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAgEUMAEAAAAMAAAAQgAAALtmi11PAAAAHwD6PwEA
-AAAkAAAARwBpAHIAaQBkAGgAYQByACAATQBhAGwAYQB2AGEAbABpAAAAHwAAgIYDAgAAAAAAwAAA
-AAAAAEYBAAAAFgAAAHUAcwBlAHIALQBhAGcAZQBuAHQAAAAAAAEAAABGAAAATQBpAGMAcgBvAHMA
-bwBmAHQALQBNAGEAYwBPAHUAdABsAG8AbwBrAC8AMQA0AC4AMwAuADgALgAxADMAMAA5ADEAMwAA
-AAAAHwAAgB+k6zOoei5Cvnt54amOVLMBAAAAOAAAAEMAbwBuAHYAZQByAHMAYQB0AGkAbwBuAEkA
-bgBkAGUAeABUAHIAYQBjAGsAaQBuAGcARQB4AAAAAQAAABgBAABJAEkAPQAwADEAMAAxAEMARgAx
-ADMAMABCADQAQwA1ADcAMQA0ADgANABCAEQAMwBBADkAMABCADMANAAwADgANAA2ADkAMQBDADgA
-QwBDAEQARQAzADMAMQA1ADMAOwBTAEIATQBJAEQAPQAzADsAUwAxAD0APAAyADAAMQA0ADAAMQAx
-ADAAMQA4ADIANwAxADQALgBHAEEAMQAxADcAMwAxAEAAcgBlAGQAaABhAHQALgBjAG8AbQA+ADsA
-VgBlAHIAcwBpAG8AbgA9AFYAZQByAHMAaQBvAG4AIAAxADQALgAyACAAKABCAHUAaQBsAGQAIAAz
-ADEAOAAuADAAKQAsACAAUwB0AGEAZwBlAD0ASAAyAAAAAwANNP0/AAAfAACAhgMCAAAAAADAAAAA
-AAAARgEAAAAgAAAAeAAtAG0AcwAtAGgAYQBzAC0AYQB0AHQAYQBjAGgAAAABAAAAAgAAAAAAAAAf
-AACAhgMCAAAAAADAAAAAAAAARgEAAAAiAAAAeAAtAG8AcgBpAGcAaQBuAGEAdABpAG4AZwAtAGkA
-cAAAAAAAAQAAABwAAABbADEAMAAuADIAOQAuADIALgAyADEANgBdAAAA160=
-
---_000_D63B9804CB63AD4FAAD966037695664647023F7Eavmb2qlogicorg_--
+> Does my patch actually have any affect on staggered spinup? I see that when
+> the HOST_CAP_SSS flag is detected it causes a PORT_CMD_SPIN_UP to be issued
+> during each port's resume. But the port resume calls themselves appear to
+> always be asynchronous, regardless of my patch's changes. (The ata_port
+> devices all have their power.async_suspend flags set, so the dpm_resume
+> call issues them all in parallel) So as far as I can tell I don't think
+> I'm causing any harm.
+>
+> I do see how my patch might hinder future attempts at staggered resume
+> handling, since it would effectively render the power.async_suspend flag
+> useless. Would it be wise for ata_port_resume to check the ata_port's
+> power.async_suspend flag and only use asynchronous ata_port_request_pm
+> if it's enabled?
+>
+>>
+>> Thanks.
+>>
+>> --
+>> tejun
