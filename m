@@ -1,7 +1,7 @@
 From: Sagi Grimberg <sagig@mellanox.com>
-Subject: [PATCH v1 5/7] IB/isert: Accept RDMA_WRITE completions
-Date: Thu, 16 Jan 2014 15:55:54 +0200
-Message-ID: <1389880556-21059-6-git-send-email-sagig@mellanox.com>
+Subject: [PATCH v1 7/7] Target/configfs: Expose iSCSI network portal group T10-PI support
+Date: Thu, 16 Jan 2014 15:55:56 +0200
+Message-ID: <1389880556-21059-8-git-send-email-sagig@mellanox.com>
 References: <1389880556-21059-1-git-send-email-sagig@mellanox.com>
 Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1389880556-21059-1-git-send-email-sagig@mellanox.com>
@@ -10,50 +10,77 @@ To: nab@daterainc.com
 Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, martin.petersen@oracle.com, oren@mellanox.com
 List-Id: linux-scsi@vger.kernel.org
 
-In case of protected transactions, we will need to check the
-protection status of the transaction before sending SCSI response.
-So be ready for RDMA_WRITE completions. currently we don't ask
-for these completions, but for T10-PI we will.
+User may enable T10-PI support per network portal group. any connection
+established on top of it, will be required to serve protected transactions.
 
 Signed-off-by: Sagi Grimberg <sagig@mellanox.com>
 ---
- drivers/infiniband/ulp/isert/ib_isert.c |   17 +++++++++++++++--
- 1 files changed, 15 insertions(+), 2 deletions(-)
+ drivers/target/iscsi/iscsi_target_configfs.c |    6 ++++++
+ drivers/target/iscsi/iscsi_target_tpg.c      |   19 +++++++++++++++++++
+ drivers/target/iscsi/iscsi_target_tpg.h      |    1 +
+ 3 files changed, 26 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/infiniband/ulp/isert/ib_isert.c b/drivers/infiniband/ulp/isert/ib_isert.c
-index e5159ee..e4352c8 100644
---- a/drivers/infiniband/ulp/isert/ib_isert.c
-+++ b/drivers/infiniband/ulp/isert/ib_isert.c
-@@ -1602,6 +1602,18 @@ isert_completion_put(struct iser_tx_desc *tx_desc, struct isert_cmd *isert_cmd,
- }
+diff --git a/drivers/target/iscsi/iscsi_target_configfs.c b/drivers/target/iscsi/iscsi_target_configfs.c
+index e3318ed..8f3f585 100644
+--- a/drivers/target/iscsi/iscsi_target_configfs.c
++++ b/drivers/target/iscsi/iscsi_target_configfs.c
+@@ -1051,6 +1051,11 @@ TPG_ATTR(demo_mode_discovery, S_IRUGO | S_IWUSR);
+  */
+ DEF_TPG_ATTRIB(default_erl);
+ TPG_ATTR(default_erl, S_IRUGO | S_IWUSR);
++/*
++ * Define iscsi_tpg_attrib_s_t10_pi
++ */
++DEF_TPG_ATTRIB(t10_pi);
++TPG_ATTR(t10_pi, S_IRUGO | S_IWUSR);
  
- static void
-+isert_completion_rdma_write(struct iser_tx_desc *tx_desc,
-+			    struct isert_cmd *isert_cmd)
+ static struct configfs_attribute *lio_target_tpg_attrib_attrs[] = {
+ 	&iscsi_tpg_attrib_authentication.attr,
+@@ -1063,6 +1068,7 @@ static struct configfs_attribute *lio_target_tpg_attrib_attrs[] = {
+ 	&iscsi_tpg_attrib_prod_mode_write_protect.attr,
+ 	&iscsi_tpg_attrib_demo_mode_discovery.attr,
+ 	&iscsi_tpg_attrib_default_erl.attr,
++	&iscsi_tpg_attrib_t10_pi.attr,
+ 	NULL,
+ };
+ 
+diff --git a/drivers/target/iscsi/iscsi_target_tpg.c b/drivers/target/iscsi/iscsi_target_tpg.c
+index 80ae14c..d95a5f2 100644
+--- a/drivers/target/iscsi/iscsi_target_tpg.c
++++ b/drivers/target/iscsi/iscsi_target_tpg.c
+@@ -860,3 +860,22 @@ int iscsit_ta_default_erl(
+ 
+ 	return 0;
+ }
++
++int iscsit_ta_t10_pi(
++	struct iscsi_portal_group *tpg,
++	u32 flag)
 +{
-+	struct iscsi_cmd *cmd = isert_cmd->iscsi_cmd;
-+	struct isert_conn *isert_conn = isert_cmd->conn;
-+	struct isert_device *device = isert_conn->conn_device;
++	struct iscsi_tpg_attrib *a = &tpg->tpg_attrib;
 +
-+	device->unreg_rdma_mem(isert_cmd, isert_conn);
-+	isert_put_response(isert_conn->conn, cmd);
++	if ((flag != 0) && (flag != 1)) {
++		pr_err("Illegal value %d\n", flag);
++		return -EINVAL;
++	}
++
++	a->t10_pi = flag;
++	pr_debug("iSCSI_TPG[%hu] - T10 Protection information bit:"
++		" %s\n", tpg->tpgt, (a->t10_pi) ?
++		"ON" : "OFF");
++
++	return 0;
 +}
-+
-+static void
- isert_completion_rdma_read(struct iser_tx_desc *tx_desc,
- 			   struct isert_cmd *isert_cmd)
- {
-@@ -1721,8 +1733,9 @@ __isert_send_completion(struct iser_tx_desc *tx_desc,
- 					  isert_conn, ib_dev);
- 		break;
- 	case ISER_IB_RDMA_WRITE:
--		pr_err("isert_send_completion: Got ISER_IB_RDMA_WRITE\n");
--		dump_stack();
-+		pr_debug("isert_send_completion: Got ISER_IB_RDMA_WRITE\n");
-+		atomic_dec(&isert_conn->post_send_buf_count);
-+		isert_completion_rdma_write(tx_desc, isert_cmd);
- 		break;
- 	case ISER_IB_RDMA_READ:
- 		pr_debug("isert_send_completion: Got ISER_IB_RDMA_READ:\n");
+diff --git a/drivers/target/iscsi/iscsi_target_tpg.h b/drivers/target/iscsi/iscsi_target_tpg.h
+index 213c0fc..0a182f2 100644
+--- a/drivers/target/iscsi/iscsi_target_tpg.h
++++ b/drivers/target/iscsi/iscsi_target_tpg.h
+@@ -39,5 +39,6 @@ extern int iscsit_ta_demo_mode_write_protect(struct iscsi_portal_group *, u32);
+ extern int iscsit_ta_prod_mode_write_protect(struct iscsi_portal_group *, u32);
+ extern int iscsit_ta_demo_mode_discovery(struct iscsi_portal_group *, u32);
+ extern int iscsit_ta_default_erl(struct iscsi_portal_group *, u32);
++extern int iscsit_ta_t10_pi(struct iscsi_portal_group *, u32);
+ 
+ #endif /* ISCSI_TARGET_TPG_H */
 -- 
 1.7.1
