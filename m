@@ -1,119 +1,47 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 2/6] megaraid_sas_fusion: Fixup fire_cmd syntax
-Date: Thu, 16 Jan 2014 11:25:32 +0100
-Message-ID: <1389867936-118685-3-git-send-email-hare@suse.de>
-References: <1389867936-118685-1-git-send-email-hare@suse.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:39890 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751513AbaAPKZi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Jan 2014 05:25:38 -0500
-In-Reply-To: <1389867936-118685-1-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v9 2/4] Documentation: Add documentation for APM X-Gene
+ SoC SATA host controller DTS binding
+Date: Thu, 16 Jan 2014 11:38:28 +0100
+Message-ID: <3162202.3lfb3jYxiv@wuerfel>
+References: <1389769910-15505-1-git-send-email-lho@apm.com>
+ <CAPw-ZTmn-aNJcLd1mZPRtog_ncq=GC94ULCJb-400oYqERYK5g@mail.gmail.com>
+ <CAPw-ZT=QXwOVvpgJSL5qU8J2eEuAt3nnXJDfDwPXTTo7z4Fe-A@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <CAPw-ZT=QXwOVvpgJSL5qU8J2eEuAt3nnXJDfDwPXTTo7z4Fe-A@mail.gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Loc Ho <lho@apm.com>
+Cc: Mark Rutland <mark.rutland@arm.com>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Suman Tripathi <stripathi@apm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dmilburn@redhat.com" <dmilburn@redhat.com>, "jcm@redhat.com" <jcm@redhat.com>, "olof@lixom.net" <olof@lixom.net>, "patches@apm.com" <patches@apm.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "tj@kernel.org" <tj@kernel.org>, Tuan Phan <tphan@apm.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Kashyap Desai <kashyap.desai@lsi.com>, Adam Radford <aradford@gmail.com>
 
-The syntax for the 'fire_cmd' callback is not used correctly,
-so fix it up to be consistent with the original definition.
+On Wednesday 15 January 2014 15:59:27 Loc Ho wrote:
+> 
+> May be I misread what Mark mentioned. The binding documentation should
+> not specify the requirement of 0. And the binding of the dts should be
+> as is:
+> 
+> phy1 {
+>    #phy-cells = <1>;
+> };
+> 
+> sata1 {
+>    :::
+>    phys = <&phy1 0>;     where 0 indicates the mode of operation?
+> };
+> 
+> 
 
-Cc: Kashyap Desai <kashyap.desai@lsi.com>
-Cc: Adam Radford <aradford@gmail.com>
-Signed-off-by: Hannes Reinecke <hare@suse.de>
----
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 26 ++++++++++++--------------
- drivers/scsi/megaraid/megaraid_sas_fusion.h |  8 +-------
- 2 files changed, 13 insertions(+), 21 deletions(-)
+Yes, that is right. You can keep the zero in the example, but the
+binding text must not require a specific phy to be used.
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index f655592..0a588a6 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -669,8 +669,8 @@ megasas_ioc_init_fusion(struct megasas_instance *instance)
- 			break;
- 	}
- 
--	instance->instancet->fire_cmd(instance, req_desc->u.low,
--				      req_desc->u.high, instance->reg_set);
-+	instance->instancet->fire_cmd(instance, req_desc->Words, 0,
-+				      instance->reg_set);
- 
- 	wait_and_poll(instance, cmd);
- 
-@@ -1052,16 +1052,17 @@ fail_alloc_mfi_cmds:
-  */
- void
- megasas_fire_cmd_fusion(struct megasas_instance *instance,
--			dma_addr_t req_desc_lo,
--			u32 req_desc_hi,
-+			dma_addr_t frame_phys_addr,
-+			u32 frame_count,
- 			struct megasas_register_set __iomem *regs)
- {
- 	unsigned long flags;
- 
- 	spin_lock_irqsave(&instance->hba_lock, flags);
--
--	writel(le32_to_cpu(req_desc_lo), &(regs)->inbound_low_queue_port);
--	writel(le32_to_cpu(req_desc_hi), &(regs)->inbound_high_queue_port);
-+	writel(le32_to_cpu(lower_32_bits(frame_phys_addr)),
-+	       &(regs)->inbound_low_queue_port);
-+	writel(le32_to_cpu(upper_32_bits(frame_phys_addr)),
-+	       &(regs)->inbound_high_queue_port);
- 	spin_unlock_irqrestore(&instance->hba_lock, flags);
- }
- 
-@@ -1830,8 +1831,7 @@ megasas_build_and_issue_cmd_fusion(struct megasas_instance *instance,
- 	 */
- 	atomic_inc(&instance->fw_outstanding);
- 
--	instance->instancet->fire_cmd(instance,
--				      req_desc->u.low, req_desc->u.high,
-+	instance->instancet->fire_cmd(instance, req_desc->Words, 0,
- 				      instance->reg_set);
- 
- 	return 0;
-@@ -2158,8 +2158,8 @@ megasas_issue_dcmd_fusion(struct megasas_instance *instance,
- 		printk(KERN_ERR "Couldn't issue MFI pass thru cmd\n");
- 		return;
- 	}
--	instance->instancet->fire_cmd(instance, req_desc->u.low,
--				      req_desc->u.high, instance->reg_set);
-+	instance->instancet->fire_cmd(instance, req_desc->Words, 0,
-+				      instance->reg_set);
- }
- 
- /**
-@@ -2441,9 +2441,7 @@ int megasas_reset_fusion(struct Scsi_Host *shost)
- 							instance->instancet->
- 							fire_cmd(instance,
- 								 req_desc->
--								 u.low,
--								 req_desc->
--								 u.high,
-+								 Words, 0,
- 								 instance->
- 								 reg_set);
- 						}
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.h b/drivers/scsi/megaraid/megaraid_sas_fusion.h
-index 35a5139..321896f 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.h
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.h
-@@ -366,13 +366,7 @@ union MEGASAS_REQUEST_DESCRIPTOR_UNION {
- 	struct MPI2_SCSI_TARGET_REQUEST_DESCRIPTOR         SCSITarget;
- 	struct MPI2_RAID_ACCEL_REQUEST_DESCRIPTOR          RAIDAccelerator;
- 	struct MEGASAS_RAID_MFA_IO_REQUEST_DESCRIPTOR      MFAIo;
--	union {
--		struct {
--			u32 low;
--			u32 high;
--		} u;
--		u64 Words;
--	};
-+	u64 Words;
- };
- 
- /* Default Reply Descriptor */
--- 
-1.7.12.4
-
+	Arnd
