@@ -1,384 +1,97 @@
-From: Jack Wang <xjtuwjp@gmail.com>
-Subject: Re: [PATCH V2] pm80xx: Spinlock fix
-Date: Thu, 16 Jan 2014 16:48:08 +0100
-Message-ID: <52D7FF38.5050801@gmail.com>
-References: <1389867307-4982-1-git-send-email-Viswas.G@pmcs.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bk0-f42.google.com ([209.85.214.42]:48141 "EHLO
-	mail-bk0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752355AbaAPPsN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Jan 2014 10:48:13 -0500
-Received: by mail-bk0-f42.google.com with SMTP id my12so1237558bkb.15
-        for <linux-scsi@vger.kernel.org>; Thu, 16 Jan 2014 07:48:12 -0800 (PST)
-In-Reply-To: <1389867307-4982-1-git-send-email-Viswas.G@pmcs.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Loc Ho <lho@apm.com>
+Subject: [PATCH v8 1/4] PHY: Add function set_speed to generic PHY framework
+Date: Thu, 16 Jan 2014 09:09:55 -0700
+Message-ID: <1389888598-29690-2-git-send-email-lho@apm.com>
+References: <1389888598-29690-1-git-send-email-lho@apm.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1389888598-29690-1-git-send-email-lho@apm.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, dmilburn@redhat.com, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Viswas G <Viswas.G@pmcs.com>
-Cc: linux-scsi@vger.kernel.org, jason.seba42@gmail.com, JBottomley@parallels.com, oleg@redhat.com, Rich.Bono@pmcs.com, Vasanthalakshmi.Tharmarajan@pmcs.com, Suresh.Thiagarajan@pmcs.com
 
-On 01/16/2014 11:15 AM, Viswas G wrote:
-> From dfaae38ba7b6b7260fb3209d2dd12d70f0a8e306 Mon Sep 17 00:00:00 2001
-> From: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
-> Date: Thu, 16 Jan 2014 15:26:21 +0530
-> Subject: [PATCH V2] pm80xx: Spinlock fix
-> 
-> spin_lock_irqsave for the HBA lock is called in one function where flag
-> is local to that function. Another function is called from the first
-> function where lock has to be released using spin_unlock_irqrestore for 
-> calling task_done of libsas. In the second function also flag is declared
-> and used. For calling task_done there is no need to enable the irq. So 
-> instead of using spin_lock_irqsave and spin_unlock_irqrestore, spin_lock
-> and spin_unlock is used now. This also avoids passing the flags across all
-> the functions where HBA lock is being used. Also removed redundant code. 
-> 
-> 
-> Reported-by: Jason Seba <jason.seba42@gmail.com>
-> Signed-off-by: Oleg Nesterov <oleg@redhat.com>
-> Signed-off-by: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
-> Signed-off-by: Viswas G <viswas.g@pmcs.com>
+This patch adds function set_speed to the generic PHY framework operation
+structure. This function can be called to instruct the PHY underlying layer
+at specified lane to configure for specified speed in hertz.
 
-Looks good to me, thanks.
-Acked-by: Jack Wang <xjtuwjp@gmail.com>
-> ---
->  drivers/scsi/pm8001/pm8001_hwi.c |   84 ++++++--------------------------------
->  drivers/scsi/pm8001/pm8001_sas.h |   12 +++++
->  drivers/scsi/pm8001/pm80xx_hwi.c |   84 ++++++--------------------------------
->  3 files changed, 38 insertions(+), 142 deletions(-)
-> 
-> diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-> index 46ace52..d6a4b17 100644
-> --- a/drivers/scsi/pm8001/pm8001_hwi.c
-> +++ b/drivers/scsi/pm8001/pm8001_hwi.c
-> @@ -2502,11 +2502,7 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
->  				IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS);
->  			ts->resp = SAS_TASK_UNDELIVERED;
->  			ts->stat = SAS_QUEUE_FULL;
-> -			pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
-> -			mb();/*in order to force CPU ordering*/
-> -			spin_unlock_irq(&pm8001_ha->lock);
-> -			t->task_done(t);
-> -			spin_lock_irq(&pm8001_ha->lock);
-> +			pm8001_ccb_task_free_done(pm8001_ha, t, ccb, tag);
->  			return;
->  		}
->  		break;
-> @@ -2522,11 +2518,7 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
->  				IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS);
->  			ts->resp = SAS_TASK_UNDELIVERED;
->  			ts->stat = SAS_QUEUE_FULL;
-> -			pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
-> -			mb();/*ditto*/
-> -			spin_unlock_irq(&pm8001_ha->lock);
-> -			t->task_done(t);
-> -			spin_lock_irq(&pm8001_ha->lock);
-> +			pm8001_ccb_task_free_done(pm8001_ha, t, ccb, tag);
->  			return;
->  		}
->  		break;
-> @@ -2550,11 +2542,7 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
->  				IO_OPEN_CNX_ERROR_STP_RESOURCES_BUSY);
->  			ts->resp = SAS_TASK_UNDELIVERED;
->  			ts->stat = SAS_QUEUE_FULL;
-> -			pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
-> -			mb();/* ditto*/
-> -			spin_unlock_irq(&pm8001_ha->lock);
-> -			t->task_done(t);
-> -			spin_lock_irq(&pm8001_ha->lock);
-> +			pm8001_ccb_task_free_done(pm8001_ha, t, ccb, tag);
->  			return;
->  		}
->  		break;
-> @@ -2617,11 +2605,7 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
->  				    IO_DS_NON_OPERATIONAL);
->  			ts->resp = SAS_TASK_UNDELIVERED;
->  			ts->stat = SAS_QUEUE_FULL;
-> -			pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
-> -			mb();/*ditto*/
-> -			spin_unlock_irq(&pm8001_ha->lock);
-> -			t->task_done(t);
-> -			spin_lock_irq(&pm8001_ha->lock);
-> +			pm8001_ccb_task_free_done(pm8001_ha, t, ccb, tag);
->  			return;
->  		}
->  		break;
-> @@ -2641,11 +2625,7 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
->  				    IO_DS_IN_ERROR);
->  			ts->resp = SAS_TASK_UNDELIVERED;
->  			ts->stat = SAS_QUEUE_FULL;
-> -			pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
-> -			mb();/*ditto*/
-> -			spin_unlock_irq(&pm8001_ha->lock);
-> -			t->task_done(t);
-> -			spin_lock_irq(&pm8001_ha->lock);
-> +			pm8001_ccb_task_free_done(pm8001_ha, t, ccb, tag);
->  			return;
->  		}
->  		break;
-> @@ -2674,20 +2654,9 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
->  			" resp 0x%x stat 0x%x but aborted by upper layer!\n",
->  			t, status, ts->resp, ts->stat));
->  		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
-> -	} else if (t->uldd_task) {
-> -		spin_unlock_irqrestore(&t->task_state_lock, flags);
-> -		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
-> -		mb();/* ditto */
-> -		spin_unlock_irq(&pm8001_ha->lock);
-> -		t->task_done(t);
-> -		spin_lock_irq(&pm8001_ha->lock);
-> -	} else if (!t->uldd_task) {
-> +	} else {
->  		spin_unlock_irqrestore(&t->task_state_lock, flags);
-> -		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
-> -		mb();/*ditto*/
-> -		spin_unlock_irq(&pm8001_ha->lock);
-> -		t->task_done(t);
-> -		spin_lock_irq(&pm8001_ha->lock);
-> +		pm8001_ccb_task_free_done(pm8001_ha, t, ccb, tag);
->  	}
->  }
->  
-> @@ -2796,11 +2765,7 @@ static void mpi_sata_event(struct pm8001_hba_info *pm8001_ha , void *piomb)
->  				IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS);
->  			ts->resp = SAS_TASK_COMPLETE;
->  			ts->stat = SAS_QUEUE_FULL;
-> -			pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
-> -			mb();/*ditto*/
-> -			spin_unlock_irq(&pm8001_ha->lock);
-> -			t->task_done(t);
-> -			spin_lock_irq(&pm8001_ha->lock);
-> +			pm8001_ccb_task_free_done(pm8001_ha, t, ccb, tag);
->  			return;
->  		}
->  		break;
-> @@ -2909,20 +2874,9 @@ static void mpi_sata_event(struct pm8001_hba_info *pm8001_ha , void *piomb)
->  			" resp 0x%x stat 0x%x but aborted by upper layer!\n",
->  			t, event, ts->resp, ts->stat));
->  		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
-> -	} else if (t->uldd_task) {
-> -		spin_unlock_irqrestore(&t->task_state_lock, flags);
-> -		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
-> -		mb();/* ditto */
-> -		spin_unlock_irq(&pm8001_ha->lock);
-> -		t->task_done(t);
-> -		spin_lock_irq(&pm8001_ha->lock);
-> -	} else if (!t->uldd_task) {
-> +	} else {
->  		spin_unlock_irqrestore(&t->task_state_lock, flags);
-> -		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
-> -		mb();/*ditto*/
-> -		spin_unlock_irq(&pm8001_ha->lock);
-> -		t->task_done(t);
-> -		spin_lock_irq(&pm8001_ha->lock);
-> +		pm8001_ccb_task_free_done(pm8001_ha, t, ccb, tag);
->  	}
->  }
->  
-> @@ -4467,23 +4421,11 @@ static int pm8001_chip_sata_req(struct pm8001_hba_info *pm8001_ha,
->  					" stat 0x%x but aborted by upper layer "
->  					"\n", task, ts->resp, ts->stat));
->  				pm8001_ccb_task_free(pm8001_ha, task, ccb, tag);
-> -			} else if (task->uldd_task) {
-> -				spin_unlock_irqrestore(&task->task_state_lock,
-> -							flags);
-> -				pm8001_ccb_task_free(pm8001_ha, task, ccb, tag);
-> -				mb();/* ditto */
-> -				spin_unlock_irq(&pm8001_ha->lock);
-> -				task->task_done(task);
-> -				spin_lock_irq(&pm8001_ha->lock);
-> -				return 0;
-> -			} else if (!task->uldd_task) {
-> +			} else {
->  				spin_unlock_irqrestore(&task->task_state_lock,
->  							flags);
-> -				pm8001_ccb_task_free(pm8001_ha, task, ccb, tag);
-> -				mb();/*ditto*/
-> -				spin_unlock_irq(&pm8001_ha->lock);
-> -				task->task_done(task);
-> -				spin_lock_irq(&pm8001_ha->lock);
-> +				pm8001_ccb_task_free_done(pm8001_ha, task,
-> +								ccb, tag);
->  				return 0;
->  			}
->  		}
-> diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
-> index 6c5fd5e..1ee06f2 100644
-> --- a/drivers/scsi/pm8001/pm8001_sas.h
-> +++ b/drivers/scsi/pm8001/pm8001_sas.h
-> @@ -708,5 +708,17 @@ ssize_t pm8001_get_gsm_dump(struct device *cdev, u32, char *buf);
->  /* ctl shared API */
->  extern struct device_attribute *pm8001_host_attrs[];
->  
-> +static inline void
-> +pm8001_ccb_task_free_done(struct pm8001_hba_info *pm8001_ha,
-> +			struct sas_task *task, struct pm8001_ccb_info *ccb,
-> +			u32 ccb_idx)
-> +{
-> +	pm8001_ccb_task_free(pm8001_ha, task, ccb, ccb_idx);
-> +	smp_mb(); /*in order to force CPU ordering*/
-> +	spin_unlock(&pm8001_ha->lock);
-> +	task->task_done(task);
-> +	spin_lock(&pm8001_ha->lock);
-> +}
-> +
->  #endif
->  
-> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-> index 65de79c..617c37f 100644
-> --- a/drivers/scsi/pm8001/pm80xx_hwi.c
-> +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-> @@ -2168,11 +2168,7 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
->  				IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS);
->  			ts->resp = SAS_TASK_UNDELIVERED;
->  			ts->stat = SAS_QUEUE_FULL;
-> -			pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
-> -			mb();/*in order to force CPU ordering*/
-> -			spin_unlock_irq(&pm8001_ha->lock);
-> -			t->task_done(t);
-> -			spin_lock_irq(&pm8001_ha->lock);
-> +			pm8001_ccb_task_free_done(pm8001_ha, t, ccb, tag);
->  			return;
->  		}
->  		break;
-> @@ -2188,11 +2184,7 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
->  				IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS);
->  			ts->resp = SAS_TASK_UNDELIVERED;
->  			ts->stat = SAS_QUEUE_FULL;
-> -			pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
-> -			mb();/*ditto*/
-> -			spin_unlock_irq(&pm8001_ha->lock);
-> -			t->task_done(t);
-> -			spin_lock_irq(&pm8001_ha->lock);
-> +			pm8001_ccb_task_free_done(pm8001_ha, t, ccb, tag);
->  			return;
->  		}
->  		break;
-> @@ -2214,11 +2206,7 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
->  				IO_OPEN_CNX_ERROR_STP_RESOURCES_BUSY);
->  			ts->resp = SAS_TASK_UNDELIVERED;
->  			ts->stat = SAS_QUEUE_FULL;
-> -			pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
-> -			mb();/* ditto*/
-> -			spin_unlock_irq(&pm8001_ha->lock);
-> -			t->task_done(t);
-> -			spin_lock_irq(&pm8001_ha->lock);
-> +			pm8001_ccb_task_free_done(pm8001_ha, t, ccb, tag);
->  			return;
->  		}
->  		break;
-> @@ -2281,11 +2269,7 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
->  					IO_DS_NON_OPERATIONAL);
->  			ts->resp = SAS_TASK_UNDELIVERED;
->  			ts->stat = SAS_QUEUE_FULL;
-> -			pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
-> -			mb();/*ditto*/
-> -			spin_unlock_irq(&pm8001_ha->lock);
-> -			t->task_done(t);
-> -			spin_lock_irq(&pm8001_ha->lock);
-> +			pm8001_ccb_task_free_done(pm8001_ha, t, ccb, tag);
->  			return;
->  		}
->  		break;
-> @@ -2305,11 +2289,7 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
->  					IO_DS_IN_ERROR);
->  			ts->resp = SAS_TASK_UNDELIVERED;
->  			ts->stat = SAS_QUEUE_FULL;
-> -			pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
-> -			mb();/*ditto*/
-> -			spin_unlock_irq(&pm8001_ha->lock);
-> -			t->task_done(t);
-> -			spin_lock_irq(&pm8001_ha->lock);
-> +			pm8001_ccb_task_free_done(pm8001_ha, t, ccb, tag);
->  			return;
->  		}
->  		break;
-> @@ -2338,20 +2318,9 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
->  			" resp 0x%x stat 0x%x but aborted by upper layer!\n",
->  			t, status, ts->resp, ts->stat));
->  		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
-> -	} else if (t->uldd_task) {
-> -		spin_unlock_irqrestore(&t->task_state_lock, flags);
-> -		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
-> -		mb();/* ditto */
-> -		spin_unlock_irq(&pm8001_ha->lock);
-> -		t->task_done(t);
-> -		spin_lock_irq(&pm8001_ha->lock);
-> -	} else if (!t->uldd_task) {
-> +	} else {
->  		spin_unlock_irqrestore(&t->task_state_lock, flags);
-> -		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
-> -		mb();/*ditto*/
-> -		spin_unlock_irq(&pm8001_ha->lock);
-> -		t->task_done(t);
-> -		spin_lock_irq(&pm8001_ha->lock);
-> +		pm8001_ccb_task_free_done(pm8001_ha, t, ccb, tag);
->  	}
->  }
->  
-> @@ -2463,11 +2432,7 @@ static void mpi_sata_event(struct pm8001_hba_info *pm8001_ha , void *piomb)
->  				IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS);
->  			ts->resp = SAS_TASK_COMPLETE;
->  			ts->stat = SAS_QUEUE_FULL;
-> -			pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
-> -			mb();/*ditto*/
-> -			spin_unlock_irq(&pm8001_ha->lock);
-> -			t->task_done(t);
-> -			spin_lock_irq(&pm8001_ha->lock);
-> +			pm8001_ccb_task_free_done(pm8001_ha, t, ccb, tag);
->  			return;
->  		}
->  		break;
-> @@ -2589,20 +2554,9 @@ static void mpi_sata_event(struct pm8001_hba_info *pm8001_ha , void *piomb)
->  			" resp 0x%x stat 0x%x but aborted by upper layer!\n",
->  			t, event, ts->resp, ts->stat));
->  		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
-> -	} else if (t->uldd_task) {
-> -		spin_unlock_irqrestore(&t->task_state_lock, flags);
-> -		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
-> -		mb();/* ditto */
-> -		spin_unlock_irq(&pm8001_ha->lock);
-> -		t->task_done(t);
-> -		spin_lock_irq(&pm8001_ha->lock);
-> -	} else if (!t->uldd_task) {
-> +	} else {
->  		spin_unlock_irqrestore(&t->task_state_lock, flags);
-> -		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
-> -		mb();/*ditto*/
-> -		spin_unlock_irq(&pm8001_ha->lock);
-> -		t->task_done(t);
-> -		spin_lock_irq(&pm8001_ha->lock);
-> +		pm8001_ccb_task_free_done(pm8001_ha, t, ccb, tag);
->  	}
->  }
->  
-> @@ -4297,23 +4251,11 @@ static int pm80xx_chip_sata_req(struct pm8001_hba_info *pm8001_ha,
->  					"\n", task, ts->resp, ts->stat));
->  				pm8001_ccb_task_free(pm8001_ha, task, ccb, tag);
->  				return 0;
-> -			} else if (task->uldd_task) {
-> -				spin_unlock_irqrestore(&task->task_state_lock,
-> -							flags);
-> -				pm8001_ccb_task_free(pm8001_ha, task, ccb, tag);
-> -				mb();/* ditto */
-> -				spin_unlock_irq(&pm8001_ha->lock);
-> -				task->task_done(task);
-> -				spin_lock_irq(&pm8001_ha->lock);
-> -				return 0;
-> -			} else if (!task->uldd_task) {
-> +			} else {
->  				spin_unlock_irqrestore(&task->task_state_lock,
->  							flags);
-> -				pm8001_ccb_task_free(pm8001_ha, task, ccb, tag);
-> -				mb();/*ditto*/
-> -				spin_unlock_irq(&pm8001_ha->lock);
-> -				task->task_done(task);
-> -				spin_lock_irq(&pm8001_ha->lock);
-> +				pm8001_ccb_task_free_done(pm8001_ha, task,
-> +								ccb, tag);
->  				return 0;
->  			}
->  		}
-> 
+Signed-off-by: Loc Ho <lho@apm.com>
+---
+ drivers/phy/phy-core.c  |   21 +++++++++++++++++++++
+ include/linux/phy/phy.h |    8 ++++++++
+ 2 files changed, 29 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/phy/phy-core.c b/drivers/phy/phy-core.c
+index 03cf8fb..b525e72 100644
+--- a/drivers/phy/phy-core.c
++++ b/drivers/phy/phy-core.c
+@@ -239,6 +239,27 @@ out:
+ }
+ EXPORT_SYMBOL_GPL(phy_power_off);
+ 
++int phy_set_speed(struct phy *phy, int lane, u64 speed)
++{
++        int ret = -ENOTSUPP;
++
++        mutex_lock(&phy->mutex);
++        if (phy->ops->set_speed) {
++                ret =  phy->ops->set_speed(phy, lane, speed);
++                if (ret < 0) {
++                        dev_err(&phy->dev, "phy set speed failed --> %d\n",
++                                ret);
++                        goto out;
++                }
++        }
++
++out:
++        mutex_unlock(&phy->mutex);
++
++        return ret;
++}
++EXPORT_SYMBOL_GPL(phy_set_speed);
++
+ /**
+  * of_phy_get() - lookup and obtain a reference to a phy by phandle
+  * @dev: device that requests this phy
+diff --git a/include/linux/phy/phy.h b/include/linux/phy/phy.h
+index 6d72269..ed2b897 100644
+--- a/include/linux/phy/phy.h
++++ b/include/linux/phy/phy.h
+@@ -27,6 +27,7 @@ struct phy;
+  * @exit: operation to be performed while exiting
+  * @power_on: powering on the phy
+  * @power_off: powering off the phy
++ * @set_speed: set operation speed in hz
+  * @owner: the module owner containing the ops
+  */
+ struct phy_ops {
+@@ -34,6 +35,7 @@ struct phy_ops {
+ 	int	(*exit)(struct phy *phy);
+ 	int	(*power_on)(struct phy *phy);
+ 	int	(*power_off)(struct phy *phy);
++	int	(*set_speed)(struct phy *phy, int lane, u64 speed);
+ 	struct module *owner;
+ };
+ 
+@@ -127,6 +129,7 @@ int phy_init(struct phy *phy);
+ int phy_exit(struct phy *phy);
+ int phy_power_on(struct phy *phy);
+ int phy_power_off(struct phy *phy);
++int phy_set_speed(struct phy *phy, int lane, u64 speed);
+ struct phy *phy_get(struct device *dev, const char *string);
+ struct phy *devm_phy_get(struct device *dev, const char *string);
+ void phy_put(struct phy *phy);
+@@ -199,6 +202,11 @@ static inline int phy_power_off(struct phy *phy)
+ 	return -ENOSYS;
+ }
+ 
++static inline int phy_set_speed(struct phy *phy, int lane, u64 speed)
++{
++	return -ENOSYS;
++}
++
+ static inline struct phy *phy_get(struct device *dev, const char *string)
+ {
+ 	return ERR_PTR(-ENOSYS);
+-- 
+1.5.5
 
