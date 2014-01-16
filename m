@@ -1,53 +1,93 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 00/14] target: Initial support for DIF Type1+Type3 emulation
-Date: Wed, 15 Jan 2014 22:04:58 -0500
-Message-ID: <yq1ob3cwrs5.fsf@sermon.lab.mkp.net>
-References: <1389212157-14540-1-git-send-email-nab@daterainc.com>
-	<52D6CD70.20706@mellanox.com>
-	<1389822920.5567.560.camel@haakon3.risingtidesystems.com>
-	<yq1wqi0wvm4.fsf@sermon.lab.mkp.net>
-	<1389839550.5567.643.camel@haakon3.risingtidesystems.com>
+From: Todd E Brandt <todd.e.brandt@linux.intel.com>
+Subject: [PATCH v4 0/2] Hard disk S3 resume time optimization
+Date: Wed, 15 Jan 2014 20:36:23 -0800
+Message-ID: <20140116043623.GA27413@linux.intel.com>
+Reply-To: todd.e.brandt@linux.intel.com
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1389839550.5567.643.camel@haakon3.risingtidesystems.com>
-	(Nicholas A. Bellinger's message of "Wed, 15 Jan 2014 18:32:30 -0800")
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, sagi grimberg <sagig@mellanox.com>, "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Or Gerlitz <ogerlitz@mellanox.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:16522 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752128AbaAPEgT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 15 Jan 2014 23:36:19 -0500
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: tj@kernel.org
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
 
->>>>> "nab" == Nicholas A Bellinger <nab@linux-iscsi.org> writes:
+This patch reduces S3 resume time from 10+ seconds to less than a second
+on systems with SATA drives. It does this by making ata port and scsi disk
+resume non-blocking.
 
-nab> Mmm, missed that detail.  So that would take care of the
-nab> passthrough for the WRITE case then..
+This is v4, sent in response to Tejun Huo's comments and with some small
+fixes made after testing.
 
-nab> How about a passthrough on the READ completion side for target
-nab> fabrics doing a hardware VERIFY..?  Any preferences how this should
-nab> work..?
+OVERVIEW
 
-Just attach a bip and issue a READ.
+The essential issue behind hard disks' lengthy resume time is the ata port
+driver blocking until the ATA port hardware is finished coming online. So
+the kernel isn't really doing anything during all those seconds that the
+disks are resuming, it's just blocking until the hardware says it's ready
+to accept commands. Applying this patch set allows SATA disks to resume
+asynchronously without holding up system resume, thus allowing the UI to
+come online much more quickly. There may be a short period after resume
+where the disks are still spinning up in the background, but it will only
+momentarily affect applications using that disk.
 
-nab> Also, for IBLOCK responses to properly generate GUARD + REFERENCE
-nab> tag CHECK_CONDITION sense failures from an underlying device VERIFY
-nab> failure, there will also need to be a way to propagate up the
-nab> failure status through bio_endio().  I assume bio_integrity_payload
-nab> is the proper place for adding something like this..?
+The patch set has two parts which apply to ata_port_resume and sd_resume
+respectively. Both are required to achieve any real performance benefit,
+but they will still function independantly without a performance hit.
 
-In my qualification tooling I have a patch that passes the info up the
-stack. But it's a bit of a hack (declares a completion status on the
-stack that shared between all clones). The alternative is to create new
-errno values for each case.
+PERFORMANCE DATA
 
-nab> One other item from my TODO list for IBLOCK protection support is
-nab> how to go about determining which DIF type to expose in the target,
-nab> based upon what is currently enabled on the underlying struct
-nab> block_device.  I'm currently trying to deduce the protection type
-nab> by looking at struct blk_integrity, but it would be helpful to make
-nab> this explicit with bi->prot_type.
+[Computer One Test - 10.5X speedup on S3 resume]
+Platform: Ubuntu Raring Ringtail (13.04) kernel 3.11.0-rc7
+Cpu: Intel(R) Core(TM) i7-3960X CPU @ 3.30GHz
+Ahci: Intel C600/X79 series chipset 6-Port SATA AHCI (r5)
+Disk config (using all 6 ahci ports): 
+240 GB SSD, 3 TB HD, 500 GB HD, DVD-ROM (with cd inserted), 2 TB HD, 1 TB HD
+Resume time: [unpatched 11656ms] [patched 1110ms]
 
-You need to match on the integrity profile string. T10-DIF-TYPE1-IP
-means it's DIF Type 1 format with IP checksum.
+[Computer Two Test - 12X speedup on S3 resume]
+Platform: Ubuntu Raring Ringtail (13.04) kernel 3.11.0-rc7
+Cpu: Intel(R) Core(TM) i7-3770 CPU @ 3.40GHz
+Ahci: Intel 7 Series/C210 Series Chipset Family 6-port SATA [AHCI mode] (r4)
+Disk config (using 1 ahci port): 320 GB Hard Disk
+Resume time: [unpatched 5416 ms] [patched 448 ms]
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+[Computer Three Test - 7.8X speedup on S3 resume]
+Platform: Ubuntu Raring Ringtail (13.04) kernel 3.11.0-rc7
+Cpu: Intel(R) Core(TM) i7-4770S CPU @ 3.10GHz
+Ahci: Intel Lynx Point 6-port SATA Controller 1 [AHCI mode] (r2)
+Disk config (using 2 ahci ports): DVD-ROM (empty), 500 GB Hard Disk
+Resume time: [unpatched 5385ms] [patched 688ms]
+
+CHANGELOG
+
+v4: Jan 15, 2014
+ [in response to Tejun Huo]
+ - completely removed the pm_result member of the ata_port struct
+ - result from ata_port_suspend/resume is now returned from the function
+   instead of into a pointer location
+ - ata_port_request_pm now only returns 0/-EAGAIN for pass/fail
+ [fixes]
+ - moved the scsi_disk_put call from sd_resume_complete into sd_resume
+   since it needs to be called from the same context
+v3: Jan 14, 2014
+ [in response to Tejun Huo]
+ - respun the ata patch to merge the entire code path into async resume
+   i.e. resume, restore, and thaw.
+ - re-tested the changes in hibernate to verify there are no issues
+ - respun the sd patch to apply clean over 3.13 rc8, no other changes
+v2: Oct 17, 2013
+ [in response to Oliver Neukum]
+ - Added scsi cmd error reporting through the scsi_sense_hdr
+ [in response to James Bottomley]
+ - unified the sd_resume code path by just making sd_resume async. Thus all
+   three resume callbacks: resume, restore, and runtime-resume will use it,
+   but there is a performance benefit for resume only.
+ [in response to Bartlomiej Zolnierkiewicz]
+ - unified the __ata_port_resume_common code path to include an async
+   parameter. This way there's no need to re-implement ata_port_request_pm.
+v1: Sept 6, 2013
