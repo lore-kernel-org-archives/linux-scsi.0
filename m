@@ -1,98 +1,45 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 38/41] hpsa: improve error messages for driver initiated
- commands
-Date: Thu, 16 Jan 2014 09:42:52 +0100
-Message-ID: <52D79B8C.9070708@suse.de>
-References: <20140115223354.5061.50276.stgit@beardog.cce.hp.com> <20140115223938.5061.20062.stgit@beardog.cce.hp.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Subject: [PATCH 0/6] megaraid_sas: Fix system stall with iommu enabled
+Date: Thu, 16 Jan 2014 11:25:30 +0100
+Message-ID: <1389867936-118685-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:36321 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:39891 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751024AbaAPImx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Jan 2014 03:42:53 -0500
-In-Reply-To: <20140115223938.5061.20062.stgit@beardog.cce.hp.com>
+	id S1751123AbaAPKZi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 16 Jan 2014 05:25:38 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>, jbottomley@parallels.com
-Cc: stephenmcameron@gmail.com, mikem@beardog.cce.hp.com, matthew.gates@hp.com, linux-scsi@vger.kernel.org, scott.teel@hp.com
+To: James Bottomley <jbottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-On 01/15/2014 11:39 PM, Stephen M. Cameron wrote:
-> From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
->=20
-> On encountering unexpected error conditions from driver initiated
-> commands, print something useful like CDB and sense data rather than
-> something useless like the kernel virtual address of the command buff=
-er.
->=20
-> Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
-> ---
->  drivers/scsi/hpsa.c |   71 ++++++++++++++++++++++++++++++++---------=
-----------
->  1 files changed, 44 insertions(+), 27 deletions(-)
->=20
-> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> index 6a50a83..d469974 100644
-> --- a/drivers/scsi/hpsa.c
-> +++ b/drivers/scsi/hpsa.c
-> @@ -1847,17 +1847,37 @@ static void hpsa_scsi_do_simple_cmd_with_retr=
-y(struct ctlr_info *h,
->  	hpsa_pci_unmap(h->pdev, c, 1, data_direction);
->  }
-> =20
-> -static void hpsa_scsi_interpret_error(struct CommandList *cp)
-> +static void hpsa_print_cmd(struct ctlr_info *h, char *txt,
-> +				struct CommandList *c)
->  {
-> -	struct ErrorInfo *ei;
-> +	const u8 *cdb =3D c->Request.CDB;
-> +	const u8 *lun =3D c->Header.LUN.LunAddrBytes;
-> +
-> +	dev_warn(&h->pdev->dev, "%s: LUN:%02x%02x%02x%02x%02x%02x%02x%02x"
-> +	" CDB:%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%=
-02x\n",
-> +		txt, lun[0], lun[1], lun[2], lun[3],
-> +		lun[4], lun[5], lun[6], lun[7],
-> +		cdb[0], cdb[1], cdb[2], cdb[3],
-> +		cdb[4], cdb[5], cdb[6], cdb[7],
-> +		cdb[8], cdb[9], cdb[10], cdb[11],
-> +		cdb[12], cdb[13], cdb[14], cdb[15]);
-> +}
-Do you _really_ have to do this?
-We do have scsi_logging_level, which would provide exactly this
-information.
-Can't you rely on the SCSI stack for logging here and drop all
-the redundancy in the driver?
+Hi all,
 
-Thing is, the hpsa driver is already quite chatty:
+recently I've enabled VT-d on one of my systems, which happened to have
+one of the latest Megaraid SAS cards (Fury) installed.
+And it failed miserably due to invalid DMAR tables.
+Which would be okay, if just the HBA failed to initialize.
+But the entire system stalled as the megaraid_sas driver
+went into an endless loop waiting for the init command to
+come back, which it never did.
 
-hpsa 0000:4f:00.0: Direct-Access     device c0b0t0l0 added.
-hpsa 0000:4f:00.0: RAID              device c0b3t0l0 added.
-scsi 0:0:0:0: Direct-Access     HP       LOGICAL VOLUME   7.24 PQ
-: 0 ANSI: 5
-sd 0:0:0:0: [sda] 286677120 512-byte logical blocks: (146 GB/136
-GiB)
-scsi 0:3:0:0: RAID              HP       P400             7.24 PQ: 0
-ANSI: 0
+So I went on to debug this, and found several issues along the way.
+With this patchset the initialisation routine for megaraid_sas
+correctly aborts and allows the system to boot.
 
-So where is the point of the first two messages?
-The enumeration is internal anyway, so it has a very quesionable
-value to the user. And the devices are listed afterwards anyway.
+Hannes Reinecke (6):
+  megaraid_sas: Do not wait forever
+  megaraid_sas_fusion: Fixup fire_cmd syntax
+  megaraid_sas_fusion: correctly pass queue info pointer
+  megaraid_sas: catch errors from megasas_get_map_info()
+  megaraid_sas_fusion: Return correct error value in
+    megasas_get_ld_map_info()
+  megaraid_sas: check return value for megasas_get_pd_list()
 
-Hence it _might_ be an idea to remove some of those messages ...
+ drivers/scsi/megaraid/megaraid_sas_base.c   | 56 +++++++++++++---------
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 74 ++++++++++++++++-------------
+ drivers/scsi/megaraid/megaraid_sas_fusion.h |  8 +---
+ 3 files changed, 75 insertions(+), 63 deletions(-)
 
-Cheers,
+-- 
+1.7.12.4
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
-)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
