@@ -1,145 +1,33 @@
-From: Alexei Starovoitov <alexei.starovoitov@gmail.com>
-Subject: Re: Why is (2 < 2) true? Is it a gcc bug?
-Date: Fri, 17 Jan 2014 13:43:45 -0800
-Message-ID: <CAADnVQL7zB2y0w4F-hYZ=RBe1bQg3X5pp-h=74HYZ1OSJ1K0xw@mail.gmail.com>
-References: <D9FFE20C522965449E182ACE73889AEB1A6A340F@IRSMSX105.ger.corp.intel.com>
-	<CAADnVQLUP=7oxciVw97d76xtqs6_YjC6E2boPRO9y4m_sqjRCA@mail.gmail.com>
-	<CAADnVQL=s8zc_ACSuPs8P3y-RB9Td8OZysM=0fj4sjzUPRzfGw@mail.gmail.com>
-	<20140117210201.GA390@x4>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: bio_integrity_verify() bug causing READ verify to be silently skipped
+Date: Fri, 17 Jan 2014 16:58:40 -0500
+Message-ID: <yq1ha92uv73.fsf@sermon.lab.mkp.net>
+References: <1387858826.5567.236.camel@haakon3.risingtidesystems.com>
+	<yq1sit4zv23.fsf@sermon.lab.mkp.net>
+	<1389936047.5567.721.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qa0-f41.google.com ([209.85.216.41]:35848 "EHLO
-	mail-qa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751369AbaAQVnq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Jan 2014 16:43:46 -0500
-In-Reply-To: <20140117210201.GA390@x4>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1389936047.5567.721.camel@haakon3.risingtidesystems.com>
+	(Nicholas A. Bellinger's message of "Thu, 16 Jan 2014 21:20:47 -0800")
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@HansenPartnership.com>, kmo@daterainc.com
 List-Id: linux-scsi@vger.kernel.org
-To: Markus Trippelsdorf <markus@trippelsdorf.de>
-Cc: "Dorau, Lukasz" <lukasz.dorau@intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, sebastian.riemer@profitbricks.com, richard.weinberger@gmail.com, Dan Williams <dan.j.williams@intel.com>
 
-On Fri, Jan 17, 2014 at 1:02 PM, Markus Trippelsdorf
-<markus@trippelsdorf.de> wrote:
-> On 2014.01.17 at 11:58 -0800, Alexei Starovoitov wrote:
->> On Fri, Jan 17, 2014 at 9:58 AM, Alexei Starovoitov
->> <alexei.starovoitov@gmail.com> wrote:
->> > On Fri, Jan 17, 2014 at 5:37 AM, Dorau, Lukasz <lukasz.dorau@intel.com> wrote:
->> >> Hi
->> >>
->> >> My story is very simply...
->> >> I applied the following patch:
->> >>
->> >> diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
->> >> --- a/drivers/scsi/isci/init.c
->> >> +++ b/drivers/scsi/isci/init.c
->> >> @@ -698,8 +698,11 @@ static int isci_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
->> >>         if (err)
->> >>                 goto err_host_alloc;
->> >>
->> >> -       for_each_isci_host(i, isci_host, pdev)
->> >> +       for_each_isci_host(i, isci_host, pdev) {
->> >> +               pr_err("(%d < %d) == %d\n",\
->> >> +                      i, SCI_MAX_CONTROLLERS, (i < SCI_MAX_CONTROLLERS));
->> >>                 scsi_scan_host(to_shost(isci_host));
->> >> +       }
->> >>
->> >>         return 0;
->> >>
->> >> --
->> >> 1.8.3.1
->> >>
->> >> Then I issued the command 'modprobe isci' on platform with two SCU controllers (Patsburg D or T chipset)
->> >> and received the following, very strange, output:
->> >>
->> >> (0 < 2) == 1
->> >> (1 < 2) == 1
->> >> (2 < 2) == 1
->> >>
->> >> Can anyone explain why (2 < 2) is true? Is it a gcc bug?
->> >
->> > gcc sees that i < array_size is the same as i < 2 as part of loop condition, so
->> > it optimizes (i < sci_max_controllers) into constant 1.
->> > and emits printk like:
->> >   printk ("\13(%d < %d) == %d\n", i_382, 2, 1);
->> >
->> >> (The kernel was compiled using gcc version 4.8.2.)
->> >
->> > it actually looks to be gcc 4.8 bug.
->> > Can you try gcc 4.7 ?
->> >
->>
->> It is interesting GCC 4.8 bug,
->> since it seems to expose issues in two compiler passes.
->>
->> here is test case:
->>
->> struct isci_host;
->> struct isci_orom;
->>
->> struct isci_pci_info {
->>   struct isci_host *hosts[2];
->>   struct isci_orom *orom;
->> } v = {{(struct isci_host *)1,(struct isci_host *)1}, 0};
->>
->> int printf(const char *fmt, ...);
->>
->> int isci_pci_probe()
->> {
->>   int i;
->>   struct isci_host *isci_host;
->>
->>   for (i = 0, isci_host = v.hosts[i];
->>        i < 2 && isci_host;
->>        isci_host = v.hosts[++i]) {
->>     printf("(%d < %d) == %d\n", i, 2, (i < 2));
->>   }
->>
->>   return 0;
->> }
->>
->> int main()
->> {
->>   isci_pci_probe();
->> }
->>
->> $ gcc bug.c
->> $./a.out
->> 0 < 2) == 1
->> (1 < 2) == 1
->> $ gcc bug.c -O2
->> $ ./a.out
->> (0 < 2) == 1
->> (1 < 2) == 1
->> Segmentation fault (core dumped)
->
-> Your testcase is invalid:
->
-> markus@x4 tmp % clang -fsanitize=undefined -Wall -Wextra -O2 bug.c
-> markus@x4 tmp % ./a.out
-> (0 < 2) == 1
-> (1 < 2) == 1
-> bug.c:16:20: runtime error: index 2 out of bounds for type 'struct isci_host *[2]'
->
-> As Jakub Jelinek said on IRC, changing the loop to e.g.:
->
->   for (i = 0;
->        i < 2 && (isci_host = v.hosts[i]);
->        i++) {
->
-> fixes the issue.
+>>>>> "nab" == Nicholas A Bellinger <nab@linux-iscsi.org> writes:
 
-testcase was reduced from drivers/scsi/isci/host.h written back in
-2011 (commit b329aff107)
-#define for_each_isci_host(id, ihost, pdev) \
-        for (id = 0, ihost = to_pci_info(pdev)->hosts[id]; \
-             id < ARRAY_SIZE(to_pci_info(pdev)->hosts) && ihost; \
-             ihost = to_pci_info(pdev)->hosts[++id])
+>> That breaks partial completion, though. I'll take a look at Kent's
+>> changes...
 
-yes, it does access 3rd element of 2 element array and will read junk.
+nab> Ping..?  Any updates on a proper bugfix for this..?
 
-C standard says the behavior is undefined and comes handy in compiler defense,
-but in this case compiler has obviously all the information to make
-right decision
-instead of misoptimizing the code.
-So yes, the loop is erroneous, non-portable, etc, but gcc can be smarter.
+I did put your patch in my queue and have been working on a fix for the
+partial completion case. The latter requires a bit of massaging that
+interferes with other pending changes.
+
+Given that your patch does address a valid issue I'm OK with Jens
+putting it in as is. I'll build upon it for my changes.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
