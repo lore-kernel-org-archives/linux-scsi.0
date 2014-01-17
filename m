@@ -1,184 +1,145 @@
-From: =?UTF-8?B?UGV0ZXIgUGFsw7pjaA==?= <Peter.Paluch-7KFcp/riIjesQNkk2E3g2Q@public.gmane.org>
-Subject: Re: XHCI issues: WD MyBook 1230 - reset SuperSpeed USB device
-Date: Fri, 17 Jan 2014 22:14:57 +0100
-Message-ID: <52D99D51.1030100@fri.uniza.sk>
-References: <Pine.LNX.4.44L0.1401161532560.1109-100000@iolanthe.rowland.org> <52D8DD45.9010602@suse.de> <52D991BA.40903@interlog.com>
+From: Alexei Starovoitov <alexei.starovoitov@gmail.com>
+Subject: Re: Why is (2 < 2) true? Is it a gcc bug?
+Date: Fri, 17 Jan 2014 13:43:45 -0800
+Message-ID: <CAADnVQL7zB2y0w4F-hYZ=RBe1bQg3X5pp-h=74HYZ1OSJ1K0xw@mail.gmail.com>
+References: <D9FFE20C522965449E182ACE73889AEB1A6A340F@IRSMSX105.ger.corp.intel.com>
+	<CAADnVQLUP=7oxciVw97d76xtqs6_YjC6E2boPRO9y4m_sqjRCA@mail.gmail.com>
+	<CAADnVQL=s8zc_ACSuPs8P3y-RB9Td8OZysM=0fj4sjzUPRzfGw@mail.gmail.com>
+	<20140117210201.GA390@x4>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <52D991BA.40903-qazKcTl6WRFWk0Htik3J/w@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: dgilbert-qazKcTl6WRFWk0Htik3J/w@public.gmane.org, Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>, Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Cc: "linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Christian Franke <Christian.Franke-zqRNUXuvxA0b1SvskN2V4Q@public.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-qa0-f41.google.com ([209.85.216.41]:35848 "EHLO
+	mail-qa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751369AbaAQVnq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Jan 2014 16:43:46 -0500
+In-Reply-To: <20140117210201.GA390@x4>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Markus Trippelsdorf <markus@trippelsdorf.de>
+Cc: "Dorau, Lukasz" <lukasz.dorau@intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, sebastian.riemer@profitbricks.com, richard.weinberger@gmail.com, Dan Williams <dan.j.williams@intel.com>
 
-Gentlemen,
-
-=46irst of all, thank you very much for looking into this issue.
-
-Alan, for the sake of keeping the thread tidy in archives, I am not=20
-going to change the $SUBJECT of this e-mail but I wholeheartedly agree=20
-that this is not an xHCI issue. Mea culpa; I did not know that at the=20
-time I first reported it.
-
-Douglas, Hannes: I believe we are definitely on to something. I do _not=
-_=20
-run smartd but this may be caused by something in my Gnome3 GUI=20
-environment. I have noticed that when I am not logged in to Gnome and=20
-work just in the text console, plugging in the USB drive and accessing=20
-it works without any issues. Only when I am logged into my Gnome and=20
-plug the drive in, Gnome obviously tries to do something with the drive=
-=20
-that causes it to stall and recover in 30 seconds. I have not yet been=20
-able to identify what it is.
-
-I am not subscribed to linux-scsi mailing list so if you believe=20
-anything of this is relevant please forward that mail there.
-
-Thank you!
-
-Best regards,
-Peter
-
-
-
-
-On 17.01.2014 21:25, Douglas Gilbert wrote:
-> On 14-01-17 02:35 AM, Hannes Reinecke wrote:
->> On 01/16/2014 09:48 PM, Alan Stern wrote:
->>> It's now clear that this is _not_ an XHCI issue, contrary to what
->>> $SUBJECT says.
->>>
->>> On Thu, 16 Jan 2014, Peter Pal=C3=BAch wrote:
->>>
->>>> Alan,
->>>>
->>>> I am attaching the usbmon trace after the drive has been plugged i=
-nto
->>>> the USB-2 port. Record of the drive in stall should occur around t=
-he
->>>> file offset 87808 (decimal). The log was done on the 3.12.7 kernel
->>>> without CONFIG_PM. Should I do a usbmon trace on my regular kernel=
-=20
->>>> with
->>>> CONFIG_PM as well?
->>>
->>> No need.
->>>
->>>> dmesg transcript:
->>>>
->>>> root@bach:/tmp# dmesg
->>>> usb 4-1.2: new high-speed USB device number 5 using ehci-pci
->>>> usb 4-1.2: New USB device found, idVendor=3D1058, idProduct=3D1230
->>>> usb 4-1.2: New USB device strings: Mfr=3D2, Product=3D3, SerialNum=
-ber=3D1
->>>> usb 4-1.2: Product: My Book 1230
->>>> usb 4-1.2: Manufacturer: Western Digital
->>>> usb 4-1.2: SerialNumber: 574D43344E30323438393836
->>>> usb-storage 4-1.2:1.0: USB Mass Storage device detected
->>>> scsi6 : usb-storage 4-1.2:1.0
->>>> usbcore: registered new interface driver usb-storage
->>>> scsi 6:0:0:0: Direct-Access     WD       My Book 1230 1050 PQ: 0=20
->>>> ANSI: 6
->>>> scsi 6:0:0:1: Enclosure         WD       SES Device 1050 PQ: 0 ANS=
-I: 6
->>>> sd 6:0:0:0: Attached scsi generic sg2 type 0
->>>> scsi 6:0:0:1: Attached scsi generic sg3 type 13
->>>> sd 6:0:0:0: [sdb] Spinning up disk...
->>>> .........ready
->>>> sd 6:0:0:0: [sdb] 732558336 4096-byte logical blocks: (3.00 TB/2.7=
-2=20
->>>> TiB)
->>>> sd 6:0:0:0: [sdb] Write Protect is off
->>>> sd 6:0:0:0: [sdb] Mode Sense: 53 00 10 08
->>>> sd 6:0:0:0: [sdb] No Caching mode page found
->>>> sd 6:0:0:0: [sdb] Assuming drive cache: write through
->>>> sd 6:0:0:0: [sdb] 732558336 4096-byte logical blocks: (3.00 TB/2.7=
-2=20
->>>> TiB)
->>>> sd 6:0:0:0: [sdb] No Caching mode page found
->>>> sd 6:0:0:0: [sdb] Assuming drive cache: write through
->>>>    sdb: sdb1
->>>> sd 6:0:0:0: [sdb] 732558336 4096-byte logical blocks: (3.00 TB/2.7=
-2=20
->>>> TiB)
->>>> sd 6:0:0:0: [sdb] No Caching mode page found
->>>> sd 6:0:0:0: [sdb] Assuming drive cache: write through
->>>> sd 6:0:0:0: [sdb] Attached SCSI disk
->>>> usb 4-1.2: reset high-speed USB device number 5 using ehci-pci
->>>
->>> It looks like the reset occurred because the computer sent an
->>> ATA-passthru command to the disk, and the disk wasn't prepared to
->>> handle it properly.  The firmware crashed, requiring a reset.
->>>
->>> If anyone can explain, the command bytes in question were:
->>>
->>>     85082e00 00000000 00000000 0000ec00
+On Fri, Jan 17, 2014 at 1:02 PM, Markus Trippelsdorf
+<markus@trippelsdorf.de> wrote:
+> On 2014.01.17 at 11:58 -0800, Alexei Starovoitov wrote:
+>> On Fri, Jan 17, 2014 at 9:58 AM, Alexei Starovoitov
+>> <alexei.starovoitov@gmail.com> wrote:
+>> > On Fri, Jan 17, 2014 at 5:37 AM, Dorau, Lukasz <lukasz.dorau@intel.com> wrote:
+>> >> Hi
+>> >>
+>> >> My story is very simply...
+>> >> I applied the following patch:
+>> >>
+>> >> diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
+>> >> --- a/drivers/scsi/isci/init.c
+>> >> +++ b/drivers/scsi/isci/init.c
+>> >> @@ -698,8 +698,11 @@ static int isci_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+>> >>         if (err)
+>> >>                 goto err_host_alloc;
+>> >>
+>> >> -       for_each_isci_host(i, isci_host, pdev)
+>> >> +       for_each_isci_host(i, isci_host, pdev) {
+>> >> +               pr_err("(%d < %d) == %d\n",\
+>> >> +                      i, SCI_MAX_CONTROLLERS, (i < SCI_MAX_CONTROLLERS));
+>> >>                 scsi_scan_host(to_shost(isci_host));
+>> >> +       }
+>> >>
+>> >>         return 0;
+>> >>
+>> >> --
+>> >> 1.8.3.1
+>> >>
+>> >> Then I issued the command 'modprobe isci' on platform with two SCU controllers (Patsburg D or T chipset)
+>> >> and received the following, very strange, output:
+>> >>
+>> >> (0 < 2) == 1
+>> >> (1 < 2) == 1
+>> >> (2 < 2) == 1
+>> >>
+>> >> Can anyone explain why (2 < 2) is true? Is it a gcc bug?
+>> >
+>> > gcc sees that i < array_size is the same as i < 2 as part of loop condition, so
+>> > it optimizes (i < sci_max_controllers) into constant 1.
+>> > and emits printk like:
+>> >   printk ("\13(%d < %d) == %d\n", i_382, 2, 1);
+>> >
+>> >> (The kernel was compiled using gcc version 4.8.2.)
+>> >
+>> > it actually looks to be gcc 4.8 bug.
+>> > Can you try gcc 4.7 ?
+>> >
+>>
+>> It is interesting GCC 4.8 bug,
+>> since it seems to expose issues in two compiler passes.
+>>
+>> here is test case:
+>>
+>> struct isci_host;
+>> struct isci_orom;
+>>
+>> struct isci_pci_info {
+>>   struct isci_host *hosts[2];
+>>   struct isci_orom *orom;
+>> } v = {{(struct isci_host *)1,(struct isci_host *)1}, 0};
+>>
+>> int printf(const char *fmt, ...);
+>>
+>> int isci_pci_probe()
+>> {
+>>   int i;
+>>   struct isci_host *isci_host;
+>>
+>>   for (i = 0, isci_host = v.hosts[i];
+>>        i < 2 && isci_host;
+>>        isci_host = v.hosts[++i]) {
+>>     printf("(%d < %d) == %d\n", i, 2, (i < 2));
+>>   }
+>>
+>>   return 0;
+>> }
+>>
+>> int main()
+>> {
+>>   isci_pci_probe();
+>> }
+>>
+>> $ gcc bug.c
+>> $./a.out
+>> 0 < 2) == 1
+>> (1 < 2) == 1
+>> $ gcc bug.c -O2
+>> $ ./a.out
+>> (0 < 2) == 1
+>> (1 < 2) == 1
+>> Segmentation fault (core dumped)
 >
-> SCSI ATA PASS-THROUGH(16) command issuing the
-> mandatory ATA command 0xec which is IDENTIFY DEVICE.
-> [See SAT-3 drafts for more information on the pass-through
-> command.]
+> Your testcase is invalid:
 >
->>> and the sense data was:
->>>
->>>     7201001d 0000000e 090c0000 00005d00 01000000 0050
+> markus@x4 tmp % clang -fsanitize=undefined -Wall -Wextra -O2 bug.c
+> markus@x4 tmp % ./a.out
+> (0 < 2) == 1
+> (1 < 2) == 1
+> bug.c:16:20: runtime error: index 2 out of bounds for type 'struct isci_host *[2]'
 >
-> ATA spec says there should not (normally) be an error issued
-> by that command; but there was:
+> As Jakub Jelinek said on IRC, changing the loop to e.g.:
 >
-> $ sg_decode_sense -n 7201001d 0000000e 090c0000 00005d00 01000000 005=
-0
->  Descriptor format, current;  Sense key: Recovered Error
->  Additional sense: ATA pass through information available
->   Descriptor type: ATA Status Return
->     extend=3D0  error=3D0x0  sector_count=3D0x0
->     lba=3D0x000000
->     device=3D0x0  status=3D0x50
+>   for (i = 0;
+>        i < 2 && (isci_host = v.hosts[i]);
+>        i++) {
 >
-> Looks reasonable at the SCSI level, not sure about the
-> ATA level, perhaps others can comment.
->
->>> I don't know what either of these means, or even what software was
->>> responsible for sending this command.  It appears to have come from
->>> some user program, though, not the kernel.  Possibly something run =
-by
->>> udev.
->>>
->> Probably smartd.
->> The logic there is _less_ than perfect.
->
-> Guilty as charged. Silly us, fancy smartmontools issuing
-> mandatory ATA commands over a USB transport (MSC ?) and
-> expecting the device to be well-behaved :-)
->
->> Try to disable smartd and check if the issue remains.
->
-> Probably will help. Throwing away all your USB storage
-> devices (apart from those that do UAS(P)) would be even
-> more helpful (to us).
->
-> Perhaps smartmontools could do a better job of identifying
-> USB connected storage devices and avoid them.
->
-> Doug Gilbert
-> [a smartmontools maintainer]
->
+> fixes the issue.
 
---=20
-Ing. Peter Pal=C3=BAch, Ph.D.
-CCIE R&S #23527, CCIP, CCAI, Cisco Designated VIP 2011-2014 LAN & WAN
+testcase was reduced from drivers/scsi/isci/host.h written back in
+2011 (commit b329aff107)
+#define for_each_isci_host(id, ihost, pdev) \
+        for (id = 0, ihost = to_pci_info(pdev)->hosts[id]; \
+             id < ARRAY_SIZE(to_pci_info(pdev)->hosts) && ihost; \
+             ihost = to_pci_info(pdev)->hosts[++id])
 
-Department of InfoCom Networks
-=46aculty of Management Science and Informatics, University of Zilina
-Univerzitn=C3=A1 8215/1, 010 26 =C5=BDilina, Slovakia
+yes, it does access 3rd element of 2 element array and will read junk.
 
-WWW:  http://www.kis.fri.uniza.sk
-Tel.: +421-41-513-4325, +421-905-164432
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+C standard says the behavior is undefined and comes handy in compiler defense,
+but in this case compiler has obviously all the information to make
+right decision
+instead of misoptimizing the code.
+So yes, the loop is erroneous, non-portable, etc, but gcc can be smarter.
