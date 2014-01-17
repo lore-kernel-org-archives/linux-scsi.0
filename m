@@ -1,40 +1,39 @@
-From: David Laight <David.Laight@ACULAB.COM>
-Subject: RE: [PATCH 3.12 033/118] usb: xhci: Link TRB must not occur within
- a USB payload burst [NEW HARDWARE]
-Date: Fri, 17 Jan 2014 14:34:07 +0000
-Message-ID: <063D6719AE5E284EB5DD2968C1650D6D45EDA3@AcuExch.aculab.com>
-References: <20140109235045.GA17660@xanatos> <52D4791B.3030309@gmail.com>
- <20140114172056.GB12126@xanatos> <52D5ABBD.7090202@gmail.com>
+From: "Dorau, Lukasz" <lukasz.dorau@intel.com>
+Subject: RE: Why is (2 < 2) true? Is it a gcc bug?
+Date: Fri, 17 Jan 2014 14:55:39 +0000
+Message-ID: <D9FFE20C522965449E182ACE73889AEB1A6A3592@IRSMSX105.ger.corp.intel.com>
+References: <D9FFE20C522965449E182ACE73889AEB1A6A340F@IRSMSX105.ger.corp.intel.com>
+ <CAFLxGvz3FKU4rgjF_uZsggjvw8TQw_Hcp42GC8Zr-wg5kiwc-w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <52D5ABBD.7090202@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:34498 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750898AbaAQOzm convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Jan 2014 09:55:42 -0500
+In-Reply-To: <CAFLxGvz3FKU4rgjF_uZsggjvw8TQw_Hcp42GC8Zr-wg5kiwc-w@mail.gmail.com>
 Content-Language: en-US
-Sender: stable-owner@vger.kernel.org
-To: 'walt' <w41ter@gmail.com>, Sarah Sharp <sarah.a.sharp@linux.intel.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Linux Kernel <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Richard Weinberger <richard.weinberger@gmail.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-RnJvbTogd2FsdA0KPiBPeSwgU2FyYWghIDspICBJIHB1dCB0aGUgQVNNZWRpYSBhZGFwdGVyIGlu
-IG15IG9sZGVyIGFtZDY0IG1hY2hpbmUsIGFuZCwgd2VsbCwNCj4gdGhlIHN0dXBpZCB0aGluZyBK
-dXN0IFdvcmtzKFRNKSB3aXRoIGtlcm5lbCAzLjEyLjchICAoWWVzLCB3aXRoIHRoZSBzYW1lIGRp
-c2sNCj4gZG9ja2luZyBzdGF0aW9uLCB0b28uKQ0KPiANCj4gSSBjYW4ndCBiZWxpZXZlIHRoZSBh
-ZGFwdGVyIHdvcmtzIHBlcmZlY3RseSBpbiBhIGRpZmZlcmVudCBjb21wdXRlci4gIEhhdmUgeW91
-DQo+IHNlZW4gdGhpcyBraW5kIG9mIHRoaW5nIGJlZm9yZT8NCg0KQ291bGQgYmUgYSBob3JyaWQg
-dGltaW5nIHJhY2UgYmV0d2VlbiB0aGUgY3B1IGFuZCB4Y2hpIGNvbnRyb2xsZXIuDQpJZiB0aGUg
-Y3B1IG1hbmFnZXMgdG8gd3JpdGUgYSBOT1Agb3IgTElOSyBUUkIgZm9yIGEgZm9sbG93aW5nIHRy
-YW5zZmVyDQpiZWZvcmUgdGhlIGNvbnRyb2xsZXIgcG9sbHMgdGhlIG5leHQgZW50cnkgKGFmdGVy
-IHJhaXNpbmcgdGhlIElSUSkNCnRoZW4gdGhlIGNvbnRyb2xsZXIgbWlnaHQgcHJvY2VzcyB0aGUg
-TElOSyBhbmQgdGhlbiBnZXQgY29uZnVzZWQNCndoZW4gaXQgY2FuJ3QgcHJvY2VzcyB0aGUgbGlu
-a2VkLXRvIFRSQi4NClRoaXMgbWlnaHQgbm90IHNvdW5kIGxpa2VseSwgYnV0IFBDSWUgaGFzIHNp
-Z25pZmljYW50IGxhdGVuY3kuDQoNCj4gQXQgdGhlIG1vbWVudCBJIGhhdmUgdHdvIG1hY2hpbmVz
-IHVzaW5nIHlvdXIgeGhjaSBkcml2ZXIgYW5kIGJvdGggd29yayBwZXJmZWN0bHksDQo+IHNvIEkg
-dGhhbmsgeW91IGFnYWluIDopDQo+IA0KPiBJJ20gbm90IHN1cmUgd2hlcmUgdG8gZ28gd2l0aCB0
-aGlzIG5leHQuICBJIGNvdWxkIHB1dCB0aGUgYWRhcHRlciBiYWNrIGluIHRoZQ0KPiBvdGhlciBt
-YWNoaW5lIGFnYWluIGlmIHlvdSBoYXZlIG1vcmUgcGF0Y2hlcyB0byB0ZXN0Lg0KDQpDYW4geW91
-IHRyeSB0aGUgcGF0Y2ggSSBwb3N0ZWQgdGhhdCBzdG9wcyB0aGUgb3duZXJzaGlwIG9uIExJTksg
-VFJCcw0KYmVpbmcgY2hhbmdlZCBiZWZvcmUgdGhhdCBvbiB0aGUgbGlua2VkLXRvIFRSQj8NCg0K
-SSBnb3QgYSBwcml2YXRlIG1haWwgZnJvbSBzb21lb25lIGluZGljYXRpbmcgdGhhdCBteSBlYXJs
-aWVyICdtaW5pbWFsJw0KcGF0Y2ggaGVscGVkIGFuIEFTTWVkaWEgY29udHJvbGxlciB0YWxraW5n
-IHRvIHRoZSBhc3gxODlfMTc4YSBldGhlcm5ldA0KaGFyZHdhcmUuDQoNCglEYXZpZA0KDQoNCg==
+On Friday, January 17, 2014 2:58 PM Richard Weinberger <richard.weinberger@gmail.com> wrote:
+> 
+> Can you reproduce this using a standalone test?
+> I.e:
+> #include <assert.h>
+> 
+> int main()
+> {
+>         assert(2 < 2 != 1);
+> 
+>         return 0;
+> }
+> 
+
+No, I can't of course.
+
+Lukasz
+
