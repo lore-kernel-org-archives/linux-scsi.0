@@ -1,53 +1,93 @@
-From: Alexander Gordeev <agordeev@redhat.com>
-Subject: [PATCH v2 0/9] Phase out pci_enable_msi_block()
-Date: Fri, 17 Jan 2014 17:02:14 +0100
-Message-ID: <cover.1389904166.git.agordeev@redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>, Brian King <brking@us.ibm.com>, Tejun Heo <tj@kernel.org>, Matthew Wilcox <willy@linux.intel.com>, Alex Williamson <alex.williamson@redhat.com>, Kalle Valo <kvalo@qca.qualcomm.com>, Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>, linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com, ath10k@lists.infradead.org, linux-nvme@lists.infradead.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, kvm@vger.kernel.org, linux-pci@vger.kernel.org
+From: Sebastian Riemer <sebastian.riemer@profitbricks.com>
+Subject: Re: Why is (2 < 2) true? Is it a gcc bug?
+Date: Fri, 17 Jan 2014 17:40:10 +0100
+Message-ID: <52D95CEA.809@profitbricks.com>
+References: <D9FFE20C522965449E182ACE73889AEB1A6A340F@IRSMSX105.ger.corp.intel.com> <D9FFE20C522965449E182ACE73889AEB1A6A352E@IRSMSX105.ger.corp.intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bk0-f44.google.com ([209.85.214.44]:43169 "EHLO
+	mail-bk0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750937AbaAQQkO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Jan 2014 11:40:14 -0500
+Received: by mail-bk0-f44.google.com with SMTP id ej10so1727450bkb.3
+        for <linux-scsi@vger.kernel.org>; Fri, 17 Jan 2014 08:40:13 -0800 (PST)
+In-Reply-To: <D9FFE20C522965449E182ACE73889AEB1A6A352E@IRSMSX105.ger.corp.intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Dorau, Lukasz" <lukasz.dorau@intel.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-This series is against "next" branch in Bjorn's repo:
-git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
+On 17.01.2014 14:55, Dorau, Lukasz wrote:
+> On Friday, January 17, 2014 2:37 PM Dorau, Lukasz <lukasz.dorau@intel.com> wrote:
+>>
+>> Hi
+>>
+>> My story is very simply...
+>> I applied the following patch:
+>>
+>> diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
+>> --- a/drivers/scsi/isci/init.c
+>> +++ b/drivers/scsi/isci/init.c
+>> @@ -698,8 +698,11 @@ static int isci_pci_probe(struct pci_dev *pdev, const struct
+>> pci_device_id *id)
+>>  	if (err)
+>>  		goto err_host_alloc;
+>>
+>> -	for_each_isci_host(i, isci_host, pdev)
+>> +	for_each_isci_host(i, isci_host, pdev) {
+>> +		pr_err("(%d < %d) == %d\n",\
+>> +		       i, SCI_MAX_CONTROLLERS, (i < SCI_MAX_CONTROLLERS));
+>>  		scsi_scan_host(to_shost(isci_host));
+>> +	}
+>>
+>>  	return 0;
+>>
+>> --
+>> 1.8.3.1
+>>
+>> Then I issued the command 'modprobe isci' on platform with two SCU controllers
+>> (Patsburg D or T chipset)
+>> and received the following, very strange, output:
+>>
+>> (0 < 2) == 1
+>> (1 < 2) == 1
+>> (2 < 2) == 1
+>>
+>> Can anyone explain why (2 < 2) is true? Is it a gcc bug?
+>>
+>> (The kernel was compiled using gcc version 4.8.2.)
+>>
+> 
+> Some additional information:
+> 
+> The loop 'for' in macro ' for_each_isci_host ' defined as (drivers/scsi/isci/host.h:313):
+> 
+> #define for_each_isci_host(id, ihost, pdev) \
+>         for (id = 0, ihost = to_pci_info(pdev)->hosts[id]; \
+>              id < ARRAY_SIZE(to_pci_info(pdev)->hosts) && ihost; \
+>              ihost = to_pci_info(pdev)->hosts[++id])
+> 
+> should be executed only for i = 0 and 1, because:
+> ARRAY_SIZE(to_pci_info(pdev)->hosts) = SCI_MAX_CONTROLLERS = 2
+> 
+> but it was executed also for i=2 regardless the above loop's end condition. 
 
-Changes from v1 to v2:
-  - added a regression fix "ahci: Fix broken fallback to single
-    MSI mode" as patch 1/9;
-  - the series is reordered to move the regression fix in front;
-  - at Bjorn's request pci_enable_msi() is un-deprecated;
-  - as result, pci_enable_msi_range(pdev, 1, 1) styled calls
-    rolled back to pci_enable_msi(pdev);
-  - nvme bug fix moved out as a separate patch 5/9 "nvme: Fix
-    invalid call to irq_set_affinity_hint()"
-  - patches changelog elaborated a bit;
+to_pci_info() can return NULL in dev_get_drvdata(). The use of
+ARRAY_SIZE() is inappropriate.
 
-Bjorn,
+#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]) +
+__must_be_array(arr))
 
-As the release is supposedly this weekend, do you prefer
-the patches to go to your tree or to individual trees after
-the release?
+#define __must_be_array(a) BUILD_BUG_ON_ZERO(__same_type((a), &(a)[0]))
 
-Thanks!
+#define BUILD_BUG_ON_ZERO(e) (sizeof(struct { int:-!!(e); }))
 
-Alexander Gordeev (9):
-  ahci: Fix broken fallback to single MSI mode
-  ahci: Use pci_enable_msi_range()
-  ipr: Get rid of superfluous call to pci_disable_msi/msix()
-  ipr: Use pci_enable_msi_range() and pci_enable_msix_range()
-  nvme: Fix invalid call to irq_set_affinity_hint()
-  nvme: Use pci_enable_msi_range() and pci_enable_msix_range()
-  vfio: Use pci_enable_msi_range() and pci_enable_msix_range()
-  ath10k: Use pci_enable_msi_range()
-  wil6210: Use pci_enable_msi_range()
+I would say that this was supposed to trigger a build error but it
+didn't and added 1 to the loop end condition.
 
- drivers/ata/ahci.c                          |   18 +++++-----
- drivers/block/nvme-core.c                   |   33 ++++-------------
- drivers/net/wireless/ath/ath10k/pci.c       |   20 +++++-----
- drivers/net/wireless/ath/wil6210/pcie_bus.c |   36 ++++++++++---------
- drivers/scsi/ipr.c                          |   51 +++++++++-----------------
- drivers/vfio/pci/vfio_pci_intrs.c           |   12 ++++--
- 6 files changed, 72 insertions(+), 98 deletions(-)
+Can you test putting SCI_MAX_CONTROLLERS to the loop end condition, please?
 
--- 
-1.7.7.6
+Cheers,
+Sebastian
