@@ -1,90 +1,89 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Disk spin-up optimization during system resume
-Date: Fri, 17 Jan 2014 09:57:47 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1401170951270.1162-100000@iolanthe.rowland.org>
-References: <20140116220409.GA1183@linux.intel.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] scsi_error: disable eh_deadline if no host_reset_handler
+ is set
+Date: Fri, 17 Jan 2014 16:04:25 +0100
+Message-ID: <52D94679.4010408@suse.de>
+References: <1386846513-122051-1-git-send-email-hare@suse.de> <1389101625.3817.1042.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:54849 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752478AbaAQO5s (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Jan 2014 09:57:48 -0500
-In-Reply-To: <20140116220409.GA1183@linux.intel.com>
+Received: from cantor2.suse.de ([195.135.220.15]:38356 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753049AbaAQPE1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 17 Jan 2014 10:04:27 -0500
+In-Reply-To: <1389101625.3817.1042.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Todd E Brandt <todd.e.brandt@linux.intel.com>
-Cc: Phillip Susi <psusi@ubuntu.com>, Aaron Lu <aaron.lu@intel.com>, Tejun Heo <tj@kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
+To: emilne@redhat.com
+Cc: James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org
 
-On Thu, 16 Jan 2014, Todd E Brandt wrote:
+On 01/07/2014 02:33 PM, Ewan Milne wrote:
+> On Thu, 2013-12-12 at 12:08 +0100, Hannes Reinecke wrote:
+>> When the host template doesn't declare an eh_host_reset_handler
+>> the eh_deadline mechanism is pointless and will set the
+>> device to offline. So disable eh_deadline if no
+>> eh_host_reset_handler is present.
+>>
+>> Cc: Ewan Milne <emilne@redhat.com>
+>> Signed-off-by: Hannes Reinecke <hare@suse.de>
+>> ---
+>>  drivers/scsi/hosts.c      | 2 +-
+>>  drivers/scsi/scsi_sysfs.c | 4 +++-
+>>  2 files changed, 4 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+>> index 6966def..351afa4 100644
+>> --- a/drivers/scsi/hosts.c
+>> +++ b/drivers/scsi/hosts.c
+>> @@ -396,7 +396,7 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_ho=
+st_template *sht, int privsize)
+>>  	shost->unchecked_isa_dma =3D sht->unchecked_isa_dma;
+>>  	shost->use_clustering =3D sht->use_clustering;
+>>  	shost->ordered_tag =3D sht->ordered_tag;
+>> -	if (shost_eh_deadline =3D=3D -1)
+>> +	if (shost_eh_deadline =3D=3D -1 || !sht->eh_host_reset_handler)
+>>  		shost->eh_deadline =3D -1;
+>>  	else if ((ulong) shost_eh_deadline * HZ > INT_MAX) {
+>>  		shost_printk(KERN_WARNING, shost,
+>> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+>> index 9117d0b..7434e26 100644
+>> --- a/drivers/scsi/scsi_sysfs.c
+>> +++ b/drivers/scsi/scsi_sysfs.c
+>> @@ -300,7 +300,9 @@ store_shost_eh_deadline(struct device *dev, stru=
+ct device_attribute *attr,
+>>  	int ret =3D -EINVAL;
+>>  	unsigned long deadline, flags;
+>> =20
+>> -	if (shost->transportt && shost->transportt->eh_strategy_handler)
+>> +	if (shost->transportt &&
+>> +	    (shost->transportt->eh_strategy_handler ||
+>> +	     !shost->transportt->eh_host_reset_handler))
+>=20
+> I think this bit is supposed to be:
+>=20
+>         if ((shost->transportt &&
+>              shost->transportt->eh_strategy_handler) ||
+>             !shost->hostt->eh_host_reset_handler)
+>                 return ret;
+>=20
+> because the field is in the scsi_host_template structure, right?
+>=20
+Right. Obviously.
 
-> On Thu, Jan 16, 2014 at 03:05:40PM -0500, Alan Stern wrote:
-> > On Thu, 16 Jan 2014, Todd E Brandt wrote:
-> > 
-> > > > Does this plan sound reasonable to everyone?  Are there important
-> > > > aspects I haven't considered (such as interactions between the SCSI and
-> > > > ATA layers)?
-> > > > 
-> > > > Alan Stern
-> > > > 
-> > > 
-> > > Both approaches employ non-blocking resume of the scsi disks so why don't
-> > > we treat these two patch sets as parts one and two. My patch just spins
-> > > everything up but sets everything to non-blocking, so it will take care
-> > > of the most common use cases. Your patch will then fine-tune that behavior
-> > > to only spin up those disks that are actually needed. I don't think there
-> > > are any serious conflicts between the two patch sets.
-> > 
-> > Hmmm.  In your 2/2 patch, sd_resume_complete() gets called in atomic
-> > context.  I would need a process context in order to carry out a
-> > runtime resume.  Any suggestions?
-> 
-> The complete call is really just there to printk any errors and free
-> the sense buffer. Why would you want to carry out a runtime resume in
-> it?
+I'll be sending an updated patch.
 
->From my earlier message:
+Cheers,
 
- 	Otherwise, check to see whether the disk is spinning up all
- 	by itself.  This presumably will involve issuing a TEST UNIT
- 	READY command and checking the sense data.  Maybe something
- 	different will be needed for ATA disks; I don't know.
- 
- 	If the disk is spinning, or if you can't tell, call
- 	pm_runtime_resume() to put the disk back into the
- 	RPM_ACTIVE state (and spin it up in the case where you 
- 	couldn't tell what it was doing).
-
-As you can see, the runtime resume is carried out in the completion
-routine for the TEST UNIT READY command.  Since the command is likely
-to take a long time (Phillip said it can take up to 10 seconds for ATA
-disks), we want it to be asynchronous, like the START-STOP command.
-
-> > Also, I don't understand the point of your 1/2 patch.  If the whole
-> > point of that patch was to carry out the ATA port resume asynchronously
-> > ("thus allowing the next device in the pm queue to resume"), doesn't
-> > device_enable_async_suspend() already do that for you?
-> > 
-> > Alan Stern
-> > 
-> 
-> The device_enable_async_suspend call is used to set a pm flag which lets
-> the power manager know that this device can be added to the async suspend
-> queue. Basically that means that it can be suspended/resumed in parallel
-> with all the other async devices, but resume still waits for all those
-> devices to finish before completing system resume.
-
-Correct.
-
-> My patch makes ata port and scsi disk resume 'non-blocking' (asynchronous
-> with respect to system resume). Which means once they're called the power
-> manager pays no more attention to them and will complete system resume
-> whenever. Both the power manager and the ata subsystems call these 
-> features 'asynchronous' so it can be confusing.
-
-I see.  That's not explained very well in the patch description -- it
-talks about going on to resume the next device on the list, but not
-about waiting for the overall system resume to finish.
-
-Alan Stern
-
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
+)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
