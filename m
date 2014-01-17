@@ -1,47 +1,50 @@
-From: Steve Magnani <steve.magnani@digidescorp.com>
-Subject: Re: Why is (2 < 2) true? Is it a gcc bug?
-Date: Fri, 17 Jan 2014 09:47:05 -0600
-Message-ID: <52D95079.1060803@digidescorp.com>
-References: <D9FFE20C522965449E182ACE73889AEB1A6A340F@IRSMSX105.ger.corp.intel.com> <CAFLxGvz3FKU4rgjF_uZsggjvw8TQw_Hcp42GC8Zr-wg5kiwc-w@mail.gmail.com> <D9FFE20C522965449E182ACE73889AEB1A6A3592@IRSMSX105.ger.corp.intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ig0-f175.google.com ([209.85.213.175]:35939 "EHLO
-	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751973AbaAQPrI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Jan 2014 10:47:08 -0500
-Received: by mail-ig0-f175.google.com with SMTP id uq10so1896568igb.2
-        for <linux-scsi@vger.kernel.org>; Fri, 17 Jan 2014 07:47:07 -0800 (PST)
-In-Reply-To: <D9FFE20C522965449E182ACE73889AEB1A6A3592@IRSMSX105.ger.corp.intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: [PATCH v2 3/9] ipr: Get rid of superfluous call to pci_disable_msi/msix()
+Date: Fri, 17 Jan 2014 17:02:17 +0100
+Message-ID: <458b5ff1d1edeaba52cad80a671721c39de01338.1389904166.git.agordeev@redhat.com>
+References: <cover.1389904166.git.agordeev@redhat.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <cover.1389904166.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>, Brian King <brking@us.ibm.com>, linux-scsi@vger.kernel.org, kvm@vger.kernel.org, linux-pci@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Dorau, Lukasz" <lukasz.dorau@intel.com>, Richard Weinberger <richard.weinberger@gmail.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 01/17/2014 08:55 AM, Dorau, Lukasz wrote:
+There is no need to call pci_disable_msi() or pci_disable_msix()
+in case the call to pci_enable_msi() or pci_enable_msix() failed.
 
-> On Friday, January 17, 2014 2:58 PM Richard Weinberger <richard.weinberger@gmail.com> wrote:
->> Can you reproduce this using a standalone test?
->> I.e:
->> #include <assert.h>
->>
->> int main()
->> {
->>          assert(2 < 2 != 1);
->>
->>          return 0;
->> }
->>
-> No, I can't of course.
->
-The test might need to be more complex in order to prevent the compiler from optimizing away the issue. Or, you could try -O0.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/scsi/ipr.c |    8 ++------
+ 1 files changed, 2 insertions(+), 6 deletions(-)
 
-------------------------------------------------------------------------
-
-  Steven J. Magnani               "I claim this network for MARS!
-
-  www.digidescorp.com              Earthling, return my space modulator!"
-
-  #include <standard.disclaimer>
-
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index 36ac1c3..fb57e21 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -9255,10 +9255,8 @@ static int ipr_enable_msix(struct ipr_ioa_cfg *ioa_cfg)
+ 	while ((err = pci_enable_msix(ioa_cfg->pdev, entries, vectors)) > 0)
+ 			vectors = err;
+ 
+-	if (err < 0) {
+-		pci_disable_msix(ioa_cfg->pdev);
++	if (err < 0)
+ 		return err;
+-	}
+ 
+ 	if (!err) {
+ 		for (i = 0; i < vectors; i++)
+@@ -9278,10 +9276,8 @@ static int ipr_enable_msi(struct ipr_ioa_cfg *ioa_cfg)
+ 	while ((err = pci_enable_msi_block(ioa_cfg->pdev, vectors)) > 0)
+ 			vectors = err;
+ 
+-	if (err < 0) {
+-		pci_disable_msi(ioa_cfg->pdev);
++	if (err < 0)
+ 		return err;
+-	}
+ 
+ 	if (!err) {
+ 		for (i = 0; i < vectors; i++)
+-- 
+1.7.7.6
