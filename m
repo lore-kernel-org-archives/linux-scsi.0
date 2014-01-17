@@ -1,173 +1,100 @@
-From: Alexei Starovoitov <alexei.starovoitov@gmail.com>
-Subject: Re: Why is (2 < 2) true? Is it a gcc bug?
-Date: Fri, 17 Jan 2014 11:58:28 -0800
-Message-ID: <CAADnVQL=s8zc_ACSuPs8P3y-RB9Td8OZysM=0fj4sjzUPRzfGw@mail.gmail.com>
-References: <D9FFE20C522965449E182ACE73889AEB1A6A340F@IRSMSX105.ger.corp.intel.com>
-	<CAADnVQLUP=7oxciVw97d76xtqs6_YjC6E2boPRO9y4m_sqjRCA@mail.gmail.com>
+From: Mike Miller <mike.miller@hp.com>
+Subject: [PATCH 1/1] scsi: hpsa resubmit all PCI IDs
+Date: Fri, 17 Jan 2014 14:14:54 -0600
+Message-ID: <20140117201454.GC9658@beardog.cce.hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAADnVQLUP=7oxciVw97d76xtqs6_YjC6E2boPRO9y4m_sqjRCA@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Dorau, Lukasz" <lukasz.dorau@intel.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, sebastian.riemer@profitbricks.com, richard.weinberger@gmail.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from g5t0008.atlanta.hp.com ([15.192.0.45]:38200 "EHLO
+	g5t0008.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753337AbaAQUPs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Jan 2014 15:15:48 -0500
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>Andrew Morton <akpm@linux-foundation.org>, "James E. J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>, thenzl@redhat.com, hare@suse.de
 
-On Fri, Jan 17, 2014 at 9:58 AM, Alexei Starovoitov
-<alexei.starovoitov@gmail.com> wrote:
-> On Fri, Jan 17, 2014 at 5:37 AM, Dorau, Lukasz <lukasz.dorau@intel.com> wrote:
->> Hi
->>
->> My story is very simply...
->> I applied the following patch:
->>
->> diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
->> --- a/drivers/scsi/isci/init.c
->> +++ b/drivers/scsi/isci/init.c
->> @@ -698,8 +698,11 @@ static int isci_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
->>         if (err)
->>                 goto err_host_alloc;
->>
->> -       for_each_isci_host(i, isci_host, pdev)
->> +       for_each_isci_host(i, isci_host, pdev) {
->> +               pr_err("(%d < %d) == %d\n",\
->> +                      i, SCI_MAX_CONTROLLERS, (i < SCI_MAX_CONTROLLERS));
->>                 scsi_scan_host(to_shost(isci_host));
->> +       }
->>
->>         return 0;
->>
->> --
->> 1.8.3.1
->>
->> Then I issued the command 'modprobe isci' on platform with two SCU controllers (Patsburg D or T chipset)
->> and received the following, very strange, output:
->>
->> (0 < 2) == 1
->> (1 < 2) == 1
->> (2 < 2) == 1
->>
->> Can anyone explain why (2 < 2) is true? Is it a gcc bug?
->
-> gcc sees that i < array_size is the same as i < 2 as part of loop condition, so
-> it optimizes (i < sci_max_controllers) into constant 1.
-> and emits printk like:
->   printk ("\13(%d < %d) == %d\n", i_382, 2, 1);
->
->> (The kernel was compiled using gcc version 4.8.2.)
->
-> it actually looks to be gcc 4.8 bug.
-> Can you try gcc 4.7 ?
->
-> gcc 4.7 compiles your loop into the following:
-> <bb 74>:
->   # i_382 = PHI <0(73), i_73(74)>
->   # isci_host_148 = PHI <isci_host_63(73), isci_host_74(74)>
->   printk ("\13(%d < %d) == %d\n", i_382, 2, 1);
->   D.43295_70 = MEM[(struct isci_host *)isci_host_148 + 18632B];
->   # DEBUG D#6 => isci_host_148
->   # DEBUG ihost s=> ihost
->   scsi_scan_host (D.43295_70);
->   # DEBUG pdev => pdev_17(D)
->   # DEBUG pdev => pdev_17(D)
->   D.43629_353 = dev_get_drvdata (D.42809_20);
->   i_73 = i_382 + 1;
->   # DEBUG i => i_73
->   isci_host_74 = MEM[(struct isci_pci_info *)D.43629_353].hosts[i_73];
->   # DEBUG isci_host => isci_host_74
->   # DEBUG isci_host => isci_host_74
->   # DEBUG i => i_73
->   i.9_79 = (unsigned int) i_73;
->   D.42849_65 = i.9_79 <= 1;
->   D.42850_66 = isci_host_74 != 0B;
->   D.42851_67 = D.42850_66 & D.42849_65;
->   if (D.42851_67 != 0)
->     goto <bb 74>;
->   else
->     goto <bb 77>;
->
-> which looks correct to me.
->
-> while gcc 4.8.2 into:
->   <bb 92>:
->   # i_73 = PHI <i_82(93), 0(91)>
->   # isci_host_274 = PHI <isci_host_83(93), isci_host_71(91)>
->   # DEBUG isci_host => isci_host_274
->   # DEBUG i => i_73
->   printk ("\13(%d < %d) == %d\n", i_73, 2, 1);
->   _79 = MEM[(struct isci_host *)isci_host_274 + 18632B];
->   # DEBUG D#6 => isci_host_274
->   # DEBUG ihost => D#6
->   scsi_scan_host (_79);
->   # DEBUG pdev => pdev_26(D)
->   # DEBUG pdev => pdev_26(D)
->   _97 = dev_get_drvdata (_29);
->   i_82 = i_73 + 1;
->   # DEBUG i => i_82
->   isci_host_83 = MEM[(struct isci_pci_info *)_97].hosts[i_82];
->   # DEBUG isci_host => isci_host_83
->   # DEBUG isci_host => isci_host_83
->   # DEBUG i => i_82
->   if (isci_host_83 != 0B)
->     goto <bb 93>;
->   else
->     goto <bb 90>;
->
->   <bb 93>:
->   goto <bb 92>;
->
-> in case of gcc4.8 the i<=1 comparison got optimized out and only
-> isci_host !=0 is left,
-> which looks incorrect.
+From: Mike Miller <mike.miller@hp.com>
 
-It is interesting GCC 4.8 bug,
-since it seems to expose issues in two compiler passes.
+This patch has every ID we have in our svn repository. Some controllers were
+cancelled, others added, now the cancelled ones are back. This patch made
+against linux-3.13.0-rc8. Now the tables are in sync with one another.
+Thanks to Tomas Henzl for pointing out the earlier problem.
 
-here is test case:
+Signed-off-by: Mike Miller <mike.miller@hp.com>
+---
+ drivers/scsi/hpsa.c |   14 +++++++++++++-
+ 1 files changed, 13 insertions(+), 1 deletions(-)
 
-struct isci_host;
-struct isci_orom;
-
-struct isci_pci_info {
-  struct isci_host *hosts[2];
-  struct isci_orom *orom;
-} v = {{(struct isci_host *)1,(struct isci_host *)1}, 0};
-
-int printf(const char *fmt, ...);
-
-int isci_pci_probe()
-{
-  int i;
-  struct isci_host *isci_host;
-
-  for (i = 0, isci_host = v.hosts[i];
-       i < 2 && isci_host;
-       isci_host = v.hosts[++i]) {
-    printf("(%d < %d) == %d\n", i, 2, (i < 2));
-  }
-
-  return 0;
-}
-
-int main()
-{
-  isci_pci_probe();
-}
-
-$ gcc bug.c
-$./a.out
-0 < 2) == 1
-(1 < 2) == 1
-$ gcc bug.c -O2
-$ ./a.out
-(0 < 2) == 1
-(1 < 2) == 1
-Segmentation fault (core dumped)
-
-workaround:
-
-disable Value Range Propagation pass:
--fdisable-tree-vrp1 -fdisable-tree-vrp2
-
-and complete unroll pass:
--fdisable-tree-cunrolli
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 348b207..614b9cb 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -91,7 +91,6 @@ static const struct pci_device_id hpsa_pci_device_id[] = {
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C, 0x3249},
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C, 0x324A},
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C, 0x324B},
+-	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C, 0x3233},
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSF,     0x103C, 0x3350},
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSF,     0x103C, 0x3351},
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSF,     0x103C, 0x3352},
+@@ -100,6 +99,7 @@ static const struct pci_device_id hpsa_pci_device_id[] = {
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSF,     0x103C, 0x3354},
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSF,     0x103C, 0x3355},
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSF,     0x103C, 0x3356},
++	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C, 0x1920},
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C, 0x1921},
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C, 0x1922},
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C, 0x1923},
+@@ -108,15 +108,20 @@ static const struct pci_device_id hpsa_pci_device_id[] = {
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C, 0x1926},
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C, 0x1928},
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C, 0x1929},
++	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C, 0x192A},
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C, 0x21BD},
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C, 0x21BE},
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C, 0x21BF},
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C, 0x21C0},
++	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C, 0x21C1},
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C, 0x21C2},
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C, 0x21C3},
++	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C, 0x21C4},
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C, 0x21C5},
++	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C, 0x21C6},
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C, 0x21C7},
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C, 0x21C8},
++	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C, 0x21C9},
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C, 0x21CA},
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C, 0x21CB},
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C, 0x21CC},
+@@ -149,22 +154,29 @@ static struct board_type products[] = {
+ 	{0x3354103C, "Smart Array P420i", &SA5_access},
+ 	{0x3355103C, "Smart Array P220i", &SA5_access},
+ 	{0x3356103C, "Smart Array P721m", &SA5_access},
++	{0x1920103C, "Smart Array P430i", &SA5_access},
+ 	{0x1921103C, "Smart Array P830i", &SA5_access},
+ 	{0x1922103C, "Smart Array P430", &SA5_access},
+ 	{0x1923103C, "Smart Array P431", &SA5_access},
+ 	{0x1924103C, "Smart Array P830", &SA5_access},
++	{0x1925103C, "Smart Array P831", &SA5_access},
+ 	{0x1926103C, "Smart Array P731m", &SA5_access},
+ 	{0x1928103C, "Smart Array P230i", &SA5_access},
+ 	{0x1929103C, "Smart Array P530", &SA5_access},
++	{0x192A103C, "Smart Array P531", &SA5_access},
+ 	{0x21BD103C, "Smart Array", &SA5_access},
+ 	{0x21BE103C, "Smart Array", &SA5_access},
+ 	{0x21BF103C, "Smart Array", &SA5_access},
+ 	{0x21C0103C, "Smart Array", &SA5_access},
++	{0x21C1103C, "Smart Array", &SA5_access},
+ 	{0x21C2103C, "Smart Array", &SA5_access},
+ 	{0x21C3103C, "Smart Array", &SA5_access},
++	{0x21C4103C, "Smart Array", &SA5_access},
+ 	{0x21C5103C, "Smart Array", &SA5_access},
++	{0x21C6103C, "Smart Array", &SA5_access},
+ 	{0x21C7103C, "Smart Array", &SA5_access},
+ 	{0x21C8103C, "Smart Array", &SA5_access},
++	{0x21C9103C, "Smart Array", &SA5_access},
+ 	{0x21CA103C, "Smart Array", &SA5_access},
+ 	{0x21CB103C, "Smart Array", &SA5_access},
+ 	{0x21CC103C, "Smart Array", &SA5_access},
