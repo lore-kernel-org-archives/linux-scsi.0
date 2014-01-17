@@ -1,103 +1,175 @@
-From: Alexander Gordeev <agordeev@redhat.com>
-Subject: [PATCH v2 4/9] ipr: Use pci_enable_msi_range() and pci_enable_msix_range()
-Date: Fri, 17 Jan 2014 17:02:18 +0100
-Message-ID: <eb0b62be65c050533f2565fcf3f1d673770dfd67.1389904166.git.agordeev@redhat.com>
-References: <cover.1389904166.git.agordeev@redhat.com>
-Return-path: <linux-pci-owner@vger.kernel.org>
-In-Reply-To: <cover.1389904166.git.agordeev@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>, Brian King <brking@us.ibm.com>, linux-scsi@vger.kernel.org, kvm@vger.kernel.org, linux-pci@vger.kernel.org
+From: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
+Subject: RE: [PATCH 1/1] scsi: hpsa, add all PCI ID's that HP has in svn
+Date: Fri, 17 Jan 2014 16:01:42 +0000
+Message-ID: <48275AD710FCA34184C2B6186B4016B32D1A0BF3@G6W2491.americas.hpqcorp.net>
+References: <20140116195112.GA9658@beardog.cce.hp.com>
+ <52D948A5.1070706@redhat.com>
+ <48275AD710FCA34184C2B6186B4016B32D1A0B01@G6W2491.americas.hpqcorp.net>
+ <52D94CBB.5020701@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <52D94CBB.5020701@suse.de>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Tomas Henzl <thenzl@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, "James E. J. Bottomley" <James.Bottomley@HansenPartnership.com>, LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>, "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
 List-Id: linux-scsi@vger.kernel.org
 
-As result deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range() and pci_enable_msix_range()
-interfaces.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- drivers/scsi/ipr.c |   47 ++++++++++++++++++-----------------------------
- 1 files changed, 18 insertions(+), 29 deletions(-)
 
-diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index fb57e21..3841298 100644
---- a/drivers/scsi/ipr.c
-+++ b/drivers/scsi/ipr.c
-@@ -9245,47 +9245,36 @@ ipr_get_chip_info(const struct pci_device_id *dev_id)
- static int ipr_enable_msix(struct ipr_ioa_cfg *ioa_cfg)
- {
- 	struct msix_entry entries[IPR_MAX_MSIX_VECTORS];
--	int i, err, vectors;
-+	int i, vectors;
- 
- 	for (i = 0; i < ARRAY_SIZE(entries); ++i)
- 		entries[i].entry = i;
- 
--	vectors = ipr_number_of_msix;
-+	vectors = pci_enable_msix_range(ioa_cfg->pdev, entries,
-+					1, ipr_number_of_msix);
-+	if (vectors < 0)
-+		return vectors;
- 
--	while ((err = pci_enable_msix(ioa_cfg->pdev, entries, vectors)) > 0)
--			vectors = err;
-+	for (i = 0; i < vectors; i++)
-+		ioa_cfg->vectors_info[i].vec = entries[i].vector;
-+	ioa_cfg->nvectors = vectors;
- 
--	if (err < 0)
--		return err;
--
--	if (!err) {
--		for (i = 0; i < vectors; i++)
--			ioa_cfg->vectors_info[i].vec = entries[i].vector;
--		ioa_cfg->nvectors = vectors;
--	}
--
--	return err;
-+	return 0;
- }
- 
- static int ipr_enable_msi(struct ipr_ioa_cfg *ioa_cfg)
- {
--	int i, err, vectors;
-+	int i, vectors;
- 
--	vectors = ipr_number_of_msix;
-+	vectors = pci_enable_msi_range(ioa_cfg->pdev, 1, ipr_number_of_msix);
-+	if (vectors < 0)
-+		return vectors;
- 
--	while ((err = pci_enable_msi_block(ioa_cfg->pdev, vectors)) > 0)
--			vectors = err;
-+	for (i = 0; i < vectors; i++)
-+		ioa_cfg->vectors_info[i].vec = ioa_cfg->pdev->irq + i;
-+	ioa_cfg->nvectors = vectors;
- 
--	if (err < 0)
--		return err;
--
--	if (!err) {
--		for (i = 0; i < vectors; i++)
--			ioa_cfg->vectors_info[i].vec = ioa_cfg->pdev->irq + i;
--		ioa_cfg->nvectors = vectors;
--	}
--
--	return err;
-+	return 0;
- }
- 
- static void name_msi_vectors(struct ipr_ioa_cfg *ioa_cfg)
-@@ -9350,7 +9339,7 @@ static irqreturn_t ipr_test_intr(int irq, void *devp)
-  * ipr_test_msi - Test for Message Signaled Interrupt (MSI) support.
-  * @pdev:		PCI device struct
-  *
-- * Description: The return value from pci_enable_msi() can not always be
-+ * Description: The return value from pci_enable_msi_range() can not always be
-  * trusted.  This routine sets up and initiates a test interrupt to determine
-  * if the interrupt is received via the ipr_test_intr() service routine.
-  * If the tests fails, the driver will fall back to LSI.
--- 
-1.7.7.6
+> -----Original Message-----
+> From: Hannes Reinecke [mailto:hare@suse.de]
+> Sent: Friday, January 17, 2014 9:31 AM
+> To: Miller, Mike (OS Dev)
+> Cc: Tomas Henzl; Andrew Morton; James E. J. Bottomley; LKML; LKML-scs=
+i;
+> Stephen M. Cameron
+> Subject: Re: [PATCH 1/1] scsi: hpsa, add all PCI ID's that HP has in =
+svn
+>=20
+> On 01/17/2014 04:17 PM, Miller, Mike (OS Dev) wrote:
+> >
+> >
+> >> -----Original Message-----
+> >> From: Tomas Henzl [mailto:thenzl@redhat.com]
+> >> Sent: Friday, January 17, 2014 9:14 AM
+> >> To: Miller, Mike (OS Dev); Andrew Morton; James E. J. Bottomley
+> >> Cc: LKML; LKML-scsi; hare@suse.de; Stephen M. Cameron
+> >> Subject: Re: [PATCH 1/1] scsi: hpsa, add all PCI ID's that HP has =
+in
+> >> svn
+> >>
+> >> On 01/16/2014 08:51 PM, Mike Miller wrote:
+> >>> From: Mike Miller <mike.miller@hp.com>
+> >>>
+> >>> This patch has every ID we have in our svn repository. Some
+> >>> controllers were cancelled, others added, now the cancelled ones =
+are
+> >>> back. Apparently the debate rages on about which controllers are
+> >>> cancelled, which are not, whatever. Please accept this patch. It =
+is
+> >>> dependent upon the patches I sent yesterday.
+> >>> This patch made/tested against kernel-3.13.0-rc8
+> >>>
+> >>> Signed-off-by: Mike Miller <mike.miller@hp.com>
+> >>> ---
+> >>>  drivers/scsi/hpsa.c |   12 ++++++++++++
+> >>>  1 files changed, 12 insertions(+), 0 deletions(-)
+> >>>
+> >>> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c index
+> >>> 348b207..3affec5 100644
+> >>> --- a/drivers/scsi/hpsa.c
+> >>> +++ b/drivers/scsi/hpsa.c
+> >>> @@ -100,6 +100,7 @@ static const struct pci_device_id
+> >> hpsa_pci_device_id[] =3D {
+> >>>  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSF,     0x103C,
+> >> 0x3354},
+> >>>  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSF,     0x103C,
+> >> 0x3355},
+> >>>  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSF,     0x103C,
+> >> 0x3356},
+> >>> +	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C,
+> >> 0x1920},
+> >>>  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C,
+> >> 0x1921},
+> >>>  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C,
+> >> 0x1922},
+> >>>  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C,
+> >> 0x1923},
+> >>> @@ -108,15 +109,19 @@ static const struct pci_device_id
+> >> hpsa_pci_device_id[] =3D {
+> >>>  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C,
+> >> 0x1926},
+> >>>  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C,
+> >> 0x1928},
+> >>>  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C,
+> >> 0x1929},
+> >>> +	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C,
+> >> 0x192A},
+> >>>  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C,
+> >> 0x21BD},
+> >>>  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C,
+> >> 0x21BE},
+> >>>  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C,
+> >> 0x21BF},
+> >>>  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C,
+> >> 0x21C0},
+> >>>  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C,
+> >> 0x21C2},
+> >>>  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C,
+> >> 0x21C3},
+> >>> +	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C,
+> >> 0x21C4},
+> >>>  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C,
+> >> 0x21C5},
+> >>> +	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C,
+> >> 0x21C6},
+> >>>  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C,
+> >> 0x21C7},
+> >>>  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C,
+> >> 0x21C8},
+> >>> +	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C,
+> >> 0x21C9},
+> >>>  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C,
+> >> 0x21CA},
+> >>>  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C,
+> >> 0x21CB},
+> >>>  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C,
+> >> 0x21CC},
+> >>> @@ -149,22 +154,29 @@ static struct board_type products[] =3D {
+> >>>  	{0x3354103C, "Smart Array P420i", &SA5_access},
+> >>>  	{0x3355103C, "Smart Array P220i", &SA5_access},
+> >>>  	{0x3356103C, "Smart Array P721m", &SA5_access},
+> >>> +	{0x1920103C, "Smart Array P430i", &SA5_access},
+> >>>  	{0x1921103C, "Smart Array P830i", &SA5_access},
+> >>>  	{0x1922103C, "Smart Array P430", &SA5_access},
+> >>>  	{0x1923103C, "Smart Array P431", &SA5_access},
+> >>>  	{0x1924103C, "Smart Array P830", &SA5_access},
+> >>> +	{0x1925103C, "Smart Array P831", &SA5_access},
+> >>>  	{0x1926103C, "Smart Array P731m", &SA5_access},
+> >>>  	{0x1928103C, "Smart Array P230i", &SA5_access},
+> >>>  	{0x1929103C, "Smart Array P530", &SA5_access},
+> >>> +	{0x192A103C, "Smart Array P531", &SA5_access},
+> >>>  	{0x21BD103C, "Smart Array", &SA5_access},
+> >>>  	{0x21BE103C, "Smart Array", &SA5_access},
+> >>>  	{0x21BF103C, "Smart Array", &SA5_access},
+> >>>  	{0x21C0103C, "Smart Array", &SA5_access},
+> >>> +	{0x21C1103C, "Smart Array", &SA5_access},
+> >>
+> >> I think that both tables should be in sync - but there is no 0x21c=
+1
+> >> in hpsa_pci_device_id (and the 0x1925), could you clarify that?
+> >>
+> >> Thanks, Tomas
+> >
+> > Crap. It seems like these menial tasks get the better of me. I'll c=
+orrect and
+> resubmit.
+> >
+> Hmm. Seeing that hpsa is now well capable of supporting even older
+> SmartArray controllers, is there really a point in updating the PCI-I=
+D list every
+> time?
+> Wouldn't you be better off by just using the catch-all phrase and rem=
+ove all
+
+Umm, if we did that but kept the PCI ID repository updated would lspci =
+still show the marketing names of the individual controllers? What abou=
+t /proc/scsi/scsi and anywhere else the names are listed?
+
+-- mikem
+
+> the individual IDs?
+>=20
+> That way you would just have to update _one_ list ...
+>=20
+> Cheers,
+>=20
+> Hannes
+> --
+> Dr. Hannes Reinecke		      zSeries & Storage
+> hare@suse.de			      +49 911 74053 688
+> SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+> GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
