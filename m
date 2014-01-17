@@ -1,147 +1,47 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH 1/1] scsi: hpsa, add all PCI ID's that HP has in svn
-Date: Fri, 17 Jan 2014 16:45:09 +0100
-Message-ID: <52D95005.8070501@redhat.com>
-References: <20140116195112.GA9658@beardog.cce.hp.com> <52D948A5.1070706@redhat.com> <48275AD710FCA34184C2B6186B4016B32D1A0B01@G6W2491.americas.hpqcorp.net> <52D94CBB.5020701@suse.de>
+From: Steve Magnani <steve.magnani@digidescorp.com>
+Subject: Re: Why is (2 < 2) true? Is it a gcc bug?
+Date: Fri, 17 Jan 2014 09:47:05 -0600
+Message-ID: <52D95079.1060803@digidescorp.com>
+References: <D9FFE20C522965449E182ACE73889AEB1A6A340F@IRSMSX105.ger.corp.intel.com> <CAFLxGvz3FKU4rgjF_uZsggjvw8TQw_Hcp42GC8Zr-wg5kiwc-w@mail.gmail.com> <D9FFE20C522965449E182ACE73889AEB1A6A3592@IRSMSX105.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40308 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752152AbaAQPqZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Jan 2014 10:46:25 -0500
-In-Reply-To: <52D94CBB.5020701@suse.de>
+Received: from mail-ig0-f175.google.com ([209.85.213.175]:35939 "EHLO
+	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751973AbaAQPrI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Jan 2014 10:47:08 -0500
+Received: by mail-ig0-f175.google.com with SMTP id uq10so1896568igb.2
+        for <linux-scsi@vger.kernel.org>; Fri, 17 Jan 2014 07:47:07 -0800 (PST)
+In-Reply-To: <D9FFE20C522965449E182ACE73889AEB1A6A3592@IRSMSX105.ger.corp.intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, "James E. J. Bottomley" <James.Bottomley@HansenPartnership.com>, LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>, "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
+To: "Dorau, Lukasz" <lukasz.dorau@intel.com>, Richard Weinberger <richard.weinberger@gmail.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 01/17/2014 04:31 PM, Hannes Reinecke wrote:
-> On 01/17/2014 04:17 PM, Miller, Mike (OS Dev) wrote:
+On 01/17/2014 08:55 AM, Dorau, Lukasz wrote:
+
+> On Friday, January 17, 2014 2:58 PM Richard Weinberger <richard.weinberger@gmail.com> wrote:
+>> Can you reproduce this using a standalone test?
+>> I.e:
+>> #include <assert.h>
 >>
->>> -----Original Message-----
->>> From: Tomas Henzl [mailto:thenzl@redhat.com]
->>> Sent: Friday, January 17, 2014 9:14 AM
->>> To: Miller, Mike (OS Dev); Andrew Morton; James E. J. Bottomley
->>> Cc: LKML; LKML-scsi; hare@suse.de; Stephen M. Cameron
->>> Subject: Re: [PATCH 1/1] scsi: hpsa, add all PCI ID's that HP has in svn
->>>
->>> On 01/16/2014 08:51 PM, Mike Miller wrote:
->>>> From: Mike Miller <mike.miller@hp.com>
->>>>
->>>> This patch has every ID we have in our svn repository. Some
->>>> controllers were cancelled, others added, now the cancelled ones are
->>>> back. Apparently the debate rages on about which controllers are
->>>> cancelled, which are not, whatever. Please accept this patch. It is
->>>> dependent upon the patches I sent yesterday.
->>>> This patch made/tested against kernel-3.13.0-rc8
->>>>
->>>> Signed-off-by: Mike Miller <mike.miller@hp.com>
->>>> ---
->>>>  drivers/scsi/hpsa.c |   12 ++++++++++++
->>>>  1 files changed, 12 insertions(+), 0 deletions(-)
->>>>
->>>> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c index
->>>> 348b207..3affec5 100644
->>>> --- a/drivers/scsi/hpsa.c
->>>> +++ b/drivers/scsi/hpsa.c
->>>> @@ -100,6 +100,7 @@ static const struct pci_device_id
->>> hpsa_pci_device_id[] = {
->>>>  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSF,     0x103C,
->>> 0x3354},
->>>>  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSF,     0x103C,
->>> 0x3355},
->>>>  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSF,     0x103C,
->>> 0x3356},
->>>> +	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C,
->>> 0x1920},
->>>>  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C,
->>> 0x1921},
->>>>  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C,
->>> 0x1922},
->>>>  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C,
->>> 0x1923},
->>>> @@ -108,15 +109,19 @@ static const struct pci_device_id
->>> hpsa_pci_device_id[] = {
->>>>  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C,
->>> 0x1926},
->>>>  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C,
->>> 0x1928},
->>>>  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C,
->>> 0x1929},
->>>> +	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C,
->>> 0x192A},
->>>>  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C,
->>> 0x21BD},
->>>>  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C,
->>> 0x21BE},
->>>>  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C,
->>> 0x21BF},
->>>>  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C,
->>> 0x21C0},
->>>>  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C,
->>> 0x21C2},
->>>>  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C,
->>> 0x21C3},
->>>> +	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C,
->>> 0x21C4},
->>>>  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C,
->>> 0x21C5},
->>>> +	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C,
->>> 0x21C6},
->>>>  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C,
->>> 0x21C7},
->>>>  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C,
->>> 0x21C8},
->>>> +	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C,
->>> 0x21C9},
->>>>  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C,
->>> 0x21CA},
->>>>  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C,
->>> 0x21CB},
->>>>  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C,
->>> 0x21CC},
->>>> @@ -149,22 +154,29 @@ static struct board_type products[] = {
->>>>  	{0x3354103C, "Smart Array P420i", &SA5_access},
->>>>  	{0x3355103C, "Smart Array P220i", &SA5_access},
->>>>  	{0x3356103C, "Smart Array P721m", &SA5_access},
->>>> +	{0x1920103C, "Smart Array P430i", &SA5_access},
->>>>  	{0x1921103C, "Smart Array P830i", &SA5_access},
->>>>  	{0x1922103C, "Smart Array P430", &SA5_access},
->>>>  	{0x1923103C, "Smart Array P431", &SA5_access},
->>>>  	{0x1924103C, "Smart Array P830", &SA5_access},
->>>> +	{0x1925103C, "Smart Array P831", &SA5_access},
->>>>  	{0x1926103C, "Smart Array P731m", &SA5_access},
->>>>  	{0x1928103C, "Smart Array P230i", &SA5_access},
->>>>  	{0x1929103C, "Smart Array P530", &SA5_access},
->>>> +	{0x192A103C, "Smart Array P531", &SA5_access},
->>>>  	{0x21BD103C, "Smart Array", &SA5_access},
->>>>  	{0x21BE103C, "Smart Array", &SA5_access},
->>>>  	{0x21BF103C, "Smart Array", &SA5_access},
->>>>  	{0x21C0103C, "Smart Array", &SA5_access},
->>>> +	{0x21C1103C, "Smart Array", &SA5_access},
->>> I think that both tables should be in sync - but there is no 0x21c1 in
->>> hpsa_pci_device_id (and the 0x1925), could you clarify that?
->>>
->>> Thanks, Tomas
->> Crap. It seems like these menial tasks get the better of me. I'll correct and resubmit.
+>> int main()
+>> {
+>>          assert(2 < 2 != 1);
 >>
-> Hmm. Seeing that hpsa is now well capable of supporting even older
-> SmartArray controllers, is there really a point in updating the
-> PCI-ID list every time?
-
-It depends on whether HP actually wishes to support even the oldest cciss
-devices this way, I'm not sure if all the devices were individually tested with hpsa driver.
-
-Cheers, Tomas
-
-> Wouldn't you be better off by just using the catch-all phrase
-> and remove all the individual IDs?
+>>          return 0;
+>> }
+>>
+> No, I can't of course.
 >
-> That way you would just have to update _one_ list ...
->
-> Cheers,
->
-> Hannes
+The test might need to be more complex in order to prevent the compiler from optimizing away the issue. Or, you could try -O0.
+
+------------------------------------------------------------------------
+
+  Steven J. Magnani               "I claim this network for MARS!
+
+  www.digidescorp.com              Earthling, return my space modulator!"
+
+  #include <standard.disclaimer>
 
