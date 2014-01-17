@@ -1,194 +1,54 @@
-From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-Subject: Re: [PATCH 16/24] qla4xxx: Fix failure of mbox 0x31
-Date: Fri, 17 Jan 2014 10:34:02 +0000
-Message-ID: <3FC4AB8B47ECD546BCD4B361A64BEACD8C6369CF@avmb3.qlogic.org>
-References: <1387194594-29817-1-git-send-email-vikas.chaudhary@qlogic.com>
- <1387194594-29817-17-git-send-email-vikas.chaudhary@qlogic.com>
- <52D8EA0C.1020509@cs.wisc.edu>
+From: "Dorau, Lukasz" <lukasz.dorau@intel.com>
+Subject: Why is (2 < 2) true? Is it a gcc bug?
+Date: Fri, 17 Jan 2014 13:37:17 +0000
+Message-ID: <D9FFE20C522965449E182ACE73889AEB1A6A340F@IRSMSX105.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_000_3FC4AB8B47ECD546BCD4B361A64BEACD8C6369CFavmb3qlogicorg_"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:58979 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751004AbaAQKeG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Jan 2014 05:34:06 -0500
-Received: from pps.filterd (m0000643.ppops.net [127.0.0.1])
-	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id s0HAXiAv025810
-	for <linux-scsi@vger.kernel.org>; Fri, 17 Jan 2014 02:34:05 -0800
-Received: from avcashub1.qlogic.com (avcashub3.qlogic.com [198.70.193.117])
-	by mx0b-0016ce01.pphosted.com with ESMTP id 1h8euxqc1m-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Fri, 17 Jan 2014 02:34:04 -0800
-In-Reply-To: <52D8EA0C.1020509@cs.wisc.edu>
+Received: from mga02.intel.com ([134.134.136.20]:16941 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751513AbaAQNhT convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Jan 2014 08:37:19 -0500
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: "jbottomley@parallels.com" <jbottomley@parallels.com>, linux-scsi <linux-scsi@vger.kernel.org>, Lalit Chandivade <lalit.chandivade@qlogic.com>
+To: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
---_000_3FC4AB8B47ECD546BCD4B361A64BEACD8C6369CFavmb3qlogicorg_
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <2FFA93BEB4DA274F9859792B78BF699C@qlogic.com>
-Content-Transfer-Encoding: quoted-printable
+Hi
 
+My story is very simply...
+I applied the following patch:
 
+diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
+--- a/drivers/scsi/isci/init.c
++++ b/drivers/scsi/isci/init.c
+@@ -698,8 +698,11 @@ static int isci_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	if (err)
+ 		goto err_host_alloc;
+ 
+-	for_each_isci_host(i, isci_host, pdev)
++	for_each_isci_host(i, isci_host, pdev) {
++		pr_err("(%d < %d) == %d\n",\
++		       i, SCI_MAX_CONTROLLERS, (i < SCI_MAX_CONTROLLERS));
+ 		scsi_scan_host(to_shost(isci_host));
++	}
+ 
+ 	return 0;
+ 
+-- 
+1.8.3.1
 
-On 17/01/14 2:00 PM, "Mike Christie" <michaelc@cs.wisc.edu> wrote:
+Then I issued the command 'modprobe isci' on platform with two SCU controllers (Patsburg D or T chipset)
+and received the following, very strange, output:
 
->
->> +static void qla4xxx_destroy_ddb(struct scsi_qla_host *ha,
->> +		struct ddb_entry *ddb_entry)
->> +{
->> +	struct dev_db_entry *fw_ddb_entry =3D NULL;
->> +	dma_addr_t fw_ddb_entry_dma;
->> +	unsigned long wtime;
->> +	uint32_t ddb_state;
->> +	int options;
->> +	int status;
->> +
->> +	options =3D LOGOUT_OPTION_CLOSE_SESSION;
->> +	if (qla4xxx_session_logout_ddb(ha, ddb_entry, options) =3D=3D QLA_ERRO=
-R) {
->> +		ql4_printk(KERN_ERR, ha, "%s: Logout failed\n", __func__);
->> +		goto clear_ddb;
->> +	}
->> +
->> +	fw_ddb_entry =3D dma_alloc_coherent(&ha->pdev->dev,
->>sizeof(*fw_ddb_entry),
->> +					  &fw_ddb_entry_dma, GFP_KERNEL);
->> +	if (!fw_ddb_entry) {
->> +		ql4_printk(KERN_ERR, ha,
->> +			   "%s: Unable to allocate dma buffer\n", __func__);
->> +		goto clear_ddb;
->> +	}
->> +
->> +	wtime =3D jiffies + (HZ * LOGOUT_TOV);
->> +	do {
->> +		status =3D qla4xxx_get_fwddb_entry(ha, ddb_entry->fw_ddb_index,
->> +						 fw_ddb_entry, fw_ddb_entry_dma,
->> +						 NULL, NULL, &ddb_state, NULL,
->> +						 NULL, NULL);
->> +		if (status =3D=3D QLA_ERROR)
->> +			goto clear_ddb;
->> +
->> +		if ((ddb_state =3D=3D DDB_DS_NO_CONNECTION_ACTIVE) ||
->> +		    (ddb_state =3D=3D DDB_DS_SESSION_FAILED))
->> +			goto clear_ddb;
->> +
->> +		schedule_timeout_uninterruptible(HZ);
->> +	} while ((time_after(wtime, jiffies)));
->
->
->I think there is a missing dma_free_coherent
->
->> +
->> +clear_ddb:
->> +	qla4xxx_clear_ddb_entry(ha, ddb_entry->fw_ddb_index);
->> +	return;
->> +}
->> +
->
->Don't need return statement there.
+(0 < 2) == 1
+(1 < 2) == 1
+(2 < 2) == 1
 
+Can anyone explain why (2 < 2) is true? Is it a gcc bug?
 
-Thanks a lot for review.
-Updated patch is posted here:-
-http://marc.info/?l=3Dlinux-scsi&m=3D138995390232212&w=3D2
+(The kernel was compiled using gcc version 4.8.2.)
 
-Thanks,
-Vikas.
+Lukasz
 
-
---_000_3FC4AB8B47ECD546BCD4B361A64BEACD8C6369CFavmb3qlogicorg_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
-
-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
-AABTAE0AVABQAAAAdgBpAGsAYQBzAC4AYwBoAGEAdQBkAGgAYQByAHkAQABxAGwAbwBnAGkAYwAu
-AGMAbwBtAAAAHwACXQEAAAA2AAAAdgBpAGsAYQBzAC4AYwBoAGEAdQBkAGgAYQByAHkAQABxAGwA
-bwBnAGkAYwAuAGMAbwBtAAAAAAAfAOVfAQAAAD4AAABzAGkAcAA6AHYAaQBrAGEAcwAuAGMAaABh
-AHUAZABoAGEAcgB5AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwAaDAEAAAAgAAAAVgBpAGsA
-YQBzACAAQwBoAGEAdQBkAGgAYQByAHkAAAAfAB8MAQAAADYAAAB2AGkAawBhAHMALgBjAGgAYQB1
-AGQAaABhAHIAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AHgwBAAAACgAAAFMATQBUAFAA
-AAAAAAIBGQwBAAAAeAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgFYAaQBrAGEAcwAgAEMAaABh
-AHUAZABoAGEAcgB5AAAAUwBNAFQAUAAAAHYAaQBrAGEAcwAuAGMAaABhAHUAZABoAGEAcgB5AEAA
-cQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AAV0BAAAANgAAAHYAaQBrAGEAcwAuAGMAaABhAHUAZABo
-AGEAcgB5AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwD4PwEAAAAgAAAAVgBpAGsAYQBzACAA
-QwBoAGEAdQBkAGgAYQByAHkAAAAfACNAAQAAADYAAAB2AGkAawBhAHMALgBjAGgAYQB1AGQAaABh
-AHIAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AIkABAAAACgAAAFMATQBUAFAAAAAAAAIB
-+T8BAAAAeAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgFYAaQBrAGEAcwAgAEMAaABhAHUAZABo
-AGEAcgB5AAAAUwBNAFQAUAAAAHYAaQBrAGEAcwAuAGMAaABhAHUAZABoAGEAcgB5AEAAcQBsAG8A
-ZwBpAGMALgBjAG8AbQAAAB8ACV0BAAAANgAAAHYAaQBrAGEAcwAuAGMAaABhAHUAZABoAGEAcgB5
-AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAACwBAOgEAAAAfABoAAQAAABIAAABJAFAATQAuAE4A
-bwB0AGUAAAAAAAMA8T8JBAAACwBAOgEAAAADAP0/5AQAAAIBCzABAAAAEAAAAIsesooJLI5LqYBw
-O2OaPAMDABcAAQAAAEAAOQAASVujbxPPAUAACDBYQLujbxPPAQsAAIAIIAYAAAAAAMAAAAAAAABG
-AAAAABSFAAABAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAHgAAAGEAYwBjAGUAcAB0AGwAYQBu
-AGcAdQBhAGcAZQAAAAAAAQAAAAwAAABlAG4ALQBVAFMAAAALAACACCAGAAAAAADAAAAAAAAARgAA
-AAAGhQAAAAAAAB8ANwABAAAAaAAAAFIAZQA6ACAAWwBQAEEAVABDAEgAIAAxADYALwAyADQAXQAg
-AHEAbABhADQAeAB4AHgAOgAgAEYAaQB4ACAAZgBhAGkAbAB1AHIAZQAgAG8AZgAgAG0AYgBvAHgA
-IAAwAHgAMwAxAAAAHwA9AAEAAAAKAAAAUgBlADoAIAAAAAAAAwA2AAAAAAAfAEIQAQAAAD4AAAA8
-ADUAMgBEADgARQBBADAAQwAuADEAMAAyADAANQAwADkAQABjAHMALgB3AGkAcwBjAC4AZQBkAHUA
-PgAAAAAAAgFxAAEAAAAgAAAAAQHO+lmKB3YqkjUQjki3srzbAm6jf5qJTg0AgAB+0QAfAHAAAQAA
-AGAAAABbAFAAQQBUAEMASAAgADEANgAvADIANABdACAAcQBsAGEANAB4AHgAeAA6ACAARgBpAHgA
-IABmAGEAaQBsAHUAcgBlACAAbwBmACAAbQBiAG8AeAAgADAAeAAzADEAAAAfADUQAQAAAHgAAAA8
-ADMARgBDADQAQQBCADgAQgA0ADcARQBDAEQANQA0ADYAQgBDAEQANABCADMANgAxAEEANgA0AEIA
-RQBBAEMARAA4AEMANgAzADYAOQBDAEYAQABhAHYAbQBiADMALgBxAGwAbwBnAGkAYwAuAG8AcgBn
-AD4AAAAfADkQAQAAADwBAAA8ADEAMwA4ADcAMQA5ADQANQA5ADQALQAyADkAOAAxADcALQAxAC0A
-ZwBpAHQALQBzAGUAbgBkAC0AZQBtAGEAaQBsAC0AdgBpAGsAYQBzAC4AYwBoAGEAdQBkAGgAYQBy
-AHkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAD4AIAA8ADEAMwA4ADcAMQA5ADQANQA5ADQALQAyADkA
-OAAxADcALQAxADcALQBnAGkAdAAtAHMAZQBuAGQALQBlAG0AYQBpAGwALQB2AGkAawBhAHMALgBj
-AGgAYQB1AGQAaABhAHIAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0APgAgADwANQAyAEQAOABFAEEA
-MABDAC4AMQAwADIAMAA1ADAAOQBAAGMAcwAuAHcAaQBzAGMALgBlAGQAdQA+AAAAAwDeP59OAABA
-AAcwnH22o28TzwEDACYAAAAAAAIBRwABAAAALgAAAGM9VVM7YT0gO3A9UUxvZ2ljO2w9QVZNQjMt
-MTQwMTE3MTAzNDAyWi04NzEyNgAAAB8AFRABAAAAWAAAADIARgBGAEEAOQAzAEIARQBCADQARABB
-ADIANwA0AEYAOQA4ADUAOQA3ADkAMgBCADcAOABCAEYANgA5ADkAQwBAAHEAbABvAGcAaQBjAC4A
-YwBvAG0AAAACARQwAQAAAAwAAAB7AAAABw40K08AAAAfAPo/AQAAACAAAABWAGkAawBhAHMAIABD
-AGgAYQB1AGQAaABhAHIAeQAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAABYAAAB1AHMAZQByAC0A
-YQBnAGUAbgB0AAAAAAABAAAARgAAAE0AaQBjAHIAbwBzAG8AZgB0AC0ATQBhAGMATwB1AHQAbABv
-AG8AawAvADEANAAuADMALgA5AC4AMQAzADEAMAAzADAAAAAAAB8AAIAfpOszqHouQr57eeGpjlSz
-AQAAADgAAABDAG8AbgB2AGUAcgBzAGEAdABpAG8AbgBJAG4AZABlAHgAVAByAGEAYwBrAGkAbgBn
-AEUAeAAAAAEAAAAOAQAASQBJAD0AMAAxADAAMQBDAEYAMQAzADYARgBBADMAMgBGADcANQA5ADYA
-QQBCADgANwA5AEIAMwBCADQAMgA4AEMANwBBAEYAMQBBAEQARgA4ADAAQQBGADIARgBCADsAUwBC
-AE0ASQBEAD0AMwA7AFMAMQA9ADwANQAyAEQAOABFAEEAMABDAC4AMQAwADIAMAA1ADAAOQBAAGMA
-cwAuAHcAaQBzAGMALgBlAGQAdQA+ADsAVgBlAHIAcwBpAG8AbgA9AFYAZQByAHMAaQBvAG4AIAAx
-ADQALgAyACAAKABCAHUAaQBsAGQAIAAzADEAOAAuADAAKQAsACAAUwB0AGEAZwBlAD0ASAAyAAAA
-AAADAA00/T8AAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAACAAAAB4AC0AbQBzAC0AaABhAHMALQBh
-AHQAdABhAGMAaAAAAAEAAAACAAAAAAAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAACIAAAB4AC0A
-bwByAGkAZwBpAG4AYQB0AGkAbgBnAC0AaQBwAAAAAAABAAAAGAAAAFsAMQAwAC4AMQAuADQALgAx
-ADAAXQAAAGmd
-
---_000_3FC4AB8B47ECD546BCD4B361A64BEACD8C6369CFavmb3qlogicorg_--
