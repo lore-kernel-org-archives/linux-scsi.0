@@ -1,50 +1,50 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2 0/9] Phase out pci_enable_msi_block()
-Date: Sat, 18 Jan 2014 09:59:40 -0500
-Message-ID: <20140118145940.GE3640@htj.dyndns.org>
-References: <cover.1389904166.git.agordeev@redhat.com>
- <CAErSpo5ztnyyceeN38XzLasLV6eJqdbqEV0viPp3Af8U=ts23w@mail.gmail.com>
- <20140118071538.GA32535@dhcp-26-207.brq.redhat.com>
- <CAErSpo4nBdnn3YYaLj6QZ8iyY2pzV8Y7msd5UxJXm1T2AYnqfg@mail.gmail.com>
+From: =?UTF-8?B?UGV0ZXIgUGFsw7pjaA==?= <Peter.Paluch@fri.uniza.sk>
+Subject: Re: XHCI issues: WD MyBook 1230 - reset SuperSpeed USB device
+Date: Sat, 18 Jan 2014 16:02:28 +0100
+Message-ID: <52DA9784.3090507@fri.uniza.sk>
+References: <Pine.LNX.4.44L0.1401161532560.1109-100000@iolanthe.rowland.org> <52D8DD45.9010602@suse.de> <52D991BA.40903@interlog.com> <52D99D51.1030100@fri.uniza.sk> <52DA8BCF.6070201@t-online.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAErSpo4nBdnn3YYaLj6QZ8iyY2pzV8Y7msd5UxJXm1T2AYnqfg@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Alexander Gordeev <agordeev@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Brian King <brking@us.ibm.com>, Matthew Wilcox <willy@linux.intel.com>, Alex Williamson <alex.williamson@redhat.com>, Kalle Valo <kvalo@qca.qualcomm.com>, Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>, linux-wireless <linux-wireless@vger.kernel.org>, wil6210@qca.qualcomm.com, ath10k@lists.infradead.org, linux-nvme@lists.infradead.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "kvm@vger.kernel.org" <kvm@vger.kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from castor.kis.fri.uniza.sk ([158.193.152.2]:38667 "EHLO
+	mail.kis.fri.uniza.sk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752277AbaARPCe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 18 Jan 2014 10:02:34 -0500
+In-Reply-To: <52DA8BCF.6070201@t-online.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christian Franke <Christian.Franke@t-online.de>, dgilbert@interlog.com
+Cc: Hannes Reinecke <hare@suse.de>, Alan Stern <stern@rowland.harvard.edu>, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Sat, Jan 18, 2014 at 07:38:55AM -0700, Bjorn Helgaas wrote:
-> On Sat, Jan 18, 2014 at 12:15 AM, Alexander Gordeev <agordeev@redhat.com> wrote:
-> > On Fri, Jan 17, 2014 at 02:00:32PM -0700, Bjorn Helgaas wrote:
-> >> > As the release is supposedly this weekend, do you prefer
-> >> > the patches to go to your tree or to individual trees after
-> >> > the release?
-> >>
-> >> I'd be happy to merge them, except for the fact that they probably
-> >> wouldn't have any time in -next before I ask Linus to pull them.  So
-> >> how about if we wait until after the release, ask the area maintainers
-> >> to take them, and if they don't take them, I'll put them in my tree
-> >> for v3.15?
-> >
-> > Patch 11 depends on patches 1-10, so I am not sure how to better handle it.
-> > Whatever works for you ;)
-> >
-> > I am only concerned with a regression fix "ahci: Fix broken fallback to
-> > single MSI mode" which would be nice to have in 3.14. But it seems pretty
-> > much too late.
-> 
-> Tejun, if you want to ack that one, I can put it in either the first
-> 3.14 pull request or a subsequent one.  Either way, since it's a
-> regression fix, we should be able to get it in 3.14.
+Christian,
 
-Acked-by: Tejun Heo <tj@kernel.org>
+>> Douglas, Hannes: I believe we are definitely on to something. I do 
+>> _not_ run smartd but this may be caused by something in my Gnome3 GUI 
+>> environment. I have noticed that when I am not logged in to Gnome and 
+>> work just in the text console, plugging in the USB drive and 
+>> accessing it works without any issues. Only when I am logged into my 
+>> Gnome and plug the drive in, Gnome obviously tries to do something 
+>> with the drive that causes it to stall and recover in 30 seconds. I 
+>> have not yet been able to identify what it is.
+>
+> Gnome disk utility?
+>
+> AFAIK it relies on libatasmart. The source code of libatasmart is 
+> unrelated to smartmontools.
 
-Please feel free to route it any way you see fit.
+I am not intentionally starting or running any disk utility when 
+plugging the USB disk to my notebook. I am simply logged to Gnome3, have 
+my terminal window open, plug in the disk - and voila, I can be sure 
+that within 30 seconds, I get a dmesg log about the drive being reset, 
+without even calling the gdisk utility I've been using earlier (note - 
+no change of behavior here, it was just me trying to work with the drive 
+right after it was recognized, which obviously coincided with some Gnome 
+subsystem trying to lay its hands on the drive as well - perhaps the 
+automount, udisksd, or something else). I will try to find out what 
+exactly is fired up in Gnome when I plug in the drive, and will update 
+this thread as soon as I have something new.
 
-Thanks!
+Best regards,
+Peter
 
--- 
-tejun
