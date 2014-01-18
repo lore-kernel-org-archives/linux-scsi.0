@@ -1,43 +1,81 @@
-From: Phillip Susi <psusi@ubuntu.com>
+From: Dan Williams <dan.j.williams@intel.com>
 Subject: Re: Disk spin-up optimization during system resume
-Date: Fri, 17 Jan 2014 22:24:04 -0500
-Message-ID: <52D9F3D4.6050807@ubuntu.com>
-References: <Pine.LNX.4.44L0.1401172034180.945-100000@iolanthe.rowland.org>
+Date: Fri, 17 Jan 2014 20:09:08 -0800
+Message-ID: <CAPcyv4i2+GAEV7NNx6MkOOcZSCxhOWB3sCO1eCuH40Z2fhpw3g@mail.gmail.com>
+References: <20140116220409.GA1183@linux.intel.com>
+	<Pine.LNX.4.44L0.1401170951270.1162-100000@iolanthe.rowland.org>
+	<CAA9_cmcHpWOk_GoAZ_6k_0VDNGdac+BmHB1GxaTNkWNVjcztJQ@mail.gmail.com>
+	<52D9976C.2010009@ubuntu.com>
+	<CAPcyv4iJScXxpAzH99m6VNHv=vM+96KWgfmv-FH+McnCMb5Vfg@mail.gmail.com>
+	<52D9F27F.8060705@ubuntu.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:61914 "EHLO
-	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753047AbaARDYF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Jan 2014 22:24:05 -0500
-In-Reply-To: <Pine.LNX.4.44L0.1401172034180.945-100000@iolanthe.rowland.org>
+Received: from mail-ve0-f182.google.com ([209.85.128.182]:59733 "EHLO
+	mail-ve0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753304AbaAREJI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Jan 2014 23:09:08 -0500
+Received: by mail-ve0-f182.google.com with SMTP id jy13so169320veb.27
+        for <linux-scsi@vger.kernel.org>; Fri, 17 Jan 2014 20:09:08 -0800 (PST)
+In-Reply-To: <52D9F27F.8060705@ubuntu.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>
-Cc: Dan Williams <dan.j.williams@intel.com>, Todd E Brandt <todd.e.brandt@linux.intel.com>, Aaron Lu <aaron.lu@intel.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Phillip Susi <psusi@ubuntu.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Todd E Brandt <todd.e.brandt@linux.intel.com>, Aaron Lu <aaron.lu@intel.com>, Tejun Heo <tj@kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA512
+On Fri, Jan 17, 2014 at 7:18 PM, Phillip Susi <psusi@ubuntu.com> wrote:
+> -----BEGIN PGP SIGNED MESSAGE-----
+> Hash: SHA512
+>
+> On 01/17/2014 05:17 PM, Dan Williams wrote:
+>> Well, "at all" is overstating it.  The system was idle and now
+>> it's being woken up to do some work.  Inactivity timers are
+>> invalidated and now the decision becomes minimize access latency,
+>> or lazily wake up.
+>
+> Sure, but that work may or may not involve disk access.  Think of a
+> laptop you are using to watch a video on youtube.  You need to get up
+> for a minute so you suspend, come back, and continue watching... no
+> need for disk IO just because you paused for a few minutes.  For a
+> single disk system you may argue that it is likely the disk will be
+> needed, but for multiple disk systems, that probability goes down.
+>
+>>> It puts needless wear and tear on disks.
+>>
+>> I'm not sure spin up cycles are predictive of drive failure?
+>
+> Drive makers rate them to handle only so many start/stop cycles before
+> they fail, which is why SMART keeps track of the count.  Any time you
+> move mechanical parts, they wear out.
 
-On 01/17/2014 08:41 PM, Alan Stern wrote:
-> The intention is that this will help on systems with more than one 
-> disk drive.  The one containing the core OS files and the journal
-> will certainly spin up right away, but the others may not.
+They also recommend maximum intervals of spin down time.  Mind you its
+on the order of weeks, but spinning up the drive help keeps the
+bearing lubricant evenly distributed.
 
-I am hoping to prevent that as well with the regular laptop-mode type
-knobs.
+What I was getting at is do these patches have a measurable impact on
+drive lifetime?  For example how many spin ups is this saving vs
+deferring in your setup.  I buy the power saving impact, but wearing
+out the drive prematurely is harder to accept without data.
 
+>> I'm not arguing about the attach rate of HDDs in shipping systems,
+>> I'm asking what is the system suspend / resume frequency of such
+>> systems and is it worth carrying that complexity in the kernel and
+>> injecting unnecessary resume latency for what amounts to a niche
+>> use case.
+>
+> It doesn't add any latency for an SSD, or even an ATA HDD that does
+> not have PuiS enabled.  SCSI disks are more likely to be in larger
+> systems where it is more likely that at least some of the drives won't
+> be accessed soon, and if you really want to avoid the latency, then
+> you can configure your user space pm scripts to disable runtime pm
+> prior to suspend to get the old behavior back.
+>
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.14 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+Larger systems are less likely to ever sleep.
 
-iQEcBAEBCgAGBQJS2fPUAAoJEI5FoCIzSKrwLj4H/3DVvgo/35w+zyBT6ZQCn+0c
-uV0oD+8hPFIr7yY5ynOP0HGdSOtXgBxo7sOz/1yED/jnOOgyx11oma+Y0lkT1PSw
-OK3+Du8xLDAtomNwng3/Wul4tGKV/tkAL5giblztk8ZLkC5zC4mOkuD44bqF8shq
-4NzDvA/25KGEcVAHoFml7BxDbLirWkhtyVW75DnVlAIel8nIOL7AuYOP8xap++k4
-SfYTsTLMpN46j/dorWvFtQ9tfmYeqEltPgtGejT89oDeFwyVegotSiuFsib1vu82
-gKVKGkcPdazW18V3LoPnz3QSIb0uU2tgzCFY45ZqS7g9f87V0bFQMvO3iZ9F3qI=
-=ddyN
------END PGP SIGNATURE-----
+I think it's a bit of an interface surprise to have pm_runtime disable
+have side effects only for scsi_disk devices.  I think lazy_resume
+needs to be an explicit attribute of the disk.  For ata devices any
+command wakes up the drive.  Perhaps we could simply do the same for
+scsi devices.  In lazy_resume mode flag the device as "needs spinup"
+at sd_resume time and schedule it when a command arrives.
