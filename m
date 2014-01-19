@@ -1,31 +1,27 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH-v2 11/17] target/iblock: Add blk_integrity + BIP passthrough support
-Date: Sun, 19 Jan 2014 02:44:34 +0000
-Message-ID: <1390099480-29013-12-git-send-email-nab@daterainc.com>
+Subject: [PATCH-v2 10/17] target: Add protection SGLs to target_submit_cmd_map_sgls
+Date: Sun, 19 Jan 2014 02:44:33 +0000
+Message-ID: <1390099480-29013-11-git-send-email-nab@daterainc.com>
 References: <1390099480-29013-1-git-send-email-nab@daterainc.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:44579 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751980AbaASDF2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 18 Jan 2014 22:05:28 -0500
+Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1390099480-29013-1-git-send-email-nab@daterainc.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: target-devel-owner@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Sagi Grimberg <sagig@mellanox.com>, Or Gerlitz <ogerlitz@mellanox.com>, Roland Dreier <roland@kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>
+List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch adds blk_integrity passthrough support for block_device
-backends using IBLOCK.
+This patch adds support to target_submit_cmd_map_sgls() for
+accepting 'sgl_prot' + 'sgl_prot_count' parameters for
+DIF protection information.
 
-This includes iblock_alloc_bip() + setup of bio_integrity_payload
-information that attaches to the leading struct bio once bio_list
-is populated during fast-path iblock_execute_rw() I/O dispatch.
+Note the passed parameters are stored at se_cmd->t_prot_sg
+and se_cmd->t_prot_nents respectively.
 
-It also updates setup in iblock_configure_device() to detect modes
-of protection + se dev->dev_attrib.pi_prot_type accordingly, along
-with creating required bio_set integrity mempools.
+Also, update tcm_loop and vhost-scsi fabrics usage of
+target_submit_cmd_map_sgls() to take into account the
+new parameters.
 
 Cc: Martin K. Petersen <martin.petersen@oracle.com>
 Cc: Christoph Hellwig <hch@lst.de>
@@ -34,168 +30,106 @@ Cc: Sagi Grimberg <sagig@mellanox.com>
 Cc: Or Gerlitz <ogerlitz@mellanox.com>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/Kconfig              |    1 +
- drivers/target/target_core_iblock.c |   91 ++++++++++++++++++++++++++++++++++-
- 2 files changed, 90 insertions(+), 2 deletions(-)
+ drivers/target/loopback/tcm_loop.c     |    2 +-
+ drivers/target/target_core_transport.c |   16 ++++++++++++++--
+ drivers/vhost/scsi.c                   |    2 +-
+ include/target/target_core_fabric.h    |    3 ++-
+ 4 files changed, 18 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/target/Kconfig b/drivers/target/Kconfig
-index 50aad2e..dc2d84a 100644
---- a/drivers/target/Kconfig
-+++ b/drivers/target/Kconfig
-@@ -14,6 +14,7 @@ if TARGET_CORE
- 
- config TCM_IBLOCK
- 	tristate "TCM/IBLOCK Subsystem Plugin for Linux/BLOCK"
-+	select BLK_DEV_INTEGRITY
- 	help
- 	Say Y here to enable the TCM/IBLOCK subsystem plugin for non-buffered
- 	access to Linux/Block devices using BIO
-diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
-index 15d9121..293d9b0 100644
---- a/drivers/target/target_core_iblock.c
-+++ b/drivers/target/target_core_iblock.c
-@@ -91,6 +91,7 @@ static int iblock_configure_device(struct se_device *dev)
- 	struct iblock_dev *ib_dev = IBLOCK_DEV(dev);
- 	struct request_queue *q;
- 	struct block_device *bd = NULL;
-+	struct blk_integrity *bi;
- 	fmode_t mode;
- 	int ret = -ENOMEM;
- 
-@@ -155,8 +156,40 @@ static int iblock_configure_device(struct se_device *dev)
- 	if (blk_queue_nonrot(q))
- 		dev->dev_attrib.is_nonrot = 1;
- 
-+	bi = bdev_get_integrity(bd);
-+	if (bi) {
-+		struct bio_set *bs = ib_dev->ibd_bio_set;
-+
-+		if (!strcmp(bi->name, "T10-DIF-TYPE3-IP") ||
-+		    !strcmp(bi->name, "T10-DIF-TYPE1-IP")) {
-+			pr_err("IBLOCK export of blk_integrity: %s not"
-+			       " supported\n", bi->name);
-+			ret = -ENOSYS;
-+			goto out_blkdev_put;
-+		}
-+
-+		if (!strcmp(bi->name, "T10-DIF-TYPE3-CRC")) {
-+			dev->dev_attrib.pi_prot_type = TARGET_DIF_TYPE3_PROT;
-+		} else if (!strcmp(bi->name, "T10-DIF-TYPE1-CRC")) {
-+			dev->dev_attrib.pi_prot_type = TARGET_DIF_TYPE1_PROT;
-+		}
-+
-+		if (dev->dev_attrib.pi_prot_type) {
-+			if (bioset_integrity_create(bs, IBLOCK_BIO_POOL_SIZE) < 0) {
-+				pr_err("Unable to allocate bioset for PI\n");
-+				ret = -ENOMEM;
-+				goto out_blkdev_put;
-+			}
-+			pr_debug("IBLOCK setup BIP bs->bio_integrity_pool: %p\n",
-+				 bs->bio_integrity_pool);
-+		}
-+		dev->dev_attrib.hw_pi_prot_type = dev->dev_attrib.pi_prot_type;
-+	}
-+
- 	return 0;
- 
-+out_blkdev_put:
-+	blkdev_put(ib_dev->ibd_bd, FMODE_WRITE|FMODE_READ|FMODE_EXCL);
- out_free_bioset:
- 	bioset_free(ib_dev->ibd_bio_set);
- 	ib_dev->ibd_bio_set = NULL;
-@@ -170,8 +203,10 @@ static void iblock_free_device(struct se_device *dev)
- 
- 	if (ib_dev->ibd_bd != NULL)
- 		blkdev_put(ib_dev->ibd_bd, FMODE_WRITE|FMODE_READ|FMODE_EXCL);
--	if (ib_dev->ibd_bio_set != NULL)
-+	if (ib_dev->ibd_bio_set != NULL) {
-+		bioset_integrity_free(ib_dev->ibd_bio_set);
- 		bioset_free(ib_dev->ibd_bio_set);
-+	}
- 	kfree(ib_dev);
- }
- 
-@@ -586,13 +621,58 @@ static ssize_t iblock_show_configfs_dev_params(struct se_device *dev, char *b)
- 	return bl;
- }
- 
-+static int
-+iblock_alloc_bip(struct se_cmd *cmd, struct bio *bio)
-+{
-+	struct se_device *dev = cmd->se_dev;
-+	struct blk_integrity *bi;
-+	struct bio_integrity_payload *bip;
-+	struct iblock_dev *ib_dev = IBLOCK_DEV(dev);
-+	struct scatterlist *sg;
-+	int i, rc;
-+
-+	bi = bdev_get_integrity(ib_dev->ibd_bd);
-+	if (!bi) {
-+		pr_err("Unable to locate bio_integrity\n");
-+		return -ENODEV;
-+	}
-+
-+	bip = bio_integrity_alloc(bio, GFP_NOIO, cmd->t_prot_nents);
-+	if (!bip) {
-+		pr_err("Unable to allocate bio_integrity_payload\n");
-+		return -ENOMEM;
-+	}
-+
-+	bip->bip_size = (cmd->data_length / dev->dev_attrib.block_size) *
-+			 dev->prot_length;
-+	bip->bip_sector = bio->bi_sector;
-+
-+	pr_debug("IBLOCK BIP Size: %u Sector: %llu\n", bip->bip_size,
-+		 (unsigned long long)bip->bip_sector);
-+
-+	for_each_sg(cmd->t_prot_sg, sg, cmd->t_prot_nents, i) {
-+
-+		rc = bio_integrity_add_page(bio, sg_page(sg), sg->length,
-+					    sg->offset);
-+		if (rc != sg->length) {
-+			pr_err("bio_integrity_add_page() failed; %d\n", rc);
-+			return -ENOMEM;
-+		}
-+
-+		pr_debug("Added bio integrity page: %p length: %d offset; %d\n",
-+			 sg_page(sg), sg->length, sg->offset);
-+	}
-+
-+	return 0;
-+}
-+
- static sense_reason_t
- iblock_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
- 		  enum dma_data_direction data_direction)
+diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
+index 763ee45..112b795 100644
+--- a/drivers/target/loopback/tcm_loop.c
++++ b/drivers/target/loopback/tcm_loop.c
+@@ -217,7 +217,7 @@ static void tcm_loop_submission_work(struct work_struct *work)
+ 			scsi_bufflen(sc), tcm_loop_sam_attr(sc),
+ 			sc->sc_data_direction, 0,
+ 			scsi_sglist(sc), scsi_sg_count(sc),
+-			sgl_bidi, sgl_bidi_count);
++			sgl_bidi, sgl_bidi_count, NULL, 0);
+ 	if (rc < 0) {
+ 		set_host_byte(sc, DID_NO_CONNECT);
+ 		goto out_done;
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index fa4fc04..aebe0bb 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -1310,6 +1310,8 @@ transport_generic_map_mem_to_cmd(struct se_cmd *cmd, struct scatterlist *sgl,
+  * @sgl_count: scatterlist count for unidirectional mapping
+  * @sgl_bidi: struct scatterlist memory for bidirectional READ mapping
+  * @sgl_bidi_count: scatterlist count for bidirectional READ mapping
++ * @sgl_prot: struct scatterlist memory protection information
++ * @sgl_prot_count: scatterlist count for protection information
+  *
+  * Returns non zero to signal active I/O shutdown failure.  All other
+  * setup exceptions will be returned as a SCSI CHECK_CONDITION response,
+@@ -1322,7 +1324,8 @@ int target_submit_cmd_map_sgls(struct se_cmd *se_cmd, struct se_session *se_sess
+ 		unsigned char *cdb, unsigned char *sense, u32 unpacked_lun,
+ 		u32 data_length, int task_attr, int data_dir, int flags,
+ 		struct scatterlist *sgl, u32 sgl_count,
+-		struct scatterlist *sgl_bidi, u32 sgl_bidi_count)
++		struct scatterlist *sgl_bidi, u32 sgl_bidi_count,
++		struct scatterlist *sgl_prot, u32 sgl_prot_count)
  {
- 	struct se_device *dev = cmd->se_dev;
- 	struct iblock_req *ibr;
--	struct bio *bio;
-+	struct bio *bio, *bio_start;
- 	struct bio_list list;
- 	struct scatterlist *sg;
- 	u32 sg_num = sgl_nents;
-@@ -655,6 +735,7 @@ iblock_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
- 	if (!bio)
- 		goto fail_free_ibr;
- 
-+	bio_start = bio;
- 	bio_list_init(&list);
- 	bio_list_add(&list, bio);
- 
-@@ -688,6 +769,12 @@ iblock_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
- 		sg_num--;
+ 	struct se_portal_group *se_tpg;
+ 	sense_reason_t rc;
+@@ -1364,6 +1367,14 @@ int target_submit_cmd_map_sgls(struct se_cmd *se_cmd, struct se_session *se_sess
+ 		target_put_sess_cmd(se_sess, se_cmd);
+ 		return 0;
  	}
- 
-+	if (cmd->prot_type) {
-+		int rc = iblock_alloc_bip(cmd, bio_start);
-+		if (rc)
-+			goto fail_put_bios;
++	/*
++	 * Save pointers for SGLs containing protection information,
++	 * if present.
++	 */
++	if (sgl_prot_count) {
++		se_cmd->t_prot_sg = sgl_prot;
++		se_cmd->t_prot_nents = sgl_prot_count;
 +	}
+ 
+ 	rc = target_setup_cmd_from_cdb(se_cmd, cdb);
+ 	if (rc != 0) {
+@@ -1406,6 +1417,7 @@ int target_submit_cmd_map_sgls(struct se_cmd *se_cmd, struct se_session *se_sess
+ 			return 0;
+ 		}
+ 	}
 +
- 	iblock_submit_bios(&list, rw);
- 	iblock_complete_cmd(cmd);
- 	return 0;
+ 	/*
+ 	 * Check if we need to delay processing because of ALUA
+ 	 * Active/NonOptimized primary access state..
+@@ -1445,7 +1457,7 @@ int target_submit_cmd(struct se_cmd *se_cmd, struct se_session *se_sess,
+ {
+ 	return target_submit_cmd_map_sgls(se_cmd, se_sess, cdb, sense,
+ 			unpacked_lun, data_length, task_attr, data_dir,
+-			flags, NULL, 0, NULL, 0);
++			flags, NULL, 0, NULL, 0, NULL, 0);
+ }
+ EXPORT_SYMBOL(target_submit_cmd);
+ 
+diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
+index f175629..84488a8 100644
+--- a/drivers/vhost/scsi.c
++++ b/drivers/vhost/scsi.c
+@@ -889,7 +889,7 @@ static void tcm_vhost_submission_work(struct work_struct *work)
+ 			cmd->tvc_lun, cmd->tvc_exp_data_len,
+ 			cmd->tvc_task_attr, cmd->tvc_data_direction,
+ 			TARGET_SCF_ACK_KREF, sg_ptr, cmd->tvc_sgl_count,
+-			sg_bidi_ptr, sg_no_bidi);
++			sg_bidi_ptr, sg_no_bidi, NULL, 0);
+ 	if (rc < 0) {
+ 		transport_send_check_condition_and_sense(se_cmd,
+ 				TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE, 0);
+diff --git a/include/target/target_core_fabric.h b/include/target/target_core_fabric.h
+index 4cf4fda..0218d68 100644
+--- a/include/target/target_core_fabric.h
++++ b/include/target/target_core_fabric.h
+@@ -105,7 +105,8 @@ sense_reason_t transport_lookup_cmd_lun(struct se_cmd *, u32);
+ sense_reason_t target_setup_cmd_from_cdb(struct se_cmd *, unsigned char *);
+ int	target_submit_cmd_map_sgls(struct se_cmd *, struct se_session *,
+ 		unsigned char *, unsigned char *, u32, u32, int, int, int,
+-		struct scatterlist *, u32, struct scatterlist *, u32);
++		struct scatterlist *, u32, struct scatterlist *, u32,
++		struct scatterlist *, u32);
+ int	target_submit_cmd(struct se_cmd *, struct se_session *, unsigned char *,
+ 		unsigned char *, u32, u32, int, int, int);
+ int	target_submit_tmr(struct se_cmd *se_cmd, struct se_session *se_sess,
 -- 
 1.7.10.4
-
