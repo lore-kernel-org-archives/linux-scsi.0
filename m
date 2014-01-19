@@ -1,14 +1,13 @@
 From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [PATCH-v2 12/17] target/file: Add DIF protection init/format
- support
-Date: Sun, 19 Jan 2014 14:31:14 +0200
-Message-ID: <52DBC592.6010405@dev.mellanox.co.il>
-References: <1390099480-29013-1-git-send-email-nab@daterainc.com> <1390099480-29013-13-git-send-email-nab@daterainc.com>
+Subject: Re: [PATCH-v2 13/17] target/file: Add DIF protection support to fd_execute_rw
+Date: Sun, 19 Jan 2014 14:37:24 +0200
+Message-ID: <52DBC704.1070700@dev.mellanox.co.il>
+References: <1390099480-29013-1-git-send-email-nab@daterainc.com> <1390099480-29013-14-git-send-email-nab@daterainc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1390099480-29013-13-git-send-email-nab@daterainc.com>
+In-Reply-To: <1390099480-29013-14-git-send-email-nab@daterainc.com>
 Sender: target-devel-owner@vger.kernel.org
 To: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Sagi Grimberg <sagig@mellanox.com>, Or Gerlitz <ogerlitz@mellanox.com>, Roland Dreier <roland@kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>
@@ -17,21 +16,12 @@ List-Id: linux-scsi@vger.kernel.org
 On 1/19/2014 4:44 AM, Nicholas A. Bellinger wrote:
 > From: Nicholas Bellinger <nab@linux-iscsi.org>
 >
-> This patch adds support for DIF protection init/format support into
-> the FILEIO backend.
+> This patch adds support for DIF protection into fd_execute_rw() code
+> for WRITE/READ I/O using sbc_dif_verify_[write,read]() logic.
 >
-> It involves using a seperate $FILE.protection for storing PI that is
-> opened via fd_init_prot() using the common pi_prot_type attribute.
-> The actual formatting of the protection is done via fd_format_prot()
-> using the common pi_prot_format attribute, that will populate the
-> initial PI data based upon the currently configured pi_prot_type.
->
-> Based on original FILEIO code from Sagi.
-
-Nice! see comments below...
-
-> v1 changes:
->    - Fix sparse warnings in fd_init_format_buf (Fengguang)
+> It adds fd_do_prot_rw() for handling interface with FILEIO PI, and
+> uses a locally allocated fd_prot->prot_buf + fd_prot->prot_sg for
+> interacting with SBC DIF verify emulation code.
 >
 > Cc: Martin K. Petersen <martin.petersen@oracle.com>
 > Cc: Christoph Hellwig <hch@lst.de>
@@ -40,202 +30,183 @@ Nice! see comments below...
 > Cc: Or Gerlitz <ogerlitz@mellanox.com>
 > Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 > ---
->   drivers/target/target_core_file.c |  137 +++++++++++++++++++++++++++++++++++++
->   drivers/target/target_core_file.h |    4 ++
->   2 files changed, 141 insertions(+)
+>   drivers/target/target_core_file.c |  119 ++++++++++++++++++++++++++++++++++++-
+>   drivers/target/target_core_file.h |    5 ++
+>   2 files changed, 123 insertions(+), 1 deletion(-)
 >
 > diff --git a/drivers/target/target_core_file.c b/drivers/target/target_core_file.c
-> index 0e34cda..119d519 100644
+> index 119d519..aaba7c5 100644
 > --- a/drivers/target/target_core_file.c
 > +++ b/drivers/target/target_core_file.c
-> @@ -700,6 +700,140 @@ static sector_t fd_get_blocks(struct se_device *dev)
->   		       dev->dev_attrib.block_size);
+> @@ -257,6 +257,72 @@ static void fd_free_device(struct se_device *dev)
+>   	kfree(fd_dev);
 >   }
 >   
-> +static int fd_init_prot(struct se_device *dev)
+> +static int fd_do_prot_rw(struct se_cmd *cmd, struct fd_prot *fd_prot,
+> +			 int is_write)
 > +{
-> +	struct fd_dev *fd_dev = FD_DEV(dev);
-> +	struct file *prot_file, *file = fd_dev->fd_file;
-> +	struct inode *inode;
-> +	int ret, flags = O_RDWR | O_CREAT | O_LARGEFILE | O_DSYNC;
-> +	char buf[FD_MAX_DEV_PROT_NAME];
-> +
-> +	if (!file) {
-> +		pr_err("Unable to locate fd_dev->fd_file\n");
-> +		return -ENODEV;
-> +	}
-> +
-> +	inode = file->f_mapping->host;
-> +	if (S_ISBLK(inode->i_mode)) {
-> +		pr_err("FILEIO Protection emulation only supported on"
-> +		       " !S_ISBLK\n");
-> +		return -ENOSYS;
-> +	}
-> +
-> +	if (fd_dev->fbd_flags & FDBD_HAS_BUFFERED_IO_WCE)
-> +		flags &= ~O_DSYNC;
-> +
-> +	snprintf(buf, FD_MAX_DEV_PROT_NAME, "%s.protection",
-> +		 fd_dev->fd_dev_name);
-> +
-> +	prot_file = filp_open(buf, flags, 0600);
-> +	if (IS_ERR(prot_file)) {
-> +		pr_err("filp_open(%s) failed\n", buf);
-> +		ret = PTR_ERR(prot_file);
-> +		return ret;
-> +	}
-> +	fd_dev->fd_prot_file = prot_file;
-> +
-> +	return 0;
-> +}
-> +
-> +static void fd_init_format_buf(struct se_device *dev, unsigned char *buf,
-> +			       u32 unit_size, u32 *ref_tag, u16 app_tag,
-> +			       bool inc_reftag)
-> +{
-> +	unsigned char *p = buf;
-> +	int i;
-> +
-> +	for (i = 0; i < unit_size; i += dev->prot_length) {
-> +		*((u16 *)&p[0]) = 0xffff;
-> +		*((__be16 *)&p[2]) = cpu_to_be16(app_tag);
-> +		*((__be32 *)&p[4]) = cpu_to_be32(*ref_tag);
-> +
-> +		if (inc_reftag)
-> +			(*ref_tag)++;
-> +
-> +		p += dev->prot_length;
-> +	}
-> +}
-> +
-> +static int fd_format_prot(struct se_device *dev)
-> +{
-> +	struct fd_dev *fd_dev = FD_DEV(dev);
-> +	struct file *prot_fd = fd_dev->fd_prot_file;
-> +	sector_t prot_length, prot;
+> +	struct se_device *se_dev = cmd->se_dev;
+> +	struct fd_dev *dev = FD_DEV(se_dev);
+> +	struct file *prot_fd = dev->fd_prot_file;
+> +	struct scatterlist *sg;
+> +	loff_t pos = (cmd->t_task_lba * se_dev->prot_length);
 > +	unsigned char *buf;
-> +	loff_t pos = 0;
-> +	u32 ref_tag = 0;
-> +	int unit_size = FDBD_FORMAT_UNIT_SIZE * dev->dev_attrib.block_size;
-> +	int rc, ret = 0, size, len;
-> +	bool inc_reftag = false;
+> +	u32 prot_size, len, size;
+> +	int rc, ret = 1, i;
 > +
-> +	if (!dev->dev_attrib.pi_prot_type) {
-> +		pr_err("Unable to format_prot while pi_prot_type == 0\n");
-> +		return -ENODEV;
-> +	}
-> +	if (!prot_fd) {
-> +		pr_err("Unable to locate fd_dev->fd_prot_file\n");
-> +		return -ENODEV;
-> +	}
+> +	prot_size = (cmd->data_length / se_dev->dev_attrib.block_size) *
+> +		     se_dev->prot_length;
 > +
-> +	switch (dev->dev_attrib.pi_prot_type) {
-redundant - see below.
-> +	case TARGET_DIF_TYPE3_PROT:
-> +		ref_tag = 0xffffffff;
-> +		break;
-> +	case TARGET_DIF_TYPE2_PROT:
-> +	case TARGET_DIF_TYPE1_PROT:
-> +		inc_reftag = true;
-> +		break;
-> +	default:
-> +		break;
-> +	}
-> +
-> +	buf = vzalloc(unit_size);
-> +	if (!buf) {
-> +		pr_err("Unable to allocate FILEIO prot buf\n");
-> +		return -ENOMEM;
-> +	}
-> +
-> +	prot_length = (dev->transport->get_blocks(dev) + 1) * dev->prot_length;
-> +	size = prot_length;
-> +
-> +	pr_debug("Using FILEIO prot_length: %llu\n",
-> +		 (unsigned long long)prot_length);
-> +
-> +	for (prot = 0; prot < prot_length; prot += unit_size) {
-> +
-> +		fd_init_format_buf(dev, buf, unit_size, &ref_tag, 0xffff,
-> +				   inc_reftag);
-
-I didn't send you my latest patches (my fault...).T10-PI format should 
-only place
-escape values throughout the protection file (fill it with 0xff). so I 
-guess in this case
-fd_init_formast_buf() boils down to memset(buf, 0xff, unit_size) once  
-before the loop
-and just loop until prot_length writing buf, no need to address 
-apptag/reftag...
-
-> +
-> +		len = min(unit_size, size);
-> +
-> +		rc = kernel_write(prot_fd, buf, len, pos);
-> +		if (rc != len) {
-> +			pr_err("vfs_write to prot file failed: %d\n", rc);
-> +			ret = -ENODEV;
-> +			goto out;
+> +	if (!is_write) {
+> +		fd_prot->prot_buf = vzalloc(prot_size);
+> +		if (!fd_prot->prot_buf) {
+> +			pr_err("Unable to allocate fd_prot->prot_buf\n");
+> +			return -ENOMEM;
 > +		}
-> +		pos += len;
-> +		size -= len;
+> +		buf = fd_prot->prot_buf;
+> +
+> +		fd_prot->prot_sg_nents = cmd->t_prot_nents;
+> +		fd_prot->prot_sg = kzalloc(sizeof(struct scatterlist) *
+> +					   fd_prot->prot_sg_nents, GFP_KERNEL);
+> +		if (!fd_prot->prot_sg) {
+> +			pr_err("Unable to allocate fd_prot->prot_sg\n");
+> +			vfree(fd_prot->prot_buf);
+> +			return -ENOMEM;
+> +		}
+> +		size = prot_size;
+> +
+> +		for_each_sg(fd_prot->prot_sg, sg, fd_prot->prot_sg_nents, i) {
+> +
+> +			len = min_t(u32, PAGE_SIZE, size);
+> +			sg_set_buf(sg, buf, len);
+> +			size -= len;
+> +			buf += len;
+> +		}
 > +	}
 > +
-> +out:
-> +	vfree(buf);
+> +	if (is_write) {
+> +		rc = kernel_write(prot_fd, fd_prot->prot_buf, prot_size, pos);
+> +		if (rc < 0 || prot_size != rc) {
+> +			pr_err("kernel_write() for fd_do_prot_rw failed:"
+> +			       " %d\n", rc);
+> +			ret = -EINVAL;
+> +		}
+> +	} else {
+> +		rc = kernel_read(prot_fd, pos, fd_prot->prot_buf, prot_size);
+> +		if (rc < 0) {
+> +			pr_err("kernel_read() for fd_do_prot_rw failed:"
+> +			       " %d\n", rc);
+> +			ret = -EINVAL;
+> +		}
+> +	}
+> +
+> +	if (is_write || ret < 0) {
+> +		kfree(fd_prot->prot_sg);
+> +		vfree(fd_prot->prot_buf);
+> +	}
+> +
 > +	return ret;
 > +}
 > +
-> +static void fd_free_prot(struct se_device *dev)
-> +{
-> +	struct fd_dev *fd_dev = FD_DEV(dev);
-> +
-> +	if (!fd_dev->fd_prot_file)
-> +		return;
-> +
-> +	filp_close(fd_dev->fd_prot_file, NULL);
-> +	fd_dev->fd_prot_file = NULL;
-> +}
-> +
->   static struct sbc_ops fd_sbc_ops = {
->   	.execute_rw		= fd_execute_rw,
->   	.execute_sync_cache	= fd_execute_sync_cache,
-> @@ -730,6 +864,9 @@ static struct se_subsystem_api fileio_template = {
->   	.show_configfs_dev_params = fd_show_configfs_dev_params,
->   	.get_device_type	= sbc_get_device_type,
->   	.get_blocks		= fd_get_blocks,
-> +	.init_prot		= fd_init_prot,
-> +	.format_prot		= fd_format_prot,
-> +	.free_prot		= fd_free_prot,
->   };
+>   static int fd_do_rw(struct se_cmd *cmd, struct scatterlist *sgl,
+>   		u32 sgl_nents, int is_write)
+>   {
+> @@ -551,6 +617,8 @@ fd_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+>   	      enum dma_data_direction data_direction)
+>   {
+>   	struct se_device *dev = cmd->se_dev;
+> +	struct fd_prot fd_prot;
+> +	sense_reason_t rc;
+>   	int ret = 0;
 >   
->   static int __init fileio_module_init(void)
+>   	/*
+> @@ -558,8 +626,48 @@ fd_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+>   	 * physical memory addresses to struct iovec virtual memory.
+>   	 */
+>   	if (data_direction == DMA_FROM_DEVICE) {
+
+Maybe its better to export this one to a separate function? 
+fd_execute_prot_rw()? just a nit...
+
+> +		memset(&fd_prot, 0, sizeof(struct fd_prot));
+> +
+> +		if (cmd->prot_type) {
+> +			ret = fd_do_prot_rw(cmd, &fd_prot, false);
+> +			if (ret < 0)
+> +				return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+> +		}
+> +
+>   		ret = fd_do_rw(cmd, sgl, sgl_nents, 0);
+> +
+> +		if (ret > 0 && cmd->prot_type) {
+> +			u32 sectors = cmd->data_length / dev->dev_attrib.block_size;
+> +
+> +			rc = sbc_dif_verify_read(cmd, cmd->t_task_lba, sectors,
+> +						 0, fd_prot.prot_sg, 0);
+> +			if (rc) {
+> +				kfree(fd_prot.prot_sg);
+> +				vfree(fd_prot.prot_buf);
+> +				return rc;
+> +			}
+> +			kfree(fd_prot.prot_sg);
+> +			vfree(fd_prot.prot_buf);
+> +		}
+>   	} else {
+> +		memset(&fd_prot, 0, sizeof(struct fd_prot));
+> +
+> +		if (cmd->prot_type) {
+> +			u32 sectors = cmd->data_length / dev->dev_attrib.block_size;
+> +
+> +			ret = fd_do_prot_rw(cmd, &fd_prot, false);
+> +			if (ret < 0)
+> +				return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+> +
+> +			rc = sbc_dif_verify_write(cmd, cmd->t_task_lba, sectors,
+> +						  0, fd_prot.prot_sg, 0);
+> +			if (rc) {
+> +				kfree(fd_prot.prot_sg);
+> +				vfree(fd_prot.prot_buf);
+> +				return rc;
+> +			}
+> +		}
+> +
+>   		ret = fd_do_rw(cmd, sgl, sgl_nents, 1);
+>   		/*
+>   		 * Perform implicit vfs_fsync_range() for fd_do_writev() ops
+> @@ -576,10 +684,19 @@ fd_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+>   
+>   			vfs_fsync_range(fd_dev->fd_file, start, end, 1);
+>   		}
+> +
+> +		if (ret > 0 && cmd->prot_type) {
+> +			ret = fd_do_prot_rw(cmd, &fd_prot, true);
+> +			if (ret < 0)
+> +				return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+> +		}
+>   	}
+>   
+> -	if (ret < 0)
+> +	if (ret < 0) {
+> +		kfree(fd_prot.prot_sg);
+> +		vfree(fd_prot.prot_buf);
+>   		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+> +	}
+>   
+>   	if (ret)
+>   		target_complete_cmd(cmd, SAM_STAT_GOOD);
 > diff --git a/drivers/target/target_core_file.h b/drivers/target/target_core_file.h
-> index 37ffc5b..583691e 100644
+> index 583691e..97e5e7d 100644
 > --- a/drivers/target/target_core_file.h
 > +++ b/drivers/target/target_core_file.h
-> @@ -4,6 +4,7 @@
->   #define FD_VERSION		"4.0"
->   
->   #define FD_MAX_DEV_NAME		256
-> +#define FD_MAX_DEV_PROT_NAME	FD_MAX_DEV_NAME + 16
->   #define FD_DEVICE_QUEUE_DEPTH	32
->   #define FD_MAX_DEVICE_QUEUE_DEPTH 128
->   #define FD_BLOCKSIZE		512
-> @@ -15,6 +16,8 @@
->   #define FBDF_HAS_PATH		0x01
->   #define FBDF_HAS_SIZE		0x02
+> @@ -18,6 +18,11 @@
 >   #define FDBD_HAS_BUFFERED_IO_WCE 0x04
-> +#define FDBD_FORMAT_UNIT_SIZE	2048
-> +
+>   #define FDBD_FORMAT_UNIT_SIZE	2048
+>   
+> +struct fd_prot {
+> +	unsigned char	*prot_buf;
+> +	struct scatterlist *prot_sg;
+> +	u32 prot_sg_nents;
+> +};
 >   
 >   struct fd_dev {
 >   	struct se_device dev;
-> @@ -29,6 +32,7 @@ struct fd_dev {
->   	u32		fd_block_size;
->   	unsigned long long fd_dev_size;
->   	struct file	*fd_file;
-> +	struct file	*fd_prot_file;
->   	/* FILEIO HBA device is connected to */
->   	struct fd_host *fd_host;
->   } ____cacheline_aligned;
