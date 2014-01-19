@@ -1,7 +1,7 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH-v2 10/17] target: Add protection SGLs to target_submit_cmd_map_sgls
-Date: Sun, 19 Jan 2014 02:44:33 +0000
-Message-ID: <1390099480-29013-11-git-send-email-nab@daterainc.com>
+Subject: [PATCH-v2 16/17] target/rd: Add DIF protection into rd_execute_rw
+Date: Sun, 19 Jan 2014 02:44:39 +0000
+Message-ID: <1390099480-29013-17-git-send-email-nab@daterainc.com>
 References: <1390099480-29013-1-git-send-email-nab@daterainc.com>
 Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1390099480-29013-1-git-send-email-nab@daterainc.com>
@@ -12,16 +12,15 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch adds support to target_submit_cmd_map_sgls() for
-accepting 'sgl_prot' + 'sgl_prot_count' parameters for
-DIF protection information.
+This patch adds support for DIF protection into rd_execute_rw() code
+for WRITE/READ I/O using sbc_dif_verify_[write,read]() logic.
 
-Note the passed parameters are stored at se_cmd->t_prot_sg
-and se_cmd->t_prot_nents respectively.
+It also adds rd_get_prot_table() for locating protection SGLs
+assoicated with the ramdisk backend device.
 
-Also, update tcm_loop and vhost-scsi fabrics usage of
-target_submit_cmd_map_sgls() to take into account the
-new parameters.
+v2 changes:
+  - Make rd_execute_rw() to u32 sectors count instead of sector_t
+  - Drop SCF_PROT usage
 
 Cc: Martin K. Petersen <martin.petersen@oracle.com>
 Cc: Christoph Hellwig <hch@lst.de>
@@ -30,106 +29,105 @@ Cc: Sagi Grimberg <sagig@mellanox.com>
 Cc: Or Gerlitz <ogerlitz@mellanox.com>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/loopback/tcm_loop.c     |    2 +-
- drivers/target/target_core_transport.c |   16 ++++++++++++++--
- drivers/vhost/scsi.c                   |    2 +-
- include/target/target_core_fabric.h    |    3 ++-
- 4 files changed, 18 insertions(+), 5 deletions(-)
+ drivers/target/target_core_rd.c |   65 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 65 insertions(+)
 
-diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
-index 763ee45..112b795 100644
---- a/drivers/target/loopback/tcm_loop.c
-+++ b/drivers/target/loopback/tcm_loop.c
-@@ -217,7 +217,7 @@ static void tcm_loop_submission_work(struct work_struct *work)
- 			scsi_bufflen(sc), tcm_loop_sam_attr(sc),
- 			sc->sc_data_direction, 0,
- 			scsi_sglist(sc), scsi_sg_count(sc),
--			sgl_bidi, sgl_bidi_count);
-+			sgl_bidi, sgl_bidi_count, NULL, 0);
- 	if (rc < 0) {
- 		set_host_byte(sc, DID_NO_CONNECT);
- 		goto out_done;
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index fa4fc04..aebe0bb 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -1310,6 +1310,8 @@ transport_generic_map_mem_to_cmd(struct se_cmd *cmd, struct scatterlist *sgl,
-  * @sgl_count: scatterlist count for unidirectional mapping
-  * @sgl_bidi: struct scatterlist memory for bidirectional READ mapping
-  * @sgl_bidi_count: scatterlist count for bidirectional READ mapping
-+ * @sgl_prot: struct scatterlist memory protection information
-+ * @sgl_prot_count: scatterlist count for protection information
-  *
-  * Returns non zero to signal active I/O shutdown failure.  All other
-  * setup exceptions will be returned as a SCSI CHECK_CONDITION response,
-@@ -1322,7 +1324,8 @@ int target_submit_cmd_map_sgls(struct se_cmd *se_cmd, struct se_session *se_sess
- 		unsigned char *cdb, unsigned char *sense, u32 unpacked_lun,
- 		u32 data_length, int task_attr, int data_dir, int flags,
- 		struct scatterlist *sgl, u32 sgl_count,
--		struct scatterlist *sgl_bidi, u32 sgl_bidi_count)
-+		struct scatterlist *sgl_bidi, u32 sgl_bidi_count,
-+		struct scatterlist *sgl_prot, u32 sgl_prot_count)
- {
- 	struct se_portal_group *se_tpg;
- 	sense_reason_t rc;
-@@ -1364,6 +1367,14 @@ int target_submit_cmd_map_sgls(struct se_cmd *se_cmd, struct se_session *se_sess
- 		target_put_sess_cmd(se_sess, se_cmd);
- 		return 0;
- 	}
-+	/*
-+	 * Save pointers for SGLs containing protection information,
-+	 * if present.
-+	 */
-+	if (sgl_prot_count) {
-+		se_cmd->t_prot_sg = sgl_prot;
-+		se_cmd->t_prot_nents = sgl_prot_count;
-+	}
- 
- 	rc = target_setup_cmd_from_cdb(se_cmd, cdb);
- 	if (rc != 0) {
-@@ -1406,6 +1417,7 @@ int target_submit_cmd_map_sgls(struct se_cmd *se_cmd, struct se_session *se_sess
- 			return 0;
- 		}
- 	}
-+
- 	/*
- 	 * Check if we need to delay processing because of ALUA
- 	 * Active/NonOptimized primary access state..
-@@ -1445,7 +1457,7 @@ int target_submit_cmd(struct se_cmd *se_cmd, struct se_session *se_sess,
- {
- 	return target_submit_cmd_map_sgls(se_cmd, se_sess, cdb, sense,
- 			unpacked_lun, data_length, task_attr, data_dir,
--			flags, NULL, 0, NULL, 0);
-+			flags, NULL, 0, NULL, 0, NULL, 0);
+diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core_rd.c
+index 660961d..66a5aba 100644
+--- a/drivers/target/target_core_rd.c
++++ b/drivers/target/target_core_rd.c
+@@ -356,6 +356,26 @@ static struct rd_dev_sg_table *rd_get_sg_table(struct rd_dev *rd_dev, u32 page)
+ 	return NULL;
  }
- EXPORT_SYMBOL(target_submit_cmd);
  
-diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
-index f175629..84488a8 100644
---- a/drivers/vhost/scsi.c
-+++ b/drivers/vhost/scsi.c
-@@ -889,7 +889,7 @@ static void tcm_vhost_submission_work(struct work_struct *work)
- 			cmd->tvc_lun, cmd->tvc_exp_data_len,
- 			cmd->tvc_task_attr, cmd->tvc_data_direction,
- 			TARGET_SCF_ACK_KREF, sg_ptr, cmd->tvc_sgl_count,
--			sg_bidi_ptr, sg_no_bidi);
-+			sg_bidi_ptr, sg_no_bidi, NULL, 0);
- 	if (rc < 0) {
- 		transport_send_check_condition_and_sense(se_cmd,
- 				TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE, 0);
-diff --git a/include/target/target_core_fabric.h b/include/target/target_core_fabric.h
-index 4cf4fda..0218d68 100644
---- a/include/target/target_core_fabric.h
-+++ b/include/target/target_core_fabric.h
-@@ -105,7 +105,8 @@ sense_reason_t transport_lookup_cmd_lun(struct se_cmd *, u32);
- sense_reason_t target_setup_cmd_from_cdb(struct se_cmd *, unsigned char *);
- int	target_submit_cmd_map_sgls(struct se_cmd *, struct se_session *,
- 		unsigned char *, unsigned char *, u32, u32, int, int, int,
--		struct scatterlist *, u32, struct scatterlist *, u32);
-+		struct scatterlist *, u32, struct scatterlist *, u32,
-+		struct scatterlist *, u32);
- int	target_submit_cmd(struct se_cmd *, struct se_session *, unsigned char *,
- 		unsigned char *, u32, u32, int, int, int);
- int	target_submit_tmr(struct se_cmd *se_cmd, struct se_session *se_sess,
++static struct rd_dev_sg_table *rd_get_prot_table(struct rd_dev *rd_dev, u32 page)
++{
++	struct rd_dev_sg_table *sg_table;
++	u32 i, sg_per_table = (RD_MAX_ALLOCATION_SIZE /
++				sizeof(struct scatterlist));
++
++	i = page / sg_per_table;
++	if (i < rd_dev->sg_prot_count) {
++		sg_table = &rd_dev->sg_prot_array[i];
++		if ((sg_table->page_start_offset <= page) &&
++		     (sg_table->page_end_offset >= page))
++			return sg_table;
++	}
++
++	pr_err("Unable to locate struct prot rd_dev_sg_table for page: %u\n",
++			page);
++
++	return NULL;
++}
++
+ static sense_reason_t
+ rd_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+ 	      enum dma_data_direction data_direction)
+@@ -370,6 +390,7 @@ rd_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+ 	u32 rd_page;
+ 	u32 src_len;
+ 	u64 tmp;
++	sense_reason_t rc;
+ 
+ 	if (dev->rd_flags & RDF_NULLIO) {
+ 		target_complete_cmd(cmd, SAM_STAT_GOOD);
+@@ -392,6 +413,28 @@ rd_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+ 			data_direction == DMA_FROM_DEVICE ? "Read" : "Write",
+ 			cmd->t_task_lba, rd_size, rd_page, rd_offset);
+ 
++	if (cmd->prot_type && data_direction == DMA_TO_DEVICE) {
++		struct rd_dev_sg_table *prot_table;
++		struct scatterlist *prot_sg;
++		u32 sectors = cmd->data_length / se_dev->dev_attrib.block_size;
++		u32 prot_offset, prot_page;
++
++		tmp = cmd->t_task_lba * se_dev->prot_length;
++		prot_offset = do_div(tmp, PAGE_SIZE);
++		prot_page = tmp;
++
++		prot_table = rd_get_prot_table(dev, prot_page);
++		if (!prot_table)
++			return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
++
++		prot_sg = &prot_table->sg_table[prot_page - prot_table->page_start_offset];
++
++		rc = sbc_dif_verify_write(cmd, cmd->t_task_lba, sectors, 0,
++					  prot_sg, prot_offset);
++		if (rc)
++			return rc;
++	}
++
+ 	src_len = PAGE_SIZE - rd_offset;
+ 	sg_miter_start(&m, sgl, sgl_nents,
+ 			data_direction == DMA_FROM_DEVICE ?
+@@ -453,6 +496,28 @@ rd_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+ 	}
+ 	sg_miter_stop(&m);
+ 
++	if (cmd->prot_type && data_direction == DMA_FROM_DEVICE) {
++		struct rd_dev_sg_table *prot_table;
++		struct scatterlist *prot_sg;
++		u32 sectors = cmd->data_length / se_dev->dev_attrib.block_size;
++		u32 prot_offset, prot_page;
++
++		tmp = cmd->t_task_lba * se_dev->prot_length;
++		prot_offset = do_div(tmp, PAGE_SIZE);
++		prot_page = tmp;
++
++		prot_table = rd_get_prot_table(dev, prot_page);
++		if (!prot_table)
++			return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
++
++		prot_sg = &prot_table->sg_table[prot_page - prot_table->page_start_offset];
++
++		rc = sbc_dif_verify_read(cmd, cmd->t_task_lba, sectors, 0,
++					 prot_sg, prot_offset);
++		if (rc)
++			return rc;
++	}
++
+ 	target_complete_cmd(cmd, SAM_STAT_GOOD);
+ 	return 0;
+ }
 -- 
 1.7.10.4
