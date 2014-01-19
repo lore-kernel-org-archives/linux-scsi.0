@@ -1,55 +1,151 @@
-From: walt <w41ter-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 3.12 033/118] usb: xhci: Link TRB must not occur within
- a USB payload burst [NEW HARDWARE]
-Date: Sat, 18 Jan 2014 12:23:27 -0800
-Message-ID: <52DAE2BF.7020208@gmail.com>
-References: <20140109235045.GA17660@xanatos> <52D4791B.3030309@gmail.com> <20140114172056.GB12126@xanatos> <52D5ABBD.7090202@gmail.com> <063D6719AE5E284EB5DD2968C1650D6D45EDA3@AcuExch.aculab.com>
+From: =?UTF-8?B?UGV0ZXIgUGFsw7pjaA==?= <Peter.Paluch@fri.uniza.sk>
+Subject: Re: XHCI issues: WD MyBook 1230 - reset SuperSpeed USB device
+Date: Sun, 19 Jan 2014 01:27:41 +0100
+Message-ID: <52DB1BFD.3080107@fri.uniza.sk>
+References: <Pine.LNX.4.44L0.1401161532560.1109-100000@iolanthe.rowland.org> <52D8DD45.9010602@suse.de> <52D991BA.40903@interlog.com> <52D99D51.1030100@fri.uniza.sk> <52DA8BCF.6070201@t-online.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6D45EDA3-VkEWCZq2GCInGFn1LkZF6NBPR1lH4CV8@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: David Laight <David.Laight-ZS65k/vG3HxXrIkS9f7CXA@public.gmane.org>, Sarah Sharp <sarah.a.sharp-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Cc: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Linux Kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from castor.kis.fri.uniza.sk ([158.193.152.2]:58275 "EHLO
+	mail.kis.fri.uniza.sk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751539AbaASA1q (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 18 Jan 2014 19:27:46 -0500
+In-Reply-To: <52DA8BCF.6070201@t-online.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christian Franke <Christian.Franke@t-online.de>, dgilbert@interlog.com
+Cc: Hannes Reinecke <hare@suse.de>, Alan Stern <stern@rowland.harvard.edu>, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On 01/17/2014 06:34 AM, David Laight wrote:
+Gentlemen,
 
-> Can you try the patch I posted that stops the ownership on LINK TRBs
-> being changed before that on the linked-to TRB?
+I believe I've found the root cause of the issue.
 
-Please disregard my earlier post about the patch not applying cleanly.
-That was the usual html corruption, so I found the original on the usb
-list and it was okay.
+USB is absolutely not to blame in this case. Problems were caused by th=
+e=20
+udisksd daemon that sent ATA IDENTIFY DEVICE pass through command with=20
+the SECTOR_COUNT field set to 0 (cdb[6] =3D 0). I first noticed it when=
+ I=20
+compared the strace output from udiskd to the strace of smartctl and=20
+sg_sat_identify - both these tools set the cdb[6] to 1. After correctin=
+g=20
+the udiskd sources in this aspect, the problem appears to be solved.
 
-Sadly, the patch didn't fix the ASMedia lockup behavior, however :(
+My sincere thanks to all of you - all your suggestions and comments=20
+moved me in the right direction. I will report this issue to udiskd=20
+maintainers along with the (trivial) patch.
 
-I did notice that the lockup occurred only when copying *to* the usb3
-drive, and not when copying from it.  I think that may be new behavior
-but I can't swear to it.
+Once again, thanks!
 
-Just to confirm, here are the first few lines of the patch I used.
-Please let me know if it's the wrong patch:
+Best regards,
+Peter
 
 
-diff --git a/drivers/usb/host/xhci-ring.c b/drivers/usb/host/xhci-ring.c
-index 53c2e29..589d336 100644
---- a/drivers/usb/host/xhci-ring.c
-+++ b/drivers/usb/host/xhci-ring.c
-@@ -2928,6 +2928,11 @@ static void queue_trb(struct xhci_hcd *xhci, struct xhci_ring *ring,
-        struct xhci_generic_trb *trb;
- 
-        trb = &amp;ring-&gt;enqueue-&gt;generic;
-+
-+       field4 = (field4 &amp; ~TRB_CYCLE) | ring-&gt;cycle_state;
-+       if (trb == &amp;ring-&gt;enqueue_first-&gt;generic)
-+               field4 ^= TRB_CYCLE;
-+
-        trb-&gt;field[0] = cpu_to_le32(field1);
-
-        <big snip>
+On 18.01.2014 15:12, Christian Franke wrote:
+> Peter Pal=C3=BAch wrote:
+>> Gentlemen,
+>>
+>> First of all, thank you very much for looking into this issue.
+>>
+>> Alan, for the sake of keeping the thread tidy in archives, I am not=20
+>> going to change the $SUBJECT of this e-mail but I wholeheartedly=20
+>> agree that this is not an xHCI issue. Mea culpa; I did not know that=
+=20
+>> at the time I first reported it.
+>>
+>> Douglas, Hannes: I believe we are definitely on to something. I do=20
+>> _not_ run smartd but this may be caused by something in my Gnome3 GU=
+I=20
+>> environment. I have noticed that when I am not logged in to Gnome an=
+d=20
+>> work just in the text console, plugging in the USB drive and=20
+>> accessing it works without any issues. Only when I am logged into my=
+=20
+>> Gnome and plug the drive in, Gnome obviously tries to do something=20
+>> with the drive that causes it to stall and recover in 30 seconds. I=20
+>> have not yet been able to identify what it is.
+>
+> Gnome disk utility?
+>
+> AFAIK it relies on libatasmart. The source code of libatasmart is=20
+> unrelated to smartmontools.
+>
+>
+>> On 17.01.2014 21:25, Douglas Gilbert wrote:
+>>> On 14-01-17 02:35 AM, Hannes Reinecke wrote:
+>>>> On 01/16/2014 09:48 PM, Alan Stern wrote:
+>>>>> It looks like the reset occurred because the computer sent an
+>>>>> ATA-passthru command to the disk, and the disk wasn't prepared to
+>>>>> handle it properly.  The firmware crashed, requiring a reset.
+>>>>>
+>>>>> If anyone can explain, the command bytes in question were:
+>>>>>
+>>>>>     85082e00 00000000 00000000 0000ec00
+>>>
+>>> SCSI ATA PASS-THROUGH(16) command issuing the
+>>> mandatory ATA command 0xec which is IDENTIFY DEVICE.
+>>> [See SAT-3 drafts for more information on the pass-through
+>>> command.]
+>>>
+>
+> The above command sets CK_COND bit (CDB[2] |=3D 0x20) to request ATA=20
+> return descriptor.
+>
+> Smartmontools never set CK_COND for IDENTIFY DEVICE. It is only set i=
+f=20
+> ATA output reqister values are actually needed:
+>
+> # smartctl -d sat -r ioctl -i -H /dev/sdd
+> ...
+> REPORT-IOCTL: Device=3D/dev/sdd Command=3DIDENTIFY DEVICE
+> Input:   FR=3D...., SC=3D0x01, LL=3D...., LM=3D...., LH=3D...., DEV=3D=
+=2E...,=20
+> CMD=3D0xec IN
+> [ata pass-through(16): 85 08 0e 00 00 00 01 00 00 00 00 00 00 00 ec 0=
+0 ]
+> ...
+> REPORT-IOCTL: Device=3D/dev/sdd Command=3DSMART STATUS CHECK
+> Input:   FR=3D0xda, SC=3D...., LL=3D...., LM=3D0x4f, LH=3D0xc2, DEV=3D=
+=2E..., CMD=3D0xb0
+> [ata pass-through(16): 85 06 2c 00 da 00 00 00 00 00 4f 00 c2 00 b0 0=
+0 ]
+> ...
+>
+>
+>>>>> and the sense data was:
+>>>>>
+>>>>>     7201001d 0000000e 090c0000 00005d00 01000000 0050
+>>>
+>>> ATA spec says there should not (normally) be an error issued
+>>> by that command; but there was:
+>>>
+>>> $ sg_decode_sense -n 7201001d 0000000e 090c0000 00005d00 01000000 0=
+050
+>>>  Descriptor format, current;  Sense key: Recovered Error
+>>>  Additional sense: ATA pass through information available
+>>>   Descriptor type: ATA Status Return
+>>>     extend=3D0  error=3D0x0  sector_count=3D0x0
+>>>     lba=3D0x000000
+>>>     device=3D0x0  status=3D0x50
+>>>
+>>> Looks reasonable at the SCSI level, not sure about the
+>>> ATA level, perhaps others can comment.
+>
+> Returned ATA register values look reasonable but are not needed for=20
+> ATA IDENTIFY command.
+>
+>
+>>> Doug Gilbert
+>>> [a smartmontools maintainer]
+>>>
+>
+> Christian Franke
+> [a smartmontools maintainer :-]
+>
+>
 --
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
