@@ -1,30 +1,27 @@
 From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: [PATCH v2 5/7] scsi_debug: prepare to enable clustering
-Date: Sun, 19 Jan 2014 22:51:41 +0900
-Message-ID: <1390139503-11519-6-git-send-email-akinobu.mita@gmail.com>
+Subject: [PATCH v2 7/7] scsi_debug: add ability to enable clustering
+Date: Sun, 19 Jan 2014 22:51:43 +0900
+Message-ID: <1390139503-11519-8-git-send-email-akinobu.mita@gmail.com>
 References: <1390139503-11519-1-git-send-email-akinobu.mita@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f54.google.com ([209.85.160.54]:58287 "EHLO
-	mail-pb0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752346AbaASNwC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Jan 2014 08:52:02 -0500
-Received: by mail-pb0-f54.google.com with SMTP id uo5so2316719pbc.13
-        for <linux-scsi@vger.kernel.org>; Sun, 19 Jan 2014 05:52:02 -0800 (PST)
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:61792 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752359AbaASNwG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Jan 2014 08:52:06 -0500
+Received: by mail-pa0-f41.google.com with SMTP id fa1so3653469pad.28
+        for <linux-scsi@vger.kernel.org>; Sun, 19 Jan 2014 05:52:05 -0800 (PST)
 In-Reply-To: <1390139503-11519-1-git-send-email-akinobu.mita@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Akinobu Mita <akinobu.mita@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Douglas Gilbert <dgilbert@interlog.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-Currently, clustering support for scsi_debug is disabled.  This is
-because there are for_each_sg() loops which assume that each sg list
-element is consisted with a single page.  But enabling clustering
-support, each sg list element for scsi commands can be consisted with
-multiple pages.
+This adds a module parameter to enable clustering.
 
-This replaces these for_each_sg() loops with sg mapping iterator which
-is capable of handling each sg list element is consisted with multiple
-pages.
+Without enabling clustering support, the transfer length for read and
+write scsi commands is limited upto 8MB when page size is 4KB and
+sg_tablesize is 2048 (= SCSI_MAX_SG_CHAIN_SEGMENTS).  I would like to
+test commands with more than that transfer length.
 
 Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
 Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
@@ -33,207 +30,48 @@ Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org
 ---
 Change from previous version:
-- remove unnecessary irqsave/irqrestore while iterating sg mapping
+- make clustering module parameter writable
 
- drivers/scsi/scsi_debug.c | 109 +++++++++++++++++++++++++---------------------
- 1 file changed, 59 insertions(+), 50 deletions(-)
+ drivers/scsi/scsi_debug.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
 diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index a102519..004b985 100644
+index 0bb1d49c..f3e9cc0 100644
 --- a/drivers/scsi/scsi_debug.c
 +++ b/drivers/scsi/scsi_debug.c
-@@ -1789,23 +1789,27 @@ static int dif_verify(struct sd_dif_tuple *sdt, const void *data,
- static void dif_copy_prot(struct scsi_cmnd *SCpnt, sector_t sector,
- 			  unsigned int sectors, bool read)
- {
--	unsigned int i, resid;
--	struct scatterlist *psgl;
-+	size_t resid;
- 	void *paddr;
- 	const void *dif_store_end = dif_storep + sdebug_store_sectors;
-+	struct sg_mapping_iter miter;
+@@ -196,6 +196,7 @@ static unsigned int scsi_debug_unmap_max_blocks = DEF_UNMAP_MAX_BLOCKS;
+ static unsigned int scsi_debug_unmap_max_desc = DEF_UNMAP_MAX_DESC;
+ static unsigned int scsi_debug_write_same_length = DEF_WRITESAME_LENGTH;
+ static bool scsi_debug_removable = DEF_REMOVABLE;
++static bool scsi_debug_clustering;
  
- 	/* Bytes of protection data to copy into sgl */
- 	resid = sectors * sizeof(*dif_storep);
+ static int scsi_debug_cmnd_count = 0;
  
--	scsi_for_each_prot_sg(SCpnt, psgl, scsi_prot_sg_count(SCpnt), i) {
--		int len = min(psgl->length, resid);
-+	sg_miter_start(&miter, scsi_prot_sglist(SCpnt),
-+			scsi_prot_sg_count(SCpnt), SG_MITER_ATOMIC |
-+			(read ? SG_MITER_TO_SG : SG_MITER_FROM_SG));
-+
-+	while (sg_miter_next(&miter) && resid > 0) {
-+		size_t len = min(miter.length, resid);
- 		void *start = dif_store(sector);
--		int rest = 0;
-+		size_t rest = 0;
+@@ -2762,6 +2763,7 @@ static int schedule_resp(struct scsi_cmnd * cmnd,
+  */
+ module_param_named(add_host, scsi_debug_add_host, int, S_IRUGO | S_IWUSR);
+ module_param_named(ato, scsi_debug_ato, int, S_IRUGO);
++module_param_named(clustering, scsi_debug_clustering, bool, S_IRUGO | S_IWUSR);
+ module_param_named(delay, scsi_debug_delay, int, S_IRUGO | S_IWUSR);
+ module_param_named(dev_size_mb, scsi_debug_dev_size_mb, int, S_IRUGO);
+ module_param_named(dif, scsi_debug_dif, int, S_IRUGO);
+@@ -2805,6 +2807,7 @@ MODULE_VERSION(SCSI_DEBUG_VERSION);
  
- 		if (dif_store_end < start + len)
- 			rest = start + len - dif_store_end;
+ MODULE_PARM_DESC(add_host, "0..127 hosts allowed(def=1)");
+ MODULE_PARM_DESC(ato, "application tag ownership: 0=disk 1=host (def=1)");
++MODULE_PARM_DESC(clustering, "when set enables larger transfers (def=0)");
+ MODULE_PARM_DESC(delay, "# of jiffies to delay response(def=1)");
+ MODULE_PARM_DESC(dev_size_mb, "size in MB of ram shared by devs(def=8)");
+ MODULE_PARM_DESC(dif, "data integrity field type: 0-3 (def=0)");
+@@ -3952,6 +3955,8 @@ static int sdebug_driver_probe(struct device * dev)
+ 	sdbg_host = to_sdebug_host(dev);
  
--		paddr = kmap_atomic(sg_page(psgl)) + psgl->offset;
-+		paddr = miter.addr;
- 
- 		if (read)
- 			memcpy(paddr, start, len - rest);
-@@ -1821,8 +1825,8 @@ static void dif_copy_prot(struct scsi_cmnd *SCpnt, sector_t sector,
- 
- 		sector += len / sizeof(*dif_storep);
- 		resid -= len;
--		kunmap_atomic(paddr);
- 	}
-+	sg_miter_stop(&miter);
- }
- 
- static int prot_verify_read(struct scsi_cmnd *SCpnt, sector_t start_sec,
-@@ -1929,55 +1933,62 @@ void dump_sector(unsigned char *buf, int len)
- static int prot_verify_write(struct scsi_cmnd *SCpnt, sector_t start_sec,
- 			     unsigned int sectors, u32 ei_lba)
- {
--	int i, j, ret;
-+	int ret;
- 	struct sd_dif_tuple *sdt;
--	struct scatterlist *dsgl;
--	struct scatterlist *psgl = scsi_prot_sglist(SCpnt);
--	void *daddr, *paddr;
-+	void *daddr;
- 	sector_t sector = start_sec;
- 	int ppage_offset;
-+	int dpage_offset;
-+	struct sg_mapping_iter diter;
-+	struct sg_mapping_iter piter;
- 
- 	BUG_ON(scsi_sg_count(SCpnt) == 0);
- 	BUG_ON(scsi_prot_sg_count(SCpnt) == 0);
- 
--	ppage_offset = 0;
--
--	/* For each data page */
--	scsi_for_each_sg(SCpnt, dsgl, scsi_sg_count(SCpnt), i) {
--		daddr = kmap_atomic(sg_page(dsgl)) + dsgl->offset;
--		paddr = kmap_atomic(sg_page(psgl)) + psgl->offset;
--
--		/* For each sector-sized chunk in data page */
--		for (j = 0; j < dsgl->length; j += scsi_debug_sector_size) {
-+	sg_miter_start(&piter, scsi_prot_sglist(SCpnt),
-+			scsi_prot_sg_count(SCpnt),
-+			SG_MITER_ATOMIC | SG_MITER_FROM_SG);
-+	sg_miter_start(&diter, scsi_sglist(SCpnt), scsi_sg_count(SCpnt),
-+			SG_MITER_ATOMIC | SG_MITER_FROM_SG);
-+
-+	/* For each protection page */
-+	while (sg_miter_next(&piter)) {
-+		dpage_offset = 0;
-+		if (WARN_ON(!sg_miter_next(&diter))) {
-+			ret = 0x01;
-+			goto out;
-+		}
- 
-+		for (ppage_offset = 0; ppage_offset < piter.length;
-+		     ppage_offset += sizeof(struct sd_dif_tuple)) {
- 			/* If we're at the end of the current
--			 * protection page advance to the next one
-+			 * data page advance to the next one
- 			 */
--			if (ppage_offset >= psgl->length) {
--				kunmap_atomic(paddr);
--				psgl = sg_next(psgl);
--				BUG_ON(psgl == NULL);
--				paddr = kmap_atomic(sg_page(psgl))
--					+ psgl->offset;
--				ppage_offset = 0;
-+			if (dpage_offset >= diter.length) {
-+				if (WARN_ON(!sg_miter_next(&diter))) {
-+					ret = 0x01;
-+					goto out;
-+				}
-+				dpage_offset = 0;
- 			}
- 
--			sdt = paddr + ppage_offset;
-+			sdt = piter.addr + ppage_offset;
-+			daddr = diter.addr + dpage_offset;
- 
--			ret = dif_verify(sdt, daddr + j, sector, ei_lba);
-+			ret = dif_verify(sdt, daddr, sector, ei_lba);
- 			if (ret) {
--				dump_sector(daddr + j, scsi_debug_sector_size);
-+				dump_sector(daddr, scsi_debug_sector_size);
- 				goto out;
- 			}
- 
- 			sector++;
- 			ei_lba++;
--			ppage_offset += sizeof(struct sd_dif_tuple);
-+			dpage_offset += scsi_debug_sector_size;
- 		}
--
--		kunmap_atomic(paddr);
--		kunmap_atomic(daddr);
-+		diter.consumed = dpage_offset;
-+		sg_miter_stop(&diter);
- 	}
-+	sg_miter_stop(&piter);
- 
- 	dif_copy_prot(SCpnt, start_sec, sectors, false);
- 	dix_writes++;
-@@ -1986,8 +1997,8 @@ static int prot_verify_write(struct scsi_cmnd *SCpnt, sector_t start_sec,
- 
- out:
- 	dif_errors++;
--	kunmap_atomic(paddr);
--	kunmap_atomic(daddr);
-+	sg_miter_stop(&diter);
-+	sg_miter_stop(&piter);
- 	return ret;
- }
- 
-@@ -2311,11 +2322,11 @@ static int resp_report_luns(struct scsi_cmnd * scp,
- static int resp_xdwriteread(struct scsi_cmnd *scp, unsigned long long lba,
- 			    unsigned int num, struct sdebug_dev_info *devip)
- {
--	int i, j, ret = -1;
-+	int j;
- 	unsigned char *kaddr, *buf;
- 	unsigned int offset;
--	struct scatterlist *sg;
- 	struct scsi_data_buffer *sdb = scsi_in(scp);
-+	struct sg_mapping_iter miter;
- 
- 	/* better not to use temporary buffer. */
- 	buf = kmalloc(scsi_bufflen(scp), GFP_ATOMIC);
-@@ -2328,22 +2339,20 @@ static int resp_xdwriteread(struct scsi_cmnd *scp, unsigned long long lba,
- 	scsi_sg_copy_to_buffer(scp, buf, scsi_bufflen(scp));
- 
- 	offset = 0;
--	for_each_sg(sdb->table.sgl, sg, sdb->table.nents, i) {
--		kaddr = (unsigned char *)kmap_atomic(sg_page(sg));
--		if (!kaddr)
--			goto out;
-+	sg_miter_start(&miter, sdb->table.sgl, sdb->table.nents,
-+			SG_MITER_ATOMIC | SG_MITER_TO_SG);
- 
--		for (j = 0; j < sg->length; j++)
--			*(kaddr + sg->offset + j) ^= *(buf + offset + j);
-+	while (sg_miter_next(&miter)) {
-+		kaddr = miter.addr;
-+		for (j = 0; j < miter.length; j++)
-+			*(kaddr + j) ^= *(buf + offset + j);
- 
--		offset += sg->length;
--		kunmap_atomic(kaddr);
-+		offset += miter.length;
- 	}
--	ret = 0;
--out:
-+	sg_miter_stop(&miter);
- 	kfree(buf);
- 
--	return ret;
-+	return 0;
- }
- 
- /* When timer goes off this function is called. */
+ 	sdebug_driver_template.can_queue = scsi_debug_max_queue;
++	if (scsi_debug_clustering)
++		sdebug_driver_template.use_clustering = ENABLE_CLUSTERING;
+ 	hpnt = scsi_host_alloc(&sdebug_driver_template, sizeof(sdbg_host));
+ 	if (NULL == hpnt) {
+ 		printk(KERN_ERR "%s: scsi_register failed\n", __func__);
 -- 
 1.8.3.2
 
