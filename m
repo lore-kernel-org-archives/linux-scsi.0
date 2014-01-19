@@ -1,7 +1,7 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH-v2 17/17] tcm_loop: Enable DIF/DIX modes in SCSI host LLD
-Date: Sun, 19 Jan 2014 02:44:40 +0000
-Message-ID: <1390099480-29013-18-git-send-email-nab@daterainc.com>
+Subject: [PATCH-v2 14/17] target/rd: Refactor rd_build_device_space + rd_release_device_space
+Date: Sun, 19 Jan 2014 02:44:37 +0000
+Message-ID: <1390099480-29013-15-git-send-email-nab@daterainc.com>
 References: <1390099480-29013-1-git-send-email-nab@daterainc.com>
 Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1390099480-29013-1-git-send-email-nab@daterainc.com>
@@ -12,61 +12,195 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch updates tcm_loop_driver_probe() to set protection
-information using scsi_host_set_prot() and scsi_host_set_guard(),
-which currently enabled all modes of DIF/DIX protection, minus
-DIX TYPE0.
+This patch refactors rd_build_device_space() + rd_release_device_space()
+into rd_allocate_sgl_table() + rd_release_device_space() so that they
+may be used seperatly for setup + release of protection information
+scatterlists.
 
-Also, update tcm_loop_submission_work() to pass struct scsi_cmnd
-related protection into target_submit_cmd_map_sgls() during CDB
-dispatch.
+Also add explicit memset of pages within rd_allocate_sgl_table() based
+upon passed 'init_payload' value.
 
-Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+v2 changes:
+  - Drop unused sg_table from rd_release_device_space (Wei)
+
+Cc: Martin K. Petersen <martin.petersen@oracle.com>
 Cc: Christoph Hellwig <hch@lst.de>
 Cc: Hannes Reinecke <hare@suse.de>
 Cc: Sagi Grimberg <sagig@mellanox.com>
 Cc: Or Gerlitz <ogerlitz@mellanox.com>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/loopback/tcm_loop.c |   12 ++++++++++--
- 1 file changed, 10 insertions(+), 2 deletions(-)
+ drivers/target/target_core_rd.c |  113 +++++++++++++++++++++++----------------
+ 1 file changed, 68 insertions(+), 45 deletions(-)
 
-diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
-index 112b795..fadad7c 100644
---- a/drivers/target/loopback/tcm_loop.c
-+++ b/drivers/target/loopback/tcm_loop.c
-@@ -217,7 +217,8 @@ static void tcm_loop_submission_work(struct work_struct *work)
- 			scsi_bufflen(sc), tcm_loop_sam_attr(sc),
- 			sc->sc_data_direction, 0,
- 			scsi_sglist(sc), scsi_sg_count(sc),
--			sgl_bidi, sgl_bidi_count, NULL, 0);
-+			sgl_bidi, sgl_bidi_count,
-+			scsi_prot_sglist(sc), scsi_prot_sg_count(sc));
- 	if (rc < 0) {
- 		set_host_byte(sc, DID_NO_CONNECT);
- 		goto out_done;
-@@ -462,7 +463,7 @@ static int tcm_loop_driver_probe(struct device *dev)
+diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core_rd.c
+index 4ffe5f2..e9fa879 100644
+--- a/drivers/target/target_core_rd.c
++++ b/drivers/target/target_core_rd.c
+@@ -78,23 +78,14 @@ static void rd_detach_hba(struct se_hba *hba)
+ 	hba->hba_ptr = NULL;
+ }
+ 
+-/*	rd_release_device_space():
+- *
+- *
+- */
+-static void rd_release_device_space(struct rd_dev *rd_dev)
++static u32 rd_release_sgl_table(struct rd_dev *rd_dev, struct rd_dev_sg_table *sg_table,
++				 u32 sg_table_count)
  {
- 	struct tcm_loop_hba *tl_hba;
- 	struct Scsi_Host *sh;
--	int error;
-+	int error, host_prot;
+-	u32 i, j, page_count = 0, sg_per_table;
+-	struct rd_dev_sg_table *sg_table;
+ 	struct page *pg;
+ 	struct scatterlist *sg;
++	u32 i, j, page_count = 0, sg_per_table;
  
- 	tl_hba = to_tcm_loop_hba(dev);
+-	if (!rd_dev->sg_table_array || !rd_dev->sg_table_count)
+-		return;
+-
+-	sg_table = rd_dev->sg_table_array;
+-
+-	for (i = 0; i < rd_dev->sg_table_count; i++) {
++	for (i = 0; i < sg_table_count; i++) {
+ 		sg = sg_table[i].sg_table;
+ 		sg_per_table = sg_table[i].rd_sg_count;
  
-@@ -486,6 +487,13 @@ static int tcm_loop_driver_probe(struct device *dev)
- 	sh->max_channel = 0;
- 	sh->max_cmd_len = TL_SCSI_MAX_CMD_LEN;
+@@ -105,16 +96,28 @@ static void rd_release_device_space(struct rd_dev *rd_dev)
+ 				page_count++;
+ 			}
+ 		}
+-
+ 		kfree(sg);
+ 	}
  
-+	host_prot = SHOST_DIF_TYPE1_PROTECTION | SHOST_DIF_TYPE2_PROTECTION |
-+		    SHOST_DIF_TYPE3_PROTECTION | SHOST_DIX_TYPE1_PROTECTION |
-+		    SHOST_DIX_TYPE2_PROTECTION | SHOST_DIX_TYPE3_PROTECTION;
++	kfree(sg_table);
++	return page_count;
++}
 +
-+	scsi_host_set_prot(sh, host_prot);
-+	scsi_host_set_guard(sh, SHOST_DIX_GUARD_CRC);
++static void rd_release_device_space(struct rd_dev *rd_dev)
++{
++	u32 page_count;
 +
- 	error = scsi_add_host(sh, &tl_hba->dev);
- 	if (error) {
- 		pr_err("%s: scsi_add_host failed\n", __func__);
++	if (!rd_dev->sg_table_array || !rd_dev->sg_table_count)
++		return;
++
++	page_count = rd_release_sgl_table(rd_dev, rd_dev->sg_table_array,
++					  rd_dev->sg_table_count);
++
+ 	pr_debug("CORE_RD[%u] - Released device space for Ramdisk"
+ 		" Device ID: %u, pages %u in %u tables total bytes %lu\n",
+ 		rd_dev->rd_host->rd_host_id, rd_dev->rd_dev_id, page_count,
+ 		rd_dev->sg_table_count, (unsigned long)page_count * PAGE_SIZE);
+ 
+-	kfree(sg_table);
+ 	rd_dev->sg_table_array = NULL;
+ 	rd_dev->sg_table_count = 0;
+ }
+@@ -124,38 +127,15 @@ static void rd_release_device_space(struct rd_dev *rd_dev)
+  *
+  *
+  */
+-static int rd_build_device_space(struct rd_dev *rd_dev)
++static int rd_allocate_sgl_table(struct rd_dev *rd_dev, struct rd_dev_sg_table *sg_table,
++				 u32 total_sg_needed, unsigned char init_payload)
+ {
+-	u32 i = 0, j, page_offset = 0, sg_per_table, sg_tables, total_sg_needed;
++	u32 i = 0, j, page_offset = 0, sg_per_table;
+ 	u32 max_sg_per_table = (RD_MAX_ALLOCATION_SIZE /
+ 				sizeof(struct scatterlist));
+-	struct rd_dev_sg_table *sg_table;
+ 	struct page *pg;
+ 	struct scatterlist *sg;
+-
+-	if (rd_dev->rd_page_count <= 0) {
+-		pr_err("Illegal page count: %u for Ramdisk device\n",
+-			rd_dev->rd_page_count);
+-		return -EINVAL;
+-	}
+-
+-	/* Don't need backing pages for NULLIO */
+-	if (rd_dev->rd_flags & RDF_NULLIO)
+-		return 0;
+-
+-	total_sg_needed = rd_dev->rd_page_count;
+-
+-	sg_tables = (total_sg_needed / max_sg_per_table) + 1;
+-
+-	sg_table = kzalloc(sg_tables * sizeof(struct rd_dev_sg_table), GFP_KERNEL);
+-	if (!sg_table) {
+-		pr_err("Unable to allocate memory for Ramdisk"
+-			" scatterlist tables\n");
+-		return -ENOMEM;
+-	}
+-
+-	rd_dev->sg_table_array = sg_table;
+-	rd_dev->sg_table_count = sg_tables;
++	unsigned char *p;
+ 
+ 	while (total_sg_needed) {
+ 		sg_per_table = (total_sg_needed > max_sg_per_table) ?
+@@ -186,16 +166,59 @@ static int rd_build_device_space(struct rd_dev *rd_dev)
+ 			}
+ 			sg_assign_page(&sg[j], pg);
+ 			sg[j].length = PAGE_SIZE;
++
++			p = kmap(pg);
++			memset(p, init_payload, PAGE_SIZE);
++			kunmap(pg);
+ 		}
+ 
+ 		page_offset += sg_per_table;
+ 		total_sg_needed -= sg_per_table;
+ 	}
+ 
++	return 0;
++}
++
++static int rd_build_device_space(struct rd_dev *rd_dev)
++{
++	struct rd_dev_sg_table *sg_table;
++	u32 sg_tables, total_sg_needed;
++	u32 max_sg_per_table = (RD_MAX_ALLOCATION_SIZE /
++				sizeof(struct scatterlist));
++	int rc;
++
++	if (rd_dev->rd_page_count <= 0) {
++		pr_err("Illegal page count: %u for Ramdisk device\n",
++		       rd_dev->rd_page_count);
++		return -EINVAL;
++	}
++
++	/* Don't need backing pages for NULLIO */
++	if (rd_dev->rd_flags & RDF_NULLIO)
++		return 0;
++
++	total_sg_needed = rd_dev->rd_page_count;
++
++	sg_tables = (total_sg_needed / max_sg_per_table) + 1;
++
++	sg_table = kzalloc(sg_tables * sizeof(struct rd_dev_sg_table), GFP_KERNEL);
++	if (!sg_table) {
++		pr_err("Unable to allocate memory for Ramdisk"
++		       " scatterlist tables\n");
++		return -ENOMEM;
++	}
++
++	rd_dev->sg_table_array = sg_table;
++	rd_dev->sg_table_count = sg_tables;
++
++	rc = rd_allocate_sgl_table(rd_dev, sg_table, total_sg_needed, 0x00);
++	if (rc)
++		return rc;
++
+ 	pr_debug("CORE_RD[%u] - Built Ramdisk Device ID: %u space of"
+-		" %u pages in %u tables\n", rd_dev->rd_host->rd_host_id,
+-		rd_dev->rd_dev_id, rd_dev->rd_page_count,
+-		rd_dev->sg_table_count);
++		 " %u pages in %u tables\n", rd_dev->rd_host->rd_host_id,
++		 rd_dev->rd_dev_id, rd_dev->rd_page_count,
++		 rd_dev->sg_table_count);
+ 
+ 	return 0;
+ }
 -- 
 1.7.10.4
