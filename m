@@ -1,107 +1,171 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: [PATCH v2 6/7] scsi_debug: protect device access with atomic_rw lock
-Date: Sun, 19 Jan 2014 22:51:42 +0900
-Message-ID: <1390139503-11519-7-git-send-email-akinobu.mita@gmail.com>
-References: <1390139503-11519-1-git-send-email-akinobu.mita@gmail.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH] scsi-sg: pass flag to inhibit setting LUN
+Date: Sun, 19 Jan 2014 10:56:15 -0500
+Message-ID: <52DBF59F.3050604@interlog.com>
+References: <52C56755.7060709@seznam.cz> <52C7193C.20806@interlog.com>
+Reply-To: dgilbert@interlog.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-2;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:51040 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752342AbaASNwE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Jan 2014 08:52:04 -0500
-Received: by mail-pa0-f46.google.com with SMTP id rd3so5906416pab.5
-        for <linux-scsi@vger.kernel.org>; Sun, 19 Jan 2014 05:52:04 -0800 (PST)
-In-Reply-To: <1390139503-11519-1-git-send-email-akinobu.mita@gmail.com>
+Received: from smtp.infotech.no ([82.134.31.41]:46495 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752305AbaASP4b (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 19 Jan 2014 10:56:31 -0500
+In-Reply-To: <52C7193C.20806@interlog.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Akinobu Mita <akinobu.mita@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Douglas Gilbert <dgilbert@interlog.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+To: =?ISO-8859-2?Q?Ji=F8=ED_Pinkava?= <j-pi@seznam.cz>
+Cc: linux-scsi@vger.kernel.org, JBottomley@parallels.com
 
-This change ensures that concurrent device access including ramdisk
-storage, protection info, and provisioning map by read, write, and
-unmap commands are protected with atomic_rw spinlock.
+On 14-01-03 03:10 PM, Douglas Gilbert wrote:
+> On 14-01-02 08:19 AM, Ji=F8=ED Pinkava wrote:
+>> Hi,
+>>
+>> This patch implements support for inhibiting setting LUN number
+>> for SCSI custom command send via /dev/sgX with ioctl(.., SG_IO, ...)=
+ call.
+>>
+>> This solves problems with some devices which claim support of
+>> SCSI v1/v2, but for some special purposes use custom commands
+>> which does not conform with standard message format.
+>> (Like mine Pentax digital single-lens reflex camera)
+>> It does not affect devices with SCSI v3 or latter.
+>>
+>> For this purpose was earlier introduced
+>> SG_FLAG_LUN_INHIBIT / SG_FLAG_UNUSED_LUN_INHIBIT (glibc/kernel) flag=
+,
+>> but the implementation was lost in some earlier code refactor.
+>>
+>> The only possible issue I see is current implementation supports onl=
+y
+>> SG driver but there is few more code paths where the similar ioctl c=
+an
+>> be invoked
+>> (eg. anny SCSI device?). I'm not sure about, feel free to say anythi=
+ng
+>> about it.
+>
+> Hi,
+> SG_FLAG_LUN_INHIBIT was added to the sg driver around 15
+> years ago. The code to centralize the masking in scsi.c
+> and remove the "LUN inhibit" capability arrived about
+> 10 years ago. A handful of people have complained about
+> it since. An you are the first to do something about it!
+>
+> I have a few comments about the code (see below) but the
+> logic seems okay to me. That said I would be very surprised
+> if this is allowed back in the kernel. If you manage to do
+> that then I'll be studying your technique (because many of my
+> patches to the sg driver are not accepted).
+>
+> So you can takes that as an "ack" with comments and good luck.
+> I'll let others judge.
+>
+>> ---
+>>   drivers/scsi/scsi.c       | 3 ++-
+>>   drivers/scsi/sg.c         | 3 +++
+>>   include/linux/blk_types.h | 2 ++
+>>   3 files changed, 7 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+>> index fe0bcb1..f6d5fc9 100644
+>> --- a/drivers/scsi/scsi.c
+>> +++ b/drivers/scsi/scsi.c
+>> @@ -693,7 +693,8 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
+>>        * If SCSI-2 or lower, store the LUN value in cmnd.
+>>        */
+>>       if (cmd->device->scsi_level <=3D SCSI_2 &&
+>> -        cmd->device->scsi_level !=3D SCSI_UNKNOWN) {
+>> +        cmd->device->scsi_level !=3D SCSI_UNKNOWN &&
+>> +        !(cmd->request->cmd_flags & REQ_LUN_INHIBIT)) {
+>>           cmd->cmnd[1] =3D (cmd->cmnd[1] & 0x1f) |
+>>                      (cmd->device->lun << 5 & 0xe0);
+>>       }
+>
+> The above being time sensitive code I was thinking a switch
+> might make it clearer and give the compiler more chances to
+> optimize:
+>        switch(cmd->device->scsi_level) {
+>        case SCSI_2:
+>        case SCSI_1_CCS:
+>        case SCSI_1:
+>                if (!(cmd->request->cmd_flags & REQ_LUN_INHIBIT)) {
+>                        cmd->cmnd[1] =3D (cmd->cmnd[1] & 0x1f) |
+>                                       (cmd->device->lun << 5 & 0xe0);
+>                }
+>                break;
+>        default:
+>                ;
+>        }
+>
+> Hmm, can a switch's default be made "likely"?
+>
+> More generally folks, with SAS SSDs available that can read at
+> 1100 MB/sec we may want to spend time looking at the fast
+> paths through the SCSI subsystem.
+>
+>
+>> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+>> index df5e961..8e09015 100644
+>> --- a/drivers/scsi/sg.c
+>> +++ b/drivers/scsi/sg.c
+>> @@ -1663,6 +1663,9 @@ static int sg_start_req(Sg_request *srp, unsig=
+ned
+>> char *cmd)
+>>       rq->sense =3D srp->sense_b;
+>>       rq->retries =3D SG_DEFAULT_RETRIES;
+>>
+>> +    if (hp->flags & SG_FLAG_UNUSED_LUN_INHIBIT)
+>> +        rq->cmd_flags |=3D  REQ_LUN_INHIBIT;
+>> +
+>>       if ((dxfer_len <=3D 0) || (dxfer_dir =3D=3D SG_DXFER_NONE))
+>>           return 0;
+>>
+>> diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+>> index 238ef0e..35d436b 100644
+>> --- a/include/linux/blk_types.h
+>> +++ b/include/linux/blk_types.h
+>> @@ -178,6 +178,7 @@ enum rq_flag_bits {
+>>       __REQ_MIXED_MERGE,    /* merge of different types, fail separa=
+tely */
+>>       __REQ_KERNEL,         /* direct IO to kernel pages */
+>>       __REQ_PM,        /* runtime pm request */
+>> +    __REQ_LUN_INHIBIT,    /* pass through for
+>> SG_FLAG_UNUSED_LUN_INHIBIT flag */
+>>       __REQ_END,        /* last of chain of requests */
+>>       __REQ_NR_BITS,        /* stops here */
+>>   };
+>> @@ -230,6 +231,7 @@ enum rq_flag_bits {
+>>   #define REQ_SECURE        (1ULL << __REQ_SECURE)
+>>   #define REQ_KERNEL        (1ULL << __REQ_KERNEL)
+>>   #define REQ_PM            (1ULL << __REQ_PM)
+>> +#define REQ_LUN_INHIBIT    (1ULL << __REQ_LUN_INHIBIT)
+>>   #define REQ_END            (1ULL << __REQ_END)
+>>
+>>   #endif /* __LINUX_BLK_TYPES_H */
+>>
+>
+> And I think the SG_FLAG_LUN_INHIBIT define should be re-instated
+> to sg.h . For backward compatibility (for the last 10 years)
+> please leave the SG_FLAG_UNUSED_LUN_INHIBIT define there. Both
+> defines should have the same value.
 
-Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Douglas Gilbert <dgilbert@interlog.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
----
-New patch from this version
+Not sure if this patch is going anywhere, but I do get queries
+periodically that boil down to a request for this capability
+to be re-instated.
 
- drivers/scsi/scsi_debug.c | 12 ++++++++++--
- 1 file changed, 10 insertions(+), 2 deletions(-)
+In the last week someone sent me a usbmon dump showing how
+sg_raw worked (or at least obeyed the command line supplied
+cdb) from Windows but failed from Linux. Linux masking byte
+1 of the cdb was the reason.
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 004b985..0bb1d49c 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -1888,17 +1888,19 @@ static int resp_read(struct scsi_cmnd *SCpnt, unsigned long long lba,
- 		return check_condition_result;
- 	}
- 
-+	read_lock_irqsave(&atomic_rw, iflags);
-+
- 	/* DIX + T10 DIF */
- 	if (scsi_debug_dix && scsi_prot_sg_count(SCpnt)) {
- 		int prot_ret = prot_verify_read(SCpnt, lba, num, ei_lba);
- 
- 		if (prot_ret) {
-+			read_unlock_irqrestore(&atomic_rw, iflags);
- 			mk_sense_buffer(devip, ABORTED_COMMAND, 0x10, prot_ret);
- 			return illegal_condition_result;
- 		}
- 	}
- 
--	read_lock_irqsave(&atomic_rw, iflags);
- 	ret = do_device_access(SCpnt, devip, lba, num, 0);
- 	read_unlock_irqrestore(&atomic_rw, iflags);
- 	if (ret == -1)
-@@ -2098,17 +2100,19 @@ static int resp_write(struct scsi_cmnd *SCpnt, unsigned long long lba,
- 	if (ret)
- 		return ret;
- 
-+	write_lock_irqsave(&atomic_rw, iflags);
-+
- 	/* DIX + T10 DIF */
- 	if (scsi_debug_dix && scsi_prot_sg_count(SCpnt)) {
- 		int prot_ret = prot_verify_write(SCpnt, lba, num, ei_lba);
- 
- 		if (prot_ret) {
-+			write_unlock_irqrestore(&atomic_rw, iflags);
- 			mk_sense_buffer(devip, ILLEGAL_REQUEST, 0x10, prot_ret);
- 			return illegal_condition_result;
- 		}
- 	}
- 
--	write_lock_irqsave(&atomic_rw, iflags);
- 	ret = do_device_access(SCpnt, devip, lba, num, 1);
- 	if (scsi_debug_lbp())
- 		map_region(lba, num);
-@@ -2187,6 +2191,7 @@ static int resp_unmap(struct scsi_cmnd * scmd, struct sdebug_dev_info * devip)
- 	struct unmap_block_desc *desc;
- 	unsigned int i, payload_len, descriptors;
- 	int ret;
-+	unsigned long iflags;
- 
- 	ret = check_readiness(scmd, 1, devip);
- 	if (ret)
-@@ -2208,6 +2213,8 @@ static int resp_unmap(struct scsi_cmnd * scmd, struct sdebug_dev_info * devip)
- 
- 	desc = (void *)&buf[8];
- 
-+	write_lock_irqsave(&atomic_rw, iflags);
-+
- 	for (i = 0 ; i < descriptors ; i++) {
- 		unsigned long long lba = get_unaligned_be64(&desc[i].lba);
- 		unsigned int num = get_unaligned_be32(&desc[i].blocks);
-@@ -2222,6 +2229,7 @@ static int resp_unmap(struct scsi_cmnd * scmd, struct sdebug_dev_info * devip)
- 	ret = 0;
- 
- out:
-+	write_unlock_irqrestore(&atomic_rw, iflags);
- 	kfree(buf);
- 
- 	return ret;
--- 
-1.8.3.2
+Doug Gilbert
 
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
