@@ -1,13 +1,13 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH-v2 12/17] target/file: Add DIF protection init/format support
-Date: Sun, 19 Jan 2014 02:44:35 +0000
-Message-ID: <1390099480-29013-13-git-send-email-nab@daterainc.com>
+Subject: [PATCH-v2 11/17] target/iblock: Add blk_integrity + BIP passthrough support
+Date: Sun, 19 Jan 2014 02:44:34 +0000
+Message-ID: <1390099480-29013-12-git-send-email-nab@daterainc.com>
 References: <1390099480-29013-1-git-send-email-nab@daterainc.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:44583 "EHLO
+Received: from mail.linux-iscsi.org ([67.23.28.174]:44579 "EHLO
 	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751981AbaASDFa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 18 Jan 2014 22:05:30 -0500
+	with ESMTP id S1751980AbaASDF2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 18 Jan 2014 22:05:28 -0500
 In-Reply-To: <1390099480-29013-1-git-send-email-nab@daterainc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -16,19 +16,16 @@ Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.ker
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch adds support for DIF protection init/format support into
-the FILEIO backend.
+This patch adds blk_integrity passthrough support for block_device
+backends using IBLOCK.
 
-It involves using a seperate $FILE.protection for storing PI that is
-opened via fd_init_prot() using the common pi_prot_type attribute.
-The actual formatting of the protection is done via fd_format_prot()
-using the common pi_prot_format attribute, that will populate the
-initial PI data based upon the currently configured pi_prot_type.
+This includes iblock_alloc_bip() + setup of bio_integrity_payload
+information that attaches to the leading struct bio once bio_list
+is populated during fast-path iblock_execute_rw() I/O dispatch.
 
-Based on original FILEIO code from Sagi.
-
-v1 changes:
-  - Fix sparse warnings in fd_init_format_buf (Fengguang)
+It also updates setup in iblock_configure_device() to detect modes
+of protection + se dev->dev_attrib.pi_prot_type accordingly, along
+with creating required bio_set integrity mempools.
 
 Cc: Martin K. Petersen <martin.petersen@oracle.com>
 Cc: Christoph Hellwig <hch@lst.de>
@@ -37,194 +34,168 @@ Cc: Sagi Grimberg <sagig@mellanox.com>
 Cc: Or Gerlitz <ogerlitz@mellanox.com>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_file.c |  137 +++++++++++++++++++++++++++++++++++++
- drivers/target/target_core_file.h |    4 ++
- 2 files changed, 141 insertions(+)
+ drivers/target/Kconfig              |    1 +
+ drivers/target/target_core_iblock.c |   91 ++++++++++++++++++++++++++++++++++-
+ 2 files changed, 90 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/target/target_core_file.c b/drivers/target/target_core_file.c
-index 0e34cda..119d519 100644
---- a/drivers/target/target_core_file.c
-+++ b/drivers/target/target_core_file.c
-@@ -700,6 +700,140 @@ static sector_t fd_get_blocks(struct se_device *dev)
- 		       dev->dev_attrib.block_size);
+diff --git a/drivers/target/Kconfig b/drivers/target/Kconfig
+index 50aad2e..dc2d84a 100644
+--- a/drivers/target/Kconfig
++++ b/drivers/target/Kconfig
+@@ -14,6 +14,7 @@ if TARGET_CORE
+ 
+ config TCM_IBLOCK
+ 	tristate "TCM/IBLOCK Subsystem Plugin for Linux/BLOCK"
++	select BLK_DEV_INTEGRITY
+ 	help
+ 	Say Y here to enable the TCM/IBLOCK subsystem plugin for non-buffered
+ 	access to Linux/Block devices using BIO
+diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
+index 15d9121..293d9b0 100644
+--- a/drivers/target/target_core_iblock.c
++++ b/drivers/target/target_core_iblock.c
+@@ -91,6 +91,7 @@ static int iblock_configure_device(struct se_device *dev)
+ 	struct iblock_dev *ib_dev = IBLOCK_DEV(dev);
+ 	struct request_queue *q;
+ 	struct block_device *bd = NULL;
++	struct blk_integrity *bi;
+ 	fmode_t mode;
+ 	int ret = -ENOMEM;
+ 
+@@ -155,8 +156,40 @@ static int iblock_configure_device(struct se_device *dev)
+ 	if (blk_queue_nonrot(q))
+ 		dev->dev_attrib.is_nonrot = 1;
+ 
++	bi = bdev_get_integrity(bd);
++	if (bi) {
++		struct bio_set *bs = ib_dev->ibd_bio_set;
++
++		if (!strcmp(bi->name, "T10-DIF-TYPE3-IP") ||
++		    !strcmp(bi->name, "T10-DIF-TYPE1-IP")) {
++			pr_err("IBLOCK export of blk_integrity: %s not"
++			       " supported\n", bi->name);
++			ret = -ENOSYS;
++			goto out_blkdev_put;
++		}
++
++		if (!strcmp(bi->name, "T10-DIF-TYPE3-CRC")) {
++			dev->dev_attrib.pi_prot_type = TARGET_DIF_TYPE3_PROT;
++		} else if (!strcmp(bi->name, "T10-DIF-TYPE1-CRC")) {
++			dev->dev_attrib.pi_prot_type = TARGET_DIF_TYPE1_PROT;
++		}
++
++		if (dev->dev_attrib.pi_prot_type) {
++			if (bioset_integrity_create(bs, IBLOCK_BIO_POOL_SIZE) < 0) {
++				pr_err("Unable to allocate bioset for PI\n");
++				ret = -ENOMEM;
++				goto out_blkdev_put;
++			}
++			pr_debug("IBLOCK setup BIP bs->bio_integrity_pool: %p\n",
++				 bs->bio_integrity_pool);
++		}
++		dev->dev_attrib.hw_pi_prot_type = dev->dev_attrib.pi_prot_type;
++	}
++
+ 	return 0;
+ 
++out_blkdev_put:
++	blkdev_put(ib_dev->ibd_bd, FMODE_WRITE|FMODE_READ|FMODE_EXCL);
+ out_free_bioset:
+ 	bioset_free(ib_dev->ibd_bio_set);
+ 	ib_dev->ibd_bio_set = NULL;
+@@ -170,8 +203,10 @@ static void iblock_free_device(struct se_device *dev)
+ 
+ 	if (ib_dev->ibd_bd != NULL)
+ 		blkdev_put(ib_dev->ibd_bd, FMODE_WRITE|FMODE_READ|FMODE_EXCL);
+-	if (ib_dev->ibd_bio_set != NULL)
++	if (ib_dev->ibd_bio_set != NULL) {
++		bioset_integrity_free(ib_dev->ibd_bio_set);
+ 		bioset_free(ib_dev->ibd_bio_set);
++	}
+ 	kfree(ib_dev);
  }
  
-+static int fd_init_prot(struct se_device *dev)
+@@ -586,13 +621,58 @@ static ssize_t iblock_show_configfs_dev_params(struct se_device *dev, char *b)
+ 	return bl;
+ }
+ 
++static int
++iblock_alloc_bip(struct se_cmd *cmd, struct bio *bio)
 +{
-+	struct fd_dev *fd_dev = FD_DEV(dev);
-+	struct file *prot_file, *file = fd_dev->fd_file;
-+	struct inode *inode;
-+	int ret, flags = O_RDWR | O_CREAT | O_LARGEFILE | O_DSYNC;
-+	char buf[FD_MAX_DEV_PROT_NAME];
++	struct se_device *dev = cmd->se_dev;
++	struct blk_integrity *bi;
++	struct bio_integrity_payload *bip;
++	struct iblock_dev *ib_dev = IBLOCK_DEV(dev);
++	struct scatterlist *sg;
++	int i, rc;
 +
-+	if (!file) {
-+		pr_err("Unable to locate fd_dev->fd_file\n");
++	bi = bdev_get_integrity(ib_dev->ibd_bd);
++	if (!bi) {
++		pr_err("Unable to locate bio_integrity\n");
 +		return -ENODEV;
 +	}
 +
-+	inode = file->f_mapping->host;
-+	if (S_ISBLK(inode->i_mode)) {
-+		pr_err("FILEIO Protection emulation only supported on"
-+		       " !S_ISBLK\n");
-+		return -ENOSYS;
++	bip = bio_integrity_alloc(bio, GFP_NOIO, cmd->t_prot_nents);
++	if (!bip) {
++		pr_err("Unable to allocate bio_integrity_payload\n");
++		return -ENOMEM;
 +	}
 +
-+	if (fd_dev->fbd_flags & FDBD_HAS_BUFFERED_IO_WCE)
-+		flags &= ~O_DSYNC;
++	bip->bip_size = (cmd->data_length / dev->dev_attrib.block_size) *
++			 dev->prot_length;
++	bip->bip_sector = bio->bi_sector;
 +
-+	snprintf(buf, FD_MAX_DEV_PROT_NAME, "%s.protection",
-+		 fd_dev->fd_dev_name);
++	pr_debug("IBLOCK BIP Size: %u Sector: %llu\n", bip->bip_size,
++		 (unsigned long long)bip->bip_sector);
 +
-+	prot_file = filp_open(buf, flags, 0600);
-+	if (IS_ERR(prot_file)) {
-+		pr_err("filp_open(%s) failed\n", buf);
-+		ret = PTR_ERR(prot_file);
-+		return ret;
++	for_each_sg(cmd->t_prot_sg, sg, cmd->t_prot_nents, i) {
++
++		rc = bio_integrity_add_page(bio, sg_page(sg), sg->length,
++					    sg->offset);
++		if (rc != sg->length) {
++			pr_err("bio_integrity_add_page() failed; %d\n", rc);
++			return -ENOMEM;
++		}
++
++		pr_debug("Added bio integrity page: %p length: %d offset; %d\n",
++			 sg_page(sg), sg->length, sg->offset);
 +	}
-+	fd_dev->fd_prot_file = prot_file;
 +
 +	return 0;
 +}
 +
-+static void fd_init_format_buf(struct se_device *dev, unsigned char *buf,
-+			       u32 unit_size, u32 *ref_tag, u16 app_tag,
-+			       bool inc_reftag)
-+{
-+	unsigned char *p = buf;
-+	int i;
-+
-+	for (i = 0; i < unit_size; i += dev->prot_length) {
-+		*((u16 *)&p[0]) = 0xffff;
-+		*((__be16 *)&p[2]) = cpu_to_be16(app_tag);
-+		*((__be32 *)&p[4]) = cpu_to_be32(*ref_tag);
-+
-+		if (inc_reftag)
-+			(*ref_tag)++;
-+
-+		p += dev->prot_length;
-+	}
-+}
-+
-+static int fd_format_prot(struct se_device *dev)
-+{
-+	struct fd_dev *fd_dev = FD_DEV(dev);
-+	struct file *prot_fd = fd_dev->fd_prot_file;
-+	sector_t prot_length, prot;
-+	unsigned char *buf;
-+	loff_t pos = 0;
-+	u32 ref_tag = 0;
-+	int unit_size = FDBD_FORMAT_UNIT_SIZE * dev->dev_attrib.block_size;
-+	int rc, ret = 0, size, len;
-+	bool inc_reftag = false;
-+
-+	if (!dev->dev_attrib.pi_prot_type) {
-+		pr_err("Unable to format_prot while pi_prot_type == 0\n");
-+		return -ENODEV;
-+	}
-+	if (!prot_fd) {
-+		pr_err("Unable to locate fd_dev->fd_prot_file\n");
-+		return -ENODEV;
-+	}
-+
-+	switch (dev->dev_attrib.pi_prot_type) {
-+	case TARGET_DIF_TYPE3_PROT:
-+		ref_tag = 0xffffffff;
-+		break;
-+	case TARGET_DIF_TYPE2_PROT:
-+	case TARGET_DIF_TYPE1_PROT:
-+		inc_reftag = true;
-+		break;
-+	default:
-+		break;
-+	}
-+
-+	buf = vzalloc(unit_size);
-+	if (!buf) {
-+		pr_err("Unable to allocate FILEIO prot buf\n");
-+		return -ENOMEM;
-+	}
-+
-+	prot_length = (dev->transport->get_blocks(dev) + 1) * dev->prot_length;
-+	size = prot_length;
-+
-+	pr_debug("Using FILEIO prot_length: %llu\n",
-+		 (unsigned long long)prot_length);
-+
-+	for (prot = 0; prot < prot_length; prot += unit_size) {
-+
-+		fd_init_format_buf(dev, buf, unit_size, &ref_tag, 0xffff,
-+				   inc_reftag);
-+
-+		len = min(unit_size, size);
-+
-+		rc = kernel_write(prot_fd, buf, len, pos);
-+		if (rc != len) {
-+			pr_err("vfs_write to prot file failed: %d\n", rc);
-+			ret = -ENODEV;
-+			goto out;
-+		}
-+		pos += len;
-+		size -= len;
-+	}
-+
-+out:
-+	vfree(buf);
-+	return ret;
-+}
-+
-+static void fd_free_prot(struct se_device *dev)
-+{
-+	struct fd_dev *fd_dev = FD_DEV(dev);
-+
-+	if (!fd_dev->fd_prot_file)
-+		return;
-+
-+	filp_close(fd_dev->fd_prot_file, NULL);
-+	fd_dev->fd_prot_file = NULL;
-+}
-+
- static struct sbc_ops fd_sbc_ops = {
- 	.execute_rw		= fd_execute_rw,
- 	.execute_sync_cache	= fd_execute_sync_cache,
-@@ -730,6 +864,9 @@ static struct se_subsystem_api fileio_template = {
- 	.show_configfs_dev_params = fd_show_configfs_dev_params,
- 	.get_device_type	= sbc_get_device_type,
- 	.get_blocks		= fd_get_blocks,
-+	.init_prot		= fd_init_prot,
-+	.format_prot		= fd_format_prot,
-+	.free_prot		= fd_free_prot,
- };
+ static sense_reason_t
+ iblock_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+ 		  enum dma_data_direction data_direction)
+ {
+ 	struct se_device *dev = cmd->se_dev;
+ 	struct iblock_req *ibr;
+-	struct bio *bio;
++	struct bio *bio, *bio_start;
+ 	struct bio_list list;
+ 	struct scatterlist *sg;
+ 	u32 sg_num = sgl_nents;
+@@ -655,6 +735,7 @@ iblock_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+ 	if (!bio)
+ 		goto fail_free_ibr;
  
- static int __init fileio_module_init(void)
-diff --git a/drivers/target/target_core_file.h b/drivers/target/target_core_file.h
-index 37ffc5b..583691e 100644
---- a/drivers/target/target_core_file.h
-+++ b/drivers/target/target_core_file.h
-@@ -4,6 +4,7 @@
- #define FD_VERSION		"4.0"
++	bio_start = bio;
+ 	bio_list_init(&list);
+ 	bio_list_add(&list, bio);
  
- #define FD_MAX_DEV_NAME		256
-+#define FD_MAX_DEV_PROT_NAME	FD_MAX_DEV_NAME + 16
- #define FD_DEVICE_QUEUE_DEPTH	32
- #define FD_MAX_DEVICE_QUEUE_DEPTH 128
- #define FD_BLOCKSIZE		512
-@@ -15,6 +16,8 @@
- #define FBDF_HAS_PATH		0x01
- #define FBDF_HAS_SIZE		0x02
- #define FDBD_HAS_BUFFERED_IO_WCE 0x04
-+#define FDBD_FORMAT_UNIT_SIZE	2048
+@@ -688,6 +769,12 @@ iblock_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+ 		sg_num--;
+ 	}
+ 
++	if (cmd->prot_type) {
++		int rc = iblock_alloc_bip(cmd, bio_start);
++		if (rc)
++			goto fail_put_bios;
++	}
 +
- 
- struct fd_dev {
- 	struct se_device dev;
-@@ -29,6 +32,7 @@ struct fd_dev {
- 	u32		fd_block_size;
- 	unsigned long long fd_dev_size;
- 	struct file	*fd_file;
-+	struct file	*fd_prot_file;
- 	/* FILEIO HBA device is connected to */
- 	struct fd_host *fd_host;
- } ____cacheline_aligned;
+ 	iblock_submit_bios(&list, rw);
+ 	iblock_complete_cmd(cmd);
+ 	return 0;
 -- 
 1.7.10.4
 
