@@ -1,137 +1,118 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH-v2 01/17] target: Add DIF related base definitions
-Date: Sun, 19 Jan 2014 02:44:24 +0000
-Message-ID: <1390099480-29013-2-git-send-email-nab@daterainc.com>
-References: <1390099480-29013-1-git-send-email-nab@daterainc.com>
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1390099480-29013-1-git-send-email-nab@daterainc.com>
-Sender: target-devel-owner@vger.kernel.org
+Subject: [PATCH-v2 00/17] target: Add support for DIF Type1+Type3 emulation + passthrough
+Date: Sun, 19 Jan 2014 02:44:23 +0000
+Message-ID: <1390099480-29013-1-git-send-email-nab@daterainc.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:44502 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751813AbaASDFQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 18 Jan 2014 22:05:16 -0500
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Sagi Grimberg <sagig@mellanox.com>, Or Gerlitz <ogerlitz@mellanox.com>, Roland Dreier <roland@kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>
-List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch adds DIF related definitions to target_core_base.h
-that includes enums for target_prot_op + target_prot_type +
-target_prot_version + target_guard_type + target_pi_error.
+Hi MKP & Co,
 
-Also included is struct se_dif_v1_tuple, along with changes
-to struct se_cmd, struct se_dev_attrib, and struct se_device.
+This -v2 series contains support for target mode DIF Type1+Type3
+emulation within target core, FILEIO, and RAMDISK_MCP device backends,
+BIP passthrough of T10 PI within IBLOCK device backends, and DIF/DIX
+host support in the tcm_loop fabric driver.
 
-Also, add new se_subsystem_api->[init,format,free]_prot() callers
-used by target core code to setup backend specific protection
-information after the device has been configured.
+DIF emulation is enabled via a new 'pi_prot_type' device attribute
+within configfs for FILEIO + RAMDISK_MCP, which is set after initial
+device configuration and before target fabric LUN export occurs.
 
-Enums taken from Sagi Grimberg's original patch.
+For IBLOCK backends, protection support is automatically detected via
+struct blk_integrity at configuration time, and no additional end-user
+setup is required.
 
-v2 changes:
+For FILEIO backends, format of protection information is exposed via
+a new 'pi_prot_format' device attribute, that is used during initial
+configuration to format a new $FILENAME.protection file containing
+DIF Type1/Type3 style metadata.
+
+Also, the DIF read/write verify emulation has been made generic enough
+so it can be used by other backend drivers (eg: FILEIO), as well as
+Type4 (16-byte PI) in the near future.
+
+Here is the v1 -> v2 changelog:
+
   - Drop guard_type related definitions
   - Update target_prot_op + target_prot_ho definitions (Sagi)
   - Drop SCF_PROT + pi_prot_version flag
   - Add se_subsystem_api->format_prot() (Sagi)
   - Add hw_pi_prot_type device attribute
+  - Make sbc_check_prot defined as static (Fengguang + Wei)
+  - Remove unprotected READ/WRITE warning (mkp)
+  - Populate cmd->prot_type + friends (Sagi)
+  - Drop SCF_PROT usage
+  - Select CRC_T10DIF for TARGET_CORE in Kconfig (Fengguang)
+  - Drop IP checksum logic from sbc_dif_v1_verify (MKP)
+  - Fix offset on app_tag = 0xffff in sbc_dif_verify_read()
+  - Drop pi_guard_type + pi_prot_version related code (MKP)
+  - Add pi_prot_format logic (Sagi)
+  - Add ->free_prot callback in target_free_device
+  - Add hw_pi_prot_type read-only attribute
+  - Add target/iblock blk_integrity + BIP passthrough
+  - Add target/file DIF protection init/format support
+  - Add target/file DIF protection support to fd_execute_rw
+  - Drop unused sg_table from rd_release_device_space (Wei)
+  - Drop unused sg_table from rd_release_prot_space (Wei)
+  - Drop rd_release_prot_space call from rd_free_device
+  - Make rd_execute_rw() to u32 sectors count instead of sector_t
 
-Cc: Martin K. Petersen <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: Sagi Grimberg <sagig@mellanox.com>
-Cc: Or Gerlitz <ogerlitz@mellanox.com>
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
----
- include/target/target_core_backend.h |    3 +++
- include/target/target_core_base.h    |   44 ++++++++++++++++++++++++++++++++++
- 2 files changed, 47 insertions(+)
+At this point the main TODO item remaining for v3.14 code is to determine
+how best to propigate App/Guard/Reference Tag VERIFY failures back up
+into IBLOCK device backend code.
 
-diff --git a/include/target/target_core_backend.h b/include/target/target_core_backend.h
-index 39e0114..0dc2745 100644
---- a/include/target/target_core_backend.h
-+++ b/include/target/target_core_backend.h
-@@ -41,6 +41,9 @@ struct se_subsystem_api {
- 	unsigned int (*get_io_opt)(struct se_device *);
- 	unsigned char *(*get_sense_buffer)(struct se_cmd *);
- 	bool (*get_write_cache)(struct se_device *);
-+	int (*init_prot)(struct se_device *);
-+	int (*format_prot)(struct se_device *);
-+	void (*free_prot)(struct se_device *);
- };
- 
- struct sbc_ops {
-diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index dd87ab4..d98048b 100644
---- a/include/target/target_core_base.h
-+++ b/include/target/target_core_base.h
-@@ -435,6 +435,34 @@ struct se_tmr_req {
- 	struct list_head	tmr_list;
- };
- 
-+enum target_prot_op {
-+	TARGET_PROT_NORMAL = 0,
-+	TARGET_PROT_DIN_INSERT,
-+	TARGET_PROT_DOUT_INSERT,
-+	TARGET_PROT_DIN_STRIP,
-+	TARGET_PROT_DOUT_STRIP,
-+	TARGET_PROT_DIN_PASS,
-+	TARGET_PROT_DOUT_PASS,
-+};
-+
-+enum target_prot_ho {
-+	PROT_SEPERATED,
-+	PROT_INTERLEAVED,
-+};
-+
-+enum target_prot_type {
-+	TARGET_DIF_TYPE0_PROT,
-+	TARGET_DIF_TYPE1_PROT,
-+	TARGET_DIF_TYPE2_PROT,
-+	TARGET_DIF_TYPE3_PROT,
-+};
-+
-+struct se_dif_v1_tuple {
-+	__be16			guard_tag;
-+	__be16			app_tag;
-+	__be32			ref_tag;
-+};
-+
- struct se_cmd {
- 	/* SAM response code being sent to initiator */
- 	u8			scsi_status;
-@@ -519,6 +547,17 @@ struct se_cmd {
- 
- 	/* Used for lun->lun_ref counting */
- 	bool			lun_ref_active;
-+
-+	/* DIF related members */
-+	enum target_prot_op	prot_op;
-+	enum target_prot_type	prot_type;
-+	u32			prot_length;
-+	u32			reftag_seed;
-+	struct scatterlist	*t_prot_sg;
-+	unsigned int		t_prot_nents;
-+	enum target_prot_ho	prot_handover;
-+	sense_reason_t		pi_err;
-+	u32			block_num;
- };
- 
- struct se_ua {
-@@ -629,6 +668,9 @@ struct se_dev_attrib {
- 	int		emulate_tpws;
- 	int		emulate_caw;
- 	int		emulate_3pc;
-+	int		pi_prot_format;
-+	enum target_prot_type pi_prot_type;
-+	enum target_prot_type hw_pi_prot_type;
- 	int		enforce_pr_isids;
- 	int		is_nonrot;
- 	int		emulate_rest_reord;
-@@ -759,6 +801,8 @@ struct se_device {
- 	/* Linked list for struct se_hba struct se_device list */
- 	struct list_head	dev_list;
- 	struct se_lun		xcopy_lun;
-+	/* Protection Information */
-+	int			prot_length;
- };
- 
- struct se_hba {
+MKP has an idea how to go about doing this that will be appearing as
+a seperate SCSI-core + IBLOCK patch.
+
+Thank you,
+
+--nab
+
+Nicholas Bellinger (17):
+  target: Add DIF related base definitions
+  target: Add DIF CHECK_CONDITION ASC/ASCQ exception cases
+  target/sbc: Add DIF setup in sbc_check_prot + sbc_parse_cdb
+  target/sbc: Add DIF TYPE1+TYPE3 read/write verify emulation
+  target/spc: Add protection bit to standard INQUIRY output
+  target/spc: Add protection related bits to INQUIRY EVPD=0x86
+  target/sbc: Add P_TYPE + PROT_EN bits to READ_CAPACITY_16
+  target/spc: Expose ATO bit in control mode page
+  target/configfs: Expose protection device attributes
+  target: Add protection SGLs to target_submit_cmd_map_sgls
+  target/iblock: Add blk_integrity + BIP passthrough support
+  target/file: Add DIF protection init/format support
+  target/file: Add DIF protection support to fd_execute_rw
+  target/rd: Refactor rd_build_device_space + rd_release_device_space
+  target/rd: Add support for protection SGL setup + release
+  target/rd: Add DIF protection into rd_execute_rw
+  tcm_loop: Enable DIF/DIX modes in SCSI host LLD
+
+ drivers/target/Kconfig                 |    2 +
+ drivers/target/loopback/tcm_loop.c     |   12 +-
+ drivers/target/target_core_configfs.c  |   12 ++
+ drivers/target/target_core_device.c    |   89 +++++++++++
+ drivers/target/target_core_file.c      |  256 +++++++++++++++++++++++++++++++-
+ drivers/target/target_core_file.h      |    9 ++
+ drivers/target/target_core_iblock.c    |   91 +++++++++++-
+ drivers/target/target_core_internal.h  |    2 +
+ drivers/target/target_core_rd.c        |  252 +++++++++++++++++++++++++------
+ drivers/target/target_core_rd.h        |    4 +
+ drivers/target/target_core_sbc.c       |  245 ++++++++++++++++++++++++++++++
+ drivers/target/target_core_spc.c       |   27 ++++
+ drivers/target/target_core_transport.c |   46 +++++-
+ drivers/vhost/scsi.c                   |    2 +-
+ include/target/target_core_backend.h   |    7 +
+ include/target/target_core_base.h      |   47 ++++++
+ include/target/target_core_fabric.h    |    3 +-
+ 17 files changed, 1052 insertions(+), 54 deletions(-)
+
 -- 
 1.7.10.4
+
