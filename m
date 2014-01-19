@@ -1,48 +1,50 @@
-From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [PATCH] IB/mlx5: Fix signature rule constants according to FW
- specifications
-Date: Sun, 19 Jan 2014 15:07:10 +0200
-Message-ID: <52DBCDFE.3080005@dev.mellanox.co.il>
-References: <1390127858-9806-1-git-send-email-sagig@mellanox.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1390127858-9806-1-git-send-email-sagig@mellanox.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Sagi Grimberg <sagig@mellanox.com>, nab@linux-iscsi.org
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-rdma@vger.kernel.org
+From: Akinobu Mita <akinobu.mita@gmail.com>
+Subject: [PATCH v2 0/7] scsi_debug: several bug fixes and enable clustering support
+Date: Sun, 19 Jan 2014 22:51:36 +0900
+Message-ID: <1390139503-11519-1-git-send-email-akinobu.mita@gmail.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pd0-f170.google.com ([209.85.192.170]:40192 "EHLO
+	mail-pd0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752086AbaASNvy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Jan 2014 08:51:54 -0500
+Received: by mail-pd0-f170.google.com with SMTP id p10so1569104pdj.1
+        for <linux-scsi@vger.kernel.org>; Sun, 19 Jan 2014 05:51:54 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Akinobu Mita <akinobu.mita@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Douglas Gilbert <dgilbert@interlog.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-On 1/19/2014 12:37 PM, Sagi Grimberg wrote:
-> Use DIF CRC INC with apptag escape (0x8) and update IP-CSUM entries.
->
-> Signed-off-by: Sagi Grimberg <sagig@mellanox.com>
-> ---
->   drivers/infiniband/hw/mlx5/qp.c |    6 +++---
->   1 files changed, 3 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/infiniband/hw/mlx5/qp.c b/drivers/infiniband/hw/mlx5/qp.c
-> index 7981620..58c4735 100644
-> --- a/drivers/infiniband/hw/mlx5/qp.c
-> +++ b/drivers/infiniband/hw/mlx5/qp.c
-> @@ -1952,9 +1952,9 @@ static int format_selector(struct ib_sig_attrs *attr,
->   {
->   
->   #define FORMAT_DIF_NONE		0
-> -#define FORMAT_DIF_CRC_INC	4
-> -#define FORMAT_DIF_CSUM_INC	12
-> -#define FORMAT_DIF_CRC_NO_INC	13
-> +#define FORMAT_DIF_CRC_INC	8
-> +#define FORMAT_DIF_CRC_NO_INC	12
-> +#define FORMAT_DIF_CSUM_INC	13
->   #define FORMAT_DIF_CSUM_NO_INC	14
->   
->   	switch (domain->sig.dif.type) {
+This patch set includes several bug fixes and patches for enabling
+clustering support for scsi_debug.
 
-Just a clarification,
+The reason why I would like to enable clustering is to test commands
+with huge transfer length.  Without enabling clustering support, the
+transfer length for read and write scsi commands is limited upto 8MB
+when page size is 4KB and sg_tablesize is 2048
+(= SCSI_MAX_SG_CHAIN_SEGMENTS).
 
-This patch along with "Fix smatch warnings" are incremental patches to 
-v4 of pending Signature verbs patchset.
+Changes from v1:
+- remove unnecessary irqsave/irqrestore while iterating sg mapping
+- protect device access with atomic_rw lock
+- make clustering module parameter writable
 
-Sagi.
+Akinobu Mita (7):
+  scsi_debug: fix false positive logical block reference tag check fail
+  scsi_debug: make pseudo_primary static
+  scsi_debug: fix duplicate dif_errors increment
+  scsi_debug: fix resp_xdwriteread() return value when running out of
+    memory
+  scsi_debug: prepare to enable clustering
+  scsi_debug: protect device access with atomic_rw lock
+  scsi_debug: add ability to enable clustering
+
+ drivers/scsi/scsi_debug.c | 141 +++++++++++++++++++++++++++-------------------
+ 1 file changed, 82 insertions(+), 59 deletions(-)
+
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Douglas Gilbert <dgilbert@interlog.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
+-- 
+1.8.3.2
+
