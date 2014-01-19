@@ -1,151 +1,137 @@
-From: =?UTF-8?B?UGV0ZXIgUGFsw7pjaA==?= <Peter.Paluch@fri.uniza.sk>
-Subject: Re: XHCI issues: WD MyBook 1230 - reset SuperSpeed USB device
-Date: Sun, 19 Jan 2014 01:27:41 +0100
-Message-ID: <52DB1BFD.3080107@fri.uniza.sk>
-References: <Pine.LNX.4.44L0.1401161532560.1109-100000@iolanthe.rowland.org> <52D8DD45.9010602@suse.de> <52D991BA.40903@interlog.com> <52D99D51.1030100@fri.uniza.sk> <52DA8BCF.6070201@t-online.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from castor.kis.fri.uniza.sk ([158.193.152.2]:58275 "EHLO
-	mail.kis.fri.uniza.sk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751539AbaASA1q (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 18 Jan 2014 19:27:46 -0500
-In-Reply-To: <52DA8BCF.6070201@t-online.de>
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Nicholas A. Bellinger" <nab@daterainc.com>
+Subject: [PATCH-v2 01/17] target: Add DIF related base definitions
+Date: Sun, 19 Jan 2014 02:44:24 +0000
+Message-ID: <1390099480-29013-2-git-send-email-nab@daterainc.com>
+References: <1390099480-29013-1-git-send-email-nab@daterainc.com>
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1390099480-29013-1-git-send-email-nab@daterainc.com>
+Sender: target-devel-owner@vger.kernel.org
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Sagi Grimberg <sagig@mellanox.com>, Or Gerlitz <ogerlitz@mellanox.com>, Roland Dreier <roland@kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Christian Franke <Christian.Franke@t-online.de>, dgilbert@interlog.com
-Cc: Hannes Reinecke <hare@suse.de>, Alan Stern <stern@rowland.harvard.edu>, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
-Gentlemen,
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-I believe I've found the root cause of the issue.
+This patch adds DIF related definitions to target_core_base.h
+that includes enums for target_prot_op + target_prot_type +
+target_prot_version + target_guard_type + target_pi_error.
 
-USB is absolutely not to blame in this case. Problems were caused by th=
-e=20
-udisksd daemon that sent ATA IDENTIFY DEVICE pass through command with=20
-the SECTOR_COUNT field set to 0 (cdb[6] =3D 0). I first noticed it when=
- I=20
-compared the strace output from udiskd to the strace of smartctl and=20
-sg_sat_identify - both these tools set the cdb[6] to 1. After correctin=
-g=20
-the udiskd sources in this aspect, the problem appears to be solved.
+Also included is struct se_dif_v1_tuple, along with changes
+to struct se_cmd, struct se_dev_attrib, and struct se_device.
 
-My sincere thanks to all of you - all your suggestions and comments=20
-moved me in the right direction. I will report this issue to udiskd=20
-maintainers along with the (trivial) patch.
+Also, add new se_subsystem_api->[init,format,free]_prot() callers
+used by target core code to setup backend specific protection
+information after the device has been configured.
 
-Once again, thanks!
+Enums taken from Sagi Grimberg's original patch.
 
-Best regards,
-Peter
+v2 changes:
+  - Drop guard_type related definitions
+  - Update target_prot_op + target_prot_ho definitions (Sagi)
+  - Drop SCF_PROT + pi_prot_version flag
+  - Add se_subsystem_api->format_prot() (Sagi)
+  - Add hw_pi_prot_type device attribute
 
+Cc: Martin K. Petersen <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: Sagi Grimberg <sagig@mellanox.com>
+Cc: Or Gerlitz <ogerlitz@mellanox.com>
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+---
+ include/target/target_core_backend.h |    3 +++
+ include/target/target_core_base.h    |   44 ++++++++++++++++++++++++++++++++++
+ 2 files changed, 47 insertions(+)
 
-On 18.01.2014 15:12, Christian Franke wrote:
-> Peter Pal=C3=BAch wrote:
->> Gentlemen,
->>
->> First of all, thank you very much for looking into this issue.
->>
->> Alan, for the sake of keeping the thread tidy in archives, I am not=20
->> going to change the $SUBJECT of this e-mail but I wholeheartedly=20
->> agree that this is not an xHCI issue. Mea culpa; I did not know that=
-=20
->> at the time I first reported it.
->>
->> Douglas, Hannes: I believe we are definitely on to something. I do=20
->> _not_ run smartd but this may be caused by something in my Gnome3 GU=
-I=20
->> environment. I have noticed that when I am not logged in to Gnome an=
-d=20
->> work just in the text console, plugging in the USB drive and=20
->> accessing it works without any issues. Only when I am logged into my=
-=20
->> Gnome and plug the drive in, Gnome obviously tries to do something=20
->> with the drive that causes it to stall and recover in 30 seconds. I=20
->> have not yet been able to identify what it is.
->
-> Gnome disk utility?
->
-> AFAIK it relies on libatasmart. The source code of libatasmart is=20
-> unrelated to smartmontools.
->
->
->> On 17.01.2014 21:25, Douglas Gilbert wrote:
->>> On 14-01-17 02:35 AM, Hannes Reinecke wrote:
->>>> On 01/16/2014 09:48 PM, Alan Stern wrote:
->>>>> It looks like the reset occurred because the computer sent an
->>>>> ATA-passthru command to the disk, and the disk wasn't prepared to
->>>>> handle it properly.  The firmware crashed, requiring a reset.
->>>>>
->>>>> If anyone can explain, the command bytes in question were:
->>>>>
->>>>>     85082e00 00000000 00000000 0000ec00
->>>
->>> SCSI ATA PASS-THROUGH(16) command issuing the
->>> mandatory ATA command 0xec which is IDENTIFY DEVICE.
->>> [See SAT-3 drafts for more information on the pass-through
->>> command.]
->>>
->
-> The above command sets CK_COND bit (CDB[2] |=3D 0x20) to request ATA=20
-> return descriptor.
->
-> Smartmontools never set CK_COND for IDENTIFY DEVICE. It is only set i=
-f=20
-> ATA output reqister values are actually needed:
->
-> # smartctl -d sat -r ioctl -i -H /dev/sdd
-> ...
-> REPORT-IOCTL: Device=3D/dev/sdd Command=3DIDENTIFY DEVICE
-> Input:   FR=3D...., SC=3D0x01, LL=3D...., LM=3D...., LH=3D...., DEV=3D=
-=2E...,=20
-> CMD=3D0xec IN
-> [ata pass-through(16): 85 08 0e 00 00 00 01 00 00 00 00 00 00 00 ec 0=
-0 ]
-> ...
-> REPORT-IOCTL: Device=3D/dev/sdd Command=3DSMART STATUS CHECK
-> Input:   FR=3D0xda, SC=3D...., LL=3D...., LM=3D0x4f, LH=3D0xc2, DEV=3D=
-=2E..., CMD=3D0xb0
-> [ata pass-through(16): 85 06 2c 00 da 00 00 00 00 00 4f 00 c2 00 b0 0=
-0 ]
-> ...
->
->
->>>>> and the sense data was:
->>>>>
->>>>>     7201001d 0000000e 090c0000 00005d00 01000000 0050
->>>
->>> ATA spec says there should not (normally) be an error issued
->>> by that command; but there was:
->>>
->>> $ sg_decode_sense -n 7201001d 0000000e 090c0000 00005d00 01000000 0=
-050
->>>  Descriptor format, current;  Sense key: Recovered Error
->>>  Additional sense: ATA pass through information available
->>>   Descriptor type: ATA Status Return
->>>     extend=3D0  error=3D0x0  sector_count=3D0x0
->>>     lba=3D0x000000
->>>     device=3D0x0  status=3D0x50
->>>
->>> Looks reasonable at the SCSI level, not sure about the
->>> ATA level, perhaps others can comment.
->
-> Returned ATA register values look reasonable but are not needed for=20
-> ATA IDENTIFY command.
->
->
->>> Doug Gilbert
->>> [a smartmontools maintainer]
->>>
->
-> Christian Franke
-> [a smartmontools maintainer :-]
->
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/include/target/target_core_backend.h b/include/target/target_core_backend.h
+index 39e0114..0dc2745 100644
+--- a/include/target/target_core_backend.h
++++ b/include/target/target_core_backend.h
+@@ -41,6 +41,9 @@ struct se_subsystem_api {
+ 	unsigned int (*get_io_opt)(struct se_device *);
+ 	unsigned char *(*get_sense_buffer)(struct se_cmd *);
+ 	bool (*get_write_cache)(struct se_device *);
++	int (*init_prot)(struct se_device *);
++	int (*format_prot)(struct se_device *);
++	void (*free_prot)(struct se_device *);
+ };
+ 
+ struct sbc_ops {
+diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
+index dd87ab4..d98048b 100644
+--- a/include/target/target_core_base.h
++++ b/include/target/target_core_base.h
+@@ -435,6 +435,34 @@ struct se_tmr_req {
+ 	struct list_head	tmr_list;
+ };
+ 
++enum target_prot_op {
++	TARGET_PROT_NORMAL = 0,
++	TARGET_PROT_DIN_INSERT,
++	TARGET_PROT_DOUT_INSERT,
++	TARGET_PROT_DIN_STRIP,
++	TARGET_PROT_DOUT_STRIP,
++	TARGET_PROT_DIN_PASS,
++	TARGET_PROT_DOUT_PASS,
++};
++
++enum target_prot_ho {
++	PROT_SEPERATED,
++	PROT_INTERLEAVED,
++};
++
++enum target_prot_type {
++	TARGET_DIF_TYPE0_PROT,
++	TARGET_DIF_TYPE1_PROT,
++	TARGET_DIF_TYPE2_PROT,
++	TARGET_DIF_TYPE3_PROT,
++};
++
++struct se_dif_v1_tuple {
++	__be16			guard_tag;
++	__be16			app_tag;
++	__be32			ref_tag;
++};
++
+ struct se_cmd {
+ 	/* SAM response code being sent to initiator */
+ 	u8			scsi_status;
+@@ -519,6 +547,17 @@ struct se_cmd {
+ 
+ 	/* Used for lun->lun_ref counting */
+ 	bool			lun_ref_active;
++
++	/* DIF related members */
++	enum target_prot_op	prot_op;
++	enum target_prot_type	prot_type;
++	u32			prot_length;
++	u32			reftag_seed;
++	struct scatterlist	*t_prot_sg;
++	unsigned int		t_prot_nents;
++	enum target_prot_ho	prot_handover;
++	sense_reason_t		pi_err;
++	u32			block_num;
+ };
+ 
+ struct se_ua {
+@@ -629,6 +668,9 @@ struct se_dev_attrib {
+ 	int		emulate_tpws;
+ 	int		emulate_caw;
+ 	int		emulate_3pc;
++	int		pi_prot_format;
++	enum target_prot_type pi_prot_type;
++	enum target_prot_type hw_pi_prot_type;
+ 	int		enforce_pr_isids;
+ 	int		is_nonrot;
+ 	int		emulate_rest_reord;
+@@ -759,6 +801,8 @@ struct se_device {
+ 	/* Linked list for struct se_hba struct se_device list */
+ 	struct list_head	dev_list;
+ 	struct se_lun		xcopy_lun;
++	/* Protection Information */
++	int			prot_length;
+ };
+ 
+ struct se_hba {
+-- 
+1.7.10.4
