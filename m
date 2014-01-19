@@ -1,7 +1,7 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH-v2 15/17] target/rd: Add support for protection SGL setup + release
-Date: Sun, 19 Jan 2014 02:44:38 +0000
-Message-ID: <1390099480-29013-16-git-send-email-nab@daterainc.com>
+Subject: [PATCH-v2 13/17] target/file: Add DIF protection support to fd_execute_rw
+Date: Sun, 19 Jan 2014 02:44:36 +0000
+Message-ID: <1390099480-29013-14-git-send-email-nab@daterainc.com>
 References: <1390099480-29013-1-git-send-email-nab@daterainc.com>
 Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1390099480-29013-1-git-send-email-nab@daterainc.com>
@@ -12,16 +12,12 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch adds rd_build_prot_space() + rd_release_prot_space() logic
-to setup + release protection information scatterlists.
+This patch adds support for DIF protection into fd_execute_rw() code
+for WRITE/READ I/O using sbc_dif_verify_[write,read]() logic.
 
-It also adds rd_init_prot() + rd_free_prot() se_subsystem_api
-callbacks used by target core code for setup + release of
-protection information.
-
-v2 changes:
-  - Drop unused sg_table from rd_release_prot_space (Wei)
-  - Drop rd_release_prot_space call from rd_free_device
+It adds fd_do_prot_rw() for handling interface with FILEIO PI, and
+uses a locally allocated fd_prot->prot_buf + fd_prot->prot_sg for
+interacting with SBC DIF verify emulation code.
 
 Cc: Martin K. Petersen <martin.petersen@oracle.com>
 Cc: Christoph Hellwig <hch@lst.de>
@@ -30,125 +26,181 @@ Cc: Sagi Grimberg <sagig@mellanox.com>
 Cc: Or Gerlitz <ogerlitz@mellanox.com>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_rd.c |   74 +++++++++++++++++++++++++++++++++++++++
- drivers/target/target_core_rd.h |    4 +++
- 2 files changed, 78 insertions(+)
+ drivers/target/target_core_file.c |  119 ++++++++++++++++++++++++++++++++++++-
+ drivers/target/target_core_file.h |    5 ++
+ 2 files changed, 123 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core_rd.c
-index e9fa879..660961d 100644
---- a/drivers/target/target_core_rd.c
-+++ b/drivers/target/target_core_rd.c
-@@ -223,6 +223,61 @@ static int rd_build_device_space(struct rd_dev *rd_dev)
- 	return 0;
+diff --git a/drivers/target/target_core_file.c b/drivers/target/target_core_file.c
+index 119d519..aaba7c5 100644
+--- a/drivers/target/target_core_file.c
++++ b/drivers/target/target_core_file.c
+@@ -257,6 +257,72 @@ static void fd_free_device(struct se_device *dev)
+ 	kfree(fd_dev);
  }
  
-+static void rd_release_prot_space(struct rd_dev *rd_dev)
++static int fd_do_prot_rw(struct se_cmd *cmd, struct fd_prot *fd_prot,
++			 int is_write)
 +{
-+	u32 page_count;
++	struct se_device *se_dev = cmd->se_dev;
++	struct fd_dev *dev = FD_DEV(se_dev);
++	struct file *prot_fd = dev->fd_prot_file;
++	struct scatterlist *sg;
++	loff_t pos = (cmd->t_task_lba * se_dev->prot_length);
++	unsigned char *buf;
++	u32 prot_size, len, size;
++	int rc, ret = 1, i;
 +
-+	if (!rd_dev->sg_prot_array || !rd_dev->sg_prot_count)
-+		return;
++	prot_size = (cmd->data_length / se_dev->dev_attrib.block_size) *
++		     se_dev->prot_length;
 +
-+	page_count = rd_release_sgl_table(rd_dev, rd_dev->sg_prot_array,
-+					  rd_dev->sg_prot_count);
++	if (!is_write) {
++		fd_prot->prot_buf = vzalloc(prot_size);
++		if (!fd_prot->prot_buf) {
++			pr_err("Unable to allocate fd_prot->prot_buf\n");
++			return -ENOMEM;
++		}
++		buf = fd_prot->prot_buf;
 +
-+	pr_debug("CORE_RD[%u] - Released protection space for Ramdisk"
-+		 " Device ID: %u, pages %u in %u tables total bytes %lu\n",
-+		 rd_dev->rd_host->rd_host_id, rd_dev->rd_dev_id, page_count,
-+		 rd_dev->sg_table_count, (unsigned long)page_count * PAGE_SIZE);
++		fd_prot->prot_sg_nents = cmd->t_prot_nents;
++		fd_prot->prot_sg = kzalloc(sizeof(struct scatterlist) *
++					   fd_prot->prot_sg_nents, GFP_KERNEL);
++		if (!fd_prot->prot_sg) {
++			pr_err("Unable to allocate fd_prot->prot_sg\n");
++			vfree(fd_prot->prot_buf);
++			return -ENOMEM;
++		}
++		size = prot_size;
 +
-+	rd_dev->sg_prot_array = NULL;
-+	rd_dev->sg_prot_count = 0;
-+}
++		for_each_sg(fd_prot->prot_sg, sg, fd_prot->prot_sg_nents, i) {
 +
-+static int rd_build_prot_space(struct rd_dev *rd_dev, int prot_length)
-+{
-+	struct rd_dev_sg_table *sg_table;
-+	u32 total_sg_needed, sg_tables;
-+	u32 max_sg_per_table = (RD_MAX_ALLOCATION_SIZE /
-+				sizeof(struct scatterlist));
-+	int rc;
-+
-+	if (rd_dev->rd_flags & RDF_NULLIO)
-+		return 0;
-+
-+	total_sg_needed = rd_dev->rd_page_count / prot_length;
-+
-+	sg_tables = (total_sg_needed / max_sg_per_table) + 1;
-+
-+	sg_table = kzalloc(sg_tables * sizeof(struct rd_dev_sg_table), GFP_KERNEL);
-+	if (!sg_table) {
-+		pr_err("Unable to allocate memory for Ramdisk protection"
-+		       " scatterlist tables\n");
-+		return -ENOMEM;
++			len = min_t(u32, PAGE_SIZE, size);
++			sg_set_buf(sg, buf, len);
++			size -= len;
++			buf += len;
++		}
 +	}
 +
-+	rd_dev->sg_prot_array = sg_table;
-+	rd_dev->sg_prot_count = sg_tables;
++	if (is_write) {
++		rc = kernel_write(prot_fd, fd_prot->prot_buf, prot_size, pos);
++		if (rc < 0 || prot_size != rc) {
++			pr_err("kernel_write() for fd_do_prot_rw failed:"
++			       " %d\n", rc);
++			ret = -EINVAL;
++		}
++	} else {
++		rc = kernel_read(prot_fd, pos, fd_prot->prot_buf, prot_size);
++		if (rc < 0) {
++			pr_err("kernel_read() for fd_do_prot_rw failed:"
++			       " %d\n", rc);
++			ret = -EINVAL;
++		}
++	}
 +
-+	rc = rd_allocate_sgl_table(rd_dev, sg_table, total_sg_needed, 0xff);
-+	if (rc)
-+		return rc;
++	if (is_write || ret < 0) {
++		kfree(fd_prot->prot_sg);
++		vfree(fd_prot->prot_buf);
++	}
 +
-+	pr_debug("CORE_RD[%u] - Built Ramdisk Device ID: %u prot space of"
-+		 " %u pages in %u tables\n", rd_dev->rd_host->rd_host_id,
-+		 rd_dev->rd_dev_id, total_sg_needed, rd_dev->sg_prot_count);
-+
-+	return 0;
++	return ret;
 +}
 +
- static struct se_device *rd_alloc_device(struct se_hba *hba, const char *name)
+ static int fd_do_rw(struct se_cmd *cmd, struct scatterlist *sgl,
+ 		u32 sgl_nents, int is_write)
  {
- 	struct rd_dev *rd_dev;
-@@ -479,6 +534,23 @@ static sector_t rd_get_blocks(struct se_device *dev)
- 	return blocks_long;
- }
+@@ -551,6 +617,8 @@ fd_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+ 	      enum dma_data_direction data_direction)
+ {
+ 	struct se_device *dev = cmd->se_dev;
++	struct fd_prot fd_prot;
++	sense_reason_t rc;
+ 	int ret = 0;
  
-+static int rd_init_prot(struct se_device *dev)
-+{
-+	struct rd_dev *rd_dev = RD_DEV(dev);
+ 	/*
+@@ -558,8 +626,48 @@ fd_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+ 	 * physical memory addresses to struct iovec virtual memory.
+ 	 */
+ 	if (data_direction == DMA_FROM_DEVICE) {
++		memset(&fd_prot, 0, sizeof(struct fd_prot));
 +
-+        if (!dev->dev_attrib.pi_prot_type)
-+		return 0;
++		if (cmd->prot_type) {
++			ret = fd_do_prot_rw(cmd, &fd_prot, false);
++			if (ret < 0)
++				return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
++		}
 +
-+	return rd_build_prot_space(rd_dev, dev->prot_length);
-+}
+ 		ret = fd_do_rw(cmd, sgl, sgl_nents, 0);
 +
-+static void rd_free_prot(struct se_device *dev)
-+{
-+	struct rd_dev *rd_dev = RD_DEV(dev);
++		if (ret > 0 && cmd->prot_type) {
++			u32 sectors = cmd->data_length / dev->dev_attrib.block_size;
 +
-+	rd_release_prot_space(rd_dev);
-+}
++			rc = sbc_dif_verify_read(cmd, cmd->t_task_lba, sectors,
++						 0, fd_prot.prot_sg, 0);
++			if (rc) {
++				kfree(fd_prot.prot_sg);
++				vfree(fd_prot.prot_buf);
++				return rc;
++			}
++			kfree(fd_prot.prot_sg);
++			vfree(fd_prot.prot_buf);
++		}
+ 	} else {
++		memset(&fd_prot, 0, sizeof(struct fd_prot));
 +
- static struct sbc_ops rd_sbc_ops = {
- 	.execute_rw		= rd_execute_rw,
- };
-@@ -504,6 +576,8 @@ static struct se_subsystem_api rd_mcp_template = {
- 	.show_configfs_dev_params = rd_show_configfs_dev_params,
- 	.get_device_type	= sbc_get_device_type,
- 	.get_blocks		= rd_get_blocks,
-+	.init_prot		= rd_init_prot,
-+	.free_prot		= rd_free_prot,
- };
++		if (cmd->prot_type) {
++			u32 sectors = cmd->data_length / dev->dev_attrib.block_size;
++
++			ret = fd_do_prot_rw(cmd, &fd_prot, false);
++			if (ret < 0)
++				return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
++
++			rc = sbc_dif_verify_write(cmd, cmd->t_task_lba, sectors,
++						  0, fd_prot.prot_sg, 0);
++			if (rc) {
++				kfree(fd_prot.prot_sg);
++				vfree(fd_prot.prot_buf);
++				return rc;
++			}
++		}
++
+ 		ret = fd_do_rw(cmd, sgl, sgl_nents, 1);
+ 		/*
+ 		 * Perform implicit vfs_fsync_range() for fd_do_writev() ops
+@@ -576,10 +684,19 @@ fd_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
  
- int __init rd_module_init(void)
-diff --git a/drivers/target/target_core_rd.h b/drivers/target/target_core_rd.h
-index 1789d1e..cc46a6a 100644
---- a/drivers/target/target_core_rd.h
-+++ b/drivers/target/target_core_rd.h
-@@ -33,8 +33,12 @@ struct rd_dev {
- 	u32		rd_page_count;
- 	/* Number of SG tables in sg_table_array */
- 	u32		sg_table_count;
-+	/* Number of SG tables in sg_prot_array */
-+	u32		sg_prot_count;
- 	/* Array of rd_dev_sg_table_t containing scatterlists */
- 	struct rd_dev_sg_table *sg_table_array;
-+	/* Array of rd_dev_sg_table containing protection scatterlists */
-+	struct rd_dev_sg_table *sg_prot_array;
- 	/* Ramdisk HBA device is connected to */
- 	struct rd_host *rd_host;
- } ____cacheline_aligned;
+ 			vfs_fsync_range(fd_dev->fd_file, start, end, 1);
+ 		}
++
++		if (ret > 0 && cmd->prot_type) {
++			ret = fd_do_prot_rw(cmd, &fd_prot, true);
++			if (ret < 0)
++				return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
++		}
+ 	}
+ 
+-	if (ret < 0)
++	if (ret < 0) {
++		kfree(fd_prot.prot_sg);
++		vfree(fd_prot.prot_buf);
+ 		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
++	}
+ 
+ 	if (ret)
+ 		target_complete_cmd(cmd, SAM_STAT_GOOD);
+diff --git a/drivers/target/target_core_file.h b/drivers/target/target_core_file.h
+index 583691e..97e5e7d 100644
+--- a/drivers/target/target_core_file.h
++++ b/drivers/target/target_core_file.h
+@@ -18,6 +18,11 @@
+ #define FDBD_HAS_BUFFERED_IO_WCE 0x04
+ #define FDBD_FORMAT_UNIT_SIZE	2048
+ 
++struct fd_prot {
++	unsigned char	*prot_buf;
++	struct scatterlist *prot_sg;
++	u32 prot_sg_nents;
++};
+ 
+ struct fd_dev {
+ 	struct se_device dev;
 -- 
 1.7.10.4
