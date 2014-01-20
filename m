@@ -1,159 +1,193 @@
-From: Alexei Starovoitov <alexei.starovoitov@gmail.com>
-Subject: Re: Why is (2 < 2) true? Is it a gcc bug?
-Date: Mon, 20 Jan 2014 11:43:46 -0800
-Message-ID: <CAADnVQKcvGz4KLb--PyXPVeNohRsumFVr=tK8or1TFhQL3qqyA@mail.gmail.com>
-References: <D9FFE20C522965449E182ACE73889AEB1A6A340F@IRSMSX105.ger.corp.intel.com>
-	<CAADnVQLUP=7oxciVw97d76xtqs6_YjC6E2boPRO9y4m_sqjRCA@mail.gmail.com>
-	<CAADnVQL=s8zc_ACSuPs8P3y-RB9Td8OZysM=0fj4sjzUPRzfGw@mail.gmail.com>
-	<20140117210201.GA390@x4>
-	<CAADnVQL7zB2y0w4F-hYZ=RBe1bQg3X5pp-h=74HYZ1OSJ1K0xw@mail.gmail.com>
-	<D9FFE20C522965449E182ACE73889AEB1A6A38A3@IRSMSX105.ger.corp.intel.com>
+From: Sarah Sharp <sarah.a.sharp-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Subject: Re: usb disk recognized but fails
+Date: Mon, 20 Jan 2014 11:45:45 -0800
+Message-ID: <20140120194545.GE5545@xanatos>
+References: <20140115154739.7DC8AFD8@centrum.cz>
+ <20140120182319.GB5545@xanatos>
+ <20140120200023.5F31B6AF@centrum.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <D9FFE20C522965449E182ACE73889AEB1A6A38A3@IRSMSX105.ger.corp.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Dorau, Lukasz" <lukasz.dorau@intel.com>
-Cc: Markus Trippelsdorf <markus@trippelsdorf.de>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "sebastian.riemer@profitbricks.com" <sebastian.riemer@profitbricks.com>, "richard.weinberger@gmail.com" <richard.weinberger@gmail.com>, "Williams, Dan J" <dan.j.williams@intel.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20140120200023.5F31B6AF-aRb0bU7PRFPrBKCeMvbIDA@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Milan Svoboda <milan.svoboda-aRb0bU7PRFPrBKCeMvbIDA@public.gmane.org>
+Cc: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, USB Storage List <usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, Jan 18, 2014 at 3:31 AM, Dorau, Lukasz <lukasz.dorau@intel.com> wrote:
-> On Friday, January 17, 2014 10:44 PM Alexei Starovoitov <alexei.starovoitov@gmail.com> wrote:
->> On Fri, Jan 17, 2014 at 1:02 PM, Markus Trippelsdorf
->> <markus@trippelsdorf.de> wrote:
->> > On 2014.01.17 at 11:58 -0800, Alexei Starovoitov wrote:
->> >> On Fri, Jan 17, 2014 at 9:58 AM, Alexei Starovoitov
->> >> <alexei.starovoitov@gmail.com> wrote:
->> >> > On Fri, Jan 17, 2014 at 5:37 AM, Dorau, Lukasz <lukasz.dorau@intel.com>
->> wrote:
->> >> >> Hi
->> >> >>
->> >> >> My story is very simply...
->> >> >> I applied the following patch:
->> >> >>
->> >> >> diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
->> >> >> --- a/drivers/scsi/isci/init.c
->> >> >> +++ b/drivers/scsi/isci/init.c
->> >> >> @@ -698,8 +698,11 @@ static int isci_pci_probe(struct pci_dev *pdev, const
->> struct pci_device_id *id)
->> >> >>         if (err)
->> >> >>                 goto err_host_alloc;
->> >> >>
->> >> >> -       for_each_isci_host(i, isci_host, pdev)
->> >> >> +       for_each_isci_host(i, isci_host, pdev) {
->> >> >> +               pr_err("(%d < %d) == %d\n",\
->> >> >> +                      i, SCI_MAX_CONTROLLERS, (i < SCI_MAX_CONTROLLERS));
->> >> >>                 scsi_scan_host(to_shost(isci_host));
->> >> >> +       }
->> >> >>
->> >> >>         return 0;
->> >> >>
->> >> >> --
->> >> >> 1.8.3.1
->> >> >>
->> >> >> Then I issued the command 'modprobe isci' on platform with two SCU
->> controllers (Patsburg D or T chipset)
->> >> >> and received the following, very strange, output:
->> >> >>
->> >> >> (0 < 2) == 1
->> >> >> (1 < 2) == 1
->> >> >> (2 < 2) == 1
->> >> >>
->> >> >> Can anyone explain why (2 < 2) is true? Is it a gcc bug?
->> >> >
->> >> > gcc sees that i < array_size is the same as i < 2 as part of loop condition, so
->> >> > it optimizes (i < sci_max_controllers) into constant 1.
->> >> > and emits printk like:
->> >> >   printk ("\13(%d < %d) == %d\n", i_382, 2, 1);
->> >> >
->> >> >> (The kernel was compiled using gcc version 4.8.2.)
->> >> >
->> >> > it actually looks to be gcc 4.8 bug.
->> >> > Can you try gcc 4.7 ?
->> >> >
->> >>
->> >> It is interesting GCC 4.8 bug,
->> >> since it seems to expose issues in two compiler passes.
->> >>
->> >> here is test case:
->> >>
->> >> struct isci_host;
->> >> struct isci_orom;
->> >>
->> >> struct isci_pci_info {
->> >>   struct isci_host *hosts[2];
->> >>   struct isci_orom *orom;
->> >> } v = {{(struct isci_host *)1,(struct isci_host *)1}, 0};
->> >>
->> >> int printf(const char *fmt, ...);
->> >>
->> >> int isci_pci_probe()
->> >> {
->> >>   int i;
->> >>   struct isci_host *isci_host;
->> >>
->> >>   for (i = 0, isci_host = v.hosts[i];
->> >>        i < 2 && isci_host;
->> >>        isci_host = v.hosts[++i]) {
->> >>     printf("(%d < %d) == %d\n", i, 2, (i < 2));
->> >>   }
->> >>
->> >>   return 0;
->> >> }
->> >>
->> >> int main()
->> >> {
->> >>   isci_pci_probe();
->> >> }
->> >>
->> >> $ gcc bug.c
->> >> $./a.out
->> >> 0 < 2) == 1
->> >> (1 < 2) == 1
->> >> $ gcc bug.c -O2
->> >> $ ./a.out
->> >> (0 < 2) == 1
->> >> (1 < 2) == 1
->> >> Segmentation fault (core dumped)
->> >
->> > Your testcase is invalid:
->> >
->> > markus@x4 tmp % clang -fsanitize=undefined -Wall -Wextra -O2 bug.c
->> > markus@x4 tmp % ./a.out
->> > (0 < 2) == 1
->> > (1 < 2) == 1
->> > bug.c:16:20: runtime error: index 2 out of bounds for type 'struct isci_host *[2]'
->> >
->> > As Jakub Jelinek said on IRC, changing the loop to e.g.:
->> >
->> >   for (i = 0;
->> >        i < 2 && (isci_host = v.hosts[i]);
->> >        i++) {
->> >
->> > fixes the issue.
->>
->> testcase was reduced from drivers/scsi/isci/host.h written back in
->> 2011 (commit b329aff107)
->> #define for_each_isci_host(id, ihost, pdev) \
->>         for (id = 0, ihost = to_pci_info(pdev)->hosts[id]; \
->>              id < ARRAY_SIZE(to_pci_info(pdev)->hosts) && ihost; \
->>              ihost = to_pci_info(pdev)->hosts[++id])
->>
->> yes, it does access 3rd element of 2 element array and will read junk.
->>
->> C standard says the behavior is undefined and comes handy in compiler defense,
->> but in this case compiler has obviously all the information to make
->> right decision
->> instead of misoptimizing the code.
->> So yes, the loop is erroneous, non-portable, etc, but gcc can be smarter.
->> --
->
-> Thank you for explanation!
->
-> Alexei,
->
-> Will you file a gcc bug for this case?
+On Mon, Jan 20, 2014 at 08:00:23PM +0100, Milan Svoboda wrote:
+> Non-working:
+>=20
+> 3.12.7-2-ARCH #1 SMP PREEMPT Sun Jan 12 13:09:09 CET 2014 x86_64 GNU/=
+Linux
+>=20
+> I'm sorry, I don't remember exactly which version worked, I have had =
+the disk connected to TV for
+> a long time and only recently I wanted to copy some movies on it. I g=
+uess it worked something like
+> 6 or 9 months ago.
 
-sure. filed for the record:
-http://gcc.gnu.org/bugzilla/show_bug.cgi?id=59892
-Closed as invalid by Markus already.
+If you're up for compiling a custom kernel, can you try 3.12.7 with
+these two patches applied?
+
+http://marc.info/?l=3Dlinux-usb&m=3D138921117504911&w=3D2
+http://marc.info/?l=3Dlinux-usb&m=3D138921117604912&w=3D2
+
+I'm concerned the I/O errors are caused by commit 459d3c146117 "usb:
+xhci: Link TRB must not occur within a USB payload burst".
+
+Can you also send me the output of `sudo lspci -vvv -n`?  I need the
+output for the xHCI host only.
+
+Sarah Sharp
+
+> ______________________________________________________________
+> > Od: Sarah Sharp <sarah.a.sharp-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+> > Komu: Milan Svoboda <milan.svoboda-aRb0bU7PRFPrBKCeMvbIDA@public.gmane.org>
+> > Datum: 20.01.2014 19:23
+> > P=C5=99edm=C4=9Bt: Re: usb disk recognized but fails
+> >
+> > CC: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "USB Storage List" <usb-storage@list=
+s.one-eyed-alien.net>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> >Cc-ing the USB storage list, in case this device needs some quirk.
+> >
+> >On Wed, Jan 15, 2014 at 03:47:39PM +0100, Milan Svoboda wrote:
+> >> The SATA adapter has a power input, but it is not used, it is conn=
+ected to the
+> >> PC with Y-type USB cable.
+> >>=20
+> >> The disk works with my "smart" TV, it works with Windows on the sa=
+me machine,
+> >> it also had worked some time ago with Linux, but now it shows the =
+following:
+> >
+> >Do you know which kernel version it worked with?  What version are y=
+ou
+> >currently running?  Please run `uname -a`.
+> >
+> >> [ 2192.027213] usb 1-3: new high-speed USB device number 5 using x=
+hci_hcd
+> >> [ 2192.042323] ums-cypress 1-3:1.0: USB Mass Storage device detect=
+ed
+> >> [ 2192.042500] scsi9 : usb-storage 1-3:1.0
+> >> [ 2193.044219] scsi 9:0:0:0: Direct-Access     WDC WD64 00BPVT-00H=
+XZT0        PQ: 0 ANSI: 0
+> >> [ 2193.045083] sd 9:0:0:0: [sdb] 1250263728 512-byte logical block=
+s: (640 GB/596 GiB)
+> >> [ 2193.045240] sd 9:0:0:0: [sdb] Write Protect is off
+> >> [ 2193.045245] sd 9:0:0:0: [sdb] Mode Sense: 03 00 00 00
+> >> [ 2193.045384] sd 9:0:0:0: [sdb] No Caching mode page found
+> >> [ 2193.045388] sd 9:0:0:0: [sdb] Assuming drive cache: write throu=
+gh
+> >> [ 2193.046259] sd 9:0:0:0: [sdb] No Caching mode page found
+> >> [ 2193.046264] sd 9:0:0:0: [sdb] Assuming drive cache: write throu=
+gh
+> >> [ 2193.054389]  sdb: sdb1
+> >> [ 2193.055092] sd 9:0:0:0: [sdb] No Caching mode page found
+> >> [ 2193.055095] sd 9:0:0:0: [sdb] Assuming drive cache: write throu=
+gh
+> >> [ 2193.055098] sd 9:0:0:0: [sdb] Attached SCSI disk
+> >> [ 2200.821345] usb 1-3: reset high-speed USB device number 5 using=
+ xhci_hcd
+> >> [ 2200.835063] xhci_hcd 0000:00:14.0: xHCI xhci_drop_endpoint call=
+ed with disabled ep ffff8800bc71e480
+> >> [ 2200.835068] xhci_hcd 0000:00:14.0: xHCI xhci_drop_endpoint call=
+ed with disabled ep ffff8800bc71e4c0
+> >> [ 2267.897715] sd 9:0:0:0: [sdb] Unhandled sense code
+> >> [ 2267.897719] sd 9:0:0:0: [sdb] =20
+> >> [ 2267.897721] Result: hostbyte=3D0x07 driverbyte=3D0x08
+> >> [ 2267.897722] sd 9:0:0:0: [sdb] =20
+> >> [ 2267.897724] Sense Key : 0x4 [current]=20
+> >> [ 2267.897735] sd 9:0:0:0: [sdb] =20
+> >> [ 2267.897736] ASC=3D0x0 ASCQ=3D0x0
+> >> [ 2267.897738] sd 9:0:0:0: [sdb] CDB:=20
+> >> [ 2267.897740] cdb[0]=3D0x28: 28 00 4a 85 6e af 00 00 08 00
+> >> [ 2267.897746] end_request: I/O error, dev sdb, sector 1250258607
+> >> [ 2267.897750] Buffer I/O error on device sdb1, logical block 6251=
+29272
+> >> [ 2267.897752] Buffer I/O error on device sdb1, logical block 6251=
+29273
+> >> [ 2267.897753] Buffer I/O error on device sdb1, logical block 6251=
+29274
+> >> [ 2267.897754] Buffer I/O error on device sdb1, logical block 6251=
+29275
+> >> [ 2270.884154] usb 1-3: USB disconnect, device number 5
+> >>=20
+> >> Bus 001 Device 010: ID 14cd:6116 Super Top M6116 SATA Bridge
+> >> Device Descriptor:
+> >>   bLength                18
+> >>   bDescriptorType         1
+> >>   bcdUSB               2.00
+> >>   bDeviceClass            0 (Defined at Interface level)
+> >>   bDeviceSubClass         0=20
+> >>   bDeviceProtocol         0=20
+> >>   bMaxPacketSize0        64
+> >>   idVendor           0x14cd Super Top
+> >>   idProduct          0x6116 M6116 SATA Bridge
+> >>   bcdDevice            1.50
+> >>   iManufacturer           1 Super Top  =20
+> >>   iProduct                3 USB 2.0  SATA BRIDGE  =20
+> >>   iSerial                 2 M6116018VE15
+> >>   bNumConfigurations      1
+> >>   Configuration Descriptor:
+> >>     bLength                 9
+> >>     bDescriptorType         2
+> >>     wTotalLength           32
+> >>     bNumInterfaces          1
+> >>     bConfigurationValue     1
+> >>     iConfiguration          0=20
+> >>     bmAttributes         0xc0
+> >>       Self Powered
+> >>     MaxPower                2mA
+> >>     Interface Descriptor:
+> >>       bLength                 9
+> >>       bDescriptorType         4
+> >>       bInterfaceNumber        0
+> >>       bAlternateSetting       0
+> >>       bNumEndpoints           2
+> >>       bInterfaceClass         8 Mass Storage
+> >>       bInterfaceSubClass      6 SCSI
+> >>       bInterfaceProtocol     80 Bulk-Only
+> >>       iInterface              0=20
+> >>       Endpoint Descriptor:
+> >>         bLength                 7
+> >>         bDescriptorType         5
+> >>         bEndpointAddress     0x81  EP 1 IN
+> >>         bmAttributes            2
+> >>           Transfer Type            Bulk
+> >>           Synch Type               None
+> >>           Usage Type               Data
+> >>         wMaxPacketSize     0x0200  1x 512 bytes
+> >>         bInterval               0
+> >>       Endpoint Descriptor:
+> >>         bLength                 7
+> >>         bDescriptorType         5
+> >>         bEndpointAddress     0x02  EP 2 OUT
+> >>         bmAttributes            2
+> >>           Transfer Type            Bulk
+> >>           Synch Type               None
+> >>           Usage Type               Data
+> >>         wMaxPacketSize     0x0200  1x 512 bytes
+> >>         bInterval               0
+> >> Device Qualifier (for other device speed):
+> >>   bLength                10
+> >>   bDescriptorType         6
+> >>   bcdUSB               2.00
+> >>   bDeviceClass            0 (Defined at Interface level)
+> >>   bDeviceSubClass         0=20
+> >>   bDeviceProtocol         0=20
+> >>   bMaxPacketSize0        64
+> >>   bNumConfigurations      1
+> >> Device Status:     0x0001
+> >>   Self Powered
+> >> --
+> >> To unsubscribe from this list: send the line "unsubscribe linux-us=
+b" in
+> >> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
