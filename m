@@ -1,173 +1,172 @@
-From: Giridhar Malavali <giridhar.malavali@qlogic.com>
-Subject: Re: [LSF/MM TOPIC] [ATTEND] scsi_eh updates
-Date: Mon, 20 Jan 2014 18:44:10 +0000
-Message-ID: <D63B9804CB63AD4FAAD9660376956646470290B2@avmb2.qlogic.org>
-References: <52B45A15.4090009@suse.de>
+From: =?utf-8?q?Milan_Svoboda?= <milan.svoboda-aRb0bU7PRFPrBKCeMvbIDA@public.gmane.org>
+Subject: =?utf-8?q?Re=3A_usb_disk_recognized_but_fails?=
+Date: Mon, 20 Jan 2014 20:00:23 +0100
+Message-ID: <20140120200023.5F31B6AF@centrum.cz>
+References: <20140115154739.7DC8AFD8@centrum.cz> <20140120182319.GB5545@xanatos>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_000_D63B9804CB63AD4FAAD9660376956646470290B2avmb2qlogicorg_"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:24211 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750721AbaATSoO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Jan 2014 13:44:14 -0500
-Received: from pps.filterd (m0000643.ppops.net [127.0.0.1])
-	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id s0KIgnPv007078
-	for <linux-scsi@vger.kernel.org>; Mon, 20 Jan 2014 10:44:12 -0800
-Received: from avcashub1.qlogic.com (avcashub3.qlogic.com [198.70.193.117])
-	by mx0b-0016ce01.pphosted.com with ESMTP id 1hfp09kshb-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Mon, 20 Jan 2014 10:44:12 -0800
-In-Reply-To: <52B45A15.4090009@suse.de>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20140120182319.GB5545@xanatos>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: =?utf-8?q?Sarah_Sharp?= <sarah.a.sharp-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Cc: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, =?utf-8?q?USB_Storage_List?= <usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
---_000_D63B9804CB63AD4FAAD9660376956646470290B2avmb2qlogicorg_
-Content-Type: text/plain; charset="iso-8859-1"
-Content-ID: <2C0B788CE129FD4D97B2AC5457281064@qlogic.com>
-Content-Transfer-Encoding: quoted-printable
+Non-working:
 
+3.12.7-2-ARCH #1 SMP PREEMPT Sun Jan 12 13:09:09 CET 2014 x86_64 GNU/Li=
+nux
 
+I'm sorry, I don't remember exactly which version worked, I have had th=
+e disk connected to TV for
+a long time and only recently I wanted to copy some movies on it. I gue=
+ss it worked something like
+6 or 9 months ago.
 
-On 12/20/13 6:54 AM, "Hannes Reinecke" <hare@suse.de> wrote:
+Milan
 
->Hi all,
+______________________________________________________________
+> Od: Sarah Sharp <sarah.a.sharp-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+> Komu: Milan Svoboda <milan.svoboda-aRb0bU7PRFPrBKCeMvbIDA@public.gmane.org>
+> Datum: 20.01.2014 19:23
+> P=C5=99edm=C4=9Bt: Re: usb disk recognized but fails
 >
->(before leaving for holiday ...)
+> CC: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "USB Storage List" <usb-storage@lists.=
+one-eyed-alien.net>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+>Cc-ing the USB storage list, in case this device needs some quirk.
 >
->I'd like to attend LSF 2014.
+>On Wed, Jan 15, 2014 at 03:47:39PM +0100, Milan Svoboda wrote:
+>> The SATA adapter has a power input, but it is not used, it is connec=
+ted to the
+>> PC with Y-type USB cable.
+>>=20
+>> The disk works with my "smart" TV, it works with Windows on the same=
+ machine,
+>> it also had worked some time ago with Linux, but now it shows the fo=
+llowing:
 >
->During that I'd like to discuss the current status of the SCSI EH
->and the future planned updates.
+>Do you know which kernel version it worked with?  What version are you
+>currently running?  Please run `uname -a`.
 >
->As discussed during last year's LSF the SCSI error handler should be
->updated to handle modern SCSI transports better.
->While some patchsets are already merged, there are some issues which
->are still open:
->- Handling of requests during host reset:
->  Do we need to keep hold of outstanding requests during host reset?
->  Or is it save to return them prior to host reset?
->- Check for transport status prior to sending TMFs.
->  Task management functions typically need a working I_T nexus,
->  so it does make sense to first check the transport status
->  prior to attempting any TMFs
->- Further steps for updating SCSI EH
->As these are tricky issues which have possible repercussions on the
->entire subsystem and LLDDs it'd be good to have a broader discussion
->here.
-
-+1
-
-I would like to participate in this discussion to provide inputs from
-LLDDs.
-
--- Giri=20
-
-
+>> [ 2192.027213] usb 1-3: new high-speed USB device number 5 using xhc=
+i_hcd
+>> [ 2192.042323] ums-cypress 1-3:1.0: USB Mass Storage device detected
+>> [ 2192.042500] scsi9 : usb-storage 1-3:1.0
+>> [ 2193.044219] scsi 9:0:0:0: Direct-Access     WDC WD64 00BPVT-00HXZ=
+T0        PQ: 0 ANSI: 0
+>> [ 2193.045083] sd 9:0:0:0: [sdb] 1250263728 512-byte logical blocks:=
+ (640 GB/596 GiB)
+>> [ 2193.045240] sd 9:0:0:0: [sdb] Write Protect is off
+>> [ 2193.045245] sd 9:0:0:0: [sdb] Mode Sense: 03 00 00 00
+>> [ 2193.045384] sd 9:0:0:0: [sdb] No Caching mode page found
+>> [ 2193.045388] sd 9:0:0:0: [sdb] Assuming drive cache: write through
+>> [ 2193.046259] sd 9:0:0:0: [sdb] No Caching mode page found
+>> [ 2193.046264] sd 9:0:0:0: [sdb] Assuming drive cache: write through
+>> [ 2193.054389]  sdb: sdb1
+>> [ 2193.055092] sd 9:0:0:0: [sdb] No Caching mode page found
+>> [ 2193.055095] sd 9:0:0:0: [sdb] Assuming drive cache: write through
+>> [ 2193.055098] sd 9:0:0:0: [sdb] Attached SCSI disk
+>> [ 2200.821345] usb 1-3: reset high-speed USB device number 5 using x=
+hci_hcd
+>> [ 2200.835063] xhci_hcd 0000:00:14.0: xHCI xhci_drop_endpoint called=
+ with disabled ep ffff8800bc71e480
+>> [ 2200.835068] xhci_hcd 0000:00:14.0: xHCI xhci_drop_endpoint called=
+ with disabled ep ffff8800bc71e4c0
+>> [ 2267.897715] sd 9:0:0:0: [sdb] Unhandled sense code
+>> [ 2267.897719] sd 9:0:0:0: [sdb] =20
+>> [ 2267.897721] Result: hostbyte=3D0x07 driverbyte=3D0x08
+>> [ 2267.897722] sd 9:0:0:0: [sdb] =20
+>> [ 2267.897724] Sense Key : 0x4 [current]=20
+>> [ 2267.897735] sd 9:0:0:0: [sdb] =20
+>> [ 2267.897736] ASC=3D0x0 ASCQ=3D0x0
+>> [ 2267.897738] sd 9:0:0:0: [sdb] CDB:=20
+>> [ 2267.897740] cdb[0]=3D0x28: 28 00 4a 85 6e af 00 00 08 00
+>> [ 2267.897746] end_request: I/O error, dev sdb, sector 1250258607
+>> [ 2267.897750] Buffer I/O error on device sdb1, logical block 625129=
+272
+>> [ 2267.897752] Buffer I/O error on device sdb1, logical block 625129=
+273
+>> [ 2267.897753] Buffer I/O error on device sdb1, logical block 625129=
+274
+>> [ 2267.897754] Buffer I/O error on device sdb1, logical block 625129=
+275
+>> [ 2270.884154] usb 1-3: USB disconnect, device number 5
+>>=20
+>> Bus 001 Device 010: ID 14cd:6116 Super Top M6116 SATA Bridge
+>> Device Descriptor:
+>>   bLength                18
+>>   bDescriptorType         1
+>>   bcdUSB               2.00
+>>   bDeviceClass            0 (Defined at Interface level)
+>>   bDeviceSubClass         0=20
+>>   bDeviceProtocol         0=20
+>>   bMaxPacketSize0        64
+>>   idVendor           0x14cd Super Top
+>>   idProduct          0x6116 M6116 SATA Bridge
+>>   bcdDevice            1.50
+>>   iManufacturer           1 Super Top  =20
+>>   iProduct                3 USB 2.0  SATA BRIDGE  =20
+>>   iSerial                 2 M6116018VE15
+>>   bNumConfigurations      1
+>>   Configuration Descriptor:
+>>     bLength                 9
+>>     bDescriptorType         2
+>>     wTotalLength           32
+>>     bNumInterfaces          1
+>>     bConfigurationValue     1
+>>     iConfiguration          0=20
+>>     bmAttributes         0xc0
+>>       Self Powered
+>>     MaxPower                2mA
+>>     Interface Descriptor:
+>>       bLength                 9
+>>       bDescriptorType         4
+>>       bInterfaceNumber        0
+>>       bAlternateSetting       0
+>>       bNumEndpoints           2
+>>       bInterfaceClass         8 Mass Storage
+>>       bInterfaceSubClass      6 SCSI
+>>       bInterfaceProtocol     80 Bulk-Only
+>>       iInterface              0=20
+>>       Endpoint Descriptor:
+>>         bLength                 7
+>>         bDescriptorType         5
+>>         bEndpointAddress     0x81  EP 1 IN
+>>         bmAttributes            2
+>>           Transfer Type            Bulk
+>>           Synch Type               None
+>>           Usage Type               Data
+>>         wMaxPacketSize     0x0200  1x 512 bytes
+>>         bInterval               0
+>>       Endpoint Descriptor:
+>>         bLength                 7
+>>         bDescriptorType         5
+>>         bEndpointAddress     0x02  EP 2 OUT
+>>         bmAttributes            2
+>>           Transfer Type            Bulk
+>>           Synch Type               None
+>>           Usage Type               Data
+>>         wMaxPacketSize     0x0200  1x 512 bytes
+>>         bInterval               0
+>> Device Qualifier (for other device speed):
+>>   bLength                10
+>>   bDescriptorType         6
+>>   bcdUSB               2.00
+>>   bDeviceClass            0 (Defined at Interface level)
+>>   bDeviceSubClass         0=20
+>>   bDeviceProtocol         0=20
+>>   bMaxPacketSize0        64
+>>   bNumConfigurations      1
+>> Device Status:     0x0001
+>>   Self Powered
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-usb"=
+ in
+>> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
->Happy X-mas,
->
->Hannes
->--=20
->Dr. Hannes Reinecke		      zSeries & Storage
->hare@suse.de			      +49 911 74053 688
->SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
->GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
->--
->To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
---_000_D63B9804CB63AD4FAAD9660376956646470290B2avmb2qlogicorg_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
-
-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
-aQBkAGgAYQByAC4AbQBhAGwAYQB2AGEAbABpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwBk
-AAEAAAAKAAAAUwBNAFQAUAAAAAAAAgFBAAEAAACAAAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACA
-RwBpAHIAaQBkAGgAYQByACAATQBhAGwAYQB2AGEAbABpAAAAUwBNAFQAUAAAAGcAaQByAGkAZABo
-AGEAcgAuAG0AYQBsAGEAdgBhAGwAaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAJdAQAAADoA
-AABnAGkAcgBpAGQAaABhAHIALgBtAGEAbABhAHYAYQBsAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBt
-AAAAAAAfAOVfAQAAAEIAAABzAGkAcAA6AGcAaQByAGkAZABoAGEAcgAuAG0AYQBsAGEAdgBhAGwA
-aQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AGgwBAAAAJAAAAEcAaQByAGkAZABoAGEAcgAg
-AE0AYQBsAGEAdgBhAGwAaQAAAB8AHwwBAAAAOgAAAGcAaQByAGkAZABoAGEAcgAuAG0AYQBsAGEA
-dgBhAGwAaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AHgwBAAAACgAAAFMATQBUAFAAAAAA
-AAIBGQwBAAAAgAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgEcAaQByAGkAZABoAGEAcgAgAE0A
-YQBsAGEAdgBhAGwAaQAAAFMATQBUAFAAAABnAGkAcgBpAGQAaABhAHIALgBtAGEAbABhAHYAYQBs
-AGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwABXQEAAAA6AAAAZwBpAHIAaQBkAGgAYQByAC4A
-bQBhAGwAYQB2AGEAbABpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwD4PwEAAAAkAAAARwBp
-AHIAaQBkAGgAYQByACAATQBhAGwAYQB2AGEAbABpAAAAHwAjQAEAAAA6AAAAZwBpAHIAaQBkAGgA
-YQByAC4AbQBhAGwAYQB2AGEAbABpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwAiQAEAAAAK
-AAAAUwBNAFQAUAAAAAAAAgH5PwEAAACAAAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACARwBpAHIA
-aQBkAGgAYQByACAATQBhAGwAYQB2AGEAbABpAAAAUwBNAFQAUAAAAGcAaQByAGkAZABoAGEAcgAu
-AG0AYQBsAGEAdgBhAGwAaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAldAQAAADoAAABnAGkA
-cgBpAGQAaABhAHIALgBtAGEAbABhAHYAYQBsAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAL
-AEA6AQAAAB8AGgABAAAAEgAAAEkAUABNAC4ATgBvAHQAZQAAAAAAAwDxPwkEAAALAEA6AQAAAAMA
-/T/kBAAAAgELMAEAAAAQAAAA2iO82dcQWUeVjVueAREZlAMAFwABAAAAQAA5AAA5IZsPFs8BQAAI
-MBnbWpsPFs8BCwAAgAggBgAAAAAAwAAAAAAAAEYAAAAAFIUAAAEAAAAfAACAhgMCAAAAAADAAAAA
-AAAARgEAAAAeAAAAYQBjAGMAZQBwAHQAbABhAG4AZwB1AGEAZwBlAAAAAAABAAAADAAAAGUAbgAt
-AFUAUwAAAAsAAIAIIAYAAAAAAMAAAAAAAABGAAAAAAaFAAAAAAAAHwA3AAEAAABYAAAAUgBlADoA
-IABbAEwAUwBGAC8ATQBNACAAVABPAFAASQBDAF0AIABbAEEAVABUAEUATgBEAF0AIABzAGMAcwBp
-AF8AZQBoACAAdQBwAGQAYQB0AGUAcwAAAB8APQABAAAACgAAAFIAZQA6ACAAAAAAAAMANgAAAAAA
-HwBCEAEAAAA2AAAAPAA1ADIAQgA0ADUAQQAxADUALgA0ADAAOQAwADAAMAA5AEAAcwB1AHMAZQAu
-AGQAZQA+AAAAAAACAXEAAQAAABsAAAABAc79k17ncJp+tQmOR7o3WJQP3+Lkmo4kDoAAHwBwAAEA
-AABQAAAAWwBMAFMARgAvAE0ATQAgAFQATwBQAEkAQwBdACAAWwBBAFQAVABFAE4ARABdACAAcwBj
-AHMAaQBfAGUAaAAgAHUAcABkAGEAdABlAHMAAAAfADUQAQAAAHgAAAA8AEQANgAzAEIAOQA4ADAA
-NABDAEIANgAzAEEARAA0AEYAQQBBAEQAOQA2ADYAMAAzADcANgA5ADUANgA2ADQANgA0ADcAMAAy
-ADkAMABCADIAQABhAHYAbQBiADIALgBxAGwAbwBnAGkAYwAuAG8AcgBnAD4AAAADAN4/r28AAEAA
-BzBYGFabDxbPAQMAJgAAAAAAAgFHAAEAAAAuAAAAYz1VUzthPSA7cD1RTG9naWM7bD1BVk1CMi0x
-NDAxMjAxODQ0MTBaLTgwNzg4AAAAHwAVEAEAAABYAAAAMgBDADAAQgA3ADgAOABDAEUAMQAyADkA
-RgBEADQARAA5ADcAQgAyAEEAQwA1ADQANQA3ADIAOAAxADAANgA0AEAAcQBsAG8AZwBpAGMALgBj
-AG8AbQAAAAIBFDABAAAADAAAANYAAACJ6P+nTwAAAB8A+j8BAAAAJAAAAEcAaQByAGkAZABoAGEA
-cgAgAE0AYQBsAGEAdgBhAGwAaQAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAABYAAAB1AHMAZQBy
-AC0AYQBnAGUAbgB0AAAAAAABAAAARgAAAE0AaQBjAHIAbwBzAG8AZgB0AC0ATQBhAGMATwB1AHQA
-bABvAG8AawAvADEANAAuADMALgA4AC4AMQAzADAAOQAxADMAAAAAAB8AAIAfpOszqHouQr57eeGp
-jlSzAQAAADgAAABDAG8AbgB2AGUAcgBzAGEAdABpAG8AbgBJAG4AZABlAHgAVAByAGEAYwBrAGkA
-bgBnAEUAeAAAAAEAAAAGAQAASQBJAD0AMAAxADAAMQBDAEYAMQA2ADAARgA5AEIANABEADQANwAy
-AEMARQBCADkANgA4AEYANwA3ADQANwA4ADQARQBBADgANAA5ADIAMAAwAEUANgBCAEYAMgAzADsA
-UwBCAE0ASQBEAD0AMwA7AFMAMQA9ADwANQAyAEIANAA1AEEAMQA1AC4ANAAwADkAMAAwADAAOQBA
-AHMAdQBzAGUALgBkAGUAPgA7AFYAZQByAHMAaQBvAG4APQBWAGUAcgBzAGkAbwBuACAAMQA0AC4A
-MgAgACgAQgB1AGkAbABkACAAMwAxADgALgAwACkALAAgAFMAdABhAGcAZQA9AEgAMgAAAAAAAwAN
-NP0/AAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAgAAAAeAAtAG0AcwAtAGgAYQBzAC0AYQB0AHQA
-YQBjAGgAAAABAAAAAgAAAAAAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAiAAAAeAAtAG8AcgBp
-AGcAaQBuAGEAdABpAG4AZwAtAGkAcAAAAAAAAQAAABwAAABbADEAMAAuADIAOQAuADcALgAxADcA
-OABdAAAA/Y8=
-
---_000_D63B9804CB63AD4FAAD9660376956646470290B2avmb2qlogicorg_--
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
