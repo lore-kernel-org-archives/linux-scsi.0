@@ -1,42 +1,35 @@
-From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [LSF/MM ATTEND] interest in blk-mq, scsi-mq, dm-cache, dm-thinp,
- dm-*
-Date: Mon, 20 Jan 2014 14:21:20 +0200
-Message-ID: <52DD14C0.6070403@dev.mellanox.co.il>
-References: <20140110182714.GA11731@redhat.com> <52D80A0D.8090909@dev.mellanox.co.il>
+From: CrashPlan Pro <linux-scsi@crashplan.pro>
+Subject: Re: Disk spin-up optimization during system resume
+Date: Mon, 20 Jan 2014 13:38:15 +0100
+Message-ID: <52DD18B7.7030303@crashplan.pro>
+References: <20140116220409.GA1183@linux.intel.com>	<Pine.LNX.4.44L0.1401170951270.1162-100000@iolanthe.rowland.org>	<CAA9_cmcHpWOk_GoAZ_6k_0VDNGdac+BmHB1GxaTNkWNVjcztJQ@mail.gmail.com>	<52D9976C.2010009@ubuntu.com>	<CAPcyv4iJScXxpAzH99m6VNHv=vM+96KWgfmv-FH+McnCMb5Vfg@mail.gmail.com>	<52D9F27F.8060705@ubuntu.com> <CAPcyv4i2+GAEV7NNx6MkOOcZSCxhOWB3sCO1eCuH40Z2fhpw3g@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:37537 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752168AbaATMV1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Jan 2014 07:21:27 -0500
-Received: by mail-wi0-f169.google.com with SMTP id e4so4316804wiv.0
-        for <linux-scsi@vger.kernel.org>; Mon, 20 Jan 2014 04:21:26 -0800 (PST)
-In-Reply-To: <52D80A0D.8090909@dev.mellanox.co.il>
+Received: from slow1-d.mail.gandi.net ([217.70.178.86]:57500 "EHLO
+	slow1-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753355AbaATM4m (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Jan 2014 07:56:42 -0500
+Received: from relay6-d.mail.gandi.net (relay6-d.mail.gandi.net [217.70.183.198])
+	by slow1-d.mail.gandi.net (Postfix) with ESMTP id 74D3947AFC6
+	for <linux-scsi@vger.kernel.org>; Mon, 20 Jan 2014 13:38:25 +0100 (CET)
+In-Reply-To: <CAPcyv4i2+GAEV7NNx6MkOOcZSCxhOWB3sCO1eCuH40Z2fhpw3g@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>, lsf-pc@lists.linux-foundation.org
-Cc: linux-scsi@vger.kernel.org
+Cc: Todd E Brandt <todd.e.brandt@linux.intel.com>, Aaron Lu <aaron.lu@intel.com>, Phillip Susi <psusi@ubuntu.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On 1/16/2014 6:34 PM, Sagi Grimberg wrote:
-> On 1/10/2014 8:27 PM, Mike Snitzer wrote:
->> I would like to attend to participate in discussions related to topics
->> listed in the subject.  As a maintainer of DM I'd be interested to
->> learn/discuss areas that should become a development focus in the months
->> following LSF.
->>
->
-> +1 for scsi-mq.
+Dan Williams wrote at 18-01-14 05:09:
+> Larger systems are less likely to ever sleep.
 
-Sparing a few words on why I voted on this topic,
-As part of me being involved in fast RDMA based initiators (iSER, SRP) I 
-can say that SCSI layer
-became a real performance bottleneck. Implementations bypassing SCSI has 
-started to pop-up lately.
-scsi-mq can and should boost performance and it is important that we 
-work also on LLDs to
-provide a total solution.
+I have to agree with this. There is almost no storage server that will 
+be suspended to sleep.
 
-Sagi.
+Users of storage servers rather see an improvement at reboot time.
+
+For example by not re-enumerating all 40 / 80 / 100 attached PuiS ATA 
+drives or not spinning the drive while enumerating. Only the boot drive 
+needs to be spin up. Currently the reboot proces does wake each drive 
+that was previously spun down. At a rate of 1 concurrent drive that 
+takes approximately 6 seconds to spin up, the re-enumeration part takes 
+around 8 minutes during reboot.
