@@ -1,68 +1,136 @@
 From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-Subject: Re: [PATCH 3.12 033/118] usb: xhci: Link TRB must not occur within a
- USB payload burst [NEW HARDWARE]
-Date: Mon, 20 Jan 2014 10:14:42 -0800
-Message-ID: <20140120181442.GA5545@xanatos>
-References: <20140109235045.GA17660@xanatos>
- <52D4791B.3030309@gmail.com>
- <20140114172056.GB12126@xanatos>
- <52D5ABBD.7090202@gmail.com>
- <063D6719AE5E284EB5DD2968C1650D6D45EDA3@AcuExch.aculab.com>
- <52DAE2BF.7020208@gmail.com>
- <063D6719AE5E284EB5DD2968C1650D6D45FF6C@AcuExch.aculab.com>
+Subject: Re: usb disk recognized but fails
+Date: Mon, 20 Jan 2014 10:23:19 -0800
+Message-ID: <20140120182319.GB5545@xanatos>
+References: <20140115154739.7DC8AFD8@centrum.cz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <stable-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:5197 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750993AbaATSXb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 20 Jan 2014 13:23:31 -0500
 Content-Disposition: inline
-In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6D45FF6C@AcuExch.aculab.com>
-Sender: stable-owner@vger.kernel.org
-To: David Laight <David.Laight@ACULAB.COM>
-Cc: 'walt' <w41ter@gmail.com>, Alan Stern <stern@rowland.harvard.edu>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Linux Kernel <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+In-Reply-To: <20140115154739.7DC8AFD8@centrum.cz>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Milan Svoboda <milan.svoboda@centrum.cz>
+Cc: linux-usb@vger.kernel.org, USB Storage List <usb-storage@lists.one-eyed-alien.net>, linux-scsi@vger.kernel.org
 
-On Mon, Jan 20, 2014 at 11:21:14AM +0000, David Laight wrote:
-> From: walt 
-> > On 01/17/2014 06:34 AM, David Laight wrote:
-> > 
-> > > Can you try the patch I posted that stops the ownership on LINK TRBs
-> > > being changed before that on the linked-to TRB?
-> > 
-> > Please disregard my earlier post about the patch not applying cleanly.
-> > That was the usual html corruption, so I found the original on the usb
-> > list and it was okay.
-> > 
-> > Sadly, the patch didn't fix the ASMedia lockup behavior, however :(
-> > 
-> > I did notice that the lockup occurred only when copying *to* the usb3
-> > drive, and not when copying from it.  I think that may be new behavior
-> > but I can't swear to it.
+Cc-ing the USB storage list, in case this device needs some quirk.
+
+On Wed, Jan 15, 2014 at 03:47:39PM +0100, Milan Svoboda wrote:
+> The SATA adapter has a power input, but it is not used, it is connected to the
+> PC with Y-type USB cable.
 > 
-> Consistent with another report that says that ethernet worked provided
-> that TSO was disabled (ie no sg tx).
-> (Without the patch to delay he ownership change on link trbs it didn't
-> work at all.)
+> The disk works with my "smart" TV, it works with Windows on the same machine,
+> it also had worked some time ago with Linux, but now it shows the following:
 
-Please be more clear.  What do you mean by these statements?  That
-someone privately reported that your earlier patch [1] did not help
-them, but applying your new patch [2] on top of the old patch did?
+Do you know which kernel version it worked with?  What version are you
+currently running?  Please run `uname -a`.
 
-[1] http://marc.info/?l=linux-usb&m=138418996717941&w=2
-[2] http://marc.info/?l=linux-usb&m=138996538403468&w=2
-
-In general, will you please Cc me and the USB list when replying to
-privately reported bugs/confirmations that patches work?  Or if the
-confirmation was reported, please provide a link to the mailing list
-discussion or bugzilla entry.  We need to keep bug and fix confirmations
-publicly archived.  Please keep me on Cc since I filter mail based on
-that.
-
-> A guess...
+> [ 2192.027213] usb 1-3: new high-speed USB device number 5 using xhci_hcd
+> [ 2192.042323] ums-cypress 1-3:1.0: USB Mass Storage device detected
+> [ 2192.042500] scsi9 : usb-storage 1-3:1.0
+> [ 2193.044219] scsi 9:0:0:0: Direct-Access     WDC WD64 00BPVT-00HXZT0        PQ: 0 ANSI: 0
+> [ 2193.045083] sd 9:0:0:0: [sdb] 1250263728 512-byte logical blocks: (640 GB/596 GiB)
+> [ 2193.045240] sd 9:0:0:0: [sdb] Write Protect is off
+> [ 2193.045245] sd 9:0:0:0: [sdb] Mode Sense: 03 00 00 00
+> [ 2193.045384] sd 9:0:0:0: [sdb] No Caching mode page found
+> [ 2193.045388] sd 9:0:0:0: [sdb] Assuming drive cache: write through
+> [ 2193.046259] sd 9:0:0:0: [sdb] No Caching mode page found
+> [ 2193.046264] sd 9:0:0:0: [sdb] Assuming drive cache: write through
+> [ 2193.054389]  sdb: sdb1
+> [ 2193.055092] sd 9:0:0:0: [sdb] No Caching mode page found
+> [ 2193.055095] sd 9:0:0:0: [sdb] Assuming drive cache: write through
+> [ 2193.055098] sd 9:0:0:0: [sdb] Attached SCSI disk
+> [ 2200.821345] usb 1-3: reset high-speed USB device number 5 using xhci_hcd
+> [ 2200.835063] xhci_hcd 0000:00:14.0: xHCI xhci_drop_endpoint called with disabled ep ffff8800bc71e480
+> [ 2200.835068] xhci_hcd 0000:00:14.0: xHCI xhci_drop_endpoint called with disabled ep ffff8800bc71e4c0
+> [ 2267.897715] sd 9:0:0:0: [sdb] Unhandled sense code
+> [ 2267.897719] sd 9:0:0:0: [sdb]  
+> [ 2267.897721] Result: hostbyte=0x07 driverbyte=0x08
+> [ 2267.897722] sd 9:0:0:0: [sdb]  
+> [ 2267.897724] Sense Key : 0x4 [current] 
+> [ 2267.897735] sd 9:0:0:0: [sdb]  
+> [ 2267.897736] ASC=0x0 ASCQ=0x0
+> [ 2267.897738] sd 9:0:0:0: [sdb] CDB: 
+> [ 2267.897740] cdb[0]=0x28: 28 00 4a 85 6e af 00 00 08 00
+> [ 2267.897746] end_request: I/O error, dev sdb, sector 1250258607
+> [ 2267.897750] Buffer I/O error on device sdb1, logical block 625129272
+> [ 2267.897752] Buffer I/O error on device sdb1, logical block 625129273
+> [ 2267.897753] Buffer I/O error on device sdb1, logical block 625129274
+> [ 2267.897754] Buffer I/O error on device sdb1, logical block 625129275
+> [ 2270.884154] usb 1-3: USB disconnect, device number 5
 > 
-> In queue_bulk_sg_tx() try calling xhci_v1_0_td_remainder() instead
-> of xhci_td_remainder().
-
-Why?  Walt has a 0.96 xHCI host controller, and the format for how to
-calculate the TD remainder changed between the 0.96 and the 1.0 spec.
-That's why we have xhci_v1_0_td_remainder() and xhci_td_remainder().
-
-Sarah Sharp
+> Bus 001 Device 010: ID 14cd:6116 Super Top M6116 SATA Bridge
+> Device Descriptor:
+>   bLength                18
+>   bDescriptorType         1
+>   bcdUSB               2.00
+>   bDeviceClass            0 (Defined at Interface level)
+>   bDeviceSubClass         0 
+>   bDeviceProtocol         0 
+>   bMaxPacketSize0        64
+>   idVendor           0x14cd Super Top
+>   idProduct          0x6116 M6116 SATA Bridge
+>   bcdDevice            1.50
+>   iManufacturer           1 Super Top   
+>   iProduct                3 USB 2.0  SATA BRIDGE   
+>   iSerial                 2 M6116018VE15
+>   bNumConfigurations      1
+>   Configuration Descriptor:
+>     bLength                 9
+>     bDescriptorType         2
+>     wTotalLength           32
+>     bNumInterfaces          1
+>     bConfigurationValue     1
+>     iConfiguration          0 
+>     bmAttributes         0xc0
+>       Self Powered
+>     MaxPower                2mA
+>     Interface Descriptor:
+>       bLength                 9
+>       bDescriptorType         4
+>       bInterfaceNumber        0
+>       bAlternateSetting       0
+>       bNumEndpoints           2
+>       bInterfaceClass         8 Mass Storage
+>       bInterfaceSubClass      6 SCSI
+>       bInterfaceProtocol     80 Bulk-Only
+>       iInterface              0 
+>       Endpoint Descriptor:
+>         bLength                 7
+>         bDescriptorType         5
+>         bEndpointAddress     0x81  EP 1 IN
+>         bmAttributes            2
+>           Transfer Type            Bulk
+>           Synch Type               None
+>           Usage Type               Data
+>         wMaxPacketSize     0x0200  1x 512 bytes
+>         bInterval               0
+>       Endpoint Descriptor:
+>         bLength                 7
+>         bDescriptorType         5
+>         bEndpointAddress     0x02  EP 2 OUT
+>         bmAttributes            2
+>           Transfer Type            Bulk
+>           Synch Type               None
+>           Usage Type               Data
+>         wMaxPacketSize     0x0200  1x 512 bytes
+>         bInterval               0
+> Device Qualifier (for other device speed):
+>   bLength                10
+>   bDescriptorType         6
+>   bcdUSB               2.00
+>   bDeviceClass            0 (Defined at Interface level)
+>   bDeviceSubClass         0 
+>   bDeviceProtocol         0 
+>   bMaxPacketSize0        64
+>   bNumConfigurations      1
+> Device Status:     0x0001
+>   Self Powered
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
