@@ -1,39 +1,57 @@
-From: "Dorau, Lukasz" <lukasz.dorau@intel.com>
-Subject: RE: [PATCH] isci: reformulate for_each_isci_host macro to fix an
- oops
-Date: Mon, 20 Jan 2014 13:46:11 +0000
-Message-ID: <D9FFE20C522965449E182ACE73889AEB1A6A4055@IRSMSX105.ger.corp.intel.com>
-References: <20140116131624.24112.8745.stgit@gklab-154-244.igk.intel.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Terrible performance of sequential O_DIRECT 4k writes in SAN
+	environment. ~3 times slower then Solars 10 with the same HBA/Storage.
+Date: Mon, 20 Jan 2014 05:58:55 -0800
+Message-ID: <20140120135855.GA26280@infradead.org>
+References: <CA+QCeVQRrqx=CrxyuAe7k0e0y4Nqo7x_8jtkuD99VM8L9Dxp+g@mail.gmail.com>
+	<20140106201032.GA13491@quack.suse.cz>
+	<20140107155830.GA28395@infradead.org>
+	<CA+QCeVRiwHU+C5utaLQXf_MpjoYMYEF4LKRyDPaqcd=H6n-RRw@mail.gmail.com>
+	<20140108140307.GA588@infradead.org>
+	<CA+QCeVRuvNtZ8+9D-NtMOD=B9UEA5HMvKaGdXOQCjO-KTnZdbw@mail.gmail.com>
+	<20140115220721.GY3469@dastard>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140116131624.24112.8745.stgit@gklab-154-244.igk.intel.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: "JBottomley@Parallels.com" <JBottomley@Parallels.com>
-Cc: "Baldysiak, Pawel" <pawel.baldysiak@intel.com>, "Jiang, Dave" <dave.jiang@intel.com>, "Patelczyk, Maciej" <maciej.patelczyk@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <xfs-bounces@oss.sgi.com>
+Content-Disposition: inline
+In-Reply-To: <20140115220721.GY3469@dastard>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Jan Kara <jack@suse.cz>, linux-scsi <linux-scsi@vger.kernel.org>, Gluk <git.user@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Sergey Meirovich <rathamahata@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gVGh1cnNkYXksIEphbnVhcnkgMTYsIDIwMTQgMjoxNiBQTSBMdWthc3ogRG9yYXUgPGx1a2Fz
-ei5kb3JhdUBpbnRlbC5jb20+IHdyb3RlOg0KPiANCj4gVGhlIGxvb3AgJ2ZvcicgaW4gbWFjcm8g
-J2Zvcl9lYWNoX2lzY2lfaG9zdCcgKGRyaXZlcnMvc2NzaS9pc2NpL2luaXQuYzo3MTcpDQo+IGlz
-IGV4ZWN1dGVkIG1vcmUgdGltZXMgdGhhbiBpdCBjYW4gYmUuIFJlZ2FyZGxlc3MgdGhlIGNvbmRp
-dGlvbjoNCj4gICAgJ2lkIDwgQVJSQVlfU0laRSh0b19wY2lfaW5mbyhwZGV2KS0+aG9zdHMpJyAo
-ZHJpdmVycy9zY3NpL2lzY2kvaG9zdC5oOjMxNSkNCj4gaXQgaXMgZXhlY3V0ZWQgd2hlbiBpZCBl
-cXVhbHMgQVJSQVlfU0laRSh0b19wY2lfaW5mbyhwZGV2KS0+aG9zdHMpIHRvby4NCj4gKFJlbWFy
-azogQVJSQVlfU0laRSh0b19wY2lfaW5mbyhwZGV2KS0+aG9zdHMpIGFsd2F5cyBlcXVhbHMNCj4g
-U0NJX01BWF9DT05UUk9MTEVSUyA9IDIpDQo+IA0KPiBJdCBzb3VuZHMgY3JhenksIGJ1dCBpdCBp
-cyB0cnV0aC4gSSBoYXZlIGNoZWNrZWQgaXQgaW4gdGhlIGZvbGxvd2luZyB3YXk6DQo+IEkgaGF2
-ZSBhZGRlZCB0aGUgbGluZToNCj4gDQo+ICAgIHByaW50ayhLRVJOX0VSUiAiPj4+ICglZCA8ICVk
-KSA9PSAlZCBcbiIsIFwNCj4gICAgICAgICAgIGksIFNDSV9NQVhfQ09OVFJPTExFUlMsIChpIDwg
-U0NJX01BWF9DT05UUk9MTEVSUykpOw0KPiANCj4gYWZ0ZXIgdGhlICdmb3JfZWFjaF9pc2NpX2hv
-c3QnIG1hY3JvIGluIGRyaXZlcnMvc2NzaS9pc2NpL2luaXQuYzo3MDENCj4gYW5kIHJlY2VpdmVk
-IHRoZSBmb2xsb3dpbmcgb3V0cHV0Og0KPiANCj4gICAgPj4+ICgwIDwgMikgPT0gMQ0KPiAgICA+
-Pj4gKDEgPCAyKSA9PSAxDQo+ICAgID4+PiAoMiA8IDIpID09IDENCj4gDQo+IGFmdGVyIGlzc3Vp
-bmcgJ21vZHByb2JlIGlzY2knIGNvbW1hbmQgb24gcGxhdGZvcm0gd2l0aCB0d28gU0NVIGNvbnRy
-b2xsZXJzDQo+IChQYXRzYnVyZyBEIG9yIFQgY2hpcHNldCByZXF1aXJlZCkuDQo+IFRoZSBrZXJu
-ZWwgd2FzIGNvbXBpbGVkIHVzaW5nIGdjYyB2ZXJzaW9uIDQuOC4yLg0KPiANCg0KSGkgSmFtZXMs
-DQoNClBsZWFzZSBkaXNyZWdhcmQgdGhpcyBwYXRjaC4NCkl0IHR1cm5lZCB0byBiZSBhIEdDQyA0
-LjggYnVnOg0KaHR0cDovL21hcmMuaW5mby8/bD1saW51eC1rZXJuZWwmbT0xMzg5OTg4NzE5MTEz
-MzYmdz0yDQoNCkkgd2lsbCB3cml0ZSBhIG5ldyBwYXRjaC4NCg0KTHVrYXN6DQoNCg==
+On Thu, Jan 16, 2014 at 09:07:21AM +1100, Dave Chinner wrote:
+> Yes, I think it can be done relatively simply. We'd have to change
+> the code in xfs_file_aio_write_checks() to check whether EOF zeroing
+> was required rather than always taking an exclusive lock (for block
+> aligned IO at EOF sub-block zeroing isn't required),
+
+That's not even required for supporting aio appends, just a further
+optimization for it.
+
+> and then we'd
+> have to modify the direct IO code to set the is_async flag
+> appropriately. We'd probably need a new flag to say tell the DIO
+> code that AIO beyond EOF is OK, but that isn't hard to do....
+
+Yep, need a flag to allow appending writes and then defer them.
+
+> Christoph, are you going to get any time to look at doing this in
+> the next few days?
+
+I'll probably need at least another week before I can get to it.  If you
+wanna pick it up before than feel free.
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
