@@ -1,136 +1,92 @@
-From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-Subject: Re: usb disk recognized but fails
-Date: Mon, 20 Jan 2014 10:23:19 -0800
-Message-ID: <20140120182319.GB5545@xanatos>
-References: <20140115154739.7DC8AFD8@centrum.cz>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH] isci: correct erroneous for_each_isci_host macro
+Date: Mon, 20 Jan 2014 10:25:46 -0800
+Message-ID: <CAA9_cmcXNC0WJ-4RgabLPtGU5=UGKZnVvpQneFaPmvqTRZZEfw@mail.gmail.com>
+References: <20140120165450.15332.39118.stgit@gklab-154-244.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:5197 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750993AbaATSXb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Jan 2014 13:23:31 -0500
-Content-Disposition: inline
-In-Reply-To: <20140115154739.7DC8AFD8@centrum.cz>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20140120165450.15332.39118.stgit@gklab-154-244.igk.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Lukasz Dorau <lukasz.dorau@intel.com>
+Cc: "JBottomley@parallels.com" <JBottomley@parallels.com>, "dave.jiang" <dave.jiang@intel.com>, "Patelczyk, Maciej" <maciej.patelczyk@intel.com>, linux-scsi <linux-scsi@vger.kernel.org>, "Baldysiak, Pawel" <pawel.baldysiak@intel.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Milan Svoboda <milan.svoboda@centrum.cz>
-Cc: linux-usb@vger.kernel.org, USB Storage List <usb-storage@lists.one-eyed-alien.net>, linux-scsi@vger.kernel.org
 
-Cc-ing the USB storage list, in case this device needs some quirk.
+On Mon, Jan 20, 2014 at 8:54 AM, Lukasz Dorau <lukasz.dorau@intel.com> wrote:
+> In the first place, the loop 'for' in the macro 'for_each_isci_host'
+> (drivers/scsi/isci/host.h:314) is incorrect, because it accesses
+> the 3rd element of 2 element array. After the 2nd iteration it executes
+> the instruction:
+>         ihost = to_pci_info(pdev)->hosts[2]
+> (while the size of the 'hosts' array equals 2) and reads an
+> out of range element.
+>
+> In the second place, because of the following GCC v4.8 bug:
+> http://marc.info/?l=linux-kernel&m=138998871911336&w=2
+> this loop is incorrectly compiled by GCC v4.8.
+> As a result, on platforms with two SCU controllers,
+> the loop at drivers/scsi/isci/init.c:717 is executed
+> more times than it can be (for i=0,1 and 2).
+> It causes the following oops after 'rmmod isci':
+>
 
-On Wed, Jan 15, 2014 at 03:47:39PM +0100, Milan Svoboda wrote:
-> The SATA adapter has a power input, but it is not used, it is connected to the
-> PC with Y-type USB cable.
-> 
-> The disk works with my "smart" TV, it works with Windows on the same machine,
-> it also had worked some time ago with Linux, but now it shows the following:
+Surprised those bugs lasted this long... some comments below.
 
-Do you know which kernel version it worked with?  What version are you
-currently running?  Please run `uname -a`.
+> BUG: unable to handle kernel NULL pointer dereference at (null)
+> IP: [<ffffffff8131360b>] __list_add+0x1b/0xc0
+> Oops: 0000 [#1] SMP
+> RIP: 0010:[<ffffffff8131360b>]  [<ffffffff8131360b>] __list_add+0x1b/0xc0
+> Call Trace:
+>   [<ffffffff81661b84>] __mutex_lock_slowpath+0x114/0x1b0
+>   [<ffffffff81661c3f>] mutex_lock+0x1f/0x30
+>   [<ffffffffa03e97cb>] sas_disable_events+0x1b/0x50 [libsas]
+>   [<ffffffffa03e9818>] sas_unregister_ha+0x18/0x60 [libsas]
+>   [<ffffffffa040316e>] isci_unregister+0x1e/0x40 [isci]
+>   [<ffffffffa0403efd>] isci_pci_remove+0x5d/0x100 [isci]
+>   [<ffffffff813391cb>] pci_device_remove+0x3b/0xb0
+>   [<ffffffff813fbf7f>] __device_release_driver+0x7f/0xf0
+>   [<ffffffff813fc8f8>] driver_detach+0xa8/0xb0
+>   [<ffffffff813fbb8b>] bus_remove_driver+0x9b/0x120
+>   [<ffffffff813fcf2c>] driver_unregister+0x2c/0x50
+>   [<ffffffff813381f3>] pci_unregister_driver+0x23/0x80
+>   [<ffffffffa04152f8>] isci_exit+0x10/0x1e [isci]
+>   [<ffffffff810d199b>] SyS_delete_module+0x16b/0x2d0
+>   [<ffffffff81012a21>] ? do_notify_resume+0x61/0xa0
+>   [<ffffffff8166ce29>] system_call_fastpath+0x16/0x1b
+>
+> The loop has been corrected.
+> This patch fixes the above oops.
+>
+> Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
+> Reviewed-by: Maciej Patelczyk <maciej.patelczyk@intel.com>
+> Tested-by: Lukasz Dorau <lukasz.dorau@intel.com>
+> Cc: Dan Williams <dan.j.williams@intel.com>
+> Cc: Dave Jiang <dave.jiang@intel.com>
+> Cc: <stable@vger.kernel.org>
+> ---
+>  drivers/scsi/isci/host.h |    6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/scsi/isci/host.h b/drivers/scsi/isci/host.h
+> index 4911310..95adf31 100644
+> --- a/drivers/scsi/isci/host.h
+> +++ b/drivers/scsi/isci/host.h
+> @@ -311,9 +311,9 @@ static inline struct Scsi_Host *to_shost(struct isci_host *ihost)
+>  }
+>
+>  #define for_each_isci_host(id, ihost, pdev) \
+> -       for (id = 0, ihost = to_pci_info(pdev)->hosts[id]; \
+> -            id < ARRAY_SIZE(to_pci_info(pdev)->hosts) && ihost; \
+> -            ihost = to_pci_info(pdev)->hosts[++id])
+> +       for (id = 0, ihost = to_pci_info(pdev)->hosts[0]; \
 
-> [ 2192.027213] usb 1-3: new high-speed USB device number 5 using xhci_hcd
-> [ 2192.042323] ums-cypress 1-3:1.0: USB Mass Storage device detected
-> [ 2192.042500] scsi9 : usb-storage 1-3:1.0
-> [ 2193.044219] scsi 9:0:0:0: Direct-Access     WDC WD64 00BPVT-00HXZT0        PQ: 0 ANSI: 0
-> [ 2193.045083] sd 9:0:0:0: [sdb] 1250263728 512-byte logical blocks: (640 GB/596 GiB)
-> [ 2193.045240] sd 9:0:0:0: [sdb] Write Protect is off
-> [ 2193.045245] sd 9:0:0:0: [sdb] Mode Sense: 03 00 00 00
-> [ 2193.045384] sd 9:0:0:0: [sdb] No Caching mode page found
-> [ 2193.045388] sd 9:0:0:0: [sdb] Assuming drive cache: write through
-> [ 2193.046259] sd 9:0:0:0: [sdb] No Caching mode page found
-> [ 2193.046264] sd 9:0:0:0: [sdb] Assuming drive cache: write through
-> [ 2193.054389]  sdb: sdb1
-> [ 2193.055092] sd 9:0:0:0: [sdb] No Caching mode page found
-> [ 2193.055095] sd 9:0:0:0: [sdb] Assuming drive cache: write through
-> [ 2193.055098] sd 9:0:0:0: [sdb] Attached SCSI disk
-> [ 2200.821345] usb 1-3: reset high-speed USB device number 5 using xhci_hcd
-> [ 2200.835063] xhci_hcd 0000:00:14.0: xHCI xhci_drop_endpoint called with disabled ep ffff8800bc71e480
-> [ 2200.835068] xhci_hcd 0000:00:14.0: xHCI xhci_drop_endpoint called with disabled ep ffff8800bc71e4c0
-> [ 2267.897715] sd 9:0:0:0: [sdb] Unhandled sense code
-> [ 2267.897719] sd 9:0:0:0: [sdb]  
-> [ 2267.897721] Result: hostbyte=0x07 driverbyte=0x08
-> [ 2267.897722] sd 9:0:0:0: [sdb]  
-> [ 2267.897724] Sense Key : 0x4 [current] 
-> [ 2267.897735] sd 9:0:0:0: [sdb]  
-> [ 2267.897736] ASC=0x0 ASCQ=0x0
-> [ 2267.897738] sd 9:0:0:0: [sdb] CDB: 
-> [ 2267.897740] cdb[0]=0x28: 28 00 4a 85 6e af 00 00 08 00
-> [ 2267.897746] end_request: I/O error, dev sdb, sector 1250258607
-> [ 2267.897750] Buffer I/O error on device sdb1, logical block 625129272
-> [ 2267.897752] Buffer I/O error on device sdb1, logical block 625129273
-> [ 2267.897753] Buffer I/O error on device sdb1, logical block 625129274
-> [ 2267.897754] Buffer I/O error on device sdb1, logical block 625129275
-> [ 2270.884154] usb 1-3: USB disconnect, device number 5
-> 
-> Bus 001 Device 010: ID 14cd:6116 Super Top M6116 SATA Bridge
-> Device Descriptor:
->   bLength                18
->   bDescriptorType         1
->   bcdUSB               2.00
->   bDeviceClass            0 (Defined at Interface level)
->   bDeviceSubClass         0 
->   bDeviceProtocol         0 
->   bMaxPacketSize0        64
->   idVendor           0x14cd Super Top
->   idProduct          0x6116 M6116 SATA Bridge
->   bcdDevice            1.50
->   iManufacturer           1 Super Top   
->   iProduct                3 USB 2.0  SATA BRIDGE   
->   iSerial                 2 M6116018VE15
->   bNumConfigurations      1
->   Configuration Descriptor:
->     bLength                 9
->     bDescriptorType         2
->     wTotalLength           32
->     bNumInterfaces          1
->     bConfigurationValue     1
->     iConfiguration          0 
->     bmAttributes         0xc0
->       Self Powered
->     MaxPower                2mA
->     Interface Descriptor:
->       bLength                 9
->       bDescriptorType         4
->       bInterfaceNumber        0
->       bAlternateSetting       0
->       bNumEndpoints           2
->       bInterfaceClass         8 Mass Storage
->       bInterfaceSubClass      6 SCSI
->       bInterfaceProtocol     80 Bulk-Only
->       iInterface              0 
->       Endpoint Descriptor:
->         bLength                 7
->         bDescriptorType         5
->         bEndpointAddress     0x81  EP 1 IN
->         bmAttributes            2
->           Transfer Type            Bulk
->           Synch Type               None
->           Usage Type               Data
->         wMaxPacketSize     0x0200  1x 512 bytes
->         bInterval               0
->       Endpoint Descriptor:
->         bLength                 7
->         bDescriptorType         5
->         bEndpointAddress     0x02  EP 2 OUT
->         bmAttributes            2
->           Transfer Type            Bulk
->           Synch Type               None
->           Usage Type               Data
->         wMaxPacketSize     0x0200  1x 512 bytes
->         bInterval               0
-> Device Qualifier (for other device speed):
->   bLength                10
->   bDescriptorType         6
->   bcdUSB               2.00
->   bDeviceClass            0 (Defined at Interface level)
->   bDeviceSubClass         0 
->   bDeviceProtocol         0 
->   bMaxPacketSize0        64
->   bNumConfigurations      1
-> Device Status:     0x0001
->   Self Powered
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+No need to initialize ihost here since we assign and check it later.
+
+> +            (id < ARRAY_SIZE(to_pci_info(pdev)->hosts)) && \
+
+Just use SCI_MAX_CONTROLLERS here.
+
+> +            (ihost = to_pci_info(pdev)->hosts[id]); id++)
+
+--
+Dan
