@@ -1,48 +1,39 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [LSF/MM TOPIC] [ATTEND] scsi_eh updates
-Date: Mon, 20 Jan 2014 13:55:23 +0100
-Message-ID: <52DD1CBB.6050708@acm.org>
-References: <52B45A15.4090009@suse.de>
+From: "Dorau, Lukasz" <lukasz.dorau@intel.com>
+Subject: RE: [PATCH] isci: reformulate for_each_isci_host macro to fix an
+ oops
+Date: Mon, 20 Jan 2014 13:46:11 +0000
+Message-ID: <D9FFE20C522965449E182ACE73889AEB1A6A4055@IRSMSX105.ger.corp.intel.com>
+References: <20140116131624.24112.8745.stgit@gklab-154-244.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from yahoo.smtp.stone-is.be ([5.134.1.31]:39082 "EHLO
-	yahoo.smtp.stone-is.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751916AbaATNDU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Jan 2014 08:03:20 -0500
-In-Reply-To: <52B45A15.4090009@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20140116131624.24112.8745.stgit@gklab-154-244.igk.intel.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: "JBottomley@Parallels.com" <JBottomley@Parallels.com>
+Cc: "Baldysiak, Pawel" <pawel.baldysiak@intel.com>, "Jiang, Dave" <dave.jiang@intel.com>, "Patelczyk, Maciej" <maciej.patelczyk@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: lsf-pc@lists.linux-foundation.org, SCSI Mailing List <linux-scsi@vger.kernel.org>
-Cc: Hannes Reinecke <hare@suse.de>
 
-On 12/20/13 15:54, Hannes Reinecke wrote:
-> I'd like to attend LSF 2014.
-> 
-> During that I'd like to discuss the current status of the SCSI EH
-> and the future planned updates.
-> 
-> As discussed during last year's LSF the SCSI error handler should be
-> updated to handle modern SCSI transports better.
-> While some patchsets are already merged, there are some issues which
-> are still open:
-> - Handling of requests during host reset:
->   Do we need to keep hold of outstanding requests during host reset?
->   Or is it save to return them prior to host reset?
-> - Check for transport status prior to sending TMFs.
->   Task management functions typically need a working I_T nexus,
->   so it does make sense to first check the transport status
->   prior to attempting any TMFs
-> - Further steps for updating SCSI EH
-> As these are tricky issues which have possible repercussions on the
-> entire subsystem and LLDDs it'd be good to have a broader discussion
-> here.
-
-+1 for this topic.
-
-Given my recent contributions to the error detection and recovery code
-in the SRP initiator driver I think I can provide valuable inputs for
-this discussion.
-
-Bart.
+T24gVGh1cnNkYXksIEphbnVhcnkgMTYsIDIwMTQgMjoxNiBQTSBMdWthc3ogRG9yYXUgPGx1a2Fz
+ei5kb3JhdUBpbnRlbC5jb20+IHdyb3RlOg0KPiANCj4gVGhlIGxvb3AgJ2ZvcicgaW4gbWFjcm8g
+J2Zvcl9lYWNoX2lzY2lfaG9zdCcgKGRyaXZlcnMvc2NzaS9pc2NpL2luaXQuYzo3MTcpDQo+IGlz
+IGV4ZWN1dGVkIG1vcmUgdGltZXMgdGhhbiBpdCBjYW4gYmUuIFJlZ2FyZGxlc3MgdGhlIGNvbmRp
+dGlvbjoNCj4gICAgJ2lkIDwgQVJSQVlfU0laRSh0b19wY2lfaW5mbyhwZGV2KS0+aG9zdHMpJyAo
+ZHJpdmVycy9zY3NpL2lzY2kvaG9zdC5oOjMxNSkNCj4gaXQgaXMgZXhlY3V0ZWQgd2hlbiBpZCBl
+cXVhbHMgQVJSQVlfU0laRSh0b19wY2lfaW5mbyhwZGV2KS0+aG9zdHMpIHRvby4NCj4gKFJlbWFy
+azogQVJSQVlfU0laRSh0b19wY2lfaW5mbyhwZGV2KS0+aG9zdHMpIGFsd2F5cyBlcXVhbHMNCj4g
+U0NJX01BWF9DT05UUk9MTEVSUyA9IDIpDQo+IA0KPiBJdCBzb3VuZHMgY3JhenksIGJ1dCBpdCBp
+cyB0cnV0aC4gSSBoYXZlIGNoZWNrZWQgaXQgaW4gdGhlIGZvbGxvd2luZyB3YXk6DQo+IEkgaGF2
+ZSBhZGRlZCB0aGUgbGluZToNCj4gDQo+ICAgIHByaW50ayhLRVJOX0VSUiAiPj4+ICglZCA8ICVk
+KSA9PSAlZCBcbiIsIFwNCj4gICAgICAgICAgIGksIFNDSV9NQVhfQ09OVFJPTExFUlMsIChpIDwg
+U0NJX01BWF9DT05UUk9MTEVSUykpOw0KPiANCj4gYWZ0ZXIgdGhlICdmb3JfZWFjaF9pc2NpX2hv
+c3QnIG1hY3JvIGluIGRyaXZlcnMvc2NzaS9pc2NpL2luaXQuYzo3MDENCj4gYW5kIHJlY2VpdmVk
+IHRoZSBmb2xsb3dpbmcgb3V0cHV0Og0KPiANCj4gICAgPj4+ICgwIDwgMikgPT0gMQ0KPiAgICA+
+Pj4gKDEgPCAyKSA9PSAxDQo+ICAgID4+PiAoMiA8IDIpID09IDENCj4gDQo+IGFmdGVyIGlzc3Vp
+bmcgJ21vZHByb2JlIGlzY2knIGNvbW1hbmQgb24gcGxhdGZvcm0gd2l0aCB0d28gU0NVIGNvbnRy
+b2xsZXJzDQo+IChQYXRzYnVyZyBEIG9yIFQgY2hpcHNldCByZXF1aXJlZCkuDQo+IFRoZSBrZXJu
+ZWwgd2FzIGNvbXBpbGVkIHVzaW5nIGdjYyB2ZXJzaW9uIDQuOC4yLg0KPiANCg0KSGkgSmFtZXMs
+DQoNClBsZWFzZSBkaXNyZWdhcmQgdGhpcyBwYXRjaC4NCkl0IHR1cm5lZCB0byBiZSBhIEdDQyA0
+LjggYnVnOg0KaHR0cDovL21hcmMuaW5mby8/bD1saW51eC1rZXJuZWwmbT0xMzg5OTg4NzE5MTEz
+MzYmdz0yDQoNCkkgd2lsbCB3cml0ZSBhIG5ldyBwYXRjaC4NCg0KTHVrYXN6DQoNCg==
