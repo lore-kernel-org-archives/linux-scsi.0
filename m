@@ -1,35 +1,74 @@
-From: CrashPlan Pro <linux-scsi@crashplan.pro>
-Subject: Re: Disk spin-up optimization during system resume
-Date: Mon, 20 Jan 2014 13:38:15 +0100
-Message-ID: <52DD18B7.7030303@crashplan.pro>
-References: <20140116220409.GA1183@linux.intel.com>	<Pine.LNX.4.44L0.1401170951270.1162-100000@iolanthe.rowland.org>	<CAA9_cmcHpWOk_GoAZ_6k_0VDNGdac+BmHB1GxaTNkWNVjcztJQ@mail.gmail.com>	<52D9976C.2010009@ubuntu.com>	<CAPcyv4iJScXxpAzH99m6VNHv=vM+96KWgfmv-FH+McnCMb5Vfg@mail.gmail.com>	<52D9F27F.8060705@ubuntu.com> <CAPcyv4i2+GAEV7NNx6MkOOcZSCxhOWB3sCO1eCuH40Z2fhpw3g@mail.gmail.com>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [LSF/MM TOPIC][ATTEND] T10-PI RDMA offload
+Date: Mon, 20 Jan 2014 13:51:52 +0100
+Message-ID: <52DD1BE8.8080500@acm.org>
+References: <52D7F6DC.10502@dev.mellanox.co.il>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from slow1-d.mail.gandi.net ([217.70.178.86]:57500 "EHLO
-	slow1-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753355AbaATM4m (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Jan 2014 07:56:42 -0500
-Received: from relay6-d.mail.gandi.net (relay6-d.mail.gandi.net [217.70.183.198])
-	by slow1-d.mail.gandi.net (Postfix) with ESMTP id 74D3947AFC6
-	for <linux-scsi@vger.kernel.org>; Mon, 20 Jan 2014 13:38:25 +0100 (CET)
-In-Reply-To: <CAPcyv4i2+GAEV7NNx6MkOOcZSCxhOWB3sCO1eCuH40Z2fhpw3g@mail.gmail.com>
+Received: from yahoo.smtp.stone-is.be ([5.134.1.31]:33273 "EHLO
+	yahoo.smtp.stone-is.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750758AbaATM6U (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Jan 2014 07:58:20 -0500
+In-Reply-To: <52D7F6DC.10502@dev.mellanox.co.il>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-Cc: Todd E Brandt <todd.e.brandt@linux.intel.com>, Aaron Lu <aaron.lu@intel.com>, Phillip Susi <psusi@ubuntu.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: linux-scsi <linux-scsi@vger.kernel.org>, lsf-pc@lists.linux-foundation.org
+Cc: Sagi Grimberg <sagig@dev.mellanox.co.il>, Oren Duer <oren@mellanox.com>
 
-Dan Williams wrote at 18-01-14 05:09:
-> Larger systems are less likely to ever sleep.
+On 01/16/14 16:12, Sagi Grimberg wrote:
+> Hey SCSI (and LSF) folks,
+> 
+> I'd like to propose the following topic for upcoming LSF-MM:
+> 
+> T10-PI standard is becoming more and more appealing for storage and
+> cloud solutions.
+> Since error-detection coding comes with its cost of CPU computation
+> overhead,
+> state-of-the-art ASICs offer the ability to offload T10-PI operations
+> (DIF/DIX), examples
+> are SAS & FC controllers. Recently, the support for T10-PI offload over
+> RDMA transactions
+> was introduced in the Mellanox Connect-IB HCA.
+> 
+> The first building block, RDMA verbs API supporting T10-PI offload was
+> submitted over
+> Linux-rdma (see http://marc.info/?l=linux-rdma&m=138719320307936&w=2).
+> Moreover,
+> we have seen first seeds of T10-PI support in Linux SCSI target entering
+> v3.14 (see
+> http://lwn.net/Articles/579708/) and RDMA offload implementation in iSER
+> transport
+> (see http://www.spinics.net/lists/linux-scsi/msg71128.html). There is
+> still some ground to
+> fill to get protection information support to a full solution over all
+> backend devices.
+> 
+> We would like to use LSF-MM platform to to push forward T10-PI support
+> end-to-end which
+> requires Linux SCSI Target core level support along with transport level
+> support in iSER and SRP
+> (and also FCoE in the future) and over to the Initiator side transports.
+> 
+> Discussion topics:
+> - Introduce T10-PI offload RDMA verbs and how are used in storage
+> applications.
+> - Discuss effects of DIX1.1 (currently a draft) in Target implementation
+> (core level -> transport level -> HW level).
+> - Discuss T10-PI Type 4 (16-byte DIF) status and possible implications
+> on Target & Initiator implementation down to HW level.
+> - Discuss Current Limitations that T10-PI RDMA offload poses on iSCSI
+> protocol (ImmediateData, UnsolDataOut) and if/how
+>   they can be solved.
+> - What-ever else comes to mind...
 
-I have to agree with this. There is almost no storage server that will 
-be suspended to sleep.
++1 for this topic.
 
-Users of storage servers rather see an improvement at reboot time.
+As a contributor to the SRP protocol implementation I'm interested in
+this discussion. Having an API for T10-PI offload in the RDMA core is a
+prerequisite before T10-PI support can be added in the SRP initiator and
+target drivers.
 
-For example by not re-enumerating all 40 / 80 / 100 attached PuiS ATA 
-drives or not spinning the drive while enumerating. Only the boot drive 
-needs to be spin up. Currently the reboot proces does wake each drive 
-that was previously spun down. At a rate of 1 concurrent drive that 
-takes approximately 6 seconds to spin up, the re-enumeration part takes 
-around 8 minutes during reboot.
+Bart.
+
