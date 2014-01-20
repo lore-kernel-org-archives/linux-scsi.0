@@ -1,81 +1,68 @@
-From: Lukasz Dorau <lukasz.dorau@intel.com>
-Subject: [PATCH] isci: correct erroneous for_each_isci_host macro
-Date: Mon, 20 Jan 2014 17:54:50 +0100
-Message-ID: <20140120165450.15332.39118.stgit@gklab-154-244.igk.intel.com>
+From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Subject: Re: [PATCH 3.12 033/118] usb: xhci: Link TRB must not occur within a
+ USB payload burst [NEW HARDWARE]
+Date: Mon, 20 Jan 2014 10:14:42 -0800
+Message-ID: <20140120181442.GA5545@xanatos>
+References: <20140109235045.GA17660@xanatos>
+ <52D4791B.3030309@gmail.com>
+ <20140114172056.GB12126@xanatos>
+ <52D5ABBD.7090202@gmail.com>
+ <063D6719AE5E284EB5DD2968C1650D6D45EDA3@AcuExch.aculab.com>
+ <52DAE2BF.7020208@gmail.com>
+ <063D6719AE5E284EB5DD2968C1650D6D45FF6C@AcuExch.aculab.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: JBottomley@Parallels.com
-Cc: dave.jiang@intel.com, maciej.patelczyk@intel.com, linux-scsi@vger.kernel.org, pawel.baldysiak@intel.com, linux-kernel@vger.kernel.org, dan.j.williams@intel.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <stable-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6D45FF6C@AcuExch.aculab.com>
+Sender: stable-owner@vger.kernel.org
+To: David Laight <David.Laight@ACULAB.COM>
+Cc: 'walt' <w41ter@gmail.com>, Alan Stern <stern@rowland.harvard.edu>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Linux Kernel <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-In the first place, the loop 'for' in the macro 'for_each_isci_host'
-(drivers/scsi/isci/host.h:314) is incorrect, because it accesses
-the 3rd element of 2 element array. After the 2nd iteration it executes
-the instruction:
-        ihost = to_pci_info(pdev)->hosts[2]
-(while the size of the 'hosts' array equals 2) and reads an
-out of range element.
+On Mon, Jan 20, 2014 at 11:21:14AM +0000, David Laight wrote:
+> From: walt 
+> > On 01/17/2014 06:34 AM, David Laight wrote:
+> > 
+> > > Can you try the patch I posted that stops the ownership on LINK TRBs
+> > > being changed before that on the linked-to TRB?
+> > 
+> > Please disregard my earlier post about the patch not applying cleanly.
+> > That was the usual html corruption, so I found the original on the usb
+> > list and it was okay.
+> > 
+> > Sadly, the patch didn't fix the ASMedia lockup behavior, however :(
+> > 
+> > I did notice that the lockup occurred only when copying *to* the usb3
+> > drive, and not when copying from it.  I think that may be new behavior
+> > but I can't swear to it.
+> 
+> Consistent with another report that says that ethernet worked provided
+> that TSO was disabled (ie no sg tx).
+> (Without the patch to delay he ownership change on link trbs it didn't
+> work at all.)
 
-In the second place, because of the following GCC v4.8 bug:
-http://marc.info/?l=linux-kernel&m=138998871911336&w=2
-this loop is incorrectly compiled by GCC v4.8.
-As a result, on platforms with two SCU controllers,
-the loop at drivers/scsi/isci/init.c:717 is executed
-more times than it can be (for i=0,1 and 2).
-It causes the following oops after 'rmmod isci':
+Please be more clear.  What do you mean by these statements?  That
+someone privately reported that your earlier patch [1] did not help
+them, but applying your new patch [2] on top of the old patch did?
 
-BUG: unable to handle kernel NULL pointer dereference at (null)
-IP: [<ffffffff8131360b>] __list_add+0x1b/0xc0
-Oops: 0000 [#1] SMP
-RIP: 0010:[<ffffffff8131360b>]  [<ffffffff8131360b>] __list_add+0x1b/0xc0
-Call Trace:
-  [<ffffffff81661b84>] __mutex_lock_slowpath+0x114/0x1b0
-  [<ffffffff81661c3f>] mutex_lock+0x1f/0x30
-  [<ffffffffa03e97cb>] sas_disable_events+0x1b/0x50 [libsas]
-  [<ffffffffa03e9818>] sas_unregister_ha+0x18/0x60 [libsas]
-  [<ffffffffa040316e>] isci_unregister+0x1e/0x40 [isci]
-  [<ffffffffa0403efd>] isci_pci_remove+0x5d/0x100 [isci]
-  [<ffffffff813391cb>] pci_device_remove+0x3b/0xb0
-  [<ffffffff813fbf7f>] __device_release_driver+0x7f/0xf0
-  [<ffffffff813fc8f8>] driver_detach+0xa8/0xb0
-  [<ffffffff813fbb8b>] bus_remove_driver+0x9b/0x120
-  [<ffffffff813fcf2c>] driver_unregister+0x2c/0x50
-  [<ffffffff813381f3>] pci_unregister_driver+0x23/0x80
-  [<ffffffffa04152f8>] isci_exit+0x10/0x1e [isci]
-  [<ffffffff810d199b>] SyS_delete_module+0x16b/0x2d0
-  [<ffffffff81012a21>] ? do_notify_resume+0x61/0xa0
-  [<ffffffff8166ce29>] system_call_fastpath+0x16/0x1b
+[1] http://marc.info/?l=linux-usb&m=138418996717941&w=2
+[2] http://marc.info/?l=linux-usb&m=138996538403468&w=2
 
-The loop has been corrected.
-This patch fixes the above oops.
+In general, will you please Cc me and the USB list when replying to
+privately reported bugs/confirmations that patches work?  Or if the
+confirmation was reported, please provide a link to the mailing list
+discussion or bugzilla entry.  We need to keep bug and fix confirmations
+publicly archived.  Please keep me on Cc since I filter mail based on
+that.
 
-Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
-Reviewed-by: Maciej Patelczyk <maciej.patelczyk@intel.com>
-Tested-by: Lukasz Dorau <lukasz.dorau@intel.com>
-Cc: Dan Williams <dan.j.williams@intel.com>
-Cc: Dave Jiang <dave.jiang@intel.com>
-Cc: <stable@vger.kernel.org>
----
- drivers/scsi/isci/host.h |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+> A guess...
+> 
+> In queue_bulk_sg_tx() try calling xhci_v1_0_td_remainder() instead
+> of xhci_td_remainder().
 
-diff --git a/drivers/scsi/isci/host.h b/drivers/scsi/isci/host.h
-index 4911310..95adf31 100644
---- a/drivers/scsi/isci/host.h
-+++ b/drivers/scsi/isci/host.h
-@@ -311,9 +311,9 @@ static inline struct Scsi_Host *to_shost(struct isci_host *ihost)
- }
- 
- #define for_each_isci_host(id, ihost, pdev) \
--	for (id = 0, ihost = to_pci_info(pdev)->hosts[id]; \
--	     id < ARRAY_SIZE(to_pci_info(pdev)->hosts) && ihost; \
--	     ihost = to_pci_info(pdev)->hosts[++id])
-+	for (id = 0, ihost = to_pci_info(pdev)->hosts[0]; \
-+	     (id < ARRAY_SIZE(to_pci_info(pdev)->hosts)) && \
-+	     (ihost = to_pci_info(pdev)->hosts[id]); id++)
- 
- static inline void wait_for_start(struct isci_host *ihost)
- {
+Why?  Walt has a 0.96 xHCI host controller, and the format for how to
+calculate the TD remainder changed between the 0.96 and the 1.0 spec.
+That's why we have xhci_v1_0_td_remainder() and xhci_td_remainder().
+
+Sarah Sharp
