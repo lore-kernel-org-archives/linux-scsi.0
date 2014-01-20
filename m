@@ -1,65 +1,159 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [LSF/MM TOPIC] [ATTEND] scsi_eh updates
-Date: Mon, 20 Jan 2014 11:05:20 -0800
-Message-ID: <1390244720.341.30.camel@dabdike.int.hansenpartnership.com>
-References: <D63B9804CB63AD4FAAD9660376956646470290B2@avmb2.qlogic.org>
+From: Alexei Starovoitov <alexei.starovoitov@gmail.com>
+Subject: Re: Why is (2 < 2) true? Is it a gcc bug?
+Date: Mon, 20 Jan 2014 11:43:46 -0800
+Message-ID: <CAADnVQKcvGz4KLb--PyXPVeNohRsumFVr=tK8or1TFhQL3qqyA@mail.gmail.com>
+References: <D9FFE20C522965449E182ACE73889AEB1A6A340F@IRSMSX105.ger.corp.intel.com>
+	<CAADnVQLUP=7oxciVw97d76xtqs6_YjC6E2boPRO9y4m_sqjRCA@mail.gmail.com>
+	<CAADnVQL=s8zc_ACSuPs8P3y-RB9Td8OZysM=0fj4sjzUPRzfGw@mail.gmail.com>
+	<20140117210201.GA390@x4>
+	<CAADnVQL7zB2y0w4F-hYZ=RBe1bQg3X5pp-h=74HYZ1OSJ1K0xw@mail.gmail.com>
+	<D9FFE20C522965449E182ACE73889AEB1A6A38A3@IRSMSX105.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:56962 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751660AbaATTFY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Jan 2014 14:05:24 -0500
-In-Reply-To: <D63B9804CB63AD4FAAD9660376956646470290B2@avmb2.qlogic.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <D9FFE20C522965449E182ACE73889AEB1A6A38A3@IRSMSX105.ger.corp.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Dorau, Lukasz" <lukasz.dorau@intel.com>
+Cc: Markus Trippelsdorf <markus@trippelsdorf.de>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "sebastian.riemer@profitbricks.com" <sebastian.riemer@profitbricks.com>, "richard.weinberger@gmail.com" <richard.weinberger@gmail.com>, "Williams, Dan J" <dan.j.williams@intel.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Giridhar Malavali <giridhar.malavali@qlogic.com>
-Cc: Hannes Reinecke <hare@suse.de>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Mon, 2014-01-20 at 18:44 +0000, Giridhar Malavali wrote:
-> 
-> On 12/20/13 6:54 AM, "Hannes Reinecke" <hare@suse.de> wrote:
-> 
-> >Hi all,
-> >
-> >(before leaving for holiday ...)
-> >
-> >I'd like to attend LSF 2014.
-> >
-> >During that I'd like to discuss the current status of the SCSI EH
-> >and the future planned updates.
-> >
-> >As discussed during last year's LSF the SCSI error handler should be
-> >updated to handle modern SCSI transports better.
-> >While some patchsets are already merged, there are some issues which
-> >are still open:
-> >- Handling of requests during host reset:
-> >  Do we need to keep hold of outstanding requests during host reset?
-> >  Or is it save to return them prior to host reset?
-> >- Check for transport status prior to sending TMFs.
-> >  Task management functions typically need a working I_T nexus,
-> >  so it does make sense to first check the transport status
-> >  prior to attempting any TMFs
-> >- Further steps for updating SCSI EH
-> >As these are tricky issues which have possible repercussions on the
-> >entire subsystem and LLDDs it'd be good to have a broader discussion
-> >here.
-> 
-> +1
-> 
-> I would like to participate in this discussion to provide inputs from
-> LLDDs.
+On Sat, Jan 18, 2014 at 3:31 AM, Dorau, Lukasz <lukasz.dorau@intel.com> wrote:
+> On Friday, January 17, 2014 10:44 PM Alexei Starovoitov <alexei.starovoitov@gmail.com> wrote:
+>> On Fri, Jan 17, 2014 at 1:02 PM, Markus Trippelsdorf
+>> <markus@trippelsdorf.de> wrote:
+>> > On 2014.01.17 at 11:58 -0800, Alexei Starovoitov wrote:
+>> >> On Fri, Jan 17, 2014 at 9:58 AM, Alexei Starovoitov
+>> >> <alexei.starovoitov@gmail.com> wrote:
+>> >> > On Fri, Jan 17, 2014 at 5:37 AM, Dorau, Lukasz <lukasz.dorau@intel.com>
+>> wrote:
+>> >> >> Hi
+>> >> >>
+>> >> >> My story is very simply...
+>> >> >> I applied the following patch:
+>> >> >>
+>> >> >> diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
+>> >> >> --- a/drivers/scsi/isci/init.c
+>> >> >> +++ b/drivers/scsi/isci/init.c
+>> >> >> @@ -698,8 +698,11 @@ static int isci_pci_probe(struct pci_dev *pdev, const
+>> struct pci_device_id *id)
+>> >> >>         if (err)
+>> >> >>                 goto err_host_alloc;
+>> >> >>
+>> >> >> -       for_each_isci_host(i, isci_host, pdev)
+>> >> >> +       for_each_isci_host(i, isci_host, pdev) {
+>> >> >> +               pr_err("(%d < %d) == %d\n",\
+>> >> >> +                      i, SCI_MAX_CONTROLLERS, (i < SCI_MAX_CONTROLLERS));
+>> >> >>                 scsi_scan_host(to_shost(isci_host));
+>> >> >> +       }
+>> >> >>
+>> >> >>         return 0;
+>> >> >>
+>> >> >> --
+>> >> >> 1.8.3.1
+>> >> >>
+>> >> >> Then I issued the command 'modprobe isci' on platform with two SCU
+>> controllers (Patsburg D or T chipset)
+>> >> >> and received the following, very strange, output:
+>> >> >>
+>> >> >> (0 < 2) == 1
+>> >> >> (1 < 2) == 1
+>> >> >> (2 < 2) == 1
+>> >> >>
+>> >> >> Can anyone explain why (2 < 2) is true? Is it a gcc bug?
+>> >> >
+>> >> > gcc sees that i < array_size is the same as i < 2 as part of loop condition, so
+>> >> > it optimizes (i < sci_max_controllers) into constant 1.
+>> >> > and emits printk like:
+>> >> >   printk ("\13(%d < %d) == %d\n", i_382, 2, 1);
+>> >> >
+>> >> >> (The kernel was compiled using gcc version 4.8.2.)
+>> >> >
+>> >> > it actually looks to be gcc 4.8 bug.
+>> >> > Can you try gcc 4.7 ?
+>> >> >
+>> >>
+>> >> It is interesting GCC 4.8 bug,
+>> >> since it seems to expose issues in two compiler passes.
+>> >>
+>> >> here is test case:
+>> >>
+>> >> struct isci_host;
+>> >> struct isci_orom;
+>> >>
+>> >> struct isci_pci_info {
+>> >>   struct isci_host *hosts[2];
+>> >>   struct isci_orom *orom;
+>> >> } v = {{(struct isci_host *)1,(struct isci_host *)1}, 0};
+>> >>
+>> >> int printf(const char *fmt, ...);
+>> >>
+>> >> int isci_pci_probe()
+>> >> {
+>> >>   int i;
+>> >>   struct isci_host *isci_host;
+>> >>
+>> >>   for (i = 0, isci_host = v.hosts[i];
+>> >>        i < 2 && isci_host;
+>> >>        isci_host = v.hosts[++i]) {
+>> >>     printf("(%d < %d) == %d\n", i, 2, (i < 2));
+>> >>   }
+>> >>
+>> >>   return 0;
+>> >> }
+>> >>
+>> >> int main()
+>> >> {
+>> >>   isci_pci_probe();
+>> >> }
+>> >>
+>> >> $ gcc bug.c
+>> >> $./a.out
+>> >> 0 < 2) == 1
+>> >> (1 < 2) == 1
+>> >> $ gcc bug.c -O2
+>> >> $ ./a.out
+>> >> (0 < 2) == 1
+>> >> (1 < 2) == 1
+>> >> Segmentation fault (core dumped)
+>> >
+>> > Your testcase is invalid:
+>> >
+>> > markus@x4 tmp % clang -fsanitize=undefined -Wall -Wextra -O2 bug.c
+>> > markus@x4 tmp % ./a.out
+>> > (0 < 2) == 1
+>> > (1 < 2) == 1
+>> > bug.c:16:20: runtime error: index 2 out of bounds for type 'struct isci_host *[2]'
+>> >
+>> > As Jakub Jelinek said on IRC, changing the loop to e.g.:
+>> >
+>> >   for (i = 0;
+>> >        i < 2 && (isci_host = v.hosts[i]);
+>> >        i++) {
+>> >
+>> > fixes the issue.
+>>
+>> testcase was reduced from drivers/scsi/isci/host.h written back in
+>> 2011 (commit b329aff107)
+>> #define for_each_isci_host(id, ihost, pdev) \
+>>         for (id = 0, ihost = to_pci_info(pdev)->hosts[id]; \
+>>              id < ARRAY_SIZE(to_pci_info(pdev)->hosts) && ihost; \
+>>              ihost = to_pci_info(pdev)->hosts[++id])
+>>
+>> yes, it does access 3rd element of 2 element array and will read junk.
+>>
+>> C standard says the behavior is undefined and comes handy in compiler defense,
+>> but in this case compiler has obviously all the information to make
+>> right decision
+>> instead of misoptimizing the code.
+>> So yes, the loop is erroneous, non-portable, etc, but gcc can be smarter.
+>> --
+>
+> Thank you for explanation!
+>
+> Alexei,
+>
+> Will you file a gcc bug for this case?
 
-For the last time, this isn't the way to ask for a place.  You need to
-send in an ATTEND request according to the CFP.
-
-http://marc.info/?l=linux-scsi&m=138753185305739
-
-Thanks,
-
-James
-
-
-
+sure. filed for the record:
+http://gcc.gnu.org/bugzilla/show_bug.cgi?id=59892
+Closed as invalid by Markus already.
