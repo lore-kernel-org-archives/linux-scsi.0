@@ -1,91 +1,54 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH] scsi_debug: unify scsi_level in proc and sysfs
-Date: Tue, 21 Jan 2014 10:07:55 -0500
-Message-ID: <52DE8D4B.3090008@interlog.com>
-References: <1390297947-6772-1-git-send-email-handai.szj@taobao.com>
-Reply-To: dgilbert@interlog.com
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: Disk spin-up optimization during system resume
+Date: Tue, 21 Jan 2014 10:44:37 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1401211042250.1272-100000@iolanthe.rowland.org>
+References: <CAPcyv4iZ4Qfzd2tZUOSbz9bGUqfzOD3zamFw6gip4ceB3=SK+Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:58543 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752265AbaAUPIK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Jan 2014 10:08:10 -0500
-In-Reply-To: <1390297947-6772-1-git-send-email-handai.szj@taobao.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:56840 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754261AbaAUPon (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Jan 2014 10:44:43 -0500
+In-Reply-To: <CAPcyv4iZ4Qfzd2tZUOSbz9bGUqfzOD3zamFw6gip4ceB3=SK+Q@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sha Zhengju <handai.szj@gmail.com>, linux-scsi@vger.kernel.org
-Cc: Sha Zhengju <handai.szj@taobao.com>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Phillip Susi <psusi@ubuntu.com>, Todd E Brandt <todd.e.brandt@linux.intel.com>, Aaron Lu <aaron.lu@intel.com>, Tejun Heo <tj@kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On 14-01-21 04:52 AM, Sha Zhengju wrote:
-> From: Sha Zhengju <handai.szj@taobao.com>
->
-> There're severel interfaces to show scsi_level value of scsi_debug,
-> but they're not in consistent. E.g:
->
-> 1)
-> #cat /sys/bus/pseudo/drivers/scsi_debug/scsi_level
-> 5
->
-> 2)
-> #cat /proc/scsi/scsi_debug/7
-> scsi_debug adapter driver, version 1.82 [20100324]
-> num_tgts=1, shared (ram) size=1024 MB, opts=0x0, every_nth=0(curr:0)
-> delay=1, max_luns=1, scsi_level=5
-> sector_size=512 bytes, cylinders=130, heads=255, sectors=63
-> number of aborts=0, device_reset=0, bus_resets=0, host_resets=0
-> dix_reads=0 dix_writes=0 dif_errors=0
->
-> 3)
-> #cat /sys/bus/scsi/devices/7\:0\:0\:0/scsi_level (or lsscsi -l)
-> 6
->
-> According to the description in scsi.h, "struct scsi_device::scsi_level
-> values. For SCSI devices other than those prior to SCSI-2 (i.e. over
-> 12 years old) this value is (resp[2] + 1) where 'resp' is a byte array
-> of the response to an INQUIRY". For scsi_debug, the resp[2] of INQUIRY
-> is 5 which indicates using SPC-3, but the sysfs's scsi_level will show 6.
->
-> The aboving 1) and 2) entry export resp[2] of INQUIRY directly, unify
-> them with 3) which is resp[2] + 1.
+On Tue, 21 Jan 2014, Dan Williams wrote:
 
-Hmmm. scsi_level is a Linux hack that should be, but cannot
-easily be, replaced. I agree all scsi_level outputs should
-be consistent (and thus equally confusing). Perhaps scsi_debug
-(and the mid-level) should introduce a new variable, something
-like 't10_inq_version' that is rsp[2] from a standard INQUIRY
-response. Since SPC-2, that byte has had the field name VERSION
-and that name seems unlikely to change.
+> On Sat, Jan 18, 2014 at 6:08 AM, Alan Stern <stern@rowland.harvard.edu> wrote:
+> > On Fri, 17 Jan 2014, Dan Williams wrote:
+> >
+> >> I think it's a bit of an interface surprise to have pm_runtime disable
+> >> have side effects only for scsi_disk devices.  I think lazy_resume
+> >> needs to be an explicit attribute of the disk.  For ata devices any
+> >> command wakes up the drive.  Perhaps we could simply do the same for
+> >> scsi devices.  In lazy_resume mode flag the device as "needs spinup"
+> >> at sd_resume time and schedule it when a command arrives.
+> >
+> > What you have just described is essentially what runtime PM does.
+> 
+> Deliberately so...
+> 
+> > There's no need to implement it any other way.  And this explains why
+> > disabling runtime PM would also disable lazy resume.
+> 
+> The need is to avoid tying rpm and dpm ops together in surprising new
+> ways that require userspace to change if it wants to keep the default
+> behavior of hiding resume latency as much as possible.  A lazy_resume
+> knob vs changing the default let's the few setups that care set the
+> power-up in standby mode.
 
-Doug Gilbert
+That's why I proposed it.  What are you getting at?
 
-> Signed-off-by: Sha Zhengju <handai.szj@taobao.com>
-> ---
->   drivers/scsi/scsi_debug.c |    4 ++--
->   1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-> index 80b8b10..a52d0687 100644
-> --- a/drivers/scsi/scsi_debug.c
-> +++ b/drivers/scsi/scsi_debug.c
-> @@ -2866,7 +2866,7 @@ static int scsi_debug_show_info(struct seq_file *m, struct Scsi_Host *host)
->   	    SCSI_DEBUG_VERSION, scsi_debug_version_date, scsi_debug_num_tgts,
->   	    scsi_debug_dev_size_mb, scsi_debug_opts, scsi_debug_every_nth,
->   	    scsi_debug_cmnd_count, scsi_debug_delay,
-> -	    scsi_debug_max_luns, scsi_debug_scsi_level,
-> +	    scsi_debug_max_luns, scsi_debug_scsi_level + 1,
->   	    scsi_debug_sector_size, sdebug_cylinders_per, sdebug_heads,
->   	    sdebug_sectors_per, num_aborts, num_dev_resets, num_bus_resets,
->   	    num_host_resets, dix_reads, dix_writes, dif_errors);
-> @@ -3091,7 +3091,7 @@ DRIVER_ATTR(no_uld, S_IRUGO, sdebug_no_uld_show, NULL);
->
->   static ssize_t sdebug_scsi_level_show(struct device_driver * ddp, char * buf)
->   {
-> -        return scnprintf(buf, PAGE_SIZE, "%d\n", scsi_debug_scsi_level);
-> +        return scnprintf(buf, PAGE_SIZE, "%d\n", scsi_debug_scsi_level + 1);
->   }
->   DRIVER_ATTR(scsi_level, S_IRUGO, sdebug_scsi_level_show, NULL);
->
->
+>  It should also "perform" better given it
+> does not require the disk to be runtime suspended prior to system
+> suspend, it will unconditionally resume on demand.
+
+None of my posts in this email thread have required the disk to be in 
+runtime suspend prior to the system suspend.
+
+Alan Stern
 
