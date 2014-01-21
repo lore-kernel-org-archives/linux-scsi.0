@@ -1,88 +1,91 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH 2/2] dual scan thread bug fix
-Date: Tue, 21 Jan 2014 07:01:41 -0800
-Message-ID: <1390316501.2182.12.camel@dabdike.int.hansenpartnership.com>
-References: <1390316319.2182.9.camel@dabdike.int.hansenpartnership.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH] scsi_debug: unify scsi_level in proc and sysfs
+Date: Tue, 21 Jan 2014 10:07:55 -0500
+Message-ID: <52DE8D4B.3090008@interlog.com>
+References: <1390297947-6772-1-git-send-email-handai.szj@taobao.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:59833 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754748AbaAUPBm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Jan 2014 10:01:42 -0500
-In-Reply-To: <1390316319.2182.9.camel@dabdike.int.hansenpartnership.com>
+Received: from smtp.infotech.no ([82.134.31.41]:58543 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752265AbaAUPIK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 Jan 2014 10:08:10 -0500
+In-Reply-To: <1390297947-6772-1-git-send-email-handai.szj@taobao.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Alan Stern <stern@rowland.harvard.edu>, USB list <linux-usb@vger.kernel.org>, Sarah Sharp <sarah.a.sharp@linux.intel.com>
+To: Sha Zhengju <handai.szj@gmail.com>, linux-scsi@vger.kernel.org
+Cc: Sha Zhengju <handai.szj@taobao.com>
 
-In the highly unusual case where two threads are running concurrently through
-the scanning code scanning the same target, we run into the situation where
-one may allocate the target while the other is still using it.  In this case,
-because the reap checks for STARGET_CREATED and kills the target without
-reference counting, the second thread will do the wrong thing on reap.
+On 14-01-21 04:52 AM, Sha Zhengju wrote:
+> From: Sha Zhengju <handai.szj@taobao.com>
+>
+> There're severel interfaces to show scsi_level value of scsi_debug,
+> but they're not in consistent. E.g:
+>
+> 1)
+> #cat /sys/bus/pseudo/drivers/scsi_debug/scsi_level
+> 5
+>
+> 2)
+> #cat /proc/scsi/scsi_debug/7
+> scsi_debug adapter driver, version 1.82 [20100324]
+> num_tgts=1, shared (ram) size=1024 MB, opts=0x0, every_nth=0(curr:0)
+> delay=1, max_luns=1, scsi_level=5
+> sector_size=512 bytes, cylinders=130, heads=255, sectors=63
+> number of aborts=0, device_reset=0, bus_resets=0, host_resets=0
+> dix_reads=0 dix_writes=0 dif_errors=0
+>
+> 3)
+> #cat /sys/bus/scsi/devices/7\:0\:0\:0/scsi_level (or lsscsi -l)
+> 6
+>
+> According to the description in scsi.h, "struct scsi_device::scsi_level
+> values. For SCSI devices other than those prior to SCSI-2 (i.e. over
+> 12 years old) this value is (resp[2] + 1) where 'resp' is a byte array
+> of the response to an INQUIRY". For scsi_debug, the resp[2] of INQUIRY
+> is 5 which indicates using SPC-3, but the sysfs's scsi_level will show 6.
+>
+> The aboving 1) and 2) entry export resp[2] of INQUIRY directly, unify
+> them with 3) which is resp[2] + 1.
 
-Fix this by reference counting even creates and doing the STARGET_CREATED
-check in the final put.
+Hmmm. scsi_level is a Linux hack that should be, but cannot
+easily be, replaced. I agree all scsi_level outputs should
+be consistent (and thus equally confusing). Perhaps scsi_debug
+(and the mid-level) should introduce a new variable, something
+like 't10_inq_version' that is rsp[2] from a standard INQUIRY
+response. Since SPC-2, that byte has had the field name VERSION
+and that name seems unlikely to change.
 
-Signed-off-by: James Bottomley <JBottomley@Parallels.com>
----
- drivers/scsi/scsi_scan.c | 23 ++++++++++++++++-------
- 1 file changed, 16 insertions(+), 7 deletions(-)
+Doug Gilbert
 
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 5fad646..4109530 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -320,6 +320,7 @@ static void scsi_target_destroy(struct scsi_target *starget)
- 	struct Scsi_Host *shost = dev_to_shost(dev->parent);
- 	unsigned long flags;
- 
-+	starget->state = STARGET_DEL;
- 	transport_destroy_device(dev);
- 	spin_lock_irqsave(shost->host_lock, flags);
- 	if (shost->hostt->target_destroy)
-@@ -384,9 +385,15 @@ static void scsi_target_reap_ref_release(struct kref *kref)
- 	struct scsi_target *starget
- 		= container_of(kref, struct scsi_target, reap_ref);
- 
--	transport_remove_device(&starget->dev);
--	device_del(&starget->dev);
--	starget->state = STARGET_DEL;
-+	/*
-+	 * if we get here and the target is still in the CREATED state that
-+	 * means it was allocated but never made visible (because a scan
-+	 * turned up no LUNs), so don't call device_del() on it.
-+	 */
-+	if (starget->state != STARGET_CREATED) {
-+		transport_remove_device(&starget->dev);
-+		device_del(&starget->dev);
-+	}
- 	scsi_target_destroy(starget);
- }
- 
-@@ -506,11 +513,13 @@ static struct scsi_target *scsi_alloc_target(struct device *parent,
-  */
- void scsi_target_reap(struct scsi_target *starget)
- {
-+	/*
-+	 * serious problem if this triggers: STARGET_DEL is only set in the if
-+	 * the reap_ref drops to zero, so we're trying to do another final put
-+	 * on an already released kref
-+	 */
- 	BUG_ON(starget->state == STARGET_DEL);
--	if (starget->state == STARGET_CREATED)
--		scsi_target_destroy(starget);
--	else
--		scsi_target_reap_ref_put(starget);
-+	scsi_target_reap_ref_put(starget);
- }
- 
- /**
--- 
-1.8.4.3
-
-
+> Signed-off-by: Sha Zhengju <handai.szj@taobao.com>
+> ---
+>   drivers/scsi/scsi_debug.c |    4 ++--
+>   1 file changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+> index 80b8b10..a52d0687 100644
+> --- a/drivers/scsi/scsi_debug.c
+> +++ b/drivers/scsi/scsi_debug.c
+> @@ -2866,7 +2866,7 @@ static int scsi_debug_show_info(struct seq_file *m, struct Scsi_Host *host)
+>   	    SCSI_DEBUG_VERSION, scsi_debug_version_date, scsi_debug_num_tgts,
+>   	    scsi_debug_dev_size_mb, scsi_debug_opts, scsi_debug_every_nth,
+>   	    scsi_debug_cmnd_count, scsi_debug_delay,
+> -	    scsi_debug_max_luns, scsi_debug_scsi_level,
+> +	    scsi_debug_max_luns, scsi_debug_scsi_level + 1,
+>   	    scsi_debug_sector_size, sdebug_cylinders_per, sdebug_heads,
+>   	    sdebug_sectors_per, num_aborts, num_dev_resets, num_bus_resets,
+>   	    num_host_resets, dix_reads, dix_writes, dif_errors);
+> @@ -3091,7 +3091,7 @@ DRIVER_ATTR(no_uld, S_IRUGO, sdebug_no_uld_show, NULL);
+>
+>   static ssize_t sdebug_scsi_level_show(struct device_driver * ddp, char * buf)
+>   {
+> -        return scnprintf(buf, PAGE_SIZE, "%d\n", scsi_debug_scsi_level);
+> +        return scnprintf(buf, PAGE_SIZE, "%d\n", scsi_debug_scsi_level + 1);
+>   }
+>   DRIVER_ATTR(scsi_level, S_IRUGO, sdebug_scsi_level_show, NULL);
+>
+>
 
