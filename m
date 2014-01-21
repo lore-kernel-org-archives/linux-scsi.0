@@ -1,54 +1,73 @@
-From: walt <w41ter@gmail.com>
-Subject: Re: [PATCH 3.12 033/118] usb: xhci: Link TRB must not occur within
- a USB payload burst [NEW HARDWARE]
-Date: Tue, 21 Jan 2014 14:07:04 -0800
-Message-ID: <52DEEF88.8090709@gmail.com>
-References: <20140109235045.GA17660@xanatos> <52D4791B.3030309@gmail.com> <20140114172056.GB12126@xanatos> <52D5ABBD.7090202@gmail.com> <063D6719AE5E284EB5DD2968C1650D6D45EDA3@AcuExch.aculab.com> <52DAE2BF.7020208@gmail.com> <063D6719AE5E284EB5DD2968C1650D6D45FF6C@AcuExch.aculab.com> <20140120181442.GA5545@xanatos> <063D6719AE5E284EB5DD2968C1650D6D4609BF@AcuExch.aculab.com>
+From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Subject: Re: [usb-storage] Re: usb disk recognized but fails
+Date: Tue, 21 Jan 2014 17:12:03 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1401211707260.1272-100000@iolanthe.rowland.org>
+References: <20140121215636.F5422382@centrum.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6D4609BF@AcuExch.aculab.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: David Laight <David.Laight@ACULAB.COM>, 'Sarah Sharp' <sarah.a.sharp@linux.intel.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Linux Kernel <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20140121215636.F5422382-aRb0bU7PRFPrBKCeMvbIDA@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: =?utf-8?q?Milan_Svoboda?= <milan.svoboda-aRb0bU7PRFPrBKCeMvbIDA@public.gmane.org>
+Cc: =?utf-8?q?Sarah_Sharp?= <sarah.a.sharp-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, =?utf-8?q?USB_Storage_List?= <usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 01/21/2014 01:51 AM, David Laight wrote:
-> From: Sarah Sharp
->> On Mon, Jan 20, 2014 at 11:21:14AM +0000, David Laight wrote:
-> ...
->>> A guess...
->>>
->>> In queue_bulk_sg_tx() try calling xhci_v1_0_td_remainder() instead
->>> of xhci_td_remainder().
->>
->> Why?  Walt has a 0.96 xHCI host controller, and the format for how to
->> calculate the TD remainder changed between the 0.96 and the 1.0 spec.
->> That's why we have xhci_v1_0_td_remainder() and xhci_td_remainder().
-> 
-> I just wonder how many of those differences are just differences in the
-> specification, rather than differences in the hardware implementation.
-> In some cases it might be that the old hardware just ignored the value.
-> 
-> I know that the xhci hardware on my ivy bridge cpu does look at that
-> value (at least checking for zero), since things failed in subtle ways
-> when I got it wrong.
-> 
-> In this case it was just something easy to change that might be worth
-> trying.  I didn't necessarily expect it to make a positive difference.
+On Tue, 21 Jan 2014, Milan Svoboda wrote:
 
-David, I tried the one-liner below, which changed nothing AFAICS, but
-then I'm not sure it's the change you intended:
+> I have applied the patches to a0fa1dd3cdbccec9597fe53b6177a9aa6e20f2f8:
 
---- xhci-ring.c.orig	2014-01-21 13:28:36.396278813 -0800
-+++ xhci-ring.c	2014-01-21 13:35:11.410312814 -0800
-@@ -3335,7 +3335,7 @@
- 		}
- 
- 		/* Set the TRB length, TD size, and interrupter fields. */
--		if (xhci->hci_version < 0x100) {
-+		if (xhci->hci_version > 0x100) {
- 			remainder = xhci_td_remainder(
- 					urb->transfer_buffer_length -
- 					running_total);
+> The kernel logs:
+> 
+> [  114.854464] usb 3-1: new high-speed USB device number 2 using xhci_hcd
+> [  114.920229] usbcore: registered new interface driver usb-storage
+> [  114.920647] ums-cypress 3-1:1.0: USB Mass Storage device detected
+> [  114.920705] scsi6 : usb-storage 3-1:1.0
+> [  114.920816] usbcore: registered new interface driver ums-cypress
+> [  115.921301] scsi 6:0:0:0: Direct-Access     WDC WD64 00BPVT-00HXZT0        PQ: 0 ANSI: 0
+> [  115.921991] sd 6:0:0:0: [sdb] 1250263728 512-byte logical blocks: (640 GB/596 GiB)
+> [  115.922142] sd 6:0:0:0: [sdb] Write Protect is off
+> [  115.922145] sd 6:0:0:0: [sdb] Mode Sense: 03 00 00 00
+> [  115.922269] sd 6:0:0:0: [sdb] No Caching mode page found
+> [  115.922271] sd 6:0:0:0: [sdb] Assuming drive cache: write through
+> [  115.922929] sd 6:0:0:0: [sdb] No Caching mode page found
+> [  115.922931] sd 6:0:0:0: [sdb] Assuming drive cache: write through
+> [  115.938479]  sdb: sdb1
+> [  115.939112] sd 6:0:0:0: [sdb] No Caching mode page found
+> [  115.939115] sd 6:0:0:0: [sdb] Assuming drive cache: write through
+> [  115.939117] sd 6:0:0:0: [sdb] Attached SCSI disk
+> [  124.241874] usb 3-1: reset high-speed USB device number 2 using xhci_hcd
+
+This reset is unexplained.  It happened almost 70 seconds before the 
+error below.
+
+> [  124.255232] xhci_hcd 0000:00:14.0: xHCI xhci_drop_endpoint called with disabled ep ffff8801f899f700
+> [  124.255237] xhci_hcd 0000:00:14.0: xHCI xhci_drop_endpoint called with disabled ep ffff8801f899f740
+> [  128.552357] vboxdrv: Found 4 processor cores.
+> [  128.552802] vboxdrv: fAsync=0 offMin=0x1dd offMax=0x16bc
+> [  128.552862] vboxdrv: TSC mode is 'synchronous', kernel timer mode is 'normal'.
+> [  128.552864] vboxdrv: Successfully loaded version 4.3.6_OSE (interface 0x001a0007).
+> [  128.556554] vboxpci: IOMMU not found (not registered)
+> [  191.463779] sd 6:0:0:0: [sdb] Unhandled sense code
+> [  191.463786] sd 6:0:0:0: [sdb]  
+> [  191.463788] Result: hostbyte=0x07 driverbyte=0x08
+> [  191.463791] sd 6:0:0:0: [sdb]  
+> [  191.463793] Sense Key : 0x4 [current] 
+> [  191.463797] sd 6:0:0:0: [sdb]  
+> [  191.463799] ASC=0x0 ASCQ=0x0
+> [  191.463802] sd 6:0:0:0: [sdb] CDB: 
+> [  191.463803] cdb[0]=0x28: 28 00 4a 85 6e af 00 00 08 00
+> [  191.463813] end_request: I/O error, dev sdb, sector 1250258607
+
+Sense Key 4 means Hardware Error.  It's possible that something is 
+wrong with your disk.
+
+In any case, can you post a usbmon trace showing what happens starting
+from when you plug in the USB disk?  Instructions are in the kernel
+source file Documentation/usb/usbmon.txt.
+
+Alan Stern
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
