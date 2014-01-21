@@ -1,61 +1,57 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [LSF/MM TOPIC] [ATTEND] new generation copy offload (ODX)
-Date: Tue, 21 Jan 2014 15:13:33 -0800
-Message-ID: <1390346013.5567.802.camel@haakon3.risingtidesystems.com>
-References: <52D96674.6060008@interlog.com>
+From: "Stewart, Sean" <Sean.Stewart@netapp.com>
+Subject: Re: [PATCH 1/2] scsi_dh_alua: ALUA check sense should retry device
+ internal reset unit attention
+Date: Tue, 21 Jan 2014 23:46:13 +0000
+Message-ID: <1390347972.7608.8.camel@ict-vth-stewarts01.ict.englab.netapp.com>
+References: <1390347399-20393-1-git-send-email-sean.stewart@netapp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:54356 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754103AbaAUXL0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Jan 2014 18:11:26 -0500
-In-Reply-To: <52D96674.6060008@interlog.com>
+Received: from mx11.netapp.com ([216.240.18.76]:57884 "EHLO mx11.netapp.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750820AbaAUXqO convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Jan 2014 18:46:14 -0500
+In-Reply-To: <1390347399-20393-1-git-send-email-sean.stewart@netapp.com>
+Content-Language: en-US
+Content-ID: <754231C8C0A72D4DB4294E1D7CA3CE4C@hq.netapp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dgilbert@interlog.com
-Cc: lsf-pc@lists.linux-foundation.org, Hannes Reinecke <hare@suse.de>, linux-fsdevel@vger.kernel.org, SCSI development list <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>
+To: "Stewart, Sean" <Sean.Stewart@netapp.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "hare@suse.de" <hare@suse.de>
 
-On Fri, 2014-01-17 at 12:20 -0500, Douglas Gilbert wrote:
-> Hannes Reinecke and I would like to attend LSF and present
-> a talk on the new generation copy offload (a.k.a. ODX).
-> 
-> Most discussions about copy offload at the storage level
-> are based on T10's 15 year old xcopy(LID1), specifically its
-> disk->disk copy. This year T10 hopes to standardize a new
-> generation copy offload whose generic name is xcopy(LID4).
-> A subset of xcopy(LID4) that does disk->disk copies and
-> already has vendors with products supporting it, has the
-> market name of ODX.
-> 
-> ODX is ROD (Representation Of Data) based (as is
-> xcopy(LID4)) where the copy is split into two steps:
->    disk->held  [SCSI POPULATE TOKEN command]
->    held->disk  [SCSI WRITE USING TOKEN command]
-> 
-> We would like to discuss how the interfaces (both to the
-> block layer and the filesystem) should look like for
-> implementing ROD based copies.
-> Further we would like to discuss if and how the Linux
-> target subsystem can be expanded to support ODX in the
-> future, in addition to the already existing support for
-> xcopy(LID1).
-> 
-> An example of one of the new ODX/xcopy(LID4) capabilities
-> can be found in this post:
->    http://www.spinics.net/lists/linux-scsi/msg71411.html
-> 
-> We hope to be able to demonstrate some low level Linux
-> utilities doing ODX copies on a remote array.
-> 
+Please disregard. Accidentally resent this patch via a script :)
 
-+1.
+Thanks,
+Sean
 
-I've looked briefly at how an initial implementation might work target
-side, and while the SCSI pieces are straight-forward enough to
-implement, the bigger issue is how an interface for snapshots within the
-backend might work to satisfy the requirements for POPULATE TOKEN..
+On Tue, 2014-01-21 at 17:36 -0600, Sean Stewart wrote:
+> When the scsi_dh_alua handler issues an RTPG during initialization, if
+> it gets 0x06/0x29/0x04 as the sense, it will fail to attach the handler.
+> NetApp E-Series returns 0x29/0x00 for power on, and 0x29/0x04 for
+> conditions that cause the controller to reboot again.  These conditions
+> should be treated identically within the handler.
+> 
+> Signed-off-by: Sean Stewart <sean.stewart@netapp.com>
+> ---
+>  drivers/scsi/device_handler/scsi_dh_alua.c | 5 +++++
+>  1 file changed, 5 insertions(+)
+> 
+> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+> index 68adb89..78205cc 100644
+> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
+> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+> @@ -481,6 +481,11 @@ static int alua_check_sense(struct scsi_device *sdev,
+>  			 * Power On, Reset, or Bus Device Reset, just retry.
+>  			 */
+>  			return ADD_TO_MLQUEUE;
+> +		if (sense_hdr->asc == 0x29 && sense_hdr->ascq == 0x04)
+> +			/*
+> +			 * Device internal reset
+> +			 */
+> +			return ADD_TO_MLQUEUE;
+>  		if (sense_hdr->asc == 0x2a && sense_hdr->ascq == 0x01)
+>  			/*
+>  			 * Mode Parameters Changed
 
---nab
 
