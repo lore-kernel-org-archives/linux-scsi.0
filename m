@@ -1,46 +1,35 @@
-From: David Laight <David.Laight@ACULAB.COM>
-Subject: RE: [PATCH 3.12 033/118] usb: xhci: Link TRB must not occur within
- a USB payload burst [NEW HARDWARE]
-Date: Tue, 21 Jan 2014 09:51:30 +0000
-Message-ID: <063D6719AE5E284EB5DD2968C1650D6D4609BF@AcuExch.aculab.com>
-References: <20140109235045.GA17660@xanatos> <52D4791B.3030309@gmail.com>
- <20140114172056.GB12126@xanatos> <52D5ABBD.7090202@gmail.com>
- <063D6719AE5E284EB5DD2968C1650D6D45EDA3@AcuExch.aculab.com>
- <52DAE2BF.7020208@gmail.com>
- <063D6719AE5E284EB5DD2968C1650D6D45FF6C@AcuExch.aculab.com>
- <20140120181442.GA5545@xanatos>
+From: Felix Njoku <ad.b.togo01@gmail.com>
+Subject: Dear Friend.
+Date: Tue, 21 Jan 2014 11:03:11 +0100
+Message-ID: <CAO8HHUQRwfpKLH7YPNS1rU2f9VCpUEnHT4ouA2qFTE2VyU_+KQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="Windows-1252"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140120181442.GA5545@xanatos>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: 'Sarah Sharp' <sarah.a.sharp@linux.intel.com>
-Cc: 'walt' <w41ter@gmail.com>, Alan Stern <stern@rowland.harvard.edu>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Linux Kernel <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pb0-f66.google.com ([209.85.160.66]:38621 "EHLO
+	mail-pb0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753624AbaAUKDM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Jan 2014 05:03:12 -0500
+Received: by mail-pb0-f66.google.com with SMTP id md12so2062664pbc.5
+        for <linux-scsi@vger.kernel.org>; Tue, 21 Jan 2014 02:03:12 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Sarah Sharp
-> On Mon, Jan 20, 2014 at 11:21:14AM +0000, David Laight wrote:
-...
-> > A guess...
-> >
-> > In queue_bulk_sg_tx() try calling xhci_v1_0_td_remainder() instead
-> > of xhci_td_remainder().
-> 
-> Why?  Walt has a 0.96 xHCI host controller, and the format for how to
-> calculate the TD remainder changed between the 0.96 and the 1.0 spec.
-> That's why we have xhci_v1_0_td_remainder() and xhci_td_remainder().
+Dear Friend.
 
-I just wonder how many of those differences are just differences in the
-specification, rather than differences in the hardware implementation.
-In some cases it might be that the old hardware just ignored the value.
+I am  Mr Felix Njuko, presently i live in West Africa  here in Lome
+Togo, for this mission, But i am a citizen  of Libya in North Africa.
+Please do not be embarrass am seeking your help in order to receive
+the sum of $30.5Million USD only, As result of chance. If you will be
+so kind enough to grant me the permission, I will be glad to give the
+details, I am ready to offer you 40% of the total amount for your
+input.
 
-I know that the xhci hardware on my ivy bridge cpu does look at that
-value (at least checking for zero), since things failed in subtle ways
-when I got it wrong.
+I will then guide you on how to apply for Closure of the Account and
+credit transfer of the funds to your designated bank account. You will
+get 40% of the funds for your role.
 
-In this case it was just something easy to change that might be worth
-trying.  I didn't necessarily expect it to make a positive difference.
+More details will reach you as possible as i hear from you.
 
-	David
+Sincerely,
+Regards
+Mr Felix Njuko
