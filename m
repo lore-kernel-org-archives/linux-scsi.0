@@ -1,112 +1,109 @@
-From: Michel Lespinasse <walken@google.com>
-Subject: Re: LSF/MM 2014 Call For Proposals
-Date: Mon, 20 Jan 2014 23:00:40 -0800
-Message-ID: <CANN689GgiJzdf76ZPAdTsAYKgDn2sHpH5mH4bwYByksD6gHjXQ@mail.gmail.com>
-References: <20131220093022.GV11295@suse.de>
+From: Giridhar Malavali <giridhar.malavali@qlogic.com>
+Subject: [LSF/MM TOPIC] [ATTEND] scsi_eh updates, scsi-mq
+Date: Tue, 21 Jan 2014 07:02:38 +0000
+Message-ID: <D63B9804CB63AD4FAAD96603769566464702A63B@avmb2.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20131220093022.GV11295@suse.de>
-Sender: owner-linux-mm@kvack.org
-To: Mel Gorman <mgorman@suse.de>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, lsf-pc@lists.linux-foundation.org
+Content-Type: multipart/mixed;
+	boundary="_000_D63B9804CB63AD4FAAD96603769566464702A63Bavmb2qlogicorg_"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:3224 "EHLO
+	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750812AbaAUHCk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 Jan 2014 02:02:40 -0500
+Received: from pps.filterd (m0045602.ppops.net [127.0.0.1])
+	by mx0a-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id s0L70Dsd026602
+	for <linux-scsi@vger.kernel.org>; Mon, 20 Jan 2014 23:02:40 -0800
+Received: from avcashub1.qlogic.com (avcashub2.qlogic.com [198.70.193.116])
+	by mx0a-0016ce01.pphosted.com with ESMTP id 1hfp0nmk8j-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Mon, 20 Jan 2014 23:02:39 -0800
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Fri, Dec 20, 2013 at 1:30 AM, Mel Gorman <mgorman@suse.de> wrote:
-> The annual Linux Storage, Filesystem and Memory Management Summit for
-> 2014 will be held on March 24th and 25th before the Linux Foundation
-> Collaboration summit at The Meritage Resort, Napa Valley, CA.
->
->         http://events.linuxfoundation.org/events/linux-storage-filesystem-and-mm-summit
->         http://events.linuxfoundation.org/events/collaboration-summit
+--_000_D63B9804CB63AD4FAAD96603769566464702A63Bavmb2qlogicorg_
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <352BB8A0D571B54E9DA84C8711415295@qlogic.com>
+Content-Transfer-Encoding: quoted-printable
 
-Just a reminder for anyone who wants to participate in LSF/MM: If you
-haven't already done so, please send us your request and/or topic
-proposals by January 31st...
+I would like to attend to participate in discussions related to topic menti=
+oned in the subject line.
+I would like to learn/discuss the changes in the following areas and plan s=
+upporting them in qla2xxx (LLDs).
 
-> Note that we are running LSF/MM a little earlier in 2014 than in previous
-> years.
->
-> On behalf of the committee I would like to issue a call for agenda proposals
-> that are suitable for cross-track discussion as well as more technical
-> subjects for discussion in the breakout sessions.
->
-> 1) Suggestions for agenda topics should be sent before January 31st
-> 2014 to:
->
->         lsf-pc@lists.linux-foundation.org
->
-> and cc the Linux list or lists that are most interested in it:
->
->         ATA: linux-ide@vger.kernel.org
->         FS: linux-fsdevel@vger.kernel.org
->         MM: linux-mm@kvack.org
->         SCSI: linux-scsi@vger.kernel.org
->
-> People who need more time for visa applications should send proposals before
-> January 15th. The committee will complete the first round of selections
-> on that date to accommodate applications.
->
-> Please remember to tag your subject with [LSF/MM TOPIC] to make it
-> easier to track. Agenda topics and attendees will be selected by the
-> program committee, but the final agenda will be formed by consensus of
-> the attendees on the day.
->
-> We will try to cap attendance at around 25-30 per track to facilitate
-> discussions although the final numbers will depend on the room sizes at
-> the venue.
->
-> 2) Requests to attend the summit should be sent to:
->
->         lsf-pc@lists.linux-foundation.org
->
-> Please summarize what expertise you will bring to the meeting, and what
-> you would like to discuss. Please also tag your email with [LSF/MM ATTEND]
-> so there is less chance of it getting lost in the large mail pile.
->
-> Presentations are allowed to guide discussion, but are strongly
-> discouraged. There will be no recording or audio bridge. However, we expect
-> that written minutes will be published as we did in previous years
->
-> 2013:
->         http://lwn.net/Articles/548089/
->
-> 2012:
->         http://lwn.net/Articles/490114/
->         http://lwn.net/Articles/490501/
->
-> 2011:
->         http://lwn.net/Articles/436871/
->         http://lwn.net/Articles/437066/
->
-> 3) If you have feedback on last year's meeting that we can use to
-> improve this year's, please also send that to:
->
->         lsf-pc@lists.linux-foundation.org
->
-> Thank you on behalf of the program committee:
->
-> Storage:
->         James Bottomley
->         Martin K. Petersen
->
-> Filesystems:
->         Trond Myklebust
->         Jeff Layton
->         Dave Chinner
->         Jan Kara
->         Ted Ts'o
->
-> MM:
->         Rik van Riel
->         Michel Lespinasse
+Thanks,
+Giri
 
--- 
-Michel "Walken" Lespinasse
-A program is never fully debugged until the last user dies.
+--_000_D63B9804CB63AD4FAAD96603769566464702A63Bavmb2qlogicorg_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+eJ8+IktKAQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAADk5RUUzMDMz
+QTNEOTRDNDE5MUNDRDMwM0NDODQ1NEFGAD4HAQ2ABAACAAAAAgACAAEFgAMADgAAAN4HAQAVAAcA
+AgAmAAIALAEBIIADAA4AAADeBwEAFQAHAAIAJgACACwBAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
+YWlsLk5vdGUAMQgBBIABADEAAABbTFNGL01NIFRPUElDXSBbQVRURU5EXSBzY3NpX2VoIHVwZGF0
+ZXMsIHNjc2ktbXEAug8BA5AGABwNAAAwAAAAAgF/AAEAAAA8AAAAPEQ2M0I5ODA0Q0I2M0FENEZB
+QUQ5NjYwMzc2OTU2NjQ2NDcwMkE2M0JAYXZtYjIucWxvZ2ljLm9yZz4AAgETEAEAAABIAgAAPGh0
+bWw+PGhlYWQ+DQo8bWV0YSBodHRwLWVxdWl2PSJDb250ZW50LVR5cGUiIGNvbnRlbnQ9InRleHQv
+aHRtbDsgY2hhcnNldD11cy1hc2NpaSI+PC9oZWFkPjxib2R5IHN0eWxlPSJ3b3JkLXdyYXA6IGJy
+ZWFrLXdvcmQ7IC13ZWJraXQtbmJzcC1tb2RlOiBzcGFjZTsgLXdlYmtpdC1saW5lLWJyZWFrOiBh
+ZnRlci13aGl0ZS1zcGFjZTsgY29sb3I6IHJnYigwLCAwLCAxMjgpOyBmb250LXNpemU6IDE2cHg7
+IGZvbnQtZmFtaWx5OiAnVGltZXMgTmV3IFJvbWFuJywgc2Fucy1zZXJpZjsgIj48ZGl2Pkkgd291
+bGQgbGlrZSB0byBhdHRlbmQgdG8gcGFydGljaXBhdGUgaW4gZGlzY3Vzc2lvbnMgcmVsYXRlZCB0
+byB0b3BpYyBtZW50aW9uZWQgaW4gdGhlIHN1YmplY3QgbGluZS4mbmJzcDs8L2Rpdj48ZGl2Pkkg
+d291bGQgbGlrZSB0byBsZWFybi9kaXNjdXNzIHRoZSBjaGFuZ2VzIGluIHRoZSBmb2xsb3dpbmcg
+YXJlYXMgYW5kIHBsYW4gc3VwcG9ydGluZyB0aGVtIGluIHFsYTJ4eHggKExMRHMpLiZuYnNwOzwv
+ZGl2PjxkaXY+PGJyPjwvZGl2PjxkaXY+VGhhbmtzLDwvZGl2PjxkaXY+R2lyaTwvZGl2PjwvYm9k
+eT48L2h0bWw+DQofAEIAAQAAACQAAABHAGkAcgBpAGQAaABhAHIAIABNAGEAbABhAHYAYQBsAGkA
+AAAfAGUAAQAAADoAAABnAGkAcgBpAGQAaABhAHIALgBtAGEAbABhAHYAYQBsAGkAQABxAGwAbwBn
+AGkAYwAuAGMAbwBtAAAAAAAfAGQAAQAAAAoAAABTAE0AVABQAAAAAAACAUEAAQAAAIAAAAAAAAAA
+gSsfpL6jEBmdbgDdAQ9UAgAAAIBHAGkAcgBpAGQAaABhAHIAIABNAGEAbABhAHYAYQBsAGkAAABT
+AE0AVABQAAAAZwBpAHIAaQBkAGgAYQByAC4AbQBhAGwAYQB2AGEAbABpAEAAcQBsAG8AZwBpAGMA
+LgBjAG8AbQAAAB8AAl0BAAAAOgAAAGcAaQByAGkAZABoAGEAcgAuAG0AYQBsAGEAdgBhAGwAaQBA
+AHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8A5V8BAAAAQgAAAHMAaQBwADoAZwBpAHIAaQBkAGgA
+YQByAC4AbQBhAGwAYQB2AGEAbABpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwAaDAEAAAAk
+AAAARwBpAHIAaQBkAGgAYQByACAATQBhAGwAYQB2AGEAbABpAAAAHwAfDAEAAAA6AAAAZwBpAHIA
+aQBkAGgAYQByAC4AbQBhAGwAYQB2AGEAbABpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwAe
+DAEAAAAKAAAAUwBNAFQAUAAAAAAAAgEZDAEAAACAAAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACA
+RwBpAHIAaQBkAGgAYQByACAATQBhAGwAYQB2AGEAbABpAAAAUwBNAFQAUAAAAGcAaQByAGkAZABo
+AGEAcgAuAG0AYQBsAGEAdgBhAGwAaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAFdAQAAADoA
+AABnAGkAcgBpAGQAaABhAHIALgBtAGEAbABhAHYAYQBsAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBt
+AAAAAAAfAPg/AQAAACQAAABHAGkAcgBpAGQAaABhAHIAIABNAGEAbABhAHYAYQBsAGkAAAAfACNA
+AQAAADoAAABnAGkAcgBpAGQAaABhAHIALgBtAGEAbABhAHYAYQBsAGkAQABxAGwAbwBnAGkAYwAu
+AGMAbwBtAAAAAAAfACJAAQAAAAoAAABTAE0AVABQAAAAAAACAfk/AQAAAIAAAAAAAAAAgSsfpL6j
+EBmdbgDdAQ9UAgAAAIBHAGkAcgBpAGQAaABhAHIAIABNAGEAbABhAHYAYQBsAGkAAABTAE0AVABQ
+AAAAZwBpAHIAaQBkAGgAYQByAC4AbQBhAGwAYQB2AGEAbABpAEAAcQBsAG8AZwBpAGMALgBjAG8A
+bQAAAB8ACV0BAAAAOgAAAGcAaQByAGkAZABoAGEAcgAuAG0AYQBsAGEAdgBhAGwAaQBAAHEAbABv
+AGcAaQBjAC4AYwBvAG0AAAAAAAsAQDoBAAAAHwAaAAEAAAASAAAASQBQAE0ALgBOAG8AdABlAAAA
+AAADAPE/CQQAAAsAQDoBAAAAAwD9P+QEAAACAQswAQAAABAAAACZ7jAzo9lMQZHM0wPMhFSvAwAX
+AAEAAABAADkAAHvBxHYWzwFAAAgwEAQNxXYWzwELAACACCAGAAAAAADAAAAAAAAARgAAAAAUhQAA
+AQAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAAB4AAABhAGMAYwBlAHAAdABsAGEAbgBnAHUAYQBn
+AGUAAAAAAAEAAAAMAAAAZQBuAC0AVQBTAAAACwAAgAggBgAAAAAAwAAAAAAAAEYAAAAABoUAAAAA
+AAAfADcAAQAAAGIAAABbAEwAUwBGAC8ATQBNACAAVABPAFAASQBDAF0AIABbAEEAVABUAEUATgBE
+AF0AIABzAGMAcwBpAF8AZQBoACAAdQBwAGQAYQB0AGUAcwAsACAAcwBjAHMAaQAtAG0AcQAAAAAA
+HwA9AAEAAAACAAAAAAAAAAMANgAAAAAAAgFxAAEAAAAWAAAAAQHPFnbFlgkXkye1rkmvYocj7/kz
+0gAAHwBwAAEAAABiAAAAWwBMAFMARgAvAE0ATQAgAFQATwBQAEkAQwBdACAAWwBBAFQAVABFAE4A
+RABdACAAcwBjAHMAaQBfAGUAaAAgAHUAcABkAGEAdABlAHMALAAgAHMAYwBzAGkALQBtAHEAAAAA
+AB8ANRABAAAAeAAAADwARAA2ADMAQgA5ADgAMAA0AEMAQgA2ADMAQQBEADQARgBBAEEARAA5ADYA
+NgAwADMANwA2ADkANQA2ADYANAA2ADQANwAwADIAQQA2ADMAQgBAAGEAdgBtAGIAMgAuAHEAbABv
+AGcAaQBjAC4AbwByAGcAPgAAAAMA3j+fTgAAQAAHMFBBCMV2Fs8BAwAmAAAAAAACAUcAAQAAAC4A
+AABjPVVTO2E9IDtwPVFMb2dpYztsPUFWTUIyLTE0MDEyMTA3MDIzOFotODEyNTYAAAAfABUQAQAA
+AFgAAAAzADUAMgBCAEIAOABBADAARAA1ADcAMQBCADUANABFADkARABBADgANABDADgANwAxADEA
+NAAxADUAMgA5ADUAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAgEUMAEAAAAMAAAAJQAAAEfAhBSp
+1VlfHwD6PwEAAAAkAAAARwBpAHIAaQBkAGgAYQByACAATQBhAGwAYQB2AGEAbABpAAAAHwAAgIYD
+AgAAAAAAwAAAAAAAAEYBAAAAFgAAAHUAcwBlAHIALQBhAGcAZQBuAHQAAAAAAAEAAABGAAAATQBp
+AGMAcgBvAHMAbwBmAHQALQBNAGEAYwBPAHUAdABsAG8AbwBrAC8AMQA0AC4AMwAuADgALgAxADMA
+MAA5ADEAMwAAAAAAHwAAgB+k6zOoei5Cvnt54amOVLMBAAAAOAAAAEMAbwBuAHYAZQByAHMAYQB0
+AGkAbwBuAEkAbgBkAGUAeABUAHIAYQBjAGsAaQBuAGcARQB4AAAAAQAAALoAAABJAEkAPQAwADEA
+MAAxAEMARgAxADYANwA2AEMANQA5ADYAMAA5ADEANwA5ADMAMgA3AEIANQBBAEUANAA5AEEARgA2
+ADIAOAA3ADIAMwBFAEYARgA5ADMAMwBEADIAOwBWAGUAcgBzAGkAbwBuAD0AVgBlAHIAcwBpAG8A
+bgAgADEANAAuADIAIAAoAEIAdQBpAGwAZAAgADMAMQA4AC4AMAApACwAIABTAHQAYQBnAGUAPQBI
+ADQAAAAAAAMADTT9PwAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAIAAAAHgALQBtAHMALQBoAGEA
+cwAtAGEAdAB0AGEAYwBoAAAAAQAAAAIAAAAAAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAIgAA
+AHgALQBvAHIAaQBnAGkAbgBhAHQAaQBuAGcALQBpAHAAAAAAAAEAAAAcAAAAWwAxADAALgAyADkA
+LgA3AC4AMQA5ADMAXQAAAER2
+
+--_000_D63B9804CB63AD4FAAD96603769566464702A63Bavmb2qlogicorg_--
