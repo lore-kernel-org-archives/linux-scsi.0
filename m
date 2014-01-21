@@ -1,73 +1,50 @@
-From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Subject: Re: [usb-storage] Re: usb disk recognized but fails
-Date: Tue, 21 Jan 2014 17:12:03 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1401211707260.1272-100000@iolanthe.rowland.org>
-References: <20140121215636.F5422382@centrum.cz>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH-v2 10/17] target: Add protection SGLs to
+ target_submit_cmd_map_sgls
+Date: Tue, 21 Jan 2014 14:17:45 -0800
+Message-ID: <1390342665.5567.776.camel@haakon3.risingtidesystems.com>
+References: <1390099480-29013-1-git-send-email-nab@daterainc.com>
+	 <1390099480-29013-11-git-send-email-nab@daterainc.com>
+	 <52DBC145.7040104@dev.mellanox.co.il>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20140121215636.F5422382-aRb0bU7PRFPrBKCeMvbIDA@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: =?utf-8?q?Milan_Svoboda?= <milan.svoboda-aRb0bU7PRFPrBKCeMvbIDA@public.gmane.org>
-Cc: =?utf-8?q?Sarah_Sharp?= <sarah.a.sharp-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, =?utf-8?q?USB_Storage_List?= <usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <52DBC145.7040104@dev.mellanox.co.il>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Sagi Grimberg <sagig@dev.mellanox.co.il>
+Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Sagi Grimberg <sagig@mellanox.com>, Or Gerlitz <ogerlitz@mellanox.com>, Roland Dreier <roland@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 21 Jan 2014, Milan Svoboda wrote:
-
-> I have applied the patches to a0fa1dd3cdbccec9597fe53b6177a9aa6e20f2f8:
-
-> The kernel logs:
+On Sun, 2014-01-19 at 14:12 +0200, Sagi Grimberg wrote:
+> On 1/19/2014 4:44 AM, Nicholas A. Bellinger wrote:
+> > From: Nicholas Bellinger <nab@linux-iscsi.org>
+> >
+> > This patch adds support to target_submit_cmd_map_sgls() for
+> > accepting 'sgl_prot' + 'sgl_prot_count' parameters for
+> > DIF protection information.
+> >
+> > Note the passed parameters are stored at se_cmd->t_prot_sg
+> > and se_cmd->t_prot_nents respectively.
+> >
+> > Also, update tcm_loop and vhost-scsi fabrics usage of
+> > target_submit_cmd_map_sgls() to take into account the
+> > new parameters.
 > 
-> [  114.854464] usb 3-1: new high-speed USB device number 2 using xhci_hcd
-> [  114.920229] usbcore: registered new interface driver usb-storage
-> [  114.920647] ums-cypress 3-1:1.0: USB Mass Storage device detected
-> [  114.920705] scsi6 : usb-storage 3-1:1.0
-> [  114.920816] usbcore: registered new interface driver ums-cypress
-> [  115.921301] scsi 6:0:0:0: Direct-Access     WDC WD64 00BPVT-00HXZT0        PQ: 0 ANSI: 0
-> [  115.921991] sd 6:0:0:0: [sdb] 1250263728 512-byte logical blocks: (640 GB/596 GiB)
-> [  115.922142] sd 6:0:0:0: [sdb] Write Protect is off
-> [  115.922145] sd 6:0:0:0: [sdb] Mode Sense: 03 00 00 00
-> [  115.922269] sd 6:0:0:0: [sdb] No Caching mode page found
-> [  115.922271] sd 6:0:0:0: [sdb] Assuming drive cache: write through
-> [  115.922929] sd 6:0:0:0: [sdb] No Caching mode page found
-> [  115.922931] sd 6:0:0:0: [sdb] Assuming drive cache: write through
-> [  115.938479]  sdb: sdb1
-> [  115.939112] sd 6:0:0:0: [sdb] No Caching mode page found
-> [  115.939115] sd 6:0:0:0: [sdb] Assuming drive cache: write through
-> [  115.939117] sd 6:0:0:0: [sdb] Attached SCSI disk
-> [  124.241874] usb 3-1: reset high-speed USB device number 2 using xhci_hcd
+> I didn't see that you added protection allocation to transports that 
+> does not use
+> target_submit_cmd_map_sgls() - which happens to be iSCSI/iSER/SRP :(
+> 
+> Don't you think that prot SG allocation should be added also to 
+> target_alloc_sgl()? by then
+> se_cmd should contain the protection attributes and this routine can 
+> know if it needs to
+> allocate prot_sg as well. This is how I used it...
 
-This reset is unexplained.  It happened almost 70 seconds before the 
-error below.
+Yes, this specific bit was left out for the moment as no code in the
+patch for v3.14 actually uses it..
 
-> [  124.255232] xhci_hcd 0000:00:14.0: xHCI xhci_drop_endpoint called with disabled ep ffff8801f899f700
-> [  124.255237] xhci_hcd 0000:00:14.0: xHCI xhci_drop_endpoint called with disabled ep ffff8801f899f740
-> [  128.552357] vboxdrv: Found 4 processor cores.
-> [  128.552802] vboxdrv: fAsync=0 offMin=0x1dd offMax=0x16bc
-> [  128.552862] vboxdrv: TSC mode is 'synchronous', kernel timer mode is 'normal'.
-> [  128.552864] vboxdrv: Successfully loaded version 4.3.6_OSE (interface 0x001a0007).
-> [  128.556554] vboxpci: IOMMU not found (not registered)
-> [  191.463779] sd 6:0:0:0: [sdb] Unhandled sense code
-> [  191.463786] sd 6:0:0:0: [sdb]  
-> [  191.463788] Result: hostbyte=0x07 driverbyte=0x08
-> [  191.463791] sd 6:0:0:0: [sdb]  
-> [  191.463793] Sense Key : 0x4 [current] 
-> [  191.463797] sd 6:0:0:0: [sdb]  
-> [  191.463799] ASC=0x0 ASCQ=0x0
-> [  191.463802] sd 6:0:0:0: [sdb] CDB: 
-> [  191.463803] cdb[0]=0x28: 28 00 4a 85 6e af 00 00 08 00
-> [  191.463813] end_request: I/O error, dev sdb, sector 1250258607
+I'm planning to add it to for-next -> v3.15 code as soon as the merge
+window closes.
 
-Sense Key 4 means Hardware Error.  It's possible that something is 
-wrong with your disk.
-
-In any case, can you post a usbmon trace showing what happens starting
-from when you plug in the USB disk?  Instructions are in the kernel
-source file Documentation/usb/usbmon.txt.
-
-Alan Stern
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--nab
