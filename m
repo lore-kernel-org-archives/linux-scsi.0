@@ -1,45 +1,101 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: Disk spin-up optimization during system resume
-Date: Tue, 21 Jan 2014 02:12:24 -0800
-Message-ID: <CAPcyv4iZ4Qfzd2tZUOSbz9bGUqfzOD3zamFw6gip4ceB3=SK+Q@mail.gmail.com>
-References: <CAPcyv4i2+GAEV7NNx6MkOOcZSCxhOWB3sCO1eCuH40Z2fhpw3g@mail.gmail.com>
-	<Pine.LNX.4.44L0.1401180906330.19470-100000@netrider.rowland.org>
+From: "Dorau, Lukasz" <lukasz.dorau@intel.com>
+Subject: RE: [PATCH] isci: correct erroneous for_each_isci_host macro
+Date: Tue, 21 Jan 2014 10:18:18 +0000
+Message-ID: <D9FFE20C522965449E182ACE73889AEB1A6A45DE@IRSMSX105.ger.corp.intel.com>
+References: <20140120165450.15332.39118.stgit@gklab-154-244.igk.intel.com>
+ <CAA9_cmcXNC0WJ-4RgabLPtGU5=UGKZnVvpQneFaPmvqTRZZEfw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:57478 "EHLO
-	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754491AbaAUKMZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Jan 2014 05:12:25 -0500
-Received: by mail-vc0-f174.google.com with SMTP id im17so3420856vcb.33
-        for <linux-scsi@vger.kernel.org>; Tue, 21 Jan 2014 02:12:25 -0800 (PST)
-In-Reply-To: <Pine.LNX.4.44L0.1401180906330.19470-100000@netrider.rowland.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAA9_cmcXNC0WJ-4RgabLPtGU5=UGKZnVvpQneFaPmvqTRZZEfw@mail.gmail.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Williams, Dan J" <dan.j.williams@intel.com>
+Cc: "JBottomley@parallels.com" <JBottomley@parallels.com>, "Jiang, Dave" <dave.jiang@intel.com>, "Patelczyk, Maciej" <maciej.patelczyk@intel.com>, linux-scsi <linux-scsi@vger.kernel.org>, "Baldysiak, Pawel" <pawel.baldysiak@intel.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Phillip Susi <psusi@ubuntu.com>, Todd E Brandt <todd.e.brandt@linux.intel.com>, Aaron Lu <aaron.lu@intel.com>, Tejun Heo <tj@kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Sat, Jan 18, 2014 at 6:08 AM, Alan Stern <stern@rowland.harvard.edu> wrote:
-> On Fri, 17 Jan 2014, Dan Williams wrote:
->
->> I think it's a bit of an interface surprise to have pm_runtime disable
->> have side effects only for scsi_disk devices.  I think lazy_resume
->> needs to be an explicit attribute of the disk.  For ata devices any
->> command wakes up the drive.  Perhaps we could simply do the same for
->> scsi devices.  In lazy_resume mode flag the device as "needs spinup"
->> at sd_resume time and schedule it when a command arrives.
->
-> What you have just described is essentially what runtime PM does.
+On Monday, January 20, 2014 7:26 PM Dan Williams <dan.j.williams@intel.com> wrote:
+> On Mon, Jan 20, 2014 at 8:54 AM, Lukasz Dorau <lukasz.dorau@intel.com> wrote:
+> > In the first place, the loop 'for' in the macro 'for_each_isci_host'
+> > (drivers/scsi/isci/host.h:314) is incorrect, because it accesses
+> > the 3rd element of 2 element array. After the 2nd iteration it executes
+> > the instruction:
+> >         ihost = to_pci_info(pdev)->hosts[2]
+> > (while the size of the 'hosts' array equals 2) and reads an
+> > out of range element.
+> >
+> > In the second place, because of the following GCC v4.8 bug:
+> > http://marc.info/?l=linux-kernel&m=138998871911336&w=2
+> > this loop is incorrectly compiled by GCC v4.8.
+> > As a result, on platforms with two SCU controllers,
+> > the loop at drivers/scsi/isci/init.c:717 is executed
+> > more times than it can be (for i=0,1 and 2).
+> > It causes the following oops after 'rmmod isci':
+> >
+> 
+> Surprised those bugs lasted this long... some comments below.
+> 
+> > BUG: unable to handle kernel NULL pointer dereference at (null)
+> > IP: [<ffffffff8131360b>] __list_add+0x1b/0xc0
+> > Oops: 0000 [#1] SMP
+> > RIP: 0010:[<ffffffff8131360b>]  [<ffffffff8131360b>] __list_add+0x1b/0xc0
+> > Call Trace:
+> >   [<ffffffff81661b84>] __mutex_lock_slowpath+0x114/0x1b0
+> >   [<ffffffff81661c3f>] mutex_lock+0x1f/0x30
+> >   [<ffffffffa03e97cb>] sas_disable_events+0x1b/0x50 [libsas]
+> >   [<ffffffffa03e9818>] sas_unregister_ha+0x18/0x60 [libsas]
+> >   [<ffffffffa040316e>] isci_unregister+0x1e/0x40 [isci]
+> >   [<ffffffffa0403efd>] isci_pci_remove+0x5d/0x100 [isci]
+> >   [<ffffffff813391cb>] pci_device_remove+0x3b/0xb0
+> >   [<ffffffff813fbf7f>] __device_release_driver+0x7f/0xf0
+> >   [<ffffffff813fc8f8>] driver_detach+0xa8/0xb0
+> >   [<ffffffff813fbb8b>] bus_remove_driver+0x9b/0x120
+> >   [<ffffffff813fcf2c>] driver_unregister+0x2c/0x50
+> >   [<ffffffff813381f3>] pci_unregister_driver+0x23/0x80
+> >   [<ffffffffa04152f8>] isci_exit+0x10/0x1e [isci]
+> >   [<ffffffff810d199b>] SyS_delete_module+0x16b/0x2d0
+> >   [<ffffffff81012a21>] ? do_notify_resume+0x61/0xa0
+> >   [<ffffffff8166ce29>] system_call_fastpath+0x16/0x1b
+> >
+> > The loop has been corrected.
+> > This patch fixes the above oops.
+> >
+> > Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
+> > Reviewed-by: Maciej Patelczyk <maciej.patelczyk@intel.com>
+> > Tested-by: Lukasz Dorau <lukasz.dorau@intel.com>
+> > Cc: Dan Williams <dan.j.williams@intel.com>
+> > Cc: Dave Jiang <dave.jiang@intel.com>
+> > Cc: <stable@vger.kernel.org>
+> > ---
+> >  drivers/scsi/isci/host.h |    6 +++---
+> >  1 file changed, 3 insertions(+), 3 deletions(-)
+> >
+> > diff --git a/drivers/scsi/isci/host.h b/drivers/scsi/isci/host.h
+> > index 4911310..95adf31 100644
+> > --- a/drivers/scsi/isci/host.h
+> > +++ b/drivers/scsi/isci/host.h
+> > @@ -311,9 +311,9 @@ static inline struct Scsi_Host *to_shost(struct isci_host
+> *ihost)
+> >  }
+> >
+> >  #define for_each_isci_host(id, ihost, pdev) \
+> > -       for (id = 0, ihost = to_pci_info(pdev)->hosts[id]; \
+> > -            id < ARRAY_SIZE(to_pci_info(pdev)->hosts) && ihost; \
+> > -            ihost = to_pci_info(pdev)->hosts[++id])
+> > +       for (id = 0, ihost = to_pci_info(pdev)->hosts[0]; \
+> 
+> No need to initialize ihost here since we assign and check it later.
+> 
+> > +            (id < ARRAY_SIZE(to_pci_info(pdev)->hosts)) && \
+> 
+> Just use SCI_MAX_CONTROLLERS here.
+> 
+> > +            (ihost = to_pci_info(pdev)->hosts[id]); id++)
+> 
+> --
 
-Deliberately so...
+Thanks, Dan.
+I will submit the second version of the patch.
 
-> There's no need to implement it any other way.  And this explains why
-> disabling runtime PM would also disable lazy resume.
-
-The need is to avoid tying rpm and dpm ops together in surprising new
-ways that require userspace to change if it wants to keep the default
-behavior of hiding resume latency as much as possible.  A lazy_resume
-knob vs changing the default let's the few setups that care set the
-power-up in standby mode.  It should also "perform" better given it
-does not require the disk to be runtime suspended prior to system
-suspend, it will unconditionally resume on demand.
+Lukasz
