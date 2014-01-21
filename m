@@ -1,53 +1,32 @@
-From: wenxiong@linux.vnet.ibm.com
-Subject: [PATCH 2/3] ipr: Add new CCIN definition for new hardware support
-Date: Tue, 21 Jan 2014 12:16:40 -0600
-Message-ID: <20140121181746.563710677@linux.vnet.ibm.com>
-References: <20140121181638.007394972@linux.vnet.ibm.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 60644] MPT2SAS drops all HDDs when under high I/O
+Date: Tue, 21 Jan 2014 19:46:09 +0000
+Message-ID: <bug-60644-11613-6I1ua5eYsT@https.bugzilla.kernel.org/>
+References: <bug-60644-11613@https.bugzilla.kernel.org/>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [32.97.110.57] ([32.97.110.57]:60128 "HELO
-	jupiter1-lp2.austin.ibm.com" rhost-flags-FAIL-FAIL-OK-FAIL)
-	by vger.kernel.org with SMTP id S1754900AbaAUSaM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Jan 2014 13:30:12 -0500
-Content-Disposition: inline; filename=z06_ltd_devid
+Received: from mail.kernel.org ([198.145.19.201]:49223 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751358AbaAUTqN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 Jan 2014 14:46:13 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id BD86420109
+	for <linux-scsi@vger.kernel.org>; Tue, 21 Jan 2014 19:46:12 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+	by mail.kernel.org (Postfix) with ESMTP id 8A55720155
+	for <linux-scsi@vger.kernel.org>; Tue, 21 Jan 2014 19:46:10 +0000 (UTC)
+In-Reply-To: <bug-60644-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com, Wen Xiong <wenxiong@linux.vnet.ibm.com>
+To: linux-scsi@vger.kernel.org
 
-Add the appropriate definition and table entry for new hardware support.
+https://bugzilla.kernel.org/show_bug.cgi?id=60644
 
-Signed-off-by: Wen Xiong <wenxiong@linux.vnet.ibm.com>
-
----
- drivers/scsi/ipr.c |    2 ++
- drivers/scsi/ipr.h |    1 +
- 2 files changed, 3 insertions(+)
-
-Index: b/drivers/scsi/ipr.c
-===================================================================
---- a/drivers/scsi/ipr.c	2014-01-21 11:32:14.949015785 -0600
-+++ b/drivers/scsi/ipr.c	2014-01-21 11:32:27.601198412 -0600
-@@ -9998,6 +9998,8 @@ static struct pci_device_id ipr_pci_tabl
- 	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_CROCODILE,
- 		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_57D9, 0, 0, 0 },
- 	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_CROCODILE,
-+		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_57DA, 0, 0, 0 },
-+	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_CROCODILE,
- 		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_57EB, 0, 0, 0 },
- 	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_CROCODILE,
- 		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_57EC, 0, 0, 0 },
-Index: b/drivers/scsi/ipr.h
-===================================================================
---- a/drivers/scsi/ipr.h	2014-01-21 11:32:14.957453279 -0600
-+++ b/drivers/scsi/ipr.h	2014-01-21 11:32:27.601198412 -0600
-@@ -101,6 +101,7 @@
- #define IPR_SUBS_DEV_ID_57D7    0x03FF
- #define IPR_SUBS_DEV_ID_57D8    0x03FE
- #define IPR_SUBS_DEV_ID_57D9    0x046D
-+#define IPR_SUBS_DEV_ID_57DA    0x04CA
- #define IPR_SUBS_DEV_ID_57EB    0x0474
- #define IPR_SUBS_DEV_ID_57EC    0x0475
- #define IPR_SUBS_DEV_ID_57ED    0x0499
+--- Comment #48 from Jeff Johnson <jeff.johnson@aeoncomputing.com> ---
+Awesome! I'm glad it is working for others.
 
 -- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
