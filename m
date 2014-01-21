@@ -1,77 +1,46 @@
-From: Sha Zhengju <handai.szj@gmail.com>
-Subject: [PATCH] scsi_debug: unify scsi_level in proc and sysfs
-Date: Tue, 21 Jan 2014 17:52:27 +0800
-Message-ID: <1390297947-6772-1-git-send-email-handai.szj@taobao.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f41.google.com ([209.85.160.41]:38849 "EHLO
-	mail-pb0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751613AbaAUJwf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Jan 2014 04:52:35 -0500
-Received: by mail-pb0-f41.google.com with SMTP id up15so7661819pbc.28
-        for <linux-scsi@vger.kernel.org>; Tue, 21 Jan 2014 01:52:35 -0800 (PST)
-Sender: linux-scsi-owner@vger.kernel.org
+From: David Laight <David.Laight@ACULAB.COM>
+Subject: RE: [PATCH 3.12 033/118] usb: xhci: Link TRB must not occur within
+ a USB payload burst [NEW HARDWARE]
+Date: Tue, 21 Jan 2014 09:51:30 +0000
+Message-ID: <063D6719AE5E284EB5DD2968C1650D6D4609BF@AcuExch.aculab.com>
+References: <20140109235045.GA17660@xanatos> <52D4791B.3030309@gmail.com>
+ <20140114172056.GB12126@xanatos> <52D5ABBD.7090202@gmail.com>
+ <063D6719AE5E284EB5DD2968C1650D6D45EDA3@AcuExch.aculab.com>
+ <52DAE2BF.7020208@gmail.com>
+ <063D6719AE5E284EB5DD2968C1650D6D45FF6C@AcuExch.aculab.com>
+ <20140120181442.GA5545@xanatos>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="Windows-1252"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20140120181442.GA5545@xanatos>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: 'Sarah Sharp' <sarah.a.sharp@linux.intel.com>
+Cc: 'walt' <w41ter@gmail.com>, Alan Stern <stern@rowland.harvard.edu>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Linux Kernel <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Sha Zhengju <handai.szj@taobao.com>
 
-From: Sha Zhengju <handai.szj@taobao.com>
+From: Sarah Sharp
+> On Mon, Jan 20, 2014 at 11:21:14AM +0000, David Laight wrote:
+...
+> > A guess...
+> >
+> > In queue_bulk_sg_tx() try calling xhci_v1_0_td_remainder() instead
+> > of xhci_td_remainder().
+> 
+> Why?  Walt has a 0.96 xHCI host controller, and the format for how to
+> calculate the TD remainder changed between the 0.96 and the 1.0 spec.
+> That's why we have xhci_v1_0_td_remainder() and xhci_td_remainder().
 
-There're severel interfaces to show scsi_level value of scsi_debug,
-but they're not in consistent. E.g:
+I just wonder how many of those differences are just differences in the
+specification, rather than differences in the hardware implementation.
+In some cases it might be that the old hardware just ignored the value.
 
-1)
-#cat /sys/bus/pseudo/drivers/scsi_debug/scsi_level
-5
+I know that the xhci hardware on my ivy bridge cpu does look at that
+value (at least checking for zero), since things failed in subtle ways
+when I got it wrong.
 
-2)
-#cat /proc/scsi/scsi_debug/7
-scsi_debug adapter driver, version 1.82 [20100324]
-num_tgts=1, shared (ram) size=1024 MB, opts=0x0, every_nth=0(curr:0)
-delay=1, max_luns=1, scsi_level=5
-sector_size=512 bytes, cylinders=130, heads=255, sectors=63
-number of aborts=0, device_reset=0, bus_resets=0, host_resets=0
-dix_reads=0 dix_writes=0 dif_errors=0
+In this case it was just something easy to change that might be worth
+trying.  I didn't necessarily expect it to make a positive difference.
 
-3)
-#cat /sys/bus/scsi/devices/7\:0\:0\:0/scsi_level (or lsscsi -l)
-6
-
-According to the description in scsi.h, "struct scsi_device::scsi_level
-values. For SCSI devices other than those prior to SCSI-2 (i.e. over
-12 years old) this value is (resp[2] + 1) where 'resp' is a byte array
-of the response to an INQUIRY". For scsi_debug, the resp[2] of INQUIRY
-is 5 which indicates using SPC-3, but the sysfs's scsi_level will show 6.
-
-The aboving 1) and 2) entry export resp[2] of INQUIRY directly, unify
-them with 3) which is resp[2] + 1.
-
-Signed-off-by: Sha Zhengju <handai.szj@taobao.com>
----
- drivers/scsi/scsi_debug.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 80b8b10..a52d0687 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -2866,7 +2866,7 @@ static int scsi_debug_show_info(struct seq_file *m, struct Scsi_Host *host)
- 	    SCSI_DEBUG_VERSION, scsi_debug_version_date, scsi_debug_num_tgts,
- 	    scsi_debug_dev_size_mb, scsi_debug_opts, scsi_debug_every_nth,
- 	    scsi_debug_cmnd_count, scsi_debug_delay,
--	    scsi_debug_max_luns, scsi_debug_scsi_level,
-+	    scsi_debug_max_luns, scsi_debug_scsi_level + 1,
- 	    scsi_debug_sector_size, sdebug_cylinders_per, sdebug_heads,
- 	    sdebug_sectors_per, num_aborts, num_dev_resets, num_bus_resets,
- 	    num_host_resets, dix_reads, dix_writes, dif_errors);
-@@ -3091,7 +3091,7 @@ DRIVER_ATTR(no_uld, S_IRUGO, sdebug_no_uld_show, NULL);
- 
- static ssize_t sdebug_scsi_level_show(struct device_driver * ddp, char * buf)
- {
--        return scnprintf(buf, PAGE_SIZE, "%d\n", scsi_debug_scsi_level);
-+        return scnprintf(buf, PAGE_SIZE, "%d\n", scsi_debug_scsi_level + 1);
- }
- DRIVER_ATTR(scsi_level, S_IRUGO, sdebug_scsi_level_show, NULL);
- 
--- 
-1.7.9.5
-
+	David
