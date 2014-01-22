@@ -1,34 +1,164 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH-v2 11/17] target/iblock: Add blk_integrity + BIP passthrough support
-Date: Tue, 21 Jan 2014 20:54:14 -0500
-Message-ID: <yq1bnz4bx2x.fsf@sermon.lab.mkp.net>
-References: <1390099480-29013-1-git-send-email-nab@daterainc.com>
-	<1390099480-29013-12-git-send-email-nab@daterainc.com>
-	<52DBC32C.4060505@dev.mellanox.co.il>
-	<1390342817.5567.778.camel@haakon3.risingtidesystems.com>
+From: Saurav Kashyap <saurav.kashyap@qlogic.com>
+Subject: Re: [patch] [SCSI] qla2xxx: fix error handling of
+ qla2x00_mem_alloc()
+Date: Wed, 22 Jan 2014 02:00:13 +0000
+Message-ID: <F5D084D6342F9B479C34599BB0A03E4D8985D1B1@AVMB1.qlogic.org>
+References: <20140121070010.GD31535@elgon.mountain>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1390342817.5567.778.camel@haakon3.risingtidesystems.com>
-	(Nicholas A. Bellinger's message of "Tue, 21 Jan 2014 14:20:17 -0800")
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Sagi Grimberg <sagig@dev.mellanox.co.il>, "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Sagi Grimberg <sagig@mellanox.com>, Or Gerlitz <ogerlitz@mellanox.com>, Roland Dreier <roland@kernel.org>
+Content-Type: multipart/mixed;
+	boundary="_000_F5D084D6342F9B479C34599BB0A03E4D8985D1B1AVMB1qlogicorg_"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:18834 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754655AbaAVCAQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 Jan 2014 21:00:16 -0500
+Received: from pps.filterd (m0000643.ppops.net [127.0.0.1])
+	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id s0M1wq3E024942
+	for <linux-scsi@vger.kernel.org>; Tue, 21 Jan 2014 18:00:16 -0800
+Received: from avcashub1.qlogic.com (avcashub3.qlogic.com [198.70.193.117])
+	by mx0b-0016ce01.pphosted.com with ESMTP id 1hfp09p1he-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Tue, 21 Jan 2014 18:00:15 -0800
+In-Reply-To: <20140121070010.GD31535@elgon.mountain>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>, Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@qlogic.com>, Anirban Chakraborty <anirban.chakraborty@qlogic.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi <linux-scsi@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
 
->>>>> "nab" == Nicholas A Bellinger <nab@linux-iscsi.org> writes:
+--_000_F5D084D6342F9B479C34599BB0A03E4D8985D1B1AVMB1qlogicorg_
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <25C9AECFE432084F8271FB05D8AAEFE3@qlogic.com>
+Content-Transfer-Encoding: quoted-printable
 
->> Please remind me why we ignore IP-CSUM guard type again?  MKP, will
->> this be irrelevant for the initiator as well? if so, I don't see a
->> reason to expose this in RDMA verbs.
+Acked-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 
-nab> My understanding is that this was used for pre-production
-nab> prototyping, and is not supported by any real backend storage
-nab> hardware.
+Thanks,
+~Saurav
 
-We are shipping several products with support for the IP checksum. But
-it's between application and initiator only. From there on it's all T10
-CRC as required by the spec.
+>qla2x00_mem_alloc() returns 1 on success and -ENOMEM on failure.  On the
+>one hand the caller assumes non-zero is success but on the other hand
+>the caller also assumes that it returns an error code.
+>
+>I've fixed it to return zero on success and a negative error code on
+>failure.  This matches the documentation as well.
+>
+>Fixes: e315cd28b9ef ('[SCSI] qla2xxx: Code changes for qla data structure
+>refactoring')
+>Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+>
+>diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+>index 89a53002b585..8d5a67fcffa1 100644
+>--- a/drivers/scsi/qla2xxx/qla_os.c
+>+++ b/drivers/scsi/qla2xxx/qla_os.c
+>@@ -2536,7 +2536,7 @@ qla2x00_probe_one(struct pci_dev *pdev, const
+>struct pci_device_id *id)
+> 	    ha->flags.enable_64bit_addressing ? "enable" :
+> 	    "disable");
+> 	ret =3D qla2x00_mem_alloc(ha, req_length, rsp_length, &req, &rsp);
+>-	if (!ret) {
+>+	if (ret) {
+> 		ql_log_pci(ql_log_fatal, pdev, 0x0031,
+> 		    "Failed to allocate memory for adapter, aborting.\n");
+>=20
+>@@ -3481,7 +3481,7 @@ qla2x00_mem_alloc(struct qla_hw_data *ha, uint16_t
+>req_len, uint16_t rsp_len,
+> 		    "loop_id_map=3D%p. \n", ha->loop_id_map);
+> 	}
+>=20
+>-	return 1;
+>+	return 0;
+>=20
+> fail_async_pd:
+> 	dma_pool_free(ha->s_dma_pool, ha->ex_init_cb, ha->ex_init_cb_dma);
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+
+--_000_F5D084D6342F9B479C34599BB0A03E4D8985D1B1AVMB1qlogicorg_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
+
+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
+QABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwACXQEAAAA0AAAAcwBhAHUAcgBhAHYALgBrAGEAcwBo
+AHkAYQBwAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8A5V8BAAAAPAAAAHMAaQBwADoAcwBhAHUA
+cgBhAHYALgBrAGEAcwBoAHkAYQBwAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AGgwBAAAAHgAA
+AFMAYQB1AHIAYQB2ACAASwBhAHMAaAB5AGEAcAAAAAAAHwAfDAEAAAA0AAAAcwBhAHUAcgBhAHYA
+LgBrAGEAcwBoAHkAYQBwAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AHgwBAAAACgAAAFMATQBU
+AFAAAAAAAAIBGQwBAAAAdAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgFMAYQB1AHIAYQB2ACAA
+SwBhAHMAaAB5AGEAcAAAAFMATQBUAFAAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABx
+AGwAbwBnAGkAYwAuAGMAbwBtAAAAHwABXQEAAAA0AAAAcwBhAHUAcgBhAHYALgBrAGEAcwBoAHkA
+YQBwAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8A+D8BAAAAHgAAAFMAYQB1AHIAYQB2ACAASwBh
+AHMAaAB5AGEAcAAAAAAAHwAjQAEAAAA0AAAAcwBhAHUAcgBhAHYALgBrAGEAcwBoAHkAYQBwAEAA
+cQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AIkABAAAACgAAAFMATQBUAFAAAAAAAAIB+T8BAAAAdAAA
+AAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgFMAYQB1AHIAYQB2ACAASwBhAHMAaAB5AGEAcAAAAFMA
+TQBUAFAAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBt
+AAAAHwAJXQEAAAA0AAAAcwBhAHUAcgBhAHYALgBrAGEAcwBoAHkAYQBwAEAAcQBsAG8AZwBpAGMA
+LgBjAG8AbQAAAAsAQDoBAAAAHwAaAAEAAAASAAAASQBQAE0ALgBOAG8AdABlAAAAAAADAPE/CQQA
+AAsAQDoBAAAAAwD9P+QEAAACAQswAQAAABAAAACRgLSvV/iCQKdfA2VJK03XAwAXAAEAAABAADkA
+gPTnrxUXzwFAAAgw+QpvsBUXzwELAACACCAGAAAAAADAAAAAAAAARgAAAAAUhQAAAQAAAB8AAICG
+AwIAAAAAAMAAAAAAAABGAQAAAB4AAABhAGMAYwBlAHAAdABsAGEAbgBnAHUAYQBnAGUAAAAAAAEA
+AAAMAAAAZQBuAC0AVQBTAAAACwAAgAggBgAAAAAAwAAAAAAAAEYAAAAABoUAAAAAAAAfADcAAQAA
+AIwAAABSAGUAOgAgAFsAcABhAHQAYwBoAF0AIABbAFMAQwBTAEkAXQAgAHEAbABhADIAeAB4AHgA
+OgAgAGYAaQB4ACAAZQByAHIAbwByACAAaABhAG4AZABsAGkAbgBnACAAbwBmACAAcQBsAGEAMgB4
+ADAAMABfAG0AZQBtAF8AYQBsAGwAbwBjACgAKQAAAB8APQABAAAACgAAAFIAZQA6ACAAAAAAAAMA
+NgAAAAAAHwBCEAEAAABQAAAAPAAyADAAMQA0ADAAMQAyADEAMAA3ADAAMAAxADAALgBHAEQAMwAx
+ADUAMwA1AEAAZQBsAGcAbwBuAC4AbQBvAHUAbgB0AGEAaQBuAD4AAAACAXEAAQAAABYAAAABAc8X
+FbDCkWuKWBIUR4eGs2A4xz55AAAfAHAAAQAAAIQAAABbAHAAYQB0AGMAaABdACAAWwBTAEMAUwBJ
+AF0AIABxAGwAYQAyAHgAeAB4ADoAIABmAGkAeAAgAGUAcgByAG8AcgAgAGgAYQBuAGQAbABpAG4A
+ZwAgAG8AZgAgAHEAbABhADIAeAAwADAAXwBtAGUAbQBfAGEAbABsAG8AYwAoACkAAAAfADUQAQAA
+AHgAAAA8AEYANQBEADAAOAA0AEQANgAzADQAMgBGADkAQgA0ADcAOQBDADMANAA1ADkAOQBCAEIA
+MABBADAAMwBFADQARAA4ADkAOAA1AEQAMQBCADEAQABBAFYATQBCADEALgBxAGwAbwBnAGkAYwAu
+AG8AcgBnAD4AAAAfADkQAQAAAFAAAAA8ADIAMAAxADQAMAAxADIAMQAwADcAMAAwADEAMAAuAEcA
+RAAzADEANQAzADUAQABlAGwAZwBvAG4ALgBtAG8AdQBuAHQAYQBpAG4APgAAAAMA3j+fTgAAQAAH
+MO7bVLAVF88BAwAmAAAAAAACAUcAAQAAAC4AAABjPVVTO2E9IDtwPVFMb2dpYztsPUFWTUIxLTE0
+MDEyMjAyMDAxM1otNzg2MjIAAAAfABUQAQAAAFgAAAAyADUAQwA5AEEARQBDAEYARQA0ADMAMgAw
+ADgANABGADgAMgA3ADEARgBCADAANQBEADgAQQBBAEUARgBFADMAQABxAGwAbwBnAGkAYwAuAGMA
+bwBtAAAAAgEUMAEAAAAMAAAAgQAAAIT+X4xBAAAAHwD6PwEAAAAeAAAAUwBhAHUAcgBhAHYAIABL
+AGEAcwBoAHkAYQBwAAAAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAWAAAAdQBzAGUAcgAtAGEA
+ZwBlAG4AdAAAAAAAAQAAAEYAAABNAGkAYwByAG8AcwBvAGYAdAAtAE0AYQBjAE8AdQB0AGwAbwBv
+AGsALwAxADQALgAzAC4AOQAuADEAMwAxADAAMwAwAAAAAAAfAACAH6TrM6h6LkK+e3nhqY5UswEA
+AAA4AAAAQwBvAG4AdgBlAHIAcwBhAHQAaQBvAG4ASQBuAGQAZQB4AFQAcgBhAGMAawBpAG4AZwBF
+AHgAAAABAAAAWAEAAEkASQA9ADAAMQAwADEAQwBGADEANwAxADUAQgAwAEEAOQAxAEUAQwAxAEMA
+NgA3ADIARgBDADIARQA0ADAAOABGADIAMAA1AEIAMgBBAEMAQQBDADgARQA1ADAAMgA7AFMAQgBN
+AEkARAA9ADUAOwBTAEIAVAA9ADEAMQA0ADsAUwAyAD0APAA4ADYARgA3AEIAOAA3ADcARQAyAEEA
+QQBFAEMANAA5AEIANwAxADEAMgBGAEMAOQA2ADkAMQA1ADAAQwA4AEIAOAA5ADkAMQAxADcARgBB
+AEAAQQBWAE0AQgAxAC4AcQBsAG8AZwBpAGMALgBvAHIAZwA+ADsAVgBlAHIAcwBpAG8AbgA9AFYA
+ZQByAHMAaQBvAG4AIAAxADQALgAyACAAKABCAHUAaQBsAGQAIAAzADEAOAAuADAAKQAsACAAUwB0
+AGEAZwBlAD0ASAA5AAAAAwANNP0/AAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAgAAAAeAAtAG0A
+cwAtAGgAYQBzAC0AYQB0AHQAYQBjAGgAAAABAAAAAgAAAAAAAAAfAACAhgMCAAAAAADAAAAAAAAA
+RgEAAAAiAAAAeAAtAG8AcgBpAGcAaQBuAGEAdABpAG4AZwAtAGkAcAAAAAAAAQAAABoAAABbADEA
+MAAuADgALgA1AC4AMgAzADkAXQAAAAAAz2k=
+
+--_000_F5D084D6342F9B479C34599BB0A03E4D8985D1B1AVMB1qlogicorg_--
