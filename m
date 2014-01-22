@@ -1,86 +1,42 @@
-From: Mel Gorman <mgorman@suse.de>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: Re: [Lsf-pc] [LSF/MM TOPIC] really large storage sectors - going
  beyond 4096 bytes
-Date: Wed, 22 Jan 2014 15:19:13 +0000
-Message-ID: <20140122151913.GY4963@suse.de>
-References: <20131220093022.GV11295@suse.de>
- <52DF353D.6050300@redhat.com>
- <20140122093435.GS4963@suse.de>
- <52DFD168.8080001@redhat.com>
- <20140122143452.GW4963@suse.de>
- <52DFDCA6.1050204@redhat.com>
+Date: Wed, 22 Jan 2014 07:54:37 -0800
+Message-ID: <1390406077.2372.4.camel@dabdike.int.hansenpartnership.com>
+References: <20131220093022.GV11295@suse.de> <52DF353D.6050300@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <52DFDCA6.1050204@redhat.com>
+In-Reply-To: <52DF353D.6050300@redhat.com>
 Sender: owner-linux-mm@kvack.org
 To: Ric Wheeler <rwheeler@redhat.com>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, lsf-pc@lists.linux-foundation.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, lsf-pc@lists.linux-foundation.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Jan 22, 2014 at 09:58:46AM -0500, Ric Wheeler wrote:
-> On 01/22/2014 09:34 AM, Mel Gorman wrote:
-> >On Wed, Jan 22, 2014 at 09:10:48AM -0500, Ric Wheeler wrote:
-> >>On 01/22/2014 04:34 AM, Mel Gorman wrote:
-> >>>On Tue, Jan 21, 2014 at 10:04:29PM -0500, Ric Wheeler wrote:
-> >>>>One topic that has been lurking forever at the edges is the current
-> >>>>4k limitation for file system block sizes. Some devices in
-> >>>>production today and others coming soon have larger sectors and it
-> >>>>would be interesting to see if it is time to poke at this topic
-> >>>>again.
-> >>>>
-> >>>Large block support was proposed years ago by Christoph Lameter
-> >>>(http://lwn.net/Articles/232757/). I think I was just getting started
-> >>>in the community at the time so I do not recall any of the details. I do
-> >>>believe it motivated an alternative by Nick Piggin called fsblock though
-> >>>(http://lwn.net/Articles/321390/). At the very least it would be nice to
-> >>>know why neither were never merged for those of us that were not around
-> >>>at the time and who may not have the chance to dive through mailing list
-> >>>archives between now and March.
-> >>>
-> >>>FWIW, I would expect that a show-stopper for any proposal is requiring
-> >>>high-order allocations to succeed for the system to behave correctly.
-> >>>
-> >>I have a somewhat hazy memory of Andrew warning us that touching
-> >>this code takes us into dark and scary places.
-> >>
-> >That is a light summary. As Andrew tends to reject patches with poor
-> >documentation in case we forget the details in 6 months, I'm going to guess
-> >that he does not remember the details of a discussion from 7ish years ago.
-> >This is where Andrew swoops in with a dazzling display of his eidetic
-> >memory just to prove me wrong.
-> >
-> >Ric, are there any storage vendor that is pushing for this right now?
-> >Is someone working on this right now or planning to? If they are, have they
-> >looked into the history of fsblock (Nick) and large block support (Christoph)
-> >to see if they are candidates for forward porting or reimplementation?
-> >I ask because without that person there is a risk that the discussion
-> >will go as follows
-> >
-> >Topic leader: Does anyone have an objection to supporting larger block
-> >	sizes than the page size?
-> >Room: Send patches and we'll talk.
-> >
+On Tue, 2014-01-21 at 22:04 -0500, Ric Wheeler wrote:
+> One topic that has been lurking forever at the edges is the current 4k 
+> limitation for file system block sizes. Some devices in production today and 
+> others coming soon have larger sectors and it would be interesting to see if it 
+> is time to poke at this topic again.
 > 
-> I will have to see if I can get a storage vendor to make a public
-> statement, but there are vendors hoping to see this land in Linux in
-> the next few years.
+> LSF/MM seems to be pretty much the only event of the year that most of the key 
+> people will be present, so should be a great topic for a joint session.
 
-What about the second and third questions -- is someone working on this
-right now or planning to? Have they looked into the history of fsblock
-(Nick) and large block support (Christoph) to see if they are candidates
-for forward porting or reimplementation?
+But the question is what will the impact be.  A huge amount of fuss was
+made about 512->4k.  Linux was totally ready because we had variable
+block sizes and our page size is 4k.  I even have one pure 4k sector
+drive that works in one of my test systems.
 
-Don't get me wrong, I'm interested in the topic but I severely doubt I'd
-have the capacity to research the background of this in advance. It's also
-unlikely that I'd work on it in the future without throwing out my current
-TODO list. In an ideal world someone will have done the legwork in advance
-of LSF/MM to help drive the topic.
+However, the result was the market chose to go the physical/logical
+route because of other Operating System considerations, all 4k drives
+expose 512 byte sectors and do RMW internally.  For us it becomes about
+layout and alignment, which we already do.  I can't see how going to 8k
+or 16k would be any different from what we've already done.  In other
+words, this is an already solved problem.
 
--- 
-Mel Gorman
-SUSE Labs
+James
+
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
