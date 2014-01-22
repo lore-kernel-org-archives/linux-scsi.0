@@ -1,58 +1,45 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 60758] module scsi_wait_scan not found kernel panic on boot
-Date: Wed, 22 Jan 2014 21:17:56 +0000
-Message-ID: <bug-60758-11613-WoPUOTEVlC@https.bugzilla.kernel.org/>
-References: <bug-60758-11613@https.bugzilla.kernel.org/>
+From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Subject: =?utf-8?q?Re=3A_=5Busb=2Dstorage=5D_Re=3A_usb_disk_recognized_but_fails?=
+Date: Wed, 22 Jan 2014 16:34:02 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1401221632200.1310-100000@iolanthe.rowland.org>
+References: <20140122220717.D61BDE5D@centrum.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:39450 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755348AbaAVVR7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Jan 2014 16:17:59 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 95BDD201B6
-	for <linux-scsi@vger.kernel.org>; Wed, 22 Jan 2014 21:17:58 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-	by mail.kernel.org (Postfix) with ESMTP id 830E5201B4
-	for <linux-scsi@vger.kernel.org>; Wed, 22 Jan 2014 21:17:57 +0000 (UTC)
-In-Reply-To: <bug-60758-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20140122220717.D61BDE5D-aRb0bU7PRFPrBKCeMvbIDA@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: =?utf-8?q?Milan_Svoboda?= <milan.svoboda-aRb0bU7PRFPrBKCeMvbIDA@public.gmane.org>
+Cc: =?utf-8?q?Sarah_Sharp?= <sarah.a.sharp-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, =?utf-8?q?USB_Storage_List?= <usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=60758
+On Wed, 22 Jan 2014, Milan Svoboda wrote:
 
---- Comment #54 from Akemi Yagi <toracat@elrepo.org> ---
-(In reply to Lin Feng from comment #53)
-
-> though it's somthing about virtio driver(my guest uses virtio as the storage
-> driver), looking into this commit it is mainly about C code changes, not
-> module compiling or not. Also I have checked the modules compiled, in both
-> cases(with and without this commit) we get virtio_blk.ko module. But the
-> difference is that with this commit virtio_blk.ko isn't packed into the
-> initramfs. 
+> >This continued a few more times until the computer gave up.  Maybe
+> >there is something wrong with one particular block at that address on
+> >the disk.
 > 
-> However between both cases there is no environmental changes, with exactly
-> the same config, same dracut, same gcc, everything...So I don't know why
-> dracut doesn't pack the virtio_blk.ko into the initramfs, and more kidding I
-> find that it packed the floppy.ko instead. 
-> (In my case as a workround we can compile virtio moduels into kernel or use
-> other disk bus driver such as IDE or USB instead)
+> I tried to run fdisk /dev/sdb which obivously failed but it tried to access sectors 0, 1, 2, 3 which resulted in kernel log
+> messages reporting invalid sectors.
+> I tried to connect the disk with Windows and it was connected immediatelly, the partition is visible, I can read files, create files...
+> No signs of problems visible...
+
+Maybe Windows doesn't try to access that problematic disk block.
+
+> I don't know if it tells anything, but Windows reports the disk as USB 2.0 SATA bridge even when connected to USB-3 ports.
 > 
-> But one thing I don't understand can someone tell me why, Will dracut look
-> through the kernel tree(C codes) to find some useful information to pack the
-> final initramfs?
+> >
+> >Do you have a USB-2 port on the computer you can plug the disk into,
+> >instead of USB-3?
+> >
+> 
+> I tried it, but it is only one and separated on the other side of laptop so I could connect only one connector and the
+> result is the same.
 
-Thank you for this extensive analysis. I, too, was having the same problem on
-my KVM guest that uses virtio (host=RHEL 6.5 and guest=CentOS 6.5). Just to
-reconfirm your findings, I created initramfs with a '--add-drivers virtio_blk'
-option and the kernel booted just fine.
+Which connector did you plug in: the data cable or the power cable?
 
-It would indeed be great if we could find out why dracut fails to pick up some
-particular modules.
+Alan Stern
 
--- 
-You are receiving this mail because:
-You are the assignee for the bug.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
