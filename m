@@ -1,61 +1,126 @@
-From: Chris Mason <clm@fb.com>
-Subject: Re: [Lsf-pc] [LSF/MM TOPIC] really large storage sectors - going
- beyond 4096 bytes
-Date: Wed, 22 Jan 2014 20:13:20 +0000
-Message-ID: <1390421691.1198.43.camel@ret.masoncoding.com>
-References: <20131220093022.GV11295@suse.de> <52DF353D.6050300@redhat.com>
-	 <20140122093435.GS4963@suse.de> <52DFD168.8080001@redhat.com>
-	 <20140122143452.GW4963@suse.de> <52DFDCA6.1050204@redhat.com>
-	 <20140122151913.GY4963@suse.de>
-	 <1390410233.1198.7.camel@ret.masoncoding.com>
-	 <1390411300.2372.33.camel@dabdike.int.hansenpartnership.com>
-	 <1390413819.1198.20.camel@ret.masoncoding.com>
-	 <1390414439.2372.53.camel@dabdike.int.hansenpartnership.com>
-	 <52E00B28.3060609@redhat.com>
-	 <1390415703.2372.62.camel@dabdike.int.hansenpartnership.com>
-	 <52E0106B.5010604@redhat.com>
-	 <1390419019.2372.89.camel@dabdike.int.hansenpartnership.com>
-	 <20140122115002.bb5d01dee836b567a7aad157@linux-foundation.org>
+From: Matthias Eble <psychotrahe@gmail.com>
+Subject: Re: Persistent reservation behaviour/compliance with redundant controllers
+Date: Wed, 22 Jan 2014 21:43:47 +0100
+Message-ID: <CAKbOo_J77vGR5zQP0LhJ2n1qsxObEhz8=OEer2jPaka2Cpek9g@mail.gmail.com>
+References: <CAKbOo_KMG+M8F06S4wo9vta6PJjpgXzMX9ri-vr=PY0QYASPLg@mail.gmail.com>
+	<52CB2C44.7040503@suse.com>
+	<CAKbOo_+LxN7UN11nxrD7pQ5Evffb-jdbW9BmPJ47NWiSXG-=nQ@mail.gmail.com>
+	<1389049579.2811.12.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-7"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20140122115002.bb5d01dee836b567a7aad157@linux-foundation.org>
-Content-Language: en-US
-Content-ID: <4377FC09DDDAD244BD307A4929AD8592@fb.com>
-Sender: owner-linux-mm@kvack.org
-To: "akpm@linux-foundation.org" <akpm@linux-foundation.org>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "rwheeler@redhat.com" <rwheeler@redhat.com>, "James.Bottomley@hansenpartnership.com" <James.Bottomley@hansenpartnership.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "mgorman@suse.de" <mgorman@suse.de>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-la0-f49.google.com ([209.85.215.49]:55340 "EHLO
+	mail-la0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753327AbaAVUnt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Jan 2014 15:43:49 -0500
+Received: by mail-la0-f49.google.com with SMTP id y1so747269lam.8
+        for <linux-scsi@vger.kernel.org>; Wed, 22 Jan 2014 12:43:47 -0800 (PST)
+In-Reply-To: <1389049579.2811.12.camel@dabdike>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Lee Duncan <lduncan@suse.com>, linux-scsi@vger.kernel.org
 
-On Wed, 2014-01-22 at 11:50 -0800, Andrew Morton wrote:
-+AD4- On Wed, 22 Jan 2014 11:30:19 -0800 James Bottomley +ADw-James.Bottoml=
-ey+AEA-hansenpartnership.com+AD4- wrote:
-+AD4-=20
-+AD4- +AD4- But this, I think, is the fundamental point for debate.  If we =
-can pull
-+AD4- +AD4- alignment and other tricks to solve 99+ACU- of the problem is t=
-here a need
-+AD4- +AD4- for radical VM surgery?  Is there anything coming down the pipe=
- in the
-+AD4- +AD4- future that may move the devices ahead of the tricks?
-+AD4-=20
-+AD4- I expect it would be relatively simple to get large blocksizes workin=
-g
-+AD4- on powerpc with 64k PAGE+AF8-SIZE.  So before diving in and doing hug=
-e
-+AD4- amounts of work, perhaps someone can do a proof-of-concept on powerpc
-+AD4- (or ia64) with 64k blocksize.
+2014/1/7 James Bottomley <James.Bottomley@hansenpartnership.com>
+>
+> On Mon, 2014-01-06 at 23:53 +0100, Matthias Eble wrote:
+> > 2014/1/6 Lee Duncan <lduncan@suse.com>:
+> > > On 12/25/2013 03:00 PM, Matthias Eble wrote:
+> > >> Here's the dmmp map
+> > >> 360002ac0000000000000000a00006e6b dm-6 3PARdata,VV
+> > >> size=2.0T features='0' hwhandler='0' wp=rw
+> > >> `-+- policy='round-robin 0' prio=1 status=active
+> > >>   |- 3:0:1:4  sdg  8:96    active ready running
+> > >>   |- 3:0:3:4  sdl  8:176   active ready running
+> > >>   |- 5:0:3:4  sdbg 67:160  active ready running
+> > >>   `- 5:0:1:4  sdce 69:32   active ready running
+> > >>
+> > >> There can only be two registrations at a time: (sdg XOR sdl) and (sdbg XOR sdce)
+> > >> Now my question is: Does this comply to the standard?
+> > >>
+> > >
+> > > I _believe_ the problem is that you are re-registering the same
+> > > I_T_Nexus through /dev/sdl, your second attempt at registration, as you
+> > > did when you used /dev/sdg, your original registration.
+> >
+> >
+> > Can sdg and sdl be the same I_T_Nexus at a time?
+> > Right now, they are handled like that.
+> > In my understanding, every scsi disk device represents an I_T_Nexus.
+>
+> No, every SCSI disk is an I_T_L nexus.  There's no actual device object
+> in Linux for an I_T nexus.
 
 
-Maybe 5 drives in raid5 on MD, with 4K coming from each drive.  Well
-aligned 16K IO will work, everything else will about the same as a rmw
-from a single drive.
+Hi All,
 
--chris
+I'd like to document the progress and findings in lots of off-list emails with
+HP's t10 members.
+Maybe someone on the net will face the same problem.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+First of all, the SPC wording isn't 100% precise. For most commands, the Lun
+context is implicit. So if the standards state "I_T Nexus", I_T_L Nexuses are
+meant, as the reservation commands are always lun specific.
+
+That said, PR-registrations need to be done for every
+I_T_L Nexus -> every single dmmp path (/dev/sdX)
+
+So we started to test the behaviour of the 3Par system.
+It seems that there are some quirks in the 3Par implementation.
+The error that led to my initial question is that the target port
+identifier isn't included in the target's reservation handling.
+Thus all PR commands from one host port are considered the same.
+Regardless of the target port over which they were received.
+(As seen in attached commands #5 or #6 after issuing #2 )
+Note that the investigations haven't been finished.
+
+
+For those who are interested, here are the findings (verbose output stripped):
+
+
+1.# sg_persist --in --read-keys /dev/sdl
+  3PARdata  VV                3122
+  Peripheral device type: disk
+  PR generation=0x44, there are NO registered reservation keys
+
+register via sdl:
+2.# sg_persist -vvv -d /dev/sdl --no-inquiry --out --register
+--param-sark=0x420480a02900006c
+    PR out: command (Register) successful
+
+test for scp3r23 table 33 compliance (same key on registered I_T Nexus
+should succeed): False
+3.# sg_persist -vvv -d /dev/sdl --no-inquiry --out --register
+--param-sark=0x420480a02900006c
+    persistent reserve out: scsi status: Reservation Conflict
+    PR out: command failed
+
+now with a *different key* (should conflict): True
+4.# sg_persist -vvv -d /dev/sdl --no-inquiry --out --register
+--param-sark=0x420480a02900006d
+    persistent reserve out: scsi status: Reservation Conflict
+    PR out: command failed
+
+Same behaviour using another path/I_T_L Nexus (should succeed in both cases):
+5.# sg_persist -vvv -d /dev/sdg --no-inquiry --out --register
+--param-sark=0x420480a02900006c
+    persistent reserve out: scsi status: Reservation Conflict
+    PR out: command failed
+6.# sg_persist -vvv -d /dev/sdg --no-inquiry --out --register
+--param-sark=0x420480a02900006d
+    persistent reserve out: scsi status: Reservation Conflict
+    PR out: command failed
+
+Unregister via sdg :-/
+7.# sg_persist -vvv -d /dev/sdg --no-inquiry --out --register
+--param-rk=0x420480a02900006c
+    PR out: command (Register) successful
+
+Additionally, read-full-status service action and ALL_TG_PT are not
+supported, right now.
+
+
+That's it for now.
+
+Thanks for your replies,
+Matthias
