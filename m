@@ -1,40 +1,77 @@
-From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [PATCH-v2 03/17] target/sbc: Add DIF setup in sbc_check_prot
- + sbc_parse_cdb
-Date: Wed, 22 Jan 2014 20:00:49 +0200
-Message-ID: <52E00751.5010309@dev.mellanox.co.il>
-References: <1390099480-29013-1-git-send-email-nab@daterainc.com>	 <1390099480-29013-4-git-send-email-nab@daterainc.com>	 <52DBBA69.4040800@dev.mellanox.co.il> <1390344494.5567.792.camel@haakon3.risingtidesystems.com>
+From: Chris Mason <clm@fb.com>
+Subject: Re: [Lsf-pc] [LSF/MM TOPIC] really large storage sectors - going
+ beyond 4096 bytes
+Date: Wed, 22 Jan 2014 18:02:09 +0000
+Message-ID: <1390413819.1198.20.camel@ret.masoncoding.com>
+References: <20131220093022.GV11295@suse.de> <52DF353D.6050300@redhat.com>
+	 <20140122093435.GS4963@suse.de> <52DFD168.8080001@redhat.com>
+	 <20140122143452.GW4963@suse.de> <52DFDCA6.1050204@redhat.com>
+	 <20140122151913.GY4963@suse.de>
+	 <1390410233.1198.7.camel@ret.masoncoding.com>
+	 <1390411300.2372.33.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1390344494.5567.792.camel@haakon3.risingtidesystems.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Sagi Grimberg <sagig@mellanox.com>, Or Gerlitz <ogerlitz@mellanox.com>, Roland Dreier <roland@kernel.org>
+Content-Type: text/plain; charset="utf-7"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1390411300.2372.33.camel@dabdike.int.hansenpartnership.com>
+Content-Language: en-US
+Content-ID: <E44B69ECB3DF564D943C1ED6AA6B2644@fb.com>
+Sender: owner-linux-mm@kvack.org
+To: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "rwheeler@redhat.com" <rwheeler@redhat.com>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "mgorman@suse.de" <mgorman@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
-On 1/22/2014 12:48 AM, Nicholas A. Bellinger wrote:
-> +	cmd->prot_handover = PROT_SEPERATED;
->> I know that we are not planning to support interleaved mode at the
->> moment, But I think
->> that the protection handover type is the backstore preference and should
->> be taken from se_dev.
->> But it is not that important for now...
->>
-> Yeah, I figured since the RDMA pieces needed the handover type defined
-> in some form, it made sense to include PROT_SEPERATED hardcoded here,
-> but stopped short of adding se_dev->prot_handler for the first round
-> merge.
->
-> --nab
->
+On Wed, 2014-01-22 at 09:21 -0800, James Bottomley wrote:
++AD4- On Wed, 2014-01-22 at 17:02 +-0000, Chris Mason wrote:
 
-Actually they don't, I just added them in iSER code to demonstrate the 
-HW ability.
-If we are not planning to support that (although as MKP mentioned it 
-might be useful in some cases),
-you can remove that for now and we can add it in the future - iSER can 
-ignore it for now (I'll refactor the patches).
++AFs- I like big sectors and I cannot lie +AF0-
 
-Sagi.
++AD4- =20
++AD4- +AD4- I really think that if we want to make progress on this one, we=
+ need
++AD4- +AD4- code and someone that owns it.  Nick's work was impressive, but=
+ it was
++AD4- +AD4- mostly there for getting rid of buffer heads.  If we have a dev=
+ice that
++AD4- +AD4- needs it and someone working to enable that device, we'll go fo=
+rward
++AD4- +AD4- much faster.
++AD4-=20
++AD4- Do we even need to do that (eliminate buffer heads)?  We cope with 4k
++AD4- sector only devices just fine today because the bh mechanisms now
++AD4- operate on top of the page cache and can do the RMW necessary to upda=
+te
++AD4- a bh in the page cache itself which allows us to do only 4k chunked
++AD4- writes, so we could keep the bh system and just alter the granularity=
+ of
++AD4- the page cache.
++AD4-=20
+
+We're likely to have people mixing 4K drives and +ADw-fill in some other
+size here+AD4- on the same box.  We could just go with the biggest size and
+use the existing bh code for the sub-pagesized blocks, but I really
+hesitate to change VM fundamentals for this.
+
+>From a pure code point of view, it may be less work to change it once in
+the VM.  But from an overall system impact point of view, it's a big
+change in how the system behaves just for filesystem metadata.
+
++AD4- The other question is if the drive does RMW between 4k and whatever i=
+ts
++AD4- physical sector size, do we need to do anything to take advantage of
++AD4- it ... as in what would altering the granularity of the page cache bu=
+y
++AD4- us?
+
+The real benefit is when and how the reads get scheduled.  We're able to
+do a much better job pipelining the reads, controlling our caches and
+reducing write latency by having the reads done up in the OS instead of
+the drive.
+
+-chris
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
