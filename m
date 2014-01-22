@@ -1,22 +1,55 @@
-From: "Howard Maxim" <howardd@maxxim.com>
-Subject: project!!
-Date: Sat, 18 Jan 2014 20:14:16 -0300 (ART)
-Message-ID: <65407.41.71.189.183.1390086856.squirrel__22534.0964309455$1390419043$gmane$org@41.71.189.183>
-Reply-To: project2014x@gmail.com
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [Lsf-pc] [LSF/MM TOPIC] really large storage sectors - going
+ beyond 4096 bytes
+Date: Wed, 22 Jan 2014 11:50:02 -0800
+Message-ID: <20140122115002.bb5d01dee836b567a7aad157@linux-foundation.org>
+References: <20131220093022.GV11295@suse.de>
+	<52DF353D.6050300@redhat.com>
+	<20140122093435.GS4963@suse.de>
+	<52DFD168.8080001@redhat.com>
+	<20140122143452.GW4963@suse.de>
+	<52DFDCA6.1050204@redhat.com>
+	<20140122151913.GY4963@suse.de>
+	<1390410233.1198.7.camel@ret.masoncoding.com>
+	<1390411300.2372.33.camel@dabdike.int.hansenpartnership.com>
+	<1390413819.1198.20.camel@ret.masoncoding.com>
+	<1390414439.2372.53.camel@dabdike.int.hansenpartnership.com>
+	<52E00B28.3060609@redhat.com>
+	<1390415703.2372.62.camel@dabdike.int.hansenpartnership.com>
+	<52E0106B.5010604@redhat.com>
+	<1390419019.2372.89.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from flash.escape.com.ar ([200.61.170.3]:49214 "HELO
-	flash.escape.com.ar" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755352AbaAVTad (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Jan 2014 14:30:33 -0500
-Received: from unknown ([127.0.0.2])
- by flash.escape.com.ar (flash [127.0.0.2]) (amavisd-new, port 628)
- id 30638-34 for <linux-scsi@vger.kernel.org>;
- Wed, 22 Jan 2014 11:58:57 -0300 (ART)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1390419019.2372.89.camel@dabdike.int.hansenpartnership.com>
+Sender: owner-linux-mm@kvack.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Ric Wheeler <rwheeler@redhat.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Chris Mason <clm@fb.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "mgorman@suse.de" <mgorman@suse.de>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
 List-Id: linux-scsi@vger.kernel.org
 
-I am Howard Maxim,retired professional broker.I have a project for you or
-your firm.My private email is project2014x@gmail.com
+On Wed, 22 Jan 2014 11:30:19 -0800 James Bottomley <James.Bottomley@hansenpartnership.com> wrote:
+
+> But this, I think, is the fundamental point for debate.  If we can pull
+> alignment and other tricks to solve 99% of the problem is there a need
+> for radical VM surgery?  Is there anything coming down the pipe in the
+> future that may move the devices ahead of the tricks?
+
+I expect it would be relatively simple to get large blocksizes working
+on powerpc with 64k PAGE_SIZE.  So before diving in and doing huge
+amounts of work, perhaps someone can do a proof-of-concept on powerpc
+(or ia64) with 64k blocksize.
+
+That way we'll at least have an understanding of what the potential
+gains will be.  If the answer is "1.5%" then poof - go off and do
+something else.
+
+(And the gains on powerpc would be an upper bound - unlike powerpc, x86
+still has to fiddle around with 16x as many pages and perhaps order-4
+allocations(?))
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
