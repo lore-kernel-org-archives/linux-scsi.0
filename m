@@ -1,53 +1,41 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: bio_integrity_verify() bug causing READ verify to be silently
- skipped
-Date: Tue, 21 Jan 2014 20:24:00 -0800
-Message-ID: <20140122042400.GG20347@kernel.dk>
-References: <1387858826.5567.236.camel@haakon3.risingtidesystems.com>
- <yq1sit4zv23.fsf@sermon.lab.mkp.net>
- <1389936047.5567.721.camel@haakon3.risingtidesystems.com>
- <yq1ha92uv73.fsf@sermon.lab.mkp.net>
- <1390348402.5567.805.camel@haakon3.risingtidesystems.com>
+From: Joel Becker <jlbec@evilplan.org>
+Subject: Re: [LSF/MM TOPIC] really large storage sectors - going beyond 4096
+ bytes
+Date: Wed, 22 Jan 2014 05:20:53 +0000
+Message-ID: <20140122052052.GM10565@ZenIV.linux.org.uk>
+References: <20131220093022.GV11295@suse.de>
+ <52DF353D.6050300@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from merlin.infradead.org ([205.233.59.134]:45063 "EHLO
-	merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752553AbaAVEYH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Jan 2014 23:24:07 -0500
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <1390348402.5567.805.camel@haakon3.risingtidesystems.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <52DF353D.6050300@redhat.com>
+Sender: owner-linux-mm@kvack.org
+To: Ric Wheeler <rwheeler@redhat.com>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, lsf-pc@lists.linux-foundation.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@HansenPartnership.com>, kmo@daterainc.com
 
-On Tue, Jan 21 2014, Nicholas A. Bellinger wrote:
-> On Fri, 2014-01-17 at 16:58 -0500, Martin K. Petersen wrote:
-> > >>>>> "nab" == Nicholas A Bellinger <nab@linux-iscsi.org> writes:
-> > 
-> > >> That breaks partial completion, though. I'll take a look at Kent's
-> > >> changes...
-> > 
-> > nab> Ping..?  Any updates on a proper bugfix for this..?
-> > 
-> > I did put your patch in my queue and have been working on a fix for the
-> > partial completion case. The latter requires a bit of massaging that
-> > interferes with other pending changes.
-> > 
-> > Given that your patch does address a valid issue I'm OK with Jens
-> > putting it in as is. I'll build upon it for my changes.
-> > 
+On Tue, Jan 21, 2014 at 10:04:29PM -0500, Ric Wheeler wrote:
+> One topic that has been lurking forever at the edges is the current
+> 4k limitation for file system block sizes. Some devices in
+> production today and others coming soon have larger sectors and it
+> would be interesting to see if it is time to poke at this topic
+> again.
 > 
-> <nod>
-> 
-> Jens, are you going to pick this one up, or shall I include it in the
-> upcoming target-pending/for-next pull request instead..?
-> 
-> Either way, it needs a CC' to stable for >= v3.10.y.
+> LSF/MM seems to be pretty much the only event of the year that most
+> of the key people will be present, so should be a great topic for a
+> joint session.
 
-I'll queue it up, thanks.
+Oh yes, I want in on this.  We handle 4k/16k/64k pages "seamlessly," and
+we would want to do the same for larger sectors.  In theory, our code
+should handle it with the appropriate defines updated.
+
+Joel
 
 -- 
-Jens Axboe
 
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
