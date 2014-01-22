@@ -1,88 +1,61 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: =?utf-8?q?Re=3A_=5Busb=2Dstorage=5D_Re=3A_usb_disk_recognized_but_fails?=
-Date: Wed, 22 Jan 2014 14:59:17 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1401221446370.1310-100000@iolanthe.rowland.org>
-References: <20140122201924.01C70D33@centrum.cz>
+From: Chris Mason <clm@fb.com>
+Subject: Re: [Lsf-pc] [LSF/MM TOPIC] really large storage sectors - going
+ beyond 4096 bytes
+Date: Wed, 22 Jan 2014 20:13:20 +0000
+Message-ID: <1390421691.1198.43.camel@ret.masoncoding.com>
+References: <20131220093022.GV11295@suse.de> <52DF353D.6050300@redhat.com>
+	 <20140122093435.GS4963@suse.de> <52DFD168.8080001@redhat.com>
+	 <20140122143452.GW4963@suse.de> <52DFDCA6.1050204@redhat.com>
+	 <20140122151913.GY4963@suse.de>
+	 <1390410233.1198.7.camel@ret.masoncoding.com>
+	 <1390411300.2372.33.camel@dabdike.int.hansenpartnership.com>
+	 <1390413819.1198.20.camel@ret.masoncoding.com>
+	 <1390414439.2372.53.camel@dabdike.int.hansenpartnership.com>
+	 <52E00B28.3060609@redhat.com>
+	 <1390415703.2372.62.camel@dabdike.int.hansenpartnership.com>
+	 <52E0106B.5010604@redhat.com>
+	 <1390419019.2372.89.camel@dabdike.int.hansenpartnership.com>
+	 <20140122115002.bb5d01dee836b567a7aad157@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:57506 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753116AbaAVT7S (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Jan 2014 14:59:18 -0500
-In-Reply-To: <20140122201924.01C70D33@centrum.cz>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-7"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20140122115002.bb5d01dee836b567a7aad157@linux-foundation.org>
+Content-Language: en-US
+Content-ID: <4377FC09DDDAD244BD307A4929AD8592@fb.com>
+Sender: owner-linux-mm@kvack.org
+To: "akpm@linux-foundation.org" <akpm@linux-foundation.org>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "rwheeler@redhat.com" <rwheeler@redhat.com>, "James.Bottomley@hansenpartnership.com" <James.Bottomley@hansenpartnership.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "mgorman@suse.de" <mgorman@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: =?utf-8?q?Milan_Svoboda?= <milan.svoboda@centrum.cz>
-Cc: =?utf-8?q?Sarah_Sharp?= <sarah.a.sharp@linux.intel.com>, linux-usb@vger.kernel.org, =?utf-8?q?USB_Storage_List?= <usb-storage@lists.one-eyed-alien.net>, linux-scsi@vger.kernel.org
 
-On Wed, 22 Jan 2014, Milan Svoboda wrote:
+On Wed, 2014-01-22 at 11:50 -0800, Andrew Morton wrote:
++AD4- On Wed, 22 Jan 2014 11:30:19 -0800 James Bottomley +ADw-James.Bottoml=
+ey+AEA-hansenpartnership.com+AD4- wrote:
++AD4-=20
++AD4- +AD4- But this, I think, is the fundamental point for debate.  If we =
+can pull
++AD4- +AD4- alignment and other tricks to solve 99+ACU- of the problem is t=
+here a need
++AD4- +AD4- for radical VM surgery?  Is there anything coming down the pipe=
+ in the
++AD4- +AD4- future that may move the devices ahead of the tricks?
++AD4-=20
++AD4- I expect it would be relatively simple to get large blocksizes workin=
+g
++AD4- on powerpc with 64k PAGE+AF8-SIZE.  So before diving in and doing hug=
+e
++AD4- amounts of work, perhaps someone can do a proof-of-concept on powerpc
++AD4- (or ia64) with 64k blocksize.
 
-> Here is the usbmon log. The disk works with TV and Windows. No error messages.
-> Could it be under-powered?
 
-That's possible, but not if it works under Windows on the same 
-computer.
+Maybe 5 drives in raid5 on MD, with 4K coming from each drive.  Well
+aligned 16K IO will work, everything else will about the same as a rmw
+from a single drive.
 
-The first reset occurred when the disk failed to respond correctly to a
-GET WINDOW command:
+-chris
 
-> ffff8801fdbb2c00 2271440149 S Bo:3:004:2 -115 31 = 55534243 59000000 00020000 80001024 2480fe01 00000000 000000ec 000000
-> ffff8801fdbb2c00 2271440171 C Bo:3:004:2 0 31 >
-> ffff8800d19fd240 2271440179 S Bi:3:004:1 -115 512 <
-> ffff8800d19fd240 2271444020 C Bi:3:004:1 -121 13 = 55534253 59000000 00000000 00
-> ffff8801fdbb2c00 2271444044 S Bi:3:004:1 -115 13 <
-> ffff8801fdbb2c00 2278599765 C Bi:3:004:1 -104 0
-
-It sent the status when it should have sent the data.  That's 
-definitely a bug in the disk or its USB interface.
-
-A bit later we see repeated attempts to read 8 blocks starting at
-block 1250258607.  In the first attempt, the disk returned 8 blocks of 
-data but sent an error status.  When asked for the error information, 
-the disk sent "No Information":
-
-> ffff8801fdbb2c00 2278816851 S Bo:3:004:2 -115 31 = 55534243 5d000000 00100000 80000a28 004a856e af000008 00000000 000000
-> ffff8801fdbb2c00 2278816886 C Bo:3:004:2 0 31 >
-> ffff8800c22c69c0 2278816911 S Bi:3:004:1 -115 4096 <
-> ffff8800c22c69c0 2278817038 C Bi:3:004:1 0 4096 = 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-> ffff8801fdbb2c00 2278817085 S Bi:3:004:1 -115 13 <
-> ffff8801fdbb2c00 2289976173 C Bi:3:004:1 -32 0
-> ffff8801fdbb2c00 2289976229 S Co:3:004:0 s 02 01 0000 0081 0000 0
-> ffff8801fdbb2c00 2289976257 C Co:3:004:0 0 0
-> ffff8801fdbb2c00 2289976273 S Bi:3:004:1 -115 13 <
-> ffff8801fdbb2c00 2289976335 C Bi:3:004:1 0 13 = 55534253 5d000000 00000000 01
-> ffff8801fdbb2c00 2289976378 S Bo:3:004:2 -115 31 = 55534243 5e000000 12000000 80000603 00000012 00000000 00000000 000000
-> ffff8801fdbb2c00 2289976419 C Bo:3:004:2 0 31 >
-> ffff8800c0afccc0 2289976428 S Bi:3:004:1 -115 18 <
-> ffff8800c0afccc0 2290123415 C Bi:3:004:1 0 18 = 70000000 0000000a 00000000 00000000 0000
-> ffff8801fdbb2c00 2290123463 S Bi:3:004:1 -115 13 <
-> ffff8801fdbb2c00 2290123486 C Bi:3:004:1 0 13 = 55534253 5e000000 00000000 00
-
-In the second attempt, the disk returned only 1 block of data, and 
-again, no error information:
-
-> ffff8801fdbb2c00 2290129737 S Bo:3:004:2 -115 31 = 55534243 5f000000 00100000 80000a28 004a856e af000008 00000000 000000
-> ffff8801fdbb2c00 2290129782 C Bo:3:004:2 0 31 >
-> ffff8800d4a51b40 2290129803 S Bi:3:004:1 -115 4096 <
-> ffff8800d4a51b40 2301288990 C Bi:3:004:1 -32 512 = 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-> ffff8801fdbb2c00 2301289039 S Co:3:004:0 s 02 01 0000 0081 0000 0
-> ffff8801fdbb2c00 2301289068 C Co:3:004:0 0 0
-> ffff8801fdbb2c00 2301289086 S Bi:3:004:1 -115 13 <
-> ffff8801fdbb2c00 2301289153 C Bi:3:004:1 0 13 = 55534253 5f000000 00000000 01
-> ffff8801fdbb2c00 2301289189 S Bo:3:004:2 -115 31 = 55534243 60000000 12000000 80000603 00000012 00000000 00000000 000000
-> ffff8801fdbb2c00 2301289223 C Bo:3:004:2 0 31 >
-> ffff8800d188c780 2301289263 S Bi:3:004:1 -115 18 <
-> ffff8800d188c780 2301299693 C Bi:3:004:1 0 18 = 70000000 0000000a 00000000 00000000 0000
-> ffff8801fdbb2c00 2301299741 S Bi:3:004:1 -115 13 <
-> ffff8801fdbb2c00 2301299765 C Bi:3:004:1 0 13 = 55534253 60000000 00000000 00
-
-This continued a few more times until the computer gave up.  Maybe
-there is something wrong with one particular block at that address on
-the disk.
-
-Do you have a USB-2 port on the computer you can plug the disk into,
-instead of USB-3?
-
-Alan Stern
-
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
