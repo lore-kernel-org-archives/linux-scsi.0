@@ -1,50 +1,33 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: bio_integrity_verify() bug causing READ verify to be silently
- skipped
-Date: Tue, 21 Jan 2014 15:53:22 -0800
-Message-ID: <1390348402.5567.805.camel@haakon3.risingtidesystems.com>
-References: <1387858826.5567.236.camel@haakon3.risingtidesystems.com>
-	 <yq1sit4zv23.fsf@sermon.lab.mkp.net>
-	 <1389936047.5567.721.camel@haakon3.risingtidesystems.com>
-	 <yq1ha92uv73.fsf@sermon.lab.mkp.net>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH-v2 11/17] target/iblock: Add blk_integrity + BIP passthrough support
+Date: Tue, 21 Jan 2014 20:52:49 -0500
+Message-ID: <yq1fvogbx5a.fsf@sermon.lab.mkp.net>
+References: <1390099480-29013-1-git-send-email-nab@daterainc.com>
+	<1390099480-29013-12-git-send-email-nab@daterainc.com>
+	<52DBC32C.4060505@dev.mellanox.co.il>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:39774 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752698AbaAUXvP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Jan 2014 18:51:15 -0500
-In-Reply-To: <yq1ha92uv73.fsf@sermon.lab.mkp.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <52DBC32C.4060505@dev.mellanox.co.il> (Sagi Grimberg's message of
+	"Sun, 19 Jan 2014 14:21:00 +0200")
+Sender: target-devel-owner@vger.kernel.org
+To: Sagi Grimberg <sagig@dev.mellanox.co.il>
+Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Sagi Grimberg <sagig@mellanox.com>, Or Gerlitz <ogerlitz@mellanox.com>, Roland Dreier <roland@kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@HansenPartnership.com>, kmo@daterainc.com
 
-On Fri, 2014-01-17 at 16:58 -0500, Martin K. Petersen wrote:
-> >>>>> "nab" == Nicholas A Bellinger <nab@linux-iscsi.org> writes:
-> 
-> >> That breaks partial completion, though. I'll take a look at Kent's
-> >> changes...
-> 
-> nab> Ping..?  Any updates on a proper bugfix for this..?
-> 
-> I did put your patch in my queue and have been working on a fix for the
-> partial completion case. The latter requires a bit of massaging that
-> interferes with other pending changes.
-> 
-> Given that your patch does address a valid issue I'm OK with Jens
-> putting it in as is. I'll build upon it for my changes.
-> 
+>>>>> "Sagi" == Sagi Grimberg <sagig@dev.mellanox.co.il> writes:
 
-<nod>
+Sagi> Please remind me why we ignore IP-CSUM guard type again?  MKP,
+Sagi> will this be irrelevant for the initiator as well? if so, I don't
+Sagi> see a reason to expose this in RDMA verbs.
 
-Jens, are you going to pick this one up, or shall I include it in the
-upcoming target-pending/for-next pull request instead..?
+I don't see much use for IP checksum for the target. You are required by
+SBC to use T10 CRC on the wire so there is no point in converting to IP
+checksum in the backend.
 
-Either way, it needs a CC' to stable for >= v3.10.y.
+My impending patches will allow you to pass through PI with T10 CRC to a
+device with an IP checksum block integrity profile (i.e. the choice of
+checksum is a per-bio bip flag instead of an HBA-enforced global).
 
-Thanks,
-
---nab
-
+-- 
+Martin K. Petersen	Oracle Linux Engineering
