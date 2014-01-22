@@ -1,52 +1,29 @@
-From: Andrew Morton <akpm@linux-foundation.org>
+From: Ric Wheeler <rwheeler@redhat.com>
 Subject: Re: [Lsf-pc] [LSF/MM TOPIC] really large storage sectors - going
  beyond 4096 bytes
-Date: Wed, 22 Jan 2014 11:50:02 -0800
-Message-ID: <20140122115002.bb5d01dee836b567a7aad157@linux-foundation.org>
-References: <20131220093022.GV11295@suse.de>
-	<52DF353D.6050300@redhat.com>
-	<20140122093435.GS4963@suse.de>
-	<52DFD168.8080001@redhat.com>
-	<20140122143452.GW4963@suse.de>
-	<52DFDCA6.1050204@redhat.com>
-	<20140122151913.GY4963@suse.de>
-	<1390410233.1198.7.camel@ret.masoncoding.com>
-	<1390411300.2372.33.camel@dabdike.int.hansenpartnership.com>
-	<1390413819.1198.20.camel@ret.masoncoding.com>
-	<1390414439.2372.53.camel@dabdike.int.hansenpartnership.com>
-	<52E00B28.3060609@redhat.com>
-	<1390415703.2372.62.camel@dabdike.int.hansenpartnership.com>
-	<52E0106B.5010604@redhat.com>
-	<1390419019.2372.89.camel@dabdike.int.hansenpartnership.com>
+Date: Wed, 22 Jan 2014 13:40:47 -0500
+Message-ID: <52E010AF.8040308@redhat.com>
+References: <20131220093022.GV11295@suse.de> <52DF353D.6050300@redhat.com>	 <20140122093435.GS4963@suse.de> <52DFD168.8080001@redhat.com>	 <20140122143452.GW4963@suse.de> <52DFDCA6.1050204@redhat.com>	 <20140122151913.GY4963@suse.de>	 <1390410233.1198.7.camel@ret.masoncoding.com>	 <1390411300.2372.33.camel@dabdike.int.hansenpartnership.com>	 <1390413819.1198.20.camel@ret.masoncoding.com>	 <1390414439.2372.53.camel@dabdike.int.hansenpartnership.com> <1390415924.1198.36.camel@ret.masoncoding.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-7
 Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1390419019.2372.89.camel@dabdike.int.hansenpartnership.com>
+In-Reply-To: <1390415924.1198.36.camel@ret.masoncoding.com>
 Sender: owner-linux-mm@kvack.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Ric Wheeler <rwheeler@redhat.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Chris Mason <clm@fb.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "mgorman@suse.de" <mgorman@suse.de>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
+To: Chris Mason <clm@fb.com>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "mgorman@suse.de" <mgorman@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 22 Jan 2014 11:30:19 -0800 James Bottomley <James.Bottomley@hansenpartnership.com> wrote:
+On 01/22/2014 01:37 PM, Chris Mason wrote:
+> Circling back to what we might talk about at the conference, Ric do you
+> have any ideas on when these drives might hit the wild?
+>
+> -chris
 
-> But this, I think, is the fundamental point for debate.  If we can pull
-> alignment and other tricks to solve 99% of the problem is there a need
-> for radical VM surgery?  Is there anything coming down the pipe in the
-> future that may move the devices ahead of the tricks?
+I will poke at vendors to see if we can get someone to make a public statement,
+but I cannot do that for them.
 
-I expect it would be relatively simple to get large blocksizes working
-on powerpc with 64k PAGE_SIZE.  So before diving in and doing huge
-amounts of work, perhaps someone can do a proof-of-concept on powerpc
-(or ia64) with 64k blocksize.
-
-That way we'll at least have an understanding of what the potential
-gains will be.  If the answer is "1.5%" then poof - go off and do
-something else.
-
-(And the gains on powerpc would be an upper bound - unlike powerpc, x86
-still has to fiddle around with 16x as many pages and perhaps order-4
-allocations(?))
+Ric
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
