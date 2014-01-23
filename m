@@ -1,49 +1,38 @@
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [Lsf-pc] [LSF/MM TOPIC] really large storage sectors - going
- beyond 4096 bytes
-Date: Thu, 23 Jan 2014 19:35:58 +1100
-Message-ID: <20140123083558.GQ13997@dastard>
-References: <20140122151913.GY4963@suse.de>
- <1390410233.1198.7.camel@ret.masoncoding.com>
- <1390411300.2372.33.camel@dabdike.int.hansenpartnership.com>
- <1390413819.1198.20.camel@ret.masoncoding.com>
- <1390414439.2372.53.camel@dabdike.int.hansenpartnership.com>
- <52E00B28.3060609@redhat.com>
- <1390415703.2372.62.camel@dabdike.int.hansenpartnership.com>
- <52E0106B.5010604@redhat.com>
- <1390419019.2372.89.camel@dabdike.int.hansenpartnership.com>
- <20140122115002.bb5d01dee836b567a7aad157@linux-foundation.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20140122115002.bb5d01dee836b567a7aad157@linux-foundation.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Chris Mason <clm@fb.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "mgorman@suse.de" <mgorman@suse.de>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, Ric Wheeler <rwheeler@redhat.com>
+From: Sha Zhengju <handai.szj@gmail.com>
+Subject: [PATCH] scsi-sd: removed unused SD_PASSTHROUGH_RETRIES
+Date: Thu, 23 Jan 2014 16:56:42 +0800
+Message-ID: <1390467402-30339-1-git-send-email-handai.szj@taobao.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pa0-f52.google.com ([209.85.220.52]:37094 "EHLO
+	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751139AbaAWI5E (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Jan 2014 03:57:04 -0500
+Received: by mail-pa0-f52.google.com with SMTP id bj1so1586664pad.25
+        for <linux-scsi@vger.kernel.org>; Thu, 23 Jan 2014 00:57:03 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: JBottomley@parallels.com, martin.petersen@oracle.com, Sha Zhengju <handai.szj@taobao.com>
 
-On Wed, Jan 22, 2014 at 11:50:02AM -0800, Andrew Morton wrote:
-> On Wed, 22 Jan 2014 11:30:19 -0800 James Bottomley <James.Bottomley@hansenpartnership.com> wrote:
-> 
-> > But this, I think, is the fundamental point for debate.  If we can pull
-> > alignment and other tricks to solve 99% of the problem is there a need
-> > for radical VM surgery?  Is there anything coming down the pipe in the
-> > future that may move the devices ahead of the tricks?
-> 
-> I expect it would be relatively simple to get large blocksizes working
-> on powerpc with 64k PAGE_SIZE.  So before diving in and doing huge
-> amounts of work, perhaps someone can do a proof-of-concept on powerpc
-> (or ia64) with 64k blocksize.
+From: Sha Zhengju <handai.szj@taobao.com>
 
-Reality check: 64k block sizes on 64k page Linux machines has been
-used in production on XFS for at least 10 years. It's exactly the
-same case as 4k block size on 4k page size - one page, one buffer
-head, one filesystem block.
+Signed-off-by: Sha Zhengju <handai.szj@taobao.com>
+---
+ drivers/scsi/sd.h |    1 -
+ 1 file changed, 1 deletion(-)
 
-Cheers,
-
-Dave.
+diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+index 26895ff..3bbe4df 100644
+--- a/drivers/scsi/sd.h
++++ b/drivers/scsi/sd.h
+@@ -24,7 +24,6 @@
+  * Number of allowed retries
+  */
+ #define SD_MAX_RETRIES		5
+-#define SD_PASSTHROUGH_RETRIES	1
+ #define SD_MAX_MEDIUM_TIMEOUTS	2
+ 
+ /*
 -- 
-Dave Chinner
-david@fromorbit.com
+1.7.9.5
+
