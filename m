@@ -1,69 +1,33 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [Lsf-pc] [LSF/MM TOPIC] really large storage sectors - going
  beyond 4096 bytes
-Date: Thu, 23 Jan 2014 11:55:35 -0800
-Message-ID: <1390506935.2402.8.camel@dabdike>
-References: <52DFD168.8080001@redhat.com> <20140122143452.GW4963@suse.de>
-	 <52DFDCA6.1050204@redhat.com> <20140122151913.GY4963@suse.de>
-	 <1390410233.1198.7.camel@ret.masoncoding.com>
-	 <1390411300.2372.33.camel@dabdike.int.hansenpartnership.com>
-	 <1390413819.1198.20.camel@ret.masoncoding.com>
-	 <1390414439.2372.53.camel@dabdike.int.hansenpartnership.com>
-	 <20140123082734.GP13997@dastard>
-	 <1390492073.2372.118.camel@dabdike.int.hansenpartnership.com>
-	 <20140123164438.GL4963@suse.de>
+Date: Fri, 24 Jan 2014 07:34:47 +1100
+Message-ID: <20140123203447.GT13997@dastard>
+References: <20140122143452.GW4963@suse.de>
+ <52DFDCA6.1050204@redhat.com>
+ <20140122151913.GY4963@suse.de>
+ <1390410233.1198.7.camel@ret.masoncoding.com>
+ <1390411300.2372.33.camel@dabdike.int.hansenpartnership.com>
+ <1390413819.1198.20.camel@ret.masoncoding.com>
+ <1390414439.2372.53.camel@dabdike.int.hansenpartnership.com>
+ <20140123082734.GP13997@dastard>
+ <1390492073.2372.118.camel@dabdike.int.hansenpartnership.com>
+ <20140123164438.GL4963@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Content-Disposition: inline
 In-Reply-To: <20140123164438.GL4963@suse.de>
-Sender: owner-linux-mm@kvack.org
+Sender: linux-fsdevel-owner@vger.kernel.org
 To: Mel Gorman <mgorman@suse.de>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Chris Mason <clm@fb.com>, Dave Chinner <david@fromorbit.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, "rwheeler@redhat.com" <rwheeler@redhat.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Chris Mason <clm@fb.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, "rwheeler@redhat.com" <rwheeler@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 2014-01-23 at 16:44 +0000, Mel Gorman wrote:
+On Thu, Jan 23, 2014 at 04:44:38PM +0000, Mel Gorman wrote:
 > On Thu, Jan 23, 2014 at 07:47:53AM -0800, James Bottomley wrote:
 > > On Thu, 2014-01-23 at 19:27 +1100, Dave Chinner wrote:
 > > > On Wed, Jan 22, 2014 at 10:13:59AM -0800, James Bottomley wrote:
 > > > > On Wed, 2014-01-22 at 18:02 +0000, Chris Mason wrote:
-> > > > > On Wed, 2014-01-22 at 09:21 -0800, James Bottomley wrote:
-> > > > > > On Wed, 2014-01-22 at 17:02 +0000, Chris Mason wrote:
-> > > > > 
-> > > > > [ I like big sectors and I cannot lie ]
-> > > > 
-> > > > I think I might be sceptical, but I don't think that's showing in my
-> > > > concerns ...
-> > > > 
-> > > > > > > I really think that if we want to make progress on this one, we need
-> > > > > > > code and someone that owns it.  Nick's work was impressive, but it was
-> > > > > > > mostly there for getting rid of buffer heads.  If we have a device that
-> > > > > > > needs it and someone working to enable that device, we'll go forward
-> > > > > > > much faster.
-> > > > > > 
-> > > > > > Do we even need to do that (eliminate buffer heads)?  We cope with 4k
-> > > > > > sector only devices just fine today because the bh mechanisms now
-> > > > > > operate on top of the page cache and can do the RMW necessary to update
-> > > > > > a bh in the page cache itself which allows us to do only 4k chunked
-> > > > > > writes, so we could keep the bh system and just alter the granularity of
-> > > > > > the page cache.
-> > > > > > 
-> > > > > 
-> > > > > We're likely to have people mixing 4K drives and <fill in some other
-> > > > > size here> on the same box.  We could just go with the biggest size and
-> > > > > use the existing bh code for the sub-pagesized blocks, but I really
-> > > > > hesitate to change VM fundamentals for this.
-> > > > 
-> > > > If the page cache had a variable granularity per device, that would cope
-> > > > with this.  It's the variable granularity that's the VM problem.
-> > > > 
-> > > > > From a pure code point of view, it may be less work to change it once in
-> > > > > the VM.  But from an overall system impact point of view, it's a big
-> > > > > change in how the system behaves just for filesystem metadata.
-> > > > 
-> > > > Agreed, but only if we don't do RMW in the buffer cache ... which may be
-> > > > a good reason to keep it.
-> > > > 
 > > > > > > The other question is if the drive does RMW between 4k and whatever its
 > > > > > > physical sector size, do we need to do anything to take advantage of
 > > > > > > it ... as in what would altering the granularity of the page cache buy
@@ -97,28 +61,45 @@ On Thu, 2014-01-23 at 16:44 +0000, Mel Gorman wrote:
 > > we might as well do it anyway. 
 > 
 > Do not do this as there is no guarantee that a compound allocation will
-> succeed.
-
-I presume this is because in the current implementation compound pages
-have to be physically contiguous.  For increasing granularity in the
-page cache, we don't necessarily need this ... however, getting write
-out to work properly without physically contiguous pages would be a bit
-more challenging (but not impossible) to solve.
-
->  If the allocation fails then it is potentially unrecoverable
-> because we can no longer write to storage then you're hosed. If you are
+> succeed. If the allocation fails then it is potentially unrecoverable
+> because we can no longer write to storage then you're hosed.  If you are
 > now thinking mempool then the problem becomes that the system will be
 > in a state of degraded performance for an unknowable length of time and
-> may never recover fully. 64K MMU page size systems get away with this
+> may never recover fully.
+
+We are talking about page cache allocation here, not something deep
+down inside the IO path that requires mempools to guarantee IO
+completion. IOWs, we have an *existing error path* to return ENOMEM
+to userspace when page cache allocation fails.
+
+> 64K MMU page size systems get away with this
 > because the blocksize is still <= PAGE_SIZE and no core VM changes are
 > necessary. Critically, pages like the page table pages are the same size as
 > the basic unit of allocation used by the kernel so external fragmentation
 > simply is not a severe problem.
 
-Right, I understand this ... but we still need to wonder about what it
-would take.  Even the simple fail a compound page allocation gets
-treated in the kernel the same way as failing a single page allocation
-in the page cache.
+Christoph's old patches didn't need 64k MMU page sizes to work.
+IIRC, the compound page was mapped via into the page cache as
+individual 4k pages. Any change of state on the child pages followed
+the back pointer to the head of the compound page and changed the
+state of that page. On page faults, the individual 4k pages were
+mapped to userspace rather than the compound page, so there was no
+userspace visible change, either.
+
+The question I had at the time that was never answered was this: if
+pages are faulted and mapped individually through their own ptes,
+why did the compound pages need to be contiguous? copy-in/out
+through read/write was still done a PAGE_SIZE granularity, mmap
+mappings were still on PAGE_SIZE granularity, so why can't we build
+a compound page for the page cache out of discontiguous pages?
+
+FWIW, XFS has long used discontiguous pages for large block support
+in metadata. Some of that is vmapped to make metadata processing
+simple. The point of this is that we don't need *contiguous*
+compound pages in the page cache if we can map them into userspace
+as individual PAGE_SIZE pages. Only the page cache management needs
+to handle the groups of pages that make up a filesystem block
+as a compound page....
 
 > > I was only objecting on the grounds that
 > > the last time we looked at it, it was major VM surgery.  Can someone
@@ -130,33 +111,33 @@ in the page cache.
 > Offhand no idea. For fsblock, probably a similar amount of work than
 > had to be done in 2007 and I'd expect it would still require filesystem
 > awareness problems that Dave Chinner pointer out earlier. For large block,
-> it'd hit into the same wall that allocations must always succeed.
-
-I don't understand this.  Why must they succeed?  4k page allocations
-don't have to succeed today in the page cache, so why would compound
-page allocations have to succeed?
-
->  If we
+> it'd hit into the same wall that allocations must always succeed. If we
 > want to break the connection between the basic unit of memory managed
 > by the kernel and the MMU page size then I don't know but it would be a
-> fairly large amount of surgery and need a lot of design work. Minimally,
-> anything dealing with an MMU-sized amount of memory would now need to
-> deal with sub-pages and there would need to be some restrictions on how
-> sub-pages were used to mitigate the risk of external fragmentation -- do not
-> mix page table page allocations with pages mapped into the address space,
-> do not allow sub pages to be used by different processes etc. At the very
+> fairly large amount of surgery and need a lot of design work.
+
+Here's the patch that Christoph wrote backin 2007 to add PAGE_SIZE
+based mmap support:
+
+http://thread.gmane.org/gmane.linux.file-systems/18004
+
+I don't claim to understand all of it, but it seems to me that most
+of the design and implementation problems were solved....
+
+.....
+
+> At the very
 > least there would be a performance impact because PAGE_SIZE is no longer a
-> compile-time constant. However, it would potentially allow the block size
-> to be at least the same size as this new basic allocation unit.
+> compile-time constant.
 
-Hm, OK, so less appealing then.
+Christoph's patchset did this, and no discernable performance
+difference could be measured as a result of making PAGE_SIZE a
+variable rather than a compile time constant. I doubt that this has
+changed much since then...
 
-James
+Cheers,
 
-
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
