@@ -1,38 +1,36 @@
-From: Sha Zhengju <handai.szj@gmail.com>
-Subject: [PATCH] scsi-sd: removed unused SD_PASSTHROUGH_RETRIES
-Date: Thu, 23 Jan 2014 16:56:42 +0800
-Message-ID: <1390467402-30339-1-git-send-email-handai.szj@taobao.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f52.google.com ([209.85.220.52]:37094 "EHLO
-	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751139AbaAWI5E (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Jan 2014 03:57:04 -0500
-Received: by mail-pa0-f52.google.com with SMTP id bj1so1586664pad.25
-        for <linux-scsi@vger.kernel.org>; Thu, 23 Jan 2014 00:57:03 -0800 (PST)
-Sender: linux-scsi-owner@vger.kernel.org
+From: Lukasz Dorau <lukasz.dorau@intel.com>
+Subject: [PATCH] isci: update version to 1.2
+Date: Thu, 23 Jan 2014 10:38:35 +0100
+Message-ID: <20140123093835.6047.53983.stgit@gklab-154-244.igk.intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: JBottomley@Parallels.com
+Cc: stable@vger.kernel.org, dave.jiang@intel.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, maciej.patelczyk@intel.com
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: JBottomley@parallels.com, martin.petersen@oracle.com, Sha Zhengju <handai.szj@taobao.com>
 
-From: Sha Zhengju <handai.szj@taobao.com>
+The version of isci driver has not been updated for 2 years.
+It was 83 isci commits ago. Suspend/resume support has been implemented
+and many bugs have been fixed since 1.1. Now update the version to 1.2.
 
-Signed-off-by: Sha Zhengju <handai.szj@taobao.com>
+Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
+Cc: <stable@vger.kernel.org>
 ---
- drivers/scsi/sd.h |    1 -
- 1 file changed, 1 deletion(-)
+ drivers/scsi/isci/init.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
-index 26895ff..3bbe4df 100644
---- a/drivers/scsi/sd.h
-+++ b/drivers/scsi/sd.h
-@@ -24,7 +24,6 @@
-  * Number of allowed retries
-  */
- #define SD_MAX_RETRIES		5
--#define SD_PASSTHROUGH_RETRIES	1
- #define SD_MAX_MEDIUM_TIMEOUTS	2
+diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
+index d25d0d8..695b34e 100644
+--- a/drivers/scsi/isci/init.c
++++ b/drivers/scsi/isci/init.c
+@@ -66,7 +66,7 @@
+ #include "probe_roms.h"
  
- /*
--- 
-1.7.9.5
-
+ #define MAJ 1
+-#define MIN 1
++#define MIN 2
+ #define BUILD 0
+ #define DRV_VERSION __stringify(MAJ) "." __stringify(MIN) "." \
+ 	__stringify(BUILD)
