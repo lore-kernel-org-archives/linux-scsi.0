@@ -1,54 +1,78 @@
-From: Lee Duncan <lduncan@suse.com>
-Subject: Re: Persistent reservation behaviour/compliance with redundant controllers
-Date: Thu, 23 Jan 2014 10:31:00 -0800
-Message-ID: <52E15FE4.9070602@suse.com>
-References: <CAKbOo_KMG+M8F06S4wo9vta6PJjpgXzMX9ri-vr=PY0QYASPLg@mail.gmail.com> <52CB2C44.7040503@suse.com> <CAKbOo_+LxN7UN11nxrD7pQ5Evffb-jdbW9BmPJ47NWiSXG-=nQ@mail.gmail.com> <20140107201847.GW2924@reaktio.net>
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [Lsf-pc] [LSF/MM TOPIC] really large storage sectors - going
+ beyond 4096 bytes
+Date: Fri, 24 Jan 2014 06:49:31 +1100
+Message-ID: <20140123194931.GS13997@dastard>
+References: <1390411300.2372.33.camel@dabdike.int.hansenpartnership.com>
+ <1390413819.1198.20.camel@ret.masoncoding.com>
+ <1390414439.2372.53.camel@dabdike.int.hansenpartnership.com>
+ <52E00B28.3060609@redhat.com>
+ <1390415703.2372.62.camel@dabdike.int.hansenpartnership.com>
+ <52E0106B.5010604@redhat.com>
+ <1390419019.2372.89.camel@dabdike.int.hansenpartnership.com>
+ <20140122115002.bb5d01dee836b567a7aad157@linux-foundation.org>
+ <20140123083558.GQ13997@dastard>
+ <20140123125550.GB6853@thunk.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.nue.novell.com ([195.135.221.5]:50673 "EHLO
-	smtp.nue.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750927AbaAWSbG (ORCPT
-	<rfc822;groupwise-linux-scsi@vger.kernel.org:0:0>);
-	Thu, 23 Jan 2014 13:31:06 -0500
-In-Reply-To: <20140107201847.GW2924@reaktio.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <20140123125550.GB6853@thunk.org>
+Sender: owner-linux-mm@kvack.org
+To: Theodore Ts'o <tytso@mit.edu>, Andrew Morton <akpm@linux-foundation.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, Chris Mason <clm@fb.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "mgorman@suse.de" <mgorman@suse.de>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, Ric Wheeler <rwheeler@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: =?ISO-8859-1?Q?Pasi_K=E4rkk=E4inen?= <pasik@iki.fi>, Matthias Eble <psychotrahe@gmail.com>
-Cc: linux-scsi@vger.kernel.org
 
-On 01/07/2014 12:18 PM, Pasi K=E4rkk=E4inen wrote:
-> On Mon, Jan 06, 2014 at 11:53:44PM +0100, Matthias Eble wrote:
->>
->>> I have a "persistent reservations for dummies" document I wrote tha=
-t I
->>> can send you off list, if you like.
->>
->> I think I know how PRs work. Yet I'd be happy about your document.
->>
->=20
-> I think that document could be helpful for others aswell, so please p=
-ost it to the list :)
->=20
-> Thanks!
->=20
-> -- Pasi
->=20
+On Thu, Jan 23, 2014 at 07:55:50AM -0500, Theodore Ts'o wrote:
+> On Thu, Jan 23, 2014 at 07:35:58PM +1100, Dave Chinner wrote:
+> > > 
+> > > I expect it would be relatively simple to get large blocksizes working
+> > > on powerpc with 64k PAGE_SIZE.  So before diving in and doing huge
+> > > amounts of work, perhaps someone can do a proof-of-concept on powerpc
+> > > (or ia64) with 64k blocksize.
+> > 
+> > Reality check: 64k block sizes on 64k page Linux machines has been
+> > used in production on XFS for at least 10 years. It's exactly the
+> > same case as 4k block size on 4k page size - one page, one buffer
+> > head, one filesystem block.
+> 
+> This is true for ext4 as well.  Block size == page size support is
+> pretty easy; the hard part is when block size > page size, due to
+> assumptions in the VM layer that requires that FS system needs to do a
+> lot of extra work to fudge around.  So the real problem comes with
+> trying to support 64k block sizes on a 4k page architecture, and can
+> we do it in a way where every single file system doesn't have to do
+> their own specific hacks to work around assumptions made in the VM
+> layer.
+> 
+> Some of the problems include handling the case where you get someone
+> dirties a single block in a sparse page, and the FS needs to manually
+> fault in the other 56k pages around that single page.  Or the VM not
+> understanding that page eviction needs to be done in chunks of 64k so
+> we don't have part of the block evicted but not all of it, etc.
 
+Right, this is part of the problem that fsblock tried to handle, and
+some of the nastiness it had was that a page fault only resulted in
+the individual page being read from the underlying block. This means
+that it was entirely possible that the filesystem would need to do
+RMW cycles in the writeback path itself to handle things like block
+checksums, copy-on-write, unwritten extent conversion, etc. i.e. all
+the stuff that the page cache currently handles by doing RMW cycles
+at the page level.
 
-Apologies for taking so darn long to reply!
+The method of using compound pages in the page cache so that the
+page cache could do 64k RMW cycles so that a filesystem never had to
+deal with new issues like the above was one of the reasons that
+approach is so appealing to us filesystem people. ;)
 
-I have published my SCSI-3 Document here:
+Cheers,
 
-  http://www.gonzoleeman.net/documents/scsi-3-pgr-tutorial-v1.0
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
-=46eedback welcome.
---=20
-Lee Duncan
-SUSE Labs
 --
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
