@@ -1,34 +1,61 @@
-From: Christoph Lameter <cl@linux.com>
+From: Joel Becker <jlbec@evilplan.org>
 Subject: Re: [Lsf-pc] [LSF/MM TOPIC] really large storage sectors - going
  beyond 4096 bytes
-Date: Thu, 23 Jan 2014 14:54:37 -0600 (CST)
-Message-ID: <alpine.DEB.2.10.1401231450550.8031@nuc>
-References: <52DF353D.6050300@redhat.com> <20140122093435.GS4963@suse.de> <52DFD168.8080001@redhat.com> <20140122143452.GW4963@suse.de> <52DFDCA6.1050204@redhat.com> <20140122151913.GY4963@suse.de> <1390410233.1198.7.camel@ret.masoncoding.com>
- <1390411300.2372.33.camel@dabdike.int.hansenpartnership.com> <1390413819.1198.20.camel@ret.masoncoding.com> <1390414439.2372.53.camel@dabdike.int.hansenpartnership.com> <20140123082734.GP13997@dastard>
- <1390492073.2372.118.camel@dabdike.int.hansenpartnership.com>
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Date: Thu, 23 Jan 2014 13:21:26 -0800
+Message-ID: <20140123212125.GA25376@localhost>
+References: <1390411300.2372.33.camel@dabdike.int.hansenpartnership.com>
+ <1390413819.1198.20.camel@ret.masoncoding.com>
+ <1390414439.2372.53.camel@dabdike.int.hansenpartnership.com>
+ <52E00B28.3060609@redhat.com>
+ <1390415703.2372.62.camel@dabdike.int.hansenpartnership.com>
+ <52E0106B.5010604@redhat.com>
+ <1390419019.2372.89.camel@dabdike.int.hansenpartnership.com>
+ <20140122115002.bb5d01dee836b567a7aad157@linux-foundation.org>
+ <20140123083558.GQ13997@dastard>
+ <20140123125550.GB6853@thunk.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1390492073.2372.118.camel@dabdike.int.hansenpartnership.com>
+Content-Disposition: inline
+In-Reply-To: <20140123125550.GB6853@thunk.org>
 Sender: owner-linux-mm@kvack.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Dave Chinner <david@fromorbit.com>, Chris Mason <clm@fb.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "mgorman@suse.de" <mgorman@suse.de>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, "rwheeler@redhat.com" <rwheeler@redhat.com>
+To: Theodore Ts'o <tytso@mit.edu>, Dave Chinner <david@fromorbit.com>, Andrew Morton <akpm@linux-foundation.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, Chris Mason <clm@fb.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "mgorman@suse.de" <mgorman@suse.de>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, Ric Wheeler <rwheeler@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 23 Jan 2014, James Bottomley wrote:
+On Thu, Jan 23, 2014 at 07:55:50AM -0500, Theodore Ts'o wrote:
+> On Thu, Jan 23, 2014 at 07:35:58PM +1100, Dave Chinner wrote:
+> > > 
+> > > I expect it would be relatively simple to get large blocksizes working
+> > > on powerpc with 64k PAGE_SIZE.  So before diving in and doing huge
+> > > amounts of work, perhaps someone can do a proof-of-concept on powerpc
+> > > (or ia64) with 64k blocksize.
+> > 
+> > Reality check: 64k block sizes on 64k page Linux machines has been
+> > used in production on XFS for at least 10 years. It's exactly the
+> > same case as 4k block size on 4k page size - one page, one buffer
+> > head, one filesystem block.
+> 
+> This is true for ext4 as well.  Block size == page size support is
+> pretty easy; the hard part is when block size > page size, due to
+> assumptions in the VM layer that requires that FS system needs to do a
+> lot of extra work to fudge around.  So the real problem comes with
+> trying to support 64k block sizes on a 4k page architecture, and can
+> we do it in a way where every single file system doesn't have to do
+> their own specific hacks to work around assumptions made in the VM
+> layer.
 
-> If the compound page infrastructure exists today and is usable for this,
-> what else do we need to do? ... because if it's a couple of trivial
-> changes and a few minor patches to filesystems to take advantage of it,
-> we might as well do it anyway.  I was only objecting on the grounds that
-> the last time we looked at it, it was major VM surgery.  Can someone
-> give a summary of how far we are away from being able to do this with
-> the VM system today and what extra work is needed (and how big is this
-> piece of work)?
+Yup, ditto for ocfs2.
 
-The main problem for me was the page cache. The VM would not be such a
-problem. Changing the page cache function required updates to many
-filesystems.
+Joel
 
+-- 
+
+"One of the symptoms of an approaching nervous breakdown is the
+ belief that one's work is terribly important."
+         - Bertrand Russell 
+
+			http://www.jlbec.org/
+			jlbec@evilplan.org
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
