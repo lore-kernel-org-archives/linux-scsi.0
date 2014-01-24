@@ -1,57 +1,40 @@
-From: Matthias Eble <psychotrahe@gmail.com>
-Subject: Re: Open/INQUIRY fails on RESERVE'd tape device
-Date: Fri, 24 Jan 2014 22:48:52 +0100
-Message-ID: <CAKbOo_J8c3YTg4NjUdtyFhG6WOrur4hFMnRMZ7u7LcL53O=o6A@mail.gmail.com>
-References: <CAKbOo_KDVtCw1U7wD7L=aE-qug-3UwQQkDjuvyG2_xVEA8tnvg@mail.gmail.com>
-	<52E2886F.3060604@tributary.com>
+From: "Mr. SUN Zhijun" <sunzhii@live.cn>
+Subject: Contact Me Please !
+Date: Fri, 24 Jan 2014 23:13:58 +0100
+Message-ID: <MAIL01BwSNsiXxfzhBw000020a6__2863.94015788591$1390602228$gmane$org@MAIL01.schroeder.local>
+Reply-To: sun.zhijun@yahoo.com.hk
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-lb0-f181.google.com ([209.85.217.181]:49568 "EHLO
-	mail-lb0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751084AbaAXVsy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Jan 2014 16:48:54 -0500
-Received: by mail-lb0-f181.google.com with SMTP id z5so3003226lbh.12
-        for <linux-scsi@vger.kernel.org>; Fri, 24 Jan 2014 13:48:52 -0800 (PST)
-In-Reply-To: <52E2886F.3060604@tributary.com>
+Received: from webmail.schroeder.nl ([82.204.41.35]:9622 "EHLO
+	MAIL01.schroeder.local" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751609AbaAXWXW convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Jan 2014 17:23:22 -0500
+Content-Description: Mail message body
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeremy Linton <jlinton@tributary.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Recipients <sunzhii@live.cn>
 
-Hi all,
+Guten Tag,
 
-2014/1/24 Jeremy Linton <jlinton@tributary.com>:
-> On 1/23/2014 4:02 PM, Matthias Eble wrote:
->> So: should open() fail on a reserved tape device?
->
->         Yes, this is expected behavior for tape devices, reserve 6/release is sometimes
-> used by backup applications in SAN environments as an arbitration mechanism
-> across multiple machines.
+Mein Name ist Mr.SUN Zhijun, ich mit der Bank of China zu arbeiten. Ich=
+ brauche Ihre Unterst=FCtzung in Durchf=FChrung einer Transaktion bei $=
+ 18,5 Millionen Dollar gesch=E4tzt, m=F6chte ich Ihnen 30% der gesamten=
+ Mittel als Ausgleich f=FCr Ihre Unterst=FCtzung in dieser Transaktion.=
+ Ich werde Sie =FCber die vollst=E4ndige Transaktion benachrichtigt nac=
+h Eingang Ihrer Antwort, wenn interessiert, bitte senden Sie mir Ihren =
+vollst=E4ndigen detials als unten, um meine E-Mail aufgef=FChrt: sun.zh=
+ijun@yahoo.com.hk
 
-You hit the nail on the head. Problem is that our backup application
-does inquiry on /dev/nst*,
-which is broken when the same application uses RESERVE/RELEASE.
+1. Vollst=E4ndiger Name
+2.Private Telefonnummer
+3.Current Wohnadresse
 
->         Its not that the INQUIRY is failing, its that the st open sequence is doing a
-> reserve/TUR/etc during the open.
-
-This is exactly what I am facing. I just thought that it might not be
-OK to issue these commands with st_open. But I guess, there is no
-right or wrong it's just implemented that way - so applications need
-to deal with it and use a generic device.
-
->         If that fails then you can't open the drives sufficiently to send a inquiry via
-> pass-through. In some environments you can bypass that processing with
-> O_NDELAY/O_NONBLOCK. Or you just use the sg device which doesn't perform the
-> tape open processing that st does.
-
-I guess you mean operating systems with environments, as sg_vpd
-also uses O_NONBLOCK, which doesn't help:
-  open("/dev/st15", O_RDONLY|O_NONBLOCK)  = -1 EIO (Input/output error)
-
-But as this behaviour has been there for long time, the backup vendor
-needs to fix it IMO.
-
-Thanks to all of you
-Matthias
+Mit freundlichen Gr=FC=DFen,
+Mr.SUN Zhijun
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
