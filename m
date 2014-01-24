@@ -1,37 +1,34 @@
-From: Jeremy Linton <jlinton@tributary.com>
-Subject: Re: Open/INQUIRY fails on RESERVE'd tape device
-Date: Fri, 24 Jan 2014 09:36:15 -0600
-Message-ID: <52E2886F.3060604@tributary.com>
-References: <CAKbOo_KDVtCw1U7wD7L=aE-qug-3UwQQkDjuvyG2_xVEA8tnvg@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay.ihostexchange.net ([66.46.182.53]:6119 "EHLO
-	relay.ihostexchange.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752500AbaAXPln (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Jan 2014 10:41:43 -0500
-In-Reply-To: <CAKbOo_KDVtCw1U7wD7L=aE-qug-3UwQQkDjuvyG2_xVEA8tnvg@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Christoph Lameter <cl@linux.com>
+Subject: Re: [Lsf-pc] [LSF/MM TOPIC] really large storage sectors - going
+ beyond 4096 bytes
+Date: Fri, 24 Jan 2014 09:44:20 -0600 (CST)
+Message-ID: <alpine.DEB.2.10.1401240941190.12665@nuc>
+References: <20131220093022.GV11295@suse.de> <52DF353D.6050300@redhat.com> <20140122093435.GS4963@suse.de> <alpine.DEB.2.10.1401231436300.8031@nuc> <20140124110928.GR4963@suse.de>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20140124110928.GR4963@suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Mel Gorman <mgorman@suse.de>
+Cc: Ric Wheeler <rwheeler@redhat.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, lsf-pc@lists.linux-foundation.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthias Eble <psychotrahe@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 1/23/2014 4:02 PM, Matthias Eble wrote:
+On Fri, 24 Jan 2014, Mel Gorman wrote:
 
-> So: should open() fail on a reserved tape device?
+> That'd be okish for 64-bit at least although it would show up as
+> degraded performance in some cases when virtually contiguous buffers were
+> used. Aside from the higher setup, access costs and teardown costs of a
+> virtual contiguous buffer, the underlying storage would no longer gets
+> a single buffer as part of the IO request. Would that not offset many of
+> the advantages?
 
-	Yes, this is expected behavior for tape devices, reserve 6/release is sometimes
-used by backup applications in SAN environments as an arbitration mechanism
-across multiple machines.
+It would offset some of that. But the major benefit of large order page
+cache was the reduction of the number of operations that the kernel has to
+perform. A 64k page contains 16 4k pages. So there is only one kernel
+operation required instead of 16. If the page is virtually allocated then
+the higher level kernel functions still only operate on one page struct.
+The lower levels (bio) then will have to deal with the virtuall mappings
+and create a scatter gather list. This is some more overhead but not much.
 
-	Its not that the INQUIRY is failing, its that the st open sequence is doing a
-reserve/TUR/etc during the open.
-
-	If that fails then you can't open the drives sufficiently to send a inquiry via
-pass-through. In some environments you can bypass that processing with
-O_NDELAY/O_NONBLOCK. Or you just use the sg device which doesn't perform the
-tape open processing that st does.
-
-
-
-
+Doing something like this will put more stress on the defragmentation
+logic in the kernel. In general I think we need more contiguous physical
+memory.
