@@ -1,52 +1,67 @@
-From: Mel Gorman <mgorman@suse.de>
-Subject: Re: [Lsf-pc] [LSF/MM TOPIC] really large storage sectors - going
- beyond 4096 bytes
-Date: Fri, 24 Jan 2014 11:09:28 +0000
-Message-ID: <20140124110928.GR4963@suse.de>
-References: <20131220093022.GV11295@suse.de>
- <52DF353D.6050300@redhat.com>
- <20140122093435.GS4963@suse.de>
- <alpine.DEB.2.10.1401231436300.8031@nuc>
+From: Pasi =?iso-8859-1?Q?K=E4rkk=E4inen?= <pasik@iki.fi>
+Subject: Re: Persistent reservation behaviour/compliance with redundant
+ controllers
+Date: Fri, 24 Jan 2014 13:41:47 +0200
+Message-ID: <20140124114147.GO2924@reaktio.net>
+References: <CAKbOo_KMG+M8F06S4wo9vta6PJjpgXzMX9ri-vr=PY0QYASPLg@mail.gmail.com>
+ <52CB2C44.7040503@suse.com>
+ <CAKbOo_+LxN7UN11nxrD7pQ5Evffb-jdbW9BmPJ47NWiSXG-=nQ@mail.gmail.com>
+ <20140107201847.GW2924@reaktio.net>
+ <52E15FE4.9070602@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-Return-path: <owner-linux-mm@kvack.org>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:45692 "EHLO
+	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751053AbaAXLls (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Jan 2014 06:41:48 -0500
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.10.1401231436300.8031@nuc>
-Sender: owner-linux-mm@kvack.org
-To: Christoph Lameter <cl@linux.com>
-Cc: Ric Wheeler <rwheeler@redhat.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, lsf-pc@lists.linux-foundation.org, linux-kernel@vger.kernel.org
+In-Reply-To: <52E15FE4.9070602@suse.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Lee Duncan <lduncan@suse.com>
+Cc: Matthias Eble <psychotrahe@gmail.com>, linux-scsi@vger.kernel.org
 
-On Thu, Jan 23, 2014 at 02:47:10PM -0600, Christoph Lameter wrote:
-> On Wed, 22 Jan 2014, Mel Gorman wrote:
-> 
-> > Large block support was proposed years ago by Christoph Lameter
-> > (http://lwn.net/Articles/232757/). I think I was just getting started
-> > in the community at the time so I do not recall any of the details. I do
-> > believe it motivated an alternative by Nick Piggin called fsblock though
-> > (http://lwn.net/Articles/321390/). At the very least it would be nice to
-> > know why neither were never merged for those of us that were not around
-> > at the time and who may not have the chance to dive through mailing list
-> > archives between now and March.
-> 
-> It was rejected first because of the necessity of higher order page
-> allocations. Nick and I then added ways to virtually map higher order
-> pages if the page allocator could no longe provide those.
-> 
+On Thu, Jan 23, 2014 at 10:31:00AM -0800, Lee Duncan wrote:
+> On 01/07/2014 12:18 PM, Pasi K=E4rkk=E4inen wrote:
+> > On Mon, Jan 06, 2014 at 11:53:44PM +0100, Matthias Eble wrote:
+> >>
+> >>> I have a "persistent reservations for dummies" document I wrote t=
+hat I
+> >>> can send you off list, if you like.
+> >>
+> >> I think I know how PRs work. Yet I'd be happy about your document.
+> >>
+> >=20
+> > I think that document could be helpful for others aswell, so please=
+ post it to the list :)
+> >=20
+> > Thanks!
+> >=20
+> > -- Pasi
+> >=20
+>=20
+>=20
+> Apologies for taking so darn long to reply!
+>=20
+> I have published my SCSI-3 Document here:
+>=20
+>   http://www.gonzoleeman.net/documents/scsi-3-pgr-tutorial-v1.0
+>
 
-That'd be okish for 64-bit at least although it would show up as
-degraded performance in some cases when virtually contiguous buffers were
-used. Aside from the higher setup, access costs and teardown costs of a
-virtual contiguous buffer, the underlying storage would no longer gets
-a single buffer as part of the IO request. Would that not offset many of
-the advantages?
+Thanky you! I'll check it out.
+=20
+> Feedback welcome.
+> --=20
+> Lee Duncan
+> SUSE Labs
+>
 
--- 
-Mel Gorman
-SUSE Labs
+-- Pasi
 
 --
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
