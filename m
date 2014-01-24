@@ -1,34 +1,41 @@
-From: Christoph Lameter <cl@linux.com>
-Subject: Re: [Lsf-pc] [LSF/MM TOPIC] really large storage sectors - going
- beyond 4096 bytes
-Date: Fri, 24 Jan 2014 09:44:20 -0600 (CST)
-Message-ID: <alpine.DEB.2.10.1401240941190.12665@nuc>
-References: <20131220093022.GV11295@suse.de> <52DF353D.6050300@redhat.com> <20140122093435.GS4963@suse.de> <alpine.DEB.2.10.1401231436300.8031@nuc> <20140124110928.GR4963@suse.de>
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140124110928.GR4963@suse.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Mel Gorman <mgorman@suse.de>
-Cc: Ric Wheeler <rwheeler@redhat.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, lsf-pc@lists.linux-foundation.org, linux-kernel@vger.kernel.org
+From: "Mr. SUN Zhijun" <sunzh@live.cn>
+Subject: Contact Me Please
+Date: Fri, 24 Jan 2014 16:33:58 +0100
+Message-ID: <BY-EXCHANGEi4w3sgT400003999@mail.BEER-YACKOV.ORG.IL>
+Reply-To: sun.zhijun@yahoo.com.hk
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from [82.166.156.133] ([82.166.156.133]:52987 "EHLO
+	mail.BEER-YACKOV.ORG.IL" rhost-flags-FAIL-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1752980AbaAXPuD convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 24 Jan 2014 10:50:03 -0500
+Content-Description: Mail message body
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Recipients <sunzh@live.cn>
 
-On Fri, 24 Jan 2014, Mel Gorman wrote:
+Guten Tag,
 
-> That'd be okish for 64-bit at least although it would show up as
-> degraded performance in some cases when virtually contiguous buffers were
-> used. Aside from the higher setup, access costs and teardown costs of a
-> virtual contiguous buffer, the underlying storage would no longer gets
-> a single buffer as part of the IO request. Would that not offset many of
-> the advantages?
+Mein Name ist Mr.SUN Zhijun, ich mit der Bank of China zu arbeiten. Ich=
+ brauche Ihre Unterst=FCtzung in Durchf=FChrung einer Transaktion bei $=
+ 18,5 Millionen Dollar gesch=E4tzt, m=F6chte ich Ihnen 30% der gesamten=
+ Mittel als Ausgleich f=FCr Ihre Unterst=FCtzung in dieser Transaktion.=
+ Ich werde Sie =FCber die vollst=E4ndige Transaktion benachrichtigt nac=
+h Eingang Ihrer Antwort, wenn interessiert, bitte senden Sie mir Ihren =
+vollst=E4ndigen detials als unten, um meine E-Mail aufgef=FChrt: sun.zh=
+ijun@yahoo.com.hk
 
-It would offset some of that. But the major benefit of large order page
-cache was the reduction of the number of operations that the kernel has to
-perform. A 64k page contains 16 4k pages. So there is only one kernel
-operation required instead of 16. If the page is virtually allocated then
-the higher level kernel functions still only operate on one page struct.
-The lower levels (bio) then will have to deal with the virtuall mappings
-and create a scatter gather list. This is some more overhead but not much.
+1. Vollst=E4ndiger Name
+2.Private Telefonnummer
+3.Current Wohnadresse
 
-Doing something like this will put more stress on the defragmentation
-logic in the kernel. In general I think we need more contiguous physical
-memory.
+Mit freundlichen Gr=FC=DFen,
+Mr.SUN Zhijun
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
