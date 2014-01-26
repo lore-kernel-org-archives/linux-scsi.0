@@ -1,31 +1,60 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: status of drivers/scsi/scsi_tgt_lib.c
-Date: Sat, 25 Jan 2014 12:48:32 +0900 (JST)
-Message-ID: <20140125.124832.1568838937885770665.fujita.tomonori@lab.ntt.co.jp>
-References: <20140124131525.GA30922@infradead.org>
+From: Caizhiyong <caizhiyong@hisilicon.com>
+Subject: patch "[SCSI] Fix out of spec CD-ROM problem with media change"
+ will cause usb  disk resume fail.
+Date: Sun, 26 Jan 2014 08:03:09 +0000
+Message-ID: <C3050A4DBA34F345975765E43127F10F25E49B33@SZXEMA512-MBX.china.huawei.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama50.ecl.ntt.co.jp ([129.60.39.147]:59428 "EHLO
-	tama50.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750803AbaAYDx5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Jan 2014 22:53:57 -0500
-In-Reply-To: <20140124131525.GA30922@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="iso-2022-jp"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Language: zh-CN
+Sender: linux-kernel-owner@vger.kernel.org
+To: TARUISI Hiroaki <taruishi.hiroak@jp.fujitsu.com>, James Bottomley <JBottomley@Parallels.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Wanglin (Albert)" <albert.wanglin@hisilicon.com>, "Liuhui (B)" <liuhui88.liuhui@hisilicon.com>, "Ouyangshiting (Tim)" <tim.ouyang@hisilicon.com>, Wanting <wanting@hisilicon.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: hch@infradead.org
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 
-Hey,
+>    [SCSI] Fix out of spec CD-ROM problem with media change
+>
+>    Some CD-ROMs fail to report a media change correctly.  The specific
+>    one for this patch simply fails to respond to commands, then gives a
+>    UNIT ATTENTION after being reset which returns ASC/ASCQ 28/00.  This
+>    is out of spec behaviour, but add a check in the eat CC/UA on reset
+>    path to catch this case so the CD-ROM will function somewhat properly.
+>
+>    [jejb: fixed up white space and accepted without signoff]
+>    Signed-off-by: James Bottomley <JBottomley@Parallels.com>
+>
+>diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+>index a4b9cdb..dc6131e 100644
+>--- a/drivers/scsi/scsi_error.c
+>+++ b/drivers/scsi/scsi_error.c
+>@@ -293,8 +293,16 @@ static int scsi_check_sense(struct scsi_cmnd *scmd)
+>                 * so that we can deal with it there.
+>                 */
+>                if (scmd->device->expecting_cc_ua) {
+>-                       scmd->device->expecting_cc_ua = 0;
+>-                       return NEEDS_RETRY;
+>+                       /*
+>+                        * Because some device does not queue unit
+>+                        * attentions correctly, we carefully check
+>+                        * additional sense code and qualifier so as
+>+                        * not to squash media change unit attention.
+>+                        */
+>+                       if (sshdr.asc != 0x28 || sshdr.ascq != 0x00) {
+>+                               scmd->device->expecting_cc_ua = 0;
+>+                               return NEEDS_RETRY;
+>+                       }
+>                }
 
-On Fri, 24 Jan 2014 05:15:25 -0800
-Christoph Hellwig <hch@infradead.org> wrote:
+Consider this scene:
 
-> Do you know if either SRP or ibmvscsi are used regularly these days?
-> Does tgtd userspace still support this interface?
+1. Insert usb disk.
+2. System suspend, usb controller power off.
+3. System resume, usb controller power on, reset the usb disk. When read/write usb disk, it will pass up "media changed" status to scsi layer.
+   this time need NEEDS_RETRY cmd，but this patch filter NEEDS_RETRY cmd, block layer report "IO ERRROR".
 
-It doesn't. I think that ibm pseries switched to virtual fc driver
-from virtual srp long ago. Only very old pseries could use the
-driver. I'm not sure there are any users of the driver. I guess that
-you could try to remove the driver to see if someone would complain.
+
+Looking forward to your feedback.
+Best regards.
+Cai Zhiyong.
+http://www.huawei.com
