@@ -1,60 +1,39 @@
-From: Caizhiyong <caizhiyong@hisilicon.com>
-Subject: patch "[SCSI] Fix out of spec CD-ROM problem with media change"
- will cause usb  disk resume fail.
-Date: Sun, 26 Jan 2014 08:03:09 +0000
-Message-ID: <C3050A4DBA34F345975765E43127F10F25E49B33@SZXEMA512-MBX.china.huawei.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 69441] WARNING: CPU: 0 PID: 4992 at fs/sysfs/group.c:214
+ sysfs_remove_group+0xc6/0xd0()
+Date: Sun, 26 Jan 2014 15:47:39 +0000
+Message-ID: <bug-69441-11613-VbIBJedWVn@https.bugzilla.kernel.org/>
+References: <bug-69441-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-2022-jp"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Language: zh-CN
-Sender: linux-kernel-owner@vger.kernel.org
-To: TARUISI Hiroaki <taruishi.hiroak@jp.fujitsu.com>, James Bottomley <JBottomley@Parallels.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Wanglin (Albert)" <albert.wanglin@hisilicon.com>, "Liuhui (B)" <liuhui88.liuhui@hisilicon.com>, "Ouyangshiting (Tim)" <tim.ouyang@hisilicon.com>, Wanting <wanting@hisilicon.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.19.201]:39167 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752198AbaAZPrq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 26 Jan 2014 10:47:46 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 97F2920142
+	for <linux-scsi@vger.kernel.org>; Sun, 26 Jan 2014 15:47:45 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+	by mail.kernel.org (Postfix) with ESMTP id 2A82020127
+	for <linux-scsi@vger.kernel.org>; Sun, 26 Jan 2014 15:47:40 +0000 (UTC)
+In-Reply-To: <bug-69441-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
->    [SCSI] Fix out of spec CD-ROM problem with media change
->
->    Some CD-ROMs fail to report a media change correctly.  The specific
->    one for this patch simply fails to respond to commands, then gives a
->    UNIT ATTENTION after being reset which returns ASC/ASCQ 28/00.  This
->    is out of spec behaviour, but add a check in the eat CC/UA on reset
->    path to catch this case so the CD-ROM will function somewhat properly.
->
->    [jejb: fixed up white space and accepted without signoff]
->    Signed-off-by: James Bottomley <JBottomley@Parallels.com>
->
->diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
->index a4b9cdb..dc6131e 100644
->--- a/drivers/scsi/scsi_error.c
->+++ b/drivers/scsi/scsi_error.c
->@@ -293,8 +293,16 @@ static int scsi_check_sense(struct scsi_cmnd *scmd)
->                 * so that we can deal with it there.
->                 */
->                if (scmd->device->expecting_cc_ua) {
->-                       scmd->device->expecting_cc_ua = 0;
->-                       return NEEDS_RETRY;
->+                       /*
->+                        * Because some device does not queue unit
->+                        * attentions correctly, we carefully check
->+                        * additional sense code and qualifier so as
->+                        * not to squash media change unit attention.
->+                        */
->+                       if (sshdr.asc != 0x28 || sshdr.ascq != 0x00) {
->+                               scmd->device->expecting_cc_ua = 0;
->+                               return NEEDS_RETRY;
->+                       }
->                }
+https://bugzilla.kernel.org/show_bug.cgi?id=69441
 
-Consider this scene:
+Greg Kroah-Hartman <greg@kroah.com> changed:
 
-1. Insert usb disk.
-2. System suspend, usb controller power off.
-3. System resume, usb controller power on, reset the usb disk. When read/write usb disk, it will pass up "media changed" status to scsi layer.
-   this time need NEEDS_RETRY cmd，but this patch filter NEEDS_RETRY cmd, block layer report "IO ERRROR".
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+          Component|SysFS                       |Other
+           Assignee|greg@kroah.com              |scsi_drivers-other@kernel-b
+                   |                            |ugs.osdl.org
+            Product|File System                 |SCSI Drivers
 
-
-Looking forward to your feedback.
-Best regards.
-Cai Zhiyong.
-http://www.huawei.com
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
