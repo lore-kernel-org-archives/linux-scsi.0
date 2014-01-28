@@ -1,40 +1,56 @@
-From: "Mr. SUN Zhijun" <sunzhii@live.cn>
-Subject: Contact Me Please
-Date: Tue, 28 Jan 2014 23:42:50 +0100
-Message-ID: <SRV-SBSJcZikaTAbNF40000040d__40208.3447821953$1390949901$gmane$org@mail.goedegebuure.nl>
-Reply-To: sun.zhijun@yahoo.com.hk
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.goedegebuure.nl ([95.97.198.144]:6569 "EHLO
-	mail.goedegebuure.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755581AbaA1W5z convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Jan 2014 17:57:55 -0500
-Content-Description: Mail message body
-Sender: linux-scsi-owner@vger.kernel.org
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH 09/11] scsi: use device_remove_file_self() instead of device_schedule_callback()
+Date: Tue, 28 Jan 2014 18:21:49 -0500
+Message-ID: <1390951311-15325-10-git-send-email-tj@kernel.org>
+References: <1390951311-15325-1-git-send-email-tj@kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1390951311-15325-1-git-send-email-tj@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: gregkh@linuxfoundation.org
+Cc: linux-kernel@vger.kernel.org, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, stern@rowland.harvard.edu, JBottomley@parallels.com, bhelgaas@google.com, Tejun Heo <tj@kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Recipients <sunzhii@live.cn>
 
-Guten Tag,
+driver-core now supports synchrnous self-deletion of attributes and
+the asynchrnous removal mechanism is scheduled for removal.  Use it
+instead of device_schedule_callback().  This makes "delete" behave
+synchronously.
 
-Mein Name ist Mr.SUN Zhijun, ich mit der Bank of China zu arbeiten. Ich=
- brauche Ihre Unterst=FCtzung in Durchf=FChrung einer Transaktion bei $=
- 18,5 Millionen Dollar gesch=E4tzt, m=F6chte ich Ihnen 30% der gesamten=
- Mittel als Ausgleich f=FCr Ihre Unterst=FCtzung in dieser Transaktion.=
- Ich werde Sie =FCber die vollst=E4ndige Transaktion benachrichtigt nac=
-h Eingang Ihrer Antwort, wenn interessiert, bitte senden Sie mir Ihren =
-vollst=E4ndigen detials als unten, um meine E-Mail aufgef=FChrt: sun.zh=
-ijun@yahoo.com.hk
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org
+---
+ drivers/scsi/scsi_sysfs.c | 15 ++-------------
+ 1 file changed, 2 insertions(+), 13 deletions(-)
 
-1. Vollst=E4ndiger Name
-2.Private Telefonnummer
-3.Current Wohnadresse
-
-Mit freundlichen Gr=FC=DFen,
-Mr.SUN Zhijun
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 9117d0b..8ead24c 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -649,23 +649,12 @@ store_rescan_field (struct device *dev, struct device_attribute *attr,
+ }
+ static DEVICE_ATTR(rescan, S_IWUSR, NULL, store_rescan_field);
+ 
+-static void sdev_store_delete_callback(struct device *dev)
+-{
+-	scsi_remove_device(to_scsi_device(dev));
+-}
+-
+ static ssize_t
+ sdev_store_delete(struct device *dev, struct device_attribute *attr,
+ 		  const char *buf, size_t count)
+ {
+-	int rc;
+-
+-	/* An attribute cannot be unregistered by one of its own methods,
+-	 * so we have to use this roundabout approach.
+-	 */
+-	rc = device_schedule_callback(dev, sdev_store_delete_callback);
+-	if (rc)
+-		count = rc;
++	if (device_remove_file_self(dev, attr))
++		scsi_remove_device(to_scsi_device(dev));
+ 	return count;
+ };
+ static DEVICE_ATTR(delete, S_IWUSR, NULL, sdev_store_delete);
+-- 
+1.8.5.3
