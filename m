@@ -1,36 +1,30 @@
-From: Alexander Gordeev <agordeev@redhat.com>
-Subject: Re: [PATCH v2 4/9] ipr: Use pci_enable_msi_range() and
- pci_enable_msix_range()
-Date: Tue, 28 Jan 2014 10:54:42 +0100
-Message-ID: <20140128095441.GA6951@dhcp-26-207.brq.redhat.com>
-References: <cover.1389904166.git.agordeev@redhat.com>
- <eb0b62be65c050533f2565fcf3f1d673770dfd67.1389904166.git.agordeev@redhat.com>
+From: "Yung kim" <pawel.dobrzanski@prawo.uni.wroc.pl>
+Subject: I HAVE A PROPOSAL FOR YOU!
+Date: Tue, 28 Jan 2014 12:08:09 +0100 (CET)
+Message-ID: <4e23ac4db5c67f736eaf2d412a2219e9.squirrel__584.030329673801$1390909312$gmane$org@prawo.uni.wroc.pl>
+Reply-To: yung.kim@qq.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-pci-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <eb0b62be65c050533f2565fcf3f1d673770dfd67.1389904166.git.agordeev@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
-To: Brian King <brking@us.ibm.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org, kvm@vger.kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx.prawo.uni.wroc.pl ([156.17.122.2]:59281 "EHLO
+	mx.prawo.uni.wroc.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754513AbaA1Lld convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Jan 2014 06:41:33 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Jan 17, 2014 at 05:02:18PM +0100, Alexander Gordeev wrote:
-> As result deprecation of MSI-X/MSI enablement functions
-> pci_enable_msix() and pci_enable_msi_block() all drivers
-> using these two interfaces need to be updated to use the
-> new pci_enable_msi_range() and pci_enable_msix_range()
-> interfaces.
-> 
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Hello,
 
-Brian, James,
+The Project is about the exportation of 100,000 barrels of Light Crude
+Oil daily out from Iraq to Turkey through my client's company in Iraq
+at the rate of $92.00 a barrel. This amount to $9,200,000 daily. I ask
+for your support as a foreigner to handle this business project with my
+client and you are not expected to invest in Iraq
 
-Could you please review patches 3 and 4?
+If yes, let me know and we will discuss this project proper.
 
-Thanks!
+yung kim.
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+yung.kim@qq.com
+
