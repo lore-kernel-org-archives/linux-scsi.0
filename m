@@ -1,56 +1,45 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 09/11] scsi: use device_remove_file_self() instead of device_schedule_callback()
-Date: Tue, 28 Jan 2014 18:21:49 -0500
-Message-ID: <1390951311-15325-10-git-send-email-tj@kernel.org>
-References: <1390951311-15325-1-git-send-email-tj@kernel.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1390951311-15325-1-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: gregkh@linuxfoundation.org
-Cc: linux-kernel@vger.kernel.org, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, stern@rowland.harvard.edu, JBottomley@parallels.com, bhelgaas@google.com, Tejun Heo <tj@kernel.org>, linux-scsi@vger.kernel.org
+From: Michael Schmitz <schmitzmic@gmail.com>
+Subject: [PATCH 0/3] m68k/atari - Atari NCR5380 SCSI driver fixes (resent)
+Date: Wed, 29 Jan 2014 12:55:21 +1300
+Message-ID: <1390953324-19962-1-git-send-email-schmitz@debian.org>
+References: <1388664474-1710039-3-git-send-email-arnd@arndb.de>
+Return-path: <linux-m68k-owner@vger.kernel.org>
+In-Reply-To: <1388664474-1710039-3-git-send-email-arnd@arndb.de>
+Sender: linux-m68k-owner@vger.kernel.org
+To: linux-m68k@vger.kernel.org
+Cc: geert@linux-m68k.org, JBottomley@parallels.com, linux-scsi@vger.kernel.org, arnd@arndb.de
 List-Id: linux-scsi@vger.kernel.org
 
-driver-core now supports synchrnous self-deletion of attributes and
-the asynchrnous removal mechanism is scheduled for removal.  Use it
-instead of device_schedule_callback().  This makes "delete" behave
-synchronously.
+Geert,
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org
----
- drivers/scsi/scsi_sysfs.c | 15 ++-------------
- 1 file changed, 2 insertions(+), 13 deletions(-)
+this patch series brings the Atari NCR5380 driver up to date with current 3.x
+(or perhaps even 2.6) series SCSI midlevel and error handling changes.
 
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 9117d0b..8ead24c 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -649,23 +649,12 @@ store_rescan_field (struct device *dev, struct device_attribute *attr,
- }
- static DEVICE_ATTR(rescan, S_IWUSR, NULL, store_rescan_field);
- 
--static void sdev_store_delete_callback(struct device *dev)
--{
--	scsi_remove_device(to_scsi_device(dev));
--}
--
- static ssize_t
- sdev_store_delete(struct device *dev, struct device_attribute *attr,
- 		  const char *buf, size_t count)
- {
--	int rc;
--
--	/* An attribute cannot be unregistered by one of its own methods,
--	 * so we have to use this roundabout approach.
--	 */
--	rc = device_schedule_callback(dev, sdev_store_delete_callback);
--	if (rc)
--		count = rc;
-+	if (device_remove_file_self(dev, attr))
-+		scsi_remove_device(to_scsi_device(dev));
- 	return count;
- };
- static DEVICE_ATTR(delete, S_IWUSR, NULL, sdev_store_delete);
--- 
-1.8.5.3
+The first patch fixes completion condition errors contained in Arnd Bergmann's
+patch ([PATCH, RFC 02/30] scsi: atari_scsi: fix sleep_on race). The locking
+scheme still isn't 100% race free that way, but much improved, and I've seen
+the driver successfully handle error recovery from aborting a disconnected
+command via bus reset with all three patches applied (never managed to do that
+since 2.4 days). 
+Not sure whether this one should be taken through your tree or handled by Arnd
+rather.
+
+The other two are a rehash of old patches I had prepared somewhere along the
+2.6 series - somehow or other these were lost when one of my old git trees
+went pear shaped. 
+
+Abort and reset handlers nowadays return SUCCESS or FAILED only, and the SCSI
+midlevel now queues commands (in particular error handling ones) from soft
+interrupt context - the Falcon locking scheme still is ill equipped to handle
+that. Return codes have been changed and the reset handler in particular will
+leave running command completion handlers to the midlevel now. 
+
+If a SCSI command is queued while IDE or floppy have reserved the shared DMA
+and interrupt, queue_command() may not wait for lock release and instead will
+return SCSI_MLQUEUE_HOST_BUSY to indicate that. 
+
+CC: to linux-scsi and the SCSI maintainer added as per your request. 
+
+Cheers,
+
+	Michael
