@@ -1,36 +1,36 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: status of drivers/scsi/scsi_tgt_lib.c
-Date: Tue, 28 Jan 2014 00:45:04 +0900 (JST)
-Message-ID: <20140128.004504.1305564732068179852.fujita.tomonori@lab.ntt.co.jp>
-References: <20140124131525.GA30922@infradead.org>
-	<20140125.124832.1568838937885770665.fujita.tomonori@lab.ntt.co.jp>
-	<20140127075038.GA18590@infradead.org>
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: Re: [PATCH v2 4/9] ipr: Use pci_enable_msi_range() and
+ pci_enable_msix_range()
+Date: Tue, 28 Jan 2014 10:54:42 +0100
+Message-ID: <20140128095441.GA6951@dhcp-26-207.brq.redhat.com>
+References: <cover.1389904166.git.agordeev@redhat.com>
+ <eb0b62be65c050533f2565fcf3f1d673770dfd67.1389904166.git.agordeev@redhat.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama500.ecl.ntt.co.jp ([129.60.39.148]:35935 "EHLO
-	tama500.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753138AbaA0Pua (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Jan 2014 10:50:30 -0500
-In-Reply-To: <20140127075038.GA18590@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-pci-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <eb0b62be65c050533f2565fcf3f1d673770dfd67.1389904166.git.agordeev@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
+To: Brian King <brking@us.ibm.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org, kvm@vger.kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: hch@infradead.org
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 
-On Sun, 26 Jan 2014 23:50:38 -0800
-Christoph Hellwig <hch@infradead.org> wrote:
-
->> > Do you know if either SRP or ibmvscsi are used regularly these days?
->> > Does tgtd userspace still support this interface?
->> 
->> It doesn't. I think that ibm pseries switched to virtual fc driver
->> from virtual srp long ago. Only very old pseries could use the
->> driver. I'm not sure there are any users of the driver. I guess that
->> you could try to remove the driver to see if someone would complain.
+On Fri, Jan 17, 2014 at 05:02:18PM +0100, Alexander Gordeev wrote:
+> As result deprecation of MSI-X/MSI enablement functions
+> pci_enable_msix() and pci_enable_msi_block() all drivers
+> using these two interfaces need to be updated to use the
+> new pci_enable_msi_range() and pci_enable_msix_range()
+> interfaces.
 > 
-> Should we try to throw in a deprecation warnings for this merge window
-> and see if anyone cares, or go ahead and remove it entirely?
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 
-Either is fine by me.
+Brian, James,
+
+Could you please review patches 3 and 4?
+
+Thanks!
+
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
