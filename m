@@ -1,52 +1,41 @@
 From: Alexander Gordeev <agordeev@redhat.com>
-Subject: Re: [PATCH v2 4/9] ipr: Use pci_enable_msi_range() and
- pci_enable_msix_range()
-Date: Wed, 29 Jan 2014 14:26:52 +0100
-Message-ID: <20140129132651.GA27764@dhcp-26-207.brq.redhat.com>
+Subject: Re: [PATCH v2 0/9] Phase out pci_enable_msi_block()
+Date: Wed, 29 Jan 2014 14:59:06 +0100
+Message-ID: <20140129135906.GA3495@dhcp-26-207.brq.redhat.com>
 References: <cover.1389904166.git.agordeev@redhat.com>
- <eb0b62be65c050533f2565fcf3f1d673770dfd67.1389904166.git.agordeev@redhat.com>
- <20140128095441.GA6951@dhcp-26-207.brq.redhat.com>
- <52E7CCAD.5070008@linux.vnet.ibm.com>
+ <CAErSpo5ztnyyceeN38XzLasLV6eJqdbqEV0viPp3Af8U=ts23w@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <kvm-owner@vger.kernel.org>
+Return-path: <linux-pci-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <52E7CCAD.5070008@linux.vnet.ibm.com>
-Sender: kvm-owner@vger.kernel.org
-To: Brian King <brking@linux.vnet.ibm.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, kvm@vger.kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, Wendy Xiong <wenxiong@linux.vnet.ibm.com>
+In-Reply-To: <CAErSpo5ztnyyceeN38XzLasLV6eJqdbqEV0viPp3Af8U=ts23w@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
+To: Alex Williamson <alex.williamson@redhat.com>, Kalle Valo <kvalo@qca.qualcomm.com>, Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Brian King <brking@us.ibm.com>, Tejun Heo <tj@kernel.org>, Matthew Wilcox <willy@linux.intel.com>, linux-wireless <linux-wireless@vger.kernel.org>, wil6210@qca.qualcomm.com, ath10k@lists.infradead.org, linux-nvme@lists.infradead.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "kvm@vger.kernel.org" <kvm@vger.kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Jan 28, 2014 at 09:28:45AM -0600, Brian King wrote:
-
-Thanks for the review, Brian!
-
-> These look like they will conflict with a recent patch to
-> the ipr driver:
+On Fri, Jan 17, 2014 at 02:00:32PM -0700, Bjorn Helgaas wrote:
+> > Bjorn,
+> >
+> > As the release is supposedly this weekend, do you prefer
+> > the patches to go to your tree or to individual trees after
+> > the release?
 > 
-> http://www.spinics.net/lists/linux-scsi/msg71644.html
+> I'd be happy to merge them, except for the fact that they probably
+> wouldn't have any time in -next before I ask Linus to pull them.  So
+> how about if we wait until after the release, ask the area maintainers
+> to take them, and if they don't take them, I'll put them in my tree
+> for v3.15?
 
-BTW, this one does not appear ACKed.
+Hi Gentleman,
 
-> Do you want me to rediff your patches on top of this one,
-> or do you want to keep the entire MSI series together
-> and do the rediff? Otherwise the patches seem fine.
+As the prerequisite commit 302a252 ("PCI/MSI: Add pci_enable_msi_range()
+and pci_enable_msix_range()") is in mainline now, could you please take
+the ACKed patches to your trees?
 
-I would prefer the former.
+Thanks!
 
-@Bjorn, please let us know if you prefer otherwise.
-
-> Thanks,
-> 
-> Brian
-> 
-> 
-> -- 
-> Brian King
-> Power Linux I/O
-> IBM Linux Technology Center
-> 
-> 
+> Bjorn
 
 -- 
 Regards,
