@@ -1,135 +1,415 @@
-From: kxie-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org
-Subject: [PATCH] cxgb4i: Use cxgb4_select_ntuple to correctly calculate
- ntuple fields
-Date: Tue, 28 Jan 2014 17:01:37 -0800
-Message-ID: <201401290101.s0T11brL026639@localhost6.localdomain6>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <open-iscsi+bncBDN4XE6H5QHRBN5HUGLQKGQEBFINCEA-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Post: <http://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <http://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <http://groups.google.com/group/open-iscsi>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <http://groups.google.com/group/open-iscsi/subscribe>, <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-To: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-Cc: kxie-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org, James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org, michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org
+From: Jayamohan Kallickal <jayamohank@gmail.com>
+Subject: [PATCH 1/8] be2iscsi: Fix handling timed out MBX completion from FW
+Date: Wed, 29 Jan 2014 02:16:39 -0500
+Message-ID: <1390979807-16718-1-git-send-email-Jayamohan.Kallickal@emulex.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pb0-f49.google.com ([209.85.160.49]:45354 "EHLO
+	mail-pb0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751073AbaA2HQ5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Jan 2014 02:16:57 -0500
+Received: by mail-pb0-f49.google.com with SMTP id up15so1400042pbc.22
+        for <linux-scsi@vger.kernel.org>; Tue, 28 Jan 2014 23:16:57 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jbottomley@parallels.com, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
+Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, John Soni Jose <sony.john-n@emulex.com>
 
-[PATCH] cxgb4i: Use cxgb4_select_ntuple to correctly calculate ntuple fields
+From: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 
-From: Karen Xie <kxie-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
+ When an MBX command timeout happens,the resources associated with
+ the MBX command were freed. If FW were to give the response to
+ host after the timeout value set by driver then driver crashes as the MBX Cmd
+ resources were already freed.
 
-Fixed calculates wrong tuple values on T5 adapter: switch to use the exported API cxgb4_select_ntuple() from cxgb4 base driver.
+ This patch fixes this issue by maintaing a state flag for each of
+ the MBX command posted/timedout/completed.
 
-Signed-off-by: Karen Xie <kxie-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
+Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
+Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 ---
- drivers/scsi/cxgbi/cxgb4i/cxgb4i.c |   59 ++++--------------------------------
- 1 files changed, 7 insertions(+), 52 deletions(-)
+ drivers/scsi/be2iscsi/be.h       | 10 +++++
+ drivers/scsi/be2iscsi/be_cmds.c  | 90 ++++++++++++++++++++++++++++++----------
+ drivers/scsi/be2iscsi/be_cmds.h  |  3 +-
+ drivers/scsi/be2iscsi/be_iscsi.c | 10 +++--
+ drivers/scsi/be2iscsi/be_main.c  | 27 ++++++++----
+ drivers/scsi/be2iscsi/be_mgmt.c  | 22 +++++-----
+ 6 files changed, 117 insertions(+), 45 deletions(-)
 
-diff --git a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-index 5a9f842..e8ee5e5 100644
---- a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-+++ b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-@@ -175,52 +175,6 @@ static inline int is_ofld_imm(const struct sk_buff *skb)
- 			sizeof(struct fw_ofld_tx_data_wr));
+diff --git a/drivers/scsi/be2iscsi/be.h b/drivers/scsi/be2iscsi/be.h
+index 2e28f6c..23c73fe 100644
+--- a/drivers/scsi/be2iscsi/be.h
++++ b/drivers/scsi/be2iscsi/be.h
+@@ -98,6 +98,14 @@ struct be_mcc_obj {
+ 	struct be_queue_info cq;
+ };
+ 
++struct beiscsi_mcc_tag_state {
++#define MCC_TAG_STATE_COMPLETED 0x00
++#define MCC_TAG_STATE_RUNNING   0x01
++#define MCC_TAG_STATE_TIMEOUT   0x02
++	uint8_t tag_state;
++	struct be_dma_mem tag_mem_state;
++};
++
+ struct be_ctrl_info {
+ 	u8 __iomem *csr;
+ 	u8 __iomem *db;		/* Door Bell */
+@@ -122,6 +130,8 @@ struct be_ctrl_info {
+ 	unsigned short mcc_alloc_index;
+ 	unsigned short mcc_free_index;
+ 	unsigned int mcc_tag_available;
++
++	struct beiscsi_mcc_tag_state ptag_state[MAX_MCC_CMD + 1];
+ };
+ 
+ #include "be_cmds.h"
+diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
+index 3338391..b14949a 100644
+--- a/drivers/scsi/be2iscsi/be_cmds.c
++++ b/drivers/scsi/be2iscsi/be_cmds.c
+@@ -138,7 +138,7 @@ unsigned int alloc_mcc_tag(struct beiscsi_hba *phba)
+  * @phba: Driver private structure
+  * @tag: Tag for the MBX Command
+  * @wrb: the WRB used for the MBX Command
+- * @cmd_hdr: IOCTL Hdr for the MBX Cmd
++ * @mbx_cmd_mem: ptr to memory allocated for MBX Cmd
+  *
+  * Waits for MBX completion with the passed TAG.
+  *
+@@ -148,21 +148,26 @@ unsigned int alloc_mcc_tag(struct beiscsi_hba *phba)
+  **/
+ int beiscsi_mccq_compl(struct beiscsi_hba *phba,
+ 		uint32_t tag, struct be_mcc_wrb **wrb,
+-		void *cmd_hdr)
++		struct be_dma_mem *mbx_cmd_mem)
+ {
+ 	int rc = 0;
+ 	uint32_t mcc_tag_response;
+ 	uint16_t status = 0, addl_status = 0, wrb_num = 0;
+ 	struct be_mcc_wrb *temp_wrb;
+-	struct be_cmd_req_hdr *ioctl_hdr;
+-	struct be_cmd_resp_hdr *ioctl_resp_hdr;
++	struct be_cmd_req_hdr *mbx_hdr;
++	struct be_cmd_resp_hdr *mbx_resp_hdr;
+ 	struct be_queue_info *mccq = &phba->ctrl.mcc_obj.q;
+ 
+ 	if (beiscsi_error(phba)) {
+ 		free_mcc_tag(&phba->ctrl, tag);
+-		return -EIO;
++		return -EPERM;
+ 	}
+ 
++	/* Set MBX Tag state to Active */
++	spin_lock(&phba->ctrl.mbox_lock);
++	phba->ctrl.ptag_state[tag].tag_state = MCC_TAG_STATE_RUNNING;
++	spin_unlock(&phba->ctrl.mbox_lock);
++
+ 	/* wait for the mccq completion */
+ 	rc = wait_event_interruptible_timeout(
+ 				phba->ctrl.mcc_wait[tag],
+@@ -171,56 +176,71 @@ int beiscsi_mccq_compl(struct beiscsi_hba *phba,
+ 				BEISCSI_HOST_MBX_TIMEOUT));
+ 
+ 	if (rc <= 0) {
++		struct be_dma_mem *tag_mem;
++		/* Set MBX Tag state to timeout */
++		spin_lock(&phba->ctrl.mbox_lock);
++		phba->ctrl.ptag_state[tag].tag_state = MCC_TAG_STATE_TIMEOUT;
++		spin_unlock(&phba->ctrl.mbox_lock);
++
++		/* Store resource addr to be freed later */
++		tag_mem = &phba->ctrl.ptag_state[tag].tag_mem_state;
++		if (mbx_cmd_mem) {
++			tag_mem->size = mbx_cmd_mem->size;
++			tag_mem->va = mbx_cmd_mem->va;
++			tag_mem->dma = mbx_cmd_mem->dma;
++		} else
++			tag_mem->size = 0;
++
+ 		beiscsi_log(phba, KERN_ERR,
+ 			    BEISCSI_LOG_INIT | BEISCSI_LOG_EH |
+ 			    BEISCSI_LOG_CONFIG,
+ 			    "BC_%d : MBX Cmd Completion timed out\n");
+-		rc = -EBUSY;
+-
+-		/* decrement the mccq used count */
+-		atomic_dec(&phba->ctrl.mcc_obj.q.used);
+-
+-		goto release_mcc_tag;
+-	} else
++		return -EBUSY;
++	} else {
+ 		rc = 0;
++		/* Set MBX Tag state to completed */
++		spin_lock(&phba->ctrl.mbox_lock);
++		phba->ctrl.ptag_state[tag].tag_state = MCC_TAG_STATE_COMPLETED;
++		spin_unlock(&phba->ctrl.mbox_lock);
++	}
+ 
+ 	mcc_tag_response = phba->ctrl.mcc_numtag[tag];
+ 	status = (mcc_tag_response & CQE_STATUS_MASK);
+ 	addl_status = ((mcc_tag_response & CQE_STATUS_ADDL_MASK) >>
+ 			CQE_STATUS_ADDL_SHIFT);
+ 
+-	if (cmd_hdr) {
+-		ioctl_hdr = (struct be_cmd_req_hdr *)cmd_hdr;
++	if (mbx_cmd_mem) {
++		mbx_hdr = (struct be_cmd_req_hdr *)mbx_cmd_mem->va;
+ 	} else {
+ 		wrb_num = (mcc_tag_response & CQE_STATUS_WRB_MASK) >>
+ 			   CQE_STATUS_WRB_SHIFT;
+ 		temp_wrb = (struct be_mcc_wrb *)queue_get_wrb(mccq, wrb_num);
+-		ioctl_hdr = embedded_payload(temp_wrb);
++		mbx_hdr = embedded_payload(temp_wrb);
+ 
+ 		if (wrb)
+ 			*wrb = temp_wrb;
+ 	}
+ 
+ 	if (status || addl_status) {
+-		beiscsi_log(phba, KERN_ERR,
++		beiscsi_log(phba, KERN_WARNING,
+ 			    BEISCSI_LOG_INIT | BEISCSI_LOG_EH |
+ 			    BEISCSI_LOG_CONFIG,
+ 			    "BC_%d : MBX Cmd Failed for "
+ 			    "Subsys : %d Opcode : %d with "
+ 			    "Status : %d and Extd_Status : %d\n",
+-			    ioctl_hdr->subsystem,
+-			    ioctl_hdr->opcode,
++			    mbx_hdr->subsystem,
++			    mbx_hdr->opcode,
+ 			    status, addl_status);
+ 
+ 		if (status == MCC_STATUS_INSUFFICIENT_BUFFER) {
+-			ioctl_resp_hdr = (struct be_cmd_resp_hdr *) ioctl_hdr;
++			mbx_resp_hdr = (struct be_cmd_resp_hdr *) mbx_hdr;
+ 			beiscsi_log(phba, KERN_WARNING,
+ 				    BEISCSI_LOG_INIT | BEISCSI_LOG_EH |
+ 				    BEISCSI_LOG_CONFIG,
+ 				    "BC_%d : Insufficent Buffer Error "
+ 				    "Resp_Len : %d Actual_Resp_Len : %d\n",
+-				    ioctl_resp_hdr->response_length,
+-				    ioctl_resp_hdr->actual_resp_len);
++				    mbx_resp_hdr->response_length,
++				    mbx_resp_hdr->actual_resp_len);
+ 
+ 			rc = -EAGAIN;
+ 			goto release_mcc_tag;
+@@ -319,6 +339,7 @@ static int be_mcc_compl_process(struct be_ctrl_info *ctrl,
+ int be_mcc_compl_process_isr(struct be_ctrl_info *ctrl,
+ 				    struct be_mcc_compl *compl)
+ {
++	struct beiscsi_hba *phba = pci_get_drvdata(ctrl->pdev);
+ 	u16 compl_status, extd_status;
+ 	unsigned short tag;
+ 
+@@ -338,7 +359,32 @@ int be_mcc_compl_process_isr(struct be_ctrl_info *ctrl,
+ 	ctrl->mcc_numtag[tag] |= (compl->tag0 & 0x00FF0000);
+ 	ctrl->mcc_numtag[tag] |= (extd_status & 0x000000FF) << 8;
+ 	ctrl->mcc_numtag[tag] |= (compl_status & 0x000000FF);
+-	wake_up_interruptible(&ctrl->mcc_wait[tag]);
++
++	if (ctrl->ptag_state[tag].tag_state == MCC_TAG_STATE_RUNNING) {
++		wake_up_interruptible(&ctrl->mcc_wait[tag]);
++	} else if (ctrl->ptag_state[tag].tag_state == MCC_TAG_STATE_TIMEOUT) {
++		struct be_dma_mem *tag_mem;
++		tag_mem = &ctrl->ptag_state[tag].tag_mem_state;
++
++		beiscsi_log(phba, KERN_WARNING,
++			    BEISCSI_LOG_MBOX | BEISCSI_LOG_INIT |
++			    BEISCSI_LOG_CONFIG,
++			    "BC_%d : MBX Completion for timeout Command "
++			    "from FW\n");
++		/* Check if memory needs to be freed */
++		if (tag_mem->size)
++			pci_free_consistent(ctrl->pdev, tag_mem->size,
++					    tag_mem->va, tag_mem->dma);
++
++		/* Change tag state */
++		spin_lock(&phba->ctrl.mbox_lock);
++		ctrl->ptag_state[tag].tag_state = MCC_TAG_STATE_COMPLETED;
++		spin_unlock(&phba->ctrl.mbox_lock);
++
++		/* Free MCC Tag */
++		free_mcc_tag(ctrl, tag);
++	}
++
+ 	return 0;
  }
  
+diff --git a/drivers/scsi/be2iscsi/be_cmds.h b/drivers/scsi/be2iscsi/be_cmds.h
+index 627ebbe..770b6c8 100644
+--- a/drivers/scsi/be2iscsi/be_cmds.h
++++ b/drivers/scsi/be2iscsi/be_cmds.h
+@@ -709,7 +709,8 @@ unsigned int be_cmd_get_port_speed(struct beiscsi_hba *phba);
+ void free_mcc_tag(struct be_ctrl_info *ctrl, unsigned int tag);
+ 
+ int beiscsi_mccq_compl(struct beiscsi_hba *phba,
+-			uint32_t tag, struct be_mcc_wrb **wrb, void *cmd_va);
++			uint32_t tag, struct be_mcc_wrb **wrb,
++			struct be_dma_mem *mbx_cmd_mem);
+ /*ISCSI Functuions */
+ int be_cmd_fw_initialize(struct be_ctrl_info *ctrl);
+ int be_cmd_fw_uninit(struct be_ctrl_info *ctrl);
+diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
+index 889066d..bdd0f05 100644
+--- a/drivers/scsi/be2iscsi/be_iscsi.c
++++ b/drivers/scsi/be2iscsi/be_iscsi.c
+@@ -1153,16 +1153,18 @@ static int beiscsi_open_conn(struct iscsi_endpoint *ep,
+ 		return -EAGAIN;
+ 	}
+ 
+-	ret = beiscsi_mccq_compl(phba, tag, NULL, nonemb_cmd.va);
++	ret = beiscsi_mccq_compl(phba, tag, NULL, &nonemb_cmd);
+ 	if (ret) {
+ 		beiscsi_log(phba, KERN_ERR,
+ 			    BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX,
+ 			    "BS_%d : mgmt_open_connection Failed");
+ 
+-		pci_free_consistent(phba->ctrl.pdev, nonemb_cmd.size,
+-			    nonemb_cmd.va, nonemb_cmd.dma);
++		if (ret != -EBUSY)
++			pci_free_consistent(phba->ctrl.pdev, nonemb_cmd.size,
++					    nonemb_cmd.va, nonemb_cmd.dma);
++
+ 		beiscsi_free_ep(beiscsi_ep);
+-		return -EBUSY;
++		return ret;
+ 	}
+ 
+ 	ptcpcnct_out = (struct tcp_connect_and_offload_out *)nonemb_cmd.va;
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index 1f37505..1a1729b 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -228,6 +228,7 @@ static int beiscsi_eh_abort(struct scsi_cmnd *sc)
+ 	struct invalidate_command_table *inv_tbl;
+ 	struct be_dma_mem nonemb_cmd;
+ 	unsigned int cid, tag, num_invalidate;
++	int rc;
+ 
+ 	cls_session = starget_to_session(scsi_target(sc->device));
+ 	session = cls_session->dd_data;
+@@ -285,9 +286,11 @@ static int beiscsi_eh_abort(struct scsi_cmnd *sc)
+ 		return FAILED;
+ 	}
+ 
+-	beiscsi_mccq_compl(phba, tag, NULL, nonemb_cmd.va);
+-	pci_free_consistent(phba->ctrl.pdev, nonemb_cmd.size,
+-			    nonemb_cmd.va, nonemb_cmd.dma);
++	rc = beiscsi_mccq_compl(phba, tag, NULL, &nonemb_cmd);
++	if (rc != -EBUSY)
++		pci_free_consistent(phba->ctrl.pdev, nonemb_cmd.size,
++				    nonemb_cmd.va, nonemb_cmd.dma);
++
+ 	return iscsi_eh_abort(sc);
+ }
+ 
+@@ -303,6 +306,7 @@ static int beiscsi_eh_device_reset(struct scsi_cmnd *sc)
+ 	struct invalidate_command_table *inv_tbl;
+ 	struct be_dma_mem nonemb_cmd;
+ 	unsigned int cid, tag, i, num_invalidate;
++	int rc;
+ 
+ 	/* invalidate iocbs */
+ 	cls_session = starget_to_session(scsi_target(sc->device));
+@@ -363,9 +367,10 @@ static int beiscsi_eh_device_reset(struct scsi_cmnd *sc)
+ 		return FAILED;
+ 	}
+ 
+-	beiscsi_mccq_compl(phba, tag, NULL, nonemb_cmd.va);
+-	pci_free_consistent(phba->ctrl.pdev, nonemb_cmd.size,
+-			    nonemb_cmd.va, nonemb_cmd.dma);
++	rc = beiscsi_mccq_compl(phba, tag, NULL, &nonemb_cmd);
++	if (rc != -EBUSY)
++		pci_free_consistent(phba->ctrl.pdev, nonemb_cmd.size,
++				    nonemb_cmd.va, nonemb_cmd.dma);
+ 	return iscsi_eh_device_reset(sc);
+ }
+ 
+@@ -4360,12 +4365,16 @@ static int beiscsi_get_boot_info(struct beiscsi_hba *phba)
+ 		goto boot_freemem;
+ 	}
+ 
+-	ret = beiscsi_mccq_compl(phba, tag, NULL, nonemb_cmd.va);
++	ret = beiscsi_mccq_compl(phba, tag, NULL, &nonemb_cmd);
+ 	if (ret) {
+ 		beiscsi_log(phba, KERN_ERR,
+ 			    BEISCSI_LOG_INIT | BEISCSI_LOG_CONFIG,
+ 			    "BM_%d : beiscsi_get_session_info Failed");
+-		goto boot_freemem;
++
++		if (ret != -EBUSY)
++			goto boot_freemem;
++		else
++			return ret;
+ 	}
+ 
+ 	session_resp = nonemb_cmd.va ;
+@@ -5594,6 +5603,8 @@ static int beiscsi_dev_probe(struct pci_dev *pcidev,
+ 		phba->ctrl.mcc_tag[i] = i + 1;
+ 		phba->ctrl.mcc_numtag[i + 1] = 0;
+ 		phba->ctrl.mcc_tag_available++;
++		memset(&phba->ctrl.ptag_state[i].tag_mem_state, 0,
++		       sizeof(struct beiscsi_mcc_tag_state));
+ 	}
+ 
+ 	phba->ctrl.mcc_alloc_index = phba->ctrl.mcc_free_index = 0;
+diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
+index b2fcac7..088bdf7 100644
+--- a/drivers/scsi/be2iscsi/be_mgmt.c
++++ b/drivers/scsi/be2iscsi/be_mgmt.c
+@@ -828,22 +828,25 @@ static int mgmt_exec_nonemb_cmd(struct beiscsi_hba *phba,
+ 	be_mcc_notify(phba);
+ 	spin_unlock(&ctrl->mbox_lock);
+ 
+-	rc = beiscsi_mccq_compl(phba, tag, NULL, nonemb_cmd->va);
++	rc = beiscsi_mccq_compl(phba, tag, NULL, nonemb_cmd);
++
++	if (resp_buf)
++		memcpy(resp_buf, nonemb_cmd->va, resp_buf_len);
++
+ 	if (rc) {
+-		/* Check if the IOCTL needs to be re-issued */
++		/* Check if the MBX Cmd needs to be re-issued */
+ 		if (rc == -EAGAIN)
+ 			return rc;
+ 
+-		beiscsi_log(phba, KERN_ERR,
++		beiscsi_log(phba, KERN_WARNING,
+ 			    BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX,
+ 			    "BG_%d : mgmt_exec_nonemb_cmd Failed status\n");
+ 
+-		goto free_cmd;
++		if (rc != -EBUSY)
++			goto free_cmd;
++		else
++			return rc;
+ 	}
 -
--#define VLAN_NONE 0xfff
--#define FILTER_SEL_VLAN_NONE 0xffff
--#define FILTER_SEL_WIDTH_P_FC (3+1) /* port uses 3 bits, FCoE one bit */
--#define FILTER_SEL_WIDTH_VIN_P_FC \
--	(6 + 7 + FILTER_SEL_WIDTH_P_FC) /* 6 bits are unused, VF uses 7 bits*/
--#define FILTER_SEL_WIDTH_TAG_P_FC \
--	(3 + FILTER_SEL_WIDTH_VIN_P_FC) /* PF uses 3 bits */
--#define FILTER_SEL_WIDTH_VLD_TAG_P_FC (1 + FILTER_SEL_WIDTH_TAG_P_FC)
+-	if (resp_buf)
+-		memcpy(resp_buf, nonemb_cmd->va, resp_buf_len);
 -
--static unsigned int select_ntuple(struct cxgbi_device *cdev,
--				struct l2t_entry *l2t)
--{
--	struct cxgb4_lld_info *lldi = cxgbi_cdev_priv(cdev);
--	unsigned int ntuple = 0;
--	u32 viid;
--
--	switch (lldi->filt_mode) {
--
--	/* default filter mode */
--	case HW_TPL_FR_MT_PR_IV_P_FC:
--		if (l2t->vlan == VLAN_NONE)
--			ntuple |= FILTER_SEL_VLAN_NONE << FILTER_SEL_WIDTH_P_FC;
--		else {
--			ntuple |= l2t->vlan << FILTER_SEL_WIDTH_P_FC;
--			ntuple |= 1 << FILTER_SEL_WIDTH_VLD_TAG_P_FC;
--		}
--		ntuple |= l2t->lport << S_PORT | IPPROTO_TCP <<
--			  FILTER_SEL_WIDTH_VLD_TAG_P_FC;
--		break;
--	case HW_TPL_FR_MT_PR_OV_P_FC: {
--		viid = cxgb4_port_viid(l2t->neigh->dev);
--
--		ntuple |= FW_VIID_VIN_GET(viid) << FILTER_SEL_WIDTH_P_FC;
--		ntuple |= FW_VIID_PFN_GET(viid) << FILTER_SEL_WIDTH_VIN_P_FC;
--		ntuple |= FW_VIID_VIVLD_GET(viid) << FILTER_SEL_WIDTH_TAG_P_FC;
--		ntuple |= l2t->lport << S_PORT | IPPROTO_TCP <<
--			  FILTER_SEL_WIDTH_VLD_TAG_P_FC;
--		break;
--	}
--	default:
--		break;
--	}
--	return ntuple;
--}
--
- static void send_act_open_req(struct cxgbi_sock *csk, struct sk_buff *skb,
- 				struct l2t_entry *e)
+ free_cmd:
+ 	pci_free_consistent(ctrl->pdev, nonemb_cmd->size,
+ 			    nonemb_cmd->va, nonemb_cmd->dma);
+@@ -1348,7 +1351,6 @@ int mgmt_set_vlan(struct beiscsi_hba *phba,
  {
-@@ -248,8 +202,6 @@ static void send_act_open_req(struct cxgbi_sock *csk, struct sk_buff *skb,
- 		struct cpl_act_open_req *req =
- 				(struct cpl_act_open_req *)skb->head;
+ 	int rc;
+ 	unsigned int tag;
+-	struct be_mcc_wrb *wrb = NULL;
  
--		req = (struct cpl_act_open_req *)skb->head;
--
- 		INIT_TP_WR(req, 0);
- 		OPCODE_TID(req) = cpu_to_be32(MK_OPCODE_TID(CPL_ACT_OPEN_REQ,
- 					qid_atid));
-@@ -258,7 +210,9 @@ static void send_act_open_req(struct cxgbi_sock *csk, struct sk_buff *skb,
- 		req->local_ip = csk->saddr.sin_addr.s_addr;
- 		req->peer_ip = csk->daddr.sin_addr.s_addr;
- 		req->opt0 = cpu_to_be64(opt0);
--		req->params = cpu_to_be32(select_ntuple(csk->cdev, csk->l2t));
-+		req->params = cpu_to_be32(cxgb4_select_ntuple(
-+					csk->cdev->ports[csk->port_id],
-+					csk->l2t));
- 		opt2 |= 1 << 22;
- 		req->opt2 = cpu_to_be32(opt2);
+ 	tag = be_cmd_set_vlan(phba, vlan_tag);
+ 	if (!tag) {
+@@ -1358,7 +1360,7 @@ int mgmt_set_vlan(struct beiscsi_hba *phba,
+ 		return -EBUSY;
+ 	}
  
-@@ -271,8 +225,6 @@ static void send_act_open_req(struct cxgbi_sock *csk, struct sk_buff *skb,
- 		struct cpl_t5_act_open_req *req =
- 				(struct cpl_t5_act_open_req *)skb->head;
- 
--		req = (struct cpl_t5_act_open_req *)skb->head;
--
- 		INIT_TP_WR(req, 0);
- 		OPCODE_TID(req) = cpu_to_be32(MK_OPCODE_TID(CPL_ACT_OPEN_REQ,
- 					qid_atid));
-@@ -281,7 +233,10 @@ static void send_act_open_req(struct cxgbi_sock *csk, struct sk_buff *skb,
- 		req->local_ip = csk->saddr.sin_addr.s_addr;
- 		req->peer_ip = csk->daddr.sin_addr.s_addr;
- 		req->opt0 = cpu_to_be64(opt0);
--		req->params = cpu_to_be32(select_ntuple(csk->cdev, csk->l2t));
-+		req->params = cpu_to_be64(V_FILTER_TUPLE(
-+				cxgb4_select_ntuple(
-+					csk->cdev->ports[csk->port_id],
-+					csk->l2t)));
- 		opt2 |= 1 << 31;
- 		req->opt2 = cpu_to_be32(opt2);
- 
-
+-	rc = beiscsi_mccq_compl(phba, tag, &wrb, NULL);
++	rc = beiscsi_mccq_compl(phba, tag, NULL, NULL);
+ 	if (rc) {
+ 		beiscsi_log(phba, KERN_ERR,
+ 			    (BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX),
 -- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-Visit this group at http://groups.google.com/group/open-iscsi.
-For more options, visit https://groups.google.com/groups/opt_out.
+1.8.5.3
+
