@@ -1,69 +1,68 @@
-From: "Steven J. Magnani" <steve.magnani@digidescorp.com>
-Subject: [PATCH] qla2xxx: eliminate dead code in qla24xx_process_bidir_cmd
-Date: Thu, 30 Jan 2014 08:17:55 -0600
-Message-ID: <1391091475-15629-1-git-send-email-steve@digidescorp.com>
+From: Dave Jones <davej@redhat.com>
+Subject: libsrp: remove unreachable kfree
+Date: Thu, 30 Jan 2014 14:19:07 -0500
+Message-ID: <20140130191907.GA13810@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ig0-f181.google.com ([209.85.213.181]:57973 "EHLO
-	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753101AbaA3OSG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Jan 2014 09:18:06 -0500
-Received: by mail-ig0-f181.google.com with SMTP id j1so7238833iga.2
-        for <linux-scsi@vger.kernel.org>; Thu, 30 Jan 2014 06:18:05 -0800 (PST)
+Received: from mx1.redhat.com ([209.132.183.28]:32617 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751154AbaA3TTQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 30 Jan 2014 14:19:16 -0500
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com (int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s0UJJEqh005671
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <linux-scsi@vger.kernel.org>; Thu, 30 Jan 2014 14:19:14 -0500
+Received: from gelk.kernelslacker.org (ovpn-113-176.phx2.redhat.com [10.3.113.176])
+	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id s0UJJ8kU017353
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Thu, 30 Jan 2014 14:19:14 -0500
+Received: from gelk.kernelslacker.org (localhost [127.0.0.1])
+	by gelk.kernelslacker.org (8.14.7/8.14.7) with ESMTP id s0UJJ7jE014729
+	for <linux-scsi@vger.kernel.org>; Thu, 30 Jan 2014 14:19:07 -0500
+Received: (from davej@localhost)
+	by gelk.kernelslacker.org (8.14.7/8.14.7/Submit) id s0UJJ7A2014728
+	for linux-scsi@vger.kernel.org; Thu, 30 Jan 2014 14:19:07 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-driver@qlogic.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Steven J. Magnani" <steve@digidescorp.com>
+To: linux-scsi@vger.kernel.org
 
-Coverity reports that the test of req_data_len vs. rsp_data_len is dead code.
-This appears to be because the test occurs before any real assignment to
-either variable.
+srp_iu_pool_alloc implements what seems like a standard "common exit path with gotos"
+but there's only one way to reach it. Additionally the kfree(q->items) is unreachable.
 
-Assuming that the sole in-tree execution path (QL_VND_DIAG_IO_CMD submitted
-via FC pass-through on a host /dev/bsg/X) does not require the response to
-have the same length as the request, all code related to the faulty test
-can be removed. If this is not the case, the test should be moved much earlier
-in the function since it does not depend on any resource acquitision.
+fold the error path back into the if.
 
-Signed-off-by: Steven J. Magnani <steve@digidescorp.com>
----
---- linux-3.13/drivers/scsi/qla2xxx/qla_bsg.c	2014-01-29 13:50:02.050802907 -0600
-+++ b/drivers/scsi/qla2xxx/qla_bsg.c	2014-01-29 13:53:15.856549874 -0600
-@@ -1732,8 +1732,6 @@ qla24xx_process_bidir_cmd(struct fc_bsg_
- 	uint16_t nextlid = 0;
- 	uint32_t tot_dsds;
- 	srb_t *sp = NULL;
--	uint32_t req_data_len = 0;
--	uint32_t rsp_data_len = 0;
+Signed-off-by: Dave Jones <davej@fedoraproject.org>
+
+diff --git a/drivers/scsi/libsrp.c b/drivers/scsi/libsrp.c
+index 0707ecdbaa32..f45758f15381 100644
+--- a/drivers/scsi/libsrp.c
++++ b/drivers/scsi/libsrp.c
+@@ -55,9 +55,12 @@ static int srp_iu_pool_alloc(struct srp_queue *q, size_t max,
+ 	q->pool = kcalloc(max, sizeof(struct iu_entry *), GFP_KERNEL);
+ 	if (!q->pool)
+ 		return -ENOMEM;
++
+ 	q->items = kcalloc(max, sizeof(struct iu_entry), GFP_KERNEL);
+-	if (!q->items)
+-		goto free_pool;
++	if (!q->items) {
++		kfree(q->pool);
++		return -ENOMEM;
++	}
  
- 	/* Check the type of the adapter */
- 	if (!IS_BIDI_CAPABLE(ha)) {
-@@ -1840,17 +1838,6 @@ qla24xx_process_bidir_cmd(struct fc_bsg_
- 		goto done_unmap_sg;
+ 	spin_lock_init(&q->lock);
+ 	kfifo_init(&q->queue, (void *) q->pool, max * sizeof(void *));
+@@ -68,11 +71,6 @@ static int srp_iu_pool_alloc(struct srp_queue *q, size_t max,
+ 		iue++;
  	}
+ 	return 0;
+-
+-	kfree(q->items);
+-free_pool:
+-	kfree(q->pool);
+-	return -ENOMEM;
+ }
  
--	if (req_data_len != rsp_data_len) {
--		rval = EXT_STATUS_BUSY;
--		ql_log(ql_log_warn, vha, 0x70aa,
--		    "req_data_len != rsp_data_len\n");
--		goto done_unmap_sg;
--	}
--
--	req_data_len = bsg_job->request_payload.payload_len;
--	rsp_data_len = bsg_job->reply_payload.payload_len;
--
--
- 	/* Alloc SRB structure */
- 	sp = qla2x00_get_sp(vha, &(vha->bidir_fcport), GFP_KERNEL);
- 	if (!sp) {
---- linux-3.13/drivers/scsi/qla2xxx/qla_dbg.c	2014-01-29 13:50:49.435230824 -0600
-+++ b/drivers/scsi/qla2xxx/qla_dbg.c	2014-01-29 13:53:43.960820829 -0600
-@@ -38,7 +38,8 @@
-  * |                              |                    | 0x7073-0x7075, |
-  * |                              |                    | 0x707b,0x708c, |
-  * |                              |                    | 0x70a5,0x70a6, |
-- * |                              |                    | 0x70a8,0x70ab, |
-+ * |                              |                    | 0x70a8,        |
-+ * |                              |                    | 0x70aa-0x70ab, |
-  * |                              |                    | 0x70ad-0x70ae, |
-  * |                              |                    | 0x70d1-0x70db, |
-  * |                              |                    | 0x7047,0x703b	|
+ static void srp_iu_pool_free(struct srp_queue *q)
