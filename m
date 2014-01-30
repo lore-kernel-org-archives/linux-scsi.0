@@ -1,130 +1,288 @@
-From: Loc Ho <lho@apm.com>
-Subject: Re: [PATCH v10 0/4] ata: Add APM X-Gene SoC SATA host controller support
-Date: Thu, 30 Jan 2014 11:56:01 -0800
-Message-ID: <CAPw-ZTkbpOEHowGvp-_3DcW1qW0AK_ZbpdS1LESJfhFU-n_Mtw@mail.gmail.com>
+From: Mikulas Patocka <mpatocka@redhat.com>
+Subject: [PATCH] block devices: validate block device capacity
+Date: Thu, 30 Jan 2014 15:40:40 -0500 (EST)
+Message-ID: <alpine.LRH.2.02.1401301531040.29912@file01.intranet.prod.int.rdu2.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod5og103.obsmtp.com ([64.18.0.145]:59543 "HELO
-	exprod5og103.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752945AbaA3T4D (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Jan 2014 14:56:03 -0500
-Received: by mail-qc0-f177.google.com with SMTP id i8so5636874qcq.22
-        for <linux-scsi@vger.kernel.org>; Thu, 30 Jan 2014 11:56:02 -0800 (PST)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: "Alasdair G. Kergon" <agk@redhat.com>, Mike Snitzer <msnitzer@redhat.com>, dm-devel@redhat.com, Nick Piggin <npiggin@kernel.dk>, "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Olof Johansson <olof@lixom.net>, Tejun Heo <tj@kernel.org>, Arnd Bergmann <arnd@arndb.de>
-Cc: Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, David Milburn <dmilburn@redhat.com>, Jon Masters <jcm@redhat.com>, "patches@apm.com" <patches@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 
-Hi Tejun,
+When running the LVM2 testsuite on 32-bit kernel, there are unkillable
+processes stuck in the kernel consuming 100% CPU:
+blkid           R running      0  2005   1409 0x00000004
+ce009d00 00000082 ffffffcf c11280ba 00000060 560b5dfd 00003111 00fe41cb
+00000000 ce009d00 00000000 d51cfeb0 00000000 0000001e 00000002 ffffffff
+00000002 c10748c1 00000002 c106cca4 00000000 00000000 ffffffff 00000000
+Call Trace:
+[<c11280ba>] ? radix_tree_next_chunk+0xda/0x2c0
+[<c10748c1>] ? release_pages+0x61/0x160
+[<c106cca4>] ? find_get_pages+0x84/0x100
+[<c1251fbe>] ? _cond_resched+0x1e/0x40
+[<c10758cb>] ? truncate_inode_pages_range+0x12b/0x440
+[<c1075cb7>] ? truncate_inode_pages+0x17/0x20
+[<c10cf2ba>] ? __blkdev_put+0x3a/0x140
+[<c10d02db>] ? blkdev_close+0x1b/0x40
+[<c10a60b2>] ? __fput+0x72/0x1c0
+[<c1039461>] ? task_work_run+0x61/0xa0
+[<c1253b6f>] ? work_notifysig+0x24/0x35
 
-As it had being awhile, any issue with this version of the SATA
-drivers before I post the follow on errata patches?
+This is caused by the fact that the LVM2 testsuite creates 64TB device.
+The kernel uses "unsigned long" to index pages in files and block devices,
+on 64TB device "unsigned long" overflows (it can address up to 16TB with
+4k pages), causing the infinite loop.
 
--Loc
+On 32-bit architectures, we must limit block device size to
+PAGE_SIZE*(2^32-1).
 
-On Thu, Jan 16, 2014 at 8:11 AM, Loc Ho <lho@apm.com> wrote:
-> This patch adds support for the APM X-Gene SoC SATA host controller. In
-> order for the host controller to work, the corresponding PHY driver
-> musts also be available.
->
-> v10:
->  * Update binding documentation
->
-> v9:
->  * Remove ACPI/EFI include files
->  * Remove the IO flush support, interrupt routine, and DTS resources
->  * Remove function xgene_rd, xgene_wr, and xgene_wr_flush
->  * Remove PMP support (function xgene_ahci_qc_issue, xgene_ahci_qc_prep,
->    xgene_ahci_qc_fill_rtf, xgene_ahci_softreset, and xgene_ahci_do_softreset)
->  * Rename function xgene_ahci_enable_phy to xgene_ahci_force_phy_rdy
->  * Clean up hardreset functions
->  * Require v7 of the PHY driver
->
-> v8:
->  * Remove _ADDR from defines
->  * Remove define MSTAWAUX_COHERENT_BYPASS_SET and
->    STARAUX_COHERENT_BYPASS_SET and use direct coding
->  * Remove the un-necessary check for DTS boot with built in ACPI table
->  * Switch to use dma_set_mask_and_coherent for setting DMA mask
->  * Remove ACPI table matching code
->  * Update clock-names for sata01clk, sata23clk, and sata45clk
->
-> v7:
->  * Update the clock code by toggle the clock
->  * Update the DTS clock mask values due to the clock spilt between host and
->    v5 of the PHY drivers
->
-> v6:
->  * Update binding documentation
->  * Change select PHY_XGENE_SATA to PHY_XGENE
->  * Add ULL to constants
->  * Change indentation and comments
->  * Clean up the probe functions a bit more
->  * Remove xgene_ahci_remove function
->  * Add the flush register to DTS
->  * Remove the interrupt-parent from DTS
->
-> v5:
->  * Sync up to v3 of the PHY driver
->  * Remove MSLIM wrapper functions
->  * Change the memory shutdown loop to use usleep_range
->  * Use devm_ioremap_resource instead devm_ioremap
->  * Remove suspend/resume functions as not needed
->
-> v4:
->  * Remove the ID property in DT
->  * Remove the temporary PHY direct function call and use PHY function
->  * Change printk to pr_debug
->  * Move the IOB flush addresses into the DT
->  * Remove the parameters retrieval function as no longer needed
->  * Remove the header file as no longer needed
->  * Require v2 patch of the SATA PHY driver. Require slightly modification
->    in the Kconfig as it is moved to folder driver/phy and use Kconfig
->    PHY_XGENE_SATA instead SATA_XGENE_PHY.
->
-> v3:
->  * Move out the SATA PHY to another driver
->  * Remove the clock-cells entry from DTS
->  * Remove debug wrapper
->  * Remove delay functions wrapper
->  * Clean up resource and IRQ query
->  * Remove query clock name
->  * Switch to use dma_set_mask/dma_coherent_mask
->  * Remove un-necessary devm_kfree
->  * Update GPL license header to v2
->  * Spilt up function xgene_ahci_hardreset
->  * Spilt up function xgene_ahci_probe
->  * Remove all reference of CONFIG_ARCH_MSLIM
->  * Clean up chip revision code
->
-> v2:
->  * Clean up file sata_xgene.c with Lindent and etc
->  * Clean up file sata_xgene_serdes.c with Lindent and etc
->  * Add description to each patch
->
-> v1:
->  * inital version
->
-> Signed-off-by: Loc Ho <lho@apm.com>
-> Signed-off-by: Tuan Phan <tphan@apm.com>
-> Signed-off-by: Suman Tripathi <stripathi@apm.com>
-> ---
-> Loc Ho (4):
->   ata: Export required functions by APM X-Gene SATA driver
->   Documentation: Add documentation for APM X-Gene SoC SATA host
->     controller DTS binding
->   ata: Add APM X-Gene SoC SATA host controller driver
->   arm64: Add APM X-Gene SoC SATA host controller DTS entries
->
->  .../devicetree/bindings/ata/apm-xgene.txt          |   70 +++
->  arch/arm64/boot/dts/apm-storm.dtsi                 |   75 +++
->  drivers/ata/Kconfig                                |    8 +
->  drivers/ata/Makefile                               |    1 +
->  drivers/ata/ahci.h                                 |    9 +
->  drivers/ata/libahci.c                              |   16 +-
->  drivers/ata/sata_xgene.c                           |  630 ++++++++++++++++++++
->  7 files changed, 803 insertions(+), 6 deletions(-)
->  create mode 100644 Documentation/devicetree/bindings/ata/apm-xgene.txt
->  create mode 100644 drivers/ata/sata_xgene.c
->
+The bug with untested device size is pervasive across the whole kernel, 
+some drivers test that the device size fits in sector_t, but this test is 
+not sufficient on 32-bit architectures. This patch introduces a new 
+function validate_disk_capacity that tests if the disk capacity is OK for 
+the current kernel and modifies the drivers brd, ide-gd, dm, sd to use it.
+
+Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
+
+---
+ block/genhd.c                 |   23 +++++++++++++++++++++++
+ drivers/block/brd.c           |   15 +++++++++++----
+ drivers/ide/ide-gd.c          |    8 ++++++++
+ drivers/md/dm-ioctl.c         |    3 +--
+ drivers/md/dm-table.c         |   14 +++++++++++++-
+ drivers/scsi/sd.c             |   20 +++++++++++---------
+ include/linux/device-mapper.h |    2 +-
+ include/linux/genhd.h         |    2 ++
+ 8 files changed, 70 insertions(+), 17 deletions(-)
+
+Index: linux-2.6-compile/block/genhd.c
+===================================================================
+--- linux-2.6-compile.orig/block/genhd.c	2014-01-30 17:23:15.000000000 +0100
++++ linux-2.6-compile/block/genhd.c	2014-01-30 19:28:42.000000000 +0100
+@@ -1835,3 +1835,26 @@ static void disk_release_events(struct g
+ 	WARN_ON_ONCE(disk->ev && disk->ev->block != 1);
+ 	kfree(disk->ev);
+ }
++
++int validate_disk_capacity(u64 n_sectors, const char **reason)
++{
++	u64 n_pages;
++	if (n_sectors << 9 >> 9 != n_sectors) {
++		if (reason)
++			*reason = "The number of bytes is greater than 2^64.";
++		return -EOVERFLOW;
++	}
++	n_pages = (n_sectors + (1 << (PAGE_SHIFT - 9)) - 1) >> (PAGE_SHIFT - 9);
++	if (n_pages > ULONG_MAX) {
++		if (reason)
++			*reason = "Use 64-bit kernel.";
++		return -EFBIG;
++	}
++	if (n_sectors != (sector_t)n_sectors) {
++		if (reason)
++			*reason = "Use a kernel compiled with support for large block devices.";
++		return -ENOSPC;
++	}
++	return 0;
++}
++EXPORT_SYMBOL(validate_disk_capacity);
+Index: linux-2.6-compile/drivers/block/brd.c
+===================================================================
+--- linux-2.6-compile.orig/drivers/block/brd.c	2014-01-30 17:23:15.000000000 +0100
++++ linux-2.6-compile/drivers/block/brd.c	2014-01-30 19:26:51.000000000 +0100
+@@ -429,12 +429,12 @@ static const struct block_device_operati
+  * And now the modules code and kernel interface.
+  */
+ static int rd_nr;
+-int rd_size = CONFIG_BLK_DEV_RAM_SIZE;
++static unsigned rd_size = CONFIG_BLK_DEV_RAM_SIZE;
+ static int max_part;
+ static int part_shift;
+ module_param(rd_nr, int, S_IRUGO);
+ MODULE_PARM_DESC(rd_nr, "Maximum number of brd devices");
+-module_param(rd_size, int, S_IRUGO);
++module_param(rd_size, uint, S_IRUGO);
+ MODULE_PARM_DESC(rd_size, "Size of each RAM disk in kbytes.");
+ module_param(max_part, int, S_IRUGO);
+ MODULE_PARM_DESC(max_part, "Maximum number of partitions per RAM disk");
+@@ -446,7 +446,7 @@ MODULE_ALIAS("rd");
+ /* Legacy boot options - nonmodular */
+ static int __init ramdisk_size(char *str)
+ {
+-	rd_size = simple_strtol(str, NULL, 0);
++	rd_size = simple_strtoul(str, NULL, 0);
+ 	return 1;
+ }
+ __setup("ramdisk_size=", ramdisk_size);
+@@ -463,6 +463,13 @@ static struct brd_device *brd_alloc(int
+ {
+ 	struct brd_device *brd;
+ 	struct gendisk *disk;
++	u64 capacity = (u64)rd_size * 2;
++	const char *reason;
++
++	if (validate_disk_capacity(capacity, &reason)) {
++		printk(KERN_ERR "brd: disk is too big: %s\n", reason);
++		goto out;
++	}
+ 
+ 	brd = kzalloc(sizeof(*brd), GFP_KERNEL);
+ 	if (!brd)
+@@ -493,7 +500,7 @@ static struct brd_device *brd_alloc(int
+ 	disk->queue		= brd->brd_queue;
+ 	disk->flags |= GENHD_FL_SUPPRESS_PARTITION_INFO;
+ 	sprintf(disk->disk_name, "ram%d", i);
+-	set_capacity(disk, rd_size * 2);
++	set_capacity(disk, capacity);
+ 
+ 	return brd;
+ 
+Index: linux-2.6-compile/drivers/ide/ide-gd.c
+===================================================================
+--- linux-2.6-compile.orig/drivers/ide/ide-gd.c	2014-01-30 17:23:17.000000000 +0100
++++ linux-2.6-compile/drivers/ide/ide-gd.c	2014-01-30 19:26:51.000000000 +0100
+@@ -58,6 +58,14 @@ static void ide_disk_put(struct ide_disk
+ 
+ sector_t ide_gd_capacity(ide_drive_t *drive)
+ {
++	int v;
++	const char *reason;
++	v = validate_disk_capacity(drive->capacity64, &reason);
++	if (v) {
++		printk(KERN_ERR "%s: The disk is too big. %s\n",
++			drive->name, reason);
++		return 0;
++	}
+ 	return drive->capacity64;
+ }
+ 
+Index: linux-2.6-compile/drivers/scsi/sd.c
+===================================================================
+--- linux-2.6-compile.orig/drivers/scsi/sd.c	2014-01-30 17:23:24.000000000 +0100
++++ linux-2.6-compile/drivers/scsi/sd.c	2014-01-30 19:26:51.000000000 +0100
+@@ -1960,6 +1960,8 @@ static int read_capacity_16(struct scsi_
+ 	unsigned int alignment;
+ 	unsigned long long lba;
+ 	unsigned sector_size;
++	int v;
++	const char *reason;
+ 
+ 	if (sdp->no_read_capacity_16)
+ 		return -EINVAL;
+@@ -2014,10 +2016,9 @@ static int read_capacity_16(struct scsi_
+ 		return -ENODEV;
+ 	}
+ 
+-	if ((sizeof(sdkp->capacity) == 4) && (lba >= 0xffffffffULL)) {
+-		sd_printk(KERN_ERR, sdkp, "Too big for this kernel. Use a "
+-			"kernel compiled with support for large block "
+-			"devices.\n");
++	v = validate_disk_capacity(lba + (lba != ULLONG_MAX), &reason);
++	if (v) {
++		sd_printk(KERN_ERR, sdkp, "The disk is too big. %s\n", reason);
+ 		sdkp->capacity = 0;
+ 		return -EOVERFLOW;
+ 	}
+@@ -2053,8 +2054,10 @@ static int read_capacity_10(struct scsi_
+ 	int sense_valid = 0;
+ 	int the_result;
+ 	int retries = 3, reset_retries = READ_CAPACITY_RETRIES_ON_RESET;
+-	sector_t lba;
++	unsigned long long lba;
+ 	unsigned sector_size;
++	int v;
++	const char *reason;
+ 
+ 	do {
+ 		cmd[0] = READ_CAPACITY;
+@@ -2100,10 +2103,9 @@ static int read_capacity_10(struct scsi_
+ 		return sector_size;
+ 	}
+ 
+-	if ((sizeof(sdkp->capacity) == 4) && (lba == 0xffffffff)) {
+-		sd_printk(KERN_ERR, sdkp, "Too big for this kernel. Use a "
+-			"kernel compiled with support for large block "
+-			"devices.\n");
++	v = validate_disk_capacity(lba + 1, &reason);
++	if (v) {
++		sd_printk(KERN_ERR, sdkp, "The disk is too big. %s\n", reason);
+ 		sdkp->capacity = 0;
+ 		return -EOVERFLOW;
+ 	}
+Index: linux-2.6-compile/include/linux/genhd.h
+===================================================================
+--- linux-2.6-compile.orig/include/linux/genhd.h	2014-01-30 17:23:29.000000000 +0100
++++ linux-2.6-compile/include/linux/genhd.h	2014-01-30 19:26:51.000000000 +0100
+@@ -451,6 +451,8 @@ static inline void set_capacity(struct g
+ 	disk->part0.nr_sects = size;
+ }
+ 
++extern int validate_disk_capacity(u64 n_sectors, const char **reason);
++
+ #ifdef CONFIG_SOLARIS_X86_PARTITION
+ 
+ #define SOLARIS_X86_NUMSLICE	16
+Index: linux-2.6-compile/drivers/md/dm-ioctl.c
+===================================================================
+--- linux-2.6-compile.orig/drivers/md/dm-ioctl.c	2014-01-30 17:23:17.000000000 +0100
++++ linux-2.6-compile/drivers/md/dm-ioctl.c	2014-01-30 19:26:51.000000000 +0100
+@@ -1250,8 +1250,7 @@ static int populate_table(struct dm_tabl
+ 		}
+ 
+ 		r = dm_table_add_target(table, spec->target_type,
+-					(sector_t) spec->sector_start,
+-					(sector_t) spec->length,
++					spec->sector_start, spec->length,
+ 					target_params);
+ 		if (r) {
+ 			DMWARN("error adding target to table");
+Index: linux-2.6-compile/drivers/md/dm-table.c
+===================================================================
+--- linux-2.6-compile.orig/drivers/md/dm-table.c	2014-01-30 17:23:17.000000000 +0100
++++ linux-2.6-compile/drivers/md/dm-table.c	2014-01-30 19:26:51.000000000 +0100
+@@ -702,11 +702,12 @@ static int validate_hardware_logical_blo
+ }
+ 
+ int dm_table_add_target(struct dm_table *t, const char *type,
+-			sector_t start, sector_t len, char *params)
++			u64 start, u64 len, char *params)
+ {
+ 	int r = -EINVAL, argc;
+ 	char **argv;
+ 	struct dm_target *tgt;
++	const char *reason;
+ 
+ 	if (t->singleton) {
+ 		DMERR("%s: target type %s must appear alone in table",
+@@ -724,6 +725,17 @@ int dm_table_add_target(struct dm_table
+ 		return -EINVAL;
+ 	}
+ 
++	if (start + len < start) {
++		DMERR("%s: target length overflow", dm_device_name(t->md));
++		return -EOVERFLOW;
++	}
++
++	r = validate_disk_capacity(start + len, &reason);
++	if (r) {
++		DMERR("%s: device is too big: %s", dm_device_name(t->md), reason);
++		return r;
++	}
++
+ 	tgt->type = dm_get_target_type(type);
+ 	if (!tgt->type) {
+ 		DMERR("%s: %s: unknown target type", dm_device_name(t->md),
+Index: linux-2.6-compile/include/linux/device-mapper.h
+===================================================================
+--- linux-2.6-compile.orig/include/linux/device-mapper.h	2014-01-30 17:23:29.000000000 +0100
++++ linux-2.6-compile/include/linux/device-mapper.h	2014-01-30 19:26:51.000000000 +0100
+@@ -428,7 +428,7 @@ int dm_table_create(struct dm_table **re
+  * Then call this once for each target.
+  */
+ int dm_table_add_target(struct dm_table *t, const char *type,
+-			sector_t start, sector_t len, char *params);
++			u64 start, u64 len, char *params);
+ 
+ /*
+  * Target_ctr should call this if it needs to add any callbacks.
