@@ -1,121 +1,69 @@
-From: Alexander Gordeev <agordeev@redhat.com>
-Subject: [PATCH v2 2/2] ipr: Use pci_enable_msi_range() and
- pci_enable_msix_range()
-Date: Thu, 30 Jan 2014 15:10:32 +0100
-Message-ID: <20140130141031.GC32349@dhcp-26-207.brq.redhat.com>
-References: <cover.1389904166.git.agordeev@redhat.com>
- <eb0b62be65c050533f2565fcf3f1d673770dfd67.1389904166.git.agordeev@redhat.com>
- <20140128095441.GA6951@dhcp-26-207.brq.redhat.com>
- <52E7CCAD.5070008@linux.vnet.ibm.com>
- <20140129132651.GA27764@dhcp-26-207.brq.redhat.com>
- <20140130140630.GA32349@dhcp-26-207.brq.redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20140130140630.GA32349@dhcp-26-207.brq.redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Brian King <brking@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, Wendy Xiong <wenxiong@linux.vnet.ibm.com>
+From: "Steven J. Magnani" <steve.magnani@digidescorp.com>
+Subject: [PATCH] qla2xxx: eliminate dead code in qla24xx_process_bidir_cmd
+Date: Thu, 30 Jan 2014 08:17:55 -0600
+Message-ID: <1391091475-15629-1-git-send-email-steve@digidescorp.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ig0-f181.google.com ([209.85.213.181]:57973 "EHLO
+	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753101AbaA3OSG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Jan 2014 09:18:06 -0500
+Received: by mail-ig0-f181.google.com with SMTP id j1so7238833iga.2
+        for <linux-scsi@vger.kernel.org>; Thu, 30 Jan 2014 06:18:05 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-driver@qlogic.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Steven J. Magnani" <steve@digidescorp.com>
 
-As result deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range() and pci_enable_msix_range()
-interfaces.
+Coverity reports that the test of req_data_len vs. rsp_data_len is dead code.
+This appears to be because the test occurs before any real assignment to
+either variable.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Assuming that the sole in-tree execution path (QL_VND_DIAG_IO_CMD submitted
+via FC pass-through on a host /dev/bsg/X) does not require the response to
+have the same length as the request, all code related to the faulty test
+can be removed. If this is not the case, the test should be moved much earlier
+in the function since it does not depend on any resource acquitision.
+
+Signed-off-by: Steven J. Magnani <steve@digidescorp.com>
 ---
- drivers/scsi/ipr.c |   47 ++++++++++++++++++-----------------------------
- 1 files changed, 18 insertions(+), 29 deletions(-)
-
-diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index 48d0cfc..70f40ca 100644
---- a/drivers/scsi/ipr.c
-+++ b/drivers/scsi/ipr.c
-@@ -9317,51 +9317,40 @@ static void ipr_wait_for_pci_err_recovery(struct ipr_ioa_cfg *ioa_cfg)
- static int ipr_enable_msix(struct ipr_ioa_cfg *ioa_cfg)
- {
- 	struct msix_entry entries[IPR_MAX_MSIX_VECTORS];
--	int i, err, vectors;
-+	int i, vectors;
+--- linux-3.13/drivers/scsi/qla2xxx/qla_bsg.c	2014-01-29 13:50:02.050802907 -0600
++++ b/drivers/scsi/qla2xxx/qla_bsg.c	2014-01-29 13:53:15.856549874 -0600
+@@ -1732,8 +1732,6 @@ qla24xx_process_bidir_cmd(struct fc_bsg_
+ 	uint16_t nextlid = 0;
+ 	uint32_t tot_dsds;
+ 	srb_t *sp = NULL;
+-	uint32_t req_data_len = 0;
+-	uint32_t rsp_data_len = 0;
  
- 	for (i = 0; i < ARRAY_SIZE(entries); ++i)
- 		entries[i].entry = i;
- 
--	vectors = ipr_number_of_msix;
--
--	while ((err = pci_enable_msix(ioa_cfg->pdev, entries, vectors)) > 0)
--			vectors = err;
--
--	if (err < 0) {
-+	vectors = pci_enable_msix_range(ioa_cfg->pdev,
-+					entries, 1, ipr_number_of_msix);
-+	if (vectors < 0) {
- 		ipr_wait_for_pci_err_recovery(ioa_cfg);
--		return err;
-+		return vectors;
+ 	/* Check the type of the adapter */
+ 	if (!IS_BIDI_CAPABLE(ha)) {
+@@ -1840,17 +1838,6 @@ qla24xx_process_bidir_cmd(struct fc_bsg_
+ 		goto done_unmap_sg;
  	}
  
--	if (!err) {
--		for (i = 0; i < vectors; i++)
--			ioa_cfg->vectors_info[i].vec = entries[i].vector;
--		ioa_cfg->nvectors = vectors;
+-	if (req_data_len != rsp_data_len) {
+-		rval = EXT_STATUS_BUSY;
+-		ql_log(ql_log_warn, vha, 0x70aa,
+-		    "req_data_len != rsp_data_len\n");
+-		goto done_unmap_sg;
 -	}
-+	for (i = 0; i < vectors; i++)
-+		ioa_cfg->vectors_info[i].vec = entries[i].vector;
-+	ioa_cfg->nvectors = vectors;
- 
--	return err;
-+	return 0;
- }
- 
- static int ipr_enable_msi(struct ipr_ioa_cfg *ioa_cfg)
- {
--	int i, err, vectors;
-+	int i, vectors;
- 
--	vectors = ipr_number_of_msix;
 -
--	while ((err = pci_enable_msi_block(ioa_cfg->pdev, vectors)) > 0)
--			vectors = err;
+-	req_data_len = bsg_job->request_payload.payload_len;
+-	rsp_data_len = bsg_job->reply_payload.payload_len;
 -
--	if (err < 0) {
-+	vectors = pci_enable_msi_range(ioa_cfg->pdev, 1, ipr_number_of_msix);
-+	if (vectors < 0) {
- 		ipr_wait_for_pci_err_recovery(ioa_cfg);
--		return err;
-+		return vectors;
- 	}
- 
--	if (!err) {
--		for (i = 0; i < vectors; i++)
--			ioa_cfg->vectors_info[i].vec = ioa_cfg->pdev->irq + i;
--		ioa_cfg->nvectors = vectors;
--	}
-+	for (i = 0; i < vectors; i++)
-+		ioa_cfg->vectors_info[i].vec = ioa_cfg->pdev->irq + i;
-+	ioa_cfg->nvectors = vectors;
- 
--	return err;
-+	return 0;
- }
- 
- static void name_msi_vectors(struct ipr_ioa_cfg *ioa_cfg)
-@@ -9426,7 +9415,7 @@ static irqreturn_t ipr_test_intr(int irq, void *devp)
-  * ipr_test_msi - Test for Message Signaled Interrupt (MSI) support.
-  * @pdev:		PCI device struct
-  *
-- * Description: The return value from pci_enable_msi() can not always be
-+ * Description: The return value from pci_enable_msi_range() can not always be
-  * trusted.  This routine sets up and initiates a test interrupt to determine
-  * if the interrupt is received via the ipr_test_intr() service routine.
-  * If the tests fails, the driver will fall back to LSI.
--- 
-1.7.7.6
-
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+-
+ 	/* Alloc SRB structure */
+ 	sp = qla2x00_get_sp(vha, &(vha->bidir_fcport), GFP_KERNEL);
+ 	if (!sp) {
+--- linux-3.13/drivers/scsi/qla2xxx/qla_dbg.c	2014-01-29 13:50:49.435230824 -0600
++++ b/drivers/scsi/qla2xxx/qla_dbg.c	2014-01-29 13:53:43.960820829 -0600
+@@ -38,7 +38,8 @@
+  * |                              |                    | 0x7073-0x7075, |
+  * |                              |                    | 0x707b,0x708c, |
+  * |                              |                    | 0x70a5,0x70a6, |
+- * |                              |                    | 0x70a8,0x70ab, |
++ * |                              |                    | 0x70a8,        |
++ * |                              |                    | 0x70aa-0x70ab, |
+  * |                              |                    | 0x70ad-0x70ae, |
+  * |                              |                    | 0x70d1-0x70db, |
+  * |                              |                    | 0x7047,0x703b	|
