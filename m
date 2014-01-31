@@ -1,49 +1,55 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH] st: Do not rewind for SG_IO
-Date: Fri, 31 Jan 2014 09:46:14 +0100
-Message-ID: <1391157974-17512-1-git-send-email-hare@suse.de>
+Subject: [PATCHv2 00/16] scsi_dh_alua updates
+Date: Fri, 31 Jan 2014 10:29:44 +0100
+Message-ID: <1391160600-19652-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:36125 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:36964 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753961AbaAaIqS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 31 Jan 2014 03:46:18 -0500
+	id S1751410AbaAaJaC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 31 Jan 2014 04:30:02 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
-Cc: Kay Sievers <kay@vrfy.org>, Kai Makisara <kai.makisara@kolumbus.fi>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+Cc: Sean Stewart <sean.stewart@netapp.com>, Martin George <marting@netapp.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-Plain 'st' devices are defined to do a rewind on close.
-This causes quite some issues when trying to read the
-VPD pages to figure out the WWN of the device.
-Especially for udev this means we either have to use
-another (non-rewinding) device node for this
-(and thereby introducing race conditions) or not
-generating a persistent device node at all
-(and breaking multi-tape setups).
+Hi James,
 
-This patch make the tape always non-rewinding
-when SG_IO is used, thus allowing udev to get
-a proper device id for tapes.
+here's an update for the ALUA device handler I've been hoarding
+for quite some time. The major bit here is the asynchronous
+RTPG handling. With the original design we would treat every
+LUN independently, despite the fact that several LUNs might
+in fact belong to the same target port group. So any
+change on one LUN will affect the others, too.
+And we now can treat LUNs in 'transitioning' ALUA mode
+correctly, as now we'll be blocking any I/O in the prep_fn()
+until the controller is in a working state again.
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
----
- drivers/scsi/st.c | 3 +++
- 1 file changed, 3 insertions(+)
+This is the second version of the patchset, containing
+suggested changes from Mike Christie to move
+GFP_ATOMIC to GFP_KERNEL allocations.
 
-diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index dc4826c..da18ce5 100644
---- a/drivers/scsi/st.c
-+++ b/drivers/scsi/st.c
-@@ -3645,6 +3645,9 @@ static long st_ioctl(struct file *file, unsigned int cmd_in, unsigned long arg)
- 		case SCSI_IOCTL_GET_IDLUN:
- 		case SCSI_IOCTL_GET_BUS_NUMBER:
- 			break;
-+		case SG_IO:
-+			STp->rew_at_close = 0;
-+			/* Fallthrough */
- 		default:
- 			if ((cmd_in == SG_IO ||
- 			     cmd_in == SCSI_IOCTL_SEND_COMMAND ||
+Hannes Reinecke (16):
+  scsi_dh_alua: Improve error handling
+  scsi_dh_alua: use flag for RTPG extended header
+  scsi_dh_alua: Pass buffer as function argument
+  scsi_dh_alua: Make stpg synchronous
+  scsi_dh_alua: put sense buffer on stack
+  scsi_dh_alua: use local buffer for VPD inquiry
+  scsi_dh_alua: Use separate alua_port_group structure
+  scsi_dh_alua: parse target device id
+  scsi_dh_alua: simplify sense code handling
+  scsi_dh_alua: Do not attach to management devices
+  scsi_dh_alua: multipath failover fails with error 15
+  scsi_dh: return individual errors in scsi_dh_activate()
+  scsi_dh_alua: Clarify logging message
+  scsi_dh: invoke callback if ->activate is not present
+  scsi_dh_alua: revert commit a8e5a2d593cbfccf530c3382c2c328d2edaa7b66
+  scsi_dh_alua: Use workqueue for RTPG
+
+ drivers/scsi/device_handler/scsi_dh.c      |   18 +-
+ drivers/scsi/device_handler/scsi_dh_alua.c | 1045 ++++++++++++++++++++--------
+ 2 files changed, 750 insertions(+), 313 deletions(-)
+
 -- 
 1.7.12.4
 
