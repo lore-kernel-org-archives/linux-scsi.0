@@ -1,102 +1,121 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 09/16] scsi_dh_alua: simplify sense code handling
-Date: Fri, 31 Jan 2014 10:29:53 +0100
-Message-ID: <1391160600-19652-10-git-send-email-hare@suse.de>
+Subject: [PATCH 06/16] scsi_dh_alua: use local buffer for VPD inquiry
+Date: Fri, 31 Jan 2014 10:29:50 +0100
+Message-ID: <1391160600-19652-7-git-send-email-hare@suse.de>
 References: <1391160600-19652-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:37013 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:37006 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753967AbaAaJaK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 31 Jan 2014 04:30:10 -0500
+	id S1754037AbaAaJaI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 31 Jan 2014 04:30:08 -0500
 In-Reply-To: <1391160600-19652-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Sean Stewart <sean.stewart@netapp.com>, Martin George <marting@netapp.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-Most sense code is already handled in the generic
-code, so we shouldn't be adding special cases here.
-However, when doing so we need to check for
-unit attention whenever we're sending an internal
-command.
+VPD inquiry need to be done only once, so we can be using
+a local buffer here.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/device_handler/scsi_dh_alua.c | 33 +++++-------------------------
- 1 file changed, 5 insertions(+), 28 deletions(-)
+ drivers/scsi/device_handler/scsi_dh_alua.c | 45 ++++++++++++++++++------------
+ 1 file changed, 27 insertions(+), 18 deletions(-)
 
 diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index 857a999..174ff45 100644
+index adc77ef..88f98e0 100644
 --- a/drivers/scsi/device_handler/scsi_dh_alua.c
 +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -388,6 +388,8 @@ static int alua_vpd_inquiry(struct scsi_device *sdev, struct alua_dh_data *h)
- 			goto out;
+@@ -322,16 +322,27 @@ static int alua_check_tpgs(struct scsi_device *sdev, struct alua_dh_data *h)
+  */
+ static int alua_vpd_inquiry(struct scsi_device *sdev, struct alua_dh_data *h)
+ {
++	unsigned char *buff;
++	unsigned char bufflen = 36;
+ 	int len, timeout = ALUA_FAILOVER_TIMEOUT;
+ 	unsigned char sense[SCSI_SENSE_BUFFERSIZE];
+ 	struct scsi_sense_hdr sense_hdr;
+ 	unsigned retval;
+ 	unsigned char *d;
+ 	unsigned long expiry;
++	int err;
+ 
+ 	expiry = round_jiffies_up(jiffies + timeout);
+  retry:
+-	retval = submit_vpd_inquiry(sdev, h->buff, h->bufflen, sense);
++	buff = kmalloc(bufflen, GFP_KERNEL);
++	if (!buff) {
++		sdev_printk(KERN_WARNING, sdev,
++			    "%s: kmalloc buffer failed\n",
++			    ALUA_DH_NAME);
++		/* Temporary failure, bypass */
++		return SCSI_DH_DEV_TEMP_BUSY;
++	}
++	retval = submit_vpd_inquiry(sdev, buff, bufflen, sense);
+ 	if (retval) {
+ 		unsigned err;
+ 
+@@ -345,6 +356,7 @@ static int alua_vpd_inquiry(struct scsi_device *sdev, struct alua_dh_data *h)
+ 				err = SCSI_DH_DEV_TEMP_BUSY;
+ 			else
+ 				err = SCSI_DH_IO;
++			kfree(buff);
+ 			return err;
  		}
  		err = alua_check_sense(sdev, &sense_hdr);
-+		if (sense_hdr.sense_key == UNIT_ATTENTION)
-+			err = ADD_TO_MLQUEUE;
- 		if (err == ADD_TO_MLQUEUE && time_before(jiffies, expiry))
- 			goto retry;
- 		if (err != SUCCESS) {
-@@ -617,21 +619,6 @@ static int alua_check_sense(struct scsi_device *sdev,
- 			 * LUN Not Accessible - ALUA state transition
- 			 */
- 			return ADD_TO_MLQUEUE;
--		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x0b)
--			/*
--			 * LUN Not Accessible -- Target port in standby state
--			 */
--			return SUCCESS;
--		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x0c)
--			/*
--			 * LUN Not Accessible -- Target port in unavailable state
--			 */
--			return SUCCESS;
--		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x12)
--			/*
--			 * LUN Not Ready -- Offline
--			 */
--			return SUCCESS;
- 		break;
- 	case UNIT_ATTENTION:
- 		if (sense_hdr->asc == 0x29 && sense_hdr->ascq == 0x00)
-@@ -646,7 +633,7 @@ static int alua_check_sense(struct scsi_device *sdev,
- 			return ADD_TO_MLQUEUE;
- 		if (sense_hdr->asc == 0x2a && sense_hdr->ascq == 0x01)
- 			/*
--			 * Mode Parameters Changed
-+			 * Mode parameter changed
- 			 */
- 			return ADD_TO_MLQUEUE;
- 		if (sense_hdr->asc == 0x2a && sense_hdr->ascq == 0x06)
-@@ -659,18 +646,6 @@ static int alua_check_sense(struct scsi_device *sdev,
- 			 * Implicit ALUA state transition failed
- 			 */
- 			return ADD_TO_MLQUEUE;
--		if (sense_hdr->asc == 0x3f && sense_hdr->ascq == 0x03)
--			/*
--			 * Inquiry data has changed
--			 */
--			return ADD_TO_MLQUEUE;
--		if (sense_hdr->asc == 0x3f && sense_hdr->ascq == 0x0e)
--			/*
--			 * REPORTED_LUNS_DATA_HAS_CHANGED is reported
--			 * when switching controllers on targets like
--			 * Intel Multi-Flex. We can just retry.
--			 */
--			return ADD_TO_MLQUEUE;
- 		break;
+@@ -362,24 +374,19 @@ static int alua_vpd_inquiry(struct scsi_device *sdev, struct alua_dh_data *h)
  	}
  
-@@ -735,6 +710,8 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg, int w
- 		}
+ 	/* Check if vpd page exceeds initial buffer */
+-	len = (h->buff[2] << 8) + h->buff[3] + 4;
+-	if (len > h->bufflen) {
++	len = (buff[2] << 8) + buff[3] + 4;
++	if (len > bufflen) {
+ 		/* Resubmit with the correct length */
+-		if (realloc_buffer(h, len)) {
+-			sdev_printk(KERN_WARNING, sdev,
+-				    "%s: kmalloc buffer failed\n",
+-				    ALUA_DH_NAME);
+-			/* Temporary failure, bypass */
+-			return SCSI_DH_DEV_TEMP_BUSY;
+-		}
++		kfree(buff);
++		bufflen = len;
+ 		goto retry;
+ 	}
  
- 		err = alua_check_sense(sdev, &sense_hdr);
-+		if (sense_hdr.sense_key == UNIT_ATTENTION)
-+			err = ADD_TO_MLQUEUE;
- 		if (err == ADD_TO_MLQUEUE && time_before(jiffies, expiry)) {
- 			sdev_printk(KERN_ERR, sdev, "%s: rtpg retry, ",
- 				    ALUA_DH_NAME);
+ 	/*
+ 	 * Now look for the correct descriptor.
+ 	 */
+-	d = h->buff + 4;
+-	while (d < h->buff + len) {
++	d = buff + 4;
++	while (d < buff + len) {
+ 		switch (d[1] & 0xf) {
+ 		case 0x4:
+ 			/* Relative target port */
+@@ -406,13 +413,15 @@ static int alua_vpd_inquiry(struct scsi_device *sdev, struct alua_dh_data *h)
+ 			    ALUA_DH_NAME);
+ 		h->state = TPGS_STATE_OPTIMIZED;
+ 		h->tpgs = TPGS_MODE_NONE;
+-		return SCSI_DH_DEV_UNSUPP;
++		err = SCSI_DH_DEV_UNSUPP;
++	} else {
++		sdev_printk(KERN_INFO, sdev,
++			    "%s: port group %02x rel port %02x\n",
++			    ALUA_DH_NAME, h->group_id, h->rel_port);
++		err = SCSI_DH_OK;
+ 	}
+-	sdev_printk(KERN_INFO, sdev,
+-		    "%s: port group %02x rel port %02x\n",
+-		    ALUA_DH_NAME, h->group_id, h->rel_port);
+-
+-	return SCSI_DH_OK;
++	kfree(buff);
++	return err;
+ }
+ 
+ static char print_alua_state(int state)
 -- 
 1.7.12.4
 
