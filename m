@@ -1,80 +1,102 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 15/16] scsi_dh_alua: revert commit a8e5a2d593cbfccf530c3382c2c328d2edaa7b66
-Date: Fri, 31 Jan 2014 10:29:59 +0100
-Message-ID: <1391160600-19652-16-git-send-email-hare@suse.de>
+Subject: [PATCH 09/16] scsi_dh_alua: simplify sense code handling
+Date: Fri, 31 Jan 2014 10:29:53 +0100
+Message-ID: <1391160600-19652-10-git-send-email-hare@suse.de>
 References: <1391160600-19652-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:37019 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:37013 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754051AbaAaJaM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 31 Jan 2014 04:30:12 -0500
+	id S1753967AbaAaJaK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 31 Jan 2014 04:30:10 -0500
 In-Reply-To: <1391160600-19652-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Sean Stewart <sean.stewart@netapp.com>, Martin George <marting@netapp.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-Obsoleted by the next patch.
+Most sense code is already handled in the generic
+code, so we shouldn't be adding special cases here.
+However, when doing so we need to check for
+unit attention whenever we're sending an internal
+command.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/device_handler/scsi_dh_alua.c | 22 ++++++++--------------
- 1 file changed, 8 insertions(+), 14 deletions(-)
+ drivers/scsi/device_handler/scsi_dh_alua.c | 33 +++++-------------------------
+ 1 file changed, 5 insertions(+), 28 deletions(-)
 
 diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index 7f03417..6591ac1 100644
+index 857a999..174ff45 100644
 --- a/drivers/scsi/device_handler/scsi_dh_alua.c
 +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -678,13 +678,12 @@ static int alua_check_sense(struct scsi_device *sdev,
- /*
-  * alua_rtpg - Evaluate REPORT TARGET GROUP STATES
-  * @sdev: the device to be evaluated.
-- * @wait_for_transition: if nonzero, wait ALUA_FAILOVER_TIMEOUT seconds for device to exit transitioning state
-  *
-  * Evaluate the Target Port Group State.
-  * Returns SCSI_DH_DEV_OFFLINED if the path is
-  * found to be unusable.
-  */
--static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg, int wait_for_transition)
-+static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
- {
- 	unsigned char sense[SCSI_SENSE_BUFFERSIZE];
- 	struct scsi_sense_hdr sense_hdr;
-@@ -774,7 +773,7 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg, int w
- 	else
- 		pg->transition_tmo = ALUA_FAILOVER_TIMEOUT;
- 
--	if (wait_for_transition && (orig_transition_tmo != pg->transition_tmo)) {
-+	if (orig_transition_tmo != pg->transition_tmo) {
- 		sdev_printk(KERN_INFO, sdev,
- 			    "%s: transition timeout set to %d seconds\n",
- 			    ALUA_DH_NAME, pg->transition_tmo);
-@@ -812,19 +811,14 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg, int w
- 
- 	switch (pg->state) {
- 	case TPGS_STATE_TRANSITIONING:
--		if (wait_for_transition) {
--			if (time_before(jiffies, expiry)) {
--				/* State transition, retry */
--				interval += 2000;
--				msleep(interval);
--				goto retry;
--			}
--			err = SCSI_DH_RETRY;
--		} else {
--			err = SCSI_DH_OK;
-+		if (time_before(jiffies, expiry)) {
-+			/* State transition, retry */
-+			interval += 2000;
-+			msleep(interval);
-+			goto retry;
+@@ -388,6 +388,8 @@ static int alua_vpd_inquiry(struct scsi_device *sdev, struct alua_dh_data *h)
+ 			goto out;
  		}
--
- 		/* Transitioning time exceeded, set port to standby */
-+		err = SCSI_DH_RETRY;
- 		pg->state = TPGS_STATE_STANDBY;
+ 		err = alua_check_sense(sdev, &sense_hdr);
++		if (sense_hdr.sense_key == UNIT_ATTENTION)
++			err = ADD_TO_MLQUEUE;
+ 		if (err == ADD_TO_MLQUEUE && time_before(jiffies, expiry))
+ 			goto retry;
+ 		if (err != SUCCESS) {
+@@ -617,21 +619,6 @@ static int alua_check_sense(struct scsi_device *sdev,
+ 			 * LUN Not Accessible - ALUA state transition
+ 			 */
+ 			return ADD_TO_MLQUEUE;
+-		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x0b)
+-			/*
+-			 * LUN Not Accessible -- Target port in standby state
+-			 */
+-			return SUCCESS;
+-		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x0c)
+-			/*
+-			 * LUN Not Accessible -- Target port in unavailable state
+-			 */
+-			return SUCCESS;
+-		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x12)
+-			/*
+-			 * LUN Not Ready -- Offline
+-			 */
+-			return SUCCESS;
  		break;
- 	case TPGS_STATE_OFFLINE:
+ 	case UNIT_ATTENTION:
+ 		if (sense_hdr->asc == 0x29 && sense_hdr->ascq == 0x00)
+@@ -646,7 +633,7 @@ static int alua_check_sense(struct scsi_device *sdev,
+ 			return ADD_TO_MLQUEUE;
+ 		if (sense_hdr->asc == 0x2a && sense_hdr->ascq == 0x01)
+ 			/*
+-			 * Mode Parameters Changed
++			 * Mode parameter changed
+ 			 */
+ 			return ADD_TO_MLQUEUE;
+ 		if (sense_hdr->asc == 0x2a && sense_hdr->ascq == 0x06)
+@@ -659,18 +646,6 @@ static int alua_check_sense(struct scsi_device *sdev,
+ 			 * Implicit ALUA state transition failed
+ 			 */
+ 			return ADD_TO_MLQUEUE;
+-		if (sense_hdr->asc == 0x3f && sense_hdr->ascq == 0x03)
+-			/*
+-			 * Inquiry data has changed
+-			 */
+-			return ADD_TO_MLQUEUE;
+-		if (sense_hdr->asc == 0x3f && sense_hdr->ascq == 0x0e)
+-			/*
+-			 * REPORTED_LUNS_DATA_HAS_CHANGED is reported
+-			 * when switching controllers on targets like
+-			 * Intel Multi-Flex. We can just retry.
+-			 */
+-			return ADD_TO_MLQUEUE;
+ 		break;
+ 	}
+ 
+@@ -735,6 +710,8 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg, int w
+ 		}
+ 
+ 		err = alua_check_sense(sdev, &sense_hdr);
++		if (sense_hdr.sense_key == UNIT_ATTENTION)
++			err = ADD_TO_MLQUEUE;
+ 		if (err == ADD_TO_MLQUEUE && time_before(jiffies, expiry)) {
+ 			sdev_printk(KERN_ERR, sdev, "%s: rtpg retry, ",
+ 				    ALUA_DH_NAME);
 -- 
 1.7.12.4
 
