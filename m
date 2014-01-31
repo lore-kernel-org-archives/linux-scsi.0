@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 11/16] scsi_dh_alua: multipath failover fails with error 15
-Date: Fri, 31 Jan 2014 10:29:55 +0100
-Message-ID: <1391160600-19652-12-git-send-email-hare@suse.de>
+Subject: [PATCH 14/16] scsi_dh: invoke callback if ->activate is not present
+Date: Fri, 31 Jan 2014 10:29:58 +0100
+Message-ID: <1391160600-19652-15-git-send-email-hare@suse.de>
 References: <1391160600-19652-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:37016 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:37018 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753962AbaAaJaL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1754049AbaAaJaL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Fri, 31 Jan 2014 04:30:11 -0500
 In-Reply-To: <1391160600-19652-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,42 +14,27 @@ List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Sean Stewart <sean.stewart@netapp.com>, Martin George <marting@netapp.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-When a path is already optimized multipath failover will fail
-with the message
-Could not failover device X:Y: Handler scsi_dh_alua Error 15
+When ->activate isn't present we still need to invoke the
+callbacks, otherwise the system might stall.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/device_handler/scsi_dh_alua.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+ drivers/scsi/device_handler/scsi_dh.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index a1c69bb..8ea35a9 100644
---- a/drivers/scsi/device_handler/scsi_dh_alua.c
-+++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -851,6 +851,8 @@ static unsigned alua_stpg(struct scsi_device *sdev, struct alua_port_group *pg)
- 		return SCSI_DH_RETRY;
- 	}
- 	switch (pg->state) {
-+	case TPGS_STATE_OPTIMIZED:
-+		return SCSI_DH_OK;
- 	case TPGS_STATE_NONOPTIMIZED:
- 		if ((pg->flags & ALUA_OPTIMIZE_STPG) &&
- 		    (!pg->pref) &&
-@@ -865,10 +867,11 @@ static unsigned alua_stpg(struct scsi_device *sdev, struct alua_port_group *pg)
- 		break;
- 	case TPGS_STATE_TRANSITIONING:
- 		return SCSI_DH_RETRY;
--		break;
- 	default:
-+		sdev_printk(KERN_INFO, sdev,
-+			    "%s: stpg failed, unhandled TPGS state %d",
-+			    ALUA_DH_NAME, pg->state);
- 		return SCSI_DH_NOSYS;
--		break;
- 	}
- 	/* Set state to transitioning */
- 	pg->state = TPGS_STATE_TRANSITIONING;
+diff --git a/drivers/scsi/device_handler/scsi_dh.c b/drivers/scsi/device_handler/scsi_dh.c
+index ae7f399..a90380f 100644
+--- a/drivers/scsi/device_handler/scsi_dh.c
++++ b/drivers/scsi/device_handler/scsi_dh.c
+@@ -411,7 +411,7 @@ int scsi_dh_activate(struct request_queue *q, activate_complete fn, void *data)
+ 		err = SCSI_DH_DEV_OFFLINED;
+ 	spin_unlock_irqrestore(q->queue_lock, flags);
+ 
+-	if (err != SCSI_DH_OK) {
++	if (err != SCSI_DH_OK || !scsi_dh->activate) {
+ 		if (fn)
+ 			fn(data, err);
+ 		goto out;
 -- 
 1.7.12.4
 
