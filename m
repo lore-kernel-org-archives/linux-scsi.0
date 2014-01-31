@@ -1,55 +1,68 @@
-From: Roland Dreier <roland@kernel.org>
-Subject: [PATCH] qla2xxx: Remove last vestiges of qla_tgt_cmd.cmd_list
-Date: Fri, 31 Jan 2014 13:11:36 -0800
-Message-ID: <1391202696-23070-1-git-send-email-roland@kernel.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys010aog114.obsmtp.com ([74.125.245.96]:47430 "HELO
-	na3sys010aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754120AbaAaVQ5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 31 Jan 2014 16:16:57 -0500
-Received: by mail-pd0-f178.google.com with SMTP id y13so4728675pdi.37
-        for <linux-scsi@vger.kernel.org>; Fri, 31 Jan 2014 13:16:56 -0800 (PST)
-Sender: linux-scsi-owner@vger.kernel.org
+From: Chris Mason <clm@fb.com>
+Subject: Re: [LSF/MM TOPIC] Fixing large block devices on 32 bit
+Date: Fri, 31 Jan 2014 16:20:32 -0500
+Message-ID: <52EC13A0.2080806@fb.com>
+References: <1391194978.2172.20.camel@dabdike.int.hansenpartnership.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1391194978.2172.20.camel@dabdike.int.hansenpartnership.com>
+Sender: owner-linux-mm@kvack.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
+Cc: lsf-pc@lists.linux-foundation.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: qla2xxx-upstream@qlogic.com, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-From: Roland Dreier <roland@purestorage.com>
+On 01/31/2014 02:02 PM, James Bottomley wrote:
+> It has been reported:
+>
+> http://marc.info/?t=139111447200006
+>
+> That large block devices (specifically devices > 16TB) crash when
+> mounted on 32 bit systems.  The problem specifically is that although
+> CONFIG_LBDAF extends the size of sector_t within the block and storage
+> layers to 64 bits, the buffer cache isn't big enough.  Specifically,
+> buffers are mapped through a single page cache mapping on the backing
+> device inode.  The size of the allowed offset in the page cache radix
+> tree is pgoff_t which is 32 bits, so once the size of device goes beyond
+> 16TB, this offset wraps and all hell breaks loose.
+>
+> The problem is that although the current single drive limit is about
+> 4TB, it will only be a couple of years before 16TB devices are
+> available.  By then, I bet that most arm (and other exotic CPU) Linux
+> based personal file servers are still going to be 32 bit, so they're not
+> going to be able to take this generation (or beyond) of drives.  The
+> thing I'd like to discuss is how to fix this.  There are several options
+> I see, but there might be others.
+>
+>       1. Try to pretend that CONFIG_LBDAF is supposed to cap out at 16TB
+>          and there's nothing we can do about it ... this won't be at all
+>          popular with arm based file server manufacturers.
+>       2. Slyly make sure that the buffer cache won't go over 16TB by
+>          keeping filesystem metadata below that limit ... the horse has
+>          probably already bolted on this one.
+>       3. Increase pgoff_t and the radix tree indexes to u64 for
+>          CONFIG_LBDAF.  This will blow out the size of struct page on 32
+>          bits by 4 bytes and may have other knock on effects, but at
+>          least it will be transparent.
+>       4. add an additional radix tree lookup within the buffer cache, so
+>          instead of a single inode for the buffer cache, we have a radix
+>          tree of them which are added and removed at the granularity of
+>          16TB offsets as entries are requested.
+>
 
-The only place this struct member is touched is in one INIT_LIST_HEAD.
+I started typing up that #3 is going to cause problems with RCU radix, 
+but it looks ok.  I think we'll find a really scarey number of places 
+that interchange pgoff_t with unsigned long though.
 
-Signed-off-by: Roland Dreier <roland@purestorage.com>
----
- drivers/scsi/qla2xxx/qla_target.c | 2 --
- drivers/scsi/qla2xxx/qla_target.h | 1 -
- 2 files changed, 3 deletions(-)
+I prefer #4, but it means each FS needs to add code too.  We assume 
+page_offset(page) maps to the disk in more than a few places.
 
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 38a1257e76e1..2f42b650367c 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -2593,8 +2593,6 @@ static int qlt_handle_cmd_for_atio(struct scsi_qla_host *vha,
- 		return -ENOMEM;
- 	}
- 
--	INIT_LIST_HEAD(&cmd->cmd_list);
--
- 	memcpy(&cmd->atio, atio, sizeof(*atio));
- 	cmd->state = QLA_TGT_STATE_NEW;
- 	cmd->tgt = ha->tgt.qla_tgt;
-diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
-index b33e411f28a0..f4a4beee2b96 100644
---- a/drivers/scsi/qla2xxx/qla_target.h
-+++ b/drivers/scsi/qla2xxx/qla_target.h
-@@ -855,7 +855,6 @@ struct qla_tgt_cmd {
- 	uint16_t loop_id;	/* to save extra sess dereferences */
- 	struct qla_tgt *tgt;	/* to save extra sess dereferences */
- 	struct scsi_qla_host *vha;
--	struct list_head cmd_list;
- 
- 	struct atio_from_isp atio;
- };
--- 
-1.9.rc1
+-chris
 
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
