@@ -1,49 +1,53 @@
-From: Jeremy Linton <jlinton@tributary.com>
-Subject: Re: [PATCH] st: Do not rewind for SG_IO
-Date: Fri, 31 Jan 2014 10:43:39 -0600
-Message-ID: <52EBD2BB.8020705@tributary.com>
-References: <1391157974-17512-1-git-send-email-hare@suse.de>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [LSF/MM TOPIC][ATTEND] Plumbing I/O Cache / Tiered Storage Hints
+Date: Fri, 31 Jan 2014 10:18:44 -0800
+Message-ID: <CAA9_cmcCAOwFE7j8-80zMmgvgP02XVmLjepFJPpEn_ZANHn1zA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay.ihostexchange.net ([66.46.182.55]:5667 "EHLO
-	relay.ihostexchange.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932263AbaAaQnl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 31 Jan 2014 11:43:41 -0500
-In-Reply-To: <1391157974-17512-1-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-bcache-owner@vger.kernel.org>
+Sender: linux-bcache-owner@vger.kernel.org
+To: lsf-pc@lists.linux-foundation.org
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>, "linux-bcache@vger.kernel.org" <linux-bcache@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Jason B Akers <jason.b.akers@intel.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>
-Cc: Kay Sievers <kay@vrfy.org>, Kai Makisara <kai.makisara@kolumbus.fi>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+On Tue, Jan 28, 2014 at 2:57 PM, Dan Williams <dan.j.williams@intel.com> wrote:
+> In addition to disk drives with internally tiered-storage (solid-state
+> + magnetic media) the kernel has also grown native I/O-caching /
+> tiered-storage implementations in bcache and dm-cache.
+>
+> Currently, all these solutions depend on heuristics to determine what
+> tier the data referenced in an I/O belongs.  However, the presence of
+> hinting proposals from SCSI [1], ATA [2], and bcache [3] indicate that
+> these devices (hardware or virtual) want to consume explicit hints
+> indicating the value of caching data in a higher performing tier.
+>
+> At LSF I want to discuss options and opportunities for plumbing cache
+> hints from userspace, through the I/O stack to devices.  My colleague,
+> Jason Akers, is also interested in this discussion as he is
+> investigating how to exploit these hints from userspace.  I
+> participated in the LSF 2012 discussion of this topic, see that it was
+> raised again at LSF 2013, and note that we have not settled on an
+> enabling path.  What's new for this year is an effort to set aside,
+> for now, the deeper complexities of the device specification proposals
+> and focus on a minimal set of hints that can be specified per-process
+> (ionice) and maybe per-file (fadvise).
+>
+> My suspicion is that AIO attributes is useful for applications that
+> want access to the full range of access hints exposed by a device.
+> However, for the general buffered-I/O / tiered-storage case, a small
+> set of hints achieves the bulk of the value.
+>
+> I am also interested in:
+> Volatile ranges
+> SMR Enabling
+> Integrity passthrough
+>
+> --
+> Dan
+>
+> [1] T10 LBA Access Hints
+> [2] T13 Hybrid Information Feature
 
-On 1/31/2014 2:46 AM, Hannes Reinecke wrote:
+Correction, the hinting scheme is defined by SATA-IO in SATA 3.2
 
-> This patch make the tape always non-rewinding when SG_IO is used, thus
-> allowing udev to get a proper device id for tapes.
-
-	Maybe instead of silently changing the behavior, if you just _HAVE_ to open
-the st device, add an ioctl or st/mt_op that disables the rewind on close.
-That way applications have to explicitly disable the rewind on close.
-
-
-
-
-
-
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (MingW32)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iQEcBAEBAgAGBQJS69K7AAoJEL5i86xrzcy7aC8IAJWoag7UaFselARB6eZ4Zfvm
-qi0Fho04TkqnNUJ5VEU81p05XwPJrmonrmqK55kR0PVkMT3o4Wp/KpkeN7gwrQjx
-ecR1Ckpoo4Q6n3W/HY06amN6qxLHgwi8RuU9vF7gjRZP4xqW57WRZz1GcuerD94n
-tF/i2Ajev6ZsdmRSCUN9DDFDR5RNKZ+XmiX3ihx4L1v27I/zMEteO66pDEIRdCoM
-laJnzsEfh/VNZdLeB3wck5xnW6HVq9YgqtH/oV+2LHeHg/Ji626g5/qsjhaA3YJQ
-asol8MJsbBGIcaRKEa9EJYy76GVFyCkMLywVFEyN7F9xcFD75P5p2a4siMlYzBc=
-=7Viv
------END PGP SIGNATURE-----
+> [3] AIO Attributes: http://marc.info/?l=linux-aio&m=136580574523674&w=2
