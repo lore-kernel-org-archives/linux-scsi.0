@@ -1,41 +1,43 @@
-From: Dave Jones <davej@redhat.com>
-Subject: Re: [LSF/MM TOPIC] Fixing large block devices on 32 bit
-Date: Fri, 31 Jan 2014 14:26:17 -0500
-Message-ID: <20140131192617.GA14098@redhat.com>
-References: <1391194978.2172.20.camel@dabdike.int.hansenpartnership.com>
+From: Christopher Voltz <christopher.voltz@hp.com>
+Subject: [LSF/MM ATTEND]
+Date: Fri, 31 Jan 2014 13:31:25 -0600
+Message-ID: <52EBFA0D.5000807@hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <1391194978.2172.20.camel@dabdike.int.hansenpartnership.com>
-Sender: owner-linux-mm@kvack.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, lsf-pc@lists.linux-foundation.org
+Content-Type: multipart/mixed;
+ boundary="------------010807000308010004060203"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from g6t0185.atlanta.hp.com ([15.193.32.62]:5153 "EHLO
+	g6t0185.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752785AbaAaTb0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 31 Jan 2014 14:31:26 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: lsf-pc@lists.linux-foundation.org
 
-On Fri, Jan 31, 2014 at 11:02:58AM -0800, James Bottomley wrote:
- 
- > it will only be a couple of years before 16TB devices are
- > available.  By then, I bet that most arm (and other exotic CPU) Linux
- > based personal file servers are still going to be 32 bit, so they're not
- > going to be able to take this generation (or beyond) of drives. 
- > 
- >      1. Try to pretend that CONFIG_LBDAF is supposed to cap out at 16TB
- >         and there's nothing we can do about it ... this won't be at all
- >         popular with arm based file server manufacturers.
+This is a multi-part message in MIME format.
+--------------010807000308010004060203
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Some of the higher end home-NAS's have already moved from arm/ppc -> x86_64[1]
-Unless ARM64 starts appearing at a low enough price point, I wouldn't be 
-surprised to see the smaller vendors do a similar move just to stay competitive.
-(probably while keeping 'legacy' product lines for a while at a cheaper pricepoint
- that won't take bigger disks).
+I would like to attend LSF/MM 2014. I am interested in discussions regarding scsi-mq, scsi-eh, scsi-over-pcie, I/O caching, and enabling of persistent memory. I work on LLDD for the HP Smart Array.
 
-	Dave
+Christopher
 
-[1] http://forum.synology.com/wiki/index.php/What_kind_of_CPU_does_my_NAS_have
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+--------------010807000308010004060203
+Content-Type: text/x-vcard; charset=utf-8;
+ name="christopher_voltz.vcf"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="christopher_voltz.vcf"
+
+YmVnaW46dmNhcmQNCmZuOkNocmlzdG9waGVyIFZvbHR6DQpuOlZvbHR6O0NocmlzdG9waGVy
+DQpvcmc6RW50ZXJwcmlzZSBCdXNpbmVzcyBTZXJ2ZXJzIGFuZCBTdG9yYWdlLCBJbmR1c3Ry
+eSBTdGFuZGFyZCBTZXJ2ZXJzO0xpbnV4IGFuZCBWTXdhcmUgRHJpdmVyIERldmVsb3BtZW50
+DQphZHI6MTE0NDUgQ29tcGFxIENlbnRlciBEcml2ZSBXZXN0OztNYWlsc3RvcCBNNzFDMzM3
+O0hvdXN0b247VGV4YXM7NzcwNzA7VVNBDQplbWFpbDtpbnRlcm5ldDpjaHJpc3RvcGhlci52
+b2x0ekBocC5jb20NCnRpdGxlOk1hc3RlciBFbmdpbmVlcg0KdGVsO3dvcms6MjgxLTUxNC04
+MzY5DQp4LW1vemlsbGEtaHRtbDpUUlVFDQp1cmw6aHR0cDovL3d3dy5ocC5jb20NCnZlcnNp
+b246Mi4xDQplbmQ6dmNhcmQNCg0K
+--------------010807000308010004060203--
