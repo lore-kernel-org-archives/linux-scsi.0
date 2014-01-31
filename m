@@ -1,43 +1,55 @@
-From: Christopher Voltz <christopher.voltz@hp.com>
-Subject: [LSF/MM ATTEND]
-Date: Fri, 31 Jan 2014 13:31:25 -0600
-Message-ID: <52EBFA0D.5000807@hp.com>
-Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------010807000308010004060203"
+From: Roland Dreier <roland@kernel.org>
+Subject: [PATCH] qla2xxx: Remove last vestiges of qla_tgt_cmd.cmd_list
+Date: Fri, 31 Jan 2014 13:11:36 -0800
+Message-ID: <1391202696-23070-1-git-send-email-roland@kernel.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g6t0185.atlanta.hp.com ([15.193.32.62]:5153 "EHLO
-	g6t0185.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752785AbaAaTb0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 31 Jan 2014 14:31:26 -0500
+Received: from na3sys010aog114.obsmtp.com ([74.125.245.96]:47430 "HELO
+	na3sys010aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754120AbaAaVQ5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 31 Jan 2014 16:16:57 -0500
+Received: by mail-pd0-f178.google.com with SMTP id y13so4728675pdi.37
+        for <linux-scsi@vger.kernel.org>; Fri, 31 Jan 2014 13:16:56 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: lsf-pc@lists.linux-foundation.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: qla2xxx-upstream@qlogic.com, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------010807000308010004060203
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Roland Dreier <roland@purestorage.com>
 
-I would like to attend LSF/MM 2014. I am interested in discussions regarding scsi-mq, scsi-eh, scsi-over-pcie, I/O caching, and enabling of persistent memory. I work on LLDD for the HP Smart Array.
+The only place this struct member is touched is in one INIT_LIST_HEAD.
 
-Christopher
+Signed-off-by: Roland Dreier <roland@purestorage.com>
+---
+ drivers/scsi/qla2xxx/qla_target.c | 2 --
+ drivers/scsi/qla2xxx/qla_target.h | 1 -
+ 2 files changed, 3 deletions(-)
 
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index 38a1257e76e1..2f42b650367c 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -2593,8 +2593,6 @@ static int qlt_handle_cmd_for_atio(struct scsi_qla_host *vha,
+ 		return -ENOMEM;
+ 	}
+ 
+-	INIT_LIST_HEAD(&cmd->cmd_list);
+-
+ 	memcpy(&cmd->atio, atio, sizeof(*atio));
+ 	cmd->state = QLA_TGT_STATE_NEW;
+ 	cmd->tgt = ha->tgt.qla_tgt;
+diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
+index b33e411f28a0..f4a4beee2b96 100644
+--- a/drivers/scsi/qla2xxx/qla_target.h
++++ b/drivers/scsi/qla2xxx/qla_target.h
+@@ -855,7 +855,6 @@ struct qla_tgt_cmd {
+ 	uint16_t loop_id;	/* to save extra sess dereferences */
+ 	struct qla_tgt *tgt;	/* to save extra sess dereferences */
+ 	struct scsi_qla_host *vha;
+-	struct list_head cmd_list;
+ 
+ 	struct atio_from_isp atio;
+ };
+-- 
+1.9.rc1
 
---------------010807000308010004060203
-Content-Type: text/x-vcard; charset=utf-8;
- name="christopher_voltz.vcf"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
- filename="christopher_voltz.vcf"
-
-YmVnaW46dmNhcmQNCmZuOkNocmlzdG9waGVyIFZvbHR6DQpuOlZvbHR6O0NocmlzdG9waGVy
-DQpvcmc6RW50ZXJwcmlzZSBCdXNpbmVzcyBTZXJ2ZXJzIGFuZCBTdG9yYWdlLCBJbmR1c3Ry
-eSBTdGFuZGFyZCBTZXJ2ZXJzO0xpbnV4IGFuZCBWTXdhcmUgRHJpdmVyIERldmVsb3BtZW50
-DQphZHI6MTE0NDUgQ29tcGFxIENlbnRlciBEcml2ZSBXZXN0OztNYWlsc3RvcCBNNzFDMzM3
-O0hvdXN0b247VGV4YXM7NzcwNzA7VVNBDQplbWFpbDtpbnRlcm5ldDpjaHJpc3RvcGhlci52
-b2x0ekBocC5jb20NCnRpdGxlOk1hc3RlciBFbmdpbmVlcg0KdGVsO3dvcms6MjgxLTUxNC04
-MzY5DQp4LW1vemlsbGEtaHRtbDpUUlVFDQp1cmw6aHR0cDovL3d3dy5ocC5jb20NCnZlcnNp
-b246Mi4xDQplbmQ6dmNhcmQNCg0K
---------------010807000308010004060203--
