@@ -1,117 +1,93 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] block devices: validate block device capacity
-Date: Thu, 30 Jan 2014 21:45:27 -0800
-Message-ID: <1391147127.2181.159.camel@dabdike.int.hansenpartnership.com>
-References: <alpine.LRH.2.02.1401301531040.29912@file01.intranet.prod.int.rdu2.redhat.com>
-	   <1391122163.2181.103.camel@dabdike.int.hansenpartnership.com>
-	   <alpine.LRH.2.02.1401301805590.19506@file01.intranet.prod.int.rdu2.redhat.com>
-	  <1391125027.2181.114.camel@dabdike.int.hansenpartnership.com>
-	  <alpine.LRH.2.02.1401301905520.25766@file01.intranet.prod.int.rdu2.redhat.com>
-	 <1391132609.2181.131.camel@dabdike.int.hansenpartnership.com>
-	 <alpine.LRH.2.02.1401302116180.9767@file01.intranet.prod.int.rdu2.redhat.com>
+Subject: Re: [PATCH v11 6/9] Make scsi_remove_host() wait until error
+ handling finished
+Date: Thu, 30 Jan 2014 21:58:56 -0800
+Message-ID: <1391147936.2181.160.camel@dabdike.int.hansenpartnership.com>
+References: <51B86E26.6030108@acm.org> <51B86FC1.6000103@acm.org>
+	   <1372101557.2013.76.camel@dabdike.int.hansenpartnership.com>
+	   <51C8A668.3060700@cs.wisc.edu>
+	  <1372112866.2013.104.camel@dabdike.int.hansenpartnership.com>
+	  <51C95C79.2080804@acm.org> <1372167923.2806.13.camel@dabdike>
+	 <51C9B7D1.9040702@acm.org>
+	 <FBC61EDC-F703-4E3F-9980-70D41EE9484F@cs.wisc.edu>
+	 <52EAAC20.2040607@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="ISO-8859-15"
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <alpine.LRH.2.02.1401302116180.9767@file01.intranet.prod.int.rdu2.redhat.com>
-Sender: owner-linux-mm@kvack.org
-To: Mikulas Patocka <mpatocka@redhat.com>
-Cc: Jens Axboe <axboe@kernel.dk>, "Alasdair G. Kergon" <agk@redhat.com>, Mike Snitzer <msnitzer@redhat.com>, dm-devel@redhat.com, "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, linux-mm@kvack.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:39385 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751101AbaAaF7A (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 31 Jan 2014 00:59:00 -0500
+In-Reply-To: <52EAAC20.2040607@acm.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: Michael Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Thu, 2014-01-30 at 21:43 -0500, Mikulas Patocka wrote:
+On Thu, 2014-01-30 at 20:46 +0100, Bart Van Assche wrote:
+> On 06/25/13 18:13, Michael Christie wrote:
+> > On Jun 25, 2013, at 10:31 AM, Bart Van Assche <bvanassche@acm.org> wrote:
+> >> On 06/25/13 15:45, James Bottomley wrote:
+> >>> On Tue, 2013-06-25 at 11:01 +0200, Bart Van Assche wrote:
+> >>>> There is a difference though between moving the EH kthread_stop() call
+> >>>> and the patch at the start of this thread: moving the EH kthread_stop()
+> >>>> call does not prevent that an ioctl like SG_SCSI_RESET triggers an eh_*
+> >>>> callback after scsi_remove_host() has finished. However, the
+> >>>> scsi_begin_eh() / scsi_end_eh() functions do prevent that an ioctl can
+> >>>> cause an eh_* callback to be invoked after scsi_remove_device() finished.
+> >>>
+> >>> OK, but this doesn't tell me what you're trying to achieve.
+> >>>
+> >>> An eh function is allowable as long as the host hadn't had the release
+> >>> callback executed.  That means you must have to have a reference to the
+> >>> device/host to execute the eh function, which is currently guaranteed
+> >>> for all invocations.
+> >>
+> >> That raises a new question: how is an LLD expected to clean up resources
+> >> without triggering a race condition ? What you wrote means that it's not
+> >> safe for an LLD to start cleaning up the resources needed by the eh_*
+> >> callbacks immediately after scsi_remove_device() returns since it it not
+> >> guaranteed that at that time all references to the device have already
+> >> been dropped.
+> >
+> > A callback in the device/target/host (whatever is needed) release function
+> > would do this right? If I understand James right, I think he suggested
+> > something like this in another mail.
 > 
-> On Thu, 30 Jan 2014, James Bottomley wrote:
+> (replying to an e-mail of seven months ago - see also
+> http://thread.gmane.org/gmane.linux.scsi/82572/focus=82822)
 > 
-> > > A device may be accessed direcly (by opening /dev/sdX) and it creates a 
-> > > mapping too - thus, the size of a mapping limits the size of a block 
-> > > device.
-> > 
-> > Right, that's what I suspected below.  We can't damage large block
-> > support on filesystems just because of this corner case.
+> Hello Mike,
 > 
-> Devices larger than 16TiB never worked on 32-bit kernel, so this patch 
-> isn't damaging anything.
+> Sorry but I'm afraid that making the SCSI core invoke a callback
+> function from a device, target or host release function would create a
+> new challenge, namely making sure that all these callback functions have
+> finished before the module is unloaded that contains the SCSI host
+> template and the code implementing such a callback function. That
+> challenge is not specific to the SCSI infrastructure but is a general
+> question that has not yet been solved in the Linux kernel (see e.g.
+> "[PATCH] kobject: provide kobject_put_wait to fix module unload race"
+> for a more general discussion about how to ensure that kobject release
+> functions are invoked before the module is unloaded that owns the
+> release function - http://thread.gmane.org/gmane.linux.kernel/1622885).
 
-expectations: 32 bit with CONFIG_LBDAF is supposed to be able to do
-almost everything 64 bits can
+For callbacks, that's easy: it's module_get/module_put
 
-> Note that if you attach a 16TiB block device, don't open it and mount it, 
-> it still won't work, because the buffer cache uses the page cache (see the 
-> function __find_get_block_slow and the variable "pgoff_t index" - that 
-> variable would overflow if the filesystem accessed a buffer beyond 16TiB).
-
-That depends on the layout of the fs metadata.
-
-> > > The main problem is that pgoff_t has 4 bytes - chaning it to 8 bytes may 
-> > > fix it - but there may be some hidden places where pgoff is converted to 
-> > > unsigned long - who knows, if they exist or not?
-> > 
-> > I don't think we want to do that ... it will make struct page fatter and
-> > have knock on impacts in the radix tree code.  To fix this, we need to
-> > make the corner case (i.e. opening large block devices without a
-> > filesystem) bear the pain.  It sort of looks like we want to do a linear
-> > array of mappings of 64TB for the device so the page cache calculations
-> > don't overflow.
+> Or maybe this just means that I misunderstood you ?
 > 
-> The code that reads and writes data to block devices and files is shared - 
-> the functions in mm/filemap.c work for both files and block devices.
+> In case it is not clear why I'm reviving this discussion: now that the
+> "improved eh timeout handler" patch is upstream (commit
+> e494f6a728394ab0df194342549ee20e6f0752df) there is an additional way in
+> which the SCSI core can invoke an EH function concurrently with or after
+> scsi_remove_host() has finished, namely from the TMF work queue
+> (tmf_work_q).
 
-Yes.
-
-> So, if you want 64-bit page offsets, you need to increase pgoff_t size, 
-> and that will increase the limit for both files and block devices.
-
-No.  The point is the page cache mapping of the device uses a
-manufactured inode saved in the backing device. It looks fixable in the
-buffer code before the page cache gets involved.
-
-> You shouldn't have separate functions for managing pages on files and 
-> separate functions for managing pages on block devices - that would 
-> increase code size and cause maintenance problems.
-
-It wouldn't it would add structure to the buffer cache for large
-devices.
-
-> > > Though, we need to know if the people who designed memory management agree 
-> > > with changing pgoff_t to 64 bits.
-> > 
-> > I don't think we can change the size of pgoff_t ... because it won't
-> > just be that, it will be other problems like the radix tree.
-> 
-> If we can't change it, then we must stay with the current 16TiB limit. 
-> There's no other way.
-> 
-> > However, you also have to bear in mind that truncating large block
-> > device support to 64TB on 32 bits is a technical ABI break.  Hopefully
-> > it is only technical because I don't know of any current consumer block
-> > device that is 64TB yet, but anyone who'd created a filesystem >64TB
-> > would find it no-longer mounted on 32 bits.
-> > James
-> 
-> It is not ABI break, because block devices larger than 16TiB never worked 
-> on 32-bit architectures. So it's better to refuse them outright, than to 
-> cause subtle lockups or data corruption.
-
-An ABI is a contract between the userspace and the kernel.  Saying we
-can remove a clause in the contract because no-one ever exercised it and
-not call it changing the contract is sophistry.  The correct thing to do
-would be to call it a bug and fix it.
-
-In a couple of short years we'll be over 16TB for hard drives.  I don't
-really want to be the one explaining to the personal storage people that
-the only way to install a 16+TB drive in their arm (or quark) based
-Linux systems is a processor upgrade.
-
-I suppose there are a couple of possibilities: pgoff_t + radix tree
-expansion or double radix tree in the buffer code.  This should probably
-be taken to fsdevel where they might have better ideas.
+But the fundamental guarantee is that the eh thread for the host (the eh
+context if you will) has to be dead before the host can be removed and
+the module unloaded.  The thread doesn't die until all the work is done.
 
 James
 
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
