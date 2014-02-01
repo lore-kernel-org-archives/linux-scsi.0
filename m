@@ -1,40 +1,55 @@
-From: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
-Subject: Re: [PATCH] cxgb4i: Use cxgb4_select_ntuple to correctly calculate
- ntuple fields
-Date: Fri, 31 Jan 2014 23:38:27 -0600
-Message-ID: <52EC8853.2010703@cs.wisc.edu>
-References: <201401290101.s0T11brL026639@localhost6.localdomain6>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] st: Do not rewind for SG_IO
+Date: Sat, 01 Feb 2014 15:06:51 +0100
+Message-ID: <52ECFF7B.7000401@suse.de>
+References: <1391157974-17512-1-git-send-email-hare@suse.de> <52EBD2BB.8020705@tributary.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Return-path: <open-iscsi+bncBCZ4TFNN2YMRBXEQWKLQKGQEOYZ7BIY-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-In-Reply-To: <201401290101.s0T11brL026639-bi+AKbBUZKagILUCTcTcHdKyNwTtLsGr@public.gmane.org>
-List-Post: <http://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <http://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <http://groups.google.com/group/open-iscsi>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <http://groups.google.com/group/open-iscsi/subscribe>, <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-Cc: kxie-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:59154 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751717AbaBAMEL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 1 Feb 2014 07:04:11 -0500
+In-Reply-To: <52EBD2BB.8020705@tributary.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jeremy Linton <jlinton@tributary.com>, James Bottomley <jbottomley@parallels.com>
+Cc: Kay Sievers <kay@vrfy.org>, Kai Makisara <kai.makisara@kolumbus.fi>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 1/28/14 7:01 PM, kxie-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org wrote:
-> [PATCH] cxgb4i: Use cxgb4_select_ntuple to correctly calculate ntuple fields
+On 01/31/2014 05:43 PM, Jeremy Linton wrote:
+> -----BEGIN PGP SIGNED MESSAGE-----
+> Hash: SHA1
 >
-> From: Karen Xie <kxie-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
+> On 1/31/2014 2:46 AM, Hannes Reinecke wrote:
 >
-> Fixed calculates wrong tuple values on T5 adapter: switch to use the exported API cxgb4_select_ntuple() from cxgb4 base driver.
+>> This patch make the tape always non-rewinding when SG_IO is used, th=
+us
+>> allowing udev to get a proper device id for tapes.
 >
-> Signed-off-by: Karen Xie <kxie-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
+> 	Maybe instead of silently changing the behavior, if you just _HAVE_ =
+to open
+> the st device, add an ioctl or st/mt_op that disables the rewind on c=
+lose.
+> That way applications have to explicitly disable the rewind on close.
+>
+Okay, that sounds like a better alternative.
+Point is for udev we simply _have_ to use the given device node.
+And when this happens to be set to rewind on close we're doomed.
 
-Patch looks ok to me.
+I'll be drafting up a patch.
 
-Reviewed-by: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
+Cheers,
 
--- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-Visit this group at http://groups.google.com/group/open-iscsi.
-For more options, visit https://groups.google.com/groups/opt_out.
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
