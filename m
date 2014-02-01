@@ -1,32 +1,29 @@
-From: Dave Hansen <dave.hansen@intel.com>
-Subject: Re: [LSF/MM TOPIC] Fixing large block devices on 32 bit
-Date: Fri, 31 Jan 2014 16:32:03 -0800
-Message-ID: <52EC4083.8010309@intel.com>
-References: <1391194978.2172.20.camel@dabdike.int.hansenpartnership.com> <52EC19E6.9010509@intel.com> <1391210864.2172.61.camel@dabdike.int.hansenpartnership.com> <52EC3D9F.8040702@intel.com> <20140201002547.GA3551@node.dhcp.inet.fi>
+From: Albert Chen <Albert.Chen@wdc.com>
+Subject: [LSF/MM TOPIC] SMR: Disrupting recording technology meriting a new
+ class of storage device
+Date: Sat, 1 Feb 2014 02:24:33 +0000
+Message-ID: <DDA2008BD25F9046BFFC83788E83AF7E8167D4D0@wdscexmb03>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20140201002547.GA3551@node.dhcp.inet.fi>
-Sender: owner-linux-mm@kvack.org
-To: "Kirill A. Shutemov" <kirill@shutemov.name>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, lsf-pc@lists.linux-foundation.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Content-Language: en-US
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, James Borden <James.Borden@wdc.com>, Jim Malina <Jim.Malina@wdc.com>, Curtis Stevens <curtis.stevens@wdc.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 01/31/2014 04:25 PM, Kirill A. Shutemov wrote:
->> > I think all we have to do is set a low bit in page->mapping
-> It's already in use to say page->mapping is anon_vma. ;)
+[LSF/MM TOPIC] SMR: Disrupting recording technology meriting a new class of storage device
 
-I weasel-worded that by not saying *THE* low bit. ;)
+Shingle Magnetic Recording is a disruptive technology that delivers the next areal density gain for the HDD industry by partially overlapping tracks. Shingling requires physical writes to be sequential, and opens the question of how to address this behavior at a system level. Two general approaches contemplated are to either to do the block management in the device or in the host storage stack/file system through Zone Block Commands (ZBC).
 
-We find *some* discriminator whether it be a page flag or an actual bit
-in page->mapping, or a magic value that doesn't collide with the
-existing PAGE_MAPPING_* flags.
+The use of ZBC to handle SMR block management yields several benefits such as:
+- Predictable performance and latency
+- Faster development time
+- Access to application and system level semantic information
+- Scalability / Fewer Drive Resources
+- Higher reliability
 
-Poor 'struct page'.  It's the doormat of data structures.
+Essential to a host managed approach (ZBC) is the openness of Linux and its community is a good place for WD to validate and seek feedback for our thinking - where in the Linux system stack is the best place to add ZBC handling? at the Device Mapper layer? or somewhere else in the storage stack? New ideas and comments are appreciated.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+For more information about ZBC, please refer to Ted's <tytso@MIT.EDU> email to linux-fsdevel@vger.kernel.org with the subject " [RFC] Draft Linux kernel interfaces for ZBC drives".
