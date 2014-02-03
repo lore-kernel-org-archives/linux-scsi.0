@@ -1,56 +1,67 @@
-From: Jeremy Linton <jlinton@tributary.com>
-Subject: Re: [PATCH] st: Do not rewind for SG_IO
-Date: Mon, 3 Feb 2014 15:58:17 -0600
-Message-ID: <52F010F9.5090305@tributary.com>
-References: <1391157974-17512-1-git-send-email-hare@suse.de> <52EBD2BB.8020705@tributary.com> <52ECFF7B.7000401@suse.de> <60EE5D9C-A799-4C8D-8962-DB9D7C1C8414@kolumbus.fi> <52EE2F2D.1010300@suse.de> <52EFACA4.6060001@tributary.com> <52EFB06C.8010101@suse.de> <52EFB0E7.3000504@tributary.com> <CAPXgP13dn+VGpu0OLHatUvP4TRDp2YEgCXYB837ReADZTWg_NA@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: Roland Dreier <roland@kernel.org>
+Subject: [PATCH] target: Simplify command completion by removing CMD_T_FAILED flag
+Date: Mon,  3 Feb 2014 14:08:26 -0800
+Message-ID: <1391465306-26282-1-git-send-email-roland@kernel.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay.ihostexchange.net ([66.46.182.55]:32258 "EHLO
-	relay.ihostexchange.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750750AbaBCV6a (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Feb 2014 16:58:30 -0500
-In-Reply-To: <CAPXgP13dn+VGpu0OLHatUvP4TRDp2YEgCXYB837ReADZTWg_NA@mail.gmail.com>
+Received: from na3sys010aog101.obsmtp.com ([74.125.245.70]:37319 "HELO
+	na3sys010aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751114AbaBCWId (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Feb 2014 17:08:33 -0500
+Received: by mail-pa0-f45.google.com with SMTP id lf10so7602668pab.18
+        for <linux-scsi@vger.kernel.org>; Mon, 03 Feb 2014 14:08:32 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kay Sievers <kay@vrfy.org>
-Cc: Hannes Reinecke <hare@suse.de>, =?UTF-8?B?IkthaSBNw6RraXNhcmEgKEtvbHVt?= =?UTF-8?B?YnVzKSI=?= <kai.makisara@kolumbus.fi>, James Bottomley <jbottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Doug Gilbert <dgilbert@interlog.com>
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On 2/3/2014 2:51 PM, Kay Sievers wrote:
-> This is not simple and not going to happen. Sibling devices in /sys cannot
-> have a relationship in udev, there are only parent/child dependencies.
+From: Roland Dreier <roland@purestorage.com>
 
-	Ok.. so if we can't ignore all the "spare" device nodes in a given /sys entry
-for a given device. Why open the device to scan it?
+The CMD_T_FAILED flag is set used in one place to record the result of a
+trivial test, and it is only tested once, few lines later.  We might as
+well make the code simpler and easier to read by directly doing the test
+of "success" where we want to use it.
 
-	I've often wondered why the serial number isn't part of the data in /sys
-along with the manufacture/model. The last tape drive I saw that failed to
-respond to inquiry page 0x80 was over a decade ago (probably manufactured in
-the early 90s). So enabling it just for tape is pretty safe.
+Signed-off-by: Roland Dreier <roland@purestorage.com>
+---
+ drivers/target/target_core_transport.c | 5 +----
+ include/target/target_core_base.h      | 1 -
+ 2 files changed, 1 insertion(+), 5 deletions(-)
 
-
-	Matching Manufacturer/model/serial is going to be better than anything your
-going to get out of 0x83 anyway. That data is guaranteed to be there, but its
-also guaranteed to be unreliable (every device, and every port has a slightly
-different set of descriptors they choose to support).
-
-	Plus, your not going to have issues accidentally rewinding a device, or
-resetting a tape density, or accidentally turning compression off if you don't
-open the device.
-
-
-
-> Hannes, can't you just drop the weird auto-rewinding device matches from
-> the persistent rules, is that really useful today?
-
-	The relationship between the st and nst devices is leveraged by a large
-number of backup applications in the field. If you change it, its likely lots
-of breakage will ensue.
-
-
-
-
-
-
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index c50fd9f11aab..24b4f65d8777 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -669,9 +669,6 @@ void target_complete_cmd(struct se_cmd *cmd, u8 scsi_status)
+ 		return;
+ 	}
+ 
+-	if (!success)
+-		cmd->transport_state |= CMD_T_FAILED;
+-
+ 	/*
+ 	 * Check for case where an explicit ABORT_TASK has been received
+ 	 * and transport_wait_for_tasks() will be waiting for completion..
+@@ -681,7 +678,7 @@ void target_complete_cmd(struct se_cmd *cmd, u8 scsi_status)
+ 		spin_unlock_irqrestore(&cmd->t_state_lock, flags);
+ 		complete(&cmd->t_transport_stop_comp);
+ 		return;
+-	} else if (cmd->transport_state & CMD_T_FAILED) {
++	} else if (!success) {
+ 		INIT_WORK(&cmd->work, target_complete_failure_work);
+ 	} else {
+ 		INIT_WORK(&cmd->work, target_complete_ok_work);
+diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
+index c9c791209cd1..1772fadcff62 100644
+--- a/include/target/target_core_base.h
++++ b/include/target/target_core_base.h
+@@ -525,7 +525,6 @@ struct se_cmd {
+ #define CMD_T_COMPLETE		(1 << 2)
+ #define CMD_T_SENT		(1 << 4)
+ #define CMD_T_STOP		(1 << 5)
+-#define CMD_T_FAILED		(1 << 6)
+ #define CMD_T_DEV_ACTIVE	(1 << 7)
+ #define CMD_T_REQUEST_STOP	(1 << 8)
+ #define CMD_T_BUSY		(1 << 9)
+-- 
+1.9.rc1
 
