@@ -1,14 +1,18 @@
 From: Alexander Gordeev <agordeev@redhat.com>
-Subject: [PATCH 20/22] qla2xxx: Use pci_enable_msix_range()
-Date: Tue,  4 Feb 2014 12:17:06 +0100
-Message-ID: <36da37b8ca3a13e24a3363ed19d6a08061c85970.1391512266.git.agordeev@redhat.com>
+Subject: [PATCH 17/22] pm8001: Use pci_enable_msix_range()
+Date: Tue,  4 Feb 2014 12:17:03 +0100
+Message-ID: <b6ab9b0f70327c1a394dd8923576dfcae571a5b3.1391512266.git.agordeev@redhat.com>
 References: <cover.1391512266.git.agordeev@redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:48983 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753918AbaBDLQD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 4 Feb 2014 06:16:03 -0500
 In-Reply-To: <cover.1391512266.git.agordeev@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>, qla2xxx-upstream@qlogic.com, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>, xjtuwjp@gmail.com, lindar_liu@usish.com, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
 
 As result of deprecation of MSI-X/MSI enablement functions
 pci_enable_msix() and pci_enable_msi_block() all drivers
@@ -16,61 +20,78 @@ using these two interfaces need to be updated to use the
 new pci_enable_msi_range() and pci_enable_msix_range()
 interfaces.
 
-Log message code 0x00c6 preserved, although it is reported
-after successful call to pci_enable_msix_range(), not before
-possibly unsuccessful call to pci_enable_msix(). Consumers
-of the error code should not notice the difference.
-
 Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: qla2xxx-upstream@qlogic.com
+Cc: xjtuwjp@gmail.com
+Cc: lindar_liu@usish.com
 Cc: linux-scsi@vger.kernel.org
 Cc: linux-pci@vger.kernel.org
 ---
- drivers/scsi/qla2xxx/qla_isr.c |   27 +++++++++++----------------
- 1 files changed, 11 insertions(+), 16 deletions(-)
+ drivers/scsi/pm8001/pm8001_init.c |   47 +++++++++++++++++++------------------
+ 1 files changed, 24 insertions(+), 23 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index 9bc86b9..b2dcfa4 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -2896,27 +2896,22 @@ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
- 	for (i = 0; i < ha->msix_count; i++)
- 		entries[i].entry = i;
- 
--	ret = pci_enable_msix(ha->pdev, entries, ha->msix_count);
--	if (ret) {
--		if (ret < MIN_MSIX_COUNT)
--			goto msix_failed;
+diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+index efffbb9..2d4b06e 100644
+--- a/drivers/scsi/pm8001/pm8001_init.c
++++ b/drivers/scsi/pm8001/pm8001_init.c
+@@ -724,34 +724,35 @@ static u32 pm8001_setup_msix(struct pm8001_hba_info *pm8001_ha)
+ 		sizeof(pm8001_ha->msix_entries[0]);
+ 	for (i = 0; i < max_entry ; i++)
+ 		pm8001_ha->msix_entries[i].entry = i;
+-	rc = pci_enable_msix(pm8001_ha->pdev, pm8001_ha->msix_entries,
+-		number_of_intr);
++	rc = pci_enable_msix_range(pm8001_ha->pdev, pm8001_ha->msix_entries,
++		number_of_intr, number_of_intr);
+ 	pm8001_ha->number_of_intr = number_of_intr;
+-	if (!rc) {
+-		PM8001_INIT_DBG(pm8001_ha, pm8001_printk(
+-			"pci_enable_msix request ret:%d no of intr %d\n",
+-					rc, pm8001_ha->number_of_intr));
 -
-+	ret = pci_enable_msix_range(ha->pdev,
-+				    entries, MIN_MSIX_COUNT, ha->msix_count);
-+	if (ret < 0) {
-+		ql_log(ql_log_fatal, vha, 0x00c7,
-+		    "MSI-X: Failed to enable support, "
-+		    "giving   up -- %d/%d.\n",
-+		    ha->msix_count, ret);
-+		goto msix_out;
-+	} else if (ret < ha->msix_count) {
- 		ql_log(ql_log_warn, vha, 0x00c6,
- 		    "MSI-X: Failed to enable support "
- 		    "-- %d/%d\n Retry with %d vectors.\n",
- 		    ha->msix_count, ret, ret);
--		ha->msix_count = ret;
--		ret = pci_enable_msix(ha->pdev, entries, ha->msix_count);
--		if (ret) {
--msix_failed:
--			ql_log(ql_log_fatal, vha, 0x00c7,
--			    "MSI-X: Failed to enable support, "
--			    "giving   up -- %d/%d.\n",
--			    ha->msix_count, ret);
--			goto msix_out;
--		}
--		ha->max_rsp_queues = ha->msix_count - 1;
+-
+-		for (i = 0; i < number_of_intr; i++) {
+-			snprintf(intr_drvname[i], sizeof(intr_drvname[0]),
+-					DRV_NAME"%d", i);
+-			pm8001_ha->irq_vector[i].irq_id = i;
+-			pm8001_ha->irq_vector[i].drv_inst = pm8001_ha;
+-
+-			rc = request_irq(pm8001_ha->msix_entries[i].vector,
+-				pm8001_interrupt_handler_msix, flag,
+-				intr_drvname[i], &(pm8001_ha->irq_vector[i]));
+-			if (rc) {
+-				for (j = 0; j < i; j++)
+-					free_irq(
+-					pm8001_ha->msix_entries[j].vector,
++	if (rc < 0)
++		return rc;
++
++	PM8001_INIT_DBG(pm8001_ha, pm8001_printk(
++		"pci_enable_msix request ret:%d no of intr %d\n",
++				rc, pm8001_ha->number_of_intr));
++
++	for (i = 0; i < number_of_intr; i++) {
++		snprintf(intr_drvname[i], sizeof(intr_drvname[0]),
++				DRV_NAME"%d", i);
++		pm8001_ha->irq_vector[i].irq_id = i;
++		pm8001_ha->irq_vector[i].drv_inst = pm8001_ha;
++
++		rc = request_irq(pm8001_ha->msix_entries[i].vector,
++			pm8001_interrupt_handler_msix, flag,
++			intr_drvname[i], &(pm8001_ha->irq_vector[i]));
++		if (rc) {
++			for (j = 0; j < i; j++) {
++				free_irq(pm8001_ha->msix_entries[j].vector,
+ 					&(pm8001_ha->irq_vector[i]));
+-				pci_disable_msix(pm8001_ha->pdev);
+-				break;
+ 			}
++			pci_disable_msix(pm8001_ha->pdev);
++			break;
+ 		}
  	}
-+	ha->msix_count = ret;
-+	ha->max_rsp_queues = ha->msix_count - 1;
- 	ha->msix_entries = kzalloc(sizeof(struct qla_msix_entry) *
- 				ha->msix_count, GFP_KERNEL);
- 	if (!ha->msix_entries) {
++
+ 	return rc;
+ }
+ #endif
 -- 
 1.7.7.6
+
