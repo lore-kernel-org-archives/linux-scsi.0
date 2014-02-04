@@ -1,40 +1,50 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 69871] drivers/scsi/bfa/bfad_bsg.c:110: possible bad array
- index ?
-Date: Tue, 04 Feb 2014 10:54:59 +0000
-Message-ID: <bug-69871-11613-QcNALGlz39@https.bugzilla.kernel.org/>
-References: <bug-69871-11613@https.bugzilla.kernel.org/>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: [PATCH 01/22] be2iscsi: Use pci_enable_msix_range()
+Date: Tue,  4 Feb 2014 12:16:47 +0100
+Message-ID: <34995adbde34985e99f01a04e34c03a4c9ad96dc.1391512266.git.agordeev@redhat.com>
+References: <cover.1391512266.git.agordeev@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:43732 "EHLO mail.kernel.org"
+Received: from mx1.redhat.com ([209.132.183.28]:49293 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750937AbaBDKzD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 4 Feb 2014 05:55:03 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id C8E35201BA
-	for <linux-scsi@vger.kernel.org>; Tue,  4 Feb 2014 10:55:01 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id 2924F2017B
-	for <linux-scsi@vger.kernel.org>; Tue,  4 Feb 2014 10:55:00 +0000 (UTC)
-In-Reply-To: <bug-69871-11613@https.bugzilla.kernel.org/>
+	id S1750937AbaBDLPa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 4 Feb 2014 06:15:30 -0500
+In-Reply-To: <cover.1391512266.git.agordeev@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>, Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=69871
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
 
-Alan <alan@lxorguk.ukuu.org.uk> changed:
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/scsi/be2iscsi/be_main.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |alan@lxorguk.ukuu.org.uk
-          Component|Other                       |Other
-           Assignee|drivers_other@kernel-bugs.o |scsi_drivers-other@kernel-b
-                   |sdl.org                     |ugs.osdl.org
-            Product|Drivers                     |SCSI Drivers
-
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index 1f37505..5878f3e 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -5284,9 +5284,9 @@ static void beiscsi_msix_enable(struct beiscsi_hba *phba)
+ 	for (i = 0; i <= phba->num_cpus; i++)
+ 		phba->msix_entries[i].entry = i;
+ 
+-	status = pci_enable_msix(phba->pcidev, phba->msix_entries,
+-				 (phba->num_cpus + 1));
+-	if (!status)
++	status = pci_enable_msix_range(phba->pcidev, phba->msix_entries,
++				       phba->num_cpus + 1, phba->num_cpus + 1);
++	if (status > 0)
+ 		phba->msix_enabled = true;
+ 
+ 	return;
 -- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+1.7.7.6
+
