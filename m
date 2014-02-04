@@ -1,97 +1,48 @@
-From: Jack Wang <xjtuwjp@gmail.com>
-Subject: Re: [PATCH 17/22] pm8001: Use pci_enable_msix_range()
-Date: Tue, 04 Feb 2014 13:04:16 +0100
-Message-ID: <52F0D740.4000106@gmail.com>
-References: <cover.1391512266.git.agordeev@redhat.com> <b6ab9b0f70327c1a394dd8923576dfcae571a5b3.1391512266.git.agordeev@redhat.com>
+From: Jon <nuxi@vault24.org>
+Subject: PROBLEM: aacraid driver can lock up in 2.6.37 and higherA
+Date: Tue, 4 Feb 2014 11:38:27 -0500
+Message-ID: <20140204163827.GG3232@feynman.vault24.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-pci-owner@vger.kernel.org>
-In-Reply-To: <b6ab9b0f70327c1a394dd8923576dfcae571a5b3.1391512266.git.agordeev@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, lindar_liu@usish.com, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from pinero.vault24.org ([69.164.212.126]:34252 "EHLO
+	pinero.vault24.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753822AbaBDQrZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Feb 2014 11:47:25 -0500
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: aacraid@adaptec.com
+Cc: JBottomley@parallels.com, linux-scsi@vger.kernel.org
 
-On 02/04/2014 12:17 PM, Alexander Gordeev wrote:
-> As result of deprecation of MSI-X/MSI enablement functions
-> pci_enable_msix() and pci_enable_msi_block() all drivers
-> using these two interfaces need to be updated to use the
-> new pci_enable_msi_range() and pci_enable_msix_range()
-> interfaces.
-> 
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> Cc: xjtuwjp@gmail.com
-> Cc: lindar_liu@usish.com
-> Cc: linux-scsi@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
-> ---
->  drivers/scsi/pm8001/pm8001_init.c |   47 +++++++++++++++++++------------------
->  1 files changed, 24 insertions(+), 23 deletions(-)
-> 
-> diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-> index efffbb9..2d4b06e 100644
-> --- a/drivers/scsi/pm8001/pm8001_init.c
-> +++ b/drivers/scsi/pm8001/pm8001_init.c
-> @@ -724,34 +724,35 @@ static u32 pm8001_setup_msix(struct pm8001_hba_info *pm8001_ha)
->  		sizeof(pm8001_ha->msix_entries[0]);
->  	for (i = 0; i < max_entry ; i++)
->  		pm8001_ha->msix_entries[i].entry = i;
-> -	rc = pci_enable_msix(pm8001_ha->pdev, pm8001_ha->msix_entries,
-> -		number_of_intr);
-> +	rc = pci_enable_msix_range(pm8001_ha->pdev, pm8001_ha->msix_entries,
-> +		number_of_intr, number_of_intr);
->  	pm8001_ha->number_of_intr = number_of_intr;
-> -	if (!rc) {
-> -		PM8001_INIT_DBG(pm8001_ha, pm8001_printk(
-> -			"pci_enable_msix request ret:%d no of intr %d\n",
-> -					rc, pm8001_ha->number_of_intr));
-> -
-> -
-> -		for (i = 0; i < number_of_intr; i++) {
-> -			snprintf(intr_drvname[i], sizeof(intr_drvname[0]),
-> -					DRV_NAME"%d", i);
-> -			pm8001_ha->irq_vector[i].irq_id = i;
-> -			pm8001_ha->irq_vector[i].drv_inst = pm8001_ha;
-> -
-> -			rc = request_irq(pm8001_ha->msix_entries[i].vector,
-> -				pm8001_interrupt_handler_msix, flag,
-> -				intr_drvname[i], &(pm8001_ha->irq_vector[i]));
-> -			if (rc) {
-> -				for (j = 0; j < i; j++)
-> -					free_irq(
-> -					pm8001_ha->msix_entries[j].vector,
-> +	if (rc < 0)
-> +		return rc;
-> +
-> +	PM8001_INIT_DBG(pm8001_ha, pm8001_printk(
-> +		"pci_enable_msix request ret:%d no of intr %d\n",
-> +				rc, pm8001_ha->number_of_intr));
-> +
-> +	for (i = 0; i < number_of_intr; i++) {
-> +		snprintf(intr_drvname[i], sizeof(intr_drvname[0]),
-> +				DRV_NAME"%d", i);
-> +		pm8001_ha->irq_vector[i].irq_id = i;
-> +		pm8001_ha->irq_vector[i].drv_inst = pm8001_ha;
-> +
-> +		rc = request_irq(pm8001_ha->msix_entries[i].vector,
-> +			pm8001_interrupt_handler_msix, flag,
-> +			intr_drvname[i], &(pm8001_ha->irq_vector[i]));
-> +		if (rc) {
-> +			for (j = 0; j < i; j++) {
-> +				free_irq(pm8001_ha->msix_entries[j].vector,
->  					&(pm8001_ha->irq_vector[i]));
-> -				pci_disable_msix(pm8001_ha->pdev);
-> -				break;
->  			}
-> +			pci_disable_msix(pm8001_ha->pdev);
-> +			break;
->  		}
->  	}
-> +
->  	return rc;
->  }
->  #endif
-> 
-Thanks, looks fine.
-Acked-by: Jack Wang <xjtuwjp@gmail.com>
+The conversion of the aacraid driver off of the BKL seems to have a bug
+that only shows up in some older versions of the adaptec raid tools.
+Older versions of the tools seem to deadlock when querying the raid
+card in post-BKL kernels.
+
+I'm not so much a kernel expert, but I did trace it to the exact commit
+that removed the BKL from the driver. I think the problem is that the
+function next_getadapter_fib() in drivers/scsi/aacraid/commctrl.c can
+call down_interruptible() while the calling function holds a lock.
+
+My understanding is that going to sleep while holding the BKL just kind
+of did the right thing behind your back (silently released the lock and
+then reaquired it when you woke up) but now that the driver has its own
+mutex that is not happening and instead it is deadlocking.
+
+I put a printk() in to confirm this is the magic line of code was only
+hit by the versions of the tools that would deadlock. I also confirmed
+that a crude hack to releasee and reaquire the mutex around the sleep
+made the tools work again (seemingly without ill affects). Although I'm
+sure there is a better fix.
+
+
+arcconf never has the problem, its only the ancient aaccli utility that
+can hit this deadlock. (Obligatory: why are you using aaccli?1? because
+no one had updated this box in ages.) Those tools are binary only, but
+its clear from the driver this isn't some quirk and its the difference
+between using blocking and non-blocking access to the RAID card.
+
+-- 
+Jon
+X(7): A program for managing terminal windows. See also screen(1).
