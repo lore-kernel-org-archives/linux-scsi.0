@@ -1,58 +1,61 @@
-From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: Re: [PATCH] qla2xxx: Re-sync module parameter descriptions with the
- code
-Date: Tue, 4 Feb 2014 15:09:22 -0500
-Message-ID: <alpine.WNT.2.00.1402041508290.5360@N5102REMCQXM4BS.qlogic.org>
-References: <1391539835-8431-1-git-send-email-steve@digidescorp.com>
+From: Arvind Kumar <arvindkumar@vmware.com>
+Subject: Re: [PATCH 22/22] vmw_pvscsi: Use pci_enable_msix_range()
+Date: Tue, 4 Feb 2014 13:47:04 -0800 (PST)
+Message-ID: <1720135544.11645858.1391550424291.JavaMail.root@vmware.com>
+References: <cover.1391512266.git.agordeev@redhat.com> <9a6fa1d91c1f23ee0bbde7c854ce03f22054345a.1391512266.git.agordeev@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"; format=flowed
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1391539835-8431-1-git-send-email-steve@digidescorp.com>
+In-Reply-To: <9a6fa1d91c1f23ee0bbde7c854ce03f22054345a.1391512266.git.agordeev@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Steven J. Magnani" <steve.magnani@digidescorp.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, "Steven J. Magnani" <steve@digidescorp.com>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, pv-drivers@vmware.com, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+Looks fine to me.
 
+Acked-by: Arvind Kumar <arvindkumar@vmware.com>
 
-On Tue, 4 Feb 2014, Steven J. Magnani wrote:
+Thanks!
+Arvind
 
-> Fix module parameter descriptions mentioning default values that no longer
-> match the code.
->
-> Signed-off-by: Steven J. Magnani <steve@digidescorp.com>
-> ---
-> diff -uprN linux-3.14-rc1/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-> --- linux-3.14-rc1/drivers/scsi/qla2xxx/qla_os.c	2014-02-02 18:42:13.000000000 -0600
-> +++ b/drivers/scsi/qla2xxx/qla_os.c	2014-02-04 12:41:45.133576764 -0600
-> @@ -120,15 +120,17 @@ MODULE_PARM_DESC(ql2xmaxqdepth,
-> int ql2xenabledif = 2;
-> module_param(ql2xenabledif, int, S_IRUGO);
-> MODULE_PARM_DESC(ql2xenabledif,
-> -		" Enable T10-CRC-DIF "
-> -		" Default is 0 - No DIF Support. 1 - Enable it"
-> -		", 2 - Enable DIF for all types, except Type 0.");
-> +		" Enable T10-CRC-DIF:\n"
-> +		" Default is 2.\n"
-> +		"  0 -- No DIF Support\n"
-> +		"  1 -- Enable DIF for all types\n"
-> +		"  2 -- Enable DIF for all types, except Type 0.\n");
->
-> int ql2xenablehba_err_chk = 2;
-> module_param(ql2xenablehba_err_chk, int, S_IRUGO|S_IWUSR);
-> MODULE_PARM_DESC(ql2xenablehba_err_chk,
-> 		" Enable T10-CRC-DIF Error isolation by HBA:\n"
-> -		" Default is 1.\n"
-> +		" Default is 2.\n"
-> 		"  0 -- Error isolation disabled\n"
-> 		"  1 -- Error isolation enabled only for DIX Type 0\n"
-> 		"  2 -- Error isolation enabled for all Types\n");
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+----- Original Message -----
+From: "Alexander Gordeev" <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: "Alexander Gordeev" <agordeev@redhat.com>, "Arvind Kumar" <arvindkumar@vmware.com>, pv-drivers@vmware.com, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Sent: Tuesday, February 4, 2014 3:17:08 AM
+Subject: [PATCH 22/22] vmw_pvscsi: Use pci_enable_msix_range()
 
-Looks good. Thanks.
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
 
-Acked-by: Chad Dupuis <chad.dupuis@qlogic.com>
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Arvind Kumar <arvindkumar@vmware.com>
+Cc: pv-drivers@vmware.com
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/scsi/vmw_pvscsi.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
+index b9755ec..c521f8e 100644
+--- a/drivers/scsi/vmw_pvscsi.c
++++ b/drivers/scsi/vmw_pvscsi.c
+@@ -1078,8 +1078,8 @@ static int pvscsi_setup_msix(const struct pvscsi_adapter *adapter,
+ 	struct msix_entry entry = { 0, PVSCSI_VECTOR_COMPLETION };
+ 	int ret;
+ 
+-	ret = pci_enable_msix(adapter->dev, &entry, 1);
+-	if (ret)
++	ret = pci_enable_msix_range(adapter->dev, &entry, 1, 1);
++	if (ret < 0)
+ 		return ret;
+ 
+ 	*irq = entry.vector;
+-- 
+1.7.7.6
