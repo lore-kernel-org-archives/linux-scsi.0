@@ -1,242 +1,105 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 16/17] scsi: convert device_busy to atomic_t
-Date: Wed, 05 Feb 2014 04:39:46 -0800
-Message-ID: <20140205124021.925960454@bombadil.infradead.org>
+Subject: [PATCH 07/17] virtio_scsi: use cmd_size
+Date: Wed, 05 Feb 2014 04:39:37 -0800
+Message-ID: <20140205124020.142099443@bombadil.infradead.org>
 References: <20140205123930.150608699@bombadil.infradead.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:53178 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:53181 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751064AbaBEMkX (ORCPT
+	with ESMTP id S1751159AbaBEMkX (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Feb 2014 07:40:23 -0500
-Content-Disposition: inline; filename=0016-scsi-convert-device_busy-to-atomic_t.patch
+Content-Disposition: inline; filename=0007-virtio_scsi-use-cmd_size.patch
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jens Axboe <axboe@kernel.dk>, James Bottomley <JBottomley@Parallels.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 Cc: linux-scsi@vger.kernel.org
 
-Avoid taking the queue_lock to check the per-device queue limit.  Instead
-we do an atomic_inc_return early on to grab our slot in the queue,
-and if nessecary decrement it after finishing all checks.
-
-Unlike the host and target busy counters this doesn't allow us to avoid the
-queue_lock in the request_fn due to the way the interface works, but it'll
-allow us to prepare for using the blk-mq code, which doesn't use the
-queue_lock at all, and it at least avoids a queue_lock rountrip in
-scsi_device_unbusy, which is still important given how busy the queue_lock
-is.
+Taken almost entirely from Nicholas Bellinger's scsi-mq conversion.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/message/fusion/mptsas.c |    2 +-
- drivers/scsi/scsi_lib.c         |   50 ++++++++++++++++++++++-----------------
- drivers/scsi/scsi_sysfs.c       |   10 +++++++-
- drivers/scsi/sg.c               |    2 +-
- include/scsi/scsi_device.h      |    4 +---
- 5 files changed, 40 insertions(+), 28 deletions(-)
+ drivers/scsi/virtio_scsi.c |   25 +++++++------------------
+ 1 file changed, 7 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
-index 00d339c..ea3f253 100644
---- a/drivers/message/fusion/mptsas.c
-+++ b/drivers/message/fusion/mptsas.c
-@@ -3765,7 +3765,7 @@ mptsas_send_link_status_event(struct fw_event_work *fw_event)
- 						printk(MYIOC_s_DEBUG_FMT
- 						"SDEV OUTSTANDING CMDS"
- 						"%d\n", ioc->name,
--						sdev->device_busy));
-+						atomic_read(&sdev->device_busy)));
- 				}
- 
- 			}
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 8929345..20dfbb5 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -291,9 +291,7 @@ void scsi_device_unbusy(struct scsi_device *sdev)
- 		spin_unlock_irqrestore(shost->host_lock, flags);
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index 16bfd50..d9a6074 100644
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -204,7 +204,6 @@ static void virtscsi_complete_cmd(struct virtio_scsi *vscsi, void *buf)
+ 			set_driver_byte(sc, DRIVER_SENSE);
  	}
  
--	spin_lock_irqsave(sdev->request_queue->queue_lock, flags);
--	sdev->device_busy--;
--	spin_unlock_irqrestore(sdev->request_queue->queue_lock, flags);
-+	atomic_dec(&sdev->device_busy);
+-	mempool_free(cmd, virtscsi_cmd_pool);
+ 	sc->scsi_done(sc);
+ 
+ 	atomic_dec(&tgt->reqs);
+@@ -279,8 +278,6 @@ static void virtscsi_complete_free(struct virtio_scsi *vscsi, void *buf)
+ 
+ 	if (cmd->comp)
+ 		complete_all(cmd->comp);
+-	else
+-		mempool_free(cmd, virtscsi_cmd_pool);
  }
  
- /*
-@@ -344,9 +342,10 @@ static void scsi_single_lun_run(struct scsi_device *current_sdev)
- 
- static inline int scsi_device_is_busy(struct scsi_device *sdev)
+ static void virtscsi_ctrl_done(struct virtqueue *vq)
+@@ -496,10 +493,9 @@ static int virtscsi_queuecommand(struct virtio_scsi *vscsi,
+ 				 struct virtio_scsi_vq *req_vq,
+ 				 struct scsi_cmnd *sc)
  {
--	if (sdev->device_busy >= sdev->queue_depth || sdev->device_blocked)
-+	if (atomic_read(&sdev->device_busy) >= sdev->queue_depth)
-+		return 1;
-+	if (sdev->device_blocked)
- 		return 1;
+-	struct virtio_scsi_cmd *cmd;
+-	int ret;
 -
- 	return 0;
- }
- 
-@@ -1268,7 +1267,7 @@ int scsi_prep_return(struct request_queue *q, struct request *req, int ret)
- 		 * queue must be restarted, so we schedule a callback to happen
- 		 * shortly.
- 		 */
--		if (sdev->device_busy == 0)
-+		if (atomic_read(&sdev->device_busy) == 0)
- 			blk_delay_queue(q, SCSI_QUEUE_DELAY);
- 		break;
- 	default:
-@@ -1299,26 +1298,32 @@ EXPORT_SYMBOL(scsi_prep_fn);
- static inline int scsi_dev_queue_ready(struct request_queue *q,
- 				  struct scsi_device *sdev)
- {
--	if (sdev->device_busy == 0 && sdev->device_blocked) {
-+	unsigned int busy;
+ 	struct Scsi_Host *shost = virtio_scsi_host(vscsi->vdev);
++	struct virtio_scsi_cmd *cmd = (struct virtio_scsi_cmd *)(sc + 1);
 +
-+	busy = atomic_inc_return(&sdev->device_busy) - 1;
-+	if (busy == 0 && sdev->device_blocked) {
- 		/*
- 		 * unblock after device_blocked iterates to zero
- 		 */
--		if (--sdev->device_blocked == 0) {
--			SCSI_LOG_MLQUEUE(3,
--				   sdev_printk(KERN_INFO, sdev,
--				   "unblocking device at zero depth\n"));
--		} else {
-+		if (--sdev->device_blocked != 0) {
- 			blk_delay_queue(q, SCSI_QUEUE_DELAY);
--			return 0;
-+			goto out_dec;
- 		}
-+		SCSI_LOG_MLQUEUE(3, sdev_printk(KERN_INFO, sdev,
-+				   "unblocking device at zero depth\n"));
- 	}
--	if (scsi_device_is_busy(sdev))
--		return 0;
-+
-+	if (busy >= sdev->queue_depth)
-+		goto out_dec;
-+	if (sdev->device_blocked)
-+		goto out_dec;
+ 	BUG_ON(scsi_sg_count(sc) > shost->sg_tablesize);
  
- 	return 1;
-+out_dec:
-+	atomic_dec(&sdev->device_busy);
+ 	/* TODO: check feature bit and fail if unsupported?  */
+@@ -508,11 +504,6 @@ static int virtscsi_queuecommand(struct virtio_scsi *vscsi,
+ 	dev_dbg(&sc->device->sdev_gendev,
+ 		"cmd %p CDB: %#02x\n", sc, sc->cmnd[0]);
+ 
+-	ret = SCSI_MLQUEUE_HOST_BUSY;
+-	cmd = mempool_alloc(virtscsi_cmd_pool, GFP_ATOMIC);
+-	if (!cmd)
+-		goto out;
+-
+ 	memset(cmd, 0, sizeof(*cmd));
+ 	cmd->sc = sc;
+ 	cmd->req.cmd = (struct virtio_scsi_cmd_req){
+@@ -531,13 +522,9 @@ static int virtscsi_queuecommand(struct virtio_scsi *vscsi,
+ 
+ 	if (virtscsi_kick_cmd(req_vq, cmd,
+ 			      sizeof cmd->req.cmd, sizeof cmd->resp.cmd,
+-			      GFP_ATOMIC) == 0)
+-		ret = 0;
+-	else
+-		mempool_free(cmd, virtscsi_cmd_pool);
+-
+-out:
+-	return ret;
++			      GFP_ATOMIC) != 0)
++		return SCSI_MLQUEUE_HOST_BUSY;
 +	return 0;
  }
  
--
- /*
-  * scsi_target_queue_ready: checks if there we can send commands to target
-  * @sdev: scsi device on starget to check.
-@@ -1488,7 +1493,7 @@ static void scsi_kill_request(struct request *req, struct request_queue *q)
- 	 * bump busy counts.  To bump the counters, we need to dance
- 	 * with the locks as normal issue path does.
- 	 */
--	sdev->device_busy++;
-+	atomic_inc(&sdev->device_busy);
- 	atomic_inc(&shost->host_busy);
- 	atomic_inc(&starget->target_busy);
- 
-@@ -1567,7 +1572,7 @@ static void scsi_request_fn(struct request_queue *q)
- 		 * accept it.
- 		 */
- 		req = blk_peek_request(q);
--		if (!req || !scsi_dev_queue_ready(q, sdev))
-+		if (!req)
- 			break;
- 
- 		if (unlikely(!scsi_device_online(sdev))) {
-@@ -1577,13 +1582,14 @@ static void scsi_request_fn(struct request_queue *q)
- 			continue;
- 		}
- 
-+		if (!scsi_dev_queue_ready(q, sdev))
-+			break;
- 
- 		/*
- 		 * Remove the request from the request list.
- 		 */
- 		if (!(blk_queue_tagged(q) && !blk_queue_start_tag(q, req)))
- 			blk_start_request(req);
--		sdev->device_busy++;
- 
- 		spin_unlock_irq(q->queue_lock);
- 		cmd = req->special;
-@@ -1649,9 +1655,9 @@ static void scsi_request_fn(struct request_queue *q)
- 	 */
- 	spin_lock_irq(q->queue_lock);
- 	blk_requeue_request(q, req);
--	sdev->device_busy--;
-+	atomic_dec(&sdev->device_busy);
- out_delay:
--	if (sdev->device_busy == 0)
-+	if (atomic_read(&sdev->device_busy) == 0)
- 		blk_delay_queue(q, SCSI_QUEUE_DELAY);
- }
- 
-@@ -2390,7 +2396,7 @@ scsi_device_quiesce(struct scsi_device *sdev)
- 		return err;
- 
- 	scsi_run_queue(sdev->request_queue);
--	while (sdev->device_busy) {
-+	while (atomic_read(&sdev->device_busy)) {
- 		msleep_interruptible(200);
- 		scsi_run_queue(sdev->request_queue);
- 	}
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 658ee82..c59e146 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -587,13 +587,21 @@ static int scsi_sdev_check_buf_bit(const char *buf)
-  */
- sdev_rd_attr (device_blocked, "%d\n");
- sdev_rd_attr (queue_depth, "%d\n");
--sdev_rd_attr (device_busy, "%d\n");
- sdev_rd_attr (type, "%d\n");
- sdev_rd_attr (scsi_level, "%d\n");
- sdev_rd_attr (vendor, "%.8s\n");
- sdev_rd_attr (model, "%.16s\n");
- sdev_rd_attr (rev, "%.4s\n");
- 
-+static ssize_t
-+sdev_show_device_busy(struct device *dev, struct device_attribute *attr,
-+		char *buf)
-+{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	return snprintf(buf, 20, "%d\n", atomic_read(&sdev->device_busy));
-+}
-+static DEVICE_ATTR(device_busy, S_IRUGO, sdev_show_device_busy, NULL);
-+
- /*
-  * TODO: can we make these symlinks to the block layer ones?
-  */
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index df5e961..999ce04 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -2489,7 +2489,7 @@ static int sg_proc_seq_show_dev(struct seq_file *s, void *v)
- 			      scsidp->id, scsidp->lun, (int) scsidp->type,
- 			      1,
- 			      (int) scsidp->queue_depth,
--			      (int) scsidp->device_busy,
-+			      (int) atomic_read(&scsidp->device_busy),
- 			      (int) scsi_device_online(scsidp));
- 	else
- 		seq_printf(s, "-1\t-1\t-1\t-1\t-1\t-1\t-1\t-1\t-1\n");
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index f85b1a2..7bb39e4 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -81,9 +81,7 @@ struct scsi_device {
- 	struct list_head    siblings;   /* list of all devices on this host */
- 	struct list_head    same_target_siblings; /* just the devices sharing same target id */
- 
--	/* this is now protected by the request_queue->queue_lock */
--	unsigned int device_busy;	/* commands actually active on
--					 * low-level. protected by queue_lock. */
-+	atomic_t device_busy;		/* commands actually active on LLDD */
- 	spinlock_t list_lock;
- 	struct list_head cmd_list;	/* queue of in use SCSI Command structures */
- 	struct list_head starved_entry;
+ static int virtscsi_queuecommand_single(struct Scsi_Host *sh,
+@@ -683,6 +670,7 @@ static struct scsi_host_template virtscsi_host_template_single = {
+ 	.name = "Virtio SCSI HBA",
+ 	.proc_name = "virtio_scsi",
+ 	.this_id = -1,
++	.cmd_size = sizeof(struct virtio_scsi_cmd),
+ 	.queuecommand = virtscsi_queuecommand_single,
+ 	.eh_abort_handler = virtscsi_abort,
+ 	.eh_device_reset_handler = virtscsi_device_reset,
+@@ -699,6 +687,7 @@ static struct scsi_host_template virtscsi_host_template_multi = {
+ 	.name = "Virtio SCSI HBA",
+ 	.proc_name = "virtio_scsi",
+ 	.this_id = -1,
++	.cmd_size = sizeof(struct virtio_scsi_cmd),
+ 	.queuecommand = virtscsi_queuecommand_multi,
+ 	.eh_abort_handler = virtscsi_abort,
+ 	.eh_device_reset_handler = virtscsi_device_reset,
 -- 
 1.7.10.4
 
