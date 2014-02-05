@@ -1,109 +1,61 @@
-From: "Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>
-Subject: [PATCH 33/51] scsi, fcoe: Fix CPU hotplug callback registration
-Date: Thu, 06 Feb 2014 03:40:34 +0530
-Message-ID: <20140205221034.19080.28417.stgit@srivatsabhat.in.ibm.com>
-References: <20140205220251.19080.92336.stgit@srivatsabhat.in.ibm.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 00/17] SCSI data path micro-optimizations
+Date: Wed, 05 Feb 2014 15:41:04 -0800
+Message-ID: <1391643664.2213.59.camel@dabdike.int.hansenpartnership.com>
+References: <20140205123930.150608699@bombadil.infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="ISO-8859-15"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140205220251.19080.92336.stgit@srivatsabhat.in.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: paulus@samba.org, oleg@redhat.com, rusty@rustcorp.com.au, peterz@infradead.org, tglx@linutronix.de, akpm@linux-foundation.org
-Cc: mingo@kernel.org, paulmck@linux.vnet.ibm.com, tj@kernel.org, walken@google.com, ego@linux.vnet.ibm.com, linux@arm.linux.org.uk, linux-kernel@vger.kernel.org, srivatsa.bhat@linux.vnet.ibm.com, Robert Love <robert.w.love@intel.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org"Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:46377 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751387AbaBEXlH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Feb 2014 18:41:07 -0500
+In-Reply-To: <20140205123930.150608699@bombadil.infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Jens Axboe <axboe@kernel.dk>, Nicholas Bellinger <nab@linux-iscsi.org>, linux-scsi@vger.kernel.org
 
-Subsystems that want to register CPU hotplug callbacks, as well as perform
-initialization for the CPUs that are already online, often do it as shown
-below:
+On Wed, 2014-02-05 at 04:39 -0800, Christoph Hellwig wrote:
+> This series contains various optimizations for the SCSI data I/O path.
+> They increase the number of IOPS seen with iSCSI or SRP between 2%
+> and 3.5% in workloads that previously hit the host_lock hard.  While this
+> isn't a lot it now fully shifts the contention to the queue_lock, which
+> will get out of the way later when the SCSI midlayer is converted to
+> use the blk-mq infrastructure.
 
-	get_online_cpus();
+I will say that you do make the series hard to review by including
+things that do code churn for no gain: like making all the error
+handling goto based instead of the current in-place if () clause
+based ... this doesn't do anything for optmisation, so why do it?  (I'm
+not going to take sides on which is better, since we do both).
 
-	for_each_online_cpu(cpu)
-		init_cpu(cpu);
+There's also a lot of extraneous stuff in here.  I'm assuming most of
+the performance stuff is get/put removal and locking efficiency, things
+like this
 
-	register_cpu_notifier(&foobar_cpu_notifier);
+1 looks like a lost pm error path, that should go (separately from the
+series) for review to the pm people (Alan Stern).
 
-	put_online_cpus();
+2,3,5 are allocation simplification.  In general it doesn't look so bad,
+but it doesn't seem to be part of the series.  It needs an ACK from the
+megaraid people since they're the only consumer of the interface you're
+trying to eliminate
 
-This is wrong, since it is prone to ABBA deadlocks involving the
-cpu_add_remove_lock and the cpu_hotplug.lock (when running concurrently
-with CPU hotplug operations).
+6,7 is a new interface for command allocation and a virtio consumer.
+OK, as it goes, but also separable ... and preferably, if, as you say,
+it's important for mq, some more users, also doesn't need to be part of
+the series.
 
-Instead, the correct and race-free way of performing the callback
-registration is:
+Some other procedural issues:
 
-	cpu_maps_update_begin();
+9,10 look like they aren't your patches, so they need an Author From:
+field for git (9 needs your signoff, if you're sending it).
 
-	for_each_online_cpu(cpu)
-		init_cpu(cpu);
+9,10,11 have uninformative titles.  Say what you're doing, which is
+removing a get/put_device
 
-	/* Note the use of the double underscored version of the API */
-	__register_cpu_notifier(&foobar_cpu_notifier);
-
-	cpu_maps_update_done();
+James
 
 
-Fix the fcoe code in scsi by using this latter form of callback registration.
-
-Cc: Robert Love <robert.w.love@intel.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: fcoe-devel@open-fcoe.org
-Cc: linux-scsi@vger.kernel.org
-Signed-off-by: Srivatsa S. Bhat <srivatsa.bhat@linux.vnet.ibm.com>
----
-
- drivers/scsi/fcoe/fcoe.c |   15 +++++++++++++--
- 1 file changed, 13 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index f317000..1c299de 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -2633,14 +2633,18 @@ static int __init fcoe_init(void)
- 		skb_queue_head_init(&p->fcoe_rx_list);
- 	}
- 
-+	cpu_maps_update_begin();
-+
- 	for_each_online_cpu(cpu)
- 		fcoe_percpu_thread_create(cpu);
- 
- 	/* Initialize per CPU interrupt thread */
--	rc = register_hotcpu_notifier(&fcoe_cpu_notifier);
-+	rc = __register_hotcpu_notifier(&fcoe_cpu_notifier);
- 	if (rc)
- 		goto out_free;
- 
-+	cpu_maps_update_done();
-+
- 	/* Setup link change notification */
- 	fcoe_dev_setup();
- 
-@@ -2655,6 +2659,9 @@ out_free:
- 	for_each_online_cpu(cpu) {
- 		fcoe_percpu_thread_destroy(cpu);
- 	}
-+
-+	cpu_maps_update_done();
-+
- 	mutex_unlock(&fcoe_config_mutex);
- 	destroy_workqueue(fcoe_wq);
- 	return rc;
-@@ -2687,11 +2694,15 @@ static void __exit fcoe_exit(void)
- 	}
- 	rtnl_unlock();
- 
--	unregister_hotcpu_notifier(&fcoe_cpu_notifier);
-+	cpu_maps_update_begin();
- 
- 	for_each_online_cpu(cpu)
- 		fcoe_percpu_thread_destroy(cpu);
- 
-+	__unregister_hotcpu_notifier(&fcoe_cpu_notifier);
-+
-+	cpu_maps_update_done();
-+
- 	mutex_unlock(&fcoe_config_mutex);
- 
- 	/*
