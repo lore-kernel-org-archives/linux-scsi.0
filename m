@@ -1,117 +1,101 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 07/15] block: remove unprep_rq_fn
-Date: Wed, 05 Feb 2014 04:41:25 -0800
-Message-ID: <20140205124153.423050331@bombadil.infradead.org>
+Subject: [PATCH 08/15] scsi: cleanup scsi_end_request calling conventions
+Date: Wed, 05 Feb 2014 04:41:26 -0800
+Message-ID: <20140205124153.565415017@bombadil.infradead.org>
 References: <20140205124118.332902571@bombadil.infradead.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:53232 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:53235 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751388AbaBEMlz (ORCPT
+	with ESMTP id S1751438AbaBEMlz (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Feb 2014 07:41:55 -0500
-Content-Disposition: inline; filename=0007-block-remove-unprep_rq_fn.patch
+Content-Disposition: inline; filename=0008-scsi-cleanup-scsi_end_request-calling-conventions.patch
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jens Axboe <axboe@kernel.dk>, James Bottomley <JBottomley@Parallels.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 Cc: linux-scsi@vger.kernel.org
 
-Now that scsi doesn't use it anymore there's no user left.
+Don't bother returning a stale pointer when a bool does the work much
+better.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- block/blk-core.c       |   11 ++---------
- block/blk-settings.c   |   17 -----------------
- include/linux/blkdev.h |    3 ---
- 3 files changed, 2 insertions(+), 29 deletions(-)
+ drivers/scsi/scsi_lib.c |   34 ++++++++++++++++------------------
+ 1 file changed, 16 insertions(+), 18 deletions(-)
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 853f927..59a4207 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -722,7 +722,6 @@ blk_init_allocated_queue(struct request_queue *q, request_fn_proc *rfn,
- 
- 	q->request_fn		= rfn;
- 	q->prep_rq_fn		= NULL;
--	q->unprep_rq_fn		= NULL;
- 	q->queue_flags		|= QUEUE_FLAG_DEFAULT;
- 
- 	/* Override internal queue lock with supplied lock pointer */
-@@ -2486,18 +2485,12 @@ static bool blk_update_bidi_request(struct request *rq, int error,
-  * @req:	the request
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index a206da5..c6fc552 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -531,17 +531,16 @@ static void __scsi_release_buffers(struct scsi_cmnd *, int);
   *
-  * This function makes a request ready for complete resubmission (or
-- * completion).  It happens only after all error handling is complete,
-- * so represents the appropriate moment to deallocate any resources
-- * that were allocated to the request in the prep_rq_fn.  The queue
-- * lock is held when calling this.
-+ * completion).  It happens only after all error handling is complete.
-+ * The queue lock is held when calling this.
+  * Lock status: Assumed that lock is not held upon entry.
+  *
+- * Returns:     cmd if requeue required, NULL otherwise.
++ * Returns:     false if requeue required, true otherwise.
+  *
+  * Notes:       This is called for block device requests in order to
+  *              mark some number of sectors as complete.
+  * 
+  *		We are guaranteeing that the request queue will be goosed
+  *		at some point during this call.
+- * Notes:	If cmd was requeued, upon return it will be a stale pointer.
   */
- void blk_unprep_request(struct request *req)
+-static struct scsi_cmnd *scsi_end_request(struct scsi_cmnd *cmd, int error,
+-					  int bytes, int requeue)
++static bool scsi_end_request(struct scsi_cmnd *cmd, int error, int bytes,
++		int requeue)
  {
--	struct request_queue *q = req->q;
--
- 	req->cmd_flags &= ~REQ_DONTPREP;
--	if (q->unprep_rq_fn)
--		q->unprep_rq_fn(q, req);
+ 	struct request_queue *q = cmd->device->request_queue;
+ 	struct request *req = cmd->request;
+@@ -554,19 +553,18 @@ static struct scsi_cmnd *scsi_end_request(struct scsi_cmnd *cmd, int error,
+ 		/* kill remainder if no retrys */
+ 		if (error && scsi_noretry_cmd(cmd))
+ 			blk_end_request_all(req, error);
+-		else {
+-			if (requeue) {
+-				/*
+-				 * Bleah.  Leftovers again.  Stick the
+-				 * leftovers in the front of the
+-				 * queue, and goose the queue again.
+-				 */
+-				scsi_release_buffers(cmd);
+-				scsi_requeue_command(q, cmd);
+-				cmd = NULL;
+-			}
+-			return cmd;
++		else if (requeue) {
++			/*
++			 * Bleah.  Leftovers again.  Stick the
++			 * leftovers in the front of the
++			 * queue, and goose the queue again.
++			 */
++			scsi_release_buffers(cmd);
++			scsi_requeue_command(q, cmd);
++			return true;
+ 		}
++
++		return false;
+ 	}
+ 
+ 	/*
+@@ -575,7 +573,7 @@ static struct scsi_cmnd *scsi_end_request(struct scsi_cmnd *cmd, int error,
+ 	 */
+ 	__scsi_release_buffers(cmd, 0);
+ 	scsi_next_command(cmd);
+-	return NULL;
++	return true;
  }
- EXPORT_SYMBOL_GPL(blk_unprep_request);
  
-diff --git a/block/blk-settings.c b/block/blk-settings.c
-index 5d21239..47a266c 100644
---- a/block/blk-settings.c
-+++ b/block/blk-settings.c
-@@ -37,23 +37,6 @@ void blk_queue_prep_rq(struct request_queue *q, prep_rq_fn *pfn)
- EXPORT_SYMBOL(blk_queue_prep_rq);
+ static inline unsigned int scsi_sgtable_index(unsigned short nents)
+@@ -847,7 +845,7 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 	 * are leftovers and there is some kind of error
+ 	 * (result != 0), retry the rest.
+ 	 */
+-	if (scsi_end_request(cmd, error, good_bytes, result == 0) == NULL)
++	if (scsi_end_request(cmd, error, good_bytes, result == 0))
+ 		return;
  
- /**
-- * blk_queue_unprep_rq - set an unprepare_request function for queue
-- * @q:		queue
-- * @ufn:	unprepare_request function
-- *
-- * It's possible for a queue to register an unprepare_request callback
-- * which is invoked before the request is finally completed. The goal
-- * of the function is to deallocate any data that was allocated in the
-- * prepare_request callback.
-- *
-- */
--void blk_queue_unprep_rq(struct request_queue *q, unprep_rq_fn *ufn)
--{
--	q->unprep_rq_fn = ufn;
--}
--EXPORT_SYMBOL(blk_queue_unprep_rq);
--
--/**
-  * blk_queue_merge_bvec - set a merge_bvec function for queue
-  * @q:		queue
-  * @mbfn:	merge_bvec_fn
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 6f02524..67c21a4 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -223,7 +223,6 @@ struct blk_queue_ctx;
- typedef void (request_fn_proc) (struct request_queue *q);
- typedef void (make_request_fn) (struct request_queue *q, struct bio *bio);
- typedef int (prep_rq_fn) (struct request_queue *, struct request *);
--typedef void (unprep_rq_fn) (struct request_queue *, struct request *);
- 
- struct bio_vec;
- struct bvec_merge_data {
-@@ -312,7 +311,6 @@ struct request_queue {
- 	request_fn_proc		*request_fn;
- 	make_request_fn		*make_request_fn;
- 	prep_rq_fn		*prep_rq_fn;
--	unprep_rq_fn		*unprep_rq_fn;
- 	merge_bvec_fn		*merge_bvec_fn;
- 	softirq_done_fn		*softirq_done_fn;
- 	rq_timed_out_fn		*rq_timed_out_fn;
-@@ -985,7 +983,6 @@ extern int blk_queue_dma_drain(struct request_queue *q,
- extern void blk_queue_lld_busy(struct request_queue *q, lld_busy_fn *fn);
- extern void blk_queue_segment_boundary(struct request_queue *, unsigned long);
- extern void blk_queue_prep_rq(struct request_queue *, prep_rq_fn *pfn);
--extern void blk_queue_unprep_rq(struct request_queue *, unprep_rq_fn *ufn);
- extern void blk_queue_merge_bvec(struct request_queue *, merge_bvec_fn *);
- extern void blk_queue_dma_alignment(struct request_queue *, int);
- extern void blk_queue_update_dma_alignment(struct request_queue *, int);
+ 	error = __scsi_error_from_host_byte(cmd, result);
 -- 
 1.7.10.4
 
