@@ -1,151 +1,108 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 14/17] scsi: convert target_busy to an atomic_t
-Date: Wed, 05 Feb 2014 04:39:44 -0800
-Message-ID: <20140205124021.528018203@bombadil.infradead.org>
+Subject: [PATCH 03/17] scsi: remove scsi_allocate_command/scsi_free_command
+Date: Wed, 05 Feb 2014 04:39:33 -0800
+Message-ID: <20140205124019.384542106@bombadil.infradead.org>
 References: <20140205123930.150608699@bombadil.infradead.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:53175 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:53189 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750723AbaBEMkX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Feb 2014 07:40:23 -0500
-Content-Disposition: inline; filename=0014-scsi-convert-target_busy-to-an-atomic_t.patch
+	with ESMTP id S1751263AbaBEMkZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Feb 2014 07:40:25 -0500
+Content-Disposition: inline; filename=0003-scsi-remove-scsi_allocate_command-scsi_free_command.patch
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jens Axboe <axboe@kernel.dk>, James Bottomley <JBottomley@Parallels.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 Cc: linux-scsi@vger.kernel.org
 
-Avoid taking the host-wide host_lock to check the per-target queue limit.
-Instead we do an atomic_inc_return early on to grab our slot in the queue,
-and if nessecary decrement it after finishing all checks.
+All users are gone, so we can get rid of these.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/scsi_lib.c    |   52 ++++++++++++++++++++++++++------------------
- include/scsi/scsi_device.h |    4 ++--
- 2 files changed, 33 insertions(+), 23 deletions(-)
+ drivers/scsi/scsi.c      |   56 ----------------------------------------------
+ include/scsi/scsi_cmnd.h |    3 ---
+ 2 files changed, 59 deletions(-)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 295e038..cc0bd7d 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -283,7 +283,7 @@ void scsi_device_unbusy(struct scsi_device *sdev)
- 
- 	spin_lock_irqsave(shost->host_lock, flags);
- 	shost->host_busy--;
--	starget->target_busy--;
-+	atomic_dec(&starget->target_busy);
- 	if (unlikely(scsi_host_in_recovery(shost) &&
- 		     (shost->host_failed || shost->host_eh_scheduled)))
- 		scsi_eh_wakeup(shost);
-@@ -350,7 +350,7 @@ static inline int scsi_device_is_busy(struct scsi_device *sdev)
- static inline int scsi_target_is_busy(struct scsi_target *starget)
- {
- 	return ((starget->can_queue > 0 &&
--		 starget->target_busy >= starget->can_queue) ||
-+		 atomic_read(&starget->target_busy) >= starget->can_queue) ||
- 		 starget->target_blocked);
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index d8afec8..ebcea6c 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -415,62 +415,6 @@ static void scsi_put_host_cmd_pool(gfp_t gfp_mask)
  }
  
-@@ -1323,37 +1323,49 @@ static inline int scsi_target_queue_ready(struct Scsi_Host *shost,
- 					   struct scsi_device *sdev)
+ /**
+- * scsi_allocate_command - get a fully allocated SCSI command
+- * @gfp_mask:	allocation mask
+- *
+- * This function is for use outside of the normal host based pools.
+- * It allocates the relevant command and takes an additional reference
+- * on the pool it used.  This function *must* be paired with
+- * scsi_free_command which also has the identical mask, otherwise the
+- * free pool counts will eventually go wrong and you'll trigger a bug.
+- *
+- * This function should *only* be used by drivers that need a static
+- * command allocation at start of day for internal functions.
+- */
+-struct scsi_cmnd *scsi_allocate_command(gfp_t gfp_mask)
+-{
+-	struct scsi_host_cmd_pool *pool = scsi_get_host_cmd_pool(gfp_mask);
+-
+-	if (!pool)
+-		return NULL;
+-
+-	return scsi_pool_alloc_command(pool, gfp_mask);
+-}
+-EXPORT_SYMBOL(scsi_allocate_command);
+-
+-/**
+- * scsi_free_command - free a command allocated by scsi_allocate_command
+- * @gfp_mask:	mask used in the original allocation
+- * @cmd:	command to free
+- *
+- * Note: using the original allocation mask is vital because that's
+- * what determines which command pool we use to free the command.  Any
+- * mismatch will cause the system to BUG eventually.
+- */
+-void scsi_free_command(gfp_t gfp_mask, struct scsi_cmnd *cmd)
+-{
+-	struct scsi_host_cmd_pool *pool = scsi_get_host_cmd_pool(gfp_mask);
+-
+-	/*
+-	 * this could trigger if the mask to scsi_allocate_command
+-	 * doesn't match this mask.  Otherwise we're guaranteed that this
+-	 * succeeds because scsi_allocate_command must have taken a reference
+-	 * on the pool
+-	 */
+-	BUG_ON(!pool);
+-
+-	scsi_pool_free_command(pool, cmd);
+-	/*
+-	 * scsi_put_host_cmd_pool is called twice; once to release the
+-	 * reference we took above, and once to release the reference
+-	 * originally taken by scsi_allocate_command
+-	 */
+-	scsi_put_host_cmd_pool(gfp_mask);
+-	scsi_put_host_cmd_pool(gfp_mask);
+-}
+-EXPORT_SYMBOL(scsi_free_command);
+-
+-/**
+  * scsi_setup_command_freelist - Setup the command freelist for a scsi host.
+  * @shost: host to allocate the freelist for.
+  *
+diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+index 91558a1..dff105a 100644
+--- a/include/scsi/scsi_cmnd.h
++++ b/include/scsi/scsi_cmnd.h
+@@ -156,9 +156,6 @@ extern void scsi_release_buffers(struct scsi_cmnd *cmd);
+ extern int scsi_dma_map(struct scsi_cmnd *cmd);
+ extern void scsi_dma_unmap(struct scsi_cmnd *cmd);
+ 
+-struct scsi_cmnd *scsi_allocate_command(gfp_t gfp_mask);
+-void scsi_free_command(gfp_t gfp_mask, struct scsi_cmnd *cmd);
+-
+ static inline unsigned scsi_sg_count(struct scsi_cmnd *cmd)
  {
- 	struct scsi_target *starget = scsi_target(sdev);
--	int ret = 0;
-+	unsigned int busy;
- 
--	spin_lock_irq(shost->host_lock);
- 	if (starget->single_lun) {
-+		spin_lock_irq(shost->host_lock);
- 		if (starget->starget_sdev_user &&
--		    starget->starget_sdev_user != sdev)
--			goto out;
-+		    starget->starget_sdev_user != sdev) {
-+			spin_unlock_irq(shost->host_lock);
-+			return 0;
-+		}
- 		starget->starget_sdev_user = sdev;
-+		spin_unlock_irq(shost->host_lock);
- 	}
- 
--	if (starget->target_busy == 0 && starget->target_blocked) {
-+	busy = atomic_inc_return(&starget->target_busy) - 1;
-+	if (busy == 0 && starget->target_blocked) {
- 		/*
- 		 * unblock after target_blocked iterates to zero
- 		 */
--		if (--starget->target_blocked != 0)
--			goto out;
-+		spin_lock_irq(shost->host_lock);
-+		if (--starget->target_blocked != 0) {
-+			spin_unlock_irq(shost->host_lock);
-+			goto out_dec;
-+		}
-+		spin_unlock_irq(shost->host_lock);
- 
- 		SCSI_LOG_MLQUEUE(3, starget_printk(KERN_INFO, starget,
- 				 "unblocking target at zero depth\n"));
- 	}
- 
--	if (scsi_target_is_busy(starget)) {
--		list_move_tail(&sdev->starved_entry, &shost->starved_list);
--		goto out;
--	}
-+	if (starget->can_queue > 0 && busy >= starget->can_queue)
-+		goto starved;
-+	if (starget->target_blocked)
-+		goto starved;
- 
--	scsi_target(sdev)->target_busy++;
--	ret = 1;
--out:
-+	return 1;
-+
-+starved:
-+	spin_lock_irq(shost->host_lock);
-+	list_move_tail(&sdev->starved_entry, &shost->starved_list);
- 	spin_unlock_irq(shost->host_lock);
--	return ret;
-+out_dec:
-+	atomic_dec(&starget->target_busy);
-+	return 0;
- }
- 
- /*
-@@ -1463,7 +1475,7 @@ static void scsi_kill_request(struct request *req, struct request_queue *q)
- 	spin_unlock(sdev->request_queue->queue_lock);
- 	spin_lock(shost->host_lock);
- 	shost->host_busy++;
--	starget->target_busy++;
-+	atomic_inc(&starget->target_busy);
- 	spin_unlock(shost->host_lock);
- 	spin_lock(sdev->request_queue->queue_lock);
- 
-@@ -1612,9 +1624,7 @@ static void scsi_request_fn(struct request_queue *q)
- 	return;
- 
-  host_not_ready:
--	spin_lock_irq(shost->host_lock);
--	scsi_target(sdev)->target_busy--;
--	spin_unlock_irq(shost->host_lock);
-+	atomic_dec(&scsi_target(sdev)->target_busy);
-  not_ready:
- 	/*
- 	 * lock q, handle tag, requeue req, and decrement device_busy. We
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index d65fbec..f85b1a2 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -272,8 +272,8 @@ struct scsi_target {
- 	unsigned int		expecting_lun_change:1;	/* A device has reported
- 						 * a 3F/0E UA, other devices on
- 						 * the same target will also. */
--	/* commands actually active on LLD. protected by host lock. */
--	unsigned int		target_busy;
-+	/* commands actually active on LLD. */
-+	atomic_t		target_busy;
- 	/*
- 	 * LLDs should set this in the slave_alloc host template callout.
- 	 * If set to zero then there is not limit.
+ 	return cmd->sdb.table.nents;
 -- 
 1.7.10.4
 
