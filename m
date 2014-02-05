@@ -1,183 +1,180 @@
-From: James Bottomley <jbottomley@parallels.com>
-Subject: Re: [REVIEW PATCH] scsi: Add 'retry_timeout' to avoid infinite
- command retry
-Date: Wed, 5 Feb 2014 16:55:49 +0000
-Message-ID: <1391619349.2213.11.camel@dabdike.int.hansenpartnership.com>
-References: <1391579254-26204-1-git-send-email-eiichi.tsukata.xh@hitachi.com>
-	 <1391579254-26204-2-git-send-email-eiichi.tsukata.xh@hitachi.com>
+From: Paul Gortmaker <paul.gortmaker@windriver.com>
+Subject: [v2.6.34-stable 010/213] block: add and use scsi_blk_cmd_ioctl
+Date: Wed, 5 Feb 2014 14:59:25 -0500
+Message-ID: <1391630568-49251-11-git-send-email-paul.gortmaker@windriver.com>
+References: <1391630568-49251-1-git-send-email-paul.gortmaker@windriver.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1391579254-26204-2-git-send-email-eiichi.tsukata.xh@hitachi.com>
-Content-Language: en-US
-Content-ID: <5EDC534DCF32254893D91A1F76CA58AB@sw.swsoft.com>
+In-Reply-To: <1391630568-49251-1-git-send-email-paul.gortmaker@windriver.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "eiichi.tsukata.xh@hitachi.com" <eiichi.tsukata.xh@hitachi.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: stable@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Paolo Bonzini <pbonzini@redhat.com>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, James Bottomley <JBottomley@parallels.com>, Linus Torvalds <torvalds@linux-foundation.org>, Paul Gortmaker <paul.gortmaker@windriver.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2014-02-05 at 14:47 +0900, Eiichi Tsukata wrote:
-> Currently, scsi error handling in scsi_decide_disposition() tries to
-> unconditionally requeue scsi command when device keeps some error state.
-> This is because retryable errors are thought to be temporary and the scsi
-> device will soon recover from those errors. Normally, such retry policy is
-> appropriate because the device will soon recover from temporary error state.
+From: Paolo Bonzini <pbonzini@redhat.com>
 
-This description isn't very descriptive.  I presume you're talking about
-the ADD_TO_MLQUEUE return from scsi_decide_disposition()?
+                   -------------------
+    This is a commit scheduled for the next v2.6.34 longterm release.
+    http://git.kernel.org/?p=linux/kernel/git/paulg/longterm-queue-2.6.34.git
+    If you see a problem with using this for longterm, please comment.
+                   -------------------
 
-> But there is no guarantee that device is able to recover from error state
-> immediately. Some hardware error may prevent device from recovering.
-> Therefore hardware error can results in infinite command retry loop.
+commit 577ebb374c78314ac4617242f509e2f5e7156649 upstream.
 
-If you're talking about ADD_TO_MLQUEUE, I don't believe this is correct:
-there's a test in scsi_softirq_done() that makes sure the maximum
-lifetime is retries*timeout and fails the command after that.
+Introduce a wrapper around scsi_cmd_ioctl that takes a block device.
 
-James
+The function will then be enhanced to detect partition block devices
+and, in that case, subject the ioctls to whitelisting.
 
+Cc: linux-scsi@vger.kernel.org
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: James Bottomley <JBottomley@parallels.com>
+Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
+Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
+Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
+---
+ block/scsi_ioctl.c             | 7 +++++++
+ drivers/block/cciss.c          | 6 +++---
+ drivers/block/ub.c             | 3 +--
+ drivers/block/virtio_blk.c     | 4 ++--
+ drivers/cdrom/cdrom.c          | 3 +--
+ drivers/ide/ide-floppy_ioctl.c | 3 +--
+ drivers/scsi/sd.c              | 2 +-
+ include/linux/blkdev.h         | 2 ++
+ 8 files changed, 18 insertions(+), 12 deletions(-)
 
-> This patchs adds 'retry_timeout' sysfs attribute which limits the retry time
-> of each scsi command. Once scsi command retry time is longer than this timeout,
-> the command is treated as failure. 'retry_timeout' is set to '0' by default
-> which means no timeout set.
-> 
-> Signed-off-by: Eiichi Tsukata <eiichi.tsukata.xh@hitachi.com>
-> Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-> Cc: linux-scsi@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
-> ---
->  drivers/scsi/scsi_lib.c    | 22 +++++++++++++++++++++-
->  drivers/scsi/scsi_scan.c   |  1 +
->  drivers/scsi/scsi_sysfs.c  | 32 ++++++++++++++++++++++++++++++++
->  include/scsi/scsi.h        |  1 +
->  include/scsi/scsi_device.h |  1 +
->  5 files changed, 56 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 7bd7f0d..a9db69e 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -1492,6 +1492,23 @@ static void scsi_kill_request(struct request *req, struct request_queue *q)
->  	blk_complete_request(req);
->  }
->  
-> +/*
-> + * Check if scsi command excessed retry timeout
-> + */
-> +static int scsi_retry_timed_out(struct scsi_cmnd *cmd)
-> +{
-> +	unsigned int retry_timeout;
-> +
-> +	retry_timeout = cmd->device->retry_timeout;
-> +	if (retry_timeout &&
-> +	    time_before(cmd->jiffies_at_alloc + retry_timeout, jiffies)) {
-> +		scmd_printk(KERN_INFO, cmd, "retry timeout\n");
-> +		return 1;
-> +	}
-> +
-> +	return 0;
-> +}
-> +
->  static void scsi_softirq_done(struct request *rq)
->  {
->  	struct scsi_cmnd *cmd = rq->special;
-> @@ -1512,7 +1529,10 @@ static void scsi_softirq_done(struct request *rq)
->  			    wait_for/HZ);
->  		disposition = SUCCESS;
->  	}
-> -			
-> +
-> +	if (scsi_retry_timed_out(cmd))
-> +		disposition = FAILED;
-> +
->  	scsi_log_completion(cmd, disposition);
->  
->  	switch (disposition) {
-> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-> index 307a811..4ab044a 100644
-> --- a/drivers/scsi/scsi_scan.c
-> +++ b/drivers/scsi/scsi_scan.c
-> @@ -925,6 +925,7 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
->  		sdev->no_dif = 1;
->  
->  	sdev->eh_timeout = SCSI_DEFAULT_EH_TIMEOUT;
-> +	sdev->retry_timeout = SCSI_DEFAULT_RETRY_TIMEOUT;
->  
->  	if (*bflags & BLIST_SKIP_VPD_PAGES)
->  		sdev->skip_vpd_pages = 1;
-> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-> index 8ff62c2..eaa2118 100644
-> --- a/drivers/scsi/scsi_sysfs.c
-> +++ b/drivers/scsi/scsi_sysfs.c
-> @@ -627,6 +627,37 @@ sdev_store_eh_timeout(struct device *dev, struct device_attribute *attr,
->  static DEVICE_ATTR(eh_timeout, S_IRUGO | S_IWUSR, sdev_show_eh_timeout, sdev_store_eh_timeout);
->  
->  static ssize_t
-> +sdev_show_retry_timeout(struct device *dev,
-> +			struct device_attribute *attr, char *buf)
-> +{
-> +	struct scsi_device *sdev;
-> +	sdev = to_scsi_device(dev);
-> +	return snprintf(buf, 20, "%u\n", sdev->retry_timeout / HZ);
-> +}
-> +
-> +static ssize_t
-> +sdev_store_retry_timeout(struct device *dev, struct device_attribute *attr,
-> +			 const char *buf, size_t count)
-> +{
-> +	struct scsi_device *sdev;
-> +	unsigned int retry_timeout;
-> +	int err;
-> +
-> +	if (!capable(CAP_SYS_ADMIN))
-> +		return -EACCES;
-> +
-> +	sdev = to_scsi_device(dev);
-> +	err = kstrtouint(buf, 10, &retry_timeout);
-> +	if (err)
-> +		return err;
-> +	sdev->retry_timeout = retry_timeout * HZ;
-> +
-> +	return count;
-> +}
-> +static DEVICE_ATTR(retry_timeout, S_IRUGO | S_IWUSR,
-> +		   sdev_show_retry_timeout, sdev_store_retry_timeout);
-> +
-> +static ssize_t
->  store_rescan_field (struct device *dev, struct device_attribute *attr,
->  		    const char *buf, size_t count)
->  {
-> @@ -797,6 +828,7 @@ static struct attribute *scsi_sdev_attrs[] = {
->  	&dev_attr_state.attr,
->  	&dev_attr_timeout.attr,
->  	&dev_attr_eh_timeout.attr,
-> +	&dev_attr_retry_timeout.attr,
->  	&dev_attr_iocounterbits.attr,
->  	&dev_attr_iorequest_cnt.attr,
->  	&dev_attr_iodone_cnt.attr,
-> diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
-> index 66d42ed..545408d 100644
-> --- a/include/scsi/scsi.h
-> +++ b/include/scsi/scsi.h
-> @@ -16,6 +16,7 @@ struct scsi_cmnd;
->  
->  enum scsi_timeouts {
->  	SCSI_DEFAULT_EH_TIMEOUT		= 10 * HZ,
-> +	SCSI_DEFAULT_RETRY_TIMEOUT	= 0,	/* disabled by default */
->  };
->  
->  /*
-> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-> index d65fbec..04fc5ee 100644
-> --- a/include/scsi/scsi_device.h
-> +++ b/include/scsi/scsi_device.h
-> @@ -121,6 +121,7 @@ struct scsi_device {
->  				 * pass settings from slave_alloc to scsi
->  				 * core. */
->  	unsigned int eh_timeout; /* Error handling timeout */
-> +	unsigned int retry_timeout;	/* Command retry timeout */
->  	unsigned writeable:1;
->  	unsigned removable:1;
->  	unsigned changed:1;	/* Data invalid due to media change */
+diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
+index 4f4230b79bb6..57ac93754841 100644
+--- a/block/scsi_ioctl.c
++++ b/block/scsi_ioctl.c
+@@ -691,6 +691,13 @@ int scsi_cmd_ioctl(struct request_queue *q, struct gendisk *bd_disk, fmode_t mod
+ }
+ EXPORT_SYMBOL(scsi_cmd_ioctl);
+ 
++int scsi_cmd_blk_ioctl(struct block_device *bd, fmode_t mode,
++		       unsigned int cmd, void __user *arg)
++{
++	return scsi_cmd_ioctl(bd->bd_disk->queue, bd->bd_disk, mode, cmd, arg);
++}
++EXPORT_SYMBOL(scsi_cmd_blk_ioctl);
++
+ static int __init blk_scsi_ioctl_init(void)
+ {
+ 	blk_set_cmd_filter_defaults(&blk_default_cmd_filter);
+diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
+index eb5ff0531cfb..54bad7584ea4 100644
+--- a/drivers/block/cciss.c
++++ b/drivers/block/cciss.c
+@@ -1652,7 +1652,7 @@ static int cciss_ioctl(struct block_device *bdev, fmode_t mode,
+ 			return status;
+ 		}
+ 
+-	/* scsi_cmd_ioctl handles these, below, though some are not */
++	/* scsi_cmd_blk_ioctl handles these, below, though some are not */
+ 	/* very meaningful for cciss.  SG_IO is the main one people want. */
+ 
+ 	case SG_GET_VERSION_NUM:
+@@ -1663,9 +1663,9 @@ static int cciss_ioctl(struct block_device *bdev, fmode_t mode,
+ 	case SG_EMULATED_HOST:
+ 	case SG_IO:
+ 	case SCSI_IOCTL_SEND_COMMAND:
+-		return scsi_cmd_ioctl(disk->queue, disk, mode, cmd, argp);
++		return scsi_cmd_blk_ioctl(bdev, mode, cmd, argp);
+ 
+-	/* scsi_cmd_ioctl would normally handle these, below, but */
++	/* scsi_cmd_blk_ioctl would normally handle these, below, but */
+ 	/* they aren't a good fit for cciss, as CD-ROMs are */
+ 	/* not supported, and we don't have any bus/target/lun */
+ 	/* which we present to the kernel. */
+diff --git a/drivers/block/ub.c b/drivers/block/ub.c
+index 0536b5b29adc..1c1533a59c4d 100644
+--- a/drivers/block/ub.c
++++ b/drivers/block/ub.c
+@@ -1727,10 +1727,9 @@ static int ub_bd_release(struct gendisk *disk, fmode_t mode)
+ static int ub_bd_ioctl(struct block_device *bdev, fmode_t mode,
+     unsigned int cmd, unsigned long arg)
+ {
+-	struct gendisk *disk = bdev->bd_disk;
+ 	void __user *usermem = (void __user *) arg;
+ 
+-	return scsi_cmd_ioctl(disk->queue, disk, mode, cmd, usermem);
++	return scsi_cmd_blk_ioctl(bdev, mode, cmd, usermem);
+ }
+ 
+ /*
+diff --git a/drivers/block/virtio_blk.c b/drivers/block/virtio_blk.c
+index 2138a7ae050c..4abfa80fdcd6 100644
+--- a/drivers/block/virtio_blk.c
++++ b/drivers/block/virtio_blk.c
+@@ -201,8 +201,8 @@ static int virtblk_ioctl(struct block_device *bdev, fmode_t mode,
+ 	if (!virtio_has_feature(vblk->vdev, VIRTIO_BLK_F_SCSI))
+ 		return -ENOTTY;
+ 
+-	return scsi_cmd_ioctl(disk->queue, disk, mode, cmd,
+-			      (void __user *)data);
++	return scsi_cmd_blk_ioctl(bdev, mode, cmd,
++				  (void __user *)data);
+ }
+ 
+ /* We provide getgeo only to please some old bootloader/partitioning tools */
+diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
+index e3749d0ba68b..5e7c72d3fe39 100644
+--- a/drivers/cdrom/cdrom.c
++++ b/drivers/cdrom/cdrom.c
+@@ -2684,12 +2684,11 @@ int cdrom_ioctl(struct cdrom_device_info *cdi, struct block_device *bdev,
+ {
+ 	void __user *argp = (void __user *)arg;
+ 	int ret;
+-	struct gendisk *disk = bdev->bd_disk;
+ 
+ 	/*
+ 	 * Try the generic SCSI command ioctl's first.
+ 	 */
+-	ret = scsi_cmd_ioctl(disk->queue, disk, mode, cmd, argp);
++	ret = scsi_cmd_blk_ioctl(bdev, mode, cmd, argp);
+ 	if (ret != -ENOTTY)
+ 		return ret;
+ 
+diff --git a/drivers/ide/ide-floppy_ioctl.c b/drivers/ide/ide-floppy_ioctl.c
+index 9c2288234dea..05f024caf4c9 100644
+--- a/drivers/ide/ide-floppy_ioctl.c
++++ b/drivers/ide/ide-floppy_ioctl.c
+@@ -287,8 +287,7 @@ int ide_floppy_ioctl(ide_drive_t *drive, struct block_device *bdev,
+ 	 * and CDROM_SEND_PACKET (legacy) ioctls
+ 	 */
+ 	if (cmd != CDROM_SEND_PACKET && cmd != SCSI_IOCTL_SEND_COMMAND)
+-		err = scsi_cmd_ioctl(bdev->bd_disk->queue, bdev->bd_disk,
+-				mode, cmd, argp);
++		err = scsi_cmd_blk_ioctl(bdev, mode, cmd, argp);
+ 
+ 	if (err == -ENOTTY)
+ 		err = generic_ide_ioctl(drive, bdev, cmd, arg);
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 18e6c59ed12d..654e2674e7c3 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -907,7 +907,7 @@ static int sd_ioctl(struct block_device *bdev, fmode_t mode,
+ 		case SCSI_IOCTL_GET_BUS_NUMBER:
+ 			return scsi_ioctl(sdp, cmd, p);
+ 		default:
+-			error = scsi_cmd_ioctl(disk->queue, disk, mode, cmd, p);
++			error = scsi_cmd_blk_ioctl(bdev, mode, cmd, p);
+ 			if (error != -ENOTTY)
+ 				return error;
+ 	}
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index cda62da68108..ba55e497f7dc 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -793,6 +793,8 @@ extern void blk_plug_device(struct request_queue *);
+ extern void blk_plug_device_unlocked(struct request_queue *);
+ extern int blk_remove_plug(struct request_queue *);
+ extern void blk_recount_segments(struct request_queue *, struct bio *);
++extern int scsi_cmd_blk_ioctl(struct block_device *, fmode_t,
++			      unsigned int, void __user *);
+ extern int scsi_cmd_ioctl(struct request_queue *, struct gendisk *, fmode_t,
+ 			  unsigned int, void __user *);
+ extern int sg_scsi_ioctl(struct request_queue *, struct gendisk *, fmode_t,
+-- 
+1.8.5.2
