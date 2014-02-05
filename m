@@ -1,87 +1,183 @@
-From: David Milburn <dmilburn@redhat.com>
-Subject: Re: [PATCH] bio_integrity_add_page: check for BIO_POOL_NONE before
- determining nr_vecs on slab
-Date: Wed, 05 Feb 2014 08:32:03 -0600
-Message-ID: <52F24B63.2040008@redhat.com>
-References: <1391013923-24072-1-git-send-email-dmilburn@redhat.com> <yq18utrzg3s.fsf@sermon.lab.mkp.net>
+From: James Bottomley <jbottomley@parallels.com>
+Subject: Re: [REVIEW PATCH] scsi: Add 'retry_timeout' to avoid infinite
+ command retry
+Date: Wed, 5 Feb 2014 16:55:49 +0000
+Message-ID: <1391619349.2213.11.camel@dabdike.int.hansenpartnership.com>
+References: <1391579254-26204-1-git-send-email-eiichi.tsukata.xh@hitachi.com>
+	 <1391579254-26204-2-git-send-email-eiichi.tsukata.xh@hitachi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq18utrzg3s.fsf@sermon.lab.mkp.net>
+In-Reply-To: <1391579254-26204-2-git-send-email-eiichi.tsukata.xh@hitachi.com>
+Content-Language: en-US
+Content-ID: <5EDC534DCF32254893D91A1F76CA58AB@sw.swsoft.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: axboe@kernel.dk, JBottomley@Parallels.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: "eiichi.tsukata.xh@hitachi.com" <eiichi.tsukata.xh@hitachi.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 02/03/2014 09:55 PM, Martin K. Petersen wrote:
->>>>>> "David" == David Milburn <dmilburn@redhat.com> writes:
->
-> David> When enabling DIX T10-DIF-TYPE1-IP protection you can hit the
-> David> bip_vec full condition which fails to attach the integrity
-> David> metadata and returns 0 back to bio_integrity_prep()
->
-> Looks like Kent accidentally broke this when he changed the bvec pool
-> setup.
->
-> David> - if (bip->bip_vcnt >= bvec_nr_vecs(bip->bip_slab)) {
-> David> + if (bip->bip_slab != BIO_POOL_NONE &&
-> David> +     bip->bip_vcnt >= bvec_nr_vecs(bip->bip_slab)) {
-> David>  		printk(KERN_ERR "%s: bip_vec full\n", __func__);
-> David>  		return 0;
-> David>  	}
->
-> We still need to check that the page will actually fit, though:
->
->
-> block: Fix nr_vecs for inline integrity vectors
->
-> Commit 9f060e2231ca changed the way we handle allocations for the
-> integrity vectors. When the vectors are inline there is no associated
-> slab and consequently bvec_nr_vecs() returns 0. Ensure that we check
-> against BIP_INLINE_VECS in that case.
->
-> Reported-by: David Milburn <dmilburn@redhat.com>
-> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
->
-> diff --git a/fs/bio-integrity.c b/fs/bio-integrity.c
-> index fc60b31453ee..6dea2b90b4d5 100644
-> --- a/fs/bio-integrity.c
-> +++ b/fs/bio-integrity.c
-> @@ -114,6 +114,14 @@ void bio_integrity_free(struct bio *bio)
->   }
->   EXPORT_SYMBOL(bio_integrity_free);
->
-> +static inline unsigned int bip_integrity_vecs(struct bio_integrity_payload *bip)
+On Wed, 2014-02-05 at 14:47 +0900, Eiichi Tsukata wrote:
+> Currently, scsi error handling in scsi_decide_disposition() tries to
+> unconditionally requeue scsi command when device keeps some error state.
+> This is because retryable errors are thought to be temporary and the scsi
+> device will soon recover from those errors. Normally, such retry policy is
+> appropriate because the device will soon recover from temporary error state.
+
+This description isn't very descriptive.  I presume you're talking about
+the ADD_TO_MLQUEUE return from scsi_decide_disposition()?
+
+> But there is no guarantee that device is able to recover from error state
+> immediately. Some hardware error may prevent device from recovering.
+> Therefore hardware error can results in infinite command retry loop.
+
+If you're talking about ADD_TO_MLQUEUE, I don't believe this is correct:
+there's a test in scsi_softirq_done() that makes sure the maximum
+lifetime is retries*timeout and fails the command after that.
+
+James
+
+
+> This patchs adds 'retry_timeout' sysfs attribute which limits the retry time
+> of each scsi command. Once scsi command retry time is longer than this timeout,
+> the command is treated as failure. 'retry_timeout' is set to '0' by default
+> which means no timeout set.
+> 
+> Signed-off-by: Eiichi Tsukata <eiichi.tsukata.xh@hitachi.com>
+> Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+> Cc: linux-scsi@vger.kernel.org
+> Cc: linux-kernel@vger.kernel.org
+> ---
+>  drivers/scsi/scsi_lib.c    | 22 +++++++++++++++++++++-
+>  drivers/scsi/scsi_scan.c   |  1 +
+>  drivers/scsi/scsi_sysfs.c  | 32 ++++++++++++++++++++++++++++++++
+>  include/scsi/scsi.h        |  1 +
+>  include/scsi/scsi_device.h |  1 +
+>  5 files changed, 56 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 7bd7f0d..a9db69e 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -1492,6 +1492,23 @@ static void scsi_kill_request(struct request *req, struct request_queue *q)
+>  	blk_complete_request(req);
+>  }
+>  
+> +/*
+> + * Check if scsi command excessed retry timeout
+> + */
+> +static int scsi_retry_timed_out(struct scsi_cmnd *cmd)
 > +{
-> +	if (bip->bip_slab == BIO_POOL_NONE)
-> +		return BIP_INLINE_VECS;
+> +	unsigned int retry_timeout;
 > +
-> +	return bvec_nr_vecs(bip->bip_slab);
+> +	retry_timeout = cmd->device->retry_timeout;
+> +	if (retry_timeout &&
+> +	    time_before(cmd->jiffies_at_alloc + retry_timeout, jiffies)) {
+> +		scmd_printk(KERN_INFO, cmd, "retry timeout\n");
+> +		return 1;
+> +	}
+> +
+> +	return 0;
 > +}
 > +
->   /**
->    * bio_integrity_add_page - Attach integrity metadata
->    * @bio:	bio to update
-> @@ -129,7 +137,7 @@ int bio_integrity_add_page(struct bio *bio, struct page *page,
->   	struct bio_integrity_payload *bip = bio->bi_integrity;
->   	struct bio_vec *iv;
->
-> -	if (bip->bip_vcnt >= bvec_nr_vecs(bip->bip_slab)) {
-> +	if (bip->bip_vcnt >= bip_integrity_vecs(bip)) {
->   		printk(KERN_ERR "%s: bip_vec full\n", __func__);
->   		return 0;
->   	}
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
->
-
-Hi Martin,
-
-Your patch has been tested successfully.
-
-Thanks for your help,
-David
+>  static void scsi_softirq_done(struct request *rq)
+>  {
+>  	struct scsi_cmnd *cmd = rq->special;
+> @@ -1512,7 +1529,10 @@ static void scsi_softirq_done(struct request *rq)
+>  			    wait_for/HZ);
+>  		disposition = SUCCESS;
+>  	}
+> -			
+> +
+> +	if (scsi_retry_timed_out(cmd))
+> +		disposition = FAILED;
+> +
+>  	scsi_log_completion(cmd, disposition);
+>  
+>  	switch (disposition) {
+> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+> index 307a811..4ab044a 100644
+> --- a/drivers/scsi/scsi_scan.c
+> +++ b/drivers/scsi/scsi_scan.c
+> @@ -925,6 +925,7 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
+>  		sdev->no_dif = 1;
+>  
+>  	sdev->eh_timeout = SCSI_DEFAULT_EH_TIMEOUT;
+> +	sdev->retry_timeout = SCSI_DEFAULT_RETRY_TIMEOUT;
+>  
+>  	if (*bflags & BLIST_SKIP_VPD_PAGES)
+>  		sdev->skip_vpd_pages = 1;
+> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+> index 8ff62c2..eaa2118 100644
+> --- a/drivers/scsi/scsi_sysfs.c
+> +++ b/drivers/scsi/scsi_sysfs.c
+> @@ -627,6 +627,37 @@ sdev_store_eh_timeout(struct device *dev, struct device_attribute *attr,
+>  static DEVICE_ATTR(eh_timeout, S_IRUGO | S_IWUSR, sdev_show_eh_timeout, sdev_store_eh_timeout);
+>  
+>  static ssize_t
+> +sdev_show_retry_timeout(struct device *dev,
+> +			struct device_attribute *attr, char *buf)
+> +{
+> +	struct scsi_device *sdev;
+> +	sdev = to_scsi_device(dev);
+> +	return snprintf(buf, 20, "%u\n", sdev->retry_timeout / HZ);
+> +}
+> +
+> +static ssize_t
+> +sdev_store_retry_timeout(struct device *dev, struct device_attribute *attr,
+> +			 const char *buf, size_t count)
+> +{
+> +	struct scsi_device *sdev;
+> +	unsigned int retry_timeout;
+> +	int err;
+> +
+> +	if (!capable(CAP_SYS_ADMIN))
+> +		return -EACCES;
+> +
+> +	sdev = to_scsi_device(dev);
+> +	err = kstrtouint(buf, 10, &retry_timeout);
+> +	if (err)
+> +		return err;
+> +	sdev->retry_timeout = retry_timeout * HZ;
+> +
+> +	return count;
+> +}
+> +static DEVICE_ATTR(retry_timeout, S_IRUGO | S_IWUSR,
+> +		   sdev_show_retry_timeout, sdev_store_retry_timeout);
+> +
+> +static ssize_t
+>  store_rescan_field (struct device *dev, struct device_attribute *attr,
+>  		    const char *buf, size_t count)
+>  {
+> @@ -797,6 +828,7 @@ static struct attribute *scsi_sdev_attrs[] = {
+>  	&dev_attr_state.attr,
+>  	&dev_attr_timeout.attr,
+>  	&dev_attr_eh_timeout.attr,
+> +	&dev_attr_retry_timeout.attr,
+>  	&dev_attr_iocounterbits.attr,
+>  	&dev_attr_iorequest_cnt.attr,
+>  	&dev_attr_iodone_cnt.attr,
+> diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
+> index 66d42ed..545408d 100644
+> --- a/include/scsi/scsi.h
+> +++ b/include/scsi/scsi.h
+> @@ -16,6 +16,7 @@ struct scsi_cmnd;
+>  
+>  enum scsi_timeouts {
+>  	SCSI_DEFAULT_EH_TIMEOUT		= 10 * HZ,
+> +	SCSI_DEFAULT_RETRY_TIMEOUT	= 0,	/* disabled by default */
+>  };
+>  
+>  /*
+> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+> index d65fbec..04fc5ee 100644
+> --- a/include/scsi/scsi_device.h
+> +++ b/include/scsi/scsi_device.h
+> @@ -121,6 +121,7 @@ struct scsi_device {
+>  				 * pass settings from slave_alloc to scsi
+>  				 * core. */
+>  	unsigned int eh_timeout; /* Error handling timeout */
+> +	unsigned int retry_timeout;	/* Command retry timeout */
+>  	unsigned writeable:1;
+>  	unsigned removable:1;
+>  	unsigned changed:1;	/* Data invalid due to media change */
