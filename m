@@ -1,79 +1,30 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 09/17] scsi: micro-optimize scsi_request_fn()
-Date: Wed, 05 Feb 2014 04:39:39 -0800
-Message-ID: <20140205124020.549353869@bombadil.infradead.org>
-References: <20140205123930.150608699@bombadil.infradead.org>
+Subject: [PATCH 00/15] A different approach for using blk-mq in the SCSI layer
+Date: Wed, 05 Feb 2014 04:41:18 -0800
+Message-ID: <20140205124118.332902571@bombadil.infradead.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:53176 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:53213 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751058AbaBEMkX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Feb 2014 07:40:23 -0500
-Content-Disposition: inline; filename=0009-scsi-micro-optimize-scsi_request_fn.patch
+	with ESMTP id S1751388AbaBEMlx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Feb 2014 07:41:53 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jens Axboe <axboe@kernel.dk>, James Bottomley <JBottomley@Parallels.com>, Nicholas Bellinger <nab@linux-iscsi.org>
-Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>, Tejun Heo <tj@kernel.org>, Mike Christie <michaelc@cs.wisc.edu>
+Cc: linux-scsi@vger.kernel.org
 
-SCSI devices may only be removed by calling scsi_remove_device().
-That function must invoke blk_cleanup_queue() before the final put
-of sdev->sdev_gendev. Since blk_cleanup_queue() waits for the
-block queue to drain and then tears it down, scsi_request_fn cannot
-be active anymore after blk_cleanup_queue() has returned and hence
-the get_device()/put_device() pair in scsi_request_fn is unnecessary.
+As explained in my earlier proposal I think we need to move to blk-mq
+for the SCSI midlayer quickly, and in a way that keeps all the existing
+queueing mechanisms working.  This series shows my current progress towards
+this goal.  It works under medium loads for iSCSI and virtio_scsi and I'm
+fairly happy with the code structure.  As seen I've tried to push as much
+work into the blk-mq core, and refactor the SCSI code so that it can be
+used for the old request based path and blk-mq as much as possible.
 
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-Acked-by: Tejun Heo <tj@kernel.org>
-Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
----
- drivers/scsi/scsi_lib.c |   14 +++-----------
- 1 file changed, 3 insertions(+), 11 deletions(-)
+There are still lots of limits mostly due to the lack of functionality in
+blk-mq, and I will try to address these in the blk-mq core mostly.
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 48ca1df..568ac24 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1553,16 +1553,14 @@ static void scsi_softirq_done(struct request *rq)
-  * Lock status: IO request lock assumed to be held when called.
-  */
- static void scsi_request_fn(struct request_queue *q)
-+	__releases(q->queue_lock)
-+	__acquires(q->queue_lock)
- {
- 	struct scsi_device *sdev = q->queuedata;
- 	struct Scsi_Host *shost;
- 	struct scsi_cmnd *cmd;
- 	struct request *req;
- 
--	if(!get_device(&sdev->sdev_gendev))
--		/* We must be tearing the block queue down already */
--		return;
--
- 	/*
- 	 * To start with, we keep looping until the queue is empty, or until
- 	 * the host is no longer able to accept any more requests.
-@@ -1651,7 +1649,7 @@ static void scsi_request_fn(struct request_queue *q)
- 			goto out_delay;
- 	}
- 
--	goto out;
-+	return;
- 
-  not_ready:
- 	spin_unlock_irq(shost->host_lock);
-@@ -1670,12 +1668,6 @@ static void scsi_request_fn(struct request_queue *q)
- out_delay:
- 	if (sdev->device_busy == 0)
- 		blk_delay_queue(q, SCSI_QUEUE_DELAY);
--out:
--	/* must be careful here...if we trigger the ->remove() function
--	 * we cannot be holding the q lock */
--	spin_unlock_irq(q->queue_lock);
--	put_device(&sdev->sdev_gendev);
--	spin_lock_irq(q->queue_lock);
- }
- 
- u64 scsi_calculate_bounce_limit(struct Scsi_Host *shost)
--- 
-1.7.10.4
+A git tree is also available at
 
+  git://git.infradead.org/users/hch/scsi.git#scsi-mq-wip
 
+This work was sponsored by the ION division of Fusion IO.
