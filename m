@@ -1,40 +1,50 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 05/15] blk-mq: initialize sg_reserved_size
-Date: Wed, 05 Feb 2014 04:41:23 -0800
-Message-ID: <20140205124153.058740666@bombadil.infradead.org>
-References: <20140205124118.332902571@bombadil.infradead.org>
+From: "Kathrin Schmid" <Kathrin78740@insurer.com>
+Subject: Dispo am Anschlag?  **  Jetzt sofort ab 4,5 Prozent und ohne *Schufa*
+ wieder Geld bekommen
+Date: Wed, 05 Feb 2014 08:58:18 -0500
+Message-ID: <20140205135819.36960@gmx.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:53226 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751426AbaBEMly (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Feb 2014 07:41:54 -0500
-Content-Disposition: inline; filename=0005-blk-mq-initialize-sg_reserved_size.patch
+Received: from mout.gmx.net ([74.208.4.201]:54085 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751744AbaBEN6U (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 5 Feb 2014 08:58:20 -0500
+Received: from mailout-us.gmx.com ([172.19.198.48]) by mrigmx.server.lan
+ (mrigmxus002) with ESMTP (Nemesis) id 0LbJNu-1VUsXW08y2-00ku4Z for
+ <linux-scsi@vger.kernel.org>; Wed, 05 Feb 2014 14:58:20 +0100
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>, James Bottomley <JBottomley@Parallels.com>, Nicholas Bellinger <nab@linux-iscsi.org>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-To behave the same way as the old request path.
+Guten Tag,
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- block/blk-mq.c |    2 ++
- 1 file changed, 2 insertions(+)
+wieso zahlen Sie f=C3=BCr einen Kredit so hohe Zinsen? Jetzt (noch) hab=
+en Sie bei ausl=C3=A4ndischen Instituten die besten Chancen.
+Also ideal f=C3=BCr jeden, der frisches Geld braucht und insbesondere f=
+=C3=BCr Selbst=C3=A4ndige.
+Die Zinsen liegen zwischen 4,5% und 5,5% Zinsen p.a., die Kredite haben=
+ Laufzeiten wahlweise von 5 - 10 Jahren, und falls mal notwendig, ist e=
+ine Tilgungsaussetzung f=C3=BCr maximal zwei Monate j=C3=A4hrlich probl=
+emlos machbar.
 
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 0b72927..d116282 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -1363,6 +1363,8 @@ struct request_queue *blk_mq_init_queue(struct blk_mq_reg *reg,
- 	q->mq_ops = reg->ops;
- 	q->queue_flags |= QUEUE_FLAG_MQ_DEFAULT;
- 
-+	q->sg_reserved_size = INT_MAX;
-+
- 	blk_queue_make_request(q, blk_mq_make_request);
- 	blk_queue_rq_timed_out(q, reg->ops->timeout);
- 	if (reg->timeout)
--- 
-1.7.10.4
+Wir brauchen keine Schufa und garantieren die Antragstellung v=C3=B6lli=
+g unb=C3=BCrokratisch.
+In 8 Tagen haben Sie meistens schon den fertigen Kreditvertrag in der T=
+asche.
 
+Nutzen Sie die Chance auf einen "billigen" Kredit:=20
+EUROSTANDARDCREDIT und erg=C3=A4nzen Sie ohne die F=C3=BCllzeichen:
+c^O^m
 
+Bis demn=C3=A4chst
+
+Clemens Hoffmann
+
+Mitarbeiter im support
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
