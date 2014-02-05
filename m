@@ -1,221 +1,54 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 06/17] scsi: add support for per-host cmd pools
-Date: Wed, 05 Feb 2014 04:39:36 -0800
-Message-ID: <20140205124019.946278511@bombadil.infradead.org>
+Subject: [PATCH 04/17] scsi: avoid useless free_list lock roundtrips
+Date: Wed, 05 Feb 2014 04:39:34 -0800
+Message-ID: <20140205124019.577883829@bombadil.infradead.org>
 References: <20140205123930.150608699@bombadil.infradead.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:53188 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:53194 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751246AbaBEMkY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Feb 2014 07:40:24 -0500
-Content-Disposition: inline; filename=0006-scsi-add-support-for-per-host-cmd-pools.patch
+	with ESMTP id S1751287AbaBEMkZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Feb 2014 07:40:25 -0500
+Content-Disposition: inline; filename=0004-scsi-avoid-useless-free_list-lock-roundtrips.patch
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jens Axboe <axboe@kernel.dk>, James Bottomley <JBottomley@Parallels.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 Cc: linux-scsi@vger.kernel.org
 
-This allows drivers to specify the size of their per-command private
-data in the host template and then get extra memory allocated for
-each command instead of needing another allocation in ->queuecommand.
-
-With the current SCSI code that already does multiple allocations for
-each command this probably doesn't make a big performance impact, but
-it allows to clean up the drivers, and prepare them for using the
-blk-mq infrastructure where the common allocation will make a difference.
+Avoid hitting the host-wide free_list lock unless we need to put a command
+back onto the freelist.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/scsi.c      |   92 ++++++++++++++++++++++++++++++++++++----------
- include/scsi/scsi_host.h |    7 ++++
- 2 files changed, 80 insertions(+), 19 deletions(-)
+ drivers/scsi/scsi.c |   13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 5347f7d..9291eb9 100644
+index ebcea6c..4139486 100644
 --- a/drivers/scsi/scsi.c
 +++ b/drivers/scsi/scsi.c
-@@ -328,46 +328,99 @@ void scsi_put_command(struct scsi_cmnd *cmd)
- }
- EXPORT_SYMBOL(scsi_put_command);
- 
--static struct scsi_host_cmd_pool *scsi_get_host_cmd_pool(gfp_t gfp_mask)
-+static struct scsi_host_cmd_pool *
-+scsi_find_host_cmd_pool(struct Scsi_Host *shost)
+@@ -320,15 +320,16 @@ void __scsi_put_command(struct Scsi_Host *shost, struct scsi_cmnd *cmd,
  {
-+	if (shost->hostt->cmd_size)
-+		return shost->hostt->cmd_pool;
-+	if (shost->unchecked_isa_dma)
-+		return &scsi_cmd_dma_pool;
-+	return &scsi_cmd_pool;
-+}
-+
-+static void
-+scsi_free_host_cmd_pool(struct scsi_host_cmd_pool *pool)
-+{
-+	kfree(pool->sense_name);
-+	kfree(pool->cmd_name);
-+	kfree(pool);
-+}
-+
-+static struct scsi_host_cmd_pool *
-+scsi_alloc_host_cmd_pool(struct Scsi_Host *shost)
-+{
-+	struct scsi_host_template *hostt = shost->hostt;
-+	struct scsi_host_cmd_pool *pool;
-+
-+	pool = kzalloc(sizeof(*pool), GFP_KERNEL);
-+	if (!pool)
-+		return NULL;
-+
-+	pool->cmd_name = kasprintf(GFP_KERNEL, "%s_cmd", hostt->name);
-+	pool->sense_name = kasprintf(GFP_KERNEL, "%s_sense", hostt->name);
-+	if (!pool->cmd_name || !pool->sense_name) {
-+		scsi_free_host_cmd_pool(pool);
-+		return NULL;
-+	}
-+
-+	pool->slab_flags = SLAB_HWCACHE_ALIGN;
-+	return pool;
-+}
-+
-+static struct scsi_host_cmd_pool *
-+scsi_get_host_cmd_pool(struct Scsi_Host *shost)
-+{
-+	struct scsi_host_template *hostt = shost->hostt;
- 	struct scsi_host_cmd_pool *retval = NULL, *pool;
-+	size_t cmd_size = sizeof(struct scsi_cmnd) + hostt->cmd_size;
-+
- 	/*
- 	 * Select a command slab for this host and create it if not
- 	 * yet existent.
- 	 */
- 	mutex_lock(&host_cmd_pool_mutex);
--	pool = (gfp_mask & __GFP_DMA) ? &scsi_cmd_dma_pool :
--		&scsi_cmd_pool;
-+	pool = scsi_find_host_cmd_pool(shost);
-+	if (!pool) {
-+		pool = scsi_alloc_host_cmd_pool(shost);
-+		if (!pool)
-+			goto out;
-+	}
-+
- 	if (!pool->users) {
--		pool->cmd_slab = kmem_cache_create(pool->cmd_name,
--						   sizeof(struct scsi_cmnd), 0,
-+		pool->cmd_slab = kmem_cache_create(pool->cmd_name, cmd_size, 0,
- 						   pool->slab_flags, NULL);
- 		if (!pool->cmd_slab)
--			goto fail;
-+			goto out_free_pool;
+ 	unsigned long flags;
  
- 		pool->sense_slab = kmem_cache_create(pool->sense_name,
- 						     SCSI_SENSE_BUFFERSIZE, 0,
- 						     pool->slab_flags, NULL);
--		if (!pool->sense_slab) {
--			kmem_cache_destroy(pool->cmd_slab);
--			goto fail;
--		}
-+		if (!pool->sense_slab)
-+			goto out_free_slab;
+-	/* changing locks here, don't need to restore the irq state */
+-	spin_lock_irqsave(&shost->free_list_lock, flags);
+ 	if (unlikely(list_empty(&shost->free_list))) {
+-		list_add(&cmd->list, &shost->free_list);
+-		cmd = NULL;
++		spin_lock_irqsave(&shost->free_list_lock, flags);
++		if (list_empty(&shost->free_list)) {
++			list_add(&cmd->list, &shost->free_list);
++			cmd = NULL;
++		}
++		spin_unlock_irqrestore(&shost->free_list_lock, flags);
  	}
+-	spin_unlock_irqrestore(&shost->free_list_lock, flags);
  
- 	pool->users++;
- 	retval = pool;
-- fail:
-+out:
- 	mutex_unlock(&host_cmd_pool_mutex);
- 	return retval;
-+
-+out_free_slab:
-+	kmem_cache_destroy(pool->cmd_slab);
-+out_free_pool:
-+	if (hostt->cmd_size)
-+		scsi_free_host_cmd_pool(pool);
-+	goto out;
- }
+-	if (likely(cmd != NULL))
++	if (cmd)
+ 		scsi_pool_free_command(shost->cmd_pool, cmd);
  
--static void scsi_put_host_cmd_pool(gfp_t gfp_mask)
-+static void scsi_put_host_cmd_pool(struct Scsi_Host *shost)
- {
-+	struct scsi_host_template *hostt = shost->hostt;
- 	struct scsi_host_cmd_pool *pool;
- 
- 	mutex_lock(&host_cmd_pool_mutex);
--	pool = (gfp_mask & __GFP_DMA) ? &scsi_cmd_dma_pool :
--		&scsi_cmd_pool;
-+	pool = scsi_find_host_cmd_pool(shost);
-+
- 	/*
- 	 * This may happen if a driver has a mismatched get and put
- 	 * of the command pool; the driver should be implicated in
-@@ -378,6 +431,8 @@ static void scsi_put_host_cmd_pool(gfp_t gfp_mask)
- 	if (!--pool->users) {
- 		kmem_cache_destroy(pool->cmd_slab);
- 		kmem_cache_destroy(pool->sense_slab);
-+		if (hostt->cmd_size)
-+			scsi_free_host_cmd_pool(pool);
- 	}
- 	mutex_unlock(&host_cmd_pool_mutex);
- }
-@@ -394,14 +449,13 @@ static void scsi_put_host_cmd_pool(gfp_t gfp_mask)
-  */
- int scsi_setup_command_freelist(struct Scsi_Host *shost)
- {
--	struct scsi_cmnd *cmd;
- 	const gfp_t gfp_mask = shost->unchecked_isa_dma ? GFP_DMA : GFP_KERNEL;
-+	struct scsi_cmnd *cmd;
- 
- 	spin_lock_init(&shost->free_list_lock);
- 	INIT_LIST_HEAD(&shost->free_list);
- 
--	shost->cmd_pool = scsi_get_host_cmd_pool(gfp_mask);
--
-+	shost->cmd_pool = scsi_get_host_cmd_pool(shost);
- 	if (!shost->cmd_pool)
- 		return -ENOMEM;
- 
-@@ -410,7 +464,7 @@ int scsi_setup_command_freelist(struct Scsi_Host *shost)
- 	 */
- 	cmd = scsi_host_alloc_command(shost, gfp_mask);
- 	if (!cmd) {
--		scsi_put_host_cmd_pool(gfp_mask);
-+		scsi_put_host_cmd_pool(shost);
- 		shost->cmd_pool = NULL;
- 		return -ENOMEM;
- 	}
-@@ -439,7 +493,7 @@ void scsi_destroy_command_freelist(struct Scsi_Host *shost)
- 		scsi_host_free_command(shost, cmd);
- 	}
- 	shost->cmd_pool = NULL;
--	scsi_put_host_cmd_pool(shost->unchecked_isa_dma ? GFP_DMA : GFP_KERNEL);
-+	scsi_put_host_cmd_pool(shost);
- }
- 
- #ifdef CONFIG_SCSI_LOGGING
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index 53075e5..94844fc 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -15,6 +15,7 @@ struct completion;
- struct module;
- struct scsi_cmnd;
- struct scsi_device;
-+struct scsi_host_cmd_pool;
- struct scsi_target;
- struct Scsi_Host;
- struct scsi_host_cmd_pool;
-@@ -524,6 +525,12 @@ struct scsi_host_template {
- 	 *   scsi_netlink.h
- 	 */
- 	u64 vendor_id;
-+
-+	/*
-+	 * Additional per-command data allocated for the driver.
-+	 */
-+	unsigned int cmd_size;
-+	struct scsi_host_cmd_pool *cmd_pool;
- };
- 
- /*
+ 	put_device(dev);
 -- 
 1.7.10.4
 
