@@ -1,81 +1,275 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 4/6] scsi: remove a useless get/put_device pair in scsi_request_fn
-Date: Thu, 06 Feb 2014 10:43:10 -0800
-Message-ID: <20140206184417.890824661@bombadil.infradead.org>
-References: <20140206184306.997538898@bombadil.infradead.org>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH][RFC] Add EVPD page 0x83 entries to sysfs
+Date: Thu, 06 Feb 2014 14:14:45 -0500
+Message-ID: <52F3DF25.10208@interlog.com>
+References: <1391691878-61265-1-git-send-email-hare@suse.de>
+Reply-To: dgilbert@interlog.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:58571 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753402AbaBFSoS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Feb 2014 13:44:18 -0500
-Content-Disposition: inline; filename=0004-scsi-remove-a-useless-get-put_device-pair-in-scsi_re.patch
+Received: from smtp.infotech.no ([82.134.31.41]:45356 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751297AbaBFTPW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 6 Feb 2014 14:15:22 -0500
+In-Reply-To: <1391691878-61265-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>, Tejun Heo <tj@kernel.org>, Mike Christie <michaelc@cs.wisc.edu>
+To: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org, Kay Sievers <kay@vrfy.org>, Jeremy Linton <jlinton@tributary.com>, Kai Makisara <kai.makisara@kolumbus.fi>
 
-From: Bart Van Assche <bvanassche@acm.org>
+On 14-02-06 08:04 AM, Hannes Reinecke wrote:
+> EVPD page 0x83 is used to uniquely identify the device.
+> So instead of having each and every program issue a separate
+> SG_IO call to retrieve this information it does make far more
+> sense to display it in sysfs.
+>
+> Cc: Jeremy Linton <jlinton@tributary.com>
+> Cc: Doug Gilbert <dgilbert@interlog.com>
 
-SCSI devices may only be removed by calling scsi_remove_device().
-That function must invoke blk_cleanup_queue() before the final put
-of sdev->sdev_gendev. Since blk_cleanup_queue() waits for the
-block queue to drain and then tears it down, scsi_request_fn cannot
-be active anymore after blk_cleanup_queue() has returned and hence
-the get_device()/put_device() pair in scsi_request_fn is unnecessary.
+See below.
 
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-Acked-by: Tejun Heo <tj@kernel.org>
-Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
----
- drivers/scsi/scsi_lib.c |   14 +++-----------
- 1 file changed, 3 insertions(+), 11 deletions(-)
+> Cc: Kai Makisara <kai.makisara@kolumbus.fi>
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> ---
+>   drivers/scsi/scsi_scan.c   |   3 +
+>   drivers/scsi/scsi_sysfs.c  | 166 ++++++++++++++++++++++++++++++++++++++++++++-
+>   include/scsi/scsi_device.h |   3 +
+>   3 files changed, 171 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+> index 307a811..073fb84 100644
+> --- a/drivers/scsi/scsi_scan.c
+> +++ b/drivers/scsi/scsi_scan.c
+> @@ -929,6 +929,9 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
+>   	if (*bflags & BLIST_SKIP_VPD_PAGES)
+>   		sdev->skip_vpd_pages = 1;
+>
+> +	if (sdev->scsi_level >= SCSI_3)
+> +		scsi_attach_vpd_ident(sdev);
+> +
+>   	transport_configure_device(&sdev->sdev_gendev);
+>
+>   	if (sdev->host->hostt->slave_configure) {
+> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+> index 9117d0b..ffe7cb5 100644
+> --- a/drivers/scsi/scsi_sysfs.c
+> +++ b/drivers/scsi/scsi_sysfs.c
+> @@ -725,8 +725,170 @@ show_queue_type_field(struct device *dev, struct device_attribute *attr,
+>
+>   static DEVICE_ATTR(queue_type, S_IRUGO, show_queue_type_field, NULL);
+>
+> +void scsi_attach_vpd_ident(struct scsi_device *sdev)
+> +{
+> +	int ret;
+> +	int vpd_len = 255;
+> +	unsigned char *buffer;
+> +retry:
+> +	buffer = kmalloc(vpd_len, GFP_KERNEL);
+> +	if (buffer) {
+> +		ret = scsi_get_vpd_page(sdev, 0x83, buffer, vpd_len);
+> +		if (ret == 0) {
+> +			vpd_len = (buffer[2] << 8) + buffer[3];
+> +			if (vpd_len > 255) {
+> +				kfree(buffer);
+> +				goto retry;
+> +			}
+> +			sdev->vpd_ident_len = vpd_len;
+> +			sdev->vpd_ident = buffer;
+> +		}
+> +	}
+> +}
+> +
+> +#define SCSI_VPD_ASSOC_lun 0x0
+> +#define SCSI_VPD_ASSOC_port 0x10
+> +#define SCSI_VPD_ASSOC_target 0x20
+> +
+> +#define SCSI_VPD_DESIG_vendor 0x0
+> +#define SCSI_VPD_DESIG_t10 0x1
+> +#define SCSI_VPD_DESIG_eui 0x2
+> +#define SCSI_VPD_DESIG_naa 0x3
+> +#define SCSI_VPD_DESIG_relport 0x4
+> +#define SCSI_VPD_DESIG_tpgrp 0x5
+> +#define SCSI_VPD_DESIG_lugrp 0x6
+> +#define SCSI_VPD_DESIG_md5 0x7
+> +#define SCSI_VPD_DESIG_scsi_name 0x8
+> +
+> +int scsi_parse_vpd_ident(struct scsi_device *sdev,
+> +			 int assoc, int desig, char *buf)
+> +{
+> +	unsigned char *d;
+> +	int len = 0;
+> +
+> +	if (!sdev->vpd_ident)
+> +		return -EINVAL;
+> +
+> +	d = sdev->vpd_ident + 4;
+> +	while (d < sdev->vpd_ident + sdev->vpd_ident_len) {
+> +		if ((d[1] & 0x30) == assoc &&
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 500178c..7d35678 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1558,16 +1558,14 @@ static void scsi_softirq_done(struct request *rq)
-  * Lock status: IO request lock assumed to be held when called.
-  */
- static void scsi_request_fn(struct request_queue *q)
-+	__releases(q->queue_lock)
-+	__acquires(q->queue_lock)
- {
- 	struct scsi_device *sdev = q->queuedata;
- 	struct Scsi_Host *shost;
- 	struct scsi_cmnd *cmd;
- 	struct request *req;
- 
--	if(!get_device(&sdev->sdev_gendev))
--		/* We must be tearing the block queue down already */
--		return;
--
- 	/*
- 	 * To start with, we keep looping until the queue is empty, or until
- 	 * the host is no longer able to accept any more requests.
-@@ -1656,7 +1654,7 @@ static void scsi_request_fn(struct request_queue *q)
- 			goto out_delay;
- 	}
- 
--	goto out;
-+	return;
- 
-  not_ready:
- 	spin_unlock_irq(shost->host_lock);
-@@ -1675,12 +1673,6 @@ static void scsi_request_fn(struct request_queue *q)
- out_delay:
- 	if (sdev->device_busy == 0)
- 		blk_delay_queue(q, SCSI_QUEUE_DELAY);
--out:
--	/* must be careful here...if we trigger the ->remove() function
--	 * we cannot be holding the q lock */
--	spin_unlock_irq(q->queue_lock);
--	put_device(&sdev->sdev_gendev);
--	spin_lock_irq(q->queue_lock);
- }
- 
- u64 scsi_calculate_bounce_limit(struct Scsi_Host *shost)
--- 
-1.7.10.4
+Wouldn't it be clearer if:
+                 if (((d[1] & 0x30) >> 4) == assoc &&
 
+and the lun, port and target defines were changed to agree
+with T10?
+
+> +		    (d[1] & 0xf) == desig) {
+> +			switch (d[1] & 0xf) {
+> +			case SCSI_VPD_DESIG_eui:
+> +			case SCSI_VPD_DESIG_naa:
+> +			case SCSI_VPD_DESIG_md5:
+> +				switch (d[3]) {
+> +				case 8:
+> +					len += sprintf(buf + len,
+> +						      "%8phN\n", d + 4);
+> +					break;
+> +				case 12:
+> +					len += sprintf(buf + len,
+> +						      "%12phN\n", d + 4);
+> +					break;
+> +				case 16:
+> +					len += sprintf(buf + len,
+> +						      "%16phN\n", d + 4);
+> +					break;
+> +				}
+> +				break;
+> +			case SCSI_VPD_DESIG_relport:
+> +			case SCSI_VPD_DESIG_tpgrp:
+> +			case SCSI_VPD_DESIG_lugrp:
+> +				len += sprintf(buf + len, "%d\n",
+> +					      (int)(d[6] << 8) + d[7]);
+> +				break;
+> +			case SCSI_VPD_DESIG_vendor:
+> +			case SCSI_VPD_DESIG_t10:
+> +			case SCSI_VPD_DESIG_scsi_name:
+> +				len += snprintf(buf + len, d[3] + 2, "%s\n",
+> +						d + 4);
+> +				break;
+> +			}
+> +		}
+> +		d += d[3] + 4;
+> +	}
+> +
+> +	return len ? len : -EINVAL;
+> +}
+> +
+> +#define sdev_evpd_ident(assoc,desig)				\
+> +static ssize_t							\
+> +sdev_show_evpd_ident_##assoc##_##desig (struct device *dev,		\
+> +					struct device_attribute *attr,	\
+> +					char * buf)			\
+> +{									\
+> +	struct scsi_device *sdev = to_scsi_device(dev);			\
+> +	return scsi_parse_vpd_ident(sdev, SCSI_VPD_ASSOC_##assoc,	\
+> +				    SCSI_VPD_DESIG_##desig, buf);	\
+> +}
+> +
+> +#define sdev_evpd_attr(assoc, desig)					\
+> +	sdev_evpd_ident(assoc, desig)					\
+> +static DEVICE_ATTR(ident_##assoc##_##desig, S_IRUGO,			\
+> +		   sdev_show_evpd_ident_##assoc##_##desig, NULL);
+> +
+
+You macros will have trouble picking up UAS and SOP port info
+stuff hiding behind the designator code 9h (Protocol specific
+port identifier). That may not matter.
+
+Doug Gilbert
+
+> +sdev_evpd_attr(lun, vendor);
+> +sdev_evpd_attr(lun, t10);
+> +sdev_evpd_attr(lun, eui);
+> +sdev_evpd_attr(lun, naa);
+> +sdev_evpd_attr(lun, lugrp);
+> +sdev_evpd_attr(lun, md5);
+> +sdev_evpd_attr(lun, scsi_name);
+> +sdev_evpd_attr(port, relport);
+> +sdev_evpd_attr(port, tpgrp);
+> +sdev_evpd_attr(port, eui);
+> +sdev_evpd_attr(port, naa);
+> +sdev_evpd_attr(port, scsi_name);
+> +sdev_evpd_attr(target, eui);
+> +sdev_evpd_attr(target, naa);
+> +sdev_evpd_attr(target, scsi_name);
+> +
+> +#define sdev_evpd_test_and_add_attr(sdev, assoc, desig, valid)	\
+> +	if (test_bit(SCSI_VPD_DESIG_##desig, (valid))) \
+> +		device_create_file(&(sdev)->sdev_gendev, \
+> +				   &dev_attr_ident_##assoc##_##desig)
+> +
+> +static void scsi_sysfs_filter_vpd_ident(struct scsi_device *sdev)
+> +{
+> +	unsigned char *d;
+> +	unsigned long desig = 0, assoc = 0;
+> +
+> +	if (!sdev->vpd_ident)
+> +		return;
+> +
+> +	d = sdev->vpd_ident + 4;
+> +	while (d < sdev->vpd_ident + sdev->vpd_ident_len) {
+> +		set_bit((d[1] >> 4) & 3, &assoc);
+> +		set_bit(d[1] & 0xf, &desig);
+> +		d += d[3] + 4;
+> +	}
+> +	if (test_bit(SCSI_VPD_ASSOC_lun, &assoc)) {
+> +		sdev_evpd_test_and_add_attr(sdev, lun, vendor, &desig);
+> +		sdev_evpd_test_and_add_attr(sdev, lun, t10, &desig);
+> +		sdev_evpd_test_and_add_attr(sdev, lun, eui, &desig);
+> +		sdev_evpd_test_and_add_attr(sdev, lun, naa, &desig);
+> +		sdev_evpd_test_and_add_attr(sdev, lun, lugrp, &desig);
+> +		sdev_evpd_test_and_add_attr(sdev, lun, md5, &desig);
+> +		sdev_evpd_test_and_add_attr(sdev, lun, scsi_name, &desig);
+> +	}
+> +	if (test_bit(SCSI_VPD_ASSOC_port, &assoc)) {
+> +		sdev_evpd_test_and_add_attr(sdev, port, eui, &desig);
+> +		sdev_evpd_test_and_add_attr(sdev, port, naa, &desig);
+> +		sdev_evpd_test_and_add_attr(sdev, port, relport, &desig);
+> +		sdev_evpd_test_and_add_attr(sdev, port, tpgrp, &desig);
+> +		sdev_evpd_test_and_add_attr(sdev, port, scsi_name, &desig);
+> +	}
+> +	if (test_bit(SCSI_VPD_ASSOC_target, &assoc)) {
+> +		sdev_evpd_test_and_add_attr(sdev, target, eui, &desig);
+> +		sdev_evpd_test_and_add_attr(sdev, target, naa, &desig);
+> +		sdev_evpd_test_and_add_attr(sdev, target, scsi_name, &desig);
+> +	}
+> +}
+> +
+>   static ssize_t
+> -show_iostat_counterbits(struct device *dev, struct device_attribute *attr, 				char *buf)
+> +show_iostat_counterbits(struct device *dev, struct device_attribute *attr,
+> +			char *buf)
+>   {
+>   	return snprintf(buf, 20, "%d\n", (int)sizeof(atomic_t) * 8);
+>   }
+> @@ -1003,6 +1165,8 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
+>   	transport_add_device(&sdev->sdev_gendev);
+>   	sdev->is_visible = 1;
+>
+> +	scsi_sysfs_filter_vpd_ident(sdev);
+> +
+>   	/* create queue files, which may be writable, depending on the host */
+>   	if (sdev->host->hostt->change_queue_depth) {
+>   		error = device_create_file(&sdev->sdev_gendev,
+> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+> index d65fbec..ea2a64f 100644
+> --- a/include/scsi/scsi_device.h
+> +++ b/include/scsi/scsi_device.h
+> @@ -113,6 +113,8 @@ struct scsi_device {
+>   	const char * vendor;		/* [back_compat] point into 'inquiry' ... */
+>   	const char * model;		/* ... after scan; point to static string */
+>   	const char * rev;		/* ... "nullnullnullnull" before scan */
+> +	unsigned char vpd_ident_len;
+> +	unsigned char *vpd_ident;
+>   	unsigned char current_tag;	/* current tag */
+>   	struct scsi_target      *sdev_target;   /* used only for single_lun */
+>
+> @@ -309,6 +311,7 @@ extern int scsi_add_device(struct Scsi_Host *host, uint channel,
+>   extern int scsi_register_device_handler(struct scsi_device_handler *scsi_dh);
+>   extern void scsi_remove_device(struct scsi_device *);
+>   extern int scsi_unregister_device_handler(struct scsi_device_handler *scsi_dh);
+> +void scsi_attach_vpd_ident(struct scsi_device *sdev);
+>
+>   extern int scsi_device_get(struct scsi_device *);
+>   extern void scsi_device_put(struct scsi_device *);
+>
 
