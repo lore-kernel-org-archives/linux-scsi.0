@@ -1,45 +1,52 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 13/17] scsi: push host_lock down into
- scsi_{host,target}_queue_ready
-Date: Thu, 06 Feb 2014 10:41:16 -0800
-Message-ID: <1391712076.22335.13.camel@dabdike>
-References: <20140205123930.150608699@bombadil.infradead.org>
-		 <20140205124021.286457268@bombadil.infradead.org>
-	 <1391705819.22335.8.camel@dabdike> <52F3C21F.70409@acm.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH 1/6] scsi: avoid useless free_list lock roundtrips
+Date: Thu, 06 Feb 2014 10:43:07 -0800
+Message-ID: <20140206184417.414170526@bombadil.infradead.org>
+References: <20140206184306.997538898@bombadil.infradead.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:49001 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753254AbaBFSlS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Feb 2014 13:41:18 -0500
-In-Reply-To: <52F3C21F.70409@acm.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:58561 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756535AbaBFSoR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Feb 2014 13:44:17 -0500
+Content-Disposition: inline; filename=0001-scsi-avoid-useless-free_list-lock-roundtrips.patch
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Thu, 2014-02-06 at 18:10 +0100, Bart Van Assche wrote:
-> On 02/06/14 17:56, James Bottomley wrote:
-> > Could you benchmark this lot and show what the actual improvement is
-> > just for this series, if any?
-> 
-> I see a performance improvement of 12% with the SRP protocol for the
-> SCSI core optimizations alone (I am still busy measuring the impact of
-> the blk-mq conversion but I can already see that it is really
-> significant). Please note that the performance impact depends a lot on
-> the workload (number of LUNs per SCSI host e.g.) so maybe the workload I
-> chose is not doing justice to Christoph's work. And it's also important
-> to mention that with the workload I ran I was saturating the target
-> system CPU (a quad core Intel i5). In other words, results might be
-> better with a more powerful target system.
+Avoid hitting the host-wide free_list lock unless we need to put a command
+back onto the freelist.
 
-On what?  Just the patches I indicated or the whole series?  My specific
-concern is that swapping a critical section for atomics may not buy us
-anything even on x86 and may slow down non-x86.  That's the bit I'd like
-benchmarks to explore.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/scsi/scsi.c |   11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
-James
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index d8afec8..fb86479 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -320,13 +320,14 @@ void __scsi_put_command(struct Scsi_Host *shost, struct scsi_cmnd *cmd,
+ {
+ 	unsigned long flags;
+ 
+-	/* changing locks here, don't need to restore the irq state */
+-	spin_lock_irqsave(&shost->free_list_lock, flags);
+ 	if (unlikely(list_empty(&shost->free_list))) {
+-		list_add(&cmd->list, &shost->free_list);
+-		cmd = NULL;
++		spin_lock_irqsave(&shost->free_list_lock, flags);
++		if (list_empty(&shost->free_list)) {
++			list_add(&cmd->list, &shost->free_list);
++			cmd = NULL;
++		}
++		spin_unlock_irqrestore(&shost->free_list_lock, flags);
+ 	}
+-	spin_unlock_irqrestore(&shost->free_list_lock, flags);
+ 
+ 	if (likely(cmd != NULL))
+ 		scsi_pool_free_command(shost->cmd_pool, cmd);
+-- 
+1.7.10.4
 
 
