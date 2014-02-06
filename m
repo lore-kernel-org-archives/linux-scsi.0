@@ -1,87 +1,71 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 2/4] scsi,
- libsas: introduce scmd_dbg() to quiet false positive "timeout"
- messages
-Date: Thu, 06 Feb 2014 12:23:07 -0800
-Message-ID: <20140206202307.5227.44096.stgit@viggo.jf.intel.com>
+Subject: [PATCH 3/4] isci: fix needless ata reset escalations
+Date: Thu, 06 Feb 2014 12:23:15 -0800
+Message-ID: <20140206202315.5227.86986.stgit@viggo.jf.intel.com>
 References: <20140206202151.5227.12582.stgit@viggo.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:47644 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754306AbaBFUXL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 6 Feb 2014 15:23:11 -0500
+Return-path: <stable-owner@vger.kernel.org>
 In-Reply-To: <20140206202151.5227.12582.stgit@viggo.jf.intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: stable-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: dave.jiang@intel.com, lukasz.dorau@intel.com, Jack Wang <jack_wang@usish.com>, Sangeetha Gnanasekaran <Sangeetha.Gnanasekaran@pmcs.com>, artur.paszkiewicz@intel.com, JBottomley@Parallels.com, Nikith Ganigarakoppal <Nikith.Ganigarakoppal@pmcs.com>, Anand Kumar Santhanam <AnandKumar.Santhanam@pmcs.com>, Xun Ni <xun.ni@intel.com>, Nelson Cheng <nelson.cheng@intel.com>
+Cc: dave.jiang@intel.com, lukasz.dorau@intel.com, stable@vger.kernel.org, artur.paszkiewicz@intel.com, JBottomley@Parallels.com, Xun Ni <xun.ni@intel.com>, Nelson Cheng <nelson.cheng@intel.com>
+List-Id: linux-scsi@vger.kernel.org
 
-libsas sometimes short circuits timeouts to force commands into error
-recovery.  It is misleading to log that the command timed-out in
-sas_scsi_timed_out() when in fact it was just queued for error handling.
-It's also redundant in the case of a true timeout as libata eh will
-detect and report timeouts via it's AC_ERR_TIMEOUT facility.
+isci is needlessly tying libata's hands by returning
+SAM_STAT_CHECK_CONDITION to some ata errors.  Instead, prefer
+SAS_PROTO_RESPONSE to let libata (via sas_ata_task_done()) disposition
+the device-to-host fis.
 
-Given that some environments consider "timeout" errors to be indicative
-of impending device failure demote the sas_scsi_timed_out() timeout
-message to be disabled by default.  This parallels ata_scsi_timed_out().
+For example isci is triggering an HSM Violation where AHCI is showing a
+simple media error for the same bus condition:
 
-Cc: Jack Wang <jack_wang@usish.com>
-Cc: Anand Kumar Santhanam <AnandKumar.Santhanam@pmcs.com>
-Cc: Sangeetha Gnanasekaran <Sangeetha.Gnanasekaran@pmcs.com>
-Cc: Nikith Ganigarakoppal <Nikith.Ganigarakoppal@pmcs.com>
+isci:
+ata7.00: failed command: READ VERIFY SECTOR(S)
+ata7.00: cmd 40/00:01:00:00:00/00:00:00:00:00/e0 tag 0
+         res 01/04:00:00:00:00/00:00:00:00:00/e0 Emask 0x3 (HSM violation)
+
+ahci:
+ata6.00: failed command: READ VERIFY SECTOR(S)
+ata6.00: cmd 40/00:01:00:00:00/00:00:00:00:00/e0 tag 0
+         res 51/40:01:00:00:00/00:00:00:00:00/e0 Emask 0x9 (media error)
+
+Note that the isci response matches this from sas_ata_task_done():
+	/* We saw a SAS error. Send a vague error. */
+	[..]
+	dev->sata_dev.fis[3] = 0x04; /* status err */
+	dev->sata_dev.fis[2] = ATA_ERR;
+
+The end effect is that isci is needlessly triggering hard resets when
+they are not necessary.
+
+Cc: <stable@vger.kernel.org>
 Reported-by: Xun Ni <xun.ni@intel.com>
 Tested-by: Nelson Cheng <nelson.cheng@intel.com>
 Acked-by: Lukasz Dorau <lukasz.dorau@intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/libsas/sas_scsi_host.c |    2 +-
- include/scsi/scsi_device.h          |   12 ++++++++++++
- 2 files changed, 13 insertions(+), 1 deletions(-)
+ drivers/scsi/isci/request.c |    8 ++------
+ 1 files changed, 2 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index da3aee17faa5..25d0f127424d 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -862,7 +862,7 @@ out:
+diff --git a/drivers/scsi/isci/request.c b/drivers/scsi/isci/request.c
+index 99d2930b18c8..56e38096f0c4 100644
+--- a/drivers/scsi/isci/request.c
++++ b/drivers/scsi/isci/request.c
+@@ -2723,13 +2723,9 @@ static void isci_process_stp_response(struct sas_task *task, struct dev_to_host_
+ 	memcpy(resp->ending_fis, fis, sizeof(*fis));
+ 	ts->buf_valid_size = sizeof(*resp);
  
- enum blk_eh_timer_return sas_scsi_timed_out(struct scsi_cmnd *cmd)
- {
--	scmd_printk(KERN_DEBUG, cmd, "command %p timed out\n", cmd);
-+	scmd_dbg(cmd, "command %p timed out\n", cmd);
+-	/* If the device fault bit is set in the status register, then
+-	 * set the sense data and return.
+-	 */
+-	if (fis->status & ATA_DF)
++	/* If an error is flagged let libata decode the fis */
++	if (ac_err_mask(fis->status))
+ 		ts->stat = SAS_PROTO_RESPONSE;
+-	else if (fis->status & ATA_ERR)
+-		ts->stat = SAM_STAT_CHECK_CONDITION;
+ 	else
+ 		ts->stat = SAM_STAT_GOOD;
  
- 	return BLK_EH_NOT_HANDLED;
- }
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index d65fbec2533d..067ac9f1607c 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -235,12 +235,24 @@ struct scsi_dh_data {
- #define sdev_printk(prefix, sdev, fmt, a...)	\
- 	dev_printk(prefix, &(sdev)->sdev_gendev, fmt, ##a)
- 
-+#define sdev_dbg(sdev, fmt, a...) \
-+	dev_dbg(&(sdev)->sdev_gendev, fmt, ##a)
-+
- #define scmd_printk(prefix, scmd, fmt, a...)				\
-         (scmd)->request->rq_disk ?					\
- 	sdev_printk(prefix, (scmd)->device, "[%s] " fmt,		\
- 		    (scmd)->request->rq_disk->disk_name, ##a) :		\
- 	sdev_printk(prefix, (scmd)->device, fmt, ##a)
- 
-+#define scmd_dbg(scmd, fmt, a...)					   \
-+        do {								   \
-+		if ((scmd)->request->rq_disk)				   \
-+			sdev_dbg((scmd)->device, "[%s] " fmt,		   \
-+				 (scmd)->request->rq_disk->disk_name, ##a);\
-+		else							   \
-+			sdev_dbg((scmd)->device, fmt, ##a);		   \
-+	} while (0)
-+
- enum scsi_target_state {
- 	STARGET_CREATED = 1,
- 	STARGET_RUNNING,
-
