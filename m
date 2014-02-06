@@ -1,52 +1,19 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 1/6] scsi: avoid useless free_list lock roundtrips
-Date: Thu, 06 Feb 2014 10:43:07 -0800
-Message-ID: <20140206184417.414170526@bombadil.infradead.org>
-References: <20140206184306.997538898@bombadil.infradead.org>
+Subject: [PATCH 0/6] first batch of SCSI data path micro-optimizations
+Date: Thu, 06 Feb 2014 10:43:06 -0800
+Message-ID: <20140206184306.997538898@bombadil.infradead.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:58561 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:58559 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756535AbaBFSoR (ORCPT
+	with ESMTP id S1756533AbaBFSoR (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Feb 2014 13:44:17 -0500
-Content-Disposition: inline; filename=0001-scsi-avoid-useless-free_list-lock-roundtrips.patch
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: linux-scsi@vger.kernel.org
 
-Avoid hitting the host-wide free_list lock unless we need to put a command
-back onto the freelist.
+This series contains a few optimizations for the SCSI data I/O path.
+These are the patches acceptable to James as-is from the previous series.
+No separate benchmarking has been performed for these patches.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/scsi/scsi.c |   11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index d8afec8..fb86479 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -320,13 +320,14 @@ void __scsi_put_command(struct Scsi_Host *shost, struct scsi_cmnd *cmd,
- {
- 	unsigned long flags;
- 
--	/* changing locks here, don't need to restore the irq state */
--	spin_lock_irqsave(&shost->free_list_lock, flags);
- 	if (unlikely(list_empty(&shost->free_list))) {
--		list_add(&cmd->list, &shost->free_list);
--		cmd = NULL;
-+		spin_lock_irqsave(&shost->free_list_lock, flags);
-+		if (list_empty(&shost->free_list)) {
-+			list_add(&cmd->list, &shost->free_list);
-+			cmd = NULL;
-+		}
-+		spin_unlock_irqrestore(&shost->free_list_lock, flags);
- 	}
--	spin_unlock_irqrestore(&shost->free_list_lock, flags);
- 
- 	if (likely(cmd != NULL))
- 		scsi_pool_free_command(shost->cmd_pool, cmd);
--- 
-1.7.10.4
-
-
+This work was sponsored by the ION division of Fusion IO.
