@@ -1,36 +1,34 @@
-From: Muthu Kumar <muthu.lkml@gmail.com>
-Subject: Re: [PATCH 02/15] blk-mq: support at_head inserations for blk_execute_rq
-Date: Thu, 6 Feb 2014 09:05:10 -0800
-Message-ID: <CAFR8uedQ2kHP6caUQewSixtRbOw7vWjyaJtK66ENbOVUJLXAag@mail.gmail.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 02/15] blk-mq: support at_head inserations for
+ blk_execute_rq
+Date: Thu, 6 Feb 2014 09:10:23 -0800
+Message-ID: <20140206171023.GA28625@infradead.org>
 References: <20140205124118.332902571@bombadil.infradead.org>
-	<20140205124152.477413324@bombadil.infradead.org>
-	<CAFR8uedLQyX7aFsuOs4UFYE=sYUOG+jpPMOQzqOW4f_RQGsf2g@mail.gmail.com>
-	<20140206161710.GB16916@infradead.org>
+ <20140205124152.477413324@bombadil.infradead.org>
+ <CAFR8uedLQyX7aFsuOs4UFYE=sYUOG+jpPMOQzqOW4f_RQGsf2g@mail.gmail.com>
+ <20140206161710.GB16916@infradead.org>
+ <CAFR8uedQ2kHP6caUQewSixtRbOw7vWjyaJtK66ENbOVUJLXAag@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pd0-f171.google.com ([209.85.192.171]:36127 "EHLO
-	mail-pd0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754359AbaBFRFL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Feb 2014 12:05:11 -0500
-Received: by mail-pd0-f171.google.com with SMTP id g10so1941874pdj.2
-        for <linux-scsi@vger.kernel.org>; Thu, 06 Feb 2014 09:05:11 -0800 (PST)
-In-Reply-To: <20140206161710.GB16916@infradead.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:58211 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752571AbaBFRKb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Feb 2014 12:10:31 -0500
+Content-Disposition: inline
+In-Reply-To: <CAFR8uedQ2kHP6caUQewSixtRbOw7vWjyaJtK66ENbOVUJLXAag@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Jens Axboe <axboe@kernel.dk>, James Bottomley <JBottomley@parallels.com>, Nicholas Bellinger <nab@linux-iscsi.org>, linux-scsi <linux-scsi@vger.kernel.org>, Bart Van Assche <bvanassche@acm.org>
+To: Muthu Kumar <muthu.lkml@gmail.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>, James Bottomley <JBottomley@parallels.com>, Nicholas Bellinger <nab@linux-iscsi.org>, linux-scsi <linux-scsi@vger.kernel.org>, Bart Van Assche <bvanassche@acm.org>
 
-On Thu, Feb 6, 2014 at 8:17 AM, Christoph Hellwig <hch@infradead.org> wrote:
-> On Wed, Feb 05, 2014 at 06:27:38PM -0800, Muthu Kumar wrote:
->> Currently its not used by any drivers. Are we sure we don't need it
->> public? If sure, please remove the EXPORT_SYMBOL() for it.
->
-> Drivers shouldn't use it, it's a low-level interface.  As mentioned in
-> the intro this is not quite a coherent series yet, but I'll post the
-> blk-mq patches in a slightly nicer form agains Jens' tree soon.
->
+On Thu, Feb 06, 2014 at 09:05:10AM -0800, Muthu Kumar wrote:
+> Alright then.. I will wait for that patch. BTW, is the scsi-mq work
+> done on your git tree only or anyone else has their own git tree
 
-Alright then.. I will wait for that patch. BTW, is the scsi-mq work
-done on your git tree only or anyone else has their own git tree
-(Bart? NAB?)?
+For now I put out a git tree for those who don't like large patch
+series.  Happy to take patches for it, but we'll have to see who
+has the energy to keep the tree in the long run.
+
+That being said I hope to feed patches into the upstream trees as
+quickly as possible and thus only keep a small stack of patches around.
