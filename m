@@ -1,275 +1,95 @@
 From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH][RFC] Add EVPD page 0x83 entries to sysfs
-Date: Thu, 06 Feb 2014 14:14:45 -0500
-Message-ID: <52F3DF25.10208@interlog.com>
-References: <1391691878-61265-1-git-send-email-hare@suse.de>
+Subject: Re: [PATCH] st: Do not rewind for SG_IO
+Date: Thu, 06 Feb 2014 14:21:17 -0500
+Message-ID: <52F3E0AD.9070301@interlog.com>
+References: <1391157974-17512-1-git-send-email-hare@suse.de>	 <52EBD2BB.8020705@tributary.com> <52ECFF7B.7000401@suse.de>	 <60EE5D9C-A799-4C8D-8962-DB9D7C1C8414@kolumbus.fi>	 <52EE2F2D.1010300@suse.de> <52EFACA4.6060001@tributary.com>	 <52EFB06C.8010101@suse.de> <52EFB0E7.3000504@tributary.com>	 <CAPXgP13dn+VGpu0OLHatUvP4TRDp2YEgCXYB837ReADZTWg_NA@mail.gmail.com>	 <52F010F9.5090305@tributary.com> <52F389A9.808@suse.de>	 <yq1eh3gv0l9.fsf@sermon.lab.mkp.net> <52F38D78.2070002@suse.de>	 <yq161osuz90.fsf@sermon.lab.mkp.net> <1391697515.2213.74.camel@dabdike.int.hansenpartnership.com> <52F3A686.3040107@suse.de>
 Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:45356 "EHLO smtp.infotech.no"
+Received: from smtp.infotech.no ([82.134.31.41]:45424 "EHLO smtp.infotech.no"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751297AbaBFTPW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 6 Feb 2014 14:15:22 -0500
-In-Reply-To: <1391691878-61265-1-git-send-email-hare@suse.de>
+	id S1755214AbaBFTVu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 6 Feb 2014 14:21:50 -0500
+In-Reply-To: <52F3A686.3040107@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org, Kay Sievers <kay@vrfy.org>, Jeremy Linton <jlinton@tributary.com>, Kai Makisara <kai.makisara@kolumbus.fi>
+To: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jlinton@tributary.com" <jlinton@tributary.com>, "kay@vrfy.org" <kay@vrfy.org>, "kai.makisara@kolumbus.fi" <kai.makisara@kolumbus.fi>
 
-On 14-02-06 08:04 AM, Hannes Reinecke wrote:
-> EVPD page 0x83 is used to uniquely identify the device.
-> So instead of having each and every program issue a separate
-> SG_IO call to retrieve this information it does make far more
-> sense to display it in sysfs.
+On 14-02-06 10:13 AM, Hannes Reinecke wrote:
+> On 02/06/2014 03:38 PM, James Bottomley wrote:
+>> On Thu, 2014-02-06 at 08:50 -0500, Martin K. Petersen wrote:
+>>>>>>>> "Hannes" == Hannes Reinecke <hare@suse.de> writes:
+>>>
+>>>>> My patch provides both the original VPD 0x83 and 0x80 bits as well as
+>>>>> a handle identical to /sbin/scsi_id.
+>>>>>
+>>> Hannes> Bah, don't do that.  That should better be handled by udev
+>>> Hannes> rules.  I've got a set of patches moving from scsi_id to sg_inq,
+>>> Hannes> which can be easily adapted to using sysfs directly.
+>>>
+>>> I just want to get out of the "userland sending random SCSI commands"
+>>> business. That is a world of pain right now.
+>>
+>> Well, in the words of Bill Clinton "I feel your pain".  However, I need
+>> to know we won't pick up that same whole world of pain in the kernel.
+>> Remember it's not just SCSI devices, it's also ATA devices and
+>> potentially other block devices ... then there's blkid and all the weird
+>> things it does. Then there's transport identifiers for multi-path
+>> reservations and so on.
+>>
+> blkid is actually not so bad, _if_ it would distinguish between
+> 'metadata not found' and 'I/O error during metadata read'.
+> I made a patch which hopefully should find it's way upstream.
 >
-> Cc: Jeremy Linton <jlinton@tributary.com>
-> Cc: Doug Gilbert <dgilbert@interlog.com>
-
-See below.
-
-> Cc: Kai Makisara <kai.makisara@kolumbus.fi>
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> ---
->   drivers/scsi/scsi_scan.c   |   3 +
->   drivers/scsi/scsi_sysfs.c  | 166 ++++++++++++++++++++++++++++++++++++++++++++-
->   include/scsi/scsi_device.h |   3 +
->   3 files changed, 171 insertions(+), 1 deletion(-)
+> And blkid just issues plain READ commands, so _this_ behaviour won't
+> change ...
 >
-> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-> index 307a811..073fb84 100644
-> --- a/drivers/scsi/scsi_scan.c
-> +++ b/drivers/scsi/scsi_scan.c
-> @@ -929,6 +929,9 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
->   	if (*bflags & BLIST_SKIP_VPD_PAGES)
->   		sdev->skip_vpd_pages = 1;
+>> Convince me this path won't have us shifting a whole bunch of weird from
+>> user space to the kernel without any reduction in the weird factor.
+>> Remember the point is not what can we do for all the nicely behaved
+>> SCSI-3 devices, it's what do we do for everything.
+>>
+> Well, first and foremost the patch should be limited to SCSI-3 (and
+> later devices). So we'd be insulated from the most obvious crap.
 >
-> +	if (sdev->scsi_level >= SCSI_3)
-> +		scsi_attach_vpd_ident(sdev);
-> +
->   	transport_configure_device(&sdev->sdev_gendev);
+> So that leaves only devices which claim to be SCSI-3 or something,
+> but still keel over when asked for VPD pages.
+> However, this type of devices will fail already, as 'sd.c' is
+> already asking for all sorts of VPD pages.
+> Which leaves only non-Disk devices, but those tend to have a better
+> SCSI implementation as you can't make quick bucks with, say, as SCSI
+> Enclosure device.
 >
->   	if (sdev->host->hostt->slave_configure) {
-> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-> index 9117d0b..ffe7cb5 100644
-> --- a/drivers/scsi/scsi_sysfs.c
-> +++ b/drivers/scsi/scsi_sysfs.c
-> @@ -725,8 +725,170 @@ show_queue_type_field(struct device *dev, struct device_attribute *attr,
+> But the prime motivator behind this patch is that we can be
+> reasonably sure the device will answer at all.
+> When retrieving the EVPD pages from userspace you always have the
+> problem that the device might have gone away or being unresponsive
+> by the time you get around sending the SG_IO call.
+> So you always have these stuck user-space processes asking for
+> information which _had_ been present at one point. In particular
+> udev is prone for this; anyone who ever came across the message
 >
->   static DEVICE_ATTR(queue_type, S_IRUGO, show_queue_type_field, NULL);
+> udevd[]: worker unexpectedly returned with status 0x0100
 >
-> +void scsi_attach_vpd_ident(struct scsi_device *sdev)
-> +{
-> +	int ret;
-> +	int vpd_len = 255;
-> +	unsigned char *buffer;
-> +retry:
-> +	buffer = kmalloc(vpd_len, GFP_KERNEL);
-> +	if (buffer) {
-> +		ret = scsi_get_vpd_page(sdev, 0x83, buffer, vpd_len);
-> +		if (ret == 0) {
-> +			vpd_len = (buffer[2] << 8) + buffer[3];
-> +			if (vpd_len > 255) {
-> +				kfree(buffer);
-> +				goto retry;
-> +			}
-> +			sdev->vpd_ident_len = vpd_len;
-> +			sdev->vpd_ident = buffer;
-> +		}
-> +	}
-> +}
-> +
-> +#define SCSI_VPD_ASSOC_lun 0x0
-> +#define SCSI_VPD_ASSOC_port 0x10
-> +#define SCSI_VPD_ASSOC_target 0x20
-> +
-> +#define SCSI_VPD_DESIG_vendor 0x0
-> +#define SCSI_VPD_DESIG_t10 0x1
-> +#define SCSI_VPD_DESIG_eui 0x2
-> +#define SCSI_VPD_DESIG_naa 0x3
-> +#define SCSI_VPD_DESIG_relport 0x4
-> +#define SCSI_VPD_DESIG_tpgrp 0x5
-> +#define SCSI_VPD_DESIG_lugrp 0x6
-> +#define SCSI_VPD_DESIG_md5 0x7
-> +#define SCSI_VPD_DESIG_scsi_name 0x8
-> +
-> +int scsi_parse_vpd_ident(struct scsi_device *sdev,
-> +			 int assoc, int desig, char *buf)
-> +{
-> +	unsigned char *d;
-> +	int len = 0;
-> +
-> +	if (!sdev->vpd_ident)
-> +		return -EINVAL;
-> +
-> +	d = sdev->vpd_ident + 4;
-> +	while (d < sdev->vpd_ident + sdev->vpd_ident_len) {
-> +		if ((d[1] & 0x30) == assoc &&
+> knows what I'm talking about ...
 
-Wouldn't it be clearer if:
-                 if (((d[1] & 0x30) >> 4) == assoc &&
-
-and the lun, port and target defines were changed to agree
-with T10?
-
-> +		    (d[1] & 0xf) == desig) {
-> +			switch (d[1] & 0xf) {
-> +			case SCSI_VPD_DESIG_eui:
-> +			case SCSI_VPD_DESIG_naa:
-> +			case SCSI_VPD_DESIG_md5:
-> +				switch (d[3]) {
-> +				case 8:
-> +					len += sprintf(buf + len,
-> +						      "%8phN\n", d + 4);
-> +					break;
-> +				case 12:
-> +					len += sprintf(buf + len,
-> +						      "%12phN\n", d + 4);
-> +					break;
-> +				case 16:
-> +					len += sprintf(buf + len,
-> +						      "%16phN\n", d + 4);
-> +					break;
-> +				}
-> +				break;
-> +			case SCSI_VPD_DESIG_relport:
-> +			case SCSI_VPD_DESIG_tpgrp:
-> +			case SCSI_VPD_DESIG_lugrp:
-> +				len += sprintf(buf + len, "%d\n",
-> +					      (int)(d[6] << 8) + d[7]);
-> +				break;
-> +			case SCSI_VPD_DESIG_vendor:
-> +			case SCSI_VPD_DESIG_t10:
-> +			case SCSI_VPD_DESIG_scsi_name:
-> +				len += snprintf(buf + len, d[3] + 2, "%s\n",
-> +						d + 4);
-> +				break;
-> +			}
-> +		}
-> +		d += d[3] + 4;
-> +	}
-> +
-> +	return len ? len : -EINVAL;
-> +}
-> +
-> +#define sdev_evpd_ident(assoc,desig)				\
-> +static ssize_t							\
-> +sdev_show_evpd_ident_##assoc##_##desig (struct device *dev,		\
-> +					struct device_attribute *attr,	\
-> +					char * buf)			\
-> +{									\
-> +	struct scsi_device *sdev = to_scsi_device(dev);			\
-> +	return scsi_parse_vpd_ident(sdev, SCSI_VPD_ASSOC_##assoc,	\
-> +				    SCSI_VPD_DESIG_##desig, buf);	\
-> +}
-> +
-> +#define sdev_evpd_attr(assoc, desig)					\
-> +	sdev_evpd_ident(assoc, desig)					\
-> +static DEVICE_ATTR(ident_##assoc##_##desig, S_IRUGO,			\
-> +		   sdev_show_evpd_ident_##assoc##_##desig, NULL);
-> +
-
-You macros will have trouble picking up UAS and SOP port info
-stuff hiding behind the designator code 9h (Protocol specific
-port identifier). That may not matter.
+Running a small array with an external power supply which
+is insufficient for the task of spinning up more than 1 or
+2 disks is interesting to watch :-)
 
 Doug Gilbert
 
-> +sdev_evpd_attr(lun, vendor);
-> +sdev_evpd_attr(lun, t10);
-> +sdev_evpd_attr(lun, eui);
-> +sdev_evpd_attr(lun, naa);
-> +sdev_evpd_attr(lun, lugrp);
-> +sdev_evpd_attr(lun, md5);
-> +sdev_evpd_attr(lun, scsi_name);
-> +sdev_evpd_attr(port, relport);
-> +sdev_evpd_attr(port, tpgrp);
-> +sdev_evpd_attr(port, eui);
-> +sdev_evpd_attr(port, naa);
-> +sdev_evpd_attr(port, scsi_name);
-> +sdev_evpd_attr(target, eui);
-> +sdev_evpd_attr(target, naa);
-> +sdev_evpd_attr(target, scsi_name);
-> +
-> +#define sdev_evpd_test_and_add_attr(sdev, assoc, desig, valid)	\
-> +	if (test_bit(SCSI_VPD_DESIG_##desig, (valid))) \
-> +		device_create_file(&(sdev)->sdev_gendev, \
-> +				   &dev_attr_ident_##assoc##_##desig)
-> +
-> +static void scsi_sysfs_filter_vpd_ident(struct scsi_device *sdev)
-> +{
-> +	unsigned char *d;
-> +	unsigned long desig = 0, assoc = 0;
-> +
-> +	if (!sdev->vpd_ident)
-> +		return;
-> +
-> +	d = sdev->vpd_ident + 4;
-> +	while (d < sdev->vpd_ident + sdev->vpd_ident_len) {
-> +		set_bit((d[1] >> 4) & 3, &assoc);
-> +		set_bit(d[1] & 0xf, &desig);
-> +		d += d[3] + 4;
-> +	}
-> +	if (test_bit(SCSI_VPD_ASSOC_lun, &assoc)) {
-> +		sdev_evpd_test_and_add_attr(sdev, lun, vendor, &desig);
-> +		sdev_evpd_test_and_add_attr(sdev, lun, t10, &desig);
-> +		sdev_evpd_test_and_add_attr(sdev, lun, eui, &desig);
-> +		sdev_evpd_test_and_add_attr(sdev, lun, naa, &desig);
-> +		sdev_evpd_test_and_add_attr(sdev, lun, lugrp, &desig);
-> +		sdev_evpd_test_and_add_attr(sdev, lun, md5, &desig);
-> +		sdev_evpd_test_and_add_attr(sdev, lun, scsi_name, &desig);
-> +	}
-> +	if (test_bit(SCSI_VPD_ASSOC_port, &assoc)) {
-> +		sdev_evpd_test_and_add_attr(sdev, port, eui, &desig);
-> +		sdev_evpd_test_and_add_attr(sdev, port, naa, &desig);
-> +		sdev_evpd_test_and_add_attr(sdev, port, relport, &desig);
-> +		sdev_evpd_test_and_add_attr(sdev, port, tpgrp, &desig);
-> +		sdev_evpd_test_and_add_attr(sdev, port, scsi_name, &desig);
-> +	}
-> +	if (test_bit(SCSI_VPD_ASSOC_target, &assoc)) {
-> +		sdev_evpd_test_and_add_attr(sdev, target, eui, &desig);
-> +		sdev_evpd_test_and_add_attr(sdev, target, naa, &desig);
-> +		sdev_evpd_test_and_add_attr(sdev, target, scsi_name, &desig);
-> +	}
-> +}
-> +
->   static ssize_t
-> -show_iostat_counterbits(struct device *dev, struct device_attribute *attr, 				char *buf)
-> +show_iostat_counterbits(struct device *dev, struct device_attribute *attr,
-> +			char *buf)
->   {
->   	return snprintf(buf, 20, "%d\n", (int)sizeof(atomic_t) * 8);
->   }
-> @@ -1003,6 +1165,8 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
->   	transport_add_device(&sdev->sdev_gendev);
->   	sdev->is_visible = 1;
+> And the more udev events for a device you get, the higher the
+> likelyhood for this to happen is.
 >
-> +	scsi_sysfs_filter_vpd_ident(sdev);
-> +
->   	/* create queue files, which may be writable, depending on the host */
->   	if (sdev->host->hostt->change_queue_depth) {
->   		error = device_create_file(&sdev->sdev_gendev,
-> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-> index d65fbec..ea2a64f 100644
-> --- a/include/scsi/scsi_device.h
-> +++ b/include/scsi/scsi_device.h
-> @@ -113,6 +113,8 @@ struct scsi_device {
->   	const char * vendor;		/* [back_compat] point into 'inquiry' ... */
->   	const char * model;		/* ... after scan; point to static string */
->   	const char * rev;		/* ... "nullnullnullnull" before scan */
-> +	unsigned char vpd_ident_len;
-> +	unsigned char *vpd_ident;
->   	unsigned char current_tag;	/* current tag */
->   	struct scsi_target      *sdev_target;   /* used only for single_lun */
+> Plus I could re-use this information for my scsi_dh_alua patchset,
+> and for xcopy and friends we'll be needing it, too.
 >
-> @@ -309,6 +311,7 @@ extern int scsi_add_device(struct Scsi_Host *host, uint channel,
->   extern int scsi_register_device_handler(struct scsi_device_handler *scsi_dh);
->   extern void scsi_remove_device(struct scsi_device *);
->   extern int scsi_unregister_device_handler(struct scsi_device_handler *scsi_dh);
-> +void scsi_attach_vpd_ident(struct scsi_device *sdev);
+> Cheers,
 >
->   extern int scsi_device_get(struct scsi_device *);
->   extern void scsi_device_put(struct scsi_device *);
+> Hannes
 >
 
