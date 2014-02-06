@@ -1,34 +1,34 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 02/15] blk-mq: support at_head inserations for
- blk_execute_rq
-Date: Thu, 6 Feb 2014 09:10:23 -0800
-Message-ID: <20140206171023.GA28625@infradead.org>
-References: <20140205124118.332902571@bombadil.infradead.org>
- <20140205124152.477413324@bombadil.infradead.org>
- <CAFR8uedLQyX7aFsuOs4UFYE=sYUOG+jpPMOQzqOW4f_RQGsf2g@mail.gmail.com>
- <20140206161710.GB16916@infradead.org>
- <CAFR8uedQ2kHP6caUQewSixtRbOw7vWjyaJtK66ENbOVUJLXAag@mail.gmail.com>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH 13/17] scsi: push host_lock down into scsi_{host,target}_queue_ready
+Date: Thu, 06 Feb 2014 18:10:55 +0100
+Message-ID: <52F3C21F.70409@acm.org>
+References: <20140205123930.150608699@bombadil.infradead.org>	 <20140205124021.286457268@bombadil.infradead.org> <1391705819.22335.8.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:58211 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752571AbaBFRKb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Feb 2014 12:10:31 -0500
-Content-Disposition: inline
-In-Reply-To: <CAFR8uedQ2kHP6caUQewSixtRbOw7vWjyaJtK66ENbOVUJLXAag@mail.gmail.com>
+Received: from smtp03.stone-is.org ([87.238.162.65]:36671 "EHLO
+	smtpgw.stone-is.be" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756363AbaBFRK7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Feb 2014 12:10:59 -0500
+In-Reply-To: <1391705819.22335.8.camel@dabdike>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Muthu Kumar <muthu.lkml@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>, James Bottomley <JBottomley@parallels.com>, Nicholas Bellinger <nab@linux-iscsi.org>, linux-scsi <linux-scsi@vger.kernel.org>, Bart Van Assche <bvanassche@acm.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, Christoph Hellwig <hch@infradead.org>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org
 
-On Thu, Feb 06, 2014 at 09:05:10AM -0800, Muthu Kumar wrote:
-> Alright then.. I will wait for that patch. BTW, is the scsi-mq work
-> done on your git tree only or anyone else has their own git tree
+On 02/06/14 17:56, James Bottomley wrote:
+> Could you benchmark this lot and show what the actual improvement is
+> just for this series, if any?
 
-For now I put out a git tree for those who don't like large patch
-series.  Happy to take patches for it, but we'll have to see who
-has the energy to keep the tree in the long run.
+I see a performance improvement of 12% with the SRP protocol for the
+SCSI core optimizations alone (I am still busy measuring the impact of
+the blk-mq conversion but I can already see that it is really
+significant). Please note that the performance impact depends a lot on
+the workload (number of LUNs per SCSI host e.g.) so maybe the workload I
+chose is not doing justice to Christoph's work. And it's also important
+to mention that with the workload I ran I was saturating the target
+system CPU (a quad core Intel i5). In other words, results might be
+better with a more powerful target system.
 
-That being said I hope to feed patches into the upstream trees as
-quickly as possible and thus only keep a small stack of patches around.
+Bart.
