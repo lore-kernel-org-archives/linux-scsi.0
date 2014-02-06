@@ -1,64 +1,218 @@
-From: Muthu Kumar <muthu.lkml@gmail.com>
-Subject: Re: [PATCH 02/15] blk-mq: support at_head inserations for blk_execute_rq
-Date: Wed, 5 Feb 2014 18:27:38 -0800
-Message-ID: <CAFR8uedLQyX7aFsuOs4UFYE=sYUOG+jpPMOQzqOW4f_RQGsf2g@mail.gmail.com>
-References: <20140205124118.332902571@bombadil.infradead.org>
-	<20140205124152.477413324@bombadil.infradead.org>
+From: Eiichi Tsukata <eiichi.tsukata.xh@hitachi.com>
+Subject: Re: [REVIEW PATCH] scsi: Add 'retry_timeout' to avoid infinite command
+ retry
+Date: Thu, 06 Feb 2014 13:11:10 +0900
+Message-ID: <52F30B5E.8020202@hitachi.com>
+References: <1391579254-26204-1-git-send-email-eiichi.tsukata.xh@hitachi.com>	 <1391579254-26204-2-git-send-email-eiichi.tsukata.xh@hitachi.com> <1391619349.2213.11.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:51802 "EHLO
-	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754293AbaBFC1j (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Feb 2014 21:27:39 -0500
-Received: by mail-pa0-f51.google.com with SMTP id ld10so1111975pab.10
-        for <linux-scsi@vger.kernel.org>; Wed, 05 Feb 2014 18:27:38 -0800 (PST)
-In-Reply-To: <20140205124152.477413324@bombadil.infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1391619349.2213.11.camel@dabdike.int.hansenpartnership.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <jbottomley@parallels.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, yrl.pp-manager.tt@hitachi.com
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Jens Axboe <axboe@kernel.dk>, James Bottomley <JBottomley@parallels.com>, Nicholas Bellinger <nab@linux-iscsi.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-> diff --git a/block/blk-mq.h b/block/blk-mq.h
-> index b771080..88a2366 100644
-> --- a/block/blk-mq.h
-> +++ b/block/blk-mq.h
-> @@ -30,6 +30,8 @@ void blk_mq_init_flush(struct request_queue *q);
->  void blk_mq_drain_queue(struct request_queue *q);
->  void blk_mq_free_queue(struct request_queue *q);
->  void blk_mq_rq_init(struct blk_mq_hw_ctx *hctx, struct request *rq);
-> +void blk_mq_insert_request(struct request_queue *, struct request *,
-> +               bool, bool);
->
->  /*
->   * CPU hotplug helpers
-> diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
-> index c1684ec..8cfdca6 100644
-> --- a/include/linux/blk-mq.h
-> +++ b/include/linux/blk-mq.h
-> @@ -119,7 +119,6 @@ void blk_mq_init_commands(struct request_queue *, void (*init)(void *data, struc
->
->  void blk_mq_flush_plug_list(struct blk_plug *plug, bool from_schedule);
->
-> -void blk_mq_insert_request(struct request_queue *, struct request *, bool);
->  void blk_mq_run_queues(struct request_queue *q, bool async);
->  void blk_mq_free_request(struct request *rq);
->  bool blk_mq_can_queue(struct blk_mq_hw_ctx *);
-> --
-> 1.7.10.4
+(2014/02/06 1:55), James Bottomley wrote:
+> On Wed, 2014-02-05 at 14:47 +0900, Eiichi Tsukata wrote:
+>> Currently, scsi error handling in scsi_decide_disposition() tries to
+>> unconditionally requeue scsi command when device keeps some error state.
+>> This is because retryable errors are thought to be temporary and the scsi
+>> device will soon recover from those errors. Normally, such retry policy is
+>> appropriate because the device will soon recover from temporary error state.
+> This description isn't very descriptive.  I presume you're talking about
+> the ADD_TO_MLQUEUE return from scsi_decide_disposition()?
 >
 
-Currently its not used by any drivers. Are we sure we don't need it
-public? If sure, please remove the EXPORT_SYMBOL() for it.
+Thanks for reviewing, James.
 
-Rest looks good.
+I was talking about ADD_TO_MLQUEUE and NEEDS_RETRY.
+I'll fix the description.
 
-Regards,
-Muthu
+>> But there is no guarantee that device is able to recover from error state
+>> immediately. Some hardware error may prevent device from recovering.
+>> Therefore hardware error can results in infinite command retry loop.
+> If you're talking about ADD_TO_MLQUEUE, I don't believe this is correct:
+> there's a test in scsi_softirq_done() that makes sure the maximum
+> lifetime is retries*timeout and fails the command after that.
+
+I see, threre's already timeout in scsi_softirq_done() so my patch is not correct
+as you say.
+
+What I really want to do is to prevent command from retrying indefinitely
+in scsi_io_completion()
+with action == ACTION_RETRY || action == ACTION_DELAYED_RETRY.
+In v2 patch, I'll change the location of retry timeout check from scsi_softirq_done()
+to scsi_io_completion().
+
+Eiichi
 
 
+(2014/02/06 1:55), James Bottomley wrote:
+> On Wed, 2014-02-05 at 14:47 +0900, Eiichi Tsukata wrote:
+>> Currently, scsi error handling in scsi_decide_disposition() tries to
+>> unconditionally requeue scsi command when device keeps some error state.
+>> This is because retryable errors are thought to be temporary and the scsi
+>> device will soon recover from those errors. Normally, such retry policy is
+>> appropriate because the device will soon recover from temporary error state.
+> This description isn't very descriptive.  I presume you're talking about
+> the ADD_TO_MLQUEUE return from scsi_decide_disposition()?
 >
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> But there is no guarantee that device is able to recover from error state
+>> immediately. Some hardware error may prevent device from recovering.
+>> Therefore hardware error can results in infinite command retry loop.
+> If you're talking about ADD_TO_MLQUEUE, I don't believe this is correct:
+> there's a test in scsi_softirq_done() that makes sure the maximum
+> lifetime is retries*timeout and fails the command after that.
+>
+> James
+>
+>
+>> This patchs adds 'retry_timeout' sysfs attribute which limits the retry time
+>> of each scsi command. Once scsi command retry time is longer than this timeout,
+>> the command is treated as failure. 'retry_timeout' is set to '0' by default
+>> which means no timeout set.
+>>
+>> Signed-off-by: Eiichi Tsukata <eiichi.tsukata.xh@hitachi.com>
+>> Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+>> Cc: linux-scsi@vger.kernel.org
+>> Cc: linux-kernel@vger.kernel.org
+>> ---
+>>   drivers/scsi/scsi_lib.c    | 22 +++++++++++++++++++++-
+>>   drivers/scsi/scsi_scan.c   |  1 +
+>>   drivers/scsi/scsi_sysfs.c  | 32 ++++++++++++++++++++++++++++++++
+>>   include/scsi/scsi.h        |  1 +
+>>   include/scsi/scsi_device.h |  1 +
+>>   5 files changed, 56 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+>> index 7bd7f0d..a9db69e 100644
+>> --- a/drivers/scsi/scsi_lib.c
+>> +++ b/drivers/scsi/scsi_lib.c
+>> @@ -1492,6 +1492,23 @@ static void scsi_kill_request(struct request *req, struct request_queue *q)
+>>   	blk_complete_request(req);
+>>   }
+>>   
+>> +/*
+>> + * Check if scsi command excessed retry timeout
+>> + */
+>> +static int scsi_retry_timed_out(struct scsi_cmnd *cmd)
+>> +{
+>> +	unsigned int retry_timeout;
+>> +
+>> +	retry_timeout = cmd->device->retry_timeout;
+>> +	if (retry_timeout &&
+>> +	    time_before(cmd->jiffies_at_alloc + retry_timeout, jiffies)) {
+>> +		scmd_printk(KERN_INFO, cmd, "retry timeout\n");
+>> +		return 1;
+>> +	}
+>> +
+>> +	return 0;
+>> +}
+>> +
+>>   static void scsi_softirq_done(struct request *rq)
+>>   {
+>>   	struct scsi_cmnd *cmd = rq->special;
+>> @@ -1512,7 +1529,10 @@ static void scsi_softirq_done(struct request *rq)
+>>   			    wait_for/HZ);
+>>   		disposition = SUCCESS;
+>>   	}
+>> -			
+>> +
+>> +	if (scsi_retry_timed_out(cmd))
+>> +		disposition = FAILED;
+>> +
+>>   	scsi_log_completion(cmd, disposition);
+>>   
+>>   	switch (disposition) {
+>> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+>> index 307a811..4ab044a 100644
+>> --- a/drivers/scsi/scsi_scan.c
+>> +++ b/drivers/scsi/scsi_scan.c
+>> @@ -925,6 +925,7 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
+>>   		sdev->no_dif = 1;
+>>   
+>>   	sdev->eh_timeout = SCSI_DEFAULT_EH_TIMEOUT;
+>> +	sdev->retry_timeout = SCSI_DEFAULT_RETRY_TIMEOUT;
+>>   
+>>   	if (*bflags & BLIST_SKIP_VPD_PAGES)
+>>   		sdev->skip_vpd_pages = 1;
+>> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+>> index 8ff62c2..eaa2118 100644
+>> --- a/drivers/scsi/scsi_sysfs.c
+>> +++ b/drivers/scsi/scsi_sysfs.c
+>> @@ -627,6 +627,37 @@ sdev_store_eh_timeout(struct device *dev, struct device_attribute *attr,
+>>   static DEVICE_ATTR(eh_timeout, S_IRUGO | S_IWUSR, sdev_show_eh_timeout, sdev_store_eh_timeout);
+>>   
+>>   static ssize_t
+>> +sdev_show_retry_timeout(struct device *dev,
+>> +			struct device_attribute *attr, char *buf)
+>> +{
+>> +	struct scsi_device *sdev;
+>> +	sdev = to_scsi_device(dev);
+>> +	return snprintf(buf, 20, "%u\n", sdev->retry_timeout / HZ);
+>> +}
+>> +
+>> +static ssize_t
+>> +sdev_store_retry_timeout(struct device *dev, struct device_attribute *attr,
+>> +			 const char *buf, size_t count)
+>> +{
+>> +	struct scsi_device *sdev;
+>> +	unsigned int retry_timeout;
+>> +	int err;
+>> +
+>> +	if (!capable(CAP_SYS_ADMIN))
+>> +		return -EACCES;
+>> +
+>> +	sdev = to_scsi_device(dev);
+>> +	err = kstrtouint(buf, 10, &retry_timeout);
+>> +	if (err)
+>> +		return err;
+>> +	sdev->retry_timeout = retry_timeout * HZ;
+>> +
+>> +	return count;
+>> +}
+>> +static DEVICE_ATTR(retry_timeout, S_IRUGO | S_IWUSR,
+>> +		   sdev_show_retry_timeout, sdev_store_retry_timeout);
+>> +
+>> +static ssize_t
+>>   store_rescan_field (struct device *dev, struct device_attribute *attr,
+>>   		    const char *buf, size_t count)
+>>   {
+>> @@ -797,6 +828,7 @@ static struct attribute *scsi_sdev_attrs[] = {
+>>   	&dev_attr_state.attr,
+>>   	&dev_attr_timeout.attr,
+>>   	&dev_attr_eh_timeout.attr,
+>> +	&dev_attr_retry_timeout.attr,
+>>   	&dev_attr_iocounterbits.attr,
+>>   	&dev_attr_iorequest_cnt.attr,
+>>   	&dev_attr_iodone_cnt.attr,
+>> diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
+>> index 66d42ed..545408d 100644
+>> --- a/include/scsi/scsi.h
+>> +++ b/include/scsi/scsi.h
+>> @@ -16,6 +16,7 @@ struct scsi_cmnd;
+>>   
+>>   enum scsi_timeouts {
+>>   	SCSI_DEFAULT_EH_TIMEOUT		= 10 * HZ,
+>> +	SCSI_DEFAULT_RETRY_TIMEOUT	= 0,	/* disabled by default */
+>>   };
+>>   
+>>   /*
+>> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+>> index d65fbec..04fc5ee 100644
+>> --- a/include/scsi/scsi_device.h
+>> +++ b/include/scsi/scsi_device.h
+>> @@ -121,6 +121,7 @@ struct scsi_device {
+>>   				 * pass settings from slave_alloc to scsi
+>>   				 * core. */
+>>   	unsigned int eh_timeout; /* Error handling timeout */
+>> +	unsigned int retry_timeout;	/* Command retry timeout */
+>>   	unsigned writeable:1;
+>>   	unsigned removable:1;
+>>   	unsigned changed:1;	/* Data invalid due to media change */
+>
+>
+> .
+>
