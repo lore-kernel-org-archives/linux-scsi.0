@@ -1,59 +1,36 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 13/17] scsi: push host_lock down into
- scsi_{host,target}_queue_ready
-Date: Thu, 06 Feb 2014 08:56:59 -0800
-Message-ID: <1391705819.22335.8.camel@dabdike>
-References: <20140205123930.150608699@bombadil.infradead.org>
-	 <20140205124021.286457268@bombadil.infradead.org>
+From: Muthu Kumar <muthu.lkml@gmail.com>
+Subject: Re: [PATCH 02/15] blk-mq: support at_head inserations for blk_execute_rq
+Date: Thu, 6 Feb 2014 09:05:10 -0800
+Message-ID: <CAFR8uedQ2kHP6caUQewSixtRbOw7vWjyaJtK66ENbOVUJLXAag@mail.gmail.com>
+References: <20140205124118.332902571@bombadil.infradead.org>
+	<20140205124152.477413324@bombadil.infradead.org>
+	<CAFR8uedLQyX7aFsuOs4UFYE=sYUOG+jpPMOQzqOW4f_RQGsf2g@mail.gmail.com>
+	<20140206161710.GB16916@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:48574 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751500AbaBFQ5A (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Feb 2014 11:57:00 -0500
-In-Reply-To: <20140205124021.286457268@bombadil.infradead.org>
+Received: from mail-pd0-f171.google.com ([209.85.192.171]:36127 "EHLO
+	mail-pd0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754359AbaBFRFL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Feb 2014 12:05:11 -0500
+Received: by mail-pd0-f171.google.com with SMTP id g10so1941874pdj.2
+        for <linux-scsi@vger.kernel.org>; Thu, 06 Feb 2014 09:05:11 -0800 (PST)
+In-Reply-To: <20140206161710.GB16916@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@infradead.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Nicholas Bellinger <nab@linux-iscsi.org>, linux-scsi@vger.kernel.org
+Cc: Jens Axboe <axboe@kernel.dk>, James Bottomley <JBottomley@parallels.com>, Nicholas Bellinger <nab@linux-iscsi.org>, linux-scsi <linux-scsi@vger.kernel.org>, Bart Van Assche <bvanassche@acm.org>
 
+On Thu, Feb 6, 2014 at 8:17 AM, Christoph Hellwig <hch@infradead.org> wrote:
+> On Wed, Feb 05, 2014 at 06:27:38PM -0800, Muthu Kumar wrote:
+>> Currently its not used by any drivers. Are we sure we don't need it
+>> public? If sure, please remove the EXPORT_SYMBOL() for it.
+>
+> Drivers shouldn't use it, it's a low-level interface.  As mentioned in
+> the intro this is not quite a coherent series yet, but I'll post the
+> blk-mq patches in a slightly nicer form agains Jens' tree soon.
+>
 
-On Wed, 2014-02-05 at 04:39 -0800, Christoph Hellwig wrote:
-> Prepare for not taking a host-wide lock in the dispatch path by pushing
-> the lock down into the places that actually need it.  Note that this
-> patch is just a preparation step, as it will actually increase lock
-> roundtrips and thus decrease performance on its own.
-
-I'm not really convinced by the rest of the series.  I think patches
-4,8,9,10,11,12 (lock elimination from fast path and get/put reduction)
-are where the improvements are at and they mostly look ready to apply
-modulo some author and signoff fixes.
-
-I'm dubious about replacing a locked set of checks and increments with
-atomics for the simple reason that atomics are pretty expensive on
-non-x86, so you've likely slowed the critical path down for them.  Even
-on x86, atomics can be very expensive because of the global bus lock.  I
-think about three of them in a row is where you might as well stick with
-the lock.
-
-Could you benchmark this lot and show what the actual improvement is
-just for this series, if any?
-
-I also think we should be getting more utility out of threading
-guarantees.  So, if there's only one thread active per device we don't
-need any device counters to be atomic.  Likewise, u32 read/write is an
-atomic operation, so we might be able to use sloppy counters for the
-target and host stuff (one per CPU that are incremented/decremented on
-that CPU ... this will only work using CPU locality ... completion on
-same CPU but that seems to be an element of a lot of stuff nowadays).
-
-I'm not saying this will all pan out, but I am saying I don't think just
-making all the counters atomic to reduce locking will buy us a huge
-amount, so I'd appreciate careful benchmarking to confirm or invalidate
-this hypothesis first.
-
-James
-
-
+Alright then.. I will wait for that patch. BTW, is the scsi-mq work
+done on your git tree only or anyone else has their own git tree
+(Bart? NAB?)?
