@@ -1,60 +1,62 @@
-From: "Dorau, Lukasz" <lukasz.dorau@intel.com>
-Subject: RE: [PATCH 10/22] isci: Use pci_enable_msix_range()
-Date: Thu, 6 Feb 2014 14:25:13 +0000
-Message-ID: <D9FFE20C522965449E182ACE73889AEB1A6C7012@IRSMSX105.ger.corp.intel.com>
-References: <cover.1391512266.git.agordeev@redhat.com>
- <ff99281291c3189da00a7d8150da326808a723ea.1391512266.git.agordeev@redhat.com>
+From: James Bottomley <jbottomley@parallels.com>
+Subject: Re: [PATCH] st: Do not rewind for SG_IO
+Date: Thu, 6 Feb 2014 14:38:35 +0000
+Message-ID: <1391697515.2213.74.camel@dabdike.int.hansenpartnership.com>
+References: <1391157974-17512-1-git-send-email-hare@suse.de>
+	 <52EBD2BB.8020705@tributary.com> <52ECFF7B.7000401@suse.de>
+	 <60EE5D9C-A799-4C8D-8962-DB9D7C1C8414@kolumbus.fi>
+	 <52EE2F2D.1010300@suse.de> <52EFACA4.6060001@tributary.com>
+	 <52EFB06C.8010101@suse.de> <52EFB0E7.3000504@tributary.com>
+	 <CAPXgP13dn+VGpu0OLHatUvP4TRDp2YEgCXYB837ReADZTWg_NA@mail.gmail.com>
+	 <52F010F9.5090305@tributary.com> <52F389A9.808@suse.de>
+	 <yq1eh3gv0l9.fsf@sermon.lab.mkp.net> <52F38D78.2070002@suse.de>
+	 <yq161osuz90.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <ff99281291c3189da00a7d8150da326808a723ea.1391512266.git.agordeev@redhat.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.parallels.com ([199.115.105.18]:50295 "EHLO
+	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750757AbaBFOjO convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Feb 2014 09:39:14 -0500
+In-Reply-To: <yq161osuz90.fsf@sermon.lab.mkp.net>
 Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Cc: "Patelczyk, Maciej" <maciej.patelczyk@intel.com>, "Jiang, Dave" <dave.jiang@intel.com>, intel-linux-scu <intel-linux-scu@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "Paszkiewicz, Artur" <artur.paszkiewicz@intel.com>
+Content-ID: <1F1C3E5AF09E7448B4A05BC1CD0C304E@sw.swsoft.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jlinton@tributary.com" <jlinton@tributary.com>, "kay@vrfy.org" <kay@vrfy.org>, "hare@suse.de" <hare@suse.de>, "dgilbert@interlog.com" <dgilbert@interlog.com>, "kai.makisara@kolumbus.fi" <kai.makisara@kolumbus.fi>
 
-On Tuesday, February 04, 2014 12:17 PM Alexander Gordeev <agordeev@redhat.com> wrote:
-> As result of deprecation of MSI-X/MSI enablement functions
-> pci_enable_msix() and pci_enable_msi_block() all drivers
-> using these two interfaces need to be updated to use the
-> new pci_enable_msi_range() and pci_enable_msix_range()
-> interfaces.
+On Thu, 2014-02-06 at 08:50 -0500, Martin K. Petersen wrote:
+> >>>>> "Hannes" == Hannes Reinecke <hare@suse.de> writes:
 > 
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> Cc: Lukasz Dorau <lukasz.dorau@intel.com>
-> Cc: Maciej Patelczyk <maciej.patelczyk@intel.com>
-> Cc: Dave Jiang <dave.jiang@intel.com>
-> Cc: intel-linux-scu@intel.com
-> Cc: linux-scsi@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
-> ---
->  drivers/scsi/isci/init.c |    5 +++--
->  1 files changed, 3 insertions(+), 2 deletions(-)
+> >> My patch provides both the original VPD 0x83 and 0x80 bits as well as
+> >> a handle identical to /sbin/scsi_id.
+> >> 
+> Hannes> Bah, don't do that.  That should better be handled by udev
+> Hannes> rules.  I've got a set of patches moving from scsi_id to sg_inq,
+> Hannes> which can be easily adapted to using sysfs directly.
 > 
-> diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
-> index d25d0d8..b99f307 100644
-> --- a/drivers/scsi/isci/init.c
-> +++ b/drivers/scsi/isci/init.c
-> @@ -356,8 +356,9 @@ static int isci_setup_interrupts(struct pci_dev *pdev)
->  	for (i = 0; i < num_msix; i++)
->  		pci_info->msix_entries[i].entry = i;
-> 
-> -	err = pci_enable_msix(pdev, pci_info->msix_entries, num_msix);
-> -	if (err)
-> +	err = pci_enable_msix_range(pdev,
-> +				    pci_info->msix_entries, num_msix, num_msix);
-> +	if (err < 0)
->  		goto intx;
-> 
->  	for (i = 0; i < num_msix; i++) {
-> --
-> 1.7.7.6
+> I just want to get out of the "userland sending random SCSI commands"
+> business. That is a world of pain right now.
 
-Looks fine.
+Well, in the words of Bill Clinton "I feel your pain".  However, I need
+to know we won't pick up that same whole world of pain in the kernel.
+Remember it's not just SCSI devices, it's also ATA devices and
+potentially other block devices ... then there's blkid and all the weird
+things it does. Then there's transport identifiers for multi-path
+reservations and so on.
 
-Acked-by: Lukasz Dorau <lukasz.dorau@intel.com>
+Convince me this path won't have us shifting a whole bunch of weird from
+user space to the kernel without any reduction in the weird factor.
+Remember the point is not what can we do for all the nicely behaved
+SCSI-3 devices, it's what do we do for everything.
 
-Thanks,
-Lukasz
+James
+
+> I wanted to provide a handle that was guaranteed to be compatible with
+> existing tooling. If you have worked around that in udev rules I guess
+> that's OK with me.
+> 
+
+
