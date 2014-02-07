@@ -1,50 +1,47 @@
 From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [bug #1] arcmsr: read past end of array in arcmsr_report_sense_info()
-Date: Fri, 7 Feb 2014 16:00:55 +0300
-Message-ID: <20140207130055.GB6971@elgon.mountain>
+Subject: [patch] [SCSI] arcmsr: upper 32 of dma address lost
+Date: Fri, 7 Feb 2014 16:00:28 +0300
+Message-ID: <20140207130028.GA6971@elgon.mountain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:24340 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:24348 "EHLO
 	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752861AbaBGNA7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Feb 2014 08:00:59 -0500
+	with ESMTP id S1754882AbaBGNBA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Feb 2014 08:01:00 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: erich@areca.com.tw
-Cc: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>, Nick Cheng <nick.cheng@areca.com.tw>
+Cc: Jingoo Han <jg1.han@samsung.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jiri Kosina <jkosina@suse.cz>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-Hello Erich Chen,
+The original code always set the upper 32 bits to zero because it was
+doing a shift of the wrong variable.
 
-The patch 1c57e86d75cf: "[SCSI] arcmsr: initial driver, version
-1.20.00.13" from Jul 12, 2006, leads to the following static checker
-warning:
+Fixes: 1a4f550a09f8 ('[SCSI] arcmsr: 1.20.00.15: add SATA RAID plus other fixes')
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-	drivers/scsi/arcmsr/arcmsr_hba.c:816 arcmsr_report_sense_info()
-	error: memcpy() 'ccb->arcmsr_cdb.SenseData' too small (15 vs 18)
-
-drivers/scsi/arcmsr/arcmsr_hba.c
-   805  static void arcmsr_report_sense_info(struct CommandControlBlock *ccb)
-   806  {
-   807  
-   808          struct scsi_cmnd *pcmd = ccb->pcmd;
-   809          struct SENSE_DATA *sensebuffer = (struct SENSE_DATA *)pcmd->sense_buffer;
-   810          pcmd->result = DID_OK << 16;
-   811          if (sensebuffer) {
-   812                  int sense_data_length =
-   813                          sizeof(struct SENSE_DATA) < SCSI_SENSE_BUFFERSIZE
-   814                          ? sizeof(struct SENSE_DATA) : SCSI_SENSE_BUFFERSIZE;
-   815                  memset(sensebuffer, 0, SCSI_SENSE_BUFFERSIZE);
-   816                  memcpy(sensebuffer, ccb->arcmsr_cdb.SenseData, sense_data_length);
-                                            ^^^^^^^^^^^^^^^^^^^^^^^^^
-This buffer is 15 bytes but we copy 18 bytes so we are reading past the
-end of the array.
-
-   817                  sensebuffer->ErrorCode = SCSI_SENSE_CURRENT_ERRORS;
-   818                  sensebuffer->Valid = 1;
-   819          }
-   820  }
-
-regards,
-dan carpenter
+diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
+index 4f6a30b8e5f9..9cfd399c47c0 100644
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c
+@@ -2500,16 +2500,15 @@ static int arcmsr_polling_ccbdone(struct AdapterControlBlock *acb,
+ static int arcmsr_iop_confirm(struct AdapterControlBlock *acb)
+ {
+ 	uint32_t cdb_phyaddr, cdb_phyaddr_hi32;
+-	dma_addr_t dma_coherent_handle;
++
+ 	/*
+ 	********************************************************************
+ 	** here we need to tell iop 331 our freeccb.HighPart
+ 	** if freeccb.HighPart is not zero
+ 	********************************************************************
+ 	*/
+-	dma_coherent_handle = acb->dma_coherent_handle;
+-	cdb_phyaddr = (uint32_t)(dma_coherent_handle);
+-	cdb_phyaddr_hi32 = (uint32_t)((cdb_phyaddr >> 16) >> 16);
++	cdb_phyaddr = (uint32_t)(acb->dma_coherent_handle);
++	cdb_phyaddr_hi32 = (uint32_t)(acb->dma_coherent_handle >> 32);
+ 	acb->cdb_phyaddr_hi32 = cdb_phyaddr_hi32;
+ 	/*
+ 	***********************************************************************
