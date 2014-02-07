@@ -1,56 +1,34 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 0/4] minor blk-mq updates
-Date: Fri, 07 Feb 2014 11:36:45 -0800
-Message-ID: <1391801805.1155.30.camel@haakon3.risingtidesystems.com>
-References: <20140207182235.659185141@bombadil.infradead.org>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: LSI SAS2008 SATA TRIM not working
+Date: Fri, 07 Feb 2014 15:44:19 -0500
+Message-ID: <yq1vbwqslek.fsf@sermon.lab.mkp.net>
+References: <1391730975.3449.16.camel@sonic.justonedata.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140207182235.659185141@bombadil.infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:27127 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751617AbaBGUot (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Feb 2014 15:44:49 -0500
+In-Reply-To: <1391730975.3449.16.camel@sonic.justonedata.com> (Kurt Miller's
+	message of "Thu, 06 Feb 2014 18:56:15 -0500")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Kurt Miller <kurt@intricatesoftware.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, 2014-02-07 at 10:22 -0800, Christoph Hellwig wrote:
-> Hi Jens,
-> 
-> these small blk-mq core updates fell out of the scsi multiqueue work.
+>>>>> "Kurt" == Kurt Miller <kurt@intricatesoftware.com> writes:
 
-That reminds me, the following blk-mq patch was required to get DIF
-working with scsi-mq.
+Kurt> Is TRIM working for anyone using LSI SAS2008 controllers?
 
-Jens, care to pick this up as well..?
+Yes. But its SAT appears to be somewhat selective about which devices it
+flags as capable.
 
---nab
+Please send me the output of:
 
->From 1428a390cc16025f93905852777d4afd8aeba05d Mon Sep 17 00:00:00 2001
-From: Nicholas Bellinger <nab@linux-iscsi.org>
-Date: Sun, 22 Dec 2013 11:58:49 +0000
-Subject: blk-mq: Add bio_integrity setup to blk_mq_make_request
+# sg_readcap -l /dev/sdc
+# sg_vpd -p bl /dev/sdc
+# sg_vpd -p lbpv /dev/sdc
 
-This patch adds the missing bio_integrity_enabled() +
-bio_integrity_prep() setup into blk_mq_make_request()
-in order to use DIF protection with scsi-mq.
-
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
----
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index c79126e..a520c39 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -916,6 +916,11 @@ static void blk_mq_make_request(struct request_queue *q, struct bio *bio)
- 
- 	blk_queue_bounce(q, &bio);
- 
-+	if (bio_integrity_enabled(bio) && bio_integrity_prep(bio)) {
-+		bio_endio(bio, -EIO);
-+		return;
-+	}
-+
- 	if (use_plug && blk_attempt_plug_merge(q, bio, &request_count))
- 		return;
- 
+-- 
+Martin K. Petersen	Oracle Linux Engineering
