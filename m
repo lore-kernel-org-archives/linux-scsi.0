@@ -1,34 +1,31 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: LSI SAS2008 SATA TRIM not working
-Date: Fri, 07 Feb 2014 15:44:19 -0500
-Message-ID: <yq1vbwqslek.fsf@sermon.lab.mkp.net>
-References: <1391730975.3449.16.camel@sonic.justonedata.com>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH 0/4] minor blk-mq updates
+Date: Fri, 7 Feb 2014 13:45:55 -0700
+Message-ID: <20140207204555.GB23865@kernel.dk>
+References: <20140207182235.659185141@bombadil.infradead.org>
+ <1391801805.1155.30.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:27127 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751617AbaBGUot (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Feb 2014 15:44:49 -0500
-In-Reply-To: <1391730975.3449.16.camel@sonic.justonedata.com> (Kurt Miller's
-	message of "Thu, 06 Feb 2014 18:56:15 -0500")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1391801805.1155.30.camel@haakon3.risingtidesystems.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kurt Miller <kurt@intricatesoftware.com>
-Cc: linux-scsi@vger.kernel.org
 
->>>>> "Kurt" == Kurt Miller <kurt@intricatesoftware.com> writes:
+On Fri, Feb 07 2014, Nicholas A. Bellinger wrote:
+> On Fri, 2014-02-07 at 10:22 -0800, Christoph Hellwig wrote:
+> > Hi Jens,
+> > 
+> > these small blk-mq core updates fell out of the scsi multiqueue work.
+> 
+> That reminds me, the following blk-mq patch was required to get DIF
+> working with scsi-mq.
+> 
+> Jens, care to pick this up as well..?
 
-Kurt> Is TRIM working for anyone using LSI SAS2008 controllers?
-
-Yes. But its SAT appears to be somewhat selective about which devices it
-flags as capable.
-
-Please send me the output of:
-
-# sg_readcap -l /dev/sdc
-# sg_vpd -p bl /dev/sdc
-# sg_vpd -p lbpv /dev/sdc
+Yep, added, thanks!
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Jens Axboe
