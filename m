@@ -1,40 +1,34 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 06/17] scsi: add support for per-host cmd pools
-Date: Fri, 07 Feb 2014 03:35:00 -0600
-Message-ID: <52F4A8C4.8080602@cs.wisc.edu>
-References: <20140205123930.150608699@bombadil.infradead.org> <20140205124019.946278511@bombadil.infradead.org>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH 13/17] scsi: push host_lock down into scsi_{host,target}_queue_ready
+Date: Fri, 07 Feb 2014 11:32:02 +0100
+Message-ID: <52F4B622.1070900@acm.org>
+References: <20140205123930.150608699@bombadil.infradead.org>	 <20140205124021.286457268@bombadil.infradead.org>	 <1391705819.22335.8.camel@dabdike> <52F3C21F.70409@acm.org> <1391723900.14985.3.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:40459 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750868AbaBGJff (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 7 Feb 2014 04:35:35 -0500
-In-Reply-To: <20140205124019.946278511@bombadil.infradead.org>
+Received: from smtp03.stone-is.org ([87.238.162.65]:44201 "EHLO
+	smtpgw.stone-is.be" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751578AbaBGKcH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Feb 2014 05:32:07 -0500
+In-Reply-To: <1391723900.14985.3.camel@haakon3.risingtidesystems.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Jens Axboe <axboe@kernel.dk>, James Bottomley <JBottomley@Parallels.com>, Nicholas Bellinger <nab@linux-iscsi.org>, linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org
 
-On 02/05/2014 06:39 AM, Christoph Hellwig wrote:
-> -static struct scsi_host_cmd_pool *scsi_get_host_cmd_pool(gfp_t gfp_mask)
-> +static struct scsi_host_cmd_pool *
-> +scsi_find_host_cmd_pool(struct Scsi_Host *shost)
->  {
-> +	if (shost->hostt->cmd_size)
-> +		return shost->hostt->cmd_pool;
-> +	if (shost->unchecked_isa_dma)
-> +		return &scsi_cmd_dma_pool;
-> +	return &scsi_cmd_pool;
-> +}
-> +
+On 02/06/14 22:58, Nicholas A. Bellinger wrote:
+> Starting with a baseline using scsi_debug that NOPs REQ_TYPE_FS commands
+> to measure improvements would be a better baseline vs. scsi_request_fn()
+> existing code that what your doing above.
+> 
+> That way at least it's easier to measure specific scsi-core overhead
+> down to the LLD's queuecommand without everything else in the way.
 
-It seems there is a issue with using the cmd_size to indicate the driver
-has its own cmd pool and also using that for scsi mq enabled drivers to
-indicate that we want the LLD's struct allocated by blk/scsi mq.
+Running initiator and target workload on the same system makes initiator
+and target code share CPUs and hence makes it hard to analyze which
+performance change is caused by initiator optimizations and which
+performance change is caused by interactions between initiator and
+target workloads.
 
-If a driver sets cmd_size for only the scsi/blk mq purpose, this patch
-wants the driver to also setup a cmd pool which I do not think is used
-when doing scsi/blk mq.
-
+Bart.
