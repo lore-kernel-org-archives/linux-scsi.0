@@ -1,101 +1,36 @@
-From: "Saxena, Sumit" <Sumit.Saxena@lsi.com>
-Subject: RE: [PATCH 13/22] megaraid: Use pci_enable_msix_range()
-Date: Fri, 7 Feb 2014 11:17:41 +0000
-Message-ID: <c2679d9fa6874a65955aaed2f79c040f@DM2PR07MB400.namprd07.prod.outlook.com>
-References: <cover.1391512266.git.agordeev@redhat.com>
- <ba26af069a9e8c1260b17210820be17f8eab0d63.1391512266.git.agordeev@redhat.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 12/15] scsi: initial blk-mq support
+Date: Fri, 7 Feb 2014 04:42:56 -0800
+Message-ID: <20140207124256.GA30510@infradead.org>
+References: <20140205124118.332902571@bombadil.infradead.org>
+ <20140205124154.337539740@bombadil.infradead.org>
+ <1391724663.14985.11.camel@haakon3.risingtidesystems.com>
+ <52F49D1E.2000007@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <ba26af069a9e8c1260b17210820be17f8eab0d63.1391512266.git.agordeev@redhat.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Cc: DL-MegaRAID Linux <megaraidlinux@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:33576 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751578AbaBGMnu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Feb 2014 07:43:50 -0500
+Content-Disposition: inline
+In-Reply-To: <52F49D1E.2000007@cs.wisc.edu>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>, James Bottomley <JBottomley@Parallels.com>, linux-scsi@vger.kernel.org
 
+On Fri, Feb 07, 2014 at 02:45:18AM -0600, Mike Christie wrote:
+> Yeah, it would be nice if like in Nick's patches, the driver could just
+> set the scsi_host_template->cmd_size then when the scsi_cmnd got to the
+> driver's queuecommand, the driver could just get its internal cmd struct
+> from the scsi_cmnd struct (for example in Nick's patch it was off the
+> SCp.ptr).
 
+You can do this with my series.  The cmd_size support is actually
+added in the first series and still works here.
 
->-----Original Message-----
->From: Alexander Gordeev [mailto:agordeev@redhat.com]
->Sent: Tuesday, February 04, 2014 4:47 PM
->To: linux-kernel@vger.kernel.org
->Cc: Alexander Gordeev; DL-MegaRAID Linux; linux-scsi@vger.kernel.org;
->linux-pci@vger.kernel.org
->Subject: [PATCH 13/22] megaraid: Use pci_enable_msix_range()
->
->As result of deprecation of MSI-X/MSI enablement functions
->pci_enable_msix() and pci_enable_msi_block() all drivers using these two
->interfaces need to be updated to use the new pci_enable_msi_range() and
->pci_enable_msix_range() interfaces.
->
->Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
->Cc: Neela Syam Kolli <megaraidlinux@lsi.com>
->Cc: linux-scsi@vger.kernel.org
->Cc: linux-pci@vger.kernel.org
->---
-> drivers/scsi/megaraid/megaraid_sas_base.c |   25 +++++++++++--------------
-> 1 files changed, 11 insertions(+), 14 deletions(-)
->
->diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c
->b/drivers/scsi/megaraid/megaraid_sas_base.c
->index 3b7ad10..90944f1 100644
->--- a/drivers/scsi/megaraid/megaraid_sas_base.c
->+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
->@@ -3731,18 +3731,12 @@ static int megasas_init_fw(struct
->megasas_instance *instance)
-> 					     (unsigned int)num_online_cpus());
-> 		for (i = 0; i < instance->msix_vectors; i++)
-> 			instance->msixentry[i].entry = i;
->-		i = pci_enable_msix(instance->pdev, instance->msixentry,
->-				    instance->msix_vectors);
->-		if (i >= 0) {
->-			if (i) {
->-				if (!pci_enable_msix(instance->pdev,
->-						     instance->msixentry, i))
->-					instance->msix_vectors = i;
->-				else
->-					instance->msix_vectors = 0;
->-			}
->-		} else
->+		i = pci_enable_msix_range(instance->pdev, instance-
->>msixentry,
->+					  1, instance->msix_vectors);
->+		if (i < 0)
-> 			instance->msix_vectors = 0;
->+		else
->+			instance->msix_vectors = i;
->
-> 		dev_info(&instance->pdev->dev, "[scsi%d]: FW supports"
-> 			"<%d> MSIX vector,Online CPUs: <%d>,"
->@@ -4667,9 +4661,11 @@ megasas_resume(struct pci_dev *pdev)
-> 		goto fail_ready_state;
->
-> 	/* Now re-enable MSI-X */
->-	if (instance->msix_vectors)
->-		pci_enable_msix(instance->pdev, instance->msixentry,
->-				instance->msix_vectors);
->+	if (instance->msix_vectors &&
->+	    pci_enable_msix_range(instance->pdev, instance->msixentry,
->+				  instance->msix_vectors,
->+				  instance->msix_vectors) < 0)
->+		goto fail_reenable_msix;
->
-> 	switch (instance->pdev->device) {
-> 	case PCI_DEVICE_ID_LSI_FUSION:
->@@ -4756,6 +4752,7 @@ fail_init_mfi:
->
-> fail_set_dma_mask:
-> fail_ready_state:
->+fail_reenable_msix:
->
-> 	pci_disable_device(pdev);
+Instead of needing SCp.ptr you just grab the memory right behind
+the command.  Right now virtio_scsi opencodes this, but I should
+probably add a helper for the next iteration.
 
-Acked-by: Sumit Saxena <sumit.saxena@lsi.com>
-
-Sumit
->
->--
->1.7.7.6
->
