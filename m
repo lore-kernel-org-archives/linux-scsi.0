@@ -1,57 +1,39 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 06/32] target: Convert lu_gp_ref_cnt to kref
-Date: Fri, 07 Feb 2014 11:17:28 -0800
-Message-ID: <1391800648.1155.14.camel@haakon3.risingtidesystems.com>
-References: <1386979160-6928-1-git-send-email-agrover@redhat.com>
-	 <1386979160-6928-7-git-send-email-agrover@redhat.com>
-	 <1387227157.20247.203.camel@haakon3.risingtidesystems.com>
-	 <52F2B512.9040102@redhat.com>
-	 <1391730689.14985.51.camel@haakon3.risingtidesystems.com>
-	 <52F44B6C.1080405@redhat.com>
+From: Phillip Susi <psusi@ubuntu.com>
+Subject: Dynamic scsi_debug module
+Date: Fri, 07 Feb 2014 14:27:23 -0500
+Message-ID: <52F5339B.7070503@ubuntu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <52F44B6C.1080405@redhat.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Andy Grover <agrover@redhat.com>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:62176 "EHLO
+	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751013AbaBGT10 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Feb 2014 14:27:26 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: SCSI development list <linux-scsi@vger.kernel.org>
 
-On Thu, 2014-02-06 at 18:56 -0800, Andy Grover wrote:
-> On 02/06/2014 03:51 PM, Nicholas A. Bellinger wrote:
-> > The problem with this patch and all of the other patches that follow the
-> > same logic is the false assumption that it's safe to return from
-> > configfs_group_operations->drop_item() before all references to the
-> > underlying data structure containing the associated struct config_group
-> > have been dropped.
-> > 
-> > In this particular case, target_core_alua_drop_lu_gp() ->
-> > config_item_put() -> target_core_alua_lu_gp_release() ->
-> > core_alua_free_lu_gp() is still being called from ->drop_item() via
-> > target_core_alua_lu_gp_ops->release(), so the same holds true here as
-> > well.
-> 
-> Yes exactly. That's why the configfs release() doesn't free the lu_gp,
-> it just lowers the lu_gp refcount. release() being called doesn't mean
-> the object is going away, it just means configfs is done with it.
-> 
-> If do_port_transition has incremented it in the meantime, the lu_gp
-> won't be freed from the release() (because the underlying object's
-> refcount will still be nonzero) but only when do_port_transition is
-> done. In the normal case where there isn't a ref from
-> do_port_transition, then it is safe to free the lu_gp from release ->
-> put_alua_lu_gp -> release_alua_lu_gp -> kmem_cache_free.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-It's still completely wrong to return from ->drop_item() before all
-references to the associated struct config_group have dropped because
-nothing prevents a parent struct config_group (and it's parent above
-that) from also being removed.
+Is it possible to use the scsi_debug module to create more than one
+device?  It seems to me that it needs rewritten to have an interface
+to dynamically create devices and set their parameters with a tool
+like losetup, rather than using module parameters.
 
-The whole point is that this type of parent/child reference counting
-comes for free with configfs, and patches that introduce changes that
-don't actually wait for individual references to drop, but instead
-lazily allow references to drop in the background at their leisure break
-this model.
+I found some references to being able to load certain modules multiple
+times using modprobe -o,  but this option does not seem to exist.
 
---nab
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.17 (MingW32)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iQEcBAEBAgAGBQJS9TOaAAoJEI5FoCIzSKrwEPAH/07+mgbvCIYfJ60DPoZAOIoa
+tN5D0ABI1Qw3DGIUqHQcdT9pUDcGdXRfO+akBtsvmCGQGI3W7lZphVzie1OwhAEq
+OiEbeT07EbLCGhP/UY9tmKssAXjeai7UZrbUDfvuvxSgBEmqFzCxyGHMCOAG7pfj
+iYW38h1xiMq7vZyttSJ4yIFDJnm9IAa8+lemhnqs2XPwzrmpod2yfgJcm4cpxkfY
+Mcix+qw7YhBNNtuHXk7BSgQDEB01w1dB4jjmTzH0VwUsbf4F45zq5IvI21f/m7DO
+9Tzsvhd3DVDgYYpEMJTgnuts9vE0L8hX5xjE50QlT7/izv1XR9gVSwgh8PJOA74=
+=GLCo
+-----END PGP SIGNATURE-----
