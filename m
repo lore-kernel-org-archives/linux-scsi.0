@@ -1,31 +1,32 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH 0/4] minor blk-mq updates
-Date: Fri, 7 Feb 2014 13:45:55 -0700
-Message-ID: <20140207204555.GB23865@kernel.dk>
-References: <20140207182235.659185141@bombadil.infradead.org>
- <1391801805.1155.30.camel@haakon3.risingtidesystems.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: Dynamic scsi_debug module
+Date: Fri, 07 Feb 2014 15:46:25 -0500
+Message-ID: <yq1r47eslb2.fsf@sermon.lab.mkp.net>
+References: <52F5339B.7070503@ubuntu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1391801805.1155.30.camel@haakon3.risingtidesystems.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:27833 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751842AbaBGUqa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Feb 2014 15:46:30 -0500
+In-Reply-To: <52F5339B.7070503@ubuntu.com> (Phillip Susi's message of "Fri, 07
+	Feb 2014 14:27:23 -0500")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Phillip Susi <psusi@ubuntu.com>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-On Fri, Feb 07 2014, Nicholas A. Bellinger wrote:
-> On Fri, 2014-02-07 at 10:22 -0800, Christoph Hellwig wrote:
-> > Hi Jens,
-> > 
-> > these small blk-mq core updates fell out of the scsi multiqueue work.
-> 
-> That reminds me, the following blk-mq patch was required to get DIF
-> working with scsi-mq.
-> 
-> Jens, care to pick this up as well..?
+>>>>> "Phillip" == Phillip Susi <psusi@ubuntu.com> writes:
 
-Yep, added, thanks!
+Phillip> Is it possible to use the scsi_debug module to create more than
+Phillip> one device?  It seems to me that it needs rewritten to have an
+Phillip> interface to dynamically create devices and set their
+Phillip> parameters with a tool like losetup, rather than using module
+Phillip> parameters.
+
+The question is how much sense it makes to invest in scsi_debug now that
+we have the LIO target in the kernel?
 
 -- 
-Jens Axboe
+Martin K. Petersen	Oracle Linux Engineering
