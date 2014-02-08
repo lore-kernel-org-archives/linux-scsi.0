@@ -1,60 +1,21 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH 13/17] scsi: push host_lock down into scsi_{host,target}_queue_ready
-Date: Sat, 08 Feb 2014 12:00:49 +0100
-Message-ID: <52F60E61.5040609@acm.org>
-References: <20140205123930.150608699@bombadil.infradead.org>	 <20140205124021.286457268@bombadil.infradead.org>	 <1391705819.22335.8.camel@dabdike> <52F3C21F.70409@acm.org>	 <1391723900.14985.3.camel@haakon3.risingtidesystems.com>	 <52F4B622.1070900@acm.org> <1391801455.1155.26.camel@haakon3.risingtidesystems.com>
+From: "=?windows-1251?Q?=DD=EB=FC=E7=EE=ED=FC=EA=E0_=CB=EE=F1=E5=E2=E0?="
+	<vladimovir@mail.kz>
+Subject: =?windows-1251?Q?=CD=E5=F1=EE=EC=ED=E5=ED=ED=EE_=EE=F7=E5=ED=FC_=F5=EE=F0=EE=F8=E0=FF_=F0=2C=E5=2C=EA=2C=EB=2C=E0=2C=EC=2C=EE=2C=F7=2C=EA=2C=E0?=
+Date: Sat, 8 Feb 2014 15:19:48 +0000
+Message-ID: <743659020.20140208151948@mail.kz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1251
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp03.stone-is.org ([87.238.162.65]:59974 "EHLO
-	smtpgw.stone-is.be" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751063AbaBHLA6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 8 Feb 2014 06:00:58 -0500
-In-Reply-To: <1391801455.1155.26.camel@haakon3.risingtidesystems.com>
+Received: from frontend03n.mail.kz ([92.46.53.18]:59055 "EHLO mail.kz"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751377AbaBHPRm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 8 Feb 2014 10:17:42 -0500
+Received: from [216.27.10.16] (account vladimovir@mail.kz HELO mail.kz)
+  by frontend03n.mail.kz (CommuniGate Pro SMTP 5.2.13)
+  with ESMTPA id 262465400 for linux-scsi@vger.kernel.org; Sat, 08 Feb 2014 21:17:18 +0600
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On 02/07/14 20:30, Nicholas A. Bellinger wrote:
-> All that scsi_debug with NOP'ed REQ_TYPE_FS commands is doing is calling
-> scsi_cmd->done() as soon as the descriptor has been dispatched into LLD
-> ->queuecommand() code.
-> 
-> It's useful for determining an absolute performance ceiling between
-> scsi_mq vs. scsi_request_fn() based codepaths without involving any
-> other LLD specific overheads.
-
-Sorry but I'm not convinced that the scsi_debug driver is well suited
-for testing scsi-mq. In source file drivers/scsi/scsi_debug.c of kernel
-3.14-rc1 I found the following:
-
-static DEF_SCSI_QCMD(scsi_debug_queuecommand)
-
->From include/scsi/scsi_host.h:
-
-/*
- * Temporary #define for host lock push down. Can be removed when all
- * drivers have been updated to take advantage of unlocked
- * queuecommand.
- *
- */
-#define DEF_SCSI_QCMD(func_name) \
-        int func_name(struct Scsi_Host *shost, struct scsi_cmnd *cmd)  \
-        {                                                              \
-                unsigned long irq_flags;                               \
-                int rc;                                                \
-                spin_lock_irqsave(shost->host_lock, irq_flags);        \
-                scsi_cmd_get_serial(shost, cmd);                       \
-                rc = func_name##_lck (cmd, cmd->scsi_done);            \
-                spin_unlock_irqrestore(shost->host_lock, irq_flags);   \
-                return rc;                                             \
-        }
-
-In other words, all scsi_debug_queuecommand() are serialized. I think
-for testing the scsi-mq code properly a SCSI LLD driver is needed that
-allows concurrent queuecommand() calls.
-
-Bart.
-
+http://rgsassociates.com/stb/flash-games.php
