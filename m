@@ -1,37 +1,35 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 13/17] scsi: push host_lock down into
- scsi_{host,target}_queue_ready
-Date: Mon, 10 Feb 2014 04:09:06 -0800
-Message-ID: <20140210120906.GA24795@infradead.org>
+Subject: Re: [PATCH 06/17] scsi: add support for per-host cmd pools
+Date: Mon, 10 Feb 2014 04:20:21 -0800
+Message-ID: <20140210122021.GA1224@infradead.org>
 References: <20140205123930.150608699@bombadil.infradead.org>
- <20140205124021.286457268@bombadil.infradead.org>
- <1391705819.22335.8.camel@dabdike>
- <52F3C21F.70409@acm.org>
- <1391723900.14985.3.camel@haakon3.risingtidesystems.com>
- <52F4B622.1070900@acm.org>
- <1391801455.1155.26.camel@haakon3.risingtidesystems.com>
- <52F60E61.5040609@acm.org>
- <1391934408.25121.3.camel@haakon3.risingtidesystems.com>
+ <20140205124019.946278511@bombadil.infradead.org>
+ <52F4A8C4.8080602@cs.wisc.edu>
+ <20140207124640.GC30510@infradead.org>
+ <52F5539B.8090202@cs.wisc.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:44410 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:44481 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752276AbaBJMJM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Feb 2014 07:09:12 -0500
+	with ESMTP id S1751851AbaBJMU2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Feb 2014 07:20:28 -0500
 Content-Disposition: inline
-In-Reply-To: <1391934408.25121.3.camel@haakon3.risingtidesystems.com>
+In-Reply-To: <52F5539B.8090202@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Bart Van Assche <bvanassche@acm.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org, Douglas Gilbert <dgilbert@interlog.com>
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Jens Axboe <axboe@kernel.dk>, James Bottomley <JBottomley@Parallels.com>, Nicholas Bellinger <nab@linux-iscsi.org>, linux-scsi@vger.kernel.org
 
-On Sun, Feb 09, 2014 at 12:26:48AM -0800, Nicholas A. Bellinger wrote:
-> Again, try NOP'ing all REQ_TYPE_FS type commands immediately in
-> ->queuecommand() in order to determine a baseline without any other LLD
-> overhead involved.
+On Fri, Feb 07, 2014 at 03:43:55PM -0600, Mike Christie wrote:
+> We need something like the attached patch which just prevents scsi-ml
+> from creating a host pool when mq is used. Note that when
+> scsi_destroy_command_freelist is called shost->cmd_pool will be NULL so
+> it will return immediately so no extra check is needed in there.
 
-Seems like this duplicates the fake_rw parameter.  Removing the needless
-host_lock in queuecommand and maybe a few more optimizations would
-certainly be more useful than duplicating the fake_rw parameter.
+Oops, missed your attached patch and pushed a similar of mine instead,
+but the effect should be the same.
 
+Btw, if you can split out the cmd_size bits of the iscsi patch so that
+we can send it to James with the command part of the first series I'd
+appreciate that.
