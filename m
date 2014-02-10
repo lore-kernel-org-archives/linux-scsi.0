@@ -1,118 +1,57 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+From: Jens Axboe <axboe@kernel.dk>
 Subject: Re: [PATCH 13/17] scsi: push host_lock down into
  scsi_{host,target}_queue_ready
-Date: Mon, 10 Feb 2014 11:53:47 -0800
-Message-ID: <1392062027.17867.14.camel@haakon3.risingtidesystems.com>
+Date: Mon, 10 Feb 2014 13:09:34 -0700
+Message-ID: <20140210200934.GA4096@kernel.dk>
 References: <20140205123930.150608699@bombadil.infradead.org>
-	 <20140205124021.286457268@bombadil.infradead.org>
-	 <1391705819.22335.8.camel@dabdike> <52F3C21F.70409@acm.org>
-	 <1391723900.14985.3.camel@haakon3.risingtidesystems.com>
-	 <52F4B622.1070900@acm.org>
-	 <1391801455.1155.26.camel@haakon3.risingtidesystems.com>
-	 <52F60E61.5040609@acm.org>
-	 <1391934408.25121.3.camel@haakon3.risingtidesystems.com>
-	 <20140210120906.GA24795@infradead.org>
+ <20140205124021.286457268@bombadil.infradead.org>
+ <1391705819.22335.8.camel@dabdike>
+ <20140210113932.GA31405@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:54646 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753704AbaBJTu6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Feb 2014 14:50:58 -0500
-In-Reply-To: <20140210120906.GA24795@infradead.org>
+Received: from mail-pa0-f53.google.com ([209.85.220.53]:52986 "EHLO
+	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753050AbaBJUJi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Feb 2014 15:09:38 -0500
+Received: by mail-pa0-f53.google.com with SMTP id lj1so6623014pab.40
+        for <linux-scsi@vger.kernel.org>; Mon, 10 Feb 2014 12:09:38 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <20140210113932.GA31405@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@infradead.org>
-Cc: Bart Van Assche <bvanassche@acm.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org, Douglas Gilbert <dgilbert@interlog.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Nicholas Bellinger <nab@linux-iscsi.org>, linux-scsi@vger.kernel.org
 
-On Mon, 2014-02-10 at 04:09 -0800, Christoph Hellwig wrote:
-> On Sun, Feb 09, 2014 at 12:26:48AM -0800, Nicholas A. Bellinger wrote:
-> > Again, try NOP'ing all REQ_TYPE_FS type commands immediately in
-> > ->queuecommand() in order to determine a baseline without any other LLD
-> > overhead involved.
+On Mon, Feb 10 2014, Christoph Hellwig wrote:
+> > I also think we should be getting more utility out of threading
+> > guarantees.  So, if there's only one thread active per device we don't
+> > need any device counters to be atomic.  Likewise, u32 read/write is an
+> > atomic operation, so we might be able to use sloppy counters for the
+> > target and host stuff (one per CPU that are incremented/decremented on
+> > that CPU ... this will only work using CPU locality ... completion on
+> > same CPU but that seems to be an element of a lot of stuff nowadays).
 > 
-> Seems like this duplicates the fake_rw parameter.  Removing the needless
-> host_lock in queuecommand and maybe a few more optimizations would
-> certainly be more useful than duplicating the fake_rw parameter.
+> The blk-mq code is aiming for CPU locality, but there are no hard
+> guarantees.  I'm also not sure always bouncing around the I/O submission
+> is a win, but it might be something to play around with at the block
+> layer.
 > 
+> Jens, did you try something like this earlier?
 
-Fine by me.
+Nope, I've always thought that if you needed to bounce submission
+around, you would already have lost. Hopefully we're moving to a model
+where you at least have X completion queues and can tell the hardware
+where you want the completion. You'd be a lot better off just placing
+the tasks differently, for the cases where you are not on the right
+node.
 
---nab
+If we're talking about shoving to a dedicated thread to avoid all the
+locking, that's going to hurt you on the sync workloads as well. And
+depending on your device and peak load, it'll kill you on the peak
+performance as well. That's why blk-mq was designed to handle parallel
+activity more efficiently.
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 80b8b10..631f5d2 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -3603,7 +3603,7 @@ static void sdebug_remove_adapter(void)
- }
- 
- static
--int scsi_debug_queuecommand_lck(struct scsi_cmnd *SCpnt, done_funct_t done)
-+int __scsi_debug_queuecommand_lck(struct scsi_cmnd *SCpnt, done_funct_t done)
- {
- 	unsigned char *cmd = (unsigned char *) SCpnt->cmnd;
- 	int len, k;
-@@ -3775,8 +3775,6 @@ read:
- 		errsts = check_readiness(SCpnt, 0, devip);
- 		if (errsts)
- 			break;
--		if (scsi_debug_fake_rw)
--			break;
- 		get_data_transfer_info(cmd, &lba, &num, &ei_lba);
- 		errsts = resp_read(SCpnt, lba, num, devip, ei_lba);
- 		if (inj_recovered && (0 == errsts)) {
-@@ -3825,8 +3823,6 @@ write:
- 		errsts = check_readiness(SCpnt, 0, devip);
- 		if (errsts)
- 			break;
--		if (scsi_debug_fake_rw)
--			break;
- 		get_data_transfer_info(cmd, &lba, &num, &ei_lba);
- 		errsts = resp_write(SCpnt, lba, num, devip, ei_lba);
- 		if (inj_recovered && (0 == errsts)) {
-@@ -3903,8 +3899,6 @@ write:
- 		errsts = check_readiness(SCpnt, 0, devip);
- 		if (errsts)
- 			break;
--		if (scsi_debug_fake_rw)
--			break;
- 		get_data_transfer_info(cmd, &lba, &num, &ei_lba);
- 		errsts = resp_read(SCpnt, lba, num, devip, ei_lba);
- 		if (errsts)
-@@ -3952,7 +3946,21 @@ write:
- 			     (delay_override ? 0 : scsi_debug_delay));
- }
- 
--static DEF_SCSI_QCMD(scsi_debug_queuecommand)
-+static DEF_SCSI_QCMD(__scsi_debug_queuecommand)
-+
-+static int scsi_debug_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *sc)
-+{
-+	struct request *rq = sc->request;
-+
-+	if (scsi_debug_fake_rw && rq->cmd_type == REQ_TYPE_FS) {
-+		set_host_byte(sc, DID_OK);
-+		sc->result |= SAM_STAT_GOOD;
-+		sc->scsi_done(sc);
-+		return 0;
-+	}
-+
-+	return __scsi_debug_queuecommand(host, sc);
-+}
- 
- static struct scsi_host_template sdebug_driver_template = {
- 	.show_info =		scsi_debug_show_info,
-@@ -3973,7 +3981,7 @@ static struct scsi_host_template sdebug_driver_template = {
- 	.can_queue =		SCSI_DEBUG_CANQUEUE,
- 	.this_id =		7,
- 	.sg_tablesize =		256,
--	.cmd_per_lun =		16,
-+	.cmd_per_lun =		64,
- 	.max_sectors =		0xffff,
- 	.use_clustering = 	DISABLE_CLUSTERING,
- 	.module =		THIS_MODULE,
 -- 
-1.7.10.4
+Jens Axboe
 
