@@ -1,54 +1,37 @@
 From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: [PATCH 13/17] scsi: push host_lock down into
  scsi_{host,target}_queue_ready
-Date: Mon, 10 Feb 2014 03:39:32 -0800
-Message-ID: <20140210113932.GA31405@infradead.org>
+Date: Mon, 10 Feb 2014 04:09:06 -0800
+Message-ID: <20140210120906.GA24795@infradead.org>
 References: <20140205123930.150608699@bombadil.infradead.org>
  <20140205124021.286457268@bombadil.infradead.org>
  <1391705819.22335.8.camel@dabdike>
+ <52F3C21F.70409@acm.org>
+ <1391723900.14985.3.camel@haakon3.risingtidesystems.com>
+ <52F4B622.1070900@acm.org>
+ <1391801455.1155.26.camel@haakon3.risingtidesystems.com>
+ <52F60E61.5040609@acm.org>
+ <1391934408.25121.3.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:44295 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:44410 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752107AbaBJLjq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Feb 2014 06:39:46 -0500
+	with ESMTP id S1752276AbaBJMJM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Feb 2014 07:09:12 -0500
 Content-Disposition: inline
-In-Reply-To: <1391705819.22335.8.camel@dabdike>
+In-Reply-To: <1391934408.25121.3.camel@haakon3.risingtidesystems.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>, Nicholas Bellinger <nab@linux-iscsi.org>, linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Bart Van Assche <bvanassche@acm.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org, Douglas Gilbert <dgilbert@interlog.com>
 
-On Thu, Feb 06, 2014 at 08:56:59AM -0800, James Bottomley wrote:
-> I'm dubious about replacing a locked set of checks and increments with
-> atomics for the simple reason that atomics are pretty expensive on
-> non-x86, so you've likely slowed the critical path down for them.  Even
-> on x86, atomics can be very expensive because of the global bus lock.  I
-> think about three of them in a row is where you might as well stick with
-> the lock.
+On Sun, Feb 09, 2014 at 12:26:48AM -0800, Nicholas A. Bellinger wrote:
+> Again, try NOP'ing all REQ_TYPE_FS type commands immediately in
+> ->queuecommand() in order to determine a baseline without any other LLD
+> overhead involved.
 
-The three of them replace two locks at least when using blk-mq.  Until
-we use blk-mq and those avoid the queue_lock we could keep the
-per-device counters as-is.
-
-As Bart's numbers have shown this defintively shows a major improvement
-on x86, for other architecture we'd need someone to run benchmarks
-on useful hardware.  Maybe some of the IBM people on the list could
-help out on PPC and S/390?
-
-> I also think we should be getting more utility out of threading
-> guarantees.  So, if there's only one thread active per device we don't
-> need any device counters to be atomic.  Likewise, u32 read/write is an
-> atomic operation, so we might be able to use sloppy counters for the
-> target and host stuff (one per CPU that are incremented/decremented on
-> that CPU ... this will only work using CPU locality ... completion on
-> same CPU but that seems to be an element of a lot of stuff nowadays).
-
-The blk-mq code is aiming for CPU locality, but there are no hard
-guarantees.  I'm also not sure always bouncing around the I/O submission
-is a win, but it might be something to play around with at the block
-layer.
-
-Jens, did you try something like this earlier?
+Seems like this duplicates the fake_rw parameter.  Removing the needless
+host_lock in queuecommand and maybe a few more optimizations would
+certainly be more useful than duplicating the fake_rw parameter.
 
