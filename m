@@ -1,57 +1,62 @@
-From: Jens Axboe <axboe@kernel.dk>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: Re: [PATCH 13/17] scsi: push host_lock down into
  scsi_{host,target}_queue_ready
-Date: Mon, 10 Feb 2014 13:09:34 -0700
-Message-ID: <20140210200934.GA4096@kernel.dk>
+Date: Mon, 10 Feb 2014 13:10:07 -0800
+Message-ID: <1392066607.19708.5.camel@dabdike.int.hansenpartnership.com>
 References: <20140205123930.150608699@bombadil.infradead.org>
- <20140205124021.286457268@bombadil.infradead.org>
- <1391705819.22335.8.camel@dabdike>
- <20140210113932.GA31405@infradead.org>
+	 <20140205124021.286457268@bombadil.infradead.org>
+	 <1391705819.22335.8.camel@dabdike> <20140210113932.GA31405@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f53.google.com ([209.85.220.53]:52986 "EHLO
-	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753050AbaBJUJi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Feb 2014 15:09:38 -0500
-Received: by mail-pa0-f53.google.com with SMTP id lj1so6623014pab.40
-        for <linux-scsi@vger.kernel.org>; Mon, 10 Feb 2014 12:09:38 -0800 (PST)
-Content-Disposition: inline
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:46658 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752369AbaBJVKJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 10 Feb 2014 16:10:09 -0500
 In-Reply-To: <20140210113932.GA31405@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@infradead.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Nicholas Bellinger <nab@linux-iscsi.org>, linux-scsi@vger.kernel.org
+Cc: Jens Axboe <axboe@kernel.dk>, Nicholas Bellinger <nab@linux-iscsi.org>, linux-scsi@vger.kernel.org
 
-On Mon, Feb 10 2014, Christoph Hellwig wrote:
-> > I also think we should be getting more utility out of threading
-> > guarantees.  So, if there's only one thread active per device we don't
-> > need any device counters to be atomic.  Likewise, u32 read/write is an
-> > atomic operation, so we might be able to use sloppy counters for the
-> > target and host stuff (one per CPU that are incremented/decremented on
-> > that CPU ... this will only work using CPU locality ... completion on
-> > same CPU but that seems to be an element of a lot of stuff nowadays).
+
+On Mon, 2014-02-10 at 03:39 -0800, Christoph Hellwig wrote:
+> On Thu, Feb 06, 2014 at 08:56:59AM -0800, James Bottomley wrote:
+> > I'm dubious about replacing a locked set of checks and increments with
+> > atomics for the simple reason that atomics are pretty expensive on
+> > non-x86, so you've likely slowed the critical path down for them.  Even
+> > on x86, atomics can be very expensive because of the global bus lock.  I
+> > think about three of them in a row is where you might as well stick with
+> > the lock.
 > 
-> The blk-mq code is aiming for CPU locality, but there are no hard
-> guarantees.  I'm also not sure always bouncing around the I/O submission
-> is a win, but it might be something to play around with at the block
-> layer.
-> 
-> Jens, did you try something like this earlier?
+> The three of them replace two locks at least when using blk-mq.  Until
+> we use blk-mq and those avoid the queue_lock we could keep the
+> per-device counters as-is.
 
-Nope, I've always thought that if you needed to bounce submission
-around, you would already have lost. Hopefully we're moving to a model
-where you at least have X completion queues and can tell the hardware
-where you want the completion. You'd be a lot better off just placing
-the tasks differently, for the cases where you are not on the right
-node.
+I'm not saying never, I'm just really dubious about this bit and the
+potential cost on other platforms ... at the very least, surely the
+device busy can still be a counter because of the current threading
+guarantees?
 
-If we're talking about shoving to a dedicated thread to avoid all the
-locking, that's going to hurt you on the sync workloads as well. And
-depending on your device and peak load, it'll kill you on the peak
-performance as well. That's why blk-mq was designed to handle parallel
-activity more efficiently.
+> As Bart's numbers have shown this defintively shows a major improvement
+> on x86, for other architecture we'd need someone to run benchmarks
+> on useful hardware.  Maybe some of the IBM people on the list could
+> help out on PPC and S/390?
 
--- 
-Jens Axboe
+Well, no, they haven't.  The number were an assertion not a benchmark
+and 3.8% can be in the error margin of anybody's tests.  Even if the
+actual benchmark were published, I can't see it being convincing because
+there's too much potential variation (other architectures, different
+ways of testing) for such a small result.
+
+I'm happy to take shortening critical sections and removing atomics in
+get/put because they're obvious wins without needing benchmark
+justification.  I don't really want to take the dubious stuff (like spin
+lock replacement with atomic) until we see the shape of what we can do
+with the block mq stuff and what's necessary and what isn't.
+
+James
+
 
