@@ -1,103 +1,41 @@
-From: Maurizio Lombardi <mlombard@redhat.com>
-Subject: [PATCH] st: fix corruption of the st_modedef structures in st_set_options()
-Date: Tue, 11 Feb 2014 22:22:47 +0100
-Message-ID: <52FA94A7.1010408@redhat.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 70271] rmmod st causes general protection fault
+Date: Tue, 11 Feb 2014 21:28:39 +0000
+Message-ID: <bug-70271-11613-3mBuqcZwWp@https.bugzilla.kernel.org/>
+References: <bug-70271-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37825 "EHLO mx1.redhat.com"
+Received: from mail.kernel.org ([198.145.19.201]:44377 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751745AbaBKVXK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Feb 2014 16:23:10 -0500
+	id S1751071AbaBKV2m (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 11 Feb 2014 16:28:42 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id ADB1220212
+	for <linux-scsi@vger.kernel.org>; Tue, 11 Feb 2014 21:28:41 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+	by mail.kernel.org (Postfix) with ESMTP id E4BA32020E
+	for <linux-scsi@vger.kernel.org>; Tue, 11 Feb 2014 21:28:40 +0000 (UTC)
+In-Reply-To: <bug-70271-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: ast@domdv.de, alan@lxorguk.ukuu.org.uk
 
-When copying the st_modedef structures the devs pointers must be preserved
-in the same way as with the cdevs pointers.
+https://bugzilla.kernel.org/show_bug.cgi?id=70271
 
-This fixes bug 70271: https://bugzilla.kernel.org/show_bug.cgi?id=70271
+Maurizio Lombardi <mlombard@redhat.com> changed:
 
-[  135.037052] BUG: unable to handle kernel NULL pointer dereference at 0000000000000098
-[  135.045048] IP: [<ffffffff812af6a1>] kernfs_find_ns+0x21/0x150
-[  135.050999] PGD 220623067 PUD 222171067 PMD 0
-[  135.055593] Oops: 0000 [#1] SMP
-[  135.058938] Modules linked in: bnx2fc cnic uio fcoe libfcoe libfc 8021q mrp scsi_transport_fc garp scsi_tgt stp llc binfmt_misc dm_round_robin dm_multipath uinput iTCO_wdt iTCO_vendor_support microcode sg pcspkr serio_raw osst st(-) i2c_i801 lpc_ich mfd_core e1000e ptp pps_core ipmi_si ipmi_msghandler video tpm_infineon ext4(F) jbd2(F) mbcache(F) sd_mod(F) crc_t10dif(F) crct10dif_common(F) sr_mod(F) cdrom(F) pata_acpi(F) ata_generic(F) ata_piix(F) libata(F) mpt2sas(F) scsi_transport_sas(F) raid_class(F) ast(F) ttm(F) drm_kms_helper(F) drm(F) i2c_algo_bit(F) sysimgblt(F) sysfillrect(F) i2c_core(F) syscopyarea(F) dm_mirror(F) dm_region_hash(F) dm_log(F) dm_mod(F)
-[  135.119686] CPU: 2 PID: 2028 Comm: rmmod Tainted: GF            3.14.0-rc1-linux-mainline+ #14
-[  135.128453] Hardware name: wortmann To be filled by O.E.M./P8B-M Series, BIOS 6103 12/06/2012
-[  135.137127] task: ffff880001de29d0 ti: ffff8802206e4000 task.ti: ffff8802206e4000
-[  135.144742] RIP: 0010:[<ffffffff812af6a1>]  [<ffffffff812af6a1>] kernfs_find_ns+0x21/0x150
-[  135.153148] RSP: 0018:ffff8802206e5c98  EFLAGS: 00010282
-[  135.158562] RAX: ffff880001de29d0 RBX: 0000000000000000 RCX: 0000000000000006
-[  135.165814] RDX: 0000000000000000 RSI: ffffffff817627e0 RDI: 0000000000000000
-[  135.173040] RBP: ffff8802206e5cc8 R08: 0000000000000000 R09: 0000000000000001
-[  135.180303] R10: 0000000000000000 R11: 0000000000000001 R12: ffffffff817627e0
-[  135.187554] R13: 0000000000000000 R14: 0000000000000000 R15: 0000000000000001
-[  135.194774] FS:  00007f817c720700(0000) GS:ffff880227200000(0000) knlGS:0000000000000000
-[  135.202995] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[  135.208878] CR2: 0000000000000098 CR3: 00000002219b0000 CR4: 00000000000407e0
-[  135.216139] Stack:
-[  135.218185]  ffffffff81af63a0 0000000000000000 ffffffff817627e0 0000000000000000
-[  135.225783]  0000000000000000 0000000000000001 ffff8802206e5cf8 ffffffff812af8de
-[  135.233347]  ffff880226801900 ffffffff81b43320 0000000000000000 ffff880221a7c1c0
-[  135.240972] Call Trace:
-[  135.243463]  [<ffffffff812af8de>] kernfs_find_and_get_ns+0x3e/0x70
-[  135.249743]  [<ffffffff812ae27d>] sysfs_unmerge_group+0x1d/0x60
-[  135.255716]  [<ffffffff81464da9>] pm_qos_sysfs_remove_latency+0x19/0x20
-[  135.262430]  [<ffffffff81466a91>] dev_pm_qos_constraints_destroy+0x31/0x1e0
-[  135.269500]  [<ffffffff81464de6>] dpm_sysfs_remove+0x16/0x50
-[  135.275263]  [<ffffffff8145c077>] device_del+0x47/0x1e0
-[  135.280554]  [<ffffffff8145c232>] device_unregister+0x22/0x60
-[  135.286406]  [<ffffffffa02e23bd>] remove_cdevs+0x4d/0x90 [st]
-[  135.292247]  [<ffffffffa02e78ff>] st_remove+0x3f/0xb0 [st]
-[  135.297851]  [<ffffffff8145f39f>] __device_release_driver+0x7f/0xf0
-[  135.304237]  [<ffffffff8145f4e8>] driver_detach+0xd8/0xe0
-[  135.309722]  [<ffffffff8145e0fc>] bus_remove_driver+0x5c/0xd0
-[  135.315553]  [<ffffffff81460170>] driver_unregister+0x30/0x70
-[  135.321366]  [<ffffffffa02e97f4>] exit_st+0x5c/0x868 [st]
-[  135.326861]  [<ffffffff8111b31a>] SyS_delete_module+0x19a/0x1f0
-[  135.332891]  [<ffffffff810e336d>] ? trace_hardirqs_on+0xd/0x10
-[  135.338811]  [<ffffffff81141974>] ? __audit_syscall_entry+0x94/0x100
-[  135.345282]  [<ffffffff8135b1fe>] ? trace_hardirqs_on_thunk+0x3a/0x3f
-[  135.351806]  [<ffffffff816e8de9>] system_call_fastpath+0x16/0x1b
-[  135.357859] Code: ff eb e3 0f 1f 80 00 00 00 00 55 48 89 e5 48 83 ec 30 48 89 5d d8 4c 89 65 e0 4c 89 6d e8 4c 89 75 f0 4c 89 7d f8 66 66 66 66 90 <44> 0f b7 bf 98 00 00 00 8b 05 71 6d 87 00 48 89 fb 49 89 f4 49
-[  135.378282] RIP  [<ffffffff812af6a1>] kernfs_find_ns+0x21/0x150
-[  135.384355]  RSP <ffff8802206e5c98>
-[  135.387881] CR2: 0000000000000098
-[  135.391298] ---[ end trace 1968409221ddb3c8 ]---
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |mlombard@redhat.com
 
-Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
----
- drivers/scsi/st.c | 11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+--- Comment #1 from Maurizio Lombardi <mlombard@redhat.com> ---
+I sent a patch to the linux-scsi mailing list that fixes the problem for me.
+Can someone test and review it?
 
-diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index a1d6986..afc834e 100644
---- a/drivers/scsi/st.c
-+++ b/drivers/scsi/st.c
-@@ -2198,12 +2198,19 @@ static int st_set_options(struct scsi_tape *STp, long options)
- 	struct st_modedef *STm;
- 	char *name = tape_name(STp);
- 	struct cdev *cd0, *cd1;
-+	struct device *d0, *d1;
+http://marc.info/?l=linux-scsi&m=139215379402532&w=2
 
- 	STm = &(STp->modes[STp->current_mode]);
- 	if (!STm->defined) {
--		cd0 = STm->cdevs[0]; cd1 = STm->cdevs[1];
-+		cd0 = STm->cdevs[0];
-+		cd1 = STm->cdevs[1];
-+		d0  = STm->devs[0];
-+		d1  = STm->devs[1];
- 		memcpy(STm, &(STp->modes[0]), sizeof(struct st_modedef));
--		STm->cdevs[0] = cd0; STm->cdevs[1] = cd1;
-+		STm->cdevs[0] = cd0;
-+		STm->cdevs[1] = cd1;
-+		STm->devs[0]  = d0;
-+		STm->devs[1]  = d1;
- 		modes_defined = 1;
-                 DEBC(printk(ST_DEB_MSG
-                             "%s: Initialized mode %d definition from mode 0\n",
 -- 
-Maurizio Lombardi
+You are receiving this mail because:
+You are the assignee for the bug.
