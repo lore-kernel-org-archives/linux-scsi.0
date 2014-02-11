@@ -1,60 +1,73 @@
-From: "Suma Ramars (sramars)" <sramars@cisco.com>
-Subject: Re: [PATCH 07/22] fnic: Use pci_enable_msix_range()
-Date: Tue, 11 Feb 2014 05:00:56 +0000
-Message-ID: <CF1FAC07.820C%sramars@cisco.com>
-References: <cover.1391512266.git.agordeev@redhat.com>
- <01c54a9cf2e52395c59bd663766c8d1071da0a33.1391512266.git.agordeev@redhat.com>
+From: Eiichi Tsukata <eiichi.tsukata.xh@hitachi.com>
+Subject: [PATCH v3] scsi: Add timeout to avoid infinite command retry
+Date: Tue, 11 Feb 2014 14:29:52 +0900
+Message-ID: <20140211052952.31205.4965.stgit@ltc223.sdl.hitachi.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-pci-owner@vger.kernel.org>
-In-Reply-To: <01c54a9cf2e52395c59bd663766c8d1071da0a33.1391512266.git.agordeev@redhat.com>
-Content-Language: en-US
-Content-ID: <FB883B43E8C43943A343F7BBA3A0D44C@emea.cisco.com>
-Sender: linux-pci-owner@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Cc: "Brian Uchino (buchino)" <buchino@cisco.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail7.hitachi.co.jp ([133.145.228.42]:59561 "EHLO
+	mail7.hitachi.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750721AbaBKF3C (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Feb 2014 00:29:02 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: JBottomley@parallels.com, linux-scsi@vger.kernel.org
+Cc: clbchenlibo.chen@huawei.com, handai.szj@gmail.com, linux-kernel@vger.kernel.org, yrl.pp-manager.tt@hitachi.com
 
-Hi Alexander
+Currently, scsi error handling in scsi_io_completion() tries to
+unconditionally requeue scsi command when device keeps some error state.
+For example, UNIT_ATTENTION causes infinite retry with
+action == ACTION_RETRY.
+This is because retryable errors are thought to be temporary and the scsi
+device will soon recover from those errors. Normally, such retry policy is
+appropriate because the device will soon recover from temporary error state.
 
-The changes look good to me. Thanks for taking care of this
+But there is no guarantee that device is able to recover from error state
+immediately. Some hardware error can prevent device from recovering.
 
--Suma
+This patch adds timeout in scsi_io_completion() to avoid infinite command
+retry in scsi_io_completion(). Once scsi command retry time is longer than
+this timeout, the command is treated as failure.
 
-On 04/02/14 4:46 PM, "Alexander Gordeev" <agordeev@redhat.com> wrote:
+Changes in v3:
+ - use existing timeout instead of adding new sysfs attribute
+   (Thanks to James)
 
->As result of deprecation of MSI-X/MSI enablement functions
->pci_enable_msix() and pci_enable_msi_block() all drivers
->using these two interfaces need to be updated to use the
->new pci_enable_msi_range() and pci_enable_msix_range()
->interfaces.
->
->Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
->Cc: Hiral Patel <hiralpat@cisco.com>
->Cc: Suma Ramars <sramars@cisco.com>
->Cc: Brian Uchino <buchino@cisco.com>
->Cc: linux-scsi@vger.kernel.org
->Cc: linux-pci@vger.kernel.org
->---
-> drivers/scsi/fnic/fnic_isr.c |    4 ++--
-> 1 files changed, 2 insertions(+), 2 deletions(-)
->
->diff --git a/drivers/scsi/fnic/fnic_isr.c b/drivers/scsi/fnic/fnic_isr.c
->index 7d9b54a..0031c3e 100644
->--- a/drivers/scsi/fnic/fnic_isr.c
->+++ b/drivers/scsi/fnic/fnic_isr.c
->@@ -257,8 +257,8 @@ int fnic_set_intr_mode(struct fnic *fnic)
-> 	    fnic->raw_wq_count >= m &&
-> 	    fnic->wq_copy_count >= o &&
-> 	    fnic->cq_count >= n + m + o) {
->-		if (!pci_enable_msix(fnic->pdev, fnic->msix_entry,
->-				    n + m + o + 1)) {
->+		if (pci_enable_msix_range(fnic->pdev, fnic->msix_entry,
->+				          n + m + o + 1, n + m + o + 1) > 0) {
-> 			fnic->rq_count = n;
-> 			fnic->raw_wq_count = m;
-> 			fnic->wq_copy_count = o;
->-- 
->1.7.7.6
->
+Changes in v2:
+ - check retry timeout in scsi_io_completion() instead of scsi_softirq_done()
+
+Signed-off-by: Eiichi Tsukata <eiichi.tsukata.xh@hitachi.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+---
+ drivers/scsi/scsi_lib.c |    7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 7bd7f0d..fa9707d 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -788,6 +788,7 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 	enum {ACTION_FAIL, ACTION_REPREP, ACTION_RETRY,
+ 	      ACTION_DELAYED_RETRY} action;
+ 	char *description = NULL;
++	unsigned long wait_for = (cmd->allowed + 1) * req->timeout;
+ 
+ 	if (result) {
+ 		sense_valid = scsi_command_normalize_sense(cmd, &sshdr);
+@@ -989,6 +990,12 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 		action = ACTION_FAIL;
+ 	}
+ 
++	if (action != ACTION_FAIL &&
++	    time_before(cmd->jiffies_at_alloc + wait_for, jiffies)) {
++		action = ACTION_FAIL;
++		description = "Command timed out";
++	}
++
+ 	switch (action) {
+ 	case ACTION_FAIL:
+ 		/* Give up and fail the remainder of the request */
+
