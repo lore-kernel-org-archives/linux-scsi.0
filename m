@@ -1,62 +1,97 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 13/17] scsi: push host_lock down into
- scsi_{host,target}_queue_ready
-Date: Mon, 10 Feb 2014 13:10:07 -0800
-Message-ID: <1392066607.19708.5.camel@dabdike.int.hansenpartnership.com>
-References: <20140205123930.150608699@bombadil.infradead.org>
-	 <20140205124021.286457268@bombadil.infradead.org>
-	 <1391705819.22335.8.camel@dabdike> <20140210113932.GA31405@infradead.org>
+From: Eiichi Tsukata <eiichi.tsukata.xh@hitachi.com>
+Subject: Re: Re: [PATCH v2] scsi: Add 'retry_timeout' to avoid infinite
+ command retry
+Date: Tue, 11 Feb 2014 10:33:44 +0900
+Message-ID: <52F97DF8.2040602@hitachi.com>
+References: <52F30B5E.8020202@hitachi.com>	 <20140207002241.11465.87367.stgit@ltc223.sdl.hitachi.co.jp> <1391752003.22335.67.camel@dabdike> <52F47A03.2010805@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:46658 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752369AbaBJVKJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 Feb 2014 16:10:09 -0500
-In-Reply-To: <20140210113932.GA31405@infradead.org>
+Received: from mail9.hitachi.co.jp ([133.145.228.44]:38723 "EHLO
+	mail9.hitachi.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752528AbaBKBds (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Feb 2014 20:33:48 -0500
+In-Reply-To: <52F47A03.2010805@huawei.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Nicholas Bellinger <nab@linux-iscsi.org>, linux-scsi@vger.kernel.org
+To: Libo Chen <clbchenlibo.chen@huawei.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, yrl.pp-manager.tt@hitachi.com
 
 
-On Mon, 2014-02-10 at 03:39 -0800, Christoph Hellwig wrote:
-> On Thu, Feb 06, 2014 at 08:56:59AM -0800, James Bottomley wrote:
-> > I'm dubious about replacing a locked set of checks and increments with
-> > atomics for the simple reason that atomics are pretty expensive on
-> > non-x86, so you've likely slowed the critical path down for them.  Even
-> > on x86, atomics can be very expensive because of the global bus lock.  I
-> > think about three of them in a row is where you might as well stick with
-> > the lock.
-> 
-> The three of them replace two locks at least when using blk-mq.  Until
-> we use blk-mq and those avoid the queue_lock we could keep the
-> per-device counters as-is.
+(2014/02/07 15:15), Libo Chen wrote:
+> On 2014/2/7 13:46, James Bottomley wrote:
+>> On Fri, 2014-02-07 at 09:22 +0900, Eiichi Tsukata wrote:
+>>> Currently, scsi error handling in scsi_io_completion() tries to
+>>> unconditionally requeue scsi command when device keeps some error state.
+>>> For example, UNIT_ATTENTION causes infinite retry with
+>>> action == ACTION_RETRY.
+>>> This is because retryable errors are thought to be temporary and the scsi
+>>> device will soon recover from those errors. Normally, such retry policy is
+>>> appropriate because the device will soon recover from temporary error state.
+>>
+>>
+>>> But there is no guarantee that device is able to recover from error state
+>>> immediately. Actually, we've experienced an infinite retry on some hardware.
+>>> Therefore hardware error can results in infinite command retry loop.
+>> Could you please add an analysis of the actual failure; which devices
+>> and what conditions.
+>>
+>
+> same question, can you explain?
 
-I'm not saying never, I'm just really dubious about this bit and the
-potential cost on other platforms ... at the very least, surely the
-device busy can still be a counter because of the current threading
-guarantees?
 
-> As Bart's numbers have shown this defintively shows a major improvement
-> on x86, for other architecture we'd need someone to run benchmarks
-> on useful hardware.  Maybe some of the IBM people on the list could
-> help out on PPC and S/390?
+I'm afraid to say that I can't expose the device name because I've not 
+confirmed yet that
+the device is responsible for the problem with the device manufacturer. 
+However, with the
+limited evidence, It seems that SCSI command retried with UNIT_ATTENTION.
 
-Well, no, they haven't.  The number were an assertion not a benchmark
-and 3.8% can be in the error margin of anybody's tests.  Even if the
-actual benchmark were published, I can't see it being convincing because
-there's too much potential variation (other architectures, different
-ways of testing) for such a small result.
+In the previous thread, Ewan reported that a storage array returned a 
+CHECK_CONDITION
+with invalid sense data, which caused the command to be retried 
+indefinitely:
+https://lkml.org/lkml/2013/8/20/498
 
-I'm happy to take shortening critical sections and removing atomics in
-get/put because they're obvious wins without needing benchmark
-justification.  I don't really want to take the dubious stuff (like spin
-lock replacement with atomic) until we see the shape of what we can do
-with the block mq stuff and what's necessary and what isn't.
+So, we should try to avoid infinite retry in SCSI middle layer, not in 
+each SCSI LLDD.
 
-James
+>>> This patch adds 'retry_timeout' sysfs attribute which limits the retry time
+>>> of each scsi command. This attribute is located in scsi sysfs directory
+>>> for example "/sys/bus/scsi/devices/X:X:X:X/" and value is in seconds.
+>>> Once scsi command retry time is longer than this timeout,
+>>> the command is treated as failure. 'retry_timeout' is set to '0' by default
+>>> which means no timeout set.
+>> Don't do this ... you're mixing a feature (which you'd need to justify)
+>> with an apparent bug fix.
+>>
+>> Once you dump all the complexity, I think the patch boils down to a
+>> simple check before the action switch in scsi_io_completion():
+>>
+>> 	if (action !=  ACTION_FAIL &&
+>> 	    time_before(cmd->jiffies_at_alloc + wait_for, jiffies)) {
+>> 		action = ACTION_FAIL;
+>> 		description = "command timed out";
+>> 	}
+>>
 
+Sounds good!
+Thanks for much simpler code. It's enough to fix the bug.
+I'll resend the patch soon with the above code.
+
+Eiichi.
+
+>> James
+>>
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> Please read the FAQ at  http://www.tux.org/lkml/
+>>
+>>
+>
+> .
+>
 
