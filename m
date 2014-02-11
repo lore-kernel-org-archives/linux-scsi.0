@@ -1,40 +1,54 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: error returns from ->queue_rq
-Date: Tue, 11 Feb 2014 08:44:03 -0700
-Message-ID: <20140211154403.GE19057@kernel.dk>
-References: <20140211092904.GA6229@infradead.org>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [patch v3] [SCSI] arcmsr: upper 32 of dma address lost
+Date: Tue, 11 Feb 2014 19:06:33 +0300
+Message-ID: <20140211160633.GC9406@elgon.mountain>
+References: <20140207130028.GA6971@elgon.mountain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:31022 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751087AbaBKQG4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Feb 2014 11:06:56 -0500
 Content-Disposition: inline
-In-Reply-To: <20140211092904.GA6229@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+In-Reply-To: <20140207130028.GA6971@elgon.mountain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>, Nick Cheng <nick.cheng@areca.com.tw>
+Cc: Jingoo Han <jg1.han@samsung.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jiri Kosina <jkosina@suse.cz>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-On Tue, Feb 11 2014, Christoph Hellwig wrote:
-> Hi Jens,
-> 
-> seems like with the SCSI work I introduced the first
-> BLK_MQ_RQ_QUEUE_ERROR error return in the tree, and immediately ran into
-> the first pitfall.  The code as-is expects rq->errors set to an error
-> value, which otherwise is an  internal field used by the block layer and
-> some drivers, but not part of the communication protocol between the
-> two.
-> 
-> We can either make it part of the protocol for blk-mq, which would
-> require documenting and praying driver writers get it right, or
-> alternatively we could map BLK_MQ_RQ_QUEUE_ERROR to -EIO and if
-> nessecary introduce other return values if we need to return other
-> errors.  The third option would be to remove BLK_MQ_RQ_QUEUE_ERROR
-> entirely and require drivers to call blk_mq_end_io themselves from
-> ->queue_rq, mirroring the ->queuecommand error handling.  I'm undecided
-> between options 2 and 3, but I'd rather avoid the current pitfall.
+The original code always set the upper 32 bits to zero because it was
+doing a shift of the wrong variable.
 
-Lets go for option #2. I agree that we should not make this a new
-depedency, it's a lot more robust to just have it be -EIO and add other
-error returns as needed.
+Fixes: 1a4f550a09f8 ('[SCSI] arcmsr: 1.20.00.15: add SATA RAID plus other fixes')
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+---
+v3: In v2 I introduced an expensive cast to solve a static checker
+    warning but James noticed and pointed me to the upper_32_bits()
+    macro.
 
--- 
-Jens Axboe
+diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
+index 4f6a30b8e5f9..9cfd399c47c0 100644
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c
+@@ -2500,16 +2500,15 @@ static int arcmsr_polling_ccbdone(struct AdapterControlBlock *acb,
+ static int arcmsr_iop_confirm(struct AdapterControlBlock *acb)
+ {
+ 	uint32_t cdb_phyaddr, cdb_phyaddr_hi32;
+-	dma_addr_t dma_coherent_handle;
++
+ 	/*
+ 	********************************************************************
+ 	** here we need to tell iop 331 our freeccb.HighPart
+ 	** if freeccb.HighPart is not zero
+ 	********************************************************************
+ 	*/
+-	dma_coherent_handle = acb->dma_coherent_handle;
+-	cdb_phyaddr = (uint32_t)(dma_coherent_handle);
+-	cdb_phyaddr_hi32 = (uint32_t)((cdb_phyaddr >> 16) >> 16);
++	cdb_phyaddr = lower_32_bits(acb->dma_coherent_handle);
++	cdb_phyaddr_hi32 = upper_32_bits(acb->dma_coherent_handle);
+ 	acb->cdb_phyaddr_hi32 = cdb_phyaddr_hi32;
+ 	/*
+ 	***********************************************************************
+
