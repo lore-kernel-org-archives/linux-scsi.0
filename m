@@ -1,405 +1,157 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv4] Add EVPD page 0x83 entries to sysfs
-Date: Tue, 11 Feb 2014 12:00:27 +0100
-Message-ID: <1392116427-13822-1-git-send-email-hare@suse.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:41330 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750788AbaBKLA3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Feb 2014 06:00:29 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [LSF/MM TOPIC] SMR: Disrupting recording technology meriting a
+ new class of storage device
+Date: Tue, 11 Feb 2014 09:57:40 -0200
+Message-ID: <20140211115739.GD5903@localhost.localdomain>
+References: <DDA2008BD25F9046BFFC83788E83AF7E8167D4D0@wdscexmb03>
+ <20140207130014.GA5078@localhost.localdomain>
+ <52F4E3AC.9060309@suse.de>
+ <7DD506441A4CF644AAC1628B9A9C5EBC647EAC9E@wdscexmb06.sc.wdc.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <7DD506441A4CF644AAC1628B9A9C5EBC647EAC9E@wdscexmb06.sc.wdc.com>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Jim Malina <Jim.Malina@wdc.com>
+Cc: Hannes Reinecke <hare@suse.de>, Albert Chen <Albert.Chen@wdc.com>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, James Borden <James.Borden@wdc.com>, Curtis Stevens <curtis.stevens@wdc.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Jeremy Linton <jlinton@tributary.com>, Doug Gilbert <dgilbert@interlog.com>, Kai Makisara <kai.makisara@kolumbus.fi>
 
-EVPD page 0x83 is used to uniquely identify the device.
-So instead of having each and every program issue a separate
-SG_IO call to retrieve this information it does make far more
-sense to display it in sysfs.
+Hi Jim,
 
-Cc: Jeremy Linton <jlinton@tributary.com>
-Cc: Doug Gilbert <dgilbert@interlog.com>
-Cc: Kai Makisara <kai.makisara@kolumbus.fi>
-Signed-off-by: Hannes Reinecke <hare@suse.de>
----
- drivers/scsi/scsi_scan.c   |   3 +
- drivers/scsi/scsi_sysfs.c  | 289 ++++++++++++++++++++++++++++++++++++++++++++-
- include/scsi/scsi.h        |   4 +-
- include/scsi/scsi_device.h |   3 +
- 4 files changed, 297 insertions(+), 2 deletions(-)
+On Fri, Feb 07, 2014 at 05:32:44PM +0000, Jim Malina wrote:
+>=20
+>=20
+> > -----Original Message-----
+> > From: Hannes Reinecke [mailto:hare@suse.de]
+> > Sent: Friday, February 07, 2014 5:46 AM
+> > To: Carlos Maiolino; Albert Chen
+> > Cc: lsf-pc@lists.linux-foundation.org; James Borden; Jim Malina; Cu=
+rtis
+> > Stevens; linux-ide@vger.kernel.org; linux-fsdevel@vger.kernel.org; =
+linux-
+> > scsi@vger.kernel.org
+> > Subject: Re: [LSF/MM TOPIC] SMR: Disrupting recording technology me=
+riting
+> > a new class of storage device
+> >=20
+> > On 02/07/2014 02:00 PM, Carlos Maiolino wrote:
+> > > Hi,
+> > >
+> > > On Sat, Feb 01, 2014 at 02:24:33AM +0000, Albert Chen wrote:
+> > >> [LSF/MM TOPIC] SMR: Disrupting recording technology meriting a n=
+ew
+> > >> class of storage device
+> > >>
+> > >> Shingle Magnetic Recording is a disruptive technology that deliv=
+ers
+> > >> the next areal density gain for the HDD industry by partially
+> > >> overlapping tracks. Shingling requires physical writes to be
+> > >> sequential, and opens the question of how to address this behavi=
+or at
+> > >> a system level. Two general approaches contemplated are to eithe=
+r to
+> > >> do the block management in the device or in the host storage
+> > >> stack/file system through Zone Block Commands (ZBC).
+> > >>
+> > >> The use of ZBC to handle SMR block management yields several ben=
+efits
+> > >> such as:
+> > >> - Predictable performance and latency
+> > >> - Faster development time
+> > >> - Access to application and system level semantic information
+> > >> - Scalability / Fewer Drive Resources
+> > >> - Higher reliability
+> > >>
+> > >> Essential to a host managed approach (ZBC) is the openness of Li=
+nux
+> > >> and its community is a good place for WD to validate and seek
+> > >> feedback for our thinking - where in the Linux system stack is t=
+he
+> > >> best place to add ZBC handling? at the Device Mapper layer?
+> > >> or somewhere else in the storage stack? New ideas and comments a=
+re
+> > >> appreciated.
+> > >
+> > > If you add ZBC handling into the device-mapper layer, aren't you
+> > > supposing that all SMR devices will be managed by device-mapper? =
+This
+> > doesn't look right IMHO.
+> > > These devices should be able to be managed via DM or either direc=
+tly
+> > > via de storage layer. And any other layers making use of these de=
+vices
+> > > (like DM for
+> > > example) should be able to communicate with them and send ZBC
+> > commands
+> > > as needed.
+> > >
+>=20
+>  Clarification:  ZBC is an interface protocol.  A new device and comm=
+and set.   SMR is a recording technology.  You may have ZBC without SMR=
+ or SMR without ZBC.  For examples.  SSD may benefit from ZBC protocol =
+to improve performance and reduce wear.   SMR may be 100% device manage=
+d and not provide information required of a ZBC device, like write poin=
+ters or zone boundaries.
+>=20
 
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 307a811..073fb84 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -929,6 +929,9 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
- 	if (*bflags & BLIST_SKIP_VPD_PAGES)
- 		sdev->skip_vpd_pages = 1;
- 
-+	if (sdev->scsi_level >= SCSI_3)
-+		scsi_attach_vpd_ident(sdev);
-+
- 	transport_configure_device(&sdev->sdev_gendev);
- 
- 	if (sdev->host->hostt->slave_configure) {
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 9117d0b..d506d12 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -415,6 +415,7 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
- 
- 	scsi_target_reap(scsi_target(sdev));
- 
-+	kfree(sdev->vpd_ident);
- 	kfree(sdev->inquiry);
- 	kfree(sdev);
- 
-@@ -725,8 +726,292 @@ show_queue_type_field(struct device *dev, struct device_attribute *attr,
- 
- static DEVICE_ATTR(queue_type, S_IRUGO, show_queue_type_field, NULL);
- 
-+void scsi_attach_vpd_ident(struct scsi_device *sdev)
-+{
-+	int ret;
-+	int vpd_len = 255;
-+	unsigned char *buffer;
-+retry:
-+	buffer = kmalloc(vpd_len, GFP_KERNEL);
-+	if (!buffer)
-+		return;
-+
-+	ret = scsi_get_vpd_page(sdev, 0x83, buffer, vpd_len);
-+	if (ret) {
-+		kfree(buffer);
-+		return;
-+	}
-+
-+	if ((buffer[2] << 8) + buffer[3] + 4 > vpd_len) {
-+		vpd_len = (buffer[2] << 8) + buffer[3] + 4;
-+		kfree(buffer);
-+		goto retry;
-+	}
-+	sdev->vpd_ident_len = vpd_len;
-+	sdev->vpd_ident = buffer;
-+}
-+
- static ssize_t
--show_iostat_counterbits(struct device *dev, struct device_attribute *attr, 				char *buf)
-+show_vpd_pg83(struct device *dev, struct device_attribute *attr,
-+	      char *buf)
-+{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	int len = 0, i;
-+
-+	if (!sdev->vpd_ident)
-+		return -EINVAL;
-+
-+	len = 0;
-+	for (i = 0; i < sdev->vpd_ident_len; i += 16) {
-+		hex_dump_to_buffer(sdev->vpd_ident + i, sdev->vpd_ident_len,
-+				   16, 1, buf + len, PAGE_SIZE, false);
-+		strcat(buf + len, "\n");
-+		len += strlen(buf + len);
-+	}
-+	return len;
-+}
-+static DEVICE_ATTR(vpd_pg83, S_IRUGO, show_vpd_pg83, NULL);
-+
-+#define SCSI_VPD_ASSOC_lun 0x0
-+#define SCSI_VPD_ASSOC_port 0x1
-+#define SCSI_VPD_ASSOC_target 0x2
-+
-+#define SCSI_VPD_DESIG_vendor 0x0
-+#define SCSI_VPD_DESIG_t10 0x1
-+#define SCSI_VPD_DESIG_eui 0x2
-+#define SCSI_VPD_DESIG_naa 0x3
-+#define SCSI_VPD_DESIG_relport 0x4
-+#define SCSI_VPD_DESIG_tpgrp 0x5
-+#define SCSI_VPD_DESIG_lugrp 0x6
-+#define SCSI_VPD_DESIG_md5 0x7
-+#define SCSI_VPD_DESIG_scsi_name 0x8
-+#define SCSI_VPD_DESIG_proto 0x9
-+
-+int scsi_parse_vpd_ident(struct scsi_device *sdev,
-+			 int assoc, int desig, char *buf)
-+{
-+	unsigned char *d;
-+	int len = 0, j;
-+
-+	if (!sdev->vpd_ident)
-+		return -EINVAL;
-+
-+	d = sdev->vpd_ident + 4;
-+	while (d < sdev->vpd_ident + sdev->vpd_ident_len) {
-+		const char *proto = NULL;
-+
-+		if (d + d[3] > sdev->vpd_ident + sdev->vpd_ident_len)
-+			return -EFAULT;
-+
-+		if (((d[1] >> 4) & 0x3) == assoc &&
-+		    (d[1] & 0xf) == desig) {
-+			if (d[1] & 0x80) {
-+				switch (d[0] >> 4) {
-+				case SCSI_PROTOCOL_FCP:
-+					proto = "fcp";
-+					break;
-+				case SCSI_PROTOCOL_SPI:
-+					proto = "spi";
-+					break;
-+				case SCSI_PROTOCOL_SSA:
-+					proto = "ssa";
-+					break;
-+				case SCSI_PROTOCOL_SBP:
-+					proto = "sbp";
-+					break;
-+				case SCSI_PROTOCOL_SRP:
-+					proto = "srp";
-+					break;
-+				case SCSI_PROTOCOL_ISCSI:
-+					proto = "iscsi";
-+					break;
-+				case SCSI_PROTOCOL_SAS:
-+					proto = "sas";
-+					break;
-+				case SCSI_PROTOCOL_ADT:
-+					proto = "adt";
-+					break;
-+				case SCSI_PROTOCOL_ATA:
-+					proto = "ata";
-+					break;
-+				case SCSI_PROTOCOL_UAS:
-+					proto = "usb";
-+					break;
-+				case SCSI_PROTOCOL_SOP:
-+					proto = "pcie";
-+					break;
-+				}
-+				if (proto)
-+					len += sprintf(buf + len, "%s:",
-+						       proto);
-+			}
-+			switch (d[1] & 0xf) {
-+			case SCSI_VPD_DESIG_eui:
-+			case SCSI_VPD_DESIG_naa:
-+			case SCSI_VPD_DESIG_md5:
-+				switch (d[3]) {
-+				case 8:
-+					len += sprintf(buf + len, "%8phN\n",
-+						       d + 4);
-+					break;
-+				case 12:
-+					len += sprintf(buf + len, "%12phN\n",
-+						       d + 4);
-+					break;
-+				case 16:
-+					len += sprintf(buf + len, "%16phN\n",
-+						       d + 4);
-+					break;
-+				}
-+				break;
-+			case SCSI_VPD_DESIG_relport:
-+			case SCSI_VPD_DESIG_tpgrp:
-+			case SCSI_VPD_DESIG_lugrp:
-+				len += sprintf(buf + len, "%d\n",
-+					      (int)(d[6] << 8) + d[7]);
-+				break;
-+			case SCSI_VPD_DESIG_vendor:
-+				if ((d[0] & 0xf) == 1) {
-+					for (j = 0; j < d[3]; j++) {
-+						len += sprintf(buf + len,
-+							       "%02x",
-+							       d[4 + j]);
-+					}
-+				} else {
-+					snprintf(buf + len, d[3] + 1,
-+						 "%s", d + 4);
-+					len += d[3];
-+				}
-+				len += sprintf(buf + len, "\n");
-+				break;
-+			case SCSI_VPD_DESIG_t10:
-+				/* T10 Vendor is always ASCII */
-+				snprintf(buf + len, 9, "%s ", d + 4);
-+				len += 8;
-+				if ((d[0] & 0xf) == 1) {
-+					for (j = 0; j < d[3] - 8; j++) {
-+						len += sprintf(buf + len,
-+							       "%02x",
-+							       d[12 + j]);
-+					}
-+				} else {
-+					snprintf(buf + len, d[3] - 7,
-+						 "%s", d + 12);
-+					len += d[3] - 8;
-+				}
-+				len += sprintf(buf + len, "\n");
-+				break;
-+			case SCSI_VPD_DESIG_scsi_name:
-+				snprintf(buf + len, d[3] + 2, "%s\n", d + 4);
-+				len += d[3] + 1;
-+				break;
-+			case SCSI_VPD_DESIG_proto:
-+				if (d[1] & 80) {
-+					if ((d[0] >> 4) == 0x9)
-+						len += sprintf(buf + len,
-+							       "%d-%d\n",
-+							       d[4], d[6]);
-+					else if ((d[0] >> 4) == 0xa) {
-+						j = (d[4] << 8) + d[5];
-+						len += sprintf(buf + len,
-+							       "%d\n", j);
-+					}
-+				}
-+				break;
-+			}
-+		}
-+		d += d[3] + 4;
-+	}
-+
-+	return len ? len : -EINVAL;
-+}
-+
-+#define sdev_evpd_ident(assoc,desig)				\
-+static ssize_t							\
-+sdev_show_evpd_ident_##assoc##_##desig (struct device *dev,		\
-+					struct device_attribute *attr,	\
-+					char * buf)			\
-+{									\
-+	struct scsi_device *sdev = to_scsi_device(dev);			\
-+	return scsi_parse_vpd_ident(sdev, SCSI_VPD_ASSOC_##assoc,	\
-+				    SCSI_VPD_DESIG_##desig, buf);	\
-+}
-+
-+#define sdev_evpd_attr(assoc, desig)					\
-+	sdev_evpd_ident(assoc, desig)					\
-+static DEVICE_ATTR(ident_##assoc##_##desig, S_IRUGO,			\
-+		   sdev_show_evpd_ident_##assoc##_##desig, NULL);
-+
-+sdev_evpd_attr(lun, vendor);
-+sdev_evpd_attr(lun, t10);
-+sdev_evpd_attr(lun, eui);
-+sdev_evpd_attr(lun, naa);
-+sdev_evpd_attr(lun, lugrp);
-+sdev_evpd_attr(lun, md5);
-+sdev_evpd_attr(lun, scsi_name);
-+sdev_evpd_attr(port, vendor);
-+sdev_evpd_attr(port, t10);
-+sdev_evpd_attr(port, relport);
-+sdev_evpd_attr(port, tpgrp);
-+sdev_evpd_attr(port, eui);
-+sdev_evpd_attr(port, naa);
-+sdev_evpd_attr(port, scsi_name);
-+sdev_evpd_attr(port, proto);
-+sdev_evpd_attr(target, vendor);
-+sdev_evpd_attr(target, t10);
-+sdev_evpd_attr(target, eui);
-+sdev_evpd_attr(target, naa);
-+sdev_evpd_attr(target, scsi_name);
-+
-+#define sdev_evpd_test_and_add_attr(sdev, assoc, desig, valid)	\
-+	if (test_bit(SCSI_VPD_DESIG_##desig + (SCSI_VPD_ASSOC_##assoc * 10), \
-+		     (valid)))						\
-+		device_create_file(&(sdev)->sdev_gendev,		\
-+				   &dev_attr_ident_##assoc##_##desig)
-+
-+static void scsi_sysfs_filter_vpd_ident(struct scsi_device *sdev)
-+{
-+	unsigned char *d;
-+	unsigned long valid = 0;
-+
-+	if (!sdev->vpd_ident)
-+		return;
-+
-+	device_create_file(&sdev->sdev_gendev, &dev_attr_vpd_pg83);
-+
-+	d = sdev->vpd_ident + 4;
-+	while (d < sdev->vpd_ident + sdev->vpd_ident_len) {
-+		set_bit((d[1] & 0xf) + (((d[1] >> 4) & 3) * 10), &valid);
-+		d += d[3] + 4;
-+	}
-+
-+	sdev_evpd_test_and_add_attr(sdev, lun, vendor, &valid);
-+	sdev_evpd_test_and_add_attr(sdev, lun, t10, &valid);
-+	sdev_evpd_test_and_add_attr(sdev, lun, eui, &valid);
-+	sdev_evpd_test_and_add_attr(sdev, lun, naa, &valid);
-+	sdev_evpd_test_and_add_attr(sdev, lun, lugrp, &valid);
-+	sdev_evpd_test_and_add_attr(sdev, lun, md5, &valid);
-+	sdev_evpd_test_and_add_attr(sdev, lun, scsi_name, &valid);
-+
-+	sdev_evpd_test_and_add_attr(sdev, port, vendor, &valid);
-+	sdev_evpd_test_and_add_attr(sdev, port, t10, &valid);
-+	sdev_evpd_test_and_add_attr(sdev, port, eui, &valid);
-+	sdev_evpd_test_and_add_attr(sdev, port, naa, &valid);
-+	sdev_evpd_test_and_add_attr(sdev, port, relport, &valid);
-+	sdev_evpd_test_and_add_attr(sdev, port, tpgrp, &valid);
-+	sdev_evpd_test_and_add_attr(sdev, port, scsi_name, &valid);
-+	sdev_evpd_test_and_add_attr(sdev, port, proto, &valid);
-+
-+	sdev_evpd_test_and_add_attr(sdev, target, vendor, &valid);
-+	sdev_evpd_test_and_add_attr(sdev, target, t10, &valid);
-+	sdev_evpd_test_and_add_attr(sdev, target, eui, &valid);
-+	sdev_evpd_test_and_add_attr(sdev, target, naa, &valid);
-+	sdev_evpd_test_and_add_attr(sdev, target, scsi_name, &valid);
-+}
-+
-+static ssize_t
-+show_iostat_counterbits(struct device *dev, struct device_attribute *attr,
-+			char *buf)
- {
- 	return snprintf(buf, 20, "%d\n", (int)sizeof(atomic_t) * 8);
- }
-@@ -1003,6 +1288,8 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
- 	transport_add_device(&sdev->sdev_gendev);
- 	sdev->is_visible = 1;
- 
-+	scsi_sysfs_filter_vpd_ident(sdev);
-+
- 	/* create queue files, which may be writable, depending on the host */
- 	if (sdev->host->hostt->change_queue_depth) {
- 		error = device_create_file(&sdev->sdev_gendev,
-diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
-index 0a4edfe..8fd13bb 100644
---- a/include/scsi/scsi.h
-+++ b/include/scsi/scsi.h
-@@ -334,7 +334,7 @@ static inline int scsi_status_is_good(int status)
- #define TYPE_OSD            0x11
- #define TYPE_NO_LUN         0x7f
- 
--/* SCSI protocols; these are taken from SPC-3 section 7.5 */
-+/* SCSI protocols; these are taken from SPC-4 section 7.6 */
- enum scsi_protocol {
- 	SCSI_PROTOCOL_FCP = 0,	/* Fibre Channel */
- 	SCSI_PROTOCOL_SPI = 1,	/* parallel SCSI */
-@@ -345,6 +345,8 @@ enum scsi_protocol {
- 	SCSI_PROTOCOL_SAS = 6,
- 	SCSI_PROTOCOL_ADT = 7,	/* Media Changers */
- 	SCSI_PROTOCOL_ATA = 8,
-+	SCSI_PROTOCOL_UAS = 9,
-+	SCSI_PROTOCOL_SOP = 0xa,
- 	SCSI_PROTOCOL_UNSPEC = 0xf, /* No specific protocol */
- };
- 
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index dcb2b73..81c7900 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -113,6 +113,8 @@ struct scsi_device {
- 	const char * vendor;		/* [back_compat] point into 'inquiry' ... */
- 	const char * model;		/* ... after scan; point to static string */
- 	const char * rev;		/* ... "nullnullnullnull" before scan */
-+	unsigned char vpd_ident_len;
-+	unsigned char *vpd_ident;
- 	struct scsi_target      *sdev_target;   /* used only for single_lun */
- 
- 	unsigned int	sdev_bflags; /* black/white flags as also found in
-@@ -308,6 +310,7 @@ extern int scsi_add_device(struct Scsi_Host *host, uint channel,
- extern int scsi_register_device_handler(struct scsi_device_handler *scsi_dh);
- extern void scsi_remove_device(struct scsi_device *);
- extern int scsi_unregister_device_handler(struct scsi_device_handler *scsi_dh);
-+void scsi_attach_vpd_ident(struct scsi_device *sdev);
- 
- extern int scsi_device_get(struct scsi_device *);
- extern void scsi_device_put(struct scsi_device *);
--- 
-1.7.12.4
+Thanks for clarification, and, this just enforce my concept that ZBC pr=
+otocol
+should be integrated in the generic block layer not make it device-mapp=
+er
+dependent. So, make this available to any device that supports it with =
+or
+without the help of DM.
 
+
+> > Precisely. Adding a new device type (and a new ULD to the SCSI
+> > midlayer) seems to be the right idea here.
+> > Then we could think of how to integrate this into the block layer; =
+eg we could
+> > identify the zones with partitions, or mirror the zones via block_l=
+imits.
+> >=20
+> > There is actually a good chance that we can tweak btrfs to run unmo=
+dified on
+> > such a disk; after all, sequential writes are not a big deal for bt=
+rfs. The only
+> > issue we might have is that we might need to re-allocate blocks to =
+free up
+> > zones.
+> > But some btrfs developers have assured me this shouldn't be too har=
+d.
+> >=20
+> > Personally I don't like the idea of _having_ to use a device-mapper=
+ module
+> > for these things. What I would like is giving the user a choice; if=
+ there are
+> > specialized fs around which can deal with such a disk (hello, ltfs =
+:-) then fine.
+> > If not of course we should be having a device-mapper module to hide=
+ the
+> > grubby details for unsuspecting filesystems.
+> >=20
+> > Cheers,
+> >=20
+> > Hannes
+> > --
+> > Dr. Hannes Reinecke		      zSeries & Storage
+> > hare@suse.de			      +49 911 74053 688
+> > SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+> > GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+>=20
+> jim
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-fsdev=
+el" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+--=20
+Carlos
+--
+To unsubscribe from this list: send the line "unsubscribe linux-fsdevel=
+" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
