@@ -1,46 +1,75 @@
-From: Jeremy Linton <jlinton@tributary.com>
-Subject: Re: [PATCHv2] Add EVPD page 0x83 entries to sysfs
-Date: Tue, 11 Feb 2014 10:56:38 -0600
-Message-ID: <52FA5646.4070009@tributary.com>
-References: <1392030699-105348-1-git-send-email-hare@suse.de> <52F91535.4010905@tributary.com> <52F9E00B.7070707@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay.ihostexchange.net ([66.46.182.55]:57341 "EHLO
-	relay.ihostexchange.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751185AbaBKQ4p (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Feb 2014 11:56:45 -0500
-In-Reply-To: <52F9E00B.7070707@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Russell King <rmk+kernel@arm.linux.org.uk>
+Subject: [PATCH] Fix uses of dma_max_pfn() when converting to a limiting
+ address
+Date: Tue, 11 Feb 2014 17:28:07 +0000
+Message-ID: <E1WDH7v-00038J-2k@rmk-PC.arm.linux.org.uk>
+Return-path: <linux-mmc-owner@vger.kernel.org>
+Sender: linux-mmc-owner@vger.kernel.org
+To: linux-arm-kernel@lists.infradead.org
+Cc: Chris Ball <chris@printf.net>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org, Santosh Shilimkar <santosh.shilimkar@ti.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Doug Gilbert <dgilbert@interlog.com>, Kai Makisara <kai.makisara@kolumbus.fi>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-On 2/11/2014 2:32 AM, Hannes Reinecke wrote:
-> The problem with page 0x80 is that (per spec) it's vendor-defined. So there
-> is no guarantee for it to be unique in any sense. Which makes it rather
-> impractical for normal use.
-> 
-> Hence we typically rely on page 0x83 to identify a device, be it for udev
-> or multipath.
+We must use a 64-bit for this, otherwise overflowed bits get lost, and
+that can result in a lower than intended value set.
 
-	AFAIK is not vendor defined page, its just not marked as "mandatory" by T10.
-For tape (which I what I thought brought much of this on) it is basically
-mandatory. Which is another place where the spec doesn't sync with the real
-world.
+Fixes: 8e0cb8a1f6ac ("ARM: 7797/1: mmc: Use dma_max_pfn(dev) helper for bounce_limit calculations")
+Fixes: 7d35496dd982 ("ARM: 7796/1: scsi: Use dma_max_pfn(dev) helper for bounce_limit calculations")
+Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+---
+While poking about with the Cubox-i4 and investigating why my UHS-1
+SD card wasn't achieving its full potential, I came across a slight
+problem... the SDHCI host sets a mask of 0xffffffff, but with the
+start of memory at pfn 0x10000, the blk code sees this when setting
+the bounce limit:
 
-	That is because it is the _ONLY_ vendor neutral method to autoconfigure tape
-libraries. The tape libraries export the drive serial numbers via READ ELEMENT
-STATUS, dvcid=1. Which means its the de facto method for backup/media manager
-applications. A tape/media changer device that crashes or fails to return useful
-0x80 information will have a very short life in the market.
+	max addr 0x0ffff000 bounce limit 0xffff dma 1
 
-	For sure, it would work better than the existing method being used by udev (for
-tape), which fails (per my other posting) because there is often insufficient
-information in 0x83 to uniquely identify devices.
+and this results in the bounce functions appearing in the profile:
 
+00000000c00f8b70 copy_to_high_bio_irq                  1139 2.5886
+00000000c00f8d28 bounce_end_io                           12 0.0714
+00000000c00f8dd0 bounce_end_io_read_isa                   8 0.1053
 
+which, compared to the cost of copying the data to userland and
+request handling, this is quite significant:
 
+00000000c04b1794 sdhci_request                          268 0.5447
+00000000c02d0740 __copy_to_user_std                     398 0.4252
 
-	
+With this calculation fixed, we avoid the bouncing code entirely.
+
+	max addr 0x10ffff000 bounce limit 0x10ffff dma 0
+
+ drivers/mmc/card/queue.c | 2 +-
+ drivers/scsi/scsi_lib.c  | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/mmc/card/queue.c b/drivers/mmc/card/queue.c
+index 357bbc54fe4b..3e049c13429c 100644
+--- a/drivers/mmc/card/queue.c
++++ b/drivers/mmc/card/queue.c
+@@ -197,7 +197,7 @@ int mmc_init_queue(struct mmc_queue *mq, struct mmc_card *card,
+ 	struct mmc_queue_req *mqrq_prev = &mq->mqrq[1];
+ 
+ 	if (mmc_dev(host)->dma_mask && *mmc_dev(host)->dma_mask)
+-		limit = dma_max_pfn(mmc_dev(host)) << PAGE_SHIFT;
++		limit = (u64)dma_max_pfn(mmc_dev(host)) << PAGE_SHIFT;
+ 
+ 	mq->card = card;
+ 	mq->queue = blk_init_queue(mmc_request_fn, lock);
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 7bd7f0d5f050..62ec84b42e31 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1684,7 +1684,7 @@ u64 scsi_calculate_bounce_limit(struct Scsi_Host *shost)
+ 
+ 	host_dev = scsi_get_device(shost);
+ 	if (host_dev && host_dev->dma_mask)
+-		bounce_limit = dma_max_pfn(host_dev) << PAGE_SHIFT;
++		bounce_limit = (u64)dma_max_pfn(host_dev) << PAGE_SHIFT;
+ 
+ 	return bounce_limit;
+ }
+-- 
+1.8.3.1
+
