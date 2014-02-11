@@ -1,26 +1,21 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv3] Add EVPD page 0x83 entries to sysfs
-Date: Tue, 11 Feb 2014 11:54:37 +0100
-Message-ID: <1392116077-5685-1-git-send-email-hare@suse.de>
+Subject: [PATCHv4] Add EVPD page 0x83 entries to sysfs
+Date: Tue, 11 Feb 2014 12:00:27 +0100
+Message-ID: <1392116427-13822-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:41176 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:41330 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750767AbaBKKyk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Feb 2014 05:54:40 -0500
+	id S1750788AbaBKLA3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 11 Feb 2014 06:00:29 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Jeremy Linton <jlinton@tributary.com>, Doug Gilbert <dgilbert@interlog.com>, Kai Makisara <kai.makisara@kolumbus.fi>
+Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Jeremy Linton <jlinton@tributary.com>, Doug Gilbert <dgilbert@interlog.com>, Kai Makisara <kai.makisara@kolumbus.fi>
 
 EVPD page 0x83 is used to uniquely identify the device.
 So instead of having each and every program issue a separate
 SG_IO call to retrieve this information it does make far more
 sense to display it in sysfs.
-The page is displayed in its entirety with the attribute
-'vpd_pg83', and the individual designators are stored in
-ident_<association>_<designator> attributes.
-Duplicate designators are added as individual lines to
-the corresponding attribute.
 
 Cc: Jeremy Linton <jlinton@tributary.com>
 Cc: Doug Gilbert <dgilbert@interlog.com>
@@ -48,7 +43,7 @@ index 307a811..073fb84 100644
  
  	if (sdev->host->hostt->slave_configure) {
 diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 9117d0b..e77e079 100644
+index 9117d0b..d506d12 100644
 --- a/drivers/scsi/scsi_sysfs.c
 +++ b/drivers/scsi/scsi_sysfs.c
 @@ -415,6 +415,7 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
@@ -79,8 +74,8 @@ index 9117d0b..e77e079 100644
 +		return;
 +	}
 +
-+	vpd_len = (buffer[2] << 8) + buffer[3];
-+	if (vpd_len > 255) {
++	if ((buffer[2] << 8) + buffer[3] + 4 > vpd_len) {
++		vpd_len = (buffer[2] << 8) + buffer[3] + 4;
 +		kfree(buffer);
 +		goto retry;
 +	}
