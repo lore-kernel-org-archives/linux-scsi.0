@@ -1,213 +1,96 @@
 From: <Sumit.Saxena@lsi.com>
-Subject: [PATCH 1/4] megaraid_sas : Don't wait forever for non-IOCTL DCMDs
-Date: Wed, 12 Feb 2014 23:36:15 +0530
-Message-ID: <201402121236.s1CCa0Rm006000@cosmhbs0.lsi.com>
+Subject: [PATCH 2/4] megaraid_sas : Big endian code related fixes
+Date: Wed, 12 Feb 2014 23:37:46 +0530
+Message-ID: <201402121237.s1CCbUt6006995@cosmhbs0.lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2lp0242.outbound.protection.outlook.com ([207.46.163.242]:31707
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+Received: from mail-bl2lp0212.outbound.protection.outlook.com ([207.46.163.212]:31663
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751530AbaBLMgc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 12 Feb 2014 07:36:32 -0500
+	id S1751435AbaBLMh6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 12 Feb 2014 07:37:58 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: jbottomley@parallels.com, kashyap.desai@lsi.com, aradford@gmail.com
 
-Don't wait forever for firmware response for internal DCMDs sent from driver firmware. Such DCMDs will be posted to firmware with
-timeout. Timeout is also introduced for DCMD sent to abort the commands. DCMD sent via IOCTL path will still be always blocking to
-keep the IOCTL design intact.
+Few big endian code related fixes.
 
 Signed-off-by: Sumit Saxena <sumit.saxena@lsi.com>
 Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
 ---
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 3b7ad10..9d1dc99 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -898,6 +898,7 @@ megasas_issue_polled(struct megasas_instance *instance, struct megasas_cmd *cmd)
-  * megasas_issue_blocked_cmd -	Synchronous wrapper around regular FW cmds
-  * @instance:			Adapter soft state
-  * @cmd:			Command to be issued
-+ * @timeout:			Timeout in seconds
-  *
-  * This function waits on an event for the command to be returned from ISR.
-  * Max wait time is MEGASAS_INTERNAL_CMD_WAIT_TIME secs
-@@ -905,13 +906,20 @@ megasas_issue_polled(struct megasas_instance *instance, struct megasas_cmd *cmd)
-  */
- static int
- megasas_issue_blocked_cmd(struct megasas_instance *instance,
--			  struct megasas_cmd *cmd)
-+			  struct megasas_cmd *cmd, int timeout)
+diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
+index 34452ea..a80e13e 100644
+--- a/drivers/scsi/megaraid/megaraid_sas.h
++++ b/drivers/scsi/megaraid/megaraid_sas.h
+@@ -1347,9 +1347,15 @@ struct megasas_cmd;
+ union megasas_evt_class_locale {
+ 
+ 	struct {
++#ifndef __BIG_ENDIAN_BITFIELD
+ 		u16 locale;
+ 		u8 reserved;
+ 		s8 class;
++#else
++		s8 class;
++		u8 reserved;
++		u16 locale;
++#endif
+ 	} __attribute__ ((packed)) members;
+ 
+ 	u32 word;
+@@ -1728,7 +1734,7 @@ MR_BuildRaidContext(struct megasas_instance *instance,
+ 		    struct IO_REQUEST_INFO *io_info,
+ 		    struct RAID_CONTEXT *pRAID_Context,
+ 		    struct MR_FW_RAID_MAP_ALL *map, u8 **raidLUN);
+-u16 MR_TargetIdToLdGet(u32 ldTgtId, struct MR_FW_RAID_MAP_ALL *map);
++u8 MR_TargetIdToLdGet(u32 ldTgtId, struct MR_FW_RAID_MAP_ALL *map);
+ struct MR_LD_RAID *MR_LdRaidGet(u32 ld, struct MR_FW_RAID_MAP_ALL *map);
+ u16 MR_ArPdGet(u32 ar, u32 arm, struct MR_FW_RAID_MAP_ALL *map);
+ u16 MR_LdSpanArrayGet(u32 ld, u32 span, struct MR_FW_RAID_MAP_ALL *map);
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fp.c b/drivers/scsi/megaraid/megaraid_sas_fp.c
+index e24b6eb..2f3bd55 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fp.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fp.c
+@@ -143,12 +143,12 @@ u16 MR_PdDevHandleGet(u32 pd, struct MR_FW_RAID_MAP_ALL *map)
+ 
+ u16 MR_GetLDTgtId(u32 ld, struct MR_FW_RAID_MAP_ALL *map)
  {
-+	int ret = 0;
- 	cmd->cmd_status = ENODATA;
- 
- 	instance->instancet->issue_dcmd(instance, cmd);
--
--	wait_event(instance->int_cmd_wait_q, cmd->cmd_status != ENODATA);
-+	if (timeout) {
-+		ret = wait_event_timeout(instance->int_cmd_wait_q,
-+				cmd->cmd_status != ENODATA, timeout * HZ);
-+		if (!ret)
-+			return 1;
-+	} else
-+		wait_event(instance->int_cmd_wait_q,
-+				cmd->cmd_status != ENODATA);
- 
- 	return 0;
+-	return map->raidMap.ldSpanMap[ld].ldRaid.targetId;
++	return le16_to_cpu(map->raidMap.ldSpanMap[ld].ldRaid.targetId);
  }
-@@ -920,18 +928,20 @@ megasas_issue_blocked_cmd(struct megasas_instance *instance,
-  * megasas_issue_blocked_abort_cmd -	Aborts previously issued cmd
-  * @instance:				Adapter soft state
-  * @cmd_to_abort:			Previously issued cmd to be aborted
-+ * @timeout:				Timeout in seconds
-  *
-- * MFI firmware can abort previously issued AEN command (automatic event
-+ * MFI firmware can abort previously issued AEN comamnd (automatic event
-  * notification). The megasas_issue_blocked_abort_cmd() issues such abort
-  * cmd and waits for return status.
-  * Max wait time is MEGASAS_INTERNAL_CMD_WAIT_TIME secs
-  */
- static int
- megasas_issue_blocked_abort_cmd(struct megasas_instance *instance,
--				struct megasas_cmd *cmd_to_abort)
-+				struct megasas_cmd *cmd_to_abort, int timeout)
+ 
+-u16 MR_TargetIdToLdGet(u32 ldTgtId, struct MR_FW_RAID_MAP_ALL *map)
++u8 MR_TargetIdToLdGet(u32 ldTgtId, struct MR_FW_RAID_MAP_ALL *map)
  {
- 	struct megasas_cmd *cmd;
- 	struct megasas_abort_frame *abort_fr;
-+	int ret = 0;
+-	return le16_to_cpu(map->raidMap.ldTgtIdToLd[ldTgtId]);
++	return map->raidMap.ldTgtIdToLd[ldTgtId];
+ }
  
- 	cmd = megasas_get_cmd(instance);
- 
-@@ -957,10 +967,18 @@ megasas_issue_blocked_abort_cmd(struct megasas_instance *instance,
- 
- 	instance->instancet->issue_dcmd(instance, cmd);
- 
--	/*
--	 * Wait for this cmd to complete
--	 */
--	wait_event(instance->abort_cmd_wait_q, cmd->cmd_status != 0xFF);
-+	if (timeout) {
-+		ret = wait_event_timeout(instance->abort_cmd_wait_q,
-+				cmd->cmd_status != ENODATA, timeout * HZ);
-+		if (!ret) {
-+			dev_err(&instance->pdev->dev, "Command timedout"
-+				"from %s\n", __func__);
-+			return 1;
-+		}
-+	} else
-+		wait_event(instance->abort_cmd_wait_q,
-+				cmd->cmd_status != ENODATA);
-+
- 	cmd->sync_cmd = 0;
- 
- 	megasas_return_cmd(instance, cmd);
-@@ -3933,16 +3951,19 @@ megasas_get_seq_num(struct megasas_instance *instance,
- 	dcmd->sgl.sge32[0].phys_addr = cpu_to_le32(el_info_h);
- 	dcmd->sgl.sge32[0].length = cpu_to_le32(sizeof(struct megasas_evt_log_info));
- 
--	megasas_issue_blocked_cmd(instance, cmd);
--
--	/*
--	 * Copy the data back into callers buffer
--	 */
--	eli->newest_seq_num = le32_to_cpu(el_info->newest_seq_num);
--	eli->oldest_seq_num = le32_to_cpu(el_info->oldest_seq_num);
--	eli->clear_seq_num = le32_to_cpu(el_info->clear_seq_num);
--	eli->shutdown_seq_num = le32_to_cpu(el_info->shutdown_seq_num);
--	eli->boot_seq_num = le32_to_cpu(el_info->boot_seq_num);
-+	if (megasas_issue_blocked_cmd(instance, cmd, 30))
-+		dev_err(&instance->pdev->dev, "Command timedout"
-+			"from %s\n", __func__);
-+	else {
-+		/*
-+		 * Copy the data back into callers buffer
-+		 */
-+		eli->newest_seq_num = le32_to_cpu(el_info->newest_seq_num);
-+		eli->oldest_seq_num = le32_to_cpu(el_info->oldest_seq_num);
-+		eli->clear_seq_num = le32_to_cpu(el_info->clear_seq_num);
-+		eli->shutdown_seq_num = le32_to_cpu(el_info->shutdown_seq_num);
-+		eli->boot_seq_num = le32_to_cpu(el_info->boot_seq_num);
-+	}
- 
- 	pci_free_consistent(instance->pdev, sizeof(struct megasas_evt_log_info),
- 			    el_info, el_info_h);
-@@ -4018,7 +4039,7 @@ megasas_register_aen(struct megasas_instance *instance, u32 seq_num,
- 			instance->aen_cmd->abort_aen = 1;
- 			ret_val = megasas_issue_blocked_abort_cmd(instance,
- 								  instance->
--								  aen_cmd);
-+								  aen_cmd, 30);
- 
- 			if (ret_val) {
- 				printk(KERN_DEBUG "megasas: Failed to abort "
-@@ -4522,7 +4543,9 @@ static void megasas_flush_cache(struct megasas_instance *instance)
- 	dcmd->opcode = cpu_to_le32(MR_DCMD_CTRL_CACHE_FLUSH);
- 	dcmd->mbox.b[0] = MR_FLUSH_CTRL_CACHE | MR_FLUSH_DISK_CACHE;
- 
--	megasas_issue_blocked_cmd(instance, cmd);
-+	if (megasas_issue_blocked_cmd(instance, cmd, 30))
-+		dev_err(&instance->pdev->dev, "Command timedout"
-+			" from %s\n", __func__);
- 
- 	megasas_return_cmd(instance, cmd);
- 
-@@ -4549,10 +4572,11 @@ static void megasas_shutdown_controller(struct megasas_instance *instance,
- 		return;
- 
- 	if (instance->aen_cmd)
--		megasas_issue_blocked_abort_cmd(instance, instance->aen_cmd);
-+		megasas_issue_blocked_abort_cmd(instance,
-+			instance->aen_cmd, 30);
- 	if (instance->map_update_cmd)
- 		megasas_issue_blocked_abort_cmd(instance,
--						instance->map_update_cmd);
-+			instance->map_update_cmd, 30);
- 	dcmd = &cmd->frame->dcmd;
- 
- 	memset(dcmd->mbox.b, 0, MFI_MBOX_SIZE);
-@@ -4566,7 +4590,9 @@ static void megasas_shutdown_controller(struct megasas_instance *instance,
- 	dcmd->data_xfer_len = 0;
- 	dcmd->opcode = cpu_to_le32(opcode);
- 
--	megasas_issue_blocked_cmd(instance, cmd);
-+	if (megasas_issue_blocked_cmd(instance, cmd, 30))
-+		dev_err(&instance->pdev->dev, "Command timedout"
-+			"from %s\n", __func__);
- 
- 	megasas_return_cmd(instance, cmd);
- 
-@@ -4793,6 +4819,9 @@ static void megasas_detach_one(struct pci_dev *pdev)
- 		instance->ev = NULL;
- 	}
- 
-+	/* cancel all wait events */
-+	wake_up_all(&instance->int_cmd_wait_q);
-+
- 	tasklet_kill(&instance->isr_tasklet);
- 
- 	/*
-@@ -5045,7 +5074,7 @@ megasas_mgmt_fw_ioctl(struct megasas_instance *instance,
- 	 * cmd to the SCSI mid-layer
- 	 */
- 	cmd->sync_cmd = 1;
--	megasas_issue_blocked_cmd(instance, cmd);
-+	megasas_issue_blocked_cmd(instance, cmd, 0);
- 	cmd->sync_cmd = 0;
- 
- 	/*
+ static struct MR_LD_SPAN *MR_LdSpanPtrGet(u32 ld, u32 span,
 diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index f655592..2d292de 100644
+index 2d292de..0de0e63 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
 +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -2469,6 +2469,7 @@ int megasas_reset_fusion(struct Scsi_Host *shost)
- 		printk(KERN_WARNING "megaraid_sas: Reset failed, killing "
- 		       "adapter.\n");
- 		megaraid_sas_kill_hba(instance);
-+		instance->adprecovery = MEGASAS_HW_CRITICAL_ERROR;
- 		retval = FAILED;
- 	} else {
- 		clear_bit(MEGASAS_FUSION_IN_RESET, &instance->reset_flags);
+@@ -1604,8 +1604,8 @@ megasas_build_dcdb_fusion(struct megasas_instance *instance,
+ 			MR_RAID_CTX_RAID_FLAGS_IO_SUB_TYPE_SHIFT;
+ 		if ((instance->pdev->device == PCI_DEVICE_ID_LSI_INVADER) ||
+ 			(instance->pdev->device == PCI_DEVICE_ID_LSI_FURY))
+-			io_request->IoFlags |=
+-				MPI25_SAS_DEVICE0_FLAGS_ENABLED_FAST_PATH;
++			io_request->IoFlags |= cpu_to_le16(
++				MPI25_SAS_DEVICE0_FLAGS_ENABLED_FAST_PATH);
+ 		cmd->request_desc->SCSIIO.RequestFlags =
+ 			(MPI2_REQ_DESCRIPT_FLAGS_HIGH_PRIORITY <<
+ 			 MEGASAS_REQ_DESCRIPT_FLAGS_TYPE_SHIFT);
+@@ -2422,7 +2422,7 @@ int megasas_reset_fusion(struct Scsi_Host *shost)
+ 					instance->
+ 					cmd_list[cmd_fusion->sync_cmd_idx];
+ 					if (cmd_mfi->frame->dcmd.opcode ==
+-					    MR_DCMD_LD_MAP_GET_INFO) {
++					    cpu_to_le32(MR_DCMD_LD_MAP_GET_INFO)) {
+ 						megasas_return_cmd(instance,
+ 								   cmd_mfi);
+ 						megasas_return_cmd_fusion(
