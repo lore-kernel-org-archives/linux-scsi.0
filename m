@@ -1,142 +1,118 @@
-From: Richard Yao <ryao@gentoo.org>
-Subject: Re: mpt2sas driver barfs when force removing a drive on 3.13.1
-Date: Wed, 12 Feb 2014 12:41:43 -0500
-Message-ID: <52FBB257.10304@gentoo.org>
-References: <52EC60C3.1080103@gentoo.org>	<20140203092409.63ffd9a0@jlaw-desktop.mno.stratus.com>	<188de80a52694613b5a1a045d0658256@CO1PR07MB298.namprd07.prod.outlook.com> <20140212114308.4f57a8b5@jlaw-desktop.mno.stratus.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH] scsi_transport_sas: move bsg destructor into sas_rphy_remove
+Date: Wed, 12 Feb 2014 11:13:22 -0800
+Message-ID: <CAA9_cme2REPT4L+uBkZaYtnfq1W2efO3Cs+5i61ArHiB4XdOgg@mail.gmail.com>
+References: <20131120140840.4d1f23ca@jlaw-desktop.mno.stratus.com>
+	<20131125112339.45e279db@jlaw-desktop.mno.stratus.com>
+	<20131203130305.1d414258@jlaw-desktop.mno.stratus.com>
+	<20131203131550.17a56000@jlaw-desktop.mno.stratus.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="jCLPncqu4XxmfgTJO0TPbu8ISS86R7cbr"
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.gentoo.org ([140.211.166.183]:42136 "EHLO smtp.gentoo.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752487AbaBLRlz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 12 Feb 2014 12:41:55 -0500
-In-Reply-To: <20140212114308.4f57a8b5@jlaw-desktop.mno.stratus.com>
+Received: from mail-qa0-f48.google.com ([209.85.216.48]:58941 "EHLO
+	mail-qa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752721AbaBLTNX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Feb 2014 14:13:23 -0500
+Received: by mail-qa0-f48.google.com with SMTP id f11so14641562qae.35
+        for <linux-scsi@vger.kernel.org>; Wed, 12 Feb 2014 11:13:23 -0800 (PST)
+In-Reply-To: <20131203131550.17a56000@jlaw-desktop.mno.stratus.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Joe Lawrence <joe.lawrence@stratus.com>, "Reddy, Sreekanth" <Sreekanth.Reddy@lsi.com>
-Cc: "prometheanfire@gentoo.org" <prometheanfire@gentoo.org>, "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>, Support <support@lsi.com>, DL-MPT Fusion Linux <DL-MPTFusionLinux@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "JBottomley@parallels.com" <JBottomley@parallels.com>, "kernel@gentoo.org" <kernel@gentoo.org>, Dan Williams <dan.j.williams@intel.com>
+To: Joe Lawrence <joe.lawrence@stratus.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Dave Jiang <dave.jiang@gmail.com>, artur.paszkiewicz@intel.com, Lukasz Dorau <lukasz.dorau@intel.com>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---jCLPncqu4XxmfgTJO0TPbu8ISS86R7cbr
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+Hi Joe, thanks for copying me on that other thread.
 
-You should use `git send-email` to send the patch to all of the people
-listed by get_maintainer.pl:
+On Tue, Dec 3, 2013 at 10:15 AM, Joe Lawrence <joe.lawrence@stratus.com> wrote:
+> The recent change in sysfs, bcdde7e221a8750f9b62b6d0bd31b72ea4ad9309
+> "sysfs: make __sysfs_remove_dir() recursive" revealed an asymmetric
+> rphy device creation/deletion sequence in scsi_transport_sas:
+>
+>   modprobe mpt2sas
+>     sas_rphy_add
+>       device_add A               rphy->dev
+>       device_add B               sas_device transport class
+>       device_add C               sas_end_device transport class
+>       device_add D               bsg class
+>
+>   rmmod mpt2sas
+>     sas_rphy_delete
+>       sas_rphy_remove
+>         device_del B
+>         device_del C
+>         device_del A
+>           sysfs_remove_group     recursive sysfs dir removal
+>       sas_rphy_free
+>         device_del D             warning
+>
+>   where device A is the parent of B, C, and D.
+>
+> When sas_rphy_free tries to unregister the bsg request queue (device D
+> above), the ensuing sysfs cleanup discovers that its sysfs group has
+> already been removed and emits a warning, "sysfs group... not found for
+> kobject 'end_device-X:0'".
+>
+> Since bsg creation is a side effect of sas_rphy_add, move its
+> complementary removal call into sas_rphy_remove. This imposes the
+> following tear-down order for the devices above: D, B, C, A.
+>
+> Note the sas_device and sas_end_device transport class devices (B and C
+> above) are created and destroyed both via the list match traversal in
+> attribute_container_device_trigger, so the order in which they are
+> handled is fixed. This is fine as long as they are deleted before their
+> parent device.
+>
+> Signed-off-by: Joe Lawrence <joe.lawrence@stratus.com>
+> Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+> ---
+>  drivers/scsi/scsi_transport_sas.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+>
+> diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
+> index 1b681427dde0..c341f855fadc 100644
+> --- a/drivers/scsi/scsi_transport_sas.c
+> +++ b/drivers/scsi/scsi_transport_sas.c
+> @@ -1621,8 +1621,6 @@ void sas_rphy_free(struct sas_rphy *rphy)
+>         list_del(&rphy->list);
+>         mutex_unlock(&sas_host->lock);
+>
+> -       sas_bsg_remove(shost, rphy);
+> -
+>         transport_destroy_device(dev);
+>
+>         put_device(dev);
+> @@ -1681,6 +1679,7 @@ sas_rphy_remove(struct sas_rphy *rphy)
+>         }
+>
+>         sas_rphy_unlink(rphy);
+> +       sas_bsg_remove(NULL, rphy);
+>         transport_remove_device(dev);
+>         device_del(dev);
+>  }
 
-richard@desktop ~/devel/linux $ scripts/get_maintainer.pl --file
-drivers/scsi/scsi_transport_sas.c
-"James E.J. Bottomley" <JBottomley@parallels.com> (maintainer:SCSI
-SUBSYSTEM)
-linux-scsi@vger.kernel.org (open list:SCSI SUBSYSTEM)
-linux-kernel@vger.kernel.org (open list)
+Acked-by: Dan Williams <dan.j.williams@intel.com>
 
-If I see that James E.J. Bottomley is already on CC for this discussion,
-but my recent (and first) experience submitting a patch for another
-subsystem was that they are ignored unless this strict procedure is
-followed.
+I think this is the right move, and some follow-up cleanups / fixes
+come to mind:
 
-If the maintainer does not respond within a month after doing this, I
-suggest informing Linus Torvalds via email that the subsystem maintainer
-is non-responsive.
+1/ Why is sas_bsg_remove() multiplexing 2 use cases?  Let's just have
+a sas_host_bsg_remove() and a sas_device_bsg_remove().
 
-On 02/12/2014 11:43 AM, Joe Lawrence wrote:
-> Hi Sreekanth,
->=20
-> There hasn't been much recent activity in
-> drivers/scsi/scsi_transport_sas.c, so I wasn't sure who could best
-> review the patch.
->=20
-> Dan Williams added sas_rphy_unlink() back in 2011, perhaps he can
-> remember why sas_bsg_remove wasn't performed there?
->=20
-> Regards,
->=20
-> -- Joe
->=20
->=20
-> On Wed, 12 Feb 2014 11:43:58 +0000
-> "Reddy, Sreekanth" <Sreekanth.Reddy@lsi.com> wrote:
->=20
->> Hi Joe,
->>
->> May I known the status of this patch having subject
->> "[PATCH] scsi_transport_sas: move bsg destructor into sas_rphy_remove"=
-=2E
->>
->> I need the status of this patch as I am also observing the same WARNIN=
-G call trace on latest 3.14.0-rc2+ kernel whenever we unload the mpt2sas/=
-mpt3sas driver or whenever we unplug the drive attached to the HBA.
->> But after applying yours patch, these WARNING call trace is not observ=
-ed.
->>
->> Regards,
->> Sreekanth
->>
->>> -----Original Message-----
->>> From: Joe Lawrence [mailto:joe.lawrence@stratus.com]
->>> Sent: Monday, February 03, 2014 7:54 PM
->>> To: prometheanfire@gentoo.org
->>> Cc: Nandigama, Nagalakshmi; Reddy, Sreekanth; Support; DL-MPT Fusion
->>> Linux; linux-scsi@vger.kernel.org; JBottomley@parallels.com; linux-
->>> kernel@vger.kernel.org; kernel@gentoo.org
->>> Subject: Re: mpt2sas driver barfs when force removing a drive on 3.13=
-=2E1
->>>
->>> On Fri, 31 Jan 2014 20:49:39 -0600
->>> Matthew Thode <prometheanfire@gentoo.org> wrote:
->>>
->>>> I decided to pull a drive while it was in use out of laziness (it wa=
-s
->>>> open via luks, but not in actual use).  Got a fun trace as a result.=
+2/ I think sas_rphy_free() mishandles the reference counts in the
+sas_rphy_add() failing case.
+sas_rphy_free() does:
+        transport_destroy_device(dev); /* which is just put_device(dev) */
+        put_device(dev);
 
->>>> Just thought you'd like to know :D
->>>>
->>>
->>> Hi Matthew,
->>>
->>> The first trace looks a lot like what I see on mpt2sas driver removal=
- [1].  I
->>> posted a suggested fix back in Dec [2], which you might try, however =
-it is not
->>> reviewed at this point.
->>>
->>> [1] http://thread.gmane.org/gmane.linux.scsi/86237
->>> [2] https://github.com/joe-
->>> lawrence/linux/compare/scsi_transport_sas_sysfs_warning.patch
->>>
->>> Regards,
->>>
->>> -- Joe
->>
->=20
+...but if sas_rphy_add() failed we never took the reference from
+transport_add_device() and I expect we only have the one reference
+from device_initialize() to drop.
 
+We also ignore the return code from transport_add_device() which is
+another hole.
 
+--
+Dan
 
---jCLPncqu4XxmfgTJO0TPbu8ISS86R7cbr
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iQIcBAEBAgAGBQJS+7JeAAoJECDuEZm+6ExkorUQAJYreT8C4z9Wd2NJcZbNE+EY
-HwaaeRSIa4gYTN/XurY2w4GhnZDoGOqmYinhaA0PUHyPWry/IbDQCTZsju8G5teC
-ddMQfcF8S3EyHdPeVQker1XS8uexS0baVZ+qTYiUNFIL0BhBv+GGae/6jAEudvOE
-ClZ/vYJ5v4AhUs4LegGQ8t++4MWeQ1+O3NsxC5wFvE+ike1dL+QYbjIfHbP2VxU0
-ZVtX35rTRhbd8rUjKlyP1/Lm1nSG2/Bipcdujy1IRdFZGuB6Rx20k9UbMbXol1Y1
-sIsk8z0HAah0F8KwevK0+Q32b3cAUjlCnvHEpF5dcr9E/PPc0RDdL42jw/iWV7wy
-7U5RyPMeMEd7qppd569mqXQmgLWJ42SUz0vla2JiwI38HZL61Whc5CJ3cIbU1eXc
-AYOJztmsEypafl7fAwUA3uPxYneTa3lLz8zOATmC9z57L1RXpryTD/DIMfYoJiWu
-jwmHX1dwDQ5zo5CL0Rnwf7Lxt97uqkYbz7JUkI2ibRbn+ra8ITGiw25u68G5ogIx
-QPOb+TjVkfXRex1nkr/YXRES1WP0eaP/SAaKLxzxDffrGpCOuh5U5QPz/T9NBYmg
-DeSZfJX8Fgc0tCAw06KzVGkzVEezP5L9oSMeFF+EnCLMMpyOzjWa7bft6sQ/y+Jy
-t1A9MIpV1MBSQ5RnVkJZ
-=nGFz
------END PGP SIGNATURE-----
-
---jCLPncqu4XxmfgTJO0TPbu8ISS86R7cbr--
+Commenting on this mail should refresh this in James' queue.  But you
+may want to resend anyways given this is a few months old.
