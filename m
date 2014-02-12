@@ -1,34 +1,42 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv6 0/3] Display EVPD pages in sysfs
-Date: Wed, 12 Feb 2014 11:24:28 +0100
-Message-ID: <1392200671-35624-1-git-send-email-hare@suse.de>
+Subject: Re: [PATCH 1/6] scsi: avoid useless free_list lock roundtrips
+Date: Wed, 12 Feb 2014 11:53:54 +0100
+Message-ID: <52FB52C2.5070207@suse.de>
+References: <20140206184306.997538898@bombadil.infradead.org> <20140206184417.414170526@bombadil.infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:36653 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:37433 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751840AbaBLKYh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 12 Feb 2014 05:24:37 -0500
+	id S1751001AbaBLKx4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 12 Feb 2014 05:53:56 -0500
+In-Reply-To: <20140206184417.414170526@bombadil.infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>
+To: Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org
 
-Hi all,
+On 02/06/2014 07:43 PM, Christoph Hellwig wrote:
+> Avoid hitting the host-wide free_list lock unless we need to put a co=
+mmand
+> back onto the freelist.
+>=20
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+Looks good.
 
-This version now includes the review from hch, and I've
-added a new patch to display EVPD page 0x80 in sysfs, too.
-And some more sanity checks to play nice with broken devices.
+Acked-by: Hannes Reinecke <hare@suse.de>
 
-Hannes Reinecke (3):
-  scsi_sysfs: Implement 'is_visible' callback
-  Add EVPD page 0x83 entries to sysfs
-  Add EVPD page 0x80 to sysfs
+Cheers,
 
- drivers/scsi/scsi_scan.c   |   5 +
- drivers/scsi/scsi_sysfs.c  | 559 +++++++++++++++++++++++++++++++++++++--------
- include/scsi/scsi.h        |   4 +-
- include/scsi/scsi_device.h |   6 +
- 4 files changed, 481 insertions(+), 93 deletions(-)
-
--- 
-1.7.12.4
-
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
