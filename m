@@ -1,222 +1,78 @@
-From: <Sumit.Saxena@lsi.com>
-Subject: [PATCH 4/4] megaraid_sas : Performance boost fixes
-Date: Wed, 12 Feb 2014 23:40:14 +0530
-Message-ID: <201402121239.s1CCdw6s007458@cosmhbs0.lsi.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 04/16] scsi_dh_alua: Make stpg synchronous
+Date: Wed, 12 Feb 2014 16:29:23 +0100
+Message-ID: <52FB9353.7040807@suse.de>
+References: <1391160600-19652-1-git-send-email-hare@suse.de> <1391160600-19652-5-git-send-email-hare@suse.de> <52F435B3.3090600@cs.wisc.edu> <52F43CD7.5050900@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2lp0210.outbound.protection.outlook.com ([207.46.163.210]:56137
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751337AbaBLMlN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 12 Feb 2014 07:41:13 -0500
+Received: from cantor2.suse.de ([195.135.220.15]:44459 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751530AbaBLP3Y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 12 Feb 2014 10:29:24 -0500
+In-Reply-To: <52F43CD7.5050900@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: jbottomley@parallels.com, kashyap.desai@lsi.com, aradford@gmail.com
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: James Bottomley <jbottomley@parallels.com>, Sean Stewart <sean.stewart@netapp.com>, Martin George <marting@netapp.com>, linux-scsi@vger.kernel.org
 
-Changes done for performance boost-
-1) Added code to set SMP IRQ affinity per CPU
-2) Removed host lock for queue_command to enable Asynchronous IO submission
-3) Pass MSI-x index, while issuing sysPD IO.
+On 02/07/2014 02:54 AM, Mike Christie wrote:
+> On 02/06/2014 07:24 PM, Mike Christie wrote:
+>> On 01/31/2014 03:29 AM, Hannes Reinecke wrote:
+>>> We should be issuing STPG synchronously as we need to
+>>> evaluate the return code on failure.
+>>>
+>>> Signed-off-by: Hannes Reinecke <hare@suse.de>
+>>
+>> I think we need to also make dm-mpath.c use a non-ordered workqueue =
+for
+>> kmpath_handlerd. With this patch and the current ordered workqueue i=
+n
+>> dm-mpath I think we will only be able to do one STPG at a time. I th=
+ink
+>> if we use a normal old non-ordered workqueue then we would be limite=
+d to
+>> have max_active STPGs executing.
+>=20
+> I goofed and commented in the order I saw the patches :) I take this
+> comment back for this patch, because I see in 16/16 you added a new
+> workqueue to scsi_dh_alua to do rtpgs and stpgs.
+>=20
+> For 16/16 though, do we want to make kmpath_aluad a non single thread=
+ed
+> workqueue? It looks like max_active for single threaded is only one w=
+ork
+> at a time too.
+>=20
+Well, that was by intention.
 
-Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
-Signed-off-by: Sumit Saxena <sumit.saxena@lsi.com>
----
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 74cd884..28acd7a 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -1519,7 +1519,7 @@ out_return_cmd:
-  * @done:			Callback entry point
-  */
- static int
--megasas_queue_command_lck(struct scsi_cmnd *scmd, void (*done) (struct scsi_cmnd *))
-+megasas_queue_command(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
- {
- 	struct megasas_instance *instance;
- 	unsigned long flags;
-@@ -1535,7 +1535,7 @@ megasas_queue_command_lck(struct scsi_cmnd *scmd, void (*done) (struct scsi_cmnd
- 	if (instance->adprecovery == MEGASAS_HW_CRITICAL_ERROR) {
- 		spin_unlock_irqrestore(&instance->hba_lock, flags);
- 		scmd->result = DID_ERROR << 16;
--		done(scmd);
-+		scmd->scsi_done(scmd);
- 		return 0;
- 	}
- 
-@@ -1546,7 +1546,6 @@ megasas_queue_command_lck(struct scsi_cmnd *scmd, void (*done) (struct scsi_cmnd
- 
- 	spin_unlock_irqrestore(&instance->hba_lock, flags);
- 
--	scmd->scsi_done = done;
- 	scmd->result = 0;
- 
- 	if (MEGASAS_IS_LOGICAL(scmd) &&
-@@ -1575,12 +1574,10 @@ megasas_queue_command_lck(struct scsi_cmnd *scmd, void (*done) (struct scsi_cmnd
- 	return 0;
- 
-  out_done:
--	done(scmd);
-+	scmd->scsi_done(scmd);
- 	return 0;
- }
- 
--static DEF_SCSI_QCMD(megasas_queue_command)
--
- static struct megasas_instance *megasas_lookup_instance(u16 host_no)
- {
- 	int i;
-@@ -4246,7 +4243,7 @@ fail_set_dma_mask:
- static int megasas_probe_one(struct pci_dev *pdev,
- 			     const struct pci_device_id *id)
- {
--	int rval, pos, i, j;
-+	int rval, pos, i, j, cpu;
- 	struct Scsi_Host *host;
- 	struct megasas_instance *instance;
- 	u16 control = 0;
-@@ -4419,7 +4416,8 @@ retry_irq_register:
- 	 * Register IRQ
- 	 */
- 	if (instance->msix_vectors) {
--		for (i = 0 ; i < instance->msix_vectors; i++) {
-+		cpu = cpumask_first(cpu_online_mask);
-+		for (i = 0; i < instance->msix_vectors; i++) {
- 			instance->irq_context[i].instance = instance;
- 			instance->irq_context[i].MSIxIndex = i;
- 			if (request_irq(instance->msixentry[i].vector,
-@@ -4428,14 +4426,22 @@ retry_irq_register:
- 					&instance->irq_context[i])) {
- 				printk(KERN_DEBUG "megasas: Failed to "
- 				       "register IRQ for vector %d.\n", i);
--				for (j = 0 ; j < i ; j++)
-+				for (j = 0; j < i; j++) {
-+					irq_set_affinity_hint(
-+						instance->msixentry[j].vector, NULL);
- 					free_irq(
- 						instance->msixentry[j].vector,
- 						&instance->irq_context[j]);
-+				}
- 				/* Retry irq register for IO_APIC */
- 				instance->msix_vectors = 0;
- 				goto retry_irq_register;
- 			}
-+			if (irq_set_affinity_hint(instance->msixentry[i].vector,
-+				get_cpu_mask(cpu)))
-+				dev_err(&instance->pdev->dev, "Error setting"
-+					"affinity hint for cpu %d\n", cpu);
-+			cpu = cpumask_next(cpu, cpu_online_mask);
- 		}
- 	} else {
- 		instance->irq_context[0].instance = instance;
-@@ -4489,9 +4495,12 @@ retry_irq_register:
- 
- 	instance->instancet->disable_intr(instance);
- 	if (instance->msix_vectors)
--		for (i = 0 ; i < instance->msix_vectors; i++)
-+		for (i = 0; i < instance->msix_vectors; i++) {
-+			irq_set_affinity_hint(
-+				instance->msixentry[i].vector, NULL);
- 			free_irq(instance->msixentry[i].vector,
- 				 &instance->irq_context[i]);
-+		}
- 	else
- 		free_irq(instance->pdev->irq, &instance->irq_context[0]);
- fail_irq:
-@@ -4645,9 +4654,12 @@ megasas_suspend(struct pci_dev *pdev, pm_message_t state)
- 	instance->instancet->disable_intr(instance);
- 
- 	if (instance->msix_vectors)
--		for (i = 0 ; i < instance->msix_vectors; i++)
-+		for (i = 0; i < instance->msix_vectors; i++) {
-+			irq_set_affinity_hint(
-+				instance->msixentry[i].vector, NULL);
- 			free_irq(instance->msixentry[i].vector,
- 				 &instance->irq_context[i]);
-+		}
- 	else
- 		free_irq(instance->pdev->irq, &instance->irq_context[0]);
- 	if (instance->msix_vectors)
-@@ -4668,7 +4680,7 @@ megasas_suspend(struct pci_dev *pdev, pm_message_t state)
- static int
- megasas_resume(struct pci_dev *pdev)
- {
--	int rval, i, j;
-+	int rval, i, j, cpu;
- 	struct Scsi_Host *host;
- 	struct megasas_instance *instance;
- 
-@@ -4740,6 +4752,7 @@ megasas_resume(struct pci_dev *pdev)
- 	 * Register IRQ
- 	 */
- 	if (instance->msix_vectors) {
-+		cpu = cpumask_first(cpu_online_mask);
- 		for (i = 0 ; i < instance->msix_vectors; i++) {
- 			instance->irq_context[i].instance = instance;
- 			instance->irq_context[i].MSIxIndex = i;
-@@ -4749,12 +4762,21 @@ megasas_resume(struct pci_dev *pdev)
- 					&instance->irq_context[i])) {
- 				printk(KERN_DEBUG "megasas: Failed to "
- 				       "register IRQ for vector %d.\n", i);
--				for (j = 0 ; j < i ; j++)
-+				for (j = 0; j < i; j++) {
-+					irq_set_affinity_hint(
-+						instance->msixentry[j].vector, NULL);
- 					free_irq(
- 						instance->msixentry[j].vector,
- 						&instance->irq_context[j]);
-+				}
- 				goto fail_irq;
- 			}
-+
-+			if (irq_set_affinity_hint(instance->msixentry[i].vector,
-+				get_cpu_mask(cpu)))
-+				dev_err(&instance->pdev->dev, "Error setting"
-+					"affinity hint for cpu %d\n", cpu);
-+			cpu = cpumask_next(cpu, cpu_online_mask);
- 		}
- 	} else {
- 		instance->irq_context[0].instance = instance;
-@@ -4853,9 +4875,12 @@ static void megasas_detach_one(struct pci_dev *pdev)
- 	instance->instancet->disable_intr(instance);
- 
- 	if (instance->msix_vectors)
--		for (i = 0 ; i < instance->msix_vectors; i++)
-+		for (i = 0; i < instance->msix_vectors; i++) {
-+			irq_set_affinity_hint(
-+				instance->msixentry[i].vector, NULL);
- 			free_irq(instance->msixentry[i].vector,
- 				 &instance->irq_context[i]);
-+		}
- 	else
- 		free_irq(instance->pdev->irq, &instance->irq_context[0]);
- 	if (instance->msix_vectors)
-@@ -4910,9 +4935,12 @@ static void megasas_shutdown(struct pci_dev *pdev)
- 	megasas_shutdown_controller(instance, MR_DCMD_CTRL_SHUTDOWN);
- 	instance->instancet->disable_intr(instance);
- 	if (instance->msix_vectors)
--		for (i = 0 ; i < instance->msix_vectors; i++)
-+		for (i = 0; i < instance->msix_vectors; i++) {
-+			irq_set_affinity_hint(
-+				instance->msixentry[i].vector, NULL);
- 			free_irq(instance->msixentry[i].vector,
- 				 &instance->irq_context[i]);
-+		}
- 	else
- 		free_irq(instance->pdev->irq, &instance->irq_context[0]);
- 	if (instance->msix_vectors)
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index 0de0e63..e452f68 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -1611,6 +1611,8 @@ megasas_build_dcdb_fusion(struct megasas_instance *instance,
- 			 MEGASAS_REQ_DESCRIPT_FLAGS_TYPE_SHIFT);
- 		cmd->request_desc->SCSIIO.DevHandle =
- 			local_map_ptr->raidMap.devHndlInfo[device_id].curDevHdl;
-+		cmd->request_desc->SCSIIO.MSIxIndex =
-+			instance->msix_vectors ? smp_processor_id() % instance->msix_vectors : 0;
- 		/*
- 		 * If the command is for the tape device, set the
- 		 * FP timeout to the os layer timeout value.
+The workqueue will be triggered very infrequently (basically for
+every path switch).
+=46or implicit ALUA we just need to issue a RTPG to get the new path
+status; there we might be suffering from single threaded behaviour.
+But we need to issue it only once and it should be processed
+reasonably fast.
+=46or explicit ALUA we'll have to send an STPG, which has potentially
+system-wide implications. So sending several to (supposedly)
+different targets might actually be contraproductive, as the first
+might have already set the status for the second call.
+Here we most definitely _want_ serialisation to avoid superfluous STPGs=
+=2E
+
+So for now I think we can stick with the single threaded workqueue,
+and can revise this later if it's found to be a scalability issue.
+
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
