@@ -1,36 +1,36 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 3/6] scsi: do not manipulate device reference counts in
- scsi_get/put_command
-Date: Wed, 12 Feb 2014 12:37:26 +0100
-Message-ID: <52FB5CF6.5010501@suse.de>
-References: <20140206184306.997538898@bombadil.infradead.org> <20140206184417.692440766@bombadil.infradead.org>
+Subject: Re: [PATCH 4/6] scsi: remove a useless get/put_device pair in scsi_request_fn
+Date: Wed, 12 Feb 2014 12:38:10 +0100
+Message-ID: <52FB5D22.5070208@suse.de>
+References: <20140206184306.997538898@bombadil.infradead.org> <20140206184417.890824661@bombadil.infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:38523 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:38548 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751001AbaBLLh1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 12 Feb 2014 06:37:27 -0500
-In-Reply-To: <20140206184417.692440766@bombadil.infradead.org>
+	id S1751001AbaBLLiL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 12 Feb 2014 06:38:11 -0500
+In-Reply-To: <20140206184417.890824661@bombadil.infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>, Tejun Heo <tj@kernel.org>, Mike Christie <michaelc@cs.wisc.edu>
 
 On 02/06/2014 07:43 PM, Christoph Hellwig wrote:
-> Many callers won't need this and we can optimize them away.  In addit=
-ion
-> the handling in the __-prefixed variants was inconsistant to start wi=
-th.
+> From: Bart Van Assche <bvanassche@acm.org>
 >=20
-> Based on an earlier patch from Bart Van Assche.
+> SCSI devices may only be removed by calling scsi_remove_device().
+> That function must invoke blk_cleanup_queue() before the final put
+> of sdev->sdev_gendev. Since blk_cleanup_queue() waits for the
+> block queue to drain and then tears it down, scsi_request_fn cannot
+> be active anymore after blk_cleanup_queue() has returned and hence
+> the get_device()/put_device() pair in scsi_request_fn is unnecessary.
 >=20
-But this decouples the scsi_device refcount from the number of
-outstanding commands, right?
-While I'm sure you've audited all call sites, it's now up to the
-callers to provide proper reference counting.
-Shouldn't we document it somewhere?
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> Acked-by: Tejun Heo <tj@kernel.org>
+> Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
+Acked-by: Hannes Reinecke <hare@suse.de>
 
 Cheers,
 
