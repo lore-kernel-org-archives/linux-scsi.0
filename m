@@ -1,107 +1,72 @@
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Subject: Re: [PATCH] Fix uses of dma_max_pfn() when converting to a
-	limiting address
-Date: Thu, 13 Feb 2014 20:01:12 +0000
-Message-ID: <20140213200112.GF30257@n2100.arm.linux.org.uk>
-References: <E1WDH7v-00038J-2k@rmk-PC.arm.linux.org.uk> <1392310690.2175.13.camel@dabdike.int.hansenpartnership.com> <20140213171117.GA30257@n2100.arm.linux.org.uk> <1392314821.2175.16.camel@dabdike.int.hansenpartnership.com>
+From: Theodore Ts'o <tytso@mit.edu>
+Subject: Re: [Lsf-pc] [LSF/MM TOPIC] SMR: Disrupting recording technology
+ meriting a new class of storage device
+Date: Thu, 13 Feb 2014 17:18:08 -0500
+Message-ID: <20140213221808.GE11480@thunk.org>
+References: <DDA2008BD25F9046BFFC83788E83AF7E8167D4D0@wdscexmb03>
+ <20140207130014.GA5078@localhost.localdomain>
+ <52F4E3AC.9060309@suse.de>
+ <7DD506441A4CF644AAC1628B9A9C5EBC647EAC9E@wdscexmb06.sc.wdc.com>
+ <20140211115739.GD5903@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-mmc-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1392314821.2175.16.camel@dabdike.int.hansenpartnership.com>
-Sender: linux-mmc-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Santosh Shilimkar <santosh.shilimkar@ti.com>, linux-mmc@vger.kernel.org, Chris Ball <chris@printf.net>, linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org
+In-Reply-To: <20140211115739.GD5903@localhost.localdomain>
+Sender: linux-ide-owner@vger.kernel.org
+To: Carlos Maiolino <cmaiolino@redhat.com>
+Cc: Jim Malina <Jim.Malina@wdc.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Albert Chen <Albert.Chen@wdc.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, James Borden <James.Borden@wdc.com>, Curtis Stevens <curtis.stevens@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Feb 13, 2014 at 10:07:01AM -0800, James Bottomley wrote:
-> On Thu, 2014-02-13 at 17:11 +0000, Russell King - ARM Linux wrote:
-> > On Thu, Feb 13, 2014 at 08:58:10AM -0800, James Bottomley wrote:
-> > > This doesn't really look like the right fix.  You replaced dev->dma_mask
-> > > with a calculation on dev_max_pfn().  Since dev->dma_mask is always u64
-> > > and dev_max_pfn is supposed to be returning the pfn of the dma_mask, it
-> > > should unconditionally be 64 bits as well.  Either that or it should
-> > > return dma_addr_t.
-> > 
-> > My reasoning is that PFNs in the system are always of type "unsigned long"
-> > and therefore a function returning a pfn should have that type.  If we
-> > overflow a PFN fitting in an unsigned long, we have lots of places which
-> > need fixing.
+On Tue, Feb 11, 2014 at 09:57:40AM -0200, Carlos Maiolino wrote:
 > 
-> It's not intuitive to people who need the dma mask that they're supposed
-> to use dma_max_pfn() << PAGE_SHIFT but now they have to worry about the
-> casting and, if they don't get it right, nothing will warn or tell them.
-> what about a new macro, say dma_max_mask(dev) that just returns
-> (u64)dma_max_pfn() << PAGE_SHIFT?
+> Thanks for clarification, and, this just enforce my concept that ZBC protocol
+> should be integrated in the generic block layer not make it device-mapper
+> dependent. So, make this available to any device that supports it with or
+> without the help of DM.
 
-This sounds like a good idea.
+The kernel interface which I have proposed[1] on the linux-fsdevel
+list is indeed something that would be integrated in the generic block
+device layer.  My hope is that in the near future (I'm waiting for ZBC
+prototypes to show up in Mountain View ;-) we will have a patches that
+will allow Linux to recognize ZBC drives, and export the ZBC
+functionality via the this interface.
 
-I've just been looking at places which do this << PAGE_SHIFT, and we
-have other places which suffer from this same bug all over the kernel,
-so maybe we actually need a pfn_to_addr() macro or similar so that
-people get this right in these other places too?  It appears to be
-quite a widespread problem.
+[1] http://thread.gmane.org/gmane.linux.file-systems/81970/focus=82309
 
-I'm surprised none of the below haven't already caused a problem.
+I also hope that in the near-term future we will have at least one
+device-mapper "SMR simulator" which take a standard block device, and
+add write-pointer tracking, and then export the same interface.  This
+would allow file systems (perhaps btrfs) to experiment with working
+with SMR drives, without having to wait for getting a hold of one of
+the ZBC drives.  It would also allow people who are interested in
+writing a device mapper shim layer which takes a SMR drive, and
+exports a host-assisted block device.
 
-Thoughts?
+Of course, the stacking of the device mapper layers:
 
-int __remove_pages(struct zone *zone, unsigned long phys_start_pfn,
-                 unsigned long nr_pages)
-{
-        resource_size_t start, size;
+	HDD <-> SMR_SIMULATOR <-> SMR_ADAPTER 
 
-        start = phys_start_pfn << PAGE_SHIFT;
+is basically a no-op except for introducing performance delays.  But
+the idea here is not performance, but allow people to debug their
+code.  So the use cases:
 
-void __meminit memmap_init_zone(unsigned long size, int nid, unsigned long zone,
-                unsigned long start_pfn, enum memmap_context context)
-{
-        unsigned long end_pfn = start_pfn + size;
-        unsigned long pfn;
+	HDD <-> SMR_SIMULATOR <-> SMR_ADAPTER <-> stock linux file system
+	HDD <-> SMR_SIMULATOR <-> SMR_ADAPTER <-> ext4 modified to be SMR-friendly
+	HDD <-> SMR_SIMULATOR <-> modified btrfs that supports ZBC
 
-                /* The shift won't overflow because ZONE_NORMAL is below 4G. */
-                if (!is_highmem_idx(zone))
-                        set_page_address(page, __va(pfn << PAGE_SHIFT));
+would eventually become:
 
-void __init free_area_init_nodes(unsigned long *max_zone_pfn)
-{
-        unsigned long start_pfn, end_pfn;
+	SMR HDD <-> SMR_ADAPTER <-> stock linux file system
+	SMR_HDD <-> SMR_ADAPTER <-> ext4 modified to be SMR-friendly
+	SMR_HDD <-> modified btrfs that supports ZBC
 
-        for_each_mem_pfn_range(i, MAX_NUMNODES, &start_pfn, &end_pfn, &nid)
-                printk("  node %3d: [mem %#010lx-%#010lx]\n", nid,
-                       start_pfn << PAGE_SHIFT, (end_pfn << PAGE_SHIFT) - 1);
-(thankfully, this one is just a printk).
+And while we wait for SMR_HDD's to become generally available to all
+kernel developers, the existence of the device-mapper smr simulator
+will enable us to start work on the device-mapper smr adapter, and
+file systems that are either modified to be SMR-friendly, or modified
+to work directly w/o any adapter layers with SMR drives.
 
-int vb2_get_contig_userptr(unsigned long vaddr, unsigned long size,
-                           struct vm_area_struct **res_vma, dma_addr_t *res_pa)
-{
-        unsigned long this_pfn, prev_pfn;
-        dma_addr_t pa = 0;
+Regards,
 
-                if (prev_pfn == 0)
-                        pa = this_pfn << PAGE_SHIFT;
-
-static pgprot_t phys_mem_access_prot(struct file *file, unsigned long pfn,
-                                     unsigned long size, pgprot_t vma_prot)
-{
-#ifdef pgprot_noncached
-        phys_addr_t offset = pfn << PAGE_SHIFT;
-
-        if (uncached_access(file, offset))
-                return pgprot_noncached(vma_prot);
-#endif
-        return vma_prot;
-
-static int i810_insert_dcache_entries(struct agp_memory *mem, off_t pg_start,
-                                      int type)
-{
-        int i;
-
-        for (i = pg_start; i < (pg_start + mem->page_count); i++) {
-                dma_addr_t addr = i << PAGE_SHIFT;
-
-
--- 
-FTTC broadband for 0.8mile line: 5.8Mbps down 500kbps up.  Estimation
-in database were 13.1 to 19Mbit for a good line, about 7.5+ for a bad.
-Estimate before purchase was "up to 13.2Mbit".
+						- Ted
