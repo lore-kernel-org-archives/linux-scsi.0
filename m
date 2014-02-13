@@ -1,24 +1,25 @@
-From: Santosh Shilimkar <santosh.shilimkar@ti.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: Re: [PATCH] Fix uses of dma_max_pfn() when converting to a limiting
  address
-Date: Thu, 13 Feb 2014 11:34:40 -0500
-Message-ID: <52FCF420.2020603@ti.com>
+Date: Thu, 13 Feb 2014 08:58:10 -0800
+Message-ID: <1392310690.2175.13.camel@dabdike.int.hansenpartnership.com>
 References: <E1WDH7v-00038J-2k@rmk-PC.arm.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset="ISO-8859-15"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:50926 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751861AbaBMQga (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Feb 2014 11:36:30 -0500
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:56974 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752289AbaBMQ6N (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 13 Feb 2014 11:58:13 -0500
 In-Reply-To: <E1WDH7v-00038J-2k@rmk-PC.arm.linux.org.uk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Russell King <rmk+kernel@arm.linux.org.uk>
-Cc: linux-arm-kernel@lists.infradead.org, Chris Ball <chris@printf.net>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org, Chris Ball <chris@printf.net>, linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org, Santosh Shilimkar <santosh.shilimkar@ti.com>
 
-On Tuesday 11 February 2014 12:28 PM, Russell King wrote:
+On Tue, 2014-02-11 at 17:28 +0000, Russell King wrote:
 > We must use a 64-bit for this, otherwise overflowed bits get lost, and
 > that can result in a lower than intended value set.
 > 
@@ -49,18 +50,7 @@ On Tuesday 11 February 2014 12:28 PM, Russell King wrote:
 > With this calculation fixed, we avoid the bouncing code entirely.
 > 
 > 	max addr 0x10ffff000 bounce limit 0x10ffff dma 0
->
-You are right. We were seeing an issue with SCSI HDD over PCI and
-the patch fixes that issue as well.
-
-I think we should send this patch to stable as well. At least 3.13
-should get this patch.
-
-Thanks RMK for the bug fix. Feel free to add, in case the patch is
-not committed already
-
-Tested-Acked-by: Santosh Shilimkar <santosh.shilimkar@ti.com>
- 
+> 
 >  drivers/mmc/card/queue.c | 2 +-
 >  drivers/scsi/scsi_lib.c  | 2 +-
 >  2 files changed, 2 insertions(+), 2 deletions(-)
@@ -88,8 +78,13 @@ Tested-Acked-by: Santosh Shilimkar <santosh.shilimkar@ti.com>
 >  	if (host_dev && host_dev->dma_mask)
 > -		bounce_limit = dma_max_pfn(host_dev) << PAGE_SHIFT;
 > +		bounce_limit = (u64)dma_max_pfn(host_dev) << PAGE_SHIFT;
->  
->  	return bounce_limit;
->  }
-> 
+
+This doesn't really look like the right fix.  You replaced dev->dma_mask
+with a calculation on dev_max_pfn().  Since dev->dma_mask is always u64
+and dev_max_pfn is supposed to be returning the pfn of the dma_mask, it
+should unconditionally be 64 bits as well.  Either that or it should
+return dma_addr_t.
+
+James
+
 
