@@ -1,90 +1,32 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] Fix uses of dma_max_pfn() when converting to a limiting
- address
-Date: Thu, 13 Feb 2014 08:58:10 -0800
-Message-ID: <1392310690.2175.13.camel@dabdike.int.hansenpartnership.com>
-References: <E1WDH7v-00038J-2k@rmk-PC.arm.linux.org.uk>
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+Subject: Re: [PATCH] Fix uses of dma_max_pfn() when converting to a
+	limiting address
+Date: Thu, 13 Feb 2014 17:11:17 +0000
+Message-ID: <20140213171117.GA30257@n2100.arm.linux.org.uk>
+References: <E1WDH7v-00038J-2k@rmk-PC.arm.linux.org.uk> <1392310690.2175.13.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:56974 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752289AbaBMQ6N (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Feb 2014 11:58:13 -0500
-In-Reply-To: <E1WDH7v-00038J-2k@rmk-PC.arm.linux.org.uk>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-mmc-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1392310690.2175.13.camel@dabdike.int.hansenpartnership.com>
+Sender: linux-mmc-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Santosh Shilimkar <santosh.shilimkar@ti.com>, linux-mmc@vger.kernel.org, Chris Ball <chris@printf.net>, linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Russell King <rmk+kernel@arm.linux.org.uk>
-Cc: linux-arm-kernel@lists.infradead.org, Chris Ball <chris@printf.net>, linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org, Santosh Shilimkar <santosh.shilimkar@ti.com>
 
-On Tue, 2014-02-11 at 17:28 +0000, Russell King wrote:
-> We must use a 64-bit for this, otherwise overflowed bits get lost, and
-> that can result in a lower than intended value set.
-> 
-> Fixes: 8e0cb8a1f6ac ("ARM: 7797/1: mmc: Use dma_max_pfn(dev) helper for bounce_limit calculations")
-> Fixes: 7d35496dd982 ("ARM: 7796/1: scsi: Use dma_max_pfn(dev) helper for bounce_limit calculations")
-> Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
-> ---
-> While poking about with the Cubox-i4 and investigating why my UHS-1
-> SD card wasn't achieving its full potential, I came across a slight
-> problem... the SDHCI host sets a mask of 0xffffffff, but with the
-> start of memory at pfn 0x10000, the blk code sees this when setting
-> the bounce limit:
-> 
-> 	max addr 0x0ffff000 bounce limit 0xffff dma 1
-> 
-> and this results in the bounce functions appearing in the profile:
-> 
-> 00000000c00f8b70 copy_to_high_bio_irq                  1139 2.5886
-> 00000000c00f8d28 bounce_end_io                           12 0.0714
-> 00000000c00f8dd0 bounce_end_io_read_isa                   8 0.1053
-> 
-> which, compared to the cost of copying the data to userland and
-> request handling, this is quite significant:
-> 
-> 00000000c04b1794 sdhci_request                          268 0.5447
-> 00000000c02d0740 __copy_to_user_std                     398 0.4252
-> 
-> With this calculation fixed, we avoid the bouncing code entirely.
-> 
-> 	max addr 0x10ffff000 bounce limit 0x10ffff dma 0
-> 
->  drivers/mmc/card/queue.c | 2 +-
->  drivers/scsi/scsi_lib.c  | 2 +-
->  2 files changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/mmc/card/queue.c b/drivers/mmc/card/queue.c
-> index 357bbc54fe4b..3e049c13429c 100644
-> --- a/drivers/mmc/card/queue.c
-> +++ b/drivers/mmc/card/queue.c
-> @@ -197,7 +197,7 @@ int mmc_init_queue(struct mmc_queue *mq, struct mmc_card *card,
->  	struct mmc_queue_req *mqrq_prev = &mq->mqrq[1];
->  
->  	if (mmc_dev(host)->dma_mask && *mmc_dev(host)->dma_mask)
-> -		limit = dma_max_pfn(mmc_dev(host)) << PAGE_SHIFT;
-> +		limit = (u64)dma_max_pfn(mmc_dev(host)) << PAGE_SHIFT;
->  
->  	mq->card = card;
->  	mq->queue = blk_init_queue(mmc_request_fn, lock);
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 7bd7f0d5f050..62ec84b42e31 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -1684,7 +1684,7 @@ u64 scsi_calculate_bounce_limit(struct Scsi_Host *shost)
->  
->  	host_dev = scsi_get_device(shost);
->  	if (host_dev && host_dev->dma_mask)
-> -		bounce_limit = dma_max_pfn(host_dev) << PAGE_SHIFT;
-> +		bounce_limit = (u64)dma_max_pfn(host_dev) << PAGE_SHIFT;
+On Thu, Feb 13, 2014 at 08:58:10AM -0800, James Bottomley wrote:
+> This doesn't really look like the right fix.  You replaced dev->dma_mask
+> with a calculation on dev_max_pfn().  Since dev->dma_mask is always u64
+> and dev_max_pfn is supposed to be returning the pfn of the dma_mask, it
+> should unconditionally be 64 bits as well.  Either that or it should
+> return dma_addr_t.
 
-This doesn't really look like the right fix.  You replaced dev->dma_mask
-with a calculation on dev_max_pfn().  Since dev->dma_mask is always u64
-and dev_max_pfn is supposed to be returning the pfn of the dma_mask, it
-should unconditionally be 64 bits as well.  Either that or it should
-return dma_addr_t.
+My reasoning is that PFNs in the system are always of type "unsigned long"
+and therefore a function returning a pfn should have that type.  If we
+overflow a PFN fitting in an unsigned long, we have lots of places which
+need fixing.
 
-James
-
-
+-- 
+FTTC broadband for 0.8mile line: 5.8Mbps down 500kbps up.  Estimation
+in database were 13.1 to 19Mbit for a good line, about 7.5+ for a bad.
+Estimate before purchase was "up to 13.2Mbit".
