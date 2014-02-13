@@ -1,57 +1,132 @@
-From: "lindar_liu" <lindar_liu@usish.com>
-Subject: RE: [PATCH] [SCSI] pm80xx : no need for tag allocation when issuing the  command of unregistering device
-Date: Thu, 13 Feb 2014 12:41:48 +0800
-Message-ID: <014801cf2875$eda238f0$c8e6aad0$@com>
-References: <y> <1392263978-216-1-git-send-email-zxh3737@163.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 04/16] scsi_dh_alua: Make stpg synchronous
+Date: Thu, 13 Feb 2014 10:31:34 +0100
+Message-ID: <52FC90F6.7020005@suse.de>
+References: <1391160600-19652-1-git-send-email-hare@suse.de> <1391160600-19652-5-git-send-email-hare@suse.de> <52F435B3.3090600@cs.wisc.edu> <52F43CD7.5050900@cs.wisc.edu> <52FB9353.7040807@suse.de> <52FB9D20.5060900@cs.wisc.edu> <52FBA0D3.50907@cs.wisc.edu> <52FBAFDE.4060104@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sr-smtp.usish.com ([210.5.144.203]:44377 "EHLO msb01.usish.com"
+Received: from cantor2.suse.de ([195.135.220.15]:60597 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751417AbaBMErN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 12 Feb 2014 23:47:13 -0500
-In-Reply-To: <1392263978-216-1-git-send-email-zxh3737@163.com>
-Content-Language: zh-cn
+	id S1751970AbaBMJbh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 13 Feb 2014 04:31:37 -0500
+In-Reply-To: <52FBAFDE.4060104@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'XinHong Zhu' <zxh3737@163.com>, linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: James Bottomley <jbottomley@parallels.com>, Sean Stewart <sean.stewart@netapp.com>, Martin George <marting@netapp.com>, linux-scsi@vger.kernel.org
 
-On Thu, 2014-02-13 at 12:00 PM, XinHong Zhu wrote: 
-> In function pm8001_dev_gone_notify require a tag from bitmap resource and
-> later don't free tag resource .So tag resource will be consume fully and
-> following request can not be execed because of lack of tags . But in the
-> function don't need use any tag to issue command of unregistering device .
-> 
-> Signed-off-by: XinHong Zhu <zxh3737@163.com>
-> ---
->  drivers/scsi/pm8001/pm8001_sas.c |    2 --
->  1 files changed, 0 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/pm8001/pm8001_sas.c
-> b/drivers/scsi/pm8001/pm8001_sas.c
-> index f50ac44..ba3088c 100644
-> --- a/drivers/scsi/pm8001/pm8001_sas.c
-> +++ b/drivers/scsi/pm8001/pm8001_sas.c
-> @@ -865,13 +865,11 @@ ex_err:
->  static void pm8001_dev_gone_notify(struct domain_device *dev)  {
->  	unsigned long flags = 0;
-> -	u32 tag;
->  	struct pm8001_hba_info *pm8001_ha;
->  	struct pm8001_device *pm8001_dev = dev->lldd_dev;
-> 
->  	pm8001_ha = pm8001_find_ha_by_dev(dev);
->  	spin_lock_irqsave(&pm8001_ha->lock, flags);
-> -	pm8001_tag_alloc(pm8001_ha, &tag);
->  	if (pm8001_dev) {
->  		u32 device_id = pm8001_dev->device_id;
-> 
+On 02/12/2014 06:31 PM, Mike Christie wrote:
+> On 2/12/14 10:26 AM, Mike Christie wrote:
+>> On 2/12/14 10:11 AM, Mike Christie wrote:
+>>> On 2/12/14 9:29 AM, Hannes Reinecke wrote:
+>>>> On 02/07/2014 02:54 AM, Mike Christie wrote:
+>>>>> On 02/06/2014 07:24 PM, Mike Christie wrote:
+>>>>>> On 01/31/2014 03:29 AM, Hannes Reinecke wrote:
+>>>>>>> We should be issuing STPG synchronously as we need to
+>>>>>>> evaluate the return code on failure.
+>>>>>>>
+>>>>>>> Signed-off-by: Hannes Reinecke <hare@suse.de>
+>>>>>>
+>>>>>> I think we need to also make dm-mpath.c use a non-ordered
+>>>>>> workqueue
+>>>>>> for
+>>>>>> kmpath_handlerd. With this patch and the current ordered
+>>>>>> workqueue in
+>>>>>> dm-mpath I think we will only be able to do one STPG at a time. =
+I
+>>>>>> think
+>>>>>> if we use a normal old non-ordered workqueue then we would be
+>>>>>> limited to
+>>>>>> have max_active STPGs executing.
+>>>>>
+>>>>> I goofed and commented in the order I saw the patches :) I take
+>>>>> this
+>>>>> comment back for this patch, because I see in 16/16 you added a
+>>>>> new
+>>>>> workqueue to scsi_dh_alua to do rtpgs and stpgs.
+>>>>>
+>>>>> For 16/16 though, do we want to make kmpath_aluad a non single
+>>>>> threaded
+>>>>> workqueue? It looks like max_active for single threaded is only
+>>>>> one
+>>>>> work
+>>>>> at a time too.
+>>>>>
+>>>> Well, that was by intention.
+>>>>
+>>>> The workqueue will be triggered very infrequently (basically for
+>>>> every path switch).
+>>>> For implicit ALUA we just need to issue a RTPG to get the new path
+>>>> status; there we might be suffering from single threaded behaviour=
+=2E
+>>>> But we need to issue it only once and it should be processed
+>>>> reasonably fast.
+>>>> For explicit ALUA we'll have to send an STPG, which has potentiall=
+y
+>>>> system-wide implications. So sending several to (supposedly)
+>>>> different targets might actually be contraproductive, as the first
+>>>> might have already set the status for the second call.
+>>>> Here we most definitely _want_ serialisation to avoid
+>>>> superfluous STPGs.
+>>>>
+>>>
+>>> What target is this?
+>>>
+>>> For our target it adds a regression. It only affects devices on
+>>> the same
+>>> port group. We then have multiple groups. Before the patch, we coul=
+d
+>>> failover/failback multiple devices in parallel. To do 64 devices
+>>> it took
+>>> about 3 seconds. With your patch it takes around 3 minutes.
+>>>
+>>
+>> Also, with your pg change patch, I think we can serialize based on
+>> group
+>> and it will do what you want and also allow us to do STPGs to
+>> different
+>> groups in parallel.
+>=20
+> I guess that would work for me, but I think if you had the same
+> target port in multiple port groups then you could hit the issue you
+> described, right?
+>=20
+Yes, we might. But it's worth a shot anyway.
 
-Thanks for fix.
-Acked-by: Lindar Liu <lindar_liu@usish.com>
+So to alleviate all this, this patch:
 
-> --
-> 1.7.9
+diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c
+b/drivers/scsi/device_ha
+ndler/scsi_dh_alua.c
+index 569af9d..46cc1ef 100644
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+@@ -1353,7 +1353,7 @@ static int __init alua_init(void)
+ {
+        int r;
 
+-       kmpath_aluad =3D create_singlethread_workqueue("kmpath_aluad");
++       kmpath_aluad =3D create_workqueue("kmpath_aluad");
+        if (!kmpath_aluad) {
+                printk(KERN_ERR "kmpath_aluad creation failed.\n");
+                return -EINVAL;
 
+should be sufficient, right?
+
+Could you test and see if it makes a difference?
+
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
