@@ -1,132 +1,38 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 04/16] scsi_dh_alua: Make stpg synchronous
-Date: Thu, 13 Feb 2014 10:31:34 +0100
-Message-ID: <52FC90F6.7020005@suse.de>
-References: <1391160600-19652-1-git-send-email-hare@suse.de> <1391160600-19652-5-git-send-email-hare@suse.de> <52F435B3.3090600@cs.wisc.edu> <52F43CD7.5050900@cs.wisc.edu> <52FB9353.7040807@suse.de> <52FB9D20.5060900@cs.wisc.edu> <52FBA0D3.50907@cs.wisc.edu> <52FBAFDE.4060104@cs.wisc.edu>
+From: Maurizio Lombardi <mlombard@redhat.com>
+Subject: Re: [PATCH 06/16] scsi_dh_alua: use local buffer for VPD inquiry
+Date: Thu, 13 Feb 2014 10:51:13 +0100
+Message-ID: <52FC9591.6020206@redhat.com>
+References: <1391160600-19652-1-git-send-email-hare@suse.de> <1391160600-19652-7-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:60597 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:6819 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751970AbaBMJbh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Feb 2014 04:31:37 -0500
-In-Reply-To: <52FBAFDE.4060104@cs.wisc.edu>
+	id S1751464AbaBMJvT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 13 Feb 2014 04:51:19 -0500
+In-Reply-To: <1391160600-19652-7-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: James Bottomley <jbottomley@parallels.com>, Sean Stewart <sean.stewart@netapp.com>, Martin George <marting@netapp.com>, linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>
+Cc: Sean Stewart <sean.stewart@netapp.com>, Martin George <marting@netapp.com>, linux-scsi@vger.kernel.org
 
-On 02/12/2014 06:31 PM, Mike Christie wrote:
-> On 2/12/14 10:26 AM, Mike Christie wrote:
->> On 2/12/14 10:11 AM, Mike Christie wrote:
->>> On 2/12/14 9:29 AM, Hannes Reinecke wrote:
->>>> On 02/07/2014 02:54 AM, Mike Christie wrote:
->>>>> On 02/06/2014 07:24 PM, Mike Christie wrote:
->>>>>> On 01/31/2014 03:29 AM, Hannes Reinecke wrote:
->>>>>>> We should be issuing STPG synchronously as we need to
->>>>>>> evaluate the return code on failure.
->>>>>>>
->>>>>>> Signed-off-by: Hannes Reinecke <hare@suse.de>
->>>>>>
->>>>>> I think we need to also make dm-mpath.c use a non-ordered
->>>>>> workqueue
->>>>>> for
->>>>>> kmpath_handlerd. With this patch and the current ordered
->>>>>> workqueue in
->>>>>> dm-mpath I think we will only be able to do one STPG at a time. =
-I
->>>>>> think
->>>>>> if we use a normal old non-ordered workqueue then we would be
->>>>>> limited to
->>>>>> have max_active STPGs executing.
->>>>>
->>>>> I goofed and commented in the order I saw the patches :) I take
->>>>> this
->>>>> comment back for this patch, because I see in 16/16 you added a
->>>>> new
->>>>> workqueue to scsi_dh_alua to do rtpgs and stpgs.
->>>>>
->>>>> For 16/16 though, do we want to make kmpath_aluad a non single
->>>>> threaded
->>>>> workqueue? It looks like max_active for single threaded is only
->>>>> one
->>>>> work
->>>>> at a time too.
->>>>>
->>>> Well, that was by intention.
->>>>
->>>> The workqueue will be triggered very infrequently (basically for
->>>> every path switch).
->>>> For implicit ALUA we just need to issue a RTPG to get the new path
->>>> status; there we might be suffering from single threaded behaviour=
-=2E
->>>> But we need to issue it only once and it should be processed
->>>> reasonably fast.
->>>> For explicit ALUA we'll have to send an STPG, which has potentiall=
-y
->>>> system-wide implications. So sending several to (supposedly)
->>>> different targets might actually be contraproductive, as the first
->>>> might have already set the status for the second call.
->>>> Here we most definitely _want_ serialisation to avoid
->>>> superfluous STPGs.
->>>>
->>>
->>> What target is this?
->>>
->>> For our target it adds a regression. It only affects devices on
->>> the same
->>> port group. We then have multiple groups. Before the patch, we coul=
-d
->>> failover/failback multiple devices in parallel. To do 64 devices
->>> it took
->>> about 3 seconds. With your patch it takes around 3 minutes.
->>>
->>
->> Also, with your pg change patch, I think we can serialize based on
->> group
->> and it will do what you want and also allow us to do STPGs to
->> different
->> groups in parallel.
->=20
-> I guess that would work for me, but I think if you had the same
-> target port in multiple port groups then you could hit the issue you
-> described, right?
->=20
-Yes, we might. But it's worth a shot anyway.
+Hi,
 
-So to alleviate all this, this patch:
+On 01/31/2014 10:29 AM, Hannes Reinecke wrote:
+>  static int alua_vpd_inquiry(struct scsi_device *sdev, struct alua_dh_data *h)
+>  {
+> +	unsigned char *buff;
+> +	unsigned char bufflen = 36;
+> 	int len, timeout = ALUA_FAILOVER_TIMEOUT;
+[...]
+>+	len = (buff[2] << 8) + buff[3] + 4;
+>+	if (len > bufflen) {
+[...]
+>+		bufflen = len;
 
-diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c
-b/drivers/scsi/device_ha
-ndler/scsi_dh_alua.c
-index 569af9d..46cc1ef 100644
---- a/drivers/scsi/device_handler/scsi_dh_alua.c
-+++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -1353,7 +1353,7 @@ static int __init alua_init(void)
- {
-        int r;
+just a nit: is it safe to use char as the type of bufflen? Isn't better
+to declare it as int just in case len is > than 255 ?
 
--       kmpath_aluad =3D create_singlethread_workqueue("kmpath_aluad");
-+       kmpath_aluad =3D create_workqueue("kmpath_aluad");
-        if (!kmpath_aluad) {
-                printk(KERN_ERR "kmpath_aluad creation failed.\n");
-                return -EINVAL;
-
-should be sufficient, right?
-
-Could you test and see if it makes a difference?
-
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Regards,
+Maurizio Lombardi
