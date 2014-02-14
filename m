@@ -1,75 +1,104 @@
-From: =?UTF-8?B?VG9yYWxmIEbDtnJzdGVy?= <toralf.foerster@gmx.de>
-Subject: 3x check of "Caching mode page"
-Date: Fri, 14 Feb 2014 17:01:08 +0100
-Message-ID: <52FE3DC4.80809@gmx.de>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 07/16] scsi_dh_alua: Use separate alua_port_group structure
+Date: Fri, 14 Feb 2014 17:12:18 +0100
+Message-ID: <52FE4062.4040902@suse.de>
+References: <1391160600-19652-1-git-send-email-hare@suse.de> <1391160600-19652-8-git-send-email-hare@suse.de> <52FE045F.8050603@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.19]:51310 "EHLO mout.gmx.net"
+Received: from cantor2.suse.de ([195.135.220.15]:58051 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751323AbaBNQBM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 Feb 2014 11:01:12 -0500
-Received: from [192.168.178.21] ([85.177.117.64]) by mail.gmx.com (mrgmx103)
- with ESMTPSA (Nemesis) id 0MPUFR-1WACKy4ACX-004mmM for
- <linux-scsi@vger.kernel.org>; Fri, 14 Feb 2014 17:01:10 +0100
+	id S1751790AbaBNQMT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 14 Feb 2014 11:12:19 -0500
+In-Reply-To: <52FE045F.8050603@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>, James Bottomley <jbottomley@parallels.com>
+Cc: Sean Stewart <sean.stewart@netapp.com>, Martin George <marting@netapp.com>, linux-scsi@vger.kernel.org
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA256
+On 02/14/2014 12:56 PM, Bart Van Assche wrote:
+> On 01/31/14 10:29, Hannes Reinecke wrote:
+>> +static void release_port_group(struct kref *kref)
+>> +{
+>> +	struct alua_port_group *pg;
+>> +
+>> +	pg =3D container_of(kref, struct alua_port_group, kref);
+>> +	printk(KERN_WARNING "alua: release port group %d\n", pg->group_id)=
+;
+>> +	spin_lock(&port_group_lock);
+>> +	list_del(&pg->node);
+>> +	spin_unlock(&port_group_lock);
+>> +	if (pg->buff && pg->inq !=3D pg->buff)
+>> +		kfree(pg->buff);
+>> +	kfree(pg);
+>> +}
+>=20
+> Does that message really need level "WARNING" ?
+No, probably not.
 
-I'm just wondering why it happens 3 times in a row :
+>=20
+>> +	sdev_printk(KERN_INFO, sdev,
+>> +		    "%s: port group %02x rel port %02x\n",
+>> +		    ALUA_DH_NAME, group_id, h->rel_port);
+>> +	spin_lock(&port_group_lock);
+>> +	pg =3D kzalloc(sizeof(struct alua_port_group), GFP_KERNEL);
+>> +	if (!pg) {
+>> +		sdev_printk(KERN_WARNING, sdev,
+>> +			    "%s: kzalloc port group failed\n",
+>> +			    ALUA_DH_NAME);
+>> +		/* Temporary failure, bypass */
+>> +		spin_unlock(&port_group_lock);
+>> +		err =3D SCSI_DH_DEV_TEMP_BUSY;
+>> +		goto out;
+>> +	}
+>> +	pg->group_id =3D group_id;
+>> +	pg->buff =3D pg->inq;
+>> +	pg->bufflen =3D ALUA_INQUIRY_SIZE;
+>> +	pg->tpgs =3D h->tpgs;
+>> +	pg->state =3D TPGS_STATE_OPTIMIZED;
+>> +	pg->flags =3D h->flags;
+>> +	kref_init(&pg->kref);
+>> +	list_add(&pg->node, &port_group_list);
+>> +	h->pg =3D pg;
+>> +	spin_unlock(&port_group_lock);
+>> +	err =3D SCSI_DH_OK;
+>=20
+> A GFP_KERNEL allocation with a spin lock held ?? Please move that
+> allocation outside the critical section and also the code for
+> initializing *pg. What's not clear to me is why no uniqueness check i=
+s
+> performed before invoking list_add() ? Does that mean that informatio=
+n
+> for the same port group ID can end up multiple times in the
+> port_group_list ? Such a uniqueness check can only be performed if a
+> storage array identification is available so patches 07 and 08 may ha=
+ve
+> to be swapped.
+>=20
+The reason I did this was that I don't have to allocate memory
+unnecesarily.
+If I move the allocation out of the spinlock I'll have to recheck
+the list upon insertion to ensure no duplicates are present.
+Upon hitting a duplicate I would have to release the memory again.
 
+I do agree that GFP_KERNEL is probably not the correct thing here;
+so either I move it to GFP_ATOMIC or we may run into a chance of
+having to release the memory again afterwards.
 
-=46eb 14 16:12:53 n22 kernel: usb 1-1.2: new high-speed USB device numb=
-er 7 using ehci-pci
-=46eb 14 16:12:53 n22 kernel: usb 1-1.2: New USB device found, idVendor=
-=3D04b4, idProduct=3D6830
-=46eb 14 16:12:53 n22 kernel: usb 1-1.2: New USB device strings: Mfr=3D=
-56, Product=3D72, SerialNumber=3D91
-=46eb 14 16:12:53 n22 kernel: usb 1-1.2: Product: Lacie Mobile Drive
-=46eb 14 16:12:53 n22 kernel: usb 1-1.2: Manufacturer: Lacie Group. SA
-=46eb 14 16:12:53 n22 kernel: usb 1-1.2: SerialNumber: DEF10D5E95F5
-=46eb 14 16:12:53 n22 kernel: usb-storage 1-1.2:1.0: USB Mass Storage d=
-evice detected
-=46eb 14 16:12:53 n22 kernel: scsi9 : usb-storage 1-1.2:1.0
-=46eb 14 16:12:54 n22 kernel: scsi 9:0:0:0: Direct-Access     SAMSUNG  =
-HM160JC          0000 PQ: 0 ANSI: 0
-=46eb 14 16:12:54 n22 kernel: sd 9:0:0:0: Attached scsi generic sg3 typ=
-e 0
-=46eb 14 16:12:54 n22 kernel: sd 9:0:0:0: [sdc] 312581808 512-byte logi=
-cal blocks: (160 GB/149 GiB)
-=46eb 14 16:12:54 n22 kernel: sd 9:0:0:0: [sdc] Write Protect is off
-=46eb 14 16:12:54 n22 kernel: sd 9:0:0:0: [sdc] Mode Sense: 27 00 00 00
-=46eb 14 16:12:54 n22 kernel: sd 9:0:0:0: [sdc] No Caching mode page fo=
-und
-=46eb 14 16:12:54 n22 kernel: sd 9:0:0:0: [sdc] Assuming drive cache: w=
-rite through
-=46eb 14 16:12:54 n22 kernel: sd 9:0:0:0: [sdc] No Caching mode page fo=
-und
-=46eb 14 16:12:54 n22 kernel: sd 9:0:0:0: [sdc] Assuming drive cache: w=
-rite through
-=46eb 14 16:12:54 n22 kernel: sdc: sdc1
-=46eb 14 16:12:54 n22 kernel: sd 9:0:0:0: [sdc] No Caching mode page fo=
-und
-=46eb 14 16:12:54 n22 kernel: sd 9:0:0:0: [sdc] Assuming drive cache: w=
-rite through
-=46eb 14 16:12:54 n22 kernel: sd 9:0:0:0: [sdc] Attached SCSI disk
+Personally I'm inclined to use GFP_ATOMIC, but I'm not sure what'd
+be best.
 
-- --=20
-MfG/Sincerely
-Toralf F=C3=B6rster
-pgp finger print:1A37 6F99 4A9D 026F 13E2 4DCF C4EA CDDE 0076 E94E
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+What would you suggest here?
 
-iF4EAREIAAYFAlL+PcQACgkQxOrN3gB26U43VQD+Lhk1W1u2Mn7ppqI38i5jzFLT
-i8NUkgjNx9Kz5EC/oPwA/iNdNIwnh8Gnpixd5E7W1ffXlJ8oWq9Wo1h8DZuNo6vF
-=3D6C32
------END PGP SIGNATURE-----
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
