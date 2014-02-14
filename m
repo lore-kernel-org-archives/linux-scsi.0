@@ -1,72 +1,52 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 08/16] scsi_dh_alua: parse target device id
-Date: Fri, 14 Feb 2014 13:21:58 +0100
-Message-ID: <52FE0A66.6050200@suse.de>
-References: <1391160600-19652-1-git-send-email-hare@suse.de> <1391160600-19652-9-git-send-email-hare@suse.de> <52FE0793.9040505@acm.org>
+From: "Dr.William Davies" <purchase@veltechuniv.edu.in>
+Subject: Re: Instructions to release your payment.
+Date: Fri, 14 Feb 2014 18:06:49 +0530
+Message-ID: <05850bfa675129882bc42edd957194c7__36493.0890537382$1392389464$gmane$org@127.0.0.1>
+Reply-To: williamdavies54@yahoo.co.uk
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:54537 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752103AbaBNMV7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 Feb 2014 07:21:59 -0500
-In-Reply-To: <52FE0793.9040505@acm.org>
+Received: from webmail.veltechuniv.edu.in ([202.71.145.3]:57988 "EHLO
+	server.veltechuniv.edu.in" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751065AbaBNOul (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 14 Feb 2014 09:50:41 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>, James Bottomley <jbottomley@parallels.com>
-Cc: Sean Stewart <sean.stewart@netapp.com>, Martin George <marting@netapp.com>, linux-scsi@vger.kernel.org
 
-On 02/14/2014 01:09 PM, Bart Van Assche wrote:
-> On 01/31/14 10:29, Hannes Reinecke wrote:
->> +	if (!target_id_size) {
->> +		/* Check for EMC Clariion extended inquiry */
->> +		if (!strncmp(sdev->vendor, "DGC     ", 8) &&
->> +		    sdev->inquiry_len > 160) {
->> +			target_id_size =3D sdev->inquiry[160];
->> +			target_id =3D sdev->inquiry + 161;
->> +			strcpy(target_id_str, "emc.");
->> +			memcpy(target_id_str + 4, target_id, target_id_size);
->> +		}
->> +		/* Check for HP EVA extended inquiry */
->> +		if (!strncmp(sdev->vendor, "HP      ", 8) &&
->> +		    !strncmp(sdev->model, "HSV", 3) &&
->> +		    sdev->inquiry_len > 170) {
->> +			target_id_size =3D 16;
->> +			target_id =3D sdev->inquiry + 154;
->> +			strcpy(target_id_str, "naa.");
->> +			memcpy(target_id_str + 4, target_id, target_id_size);
->> +		}
->> +	}
->=20
-> Being able to identify a storage array unambiguously is essential for
-> the new ALUA device handler algorithm introduced by this patch series=
-=2E
-> What if a new storage array is introduced that is not covered by one =
-of
-> the heuristics in this patch ? Has it been considered to let storage
-> array identification occur in user space instead of in the kernel ?
->=20
-As noted in the other mail, if we cannot decipher the array
-identifier the whole thing degrades into one pg per sdev.
-IE we cannot bunch RTPG / STPG for those.
-The idea here is that those arrays do not have any limitations,
-so that no special treatment is required.
+Attention
 
-Adding identifiers from userspace are a bit tricky; there is no
-actual sysfs structure for the device handler.
-Which we would need if we were to use these tricks.
+Sir,
 
-Cheers,
+Following an application brought, seeking the release of your due payment
+through British bank, I am directed to inform you that the application has
+been approved and Natwest bank of London has been mandated to make transfer
+of your payment to the bank account you will nominate. Please kindly reply
+for immediate release of your US$6.2 Million to you nominates account.
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Sir, for the avoidance of doubts, reconfirm the following information to
+me to enable us forward same to Natwest bank to contact you for your
+payment.
+
+Name:
+
+Address:
+
+Tel/Fax No.:
+
+Nationality:
+
+Occupation:
+
+Date of birth: 
+
+As soon as I received the above information, I will forward them to
+Natwest bank to contact you for your approved payment. Please see in the
+attachment, letter I wrote to Natwest bank informing them of the
+transaction
+
+Yours faithfully
+
+Dr.William Davies
+Chairman,British Banking Regulatory Board.
