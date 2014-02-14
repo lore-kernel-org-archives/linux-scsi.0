@@ -1,104 +1,35 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 07/16] scsi_dh_alua: Use separate alua_port_group structure
-Date: Fri, 14 Feb 2014 17:12:18 +0100
-Message-ID: <52FE4062.4040902@suse.de>
-References: <1391160600-19652-1-git-send-email-hare@suse.de> <1391160600-19652-8-git-send-email-hare@suse.de> <52FE045F.8050603@acm.org>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: 3x check of "Caching mode page"
+Date: Fri, 14 Feb 2014 12:00:01 -0500
+Message-ID: <yq1ppmpocj2.fsf@sermon.lab.mkp.net>
+References: <52FE3DC4.80809@gmx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:58051 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751790AbaBNQMT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 Feb 2014 11:12:19 -0500
-In-Reply-To: <52FE045F.8050603@acm.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:18160 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751644AbaBNRAJ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Feb 2014 12:00:09 -0500
+In-Reply-To: <52FE3DC4.80809@gmx.de> ("Toralf =?utf-8?Q?F=C3=B6rster=22's?=
+ message of "Fri, 14
+	Feb 2014 17:01:08 +0100")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>, James Bottomley <jbottomley@parallels.com>
-Cc: Sean Stewart <sean.stewart@netapp.com>, Martin George <marting@netapp.com>, linux-scsi@vger.kernel.org
+To: Toralf =?utf-8?Q?F=C3=B6rster?= <toralf.foerster@gmx.de>
+Cc: linux-scsi@vger.kernel.org, James Bottomley <jbottomley@parallels.com>
 
-On 02/14/2014 12:56 PM, Bart Van Assche wrote:
-> On 01/31/14 10:29, Hannes Reinecke wrote:
->> +static void release_port_group(struct kref *kref)
->> +{
->> +	struct alua_port_group *pg;
->> +
->> +	pg =3D container_of(kref, struct alua_port_group, kref);
->> +	printk(KERN_WARNING "alua: release port group %d\n", pg->group_id)=
-;
->> +	spin_lock(&port_group_lock);
->> +	list_del(&pg->node);
->> +	spin_unlock(&port_group_lock);
->> +	if (pg->buff && pg->inq !=3D pg->buff)
->> +		kfree(pg->buff);
->> +	kfree(pg);
->> +}
->=20
-> Does that message really need level "WARNING" ?
-No, probably not.
+>>>>> "Toralf" =3D=3D Toralf F=C3=B6rster <toralf.foerster@gmx.de> writ=
+es:
 
->=20
->> +	sdev_printk(KERN_INFO, sdev,
->> +		    "%s: port group %02x rel port %02x\n",
->> +		    ALUA_DH_NAME, group_id, h->rel_port);
->> +	spin_lock(&port_group_lock);
->> +	pg =3D kzalloc(sizeof(struct alua_port_group), GFP_KERNEL);
->> +	if (!pg) {
->> +		sdev_printk(KERN_WARNING, sdev,
->> +			    "%s: kzalloc port group failed\n",
->> +			    ALUA_DH_NAME);
->> +		/* Temporary failure, bypass */
->> +		spin_unlock(&port_group_lock);
->> +		err =3D SCSI_DH_DEV_TEMP_BUSY;
->> +		goto out;
->> +	}
->> +	pg->group_id =3D group_id;
->> +	pg->buff =3D pg->inq;
->> +	pg->bufflen =3D ALUA_INQUIRY_SIZE;
->> +	pg->tpgs =3D h->tpgs;
->> +	pg->state =3D TPGS_STATE_OPTIMIZED;
->> +	pg->flags =3D h->flags;
->> +	kref_init(&pg->kref);
->> +	list_add(&pg->node, &port_group_list);
->> +	h->pg =3D pg;
->> +	spin_unlock(&port_group_lock);
->> +	err =3D SCSI_DH_OK;
->=20
-> A GFP_KERNEL allocation with a spin lock held ?? Please move that
-> allocation outside the critical section and also the code for
-> initializing *pg. What's not clear to me is why no uniqueness check i=
-s
-> performed before invoking list_add() ? Does that mean that informatio=
-n
-> for the same port group ID can end up multiple times in the
-> port_group_list ? Such a uniqueness check can only be performed if a
-> storage array identification is available so patches 07 and 08 may ha=
-ve
-> to be swapped.
->=20
-The reason I did this was that I don't have to allocate memory
-unnecesarily.
-If I move the allocation out of the spinlock I'll have to recheck
-the list upon insertion to ensure no duplicates are present.
-Upon hitting a duplicate I would have to release the memory again.
+Toralf> I'm just wondering why it happens 3 times in a row :
 
-I do agree that GFP_KERNEL is probably not the correct thing here;
-so either I move it to GFP_ATOMIC or we may run into a chance of
-having to release the memory again afterwards.
+http://marc.info/?l=3Dlinux-scsi&m=3D138879119205889
 
-Personally I'm inclined to use GFP_ATOMIC, but I'm not sure what'd
-be best.
+James: Ping on this patch.
 
-What would you suggest here?
-
-Cheers,
-
-Hannes
 --=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+Martin K. Petersen	Oracle Linux Engineering
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
