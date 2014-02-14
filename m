@@ -1,43 +1,96 @@
-From: XinHong Zhu <zxh3737@163.com>
-Subject: [PATCH] [scsi] : pm80xx : fix problem of pm8001_work_fn reseting uncorrect phy device
-Date: Fri, 14 Feb 2014 16:01:28 +0800
-Message-ID: <1392364888-6996-1-git-send-email-zxh3737@163.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from m12-17.163.com ([220.181.12.17]:50233 "EHLO m12-17.163.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753056AbaBNIBv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 Feb 2014 03:01:51 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>
+Subject: [PATCH v2 33/52] scsi, bnx2i: Fix CPU hotplug callback registration
+Date: Fri, 14 Feb 2014 13:26:41 +0530
+Message-ID: <20140214075641.22701.48573.stgit@srivatsabhat.in.ibm.com>
+References: <20140214074750.22701.47330.stgit@srivatsabhat.in.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20140214074750.22701.47330.stgit@srivatsabhat.in.ibm.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: paulus@samba.org, oleg@redhat.com, rusty@rustcorp.com.au, peterz@infradead.org, tglx@linutronix.de, akpm@linux-foundation.org
+Cc: paulmck@linux.vnet.ibm.com, tj@kernel.org, walken@google.com, ego@linux.vnet.ibm.com, linux@arm.linux.org.uk, rjw@rjwysocki.net, linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org, srivatsa.bhat@linux.vnet.ibm.com, Eddie Wai <eddie.wai@broadcom.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Ingo Molnar <mingo@kernel.org>, linux-scsi@vger.kernel.org"Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: lindar_liu@usish.com, XinHong Zhu <zxh3737@163.com>
 
-If a phy device is removed ,the device can get error of I/O and HBA maybe receieve
-IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS of event which causes pm8001_work_fn to reset the phy
-device ,but in pm8001_task_exec don't assign a value for field device of ccb  and in
-other case a ccb used have device field set , when  ccb is freeed the field device of
-the ccb don't be set NULL.So there is possibility of getting another devcie reset in fun
-of mpi_ssp_completion .Also there are another way to solve problem by adding following
-code in mpi_SSP_completion:
-  pm8001_dev = t->dev->lldd_dev;
-Signed-off-by: zhuxh <zxh3737@163.com>
+Subsystems that want to register CPU hotplug callbacks, as well as perform
+initialization for the CPUs that are already online, often do it as shown
+below:
+
+	get_online_cpus();
+
+	for_each_online_cpu(cpu)
+		init_cpu(cpu);
+
+	register_cpu_notifier(&foobar_cpu_notifier);
+
+	put_online_cpus();
+
+This is wrong, since it is prone to ABBA deadlocks involving the
+cpu_add_remove_lock and the cpu_hotplug.lock (when running concurrently
+with CPU hotplug operations).
+
+Instead, the correct and race-free way of performing the callback
+registration is:
+
+	cpu_notifier_register_begin();
+
+	for_each_online_cpu(cpu)
+		init_cpu(cpu);
+
+	/* Note the use of the double underscored version of the API */
+	__register_cpu_notifier(&foobar_cpu_notifier);
+
+	cpu_notifier_register_done();
+
+
+Fix the bnx2i code in scsi by using this latter form of callback registration.
+
+Cc: Eddie Wai <eddie.wai@broadcom.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Ingo Molnar <mingo@kernel.org>
+Cc: linux-scsi@vger.kernel.org
+Signed-off-by: Srivatsa S. Bhat <srivatsa.bhat@linux.vnet.ibm.com>
 ---
- drivers/scsi/pm8001/pm8001_sas.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
-index f50ac44..f0ea5db 100644
---- a/drivers/scsi/pm8001/pm8001_sas.c
-+++ b/drivers/scsi/pm8001/pm8001_sas.c
-@@ -434,6 +434,7 @@ static int pm8001_task_exec(struct sas_task *task, const int num,
- 		ccb->n_elem = n_elem;
- 		ccb->ccb_tag = tag;
- 		ccb->task = t;
-+		ccb->device = pm8001_dev;
- 		switch (t->task_proto) {
- 		case SAS_PROTOCOL_SMP:
- 			rc = pm8001_task_prep_smp(pm8001_ha, ccb);
--- 
-1.7.9
+ drivers/scsi/bnx2i/bnx2i_init.c |   12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
 
-
+diff --git a/drivers/scsi/bnx2i/bnx2i_init.c b/drivers/scsi/bnx2i/bnx2i_init.c
+index 34c294b..80c03b4 100644
+--- a/drivers/scsi/bnx2i/bnx2i_init.c
++++ b/drivers/scsi/bnx2i/bnx2i_init.c
+@@ -537,11 +537,15 @@ static int __init bnx2i_mod_init(void)
+ 		p->iothread = NULL;
+ 	}
+ 
++	cpu_notifier_register_begin();
++
+ 	for_each_online_cpu(cpu)
+ 		bnx2i_percpu_thread_create(cpu);
+ 
+ 	/* Initialize per CPU interrupt thread */
+-	register_hotcpu_notifier(&bnx2i_cpu_notifier);
++	__register_hotcpu_notifier(&bnx2i_cpu_notifier);
++
++	cpu_notifier_register_done();
+ 
+ 	return 0;
+ 
+@@ -581,11 +585,15 @@ static void __exit bnx2i_mod_exit(void)
+ 	}
+ 	mutex_unlock(&bnx2i_dev_lock);
+ 
+-	unregister_hotcpu_notifier(&bnx2i_cpu_notifier);
++	cpu_notifier_register_begin();
+ 
+ 	for_each_online_cpu(cpu)
+ 		bnx2i_percpu_thread_destroy(cpu);
+ 
++	__unregister_hotcpu_notifier(&bnx2i_cpu_notifier);
++
++	cpu_notifier_register_done();
++
+ 	iscsi_unregister_transport(&bnx2i_iscsi_transport);
+ 	cnic_unregister_driver(CNIC_ULP_ISCSI);
+ }
