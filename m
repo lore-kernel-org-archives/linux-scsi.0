@@ -1,57 +1,77 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v10 0/4] ata: Add APM X-Gene SoC SATA host controller
- support
-Date: Fri, 14 Feb 2014 10:03:22 -0500
-Message-ID: <20140214150322.GB29516@htj.dyndns.org>
-References: <CAPw-ZTkbpOEHowGvp-_3DcW1qW0AK_ZbpdS1LESJfhFU-n_Mtw@mail.gmail.com>
- <CAPw-ZTn5c=v+7pbetEjXWpw9i=cG+zdeHPxO1QD0e42uFrKnCg@mail.gmail.com>
+From: =?UTF-8?B?VG9yYWxmIEbDtnJzdGVy?= <toralf.foerster@gmx.de>
+Subject: 3x check of "Caching mode page"
+Date: Fri, 14 Feb 2014 17:01:08 +0100
+Message-ID: <52FE3DC4.80809@gmx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAPw-ZTn5c=v+7pbetEjXWpw9i=cG+zdeHPxO1QD0e42uFrKnCg@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Loc Ho <lho@apm.com>
-Cc: Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, David Milburn <dmilburn@redhat.com>, Jon Masters <jcm@redhat.com>, "patches@apm.com" <patches@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mout.gmx.net ([212.227.15.19]:51310 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751323AbaBNQBM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 14 Feb 2014 11:01:12 -0500
+Received: from [192.168.178.21] ([85.177.117.64]) by mail.gmx.com (mrgmx103)
+ with ESMTPSA (Nemesis) id 0MPUFR-1WACKy4ACX-004mmM for
+ <linux-scsi@vger.kernel.org>; Fri, 14 Feb 2014 17:01:10 +0100
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Hello, Loc.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA256
 
-On Thu, Feb 13, 2014 at 03:28:01PM -0800, Loc Ho wrote:
-> 1. There are a number of errata that require workaround. Some can be
-> fixed by adding broken flags while others are better to just wrap
-> around the existent libahci library routines and not overly polluting
-> the libahci routines.
-> 2. There are additional controller programming sequences to configure.
-> 2a. By default, RAM are powered down and require brought out of shutdown.
-> 2b. The controller has an additional corresponding PHY part that needs
-> to be programmed after PHY configuration.
+I'm just wondering why it happens 3 times in a row :
 
-Have you looked at the latest patchset Hans posted?  He added multiple
-PHY support and split up init to three steps so that each platform
-driver can mix and match as they see fit.  Looking at xgene driver,
-sure there are things specific to the driver but there also are
-non-insignificant amount of boilerplate code and that's what I'm
-primarily concerned about.  It may be okay when you have two or three
-drivers duplicating some code but it looks like we could have many
-more and I *really* want to avoid the situation where the same piece
-of code is copied over N times.  In addition, frankly, not many people
-except yourself would care about these drivers once they're merged and
-many of these are gonna be painful to test making later refactoring a
-lot harder.
 
-> 2c. The controller requires extra programming sequence for the
-> hardreset due to errata.
-> 2d. For the IO flush, it requires additional memory resources.
+=46eb 14 16:12:53 n22 kernel: usb 1-1.2: new high-speed USB device numb=
+er 7 using ehci-pci
+=46eb 14 16:12:53 n22 kernel: usb 1-1.2: New USB device found, idVendor=
+=3D04b4, idProduct=3D6830
+=46eb 14 16:12:53 n22 kernel: usb 1-1.2: New USB device strings: Mfr=3D=
+56, Product=3D72, SerialNumber=3D91
+=46eb 14 16:12:53 n22 kernel: usb 1-1.2: Product: Lacie Mobile Drive
+=46eb 14 16:12:53 n22 kernel: usb 1-1.2: Manufacturer: Lacie Group. SA
+=46eb 14 16:12:53 n22 kernel: usb 1-1.2: SerialNumber: DEF10D5E95F5
+=46eb 14 16:12:53 n22 kernel: usb-storage 1-1.2:1.0: USB Mass Storage d=
+evice detected
+=46eb 14 16:12:53 n22 kernel: scsi9 : usb-storage 1-1.2:1.0
+=46eb 14 16:12:54 n22 kernel: scsi 9:0:0:0: Direct-Access     SAMSUNG  =
+HM160JC          0000 PQ: 0 ANSI: 0
+=46eb 14 16:12:54 n22 kernel: sd 9:0:0:0: Attached scsi generic sg3 typ=
+e 0
+=46eb 14 16:12:54 n22 kernel: sd 9:0:0:0: [sdc] 312581808 512-byte logi=
+cal blocks: (160 GB/149 GiB)
+=46eb 14 16:12:54 n22 kernel: sd 9:0:0:0: [sdc] Write Protect is off
+=46eb 14 16:12:54 n22 kernel: sd 9:0:0:0: [sdc] Mode Sense: 27 00 00 00
+=46eb 14 16:12:54 n22 kernel: sd 9:0:0:0: [sdc] No Caching mode page fo=
+und
+=46eb 14 16:12:54 n22 kernel: sd 9:0:0:0: [sdc] Assuming drive cache: w=
+rite through
+=46eb 14 16:12:54 n22 kernel: sd 9:0:0:0: [sdc] No Caching mode page fo=
+und
+=46eb 14 16:12:54 n22 kernel: sd 9:0:0:0: [sdc] Assuming drive cache: w=
+rite through
+=46eb 14 16:12:54 n22 kernel: sdc: sdc1
+=46eb 14 16:12:54 n22 kernel: sd 9:0:0:0: [sdc] No Caching mode page fo=
+und
+=46eb 14 16:12:54 n22 kernel: sd 9:0:0:0: [sdc] Assuming drive cache: w=
+rite through
+=46eb 14 16:12:54 n22 kernel: sd 9:0:0:0: [sdc] Attached SCSI disk
 
-Sure, you'll need to override good parts of the driver.  What I'm
-saying is please try to reuse whatever you can.  If that takes
-refactoring and librarize ahci_platform, please do so and I do see
-healthy chunk of duplicated code in the init path.  Please take a look
-at Hans' patches and if necessary work with him so that your driver
-can be part of the refactoring.
+- --=20
+MfG/Sincerely
+Toralf F=C3=B6rster
+pgp finger print:1A37 6F99 4A9D 026F 13E2 4DCF C4EA CDDE 0076 E94E
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
 
-Thanks.
-
--- 
-tejun
+iF4EAREIAAYFAlL+PcQACgkQxOrN3gB26U43VQD+Lhk1W1u2Mn7ppqI38i5jzFLT
+i8NUkgjNx9Kz5EC/oPwA/iNdNIwnh8Gnpixd5E7W1ffXlJ8oWq9Wo1h8DZuNo6vF
+=3D6C32
+-----END PGP SIGNATURE-----
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
