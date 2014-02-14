@@ -1,128 +1,48 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 04/16] scsi_dh_alua: Make stpg synchronous
-Date: Fri, 14 Feb 2014 12:21:25 -0600
-Message-ID: <52FE5EA5.3020905@cs.wisc.edu>
-References: <1391160600-19652-1-git-send-email-hare@suse.de> <1391160600-19652-5-git-send-email-hare@suse.de> <52F435B3.3090600@cs.wisc.edu> <52F43CD7.5050900@cs.wisc.edu> <52FB9353.7040807@suse.de> <52FB9D20.5060900@cs.wisc.edu> <52FBA0D3.50907@cs.wisc.edu> <52FBAFDE.4060104@cs.wisc.edu> <52FC90F6.7020005@suse.de> <52FDFFF8.8030507@acm.org>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH 16/16] scsi_dh_alua: Use workqueue for RTPG
+Date: Fri, 14 Feb 2014 20:03:26 +0100
+Message-ID: <52FE687E.7000100@acm.org>
+References: <1391160600-19652-1-git-send-email-hare@suse.de> <1391160600-19652-17-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:57420 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751660AbaBNSVx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 Feb 2014 13:21:53 -0500
-In-Reply-To: <52FDFFF8.8030507@acm.org>
+Received: from smtp03.stone-is.org ([87.238.162.65]:60641 "EHLO
+	smtpgw.stone-is.be" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751946AbaBNTDc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Feb 2014 14:03:32 -0500
+In-Reply-To: <1391160600-19652-17-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>, Sean Stewart <sean.stewart@netapp.com>, Martin George <marting@netapp.com>, linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>
+Cc: Sean Stewart <sean.stewart@netapp.com>, Martin George <marting@netapp.com>, linux-scsi@vger.kernel.org
 
-On 2/14/14 5:37 AM, Bart Van Assche wrote:
-> On 02/13/14 10:31, Hannes Reinecke wrote:
->> >On 02/12/2014 06:31 PM, Mike Christie wrote:
->>> >>On 2/12/14 10:26 AM, Mike Christie wrote:
->>>> >>>On 2/12/14 10:11 AM, Mike Christie wrote:
->>>>> >>>>On 2/12/14 9:29 AM, Hannes Reinecke wrote:
->>>>>> >>>>>On 02/07/2014 02:54 AM, Mike Christie wrote:
->>>>>>> >>>>>>On 02/06/2014 07:24 PM, Mike Christie wrote:
->>>>>>>> >>>>>>>On 01/31/2014 03:29 AM, Hannes Reinecke wrote:
->>>>>>>>> >>>>>>>>We should be issuing STPG synchronously as we need to
->>>>>>>>> >>>>>>>>evaluate the return code on failure.
->>>>>>>>> >>>>>>>>
->>>>>>>>> >>>>>>>>Signed-off-by: Hannes Reinecke<hare@suse.de>
->>>>>>>> >>>>>>>
->>>>>>>> >>>>>>>I think we need to also make dm-mpath.c use a non-ordered
->>>>>>>> >>>>>>>workqueue
->>>>>>>> >>>>>>>for
->>>>>>>> >>>>>>>kmpath_handlerd. With this patch and the current ordered
->>>>>>>> >>>>>>>workqueue in
->>>>>>>> >>>>>>>dm-mpath I think we will only be able to do one STPG at a time. I
->>>>>>>> >>>>>>>think
->>>>>>>> >>>>>>>if we use a normal old non-ordered workqueue then we would be
->>>>>>>> >>>>>>>limited to
->>>>>>>> >>>>>>>have max_active STPGs executing.
->>>>>>> >>>>>>
->>>>>>> >>>>>>I goofed and commented in the order I saw the patches:)  I take
->>>>>>> >>>>>>this
->>>>>>> >>>>>>comment back for this patch, because I see in 16/16 you added a
->>>>>>> >>>>>>new
->>>>>>> >>>>>>workqueue to scsi_dh_alua to do rtpgs and stpgs.
->>>>>>> >>>>>>
->>>>>>> >>>>>>For 16/16 though, do we want to make kmpath_aluad a non single
->>>>>>> >>>>>>threaded
->>>>>>> >>>>>>workqueue? It looks like max_active for single threaded is only
->>>>>>> >>>>>>one
->>>>>>> >>>>>>work
->>>>>>> >>>>>>at a time too.
->>>>>>> >>>>>>
->>>>>> >>>>>Well, that was by intention.
->>>>>> >>>>>
->>>>>> >>>>>The workqueue will be triggered very infrequently (basically for
->>>>>> >>>>>every path switch).
->>>>>> >>>>>For implicit ALUA we just need to issue a RTPG to get the new path
->>>>>> >>>>>status; there we might be suffering from single threaded behaviour.
->>>>>> >>>>>But we need to issue it only once and it should be processed
->>>>>> >>>>>reasonably fast.
->>>>>> >>>>>For explicit ALUA we'll have to send an STPG, which has potentially
->>>>>> >>>>>system-wide implications. So sending several to (supposedly)
->>>>>> >>>>>different targets might actually be contraproductive, as the first
->>>>>> >>>>>might have already set the status for the second call.
->>>>>> >>>>>Here we most definitely_want_  serialisation to avoid
->>>>>> >>>>>superfluous STPGs.
->>>>>> >>>>>
->>>>> >>>>
->>>>> >>>>What target is this?
->>>>> >>>>
->>>>> >>>>For our target it adds a regression. It only affects devices on
->>>>> >>>>the same
->>>>> >>>>port group. We then have multiple groups. Before the patch, we could
->>>>> >>>>failover/failback multiple devices in parallel. To do 64 devices
->>>>> >>>>it took
->>>>> >>>>about 3 seconds. With your patch it takes around 3 minutes.
->>>>> >>>>
->>>> >>>
->>>> >>>Also, with your pg change patch, I think we can serialize based on
->>>> >>>group
->>>> >>>and it will do what you want and also allow us to do STPGs to
->>>> >>>different
->>>> >>>groups in parallel.
->>> >>
->>> >>I guess that would work for me, but I think if you had the same
->>> >>target port in multiple port groups then you could hit the issue you
->>> >>described, right?
->>> >>
->> >Yes, we might. But it's worth a shot anyway.
->> >
->> >So to alleviate all this, this patch:
->> >
->> >diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c
->> >b/drivers/scsi/device_ha
->> >ndler/scsi_dh_alua.c
->> >index 569af9d..46cc1ef 100644
->> >--- a/drivers/scsi/device_handler/scsi_dh_alua.c
->> >+++ b/drivers/scsi/device_handler/scsi_dh_alua.c
->> >@@ -1353,7 +1353,7 @@ static int __init alua_init(void)
->> >  {
->> >         int r;
->> >
->> >-       kmpath_aluad = create_singlethread_workqueue("kmpath_aluad");
->> >+       kmpath_aluad = create_workqueue("kmpath_aluad");
->> >         if (!kmpath_aluad) {
->> >                 printk(KERN_ERR "kmpath_aluad creation failed.\n");
->> >                 return -EINVAL;
->> >
->> >should be sufficient, right?
-> I think this will only be sufficient if there are more CPU threads
-> available than the number of LUNs for which an STPG has to be issued.
+On 01/31/14 10:30, Hannes Reinecke wrote:
+> +static void alua_check(struct scsi_device *sdev)
+> +{
+> +	struct alua_dh_data *h = get_alua_data(sdev);
+> +	struct alua_port_group *pg;
+> +
+> +	if (!h)
+> +		return;
+> +
+> +	rcu_read_lock();
+> +	pg = rcu_dereference(h->pg);
+> +	if (pg) {
+> +		kref_get(&pg->kref);
+> +		rcu_read_unlock();
+> +		alua_rtpg_queue(pg, sdev, NULL);
+> +		kref_put(&pg->kref, release_port_group);
+> +	} else
+> +		rcu_read_unlock();
+> +}
 
-Ah shoot, you reminded me of some other issue. With the above command we 
-only can do 1 unit of work at a time. With the alloc_workqueue example I 
-sent in the other mail, I think it would create a new problem.
+>From the implementation it seems to me like the target port group data
+is kept just as long as it is in use ? Has it been considered to keep
+that data as long as the sdev exists instead ? I think that would result
+in far fewer reference count manipulations and hence in code that is
+easier to read and to verify.
 
-alloc_workqueue with max_active=0 looks like it has the wq code 
-dynamically create worker threads as needed, so with that we could end 
-up with a lot of threads and can failover lots of devices (512 with the 
-current max) in parallel. The threads will even get reaped when they are 
-not needed. However, trying to create lots of threads at failover time 
-might have issues, and in general creating 32 or 64 threads or more is 
-probably not something we want to do.
+Thanks,
+
+Bart.
