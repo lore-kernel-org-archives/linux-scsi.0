@@ -1,56 +1,58 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [LSF/MM TOPIC] atomic block device
-Date: Sat, 15 Feb 2014 12:25:02 -0800
-Message-ID: <1392495902.2178.27.camel@dabdike.int.hansenpartnership.com>
-References: <CAA9_cmf7Y1TL8XqR7dYUn=Pv-En2e0X0FM0zdpkiBkUuNBGKfQ@mail.gmail.com>
-	 <1392487335.2178.5.camel@dabdike.int.hansenpartnership.com>
-	 <CABBL8E+dQPi=N108+z97F54o=xg7vYk5T1JCBGY+9UetiC6qTg@mail.gmail.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [GIT PULL] target fixes for v3.14-rc3
+Date: Sat, 15 Feb 2014 15:29:59 -0800
+Message-ID: <1392506999.24417.14.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <CABBL8E+dQPi=N108+z97F54o=xg7vYk5T1JCBGY+9UetiC6qTg@mail.gmail.com>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Andy Rudoff <andy@rudoff.com>
-Cc: Dan Williams <dan.j.williams@intel.com>, lsf-pc@lists.linux-foundation.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, jmoyer@redhat.com, david@fromorbit.com, Chris Mason <clm@fb.com>, Jens Axboe <axboe@kernel.dk>, Bryan E Veal <bryan.e.veal@intel.com>, Annie Foong <annie.foong@intel.com>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Lameter <christoph@lameter.com>
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>target-devel <target-devel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, 2014-02-15 at 11:15 -0700, Andy Rudoff wrote:
-> > OK, I'm prepared to look through it, but I should warn you that after
-> > the SNIA HBAAPI cluster fuck I'm not well disposed towards any APIs that
-> > come out of SNIA.  I've read the first 30 pages and they don't inspire
-> > confidence; it's basically going the same way as HBA API.  The failure
-> > there was trying to define universal interfaces for every OS regardless
-> > of the existing interfaces they currently had.  this NVM model seems to
-> > define a lot of existing stuff in block and VFS but slightly
-> > differently.  Why do you think it's a good idea?
-> 
-> Note that the NVMP workgroup did not define any APIs.  Instead, we
-> concentrated on defining the actions that we see applications needing
-> (or being able to use) and defining some common terminology.  We leave
-> the API defintion to the operating system authors so they can create
-> them in the way that makes the most sense for their environment (much
-> like you are suggesting above, I think).
+Hi Linus,
 
-Well, the actions had define input and output properties ... we can
-argue about what level of semantics you have to define before an action
-becomes an API, but the real question 
+Here are the target-pending fixes for v3.14-rc3 code.
 
-> > I'll further add  what we really need are use cases, not an API
-> > chocolate box.  I think some DB people will be coming to LSF, so we
-> > should really talk use cases with them.
-> 
-> Totally agree.
+Please pull from:
 
-OK, so what the Database people are currently fretting about is how the
-Linux cache fights with the WAL.  Pretty much all DBs sit on filesystems
-these days, so the first question is are block operations even relevant
-and do the (rather scant) file operations fit their need.  The basic
-problem with the file mode is the granularity.  What does a DB do with
-transactions which go over the limits?  It also looks like the NVM file
-actions need to work over DIO, so the question is how. (And the other
-problem is that only a few DBs seem to use DIO).
+  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git master
 
-James
+Mostly minor fixes this time to v3.14-rc1 related changes.  Also
+included is one fix for a free after use regression in persistent
+reservations UNREGISTER logic that is CC'ed to >= v3.11.y stable.
 
+Thank you,
 
+--nab
+
+Jingoo Han (1):
+  IB/srpt: replace strict_strtoul() with kstrtoul()
+
+Nicholas Bellinger (4):
+  target: Fix free-after-use regression in PR unregister
+  target: Fix 32-bit + CONFIG_LBDAF=n link error w/ sector_div
+  iscsi-target: Fix SNACK Type 1 + BegRun=0 handling
+  iser-target: Fix leak on failure in isert_conn_create_fastreg_pool
+
+Roland Dreier (3):
+  qla2xxx: Remove last vestiges of qla_tgt_cmd.cmd_list
+  target: Fix missing length check in spc_emulate_evpd_83()
+  target: Simplify command completion by removing CMD_T_FAILED flag
+
+Sagi Grimberg (1):
+  Target/sbc: Fix protection copy routine
+
+ drivers/infiniband/ulp/isert/ib_isert.c  |    1 +
+ drivers/infiniband/ulp/srpt/ib_srpt.c    |   14 +++++++-------
+ drivers/scsi/qla2xxx/qla_target.c        |    2 --
+ drivers/scsi/qla2xxx/qla_target.h        |    1 -
+ drivers/target/iscsi/iscsi_target_erl1.c |    4 +++-
+ drivers/target/target_core_alua.c        |    2 +-
+ drivers/target/target_core_pr.c          |   11 +++++++----
+ drivers/target/target_core_sbc.c         |    8 ++++++++
+ drivers/target/target_core_spc.c         |    4 ++--
+ drivers/target/target_core_transport.c   |    5 +----
+ include/target/target_core_base.h        |    1 -
+ 11 files changed, 30 insertions(+), 23 deletions(-)
