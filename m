@@ -1,39 +1,45 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 70271] rmmod st causes general protection fault
-Date: Sun, 16 Feb 2014 03:30:06 +0000
-Message-ID: <bug-70271-11613-6Vz61eRdXf@https.bugzilla.kernel.org/>
-References: <bug-70271-11613@https.bugzilla.kernel.org/>
+From: Wang Yongli <hauandrw@hauandrew.onmicrosoft.com>
+Subject: =?utf-8?q?Gr=C3=BC=C3=9Fe_und_Komplimente!!!?=
+Date: Sun, 16 Feb 2014 17:53:32 +0100
+Message-ID: <ed411a76-3004-43b1-930a-871fe63072fa__9117.88208545676$1392569776$gmane$org@AM3PR06MB356.eurprd06.prod.outlook.com>
+Reply-To: <wangyongli1@aol.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:45642 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752567AbaBPDaL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 15 Feb 2014 22:30:11 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 24736201F5
-	for <linux-scsi@vger.kernel.org>; Sun, 16 Feb 2014 03:30:10 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-	by mail.kernel.org (Postfix) with ESMTP id 1C531201F9
-	for <linux-scsi@vger.kernel.org>; Sun, 16 Feb 2014 03:30:08 +0000 (UTC)
-In-Reply-To: <bug-70271-11613@https.bugzilla.kernel.org/>
+Received: from emea01-am1-ndr.ptr.protection.outlook.com ([157.56.116.106]:14017
+	"EHLO emea01-am1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752643AbaBPQzp convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 16 Feb 2014 11:55:45 -0500
+Content-Description: Mail message body
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Recipients <hauandrw@hauandrew.onmicrosoft.com>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=70271
+Gr=FC=DFe und Komplimente
 
-Andreas Steinmetz <ast@domdv.de> changed:
+Sehr geehrter  Damen und Herren,
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|NEW                         |RESOLVED
-         Resolution|---                         |CODE_FIX
+  ich bin Herr Wang Yongli. Ich arbeite bei der BANK OF CHINA. Ich habe=
+ einen Business-Vorschlag in der Tonne von US $ 30.500.000 dem ich auf =
+einem Offshore-Konto mit Ihrer Hilfe, wenn Sie bereit sind =FCbertragen=
+ werde.
 
---- Comment #2 from Andreas Steinmetz <ast@domdv.de> ---
-Verified the patch. Fixes the Oops. Thanks a lot.
+Bei Interesse sende ich Ihnen die vollen Angaben zur Transaktion nach E=
+ingang Ihrer Antwort. Sie k=F6nnen mich auf meiner privaten E-Mail kont=
+aktieren (wangyongli1@aol.com) und mir die folgenden Informationen zur =
+Dokumentation senden
 
--- 
-You are receiving this mail because:
-You are the assignee for the bug.
+1) Vollst=E4ndige Namen 2) Aktuelle Wohnadresse 3) Private Telefonnumme=
+r
+
+  =20
+Mit freundlichen Gr=FC=DFen
+
+Herr Wang Yongli
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
