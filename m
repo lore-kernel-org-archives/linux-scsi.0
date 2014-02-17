@@ -1,57 +1,55 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 08/16] scsi_dh_alua: parse target device id
-Date: Mon, 17 Feb 2014 15:33:13 +0100
-Message-ID: <53021DA9.9090408@suse.de>
-References: <1391160600-19652-1-git-send-email-hare@suse.de> <1391160600-19652-9-git-send-email-hare@suse.de> <52FE0793.9040505@acm.org> <52FE0A66.6050200@suse.de> <5302171A.9070507@acm.org> <5302181A.9080308@suse.de> <53021C6B.7040207@acm.org>
+From: Bradley Grove <bgrove@attotech.com>
+Subject: Re: [PATCH 0/2] pm80xx: Fix ATTO pm8001 based HBA support
+Date: Mon, 17 Feb 2014 16:41:27 -0500
+Message-ID: <53028207.8090404@attotech.com>
+References: <1387468257-3177-1-git-send-email-bgrove@attotech.com> <52B42108.4040408@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:41836 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753212AbaBQOdP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 17 Feb 2014 09:33:15 -0500
-In-Reply-To: <53021C6B.7040207@acm.org>
+Received: from sw.attotech.com ([208.69.85.34]:49442 "EHLO
+	NOTESERV1.attotech.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750939AbaBQV46 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Feb 2014 16:56:58 -0500
+In-Reply-To: <52B42108.4040408@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>, James Bottomley <jbottomley@parallels.com>
-Cc: Sean Stewart <sean.stewart@netapp.com>, Martin George <marting@netapp.com>, linux-scsi@vger.kernel.org
+To: jbottomley@parallels.com
+Cc: Jack Wang <xjtuwjp@gmail.com>, linux-scsi@vger.kernel.org
 
-On 02/17/2014 03:27 PM, Bart Van Assche wrote:
-> On 02/17/14 15:09, Hannes Reinecke wrote:
->> If the product ID is actually the array identification and not a
->> generic name, sure.
->> But if all ION arrays with the same FW level identify itself with
->> the same identifier it's kinda pointless :-)
->> Otherwise, yeah, that's easily done.
+
+James,
+
+There were a couple of patches that I expected to be added during the 
+3.14-rc1 merge window that weren't.   Specifically:
+
+http://marc.info/?l=linux-scsi&m=138753665607127&w=2
+http://marc.info/?l=linux-scsi&m=138738970431549&w=2
+
+Can you explain why they weren't included?
+
+Brad
+
+On 12/20/2013 05:50 AM, Jack Wang wrote:
+> On 12/19/2013 04:50 PM, Bradley Grove wrote:
+>> Addresses issues that we uncovered during testing with our HBAs.
+>> For the most part, we just enabled code that was already being used
+>> for other vendor's HBAs.
 >>
->> But you might want to talk to your FW folks; if they were to update
->> VPD page 0x83 to include an target-specific identifier we'd be all
->> set ...
->=20
-> The product ID indeed identifies an array.
->=20
-> Updating VPD page 0x83 can be done easily for new FW releases. Howeve=
-r,
-> the target identification approach explained in the previous e-mail i=
-s
-> already in use at several customer sites and I'm not sure it will be
-> possible to convince all of them to upgrade ...
->=20
-Ok, fair enough.
+>> Bradley Grove (2):
+>>    pm80xx: Read saved WWN from NVMD for ATTO pm8001 based HBAs.
+>>    pm80xx: Enable BAR shift to avoid BIOS conflict with MPI space for
+>>      ATTO pm8001 based HBAs.
+>>
+>>   drivers/scsi/pm8001/pm8001_hwi.c  |  6 +++---
+>>   drivers/scsi/pm8001/pm8001_init.c | 10 +++++-----
+>>   2 files changed, 8 insertions(+), 8 deletions(-)
+>>
+> Looks fine, thanks
+>   Acked-by: Jack Wang <xjtuwjp@gmail.com>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-Will be including it.
-
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
