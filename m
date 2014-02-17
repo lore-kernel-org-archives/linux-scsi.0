@@ -1,116 +1,54 @@
-From: Loc Ho <lho@apm.com>
-Subject: [PATCH v11 3/3] arm64: Add APM X-Gene SoC AHCI SATA host controller DTS entries
-Date: Mon, 17 Feb 2014 00:17:13 -0700
-Message-ID: <1392621433-5566-4-git-send-email-lho@apm.com>
-References: <1392621433-5566-1-git-send-email-lho@apm.com>
- <1392621433-5566-2-git-send-email-lho@apm.com>
- <1392621433-5566-3-git-send-email-lho@apm.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1392621433-5566-3-git-send-email-lho@apm.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH 13/17] scsi: push host_lock down into scsi_{host,target}_queue_ready
+Date: Mon, 17 Feb 2014 10:36:20 +0100
+Message-ID: <5301D814.5070100@acm.org>
+References: <20140205123930.150608699@bombadil.infradead.org> <20140205124021.286457268@bombadil.infradead.org> <1391705819.22335.8.camel@dabdike> <20140210113932.GA31405@infradead.org> <20140210200934.GA4096@kernel.dk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp03.stone-is.org ([87.238.162.65]:36685 "EHLO
+	smtpgw.stone-is.be" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751100AbaBQJgZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Feb 2014 04:36:25 -0500
+In-Reply-To: <20140210200934.GA4096@kernel.dk>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@infradead.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Nicholas Bellinger <nab@linux-iscsi.org>, linux-scsi@vger.kernel.org
 
-Signed-off-by: Loc Ho <lho@apm.com>
-Signed-off-by: Tuan Phan <tphan@apm.com>
-Signed-off-by: Suman Tripathi <stripathi@apm.com>
----
- arch/arm64/boot/dts/apm-storm.dtsi |   75 ++++++++++++++++++++++++++++++++++++
- 1 files changed, 75 insertions(+), 0 deletions(-)
+On 02/10/14 21:09, Jens Axboe wrote:
+> On Mon, Feb 10 2014, Christoph Hellwig wrote:
+>>> I also think we should be getting more utility out of threading
+>>> guarantees.  So, if there's only one thread active per device we don't
+>>> need any device counters to be atomic.  Likewise, u32 read/write is an
+>>> atomic operation, so we might be able to use sloppy counters for the
+>>> target and host stuff (one per CPU that are incremented/decremented on
+>>> that CPU ... this will only work using CPU locality ... completion on
+>>> same CPU but that seems to be an element of a lot of stuff nowadays).
+>>
+>> The blk-mq code is aiming for CPU locality, but there are no hard
+>> guarantees.  I'm also not sure always bouncing around the I/O submission
+>> is a win, but it might be something to play around with at the block
+>> layer.
+>>
+>> Jens, did you try something like this earlier?
+> 
+> Nope, I've always thought that if you needed to bounce submission
+> around, you would already have lost. [ ... ]
 
-diff --git a/arch/arm64/boot/dts/apm-storm.dtsi b/arch/arm64/boot/dts/apm-storm.dtsi
-index c78ddcf..57b0770 100644
---- a/arch/arm64/boot/dts/apm-storm.dtsi
-+++ b/arch/arm64/boot/dts/apm-storm.dtsi
-@@ -221,6 +221,48 @@
- 				enable-offset = <0x0>;
- 				enable-mask = <0x06>;
- 			};
-+
-+			sata01clk: sata01clk@1f21c000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				clock-names = "socplldiv2";
-+				reg = <0x0 0x1f21c000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "sata01clk";
-+				csr-offset = <0x4>;
-+				csr-mask = <0x05>;
-+				enable-offset = <0x0>;
-+				enable-mask = <0x39>;
-+			};
-+
-+			sata23clk: sata23clk@1f22c000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				clock-names = "socplldiv2";
-+				reg = <0x0 0x1f22c000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "sata23clk";
-+				csr-offset = <0x4>;
-+				csr-mask = <0x05>;
-+				enable-offset = <0x0>;
-+				enable-mask = <0x39>;
-+			};
-+
-+			sata45clk: sata45clk@1f23c000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				clock-names = "socplldiv2";
-+				reg = <0x0 0x1f23c000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "sata45clk";
-+				csr-offset = <0x4>;
-+				csr-mask = <0x05>;
-+				enable-offset = <0x0>;
-+				enable-mask = <0x39>;
-+			};
- 		};
- 
- 		serial0: serial@1c020000 {
-@@ -262,5 +304,38 @@
- 			apm,tx-boost-gain = <31 31 31 31 31 31>;
- 			apm,tx-eye-tuning = <2 10 10 2 10 10>;
- 		};
-+
-+		sata1: sata@1a000000 {
-+			compatible = "apm,xgene-ahci-sgmii";
-+			reg = <0x0 0x1a000000 0x0 0x1000>,
-+			      <0x0 0x1f210000 0x0 0x10000>;
-+			interrupts = <0x0 0x86 0x4>;
-+			status = "disabled";
-+			clocks = <&sata01clk 0>;
-+			phys = <&phy1 0>;
-+			phy-names = "sata-6g";
-+		};
-+
-+		sata2: sata@1a400000 {
-+			compatible = "apm,xgene-ahci-sgmii";
-+			reg = <0x0 0x1a400000 0x0 0x1000>,
-+			      <0x0 0x1f220000 0x0 0x10000>;
-+			interrupts = <0x0 0x87 0x4>;
-+			status = "ok";
-+			clocks = <&sata23clk 0>;
-+			phys = <&phy2 0>;
-+			phy-names = "sata-6g";
-+		};
-+
-+		sata3: sata@1a800000 {
-+			compatible = "apm,xgene-ahci-pcie";
-+			reg = <0x0 0x1a800000 0x0 0x1000>,
-+			      <0x0 0x1f230000 0x0 0x10000>;
-+			interrupts = <0x0 0x88 0x4>;
-+			status = "ok";
-+			clocks = <&sata45clk 0>;
-+			phys = <&phy3 0>;
-+			phy-names = "sata-6g";
-+		};
- 	};
- };
--- 
-1.5.5
+This comment makes a lot of sense to me. The approach that has been
+taken in the scsi-mq patches that have been posted on February 5 is to
+associate one blk-mq device with each LUN. That blk-mq device has one
+hctx with queue depth shost->cmd_per_lun. So if there are multiple LUNs
+per SCSI host the combined hctx queue depth of its LUNs can exceed
+shost->can_queue. I'm not sure whether it's possible to prevent this
+without modifying the block layer. How about modifying the block layer
+such that a single hctx can be shared by multiple block devices and
+adding cmd_per_lun support in the block layer ? I think that would allow
+to prevent having to bounce submission in the SCSI mid-layer.
+
+Thanks,
+
+Bart.
 
