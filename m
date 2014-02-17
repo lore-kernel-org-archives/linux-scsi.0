@@ -1,54 +1,69 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH 13/17] scsi: push host_lock down into scsi_{host,target}_queue_ready
-Date: Mon, 17 Feb 2014 10:36:20 +0100
-Message-ID: <5301D814.5070100@acm.org>
-References: <20140205123930.150608699@bombadil.infradead.org> <20140205124021.286457268@bombadil.infradead.org> <1391705819.22335.8.camel@dabdike> <20140210113932.GA31405@infradead.org> <20140210200934.GA4096@kernel.dk>
+From: Daniel Mack <daniel@zonque.org>
+Subject: Re: [PATCH] SCSI: sd: don't fail if the device doesn't recognize
+ SYNCHRONIZE CACHE
+Date: Mon, 17 Feb 2014 12:33:45 +0100
+Message-ID: <5301F399.9070301@zonque.org>
+References: <Pine.LNX.4.44L0.1401151533360.1587-100000@iolanthe.rowland.org> <52F21AB1.8030003@zonque.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp03.stone-is.org ([87.238.162.65]:36685 "EHLO
-	smtpgw.stone-is.be" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751100AbaBQJgZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Feb 2014 04:36:25 -0500
-In-Reply-To: <20140210200934.GA4096@kernel.dk>
+Received: from svenfoo.org ([82.94.215.22]:33011 "EHLO mail.zonque.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752108AbaBQLdu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 17 Feb 2014 06:33:50 -0500
+In-Reply-To: <52F21AB1.8030003@zonque.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@infradead.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Nicholas Bellinger <nab@linux-iscsi.org>, linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Sven Neumann <s.neumann@raumfeld.com>, Oliver Neukum <oliver@neukum.org>, SCSI development list <linux-scsi@vger.kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
-On 02/10/14 21:09, Jens Axboe wrote:
-> On Mon, Feb 10 2014, Christoph Hellwig wrote:
->>> I also think we should be getting more utility out of threading
->>> guarantees.  So, if there's only one thread active per device we don't
->>> need any device counters to be atomic.  Likewise, u32 read/write is an
->>> atomic operation, so we might be able to use sloppy counters for the
->>> target and host stuff (one per CPU that are incremented/decremented on
->>> that CPU ... this will only work using CPU locality ... completion on
->>> same CPU but that seems to be an element of a lot of stuff nowadays).
+On 02/05/2014 12:04 PM, Daniel Mack wrote:
+> On 01/15/2014 09:37 PM, Alan Stern wrote:
+>> Evidently some wacky USB-ATA bridges don't recognize the SYNCHRONIZE
+>> CACHE command, as shown in this email thread:
 >>
->> The blk-mq code is aiming for CPU locality, but there are no hard
->> guarantees.  I'm also not sure always bouncing around the I/O submission
->> is a win, but it might be something to play around with at the block
->> layer.
+>> 	http://marc.info/?t=138978356200002&r=1&w=2
 >>
->> Jens, did you try something like this earlier?
+>> The fact that we can't tell them to drain their caches shouldn't
+>> prevent the system from going into suspend.  Therefore sd_sync_cache()
+>> shouldn't return an error if the device replies with an Invalid
+>> Command ASC.
+>>
+>> Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+>> Reported-by: Sven Neumann <s.neumann@raumfeld.com>
+>> Tested-by: Daniel Mack <zonque@gmail.com>
+>> CC: Oliver Neukum <oliver@neukum.org>
+>> CC: <stable@vger.kernel.org>
 > 
-> Nope, I've always thought that if you needed to bounce submission
-> around, you would already have lost. [ ... ]
+> Any objections about this patch? It would be good to get it merged for
+> 3.14, if possible.
 
-This comment makes a lot of sense to me. The approach that has been
-taken in the scsi-mq patches that have been posted on February 5 is to
-associate one blk-mq device with each LUN. That blk-mq device has one
-hctx with queue depth shost->cmd_per_lun. So if there are multiple LUNs
-per SCSI host the combined hctx queue depth of its LUNs can exceed
-shost->can_queue. I'm not sure whether it's possible to prevent this
-without modifying the block layer. How about modifying the block layer
-such that a single hctx can be shared by multiple block devices and
-adding cmd_per_lun support in the block layer ? I think that would allow
-to prevent having to bounce submission in the SCSI mid-layer.
+Ping? Did anyone queue this one up?
+
 
 Thanks,
+Daniel
 
-Bart.
+
+>>  drivers/scsi/sd.c |    4 ++--
+>>  1 file changed, 2 insertions(+), 2 deletions(-)
+>>
+>> Index: usb-3.13/drivers/scsi/sd.c
+>> ===================================================================
+>> --- usb-3.13.orig/drivers/scsi/sd.c
+>> +++ usb-3.13/drivers/scsi/sd.c
+>> @@ -1463,8 +1463,8 @@ static int sd_sync_cache(struct scsi_dis
+>>  			sd_print_sense_hdr(sdkp, &sshdr);
+>>  		/* we need to evaluate the error return  */
+>>  		if (scsi_sense_valid(&sshdr) &&
+>> -			/* 0x3a is medium not present */
+>> -			sshdr.asc == 0x3a)
+>> +			(sshdr.asc == 0x3a ||	/* medium not present */
+>> +			 sshdr.asc == 0x20))	/* invalid command */
+>>  				/* this is no error here */
+>>  				return 0;
+>>  
+>>
+> 
 
