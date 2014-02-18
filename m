@@ -1,137 +1,265 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 14/35] hpsa: do ioaccel mode 2 resource allocations
-Date: Tue, 18 Feb 2014 13:56:14 -0600
-Message-ID: <20140218195614.15787.34932.stgit@beardog.cce.hp.com>
+Subject: [PATCH 19/35] hpsa: add task management for ioaccel mode 2
+Date: Tue, 18 Feb 2014 13:56:45 -0600
+Message-ID: <20140218195645.15787.67456.stgit@beardog.cce.hp.com>
 References: <20140218195251.15787.55872.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g9t1613g.houston.hp.com ([15.240.0.71]:43525 "EHLO
-	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751741AbaBRT5m (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Feb 2014 14:57:42 -0500
-Received: from g2t2354.austin.hp.com (g2t2354.austin.hp.com [15.217.128.53])
+Received: from g2t1383g.austin.hp.com ([15.217.136.92]:57053 "EHLO
+	g2t1383g.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751745AbaBRT5r (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Feb 2014 14:57:47 -0500
+Received: from g4t3427.houston.hp.com (g4t3427.houston.hp.com [15.201.208.55])
 	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by g9t1613g.houston.hp.com (Postfix) with ESMTPS id E80D160962
-	for <linux-scsi@vger.kernel.org>; Tue, 18 Feb 2014 19:57:41 +0000 (UTC)
+	by g2t1383g.austin.hp.com (Postfix) with ESMTPS id 49A7757F
+	for <linux-scsi@vger.kernel.org>; Tue, 18 Feb 2014 19:57:40 +0000 (UTC)
 In-Reply-To: <20140218195251.15787.55872.stgit@beardog.cce.hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: james.bottomley@hansenpartnership.com
 Cc: dab@hp.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, stephenmcameron@gmail.com, joseph.t.handzik@hp.com, thenzl@redhat.com, michael.miller@canonical.com, scott.teel@hp.com
 
-From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+From: Scott Teel <scott.teel@hp.com>
 
+Underlying firmware cannot handle task abort on accelerated path (SSD Smart Path).
+Change abort requests for accelerated path commands to physical target reset.
+Send reset request on normal IO path.
+
+Signed-off-by: Scott Teel <scott.teel@hp.com>
 Signed-off-by: Mike Miller <michael.miller@canonical.com>
 Acked-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- drivers/scsi/hpsa.c |   50 ++++++++++++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/hpsa.h |    3 +++
- 2 files changed, 53 insertions(+), 0 deletions(-)
+ drivers/scsi/hpsa.c     |  166 ++++++++++++++++++++++++++++++++++++++++++++++-
+ drivers/scsi/hpsa_cmd.h |    7 +-
+ 2 files changed, 167 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index ba51b1e..80acb23 100644
+index 021d077..8880f54 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -5288,6 +5288,10 @@ static void hpsa_free_cmd_pool(struct ctlr_info *h)
- 		pci_free_consistent(h->pdev,
- 			    h->nr_cmds * sizeof(struct CommandList),
- 			    h->cmd_pool, h->cmd_pool_dhandle);
-+	if (h->ioaccel2_cmd_pool)
-+		pci_free_consistent(h->pdev,
-+			h->nr_cmds * sizeof(*h->ioaccel2_cmd_pool),
-+			h->ioaccel2_cmd_pool, h->ioaccel2_cmd_pool_dhandle);
- 	if (h->errinfo_pool)
- 		pci_free_consistent(h->pdev,
- 			    h->nr_cmds * sizeof(struct ErrorInfo),
-@@ -5826,6 +5830,7 @@ static void hpsa_remove_one(struct pci_dev *pdev)
- 	kfree(h->cmd_pool_bits);
- 	kfree(h->blockFetchTable);
- 	kfree(h->ioaccel1_blockFetchTable);
-+	kfree(h->ioaccel2_blockFetchTable);
- 	kfree(h->hba_inquiry_data);
- 	pci_disable_device(pdev);
- 	pci_release_regions(pdev);
-@@ -6045,6 +6050,44 @@ clean_up:
- 	return 1;
+@@ -2307,6 +2307,85 @@ static int add_ext_target_dev(struct ctlr_info *h,
  }
  
-+static int ioaccel2_alloc_cmds_and_bft(struct ctlr_info *h)
+ /*
++ * Get address of physical disk used for an ioaccel2 mode command:
++ *	1. Extract ioaccel2 handle from the command.
++ *	2. Find a matching ioaccel2 handle from list of physical disks.
++ *	3. Return:
++ *		1 and set scsi3addr to address of matching physical
++ *		0 if no matching physical disk was found.
++ */
++static int hpsa_get_pdisk_of_ioaccel2(struct ctlr_info *h,
++	struct CommandList *ioaccel2_cmd_to_abort, unsigned char *scsi3addr)
 +{
-+	/* Allocate ioaccel2 mode command blocks and block fetch table */
++	struct ReportExtendedLUNdata *physicals = NULL;
++	int responsesize = 24;	/* size of physical extended response */
++	int extended = 2;	/* flag forces reporting 'other dev info'. */
++	int reportsize = sizeof(*physicals) + HPSA_MAX_PHYS_LUN * responsesize;
++	u32 nphysicals = 0;	/* number of reported physical devs */
++	int found = 0;		/* found match (1) or not (0) */
++	u32 find;		/* handle we need to match */
++	int i;
++	struct scsi_cmnd *scmd;	/* scsi command within request being aborted */
++	struct hpsa_scsi_dev_t *d; /* device of request being aborted */
++	struct io_accel2_cmd *c2a; /* ioaccel2 command to abort */
++	u32 it_nexus;		/* 4 byte device handle for the ioaccel2 cmd */
++	u32 scsi_nexus;		/* 4 byte device handle for the ioaccel2 cmd */
 +
-+	h->ioaccel_maxsg =
-+		readl(&(h->cfgtable->io_accel_max_embedded_sg_count));
-+	if (h->ioaccel_maxsg > IOACCEL2_MAXSGENTRIES)
-+		h->ioaccel_maxsg = IOACCEL2_MAXSGENTRIES;
++	if (ioaccel2_cmd_to_abort->cmd_type != CMD_IOACCEL2)
++		return 0; /* no match */
 +
-+#define IOACCEL2_COMMANDLIST_ALIGNMENT 128
-+	BUILD_BUG_ON(sizeof(struct io_accel2_cmd) %
-+			IOACCEL2_COMMANDLIST_ALIGNMENT);
-+	h->ioaccel2_cmd_pool =
-+		pci_alloc_consistent(h->pdev,
-+			h->nr_cmds * sizeof(*h->ioaccel2_cmd_pool),
-+			&(h->ioaccel2_cmd_pool_dhandle));
++	/* point to the ioaccel2 device handle */
++	c2a = &h->ioaccel2_cmd_pool[ioaccel2_cmd_to_abort->cmdindex];
++	if (c2a == NULL)
++		return 0; /* no match */
 +
-+	h->ioaccel2_blockFetchTable =
-+		kmalloc(((h->ioaccel_maxsg + 1) *
-+				sizeof(u32)), GFP_KERNEL);
++	scmd = (struct scsi_cmnd *) ioaccel2_cmd_to_abort->scsi_cmd;
++	if (scmd == NULL)
++		return 0; /* no match */
 +
-+	if ((h->ioaccel2_cmd_pool == NULL) ||
-+		(h->ioaccel2_blockFetchTable == NULL))
-+		goto clean_up;
++	d = scmd->device->hostdata;
++	if (d == NULL)
++		return 0; /* no match */
 +
-+	memset(h->ioaccel2_cmd_pool, 0,
-+		h->nr_cmds * sizeof(*h->ioaccel2_cmd_pool));
-+	return 0;
++	it_nexus = cpu_to_le32((u32) d->ioaccel_handle);
++	scsi_nexus = cpu_to_le32((u32) c2a->scsi_nexus);
++	find = c2a->scsi_nexus;
 +
-+clean_up:
-+	if (h->ioaccel2_cmd_pool)
-+		pci_free_consistent(h->pdev,
-+			h->nr_cmds * sizeof(*h->ioaccel2_cmd_pool),
-+			h->ioaccel2_cmd_pool, h->ioaccel2_cmd_pool_dhandle);
-+	kfree(h->ioaccel2_blockFetchTable);
-+	return 1;
++	/* Get the list of physical devices */
++	physicals = kzalloc(reportsize, GFP_KERNEL);
++	if (hpsa_scsi_do_report_phys_luns(h, (struct ReportLUNdata *) physicals,
++		reportsize, extended)) {
++		dev_err(&h->pdev->dev,
++			"Can't lookup %s device handle: report physical LUNs failed.\n",
++			"HP SSD Smart Path");
++		kfree(physicals);
++		return 0;
++	}
++	nphysicals = be32_to_cpu(*((__be32 *)physicals->LUNListLength)) /
++							responsesize;
++
++
++	/* find ioaccel2 handle in list of physicals: */
++	for (i = 0; i < nphysicals; i++) {
++		/* handle is in bytes 28-31 of each lun */
++		if (memcmp(&((struct ReportExtendedLUNdata *)
++				physicals)->LUN[i][20], &find, 4) != 0) {
++			continue; /* didn't match */
++		}
++		found = 1;
++		memcpy(scsi3addr, &((struct ReportExtendedLUNdata *)
++					physicals)->LUN[i][0], 8);
++		break; /* found it */
++	}
++
++	kfree(physicals);
++	if (found)
++		return 1;
++	else
++		return 0;
++
++}
++/*
+  * Do CISS_REPORT_PHYS and CISS_REPORT_LOG.  Data is returned in physdev,
+  * logdev.  The number of luns in physdev and logdev are returned in
+  * *nphysicals and *nlogicals, respectively.
+@@ -3423,12 +3502,20 @@ static void hpsa_get_tag(struct ctlr_info *h,
+ 			&h->ioaccel_cmd_pool[c->cmdindex];
+ 		*tagupper = cm1->Tag.upper;
+ 		*taglower = cm1->Tag.lower;
+-	} else {
+-		*tagupper = c->Header.Tag.upper;
+-		*taglower = c->Header.Tag.lower;
++		return;
++	}
++	if (c->cmd_type == CMD_IOACCEL2) {
++		struct io_accel2_cmd *cm2 = (struct io_accel2_cmd *)
++			&h->ioaccel2_cmd_pool[c->cmdindex];
++		*tagupper = cm2->Tag.upper;
++		*taglower = cm2->Tag.lower;
++		return;
+ 	}
++	*tagupper = c->Header.Tag.upper;
++	*taglower = c->Header.Tag.lower;
+ }
+ 
++
+ static int hpsa_send_abort(struct ctlr_info *h, unsigned char *scsi3addr,
+ 	struct CommandList *abort, int swizzle)
+ {
+@@ -3524,6 +3611,71 @@ static struct CommandList *hpsa_find_cmd_in_queue_by_tag(struct ctlr_info *h,
+ 	return NULL;
+ }
+ 
++/* ioaccel2 path firmware cannot handle abort task requests.
++ * Change abort requests to physical target reset, and send to the
++ * address of the physical disk used for the ioaccel 2 command.
++ * Return 0 on success (IO_OK)
++ *	 -1 on failure
++ */
++
++static int hpsa_send_reset_as_abort_ioaccel2(struct ctlr_info *h,
++	unsigned char *scsi3addr, struct CommandList *abort)
++{
++	int rc = IO_OK;
++	struct scsi_cmnd *scmd; /* scsi command within request being aborted */
++	struct hpsa_scsi_dev_t *dev; /* device to which scsi cmd was sent */
++	unsigned char phys_scsi3addr[8]; /* addr of phys disk with volume */
++	unsigned char *psa = &phys_scsi3addr[0];
++
++	/* Get a pointer to the hpsa logical device. */
++	scmd = (struct scsi_cmnd *) abort->scsi_cmd;
++	dev = (struct hpsa_scsi_dev_t *)(scmd->device->hostdata);
++	if (dev == NULL) {
++		dev_warn(&h->pdev->dev,
++			"Cannot abort: no device pointer for command.\n");
++			return -1; /* not abortable */
++	}
++
++	if (!dev->offload_enabled) {
++		dev_warn(&h->pdev->dev,
++			"Can't abort: device is not operating in HP SSD Smart Path mode.\n");
++		return -1; /* not abortable */
++	}
++
++	/* Incoming scsi3addr is logical addr. We need physical disk addr. */
++	if (!hpsa_get_pdisk_of_ioaccel2(h, abort, psa)) {
++		dev_warn(&h->pdev->dev, "Can't abort: Failed lookup of physical address.\n");
++		return -1; /* not abortable */
++	}
++
++	/* send the reset */
++	rc = hpsa_send_reset(h, psa, HPSA_RESET_TYPE_TARGET);
++	if (rc != 0) {
++		dev_warn(&h->pdev->dev,
++			"Reset as abort: Failed on physical device at scsi3addr 0x%02x%02x%02x%02x%02x%02x%02x%02x\n",
++			psa[0], psa[1], psa[2], psa[3],
++			psa[4], psa[5], psa[6], psa[7]);
++		return rc; /* failed to reset */
++	}
++
++	/* wait for device to recover */
++	if (wait_for_device_to_become_ready(h, psa) != 0) {
++		dev_warn(&h->pdev->dev,
++			"Reset as abort: Failed: Device never recovered from reset: 0x%02x%02x%02x%02x%02x%02x%02x%02x\n",
++			psa[0], psa[1], psa[2], psa[3],
++			psa[4], psa[5], psa[6], psa[7]);
++		return -1;  /* failed to recover */
++	}
++
++	/* device recovered */
++	dev_info(&h->pdev->dev,
++		"Reset as abort: Device recovered from reset: scsi3addr 0x%02x%02x%02x%02x%02x%02x%02x%02x\n",
++		psa[0], psa[1], psa[2], psa[3],
++		psa[4], psa[5], psa[6], psa[7]);
++
++	return rc; /* success */
 +}
 +
- static void hpsa_put_ctlr_into_performant_mode(struct ctlr_info *h)
- {
- 	u32 trans_support;
-@@ -6065,6 +6108,13 @@ static void hpsa_put_ctlr_into_performant_mode(struct ctlr_info *h)
- 				CFGTBL_Trans_enable_directed_msix;
- 		if (hpsa_alloc_ioaccel_cmd_and_bft(h))
- 			goto clean_up;
-+	} else {
-+		if (trans_support & CFGTBL_Trans_io_accel2) {
-+				transMethod |= CFGTBL_Trans_io_accel2 |
-+				CFGTBL_Trans_enable_directed_msix;
-+		if (ioaccel2_alloc_cmds_and_bft(h))
-+			goto clean_up;
-+		}
- 	}
+ /* Some Smart Arrays need the abort tag swizzled, and some don't.  It's hard to
+  * tell which kind we're dealing with, so we send the abort both ways.  There
+  * shouldn't be any collisions between swizzled and unswizzled tags due to the
+@@ -3537,6 +3689,14 @@ static int hpsa_send_abort_both_ways(struct ctlr_info *h,
+ 	struct CommandList *c;
+ 	int rc = 0, rc2 = 0;
  
- 	/* TODO, check that this next line h->nreply_queues is correct */
-diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
-index 74eb22a..2a4a0cb 100644
---- a/drivers/scsi/hpsa.h
-+++ b/drivers/scsi/hpsa.h
-@@ -105,6 +105,8 @@ struct ctlr_info {
- 	dma_addr_t		cmd_pool_dhandle;
- 	struct io_accel1_cmd	*ioaccel_cmd_pool;
- 	dma_addr_t		ioaccel_cmd_pool_dhandle;
-+	struct io_accel2_cmd	*ioaccel2_cmd_pool;
-+	dma_addr_t		ioaccel2_cmd_pool_dhandle;
- 	struct ErrorInfo 	*errinfo_pool;
- 	dma_addr_t		errinfo_pool_dhandle;
- 	unsigned long  		*cmd_pool_bits;
-@@ -139,6 +141,7 @@ struct ctlr_info {
- 	dma_addr_t reply_pool_dhandle;
- 	u32 *blockFetchTable;
- 	u32 *ioaccel1_blockFetchTable;
-+	u32 *ioaccel2_blockFetchTable;
- 	unsigned char *hba_inquiry_data;
- 	u32 driver_support;
- 	u32 fw_support;
++	/* ioccelerator mode 2 commands should be aborted via the
++	 * accelerated path, since RAID path is unaware of these commands,
++	 * but underlying firmware can't handle abort TMF.
++	 * Change abort to physical device reset.
++	 */
++	if (abort->cmd_type == CMD_IOACCEL2)
++		return hpsa_send_reset_as_abort_ioaccel2(h, scsi3addr, abort);
++
+ 	/* we do not expect to find the swizzled tag in our queue, but
+ 	 * check anyway just to be sure the assumptions which make this
+ 	 * the case haven't become wrong.
+diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
+index f6430b4..e048167 100644
+--- a/drivers/scsi/hpsa_cmd.h
++++ b/drivers/scsi/hpsa_cmd.h
+@@ -82,8 +82,9 @@
+ #define ATTR_ACA                0x07
+ 
+ /* cdb type */
+-#define TYPE_CMD				0x00
+-#define TYPE_MSG				0x01
++#define TYPE_CMD		0x00
++#define TYPE_MSG		0x01
++#define TYPE_IOACCEL2_CMD	0x81 /* 0x81 is not used by hardware */
+ 
+ /* Message Types  */
+ #define HPSA_TASK_MANAGEMENT    0x00
+@@ -525,7 +526,7 @@ struct io_accel2_cmd {
+  * FIXME: this can't be all I need mfm
+  */
+ #define IOACCEL2_IU_TYPE	0x40
+-#define IU_TYPE_TMF		0x41
++#define IOACCEL2_IU_TMF_TYPE	0x41
+ #define IOACCEL2_DIR_NO_DATA	0x00
+ #define IOACCEL2_DIR_DATA_IN	0x01
+ #define IOACCEL2_DIR_DATA_OUT	0x02
 
