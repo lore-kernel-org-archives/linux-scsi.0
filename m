@@ -1,22 +1,21 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 32/35] hpsa add sysfs debug switch for raid map debugging
-	messages
-Date: Tue, 18 Feb 2014 13:57:52 -0600
-Message-ID: <20140218195752.15787.96965.stgit@beardog.cce.hp.com>
+Subject: [PATCH 33/35] pci: add HP/3PAR vendor id to pci_ids.h
+Date: Tue, 18 Feb 2014 13:57:57 -0600
+Message-ID: <20140218195757.15787.65236.stgit@beardog.cce.hp.com>
 References: <20140218195251.15787.55872.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g9t1613g.houston.hp.com ([15.240.0.71]:43840 "EHLO
-	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752128AbaBRT7Q (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Feb 2014 14:59:16 -0500
-Received: from g5t1626.atlanta.hp.com (g5t1626.atlanta.hp.com [15.192.137.9])
+Received: from g2t1383g.austin.hp.com ([15.217.136.92]:57126 "EHLO
+	g2t1383g.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752242AbaBRT70 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Feb 2014 14:59:26 -0500
+Received: from g4t3427.houston.hp.com (g4t3427.houston.hp.com [15.201.208.55])
 	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by g9t1613g.houston.hp.com (Postfix) with ESMTPS id 9D5B860365
-	for <linux-scsi@vger.kernel.org>; Tue, 18 Feb 2014 19:59:15 +0000 (UTC)
+	by g2t1383g.austin.hp.com (Postfix) with ESMTPS id 7E25B1CC7
+	for <linux-scsi@vger.kernel.org>; Tue, 18 Feb 2014 19:59:19 +0000 (UTC)
 In-Reply-To: <20140218195251.15787.55872.stgit@beardog.cce.hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -25,147 +24,21 @@ Cc: dab@hp.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, stephenm
 
 From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-Signed-off-by: Scott Teel <scott.teel@hp.com>
-Acked-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- drivers/scsi/hpsa.c |   64 +++++++++++++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/hpsa.h |    1 +
- 2 files changed, 65 insertions(+), 0 deletions(-)
+ include/linux/pci_ids.h |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 5b96799..9410482 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -312,6 +312,31 @@ static ssize_t host_store_hp_ssd_smart_path_status(struct device *dev,
- 	return count;
- }
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 97fbecd..0154d9b 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -726,6 +726,7 @@
+ #define PCI_DEVICE_ID_SI_7018		0x7018
  
-+static ssize_t host_store_raid_offload_debug(struct device *dev,
-+					 struct device_attribute *attr,
-+					 const char *buf, size_t count)
-+{
-+	int debug_level, len;
-+	struct ctlr_info *h;
-+	struct Scsi_Host *shost = class_to_shost(dev);
-+	char tmpbuf[10];
-+
-+	if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
-+		return -EACCES;
-+	len = count > sizeof(tmpbuf) - 1 ? sizeof(tmpbuf) - 1 : count;
-+	strncpy(tmpbuf, buf, len);
-+	tmpbuf[len] = '\0';
-+	if (sscanf(tmpbuf, "%d", &debug_level) != 1)
-+		return -EINVAL;
-+	if (debug_level < 0)
-+		debug_level = 0;
-+	h = shost_to_hba(shost);
-+	h->raid_offload_debug = debug_level;
-+	dev_warn(&h->pdev->dev, "hpsa: Set raid_offload_debug level = %d\n",
-+		h->raid_offload_debug);
-+	return count;
-+}
-+
- static ssize_t host_store_rescan(struct device *dev,
- 				 struct device_attribute *attr,
- 				 const char *buf, size_t count)
-@@ -585,6 +610,8 @@ static DEVICE_ATTR(hp_ssd_smart_path_enabled, S_IRUGO,
- static DEVICE_ATTR(hp_ssd_smart_path_status, S_IWUSR|S_IRUGO|S_IROTH,
- 		host_show_hp_ssd_smart_path_status,
- 		host_store_hp_ssd_smart_path_status);
-+static DEVICE_ATTR(raid_offload_debug, S_IWUSR, NULL,
-+			host_store_raid_offload_debug);
- static DEVICE_ATTR(firmware_revision, S_IRUGO,
- 	host_show_firmware_revision, NULL);
- static DEVICE_ATTR(commands_outstanding, S_IRUGO,
-@@ -609,6 +636,7 @@ static struct device_attribute *hpsa_shost_attrs[] = {
- 	&dev_attr_transport_mode,
- 	&dev_attr_resettable,
- 	&dev_attr_hp_ssd_smart_path_status,
-+	&dev_attr_raid_offload_debug,
- 	NULL,
- };
- 
-@@ -2020,6 +2048,10 @@ static void hpsa_debug_map_buff(struct ctlr_info *h, int rc,
- 	if (rc != 0)
- 		return;
- 
-+	/* Show details only if debugging has been activated. */
-+	if (h->raid_offload_debug < 2)
-+		return;
-+
- 	dev_info(&h->pdev->dev, "structure_size = %u\n",
- 				le32_to_cpu(map_buff->structure_size));
- 	dev_info(&h->pdev->dev, "volume_blk_size = %u\n",
-@@ -2505,6 +2537,17 @@ static int hpsa_get_pdisk_of_ioaccel2(struct ctlr_info *h,
- 	scsi_nexus = cpu_to_le32((u32) c2a->scsi_nexus);
- 	find = c2a->scsi_nexus;
- 
-+	if (h->raid_offload_debug > 0)
-+		dev_info(&h->pdev->dev,
-+			"%s: scsi_nexus:0x%08x device id: 0x%02x%02x%02x%02x %02x%02x%02x%02x %02x%02x%02x%02x %02x%02x%02x%02x\n",
-+			__func__, scsi_nexus,
-+			d->device_id[0], d->device_id[1], d->device_id[2],
-+			d->device_id[3], d->device_id[4], d->device_id[5],
-+			d->device_id[6], d->device_id[7], d->device_id[8],
-+			d->device_id[9], d->device_id[10], d->device_id[11],
-+			d->device_id[12], d->device_id[13], d->device_id[14],
-+			d->device_id[15]);
-+
- 	/* Get the list of physical devices */
- 	physicals = kzalloc(reportsize, GFP_KERNEL);
- 	if (hpsa_scsi_do_report_phys_luns(h, (struct ReportLUNdata *) physicals,
-@@ -2529,6 +2572,15 @@ static int hpsa_get_pdisk_of_ioaccel2(struct ctlr_info *h,
- 		found = 1;
- 		memcpy(scsi3addr, &((struct ReportExtendedLUNdata *)
- 					physicals)->LUN[i][0], 8);
-+		if (h->raid_offload_debug > 0)
-+			dev_info(&h->pdev->dev,
-+				"%s: Searched h=0x%08x, Found h=0x%08x, scsiaddr 0x%02x%02x%02x%02x%02x%02x%02x%02x\n",
-+				__func__, find,
-+				((struct ReportExtendedLUNdata *)
-+					physicals)->LUN[i][20],
-+				scsi3addr[0], scsi3addr[1], scsi3addr[2],
-+				scsi3addr[3], scsi3addr[4], scsi3addr[5],
-+				scsi3addr[6], scsi3addr[7]);
- 		break; /* found it */
- 	}
- 
-@@ -4077,6 +4129,13 @@ static int hpsa_send_reset_as_abort_ioaccel2(struct ctlr_info *h,
- 			return -1; /* not abortable */
- 	}
- 
-+	if (h->raid_offload_debug > 0)
-+		dev_info(&h->pdev->dev,
-+			"Reset as abort: Abort requested on C%d:B%d:T%d:L%d scsi3addr 0x%02x%02x%02x%02x%02x%02x%02x%02x\n",
-+			h->scsi_host->host_no, dev->bus, dev->target, dev->lun,
-+			scsi3addr[0], scsi3addr[1], scsi3addr[2], scsi3addr[3],
-+			scsi3addr[4], scsi3addr[5], scsi3addr[6], scsi3addr[7]);
-+
- 	if (!dev->offload_enabled) {
- 		dev_warn(&h->pdev->dev,
- 			"Can't abort: device is not operating in HP SSD Smart Path mode.\n");
-@@ -4090,6 +4149,11 @@ static int hpsa_send_reset_as_abort_ioaccel2(struct ctlr_info *h,
- 	}
- 
- 	/* send the reset */
-+	if (h->raid_offload_debug > 0)
-+		dev_info(&h->pdev->dev,
-+			"Reset as abort: Resetting physical device at scsi3addr 0x%02x%02x%02x%02x%02x%02x%02x%02x\n",
-+			psa[0], psa[1], psa[2], psa[3],
-+			psa[4], psa[5], psa[6], psa[7]);
- 	rc = hpsa_send_reset(h, psa, HPSA_RESET_TYPE_TARGET);
- 	if (rc != 0) {
- 		dev_warn(&h->pdev->dev,
-diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
-index fe8d281..c4a81f0 100644
---- a/drivers/scsi/hpsa.h
-+++ b/drivers/scsi/hpsa.h
-@@ -199,6 +199,7 @@ struct ctlr_info {
- 		CTLR_STATE_CHANGE_EVENT_AIO_CONFIG_CHANGE)
- 	int	acciopath_status;
- 	int	drv_req_rescan;	/* flag for driver to request rescan event */
-+	int	raid_offload_debug;
- };
- #define HPSA_ABORT_MSG 0
- #define HPSA_DEVICE_RESET_MSG 1
+ #define PCI_VENDOR_ID_HP		0x103c
++#define PCI_VENDOR_ID_HP_3PAR		0x1590
+ #define PCI_DEVICE_ID_HP_VISUALIZE_EG	0x1005
+ #define PCI_DEVICE_ID_HP_VISUALIZE_FX6	0x1006
+ #define PCI_DEVICE_ID_HP_VISUALIZE_FX4	0x1008
 
