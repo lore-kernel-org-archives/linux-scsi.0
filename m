@@ -1,176 +1,192 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 26/35] hpsa: retry certain ioaccel error cases on the RAID path
-Date: Tue, 18 Feb 2014 13:57:21 -0600
-Message-ID: <20140218195721.15787.81704.stgit@beardog.cce.hp.com>
+Subject: [PATCH 31/35] hpsa: improve error messages for driver initiated
+	commands
+Date: Tue, 18 Feb 2014 13:57:47 -0600
+Message-ID: <20140218195747.15787.3894.stgit@beardog.cce.hp.com>
 References: <20140218195251.15787.55872.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g2t1383g.austin.hp.com ([15.217.136.92]:57088 "EHLO
+Received: from g2t1383g.austin.hp.com ([15.217.136.92]:57095 "EHLO
 	g2t1383g.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751151AbaBRT6r (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Feb 2014 14:58:47 -0500
-Received: from g4t3425.houston.hp.com (g4t3425.houston.hp.com [15.201.208.53])
+	with ESMTP id S1751151AbaBRT6w (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Feb 2014 14:58:52 -0500
+Received: from g6t1526.atlanta.hp.com (g6t1526.atlanta.hp.com [15.193.200.69])
 	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by g2t1383g.austin.hp.com (Postfix) with ESMTPS id 497211A41
-	for <linux-scsi@vger.kernel.org>; Tue, 18 Feb 2014 19:58:40 +0000 (UTC)
+	by g2t1383g.austin.hp.com (Postfix) with ESMTPS id ADB2E15F2
+	for <linux-scsi@vger.kernel.org>; Tue, 18 Feb 2014 19:58:44 +0000 (UTC)
 In-Reply-To: <20140218195251.15787.55872.stgit@beardog.cce.hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: james.bottomley@hansenpartnership.com
 Cc: dab@hp.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, stephenmcameron@gmail.com, joseph.t.handzik@hp.com, thenzl@redhat.com, michael.miller@canonical.com, scott.teel@hp.com
 
-From: Scott Teel <scott.teel@hp.com>
+From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-Change the handling of HP SSD Smart Path errors with status:
-  0x02 CHECK CONDITION
-  0x08 BUSY
-  0x18 RESERVATION CONFLICT
-  0x40 TASK ABORTED
-So that they get retried on the RAID Path.
+On encountering unexpected error conditions from driver initiated
+commands, print something useful like CDB and sense data rather than
+something useless like the kernel virtual address of the command buffer.
 
-Signed-off-by: Scott Teel <scott.teel@hp.com>
-Acked-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- drivers/scsi/hpsa.c |   45 +++++++++++++++++++++++++++++++++++++++------
- 1 files changed, 39 insertions(+), 6 deletions(-)
+ drivers/scsi/hpsa.c |   71 ++++++++++++++++++++++++++++++++-------------------
+ 1 files changed, 44 insertions(+), 27 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 909012e..7fd09d8 100644
+index 5193fab..5b96799 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -1351,12 +1351,18 @@ static void hpsa_unmap_sg_chain_block(struct ctlr_info *h,
- 	pci_unmap_single(h->pdev, temp64.val, chain_sg->Len, PCI_DMA_TODEVICE);
+@@ -1847,17 +1847,37 @@ static void hpsa_scsi_do_simple_cmd_with_retry(struct ctlr_info *h,
+ 	hpsa_pci_unmap(h->pdev, c, 1, data_direction);
  }
  
--static void handle_ioaccel_mode2_error(struct ctlr_info *h,
-+
-+/* Decode the various types of errors on ioaccel2 path.
-+ * Return 1 for any error that should generate a RAID path retry.
-+ * Return 0 for errors that don't require a RAID path retry.
-+ */
-+static int handle_ioaccel_mode2_error(struct ctlr_info *h,
- 					struct CommandList *c,
- 					struct scsi_cmnd *cmd,
- 					struct io_accel2_cmd *c2)
+-static void hpsa_scsi_interpret_error(struct CommandList *cp)
++static void hpsa_print_cmd(struct ctlr_info *h, char *txt,
++				struct CommandList *c)
  {
- 	int data_len;
-+	int retry = 0;
+-	struct ErrorInfo *ei;
++	const u8 *cdb = c->Request.CDB;
++	const u8 *lun = c->Header.LUN.LunAddrBytes;
++
++	dev_warn(&h->pdev->dev, "%s: LUN:%02x%02x%02x%02x%02x%02x%02x%02x"
++	" CDB:%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n",
++		txt, lun[0], lun[1], lun[2], lun[3],
++		lun[4], lun[5], lun[6], lun[7],
++		cdb[0], cdb[1], cdb[2], cdb[3],
++		cdb[4], cdb[5], cdb[6], cdb[7],
++		cdb[8], cdb[9], cdb[10], cdb[11],
++		cdb[12], cdb[13], cdb[14], cdb[15]);
++}
++
++static void hpsa_scsi_interpret_error(struct ctlr_info *h,
++			struct CommandList *cp)
++{
++	const struct ErrorInfo *ei = cp->err_info;
+ 	struct device *d = &cp->h->pdev->dev;
++	const u8 *sd = ei->SenseInfo;
  
- 	switch (c2->error_data.serv_response) {
- 	case IOACCEL2_SERV_RESPONSE_COMPLETE:
-@@ -1380,16 +1386,19 @@ static void handle_ioaccel_mode2_error(struct ctlr_info *h,
- 			memcpy(cmd->sense_buffer,
- 				c2->error_data.sense_data_buff, data_len);
- 			cmd->result |= SAM_STAT_CHECK_CONDITION;
-+			retry = 1;
- 			break;
- 		case IOACCEL2_STATUS_SR_TASK_COMP_BUSY:
- 			dev_warn(&h->pdev->dev,
- 				"%s: task complete with BUSY status.\n",
- 				"HP SSD Smart Path");
-+			retry = 1;
- 			break;
- 		case IOACCEL2_STATUS_SR_TASK_COMP_RES_CON:
- 			dev_warn(&h->pdev->dev,
- 				"%s: task complete with reservation conflict.\n",
- 				"HP SSD Smart Path");
-+			retry = 1;
- 			break;
- 		case IOACCEL2_STATUS_SR_TASK_COMP_SET_FULL:
- 			/* Make scsi midlayer do unlimited retries */
-@@ -1399,11 +1408,13 @@ static void handle_ioaccel_mode2_error(struct ctlr_info *h,
- 			dev_warn(&h->pdev->dev,
- 				"%s: task complete with aborted status.\n",
- 				"HP SSD Smart Path");
-+			retry = 1;
- 			break;
- 		default:
- 			dev_warn(&h->pdev->dev,
- 				"%s: task complete with unrecognized status: 0x%02x\n",
- 				"HP SSD Smart Path", c2->error_data.status);
-+			retry = 1;
- 			break;
+-	ei = cp->err_info;
+ 	switch (ei->CommandStatus) {
+ 	case CMD_TARGET_STATUS:
+-		dev_warn(d, "cmd %p has completed with errors\n", cp);
+-		dev_warn(d, "cmd %p has SCSI Status = %x\n", cp,
+-				ei->ScsiStatus);
++		hpsa_print_cmd(h, "SCSI status", cp);
++		if (ei->ScsiStatus == SAM_STAT_CHECK_CONDITION)
++			dev_warn(d, "SCSI Status = 02, Sense key = %02x, ASC = %02x, ASCQ = %02x\n",
++				sd[2] & 0x0f, sd[12], sd[13]);
++		else
++			dev_warn(d, "SCSI Status = %02x\n", ei->ScsiStatus);
+ 		if (ei->ScsiStatus == 0)
+ 			dev_warn(d, "SCSI status is abnormally zero.  "
+ 			"(probably indicates selection timeout "
+@@ -1865,48 +1885,45 @@ static void hpsa_scsi_interpret_error(struct CommandList *cp)
+ 			"firmware bug, circa July, 2001.)\n");
+ 		break;
+ 	case CMD_DATA_UNDERRUN: /* let mid layer handle it. */
+-			dev_info(d, "UNDERRUN\n");
+ 		break;
+ 	case CMD_DATA_OVERRUN:
+-		dev_warn(d, "cp %p has completed with data overrun\n", cp);
++		hpsa_print_cmd(h, "overrun condition", cp);
+ 		break;
+ 	case CMD_INVALID: {
+ 		/* controller unfortunately reports SCSI passthru's
+ 		 * to non-existent targets as invalid commands.
+ 		 */
+-		dev_warn(d, "cp %p is reported invalid (probably means "
+-			"target device no longer present)\n", cp);
+-		/* print_bytes((unsigned char *) cp, sizeof(*cp), 1, 0);
+-		print_cmd(cp);  */
++		hpsa_print_cmd(h, "invalid command", cp);
++		dev_warn(d, "probably means device no longer present\n");
  		}
  		break;
-@@ -1412,6 +1423,7 @@ static void handle_ioaccel_mode2_error(struct ctlr_info *h,
- 		dev_warn(&h->pdev->dev,
- 			"unexpected delivery or target failure, status = 0x%02x\n",
- 			c2->error_data.status);
-+		retry = 1;
+ 	case CMD_PROTOCOL_ERR:
+-		dev_warn(d, "cp %p has protocol error \n", cp);
++		hpsa_print_cmd(h, "protocol error", cp);
  		break;
- 	case IOACCEL2_SERV_RESPONSE_TMF_COMPLETE:
+ 	case CMD_HARDWARE_ERR:
+-		/* cmd->result = DID_ERROR << 16; */
+-		dev_warn(d, "cp %p had hardware error\n", cp);
++		hpsa_print_cmd(h, "hardware error", cp);
  		break;
-@@ -1419,6 +1431,7 @@ static void handle_ioaccel_mode2_error(struct ctlr_info *h,
+ 	case CMD_CONNECTION_LOST:
+-		dev_warn(d, "cp %p had connection lost\n", cp);
++		hpsa_print_cmd(h, "connection lost", cp);
  		break;
- 	case IOACCEL2_SERV_RESPONSE_TMF_REJECTED:
- 		dev_warn(&h->pdev->dev, "task management function rejected.\n");
-+		retry = 1;
+ 	case CMD_ABORTED:
+-		dev_warn(d, "cp %p was aborted\n", cp);
++		hpsa_print_cmd(h, "aborted", cp);
  		break;
- 	case IOACCEL2_SERV_RESPONSE_TMF_WRONG_LUN:
- 		dev_warn(&h->pdev->dev, "task management function invalid LUN\n");
-@@ -1426,9 +1439,13 @@ static void handle_ioaccel_mode2_error(struct ctlr_info *h,
+ 	case CMD_ABORT_FAILED:
+-		dev_warn(d, "cp %p reports abort failed\n", cp);
++		hpsa_print_cmd(h, "abort failed", cp);
+ 		break;
+ 	case CMD_UNSOLICITED_ABORT:
+-		dev_warn(d, "cp %p aborted due to an unsolicited abort\n", cp);
++		hpsa_print_cmd(h, "unsolicited abort", cp);
+ 		break;
+ 	case CMD_TIMEOUT:
+-		dev_warn(d, "cp %p timed out\n", cp);
++		hpsa_print_cmd(h, "timed out", cp);
+ 		break;
+ 	case CMD_UNABORTABLE:
+-		dev_warn(d, "Command unabortable\n");
++		hpsa_print_cmd(h, "unabortable", cp);
+ 		break;
  	default:
- 		dev_warn(&h->pdev->dev,
- 			"%s: Unrecognized server response: 0x%02x\n",
--			"HP SSD Smart Path", c2->error_data.serv_response);
-+			"HP SSD Smart Path",
-+			c2->error_data.serv_response);
-+		retry = 1;
+-		dev_warn(d, "cp %p returned unknown status %x\n", cp,
++		hpsa_print_cmd(h, "unknown status", cp);
++		dev_warn(d, "Unknown command status %x\n",
+ 				ei->CommandStatus);
+ 	}
+ }
+@@ -1934,7 +1951,7 @@ static int hpsa_scsi_do_inquiry(struct ctlr_info *h, unsigned char *scsi3addr,
+ 	hpsa_scsi_do_simple_cmd_with_retry(h, c, PCI_DMA_FROMDEVICE);
+ 	ei = c->err_info;
+ 	if (ei->CommandStatus != 0 && ei->CommandStatus != CMD_DATA_UNDERRUN) {
+-		hpsa_scsi_interpret_error(c);
++		hpsa_scsi_interpret_error(h, c);
+ 		rc = -1;
+ 	}
+ out:
+@@ -1965,7 +1982,7 @@ static int hpsa_send_reset(struct ctlr_info *h, unsigned char *scsi3addr,
+ 
+ 	ei = c->err_info;
+ 	if (ei->CommandStatus != 0) {
+-		hpsa_scsi_interpret_error(c);
++		hpsa_scsi_interpret_error(h, c);
+ 		rc = -1;
+ 	}
+ 	cmd_special_free(h, c);
+@@ -2089,7 +2106,7 @@ static int hpsa_get_raid_map(struct ctlr_info *h,
+ 	hpsa_scsi_do_simple_cmd_with_retry(h, c, PCI_DMA_FROMDEVICE);
+ 	ei = c->err_info;
+ 	if (ei->CommandStatus != 0 && ei->CommandStatus != CMD_DATA_UNDERRUN) {
+-		hpsa_scsi_interpret_error(c);
++		hpsa_scsi_interpret_error(h, c);
+ 		cmd_special_free(h, c);
+ 		return -1;
+ 	}
+@@ -2231,7 +2248,7 @@ static int hpsa_scsi_do_report_luns(struct ctlr_info *h, int logical,
+ 	ei = c->err_info;
+ 	if (ei->CommandStatus != 0 &&
+ 	    ei->CommandStatus != CMD_DATA_UNDERRUN) {
+-		hpsa_scsi_interpret_error(c);
++		hpsa_scsi_interpret_error(h, c);
+ 		rc = -1;
+ 	} else {
+ 		if (buf->extended_response_flag != extended_response) {
+@@ -3975,7 +3992,7 @@ static int hpsa_send_abort(struct ctlr_info *h, unsigned char *scsi3addr,
+ 	default:
+ 		dev_dbg(&h->pdev->dev, "%s: Tag:0x%08x:%08x: interpreting error.\n",
+ 			__func__, tagupper, taglower);
+-		hpsa_scsi_interpret_error(c);
++		hpsa_scsi_interpret_error(h, c);
+ 		rc = -1;
  		break;
  	}
-+
-+	return retry;	/* retry on raid path? */
- }
- 
- static void process_ioaccel2_completion(struct ctlr_info *h,
-@@ -1436,6 +1453,7 @@ static void process_ioaccel2_completion(struct ctlr_info *h,
- 		struct hpsa_scsi_dev_t *dev)
- {
- 	struct io_accel2_cmd *c2 = &h->ioaccel2_cmd_pool[c->cmdindex];
-+	int raid_retry = 0;
- 
- 	/* check for good status */
- 	if (likely(c2->error_data.serv_response == 0 &&
-@@ -1452,11 +1470,16 @@ static void process_ioaccel2_completion(struct ctlr_info *h,
- 	if (is_logical_dev_addr_mode(dev->scsi3addr) &&
- 		c2->error_data.serv_response ==
- 			IOACCEL2_SERV_RESPONSE_FAILURE) {
--		if (c2->error_data.status !=
--				IOACCEL2_STATUS_SR_IOACCEL_DISABLED)
-+		if (c2->error_data.status ==
-+			IOACCEL2_STATUS_SR_IOACCEL_DISABLED)
-+			dev_warn(&h->pdev->dev,
-+				"%s: Path is unavailable, retrying on standard path.\n",
-+				"HP SSD Smart Path");
-+		else
- 			dev_warn(&h->pdev->dev,
--				"%s: Error 0x%02x, Retrying on standard path.\n",
-+				"%s: Error 0x%02x, retrying on standard path.\n",
- 				"HP SSD Smart Path", c2->error_data.status);
-+
- 		dev->offload_enabled = 0;
- 		h->drv_req_rescan = 1;	/* schedule controller for a rescan */
- 		cmd->result = DID_SOFT_ERROR << 16;
-@@ -1464,7 +1487,17 @@ static void process_ioaccel2_completion(struct ctlr_info *h,
- 		cmd->scsi_done(cmd);
- 		return;
- 	}
--	handle_ioaccel_mode2_error(h, c, cmd, c2);
-+	raid_retry = handle_ioaccel_mode2_error(h, c, cmd, c2);
-+	/* If error found, disable Smart Path, schedule a rescan,
-+	 * and force a retry on the standard path.
-+	 */
-+	if (raid_retry) {
-+		dev_warn(&h->pdev->dev, "%s: Retrying on standard path.\n",
-+			"HP SSD Smart Path");
-+		dev->offload_enabled = 0; /* Disable Smart Path */
-+		h->drv_req_rescan = 1;	  /* schedule controller rescan */
-+		cmd->result = DID_SOFT_ERROR << 16;
-+	}
- 	cmd_free(h, c);
- 	cmd->scsi_done(cmd);
- }
 
