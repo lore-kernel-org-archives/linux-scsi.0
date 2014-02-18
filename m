@@ -1,22 +1,22 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 31/35] hpsa: improve error messages for driver initiated
-	commands
-Date: Tue, 18 Feb 2014 13:57:47 -0600
-Message-ID: <20140218195747.15787.3894.stgit@beardog.cce.hp.com>
+Subject: [PATCH 25/35] hpsa: do not inquire for unsupported ioaccel status vpd
+	page
+Date: Tue, 18 Feb 2014 13:57:16 -0600
+Message-ID: <20140218195716.15787.72473.stgit@beardog.cce.hp.com>
 References: <20140218195251.15787.55872.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g2t1383g.austin.hp.com ([15.217.136.92]:57095 "EHLO
+Received: from g2t1383g.austin.hp.com ([15.217.136.92]:57104 "EHLO
 	g2t1383g.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751151AbaBRT6w (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Feb 2014 14:58:52 -0500
-Received: from g6t1526.atlanta.hp.com (g6t1526.atlanta.hp.com [15.193.200.69])
+	with ESMTP id S1751151AbaBRT65 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Feb 2014 14:58:57 -0500
+Received: from g4t3425.houston.hp.com (g4t3425.houston.hp.com [15.201.208.53])
 	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by g2t1383g.austin.hp.com (Postfix) with ESMTPS id ADB2E15F2
-	for <linux-scsi@vger.kernel.org>; Tue, 18 Feb 2014 19:58:44 +0000 (UTC)
+	by g2t1383g.austin.hp.com (Postfix) with ESMTPS id F315C1CA7
+	for <linux-scsi@vger.kernel.org>; Tue, 18 Feb 2014 19:58:49 +0000 (UTC)
 In-Reply-To: <20140218195251.15787.55872.stgit@beardog.cce.hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -25,168 +25,88 @@ Cc: dab@hp.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, stephenm
 
 From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-On encountering unexpected error conditions from driver initiated
-commands, print something useful like CDB and sense data rather than
-something useless like the kernel virtual address of the command buffer.
-
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- drivers/scsi/hpsa.c |   71 ++++++++++++++++++++++++++++++++-------------------
- 1 files changed, 44 insertions(+), 27 deletions(-)
+ drivers/scsi/hpsa.c     |   45 +++++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/hpsa_cmd.h |    2 ++
+ 2 files changed, 47 insertions(+), 0 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 5193fab..5b96799 100644
+index ea77a4f..909012e 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -1847,17 +1847,37 @@ static void hpsa_scsi_do_simple_cmd_with_retry(struct ctlr_info *h,
- 	hpsa_pci_unmap(h->pdev, c, 1, data_direction);
+@@ -2064,6 +2064,49 @@ static int hpsa_get_raid_map(struct ctlr_info *h,
+ 	return rc;
  }
  
--static void hpsa_scsi_interpret_error(struct CommandList *cp)
-+static void hpsa_print_cmd(struct ctlr_info *h, char *txt,
-+				struct CommandList *c)
- {
--	struct ErrorInfo *ei;
-+	const u8 *cdb = c->Request.CDB;
-+	const u8 *lun = c->Header.LUN.LunAddrBytes;
++static int hpsa_vpd_page_supported(struct ctlr_info *h,
++	unsigned char scsi3addr[], u8 page)
++{
++	int rc;
++	int i;
++	int pages;
++	unsigned char *buf, bufsize;
 +
-+	dev_warn(&h->pdev->dev, "%s: LUN:%02x%02x%02x%02x%02x%02x%02x%02x"
-+	" CDB:%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n",
-+		txt, lun[0], lun[1], lun[2], lun[3],
-+		lun[4], lun[5], lun[6], lun[7],
-+		cdb[0], cdb[1], cdb[2], cdb[3],
-+		cdb[4], cdb[5], cdb[6], cdb[7],
-+		cdb[8], cdb[9], cdb[10], cdb[11],
-+		cdb[12], cdb[13], cdb[14], cdb[15]);
++	buf = kzalloc(256, GFP_KERNEL);
++	if (!buf)
++		return 0;
++
++	/* Get the size of the page list first */
++	rc = hpsa_scsi_do_inquiry(h, scsi3addr,
++				VPD_PAGE | HPSA_VPD_SUPPORTED_PAGES,
++				buf, HPSA_VPD_HEADER_SZ);
++	if (rc != 0)
++		goto exit_unsupported;
++	pages = buf[3];
++	if ((pages + HPSA_VPD_HEADER_SZ) <= 255)
++		bufsize = pages + HPSA_VPD_HEADER_SZ;
++	else
++		bufsize = 255;
++
++	/* Get the whole VPD page list */
++	rc = hpsa_scsi_do_inquiry(h, scsi3addr,
++				VPD_PAGE | HPSA_VPD_SUPPORTED_PAGES,
++				buf, bufsize);
++	if (rc != 0)
++		goto exit_unsupported;
++
++	pages = buf[3];
++	for (i = 1; i <= pages; i++)
++		if (buf[3 + i] == page)
++			goto exit_supported;
++exit_unsupported:
++	kfree(buf);
++	return 0;
++exit_supported:
++	kfree(buf);
++	return 1;
 +}
 +
-+static void hpsa_scsi_interpret_error(struct ctlr_info *h,
-+			struct CommandList *cp)
-+{
-+	const struct ErrorInfo *ei = cp->err_info;
- 	struct device *d = &cp->h->pdev->dev;
-+	const u8 *sd = ei->SenseInfo;
+ static void hpsa_get_ioaccel_status(struct ctlr_info *h,
+ 	unsigned char *scsi3addr, struct hpsa_scsi_dev_t *this_device)
+ {
+@@ -2077,6 +2120,8 @@ static void hpsa_get_ioaccel_status(struct ctlr_info *h,
+ 	buf = kzalloc(64, GFP_KERNEL);
+ 	if (!buf)
+ 		return;
++	if (!hpsa_vpd_page_supported(h, scsi3addr, HPSA_VPD_LV_IOACCEL_STATUS))
++		goto out;
+ 	rc = hpsa_scsi_do_inquiry(h, scsi3addr,
+ 			VPD_PAGE | HPSA_VPD_LV_IOACCEL_STATUS, buf, 64);
+ 	if (rc != 0)
+diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
+index e048167..769fd2a 100644
+--- a/drivers/scsi/hpsa_cmd.h
++++ b/drivers/scsi/hpsa_cmd.h
+@@ -144,8 +144,10 @@
+ #define CFGTBL_BusType_Fibre2G  0x00000200l
  
--	ei = cp->err_info;
- 	switch (ei->CommandStatus) {
- 	case CMD_TARGET_STATUS:
--		dev_warn(d, "cmd %p has completed with errors\n", cp);
--		dev_warn(d, "cmd %p has SCSI Status = %x\n", cp,
--				ei->ScsiStatus);
-+		hpsa_print_cmd(h, "SCSI status", cp);
-+		if (ei->ScsiStatus == SAM_STAT_CHECK_CONDITION)
-+			dev_warn(d, "SCSI Status = 02, Sense key = %02x, ASC = %02x, ASCQ = %02x\n",
-+				sd[2] & 0x0f, sd[12], sd[13]);
-+		else
-+			dev_warn(d, "SCSI Status = %02x\n", ei->ScsiStatus);
- 		if (ei->ScsiStatus == 0)
- 			dev_warn(d, "SCSI status is abnormally zero.  "
- 			"(probably indicates selection timeout "
-@@ -1865,48 +1885,45 @@ static void hpsa_scsi_interpret_error(struct CommandList *cp)
- 			"firmware bug, circa July, 2001.)\n");
- 		break;
- 	case CMD_DATA_UNDERRUN: /* let mid layer handle it. */
--			dev_info(d, "UNDERRUN\n");
- 		break;
- 	case CMD_DATA_OVERRUN:
--		dev_warn(d, "cp %p has completed with data overrun\n", cp);
-+		hpsa_print_cmd(h, "overrun condition", cp);
- 		break;
- 	case CMD_INVALID: {
- 		/* controller unfortunately reports SCSI passthru's
- 		 * to non-existent targets as invalid commands.
- 		 */
--		dev_warn(d, "cp %p is reported invalid (probably means "
--			"target device no longer present)\n", cp);
--		/* print_bytes((unsigned char *) cp, sizeof(*cp), 1, 0);
--		print_cmd(cp);  */
-+		hpsa_print_cmd(h, "invalid command", cp);
-+		dev_warn(d, "probably means device no longer present\n");
- 		}
- 		break;
- 	case CMD_PROTOCOL_ERR:
--		dev_warn(d, "cp %p has protocol error \n", cp);
-+		hpsa_print_cmd(h, "protocol error", cp);
- 		break;
- 	case CMD_HARDWARE_ERR:
--		/* cmd->result = DID_ERROR << 16; */
--		dev_warn(d, "cp %p had hardware error\n", cp);
-+		hpsa_print_cmd(h, "hardware error", cp);
- 		break;
- 	case CMD_CONNECTION_LOST:
--		dev_warn(d, "cp %p had connection lost\n", cp);
-+		hpsa_print_cmd(h, "connection lost", cp);
- 		break;
- 	case CMD_ABORTED:
--		dev_warn(d, "cp %p was aborted\n", cp);
-+		hpsa_print_cmd(h, "aborted", cp);
- 		break;
- 	case CMD_ABORT_FAILED:
--		dev_warn(d, "cp %p reports abort failed\n", cp);
-+		hpsa_print_cmd(h, "abort failed", cp);
- 		break;
- 	case CMD_UNSOLICITED_ABORT:
--		dev_warn(d, "cp %p aborted due to an unsolicited abort\n", cp);
-+		hpsa_print_cmd(h, "unsolicited abort", cp);
- 		break;
- 	case CMD_TIMEOUT:
--		dev_warn(d, "cp %p timed out\n", cp);
-+		hpsa_print_cmd(h, "timed out", cp);
- 		break;
- 	case CMD_UNABORTABLE:
--		dev_warn(d, "Command unabortable\n");
-+		hpsa_print_cmd(h, "unabortable", cp);
- 		break;
- 	default:
--		dev_warn(d, "cp %p returned unknown status %x\n", cp,
-+		hpsa_print_cmd(h, "unknown status", cp);
-+		dev_warn(d, "Unknown command status %x\n",
- 				ei->CommandStatus);
- 	}
- }
-@@ -1934,7 +1951,7 @@ static int hpsa_scsi_do_inquiry(struct ctlr_info *h, unsigned char *scsi3addr,
- 	hpsa_scsi_do_simple_cmd_with_retry(h, c, PCI_DMA_FROMDEVICE);
- 	ei = c->err_info;
- 	if (ei->CommandStatus != 0 && ei->CommandStatus != CMD_DATA_UNDERRUN) {
--		hpsa_scsi_interpret_error(c);
-+		hpsa_scsi_interpret_error(h, c);
- 		rc = -1;
- 	}
- out:
-@@ -1965,7 +1982,7 @@ static int hpsa_send_reset(struct ctlr_info *h, unsigned char *scsi3addr,
+ /* VPD Inquiry types */
++#define HPSA_VPD_SUPPORTED_PAGES        0x00
+ #define HPSA_VPD_LV_DEVICE_GEOMETRY     0xC1
+ #define HPSA_VPD_LV_IOACCEL_STATUS      0xC2
++#define HPSA_VPD_HEADER_SZ              4
  
- 	ei = c->err_info;
- 	if (ei->CommandStatus != 0) {
--		hpsa_scsi_interpret_error(c);
-+		hpsa_scsi_interpret_error(h, c);
- 		rc = -1;
- 	}
- 	cmd_special_free(h, c);
-@@ -2089,7 +2106,7 @@ static int hpsa_get_raid_map(struct ctlr_info *h,
- 	hpsa_scsi_do_simple_cmd_with_retry(h, c, PCI_DMA_FROMDEVICE);
- 	ei = c->err_info;
- 	if (ei->CommandStatus != 0 && ei->CommandStatus != CMD_DATA_UNDERRUN) {
--		hpsa_scsi_interpret_error(c);
-+		hpsa_scsi_interpret_error(h, c);
- 		cmd_special_free(h, c);
- 		return -1;
- 	}
-@@ -2231,7 +2248,7 @@ static int hpsa_scsi_do_report_luns(struct ctlr_info *h, int logical,
- 	ei = c->err_info;
- 	if (ei->CommandStatus != 0 &&
- 	    ei->CommandStatus != CMD_DATA_UNDERRUN) {
--		hpsa_scsi_interpret_error(c);
-+		hpsa_scsi_interpret_error(h, c);
- 		rc = -1;
- 	} else {
- 		if (buf->extended_response_flag != extended_response) {
-@@ -3975,7 +3992,7 @@ static int hpsa_send_abort(struct ctlr_info *h, unsigned char *scsi3addr,
- 	default:
- 		dev_dbg(&h->pdev->dev, "%s: Tag:0x%08x:%08x: interpreting error.\n",
- 			__func__, tagupper, taglower);
--		hpsa_scsi_interpret_error(c);
-+		hpsa_scsi_interpret_error(h, c);
- 		rc = -1;
- 		break;
- 	}
+ struct vals32 {
+ 	u32   lower;
 
