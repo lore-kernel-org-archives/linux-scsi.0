@@ -1,60 +1,48 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 13/35] hpsa: Acknowledge controller events in ioaccell mode 2
+Subject: [PATCH 15/35] hpsa: get physical device handles for io accel mode 2
 	as well as mode 1
-Date: Tue, 18 Feb 2014 13:56:09 -0600
-Message-ID: <20140218195609.15787.9960.stgit@beardog.cce.hp.com>
+Date: Tue, 18 Feb 2014 13:56:20 -0600
+Message-ID: <20140218195620.15787.71728.stgit@beardog.cce.hp.com>
 References: <20140218195251.15787.55872.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g9t1613g.houston.hp.com ([15.240.0.71]:43533 "EHLO
-	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750911AbaBRT6B (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Feb 2014 14:58:01 -0500
-Received: from g4t3425.houston.hp.com (g4t3425.houston.hp.com [15.201.208.53])
+Received: from g2t1383g.austin.hp.com ([15.217.136.92]:57072 "EHLO
+	g2t1383g.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750832AbaBRT6Q (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Feb 2014 14:58:16 -0500
+Received: from g2t2354.austin.hp.com (g2t2354.austin.hp.com [15.217.128.53])
 	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by g9t1613g.houston.hp.com (Postfix) with ESMTPS id A6F9D61C2D
-	for <linux-scsi@vger.kernel.org>; Tue, 18 Feb 2014 19:58:00 +0000 (UTC)
+	by g2t1383g.austin.hp.com (Postfix) with ESMTPS id 882031011
+	for <linux-scsi@vger.kernel.org>; Tue, 18 Feb 2014 19:58:08 +0000 (UTC)
 In-Reply-To: <20140218195251.15787.55872.stgit@beardog.cce.hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: james.bottomley@hansenpartnership.com
 Cc: dab@hp.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, stephenmcameron@gmail.com, joseph.t.handzik@hp.com, thenzl@redhat.com, michael.miller@canonical.com, scott.teel@hp.com
 
-From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+From: Mike MIller <mikem@beardog.cce.hp.com>
 
-Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+Signed-off-by: Mike MIller <michael.miller@canonical.com>
+Acked-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- drivers/scsi/hpsa.c     |    3 ++-
- drivers/scsi/hpsa_cmd.h |    1 +
- 2 files changed, 3 insertions(+), 1 deletions(-)
+ drivers/scsi/hpsa.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index b80ba1e..ba51b1e 100644
+index 80acb23..5da13f0 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -5482,7 +5482,8 @@ static int hpsa_kickoff_rescan(struct ctlr_info *h)
- 	char *event_type;
+@@ -2126,7 +2126,8 @@ static int hpsa_gather_lun_info(struct ctlr_info *h,
+ 	*physical_mode = 0;
  
- 	/* Ask the controller to clear the events we're handling. */
--	if (h->transMethod & (CFGTBL_Trans_io_accel1) &&
-+	if ((h->transMethod & (CFGTBL_Trans_io_accel1
-+			| CFGTBL_Trans_io_accel2)) &&
- 		(h->events & HPSA_EVENT_NOTIFY_ACCEL_IO_PATH_STATE_CHANGE ||
- 		 h->events & HPSA_EVENT_NOTIFY_ACCEL_IO_PATH_CONFIG_CHANGE)) {
- 
-diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
-index 9e00988..6b336e8 100644
---- a/drivers/scsi/hpsa_cmd.h
-+++ b/drivers/scsi/hpsa_cmd.h
-@@ -133,6 +133,7 @@
- #define CFGTBL_Trans_Simple     0x00000002l
- #define CFGTBL_Trans_Performant 0x00000004l
- #define CFGTBL_Trans_io_accel1	0x00000080l
-+#define CFGTBL_Trans_io_accel2	0x00000100l
- #define CFGTBL_Trans_use_short_tags 0x20000000l
- #define CFGTBL_Trans_enable_directed_msix (1 << 30)
- 
+ 	/* For I/O accelerator mode we need to read physical device handles */
+-	if (h->transMethod & CFGTBL_Trans_io_accel1) {
++	if (h->transMethod & CFGTBL_Trans_io_accel1 ||
++		h->transMethod & CFGTBL_Trans_io_accel2) {
+ 		*physical_mode = HPSA_REPORT_PHYS_EXTENDED;
+ 		physical_entry_size = 24;
+ 	}
 
