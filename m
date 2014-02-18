@@ -1,338 +1,107 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 28/35] hpsa: add controller base data-at-rest encryption
-	compatibility ioaccel2
-Date: Tue, 18 Feb 2014 13:57:31 -0600
-Message-ID: <20140218195731.15787.75148.stgit@beardog.cce.hp.com>
+Subject: [PATCH 24/35] hpsa: allow VPD page zero to be queried
+Date: Tue, 18 Feb 2014 13:57:11 -0600
+Message-ID: <20140218195710.15787.15155.stgit@beardog.cce.hp.com>
 References: <20140218195251.15787.55872.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g2t1383g.austin.hp.com ([15.217.136.92]:57106 "EHLO
-	g2t1383g.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751151AbaBRT7B (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Feb 2014 14:59:01 -0500
-Received: from g4t3427.houston.hp.com (g4t3427.houston.hp.com [15.201.208.55])
+Received: from g9t1613g.houston.hp.com ([15.240.0.71]:43822 "EHLO
+	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752128AbaBRT7H (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Feb 2014 14:59:07 -0500
+Received: from g4t3426.houston.hp.com (g4t3426.houston.hp.com [15.201.208.54])
 	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by g2t1383g.austin.hp.com (Postfix) with ESMTPS id A233F1CA7
-	for <linux-scsi@vger.kernel.org>; Tue, 18 Feb 2014 19:58:53 +0000 (UTC)
+	by g9t1613g.houston.hp.com (Postfix) with ESMTPS id B570E60365
+	for <linux-scsi@vger.kernel.org>; Tue, 18 Feb 2014 19:58:49 +0000 (UTC)
 In-Reply-To: <20140218195251.15787.55872.stgit@beardog.cce.hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: james.bottomley@hansenpartnership.com
 Cc: dab@hp.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, stephenmcameron@gmail.com, joseph.t.handzik@hp.com, thenzl@redhat.com, michael.miller@canonical.com, scott.teel@hp.com
 
-From: Scott Teel <scott.teel@hp.com>
+From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-Add controller-based data-at-rest encryption compatibility
-to ioaccel2 path (HP SSD Smart Path).
+Code was confused and assumed that page zero was not
+VPD page and all non-zero pages were VPD pages.
 
-Encryption feature requires driver to supply additional fields
-for encryption enable, tweak index, and data encryption key index
-in the ioaccel2 request structure.
-
-Encryption enable flag and data encryption key index come from
-raid_map data structure from raid offload command.
-
-During ioaccel2 submission, check device structure's raid map to see if
-encryption is enabled for the device. If so, call new function below.
-
-Add function set_encrypt_ioaccel2 to set encryption flag, data encryption key
-index, and calculate tweak value from request's logical block address.
-
-Signed-off-by: Scott Teel <scott.teel@hp.com>
-Acked-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- drivers/scsi/hpsa.c     |  179 +++++++++++++++++++++++++++++++++++++++++++++--
- drivers/scsi/hpsa_cmd.h |   19 ++++-
- 2 files changed, 184 insertions(+), 14 deletions(-)
+ drivers/scsi/hpsa.c |   17 +++++++++--------
+ 1 files changed, 9 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 8042920..3ed0142 100644
+index 76e7ae9..ea77a4f 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -2027,6 +2027,14 @@ static void hpsa_debug_map_buff(struct ctlr_info *h, int rc,
- 			le16_to_cpu(map_buff->row_cnt));
- 	dev_info(&h->pdev->dev, "layout_map_count = %u\n",
- 			le16_to_cpu(map_buff->layout_map_count));
-+	dev_info(&h->pdev->dev, "flags = %u\n",
-+			le16_to_cpu(map_buff->flags));
-+	if (map_buff->flags & RAID_MAP_FLAG_ENCRYPT_ON)
-+		dev_info(&h->pdev->dev, "encrypytion = ON\n");
-+	else
-+		dev_info(&h->pdev->dev, "encrypytion = OFF\n");
-+	dev_info(&h->pdev->dev, "dekindex = %u\n",
-+			le16_to_cpu(map_buff->dekindex));
+@@ -183,8 +183,9 @@ static void cmd_special_free(struct ctlr_info *h, struct CommandList *c);
+ static struct CommandList *cmd_alloc(struct ctlr_info *h);
+ static struct CommandList *cmd_special_alloc(struct ctlr_info *h);
+ static int fill_cmd(struct CommandList *c, u8 cmd, struct ctlr_info *h,
+-	void *buff, size_t size, u8 page_code, unsigned char *scsi3addr,
++	void *buff, size_t size, u16 page_code, unsigned char *scsi3addr,
+ 	int cmd_type);
++#define VPD_PAGE (1 << 8)
  
- 	map_cnt = le16_to_cpu(map_buff->layout_map_count);
- 	for (map = 0; map < map_cnt; map++) {
-@@ -2967,6 +2975,128 @@ static int hpsa_scsi_ioaccel_direct_map(struct ctlr_info *h,
- 		cmd->cmnd, cmd->cmd_len, dev->scsi3addr);
+ static int hpsa_scsi_queue_command(struct Scsi_Host *h, struct scsi_cmnd *cmd);
+ static void hpsa_scan_start(struct Scsi_Host *);
+@@ -1878,7 +1879,7 @@ static void hpsa_scsi_interpret_error(struct CommandList *cp)
  }
  
-+/*
-+ * Set encryption parameters for the ioaccel2 request
-+ */
-+static void set_encrypt_ioaccel2(struct ctlr_info *h,
-+	struct CommandList *c, struct io_accel2_cmd *cp)
-+{
-+	struct scsi_cmnd *cmd = c->scsi_cmd;
-+	struct hpsa_scsi_dev_t *dev = cmd->device->hostdata;
-+	struct raid_map_data *map = &dev->raid_map;
-+	u64 first_block;
-+
-+	BUG_ON(!(dev->offload_config && dev->offload_enabled));
-+
-+	/* Are we doing encryption on this device */
-+	if (!(map->flags & RAID_MAP_FLAG_ENCRYPT_ON))
-+		return;
-+	/* Set the data encryption key index. */
-+	cp->dekindex = map->dekindex;
-+
-+	/* Set the encryption enable flag, encoded into direction field. */
-+	cp->direction |= IOACCEL2_DIRECTION_ENCRYPT_MASK;
-+
-+	/* Set encryption tweak values based on logical block address
-+	 * If block size is 512, tweak value is LBA.
-+	 * For other block sizes, tweak is (LBA * block size)/ 512)
-+	 */
-+	switch (cmd->cmnd[0]) {
-+	/* Required? 6-byte cdbs eliminated by fixup_ioaccel_cdb */
-+	case WRITE_6:
-+	case READ_6:
-+		if (map->volume_blk_size == 512) {
-+			cp->tweak_lower =
-+				(((u32) cmd->cmnd[2]) << 8) |
-+					cmd->cmnd[3];
-+			cp->tweak_upper = 0;
-+		} else {
-+			first_block =
-+				(((u64) cmd->cmnd[2]) << 8) |
-+					cmd->cmnd[3];
-+			first_block = (first_block * map->volume_blk_size)/512;
-+			cp->tweak_lower = (u32)first_block;
-+			cp->tweak_upper = (u32)(first_block >> 32);
-+		}
-+		break;
-+	case WRITE_10:
-+	case READ_10:
-+		if (map->volume_blk_size == 512) {
-+			cp->tweak_lower =
-+				(((u32) cmd->cmnd[2]) << 24) |
-+				(((u32) cmd->cmnd[3]) << 16) |
-+				(((u32) cmd->cmnd[4]) << 8) |
-+					cmd->cmnd[5];
-+			cp->tweak_upper = 0;
-+		} else {
-+			first_block =
-+				(((u64) cmd->cmnd[2]) << 24) |
-+				(((u64) cmd->cmnd[3]) << 16) |
-+				(((u64) cmd->cmnd[4]) << 8) |
-+					cmd->cmnd[5];
-+			first_block = (first_block * map->volume_blk_size)/512;
-+			cp->tweak_lower = (u32)first_block;
-+			cp->tweak_upper = (u32)(first_block >> 32);
-+		}
-+		break;
-+	/* Required? 12-byte cdbs eliminated by fixup_ioaccel_cdb */
-+	case WRITE_12:
-+	case READ_12:
-+		if (map->volume_blk_size == 512) {
-+			cp->tweak_lower =
-+				(((u32) cmd->cmnd[2]) << 24) |
-+				(((u32) cmd->cmnd[3]) << 16) |
-+				(((u32) cmd->cmnd[4]) << 8) |
-+					cmd->cmnd[5];
-+			cp->tweak_upper = 0;
-+		} else {
-+			first_block =
-+				(((u64) cmd->cmnd[2]) << 24) |
-+				(((u64) cmd->cmnd[3]) << 16) |
-+				(((u64) cmd->cmnd[4]) << 8) |
-+					cmd->cmnd[5];
-+			first_block = (first_block * map->volume_blk_size)/512;
-+			cp->tweak_lower = (u32)first_block;
-+			cp->tweak_upper = (u32)(first_block >> 32);
-+		}
-+		break;
-+	case WRITE_16:
-+	case READ_16:
-+		if (map->volume_blk_size == 512) {
-+			cp->tweak_lower =
-+				(((u32) cmd->cmnd[6]) << 24) |
-+				(((u32) cmd->cmnd[7]) << 16) |
-+				(((u32) cmd->cmnd[8]) << 8) |
-+					cmd->cmnd[9];
-+			cp->tweak_upper =
-+				(((u32) cmd->cmnd[2]) << 24) |
-+				(((u32) cmd->cmnd[3]) << 16) |
-+				(((u32) cmd->cmnd[4]) << 8) |
-+					cmd->cmnd[5];
-+		} else {
-+			first_block =
-+				(((u64) cmd->cmnd[2]) << 56) |
-+				(((u64) cmd->cmnd[3]) << 48) |
-+				(((u64) cmd->cmnd[4]) << 40) |
-+				(((u64) cmd->cmnd[5]) << 32) |
-+				(((u64) cmd->cmnd[6]) << 24) |
-+				(((u64) cmd->cmnd[7]) << 16) |
-+				(((u64) cmd->cmnd[8]) << 8) |
-+					cmd->cmnd[9];
-+			first_block = (first_block * map->volume_blk_size)/512;
-+			cp->tweak_lower = (u32)first_block;
-+			cp->tweak_upper = (u32)(first_block >> 32);
-+		}
-+		break;
-+	default:
-+		dev_err(&h->pdev->dev,
-+			"ERROR: %s: IOACCEL request CDB size not supported for encryption\n",
-+			__func__);
-+		BUG();
-+		break;
-+	}
-+}
-+
- static int hpsa_scsi_ioaccel2_queue_command(struct ctlr_info *h,
- 	struct CommandList *c, u32 ioaccel_handle, u8 *cdb, int cdb_len,
- 	u8 *scsi3addr)
-@@ -3016,13 +3146,16 @@ static int hpsa_scsi_ioaccel2_queue_command(struct ctlr_info *h,
- 
- 		switch (cmd->sc_data_direction) {
- 		case DMA_TO_DEVICE:
--			cp->direction = IOACCEL2_DIR_DATA_OUT;
-+			cp->direction &= ~IOACCEL2_DIRECTION_MASK;
-+			cp->direction |= IOACCEL2_DIR_DATA_OUT;
- 			break;
- 		case DMA_FROM_DEVICE:
--			cp->direction = IOACCEL2_DIR_DATA_IN;
-+			cp->direction &= ~IOACCEL2_DIRECTION_MASK;
-+			cp->direction |= IOACCEL2_DIR_DATA_IN;
- 			break;
- 		case DMA_NONE:
--			cp->direction = IOACCEL2_DIR_NO_DATA;
-+			cp->direction &= ~IOACCEL2_DIRECTION_MASK;
-+			cp->direction |= IOACCEL2_DIR_NO_DATA;
- 			break;
- 		default:
- 			dev_err(&h->pdev->dev, "unknown data direction: %d\n",
-@@ -3031,10 +3164,15 @@ static int hpsa_scsi_ioaccel2_queue_command(struct ctlr_info *h,
- 			break;
- 		}
- 	} else {
--		cp->direction = IOACCEL2_DIR_NO_DATA;
-+		cp->direction &= ~IOACCEL2_DIRECTION_MASK;
-+		cp->direction |= IOACCEL2_DIR_NO_DATA;
- 	}
-+
-+	/* Set encryption parameters, if necessary */
-+	set_encrypt_ioaccel2(h, c, cp);
-+
- 	cp->scsi_nexus = ioaccel_handle;
--	cp->Tag.lower = (c->cmdindex << DIRECT_LOOKUP_SHIFT) |
-+	cp->Tag = (c->cmdindex << DIRECT_LOOKUP_SHIFT) |
- 				DIRECT_LOOKUP_BIT;
- 	memcpy(cp->cdb, cdb, sizeof(cp->cdb));
- 	memset(cp->cciss_lun, 0, sizeof(cp->cciss_lun));
-@@ -3792,8 +3930,9 @@ static void hpsa_get_tag(struct ctlr_info *h,
- 	if (c->cmd_type == CMD_IOACCEL2) {
- 		struct io_accel2_cmd *cm2 = (struct io_accel2_cmd *)
- 			&h->ioaccel2_cmd_pool[c->cmdindex];
--		*tagupper = cm2->Tag.upper;
--		*taglower = cm2->Tag.lower;
-+		/* upper tag not used in ioaccel2 mode */
-+		memset(tagupper, 0, sizeof(*tagupper));
-+		*taglower = cm2->Tag;
- 		return;
- 	}
- 	*tagupper = c->Header.Tag.upper;
-@@ -3841,8 +3980,8 @@ static int hpsa_send_abort(struct ctlr_info *h, unsigned char *scsi3addr,
- 		break;
- 	}
- 	cmd_special_free(h, c);
--	dev_dbg(&h->pdev->dev, "%s: Tag:0x%08x:%08x: Finished.\n", __func__,
--		abort->Header.Tag.upper, abort->Header.Tag.lower);
-+	dev_dbg(&h->pdev->dev, "%s: Tag:0x%08x:%08x: Finished.\n",
-+		__func__, tagupper, taglower);
- 	return rc;
- }
- 
-@@ -6968,6 +7107,28 @@ static void __exit hpsa_cleanup(void)
- static void __attribute__((unused)) verify_offsets(void)
+ static int hpsa_scsi_do_inquiry(struct ctlr_info *h, unsigned char *scsi3addr,
+-			unsigned char page, unsigned char *buf,
++			u16 page, unsigned char *buf,
+ 			unsigned char bufsize)
  {
- #define VERIFY_OFFSET(member, offset) \
-+	BUILD_BUG_ON(offsetof(struct raid_map_data, member) != offset)
-+
-+	VERIFY_OFFSET(structure_size, 0);
-+	VERIFY_OFFSET(volume_blk_size, 4);
-+	VERIFY_OFFSET(volume_blk_cnt, 8);
-+	VERIFY_OFFSET(phys_blk_shift, 16);
-+	VERIFY_OFFSET(parity_rotation_shift, 17);
-+	VERIFY_OFFSET(strip_size, 18);
-+	VERIFY_OFFSET(disk_starting_blk, 20);
-+	VERIFY_OFFSET(disk_blk_cnt, 28);
-+	VERIFY_OFFSET(data_disks_per_row, 36);
-+	VERIFY_OFFSET(metadata_disks_per_row, 38);
-+	VERIFY_OFFSET(row_cnt, 40);
-+	VERIFY_OFFSET(layout_map_count, 42);
-+	VERIFY_OFFSET(flags, 44);
-+	VERIFY_OFFSET(dekindex, 46);
-+	/* VERIFY_OFFSET(reserved, 48 */
-+	VERIFY_OFFSET(data, 64);
-+
-+#undef VERIFY_OFFSET
-+
-+#define VERIFY_OFFSET(member, offset) \
- 	BUILD_BUG_ON(offsetof(struct io_accel2_cmd, member) != offset)
+ 	int rc = IO_OK;
+@@ -1948,7 +1949,7 @@ static void hpsa_get_raid_level(struct ctlr_info *h,
+ 	buf = kzalloc(64, GFP_KERNEL);
+ 	if (!buf)
+ 		return;
+-	rc = hpsa_scsi_do_inquiry(h, scsi3addr, 0xC1, buf, 64);
++	rc = hpsa_scsi_do_inquiry(h, scsi3addr, VPD_PAGE | 0xC1, buf, 64);
+ 	if (rc == 0)
+ 		*raid_level = buf[8];
+ 	if (*raid_level > RAID_UNKNOWN)
+@@ -2077,7 +2078,7 @@ static void hpsa_get_ioaccel_status(struct ctlr_info *h,
+ 	if (!buf)
+ 		return;
+ 	rc = hpsa_scsi_do_inquiry(h, scsi3addr,
+-			HPSA_VPD_LV_IOACCEL_STATUS, buf, 64);
++			VPD_PAGE | HPSA_VPD_LV_IOACCEL_STATUS, buf, 64);
+ 	if (rc != 0)
+ 		goto out;
  
- 	VERIFY_OFFSET(IU_type, 0);
-diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
-index 7768092..eaa7fda 100644
---- a/drivers/scsi/hpsa_cmd.h
-+++ b/drivers/scsi/hpsa_cmd.h
-@@ -209,7 +209,10 @@ struct raid_map_data {
- 	u16   row_cnt;			/* rows in each layout map */
- 	u16   layout_map_count;		/* layout maps (1 map per mirror/parity
- 					 * group) */
--	u8    reserved[20];
-+	u16   flags;			/* Bit 0 set if encryption enabled */
-+#define RAID_MAP_FLAG_ENCRYPT_ON  0x01
-+	u16   dekindex;			/* Data encryption key index. */
-+	u8    reserved[16];
- 	struct raid_map_disk_data data[RAID_MAP_MAX_ENTRIES];
- };
+@@ -2110,7 +2111,7 @@ static int hpsa_get_device_id(struct ctlr_info *h, unsigned char *scsi3addr,
+ 	buf = kzalloc(64, GFP_KERNEL);
+ 	if (!buf)
+ 		return -1;
+-	rc = hpsa_scsi_do_inquiry(h, scsi3addr, 0x83, buf, 64);
++	rc = hpsa_scsi_do_inquiry(h, scsi3addr, VPD_PAGE | 0x83, buf, 64);
+ 	if (rc == 0)
+ 		memcpy(device_id, &buf[8], buflen);
+ 	kfree(buf);
+@@ -4629,7 +4630,7 @@ static int hpsa_send_host_reset(struct ctlr_info *h, unsigned char *scsi3addr,
+ }
  
-@@ -502,11 +505,17 @@ struct io_accel2_scsi_response {
-  */
- struct io_accel2_cmd {
- 	u8  IU_type;			/* IU Type */
--	u8  direction;                  /* Transfer direction, 2 bits */
-+	u8  direction;			/* direction, memtype, and encryption */
-+#define IOACCEL2_DIRECTION_MASK		0x03 /* bits 0,1: direction  */
-+#define IOACCEL2_DIRECTION_MEMTYPE_MASK	0x04 /* bit 2: memtype source/dest */
-+					     /*     0b=PCIe, 1b=DDR */
-+#define IOACCEL2_DIRECTION_ENCRYPT_MASK	0x08 /* bit 3: encryption flag */
-+					     /*     0=off, 1=on */
- 	u8  reply_queue;		/* Reply Queue ID */
- 	u8  reserved1;			/* Reserved */
- 	u32 scsi_nexus;			/* Device Handle */
--	struct vals32 Tag;		/* cciss tag */
-+	u32 Tag;			/* cciss tag, lower 4 bytes only */
-+	u32 tweak_lower;		/* Encryption tweak, lower 4 bytes */
- 	u8  cdb[16];			/* SCSI Command Descriptor Block */
- 	u8  cciss_lun[8];		/* 8 byte SCSI address */
- 	u32 data_len;			/* Total bytes to transfer */
-@@ -514,10 +523,10 @@ struct io_accel2_cmd {
- #define IOACCEL2_PRIORITY_MASK 0x78
- #define IOACCEL2_ATTR_MASK 0x07
- 	u8  sg_count;			/* Number of sg elements */
--	u8  reserved3[2];		/* Reserved */
-+	u16 dekindex;			/* Data encryption key index */
- 	u64 err_ptr;			/* Error Pointer */
- 	u32 err_len;			/* Error Length*/
--	u8 reserved4[4];		/* Reserved */
-+	u32 tweak_upper;		/* Encryption tweak, upper 4 bytes */
- 	struct ioaccel2_sg_element sg[IOACCEL2_MAXSGENTRIES];
- 	struct io_accel2_scsi_response error_data;
- 	u8 pad[IOACCEL2_PAD];
+ static int fill_cmd(struct CommandList *c, u8 cmd, struct ctlr_info *h,
+-	void *buff, size_t size, u8 page_code, unsigned char *scsi3addr,
++	void *buff, size_t size, u16 page_code, unsigned char *scsi3addr,
+ 	int cmd_type)
+ {
+ 	int pci_dir = XFER_NONE;
+@@ -4652,9 +4653,9 @@ static int fill_cmd(struct CommandList *c, u8 cmd, struct ctlr_info *h,
+ 		switch (cmd) {
+ 		case HPSA_INQUIRY:
+ 			/* are we trying to read a vital product page */
+-			if (page_code != 0) {
++			if (page_code & VPD_PAGE) {
+ 				c->Request.CDB[1] = 0x01;
+-				c->Request.CDB[2] = page_code;
++				c->Request.CDB[2] = (page_code & 0xff);
+ 			}
+ 			c->Request.CDBLen = 6;
+ 			c->Request.Type.Attribute = ATTR_SIMPLE;
 
