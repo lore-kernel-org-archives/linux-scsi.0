@@ -1,21 +1,21 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 22/35] hpsa: allow user to disable accelerated i/o path
-Date: Tue, 18 Feb 2014 13:57:00 -0600
-Message-ID: <20140218195700.15787.7238.stgit@beardog.cce.hp.com>
+Subject: [PATCH 26/35] hpsa: retry certain ioaccel error cases on the RAID path
+Date: Tue, 18 Feb 2014 13:57:21 -0600
+Message-ID: <20140218195721.15787.81704.stgit@beardog.cce.hp.com>
 References: <20140218195251.15787.55872.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g9t1613g.houston.hp.com ([15.240.0.71]:43554 "EHLO
-	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751151AbaBRT6m (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Feb 2014 14:58:42 -0500
-Received: from g5t1626.atlanta.hp.com (g5t1626.atlanta.hp.com [15.192.137.9])
+Received: from g2t1383g.austin.hp.com ([15.217.136.92]:57088 "EHLO
+	g2t1383g.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751151AbaBRT6r (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Feb 2014 14:58:47 -0500
+Received: from g4t3425.houston.hp.com (g4t3425.houston.hp.com [15.201.208.53])
 	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by g9t1613g.houston.hp.com (Postfix) with ESMTPS id 0A25861E00
-	for <linux-scsi@vger.kernel.org>; Tue, 18 Feb 2014 19:58:42 +0000 (UTC)
+	by g2t1383g.austin.hp.com (Postfix) with ESMTPS id 497211A41
+	for <linux-scsi@vger.kernel.org>; Tue, 18 Feb 2014 19:58:40 +0000 (UTC)
 In-Reply-To: <20140218195251.15787.55872.stgit@beardog.cce.hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -24,147 +24,153 @@ Cc: dab@hp.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, stephenm
 
 From: Scott Teel <scott.teel@hp.com>
 
-Allow SSD Smart Path for a controller to be disabled by
-the user, regardless of settings in controller firmware
-or array configuration.
-
-To disable:     echo 0 > /sys/class/scsi_host/host<id>/acciopath_status
-To re-enable:   echo 1 > /sys/class/scsi_host/host<id>/acciopath_status
-To check state: cat /sys/class/scsi_host/host<id>/acciopath_status
+Change the handling of HP SSD Smart Path errors with status:
+  0x02 CHECK CONDITION
+  0x08 BUSY
+  0x18 RESERVATION CONFLICT
+  0x40 TASK ABORTED
+So that they get retried on the RAID Path.
 
 Signed-off-by: Scott Teel <scott.teel@hp.com>
 Acked-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- Documentation/ABI/testing/sysfs-class-scsi_host |   16 ++++++++
- drivers/scsi/hpsa.c                             |   45 ++++++++++++++++++++++-
- drivers/scsi/hpsa.h                             |    1 +
- 3 files changed, 61 insertions(+), 1 deletions(-)
+ drivers/scsi/hpsa.c |   45 +++++++++++++++++++++++++++++++++++++++------
+ 1 files changed, 39 insertions(+), 6 deletions(-)
 
-diff --git a/Documentation/ABI/testing/sysfs-class-scsi_host b/Documentation/ABI/testing/sysfs-class-scsi_host
-index 29a4f89..0eb255e 100644
---- a/Documentation/ABI/testing/sysfs-class-scsi_host
-+++ b/Documentation/ABI/testing/sysfs-class-scsi_host
-@@ -11,3 +11,19 @@ Description:
- 		guaranteed.  The 'isci_id' attribute unambiguously identifies
- 		the controller index: '0' for the first controller,
- 		'1' for the second.
-+
-+What:		/sys/class/scsi_host/hostX/acciopath_status
-+Date:		November 2013
-+Contact:	Stephen M. Cameron <scameron@beardog.cce.hp.com>
-+Description:	This file contains the current status of the "SSD Smart Path"
-+		feature of HP Smart Array RAID controllers using the hpsa
-+		driver.  SSD Smart Path, when enabled permits the driver to
-+		send i/o requests directly to physical devices that are part
-+		of a logical drive, bypassing the controllers firmware RAID
-+		stack for a performance advantage when possible.  A value of
-+		'1' indicates the feature is enabled, and the controller may
-+		use the direct i/o path to physical devices.  A value of zero
-+		means the feature is disabled and the controller may not use
-+		the direct i/o path to physical devices.  This setting is
-+		controller wide, affecting all configured logical drives on the
-+		controller.  This file is readable and writable.
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 10f48ba..295c5da 100644
+index 909012e..7fd09d8 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -287,6 +287,30 @@ static int check_for_busy(struct ctlr_info *h, struct CommandList *c)
- 	return 1;
+@@ -1351,12 +1351,18 @@ static void hpsa_unmap_sg_chain_block(struct ctlr_info *h,
+ 	pci_unmap_single(h->pdev, temp64.val, chain_sg->Len, PCI_DMA_TODEVICE);
  }
  
-+static ssize_t host_store_hp_ssd_smart_path_status(struct device *dev,
-+					 struct device_attribute *attr,
-+					 const char *buf, size_t count)
-+{
-+	int status, len;
-+	struct ctlr_info *h;
-+	struct Scsi_Host *shost = class_to_shost(dev);
-+	char tmpbuf[10];
+-static void handle_ioaccel_mode2_error(struct ctlr_info *h,
 +
-+	if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
-+		return -EACCES;
-+	len = count > sizeof(tmpbuf) - 1 ? sizeof(tmpbuf) - 1 : count;
-+	strncpy(tmpbuf, buf, len);
-+	tmpbuf[len] = '\0';
-+	if (sscanf(tmpbuf, "%d", &status) != 1)
-+		return -EINVAL;
-+	h = shost_to_hba(shost);
-+	h->acciopath_status = !!status;
-+	dev_warn(&h->pdev->dev,
-+		"hpsa: HP SSD Smart Path %s via sysfs update.\n",
-+		h->acciopath_status ? "enabled" : "disabled");
-+	return count;
-+}
-+
- static ssize_t host_store_rescan(struct device *dev,
- 				 struct device_attribute *attr,
- 				 const char *buf, size_t count)
-@@ -334,6 +358,17 @@ static ssize_t host_show_transport_mode(struct device *dev,
- 			"performant" : "simple");
- }
++/* Decode the various types of errors on ioaccel2 path.
++ * Return 1 for any error that should generate a RAID path retry.
++ * Return 0 for errors that don't require a RAID path retry.
++ */
++static int handle_ioaccel_mode2_error(struct ctlr_info *h,
+ 					struct CommandList *c,
+ 					struct scsi_cmnd *cmd,
+ 					struct io_accel2_cmd *c2)
+ {
+ 	int data_len;
++	int retry = 0;
  
-+static ssize_t host_show_hp_ssd_smart_path_status(struct device *dev,
-+	struct device_attribute *attr, char *buf)
-+{
-+	struct ctlr_info *h;
-+	struct Scsi_Host *shost = class_to_shost(dev);
-+
-+	h = shost_to_hba(shost);
-+	return snprintf(buf, 30, "HP SSD Smart Path %s\n",
-+		(h->acciopath_status == 1) ?  "enabled" : "disabled");
-+}
-+
- /* List of controllers which cannot be hard reset on kexec with reset_devices */
- static u32 unresettable_controller[] = {
- 	0x324a103C, /* Smart Array P712m */
-@@ -546,6 +581,9 @@ static DEVICE_ATTR(unique_id, S_IRUGO, unique_id_show, NULL);
- static DEVICE_ATTR(rescan, S_IWUSR, NULL, host_store_rescan);
- static DEVICE_ATTR(hp_ssd_smart_path_enabled, S_IRUGO,
- 			host_show_hp_ssd_smart_path_enabled, NULL);
-+static DEVICE_ATTR(hp_ssd_smart_path_status, S_IWUSR|S_IRUGO|S_IROTH,
-+		host_show_hp_ssd_smart_path_status,
-+		host_store_hp_ssd_smart_path_status);
- static DEVICE_ATTR(firmware_revision, S_IRUGO,
- 	host_show_firmware_revision, NULL);
- static DEVICE_ATTR(commands_outstanding, S_IRUGO,
-@@ -569,6 +607,7 @@ static struct device_attribute *hpsa_shost_attrs[] = {
- 	&dev_attr_commands_outstanding,
- 	&dev_attr_transport_mode,
- 	&dev_attr_resettable,
-+	&dev_attr_hp_ssd_smart_path_status,
- 	NULL,
- };
- 
-@@ -3341,7 +3380,8 @@ static int hpsa_scsi_queue_command_lck(struct scsi_cmnd *cmd,
- 	 * Retries always go down the normal I/O path.
- 	 */
- 	if (likely(cmd->retries == 0 &&
--		cmd->request->cmd_type == REQ_TYPE_FS)) {
-+		cmd->request->cmd_type == REQ_TYPE_FS &&
-+		h->acciopath_status)) {
- 		if (dev->offload_enabled) {
- 			rc = hpsa_scsi_ioaccel_raid_map(h, c);
- 			if (rc == 0)
-@@ -6323,6 +6363,9 @@ reinit_after_soft_reset:
- 		goto reinit_after_soft_reset;
+ 	switch (c2->error_data.serv_response) {
+ 	case IOACCEL2_SERV_RESPONSE_COMPLETE:
+@@ -1380,16 +1386,19 @@ static void handle_ioaccel_mode2_error(struct ctlr_info *h,
+ 			memcpy(cmd->sense_buffer,
+ 				c2->error_data.sense_data_buff, data_len);
+ 			cmd->result |= SAM_STAT_CHECK_CONDITION;
++			retry = 1;
+ 			break;
+ 		case IOACCEL2_STATUS_SR_TASK_COMP_BUSY:
+ 			dev_warn(&h->pdev->dev,
+ 				"%s: task complete with BUSY status.\n",
+ 				"HP SSD Smart Path");
++			retry = 1;
+ 			break;
+ 		case IOACCEL2_STATUS_SR_TASK_COMP_RES_CON:
+ 			dev_warn(&h->pdev->dev,
+ 				"%s: task complete with reservation conflict.\n",
+ 				"HP SSD Smart Path");
++			retry = 1;
+ 			break;
+ 		case IOACCEL2_STATUS_SR_TASK_COMP_SET_FULL:
+ 			/* Make scsi midlayer do unlimited retries */
+@@ -1399,11 +1408,13 @@ static void handle_ioaccel_mode2_error(struct ctlr_info *h,
+ 			dev_warn(&h->pdev->dev,
+ 				"%s: task complete with aborted status.\n",
+ 				"HP SSD Smart Path");
++			retry = 1;
+ 			break;
+ 		default:
+ 			dev_warn(&h->pdev->dev,
+ 				"%s: task complete with unrecognized status: 0x%02x\n",
+ 				"HP SSD Smart Path", c2->error_data.status);
++			retry = 1;
+ 			break;
+ 		}
+ 		break;
+@@ -1412,6 +1423,7 @@ static void handle_ioaccel_mode2_error(struct ctlr_info *h,
+ 		dev_warn(&h->pdev->dev,
+ 			"unexpected delivery or target failure, status = 0x%02x\n",
+ 			c2->error_data.status);
++		retry = 1;
+ 		break;
+ 	case IOACCEL2_SERV_RESPONSE_TMF_COMPLETE:
+ 		break;
+@@ -1419,6 +1431,7 @@ static void handle_ioaccel_mode2_error(struct ctlr_info *h,
+ 		break;
+ 	case IOACCEL2_SERV_RESPONSE_TMF_REJECTED:
+ 		dev_warn(&h->pdev->dev, "task management function rejected.\n");
++		retry = 1;
+ 		break;
+ 	case IOACCEL2_SERV_RESPONSE_TMF_WRONG_LUN:
+ 		dev_warn(&h->pdev->dev, "task management function invalid LUN\n");
+@@ -1426,9 +1439,13 @@ static void handle_ioaccel_mode2_error(struct ctlr_info *h,
+ 	default:
+ 		dev_warn(&h->pdev->dev,
+ 			"%s: Unrecognized server response: 0x%02x\n",
+-			"HP SSD Smart Path", c2->error_data.serv_response);
++			"HP SSD Smart Path",
++			c2->error_data.serv_response);
++		retry = 1;
+ 		break;
  	}
- 
-+	/* Enable Accelerated IO path at driver layer */
-+	h->acciopath_status = 1;
 +
- 	/* Turn the interrupts on so we can service requests */
- 	h->access.set_intr_mask(h, HPSA_INTR_ON);
++	return retry;	/* retry on raid path? */
+ }
  
-diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
-index 45bb1ea..1d3340d 100644
---- a/drivers/scsi/hpsa.h
-+++ b/drivers/scsi/hpsa.h
-@@ -181,6 +181,7 @@ struct ctlr_info {
- #define HPSATMF_LOG_QRY_TSET    (1 << 24)
- #define HPSATMF_LOG_QRY_ASYNC   (1 << 25)
- 	u32 events;
-+	int	acciopath_status;
- };
- #define HPSA_ABORT_MSG 0
- #define HPSA_DEVICE_RESET_MSG 1
+ static void process_ioaccel2_completion(struct ctlr_info *h,
+@@ -1436,6 +1453,7 @@ static void process_ioaccel2_completion(struct ctlr_info *h,
+ 		struct hpsa_scsi_dev_t *dev)
+ {
+ 	struct io_accel2_cmd *c2 = &h->ioaccel2_cmd_pool[c->cmdindex];
++	int raid_retry = 0;
+ 
+ 	/* check for good status */
+ 	if (likely(c2->error_data.serv_response == 0 &&
+@@ -1452,11 +1470,16 @@ static void process_ioaccel2_completion(struct ctlr_info *h,
+ 	if (is_logical_dev_addr_mode(dev->scsi3addr) &&
+ 		c2->error_data.serv_response ==
+ 			IOACCEL2_SERV_RESPONSE_FAILURE) {
+-		if (c2->error_data.status !=
+-				IOACCEL2_STATUS_SR_IOACCEL_DISABLED)
++		if (c2->error_data.status ==
++			IOACCEL2_STATUS_SR_IOACCEL_DISABLED)
++			dev_warn(&h->pdev->dev,
++				"%s: Path is unavailable, retrying on standard path.\n",
++				"HP SSD Smart Path");
++		else
+ 			dev_warn(&h->pdev->dev,
+-				"%s: Error 0x%02x, Retrying on standard path.\n",
++				"%s: Error 0x%02x, retrying on standard path.\n",
+ 				"HP SSD Smart Path", c2->error_data.status);
++
+ 		dev->offload_enabled = 0;
+ 		h->drv_req_rescan = 1;	/* schedule controller for a rescan */
+ 		cmd->result = DID_SOFT_ERROR << 16;
+@@ -1464,7 +1487,17 @@ static void process_ioaccel2_completion(struct ctlr_info *h,
+ 		cmd->scsi_done(cmd);
+ 		return;
+ 	}
+-	handle_ioaccel_mode2_error(h, c, cmd, c2);
++	raid_retry = handle_ioaccel_mode2_error(h, c, cmd, c2);
++	/* If error found, disable Smart Path, schedule a rescan,
++	 * and force a retry on the standard path.
++	 */
++	if (raid_retry) {
++		dev_warn(&h->pdev->dev, "%s: Retrying on standard path.\n",
++			"HP SSD Smart Path");
++		dev->offload_enabled = 0; /* Disable Smart Path */
++		h->drv_req_rescan = 1;	  /* schedule controller rescan */
++		cmd->result = DID_SOFT_ERROR << 16;
++	}
+ 	cmd_free(h, c);
+ 	cmd->scsi_done(cmd);
+ }
 
