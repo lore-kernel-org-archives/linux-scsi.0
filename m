@@ -1,33 +1,31 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 70751] mpt2sas: system disks dropped when execute SMART tests
-Date: Tue, 18 Feb 2014 10:55:43 +0000
-Message-ID: <bug-70751-11613-X289rj6uXt@https.bugzilla.kernel.org/>
-References: <bug-70751-11613@https.bugzilla.kernel.org/>
+From: "Dr. Pius Okagba" <renato.ardigo@alice.it>
+Subject: Dear
+Date: Tue, 18 Feb 2014 12:36:57 +0100 (CET)
+Message-ID: <14444c8d83b.renato.ardigo__32512.510152492$1392723441$gmane$org@alice.it>
+Reply-To: franklinb1@barid.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain;charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:38368 "EHLO mail.kernel.org"
+Received: from smtp302.alice.it ([82.57.200.118]:7781 "EHLO smtp302.alice.it"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754466AbaBRKzp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 Feb 2014 05:55:45 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 0883B20212
-	for <linux-scsi@vger.kernel.org>; Tue, 18 Feb 2014 10:55:45 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id 6605A20115
-	for <linux-scsi@vger.kernel.org>; Tue, 18 Feb 2014 10:55:43 +0000 (UTC)
-In-Reply-To: <bug-70751-11613@https.bugzilla.kernel.org/>
+	id S1755184AbaBRLhA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 18 Feb 2014 06:37:00 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=70751
-
---- Comment #1 from Mihaly, A. Toth <mihaly.arva-toth+kernelorg@virtual-call-center.eu> ---
-This is my first bugreport in this bugzilla, let me know if any other
-information is needed. Thank you!
-
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+Attention:
+Regarding the transaction made so far, I waited for your message as you told 
+me
+with none received. Remember, I supposed to have traveled last night 
+but the
+weather is too bad. I will be leaving to Paraguay tomorrow for estate project.
+Meanwhile, contact the Bank manager with below address, i have kept the cheque
+worth of USD2.5M. They will either mail it to you or remit it for transfer
+depending on how you want it; Here is Bank contact information:
+ 
+Name Of Manager: Mr. Franklin Barnard
+MAIL: (franklinb1@barid.com,
+okagbapius1@live.com
+Thank you
+UN Office.
