@@ -1,152 +1,137 @@
-From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-Subject: Re: [PATCH 21/22] qla4xxx: Use pci_enable_msix_range()
-Date: Tue, 18 Feb 2014 08:37:05 +0000
-Message-ID: <3FC4AB8B47ECD546BCD4B361A64BEACD8C64E701@avmb3.qlogic.org>
-References: <cover.1391512266.git.agordeev@redhat.com>
- <eb9c6c476786ff901512e46859f0d59a5e62170d.1391512266.git.agordeev@redhat.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 70751] New: mpt2sas: system disks dropped when execute SMART
+ tests
+Date: Tue, 18 Feb 2014 10:48:27 +0000
+Message-ID: <bug-70751-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_000_3FC4AB8B47ECD546BCD4B361A64BEACD8C64E701avmb3qlogicorg_"
-Return-path: <linux-pci-owner@vger.kernel.org>
-In-Reply-To: <eb9c6c476786ff901512e46859f0d59a5e62170d.1391512266.git.agordeev@redhat.com>
-Content-Language: en-US
-Sender: linux-pci-owner@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>, linux-kernel <linux-kernel@vger.kernel.org>
-Cc: Dept-Eng iSCSI Driver <Dept-iSCSIDriver@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-pci <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.19.201]:38081 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755244AbaBRKsd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 18 Feb 2014 05:48:33 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 71A7D20213
+	for <linux-scsi@vger.kernel.org>; Tue, 18 Feb 2014 10:48:32 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+	by mail.kernel.org (Postfix) with ESMTP id 2953820142
+	for <linux-scsi@vger.kernel.org>; Tue, 18 Feb 2014 10:48:29 +0000 (UTC)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
---_000_3FC4AB8B47ECD546BCD4B361A64BEACD8C64E701avmb3qlogicorg_
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <99113A8B646FA54AAC94F583A3CA15E7@qlogic.com>
-Content-Transfer-Encoding: quoted-printable
+https://bugzilla.kernel.org/show_bug.cgi?id=70751
 
+            Bug ID: 70751
+           Summary: mpt2sas: system disks dropped when execute SMART tests
+           Product: SCSI Drivers
+           Version: 2.5
+    Kernel Version: 3.8
+          Hardware: x86-64
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: high
+          Priority: P1
+         Component: Other
+          Assignee: scsi_drivers-other@kernel-bugs.osdl.org
+          Reporter: mihaly.arva-toth+kernelorg@virtual-call-center.eu
+        Regression: No
 
+Created attachment 126551
+  --> https://bugzilla.kernel.org/attachment.cgi?id=126551&action=edit
+dmesg from boot
 
-On 04/02/14 3:17 AM, "Alexander Gordeev" <agordeev@redhat.com> wrote:
+This bug is similar to #60644 but errors are different.
 
->As result of deprecation of MSI-X/MSI enablement functions
->pci_enable_msix() and pci_enable_msi_block() all drivers
->using these two interfaces need to be updated to use the
->new pci_enable_msi_range() and pci_enable_msix_range()
->interfaces.
->
->Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
->Cc: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
->Cc: iscsi-driver@qlogic.com
->Cc: linux-scsi@vger.kernel.org
->Cc: linux-pci@vger.kernel.org
->---
-> drivers/scsi/qla4xxx/ql4_nx.c |    5 +++--
-> 1 files changed, 3 insertions(+), 2 deletions(-)
->
->diff --git a/drivers/scsi/qla4xxx/ql4_nx.c b/drivers/scsi/qla4xxx/ql4_nx.c
->index d001202..7f5412d 100644
->--- a/drivers/scsi/qla4xxx/ql4_nx.c
->+++ b/drivers/scsi/qla4xxx/ql4_nx.c
->@@ -3805,8 +3805,9 @@ qla4_8xxx_enable_msix(struct scsi_qla_host *ha)
-> 	for (i =3D 0; i < QLA_MSIX_ENTRIES; i++)
-> 		entries[i].entry =3D qla4_8xxx_msix_entries[i].entry;
->=20
->-	ret =3D pci_enable_msix(ha->pdev, entries, ARRAY_SIZE(entries));
->-	if (ret) {
->+	ret =3D pci_enable_msix_range(ha->pdev, entries,
->+				    ARRAY_SIZE(entries), ARRAY_SIZE(entries));
->+	if (ret < 0) {
-> 		ql4_printk(KERN_WARNING, ha,
-> 		    "MSI-X: Failed to enable support -- %d/%d\n",
-> 		    QLA_MSIX_ENTRIES, ret);
+I've a SuperMicro SSG-6047R-E1R36L server with LSI2308 HBA, which handled by
+mpt2sas kernel driver. I'm using four SATA HDD in server, 2 disks in software
+RAID-1 with installed Ubuntu 12.04 LTS (3.8.0-29) and 2 disks for standalone
+Ceph OSD storage.
 
-Looks good to me.
-Acked-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+When I run SMART short/extended test on one of first two disk (which holds
+system), I think driver sends something wrong to controller. I
+can reproduce every time with smartctl -t short /dev/sda (but I need to do
+restart after crash)
 
+I turn on mpt2sas.debug_logging=0x3f8:
 
---_000_3FC4AB8B47ECD546BCD4B361A64BEACD8C64E701avmb3qlogicorg_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
+2014-02-18T10:50:28+01:00 stor3 kernel: : [ 1103.132677] sd 0:0:1:0: [sdb] CDB: 
+2014-02-18T10:50:28+01:00 stor3 kernel: : [ 1103.132683] Write(10): 2a 08 00 00
+08 08 00 00 01 00
+2014-02-18T10:50:28+01:00 stor3 kernel: : [ 1103.132698] mpt2sas0:     
+sas_address(0x500304800089138d), phy(13)
+2014-02-18T10:50:28+01:00 stor3 kernel: : [ 1103.132701] mpt2sas0:     
+enclosure_logical_id(0x50030480008913bf), slot(1)
+2014-02-18T10:50:28+01:00 stor3 kernel: : [ 1103.132704] mpt2sas0:     
+handle(0x000b), ioc_status(success)(0x0000), smid(48)
+2014-02-18T10:50:28+01:00 stor3 kernel: : [ 1103.132707] mpt2sas0:     
+request_len(512), underflow(512), resid(512)
+2014-02-18T10:50:28+01:00 stor3 kernel: : [ 1103.132710] mpt2sas0:      tag(0),
+transfer_count(0), sc->result(0x00000002)
+2014-02-18T10:50:28+01:00 stor3 kernel: : [ 1103.132713] mpt2sas0:     
+scsi_status(check condition)(0x02), scsi_state(autosense valid )(0x01)
+2014-02-18T10:50:28+01:00 stor3 kernel: : [ 1103.132716] mpt2sas0:     
+[sense_key,asc,ascq]: [0x05,0x21,0x00], count(18)
+2014-02-18T10:50:28+01:00 stor3 kernel: : [ 1103.132730] sd 0:0:1:0: [sdb]  
+2014-02-18T10:50:28+01:00 stor3 kernel: : [ 1103.132733] Result:
+hostbyte=DID_OK driverbyte=DRIVER_SENSE
+2014-02-18T10:50:28+01:00 stor3 kernel: : [ 1103.132736] sd 0:0:1:0: [sdb]  
+2014-02-18T10:50:28+01:00 stor3 kernel: : [ 1103.132738] Sense Key : Illegal
+Request [current] 
+2014-02-18T10:50:28+01:00 stor3 kernel: : [ 1103.132743] Info fld=0x808
+2014-02-18T10:50:28+01:00 stor3 kernel: : [ 1103.132745] sd 0:0:1:0: [sdb]  
+2014-02-18T10:50:28+01:00 stor3 kernel: : [ 1103.132749] Add. Sense: Logical
+block address out of range
+2014-02-18T10:50:28+01:00 stor3 kernel: : [ 1103.132753] sd 0:0:1:0: [sdb] CDB: 
+2014-02-18T10:50:28+01:00 stor3 kernel: : [ 1103.132755] Write(10): 2a 08 00 00
+08 08 00 00 01 00
+2014-02-18T10:50:28+01:00 stor3 kernel: : [ 1103.132767] end_request: critical
+target error, dev sdb, sector 2056
+2014-02-18T10:50:28+01:00 stor3 kernel: : [ 1103.133132] end_request: critical
+target error, dev sdb, sector 2056
+2014-02-18T10:50:28+01:00 stor3 kernel: : [ 1103.133495] md: super_written gets
+error=-121, uptodate=0
+2014-02-18T10:50:28+01:00 stor3 kernel: : [ 1103.133500] md/raid1:md0: Disk
+failure on sdb1, disabling device.
+2014-02-18T10:50:28+01:00 stor3 kernel: : [ 1103.133500] md/raid1:md0:
+Operation continuing on 1 devices.
+2014-02-18T10:50:28+01:00 stor3 kernel: : [ 1103.157908] RAID1 conf printout:
+2014-02-18T10:50:28+01:00 stor3 kernel: : [ 1103.157913]  --- wd:1 rd:2
+2014-02-18T10:50:28+01:00 stor3 kernel: : [ 1103.157917]  disk 0, wo:0, o:1,
+dev:sda1
+2014-02-18T10:50:28+01:00 stor3 kernel: : [ 1103.157920]  disk 1, wo:1, o:0,
+dev:sdb1
+2014-02-18T10:50:28+01:00 stor3 kernel: : [ 1103.160890] RAID1 conf printout:
+2014-02-18T10:50:28+01:00 stor3 kernel: : [ 1103.160903]  --- wd:1 rd:2
+2014-02-18T10:50:28+01:00 stor3 kernel: : [ 1103.160908]  disk 0, wo:0, o:1,
+dev:sda1
+2014-02-18T10:50:28+01:00 stor3 kernel: : [ 1103.175482] EXT4-fs error (device
+md0): ext4_journal_start_sb:349: Detected aborted journal
+2014-02-18T10:50:28+01:00 stor3 kernel: : [ 1103.175534] EXT4-fs (md0):
+Remounting filesystem read-only
 
-eJ8+InFcAQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAADkwM0ZCNzM0
-MjM4M0QzNEI5QUM3MDk0RThCNjZBODY4ACIHAQ2ABAACAAAAAgACAAEFgAMADgAAAN4HAgASAAgA
-JQAFAAIALQEBIIADAA4AAADeBwIAEgAIACUABQACAC0BAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
-YWlsLk5vdGUAMQgBBIABADcAAABSZTogW1BBVENIIDIxLzIyXSBxbGE0eHh4OiBVc2UgcGNpX2Vu
-YWJsZV9tc2l4X3JhbmdlKCkAzxEBA5AGAHQRAAA1AAAAAgF/AAEAAAA8AAAAPDNGQzRBQjhCNDdF
-Q0Q1NDZCQ0Q0QjM2MUE2NEJFQUNEOEM2NEU3MDFAYXZtYjMucWxvZ2ljLm9yZz4ACwAfDgEAAAAC
-AQkQAQAAAEgEAABEBAAA0QcAAExaRnUU9U1fYQAKZmJpZAQAAGNjwHBnMTI1MgD+A0PwdGV4dAH3
-AqQD4wIABGNoCsBzZXQwIO8HbQKDAFARTTIKgAa0AoCWfQqACMg7CWIxOQ7AvwnDFnIKMhZxAoAV
-YioJsHMJ8ASQYXQFsg5QA2Bzom8BgCBFeBHBbhgwXQZSdgSQF7YCEHIAwHR9CFBuGjEQIAXABaAb
-ZGSaIANSIBAiF7JcdgiQ5HdrC4BkNR1TBPAHQA0XcDAKcRfyYmttawZzAZAAICBCTV9C4EVHSU59
-CvwB8QvyWmwLgGUKgSGkTwOgMAA0LzAyLzE0IAAzOjE3IEFNLGggIkEecHgAcASBIAZHBbABAGV2
-IiA8NGFnJIRACXER0HQuYQWgbT4gdwNgECA6GSGcPkEEIAlwc3VsawVAGTAgAQBwCXAeUHQOaQIg
-KEIF4EktWC/9KXEgCfABoB5wB4ACMBxwOHVuYyjyDgAnRXBjJGlfKhRfbQCQeChUKSAkESAr3F8C
-YG/UY2sswmwDIGQFEBox3StHdQCQGcAcwGgHkBngsHR3byALgBuhZgDQTweRGFAcURiQIGIZ4HX8
-cGQYgDGkL9AwcTBAJzb/GFAH4C09GHAZwSzPLHM09hsnNjDYLic2JzZTaWcJGFBkLRkwZi1ieT46
-I3Aj7iT/JgMnNkNjoTowVmlrYQQgQxHQ8nUlwXJ5O2AdYD2hJgDpPfZAcQkAZw5QPH8EAHpjAJAt
-LuQ/iTzKIaF1JHgtQRJAdhgwci6iawSRZWwuBbBnQn/uLSvRQ98nRS1HoCc2LtaKL0ESLz+QYTR4
-SXAhSSE0X254JgAgfGIgSlE1ICtKsEe5Ma8ccAMQB5EZlGQjoDMwwUcSAAAgKxIoKykjoDL3KHEe
-cE0ULTcnJzYN4AEgziBHoD/ABUBhL0hvSXveYlBfSWs3OAEAeChwHqADDpAi0C4uN2Y1NMcOkBxg
-HpE2NDRHKVA/P1NPJ1RKsVI/WE8nVEBAgU/QMzgwNSw4SqCZXKM5IFxhUTJfOElxUywLH2BydSrw
-IEESX9lRMV9oGRAFQCoR0DcnDwMwAZEccAWxKGkgPQ0ikDswwDtgIFFMQQJfKXFYX0VOVFL4SUVT
-YjFKsGCsYUMqgcEIgXNbaV0uZRI+YP9iAF3INnNlHhYgYMdHNmFD3wlwBUBiACveEdAtK8ABAA52
-I6BlFSOgQVJSQURZXymAWkUoZRUpfiloN2lUBpBhwGmxNWBc3wAAWUZpbzYuax8sbytzev9KUmw/
-bUFsL208b6RudWJhfjBu6mR4SbIooDDRLmBLoEVSTl9XdhBOICC+RyOgEdBy12R4SlIiKXP9OjBG
-C3AecDGzKhRfgDIwhnAJEU/RICVkL3+w8FxcbiJ8D3RkYp4joEdusmg2IZVMb28fUCDfO5AEcDHC
-B4A4VkEuUDmhfzoSPY8+nz+vIZUVQooAHwBCAAEAAAAgAAAAVgBpAGsAYQBzACAAQwBoAGEAdQBk
-AGgAYQByAHkAAAAfAGUAAQAAADYAAAB2AGkAawBhAHMALgBjAGgAYQB1AGQAaABhAHIAeQBAAHEA
-bABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AZAABAAAACgAAAFMATQBUAFAAAAAAAAIBQQABAAAAeAAA
-AAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgFYAaQBrAGEAcwAgAEMAaABhAHUAZABoAGEAcgB5AAAA
-UwBNAFQAUAAAAHYAaQBrAGEAcwAuAGMAaABhAHUAZABoAGEAcgB5AEAAcQBsAG8AZwBpAGMALgBj
-AG8AbQAAAB8AAl0BAAAANgAAAHYAaQBrAGEAcwAuAGMAaABhAHUAZABoAGEAcgB5AEAAcQBsAG8A
-ZwBpAGMALgBjAG8AbQAAAAAAHwDlXwEAAAA+AAAAcwBpAHAAOgB2AGkAawBhAHMALgBjAGgAYQB1
-AGQAaABhAHIAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AGgwBAAAAIAAAAFYAaQBrAGEA
-cwAgAEMAaABhAHUAZABoAGEAcgB5AAAAHwAfDAEAAAA2AAAAdgBpAGsAYQBzAC4AYwBoAGEAdQBk
-AGgAYQByAHkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfAB4MAQAAAAoAAABTAE0AVABQAAAA
-AAACARkMAQAAAHgAAAAAAAAAgSsfpL6jEBmdbgDdAQ9UAgAAAIBWAGkAawBhAHMAIABDAGgAYQB1
-AGQAaABhAHIAeQAAAFMATQBUAFAAAAB2AGkAawBhAHMALgBjAGgAYQB1AGQAaABhAHIAeQBAAHEA
-bABvAGcAaQBjAC4AYwBvAG0AAAAfAAFdAQAAADYAAAB2AGkAawBhAHMALgBjAGgAYQB1AGQAaABh
-AHIAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8A+D8BAAAAIAAAAFYAaQBrAGEAcwAgAEMA
-aABhAHUAZABoAGEAcgB5AAAAHwAjQAEAAAA2AAAAdgBpAGsAYQBzAC4AYwBoAGEAdQBkAGgAYQBy
-AHkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfACJAAQAAAAoAAABTAE0AVABQAAAAAAACAfk/
-AQAAAHgAAAAAAAAAgSsfpL6jEBmdbgDdAQ9UAgAAAIBWAGkAawBhAHMAIABDAGgAYQB1AGQAaABh
-AHIAeQAAAFMATQBUAFAAAAB2AGkAawBhAHMALgBjAGgAYQB1AGQAaABhAHIAeQBAAHEAbABvAGcA
-aQBjAC4AYwBvAG0AAAAfAAldAQAAADYAAAB2AGkAawBhAHMALgBjAGgAYQB1AGQAaABhAHIAeQBA
-AHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AMUABAAAAAgAAAAAAAAALAEA6AQAAAB8AMEABAAAA
-AgAAAAAAAAAfABoAAQAAABIAAABJAFAATQAuAE4AbwB0AGUAAAAAAAMA8T8JBAAACwBAOgEAAAAD
-AP0/5AQAAAIBCzABAAAAEAAAAJA/tzQjg9NLmscJTotmqGgDABcAAQAAAEAAOQCADh6ahCzPAUAA
-CDDE306ahCzPAQsAAIAIIAYAAAAAAMAAAAAAAABGAAAAABSFAAABAAAAHwAAgIYDAgAAAAAAwAAA
-AAAAAEYBAAAAHgAAAGEAYwBjAGUAcAB0AGwAYQBuAGcAdQBhAGcAZQAAAAAAAQAAAAwAAABlAG4A
-LQBVAFMAAAALAACACCAGAAAAAADAAAAAAAAARgAAAAAGhQAAAAAAAB8ANwABAAAAbgAAAFIAZQA6
-ACAAWwBQAEEAVABDAEgAIAAyADEALwAyADIAXQAgAHEAbABhADQAeAB4AHgAOgAgAFUAcwBlACAA
-cABjAGkAXwBlAG4AYQBiAGwAZQBfAG0AcwBpAHgAXwByAGEAbgBnAGUAKAApAAAAAAAfAD0AAQAA
-AAoAAABSAGUAOgAgAAAAAAADADYAAAAAAB8AQhABAAAAnAAAADwAZQBiADkAYwA2AGMANAA3ADYA
-NwA4ADYAZgBmADkAMAAxADUAMQAyAGUANAA2ADgANQA5AGYAMABkADUAOQBhADUAZQA2ADIAMQA3
-ADAAZAAuADEAMwA5ADEANQAxADIAMgA2ADYALgBnAGkAdAAuAGEAZwBvAHIAZABlAGUAdgBAAHIA
-ZQBkAGgAYQB0AC4AYwBvAG0APgAAAAIBcQABAAAAGwAAAAEBzyGafwCS3FOH8X9EhBKaEiY7b++a
-u6hKgAAfAHAAAQAAAGYAAABbAFAAQQBUAEMASAAgADIAMQAvADIAMgBdACAAcQBsAGEANAB4AHgA
-eAA6ACAAVQBzAGUAIABwAGMAaQBfAGUAbgBhAGIAbABlAF8AbQBzAGkAeABfAHIAYQBuAGcAZQAo
-ACkAAAAAAB8ANRABAAAAeAAAADwAMwBGAEMANABBAEIAOABCADQANwBFAEMARAA1ADQANgBCAEMA
-RAA0AEIAMwA2ADEAQQA2ADQAQgBFAEEAQwBEADgAQwA2ADQARQA3ADAAMQBAAGEAdgBtAGIAMwAu
-AHEAbABvAGcAaQBjAC4AbwByAGcAPgAAAB8AORABAAAA8gAAADwAYwBvAHYAZQByAC4AMQAzADkA
-MQA1ADEAMgAyADYANgAuAGcAaQB0AC4AYQBnAG8AcgBkAGUAZQB2AEAAcgBlAGQAaABhAHQALgBj
-AG8AbQA+ACAAPABlAGIAOQBjADYAYwA0ADcANgA3ADgANgBmAGYAOQAwADEANQAxADIAZQA0ADYA
-OAA1ADkAZgAwAGQANQA5AGEANQBlADYAMgAxADcAMABkAC4AMQAzADkAMQA1ADEAMgAyADYANgAu
-AGcAaQB0AC4AYQBnAG8AcgBkAGUAZQB2AEAAcgBlAGQAaABhAHQALgBjAG8AbQA+AAAAAAADAN4/
-n04AAEAABzDi+EKahCzPAQMAJgAAAAAAAgFHAAEAAAAvAAAAYz1VUzthPSA7cD1RTG9naWM7bD1B
-Vk1CMy0xNDAyMTgwODM3MDVaLTEwNzYxNAAAHwAVEAEAAABYAAAAOQA5ADEAMQAzAEEAOABCADYA
-NAA2AEYAQQA1ADQAQQBBAEMAOQA0AEYANQA4ADMAQQAzAEMAQQAxADUARQA3AEAAcQBsAG8AZwBp
-AGMALgBjAG8AbQAAAAIBFDABAAAADAAAAGcAAACRWjKmTwAAAB8A+j8BAAAAIAAAAFYAaQBrAGEA
-cwAgAEMAaABhAHUAZABoAGEAcgB5AAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAFgAAAHUAcwBl
-AHIALQBhAGcAZQBuAHQAAAAAAAEAAABGAAAATQBpAGMAcgBvAHMAbwBmAHQALQBNAGEAYwBPAHUA
-dABsAG8AbwBrAC8AMQA0AC4AMwAuADkALgAxADMAMQAwADMAMAAAAAAAHwAAgB+k6zOoei5Cvnt5
-4amOVLMBAAAAOAAAAEMAbwBuAHYAZQByAHMAYQB0AGkAbwBuAEkAbgBkAGUAeABUAHIAYQBjAGsA
-aQBuAGcARQB4AAAAAQAAAG4BAABJAEkAPQAwADEAMAAxAEMARgAyAEMAOAA0ADkAOQBBADkANwA2
-ADYARgAwADMAMwBEADUAOQBCADAANAA3ADgAQwBCAEIAMQA5ADAAOABGADAAQgA3ADEANwA2AEYA
-OwBTAEIATQBJAEQAPQAzADkAOwBTADEAPQA8AGUAYgA5AGMANgBjADQANwA2ADcAOAA2AGYAZgA5
-ADAAMQA1ADEAMgBlADQANgA4ADUAOQBmADAAZAA1ADkAYQA1AGUANgAyADEANwAwAGQALgAxADMA
-OQAxADUAMQAyADIANgA2AC4AZwBpAHQALgBhAGcAbwByAGQAZQBlAHYAQAByAGUAZABoAGEAdAAu
-AGMAbwBtAD4AOwBWAGUAcgBzAGkAbwBuAD0AVgBlAHIAcwBpAG8AbgAgADEANAAuADIAIAAoAEIA
-dQBpAGwAZAAgADMAOAA3AC4AMAApACwAIABTAHQAYQBnAGUAPQBIADIAAAAAAAMADTT9PwAAHwAA
-gIYDAgAAAAAAwAAAAAAAAEYBAAAAIAAAAHgALQBtAHMALQBoAGEAcwAtAGEAdAB0AGEAYwBoAAAA
-AQAAAAIAAAAAAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAIgAAAHgALQBvAHIAaQBnAGkAbgBh
-AHQAaQBuAGcALQBpAHAAAAAAAAEAAAAYAAAAWwAxADAALgAxAC4ANAAuADEAMABdAAAAMFk=
+I tried rootfs with ext4 and xfs filesystems too. When I run SMART test on 3rd
+or 4th HDD (not system disk), there is no crash and tests
+working fine. When I boot from a live CD, I can run SMART tests on all HDDs
+without problem. I tried to install and booted latest stable
+FreeBSD and SMART tests working well, no hang up.
 
---_000_3FC4AB8B47ECD546BCD4B361A64BEACD8C64E701avmb3qlogicorg_--
+I tired the latest LSI firmware P17 and latest mpt2sas kernel driver compiled
+to this kernel, but problem still exists. Also I tried ASPM disable, PERR and
+SERR disable and Above 4G encoding enabled but nothing helps. I'm using WD RE3
+and RE4 SATA disks.
+
+I found an another guy who runs same issue:
+
+https://bugs.launchpad.net/ubuntu/+source/linux/+bug/906873/comments/4
+
+So the bug exists in linux kernel only, and crash happens only when I try to
+run SMART tests on booted system's disks.
+
+dmesg from boot has been attached.
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
