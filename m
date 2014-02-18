@@ -1,46 +1,37 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 13/17] scsi: push host_lock down into
- scsi_{host,target}_queue_ready
-Date: Mon, 17 Feb 2014 14:00:57 -0800
-Message-ID: <20140217220057.GB30101@infradead.org>
-References: <20140205123930.150608699@bombadil.infradead.org>
- <20140205124021.286457268@bombadil.infradead.org>
- <1391705819.22335.8.camel@dabdike>
- <20140210113932.GA31405@infradead.org>
- <20140210200934.GA4096@kernel.dk>
- <5301D814.5070100@acm.org>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH 08/16] scsi_dh_alua: parse target device id
+Date: Tue, 18 Feb 2014 08:26:55 +0100
+Message-ID: <53030B3F.4010206@acm.org>
+References: <1391160600-19652-1-git-send-email-hare@suse.de> <1391160600-19652-9-git-send-email-hare@suse.de> <52FE0793.9040505@acm.org> <52FE0A66.6050200@suse.de> <5302171A.9070507@acm.org> <5302181A.9080308@suse.de> <53021C6B.7040207@acm.org> <53021DA9.9090408@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:44494 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753702AbaBQWBD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Feb 2014 17:01:03 -0500
-Content-Disposition: inline
-In-Reply-To: <5301D814.5070100@acm.org>
+Received: from smtp03.stone-is.org ([87.238.162.65]:57443 "EHLO
+	smtpgw.stone-is.be" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751823AbaBRH1B (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Feb 2014 02:27:01 -0500
+In-Reply-To: <53021DA9.9090408@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Nicholas Bellinger <nab@linux-iscsi.org>, linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>
+Cc: Sean Stewart <sean.stewart@netapp.com>, Martin George <marting@netapp.com>, linux-scsi@vger.kernel.org
 
-On Mon, Feb 17, 2014 at 10:36:20AM +0100, Bart Van Assche wrote:
-> This comment makes a lot of sense to me. The approach that has been
-> taken in the scsi-mq patches that have been posted on February 5 is to
-> associate one blk-mq device with each LUN. That blk-mq device has one
-> hctx with queue depth shost->cmd_per_lun. So if there are multiple LUNs
-> per SCSI host the combined hctx queue depth of its LUNs can exceed
-> shost->can_queue. I'm not sure whether it's possible to prevent this
-> without modifying the block layer. How about modifying the block layer
-> such that a single hctx can be shared by multiple block devices and
-> adding cmd_per_lun support in the block layer ? I think that would allow
-> to prevent having to bounce submission in the SCSI mid-layer.
+On 02/17/14 15:33, Hannes Reinecke wrote:
+> On 02/17/2014 03:27 PM, Bart Van Assche wrote:
+>> Updating VPD page 0x83 can be done easily for new FW releases. However,
+>> the target identification approach explained in the previous e-mail is
+>> already in use at several customer sites and I'm not sure it will be
+>> possible to convince all of them to upgrade ...
+>>
+> Ok, fair enough.
+> 
+> Will be including it.
 
-Most of the scsi multiqueue work so far has been about modifying the
-block layer, so I'm defintively now shy about doing that were needed.
-And I think we will eventually need to be able to have n:m queue to hctx
-mapping instead of the current 1:n one.
+This has been discussed further internally. The outcome of the
+discussion is that a target specific identifier will be added in the
+Device Identification VPD page and also that we will take care of
+upgrading the customer systems. In other words, no further action is
+needed from your side. Sorry for the noise.
 
-I think the biggest issue will be to sort out the tag allocation.  I'm
-going to look into this whole cluster of issues once the basic
-functionality is fully working.
-
+Bart.
