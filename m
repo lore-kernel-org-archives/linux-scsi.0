@@ -1,98 +1,66 @@
-From: Ben Hutchings <ben@decadent.org.uk>
-Subject: [PATCH RESEND 2] mvsas: Recognise device/subsystem 9485/9485 as
- 88SE9485
-Date: Wed, 19 Feb 2014 01:06:42 +0000
-Message-ID: <1392772002.10088.50.camel@deadeye.wl.decadent.org.uk>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 04/16] scsi_dh_alua: Make stpg synchronous
+Date: Wed, 19 Feb 2014 09:09:29 +0100
+Message-ID: <530466B9.3060903@suse.de>
+References: <1391160600-19652-1-git-send-email-hare@suse.de> <1391160600-19652-5-git-send-email-hare@suse.de> <52F435B3.3090600@cs.wisc.edu> <52F43CD7.5050900@cs.wisc.edu> <52FB9353.7040807@suse.de> <52FB9D20.5060900@cs.wisc.edu> <52FBA0D3.50907@cs.wisc.edu> <52FBAFDE.4060104@cs.wisc.edu> <52FC90F6.7020005@suse.de> <52FDFFF8.8030507@acm.org> <52FE5EA5.3020905@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-PFPMUmJIS/th3y4M3BES"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:44475 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751099AbaBSBG6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 Feb 2014 20:06:58 -0500
+Received: from cantor2.suse.de ([195.135.220.15]:50381 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752001AbaBSIJb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 19 Feb 2014 03:09:31 -0500
+In-Reply-To: <52FE5EA5.3020905@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Matt Taggart <taggart@debian.org>, Debian kernel maintainers <debian-kernel@lists.debian.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Mike Christie <michaelc@cs.wisc.edu>, Bart Van Assche <bvanassche@acm.org>
+Cc: Sean Stewart <sean.stewart@netapp.com>, Martin George <marting@netapp.com>, linux-scsi@vger.kernel.org
 
+On 02/14/2014 07:21 PM, Mike Christie wrote:
+> On 2/14/14 5:37 AM, Bart Van Assche wrote:
+[ .. ]
+>> I think this will only be sufficient if there are more CPU threads
+>> available than the number of LUNs for which an STPG has to be issued=
+=2E
+>=20
+> Ah shoot, you reminded me of some other issue. With the above
+> command we only can do 1 unit of work at a time. With the
+> alloc_workqueue example I sent in the other mail, I think it would
+> create a new problem.
+>=20
+> alloc_workqueue with max_active=3D0 looks like it has the wq code
+> dynamically create worker threads as needed, so with that we could
+> end up with a lot of threads and can failover lots of devices (512
+> with the current max) in parallel. The threads will even get reaped
+> when they are not needed. However, trying to create lots of threads
+> at failover time might have issues, and in general creating 32 or 64
+> threads or more is probably not something we want to do.
 
---=-PFPMUmJIS/th3y4M3BES
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Another followup: Mike is, as usual, right.
+I need to use 'alloc_workqueue' to be able to have more than one
+worker at a time.
+And also Bart is right in that it makes sense to have STPG run
+asynchronously.
 
-Matt Taggart reported that mvsas didn't bind to the Marvell
-SAS controller on a Supermicro AOC-SAS2LP-MV8 board.
+However, in doing so I'll be bunching together STPG activations from
+several request_queues, and will be deferring I/O on those
+queues during STPG update.
+So to avoid stalled I/O I'll need to kick each of the queues again
+after STPG is finished, right?
 
-lspci reports it as:
+Hmm. Let's see how this will look like.
 
-01:00.0 RAID bus controller [0104]: Marvell Technology Group Ltd. Device [1=
-b4b:9485] (rev 03)
-        Subsystem: Marvell Technology Group Ltd. Device [1b4b:9485]
-[...]
+Cheers,
 
-Add it to the device table as chip_9485.
-
-Reported-by: Matt Taggart <taggart@debian.org>
-Tested-by: Matt Taggart <taggart@debian.org>
-Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
----
- drivers/scsi/mvsas/mv_init.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
-
-diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
-index 7b7381d..83fa5f8 100644
---- a/drivers/scsi/mvsas/mv_init.c
-+++ b/drivers/scsi/mvsas/mv_init.c
-@@ -729,6 +729,15 @@ static struct pci_device_id mvs_pci_table[] =3D {
- 		.class_mask	=3D 0,
- 		.driver_data	=3D chip_9485,
- 	},
-+	{
-+		.vendor		=3D PCI_VENDOR_ID_MARVELL_EXT,
-+		.device		=3D 0x9485,
-+		.subvendor	=3D PCI_ANY_ID,
-+		.subdevice	=3D 0x9485,
-+		.class		=3D 0,
-+		.class_mask	=3D 0,
-+		.driver_data	=3D chip_9485,
-+	},
- 	{ PCI_VDEVICE(OCZ, 0x1021), chip_9485}, /* OCZ RevoDrive3 */
- 	{ PCI_VDEVICE(OCZ, 0x1022), chip_9485}, /* OCZ RevoDrive3/zDriveR4 (exact=
- model unknown) */
- 	{ PCI_VDEVICE(OCZ, 0x1040), chip_9485}, /* OCZ RevoDrive3/zDriveR4 (exact=
- model unknown) */
-
-
+Hannes
 --=20
-Ben Hutchings
-One of the nice things about standards is that there are so many of them.
-
---=20
-Ben Hutchings
-Absolutum obsoletum. (If it works, it's out of date.) - Stafford Beer
-
---=-PFPMUmJIS/th3y4M3BES
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIVAwUAUwQDoue/yOyVhhEJAQqJ8Q//fpOXndV3YJfWEsMDaGwZ4UpkRowCQY04
-5d55lRykfAqp2q7IB0KJbXjfbTaBepXcjHchGnJCRMkvEpjO7/+w0TBaOPb/blZt
-HXc8Lma2OMU/3RGnjZKumSM58pVLuLYre9QB+Ez0QG1j+eqnvXX7kfS9co7H2ct2
-tPs8ix8ZkJ0CQmhD6RFZ3NKyA6EWMslSYQmlw3ipRpRS9Np3jax71VSnI1CU7sBj
-dbIp6Km6mB/7BEU6vl+pyIWmUDydWISDEzmQGgvjPLknL6fIls9TjUhmrCK2GAoZ
-yBkZ1u2w8HS+FdXhf5ry5pOmdIeGev7W/hW7WWgTnTcuW8J2QBT4ZmPSqLl/xx0u
-+oQO9XCiGrnhoa7QLDeaMTgKlXTzeluZpzf2Q+Ldotl1GMvnWZeS8jkxjdfNNTbc
-zwxiZf7x/Ntgp1xQVyCbwqiQIpm6BahLyjfLMkzR0XPp7XgMejy2Cz0hDWdWMcND
-dsW7suHAGgPtp61BxpHs0qxl/iCw199EgM/5xgMTGA+gawGsTe3BCdEdFEkFEc6G
-AIUs4iT43j8cbkjFQeDgAw9NhvXQSFiMZiq511UQuRoktRYmzO7BCYkYH5kVSPHr
-wAvNEbYxRogiMa7y/WwDr0WBiGPHruwp3gGN1PpweEW65N5UafKiYkNriQ7WSkZX
-aumU3IyJtXU=
-=ELz9
------END PGP SIGNATURE-----
-
---=-PFPMUmJIS/th3y4M3BES--
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
