@@ -1,63 +1,98 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [GIT PULL] ARM fixes
-Date: Tue, 18 Feb 2014 16:23:51 -0800
-Message-ID: <CA+55aFxZz9ubkj72KHy8PhpsjZb6D7LD+v6jHJTtsD4N6AWPzw@mail.gmail.com>
-References: <20140217234644.GA5171@rmk-PC.arm.linux.org.uk>
-	<CA+55aFy7ApiQRudxPAd3v5k_apppxRnePHb1HZPH13erqhmX=g@mail.gmail.com>
-	<20140219000352.GP21483@n2100.arm.linux.org.uk>
+From: Ben Hutchings <ben@decadent.org.uk>
+Subject: [PATCH RESEND 2] mvsas: Recognise device/subsystem 9485/9485 as
+ 88SE9485
+Date: Wed, 19 Feb 2014 01:06:42 +0000
+Message-ID: <1392772002.10088.50.camel@deadeye.wl.decadent.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20140219000352.GP21483@n2100.arm.linux.org.uk>
-Sender: owner-linux-mm@kvack.org
-To: Russell King - ARM Linux <linux@arm.linux.org.uk>, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, James Bottomley <James.Bottomley@parallels.com>, Linux SCSI List <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, ARM SoC <arm@kernel.org>, xen-devel@lists.xenproject.org
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-PFPMUmJIS/th3y4M3BES"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:44475 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751099AbaBSBG6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 18 Feb 2014 20:06:58 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Matt Taggart <taggart@debian.org>, Debian kernel maintainers <debian-kernel@lists.debian.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Tue, Feb 18, 2014 at 4:03 PM, Russell King - ARM Linux
-<linux@arm.linux.org.uk> wrote:
->
-> Almost, but not quite.  If we're going to avoid u64, then dma_addr_t
-> woudl be the right type here because we're talking about DMA addresses.
 
-Well, phys_addr_t had better be as big as dma_addr_t, because that's
-what the resource management handles.
+--=-PFPMUmJIS/th3y4M3BES
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-> We could also switch to keeping this as PFNs - block internally converts
-> it to a PFN anyway:
+Matt Taggart reported that mvsas didn't bind to the Marvell
+SAS controller on a Supermicro AOC-SAS2LP-MV8 board.
 
-Yeah, that definitely sounds like it would be a good idea.
+lspci reports it as:
 
-> Maybe blk_queue_bounce_pfn_limit() so we ensure all users get caught?
->
->> That said, it's admittedly a disgusting name, and I wonder if we
->> should introduce a nicer-named "pfn_to_phys()" that matches the other
->> "xyz_to_abc()" functions we have (including "pfn_to_virt()")
->
-> We have these on ARM:
->
-> arch/arm/include/asm/memory.h:#define   __pfn_to_phys(pfn)      ((phys_addr_t)(pfn) << PAGE_SHIFT)
-> arch/arm/include/asm/memory.h:#define   __phys_to_pfn(paddr)    ((unsigned long)((paddr) >> PAGE_SHIFT))
->
-> it probably makes sense to pick those right out, maybe losing the
-> __ prefix on them.
+01:00.0 RAID bus controller [0104]: Marvell Technology Group Ltd. Device [1=
+b4b:9485] (rev 03)
+        Subsystem: Marvell Technology Group Ltd. Device [1b4b:9485]
+[...]
 
-Yup.
+Add it to the device table as chip_9485.
 
->>   __va(PFN_PHYS(page_to_pfn(page)));
->
-> Wow.  Two things spring to mind there... highmem pages, and don't we
-> already have page_address() for that?
+Reported-by: Matt Taggart <taggart@debian.org>
+Tested-by: Matt Taggart <taggart@debian.org>
+Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
+---
+ drivers/scsi/mvsas/mv_init.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-Well, that code clearly cannot handle highmem anyway, but yes, it
-really smells like xen should use page_address().
+diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
+index 7b7381d..83fa5f8 100644
+--- a/drivers/scsi/mvsas/mv_init.c
++++ b/drivers/scsi/mvsas/mv_init.c
+@@ -729,6 +729,15 @@ static struct pci_device_id mvs_pci_table[] =3D {
+ 		.class_mask	=3D 0,
+ 		.driver_data	=3D chip_9485,
+ 	},
++	{
++		.vendor		=3D PCI_VENDOR_ID_MARVELL_EXT,
++		.device		=3D 0x9485,
++		.subvendor	=3D PCI_ANY_ID,
++		.subdevice	=3D 0x9485,
++		.class		=3D 0,
++		.class_mask	=3D 0,
++		.driver_data	=3D chip_9485,
++	},
+ 	{ PCI_VDEVICE(OCZ, 0x1021), chip_9485}, /* OCZ RevoDrive3 */
+ 	{ PCI_VDEVICE(OCZ, 0x1022), chip_9485}, /* OCZ RevoDrive3/zDriveR4 (exact=
+ model unknown) */
+ 	{ PCI_VDEVICE(OCZ, 0x1040), chip_9485}, /* OCZ RevoDrive3/zDriveR4 (exact=
+ model unknown) */
 
-Adding Xen people who I didn't add the last time around.
 
-             Linus
+--=20
+Ben Hutchings
+One of the nice things about standards is that there are so many of them.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+--=20
+Ben Hutchings
+Absolutum obsoletum. (If it works, it's out of date.) - Stafford Beer
+
+--=-PFPMUmJIS/th3y4M3BES
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIVAwUAUwQDoue/yOyVhhEJAQqJ8Q//fpOXndV3YJfWEsMDaGwZ4UpkRowCQY04
+5d55lRykfAqp2q7IB0KJbXjfbTaBepXcjHchGnJCRMkvEpjO7/+w0TBaOPb/blZt
+HXc8Lma2OMU/3RGnjZKumSM58pVLuLYre9QB+Ez0QG1j+eqnvXX7kfS9co7H2ct2
+tPs8ix8ZkJ0CQmhD6RFZ3NKyA6EWMslSYQmlw3ipRpRS9Np3jax71VSnI1CU7sBj
+dbIp6Km6mB/7BEU6vl+pyIWmUDydWISDEzmQGgvjPLknL6fIls9TjUhmrCK2GAoZ
+yBkZ1u2w8HS+FdXhf5ry5pOmdIeGev7W/hW7WWgTnTcuW8J2QBT4ZmPSqLl/xx0u
++oQO9XCiGrnhoa7QLDeaMTgKlXTzeluZpzf2Q+Ldotl1GMvnWZeS8jkxjdfNNTbc
+zwxiZf7x/Ntgp1xQVyCbwqiQIpm6BahLyjfLMkzR0XPp7XgMejy2Cz0hDWdWMcND
+dsW7suHAGgPtp61BxpHs0qxl/iCw199EgM/5xgMTGA+gawGsTe3BCdEdFEkFEc6G
+AIUs4iT43j8cbkjFQeDgAw9NhvXQSFiMZiq511UQuRoktRYmzO7BCYkYH5kVSPHr
+wAvNEbYxRogiMa7y/WwDr0WBiGPHruwp3gGN1PpweEW65N5UafKiYkNriQ7WSkZX
+aumU3IyJtXU=
+=ELz9
+-----END PGP SIGNATURE-----
+
+--=-PFPMUmJIS/th3y4M3BES--
