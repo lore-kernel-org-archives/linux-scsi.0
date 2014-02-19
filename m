@@ -1,66 +1,37 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 04/16] scsi_dh_alua: Make stpg synchronous
-Date: Wed, 19 Feb 2014 09:09:29 +0100
-Message-ID: <530466B9.3060903@suse.de>
-References: <1391160600-19652-1-git-send-email-hare@suse.de> <1391160600-19652-5-git-send-email-hare@suse.de> <52F435B3.3090600@cs.wisc.edu> <52F43CD7.5050900@cs.wisc.edu> <52FB9353.7040807@suse.de> <52FB9D20.5060900@cs.wisc.edu> <52FBA0D3.50907@cs.wisc.edu> <52FBAFDE.4060104@cs.wisc.edu> <52FC90F6.7020005@suse.de> <52FDFFF8.8030507@acm.org> <52FE5EA5.3020905@cs.wisc.edu>
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: Re: [PATCH 00/22] scsi: Use pci_enable_msix_range()
+Date: Wed, 19 Feb 2014 09:15:42 +0100
+Message-ID: <20140219081541.GA26928@dhcp-26-207.brq.redhat.com>
+References: <cover.1391512266.git.agordeev@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:50381 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:37998 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752001AbaBSIJb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Feb 2014 03:09:31 -0500
-In-Reply-To: <52FE5EA5.3020905@cs.wisc.edu>
+	id S1751836AbaBSINt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 19 Feb 2014 03:13:49 -0500
+Content-Disposition: inline
+In-Reply-To: <cover.1391512266.git.agordeev@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>, Bart Van Assche <bvanassche@acm.org>
-Cc: Sean Stewart <sean.stewart@netapp.com>, Martin George <marting@netapp.com>, linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org, James Bottomley <JBottomley@Parallels.com>
+Cc: pv-drivers@vmware.com, iscsi-driver@qlogic.com, qla2xxx-upstream@qlogic.com, support@lsi.com, DL-MPTFusionLinux@lsi.com, intel-linux-scu@intel.com, iss_storagedev@hp.com, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
 
-On 02/14/2014 07:21 PM, Mike Christie wrote:
-> On 2/14/14 5:37 AM, Bart Van Assche wrote:
-[ .. ]
->> I think this will only be sufficient if there are more CPU threads
->> available than the number of LUNs for which an STPG has to be issued=
-=2E
->=20
-> Ah shoot, you reminded me of some other issue. With the above
-> command we only can do 1 unit of work at a time. With the
-> alloc_workqueue example I sent in the other mail, I think it would
-> create a new problem.
->=20
-> alloc_workqueue with max_active=3D0 looks like it has the wq code
-> dynamically create worker threads as needed, so with that we could
-> end up with a lot of threads and can failover lots of devices (512
-> with the current max) in parallel. The threads will even get reaped
-> when they are not needed. However, trying to create lots of threads
-> at failover time might have issues, and in general creating 32 or 64
-> threads or more is probably not something we want to do.
+On Tue, Feb 04, 2014 at 12:16:46PM +0100, Alexander Gordeev wrote:
+> As result of deprecation of MSI-X/MSI enablement functions
+> pci_enable_msix() and pci_enable_msi_block() all drivers
+> using these two interfaces need to be updated to use the
+> new pci_enable_msi_range() and pci_enable_msix_range()
+> interfaces.
 
-Another followup: Mike is, as usual, right.
-I need to use 'alloc_workqueue' to be able to have more than one
-worker at a time.
-And also Bart is right in that it makes sense to have STPG run
-asynchronously.
+Hi James,
 
-However, in doing so I'll be bunching together STPG activations from
-several request_queues, and will be deferring I/O on those
-queues during STPG update.
-So to avoid stalled I/O I'll need to kick each of the queues again
-after STPG is finished, right?
+What is the process to get these patches accepted to scsi.git tree?
+Should I make some extra effort besides just posting the series this way?
 
-Hmm. Let's see how this will look like.
+Thanks!
 
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
