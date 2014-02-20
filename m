@@ -1,36 +1,34 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: Re: [PATCH v1.3 1/11] arcmsr: Revise interrupt service routine to
- fix command timeout
-Date: Thu, 20 Feb 2014 15:14:35 +0300
-Message-ID: <20140220121435.GY26776@mwanda>
-References: <CAKiknE9pf-hQOTcxbw8WnHECDJDZMHJA-TBEPeg7+q5nb+AoCA@mail.gmail.com>
+From: Akinobu Mita <akinobu.mita@gmail.com>
+Subject: Re: loading scsi_debug with data integrity hits BUG_ON
+Date: Thu, 20 Feb 2014 22:44:21 +0900
+Message-ID: <CAC5umyhLpEPxYCYNOP-=Zt_-RbTd1zory2RG+x=oCCWp4qNewg@mail.gmail.com>
+References: <CAC5umyjVedpiUu4yffiT4n5kCUPSTgsuPucj1Nwc_TuwtoPLVg@mail.gmail.com>
+	<1392858619.22195.24.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAKiknE9pf-hQOTcxbw8WnHECDJDZMHJA-TBEPeg7+q5nb+AoCA@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: =?utf-8?B?6buD5riF6ZqG?= <ching2048@areca.com.tw>
-Cc: jejb@kernel.com, jbottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, fengguang.wu@intel.com, Tomas Henzl <thenzl@redhat.com>, =?utf-8?B?5ZCz56Kn5ra8?= <billion.wu@areca.com.tw>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ob0-f171.google.com ([209.85.214.171]:46092 "EHLO
+	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754100AbaBTNoX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Feb 2014 08:44:23 -0500
+Received: by mail-ob0-f171.google.com with SMTP id vb8so1702976obc.30
+        for <linux-scsi@vger.kernel.org>; Thu, 20 Feb 2014 05:44:22 -0800 (PST)
+In-Reply-To: <1392858619.22195.24.camel@haakon3.risingtidesystems.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagig@mellanox.com>, kmo@daterainc.com
 
-On Thu, Feb 20, 2014 at 08:05:05PM +0800, =E9=BB=83=E6=B8=85=E9=9A=86 w=
-rote:
-> From: Ching <ching2048@areca.com.tw>
->=20
-> Rewrite interrupt service routine to fix command timeout on controlle=
-r too
-> heavy loading.
->=20
-> Singed-off-by: Ching <ching2048@areca.com.tw>
+Thanks for the patch.  I have just one nitpicking.
 
-Your email client screwed up the whitespace completely.  Read
-Documentation/email-clients.txt or use `git send-email`
-http://www.freedesktop.org/wiki/Software/PulseAudio/HowToUseGitSendEmai=
-l/
+> diff --git a/fs/bio-integrity.c b/fs/bio-integrity.c
+> index 0bad24d..47ed160 100644
+> --- a/fs/bio-integrity.c
+> +++ b/fs/bio-integrity.c
+> @@ -476,7 +476,6 @@ static int bio_integrity_verify(struct bio *bio)
+>                 sector += sectors;
+>                 prot_buf += sectors * bi->tuple_size;
+>                 total += sectors * bi->tuple_size;
+> -               BUG_ON(total > bio->bi_integrity->bip_iter.bi_size);
 
-There are also many unrelated white space changes in this patch.
-
-regards,
-dan carpenter
+The variable 'total' is only used for the BUG_ON.  So it can be removed.
