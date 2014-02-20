@@ -1,7 +1,7 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH 2/5] qla2xxx: Check + fail when npiv_vports_inuse exists in shutdown
-Date: Thu, 20 Feb 2014 21:03:26 +0000
-Message-ID: <1392930209-25065-3-git-send-email-nab@daterainc.com>
+Subject: [PATCH 3/5] tcm_qla2xxx: Add NPIV specific enable/disable attribute logic
+Date: Thu, 20 Feb 2014 21:03:27 +0000
+Message-ID: <1392930209-25065-4-git-send-email-nab@daterainc.com>
 References: <1392930209-25065-1-git-send-email-nab@daterainc.com>
 Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1392930209-25065-1-git-send-email-nab@daterainc.com>
@@ -12,14 +12,10 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch adds an check to qlt_stop_phase1() to avoid shutdown
-when the base_vha contains a non-zero fc_host->npiv_vports_inuse
-count.
-
-This includes holding qla_tgt_mutex in qlt_stop_phase1() between
-the fc_host->npiv_vports_inuse check + setting of tgt->tgt_stop to
-avoid a possible race between qlt_lport_register() -> tcm_qla2xxx
--> tcm_qla2xxx_lport_register_npiv_cb() calling fc_vport_create().
+This patch adds seperate logic for NPIV specific enable/disable
+attribute logic, as NPIV vs. non-NPIV enable/disable ends up being
+different enough to warrent seperate logic for setting configfs
+tpg_group dependencies in the non-NPIV case.
 
 Cc: Sawan Chandak <sawan.chandak@qlogic.com>
 Cc: Quinn Tran <quinn.tran@qlogic.com>
@@ -27,78 +23,88 @@ Cc: Saurav Kashyap <saurav.kashyap@qlogic.com>
 Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/scsi/qla2xxx/qla_target.c |   23 ++++++++++++++++++++---
- drivers/scsi/qla2xxx/qla_target.h |    2 +-
- 2 files changed, 21 insertions(+), 4 deletions(-)
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c |   59 ++++++++++++++++++++++++++++++++++--
+ 1 file changed, 56 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index ea3eaef..f2e1c5a 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -790,17 +790,32 @@ static inline int test_tgt_sess_count(struct qla_tgt *tgt)
+diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+index 75a141b..db43b289 100644
+--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
++++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+@@ -1053,11 +1053,64 @@ static void tcm_qla2xxx_drop_tpg(struct se_portal_group *se_tpg)
+ 	/*
+ 	 * Clear local TPG=1 pointer for non NPIV mode.
+ 	 */
+-		lport->tpg_1 = NULL;
+-
++	lport->tpg_1 = NULL;
+ 	kfree(tpg);
  }
  
- /* Called by tcm_qla2xxx configfs code */
--void qlt_stop_phase1(struct qla_tgt *tgt)
-+int qlt_stop_phase1(struct qla_tgt *tgt)
- {
- 	struct scsi_qla_host *vha = tgt->vha;
- 	struct qla_hw_data *ha = tgt->ha;
- 	unsigned long flags;
- 
-+	mutex_lock(&qla_tgt_mutex);
-+	if (!vha->fc_vport) {
-+		struct Scsi_Host *sh = vha->host;
-+		struct fc_host_attrs *fc_host = shost_to_fc_host(sh);
-+		bool npiv_vports;
++static ssize_t tcm_qla2xxx_npiv_tpg_show_enable(
++	struct se_portal_group *se_tpg,
++	char *page)
++{
++	return tcm_qla2xxx_tpg_show_enable(se_tpg, page);
++}
 +
-+		spin_lock_irqsave(sh->host_lock, flags);
-+		npiv_vports = (fc_host->npiv_vports_inuse);
-+		spin_unlock_irqrestore(sh->host_lock, flags);
++static ssize_t tcm_qla2xxx_npiv_tpg_store_enable(
++	struct se_portal_group *se_tpg,
++	const char *page,
++	size_t count)
++{
++	struct se_wwn *se_wwn = se_tpg->se_tpg_wwn;
++	struct tcm_qla2xxx_lport *lport = container_of(se_wwn,
++			struct tcm_qla2xxx_lport, lport_wwn);
++	struct scsi_qla_host *vha = lport->qla_vha;
++	struct tcm_qla2xxx_tpg *tpg = container_of(se_tpg,
++			struct tcm_qla2xxx_tpg, se_tpg);
++	unsigned long op;
++	int rc;
 +
-+		if (npiv_vports) {
-+			mutex_unlock(&qla_tgt_mutex);
-+			return -EPERM;
-+		}
++	rc = kstrtoul(page, 0, &op);
++	if (rc < 0) {
++		pr_err("kstrtoul() returned %d\n", rc);
++		return -EINVAL;
 +	}
- 	if (tgt->tgt_stop || tgt->tgt_stopped) {
- 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf04e,
- 		    "Already in tgt->tgt_stop or tgt_stopped state\n");
--		dump_stack();
--		return;
-+		mutex_unlock(&qla_tgt_mutex);
-+		return -EPERM;
- 	}
- 
- 	ql_dbg(ql_dbg_tgt, vha, 0xe003, "Stopping target for host %ld(%p)\n",
-@@ -815,6 +830,7 @@ void qlt_stop_phase1(struct qla_tgt *tgt)
- 	qlt_clear_tgt_db(tgt, true);
- 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
- 	mutex_unlock(&vha->vha_tgt.tgt_mutex);
-+	mutex_unlock(&qla_tgt_mutex);
- 
- 	flush_delayed_work(&tgt->sess_del_work);
- 
-@@ -841,6 +857,7 @@ void qlt_stop_phase1(struct qla_tgt *tgt)
- 
- 	/* Wait for sessions to clear out (just in case) */
- 	wait_event(tgt->waitQ, test_tgt_sess_count(tgt));
-+	return 0;
- }
- EXPORT_SYMBOL(qlt_stop_phase1);
- 
-diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
-index 66e755c..ce33d8c 100644
---- a/drivers/scsi/qla2xxx/qla_target.h
-+++ b/drivers/scsi/qla2xxx/qla_target.h
-@@ -1001,7 +1001,7 @@ extern void qlt_modify_vp_config(struct scsi_qla_host *,
- extern void qlt_probe_one_stage1(struct scsi_qla_host *, struct qla_hw_data *);
- extern int qlt_mem_alloc(struct qla_hw_data *);
- extern void qlt_mem_free(struct qla_hw_data *);
--extern void qlt_stop_phase1(struct qla_tgt *);
-+extern int qlt_stop_phase1(struct qla_tgt *);
- extern void qlt_stop_phase2(struct qla_tgt *);
- extern irqreturn_t qla83xx_msix_atio_q(int, void *);
- extern void qlt_83xx_iospace_config(struct qla_hw_data *);
++	if ((op != 1) && (op != 0)) {
++		pr_err("Illegal value for tpg_enable: %lu\n", op);
++		return -EINVAL;
++	}
++	if (op) {
++		if (atomic_read(&tpg->lport_tpg_enabled))
++			return -EEXIST;
++
++		atomic_set(&tpg->lport_tpg_enabled, 1);
++		qlt_enable_vha(vha);
++	} else {
++		if (!atomic_read(&tpg->lport_tpg_enabled))
++			return count;
++
++		atomic_set(&tpg->lport_tpg_enabled, 0);
++		qlt_stop_phase1(vha->vha_tgt.qla_tgt);
++	}
++
++	return count;
++}
++
++TF_TPG_BASE_ATTR(tcm_qla2xxx_npiv, enable, S_IRUGO | S_IWUSR);
++
++static struct configfs_attribute *tcm_qla2xxx_npiv_tpg_attrs[] = {
++        &tcm_qla2xxx_npiv_tpg_enable.attr,
++        NULL,
++};
++
+ static struct se_portal_group *tcm_qla2xxx_npiv_make_tpg(
+ 	struct se_wwn *wwn,
+ 	struct config_group *group,
+@@ -1935,7 +1988,7 @@ static int tcm_qla2xxx_register_configfs(void)
+ 	 */
+ 	npiv_fabric->tf_cit_tmpl.tfc_wwn_cit.ct_attrs = tcm_qla2xxx_wwn_attrs;
+ 	npiv_fabric->tf_cit_tmpl.tfc_tpg_base_cit.ct_attrs =
+-	    tcm_qla2xxx_tpg_attrs;
++	    tcm_qla2xxx_npiv_tpg_attrs;
+ 	npiv_fabric->tf_cit_tmpl.tfc_tpg_attrib_cit.ct_attrs = NULL;
+ 	npiv_fabric->tf_cit_tmpl.tfc_tpg_param_cit.ct_attrs = NULL;
+ 	npiv_fabric->tf_cit_tmpl.tfc_tpg_np_base_cit.ct_attrs = NULL;
 -- 
 1.7.10.4
