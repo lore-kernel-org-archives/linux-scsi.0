@@ -1,61 +1,42 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH v2] target_core_alua: silence GCC warning
-Date: Thu, 20 Feb 2014 10:33:19 -0800
-Message-ID: <1392921199.29525.0.camel@haakon3.risingtidesystems.com>
-References: <1392714172-2712-1-git-send-email-geert@linux-m68k.org>
-	 <1392803546.27558.16.camel@x220>
-	 <CAMuHMdXZrw7oU=n60+PNNQftU6Su=mBf2V75TCO8Ws1pS5z+6Q@mail.gmail.com>
-	 <1392804347.27558.20.camel@x220>
-	 <1392850749.22195.1.camel@haakon3.risingtidesystems.com>
-	 <1392883672.5070.21.camel@x220>
+Subject: Re: loading scsi_debug with data integrity hits BUG_ON
+Date: Thu, 20 Feb 2014 11:20:04 -0800
+Message-ID: <1392924004.29525.19.camel@haakon3.risingtidesystems.com>
+References: <CAC5umyjVedpiUu4yffiT4n5kCUPSTgsuPucj1Nwc_TuwtoPLVg@mail.gmail.com>
+	 <1392858619.22195.24.camel@haakon3.risingtidesystems.com>
+	 <CAC5umyhLpEPxYCYNOP-=Zt_-RbTd1zory2RG+x=oCCWp4qNewg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1392883672.5070.21.camel@x220>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Paul Bolle <pebolle@tiscali.nl>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:58948 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752541AbaBTTQz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Feb 2014 14:16:55 -0500
+In-Reply-To: <CAC5umyhLpEPxYCYNOP-=Zt_-RbTd1zory2RG+x=oCCWp4qNewg@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Akinobu Mita <akinobu.mita@gmail.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagig@mellanox.com>, kmo@daterainc.com
 
-On Thu, 2014-02-20 at 09:07 +0100, Paul Bolle wrote:
-> Building target_core_alua.o triggers a GCC warning:
->     drivers/target/target_core_alua.c: In function =E2=80=98target_al=
-ua_state_check=E2=80=99:
->     drivers/target/target_core_alua.c:773:18: warning: =E2=80=98alua_=
-ascq=E2=80=99 may be used uninitialized in this function [-Wmaybe-unini=
-tialized]
->        cmd->scsi_ascq =3D alua_ascq;
->                       ^
->=20
-> This is a false positive. A little trial and error shows it is
-> apparently caused by core_alua_state_lba_dependent(). It must be hard
-> for GCC to track the branches of a switch statement, inside a
-> list_for_each_entry loop, inside a while loop.
->=20
-> But if we add a small (inline) helper function we can reorganize the
-> code a bit. That also allows to drop alua_ascq which, obviously, gets
-> rid of this warning.
->=20
-> Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
-> ---
-> v2: Make core_alua_state_nonoptimized() return void, as Geert
-> suggested.=20
->=20
-> Also keep core_alua_state_lba_dependent() inline. Setting that functi=
-on
-> noinline was just a leftover from the trial and error fase, and isn't
-> needed to make the warning go away. Ie, I was sloppy in v1!
->=20
-> Still compile tested only.
->=20
->  drivers/target/target_core_alua.c | 95 ++++++++++++++++++-----------=
-----------
->  1 file changed, 44 insertions(+), 51 deletions(-)
->=20
+On Thu, 2014-02-20 at 22:44 +0900, Akinobu Mita wrote:
+> Thanks for the patch.  I have just one nitpicking.
+> 
+> > diff --git a/fs/bio-integrity.c b/fs/bio-integrity.c
+> > index 0bad24d..47ed160 100644
+> > --- a/fs/bio-integrity.c
+> > +++ b/fs/bio-integrity.c
+> > @@ -476,7 +476,6 @@ static int bio_integrity_verify(struct bio *bio)
+> >                 sector += sectors;
+> >                 prot_buf += sectors * bi->tuple_size;
+> >                 total += sectors * bi->tuple_size;
+> > -               BUG_ON(total > bio->bi_integrity->bip_iter.bi_size);
+> 
+> The variable 'total' is only used for the BUG_ON.  So it can be removed.
 
-Applied to target-pending/for-next.
+Duh, yes of course..
 
-Thanks Paul!
+MKP + Jens, any concerns wrt dropping this BUG_ON for v3.14-rc code..?
 
 --nab
+
