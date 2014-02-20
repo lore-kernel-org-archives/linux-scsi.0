@@ -1,226 +1,82 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 9/9] scsi: add support for per-host cmd pools
-Date: Thu, 20 Feb 2014 14:21:01 -0800
-Message-ID: <20140220222358.687375240@bombadil.infradead.org>
+Subject: [PATCH 6/9] scsi: remove a useless get/put_device pair in scsi_requeue_command
+Date: Thu, 20 Feb 2014 14:20:58 -0800
+Message-ID: <20140220222357.688669989@bombadil.infradead.org>
 References: <20140220222052.717958451@bombadil.infradead.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:58142 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:58132 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752835AbaBTWX7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Feb 2014 17:23:59 -0500
-Content-Disposition: inline; filename=0009-scsi-add-support-for-per-host-cmd-pools.patch
+	with ESMTP id S1752965AbaBTWX6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Feb 2014 17:23:58 -0500
+Content-Disposition: inline; filename=0006-scsi-remove-a-useless-get-put_device-pair-in-scsi_re.patch
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <JBottomley@Parallels.com>
-Cc: linux-scsi@vger.kernel.org, Paolo Bonzini <pbonzini@redhat.com>
+Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-This allows drivers to specify the size of their per-command private
-data in the host template and then get extra memory allocated for
-each command instead of needing another allocation in ->queuecommand.
-
-With the current SCSI code that already does multiple allocations for
-each command this probably doesn't make a big performance impact, but
-it allows to clean up the drivers, and prepare them for using the
-blk-mq infrastructure where the common allocation will make a difference.
+Avoid a spurious device get/put pair by cleaning up scsi_requeue_command
+and folding scsi_unprep_request into it.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
+Acked-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/scsi.c      |   96 +++++++++++++++++++++++++++++++++++++---------
- include/scsi/scsi_host.h |    7 ++++
- 2 files changed, 84 insertions(+), 19 deletions(-)
+ drivers/scsi/scsi_lib.c |   35 +++--------------------------------
+ 1 file changed, 3 insertions(+), 32 deletions(-)
 
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index a94a486..a45f01c 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -332,46 +332,103 @@ void scsi_put_command(struct scsi_cmnd *cmd)
- }
- EXPORT_SYMBOL(scsi_put_command);
- 
--static struct scsi_host_cmd_pool *scsi_get_host_cmd_pool(gfp_t gfp_mask)
-+static struct scsi_host_cmd_pool *
-+scsi_find_host_cmd_pool(struct Scsi_Host *shost)
- {
-+	if (shost->hostt->cmd_size)
-+		return shost->hostt->cmd_pool;
-+	if (shost->unchecked_isa_dma)
-+		return &scsi_cmd_dma_pool;
-+	return &scsi_cmd_pool;
-+}
-+
-+static void
-+scsi_free_host_cmd_pool(struct scsi_host_cmd_pool *pool)
-+{
-+	kfree(pool->sense_name);
-+	kfree(pool->cmd_name);
-+	kfree(pool);
-+}
-+
-+static struct scsi_host_cmd_pool *
-+scsi_alloc_host_cmd_pool(struct Scsi_Host *shost)
-+{
-+	struct scsi_host_template *hostt = shost->hostt;
-+	struct scsi_host_cmd_pool *pool;
-+
-+	pool = kzalloc(sizeof(*pool), GFP_KERNEL);
-+	if (!pool)
-+		return NULL;
-+
-+	pool->cmd_name = kasprintf(GFP_KERNEL, "%s_cmd", hostt->name);
-+	pool->sense_name = kasprintf(GFP_KERNEL, "%s_sense", hostt->name);
-+	if (!pool->cmd_name || !pool->sense_name) {
-+		scsi_free_host_cmd_pool(pool);
-+		return NULL;
-+	}
-+
-+	pool->slab_flags = SLAB_HWCACHE_ALIGN;
-+	if (shost->unchecked_isa_dma) {
-+		pool->slab_flags |= SLAB_CACHE_DMA;
-+		pool->gfp_mask = __GFP_DMA;
-+	}
-+	return pool;
-+}
-+
-+static struct scsi_host_cmd_pool *
-+scsi_get_host_cmd_pool(struct Scsi_Host *shost)
-+{
-+	struct scsi_host_template *hostt = shost->hostt;
- 	struct scsi_host_cmd_pool *retval = NULL, *pool;
-+	size_t cmd_size = sizeof(struct scsi_cmnd) + hostt->cmd_size;
-+
- 	/*
- 	 * Select a command slab for this host and create it if not
- 	 * yet existent.
- 	 */
- 	mutex_lock(&host_cmd_pool_mutex);
--	pool = (gfp_mask & __GFP_DMA) ? &scsi_cmd_dma_pool :
--		&scsi_cmd_pool;
-+	pool = scsi_find_host_cmd_pool(shost);
-+	if (!pool) {
-+		pool = scsi_alloc_host_cmd_pool(shost);
-+		if (!pool)
-+			goto out;
-+	}
-+
- 	if (!pool->users) {
--		pool->cmd_slab = kmem_cache_create(pool->cmd_name,
--						   sizeof(struct scsi_cmnd), 0,
-+		pool->cmd_slab = kmem_cache_create(pool->cmd_name, cmd_size, 0,
- 						   pool->slab_flags, NULL);
- 		if (!pool->cmd_slab)
--			goto fail;
-+			goto out_free_pool;
- 
- 		pool->sense_slab = kmem_cache_create(pool->sense_name,
- 						     SCSI_SENSE_BUFFERSIZE, 0,
- 						     pool->slab_flags, NULL);
--		if (!pool->sense_slab) {
--			kmem_cache_destroy(pool->cmd_slab);
--			goto fail;
--		}
-+		if (!pool->sense_slab)
-+			goto out_free_slab;
- 	}
- 
- 	pool->users++;
- 	retval = pool;
-- fail:
-+out:
- 	mutex_unlock(&host_cmd_pool_mutex);
- 	return retval;
-+
-+out_free_slab:
-+	kmem_cache_destroy(pool->cmd_slab);
-+out_free_pool:
-+	if (hostt->cmd_size)
-+		scsi_free_host_cmd_pool(pool);
-+	goto out;
- }
- 
--static void scsi_put_host_cmd_pool(gfp_t gfp_mask)
-+static void scsi_put_host_cmd_pool(struct Scsi_Host *shost)
- {
-+	struct scsi_host_template *hostt = shost->hostt;
- 	struct scsi_host_cmd_pool *pool;
- 
- 	mutex_lock(&host_cmd_pool_mutex);
--	pool = (gfp_mask & __GFP_DMA) ? &scsi_cmd_dma_pool :
--		&scsi_cmd_pool;
-+	pool = scsi_find_host_cmd_pool(shost);
-+
- 	/*
- 	 * This may happen if a driver has a mismatched get and put
- 	 * of the command pool; the driver should be implicated in
-@@ -382,6 +439,8 @@ static void scsi_put_host_cmd_pool(gfp_t gfp_mask)
- 	if (!--pool->users) {
- 		kmem_cache_destroy(pool->cmd_slab);
- 		kmem_cache_destroy(pool->sense_slab);
-+		if (hostt->cmd_size)
-+			scsi_free_host_cmd_pool(pool);
- 	}
- 	mutex_unlock(&host_cmd_pool_mutex);
- }
-@@ -398,14 +457,13 @@ static void scsi_put_host_cmd_pool(gfp_t gfp_mask)
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 91ca414..9350691 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -75,29 +75,6 @@ struct kmem_cache *scsi_sdb_cache;
   */
- int scsi_setup_command_freelist(struct Scsi_Host *shost)
- {
--	struct scsi_cmnd *cmd;
- 	const gfp_t gfp_mask = shost->unchecked_isa_dma ? GFP_DMA : GFP_KERNEL;
-+	struct scsi_cmnd *cmd;
+ #define SCSI_QUEUE_DELAY	3
  
- 	spin_lock_init(&shost->free_list_lock);
- 	INIT_LIST_HEAD(&shost->free_list);
- 
--	shost->cmd_pool = scsi_get_host_cmd_pool(gfp_mask);
+-/*
+- * Function:	scsi_unprep_request()
+- *
+- * Purpose:	Remove all preparation done for a request, including its
+- *		associated scsi_cmnd, so that it can be requeued.
+- *
+- * Arguments:	req	- request to unprepare
+- *
+- * Lock status:	Assumed that no locks are held upon entry.
+- *
+- * Returns:	Nothing.
+- */
+-static void scsi_unprep_request(struct request *req)
+-{
+-	struct scsi_cmnd *cmd = req->special;
 -
-+	shost->cmd_pool = scsi_get_host_cmd_pool(shost);
- 	if (!shost->cmd_pool)
- 		return -ENOMEM;
+-	blk_unprep_request(req);
+-	req->special = NULL;
+-
+-	scsi_put_command(cmd);
+-	put_device(&cmd->device->sdev_gendev);
+-}
+-
+ /**
+  * __scsi_queue_insert - private queue insertion
+  * @cmd: The SCSI command being requeued
+@@ -503,16 +480,10 @@ static void scsi_requeue_command(struct request_queue *q, struct scsi_cmnd *cmd)
+ 	struct request *req = cmd->request;
+ 	unsigned long flags;
  
-@@ -414,7 +472,7 @@ int scsi_setup_command_freelist(struct Scsi_Host *shost)
- 	 */
- 	cmd = scsi_host_alloc_command(shost, gfp_mask);
- 	if (!cmd) {
--		scsi_put_host_cmd_pool(gfp_mask);
-+		scsi_put_host_cmd_pool(shost);
- 		shost->cmd_pool = NULL;
- 		return -ENOMEM;
- 	}
-@@ -443,7 +501,7 @@ void scsi_destroy_command_freelist(struct Scsi_Host *shost)
- 		scsi_host_free_command(shost, cmd);
- 	}
- 	shost->cmd_pool = NULL;
--	scsi_put_host_cmd_pool(shost->unchecked_isa_dma ? GFP_DMA : GFP_KERNEL);
-+	scsi_put_host_cmd_pool(shost);
- }
+-	/*
+-	 * We need to hold a reference on the device to avoid the queue being
+-	 * killed after the unlock and before scsi_run_queue is invoked which
+-	 * may happen because scsi_unprep_request() puts the command which
+-	 * releases its reference on the device.
+-	 */
+-	get_device(&sdev->sdev_gendev);
+-
+ 	spin_lock_irqsave(q->queue_lock, flags);
+-	scsi_unprep_request(req);
++	blk_unprep_request(req);
++	req->special = NULL;
++	scsi_put_command(cmd);
+ 	blk_requeue_request(q, req);
+ 	spin_unlock_irqrestore(q->queue_lock, flags);
  
- #ifdef CONFIG_SCSI_LOGGING
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index 53075e5..94844fc 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -15,6 +15,7 @@ struct completion;
- struct module;
- struct scsi_cmnd;
- struct scsi_device;
-+struct scsi_host_cmd_pool;
- struct scsi_target;
- struct Scsi_Host;
- struct scsi_host_cmd_pool;
-@@ -524,6 +525,12 @@ struct scsi_host_template {
- 	 *   scsi_netlink.h
- 	 */
- 	u64 vendor_id;
-+
-+	/*
-+	 * Additional per-command data allocated for the driver.
-+	 */
-+	unsigned int cmd_size;
-+	struct scsi_host_cmd_pool *cmd_pool;
- };
- 
- /*
 -- 
 1.7.10.4
 
