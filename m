@@ -1,242 +1,121 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 3/8] lpfc 8.3.45: Incorporate changes to use reason in
- change_queue_depth function.
-Date: Thu, 20 Feb 2014 09:57:08 -0500
-Message-ID: <1392908228.31081.15.camel@myfc17>
+Subject: [PATCH 4/8] lpfc 8.3.45: Fix sysfs buffer overrun in read of
+ lpfc_fcp_cpu_map for 128 CPUs.
+Date: Thu, 20 Feb 2014 09:57:18 -0500
+Message-ID: <1392908238.31081.16.camel@myfc17>
 Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:16707 "EHLO
-	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753413AbaBTO5K (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Feb 2014 09:57:10 -0500
+Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:8739 "EHLO
+	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754284AbaBTO5U (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Feb 2014 09:57:20 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Incorporate changes to use reason in change_queue_depth function.
+Fix sysfs buffer overrun in read of lpfc_fcp_cpu_map for 128 CPUs.
 
 
 Signed-off-by: James Smart <james.smart@emulex.com>
 
  ---
 
- lpfc.h         |    3 -
- lpfc_crtn.h    |    1 
- lpfc_hbadisc.c |    2 
- lpfc_scsi.c    |  126 ++++++++-------------------------------------------------
- 4 files changed, 19 insertions(+), 113 deletions(-)
+ lpfc_attr.c |   28 ++++++++++++++++++++++------
+ lpfc_init.c |    2 ++
+ lpfc_sli4.h |    1 +
+ 3 files changed, 25 insertions(+), 6 deletions(-)
 
 
-diff -upNr a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
---- a/drivers/scsi/lpfc/lpfc_crtn.h	2014-02-19 15:29:28.607023725 -0500
-+++ b/drivers/scsi/lpfc/lpfc_crtn.h	2014-02-19 15:29:32.341023676 -0500
-@@ -405,7 +405,6 @@ void lpfc_fabric_block_timeout(unsigned
- void lpfc_unblock_fabric_iocbs(struct lpfc_hba *);
- void lpfc_rampdown_queue_depth(struct lpfc_hba *);
- void lpfc_ramp_down_queue_handler(struct lpfc_hba *);
--void lpfc_ramp_up_queue_handler(struct lpfc_hba *);
- void lpfc_scsi_dev_block(struct lpfc_hba *);
+diff -upNr a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+--- a/drivers/scsi/lpfc/lpfc_attr.c	2014-02-19 15:29:28.602023725 -0500
++++ b/drivers/scsi/lpfc/lpfc_attr.c	2014-02-19 15:29:33.856023845 -0500
+@@ -4288,7 +4288,7 @@ lpfc_fcp_cpu_map_show(struct device *dev
+ 	struct lpfc_vport *vport = (struct lpfc_vport *)shost->hostdata;
+ 	struct lpfc_hba   *phba = vport->phba;
+ 	struct lpfc_vector_map_info *cpup;
+-	int  idx, len = 0;
++	int  len = 0;
  
- void
-diff -upNr a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
---- a/drivers/scsi/lpfc/lpfc.h	2014-02-19 15:29:28.612023725 -0500
-+++ b/drivers/scsi/lpfc/lpfc.h	2014-02-19 15:29:32.343023711 -0500
-@@ -73,8 +73,6 @@ struct lpfc_sli2_slim;
-  */
- /* 1 Second */
- #define QUEUE_RAMP_DOWN_INTERVAL	(msecs_to_jiffies(1000 * 1))
--/* 5 minutes */
--#define QUEUE_RAMP_UP_INTERVAL		(msecs_to_jiffies(1000 * 300))
- 
- /* Number of exchanges reserved for discovery to complete */
- #define LPFC_DISC_IOCB_BUFF_COUNT 20
-@@ -885,7 +883,6 @@ struct lpfc_hba {
- 	atomic_t num_cmd_success;
- 	unsigned long last_rsrc_error_time;
- 	unsigned long last_ramp_down_time;
--	unsigned long last_ramp_up_time;
- #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
- 	struct dentry *hba_debugfs_root;
- 	atomic_t debugfs_vport_count;
-diff -upNr a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c	2014-02-12 11:38:01.316067309 -0500
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c	2014-02-19 15:29:32.381023811 -0500
-@@ -674,8 +674,6 @@ lpfc_work_done(struct lpfc_hba *phba)
- 				lpfc_fdmi_timeout_handler(vport);
- 			if (work_port_events & WORKER_RAMP_DOWN_QUEUE)
- 				lpfc_ramp_down_queue_handler(phba);
--			if (work_port_events & WORKER_RAMP_UP_QUEUE)
--				lpfc_ramp_up_queue_handler(phba);
- 			if (work_port_events & WORKER_DELAYED_DISC_TMO)
- 				lpfc_delayed_disc_timeout_handler(vport);
- 		}
-diff -upNr a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
---- a/drivers/scsi/lpfc/lpfc_scsi.c	2014-02-19 15:29:28.688023727 -0500
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c	2014-02-19 15:29:32.386023811 -0500
-@@ -315,7 +315,25 @@ lpfc_change_queue_depth(struct scsi_devi
- 	unsigned long new_queue_depth, old_queue_depth;
- 
- 	old_queue_depth = sdev->queue_depth;
--	scsi_adjust_queue_depth(sdev, scsi_get_tag_type(sdev), qdepth);
-+
-+	switch (reason) {
-+	case SCSI_QDEPTH_DEFAULT:
-+		/* change request from sysfs, fall through */
-+	case SCSI_QDEPTH_RAMP_UP:
-+		scsi_adjust_queue_depth(sdev, scsi_get_tag_type(sdev), qdepth);
-+		break;
-+	case SCSI_QDEPTH_QFULL:
-+		if (scsi_track_queue_full(sdev, qdepth) == 0)
-+			return sdev->queue_depth;
-+
-+		lpfc_printf_vlog(vport, KERN_WARNING, LOG_FCP,
-+				 "0711 detected queue full - lun queue "
-+				 "depth adjusted to %d.\n", sdev->queue_depth);
-+		break;
-+	default:
-+		return -EOPNOTSUPP;
-+	}
-+
- 	new_queue_depth = sdev->queue_depth;
- 	rdata = lpfc_rport_data_from_scsi_device(sdev);
- 	if (rdata)
-@@ -388,50 +406,6 @@ lpfc_rampdown_queue_depth(struct lpfc_hb
- }
- 
- /**
-- * lpfc_rampup_queue_depth - Post RAMP_UP_QUEUE event for worker thread
-- * @phba: The Hba for which this call is being executed.
-- *
-- * This routine post WORKER_RAMP_UP_QUEUE event for @phba vport. This routine
-- * post at most 1 event every 5 minute after last_ramp_up_time or
-- * last_rsrc_error_time.  This routine wakes up worker thread of @phba
-- * to process WORKER_RAM_DOWN_EVENT event.
-- *
-- * This routine should be called with no lock held.
-- **/
--static inline void
--lpfc_rampup_queue_depth(struct lpfc_vport  *vport,
--			uint32_t queue_depth)
--{
--	unsigned long flags;
--	struct lpfc_hba *phba = vport->phba;
--	uint32_t evt_posted;
--	atomic_inc(&phba->num_cmd_success);
--
--	if (vport->cfg_lun_queue_depth <= queue_depth)
--		return;
--	spin_lock_irqsave(&phba->hbalock, flags);
--	if (time_before(jiffies,
--			phba->last_ramp_up_time + QUEUE_RAMP_UP_INTERVAL) ||
--	    time_before(jiffies,
--			phba->last_rsrc_error_time + QUEUE_RAMP_UP_INTERVAL)) {
--		spin_unlock_irqrestore(&phba->hbalock, flags);
--		return;
--	}
--	phba->last_ramp_up_time = jiffies;
--	spin_unlock_irqrestore(&phba->hbalock, flags);
--
--	spin_lock_irqsave(&phba->pport->work_port_lock, flags);
--	evt_posted = phba->pport->work_port_events & WORKER_RAMP_UP_QUEUE;
--	if (!evt_posted)
--		phba->pport->work_port_events |= WORKER_RAMP_UP_QUEUE;
--	spin_unlock_irqrestore(&phba->pport->work_port_lock, flags);
--
--	if (!evt_posted)
--		lpfc_worker_wake_up(phba);
--	return;
--}
--
--/**
-  * lpfc_ramp_down_queue_handler - WORKER_RAMP_DOWN_QUEUE event handler
-  * @phba: The Hba for which this call is being executed.
-  *
-@@ -483,41 +457,6 @@ lpfc_ramp_down_queue_handler(struct lpfc
- }
- 
- /**
-- * lpfc_ramp_up_queue_handler - WORKER_RAMP_UP_QUEUE event handler
-- * @phba: The Hba for which this call is being executed.
-- *
-- * This routine is called to  process WORKER_RAMP_UP_QUEUE event for worker
-- * thread.This routine increases queue depth for all scsi device on each vport
-- * associated with @phba by 1. This routine also sets @phba num_rsrc_err and
-- * num_cmd_success to zero.
-- **/
--void
--lpfc_ramp_up_queue_handler(struct lpfc_hba *phba)
--{
--	struct lpfc_vport **vports;
--	struct Scsi_Host  *shost;
--	struct scsi_device *sdev;
--	int i;
--
--	vports = lpfc_create_vport_work_array(phba);
--	if (vports != NULL)
--		for (i = 0; i <= phba->max_vports && vports[i] != NULL; i++) {
--			shost = lpfc_shost_from_vport(vports[i]);
--			shost_for_each_device(sdev, shost) {
--				if (vports[i]->cfg_lun_queue_depth <=
--				    sdev->queue_depth)
--					continue;
--				lpfc_change_queue_depth(sdev,
--							sdev->queue_depth+1,
--							SCSI_QDEPTH_RAMP_UP);
--			}
--		}
--	lpfc_destroy_vport_work_array(phba, vports);
--	atomic_set(&phba->num_rsrc_err, 0);
--	atomic_set(&phba->num_cmd_success, 0);
--}
--
--/**
-  * lpfc_scsi_dev_block - set all scsi hosts to block state
-  * @phba: Pointer to HBA context object.
-  *
-@@ -4040,7 +3979,6 @@ lpfc_scsi_cmd_iocb_cmpl(struct lpfc_hba
- 	struct lpfc_nodelist *pnode = rdata->pnode;
- 	struct scsi_cmnd *cmd;
- 	int result;
--	struct scsi_device *tmp_sdev;
- 	int depth;
- 	unsigned long flags;
- 	struct lpfc_fast_path_event *fast_path_evt;
-@@ -4285,32 +4223,6 @@ lpfc_scsi_cmd_iocb_cmpl(struct lpfc_hba
- 		return;
+ 	if ((phba->sli_rev != LPFC_SLI_REV4) ||
+ 	    (phba->intr_type != MSIX))
+@@ -4316,23 +4316,39 @@ lpfc_fcp_cpu_map_show(struct device *dev
+ 		break;
  	}
  
--	if (!result)
--		lpfc_rampup_queue_depth(vport, queue_depth);
--
--	/*
--	 * Check for queue full.  If the lun is reporting queue full, then
--	 * back off the lun queue depth to prevent target overloads.
--	 */
--	if (result == SAM_STAT_TASK_SET_FULL && pnode &&
--	    NLP_CHK_NODE_ACT(pnode)) {
--		shost_for_each_device(tmp_sdev, shost) {
--			if (tmp_sdev->id != scsi_id)
--				continue;
--			depth = scsi_track_queue_full(tmp_sdev,
--						      tmp_sdev->queue_depth-1);
--			if (depth <= 0)
--				continue;
--			lpfc_printf_vlog(vport, KERN_WARNING, LOG_FCP,
--					 "0711 detected queue full - lun queue "
--					 "depth adjusted to %d.\n", depth);
--			lpfc_send_sdev_queuedepth_change_event(phba, vport,
--							       pnode,
--							       tmp_sdev->lun,
--							       depth+1, depth);
--		}
--	}
--
- 	spin_lock_irqsave(&phba->hbalock, flags);
- 	lpfc_cmd->pCmd = NULL;
- 	spin_unlock_irqrestore(&phba->hbalock, flags);
+-	cpup = phba->sli4_hba.cpu_map;
+-	for (idx = 0; idx < phba->sli4_hba.num_present_cpu; idx++) {
++	while (phba->sli4_hba.curr_disp_cpu < phba->sli4_hba.num_present_cpu) {
++		cpup = &phba->sli4_hba.cpu_map[phba->sli4_hba.curr_disp_cpu];
++
++		/* margin should fit in this and the truncated message */
+ 		if (cpup->irq == LPFC_VECTOR_MAP_EMPTY)
+ 			len += snprintf(buf + len, PAGE_SIZE-len,
+ 					"CPU %02d io_chan %02d "
+ 					"physid %d coreid %d\n",
+-					idx, cpup->channel_id, cpup->phys_id,
++					phba->sli4_hba.curr_disp_cpu,
++					cpup->channel_id, cpup->phys_id,
+ 					cpup->core_id);
+ 		else
+ 			len += snprintf(buf + len, PAGE_SIZE-len,
+ 					"CPU %02d io_chan %02d "
+ 					"physid %d coreid %d IRQ %d\n",
+-					idx, cpup->channel_id, cpup->phys_id,
++					phba->sli4_hba.curr_disp_cpu,
++					cpup->channel_id, cpup->phys_id,
+ 					cpup->core_id, cpup->irq);
+ 
+-		cpup++;
++		phba->sli4_hba.curr_disp_cpu++;
++
++		/* display max number of CPUs keeping some margin */
++		if (phba->sli4_hba.curr_disp_cpu <
++				phba->sli4_hba.num_present_cpu &&
++				(len >= (PAGE_SIZE - 64))) {
++			len += snprintf(buf + len, PAGE_SIZE-len, "more...\n");
++			break;
++		}
+ 	}
++
++	if (phba->sli4_hba.curr_disp_cpu == phba->sli4_hba.num_present_cpu)
++		phba->sli4_hba.curr_disp_cpu = 0;
++
+ 	return len;
+ }
+ 
+diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+--- a/drivers/scsi/lpfc/lpfc_init.c	2014-02-19 15:29:28.636023725 -0500
++++ b/drivers/scsi/lpfc/lpfc_init.c	2014-02-19 15:29:33.869023845 -0500
+@@ -5280,6 +5280,7 @@ lpfc_sli4_driver_resource_unset(struct l
+ 	kfree(phba->sli4_hba.cpu_map);
+ 	phba->sli4_hba.num_present_cpu = 0;
+ 	phba->sli4_hba.num_online_cpu = 0;
++	phba->sli4_hba.curr_disp_cpu = 0;
+ 
+ 	/* Free memory allocated for msi-x interrupt vector entries */
+ 	kfree(phba->sli4_hba.msix_entries);
+@@ -6850,6 +6851,7 @@ lpfc_sli4_queue_verify(struct lpfc_hba *
+ 	}
+ 	phba->sli4_hba.num_online_cpu = i;
+ 	phba->sli4_hba.num_present_cpu = lpfc_present_cpu;
++	phba->sli4_hba.curr_disp_cpu = 0;
+ 
+ 	if (i < cfg_fcp_io_channel) {
+ 		lpfc_printf_log(phba,
+diff -upNr a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
+--- a/drivers/scsi/lpfc/lpfc_sli4.h	2014-02-19 15:29:28.693023727 -0500
++++ b/drivers/scsi/lpfc/lpfc_sli4.h	2014-02-19 15:29:33.871023845 -0500
+@@ -607,6 +607,7 @@ struct lpfc_sli4_hba {
+ 	struct lpfc_vector_map_info *cpu_map;
+ 	uint16_t num_online_cpu;
+ 	uint16_t num_present_cpu;
++	uint16_t curr_disp_cpu;
+ };
+ 
+ enum lpfc_sge_type {
 
 
 
