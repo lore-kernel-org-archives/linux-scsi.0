@@ -1,54 +1,19 @@
-From: Paul Bolle <pebolle@tiscali.nl>
-Subject: [PATCH 2/2] MAINTAINERS: mark Advansys Orphan
-Date: Thu, 20 Feb 2014 10:14:03 +0100
-Message-ID: <1392887643.5070.44.camel@x220>
+From: mrs eva <caa520@york.ac.uk>
+Subject: re
+Date: Thu, 20 Feb 2014 10:52:01 +0100
+Message-ID: <CADBTM=pc7VBjms5NY7nNZW3GJGaJM7zhGShURDXyTXrxdGdyhA__6200.64516920156$1392889950$gmane$org@mail.gmail.com>
+Reply-To: mrs.eva@Safe-mail.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Josh Boyer <jwboyer@fedoraproject.org>, Hans de Goede <hdegoede@redhat.com>, Matthew Wilcox <matthew@wil.cx>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-lb0-f173.google.com ([209.85.217.173]:57774 "EHLO
+	mail-lb0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752444AbaBTJwE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Feb 2014 04:52:04 -0500
+Received: by mail-lb0-f173.google.com with SMTP id s7so1156868lbd.32
+        for <linux-scsi@vger.kernel.org>; Thu, 20 Feb 2014 01:52:02 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Matthew Wilcox hasn't touched the Advansys driver since v2.6.29. I have
-not been able to get Matthew to respond to a trivial patch I'd like to
-see go in. Mark this driver Orphan and add this driver to Matthew's
-CREDITS entry.
-
-Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
----
- CREDITS     | 2 +-
- MAINTAINERS | 3 +--
- 2 files changed, 2 insertions(+), 3 deletions(-)
-
-diff --git a/CREDITS b/CREDITS
-index e371c55..4adbf38 100644
---- a/CREDITS
-+++ b/CREDITS
-@@ -3805,7 +3805,7 @@ N: Matthew Wilcox
- E: matthew@wil.cx
- W: ftp://ftp.uk.linux.org/pub/linux/people/willy/
- D: Linux/PARISC hacker.  Filesystem hacker.  Random other hacking.  Custom
--D: PPC port hacking.
-+D: PPC port hacking.  Advansys SCSI driver.
- 
- N: G\"unter Windau
- E: gunter@mbfys.kun.nl
-diff --git a/MAINTAINERS b/MAINTAINERS
-index fb08dce..c45d72e 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -426,9 +426,8 @@ S:	Supported
- F:	drivers/input/misc/adxl34x.c
- 
- ADVANSYS SCSI DRIVER
--M:	Matthew Wilcox <matthew@wil.cx>
- L:	linux-scsi@vger.kernel.org
--S:	Maintained
-+S:	Orphan
- F:	Documentation/scsi/advansys.txt
- F:	drivers/scsi/advansys.c
- 
--- 
-1.8.5.3
+Hi, I have a transaction for you, contact me on (
+mrs.eva@Safe-mail.net ) for more details
