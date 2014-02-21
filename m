@@ -1,57 +1,269 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 3/6] hpsa: increase the probability of a reported success
-	after a device reset
-Date: Fri, 21 Feb 2014 16:25:05 -0600
-Message-ID: <20140221222505.31344.94687.stgit@beardog.cce.hp.com>
+Subject: [PATCH 5/6] hpsa: Add hba mode to the hpsa driver
+Date: Fri, 21 Feb 2014 16:25:15 -0600
+Message-ID: <20140221222515.31344.26376.stgit@beardog.cce.hp.com>
 References: <20140221222153.31344.99129.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g9t1613g.houston.hp.com ([15.240.0.71]:48952 "EHLO
-	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754049AbaBUW0c (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Feb 2014 17:26:32 -0500
-Received: from g5t1626.atlanta.hp.com (g5t1626.atlanta.hp.com [15.192.137.9])
+Received: from g2t1383g.austin.hp.com ([15.217.136.92]:17916 "EHLO
+	g2t1383g.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754049AbaBUW0m (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Feb 2014 17:26:42 -0500
+Received: from g2t2354.austin.hp.com (g2t2354.austin.hp.com [15.217.128.53])
 	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by g9t1613g.houston.hp.com (Postfix) with ESMTPS id 5EFF8614C9
-	for <linux-scsi@vger.kernel.org>; Fri, 21 Feb 2014 22:26:32 +0000 (UTC)
+	by g2t1383g.austin.hp.com (Postfix) with ESMTPS id 18CEE327
+	for <linux-scsi@vger.kernel.org>; Fri, 21 Feb 2014 22:26:35 +0000 (UTC)
 In-Reply-To: <20140221222153.31344.99129.stgit@beardog.cce.hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: james.bottomley@hansenpartnership.com
 Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, stephenmcameron@gmail.com, joseph.t.handzik@hp.com, thenzl@redhat.com, michael.miller@canonical.com, scott.teel@hp.com
 
-From: Tomas Henzl <thenzl@redhat.com>
+From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-rc is set in the loop, and it isn't set back to zero anywhere
-this patch fixes it
+This allows exposing physical disks behind Smart
+Array controllers to the OS (if the controller
+has the right firmware and is in "hba" mode)
 
-Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+Signed-off-by: Joe Handzik <joseph.t.handzik@hp.com>
 ---
- drivers/scsi/hpsa.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+ drivers/scsi/hpsa.c     |   93 +++++++++++++++++++++++++++++++++++++++++++++--
+ drivers/scsi/hpsa.h     |   41 +++++++++++++++++++++
+ drivers/scsi/hpsa_cmd.h |    1 +
+ 3 files changed, 131 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index a0fcaa6..23110a8 100644
+index 23110a8..355ebf3 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -4142,7 +4142,7 @@ static int hpsa_register_scsi(struct ctlr_info *h)
- static int wait_for_device_to_become_ready(struct ctlr_info *h,
- 	unsigned char lunaddr[])
- {
--	int rc = 0;
-+	int rc;
- 	int count = 0;
- 	int waittime = 1; /* seconds */
- 	struct CommandList *c;
-@@ -4162,6 +4162,7 @@ static int wait_for_device_to_become_ready(struct ctlr_info *h,
- 		 */
- 		msleep(1000 * waittime);
- 		count++;
-+		rc = 0; /* Device ready. */
+@@ -2128,6 +2128,37 @@ out:
+ 	return rc;
+ }
  
- 		/* Increase wait time with each try, up to a point. */
- 		if (waittime < HPSA_MAX_WAIT_INTERVAL_SECS)
++static int hpsa_bmic_ctrl_mode_sense(struct ctlr_info *h,
++		unsigned char *scsi3addr, unsigned char page,
++		struct bmic_controller_parameters *buf, size_t bufsize)
++{
++	int rc = IO_OK;
++	struct CommandList *c;
++	struct ErrorInfo *ei;
++
++	c = cmd_special_alloc(h);
++
++	if (c == NULL) {			/* trouble... */
++		dev_warn(&h->pdev->dev, "cmd_special_alloc returned NULL!\n");
++		return -ENOMEM;
++	}
++
++	if (fill_cmd(c, BMIC_SENSE_CONTROLLER_PARAMETERS, h, buf, bufsize,
++			page, scsi3addr, TYPE_CMD)) {
++		rc = -1;
++		goto out;
++	}
++	hpsa_scsi_do_simple_cmd_with_retry(h, c, PCI_DMA_FROMDEVICE);
++	ei = c->err_info;
++	if (ei->CommandStatus != 0 && ei->CommandStatus != CMD_DATA_UNDERRUN) {
++		hpsa_scsi_interpret_error(h, c);
++		rc = -1;
++	}
++out:
++	cmd_special_free(h, c);
++	return rc;
++	}
++
+ static int hpsa_send_reset(struct ctlr_info *h, unsigned char *scsi3addr,
+ 	u8 reset_type)
+ {
+@@ -2929,6 +2960,24 @@ u8 *figure_lunaddrbytes(struct ctlr_info *h, int raid_ctlr_position, int i,
+ 	return NULL;
+ }
+ 
++static int hpsa_hba_mode_enabled(struct ctlr_info *h)
++{
++	int rc;
++	struct bmic_controller_parameters *ctlr_params;
++	ctlr_params = kzalloc(sizeof(struct bmic_controller_parameters),
++		GFP_KERNEL);
++
++	if (!ctlr_params)
++		return 0;
++	rc = hpsa_bmic_ctrl_mode_sense(h, RAID_CTLR_LUNID, 0, ctlr_params,
++		sizeof(struct bmic_controller_parameters));
++	if (rc != 0) {
++		kfree(ctlr_params);
++		return 0;
++	}
++	return ctlr_params->nvram_flags & (1 << 3) ? 1 : 0;
++}
++
+ static void hpsa_update_scsi_devices(struct ctlr_info *h, int hostno)
+ {
+ 	/* the idea here is we could get notified
+@@ -2952,6 +3001,7 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h, int hostno)
+ 	int reportlunsize = sizeof(*physdev_list) + HPSA_MAX_PHYS_LUN * 24;
+ 	int i, n_ext_target_devs, ndevs_to_allocate;
+ 	int raid_ctlr_position;
++	u8 rescan_hba_mode;
+ 	DECLARE_BITMAP(lunzerobits, MAX_EXT_TARGETS);
+ 
+ 	currentsd = kzalloc(sizeof(*currentsd) * HPSA_MAX_DEVICES, GFP_KERNEL);
+@@ -2965,6 +3015,15 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h, int hostno)
+ 	}
+ 	memset(lunzerobits, 0, sizeof(lunzerobits));
+ 
++	rescan_hba_mode = hpsa_hba_mode_enabled(h);
++
++	if (!h->hba_mode_enabled && rescan_hba_mode)
++		dev_warn(&h->pdev->dev, "HBA mode enabled\n");
++	else if (h->hba_mode_enabled && !rescan_hba_mode)
++		dev_warn(&h->pdev->dev, "HBA mode disabled\n");
++
++	h->hba_mode_enabled = rescan_hba_mode;
++
+ 	if (hpsa_gather_lun_info(h, reportlunsize,
+ 			(struct ReportLUNdata *) physdev_list, &nphysicals,
+ 			&physical_mode, logdev_list, &nlogicals))
+@@ -3048,7 +3107,19 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h, int hostno)
+ 				ncurrent++;
+ 			break;
+ 		case TYPE_DISK:
+-			if (i >= nphysicals) {
++			if (h->hba_mode_enabled) {
++				/* never use raid mapper in HBA mode */
++				this_device->offload_enabled = 0;
++				ncurrent++;
++				break;
++			} else if (h->acciopath_status) {
++				if (i >= nphysicals) {
++					ncurrent++;
++					break;
++				}
++			} else {
++				if (i < nphysicals)
++					break;
+ 				ncurrent++;
+ 				break;
+ 			}
+@@ -4116,7 +4187,10 @@ static int hpsa_register_scsi(struct ctlr_info *h)
+ 	sh->max_lun = HPSA_MAX_LUN;
+ 	sh->max_id = HPSA_MAX_LUN;
+ 	sh->can_queue = h->nr_cmds;
+-	sh->cmd_per_lun = h->nr_cmds;
++	if (h->hba_mode_enabled)
++		sh->cmd_per_lun = 7;
++	else
++		sh->cmd_per_lun = h->nr_cmds;
+ 	sh->sg_tablesize = h->maxsgentries;
+ 	h->scsi_host = sh;
+ 	sh->hostdata[0] = (unsigned long) h;
+@@ -5261,6 +5335,16 @@ static int fill_cmd(struct CommandList *c, u8 cmd, struct ctlr_info *h,
+ 			c->Request.CDB[8] = (size >> 8) & 0xFF;
+ 			c->Request.CDB[9] = size & 0xFF;
+ 			break;
++		case BMIC_SENSE_CONTROLLER_PARAMETERS:
++			c->Request.CDBLen = 10;
++			c->Request.Type.Attribute = ATTR_SIMPLE;
++			c->Request.Type.Direction = XFER_READ;
++			c->Request.Timeout = 0;
++			c->Request.CDB[0] = BMIC_READ;
++			c->Request.CDB[6] = BMIC_SENSE_CONTROLLER_PARAMETERS;
++			c->Request.CDB[7] = (size >> 16) & 0xFF;
++			c->Request.CDB[8] = (size >> 8) & 0xFF;
++			break;
+ 		default:
+ 			dev_warn(&h->pdev->dev, "unknown command 0x%c\n", cmd);
+ 			BUG();
+@@ -6885,6 +6969,7 @@ reinit_after_soft_reset:
+ 
+ 	pci_set_drvdata(pdev, h);
+ 	h->ndevices = 0;
++	h->hba_mode_enabled = 0;
+ 	h->scsi_host = NULL;
+ 	spin_lock_init(&h->devlock);
+ 	hpsa_put_ctlr_into_performant_mode(h);
+@@ -6944,8 +7029,8 @@ reinit_after_soft_reset:
+ 		goto reinit_after_soft_reset;
+ 	}
+ 
+-	/* Enable Accelerated IO path at driver layer */
+-	h->acciopath_status = 1;
++		/* Enable Accelerated IO path at driver layer */
++		h->acciopath_status = 1;
+ 
+ 	h->drv_req_rescan = 0;
+ 
+diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
+index ae8c592..44235a2 100644
+--- a/drivers/scsi/hpsa.h
++++ b/drivers/scsi/hpsa.h
+@@ -64,6 +64,46 @@ struct reply_pool {
+ 	u32 current_entry;
+ };
+ 
++#pragma pack(1)
++struct bmic_controller_parameters {
++	u8   led_flags;
++	u8   enable_command_list_verification;
++	u8   backed_out_write_drives;
++	u16  stripes_for_parity;
++	u8   parity_distribution_mode_flags;
++	u16  max_driver_requests;
++	u16  elevator_trend_count;
++	u8   disable_elevator;
++	u8   force_scan_complete;
++	u8   scsi_transfer_mode;
++	u8   force_narrow;
++	u8   rebuild_priority;
++	u8   expand_priority;
++	u8   host_sdb_asic_fix;
++	u8   pdpi_burst_from_host_disabled;
++	char software_name[64];
++	char hardware_name[32];
++	u8   bridge_revision;
++	u8   snapshot_priority;
++	u32  os_specific;
++	u8   post_prompt_timeout;
++	u8   automatic_drive_slamming;
++	u8   reserved1;
++	u8   nvram_flags;
++	u8   cache_nvram_flags;
++	u8   drive_config_flags;
++	u16  reserved2;
++	u8   temp_warning_level;
++	u8   temp_shutdown_level;
++	u8   temp_condition_reset;
++	u8   max_coalesce_commands;
++	u32  max_coalesce_delay;
++	u8   orca_password[4];
++	u8   access_id[16];
++	u8   reserved[356];
++};
++#pragma pack()
++
+ struct ctlr_info {
+ 	int	ctlr;
+ 	char	devname[8];
+@@ -89,6 +129,7 @@ struct ctlr_info {
+ 	unsigned int msi_vector;
+ 	int intr_mode; /* either PERF_MODE_INT or SIMPLE_MODE_INT */
+ 	struct access_method access;
++	char hba_mode_enabled;
+ 
+ 	/* queue and queue Info */
+ 	struct list_head reqQ;
+diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
+index 50388f1..b5cc705 100644
+--- a/drivers/scsi/hpsa_cmd.h
++++ b/drivers/scsi/hpsa_cmd.h
+@@ -257,6 +257,7 @@ struct SenseSubsystem_info {
+ #define BMIC_CACHE_FLUSH 0xc2
+ #define HPSA_CACHE_FLUSH 0x01	/* C2 was already being used by HPSA */
+ #define BMIC_FLASH_FIRMWARE 0xF7
++#define BMIC_SENSE_CONTROLLER_PARAMETERS 0x64
+ 
+ /* Command List Structure */
+ union SCSI3Addr {
 
