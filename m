@@ -1,45 +1,120 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 3/9] scsi: do not manipulate device reference counts in
- scsi_get/put_command
-Date: Fri, 21 Feb 2014 13:20:04 +0100
-Message-ID: <53074474.2050801@suse.de>
-References: <20140220222052.717958451@bombadil.infradead.org> <20140220222357.115614698@bombadil.infradead.org>
+From: Peter Hurley <peter@hurleysoftware.com>
+Subject: Re: [PATCH 4/9] firewire: don't use PREPARE_DELAYED_WORK
+Date: Fri, 21 Feb 2014 07:51:48 -0500
+Message-ID: <53074BE4.1020307@hurleysoftware.com>
+References: <1392929071-16555-1-git-send-email-tj@kernel.org>
+	<1392929071-16555-5-git-send-email-tj@kernel.org>
+	<5306AF8E.3080006@hurleysoftware.com>
+	<20140221015935.GF6897@htj.dyndns.org>
+	<5306B4DF.4000901@hurleysoftware.com>
+	<20140221021341.GG6897@htj.dyndns.org>
+	<5306E06C.5020805@hurleysoftware.com>
+	<20140221100301.GA14653@mtj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:46190 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754004AbaBUMUF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 Feb 2014 07:20:05 -0500
-In-Reply-To: <20140220222357.115614698@bombadil.infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
+In-Reply-To: <20140221100301.GA14653@mtj.dyndns.org>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
+List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
+List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
+Errors-To: linux1394-devel-bounces@lists.sourceforge.net
+To: Tejun Heo <tj@kernel.org>
+Cc: laijs@cn.fujitsu.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux1394-devel@lists.sourceforge.net, target-devel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, James Bottomley <JBottomley@Parallels.com>
-Cc: linux-scsi@vger.kernel.org
 
-On 02/20/2014 11:20 PM, Christoph Hellwig wrote:
-> Many callers won't need this and we can optimize them away.  In addit=
-ion
-> the handling in the __-prefixed variants was inconsistant to start wi=
-th.
->=20
-> Based on an earlier patch from Bart Van Assche.
->=20
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+On 02/21/2014 05:03 AM, Tejun Heo wrote:
+> On Fri, Feb 21, 2014 at 12:13:16AM -0500, Peter Hurley wrote:
+>> CPU 0                            | CPU 1
+>>                                   |
+>>   INIT_WORK(fw_device_workfn)     |
+>>                                   |
+>>   workfn = funcA                  |
+>>   queue_work_on()                 |
+>>   .                               | process_one_work()
+>>   .                               |   ..
+>>   .                               |   worker->current_func = work->func
+>>   .                               |
+>>   .                               |   speculative load of workfn = funcA
+>>   .                               |   .
+>>   workfn = funcB                  |   .
+>>   queue_work_on()                 |   .
+>>     local_irq_save()              |   .
+>>     test_and_set_bit() == 1       |   .
+>>                                   |   set_work_pool_and_clear_pending()
+>>     work is not queued            |     smp_wmb
+>>      funcB never runs             |     set_work_data()
+>>                                   |       atomic_set()
+>>                                   |   spin_unlock_irq()
+>>                                   |
+>>                                   |   worker->current_func(work)  @ fw_device_workfn
+>>                                   |      workfn()  @ funcA
+>>
+>>
+>> The speculative load of workfn on CPU 1 is valid because no rmb will occur
+>> between the load and the execution of workfn() on CPU 1.
+>>
+>> Thus funcB will never execute because, in this circumstance, a second
+>> worker is not queued (because PENDING had not yet been cleared).
+>
+> There's no right or wrong execution.  Executions of either funcA or
+> funcB are correct results.  The only memory ordering guarantee
+> workqueue gives is that anything written before the work item is
+> queued will be visible when that instance starts executing.  When a
+> work item is not queued, no ordering is guaranteed between the
+> queueing attempt and the execution of the existing instance.
 
-Acked-by: Hannes Reinecke <hare@suse.de>
+I think the vast majority of kernel code which uses the workqueue
+assumes there is a memory ordering guarantee.
 
-Cheers,
+Meaning that if a work item is not queue-able then the previously
+queued instance _has not yet started_ and so, by deduction, must be
+able to see the newly written values.
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Consider:
+
+    add something important to list to work on
+    queue work
+
+or
+
+    update index in buffer indicating more data
+    queue work
+
+Neither of these uses expect that the workqueue does not guarantee
+that this latest data is acted upon.
+
+Another way to look at this problem is that process_one_work()
+doesn't become the existing instance _until_ PENDING is cleared.
+
+> We can
+> add such guarantee, not sure how much it'd matter but it's not like
+> it's gonna cost a lot either.
+>
+> This doesn't have much to do with the current series tho.  In fact,
+> PREPARE_WORK can't ever be made to give such guarantee.
+
+Yes, I agree that PREPARE_DELAYED_WORK was also broken usage with the
+same problem. [And there are other bugs in that firewire device work
+code which I'm working on.]
+
+> The function pointer has to fetched before clearing of PENDING.
+
+Why?
+
+As long as the load takes place within the pool->lock, I don't think
+it matters (especially now PREPARE_WORK is removed).
+
+Regards,
+Peter Hurley
+
+
+------------------------------------------------------------------------------
+Managing the Performance of Cloud-Based Applications
+Take advantage of what the Cloud has to offer - Avoid Common Pitfalls.
+Read the Whitepaper.
+http://pubads.g.doubleclick.net/gampad/clk?id=121054471&iu=/4140/ostg.clktrk
