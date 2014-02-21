@@ -1,46 +1,41 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 4/9] firewire: don't use PREPARE_DELAYED_WORK
-Date: Thu, 20 Feb 2014 21:13:41 -0500
-Message-ID: <20140221021341.GG6897@htj.dyndns.org>
-References: <1392929071-16555-1-git-send-email-tj@kernel.org>
- <1392929071-16555-5-git-send-email-tj@kernel.org>
- <5306AF8E.3080006@hurleysoftware.com>
- <20140221015935.GF6897@htj.dyndns.org>
- <5306B4DF.4000901@hurleysoftware.com>
+From: Yoshihiro YUNOMAE <yoshihiro.yunomae.ez@hitachi.com>
+Subject: Re: [PATCH] st: use dev_printk() to avoid linebreaks in kernel messages.
+Date: Fri, 21 Feb 2014 11:48:59 +0900
+Message-ID: <5306BE9B.1010909@hitachi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <target-devel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <5306B4DF.4000901@hurleysoftware.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Peter Hurley <peter@hurleysoftware.com>
-Cc: laijs@cn.fujitsu.com, linux-kernel@vger.kernel.org, Stefan Richter <stefanr@s5r6.in-berlin.de>, linux1394-devel@lists.sourceforge.net, Chris Boot <bootc@bootc.net>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-2022-JP
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+in-reply-to: 53047DA0.4030100@suse.de
+Sender: linux-kernel-owner@vger.kernel.org
+To: hare@suse.de
+Cc: mlombard@redhat.com, Kai.Makisara@kolumbus.fi, linux-scsi@vger.kernel.org, jbottomley@parallels.com, kay@vrfy.org, martin.petersen@oracle.com, linux-kernel@vger.kernel.org, hidehiro.kawai.ez@hitachi.com, yrl.pp-manager.tt@hitachi.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Feb 20, 2014 at 09:07:27PM -0500, Peter Hurley wrote:
-> On 02/20/2014 08:59 PM, Tejun Heo wrote:
-> >Hello,
-> >
-> >On Thu, Feb 20, 2014 at 08:44:46PM -0500, Peter Hurley wrote:
-> >>>+static void fw_device_workfn(struct work_struct *work)
-> >>>+{
-> >>>+	struct fw_device *device = container_of(to_delayed_work(work),
-> >>>+						struct fw_device, work);
-> >>
-> >>I think this needs an smp_rmb() here.
-> >
-> >The patch is equivalent transformation and the whole thing is
-> >guaranteed to have gone through pool->lock.  No explicit rmb
-> >necessary.
-> 
-> The spin_unlock_irq(&pool->lock) only guarantees completion of
-> memory operations _before_ the unlock; memory operations which occur
-> _after_ the unlock may be speculated before the unlock.
-> 
-> IOW, unlock is not a memory barrier for operations that occur after.
+Hi Hannes,
 
-It's not just unlock.  It's lock / unlock pair on the same lock from
-both sides.  Nothing can sip through that.
+We want to handle the error message in userland for HA clusters, so the
+error messages should be output in single(atomic) line. However, current
+upstream kernel outputs SCSI error messages in multiple lines, so
+current implementation is inconvenient. Even if human reads the error
+messages, the split messages are difficult to read. Therefore, the
+split error messages should be fixed.
+
+In order to solve this problem, recently I submitted the patch fixing
+SCSI error message split[1] to LKML. However, when I read the
+discussion of you and Maurizio, I noticed that you already have fixed
+in your branch.
+
+When will you send your branch to linux-kernel ML or linux-scsi ML?
+
+[1] https://lkml.org/lkml/2014/1/15/926
+[2] http://marc.info/?t=139280071900001&r=1&w=2
+
+Thank you,
+Yoshihiro YUNOMAE
 
 -- 
-tejun
+Yoshihiro YUNOMAE
+Software Platform Research Dept. Linux Technology Center
+Hitachi, Ltd., Yokohama Research Laboratory
+E-mail: yoshihiro.yunomae.ez@hitachi.com
