@@ -1,58 +1,52 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] st: use dev_printk() to avoid linebreaks in kernel messages.
-Date: Fri, 21 Feb 2014 07:46:41 +0100
-Message-ID: <5306F651.6050607@suse.de>
-References: <1392800681-5290-1-git-send-email-mlombard@redhat.com>	<530474D2.4050504@suse.de> <5304780A.6020605@redhat.com>	<53047DA0.4030100@suse.de> <yq1ob21k2ng.fsf@sermon.lab.mkp.net>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: Re: [PATCH v1.3 1/11] arcmsr: Revise interrupt service routine to
+ fix command timeout
+Date: Fri, 21 Feb 2014 10:20:01 +0300
+Message-ID: <20140221072001.GF26776@mwanda>
+References: <CAKiknE9M44XvZQSjGRSgvgUHrgfbhwj8eTNRHWJ-VO+NU=cbvA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:40550 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753464AbaBUGqn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 Feb 2014 01:46:43 -0500
-In-Reply-To: <yq1ob21k2ng.fsf@sermon.lab.mkp.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CAKiknE9M44XvZQSjGRSgvgUHrgfbhwj8eTNRHWJ-VO+NU=cbvA@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: =?utf-8?B?6buD5riF6ZqG?= <ching2048@areca.com.tw>
+Cc: jbottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, fengguang.wu@intel.com, Tomas Henzl <thenzl@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, jbottomley@parallels.com
-Cc: Maurizio Lombardi <mlombard@redhat.com>, Kai.Makisara@kolumbus.fi, linux-scsi@vger.kernel.org, kay@vrfy.org
 
-On 02/20/2014 08:25 PM, Martin K. Petersen wrote:
->>>>>> "Hannes" =3D=3D Hannes Reinecke <hare@suse.de> writes:
+On Fri, Feb 21, 2014 at 10:56:34AM +0800, =E9=BB=83=E6=B8=85=E9=9A=86 w=
+rote:
+> From: Ching <ching2048@areca.com.tw>
 >=20
-> Hannes,
+> Rewrite interrupt service routine to fix command timeout on controlle=
+r
+> too heavy loading.
 >=20
->>> If you have a more complete and up-to-date patchset in your queue i=
-t
->>> would be interesting to have a look at it.
->>>
-> Hannes> You can find the current development branch at
->=20
-> Hannes> git.kernel.org:/pub/scm/linux/kernel/git/hare/scsi-devel bran=
-ch
-> Hannes> scsi-logging.v3
->=20
-> I like the printk cleanups and the more sensible sense printing. But =
-why
-> perpetuate the crufty old SCSI logging stuff when we have SCSI tracin=
-g?
->=20
+> Singed-off-by: Ching <ching2048@areca.com.tw>
 
-I'm all for removing it, and move over to SCSI tracing.
-But not without general (read: the maintainers) consent.
+This email is still line wrapped I'm afraid.  It doesn't apply.
 
-James?
+> ---
+>=20
+> diff -uprN a/drivers/scsi/arcmsr/arcmsr_attr.c
+> b/drivers/scsi/arcmsr/arcmsr_attr.c
+> --- a/drivers/scsi/arcmsr/arcmsr_attr.c 2014-02-07 01:47:24.000000000=
+ +0800
+> +++ b/drivers/scsi/arcmsr/arcmsr_attr.c 2014-01-10 20:28:48.000000000=
+ +0800
+> -#define ARCMSR_SCSI_INITIATOR_ID
+>          255
+> +#define ARCMSR_SCSI_INITIATOR_ID       255
 
-Cheers,
+Please do white space changes in a separate change set so that the logi=
+c
+changes are easier to review.
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+Use "git citool".  Highlight the lines with white space changes and the=
 n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+right click and select "Stage lines for commit".  It is a very useful
+tool.
+
+regards,
+dan carpenter
