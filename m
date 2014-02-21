@@ -1,50 +1,69 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: Re: [PATCH v1.3 10/11] arcmsr: Fixed coding style errors and white
- space change
-Date: Fri, 21 Feb 2014 11:19:33 +0300
-Message-ID: <20140221081933.GH26776@mwanda>
-References: <CAKiknE-FJg9y7CTMbvow277mr=H+oKkBLjDc1qDYjhHtpfBdZA@mail.gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 4/9] firewire: don't use PREPARE_DELAYED_WORK
+Date: Fri, 21 Feb 2014 05:03:01 -0500
+Message-ID: <20140221100301.GA14653@mtj.dyndns.org>
+References: <1392929071-16555-1-git-send-email-tj@kernel.org>
+ <1392929071-16555-5-git-send-email-tj@kernel.org>
+ <5306AF8E.3080006@hurleysoftware.com>
+ <20140221015935.GF6897@htj.dyndns.org>
+ <5306B4DF.4000901@hurleysoftware.com>
+ <20140221021341.GG6897@htj.dyndns.org>
+ <5306E06C.5020805@hurleysoftware.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <target-devel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <CAKiknE-FJg9y7CTMbvow277mr=H+oKkBLjDc1qDYjhHtpfBdZA@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: =?utf-8?B?6buD5riF6ZqG?= <ching2048@areca.com.tw>
-Cc: jbottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, fengguang.wu@intel.com, Tomas Henzl <thenzl@redhat.com>
+In-Reply-To: <5306E06C.5020805@hurleysoftware.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Peter Hurley <peter@hurleysoftware.com>
+Cc: laijs@cn.fujitsu.com, linux-kernel@vger.kernel.org, Stefan Richter <stefanr@s5r6.in-berlin.de>, linux1394-devel@lists.sourceforge.net, Chris Boot <bootc@bootc.net>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Feb 21, 2014 at 12:35:58PM +0800, =E9=BB=83=E6=B8=85=E9=9A=86 w=
-rote:
-> From: Ching <ching2048@areca.com.tw>
->=20
-> Fixed coding style errors and white space change.
->=20
+On Fri, Feb 21, 2014 at 12:13:16AM -0500, Peter Hurley wrote:
+> CPU 0                            | CPU 1
+>                                  |
+>  INIT_WORK(fw_device_workfn)     |
+>                                  |
+>  workfn = funcA                  |
+>  queue_work_on()                 |
+>  .                               | process_one_work()
+>  .                               |   ..
+>  .                               |   worker->current_func = work->func
+>  .                               |
+>  .                               |   speculative load of workfn = funcA
+>  .                               |   .
+>  workfn = funcB                  |   .
+>  queue_work_on()                 |   .
+>    local_irq_save()              |   .
+>    test_and_set_bit() == 1       |   .
+>                                  |   set_work_pool_and_clear_pending()
+>    work is not queued            |     smp_wmb
+>     funcB never runs             |     set_work_data()
+>                                  |       atomic_set()
+>                                  |   spin_unlock_irq()
+>                                  |
+>                                  |   worker->current_func(work)  @ fw_device_workfn
+>                                  |      workfn()  @ funcA
+> 
+> 
+> The speculative load of workfn on CPU 1 is valid because no rmb will occur
+> between the load and the execution of workfn() on CPU 1.
+> 
+> Thus funcB will never execute because, in this circumstance, a second
+> worker is not queued (because PENDING had not yet been cleared).
 
-This doesn't *just* do that.  It also has code changes.
+There's no right or wrong execution.  Executions of either funcA or
+funcB are correct results.  The only memory ordering guarantee
+workqueue gives is that anything written before the work item is
+queued will be visible when that instance starts executing.  When a
+work item is not queued, no ordering is guaranteed between the
+queueing attempt and the execution of the existing instance.  We can
+add such guarantee, not sure how much it'd matter but it's not like
+it's gonna cost a lot either.
 
-> -static void arcmsr_hbaC_flush_cache(struct AdapterControlBlock *pACB=
-)
-> +static void
-> +arcmsr_hbaC_flush_cache(struct AdapterControlBlock *pACB)
->  {
->         struct MessageUnit_C __iomem *reg =3D pACB->pmuC;
-> -       int retry_count =3D 30;/* enlarge wait flush adapter cache ti=
-me:
-> 10 minute */
-> +       int retry_count =3D 6;
-> +
->         writel(ARCMSR_INBOUND_MESG0_FLUSH_CACHE, &reg->inbound_msgadd=
-r0);
->         writel(ARCMSR_HBCMU_DRV2IOP_MESSAGE_CMD_DONE, &reg->inbound_d=
-oorbell);
-> +       readl(&reg->inbound_doorbell);
-> +       readl(&reg->inbound_msgaddr0);
+This doesn't have much to do with the current series tho.  In fact,
+PREPARE_WORK can't ever be made to give such guarantee.  The function
+pointer has to fetched before clearing of PENDING.
 
-
-We also change the printed driver string and there are other code
-changes as well.
-
-regards,
-dan carpenter
+-- 
+tejun
