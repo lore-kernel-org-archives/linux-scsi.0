@@ -1,115 +1,75 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v11 2/3] ata: Add APM X-Gene SoC AHCI SATA host
- controller driver
-Date: Fri, 21 Feb 2014 11:06:19 -0500
-Message-ID: <20140221160619.GC460@htj.dyndns.org>
-References: <1392621433-5566-1-git-send-email-lho@apm.com>
- <1392621433-5566-2-git-send-email-lho@apm.com>
- <1392621433-5566-3-git-send-email-lho@apm.com>
+From: Peter Hurley <peter@hurleysoftware.com>
+Subject: Re: [PATCH 4/9] firewire: don't use PREPARE_DELAYED_WORK
+Date: Fri, 21 Feb 2014 11:53:46 -0500
+Message-ID: <5307849A.9050209@hurleysoftware.com>
+References: <1392929071-16555-1-git-send-email-tj@kernel.org> <1392929071-16555-5-git-send-email-tj@kernel.org> <5306AF8E.3080006@hurleysoftware.com> <20140221015935.GF6897@htj.dyndns.org> <5306B4DF.4000901@hurleysoftware.com> <20140221021341.GG6897@htj.dyndns.org> <5306E06C.5020805@hurleysoftware.com> <20140221100301.GA14653@mtj.dyndns.org> <53074BE4.1020307@hurleysoftware.com> <20140221130614.GH6897@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1392621433-5566-3-git-send-email-lho@apm.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Loc Ho <lho@apm.com>
-Cc: olof@lixom.net, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <20140221130614.GH6897@htj.dyndns.org>
+Sender: target-devel-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: laijs@cn.fujitsu.com, linux-kernel@vger.kernel.org, Stefan Richter <stefanr@s5r6.in-berlin.de>, linux1394-devel@lists.sourceforge.net, Chris Boot <bootc@bootc.net>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hello, Loc.
+Hi Tejun,
 
-On Mon, Feb 17, 2014 at 12:17:12AM -0700, Loc Ho wrote:
-...
-> +static int xgene_ahci_get_channel(struct ata_host *host, struct ata_port *port)
-> +{
-> +	int i;
-> +	for (i = 0; i < host->n_ports; i++)
-> +		if (host->ports[i] == port)
-> +			return i;
-> +	return -1;
-> +}
+On 02/21/2014 08:06 AM, Tejun Heo wrote:
+> Hello,
+>
+> On Fri, Feb 21, 2014 at 07:51:48AM -0500, Peter Hurley wrote:
+>> I think the vast majority of kernel code which uses the workqueue
+>> assumes there is a memory ordering guarantee.
+>
+> Not really.  Workqueues haven't even guaranteed non-reentrancy until
+> recently, forcing everybody to lock explicitly in the work function.
+> I don't think there'd be many, if any, use cases which depend on
+> ordering guarantee on duplicate queueing.
 
-Didn't I ask you why you weren't using ap->port_no?
+I added some in 3.12 :)
 
-> +/*
-> + * Custom Query ID command
-> + *
-> + * Due to HW errata, we must stop and re-start the port state machine after
-> + * read ID command. Also disable support for DEVSLP as hardware don't support
-> + * it.
-> + */
+>> Another way to look at this problem is that process_one_work()
+>> doesn't become the existing instance _until_ PENDING is cleared.
+>
+> Sure, having that guarantee definitely is nicer and all we need seems
+> to be mb_after_unlock in the execution path.  Please feel free to
+> submit a patch.
 
-Please use /** function comment style.
+Ok, I can do that. But AFAIK it'll have to be an smp_rmb(); there is
+no mb__after unlock.
 
-> +static unsigned int xgene_ahci_read_id(struct ata_device *dev,
-> +				       struct ata_taskfile *tf, u16 *id)
-> +{
-> +	u32 err_mask;
-> +	void __iomem *port_mmio = ahci_port_base(dev->link->ap);
-> +
-> +	err_mask = ata_do_dev_read_id(dev, tf, id);
-> +	if (err_mask)
-> +		return err_mask;
-> +
-> +	/* Mask reserved area. Bit78 spec of Link Power Management
+[ After thinking about it some, I don't think preventing speculative
+   writes before clearing PENDING if useful or necessary, so that's
+   why I'm suggesting only the rmb. ]
 
-Another review point which hasn't been addressed.  Please use
-fully-winged comments for multiline comments.
+>>> add such guarantee, not sure how much it'd matter but it's not like
+>>> it's gonna cost a lot either.
+>>>
+>>> This doesn't have much to do with the current series tho.  In fact,
+>>> PREPARE_WORK can't ever be made to give such guarantee.
+>>
+>> Yes, I agree that PREPARE_DELAYED_WORK was also broken usage with the
+>> same problem. [And there are other bugs in that firewire device work
+>> code which I'm working on.]
+>>
+>>> The function pointer has to fetched before clearing of PENDING.
+>>
+>> Why?
+>>
+>> As long as the load takes place within the pool->lock, I don't think
+>> it matters (especially now PREPARE_WORK is removed).
+>
+> Hmmm... I was talking about PREPARE_WORK().  Clearing PENDING means
+> that the work item is released from the worker context and may be
+> freed or reused at any time (hmm... this may not be true anymore as
+> non-syncing variants of cancel_work are gone), so clearing PENDING
+> should be the last access to the work item and thus we can't use that
+> as the barrier event for fetching its work function.
 
-> +	 * bit15-8: reserved
-> +	 * bit7: NCQ autosence
-> +	 * bit6: Software settings preservation supported
-> +	 * bit5: reserved
-> +	 * bit4: In-order sata delivery supported
-> +	 * bit3: DIPM requests supported
-> +	 * bit2: DMA Setup FIS Auto-Activate optimization supported
-> +	 * bit1: DMA Setup FIX non-Zero buffer offsets supported
-> +	 * bit0: Reserved
-> +	 *
-> +	 * Clear reserved bit (DEVSLP bit) as we don't support DEVSLP
-> +	 */
-> +	id[78] &= 0x00FF;
-> +
-> +	/* Restart the port if required due to HW errata */
-> +	if (!readl(port_mmio + PORT_CMD_ISSUE)) {
-> +		writel(PORT_CMD_FIS_RX, port_mmio + PORT_CMD);
-> +		readl(port_mmio + PORT_CMD);	/* Force a barrier */
-> +		writel(PORT_CMD_FIS_RX | PORT_CMD_START, port_mmio + PORT_CMD);
-> +		readl(port_mmio + PORT_CMD);	/* Force a barrier */
-> +	}
-> +	return 0;
-> +}
-...
-> +static int xgene_ahci_do_hardreset(struct ata_link *link,
-> +				   unsigned long deadline, bool *online)
-> +{
-...
-> +hardreset_retry:
-> +	/* clear D2H reception area to properly wait for D2H FIS */
-> +	ata_tf_init(link->device, &tf);
-> +	tf.command = ATA_BUSY;
-> +	ata_tf_to_fis(&tf, 0, 0, d2h_fis);
-> +	rc = sata_link_hardreset(link, timing, deadline, online,
-> +				 ahci_check_ready);
-> +
-> +	if (*online) {
-> +		int chan = xgene_ahci_get_channel(ap->host, ap);
-> +
-> +		/* Check to ensure that the disk comes up in matching speed */
-> +		if (first_time) {
-> +			u32 gen_speed;
-> +
-> +			first_time = 0;
-> +			sata_scr_read(link, SCR_STATUS, &gen_speed);
-> +			gen_speed = (gen_speed >> 4) & 0xf;
-> +			if (gen_speed == 1 || gen_speed == 2) {
-> +				/* For Gen2/1 and first time, let's check again
-> +				 * with Gen2/1 PHY to ensure actual Gen2/1 disk.
-> +				 */
+Yeah, it seems like the work item lifetime is at least guaranteed
+while either PENDING is set _or_ while the pool->lock is held
+after PENDING is cleared.
 
-Another review point not addressed.
-
-Thanks.
-
--- 
-tejun
+Regards,
+Peter Hurley
