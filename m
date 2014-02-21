@@ -1,57 +1,72 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v12 2/3] ata: Add APM X-Gene SoC AHCI SATA host
- controller driver
-Date: Fri, 21 Feb 2014 14:00:58 -0500
-Message-ID: <20140221190058.GB12830@htj.dyndns.org>
-References: <1393004853-25994-1-git-send-email-lho@apm.com>
- <1393004853-25994-2-git-send-email-lho@apm.com>
- <1393004853-25994-3-git-send-email-lho@apm.com>
- <20140221175542.GA12830@htj.dyndns.org>
- <CAPw-ZTkWbYfCKs+4ZJ7_zuuFZy5RH51319Pj=3i5kdg162UVXg@mail.gmail.com>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [PATCH 4/9] firewire: don't use PREPARE_DELAYED_WORK
+Date: Fri, 21 Feb 2014 21:45:48 +0100
+Message-ID: <20140221214548.4dd6373c@stein>
+References: <1392929071-16555-1-git-send-email-tj@kernel.org>
+	<1392929071-16555-5-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qg0-f48.google.com ([209.85.192.48]:58836 "EHLO
-	mail-qg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753134AbaBUTBC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Feb 2014 14:01:02 -0500
-Content-Disposition: inline
-In-Reply-To: <CAPw-ZTkWbYfCKs+4ZJ7_zuuFZy5RH51319Pj=3i5kdg162UVXg@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
+In-Reply-To: <1392929071-16555-5-git-send-email-tj@kernel.org>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
+List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
+List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
+Errors-To: linux1394-devel-bounces@lists.sourceforge.net
+To: Tejun Heo <tj@kernel.org>
+Cc: laijs@cn.fujitsu.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, target-devel@vger.kernel.org, linux1394-devel@lists.sourceforge.net
 List-Id: linux-scsi@vger.kernel.org
-To: Loc Ho <lho@apm.com>
-Cc: Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Don Dutile <ddutile@redhat.com>, Jon Masters <jcm@redhat.com>, "patches@apm.com" <patches@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 
-Hello, Loc.
-
-On Fri, Feb 21, 2014 at 10:43:52AM -0800, Loc Ho wrote:
-> Do you want this for all functions or only one that with comment? Also,
-> for both drivers - host and PHY drivres?
-
-Oh, no need to do that for every function.  It's just customary to use
-function comment when there's sufficient amount to explain for the
-whole function.
-
-> > Can you please go back two reviews and re-read what I requested?
-> > Also, if you're unsure, please don't hesitate to ask back.  It's
-> > usually a lot easier for both parties than iterating through patchsets
-> > without properly understanding each other.
-> >
+On Feb 20 Tejun Heo wrote:
+> PREPARE_[DELAYED_]WORK() are being phased out.  They have few users
+> and a nasty surprise in terms of reentrancy guarantee as workqueue
+> considers work items to be different if they don't have the same work
+> function.
 > 
-> Before posting this morning, I had gone over all response email from you
-> since we first interacted. I am not quite follow what you want here. Are
-> you suggesting that I should move this out as an errata patch?
+> firewire core-device and sbp2 have been been multiplexing work items
+> with multiple work functions.  Introduce fw_device_workfn() and
+> sbp2_lu_workfn() which invoke fw_device->workfn and
+> sbp2_logical_unit->workfn respectively and always use the two
+> functions as the work functions and update the users to set the
+> ->workfn fields instead of overriding work functions using
+> PREPARE_DELAYED_WORK().
+> 
+> It would probably be best to route this with other related updates
+> through the workqueue tree.
+> 
+> Compile tested.
+> 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>
+> Cc: linux1394-devel@lists.sourceforge.net
 
-Hmmm... maybe I was too ambiguous.  Because the behavior is quite
-unusual and can make the error handling behavior deviate, I think it
-deserves to explain 1. why such behavior is necessary and 2. what the
-implications are (e.g. in corner cases, how long it could add to reset
-timeout) and preferably 3. rationale for choosing this specific
-approach given #1 and #2, so that when someone else reads the code
-later on [s]he doesn't have to second-guess the original intention of
-the workaround.
+Acked-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
 
-Thanks.
+And lightly runtime-tested as well.
+
+This doesn't actually touch sbp-target; the following Cc's could be
+dropped:
+
+> Cc: Chris Boot <bootc@bootc.net>
+> Cc: linux-scsi@vger.kernel.org
+> Cc: target-devel@vger.kernel.org
+> ---
+>  drivers/firewire/core-device.c | 22 +++++++++++++++-------
+>  drivers/firewire/sbp2.c        | 17 +++++++++++++----
+>  include/linux/firewire.h       |  1 +
+>  3 files changed, 29 insertions(+), 11 deletions(-)
 
 -- 
-tejun
+Stefan Richter
+-=====-====- --=- =-=-=
+http://arcgraph.de/sr/
+
+------------------------------------------------------------------------------
+Managing the Performance of Cloud-Based Applications
+Take advantage of what the Cloud has to offer - Avoid Common Pitfalls.
+Read the Whitepaper.
+http://pubads.g.doubleclick.net/gampad/clk?id=121054471&iu=/4140/ostg.clktrk
