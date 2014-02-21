@@ -1,78 +1,52 @@
-From: Joe Lawrence <joe.lawrence@stratus.com>
-Subject: Re: [PATCH] scsi_transport_sas: move bsg destructor into
- sas_rphy_remove
-Date: Fri, 21 Feb 2014 17:15:02 -0500
-Message-ID: <20140221171502.74830b03@jlaw-desktop.mno.stratus.com>
-References: <20131120140840.4d1f23ca@jlaw-desktop.mno.stratus.com>
-	<20131125112339.45e279db@jlaw-desktop.mno.stratus.com>
-	<20131203130305.1d414258@jlaw-desktop.mno.stratus.com>
-	<20131203131550.17a56000@jlaw-desktop.mno.stratus.com>
-	<CAA9_cme2REPT4L+uBkZaYtnfq1W2efO3Cs+5i61ArHiB4XdOgg@mail.gmail.com>
+From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
+Subject: [PATCH 0/6] hpsa: supplemental February 2014 driver updates
+Date: Fri, 21 Feb 2014 16:24:47 -0600
+Message-ID: <20140221222153.31344.99129.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from p01c12o144.mxlogic.net ([208.65.145.67]:44338 "EHLO
-	p01c12o144.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752899AbaBUWPZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Feb 2014 17:15:25 -0500
-In-Reply-To: <CAA9_cme2REPT4L+uBkZaYtnfq1W2efO3Cs+5i61ArHiB4XdOgg@mail.gmail.com>
+Received: from g9t1613g.houston.hp.com ([15.240.0.71]:48933 "EHLO
+	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750887AbaBUWZv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Feb 2014 17:25:51 -0500
+Received: from g4t3427.houston.hp.com (g4t3427.houston.hp.com [15.201.208.55])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by g9t1613g.houston.hp.com (Postfix) with ESMTPS id 08E2B6127B
+	for <linux-scsi@vger.kernel.org>; Fri, 21 Feb 2014 22:25:51 +0000 (UTC)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Dave Jiang <dave.jiang@gmail.com>, artur.paszkiewicz@intel.com, Lukasz Dorau <lukasz.dorau@intel.com>
+To: james.bottomley@hansenpartnership.com
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, stephenmcameron@gmail.com, joseph.t.handzik@hp.com, thenzl@redhat.com, michael.miller@canonical.com, scott.teel@hp.com
 
-On Wed, 12 Feb 2014 11:13:22 -0800
-Dan Williams <dan.j.williams@intel.com> wrote:
-> 
-> Acked-by: Dan Williams <dan.j.williams@intel.com>
-> 
-> I think this is the right move, and some follow-up cleanups / fixes
-> come to mind:
+The following series applies on top of the 35 patches I sent on Feb 18
+(see http://thread.gmane.org/gmane.linux.scsi/88433 )
 
-Dan -- Thanks for taking a look.  A few comments below.
+The two main changes are to bring temporarily offline devices
+(e.g. logical drives undergoing "rapid parity initialization")
+online automatically when they become ready, and adding support
+for "hba mode" for controllers which support this feature,
+to expose physical disks to the OS.
 
-> 1/ Why is sas_bsg_remove() multiplexing 2 use cases?  Let's just have
-> a sas_host_bsg_remove() and a sas_device_bsg_remove().
+---
 
-Splitting the two use cases reduces them into a simple conditional call
-to bsg_unregister_queue(), that could just be done in place.  On the
-other hand, sas_bsg_initialize() looks like it handles both cases as
-well.
+Stephen M. Cameron (5):
+      hpsa: remove unused kthread.h header
+      hpsa: bring format-in-progress drives online when ready
+      hpsa: remove unused struct request from CommandList
+      hpsa: Add hba mode to the hpsa driver
+      hpsa: Do not zero fields of ioaccel2 command structure twice
 
-> 2/ I think sas_rphy_free() mishandles the reference counts in the
-> sas_rphy_add() failing case.
-> sas_rphy_free() does:
->         transport_destroy_device(dev); /* which is just put_device(dev) */
->         put_device(dev);
-> 
-> ...but if sas_rphy_add() failed we never took the reference from
-> transport_add_device() and I expect we only have the one reference
-> from device_initialize() to drop.
-> 
-> We also ignore the return code from transport_add_device() which is
-> another hole.
+Tomas Henzl (1):
+      hpsa: increase the probability of a reported success after a device reset
 
-Ugh, I think fixing this properly would require piping the return code
-of the trigger function back out of the attribute container code:
 
-void transport_add_device()
-  void attribute_container_device_trigger()
-    loop through the attribute_container_list
-      if match
-        int transport_add_class_device()
-          ... return error ...
+ drivers/scsi/hpsa.c     |  410 +++++++++++++++++++++++++++++++++++++++++++----
+ drivers/scsi/hpsa.h     |   50 ++++++
+ drivers/scsi/hpsa_cmd.h |   21 ++
+ 3 files changed, 446 insertions(+), 35 deletions(-)
 
-Not to mention several callers of sas_rphy_add keep on truckin' when it
-does return failure.
+-- 
+-- steve
 
-Perhaps this can be handled in another way?
-
-> Commenting on this mail should refresh this in James' queue.  But you
-> may want to resend anyways given this is a few months old.
-
-Whatever is easier for James.
-
-Regards,
-
--- Joe
