@@ -1,72 +1,61 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [PATCH 4/9] firewire: don't use PREPARE_DELAYED_WORK
-Date: Fri, 21 Feb 2014 21:45:48 +0100
-Message-ID: <20140221214548.4dd6373c@stein>
-References: <1392929071-16555-1-git-send-email-tj@kernel.org>
-	<1392929071-16555-5-git-send-email-tj@kernel.org>
+From: Francois Romieu <romieu@fr.zoreil.com>
+Subject: Re: [PATCH v1.3 11/11] arcmsr: Adding support Areca
+ ARC1214/1224/1264/1284 SATA 6Gb raid controllers
+Date: Fri, 21 Feb 2014 23:09:53 +0100
+Message-ID: <20140221220953.GA14729@electric-eye.fr.zoreil.com>
+References: <CAKiknE-7TOGtN01xsXyay2gv69ruVvAEq22ozu=vTzh_R=SxuQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <1392929071-16555-5-git-send-email-tj@kernel.org>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-Errors-To: linux1394-devel-bounces@lists.sourceforge.net
-To: Tejun Heo <tj@kernel.org>
-Cc: laijs@cn.fujitsu.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, target-devel@vger.kernel.org, linux1394-devel@lists.sourceforge.net
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CAKiknE-7TOGtN01xsXyay2gv69ruVvAEq22ozu=vTzh_R=SxuQ@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: =?utf-8?B?6buD5riF6ZqG?= <ching2048@areca.com.tw>
+Cc: jbottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Dan Carpenter <dan.carpenter@oracle.com>, fengguang.wu@intel.com, Tomas Henzl <thenzl@redhat.com>, =?utf-8?B?5ZCz56Kn5ra8?= <billion.wu@areca.com.tw>
 List-Id: linux-scsi@vger.kernel.org
 
-On Feb 20 Tejun Heo wrote:
-> PREPARE_[DELAYED_]WORK() are being phased out.  They have few users
-> and a nasty surprise in terms of reentrancy guarantee as workqueue
-> considers work items to be different if they don't have the same work
-> function.
-> 
-> firewire core-device and sbp2 have been been multiplexing work items
-> with multiple work functions.  Introduce fw_device_workfn() and
-> sbp2_lu_workfn() which invoke fw_device->workfn and
-> sbp2_logical_unit->workfn respectively and always use the two
-> functions as the work functions and update the users to set the
-> ->workfn fields instead of overriding work functions using
-> PREPARE_DELAYED_WORK().
-> 
-> It would probably be best to route this with other related updates
-> through the workqueue tree.
-> 
-> Compile tested.
-> 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>
-> Cc: linux1394-devel@lists.sourceforge.net
+=E9=BB=83=E6=B8=85=E9=9A=86 <ching2048@areca.com.tw> :
+[...]
+> diff -uprN a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/a=
+rcmsr_hba.c
+> --- a/drivers/scsi/arcmsr/arcmsr_hba.c  2014-02-20 19:11:05.000000000=
+ +0800
+> +++ b/drivers/scsi/arcmsr/arcmsr_hba.c  2014-02-21 01:47:26.000000000=
+ +0800
+[...]
+> @@ -2894,6 +3372,89 @@ polling_hbc_ccb_retry:
+>  }
+>=20
+>  static int
+> +arcmsr_hbaD_polling_ccbdone(struct AdapterControlBlock *acb,
+> +                               struct CommandControlBlock *poll_ccb)
+> +{
+> +       bool error;
+> +       uint32_t poll_ccb_done =3D 0, poll_count =3D 0, flag_ccb, ccb=
+_cdb_phy;
+> +       int rtn, doneq_index, index_stripped, outbound_write_pointer;
+> +       unsigned long flags;
+> +       struct ARCMSR_CDB *arcmsr_cdb;
+> +       struct CommandControlBlock *pCCB;
+> +       struct MessageUnit_D *pmu =3D acb->pmuD;
+> +
+> +       spin_lock_irqsave(&acb->doneq_lock, flags);
+> +polling_hbaD_ccb_retry:
+> +       poll_count++;
+> +       while (1) {
+> +               outbound_write_pointer =3D pmu->done_qbuffer[0].addre=
+ssLow + 1;
+> +               doneq_index =3D pmu->doneq_index;
+> +               if ((outbound_write_pointer & 0xFFF) =3D=3D (doneq_in=
+dex & 0xFFF)) {
+> +                       if (poll_ccb_done) {
+> +                               rtn =3D SUCCESS;
+> +                               break;
+> +                       } else {
+> +                               msleep(25);
 
-Acked-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
+msleep with spinlock held.
 
-And lightly runtime-tested as well.
-
-This doesn't actually touch sbp-target; the following Cc's could be
-dropped:
-
-> Cc: Chris Boot <bootc@bootc.net>
-> Cc: linux-scsi@vger.kernel.org
-> Cc: target-devel@vger.kernel.org
-> ---
->  drivers/firewire/core-device.c | 22 +++++++++++++++-------
->  drivers/firewire/sbp2.c        | 17 +++++++++++++----
->  include/linux/firewire.h       |  1 +
->  3 files changed, 29 insertions(+), 11 deletions(-)
-
--- 
-Stefan Richter
--=====-====- --=- =-=-=
-http://arcgraph.de/sr/
-
-------------------------------------------------------------------------------
-Managing the Performance of Cloud-Based Applications
-Take advantage of what the Cloud has to offer - Avoid Common Pitfalls.
-Read the Whitepaper.
-http://pubads.g.doubleclick.net/gampad/clk?id=121054471&iu=/4140/ostg.clktrk
+--=20
+Ueimor
