@@ -1,7 +1,7 @@
 From: Daeseok Youn <daeseok.youn@gmail.com>
-Subject: [PATCH] [SCSI] be2iscsi: make beiscsi_process_mcc() as static
-Date: Fri, 21 Feb 2014 10:11:40 +0900
-Message-ID: <4848622.esnnEkYuHI@daeseok-laptop.cloud.net>
+Subject: [PATCH] [SCSI] be2iscsi: use NULL instead of 0 for pointer
+Date: Fri, 21 Feb 2014 10:12:45 +0900
+Message-ID: <8505576.9F9pTSfgP9@daeseok-laptop.cloud.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7Bit
@@ -11,30 +11,41 @@ To: JBottomley@parallels.com
 Cc: jayamohan.kallickal@emulex.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
->From 137a2f619f1fa93fc497d891954d83c6cb307d11 Mon Sep 17 00:00:00 2001
+>From b483ef302f7d77c586949ae170754d589e8a4935 Mon Sep 17 00:00:00 2001
 From: Daeseok Youn <daeseok.youn@gmail.com>
-Date: Fri, 21 Feb 2014 08:43:56 +0900
-Subject: [PATCH] [SCSI] be2iscsi: make beiscsi_process_mcc() as static
+Date: Fri, 21 Feb 2014 08:39:08 +0900
+Subject: [PATCH] [SCSI] be2iscsi: use NULL instead of 0 for pointer
 
-beiscsi_process_mcc() is only referenced in this file.
+sparse says:
+
+drivers/scsi/be2iscsi/be_cmds.c:27:32: warning:
+ Using plain integer as NULL pointer
+drivers/scsi/be2iscsi/be_cmds.c:28:34: warning:
+ Using plain integer as NULL pointer
+drivers/scsi/be2iscsi/be_cmds.c:29:34: warning:
+ Using plain integer as NULL pointer
 
 Signed-off-by: Daeseok Youn <daeseok.youn@gmail.com>
 ---
- drivers/scsi/be2iscsi/be_cmds.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/be2iscsi/be_cmds.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
-index 1ec9793..d4fff8a 100644
+index 3338391..1ec9793 100644
 --- a/drivers/scsi/be2iscsi/be_cmds.c
 +++ b/drivers/scsi/be2iscsi/be_cmds.c
-@@ -398,7 +398,7 @@ static void beiscsi_cq_notify(struct beiscsi_hba *phba, u16 qid, bool arm,
- }
- 
- 
--int beiscsi_process_mcc(struct beiscsi_hba *phba)
-+static int beiscsi_process_mcc(struct beiscsi_hba *phba)
+@@ -24,9 +24,9 @@
+ int beiscsi_pci_soft_reset(struct beiscsi_hba *phba)
  {
- 	struct be_mcc_compl *compl;
- 	int num = 0, status = 0;
+ 	u32 sreset;
+-	u8 *pci_reset_offset = 0;
+-	u8 *pci_online0_offset = 0;
+-	u8 *pci_online1_offset = 0;
++	u8 *pci_reset_offset = NULL;
++	u8 *pci_online0_offset = NULL;
++	u8 *pci_online1_offset = NULL;
+ 	u32 pconline0 = 0;
+ 	u32 pconline1 = 0;
+ 	u32 i;
 -- 
 1.7.9.5
