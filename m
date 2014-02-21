@@ -1,51 +1,195 @@
-From: Daeseok Youn <daeseok.youn@gmail.com>
-Subject: [PATCH] [SCSI] be2iscsi: use NULL instead of 0 for pointer
-Date: Fri, 21 Feb 2014 10:12:45 +0900
-Message-ID: <8505576.9F9pTSfgP9@daeseok-laptop.cloud.net>
+From: Quinn Tran <quinn.tran@qlogic.com>
+Subject: Re: [PATCH 0/5] qla2xxx: NPIV target mode fixes for v3.14-rc
+Date: Fri, 21 Feb 2014 01:20:11 +0000
+Message-ID: <504EB66DAC8D234EB8E8560985C2D7AD46CDB0DF@avmb2.qlogic.org>
+References: <1392930209-25065-1-git-send-email-nab@daterainc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: JBottomley@parallels.com
-Cc: jayamohan.kallickal@emulex.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: multipart/mixed;
+	boundary="_000_504EB66DAC8D234EB8E8560985C2D7AD46CDB0DFavmb2qlogicorg_"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:46934 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755418AbaBUBUO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 Feb 2014 20:20:14 -0500
+Received: from pps.filterd (m0000643.ppops.net [127.0.0.1])
+	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id s1L1KDQU015237
+	for <linux-scsi@vger.kernel.org>; Thu, 20 Feb 2014 17:20:13 -0800
+Received: from avcashub1.qlogic.com (avcashub3.qlogic.com [198.70.193.117])
+	by mx0b-0016ce01.pphosted.com with ESMTP id 1htwtydjmn-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Thu, 20 Feb 2014 17:20:13 -0800
+In-Reply-To: <1392930209-25065-1-git-send-email-nab@daterainc.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Sawan Chandak <sawan.chandak@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 
->From b483ef302f7d77c586949ae170754d589e8a4935 Mon Sep 17 00:00:00 2001
-From: Daeseok Youn <daeseok.youn@gmail.com>
-Date: Fri, 21 Feb 2014 08:39:08 +0900
-Subject: [PATCH] [SCSI] be2iscsi: use NULL instead of 0 for pointer
+--_000_504EB66DAC8D234EB8E8560985C2D7AD46CDB0DFavmb2qlogicorg_
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <F46403FD838B4A41AB18821B7A7A0E5D@qlogic.com>
+Content-Transfer-Encoding: quoted-printable
 
-sparse says:
+Nicholas,
 
-drivers/scsi/be2iscsi/be_cmds.c:27:32: warning:
- Using plain integer as NULL pointer
-drivers/scsi/be2iscsi/be_cmds.c:28:34: warning:
- Using plain integer as NULL pointer
-drivers/scsi/be2iscsi/be_cmds.c:29:34: warning:
- Using plain integer as NULL pointer
+Will do. Thanks.
 
-Signed-off-by: Daeseok Youn <daeseok.youn@gmail.com>
----
- drivers/scsi/be2iscsi/be_cmds.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
-index 3338391..1ec9793 100644
---- a/drivers/scsi/be2iscsi/be_cmds.c
-+++ b/drivers/scsi/be2iscsi/be_cmds.c
-@@ -24,9 +24,9 @@
- int beiscsi_pci_soft_reset(struct beiscsi_hba *phba)
- {
- 	u32 sreset;
--	u8 *pci_reset_offset = 0;
--	u8 *pci_online0_offset = 0;
--	u8 *pci_online1_offset = 0;
-+	u8 *pci_reset_offset = NULL;
-+	u8 *pci_online0_offset = NULL;
-+	u8 *pci_online1_offset = NULL;
- 	u32 pconline0 = 0;
- 	u32 pconline1 = 0;
- 	u32 i;
--- 
-1.7.9.5
+Regards,
+Quinn Tran
+
+
+
+
+On 2/20/14 1:03 PM, "Nicholas A. Bellinger" <nab@daterainc.com> wrote:
+
+>From: Nicholas Bellinger <nab@linux-iscsi.org>
+>
+>Hi Sawan, Quinn, & Co.
+>
+>The following series addresses a number of NPIV related bugs specific
+>to v3.14-rc code, mostly involving the underlying configfs dependency
+>of base_vha / base_tpg to not be removed while there are active NPIV
+>ports.
+>
+>Patch #1 fixes a race between the qlt_lport_register() callback and
+>subsequent shutdown operations.
+>
+>Patch #2 ensures that shutdown of a base_vha port fails when there
+>are active npiv_ports_inuse.
+>
+>Patch #3 adds seperate enable/disable attribute logic that is specific
+>to NPIV operation, and patch #4 adds the configfs_[un]depend_item()
+>calls in ensure that base_vha / base_tpg cannot be removed from the
+>configfs hierarchy until all associated NPIV ports have been shutdown.
+>
+>And patch #5 fixes a seperate issue with NAA formatting of EVPD=3D0x83
+>device identifier for NPIV WWPNs.
+>
+>Please review.
+>
+>Thanks!
+>
+>--nab
+>
+>Nicholas Bellinger (5):
+>  qla2xxx: Fix qlt_lport_register base_vha callback race
+>  qla2xxx: Check + fail when npiv_vports_inuse exists in shutdown
+>  tcm_qla2xxx: Add NPIV specific enable/disable attribute logic
+>  tcm_qla2xxx: Perform configfs depend/undepend for base_tpg
+>  tcm_qla2xxx: Fix NAA formatted name for NPIV WWPNs
+>
+> drivers/scsi/qla2xxx/qla_target.c  |   39 +++++++--
+> drivers/scsi/qla2xxx/qla_target.h  |    2 +-
+> drivers/scsi/qla2xxx/tcm_qla2xxx.c |  158
+>++++++++++++++++++++++++++----------
+> drivers/scsi/qla2xxx/tcm_qla2xxx.h |    7 +-
+> 4 files changed, 153 insertions(+), 53 deletions(-)
+>
+>--
+>1.7.10.4
+>
+
+
+________________________________
+
+This message and any attached documents contain information from QLogic Cor=
+poration or its wholly-owned subsidiaries that may be confidential. If you =
+are not the intended recipient, you may not read, copy, distribute, or use =
+this information. If you have received this transmission in error, please n=
+otify the sender immediately by reply e-mail and then delete this message.
+
+--_000_504EB66DAC8D234EB8E8560985C2D7AD46CDB0DFavmb2qlogicorg_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
+
+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
+8glwNgAqQAWg/HB5KkAN4VX1KkAFsXwivzuwVyGoSa4XZOOv8WVCEe8cYLNTVfAAcW0EAajCXWL6
+cgNgcipAC1BvAz/xBpDfOvA7shIAPAI7AG0HgKwRexAgOuFiOvAJcAtQOvBl/i0AwGMSWZE7sQOg
+nbOzNQ+llSQGFUK9UB8AQgABAAAAFgAAAFEAdQBpAG4AbgAgAFQAcgBhAG4AAAAAAB8AZQABAAAA
+LAAAAHEAdQBpAG4AbgAuAHQAcgBhAG4AQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwBkAAEAAAAK
+AAAAUwBNAFQAUAAAAAAAAgFBAAEAAABkAAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAUQB1AGkA
+bgBuACAAVAByAGEAbgAAAFMATQBUAFAAAABxAHUAaQBuAG4ALgB0AHIAYQBuAEAAcQBsAG8AZwBp
+AGMALgBjAG8AbQAAAB8AAl0BAAAALAAAAHEAdQBpAG4AbgAuAHQAcgBhAG4AQABxAGwAbwBnAGkA
+YwAuAGMAbwBtAAAAHwDlXwEAAAA0AAAAcwBpAHAAOgBxAHUAaQBuAG4ALgB0AHIAYQBuAEAAcQBs
+AG8AZwBpAGMALgBjAG8AbQAAAB8AGgwBAAAAFgAAAFEAdQBpAG4AbgAgAFQAcgBhAG4AAAAAAB8A
+HwwBAAAALAAAAHEAdQBpAG4AbgAuAHQAcgBhAG4AQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAe
+DAEAAAAKAAAAUwBNAFQAUAAAAAAAAgEZDAEAAABkAAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACA
+UQB1AGkAbgBuACAAVAByAGEAbgAAAFMATQBUAFAAAABxAHUAaQBuAG4ALgB0AHIAYQBuAEAAcQBs
+AG8AZwBpAGMALgBjAG8AbQAAAB8AAV0BAAAALAAAAHEAdQBpAG4AbgAuAHQAcgBhAG4AQABxAGwA
+bwBnAGkAYwAuAGMAbwBtAAAAHwD4PwEAAAAWAAAAUQB1AGkAbgBuACAAVAByAGEAbgAAAAAAHwAj
+QAEAAAAsAAAAcQB1AGkAbgBuAC4AdAByAGEAbgBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfACJA
+AQAAAAoAAABTAE0AVABQAAAAAAACAfk/AQAAAGQAAAAAAAAAgSsfpL6jEBmdbgDdAQ9UAgAAAIBR
+AHUAaQBuAG4AIABUAHIAYQBuAAAAUwBNAFQAUAAAAHEAdQBpAG4AbgAuAHQAcgBhAG4AQABxAGwA
+bwBnAGkAYwAuAGMAbwBtAAAAHwAJXQEAAAAsAAAAcQB1AGkAbgBuAC4AdAByAGEAbgBAAHEAbABv
+AGcAaQBjAC4AYwBvAG0AAAAfADFAAQAAAAIAAAAAAAAACwBAOgEAAAAfADBAAQAAAAIAAAAAAAAA
+HwAaAAEAAAASAAAASQBQAE0ALgBOAG8AdABlAAAAAAADAPE/CQQAAAsAQDoBAAAAAwD9P+QEAAAC
+AQswAQAAABAAAACxCQFNZY4jTKeieYZH8AP2AwAXAAEAAABAADkAgFeYEKMuzwFAAAgwvo/WEKMu
+zwELAACACCAGAAAAAADAAAAAAAAARgAAAAAUhQAAAQAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAA
+AB4AAABhAGMAYwBlAHAAdABsAGEAbgBnAHUAYQBnAGUAAAAAAAEAAAAMAAAAZQBuAC0AVQBTAAAA
+CwAAgAggBgAAAAAAwAAAAAAAAEYAAAAABoUAAAAAAAAfADcAAQAAAHoAAABSAGUAOgAgAFsAUABB
+AFQAQwBIACAAMAAvADUAXQAgAHEAbABhADIAeAB4AHgAOgAgAE4AUABJAFYAIAB0AGEAcgBnAGUA
+dAAgAG0AbwBkAGUAIABmAGkAeABlAHMAIABmAG8AcgAgAHYAMwAuADEANAAtAHIAYwAAAAAAHwA9
+AAEAAAAKAAAAUgBlADoAIAAAAAAAAwA2AAAAAAAfAEIQAQAAAGwAAAA8ADEAMwA5ADIAOQAzADAA
+MgAwADkALQAyADUAMAA2ADUALQAxAC0AZwBpAHQALQBzAGUAbgBkAC0AZQBtAGEAaQBsAC0AbgBh
+AGIAQABkAGEAdABlAHIAYQBpAG4AYwAuAGMAbwBtAD4AAAACAXEAAQAAABsAAAABAc8ugj8u9cnj
+/M42R6xq+aYM2OlNmr7pF4AAHwBwAAEAAAByAAAAWwBQAEEAVABDAEgAIAAwAC8ANQBdACAAcQBs
+AGEAMgB4AHgAeAA6ACAATgBQAEkAVgAgAHQAYQByAGcAZQB0ACAAbQBvAGQAZQAgAGYAaQB4AGUA
+cwAgAGYAbwByACAAdgAzAC4AMQA0AC0AcgBjAAAAAAAfADUQAQAAAHgAAAA8ADUAMAA0AEUAQgA2
+ADYARABBAEMAOABEADIAMwA0AEUAQgA4AEUAOAA1ADYAMAA5ADgANQBDADIARAA3AEEARAA0ADYA
+QwBEAEIAMABEAEYAQABhAHYAbQBiADIALgBxAGwAbwBnAGkAYwAuAG8AcgBnAD4AAAAfADkQAQAA
+AGwAAAA8ADEAMwA5ADIAOQAzADAAMgAwADkALQAyADUAMAA2ADUALQAxAC0AZwBpAHQALQBzAGUA
+bgBkAC0AZQBtAGEAaQBsAC0AbgBhAGIAQABkAGEAdABlAHIAYQBpAG4AYwAuAGMAbwBtAD4AAAAD
+AN4/n04AAEAABzC+hMMQoy7PAQMAJgAAAAAAAgFHAAEAAAAvAAAAYz1VUzthPSA7cD1RTG9naWM7
+bD1BVk1CMi0xNDAyMjEwMTIwMTFaLTE0MTQ1MAAAHwAVEAEAAABYAAAARgA0ADYANAAwADMARgBE
+ADgAMwA4AEIANABBADQAMQBBAEIAMQA4ADgAMgAxAEIANwBBADcAQQAwAEUANQBEAEAAcQBsAG8A
+ZwBpAGMALgBjAG8AbQAAAAIBFDABAAAADAAAALYAAAD/9+N2TgAAAB8A+j8BAAAAFgAAAFEAdQBp
+AG4AbgAgAFQAcgBhAG4AAAAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAABYAAAB1AHMAZQByAC0A
+YQBnAGUAbgB0AAAAAAABAAAARgAAAE0AaQBjAHIAbwBzAG8AZgB0AC0ATQBhAGMATwB1AHQAbABv
+AG8AawAvADEANAAuADMALgA5AC4AMQAzADEAMAAzADAAAAAAAB8AAIAfpOszqHouQr57eeGpjlSz
+AQAAADgAAABDAG8AbgB2AGUAcgBzAGEAdABpAG8AbgBJAG4AZABlAHgAVAByAGEAYwBrAGkAbgBn
+AEUAeAAAAAEAAAA+AQAASQBJAD0AMAAxADAAMQBDAEYAMgBFAEEAMwAxADAARgA1AEYAMQBDAEUA
+NQAzAEIAMQBCAEMARABCADQAMABBADIANwBEADIARABFAEEARgBGADIAQQBGAEIAMwAxADsAUwBC
+AE0ASQBEAD0AMgA3ADsAUwAxAD0APAAxADMAOQAyADkAMwAwADIAMAA5AC0AMgA1ADAANgA1AC0A
+MQAtAGcAaQB0AC0AcwBlAG4AZAAtAGUAbQBhAGkAbAAtAG4AYQBiAEAAZABhAHQAZQByAGEAaQBu
+AGMALgBjAG8AbQA+ADsAVgBlAHIAcwBpAG8AbgA9AFYAZQByAHMAaQBvAG4AIAAxADQALgAyACAA
+KABCAHUAaQBsAGQAIAAzADgANwAuADAAKQAsACAAUwB0AGEAZwBlAD0ASAAyAAAAAAADAA00/T8A
+AB8AAICGAwIAAAAAAMAAAAAAAABGAQAAACAAAAB4AC0AbQBzAC0AaABhAHMALQBhAHQAdABhAGMA
+aAAAAAEAAAACAAAAAAAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAACIAAAB4AC0AbwByAGkAZwBp
+AG4AYQB0AGkAbgBnAC0AaQBwAAAAAAABAAAAGgAAAFsAMQAwAC4AMwAuADEAMAAuADgAMQBdAAAA
+AABD9A==
+
+--_000_504EB66DAC8D234EB8E8560985C2D7AD46CDB0DFavmb2qlogicorg_--
