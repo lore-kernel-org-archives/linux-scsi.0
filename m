@@ -1,101 +1,55 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 3/3] blk-mq: support partial I/O completions
-Date: Thu, 20 Feb 2014 15:32:38 -0800
-Message-ID: <20140220233352.536068886@bombadil.infradead.org>
-References: <20140220233235.443299098@bombadil.infradead.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=0003-blk-mq-support-partial-I-O-completions.patch
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+From: Stewart Smith <stewart@linux.vnet.ibm.com>
+Subject: [PATCH] scsi/sd.c: fix spun up and not ready messages to mention which disk
+Date: Fri, 21 Feb 2014 11:34:43 +1100
+Message-ID: <1392942883-4624-1-git-send-email-stewart@linux.vnet.ibm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e28smtp04.in.ibm.com ([122.248.162.4]:55550 "EHLO
+	e28smtp04.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755948AbaBUAfL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Feb 2014 19:35:11 -0500
+Received: from /spool/local
+	by e28smtp04.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <stewart@linux.vnet.ibm.com>;
+	Fri, 21 Feb 2014 06:05:08 +0530
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Stewart Smith <stewart@linux.vnet.ibm.com>
 
-Add a new blk_mq_end_io_partial function to partially complete requests
-as needed by the SCSI layer.  We do this by reusing blk_update_request
-to advance the bio instead of having a simplified version of it in
-the blk-mq code.
+Previously, many years ago, this was done in series which was fine,
+but things moved to be done in parallel and with many disks in a system
+it can be hard to see which disk spun up and which one didn't as the
+printk messages were all mixed together.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Stewart Smith <stewart@linux.vnet.ibm.com>
 ---
- block/blk-mq.c         |   37 +++++--------------------------------
- include/linux/blk-mq.h |    8 +++++++-
- 2 files changed, 12 insertions(+), 33 deletions(-)
+ drivers/scsi/sd.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 2af8405..1b8b50d 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -283,38 +283,10 @@ void blk_mq_free_request(struct request *rq)
- 	__blk_mq_free_request(hctx, ctx, rq);
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 470954a..1436c85 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1838,7 +1838,6 @@ sd_spinup_disk(struct scsi_disk *sdkp)
+ 			}
+ 			/* Wait 1 second for next try */
+ 			msleep(1000);
+-			printk(".");
+ 
+ 		/*
+ 		 * Wait for USB flash devices with slow firmware.
+@@ -1868,9 +1867,9 @@ sd_spinup_disk(struct scsi_disk *sdkp)
+ 
+ 	if (spintime) {
+ 		if (scsi_status_is_good(the_result))
+-			printk("ready\n");
++			sd_printk(KERN_NOTICE, sdkp, "ready\n");
+ 		else
+-			printk("not responding...\n");
++			sd_printk(KERN_NOTICE, sdkp, "not responding...\n");
+ 	}
  }
- 
--static void blk_mq_bio_endio(struct request *rq, struct bio *bio, int error)
-+bool blk_mq_end_io_partial(struct request *rq, int error, unsigned int nr_bytes)
- {
--	if (error)
--		clear_bit(BIO_UPTODATE, &bio->bi_flags);
--	else if (!test_bit(BIO_UPTODATE, &bio->bi_flags))
--		error = -EIO;
--
--	if (unlikely(rq->cmd_flags & REQ_QUIET))
--		set_bit(BIO_QUIET, &bio->bi_flags);
--
--	/* don't actually finish bio if it's part of flush sequence */
--	if (!(rq->cmd_flags & REQ_FLUSH_SEQ))
--		bio_endio(bio, error);
--}
--
--void blk_mq_end_io(struct request *rq, int error)
--{
--	struct bio *bio = rq->bio;
--	unsigned int bytes = 0;
--
--	trace_block_rq_complete(rq->q, rq);
--
--	while (bio) {
--		struct bio *next = bio->bi_next;
--
--		bio->bi_next = NULL;
--		bytes += bio->bi_iter.bi_size;
--		blk_mq_bio_endio(rq, bio, error);
--		bio = next;
--	}
--
--	blk_account_io_completion(rq, bytes);
-+	if (blk_update_request(rq, error, blk_rq_bytes(rq)))
-+		return true;
- 
- 	blk_account_io_done(rq);
- 
-@@ -322,8 +294,9 @@ void blk_mq_end_io(struct request *rq, int error)
- 		rq->end_io(rq, error);
- 	else
- 		blk_mq_free_request(rq);
-+	return false;
- }
--EXPORT_SYMBOL(blk_mq_end_io);
-+EXPORT_SYMBOL(blk_mq_end_io_partial);
- 
- static void __blk_mq_complete_request_remote(void *data)
- {
-diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
-index ff28fe3..2ff2e8d 100644
---- a/include/linux/blk-mq.h
-+++ b/include/linux/blk-mq.h
-@@ -133,7 +133,13 @@ struct blk_mq_hw_ctx *blk_mq_map_queue(struct request_queue *, const int ctx_ind
- struct blk_mq_hw_ctx *blk_mq_alloc_single_hw_queue(struct blk_mq_reg *, unsigned int);
- void blk_mq_free_single_hw_queue(struct blk_mq_hw_ctx *, unsigned int);
- 
--void blk_mq_end_io(struct request *rq, int error);
-+bool blk_mq_end_io_partial(struct request *rq, int error,
-+		unsigned int nr_bytes);
-+static inline void blk_mq_end_io(struct request *rq, int error)
-+{
-+	bool done = !blk_mq_end_io_partial(rq, error, blk_rq_bytes(rq));
-+	BUG_ON(!done);
-+}
- 
- void blk_mq_complete_request(struct request *rq);
  
 -- 
-1.7.10.4
+1.8.5.3
+
