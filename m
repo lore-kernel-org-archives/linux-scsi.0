@@ -1,69 +1,41 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 4/9] firewire: don't use PREPARE_DELAYED_WORK
-Date: Fri, 21 Feb 2014 05:03:01 -0500
-Message-ID: <20140221100301.GA14653@mtj.dyndns.org>
-References: <1392929071-16555-1-git-send-email-tj@kernel.org>
- <1392929071-16555-5-git-send-email-tj@kernel.org>
- <5306AF8E.3080006@hurleysoftware.com>
- <20140221015935.GF6897@htj.dyndns.org>
- <5306B4DF.4000901@hurleysoftware.com>
- <20140221021341.GG6897@htj.dyndns.org>
- <5306E06C.5020805@hurleysoftware.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 2/9] scsi: avoid taking host_lock in scsi_run_queue unless
+ nessecary
+Date: Fri, 21 Feb 2014 13:19:17 +0100
+Message-ID: <53074445.8030000@suse.de>
+References: <20140220222052.717958451@bombadil.infradead.org> <20140220222356.899671950@bombadil.infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <target-devel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <5306E06C.5020805@hurleysoftware.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Peter Hurley <peter@hurleysoftware.com>
-Cc: laijs@cn.fujitsu.com, linux-kernel@vger.kernel.org, Stefan Richter <stefanr@s5r6.in-berlin.de>, linux1394-devel@lists.sourceforge.net, Chris Boot <bootc@bootc.net>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:46180 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754004AbaBUMTS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 21 Feb 2014 07:19:18 -0500
+In-Reply-To: <20140220222356.899671950@bombadil.infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, James Bottomley <JBottomley@Parallels.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, Feb 21, 2014 at 12:13:16AM -0500, Peter Hurley wrote:
-> CPU 0                            | CPU 1
->                                  |
->  INIT_WORK(fw_device_workfn)     |
->                                  |
->  workfn = funcA                  |
->  queue_work_on()                 |
->  .                               | process_one_work()
->  .                               |   ..
->  .                               |   worker->current_func = work->func
->  .                               |
->  .                               |   speculative load of workfn = funcA
->  .                               |   .
->  workfn = funcB                  |   .
->  queue_work_on()                 |   .
->    local_irq_save()              |   .
->    test_and_set_bit() == 1       |   .
->                                  |   set_work_pool_and_clear_pending()
->    work is not queued            |     smp_wmb
->     funcB never runs             |     set_work_data()
->                                  |       atomic_set()
->                                  |   spin_unlock_irq()
->                                  |
->                                  |   worker->current_func(work)  @ fw_device_workfn
->                                  |      workfn()  @ funcA
-> 
-> 
-> The speculative load of workfn on CPU 1 is valid because no rmb will occur
-> between the load and the execution of workfn() on CPU 1.
-> 
-> Thus funcB will never execute because, in this circumstance, a second
-> worker is not queued (because PENDING had not yet been cleared).
+On 02/20/2014 11:20 PM, Christoph Hellwig wrote:
+> If we don't have starved devices we don't need to take the host lock
+> to iterate over them.  Also split the function up to be more clear.
+>=20
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-There's no right or wrong execution.  Executions of either funcA or
-funcB are correct results.  The only memory ordering guarantee
-workqueue gives is that anything written before the work item is
-queued will be visible when that instance starts executing.  When a
-work item is not queued, no ordering is guaranteed between the
-queueing attempt and the execution of the existing instance.  We can
-add such guarantee, not sure how much it'd matter but it's not like
-it's gonna cost a lot either.
+Acked-by: Hannes Reinecke <hare@suse.de>
 
-This doesn't have much to do with the current series tho.  In fact,
-PREPARE_WORK can't ever be made to give such guarantee.  The function
-pointer has to fetched before clearing of PENDING.
+Cheers,
 
--- 
-tejun
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
