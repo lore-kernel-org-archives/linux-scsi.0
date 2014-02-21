@@ -1,44 +1,40 @@
 From: Daeseok Youn <daeseok.youn@gmail.com>
-Subject: [PATCH] [SCSI] lpfc 8.3.43: use NULL instead of 0 for pointer
-Date: Fri, 21 Feb 2014 10:10:24 +0900
-Message-ID: <1790992.BDi3De8mQ2@daeseok-laptop.cloud.net>
+Subject: [PATCH] [SCSI] be2iscsi: make beiscsi_process_mcc() as static
+Date: Fri, 21 Feb 2014 10:11:40 +0900
+Message-ID: <4848622.esnnEkYuHI@daeseok-laptop.cloud.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7Bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: JBottomley@parallels.com
-Cc: james.smart@emulex.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: jayamohan.kallickal@emulex.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
->From 9e7478f6e953fac5b2bef0f5abe76fe8dc9e59d1 Mon Sep 17 00:00:00 2001
+>From 137a2f619f1fa93fc497d891954d83c6cb307d11 Mon Sep 17 00:00:00 2001
 From: Daeseok Youn <daeseok.youn@gmail.com>
-Date: Fri, 21 Feb 2014 09:03:32 +0900
-Subject: [PATCH] [SCSI] lpfc 8.3.43: use NULL instead of 0 for pointer
+Date: Fri, 21 Feb 2014 08:43:56 +0900
+Subject: [PATCH] [SCSI] be2iscsi: make beiscsi_process_mcc() as static
 
-sparse says:
-drivers/scsi/lpfc/lpfc_sli.c:16547:37: warning:
- Using plain integer as NULL pointer
+beiscsi_process_mcc() is only referenced in this file.
 
 Signed-off-by: Daeseok Youn <daeseok.youn@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_sli.c |    2 +-
+ drivers/scsi/be2iscsi/be_cmds.c |    2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 8f580fd..a218ecd 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -16544,7 +16544,7 @@ lpfc_drain_txq(struct lpfc_hba *phba)
+diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
+index 1ec9793..d4fff8a 100644
+--- a/drivers/scsi/be2iscsi/be_cmds.c
++++ b/drivers/scsi/be2iscsi/be_cmds.c
+@@ -398,7 +398,7 @@ static void beiscsi_cq_notify(struct beiscsi_hba *phba, u16 qid, bool arm,
+ }
+ 
+ 
+-int beiscsi_process_mcc(struct beiscsi_hba *phba)
++static int beiscsi_process_mcc(struct beiscsi_hba *phba)
  {
- 	LIST_HEAD(completions);
- 	struct lpfc_sli_ring *pring = &phba->sli.ring[LPFC_ELS_RING];
--	struct lpfc_iocbq *piocbq = 0;
-+	struct lpfc_iocbq *piocbq = NULL;
- 	unsigned long iflags = 0;
- 	char *fail_msg = NULL;
- 	struct lpfc_sglq *sglq;
+ 	struct be_mcc_compl *compl;
+ 	int num = 0, status = 0;
 -- 
 1.7.9.5
-
----
