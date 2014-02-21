@@ -1,38 +1,115 @@
-From: James Bottomley <jbottomley@parallels.com>
-Subject: Re: [PATCH v1.3 1/11] arcmsr: Revise interrupt service routine to
- fix command timeout
-Date: Fri, 21 Feb 2014 01:43:40 +0000
-Message-ID: <1392947020.11425.1.camel@dabdike>
-References: <CAKiknE9pf-hQOTcxbw8WnHECDJDZMHJA-TBEPeg7+q5nb+AoCA@mail.gmail.com>
-	 <20140220121435.GY26776@mwanda>
+From: Peter Hurley <peter@hurleysoftware.com>
+Subject: Re: [PATCH 4/9] firewire: don't use PREPARE_DELAYED_WORK
+Date: Thu, 20 Feb 2014 20:44:46 -0500
+Message-ID: <5306AF8E.3080006@hurleysoftware.com>
+References: <1392929071-16555-1-git-send-email-tj@kernel.org> <1392929071-16555-5-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.parallels.com ([199.115.105.18]:50340 "EHLO
-	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754599AbaBUBoO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Feb 2014 20:44:14 -0500
-In-Reply-To: <20140220121435.GY26776@mwanda>
-Content-Language: en-US
-Content-ID: <F9384BD96208894E9206BE2B54A5C0D1@sw.swsoft.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1392929071-16555-5-git-send-email-tj@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>, laijs@cn.fujitsu.com
+Cc: linux-kernel@vger.kernel.org, Stefan Richter <stefanr@s5r6.in-berlin.de>, linux1394-devel@lists.sourceforge.net, Chris Boot <bootc@bootc.net>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "dan.carpenter@oracle.com" <dan.carpenter@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "fengguang.wu@intel.com" <fengguang.wu@intel.com>, "ching2048@areca.com.tw" <ching2048@areca.com.tw>, "thenzl@redhat.com" <thenzl@redhat.com>, "billion.wu@areca.com.tw" <billion.wu@areca.com.tw>
 
-T24gVGh1LCAyMDE0LTAyLTIwIGF0IDE1OjE0ICswMzAwLCBEYW4gQ2FycGVudGVyIHdyb3RlOg0K
-PiBPbiBUaHUsIEZlYiAyMCwgMjAxNCBhdCAwODowNTowNVBNICswODAwLCDpu4PmuIXpmoYgd3Jv
-dGU6DQo+ID4gRnJvbTogQ2hpbmcgPGNoaW5nMjA0OEBhcmVjYS5jb20udHc+DQo+ID4gDQo+ID4g
-UmV3cml0ZSBpbnRlcnJ1cHQgc2VydmljZSByb3V0aW5lIHRvIGZpeCBjb21tYW5kIHRpbWVvdXQg
-b24gY29udHJvbGxlciB0b28NCj4gPiBoZWF2eSBsb2FkaW5nLg0KPiA+IA0KPiA+IFNpbmdlZC1v
-ZmYtYnk6IENoaW5nIDxjaGluZzIwNDhAYXJlY2EuY29tLnR3Pg0KPiANCj4gWW91ciBlbWFpbCBj
-bGllbnQgc2NyZXdlZCB1cCB0aGUgd2hpdGVzcGFjZSBjb21wbGV0ZWx5LiAgUmVhZA0KPiBEb2N1
-bWVudGF0aW9uL2VtYWlsLWNsaWVudHMudHh0IG9yIHVzZSBgZ2l0IHNlbmQtZW1haWxgDQo+IGh0
-dHA6Ly93d3cuZnJlZWRlc2t0b3Aub3JnL3dpa2kvU29mdHdhcmUvUHVsc2VBdWRpby9Ib3dUb1Vz
-ZUdpdFNlbmRFbWFpbC8NCj4gDQo+IFRoZXJlIGFyZSBhbHNvIG1hbnkgdW5yZWxhdGVkIHdoaXRl
-IHNwYWNlIGNoYW5nZXMgaW4gdGhpcyBwYXRjaC4NCg0KQWN0dWFsbHksIG5vbmUgb2YgdGhlc2Ug
-cGF0Y2hlcyBldmVuIG1hZGUgaXQgdG8gdGhlIFNDU0kgbGlzdCwgYmVjYXVzZQ0KdGhleSBoYWQg
-aHRtbCBwYXJ0cywgd2hpY2ggdmdlciBkZXN0cm95cy4gIFBsZWFzZSBtYWtlIHRoZSBjaGFuZ2Vz
-IERhbg0Kc3VnZ2VzdHMgYW5kIHRoZW4gcmVzdWJtaXQgYXMgcGxhaW4gdGV4dCBvbmx5Lg0KDQpK
-YW1lcw0KDQo=
+On 02/20/2014 03:44 PM, Tejun Heo wrote:
+> PREPARE_[DELAYED_]WORK() are being phased out.  They have few users
+> and a nasty surprise in terms of reentrancy guarantee as workqueue
+> considers work items to be different if they don't have the same work
+> function.
+>
+> firewire core-device and sbp2 have been been multiplexing work items
+> with multiple work functions.  Introduce fw_device_workfn() and
+> sbp2_lu_workfn() which invoke fw_device->workfn and
+> sbp2_logical_unit->workfn respectively and always use the two
+> functions as the work functions and update the users to set the
+> ->workfn fields instead of overriding work functions using
+> PREPARE_DELAYED_WORK().
+>
+> It would probably be best to route this with other related updates
+> through the workqueue tree.
+>
+> Compile tested.
+>
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>
+> Cc: linux1394-devel@lists.sourceforge.net
+> Cc: Chris Boot <bootc@bootc.net>
+> Cc: linux-scsi@vger.kernel.org
+> Cc: target-devel@vger.kernel.org
+> ---
+>   drivers/firewire/core-device.c | 22 +++++++++++++++-------
+>   drivers/firewire/sbp2.c        | 17 +++++++++++++----
+>   include/linux/firewire.h       |  1 +
+>   3 files changed, 29 insertions(+), 11 deletions(-)
+>
+> diff --git a/drivers/firewire/core-device.c b/drivers/firewire/core-device.c
+> index de4aa40..2c6d5e1 100644
+> --- a/drivers/firewire/core-device.c
+> +++ b/drivers/firewire/core-device.c
+> @@ -916,7 +916,7 @@ static int lookup_existing_device(struct device *dev, void *data)
+>   		old->config_rom_retries = 0;
+>   		fw_notice(card, "rediscovered device %s\n", dev_name(dev));
+>
+> -		PREPARE_DELAYED_WORK(&old->work, fw_device_update);
+> +		old->workfn = fw_device_update;
+>   		fw_schedule_device_work(old, 0);
+>
+>   		if (current_node == card->root_node)
+> @@ -1075,7 +1075,7 @@ static void fw_device_init(struct work_struct *work)
+>   	if (atomic_cmpxchg(&device->state,
+>   			   FW_DEVICE_INITIALIZING,
+>   			   FW_DEVICE_RUNNING) == FW_DEVICE_GONE) {
+> -		PREPARE_DELAYED_WORK(&device->work, fw_device_shutdown);
+> +		device->workfn = fw_device_shutdown;
+>   		fw_schedule_device_work(device, SHUTDOWN_DELAY);
+
+Implied mb of test_and_set_bit() in queue_work_on() ensures that the
+newly assigned work function is visible on all cpus before evaluating
+whether or not the work can be queued.
+
+Ok.
+
+>   	} else {
+>   		fw_notice(card, "created device %s: GUID %08x%08x, S%d00\n",
+> @@ -1196,13 +1196,20 @@ static void fw_device_refresh(struct work_struct *work)
+>   		  dev_name(&device->device), fw_rcode_string(ret));
+>    gone:
+>   	atomic_set(&device->state, FW_DEVICE_GONE);
+> -	PREPARE_DELAYED_WORK(&device->work, fw_device_shutdown);
+> +	device->workfn = fw_device_shutdown;
+>   	fw_schedule_device_work(device, SHUTDOWN_DELAY);
+>    out:
+>   	if (node_id == card->root_node->node_id)
+>   		fw_schedule_bm_work(card, 0);
+>   }
+>
+> +static void fw_device_workfn(struct work_struct *work)
+> +{
+> +	struct fw_device *device = container_of(to_delayed_work(work),
+> +						struct fw_device, work);
+
+I think this needs an smp_rmb() here.
+
+> +	device->workfn(work);
+> +}
+> +
+
+Otherwise this cpu could speculatively load workfn before
+set_work_pool_and_clear_pending(), which means that the old workfn
+could have been loaded but PENDING was still set and caused queue_work_on()
+to reject the work as already pending.
+
+Result: the new work function never runs.
+
+But this exposes a more general problem that I believe workqueue should
+prevent; speculated loads and stores in the work item function should be
+prevented from occurring before clearing PENDING in
+set_work_pool_and_clear_pending().
+
+IOW, the beginning of the work function should act like a barrier in
+the same way that queue_work_on() (et. al.) already does.
+
+Regards,
+Peter Hurley
