@@ -1,47 +1,40 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: loading scsi_debug with data integrity hits BUG_ON
-Date: Fri, 21 Feb 2014 15:56:48 -0800
-Message-ID: <20140221235648.GG29129@kernel.dk>
-References: <CAC5umyjVedpiUu4yffiT4n5kCUPSTgsuPucj1Nwc_TuwtoPLVg@mail.gmail.com>
- <1392858619.22195.24.camel@haakon3.risingtidesystems.com>
- <yq1wqgpk325.fsf@sermon.lab.mkp.net>
- <1392924492.29525.22.camel@haakon3.risingtidesystems.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 69441] WARNING: CPU: 0 PID: 4992 at fs/sysfs/group.c:214
+ sysfs_remove_group+0xc6/0xd0()
+Date: Sat, 22 Feb 2014 14:00:41 +0000
+Message-ID: <bug-69441-11613-10r8F1WxG0@https.bugzilla.kernel.org/>
+References: <bug-69441-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f50.google.com ([209.85.160.50]:42823 "EHLO
-	mail-pb0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753468AbaBUX4w (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Feb 2014 18:56:52 -0500
-Received: by mail-pb0-f50.google.com with SMTP id rq2so4112503pbb.37
-        for <linux-scsi@vger.kernel.org>; Fri, 21 Feb 2014 15:56:52 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <1392924492.29525.22.camel@haakon3.risingtidesystems.com>
+Received: from mail.kernel.org ([198.145.19.201]:54219 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751126AbaBVOAp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 22 Feb 2014 09:00:45 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 62593201DD
+	for <linux-scsi@vger.kernel.org>; Sat, 22 Feb 2014 14:00:44 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id 4BB11201EF
+	for <linux-scsi@vger.kernel.org>; Sat, 22 Feb 2014 14:00:42 +0000 (UTC)
+In-Reply-To: <bug-69441-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Akinobu Mita <akinobu.mita@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagig@mellanox.com>, kmo@daterainc.com
+To: linux-scsi@vger.kernel.org
 
-On Thu, Feb 20 2014, Nicholas A. Bellinger wrote:
-> On Thu, 2014-02-20 at 14:16 -0500, Martin K. Petersen wrote:
-> > >>>>> "nab" == Nicholas A Bellinger <nab@linux-iscsi.org> writes:
-> > 
-> > nab> Given that there is no (easy) way to ascertain what the original
-> > nab> value of bio_integrity->bip_iter.bi_size was post
-> > nab> bio_integrity_advance(), dropping this BUG_ON() probably makes the
-> > nab> most sense.
-> > 
-> > nab> MKP + Jens, care to ACK + pickup..?
-> > 
-> > Please remove total as suggested by Akinobu.
-> > 
-> > Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
-> > 
-> 
-> Thanks.  Here's an updated patch for Jen's to pickup.
+https://bugzilla.kernel.org/show_bug.cgi?id=69441
 
-Got it, thanks!
+Igor Gnatenko <i.gnatenko.brain@gmail.com> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|NEW                         |RESOLVED
+         Resolution|---                         |CODE_FIX
+
+--- Comment #4 from Igor Gnatenko <i.gnatenko.brain@gmail.com> ---
+I can't reproduce this bug on master branch, so close it as FIXED.
 
 -- 
-Jens Axboe
-
+You are receiving this mail because:
+You are watching the assignee of the bug.
