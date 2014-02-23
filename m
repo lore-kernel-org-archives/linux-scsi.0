@@ -1,78 +1,65 @@
 From: Peter Hurley <peter@hurleysoftware.com>
-Subject: Re: memory-barriers.txt again (was Re: [PATCH 4/9] firewire: don't
- use PREPARE_DELAYED_WORK)
-Date: Sun, 23 Feb 2014 15:35:31 -0500
-Message-ID: <530A5B93.7010304@hurleysoftware.com>
-References: <53074BE4.1020307@hurleysoftware.com> <20140221130614.GH6897@htj.dyndns.org> <5307849A.9050209@hurleysoftware.com> <20140221165730.GA10929@htj.dyndns.org> <5307DAC9.2020103@hurleysoftware.com> <1393094608.11497.1.camel@dabdike.int.hansenpartnership.com> <5308F0E2.3030804@hurleysoftware.com> <1393095138.11497.5.camel@dabdike.int.hansenpartnership.com> <5308F48C.8080609@hurleysoftware.com> <20140223022303.3240093c@stein> <20140223163743.GU4250@linux.vnet.ibm.com>
+Subject: Re: [PATCH 4/9] firewire: don't use PREPARE_DELAYED_WORK
+Date: Sun, 23 Feb 2014 17:32:23 -0500
+Message-ID: <530A76F7.3010708@hurleysoftware.com>
+References: <1392929071-16555-5-git-send-email-tj@kernel.org>			 <5306AF8E.3080006@hurleysoftware.com>			 <20140221015935.GF6897@htj.dyndns.org>			 <5306B4DF.4000901@hurleysoftware.com>			 <20140221021341.GG6897@htj.dyndns.org>			 <5306E06C.5020805@hurleysoftware.com>			 <20140221100301.GA14653@mtj.dyndns.org>			 <53074BE4.1020307@hurleysoftware.com>			 <20140221130614.GH6897@htj.dyndns.org>			 <5307849A.9050209@hurleysoftware.com>			 <20140221165730.GA10929@htj.dyndns.org>			 <5307DAC9.2020103@hurleysoftware.com>		 <1393094608.11497.1.camel@dabdike.int.hansenpartnership.com>		 <5308F0E2.3030804@hurleysoftware.com>	 <1393095138.11497.5.camel@dabdike.int.hansenpartnership.com>	 <5308F48C.8080609@hurleysoftware.com> <1393185948.9743.2.camel@dabdike>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140223163743.GU4250@linux.vnet.ibm.com>
+In-Reply-To: <1393185948.9743.2.camel@dabdike>
 Sender: linux-kernel-owner@vger.kernel.org
-To: paulmck@linux.vnet.ibm.com, Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Tejun Heo <tj@kernel.org>, laijs@cn.fujitsu.com, linux-kernel@vger.kernel.org, linux1394-devel@lists.sourceforge.net, Chris Boot <bootc@bootc.net>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
+Cc: Tejun Heo <tj@kernel.org>, Lai Jiangshan <laijs@cn.fujitsu.com>, linux-kernel@vger.kernel.org, Stefan Richter <stefanr@s5r6.in-berlin.de>, linux1394-devel@lists.sourceforge.net, Chris Boot <bootc@bootc.net>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Paul,
+Hi James,
 
-On 02/23/2014 11:37 AM, Paul E. McKenney wrote:
-> commit aba6b0e82c9de53eb032844f1932599f148ff68d
-> Author: Paul E. McKenney <paulmck@linux.vnet.ibm.com>
-> Date:   Sun Feb 23 08:34:24 2014 -0800
+On 02/23/2014 03:05 PM, James Bottomley wrote:
+> On Sat, 2014-02-22 at 14:03 -0500, Peter Hurley wrote:
+>> If it is necessary for a RELEASE-ACQUIRE pair to produce a full barrier, the
+>> ACQUIRE can be followed by an smp_mb__after_unlock_lock() invocation.  This
+>> will produce a full barrier if either (a) the RELEASE and the ACQUIRE are
+>> executed by the same CPU or task, or (b) the RELEASE and ACQUIRE act on the
+>> same variable.  The smp_mb__after_unlock_lock() primitive is free on many
+>> architectures.  Without smp_mb__after_unlock_lock(), the critical sections
+>> corresponding to the RELEASE and the ACQUIRE can cross:
+>>
+>> 	*A = a;
+>> 	RELEASE M
+>> 	ACQUIRE N
+>> 	*B = b;
+>>
+>> could occur as:
+>>
+>> 	ACQUIRE N, STORE *B, STORE *A, RELEASE M
 >
->      Documentation/memory-barriers.txt: Clarify release/acquire ordering
+> Ah, OK, that's an error in the documentation.
+
+AFAIK, Paul will not be changing the quoted text above.
+
+> The example should read
 >
->      This commit fixes a couple of typos and clarifies what happens when
->      the CPU chooses to execute a later lock acquisition before a prior
->      lock release, in particular, why deadlock is avoided.
->
->      Reported-by: Peter Hurley <peter@hurleysoftware.com>
->      Reported-by: James Bottomley <James.Bottomley@HansenPartnership.com>
->      Reported-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
->      Signed-off-by: Paul E. McKenney <paulmck@linux.vnet.ibm.com>
->
-> diff --git a/Documentation/memory-barriers.txt b/Documentation/memory-barriers.txt
-> index 9dde54c55b24..c8932e06edf1 100644
-> --- a/Documentation/memory-barriers.txt
-> +++ b/Documentation/memory-barriers.txt
-> @@ -1674,12 +1674,12 @@ for each construct.  These operations all imply certain barriers:
->        Memory operations issued after the ACQUIRE will be completed after the
->        ACQUIRE operation has completed.
->
-> -     Memory operations issued before the ACQUIRE may be completed after the
-> -     ACQUIRE operation has completed.  An smp_mb__before_spinlock(), combined
-> -     with a following ACQUIRE, orders prior loads against subsequent stores and
-> -     stores and prior stores against subsequent stores.  Note that this is
-> -     weaker than smp_mb()!  The smp_mb__before_spinlock() primitive is free on
-> -     many architectures.
-> +     Memory operations issued before the ACQUIRE may be completed after
-> +     the ACQUIRE operation has completed.  An smp_mb__before_spinlock(),
-> +     combined with a following ACQUIRE, orders prior loads against
-> +     subsequent loads and stores and also orders prior stores against
-> +     subsequent stores.  Note that this is weaker than smp_mb()!  The
-> +     smp_mb__before_spinlock() primitive is free on many architectures.
->
->    (2) RELEASE operation implication:
->
-> @@ -1717,23 +1717,47 @@ the two accesses can themselves then cross:
->
->   	*A = a;
->   	ACQUIRE M
-> -	RELEASE M
-> +	RELEASE N
+> 	*A = a;
+>   	RELEASE *N*
+>   	ACQUIRE *M*
 >   	*B = b;
 >
->   may occur as:
->
-> -	ACQUIRE M, STORE *B, STORE *A, RELEASE M
+> The point being you can't have speculation that entangles critical
+> sections, as I've been saying, because that would speculate you into
+> ABBA deadlocks.  Paul McKenny will submit a patch fixing the bug in
+> documentation.
 
-This example should remain as is; it refers to the porosity of a critical
-section to loads and stores occurring outside that critical section, and
-importantly that LOCK + UNLOCK is not a full barrier. It documents that
-memory operations from either side of the critical section may cross
-(in the absence of other specific memory barriers). IOW, it is the example
-to implication #1 above.
+The reason why there is no deadlock here is because the RELEASE M is
+not dependent on the ACQUIRE N to complete.
+
+If the attempt to ACQUIRE N is speculated before the RELEASE M, two
+possibilities exist:
+1. N is not owned, so the ACQUIRE is immediately successful, or
+2. N is owned, so the attempted ACQUIRE is not immediately successful.
+
+However, in both cases the RELEASE M will still complete, having already
+been started (since it occurred before in the instruction stream).
 
 Regards,
 Peter Hurley
