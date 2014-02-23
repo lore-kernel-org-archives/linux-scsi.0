@@ -1,114 +1,128 @@
-From: Sagi Grimberg <sagig@mellanox.com>
-Subject: [PATCH 03/11] IB/iser: Move fast_reg_descriptor initialization to a function
-Date: Sun, 23 Feb 2014 14:19:26 +0200
-Message-ID: <1393157974-24931-4-git-send-email-sagig@mellanox.com>
+From: Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Subject: [PATCH 09/11] SCSI/libiscsi: Add check_protection callback for transports
+Date: Sun, 23 Feb 2014 14:19:32 +0200
+Message-ID: <1393157974-24931-10-git-send-email-sagig@mellanox.com>
 References: <1393157974-24931-1-git-send-email-sagig@mellanox.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailp.voltaire.com ([193.47.165.129]:40908 "EHLO mellanox.co.il"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751300AbaBWMTm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 23 Feb 2014 07:19:42 -0500
-In-Reply-To: <1393157974-24931-1-git-send-email-sagig@mellanox.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1393157974-24931-1-git-send-email-sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: roland-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org
+Cc: oren-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: roland@kernel.org, nab@linux-iscsi.org
-Cc: oren@mellanox.com, martin.petersen@oracle.com, michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org
 
-fastreg descriptor will include protection information context.
-In order to place the logic in one place we introduce
-iser_create_fr_desc function.
+iSCSI needs to be at least aware that a task involves protection
+information. In case it does, after the transaction completed
+libiscsi will ask the transport to check the protection status
+of the transaction.
 
-This patch does not change any functionality.
+Unlike transport errors, DIF errors should not prevent successful
+completion of the transaction from the transport point of view,
+but should be escelated to scsi mid-layer when constructing the
+scsi result and sense data.
 
-Signed-off-by: Sagi Grimberg <sagig@mellanox.com>
+check_protection routine will return the ascq corresponding to the
+DIF error that occured (or 0 if no error happened).
+
+return ascq:
+- 0x1: GUARD_CHECK_FAILED
+- 0x2: APPTAG_CHECK_FAILED
+- 0x3: REFTAG_CHECK_FAILED
+
+Signed-off-by: Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
 ---
- drivers/infiniband/ulp/iser/iser_verbs.c |   58 ++++++++++++++++++++---------
- 1 files changed, 40 insertions(+), 18 deletions(-)
+ drivers/scsi/libiscsi.c             |   32 ++++++++++++++++++++++++++++++++
+ include/scsi/libiscsi.h             |    4 ++++
+ include/scsi/scsi_transport_iscsi.h |    1 +
+ 3 files changed, 37 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/infiniband/ulp/iser/iser_verbs.c b/drivers/infiniband/ulp/iser/iser_verbs.c
-index 4809693..0cc76de 100644
---- a/drivers/infiniband/ulp/iser/iser_verbs.c
-+++ b/drivers/infiniband/ulp/iser/iser_verbs.c
-@@ -279,6 +279,39 @@ void iser_free_fmr_pool(struct iser_conn *ib_conn)
- 	ib_conn->fmr.page_vec = NULL;
- }
- 
-+static int
-+iser_create_fastreg_desc(struct ib_device *ib_device, struct ib_pd *pd,
-+			 struct fast_reg_descriptor *desc)
-+{
-+	int ret;
-+
-+	desc->data_frpl = ib_alloc_fast_reg_page_list(ib_device,
-+						      ISCSI_ISER_SG_TABLESIZE + 1);
-+	if (IS_ERR(desc->data_frpl)) {
-+		ret = PTR_ERR(desc->data_frpl);
-+		iser_err("Failed to allocate ib_fast_reg_page_list err=%d\n",
-+			 ret);
-+		return PTR_ERR(desc->data_frpl);
-+	}
-+
-+	desc->data_mr = ib_alloc_fast_reg_mr(pd, ISCSI_ISER_SG_TABLESIZE + 1);
-+	if (IS_ERR(desc->data_mr)) {
-+		ret = PTR_ERR(desc->data_mr);
-+		iser_err("Failed to allocate ib_fast_reg_mr err=%d\n", ret);
-+		goto fast_reg_mr_failure;
-+	}
-+	iser_info("Create fr_desc %p page_list %p\n",
-+		  desc, desc->data_frpl->page_list);
-+	desc->valid = true;
-+
-+	return 0;
-+
-+fast_reg_mr_failure:
-+	ib_free_fast_reg_page_list(desc->data_frpl);
-+
-+	return ret;
-+}
-+
- /**
-  * iser_create_fastreg_pool - Creates pool of fast_reg descriptors
-  * for fast registration work requests.
-@@ -300,32 +333,21 @@ int iser_create_fastreg_pool(struct iser_conn *ib_conn, unsigned cmds_max)
- 			goto err;
- 		}
- 
--		desc->data_frpl = ib_alloc_fast_reg_page_list(device->ib_device,
--							 ISCSI_ISER_SG_TABLESIZE + 1);
--		if (IS_ERR(desc->data_frpl)) {
--			ret = PTR_ERR(desc->data_frpl);
--			iser_err("Failed to allocate ib_fast_reg_page_list err=%d\n", ret);
--			goto fast_reg_page_failure;
-+		ret = iser_create_fastreg_desc(device->ib_device,
-+					       device->pd, desc);
-+		if (ret) {
-+			iser_err("Failed to create fastreg descriptor err=%d\n",
-+				 ret);
-+			kfree(desc);
-+			goto err;
- 		}
- 
--		desc->data_mr = ib_alloc_fast_reg_mr(device->pd,
--						     ISCSI_ISER_SG_TABLESIZE + 1);
--		if (IS_ERR(desc->data_mr)) {
--			ret = PTR_ERR(desc->data_mr);
--			iser_err("Failed to allocate ib_fast_reg_mr err=%d\n", ret);
--			goto fast_reg_mr_failure;
--		}
--		desc->valid = true;
- 		list_add_tail(&desc->list, &ib_conn->fastreg.pool);
- 		ib_conn->fastreg.pool_size++;
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index 4046241..a58a6bb 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -395,6 +395,10 @@ static int iscsi_prep_scsi_cmd_pdu(struct iscsi_task *task)
+ 		if (rc)
+ 			return rc;
  	}
++
++	if (scsi_get_prot_op(sc) != SCSI_PROT_NORMAL)
++		task->protected = true;
++
+ 	if (sc->sc_data_direction == DMA_TO_DEVICE) {
+ 		unsigned out_len = scsi_out(sc)->length;
+ 		struct iscsi_r2t_info *r2t = &task->unsol_r2t;
+@@ -823,6 +827,33 @@ static void iscsi_scsi_cmd_rsp(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
  
- 	return 0;
+ 	sc->result = (DID_OK << 16) | rhdr->cmd_status;
  
--fast_reg_mr_failure:
--	ib_free_fast_reg_page_list(desc->data_frpl);
--fast_reg_page_failure:
--	kfree(desc);
- err:
- 	iser_free_fastreg_pool(ib_conn);
- 	return ret;
++	if (task->protected) {
++		sector_t sector;
++		u8 ascq;
++
++		/**
++		 * Transports that didn't implement check_protection
++		 * callback but still published T10-PI support to scsi-mid
++		 * deserve this BUG_ON.
++		 **/
++		 BUG_ON(!session->tt->check_protection);
++
++		ascq = session->tt->check_protection(task, &sector);
++		if (ascq) {
++			sc->result = DRIVER_SENSE << 24 | DID_ABORT << 16 |
++				     SAM_STAT_CHECK_CONDITION;
++			scsi_build_sense_buffer(1, sc->sense_buffer,
++						ILLEGAL_REQUEST, 0x10, ascq);
++			sc->sense_buffer[7] = 0xc; /* Additional sense length */
++			sc->sense_buffer[8] = 0;   /* Information desc type */
++			sc->sense_buffer[9] = 0xa; /* Additional desc length */
++			sc->sense_buffer[10] = 0x80; /* Validity bit */
++
++			put_unaligned_be64(sector, &sc->sense_buffer[12]);
++			goto out;
++		}
++	}
++
+ 	if (rhdr->response != ISCSI_STATUS_CMD_COMPLETED) {
+ 		sc->result = DID_ERROR << 16;
+ 		goto out;
+@@ -1567,6 +1598,7 @@ static inline struct iscsi_task *iscsi_alloc_task(struct iscsi_conn *conn,
+ 	task->have_checked_conn = false;
+ 	task->last_timeout = jiffies;
+ 	task->last_xfer = jiffies;
++	task->protected = false;
+ 	INIT_LIST_HEAD(&task->running);
+ 	return task;
+ }
+diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
+index 309f513..1457c26 100644
+--- a/include/scsi/libiscsi.h
++++ b/include/scsi/libiscsi.h
+@@ -133,6 +133,10 @@ struct iscsi_task {
+ 	unsigned long		last_xfer;
+ 	unsigned long		last_timeout;
+ 	bool			have_checked_conn;
++
++	/* T10 protection information */
++	bool			protected;
++
+ 	/* state set/tested under session->lock */
+ 	int			state;
+ 	atomic_t		refcount;
+diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
+index 88640a4..2555ee5 100644
+--- a/include/scsi/scsi_transport_iscsi.h
++++ b/include/scsi/scsi_transport_iscsi.h
+@@ -167,6 +167,7 @@ struct iscsi_transport {
+ 				 struct iscsi_bus_flash_conn *fnode_conn);
+ 	int (*logout_flashnode_sid) (struct iscsi_cls_session *cls_sess);
+ 	int (*get_host_stats) (struct Scsi_Host *shost, char *buf, int len);
++	u8 (*check_protection)(struct iscsi_task *task, sector_t *sector);
+ };
+ 
+ /*
 -- 
 1.7.1
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
