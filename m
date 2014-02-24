@@ -1,98 +1,50 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 05/11] IB/iser: Replace fastreg descriptor valid bool
- with indicators container
-Date: Mon, 24 Feb 2014 11:52:51 -0800
-Message-ID: <1393271571.10384.3.camel@haakon3.risingtidesystems.com>
-References: <1393157974-24931-1-git-send-email-sagig@mellanox.com>
-	 <1393157974-24931-6-git-send-email-sagig@mellanox.com>
-	 <1393224839.22656.19.camel@haakon3.risingtidesystems.com>
-	 <1393227000.22656.24.camel@haakon3.risingtidesystems.com>
-	 <530B028C.7060405@dev.mellanox.co.il>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH 0/4] isci, libsas fixes for 3.4-rc2
+Date: Mon, 24 Feb 2014 12:03:38 -0800
+Message-ID: <CAA9_cmdhA9=s6PaXb5vzbebSizYoQ6ZrNP3gwz5OeuNgyEL1ew@mail.gmail.com>
+References: <20140206202151.5227.12582.stgit@viggo.jf.intel.com>
+	<1393186369.9743.4.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:47349 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752184AbaBXTte (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Feb 2014 14:49:34 -0500
-In-Reply-To: <530B028C.7060405@dev.mellanox.co.il>
+Received: from mail-qc0-f171.google.com ([209.85.216.171]:44603 "EHLO
+	mail-qc0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752184AbaBXUDj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Feb 2014 15:03:39 -0500
+Received: by mail-qc0-f171.google.com with SMTP id x13so1916254qcv.16
+        for <linux-scsi@vger.kernel.org>; Mon, 24 Feb 2014 12:03:38 -0800 (PST)
+In-Reply-To: <1393186369.9743.4.camel@dabdike>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Cc: Sagi Grimberg <sagig@mellanox.com>, roland@kernel.org, oren@mellanox.com, martin.petersen@oracle.com, michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, artur.paszkiewicz@intel.com, "dave.jiang" <dave.jiang@intel.com>, Lukasz Dorau <lukasz.dorau@intel.com>
 
-On Mon, 2014-02-24 at 10:27 +0200, Sagi Grimberg wrote:
-> On 2/24/2014 9:30 AM, Nicholas A. Bellinger wrote:
-> > On Sun, 2014-02-23 at 22:53 -0800, Nicholas A. Bellinger wrote:
-> >> On Sun, 2014-02-23 at 14:19 +0200, Sagi Grimberg wrote:
-> >>> In T10-PI support we will have memory keys for protection
-> >>> buffers and signature transactions. We prefer to compact
-> >>> indicators rather than keeping multiple bools.
-> >>>
-> >>> This commit does not change any functionality.
-> >>>
-> >>> Signed-off-by: Sagi Grimberg <sagig@mellanox.com>
-> >>> ---
-> >>>   drivers/infiniband/ulp/iser/iscsi_iser.h  |    8 ++++++--
-> >>>   drivers/infiniband/ulp/iser/iser_memory.c |    4 ++--
-> >>>   drivers/infiniband/ulp/iser/iser_verbs.c  |    2 +-
-> >>>   3 files changed, 9 insertions(+), 5 deletions(-)
-> >>>
-> >>> diff --git a/drivers/infiniband/ulp/iser/iscsi_iser.h b/drivers/infiniband/ulp/iser/iscsi_iser.h
-> >>> index 5ffa92f..5f7dbfd 100644
-> >>> --- a/drivers/infiniband/ulp/iser/iscsi_iser.h
-> >>> +++ b/drivers/infiniband/ulp/iser/iscsi_iser.h
-> >>> @@ -280,13 +280,17 @@ struct iser_device {
-> >>>   							    enum iser_data_dir cmd_dir);
-> >>>   };
-> >>>   
-> >>> +enum iser_reg_indicator {
-> >>> +	ISER_DATA_KEY_VALID = 1 << 0,
-> >>> +};
-> >>> +
-> >>>   struct fast_reg_descriptor {
-> >>>   	struct list_head		  list;
-> >>>   	/* For fast registration - FRWR */
-> >>>   	struct ib_mr			 *data_mr;
-> >>>   	struct ib_fast_reg_page_list     *data_frpl;
-> >>> -	/* Valid for fast registration flag */
-> >>> -	bool				  valid;
-> >>> +	/* registration indicators container */
-> >>> +	u8				  reg_indicators;
-> >>>   };
-> >>>   
-> >>>   struct iser_conn {
-> >>> diff --git a/drivers/infiniband/ulp/iser/iser_memory.c b/drivers/infiniband/ulp/iser/iser_memory.c
-> >>> index 0e029fe..3edab18 100644
-> >>> --- a/drivers/infiniband/ulp/iser/iser_memory.c
-> >>> +++ b/drivers/infiniband/ulp/iser/iser_memory.c
-> >>> @@ -479,7 +479,7 @@ static int iser_fast_reg_mr(struct iscsi_iser_task *iser_task,
-> >>>   		return -EINVAL;
-> >>>   	}
-> >>>   
-> >>> -	if (!desc->valid) {
-> >>> +	if (!(desc->reg_indicators & ISER_DATA_KEY_VALID)) {
-> >>>   		memset(&inv_wr, 0, sizeof(inv_wr));
-> >>>   		inv_wr.wr_id = ISER_FRWR_LI_WRID;
-> >>>   		inv_wr.opcode = IB_WR_LOCAL_INV;
-> >> This block doesn't apply either..
-> >>
-> >> ISER_FRWR_LI_WRID does not appear to be defined anywhere in v3.14-rc2
-> >> code..?  Is this patch missing a new definition..?
-> > Er, missed the bit wrt:
-> >
-> >     IB/iser: Suppress completion for fast registration work requests
-> >
-> > Applied along with ib_iser + ib_isert patches to target-pending/rdma-dif
-> >
-> > --nab
-> 
-> OK, I see you got the missing piece.
-> This fixes all your conflicts right (I verified it before myself)?
-> 
+On Sun, Feb 23, 2014 at 12:12 PM, James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
+>
+> On Thu, 2014-02-06 at 12:22 -0800, Dan Williams wrote:
+>> Hi James,
+>>
+>> Here are some collected fixes.  All but patch 2 are tagged for -stable.
+>>
+>> Patch 1 and 4 have been on the list since before the 3.14 merge window,
+>> patch 2 and 3 are new.
+>>
+>> Please apply, thank you.
+>>
+>> [PATCH 1/4] isci: fix reset timeout handling
+>> [PATCH 2/4] scsi, libsas: introduce scmd_dbg() to quiet false positive "timeout" messages
+>> [PATCH 3/4] isci: fix needless ata reset escalations
+>> [PATCH 4/4] isci: correct erroneous for_each_isci_host macro
+>
+> 2,3 aren't really bug fixes; they're more enhancements (they make the
+> behaviour better but nothing breaks without them), so I'll queue 1,4 for
+> fixes and 2-3 for misc.
 
-All good, thanks. 
+Ok.
 
---nab
+Also Joe's patch while you're in the area:
+http://marc.info/?l=linux-scsi&m=138609455422179&w=2
 
+I acked it, but it shows some additional work needed for registration
+error paths in scsi_transport_sas.
