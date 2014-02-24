@@ -1,13 +1,13 @@
 From: Alexander Gordeev <agordeev@redhat.com>
-Subject: [PATCH v2 01/23] be2iscsi: Use pci_enable_msix_exact() instead of pci_enable_msix()
-Date: Mon, 24 Feb 2014 09:02:01 +0100
-Message-ID: <7870f36835f20cbe81dfa1540e6671d486fda0b0.1393191330.git.agordeev@redhat.com>
+Subject: [PATCH v2 10/23] isci: Use pci_enable_msix_exact() instead of pci_enable_msix()
+Date: Mon, 24 Feb 2014 09:02:10 +0100
+Message-ID: <b6c5934fa5e2f17f49a48a38f036bcd5149455c6.1393191330.git.agordeev@redhat.com>
 References: <cover.1393191330.git.agordeev@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1393191330.git.agordeev@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>, Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>, Lukasz Dorau <lukasz.dorau@intel.com>, Maciej Patelczyk <maciej.patelczyk@intel.com>, Dave Jiang <dave.jiang@intel.com>, intel-linux-scu@intel.com, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 As result of deprecation of MSI-X/MSI enablement functions
@@ -18,31 +18,28 @@ and pci_enable_msix_range() or pci_enable_msix_exact()
 interfaces.
 
 Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+Cc: Lukasz Dorau <lukasz.dorau@intel.com>
+Cc: Maciej Patelczyk <maciej.patelczyk@intel.com>
+Cc: Dave Jiang <dave.jiang@intel.com>
+Cc: intel-linux-scu@intel.com
 Cc: linux-scsi@vger.kernel.org
 Cc: linux-pci@vger.kernel.org
 ---
- drivers/scsi/be2iscsi/be_main.c |    6 ++----
- 1 files changed, 2 insertions(+), 4 deletions(-)
+ drivers/scsi/isci/init.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 1f37505..580192f 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -5284,12 +5284,10 @@ static void beiscsi_msix_enable(struct beiscsi_hba *phba)
- 	for (i = 0; i <= phba->num_cpus; i++)
- 		phba->msix_entries[i].entry = i;
+diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
+index d25d0d8..ce40538 100644
+--- a/drivers/scsi/isci/init.c
++++ b/drivers/scsi/isci/init.c
+@@ -356,7 +356,7 @@ static int isci_setup_interrupts(struct pci_dev *pdev)
+ 	for (i = 0; i < num_msix; i++)
+ 		pci_info->msix_entries[i].entry = i;
  
--	status = pci_enable_msix(phba->pcidev, phba->msix_entries,
--				 (phba->num_cpus + 1));
-+	status = pci_enable_msix_exact(phba->pcidev, phba->msix_entries,
-+				       phba->num_cpus + 1);
- 	if (!status)
- 		phba->msix_enabled = true;
--
--	return;
- }
+-	err = pci_enable_msix(pdev, pci_info->msix_entries, num_msix);
++	err = pci_enable_msix_exact(pdev, pci_info->msix_entries, num_msix);
+ 	if (err)
+ 		goto intx;
  
- /*
 -- 
 1.7.7.6
