@@ -1,50 +1,73 @@
-From: James Smart <james.smart@emulex.com>
-Subject: Re: [PATCH] [SCSI] lpfc 8.3.43: use NULL instead of 0 for pointer
-Date: Mon, 24 Feb 2014 12:37:49 -0500
-Message-ID: <530B836D.6000508@emulex.com>
-References: <1790992.BDi3De8mQ2@daeseok-laptop.cloud.net>
-Reply-To: <james.smart@emulex.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v13 2/3] ata: Add APM X-Gene SoC AHCI SATA host
+ controller driver
+Date: Mon, 24 Feb 2014 13:31:29 -0500
+Message-ID: <20140224183129.GA2522@htj.dyndns.org>
+References: <1393221265-13057-1-git-send-email-lho@apm.com>
+ <1393221265-13057-2-git-send-email-lho@apm.com>
+ <1393221265-13057-3-git-send-email-lho@apm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1790992.BDi3De8mQ2@daeseok-laptop.cloud.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Daeseok Youn <daeseok.youn@gmail.com>
-Cc: JBottomley@parallels.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1393221265-13057-3-git-send-email-lho@apm.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Loc Ho <lho@apm.com>
+Cc: olof@lixom.net, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Acked-by: James Smart   <james.smart@emulex.com>
+Hello, Loc.
 
--- james s
+Almost there.  Just one more thing.
 
+On Sun, Feb 23, 2014 at 10:54:24PM -0700, Loc Ho wrote:
+....
+> +static int xgene_ahci_init_memram(struct xgene_ahci_context *ctx)
+> +{
+> +	void __iomem *diagcsr = ctx->csr_base + SATA_DIAG_OFFSET;
+> +	int try;
+> +	u32 val;
+> +
+> +	val = readl(diagcsr + CFG_MEM_RAM_SHUTDOWN);
+> +	if (val == 0) {
+> +		dev_dbg(ctx->dev, "memory already released from shutdown\n");
+> +		return 0;
+> +	}
+> +	dev_dbg(ctx->dev, "Release memory from shutdown\n");
+> +	/* SATA controller memory in shutdown. Remove from shutdown. */
+> +	writel(0x0, diagcsr + CFG_MEM_RAM_SHUTDOWN);
+> +	readl(diagcsr + CFG_MEM_RAM_SHUTDOWN); /* Force a barrier */
+> +
+> +	/* Check for at least ~1ms */
+> +	try = 1000;
+> +	do {
+> +		val = readl(diagcsr + BLOCK_MEM_RDY);
+> +		if (val != 0xFFFFFFFF)
+> +			usleep_range(1, 100);
+> +	} while (val != 0xFFFFFFFF && try-- > 0);
+> +	if (try <= 0) {
+> +		dev_err(ctx->dev, "failed to release memory from shutdown\n");
+> +		return -ENODEV;
+> +	}
+> +	return 0;
+> +}
 
+Hmm... ISTR raising this issue before but the above is way more
+elaborate than necessary.  This isn't in any sense a hot path and 1ms
+is short enough to handle it simply.  If the only thing being
+addressed here is that the init may take upto 1ms, you might as well
+just do
 
-On 2/20/2014 8:10 PM, Daeseok Youn wrote:
-> >From 9e7478f6e953fac5b2bef0f5abe76fe8dc9e59d1 Mon Sep 17 00:00:00 2001
-> From: Daeseok Youn <daeseok.youn@gmail.com>
-> Date: Fri, 21 Feb 2014 09:03:32 +0900
-> Subject: [PATCH] [SCSI] lpfc 8.3.43: use NULL instead of 0 for pointer
->
-> sparse says:
-> drivers/scsi/lpfc/lpfc_sli.c:16547:37: warning:
->   Using plain integer as NULL pointer
->
-> Signed-off-by: Daeseok Youn <daeseok.youn@gmail.com>
-> ---
->   drivers/scsi/lpfc/lpfc_sli.c |    2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-> index 8f580fd..a218ecd 100644
-> --- a/drivers/scsi/lpfc/lpfc_sli.c
-> +++ b/drivers/scsi/lpfc/lpfc_sli.c
-> @@ -16544,7 +16544,7 @@ lpfc_drain_txq(struct lpfc_hba *phba)
->   {
->   	LIST_HEAD(completions);
->   	struct lpfc_sli_ring *pring = &phba->sli.ring[LPFC_ELS_RING];
-> -	struct lpfc_iocbq *piocbq = 0;
-> +	struct lpfc_iocbq *piocbq = NULL;
->   	unsigned long iflags = 0;
->   	char *fail_msg = NULL;
->   	struct lpfc_sglq *sglq;
+	writel(0x0, diagcsr + CFG_MEM_RAM_SHUTDOWN);
+	readl(diagcsr + CFG_MEM_RAM_SHUTDOWN); /* Force a barrier */
+	msleep(1);	/* reset may take upto 1ms */
+	if (readl(diagcsr + BLOCK_MEM_RDY) != 0xFFFFFFFF) {
+		dev_err(...);
+		return -ENODEV;
+	}
+	return 0;
+
+Thanks.
+
+-- 
+tejun
