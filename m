@@ -1,68 +1,105 @@
-From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [RFC 3/6] vhost/scsi: Add T10 PI IOV -> SGL memory mapping logic
-Date: Mon, 24 Feb 2014 05:32:27 +0000
-Message-ID: <1393219950-18613-4-git-send-email-nab@daterainc.com>
-References: <1393219950-18613-1-git-send-email-nab@daterainc.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1393219950-18613-1-git-send-email-nab@daterainc.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, kvm-devel <kvm@vger.kernel.org>, "Michael S. Tsirkin" <mst@redhat.com>, Paolo Bonzini <pbonzini@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Sagi Grimberg <sagig@mellanox.com>, Nicholas Bellinger <nab@linux-iscsi.org>, Sagi Grimberg <sagig@dev.mellanox.co.il>
+From: Loc Ho <lho@apm.com>
+Subject: [PATCH v13 1/3] Documentation: Add documentation for APM X-Gene SoC SATA host controller DTS binding
+Date: Sun, 23 Feb 2014 22:54:23 -0700
+Message-ID: <1393221265-13057-2-git-send-email-lho@apm.com>
+References: <1393221265-13057-1-git-send-email-lho@apm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from exprod5og110.obsmtp.com ([64.18.0.20]:54070 "HELO
+	exprod5og110.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751978AbaBXFyn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Feb 2014 00:54:43 -0500
+Received: by mail-pd0-f171.google.com with SMTP id r10so325945pdi.30
+        for <linux-scsi@vger.kernel.org>; Sun, 23 Feb 2014 21:54:42 -0800 (PST)
+In-Reply-To: <1393221265-13057-1-git-send-email-lho@apm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
-
-This patch adds vhost_scsi_map_iov_to_prot() to perform the mapping of
-T10 data integrity memory between virtio iov + struct scatterlist using
-get_user_pages_fast() following existing code.
-
-As with vhost_scsi_map_iov_to_sgl(), this does sanity checks against the
-total prot_sgl_count vs. pre-allocated SGLs, and loops across protection
-iovs using vhost_scsi_map_to_sgl() to perform the actual memory mapping.
-
-Also update tcm_vhost_release_cmd() to release associated tvc_prot_sgl[]
-struct page.
-
-Cc: Martin K. Petersen <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: Michael S. Tsirkin <mst@redhat.com>
-Cc: Paolo Bonzini <pbonzini@redhat.com>
-Cc: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+Signed-off-by: Loc Ho <lho@apm.com>
+Signed-off-by: Tuan Phan <tphan@apm.com>
+Signed-off-by: Suman Tripathi <stripathi@apm.com>
 ---
- drivers/vhost/scsi.c |    7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ .../devicetree/bindings/ata/apm-xgene.txt          |   70 ++++++++++++++++++++
+ 1 files changed, 70 insertions(+), 0 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/ata/apm-xgene.txt
 
-diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
-index 314cbd4..0cf5948 100644
---- a/drivers/vhost/scsi.c
-+++ b/drivers/vhost/scsi.c
-@@ -80,6 +80,7 @@ struct tcm_vhost_cmd {
- 	u64 tvc_tag;
- 	/* The number of scatterlists associated with this cmd */
- 	u32 tvc_sgl_count;
-+	u32 tvc_prot_sgl_count;
- 	/* Saved unpacked SCSI LUN for tcm_vhost_submission_work() */
- 	u32 tvc_lun;
- 	/* Pointer to the SGL formatted memory from virtio-scsi */
-@@ -458,12 +459,16 @@ static void tcm_vhost_release_cmd(struct se_cmd *se_cmd)
- 	struct tcm_vhost_cmd *tv_cmd = container_of(se_cmd,
- 				struct tcm_vhost_cmd, tvc_se_cmd);
- 	struct se_session *se_sess = se_cmd->se_sess;
-+	int i;
- 
- 	if (tv_cmd->tvc_sgl_count) {
--		u32 i;
- 		for (i = 0; i < tv_cmd->tvc_sgl_count; i++)
- 			put_page(sg_page(&tv_cmd->tvc_sgl[i]));
- 	}
-+	if (tv_cmd->tvc_prot_sgl_count) {
-+		for (i = 0; i < tv_cmd->tvc_prot_sgl_count; i++)
-+			put_page(sg_page(&tv_cmd->tvc_prot_sgl[i]));
-+	}
- 
- 	tcm_vhost_put_inflight(tv_cmd->inflight);
- 	percpu_ida_free(&se_sess->sess_tag_pool, se_cmd->map_tag);
+diff --git a/Documentation/devicetree/bindings/ata/apm-xgene.txt b/Documentation/devicetree/bindings/ata/apm-xgene.txt
+new file mode 100644
+index 0000000..633eb3b
+--- /dev/null
++++ b/Documentation/devicetree/bindings/ata/apm-xgene.txt
+@@ -0,0 +1,70 @@
++* APM X-Gene 6.0 Gb/s SATA host controller nodes
++
++SATA host controller nodes are defined to describe on-chip Serial ATA
++controllers. Each SATA controller (pair of ports) have its own node.
++
++Required properties:
++- compatible		: Shall contain:
++  * "apm,xgene-ahci-sgmii" if mux'ed with SGMII
++  * "apm,xgene-ahci-pcie" if mux'ed with PCIe
++- reg			: First memory resource shall be the AHCI memory
++			  resource.
++			  Second memory resource shall be the host controller
++			  memory resource.
++- interrupts		: Interrupt-specifier for SATA host controller IRQ.
++- clocks		: Reference to the clock entry.
++- phys			: A list of phandles + phy-specifiers, one for each
++			  entry in phy-names.
++- phy-names		: Should contain:
++  * "sata-6g" for the SATA 6.0Gbps PHY
++
++Optional properties:
++- status		: Shall be "ok" if enabled or "disabled" if disabled.
++			  Default is "ok".
++- interrupt-parent	: Interrupt controller.
++
++Example:
++		sataclk: sataclk {
++			compatible = "fixed-clock";
++			#clock-cells = <1>;
++			clock-frequency = <100000000>;
++			clock-output-names = "sataclk";
++		};
++
++		phy2: phy@1f22a000 {
++			compatible = "apm,xgene-phy";
++			reg = <0x0 0x1f22a000 0x0 0x100>,
++			      <0x0 0x1f22c000 0x0 0x100>;
++			#phy-cells = <1>;
++		};
++
++		phy3: phy@1f23a000 {
++			compatible = "apm,xgene-phy";
++			reg = <0x0 0x1f23a000 0x0 0x100>,
++			      <0x0 0x1f23c000 0x0 0x100>;
++			#phy-cells = <1>;
++		};
++
++		sata2: sata@1a400000 {
++			compatible = "apm,xgene-ahci-sgmii";
++			reg = <0x0 0x1a400000 0x0 0x1000>,
++			      <0x0 0x1f220000 0x0 0x10000>;
++			interrupt-parent = <&gic>;
++			interrupts = <0x0 0x87 0x4>;
++			status = "ok";
++			clocks = <&sataclk 0>;
++			phys = <&phy2 0>;
++			phy-names = "sata-6g";
++		};
++
++		sata3: sata@1a800000 {
++			compatible = "apm,xgene-ahci-pcie";
++			reg = <0x0 0x1a800000 0x0 0x1000>,
++			      <0x0 0x1f230000 0x0 0x10000>;
++			interrupt-parent = <&gic>;
++			interrupts = <0x0 0x88 0x4>;
++			status = "ok";
++			clocks = <&sataclk 0>;
++			phys = <&phy3 0>;
++			phy-names = "sata-6g";
++		};
 -- 
-1.7.10.4
+1.5.5
+
