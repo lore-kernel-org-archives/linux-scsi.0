@@ -1,50 +1,44 @@
 From: Alexander Gordeev <agordeev@redhat.com>
-Subject: [PATCH v2 15/23] mpt2sas: Use pci_enable_msix_exact() instead of pci_enable_msix()
-Date: Mon, 24 Feb 2014 09:02:15 +0100
-Message-ID: <5ebfc7b99be8b12422e5e4e394a7720010e54399.1393191330.git.agordeev@redhat.com>
-References: <cover.1393191330.git.agordeev@redhat.com>
+Subject: Re: [PATCH v2 4/9] ipr: Use pci_enable_msi_range() and
+ pci_enable_msix_range()
+Date: Mon, 24 Feb 2014 09:12:09 +0100
+Message-ID: <20140224081209.GA32200@dhcp-26-207.brq.redhat.com>
+References: <cover.1389904166.git.agordeev@redhat.com>
+ <eb0b62be65c050533f2565fcf3f1d673770dfd67.1389904166.git.agordeev@redhat.com>
+ <20140128095441.GA6951@dhcp-26-207.brq.redhat.com>
+ <52E7CCAD.5070008@linux.vnet.ibm.com>
+ <20140129132651.GA27764@dhcp-26-207.brq.redhat.com>
+ <20140130140630.GA32349@dhcp-26-207.brq.redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <cover.1393191330.git.agordeev@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <20140130140630.GA32349@dhcp-26-207.brq.redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>, Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>, Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, support@lsi.com, DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+To: Brian King <brking@linux.vnet.ibm.com>, James Bottomley <jbottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, Wendy Xiong <wenxiong@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range()  or pci_enable_msi_exact()
-and pci_enable_msix_range() or pci_enable_msix_exact()
-interfaces.
+On Thu, Jan 30, 2014 at 03:06:30PM +0100, Alexander Gordeev wrote:
+> On Wed, Jan 29, 2014 at 02:26:52PM +0100, Alexander Gordeev wrote:
+> > > Do you want me to rediff your patches on top of this one,
+> > > or do you want to keep the entire MSI series together
+> > > and do the rediff? Otherwise the patches seem fine.
+> > 
+> > I would prefer the former.
+> 
+> Hi Brian,
+> 
+> I am sending the refreshed patches on top of "ipr: Handle early EEH".
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>
-Cc: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
-Cc: support@lsi.com
-Cc: DL-MPTFusionLinux@lsi.com
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
----
- drivers/scsi/mpt2sas/mpt2sas_base.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+Hi Brian,
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-index bde63f7..984b605 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -1432,10 +1432,10 @@ _base_enable_msix(struct MPT2SAS_ADAPTER *ioc)
- 	for (i = 0, a = entries; i < ioc->reply_queue_count; i++, a++)
- 		a->entry = i;
- 
--	r = pci_enable_msix(ioc->pdev, entries, ioc->reply_queue_count);
-+	r = pci_enable_msix_exact(ioc->pdev, entries, ioc->reply_queue_count);
- 	if (r) {
--		dfailprintk(ioc, printk(MPT2SAS_INFO_FMT "pci_enable_msix "
--		    "failed (r=%d) !!!\n", ioc->name, r));
-+		dfailprintk(ioc, printk(MPT2SAS_INFO_FMT
-+		    "pci_enable_msix_exact failed (r=%d) !!!\n", ioc->name, r));
- 		kfree(entries);
- 		goto try_ioapic;
- 	}
+What three the two patches you ACKed are against?
+Should I ask James to take them?
+
+Thanks!
+
 -- 
-1.7.7.6
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
