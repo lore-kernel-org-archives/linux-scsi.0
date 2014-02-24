@@ -1,145 +1,122 @@
 From: Loc Ho <lho@apm.com>
-Subject: [PATCH v13 0/3] ata: Add APM X-Gene SoC AHCI SATA host controller support
-Date: Sun, 23 Feb 2014 22:54:22 -0700
-Message-ID: <1393221265-13057-1-git-send-email-lho@apm.com>
+Subject: [PATCH v13 3/3] arm64: Add APM X-Gene SoC AHCI SATA host controller DTS entries
+Date: Sun, 23 Feb 2014 22:54:25 -0700
+Message-ID: <1393221265-13057-4-git-send-email-lho@apm.com>
+References: <1393221265-13057-1-git-send-email-lho@apm.com>
+ <1393221265-13057-2-git-send-email-lho@apm.com>
+ <1393221265-13057-3-git-send-email-lho@apm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod5og106.obsmtp.com ([64.18.0.182]:54012 "HELO
-	exprod5og106.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752187AbaBXFyf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Feb 2014 00:54:35 -0500
-Received: by mail-pd0-f179.google.com with SMTP id fp1so5868849pdb.38
-        for <linux-scsi@vger.kernel.org>; Sun, 23 Feb 2014 21:54:34 -0800 (PST)
+Received: from exprod5og115.obsmtp.com ([64.18.0.246]:33831 "HELO
+	exprod5og115.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752414AbaBXFy5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Feb 2014 00:54:57 -0500
+Received: by mail-pb0-f47.google.com with SMTP id rp16so6029851pbb.6
+        for <linux-scsi@vger.kernel.org>; Sun, 23 Feb 2014 21:54:56 -0800 (PST)
+In-Reply-To: <1393221265-13057-3-git-send-email-lho@apm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
 Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 
-This patch adds support for the APM X-Gene SoC AHCI SATA host controller. In
-order for the host controller to work, the corresponding PHY driver
-musts also be available.
-
-v13:
- * Add fully-winged style comment for function xgene_ahci_read_id and
-   xgene_ahci_do_hardrest
- * Minor comments update for function xgene_ahci_read_id,
-   xgene_ahci_do_hardrest, and xgene_ahci_hardreset
- * NOTE: There is no functional code change.
-
-v12:
- * Remove function xgene_ahci_get_channel and use the ata_port field port_no
- * Update comment for function xgene_ahci_read_id to function comment style
-   '/**'
- * Update comment for multiple lines to fully-winged style
-
-v11:
- * Drop the export functions requirement with libachi
- * Change CONFIG_SATA_XGENE to CONFIG_AHCI_XGENE
- * Rename file sata_xgene.c to ahci_xgene.c
- * Convert to use Hans De Geode version 5 ahci_platform code re-factor changes
-   to reduce code duplication. For extra context, use plat_data to store our
-   context. The probe function follows the ahci_sunxi implementation. A number
-   of code fragments update to reflect this change.
- * Update comment for function xgene_ahci_read_id
- * Minor code move around in function xgene_ahci_do_hardreset and use
-   ATA_BUSY instead 0x80
- * Fix hardreset to use start_engine function pointer as required due to newer
-   kernel rebased
- * Fix the set DMA mask for 32-bit as well
-
-v10:
- * Update binding documentation
-
-v9:
- * Remove ACPI/EFI include files
- * Remove the IO flush support, interrupt routine, and DTS resources
- * Remove function xgene_rd, xgene_wr, and xgene_wr_flush
- * Remove PMP support (function xgene_ahci_qc_issue, xgene_ahci_qc_prep,
-   xgene_ahci_qc_fill_rtf, xgene_ahci_softreset, and xgene_ahci_do_softreset)
- * Rename function xgene_ahci_enable_phy to xgene_ahci_force_phy_rdy
- * Clean up hardreset functions
- * Require v7 of the PHY driver
-
-v8:
- * Remove _ADDR from defines
- * Remove define MSTAWAUX_COHERENT_BYPASS_SET and
-   STARAUX_COHERENT_BYPASS_SET and use direct coding
- * Remove the un-necessary check for DTS boot with built in ACPI table
- * Switch to use dma_set_mask_and_coherent for setting DMA mask
- * Remove ACPI table matching code
- * Update clock-names for sata01clk, sata23clk, and sata45clk
-
-v7:
- * Update the clock code by toggle the clock
- * Update the DTS clock mask values due to the clock spilt between host and
-   v5 of the PHY drivers
-
-v6:
- * Update binding documentation
- * Change select PHY_XGENE_SATA to PHY_XGENE
- * Add ULL to constants
- * Change indentation and comments
- * Clean up the probe functions a bit more
- * Remove xgene_ahci_remove function
- * Add the flush register to DTS
- * Remove the interrupt-parent from DTS
-
-v5:
- * Sync up to v3 of the PHY driver
- * Remove MSLIM wrapper functions
- * Change the memory shutdown loop to use usleep_range
- * Use devm_ioremap_resource instead devm_ioremap
- * Remove suspend/resume functions as not needed
-
-v4:
- * Remove the ID property in DT
- * Remove the temporary PHY direct function call and use PHY function
- * Change printk to pr_debug
- * Move the IOB flush addresses into the DT
- * Remove the parameters retrieval function as no longer needed
- * Remove the header file as no longer needed
- * Require v2 patch of the SATA PHY driver. Require slightly modification
-   in the Kconfig as it is moved to folder driver/phy and use Kconfig
-   PHY_XGENE_SATA instead SATA_XGENE_PHY.
-
-v3:
- * Move out the SATA PHY to another driver
- * Remove the clock-cells entry from DTS
- * Remove debug wrapper
- * Remove delay functions wrapper
- * Clean up resource and IRQ query
- * Remove query clock name
- * Switch to use dma_set_mask/dma_coherent_mask
- * Remove un-necessary devm_kfree
- * Update GPL license header to v2
- * Spilt up function xgene_ahci_hardreset
- * Spilt up function xgene_ahci_probe
- * Remove all reference of CONFIG_ARCH_MSLIM
- * Clean up chip revision code
-
-v2:
- * Clean up file sata_xgene.c with Lindent and etc
- * Clean up file sata_xgene_serdes.c with Lindent and etc
- * Add description to each patch
-
-v1:
- * inital version
-
 Signed-off-by: Loc Ho <lho@apm.com>
 Signed-off-by: Tuan Phan <tphan@apm.com>
 Signed-off-by: Suman Tripathi <stripathi@apm.com>
 ---
-Loc Ho (3):
-  Documentation: Add documentation for APM X-Gene SoC SATA host
-    controller DTS binding
-  ata: Add APM X-Gene SoC AHCI SATA host controller driver
-  arm64: Add APM X-Gene SoC AHCI SATA host controller DTS entries
+ arch/arm64/boot/dts/apm-storm.dtsi |   75 ++++++++++++++++++++++++++++++++++++
+ 1 files changed, 75 insertions(+), 0 deletions(-)
 
- .../devicetree/bindings/ata/apm-xgene.txt          |   70 +++
- arch/arm64/boot/dts/apm-storm.dtsi                 |   75 +++
- drivers/ata/Kconfig                                |    8 +
- drivers/ata/Makefile                               |    1 +
- drivers/ata/ahci_xgene.c                           |  581 ++++++++++++++++++++
- 5 files changed, 735 insertions(+), 0 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/ata/apm-xgene.txt
- create mode 100644 drivers/ata/ahci_xgene.c
+diff --git a/arch/arm64/boot/dts/apm-storm.dtsi b/arch/arm64/boot/dts/apm-storm.dtsi
+index c78ddcf..57b0770 100644
+--- a/arch/arm64/boot/dts/apm-storm.dtsi
++++ b/arch/arm64/boot/dts/apm-storm.dtsi
+@@ -221,6 +221,48 @@
+ 				enable-offset = <0x0>;
+ 				enable-mask = <0x06>;
+ 			};
++
++			sata01clk: sata01clk@1f21c000 {
++				compatible = "apm,xgene-device-clock";
++				#clock-cells = <1>;
++				clocks = <&socplldiv2 0>;
++				clock-names = "socplldiv2";
++				reg = <0x0 0x1f21c000 0x0 0x1000>;
++				reg-names = "csr-reg";
++				clock-output-names = "sata01clk";
++				csr-offset = <0x4>;
++				csr-mask = <0x05>;
++				enable-offset = <0x0>;
++				enable-mask = <0x39>;
++			};
++
++			sata23clk: sata23clk@1f22c000 {
++				compatible = "apm,xgene-device-clock";
++				#clock-cells = <1>;
++				clocks = <&socplldiv2 0>;
++				clock-names = "socplldiv2";
++				reg = <0x0 0x1f22c000 0x0 0x1000>;
++				reg-names = "csr-reg";
++				clock-output-names = "sata23clk";
++				csr-offset = <0x4>;
++				csr-mask = <0x05>;
++				enable-offset = <0x0>;
++				enable-mask = <0x39>;
++			};
++
++			sata45clk: sata45clk@1f23c000 {
++				compatible = "apm,xgene-device-clock";
++				#clock-cells = <1>;
++				clocks = <&socplldiv2 0>;
++				clock-names = "socplldiv2";
++				reg = <0x0 0x1f23c000 0x0 0x1000>;
++				reg-names = "csr-reg";
++				clock-output-names = "sata45clk";
++				csr-offset = <0x4>;
++				csr-mask = <0x05>;
++				enable-offset = <0x0>;
++				enable-mask = <0x39>;
++			};
+ 		};
+ 
+ 		serial0: serial@1c020000 {
+@@ -262,5 +304,38 @@
+ 			apm,tx-boost-gain = <31 31 31 31 31 31>;
+ 			apm,tx-eye-tuning = <2 10 10 2 10 10>;
+ 		};
++
++		sata1: sata@1a000000 {
++			compatible = "apm,xgene-ahci-sgmii";
++			reg = <0x0 0x1a000000 0x0 0x1000>,
++			      <0x0 0x1f210000 0x0 0x10000>;
++			interrupts = <0x0 0x86 0x4>;
++			status = "disabled";
++			clocks = <&sata01clk 0>;
++			phys = <&phy1 0>;
++			phy-names = "sata-6g";
++		};
++
++		sata2: sata@1a400000 {
++			compatible = "apm,xgene-ahci-sgmii";
++			reg = <0x0 0x1a400000 0x0 0x1000>,
++			      <0x0 0x1f220000 0x0 0x10000>;
++			interrupts = <0x0 0x87 0x4>;
++			status = "ok";
++			clocks = <&sata23clk 0>;
++			phys = <&phy2 0>;
++			phy-names = "sata-6g";
++		};
++
++		sata3: sata@1a800000 {
++			compatible = "apm,xgene-ahci-pcie";
++			reg = <0x0 0x1a800000 0x0 0x1000>,
++			      <0x0 0x1f230000 0x0 0x10000>;
++			interrupts = <0x0 0x88 0x4>;
++			status = "ok";
++			clocks = <&sata45clk 0>;
++			phys = <&phy3 0>;
++			phy-names = "sata-6g";
++		};
+ 	};
+ };
+-- 
+1.5.5
 
