@@ -1,157 +1,113 @@
-From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [RFC 1/6] vhost/scsi: Move sanity check into vhost_scsi_map_iov_to_sgl
-Date: Mon, 24 Feb 2014 05:32:25 +0000
-Message-ID: <1393219950-18613-2-git-send-email-nab@daterainc.com>
-References: <1393219950-18613-1-git-send-email-nab@daterainc.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1393219950-18613-1-git-send-email-nab@daterainc.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, kvm-devel <kvm@vger.kernel.org>, "Michael S. Tsirkin" <mst@redhat.com>, Paolo Bonzini <pbonzini@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Sagi Grimberg <sagig@mellanox.com>, Nicholas Bellinger <nab@linux-iscsi.org>, Sagi Grimberg <sagig@dev.mellanox.co.il>
+From: "Nicholas A. Bellinger" <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>
+Subject: Re: [PATCH 08/11] IB/iser: Support T10-PI operations
+Date: Sun, 23 Feb 2014 22:50:04 -0800
+Message-ID: <1393224604.22656.16.camel@haakon3.risingtidesystems.com>
+References: <1393157974-24931-1-git-send-email-sagig@mellanox.com>
+	 <1393157974-24931-9-git-send-email-sagig@mellanox.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1393157974-24931-9-git-send-email-sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Cc: roland-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, oren-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+On Sun, 2014-02-23 at 14:19 +0200, Sagi Grimberg wrote:
+> Add logic to initialize protection information entities.
+> Upon each iSCSI task, we keep the scsi_cmnd in order to
+> query the scsi protection operations and reference to
+> protection buffers.
+> 
+> Modify iser_fast_reg_mr to receive indication weather it
+> is registering the data or protection buffers.
+> 
+> In addition Introduce iser_reg_sig_mr which performs fast
+> registration work-request for a signature enabled memory region
+> (IB_WR_REG_SIG_MR). In this routine we set all the protection
+> relevants for the device to offload protection data-transfer
+> and verification.
+> 
+> Signed-off-by: Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+> ---
+>  drivers/infiniband/ulp/iser/iscsi_iser.c     |    2 +
+>  drivers/infiniband/ulp/iser/iscsi_iser.h     |    8 +
+>  drivers/infiniband/ulp/iser/iser_initiator.c |   41 ++++-
+>  drivers/infiniband/ulp/iser/iser_memory.c    |  255 +++++++++++++++++++++++---
+>  4 files changed, 280 insertions(+), 26 deletions(-)
+> 
 
-Move the overflow check for sgl_count > TCM_VHOST_PREALLOC_SGLS into
-vhost_scsi_map_iov_to_sgl() so that it's based on the total number
-of SGLs for all IOVs, instead of single IOVs.
+<SNIP>
 
-Also, rename TCM_VHOST_PREALLOC_PAGES -> TCM_VHOST_PREALLOC_UPAGES
-to better describe pointers to user-space pages.
+> diff --git a/drivers/infiniband/ulp/iser/iser_memory.c b/drivers/infiniband/ulp/iser/iser_memory.c
+> index 3edab18..9729aae 100644
+> --- a/drivers/infiniband/ulp/iser/iser_memory.c
+> +++ b/drivers/infiniband/ulp/iser/iser_memory.c
 
-Cc: Michael S. Tsirkin <mst@redhat.com>
-Cc: Paolo Bonzini <pbonzini@redhat.com>
-Cc: Martin K. Petersen <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
----
- drivers/vhost/scsi.c |   59 +++++++++++++++++++++-----------------------------
- 1 file changed, 25 insertions(+), 34 deletions(-)
+<SNIP>
 
-diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
-index 0a025b8..31feb47 100644
---- a/drivers/vhost/scsi.c
-+++ b/drivers/vhost/scsi.c
-@@ -57,7 +57,7 @@
- #define TCM_VHOST_MAX_CDB_SIZE 32
- #define TCM_VHOST_DEFAULT_TAGS 256
- #define TCM_VHOST_PREALLOC_SGLS 2048
--#define TCM_VHOST_PREALLOC_PAGES 2048
-+#define TCM_VHOST_PREALLOC_UPAGES 2048
- 
- struct vhost_scsi_inflight {
- 	/* Wait for the flush operation to finish */
-@@ -762,35 +762,28 @@ vhost_scsi_map_to_sgl(struct tcm_vhost_cmd *tv_cmd,
- 		      struct scatterlist *sgl,
- 		      unsigned int sgl_count,
- 		      struct iovec *iov,
--		      int write)
-+		      struct page **pages,
-+		      bool write)
- {
- 	unsigned int npages = 0, pages_nr, offset, nbytes;
- 	struct scatterlist *sg = sgl;
- 	void __user *ptr = iov->iov_base;
- 	size_t len = iov->iov_len;
--	struct page **pages;
- 	int ret, i;
- 
--	if (sgl_count > TCM_VHOST_PREALLOC_SGLS) {
--		pr_err("vhost_scsi_map_to_sgl() psgl_count: %u greater than"
--		       " preallocated TCM_VHOST_PREALLOC_SGLS: %u\n",
--			sgl_count, TCM_VHOST_PREALLOC_SGLS);
--		return -ENOBUFS;
--	}
--
- 	pages_nr = iov_num_pages(iov);
--	if (pages_nr > sgl_count)
-+	if (pages_nr > sgl_count) {
-+		pr_err("vhost_scsi_map_iov_to_sgl() pages_nr: %u greater than"
-+		       " sgl_count: %u\n", pages_nr, sgl_count);
- 		return -ENOBUFS;
--
--	if (pages_nr > TCM_VHOST_PREALLOC_PAGES) {
-+	}
-+	if (pages_nr > TCM_VHOST_PREALLOC_UPAGES) {
- 		pr_err("vhost_scsi_map_to_sgl() pages_nr: %u greater than"
--		       " preallocated TCM_VHOST_PREALLOC_PAGES: %u\n",
--			pages_nr, TCM_VHOST_PREALLOC_PAGES);
-+		       " preallocated TCM_VHOST_PREALLOC_UPAGES: %u\n",
-+			pages_nr, TCM_VHOST_PREALLOC_UPAGES);
- 		return -ENOBUFS;
- 	}
- 
--	pages = tv_cmd->tvc_upages;
--
- 	ret = get_user_pages_fast((unsigned long)ptr, pages_nr, write, pages);
- 	/* No pages were pinned */
- 	if (ret < 0)
-@@ -820,33 +813,32 @@ out:
- static int
- vhost_scsi_map_iov_to_sgl(struct tcm_vhost_cmd *cmd,
- 			  struct iovec *iov,
--			  unsigned int niov,
--			  int write)
-+			  int niov,
-+			  bool write)
- {
--	int ret;
--	unsigned int i;
--	u32 sgl_count;
--	struct scatterlist *sg;
-+	struct scatterlist *sg = cmd->tvc_sgl;
-+	unsigned int sgl_count = 0;
-+	int ret, i;
- 
--	/*
--	 * Find out how long sglist needs to be
--	 */
--	sgl_count = 0;
- 	for (i = 0; i < niov; i++)
- 		sgl_count += iov_num_pages(&iov[i]);
- 
--	/* TODO overflow checking */
-+	if (sgl_count > TCM_VHOST_PREALLOC_SGLS) {
-+		pr_err("vhost_scsi_map_iov_to_sgl() sgl_count: %u greater than"
-+			" preallocated TCM_VHOST_PREALLOC_SGLS: %u\n",
-+			sgl_count, TCM_VHOST_PREALLOC_SGLS);
-+		return -ENOBUFS;
-+	}
- 
--	sg = cmd->tvc_sgl;
- 	pr_debug("%s sg %p sgl_count %u\n", __func__, sg, sgl_count);
- 	sg_init_table(sg, sgl_count);
--
- 	cmd->tvc_sgl_count = sgl_count;
- 
--	pr_debug("Mapping %u iovecs for %u pages\n", niov, sgl_count);
-+	pr_debug("Mapping iovec %p for %u pages\n", &iov[0], sgl_count);
-+
- 	for (i = 0; i < niov; i++) {
- 		ret = vhost_scsi_map_to_sgl(cmd, sg, sgl_count, &iov[i],
--					    write);
-+					    cmd->tvc_upages, write);
- 		if (ret < 0) {
- 			for (i = 0; i < cmd->tvc_sgl_count; i++)
- 				put_page(sg_page(&cmd->tvc_sgl[i]));
-@@ -854,7 +846,6 @@ vhost_scsi_map_iov_to_sgl(struct tcm_vhost_cmd *cmd,
- 			cmd->tvc_sgl_count = 0;
- 			return ret;
- 		}
--
- 		sg += ret;
- 		sgl_count -= ret;
- 	}
-@@ -1753,7 +1744,7 @@ static int tcm_vhost_make_nexus(struct tcm_vhost_tpg *tpg,
- 		}
- 
- 		tv_cmd->tvc_upages = kzalloc(sizeof(struct page *) *
--					TCM_VHOST_PREALLOC_PAGES, GFP_KERNEL);
-+					TCM_VHOST_PREALLOC_UPAGES, GFP_KERNEL);
- 		if (!tv_cmd->tvc_upages) {
- 			mutex_unlock(&tpg->tv_tpg_mutex);
- 			pr_err("Unable to allocate tv_cmd->tvc_upages\n");
--- 
-1.7.10.4
+> @@ -471,35 +646,42 @@ static int iser_fast_reg_mr(struct iscsi_iser_task *iser_task,
+>  		return 0;
+>  	}
+>  
+> -	plen = iser_sg_to_page_vec(mem, device->ib_device,
+> -				   desc->data_frpl->page_list,
+> +	if (ind == ISER_DATA_KEY_VALID) {
+> +		mr = desc->data_mr;
+> +		frpl = desc->data_frpl;
+> +	} else {
+> +		mr = desc->pi_ctx->prot_mr;
+> +		frpl = desc->pi_ctx->prot_frpl;
+> +	}
+> +
+> +	plen = iser_sg_to_page_vec(mem, device->ib_device, frpl->page_list,
+>  				   &offset, &size);
+>  	if (plen * SIZE_4K < size) {
+>  		iser_err("fast reg page_list too short to hold this SG\n");
+>  		return -EINVAL;
+>  	}
+>  
+> -	if (!(desc->reg_indicators & ISER_DATA_KEY_VALID)) {
+> +	if (!(desc->reg_indicators & ind)) {
+>  		memset(&inv_wr, 0, sizeof(inv_wr));
+>  		inv_wr.wr_id = ISER_FRWR_LI_WRID;
+>  		inv_wr.opcode = IB_WR_LOCAL_INV;
+> -		inv_wr.ex.invalidate_rkey = desc->data_mr->rkey;
+> +		inv_wr.ex.invalidate_rkey = mr->rkey;
+>  		wr = &inv_wr;
+>  		/* Bump the key */
+> -		key = (u8)(desc->data_mr->rkey & 0x000000FF);
+> -		ib_update_fast_reg_key(desc->data_mr, ++key);
+> +		key = (u8)(mr->rkey & 0x000000FF);
+> +		ib_update_fast_reg_key(mr, ++key);
+>  	}
+>  
+>  	/* Prepare FASTREG WR */
+>  	memset(&fastreg_wr, 0, sizeof(fastreg_wr));
+>  	fastreg_wr.wr_id = ISER_FRWR_LI_WRID;
+>  	fastreg_wr.opcode = IB_WR_FAST_REG_MR;
+> -	fastreg_wr.wr.fast_reg.iova_start = desc->data_frpl->page_list[0] + offset;
+> -	fastreg_wr.wr.fast_reg.page_list = desc->data_frpl;
+> +	fastreg_wr.wr.fast_reg.iova_start = frpl->page_list[0] + offset;
+> +	fastreg_wr.wr.fast_reg.page_list = frpl;
+>  	fastreg_wr.wr.fast_reg.page_list_len = plen;
+>  	fastreg_wr.wr.fast_reg.page_shift = SHIFT_4K;
+>  	fastreg_wr.wr.fast_reg.length = size;
+> -	fastreg_wr.wr.fast_reg.rkey = desc->data_mr->rkey;
+> +	fastreg_wr.wr.fast_reg.rkey = mr->rkey;
+>  	fastreg_wr.wr.fast_reg.access_flags = (IB_ACCESS_LOCAL_WRITE  |
+>  					       IB_ACCESS_REMOTE_WRITE |
+>  					       IB_ACCESS_REMOTE_READ);
+
+This one did not apply on v3.14-rc2 either.  Fixed up the context
+change.
+
+Please verify this patch in target-pending/rdma-dif is what you expect.
+
+--nab
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
