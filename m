@@ -1,45 +1,77 @@
 From: Alexander Gordeev <agordeev@redhat.com>
-Subject: [PATCH v2 08/23] hpsa: Fallback to MSI rather than to INTx if MSI-X failed
-Date: Mon, 24 Feb 2014 09:02:08 +0100
-Message-ID: <86ea36942166dad4c641425c1e9508a7b5d76836.1393191330.git.agordeev@redhat.com>
+Subject: [PATCH v2 21/23] qla2xxx: Use pci_enable_msix_range() instead of pci_enable_msix()
+Date: Mon, 24 Feb 2014 09:02:21 +0100
+Message-ID: <09a448376c6da694f2d865a063f0eb75efa2e408.1393191330.git.agordeev@redhat.com>
 References: <cover.1393191330.git.agordeev@redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-pci-owner@vger.kernel.org>
 In-Reply-To: <cover.1393191330.git.agordeev@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>, "Stephen M. Cameron" <scameron@beardog.cce.hp.com>, iss_storagedev@hp.com, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>, qla2xxx-upstream@qlogic.com, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Currently the driver falls back to INTx mode when MSI-X
-initialization failed. This is a suboptimal behaviour
-for chips that also support MSI. This update changes that
-behaviour and falls back to MSI mode in case MSI-X mode
-initialization failed.
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range()  or pci_enable_msi_exact()
+and pci_enable_msix_range() or pci_enable_msix_exact()
+interfaces.
+
+Log message code 0x00c6 preserved, although it is reported
+after successful call to pci_enable_msix_range(), not before
+possibly unsuccessful call to pci_enable_msix(). Consumers
+of the error code should not notice the difference.
 
 Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Cc: iss_storagedev@hp.com
+Cc: qla2xxx-upstream@qlogic.com
 Cc: linux-scsi@vger.kernel.org
 Cc: linux-pci@vger.kernel.org
 ---
- drivers/scsi/hpsa.c |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+ drivers/scsi/qla2xxx/qla_isr.c |   27 +++++++++++----------------
+ 1 files changed, 11 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 868318a..52cfd19 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -4180,11 +4180,9 @@ static void hpsa_interrupt_mode(struct ctlr_info *h)
- 		if (err > 0) {
- 			dev_warn(&h->pdev->dev, "only %d MSI-X vectors "
- 			       "available\n", err);
--			goto default_int_mode;
- 		} else {
- 			dev_warn(&h->pdev->dev, "MSI-X init failed %d\n",
- 			       err);
--			goto default_int_mode;
- 		}
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 9bc86b9..b2dcfa4 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -2896,27 +2896,22 @@ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
+ 	for (i = 0; i < ha->msix_count; i++)
+ 		entries[i].entry = i;
+ 
+-	ret = pci_enable_msix(ha->pdev, entries, ha->msix_count);
+-	if (ret) {
+-		if (ret < MIN_MSIX_COUNT)
+-			goto msix_failed;
+-
++	ret = pci_enable_msix_range(ha->pdev,
++				    entries, MIN_MSIX_COUNT, ha->msix_count);
++	if (ret < 0) {
++		ql_log(ql_log_fatal, vha, 0x00c7,
++		    "MSI-X: Failed to enable support, "
++		    "giving   up -- %d/%d.\n",
++		    ha->msix_count, ret);
++		goto msix_out;
++	} else if (ret < ha->msix_count) {
+ 		ql_log(ql_log_warn, vha, 0x00c6,
+ 		    "MSI-X: Failed to enable support "
+ 		    "-- %d/%d\n Retry with %d vectors.\n",
+ 		    ha->msix_count, ret, ret);
+-		ha->msix_count = ret;
+-		ret = pci_enable_msix(ha->pdev, entries, ha->msix_count);
+-		if (ret) {
+-msix_failed:
+-			ql_log(ql_log_fatal, vha, 0x00c7,
+-			    "MSI-X: Failed to enable support, "
+-			    "giving   up -- %d/%d.\n",
+-			    ha->msix_count, ret);
+-			goto msix_out;
+-		}
+-		ha->max_rsp_queues = ha->msix_count - 1;
  	}
- 	if (pci_find_capability(h->pdev, PCI_CAP_ID_MSI)) {
++	ha->msix_count = ret;
++	ha->max_rsp_queues = ha->msix_count - 1;
+ 	ha->msix_entries = kzalloc(sizeof(struct qla_msix_entry) *
+ 				ha->msix_count, GFP_KERNEL);
+ 	if (!ha->msix_entries) {
 -- 
 1.7.7.6
