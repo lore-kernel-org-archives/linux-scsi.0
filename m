@@ -1,40 +1,47 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 71021] WARNING: CPU: 0 PID: 5517 at
- /build/buildd/linux-3.13.0/fs/sysfs/group.c:214
- sysfs_remove_group+0xc6/0xd0()
-Date: Mon, 24 Feb 2014 22:22:11 +0000
-Message-ID: <bug-71021-11613-yVVYoJPlZn@https.bugzilla.kernel.org/>
-References: <bug-71021-11613@https.bugzilla.kernel.org/>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [PATCH] vhost/scsi: Check LUN structure byte 0 is set to 1, per
+ spec
+Date: Mon, 24 Feb 2014 17:27:39 -0500 (EST)
+Message-ID: <1662106574.8578383.1393280859359.JavaMail.zimbra@redhat.com>
+References: <20140224221332.GA32725@google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:58208 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752578AbaBXWWP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Feb 2014 17:22:15 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id A7EF7201E9
-	for <linux-scsi@vger.kernel.org>; Mon, 24 Feb 2014 22:22:13 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id 2434F2017E
-	for <linux-scsi@vger.kernel.org>; Mon, 24 Feb 2014 22:22:12 +0000 (UTC)
-In-Reply-To: <bug-71021-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20140224221332.GA32725@google.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Venkatesh Srinivas <venkateshs@google.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, nab@linux-iscsi.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=71021
+> The virtio spec requires byte 0 of the virtio-scsi LUN structure
+> to be '1'.
+> 
+> Signed-off-by: Venkatesh Srinivas <venkateshs@google.com>
+> ---
+>   drivers/vhost/scsi.c | 6 ++++++
+>   1 file changed, 6 insertions(+)
+> 
+> diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
+> index 0a025b8..e48d4a6 100644
+> --- a/drivers/vhost/scsi.c
+> +++ b/drivers/vhost/scsi.c
+> @@ -1001,6 +1001,12 @@ vhost_scsi_handle_vq(struct vhost_scsi *vs, struct
+> vhost_virtqueue *vq)
+>   			break;
+>   		}
+>   
+> +		/* virtio-scsi spec requires byte 0 of the lun to be 1 */
+> +		if (unlikely(v_req.lun[0] != 1)) {
+> +			vhost_scsi_send_bad_target(vs, vq, head, out);
+> +			continue;
+> +		}
+> +
+>   		/* Extract the tpgt */
+>   		target = v_req.lun[1];
+>   		tpg = ACCESS_ONCE(vs_tpg[target]);
+> --
+> 1.8.5.3
+> 
 
-Alan <alan@lxorguk.ukuu.org.uk> changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |alan@lxorguk.ukuu.org.uk
-          Component|SysFS                       |SCSI
-           Assignee|greg@kroah.com              |linux-scsi@vger.kernel.org
-            Product|File System                 |IO/Storage
-
--- 
-You are receiving this mail because:
-You are the assignee for the bug.
+Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
