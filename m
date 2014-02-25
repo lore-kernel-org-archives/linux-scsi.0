@@ -1,195 +1,132 @@
-From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: Re: [PATCH 20/22] qla2xxx: Use pci_enable_msix_range()
-Date: Tue, 25 Feb 2014 09:52:02 +0000
-Message-ID: <F5D084D6342F9B479C34599BB0A03E4D89867332@AVMB1.qlogic.org>
-References: <cover.1391512266.git.agordeev@redhat.com>
- <36da37b8ca3a13e24a3363ed19d6a08061c85970.1391512266.git.agordeev@redhat.com>
-Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_000_F5D084D6342F9B479C34599BB0A03E4D89867332AVMB1qlogicorg_"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:63456 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750735AbaBYJwG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Feb 2014 04:52:06 -0500
-In-Reply-To: <36da37b8ca3a13e24a3363ed19d6a08061c85970.1391512266.git.agordeev@redhat.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+From: Loc Ho <lho@apm.com>
+Subject: [PATCH v11 0/4] PHY: Add APM X-Gene SoC 15Gbps Multi-purpose PHY support
+Date: Tue, 25 Feb 2014 11:41:35 -0700
+Message-ID: <1393353699-6443-1-git-send-email-lho@apm.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: kishon@ti.com, tj@kernel.org
+Cc: olof@lixom.net, arnd@arndb.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>, linux-kernel <linux-kernel@vger.kernel.org>
-Cc: Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-pci <linux-pci@vger.kernel.org>
 
---_000_F5D084D6342F9B479C34599BB0A03E4D89867332AVMB1qlogicorg_
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <B0CACDB358679F4DADA7A77C27A9DB10@qlogic.com>
-Content-Transfer-Encoding: quoted-printable
+This patch adds support for APM X-Gene SoC 15Gbps Multi-purpose PHY. This
+is the physical layer interface for the corresponding host controller. This
+driver uses the PHY generic framework. In addition, the PHY generic
+framework is patched to provide an function to set the speed of the PHY.
 
-Looks good to me.
+v11:
+* Add comment to function phy_set_speed
+* Add commit log for documentation patch file
+* Minor comment update to function xgene_phy_force_lat_summer_cal and
+  xgene_phy_sata_force_gen
 
-Acked-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
+v10
+* Update comment for function xgene_phy_force_lat_summer_cal and
+  xgene_phy_sata_force_gen with function style fully-winged style
 
->As result of deprecation of MSI-X/MSI enablement functions
->pci_enable_msix() and pci_enable_msi_block() all drivers
->using these two interfaces need to be updated to use the
->new pci_enable_msi_range() and pci_enable_msix_range()
->interfaces.
->
->Log message code 0x00c6 preserved, although it is reported
->after successful call to pci_enable_msix_range(), not before
->possibly unsuccessful call to pci_enable_msix(). Consumers
->of the error code should not notice the difference.
->
->Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
->Cc: qla2xxx-upstream@qlogic.com
->Cc: linux-scsi@vger.kernel.org
->Cc: linux-pci@vger.kernel.org
->---
-> drivers/scsi/qla2xxx/qla_isr.c |   27 +++++++++++----------------
-> 1 files changed, 11 insertions(+), 16 deletions(-)
->
->diff --git a/drivers/scsi/qla2xxx/qla_isr.c
->b/drivers/scsi/qla2xxx/qla_isr.c
->index 9bc86b9..b2dcfa4 100644
->--- a/drivers/scsi/qla2xxx/qla_isr.c
->+++ b/drivers/scsi/qla2xxx/qla_isr.c
->@@ -2896,27 +2896,22 @@ qla24xx_enable_msix(struct qla_hw_data *ha,
->struct rsp_que *rsp)
-> 	for (i =3D 0; i < ha->msix_count; i++)
-> 		entries[i].entry =3D i;
->=20
->-	ret =3D pci_enable_msix(ha->pdev, entries, ha->msix_count);
->-	if (ret) {
->-		if (ret < MIN_MSIX_COUNT)
->-			goto msix_failed;
->-
->+	ret =3D pci_enable_msix_range(ha->pdev,
->+				    entries, MIN_MSIX_COUNT, ha->msix_count);
->+	if (ret < 0) {
->+		ql_log(ql_log_fatal, vha, 0x00c7,
->+		    "MSI-X: Failed to enable support, "
->+		    "giving   up -- %d/%d.\n",
->+		    ha->msix_count, ret);
->+		goto msix_out;
->+	} else if (ret < ha->msix_count) {
-> 		ql_log(ql_log_warn, vha, 0x00c6,
-> 		    "MSI-X: Failed to enable support "
-> 		    "-- %d/%d\n Retry with %d vectors.\n",
-> 		    ha->msix_count, ret, ret);
->-		ha->msix_count =3D ret;
->-		ret =3D pci_enable_msix(ha->pdev, entries, ha->msix_count);
->-		if (ret) {
->-msix_failed:
->-			ql_log(ql_log_fatal, vha, 0x00c7,
->-			    "MSI-X: Failed to enable support, "
->-			    "giving   up -- %d/%d.\n",
->-			    ha->msix_count, ret);
->-			goto msix_out;
->-		}
->-		ha->max_rsp_queues =3D ha->msix_count - 1;
-> 	}
->+	ha->msix_count =3D ret;
->+	ha->max_rsp_queues =3D ha->msix_count - 1;
-> 	ha->msix_entries =3D kzalloc(sizeof(struct qla_msix_entry) *
-> 				ha->msix_count, GFP_KERNEL);
-> 	if (!ha->msix_entries) {
->--=20
->1.7.7.6
->
+v9
+* Update CMU parameter setting for register 13
+* Add required delay when configure CMU PLL, Manual Calibration PLL, and VCO
+  PLL
+* Add comment for CMU PLL calibration loop delay of 10us
+* Add required delay for stopping and starting summer calibrations
+* Update comment for summer and latch calibration delays
+* Update comment for PHY reset Rx delay and decrease max sleep time from 500
+  to 150us
+* Always program the DFE (equalizer) setting to 0x7e00 as with original version
+* Fix Tx speed selection to always using Gen3 setting when force to an
+  specified generation speed
 
+v8
+* Update binding documentation
+* Remove XGENE_PHY_DTS and XGENE_PHY_EXT_DTS defines
+* Remove support for internal clock
+* Remove support for external reference CMU
+* Remove the need for external reference resource DTS entry and its related
+  code
 
---_000_F5D084D6342F9B479C34599BB0A03E4D89867332AVMB1qlogicorg_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
+v7
+* Add/Update PHY CMU/lane parameters and its default values
+* Rename variable enable_manual_cal to preA3Chip
+* Remove function phy_rd, phy_wr, and phy_wr_flush
+* Change function cmu_wr, cmu_rd, cmu_toggle1to0, cmu_clrbits, cmu_setbits,
+  serdes_wr, serdes_rd, serdes_clrbits, and serdes_setbits to take context
+  instead void *
+* Remove function serdes_toggle1to0
+* Decrease the polling time from 10ms to 1ms on CMU calibration complete
+  detection
+* Move all SATA specify code in function xgene_phy_hw_initialize into
+  function xgene_phy_hw_init_sata
+* Add usleep_range after starting summer/latch calibrations
+* Add usleep_range between receiver reset (function xgene_phy_reset_rxd)
+* Save and restore PHY register 31 instead writing 0 in function
+  xgene_phy_gen_avg_val
+* Update function xgene_phy_sata_force_gen programming sequences
+* Add support to reset the receiver lane in function xgene_phy_set_speed
+  if speed is 0
+* Update PHY parameters in DTS per controller
+* Some minor code clean up
 
-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
-Pnk1cBgQqY6tD8NmR0YAUF9LRVJORUz3fIhylLSyIdLOfftmwCdG6DEuN91xNjh9IrUVQgHfcAAA
-HwBCAAEAAAAeAAAAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAAAAfAGUAAQAAADQAAABz
-AGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwBkAAEA
-AAAKAAAAUwBNAFQAUAAAAAAAAgFBAAEAAAB0AAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAUwBh
-AHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAUwBNAFQAUAAAAHMAYQB1AHIAYQB2AC4AawBhAHMA
-aAB5AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAJdAQAAADQAAABzAGEAdQByAGEAdgAu
-AGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwDlXwEAAAA8AAAAcwBpAHAA
-OgBzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAa
-DAEAAAAeAAAAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAAAAfAB8MAQAAADQAAABzAGEA
-dQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAeDAEAAAAK
-AAAAUwBNAFQAUAAAAAAAAgEZDAEAAAB0AAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAUwBhAHUA
-cgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAUwBNAFQAUAAAAHMAYQB1AHIAYQB2AC4AawBhAHMAaAB5
-AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAFdAQAAADQAAABzAGEAdQByAGEAdgAuAGsA
-YQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwD4PwEAAAAeAAAAUwBhAHUAcgBh
-AHYAIABLAGEAcwBoAHkAYQBwAAAAAAAfACNAAQAAADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgA
-eQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAiQAEAAAAKAAAAUwBNAFQAUAAAAAAAAgH5
-PwEAAAB0AAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkA
-YQBwAAAAUwBNAFQAUAAAAHMAYQB1AHIAYQB2AC4AawBhAHMAaAB5AGEAcABAAHEAbABvAGcAaQBj
-AC4AYwBvAG0AAAAfAAldAQAAADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwA
-bwBnAGkAYwAuAGMAbwBtAAAAHwAxQAEAAAACAAAAAAAAAAsAQDoBAAAAHwAwQAEAAAACAAAAAAAA
-AB8AGgABAAAAEgAAAEkAUABNAC4ATgBvAHQAZQAAAAAAAwDxPwkEAAALAEA6AQAAAAMA/T/kBAAA
-AgELMAEAAAAQAAAArfCOXAZneUGCozxVO1LqOAMAFwABAAAAQAA5AAANbjsPMs8BQAAIME8M0jsP
-Ms8BCwAAgAggBgAAAAAAwAAAAAAAAEYAAAAAFIUAAAEAAAAfAACAhgMCAAAAAADAAAAAAAAARgEA
-AAAeAAAAYQBjAGMAZQBwAHQAbABhAG4AZwB1AGEAZwBlAAAAAAABAAAADAAAAGUAbgAtAFUAUwAA
-AAsAAIAIIAYAAAAAAMAAAAAAAABGAAAAAAaFAAAAAAAAHwA3AAEAAABuAAAAUgBlADoAIABbAFAA
-QQBUAEMASAAgADIAMAAvADIAMgBdACAAcQBsAGEAMgB4AHgAeAA6ACAAVQBzAGUAIABwAGMAaQBf
-AGUAbgBhAGIAbABlAF8AbQBzAGkAeABfAHIAYQBuAGcAZQAoACkAAAAAAB8APQABAAAACgAAAFIA
-ZQA6ACAAAAAAAAMANgAAAAAAHwBCEAEAAACcAAAAPAAzADYAZABhADMANwBiADgAYwBhADMAYQAx
-ADMAZQAyADQAYQAzADMANgAzAGUAZAAxADkAZAA2AGEAMAA4ADAANgAxAGMAOAA1ADkANwAwAC4A
-MQAzADkAMQA1ADEAMgAyADYANgAuAGcAaQB0AC4AYQBnAG8AcgBkAGUAZQB2AEAAcgBlAGQAaABh
-AHQALgBjAG8AbQA+AAAAAgFxAAEAAAAWAAAAAQHPMg87iD1LWGzPO067X063mCiHIgAAHwBwAAEA
-AABmAAAAWwBQAEEAVABDAEgAIAAyADAALwAyADIAXQAgAHEAbABhADIAeAB4AHgAOgAgAFUAcwBl
-ACAAcABjAGkAXwBlAG4AYQBiAGwAZQBfAG0AcwBpAHgAXwByAGEAbgBnAGUAKAApAAAAAAAfADUQ
-AQAAAHgAAAA8AEYANQBEADAAOAA0AEQANgAzADQAMgBGADkAQgA0ADcAOQBDADMANAA1ADkAOQBC
-AEIAMABBADAAMwBFADQARAA4ADkAOAA2ADcAMwAzADIAQABBAFYATQBCADEALgBxAGwAbwBnAGkA
-YwAuAG8AcgBnAD4AAAAfADkQAQAAAPIAAAA8AGMAbwB2AGUAcgAuADEAMwA5ADEANQAxADIAMgA2
-ADYALgBnAGkAdAAuAGEAZwBvAHIAZABlAGUAdgBAAHIAZQBkAGgAYQB0AC4AYwBvAG0APgAgADwA
-MwA2AGQAYQAzADcAYgA4AGMAYQAzAGEAMQAzAGUAMgA0AGEAMwAzADYAMwBlAGQAMQA5AGQANgBh
-ADAAOAAwADYAMQBjADgANQA5ADcAMAAuADEAMwA5ADEANQAxADIAMgA2ADYALgBnAGkAdAAuAGEA
-ZwBvAHIAZABlAGUAdgBAAHIAZQBkAGgAYQB0AC4AYwBvAG0APgAAAAAAAwDeP59OAABAAAcwNejK
-Ow8yzwEDACYAAAAAAAIBRwABAAAALwAAAGM9VVM7YT0gO3A9UUxvZ2ljO2w9QVZNQjEtMTQwMjI1
-MDk1MjAyWi0xMDAwNjUAAB8AFRABAAAAWAAAAEIAMABDAEEAQwBEAEIAMwA1ADgANgA3ADkARgA0
-AEQAQQBEAEEANwBBADcANwBDADIANwBBADkARABCADEAMABAAHEAbABvAGcAaQBjAC4AYwBvAG0A
-AAACARQwAQAAAAwAAADBAAAAvMaH7UwAAAAfAPo/AQAAAB4AAABTAGEAdQByAGEAdgAgAEsAYQBz
-AGgAeQBhAHAAAAAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAABYAAAB1AHMAZQByAC0AYQBnAGUA
-bgB0AAAAAAABAAAARgAAAE0AaQBjAHIAbwBzAG8AZgB0AC0ATQBhAGMATwB1AHQAbABvAG8AawAv
-ADEANAAuADMALgA5AC4AMQAzADEAMAAzADAAAAAAAB8AAIAfpOszqHouQr57eeGpjlSzAQAAADgA
-AABDAG8AbgB2AGUAcgBzAGEAdABpAG8AbgBJAG4AZABlAHgAVAByAGEAYwBrAGkAbgBnAEUAeAAA
-AAEAAADwAAAASQBJAD0AMAAxADAAMQBDAEYAMwAyADAARgAzAEIAOAA4ADMARAA0AEIANQA4ADYA
-QwBDAEYAMwBCADQARQBCAEIANQBGADQARQBCADcAOQA4ADIAOAA4ADcAMgAyADsAUwBCAE0ASQBE
-AD0ANAA7AFMAQgBUAD0AMwA7AFQASABBAD0AMwA0ADUANAAxADAAMQA2ADsAVgBlAHIAcwBpAG8A
-bgA9AFYAZQByAHMAaQBvAG4AIAAxADQALgAyACAAKABCAHUAaQBsAGQAIAAzADgANwAuADAAKQAs
-ACAAUwB0AGEAZwBlAD0ASAA3AAAAAwANNP0/AAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAgAAAA
-eAAtAG0AcwAtAGgAYQBzAC0AYQB0AHQAYQBjAGgAAAABAAAAAgAAAAAAAAAfAACAhgMCAAAAAADA
-AAAAAAAARgEAAAAiAAAAeAAtAG8AcgBpAGcAaQBuAGEAdABpAG4AZwAtAGkAcAAAAAAAAQAAABoA
-AABbADEAMAAuADMANQAuADcALgA2ADQAXQAAAAAAkwc=
+v6
+* Move PHY document to Documentation/devicetree/binding/phy
+* Remove _ADDR from all register defines
+* Update clock-names property for sataphy1clk, sataphy2clk, and sataphy3clk
 
---_000_F5D084D6342F9B479C34599BB0A03E4D89867332AVMB1qlogicorg_--
+v5
+* Update DTS binding documentation
+* Remove direct clock access and use clock interface instead
+* Change override parameters to decimal instead hex values
+* Change apm,tx-amplitude, apm,tx-pre-cursor1, apm,tx-pre-cursor2,
+  apm,tx-post-cursor to be unit of uV
+
+v4
+* Update documentation with 'apm,' instead 'apm-'
+* Change DTS override parameter to have 'apm,'
+* Add select GENERIC_PHY to Kconfig PHY_XGENE
+* Make override parameters to be pair of three values instead one
+* Some minor comment and indentation changes
+* Remove error register addition offset
+* Add ULL to constants
+* Use module_init instead subsys_initcall
+* Make DTS node based on first register address
+* Update override setting values
+
+v3
+* Major re-write of the code based on various review comments
+* Support external clock only at the moment
+* Support SATA mode only at the moment
+* No UEFI support at the moment
+
+v2
+* Remove port knowledge from functions
+* Make all functions static
+* Remove ID completely
+* Make resource requirement based on compatible type
+* Rename override PHY parameters with more descriptive name
+* Add override PHY parameter for per controller, per port, and per speed
+* Patch the generic PHY frame to expose set_speed operation
+
+v1
+* Initial version
+
+Signed-off-by: Loc Ho <lho@apm.com>
+Signed-off-by: Tuan Phan <tphan@apm.com>
+Signed-off-by: Suman Tripathi <stripathi@apm.com>
+---
+Loc Ho (4):
+  PHY: Add function set_speed to generic PHY framework
+  Documentation: Add APM X-Gene SoC 15Gbps Multi-purpose PHY driver
+    binding documentation
+  PHY: add APM X-Gene SoC 15Gbps Multi-purpose PHY driver
+  arm64: Add APM X-Gene SoC 15Gbps Multi-purpose PHY DTS entries
+
+ .../devicetree/bindings/phy/apm-xgene-phy.txt      |   79 +
+ arch/arm64/boot/dts/apm-storm.dtsi                 |   75 +
+ drivers/phy/Kconfig                                |    7 +
+ drivers/phy/Makefile                               |    2 +
+ drivers/phy/phy-core.c                             |   30 +
+ drivers/phy/phy-xgene.c                            | 1827 ++++++++++++++++++++
+ include/linux/phy/phy.h                            |    8 +
+ 7 files changed, 2028 insertions(+), 0 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/phy/apm-xgene-phy.txt
+ create mode 100644 drivers/phy/phy-xgene.c
+
