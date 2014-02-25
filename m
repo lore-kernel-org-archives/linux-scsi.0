@@ -1,51 +1,59 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] vhost/scsi: Check LUN structure byte 0 is set to 1, per
- spec
-Date: Mon, 24 Feb 2014 16:16:50 -0800
-Message-ID: <1393287410.10384.23.camel@haakon3.risingtidesystems.com>
-References: <20140224221332.GA32725@google.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20140224221332.GA32725@google.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Venkatesh Srinivas <venkateshs@google.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, pbonzini@redhat.com, target-devel <target-devel@vger.kernel.org>
+From: wenxiong@vmlinux.vnet.ibm.com
+Subject: [PATCH 2/2] ipr: Add new CCIN definition for new hardware support
+Date: Mon, 24 Feb 2014 19:18:00 -0600
+Message-ID: <20140225011859.038850473@vmlinux.vnet.ibm.com>
+References: <20140225011758.039512398@vmlinux.vnet.ibm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from [32.97.110.57] ([32.97.110.57]:60278 "HELO
+	jupiter1-lp2.austin.ibm.com" rhost-flags-FAIL-FAIL-OK-FAIL)
+	by vger.kernel.org with SMTP id S1751489AbaBYBbD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 24 Feb 2014 20:31:03 -0500
+Content-Disposition: inline; filename=grand_canyon_id
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, bjking1@us.ibm.com, Wen Xiong <wenxiong@linux.vnet.ibm.com>
 
-Hi Venkatesh,
+Add the appropriate definition and table entry for new hardware support.
 
-On Mon, 2014-02-24 at 14:13 -0800, Venkatesh Srinivas wrote:
-> The virtio spec requires byte 0 of the virtio-scsi LUN structure
-> to be '1'.
-> 
-> Signed-off-by: Venkatesh Srinivas <venkateshs@google.com>
-> ---
->   drivers/vhost/scsi.c | 6 ++++++
->   1 file changed, 6 insertions(+)
-> 
-> diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
-> index 0a025b8..e48d4a6 100644
-> --- a/drivers/vhost/scsi.c
-> +++ b/drivers/vhost/scsi.c
-> @@ -1001,6 +1001,12 @@ vhost_scsi_handle_vq(struct vhost_scsi *vs, struct vhost_virtqueue *vq)
->   			break;
->   		}
->   
-> +		/* virtio-scsi spec requires byte 0 of the lun to be 1 */
-> +		if (unlikely(v_req.lun[0] != 1)) {
-> +			vhost_scsi_send_bad_target(vs, vq, head, out);
-> +			continue;
-> +		}
-> +
->   		/* Extract the tpgt */
->   		target = v_req.lun[1];
->   		tpg = ACCESS_ONCE(vs_tpg[target]);
+Signed-off-by: Wen Xiong <wenxiong@linux.vnet.ibm.com>
 
-Applied to target-pending/master, and including in the next v3.14-rc
-PULL request.
+---
+ drivers/scsi/ipr.c |    6 ++++++
+ drivers/scsi/ipr.h |    3 +++
+ 2 files changed, 9 insertions(+)
 
-Thanks!
+Index: b/drivers/scsi/ipr.c
+===================================================================
+--- a/drivers/scsi/ipr.c	2014-02-24 18:12:49.618706961 -0600
++++ b/drivers/scsi/ipr.c	2014-02-24 18:14:04.059956190 -0600
+@@ -10136,6 +10136,12 @@ static struct pci_device_id ipr_pci_tabl
+ 		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_57EF, 0, 0, 0 },
+ 	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_CROCODILE,
+ 		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_57F0, 0, 0, 0 },
++	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_CROCODILE,
++		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_2CCA, 0, 0, 0 },
++	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_CROCODILE,
++		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_2CD2, 0, 0, 0 },
++	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_CROCODILE,
++		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_2CCD, 0, 0, 0 },
+ 	{ }
+ };
+ MODULE_DEVICE_TABLE(pci, ipr_pci_table);
+Index: b/drivers/scsi/ipr.h
+===================================================================
+--- a/drivers/scsi/ipr.h	2014-02-24 18:12:49.618706961 -0600
++++ b/drivers/scsi/ipr.h	2014-02-24 18:14:04.059956190 -0600
+@@ -108,6 +108,9 @@
+ #define IPR_SUBS_DEV_ID_57EE    0x049A
+ #define IPR_SUBS_DEV_ID_57EF    0x049B
+ #define IPR_SUBS_DEV_ID_57F0    0x049C
++#define IPR_SUBS_DEV_ID_2CCA	0x04C7
++#define IPR_SUBS_DEV_ID_2CD2	0x04C8
++#define IPR_SUBS_DEV_ID_2CCD	0x04C9
+ #define IPR_NAME				"ipr"
+ 
+ /*
 
---nab
+-- 
