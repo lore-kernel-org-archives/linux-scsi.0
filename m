@@ -1,187 +1,143 @@
-From: <vikas.chaudhary@qlogic.com>
-Subject: [PATCH 05/10] qla4xxx: Added PEX DMA Support for ISP8022 Adapter
-Date: Mon, 24 Feb 2014 22:07:00 -0500
-Message-ID: <1393297625-928-6-git-send-email-vikas.chaudhary@qlogic.com>
-References: <1393297625-928-1-git-send-email-vikas.chaudhary@qlogic.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:29027 "EHLO
-	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752902AbaBYDpG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Feb 2014 22:45:06 -0500
-In-Reply-To: <1393297625-928-1-git-send-email-vikas.chaudhary@qlogic.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Loc Ho <lho@apm.com>
+Subject: [PATCH v14 0/3] ata: Add APM X-Gene SoC AHCI SATA host controller support
+Date: Mon, 24 Feb 2014 22:28:04 -0700
+Message-ID: <1393306087-2875-1-git-send-email-lho@apm.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: jbottomley@parallels.com, michaelc@cs.wisc.edu
-Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, Tej Parkash <tej.parkash@qlogic.com>
 
-From: Tej Parkash <tej.parkash@qlogic.com>
+This patch adds support for the APM X-Gene SoC AHCI SATA host controller. In
+order for the host controller to work, the corresponding PHY driver
+musts also be available.
 
-Signed-off-by: Tej Parkash <tej.parkash@qlogic.com>
-Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+v14:
+ * Remove the shutdown already check and replace the while loop check with
+   msleep in function xgene_ahci_init_memram
+
+v13:
+ * Add fully-winged style comment for function xgene_ahci_read_id and
+   xgene_ahci_do_hardrest
+ * Minor comments update for function xgene_ahci_read_id,
+   xgene_ahci_do_hardrest, and xgene_ahci_hardreset
+ * NOTE: There is no functional code change.
+
+v12:
+ * Remove function xgene_ahci_get_channel and use the ata_port field port_no
+ * Update comment for function xgene_ahci_read_id to function comment style
+   '/**'
+ * Update comment for multiple lines to fully-winged style
+
+v11:
+ * Drop the export functions requirement with libachi
+ * Change CONFIG_SATA_XGENE to CONFIG_AHCI_XGENE
+ * Rename file sata_xgene.c to ahci_xgene.c
+ * Convert to use Hans De Geode version 5 ahci_platform code re-factor changes
+   to reduce code duplication. For extra context, use plat_data to store our
+   context. The probe function follows the ahci_sunxi implementation. A number
+   of code fragments update to reflect this change.
+ * Update comment for function xgene_ahci_read_id
+ * Minor code move around in function xgene_ahci_do_hardreset and use
+   ATA_BUSY instead 0x80
+ * Fix hardreset to use start_engine function pointer as required due to newer
+   kernel rebased
+ * Fix the set DMA mask for 32-bit as well
+
+v10:
+ * Update binding documentation
+
+v9:
+ * Remove ACPI/EFI include files
+ * Remove the IO flush support, interrupt routine, and DTS resources
+ * Remove function xgene_rd, xgene_wr, and xgene_wr_flush
+ * Remove PMP support (function xgene_ahci_qc_issue, xgene_ahci_qc_prep,
+   xgene_ahci_qc_fill_rtf, xgene_ahci_softreset, and xgene_ahci_do_softreset)
+ * Rename function xgene_ahci_enable_phy to xgene_ahci_force_phy_rdy
+ * Clean up hardreset functions
+ * Require v7 of the PHY driver
+
+v8:
+ * Remove _ADDR from defines
+ * Remove define MSTAWAUX_COHERENT_BYPASS_SET and
+   STARAUX_COHERENT_BYPASS_SET and use direct coding
+ * Remove the un-necessary check for DTS boot with built in ACPI table
+ * Switch to use dma_set_mask_and_coherent for setting DMA mask
+ * Remove ACPI table matching code
+ * Update clock-names for sata01clk, sata23clk, and sata45clk
+
+v7:
+ * Update the clock code by toggle the clock
+ * Update the DTS clock mask values due to the clock spilt between host and
+   v5 of the PHY drivers
+
+v6:
+ * Update binding documentation
+ * Change select PHY_XGENE_SATA to PHY_XGENE
+ * Add ULL to constants
+ * Change indentation and comments
+ * Clean up the probe functions a bit more
+ * Remove xgene_ahci_remove function
+ * Add the flush register to DTS
+ * Remove the interrupt-parent from DTS
+
+v5:
+ * Sync up to v3 of the PHY driver
+ * Remove MSLIM wrapper functions
+ * Change the memory shutdown loop to use usleep_range
+ * Use devm_ioremap_resource instead devm_ioremap
+ * Remove suspend/resume functions as not needed
+
+v4:
+ * Remove the ID property in DT
+ * Remove the temporary PHY direct function call and use PHY function
+ * Change printk to pr_debug
+ * Move the IOB flush addresses into the DT
+ * Remove the parameters retrieval function as no longer needed
+ * Remove the header file as no longer needed
+ * Require v2 patch of the SATA PHY driver. Require slightly modification
+   in the Kconfig as it is moved to folder driver/phy and use Kconfig
+   PHY_XGENE_SATA instead SATA_XGENE_PHY.
+
+v3:
+ * Move out the SATA PHY to another driver
+ * Remove the clock-cells entry from DTS
+ * Remove debug wrapper
+ * Remove delay functions wrapper
+ * Clean up resource and IRQ query
+ * Remove query clock name
+ * Switch to use dma_set_mask/dma_coherent_mask
+ * Remove un-necessary devm_kfree
+ * Update GPL license header to v2
+ * Spilt up function xgene_ahci_hardreset
+ * Spilt up function xgene_ahci_probe
+ * Remove all reference of CONFIG_ARCH_MSLIM
+ * Clean up chip revision code
+
+v2:
+ * Clean up file sata_xgene.c with Lindent and etc
+ * Clean up file sata_xgene_serdes.c with Lindent and etc
+ * Add description to each patch
+
+v1:
+ * inital version
+
+Signed-off-by: Loc Ho <lho@apm.com>
+Signed-off-by: Tuan Phan <tphan@apm.com>
+Signed-off-by: Suman Tripathi <stripathi@apm.com>
 ---
- drivers/scsi/qla4xxx/ql4_83xx.c | 44 +++++++++++++++++++++--------------------
- drivers/scsi/qla4xxx/ql4_glbl.h |  2 +-
- drivers/scsi/qla4xxx/ql4_nx.c   | 15 ++++----------
- 3 files changed, 28 insertions(+), 33 deletions(-)
+Loc Ho (3):
+  Documentation: Add documentation for APM X-Gene SoC SATA host
+    controller DTS binding
+  ata: Add APM X-Gene SoC AHCI SATA host controller driver
+  arm64: Add APM X-Gene SoC AHCI SATA host controller DTS entries
 
-diff --git a/drivers/scsi/qla4xxx/ql4_83xx.c b/drivers/scsi/qla4xxx/ql4_83xx.c
-index 2eba353..ffce016 100644
---- a/drivers/scsi/qla4xxx/ql4_83xx.c
-+++ b/drivers/scsi/qla4xxx/ql4_83xx.c
-@@ -250,7 +250,7 @@ void qla4_83xx_rom_lock_recovery(struct scsi_qla_host *ha)
- }
- 
- /**
-- * qla4_83xx_ms_mem_write_128b - Writes data to MS/off-chip memory
-+ * qla4_8xxx_ms_mem_write_128b - Writes data to MS/off-chip memory
-  * @ha: Pointer to adapter structure
-  * @addr: Flash address to write to
-  * @data: Data to be written
-@@ -259,7 +259,7 @@ void qla4_83xx_rom_lock_recovery(struct scsi_qla_host *ha)
-  * Return: On success return QLA_SUCCESS
-  *	   On error return QLA_ERROR
-  **/
--int qla4_83xx_ms_mem_write_128b(struct scsi_qla_host *ha, uint64_t addr,
-+int qla4_8xxx_ms_mem_write_128b(struct scsi_qla_host *ha, uint64_t addr,
- 				uint32_t *data, uint32_t count)
- {
- 	int i, j;
-@@ -276,7 +276,7 @@ int qla4_83xx_ms_mem_write_128b(struct scsi_qla_host *ha, uint64_t addr,
- 	write_lock_irqsave(&ha->hw_lock, flags);
- 
- 	/* Write address */
--	ret_val = qla4_83xx_wr_reg_indirect(ha, MD_MIU_TEST_AGT_ADDR_HI, 0);
-+	ret_val = ha->isp_ops->wr_reg_indirect(ha, MD_MIU_TEST_AGT_ADDR_HI, 0);
- 	if (ret_val == QLA_ERROR) {
- 		ql4_printk(KERN_ERR, ha, "%s: write to AGT_ADDR_HI failed\n",
- 			   __func__);
-@@ -292,19 +292,20 @@ int qla4_83xx_ms_mem_write_128b(struct scsi_qla_host *ha, uint64_t addr,
- 			goto exit_ms_mem_write_unlock;
- 		}
- 
--		ret_val = qla4_83xx_wr_reg_indirect(ha, MD_MIU_TEST_AGT_ADDR_LO,
--						    addr);
-+		ret_val = ha->isp_ops->wr_reg_indirect(ha,
-+						       MD_MIU_TEST_AGT_ADDR_LO,
-+						       addr);
- 		/* Write data */
--		ret_val |= qla4_83xx_wr_reg_indirect(ha,
--						     MD_MIU_TEST_AGT_WRDATA_LO,
--						     *data++);
--		ret_val |= qla4_83xx_wr_reg_indirect(ha,
--						     MD_MIU_TEST_AGT_WRDATA_HI,
--						     *data++);
--		ret_val |= qla4_83xx_wr_reg_indirect(ha,
-+		ret_val |= ha->isp_ops->wr_reg_indirect(ha,
-+						      MD_MIU_TEST_AGT_WRDATA_LO,
-+						      *data++);
-+		ret_val |= ha->isp_ops->wr_reg_indirect(ha,
-+						      MD_MIU_TEST_AGT_WRDATA_HI,
-+						      *data++);
-+		ret_val |= ha->isp_ops->wr_reg_indirect(ha,
- 						     MD_MIU_TEST_AGT_WRDATA_ULO,
- 						     *data++);
--		ret_val |= qla4_83xx_wr_reg_indirect(ha,
-+		ret_val |= ha->isp_ops->wr_reg_indirect(ha,
- 						     MD_MIU_TEST_AGT_WRDATA_UHI,
- 						     *data++);
- 		if (ret_val == QLA_ERROR) {
-@@ -314,10 +315,11 @@ int qla4_83xx_ms_mem_write_128b(struct scsi_qla_host *ha, uint64_t addr,
- 		}
- 
- 		/* Check write status */
--		ret_val = qla4_83xx_wr_reg_indirect(ha, MD_MIU_TEST_AGT_CTRL,
--						    MIU_TA_CTL_WRITE_ENABLE);
--		ret_val |= qla4_83xx_wr_reg_indirect(ha, MD_MIU_TEST_AGT_CTRL,
--						     MIU_TA_CTL_WRITE_START);
-+		ret_val = ha->isp_ops->wr_reg_indirect(ha, MD_MIU_TEST_AGT_CTRL,
-+						       MIU_TA_CTL_WRITE_ENABLE);
-+		ret_val |= ha->isp_ops->wr_reg_indirect(ha,
-+							MD_MIU_TEST_AGT_CTRL,
-+							MIU_TA_CTL_WRITE_START);
- 		if (ret_val == QLA_ERROR) {
- 			ql4_printk(KERN_ERR, ha, "%s: write to AGT_CTRL failed\n",
- 				   __func__);
-@@ -325,9 +327,9 @@ int qla4_83xx_ms_mem_write_128b(struct scsi_qla_host *ha, uint64_t addr,
- 		}
- 
- 		for (j = 0; j < MAX_CTL_CHECK; j++) {
--			ret_val = qla4_83xx_rd_reg_indirect(ha,
--							MD_MIU_TEST_AGT_CTRL,
--							&agt_ctrl);
-+			ret_val = ha->isp_ops->rd_reg_indirect(ha,
-+							  MD_MIU_TEST_AGT_CTRL,
-+							  &agt_ctrl);
- 			if (ret_val == QLA_ERROR) {
- 				ql4_printk(KERN_ERR, ha, "%s: failed to read MD_MIU_TEST_AGT_CTRL\n",
- 					   __func__);
-@@ -760,7 +762,7 @@ static int qla4_83xx_copy_bootloader(struct scsi_qla_host *ha)
- 			  __func__));
- 
- 	/* 128 bit/16 byte write to MS memory */
--	ret_val = qla4_83xx_ms_mem_write_128b(ha, dest, (uint32_t *)p_cache,
-+	ret_val = qla4_8xxx_ms_mem_write_128b(ha, dest, (uint32_t *)p_cache,
- 					      count);
- 	if (ret_val == QLA_ERROR) {
- 		ql4_printk(KERN_ERR, ha, "%s: Error writing firmware to MS\n",
-diff --git a/drivers/scsi/qla4xxx/ql4_glbl.h b/drivers/scsi/qla4xxx/ql4_glbl.h
-index b1a19cd..2035475 100644
---- a/drivers/scsi/qla4xxx/ql4_glbl.h
-+++ b/drivers/scsi/qla4xxx/ql4_glbl.h
-@@ -274,7 +274,7 @@ int qla4xxx_set_acb(struct scsi_qla_host *ha, uint32_t *mbox_cmd,
- int qla4xxx_get_acb(struct scsi_qla_host *ha, dma_addr_t acb_dma,
- 		    uint32_t acb_type, uint32_t len);
- int qla4_84xx_config_acb(struct scsi_qla_host *ha, int acb_config);
--int qla4_83xx_ms_mem_write_128b(struct scsi_qla_host *ha,
-+int qla4_8xxx_ms_mem_write_128b(struct scsi_qla_host *ha,
- 				uint64_t addr, uint32_t *data, uint32_t count);
- uint8_t qla4xxx_set_ipaddr_state(uint8_t fw_ipaddr_state);
- int qla4_83xx_get_port_config(struct scsi_qla_host *ha, uint32_t *config);
-diff --git a/drivers/scsi/qla4xxx/ql4_nx.c b/drivers/scsi/qla4xxx/ql4_nx.c
-index bdc3b95..6032bf6 100644
---- a/drivers/scsi/qla4xxx/ql4_nx.c
-+++ b/drivers/scsi/qla4xxx/ql4_nx.c
-@@ -1918,7 +1918,7 @@ error_exit:
- 	return rval;
- }
- 
--static int qla4_83xx_minidump_pex_dma_read(struct scsi_qla_host *ha,
-+static int qla4_8xxx_minidump_pex_dma_read(struct scsi_qla_host *ha,
- 				struct qla8xxx_minidump_entry_hdr *entry_hdr,
- 				uint32_t **d_ptr)
- {
-@@ -1995,7 +1995,7 @@ static int qla4_83xx_minidump_pex_dma_read(struct scsi_qla_host *ha,
- 		dma_desc.cmd.read_data_size = size;
- 
- 		/* Prepare: Write pex-dma descriptor to MS memory. */
--		rval = qla4_83xx_ms_mem_write_128b(ha,
-+		rval = qla4_8xxx_ms_mem_write_128b(ha,
- 			      (uint64_t)m_hdr->desc_card_addr,
- 			      (uint32_t *)&dma_desc,
- 			      (sizeof(struct qla4_83xx_pex_dma_descriptor)/16));
-@@ -2455,17 +2455,10 @@ static int qla4_8xxx_minidump_process_rdmem(struct scsi_qla_host *ha,
- 	uint32_t *data_ptr = *d_ptr;
- 	int rval = QLA_SUCCESS;
- 
--	if (is_qla8032(ha) || is_qla8042(ha)) {
--		rval = qla4_83xx_minidump_pex_dma_read(ha, entry_hdr,
--						       &data_ptr);
--		if (rval != QLA_SUCCESS) {
--			rval = __qla4_8xxx_minidump_process_rdmem(ha, entry_hdr,
--								  &data_ptr);
--		}
--	} else {
-+	rval = qla4_8xxx_minidump_pex_dma_read(ha, entry_hdr, &data_ptr);
-+	if (rval != QLA_SUCCESS)
- 		rval = __qla4_8xxx_minidump_process_rdmem(ha, entry_hdr,
- 							  &data_ptr);
--	}
- 	*d_ptr = data_ptr;
- 	return rval;
- }
--- 
-1.8.2.GIT
+ .../devicetree/bindings/ata/apm-xgene.txt          |   70 +++
+ arch/arm64/boot/dts/apm-storm.dtsi                 |   75 +++
+ drivers/ata/Kconfig                                |    8 +
+ drivers/ata/Makefile                               |    1 +
+ drivers/ata/ahci_xgene.c                           |  566 ++++++++++++++++++++
+ 5 files changed, 720 insertions(+), 0 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/ata/apm-xgene.txt
+ create mode 100644 drivers/ata/ahci_xgene.c
 
