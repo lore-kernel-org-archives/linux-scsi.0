@@ -1,14 +1,14 @@
 From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: [PATCH RESUBMIT 08/23] qla2xxx: Properly handle 32 bit mailbox register for ISPFX00.
-Date: Wed, 26 Feb 2014 04:15:03 -0500
-Message-ID: <1393406118-6586-9-git-send-email-saurav.kashyap@qlogic.com>
+Subject: [PATCH RESUBMIT 10/23] scsi_transport_fc: Add 32Gbps speed definition.
+Date: Wed, 26 Feb 2014 04:15:05 -0500
+Message-ID: <1393406118-6586-11-git-send-email-saurav.kashyap@qlogic.com>
 References: <1393406118-6586-1-git-send-email-saurav.kashyap@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:42374 "EHLO
+Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:31392 "EHLO
 	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751810AbaBZJv0 (ORCPT
+	by vger.kernel.org with ESMTP id S1751224AbaBZJv0 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Wed, 26 Feb 2014 04:51:26 -0500
 In-Reply-To: <1393406118-6586-1-git-send-email-saurav.kashyap@qlogic.com>
@@ -17,51 +17,39 @@ List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
+From: Chad Dupuis <chad.dupuis@qlogic.com>
+
+Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
 Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_mr.c |   12 ++++++------
- 1 files changed, 6 insertions(+), 6 deletions(-)
+ drivers/scsi/scsi_transport_fc.c |    1 +
+ include/scsi/scsi_transport_fc.h |    1 +
+ 2 files changed, 2 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_mr.c b/drivers/scsi/qla2xxx/qla_mr.c
-index 9839da8..ed44ec6 100644
---- a/drivers/scsi/qla2xxx/qla_mr.c
-+++ b/drivers/scsi/qla2xxx/qla_mr.c
-@@ -2916,9 +2916,9 @@ qlafx00_async_event(scsi_qla_host_t *vha)
- 		break;
+diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+index 4628fd5..f80908f 100644
+--- a/drivers/scsi/scsi_transport_fc.c
++++ b/drivers/scsi/scsi_transport_fc.c
+@@ -261,6 +261,7 @@ static const struct {
+ 	{ FC_PORTSPEED_10GBIT,		"10 Gbit" },
+ 	{ FC_PORTSPEED_8GBIT,		"8 Gbit" },
+ 	{ FC_PORTSPEED_16GBIT,		"16 Gbit" },
++	{ FC_PORTSPEED_32GBIT,		"32 Gbit" },
+ 	{ FC_PORTSPEED_NOT_NEGOTIATED,	"Not Negotiated" },
+ };
+ fc_bitfield_name_search(port_speed, fc_port_speed_names)
+diff --git a/include/scsi/scsi_transport_fc.h b/include/scsi/scsi_transport_fc.h
+index b797e8f..8c79980 100644
+--- a/include/scsi/scsi_transport_fc.h
++++ b/include/scsi/scsi_transport_fc.h
+@@ -130,6 +130,7 @@ enum fc_vport_state {
+ #define FC_PORTSPEED_4GBIT		8
+ #define FC_PORTSPEED_8GBIT		0x10
+ #define FC_PORTSPEED_16GBIT		0x20
++#define FC_PORTSPEED_32GBIT		0x40
+ #define FC_PORTSPEED_NOT_NEGOTIATED	(1 << 15) /* Speed not established */
  
- 	case QLAFX00_MBA_PORT_UPDATE:		/* Port database update */
--		ha->aenmb[1] = RD_REG_WORD(&reg->aenmailbox1);
--		ha->aenmb[2] = RD_REG_WORD(&reg->aenmailbox2);
--		ha->aenmb[3] = RD_REG_WORD(&reg->aenmailbox3);
-+		ha->aenmb[1] = RD_REG_DWORD(&reg->aenmailbox1);
-+		ha->aenmb[2] = RD_REG_DWORD(&reg->aenmailbox2);
-+		ha->aenmb[3] = RD_REG_DWORD(&reg->aenmailbox3);
- 		ql_dbg(ql_dbg_async, vha, 0x5077,
- 		    "Asynchronous port Update received "
- 		    "aenmb[0]: %x, aenmb[1]: %x, aenmb[2]: %x, aenmb[3]: %x\n",
-@@ -2975,7 +2975,7 @@ static void
- qlafx00_mbx_completion(scsi_qla_host_t *vha, uint32_t mb0)
- {
- 	uint16_t	cnt;
--	uint16_t __iomem *wptr;
-+	uint32_t __iomem *wptr;
- 	struct qla_hw_data *ha = vha->hw;
- 	struct device_reg_fx00 __iomem *reg = &ha->iobase->ispfx00;
- 
-@@ -2985,10 +2985,10 @@ qlafx00_mbx_completion(scsi_qla_host_t *vha, uint32_t mb0)
- 	/* Load return mailbox registers. */
- 	ha->flags.mbox_int = 1;
- 	ha->mailbox_out32[0] = mb0;
--	wptr = (uint16_t __iomem *)&reg->mailbox17;
-+	wptr = (uint32_t __iomem *)&reg->mailbox17;
- 
- 	for (cnt = 1; cnt < ha->mbx_count; cnt++) {
--		ha->mailbox_out32[cnt] = RD_REG_WORD(wptr);
-+		ha->mailbox_out32[cnt] = RD_REG_DWORD(wptr);
- 		wptr++;
- 	}
- }
+ /*
 -- 
 1.7.7
 
