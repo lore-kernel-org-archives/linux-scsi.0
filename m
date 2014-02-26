@@ -1,180 +1,43 @@
 From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: Re: [PATCH 0/5] qla2xxx: NPIV target mode fixes for v3.14-rc
-Date: Wed, 26 Feb 2014 06:05:41 +0000
-Message-ID: <F5D084D6342F9B479C34599BB0A03E4D898677EF@AVMB1.qlogic.org>
-References: <1392930209-25065-1-git-send-email-nab@daterainc.com>
+Subject: [PATCH RESUBMIT 13/23] qla2xxx: Remove ISP_ABORT_NEEDED and ISP_ABORT_RETRY checks from watchdog function for ISP8044.
+Date: Wed, 26 Feb 2014 04:15:08 -0500
+Message-ID: <1393406118-6586-14-git-send-email-saurav.kashyap@qlogic.com>
+References: <1393406118-6586-1-git-send-email-saurav.kashyap@qlogic.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_000_F5D084D6342F9B479C34599BB0A03E4D898677EFAVMB1qlogicorg_"
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:5585 "EHLO
+Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:28290 "EHLO
 	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750918AbaBZGFn (ORCPT
+	by vger.kernel.org with ESMTP id S1750748AbaBZJut (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 26 Feb 2014 01:05:43 -0500
-Received: from pps.filterd (m0045602.ppops.net [127.0.0.1])
-	by mx0a-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id s1Q5xEoP011277
-	for <linux-scsi@vger.kernel.org>; Tue, 25 Feb 2014 22:05:43 -0800
-Received: from avcashub1.qlogic.com (avcashub2.qlogic.com [198.70.193.116])
-	by mx0a-0016ce01.pphosted.com with ESMTP id 1j8yrs8pre-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Tue, 25 Feb 2014 22:05:43 -0800
-In-Reply-To: <1392930209-25065-1-git-send-email-nab@daterainc.com>
-Content-Language: en-US
+	Wed, 26 Feb 2014 04:50:49 -0500
+In-Reply-To: <1393406118-6586-1-git-send-email-saurav.kashyap@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Sawan Chandak <sawan.chandak@qlogic.com>, Quinn Tran <quinn.tran@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+To: jbottomley@parallels.com
+Cc: giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
---_000_F5D084D6342F9B479C34599BB0A03E4D898677EFAVMB1qlogicorg_
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <F2A8A98143992A41A02C70BB57ACF30C@qlogic.com>
-Content-Transfer-Encoding: quoted-printable
+From: Atul Deshmukh <atul.deshmukh@qlogic.com>
 
-Hi Nicholas,
+Signed-off-by: Atul Deshmukh <atul.deshmukh@qlogic.com>
+Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
+---
+ drivers/scsi/qla2xxx/qla_nx2.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
-The patches looks good.
+diff --git a/drivers/scsi/qla2xxx/qla_nx2.c b/drivers/scsi/qla2xxx/qla_nx2.c
+index 1f4c72a..b7ed478 100644
+--- a/drivers/scsi/qla2xxx/qla_nx2.c
++++ b/drivers/scsi/qla2xxx/qla_nx2.c
+@@ -2014,8 +2014,6 @@ qla8044_watchdog(struct scsi_qla_host *vha)
+ 
+ 	/* don't poll if reset is going on or FW hang in quiescent state */
+ 	if (!(test_bit(ABORT_ISP_ACTIVE, &vha->dpc_flags) ||
+-	    test_bit(ISP_ABORT_NEEDED, &vha->dpc_flags) ||
+-	    test_bit(ISP_ABORT_RETRY, &vha->dpc_flags) ||
+ 	    test_bit(FCOE_CTX_RESET_NEEDED, &vha->dpc_flags))) {
+ 		dev_state = qla8044_rd_direct(vha, QLA8044_CRB_DEV_STATE_INDEX);
+ 
+-- 
+1.7.7
 
-Acked-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
-
-Thanks,
-~Saurav
-
->From: Nicholas Bellinger <nab@linux-iscsi.org>
->
->Hi Sawan, Quinn, & Co.
->
->The following series addresses a number of NPIV related bugs specific
->to v3.14-rc code, mostly involving the underlying configfs dependency
->of base_vha / base_tpg to not be removed while there are active NPIV
->ports.
->
->Patch #1 fixes a race between the qlt_lport_register() callback and
->subsequent shutdown operations.
->
->Patch #2 ensures that shutdown of a base_vha port fails when there
->are active npiv_ports_inuse.
->
->Patch #3 adds seperate enable/disable attribute logic that is specific
->to NPIV operation, and patch #4 adds the configfs_[un]depend_item()
->calls in ensure that base_vha / base_tpg cannot be removed from the
->configfs hierarchy until all associated NPIV ports have been shutdown.
->
->And patch #5 fixes a seperate issue with NAA formatting of EVPD=3D0x83
->device identifier for NPIV WWPNs.
->
->Please review.
->
->Thanks!
->
->--nab
->
->Nicholas Bellinger (5):
->  qla2xxx: Fix qlt_lport_register base_vha callback race
->  qla2xxx: Check + fail when npiv_vports_inuse exists in shutdown
->  tcm_qla2xxx: Add NPIV specific enable/disable attribute logic
->  tcm_qla2xxx: Perform configfs depend/undepend for base_tpg
->  tcm_qla2xxx: Fix NAA formatted name for NPIV WWPNs
->
-> drivers/scsi/qla2xxx/qla_target.c  |   39 +++++++--
-> drivers/scsi/qla2xxx/qla_target.h  |    2 +-
-> drivers/scsi/qla2xxx/tcm_qla2xxx.c |  158
->++++++++++++++++++++++++++----------
-> drivers/scsi/qla2xxx/tcm_qla2xxx.h |    7 +-
-> 4 files changed, 153 insertions(+), 53 deletions(-)
->
->--=20
->1.7.10.4
->
-
-
---_000_F5D084D6342F9B479C34599BB0A03E4D898677EFAVMB1qlogicorg_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
-
-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
-D1QCAAAAgFMAYQB1AHIAYQB2ACAASwBhAHMAaAB5AGEAcAAAAFMATQBUAFAAAABzAGEAdQByAGEA
-dgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwACXQEAAAA0AAAAcwBh
-AHUAcgBhAHYALgBrAGEAcwBoAHkAYQBwAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8A5V8BAAAA
-PAAAAHMAaQBwADoAcwBhAHUAcgBhAHYALgBrAGEAcwBoAHkAYQBwAEAAcQBsAG8AZwBpAGMALgBj
-AG8AbQAAAB8AGgwBAAAAHgAAAFMAYQB1AHIAYQB2ACAASwBhAHMAaAB5AGEAcAAAAAAAHwAfDAEA
-AAA0AAAAcwBhAHUAcgBhAHYALgBrAGEAcwBoAHkAYQBwAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAA
-AB8AHgwBAAAACgAAAFMATQBUAFAAAAAAAAIBGQwBAAAAdAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QC
-AAAAgFMAYQB1AHIAYQB2ACAASwBhAHMAaAB5AGEAcAAAAFMATQBUAFAAAABzAGEAdQByAGEAdgAu
-AGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwABXQEAAAA0AAAAcwBhAHUA
-cgBhAHYALgBrAGEAcwBoAHkAYQBwAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8A+D8BAAAAHgAA
-AFMAYQB1AHIAYQB2ACAASwBhAHMAaAB5AGEAcAAAAAAAHwAjQAEAAAA0AAAAcwBhAHUAcgBhAHYA
-LgBrAGEAcwBoAHkAYQBwAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AIkABAAAACgAAAFMATQBU
-AFAAAAAAAAIB+T8BAAAAdAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgFMAYQB1AHIAYQB2ACAA
-SwBhAHMAaAB5AGEAcAAAAFMATQBUAFAAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABx
-AGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAJXQEAAAA0AAAAcwBhAHUAcgBhAHYALgBrAGEAcwBoAHkA
-YQBwAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AMUABAAAAAgAAAAAAAAALAEA6AQAAAB8AMEAB
-AAAAAgAAAAAAAAAfABoAAQAAABIAAABJAFAATQAuAE4AbwB0AGUAAAAAAAMA8T8JBAAACwBAOgEA
-AAADAP0/5AQAAAIBCzABAAAAEAAAALj9nn5JnABDqeyZl+FRrWQDABcAAQAAAEAAOQCAqO/GuDLP
-AUAACDDfbRTHuDLPAQsAAIAIIAYAAAAAAMAAAAAAAABGAAAAABSFAAABAAAAHwAAgIYDAgAAAAAA
-wAAAAAAAAEYBAAAAHgAAAGEAYwBjAGUAcAB0AGwAYQBuAGcAdQBhAGcAZQAAAAAAAQAAAAwAAABl
-AG4ALQBVAFMAAAALAACACCAGAAAAAADAAAAAAAAARgAAAAAGhQAAAAAAAB8ANwABAAAAegAAAFIA
-ZQA6ACAAWwBQAEEAVABDAEgAIAAwAC8ANQBdACAAcQBsAGEAMgB4AHgAeAA6ACAATgBQAEkAVgAg
-AHQAYQByAGcAZQB0ACAAbQBvAGQAZQAgAGYAaQB4AGUAcwAgAGYAbwByACAAdgAzAC4AMQA0AC0A
-cgBjAAAAAAAfAD0AAQAAAAoAAABSAGUAOgAgAAAAAAADADYAAAAAAB8AQhABAAAAbAAAADwAMQAz
-ADkAMgA5ADMAMAAyADAAOQAtADIANQAwADYANQAtADEALQBnAGkAdAAtAHMAZQBuAGQALQBlAG0A
-YQBpAGwALQBuAGEAYgBAAGQAYQB0AGUAcgBhAGkAbgBjAC4AYwBvAG0APgAAAAIBcQABAAAAGwAA
-AAEBzy6CP1rqkmXJtxVOjANbOt9PYaeax/bVAAAfAHAAAQAAAHIAAABbAFAAQQBUAEMASAAgADAA
-LwA1AF0AIABxAGwAYQAyAHgAeAB4ADoAIABOAFAASQBWACAAdABhAHIAZwBlAHQAIABtAG8AZABl
-ACAAZgBpAHgAZQBzACAAZgBvAHIAIAB2ADMALgAxADQALQByAGMAAAAAAB8ANRABAAAAeAAAADwA
-RgA1AEQAMAA4ADQARAA2ADMANAAyAEYAOQBCADQANwA5AEMAMwA0ADUAOQA5AEIAQgAwAEEAMAAz
-AEUANABEADgAOQA4ADYANwA3AEUARgBAAEEAVgBNAEIAMQAuAHEAbABvAGcAaQBjAC4AbwByAGcA
-PgAAAB8AORABAAAAbAAAADwAMQAzADkAMgA5ADMAMAAyADAAOQAtADIANQAwADYANQAtADEALQBn
-AGkAdAAtAHMAZQBuAGQALQBlAG0AYQBpAGwALQBuAGEAYgBAAGQAYQB0AGUAcgBhAGkAbgBjAC4A
-YwBvAG0APgAAAAMA3j+fTgAAQAAHMGfoCse4Ms8BAwAmAAAAAAACAUcAAQAAAC8AAABjPVVTO2E9
-IDtwPVFMb2dpYztsPUFWTUIxLTE0MDIyNjA2MDU0MVotMTAwODQxAAAfABUQAQAAAFgAAABGADIA
-QQA4AEEAOQA4ADEANAAzADkAOQAyAEEANAAxAEEAMAAyAEMANwAwAEIAQgA1ADcAQQBDAEYAMwAw
-AEMAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAgEUMAEAAAAMAAAAsgAAAAqK745IAAAAHwD6PwEA
-AAAeAAAAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAAAAfAACAhgMCAAAAAADAAAAAAAAA
-RgEAAAAWAAAAdQBzAGUAcgAtAGEAZwBlAG4AdAAAAAAAAQAAAEYAAABNAGkAYwByAG8AcwBvAGYA
-dAAtAE0AYQBjAE8AdQB0AGwAbwBvAGsALwAxADQALgAzAC4AOQAuADEAMwAxADAAMwAwAAAAAAAf
-AACAH6TrM6h6LkK+e3nhqY5UswEAAAA4AAAAQwBvAG4AdgBlAHIAcwBhAHQAaQBvAG4ASQBuAGQA
-ZQB4AFQAcgBhAGMAawBpAG4AZwBFAHgAAAABAAAAPgEAAEkASQA9ADAAMQAwADEAQwBGADMAMgBC
-ADgAQwA3ADQAMwBCADIAQwBBADAANwAwADYAMwBFADcAQgA0ADkAOABGADQAOAA0ADcAOQAyAEEA
-NQBFAEQAMgAyADIARgA7AFMAQgBNAEkARAA9ADEANAA7AFMAMQA9ADwAMQAzADkAMgA5ADMAMAAy
-ADAAOQAtADIANQAwADYANQAtADEALQBnAGkAdAAtAHMAZQBuAGQALQBlAG0AYQBpAGwALQBuAGEA
-YgBAAGQAYQB0AGUAcgBhAGkAbgBjAC4AYwBvAG0APgA7AFYAZQByAHMAaQBvAG4APQBWAGUAcgBz
-AGkAbwBuACAAMQA0AC4AMgAgACgAQgB1AGkAbABkACAAMwA4ADcALgAwACkALAAgAFMAdABhAGcA
-ZQA9AEgAMgAAAAAAAwANNP0/AAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAgAAAAeAAtAG0AcwAt
-AGgAYQBzAC0AYQB0AHQAYQBjAGgAAAABAAAAAgAAAAAAAAAfAACAhgMCAAAAAADAAAAAAAAARgEA
-AAAiAAAAeAAtAG8AcgBpAGcAaQBuAGEAdABpAG4AZwAtAGkAcAAAAAAAAQAAABgAAABbADEAMAAu
-ADEALgA0AC4AMQAwAF0AAAAvlA==
-
---_000_F5D084D6342F9B479C34599BB0A03E4D898677EFAVMB1qlogicorg_--
