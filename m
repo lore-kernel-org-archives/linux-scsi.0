@@ -1,16 +1,16 @@
 From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: [PATCH RESUBMIT 10/23] scsi_transport_fc: Add 32Gbps speed definition.
-Date: Wed, 26 Feb 2014 04:15:05 -0500
-Message-ID: <1393406118-6586-11-git-send-email-saurav.kashyap@qlogic.com>
+Subject: [PATCH RESUBMIT 09/23] qla2xxx: Set host can_queue value based on available resources.
+Date: Wed, 26 Feb 2014 04:15:04 -0500
+Message-ID: <1393406118-6586-10-git-send-email-saurav.kashyap@qlogic.com>
 References: <1393406118-6586-1-git-send-email-saurav.kashyap@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:31392 "EHLO
+Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:60529 "EHLO
 	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751224AbaBZJv0 (ORCPT
+	by vger.kernel.org with ESMTP id S1750748AbaBZJvb (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 26 Feb 2014 04:51:26 -0500
+	Wed, 26 Feb 2014 04:51:31 -0500
 In-Reply-To: <1393406118-6586-1-git-send-email-saurav.kashyap@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,37 +19,59 @@ Cc: giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.vasquez@qlog
 
 From: Chad Dupuis <chad.dupuis@qlogic.com>
 
+Tell the mid-layer that number of commands we can queue is the available
+resources we have minus a small amount for internal commands.
+
 Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
 Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 ---
- drivers/scsi/scsi_transport_fc.c |    1 +
- include/scsi/scsi_transport_fc.h |    1 +
- 2 files changed, 2 insertions(+), 0 deletions(-)
+ drivers/scsi/qla2xxx/qla_os.c |   19 ++++++++++---------
+ 1 files changed, 10 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-index 4628fd5..f80908f 100644
---- a/drivers/scsi/scsi_transport_fc.c
-+++ b/drivers/scsi/scsi_transport_fc.c
-@@ -261,6 +261,7 @@ static const struct {
- 	{ FC_PORTSPEED_10GBIT,		"10 Gbit" },
- 	{ FC_PORTSPEED_8GBIT,		"8 Gbit" },
- 	{ FC_PORTSPEED_16GBIT,		"16 Gbit" },
-+	{ FC_PORTSPEED_32GBIT,		"32 Gbit" },
- 	{ FC_PORTSPEED_NOT_NEGOTIATED,	"Not Negotiated" },
- };
- fc_bitfield_name_search(port_speed, fc_port_speed_names)
-diff --git a/include/scsi/scsi_transport_fc.h b/include/scsi/scsi_transport_fc.h
-index b797e8f..8c79980 100644
---- a/include/scsi/scsi_transport_fc.h
-+++ b/include/scsi/scsi_transport_fc.h
-@@ -130,6 +130,7 @@ enum fc_vport_state {
- #define FC_PORTSPEED_4GBIT		8
- #define FC_PORTSPEED_8GBIT		0x10
- #define FC_PORTSPEED_16GBIT		0x20
-+#define FC_PORTSPEED_32GBIT		0x40
- #define FC_PORTSPEED_NOT_NEGOTIATED	(1 << 15) /* Speed not established */
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index c698e10..925d45c 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -2561,10 +2561,6 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
  
- /*
+ 	host = base_vha->host;
+ 	base_vha->req = req;
+-	if (IS_QLAFX00(ha))
+-		host->can_queue = QLAFX00_MAX_CANQUEUE;
+-	else
+-		host->can_queue = req->length + 128;
+ 	if (IS_QLA2XXX_MIDTYPE(ha))
+ 		base_vha->mgmt_svr_loop_id = 10 + base_vha->vp_idx;
+ 	else
+@@ -2587,11 +2583,6 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		if (!IS_QLA82XX(ha))
+ 			host->sg_tablesize = QLA_SG_ALL;
+ 	}
+-	ql_dbg(ql_dbg_init, base_vha, 0x0032,
+-	    "can_queue=%d, req=%p, "
+-	    "mgmt_svr_loop_id=%d, sg_tablesize=%d.\n",
+-	    host->can_queue, base_vha->req,
+-	    base_vha->mgmt_svr_loop_id, host->sg_tablesize);
+ 	host->max_id = ha->max_fibre_devices;
+ 	host->cmd_per_lun = 3;
+ 	host->unique_id = host->host_no;
+@@ -2707,6 +2698,16 @@ que_init:
+ 		goto probe_failed;
+ 	}
+ 
++	if (IS_QLAFX00(ha))
++		host->can_queue = QLAFX00_MAX_CANQUEUE;
++	else
++		host->can_queue = req->num_outstanding_cmds - 10;
++
++	ql_dbg(ql_dbg_init, base_vha, 0x0032,
++	    "can_queue=%d, req=%p, mgmt_svr_loop_id=%d, sg_tablesize=%d.\n",
++	    host->can_queue, base_vha->req,
++	    base_vha->mgmt_svr_loop_id, host->sg_tablesize);
++
+ 	if (ha->mqenable) {
+ 		if (qla25xx_setup_mode(base_vha)) {
+ 			ql_log(ql_log_warn, base_vha, 0x00ec,
 -- 
 1.7.7
 
