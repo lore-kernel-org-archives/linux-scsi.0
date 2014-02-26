@@ -1,126 +1,102 @@
 From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: [PATCH RESUBMIT 12/23] qla2xxx: Remove Marker type IOCB logic for ISPFX00.
-Date: Wed, 26 Feb 2014 04:15:07 -0500
-Message-ID: <1393406118-6586-13-git-send-email-saurav.kashyap@qlogic.com>
+Subject: [PATCH RESUBMIT 05/23] qla2xxx: Remove init control block related dead code for ISPFX00.
+Date: Wed, 26 Feb 2014 04:15:00 -0500
+Message-ID: <1393406118-6586-6-git-send-email-saurav.kashyap@qlogic.com>
 References: <1393406118-6586-1-git-send-email-saurav.kashyap@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:28594 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751522AbaBZJvF (ORCPT
+Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:15003 "EHLO
+	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751301AbaBZJvs (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 26 Feb 2014 04:51:05 -0500
+	Wed, 26 Feb 2014 04:51:48 -0500
 In-Reply-To: <1393406118-6586-1-git-send-email-saurav.kashyap@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Armen Baloyan <armen.baloyan@qlogic.com>
-
-Signed-off-by: Armen Baloyan <armen.baloyan@qlogic.com>
+Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
 Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_iocb.c |   11 +----------
- drivers/scsi/qla2xxx/qla_mr.c   |   12 ------------
- drivers/scsi/qla2xxx/qla_mr.h   |   24 ------------------------
- 3 files changed, 1 insertions(+), 46 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h |   24 ------------------------
+ drivers/scsi/qla2xxx/qla_mr.c  |   14 --------------
+ drivers/scsi/qla2xxx/qla_os.c  |    1 -
+ 3 files changed, 0 insertions(+), 39 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
-index 5e6ac6c..0aad5e4 100644
---- a/drivers/scsi/qla2xxx/qla_iocb.c
-+++ b/drivers/scsi/qla2xxx/qla_iocb.c
-@@ -524,7 +524,6 @@ __qla2x00_marker(struct scsi_qla_host *vha, struct req_que *req,
- {
- 	mrk_entry_t *mrk;
- 	struct mrk_entry_24xx *mrk24 = NULL;
--	struct mrk_entry_fx00 *mrkfx = NULL;
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index 4c286eb..638bdcc 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -1197,30 +1197,6 @@ typedef struct {
+ 	uint8_t  reserved_3[26];
+ } init_cb_t;
  
- 	struct qla_hw_data *ha = vha->hw;
- 	scsi_qla_host_t *base_vha = pci_get_drvdata(ha->pdev);
-@@ -541,15 +540,7 @@ __qla2x00_marker(struct scsi_qla_host *vha, struct req_que *req,
- 	mrk->entry_type = MARKER_TYPE;
- 	mrk->modifier = type;
- 	if (type != MK_SYNC_ALL) {
--		if (IS_QLAFX00(ha)) {
--			mrkfx = (struct mrk_entry_fx00 *) mrk;
--			mrkfx->handle = MAKE_HANDLE(req->id, mrkfx->handle);
--			mrkfx->handle_hi = 0;
--			mrkfx->tgt_id = cpu_to_le16(loop_id);
--			mrkfx->lun[1] = LSB(lun);
--			mrkfx->lun[2] = MSB(lun);
--			host_to_fcp_swap(mrkfx->lun, sizeof(mrkfx->lun));
--		} else if (IS_FWI2_CAPABLE(ha)) {
-+		if (IS_FWI2_CAPABLE(ha)) {
- 			mrk24 = (struct mrk_entry_24xx *) mrk;
- 			mrk24->nport_handle = cpu_to_le16(loop_id);
- 			mrk24->lun[1] = LSB(lun);
-diff --git a/drivers/scsi/qla2xxx/qla_mr.c b/drivers/scsi/qla2xxx/qla_mr.c
-index a9b5cf4..893e56d 100644
---- a/drivers/scsi/qla2xxx/qla_mr.c
-+++ b/drivers/scsi/qla2xxx/qla_mr.c
-@@ -2140,7 +2140,6 @@ qlafx00_initialize_adapter(scsi_qla_host_t *vha)
- 	vha->device_flags = DFLG_NO_CABLE;
- 	vha->dpc_flags = 0;
- 	vha->flags.management_server_logged_in = 0;
--	vha->marker_needed = 0;
- 	ha->isp_abort_cnt = 0;
- 	ha->beacon_blink_led = 0;
- 
-@@ -3213,17 +3212,6 @@ qlafx00_start_scsi(srb_t *sp)
- 	/* So we know we haven't pci_map'ed anything yet */
- 	tot_dsds = 0;
- 
--	/* Forcing marker needed for now */
--	vha->marker_needed = 0;
 -
--	/* Send marker if required */
--	if (vha->marker_needed != 0) {
--		if (qla2x00_marker(vha, req, rsp, 0, 0, MK_SYNC_ALL) !=
--		    QLA_SUCCESS)
--			return QLA_FUNCTION_FAILED;
--		vha->marker_needed = 0;
--	}
--
- 	/* Acquire ring specific lock */
- 	spin_lock_irqsave(&ha->hardware_lock, flags);
- 
-diff --git a/drivers/scsi/qla2xxx/qla_mr.h b/drivers/scsi/qla2xxx/qla_mr.h
-index 5f3ed8b..1e60ca2 100644
---- a/drivers/scsi/qla2xxx/qla_mr.h
-+++ b/drivers/scsi/qla2xxx/qla_mr.h
-@@ -47,30 +47,6 @@ struct cmd_type_7_fx00 {
- 	uint32_t dseg_0_len;		/* Data segment 0 length. */
- };
- 
--/*
-- * ISP queue - marker entry structure definition.
-- */
--struct mrk_entry_fx00 {
--	uint8_t entry_type;		/* Entry type. */
--	uint8_t entry_count;		/* Entry count. */
--	uint8_t handle_count;		/* Handle count. */
--	uint8_t entry_status;		/* Entry Status. */
--
--	uint32_t handle;		/* System handle. */
--	uint32_t handle_hi;		/* System handle. */
--
--	uint16_t tgt_id;		/* Target ID. */
--
--	uint8_t modifier;		/* Modifier (7-0). */
--	uint8_t reserved_1;
--
--	uint8_t reserved_2[5];
--
--	uint8_t lun[8];			/* FCP LUN (BE). */
--	uint8_t reserved_3[36];
+-struct init_cb_fx {
+-	uint16_t	version;
+-	uint16_t	reserved_1[13];
+-	__le16		request_q_outpointer;
+-	__le16		response_q_inpointer;
+-	uint16_t	reserved_2[2];
+-	__le16		response_q_length;
+-	__le16		request_q_length;
+-	uint16_t	reserved_3[2];
+-	__le32		request_q_address[2];
+-	__le32		response_q_address[2];
+-	uint16_t	reserved_4[4];
+-	uint8_t		response_q_msivec;
+-	uint8_t		reserved_5[19];
+-	uint16_t	interrupt_delay_timer;
+-	uint16_t	reserved_6;
+-	uint32_t	fwoptions1;
+-	uint32_t	fwoptions2;
+-	uint32_t	fwoptions3;
+-	uint8_t		reserved_7[24];
 -};
 -
 -
- #define	STATUS_TYPE_FX00	0x01		/* Status entry. */
- struct sts_entry_fx00 {
- 	uint8_t entry_type;		/* Entry type. */
+ /*
+  * Get Link Status mailbox command return buffer.
+  */
+diff --git a/drivers/scsi/qla2xxx/qla_mr.c b/drivers/scsi/qla2xxx/qla_mr.c
+index 7c7849d..4542247 100644
+--- a/drivers/scsi/qla2xxx/qla_mr.c
++++ b/drivers/scsi/qla2xxx/qla_mr.c
+@@ -631,20 +631,6 @@ qlafx00_config_rings(struct scsi_qla_host *vha)
+ {
+ 	struct qla_hw_data *ha = vha->hw;
+ 	struct device_reg_fx00 __iomem *reg = &ha->iobase->ispfx00;
+-	struct init_cb_fx *icb;
+-	struct req_que *req = ha->req_q_map[0];
+-	struct rsp_que *rsp = ha->rsp_q_map[0];
+-
+-	/* Setup ring parameters in initialization control block. */
+-	icb = (struct init_cb_fx *)ha->init_cb;
+-	icb->request_q_outpointer = __constant_cpu_to_le16(0);
+-	icb->response_q_inpointer = __constant_cpu_to_le16(0);
+-	icb->request_q_length = cpu_to_le16(req->length);
+-	icb->response_q_length = cpu_to_le16(rsp->length);
+-	icb->request_q_address[0] = cpu_to_le32(LSD(req->dma));
+-	icb->request_q_address[1] = cpu_to_le32(MSD(req->dma));
+-	icb->response_q_address[0] = cpu_to_le32(LSD(rsp->dma));
+-	icb->response_q_address[1] = cpu_to_le32(MSD(rsp->dma));
+ 
+ 	WRT_REG_DWORD(&reg->req_q_in, 0);
+ 	WRT_REG_DWORD(&reg->req_q_out, 0);
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 53edc4b..c698e10 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -2489,7 +2489,6 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		ha->aen_mbx_count = AEN_MAILBOX_REGISTER_COUNT_FX00;
+ 		req_length = REQUEST_ENTRY_CNT_FX00;
+ 		rsp_length = RESPONSE_ENTRY_CNT_FX00;
+-		ha->init_cb_size = sizeof(struct init_cb_fx);
+ 		ha->isp_ops = &qlafx00_isp_ops;
+ 		ha->port_down_retry_count = 30; /* default value */
+ 		ha->mr.fw_hbt_cnt = QLAFX00_HEARTBEAT_INTERVAL;
 -- 
 1.7.7
 
