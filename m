@@ -1,102 +1,45 @@
 From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: [PATCH RESUBMIT 05/23] qla2xxx: Remove init control block related dead code for ISPFX00.
-Date: Wed, 26 Feb 2014 04:15:00 -0500
-Message-ID: <1393406118-6586-6-git-send-email-saurav.kashyap@qlogic.com>
+Subject: [PATCH RESUBMIT 04/23] qla2xxx: Use proper message for Non owner reset ACK Timeout.
+Date: Wed, 26 Feb 2014 04:14:59 -0500
+Message-ID: <1393406118-6586-5-git-send-email-saurav.kashyap@qlogic.com>
 References: <1393406118-6586-1-git-send-email-saurav.kashyap@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:15003 "EHLO
-	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751301AbaBZJvs (ORCPT
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:58016 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751660AbaBZJvG (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 26 Feb 2014 04:51:48 -0500
+	Wed, 26 Feb 2014 04:51:06 -0500
 In-Reply-To: <1393406118-6586-1-git-send-email-saurav.kashyap@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
+From: Atul Deshmukh <atul.deshmukh@qlogic.com>
+
+Signed-off-by: Atul Deshmukh <atul.deshmukh@qlogic.com>
 Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_def.h |   24 ------------------------
- drivers/scsi/qla2xxx/qla_mr.c  |   14 --------------
- drivers/scsi/qla2xxx/qla_os.c  |    1 -
- 3 files changed, 0 insertions(+), 39 deletions(-)
+ drivers/scsi/qla2xxx/qla_nx2.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 4c286eb..638bdcc 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -1197,30 +1197,6 @@ typedef struct {
- 	uint8_t  reserved_3[26];
- } init_cb_t;
+diff --git a/drivers/scsi/qla2xxx/qla_nx2.c b/drivers/scsi/qla2xxx/qla_nx2.c
+index f60989d..1f4c72a 100644
+--- a/drivers/scsi/qla2xxx/qla_nx2.c
++++ b/drivers/scsi/qla2xxx/qla_nx2.c
+@@ -1578,8 +1578,8 @@ qla8044_need_reset_handler(struct scsi_qla_host *vha)
+ 		do {
+ 			if (time_after_eq(jiffies, dev_init_timeout)) {
+ 				ql_log(ql_log_info, vha, 0xb0c4,
+-				    "%s: Non Reset owner DEV INIT "
+-				    "TIMEOUT!\n", __func__);
++				    "%s: Non Reset owner: Reset Ack Timeout!\n",
++				    __func__);
+ 				break;
+ 			}
  
--
--struct init_cb_fx {
--	uint16_t	version;
--	uint16_t	reserved_1[13];
--	__le16		request_q_outpointer;
--	__le16		response_q_inpointer;
--	uint16_t	reserved_2[2];
--	__le16		response_q_length;
--	__le16		request_q_length;
--	uint16_t	reserved_3[2];
--	__le32		request_q_address[2];
--	__le32		response_q_address[2];
--	uint16_t	reserved_4[4];
--	uint8_t		response_q_msivec;
--	uint8_t		reserved_5[19];
--	uint16_t	interrupt_delay_timer;
--	uint16_t	reserved_6;
--	uint32_t	fwoptions1;
--	uint32_t	fwoptions2;
--	uint32_t	fwoptions3;
--	uint8_t		reserved_7[24];
--};
--
--
- /*
-  * Get Link Status mailbox command return buffer.
-  */
-diff --git a/drivers/scsi/qla2xxx/qla_mr.c b/drivers/scsi/qla2xxx/qla_mr.c
-index 7c7849d..4542247 100644
---- a/drivers/scsi/qla2xxx/qla_mr.c
-+++ b/drivers/scsi/qla2xxx/qla_mr.c
-@@ -631,20 +631,6 @@ qlafx00_config_rings(struct scsi_qla_host *vha)
- {
- 	struct qla_hw_data *ha = vha->hw;
- 	struct device_reg_fx00 __iomem *reg = &ha->iobase->ispfx00;
--	struct init_cb_fx *icb;
--	struct req_que *req = ha->req_q_map[0];
--	struct rsp_que *rsp = ha->rsp_q_map[0];
--
--	/* Setup ring parameters in initialization control block. */
--	icb = (struct init_cb_fx *)ha->init_cb;
--	icb->request_q_outpointer = __constant_cpu_to_le16(0);
--	icb->response_q_inpointer = __constant_cpu_to_le16(0);
--	icb->request_q_length = cpu_to_le16(req->length);
--	icb->response_q_length = cpu_to_le16(rsp->length);
--	icb->request_q_address[0] = cpu_to_le32(LSD(req->dma));
--	icb->request_q_address[1] = cpu_to_le32(MSD(req->dma));
--	icb->response_q_address[0] = cpu_to_le32(LSD(rsp->dma));
--	icb->response_q_address[1] = cpu_to_le32(MSD(rsp->dma));
- 
- 	WRT_REG_DWORD(&reg->req_q_in, 0);
- 	WRT_REG_DWORD(&reg->req_q_out, 0);
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 53edc4b..c698e10 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -2489,7 +2489,6 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 		ha->aen_mbx_count = AEN_MAILBOX_REGISTER_COUNT_FX00;
- 		req_length = REQUEST_ENTRY_CNT_FX00;
- 		rsp_length = RESPONSE_ENTRY_CNT_FX00;
--		ha->init_cb_size = sizeof(struct init_cb_fx);
- 		ha->isp_ops = &qlafx00_isp_ops;
- 		ha->port_down_retry_count = 30; /* default value */
- 		ha->mr.fw_hbt_cnt = QLAFX00_HEARTBEAT_INTERVAL;
 -- 
 1.7.7
 
