@@ -1,92 +1,40 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 2/2] scsi: remove __scsi_release_buffers
-Date: Wed, 26 Feb 2014 06:23:44 -0800
-Message-ID: <20140226142344.GA14161@infradead.org>
-References: <20140226142321.GA14126@infradead.org>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: [PATCH 1/2] ipr: Format HCAM overlay ID 0x21
+Date: Wed, 26 Feb 2014 08:59:59 -0600
+Message-ID: <530E016F.4020805@linux.vnet.ibm.com>
+References: <20140225011758.039512398@vmlinux.vnet.ibm.com> <20140225011858.911615854@vmlinux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:54184 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751177AbaBZOXp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Feb 2014 09:23:45 -0500
-Content-Disposition: inline
-In-Reply-To: <20140226142321.GA14126@infradead.org>
+Received: from e35.co.us.ibm.com ([32.97.110.153]:38012 "EHLO
+	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750942AbaBZPAE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Feb 2014 10:00:04 -0500
+Received: from /spool/local
+	by e35.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
+	Wed, 26 Feb 2014 08:00:04 -0700
+Received: from b03cxnp07028.gho.boulder.ibm.com (b03cxnp07028.gho.boulder.ibm.com [9.17.130.15])
+	by d03dlp03.boulder.ibm.com (Postfix) with ESMTP id C2B5619D804E
+	for <linux-scsi@vger.kernel.org>; Wed, 26 Feb 2014 07:59:59 -0700 (MST)
+Received: from d03av06.boulder.ibm.com (d03av06.boulder.ibm.com [9.17.195.245])
+	by b03cxnp07028.gho.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s1QExShW5833206
+	for <linux-scsi@vger.kernel.org>; Wed, 26 Feb 2014 15:59:28 +0100
+Received: from d03av06.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av06.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id s1QF3SE1031451
+	for <linux-scsi@vger.kernel.org>; Wed, 26 Feb 2014 08:03:28 -0700
+In-Reply-To: <20140225011858.911615854@vmlinux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <JBottomley@Parallels.com>
-Cc: linux-scsi@vger.kernel.org
+To: Wen Xiong <wenxiong@linux.vnet.ibm.com>
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 
-We always do the bidi check now, so it can be folded into scsi_release_buffers.
+Acked-by: Brian King <brking@linux.vnet.ibm.com>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/scsi/scsi_lib.c |   38 +++++++++++++++-----------------------
- 1 file changed, 15 insertions(+), 23 deletions(-)
-
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 51063ca..94e46ee 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -538,8 +538,6 @@ void scsi_run_host_queues(struct Scsi_Host *shost)
- 		scsi_run_queue(sdev->request_queue);
- }
- 
--static void __scsi_release_buffers(struct scsi_cmnd *, int);
--
- static inline unsigned int scsi_sgtable_index(unsigned short nents)
- {
- 	unsigned int index;
-@@ -591,26 +589,6 @@ static void scsi_free_sgtable(struct scsi_data_buffer *sdb)
- 	__sg_free_table(&sdb->table, SCSI_MAX_SG_SEGMENTS, scsi_sg_free);
- }
- 
--static void __scsi_release_buffers(struct scsi_cmnd *cmd, int do_bidi_check)
--{
--
--	if (cmd->sdb.table.nents)
--		scsi_free_sgtable(&cmd->sdb);
--
--	memset(&cmd->sdb, 0, sizeof(cmd->sdb));
--
--	if (do_bidi_check && scsi_bidi_cmnd(cmd)) {
--		struct scsi_data_buffer *bidi_sdb =
--			cmd->request->next_rq->special;
--		scsi_free_sgtable(bidi_sdb);
--		kmem_cache_free(scsi_sdb_cache, bidi_sdb);
--		cmd->request->next_rq->special = NULL;
--	}
--
--	if (scsi_prot_sg_count(cmd))
--		scsi_free_sgtable(cmd->prot_sdb);
--}
--
- /*
-  * Function:    scsi_release_buffers()
-  *
-@@ -630,7 +608,21 @@ static void __scsi_release_buffers(struct scsi_cmnd *cmd, int do_bidi_check)
-  */
- void scsi_release_buffers(struct scsi_cmnd *cmd)
- {
--	__scsi_release_buffers(cmd, 1);
-+	if (cmd->sdb.table.nents)
-+		scsi_free_sgtable(&cmd->sdb);
-+
-+	memset(&cmd->sdb, 0, sizeof(cmd->sdb));
-+
-+	if (scsi_bidi_cmnd(cmd)) {
-+		struct scsi_data_buffer *bidi_sdb =
-+			cmd->request->next_rq->special;
-+		scsi_free_sgtable(bidi_sdb);
-+		kmem_cache_free(scsi_sdb_cache, bidi_sdb);
-+		cmd->request->next_rq->special = NULL;
-+	}
-+
-+	if (scsi_prot_sg_count(cmd))
-+		scsi_free_sgtable(cmd->prot_sdb);
- }
- EXPORT_SYMBOL(scsi_release_buffers);
- 
 -- 
-1.7.10.4
+Brian King
+Power Linux I/O
+IBM Linux Technology Center
+
 
