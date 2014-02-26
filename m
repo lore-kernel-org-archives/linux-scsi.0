@@ -1,44 +1,35 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [PATCH v2 4/9] ipr: Use pci_enable_msi_range() and pci_enable_msix_range()
-Date: Wed, 26 Feb 2014 09:02:07 -0600
-Message-ID: <530E01EF.904@linux.vnet.ibm.com>
-References: <cover.1389904166.git.agordeev@redhat.com> <eb0b62be65c050533f2565fcf3f1d673770dfd67.1389904166.git.agordeev@redhat.com> <20140128095441.GA6951@dhcp-26-207.brq.redhat.com> <52E7CCAD.5070008@linux.vnet.ibm.com> <20140129132651.GA27764@dhcp-26-207.brq.redhat.com> <20140130140630.GA32349@dhcp-26-207.brq.redhat.com> <20140224081209.GA32200@dhcp-26-207.brq.redhat.com>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH 13/17] scsi: push host_lock down into scsi_{host,target}_queue_ready
+Date: Wed, 26 Feb 2014 16:39:49 +0100
+Message-ID: <530E0AC5.60101@acm.org>
+References: <20140205123930.150608699@bombadil.infradead.org> <20140205124021.286457268@bombadil.infradead.org> <1391705819.22335.8.camel@dabdike> <20140210113932.GA31405@infradead.org> <20140210200934.GA4096@kernel.dk> <5301D814.5070100@acm.org> <20140217220057.GB30101@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-pci-owner@vger.kernel.org>
-In-Reply-To: <20140224081209.GA32200@dhcp-26-207.brq.redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, Wendy Xiong <wenxiong@linux.vnet.ibm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp03.stone-is.org ([87.238.162.6]:41174 "EHLO
+	smtpgw.stone-is.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752040AbaBZPjx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Feb 2014 10:39:53 -0500
+In-Reply-To: <20140217220057.GB30101@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Jens Axboe <axboe@kernel.dk>, James Bottomley <James.Bottomley@HansenPartnership.com>, Nicholas Bellinger <nab@linux-iscsi.org>, linux-scsi@vger.kernel.org
 
-On 02/24/2014 02:12 AM, Alexander Gordeev wrote:
-> On Thu, Jan 30, 2014 at 03:06:30PM +0100, Alexander Gordeev wrote:
->> On Wed, Jan 29, 2014 at 02:26:52PM +0100, Alexander Gordeev wrote:
->>>> Do you want me to rediff your patches on top of this one,
->>>> or do you want to keep the entire MSI series together
->>>> and do the rediff? Otherwise the patches seem fine.
->>>
->>> I would prefer the former.
->>
->> Hi Brian,
->>
->> I am sending the refreshed patches on top of "ipr: Handle early EEH".
-> 
-> Hi Brian,
-> 
-> What three the two patches you ACKed are against?
-> Should I ask James to take them?
+On 02/17/14 23:00, Christoph Hellwig wrote:
+> Most of the scsi multiqueue work so far has been about modifying the
+> block layer, so I'm definitively now shy about doing that were needed.
+> And I think we will eventually need to be able to have n:m queue to hctx
+> mapping instead of the current 1:n one.
 
-Wendy - can you pull in these two patches from Alexander and rebase on
-top of the latest patches you've sent upstream?
+I think it would be great if the blk-mq core would support an n:m queue
+to hctx mapping. One of the advantages of that approach would be that
+the blk-mq layer already keeps track of how many commands are queued per
+hctx and hence that would allow to eliminate the host_busy counter from
+the SCSI mid-layer. However, this involves a change in semantics. I hope
+it's fine to change the semantics of the hosts->can_queue parameter from
+"maximum number of commands queued per SCSI host" into "maximum number
+of commands queued per hctx" ?
 
-Thanks,
-
-Brian
-
--- 
-Brian King
-Power Linux I/O
-IBM Linux Technology Center
+Bart.
