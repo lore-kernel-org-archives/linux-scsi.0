@@ -1,24 +1,27 @@
 From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: [PATCH v3 6/7] scsi_debug: protect device access with atomic_rw lock
-Date: Wed, 26 Feb 2014 22:57:03 +0900
-Message-ID: <1393423024-8063-7-git-send-email-akinobu.mita@gmail.com>
+Subject: [PATCH v3 7/7] scsi_debug: add ability to enable clustering
+Date: Wed, 26 Feb 2014 22:57:04 +0900
+Message-ID: <1393423024-8063-8-git-send-email-akinobu.mita@gmail.com>
 References: <1393423024-8063-1-git-send-email-akinobu.mita@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f51.google.com ([209.85.160.51]:58554 "EHLO
-	mail-pb0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751047AbaBZN5d (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Feb 2014 08:57:33 -0500
-Received: by mail-pb0-f51.google.com with SMTP id un15so1013905pbc.38
-        for <linux-scsi@vger.kernel.org>; Wed, 26 Feb 2014 05:57:32 -0800 (PST)
+Received: from mail-pa0-f47.google.com ([209.85.220.47]:55424 "EHLO
+	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751047AbaBZN5f (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Feb 2014 08:57:35 -0500
+Received: by mail-pa0-f47.google.com with SMTP id kp14so1003797pab.20
+        for <linux-scsi@vger.kernel.org>; Wed, 26 Feb 2014 05:57:34 -0800 (PST)
 In-Reply-To: <1393423024-8063-1-git-send-email-akinobu.mita@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Akinobu Mita <akinobu.mita@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Douglas Gilbert <dgilbert@interlog.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-This change ensures that concurrent device access including ramdisk
-storage, protection info, and provisioning map by read, write, and
-unmap commands are protected with atomic_rw spinlock.
+This adds a module parameter to enable clustering.
+
+Without enabling clustering support, the transfer length for read and
+write scsi commands is limited upto 8MB when page size is 4KB and
+sg_tablesize is 2048 (= SCSI_MAX_SG_CHAIN_SEGMENTS).  I would like to
+test commands with more than that transfer length.
 
 Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
 Reviewed-by: Douglas Gilbert <dgilbert@interlog.com>
@@ -28,80 +31,46 @@ Cc: Douglas Gilbert <dgilbert@interlog.com>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org
 ---
- drivers/scsi/scsi_debug.c | 12 ++++++++++--
- 1 file changed, 10 insertions(+), 2 deletions(-)
+ drivers/scsi/scsi_debug.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
 diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 004b985..0bb1d49c 100644
+index 0bb1d49c..f3e9cc0 100644
 --- a/drivers/scsi/scsi_debug.c
 +++ b/drivers/scsi/scsi_debug.c
-@@ -1888,17 +1888,19 @@ static int resp_read(struct scsi_cmnd *SCpnt, unsigned long long lba,
- 		return check_condition_result;
- 	}
+@@ -196,6 +196,7 @@ static unsigned int scsi_debug_unmap_max_blocks = DEF_UNMAP_MAX_BLOCKS;
+ static unsigned int scsi_debug_unmap_max_desc = DEF_UNMAP_MAX_DESC;
+ static unsigned int scsi_debug_write_same_length = DEF_WRITESAME_LENGTH;
+ static bool scsi_debug_removable = DEF_REMOVABLE;
++static bool scsi_debug_clustering;
  
-+	read_lock_irqsave(&atomic_rw, iflags);
-+
- 	/* DIX + T10 DIF */
- 	if (scsi_debug_dix && scsi_prot_sg_count(SCpnt)) {
- 		int prot_ret = prot_verify_read(SCpnt, lba, num, ei_lba);
+ static int scsi_debug_cmnd_count = 0;
  
- 		if (prot_ret) {
-+			read_unlock_irqrestore(&atomic_rw, iflags);
- 			mk_sense_buffer(devip, ABORTED_COMMAND, 0x10, prot_ret);
- 			return illegal_condition_result;
- 		}
- 	}
+@@ -2762,6 +2763,7 @@ static int schedule_resp(struct scsi_cmnd * cmnd,
+  */
+ module_param_named(add_host, scsi_debug_add_host, int, S_IRUGO | S_IWUSR);
+ module_param_named(ato, scsi_debug_ato, int, S_IRUGO);
++module_param_named(clustering, scsi_debug_clustering, bool, S_IRUGO | S_IWUSR);
+ module_param_named(delay, scsi_debug_delay, int, S_IRUGO | S_IWUSR);
+ module_param_named(dev_size_mb, scsi_debug_dev_size_mb, int, S_IRUGO);
+ module_param_named(dif, scsi_debug_dif, int, S_IRUGO);
+@@ -2805,6 +2807,7 @@ MODULE_VERSION(SCSI_DEBUG_VERSION);
  
--	read_lock_irqsave(&atomic_rw, iflags);
- 	ret = do_device_access(SCpnt, devip, lba, num, 0);
- 	read_unlock_irqrestore(&atomic_rw, iflags);
- 	if (ret == -1)
-@@ -2098,17 +2100,19 @@ static int resp_write(struct scsi_cmnd *SCpnt, unsigned long long lba,
- 	if (ret)
- 		return ret;
+ MODULE_PARM_DESC(add_host, "0..127 hosts allowed(def=1)");
+ MODULE_PARM_DESC(ato, "application tag ownership: 0=disk 1=host (def=1)");
++MODULE_PARM_DESC(clustering, "when set enables larger transfers (def=0)");
+ MODULE_PARM_DESC(delay, "# of jiffies to delay response(def=1)");
+ MODULE_PARM_DESC(dev_size_mb, "size in MB of ram shared by devs(def=8)");
+ MODULE_PARM_DESC(dif, "data integrity field type: 0-3 (def=0)");
+@@ -3952,6 +3955,8 @@ static int sdebug_driver_probe(struct device * dev)
+ 	sdbg_host = to_sdebug_host(dev);
  
-+	write_lock_irqsave(&atomic_rw, iflags);
-+
- 	/* DIX + T10 DIF */
- 	if (scsi_debug_dix && scsi_prot_sg_count(SCpnt)) {
- 		int prot_ret = prot_verify_write(SCpnt, lba, num, ei_lba);
- 
- 		if (prot_ret) {
-+			write_unlock_irqrestore(&atomic_rw, iflags);
- 			mk_sense_buffer(devip, ILLEGAL_REQUEST, 0x10, prot_ret);
- 			return illegal_condition_result;
- 		}
- 	}
- 
--	write_lock_irqsave(&atomic_rw, iflags);
- 	ret = do_device_access(SCpnt, devip, lba, num, 1);
- 	if (scsi_debug_lbp())
- 		map_region(lba, num);
-@@ -2187,6 +2191,7 @@ static int resp_unmap(struct scsi_cmnd * scmd, struct sdebug_dev_info * devip)
- 	struct unmap_block_desc *desc;
- 	unsigned int i, payload_len, descriptors;
- 	int ret;
-+	unsigned long iflags;
- 
- 	ret = check_readiness(scmd, 1, devip);
- 	if (ret)
-@@ -2208,6 +2213,8 @@ static int resp_unmap(struct scsi_cmnd * scmd, struct sdebug_dev_info * devip)
- 
- 	desc = (void *)&buf[8];
- 
-+	write_lock_irqsave(&atomic_rw, iflags);
-+
- 	for (i = 0 ; i < descriptors ; i++) {
- 		unsigned long long lba = get_unaligned_be64(&desc[i].lba);
- 		unsigned int num = get_unaligned_be32(&desc[i].blocks);
-@@ -2222,6 +2229,7 @@ static int resp_unmap(struct scsi_cmnd * scmd, struct sdebug_dev_info * devip)
- 	ret = 0;
- 
- out:
-+	write_unlock_irqrestore(&atomic_rw, iflags);
- 	kfree(buf);
- 
- 	return ret;
+ 	sdebug_driver_template.can_queue = scsi_debug_max_queue;
++	if (scsi_debug_clustering)
++		sdebug_driver_template.use_clustering = ENABLE_CLUSTERING;
+ 	hpnt = scsi_host_alloc(&sdebug_driver_template, sizeof(sdbg_host));
+ 	if (NULL == hpnt) {
+ 		printk(KERN_ERR "%s: scsi_register failed\n", __func__);
 -- 
 1.8.3.2
 
