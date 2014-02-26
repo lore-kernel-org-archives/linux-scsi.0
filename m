@@ -1,42 +1,46 @@
-From: <Anil@mv.qlogic.com>, <"Gurumurthy <anil.gurumurthy"@qlogic.com>
-Subject: [PATCH] bfa: Updating Maintainers email ids
-Date: Wed, 26 Feb 2014 06:08:42 -0500
-Message-ID: <1393412922-7119-1-git-send-email-anil.gurumurthy@qlogic.com>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: Akinobu Mita <akinobu.mita@gmail.com>
+Subject: [PATCH v3 2/7] scsi_debug: make pseudo_primary static
+Date: Wed, 26 Feb 2014 22:56:59 +0900
+Message-ID: <1393423024-8063-3-git-send-email-akinobu.mita@gmail.com>
+References: <1393423024-8063-1-git-send-email-akinobu.mita@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:54434 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751140AbaBZLoZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 26 Feb 2014 06:44:25 -0500
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:51854 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750886AbaBZN5Y (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Feb 2014 08:57:24 -0500
+Received: by mail-pa0-f45.google.com with SMTP id lf10so998664pab.32
+        for <linux-scsi@vger.kernel.org>; Wed, 26 Feb 2014 05:57:24 -0800 (PST)
+In-Reply-To: <1393423024-8063-1-git-send-email-akinobu.mita@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jbottomley@parallels.com
-Cc: anil.gurumurthy@qlogic.com, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Akinobu Mita <akinobu.mita@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Douglas Gilbert <dgilbert@interlog.com>
 
-From: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
+As pseudo_primary is only used in scsi_debug.c, it should be static.
 
-Signed-off-by: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
+Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
+Reviewed-by: Douglas Gilbert <dgilbert@interlog.com>
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Douglas Gilbert <dgilbert@interlog.com>
+Cc: linux-scsi@vger.kernel.org
 ---
- MAINTAINERS | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/scsi_debug.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 0dba50b..0dff580 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -1917,8 +1917,8 @@ F:	drivers/bcma/
- F:	include/linux/bcma/
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index bdfb9be..9cd211e 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -3246,7 +3246,7 @@ static struct attribute *sdebug_drv_attrs[] = {
+ };
+ ATTRIBUTE_GROUPS(sdebug_drv);
  
- BROCADE BFA FC SCSI DRIVER
--M:	Anil Gurumurthy <agurumur@brocade.com>
--M:	Vijaya Mohan Guvva <vmohan@brocade.com>
-+M:	Anil Gurumurthy <anil.gurumurthy@qlogic.com>
-+M:	Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>
- L:	linux-scsi@vger.kernel.org
- S:	Supported
- F:	drivers/scsi/bfa/
+-struct device *pseudo_primary;
++static struct device *pseudo_primary;
+ 
+ static int __init scsi_debug_init(void)
+ {
 -- 
-1.9.0
+1.8.3.2
 
