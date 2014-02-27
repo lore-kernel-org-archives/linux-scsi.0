@@ -1,7 +1,7 @@
 From: Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH v1 07/13] IB/iser: Generalize fall_to_bounce_buf routine
-Date: Thu, 27 Feb 2014 13:13:03 +0200
-Message-ID: <1393499589-15633-8-git-send-email-sagig@mellanox.com>
+Subject: [PATCH v1 11/13] SCSI/libiscsi: Add check_protection callback for transports
+Date: Thu, 27 Feb 2014 13:13:07 +0200
+Message-ID: <1393499589-15633-12-git-send-email-sagig@mellanox.com>
 References: <1393499589-15633-1-git-send-email-sagig@mellanox.com>
 Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 In-Reply-To: <1393499589-15633-1-git-send-email-sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
@@ -10,146 +10,116 @@ To: roland-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, nab-IzHhD5pYlfBP7FQvKIMDCQ@p
 Cc: oren-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-Unaligned SG-lists may also happen for protection
-information. Genrelize bounce buffer routine to handle
-any iser_data_buf which may be data and/or protection.
+iSCSI needs to be at least aware that a task involves protection
+information. In case it does, after the transaction completed
+libiscsi will ask the transport to check the protection status
+of the transaction.
 
-This patch does not change any functionality.
+Unlike transport errors, DIF errors should not prevent successful
+completion of the transaction from the transport point of view,
+but should be escelated to scsi mid-layer when constructing the
+scsi result and sense data.
+
+check_protection routine will return the ascq corresponding to the
+DIF error that occured (or 0 if no error happened).
+
+return ascq:
+- 0x1: GUARD_CHECK_FAILED
+- 0x2: APPTAG_CHECK_FAILED
+- 0x3: REFTAG_CHECK_FAILED
 
 Signed-off-by: Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Signed-off-by: Alex Tabachnik <alext-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
 ---
- drivers/infiniband/ulp/iser/iser_memory.c |   53 ++++++++++++++++-------------
- 1 files changed, 29 insertions(+), 24 deletions(-)
+ drivers/scsi/libiscsi.c             |   32 ++++++++++++++++++++++++++++++++
+ include/scsi/libiscsi.h             |    4 ++++
+ include/scsi/scsi_transport_iscsi.h |    1 +
+ 3 files changed, 37 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/infiniband/ulp/iser/iser_memory.c b/drivers/infiniband/ulp/iser/iser_memory.c
-index a933508..2c3f4b1 100644
---- a/drivers/infiniband/ulp/iser/iser_memory.c
-+++ b/drivers/infiniband/ulp/iser/iser_memory.c
-@@ -45,13 +45,19 @@
-  * iser_start_rdma_unaligned_sg
-  */
- static int iser_start_rdma_unaligned_sg(struct iscsi_iser_task *iser_task,
-+					struct iser_data_buf *data,
-+					struct iser_data_buf *data_copy,
- 					enum iser_data_dir cmd_dir)
- {
--	int dma_nents;
--	struct ib_device *dev;
-+	struct ib_device *dev = iser_task->iser_conn->ib_conn->device->ib_device;
-+	struct scatterlist *sgl = (struct scatterlist *)data->buf;
-+	struct scatterlist *sg;
- 	char *mem = NULL;
--	struct iser_data_buf *data = &iser_task->data[cmd_dir];
--	unsigned long  cmd_data_len = data->data_len;
-+	unsigned long  cmd_data_len = 0;
-+	int dma_nents, i;
-+
-+	for_each_sg(sgl, sg, data->size, i)
-+		cmd_data_len += ib_sg_dma_len(dev, sg);
- 
- 	if (cmd_data_len > ISER_KMALLOC_THRESHOLD)
- 		mem = (void *)__get_free_pages(GFP_ATOMIC,
-@@ -61,17 +67,16 @@ static int iser_start_rdma_unaligned_sg(struct iscsi_iser_task *iser_task,
- 
- 	if (mem == NULL) {
- 		iser_err("Failed to allocate mem size %d %d for copying sglist\n",
--			 data->size,(int)cmd_data_len);
-+			 data->size, (int)cmd_data_len);
- 		return -ENOMEM;
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index 4046241..a58a6bb 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -395,6 +395,10 @@ static int iscsi_prep_scsi_cmd_pdu(struct iscsi_task *task)
+ 		if (rc)
+ 			return rc;
  	}
- 
- 	if (cmd_dir == ISER_DIR_OUT) {
- 		/* copy the unaligned sg the buffer which is used for RDMA */
--		struct scatterlist *sgl = (struct scatterlist *)data->buf;
--		struct scatterlist *sg;
- 		int i;
- 		char *p, *from;
- 
-+		sgl = (struct scatterlist *)data->buf;
- 		p = mem;
- 		for_each_sg(sgl, sg, data->size, i) {
- 			from = kmap_atomic(sg_page(sg));
-@@ -83,22 +88,19 @@ static int iser_start_rdma_unaligned_sg(struct iscsi_iser_task *iser_task,
- 		}
- 	}
- 
--	sg_init_one(&iser_task->data_copy[cmd_dir].sg_single, mem, cmd_data_len);
--	iser_task->data_copy[cmd_dir].buf  =
--		&iser_task->data_copy[cmd_dir].sg_single;
--	iser_task->data_copy[cmd_dir].size = 1;
-+	sg_init_one(&data_copy->sg_single, mem, cmd_data_len);
-+	data_copy->buf = &data_copy->sg_single;
-+	data_copy->size = 1;
-+	data_copy->copy_buf = mem;
- 
--	iser_task->data_copy[cmd_dir].copy_buf  = mem;
--
--	dev = iser_task->iser_conn->ib_conn->device->ib_device;
--	dma_nents = ib_dma_map_sg(dev,
--				  &iser_task->data_copy[cmd_dir].sg_single,
--				  1,
-+	dma_nents = ib_dma_map_sg(dev, &data_copy->sg_single, 1,
- 				  (cmd_dir == ISER_DIR_OUT) ?
- 				  DMA_TO_DEVICE : DMA_FROM_DEVICE);
- 	BUG_ON(dma_nents == 0);
- 
--	iser_task->data_copy[cmd_dir].dma_nents = dma_nents;
-+	data_copy->dma_nents = dma_nents;
-+	data_copy->data_len = cmd_data_len;
 +
- 	return 0;
++	if (scsi_get_prot_op(sc) != SCSI_PROT_NORMAL)
++		task->protected = true;
++
+ 	if (sc->sc_data_direction == DMA_TO_DEVICE) {
+ 		unsigned out_len = scsi_out(sc)->length;
+ 		struct iscsi_r2t_info *r2t = &task->unsol_r2t;
+@@ -823,6 +827,33 @@ static void iscsi_scsi_cmd_rsp(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+ 
+ 	sc->result = (DID_OK << 16) | rhdr->cmd_status;
+ 
++	if (task->protected) {
++		sector_t sector;
++		u8 ascq;
++
++		/**
++		 * Transports that didn't implement check_protection
++		 * callback but still published T10-PI support to scsi-mid
++		 * deserve this BUG_ON.
++		 **/
++		 BUG_ON(!session->tt->check_protection);
++
++		ascq = session->tt->check_protection(task, &sector);
++		if (ascq) {
++			sc->result = DRIVER_SENSE << 24 | DID_ABORT << 16 |
++				     SAM_STAT_CHECK_CONDITION;
++			scsi_build_sense_buffer(1, sc->sense_buffer,
++						ILLEGAL_REQUEST, 0x10, ascq);
++			sc->sense_buffer[7] = 0xc; /* Additional sense length */
++			sc->sense_buffer[8] = 0;   /* Information desc type */
++			sc->sense_buffer[9] = 0xa; /* Additional desc length */
++			sc->sense_buffer[10] = 0x80; /* Validity bit */
++
++			put_unaligned_be64(sector, &sc->sense_buffer[12]);
++			goto out;
++		}
++	}
++
+ 	if (rhdr->response != ISCSI_STATUS_CMD_COMPLETED) {
+ 		sc->result = DID_ERROR << 16;
+ 		goto out;
+@@ -1567,6 +1598,7 @@ static inline struct iscsi_task *iscsi_alloc_task(struct iscsi_conn *conn,
+ 	task->have_checked_conn = false;
+ 	task->last_timeout = jiffies;
+ 	task->last_xfer = jiffies;
++	task->protected = false;
+ 	INIT_LIST_HEAD(&task->running);
+ 	return task;
  }
+diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
+index 309f513..1457c26 100644
+--- a/include/scsi/libiscsi.h
++++ b/include/scsi/libiscsi.h
+@@ -133,6 +133,10 @@ struct iscsi_task {
+ 	unsigned long		last_xfer;
+ 	unsigned long		last_timeout;
+ 	bool			have_checked_conn;
++
++	/* T10 protection information */
++	bool			protected;
++
+ 	/* state set/tested under session->lock */
+ 	int			state;
+ 	atomic_t		refcount;
+diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
+index 88640a4..2555ee5 100644
+--- a/include/scsi/scsi_transport_iscsi.h
++++ b/include/scsi/scsi_transport_iscsi.h
+@@ -167,6 +167,7 @@ struct iscsi_transport {
+ 				 struct iscsi_bus_flash_conn *fnode_conn);
+ 	int (*logout_flashnode_sid) (struct iscsi_cls_session *cls_sess);
+ 	int (*get_host_stats) (struct Scsi_Host *shost, char *buf, int len);
++	u8 (*check_protection)(struct iscsi_task *task, sector_t *sector);
+ };
  
-@@ -341,11 +343,12 @@ void iser_dma_unmap_task_data(struct iscsi_iser_task *iser_task,
- 
- static int fall_to_bounce_buf(struct iscsi_iser_task *iser_task,
- 			      struct ib_device *ibdev,
-+			      struct iser_data_buf *mem,
-+			      struct iser_data_buf *mem_copy,
- 			      enum iser_data_dir cmd_dir,
- 			      int aligned_len)
- {
- 	struct iscsi_conn    *iscsi_conn = iser_task->iser_conn->iscsi_conn;
--	struct iser_data_buf *mem = &iser_task->data[cmd_dir];
- 
- 	iscsi_conn->fmr_unalign_cnt++;
- 	iser_warn("rdma alignment violation (%d/%d aligned) or FMR not supported\n",
-@@ -355,12 +358,12 @@ static int fall_to_bounce_buf(struct iscsi_iser_task *iser_task,
- 		iser_data_buf_dump(mem, ibdev);
- 
- 	/* unmap the command data before accessing it */
--	iser_dma_unmap_task_data(iser_task, &iser_task->data[cmd_dir]);
-+	iser_dma_unmap_task_data(iser_task, mem);
- 
- 	/* allocate copy buf, if we are writing, copy the */
- 	/* unaligned scatterlist, dma map the copy        */
--	if (iser_start_rdma_unaligned_sg(iser_task, cmd_dir) != 0)
--			return -ENOMEM;
-+	if (iser_start_rdma_unaligned_sg(iser_task, mem, mem_copy, cmd_dir) != 0)
-+		return -ENOMEM;
- 
- 	return 0;
- }
-@@ -388,7 +391,8 @@ int iser_reg_rdma_mem_fmr(struct iscsi_iser_task *iser_task,
- 
- 	aligned_len = iser_data_buf_aligned_len(mem, ibdev);
- 	if (aligned_len != mem->dma_nents) {
--		err = fall_to_bounce_buf(iser_task, ibdev,
-+		err = fall_to_bounce_buf(iser_task, ibdev, mem,
-+					 &iser_task->data_copy[cmd_dir],
- 					 cmd_dir, aligned_len);
- 		if (err) {
- 			iser_err("failed to allocate bounce buffer\n");
-@@ -536,7 +540,8 @@ int iser_reg_rdma_mem_fastreg(struct iscsi_iser_task *iser_task,
- 
- 	aligned_len = iser_data_buf_aligned_len(mem, ibdev);
- 	if (aligned_len != mem->dma_nents) {
--		err = fall_to_bounce_buf(iser_task, ibdev,
-+		err = fall_to_bounce_buf(iser_task, ibdev, mem,
-+					 &iser_task->data_copy[cmd_dir],
- 					 cmd_dir, aligned_len);
- 		if (err) {
- 			iser_err("failed to allocate bounce buffer\n");
+ /*
 -- 
 1.7.1
 
