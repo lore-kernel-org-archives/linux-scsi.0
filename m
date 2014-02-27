@@ -1,125 +1,114 @@
 From: Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH v1 11/13] SCSI/libiscsi: Add check_protection callback for transports
-Date: Thu, 27 Feb 2014 13:13:07 +0200
-Message-ID: <1393499589-15633-12-git-send-email-sagig@mellanox.com>
+Subject: [PATCH v1 08/13] IB/iser: Introduce pi_enable, pi_guard module parameters
+Date: Thu, 27 Feb 2014 13:13:04 +0200
+Message-ID: <1393499589-15633-9-git-send-email-sagig@mellanox.com>
 References: <1393499589-15633-1-git-send-email-sagig@mellanox.com>
 Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 In-Reply-To: <1393499589-15633-1-git-send-email-sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
 Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 To: roland-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org
-Cc: oren-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: oren-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Alex Tabachnik <alext-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-iSCSI needs to be at least aware that a task involves protection
-information. In case it does, after the transaction completed
-libiscsi will ask the transport to check the protection status
-of the transaction.
+From: Alex Tabachnik <alext-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
 
-Unlike transport errors, DIF errors should not prevent successful
-completion of the transaction from the transport point of view,
-but should be escelated to scsi mid-layer when constructing the
-scsi result and sense data.
+Use modparams to activate protection information support.
 
-check_protection routine will return the ascq corresponding to the
-DIF error that occured (or 0 if no error happened).
+pi_enable bool: Based on this parameter iSER will know
+if it should support T10-PI. We don't want to do this by
+default as it requires to allocate and initiatlize extra
+resources. In case pi_enable=N, iSER won't publish to
+SCSI midlayer any DIF capabilities.
 
-return ascq:
-- 0x1: GUARD_CHECK_FAILED
-- 0x2: APPTAG_CHECK_FAILED
-- 0x3: REFTAG_CHECK_FAILED
+pi_guard int: Based on this parameter iSER will publish
+DIX guard type support to SCSI midlayer. 0 means CRC is
+allowed to be passed in DIX buffers, 1 (or non-zero)
+means IP-CSUM is allowed to be passed in DIX buffers.
+Note that over the wire, only CRC is allowed.
 
-Signed-off-by: Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+In the next phase, it is worth considering passing these
+parameters from iscsid via nlmsg. This will allow these
+parameters to be connection based rather than global.
+
 Signed-off-by: Alex Tabachnik <alext-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Signed-off-by: Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
 ---
- drivers/scsi/libiscsi.c             |   32 ++++++++++++++++++++++++++++++++
- include/scsi/libiscsi.h             |    4 ++++
- include/scsi/scsi_transport_iscsi.h |    1 +
- 3 files changed, 37 insertions(+), 0 deletions(-)
+ drivers/infiniband/ulp/iser/iscsi_iser.c |    8 ++++++++
+ drivers/infiniband/ulp/iser/iscsi_iser.h |    3 +++
+ drivers/infiniband/ulp/iser/iser_verbs.c |   13 +++++++++++++
+ 3 files changed, 24 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 4046241..a58a6bb 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -395,6 +395,10 @@ static int iscsi_prep_scsi_cmd_pdu(struct iscsi_task *task)
- 		if (rc)
- 			return rc;
- 	}
-+
-+	if (scsi_get_prot_op(sc) != SCSI_PROT_NORMAL)
-+		task->protected = true;
-+
- 	if (sc->sc_data_direction == DMA_TO_DEVICE) {
- 		unsigned out_len = scsi_out(sc)->length;
- 		struct iscsi_r2t_info *r2t = &task->unsol_r2t;
-@@ -823,6 +827,33 @@ static void iscsi_scsi_cmd_rsp(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+diff --git a/drivers/infiniband/ulp/iser/iscsi_iser.c b/drivers/infiniband/ulp/iser/iscsi_iser.c
+index dd03cfe..cfa952e 100644
+--- a/drivers/infiniband/ulp/iser/iscsi_iser.c
++++ b/drivers/infiniband/ulp/iser/iscsi_iser.c
+@@ -82,6 +82,8 @@ static unsigned int iscsi_max_lun = 512;
+ module_param_named(max_lun, iscsi_max_lun, uint, S_IRUGO);
  
- 	sc->result = (DID_OK << 16) | rhdr->cmd_status;
+ int iser_debug_level = 0;
++bool iser_pi_enable = false;
++int iser_pi_guard = 0;
  
-+	if (task->protected) {
-+		sector_t sector;
-+		u8 ascq;
+ MODULE_DESCRIPTION("iSER (iSCSI Extensions for RDMA) Datamover");
+ MODULE_LICENSE("Dual BSD/GPL");
+@@ -91,6 +93,12 @@ MODULE_VERSION(DRV_VER);
+ module_param_named(debug_level, iser_debug_level, int, 0644);
+ MODULE_PARM_DESC(debug_level, "Enable debug tracing if > 0 (default:disabled)");
+ 
++module_param_named(pi_enable, iser_pi_enable, bool, 0644);
++MODULE_PARM_DESC(pi_enable, "Enable T10-PI offload support (default:disabled)");
 +
-+		/**
-+		 * Transports that didn't implement check_protection
-+		 * callback but still published T10-PI support to scsi-mid
-+		 * deserve this BUG_ON.
-+		 **/
-+		 BUG_ON(!session->tt->check_protection);
++module_param_named(pi_guard, iser_pi_guard, int, 0644);
++MODULE_PARM_DESC(pi_guard, "T10-PI guard_type, 0:CRC|1:IP_CSUM (default:CRC)");
 +
-+		ascq = session->tt->check_protection(task, &sector);
-+		if (ascq) {
-+			sc->result = DRIVER_SENSE << 24 | DID_ABORT << 16 |
-+				     SAM_STAT_CHECK_CONDITION;
-+			scsi_build_sense_buffer(1, sc->sense_buffer,
-+						ILLEGAL_REQUEST, 0x10, ascq);
-+			sc->sense_buffer[7] = 0xc; /* Additional sense length */
-+			sc->sense_buffer[8] = 0;   /* Information desc type */
-+			sc->sense_buffer[9] = 0xa; /* Additional desc length */
-+			sc->sense_buffer[10] = 0x80; /* Validity bit */
-+
-+			put_unaligned_be64(sector, &sc->sense_buffer[12]);
-+			goto out;
+ struct iser_global ig;
+ 
+ void
+diff --git a/drivers/infiniband/ulp/iser/iscsi_iser.h b/drivers/infiniband/ulp/iser/iscsi_iser.h
+index 623defa..011003f 100644
+--- a/drivers/infiniband/ulp/iser/iscsi_iser.h
++++ b/drivers/infiniband/ulp/iser/iscsi_iser.h
+@@ -317,6 +317,7 @@ struct iser_conn {
+ 	unsigned int 		     rx_desc_head;
+ 	struct iser_rx_desc	     *rx_descs;
+ 	struct ib_recv_wr	     rx_wr[ISER_MIN_POSTED_RX];
++	bool			     pi_support;
+ 
+ 	/* Connection memory registration pool */
+ 	union {
+@@ -371,6 +372,8 @@ struct iser_global {
+ 
+ extern struct iser_global ig;
+ extern int iser_debug_level;
++extern bool iser_pi_enable;
++extern int iser_pi_guard;
+ 
+ /* allocate connection resources needed for rdma functionality */
+ int iser_conn_set_full_featured_mode(struct iscsi_conn *conn);
+diff --git a/drivers/infiniband/ulp/iser/iser_verbs.c b/drivers/infiniband/ulp/iser/iser_verbs.c
+index 6a5f424..4c27f55 100644
+--- a/drivers/infiniband/ulp/iser/iser_verbs.c
++++ b/drivers/infiniband/ulp/iser/iser_verbs.c
+@@ -607,6 +607,19 @@ static int iser_addr_handler(struct rdma_cm_id *cma_id)
+ 	ib_conn = (struct iser_conn *)cma_id->context;
+ 	ib_conn->device = device;
+ 
++	/* connection T10-PI support */
++	if (iser_pi_enable) {
++		if (!(device->dev_attr.device_cap_flags &
++		      IB_DEVICE_SIGNATURE_HANDOVER)) {
++			iser_warn("T10-PI requested but not supported on %s, "
++				  "continue without T10-PI\n",
++				  ib_conn->device->ib_device->name);
++			ib_conn->pi_support = false;
++		} else {
++			ib_conn->pi_support = true;
 +		}
 +	}
 +
- 	if (rhdr->response != ISCSI_STATUS_CMD_COMPLETED) {
- 		sc->result = DID_ERROR << 16;
- 		goto out;
-@@ -1567,6 +1598,7 @@ static inline struct iscsi_task *iscsi_alloc_task(struct iscsi_conn *conn,
- 	task->have_checked_conn = false;
- 	task->last_timeout = jiffies;
- 	task->last_xfer = jiffies;
-+	task->protected = false;
- 	INIT_LIST_HEAD(&task->running);
- 	return task;
- }
-diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
-index 309f513..1457c26 100644
---- a/include/scsi/libiscsi.h
-+++ b/include/scsi/libiscsi.h
-@@ -133,6 +133,10 @@ struct iscsi_task {
- 	unsigned long		last_xfer;
- 	unsigned long		last_timeout;
- 	bool			have_checked_conn;
-+
-+	/* T10 protection information */
-+	bool			protected;
-+
- 	/* state set/tested under session->lock */
- 	int			state;
- 	atomic_t		refcount;
-diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
-index 88640a4..2555ee5 100644
---- a/include/scsi/scsi_transport_iscsi.h
-+++ b/include/scsi/scsi_transport_iscsi.h
-@@ -167,6 +167,7 @@ struct iscsi_transport {
- 				 struct iscsi_bus_flash_conn *fnode_conn);
- 	int (*logout_flashnode_sid) (struct iscsi_cls_session *cls_sess);
- 	int (*get_host_stats) (struct Scsi_Host *shost, char *buf, int len);
-+	u8 (*check_protection)(struct iscsi_task *task, sector_t *sector);
- };
- 
- /*
+ 	ret = rdma_resolve_route(cma_id, 1000);
+ 	if (ret) {
+ 		iser_err("resolve route failed: %d\n", ret);
 -- 
 1.7.1
 
