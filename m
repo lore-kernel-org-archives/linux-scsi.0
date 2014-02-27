@@ -1,97 +1,70 @@
 From: Sagi Grimberg <sagig@mellanox.com>
-Subject: [PATCH v1 04/13] IB/iser: Keep IB device attributes under iser_device
-Date: Thu, 27 Feb 2014 13:13:00 +0200
-Message-ID: <1393499589-15633-5-git-send-email-sagig@mellanox.com>
+Subject: [PATCH v1 13/13] IB/iser: Publish T10-PI support to SCSI midlayer
+Date: Thu, 27 Feb 2014 13:13:09 +0200
+Message-ID: <1393499589-15633-14-git-send-email-sagig@mellanox.com>
 References: <1393499589-15633-1-git-send-email-sagig@mellanox.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailp.voltaire.com ([193.47.165.129]:35948 "EHLO mellanox.co.il"
+Received: from mailp.voltaire.com ([193.47.165.129]:36053 "EHLO mellanox.co.il"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751785AbaB0LNQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Feb 2014 06:13:16 -0500
+	id S1752677AbaB0LNZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Feb 2014 06:13:25 -0500
 In-Reply-To: <1393499589-15633-1-git-send-email-sagig@mellanox.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: roland@kernel.org, nab@linux-iscsi.org
 Cc: oren@mellanox.com, martin.petersen@oracle.com, michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org
 
-For T10-PI offload support, we will need to know the
-device signature offload capability upon every connection
-establishment.
-
-This patch does not change any functionality.
+After allocating a scsi_host we set protection types
+and guard type supported.
 
 Signed-off-by: Sagi Grimberg <sagig@mellanox.com>
 Signed-off-by: Alex Tabachnik <alext@mellanox.com>
 ---
- drivers/infiniband/ulp/iser/iscsi_iser.h |    1 +
- drivers/infiniband/ulp/iser/iser_verbs.c |   18 ++++++------------
- 2 files changed, 7 insertions(+), 12 deletions(-)
+ drivers/infiniband/ulp/iser/iscsi_iser.c |   23 ++++++++++++++++++++++-
+ 1 files changed, 22 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/infiniband/ulp/iser/iscsi_iser.h b/drivers/infiniband/ulp/iser/iscsi_iser.h
-index ca161df..b4290f5 100644
---- a/drivers/infiniband/ulp/iser/iscsi_iser.h
-+++ b/drivers/infiniband/ulp/iser/iscsi_iser.h
-@@ -260,6 +260,7 @@ struct iscsi_iser_task;
- struct iser_device {
- 	struct ib_device             *ib_device;
- 	struct ib_pd	             *pd;
-+	struct ib_device_attr	     dev_attr;
- 	struct ib_cq	             *rx_cq[ISER_MAX_CQ];
- 	struct ib_cq	             *tx_cq[ISER_MAX_CQ];
- 	struct ib_mr	             *mr;
-diff --git a/drivers/infiniband/ulp/iser/iser_verbs.c b/drivers/infiniband/ulp/iser/iser_verbs.c
-index 9569e40..95fcfca 100644
---- a/drivers/infiniband/ulp/iser/iser_verbs.c
-+++ b/drivers/infiniband/ulp/iser/iser_verbs.c
-@@ -71,17 +71,14 @@ static void iser_event_handler(struct ib_event_handler *handler,
-  */
- static int iser_create_device_ib_res(struct iser_device *device)
- {
--	int i, j;
- 	struct iser_cq_desc *cq_desc;
--	struct ib_device_attr *dev_attr;
-+	struct ib_device_attr *dev_attr = &device->dev_attr;
-+	int ret, i, j;
- 
--	dev_attr = kmalloc(sizeof(*dev_attr), GFP_KERNEL);
--	if (!dev_attr)
--		return -ENOMEM;
--
--	if (ib_query_device(device->ib_device, dev_attr)) {
-+	ret = ib_query_device(device->ib_device, dev_attr);
-+	if (ret) {
- 		pr_warn("Query device failed for %s\n", device->ib_device->name);
--		goto dev_attr_err;
-+		return ret;
- 	}
- 
- 	/* Assign function handles  - based on FMR support */
-@@ -101,7 +98,7 @@ static int iser_create_device_ib_res(struct iser_device *device)
- 		device->iser_unreg_rdma_mem = iser_unreg_mem_fastreg;
- 	} else {
- 		iser_err("IB device does not support FMRs nor FastRegs, can't register memory\n");
--		goto dev_attr_err;
-+		return -1;
- 	}
- 
- 	device->cqs_used = min(ISER_MAX_CQ, device->ib_device->num_comp_vectors);
-@@ -158,7 +155,6 @@ static int iser_create_device_ib_res(struct iser_device *device)
- 	if (ib_register_event_handler(&device->event_handler))
- 		goto handler_err;
- 
--	kfree(dev_attr);
- 	return 0;
- 
- handler_err:
-@@ -178,8 +174,6 @@ pd_err:
- 	kfree(device->cq_desc);
- cq_desc_err:
- 	iser_err("failed to allocate an IB resource\n");
--dev_attr_err:
--	kfree(dev_attr);
- 	return -1;
+diff --git a/drivers/infiniband/ulp/iser/iscsi_iser.c b/drivers/infiniband/ulp/iser/iscsi_iser.c
+index f13d7e9..a0ec2d0 100644
+--- a/drivers/infiniband/ulp/iser/iscsi_iser.c
++++ b/drivers/infiniband/ulp/iser/iscsi_iser.c
+@@ -435,6 +435,17 @@ static void iscsi_iser_session_destroy(struct iscsi_cls_session *cls_session)
+ 	iscsi_host_free(shost);
  }
  
++static inline unsigned int
++iser_dif_prot_caps(int prot_caps)
++{
++	return ((prot_caps & IB_PROT_T10DIF_TYPE_1) ? SHOST_DIF_TYPE1_PROTECTION |
++						      SHOST_DIX_TYPE1_PROTECTION : 0) |
++	       ((prot_caps & IB_PROT_T10DIF_TYPE_2) ? SHOST_DIF_TYPE2_PROTECTION |
++						      SHOST_DIX_TYPE2_PROTECTION : 0) |
++	       ((prot_caps & IB_PROT_T10DIF_TYPE_3) ? SHOST_DIF_TYPE3_PROTECTION |
++						      SHOST_DIX_TYPE3_PROTECTION : 0);
++}
++
+ static struct iscsi_cls_session *
+ iscsi_iser_session_create(struct iscsi_endpoint *ep,
+ 			  uint16_t cmds_max, uint16_t qdepth,
+@@ -459,8 +470,18 @@ iscsi_iser_session_create(struct iscsi_endpoint *ep,
+ 	 * older userspace tools (before 2.0-870) did not pass us
+ 	 * the leading conn's ep so this will be NULL;
+ 	 */
+-	if (ep)
++	if (ep) {
+ 		ib_conn = ep->dd_data;
++		if (ib_conn->pi_support) {
++			u32 sig_caps = ib_conn->device->dev_attr.sig_prot_cap;
++
++			scsi_host_set_prot(shost, iser_dif_prot_caps(sig_caps));
++			if (iser_pi_guard)
++				scsi_host_set_guard(shost, SHOST_DIX_GUARD_IP);
++			else
++				scsi_host_set_guard(shost, SHOST_DIX_GUARD_CRC);
++		}
++	}
+ 
+ 	if (iscsi_host_add(shost,
+ 			   ep ? ib_conn->device->ib_device->dma_device : NULL))
 -- 
 1.7.1
 
