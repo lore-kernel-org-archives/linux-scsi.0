@@ -1,70 +1,115 @@
 From: Sagi Grimberg <sagig@mellanox.com>
-Subject: [PATCH v1 13/13] IB/iser: Publish T10-PI support to SCSI midlayer
-Date: Thu, 27 Feb 2014 13:13:09 +0200
-Message-ID: <1393499589-15633-14-git-send-email-sagig@mellanox.com>
+Subject: [PATCH v1 03/13] IB/iser: Move fast_reg_descriptor initialization to a function
+Date: Thu, 27 Feb 2014 13:12:59 +0200
+Message-ID: <1393499589-15633-4-git-send-email-sagig@mellanox.com>
 References: <1393499589-15633-1-git-send-email-sagig@mellanox.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailp.voltaire.com ([193.47.165.129]:36053 "EHLO mellanox.co.il"
+Received: from mailp.voltaire.com ([193.47.165.129]:37259 "EHLO mellanox.co.il"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752677AbaB0LNZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Feb 2014 06:13:25 -0500
+	id S1751785AbaB0LNU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Feb 2014 06:13:20 -0500
 In-Reply-To: <1393499589-15633-1-git-send-email-sagig@mellanox.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: roland@kernel.org, nab@linux-iscsi.org
 Cc: oren@mellanox.com, martin.petersen@oracle.com, michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org
 
-After allocating a scsi_host we set protection types
-and guard type supported.
+fastreg descriptor will include protection information context.
+In order to place the logic in one place we introduce
+iser_create_fr_desc function.
+
+This patch does not change any functionality.
 
 Signed-off-by: Sagi Grimberg <sagig@mellanox.com>
 Signed-off-by: Alex Tabachnik <alext@mellanox.com>
 ---
- drivers/infiniband/ulp/iser/iscsi_iser.c |   23 ++++++++++++++++++++++-
- 1 files changed, 22 insertions(+), 1 deletions(-)
+ drivers/infiniband/ulp/iser/iser_verbs.c |   58 ++++++++++++++++++++---------
+ 1 files changed, 40 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/infiniband/ulp/iser/iscsi_iser.c b/drivers/infiniband/ulp/iser/iscsi_iser.c
-index f13d7e9..a0ec2d0 100644
---- a/drivers/infiniband/ulp/iser/iscsi_iser.c
-+++ b/drivers/infiniband/ulp/iser/iscsi_iser.c
-@@ -435,6 +435,17 @@ static void iscsi_iser_session_destroy(struct iscsi_cls_session *cls_session)
- 	iscsi_host_free(shost);
+diff --git a/drivers/infiniband/ulp/iser/iser_verbs.c b/drivers/infiniband/ulp/iser/iser_verbs.c
+index dc5a0b4..9569e40 100644
+--- a/drivers/infiniband/ulp/iser/iser_verbs.c
++++ b/drivers/infiniband/ulp/iser/iser_verbs.c
+@@ -279,6 +279,39 @@ void iser_free_fmr_pool(struct iser_conn *ib_conn)
+ 	ib_conn->fmr.page_vec = NULL;
  }
  
-+static inline unsigned int
-+iser_dif_prot_caps(int prot_caps)
++static int
++iser_create_fastreg_desc(struct ib_device *ib_device, struct ib_pd *pd,
++			 struct fast_reg_descriptor *desc)
 +{
-+	return ((prot_caps & IB_PROT_T10DIF_TYPE_1) ? SHOST_DIF_TYPE1_PROTECTION |
-+						      SHOST_DIX_TYPE1_PROTECTION : 0) |
-+	       ((prot_caps & IB_PROT_T10DIF_TYPE_2) ? SHOST_DIF_TYPE2_PROTECTION |
-+						      SHOST_DIX_TYPE2_PROTECTION : 0) |
-+	       ((prot_caps & IB_PROT_T10DIF_TYPE_3) ? SHOST_DIF_TYPE3_PROTECTION |
-+						      SHOST_DIX_TYPE3_PROTECTION : 0);
++	int ret;
++
++	desc->data_frpl = ib_alloc_fast_reg_page_list(ib_device,
++						      ISCSI_ISER_SG_TABLESIZE + 1);
++	if (IS_ERR(desc->data_frpl)) {
++		ret = PTR_ERR(desc->data_frpl);
++		iser_err("Failed to allocate ib_fast_reg_page_list err=%d\n",
++			 ret);
++		return PTR_ERR(desc->data_frpl);
++	}
++
++	desc->data_mr = ib_alloc_fast_reg_mr(pd, ISCSI_ISER_SG_TABLESIZE + 1);
++	if (IS_ERR(desc->data_mr)) {
++		ret = PTR_ERR(desc->data_mr);
++		iser_err("Failed to allocate ib_fast_reg_mr err=%d\n", ret);
++		goto fast_reg_mr_failure;
++	}
++	iser_info("Create fr_desc %p page_list %p\n",
++		  desc, desc->data_frpl->page_list);
++	desc->valid = true;
++
++	return 0;
++
++fast_reg_mr_failure:
++	ib_free_fast_reg_page_list(desc->data_frpl);
++
++	return ret;
 +}
 +
- static struct iscsi_cls_session *
- iscsi_iser_session_create(struct iscsi_endpoint *ep,
- 			  uint16_t cmds_max, uint16_t qdepth,
-@@ -459,8 +470,18 @@ iscsi_iser_session_create(struct iscsi_endpoint *ep,
- 	 * older userspace tools (before 2.0-870) did not pass us
- 	 * the leading conn's ep so this will be NULL;
- 	 */
--	if (ep)
-+	if (ep) {
- 		ib_conn = ep->dd_data;
-+		if (ib_conn->pi_support) {
-+			u32 sig_caps = ib_conn->device->dev_attr.sig_prot_cap;
-+
-+			scsi_host_set_prot(shost, iser_dif_prot_caps(sig_caps));
-+			if (iser_pi_guard)
-+				scsi_host_set_guard(shost, SHOST_DIX_GUARD_IP);
-+			else
-+				scsi_host_set_guard(shost, SHOST_DIX_GUARD_CRC);
-+		}
-+	}
+ /**
+  * iser_create_fastreg_pool - Creates pool of fast_reg descriptors
+  * for fast registration work requests.
+@@ -300,32 +333,21 @@ int iser_create_fastreg_pool(struct iser_conn *ib_conn, unsigned cmds_max)
+ 			goto err;
+ 		}
  
- 	if (iscsi_host_add(shost,
- 			   ep ? ib_conn->device->ib_device->dma_device : NULL))
+-		desc->data_frpl = ib_alloc_fast_reg_page_list(device->ib_device,
+-							 ISCSI_ISER_SG_TABLESIZE + 1);
+-		if (IS_ERR(desc->data_frpl)) {
+-			ret = PTR_ERR(desc->data_frpl);
+-			iser_err("Failed to allocate ib_fast_reg_page_list err=%d\n", ret);
+-			goto fast_reg_page_failure;
++		ret = iser_create_fastreg_desc(device->ib_device,
++					       device->pd, desc);
++		if (ret) {
++			iser_err("Failed to create fastreg descriptor err=%d\n",
++				 ret);
++			kfree(desc);
++			goto err;
+ 		}
+ 
+-		desc->data_mr = ib_alloc_fast_reg_mr(device->pd,
+-						     ISCSI_ISER_SG_TABLESIZE + 1);
+-		if (IS_ERR(desc->data_mr)) {
+-			ret = PTR_ERR(desc->data_mr);
+-			iser_err("Failed to allocate ib_fast_reg_mr err=%d\n", ret);
+-			goto fast_reg_mr_failure;
+-		}
+-		desc->valid = true;
+ 		list_add_tail(&desc->list, &ib_conn->fastreg.pool);
+ 		ib_conn->fastreg.pool_size++;
+ 	}
+ 
+ 	return 0;
+ 
+-fast_reg_mr_failure:
+-	ib_free_fast_reg_page_list(desc->data_frpl);
+-fast_reg_page_failure:
+-	kfree(desc);
+ err:
+ 	iser_free_fastreg_pool(ib_conn);
+ 	return ret;
 -- 
 1.7.1
 
