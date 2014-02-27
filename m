@@ -1,39 +1,82 @@
-From: Loc Ho <lho@apm.com>
-Subject: Re: [PATCH v12 3/4] PHY: add APM X-Gene SoC 15Gbps Multi-purpose PHY driver
-Date: Thu, 27 Feb 2014 12:02:32 -0800
-Message-ID: <CAPw-ZTkB9LhWmw3+WMTF-0tAwGibugxmCAu2VgNkmGaa6ojJUA@mail.gmail.com>
-References: <1393524848-8207-1-git-send-email-lho@apm.com>
-	<1393524848-8207-2-git-send-email-lho@apm.com>
-	<1393524848-8207-3-git-send-email-lho@apm.com>
-	<1393524848-8207-4-git-send-email-lho@apm.com>
-	<20140227190259.GC4862@saruman.home>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH 02/16] scsi: atari_scsi: fix sleep_on race
+Date: Thu, 27 Feb 2014 21:44:50 +0100
+Message-ID: <201402272144.50946.arnd@arndb.de>
+References: <1393412516-3762435-1-git-send-email-arnd@arndb.de> <1393412516-3762435-3-git-send-email-arnd@arndb.de> <530EF01D.6000208@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20140227190259.GC4862@saruman.home>
-Sender: linux-ide-owner@vger.kernel.org
-To: balbi@ti.com
-Cc: Kishon Vijay Abraham I <kishon@ti.com>, Tejun Heo <tj@kernel.org>, Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Don Dutile <ddutile@redhat.com>, Jon Masters <jcm@redhat.com>, "patches@apm.com" <patches@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <530EF01D.6000208@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Michael Schmitz <schmitzmic@gmail.com>
+Cc: linux-kernel@vger.kernel.org, Geert Uytterhoeven <geert@linux-m68k.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Balbi,
+On Thursday 27 February 2014, Michael Schmitz wrote:
+> Arnd Bergmann wrote:
+> >   
+> Nack - the completion condition in the first hunk has its logic 
+> reversed. Try this instead (while() loops while condition true, do {} 
+> until () loops while condition false, no?)
 
->> +/*
->> + * This function is used to configure the PHY to operation as either SATA Gen1
->> + * or Gen2 speed.
->> + */
->> +static void xgene_phy_sata_force_gen(struct xgene_phy_ctx *ctx,
->> +                                  int lane, int gen)
->
-> why do you need to *force* the generation ? Is this because of some
-> silicon errata ? It almost seems like this should be done through link
-> negotiation between both link partners.
+Sorry about messing it up again. I though I had fixed it up the
+way you commented when you said it worked.
+ 
+> I'm 99% confident I had tested your current version of the patch before 
+> and found it still attempts to schedule while in interrupt. I can retest 
+> if you prefer, but that'll have to wait a few days.
 
-You can call this as an errata or limitation of the underlying PHY IP.
-As start, the PHY is configured with auto neg up to 6Gbps (or Gen3
-speed). After link up, we will know whether it is Gen1 (1.5Gbps), Gen2
-(3.0Gbps), or Gen3 (6.0Gbps). In order to ensure reliability, the PHY
-needs to be configured at specified speed. For this reason and after
-link up, the PHY is re-trained for the linked up speed.
+I definitely trust you to have the right version, since you did the
+testing.
 
--Loc
+> diff --git a/drivers/scsi/atari_scsi.c b/drivers/scsi/atari_scsi.c
+> index a3e6c8a..cc1b013 100644
+> --- a/drivers/scsi/atari_scsi.c
+> +++ b/drivers/scsi/atari_scsi.c
+> @@ -90,6 +90,7 @@
+>  #include <linux/init.h>
+>  #include <linux/nvram.h>
+>  #include <linux/bitops.h>
+> +#include <linux/wait.h>
+>  
+>  #include <asm/setup.h>
+>  #include <asm/atarihw.h>
+> @@ -549,8 +550,10 @@ static void falcon_get_lock(void)
+>  
+>         local_irq_save(flags);
+>  
+> -       while (!in_irq() && falcon_got_lock && stdma_others_waiting())
+> -               sleep_on(&falcon_fairness_wait);
+> +       wait_event_cmd(falcon_fairness_wait,
+> +               in_irq() || !falcon_got_lock || !stdma_others_waiting(),
+> +               local_irq_restore(flags),
+> +               local_irq_save(flags));
+>  
+>         while (!falcon_got_lock) {
+>                 if (in_irq())
+
+Yes, by inspection your version looks correct and mine looks wrong.
+I had figured this out before, just sent the wrong version.
+
+> @@ -562,7 +565,10 @@ static void falcon_get_lock(void)
+>                         falcon_trying_lock = 0;
+>                         wake_up(&falcon_try_wait);
+>                 } else {
+> -                       sleep_on(&falcon_try_wait);
+> +                       wait_event_cmd(falcon_try_wait,
+> +                               falcon_got_lock && !falcon_trying_lock,
+> +                               local_irq_restore(flags),
+> +                               local_irq_save(flags));
+>                 }
+
+I did correct this part compared to my first patch, but forgot
+to change the other hunk.
+
+Can you send your version of the patch to Geert for inclusion?
+That way I don't have the danger of missing another negation.
+This code is clearly too weird to rely on inspection alone and
+we know that your version was working when you last tested it.
+
+	Arnd
