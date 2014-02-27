@@ -1,543 +1,652 @@
-From: "Mrs. Alivia Edwin" <herbertm@gamagara.co.za>
-Subject: (unknown)
-Date: Wed, 26 Feb 2014 17:59:56 +0200 (SAST)
-Message-ID: <1470681095.129218.1393430396576.JavaMail.zimbra@gamagara.co.za>
-References: <1568866273.117488.1393423491853.JavaMail.zimbra@gamagara.co.za> <1594965826.127096.1393429003809.JavaMail.zimbra@gamagara.co.za> <2001320785.127372.1393429287083.JavaMail.zimbra@gamagara.co.za> <34022613.127878.1393429409275.JavaMail.zimbra@gamagara.co.za> <1636112276.128031.1393429462589.JavaMail.zimbra@gamagara.co.za> <64089477.128129.1393429617399.JavaMail.zimbra@gamagara.co.za> <315635609.129008.1393430051898.JavaMail.zimbra@gamagara.co.za> <962355742.129147.1393430287902.JavaMail.zimbra@gamagara.co.za>
-Reply-To: "Mrs. Alivia Edwin" <mrs.aliviaedwin@outlook.com>
+From: Yoshihiro YUNOMAE <yoshihiro.yunomae.ez@hitachi.com>
+Subject: [PATCH RESEND] scsi: Output error messages using structured printk
+ in single line
+Date: Thu, 27 Feb 2014 13:17:38 +0900
+Message-ID: <20140227041738.31316.14684.stgit@yunodevel>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_Part_129216_523112230.1393430396571"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ubertech-cli.saol-net.com ([196.41.112.142]:47925 "EHLO
-	ubertech-cli.saol-net.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751445AbaB0APV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Feb 2014 19:15:21 -0500
-In-Reply-To: <962355742.129147.1393430287902.JavaMail.zimbra@gamagara.co.za>
-Subject: 
+Received: from mail9.hitachi.co.jp ([133.145.228.44]:40206 "EHLO
+	mail9.hitachi.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751929AbaB0ERr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Feb 2014 23:17:47 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Prarit Bhargava <prarit@redhat.com>, linux-scsi@vger.kernel.org, Kay Sievers <kay@vrfy.org>, linux-kernel@vger.kernel.org, Hidehiro Kawai <hidehiro.kawai.ez@hitachi.com>, yrl.pp-manager.tt@hitachi.com, Masami Hiramatsu <masami.hiramatsu.pt@hitachi.com>
 
-------=_Part_129216_523112230.1393430396571
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Output error messages using structured printk in single line.
+In SCSI drivers, some error messages which should be output in single line are
+divided in multiple lines. When user tools handle the error messages, those
+divided messages will create some inconveniences.
 
+The reason why this problem is induced is structured printk for error messages.
+Structured printk can add device information for printk, and it is used in
+scmd_printk() and sd_printk(). The printk aims at output in atomic, so we
+cannot use those functions for connecting multiple messages like KERN_CONT.
+However, some error messages is implemented as follows:
+   structured_printk("DEVICE INFORMATION:");
+   printk(KERN_CONT, "DETAIL INFORMATION\n");
+This implementation will be expected to output like "DEVICE INFORMATION: DETAIL
+INFORMATION", but actually, this will be output as follows:
+   DEVICE INFORMATION:
+   DETAIL INFORMATION
+
+For instance, in a following pseudo SCSI error test, the device information and
+the detail information are divided:
+
+-- Pseudo SCSI error test for current kernel
+  # modprobe scsi_debug
+  # cd /sys/bus/pseudo/drivers/scsi_debug
+  # echo 2 > opts
+  # dd if=/dev/sdb of=/dev/null 2> /dev/null
+
+-- Result for current kernel
+  # dmesg
+
+[   17.842110] sd 2:0:0:0: [sdb] Attached SCSI disk
+[   18.859098] sd 2:0:0:0: [sdb] Unhandled sense code
+[   18.859103] sd 2:0:0:0: [sdb]
+[   18.859106] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+[   18.859108] sd 2:0:0:0: [sdb]
+[   18.859110] Sense Key : Medium Error [current]
+[   18.859114] Info fld=0x1234
+[   18.859116] sd 2:0:0:0: [sdb]
+[   18.859119] Add. Sense: Unrecovered read error
+[   18.859122] sd 2:0:0:0: [sdb] CDB:
+[   18.859124] Read(10): 28 00 00 00 11 e0 00 01 00 00
+
+In a SCSI device driver, sd_print_result() is implemented as follows:
+   sd_print_result()
+   {
+       sd_printk(KERN_INFO, sdkp, " ");
+       scsi_show_result(result);
+   }
+Here, first sd_printk() outputs "sd 2:0:0:0: [sdb] ", then scsi_show_sense_hdr()
+outputs "Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE". sd_printk() does not
+include "\n", but it forcibly starts a new line. Therefore, when the driver
+outputs error messages, those messages are divided.
+
+This patch makes those multiple line messages output in single line as follows:
+
+  # dmesg
+
+[   17.145085]  sdb: unknown partition table
+[   17.149096] sd 2:0:0:0: [sdb] Attached SCSI disk
+[   18.166090] sd 2:0:0:0: [sdb] Unhandled sense code
+[   18.166095] sd 2:0:0:0: [sdb] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+[   18.166099] sd 2:0:0:0: [sdb] Sense Key : Medium Error [current]
+[   18.166104] Info fld=0x1234
+[   18.166106] sd 2:0:0:0: [sdb] Add. Sense: Unrecovered read error
+[   18.166111] sd 2:0:0:0: [sdb] CDB: Read(10): 28 00 00 00 11 e0 00 01 00 00
+
+Signed-off-by: Yoshihiro YUNOMAE <yoshihiro.yunomae.ez@hitachi.com>
+Cc: James E.J. Bottomley <JBottomley@parallels.com>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: Kay Sievers <kay@vrfy.org>
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
+---
+ drivers/scsi/constants.c |  206 ++++++++++++++++++++++++++++------------------
+ drivers/scsi/scsi.c      |   28 ++++--
+ drivers/scsi/sd.c        |   19 +++-
+ include/scsi/scsi_dbg.h  |   23 ++++-
+ 4 files changed, 176 insertions(+), 100 deletions(-)
+
+diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
+index d35a5d6..cb93435 100644
+--- a/drivers/scsi/constants.c
++++ b/drivers/scsi/constants.c
+@@ -256,8 +256,26 @@ static const char * get_sa_name(const struct value_name_pair * arr,
+ 	return (k < arr_sz) ? arr->name : NULL;
+ }
  
++/* Store a SCSI logging event to buf. */
++__printf(2, 3)
++void scsi_log_add(struct scsi_log_line *log, const char *fmt, ...)
++{
++	va_list args;
++	int len;
++
++	va_start(args, fmt);
++	len = vscnprintf(log->buf + log->offset,
++			 SCSI_LOG_LINE_MAX - log->offset, fmt, args);
++	WARN_ONCE(!len, "Cannot store the message '%s' in a local log buffer\n",
++		  fmt);
++	log->offset += len;
++	va_end(args);
++}
++EXPORT_SYMBOL(scsi_log_add);
++
+ /* attempt to guess cdb length if cdb_len==0 . No trailing linefeed. */
+-static void print_opcode_name(unsigned char * cdbp, int cdb_len)
++static void print_opcode_name(unsigned char *cdbp, int cdb_len,
++			      struct scsi_log_line *log)
+ {
+ 	int sa, len, cdb0;
+ 	int fin_name = 0;
+@@ -268,20 +286,22 @@ static void print_opcode_name(unsigned char * cdbp, int cdb_len)
+ 	case VARIABLE_LENGTH_CMD:
+ 		len = scsi_varlen_cdb_length(cdbp);
+ 		if (len < 10) {
+-			printk("short variable length command, "
+-			       "len=%d ext_len=%d", len, cdb_len);
++			scsi_log_add(log,
++			     "short variable length command, len=%d ext_len=%d",
++			     len, cdb_len);
+ 			break;
+ 		}
+ 		sa = (cdbp[8] << 8) + cdbp[9];
+ 		name = get_sa_name(variable_length_arr, VARIABLE_LENGTH_SZ,
+ 				   sa);
+ 		if (name)
+-			printk("%s", name);
++			scsi_log_add(log, "%s", name);
+ 		else
+-			printk("cdb[0]=0x%x, sa=0x%x", cdb0, sa);
++			scsi_log_add(log, "cdb[0]=0x%x, sa=0x%x", cdb0, sa);
  
+ 		if ((cdb_len > 0) && (len != cdb_len))
+-			printk(", in_cdb_len=%d, ext_len=%d", len, cdb_len);
++			scsi_log_add(log, ", in_cdb_len=%d, ext_len=%d",
++				     len, cdb_len);
  
+ 		break;
+ 	case MAINTENANCE_IN:
+@@ -343,24 +363,26 @@ static void print_opcode_name(unsigned char * cdbp, int cdb_len)
+ 		if (cdb0 < 0xc0) {
+ 			name = cdb_byte0_names[cdb0];
+ 			if (name)
+-				printk("%s", name);
++				scsi_log_add(log, "%s", name);
+ 			else
+-				printk("cdb[0]=0x%x (reserved)", cdb0);
++				scsi_log_add(log, "cdb[0]=0x%x (reserved)",
++					     cdb0);
+ 		} else
+-			printk("cdb[0]=0x%x (vendor)", cdb0);
++			scsi_log_add(log, "cdb[0]=0x%x (vendor)", cdb0);
+ 		break;
+ 	}
+ 	if (fin_name) {
+ 		if (name)
+-			printk("%s", name);
++			scsi_log_add(log, "%s", name);
+ 		else
+-			printk("cdb[0]=0x%x, sa=0x%x", cdb0, sa);
++			scsi_log_add(log, "cdb[0]=0x%x, sa=0x%x", cdb0, sa);
+ 	}
+ }
  
+ #else /* ifndef CONFIG_SCSI_CONSTANTS */
  
+-static void print_opcode_name(unsigned char * cdbp, int cdb_len)
++static void print_opcode_name(unsigned char *cdbp, int cdb_len,
++			      struct scsi_log_line *log)
+ {
+ 	int sa, len, cdb0;
  
+@@ -369,14 +391,16 @@ static void print_opcode_name(unsigned char * cdbp, int cdb_len)
+ 	case VARIABLE_LENGTH_CMD:
+ 		len = scsi_varlen_cdb_length(cdbp);
+ 		if (len < 10) {
+-			printk("short opcode=0x%x command, len=%d "
+-			       "ext_len=%d", cdb0, len, cdb_len);
++			scsi_log_add(log,
++				 "short opcode=0x%x command, len=%d ext_len=%d",
++				 cdb0, len, cdb_len);
+ 			break;
+ 		}
+ 		sa = (cdbp[8] << 8) + cdbp[9];
+-		printk("cdb[0]=0x%x, sa=0x%x", cdb0, sa);
++		scsi_log_add(log, "cdb[0]=0x%x, sa=0x%x", cdb0, sa);
+ 		if (len != cdb_len)
+-			printk(", in_cdb_len=%d, ext_len=%d", len, cdb_len);
++			scsi_log_add(log, ", in_cdb_len=%d, ext_len=%d",
++				     len, cdb_len);
+ 		break;
+ 	case MAINTENANCE_IN:
+ 	case MAINTENANCE_OUT:
+@@ -390,46 +414,50 @@ static void print_opcode_name(unsigned char * cdbp, int cdb_len)
+ 	case THIRD_PARTY_COPY_IN:
+ 	case THIRD_PARTY_COPY_OUT:
+ 		sa = cdbp[1] & 0x1f;
+-		printk("cdb[0]=0x%x, sa=0x%x", cdb0, sa);
++		scsi_log_add(log, "cdb[0]=0x%x, sa=0x%x", cdb0, sa);
+ 		break;
+ 	default:
+ 		if (cdb0 < 0xc0)
+-			printk("cdb[0]=0x%x", cdb0);
++			scsi_log_add(log, "cdb[0]=0x%x", cdb0);
+ 		else
+-			printk("cdb[0]=0x%x (vendor)", cdb0);
++			scsi_log_add(log, "cdb[0]=0x%x (vendor)", cdb0);
+ 		break;
+ 	}
++	return offset;
+ }
+ #endif
  
+ void __scsi_print_command(unsigned char *cdb)
+ {
++	struct scsi_log_line log;
+ 	int k, len;
  
+-	print_opcode_name(cdb, 0);
++	scsi_log_line_init(&log);
++	print_opcode_name(cdb, 0, &log);
+ 	len = scsi_command_size(cdb);
+ 	/* print out all bytes in cdb */
+ 	for (k = 0; k < len; ++k)
+-		printk(" %02x", cdb[k]);
+-	printk("\n");
++		scsi_log_add(&log, " %02x", cdb[k]);
++	pr_info("%s\n", log.buf);
+ }
+ EXPORT_SYMBOL(__scsi_print_command);
  
+ void scsi_print_command(struct scsi_cmnd *cmd)
+ {
++	struct scsi_log_line log;
+ 	int k;
  
+ 	if (cmd->cmnd == NULL)
+ 		return;
  
-  
+-	scmd_printk(KERN_INFO, cmd, "CDB: ");
+-	print_opcode_name(cmd->cmnd, cmd->cmd_len);
++	scsi_log_line_init(&log);
++	print_opcode_name(cmd->cmnd, cmd->cmd_len, &log);
  
-
+ 	/* print out all bytes in cdb */
+-	printk(":");
++	scsi_log_add(&log, ":");
+ 	for (k = 0; k < cmd->cmd_len; ++k)
+-		printk(" %02x", cmd->cmnd[k]);
+-	printk("\n");
++		scsi_log_add(&log, " %02x", cmd->cmnd[k]);
++	scmd_printk(KERN_INFO, cmd, "CDB: %s\n", log.buf);
+ }
+ EXPORT_SYMBOL(scsi_print_command);
  
+@@ -1368,50 +1396,50 @@ scsi_extd_sense_format(unsigned char asc, unsigned char ascq) {
+ }
+ EXPORT_SYMBOL(scsi_extd_sense_format);
  
+-void
+-scsi_show_extd_sense(unsigned char asc, unsigned char ascq)
++void scsi_show_extd_sense(unsigned char asc, unsigned char ascq,
++			  struct scsi_log_line *log)
+ {
+         const char *extd_sense_fmt = scsi_extd_sense_format(asc, ascq);
  
+ 	if (extd_sense_fmt) {
+ 		if (strstr(extd_sense_fmt, "%x")) {
+-			printk("Add. Sense: ");
+-			printk(extd_sense_fmt, ascq);
++			scsi_log_add(log, "Add. Sense: ");
++			scsi_log_add(log, extd_sense_fmt, ascq);
+ 		} else
+-			printk("Add. Sense: %s", extd_sense_fmt);
++			scsi_log_add(log, "Add. Sense: %s", extd_sense_fmt);
+ 	} else {
+ 		if (asc >= 0x80)
+-			printk("<<vendor>> ASC=0x%x ASCQ=0x%x", asc,
+-			       ascq);
++			scsi_log_add(log, "<<vendor>> ASC=0x%x ASCQ=0x%x",
++				     asc, ascq);
+ 		if (ascq >= 0x80)
+-			printk("ASC=0x%x <<vendor>> ASCQ=0x%x", asc,
+-			       ascq);
++			scsi_log_add(log, "ASC=0x%x <<vendor>> ASCQ=0x%x",
++				     asc, ascq);
+ 		else
+-			printk("ASC=0x%x ASCQ=0x%x", asc, ascq);
++			scsi_log_add(log, "ASC=0x%x ASCQ=0x%x", asc, ascq);
+ 	}
  
+-	printk("\n");
++	scsi_log_add(log, "\n");
+ }
+ EXPORT_SYMBOL(scsi_show_extd_sense);
  
-
+ void
+-scsi_show_sense_hdr(struct scsi_sense_hdr *sshdr)
++scsi_show_sense_hdr(struct scsi_sense_hdr *sshdr, struct scsi_log_line *log)
+ {
+ 	const char *sense_txt;
  
+ 	sense_txt = scsi_sense_key_string(sshdr->sense_key);
+ 	if (sense_txt)
+-		printk("Sense Key : %s ", sense_txt);
++		scsi_log_add(log, "Sense Key : %s ", sense_txt);
+ 	else
+-		printk("Sense Key : 0x%x ", sshdr->sense_key);
++		scsi_log_add(log, "Sense Key : 0x%x ", sshdr->sense_key);
+ 
+-	printk("%s", scsi_sense_is_deferred(sshdr) ? "[deferred] " :
+-	       "[current] ");
++	scsi_log_add(log, "%s", scsi_sense_is_deferred(sshdr) ?
++		     "[deferred] " : "[current] ");
+ 
+ 	if (sshdr->response_code >= 0x72)
+-		printk("[descriptor]");
++		scsi_log_add(log, "[descriptor]");
+ 
+-	printk("\n");
++	scsi_log_add(log, "\n");
+ }
+ EXPORT_SYMBOL(scsi_show_sense_hdr);
+ 
+@@ -1421,10 +1449,15 @@ EXPORT_SYMBOL(scsi_show_sense_hdr);
+ void
+ scsi_print_sense_hdr(const char *name, struct scsi_sense_hdr *sshdr)
+ {
+-	printk(KERN_INFO "%s: ", name);
+-	scsi_show_sense_hdr(sshdr);
+-	printk(KERN_INFO "%s: ", name);
+-	scsi_show_extd_sense(sshdr->asc, sshdr->ascq);
++	struct scsi_log_line log;
++
++	scsi_log_line_init(&log);
++	scsi_show_sense_hdr(sshdr, &log);
++	pr_info("%s: %s", name, log.buf);
++
++	scsi_log_line_init(&log);
++	scsi_show_extd_sense(sshdr->asc, sshdr->ascq, &log);
++	pr_info("%s: %s", name, log.buf);
+ }
+ EXPORT_SYMBOL(scsi_print_sense_hdr);
+ 
+@@ -1435,16 +1468,22 @@ void
+ scsi_cmd_print_sense_hdr(struct scsi_cmnd *scmd, const char *desc,
+ 			  struct scsi_sense_hdr *sshdr)
+ {
+-	scmd_printk(KERN_INFO, scmd, "%s: ", desc);
+-	scsi_show_sense_hdr(sshdr);
+-	scmd_printk(KERN_INFO, scmd, "%s: ", desc);
+-	scsi_show_extd_sense(sshdr->asc, sshdr->ascq);
++	struct scsi_log_line log;
++
++	scsi_log_line_init(&log);
++	scsi_show_sense_hdr(sshdr, &log);
++	scmd_printk(KERN_INFO, scmd, "%s: %s", desc, log.buf);
++
++	scsi_log_line_init(&log);
++	scsi_show_extd_sense(sshdr->asc, sshdr->ascq, &log);
++	scmd_printk(KERN_INFO, scmd, "%s: %s", desc, log.buf);
+ }
+ EXPORT_SYMBOL(scsi_cmd_print_sense_hdr);
+ 
+ static void
+ scsi_decode_sense_buffer(const unsigned char *sense_buffer, int sense_len,
+-		       struct scsi_sense_hdr *sshdr)
++			 struct scsi_sense_hdr *sshdr,
++			 struct scsi_log_line *log)
+ {
+ 	int k, num, res;
+ 
+@@ -1452,16 +1491,13 @@ scsi_decode_sense_buffer(const unsigned char *sense_buffer, int sense_len,
+ 	if (0 == res) {
+ 		/* this may be SCSI-1 sense data */
+ 		num = (sense_len < 32) ? sense_len : 32;
+-		printk("Unrecognized sense data (in hex):");
++		scsi_log_add(log, "Unrecognized sense data (in hex):");
+ 		for (k = 0; k < num; ++k) {
+-			if (0 == (k % 16)) {
+-				printk("\n");
+-				printk(KERN_INFO "        ");
+-			}
+-			printk("%02x ", sense_buffer[k]);
++			if (0 == (k % 16))
++				scsi_log_add(log, "\n        ");
++			scsi_log_add(log, "%02x ", sense_buffer[k]);
+ 		}
+-		printk("\n");
+-		return;
++		scsi_log_add(log, "\n");
+ 	}
+ }
+ 
+@@ -1531,13 +1567,17 @@ void __scsi_print_sense(const char *name, const unsigned char *sense_buffer,
+ 			int sense_len)
+ {
+ 	struct scsi_sense_hdr sshdr;
++	struct scsi_log_line log;
+ 
+-	printk(KERN_INFO "%s: ", name);
+-	scsi_decode_sense_buffer(sense_buffer, sense_len, &sshdr);
+-	scsi_show_sense_hdr(&sshdr);
++	scsi_log_line_init(&log);
++	scsi_decode_sense_buffer(sense_buffer, sense_len, &sshdr, &log);
++	scsi_show_sense_hdr(&sshdr, &log);
++	pr_info("%s: %s", name, log.buf);
+ 	scsi_decode_sense_extras(sense_buffer, sense_len, &sshdr);
+-	printk(KERN_INFO "%s: ", name);
+-	scsi_show_extd_sense(sshdr.asc, sshdr.ascq);
++
++	scsi_log_line_init(&log);
++	scsi_show_extd_sense(sshdr.asc, sshdr.ascq, &log);
++	pr_info("%s: %s", name, log.buf);
+ }
+ EXPORT_SYMBOL(__scsi_print_sense);
+ 
+@@ -1545,15 +1585,19 @@ EXPORT_SYMBOL(__scsi_print_sense);
+ void scsi_print_sense(char *name, struct scsi_cmnd *cmd)
+ {
+ 	struct scsi_sense_hdr sshdr;
++	struct scsi_log_line log;
+ 
+-	scmd_printk(KERN_INFO, cmd, " ");
++	scsi_log_line_init(&log);
+ 	scsi_decode_sense_buffer(cmd->sense_buffer, SCSI_SENSE_BUFFERSIZE,
+-				 &sshdr);
+-	scsi_show_sense_hdr(&sshdr);
++				 &sshdr, &log);
++	scsi_show_sense_hdr(&sshdr, &log);
++	scmd_printk(KERN_INFO, cmd, "%s", log.buf);
+ 	scsi_decode_sense_extras(cmd->sense_buffer, SCSI_SENSE_BUFFERSIZE,
+ 				 &sshdr);
+-	scmd_printk(KERN_INFO, cmd, " ");
+-	scsi_show_extd_sense(sshdr.asc, sshdr.ascq);
++
++	scsi_log_line_init(&log);
++	scsi_show_extd_sense(sshdr.asc, sshdr.ascq, &log);
++	scmd_printk(KERN_INFO, cmd, "%s", log.buf);
+ }
+ EXPORT_SYMBOL(scsi_print_sense);
+ 
+@@ -1572,31 +1616,33 @@ static const char * const driverbyte_table[]={
+ "DRIVER_INVALID", "DRIVER_TIMEOUT", "DRIVER_HARD", "DRIVER_SENSE"};
+ #define NUM_DRIVERBYTE_STRS ARRAY_SIZE(driverbyte_table)
+ 
+-void scsi_show_result(int result)
++void scsi_show_result(int result, struct scsi_log_line *log)
+ {
+ 	int hb = host_byte(result);
+ 	int db = driver_byte(result);
+ 
+-	printk("Result: hostbyte=%s driverbyte=%s\n",
++	scsi_log_add(log, "Result: hostbyte=%s driverbyte=%s\n",
+ 	       (hb < NUM_HOSTBYTE_STRS ? hostbyte_table[hb]     : "invalid"),
+ 	       (db < NUM_DRIVERBYTE_STRS ? driverbyte_table[db] : "invalid"));
+ }
+ 
+ #else
+ 
+-void scsi_show_result(int result)
++void scsi_show_result(int result, struct scsi_log_line *log)
+ {
+-	printk("Result: hostbyte=0x%02x driverbyte=0x%02x\n",
+-	       host_byte(result), driver_byte(result));
++	scsi_log_add(log, "Result: hostbyte=0x%02x driverbyte=0x%02x\n",
++		     host_byte(result), driver_byte(result));
+ }
+ 
+ #endif
+ EXPORT_SYMBOL(scsi_show_result);
+ 
+-
+ void scsi_print_result(struct scsi_cmnd *cmd)
+ {
+-	scmd_printk(KERN_INFO, cmd, " ");
+-	scsi_show_result(cmd->result);
++	struct scsi_log_line log;
++
++	scsi_log_line_init(&log);
++	scsi_show_result(cmd->result, &log);
++	scmd_printk(KERN_INFO, cmd, "%s", log.buf);
+ }
+ EXPORT_SYMBOL(scsi_print_result);
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index d8afec8..40b2b23 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -550,10 +550,13 @@ void scsi_log_send(struct scsi_cmnd *cmd)
+ 		level = SCSI_LOG_LEVEL(SCSI_LOG_MLQUEUE_SHIFT,
+ 				       SCSI_LOG_MLQUEUE_BITS);
+ 		if (level > 1) {
+-			scmd_printk(KERN_INFO, cmd, "Send: ");
++			struct scsi_log_line log;
++
++			scsi_log_line_init(&log);
+ 			if (level > 2)
+-				printk("0x%p ", cmd);
+-			printk("\n");
++				scsi_log_add(&log, "0x%p ", cmd);
++			scsi_log_add(&log, "\n");
++			scmd_printk(KERN_INFO, cmd, "Send: %s", log.buf);
+ 			scsi_print_command(cmd);
+ 			if (level > 3) {
+ 				printk(KERN_INFO "buffer = 0x%p, bufflen = %d,"
+@@ -587,35 +590,38 @@ void scsi_log_completion(struct scsi_cmnd *cmd, int disposition)
+ 				       SCSI_LOG_MLCOMPLETE_BITS);
+ 		if (((level > 0) && (cmd->result || disposition != SUCCESS)) ||
+ 		    (level > 1)) {
+-			scmd_printk(KERN_INFO, cmd, "Done: ");
++			struct scsi_log_line log;
++
++			scsi_log_line_init(&log);
+ 			if (level > 2)
+-				printk("0x%p ", cmd);
++				scsi_log_add(&log, "0x%p ", cmd);
+ 			/*
+ 			 * Dump truncated values, so we usually fit within
+ 			 * 80 chars.
+ 			 */
+ 			switch (disposition) {
+ 			case SUCCESS:
+-				printk("SUCCESS\n");
++				scsi_log_add(&log, "SUCCESS\n");
+ 				break;
+ 			case NEEDS_RETRY:
+-				printk("RETRY\n");
++				scsi_log_add(&log, "RETRY\n");
+ 				break;
+ 			case ADD_TO_MLQUEUE:
+-				printk("MLQUEUE\n");
++				scsi_log_add(&log, "MLQUEUE\n");
+ 				break;
+ 			case FAILED:
+-				printk("FAILED\n");
++				scsi_log_add(&log, "FAILED\n");
+ 				break;
+ 			case TIMEOUT_ERROR:
+ 				/* 
+ 				 * If called via scsi_times_out.
+ 				 */
+-				printk("TIMEOUT\n");
++				scsi_log_add(&log, "TIMEOUT\n");
+ 				break;
+ 			default:
+-				printk("UNKNOWN\n");
++				scsi_log_add(&log, "UNKNOWN\n");
+ 			}
++			scmd_printk(KERN_INFO, cmd, "Done: %s", log.buf);
+ 			scsi_print_result(cmd);
+ 			scsi_print_command(cmd);
+ 			if (status_byte(cmd->result) & CHECK_CONDITION)
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 470954a..64d79b2 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -3275,15 +3275,22 @@ module_exit(exit_sd);
+ static void sd_print_sense_hdr(struct scsi_disk *sdkp,
+ 			       struct scsi_sense_hdr *sshdr)
+ {
+-	sd_printk(KERN_INFO, sdkp, " ");
+-	scsi_show_sense_hdr(sshdr);
+-	sd_printk(KERN_INFO, sdkp, " ");
+-	scsi_show_extd_sense(sshdr->asc, sshdr->ascq);
++	struct scsi_log_line log;
++
++	scsi_log_line_init(&log);
++	scsi_show_sense_hdr(sshdr, &log);
++	sd_printk(KERN_INFO, sdkp, "%s", log.buf);
++	scsi_log_line_init(&log);
++	scsi_show_extd_sense(sshdr->asc, sshdr->ascq, &log);
++	sd_printk(KERN_INFO, sdkp, "%s", log.buf);
+ }
+ 
+ static void sd_print_result(struct scsi_disk *sdkp, int result)
+ {
+-	sd_printk(KERN_INFO, sdkp, " ");
+-	scsi_show_result(result);
++	struct scsi_log_line log;
++
++	scsi_log_line_init(&log);
++	scsi_show_result(result, &log);
++	sd_printk(KERN_INFO, sdkp, "%s", log.buf);
+ }
+ 
+diff --git a/include/scsi/scsi_dbg.h b/include/scsi/scsi_dbg.h
+index e89844c..3d8f39c 100644
+--- a/include/scsi/scsi_dbg.h
++++ b/include/scsi/scsi_dbg.h
+@@ -1,13 +1,25 @@
+ #ifndef _SCSI_SCSI_DBG_H
+ #define _SCSI_SCSI_DBG_H
+ 
++/* Maximum size of a local buffer for structured printk */
++#define SCSI_LOG_LINE_MAX 512
++
++/* Local buffer for structured printk */
++struct scsi_log_line {
++	int offset;
++	char buf[SCSI_LOG_LINE_MAX];
++};
++
+ struct scsi_cmnd;
+ struct scsi_sense_hdr;
+ 
++extern void scsi_log_add(struct scsi_log_line *log, const char *fmt, ...);
+ extern void scsi_print_command(struct scsi_cmnd *);
+ extern void __scsi_print_command(unsigned char *);
+-extern void scsi_show_extd_sense(unsigned char, unsigned char);
+-extern void scsi_show_sense_hdr(struct scsi_sense_hdr *);
++extern void scsi_show_extd_sense(unsigned char, unsigned char,
++				 struct scsi_log_line *log);
++extern void scsi_show_sense_hdr(struct scsi_sense_hdr *,
++				struct scsi_log_line *log);
+ extern void scsi_print_sense_hdr(const char *, struct scsi_sense_hdr *);
+ extern void scsi_cmd_print_sense_hdr(struct scsi_cmnd *, const char *,
+ 				     struct scsi_sense_hdr *);
+@@ -15,10 +27,15 @@ extern void scsi_print_sense(char *, struct scsi_cmnd *);
+ extern void __scsi_print_sense(const char *name,
+ 			       const unsigned char *sense_buffer,
+ 			       int sense_len);
+-extern void scsi_show_result(int);
++extern void scsi_show_result(int, struct scsi_log_line *log);
+ extern void scsi_print_result(struct scsi_cmnd *);
+ extern void scsi_print_status(unsigned char);
+ extern const char *scsi_sense_key_string(unsigned char);
+ extern const char *scsi_extd_sense_format(unsigned char, unsigned char);
+ 
++static inline void scsi_log_line_init(struct scsi_log_line *log)
++{
++	log->offset = 0;
++}
++
+ #endif /* _SCSI_SCSI_DBG_H */
 
-  
-
-  
-
-I am Mrs. Alivia Edwin the wife of Engr David Edwin a Syrian Industrialist and member of a Syrian businessman in council Damascus. Please kindly view attache for more details.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-------=_Part_129216_523112230.1393430396571
-Content-Type: application/msword; name="From Mrs. Alivia Edwin.doc"
-Content-Disposition: attachment; filename="From Mrs. Alivia Edwin.doc"
-Content-Transfer-Encoding: base64
-
-0M8R4KGxGuEAAAAAAAAAAAAAAAAAAAAAPgADAP7/CQAGAAAAAAAAAAAAAAABAAAALgAAAAAAAAAA
-EAAAMAAAAAEAAAD+////AAAAAC0AAAD/////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////s
-pcEAD8AJBAAA8BK/AAAAAAAAEAAAAAAACAAA+Q8AAA4AYmpialfZV9kAAAAAAAAAAAAAAAAAAAAA
-AAAJBBYANBQAADWzAQA1swEA+QcAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//w8AAAAA
-AAAAAAD//w8AAAAAAAAAAAD//w8AAAAAAAAAAAAAAAAAAAAAALcAAAAAACgIAAAAAAAAKAgAAIIV
-AAAAAAAAghUAAAAAAACCFQAAAAAAAIIVAAAAAAAAghUAABQAAAAAAAAAAAAAAP////8AAAAAlhUA
-AAAAAACWFQAAAAAAAJYVAAAAAAAAlhUAAAwAAACiFQAADAAAAJYVAAAAAAAAOB4AAC4BAACuFQAA
-AAAAAK4VAAAAAAAArhUAAAAAAACuFQAAAAAAAK4VAAAAAAAAiRYAAAAAAACJFgAAAAAAAIkWAAAA
-AAAAtx0AAAIAAAC5HQAAAAAAALkdAAAAAAAAuR0AAAAAAAC5HQAAAAAAALkdAAAAAAAAuR0AACQA
-AABmHwAAsgIAABgiAABwAAAA3R0AABUAAAAAAAAAAAAAAAAAAAAAAAAAghUAAAAAAACJFgAAAAAA
-AAAAAAAAAAAAAAAAAAAAAACJFgAAAAAAAIkWAAAAAAAAiRYAAAAAAACJFgAAAAAAAN0dAAAAAAAA
-AAAAAAAAAACCFQAAAAAAAIIVAAAAAAAArhUAAAAAAAAAAAAAAAAAAK4VAADbAAAA8h0AABYAAAAF
-FwAAAAAAAAUXAAAAAAAABRcAAAAAAACJFgAALgAAAIIVAAAAAAAArhUAAAAAAACCFQAAAAAAAK4V
-AAAAAAAAtx0AAAAAAAAAAAAAAAAAAAUXAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAiRYAAAAAAAC3HQAAAAAAAAAAAAAAAAAABRcAAAAAAAAFFwAA
-OgAAAKsbAAAsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMxwAAAAAAACuFQAAAAAAAP////8AAAAAwEFVLwUw
-zwEAAAAAAAAAAP////8AAAAAtxYAAC4AAADXGwAACgAAAAAAAAAAAAAAox0AABQAAAAIHgAAMAAA
-ADgeAAAAAAAA4RsAAFIAAACIIgAAAAAAAOUWAAAQAAAAiCIAABQAAAAzHAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAIgiAAAAAAAAAAAAAAAAAACCFQAAAAAAADMcAABwAQAAiRYAAAAAAACJFgAAAAAAAAUX
-AAAAAAAAiRYAAAAAAACJFgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAiRYA
-AAAAAACJFgAAAAAAAIkWAAAAAAAA3R0AAAAAAADdHQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAA9RYAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIkWAAAA
-AAAAiRYAAAAAAACJFgAAAAAAADgeAAAAAAAAiRYAAAAAAACJFgAAAAAAAIkWAAAAAAAAiRYAAAAA
-AAAAAAAAAAAAAP////8AAAAA/////wAAAAD/////AAAAAAAAAAAAAAAA/////wAAAAD/////AAAA
-AP////8AAAAA/////wAAAAD/////AAAAAP////8AAAAA/////wAAAAD/////AAAAAP////8AAAAA
-/////wAAAAD/////AAAAAP////8AAAAA/////wAAAAD/////AAAAAIgiAAAAAAAAiRYAAAAAAACJ
-FgAAAAAAAIkWAAAAAAAAiRYAAAAAAACJFgAAAAAAAIkWAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACJFgAAAAAAAIkWAAAAAAAAiRYA
-AAAAAAAoCAAAIAwAAEgUAAA6AQAABQASAQAACQQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAERlYXIg
-U2lyL01hZGFtLA0gDUkgYW0gTXJzLiBBbGl2aWEgRWR3aW4gdGhlIHdpZmUgb2YgRW5nciBEYXZp
-ZCBFZHdpbiBhIFN5cmlhbiBJbmR1c3RyaWFsaXN0IGFuZCBtZW1iZXIgb2YgYSBTeXJpYW4gYnVz
-aW5lc3NtYW4gaW4gY291bmNpbCBEYW1hc2N1cy4gQWZ0ZXIgdGhlIGRlYXRoIG9mIG15IGh1c2Jh
-bmQsIG15IGZhbWlseSBpcyB1bmRlciB0aHJlYXQgb2YgUHJlc2lkZW50IEJhc2hhciBhbC1Bc3Nh
-ZCBmb3IgUmVzb2x1dGUgb3VyIHN1cHBvcnQgZm9yIGEgdHJ1ZSBEZW1vY3JhdGljIEdvdmVybm1l
-bnQgaW4gU3lyaWEgdGhhdCBpcyB3aHkgdGhleSBraWxsZWQgbXkgaHVzYmFuZC4NIA1EdWUgdG8g
-dGhlIGN1cnJlbnQgUHJlc2lkZW50IEJhc2hhciBhbC1Bc3NhZCBwcm90ZXN0IGluIHRoZSBjb3Vu
-dHJ5IG1hbnkgZmFtaWxpZXMgYXJlIHJ1bm5pbmcgZm9yIGRlYXIgbGl2ZXMgYXMgdGhlaXIgc29s
-ZGllcnMgYXJlIGtpbGxpbmcgY2l2aWxpYW5zLCB3b21lbiBhbmQgY2hpbGRyZW4uIEkgd2FudCB0
-byBicmluZyB0byB5b3VyIG5vdGljZSB0aGF0IEkgaGF2ZSBpbiBteSBwb3NzZXNzaW9uIHRoZSBz
-dW0gb2YgJDEwLDUwMC4wMDAgbWlsbGlvbiBkb2xsYXJzLiBUaGlzIGlzIHRoZSBtb25leSBtZSBh
-bmQgbXkgaHVzYmFuZCBoYXZlIHNhdmVkIGZvciBvdXIgZW50aXJlIGxpZmUgYXMgYW4gSW5kdXN0
-cmlhbGlzdC4gSSBwbGFjZWQgdGhlIG1vbmV5IGluIHRydW5rIGJveCBhbmQgZGVwb3NpdGVkIGl0
-IHdpdGggdGhlIFVOIGhlcmUgaW4gRGFtYXNjdXMuIE15IHNpbmNlcmUgaW50ZW50aW9uIGluIHdy
-aXRpbmcgeW91IGlzIHRvIGdhaW4geW91ciBraW5kIHBlcm1pc3Npb24gYW5kIGFjY2VwdGFuY2Ug
-dG8gcmVjZWl2ZSB0aGUgbW9uZXkgb24gbXkgYmVoYWxmIGluIHlvdXIgQ291bnRyeSBhbmQgYWxz
-byBtYWtlIGludmVzdG1lbnQgd2l0aCBpdC4gRm9yIHlvdXIgcGVybWlzc2lvbiBhbmQgYWNjZXB0
-YW5jZSwgSSB3aWxsIGdpdmUgeW91IDMwJSBjb21taXNzaW9uIGFzIHdlbGwgYXMgYnV5IGEgcHJv
-cGVydHkgZm9yIHlvdS4NIA1JIGhhdmUgdG8gdGFrZSB0aGlzIGNoYW5jZSBiZWNhdXNlIEkgaGF2
-ZSBubyBvdGhlciBhbHRlcm5hdGl2ZSBidXQgdG8gdHJ1c3Qgc29tZWJvZHkuIEFtIGFuIG9ycGhh
-biB3aXRoIG5vIGJyb3RoZXIgb3Igc2lzdGVyIHNvIEkgY2Fubm90IHJpc2sgbXkgbGlmZSBoZXJl
-IHRvIGF2b2lkIGFuIGVuZCB0byBteSBmYW1pbHkgbGluZWFnZS4gQXMgYSB3b21hbiBzaW5jZSBt
-eSBodXNiYW5kIGlzIGRlYWQgYWxsIEkgaGF2ZSBpcyBteSB0d28gc29ucy4gVGhleSBkZXNlcnZl
-IGEgZGVjZW50IGxpZmUgc2luY2UgSSB3YW50IHRoZW0gdG8gZ3JvdyB1cCBpbiBhIHBlYWNlZnVs
-IGVudmlyb25tZW50LiBJIHdpbGwgcmVsb2NhdGUgdG8geW91ciBDb3VudHJ5IHdpdGggbXkgZmFt
-aWx5IGFuZCBpbnZlc3QgdGhlIG1vbmV5IEluIGFjY29yZGFuY2Ugd2l0aCBsYXcsIHlvdXIgYWR2
-aWNlIGFuZCBhc3Npc3RhbmNlOyB3ZSBjYW4gd29yayB0b2dldGhlciBhbmQgYWNoaWV2ZSBhIGJl
-dHRlciBmdXR1cmUgZm9yIG91ciBmYW1pbGllcy4NIA1JZiBwb3NzaWJsZSwgbWF5IEkgcmVxdWVz
-dCB5b3UgdG8gc2VuZCBtZSB5b3VyIGluZm9ybWF0aW9uPyBPbmx5IGlmIHlvdSBhcmUgY29tZm9y
-dGFibGUgd2l0aCB0aGlzIHJlcXVlc3QuIFRoaXMgaXMgcHVyZWx5IGZvciB0aGUgcHVycG9zZSBv
-ZiBzZW5kaW5nIHRoZSBtb25leSB0byB5b3UuIFRoZSBpbmZvcm1hdGlvbiBuZWVkZWQgaXM6IFlv
-dXIgZnVsbCBuYW1lLCB5b3VyIHByaXZhdGUgcGhvbmUgbnVtYmVyLCB5b3VyIGZ1bGwgYWRkcmVz
-cy4NIA1JIGFudGljaXBhdGUgeW91ciBwb3NpdGl2ZSByZXNwb25zZSBhbmQgb24gcmVjZWlwdCBv
-ZiB5b3VyIGluZm9ybWF0aW9uIEkgd2lsbCBwcm92aWRlIHlvdSB3aXRoIGZ1cnRoZXIgZGV0YWls
-cy4NIA1TaW5jZXJlbHksDSANTXJzIEFsaXZpYSBFZHdpbi4NDQ0gICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICBQTEVBU0UgSEVMUCBNWSBGQU1JTFkuDQ0AAAAAAAAAAAgAAEUKAABG
-CgAAUAoAAGAOAACADgAAug8AALsPAAD4DwAA+Q8AAPXt3/Xt9dft9QAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA4WaLhgZABDSiAAYUogAAAaFWhSFgMAFmhSFgMANQiBPioB
-Q0ogAGFKIAAADhZoUhYDAENKIABhSiAAABQVaFIWAwAWaFIWAwBDSiAAYUogAAkACAAAEAgAABII
-AABSCQAAVAkAABYMAAAYDAAAJg4AACgOAAAoDwAAKg8AAJoPAACcDwAApw8AAKkPAAC7DwAAvA8A
-AL0PAAD4DwAA+Q8AAPoAAAAAAAAAAAAAAAD6AAAAAAAAAAAAAAAA+gAAAAAAAAAAAAAAAPoAAAAA
-AAAAAAAAAAD6AAAAAAAAAAAAAAAA+gAAAAAAAAAAAAAAAPoAAAAAAAAAAAAAAAD6AAAAAAAAAAAA
-AAAA+gAAAAAAAAAAAAAAAPoAAAAAAAAAAAAAAAD6AAAAAAAAAAAAAAAA+gAAAAAAAAAAAAAAAPoA
-AAAAAAAAAAAAAAD6AAAAAAAAAAAAAAAA+gAAAAAAAAAAAAAAAPoAAAAAAAAAAAAAAAD6AAAAAAAA
-AAAAAAAA+gAAAAAAAAAAAAAAAPoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAABnZFIWAwAAEzIAMZBoATpwyHk5
-AB+w0C8gsOA9IbA4BCKwNQQjkAAAJJAAACWwAAAXsNACGLDQAgyQ0AIAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAXgQSABIAAQALAQ8A
-BwAAAAAAAAAAAAQACAAAAAgAAAAIAAAACAAAAAgAAAAIAAAACAAAAA4AAAAOAAAADgAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA4AAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAACAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAMgYAABgAAADAAwAA0AMAAOADAADwAwAAAAQAABAEAAAgBAAAMAQAAEAEAABQBAAA
-YAQAAHAEAACABAAAkAQAAMADAADQAwAA4AMAAPADAAAABAAAEAQAADIGAAAoAgAA2AEAAOgBAAAg
-BAAAMAQAAEAEAABQBAAAYAQAAHAEAACABAAAkAQAAMADAADQAwAA4AMAAPADAAAABAAAEAQAACAE
-AAAwBAAAQAQAAFAEAABgBAAAcAQAAIAEAACQBAAAwAMAANADAADgAwAA8AMAAAAEAAAQBAAAIAQA
-ADAEAABABAAAUAQAAGAEAABwBAAAgAQAAJAEAADAAwAA0AMAAOADAADwAwAAAAQAABAEAAAgBAAA
-MAQAAEAEAABQBAAAYAQAAHAEAACABAAAkAQAAMADAADQAwAA4AMAAPADAAAABAAAEAQAACAEAAAw
-BAAAQAQAAFAEAABgBAAAcAQAAIAEAACQBAAAwAMAANADAADgAwAA8AMAAAAEAAAQBAAAIAQAADAE
-AABABAAAUAQAAGAEAABwBAAAgAQAAJAEAAA4AQAAWAEAAPgBAAAIAgAAGAIAAFYCAAB+AgAAFAAA
-AF9IAQRtSAkEbkgJBHNICQR0SAkEAAAAAEAAAGDx/wIAQAAMEAAAAAAAAAAABgBOAG8AcgBtAGEA
-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
-xszgI5uqTATKW7q6xN8AAAD//wMAUEsBAi0AFAAGAAgAAAAhAOneD7//AAAAHAIAABMAAAAAAAAA
-AAAAAAAAAAAAAFtDb250ZW50X1R5cGVzXS54bWxQSwECLQAUAAYACAAAACEApdan58AAAAA2AQAA
-CwAAAAAAAAAAAAAAAAAwAQAAX3JlbHMvLnJlbHNQSwECLQAUAAYACAAAACEAa3mWFoMAAACKAAAA
-HAAAAAAAAAAAAAAAAAAZAgAAdGhlbWUvdGhlbWUvdGhlbWVNYW5hZ2VyLnhtbFBLAQItABQABgAI
-AAAAIQAw3UMpqAYAAKQbAAAWAAAAAAAAAAAAAAAAANYCAAB0aGVtZS90aGVtZS90aGVtZTEueG1s
-UEsBAi0AFAAGAAgAAAAhAA3RkJ+2AAAAGwEAACcAAAAAAAAAAAAAAAAAsgkAAHRoZW1lL3RoZW1l
-L19yZWxzL3RoZW1lTWFuYWdlci54bWwucmVsc1BLBQYAAAAABQAFAF0BAACtCgAAAAA8P3htbCB2
-ZXJzaW9uPSIxLjAiIGVuY29kaW5nPSJVVEYtOCIgc3RhbmRhbG9uZT0ieWVzIj8+DQo8YTpjbHJN
-YXAgeG1sbnM6YT0iaHR0cDovL3NjaGVtYXMub3BlbnhtbGZvcm1hdHMub3JnL2RyYXdpbmdtbC8y
-MDA2L21haW4iIGJnMT0ibHQxIiB0eDE9ImRrMSIgYmcyPSJsdDIiIHR4Mj0iZGsyIiBhY2NlbnQx
-PSJhY2NlbnQxIiBhY2NlbnQyPSJhY2NlbnQyIiBhY2NlbnQzPSJhY2NlbnQzIiBhY2NlbnQ0PSJh
-Y2NlbnQ0IiBhY2NlbnQ1PSJhY2NlbnQ1IiBhY2NlbnQ2PSJhY2NlbnQ2IiBobGluaz0iaGxpbmsi
-IGZvbEhsaW5rPSJmb2xIbGluayIvPgAAAAD5BwAAGQAAFAAAAAD/////AAgAAPkPAAAIAAAAAAgA
-APkPAAAJAAAADwAA8DgAAAAAAAbwGAAAAAIEAAACAAAAAQAAAAEAAAABAAAAAgAAAEAAHvEQAAAA
-//8AAAAA/wCAgIAA9wAAEAAPAALwkgAAABAACPAIAAAAAQAAAAEEAAAPAAPwMAAAAA8ABPAoAAAA
-AQAJ8BAAAAAAAAAAAAAAAAAAAAAAAAAAAgAK8AgAAAAABAAABQAAAA8ABPBCAAAAEgAK8AgAAAAB
-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
-DgAAADgBAAAPAAAAQAEAABAAAABIAQAAEwAAAFABAAACAAAA5AQAAB4AAAAcAAAAR1JFRU5WSUxM
-RSBBVFRPUk5FWVMgSU5DAAAAAB4AAAAIAAAAVXNlcgAAAAAeAAAACAAAAE5vcm1hbAAAHgAAAAgA
-AAB3aW5kb3c3AB4AAAAEAAAAMgAAAB4AAAAYAAAATWljcm9zb2Z0IE9mZmljZSBXb3JkAAAAQAAA
-AABGwyMAAAAAQAAAAABWB+ZC58wBQAAAAAAKtCwFMM8BQAAAAAAKtCwFMM8BAwAAAAEAAAADAAAA
-MAEAAAMAAADJBgAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAP7/AAAGAQIAAAAAAAAAAAAAAAAAAAAAAAEAAAAC1c3VnC4bEJOX
-CAArLPmuMAAAAAABAAAMAAAAAQAAAGgAAAAPAAAAcAAAAAUAAAB8AAAABgAAAIQAAAARAAAAjAAA
-ABcAAACUAAAACwAAAJwAAAAQAAAApAAAABMAAACsAAAAFgAAALQAAAANAAAAvAAAAAwAAADhAAAA
-AgAAAOQEAAAeAAAABAAAAC4AAAADAAAADgAAAAMAAAAEAAAAAwAAAPUHAAADAAAAAAAOAAsAAAAA
-AAAACwAAAAAAAAALAAAAAAAAAAsAAAAAAAAAHhAAAAEAAAAZAAAAR1JFRU5WSUxMRSBBVFRPUk5F
-WVMgSU5DAAwQAAACAAAAHgAAAAYAAABUaXRsZQADAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAABAAAAAgAAAAMAAAAEAAAABQAAAAYAAAAHAAAACAAAAAkAAAAKAAAA/v///wwA
-AAANAAAADgAAAA8AAAAQAAAAEQAAABIAAAATAAAAFAAAABUAAAAWAAAAFwAAABgAAAAZAAAAGgAA
-ABsAAAAcAAAA/v///x4AAAAfAAAAIAAAACEAAAAiAAAAIwAAACQAAAD+////JgAAACcAAAAoAAAA
-KQAAACoAAAArAAAALAAAAP7////9////LwAAAP7////+/////v//////////////////////////
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-/////////////1IAbwBvAHQAIABFAG4AdAByAHkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAWAAUB//////////8DAAAABgkCAAAAAADAAAAAAAAARgAAAAAAAAAA
-AAAAAEDNXS8FMM8BMQAAAIAAAAAAAAAAMQBUAGEAYgBsAGUAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA4AAgH/////BQAAAP////8AAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAALAAAAnCIAAAAAAABXAG8AcgBkAEQAbwBjAHUAbQBl
-AG4AdAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGgACAQEAAAD/////
-/////wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAC5FAAAAAAAAAUAUwB1
-AG0AbQBhAHIAeQBJAG4AZgBvAHIAbQBhAHQAaQBvAG4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAoAAIBAgAAAAQAAAD/////AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHQAA
-AAAQAAAAAAAABQBEAG8AYwB1AG0AZQBuAHQAUwB1AG0AbQBhAHIAeQBJAG4AZgBvAHIAbQBhAHQA
-aQBvAG4AAAAAAAAAAAAAADgAAgH///////////////8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAlAAAAABAAAAAAAAABAEMAbwBtAHAATwBiAGoAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEgACAP///////////////wAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAByAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA////////////
-////AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAD///////////////8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAABAAAA/v//////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-/////////wEA/v8DCgAA/////wYJAgAAAAAAwAAAAAAAAEYgAAAATWljcm9zb2Z0IFdvcmQgOTct
-MjAwMyBEb2N1bWVudAAKAAAATVNXb3JkRG9jABAAAABXb3JkLkRvY3VtZW50LjgA9DmycQAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAA
-------=_Part_129216_523112230.1393430396571--
