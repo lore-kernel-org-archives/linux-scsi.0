@@ -1,92 +1,86 @@
 From: Sagi Grimberg <sagig@mellanox.com>
-Subject: [PATCH v1 05/13] IB/iser: Replace fastreg descriptor valid bool with indicators container
-Date: Thu, 27 Feb 2014 13:13:01 +0200
-Message-ID: <1393499589-15633-6-git-send-email-sagig@mellanox.com>
-References: <1393499589-15633-1-git-send-email-sagig@mellanox.com>
+Subject: [PATCH v1 00/13] T10-PI support for iSER initiator
+Date: Thu, 27 Feb 2014 13:12:56 +0200
+Message-ID: <1393499589-15633-1-git-send-email-sagig@mellanox.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailp.voltaire.com ([193.47.165.129]:37263 "EHLO mellanox.co.il"
+Received: from mailp.voltaire.com ([193.47.165.129]:35953 "EHLO mellanox.co.il"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752677AbaB0LNU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Feb 2014 06:13:20 -0500
-In-Reply-To: <1393499589-15633-1-git-send-email-sagig@mellanox.com>
+	id S1752001AbaB0LNQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Feb 2014 06:13:16 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: roland@kernel.org, nab@linux-iscsi.org
 Cc: oren@mellanox.com, martin.petersen@oracle.com, michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org
 
-In T10-PI support we will have memory keys for protection
-buffers and signature transactions. We prefer to compact
-indicators rather than keeping multiple bools.
+Hey Roland, Nic and Co
 
-This commit does not change any functionality.
+This patchset adds T10 protection information offload support over
+RDMA signature verbs API. This set, along with the iSER target set,
+allow end-to-end protection information passthrough and validation.
+The patchset was tested against Linux SCSI target with iSER DIF
+support applied.
 
-Signed-off-by: Sagi Grimberg <sagig@mellanox.com>
-Signed-off-by: Alex Tabachnik <alext@mellanox.com>
----
- drivers/infiniband/ulp/iser/iscsi_iser.h  |    8 ++++++--
- drivers/infiniband/ulp/iser/iser_memory.c |    4 ++--
- drivers/infiniband/ulp/iser/iser_verbs.c  |    2 +-
- 3 files changed, 9 insertions(+), 5 deletions(-)
+The enablement of iSER DIF support is currently controlled with
+module parameters (similar to lpfc for example) which make them
+global. In the next phase we can consider passing these parameters
+from iscsid nl messages, which would make them per-connection.
 
-diff --git a/drivers/infiniband/ulp/iser/iscsi_iser.h b/drivers/infiniband/ulp/iser/iscsi_iser.h
-index b4290f5..5660714 100644
---- a/drivers/infiniband/ulp/iser/iscsi_iser.h
-+++ b/drivers/infiniband/ulp/iser/iscsi_iser.h
-@@ -280,13 +280,17 @@ struct iser_device {
- 							    enum iser_data_dir cmd_dir);
- };
- 
-+enum iser_reg_indicator {
-+	ISER_DATA_KEY_VALID = 1 << 0,
-+};
-+
- struct fast_reg_descriptor {
- 	struct list_head		  list;
- 	/* For fast registration - FRWR */
- 	struct ib_mr			 *data_mr;
- 	struct ib_fast_reg_page_list     *data_frpl;
--	/* Valid for fast registration flag */
--	bool				  valid;
-+	/* registration indicators container */
-+	u8				  reg_indicators;
- };
- 
- struct iser_conn {
-diff --git a/drivers/infiniband/ulp/iser/iser_memory.c b/drivers/infiniband/ulp/iser/iser_memory.c
-index d25587e..a7a0d3e 100644
---- a/drivers/infiniband/ulp/iser/iser_memory.c
-+++ b/drivers/infiniband/ulp/iser/iser_memory.c
-@@ -479,7 +479,7 @@ static int iser_fast_reg_mr(struct iscsi_iser_task *iser_task,
- 		return -EINVAL;
- 	}
- 
--	if (!desc->valid) {
-+	if (!(desc->reg_indicators & ISER_DATA_KEY_VALID)) {
- 		memset(&inv_wr, 0, sizeof(inv_wr));
- 		inv_wr.wr_id = ISER_FASTREG_LI_WRID;
- 		inv_wr.opcode = IB_WR_LOCAL_INV;
-@@ -514,7 +514,7 @@ static int iser_fast_reg_mr(struct iscsi_iser_task *iser_task,
- 		iser_err("fast registration failed, ret:%d\n", ret);
- 		return ret;
- 	}
--	desc->valid = false;
-+	desc->reg_indicators &= ~ISER_DATA_KEY_VALID;
- 
- 	sge->lkey = desc->data_mr->lkey;
- 	sge->addr = desc->data_frpl->page_list[0] + offset;
-diff --git a/drivers/infiniband/ulp/iser/iser_verbs.c b/drivers/infiniband/ulp/iser/iser_verbs.c
-index 95fcfca..6a5f424 100644
---- a/drivers/infiniband/ulp/iser/iser_verbs.c
-+++ b/drivers/infiniband/ulp/iser/iser_verbs.c
-@@ -296,7 +296,7 @@ iser_create_fastreg_desc(struct ib_device *ib_device, struct ib_pd *pd,
- 	}
- 	iser_info("Create fr_desc %p page_list %p\n",
- 		  desc, desc->data_frpl->page_list);
--	desc->valid = true;
-+	desc->reg_indicators |= ISER_DATA_KEY_VALID;
- 
- 	return 0;
- 
--- 
-1.7.1
+The approach I took with respect to escelating protection information
+errors was minimal iSCSI intervention in protection information affairs.
+I added libiscsi a hook asking the transport to check the protection
+information status, and construct the proper sense data in case of errors
+(the alternative of letting the transport to construct sense data seemed
+much less appealing).
+
+Note that this patchset comes on top of a pending patch for iSER to suppress
+fastreg completions (http://marc.info/?l=linux-rdma&m=139047309831997&w=2).
+
+v0 patches are available in target-pending git repo (branch rdma-dif) and
+passed 0-DAY testing.
+
+Roland, I would like to hear your feedback on this.
+
+The set is ordered by the following:
+- Preperation patches (non/minor functionality changes).
+- Add protection information execution support.
+- Add protection information status check facilities.
+- Publish T10-DIF support to SCSI midlayer according to
+  IB device capabilities.
+
+Changes from v0:
+- Fix protection information dma registration for unaligned scatterlists
+  which may happen when the block layer merges bios.
+- Don't fail connections on devices without DIF support - warn and continue
+  without DIF.
+- reword FR -> FastReg
+
+Alex Tabachnik (2):
+  IB/iser: Introduce pi_enable, pi_guard module parameters
+  IB/iser: Initialize T10-PI resources
+
+Sagi Grimberg (11):
+  IB/iser: Avoid FRWR notation, use fastreg instead
+  IB/iser: Push the desicion what memory key to use into fast_reg_mr
+    routine
+  IB/iser: Move fast_reg_descriptor initialization to a function
+  IB/iser: Keep IB device attributes under iser_device
+  IB/iser: Replace fastreg descriptor valid bool with indicators
+    container
+  IB/iser: Generalize iser_unmap_task_data and
+    finalize_rdma_unaligned_sg
+  IB/iser: Generalize fall_to_bounce_buf routine
+  IB/iser: Support T10-PI operations
+  SCSI/libiscsi: Add check_protection callback for transports
+  IB/iser: Implement check_protection
+  IB/iser: Publish T10-PI support to SCSI midlayer
+
+ drivers/infiniband/ulp/iser/iscsi_iser.c     |   46 +++-
+ drivers/infiniband/ulp/iser/iscsi_iser.h     |   71 ++++-
+ drivers/infiniband/ulp/iser/iser_initiator.c |   98 +++++-
+ drivers/infiniband/ulp/iser/iser_memory.c    |  445 +++++++++++++++++++-------
+ drivers/infiniband/ulp/iser/iser_verbs.c     |  285 ++++++++++++-----
+ drivers/scsi/libiscsi.c                      |   32 ++
+ include/scsi/libiscsi.h                      |    4 +
+ include/scsi/scsi_transport_iscsi.h          |    1 +
+ 8 files changed, 769 insertions(+), 213 deletions(-)
 
