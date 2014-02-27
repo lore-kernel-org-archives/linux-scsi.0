@@ -1,52 +1,63 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH 00/16] sleep_on removal, second try
-Date: Thu, 27 Feb 2014 12:55:13 +0100
-Message-ID: <CAMuHMdWvgO=RBp0ctofFqWWyX2V933_RsRLsh83MDdcXnw_1Zg@mail.gmail.com>
-References: <1393412516-3762435-1-git-send-email-arnd@arndb.de>
-	<2e8474df8cbb7cc583fe1c4e01649835@biophys.uni-duesseldorf.de>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 71231] New: System unresponsable after a lot of LUNs have been
+ added to the system
+Date: Thu, 27 Feb 2014 17:45:40 +0000
+Message-ID: <bug-71231-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <2e8474df8cbb7cc583fe1c4e01649835@biophys.uni-duesseldorf.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Michael Schmitz <schmitz@biophys.uni-duesseldorf.de>
-Cc: Arnd Bergmann <arnd@arndb.de>, scsi <linux-scsi@vger.kernel.org>, Karsten Keil <isdn@linux-pingi.de>, linux-atm-general@lists.sourceforge.net, Andrew Morton <akpm@osdl.org>, "David S. Miller" <davem@davemloft.net>, Jens Axboe <axboe@kernel.dk>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Mauro Carvalho Chehab <m.chehab@samsung.com>, Linux Media Mailing List <linux-media@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.19.201]:57010 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751155AbaB0Rpo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Feb 2014 12:45:44 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 6408420240
+	for <linux-scsi@vger.kernel.org>; Thu, 27 Feb 2014 17:45:43 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+	by mail.kernel.org (Postfix) with ESMTP id 2F98220251
+	for <linux-scsi@vger.kernel.org>; Thu, 27 Feb 2014 17:45:41 +0000 (UTC)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Hi Michael, Arnd,
+https://bugzilla.kernel.org/show_bug.cgi?id=71231
 
-On Thu, Feb 27, 2014 at 7:37 AM, Michael Schmitz
-<schmitz@biophys.uni-duesseldorf.de> wrote:
->> It's been a while since the first submission of these patches,
->> but a lot of them have made it into linux-next already, so here
->> is the stuff that is not merged yet, hopefully addressing all
->> the comments.
->>
->> Geert and Michael: the I was expecting the ataflop and atari_scsi
->> patches to be merged already, based on earlier discussion.
->> Can you apply them to the linux-m68k tree, or do you prefer
->> them to go through the scsi and block maintainers?
->
-> Not sure what we decided to do - I'd prefer to double-check the latest ones
-> first, but I'd be OK with these to go via m68k.
->
-> Maybe Geert waits for acks from linux-scsi and linux-block? (The rest of my
-> patches to Atari SCSI still awaits comment there.)
+            Bug ID: 71231
+           Summary: System unresponsable after a lot of LUNs have been
+                    added to the system
+           Product: IO/Storage
+           Version: 2.5
+    Kernel Version: 3.10.32
+          Hardware: x86-64
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: high
+          Priority: P1
+         Component: SCSI
+          Assignee: linux-scsi@vger.kernel.org
+          Reporter: alexandernaumann@gmx.de
+        Regression: No
 
-I was waiting for a final confirmation. I was under the impression some rework
-was needed, and seeing Michael's NAK confirms that.
+Created attachment 127581
+  --> https://bugzilla.kernel.org/attachment.cgi?id=127581&action=edit
+Kernel config
 
-I'd be glad to take them through the m68k tree (for 3.15), once they have
-received testing and Michael's ACK. Or the block resp. SCSI maintainers can
-take them if they prefer, which apparently already happened for 01/16.
+This Kernel crash is reproducable on my system.
+Right now I could get it with 3.10.25 and 3.10.32.
+I works fine with 3.1.
 
-Gr{oetje,eeting}s,
+The system (Dell R910, nut it also happens with other servers) has a QLogic
+FC-HBA (qla2xxx driver).
+After connection about 30 LUNs the system is working fine, but if I increase
+the amount of FC-LUNs to for example 40 the system hangs afetr some seconds.
 
-                        Geert
+Maybe this bug has been already fixed by Suse:
+http://kernel.suse.com/cgit/kernel-source/tree/patches.fixes/mm-resched-to-avoid-rcu-stall-during-boot-large-machines.patch?h=SLE11-SP3&id=6780159bba20e9f99dd5ac8a4e18f98f9c93adf7
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+If it is the case I think this patch should be put into current kernel lines.
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+-- 
+You are receiving this mail because:
+You are the assignee for the bug.
