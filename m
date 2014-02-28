@@ -1,63 +1,45 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCHv7 0/3][Resend] Display EVPD pages in sysfs
-Date: Fri, 28 Feb 2014 08:27:12 +0100
-Message-ID: <53103A50.5090603@suse.de>
-References: <1392287281-75002-1-git-send-email-hare@suse.de>
+From: Karsten Keil <kkeil@linux-pingi.de>
+Subject: Re: [PATCH 00/16] sleep_on removal, second try
+Date: Fri, 28 Feb 2014 09:53:37 +0100
+Message-ID: <53104E91.6070109@linux-pingi.de>
+References: <1393412516-3762435-1-git-send-email-arnd@arndb.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:52634 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751722AbaB1H1N (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 Feb 2014 02:27:13 -0500
-In-Reply-To: <1392287281-75002-1-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1393412516-3762435-1-git-send-email-arnd@arndb.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org
+Cc: Andrew Morton <akpm@osdl.org>, "David S. Miller" <davem@davemloft.net>, Geert Uytterhoeven <geert@linux-m68k.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Ingo Molnar <mingo@kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Jens Axboe <axboe@kernel.dk>, Karsten Keil <isdn@linux-pingi.de>, Mauro Carvalho Chehab <m.chehab@samsung.com>, Michael Schmitz <schmitz@biophys.uni-duesseldorf.de>, Peter Zijlstra <peterz@infradead.org>, linux-atm-general@lists.sourceforge.net, linux-media@vger.kernel.org, linux-scsi@vger.kernel.org, netdev@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>
 
-On 02/13/2014 11:27 AM, Hannes Reinecke wrote:
-> Hi all,
->=20
-> After discussion with jejb I've dropped the EVPD parsing.
-> So with this version we're just displaying the EVPD page
-> 0x80 and 0x83 as hexdumps; no parsing is attempted.
-> This drastically simplifies the patch, and we don't
-> have to worry about any parsing errors in kernel space.
-> Of course we'll need a parser in userspace, but that
-> doesn't need to do any I/O. So it's still a very nice
-> gain.
->=20
-> (I had to redo the patchset as it no longer applied to
->  -rc2. Hence the resend. Sorry for that.)
->=20
-> Hannes Reinecke (3):
->   scsi_sysfs: Implement 'is_visible' callback
->   Add EVPD page 0x83 to sysfs
->   Add EVPD page 0x80 to sysfs
->=20
->  drivers/scsi/scsi.c        | 104 ++++++++++++++++++--
->  drivers/scsi/scsi_scan.c   |   3 +
->  drivers/scsi/scsi_sysfs.c  | 229 +++++++++++++++++++++++++++--------=
-----------
->  include/scsi/scsi_device.h |   5 +
->  4 files changed, 242 insertions(+), 99 deletions(-)
->=20
-James, ping?
+Am 26.02.2014 12:01, schrieb Arnd Bergmann:
+> It's been a while since the first submission of these patches,
+> but a lot of them have made it into linux-next already, so here
+> is the stuff that is not merged yet, hopefully addressing all
+> the comments.
+> 
+> Geert and Michael: the I was expecting the ataflop and atari_scsi
+> patches to be merged already, based on earlier discussion.
+> Can you apply them to the linux-m68k tree, or do you prefer
+> them to go through the scsi and block maintainers?
+> 
+> Jens: I did not get any comments for the DAC960 and swim3 patches,
+> I assume they are good to go in. Please merge.
+> 
+> Hans and Mauro: As I commented on the old thread, I thought the
+> four media patches were on their way. I have addressed the one
+> comment that I missed earlier now, and used Hans' version for
+> the two patches he changed. Please merge or let me know the status
+> if you have already put them in some tree, but not yet into linux-next
+> 
+> Greg or Andrew: The parport subsystem is orphaned unfortunately,
+> can one of you pick up that patch?
+> 
+> Davem: The two ATM patches got acks, but I did not hear back from
+> Karsten regarding the ISDN patches. Can you pick up all six, or
+> should we wait for comments about the ISDN patches?
+>
 
-Anything amiss with that patchset?
 
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Ack on the ISDN stuff (12,13,14,15)
