@@ -1,151 +1,89 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: [PATCH 2/2] megaraid_sas: remove unused variables
-Date: Fri, 28 Feb 2014 15:54:37 +0100
-Message-ID: <1393599277-30904-3-git-send-email-thenzl@redhat.com>
-References: <1393599277-30904-1-git-send-email-thenzl@redhat.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] scsi_dh_alua: Requeue another not ready check condition
+ at ML
+Date: Fri, 28 Feb 2014 16:14:55 +0100
+Message-ID: <5310A7EF.7060902@suse.de>
+References: <8255ED565A0EAA4A960625E27D49DBF24AC8B21D@SACEXCMBX04-PRD.hq.netapp.com> <530FED5B.60803@cs.wisc.edu>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:12814 "EHLO mx1.redhat.com"
+Received: from cantor2.suse.de ([195.135.220.15]:34971 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752282AbaB1Ozl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 Feb 2014 09:55:41 -0500
-In-Reply-To: <1393599277-30904-1-git-send-email-thenzl@redhat.com>
+	id S1752431AbaB1PO5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 Feb 2014 10:14:57 -0500
+In-Reply-To: <530FED5B.60803@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: jbottomley@parallels.com, Tomas Henzl <thenzl@redhat.com>, Sumit Saxena <sumit.saxena@lsi.com>, Adam Radford <aradford@gmail.com>
+To: Mike Christie <michaelc@cs.wisc.edu>, "Stewart, Sean" <Sean.Stewart@netapp.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>
 
-Some, almost not used variables removed.
+On 02/28/2014 02:58 AM, Mike Christie wrote:
+> On 02/27/2014 06:14 PM, Stewart, Sean wrote:
+>> This allows the sd driver to retry commands like read capacity until=
+ a
+>> LUN is ready, rather than giving up after three retries.
+>>
+>> In NetApp E-Series, a controller can return not ready like this when=
+ it
+>> quiesces I/O on the controller that just came on the network, during=
+ a
+>> firmware upgrade procedure, and retrying the command at the midlayer
+>> will allow the discovery to complete, successfully.
+>>
+>> Signed-off-by: Sean Stewart <sean.stewart@netapp.com>
+>> ---
+>>  drivers/scsi/device_handler/scsi_dh_alua.c | 5 +++++
+>>  1 file changed, 5 insertions(+)
+>>
+>> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/sc=
+si/device_handler/scsi_dh_alua.c
+>> index 5248c88..95d87fe 100644
+>> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
+>> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+>> @@ -454,6 +454,11 @@ static int alua_check_sense(struct scsi_device =
+*sdev,
+>>  {
+>>  	switch (sense_hdr->sense_key) {
+>>  	case NOT_READY:
+>> +		if (sense_hdr->asc =3D=3D 0x04 && sense_hdr->ascq =3D=3D 0x01)
+>> +			/*
+>> +			 * LUN Not Ready -- In process of becoming ready
+>> +			 */
+>> +			return ADD_TO_MLQUEUE;
+>=20
+> It seems like the check_sense callout is being used to work around
+> scsi-ml in a lot of the additions that are not alua specific. If this=
+ is
+> meant for a specific target then it should not be here. If this is
+> non-alua specific behavior then it should also not be here either.
+>=20
+> If the IO was not a REQ_TYPE_BLOCK_PC request, then it would retried =
+by
+> scsi_io_completion. Same with the other ones like inquiry data change=
+d,
+> report luns data changed, etc.
+>=20
+> Are we sure we don't want to fix the REQ_TYPE_BLOCK_PC/scsi_execute*
+> users to retry, or to add some new flag that those users can use that
+> tells scsi-ml to retry like it normally would so callers do not have =
+to
+> check for all these errors, or just add these to scsi_decide_disposit=
+ion?
+>=20
+Yes, that's definitely a better idea. I've stumbled across this
+issue several times now.
 
-Cc: Sumit Saxena <sumit.saxena@lsi.com>
-Cc: Adam Radford <aradford@gmail.com>
-Signed-off-by: Tomas Henzl <thenzl@redhat.com>
----
- drivers/scsi/megaraid/megaraid_sas_base.c | 53 +++++++------------------------
- 1 file changed, 11 insertions(+), 42 deletions(-)
+Cheers,
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 1153ac4..806ac60 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -2621,10 +2621,7 @@ int
- megasas_transition_to_ready(struct megasas_instance *instance, int ocr)
- {
- 	int i;
--	u8 max_wait;
--	u32 fw_state;
--	u32 cur_state;
--	u32 abs_state, curr_abs_state;
-+	u32 fw_state, abs_state, curr_abs_state;
- 
- 	abs_state = instance->instancet->read_fw_status_reg(instance->reg_set);
- 	fw_state = abs_state & MFI_STATE_MASK;
-@@ -2639,11 +2636,9 @@ megasas_transition_to_ready(struct megasas_instance *instance, int ocr)
- 
- 		case MFI_STATE_FAULT:
- 			printk(KERN_DEBUG "megasas: FW in FAULT state!!\n");
--			if (ocr) {
--				max_wait = MEGASAS_RESET_WAIT_TIME;
--				cur_state = MFI_STATE_FAULT;
-+			if (ocr)
- 				break;
--			} else
-+			else
- 				return -ENODEV;
- 
- 		case MFI_STATE_WAIT_HANDSHAKE:
-@@ -2667,8 +2662,6 @@ megasas_transition_to_ready(struct megasas_instance *instance, int ocr)
- 					&instance->reg_set->inbound_doorbell);
- 			}
- 
--			max_wait = MEGASAS_RESET_WAIT_TIME;
--			cur_state = MFI_STATE_WAIT_HANDSHAKE;
- 			break;
- 
- 		case MFI_STATE_BOOT_MESSAGE_PENDING:
-@@ -2686,8 +2679,6 @@ megasas_transition_to_ready(struct megasas_instance *instance, int ocr)
- 				writel(MFI_INIT_HOTPLUG,
- 					&instance->reg_set->inbound_doorbell);
- 
--			max_wait = MEGASAS_RESET_WAIT_TIME;
--			cur_state = MFI_STATE_BOOT_MESSAGE_PENDING;
- 			break;
- 
- 		case MFI_STATE_OPERATIONAL:
-@@ -2723,41 +2714,17 @@ megasas_transition_to_ready(struct megasas_instance *instance, int ocr)
- 				writel(MFI_RESET_FLAGS,
- 					&instance->reg_set->inbound_doorbell);
- 
--			max_wait = MEGASAS_RESET_WAIT_TIME;
--			cur_state = MFI_STATE_OPERATIONAL;
- 			break;
- 
- 		case MFI_STATE_UNDEFINED:
- 			/*
- 			 * This state should not last for more than 2 seconds
- 			 */
--			max_wait = MEGASAS_RESET_WAIT_TIME;
--			cur_state = MFI_STATE_UNDEFINED;
--			break;
--
- 		case MFI_STATE_BB_INIT:
--			max_wait = MEGASAS_RESET_WAIT_TIME;
--			cur_state = MFI_STATE_BB_INIT;
--			break;
--
- 		case MFI_STATE_FW_INIT:
--			max_wait = MEGASAS_RESET_WAIT_TIME;
--			cur_state = MFI_STATE_FW_INIT;
--			break;
--
- 		case MFI_STATE_FW_INIT_2:
--			max_wait = MEGASAS_RESET_WAIT_TIME;
--			cur_state = MFI_STATE_FW_INIT_2;
--			break;
--
- 		case MFI_STATE_DEVICE_SCAN:
--			max_wait = MEGASAS_RESET_WAIT_TIME;
--			cur_state = MFI_STATE_DEVICE_SCAN;
--			break;
--
- 		case MFI_STATE_FLUSH_CACHE:
--			max_wait = MEGASAS_RESET_WAIT_TIME;
--			cur_state = MFI_STATE_FLUSH_CACHE;
- 			break;
- 
- 		default:
-@@ -2767,24 +2734,26 @@ megasas_transition_to_ready(struct megasas_instance *instance, int ocr)
- 		}
- 
- 		/*
--		 * The cur_state should not last for more than max_wait secs
-+		 * The cur_abs_state should not last for more than
-+		 * MEGASAS_RESET_WAIT_TIME secs
- 		 */
--		for (i = 0; i < (max_wait * 1000); i++) {
-+		for (i = 0; i < (MEGASAS_RESET_WAIT_TIME * 1000); i++) {
- 			curr_abs_state = instance->instancet->
- 				read_fw_status_reg(instance->reg_set);
- 
--			if (abs_state == curr_abs_state) {
-+			if (abs_state == curr_abs_state)
- 				msleep(1);
--			} else
-+			else
- 				break;
- 		}
- 
- 		/*
--		 * Return error if fw_state hasn't changed after max_wait
-+		 * Return error if fw_state hasn't changed
-+		 * after MEGASAS_RESET_WAIT_TIME
- 		 */
- 		if (curr_abs_state == abs_state) {
- 			printk(KERN_DEBUG "FW state [%d] hasn't changed "
--			       "in %d secs\n", fw_state, max_wait);
-+			       "in %d secs\n", fw_state, MEGASAS_RESET_WAIT_TIME);
- 			return -ENODEV;
- 		}
- 
--- 
-1.8.3.1
-
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
