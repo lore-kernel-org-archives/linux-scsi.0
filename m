@@ -1,33 +1,33 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 71231] System unresponsable after a lot of LUNs have been added
- to the system
-Date: Fri, 28 Feb 2014 13:09:44 +0000
-Message-ID: <bug-71231-11613-WBjKhIWmWk@https.bugzilla.kernel.org/>
-References: <bug-71231-11613@https.bugzilla.kernel.org/>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: [PATCH 0/2] megaraid_sas: fix a small problem when reading state value from hw
+Date: Fri, 28 Feb 2014 15:54:35 +0100
+Message-ID: <1393599277-30904-1-git-send-email-thenzl@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:37627 "EHLO mail.kernel.org"
+Received: from mx1.redhat.com ([209.132.183.28]:17445 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752439AbaB1NJr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 Feb 2014 08:09:47 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 40E0B202B8
-	for <linux-scsi@vger.kernel.org>; Fri, 28 Feb 2014 13:09:46 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id CC2B9202AE
-	for <linux-scsi@vger.kernel.org>; Fri, 28 Feb 2014 13:09:44 +0000 (UTC)
-In-Reply-To: <bug-71231-11613@https.bugzilla.kernel.org/>
+	id S1752205AbaB1OzX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 Feb 2014 09:55:23 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
+Cc: jbottomley@parallels.com, Tomas Henzl <thenzl@redhat.com>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=71231
+Hi all,
 
---- Comment #4 from Alex <alexandernaumann@gmx.de> ---
-Kernel 3.13.1 is fine too.
+I have posted almost the same fix back 2011 http://www.spinics.net/lists/linux-scsi/msg50624.html
+now it looks like someone was really hit by the hw read race.
+This patch is split into two part - the first patch fixes the actual race,
+the second is a bonus, it just removes some almost unused variables from the same function
+with no functional change.
+
+
+Tomas Henzl (2):
+  megaraid_sas: fix a small problem when reading state value from hw
+  megaraid_sas: remove unused variables
+
+ drivers/scsi/megaraid/megaraid_sas_base.c | 68 ++++++++-----------------------
+ 1 file changed, 18 insertions(+), 50 deletions(-)
 
 -- 
-You are receiving this mail because:
-You are the assignee for the bug.
+1.8.3.1
+
