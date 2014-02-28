@@ -1,54 +1,68 @@
-From: "Stewart, Sean" <Sean.Stewart@netapp.com>
-Subject: [PATCH] scsi_dh_alua: Requeue another not ready check
- condition at ML
-Date: Fri, 28 Feb 2014 00:14:20 +0000
-Message-ID: <8255ED565A0EAA4A960625E27D49DBF24AC8B21D@SACEXCMBX04-PRD.hq.netapp.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Eiichi Tsukata <eiichi.tsukata.xh@hitachi.com>
+Subject: [RESEND PATCH v3] scsi: Add timeout to avoid infinite command retry
+Date: Fri, 28 Feb 2014 10:13:02 +0900
+Message-ID: <20140228011302.7250.37517.stgit@ltc223.sdl.hitachi.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-Content-Language: en-US
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: JBottomley@parallels.com, linux-scsi@vger.kernel.org
+Cc: clbchenlibo.chen@huawei.com, handai.szj@gmail.com, linux-kernel@vger.kernel.org, yrl.pp-manager.tt@hitachi.com
 List-Id: linux-scsi@vger.kernel.org
 
-This allows the sd driver to retry commands like read capacity until a
-LUN is ready, rather than giving up after three retries.
+Currently, scsi error handling in scsi_io_completion() tries to
+unconditionally requeue scsi command when device keeps some error state.
+For example, UNIT_ATTENTION causes infinite retry with
+action == ACTION_RETRY.
+This is because retryable errors are thought to be temporary and the scsi
+device will soon recover from those errors. Normally, such retry policy is
+appropriate because the device will soon recover from temporary error state.
 
-In NetApp E-Series, a controller can return not ready like this when it
-quiesces I/O on the controller that just came on the network, during a
-firmware upgrade procedure, and retrying the command at the midlayer
-will allow the discovery to complete, successfully.
+But there is no guarantee that device is able to recover from error state
+immediately. Some hardware error can prevent device from recovering.
 
-Signed-off-by: Sean Stewart <sean.stewart@netapp.com>
+This patch adds timeout in scsi_io_completion() to avoid infinite command
+retry in scsi_io_completion(). Once scsi command retry time is longer than
+this timeout, the command is treated as failure.
+
+Changes in v3:
+ - use existing timeout instead of adding new sysfs attribute
+   (Thanks to James)
+
+Changes in v2:
+ - check retry timeout in scsi_io_completion() instead of scsi_softirq_done()
+
+Signed-off-by: Eiichi Tsukata <eiichi.tsukata.xh@hitachi.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 ---
- drivers/scsi/device_handler/scsi_dh_alua.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/scsi/scsi_lib.c |    7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index 5248c88..95d87fe 100644
---- a/drivers/scsi/device_handler/scsi_dh_alua.c
-+++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -454,6 +454,11 @@ static int alua_check_sense(struct scsi_device *sdev,
- {
- 	switch (sense_hdr->sense_key) {
- 	case NOT_READY:
-+		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x01)
-+			/*
-+			 * LUN Not Ready -- In process of becoming ready
-+			 */
-+			return ADD_TO_MLQUEUE;
- 		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x0a)
- 			/*
- 			 * LUN Not Accessible - ALUA state transition
--- 
-1.8.3.1
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 62ec84b..f97a1a6 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -788,6 +788,7 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 	enum {ACTION_FAIL, ACTION_REPREP, ACTION_RETRY,
+ 	      ACTION_DELAYED_RETRY} action;
+ 	char *description = NULL;
++	unsigned long wait_for = (cmd->allowed + 1) * req->timeout;
+ 
+ 	if (result) {
+ 		sense_valid = scsi_command_normalize_sense(cmd, &sshdr);
+@@ -989,6 +990,12 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 		action = ACTION_FAIL;
+ 	}
+ 
++	if (action != ACTION_FAIL &&
++	    time_before(cmd->jiffies_at_alloc + wait_for, jiffies)) {
++		action = ACTION_FAIL;
++		description = "Command timed out";
++	}
++
+ 	switch (action) {
+ 	case ACTION_FAIL:
+ 		/* Give up and fail the remainder of the request */
