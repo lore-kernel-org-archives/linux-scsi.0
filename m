@@ -1,70 +1,43 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH] scsi: storvsc_device_destroy NULL pointer fix
-Date: Fri, 28 Feb 2014 02:08:26 +0000
-Message-ID: <3f6f360973de44bcb1991c510ca8a81e@BY2PR03MB299.namprd03.prod.outlook.com>
-References: <1393495410-17575-1-git-send-email-alnovak@suse.cz>
+From: Ren Mingxin <renmx@cn.fujitsu.com>
+Subject: Re: [PATCH 7/8] scsi: Add 'eh_deadline' to limit SCSI EH runtime
+Date: Fri, 28 Feb 2014 15:01:33 +0800
+Message-ID: <5310344D.8090400@cn.fujitsu.com>
+References: <1382518282-107606-1-git-send-email-hare@suse.de> <1382518282-107606-8-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1393495410-17575-1-git-send-email-alnovak@suse.cz>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Ales Novak <alnovak@suse.cz>, "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "jkosina@suse.cz" <jkosina@suse.cz>, Thomas Abraham <tabraham@suse.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cn.fujitsu.com ([222.73.24.84]:65012 "EHLO song.cn.fujitsu.com"
+	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1751334AbaB1G6H (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 Feb 2014 01:58:07 -0500
+In-Reply-To: <1382518282-107606-8-git-send-email-hare@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>
 
+Hi, Hannes:
 
+On 10/23/2013 04:51 PM, Hannes Reinecke wrote:
+> This patchs adds an 'eh_deadline' sysfs attribute to the scsi
+> host which limits the overall runtime of the SCSI EH.
 
-> -----Original Message-----
-> From: Ales Novak [mailto:alnovak@suse.cz]
-> Sent: Thursday, February 27, 2014 2:04 AM
-> To: KY Srinivasan; James E.J. Bottomley
-> Cc: linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org;
-> jkosina@suse.cz; Ales Novak; Thomas Abraham
-> Subject: [PATCH] scsi: storvsc_device_destroy NULL pointer fix
-> 
-> If the initialization of storvsc fails, the storvsc_device_destroy() causes NULL
-> pointer dereference.
-> 
-> storvsc_bus_scan()
->   scsi_scan_target()
->     __scsi_scan_target()
->       scsi_probe_and_add_lun(hostdata=NULL)
->         scsi_alloc_sdev(hostdata=NULL)
-> 
-> 	  sdev->hostdata = hostdata
-> 
-> 	  now the host allocation fails
-> 
->           __scsi_remove_device(sdev)
-> 
-> 	  calls sdev->host->hostt->slave_destroy() ==
-> 	  storvsc_device_destroy(sdev)
-> 	    access of sdev->hostdata->request_mempool
-> 
-> Signed-off-by: Ales Novak <alnovak@suse.cz>
-> Signed-off-by: Thomas Abraham <tabraham@suse.com>
-> Acked-by: Jiri Kosina <jkosina@suse.cz>
+As you known, adding to scsi host means such interface has also been
+added to the SATA and USB controllers. But to users, I think it is
+possible that there are 3 confusing points below:
 
-Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
-> ---
->  drivers/scsi/storvsc_drv.c | 3 +++
->  1 file changed, 3 insertions(+)
-> 
-> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c index
-> 17d7404..9969fa1 100644
-> --- a/drivers/scsi/storvsc_drv.c
-> +++ b/drivers/scsi/storvsc_drv.c
-> @@ -1419,6 +1419,9 @@ static void storvsc_device_destroy(struct
-> scsi_device *sdevice)  {
->  	struct stor_mem_pools *memp = sdevice->hostdata;
-> 
-> +	if (!memp)
-> +		return;
-> +
->  	mempool_destroy(memp->request_mempool);
->  	kmem_cache_destroy(memp->request_pool);
->  	kfree(memp);
-> --
-> 1.8.1.4
+1) There should not be this sysfs interface for SATA controllers, for
+    such interface will not work under SATA's own EH policy;
+2) There should not be this sysfs interface for USB controllers,
+    because probably they will not consider EH recovery to USB ones;
+3) They are not willing to affect SATA/USB controllers(even if their
+    sysfs interfaces) while setting global interafce by assigning scsi
+    module parameter.
+
+I was thinking how to mask SATA/USB controllers, but havn't a perfect
+solution so far, for it seems that it is not clever enough to mask
+them in each controller driver. Do you have any idea about above?
+
+Thanks,
+Ren
