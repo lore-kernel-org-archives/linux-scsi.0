@@ -1,54 +1,52 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 7/8] scsi: Add 'eh_deadline' to limit SCSI EH runtime
-Date: Fri, 28 Feb 2014 08:24:50 +0100
-Message-ID: <531039C2.5000307@suse.de>
-References: <1382518282-107606-1-git-send-email-hare@suse.de> <1382518282-107606-8-git-send-email-hare@suse.de> <5310344D.8090400@cn.fujitsu.com>
+Subject: Re: [PATCHv7 0/3][Resend] Display EVPD pages in sysfs
+Date: Fri, 28 Feb 2014 08:27:12 +0100
+Message-ID: <53103A50.5090603@suse.de>
+References: <1392287281-75002-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:52609 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:52634 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750750AbaB1HYw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 Feb 2014 02:24:52 -0500
-In-Reply-To: <5310344D.8090400@cn.fujitsu.com>
+	id S1751722AbaB1H1N (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 Feb 2014 02:27:13 -0500
+In-Reply-To: <1392287281-75002-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ren Mingxin <renmx@cn.fujitsu.com>
-Cc: James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>
+To: James Bottomley <jbottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>
 
-On 02/28/2014 08:01 AM, Ren Mingxin wrote:
-> Hi, Hannes:
+On 02/13/2014 11:27 AM, Hannes Reinecke wrote:
+> Hi all,
 >=20
-> On 10/23/2013 04:51 PM, Hannes Reinecke wrote:
->> This patchs adds an 'eh_deadline' sysfs attribute to the scsi
->> host which limits the overall runtime of the SCSI EH.
+> After discussion with jejb I've dropped the EVPD parsing.
+> So with this version we're just displaying the EVPD page
+> 0x80 and 0x83 as hexdumps; no parsing is attempted.
+> This drastically simplifies the patch, and we don't
+> have to worry about any parsing errors in kernel space.
+> Of course we'll need a parser in userspace, but that
+> doesn't need to do any I/O. So it's still a very nice
+> gain.
 >=20
-> As you known, adding to scsi host means such interface has also been
-> added to the SATA and USB controllers. But to users, I think it is
-> possible that there are 3 confusing points below:
+> (I had to redo the patchset as it no longer applied to
+>  -rc2. Hence the resend. Sorry for that.)
 >=20
-> 1) There should not be this sysfs interface for SATA controllers, for
->    such interface will not work under SATA's own EH policy;
-> 2) There should not be this sysfs interface for USB controllers,
->    because probably they will not consider EH recovery to USB ones;
-> 3) They are not willing to affect SATA/USB controllers(even if their
->    sysfs interfaces) while setting global interafce by assigning scsi
->    module parameter.
+> Hannes Reinecke (3):
+>   scsi_sysfs: Implement 'is_visible' callback
+>   Add EVPD page 0x83 to sysfs
+>   Add EVPD page 0x80 to sysfs
 >=20
-> I was thinking how to mask SATA/USB controllers, but havn't a perfect
-> solution so far, for it seems that it is not clever enough to mask
-> them in each controller driver. Do you have any idea about above?
+>  drivers/scsi/scsi.c        | 104 ++++++++++++++++++--
+>  drivers/scsi/scsi_scan.c   |   3 +
+>  drivers/scsi/scsi_sysfs.c  | 229 +++++++++++++++++++++++++++--------=
+----------
+>  include/scsi/scsi_device.h |   5 +
+>  4 files changed, 242 insertions(+), 99 deletions(-)
 >=20
-Yes, I have.
+James, ping?
 
-I've send a patchset titled 'Display EVPD pages in sysfs', which
-introduces the ability to mask individual (device) attributes.
-The same mechanism can easily be used for host attributes.
-
-James B indicated that those patches might be okay for inclusion,
-but so far nothing has happened with them.
-I'll ping him again.
+Anything amiss with that patchset?
 
 Cheers,
 
