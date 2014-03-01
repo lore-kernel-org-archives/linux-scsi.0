@@ -1,111 +1,54 @@
-From: Michael Schmitz <schmitzmic@gmail.com>
-Subject: [PATCH 3/3] m68k/atari - atari_scsi: punt if deadlocked
-Date: Sat,  1 Mar 2014 20:51:05 +1300
-Message-ID: <1393660265-19384-4-git-send-email-schmitz@debian.org>
-References: <1393660265-19384-1-git-send-email-schmitz@debian.org>
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <1393660265-19384-1-git-send-email-schmitz@debian.org>
-Sender: linux-m68k-owner@vger.kernel.org
-To: linux-m68k@vger.kernel.org
-Cc: geert@linux-m68k.org, JBottomley@parallels.com, linux-scsi@vger.kernel.org, arnd@arndb.de, Michael Schmitz <schmitz@debian.org>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH 1/3] m68k/atari - convert atari_scsi falcon_get_lock() to use wait_event()
+Date: Sat, 1 Mar 2014 12:53:56 +0100
+Message-ID: <201403011253.56831.arnd@arndb.de>
+References: <1393660265-19384-1-git-send-email-schmitz@debian.org> <1393660265-19384-2-git-send-email-schmitz@debian.org>
+Mime-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from moutng.kundenserver.de ([212.227.17.24]:59963 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752168AbaCALyD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 1 Mar 2014 06:54:03 -0500
+In-Reply-To: <1393660265-19384-2-git-send-email-schmitz@debian.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Michael Schmitz <schmitzmic@gmail.com>
+Cc: linux-m68k@vger.kernel.org, geert@linux-m68k.org, JBottomley@parallels.com, linux-scsi@vger.kernel.org, Michael Schmitz <schmitz@debian.org>
 
-In case a SCSI command is queued from softirq context, and another
-driver currently holds the ST-DMA lock, tell the SCSI midlevel to
-hold off queueing commands for now. Midlevel will resume play later.
+On Saturday 01 March 2014, Michael Schmitz wrote:
+> 
+> sleep_on is known broken and going away. The atari_scsi driver is one of
+> two remaining users in the falcon_get_lock() function, which is a rather
+> crazy piece of code. This does not attempt to fix the driver's locking
+> scheme in general, but at least prevents falcon_get_lock from going to
+> sleep when no other thread holds the same lock or tries to get it,
+> and we no longer schedule with irqs disabled.
+> 
+> MSch: fixed completion conditions missed in Arnds' original RFC patch.
+> 
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> Acked-by: Michael Schmitz <schmitz@debian.org>
+> Cc: Geert Uytterhoeven <geert@linux-m68k.org>
+> Cc: James E.J. Bottomley <JBottomley@parallels.com>
+> Cc: linux-scsi@vger.kernel.org
 
-Signed-off-by: Michael Schmitz <schmitz@debian.org>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: James E.J. Bottomley <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org
----
- drivers/scsi/atari_NCR5380.c |   12 +++++++++---
- drivers/scsi/atari_scsi.c    |   24 ++++++++++++++++++++----
- 2 files changed, 29 insertions(+), 7 deletions(-)
+Thanks a lot for taking care of this so quickly!
 
-diff --git a/drivers/scsi/atari_NCR5380.c b/drivers/scsi/atari_NCR5380.c
-index 465e63d..90a90e8 100644
---- a/drivers/scsi/atari_NCR5380.c
-+++ b/drivers/scsi/atari_NCR5380.c
-@@ -967,9 +967,15 @@ static int NCR5380_queue_command_lck(Scsi_Cmnd *cmd, void (*done)(Scsi_Cmnd *))
- 	 * alter queues and touch the lock.
- 	 */
- 	if (!IS_A_TT()) {
--		/* perhaps stop command timer here */
--		falcon_get_lock();
--		/* perhaps restart command timer here */
-+		/* MSch 20140119: check whether obtaining the ST-DMA lock did
-+		 * succeed.
-+		 * If the lock could not be acquired without risking to
-+		 * deadlock, i.e. from softirq context with ST-DMA currently
-+		 * otherwise locked, defer queueing further commands.
-+		 */
-+		if (falcon_get_lock()) {
-+			return SCSI_MLQUEUE_HOST_BUSY;
-+		}
- 	}
- 	if (!(hostdata->issue_queue) || (cmd->cmnd[0] == REQUEST_SENSE)) {
- 		LIST(cmd, hostdata->issue_queue);
-diff --git a/drivers/scsi/atari_scsi.c b/drivers/scsi/atari_scsi.c
-index 4ae0c1a..30c7385 100644
---- a/drivers/scsi/atari_scsi.c
-+++ b/drivers/scsi/atari_scsi.c
-@@ -197,7 +197,7 @@ static unsigned long atari_dma_xfer_len(unsigned long wanted_len,
- static irqreturn_t scsi_tt_intr(int irq, void *dummy);
- static irqreturn_t scsi_falcon_intr(int irq, void *dummy);
- static void falcon_release_lock_if_possible(struct NCR5380_hostdata *hostdata);
--static void falcon_get_lock(void);
-+static int falcon_get_lock(void);
- #ifdef CONFIG_ATARI_SCSI_RESET_BOOT
- static void atari_scsi_reset_boot(void);
- #endif
-@@ -541,12 +541,12 @@ static void falcon_release_lock_if_possible(struct NCR5380_hostdata *hostdata)
-  * Complicated, complicated.... Sigh...
-  */
- 
--static void falcon_get_lock(void)
-+static int falcon_get_lock(void)
- {
- 	unsigned long flags;
- 
- 	if (IS_A_TT())
--		return;
-+		return 0;
- 
- 	local_irq_save(flags);
- 
-@@ -557,8 +557,23 @@ static void falcon_get_lock(void)
- 
- 	while (!falcon_got_lock) {
- 		if (in_irq())
--			panic("Falcon SCSI hasn't ST-DMA lock in interrupt");
-+			panic("Falcon SCSI hasn't got ST-DMA lock in irq");
- 		if (!falcon_trying_lock) {
-+			if (in_interrupt()) {
-+				if (stdma_islocked()) {
-+					/* MSch 20140119: problem -
-+					 * cannot schedule in interrupt!
-+					 * Unless stdma_lock can be modified
-+					 * to interruptible wait, this will
-+					 * be needed to avoid deadlocking here!
-+					 * Return error to indicate command
-+					 * queueing would deadlock, and allow
-+					 * queue_command() to stall queueing.
-+					 */
-+					local_irq_restore(flags);
-+					return 1;
-+				}
-+			}
- 			falcon_trying_lock = 1;
- 			stdma_lock(scsi_falcon_intr, NULL);
- 			falcon_got_lock = 1;
-@@ -575,6 +590,7 @@ static void falcon_get_lock(void)
- 	local_irq_restore(flags);
- 	if (!falcon_got_lock)
- 		panic("Falcon SCSI: someone stole the lock :-(\n");
-+	return 0;
- }
- 
- 
--- 
-1.7.0.4
+A minor note about patch processing: The normal way to forward
+a patch from another person is to add your 'Signed-off-by:' line
+below the one from the original submitter, i.e. in the place where
+you have the 'Acked-by:'. Not sure if you just forgot to update
+your patch or you weren't aware of that. Geert will be able to
+fix that when he adds his own Signed-off-by line.
+
+Also if you want to preserve authorship of the patch, you can add
+as the first line before the description a line 'From: Arnd Bergmann
+<arnd@arndb.de>'. Since you modified most the lines I originally
+changed and the patch is very small, I don't care about having
+me listed as the author, it's absolutely ok to have you listed here,
+just explaining it here in case you intended differently.
+
+	Arnd
