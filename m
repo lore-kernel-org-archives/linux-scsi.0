@@ -1,192 +1,187 @@
-From: Anil Gurumurthy <Anil.Gurumurthy@qlogic.com>
-Subject: RE: [PATCH v2 03/23] bfa: Cleanup bfad_setup_intr() function
-Date: Sun, 2 Mar 2014 08:02:24 +0000
-Message-ID: <20B1A3CBD98F3845B3F5F56D8597EF59F7A207@avmb2.qlogic.org>
-References: <cover.1393191330.git.agordeev@redhat.com>
- <c3fb3d552113a7c180741cf9f577081fc690366f.1393191330.git.agordeev@redhat.com>
+From: <Sumit.Saxena@lsi.com>
+Subject: [PATCH/RESEND 4/4] megaraid_sas : Performance boost fixes
+Date: Sun, 2 Mar 2014 05:28:11 +0530
+Message-ID: <201403020759.s227xWs6017901@cosmhbs0.lsi.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_000_20B1A3CBD98F3845B3F5F56D8597EF59F7A207avmb2qlogicorg_"
-Return-path: <linux-pci-owner@vger.kernel.org>
-In-Reply-To: <c3fb3d552113a7c180741cf9f577081fc690366f.1393191330.git.agordeev@redhat.com>
-Content-Language: en-US
-Sender: linux-pci-owner@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>, linux-kernel <linux-kernel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-pci <linux-pci@vger.kernel.org>
-List-Id: linux-scsi@vger.kernel.org
-
---_000_20B1A3CBD98F3845B3F5F56D8597EF59F7A207avmb2qlogicorg_
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bn1blp0186.outbound.protection.outlook.com ([207.46.163.186]:27160
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751741AbaCBICf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 2 Mar 2014 03:02:35 -0500
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, jbottomley@parallels.com, megaraidlinux@lsi.com
+Cc: aradford@gmail.com
 
-Patch look good.
-Acked-by: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
+Please ignore last sent patch on performance boost with subject line - "[PATCH 4/4] megaraid_sas : Performance boost fixes"
+Resending the performance boost patch with one change being reverted back- Remove host lock for queuecommand for asynchronous IO submission
+, Host lock is added back around queuecommand. Host lock removal can create race conditon between ISR path(when RAID map update interrupt 
+is raised) and IO build path of driver, since IO build path is making use of RAID map, and in case of RAID map update interrupt, old RAID
+map copy is memset to zero, which some IOs may be referencing in build IO path.
+Changes done for performance boost-
+1) Added code to set SMP IRQ affinity per CPU.
+2) Pass MSI-x index, while issuing sysPD IO.
 
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.kernel=
-.org] On Behalf Of Alexander Gordeev
-Sent: 24 February 2014 13:32
-To: linux-kernel
-Cc: Alexander Gordeev; Anil Gurumurthy; Vijaya Mohan Guvva; linux-scsi; lin=
-ux-pci
-Subject: [PATCH v2 03/23] bfa: Cleanup bfad_setup_intr() function
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Anil Gurumurthy <agurumur@brocade.com>
-Cc: Vijaya Mohan Guvva <vmohan@brocade.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
+Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
+Signed-off-by: Sumit Saxena <sumit.saxena@lsi.com>
 ---
- drivers/scsi/bfa/bfad.c |   18 ++++++++----------
- 1 files changed, 8 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c index 972ff8=
-d..e7e4774 100644
---- a/drivers/scsi/bfa/bfad.c
-+++ b/drivers/scsi/bfa/bfad.c
-@@ -1219,7 +1219,7 @@ bfad_install_msix_handler(struct bfad_s *bfad)  int  =
-bfad_setup_intr(struct bfad_s *bfad)  {
--       int error =3D 0;
-+       int error;
-        u32 mask =3D 0, i, num_bit =3D 0, max_bit =3D 0;
-        struct msix_entry msix_entries[MAX_MSIX_ENTRY];
-        struct pci_dev *pdev =3D bfad->pcidev;
-@@ -1279,20 +1279,18 @@ bfad_setup_intr(struct bfad_s *bfad)
-
-                bfad->bfad_flags |=3D BFAD_MSIX_ON;
-
--               return error;
-+               return 0;
-        }
-
- line_based:
--       error =3D 0;
--       if (request_irq
--           (bfad->pcidev->irq, (irq_handler_t) bfad_intx, BFAD_IRQ_FLAGS,
--            BFAD_DRIVER_NAME, bfad) !=3D 0) {
--               /* Enable interrupt handler failed */
--               return 1;
--       }
-+       error =3D request_irq(bfad->pcidev->irq, (irq_handler_t)bfad_intx,
-+                           BFAD_IRQ_FLAGS, BFAD_DRIVER_NAME, bfad);
-+       if (error)
-+               return error;
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index 74cd884..d2faa61 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -4246,7 +4246,7 @@ fail_set_dma_mask:
+ static int megasas_probe_one(struct pci_dev *pdev,
+ 			     const struct pci_device_id *id)
+ {
+-	int rval, pos, i, j;
++	int rval, pos, i, j, cpu;
+ 	struct Scsi_Host *host;
+ 	struct megasas_instance *instance;
+ 	u16 control = 0;
+@@ -4419,7 +4419,8 @@ retry_irq_register:
+ 	 * Register IRQ
+ 	 */
+ 	if (instance->msix_vectors) {
+-		for (i = 0 ; i < instance->msix_vectors; i++) {
++		cpu = cpumask_first(cpu_online_mask);
++		for (i = 0; i < instance->msix_vectors; i++) {
+ 			instance->irq_context[i].instance = instance;
+ 			instance->irq_context[i].MSIxIndex = i;
+ 			if (request_irq(instance->msixentry[i].vector,
+@@ -4428,14 +4429,22 @@ retry_irq_register:
+ 					&instance->irq_context[i])) {
+ 				printk(KERN_DEBUG "megasas: Failed to "
+ 				       "register IRQ for vector %d.\n", i);
+-				for (j = 0 ; j < i ; j++)
++				for (j = 0; j < i; j++) {
++					irq_set_affinity_hint(
++						instance->msixentry[j].vector, NULL);
+ 					free_irq(
+ 						instance->msixentry[j].vector,
+ 						&instance->irq_context[j]);
++				}
+ 				/* Retry irq register for IO_APIC */
+ 				instance->msix_vectors = 0;
+ 				goto retry_irq_register;
+ 			}
++			if (irq_set_affinity_hint(instance->msixentry[i].vector,
++				get_cpu_mask(cpu)))
++				dev_err(&instance->pdev->dev, "Error setting"
++					"affinity hint for cpu %d\n", cpu);
++			cpu = cpumask_next(cpu, cpu_online_mask);
+ 		}
+ 	} else {
+ 		instance->irq_context[0].instance = instance;
+@@ -4489,9 +4498,12 @@ retry_irq_register:
+ 
+ 	instance->instancet->disable_intr(instance);
+ 	if (instance->msix_vectors)
+-		for (i = 0 ; i < instance->msix_vectors; i++)
++		for (i = 0; i < instance->msix_vectors; i++) {
++			irq_set_affinity_hint(
++				instance->msixentry[i].vector, NULL);
+ 			free_irq(instance->msixentry[i].vector,
+ 				 &instance->irq_context[i]);
++		}
+ 	else
+ 		free_irq(instance->pdev->irq, &instance->irq_context[0]);
+ fail_irq:
+@@ -4645,9 +4657,12 @@ megasas_suspend(struct pci_dev *pdev, pm_message_t state)
+ 	instance->instancet->disable_intr(instance);
+ 
+ 	if (instance->msix_vectors)
+-		for (i = 0 ; i < instance->msix_vectors; i++)
++		for (i = 0; i < instance->msix_vectors; i++) {
++			irq_set_affinity_hint(
++				instance->msixentry[i].vector, NULL);
+ 			free_irq(instance->msixentry[i].vector,
+ 				 &instance->irq_context[i]);
++		}
+ 	else
+ 		free_irq(instance->pdev->irq, &instance->irq_context[0]);
+ 	if (instance->msix_vectors)
+@@ -4668,7 +4683,7 @@ megasas_suspend(struct pci_dev *pdev, pm_message_t state)
+ static int
+ megasas_resume(struct pci_dev *pdev)
+ {
+-	int rval, i, j;
++	int rval, i, j, cpu;
+ 	struct Scsi_Host *host;
+ 	struct megasas_instance *instance;
+ 
+@@ -4740,6 +4755,7 @@ megasas_resume(struct pci_dev *pdev)
+ 	 * Register IRQ
+ 	 */
+ 	if (instance->msix_vectors) {
++		cpu = cpumask_first(cpu_online_mask);
+ 		for (i = 0 ; i < instance->msix_vectors; i++) {
+ 			instance->irq_context[i].instance = instance;
+ 			instance->irq_context[i].MSIxIndex = i;
+@@ -4749,12 +4765,21 @@ megasas_resume(struct pci_dev *pdev)
+ 					&instance->irq_context[i])) {
+ 				printk(KERN_DEBUG "megasas: Failed to "
+ 				       "register IRQ for vector %d.\n", i);
+-				for (j = 0 ; j < i ; j++)
++				for (j = 0; j < i; j++) {
++					irq_set_affinity_hint(
++						instance->msixentry[j].vector, NULL);
+ 					free_irq(
+ 						instance->msixentry[j].vector,
+ 						&instance->irq_context[j]);
++				}
+ 				goto fail_irq;
+ 			}
 +
-        bfad->bfad_flags |=3D BFAD_INTX_ON;
-
--       return error;
-+       return 0;
- }
-
- void
---
-1.7.7.6
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in th=
-e body of a message to majordomo@vger.kernel.org More majordomo info at  ht=
-tp://vger.kernel.org/majordomo-info.html
-
-________________________________
-
-This message and any attached documents contain information from QLogic Cor=
-poration or its wholly-owned subsidiaries that may be confidential. If you =
-are not the intended recipient, you may not read, copy, distribute, or use =
-this information. If you have received this transmission in error, please n=
-otify the sender immediately by reply e-mail and then delete this message.
-
---_000_20B1A3CBD98F3845B3F5F56D8597EF59F7A207avmb2qlogicorg_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
-
-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
-4jvABbBwBbDD1AWxk1YQBCB3aAbwbHks8/8cYLEiDdEKwHEBsgG50QDAfySQsZEb4VHAAQACMAcx
-LnQgSS7weQhgW/C4sW7+bwVAsxKSwi+RHGAJcDlQ/nAIkAIwUpDJksgSyhIJcOc8cFKQBaBweVKQ
-DeFw4dxidRAgUpAFsXUSALIE38N5yUcR0BowyxJlXoGy8veyMT0gAHFtBAHD8rUxheP/UpALUDvw
-zlHKEQaQJJCzEv+ywhuxB3AHgMdBECDGYDtw/ySQCXALUCSQKJAr4sEzsxF/A6BT885ltkUilhVC
-2IAAHwBCAAEAAAAgAAAAQQBuAGkAbAAgAEcAdQByAHUAbQB1AHIAdABoAHkAAAAfAGUAAQAAADYA
-AABBAG4AaQBsAC4ARwB1AHIAdQBtAHUAcgB0AGgAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAA
-AB8AZAABAAAACgAAAFMATQBUAFAAAAAAAAIBQQABAAAAeAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QC
-AAAAgEEAbgBpAGwAIABHAHUAcgB1AG0AdQByAHQAaAB5AAAAUwBNAFQAUAAAAEEAbgBpAGwALgBH
-AHUAcgB1AG0AdQByAHQAaAB5AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AAl0BAAAANgAAAEEA
-bgBpAGwALgBHAHUAcgB1AG0AdQByAHQAaAB5AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwDl
-XwEAAAA+AAAAcwBpAHAAOgBhAG4AaQBsAC4AZwB1AHIAdQBtAHUAcgB0AGgAeQBAAHEAbABvAGcA
-aQBjAC4AYwBvAG0AAAAAAB8AGgwBAAAAIAAAAEEAbgBpAGwAIABHAHUAcgB1AG0AdQByAHQAaAB5
-AAAAHwAfDAEAAAA2AAAAQQBuAGkAbAAuAEcAdQByAHUAbQB1AHIAdABoAHkAQABxAGwAbwBnAGkA
-YwAuAGMAbwBtAAAAAAAfAB4MAQAAAAoAAABTAE0AVABQAAAAAAACARkMAQAAAHgAAAAAAAAAgSsf
-pL6jEBmdbgDdAQ9UAgAAAIBBAG4AaQBsACAARwB1AHIAdQBtAHUAcgB0AGgAeQAAAFMATQBUAFAA
-AABBAG4AaQBsAC4ARwB1AHIAdQBtAHUAcgB0AGgAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAf
-AAFdAQAAADYAAABBAG4AaQBsAC4ARwB1AHIAdQBtAHUAcgB0AGgAeQBAAHEAbABvAGcAaQBjAC4A
-YwBvAG0AAAAAAB8A+D8BAAAAIAAAAEEAbgBpAGwAIABHAHUAcgB1AG0AdQByAHQAaAB5AAAAHwAj
-QAEAAAA2AAAAQQBuAGkAbAAuAEcAdQByAHUAbQB1AHIAdABoAHkAQABxAGwAbwBnAGkAYwAuAGMA
-bwBtAAAAAAAfACJAAQAAAAoAAABTAE0AVABQAAAAAAACAfk/AQAAAHgAAAAAAAAAgSsfpL6jEBmd
-bgDdAQ9UAgAAAIBBAG4AaQBsACAARwB1AHIAdQBtAHUAcgB0AGgAeQAAAFMATQBUAFAAAABBAG4A
-aQBsAC4ARwB1AHIAdQBtAHUAcgB0AGgAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAldAQAA
-ADYAAABBAG4AaQBsAC4ARwB1AHIAdQBtAHUAcgB0AGgAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0A
-AAAAAB8AMUABAAAAAgAAAAAAAAALAEA6AQAAAB8AMEABAAAAAgAAAAAAAAAfABoAAQAAABIAAABJ
-AFAATQAuAE4AbwB0AGUAAAAAAAMA8T8JBAAACwBAOgEAAAADAP0/5AQAAAIBCzABAAAAEAAAAMvG
-OukvqhdFgkFQB7dzAm8DABcAAQAAAEAAOQAAqLO+7TXPAUAACDC1dh2/7TXPAQsAKQAAAAAACwAj
-AAAAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAeAAAAYQBjAGMAZQBwAHQAbABhAG4AZwB1AGEA
-ZwBlAAAAAAABAAAADAAAAGUAbgAtAFUAUwAAAAsAAIAIIAYAAAAAAMAAAAAAAABGAAAAAAaFAAAA
-AAAAHwA3AAEAAAB6AAAAUgBFADoAIABbAFAAQQBUAEMASAAgAHYAMgAgADAAMwAvADIAMwBdACAA
-YgBmAGEAOgAgAEMAbABlAGEAbgB1AHAAIABiAGYAYQBkAF8AcwBlAHQAdQBwAF8AaQBuAHQAcgAo
-ACkAIABmAHUAbgBjAHQAaQBvAG4AAAAAAB8APQABAAAACgAAAFIARQA6ACAAAAAAAAMANgAAAAAA
-AwAuAAAAAAAfAEIQAQAAAJwAAAA8AGMAMwBmAGIAMwBkADUANQAyADEAMQAzAGEANwBjADEAOAAw
-ADcANAAxAGMAZgA5AGYANQA3ADcAMAA4ADEAZgBjADYAOQAwADMANgA2AGYALgAxADMAOQAzADEA
-OQAxADMAMwAwAC4AZwBpAHQALgBhAGcAbwByAGQAZQBlAHYAQAByAGUAZABoAGEAdAAuAGMAbwBt
-AD4AAAACAXEAAQAAABsAAAABAc8xON5Z6NPEnf45R5ibBjPc6+Vams147yAAHwBwAAEAAAByAAAA
-WwBQAEEAVABDAEgAIAB2ADIAIAAwADMALwAyADMAXQAgAGIAZgBhADoAIABDAGwAZQBhAG4AdQBw
-ACAAYgBmAGEAZABfAHMAZQB0AHUAcABfAGkAbgB0AHIAKAApACAAZgB1AG4AYwB0AGkAbwBuAAAA
-AAAfADUQAQAAAHQAAAA8ADIAMABCADEAQQAzAEMAQgBEADkAOABGADMAOAA0ADUAQgAzAEYANQBG
-ADUANgBEADgANQA5ADcARQBGADUAOQBGADcAQQAyADAANwBAAGEAdgBtAGIAMgAuAHEAbABvAGcA
-aQBjAC4AbwByAGcAPgAAAB8AORABAAAA8gAAADwAYwBvAHYAZQByAC4AMQAzADkAMwAxADkAMQAz
-ADMAMAAuAGcAaQB0AC4AYQBnAG8AcgBkAGUAZQB2AEAAcgBlAGQAaABhAHQALgBjAG8AbQA+ACAA
-PABjADMAZgBiADMAZAA1ADUAMgAxADEAMwBhADcAYwAxADgAMAA3ADQAMQBjAGYAOQBmADUANwA3
-ADAAOAAxAGYAYwA2ADkAMAAzADYANgBmAC4AMQAzADkAMwAxADkAMQAzADMAMAAuAGcAaQB0AC4A
-YQBnAG8AcgBkAGUAZQB2AEAAcgBlAGQAaABhAHQALgBjAG8AbQA+AAAAAAADAN4/n04AAAsAAIAI
-IAYAAAAAAMAAAAAAAABGAAAAAAOFAAAAAAAAAwAAgAggBgAAAAAAwAAAAAAAAEYAAAAAAYUAAAAA
-AAADAIAQ/////0AABzB1ft697TXPAQsAAgABAAAAAwAmAAAAAAALACsAAAAAAAIBRwABAAAALwAA
-AGM9VVM7YT0gO3A9UUxvZ2ljO2w9QVZNQjItMTQwMzAyMDgwMjI0Wi0xNDg1OTAAAAIBEDABAAAA
-RgAAAAAAAACl9rpY+JScQJeq5kM6RFa/BwAgsaPL2Y84RbP19W2Fl+9ZAAAA9I0YAABnBDGMy3Gi
-SKVd3se6CF95AEt6pYzLAAAAAB8A+j8BAAAAIAAAAEEAbgBpAGwAIABHAHUAcgB1AG0AdQByAHQA
-aAB5AAAAAwAJWQEAAAADAACACCAGAAAAAADAAAAAAAAARgAAAAAQhQAAAAAAAAsAAIAIIAYAAAAA
-AMAAAAAAAABGAAAAAA6FAAAAAAAAAwAAgAggBgAAAAAAwAAAAAAAAEYAAAAAGIUAAAAAAAALAACA
-CCAGAAAAAADAAAAAAAAARgAAAACChQAAAAAAAB8AAIAIIAYAAAAAAMAAAAAAAABGAAAAANiFAAAB
-AAAAEgAAAEkAUABNAC4ATgBvAHQAZQAAAAAAAwANNP0/AAAfAACAhgMCAAAAAADAAAAAAAAARgEA
-AAAgAAAAeAAtAG0AcwAtAGgAYQBzAC0AYQB0AHQAYQBjAGgAAAABAAAAAgAAAAAAAAAfAACAhgMC
-AAAAAADAAAAAAAAARgEAAAAiAAAAeAAtAG8AcgBpAGcAaQBuAGEAdABpAG4AZwAtAGkAcAAAAAAA
-AQAAABgAAABbADEAMAAuADEALgA0AC4AMQAwAF0AAADoPw==
-
---_000_20B1A3CBD98F3845B3F5F56D8597EF59F7A207avmb2qlogicorg_--
++			if (irq_set_affinity_hint(instance->msixentry[i].vector,
++				get_cpu_mask(cpu)))
++				dev_err(&instance->pdev->dev, "Error setting"
++					"affinity hint for cpu %d\n", cpu);
++			cpu = cpumask_next(cpu, cpu_online_mask);
+ 		}
+ 	} else {
+ 		instance->irq_context[0].instance = instance;
+@@ -4853,9 +4878,12 @@ static void megasas_detach_one(struct pci_dev *pdev)
+ 	instance->instancet->disable_intr(instance);
+ 
+ 	if (instance->msix_vectors)
+-		for (i = 0 ; i < instance->msix_vectors; i++)
++		for (i = 0; i < instance->msix_vectors; i++) {
++			irq_set_affinity_hint(
++				instance->msixentry[i].vector, NULL);
+ 			free_irq(instance->msixentry[i].vector,
+ 				 &instance->irq_context[i]);
++		}
+ 	else
+ 		free_irq(instance->pdev->irq, &instance->irq_context[0]);
+ 	if (instance->msix_vectors)
+@@ -4910,9 +4938,12 @@ static void megasas_shutdown(struct pci_dev *pdev)
+ 	megasas_shutdown_controller(instance, MR_DCMD_CTRL_SHUTDOWN);
+ 	instance->instancet->disable_intr(instance);
+ 	if (instance->msix_vectors)
+-		for (i = 0 ; i < instance->msix_vectors; i++)
++		for (i = 0; i < instance->msix_vectors; i++) {
++			irq_set_affinity_hint(
++				instance->msixentry[i].vector, NULL);
+ 			free_irq(instance->msixentry[i].vector,
+ 				 &instance->irq_context[i]);
++		}
+ 	else
+ 		free_irq(instance->pdev->irq, &instance->irq_context[0]);
+ 	if (instance->msix_vectors)
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+index 0de0e63..e452f68 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+@@ -1611,6 +1611,8 @@ megasas_build_dcdb_fusion(struct megasas_instance *instance,
+ 			 MEGASAS_REQ_DESCRIPT_FLAGS_TYPE_SHIFT);
+ 		cmd->request_desc->SCSIIO.DevHandle =
+ 			local_map_ptr->raidMap.devHndlInfo[device_id].curDevHdl;
++		cmd->request_desc->SCSIIO.MSIxIndex =
++			instance->msix_vectors ? smp_processor_id() % instance->msix_vectors : 0;
+ 		/*
+ 		 * If the command is for the tape device, set the
+ 		 * FP timeout to the os layer timeout value.
