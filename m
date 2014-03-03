@@ -1,46 +1,38 @@
-From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Subject: Re: v3.14-rc2+ WARNING: CPU: 0 PID: 24108 at fs/sysfs/group.c:216
- sysfs_remove_group+0xa3/0xb0()
-Date: Mon, 3 Mar 2014 16:44:19 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1403031641231.1373-100000@iolanthe.rowland.org>
-References: <1392666936.2198.23.camel@dabdike.int.hansenpartnership.com>
+From: "Dr. Zuliu Hu" <zuliuh@live.hk>
+Subject: Lieber Freund
+Date: Mon, 03 Mar 2014 23:43:18 +0100
+Message-ID: <SERVERXix4A2DreBBsQ0000000e@horizoncpa.biz>
+Reply-To: zuliuhu2020@yahoo.com.hk
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1392666936.2198.23.camel-sFMDBYUN5F8GjUHQrlYNx2Wm91YjaHnnhRte9Li2A+AAvxtiuMwx3w@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Cc: Ronald <ronald645-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Michal =?UTF-8?Q?=EF=BF=BDmucr?= <msmucr-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from 50-195-145-93-static.hfc.comcastbusiness.net ([50.195.145.93]:6331
+	"EHLO horizoncpa.biz" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755180AbaCCX1F convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Mar 2014 18:27:05 -0500
+Content-Description: Mail message body
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Recipients <zuliuh@live.hk>
 
-On Mon, 17 Feb 2014, James Bottomley wrote:
+Lieber Freund=20
 
-> > You can tell by the way the stack trace doesn't mention USB at all.  In 
-> > fact, this is a known SCSI problem.  It has been fixed by these two 
-> > patches:
-> > 
-> > 	http://marc.info/?l=linux-scsi&m=139031645920152&w=2
-> > 	http://marc.info/?l=linux-scsi&m=139031650720168&w=2
-> > 
-> > If these patches have appeared in any git repositories yet, I don't 
-> > know where.
-> > 
-> > James, what happened to those two target-reap-infrastructure patches?  
-> > They don't seem to have reached linux-next yet, and I can't find them 
-> > in your SCSI repository on git.kernel.org.
-> 
-> Yes, I'm just about to build it.  I usually start at -rc1, but got a
-> little behind because of pressure of work.  I need them to go through a
-> full regression cycle just to make sure there aren't any new bugs, but
-> then they'll get backported to the stable kernels.
+Ich bin Dr. Zuliu Hu. Independent Non-Executive Director der Hang Seng =
+Bank Ltd, Hong Kong. Ich habe einen Gesch=E4ftsvorgang von $54,5 Millio=
+nen US-Dollar, und ich werde 30% Entsch=E4digung f=FCr Ihre Unterst=FCt=
+zung in dieser Transaktion erhalten Sie, bei Interesse kontaktieren Sie=
+ mich f=FCr weitere Details =FCber meine pers=F6nliche E-Mail: (zuliuhu=
+2020@yahoo.com.hk )=20
 
-James, these two patches appear still not to be merged in any of your 
-branches on git.kernel.org.  Will they get there in time for the next 
-merge window?
+Vollst=E4ndige Namen:=20
+Adresse:=20
+Telefon
 
-Alan Stern
-
+Gr=FC=DFe=20
+Dr. Zuliu Hu
 --
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
