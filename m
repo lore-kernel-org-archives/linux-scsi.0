@@ -1,7 +1,7 @@
-From: Emmanuel Florac <eflorac@intellique.com>
+From: adam radford <aradford@gmail.com>
 Subject: Re: Dell Shared PERC8 RAID Controller
-Date: Mon, 3 Mar 2014 21:37:12 +0100
-Message-ID: <20140303213712.6b226d01@galadriel.home>
+Date: Mon, 3 Mar 2014 13:01:40 -0800
+Message-ID: <CAHtARFHALG5gCKRde0r3sZ=rv6stbDU14Q+1MpUxT5Z4pDS-5w@mail.gmail.com>
 References: <CABA7EgDjuvvwYDxzYgO1qQLjTAXbjiqccnF0CxCsJAyz+xDZ7g@mail.gmail.com>
 	<20140303160944.50ba399d@harpe.intellique.com>
 	<CABA7EgD+YaOQXEzR25NWxkH+JQ2dN1VW3RsjN3=fLdg6OOoJcQ@mail.gmail.com>
@@ -13,45 +13,30 @@ References: <CABA7EgDjuvvwYDxzYgO1qQLjTAXbjiqccnF0CxCsJAyz+xDZ7g@mail.gmail.com>
 	<CABA7EgAFi_Geq2Kf6jAOXOLvrKPbPo+4JwWwOh2FdAmK6bkr5w@mail.gmail.com>
 	<CABA7EgC8gpzqMO=J6KvE6KHREJ=KEgEK2bkkPAUSgoLz295Ktw@mail.gmail.com>
 	<CABA7EgBFBNdgt6Dj6qHGrPKRMC_JUO4Zqu0OdYcDzv0nh9dNiA@mail.gmail.com>
+	<20140303213712.6b226d01@galadriel.home>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtpfb2-g21.free.fr ([212.27.42.10]:46961 "EHLO
-	smtpfb2-g21.free.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754472AbaCCUhl convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Mar 2014 15:37:41 -0500
-Received: from smtp5-g21.free.fr (smtp5-g21.free.fr [212.27.42.5])
-	by smtpfb2-g21.free.fr (Postfix) with ESMTP id 7604ED1AAA9
-	for <linux-scsi@vger.kernel.org>; Mon,  3 Mar 2014 21:37:37 +0100 (CET)
-In-Reply-To: <CABA7EgBFBNdgt6Dj6qHGrPKRMC_JUO4Zqu0OdYcDzv0nh9dNiA@mail.gmail.com>
+Received: from mail-yh0-f54.google.com ([209.85.213.54]:33050 "EHLO
+	mail-yh0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754125AbaCCVBl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Mar 2014 16:01:41 -0500
+Received: by mail-yh0-f54.google.com with SMTP id c41so4144475yho.13
+        for <linux-scsi@vger.kernel.org>; Mon, 03 Mar 2014 13:01:40 -0800 (PST)
+In-Reply-To: <20140303213712.6b226d01@galadriel.home>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Istvan Hubay Cebrian <istvan.cebrian@gmail.com>
-Cc: linux-scsi@vger.kernel.org
+To: Emmanuel Florac <eflorac@intellique.com>
+Cc: Istvan Hubay Cebrian <istvan.cebrian@gmail.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Le Mon, 3 Mar 2014 18:44:50 +0000 vous =C3=A9criviez:
+Istvan/Emmanuel,
 
-> Specifically stated "MegaRAID" whilst the Shared PERC 8 does not. In
-> the module listing I can't clearly identify any module that would be
-> responsible for providing support to the shared PERC 8 controller
+>> 08:00.0 RAID bus controller [0104]: LSI Logic / Symbios Logic MegaRAID
+SAS 2208 IOV [Thunderbolt] [1000:002f] (rev 05)
 
-Well I went through the module list and couldn't find anything else
-that could reasonably fit with an LSI driver, so I'm pretty sure it
-must be the megaraid driver... If only it could be a normal Linux
-system, alas.
+I will be sending a driver patch for megaraid_sas to support the Dell
+PowerEdge VRTX/Shared PERC8 device later this week.  This will allow
+you to run Linux with the megaraid_sas in Virtual Function (VF) mode
+on the VRTX blades.
 
---=20
------------------------------------------------------------------------=
--
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |	<eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
------------------------------------------------------------------------=
--
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-Adam
