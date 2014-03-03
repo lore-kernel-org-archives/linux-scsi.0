@@ -1,64 +1,46 @@
-From: Daniel Mack <zonque@gmail.com>
-Subject: [PATCH RESEND] SCSI: sd: don't fail if the device doesn't recognize SYNCHRONIZE CACHE
-Date: Mon,  3 Mar 2014 22:25:57 +0100
-Message-ID: <1393881957-12320-1-git-send-email-zonque@gmail.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ee0-f44.google.com ([74.125.83.44]:62084 "EHLO
-	mail-ee0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754005AbaCCV0G (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Mar 2014 16:26:06 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Subject: Re: v3.14-rc2+ WARNING: CPU: 0 PID: 24108 at fs/sysfs/group.c:216
+ sysfs_remove_group+0xa3/0xb0()
+Date: Mon, 3 Mar 2014 16:44:19 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1403031641231.1373-100000@iolanthe.rowland.org>
+References: <1392666936.2198.23.camel@dabdike.int.hansenpartnership.com>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1392666936.2198.23.camel-sFMDBYUN5F8GjUHQrlYNx2Wm91YjaHnnhRte9Li2A+AAvxtiuMwx3w@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
+Cc: Ronald <ronald645-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Michal =?UTF-8?Q?=EF=BF=BDmucr?= <msmucr-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: JBottomley@parallels.com, linux-scsi@vger.kernel.org
-Cc: linux-usb@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>, Oliver Neukum <oliver@neukum.org>, stable@vger.kernel.org
 
-From: Alan Stern <stern@rowland.harvard.edu>
+On Mon, 17 Feb 2014, James Bottomley wrote:
 
-Evidently some wacky USB-ATA bridges don't recognize the SYNCHRONIZE
-CACHE command, as shown in this email thread:
+> > You can tell by the way the stack trace doesn't mention USB at all.  In 
+> > fact, this is a known SCSI problem.  It has been fixed by these two 
+> > patches:
+> > 
+> > 	http://marc.info/?l=linux-scsi&m=139031645920152&w=2
+> > 	http://marc.info/?l=linux-scsi&m=139031650720168&w=2
+> > 
+> > If these patches have appeared in any git repositories yet, I don't 
+> > know where.
+> > 
+> > James, what happened to those two target-reap-infrastructure patches?  
+> > They don't seem to have reached linux-next yet, and I can't find them 
+> > in your SCSI repository on git.kernel.org.
+> 
+> Yes, I'm just about to build it.  I usually start at -rc1, but got a
+> little behind because of pressure of work.  I need them to go through a
+> full regression cycle just to make sure there aren't any new bugs, but
+> then they'll get backported to the stable kernels.
 
-	http://marc.info/?t=138978356200002&r=1&w=2
+James, these two patches appear still not to be merged in any of your 
+branches on git.kernel.org.  Will they get there in time for the next 
+merge window?
 
-The fact that we can't tell them to drain their caches shouldn't
-prevent the system from going into suspend.  Therefore sd_sync_cache()
-shouldn't return an error if the device replies with an Invalid
-Command ASC.
+Alan Stern
 
-Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
-Reported-by: Sven Neumann <s.neumann@raumfeld.com>
-Tested-by: Daniel Mack <zonque@gmail.com>
-CC: Oliver Neukum <oliver@neukum.org>
-CC: <stable@vger.kernel.org>
----
-Hi,
-
-this patch has been around for awhile, but hasn't gained much
-attraction, and hasn't been merged anywhere yet. Which is sad,
-as it fixes a bug on real hardware when going to suspend :)
-
-Could anyone from the SCSI people have a quick look maybe?
-
-Thanks,
-Daniel
-
- drivers/scsi/sd.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 470954a..36d1a23 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1463,8 +1463,8 @@ static int sd_sync_cache(struct scsi_disk *sdkp)
- 			sd_print_sense_hdr(sdkp, &sshdr);
- 		/* we need to evaluate the error return  */
- 		if (scsi_sense_valid(&sshdr) &&
--			/* 0x3a is medium not present */
--			sshdr.asc == 0x3a)
-+			(sshdr.asc == 0x3a ||	/* medium not present */
-+			 sshdr.asc == 0x20))	/* invalid command */
- 				/* this is no error here */
- 				return 0;
- 
--- 
-1.8.5.3
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
