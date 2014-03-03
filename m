@@ -1,59 +1,63 @@
-From: "Dorau, Lukasz" <lukasz.dorau@intel.com>
-Subject: RE: [PATCH v2 10/23] isci: Use pci_enable_msix_exact() instead of
- pci_enable_msix()
-Date: Mon, 3 Mar 2014 13:56:30 +0000
-Message-ID: <D9FFE20C522965449E182ACE73889AEB1A6F3E19@IRSMSX105.ger.corp.intel.com>
-References: <cover.1393191330.git.agordeev@redhat.com>
- <b6c5934fa5e2f17f49a48a38f036bcd5149455c6.1393191330.git.agordeev@redhat.com>
+From: Istvan Hubay Cebrian <istvan.cebrian@gmail.com>
+Subject: Dell Shared PERC8 RAID Controller
+Date: Mon, 3 Mar 2014 14:53:36 +0000
+Message-ID: <CABA7EgDjuvvwYDxzYgO1qQLjTAXbjiqccnF0CxCsJAyz+xDZ7g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <b6c5934fa5e2f17f49a48a38f036bcd5149455c6.1393191330.git.agordeev@redhat.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: "Patelczyk, Maciej" <maciej.patelczyk@intel.com>, "Jiang, Dave" <dave.jiang@intel.com>, intel-linux-scu <intel-linux-scu@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Paszkiewicz, Artur" <artur.paszkiewicz@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-vc0-f176.google.com ([209.85.220.176]:37703 "EHLO
+	mail-vc0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755050AbaCCOx5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Mar 2014 09:53:57 -0500
+Received: by mail-vc0-f176.google.com with SMTP id la4so3637757vcb.21
+        for <linux-scsi@vger.kernel.org>; Mon, 03 Mar 2014 06:53:56 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Monday, February 24, 2014 9:02 AM Alexander Gordeev <agordeev@redhat.com> wrote:
-> As result of deprecation of MSI-X/MSI enablement functions
-> pci_enable_msix() and pci_enable_msi_block() all drivers
-> using these two interfaces need to be updated to use the
-> new pci_enable_msi_range()  or pci_enable_msi_exact()
-> and pci_enable_msix_range() or pci_enable_msix_exact()
-> interfaces.
-> 
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> Cc: Lukasz Dorau <lukasz.dorau@intel.com>
-> Cc: Maciej Patelczyk <maciej.patelczyk@intel.com>
-> Cc: Dave Jiang <dave.jiang@intel.com>
-> Cc: intel-linux-scu@intel.com
-> Cc: linux-scsi@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
-> ---
->  drivers/scsi/isci/init.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
-> index d25d0d8..ce40538 100644
-> --- a/drivers/scsi/isci/init.c
-> +++ b/drivers/scsi/isci/init.c
-> @@ -356,7 +356,7 @@ static int isci_setup_interrupts(struct pci_dev *pdev)
->  	for (i = 0; i < num_msix; i++)
->  		pci_info->msix_entries[i].entry = i;
-> 
-> -	err = pci_enable_msix(pdev, pci_info->msix_entries, num_msix);
-> +	err = pci_enable_msix_exact(pdev, pci_info->msix_entries, num_msix);
->  	if (err)
->  		goto intx;
-> 
-> --
-> 1.7.7.6
+Hello,
 
-Looks fine.
+Am sending this email here as I think it is possibly the most
+appropriate place. If not, please disregard/ignore and my apologizes.
 
-Acked-by: Lukasz Dorau <lukasz.dorau@intel.com>
+Recently I have bought a new Dell PowerEdge VRTX Enclosure
+(http://www.dell.com/us/business/p/poweredge-vrtx/pd) that houses Dell
+PowerEdge M520 Blade server
+(http://www.dell.com/us/business/p/poweredge-m520/pd).
 
-Thanks,
-Lukasz
+This solution (http://bladesmadesimple.com/2013/06/a-detailed-look-at-dell-poweredge-vrtx/),
+released specifically for the SMB market currently only works with
+Windows Server 2008+ and VMware ESXi.
+
+This due to a controller called the Shared PERC8 RAID Controller
+(http://www.dell.com/support/drivers/us/en/19/driverdetails?driverid=7HPN0)
+which apparently is not supported in Linux.
+
+I have been trying to get feedback from Dell for nearly 1 year now but
+to no avail. Dell say's it is not supported and that it is the
+community that needs to provide the drivers first. When I asked if
+they where providing support to the community I never received a
+response.
+
+What I don't understand is how VMware ESXi which I believe uses the
+Linux Kernel is already supported and it can work with said
+controller. Possibly because it does not use MegaRAID drivers? Not
+sure.
+
+This email is either to discuss this matter further or aimed at
+requesting support for the Dell Shared PERC8 RAID Controller in order
+to allow such platforms as the VRTX and enable SMB all the advantages
+of using this hardware coupled with Linux thus allowing for a very
+budget friendly infrastructure.
+
+lspci -nn (on Dell PowerEdge M520 Blade)
+...
+01:00.0 RAID bus controller [0104]: LSI Logic / Symbios Logic MegaRAID
+SAS 2008 [Falcon] [1000:0073] (rev 03)
+08:00.0 RAID bus controller [0104]: LSI Logic / Symbios Logic MegaRAID
+SAS 2208 IOV [Thunderbolt] [1000:002f] (rev 05)
+...
+
+Sincerely,
+--
+Istvan Hubay Cebrian
