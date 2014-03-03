@@ -1,44 +1,64 @@
-From: Istvan Hubay Cebrian <istvan.cebrian@gmail.com>
-Subject: Re: Dell Shared PERC8 RAID Controller
-Date: Mon, 3 Mar 2014 21:14:02 +0000
-Message-ID: <CABA7EgBJnPcrhz_SP+++S4jvVZ82ssQ3fhVmqCaXiyyU=rKqJg@mail.gmail.com>
-References: <CABA7EgDjuvvwYDxzYgO1qQLjTAXbjiqccnF0CxCsJAyz+xDZ7g@mail.gmail.com>
- <20140303160944.50ba399d@harpe.intellique.com> <CABA7EgD+YaOQXEzR25NWxkH+JQ2dN1VW3RsjN3=fLdg6OOoJcQ@mail.gmail.com>
- <20140303163317.543e9a98@harpe.intellique.com> <CABA7EgABdoQK735L5uoW6ydVWpKM_rZSFcLpOCruTHEdcNu-ZA@mail.gmail.com>
- <20140303183531.7ffedbe6@harpe.intellique.com> <CABA7EgDUo5LZAi899-oMMnE5EkuP0GyFSQmtKtc606GG+_nAWA@mail.gmail.com>
- <20140303190535.17a21733@harpe.intellique.com> <CABA7EgAFi_Geq2Kf6jAOXOLvrKPbPo+4JwWwOh2FdAmK6bkr5w@mail.gmail.com>
- <CABA7EgC8gpzqMO=J6KvE6KHREJ=KEgEK2bkkPAUSgoLz295Ktw@mail.gmail.com>
- <CABA7EgBFBNdgt6Dj6qHGrPKRMC_JUO4Zqu0OdYcDzv0nh9dNiA@mail.gmail.com>
- <20140303213712.6b226d01@galadriel.home> <CAHtARFHALG5gCKRde0r3sZ=rv6stbDU14Q+1MpUxT5Z4pDS-5w@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+From: Daniel Mack <zonque@gmail.com>
+Subject: [PATCH RESEND] SCSI: sd: don't fail if the device doesn't recognize SYNCHRONIZE CACHE
+Date: Mon,  3 Mar 2014 22:25:57 +0100
+Message-ID: <1393881957-12320-1-git-send-email-zonque@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-vc0-f171.google.com ([209.85.220.171]:57696 "EHLO
-	mail-vc0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755001AbaCCVOX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Mar 2014 16:14:23 -0500
-Received: by mail-vc0-f171.google.com with SMTP id le5so4162746vcb.16
-        for <linux-scsi@vger.kernel.org>; Mon, 03 Mar 2014 13:14:22 -0800 (PST)
-In-Reply-To: <CAHtARFHALG5gCKRde0r3sZ=rv6stbDU14Q+1MpUxT5Z4pDS-5w@mail.gmail.com>
+Received: from mail-ee0-f44.google.com ([74.125.83.44]:62084 "EHLO
+	mail-ee0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754005AbaCCV0G (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Mar 2014 16:26:06 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: adam radford <aradford@gmail.com>
-Cc: Emmanuel Florac <eflorac@intellique.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: JBottomley@parallels.com, linux-scsi@vger.kernel.org
+Cc: linux-usb@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>, Oliver Neukum <oliver@neukum.org>, stable@vger.kernel.org
 
-> I will be sending a driver patch for megaraid_sas to support the Dell
-> PowerEdge VRTX/Shared PERC8 device later this week.  This will allow
-> you to run Linux with the megaraid_sas in Virtual Function (VF) mode
-> on the VRTX blades.
+From: Alan Stern <stern@rowland.harvard.edu>
 
-That is great news Adam! Many thanks for that. Might I just ask, was
-this something you where already working on or something more recent?
+Evidently some wacky USB-ATA bridges don't recognize the SYNCHRONIZE
+CACHE command, as shown in this email thread:
 
-Also, if its not too much trouble I would like to understand how
-support is typically added/considered, does LSI have to provide you
-with info, is the community responsible for knowing what new hardware
-is out and when possible support it, does Dell/LSI (anyone) provide
-any support in this respect? (just trying to understand if me coming
-to this mailing list was at all necessary or useful)
+	http://marc.info/?t=138978356200002&r=1&w=2
 
-In any case, this is definitely great and very welcomed news. Looking
-forward to hearing from you some more.
+The fact that we can't tell them to drain their caches shouldn't
+prevent the system from going into suspend.  Therefore sd_sync_cache()
+shouldn't return an error if the device replies with an Invalid
+Command ASC.
+
+Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+Reported-by: Sven Neumann <s.neumann@raumfeld.com>
+Tested-by: Daniel Mack <zonque@gmail.com>
+CC: Oliver Neukum <oliver@neukum.org>
+CC: <stable@vger.kernel.org>
+---
+Hi,
+
+this patch has been around for awhile, but hasn't gained much
+attraction, and hasn't been merged anywhere yet. Which is sad,
+as it fixes a bug on real hardware when going to suspend :)
+
+Could anyone from the SCSI people have a quick look maybe?
+
+Thanks,
+Daniel
+
+ drivers/scsi/sd.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 470954a..36d1a23 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1463,8 +1463,8 @@ static int sd_sync_cache(struct scsi_disk *sdkp)
+ 			sd_print_sense_hdr(sdkp, &sshdr);
+ 		/* we need to evaluate the error return  */
+ 		if (scsi_sense_valid(&sshdr) &&
+-			/* 0x3a is medium not present */
+-			sshdr.asc == 0x3a)
++			(sshdr.asc == 0x3a ||	/* medium not present */
++			 sshdr.asc == 0x20))	/* invalid command */
+ 				/* this is no error here */
+ 				return 0;
+ 
+-- 
+1.8.5.3
+
