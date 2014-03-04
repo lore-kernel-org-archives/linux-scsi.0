@@ -1,63 +1,61 @@
-From: Arvind Kumar <arvindkumar@vmware.com>
-Subject: Re: [PATCH v2 23/23] vmw_pvscsi: Use pci_enable_msix_exact()
- instead of pci_enable_msix()
-Date: Tue, 4 Mar 2014 11:27:44 -0800 (PST)
-Message-ID: <1412188603.36940054.1393961264565.JavaMail.root@vmware.com>
-References: <cover.1393191330.git.agordeev@redhat.com> <a414d28c5587e57e78777a75c07873e1535dc839.1393191330.git.agordeev@redhat.com>
+From: "Nicholas A. Bellinger" <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>
+Subject: Re: [PATCH 5/6] iser-target: Ignore completions for FRWRs in
+ isert_cq_tx_work
+Date: Tue, 04 Mar 2014 15:56:34 -0800
+Message-ID: <1393977394.30113.0.camel@haakon3.risingtidesystems.com>
+References: <1393891265-22910-1-git-send-email-nab@daterainc.com>
+	 <1393891265-22910-6-git-send-email-nab@daterainc.com>
+	 <5315E85F.2090904@dev.mellanox.co.il>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <a414d28c5587e57e78777a75c07873e1535dc839.1393191330.git.agordeev@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, pv-drivers@vmware.com, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <5315E85F.2090904-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Sagi Grimberg <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>
+Cc: "Nicholas A. Bellinger" <nab-PEzghdH756F8UrSeD/g0lQ@public.gmane.org>, target-devel <target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Alexander,
+On Tue, 2014-03-04 at 16:51 +0200, Sagi Grimberg wrote:
+> On 3/4/2014 2:01 AM, Nicholas A. Bellinger wrote:
+> > From: Nicholas Bellinger <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>
+> >
+> > This patch changes IB_WR_FAST_REG_MR + IB_WR_LOCAL_INV related
+> > work requests to include a ISER_FRWR_LI_WRID value in order to
+> > signal isert_cq_tx_work() that these requests should be ignored.
+> >
+> > This is necessary because even though IB_SEND_SIGNALED is not
+> > set for either work request, during a QP failure event the work
+> > requests will be returned with exception status from the TX
+> > completion queue.
+> >
+> > Cc: Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+> > Cc: Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+> > Signed-off-by: Nicholas Bellinger <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>
+> > ---
+> >   drivers/infiniband/ulp/isert/ib_isert.c |    8 ++++++--
+> >   drivers/infiniband/ulp/isert/ib_isert.h |    1 +
+> >   2 files changed, 7 insertions(+), 2 deletions(-)
+> >
+> > diff --git a/drivers/infiniband/ulp/isert/ib_isert.c b/drivers/infiniband/ulp/isert/ib_isert.c
+> > index c9d488f..003b5d0 100644
+> > --- a/drivers/infiniband/ulp/isert/ib_isert.c
+> > +++ b/drivers/infiniband/ulp/isert/ib_isert.c
+> > @@ -1738,8 +1738,10 @@ isert_cq_tx_work(struct work_struct *work)
+> >   			pr_debug("TX wc.status: 0x%08x\n", wc.status);
+> >   			pr_debug("TX wc.vendor_err: 0x%08x\n", wc.vendor_err);
+> >   
+> > -			atomic_dec(&isert_conn->post_send_buf_count);
+> > -			isert_cq_tx_comp_err(tx_desc, isert_conn);
+> > +			if (wc.wr_id != ISER_FRWR_LI_WRID) {
+> 
+> Better to use ISER_FASTREG_LI_WRID - I changed it in the initiator.
 
-This looks fine to me.
+<nod>, updating that bit now..
 
-Acked-by: Arvind Kumar <arvindkumar@vmware.com>
+--nab
 
-Thanks!
-Arvind
-
------ Original Message -----
-From: "Alexander Gordeev" <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: "Alexander Gordeev" <agordeev@redhat.com>, "Arvind Kumar" <arvindkumar@vmware.com>, pv-drivers@vmware.com, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-Sent: Monday, February 24, 2014 12:02:23 AM
-Subject: [PATCH v2 23/23] vmw_pvscsi: Use pci_enable_msix_exact() instead of pci_enable_msix()
-
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range()  or pci_enable_msi_exact()
-and pci_enable_msix_range() or pci_enable_msix_exact()
-interfaces.
-
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Arvind Kumar <arvindkumar@vmware.com>
-Cc: pv-drivers@vmware.com
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
----
- drivers/scsi/vmw_pvscsi.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
-index b9755ec..a046618 100644
---- a/drivers/scsi/vmw_pvscsi.c
-+++ b/drivers/scsi/vmw_pvscsi.c
-@@ -1078,7 +1078,7 @@ static int pvscsi_setup_msix(const struct pvscsi_adapter *adapter,
- 	struct msix_entry entry = { 0, PVSCSI_VECTOR_COMPLETION };
- 	int ret;
- 
--	ret = pci_enable_msix(adapter->dev, &entry, 1);
-+	ret = pci_enable_msix_exact(adapter->dev, &entry, 1);
- 	if (ret)
- 		return ret;
- 
--- 
-1.7.7.6
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
