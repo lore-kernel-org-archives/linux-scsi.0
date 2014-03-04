@@ -1,7 +1,7 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH 6/6] iser-target: Fix command leak for tx_desc->comp_llnode_batch
-Date: Tue,  4 Mar 2014 00:01:05 +0000
-Message-ID: <1393891265-22910-7-git-send-email-nab@daterainc.com>
+Subject: [PATCH 5/6] iser-target: Ignore completions for FRWRs in isert_cq_tx_work
+Date: Tue,  4 Mar 2014 00:01:04 +0000
+Message-ID: <1393891265-22910-6-git-send-email-nab@daterainc.com>
 References: <1393891265-22910-1-git-send-email-nab@daterainc.com>
 Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1393891265-22910-1-git-send-email-nab@daterainc.com>
@@ -12,148 +12,67 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch addresses a number of active I/O shutdown issues
-related to isert_cmd descriptors being leaked that are part
-of a completion interrupt coalescing batch.
+This patch changes IB_WR_FAST_REG_MR + IB_WR_LOCAL_INV related
+work requests to include a ISER_FRWR_LI_WRID value in order to
+signal isert_cq_tx_work() that these requests should be ignored.
 
-This includes adding logic in isert_cq_tx_comp_err() to
-drain any associated tx_desc->comp_llnode_batch, as well
-as isert_cq_drain_comp_llist() to drain any associated
-isert_conn->conn_comp_llist.
-
-Also, set tx_desc->llnode_active in isert_init_send_wr()
-in order to determine when work requests need to be skipped
-in isert_cq_tx_work() exception path code.
-
-Finally, update isert_init_send_wr() to only allow interrupt
-coalescing when ISER_CONN_UP.
+This is necessary because even though IB_SEND_SIGNALED is not
+set for either work request, during a QP failure event the work
+requests will be returned with exception status from the TX
+completion queue.
 
 Cc: Sagi Grimberg <sagig@mellanox.com>
 Cc: Or Gerlitz <ogerlitz@mellanox.com>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/infiniband/ulp/isert/ib_isert.c |   50 +++++++++++++++++++++++++++----
- drivers/infiniband/ulp/isert/ib_isert.h |    2 +-
- 2 files changed, 46 insertions(+), 6 deletions(-)
+ drivers/infiniband/ulp/isert/ib_isert.c |    8 ++++++--
+ drivers/infiniband/ulp/isert/ib_isert.h |    1 +
+ 2 files changed, 7 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/infiniband/ulp/isert/ib_isert.c b/drivers/infiniband/ulp/isert/ib_isert.c
-index 003b5d0..fdd3042 100644
+index c9d488f..003b5d0 100644
 --- a/drivers/infiniband/ulp/isert/ib_isert.c
 +++ b/drivers/infiniband/ulp/isert/ib_isert.c
-@@ -484,7 +484,6 @@ isert_connect_request(struct rdma_cm_id *cma_id, struct rdma_cm_event *event)
- 	kref_init(&isert_conn->conn_kref);
- 	kref_get(&isert_conn->conn_kref);
- 	mutex_init(&isert_conn->conn_mutex);
--	mutex_init(&isert_conn->conn_comp_mutex);
- 	spin_lock_init(&isert_conn->conn_lock);
- 
- 	cma_id->context = isert_conn;
-@@ -875,16 +874,17 @@ isert_init_send_wr(struct isert_conn *isert_conn, struct isert_cmd *isert_cmd,
- 	 * Coalesce send completion interrupts by only setting IB_SEND_SIGNALED
- 	 * bit for every ISERT_COMP_BATCH_COUNT number of ib_post_send() calls.
- 	 */
--	mutex_lock(&isert_conn->conn_comp_mutex);
--	if (coalesce &&
-+	mutex_lock(&isert_conn->conn_mutex);
-+	if (coalesce && isert_conn->state == ISER_CONN_UP &&
- 	    ++isert_conn->conn_comp_batch < ISERT_COMP_BATCH_COUNT) {
-+		tx_desc->llnode_active = true;
- 		llist_add(&tx_desc->comp_llnode, &isert_conn->conn_comp_llist);
--		mutex_unlock(&isert_conn->conn_comp_mutex);
-+		mutex_unlock(&isert_conn->conn_mutex);
- 		return;
- 	}
- 	isert_conn->conn_comp_batch = 0;
- 	tx_desc->comp_llnode_batch = llist_del_all(&isert_conn->conn_comp_llist);
--	mutex_unlock(&isert_conn->conn_comp_mutex);
-+	mutex_unlock(&isert_conn->conn_mutex);
- 
- 	send_wr->send_flags = IB_SEND_SIGNALED;
- }
-@@ -1680,10 +1680,45 @@ isert_send_completion(struct iser_tx_desc *tx_desc,
- }
- 
- static void
-+isert_cq_drain_comp_llist(struct isert_conn *isert_conn, struct ib_device *ib_dev)
-+{
-+	struct llist_node *llnode;
-+	struct isert_rdma_wr *wr;
-+	struct iser_tx_desc *t;
-+
-+	mutex_lock(&isert_conn->conn_mutex);
-+	llnode = llist_del_all(&isert_conn->conn_comp_llist);
-+	isert_conn->conn_comp_batch = 0;
-+	mutex_unlock(&isert_conn->conn_mutex);
-+
-+	while (llnode) {
-+		t = llist_entry(llnode, struct iser_tx_desc, comp_llnode);
-+		llnode = llist_next(llnode);
-+		wr = &t->isert_cmd->rdma_wr;
-+
-+		atomic_sub(wr->send_wr_num + 1, &isert_conn->post_send_buf_count);
-+		isert_completion_put(t, t->isert_cmd, ib_dev);
-+	}
-+}
-+
-+static void
- isert_cq_tx_comp_err(struct iser_tx_desc *tx_desc, struct isert_conn *isert_conn)
- {
- 	struct ib_device *ib_dev = isert_conn->conn_cm_id->device;
- 	struct isert_cmd *isert_cmd = tx_desc->isert_cmd;
-+	struct llist_node *llnode = tx_desc->comp_llnode_batch;
-+	struct isert_rdma_wr *wr;
-+	struct iser_tx_desc *t;
-+
-+	while (llnode) {
-+		t = llist_entry(llnode, struct iser_tx_desc, comp_llnode);
-+		llnode = llist_next(llnode);
-+		wr = &t->isert_cmd->rdma_wr;
-+
-+		atomic_sub(wr->send_wr_num + 1, &isert_conn->post_send_buf_count);
-+		isert_completion_put(t, t->isert_cmd, ib_dev);
-+	}
-+	tx_desc->comp_llnode_batch = NULL;
- 
- 	if (!isert_cmd)
- 		isert_unmap_tx_desc(tx_desc, ib_dev);
-@@ -1700,6 +1735,8 @@ isert_cq_rx_comp_err(struct isert_conn *isert_conn)
- 	if (isert_conn->post_recv_buf_count)
- 		return;
- 
-+	isert_cq_drain_comp_llist(isert_conn, ib_dev);
-+
- 	if (conn->sess) {
- 		target_sess_cmd_list_set_waiting(conn->sess->se_sess);
- 		target_wait_for_sess_cmds(conn->sess->se_sess);
-@@ -1739,6 +1776,9 @@ isert_cq_tx_work(struct work_struct *work)
+@@ -1738,8 +1738,10 @@ isert_cq_tx_work(struct work_struct *work)
+ 			pr_debug("TX wc.status: 0x%08x\n", wc.status);
  			pr_debug("TX wc.vendor_err: 0x%08x\n", wc.vendor_err);
  
- 			if (wc.wr_id != ISER_FRWR_LI_WRID) {
-+				if (tx_desc->llnode_active)
-+					continue;
-+
- 				atomic_dec(&isert_conn->post_send_buf_count);
- 				isert_cq_tx_comp_err(tx_desc, isert_conn);
- 			}
+-			atomic_dec(&isert_conn->post_send_buf_count);
+-			isert_cq_tx_comp_err(tx_desc, isert_conn);
++			if (wc.wr_id != ISER_FRWR_LI_WRID) {
++				atomic_dec(&isert_conn->post_send_buf_count);
++				isert_cq_tx_comp_err(tx_desc, isert_conn);
++			}
+ 		}
+ 	}
+ 
+@@ -2202,6 +2204,7 @@ isert_fast_reg_mr(struct fast_reg_descriptor *fr_desc,
+ 
+ 	if (!fr_desc->valid) {
+ 		memset(&inv_wr, 0, sizeof(inv_wr));
++		inv_wr.wr_id = ISER_FRWR_LI_WRID;
+ 		inv_wr.opcode = IB_WR_LOCAL_INV;
+ 		inv_wr.ex.invalidate_rkey = fr_desc->data_mr->rkey;
+ 		wr = &inv_wr;
+@@ -2212,6 +2215,7 @@ isert_fast_reg_mr(struct fast_reg_descriptor *fr_desc,
+ 
+ 	/* Prepare FASTREG WR */
+ 	memset(&fr_wr, 0, sizeof(fr_wr));
++	fr_wr.wr_id = ISER_FRWR_LI_WRID;
+ 	fr_wr.opcode = IB_WR_FAST_REG_MR;
+ 	fr_wr.wr.fast_reg.iova_start =
+ 		fr_desc->data_frpl->page_list[0] + page_off;
 diff --git a/drivers/infiniband/ulp/isert/ib_isert.h b/drivers/infiniband/ulp/isert/ib_isert.h
-index 599b4e2..6059ae1 100644
+index 41e799f..599b4e2 100644
 --- a/drivers/infiniband/ulp/isert/ib_isert.h
 +++ b/drivers/infiniband/ulp/isert/ib_isert.h
-@@ -46,6 +46,7 @@ struct iser_tx_desc {
- 	struct isert_cmd *isert_cmd;
- 	struct llist_node *comp_llnode_batch;
- 	struct llist_node comp_llnode;
-+	bool		llnode_active;
- 	struct ib_send_wr send_wr;
- } __packed;
+@@ -6,6 +6,7 @@
  
-@@ -127,7 +128,6 @@ struct isert_conn {
- #define ISERT_COMP_BATCH_COUNT	8
- 	int			conn_comp_batch;
- 	struct llist_head	conn_comp_llist;
--	struct mutex		conn_comp_mutex;
- };
+ #define ISERT_RDMA_LISTEN_BACKLOG	10
+ #define ISCSI_ISER_SG_TABLESIZE		256
++#define ISER_FRWR_LI_WRID		0xffffffffffffffffULL
  
- #define ISERT_MAX_CQ 64
+ enum isert_desc_type {
+ 	ISCSI_TX_CONTROL,
 -- 
 1.7.10.4
