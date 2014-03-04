@@ -1,38 +1,73 @@
-From: "Dr. Zuliu Hu" <zuliuh@live.hk>
-Subject: Lieber Freund
-Date: Mon, 03 Mar 2014 23:43:18 +0100
-Message-ID: <SERVERXix4A2DreBBsQ0000000e@horizoncpa.biz>
-Reply-To: zuliuhu2020@yahoo.com.hk
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 50-195-145-93-static.hfc.comcastbusiness.net ([50.195.145.93]:6331
-	"EHLO horizoncpa.biz" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755180AbaCCX1F convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Mar 2014 18:27:05 -0500
-Content-Description: Mail message body
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Nicholas A. Bellinger" <nab-PEzghdH756F8UrSeD/g0lQ@public.gmane.org>
+Subject: [PATCH 0/6] iser-target: Fix active I/O shutdown related issues
+Date: Tue,  4 Mar 2014 00:00:59 +0000
+Message-ID: <1393891265-22910-1-git-send-email-nab@daterainc.com>
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: target-devel <target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Cc: linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Nicholas Bellinger <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Recipients <zuliuh@live.hk>
 
-Lieber Freund=20
+From: Nicholas Bellinger <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>
 
-Ich bin Dr. Zuliu Hu. Independent Non-Executive Director der Hang Seng =
-Bank Ltd, Hong Kong. Ich habe einen Gesch=E4ftsvorgang von $54,5 Millio=
-nen US-Dollar, und ich werde 30% Entsch=E4digung f=FCr Ihre Unterst=FCt=
-zung in dieser Transaktion erhalten Sie, bei Interesse kontaktieren Sie=
- mich f=FCr weitere Details =FCber meine pers=F6nliche E-Mail: (zuliuhu=
-2020@yahoo.com.hk )=20
+Hi Or & Sagi,
 
-Vollst=E4ndige Namen:=20
-Adresse:=20
-Telefon
+This series addresses a number of active I/O shutdown related issues
+in iser-target code that have come up recently during stress testing.
 
-Gr=FC=DFe=20
-Dr. Zuliu Hu
+Note there is still a seperate iser-target network portal shutdown
+bug being tracked down, but this series addresses all existing issues
+related to active I/O session shutdown.
+
+The patch breakdown looks like:
+
+Patch #1 fixes a long-standing bug where TPGs in shutdown incorrectly
+could be referenced by new login attempts.
+
+Patch #2 converts list_del -> list_del_init for iscsi_cmd->i_conn_node
+so that list_empty works correctly.
+
+Patch #3 addresses isert_conn->state related bugs resulting in hung
+shutdown, and splits isert_free_conn() into seperate code that is
+called earlier during shutdown to ensure that all outstanding I/O
+has completed.
+
+Patch #4 fixes incorrect accounting of ->post_send_buf_count during
+active I/O shutdown with outstanding RDMA WRITE + RDMA READ work
+requests.
+
+Patch #5 addresses a bug related to active I/O shutdown with
+outstanding FRMR work requests.  Note this patch is specific to
+v3.12+ code.
+
+Patch #6 addresses bugs related to active I/O shutdown with
+outstanding completion interrupt coalescing batches. Note this patch
+is specific to v3.13+ code.
+
+Please review.
+
+--nab
+
+Nicholas Bellinger (6):
+  iscsi-target: Fix iscsit_get_tpg_from_np tpg_state bug
+  iscsi/iser-target: Use list_del_init for ->i_conn_node
+  iscsi/iser-target: Fix isert_conn->state hung shutdown issues
+  iser-target: Fix post_send_buf_count for RDMA READ/WRITE
+  iser-target: Ignore completions for FRWRs in isert_cq_tx_work
+  iser-target: Fix command leak for tx_desc->comp_llnode_batch
+
+ drivers/infiniband/ulp/isert/ib_isert.c  |  180 ++++++++++++++++++------------
+ drivers/infiniband/ulp/isert/ib_isert.h  |    7 +-
+ drivers/target/iscsi/iscsi_target.c      |   10 +-
+ drivers/target/iscsi/iscsi_target_erl2.c |   16 +--
+ drivers/target/iscsi/iscsi_target_tpg.c  |    2 +-
+ include/target/iscsi/iscsi_transport.h   |    1 +
+ 6 files changed, 129 insertions(+), 87 deletions(-)
+
+-- 
+1.7.10.4
+
 --
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
