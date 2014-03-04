@@ -1,34 +1,43 @@
-From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [PATCH 4/6] iser-target: Fix post_send_buf_count for RDMA READ/WRITE
-Date: Tue, 04 Mar 2014 11:21:27 +0200
-Message-ID: <53159B17.6090901@dev.mellanox.co.il>
-References: <1393891265-22910-1-git-send-email-nab@daterainc.com> <1393891265-22910-5-git-send-email-nab@daterainc.com> <5315859E.7050202@mellanox.com>
+From: Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Subject: Re: [PATCH v1 10/13] IB/iser: Support T10-PI operations
+Date: Tue, 4 Mar 2014 11:38:17 +0200
+Message-ID: <53159F09.6050802@mellanox.com>
+References: <1393499589-15633-1-git-send-email-sagig@mellanox.com> <1393499589-15633-11-git-send-email-sagig@mellanox.com> <531408C8.10107@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <5315859E.7050202@mellanox.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Or Gerlitz <ogerlitz@mellanox.com>, "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>
-Cc: linux-rdma <linux-rdma@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Sagi Grimberg <sagig@mellanox.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <531408C8.10107-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Cc: roland-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org, oren-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 3/4/2014 9:49 AM, Or Gerlitz wrote:
-> On 04/03/2014 02:01, Nicholas A. Bellinger wrote:
->> This is necessary because even though IB_SEND_SIGNALED is
->> not set for RDMA WRITEs + READs, during a QP failure event
->> the work requests will be returned with exception status
->> from the TX completion queue.
+On 03/03/2014 06:44, Mike Christie wrote:
+> The xmit_task callout does handle failures like EINVAL. If the above map
+> calls fail then you would get infinite retries. You would currently want
+> to do the mapping in the init_task callout instead.
 >
-> Impossible... for rdma reads we must ask for completing, since we 
-> should write the data
-> for the back-end, I assume it's just wrong mentioning of rdma-read 
-> here, right?
->
+> If it makes it easier on the driver implementation then it is ok to
+> modify the xmit_task callers so that they handle multiple error codes
+> for drivers like iser that have the xmit_task callout called from
+> iscsi_queuecommand.
 
-No, In case of multiple RDMA READs (for non-fastreg case) isert asks for 
-completion only on the last one.
+Mike,
 
-This is fine.
+After looking on the code with Sagi,  it seems to us that the correct 
+way to go here, would be to enhance in iscsi_queuecommand the processing 
+of the result returned by session->tt->xmit_task(task) to behave in a 
+similar manner to how the return value of iscsi_prep_scsi_cmd_pdu() is 
+treated. E.g for errors such as ENOMEM and EGAIN take the "reject" flow 
+which would cause the SCSI midlayer to retry the command and for other 
+return values go to the "fault" flow which will cause the ML to abort 
+the command.
 
-Sagi.
+Or.
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
