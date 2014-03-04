@@ -1,53 +1,63 @@
-From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [PATCH v1 10/13] IB/iser: Support T10-PI operations
-Date: Tue, 04 Mar 2014 19:04:05 +0200
-Message-ID: <53160785.4060507@dev.mellanox.co.il>
-References: <1393499589-15633-1-git-send-email-sagig@mellanox.com> <1393499589-15633-11-git-send-email-sagig@mellanox.com> <531408C8.10107@cs.wisc.edu> <53159F09.6050802@mellanox.com> <5315A3E4.508@dev.mellanox.co.il> <5315B83D.6060503@mellanox.com> <5315E6DD.4060909@dev.mellanox.co.il> <5315FC64.2020207@mellanox.com>
+From: Arvind Kumar <arvindkumar@vmware.com>
+Subject: Re: [PATCH v2 23/23] vmw_pvscsi: Use pci_enable_msix_exact()
+ instead of pci_enable_msix()
+Date: Tue, 4 Mar 2014 11:27:44 -0800 (PST)
+Message-ID: <1412188603.36940054.1393961264565.JavaMail.root@vmware.com>
+References: <cover.1393191330.git.agordeev@redhat.com> <a414d28c5587e57e78777a75c07873e1535dc839.1393191330.git.agordeev@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ea0-f176.google.com ([209.85.215.176]:49383 "EHLO
-	mail-ea0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754350AbaCDREJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Mar 2014 12:04:09 -0500
-Received: by mail-ea0-f176.google.com with SMTP id o10so483439eaj.35
-        for <linux-scsi@vger.kernel.org>; Tue, 04 Mar 2014 09:04:08 -0800 (PST)
-In-Reply-To: <5315FC64.2020207@mellanox.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <a414d28c5587e57e78777a75c07873e1535dc839.1393191330.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, pv-drivers@vmware.com, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Or Gerlitz <ogerlitz@mellanox.com>, Mike Christie <michaelc@cs.wisc.edu>, Sagi Grimberg <sagig@mellanox.com>
-Cc: roland@kernel.org, nab@linux-iscsi.org, oren@mellanox.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org
 
-On 3/4/2014 6:16 PM, Or Gerlitz wrote:
-> On 04/03/2014 16:44, Sagi Grimberg wrote:
->>>> @@ -1707,10 +1707,17 @@ int iscsi_queuecommand(struct Scsi_Host 
->>>> *host, struct scsi_cmnd *sc)
->>>>                                 goto prepd_fault;
->>>>                         }
->>>>                 }
->>>> -               if (session->tt->xmit_task(task)) {
->>>> -                       session->cmdsn--;
->>>> -                       reason = FAILURE_SESSION_NOT_READY;
->>>> -                       goto prepd_reject;
->>>> +
->>>> +               reason = session->tt->xmit_task(task);
->>>> +               if (reason) {
->>>> +                       if (reason == -ENOMEM || reason == -EAGAIN) {
->>>> +                               session->cmdsn--;
->>>
->>> I am pretty sure this has to be done anyway, no matter why the 
->>> xmit_task callback failed
->>
->> Even if we abort? this just follows the same logic as 
->> iscsi_prep_scsi_cmd_pdu error flow.
->
-> yes, take a 2nd look on iscsi_prep_scsi_cmd_pdu and you'll see that 
-> all the possible error cases take place **before** session->cmdsn is 
-> incremented
+Hi Alexander,
 
-Ahhh, yes... So dec the cmdsn regardless.
+This looks fine to me.
 
-Mike, are you on board with this?
+Acked-by: Arvind Kumar <arvindkumar@vmware.com>
 
-Sagi.
+Thanks!
+Arvind
+
+----- Original Message -----
+From: "Alexander Gordeev" <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: "Alexander Gordeev" <agordeev@redhat.com>, "Arvind Kumar" <arvindkumar@vmware.com>, pv-drivers@vmware.com, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Sent: Monday, February 24, 2014 12:02:23 AM
+Subject: [PATCH v2 23/23] vmw_pvscsi: Use pci_enable_msix_exact() instead of pci_enable_msix()
+
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range()  or pci_enable_msi_exact()
+and pci_enable_msix_range() or pci_enable_msix_exact()
+interfaces.
+
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Arvind Kumar <arvindkumar@vmware.com>
+Cc: pv-drivers@vmware.com
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/scsi/vmw_pvscsi.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
+index b9755ec..a046618 100644
+--- a/drivers/scsi/vmw_pvscsi.c
++++ b/drivers/scsi/vmw_pvscsi.c
+@@ -1078,7 +1078,7 @@ static int pvscsi_setup_msix(const struct pvscsi_adapter *adapter,
+ 	struct msix_entry entry = { 0, PVSCSI_VECTOR_COMPLETION };
+ 	int ret;
+ 
+-	ret = pci_enable_msix(adapter->dev, &entry, 1);
++	ret = pci_enable_msix_exact(adapter->dev, &entry, 1);
+ 	if (ret)
+ 		return ret;
+ 
+-- 
+1.7.7.6
