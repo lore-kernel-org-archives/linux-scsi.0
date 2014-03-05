@@ -1,37 +1,75 @@
 From: Michael Opdenacker <michael.opdenacker@free-electrons.com>
-Subject: [PATCH] [RESEND] [SCSI] NCR5380: remove deprecated IRQF_DISABLED
-Date: Wed,  5 Mar 2014 06:09:41 +0100
-Message-ID: <1393996181-3425-1-git-send-email-michael.opdenacker@free-electrons.com>
-References: <1386582290-4755-1-git-send-email-michael.opdenacker@free-electrons.com>
+Subject: [PATCH] [RESEND] [SCSI] aacraid: remove deprecated IRQF_DISABLED
+Date: Wed,  5 Mar 2014 06:13:32 +0100
+Message-ID: <1393996412-3544-1-git-send-email-michael.opdenacker@free-electrons.com>
+References: <1386582674-4826-1-git-send-email-michael.opdenacker@free-electrons.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1386582290-4755-1-git-send-email-michael.opdenacker@free-electrons.com>
+In-Reply-To: <1386582674-4826-1-git-send-email-michael.opdenacker@free-electrons.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: JBottomley@parallels.com
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Michael Opdenacker <michael.opdenacker@free-electrons.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This patch removes the use of the IRQF_DISABLED flag
-from drivers/scsi/NCR5380.c
+This patch removes the use of IRQF_DISABLED
+from code in drivers/scsi/aacraid/
 
 It's a NOOP since 2.6.35 and it will be removed one day.
 
 Signed-off-by: Michael Opdenacker <michael.opdenacker@free-electrons.com>
 ---
- drivers/scsi/NCR5380.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/aacraid/rx.c  | 2 +-
+ drivers/scsi/aacraid/sa.c  | 3 +--
+ drivers/scsi/aacraid/src.c | 4 ++--
+ 3 files changed, 4 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
-index 1e9d6ad9302b..bcd223868227 100644
---- a/drivers/scsi/NCR5380.c
-+++ b/drivers/scsi/NCR5380.c
-@@ -584,7 +584,7 @@ static int __init __maybe_unused NCR5380_probe_irq(struct Scsi_Host *instance,
- 	NCR5380_setup(instance);
+diff --git a/drivers/scsi/aacraid/rx.c b/drivers/scsi/aacraid/rx.c
+index dada38aeacc0..bf077ce95bfe 100644
+--- a/drivers/scsi/aacraid/rx.c
++++ b/drivers/scsi/aacraid/rx.c
+@@ -646,7 +646,7 @@ int _aac_rx_init(struct aac_dev *dev)
+ 	dev->sync_mode = 0;	/* sync. mode not supported */
+ 	dev->msi = aac_msi && !pci_enable_msi(dev->pdev);
+ 	if (request_irq(dev->pdev->irq, dev->a_ops.adapter_intr,
+-			IRQF_SHARED|IRQF_DISABLED, "aacraid", dev) < 0) {
++			IRQF_SHARED, "aacraid", dev) < 0) {
+ 		if (dev->msi)
+ 			pci_disable_msi(dev->pdev);
+ 		printk(KERN_ERR "%s%d: Interrupt unavailable.\n",
+diff --git a/drivers/scsi/aacraid/sa.c b/drivers/scsi/aacraid/sa.c
+index 2244f315f33b..e66477c98240 100644
+--- a/drivers/scsi/aacraid/sa.c
++++ b/drivers/scsi/aacraid/sa.c
+@@ -387,8 +387,7 @@ int aac_sa_init(struct aac_dev *dev)
+ 		goto error_irq;
+ 	dev->sync_mode = 0;	/* sync. mode not supported */
+ 	if (request_irq(dev->pdev->irq, dev->a_ops.adapter_intr,
+-			IRQF_SHARED|IRQF_DISABLED,
+-			"aacraid", (void *)dev ) < 0) {
++			IRQF_SHARED, "aacraid", (void *)dev) < 0) {
+ 		printk(KERN_WARNING "%s%d: Interrupt unavailable.\n",
+ 			name, instance);
+ 		goto error_iounmap;
+diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c
+index 7e17107643d4..9c65aed26212 100644
+--- a/drivers/scsi/aacraid/src.c
++++ b/drivers/scsi/aacraid/src.c
+@@ -647,7 +647,7 @@ int aac_src_init(struct aac_dev *dev)
+ 	dev->msi = aac_msi && !pci_enable_msi(dev->pdev);
  
- 	for (trying_irqs = i = 0, mask = 1; i < 16; ++i, mask <<= 1)
--		if ((mask & possible) && (request_irq(i, &probe_intr, IRQF_DISABLED, "NCR-probe", NULL) == 0))
-+		if ((mask & possible) && (request_irq(i, &probe_intr, 0, "NCR-probe", NULL) == 0))
- 			trying_irqs |= mask;
+ 	if (request_irq(dev->pdev->irq, dev->a_ops.adapter_intr,
+-			IRQF_SHARED|IRQF_DISABLED, "aacraid", dev) < 0) {
++			IRQF_SHARED, "aacraid", dev) < 0) {
  
- 	timeout = jiffies + (250 * HZ / 1000);
+ 		if (dev->msi)
+ 			pci_disable_msi(dev->pdev);
+@@ -804,7 +804,7 @@ int aac_srcv_init(struct aac_dev *dev)
+ 		goto error_iounmap;
+ 	dev->msi = aac_msi && !pci_enable_msi(dev->pdev);
+ 	if (request_irq(dev->pdev->irq, dev->a_ops.adapter_intr,
+-		IRQF_SHARED|IRQF_DISABLED, "aacraid", dev) < 0) {
++		IRQF_SHARED, "aacraid", dev) < 0) {
+ 		if (dev->msi)
+ 			pci_disable_msi(dev->pdev);
+ 		printk(KERN_ERR "%s%d: Interrupt unavailable.\n",
 -- 
 1.8.3.2
