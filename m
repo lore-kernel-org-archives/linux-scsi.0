@@ -1,12 +1,12 @@
 From: Sagi Grimberg <sagig@mellanox.com>
-Subject: [PATCH v2 04/13] IB/iser: Keep IB device attributes under iser_device
-Date: Wed,  5 Mar 2014 19:43:42 +0200
-Message-ID: <1394041431-28399-5-git-send-email-sagig@mellanox.com>
+Subject: [PATCH v2 11/13] SCSI/libiscsi: Add check_protection callback for transports
+Date: Wed,  5 Mar 2014 19:43:49 +0200
+Message-ID: <1394041431-28399-12-git-send-email-sagig@mellanox.com>
 References: <1394041431-28399-1-git-send-email-sagig@mellanox.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailp.voltaire.com ([193.47.165.129]:37613 "EHLO mellanox.co.il"
+Received: from mailp.voltaire.com ([193.47.165.129]:59711 "EHLO mellanox.co.il"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755525AbaCERoC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1754855AbaCERoC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Wed, 5 Mar 2014 12:44:02 -0500
 In-Reply-To: <1394041431-28399-1-git-send-email-sagig@mellanox.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,84 +14,116 @@ List-Id: linux-scsi@vger.kernel.org
 To: roland@kernel.org, nab@linux-iscsi.org, michaelc@cs.wisc.edu
 Cc: martin.petersen@oracle.com, oren@mellanox.com, linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org
 
-For T10-PI offload support, we will need to know the
-device signature offload capability upon every connection
-establishment.
+iSCSI needs to be at least aware that a task involves protection
+information. In case it does, after the transaction completed
+libiscsi will ask the transport to check the protection status
+of the transaction.
 
-This patch does not change any functionality.
+Unlike transport errors, DIF errors should not prevent successful
+completion of the transaction from the transport point of view,
+but should be escelated to scsi mid-layer when constructing the
+scsi result and sense data.
+
+check_protection routine will return the ascq corresponding to the
+DIF error that occured (or 0 if no error happened).
+
+return ascq:
+- 0x1: GUARD_CHECK_FAILED
+- 0x2: APPTAG_CHECK_FAILED
+- 0x3: REFTAG_CHECK_FAILED
 
 Signed-off-by: Sagi Grimberg <sagig@mellanox.com>
 Signed-off-by: Alex Tabachnik <alext@mellanox.com>
 ---
- drivers/infiniband/ulp/iser/iscsi_iser.h |    1 +
- drivers/infiniband/ulp/iser/iser_verbs.c |   18 ++++++------------
- 2 files changed, 7 insertions(+), 12 deletions(-)
+ drivers/scsi/libiscsi.c             |   32 ++++++++++++++++++++++++++++++++
+ include/scsi/libiscsi.h             |    4 ++++
+ include/scsi/scsi_transport_iscsi.h |    1 +
+ 3 files changed, 37 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/infiniband/ulp/iser/iscsi_iser.h b/drivers/infiniband/ulp/iser/iscsi_iser.h
-index ca161df..b4290f5 100644
---- a/drivers/infiniband/ulp/iser/iscsi_iser.h
-+++ b/drivers/infiniband/ulp/iser/iscsi_iser.h
-@@ -260,6 +260,7 @@ struct iscsi_iser_task;
- struct iser_device {
- 	struct ib_device             *ib_device;
- 	struct ib_pd	             *pd;
-+	struct ib_device_attr	     dev_attr;
- 	struct ib_cq	             *rx_cq[ISER_MAX_CQ];
- 	struct ib_cq	             *tx_cq[ISER_MAX_CQ];
- 	struct ib_mr	             *mr;
-diff --git a/drivers/infiniband/ulp/iser/iser_verbs.c b/drivers/infiniband/ulp/iser/iser_verbs.c
-index 9569e40..95fcfca 100644
---- a/drivers/infiniband/ulp/iser/iser_verbs.c
-+++ b/drivers/infiniband/ulp/iser/iser_verbs.c
-@@ -71,17 +71,14 @@ static void iser_event_handler(struct ib_event_handler *handler,
-  */
- static int iser_create_device_ib_res(struct iser_device *device)
- {
--	int i, j;
- 	struct iser_cq_desc *cq_desc;
--	struct ib_device_attr *dev_attr;
-+	struct ib_device_attr *dev_attr = &device->dev_attr;
-+	int ret, i, j;
- 
--	dev_attr = kmalloc(sizeof(*dev_attr), GFP_KERNEL);
--	if (!dev_attr)
--		return -ENOMEM;
--
--	if (ib_query_device(device->ib_device, dev_attr)) {
-+	ret = ib_query_device(device->ib_device, dev_attr);
-+	if (ret) {
- 		pr_warn("Query device failed for %s\n", device->ib_device->name);
--		goto dev_attr_err;
-+		return ret;
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index 4046241..3c11acf 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -395,6 +395,10 @@ static int iscsi_prep_scsi_cmd_pdu(struct iscsi_task *task)
+ 		if (rc)
+ 			return rc;
  	}
++
++	if (scsi_get_prot_op(sc) != SCSI_PROT_NORMAL)
++		task->protected = true;
++
+ 	if (sc->sc_data_direction == DMA_TO_DEVICE) {
+ 		unsigned out_len = scsi_out(sc)->length;
+ 		struct iscsi_r2t_info *r2t = &task->unsol_r2t;
+@@ -823,6 +827,33 @@ static void iscsi_scsi_cmd_rsp(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
  
- 	/* Assign function handles  - based on FMR support */
-@@ -101,7 +98,7 @@ static int iser_create_device_ib_res(struct iser_device *device)
- 		device->iser_unreg_rdma_mem = iser_unreg_mem_fastreg;
- 	} else {
- 		iser_err("IB device does not support FMRs nor FastRegs, can't register memory\n");
--		goto dev_attr_err;
-+		return -1;
- 	}
+ 	sc->result = (DID_OK << 16) | rhdr->cmd_status;
  
- 	device->cqs_used = min(ISER_MAX_CQ, device->ib_device->num_comp_vectors);
-@@ -158,7 +155,6 @@ static int iser_create_device_ib_res(struct iser_device *device)
- 	if (ib_register_event_handler(&device->event_handler))
- 		goto handler_err;
- 
--	kfree(dev_attr);
- 	return 0;
- 
- handler_err:
-@@ -178,8 +174,6 @@ pd_err:
- 	kfree(device->cq_desc);
- cq_desc_err:
- 	iser_err("failed to allocate an IB resource\n");
--dev_attr_err:
--	kfree(dev_attr);
- 	return -1;
++	if (task->protected) {
++		sector_t sector;
++		u8 ascq;
++
++		/**
++		 * Transports that didn't implement check_protection
++		 * callback but still published T10-PI support to scsi-mid
++		 * deserve this BUG_ON.
++		 **/
++		BUG_ON(!session->tt->check_protection);
++
++		ascq = session->tt->check_protection(task, &sector);
++		if (ascq) {
++			sc->result = DRIVER_SENSE << 24 |
++				     SAM_STAT_CHECK_CONDITION;
++			scsi_build_sense_buffer(1, sc->sense_buffer,
++						ILLEGAL_REQUEST, 0x10, ascq);
++			sc->sense_buffer[7] = 0xc; /* Additional sense length */
++			sc->sense_buffer[8] = 0;   /* Information desc type */
++			sc->sense_buffer[9] = 0xa; /* Additional desc length */
++			sc->sense_buffer[10] = 0x80; /* Validity bit */
++
++			put_unaligned_be64(sector, &sc->sense_buffer[12]);
++			goto out;
++		}
++	}
++
+ 	if (rhdr->response != ISCSI_STATUS_CMD_COMPLETED) {
+ 		sc->result = DID_ERROR << 16;
+ 		goto out;
+@@ -1567,6 +1598,7 @@ static inline struct iscsi_task *iscsi_alloc_task(struct iscsi_conn *conn,
+ 	task->have_checked_conn = false;
+ 	task->last_timeout = jiffies;
+ 	task->last_xfer = jiffies;
++	task->protected = false;
+ 	INIT_LIST_HEAD(&task->running);
+ 	return task;
  }
+diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
+index 309f513..1457c26 100644
+--- a/include/scsi/libiscsi.h
++++ b/include/scsi/libiscsi.h
+@@ -133,6 +133,10 @@ struct iscsi_task {
+ 	unsigned long		last_xfer;
+ 	unsigned long		last_timeout;
+ 	bool			have_checked_conn;
++
++	/* T10 protection information */
++	bool			protected;
++
+ 	/* state set/tested under session->lock */
+ 	int			state;
+ 	atomic_t		refcount;
+diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
+index 88640a4..2555ee5 100644
+--- a/include/scsi/scsi_transport_iscsi.h
++++ b/include/scsi/scsi_transport_iscsi.h
+@@ -167,6 +167,7 @@ struct iscsi_transport {
+ 				 struct iscsi_bus_flash_conn *fnode_conn);
+ 	int (*logout_flashnode_sid) (struct iscsi_cls_session *cls_sess);
+ 	int (*get_host_stats) (struct Scsi_Host *shost, char *buf, int len);
++	u8 (*check_protection)(struct iscsi_task *task, sector_t *sector);
+ };
  
+ /*
 -- 
 1.7.1
 
