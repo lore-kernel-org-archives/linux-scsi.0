@@ -1,115 +1,97 @@
 From: Sagi Grimberg <sagig@mellanox.com>
-Subject: [PATCH v2 03/13] IB/iser: Move fast_reg_descriptor initialization to a function
-Date: Wed,  5 Mar 2014 19:43:41 +0200
-Message-ID: <1394041431-28399-4-git-send-email-sagig@mellanox.com>
+Subject: [PATCH v2 04/13] IB/iser: Keep IB device attributes under iser_device
+Date: Wed,  5 Mar 2014 19:43:42 +0200
+Message-ID: <1394041431-28399-5-git-send-email-sagig@mellanox.com>
 References: <1394041431-28399-1-git-send-email-sagig@mellanox.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailp.voltaire.com ([193.47.165.129]:59776 "EHLO mellanox.co.il"
+Received: from mailp.voltaire.com ([193.47.165.129]:37613 "EHLO mellanox.co.il"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755525AbaCERoG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 5 Mar 2014 12:44:06 -0500
+	id S1755525AbaCERoC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 5 Mar 2014 12:44:02 -0500
 In-Reply-To: <1394041431-28399-1-git-send-email-sagig@mellanox.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: roland@kernel.org, nab@linux-iscsi.org, michaelc@cs.wisc.edu
 Cc: martin.petersen@oracle.com, oren@mellanox.com, linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org
 
-fastreg descriptor will include protection information context.
-In order to place the logic in one place we introduce
-iser_create_fr_desc function.
+For T10-PI offload support, we will need to know the
+device signature offload capability upon every connection
+establishment.
 
 This patch does not change any functionality.
 
 Signed-off-by: Sagi Grimberg <sagig@mellanox.com>
 Signed-off-by: Alex Tabachnik <alext@mellanox.com>
 ---
- drivers/infiniband/ulp/iser/iser_verbs.c |   58 ++++++++++++++++++++---------
- 1 files changed, 40 insertions(+), 18 deletions(-)
+ drivers/infiniband/ulp/iser/iscsi_iser.h |    1 +
+ drivers/infiniband/ulp/iser/iser_verbs.c |   18 ++++++------------
+ 2 files changed, 7 insertions(+), 12 deletions(-)
 
+diff --git a/drivers/infiniband/ulp/iser/iscsi_iser.h b/drivers/infiniband/ulp/iser/iscsi_iser.h
+index ca161df..b4290f5 100644
+--- a/drivers/infiniband/ulp/iser/iscsi_iser.h
++++ b/drivers/infiniband/ulp/iser/iscsi_iser.h
+@@ -260,6 +260,7 @@ struct iscsi_iser_task;
+ struct iser_device {
+ 	struct ib_device             *ib_device;
+ 	struct ib_pd	             *pd;
++	struct ib_device_attr	     dev_attr;
+ 	struct ib_cq	             *rx_cq[ISER_MAX_CQ];
+ 	struct ib_cq	             *tx_cq[ISER_MAX_CQ];
+ 	struct ib_mr	             *mr;
 diff --git a/drivers/infiniband/ulp/iser/iser_verbs.c b/drivers/infiniband/ulp/iser/iser_verbs.c
-index dc5a0b4..9569e40 100644
+index 9569e40..95fcfca 100644
 --- a/drivers/infiniband/ulp/iser/iser_verbs.c
 +++ b/drivers/infiniband/ulp/iser/iser_verbs.c
-@@ -279,6 +279,39 @@ void iser_free_fmr_pool(struct iser_conn *ib_conn)
- 	ib_conn->fmr.page_vec = NULL;
- }
+@@ -71,17 +71,14 @@ static void iser_event_handler(struct ib_event_handler *handler,
+  */
+ static int iser_create_device_ib_res(struct iser_device *device)
+ {
+-	int i, j;
+ 	struct iser_cq_desc *cq_desc;
+-	struct ib_device_attr *dev_attr;
++	struct ib_device_attr *dev_attr = &device->dev_attr;
++	int ret, i, j;
  
-+static int
-+iser_create_fastreg_desc(struct ib_device *ib_device, struct ib_pd *pd,
-+			 struct fast_reg_descriptor *desc)
-+{
-+	int ret;
-+
-+	desc->data_frpl = ib_alloc_fast_reg_page_list(ib_device,
-+						      ISCSI_ISER_SG_TABLESIZE + 1);
-+	if (IS_ERR(desc->data_frpl)) {
-+		ret = PTR_ERR(desc->data_frpl);
-+		iser_err("Failed to allocate ib_fast_reg_page_list err=%d\n",
-+			 ret);
-+		return PTR_ERR(desc->data_frpl);
-+	}
-+
-+	desc->data_mr = ib_alloc_fast_reg_mr(pd, ISCSI_ISER_SG_TABLESIZE + 1);
-+	if (IS_ERR(desc->data_mr)) {
-+		ret = PTR_ERR(desc->data_mr);
-+		iser_err("Failed to allocate ib_fast_reg_mr err=%d\n", ret);
-+		goto fast_reg_mr_failure;
-+	}
-+	iser_info("Create fr_desc %p page_list %p\n",
-+		  desc, desc->data_frpl->page_list);
-+	desc->valid = true;
-+
-+	return 0;
-+
-+fast_reg_mr_failure:
-+	ib_free_fast_reg_page_list(desc->data_frpl);
-+
-+	return ret;
-+}
-+
- /**
-  * iser_create_fastreg_pool - Creates pool of fast_reg descriptors
-  * for fast registration work requests.
-@@ -300,32 +333,21 @@ int iser_create_fastreg_pool(struct iser_conn *ib_conn, unsigned cmds_max)
- 			goto err;
- 		}
- 
--		desc->data_frpl = ib_alloc_fast_reg_page_list(device->ib_device,
--							 ISCSI_ISER_SG_TABLESIZE + 1);
--		if (IS_ERR(desc->data_frpl)) {
--			ret = PTR_ERR(desc->data_frpl);
--			iser_err("Failed to allocate ib_fast_reg_page_list err=%d\n", ret);
--			goto fast_reg_page_failure;
-+		ret = iser_create_fastreg_desc(device->ib_device,
-+					       device->pd, desc);
-+		if (ret) {
-+			iser_err("Failed to create fastreg descriptor err=%d\n",
-+				 ret);
-+			kfree(desc);
-+			goto err;
- 		}
- 
--		desc->data_mr = ib_alloc_fast_reg_mr(device->pd,
--						     ISCSI_ISER_SG_TABLESIZE + 1);
--		if (IS_ERR(desc->data_mr)) {
--			ret = PTR_ERR(desc->data_mr);
--			iser_err("Failed to allocate ib_fast_reg_mr err=%d\n", ret);
--			goto fast_reg_mr_failure;
--		}
--		desc->valid = true;
- 		list_add_tail(&desc->list, &ib_conn->fastreg.pool);
- 		ib_conn->fastreg.pool_size++;
+-	dev_attr = kmalloc(sizeof(*dev_attr), GFP_KERNEL);
+-	if (!dev_attr)
+-		return -ENOMEM;
+-
+-	if (ib_query_device(device->ib_device, dev_attr)) {
++	ret = ib_query_device(device->ib_device, dev_attr);
++	if (ret) {
+ 		pr_warn("Query device failed for %s\n", device->ib_device->name);
+-		goto dev_attr_err;
++		return ret;
  	}
  
+ 	/* Assign function handles  - based on FMR support */
+@@ -101,7 +98,7 @@ static int iser_create_device_ib_res(struct iser_device *device)
+ 		device->iser_unreg_rdma_mem = iser_unreg_mem_fastreg;
+ 	} else {
+ 		iser_err("IB device does not support FMRs nor FastRegs, can't register memory\n");
+-		goto dev_attr_err;
++		return -1;
+ 	}
+ 
+ 	device->cqs_used = min(ISER_MAX_CQ, device->ib_device->num_comp_vectors);
+@@ -158,7 +155,6 @@ static int iser_create_device_ib_res(struct iser_device *device)
+ 	if (ib_register_event_handler(&device->event_handler))
+ 		goto handler_err;
+ 
+-	kfree(dev_attr);
  	return 0;
  
--fast_reg_mr_failure:
--	ib_free_fast_reg_page_list(desc->data_frpl);
--fast_reg_page_failure:
--	kfree(desc);
- err:
- 	iser_free_fastreg_pool(ib_conn);
- 	return ret;
+ handler_err:
+@@ -178,8 +174,6 @@ pd_err:
+ 	kfree(device->cq_desc);
+ cq_desc_err:
+ 	iser_err("failed to allocate an IB resource\n");
+-dev_attr_err:
+-	kfree(dev_attr);
+ 	return -1;
+ }
+ 
 -- 
 1.7.1
 
