@@ -1,95 +1,31 @@
-From: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
-Subject: Re: [PATCH v1 10/13] IB/iser: Support T10-PI operations
-Date: Wed, 05 Mar 2014 11:55:26 -0600
-Message-ID: <5317650E.40306@cs.wisc.edu>
-References: <1393499589-15633-1-git-send-email-sagig@mellanox.com> <1393499589-15633-11-git-send-email-sagig@mellanox.com> <531408C8.10107@cs.wisc.edu> <53159F09.6050802@mellanox.com> <5315A3E4.508@dev.mellanox.co.il>
+From: Mark Knecht <markknecht@gmail.com>
+Subject: Re: Slow I/O performance on SAS1064
+Date: Wed, 5 Mar 2014 10:21:07 -0800
+Message-ID: <CAK2H+ecJKp+QLJsbGW2tquO5_DuQReJD8nKViHea9tTiJwfn-g@mail.gmail.com>
+References: <20140305175036.GA23885@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <5315A3E4.508-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Sagi Grimberg <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>
-Cc: Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, roland-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org, oren-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:50125 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750817AbaCESVI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Mar 2014 13:21:08 -0500
+In-Reply-To: <20140305175036.GA23885@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Markus <markus@kola.li>
+Cc: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>, Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, support@lsi.com, DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org, Linux Kernel List <linux-kernel@vger.kernel.org>
 
-On 03/04/2014 03:59 AM, Sagi Grimberg wrote:
-> On 3/4/2014 11:38 AM, Or Gerlitz wrote:
->> On 03/03/2014 06:44, Mike Christie wrote:
->>> The xmit_task callout does handle failures like EINVAL. If the above map
->>> calls fail then you would get infinite retries. You would currently want
->>> to do the mapping in the init_task callout instead.
->>>
->>> If it makes it easier on the driver implementation then it is ok to
->>> modify the xmit_task callers so that they handle multiple error codes
->>> for drivers like iser that have the xmit_task callout called from
->>> iscsi_queuecommand.
->>
->> Mike,
->>
->> After looking on the code with Sagi,  it seems to us that the correct
->> way to go here, would be to enhance in iscsi_queuecommand the
->> processing of the result returned by session->tt->xmit_task(task) to
->> behave in a similar manner to how the return value of
->> iscsi_prep_scsi_cmd_pdu() is treated. E.g for errors such as ENOMEM
->> and EGAIN take the "reject" flow which would cause the SCSI midlayer
->> to retry the command and for other return values go to the "fault"
->> flow which will cause the ML to abort the command.
->>
->> Or.
->>
-> 
-> Yes, we were thinking about the following:
-> --- a/drivers/scsi/libiscsi.c
-> +++ b/drivers/scsi/libiscsi.c
-> @@ -1707,10 +1707,17 @@ int iscsi_queuecommand(struct Scsi_Host *host,
-> struct scsi_cmnd *sc)
->                                 goto prepd_fault;
->                         }
->                 }
-> -               if (session->tt->xmit_task(task)) {
-> -                       session->cmdsn--;
-> -                       reason = FAILURE_SESSION_NOT_READY;
-> -                       goto prepd_reject;
-> +
-> +               reason = session->tt->xmit_task(task);
-> +               if (reason) {
-> +                       if (reason == -ENOMEM || reason == -EAGAIN) {
-> +                               session->cmdsn--;
-> +                               reason = FAILURE_SESSION_NOT_READY;
-> +                               goto prepd_reject;
-> +                       } else {
-> +                               sc->result = DID_ABORT << 16;
-> +                               goto prepd_fault;
-> +                       }
+On Wed, Mar 5, 2014 at 9:50 AM, Markus <markus@kola.li> wrote:
+<SNIP>
 
-Or is correct.
+> The hdparm result looks like there is somethink not right . There were no features supported but why ?
 
-If iscsi_prep_scsi_cmd_pdu is successful then it will increment cmdsn.
 
-In this code path for xmit_task above, we assume that the driver can
-either take the entire command and can send it here, or return error and
-we requeue. For your new error case where we cannot send the command due
-to a hard failure so we want to fail the command, then we still need to
-decrement the cmdsn or there would be a hole since it was never put on
-the wire.
+Does the HDD have S.M.A.R.T. features? Possibly
 
-Also, it is probably safest to check for the error code you are adding
-support for:
+smartctl -a /dev/sda
 
-reason = session->tt->xmit_task(task);
-if (reason) {
-	session->cmdsn--;
+would provide some additional visibility?
 
-	if (reason == -EINVAL) {
-		sc->result = DID_ABORT << 16;
-		goto prepd_fault;
-	} else {
-		sc->result = DID_ABORT << 16;
-		goto prepd_fault;
-	}
-}
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+- Mark
