@@ -1,55 +1,95 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH v5 2/3] libata: async resume
-Date: Wed, 05 Mar 2014 12:17:35 -0800
-Message-ID: <20140305201735.20088.22124.stgit@viggo.jf.intel.com>
-References: <20140305201443.20088.85361.stgit@viggo.jf.intel.com>
+From: Loc Ho <lho@apm.com>
+Subject: Re: [PATCH v14 2/3] ata: Add APM X-Gene SoC AHCI SATA host controller driver
+Date: Wed, 5 Mar 2014 13:25:05 -0800
+Message-ID: <CAPw-ZT=BFjmFeiRL4fdYK8+R7baTWaAmQ4aXrJ-UUtDPqXUSog@mail.gmail.com>
+References: <1393306087-2875-1-git-send-email-lho@apm.com>
+	<1393306087-2875-2-git-send-email-lho@apm.com>
+	<1393306087-2875-3-git-send-email-lho@apm.com>
+	<1580977.AbkFy4UXLu@amdc1032>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20140305201443.20088.85361.stgit@viggo.jf.intel.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: tj@kernel.org, JBottomley@Parallels.com
-Cc: Len Brown <len.brown@intel.com>, linux-scsi@vger.kernel.org, Phillip Susi <psusi@ubuntu.com>, linux-ide@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>, Todd Brandt <todd.e.brandt@linux.intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from exprod5og112.obsmtp.com ([64.18.0.24]:33999 "HELO
+	exprod5og112.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756051AbaCEVZH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Mar 2014 16:25:07 -0500
+Received: by mail-qc0-f172.google.com with SMTP id i8so1878312qcq.17
+        for <linux-scsi@vger.kernel.org>; Wed, 05 Mar 2014 13:25:05 -0800 (PST)
+In-Reply-To: <1580977.AbkFy4UXLu@amdc1032>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Cc: Olof Johansson <olof@lixom.net>, Tejun Heo <tj@kernel.org>, Arnd Bergmann <arnd@arndb.de>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Don Dutile <ddutile@redhat.com>, Jon Masters <jcm@redhat.com>, "patches@apm.com" <patches@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 
-From: Todd Brandt <todd.e.brandt@linux.intel.com>
+Hi,
 
-Improve overall system resume time by making libata link recovery
-actions asynchronous relative to other resume events.
+>> +#define pdata_to_ctx(x) container_of(x, struct xgene_ahci_context, plat_data)
+>> +
+>> +struct xgene_ahci_context {
+>> +     struct ahci_platform_data plat_data;
+>
+> plat_data is used only to get to struct xgene_ahci_context instance
+> so it can be removed (especially since we want to remove struct
+> ahci_platform_data altogether in the long-term) and hpriv->plat_data
+> should be set to point to context instance itself.  Actually, this
+> seems to be the case already as hpriv->plat_data is set to hplat_data
+> (not to &hplat_data->plat_data) in xgene_ahci_probe() so I wonder how
+> does this driver work currently?
 
-Link resume operations are performed using the scsi_eh thread, so
-commands, particularly the sd resume start/stop command, will be held
-off until the device exits error handling.  Libata already flushes eh
-with ata_port_wait_eh() in the port teardown paths, so there are no
-concerns with async operation colliding with the end-of-life of the
-ata_port object.  Also, libata-core is already careful to flush
-in-flight pm operations before another round of pm starts on the given
-ata_port.
+I will remove the plat_data. .
 
-Reference: https://01.org/suspendresume/blogs/tebrandt/2013/hard-disk-resume-optimization-simpler-approach
+>> +/**
+>> + * xgene_ahci_read_id - Read ID data from the specified device
+>> + * @dev: device
+>> + * @tf: proposed taskfile
+>> + * @id: data buffer
+>> + *
+>> + * This custom read ID function is required due to the fact that the HW
+>> + * does not support DEVSLP and the controller state machine may get stuck
+>> + * after processing the ID query command.
+>> + */
+>> +static unsigned int xgene_ahci_read_id(struct ata_device *dev,
+>> +                                    struct ata_taskfile *tf, u16 *id)
+>> +{
+>> +     u32 err_mask;
+>> +     void __iomem *port_mmio = ahci_port_base(dev->link->ap);
+>> +
+>> +     err_mask = ata_do_dev_read_id(dev, tf, id);
+>> +     if (err_mask)
+>> +             return err_mask;
+>> +
+>> +     /*
+>> +      * Mask reserved area. Bit78 spec of Link Power Management
+>
+> Word78?
 
-Cc: Len Brown <len.brown@intel.com>
-Cc: Phillip Susi <psusi@ubuntu.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>
-Signed-off-by: Todd Brandt <todd.e.brandt@linux.intel.com>
-[djbw: rebase on cleanup patch, changelog wordsmithing]
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- drivers/ata/libata-core.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Yes...
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 0f47436c714c..7719ec7d9df9 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -5444,7 +5444,7 @@ static int ata_port_resume(struct device *dev)
- {
- 	int rc;
- 
--	rc = ata_port_resume_sync(to_ata_port(dev), PMSG_RESUME);
-+	rc = queue_ata_port_resume(to_ata_port(dev), PMSG_RESUME);
- 	if (!rc) {
- 		pm_runtime_disable(dev);
- 		pm_runtime_set_active(dev);
+>
+>> +      * bit15-8: reserved
+>> +      * bit7: NCQ autosence
+>> +      * bit6: Software settings preservation supported
+>> +      * bit5: reserved
+>> +      * bit4: In-order sata delivery supported
+>> +      * bit3: DIPM requests supported
+>> +      * bit2: DMA Setup FIS Auto-Activate optimization supported
+>> +      * bit1: DMA Setup FIX non-Zero buffer offsets supported
+>> +      * bit0: Reserved
+>> +      *
+>> +      * Clear reserved bit (DEVSLP bit) as we don't support DEVSLP
+>> +      */
+>> +     id[78] &= 0x00FF;
 
+I will also fix this up by bit mask off.
+
+>> +
+>> +     /* HW requires toggle of the clock */
+>> +     ahci_platform_disable_clks(hpriv);
+>> +     rc = ahci_platform_enable_clks(hpriv);
+>
+> Why is this needed (extra clocks disable->enable sequence)?
+
+This is an HW errata with the clock. If I don't give the clock an full
+cycle, it doesn't work.
+
+-Loc
