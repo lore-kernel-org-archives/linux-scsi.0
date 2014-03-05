@@ -1,50 +1,31 @@
 From: Hannes Reinecke <hare@suse.de>
 Subject: Re: [PATCH 2/3] Add EVPD page 0x83 to sysfs
-Date: Wed, 05 Mar 2014 08:56:04 +0100
-Message-ID: <5316D894.1000808@suse.de>
-References: <1392287281-75002-1-git-send-email-hare@suse.de> <1392287281-75002-3-git-send-email-hare@suse.de> <5312ED18.8080905@acm.org>
+Date: Wed, 05 Mar 2014 08:56:21 +0100
+Message-ID: <5316D8A5.8040202@suse.de>
+References: <1392287281-75002-1-git-send-email-hare@suse.de> <1392287281-75002-3-git-send-email-hare@suse.de> <5312ED92.20806@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:54355 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:54358 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752661AbaCEH4G (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 5 Mar 2014 02:56:06 -0500
-In-Reply-To: <5312ED18.8080905@acm.org>
+	id S1753025AbaCEH4W (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 5 Mar 2014 02:56:22 -0500
+In-Reply-To: <5312ED92.20806@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Bart Van Assche <bvanassche@acm.org>, James Bottomley <jbottomley@parallels.com>
 Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Jeremy Linton <jlinton@tributary.com>, Kay Sievers <kay@vrfy.org>, Doug Gilbert <dgilbert@interlog.com>, Kai Makisara <kai.makisara@kolumbus.fi>
 
-On 03/02/2014 09:34 AM, Bart Van Assche wrote:
+On 03/02/2014 09:36 AM, Bart Van Assche wrote:
 > On 02/13/14 11:28, Hannes Reinecke wrote:
->>  static ssize_t
->> -show_iostat_counterbits(struct device *dev, struct device_attribute=
- *attr, 				char *buf)
->> +show_vpd_pg(const unsigned char *pg_buf, int pg_len, char *buf)
->> +{
->> +	int len =3D 0, i;
->> +
->> +	if (!pg_buf)
->> +		return -EINVAL;
->> +
->> +	len =3D 0;
->> +	for (i =3D 0; i < pg_len; i +=3D 16) {
->> +		hex_dump_to_buffer(pg_buf + i, pg_len, 16, 1,
->> +				   buf + len, PAGE_SIZE, false);
->> +		strcat(buf + len, "\n");
->> +		len +=3D strlen(buf + len);
->> +	}
->> +	return len;
->> +}
+>> -	return 0;
+>> +	return (buffer[2] << 8) + buffer[3] + 4;
 >=20
-> It might be a good idea to add the output buffer length as an argumen=
-t
-> in show_vpd_pg() and to check explicitly whether or not there is
-> sufficient space left in the output buffer.
+> Has it been considered to use get_unaligned_be16() instead of open
+> coding this function ?
 >=20
-Good point. Will be doing so.
+Ok.
 
 Cheers,
 
