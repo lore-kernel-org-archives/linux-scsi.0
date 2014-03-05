@@ -1,71 +1,277 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH v5 0/3] Accelerate Storage Resume (2x or more)
-Date: Wed, 05 Mar 2014 12:17:24 -0800
-Message-ID: <20140305201443.20088.85361.stgit@viggo.jf.intel.com>
+Subject: [PATCH v5 3/3] scsi: async sd resume
+Date: Wed, 05 Mar 2014 12:17:40 -0800
+Message-ID: <20140305201740.20088.85890.stgit@viggo.jf.intel.com>
+References: <20140305201443.20088.85361.stgit@viggo.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20140305201443.20088.85361.stgit@viggo.jf.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 To: tj@kernel.org, JBottomley@Parallels.com
-Cc: Len Brown <len.brown@intel.com>, linux-scsi@vger.kernel.org, Phillip Susi <psusi@ubuntu.com>, linux-ide@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>, Todd Brandt <todd.e.brandt@linux.intel.com>, Todd Brandt <todd.e.brandt@intel.com>
+Cc: Len Brown <len.brown@intel.com>, linux-scsi@vger.kernel.org, Phillip Susi <psusi@ubuntu.com>, linux-ide@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>, Todd Brandt <todd.e.brandt@linux.intel.com>
 List-Id: linux-scsi@vger.kernel.org
 
-It is not everyday that a kernel operation gets 2x faster.  Nice find
-by Todd and his AnalyzeSuspend tool [1].
+async_schedule() sd resume work to allow disks and other devices to
+resume in parallel.
 
-Todd is on vacation so I am taking care of these patches to make sure
-they get in the queue for 3.15.
+This moves the entirety of scsi_device resume to an async context to
+ensure that scsi_device_resume() remains ordered with respect to the
+completion of the start/stop command.  For the duration of the resume,
+new command submissions (that do not originate from the scsi-core) will
+be deferred (BLKPREP_DEFER).
 
-The significant changes from Todd's last submission [2]:
+It adds a new ASYNC_DOMAIN_EXCLUSIVE(scsi_sd_pm_domain) as a container
+of these operations.  Like scsi_sd_probe_domain it is flushed at
+sd_remove() time to ensure async ops do not continue past the
+end-of-life of the sdev.  The implementation explicitly refrains from
+reusing scsi_sd_probe_domain directly for this purpose as it is flushed
+at the end of dpm_resume(), potentially defeating some of the benefit.
+Given sdevs are quiesced it is permissible for these resume operations
+to bleed past the async_synchronize_full() calls made by the driver
+core.
 
-1/ Split out the pure cleanup into its own patch, and expand it to clean
-   up libsas as well
+We defer the resolution of which pm callback to call until
+scsi_dev_type_{suspend|resume} time and guarantee that the 'int
+(*cb)(struct device *)' parameter is never NULL.  With this in place the
+type of resume operation is encoded in the async function identifier.
 
-2/ Move the entirety of scsi_device resume to an async context.  As
-   written, v4 of the patchset overlapped the scsi-start-stop command
-   with the scsi_device_resume().  Now in v5 the queue restart is
-   properly ordered with the completion of the scsi-start-stop command.
-
-Resume completion time as reported by:
-
-"echo devices > /sys/power/pm_test && echo mem > /sys/power/state"
-
-BEFORE: PM: resume of devices complete after 2271.097 msecs
-AFTER:  PM: resume of devices complete after 1057.404 msecs
-
-On a system with two SSDs attached via AHCI.
-
---
-Dan
-
-
-[1]: Todd's testing showing up to 12x resume latency improvement in some
-cases:
+Inspired by Todd's analysis and initial proposal [2]:
 https://01.org/suspendresume/blogs/tebrandt/2013/hard-disk-resume-optimization-simpler-approach
 
-[2]: Todd's v4 patchset:
-[PATCH v4 0/2] http://marc.info/?l=linux-ide&m=138984698103487&w=2
-[PATCH v4 1/2] http://marc.info/?l=linux-ide&m=138984713203515&w=2
-[PATCH v4 2/2] http://marc.info/?l=linux-ide&m=138984722003539&w=2
-
+Cc: Len Brown <len.brown@intel.com>
+Cc: Phillip Susi <psusi@ubuntu.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>
+Suggested-by: Todd Brandt <todd.e.brandt@linux.intel.com>
+[djbw: kick all resume work to the async queue]
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
+ drivers/scsi/scsi.c      |    3 +
+ drivers/scsi/scsi_pm.c   |  115 ++++++++++++++++++++++++++++++++++++----------
+ drivers/scsi/scsi_priv.h |    1 
+ drivers/scsi/sd.c        |    1 
+ 4 files changed, 95 insertions(+), 25 deletions(-)
 
-Dan Williams (2):
-      libata, libsas: kill pm_result and related cleanup
-      scsi: async sd resume
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index d8afec8317cf..990d4a302788 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -91,6 +91,9 @@ EXPORT_SYMBOL(scsi_logging_level);
+ ASYNC_DOMAIN(scsi_sd_probe_domain);
+ EXPORT_SYMBOL(scsi_sd_probe_domain);
+ 
++ASYNC_DOMAIN_EXCLUSIVE(scsi_sd_pm_domain);
++EXPORT_SYMBOL(scsi_sd_pm_domain);
++
+ /* NB: These are exposed through /proc/scsi/scsi and form part of the ABI.
+  * You may not alter any existing entry (although adding new ones is
+  * encouraged once assigned by ANSI/INCITS T10
+diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
+index 001e9ceda4c3..1cb211bf0383 100644
+--- a/drivers/scsi/scsi_pm.c
++++ b/drivers/scsi/scsi_pm.c
+@@ -18,17 +18,52 @@
+ 
+ #ifdef CONFIG_PM_SLEEP
+ 
++#define do_pm_op(dev, op) \
++	dev->driver ? dev->driver->pm ? \
++	dev->driver->pm->op(dev) : 0 : 0
++
++static int do_scsi_suspend(struct device *dev)
++{
++	return do_pm_op(dev, suspend);
++}
++
++static int do_scsi_freeze(struct device *dev)
++{
++	return do_pm_op(dev, freeze);
++}
++
++static int do_scsi_poweroff(struct device *dev)
++{
++	return do_pm_op(dev, poweroff);
++}
++
++static int do_scsi_resume(struct device *dev)
++{
++	return do_pm_op(dev, resume);
++}
++
++static int do_scsi_thaw(struct device *dev)
++{
++	return do_pm_op(dev, thaw);
++}
++
++static int do_scsi_restore(struct device *dev)
++{
++	return do_pm_op(dev, restore);
++}
++
+ static int scsi_dev_type_suspend(struct device *dev, int (*cb)(struct device *))
+ {
+ 	int err;
+ 
++	/* flush pending in-flight resume operations, suspend is synchronous */
++	async_synchronize_full_domain(&scsi_sd_pm_domain);
++
+ 	err = scsi_device_quiesce(to_scsi_device(dev));
+ 	if (err == 0) {
+-		if (cb) {
+-			err = cb(dev);
+-			if (err)
+-				scsi_device_resume(to_scsi_device(dev));
+-		}
++		err = cb(dev);
++		if (err)
++			scsi_device_resume(to_scsi_device(dev));
+ 	}
+ 	dev_dbg(dev, "scsi suspend: %d\n", err);
+ 	return err;
+@@ -38,10 +73,16 @@ static int scsi_dev_type_resume(struct device *dev, int (*cb)(struct device *))
+ {
+ 	int err = 0;
+ 
+-	if (cb)
+-		err = cb(dev);
++	err = cb(dev);
+ 	scsi_device_resume(to_scsi_device(dev));
+ 	dev_dbg(dev, "scsi resume: %d\n", err);
++
++	if (err == 0) {
++		pm_runtime_disable(dev);
++		pm_runtime_set_active(dev);
++		pm_runtime_enable(dev);
++	}
++
+ 	return err;
+ }
+ 
+@@ -66,20 +107,50 @@ scsi_bus_suspend_common(struct device *dev, int (*cb)(struct device *))
+ 	return err;
+ }
+ 
++static void async_sdev_resume(void *dev, async_cookie_t cookie)
++{
++	scsi_dev_type_resume(dev, do_scsi_resume);
++}
++
++static void async_sdev_thaw(void *dev, async_cookie_t cookie)
++{
++	scsi_dev_type_resume(dev, do_scsi_thaw);
++}
++
++static void async_sdev_restore(void *dev, async_cookie_t cookie)
++{
++	scsi_dev_type_resume(dev, do_scsi_restore);
++}
++
++static async_func_t to_async_sdev_resume_fn(struct device *dev,
++		int (*cb)(struct device *))
++{
++	if (!scsi_is_sdev_device(dev))
++		return NULL;
++
++	if (cb == do_scsi_resume)
++		return async_sdev_resume;
++	else if (cb == do_scsi_thaw)
++		return async_sdev_thaw;
++	else if (cb == do_scsi_restore)
++		return async_sdev_restore;
++	else
++		return NULL;
++}
++
+ static int
+ scsi_bus_resume_common(struct device *dev, int (*cb)(struct device *))
+ {
+-	int err = 0;
+-
+-	if (scsi_is_sdev_device(dev))
+-		err = scsi_dev_type_resume(dev, cb);
++	async_func_t fn = to_async_sdev_resume_fn(dev, cb);
+ 
+-	if (err == 0) {
++	if (fn)
++		async_schedule_domain(fn, dev, &scsi_sd_pm_domain);
++	else {
+ 		pm_runtime_disable(dev);
+ 		pm_runtime_set_active(dev);
+ 		pm_runtime_enable(dev);
+ 	}
+-	return err;
++	return 0;
+ }
+ 
+ static int scsi_bus_prepare(struct device *dev)
+@@ -97,38 +168,32 @@ static int scsi_bus_prepare(struct device *dev)
+ 
+ static int scsi_bus_suspend(struct device *dev)
+ {
+-	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
+-	return scsi_bus_suspend_common(dev, pm ? pm->suspend : NULL);
++	return scsi_bus_suspend_common(dev, do_scsi_suspend);
+ }
+ 
+ static int scsi_bus_resume(struct device *dev)
+ {
+-	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
+-	return scsi_bus_resume_common(dev, pm ? pm->resume : NULL);
++	return scsi_bus_resume_common(dev, do_scsi_resume);
+ }
+ 
+ static int scsi_bus_freeze(struct device *dev)
+ {
+-	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
+-	return scsi_bus_suspend_common(dev, pm ? pm->freeze : NULL);
++	return scsi_bus_suspend_common(dev, do_scsi_freeze);
+ }
+ 
+ static int scsi_bus_thaw(struct device *dev)
+ {
+-	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
+-	return scsi_bus_resume_common(dev, pm ? pm->thaw : NULL);
++	return scsi_bus_resume_common(dev, do_scsi_thaw);
+ }
+ 
+ static int scsi_bus_poweroff(struct device *dev)
+ {
+-	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
+-	return scsi_bus_suspend_common(dev, pm ? pm->poweroff : NULL);
++	return scsi_bus_suspend_common(dev, do_scsi_poweroff);
+ }
+ 
+ static int scsi_bus_restore(struct device *dev)
+ {
+-	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
+-	return scsi_bus_resume_common(dev, pm ? pm->restore : NULL);
++	return scsi_bus_resume_common(dev, do_scsi_restore);
+ }
+ 
+ #else /* CONFIG_PM_SLEEP */
+diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+index f079a598bed4..a26fd44c7738 100644
+--- a/drivers/scsi/scsi_priv.h
++++ b/drivers/scsi/scsi_priv.h
+@@ -166,6 +166,7 @@ static inline int scsi_autopm_get_host(struct Scsi_Host *h) { return 0; }
+ static inline void scsi_autopm_put_host(struct Scsi_Host *h) {}
+ #endif /* CONFIG_PM_RUNTIME */
+ 
++extern struct async_domain scsi_sd_pm_domain;
+ extern struct async_domain scsi_sd_probe_domain;
+ 
+ /* 
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 470954aba728..700c595c603e 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -3020,6 +3020,7 @@ static int sd_remove(struct device *dev)
+ 	devt = disk_devt(sdkp->disk);
+ 	scsi_autopm_get_device(sdkp->device);
+ 
++	async_synchronize_full_domain(&scsi_sd_pm_domain);
+ 	async_synchronize_full_domain(&scsi_sd_probe_domain);
+ 	blk_queue_prep_rq(sdkp->device->request_queue, scsi_prep_fn);
+ 	blk_queue_unprep_rq(sdkp->device->request_queue, NULL);
 
-Todd Brandt (1):
-      libata: async resume
-
-
- drivers/ata/libata-core.c     |   75 ++++++++++-----------------
- drivers/ata/libata-eh.c       |   13 +----
- drivers/scsi/libsas/sas_ata.c |   35 ++----------
- drivers/scsi/scsi.c           |    3 +
- drivers/scsi/scsi_pm.c        |  115 ++++++++++++++++++++++++++++++++---------
- drivers/scsi/scsi_priv.h      |    1 
- drivers/scsi/sd.c             |    1 
- include/linux/libata.h        |    9 +--
- include/scsi/libsas.h         |    1 
- 9 files changed, 134 insertions(+), 119 deletions(-)
