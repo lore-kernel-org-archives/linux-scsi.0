@@ -1,31 +1,46 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 2/3] Add EVPD page 0x83 to sysfs
-Date: Wed, 05 Mar 2014 08:56:21 +0100
-Message-ID: <5316D8A5.8040202@suse.de>
-References: <1392287281-75002-1-git-send-email-hare@suse.de> <1392287281-75002-3-git-send-email-hare@suse.de> <5312ED92.20806@acm.org>
+Subject: Re: [PATCHv7 0/3][Resend] Display EVPD pages in sysfs
+Date: Wed, 05 Mar 2014 09:00:29 +0100
+Message-ID: <5316D99D.3060005@suse.de>
+References: <1392287281-75002-1-git-send-email-hare@suse.de> <5312F1A1.4070605@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:54358 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:54405 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753025AbaCEH4W (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 5 Mar 2014 02:56:22 -0500
-In-Reply-To: <5312ED92.20806@acm.org>
+	id S1752064AbaCEIAa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 5 Mar 2014 03:00:30 -0500
+In-Reply-To: <5312F1A1.4070605@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Bart Van Assche <bvanassche@acm.org>, James Bottomley <jbottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Jeremy Linton <jlinton@tributary.com>, Kay Sievers <kay@vrfy.org>, Doug Gilbert <dgilbert@interlog.com>, Kai Makisara <kai.makisara@kolumbus.fi>
+Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
 
-On 03/02/2014 09:36 AM, Bart Van Assche wrote:
-> On 02/13/14 11:28, Hannes Reinecke wrote:
->> -	return 0;
->> +	return (buffer[2] << 8) + buffer[3] + 4;
+On 03/02/2014 09:53 AM, Bart Van Assche wrote:
+> On 02/13/14 11:27, Hannes Reinecke wrote:
+>> After discussion with jejb I've dropped the EVPD parsing.
+>> So with this version we're just displaying the EVPD page
+>> 0x80 and 0x83 as hexdumps; no parsing is attempted.
+>> This drastically simplifies the patch, and we don't
+>> have to worry about any parsing errors in kernel space.
+>> Of course we'll need a parser in userspace, but that
+>> doesn't need to do any I/O. So it's still a very nice
+>> gain.
 >=20
-> Has it been considered to use get_unaligned_be16() instead of open
-> coding this function ?
+> A general comment about this patch series: I think the cached copies =
+of
+> these pages should be refreshed at least after an INQUIRY DATA HAS
+> CHANGED unit attention code has been received. Some SCSI target
+> implementations allow to change this data after a LUN has been create=
+d.
 >=20
-Ok.
+Yes, eventually. But this needs to be handled in a general context,
+as (potentially) even the inquiry string itself has been invalidated
+after receiving such an event.
+So we should be doing a rescan of the scsi device upon receiving
+such an event. But this is a general problem, not one particular to
+this patchset.
 
 Cheers,
 
