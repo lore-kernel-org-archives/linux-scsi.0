@@ -1,118 +1,61 @@
-From: Loc Ho <lho@apm.com>
-Subject: [PATCH v15 3/3] arm64: Add APM X-Gene SoC AHCI SATA host controller DTS entries
-Date: Wed,  5 Mar 2014 15:44:49 -0700
-Message-ID: <1394059489-30706-4-git-send-email-lho@apm.com>
-References: <1394059489-30706-1-git-send-email-lho@apm.com>
- <1394059489-30706-2-git-send-email-lho@apm.com>
- <1394059489-30706-3-git-send-email-lho@apm.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1394059489-30706-3-git-send-email-lho@apm.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH RESEND] SCSI: sd: don't fail if the device doesn't
+ recognize SYNCHRONIZE CACHE
+Date: Wed, 5 Mar 2014 16:14:05 -0800
+Message-ID: <CAA9_cmffKCnam5n2U9y1NzJpBRVzLyb2F+m8F5e6eW2Hub-HTA@mail.gmail.com>
+References: <1393881957-12320-1-git-send-email-zonque@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-qc0-f169.google.com ([209.85.216.169]:54263 "EHLO
+	mail-qc0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757276AbaCFAOG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Mar 2014 19:14:06 -0500
+In-Reply-To: <1393881957-12320-1-git-send-email-zonque@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Daniel Mack <zonque@gmail.com>
+Cc: "JBottomley@parallels.com" <JBottomley@parallels.com>, linux-scsi <linux-scsi@vger.kernel.org>, USB list <linux-usb@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>, Oliver Neukum <oliver@neukum.org>, stable@vger.kernel.org
 
-This patch adds APM X-Gene SoC AHCI SATA host controller DTS entries.
+On Mon, Mar 3, 2014 at 1:25 PM, Daniel Mack <zonque@gmail.com> wrote:
+> From: Alan Stern <stern@rowland.harvard.edu>
+>
+> Evidently some wacky USB-ATA bridges don't recognize the SYNCHRONIZE
+> CACHE command, as shown in this email thread:
+>
+>         http://marc.info/?t=138978356200002&r=1&w=2
+>
+> The fact that we can't tell them to drain their caches shouldn't
+> prevent the system from going into suspend.  Therefore sd_sync_cache()
+> shouldn't return an error if the device replies with an Invalid
+> Command ASC.
+>
+> Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+> Reported-by: Sven Neumann <s.neumann@raumfeld.com>
+> Tested-by: Daniel Mack <zonque@gmail.com>
+> CC: Oliver Neukum <oliver@neukum.org>
+> CC: <stable@vger.kernel.org>
+> ---
+> Hi,
+>
+> this patch has been around for awhile, but hasn't gained much
+> attraction, and hasn't been merged anywhere yet. Which is sad,
+> as it fixes a bug on real hardware when going to suspend :)
+>
+> Could anyone from the SCSI people have a quick look maybe?
 
-Signed-off-by: Loc Ho <lho@apm.com>
-Signed-off-by: Tuan Phan <tphan@apm.com>
-Signed-off-by: Suman Tripathi <stripathi@apm.com>
----
- arch/arm64/boot/dts/apm-storm.dtsi |   75 ++++++++++++++++++++++++++++++++++++
- 1 files changed, 75 insertions(+), 0 deletions(-)
+Acked-by: Dan Williams <dan.j.williams@intel.com>
 
-diff --git a/arch/arm64/boot/dts/apm-storm.dtsi b/arch/arm64/boot/dts/apm-storm.dtsi
-index c78ddcf..2a03e96 100644
---- a/arch/arm64/boot/dts/apm-storm.dtsi
-+++ b/arch/arm64/boot/dts/apm-storm.dtsi
-@@ -221,6 +221,48 @@
- 				enable-offset = <0x0>;
- 				enable-mask = <0x06>;
- 			};
-+
-+			sata01clk: sata01clk@1f21c000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				clock-names = "socplldiv2";
-+				reg = <0x0 0x1f21c000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "sata01clk";
-+				csr-offset = <0x4>;
-+				csr-mask = <0x05>;
-+				enable-offset = <0x0>;
-+				enable-mask = <0x39>;
-+			};
-+
-+			sata23clk: sata23clk@1f22c000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				clock-names = "socplldiv2";
-+				reg = <0x0 0x1f22c000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "sata23clk";
-+				csr-offset = <0x4>;
-+				csr-mask = <0x05>;
-+				enable-offset = <0x0>;
-+				enable-mask = <0x39>;
-+			};
-+
-+			sata45clk: sata45clk@1f23c000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				clock-names = "socplldiv2";
-+				reg = <0x0 0x1f23c000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "sata45clk";
-+				csr-offset = <0x4>;
-+				csr-mask = <0x05>;
-+				enable-offset = <0x0>;
-+				enable-mask = <0x39>;
-+			};
- 		};
- 
- 		serial0: serial@1c020000 {
-@@ -262,5 +304,38 @@
- 			apm,tx-boost-gain = <31 31 31 31 31 31>;
- 			apm,tx-eye-tuning = <2 10 10 2 10 10>;
- 		};
-+
-+		sata1: sata@1a000000 {
-+			compatible = "apm,xgene-ahci-sgmii";
-+			reg = <0x0 0x1a000000 0x0 0x1000>,
-+			      <0x0 0x1f210000 0x0 0x10000>;
-+			interrupts = <0x0 0x86 0x4>;
-+			status = "disabled";
-+			clocks = <&sata01clk 0>;
-+			phys = <&phy1 0>;
-+			phy-names = "sata-phy";
-+		};
-+
-+		sata2: sata@1a400000 {
-+			compatible = "apm,xgene-ahci-sgmii";
-+			reg = <0x0 0x1a400000 0x0 0x1000>,
-+			      <0x0 0x1f220000 0x0 0x10000>;
-+			interrupts = <0x0 0x87 0x4>;
-+			status = "ok";
-+			clocks = <&sata23clk 0>;
-+			phys = <&phy2 0>;
-+			phy-names = "sata-phy";
-+		};
-+
-+		sata3: sata@1a800000 {
-+			compatible = "apm,xgene-ahci-pcie";
-+			reg = <0x0 0x1a800000 0x0 0x1000>,
-+			      <0x0 0x1f230000 0x0 0x10000>;
-+			interrupts = <0x0 0x88 0x4>;
-+			status = "ok";
-+			clocks = <&sata45clk 0>;
-+			phys = <&phy3 0>;
-+			phy-names = "sata-phy";
-+		};
- 	};
- };
--- 
-1.5.5
+But I agree with Tejun [1], that this likely does not go far enough.
+We should also be looking to fail future writes to the device or
+disabling the cache.
 
+Tejun's comment:
+"Ooh, yeah, flush failure is special.  That said, I think the right way
+to deal with that is marking the device as failed and fail writes /
+flushes afterwards instead of failing suspend.  It's hightly unlikely
+the device is in any useable state after failing flushes anyway and
+failing suspend has potential to lead to pretty dramatic failure
+conditions (device overheating in the bag would be a common one) too."
+
+[1]: http://marc.info/?l=linux-scsi&m=138998568010393&w=2
