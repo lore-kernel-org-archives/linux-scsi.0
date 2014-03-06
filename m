@@ -1,7 +1,7 @@
 From: Andy Grover <agrover@redhat.com>
-Subject: [PATCH 6/6] target: Remove core_tpg_release_virtual_lun0 function
-Date: Thu,  6 Mar 2014 14:15:31 -0800
-Message-ID: <1394144131-31499-7-git-send-email-agrover@redhat.com>
+Subject: [PATCH 2/6] target: core_tpg_post_dellun can return void
+Date: Thu,  6 Mar 2014 14:15:27 -0800
+Message-ID: <1394144131-31499-3-git-send-email-agrover@redhat.com>
 References: <1394144131-31499-1-git-send-email-agrover@redhat.com>
 Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1394144131-31499-1-git-send-email-agrover@redhat.com>
@@ -10,39 +10,50 @@ To: target-devel@vger.kernel.org
 Cc: linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Simple and just called from one place.
+Nothing in it can raise an error.
 
 Signed-off-by: Andy Grover <agrover@redhat.com>
 ---
- drivers/target/target_core_tpg.c | 9 +--------
- 1 file changed, 1 insertion(+), 8 deletions(-)
+ drivers/target/target_core_internal.h | 2 +-
+ drivers/target/target_core_tpg.c      | 5 +----
+ 2 files changed, 2 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/target/target_core_internal.h b/drivers/target/target_core_internal.h
+index de9cab7..463fddc 100644
+--- a/drivers/target/target_core_internal.h
++++ b/drivers/target/target_core_internal.h
+@@ -83,7 +83,7 @@ struct se_lun *core_tpg_alloc_lun(struct se_portal_group *, u32);
+ int	core_tpg_add_lun(struct se_portal_group *, struct se_lun *,
+ 		u32, struct se_device *);
+ struct se_lun *core_tpg_pre_dellun(struct se_portal_group *, u32 unpacked_lun);
+-int	core_tpg_post_dellun(struct se_portal_group *, struct se_lun *);
++void core_tpg_post_dellun(struct se_portal_group *, struct se_lun *);
+ 
+ /* target_core_transport.c */
+ extern struct kmem_cache *se_tmr_req_cache;
 diff --git a/drivers/target/target_core_tpg.c b/drivers/target/target_core_tpg.c
-index 25e3a8e..522b325 100644
+index fbed75f..63033ae 100644
 --- a/drivers/target/target_core_tpg.c
 +++ b/drivers/target/target_core_tpg.c
-@@ -621,13 +621,6 @@ static int core_tpg_setup_virtual_lun0(struct se_portal_group *se_tpg)
- 	return 0;
+@@ -855,18 +855,15 @@ struct se_lun *core_tpg_pre_dellun(
+ 	return lun;
  }
  
--static void core_tpg_release_virtual_lun0(struct se_portal_group *se_tpg)
--{
--	struct se_lun *lun = &se_tpg->tpg_virt_lun0;
+-int core_tpg_post_dellun(
++void core_tpg_post_dellun(
+ 	struct se_portal_group *tpg,
+ 	struct se_lun *lun)
+ {
+ 	core_clear_lun_from_tpg(lun, tpg);
+ 	transport_clear_lun_ref(lun);
 -
--	core_tpg_remove_lun(se_tpg, lun);
--}
+ 	core_dev_unexport(lun->lun_se_dev, tpg, lun);
+ 
+ 	spin_lock(&tpg->tpg_lun_lock);
+ 	lun->lun_status = TRANSPORT_LUN_STATUS_FREE;
+ 	spin_unlock(&tpg->tpg_lun_lock);
 -
- int core_tpg_register(
- 	struct target_core_fabric_ops *tfo,
- 	struct se_wwn *se_wwn,
-@@ -714,7 +707,7 @@ int core_tpg_deregister(struct se_portal_group *se_tpg)
- 	spin_unlock_irq(&se_tpg->acl_node_lock);
- 
- 	if (se_tpg->se_tpg_type == TRANSPORT_TPG_TYPE_NORMAL)
--		core_tpg_release_virtual_lun0(se_tpg);
-+		core_tpg_remove_lun(se_tpg, &se_tpg->tpg_virt_lun0);
- 
- 	se_tpg->se_tpg_fabric_ptr = NULL;
- 	kfree(se_tpg->tpg_lun_list);
+-	return 0;
+ }
 -- 
 1.8.5.3
