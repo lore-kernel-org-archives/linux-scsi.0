@@ -1,70 +1,47 @@
-From: Mark Knecht <markknecht@gmail.com>
-Subject: Re: Slow I/O performance on SAS1064
-Date: Thu, 6 Mar 2014 12:51:27 -0800
-Message-ID: <CAK2H+eesWkK_w66e5BLcA_Ft0FHNTuNYmxF_LceMHVupX8T_xg@mail.gmail.com>
-References: <20140305175036.GA23885@localhost.localdomain>
-	<CAK2H+ecJKp+QLJsbGW2tquO5_DuQReJD8nKViHea9tTiJwfn-g@mail.gmail.com>
-	<20140305214013.GA6287@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+From: Andy Grover <agrover@redhat.com>
+Subject: [PATCH 0/6] target: Save memory on unused se_dev_entrys and se_luns
+Date: Thu,  6 Mar 2014 14:15:25 -0800
+Message-ID: <1394144131-31499-1-git-send-email-agrover@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:58916 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752824AbaCFUv2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Mar 2014 15:51:28 -0500
-In-Reply-To: <20140305214013.GA6287@localhost.localdomain>
+Received: from mx1.redhat.com ([209.132.183.28]:52660 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750794AbaCFWPe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 6 Mar 2014 17:15:34 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: markus <markus@kola.li>
-Cc: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>, Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, support@lsi.com, DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org, Linux Kernel List <linux-kernel@vger.kernel.org>
+To: target-devel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, Mar 5, 2014 at 1:40 PM, markus <markus@kola.li> wrote:
-> On Wed, Mar 05, 2014 at 10:21:07AM -0800, Mark Knecht wrote:
->> On Wed, Mar 5, 2014 at 9:50 AM, Markus <markus@kola.li> wrote:
->> <SNIP>
->>
->> > The hdparm result looks like there is somethink not right . There were no features supported but why ?
->>
->>
->> Does the HDD have S.M.A.R.T. features? Possibly
->>
->> smartctl -a /dev/sda
-> root@outpost:~# smartctl -a /dev/sda
-> smartctl 5.41 2011-06-09 r3365 [sparc64-linux-3.13.5-mar] (local build)
-> Copyright (C) 2002-11 by Bruce Allen, http://smartmontools.sourceforge.net
->
->
-> Probable ATA device behind a SAT layer
-> Try an additional '-d ata' or '-d sat' argument.
->
-> so i try it with scsi.
->
-> root@outpost:~# smartctl -d scsi -a /dev/sda
-> smartctl 5.41 2011-06-09 r3365 [sparc64-linux-3.13.5-mar] (local build)
-> Copyright (C) 2002-11 by Bruce Allen, http://smartmontools.sourceforge.net
->
-> User Capacity:        2,000,398,934,016 bytes [2.00 TB]
-> Logical block size:   512 bytes
-> Logical Unit id:      0x50000394e2380537
-> Serial number:                   7365P4KNT
-> Device type:          disk
-> Local Time is:        Wed Mar  5 22:32:09 2014 CET
-> Device supports SMART and is Disabled
-> Temperature Warning Disabled or Not Supported
-> SMART Health Status: OK
->
-> Error Counter logging not supported
-> Device does not support Self Test logging
+Hi nab and everyone,
 
-I am not familiar with this message:
+This patchset reduces the amount of memory for se_dev_entry and se_lun
+arrays by waiting to allocate array members, and includes some related
+simplification patches too. This is a rework of a few patches I submitted
+in December in a larger series, but keeping it simple by sticking with
+fixed-size arrays for device_list and tpg_lun_list for now.
 
-"Device supports SMART and is Disabled"
+Testing: created and removed luns and mapped luns, worked ok.
 
-but there are lots of posts out there with folks asking about it.
-Possibly you can figure out what's causing smart not to turn on, get
-it turned on and get some info.
+Regards -- Andy
 
-Sorry I cannot help more.
+Andy Grover (6):
+  target: Allocate se_dev_entrys in device list only when used
+  target: core_tpg_post_dellun can return void
+  target: Change core_dev_del_lun to take a se_lun instead of
+    unpacked_lun
+  target: Rename core_tpg_post_dellun to remove_lun
+  target: Allocate se_luns only when used
+  target: Remove core_tpg_release_virtual_lun0 function
 
-Good luck,
-Mark
+ drivers/target/sbp/sbp_target.c              |   6 +-
+ drivers/target/target_core_device.c          | 206 ++++++++++-----------------
+ drivers/target/target_core_fabric_configfs.c |  25 ++--
+ drivers/target/target_core_internal.h        |   9 +-
+ drivers/target/target_core_spc.c             |   2 +-
+ drivers/target/target_core_tpg.c             | 154 +++++---------------
+ include/target/target_core_base.h            |  13 +-
+ 7 files changed, 136 insertions(+), 279 deletions(-)
+
+-- 
+1.8.5.3
+
