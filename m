@@ -1,174 +1,64 @@
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Subject: Re: [PATCH v13 2/3] PHY: add APM X-Gene SoC 15Gbps Multi-purpose
- PHY driver
-Date: Thu, 6 Mar 2014 14:23:05 +0530
-Message-ID: <53183771.9070501@ti.com>
-References: <1394059399-30671-1-git-send-email-lho@apm.com> <1394059399-30671-2-git-send-email-lho@apm.com> <1394059399-30671-3-git-send-email-lho@apm.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 2/3] Add EVPD page 0x83 to sysfs
+Date: Thu, 06 Mar 2014 10:01:05 +0100
+Message-ID: <53183951.7080805@suse.de>
+References: <1392286032-85036-1-git-send-email-hare@suse.de> <1392286032-85036-3-git-send-email-hare@suse.de> <20140228170131.GA31510@infradead.org> <5316D459.6070107@suse.de> <20140305194255.GA5607@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1394059399-30671-3-git-send-email-lho@apm.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Loc Ho <lho@apm.com>, tj@kernel.org
-Cc: olof@lixom.net, arnd@arndb.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:49265 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751190AbaCFJBH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 6 Mar 2014 04:01:07 -0500
+In-Reply-To: <20140305194255.GA5607@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, Jeremy Linton <jlinton@tributary.com>, Kay Sievers <kay@vrfy.org>, Doug Gilbert <dgilbert@interlog.com>, Kai Makisara <kai.makisara@kolumbus.fi>
 
-Hi,
+On 03/05/2014 08:42 PM, Christoph Hellwig wrote:
+> On Wed, Mar 05, 2014 at 08:38:01AM +0100, Hannes Reinecke wrote:
+>>> Either way I think the call to query evpd 0 should be a separate
+>>> function, so even if we don't store the information it's abstracted=
+ out.
+>>>
+>> Hmm. That would work if we were just asking for a single page; but
+>> when we're checking several pages (like 0x83 and 0x80) we'd need
+>> either to pass in a page array or querying page 0 several times.
+>> Neither of which is very appealing.
+>>
+>> However, specifying additional flags for the individual pages might
+>> work. I'll see what I can come up with.
+>=20
+> Passing in a bitmask or flags seems useful.  Even better storing it i=
+n the
+> scsi_device.  Note that I expect the place that need to know the EVPD
+> patch to grow slowly but steadily over time.
+>=20
+I am somewhat reluctant here.
 
-On Thursday 06 March 2014 04:13 AM, Loc Ho wrote:
-> This patch adds support for the APM X-Gene SoC 15Gbps Multi-purpose PHY.
-> This is the physical layer interface for the corresponding host
-> controller. Currently, only external clock and Gen3 SATA mode
-> are supported.
->
-> Signed-off-by: Loc Ho <lho@apm.com>
-> Signed-off-by: Tuan Phan <tphan@apm.com>
-> Signed-off-by: Suman Tripathi <stripathi@apm.com>
-> ---
->   drivers/phy/Kconfig     |    7 +
->   drivers/phy/Makefile    |    2 +
->   drivers/phy/phy-xgene.c | 1756 +++++++++++++++++++++++++++++++++++++++++++++++
->   3 files changed, 1765 insertions(+), 0 deletions(-)
->   create mode 100644 drivers/phy/phy-xgene.c
->
-> diff --git a/drivers/phy/Kconfig b/drivers/phy/Kconfig
-> index afa2354..221a1b7 100644
-> --- a/drivers/phy/Kconfig
-> +++ b/drivers/phy/Kconfig
-> @@ -64,4 +64,11 @@ config BCM_KONA_USB2_PHY
->   	help
->   	  Enable this to support the Broadcom Kona USB 2.0 PHY.
->
-> +config PHY_XGENE
-> +	tristate "APM X-Gene 15Gbps PHY support"
-> +	depends on HAS_IOMEM && OF && (ARM64 || COMPILE_TEST)
-> +	select GENERIC_PHY
-> +	help
-> +	  This option enables support for APM X-Gene SoC multi-purpose PHY.
-> +
->   endmenu
-> diff --git a/drivers/phy/Makefile b/drivers/phy/Makefile
-> index b57c253..dee70f4 100644
-> --- a/drivers/phy/Makefile
-> +++ b/drivers/phy/Makefile
-> @@ -9,3 +9,5 @@ obj-$(CONFIG_PHY_EXYNOS_MIPI_VIDEO)	+= phy-exynos-mipi-video.o
->   obj-$(CONFIG_PHY_MVEBU_SATA)		+= phy-mvebu-sata.o
->   obj-$(CONFIG_OMAP_USB2)			+= phy-omap-usb2.o
->   obj-$(CONFIG_TWL4030_USB)		+= phy-twl4030-usb.o
-> +obj-$(CONFIG_PHY_XGENE)			+= phy-xgene.o
-> +
-.
-.
-<snip>
-.
-.
+Adding separate flags like 'support_vpd_pg83' is a bit pointless,
+given that we might as well check for vpg_pg83.
 
-> +	int i;
-> +
-> +	rc = xgene_phy_hw_initialize(ctx, CLK_EXT_DIFF, SSC_DISABLE);
-> +	if (rc) {
-> +		dev_err(ctx->dev, "PHY initialize failed %d\n", rc);
-> +		return rc;
-> +	}
-> +
-> +	/* Setup clock properly after PHY configuration */
-> +	if (!IS_ERR(ctx->clk)) {
-> +		/* HW requires an toggle of the clock */
-> +		clk_prepare_enable(ctx->clk);
-> +		clk_disable_unprepare(ctx->clk);
-> +		clk_prepare_enable(ctx->clk);
-> +	}
-> +
-> +	/* Compute average value */
-> +	for (i = 0; i < MAX_LANE; i++)
-> +		xgene_phy_gen_avg_val(ctx, i);
-> +
-> +	dev_dbg(ctx->dev, "PHY initialized\n");
-> +	return 0;
-> +}
-> +
-> +static const struct phy_ops xgene_phy_ops = {
-> +	.init		= xgene_phy_hw_init,
-> +	.owner		= THIS_MODULE,
-> +};
-> +
-> +static struct phy *xgene_phy_xlate(struct device *dev,
-> +				   struct of_phandle_args *args)
-> +{
-> +	struct xgene_phy_ctx *ctx = dev_get_drvdata(dev);
-> +
-> +	if (args->args_count > 0) {
-> +		if (args->args[0] >= MODE_MAX)
-> +			return NULL;
+So the only 'proper' solution would be to add a bitmap of supported
+pages; however, this would be 256 bits =3D 32 bytes of additional
+space required for struct sdev.
+Which I'm a bit reluctant do to, as it'll be a sparse array in most
+cases, adding to quite some wasted space.
 
-Are you sure you want to return NULL instead of error? NULL is 
-considered a valid value for optional PHYs.
-> +		ctx->mode = args->args[0];
-> +	}
+Thoughts?
 
-I think it doesn't make sense to return the phy without the 'mode'. So 
-we should report error here too.
+Cheers,
 
-> +	return ctx->phy;
-> +}
-> +
-> +static void xgene_phy_get_param(struct platform_device *pdev,
-> +				const char *name, u32 *buffer,
-> +				int count, u32 *default_val,
-> +				u32 conv_factor)
-> +{
-> +	int i;
-> +
-> +	if (!of_property_read_u32_array(pdev->dev.of_node, name, buffer,
-> +					count)) {
-> +		for (i = 0; i < count; i++)
-> +			buffer[i] /= conv_factor;
-> +		return;
-> +	}
-> +	/* Does not exist, load default */
-> +	for (i = 0; i < count; i++)
-> +		buffer[i] = default_val[i % 3];
-> +}
-> +
-> +static int xgene_phy_probe(struct platform_device *pdev)
-> +{
-> +	struct phy_provider *phy_provider;
-> +	struct xgene_phy_ctx *ctx;
-> +	struct resource *res;
-> +	int rc = 0;
-> +	u32 default_spd[] = DEFAULT_SATA_SPD_SEL;
-> +	u32 default_txboost_gain[] = DEFAULT_SATA_TXBOOST_GAIN;
-> +	u32 default_txeye_direction[] = DEFAULT_SATA_TXEYEDIRECTION;
-> +	u32 default_txeye_tuning[] = DEFAULT_SATA_TXEYETUNING;
-> +	u32 default_txamp[] = DEFAULT_SATA_TXAMP;
-> +	u32 default_txcn1[] = DEFAULT_SATA_TXCN1;
-> +	u32 default_txcn2[] = DEFAULT_SATA_TXCN2;
-> +	u32 default_txcp1[] = DEFAULT_SATA_TXCP1;
-> +	int i;
-> +
-> +	ctx = devm_kzalloc(&pdev->dev, sizeof(*ctx), GFP_KERNEL);
-> +	if (!ctx) {
-> +		dev_err(&pdev->dev, "can't allocate PHY context\n");
-remove dev_err here.. kzalloc will do that for you..
-> +		return -ENOMEM;
-> +	}
-> +	ctx->dev = &pdev->dev;
-> +
-> +	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-> +	if (!res) {
-> +		dev_err(&pdev->dev, "no PHY resource address\n");
-
-same here.. you don't have to even check for return value of res. 
-ioremap_resource will take care of that.
-> +		rc = -EINVAL;
-> +		goto error;
-> +	}
-> +	ctx->sds_base = devm_ioremap_resource(&pdev->dev, res);
-> +	if (!ctx->sds_base) {
-> +		dev_err(&pdev->dev, "can't map PHY resource\n");
-
-same here..
-
-Thanks
-Kishon
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
