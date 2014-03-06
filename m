@@ -1,64 +1,70 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH RESEND] SCSI: sd: don't fail if the device doesn't
- recognize SYNCHRONIZE CACHE
-Date: Thu, 6 Mar 2014 13:13:24 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1403061308350.961-100000@iolanthe.rowland.org>
-References: <CAA9_cmffKCnam5n2U9y1NzJpBRVzLyb2F+m8F5e6eW2Hub-HTA@mail.gmail.com>
+From: Mark Knecht <markknecht@gmail.com>
+Subject: Re: Slow I/O performance on SAS1064
+Date: Thu, 6 Mar 2014 12:51:27 -0800
+Message-ID: <CAK2H+eesWkK_w66e5BLcA_Ft0FHNTuNYmxF_LceMHVupX8T_xg@mail.gmail.com>
+References: <20140305175036.GA23885@localhost.localdomain>
+	<CAK2H+ecJKp+QLJsbGW2tquO5_DuQReJD8nKViHea9tTiJwfn-g@mail.gmail.com>
+	<20140305214013.GA6287@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <CAA9_cmffKCnam5n2U9y1NzJpBRVzLyb2F+m8F5e6eW2Hub-HTA@mail.gmail.com>
-Sender: stable-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Daniel Mack <zonque@gmail.com>, "JBottomley@parallels.com" <JBottomley@parallels.com>, linux-scsi <linux-scsi@vger.kernel.org>, USB list <linux-usb@vger.kernel.org>, Oliver Neukum <oliver@neukum.org>, stable@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:58916 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752824AbaCFUv2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Mar 2014 15:51:28 -0500
+In-Reply-To: <20140305214013.GA6287@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: markus <markus@kola.li>
+Cc: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>, Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, support@lsi.com, DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org, Linux Kernel List <linux-kernel@vger.kernel.org>
 
-On Wed, 5 Mar 2014, Dan Williams wrote:
+On Wed, Mar 5, 2014 at 1:40 PM, markus <markus@kola.li> wrote:
+> On Wed, Mar 05, 2014 at 10:21:07AM -0800, Mark Knecht wrote:
+>> On Wed, Mar 5, 2014 at 9:50 AM, Markus <markus@kola.li> wrote:
+>> <SNIP>
+>>
+>> > The hdparm result looks like there is somethink not right . There were no features supported but why ?
+>>
+>>
+>> Does the HDD have S.M.A.R.T. features? Possibly
+>>
+>> smartctl -a /dev/sda
+> root@outpost:~# smartctl -a /dev/sda
+> smartctl 5.41 2011-06-09 r3365 [sparc64-linux-3.13.5-mar] (local build)
+> Copyright (C) 2002-11 by Bruce Allen, http://smartmontools.sourceforge.net
+>
+>
+> Probable ATA device behind a SAT layer
+> Try an additional '-d ata' or '-d sat' argument.
+>
+> so i try it with scsi.
+>
+> root@outpost:~# smartctl -d scsi -a /dev/sda
+> smartctl 5.41 2011-06-09 r3365 [sparc64-linux-3.13.5-mar] (local build)
+> Copyright (C) 2002-11 by Bruce Allen, http://smartmontools.sourceforge.net
+>
+> User Capacity:        2,000,398,934,016 bytes [2.00 TB]
+> Logical block size:   512 bytes
+> Logical Unit id:      0x50000394e2380537
+> Serial number:                   7365P4KNT
+> Device type:          disk
+> Local Time is:        Wed Mar  5 22:32:09 2014 CET
+> Device supports SMART and is Disabled
+> Temperature Warning Disabled or Not Supported
+> SMART Health Status: OK
+>
+> Error Counter logging not supported
+> Device does not support Self Test logging
 
-> On Mon, Mar 3, 2014 at 1:25 PM, Daniel Mack <zonque@gmail.com> wrote:
-> > From: Alan Stern <stern@rowland.harvard.edu>
-> >
-> > Evidently some wacky USB-ATA bridges don't recognize the SYNCHRONIZE
-> > CACHE command, as shown in this email thread:
-> >
-> >         http://marc.info/?t=138978356200002&r=1&w=2
-> >
-> > The fact that we can't tell them to drain their caches shouldn't
-> > prevent the system from going into suspend.  Therefore sd_sync_cache()
-> > shouldn't return an error if the device replies with an Invalid
-> > Command ASC.
-> >
-> > Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
-> > Reported-by: Sven Neumann <s.neumann@raumfeld.com>
-> > Tested-by: Daniel Mack <zonque@gmail.com>
-> > CC: Oliver Neukum <oliver@neukum.org>
-> > CC: <stable@vger.kernel.org>
-> > ---
-> > Hi,
-> >
-> > this patch has been around for awhile, but hasn't gained much
-> > attraction, and hasn't been merged anywhere yet. Which is sad,
-> > as it fixes a bug on real hardware when going to suspend :)
-> >
-> > Could anyone from the SCSI people have a quick look maybe?
-> 
-> Acked-by: Dan Williams <dan.j.williams@intel.com>
-> 
-> But I agree with Tejun [1], that this likely does not go far enough.
-> We should also be looking to fail future writes to the device or
-> disabling the cache.
-> 
-> Tejun's comment:
-> "Ooh, yeah, flush failure is special.  That said, I think the right way
-> to deal with that is marking the device as failed and fail writes /
-> flushes afterwards instead of failing suspend.  It's hightly unlikely
-> the device is in any useable state after failing flushes anyway and
-> failing suspend has potential to lead to pretty dramatic failure
-> conditions (device overheating in the bag would be a common one) too."
+I am not familiar with this message:
 
-I disagree with part of Tejun's comment.  In the case of the bug report
-leading to this patch, it is _not_ true that the device ends up in an
-unusable state (as far as I know).  There's no reason to mark the
-device as failed.
+"Device supports SMART and is Disabled"
 
-Alan Stern
+but there are lots of posts out there with folks asking about it.
+Possibly you can figure out what's causing smart not to turn on, get
+it turned on and get some info.
+
+Sorry I cannot help more.
+
+Good luck,
+Mark
