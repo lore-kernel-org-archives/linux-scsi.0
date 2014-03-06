@@ -1,56 +1,51 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH] virtio-scsi: Change sense buffer size to 252
-Date: Thu, 06 Mar 2014 12:55:45 +0100
-Message-ID: <53186241.5060106@redhat.com>
-References: <1394095660-15075-1-git-send-email-famz@redhat.com> <53184962.3080100@redhat.com> <53185A79.9010206@suse.de>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH 1/3] m68k/atari - convert atari_scsi falcon_get_lock() to
+ use wait_event()
+Date: Thu, 6 Mar 2014 14:48:12 +0100
+Message-ID: <CAMuHMdUm_FrhnagZcDBGFH15tqSfC5We0fczSbRhmbyi1KvHZQ@mail.gmail.com>
+References: <1393660265-19384-1-git-send-email-schmitz@debian.org>
+	<1393660265-19384-2-git-send-email-schmitz@debian.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <53185A79.9010206@suse.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, Fam Zheng <famz@redhat.com>, linux-kernel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org, kvm@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pd0-f175.google.com ([209.85.192.175]:50702 "EHLO
+	mail-pd0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750885AbaCFNsN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Mar 2014 08:48:13 -0500
+In-Reply-To: <1393660265-19384-2-git-send-email-schmitz@debian.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Michael Schmitz <schmitzmic@gmail.com>
+Cc: Linux/m68k <linux-m68k@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, scsi <linux-scsi@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>, Michael Schmitz <schmitz@debian.org>
 
-Il 06/03/2014 12:22, Hannes Reinecke ha scritto:
-> On 03/06/2014 11:09 AM, Paolo Bonzini wrote:
->> Il 06/03/2014 09:47, Fam Zheng ha scritto:
->>> According to SPC-4, section 4.5.2.1, 252 is the limit of sense
->>> data. So
->>> increase the value.
->>>
->>> Signed-off-by: Fam Zheng <famz@redhat.com>
->>> ---
->>>  include/linux/virtio_scsi.h | 2 +-
->>>  1 file changed, 1 insertion(+), 1 deletion(-)
->>>
->>> diff --git a/include/linux/virtio_scsi.h
->>> b/include/linux/virtio_scsi.h
->>> index 4195b97..a437f7f 100644
->>> --- a/include/linux/virtio_scsi.h
->>> +++ b/include/linux/virtio_scsi.h
->>> @@ -28,7 +28,7 @@
->>>  #define _LINUX_VIRTIO_SCSI_H
->>>
->>>  #define VIRTIO_SCSI_CDB_SIZE   32
->>> -#define VIRTIO_SCSI_SENSE_SIZE 96
->>> +#define VIRTIO_SCSI_SENSE_SIZE 252
->>>
->>>  /* SCSI command request, followed by data-out */
->>>  struct virtio_scsi_cmd_req {
->>>
->>
->> Hi Fam, how did you test this?
+On Sat, Mar 1, 2014 at 8:51 AM, Michael Schmitz <schmitzmic@gmail.com> wrote:
+> sleep_on is known broken and going away. The atari_scsi driver is one of
+> two remaining users in the falcon_get_lock() function, which is a rather
+> crazy piece of code. This does not attempt to fix the driver's locking
+> scheme in general, but at least prevents falcon_get_lock from going to
+> sleep when no other thread holds the same lock or tries to get it,
+> and we no longer schedule with irqs disabled.
 >
-> Is there a specific reason _not_ to use the linux default?
-> The SCSI stack typically limits the sense code to
-> SCSI_SENSE_BUFFERSIZE, so using other values have a
-> limited sense.
-> Literally :-)
+> MSch: fixed completion conditions missed in Arnds' original RFC patch.
+>
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> Acked-by: Michael Schmitz <schmitz@debian.org>
+> Cc: Geert Uytterhoeven <geert@linux-m68k.org>
+> Cc: James E.J. Bottomley <JBottomley@parallels.com>
+> Cc: linux-scsi@vger.kernel.org
 
-Indeed I don't think this patch makes a difference.  Though I asked not 
-from the SCSI stack perspective, but because right now both virtio-scsi 
-targets (QEMU and vhost-scsi) are also truncating at 96.
+Thanks, applied with original authorship attribution, original subject
+matching SCSI oneline summary style, and proper SoB.
 
-Paolo
+Will queue for 3.15.
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
