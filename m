@@ -1,28 +1,33 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/6] target: Allocate se_dev_entrys in device list only
- when used
-Date: Fri, 7 Mar 2014 02:33:43 -0800
-Message-ID: <20140307103343.GA14195@infradead.org>
+Subject: Re: [PATCH 3/6] target: Change core_dev_del_lun to take a se_lun
+ instead of unpacked_lun
+Date: Fri, 7 Mar 2014 02:35:34 -0800
+Message-ID: <20140307103534.GB14195@infradead.org>
 References: <1394144131-31499-1-git-send-email-agrover@redhat.com>
- <1394144131-31499-2-git-send-email-agrover@redhat.com>
+ <1394144131-31499-4-git-send-email-agrover@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <target-devel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1394144131-31499-2-git-send-email-agrover@redhat.com>
+In-Reply-To: <1394144131-31499-4-git-send-email-agrover@redhat.com>
 Sender: target-devel-owner@vger.kernel.org
 To: Andy Grover <agrover@redhat.com>
 Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
->  static int core_create_device_list_for_node(struct se_node_acl *nacl)
+On Thu, Mar 06, 2014 at 02:15:28PM -0800, Andy Grover wrote:
+> +void core_dev_del_lun(
+>  	struct se_portal_group *tpg,
+> +	struct se_lun *lun)
 >  {
-> -	struct se_dev_entry *deve;
-> -	int i;
-> -
-> -	nacl->device_list = array_zalloc(TRANSPORT_MAX_LUNS_PER_TPG,
-> -			sizeof(struct se_dev_entry), GFP_KERNEL);
-> +	nacl->device_list = kzalloc(TRANSPORT_MAX_LUNS_PER_TPG * sizeof(void*),
-> +				    GFP_KERNEL);
+> +	pr_debug("%s_TPG[%u]_LUN[%u] - Deactivating %s Logical Unit from"
+>  		" device object\n", tpg->se_tpg_tfo->get_fabric_name(),
+> +		tpg->se_tpg_tfo->tpg_get_tag(tpg), lun->unpacked_lun,
+>  		tpg->se_tpg_tfo->get_fabric_name());
+>  
+> +	core_tpg_post_dellun(tpg, lun);
 
-Seems like ->device_list should simply be an array instead of a pointer.
+Seems like core_tpg_post_dellun should be folded into core_dev_del_lun?
+
+Also would be nice to get some sane names for all the functions in this
+area..
