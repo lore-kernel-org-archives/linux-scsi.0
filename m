@@ -1,51 +1,126 @@
 From: Eddie Wai <eddie.wai@broadcom.com>
-Subject: Re: [PATCH 1/2] bnx2fc: remove unused variable hash_table_size
-Date: Fri, 7 Mar 2014 10:43:18 -0800
-Message-ID: <1394217798.8102.45.camel@lbirv-waie-lx2.broadcom.com>
+Subject: Re: [PATCH 2/2] bnx2fc: fix memory leak and potential NULL pointer
+ dereference.
+Date: Fri, 7 Mar 2014 11:21:45 -0800
+Message-ID: <1394220105.8102.62.camel@lbirv-waie-lx2.broadcom.com>
 References: <1394203066-13515-1-git-send-email-mlombard@redhat.com>
-	 <1394203066-13515-2-git-send-email-mlombard@redhat.com>
+	 <1394203066-13515-3-git-send-email-mlombard@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:1559 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751577AbaCGSqI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Mar 2014 13:46:08 -0500
-In-Reply-To: <1394203066-13515-2-git-send-email-mlombard@redhat.com>
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:37798 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751945AbaCGTXf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Mar 2014 14:23:35 -0500
+In-Reply-To: <1394203066-13515-3-git-send-email-mlombard@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Maurizio Lombardi <mlombard@redhat.com>
 Cc: linux-scsi@vger.kernel.org, jbottomley@parallels.com, m.lombardi85@gmail.com
 
-Looks good.  Thanks.
+Hello Maurizio,
 
-Acked-by: Eddie Wai <eddie.wai@broadcom.com>
+Thanks for looking into this.  The patch looks good, but I would like to
+extend it with the following allocation failure portion to completely
+remove the memory leak.  Please incorporate this into your next
+submission.
+
+Thanks,
+Eddie
+
+@@ -2020,7 +2026,7 @@ static int bnx2fc_allocate_hash_table(struct
+bnx2fc_hba *hba)
+        dma_segment_array = kzalloc(dma_segment_array_size, GFP_KERNEL);
+        if (!dma_segment_array) {
+                printk(KERN_ERR PFX "hash table pointers (dma) alloc
+failed\n");
+-               return -ENOMEM;
++               goto free_hash_tbl_seg;
+        }
+
+        for (i = 0; i < segment_count; ++i) {
+@@ -2039,7 +2045,7 @@ static int bnx2fc_allocate_hash_table(struct
+bnx2fc_hba *hba)
+                                hba->hash_tbl_segments[i] = NULL;
+                        }
+                        kfree(dma_segment_array);
+-                       return -ENOMEM;
++                       goto free_hash_tbl_seg;
+                }
+                memset(hba->hash_tbl_segments[i], 0,
+                       BNX2FC_HASH_TBL_CHUNK_SIZE);
+@@ -2077,6 +2083,11 @@ static int bnx2fc_allocate_hash_table(struct
+bnx2fc_hba *hba)
+        }
+        kfree(dma_segment_array);
+        return 0;
++
++free_hash_tbl_seg:
++       kfree(hba->hash_tbl_segments);
++       hba->hash_tbl_segments = NULL;
++       return -ENOMEM;
+ }
+
 
 On Fri, 2014-03-07 at 15:37 +0100, Maurizio Lombardi wrote:
-> hash_table_size is not used by the bnx2fc_free_hash_table() function.
+> If bnx2fc_allocate_hash_table() for some reasons fails, it is possible that the
+> hash_tbl_segments or the hash_tbl_pbl pointers are NULL.
+> In this case bnx2fc_free_hash_table() will panic the system.
+> 
+> this patch also fixes a memory leak, the hash_tbl_segments pointer was never
+> freed.
 > 
 > Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
 > ---
->  drivers/scsi/bnx2fc/bnx2fc_hwi.c | 3 ---
->  1 file changed, 3 deletions(-)
+>  drivers/scsi/bnx2fc/bnx2fc_hwi.c | 34 ++++++++++++++++++++--------------
+>  1 file changed, 20 insertions(+), 14 deletions(-)
 > 
 > diff --git a/drivers/scsi/bnx2fc/bnx2fc_hwi.c b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-> index 46a3765..261af2a 100644
+> index 261af2a..f83bae4 100644
 > --- a/drivers/scsi/bnx2fc/bnx2fc_hwi.c
 > +++ b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-> @@ -1966,12 +1966,9 @@ static void bnx2fc_free_hash_table(struct bnx2fc_hba *hba)
->  {
->  	int i;
+> @@ -1968,21 +1968,27 @@ static void bnx2fc_free_hash_table(struct bnx2fc_hba *hba)
 >  	int segment_count;
-> -	int hash_table_size;
 >  	u32 *pbl;
 >  
->  	segment_count = hba->hash_tbl_segment_count;
-> -	hash_table_size = BNX2FC_NUM_MAX_SESS * BNX2FC_MAX_ROWS_IN_HASH_TBL *
-> -		sizeof(struct fcoe_hash_table_entry);
+> -	segment_count = hba->hash_tbl_segment_count;
+> -
+> -	pbl = hba->hash_tbl_pbl;
+> -	for (i = 0; i < segment_count; ++i) {
+> -		dma_addr_t dma_address;
+> -
+> -		dma_address = le32_to_cpu(*pbl);
+> -		++pbl;
+> -		dma_address += ((u64)le32_to_cpu(*pbl)) << 32;
+> -		++pbl;
+> -		dma_free_coherent(&hba->pcidev->dev,
+> -				  BNX2FC_HASH_TBL_CHUNK_SIZE,
+> -				  hba->hash_tbl_segments[i],
+> -				  dma_address);
+> +	if (hba->hash_tbl_segments) {
+> +
+> +		pbl = hba->hash_tbl_pbl;
+> +		if (pbl) {
+> +			segment_count = hba->hash_tbl_segment_count;
+> +			for (i = 0; i < segment_count; ++i) {
+> +				dma_addr_t dma_address;
+> +
+> +				dma_address = le32_to_cpu(*pbl);
+> +				++pbl;
+> +				dma_address += ((u64)le32_to_cpu(*pbl)) << 32;
+> +				++pbl;
+> +				dma_free_coherent(&hba->pcidev->dev,
+> +						  BNX2FC_HASH_TBL_CHUNK_SIZE,
+> +						  hba->hash_tbl_segments[i],
+> +						  dma_address);
+> +			}
+> +		}
 >  
->  	pbl = hba->hash_tbl_pbl;
->  	for (i = 0; i < segment_count; ++i) {
+> +		kfree(hba->hash_tbl_segments);
+> +		hba->hash_tbl_segments = NULL;
+>  	}
+>  
+>  	if (hba->hash_tbl_pbl) {
 
 
