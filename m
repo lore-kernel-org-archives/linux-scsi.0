@@ -1,118 +1,161 @@
-From: Loc Ho <lho@apm.com>
-Subject: [PATCH v15 3/3] arm64: Add APM X-Gene SoC 15Gbps Multi-purpose PHY DTS entries
-Date: Fri,  7 Mar 2014 10:28:09 -0700
-Message-ID: <1394213289-29565-4-git-send-email-lho@apm.com>
-References: <1394213289-29565-1-git-send-email-lho@apm.com>
- <1394213289-29565-2-git-send-email-lho@apm.com>
- <1394213289-29565-3-git-send-email-lho@apm.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1394213289-29565-3-git-send-email-lho@apm.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: kishon@ti.com, tj@kernel.org
-Cc: olof@lixom.net, arnd@arndb.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
+From: Andy Grover <agrover@redhat.com>
+Subject: [PATCH 7/6] target: Do not allocate device_list and tpg_lun_list arrays separately
+Date: Fri,  7 Mar 2014 09:50:22 -0800
+Message-ID: <1394214622-2924-1-git-send-email-agrover@redhat.com>
+References: <1394144131-31499-1-git-send-email-agrover@redhat.com>
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1394144131-31499-1-git-send-email-agrover@redhat.com>
+Sender: target-devel-owner@vger.kernel.org
+To: target-devel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-This patch adds the DTS entries for the APM X-Gene SoC 15Gbps Multi-purpose
-PHY driver. The PHY for SATA controller 2 and 3 are enabled by default.
+Instead of allocing these dynamically, include them in their parent
+structures.
 
-Signed-off-by: Loc Ho <lho@apm.com>
-Signed-off-by: Tuan Phan <tphan@apm.com>
-Signed-off-by: Suman Tripathi <stripathi@apm.com>
+Signed-off-by: Andy Grover <agrover@redhat.com>
 ---
- arch/arm64/boot/dts/apm-storm.dtsi |   75 ++++++++++++++++++++++++++++++++++++
- 1 files changed, 75 insertions(+), 0 deletions(-)
+ drivers/target/target_core_device.c |  6 -----
+ drivers/target/target_core_tpg.c    | 44 +++----------------------------------
+ include/target/target_core_base.h   |  4 ++--
+ 3 files changed, 5 insertions(+), 49 deletions(-)
 
-diff --git a/arch/arm64/boot/dts/apm-storm.dtsi b/arch/arm64/boot/dts/apm-storm.dtsi
-index d37d736..c78ddcf 100644
---- a/arch/arm64/boot/dts/apm-storm.dtsi
-+++ b/arch/arm64/boot/dts/apm-storm.dtsi
-@@ -176,6 +176,51 @@
- 				reg-names = "csr-reg";
- 				clock-output-names = "eth8clk";
- 			};
-+
-+			sataphy1clk: sataphy1clk@1f21c000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				clock-names = "socplldiv2";
-+				reg = <0x0 0x1f21c000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "sataphy1clk";
-+				status = "disabled";
-+				csr-offset = <0x4>;
-+				csr-mask = <0x00>;
-+				enable-offset = <0x0>;
-+				enable-mask = <0x06>;
-+			};
-+
-+			sataphy2clk: sataphy1clk@1f22c000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				clock-names = "socplldiv2";
-+				reg = <0x0 0x1f22c000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "sataphy2clk";
-+				status = "ok";
-+				csr-offset = <0x4>;
-+				csr-mask = <0x3a>;
-+				enable-offset = <0x0>;
-+				enable-mask = <0x06>;
-+			};
-+
-+			sataphy3clk: sataphy1clk@1f23c000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				clock-names = "socplldiv2";
-+				reg = <0x0 0x1f23c000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "sataphy3clk";
-+				status = "ok";
-+				csr-offset = <0x4>;
-+				csr-mask = <0x3a>;
-+				enable-offset = <0x0>;
-+				enable-mask = <0x06>;
-+			};
- 		};
+diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
+index afa7f6b..173c4f0 100644
+--- a/drivers/target/target_core_device.c
++++ b/drivers/target/target_core_device.c
+@@ -242,9 +242,6 @@ int core_free_device_list_for_node(
+ 	struct se_lun *lun;
+ 	u32 i;
  
- 		serial0: serial@1c020000 {
-@@ -187,5 +232,35 @@
- 			interrupt-parent = <&gic>;
- 			interrupts = <0x0 0x4c 0x4>;
- 		};
+-	if (!nacl->device_list)
+-		return 0;
+-
+ 	spin_lock_irq(&nacl->device_list_lock);
+ 	for (i = 0; i < TRANSPORT_MAX_LUNS_PER_TPG; i++) {
+ 		deve = nacl->device_list[i];
+@@ -267,9 +264,6 @@ int core_free_device_list_for_node(
+ 	}
+ 	spin_unlock_irq(&nacl->device_list_lock);
+ 
+-	kfree(nacl->device_list);
+-	nacl->device_list = NULL;
+-
+ 	return 0;
+ }
+ 
+diff --git a/drivers/target/target_core_tpg.c b/drivers/target/target_core_tpg.c
+index 522b325..38a6d1b 100644
+--- a/drivers/target/target_core_tpg.c
++++ b/drivers/target/target_core_tpg.c
+@@ -189,23 +189,6 @@ static int core_set_queue_depth_for_node(
+ 	return 0;
+ }
+ 
+-/*      core_create_device_list_for_node():
+- *
+- *
+- */
+-static int core_create_device_list_for_node(struct se_node_acl *nacl)
+-{
+-	nacl->device_list = kzalloc(TRANSPORT_MAX_LUNS_PER_TPG * sizeof(void*),
+-				    GFP_KERNEL);
+-	if (!nacl->device_list) {
+-		pr_err("Unable to allocate memory for"
+-			" struct se_node_acl->device_list\n");
+-		return -ENOMEM;
+-	}
+-
+-	return 0;
+-}
+-
+ /*	core_tpg_check_initiator_node_acl()
+  *
+  *
+@@ -242,11 +225,6 @@ struct se_node_acl *core_tpg_check_initiator_node_acl(
+ 
+ 	tpg->se_tpg_tfo->set_default_node_attributes(acl);
+ 
+-	if (core_create_device_list_for_node(acl) < 0) {
+-		tpg->se_tpg_tfo->tpg_release_fabric_acl(tpg, acl);
+-		return NULL;
+-	}
+-
+ 	if (core_set_queue_depth_for_node(tpg, acl) < 0) {
+ 		core_free_device_list_for_node(acl, tpg);
+ 		tpg->se_tpg_tfo->tpg_release_fabric_acl(tpg, acl);
+@@ -367,11 +345,6 @@ struct se_node_acl *core_tpg_add_initiator_node_acl(
+ 
+ 	tpg->se_tpg_tfo->set_default_node_attributes(acl);
+ 
+-	if (core_create_device_list_for_node(acl) < 0) {
+-		tpg->se_tpg_tfo->tpg_release_fabric_acl(tpg, acl);
+-		return ERR_PTR(-ENOMEM);
+-	}
+-
+ 	if (core_set_queue_depth_for_node(tpg, acl) < 0) {
+ 		core_free_device_list_for_node(acl, tpg);
+ 		tpg->se_tpg_tfo->tpg_release_fabric_acl(tpg, acl);
+@@ -628,14 +601,6 @@ int core_tpg_register(
+ 	void *tpg_fabric_ptr,
+ 	int se_tpg_type)
+ {
+-	se_tpg->tpg_lun_list = kzalloc(TRANSPORT_MAX_LUNS_PER_TPG * sizeof(void*),
+-				       GFP_KERNEL);
+-	if (!se_tpg->tpg_lun_list) {
+-		pr_err("Unable to allocate struct se_portal_group->"
+-				"tpg_lun_list\n");
+-		return -ENOMEM;
+-	}
+-
+ 	se_tpg->se_tpg_type = se_tpg_type;
+ 	se_tpg->se_tpg_fabric_ptr = tpg_fabric_ptr;
+ 	se_tpg->se_tpg_tfo = tfo;
+@@ -648,12 +613,9 @@ int core_tpg_register(
+ 	spin_lock_init(&se_tpg->session_lock);
+ 	spin_lock_init(&se_tpg->tpg_lun_lock);
+ 
+-	if (se_tpg->se_tpg_type == TRANSPORT_TPG_TYPE_NORMAL) {
+-		if (core_tpg_setup_virtual_lun0(se_tpg) < 0) {
+-			kfree(se_tpg->tpg_lun_list);
++	if (se_tpg->se_tpg_type == TRANSPORT_TPG_TYPE_NORMAL)
++		if (core_tpg_setup_virtual_lun0(se_tpg) < 0)
+ 			return -ENOMEM;
+-		}
+-	}
+ 
+ 	spin_lock_bh(&tpg_lock);
+ 	list_add_tail(&se_tpg->se_tpg_node, &tpg_list);
+@@ -710,7 +672,7 @@ int core_tpg_deregister(struct se_portal_group *se_tpg)
+ 		core_tpg_remove_lun(se_tpg, &se_tpg->tpg_virt_lun0);
+ 
+ 	se_tpg->se_tpg_fabric_ptr = NULL;
+-	kfree(se_tpg->tpg_lun_list);
 +
-+		phy1: phy@1f21a000 {
-+			compatible = "apm,xgene-phy";
-+			reg = <0x0 0x1f21a000 0x0 0x100>;
-+			#phy-cells = <1>;
-+			clocks = <&sataphy1clk 0>;
-+			status = "disabled";
-+			apm,tx-boost-gain = <30 30 30 30 30 30>;
-+			apm,tx-eye-tuning = <2 10 10 2 10 10>;
-+		};
-+
-+		phy2: phy@1f22a000 {
-+			compatible = "apm,xgene-phy";
-+			reg = <0x0 0x1f22a000 0x0 0x100>;
-+			#phy-cells = <1>;
-+			clocks = <&sataphy2clk 0>;
-+			status = "ok";
-+			apm,tx-boost-gain = <30 30 30 30 30 30>;
-+			apm,tx-eye-tuning = <1 10 10 2 10 10>;
-+		};
-+
-+		phy3: phy@1f23a000 {
-+			compatible = "apm,xgene-phy";
-+			reg = <0x0 0x1f23a000 0x0 0x100>;
-+			#phy-cells = <1>;
-+			clocks = <&sataphy3clk 0>;
-+			status = "ok";
-+			apm,tx-boost-gain = <31 31 31 31 31 31>;
-+			apm,tx-eye-tuning = <2 10 10 2 10 10>;
-+		};
- 	};
- };
+ 	return 0;
+ }
+ EXPORT_SYMBOL(core_tpg_deregister);
+diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
+index 6981642..c0d93c5 100644
+--- a/include/target/target_core_base.h
++++ b/include/target/target_core_base.h
+@@ -577,7 +577,7 @@ struct se_node_acl {
+ 	char			acl_tag[MAX_ACL_TAG_SIZE];
+ 	/* Used for PR SPEC_I_PT=1 and REGISTER_AND_MOVE */
+ 	atomic_t		acl_pr_ref_count;
+-	struct se_dev_entry	**device_list;
++	struct se_dev_entry	*device_list[TRANSPORT_MAX_LUNS_PER_TPG];
+ 	struct se_session	*nacl_sess;
+ 	struct se_portal_group *se_tpg;
+ 	spinlock_t		device_list_lock;
+@@ -864,7 +864,7 @@ struct se_portal_group {
+ 	struct list_head	se_tpg_node;
+ 	/* linked list for initiator ACL list */
+ 	struct list_head	acl_node_list;
+-	struct se_lun		**tpg_lun_list;
++	struct se_lun		*tpg_lun_list[TRANSPORT_MAX_LUNS_PER_TPG];
+ 	struct se_lun		tpg_virt_lun0;
+ 	/* List of TCM sessions associated wth this TPG */
+ 	struct list_head	tpg_sess_list;
 -- 
-1.5.5
+1.8.5.3
