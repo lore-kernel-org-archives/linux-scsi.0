@@ -1,41 +1,44 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 5/6] target: Allocate se_luns only when used
-Date: Fri, 7 Mar 2014 02:41:14 -0800
-Message-ID: <20140307104114.GC14195@infradead.org>
-References: <1394144131-31499-1-git-send-email-agrover@redhat.com>
- <1394144131-31499-6-git-send-email-agrover@redhat.com>
+Subject: Re: [PATCH 2/3] Add EVPD page 0x83 to sysfs
+Date: Fri, 7 Mar 2014 02:43:21 -0800
+Message-ID: <20140307104321.GA28472@infradead.org>
+References: <1392286032-85036-1-git-send-email-hare@suse.de>
+ <1392286032-85036-3-git-send-email-hare@suse.de>
+ <20140228170131.GA31510@infradead.org>
+ <5316D459.6070107@suse.de>
+ <20140305194255.GA5607@infradead.org>
+ <53183951.7080805@suse.de>
+ <1394188800.5225.41.camel@dabdike>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <target-devel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:40014 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751945AbaCGKnZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Mar 2014 05:43:25 -0500
 Content-Disposition: inline
-In-Reply-To: <1394144131-31499-6-git-send-email-agrover@redhat.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Andy Grover <agrover@redhat.com>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
+In-Reply-To: <1394188800.5225.41.camel@dabdike>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Jeremy Linton <jlinton@tributary.com>, Kay Sievers <kay@vrfy.org>, Doug Gilbert <dgilbert@interlog.com>, Kai Makisara <kai.makisara@kolumbus.fi>
 
-> -	se_tpg->tpg_lun_list = array_zalloc(TRANSPORT_MAX_LUNS_PER_TPG,
-> -			sizeof(struct se_lun), GFP_KERNEL);
-> +	se_tpg->tpg_lun_list = kzalloc(TRANSPORT_MAX_LUNS_PER_TPG * sizeof(void*),
-> +				       GFP_KERNEL);
+On Fri, Mar 07, 2014 at 02:40:00PM +0400, James Bottomley wrote:
+> On Thu, 2014-03-06 at 10:01 +0100, Hannes Reinecke wrote:
+> > So the only 'proper' solution would be to add a bitmap of supported
+> > pages; however, this would be 256 bits = 32 bytes of additional
+> > space required for struct sdev.
+> > Which I'm a bit reluctant do to, as it'll be a sparse array in most
+> > cases, adding to quite some wasted space.
+> 
+> Why per sdev?  Isn't it per target?  The supported EVPD page list
+> shouldn't really vary for luns of the same target unless something very
+> strange is happening in the array.
 
-Again seems like the pointer array should just be embedded instead of
-dynamically allocated.  Also given that it's properly typdef the kcalloc
-should have used the type instead of void *.  And it should have been
-kcalloc to start with..
+It might very well vary.  For one difference device types support
+different EVPD patches and a target might mix and match device types for
+LUNs.  Also software targets might use individual LUNs as passthrough
+to physical devices, in which case they might support different EVPD
+pages even for the same device type.  E.g. the pscsi backend for the
+in-kernel target might behave like that.
 
-> +void core_tpg_free_lun(
-> +	struct se_portal_group *tpg,
-> +	struct se_lun *lun)
-> +{
->  	spin_lock(&tpg->tpg_lun_lock);
-> -	lun->lun_status = TRANSPORT_LUN_STATUS_FREE;
-> +	tpg->tpg_lun_list[lun->unpacked_lun] = NULL;
->  	spin_unlock(&tpg->tpg_lun_lock);
-> +
-> +	kfree(lun);
-
-I can't see how the synchronization can work without refcounting the lun
-structure.  The lock just protectes the assignment, but you free it
-right after.  What happens to how jsut dereferenced it under the lock
-but then uses it outside (e.g. core_dev_add_initiator_node_lun_acl).
