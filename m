@@ -1,50 +1,35 @@
 From: Andy Grover <agrover@redhat.com>
-Subject: Re: [PATCH 5/6] target: Allocate se_luns only when used
-Date: Fri, 07 Mar 2014 10:12:09 -0800
-Message-ID: <531A0BF9.9040504@redhat.com>
-References: <1394144131-31499-1-git-send-email-agrover@redhat.com> <1394144131-31499-6-git-send-email-agrover@redhat.com> <20140307104114.GC14195@infradead.org>
+Subject: Re: [PATCH 3/6] target: Change core_dev_del_lun to take a se_lun
+ instead of unpacked_lun
+Date: Fri, 07 Mar 2014 10:20:02 -0800
+Message-ID: <531A0DD2.6020905@redhat.com>
+References: <1394144131-31499-1-git-send-email-agrover@redhat.com> <1394144131-31499-4-git-send-email-agrover@redhat.com> <20140307103534.GB14195@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20140307104114.GC14195@infradead.org>
+In-Reply-To: <20140307103534.GB14195@infradead.org>
 Sender: target-devel-owner@vger.kernel.org
 To: Christoph Hellwig <hch@infradead.org>
 Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 03/07/2014 02:41 AM, Christoph Hellwig wrote:
->> -	se_tpg->tpg_lun_list = array_zalloc(TRANSPORT_MAX_LUNS_PER_TPG,
->> -			sizeof(struct se_lun), GFP_KERNEL);
->> +	se_tpg->tpg_lun_list = kzalloc(TRANSPORT_MAX_LUNS_PER_TPG * sizeof(void*),
->> +				       GFP_KERNEL);
->
-> Again seems like the pointer array should just be embedded instead of
-> dynamically allocated.  Also given that it's properly typdef the kcalloc
-> should have used the type instead of void *.  And it should have been
-> kcalloc to start with..
-
-Yup. I posted a "7 of 6"  patch that folds the arrays into their parent 
-structures.
-
->> +void core_tpg_free_lun(
->> +	struct se_portal_group *tpg,
+On 03/07/2014 02:35 AM, Christoph Hellwig wrote:
+> On Thu, Mar 06, 2014 at 02:15:28PM -0800, Andy Grover wrote:
+>> +void core_dev_del_lun(
+>>   	struct se_portal_group *tpg,
 >> +	struct se_lun *lun)
->> +{
->>   	spin_lock(&tpg->tpg_lun_lock);
->> -	lun->lun_status = TRANSPORT_LUN_STATUS_FREE;
->> +	tpg->tpg_lun_list[lun->unpacked_lun] = NULL;
->>   	spin_unlock(&tpg->tpg_lun_lock);
->> +
->> +	kfree(lun);
+>>   {
+>> +	pr_debug("%s_TPG[%u]_LUN[%u] - Deactivating %s Logical Unit from"
+>>   		" device object\n", tpg->se_tpg_tfo->get_fabric_name(),
+>> +		tpg->se_tpg_tfo->tpg_get_tag(tpg), lun->unpacked_lun,
+>>   		tpg->se_tpg_tfo->get_fabric_name());
+>>
+>> +	core_tpg_post_dellun(tpg, lun);
 >
-> I can't see how the synchronization can work without refcounting the lun
-> structure.  The lock just protectes the assignment, but you free it
-> right after.  What happens to how jsut dereferenced it under the lock
-> but then uses it outside (e.g. core_dev_add_initiator_node_lun_acl).
+> Seems like core_tpg_post_dellun should be folded into core_dev_del_lun?
 
-Well you're right, but this is one instance of a larger lio 
-locking/refcounting hairball. This will be addressed in a separate patch 
-series.
+It gets more stuff added back to it in a later patch, and post_dellun 
+gets renamed too.
 
-Regards  -- Andy
+Regards -- Andy
