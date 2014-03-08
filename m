@@ -1,178 +1,300 @@
 From: Arvind Kumar <arvindkumar@vmware.com>
-Subject: [PATCH 2/3] VMW_PVSCSI: Add support for I/O requests coalescing.
-Date: Sat, 08 Mar 2014 12:59:39 -0800
-Message-ID: <1394312380.8462.27.camel@arvindkumar-dev1.eng.vmware.com>
+Subject: [PATCH 3/3] VMW_PVSCSI: Some improvements in pvscsi driver.
+Date: Sat, 08 Mar 2014 13:04:45 -0800
+Message-ID: <1394312685.8462.32.camel@arvindkumar-dev1.eng.vmware.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-outbound-1.vmware.com ([208.91.2.12]:42617 "EHLO
-	smtp-outbound-1.vmware.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751721AbaCHVHD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 8 Mar 2014 16:07:03 -0500
+Received: from smtp-outbound-2.vmware.com ([208.91.2.13]:59680 "EHLO
+	smtp-outbound-2.vmware.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751721AbaCHVML (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 8 Mar 2014 16:12:11 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@parallels.com, linux-scsi@vger.kernel.org
-Cc: pv-drivers@vmware.com, rmehta@vmware.com
+Cc: pv-drivers@vmware.com
 
-This change allows pvscsi driver to coalesce I/O requests
-before issuing them. The number of I/O's coalesced can be
-dynamically configured based on the workload.
+This change is about the following:
+(1) If the number of targets is 16+ then default ring_pages to 32.
+(2) Change default queue depth (per device) to 254.
+(3) Implement change_queue_depth function so that queue_depth per device can
+    be changed at run time. Honors the request only if coming from sysfs.
+(4) Clean up the info returned by modinfo.
 
-Signed-off-by: Rishi Mehta <rmehta@vmware.com>
-Acked-by: Arvind Kumar <arvindkumar@vmware.com>
-Cc: Rishi Mehta <rmehta@vmware.com>
+Signed-off-by: Arvind Kumar <arvindkumar@vmware.com>
 ---
- drivers/scsi/vmw_pvscsi.c |   49 ++++++++++++++++++++++++++++++++++++++++++---
- drivers/scsi/vmw_pvscsi.h |   17 +++++++++++++---
- 2 files changed, 60 insertions(+), 6 deletions(-)
+ drivers/scsi/vmw_pvscsi.c |  142 +++++++++++++++++++++++++++++++++------------
+ drivers/scsi/vmw_pvscsi.h |    2 +-
+ 2 files changed, 105 insertions(+), 39 deletions(-)
 
 diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
-index 7c5abd7..0591cff 100644
+index 0591cff..8667b8c 100644
 --- a/drivers/scsi/vmw_pvscsi.c
 +++ b/drivers/scsi/vmw_pvscsi.c
-@@ -72,6 +72,7 @@ struct pvscsi_adapter {
- 	bool				use_msi;
- 	bool				use_msix;
- 	bool				use_msg;
-+	bool				use_req_threshold;
+@@ -32,6 +32,7 @@
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_cmnd.h>
+ #include <scsi/scsi_device.h>
++#include <scsi/scsi_tcq.h>
  
- 	spinlock_t			hw_lock;
+ #include "vmw_pvscsi.h"
  
-@@ -109,6 +110,7 @@ static int pvscsi_cmd_per_lun    = PVSCSI_DEFAULT_QUEUE_DEPTH;
+@@ -44,7 +45,7 @@ MODULE_VERSION(PVSCSI_DRIVER_VERSION_STRING);
+ 
+ #define PVSCSI_DEFAULT_NUM_PAGES_PER_RING	8
+ #define PVSCSI_DEFAULT_NUM_PAGES_MSG_RING	1
+-#define PVSCSI_DEFAULT_QUEUE_DEPTH		64
++#define PVSCSI_DEFAULT_QUEUE_DEPTH		254
+ #define SGL_SIZE				PAGE_SIZE
+ 
+ struct pvscsi_sg_list {
+@@ -104,7 +105,7 @@ struct pvscsi_adapter {
+ 
+ 
+ /* Command line parameters */
+-static int pvscsi_ring_pages     = PVSCSI_DEFAULT_NUM_PAGES_PER_RING;
++static int pvscsi_ring_pages;
+ static int pvscsi_msg_ring_pages = PVSCSI_DEFAULT_NUM_PAGES_MSG_RING;
+ static int pvscsi_cmd_per_lun    = PVSCSI_DEFAULT_QUEUE_DEPTH;
  static bool pvscsi_disable_msi;
- static bool pvscsi_disable_msix;
- static bool pvscsi_use_msg       = true;
-+static bool pvscsi_use_req_threshold = true;
+@@ -116,7 +117,10 @@ static bool pvscsi_use_req_threshold = true;
  
- #define PVSCSI_RW (S_IRUSR | S_IWUSR)
+ module_param_named(ring_pages, pvscsi_ring_pages, int, PVSCSI_RW);
+ MODULE_PARM_DESC(ring_pages, "Number of pages per req/cmp ring - (default="
+-		 __stringify(PVSCSI_DEFAULT_NUM_PAGES_PER_RING) ")");
++		 __stringify(PVSCSI_DEFAULT_NUM_PAGES_PER_RING)
++		 "[up to 16 targets],"
++		 __stringify(PVSCSI_SETUP_RINGS_MAX_NUM_PAGES)
++		 "[for 16+ targets])");
  
-@@ -133,6 +135,10 @@ MODULE_PARM_DESC(disable_msix, "Disable MSI-X use in driver - (default=0)");
- module_param_named(use_msg, pvscsi_use_msg, bool, PVSCSI_RW);
- MODULE_PARM_DESC(use_msg, "Use msg ring when available - (default=1)");
+ module_param_named(msg_ring_pages, pvscsi_msg_ring_pages, int, PVSCSI_RW);
+ MODULE_PARM_DESC(msg_ring_pages, "Number of pages for the msg ring - (default="
+@@ -124,7 +128,7 @@ MODULE_PARM_DESC(msg_ring_pages, "Number of pages for the msg ring - (default="
  
-+module_param_named(use_req_threshold, pvscsi_use_req_threshold,
-+		   bool, PVSCSI_RW);
-+MODULE_PARM_DESC(use_req_threshold, "Use driver-based request coalescing if configured - (default=1)");
-+
- static const struct pci_device_id pvscsi_pci_tbl[] = {
- 	{ PCI_VDEVICE(VMWARE, PCI_DEVICE_ID_VMWARE_PVSCSI) },
- 	{ 0 }
-@@ -282,10 +288,15 @@ static int scsi_is_rw(unsigned char op)
- static void pvscsi_kick_io(const struct pvscsi_adapter *adapter,
- 			   unsigned char op)
- {
--	if (scsi_is_rw(op))
--		pvscsi_kick_rw_io(adapter);
--	else
-+	if (scsi_is_rw(op)) {
-+		struct PVSCSIRingsState *s = adapter->rings_state;
-+
-+		if (!adapter->use_req_threshold ||
-+		    s->reqProdIdx - s->reqConsIdx >= s->reqCallThreshold)
-+			pvscsi_kick_rw_io(adapter);
-+	} else {
- 		pvscsi_process_request_ring(adapter);
-+	}
+ module_param_named(cmd_per_lun, pvscsi_cmd_per_lun, int, PVSCSI_RW);
+ MODULE_PARM_DESC(cmd_per_lun, "Maximum commands per lun - (default="
+-		 __stringify(PVSCSI_MAX_REQ_QUEUE_DEPTH) ")");
++		 __stringify(PVSCSI_DEFAULT_QUEUE_DEPTH) ")");
+ 
+ module_param_named(disable_msi, pvscsi_disable_msi, bool, PVSCSI_RW);
+ MODULE_PARM_DESC(disable_msi, "Disable MSI use in driver - (default=0)");
+@@ -500,6 +504,35 @@ static void pvscsi_setup_all_rings(const struct pvscsi_adapter *adapter)
+ 	}
  }
  
- static void ll_adapter_reset(const struct pvscsi_adapter *adapter)
-@@ -1077,6 +1088,34 @@ static int pvscsi_setup_msg_workqueue(struct pvscsi_adapter *adapter)
- 	return 1;
- }
- 
-+static bool pvscsi_setup_req_threshold(struct pvscsi_adapter *adapter,
-+				      bool enable)
++static int pvscsi_change_queue_depth(struct scsi_device *sdev,
++				     int qdepth,
++				     int reason)
 +{
-+	u32 val;
++	int max_depth;
++	struct Scsi_Host *shost = sdev->host;
 +
-+	if (!pvscsi_use_req_threshold)
-+		return false;
++	if (reason != SCSI_QDEPTH_DEFAULT)
++		/*
++		 * We support only changing default.
++		 */
++		return -EOPNOTSUPP;
 +
-+	pvscsi_reg_write(adapter, PVSCSI_REG_OFFSET_COMMAND,
-+			 PVSCSI_CMD_SETUP_REQCALLTHRESHOLD);
-+	val = pvscsi_reg_read(adapter, PVSCSI_REG_OFFSET_COMMAND_STATUS);
-+	if (val == -1) {
-+		printk(KERN_INFO "pvscsi: device does not support req_threshold\n");
-+		return false;
-+	} else {
-+		struct PVSCSICmdDescSetupReqCall cmd_msg = { 0 };
-+		cmd_msg.enable = enable;
-+		printk(KERN_INFO
-+		       "pvscsi: %sabling reqCallThreshold\n",
-+			enable ? "en" : "dis");
-+		pvscsi_write_cmd_desc(adapter,
-+				      PVSCSI_CMD_SETUP_REQCALLTHRESHOLD,
-+				      &cmd_msg, sizeof(cmd_msg));
-+		return pvscsi_reg_read(adapter,
-+				       PVSCSI_REG_OFFSET_COMMAND_STATUS) != 0;
-+	}
++	max_depth = shost->can_queue;
++	if (!sdev->tagged_supported)
++		max_depth = 1;
++	if (qdepth > max_depth)
++		qdepth = max_depth;
++	scsi_adjust_queue_depth(sdev, scsi_get_tag_type(sdev), qdepth);
++
++	if (sdev->inquiry_len > 7)
++		sdev_printk(KERN_INFO, sdev,
++			    "qdepth(%d), tagged(%d), simple(%d), ordered(%d), scsi_level(%d), cmd_que(%d)\n",
++			    sdev->queue_depth, sdev->tagged_supported,
++			    sdev->simple_tags, sdev->ordered_tags,
++			    sdev->scsi_level, (sdev->inquiry[7] & 2) >> 1);
++	return sdev->queue_depth;
 +}
 +
- static irqreturn_t pvscsi_isr(int irq, void *devp)
+ /*
+  * Pull a completion descriptor off and pass the completion back
+  * to the SCSI mid layer.
+@@ -965,6 +998,7 @@ static struct scsi_host_template pvscsi_template = {
+ 	.dma_boundary			= UINT_MAX,
+ 	.max_sectors			= 0xffff,
+ 	.use_clustering			= ENABLE_CLUSTERING,
++	.change_queue_depth		= pvscsi_change_queue_depth,
+ 	.eh_abort_handler		= pvscsi_abort,
+ 	.eh_device_reset_handler	= pvscsi_device_reset,
+ 	.eh_bus_reset_handler		= pvscsi_bus_reset,
+@@ -1318,11 +1352,12 @@ exit:
+ static int pvscsi_probe(struct pci_dev *pdev, const struct pci_device_id *id)
  {
- 	struct pvscsi_adapter *adapter = devp;
-@@ -1416,6 +1455,10 @@ static int pvscsi_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 		flags = IRQF_SHARED;
+ 	struct pvscsi_adapter *adapter;
+-	struct Scsi_Host *host;
+-	struct device *dev;
++	struct pvscsi_adapter adapter_temp;
++	struct Scsi_Host *host = NULL;
+ 	unsigned int i;
+ 	unsigned long flags = 0;
+ 	int error;
++	u32 max_id;
+ 
+ 	error = -ENODEV;
+ 
+@@ -1340,34 +1375,19 @@ static int pvscsi_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		goto out_disable_device;
  	}
  
-+	adapter->use_req_threshold = pvscsi_setup_req_threshold(adapter, true);
-+	printk(KERN_DEBUG "pvscsi: driver-based request coalescing %sabled\n",
-+	       adapter->use_req_threshold ? "en" : "dis");
+-	pvscsi_template.can_queue =
+-		min(PVSCSI_MAX_NUM_PAGES_REQ_RING, pvscsi_ring_pages) *
+-		PVSCSI_MAX_NUM_REQ_ENTRIES_PER_PAGE;
+-	pvscsi_template.cmd_per_lun =
+-		min(pvscsi_template.can_queue, pvscsi_cmd_per_lun);
+-	host = scsi_host_alloc(&pvscsi_template, sizeof(struct pvscsi_adapter));
+-	if (!host) {
+-		printk(KERN_ERR "vmw_pvscsi: failed to allocate host\n");
+-		goto out_disable_device;
+-	}
+-
+-	adapter = shost_priv(host);
++	/*
++	 * Let's use a temp pvscsi_adapter struct until we find the number of
++	 * targets on the adapter, after that we will switch to the real
++	 * allocated struct.
++	 */
++	adapter = &adapter_temp;
+ 	memset(adapter, 0, sizeof(*adapter));
+ 	adapter->dev  = pdev;
+-	adapter->host = host;
+-
+-	spin_lock_init(&adapter->hw_lock);
+-
+-	host->max_channel = 0;
+-	host->max_id      = 16;
+-	host->max_lun     = 1;
+-	host->max_cmd_len = 16;
+-
+ 	adapter->rev = pdev->revision;
+ 
+ 	if (pci_request_regions(pdev, "vmw_pvscsi")) {
+ 		printk(KERN_ERR "vmw_pvscsi: pci memory selection failed\n");
+-		goto out_free_host;
++		goto out_disable_device;
+ 	}
+ 
+ 	for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
+@@ -1383,7 +1403,7 @@ static int pvscsi_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	if (i == DEVICE_COUNT_RESOURCE) {
+ 		printk(KERN_ERR
+ 		       "vmw_pvscsi: adapter has no suitable MMIO region\n");
+-		goto out_release_resources;
++		goto out_release_resources_and_disable;
+ 	}
+ 
+ 	adapter->mmioBase = pci_iomap(pdev, i, PVSCSI_MEM_SPACE_SIZE);
+@@ -1392,10 +1412,60 @@ static int pvscsi_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		printk(KERN_ERR
+ 		       "vmw_pvscsi: can't iomap for BAR %d memsize %lu\n",
+ 		       i, PVSCSI_MEM_SPACE_SIZE);
+-		goto out_release_resources;
++		goto out_release_resources_and_disable;
+ 	}
+ 
+ 	pci_set_master(pdev);
 +
- 	error = request_irq(adapter->irq, pvscsi_isr, flags,
- 			    "vmw_pvscsi", adapter);
- 	if (error) {
++	/*
++	 * Ask the device for max number of targets before deciding the
++	 * default pvscsi_ring_pages value.
++	 */
++	max_id = pvscsi_get_max_targets(adapter);
++	printk(KERN_INFO "vmw_pvscsi: max_id: %u\n", max_id);
++
++	if (pvscsi_ring_pages == 0)
++		/*
++		 * Set the right default value. Up to 16 it is 8, above it is
++		 * max.
++		 */
++		pvscsi_ring_pages = (max_id > 16) ?
++			PVSCSI_SETUP_RINGS_MAX_NUM_PAGES :
++			PVSCSI_DEFAULT_NUM_PAGES_PER_RING;
++	printk(KERN_INFO
++	       "vmw_pvscsi: setting ring_pages to %d\n",
++	       pvscsi_ring_pages);
++
++	pvscsi_template.can_queue =
++		min(PVSCSI_MAX_NUM_PAGES_REQ_RING, pvscsi_ring_pages) *
++		PVSCSI_MAX_NUM_REQ_ENTRIES_PER_PAGE;
++	pvscsi_template.cmd_per_lun =
++		min(pvscsi_template.can_queue, pvscsi_cmd_per_lun);
++	host = scsi_host_alloc(&pvscsi_template, sizeof(struct pvscsi_adapter));
++	if (!host) {
++		printk(KERN_ERR "vmw_pvscsi: failed to allocate host\n");
++		goto out_release_resources_and_disable;
++	}
++
++	/*
++	 * Let's use the real pvscsi_adapter struct here onwards.
++	 */
++	adapter = shost_priv(host);
++	memset(adapter, 0, sizeof(*adapter));
++	adapter->dev  = pdev;
++	adapter->host = host;
++	/*
++	 * Copy back what we already have to the allocated adapter struct.
++	 */
++	adapter->rev = adapter_temp.rev;
++	adapter->mmioBase = adapter_temp.mmioBase;
++
++	spin_lock_init(&adapter->hw_lock);
++	host->max_channel = 0;
++	host->max_lun     = 1;
++	host->max_cmd_len = 16;
++	host->max_id      = max_id;
++
+ 	pci_set_drvdata(pdev, host);
+ 
+ 	ll_adapter_reset(adapter);
+@@ -1409,13 +1479,6 @@ static int pvscsi_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	}
+ 
+ 	/*
+-	 * Ask the device for max number of targets.
+-	 */
+-	host->max_id = pvscsi_get_max_targets(adapter);
+-	dev = pvscsi_dev(adapter);
+-	dev_info(dev, "vmw_pvscsi: host->max_id: %u\n", host->max_id);
+-
+-	/*
+ 	 * From this point on we should reset the adapter if anything goes
+ 	 * wrong.
+ 	 */
+@@ -1488,12 +1551,15 @@ out_reset_adapter:
+ 	ll_adapter_reset(adapter);
+ out_release_resources:
+ 	pvscsi_release_resources(adapter);
+-out_free_host:
+ 	scsi_host_put(host);
+ out_disable_device:
+ 	pci_disable_device(pdev);
+ 
+ 	return error;
++
++out_release_resources_and_disable:
++	pvscsi_release_resources(adapter);
++	goto out_disable_device;
+ }
+ 
+ static void __pvscsi_shutdown(struct pvscsi_adapter *adapter)
 diff --git a/drivers/scsi/vmw_pvscsi.h b/drivers/scsi/vmw_pvscsi.h
-index a643775..15a9ac6 100644
+index 15a9ac6..ce45888 100644
 --- a/drivers/scsi/vmw_pvscsi.h
 +++ b/drivers/scsi/vmw_pvscsi.h
 @@ -26,7 +26,7 @@
  
  #include <linux/types.h>
  
--#define PVSCSI_DRIVER_VERSION_STRING   "1.0.3.0-k"
-+#define PVSCSI_DRIVER_VERSION_STRING   "1.0.4.0-k"
+-#define PVSCSI_DRIVER_VERSION_STRING   "1.0.4.0-k"
++#define PVSCSI_DRIVER_VERSION_STRING   "1.0.5.0-k"
  
  #define PVSCSI_MAX_NUM_SG_ENTRIES_PER_SEGMENT 128
  
-@@ -117,8 +117,9 @@ enum PVSCSICommands {
- 	PVSCSI_CMD_CONFIG            = 7,
- 	PVSCSI_CMD_SETUP_MSG_RING    = 8,
- 	PVSCSI_CMD_DEVICE_UNPLUG     = 9,
-+	PVSCSI_CMD_SETUP_REQCALLTHRESHOLD     = 10,
- 
--	PVSCSI_CMD_LAST              = 10  /* has to be last */
-+	PVSCSI_CMD_LAST              = 11  /* has to be last */
- };
- 
- /*
-@@ -141,6 +142,14 @@ struct PVSCSICmdDescConfigCmd {
- 	u32 _pad;
- } __packed;
- 
-+/*
-+ * Command descriptor for PVSCSI_CMD_SETUP_REQCALLTHRESHOLD --
-+ */
-+
-+struct PVSCSICmdDescSetupReqCall {
-+	u32 enable;
-+} __packed;
-+
- enum PVSCSIConfigPageType {
- 	PVSCSI_CONFIG_PAGE_CONTROLLER = 0x1958,
- 	PVSCSI_CONFIG_PAGE_PHY        = 0x1959,
-@@ -261,7 +270,9 @@ struct PVSCSIRingsState {
- 	u32	cmpConsIdx;
- 	u32	cmpNumEntriesLog2;
- 
--	u8	_pad[104];
-+	u32	reqCallThreshold;
-+
-+	u8	_pad[100];
- 
- 	u32	msgProdIdx;
- 	u32	msgConsIdx;
 -- 
 1.7.9.5
 
