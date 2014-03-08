@@ -1,49 +1,37 @@
-From: Michael Opdenacker <michael.opdenacker@free-electrons.com>
-Subject: [PATCH] [RESEND][SCSI] ips: remove unused defines
-Date: Sat,  8 Mar 2014 06:32:51 +0100
-Message-ID: <1394256771-10751-1-git-send-email-michael.opdenacker@free-electrons.com>
-References: <1386583540-5190-1-git-send-email-michael.opdenacker@free-electrons.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:42824 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753705AbaCHFdA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 8 Mar 2014 00:33:00 -0500
-In-Reply-To: <1386583540-5190-1-git-send-email-michael.opdenacker@free-electrons.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Andy Lutomirski <luto@amacapital.net>
+Subject: [PATCH 3/4] sr: Add a missing KERN_INFO
+Date: Sat,  8 Mar 2014 10:58:14 -0800
+Message-ID: <a59d550e4e551746dffd710257ec3a5362001cd3.1394304585.git.luto@amacapital.net>
+References: <cover.1394304585.git.luto@amacapital.net>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <cover.1394304585.git.luto@amacapital.net>
+In-Reply-To: <cover.1394304585.git.luto@amacapital.net>
+References: <cover.1394304585.git.luto@amacapital.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: trivial@kernel.org, Andy Lutomirski <luto@amacapital.net>, Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: aacraid@adaptec.com, ipslinux@adaptec.com, JBottomley@parallels.com
-Cc: akpm@linux-foundation.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Michael Opdenacker <michael.opdenacker@free-electrons.com>
 
-This patch removes unused defines from drivers/scsi/ips.h
+The existence if scsi3-mmc capabilities is not an error.
 
-- the min() macro is not used
-- the __iomem define is no longer needed
-  to compile ips.c without warnings
-
-Signed-off-by: Michael Opdenacker <michael.opdenacker@free-electrons.com>
+Signed-off-by: Andy Lutomirski <luto@amacapital.net>
 ---
- drivers/scsi/ips.h | 8 --------
- 1 file changed, 8 deletions(-)
+ drivers/scsi/sr.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/ips.h b/drivers/scsi/ips.h
-index 45b9566b928e..26df4f6e9d70 100644
---- a/drivers/scsi/ips.h
-+++ b/drivers/scsi/ips.h
-@@ -88,14 +88,6 @@
- 		touch_nmi_watchdog();	\
- 	} while (0)
- 
--   #ifndef min
--      #define min(x,y) ((x) < (y) ? x : y)
--   #endif
--
--   #ifndef __iomem       /* For clean compiles in earlier kernels without __iomem annotations */
--      #define __iomem
--   #endif
--
-    #define pci_dma_hi32(a)         ((a >> 16) >> 16)
-    #define pci_dma_lo32(a)         (a & 0xffffffff)
- 
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index 40d8592..67baf7f 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -887,7 +887,8 @@ static void get_capabilities(struct scsi_cd *cd)
+ 	cd->readcd_known = 1;
+ 	cd->readcd_cdda = buffer[n + 5] & 0x01;
+ 	/* print some capability bits */
+-	printk("%s: scsi3-mmc drive: %dx/%dx %s%s%s%s%s%s\n", cd->cdi.name,
++	printk(KERN_INFO "%s: scsi3-mmc drive: %dx/%dx %s%s%s%s%s%s\n",
++	       cd->cdi.name,
+ 	       ((buffer[n + 14] << 8) + buffer[n + 15]) / 176,
+ 	       cd->cdi.speed,
+ 	       buffer[n + 3] & 0x01 ? "writer " : "", /* CD Writer */
 -- 
-1.8.3.2
-
+1.8.5.3
