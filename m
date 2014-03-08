@@ -1,50 +1,72 @@
-From: Andy Lutomirski <luto@amacapital.net>
-Subject: [PATCH 2/4] megaraid: Downgrade success messages from KERN_ERR to dev_dbg
-Date: Sat,  8 Mar 2014 10:58:13 -0800
-Message-ID: <5f7f702c58631462bc23d3787a6d515942ca24f6.1394304585.git.luto@amacapital.net>
-References: <cover.1394304585.git.luto@amacapital.net>
+From: markus <markus@kola.li>
+Subject: Re: Slow I/O performance on SAS1064
+Date: Sat, 8 Mar 2014 21:14:50 +0100
+Message-ID: <20140308201450.GA18581@localhost.localdomain>
+References: <CAN7X1Umb_wyTCk9w590AnSTFgL=3CC5x8zGNiGZoAdNEej9TCQ@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="3V7upXqbjpZ4EhLz"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <cover.1394304585.git.luto@amacapital.net>
-In-Reply-To: <cover.1394304585.git.luto@amacapital.net>
-References: <cover.1394304585.git.luto@amacapital.net>
+Content-Disposition: inline
+In-Reply-To: <CAN7X1Umb_wyTCk9w590AnSTFgL=3CC5x8zGNiGZoAdNEej9TCQ@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: trivial@kernel.org, Andy Lutomirski <luto@amacapital.net>, Neela Syam Kolli <megaraidlinux@lsi.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
+To: Purush Gupta <purush.gupta@nutanix.com>
+Cc: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>, Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, support@lsi.com, DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org, Linux Kernel List <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-These messages are uninteresting indications of success.
 
-Signed-off-by: Andy Lutomirski <luto@amacapital.net>
----
- drivers/scsi/megaraid/megaraid_sas_base.c   | 2 +-
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+--3V7upXqbjpZ4EhLz
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 3b7ad10..a0a133d 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -3755,7 +3755,7 @@ static int megasas_init_fw(struct megasas_instance *instance)
- 	if (instance->instancet->init_adapter(instance))
- 		goto fail_init_adapter;
- 
--	printk(KERN_ERR "megasas: INIT adapter done\n");
-+	dev_dbg(&instance->pdev->dev, "INIT adapter done\n");
- 
- 	/** for passthrough
- 	* the following function will get the PD LIST.
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index f655592..261742a 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -679,7 +679,7 @@ megasas_ioc_init_fusion(struct megasas_instance *instance)
- 		ret = 1;
- 		goto fail_fw_init;
- 	}
--	printk(KERN_ERR "megasas:IOC Init cmd success\n");
-+	dev_dbg(&instance->pdev->dev, "IOC Init cmd success\n");
- 
- 	ret = 0;
- 
--- 
-1.8.5.3
+On Fri, Mar 07, 2014 at 08:24:48AM -0800, Purush Gupta wrote:
+> I noticed you had benchmarked only sda target, is the behavior same on
+> other targets?
+>=20
+Yes the other disk are equal to sda , but they are used with zfs and there =
+were other preformance problems because of the multible disk access.
+config:
+
+        NAME        STATE     READ WRITE CKSUM
+        home        ONLINE       0     0     0
+          raidz1-0  ONLINE       0     0     0
+            sdb     ONLINE       0     0     3
+            sdc     ONLINE       0     0     0
+            sdd     ONLINE       0     0     0
+
+
+
+> Since they are SCSI targets, have you explored sg_utils [
+> http://sg.danny.cz/sg/uu_index.html]
+>=20
+> And for benchmarking I also recommend FIO https://github.com/axboe/fio
+>=20
+Thanks for the tips.
+> Good luck,
+> Purush
+>=20
+
+--3V7upXqbjpZ4EhLz
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJTG3o5AAoJENNjYPi2hQIw2SEQAIaoXDMfl3+tJsG1mCzCdp9t
+84bBZ3IBYyvR3efF54VJs/RxX3bWnerLiljSz7WXz5Y9O/BmzeuDVN55LTMEMbPo
+DmI6Z177SHZgkRw3xYJDwSHX/t8eyfC1sdBH2NgnpNOL4Uw+wEVHdY5ZKRW8nJ7u
+C9uAHfLPNnwCfv9PkBeZlRyWk/KHGY6UQC8iJu7ORB1pkNs+MZmq1KCxXLyJGFIh
+M197//ax+pcqoRXrsQSbIa4tN633in4LKcE+6UKjQZkXq27AQR6b5bn/Tf0mFOIE
+d2SHN8SL/AHIshoq3etzjVbNtpj35SRVjwjqlFl6/ZT0bhDMrGQW7tRg9alLLUG0
+bl68BEfEQP1aU2OcXkyW/X5x8yCnt//rBUtN7XTp3UkE5UAtc9u8YY9ZCuHNqWHL
+dt+C+OghSG/0mHwdeEltZr4JF4jwJuhB6zbnWS/ZB/Y10IzbdH6i5AOJd4yLJ6e9
+TxmVUQDga+K9gr5xMTn5F2uxdYyZsALW4Ss+eOe+e5RGHNhMWNbyw2CuGIw/964v
+ksJKg6Dh10ZeIM/C05TPelr8g6l9Pw/k/9q1czMRf0VElnJmQi6NmtRqFNE6l6Uh
+xJQ90kYAM3DNSn9f8xJQPMaoeaVeC4KlRXYO9aeYUzr5frierEEk0eEoS4pYvI4N
+PYtqW7LUGgGVXFZq17gh
+=/jiA
+-----END PGP SIGNATURE-----
+
+--3V7upXqbjpZ4EhLz--
