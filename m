@@ -1,62 +1,74 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [GIT PULL] target fixes for v3.14-rc6
-Date: Sat, 08 Mar 2014 13:51:45 -0800
-Message-ID: <1394315505.11448.30.camel@haakon3.risingtidesystems.com>
+From: Ben Hutchings <ben@decadent.org.uk>
+Subject: [PATCH] [SCSI] bfa: Replace large udelay() with mdelay()
+Date: Sun, 09 Mar 2014 04:04:18 +0000
+Message-ID: <1394337858.2861.72.camel@deadeye.wl.decadent.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-sjmAM6feAtbFP8k5BMyS"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:49493 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752287AbaCIEE3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 8 Mar 2014 23:04:29 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Anil Gurumurthy <agurumur@brocade.com>, Vijaya Mohan Guvva <vmohan@brocade.com>, linux-scsi <linux-scsi@vger.kernel.org>, Vagrant Cascadian <vagrant@debian.org>
 
-Hi Linus,
 
-Here are the target-pending fixes for v3.14-rc6.
+--=-sjmAM6feAtbFP8k5BMyS
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Please pull from:
+udelay() does not work on some architectures for values above
+2000, in particular on ARM:
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git master
+ERROR: "__bad_udelay" [drivers/scsi/bfa/bfa.ko] undefined!
 
-This series addresses a number of outstanding issues wrt to active I/O
-shutdown using iser-target.  This includes:
+Reported-by: Vagrant Cascadian <vagrant@debian.org>
+Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
+---
+ drivers/scsi/bfa/bfa_ioc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-- Fix a long standing tpg_state bug where a tpg could be referenced
-  during explicit shutdown (v3.1+ stable)
-- Use list_del_init for iscsi_cmd->i_conn_node so list_empty checks
-  work as expected (v3.10+ stable)
-- Fix a isert_conn->state related hung task bug + ensure outstanding
-  I/O completes during session shutdown. (v3.10+ stable)
-- Fix isert_conn->post_send_buf_count accounting for RDMA READ/WRITEs
-  (v3.10+ stable)
-- Ignore FRWR completions during active I/O shutdown (v3.12+ stable)
-- Fix command leakage for interrupt coalescing during active I/O 
-  shutdown (v3.13+ stable)
+diff --git a/drivers/scsi/bfa/bfa_ioc.c b/drivers/scsi/bfa/bfa_ioc.c
+index 65180e1..50c75e1 100644
+--- a/drivers/scsi/bfa/bfa_ioc.c
++++ b/drivers/scsi/bfa/bfa_ioc.c
+@@ -7006,7 +7006,7 @@ bfa_flash_sem_get(void __iomem *bar)
+ 	while (!bfa_raw_sem_get(bar)) {
+ 		if (--n <=3D 0)
+ 			return BFA_STATUS_BADFLASH;
+-		udelay(10000);
++		mdelay(10);
+ 	}
+ 	return BFA_STATUS_OK;
+ }
 
-Also included is another DIF emulation fix from Sagi specific to
-v3.14-rc code.
+--=20
+Ben Hutchings
+I say we take off; nuke the site from orbit.  It's the only way to be sure.
 
-Thank you,
+--=-sjmAM6feAtbFP8k5BMyS
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
---nab
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
 
-Nicholas Bellinger (6):
-  iscsi-target: Fix iscsit_get_tpg_from_np tpg_state bug
-  iscsi/iser-target: Use list_del_init for ->i_conn_node
-  iscsi/iser-target: Fix isert_conn->state hung shutdown issues
-  iser-target: Fix post_send_buf_count for RDMA READ/WRITE
-  iser-target: Ignore completions for FRWRs in isert_cq_tx_work
-  iser-target: Fix command leak for tx_desc->comp_llnode_batch
+iQIVAwUAUxvoQue/yOyVhhEJAQovXA/+JkkUqzC7/GjbtuaaO8HtunHcSlE19h5K
+Qwv+PMZfAHGFAIm1ZQUqbWJ1X5YQTmuFojCbQEv/xzDaH1H6axnI2irduApqEO4T
+80ONqekFy7ODoW8F1b6jjuUVpG8ceF4aga8W1oWZ5Tu5v/vKFM1ON6q65jaRS6qY
+MWLhoQcElXwiE19PhwjHH2jVquqn45zFpgjc3EElLLivjIoL67hIZE9gdXymIxa4
+wrg+yJA6uDuXOWREBBghFolBrUpEJkluW0IQc9SX1UMz4MpSOCgy+SDFs67aTzGk
+B0BLcXUrDqjz0v5f/ayj9QuE8hC1gFaGBdmOvUcYGIPFWXUWq9zmNZlcQUIRiYCq
+pAYBwqggYUhH4d/Crg9ZP6YAyjilR/J1ZlRjPvXPBruqjBmnD4RF2MH5kuBPR2uB
+jhAf89s+tNQuqQdYExD/W2RAexlrAcy6fl+T7iEc13mNNzqD6f9IdO+AdbCIkk2a
+26CRS3AgD1IHL1rAOp31KU3hSa3BAIV7DzFL6g1ooDe9WgfT0uO2All03MwhsyjR
+EU1uOvboPX1eYzz34fgGcKzsksBISp4vxF6IoZdscmjCPm21Gs0coOzU2giSxebB
+xnkR28+y55VoY7CNJgTQUXteOAuszrUiMoCEkhhuE9i8Su8Nnc/GcvWN13ky1IiD
+eFptRI35hrY=
+=5XdR
+-----END PGP SIGNATURE-----
 
-Sagi Grimberg (1):
-  Target/sbc: Fix sbc_copy_prot for offset scatters
-
- drivers/infiniband/ulp/isert/ib_isert.c  |  180 ++++++++++++++++++------------
- drivers/infiniband/ulp/isert/ib_isert.h  |    7 +-
- drivers/target/iscsi/iscsi_target.c      |   10 +-
- drivers/target/iscsi/iscsi_target_erl2.c |   16 +--
- drivers/target/iscsi/iscsi_target_tpg.c  |    2 +-
- drivers/target/target_core_sbc.c         |   38 ++++---
- include/target/iscsi/iscsi_transport.h   |    1 +
- 7 files changed, 151 insertions(+), 103 deletions(-)
+--=-sjmAM6feAtbFP8k5BMyS--
