@@ -1,41 +1,54 @@
-From: Phillip Susi <psusi@ubuntu.com>
-Subject: Re: [PATCH v5 3/3] scsi: async sd resume
-Date: Mon, 10 Mar 2014 18:41:09 -0400
-Message-ID: <531E3F85.9010304@ubuntu.com>
-References: <Pine.LNX.4.44L0.1403101658490.5966-100000@netrider.rowland.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44L0.1403101658490.5966-100000@netrider.rowland.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>, Dan Williams <dan.j.williams@intel.com>
-Cc: Tejun Heo <tj@kernel.org>, James Bottomley <JBottomley@parallels.com>, Len Brown <len.brown@intel.com>, linux-scsi <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Todd Brandt <todd.e.brandt@linux.intel.com>
+From: Andy Grover <agrover@redhat.com>
+Subject: [PATCHv2 0/9] target: Save memory on unused se_dev_entrys and se_luns
+Date: Mon, 10 Mar 2014 15:45:44 -0700
+Message-ID: <1394491553-3939-1-git-send-email-agrover@redhat.com>
+References: <1394144131-31499-1-git-send-email-agrover@redhat.com>
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1394144131-31499-1-git-send-email-agrover@redhat.com>
+Sender: target-devel-owner@vger.kernel.org
+To: target-devel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA512
+Hi nab, hch, and all,
 
-On 03/10/2014 04:59 PM, Alan Stern wrote:
-> Why?  The existing code doesn't have anything like that.
+This patchset reduces the amount of memory for se_dev_entry and se_lun
+arrays by waiting to allocate array members, and includes some related
+simplification patches too. This is a rework of a few patches I submitted
+in December in a larger series, but keeping it simple by sticking with
+fixed-size arrays for device_list and tpg_lun_list for now.
 
-The current sd code doesn't, but the libata code does use the AHCI
-staggered spinup feature flag as a hint to only spin up one drive at a
-time, so these patches together may defeat that behavior when resuming
-from suspend.  That could be a problem on some systems.  Then again,
-it may still follow the same code path in libata; I haven't looked at
-it closely enough lately to be sure.
+Testing: created and removed luns and mapped luns, worked ok.
 
+Changes in v2:
+  Added patches 1-2, which ensure locking around the arrays
+  Added patch 9, refactors enable_device_list_for_node
+  Patch 7/6 folded into series
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.14 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+Regards -- Andy
 
-iQEcBAEBCgAGBQJTHj+FAAoJEI5FoCIzSKrwYm0IAKZlralrzs8+5s7F4xouYrz8
-samOep5+XxO8eVa6Cl6kqQvl02jYJNLUnabeBBTe8L5qws+ZFXnSkhFvAC5zd3LF
-a68hns996l9wum+XWDAeMb7K7/dKYJiDB+6w3foquA4fgoZsc2tYLEjvUUA9h9U6
-+bfZpelLnqqRgFwKwBazqVRB4ZIBGcq1+DLnDTldOH6e4gJSnzoJU1MbLYiCa6KU
-tvg2XWDnp1ifhHcCGVIsdEdB1hxKKs3J+3CiXeg1Uc6LoWOfOpsfkvReNfIk4Ju9
-zr2KEXGsIZwcmyx9i2Jni/I90oG3jNtVWlOT9Gvey2RW2fiMREesuHTt5KONc/U=
-=wrih
------END PGP SIGNATURE-----
+Andy Grover (9):
+  target: Add locking to some accesses to nacl.device_list
+  target: Don't unlock/relock tpg_lun_lock in loop in add_node_to_devs
+  target: Allocate se_dev_entrys in device list only when used
+  target: core_tpg_post_dellun can return void
+  target: Change core_dev_del_lun to take a se_lun instead of
+    unpacked_lun
+  target: Rename core_tpg_post_dellun to remove_lun
+  target: Allocate se_luns only when used
+  target: Remove core_tpg_release_virtual_lun0 function
+  target: Refactor core_enable_device_list_for_node
+
+ drivers/target/sbp/sbp_target.c              |   6 +-
+ drivers/target/target_core_device.c          | 311 +++++++++++++--------------
+ drivers/target/target_core_fabric_configfs.c |  35 +--
+ drivers/target/target_core_internal.h        |   9 +-
+ drivers/target/target_core_pr.c              |  40 +++-
+ drivers/target/target_core_spc.c             |   2 +-
+ drivers/target/target_core_tpg.c             | 189 ++++------------
+ drivers/target/target_core_ua.c              |   3 +
+ include/target/target_core_base.h            |  17 +-
+ 9 files changed, 246 insertions(+), 366 deletions(-)
+
+-- 
+1.8.5.3
