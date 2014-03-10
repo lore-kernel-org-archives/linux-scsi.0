@@ -1,35 +1,53 @@
-From: James Bottomley <jbottomley@parallels.com>
-Subject: Re: [PATCH 3/5] Add EVPD page 0x83 to sysfs
-Date: Mon, 10 Mar 2014 18:24:59 +0000
-Message-ID: <1394475897.2565.46.camel@dabdike.int.hansenpartnership.com>
-References: <1394461725-76203-1-git-send-email-hare@suse.de>
-	 <1394461725-76203-4-git-send-email-hare@suse.de>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 5/5] ses: Use vpd information from scsi_device
+Date: Mon, 10 Mar 2014 21:44:30 +0100
+Message-ID: <531E242E.60806@suse.de>
+References: <1394461725-76203-1-git-send-email-hare@suse.de>	 <1394461725-76203-6-git-send-email-hare@suse.de> <1394475625.2565.42.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-15;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.parallels.com ([199.115.105.18]:55658 "EHLO
-	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753008AbaCJSZk convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Mar 2014 14:25:40 -0400
-In-Reply-To: <1394461725-76203-4-git-send-email-hare@suse.de>
-Content-Language: en-US
-Content-ID: <E614DC81098B924E918A96CF77B4517D@sw.swsoft.com>
+Received: from cantor2.suse.de ([195.135.220.15]:38650 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752099AbaCJSlb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 10 Mar 2014 14:41:31 -0400
+In-Reply-To: <1394475625.2565.42.camel@dabdike.int.hansenpartnership.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "hare@suse.de" <hare@suse.de>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "bvanassche@acm.org" <bvanassche@acm.org>, "hch@infradead.org" <hch@infradead.org>, "dgilbert@interlog.com" <dgilbert@interlog.com>, "jlinton@tributary.com" <jlinton@tributary.com>, "kai.makisara@kolumbus.fi" <kai.makisara@kolumbus.fi>, "kay@vrfy.org" <kay@vrfy.org>
+To: James Bottomley <jbottomley@parallels.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "bvanassche@acm.org" <bvanassche@acm.org>, "hch@infradead.org" <hch@infradead.org>
 
-On Mon, 2014-03-10 at 15:28 +0100, Hannes Reinecke wrote:
-> EVPD page 0x83 is used to uniquely identify the device.
-> So instead of having each and every program issue a separate
-> SG_IO call to retrieve this information it does make far more
-> sense to display it in sysfs.
+On 03/10/2014 07:20 PM, James Bottomley wrote:
+> On Mon, 2014-03-10 at 15:28 +0100, Hannes Reinecke wrote:
+>> The scsi_device now has VPD page83 information attached, so
+>> there is no need to query it again.
+>
+> This is a bit new for a v8 patch, have you actually tested it?  I'm
+> asking because it looks to me like the vpd attach is done just before
+> the configure whereas the bindings are usually done in add.  I suspec=
+t
+> this will work for ses because it's a device model binding rather tha=
+n a
+> transport class binding and the former occurs later, but knowing it
+> actually all works would be useful.
+>
+Yes, correct. But the device_add() call is done in
+scsi_sysfs_add_sdev(), which is done at the end of scsi_add_lun().
+So that will be okay.
 
-Christoph's suggestion of binary sysfs attributes for this rather than
-the text ones you have is better ... because your current ones are going
-to truncate when they run off the one page of data sysfs text attributes
-get (i.e. about 2k of vpd).
+But nevertheless I'll be cross-checking.
 
-James
+Cheers,
 
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
