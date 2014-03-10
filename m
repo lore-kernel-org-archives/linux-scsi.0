@@ -1,38 +1,43 @@
 From: Maurizio Lombardi <mlombard@redhat.com>
-Subject: [PATCH v2 0/3] bnx2fc: fix memory leaks and NULL pointer dereferences
-Date: Mon, 10 Mar 2014 11:03:16 +0100
-Message-ID: <1394445799-8463-1-git-send-email-mlombard@redhat.com>
+Subject: [PATCH 1/3] bnx2fc: remove unused variable hash_table_size
+Date: Mon, 10 Mar 2014 11:03:17 +0100
+Message-ID: <1394445799-8463-2-git-send-email-mlombard@redhat.com>
+References: <1394445799-8463-1-git-send-email-mlombard@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41833 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:18182 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752679AbaCJKD1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 Mar 2014 06:03:27 -0400
+	id S1753088AbaCJKD3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 10 Mar 2014 06:03:29 -0400
+In-Reply-To: <1394445799-8463-1-git-send-email-mlombard@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: eddie.wai@broadcom.com
 Cc: linux-scsi@vger.kernel.org, jbottomley@parallels.com, m.lombardi85@gmail.com
 
-PATCH 1/3 removes a unused variable from the bnx2fc_free_hash_table() function,
-it was already posted on the linux-scsi mailing list:
+hash_table_size is not used by the bnx2fc_free_hash_table() function.
 
-http://www.spinics.net/lists/linux-scsi/msg72740.html
+Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
+---
+ drivers/scsi/bnx2fc/bnx2fc_hwi.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-but has not been picked up yet.
-
-PATCH 2/3 fixes a memory leak and some NULL pointer dereferences in the bnx2fc_free_hash_table() function
-that may happen if bnx2fc_allocate_hash_table() fails.
-
-PATCH 3/3 fixes a memory leak in the bnx2fc_allocate_hash_table() function.
-
-
-Maurizio Lombardi (3):
-  bnx2fc: remove unused variable hash_table_size
-  bnx2fc: fix memory leak and potential NULL pointer dereference.
-  bnx2fc: fix memory leak in bnx2fc_allocate_hash_table()
-
- drivers/scsi/bnx2fc/bnx2fc_hwi.c | 64 +++++++++++++++++++++++-----------------
- 1 file changed, 37 insertions(+), 27 deletions(-)
-
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_hwi.c b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
+index 46a3765..261af2a 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_hwi.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
+@@ -1966,12 +1966,9 @@ static void bnx2fc_free_hash_table(struct bnx2fc_hba *hba)
+ {
+ 	int i;
+ 	int segment_count;
+-	int hash_table_size;
+ 	u32 *pbl;
+ 
+ 	segment_count = hba->hash_tbl_segment_count;
+-	hash_table_size = BNX2FC_NUM_MAX_SESS * BNX2FC_MAX_ROWS_IN_HASH_TBL *
+-		sizeof(struct fcoe_hash_table_entry);
+ 
+ 	pbl = hba->hash_tbl_pbl;
+ 	for (i = 0; i < segment_count; ++i) {
 -- 
 Maurizio Lombardi
 
