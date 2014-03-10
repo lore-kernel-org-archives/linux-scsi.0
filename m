@@ -1,46 +1,53 @@
 From: Hannes Reinecke <hare@suse.de>
 Subject: Re: [PATCH 0/5] megaraid_sas: Updates for scsi-misc
-Date: Mon, 10 Mar 2014 12:13:56 +0100
-Message-ID: <531D9E74.9000802@suse.de>
-References: <CAHtARFHcaLNbNFrGYRU9SQpJzhhESM0=TVZ5X2Rz_=1fLvk_rg@mail.gmail.com>
+Date: Mon, 10 Mar 2014 12:16:08 +0100
+Message-ID: <531D9EF8.9090703@suse.de>
+References: <CAHtARFHcaLNbNFrGYRU9SQpJzhhESM0=TVZ5X2Rz_=1fLvk_rg@mail.gmail.com> <531D9E74.9000802@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:57550 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:57571 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752147AbaCJLN6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 Mar 2014 07:13:58 -0400
-In-Reply-To: <CAHtARFHcaLNbNFrGYRU9SQpJzhhESM0=TVZ5X2Rz_=1fLvk_rg@mail.gmail.com>
+	id S1753157AbaCJLQK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 10 Mar 2014 07:16:10 -0400
+In-Reply-To: <531D9E74.9000802@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: adam radford <aradford@gmail.com>, linux-scsi <linux-scsi@vger.kernel.org>, Kashyap Desai <Kashyap.Desai@lsi.com>, "Saxena, Sumit" <Sumit.Saxena@lsi.com>
 
-On 03/10/2014 10:51 AM, adam radford wrote:
-> James/linux-scsi,
+On 03/10/2014 12:13 PM, Hannes Reinecke wrote:
+> On 03/10/2014 10:51 AM, adam radford wrote:
+>> James/linux-scsi,
+>>
+>> The following patch series for megaraid_sas brings the driver up to
+>> v06.803.01.00-rc1:
+>>
+>> 1. Load correct raid context timeout value for multipathing and clus=
+tering.
+>> 2. Fix megasas_ioc_init_fusion to use local stack variable.
+>> 3. Return leaked MPT frames to MPT command pool.
+>> 4. Add Dell PowerEdge VRTX SR-IOV VF device support.
+>> 5. Version and Changelog update.
+>>
+>> This patch series apples on top of Sumit Saxena's latest patch serie=
+s, which
+>> starts here:
+>>
+>> http://marc.info/?l=3Dlinux-scsi&m=3D139220849616649&w=3D2
+>>
+>> and includes a small repost here:
+>>
+>> http://marc.info/?l=3Dlinux-scsi&m=3D139374736120535&w=3D2
+>>
+> Patch series is lacking coding style. Please re-check with
+> './scripts/checkpatch.pl
 >=20
-> The following patch series for megaraid_sas brings the driver up to
-> v06.803.01.00-rc1:
->=20
-> 1. Load correct raid context timeout value for multipathing and clust=
-ering.
-> 2. Fix megasas_ioc_init_fusion to use local stack variable.
-> 3. Return leaked MPT frames to MPT command pool.
-> 4. Add Dell PowerEdge VRTX SR-IOV VF device support.
-> 5. Version and Changelog update.
->=20
-> This patch series apples on top of Sumit Saxena's latest patch series=
-, which
-> starts here:
->=20
-> http://marc.info/?l=3Dlinux-scsi&m=3D139220849616649&w=3D2
->=20
-> and includes a small repost here:
->=20
-> http://marc.info/?l=3Dlinux-scsi&m=3D139374736120535&w=3D2
->=20
-Patch series is lacking coding style. Please re-check with
-'./scripts/checkpatch.pl
+Sigh.
+
+Ignore that.
+You should've said you've attached two version of the patches.
+Slightly unusual.
 
 Cheers,
 
