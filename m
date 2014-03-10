@@ -1,77 +1,90 @@
 From: Maurizio Lombardi <mlombard@redhat.com>
-Subject: [PATCH 2/3] bnx2fc: fix memory leak and potential NULL pointer dereference.
-Date: Mon, 10 Mar 2014 11:03:18 +0100
-Message-ID: <1394445799-8463-3-git-send-email-mlombard@redhat.com>
+Subject: [PATCH 3/3] bnx2fc: fix memory leak in bnx2fc_allocate_hash_table()
+Date: Mon, 10 Mar 2014 11:03:19 +0100
+Message-ID: <1394445799-8463-4-git-send-email-mlombard@redhat.com>
 References: <1394445799-8463-1-git-send-email-mlombard@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:16724 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:46640 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753132AbaCJKD3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 Mar 2014 06:03:29 -0400
+	id S1753132AbaCJKDb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 10 Mar 2014 06:03:31 -0400
 In-Reply-To: <1394445799-8463-1-git-send-email-mlombard@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: eddie.wai@broadcom.com
 Cc: linux-scsi@vger.kernel.org, jbottomley@parallels.com, m.lombardi85@gmail.com
 
-If bnx2fc_allocate_hash_table() for some reasons fails, it is possible that the
-hash_tbl_segments or the hash_tbl_pbl pointers are NULL.
-In this case bnx2fc_free_hash_table() will panic the system.
-
-this patch also fixes a memory leak, the hash_tbl_segments pointer was never
-freed.
+In case of error, the bnx2fc_allocate_hash_table() didn't free
+all the memory it allocated.
 
 Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
 ---
- drivers/scsi/bnx2fc/bnx2fc_hwi.c | 34 ++++++++++++++++++++--------------
- 1 file changed, 20 insertions(+), 14 deletions(-)
+ drivers/scsi/bnx2fc/bnx2fc_hwi.c | 31 +++++++++++++++++++------------
+ 1 file changed, 19 insertions(+), 12 deletions(-)
 
 diff --git a/drivers/scsi/bnx2fc/bnx2fc_hwi.c b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-index 261af2a..f83bae4 100644
+index f83bae4..5a7865f 100644
 --- a/drivers/scsi/bnx2fc/bnx2fc_hwi.c
 +++ b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-@@ -1968,21 +1968,27 @@ static void bnx2fc_free_hash_table(struct bnx2fc_hba *hba)
- 	int segment_count;
- 	u32 *pbl;
- 
--	segment_count = hba->hash_tbl_segment_count;
--
--	pbl = hba->hash_tbl_pbl;
--	for (i = 0; i < segment_count; ++i) {
--		dma_addr_t dma_address;
--
--		dma_address = le32_to_cpu(*pbl);
--		++pbl;
--		dma_address += ((u64)le32_to_cpu(*pbl)) << 32;
--		++pbl;
--		dma_free_coherent(&hba->pcidev->dev,
--				  BNX2FC_HASH_TBL_CHUNK_SIZE,
--				  hba->hash_tbl_segments[i],
--				  dma_address);
-+	if (hba->hash_tbl_segments) {
-+
-+		pbl = hba->hash_tbl_pbl;
-+		if (pbl) {
-+			segment_count = hba->hash_tbl_segment_count;
-+			for (i = 0; i < segment_count; ++i) {
-+				dma_addr_t dma_address;
-+
-+				dma_address = le32_to_cpu(*pbl);
-+				++pbl;
-+				dma_address += ((u64)le32_to_cpu(*pbl)) << 32;
-+				++pbl;
-+				dma_free_coherent(&hba->pcidev->dev,
-+						  BNX2FC_HASH_TBL_CHUNK_SIZE,
-+						  hba->hash_tbl_segments[i],
-+						  dma_address);
-+			}
-+		}
- 
-+		kfree(hba->hash_tbl_segments);
-+		hba->hash_tbl_segments = NULL;
+@@ -2026,7 +2026,7 @@ static int bnx2fc_allocate_hash_table(struct bnx2fc_hba *hba)
+ 	dma_segment_array = kzalloc(dma_segment_array_size, GFP_KERNEL);
+ 	if (!dma_segment_array) {
+ 		printk(KERN_ERR PFX "hash table pointers (dma) alloc failed\n");
+-		return -ENOMEM;
++		goto fail;
  	}
  
- 	if (hba->hash_tbl_pbl) {
+ 	for (i = 0; i < segment_count; ++i) {
+@@ -2037,15 +2037,7 @@ static int bnx2fc_allocate_hash_table(struct bnx2fc_hba *hba)
+ 					   GFP_KERNEL);
+ 		if (!hba->hash_tbl_segments[i]) {
+ 			printk(KERN_ERR PFX "hash segment alloc failed\n");
+-			while (--i >= 0) {
+-				dma_free_coherent(&hba->pcidev->dev,
+-						    BNX2FC_HASH_TBL_CHUNK_SIZE,
+-						    hba->hash_tbl_segments[i],
+-						    dma_segment_array[i]);
+-				hba->hash_tbl_segments[i] = NULL;
+-			}
+-			kfree(dma_segment_array);
+-			return -ENOMEM;
++			goto fail;
+ 		}
+ 		memset(hba->hash_tbl_segments[i], 0,
+ 		       BNX2FC_HASH_TBL_CHUNK_SIZE);
+@@ -2057,8 +2049,7 @@ static int bnx2fc_allocate_hash_table(struct bnx2fc_hba *hba)
+ 					       GFP_KERNEL);
+ 	if (!hba->hash_tbl_pbl) {
+ 		printk(KERN_ERR PFX "hash table pbl alloc failed\n");
+-		kfree(dma_segment_array);
+-		return -ENOMEM;
++		goto fail;
+ 	}
+ 	memset(hba->hash_tbl_pbl, 0, PAGE_SIZE);
+ 
+@@ -2083,6 +2074,22 @@ static int bnx2fc_allocate_hash_table(struct bnx2fc_hba *hba)
+ 	}
+ 	kfree(dma_segment_array);
+ 	return 0;
++
++fail:
++	for (i = 0; i < segment_count; ++i) {
++		if (hba->hash_tbl_segments[i])
++			dma_free_coherent(&hba->pcidev->dev,
++					    BNX2FC_HASH_TBL_CHUNK_SIZE,
++					    hba->hash_tbl_segments[i],
++					    dma_segment_array[i]);
++	}
++
++	if (dma_segment_array)
++		kfree(dma_segment_array);
++
++	kfree(hba->hash_tbl_segments);
++	hba->hash_tbl_segments = NULL;
++	return -ENOMEM;
+ }
+ 
+ /**
 -- 
 Maurizio Lombardi
 
