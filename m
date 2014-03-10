@@ -1,49 +1,110 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v15 3/3] arm64: Add APM X-Gene SoC 15Gbps Multi-purpose
- PHY DTS entries
-Date: Mon, 10 Mar 2014 16:45:49 -0400
-Message-ID: <20140310204549.GJ25290@htj.dyndns.org>
-References: <1394213289-29565-1-git-send-email-lho@apm.com>
- <1394213289-29565-2-git-send-email-lho@apm.com>
- <1394213289-29565-3-git-send-email-lho@apm.com>
- <1394213289-29565-4-git-send-email-lho@apm.com>
- <CAPw-ZTmwFZjKT2+CUUp73TDXJcXy-bEY_sTNg-TtH-COzDnCfw@mail.gmail.com>
+From: "Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>
+Subject: [PATCH v3 35/52] scsi, fcoe: Fix CPU hotplug callback registration
+Date: Tue, 11 Mar 2014 02:09:52 +0530
+Message-ID: <20140310203952.10746.35946.stgit@srivatsabhat.in.ibm.com>
+References: <20140310203312.10746.310.stgit@srivatsabhat.in.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAPw-ZTmwFZjKT2+CUUp73TDXJcXy-bEY_sTNg-TtH-COzDnCfw@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Loc Ho <lho@apm.com>
-Cc: Kishon Vijay Abraham I <kishon@ti.com>, Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Don Dutile <ddutile@redhat.com>, Jon Masters <jcm@redhat.com>, "patches@apm.com" <patches@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arch-owner@vger.kernel.org>
+In-Reply-To: <20140310203312.10746.310.stgit@srivatsabhat.in.ibm.com>
+Sender: linux-arch-owner@vger.kernel.org
+To: paulus@samba.org, oleg@redhat.com, rjw@rjwysocki.net, rusty@rustcorp.com.au, peterz@infradead.org, tglx@linutronix.de, akpm@linux-foundation.org
+Cc: paulmck@linux.vnet.ibm.com, tj@kernel.org, walken@google.com, ego@linux.vnet.ibm.com, linux@arm.linux.org.uk, linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org, linux-pm@vger.kernel.org, linuxppc-dev@ozlabs.org, srivatsa.bhat@linux.vnet.ibm.com, Robert Love <robert.w.love@intel.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Ingo Molnar <mingo@kernel.org>, fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org"Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, Mar 09, 2014 at 10:23:33PM -0700, Loc Ho wrote:
-> Hi Tejun,
-> 
-> On Fri, Mar 7, 2014 at 9:28 AM, Loc Ho <lho@apm.com> wrote:
-> 
-> > This patch adds the DTS entries for the APM X-Gene SoC 15Gbps Multi-purpose
-> > PHY driver. The PHY for SATA controller 2 and 3 are enabled by default.
-> >
-> > Signed-off-by: Loc Ho <lho@apm.com>
-> > Signed-off-by: Tuan Phan <tphan@apm.com>
-> > Signed-off-by: Suman Tripathi <stripathi@apm.com>
-> > ---
-> >  arch/arm64/boot/dts/apm-storm.dtsi |   75
-> > ++++++++++++++++++++++++++++++++++++
-> >  1 files changed, 75 insertions(+), 0 deletions(-)
-> >
-> >
-> Kishon had pulled in the PHY doc/driver patches. Will you pulling in the
-> PHY DTS and the SATA host driver patches soon?
+Subsystems that want to register CPU hotplug callbacks, as well as perform
+initialization for the CPUs that are already online, often do it as shown
+below:
 
-Kishon, is the following branch the right one to pull into
-libata/for-3.15?
+	get_online_cpus();
 
- git://git.kernel.org/pub/scm/linux/kernel/git/kishon/linux-phy.git next
+	for_each_online_cpu(cpu)
+		init_cpu(cpu);
 
-Thanks.
+	register_cpu_notifier(&foobar_cpu_notifier);
 
--- 
-tejun
+	put_online_cpus();
+
+This is wrong, since it is prone to ABBA deadlocks involving the
+cpu_add_remove_lock and the cpu_hotplug.lock (when running concurrently
+with CPU hotplug operations).
+
+Instead, the correct and race-free way of performing the callback
+registration is:
+
+	cpu_notifier_register_begin();
+
+	for_each_online_cpu(cpu)
+		init_cpu(cpu);
+
+	/* Note the use of the double underscored version of the API */
+	__register_cpu_notifier(&foobar_cpu_notifier);
+
+	cpu_notifier_register_done();
+
+
+Fix the fcoe code in scsi by using this latter form of callback registration.
+
+Cc: Robert Love <robert.w.love@intel.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Ingo Molnar <mingo@kernel.org>
+Cc: fcoe-devel@open-fcoe.org
+Cc: linux-scsi@vger.kernel.org
+Signed-off-by: Srivatsa S. Bhat <srivatsa.bhat@linux.vnet.ibm.com>
+---
+
+ drivers/scsi/fcoe/fcoe.c |   15 +++++++++++++--
+ 1 file changed, 13 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index f317000..d5e105b 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -2633,14 +2633,18 @@ static int __init fcoe_init(void)
+ 		skb_queue_head_init(&p->fcoe_rx_list);
+ 	}
+ 
++	cpu_notifier_register_begin();
++
+ 	for_each_online_cpu(cpu)
+ 		fcoe_percpu_thread_create(cpu);
+ 
+ 	/* Initialize per CPU interrupt thread */
+-	rc = register_hotcpu_notifier(&fcoe_cpu_notifier);
++	rc = __register_hotcpu_notifier(&fcoe_cpu_notifier);
+ 	if (rc)
+ 		goto out_free;
+ 
++	cpu_notifier_register_done();
++
+ 	/* Setup link change notification */
+ 	fcoe_dev_setup();
+ 
+@@ -2655,6 +2659,9 @@ out_free:
+ 	for_each_online_cpu(cpu) {
+ 		fcoe_percpu_thread_destroy(cpu);
+ 	}
++
++	cpu_notifier_register_done();
++
+ 	mutex_unlock(&fcoe_config_mutex);
+ 	destroy_workqueue(fcoe_wq);
+ 	return rc;
+@@ -2687,11 +2694,15 @@ static void __exit fcoe_exit(void)
+ 	}
+ 	rtnl_unlock();
+ 
+-	unregister_hotcpu_notifier(&fcoe_cpu_notifier);
++	cpu_notifier_register_begin();
+ 
+ 	for_each_online_cpu(cpu)
+ 		fcoe_percpu_thread_destroy(cpu);
+ 
++	__unregister_hotcpu_notifier(&fcoe_cpu_notifier);
++
++	cpu_notifier_register_done();
++
+ 	mutex_unlock(&fcoe_config_mutex);
+ 
+ 	/*
