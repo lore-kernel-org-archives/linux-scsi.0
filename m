@@ -1,134 +1,96 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 4/5] Add EVPD page 0x80 to sysfs
-Date: Mon, 10 Mar 2014 15:28:44 +0100
-Message-ID: <1394461725-76203-5-git-send-email-hare@suse.de>
-References: <1394461725-76203-1-git-send-email-hare@suse.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:34234 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753496AbaCJO2s (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 Mar 2014 10:28:48 -0400
-In-Reply-To: <1394461725-76203-1-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH v5 3/3] scsi: async sd resume
+Date: Mon, 10 Mar 2014 11:49:07 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1403101148340.22665-100000@netrider.rowland.org>
+References: <1394247126.10864.3.camel@dwillia2-mobl2.amr.corp.intel.com>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1394247126.10864.3.camel@dwillia2-mobl2.amr.corp.intel.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: tj@kernel.org, JBottomley@Parallels.com, Len Brown <len.brown@intel.com>, linux-scsi@vger.kernel.org, Phillip Susi <psusi@ubuntu.com>, linux-ide@vger.kernel.org, Todd Brandt <todd.e.brandt@linux.intel.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>
-Cc: Bart van Assche <bvanassche@acm.org>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Doug Gilbert <dgilbert@interlog.com>, Jeremy Linton <jlinton@tributary.com>
 
-Some older devices (most notably tapes) will only report reliable
-information in page 0x80 (Unit Serial Number). So export this
-in the sysfs attribute 'vpd_pg80'.
+On Fri, 7 Mar 2014, Dan Williams wrote:
 
-Cc: Doug Gilbert <dgilbert@interlog.com>
-Cc: Jeremy Linton <jlinton@tributary.com>
-Signed-off-by: Hannes Reinecke <hare@suse.de>
----
- drivers/scsi/scsi.c        | 27 ++++++++++++++++++++++++++-
- drivers/scsi/scsi_sysfs.c  |  6 ++++++
- include/scsi/scsi_device.h |  2 ++
- 3 files changed, 34 insertions(+), 1 deletion(-)
+> On Fri, 2014-03-07 at 10:42 -0500, Alan Stern wrote:
+> > >  #ifdef CONFIG_PM_SLEEP
+> > >  
+> > > +#define do_pm_op(dev, op) \
+> > > +	dev->driver ? dev->driver->pm ? \
+> > > +	dev->driver->pm->op(dev) : 0 : 0
+> > 
+> > This will crash if dev->driver->pm->op is NULL.  How about making it 
+> > easier to read, too?
+> > 
+> > #define RETURN_PM_OP(dev, op)						\
+> > 	if (dev->driver && dev->driver->pm && dev->driver->pm->op) 	\
+> > 		return dev->driver->pm->op(dev);			\
+> > 	else								\
+> > 		return 0
+> > 
+> > static int do_scsi_suspend(struct device *dev)
+> > {
+> > 	RETURM_PM_OP(dev, suspend);
+> > }
+> > 
+> > etc.
+> > 
+> > Alternatively, you could put the "dev->driver && dev->driver->pm" part
+> > of the test directly into scsi_dev_type_suspend and
+> > scsi_dev_type_resume, to save a little code space.  Then the original 
+> > macro formulation would become sufficiently simple: one test and one 
+> > function call.
+> [..]
+> > Given that this function is used in only one place; I would put it 
+> > inline.
+> > 
+> 
+> Ended up putting the dev->driver->pm lookup into scsi_dev_type_{suspend|
+> resume} directly, and open coding the pm->op is NULL check.
+> 
+> Moved the lookup of the async function inline.
+> 
+> 8<----------------
+> Subject: scsi: async sd resume
+> 
+> From: Dan Williams <dan.j.williams@intel.com>
+> 
+> async_schedule() sd resume work to allow disks and other devices to
+> resume in parallel.
+> 
+> This moves the entirety of scsi_device resume to an async context to
+> ensure that scsi_device_resume() remains ordered with respect to the
+> completion of the start/stop command.  For the duration of the resume,
+> new command submissions (that do not originate from the scsi-core) will
+> be deferred (BLKPREP_DEFER).
+> 
+> It adds a new ASYNC_DOMAIN_EXCLUSIVE(scsi_sd_pm_domain) as a container
+> of these operations.  Like scsi_sd_probe_domain it is flushed at
+> sd_remove() time to ensure async ops do not continue past the
+> end-of-life of the sdev.  The implementation explicitly refrains from
+> reusing scsi_sd_probe_domain directly for this purpose as it is flushed
+> at the end of dpm_resume(), potentially defeating some of the benefit.
+> Given sdevs are quiesced it is permissible for these resume operations
+> to bleed past the async_synchronize_full() calls made by the driver
+> core.
+> 
+> We defer the resolution of which pm callback to call until
+> scsi_dev_type_{suspend|resume} time and guarantee that the callback
+> parameter is never NULL.  With this in place the type of resume
+> operation is encoded in the async function identifier.
+> 
+> Inspired by Todd's analysis and initial proposal [2]:
+> https://01.org/suspendresume/blogs/tebrandt/2013/hard-disk-resume-optimization-simpler-approach
+> 
+> Cc: Len Brown <len.brown@intel.com>
+> Cc: Phillip Susi <psusi@ubuntu.com>
+> Cc: Alan Stern <stern@rowland.harvard.edu>
+> [alan: bug fix and clean up suggestion]
+> Suggested-by: Todd Brandt <todd.e.brandt@linux.intel.com>
+> [djbw: kick all resume work to the async queue]
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index f753373..de31a82 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -1045,7 +1045,8 @@ EXPORT_SYMBOL_GPL(scsi_get_vpd_page);
-  * scsi_attach_vpd - Attach Vital Product Data to a SCSI device structure
-  * @sdev: The device to ask
-  *
-- * Attach the 'Device Identification' VPD page (0x83) to a SCSI device
-+ * Attach the 'Device Identification' VPD page (0x83) and the
-+ * 'Unit Serial Number' VPD page (0x80) to a SCSI device
-  * structure. This information can be used to identify the device
-  * uniquely.
-  */
-@@ -1053,6 +1054,7 @@ void scsi_attach_vpd(struct scsi_device *sdev)
- {
- 	int result, i;
- 	int vpd_len = 255;
-+	int pg80_supported = 0;
- 	int pg83_supported = 0;
- 	unsigned char *vpd_buf;
- 
-@@ -1076,12 +1078,35 @@ retry_pg0:
- 	}
- 
- 	for (i = 4; i < result; i++) {
-+		if (vpd_buf[i] == 0x80) {
-+			pg80_supported = 1;
-+		}
- 		if (vpd_buf[i] == 0x83) {
- 			pg83_supported = 1;
- 		}
- 	}
- 	kfree(vpd_buf);
- 
-+	if (pg80_supported) {
-+retry_pg80:
-+		vpd_buf = kmalloc(vpd_len, GFP_KERNEL);
-+		if (!vpd_buf)
-+			return;
-+
-+		result = scsi_vpd_inquiry(sdev, vpd_buf, 0x80, vpd_len);
-+		if (result < 0) {
-+			kfree(vpd_buf);
-+			return;
-+		}
-+		if (result > vpd_len) {
-+			vpd_len = result;
-+			kfree(vpd_buf);
-+			goto retry_pg80;
-+		}
-+		sdev->vpd_pg80_len = result;
-+		sdev->vpd_pg80 = vpd_buf;
-+	}
-+
- 	if (pg83_supported) {
- retry_pg83:
- 		vpd_buf = kmalloc(vpd_len, GFP_KERNEL);
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 5d5e55a..fd7956e 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -789,6 +789,7 @@ show_vpd_##page(struct device *dev, struct device_attribute *attr, \
- static DEVICE_ATTR(vpd_##page, S_IRUGO, show_vpd_##page, NULL);
- 
- sdev_vpd_pg_attr(pg83);
-+sdev_vpd_pg_attr(pg80);
- 
- static ssize_t
- show_iostat_counterbits(struct device *dev, struct device_attribute *attr,
-@@ -946,6 +947,10 @@ static umode_t scsi_sdev_attr_is_visible(struct kobject *kobj,
- 	    !sdev->vpd_pg83)
- 		return 0;
- 
-+	if (attr == &dev_attr_vpd_pg80.attr &&
-+	    !sdev->vpd_pg80)
-+		return 0;
-+
- 	return attr->mode;
- }
- 
-@@ -971,6 +976,7 @@ static struct attribute *scsi_sdev_attrs[] = {
- 	&dev_attr_queue_depth.attr,
- 	&dev_attr_queue_type.attr,
- 	&dev_attr_queue_ramp_up_period.attr,
-+	&dev_attr_vpd_pg80.attr,
- 	&dev_attr_vpd_pg83.attr,
- 	REF_EVT(media_change),
- 	REF_EVT(inquiry_change_reported),
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index d209f04..2ea8212 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -115,6 +115,8 @@ struct scsi_device {
- 	const char * rev;		/* ... "nullnullnullnull" before scan */
- 	unsigned char vpd_pg83_len;
- 	unsigned char *vpd_pg83;
-+	unsigned char vpd_pg80_len;
-+	unsigned char *vpd_pg80;
- 	unsigned char current_tag;	/* current tag */
- 	struct scsi_target      *sdev_target;   /* used only for single_lun */
- 
--- 
-1.7.12.4
+Acked-by: Alan Stern <stern@rowland.harvard.edu>
 
