@@ -1,32 +1,96 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v5 1/3] libata, libsas: kill pm_result and related cleanup
-Date: Mon, 10 Mar 2014 16:29:47 -0400
-Message-ID: <20140310202947.GG25290@htj.dyndns.org>
-References: <20140305201443.20088.85361.stgit@viggo.jf.intel.com>
- <20140305201730.20088.42218.stgit@viggo.jf.intel.com>
+From: "Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>
+Subject: [PATCH v3 33/52] scsi, bnx2i: Fix CPU hotplug callback registration
+Date: Tue, 11 Mar 2014 02:09:39 +0530
+Message-ID: <20140310203938.10746.18579.stgit@srivatsabhat.in.ibm.com>
+References: <20140310203312.10746.310.stgit@srivatsabhat.in.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20140305201730.20088.42218.stgit@viggo.jf.intel.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: JBottomley@Parallels.com, Phillip Susi <psusi@ubuntu.com>, Todd Brandt <todd.e.brandt@intel.com>, Alan Stern <stern@rowland.harvard.edu>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arch-owner@vger.kernel.org>
+In-Reply-To: <20140310203312.10746.310.stgit@srivatsabhat.in.ibm.com>
+Sender: linux-arch-owner@vger.kernel.org
+To: paulus@samba.org, oleg@redhat.com, rjw@rjwysocki.net, rusty@rustcorp.com.au, peterz@infradead.org, tglx@linutronix.de, akpm@linux-foundation.org
+Cc: paulmck@linux.vnet.ibm.com, tj@kernel.org, walken@google.com, ego@linux.vnet.ibm.com, linux@arm.linux.org.uk, linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org, linux-pm@vger.kernel.org, linuxppc-dev@ozlabs.org, srivatsa.bhat@linux.vnet.ibm.com, Eddie Wai <eddie.wai@broadcom.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Ingo Molnar <mingo@kernel.org>, linux-scsi@vger.kernel.org"Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hello,
+Subsystems that want to register CPU hotplug callbacks, as well as perform
+initialization for the CPUs that are already online, often do it as shown
+below:
 
-On Wed, Mar 05, 2014 at 12:17:30PM -0800, Dan Williams wrote:
-> +#define ata_port_resume_sync(ap, msg) ata_port_resume_common((ap), (msg), false)
-> +#define queue_ata_port_resume(ap, msg) ata_port_resume_common((ap), (msg), true)
+	get_online_cpus();
 
-Let's please use proper static functions.  The compiler can deal with
-inlining.  Also, maybe ata_port_resume() and ata_port_resume_async()
-are better names for the wrappers?
+	for_each_online_cpu(cpu)
+		init_cpu(cpu);
 
-Other than that, libata part looks good to me.
+	register_cpu_notifier(&foobar_cpu_notifier);
 
-Thanks.
+	put_online_cpus();
 
--- 
-tejun
+This is wrong, since it is prone to ABBA deadlocks involving the
+cpu_add_remove_lock and the cpu_hotplug.lock (when running concurrently
+with CPU hotplug operations).
+
+Instead, the correct and race-free way of performing the callback
+registration is:
+
+	cpu_notifier_register_begin();
+
+	for_each_online_cpu(cpu)
+		init_cpu(cpu);
+
+	/* Note the use of the double underscored version of the API */
+	__register_cpu_notifier(&foobar_cpu_notifier);
+
+	cpu_notifier_register_done();
+
+
+Fix the bnx2i code in scsi by using this latter form of callback registration.
+
+Cc: Eddie Wai <eddie.wai@broadcom.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Ingo Molnar <mingo@kernel.org>
+Cc: linux-scsi@vger.kernel.org
+Signed-off-by: Srivatsa S. Bhat <srivatsa.bhat@linux.vnet.ibm.com>
+---
+
+ drivers/scsi/bnx2i/bnx2i_init.c |   12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/bnx2i/bnx2i_init.c b/drivers/scsi/bnx2i/bnx2i_init.c
+index 34c294b..80c03b4 100644
+--- a/drivers/scsi/bnx2i/bnx2i_init.c
++++ b/drivers/scsi/bnx2i/bnx2i_init.c
+@@ -537,11 +537,15 @@ static int __init bnx2i_mod_init(void)
+ 		p->iothread = NULL;
+ 	}
+ 
++	cpu_notifier_register_begin();
++
+ 	for_each_online_cpu(cpu)
+ 		bnx2i_percpu_thread_create(cpu);
+ 
+ 	/* Initialize per CPU interrupt thread */
+-	register_hotcpu_notifier(&bnx2i_cpu_notifier);
++	__register_hotcpu_notifier(&bnx2i_cpu_notifier);
++
++	cpu_notifier_register_done();
+ 
+ 	return 0;
+ 
+@@ -581,11 +585,15 @@ static void __exit bnx2i_mod_exit(void)
+ 	}
+ 	mutex_unlock(&bnx2i_dev_lock);
+ 
+-	unregister_hotcpu_notifier(&bnx2i_cpu_notifier);
++	cpu_notifier_register_begin();
+ 
+ 	for_each_online_cpu(cpu)
+ 		bnx2i_percpu_thread_destroy(cpu);
+ 
++	__unregister_hotcpu_notifier(&bnx2i_cpu_notifier);
++
++	cpu_notifier_register_done();
++
+ 	iscsi_unregister_transport(&bnx2i_iscsi_transport);
+ 	cnic_unregister_driver(CNIC_ULP_ISCSI);
+ }
