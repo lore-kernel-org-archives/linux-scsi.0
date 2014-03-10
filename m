@@ -1,220 +1,102 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 3/5] Add EVPD page 0x83 to sysfs
-Date: Mon, 10 Mar 2014 15:28:43 +0100
-Message-ID: <1394461725-76203-4-git-send-email-hare@suse.de>
+Subject: [PATCH 5/5] ses: Use vpd information from scsi_device
+Date: Mon, 10 Mar 2014 15:28:45 +0100
+Message-ID: <1394461725-76203-6-git-send-email-hare@suse.de>
 References: <1394461725-76203-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:34249 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:34222 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753513AbaCJO2t (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 Mar 2014 10:28:49 -0400
+	id S1753457AbaCJO2s (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 10 Mar 2014 10:28:48 -0400
 In-Reply-To: <1394461725-76203-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
-Cc: Bart van Assche <bvanassche@acm.org>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Jeremy Linton <jlinton@tributary.com>, Kay Sievers <kay@vrfy.org>, Doug Gilbert <dgilbert@interlog.com>, Kai Makisara <kai.makisara@kolumbus.fi>
+Cc: Bart van Assche <bvanassche@acm.org>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-EVPD page 0x83 is used to uniquely identify the device.
-So instead of having each and every program issue a separate
-SG_IO call to retrieve this information it does make far more
-sense to display it in sysfs.
+The scsi_device now has VPD page83 information attached, so
+there is no need to query it again.
 
-Cc: Jeremy Linton <jlinton@tributary.com>
-Cc: Kay Sievers <kay@vrfy.org>
-Cc: Doug Gilbert <dgilbert@interlog.com>
-Cc: Kai Makisara <kai.makisara@kolumbus.fi>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/scsi.c        | 62 ++++++++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/scsi_scan.c   |  3 +++
- drivers/scsi/scsi_sysfs.c  | 44 +++++++++++++++++++++++++++++++-
- include/scsi/scsi_device.h |  3 +++
- 4 files changed, 111 insertions(+), 1 deletion(-)
+ drivers/scsi/ses.c | 38 ++++++++++----------------------------
+ 1 file changed, 10 insertions(+), 28 deletions(-)
 
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index ecaeff1..f753373 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -1042,6 +1042,68 @@ int scsi_get_vpd_page(struct scsi_device *sdev, u8 page, unsigned char *buf,
- EXPORT_SYMBOL_GPL(scsi_get_vpd_page);
+diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
+index eba183c..80bfece 100644
+--- a/drivers/scsi/ses.c
++++ b/drivers/scsi/ses.c
+@@ -25,6 +25,7 @@
+ #include <linux/module.h>
+ #include <linux/kernel.h>
+ #include <linux/enclosure.h>
++#include <asm/unaligned.h>
  
- /**
-+ * scsi_attach_vpd - Attach Vital Product Data to a SCSI device structure
-+ * @sdev: The device to ask
-+ *
-+ * Attach the 'Device Identification' VPD page (0x83) to a SCSI device
-+ * structure. This information can be used to identify the device
-+ * uniquely.
-+ */
-+void scsi_attach_vpd(struct scsi_device *sdev)
-+{
-+	int result, i;
-+	int vpd_len = 255;
-+	int pg83_supported = 0;
-+	unsigned char *vpd_buf;
-+
-+	if (sdev->skip_vpd_pages)
-+		return;
-+retry_pg0:
-+	vpd_buf = kmalloc(vpd_len, GFP_KERNEL);
-+	if (!vpd_buf)
-+		return;
-+
-+	/* Ask for all the pages supported by this device */
-+	result = scsi_vpd_inquiry(sdev, vpd_buf, 0, vpd_len);
-+	if (result < 0) {
-+		kfree(vpd_buf);
-+		return;
-+	}
-+	if (result > vpd_len) {
-+		vpd_len = result;
-+		kfree(vpd_buf);
-+		goto retry_pg0;
-+	}
-+
-+	for (i = 4; i < result; i++) {
-+		if (vpd_buf[i] == 0x83) {
-+			pg83_supported = 1;
-+		}
-+	}
-+	kfree(vpd_buf);
-+
-+	if (pg83_supported) {
-+retry_pg83:
-+		vpd_buf = kmalloc(vpd_len, GFP_KERNEL);
-+		if (!vpd_buf)
-+			return;
-+
-+		result = scsi_vpd_inquiry(sdev, vpd_buf, 0x83, vpd_len);
-+		if (result < 0) {
-+			kfree(vpd_buf);
-+			return;
-+		}
-+		if (result > vpd_len) {
-+			vpd_len = result;
-+			kfree(vpd_buf);
-+			goto retry_pg83;
-+		}
-+		sdev->vpd_pg83_len = result;
-+		sdev->vpd_pg83 = vpd_buf;
-+	}
-+}
-+
-+/**
-  * scsi_report_opcode - Find out if a given command opcode is supported
-  * @sdev:	scsi device to query
-  * @buffer:	scratch buffer (must be at least 20 bytes long)
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 307a811..154bb5e 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -929,6 +929,9 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
- 	if (*bflags & BLIST_SKIP_VPD_PAGES)
- 		sdev->skip_vpd_pages = 1;
- 
-+	if (sdev->scsi_level >= SCSI_3)
-+		scsi_attach_vpd(sdev);
-+
- 	transport_configure_device(&sdev->sdev_gendev);
- 
- 	if (sdev->host->hostt->slave_configure) {
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 196e59a..5d5e55a 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -415,6 +415,7 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
- 
- 	scsi_target_reap(scsi_target(sdev));
- 
-+	kfree(sdev->vpd_pg83);
- 	kfree(sdev->inquiry);
- 	kfree(sdev);
- 
-@@ -755,7 +756,43 @@ static DEVICE_ATTR(queue_type, S_IRUGO | S_IWUSR, show_queue_type_field,
- 		   store_queue_type_field);
- 
- static ssize_t
--show_iostat_counterbits(struct device *dev, struct device_attribute *attr, 				char *buf)
-+show_vpd_pg(const unsigned char *pg_buf, int pg_len, char *buf, int buf_len)
-+{
-+	int len = 0, i;
-+
-+	if (!pg_buf)
-+		return -EINVAL;
-+
-+	len = 0;
-+	for (i = 0; i < pg_len; i += 16) {
-+		if (len + 2 > buf_len) {
-+			len = -EFAULT;
-+			break;
-+		}
-+		hex_dump_to_buffer(pg_buf + i, pg_len, 16, 1,
-+				   buf + len, buf_len - len, false);
-+		strcat(buf + len, "\n");
-+		len += strlen(buf + len);
-+	}
-+	return len;
-+}
-+
-+#define sdev_vpd_pg_attr(page) \
-+static ssize_t						   \
-+show_vpd_##page(struct device *dev, struct device_attribute *attr, \
-+		char *buf)						\
-+{									\
-+	struct scsi_device *sdev = to_scsi_device(dev);			\
-+	return show_vpd_pg(sdev->vpd_##page, sdev->vpd_##page##_len,	\
-+			   buf, PAGE_SIZE);				\
-+}									\
-+static DEVICE_ATTR(vpd_##page, S_IRUGO, show_vpd_##page, NULL);
-+
-+sdev_vpd_pg_attr(pg83);
-+
-+static ssize_t
-+show_iostat_counterbits(struct device *dev, struct device_attribute *attr,
-+			char *buf)
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_cmnd.h>
+@@ -448,27 +449,18 @@ static void ses_enclosure_data_process(struct enclosure_device *edev,
+ static void ses_match_to_enclosure(struct enclosure_device *edev,
+ 				   struct scsi_device *sdev)
  {
- 	return snprintf(buf, 20, "%d\n", (int)sizeof(atomic_t) * 8);
+-	unsigned char *buf;
+ 	unsigned char *desc;
+-	unsigned int vpd_len;
+ 	struct efd efd = {
+ 		.addr = 0,
+ 	};
+ 
+-	buf = kmalloc(INIT_ALLOC_SIZE, GFP_KERNEL);
+-	if (!buf || scsi_get_vpd_page(sdev, 0x83, buf, INIT_ALLOC_SIZE))
+-		goto free;
+-
+ 	ses_enclosure_data_process(edev, to_scsi_device(edev->edev.parent), 0);
+ 
+-	vpd_len = ((buf[2] << 8) | buf[3]) + 4;
+-	kfree(buf);
+-	buf = kmalloc(vpd_len, GFP_KERNEL);
+-	if (!buf ||scsi_get_vpd_page(sdev, 0x83, buf, vpd_len))
+-		goto free;
++	if (!sdev->vpd_pg83_len)
++		return;
+ 
+-	desc = buf + 4;
+-	while (desc < buf + vpd_len) {
++	desc = sdev->vpd_pg83 + 4;
++	while (desc < sdev->vpd_pg83 + sdev->vpd_pg83_len) {
+ 		enum scsi_protocol proto = desc[0] >> 4;
+ 		u8 code_set = desc[0] & 0x0f;
+ 		u8 piv = desc[1] & 0x80;
+@@ -478,25 +470,15 @@ static void ses_match_to_enclosure(struct enclosure_device *edev,
+ 
+ 		if (piv && code_set == 1 && assoc == 1
+ 		    && proto == SCSI_PROTOCOL_SAS && type == 3 && len == 8)
+-			efd.addr = (u64)desc[4] << 56 |
+-				(u64)desc[5] << 48 |
+-				(u64)desc[6] << 40 |
+-				(u64)desc[7] << 32 |
+-				(u64)desc[8] << 24 |
+-				(u64)desc[9] << 16 |
+-				(u64)desc[10] << 8 |
+-				(u64)desc[11];
++			efd.addr = get_unaligned_be64(&desc[4]);
+ 
+ 		desc += len + 4;
+ 	}
+-	if (!efd.addr)
+-		goto free;
++	if (efd.addr) {
++		efd.dev = &sdev->sdev_gendev;
+ 
+-	efd.dev = &sdev->sdev_gendev;
+-
+-	enclosure_for_each_device(ses_enclosure_find_by_addr, &efd);
+- free:
+-	kfree(buf);
++		enclosure_for_each_device(ses_enclosure_find_by_addr, &efd);
++	}
  }
-@@ -905,6 +942,10 @@ static umode_t scsi_sdev_attr_is_visible(struct kobject *kobj,
- 	    !sdev->host->hostt->change_queue_type)
- 		return S_IRUGO;
  
-+	if (attr == &dev_attr_vpd_pg83.attr &&
-+	    !sdev->vpd_pg83)
-+		return 0;
-+
- 	return attr->mode;
- }
- 
-@@ -930,6 +971,7 @@ static struct attribute *scsi_sdev_attrs[] = {
- 	&dev_attr_queue_depth.attr,
- 	&dev_attr_queue_type.attr,
- 	&dev_attr_queue_ramp_up_period.attr,
-+	&dev_attr_vpd_pg83.attr,
- 	REF_EVT(media_change),
- 	REF_EVT(inquiry_change_reported),
- 	REF_EVT(capacity_change_reported),
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index d65fbec..d209f04 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -113,6 +113,8 @@ struct scsi_device {
- 	const char * vendor;		/* [back_compat] point into 'inquiry' ... */
- 	const char * model;		/* ... after scan; point to static string */
- 	const char * rev;		/* ... "nullnullnullnull" before scan */
-+	unsigned char vpd_pg83_len;
-+	unsigned char *vpd_pg83;
- 	unsigned char current_tag;	/* current tag */
- 	struct scsi_target      *sdev_target;   /* used only for single_lun */
- 
-@@ -309,6 +311,7 @@ extern int scsi_add_device(struct Scsi_Host *host, uint channel,
- extern int scsi_register_device_handler(struct scsi_device_handler *scsi_dh);
- extern void scsi_remove_device(struct scsi_device *);
- extern int scsi_unregister_device_handler(struct scsi_device_handler *scsi_dh);
-+void scsi_attach_vpd(struct scsi_device *sdev);
- 
- extern int scsi_device_get(struct scsi_device *);
- extern void scsi_device_put(struct scsi_device *);
+ static int ses_intf_add(struct device *cdev,
 -- 
 1.7.12.4
 
