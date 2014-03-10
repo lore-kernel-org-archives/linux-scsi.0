@@ -1,37 +1,91 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH v5 3/3] scsi: async sd resume
-Date: Mon, 10 Mar 2014 14:06:10 -0700
-Message-ID: <CAPcyv4gpxxPMHJo7+iH-e+S1KVaJJH62bEBdq8_NQbeU7jTS4A@mail.gmail.com>
-References: <CAPcyv4ik5GhaqZsBCA+LJ5WN=bCBPqjHgWwud1PrrKB4LarBOA@mail.gmail.com>
-	<Pine.LNX.4.44L0.1403101658490.5966-100000@netrider.rowland.org>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH 0/6] iser-target: Fix active I/O shutdown related issues
+Date: Mon, 10 Mar 2014 15:00:11 -0700
+Message-ID: <1394488811.16214.32.camel@haakon3.risingtidesystems.com>
+References: <1393891265-22910-1-git-send-email-nab@daterainc.com>
+	 <5315EE7C.3030806@dev.mellanox.co.il>
+	 <1393978007.30113.4.camel@haakon3.risingtidesystems.com>
+	 <531714BE.2060401@dev.mellanox.co.il>
+	 <1394057083.20601.51.camel@haakon3.risingtidesystems.com>
+	 <5318808E.5080207@mellanox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44L0.1403101658490.5966-100000@netrider.rowland.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Tejun Heo <tj@kernel.org>, James Bottomley <JBottomley@parallels.com>, Len Brown <len.brown@intel.com>, linux-scsi <linux-scsi@vger.kernel.org>, Phillip Susi <psusi@ubuntu.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Todd Brandt <todd.e.brandt@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:55566 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752357AbaCJV4W (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Mar 2014 17:56:22 -0400
+In-Reply-To: <5318808E.5080207@mellanox.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: sagi grimberg <sagig@mellanox.com>
+Cc: Sagi Grimberg <sagig@dev.mellanox.co.il>, "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-rdma <linux-rdma@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Or Gerlitz <ogerlitz@mellanox.com>
 
-On Mon, Mar 10, 2014 at 1:59 PM, Alan Stern <stern@rowland.harvard.edu> wrote:
-> On Mon, 10 Mar 2014, Dan Williams wrote:
->
->> > The only thing which is a bit concerning is that this doesn't have any
->> > throttling mechanism for simultaneous wakeups.  Would this be able to
->> > blow up the PSU if used on a machine with a lot of spindles?
->>
->> Good point.  The primary benefit is completing userspace resume
->> without needlessly waiting for the disk.  For now I think it would be
->> enough to have a mutex to maintain one disk at a time.  We can follow
->> on later with something more complex to enable a max simultaneous
->> spin-up tunable.
->
-> Why?  The existing code doesn't have anything like that.
->
+On Thu, 2014-03-06 at 16:05 +0200, sagi grimberg wrote:
+> On 3/6/2014 12:04 AM, Nicholas A. Bellinger wrote:
+> > On Wed, 2014-03-05 at 14:12 +0200, Sagi Grimberg wrote:
+> >> On 3/5/2014 2:06 AM, Nicholas A. Bellinger wrote:
+> >>> On Tue, 2014-03-04 at 17:17 +0200, Sagi Grimberg wrote:
+> >>>> On 3/4/2014 2:00 AM, Nicholas A. Bellinger wrote:
 
-Why follow up later, or why maintain one disk at a time?
+<SNIP>
 
-I know at least the SCSI driver I maintained had this as a
-per-low-level driver tunable.  Seems to be a good candidate for
-attempting a unified platform-level tunable.  Mind you I would not be
-looking to implement it anytime soon.
+> >>> <nod>, I noticed that as well during recent debugging.
+> >>>
+> >>> However, AFAICT the RDMA_CM_EVENT_TIMEWAIT_EVENT doesn't (always) occur
+> >>> on the target side after a RDMA_CM_EVENT_DISCONNECTED, and thus far I've
+> >>> not been able to ascertain what's different about the shutdown sequence
+> >>> that would make this happen, or not happen..
+> >>>
+> >>> Any ideas..?
+> >> That's probably because the cm_id is destroyed before you get the event.
+> >> There is a specific
+> >> timout computation to get this event (see IB spec). If you will attempt
+> >> to disconnect while
+> >> the link is down (initiator won't receive it and send you disconnect
+> >> back), you should be able
+> >> to see this event. As I understand, in order to comply the spec, the QP
+> >> (and the cm_id afterwards)
+> >> should be destroyed only when getting this event and not before.
+> >>
+> > <nod>, thanks for the additional background.
+> >
+> > So currently rdma_destroy_qp() + rdma_destroy_id() is being done via
+> > isert_connect_release(), which occurs after the final isert_put_conn()
+> > happens from either the RDMA_CM_EVENT_DISCONNECTED handler, or within
+> > isert_free_conn() in one of the per connection kernel thread contexts
+> > via iscsit_close_connection().
+> >
+> > If I understand the above correctly, the isert_put_conn() should move
+> > from the RDMA_CM_EVENT_DISCONNECTED handler into the TIMEWAIT_EVENT
+> > handler, yes..?
+> 
+> Yes.
+> 
+> > And it's safe to assume that DISCONNECTED will always occur before
+> > TIMEWAIT_EVENT, right..?
+> 
+> DISCONNECTED event may not even come at all (in case the initiator 
+> didn't call rdma_disconnect). no guarantees here..
+> But, if once we get the TIMEWAIT event, we destroy the qp and the 
+> *cm_id*, we won't get any CM events at all.
+> As I understand, we don't even need to explicitly destroy the cm_id, we 
+> can just return a non-zero return from cma_handler
+> for TIMEWAIT events which will cause rdma_cm to implicitly destroy the 
+> cm_id.
+> 
+
+Mmmm, if that's the case then I'm more confused about how reference
+counting for isert_conn should work wrt TIMEWAIT_EVENT than before..  ;)
+
+As mentioned earlier, the first isert_put_conn() occurs from the per
+connection process context after calling rdma_disconnect(), and the
+second from the disconnected event handler.
+
+Your comment above would seem to indicate that iser-target code should
+be waiting to receive TIMEWAIT_EVENT, instead of pro-actively calling
+rdma_disconnect() to trigger the disconnect.  Is that correct..?
+
+--nab
+
