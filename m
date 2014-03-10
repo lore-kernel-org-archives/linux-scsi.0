@@ -1,90 +1,47 @@
-From: Maurizio Lombardi <mlombard@redhat.com>
-Subject: [PATCH 3/3] bnx2fc: fix memory leak in bnx2fc_allocate_hash_table()
-Date: Mon, 10 Mar 2014 11:03:19 +0100
-Message-ID: <1394445799-8463-4-git-send-email-mlombard@redhat.com>
-References: <1394445799-8463-1-git-send-email-mlombard@redhat.com>
+From: "I AM AN INVESTOR WITH CAPITAL OF US$6.7 MILLION. I WANT TO INVEST IN
+	YOUR COUNTRY UNDER YOU CONTROL (nancyabdul1)"
+	<nancyabdul@outlook.com>
+Subject: Invitation for Wine-Apps.org
+Date: Mon, 10 Mar 2014 11:31:26 +0100
+Message-ID: <c01428972f9592a6e0b7478a3ae5e7e2@wine-apps.org>
+Reply-To: "I AM AN INVESTOR WITH CAPITAL OF US$6.7 MILLION. I WANT TO INVEST IN
+	  YOUR COUNTRY UNDER YOU CONTROL (nancyabdul1)"
+	  <nancyabdul@outlook.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46640 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753132AbaCJKDb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 Mar 2014 06:03:31 -0400
-In-Reply-To: <1394445799-8463-1-git-send-email-mlombard@redhat.com>
+Received: from s4.hive01.com ([188.138.118.86]:48509 "EHLO
+	loft7903.serverloft.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752337AbaCJKhD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Mar 2014 06:37:03 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: eddie.wai@broadcom.com
-Cc: linux-scsi@vger.kernel.org, jbottomley@parallels.com, m.lombardi85@gmail.com
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-In case of error, the bnx2fc_allocate_hash_table() didn't free
-all the memory it allocated.
+Hello linux-scsi@vger.kernel.org,
 
-Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
----
- drivers/scsi/bnx2fc/bnx2fc_hwi.c | 31 +++++++++++++++++++------------
- 1 file changed, 19 insertions(+), 12 deletions(-)
+this is an invitation sent to you from user I AM
+AN INVESTOR WITH CAPITAL OF US$6.7 MILLION.  I
+WANT TO INVEST IN YOUR COUNTRY UNDER YOU CONTROL
+(nancyabdul1) for the social network
+Wine-Apps.org. If you want to join please have a
+look at WINE-Apps.org where you can also create an
+user account and join our community! We're looking
+forward for your registration!
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_hwi.c b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-index f83bae4..5a7865f 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-@@ -2026,7 +2026,7 @@ static int bnx2fc_allocate_hash_table(struct bnx2fc_hba *hba)
- 	dma_segment_array = kzalloc(dma_segment_array_size, GFP_KERNEL);
- 	if (!dma_segment_array) {
- 		printk(KERN_ERR PFX "hash table pointers (dma) alloc failed\n");
--		return -ENOMEM;
-+		goto fail;
- 	}
- 
- 	for (i = 0; i < segment_count; ++i) {
-@@ -2037,15 +2037,7 @@ static int bnx2fc_allocate_hash_table(struct bnx2fc_hba *hba)
- 					   GFP_KERNEL);
- 		if (!hba->hash_tbl_segments[i]) {
- 			printk(KERN_ERR PFX "hash segment alloc failed\n");
--			while (--i >= 0) {
--				dma_free_coherent(&hba->pcidev->dev,
--						    BNX2FC_HASH_TBL_CHUNK_SIZE,
--						    hba->hash_tbl_segments[i],
--						    dma_segment_array[i]);
--				hba->hash_tbl_segments[i] = NULL;
--			}
--			kfree(dma_segment_array);
--			return -ENOMEM;
-+			goto fail;
- 		}
- 		memset(hba->hash_tbl_segments[i], 0,
- 		       BNX2FC_HASH_TBL_CHUNK_SIZE);
-@@ -2057,8 +2049,7 @@ static int bnx2fc_allocate_hash_table(struct bnx2fc_hba *hba)
- 					       GFP_KERNEL);
- 	if (!hba->hash_tbl_pbl) {
- 		printk(KERN_ERR PFX "hash table pbl alloc failed\n");
--		kfree(dma_segment_array);
--		return -ENOMEM;
-+		goto fail;
- 	}
- 	memset(hba->hash_tbl_pbl, 0, PAGE_SIZE);
- 
-@@ -2083,6 +2074,22 @@ static int bnx2fc_allocate_hash_table(struct bnx2fc_hba *hba)
- 	}
- 	kfree(dma_segment_array);
- 	return 0;
-+
-+fail:
-+	for (i = 0; i < segment_count; ++i) {
-+		if (hba->hash_tbl_segments[i])
-+			dma_free_coherent(&hba->pcidev->dev,
-+					    BNX2FC_HASH_TBL_CHUNK_SIZE,
-+					    hba->hash_tbl_segments[i],
-+					    dma_segment_array[i]);
-+	}
-+
-+	if (dma_segment_array)
-+		kfree(dma_segment_array);
-+
-+	kfree(hba->hash_tbl_segments);
-+	hba->hash_tbl_segments = NULL;
-+	return -ENOMEM;
- }
- 
- /**
--- 
-Maurizio Lombardi
+
+Best regard
+  The Wine-Apps.org Team
+
+--
+Message sent via Wine-Apps.org
+http://WINE-Apps.org
+
+
+
+JOB RECOMMENDATION:
+
+more jobs: http://WINE-Apps.org/jobs/
+
 
