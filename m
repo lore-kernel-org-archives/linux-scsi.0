@@ -1,106 +1,149 @@
-From: Or Gerlitz <or.gerlitz-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH v2 00/13] T10-PI support for iSER initiator
-Date: Mon, 10 Mar 2014 21:08:57 +0200
-Message-ID: <CAJZOPZJ8B+f8P+1MrZ=6CnHhxQJXZ2xN+vh2Z8NNBNW2oNGjJw@mail.gmail.com>
-References: <1394041431-28399-1-git-send-email-sagig@mellanox.com>
+From: worley@alum.mit.edu (Dale R. Worley)
+Subject: Writing session to CD does not update some important cached information.
+Date: Mon, 10 Mar 2014 16:05:21 -0400
+Message-ID: <201403102005.s2AK5L80013788@hobgoblin.ariadne.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1394041431-28399-1-git-send-email-sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
-Cc: Roland Dreier <roland-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Nicholas A. Bellinger" <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>, Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>, "martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "oren-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org" <oren-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from qmta11.westchester.pa.mail.comcast.net ([76.96.59.211]:44480
+	"EHLO QMTA11.westchester.pa.mail.comcast.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751517AbaCJUL2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 10 Mar 2014 16:11:28 -0400
+Received: from hobgoblin.ariadne.com (hobgoblin.ariadne.com [127.0.0.1])
+	by hobgoblin.ariadne.com (8.14.7/8.14.7) with ESMTP id s2AK5Lgd013789
+	for <linux-scsi@vger.kernel.org>; Mon, 10 Mar 2014 16:05:21 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Wed, Mar 5, 2014 at 7:43 PM, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org> wrote:
-> Hey Roland, Nic, Mike and Co
->
-> This patchset adds T10 protection information offload support over
-> RDMA signature verbs API. This set, along with the iSER target set,
-> allow end-to-end protection information passthrough and validation.
-> The patchset was tested against Linux SCSI target with iSER DIF
-> support applied.
->
-> iSER T10-PI support enablement is currently controlled with
-> module parameters (similar to lpfc for example) which make them
-> global. In the next phase we can consider passing these parameters
-> from iscsid nl messages, which would make them per-connection.
->
-> The approach I took with respect to escalating protection information
-> errors was minimal iSCSI intervention in protection information affairs.
-> I added libiscsi a hook asking the transport to check the protection
-> information status, and construct the proper sense data in case of errors
-> (the alternative of letting the transport to construct sense data seemed
-> much less appealing).
->
-> Note that this patchset comes on top of a pending patch for iSER to suppress
-> fastreg completions (http://marc.info/?l=linux-rdma&m=139047309831997&w=2).
->
-> v0 patches are available in target-pending git repo (branch rdma-dif) and
-> passed 0-DAY testing.
->
-> Roland, I would like to hear your feedback on this.
+(This is based on the bug report
+https://bugzilla.redhat.com/show_bug.cgi?id=3D918200)
 
-Acked-By: Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+When I repartition a disk, when I exit the partitioning tool, it has
+some method of ordering the kernel to re-read the partition table.
+Thus, after repartitioning, the partitions I've created/changed are
+available for use.
 
-Roland, given that Sagi addressed all the feedback from the reviewers,
-specifically from Mike Christie, and has my iser maintainer
-ack on the series, can you please go ahead and apply that for 3.15?
->
-> The set is ordered by the following:
-> - Preparation patches (non/minor functionality changes).
-> - Add protection information execution support.
-> - Add protection information status check facilities.
-> - Publish T10-DIF support to SCSI mid-layer according to
->   IB device capabilities.
->
-> Changes from v1:
-> - Removed extra space (BUG_ON).
-> - Dropped DID_ABORT from sc result for data integrity errors.
-> - Fixed failed sector report.
->
-> Changes from v0:
-> - Fix protection information dma registration for unaligned scatterlists
->   which may happen when the block layer merges bios.
-> - Don't fail connections on devices without DIF support - warn and continue
->   without DIF.
-> - reword FR -> FastReg
->
-> Alex Tabachnik (2):
->   IB/iser: Introduce pi_enable, pi_guard module parameters
->   IB/iser: Initialize T10-PI resources
->
-> Sagi Grimberg (11):
->   IB/iser: Avoid FRWR notation, use fastreg instead
->   IB/iser: Push the decision what memory key to use into fast_reg_mr
->     routine
->   IB/iser: Move fast_reg_descriptor initialization to a function
->   IB/iser: Keep IB device attributes under iser_device
->   IB/iser: Replace fastreg descriptor valid bool with indicators
->     container
->   IB/iser: Generalize iser_unmap_task_data and
->     finalize_rdma_unaligned_sg
->   IB/iser: Generalize fall_to_bounce_buf routine
->   IB/iser: Support T10-PI operations
->   SCSI/libiscsi: Add check_protection callback for transports
->   IB/iser: Implement check_protection
->   IB/iser: Publish T10-PI support to SCSI midlayer
->
->  drivers/infiniband/ulp/iser/iscsi_iser.c     |   46 +++-
->  drivers/infiniband/ulp/iser/iscsi_iser.h     |   71 ++++-
->  drivers/infiniband/ulp/iser/iser_initiator.c |   98 +++++-
->  drivers/infiniband/ulp/iser/iser_memory.c    |  445 +++++++++++++++++++-------
->  drivers/infiniband/ulp/iser/iser_verbs.c     |  287 ++++++++++++-----
->  drivers/scsi/libiscsi.c                      |   32 ++
->  include/scsi/libiscsi.h                      |    4 +
->  include/scsi/scsi_transport_iscsi.h          |    1 +
->  8 files changed, 771 insertions(+), 213 deletions(-)
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+But when I burn a CD, when the CD-burning tool is done, it does not
+seem to be able to tell the kernel about the data track that now
+exists.  (Or so the people at bugzilla.redhat.com say.)  To gain
+access to the new track, the CD has to be ejected and reloaded.
+
+It seems to me that this is a deficiency that shouldn't be too hard to
+fix.
+
+Thanks for any attention you can give this!
+
+Dale
+
+----------------------------------------------------------------------
+
+Here is a detailed example of the problem:
+
+The issue is still seen with kernel 3.13.5-101 in Fedora 19.  Here is a=
+n example:
+
+# # Determine version information.
+# uname -a
+Linux hobgoblin.ariadne.com 3.13.5-101.fc19.x86_64 #1 SMP Tue Feb 25 21=
+:25:32 UTC 2014 x86_64 x86_64 x86_64 GNU/Linux
+# cat /etc/redhat-release
+=46edora release 19 (Schr=C3=B6dinger=E2=80=99s Cat)
+# rpm -qa | grep cdr
+libcdr-0.0.14-1.fc19.x86_64
+cdrdao-1.2.3-19.fc19.x86_64
+# # Verify that the file contains a valid ISO filesystem.
+# mount -o loop ~worley/temp/time-warp-iso /mnt/temp
+mount: /dev/loop0 is write-protected, mounting read-only
+# ls /mnt/temp
+COMMIT_EDITMSG	ORIG_HEAD  config~	index  objects	       refs
+=46ETCH_HEAD	branches   description	info   packed-refs
+HEAD		config	   hooks	logs   qgit_cache.dat
+# umount /mnt/temp
+# # Burn the filesystem onto a new CD-R.
+# wodim dev=3D/dev/sr0 -multi speed=3D32 fs=3D32m -v -data ~worley/temp=
+/time-warp-iso
+wodim: No write mode specified.
+wodim: Assuming -tao mode.
+wodim: Future versions of wodim may have different drive dependent defa=
+ults.
+TOC Type: 1 =3D CD-ROM
+scsidev: '/dev/sr0'
+devname: '/dev/sr0'
+scsibus: -2 target: -2 lun: -2
+Linux sg driver version: 3.5.27
+Wodim version: 1.1.11
+SCSI buffer size: 64512
+Device type    : Removable CD-ROM
+Version        : 5
+Response Format: 2
+Capabilities   :=20
+Vendor_info    : 'TSSTcorp'
+Identification : 'DVD+-RW TS-U633A'
+Revision       : 'D300'
+Device seems to be: Generic mmc2 DVD-R/DVD-RW.
+[...]
+Track 01:  625 of  625 MB written (fifo 100%) [buf 100%]  25.2x.
+Track 01: Total bytes read/written: 656142336/656142336 (320382 sectors=
+).
+Writing  time:  255.813s
+Average write speed  17.1x.
+Min drive buffer fill was 99%
+=46ixating...
+=46ixating time:   43.895s
+BURN-Free was never needed.
+wodim: fifo had 10335 puts and 10335 gets.
+wodim: fifo was 0 times empty and 9573 times full, min fill was 97%.
+# # Attempt to mount the CD-R immediately after burning it.
+# mount /dev/sr0 /mnt/temp
+mount: /dev/sr0 is write-protected, mounting read-only
+mount: wrong fs type, bad option, bad superblock on /dev/sr0,
+       missing codepage or helper program, or other error
+
+       In some cases useful info is found in syslog - try
+       dmesg | tail or so.
+# dmesg | tail
+[99045.625479] i801_smbus 0000:00:1f.3: using default PCI settings
+[99045.649439] dell_wmi: Received unknown WMI event (0x11)
+[100784.941616] loop: module loaded
+[100785.165164] ISO 9660 Extensions: Microsoft Joliet Level 3
+[100785.222074] ISO 9660 Extensions: RRIP_1991A
+[100785.222207] SELinux: initialized (dev loop0, type iso9660), uses ge=
+nfs_contexts
+[100931.369609] fuse init (API version 7.22)
+[100931.711371] SELinux: initialized (dev fuse, type fuse), uses genfs_=
+contexts
+[100932.052892] SELinux: initialized (dev fusectl, type fusectl), uses =
+genfs_contexts
+[101215.067563] isofs_fill_super: bread failed, dev=3Dsr0, iso_blknum=3D=
+16, block=3D16
+# # Eject and reload the CD-R and then try to mount it.
+# eject /dev/sr0
+# mount /dev/sr0 /mnt/temp
+mount: /dev/sr0 is write-protected, mounting read-only
+# ll /mnt/temp
+total 2493
+-r--r--r--. 1 root root      34 Mar  8 03:45 COMMIT_EDITMSG
+-r--r--r--. 1 root root      87 May 27  2013 FETCH_HEAD
+-r--r--r--. 1 root root      26 Jun 12  2013 HEAD
+-r--r--r--. 1 root root      41 Mar  8 02:45 ORIG_HEAD
+dr-xr-xr-x. 2 root root    2048 May 11  2013 branches
+-r--r--r--. 1 root root     234 Mar  6 12:55 config
+-r--r--r--. 1 root root     233 Feb 26 14:34 config~
+-r--r--r--. 1 root root      73 May 11  2013 description
+dr-xr-xr-x. 2 root root    2048 May 11  2013 hooks
+-r--r--r--. 1 root root 2350328 Mar  8 02:45 index
+dr-xr-xr-x. 2 root root    2048 Mar  8 02:54 info
+dr-xr-xr-x. 3 root root    2048 May 22  2013 logs
+dr-xr-xr-x. 4 root root    2048 Mar  8 02:54 objects
+-r--r--r--. 1 root root     302 Mar  8 02:45 packed-refs
+-r--r--r--. 1 root root  185477 Jul 31  2013 qgit_cache.dat
+dr-xr-xr-x. 6 root root    2048 Nov 15 11:52 refs
+#
 --
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
