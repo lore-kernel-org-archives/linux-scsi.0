@@ -1,64 +1,39 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 0/5] megaraid_sas: Updates for scsi-misc
-Date: Mon, 10 Mar 2014 12:16:08 +0100
-Message-ID: <531D9EF8.9090703@suse.de>
-References: <CAHtARFHcaLNbNFrGYRU9SQpJzhhESM0=TVZ5X2Rz_=1fLvk_rg@mail.gmail.com> <531D9E74.9000802@suse.de>
+From: Ewan Milne <emilne@redhat.com>
+Subject: Re: [PATCH 1/3] VMW_PVSCSI: Fix pvscsi_abort() function.
+Date: Mon, 10 Mar 2014 09:13:18 -0400
+Message-ID: <1394457198.3827.270.camel@localhost.localdomain>
+References: <1394311872.8462.20.camel@arvindkumar-dev1.eng.vmware.com>
+Reply-To: emilne@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:57571 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:59158 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753157AbaCJLQK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 Mar 2014 07:16:10 -0400
-In-Reply-To: <531D9E74.9000802@suse.de>
+	id S1753399AbaCJNNh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 10 Mar 2014 09:13:37 -0400
+In-Reply-To: <1394311872.8462.20.camel@arvindkumar-dev1.eng.vmware.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: adam radford <aradford@gmail.com>, linux-scsi <linux-scsi@vger.kernel.org>, Kashyap Desai <Kashyap.Desai@lsi.com>, "Saxena, Sumit" <Sumit.Saxena@lsi.com>
+To: Arvind Kumar <arvindkumar@vmware.com>
+Cc: JBottomley@parallels.com, linux-scsi@vger.kernel.org, pv-drivers@vmware.com
 
-On 03/10/2014 12:13 PM, Hannes Reinecke wrote:
-> On 03/10/2014 10:51 AM, adam radford wrote:
->> James/linux-scsi,
->>
->> The following patch series for megaraid_sas brings the driver up to
->> v06.803.01.00-rc1:
->>
->> 1. Load correct raid context timeout value for multipathing and clus=
-tering.
->> 2. Fix megasas_ioc_init_fusion to use local stack variable.
->> 3. Return leaked MPT frames to MPT command pool.
->> 4. Add Dell PowerEdge VRTX SR-IOV VF device support.
->> 5. Version and Changelog update.
->>
->> This patch series apples on top of Sumit Saxena's latest patch serie=
-s, which
->> starts here:
->>
->> http://marc.info/?l=3Dlinux-scsi&m=3D139220849616649&w=3D2
->>
->> and includes a small repost here:
->>
->> http://marc.info/?l=3Dlinux-scsi&m=3D139374736120535&w=3D2
->>
-> Patch series is lacking coding style. Please re-check with
-> './scripts/checkpatch.pl
->=20
-Sigh.
+On Sat, 2014-03-08 at 12:51 -0800, Arvind Kumar wrote:
+> This change ensures that pvscsi_abort() function returns SUCCESS
+> only when the command in question was actually completed, otherwise
+> returns FAILURE. The code before change, was causing a bug where
+> driver tries to complete a command to the mid-layer while the mid-layer
+> has already requested the driver to abort that command, in response
+> to which the driver has responded with SUCCESS causing mid-layer
+> to free the command struct.
+> 
+> Signed-off-by: Arvind Kumar <arvindkumar@vmware.com>
+> Cc: Ewan Milne <emilne@redhat.com>
 
-Ignore that.
-You should've said you've attached two version of the patches.
-Slightly unusual.
+This patch was verified by an OEM to fix a crash involving a double
+completion.  The vmw_pvscsi driver was completing an scmd after having
+previously returned SUCCESS status on the scmd from .eh_abort_handler().
 
-Cheers,
+Acked-by: Ewan D. Milne <emilne@redhat.com>
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
