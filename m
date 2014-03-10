@@ -1,7 +1,7 @@
 From: Andy Grover <agrover@redhat.com>
-Subject: [PATCHv2 3/9] target: Allocate se_dev_entrys in device list only when used
-Date: Mon, 10 Mar 2014 15:45:47 -0700
-Message-ID: <1394491553-3939-4-git-send-email-agrover@redhat.com>
+Subject: [PATCHv2 2/9] target: Don't unlock/relock tpg_lun_lock in loop in add_node_to_devs
+Date: Mon, 10 Mar 2014 15:45:46 -0700
+Message-ID: <1394491553-3939-3-git-send-email-agrover@redhat.com>
 References: <1394491553-3939-1-git-send-email-agrover@redhat.com>
 Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1394491553-3939-1-git-send-email-agrover@redhat.com>
@@ -10,360 +10,204 @@ To: target-devel@vger.kernel.org
 Cc: linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Remove TRANSPORT_LUNFLAGS_INITIATOR_ACCESS and just look at if a
-non-NULL value is in the node_acl->device_list for the given lun. Since
-usually nowhere near all se_dev_entrys are used, this nets a sizable
-reduction in memory use.
+It's not safe to unlock/relock in core_tpg_add_node_to_devs. Remove this.
 
-In core_disable_device_list_for_node, move all calls to functions
-referencing deve inside the spinlock, since it's not safe to access deve
-outside it. Skip reinitializing, since the deve is actually being freed.
+As a consequence, core_enable_device_list_for_node needs to be called with
+a lock held & irqs off. Add a comment mentioning this. Change
+spin_lock_irqs to spin_locks. Change error handling to goto-style.
 
-Do not allocate device_list array separately, but include it in
-se_node_acl.
+Also change the other place enable_device_list_for_node is called,
+add_initiator_node_lun_acl. Hold tpg_lun_lock across all uses of lun.
+Change error handling to release lock from error paths. Remove
+core_dev_get_lun.
 
 Signed-off-by: Andy Grover <agrover@redhat.com>
 ---
- drivers/target/target_core_device.c          | 94 +++++++++++++++-------------
- drivers/target/target_core_fabric_configfs.c |  4 +-
- drivers/target/target_core_spc.c             |  2 +-
- drivers/target/target_core_tpg.c             | 41 +-----------
- include/target/target_core_base.h            |  7 +--
- 5 files changed, 59 insertions(+), 89 deletions(-)
+ drivers/target/target_core_device.c | 78 ++++++++++++++-----------------------
+ drivers/target/target_core_tpg.c    |  3 --
+ 2 files changed, 29 insertions(+), 52 deletions(-)
 
 diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-index 6d91e4d..8a37471 100644
+index 54f5b14..6d91e4d 100644
 --- a/drivers/target/target_core_device.c
 +++ b/drivers/target/target_core_device.c
-@@ -67,7 +67,7 @@ transport_lookup_cmd_lun(struct se_cmd *se_cmd, u32 unpacked_lun)
+@@ -295,7 +295,7 @@ void core_update_device_list_access(
  
- 	spin_lock_irqsave(&se_sess->se_node_acl->device_list_lock, flags);
- 	se_cmd->se_deve = se_sess->se_node_acl->device_list[unpacked_lun];
--	if (se_cmd->se_deve->lun_flags & TRANSPORT_LUNFLAGS_INITIATOR_ACCESS) {
-+	if (se_cmd->se_deve) {
- 		struct se_dev_entry *deve = se_cmd->se_deve;
- 
- 		deve->total_cmds++;
-@@ -143,7 +143,6 @@ EXPORT_SYMBOL(transport_lookup_cmd_lun);
- 
- int transport_lookup_tmr_lun(struct se_cmd *se_cmd, u32 unpacked_lun)
- {
--	struct se_dev_entry *deve;
- 	struct se_lun *se_lun = NULL;
- 	struct se_session *se_sess = se_cmd->se_sess;
- 	struct se_tmr_req *se_tmr = se_cmd->se_tmr_req;
-@@ -154,9 +153,9 @@ int transport_lookup_tmr_lun(struct se_cmd *se_cmd, u32 unpacked_lun)
- 
- 	spin_lock_irqsave(&se_sess->se_node_acl->device_list_lock, flags);
- 	se_cmd->se_deve = se_sess->se_node_acl->device_list[unpacked_lun];
--	deve = se_cmd->se_deve;
-+	if (se_cmd->se_deve) {
-+		struct se_dev_entry *deve = se_cmd->se_deve;
- 
--	if (deve->lun_flags & TRANSPORT_LUNFLAGS_INITIATOR_ACCESS) {
- 		se_tmr->tmr_lun = deve->se_lun;
- 		se_cmd->se_lun = deve->se_lun;
- 		se_lun = deve->se_lun;
-@@ -204,7 +203,7 @@ struct se_dev_entry *core_get_se_deve_from_rtpi(
- 	for (i = 0; i < TRANSPORT_MAX_LUNS_PER_TPG; i++) {
- 		deve = nacl->device_list[i];
- 
--		if (!(deve->lun_flags & TRANSPORT_LUNFLAGS_INITIATOR_ACCESS))
-+		if (!deve)
- 			continue;
- 
- 		lun = deve->se_lun;
-@@ -243,14 +242,11 @@ int core_free_device_list_for_node(
- 	struct se_lun *lun;
- 	u32 i;
- 
--	if (!nacl->device_list)
--		return 0;
--
- 	spin_lock_irq(&nacl->device_list_lock);
- 	for (i = 0; i < TRANSPORT_MAX_LUNS_PER_TPG; i++) {
- 		deve = nacl->device_list[i];
- 
--		if (!(deve->lun_flags & TRANSPORT_LUNFLAGS_INITIATOR_ACCESS))
-+		if (!deve)
- 			continue;
- 
- 		if (!deve->se_lun) {
-@@ -268,9 +264,6 @@ int core_free_device_list_for_node(
- 	}
- 	spin_unlock_irq(&nacl->device_list_lock);
- 
--	array_free(nacl->device_list, TRANSPORT_MAX_LUNS_PER_TPG);
--	nacl->device_list = NULL;
--
- 	return 0;
- }
- 
-@@ -283,12 +276,14 @@ void core_update_device_list_access(
- 
- 	spin_lock_irq(&nacl->device_list_lock);
- 	deve = nacl->device_list[mapped_lun];
--	if (lun_access & TRANSPORT_LUNFLAGS_READ_WRITE) {
--		deve->lun_flags &= ~TRANSPORT_LUNFLAGS_READ_ONLY;
--		deve->lun_flags |= TRANSPORT_LUNFLAGS_READ_WRITE;
--	} else {
--		deve->lun_flags &= ~TRANSPORT_LUNFLAGS_READ_WRITE;
--		deve->lun_flags |= TRANSPORT_LUNFLAGS_READ_ONLY;
-+	if (deve) {
-+		if (lun_access & TRANSPORT_LUNFLAGS_READ_WRITE) {
-+			deve->lun_flags &= ~TRANSPORT_LUNFLAGS_READ_ONLY;
-+			deve->lun_flags |= TRANSPORT_LUNFLAGS_READ_WRITE;
-+		} else {
-+			deve->lun_flags &= ~TRANSPORT_LUNFLAGS_READ_WRITE;
-+			deve->lun_flags |= TRANSPORT_LUNFLAGS_READ_ONLY;
-+		}
- 	}
- 	spin_unlock_irq(&nacl->device_list_lock);
- }
-@@ -318,7 +313,7 @@ int core_enable_device_list_for_node(
- 	 * transition.  This transition must be for the same struct se_lun
- 	 * + mapped_lun that was setup in demo mode..
- 	 */
--	if (deve->lun_flags & TRANSPORT_LUNFLAGS_INITIATOR_ACCESS) {
-+	if (deve) {
- 		if (deve->se_lun_acl != NULL) {
- 			pr_err("struct se_dev_entry->se_lun_acl"
- 			       " already set for demo mode -> explicit"
-@@ -346,18 +341,27 @@ int core_enable_device_list_for_node(
- 		goto out;
- 	}
- 
-+	deve = kzalloc(sizeof(*deve), GFP_ATOMIC);
-+	if (!deve) {
-+		spin_unlock_irq(&nacl->device_list_lock);
-+		return -ENOMEM;
-+	}
-+
-+	nacl->device_list[mapped_lun] = deve;
-+
-+	atomic_set(&deve->ua_count, 0);
-+	atomic_set(&deve->pr_ref_count, 0);
-+	spin_lock_init(&deve->ua_lock);
-+	INIT_LIST_HEAD(&deve->alua_port_list);
-+	INIT_LIST_HEAD(&deve->ua_list);
- 	deve->se_lun = lun;
- 	deve->se_lun_acl = lun_acl;
- 	deve->mapped_lun = mapped_lun;
--	deve->lun_flags |= TRANSPORT_LUNFLAGS_INITIATOR_ACCESS;
- 
--	if (lun_access & TRANSPORT_LUNFLAGS_READ_WRITE) {
--		deve->lun_flags &= ~TRANSPORT_LUNFLAGS_READ_ONLY;
-+	if (lun_access & TRANSPORT_LUNFLAGS_READ_WRITE)
- 		deve->lun_flags |= TRANSPORT_LUNFLAGS_READ_WRITE;
--	} else {
--		deve->lun_flags &= ~TRANSPORT_LUNFLAGS_READ_WRITE;
-+	else
- 		deve->lun_flags |= TRANSPORT_LUNFLAGS_READ_ONLY;
--	}
- 
- 	deve->creation_time = get_jiffies_64();
- 	deve->attach_count++;
-@@ -385,7 +389,23 @@ int core_disable_device_list_for_node(
- 	struct se_portal_group *tpg)
+ /*      core_enable_device_list_for_node():
+  *
+- *
++ * Called with tpg_lun_lock held & irqs off
+  */
+ int core_enable_device_list_for_node(
+ 	struct se_lun *lun,
+@@ -307,8 +307,9 @@ int core_enable_device_list_for_node(
  {
  	struct se_port *port = lun->lun_sep;
--	struct se_dev_entry *deve = nacl->device_list[mapped_lun];
-+	struct se_dev_entry *deve;
-+
-+	core_scsi3_free_pr_reg_from_nacl(lun->lun_se_dev, nacl);
-+
-+	spin_lock_irq(&nacl->device_list_lock);
-+	deve = nacl->device_list[mapped_lun];
-+	if (!deve) {
-+		spin_unlock_irq(&nacl->device_list_lock);
-+		return 0;
-+	}
-+
-+	/*
-+	 * Wait for any in process SPEC_I_PT=1 or REGISTER_AND_MOVE
-+	 * PR operation to complete.
-+	 */
-+	while (atomic_read(&deve->pr_ref_count) != 0)
-+		cpu_relax();
- 
- 	/*
- 	 * If the MappedLUN entry is being disabled, the entry in
-@@ -400,29 +420,19 @@ int core_disable_device_list_for_node(
- 	 * NodeACL context specific PR metadata for demo-mode
- 	 * MappedLUN *deve will be released below..
- 	 */
--	spin_lock_bh(&port->sep_alua_lock);
-+	spin_lock(&port->sep_alua_lock);
- 	list_del(&deve->alua_port_list);
--	spin_unlock_bh(&port->sep_alua_lock);
--	/*
--	 * Wait for any in process SPEC_I_PT=1 or REGISTER_AND_MOVE
--	 * PR operation to complete.
--	 */
--	while (atomic_read(&deve->pr_ref_count) != 0)
--		cpu_relax();
-+	spin_unlock(&port->sep_alua_lock);
+ 	struct se_dev_entry *deve;
++	int ret = 0;
  
 -	spin_lock_irq(&nacl->device_list_lock);
- 	/*
- 	 * Disable struct se_dev_entry LUN ACL mapping
- 	 */
- 	core_scsi3_ua_release_all(deve);
--	deve->se_lun = NULL;
--	deve->se_lun_acl = NULL;
--	deve->lun_flags = 0;
--	deve->creation_time = 0;
--	deve->attach_count--;
-+	nacl->device_list[mapped_lun] = NULL;
-+	kfree(deve);
-+
- 	spin_unlock_irq(&nacl->device_list_lock);
++	spin_lock(&nacl->device_list_lock);
  
--	core_scsi3_free_pr_reg_from_nacl(lun->lun_se_dev, nacl);
- 	return 0;
- }
+ 	deve = nacl->device_list[mapped_lun];
  
-@@ -443,7 +453,7 @@ void core_clear_lun_from_tpg(struct se_lun *lun, struct se_portal_group *tpg)
- 		spin_lock_irq(&nacl->device_list_lock);
- 		for (i = 0; i < TRANSPORT_MAX_LUNS_PER_TPG; i++) {
- 			deve = nacl->device_list[i];
--			if (lun != deve->se_lun)
-+			if (!deve || lun != deve->se_lun)
- 				continue;
- 			spin_unlock_irq(&nacl->device_list_lock);
+@@ -322,15 +323,15 @@ int core_enable_device_list_for_node(
+ 			pr_err("struct se_dev_entry->se_lun_acl"
+ 			       " already set for demo mode -> explicit"
+ 			       " LUN ACL transition\n");
+-			spin_unlock_irq(&nacl->device_list_lock);
+-			return -EINVAL;
++			ret = -EINVAL;
++			goto out;
+ 		}
+ 		if (deve->se_lun != lun) {
+ 			pr_err("struct se_dev_entry->se_lun does"
+ 			       " match passed struct se_lun for demo mode"
+ 			       " -> explicit LUN ACL transition\n");
+-			spin_unlock_irq(&nacl->device_list_lock);
+-			return -EINVAL;
++			ret = -EINVAL;
++			goto out;
+ 		}
+ 		deve->se_lun_acl = lun_acl;
  
-diff --git a/drivers/target/target_core_fabric_configfs.c b/drivers/target/target_core_fabric_configfs.c
-index 804e7f0..0955c948 100644
---- a/drivers/target/target_core_fabric_configfs.c
-+++ b/drivers/target/target_core_fabric_configfs.c
-@@ -113,7 +113,7 @@ static int target_fabric_mappedlun_link(
- 	 */
- 	spin_lock_irq(&lacl->se_lun_nacl->device_list_lock);
- 	deve = lacl->se_lun_nacl->device_list[lacl->mapped_lun];
--	if (deve->lun_flags & TRANSPORT_LUNFLAGS_INITIATOR_ACCESS)
-+	if (deve)
- 		lun_access = deve->lun_flags;
- 	else
- 		lun_access =
-@@ -149,7 +149,7 @@ static int target_fabric_mappedlun_unlink(
- 	/*
- 	 * Determine if the underlying MappedLUN has already been released..
- 	 */
--	if (!deve->se_lun) {
-+	if (!deve || !deve->se_lun) {
- 		spin_unlock_irq(&nacl->device_list_lock);
- 		return 0;
+@@ -342,8 +343,7 @@ int core_enable_device_list_for_node(
+ 			deve->lun_flags |= TRANSPORT_LUNFLAGS_READ_ONLY;
+ 		}
+ 
+-		spin_unlock_irq(&nacl->device_list_lock);
+-		return 0;
++		goto out;
  	}
-diff --git a/drivers/target/target_core_spc.c b/drivers/target/target_core_spc.c
-index 43c5ca98..d91cce7 100644
---- a/drivers/target/target_core_spc.c
-+++ b/drivers/target/target_core_spc.c
-@@ -1239,7 +1239,7 @@ sense_reason_t spc_emulate_report_luns(struct se_cmd *cmd)
- 	spin_lock_irq(&sess->se_node_acl->device_list_lock);
- 	for (i = 0; i < TRANSPORT_MAX_LUNS_PER_TPG; i++) {
- 		deve = sess->se_node_acl->device_list[i];
--		if (!(deve->lun_flags & TRANSPORT_LUNFLAGS_INITIATOR_ACCESS))
-+		if (!deve)
- 			continue;
- 		/*
- 		 * We determine the correct LUN LIST LENGTH even once we
-diff --git a/drivers/target/target_core_tpg.c b/drivers/target/target_core_tpg.c
-index 88fddcf..82a25e1 100644
---- a/drivers/target/target_core_tpg.c
-+++ b/drivers/target/target_core_tpg.c
-@@ -62,7 +62,7 @@ static void core_clear_initiator_node_from_tpg(
- 	for (i = 0; i < TRANSPORT_MAX_LUNS_PER_TPG; i++) {
- 		deve = nacl->device_list[i];
  
--		if (!(deve->lun_flags & TRANSPORT_LUNFLAGS_INITIATOR_ACCESS))
-+		if (!deve)
- 			continue;
+ 	deve->se_lun = lun;
+@@ -366,9 +366,10 @@ int core_enable_device_list_for_node(
+ 	list_add_tail(&deve->alua_port_list, &port->sep_alua_list);
+ 	spin_unlock(&port->sep_alua_lock);
  
- 		if (!deve->se_lun) {
-@@ -214,35 +214,6 @@ static void *array_zalloc(int n, size_t size, gfp_t flags)
- 	return a;
+-	spin_unlock_irq(&nacl->device_list_lock);
++out:
++	spin_unlock(&nacl->device_list_lock);
+ 
+-	return 0;
++	return ret;
  }
  
--/*      core_create_device_list_for_node():
+ /*      core_disable_device_list_for_node():
+@@ -1295,39 +1296,6 @@ struct se_lun *core_get_lun_from_tpg(struct se_portal_group *tpg, u32 unpacked_l
+ 	return lun;
+ }
+ 
+-/*      core_dev_get_lun():
 - *
 - *
 - */
--static int core_create_device_list_for_node(struct se_node_acl *nacl)
+-static struct se_lun *core_dev_get_lun(struct se_portal_group *tpg, u32 unpacked_lun)
 -{
--	struct se_dev_entry *deve;
--	int i;
+-	struct se_lun *lun;
 -
--	nacl->device_list = array_zalloc(TRANSPORT_MAX_LUNS_PER_TPG,
--			sizeof(struct se_dev_entry), GFP_KERNEL);
--	if (!nacl->device_list) {
--		pr_err("Unable to allocate memory for"
--			" struct se_node_acl->device_list\n");
--		return -ENOMEM;
--	}
--	for (i = 0; i < TRANSPORT_MAX_LUNS_PER_TPG; i++) {
--		deve = nacl->device_list[i];
--
--		atomic_set(&deve->ua_count, 0);
--		atomic_set(&deve->pr_ref_count, 0);
--		spin_lock_init(&deve->ua_lock);
--		INIT_LIST_HEAD(&deve->alua_port_list);
--		INIT_LIST_HEAD(&deve->ua_list);
--	}
--
--	return 0;
--}
--
- /*	core_tpg_check_initiator_node_acl()
-  *
-  *
-@@ -279,11 +250,6 @@ struct se_node_acl *core_tpg_check_initiator_node_acl(
- 
- 	tpg->se_tpg_tfo->set_default_node_attributes(acl);
- 
--	if (core_create_device_list_for_node(acl) < 0) {
--		tpg->se_tpg_tfo->tpg_release_fabric_acl(tpg, acl);
+-	spin_lock(&tpg->tpg_lun_lock);
+-	if (unpacked_lun > (TRANSPORT_MAX_LUNS_PER_TPG-1)) {
+-		pr_err("%s LUN: %u exceeds TRANSPORT_MAX_LUNS_PER"
+-			"_TPG-1: %u for Target Portal Group: %hu\n",
+-			tpg->se_tpg_tfo->get_fabric_name(), unpacked_lun,
+-			TRANSPORT_MAX_LUNS_PER_TPG-1,
+-			tpg->se_tpg_tfo->tpg_get_tag(tpg));
+-		spin_unlock(&tpg->tpg_lun_lock);
 -		return NULL;
 -	}
+-	lun = tpg->tpg_lun_list[unpacked_lun];
 -
- 	if (core_set_queue_depth_for_node(tpg, acl) < 0) {
- 		core_free_device_list_for_node(acl, tpg);
- 		tpg->se_tpg_tfo->tpg_release_fabric_acl(tpg, acl);
-@@ -405,11 +371,6 @@ struct se_node_acl *core_tpg_add_initiator_node_acl(
- 
- 	tpg->se_tpg_tfo->set_default_node_attributes(acl);
- 
--	if (core_create_device_list_for_node(acl) < 0) {
--		tpg->se_tpg_tfo->tpg_release_fabric_acl(tpg, acl);
--		return ERR_PTR(-ENOMEM);
+-	if (lun->lun_status != TRANSPORT_LUN_STATUS_ACTIVE) {
+-		pr_err("%s Logical Unit Number: %u is not active on"
+-			" Target Portal Group: %hu, ignoring request.\n",
+-			tpg->se_tpg_tfo->get_fabric_name(), unpacked_lun,
+-			tpg->se_tpg_tfo->tpg_get_tag(tpg));
+-		spin_unlock(&tpg->tpg_lun_lock);
+-		return NULL;
 -	}
+-	spin_unlock(&tpg->tpg_lun_lock);
 -
- 	if (core_set_queue_depth_for_node(tpg, acl) < 0) {
- 		core_free_device_list_for_node(acl, tpg);
- 		tpg->se_tpg_tfo->tpg_release_fabric_acl(tpg, acl);
-diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index c9c7912..34e1ae4 100644
---- a/include/target/target_core_base.h
-+++ b/include/target/target_core_base.h
-@@ -174,9 +174,8 @@ enum se_cmd_flags_table {
- /* struct se_dev_entry->lun_flags and struct se_lun->lun_access */
- enum transport_lunflags_table {
- 	TRANSPORT_LUNFLAGS_NO_ACCESS		= 0x00,
--	TRANSPORT_LUNFLAGS_INITIATOR_ACCESS	= 0x01,
--	TRANSPORT_LUNFLAGS_READ_ONLY		= 0x02,
--	TRANSPORT_LUNFLAGS_READ_WRITE		= 0x04,
-+	TRANSPORT_LUNFLAGS_READ_ONLY		= 0x01,
-+	TRANSPORT_LUNFLAGS_READ_WRITE		= 0x02,
- };
+-	return lun;
+-}
+-
+ struct se_lun_acl *core_dev_init_initiator_node_lun_acl(
+ 	struct se_portal_group *tpg,
+ 	struct se_node_acl *nacl,
+@@ -1366,19 +1334,24 @@ int core_dev_add_initiator_node_lun_acl(
+ {
+ 	struct se_lun *lun;
+ 	struct se_node_acl *nacl;
++	int ret = 0;
  
- /*
-@@ -584,7 +583,7 @@ struct se_node_acl {
- 	char			acl_tag[MAX_ACL_TAG_SIZE];
- 	/* Used for PR SPEC_I_PT=1 and REGISTER_AND_MOVE */
- 	atomic_t		acl_pr_ref_count;
--	struct se_dev_entry	**device_list;
-+	struct se_dev_entry	*device_list[TRANSPORT_MAX_LUNS_PER_TPG];
- 	struct se_session	*nacl_sess;
- 	struct se_portal_group *se_tpg;
- 	spinlock_t		device_list_lock;
+-	lun = core_dev_get_lun(tpg, unpacked_lun);
++	spin_lock(&tpg->tpg_lun_lock);
++	lun = tpg->tpg_lun_list[unpacked_lun];
+ 	if (!lun) {
+ 		pr_err("%s Logical Unit Number: %u is not active on"
+ 			" Target Portal Group: %hu, ignoring request.\n",
+ 			tpg->se_tpg_tfo->get_fabric_name(), unpacked_lun,
+ 			tpg->se_tpg_tfo->tpg_get_tag(tpg));
+-		return -EINVAL;
++		ret = -EINVAL;
++		goto out;
+ 	}
+ 
+ 	nacl = lacl->se_lun_nacl;
+-	if (!nacl)
+-		return -EINVAL;
++	if (!nacl) {
++		ret = -EINVAL;
++		goto out;
++	}
+ 
+ 	if ((lun->lun_access & TRANSPORT_LUNFLAGS_READ_ONLY) &&
+ 	    (lun_access & TRANSPORT_LUNFLAGS_READ_WRITE))
+@@ -1388,7 +1361,10 @@ int core_dev_add_initiator_node_lun_acl(
+ 
+ 	if (core_enable_device_list_for_node(lun, lacl, lacl->mapped_lun,
+ 			lun_access, nacl, tpg) < 0)
+-		return -EINVAL;
++	{
++		ret = -EINVAL;
++		goto out;
++	}
+ 
+ 	spin_lock(&lun->lun_acl_lock);
+ 	list_add_tail(&lacl->lacl_list, &lun->lun_acl_list);
+@@ -1406,7 +1382,11 @@ int core_dev_add_initiator_node_lun_acl(
+ 	 * pre-registrations that need to be enabled for this LUN ACL..
+ 	 */
+ 	core_scsi3_check_aptpl_registration(lun->lun_se_dev, tpg, lun, lacl);
+-	return 0;
++
++out:
++	spin_unlock(&tpg->tpg_lun_lock);
++
++	return ret;
+ }
+ 
+ /*      core_dev_del_initiator_node_lun_acl():
+diff --git a/drivers/target/target_core_tpg.c b/drivers/target/target_core_tpg.c
+index c036595..88fddcf 100644
+--- a/drivers/target/target_core_tpg.c
++++ b/drivers/target/target_core_tpg.c
+@@ -137,8 +137,6 @@ void core_tpg_add_node_to_devs(
+ 		if (lun->lun_status != TRANSPORT_LUN_STATUS_ACTIVE)
+ 			continue;
+ 
+-		spin_unlock(&tpg->tpg_lun_lock);
+-
+ 		dev = lun->lun_se_dev;
+ 		/*
+ 		 * By default in LIO-Target $FABRIC_MOD,
+@@ -166,7 +164,6 @@ void core_tpg_add_node_to_devs(
+ 
+ 		core_enable_device_list_for_node(lun, NULL, lun->unpacked_lun,
+ 				lun_access, acl, tpg);
+-		spin_lock(&tpg->tpg_lun_lock);
+ 	}
+ 	spin_unlock(&tpg->tpg_lun_lock);
+ }
 -- 
 1.8.5.3
