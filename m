@@ -1,59 +1,48 @@
-From: James Bottomley <jbottomley@parallels.com>
-Subject: Re: [PATCH 3/5] Add EVPD page 0x83 to sysfs
-Date: Tue, 11 Mar 2014 04:14:05 +0000
-Message-ID: <1394511243.2142.1.camel@dabdike.int.hansenpartnership.com>
-References: <1394461725-76203-1-git-send-email-hare@suse.de>
-		 <1394461725-76203-4-git-send-email-hare@suse.de>
-	 <1394475897.2565.46.camel@dabdike.int.hansenpartnership.com>
-	 <531E25F3.6090102@suse.de>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH v5 3/3] scsi: async sd resume
+Date: Tue, 11 Mar 2014 08:19:49 +0400
+Message-ID: <1394511589.2142.5.camel@dabdike.int.hansenpartnership.com>
+References: <Pine.LNX.4.44L0.1403101658490.5966-100000@netrider.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.parallels.com ([199.115.105.18]:56864 "EHLO
-	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751204AbaCKEOu convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Mar 2014 00:14:50 -0400
-In-Reply-To: <531E25F3.6090102@suse.de>
-Content-Language: en-US
-Content-ID: <9EB282F48C48E149BA7A08335D01D86D@sw.swsoft.com>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:60945 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752183AbaCKETz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 11 Mar 2014 00:19:55 -0400
+In-Reply-To: <Pine.LNX.4.44L0.1403101658490.5966-100000@netrider.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "hare@suse.de" <hare@suse.de>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "bvanassche@acm.org" <bvanassche@acm.org>, "hch@infradead.org" <hch@infradead.org>, "dgilbert@interlog.com" <dgilbert@interlog.com>, "jlinton@tributary.com" <jlinton@tributary.com>, "kai.makisara@kolumbus.fi" <kai.makisara@kolumbus.fi>, "kay@vrfy.org" <kay@vrfy.org>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Dan Williams <dan.j.williams@intel.com>, Tejun Heo <tj@kernel.org>, Len Brown <len.brown@intel.com>, linux-scsi <linux-scsi@vger.kernel.org>, Phillip Susi <psusi@ubuntu.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Todd Brandt <todd.e.brandt@linux.intel.com>
 
-On Mon, 2014-03-10 at 21:52 +0100, Hannes Reinecke wrote:
-> On 03/10/2014 07:24 PM, James Bottomley wrote:
-> > On Mon, 2014-03-10 at 15:28 +0100, Hannes Reinecke wrote:
-> >> EVPD page 0x83 is used to uniquely identify the device.
-> >> So instead of having each and every program issue a separate
-> >> SG_IO call to retrieve this information it does make far more
-> >> sense to display it in sysfs.
-> >
-> > Christoph's suggestion of binary sysfs attributes for this rather than
-> > the text ones you have is better ... because your current ones are going
-> > to truncate when they run off the one page of data sysfs text attributes
-> > get (i.e. about 2k of vpd).
-> >
-> Yes, I thought of that, too.
-> I thought to remember that binary attributes are reserved for 
-> firmware/hardware-dependent interfaces.
-> If that's not the case I'll be moving to a binary attribute here.
-> Will be resending the patchset.
+On Mon, 2014-03-10 at 16:59 -0400, Alan Stern wrote:
+> On Mon, 10 Mar 2014, Dan Williams wrote:
 > 
-> What should happen with the first patch in the series, then?
-> When moving to a binary attribute the first patch isn't required 
-> anymore; should I drop it or send as a separate patch?
+> > > The only thing which is a bit concerning is that this doesn't have any
+> > > throttling mechanism for simultaneous wakeups.  Would this be able to
+> > > blow up the PSU if used on a machine with a lot of spindles?
+> > 
+> > Good point.  The primary benefit is completing userspace resume
+> > without needlessly waiting for the disk.  For now I think it would be
+> > enough to have a mutex to maintain one disk at a time.  We can follow
+> > on later with something more complex to enable a max simultaneous
+> > spin-up tunable.
+> 
+> Why?  The existing code doesn't have anything like that.
 
-It can be applied separately.
+This only becomes a problem if enterprise class systems want to suspend
+and resume.  Last I heard, this wasn't on the cards.
 
-I also still think we can get around the caching problem by requesting
-the vpd page every time.  Arrays will change it under us and the cache
-will go stale.  Even enclosures sometimes swallow unplug plug events and
-simply change the vpd data.
+We also don't usually need to bother with in-kernel staggered spin ups
+because if the device can blow the PSU by doing simultaneous spinups,
+staggering is usually hard jumpered in the system.  The main reason for
+this is that there's no way for us to work out the PSU topology to do
+the stagger in kernel, so the enterprise likes to be sure.
 
 James
 
 
-James
 
