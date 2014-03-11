@@ -1,72 +1,55 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH v5 3/3] scsi: async sd resume
-Date: Mon, 10 Mar 2014 22:26:58 -0700
-Message-ID: <CAPcyv4gLEQ9-e2GJpfbQQ+DN+nsv-90oFwXxh-_K_hU0z4U5YQ@mail.gmail.com>
-References: <Pine.LNX.4.44L0.1403101658490.5966-100000@netrider.rowland.org>
-	<1394511589.2142.5.camel@dabdike.int.hansenpartnership.com>
-	<CAPcyv4gJssEE7hADEDXmi4ao031uSVjMenKk9AFcbTukm1MKNg@mail.gmail.com>
-	<1394515014.2142.11.camel@dabdike.int.hansenpartnership.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Subject: Re: [PATCH v15 3/3] arm64: Add APM X-Gene SoC 15Gbps Multi-purpose
+ PHY DTS entries
+Date: Tue, 11 Mar 2014 11:34:44 +0530
+Message-ID: <531EA77C.103@ti.com>
+References: <1394213289-29565-1-git-send-email-lho@apm.com> <1394213289-29565-2-git-send-email-lho@apm.com> <1394213289-29565-3-git-send-email-lho@apm.com> <1394213289-29565-4-git-send-email-lho@apm.com> <CAPw-ZTmwFZjKT2+CUUp73TDXJcXy-bEY_sTNg-TtH-COzDnCfw@mail.gmail.com> <20140310204549.GJ25290@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ve0-f172.google.com ([209.85.128.172]:59561 "EHLO
-	mail-ve0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753309AbaCKF07 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Mar 2014 01:26:59 -0400
-Received: by mail-ve0-f172.google.com with SMTP id jx11so8180017veb.31
-        for <linux-scsi@vger.kernel.org>; Mon, 10 Mar 2014 22:26:58 -0700 (PDT)
-In-Reply-To: <1394515014.2142.11.camel@dabdike.int.hansenpartnership.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20140310204549.GJ25290@htj.dyndns.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>, Loc Ho <lho@apm.com>
+Cc: Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Don Dutile <ddutile@redhat.com>, Jon Masters <jcm@redhat.com>, "patches@apm.com" <patches@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>, Len Brown <len.brown@intel.com>, linux-scsi <linux-scsi@vger.kernel.org>, Phillip Susi <psusi@ubuntu.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Todd Brandt <todd.e.brandt@linux.intel.com>
 
-On Mon, Mar 10, 2014 at 10:16 PM, James Bottomley
-<James.Bottomley@hansenpartnership.com> wrote:
-> On Mon, 2014-03-10 at 21:47 -0700, Dan Williams wrote:
->> On Mon, Mar 10, 2014 at 9:19 PM, James Bottomley
->> <James.Bottomley@hansenpartnership.com> wrote:
->> > On Mon, 2014-03-10 at 16:59 -0400, Alan Stern wrote:
->> >> On Mon, 10 Mar 2014, Dan Williams wrote:
->> >>
->> >> > > The only thing which is a bit concerning is that this doesn't have any
->> >> > > throttling mechanism for simultaneous wakeups.  Would this be able to
->> >> > > blow up the PSU if used on a machine with a lot of spindles?
->> >> >
->> >> > Good point.  The primary benefit is completing userspace resume
->> >> > without needlessly waiting for the disk.  For now I think it would be
->> >> > enough to have a mutex to maintain one disk at a time.  We can follow
->> >> > on later with something more complex to enable a max simultaneous
->> >> > spin-up tunable.
->> >>
->> >> Why?  The existing code doesn't have anything like that.
->> >
->> > This only becomes a problem if enterprise class systems want to suspend
->> > and resume.  Last I heard, this wasn't on the cards.
->> >
->> > We also don't usually need to bother with in-kernel staggered spin ups
->> > because if the device can blow the PSU by doing simultaneous spinups,
->> > staggering is usually hard jumpered in the system.  The main reason for
->> > this is that there's no way for us to work out the PSU topology to do
->> > the stagger in kernel, so the enterprise likes to be sure.
->> >
+
+
+On Tuesday 11 March 2014 02:15 AM, Tejun Heo wrote:
+> On Sun, Mar 09, 2014 at 10:23:33PM -0700, Loc Ho wrote:
+>> Hi Tejun,
 >>
->> In that case shouldn't we limit it to a disk at a time?  Enterprise
->> doesn't care and home brew folks that both put a lot of disks in a
->> system and suspend/resume them are less likely to burn themselves.
+>> On Fri, Mar 7, 2014 at 9:28 AM, Loc Ho <lho@apm.com> wrote:
+>>
+>>> This patch adds the DTS entries for the APM X-Gene SoC 15Gbps Multi-purpose
+>>> PHY driver. The PHY for SATA controller 2 and 3 are enabled by default.
+>>>
+>>> Signed-off-by: Loc Ho <lho@apm.com>
+>>> Signed-off-by: Tuan Phan <tphan@apm.com>
+>>> Signed-off-by: Suman Tripathi <stripathi@apm.com>
+>>> ---
+>>>   arch/arm64/boot/dts/apm-storm.dtsi |   75
+>>> ++++++++++++++++++++++++++++++++++++
+>>>   1 files changed, 75 insertions(+), 0 deletions(-)
+>>>
+>>>
+>> Kishon had pulled in the PHY doc/driver patches. Will you pulling in the
+>> PHY DTS and the SATA host driver patches soon?
 >
-> Where do you get that idea from?  the enterprise is amazingly sensitive
-> to system start times; they'd demand my head on a plate if we started a
-> disk at a time and their start times went up by 10x.  That's why we
-> leave it to hard wiring ... they can start in batches the maximum number
-> allowable and thus get the shortest start up times.
+> Kishon, is the following branch the right one to pull into
+> libata/for-3.15?
+>
+>   git://git.kernel.org/pub/scm/linux/kernel/git/kishon/linux-phy.git next
 
-Just considering the dpm_resume path, not device discovery...
 
-> In the long game, though this whole debate is moot: setups with hard
-> wired start times adhere to them regardless of what the system does, so
-> they ignore start unit commands.  Systems without hard wired start times
-> can usually be started at once, so us introducing a delay is unnecessary
-> in either case.
+My PULL request to Greg has this..
+git://git.kernel.org/pub/scm/linux/kernel/git/kishon/linux-phy.git 
+tags/for_3.15
 
-Ok, then I'll let the patch stand as is.
+Btw you can add my
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+for this patch.
+
+Thanks
+Kishon
