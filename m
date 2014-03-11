@@ -1,186 +1,171 @@
-From: Arvind Kumar <arvindkumar@vmware.com>
-Subject: Re: [Pv-drivers] [PATCH 2/3] VMW_PVSCSI: Add support for I/O
- requests coalescing.
-Date: Tue, 11 Mar 2014 13:51:33 -0700
-Message-ID: <1394571094.8462.40.camel@arvindkumar-dev1.eng.vmware.com>
-References: <1394312380.8462.27.camel@arvindkumar-dev1.eng.vmware.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: Loc Ho <lho@apm.com>
+Subject: [PATCH v16 0/4] ata: Add APM X-Gene SoC AHCI SATA host controller support
+Date: Tue, 11 Mar 2014 16:11:31 -0600
+Message-ID: <1394575895-7039-1-git-send-email-lho@apm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-outbound-1.vmware.com ([208.91.2.12]:50394 "EHLO
-	smtp-outbound-1.vmware.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754268AbaCKU7H (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Mar 2014 16:59:07 -0400
-In-Reply-To: <1394312380.8462.27.camel@arvindkumar-dev1.eng.vmware.com>
+Received: from exprod5og103.obsmtp.com ([64.18.0.145]:39682 "HELO
+	exprod5og103.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753644AbaCKWLv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Mar 2014 18:11:51 -0400
+Received: by mail-pb0-f48.google.com with SMTP id md12so162584pbc.21
+        for <linux-scsi@vger.kernel.org>; Tue, 11 Mar 2014 15:11:50 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: JBottomley@parallels.com, linux-scsi@vger.kernel.org
-Cc: pv-drivers@vmware.com, rmehta@vmware.com
+To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 
-Fixed an issue with log message's prefix. Should have been vmw_pvscsi, was pvscsi.
-Resending. Please consider this one. Thanks!
+This patch adds support for the APM X-Gene SoC AHCI SATA host controller. In
+order for the host controller to work, the corresponding PHY driver
+musts also be available. Currently, only Gen3 disk is supported with this
+initial version.
 
-This change allows pvscsi driver to coalesce I/O requests
-before issuing them. The number of I/O's coalesced can be
-dynamically configured based on the workload.
+v16:
+ * Rebase to libata-for-3.15
+ * Pull in the PHY DTS patch as the host controller DTS patch depends on it
 
-Signed-off-by: Rishi Mehta <rmehta@vmware.com>
-Acked-by: Arvind Kumar <arvindkumar@vmware.com>
+v15:
+ * Rebase to libata next branch
+ * Remove field plat_data and PHY from context structure
+ * Fix comment on function xgene_ahci_read_id as well as using bit mask to
+   clear DEVSLP bit
+ * Remove function xgene_ahci_force_phy_rdy and xgene_ahci_phy_restart as not
+   required since Gen1/Gen2 support remove for this initial version
+ * Update function xgene_ahci_do_hardreset comment
+ * Remove Gen1/Gen2 support from function xgene_ahci_do_hardreset
+ * Change int to u32 for variable portcmd_saved in function
+   xgene_ahci_hardreset
+ * Change variable hplat_data to ctx in function xgene_ahci_probe
+ * Remove PHY call and using ahci_platform_enable_resource instead
+ * Add ahci_patlform_remove_one to driver function .remove
+ * Change phy-name to "sata-phy"
+
+v14:
+ * Remove the shutdown already check and replace the while loop check with
+   msleep in function xgene_ahci_init_memram
+
+v13:
+ * Add fully-winged style comment for function xgene_ahci_read_id and
+   xgene_ahci_do_hardrest
+ * Minor comments update for function xgene_ahci_read_id,
+   xgene_ahci_do_hardrest, and xgene_ahci_hardreset
+ * NOTE: There is no functional code change.
+
+v12:
+ * Remove function xgene_ahci_get_channel and use the ata_port field port_no
+ * Update comment for function xgene_ahci_read_id to function comment style
+   '/**'
+ * Update comment for multiple lines to fully-winged style
+
+v11:
+ * Drop the export functions requirement with libachi
+ * Change CONFIG_SATA_XGENE to CONFIG_AHCI_XGENE
+ * Rename file sata_xgene.c to ahci_xgene.c
+ * Convert to use Hans De Geode version 5 ahci_platform code re-factor changes
+   to reduce code duplication. For extra context, use plat_data to store our
+   context. The probe function follows the ahci_sunxi implementation. A number
+   of code fragments update to reflect this change.
+ * Update comment for function xgene_ahci_read_id
+ * Minor code move around in function xgene_ahci_do_hardreset and use
+   ATA_BUSY instead 0x80
+ * Fix hardreset to use start_engine function pointer as required due to newer
+   kernel rebased
+ * Fix the set DMA mask for 32-bit as well
+
+v10:
+ * Update binding documentation
+
+v9:
+ * Remove ACPI/EFI include files
+ * Remove the IO flush support, interrupt routine, and DTS resources
+ * Remove function xgene_rd, xgene_wr, and xgene_wr_flush
+ * Remove PMP support (function xgene_ahci_qc_issue, xgene_ahci_qc_prep,
+   xgene_ahci_qc_fill_rtf, xgene_ahci_softreset, and xgene_ahci_do_softreset)
+ * Rename function xgene_ahci_enable_phy to xgene_ahci_force_phy_rdy
+ * Clean up hardreset functions
+ * Require v7 of the PHY driver
+
+v8:
+ * Remove _ADDR from defines
+ * Remove define MSTAWAUX_COHERENT_BYPASS_SET and
+   STARAUX_COHERENT_BYPASS_SET and use direct coding
+ * Remove the un-necessary check for DTS boot with built in ACPI table
+ * Switch to use dma_set_mask_and_coherent for setting DMA mask
+ * Remove ACPI table matching code
+ * Update clock-names for sata01clk, sata23clk, and sata45clk
+
+v7:
+ * Update the clock code by toggle the clock
+ * Update the DTS clock mask values due to the clock spilt between host and
+   v5 of the PHY drivers
+
+v6:
+ * Update binding documentation
+ * Change select PHY_XGENE_SATA to PHY_XGENE
+ * Add ULL to constants
+ * Change indentation and comments
+ * Clean up the probe functions a bit more
+ * Remove xgene_ahci_remove function
+ * Add the flush register to DTS
+ * Remove the interrupt-parent from DTS
+
+v5:
+ * Sync up to v3 of the PHY driver
+ * Remove MSLIM wrapper functions
+ * Change the memory shutdown loop to use usleep_range
+ * Use devm_ioremap_resource instead devm_ioremap
+ * Remove suspend/resume functions as not needed
+
+v4:
+ * Remove the ID property in DT
+ * Remove the temporary PHY direct function call and use PHY function
+ * Change printk to pr_debug
+ * Move the IOB flush addresses into the DT
+ * Remove the parameters retrieval function as no longer needed
+ * Remove the header file as no longer needed
+ * Require v2 patch of the SATA PHY driver. Require slightly modification
+   in the Kconfig as it is moved to folder driver/phy and use Kconfig
+   PHY_XGENE_SATA instead SATA_XGENE_PHY.
+
+v3:
+ * Move out the SATA PHY to another driver
+ * Remove the clock-cells entry from DTS
+ * Remove debug wrapper
+ * Remove delay functions wrapper
+ * Clean up resource and IRQ query
+ * Remove query clock name
+ * Switch to use dma_set_mask/dma_coherent_mask
+ * Remove un-necessary devm_kfree
+ * Update GPL license header to v2
+ * Spilt up function xgene_ahci_hardreset
+ * Spilt up function xgene_ahci_probe
+ * Remove all reference of CONFIG_ARCH_MSLIM
+ * Clean up chip revision code
+
+v2:
+ * Clean up file sata_xgene.c with Lindent and etc
+ * Clean up file sata_xgene_serdes.c with Lindent and etc
+ * Add description to each patch
+
+v1:
+ * inital version
+
+Signed-off-by: Loc Ho <lho@apm.com>
+Signed-off-by: Tuan Phan <tphan@apm.com>
+Signed-off-by: Suman Tripathi <stripathi@apm.com>
 ---
- drivers/scsi/vmw_pvscsi.c |   49 ++++++++++++++++++++++++++++++++++++++++++---
- drivers/scsi/vmw_pvscsi.h |   17 +++++++++++++---
- 2 files changed, 60 insertions(+), 6 deletions(-)
+Loc Ho (4):
+  arm64: Add APM X-Gene SoC 15Gbps Multi-purpose PHY DTS entries
+  Documentation: Add documentation for the APM X-Gene SoC SATA host
+    controller DTS binding
+  ata: Add APM X-Gene SoC AHCI SATA host controller driver
+  arm64: Add APM X-Gene SoC AHCI SATA host controller DTS entries
 
-diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
-index 7c5abd7..b92ea94 100644
---- a/drivers/scsi/vmw_pvscsi.c
-+++ b/drivers/scsi/vmw_pvscsi.c
-@@ -72,6 +72,7 @@ struct pvscsi_adapter {
- 	bool				use_msi;
- 	bool				use_msix;
- 	bool				use_msg;
-+	bool				use_req_threshold;
- 
- 	spinlock_t			hw_lock;
- 
-@@ -109,6 +110,7 @@ static int pvscsi_cmd_per_lun    = PVSCSI_DEFAULT_QUEUE_DEPTH;
- static bool pvscsi_disable_msi;
- static bool pvscsi_disable_msix;
- static bool pvscsi_use_msg       = true;
-+static bool pvscsi_use_req_threshold = true;
- 
- #define PVSCSI_RW (S_IRUSR | S_IWUSR)
- 
-@@ -133,6 +135,10 @@ MODULE_PARM_DESC(disable_msix, "Disable MSI-X use in driver - (default=0)");
- module_param_named(use_msg, pvscsi_use_msg, bool, PVSCSI_RW);
- MODULE_PARM_DESC(use_msg, "Use msg ring when available - (default=1)");
- 
-+module_param_named(use_req_threshold, pvscsi_use_req_threshold,
-+		   bool, PVSCSI_RW);
-+MODULE_PARM_DESC(use_req_threshold, "Use driver-based request coalescing if configured - (default=1)");
-+
- static const struct pci_device_id pvscsi_pci_tbl[] = {
- 	{ PCI_VDEVICE(VMWARE, PCI_DEVICE_ID_VMWARE_PVSCSI) },
- 	{ 0 }
-@@ -282,10 +288,15 @@ static int scsi_is_rw(unsigned char op)
- static void pvscsi_kick_io(const struct pvscsi_adapter *adapter,
- 			   unsigned char op)
- {
--	if (scsi_is_rw(op))
--		pvscsi_kick_rw_io(adapter);
--	else
-+	if (scsi_is_rw(op)) {
-+		struct PVSCSIRingsState *s = adapter->rings_state;
-+
-+		if (!adapter->use_req_threshold ||
-+		    s->reqProdIdx - s->reqConsIdx >= s->reqCallThreshold)
-+			pvscsi_kick_rw_io(adapter);
-+	} else {
- 		pvscsi_process_request_ring(adapter);
-+	}
- }
- 
- static void ll_adapter_reset(const struct pvscsi_adapter *adapter)
-@@ -1077,6 +1088,34 @@ static int pvscsi_setup_msg_workqueue(struct pvscsi_adapter *adapter)
- 	return 1;
- }
- 
-+static bool pvscsi_setup_req_threshold(struct pvscsi_adapter *adapter,
-+				      bool enable)
-+{
-+	u32 val;
-+
-+	if (!pvscsi_use_req_threshold)
-+		return false;
-+
-+	pvscsi_reg_write(adapter, PVSCSI_REG_OFFSET_COMMAND,
-+			 PVSCSI_CMD_SETUP_REQCALLTHRESHOLD);
-+	val = pvscsi_reg_read(adapter, PVSCSI_REG_OFFSET_COMMAND_STATUS);
-+	if (val == -1) {
-+		printk(KERN_INFO "vmw_pvscsi: device does not support req_threshold\n");
-+		return false;
-+	} else {
-+		struct PVSCSICmdDescSetupReqCall cmd_msg = { 0 };
-+		cmd_msg.enable = enable;
-+		printk(KERN_INFO
-+		       "vmw_pvscsi: %sabling reqCallThreshold\n",
-+			enable ? "en" : "dis");
-+		pvscsi_write_cmd_desc(adapter,
-+				      PVSCSI_CMD_SETUP_REQCALLTHRESHOLD,
-+				      &cmd_msg, sizeof(cmd_msg));
-+		return pvscsi_reg_read(adapter,
-+				       PVSCSI_REG_OFFSET_COMMAND_STATUS) != 0;
-+	}
-+}
-+
- static irqreturn_t pvscsi_isr(int irq, void *devp)
- {
- 	struct pvscsi_adapter *adapter = devp;
-@@ -1416,6 +1455,10 @@ static int pvscsi_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 		flags = IRQF_SHARED;
- 	}
- 
-+	adapter->use_req_threshold = pvscsi_setup_req_threshold(adapter, true);
-+	printk(KERN_DEBUG "vmw_pvscsi: driver-based request coalescing %sabled\n",
-+	       adapter->use_req_threshold ? "en" : "dis");
-+
- 	error = request_irq(adapter->irq, pvscsi_isr, flags,
- 			    "vmw_pvscsi", adapter);
- 	if (error) {
-diff --git a/drivers/scsi/vmw_pvscsi.h b/drivers/scsi/vmw_pvscsi.h
-index a643775..15a9ac6 100644
---- a/drivers/scsi/vmw_pvscsi.h
-+++ b/drivers/scsi/vmw_pvscsi.h
-@@ -26,7 +26,7 @@
- 
- #include <linux/types.h>
- 
--#define PVSCSI_DRIVER_VERSION_STRING   "1.0.3.0-k"
-+#define PVSCSI_DRIVER_VERSION_STRING   "1.0.4.0-k"
- 
- #define PVSCSI_MAX_NUM_SG_ENTRIES_PER_SEGMENT 128
- 
-@@ -117,8 +117,9 @@ enum PVSCSICommands {
- 	PVSCSI_CMD_CONFIG            = 7,
- 	PVSCSI_CMD_SETUP_MSG_RING    = 8,
- 	PVSCSI_CMD_DEVICE_UNPLUG     = 9,
-+	PVSCSI_CMD_SETUP_REQCALLTHRESHOLD     = 10,
- 
--	PVSCSI_CMD_LAST              = 10  /* has to be last */
-+	PVSCSI_CMD_LAST              = 11  /* has to be last */
- };
- 
- /*
-@@ -141,6 +142,14 @@ struct PVSCSICmdDescConfigCmd {
- 	u32 _pad;
- } __packed;
- 
-+/*
-+ * Command descriptor for PVSCSI_CMD_SETUP_REQCALLTHRESHOLD --
-+ */
-+
-+struct PVSCSICmdDescSetupReqCall {
-+	u32 enable;
-+} __packed;
-+
- enum PVSCSIConfigPageType {
- 	PVSCSI_CONFIG_PAGE_CONTROLLER = 0x1958,
- 	PVSCSI_CONFIG_PAGE_PHY        = 0x1959,
-@@ -261,7 +270,9 @@ struct PVSCSIRingsState {
- 	u32	cmpConsIdx;
- 	u32	cmpNumEntriesLog2;
- 
--	u8	_pad[104];
-+	u32	reqCallThreshold;
-+
-+	u8	_pad[100];
- 
- 	u32	msgProdIdx;
- 	u32	msgConsIdx;
--- 
-1.7.9.5
-
-
+ .../devicetree/bindings/ata/apm-xgene.txt          |   70 +++
+ arch/arm64/boot/dts/apm-storm.dtsi                 |  150 ++++++
+ drivers/ata/Kconfig                                |    7 +
+ drivers/ata/Makefile                               |    1 +
+ drivers/ata/ahci_xgene.c                           |  490 ++++++++++++++++++++
+ 5 files changed, 718 insertions(+), 0 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/ata/apm-xgene.txt
+ create mode 100644 drivers/ata/ahci_xgene.c
 
