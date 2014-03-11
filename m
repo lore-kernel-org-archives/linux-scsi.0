@@ -1,62 +1,186 @@
-From: Jayamohan Kallickal <Jayamohan.Kallickal@Emulex.Com>
-Subject: RE: [PATCH v2 01/23] be2iscsi: Use pci_enable_msix_exact() instead
- of pci_enable_msix()
-Date: Tue, 11 Mar 2014 17:06:29 +0000
-Message-ID: <37724B2049F71D4C9B086F99DDB2DE112A8F0A03@CMEXMB1.ad.emulex.com>
-References: <cover.1393191330.git.agordeev@redhat.com>
- <7870f36835f20cbe81dfa1540e6671d486fda0b0.1393191330.git.agordeev@redhat.com>
+From: Arvind Kumar <arvindkumar@vmware.com>
+Subject: Re: [Pv-drivers] [PATCH 2/3] VMW_PVSCSI: Add support for I/O
+ requests coalescing.
+Date: Tue, 11 Mar 2014 13:51:33 -0700
+Message-ID: <1394571094.8462.40.camel@arvindkumar-dev1.eng.vmware.com>
+References: <1394312380.8462.27.camel@arvindkumar-dev1.eng.vmware.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <7870f36835f20cbe81dfa1540e6671d486fda0b0.1393191330.git.agordeev@redhat.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp-outbound-1.vmware.com ([208.91.2.12]:50394 "EHLO
+	smtp-outbound-1.vmware.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754268AbaCKU7H (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 11 Mar 2014 16:59:07 -0400
+In-Reply-To: <1394312380.8462.27.camel@arvindkumar-dev1.eng.vmware.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: JBottomley@parallels.com, linux-scsi@vger.kernel.org
+Cc: pv-drivers@vmware.com, rmehta@vmware.com
 
+Fixed an issue with log message's prefix. Should have been vmw_pvscsi, was pvscsi.
+Resending. Please consider this one. Thanks!
 
+This change allows pvscsi driver to coalesce I/O requests
+before issuing them. The number of I/O's coalesced can be
+dynamically configured based on the workload.
 
------Original Message-----
-From: Alexander Gordeev [mailto:agordeev@redhat.com] 
-Sent: Monday, February 24, 2014 12:02 AM
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev; Jayamohan Kallickal; linux-scsi@vger.kernel.org; linux-pci@vger.kernel.org
-Subject: [PATCH v2 01/23] be2iscsi: Use pci_enable_msix_exact() instead of pci_enable_msix()
-
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers using these two interfaces need to be updated to use the new pci_enable_msi_range()  or pci_enable_msi_exact() and pci_enable_msix_range() or pci_enable_msix_exact() interfaces.
-
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
+Signed-off-by: Rishi Mehta <rmehta@vmware.com>
+Acked-by: Arvind Kumar <arvindkumar@vmware.com>
 ---
- drivers/scsi/be2iscsi/be_main.c |    6 ++----
- 1 files changed, 2 insertions(+), 4 deletions(-)
+ drivers/scsi/vmw_pvscsi.c |   49 ++++++++++++++++++++++++++++++++++++++++++---
+ drivers/scsi/vmw_pvscsi.h |   17 +++++++++++++---
+ 2 files changed, 60 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c index 1f37505..580192f 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -5284,12 +5284,10 @@ static void beiscsi_msix_enable(struct beiscsi_hba *phba)
- 	for (i = 0; i <= phba->num_cpus; i++)
- 		phba->msix_entries[i].entry = i;
+diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
+index 7c5abd7..b92ea94 100644
+--- a/drivers/scsi/vmw_pvscsi.c
++++ b/drivers/scsi/vmw_pvscsi.c
+@@ -72,6 +72,7 @@ struct pvscsi_adapter {
+ 	bool				use_msi;
+ 	bool				use_msix;
+ 	bool				use_msg;
++	bool				use_req_threshold;
  
--	status = pci_enable_msix(phba->pcidev, phba->msix_entries,
--				 (phba->num_cpus + 1));
-+	status = pci_enable_msix_exact(phba->pcidev, phba->msix_entries,
-+				       phba->num_cpus + 1);
- 	if (!status)
- 		phba->msix_enabled = true;
--
--	return;
+ 	spinlock_t			hw_lock;
+ 
+@@ -109,6 +110,7 @@ static int pvscsi_cmd_per_lun    = PVSCSI_DEFAULT_QUEUE_DEPTH;
+ static bool pvscsi_disable_msi;
+ static bool pvscsi_disable_msix;
+ static bool pvscsi_use_msg       = true;
++static bool pvscsi_use_req_threshold = true;
+ 
+ #define PVSCSI_RW (S_IRUSR | S_IWUSR)
+ 
+@@ -133,6 +135,10 @@ MODULE_PARM_DESC(disable_msix, "Disable MSI-X use in driver - (default=0)");
+ module_param_named(use_msg, pvscsi_use_msg, bool, PVSCSI_RW);
+ MODULE_PARM_DESC(use_msg, "Use msg ring when available - (default=1)");
+ 
++module_param_named(use_req_threshold, pvscsi_use_req_threshold,
++		   bool, PVSCSI_RW);
++MODULE_PARM_DESC(use_req_threshold, "Use driver-based request coalescing if configured - (default=1)");
++
+ static const struct pci_device_id pvscsi_pci_tbl[] = {
+ 	{ PCI_VDEVICE(VMWARE, PCI_DEVICE_ID_VMWARE_PVSCSI) },
+ 	{ 0 }
+@@ -282,10 +288,15 @@ static int scsi_is_rw(unsigned char op)
+ static void pvscsi_kick_io(const struct pvscsi_adapter *adapter,
+ 			   unsigned char op)
+ {
+-	if (scsi_is_rw(op))
+-		pvscsi_kick_rw_io(adapter);
+-	else
++	if (scsi_is_rw(op)) {
++		struct PVSCSIRingsState *s = adapter->rings_state;
++
++		if (!adapter->use_req_threshold ||
++		    s->reqProdIdx - s->reqConsIdx >= s->reqCallThreshold)
++			pvscsi_kick_rw_io(adapter);
++	} else {
+ 		pvscsi_process_request_ring(adapter);
++	}
  }
  
+ static void ll_adapter_reset(const struct pvscsi_adapter *adapter)
+@@ -1077,6 +1088,34 @@ static int pvscsi_setup_msg_workqueue(struct pvscsi_adapter *adapter)
+ 	return 1;
+ }
+ 
++static bool pvscsi_setup_req_threshold(struct pvscsi_adapter *adapter,
++				      bool enable)
++{
++	u32 val;
++
++	if (!pvscsi_use_req_threshold)
++		return false;
++
++	pvscsi_reg_write(adapter, PVSCSI_REG_OFFSET_COMMAND,
++			 PVSCSI_CMD_SETUP_REQCALLTHRESHOLD);
++	val = pvscsi_reg_read(adapter, PVSCSI_REG_OFFSET_COMMAND_STATUS);
++	if (val == -1) {
++		printk(KERN_INFO "vmw_pvscsi: device does not support req_threshold\n");
++		return false;
++	} else {
++		struct PVSCSICmdDescSetupReqCall cmd_msg = { 0 };
++		cmd_msg.enable = enable;
++		printk(KERN_INFO
++		       "vmw_pvscsi: %sabling reqCallThreshold\n",
++			enable ? "en" : "dis");
++		pvscsi_write_cmd_desc(adapter,
++				      PVSCSI_CMD_SETUP_REQCALLTHRESHOLD,
++				      &cmd_msg, sizeof(cmd_msg));
++		return pvscsi_reg_read(adapter,
++				       PVSCSI_REG_OFFSET_COMMAND_STATUS) != 0;
++	}
++}
++
+ static irqreturn_t pvscsi_isr(int irq, void *devp)
+ {
+ 	struct pvscsi_adapter *adapter = devp;
+@@ -1416,6 +1455,10 @@ static int pvscsi_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		flags = IRQF_SHARED;
+ 	}
+ 
++	adapter->use_req_threshold = pvscsi_setup_req_threshold(adapter, true);
++	printk(KERN_DEBUG "vmw_pvscsi: driver-based request coalescing %sabled\n",
++	       adapter->use_req_threshold ? "en" : "dis");
++
+ 	error = request_irq(adapter->irq, pvscsi_isr, flags,
+ 			    "vmw_pvscsi", adapter);
+ 	if (error) {
+diff --git a/drivers/scsi/vmw_pvscsi.h b/drivers/scsi/vmw_pvscsi.h
+index a643775..15a9ac6 100644
+--- a/drivers/scsi/vmw_pvscsi.h
++++ b/drivers/scsi/vmw_pvscsi.h
+@@ -26,7 +26,7 @@
+ 
+ #include <linux/types.h>
+ 
+-#define PVSCSI_DRIVER_VERSION_STRING   "1.0.3.0-k"
++#define PVSCSI_DRIVER_VERSION_STRING   "1.0.4.0-k"
+ 
+ #define PVSCSI_MAX_NUM_SG_ENTRIES_PER_SEGMENT 128
+ 
+@@ -117,8 +117,9 @@ enum PVSCSICommands {
+ 	PVSCSI_CMD_CONFIG            = 7,
+ 	PVSCSI_CMD_SETUP_MSG_RING    = 8,
+ 	PVSCSI_CMD_DEVICE_UNPLUG     = 9,
++	PVSCSI_CMD_SETUP_REQCALLTHRESHOLD     = 10,
+ 
+-	PVSCSI_CMD_LAST              = 10  /* has to be last */
++	PVSCSI_CMD_LAST              = 11  /* has to be last */
+ };
+ 
  /*
---
-1.7.7.6
+@@ -141,6 +142,14 @@ struct PVSCSICmdDescConfigCmd {
+ 	u32 _pad;
+ } __packed;
+ 
++/*
++ * Command descriptor for PVSCSI_CMD_SETUP_REQCALLTHRESHOLD --
++ */
++
++struct PVSCSICmdDescSetupReqCall {
++	u32 enable;
++} __packed;
++
+ enum PVSCSIConfigPageType {
+ 	PVSCSI_CONFIG_PAGE_CONTROLLER = 0x1958,
+ 	PVSCSI_CONFIG_PAGE_PHY        = 0x1959,
+@@ -261,7 +270,9 @@ struct PVSCSIRingsState {
+ 	u32	cmpConsIdx;
+ 	u32	cmpNumEntriesLog2;
+ 
+-	u8	_pad[104];
++	u32	reqCallThreshold;
++
++	u8	_pad[100];
+ 
+ 	u32	msgProdIdx;
+ 	u32	msgConsIdx;
+-- 
+1.7.9.5
 
-Acked-By: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 
---
+
