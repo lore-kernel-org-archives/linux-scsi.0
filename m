@@ -1,116 +1,81 @@
-From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [PATCH 0/6] iser-target: Fix active I/O shutdown related issues
-Date: Tue, 11 Mar 2014 12:27:08 +0200
-Message-ID: <531EE4FC.9010402@dev.mellanox.co.il>
-References: <1393891265-22910-1-git-send-email-nab@daterainc.com>	 <5315EE7C.3030806@dev.mellanox.co.il>	 <1393978007.30113.4.camel@haakon3.risingtidesystems.com>	 <531714BE.2060401@dev.mellanox.co.il>	 <1394057083.20601.51.camel@haakon3.risingtidesystems.com>	 <5318808E.5080207@mellanox.com> <1394488811.16214.32.camel@haakon3.risingtidesystems.com>
+From: James Bottomley <jbottomley@parallels.com>
+Subject: Re: [PATCH 3/5] Add EVPD page 0x83 to sysfs
+Date: Tue, 11 Mar 2014 10:55:54 +0000
+Message-ID: <1394535351.2142.35.camel@dabdike.int.hansenpartnership.com>
+References: <1394461725-76203-1-git-send-email-hare@suse.de>
+			 <1394461725-76203-4-git-send-email-hare@suse.de>
+		 <1394475897.2565.46.camel@dabdike.int.hansenpartnership.com>
+		 <531E25F3.6090102@suse.de>
+	 <1394511243.2142.1.camel@dabdike.int.hansenpartnership.com>
+	 <531EF9D9.9040208@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1394488811.16214.32.camel@haakon3.risingtidesystems.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, sagi grimberg <sagig@mellanox.com>
-Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-rdma <linux-rdma@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Or Gerlitz <ogerlitz@mellanox.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.parallels.com ([199.115.105.18]:41906 "EHLO
+	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752615AbaCKK4t convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Mar 2014 06:56:49 -0400
+In-Reply-To: <531EF9D9.9040208@suse.de>
+Content-Language: en-US
+Content-ID: <836836F623041E4492A144771E2E9505@sw.swsoft.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "hare@suse.de" <hare@suse.de>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "bvanassche@acm.org" <bvanassche@acm.org>, "hch@infradead.org" <hch@infradead.org>, "dgilbert@interlog.com" <dgilbert@interlog.com>, "jlinton@tributary.com" <jlinton@tributary.com>, "kai.makisara@kolumbus.fi" <kai.makisara@kolumbus.fi>, "kay@vrfy.org" <kay@vrfy.org>
 
-On 3/11/2014 12:00 AM, Nicholas A. Bellinger wrote:
-> On Thu, 2014-03-06 at 16:05 +0200, sagi grimberg wrote:
->> On 3/6/2014 12:04 AM, Nicholas A. Bellinger wrote:
->>> On Wed, 2014-03-05 at 14:12 +0200, Sagi Grimberg wrote:
->>>> On 3/5/2014 2:06 AM, Nicholas A. Bellinger wrote:
->>>>> On Tue, 2014-03-04 at 17:17 +0200, Sagi Grimberg wrote:
->>>>>> On 3/4/2014 2:00 AM, Nicholas A. Bellinger wrote:
-> <SNIP>
->
->>>>> <nod>, I noticed that as well during recent debugging.
->>>>>
->>>>> However, AFAICT the RDMA_CM_EVENT_TIMEWAIT_EVENT doesn't (always) occur
->>>>> on the target side after a RDMA_CM_EVENT_DISCONNECTED, and thus far I've
->>>>> not been able to ascertain what's different about the shutdown sequence
->>>>> that would make this happen, or not happen..
->>>>>
->>>>> Any ideas..?
->>>> That's probably because the cm_id is destroyed before you get the event.
->>>> There is a specific
->>>> timout computation to get this event (see IB spec). If you will attempt
->>>> to disconnect while
->>>> the link is down (initiator won't receive it and send you disconnect
->>>> back), you should be able
->>>> to see this event. As I understand, in order to comply the spec, the QP
->>>> (and the cm_id afterwards)
->>>> should be destroyed only when getting this event and not before.
->>>>
->>> <nod>, thanks for the additional background.
->>>
->>> So currently rdma_destroy_qp() + rdma_destroy_id() is being done via
->>> isert_connect_release(), which occurs after the final isert_put_conn()
->>> happens from either the RDMA_CM_EVENT_DISCONNECTED handler, or within
->>> isert_free_conn() in one of the per connection kernel thread contexts
->>> via iscsit_close_connection().
->>>
->>> If I understand the above correctly, the isert_put_conn() should move
->>> from the RDMA_CM_EVENT_DISCONNECTED handler into the TIMEWAIT_EVENT
->>> handler, yes..?
->> Yes.
->>
->>> And it's safe to assume that DISCONNECTED will always occur before
->>> TIMEWAIT_EVENT, right..?
->> DISCONNECTED event may not even come at all (in case the initiator
->> didn't call rdma_disconnect). no guarantees here..
->> But, if once we get the TIMEWAIT event, we destroy the qp and the
->> *cm_id*, we won't get any CM events at all.
->> As I understand, we don't even need to explicitly destroy the cm_id, we
->> can just return a non-zero return from cma_handler
->> for TIMEWAIT events which will cause rdma_cm to implicitly destroy the
->> cm_id.
->>
-> Mmmm, if that's the case then I'm more confused about how reference
-> counting for isert_conn should work wrt TIMEWAIT_EVENT than before..  ;)
+On Tue, 2014-03-11 at 12:56 +0100, Hannes Reinecke wrote:
+> On 03/11/2014 05:14 AM, James Bottomley wrote:
+> > On Mon, 2014-03-10 at 21:52 +0100, Hannes Reinecke wrote:
+> >> On 03/10/2014 07:24 PM, James Bottomley wrote:
+> >>> On Mon, 2014-03-10 at 15:28 +0100, Hannes Reinecke wrote:
+> >>>> EVPD page 0x83 is used to uniquely identify the device.
+> >>>> So instead of having each and every program issue a separate
+> >>>> SG_IO call to retrieve this information it does make far more
+> >>>> sense to display it in sysfs.
+> >>>
+> >>> Christoph's suggestion of binary sysfs attributes for this rather than
+> >>> the text ones you have is better ... because your current ones are going
+> >>> to truncate when they run off the one page of data sysfs text attributes
+> >>> get (i.e. about 2k of vpd).
+> >>>
+> >> Yes, I thought of that, too.
+> >> I thought to remember that binary attributes are reserved for
+> >> firmware/hardware-dependent interfaces.
+> >> If that's not the case I'll be moving to a binary attribute here.
+> >> Will be resending the patchset.
+> >>
+> >> What should happen with the first patch in the series, then?
+> >> When moving to a binary attribute the first patch isn't required
+> >> anymore; should I drop it or send as a separate patch?
+> >
+> > It can be applied separately.
+> >
+> > I also still think we can get around the caching problem by requesting
+> > the vpd page every time.  Arrays will change it under us and the cache
+> > will go stale.  Even enclosures sometimes swallow unplug plug events and
+> > simply change the vpd data.
+> >
+> Hmm. The whole idea of having the vpd data in sysfs is precisely so that 
+> one does _not_ have to do I/O to access it.
 
-Yes, it is indeed confusing.
-The below might be even more confusing... I'll try to simplify.
+No, the point is to provide a uniform interface to User Space to prevent
+*userspace* from having to do I/O (which it frequently gets wrong).
+What we do under the covers is up to us.  What's the reason for not
+wanting to do I/O every time?  Getting VPD data isn't a time critical
+operation is it?  so what's the benefit of caching it?
 
-> As mentioned earlier, the first isert_put_conn() occurs from the per
-> connection process context after calling rdma_disconnect(), and the
-> second from the disconnected event handler.
->
-> Your comment above would seem to indicate that iser-target code should
-> be waiting to receive TIMEWAIT_EVENT, instead of pro-actively calling
-> rdma_disconnect() to trigger the disconnect.  Is that correct..?
+James
 
-Not instead. iser-target should call rdma_disconnect upon DISCONNECTED 
-event but
-destroy the qp and cm_id when getting TIMEWAIT.
 
-There is a matter of sending disconnect request/response and a matter of 
-when
-to destroy the QP.
+> I think using a flag to invalidate data would be better here.
+> 
+> And will keep Bart happy :-)
+> 
+> Will be updating the patchset.
+> 
+> Cheers,
+> 
+> Hannes
 
-DISCONNECTED events are coming from 2 conditions:
-static int cma_ib_handler()
-{
-         ...
-         case IB_CM_DREQ_RECEIVED:    /* remote side sent a disconnect 
-request */
-         case IB_CM_DREP_RECEIVED:    /* remote side responded our 
-disconnect request */
-                 if (!cma_comp_exch(id_priv, RDMA_CM_CONNECT,
-                                    RDMA_CM_DISCONNECT))
-                         goto out;
-                 event.event = RDMA_CM_EVENT_DISCONNECTED;
-                 break;
-         ...
-}
 
-So regardless if iser_target initiated rdma_disconnect - once it gets 
-DISCONNECTED event
-it should call it *again* to respond the initiator disconnect request 
-(rdma_disconnect sends
-CM DREQ and if fails calls CM_DREP - this is to cover that both sides 
-will send DREQ and DREP).
-
-The removal of the QP and cm_id should come once getting TIMEWAIT event.
-
-Hope this wasn't even more confusing...
-
-Sagi.
