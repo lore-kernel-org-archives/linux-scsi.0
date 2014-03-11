@@ -1,175 +1,59 @@
-From: Andy Grover <agrover@redhat.com>
-Subject: [PATCHv2 9/9] target: Refactor core_enable_device_list_for_node
-Date: Mon, 10 Mar 2014 15:45:53 -0700
-Message-ID: <1394491553-3939-10-git-send-email-agrover@redhat.com>
-References: <1394491553-3939-1-git-send-email-agrover@redhat.com>
+From: James Bottomley <jbottomley@parallels.com>
+Subject: Re: [PATCH 3/5] Add EVPD page 0x83 to sysfs
+Date: Tue, 11 Mar 2014 04:14:05 +0000
+Message-ID: <1394511243.2142.1.camel@dabdike.int.hansenpartnership.com>
+References: <1394461725-76203-1-git-send-email-hare@suse.de>
+		 <1394461725-76203-4-git-send-email-hare@suse.de>
+	 <1394475897.2565.46.camel@dabdike.int.hansenpartnership.com>
+	 <531E25F3.6090102@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:26785 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753532AbaCJWp6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 Mar 2014 18:45:58 -0400
-In-Reply-To: <1394491553-3939-1-git-send-email-agrover@redhat.com>
+Received: from mx2.parallels.com ([199.115.105.18]:56864 "EHLO
+	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751204AbaCKEOu convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Mar 2014 00:14:50 -0400
+In-Reply-To: <531E25F3.6090102@suse.de>
+Content-Language: en-US
+Content-ID: <9EB282F48C48E149BA7A08335D01D86D@sw.swsoft.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: target-devel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
+To: "hare@suse.de" <hare@suse.de>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "bvanassche@acm.org" <bvanassche@acm.org>, "hch@infradead.org" <hch@infradead.org>, "dgilbert@interlog.com" <dgilbert@interlog.com>, "jlinton@tributary.com" <jlinton@tributary.com>, "kai.makisara@kolumbus.fi" <kai.makisara@kolumbus.fi>, "kay@vrfy.org" <kay@vrfy.org>
 
-Create helper functions to alloc a deve and to transition it from
-demo mode to explicit.
+On Mon, 2014-03-10 at 21:52 +0100, Hannes Reinecke wrote:
+> On 03/10/2014 07:24 PM, James Bottomley wrote:
+> > On Mon, 2014-03-10 at 15:28 +0100, Hannes Reinecke wrote:
+> >> EVPD page 0x83 is used to uniquely identify the device.
+> >> So instead of having each and every program issue a separate
+> >> SG_IO call to retrieve this information it does make far more
+> >> sense to display it in sysfs.
+> >
+> > Christoph's suggestion of binary sysfs attributes for this rather than
+> > the text ones you have is better ... because your current ones are going
+> > to truncate when they run off the one page of data sysfs text attributes
+> > get (i.e. about 2k of vpd).
+> >
+> Yes, I thought of that, too.
+> I thought to remember that binary attributes are reserved for 
+> firmware/hardware-dependent interfaces.
+> If that's not the case I'll be moving to a binary attribute here.
+> Will be resending the patchset.
+> 
+> What should happen with the first patch in the series, then?
+> When moving to a binary attribute the first patch isn't required 
+> anymore; should I drop it or send as a separate patch?
 
-Signed-off-by: Andy Grover <agrover@redhat.com>
----
- drivers/target/target_core_device.c | 121 ++++++++++++++++++++++--------------
- 1 file changed, 74 insertions(+), 47 deletions(-)
+It can be applied separately.
 
-diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-index 0bd09c8..c15b7aa 100644
---- a/drivers/target/target_core_device.c
-+++ b/drivers/target/target_core_device.c
-@@ -288,6 +288,73 @@ void core_update_device_list_access(
- 	spin_unlock_irq(&nacl->device_list_lock);
- }
- 
-+static struct se_dev_entry *core_alloc_se_dev_entry(
-+	struct se_lun *lun,
-+	struct se_lun_acl *lun_acl,
-+	u32 mapped_lun,
-+	u32 lun_access,
-+	struct se_node_acl *nacl)
-+{
-+	struct se_dev_entry *deve;
-+
-+	/* Holding locks, can't sleep */
-+	deve = kzalloc(sizeof(*deve), GFP_ATOMIC);
-+	if (!deve)
-+		return ERR_PTR(-ENOMEM);
-+
-+	atomic_set(&deve->ua_count, 0);
-+	atomic_set(&deve->pr_ref_count, 0);
-+	spin_lock_init(&deve->ua_lock);
-+	INIT_LIST_HEAD(&deve->alua_port_list);
-+	INIT_LIST_HEAD(&deve->ua_list);
-+	deve->se_lun = lun;
-+	deve->se_lun_acl = lun_acl;
-+	deve->mapped_lun = mapped_lun;
-+
-+	if (lun_access & TRANSPORT_LUNFLAGS_READ_WRITE)
-+		deve->lun_flags |= TRANSPORT_LUNFLAGS_READ_WRITE;
-+	else
-+		deve->lun_flags |= TRANSPORT_LUNFLAGS_READ_ONLY;
-+
-+	deve->creation_time = get_jiffies_64();
-+
-+	nacl->device_list[mapped_lun] = deve;
-+
-+	return deve;
-+}
-+
-+static int core_transition_deve_to_explicit(
-+	struct se_lun *lun,
-+	struct se_lun_acl *lun_acl,
-+	struct se_dev_entry *deve,
-+	u32 lun_access)
-+{
-+	if (deve->se_lun_acl != NULL) {
-+		pr_err("struct se_dev_entry->se_lun_acl"
-+		       " already set for demo mode -> explicit"
-+		       " LUN ACL transition\n");
-+		return -EINVAL;
-+	}
-+	if (deve->se_lun != lun) {
-+		pr_err("struct se_dev_entry->se_lun does"
-+		       " match passed struct se_lun for demo mode"
-+		       " -> explicit LUN ACL transition\n");
-+		return -EINVAL;
-+	}
-+
-+	deve->se_lun_acl = lun_acl;
-+
-+	if (lun_access & TRANSPORT_LUNFLAGS_READ_WRITE) {
-+		deve->lun_flags &= ~TRANSPORT_LUNFLAGS_READ_ONLY;
-+		deve->lun_flags |= TRANSPORT_LUNFLAGS_READ_WRITE;
-+	} else {
-+		deve->lun_flags &= ~TRANSPORT_LUNFLAGS_READ_WRITE;
-+		deve->lun_flags |= TRANSPORT_LUNFLAGS_READ_ONLY;
-+	}
-+
-+	return 0;
-+}
-+
- /*      core_enable_device_list_for_node():
-  *
-  * Called with tpg_lun_lock held & irqs off
-@@ -314,62 +381,22 @@ int core_enable_device_list_for_node(
- 	 * + mapped_lun that was setup in demo mode..
- 	 */
- 	if (deve) {
--		if (deve->se_lun_acl != NULL) {
--			pr_err("struct se_dev_entry->se_lun_acl"
--			       " already set for demo mode -> explicit"
--			       " LUN ACL transition\n");
--			ret = -EINVAL;
--			goto out;
--		}
--		if (deve->se_lun != lun) {
--			pr_err("struct se_dev_entry->se_lun does"
--			       " match passed struct se_lun for demo mode"
--			       " -> explicit LUN ACL transition\n");
--			ret = -EINVAL;
--			goto out;
--		}
--		deve->se_lun_acl = lun_acl;
--
--		if (lun_access & TRANSPORT_LUNFLAGS_READ_WRITE) {
--			deve->lun_flags &= ~TRANSPORT_LUNFLAGS_READ_ONLY;
--			deve->lun_flags |= TRANSPORT_LUNFLAGS_READ_WRITE;
--		} else {
--			deve->lun_flags &= ~TRANSPORT_LUNFLAGS_READ_WRITE;
--			deve->lun_flags |= TRANSPORT_LUNFLAGS_READ_ONLY;
--		}
--
-+		ret = core_transition_deve_to_explicit(lun, lun_acl, deve,
-+						       lun_access);
- 		goto out;
- 	}
- 
--	deve = kzalloc(sizeof(*deve), GFP_ATOMIC);
--	if (!deve) {
--		spin_unlock_irq(&nacl->device_list_lock);
--		return -ENOMEM;
-+	deve = core_alloc_se_dev_entry(lun, lun_acl, mapped_lun, lun_access, nacl);
-+	if (IS_ERR(deve)) {
-+		ret = PTR_ERR(deve);
-+		goto out;
- 	}
- 
--	nacl->device_list[mapped_lun] = deve;
--
--	atomic_set(&deve->ua_count, 0);
--	atomic_set(&deve->pr_ref_count, 0);
--	spin_lock_init(&deve->ua_lock);
--	INIT_LIST_HEAD(&deve->alua_port_list);
--	INIT_LIST_HEAD(&deve->ua_list);
--	deve->se_lun = lun;
--	deve->se_lun_acl = lun_acl;
--	deve->mapped_lun = mapped_lun;
--
--	if (lun_access & TRANSPORT_LUNFLAGS_READ_WRITE)
--		deve->lun_flags |= TRANSPORT_LUNFLAGS_READ_WRITE;
--	else
--		deve->lun_flags |= TRANSPORT_LUNFLAGS_READ_ONLY;
--
--	deve->creation_time = get_jiffies_64();
--	deve->attach_count++;
--
- 	spin_lock(&port->sep_alua_lock);
- 	list_add_tail(&deve->alua_port_list, &port->sep_alua_list);
- 	spin_unlock(&port->sep_alua_lock);
- 
-+	deve->attach_count++;
- out:
- 	spin_unlock(&nacl->device_list_lock);
- 
--- 
-1.8.5.3
+I also still think we can get around the caching problem by requesting
+the vpd page every time.  Arrays will change it under us and the cache
+will go stale.  Even enclosures sometimes swallow unplug plug events and
+simply change the vpd data.
+
+James
+
+
+James
 
