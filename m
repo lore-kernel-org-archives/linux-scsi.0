@@ -1,116 +1,37 @@
-From: Muthukumar R <muthu.lkml@gmail.com>
-Subject: Re: [PATCH 2/5] scsi: Return VPD page length in scsi_vpd_inquiry()
-Date: Wed, 12 Mar 2014 14:14:57 -0700
-Message-ID: <CAFR8ueeATrBwSMg_dmA2gY-Bt2D2+F8rR5zmDbN1ZC3Aw5bJMw@mail.gmail.com>
-References: <1394461725-76203-1-git-send-email-hare@suse.de>
-	<1394461725-76203-3-git-send-email-hare@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:46049 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752507AbaCLVO6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Mar 2014 17:14:58 -0400
-Received: by mail-pb0-f46.google.com with SMTP id rq2so87495pbb.33
-        for <linux-scsi@vger.kernel.org>; Wed, 12 Mar 2014 14:14:57 -0700 (PDT)
-In-Reply-To: <1394461725-76203-3-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Matei Oprea <eu@opreamatei.ro>
+Subject: [PATCH] Scsi: lpfc: lpfc_init: Remove useless casting value
+Date: Wed, 12 Mar 2014 23:20:47 +0200
+Message-ID: <1394659247-20037-1-git-send-email-eu@opreamatei.ro>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: JBottomley@parallels.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Matei Oprea <eu@opreamatei.ro>, ROSEdu Kernel Community <firefly@lists.rosedu.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <jbottomley@parallels.com>, Bart van Assche <bvanassche@acm.org>, Christoph Hellwig <hch@infradead.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Mon, Mar 10, 2014 at 7:28 AM, Hannes Reinecke <hare@suse.de> wrote:
-> We should be returning the number of bytes of the
-> requested VPD page in scsi_vpd_inquiry.
-> This makes it easier for the caller to verify the
-> required space.
->
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> ---
->  drivers/scsi/scsi.c | 17 ++++++++++-------
->  1 file changed, 10 insertions(+), 7 deletions(-)
->
-> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-> index d8afec8..ecaeff1 100644
-> --- a/drivers/scsi/scsi.c
-> +++ b/drivers/scsi/scsi.c
-> @@ -954,7 +954,7 @@ EXPORT_SYMBOL(scsi_track_queue_full);
->   * This is an internal helper function.  You probably want to use
->   * scsi_get_vpd_page instead.
->   *
-> - * Returns 0 on success or a negative error number.
-> + * Returns size of the vpg page on success or a negative error number.
->   */
-Typo:                              ^^^
+Remove useless casting value returned by k[cmz]alloc
+to (struct lpfc_sli_ring *).
 
- Should be: vpd page
+Found using coccinelle
 
+Signed-off-by: Matei Oprea <eu@opreamatei.ro>
+Cc: ROSEdu Kernel Community <firefly@lists.rosedu.org>
+---
+ drivers/scsi/lpfc/lpfc_init.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
->  static int scsi_vpd_inquiry(struct scsi_device *sdev, unsigned char *buffer,
->                                                         u8 page, unsigned len)
-> @@ -962,6 +962,9 @@ static int scsi_vpd_inquiry(struct scsi_device *sdev, unsigned char *buffer,
->         int result;
->         unsigned char cmd[16];
->
-> +       if (len < 4)
-> +               return -EINVAL;
-> +
->         cmd[0] = INQUIRY;
->         cmd[1] = 1;             /* EVPD */
->         cmd[2] = page;
-> @@ -982,7 +985,7 @@ static int scsi_vpd_inquiry(struct scsi_device *sdev, unsigned char *buffer,
->         if (buffer[1] != page)
->                 return -EIO;
->
-> -       return 0;
-> +       return get_unaligned_be16(&buffer[2]) + 4;
->  }
->
->  /**
-> @@ -1009,18 +1012,18 @@ int scsi_get_vpd_page(struct scsi_device *sdev, u8 page, unsigned char *buf,
->
->         /* Ask for all the pages supported by this device */
->         result = scsi_vpd_inquiry(sdev, buf, 0, buf_len);
-> -       if (result)
-> +       if (result < 4)
->                 goto fail;
-
-
-You mean:
-
-            if (result < 0)
-                   goto fail;
-
-
->
->         /* If the user actually wanted this page, we can skip the rest */
->         if (page == 0)
->                 return 0;
->
-> -       for (i = 0; i < min((int)buf[3], buf_len - 4); i++)
-> -               if (buf[i + 4] == page)
-> +       for (i = 4; i < min(result, buf_len); i++)
-> +               if (buf[i] == page)
->                         goto found;
->
-> -       if (i < buf[3] && i >= buf_len - 4)
-> +       if (i < result && i >= buf_len)
->                 /* ran off the end of the buffer, give us benefit of doubt */
->                 goto found;
->         /* The device claims it doesn't support the requested page */
-> @@ -1028,7 +1031,7 @@ int scsi_get_vpd_page(struct scsi_device *sdev, u8 page, unsigned char *buf,
->
->   found:
->         result = scsi_vpd_inquiry(sdev, buf, page, buf_len);
-> -       if (result)
-> +       if (result < 0)
->                 goto fail;
->
->         return 0;
-> --
-> 1.7.12.4
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 68c94cc..47d2c20 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -4731,8 +4731,7 @@ lpfc_sli_driver_resource_setup(struct lpfc_hba *phba)
+ 	}
+ 
+ 	if (!phba->sli.ring)
+-		phba->sli.ring = (struct lpfc_sli_ring *)
+-			kzalloc(LPFC_SLI3_MAX_RING *
++		phba->sli.ring = kzalloc(LPFC_SLI3_MAX_RING *
+ 			sizeof(struct lpfc_sli_ring), GFP_KERNEL);
+ 	if (!phba->sli.ring)
+ 		return -ENOMEM;
+-- 
+1.7.9.5
