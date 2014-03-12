@@ -1,36 +1,38 @@
-From: Loc Ho <lho@apm.com>
-Subject: Re: [PATCH v15 3/3] arm64: Add APM X-Gene SoC AHCI SATA host
- controller DTS entries
-Date: Wed, 12 Mar 2014 09:32:13 -0700
-Message-ID: <CAPw-ZT=xX9fi6zV8QFmCDAB7dvoLXSh+s1y_k9G0c44ONRbBOg@mail.gmail.com>
-References: <1394059489-30706-1-git-send-email-lho@apm.com>
-	<1394059489-30706-2-git-send-email-lho@apm.com>
-	<1394059489-30706-3-git-send-email-lho@apm.com>
-	<1394059489-30706-4-git-send-email-lho@apm.com>
-	<20140311124943.GD11477@htj.dyndns.org>
-	<CAPw-ZTmBSeOXv5ExVAiSkcU=qH3zHp52eVuGBfYYD=7=sjhVgw@mail.gmail.com>
-	<20140311165548.GA20776@mtj.dyndns.org>
+From: Sagi Grimberg <sagig@dev.mellanox.co.il>
+Subject: blk_iopoll_enabled
+Date: Wed, 12 Mar 2014 19:35:07 +0200
+Message-ID: <53209ACB.2080708@dev.mellanox.co.il>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20140311165548.GA20776@mtj.dyndns.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Kishon Vijay Abraham I <kishon@ti.com>, Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Don Dutile <ddutile@redhat.com>, Jon Masters <jcm@redhat.com>, "patches@apm.com" <patches@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-we0-f179.google.com ([74.125.82.179]:36197 "EHLO
+	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755894AbaCLRfN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Mar 2014 13:35:13 -0400
+Received: by mail-we0-f179.google.com with SMTP id x48so11386107wes.24
+        for <linux-scsi@vger.kernel.org>; Wed, 12 Mar 2014 10:35:11 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Bart Van Assche <bvanassche@acm.org>, Or Gerlitz <ogerlitz@mellanox.com>, Oren Duer <oren@mellanox.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Hi,
+Hey Jens,
 
->> Kishon didn't applied the PHY DTS patch. Did you first apply the PHY
->> DTS patch? We agreed that you will first pull in the PHY DTS as well
->> as the host controller patches. I don't see any reason why it wouldn't
->> apply if both DTS is applied. I will pull libata/for-3.15 and check
->> out.
->
-> Can you please repost patches to apply on top of the current
-> libata/for-3.15?
->
+So I'm looking at blk_iopoll for iSER & SRP and I have one gap I would 
+like to get your input on.
 
-I posted v16 yetersday with the PHY DTS merged into the SATA host patches.
+In blk-iopoll.c I see:
+int blk_iopoll_enabled = 1;
+EXPORT_SYMBOL(blk_iopoll_enabled);
 
--Loc
+This is set to 1 and exported for everyone to condition and *modify* it.
+The documentation says the user must check this when using blk_iopoll.
+
+My question is why? it should always be true shouldn't it?
+Moreover, isn't it better to protect it using a get() function of it?
+can't someone set it to 0 and shutdown the lights on everyone else?
+
+Thanks,
+
+Sagi.
