@@ -1,411 +1,251 @@
-From: Michael Schmitz <schmitzmic@gmail.com>
-Subject: Re: [PATCH 2/3] m68k/atari - atari_scsi: change abort/reset return codes
-Date: Wed, 12 Mar 2014 20:05:28 +1300
-Message-ID: <fa87a2cf114c23fc027b5e1c2ee2e30c@gmail.com>
-References: <1393660265-19384-1-git-send-email-schmitz@debian.org> <1393660265-19384-3-git-send-email-schmitz@debian.org> <alpine.LNX.2.00.1403111852390.15749@nippy.intranet> <CAMuHMdUC=WZLGyHoVY1bCdJ9JP2tdhAK_GRhhsqxuiiVGAgKTA@mail.gmail.com>
-Mime-Version: 1.0 (Apple Message framework v624)
-Content-Type: text/plain; charset=US-ASCII; format=flowed
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 71941] New: LSI SAS2116 does not detect disks
+Date: Wed, 12 Mar 2014 07:14:09 +0000
+Message-ID: <bug-71941-11613@https.bugzilla.kernel.org/>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pd0-f178.google.com ([209.85.192.178]:47963 "EHLO
-	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755839AbaCLHFf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Mar 2014 03:05:35 -0400
-In-Reply-To: <CAMuHMdUC=WZLGyHoVY1bCdJ9JP2tdhAK_GRhhsqxuiiVGAgKTA@mail.gmail.com>
+Received: from mail.kernel.org ([198.145.19.201]:53840 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756469AbaCLHOO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 12 Mar 2014 03:14:14 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 190CE201D5
+	for <linux-scsi@vger.kernel.org>; Wed, 12 Mar 2014 07:14:13 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+	by mail.kernel.org (Postfix) with ESMTP id 503D52026F
+	for <linux-scsi@vger.kernel.org>; Wed, 12 Mar 2014 07:14:11 +0000 (UTC)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Linux/m68k <linux-m68k@vger.kernel.org>, Michael Schmitz <schmitz@debian.org>, Finn Thain <fthain@telegraphics.com.au>, "James E.J. Bottomley" <JBottomley@parallels.com>, scsi <linux-scsi@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>, Sam Creasey <sammy@sammy.net>
+To: linux-scsi@vger.kernel.org
 
-Bugger - forgot to CC Sammy as well.
+https://bugzilla.kernel.org/show_bug.cgi?id=71941
 
-My only comment of substance is that the reset handling doesn't need to 
-be done the same way as on Atari, as there's no special locking to 
-account for.
+            Bug ID: 71941
+           Summary: LSI SAS2116 does not detect disks
+           Product: SCSI Drivers
+           Version: 2.5
+    Kernel Version: 3.13.6
+          Hardware: All
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: Other
+          Assignee: scsi_drivers-other@kernel-bugs.osdl.org
+          Reporter: kernel-bugzilla.20.drkshadow@spamgourmet.com
+        Regression: No
 
-Cheers,
+The LSI SAS 9201 (chip: LSI SAS2116) device in my system isn't detecting any
+connected disks. 
 
-	Michael
+Relevant boot dmesg, with 7 disks attached:
+Fusion MPT base driver 3.04.20
+Copyright (c) 1999-2008 LSI Corporation
+Fusion MPT SAS Host driver 3.04.20
+mpt2sas version 16.100.00.00 loaded
+scsi9 : Fusion MPT SAS Host
+mpt2sas0: 64 BIT PCI BUS DMA ADDRESSING SUPPORTED, total mem (24692096 kB)
+mpt2sas0: IO-APIC enabled: IRQ 16
+mpt2sas0: iomem(0x00000000fbbfc000), mapped(0xffffc90008380000), size(16384)
+mpt2sas0: ioport(0x000000000000de00), size(256)
+mpt2sas0: Allocated physical memory: size(13309 kB)
+mpt2sas0: Current Controller Queue Depth(5333), Max Controller Queue
+Depth(10392)
+mpt2sas0: Scatter Gather Elements per IO(128)
+mpt2sas0: LSISAS2116: FWVersion(09.00.00.00), ChipRevision(0x02),
+BiosVersion(00.00.00.00)
+mpt2sas0: Protocol=(Initiator,Target), Capabilities=(TLR,EEDP,Snapshot
+Buffer,Diag Trace Buffer,Task Set Full,NCQ)
+mpt2sas0: sending port enable !!
+mpt2sas0: host_add: handle(0x0001), sas_addr(0x5000d31000407c1f), phys(16)
+mpt2sas0: port enable: SUCCESS
 
-Am 11.03.2014 um 21:28 schrieb Geert Uytterhoeven:
+This was as an auto-loaded module. I can remove it,
+waiting module removal not supported: please upgrade 
+mpt2sas version 16.100.00.00 unloading
+mpt2sas0: _base_make_ioc_ready
+mpt2sas0: _base_make_ioc_ready: ioc_state(0x24000000)
+mpt2sas0: sending message unit reset !!
+mpt2sas0: _base_wait_for_doorbell_ack: successful count(1), timeout(15)
+mpt2sas0: message unit reset: SUCCESS 
 
-> CC Sammy
->
-> On Tue, Mar 11, 2014 at 9:21 AM, Finn Thain 
-> <fthain@telegraphics.com.au> wrote:
->>
->> This is a larger version of Michael's patch. It takes care of the 
->> header
->> files and comments and it addresses sun3_NCR5380 as well as 
->> atari_NCR5380.
->> This means that the initio.h include (!) can be dropped from 
->> sun3_scsi.h.
->>
->> Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
->>
->> ---
->>
->> Michael, I'm assuming that your patch hasn't been merged already (I 
->> didn't
->> find it in any of the likely repos). Please go ahead and add your 
->> sign-off
->> on this version if it is satisfactory. I didn't test this patch: I 
->> presume
->> that sun3_NCR5380 would need the same abort/reset fixes that 
->> atari_NCR5380
->> needed...
->>
->>
->> diff --git a/drivers/scsi/atari_NCR5380.c 
->> b/drivers/scsi/atari_NCR5380.c
->> index 0f3cdbc..e4aaf9a 100644
->> --- a/drivers/scsi/atari_NCR5380.c
->> +++ b/drivers/scsi/atari_NCR5380.c
->> @@ -2683,11 +2683,11 @@ int NCR5380_abort(Scsi_Cmnd *cmd)
->>                         local_irq_restore(flags);
->>                         cmd->scsi_done(cmd);
->>                         falcon_release_lock_if_possible(hostdata);
->> -                       return SCSI_ABORT_SUCCESS;
->> +                       return SUCCESS;
->>                 } else {
->>  /*                     local_irq_restore(flags); */
->>                         printk("scsi%d: abort of connected command 
->> failed!\n", HOSTNO);
->> -                       return SCSI_ABORT_ERROR;
->> +                       return FAILED;
->>                 }
->>         }
->>  #endif
->> @@ -2711,7 +2711,7 @@ int NCR5380_abort(Scsi_Cmnd *cmd)
->>                          * yet... */
->>                         tmp->scsi_done(tmp);
->>                         falcon_release_lock_if_possible(hostdata);
->> -                       return SCSI_ABORT_SUCCESS;
->> +                       return SUCCESS;
->>                 }
->>         }
->>
->> @@ -2729,7 +2729,7 @@ int NCR5380_abort(Scsi_Cmnd *cmd)
->>         if (hostdata->connected) {
->>                 local_irq_restore(flags);
->>                 ABRT_PRINTK("scsi%d: abort failed, command 
->> connected.\n", HOSTNO);
->> -               return SCSI_ABORT_SNOOZE;
->> +               return FAILED;
->>         }
->>
->>         /*
->> @@ -2764,7 +2764,7 @@ int NCR5380_abort(Scsi_Cmnd *cmd)
->>                         ABRT_PRINTK("scsi%d: aborting disconnected 
->> command.\n", HOSTNO);
->>
->>                         if (NCR5380_select(instance, cmd, 
->> (int)cmd->tag))
->> -                               return SCSI_ABORT_BUSY;
->> +                               return FAILED;
->>
->>                         ABRT_PRINTK("scsi%d: nexus reestablished.\n", 
->> HOSTNO);
->>
->> @@ -2791,7 +2791,7 @@ int NCR5380_abort(Scsi_Cmnd *cmd)
->>                                         local_irq_restore(flags);
->>                                         tmp->scsi_done(tmp);
->>                                         
->> falcon_release_lock_if_possible(hostdata);
->> -                                       return SCSI_ABORT_SUCCESS;
->> +                                       return SUCCESS;
->>                                 }
->>                         }
->>                 }
->> @@ -2816,7 +2816,7 @@ int NCR5380_abort(Scsi_Cmnd *cmd)
->>          */
->>         falcon_release_lock_if_possible(hostdata);
->>
->> -       return SCSI_ABORT_NOT_RUNNING;
->> +       return FAILED;
->>  }
->>
->>
->> @@ -2825,7 +2825,7 @@ int NCR5380_abort(Scsi_Cmnd *cmd)
->>   *
->>   * Purpose : reset the SCSI bus.
->>   *
->> - * Returns : SCSI_RESET_WAKEUP
->> + * Returns : SUCCESS or FAILURE
->>   *
->>   */
->>
->> @@ -2834,7 +2834,7 @@ static int NCR5380_bus_reset(Scsi_Cmnd *cmd)
->>         SETUP_HOSTDATA(cmd->device->host);
->>         int i;
->>         unsigned long flags;
->> -#if 1
->> +#if defined(RESET_RUN_DONE)
->>         Scsi_Cmnd *connected, *disconnected_queue;
->>  #endif
->>
->> @@ -2859,7 +2859,14 @@ static int NCR5380_bus_reset(Scsi_Cmnd *cmd)
->>          * through anymore ... */
->>         (void)NCR5380_read(RESET_PARITY_INTERRUPT_REG);
->>
->> -#if 1  /* XXX Should now be done by midlevel code, but it's broken 
->> XXX */
->> +       /* MSch 20140115 - looking at the generic NCR5380 driver, all 
->> of this
->> +        * should go.
->> +        * Catch-22: if we don't clear all queues, the SCSI driver 
->> lock will
->> +        * not be reset by atari_scsi_reset()!
->> +        */
->> +
->> +#if defined(RESET_RUN_DONE)
->> +       /* XXX Should now be done by midlevel code, but it's broken 
->> XXX */
->>         /* XXX see below                                            
->> XXX */
->>
->>         /* MSch: old-style reset: actually abort all command 
->> processing here */
->> @@ -2915,7 +2922,7 @@ static int NCR5380_bus_reset(Scsi_Cmnd *cmd)
->>          * the midlevel code that the reset was SUCCESSFUL, and there 
->> is no
->>          * need to 'wake up' the commands by a request_sense
->>          */
->> -       return SCSI_RESET_SUCCESS | SCSI_RESET_BUS_RESET;
->> +       return SUCCESS;
->>  #else /* 1 */
->>
->>         /* MSch: new-style reset handling: let the mid-level do what 
->> it can */
->> @@ -2963,6 +2970,6 @@ static int NCR5380_bus_reset(Scsi_Cmnd *cmd)
->>         local_irq_restore(flags);
->>
->>         /* we did no complete reset of all commands, so a wakeup is 
->> required */
->> -       return SCSI_RESET_WAKEUP | SCSI_RESET_BUS_RESET;
->> +       return SUCCESS;
->>  #endif /* 1 */
->>  }
->> diff --git a/drivers/scsi/atari_scsi.c b/drivers/scsi/atari_scsi.c
->> index a3e6c8a..3ed39e5 100644
->> --- a/drivers/scsi/atari_scsi.c
->> +++ b/drivers/scsi/atari_scsi.c
->> @@ -821,7 +821,7 @@ static int atari_scsi_bus_reset(Scsi_Cmnd *cmd)
->>         } else {
->>                 atari_turnon_irq(IRQ_MFP_FSCSI);
->>         }
->> -       if ((rv & SCSI_RESET_ACTION) == SCSI_RESET_SUCCESS)
->> +       if (rv == SUCCESS)
->>                 falcon_release_lock_if_possible(hostdata);
->>
->>         return rv;
->> diff --git a/drivers/scsi/atari_scsi.h b/drivers/scsi/atari_scsi.h
->> index 11c624b..ae559f4 100644
->> --- a/drivers/scsi/atari_scsi.h
->> +++ b/drivers/scsi/atari_scsi.h
->> @@ -54,32 +54,6 @@
->>  #define        NCR5380_dma_xfer_len(i,cmd,phase) \
->>         atari_dma_xfer_len(cmd->SCp.this_residual,cmd,((phase) & 
->> SR_IO) ? 0 : 1)
->>
->> -/* former generic SCSI error handling stuff */
->> -
->> -#define SCSI_ABORT_SNOOZE 0
->> -#define SCSI_ABORT_SUCCESS 1
->> -#define SCSI_ABORT_PENDING 2
->> -#define SCSI_ABORT_BUSY 3
->> -#define SCSI_ABORT_NOT_RUNNING 4
->> -#define SCSI_ABORT_ERROR 5
->> -
->> -#define SCSI_RESET_SNOOZE 0
->> -#define SCSI_RESET_PUNT 1
->> -#define SCSI_RESET_SUCCESS 2
->> -#define SCSI_RESET_PENDING 3
->> -#define SCSI_RESET_WAKEUP 4
->> -#define SCSI_RESET_NOT_RUNNING 5
->> -#define SCSI_RESET_ERROR 6
->> -
->> -#define SCSI_RESET_SYNCHRONOUS         0x01
->> -#define SCSI_RESET_ASYNCHRONOUS                0x02
->> -#define SCSI_RESET_SUGGEST_BUS_RESET   0x04
->> -#define SCSI_RESET_SUGGEST_HOST_RESET  0x08
->> -
->> -#define SCSI_RESET_BUS_RESET 0x100
->> -#define SCSI_RESET_HOST_RESET 0x200
->> -#define SCSI_RESET_ACTION   0xff
->> -
->>  /* Debugging printk definitions:
->>   *
->>   *  ARB  -> arbitration
->> diff --git a/drivers/scsi/sun3_NCR5380.c b/drivers/scsi/sun3_NCR5380.c
->> index 636bbe0..455b1f0 100644
->> --- a/drivers/scsi/sun3_NCR5380.c
->> +++ b/drivers/scsi/sun3_NCR5380.c
->> @@ -2664,11 +2664,11 @@ static int NCR5380_abort(struct scsi_cmnd 
->> *cmd)
->>  #endif
->>           local_irq_restore(flags);
->>           cmd->scsi_done(cmd);
->> -         return SCSI_ABORT_SUCCESS;
->> +         return SUCCESS;
->>         } else {
->>  /*       local_irq_restore(flags); */
->>           printk("scsi%d: abort of connected command failed!\n", 
->> HOSTNO);
->> -         return SCSI_ABORT_ERROR;
->> +         return FAILED;
->>         }
->>     }
->>  #endif
->> @@ -2691,7 +2691,7 @@ static int NCR5380_abort(struct scsi_cmnd *cmd)
->>             /* Tagged queuing note: no tag to free here, hasn't been 
->> assigned
->>              * yet... */
->>             tmp->scsi_done(tmp);
->> -           return SCSI_ABORT_SUCCESS;
->> +           return SUCCESS;
->>         }
->>
->>  /*
->> @@ -2708,7 +2708,7 @@ static int NCR5380_abort(struct scsi_cmnd *cmd)
->>      if (hostdata->connected) {
->>         local_irq_restore(flags);
->>         ABRT_PRINTK("scsi%d: abort failed, command connected.\n", 
->> HOSTNO);
->> -        return SCSI_ABORT_SNOOZE;
->> +        return FAILED;
->>      }
->>
->>  /*
->> @@ -2743,7 +2743,7 @@ static int NCR5380_abort(struct scsi_cmnd *cmd)
->>             ABRT_PRINTK("scsi%d: aborting disconnected command.\n", 
->> HOSTNO);
->>
->>              if (NCR5380_select (instance, cmd, (int) cmd->tag))
->> -               return SCSI_ABORT_BUSY;
->> +               return FAILED;
->>
->>             ABRT_PRINTK("scsi%d: nexus reestablished.\n", HOSTNO);
->>
->> @@ -2769,7 +2769,7 @@ static int NCR5380_abort(struct scsi_cmnd *cmd)
->>  #endif
->>                     local_irq_restore(flags);
->>                     tmp->scsi_done(tmp);
->> -                   return SCSI_ABORT_SUCCESS;
->> +                   return SUCCESS;
->>                 }
->>         }
->>
->> @@ -2786,7 +2786,7 @@ static int NCR5380_abort(struct scsi_cmnd *cmd)
->>      local_irq_restore(flags);
->>      printk(KERN_INFO "scsi%d: warning : SCSI command probably 
->> completed successfully before abortion\n", HOSTNO);
->>
->> -    return SCSI_ABORT_NOT_RUNNING;
->> +    return FAILED;
->>  }
->>
->>
->> @@ -2795,7 +2795,7 @@ static int NCR5380_abort(struct scsi_cmnd *cmd)
->>   *
->>   * Purpose : reset the SCSI bus.
->>   *
->> - * Returns : SCSI_RESET_WAKEUP
->> + * Returns : SUCCESS or FAILURE
->>   *
->>   */
->>
->> @@ -2804,7 +2804,7 @@ static int NCR5380_bus_reset(struct scsi_cmnd 
->> *cmd)
->>      SETUP_HOSTDATA(cmd->device->host);
->>      int           i;
->>      unsigned long flags;
->> -#if 1
->> +#if defined(RESET_RUN_DONE)
->>      struct scsi_cmnd *connected, *disconnected_queue;
->>  #endif
->>
->> @@ -2826,8 +2826,15 @@ static int NCR5380_bus_reset(struct scsi_cmnd 
->> *cmd)
->>       * through anymore ... */
->>      (void)NCR5380_read( RESET_PARITY_INTERRUPT_REG );
->>
->> -#if 1 /* XXX Should now be done by midlevel code, but it's broken 
->> XXX */
->> -      /* XXX see below                                            
->> XXX */
->> +       /* MSch 20140115 - looking at the generic NCR5380 driver, all 
->> of this
->> +        * should go.
->> +        * Catch-22: if we don't clear all queues, the SCSI driver 
->> lock will
->> +        * not be reset by atari_scsi_reset()!
->> +        */
->> +
->> +#if defined(RESET_RUN_DONE)
->> +       /* XXX Should now be done by midlevel code, but it's broken 
->> XXX */
->> +       /* XXX see below                                            
->> XXX */
->>
->>      /* MSch: old-style reset: actually abort all command processing 
->> here */
->>
->> @@ -2876,7 +2883,7 @@ static int NCR5380_bus_reset(struct scsi_cmnd 
->> *cmd)
->>       * the midlevel code that the reset was SUCCESSFUL, and there is 
->> no
->>       * need to 'wake up' the commands by a request_sense
->>       */
->> -    return SCSI_RESET_SUCCESS | SCSI_RESET_BUS_RESET;
->> +    return SUCCESS;
->>  #else /* 1 */
->>
->>      /* MSch: new-style reset handling: let the mid-level do what it 
->> can */
->> @@ -2924,7 +2931,7 @@ static int NCR5380_bus_reset(struct scsi_cmnd 
->> *cmd)
->>      local_irq_restore(flags);
->>
->>      /* we did no complete reset of all commands, so a wakeup is 
->> required */
->> -    return SCSI_RESET_WAKEUP | SCSI_RESET_BUS_RESET;
->> +    return SUCCESS;
->>  #endif /* 1 */
->>  }
->>
->> diff --git a/drivers/scsi/sun3_scsi.c b/drivers/scsi/sun3_scsi.c
->> index e2c009b..0cfa542 100644
->> --- a/drivers/scsi/sun3_scsi.c
->> +++ b/drivers/scsi/sun3_scsi.c
->> @@ -79,7 +79,6 @@
->>  #define REAL_DMA
->>
->>  #include "scsi.h"
->> -#include "initio.h"
->>  #include <scsi/scsi_host.h>
->>  #include "sun3_scsi.h"
->>
->
->
->
-> -- 
-> Gr{oetje,eeting}s,
->
->                         Geert
->
-> --
-> Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- 
-> geert@linux-m68k.org
->
-> In personal conversations with technical people, I call myself a 
-> hacker. But
-> when I'm talking to journalists I just say "programmer" or something 
-> like that.
->                                 -- Linus Torvalds
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-m68k" 
-> in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
+And reload with higher logging level (Enabled "firmware events and reply with
+additional info", "handshake and initialization", "application using IOCTLS",
+"host reset and task management" logging). Note that this reinsert is with two
+ports connected to seven disks total:
+setting logging_level(0x0000a738)
+mpt2sas version 16.100.00.00 loaded
+scsi11 : Fusion MPT SAS Host
+mpt2sas0: mpt2sas_base_attach
+mpt2sas0: mpt2sas_base_map_resources
+mpt2sas0: 64 BIT PCI BUS DMA ADDRESSING SUPPORTED, total mem (24692096 kB)
+mpt2sas0: msix is supported, vector_count(1)
+mpt2sas0: IO-APIC enabled: IRQ 16
+mpt2sas0: iomem(0x00000000fbbfc000), mapped(0xffffc900077d8000), size(16384)
+mpt2sas0: ioport(0x000000000000de00), size(256)
+mpt2sas0: _base_get_ioc_facts
+mpt2sas0: _base_wait_for_doorbell_int: successful count(1), timeout(5)
+mpt2sas0: _base_wait_for_doorbell_ack: successful count(1), timeout(5)
+(prev line 3 more times)
+mpt2sas0: _base_wait_for_doorbell_int: successful count(0), timeout(5)
+mpt2sas0: _base_wait_for_doorbell_int: successful count(1), timeout(5)
+(prev line 31 more times)
+mpt2sas0: _base_wait_for_doorbell_not_used: successful count(0), timeout(5)
+    offset:data
+    [0x00]:03100200
+    [0x04]:00001200
+    [0x08]:00000000
+    [0x0c]:00000000
+    [0x10]:00000000
+    [0x14]:00010480
+    [0x18]:22132898
+    [0x1c]:0001285c
+    [0x20]:09000000
+    [0x24]:00000020
+    [0x28]:03480004
+    [0x2c]:00440044
+    [0x30]:09df0003
+    [0x34]:0020fff0
+    [0x38]:008003a0
+    [0x3c]:00000011
+mpt2sas0: hba queue depth(10392), max chains per io(128)
+mpt2sas0: request frame size(128), reply frame size(128)
+mpt2sas0: _base_make_ioc_ready
+mpt2sas0: _base_make_ioc_ready: ioc_state(0x14000000)
+mpt2sas0: _base_get_port_facts
+mpt2sas0: _base_wait_for_doorbell_int: successful count(1), timeout(5)
+(prev line 4 more times)
+mpt2sas0: _base_wait_for_doorbell_int: successful count(0), timeout(5)
+mpt2sas0: _base_wait_for_doorbell_int: successful count(1), timeout(5)
+(prev line 13 more times)
+mpt2sas0: _base_wait_for_doorbell_not_used: successful count(0), timeout(5)
+    offset:data
+    [0x00]:05070000
+    [0x04]:00000000
+    [0x08]:00000000
+    [0x0c]:00000000
+    [0x10]:00000000
+    [0x14]:00003000
+    [0x18]:0000020e
+mpt2sas0: _base_allocate_memory_pools
+mpt2sas0: scatter gather: sge_in_main_msg(1), sge_per_chain(9),
+sge_per_io(128), chains_per_io(15)
+mpt2sas0: scsi host: can_queue depth (5333)
+mpt2sas0: request pool(0xffff8800d8600000): depth(10392), frame_size(128),
+pool_size(1299 kB)
+mpt2sas0: request pool: dma(0xd8600000)
+mpt2sas0: scsiio(0xffff8800d8600000): depth(5333)
+mpt2sas0: chain pool depth(79995), frame_size(128), pool_size(9999 kB)
+mpt2sas0: hi_priority(0xffff8800d86a6b00): depth(2527), start smid(5334)
+mpt2sas0: internal(0xffff8800d86f5a80): depth(2532), start smid(7861)
+mpt2sas0: sense pool(0xffff8805fed80000): depth(5333), element_size(96),
+pool_size(499 kB)
+mpt2sas0: sense_dma(0x5fed80000)
+mpt2sas0: reply pool(0xffff8805ff400000): depth(10456), frame_size(128),
+pool_size(1307 kB)
+mpt2sas0: reply_dma(0x5ff400000)
+mpt2sas0: reply_free pool(0xffff8800da860000): depth(10456), element_size(4),
+pool_size(40 kB)
+mpt2sas0: reply_free_dma(0xda860000)
+mpt2sas0: reply post free pool(0xffff8800dafc0000): depth(20864),
+element_size(8), pool_size(163 kB)
+mpt2sas0: reply_post_free_dma = (0xdafc0000)
+mpt2sas0: config page(0xffff8800d840a000): size(512)
+mpt2sas0: config_page_dma(0xd840a000)
+mpt2sas0: Allocated physical memory: size(13309 kB)
+mpt2sas0: Current Controller Queue Depth(5333), Max Controller Queue
+Depth(10392)
+mpt2sas0: Scatter Gather Elements per IO(128)
+mpt2sas0: _base_make_ioc_operational
+mpt2sas0: _base_send_ioc_init
+    offset:data
+    [0x00]:02000004
+    [0x04]:00000000
+    [0x08]:00000000
+    [0x0c]:1c000200
+    [0x10]:00000000
+    [0x14]:00000000
+    [0x18]:00200000
+    [0x1c]:28d85180
+    [0x20]:00000005
+    [0x24]:00000005
+    [0x28]:d8600000
+    [0x2c]:00000000
+    [0x30]:dafc0000
+    [0x34]:00000000
+    [0x38]:da860000
+    [0x3c]:00000000
+    [0x40]:b5094698
+    [0x44]:00000144
+mpt2sas0: _base_wait_for_doorbell_int: successful count(1), timeout(5)
+(prev line 20 more times)
+mpt2sas0: _base_wait_for_doorbell_int: successful count(0), timeout(10)
+mpt2sas0: _base_wait_for_doorbell_int: successful count(1), timeout(5)
+(prev line 9 more times)
+mpt2sas0: _base_wait_for_doorbell_not_used: successful count(0), timeout(5)
+    offset:data
+    [0x00]:02050004
+    [0x04]:00000000
+    [0x08]:00000000
+    [0x0c]:00000000
+    [0x10]:00000000
+mpt2sas0: _base_event_notification
+mpt2sas0: _base_event_notification: complete
+mpt2sas0: LSISAS2116: FWVersion(09.00.00.00), ChipRevision(0x02),
+BiosVersion(00.00.00.00)
+mpt2sas0: Protocol=(Initiator,Target), Capabilities=(TLR,EEDP,Snapshot
+Buffer,Diag Trace Buffer,Task Set Full,NCQ)
+mpt2sas0: sending port enable !!
+mpt2sas0: Discovery: (start)
+mpt2sas0: SAS Enclosure Device Status Change
+mpt2sas0: SAS Topology Change List
+mpt2sas0: Discovery: (stop)
+mpt2sas0: discovery event: (start)
+mpt2sas0: Discovery: (start)
+
+mpt2sas0: Discovery: (stop)
+mpt2sas0: Discovery: (start)
+mpt2sas0: Discovery: (stop)
+mpt2sas0: Discovery: (start)
+mpt2sas0: Discovery: (stop)
+mpt2sas0: host_add: handle(0x0001), sas_addr(0x5000d31000407c1f), phys(16)
+mpt2sas0: enclosure status change: (enclosure add)
+    handle(0x0001), enclosure logical id(0x5000d31000407c1f) number slots(0)
+mpt2sas0: sas topology change: (responding)
+    handle(0x0000), enclosure_handle(0x0001) start_phy(00), count(16)
+mpt2sas0: updating handles for sas_host(0x5000d31000407c1f)
+mpt2sas0: discovery event: (stop)
+mpt2sas0: discovery event: (start)
+mpt2sas0: discovery event: (stop)
+mpt2sas0: discovery event: (start)
+mpt2sas0: discovery event: (stop)
+mpt2sas0: discovery event: (start)
+mpt2sas0: discovery event: (stop)
+mpt2sas0: port enable: complete from worker thread
+mpt2sas0: port enable: SUCCESS
+
+When I then unplug one of the cables, I get no change in dmesg. It doesn't
+detect any disconnect whatsoever. When I plug the cable back in, likewise --
+nothing logged in dmesg.
+
+This is a replacement from LSI 3442 card (mptsas driver -- different), so I
+know the cabling and disks all work perfectly. I upgraded for 4TB disk support,
+but still testing so haven't put those in play yet.
+
+LSI has released an updated driver, 18.00.00.00, as opposed to the 3.13.6
+version, 16.100.00.00. However, I lack the ability to convert this driver to
+the newer kernel.
+
+LSI driver, 18.00.00.00:
+http://www.lsi.com/downloads/Public/Host%20Bus%20Adapters/Host%20Bus%20Adapters%20Common%20Files/SAS_SATA_6G_P18/Linux%20Driver-RH5_SLES10_P18.zip
+(Caution: 866MB)
+mpt2sas-18.00.00.00-src.tar.gz (259K), from archive:
+http://www.2shared.com/file/oYzP_HeF/mpt2sas-18000000-srctar.html
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
