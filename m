@@ -1,115 +1,116 @@
-From: wenxiong@vmlinux.vnet.ibm.com
-Subject: [PATCH RESEND 5/7] ipr: Use pci_enable_msi_range() and pci_enable_msix_range()
-Date: Wed, 12 Mar 2014 16:08:50 -0500
-Message-ID: <20140312210906.467119132@vmlinux.vnet.ibm.com>
-References: <20140312210845.384489953@vmlinux.vnet.ibm.com>
+From: Muthukumar R <muthu.lkml@gmail.com>
+Subject: Re: [PATCH 2/5] scsi: Return VPD page length in scsi_vpd_inquiry()
+Date: Wed, 12 Mar 2014 14:14:57 -0700
+Message-ID: <CAFR8ueeATrBwSMg_dmA2gY-Bt2D2+F8rR5zmDbN1ZC3Aw5bJMw@mail.gmail.com>
+References: <1394461725-76203-1-git-send-email-hare@suse.de>
+	<1394461725-76203-3-git-send-email-hare@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [32.97.110.57] ([32.97.110.57]:17882 "HELO
-	jupiter1-lp2.austin.ibm.com" rhost-flags-FAIL-FAIL-OK-FAIL)
-	by vger.kernel.org with SMTP id S1752808AbaCLVML (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 12 Mar 2014 17:12:11 -0400
-Content-Disposition: inline; filename=002_msix
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:46049 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752507AbaCLVO6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Mar 2014 17:14:58 -0400
+Received: by mail-pb0-f46.google.com with SMTP id rq2so87495pbb.33
+        for <linux-scsi@vger.kernel.org>; Wed, 12 Mar 2014 14:14:57 -0700 (PDT)
+In-Reply-To: <1394461725-76203-3-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, bjking1@us.ibm.com, Alexander Gordeev <agordeev@redhat.com>, Brian King <brking@linux.vnet.ibm.com>
+To: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <jbottomley@parallels.com>, Bart van Assche <bvanassche@acm.org>, Christoph Hellwig <hch@infradead.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-From: Alexander Gordeev <agordeev@redhat.com>
+On Mon, Mar 10, 2014 at 7:28 AM, Hannes Reinecke <hare@suse.de> wrote:
+> We should be returning the number of bytes of the
+> requested VPD page in scsi_vpd_inquiry.
+> This makes it easier for the caller to verify the
+> required space.
+>
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> ---
+>  drivers/scsi/scsi.c | 17 ++++++++++-------
+>  1 file changed, 10 insertions(+), 7 deletions(-)
+>
+> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+> index d8afec8..ecaeff1 100644
+> --- a/drivers/scsi/scsi.c
+> +++ b/drivers/scsi/scsi.c
+> @@ -954,7 +954,7 @@ EXPORT_SYMBOL(scsi_track_queue_full);
+>   * This is an internal helper function.  You probably want to use
+>   * scsi_get_vpd_page instead.
+>   *
+> - * Returns 0 on success or a negative error number.
+> + * Returns size of the vpg page on success or a negative error number.
+>   */
+Typo:                              ^^^
 
-As result deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range() and pci_enable_msix_range()
-interfaces.
+ Should be: vpd page
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Acked-by: Brian King <brking@linux.vnet.ibm.com>
----
- drivers/scsi/ipr.c |   47 ++++++++++++++++++-----------------------------
- 1 file changed, 18 insertions(+), 29 deletions(-)
 
-Index: b/drivers/scsi/ipr.c
-===================================================================
---- a/drivers/scsi/ipr.c	2014-03-11 17:18:06.709957199 -0500
-+++ b/drivers/scsi/ipr.c	2014-03-11 17:18:20.169018184 -0500
-@@ -9317,51 +9317,40 @@ static void ipr_wait_for_pci_err_recover
- static int ipr_enable_msix(struct ipr_ioa_cfg *ioa_cfg)
- {
- 	struct msix_entry entries[IPR_MAX_MSIX_VECTORS];
--	int i, err, vectors;
-+	int i, vectors;
- 
- 	for (i = 0; i < ARRAY_SIZE(entries); ++i)
- 		entries[i].entry = i;
- 
--	vectors = ipr_number_of_msix;
--
--	while ((err = pci_enable_msix(ioa_cfg->pdev, entries, vectors)) > 0)
--			vectors = err;
--
--	if (err < 0) {
-+	vectors = pci_enable_msix_range(ioa_cfg->pdev,
-+					entries, 1, ipr_number_of_msix);
-+	if (vectors < 0) {
- 		ipr_wait_for_pci_err_recovery(ioa_cfg);
--		return err;
-+		return vectors;
- 	}
- 
--	if (!err) {
--		for (i = 0; i < vectors; i++)
--			ioa_cfg->vectors_info[i].vec = entries[i].vector;
--		ioa_cfg->nvectors = vectors;
--	}
-+	for (i = 0; i < vectors; i++)
-+		ioa_cfg->vectors_info[i].vec = entries[i].vector;
-+	ioa_cfg->nvectors = vectors;
- 
--	return err;
-+	return 0;
- }
- 
- static int ipr_enable_msi(struct ipr_ioa_cfg *ioa_cfg)
- {
--	int i, err, vectors;
-+	int i, vectors;
- 
--	vectors = ipr_number_of_msix;
--
--	while ((err = pci_enable_msi_block(ioa_cfg->pdev, vectors)) > 0)
--			vectors = err;
--
--	if (err < 0) {
-+	vectors = pci_enable_msi_range(ioa_cfg->pdev, 1, ipr_number_of_msix);
-+	if (vectors < 0) {
- 		ipr_wait_for_pci_err_recovery(ioa_cfg);
--		return err;
-+		return vectors;
- 	}
- 
--	if (!err) {
--		for (i = 0; i < vectors; i++)
--			ioa_cfg->vectors_info[i].vec = ioa_cfg->pdev->irq + i;
--		ioa_cfg->nvectors = vectors;
--	}
-+	for (i = 0; i < vectors; i++)
-+		ioa_cfg->vectors_info[i].vec = ioa_cfg->pdev->irq + i;
-+	ioa_cfg->nvectors = vectors;
- 
--	return err;
-+	return 0;
- }
- 
- static void name_msi_vectors(struct ipr_ioa_cfg *ioa_cfg)
-@@ -9426,7 +9415,7 @@ static irqreturn_t ipr_test_intr(int irq
-  * ipr_test_msi - Test for Message Signaled Interrupt (MSI) support.
-  * @pdev:		PCI device struct
-  *
-- * Description: The return value from pci_enable_msi() can not always be
-+ * Description: The return value from pci_enable_msi_range() can not always be
-  * trusted.  This routine sets up and initiates a test interrupt to determine
-  * if the interrupt is received via the ipr_test_intr() service routine.
-  * If the tests fails, the driver will fall back to LSI.
+>  static int scsi_vpd_inquiry(struct scsi_device *sdev, unsigned char *buffer,
+>                                                         u8 page, unsigned len)
+> @@ -962,6 +962,9 @@ static int scsi_vpd_inquiry(struct scsi_device *sdev, unsigned char *buffer,
+>         int result;
+>         unsigned char cmd[16];
+>
+> +       if (len < 4)
+> +               return -EINVAL;
+> +
+>         cmd[0] = INQUIRY;
+>         cmd[1] = 1;             /* EVPD */
+>         cmd[2] = page;
+> @@ -982,7 +985,7 @@ static int scsi_vpd_inquiry(struct scsi_device *sdev, unsigned char *buffer,
+>         if (buffer[1] != page)
+>                 return -EIO;
+>
+> -       return 0;
+> +       return get_unaligned_be16(&buffer[2]) + 4;
+>  }
+>
+>  /**
+> @@ -1009,18 +1012,18 @@ int scsi_get_vpd_page(struct scsi_device *sdev, u8 page, unsigned char *buf,
+>
+>         /* Ask for all the pages supported by this device */
+>         result = scsi_vpd_inquiry(sdev, buf, 0, buf_len);
+> -       if (result)
+> +       if (result < 4)
+>                 goto fail;
 
--- 
+
+You mean:
+
+            if (result < 0)
+                   goto fail;
+
+
+>
+>         /* If the user actually wanted this page, we can skip the rest */
+>         if (page == 0)
+>                 return 0;
+>
+> -       for (i = 0; i < min((int)buf[3], buf_len - 4); i++)
+> -               if (buf[i + 4] == page)
+> +       for (i = 4; i < min(result, buf_len); i++)
+> +               if (buf[i] == page)
+>                         goto found;
+>
+> -       if (i < buf[3] && i >= buf_len - 4)
+> +       if (i < result && i >= buf_len)
+>                 /* ran off the end of the buffer, give us benefit of doubt */
+>                 goto found;
+>         /* The device claims it doesn't support the requested page */
+> @@ -1028,7 +1031,7 @@ int scsi_get_vpd_page(struct scsi_device *sdev, u8 page, unsigned char *buf,
+>
+>   found:
+>         result = scsi_vpd_inquiry(sdev, buf, page, buf_len);
+> -       if (result)
+> +       if (result < 0)
+>                 goto fail;
+>
+>         return 0;
+> --
+> 1.7.12.4
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
