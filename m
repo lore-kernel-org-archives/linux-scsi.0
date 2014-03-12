@@ -1,72 +1,176 @@
 From: Loc Ho <lho@apm.com>
-Subject: Re: [PATCH v16 3/4] ata: Add APM X-Gene SoC AHCI SATA host controller driver
-Date: Wed, 12 Mar 2014 12:01:42 -0700
-Message-ID: <CAPw-ZTmvG1dMckif4xKrv-rg=8jAode0RWgFBjoi_5OXrB2RHQ@mail.gmail.com>
-References: <1394575895-7039-1-git-send-email-lho@apm.com>
-	<1394575895-7039-3-git-send-email-lho@apm.com>
-	<1394575895-7039-4-git-send-email-lho@apm.com>
-	<2172234.huOH9CEWA3@amdc1032>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: [PATCH v17 0/4] ata: Add APM X-Gene SoC AHCI SATA host controller support
+Date: Wed, 12 Mar 2014 14:19:29 -0600
+Message-ID: <1394655573-32645-1-git-send-email-lho@apm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod5og118.obsmtp.com ([64.18.0.160]:49310 "HELO
-	exprod5og118.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751833AbaCLTBn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Mar 2014 15:01:43 -0400
-Received: by mail-qg0-f48.google.com with SMTP id j107so30272899qga.7
-        for <linux-scsi@vger.kernel.org>; Wed, 12 Mar 2014 12:01:42 -0700 (PDT)
-In-Reply-To: <2172234.huOH9CEWA3@amdc1032>
+Received: from exprod5og112.obsmtp.com ([64.18.0.24]:47195 "HELO
+	exprod5og112.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751101AbaCLUTy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Mar 2014 16:19:54 -0400
+Received: by mail-pb0-f42.google.com with SMTP id rr13so25810pbb.29
+        for <linux-scsi@vger.kernel.org>; Wed, 12 Mar 2014 13:19:54 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Cc: Olof Johansson <olof@lixom.net>, Tejun Heo <tj@kernel.org>, Arnd Bergmann <arnd@arndb.de>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Don Dutile <ddutile@redhat.com>, Jon Masters <jcm@redhat.com>, "patches@apm.com" <patches@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
+To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 
-Hi,
+This patch adds support for the APM X-Gene SoC AHCI SATA host controller. In
+order for the host controller to work, the corresponding PHY driver
+musts also be available. Currently, only Gen3 disk is supported with this
+initial version.
 
->> +MODULE_DEVICE_TABLE(of, xgene_ahci_of_match);
->> +
->> +static struct platform_driver xgene_ahci_driver = {
->> +     .probe = xgene_ahci_probe,
->> +     .remove = ata_platform_remove_one,
->
-> It is good to use ata_platform_remove_one() here but some code still needs
-> to callback ahci_platform_disable_resources() before the driver is removed
-> completely.  The way other drivers do it is to define custom ->host_stop
-> method and add it to port ops (xgene_ahci_ops in this case).  For X-Gene
-> AHCI driver ->host_stop function can be quite simple and look like this:
->
-> static void xgene_ahci_host_stop(struct ata_host *host)
-> {
->         struct ahci_host_priv *hpriv = host->private_data;
->
->         ahci_platform_disable_resources(hpriv);
-> }
+v17:
+ * Add comment on no support for PM currently
+ * Add xgene_ahci_host_stop function to support stopping the controller
+ * Remove call to phy_exit as not necessary with new ahci_platform code
 
-Will do.
+v16:
+ * Rebase to libata-for-3.15
+ * Pull in the PHY DTS patch as the host controller DTS patch depends on it
 
->
->> +     .driver = {
->> +             .name = "xgene-ahci",
->> +             .owner = THIS_MODULE,
->> +             .of_match_table = xgene_ahci_of_match,
->> +     },
->
-> Power Management support is missing for this driver.  If your platform
-> doesn't support Suspend to RAM yet it would be good to add a comment
-> about this explaining the lack of PM.  Otherwise it should be fixed (you
-> can take a look at ahci_imx.c and ahci_sunxi.c for examples).
+v15:
+ * Rebase to libata next branch
+ * Remove field plat_data and PHY from context structure
+ * Fix comment on function xgene_ahci_read_id as well as using bit mask to
+   clear DEVSLP bit
+ * Remove function xgene_ahci_force_phy_rdy and xgene_ahci_phy_restart as not
+   required since Gen1/Gen2 support remove for this initial version
+ * Update function xgene_ahci_do_hardreset comment
+ * Remove Gen1/Gen2 support from function xgene_ahci_do_hardreset
+ * Change int to u32 for variable portcmd_saved in function
+   xgene_ahci_hardreset
+ * Change variable hplat_data to ctx in function xgene_ahci_probe
+ * Remove PHY call and using ahci_platform_enable_resource instead
+ * Add ahci_patlform_remove_one to driver function .remove
+ * Change phy-name to "sata-phy"
 
-In order to support PM, I will need an other errata fix in libachi.c.
-For now PM, will NOT be support.
+v14:
+ * Remove the shutdown already check and replace the while loop check with
+   msleep in function xgene_ahci_init_memram
 
->
-> Otherwise the driver looks good to me and (FWIW) you can add:
->
->         Reviewed-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
->
-> Once the aforementioned issues are fixed.
+v13:
+ * Add fully-winged style comment for function xgene_ahci_read_id and
+   xgene_ahci_do_hardrest
+ * Minor comments update for function xgene_ahci_read_id,
+   xgene_ahci_do_hardrest, and xgene_ahci_hardreset
+ * NOTE: There is no functional code change.
 
-I will post another version. If you ack'ed that version, Tejun can add
-you to the Reviewed-by list.
+v12:
+ * Remove function xgene_ahci_get_channel and use the ata_port field port_no
+ * Update comment for function xgene_ahci_read_id to function comment style
+   '/**'
+ * Update comment for multiple lines to fully-winged style
 
--Loc
+v11:
+ * Drop the export functions requirement with libachi
+ * Change CONFIG_SATA_XGENE to CONFIG_AHCI_XGENE
+ * Rename file sata_xgene.c to ahci_xgene.c
+ * Convert to use Hans De Geode version 5 ahci_platform code re-factor changes
+   to reduce code duplication. For extra context, use plat_data to store our
+   context. The probe function follows the ahci_sunxi implementation. A number
+   of code fragments update to reflect this change.
+ * Update comment for function xgene_ahci_read_id
+ * Minor code move around in function xgene_ahci_do_hardreset and use
+   ATA_BUSY instead 0x80
+ * Fix hardreset to use start_engine function pointer as required due to newer
+   kernel rebased
+ * Fix the set DMA mask for 32-bit as well
+
+v10:
+ * Update binding documentation
+
+v9:
+ * Remove ACPI/EFI include files
+ * Remove the IO flush support, interrupt routine, and DTS resources
+ * Remove function xgene_rd, xgene_wr, and xgene_wr_flush
+ * Remove PMP support (function xgene_ahci_qc_issue, xgene_ahci_qc_prep,
+   xgene_ahci_qc_fill_rtf, xgene_ahci_softreset, and xgene_ahci_do_softreset)
+ * Rename function xgene_ahci_enable_phy to xgene_ahci_force_phy_rdy
+ * Clean up hardreset functions
+ * Require v7 of the PHY driver
+
+v8:
+ * Remove _ADDR from defines
+ * Remove define MSTAWAUX_COHERENT_BYPASS_SET and
+   STARAUX_COHERENT_BYPASS_SET and use direct coding
+ * Remove the un-necessary check for DTS boot with built in ACPI table
+ * Switch to use dma_set_mask_and_coherent for setting DMA mask
+ * Remove ACPI table matching code
+ * Update clock-names for sata01clk, sata23clk, and sata45clk
+
+v7:
+ * Update the clock code by toggle the clock
+ * Update the DTS clock mask values due to the clock spilt between host and
+   v5 of the PHY drivers
+
+v6:
+ * Update binding documentation
+ * Change select PHY_XGENE_SATA to PHY_XGENE
+ * Add ULL to constants
+ * Change indentation and comments
+ * Clean up the probe functions a bit more
+ * Remove xgene_ahci_remove function
+ * Add the flush register to DTS
+ * Remove the interrupt-parent from DTS
+
+v5:
+ * Sync up to v3 of the PHY driver
+ * Remove MSLIM wrapper functions
+ * Change the memory shutdown loop to use usleep_range
+ * Use devm_ioremap_resource instead devm_ioremap
+ * Remove suspend/resume functions as not needed
+
+v4:
+ * Remove the ID property in DT
+ * Remove the temporary PHY direct function call and use PHY function
+ * Change printk to pr_debug
+ * Move the IOB flush addresses into the DT
+ * Remove the parameters retrieval function as no longer needed
+ * Remove the header file as no longer needed
+ * Require v2 patch of the SATA PHY driver. Require slightly modification
+   in the Kconfig as it is moved to folder driver/phy and use Kconfig
+   PHY_XGENE_SATA instead SATA_XGENE_PHY.
+
+v3:
+ * Move out the SATA PHY to another driver
+ * Remove the clock-cells entry from DTS
+ * Remove debug wrapper
+ * Remove delay functions wrapper
+ * Clean up resource and IRQ query
+ * Remove query clock name
+ * Switch to use dma_set_mask/dma_coherent_mask
+ * Remove un-necessary devm_kfree
+ * Update GPL license header to v2
+ * Spilt up function xgene_ahci_hardreset
+ * Spilt up function xgene_ahci_probe
+ * Remove all reference of CONFIG_ARCH_MSLIM
+ * Clean up chip revision code
+
+v2:
+ * Clean up file sata_xgene.c with Lindent and etc
+ * Clean up file sata_xgene_serdes.c with Lindent and etc
+ * Add description to each patch
+
+v1:
+ * inital version
+
+Signed-off-by: Loc Ho <lho@apm.com>
+Signed-off-by: Tuan Phan <tphan@apm.com>
+Signed-off-by: Suman Tripathi <stripathi@apm.com>
+---
+Loc Ho (4):
+  arm64: Add APM X-Gene SoC 15Gbps Multi-purpose PHY DTS entries
+  Documentation: Add documentation for the APM X-Gene SoC SATA host
+    controller DTS binding
+  ata: Add APM X-Gene SoC AHCI SATA host controller driver
+  arm64: Add APM X-Gene SoC AHCI SATA host controller DTS entries
+
+ .../devicetree/bindings/ata/apm-xgene.txt          |   70 +++
+ arch/arm64/boot/dts/apm-storm.dtsi                 |  150 ++++++
+ drivers/ata/Kconfig                                |    7 +
+ drivers/ata/Makefile                               |    1 +
+ drivers/ata/ahci_xgene.c                           |  497 ++++++++++++++++++++
+ 5 files changed, 725 insertions(+), 0 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/ata/apm-xgene.txt
+ create mode 100644 drivers/ata/ahci_xgene.c
+
