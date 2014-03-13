@@ -1,57 +1,100 @@
-From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: blk_iopoll_enabled
-Date: Thu, 13 Mar 2014 20:48:50 +0200
-Message-ID: <5321FD92.6020700@dev.mellanox.co.il>
-References: <53209ACB.2080708@dev.mellanox.co.il> <532128AB.6010803@kernel.dk> <5321CFF0.8020209@kernel.dk>
+From: Saurav Kashyap <saurav.kashyap@qlogic.com>
+Subject: [PATCH] qla2xxx: Fix build errors related to invalid print fields on some architectures.
+Date: Thu, 13 Mar 2014 14:16:40 -0400
+Message-ID: <1394734600-25067-1-git-send-email-saurav.kashyap@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ee0-f51.google.com ([74.125.83.51]:53755 "EHLO
-	mail-ee0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755164AbaCMSsy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Mar 2014 14:48:54 -0400
-Received: by mail-ee0-f51.google.com with SMTP id c13so595428eek.24
-        for <linux-scsi@vger.kernel.org>; Thu, 13 Mar 2014 11:48:52 -0700 (PDT)
-In-Reply-To: <5321CFF0.8020209@kernel.dk>
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:2242 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754653AbaCMSxH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 13 Mar 2014 14:53:07 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Bart Van Assche <bvanassche@acm.org>, Or Gerlitz <ogerlitz@mellanox.com>, Oren Duer <oren@mellanox.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: jbottomley@parallels.com
+Cc: giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-On 3/13/2014 5:34 PM, Jens Axboe wrote:
-> On 03/12/2014 09:40 PM, Jens Axboe wrote:
->> On 2014-03-12 11:35, Sagi Grimberg wrote:
->>> Hey Jens,
->>>
->>> So I'm looking at blk_iopoll for iSER & SRP and I have one gap I would
->>> like to get your input on.
->>>
->>> In blk-iopoll.c I see:
->>> int blk_iopoll_enabled = 1;
->>> EXPORT_SYMBOL(blk_iopoll_enabled);
->>>
->>> This is set to 1 and exported for everyone to condition and *modify* 
->>> it.
->>> The documentation says the user must check this when using blk_iopoll.
->>>
->>> My question is why? it should always be true shouldn't it?
->>> Moreover, isn't it better to protect it using a get() function of it?
->>> can't someone set it to 0 and shutdown the lights on everyone else?
->>
->> We can kill it. IIRC, it was mostly used during development to test
->> functionality and performance (and wired to a sysfs toggle file).
->>
->> But... Just because it's exported doesn't mean that random users are
->> allowed to just disable it. What's left now is an always-on, so we can
->> remove it.
->
-> It _is_ still exported, I just forgot it was put in sysctl. I'll kill 
-> it off completely now. It's safe to toggle from user space, but only 
-> practically so if IO is idle. It makes no attempt to ensure that, as 
-> it was just a debug thing.
->
+From: Chad Dupuis <chad.dupuis@qlogic.com>
 
-Thanks
+Fixes some build warnings such as:
+drivers/scsi/qla2xxx/qla_attr.c:162:6: warning: format '%lx' expects argument of
+type 'long unsigned int', but argument 6 has type 'size_t'"
+and
+drivers/scsi/qla2xxx/qla_init.c:5198:7: warning: format '%lx' expects argument
+of type 'long unsigned int', but argument 5 has type 'uint32_t' [-Wformat]
 
-Sagi.
+Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
+Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
+---
+ drivers/scsi/qla2xxx/qla_attr.c |    6 +++---
+ drivers/scsi/qla2xxx/qla_init.c |   12 ++++++------
+ 2 files changed, 9 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+index aa81829..07befcf 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -159,7 +159,7 @@ qla2x00_sysfs_read_fw_dump_template(struct file *filp, struct kobject *kobj,
+ 		return 0;
+ 
+ 	ql_dbg(ql_dbg_user, vha, 0x70e2,
+-	    "chunk <- off=%llx count=%lx\n", off, count);
++	    "chunk <- off=%llx count=%zx\n", off, count);
+ 	return memory_read_from_buffer(buf, count, &off,
+ 	    ha->fw_dump_template, ha->fw_dump_template_len);
+ }
+@@ -200,11 +200,11 @@ qla2x00_sysfs_write_fw_dump_template(struct file *filp, struct kobject *kobj,
+ 	if (off + count > ha->fw_dump_template_len) {
+ 		count = ha->fw_dump_template_len - off;
+ 		ql_dbg(ql_dbg_user, vha, 0x70d3,
+-		    "chunk -> truncating to %lx bytes.\n", count);
++		    "chunk -> truncating to %zx bytes.\n", count);
+ 	}
+ 
+ 	ql_dbg(ql_dbg_user, vha, 0x70d4,
+-	    "chunk -> off=%llx count=%lx\n", off, count);
++	    "chunk -> off=%llx count=%zx\n", off, count);
+ 	memcpy(ha->fw_dump_template + off, buf, count);
+ 
+ 	if (off + count == ha->fw_dump_template_len) {
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 0a25e8b..38aeb54 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -5291,8 +5291,8 @@ qla24xx_load_risc_flash(scsi_qla_host_t *vha, uint32_t *srisc_addr,
+ 	    "-> template size %x bytes\n", dlen);
+ 	if (dlen > risc_size * sizeof(*dcode)) {
+ 		ql_log(ql_log_warn, vha, 0x0167,
+-		    "Failed fwdump template exceeds array by %lx bytes\n",
+-		    dlen - risc_size * sizeof(*dcode));
++		    "Failed fwdump template exceeds array by %x bytes\n",
++		    (uint32_t)(dlen - risc_size * sizeof(*dcode)));
+ 		goto default_template;
+ 	}
+ 	ha->fw_dump_template_len = dlen;
+@@ -5558,8 +5558,8 @@ qla24xx_load_risc_blob(scsi_qla_host_t *vha, uint32_t *srisc_addr)
+ 	ha->fw_dump_template_len = 0;
+ 
+ 	ql_dbg(ql_dbg_init, vha, 0x171,
+-	    "Loading fwdump template from %lx\n",
+-	    (void *)fwcode - (void *)blob->fw->data);
++	    "Loading fwdump template from %x\n",
++	    (uint32_t)((void *)fwcode - (void *)blob->fw->data));
+ 	risc_size = be32_to_cpu(fwcode[2]);
+ 	ql_dbg(ql_dbg_init, vha, 0x172,
+ 	    "-> array size %x dwords\n", risc_size);
+@@ -5593,8 +5593,8 @@ qla24xx_load_risc_blob(scsi_qla_host_t *vha, uint32_t *srisc_addr)
+ 	    "-> template size %x bytes\n", dlen);
+ 	if (dlen > risc_size * sizeof(*fwcode)) {
+ 		ql_log(ql_log_warn, vha, 0x0177,
+-		    "Failed fwdump template exceeds array by %lx bytes\n",
+-		    dlen - risc_size * sizeof(*fwcode));
++		    "Failed fwdump template exceeds array by %x bytes\n",
++		    (uint32_t)(dlen - risc_size * sizeof(*fwcode)));
+ 		goto default_template;
+ 	}
+ 	ha->fw_dump_template_len = dlen;
+-- 
+1.7.7
+
