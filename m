@@ -1,122 +1,107 @@
-From: Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v2 00/23] scsi: Use pci_enable_msix_range() instead of
- pci_enable_msix()
-Date: Wed, 12 Mar 2014 22:04:40 -0600
-Message-ID: <20140313040440.GB26657@google.com>
-References: <cover.1393191330.git.agordeev@redhat.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 2/5] scsi: Return VPD page length in scsi_vpd_inquiry()
+Date: Thu, 13 Mar 2014 07:45:20 +0100
+Message-ID: <53215400.50907@suse.de>
+References: <1394461725-76203-1-git-send-email-hare@suse.de>	<1394461725-76203-3-git-send-email-hare@suse.de> <CAFR8ueeATrBwSMg_dmA2gY-Bt2D2+F8rR5zmDbN1ZC3Aw5bJMw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qg0-f44.google.com ([209.85.192.44]:58020 "EHLO
-	mail-qg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750716AbaCMEEp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Mar 2014 00:04:45 -0400
-Received: by mail-qg0-f44.google.com with SMTP id a108so1437194qge.3
-        for <linux-scsi@vger.kernel.org>; Wed, 12 Mar 2014 21:04:45 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <cover.1393191330.git.agordeev@redhat.com>
+Received: from cantor2.suse.de ([195.135.220.15]:58872 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751158AbaCMGpV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 13 Mar 2014 02:45:21 -0400
+In-Reply-To: <CAFR8ueeATrBwSMg_dmA2gY-Bt2D2+F8rR5zmDbN1ZC3Aw5bJMw@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-kernel@vger.kernel.org, iss_storagedev@hp.com, intel-linux-scu@intel.com, support@lsi.com, DL-MPTFusionLinux@lsi.com, qla2xxx-upstream@qlogic.com, iscsi-driver@qlogic.com, pv-drivers@vmware.com, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+To: Muthukumar R <muthu.lkml@gmail.com>
+Cc: James Bottomley <jbottomley@parallels.com>, Bart van Assche <bvanassche@acm.org>, Christoph Hellwig <hch@infradead.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Mon, Feb 24, 2014 at 09:02:00AM +0100, Alexander Gordeev wrote:
-> Hello!
-> 
-> This series is against James Bottomley's SCSI tree [1], but it needs
-> commit f7fc32c ("PCI/MSI: Add pci_enable_msi_exact() and
-> pci_enable_msix_exact()") from from Bjorn Helgaas's PCI tree [2]:
-> 
-> 1. git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
-> 2. git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/msi
-> 
-> Recently pci_enable_msix_exact() function has been accepted to
-> the mainline. That is a variation of pci_enable_msix_range() which
-> allows a device driver to request a particular number of MSI-Xs.
-> 
-> As result, most of the changes posted in version 1 of this series
-> are invalidated and need to use pci_enable_msix_exact() instead of
-> originally posted pci_enable_msix_range() usages.
-> 
-> I removed almost all ACKs, since unlike pci_enable_msix_range()
-> function which returns the number of MSI-Xs allocated or negative
-> errno, pci_enable_msix_exact() returns either zero success code or
-> a negative errno. Although this change is simple, it still entails
-> an updated error code analysis and would be better reviewed by
-> driver maintainers.
+On 03/12/2014 10:14 PM, Muthukumar R wrote:
+> On Mon, Mar 10, 2014 at 7:28 AM, Hannes Reinecke <hare@suse.de> wrote=
+:
+>> We should be returning the number of bytes of the
+>> requested VPD page in scsi_vpd_inquiry.
+>> This makes it easier for the caller to verify the
+>> required space.
+>>
+>> Signed-off-by: Hannes Reinecke <hare@suse.de>
+>> ---
+>>  drivers/scsi/scsi.c | 17 ++++++++++-------
+>>  1 file changed, 10 insertions(+), 7 deletions(-)
+>>
+>> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+>> index d8afec8..ecaeff1 100644
+>> --- a/drivers/scsi/scsi.c
+>> +++ b/drivers/scsi/scsi.c
+>> @@ -954,7 +954,7 @@ EXPORT_SYMBOL(scsi_track_queue_full);
+>>   * This is an internal helper function.  You probably want to use
+>>   * scsi_get_vpd_page instead.
+>>   *
+>> - * Returns 0 on success or a negative error number.
+>> + * Returns size of the vpg page on success or a negative error numb=
+er.
+>>   */
+> Typo:                              ^^^
+>=20
+>  Should be: vpd page
+>=20
+>=20
+Ah. Correct.
 
-Hi James,
+>>  static int scsi_vpd_inquiry(struct scsi_device *sdev, unsigned char=
+ *buffer,
+>>                                                         u8 page, uns=
+igned len)
+>> @@ -962,6 +962,9 @@ static int scsi_vpd_inquiry(struct scsi_device *=
+sdev, unsigned char *buffer,
+>>         int result;
+>>         unsigned char cmd[16];
+>>
+>> +       if (len < 4)
+>> +               return -EINVAL;
+>> +
+>>         cmd[0] =3D INQUIRY;
+>>         cmd[1] =3D 1;             /* EVPD */
+>>         cmd[2] =3D page;
+>> @@ -982,7 +985,7 @@ static int scsi_vpd_inquiry(struct scsi_device *=
+sdev, unsigned char *buffer,
+>>         if (buffer[1] !=3D page)
+>>                 return -EIO;
+>>
+>> -       return 0;
+>> +       return get_unaligned_be16(&buffer[2]) + 4;
+>>  }
+>>
+>>  /**
+>> @@ -1009,18 +1012,18 @@ int scsi_get_vpd_page(struct scsi_device *sd=
+ev, u8 page, unsigned char *buf,
+>>
+>>         /* Ask for all the pages supported by this device */
+>>         result =3D scsi_vpd_inquiry(sdev, buf, 0, buf_len);
+>> -       if (result)
+>> +       if (result < 4)
+>>                 goto fail;
+>=20
+>=20
+> You mean:
+>=20
+>             if (result < 0)
+>                    goto fail;
+>=20
+>=20
+No. See above. The actual data starts at offset 4.
 
-I think Alexander sent these to linux-scsi hoping that you would handle
-them, but I know it's a hassle because they depend on f7fc32c, which went
-in after the merge window.
+Cheers,
 
-I'd be glad to review these and apply them through my tree, unless you want
-to do it.  I'd like to get these merged in the v3.15 merge window so
-Alexander can move on to something else.  I haven't checked for merge
-conflicts with scsi.git yet, but I assume they'd be pretty trivial if there
-are any.
-
-Bjorn
-
-> Cc: iss_storagedev@hp.com
-> Cc: intel-linux-scu@intel.com
-> Cc: support@lsi.com
-> Cc: DL-MPTFusionLinux@lsi.com
-> Cc: qla2xxx-upstream@qlogic.com
-> Cc: iscsi-driver@qlogic.com
-> Cc: pv-drivers@vmware.com
-> Cc: linux-scsi@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
-> 
-> Alexander Gordeev (23):
->   be2iscsi: Use pci_enable_msix_exact() instead of pci_enable_msix()
->   bfa: Do not call pci_enable_msix() after it failed once
->   bfa: Cleanup bfad_setup_intr() function
->   bfa: Use pci_enable_msix_exact() instead of pci_enable_msix()
->   csiostor: Remove superfluous call to pci_disable_msix()
->   csiostor: Use pci_enable_msix_range() instead of pci_enable_msix()
->   fnic: Use pci_enable_msix_exact() instead of pci_enable_msix()
->   hpsa: Fallback to MSI rather than to INTx if MSI-X failed
->   hpsa: Use pci_enable_msix_exact() instead of pci_enable_msix()
->   isci: Use pci_enable_msix_exact() instead of pci_enable_msix()
->   lpfc: Remove superfluous call to pci_disable_msix()
->   lpfc: Use pci_enable_msix_range() instead of pci_enable_msix()
->   megaraid: Fail resume if MSI-X re-initialization failed
->   megaraid: Use pci_enable_msix_range() instead of pci_enable_msix()
->   mpt2sas: Use pci_enable_msix_exact() instead of pci_enable_msix()
->   mpt3sas: Use pci_enable_msix_exact() instead of pci_enable_msix()
->   pm8001: Fix invalid return when request_irq() failed
->   pm8001: Use pci_enable_msix_exact() instead of pci_enable_msix()
->   pmcraid: Get rid of a redundant assignment
->   pmcraid: Use pci_enable_msix_range() instead of pci_enable_msix()
->   qla2xxx: Use pci_enable_msix_range() instead of pci_enable_msix()
->   qla4xxx: Use pci_enable_msix_exact() instead of pci_enable_msix()
->   vmw_pvscsi: Use pci_enable_msix_exact() instead of pci_enable_msix()
-> 
->  drivers/scsi/be2iscsi/be_main.c           |    6 +--
->  drivers/scsi/bfa/bfad.c                   |   62 ++++++++++++-----------------
->  drivers/scsi/csiostor/csio_hw.h           |    2 +-
->  drivers/scsi/csiostor/csio_isr.c          |   24 ++++-------
->  drivers/scsi/fnic/fnic_isr.c              |    4 +-
->  drivers/scsi/hpsa.c                       |   12 +-----
->  drivers/scsi/isci/init.c                  |    2 +-
->  drivers/scsi/lpfc/lpfc_init.c             |   54 ++++++++++++-------------
->  drivers/scsi/megaraid/megaraid_sas_base.c |   24 +++++------
->  drivers/scsi/mpt2sas/mpt2sas_base.c       |    6 +-
->  drivers/scsi/mpt3sas/mpt3sas_base.c       |    4 +-
->  drivers/scsi/pm8001/pm8001_init.c         |   44 +++++++++++----------
->  drivers/scsi/pmcraid.c                    |   14 +------
->  drivers/scsi/qla2xxx/qla_isr.c            |   27 +++++-------
->  drivers/scsi/qla4xxx/ql4_nx.c             |    2 +-
->  drivers/scsi/vmw_pvscsi.c                 |    2 +-
->  16 files changed, 121 insertions(+), 168 deletions(-)
-> 
-> -- 
-> 1.7.7.6
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
