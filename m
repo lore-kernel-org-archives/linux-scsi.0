@@ -1,59 +1,57 @@
-From: Randy Dunlap <rdunlap@infradead.org>
-Subject: Re: mmotm 2014-03-12-16-04 uploaded (scsi/qla2xxx)
-Date: Thu, 13 Mar 2014 11:17:19 -0700
-Message-ID: <5321F62F.6040804@infradead.org>
-References: <20140312230510.69CD831C078@corp2gmr1-1.hot.corp.google.com>
+From: Sagi Grimberg <sagig@dev.mellanox.co.il>
+Subject: Re: blk_iopoll_enabled
+Date: Thu, 13 Mar 2014 20:48:50 +0200
+Message-ID: <5321FD92.6020700@dev.mellanox.co.il>
+References: <53209ACB.2080708@dev.mellanox.co.il> <532128AB.6010803@kernel.dk> <5321CFF0.8020209@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20140312230510.69CD831C078@corp2gmr1-1.hot.corp.google.com>
-Sender: owner-linux-mm@kvack.org
-To: akpm@linux-foundation.org, mm-commits@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-next@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, qla2xxx-upstream@qlogic.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ee0-f51.google.com ([74.125.83.51]:53755 "EHLO
+	mail-ee0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755164AbaCMSsy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Mar 2014 14:48:54 -0400
+Received: by mail-ee0-f51.google.com with SMTP id c13so595428eek.24
+        for <linux-scsi@vger.kernel.org>; Thu, 13 Mar 2014 11:48:52 -0700 (PDT)
+In-Reply-To: <5321CFF0.8020209@kernel.dk>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Bart Van Assche <bvanassche@acm.org>, Or Gerlitz <ogerlitz@mellanox.com>, Oren Duer <oren@mellanox.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On 03/12/2014 04:05 PM, akpm@linux-foundation.org wrote:
-> The mm-of-the-moment snapshot 2014-03-12-16-04 has been uploaded to
-> 
->    http://www.ozlabs.org/~akpm/mmotm/
-> 
-> mmotm-readme.txt says
-> 
-> README for mm-of-the-moment:
-> 
-> http://www.ozlabs.org/~akpm/mmotm/
-> 
-> This is a snapshot of my -mm patch queue.  Uploaded at random hopefully
-> more than once a week.
-> 
-> You will need quilt to apply these patches to the latest Linus release (3.x
-> or 3.x-rcY).  The series file is in broken-out.tar.gz and is duplicated in
-> http://ozlabs.org/~akpm/mmotm/series
-> 
-> The file broken-out.tar.gz contains two datestamp files: .DATE and
-> .DATE-yyyy-mm-dd-hh-mm-ss.  Both contain the string yyyy-mm-dd-hh-mm-ss,
-> followed by the base kernel version against which this patch series is to
-> be applied.
-> 
+On 3/13/2014 5:34 PM, Jens Axboe wrote:
+> On 03/12/2014 09:40 PM, Jens Axboe wrote:
+>> On 2014-03-12 11:35, Sagi Grimberg wrote:
+>>> Hey Jens,
+>>>
+>>> So I'm looking at blk_iopoll for iSER & SRP and I have one gap I would
+>>> like to get your input on.
+>>>
+>>> In blk-iopoll.c I see:
+>>> int blk_iopoll_enabled = 1;
+>>> EXPORT_SYMBOL(blk_iopoll_enabled);
+>>>
+>>> This is set to 1 and exported for everyone to condition and *modify* 
+>>> it.
+>>> The documentation says the user must check this when using blk_iopoll.
+>>>
+>>> My question is why? it should always be true shouldn't it?
+>>> Moreover, isn't it better to protect it using a get() function of it?
+>>> can't someone set it to 0 and shutdown the lights on everyone else?
+>>
+>> We can kill it. IIRC, it was mostly used during development to test
+>> functionality and performance (and wired to a sysfs toggle file).
+>>
+>> But... Just because it's exported doesn't mean that random users are
+>> allowed to just disable it. What's left now is an always-on, so we can
+>> remove it.
+>
+> It _is_ still exported, I just forgot it was put in sysctl. I'll kill 
+> it off completely now. It's safe to toggle from user space, but only 
+> practically so if IO is idle. It makes no attempt to ensure that, as 
+> it was just a debug thing.
+>
 
-from linux-next:
+Thanks
 
-on i386:
-
-drivers/scsi/qla2xxx/qla_init.c:5295:7: warning: format '%lx' expects argument of type 'long unsigned int', but argument 5 has type 'uint32_t' [-Wformat]
-drivers/scsi/qla2xxx/qla_init.c:5562:6: warning: format '%lx' expects argument of type 'long unsigned int', but argument 5 has type 'int' [-Wformat]
-drivers/scsi/qla2xxx/qla_init.c:5597:7: warning: format '%lx' expects argument of type 'long unsigned int', but argument 5 has type 'uint32_t' [-Wformat]
-drivers/scsi/qla2xxx/qla_attr.c:162:6: warning: format '%lx' expects argument of type 'long unsigned int', but argument 6 has type 'size_t' [-Wformat]
-drivers/scsi/qla2xxx/qla_attr.c:203:7: warning: format '%lx' expects argument of type 'long unsigned int', but argument 5 has type 'size_t' [-Wformat]
-drivers/scsi/qla2xxx/qla_attr.c:207:6: warning: format '%lx' expects argument of type 'long unsigned int', but argument 6 has type 'size_t' [-Wformat]
-
-
-
--- 
-~Randy
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Sagi.
