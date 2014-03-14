@@ -1,35 +1,64 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: Kernel bug triggered in multipath
-Date: Fri, 14 Mar 2014 12:26:15 -0400
-Message-ID: <20140314162615.GC14188@redhat.com>
-References: <1394795632-86434-1-git-send-email-hare@suse.de>
- <20140314111520.GA17288@infradead.org>
- <20140314162111.GB14188@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: "Ewan D. Milne" <emilne@redhat.com>
+Subject: [PATCH] [SCSI] scsi_error: really disable eh_deadline if no host_reset_handler is set
+Date: Fri, 14 Mar 2014 13:09:01 -0400
+Message-ID: <1394816941-7368-1-git-send-email-emilne@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:27463 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:8309 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755801AbaCNQ0n (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 Mar 2014 12:26:43 -0400
-Content-Disposition: inline
-In-Reply-To: <20140314162111.GB14188@redhat.com>
+	id S1754809AbaCNRJD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 14 Mar 2014 13:09:03 -0400
+Received: from int-mx12.intmail.prod.int.phx2.redhat.com (int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s2EH92g9022660
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <linux-scsi@vger.kernel.org>; Fri, 14 Mar 2014 13:09:02 -0400
+Received: from emilne.csb ([10.18.25.104])
+	by int-mx12.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id s2EH922s008146
+	for <linux-scsi@vger.kernel.org>; Fri, 14 Mar 2014 13:09:02 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, dm-devel@redhat.com
+To: linux-scsi@vger.kernel.org
 
-On Fri, Mar 14 2014 at 12:21pm -0400,
-Mike Snitzer <snitzer@redhat.com> wrote:
+From: "Ewan D. Milne" <emilne@redhat.com>
 
-> I have no problem with this patch, added safety-net and all, but
-> bottomline: if scsi_dh interfaces were being called against a DM
-> multipath request_queue that is a bug.
+Commit 0d860641db6d49655b91cd08c8db5af74f88bcb5
+("disable eh_deadline if no host_reset_handler is set")
+did not prevent eh_deadline from being set via sysfs if
+shost->transportt was NULL.  That logic is incorrect.
 
-Sorry, s/DM multipath request_queue/non-SCSI requeue_queue/
+The logic should prevent setting eh_deadline if:
 
-> In practice that never happens
-> in supported configurations.  AFAICT, Hannes just stumbled upon it cause
-> he was trying to get cciss working with dm-multipath.
-> 
-> Acked-by: Mike Snitzer <snitzer@redhat.com>
+  - A transport-specific eh_strategy_handler is provided
+ 
+    or
+
+  - The host driver has no eh_reset_handler
+
+...because the eh_deadline value won't be used if a
+different EH strategy is provided, and won't work properly
+if the host can't be reset when the deadline expires.
+
+Signed-off-by: Ewan D. Milne <emilne@redhat.com>
+---
+ drivers/scsi/scsi_sysfs.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 8dab6dd..facafc1 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -300,9 +300,9 @@ store_shost_eh_deadline(struct device *dev, struct device_attribute *attr,
+ 	int ret = -EINVAL;
+ 	unsigned long deadline, flags;
+ 
+-	if (shost->transportt &&
+-	    (shost->transportt->eh_strategy_handler ||
+-	     !shost->hostt->eh_host_reset_handler))
++	if ((shost->transportt &&
++	     shost->transportt->eh_strategy_handler) ||
++	     !shost->hostt->eh_host_reset_handler)
+ 		return ret;
+ 
+ 	if (!strncmp(buf, "off", strlen("off")))
+-- 
+1.7.11.7
+
