@@ -1,38 +1,59 @@
-From: "Reddy, Sreekanth" <Sreekanth.Reddy@lsi.com>
-Subject: [PATCH 9/9][SCSI]mpt3sas: Bump mpt3sas driver version to
- v04.100.00.00
-Date: Fri, 14 Mar 2014 21:44:43 +0530
-Message-ID: <20140314161443.GA8421@lsi.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: Kernel bug triggered in multipath
+Date: Fri, 14 Mar 2014 12:21:11 -0400
+Message-ID: <20140314162111.GB14188@redhat.com>
+References: <1394795632-86434-1-git-send-email-hare@suse.de>
+ <20140314111520.GA17288@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:11608 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755079AbaCNQVm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 14 Mar 2014 12:21:42 -0400
 Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@kernel.org, JBottomley@Parallels.com
-Cc: linux-scsi@vger.kernel.org, Sathya.Prakash@lsi.com, Nagalakshmi.Nandigama@lsi.com, sreekanth.reddy@lsi.com, linux-kernel@vger.kernel.org, sreekanthreddy0547@gmail.com
+In-Reply-To: <20140314111520.GA17288@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, dm-devel@redhat.com
 
-Bump mpt3sas driver version to 04.100.00.00.
+On Fri, Mar 14 2014 at  7:15am -0400,
+Christoph Hellwig <hch@infradead.org> wrote:
 
-Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
----
- drivers/scsi/mpt3sas/mpt3sas_base.h |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+> On Fri, Mar 14, 2014 at 12:13:52PM +0100, Hannes Reinecke wrote:
+> > Starting multipath on a cciss device will cause a kernel
+> > warning to be triggered. Problem is that we're using the
+> > ->queuedata field of the request_queue to derefence the
+> > scsi device; however, for other (non-SCSI) devices this
+> > points to a totally different structure.
+> > So we should rather be using accessors here which make
+> > sure we're only returning valid SCSI device structures.
+> > 
+> > Signed-off-by: Hannes Reinecke <hare@suse.de>
+> 
+> Looks reasonable to me as a short term fix.  Long ter mwe should stop
+> calling into scsi-specific code directly from the DM code.
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index 8fb2a38..09545fc 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -70,8 +70,8 @@
- #define MPT3SAS_DRIVER_NAME		"mpt3sas"
- #define MPT3SAS_AUTHOR	"LSI Corporation <DL-MPTFusionLinux@lsi.com>"
- #define MPT3SAS_DESCRIPTION	"LSI MPT Fusion SAS 3.0 Device Driver"
--#define MPT3SAS_DRIVER_VERSION		"03.100.00.00"
--#define MPT3SAS_MAJOR_VERSION		3
-+#define MPT3SAS_DRIVER_VERSION		"04.100.00.00"
-+#define MPT3SAS_MAJOR_VERSION		4
- #define MPT3SAS_MINOR_VERSION		100
- #define MPT3SAS_BUILD_VERSION		0
- #define MPT3SAS_RELEASE_VERSION	00
--- 
-1.7.1
+DM multipath has a role in insuring the desired scsi_dh is attached and
+that it holds a reference on the attached scsi_dh.
+
+I'm open to ideas of how dm-multipath could avoid having _any_ role here
+but it isn't so simple to avoid, dm-multipath does 3 things in this
+area (ranging from lightest to heaviest relative to scsi_dh interface use):
+1) get reference on scsi_dh that is already attached -- most widely used
+   now that the scsi_dh matching code has been improved to get correct
+   scsi_dh attached during scsi device scan)
+2) no scsi_dh was attached, but one should be -- really shouldn't happen
+   anymore
+3) switch from the scsi_dh that was auto-attached by scsi_dh matching to
+   some user-specified override -- shouldn't be needed now but a user may
+   have a custom scsi_dh they've developed.
+
+I have no problem with this patch, added safety-net and all, but
+bottomline: if scsi_dh interfaces were being called against a DM
+multipath request_queue that is a bug.  In practice that never happens
+in supported configurations.  AFAICT, Hannes just stumbled upon it cause
+he was trying to get cciss working with dm-multipath.
+
+Acked-by: Mike Snitzer <snitzer@redhat.com>
