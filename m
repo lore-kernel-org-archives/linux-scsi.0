@@ -1,114 +1,109 @@
 From: Loc Ho <lho@apm.com>
-Subject: [PATCH v18 1/4] arm64: Add APM X-Gene SoC 15Gbps Multi-purpose PHY DTS entries
-Date: Fri, 14 Mar 2014 17:53:18 -0600
-Message-ID: <1394841201-29495-2-git-send-email-lho@apm.com>
+Subject: [PATCH v18 2/4] Documentation: Add documentation for the APM X-Gene SoC SATA host controller DTS binding
+Date: Fri, 14 Mar 2014 17:53:19 -0600
+Message-ID: <1394841201-29495-3-git-send-email-lho@apm.com>
 References: <1394841201-29495-1-git-send-email-lho@apm.com>
+ <1394841201-29495-2-git-send-email-lho@apm.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1394841201-29495-1-git-send-email-lho@apm.com>
+In-Reply-To: <1394841201-29495-2-git-send-email-lho@apm.com>
 Sender: linux-ide-owner@vger.kernel.org
 To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
 Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This patch adds the DTS entries for the APM X-Gene SoC 15Gbps Multi-purpose
-PHY driver. The PHY for SATA controller 2 and 3 are enabled by default.
+This patch adds documentation for the APM X-Gene SoC SATA host controller DTS
+binding.
 
 Signed-off-by: Loc Ho <lho@apm.com>
 Signed-off-by: Tuan Phan <tphan@apm.com>
 Signed-off-by: Suman Tripathi <stripathi@apm.com>
 ---
- arch/arm64/boot/dts/apm-storm.dtsi |   72 ++++++++++++++++++++++++++++++++++++
- 1 files changed, 72 insertions(+), 0 deletions(-)
+ .../devicetree/bindings/ata/apm-xgene.txt          |   76 ++++++++++++++++++++
+ 1 files changed, 76 insertions(+), 0 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/ata/apm-xgene.txt
 
-diff --git a/arch/arm64/boot/dts/apm-storm.dtsi b/arch/arm64/boot/dts/apm-storm.dtsi
-index d37d736..6d4f493 100644
---- a/arch/arm64/boot/dts/apm-storm.dtsi
-+++ b/arch/arm64/boot/dts/apm-storm.dtsi
-@@ -176,6 +176,48 @@
- 				reg-names = "csr-reg";
- 				clock-output-names = "eth8clk";
- 			};
+diff --git a/Documentation/devicetree/bindings/ata/apm-xgene.txt b/Documentation/devicetree/bindings/ata/apm-xgene.txt
+new file mode 100644
+index 0000000..7bcfbf5
+--- /dev/null
++++ b/Documentation/devicetree/bindings/ata/apm-xgene.txt
+@@ -0,0 +1,76 @@
++* APM X-Gene 6.0 Gb/s SATA host controller nodes
 +
-+			sataphy1clk: sataphy1clk@1f21c000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				reg = <0x0 0x1f21c000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "sataphy1clk";
-+				status = "disabled";
-+				csr-offset = <0x4>;
-+				csr-mask = <0x00>;
-+				enable-offset = <0x0>;
-+				enable-mask = <0x06>;
-+			};
++SATA host controller nodes are defined to describe on-chip Serial ATA
++controllers. Each SATA controller (pair of ports) have its own node.
 +
-+			sataphy2clk: sataphy1clk@1f22c000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				reg = <0x0 0x1f22c000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "sataphy2clk";
-+				status = "ok";
-+				csr-offset = <0x4>;
-+				csr-mask = <0x3a>;
-+				enable-offset = <0x0>;
-+				enable-mask = <0x06>;
-+			};
++Required properties:
++- compatible		: Shall contain:
++  * "apm,xgene-ahci"
++- reg			: First memory resource shall be the AHCI memory
++			  resource.
++			  Second memory resource shall be the host controller
++			  core memory resource.
++			  Third memory resource shall be the host controller
++			  diagnostic memory resource.
++			  4th memory resource shall be the host controller
++			  AXI memory resource.
++			  5th optional memory resource shall be the host
++			  controller MUX memory resource if required.
++- interrupts		: Interrupt-specifier for SATA host controller IRQ.
++- clocks		: Reference to the clock entry.
++- phys			: A list of phandles + phy-specifiers, one for each
++			  entry in phy-names.
++- phy-names		: Should contain:
++  * "sata-phy" for the SATA 6.0Gbps PHY
 +
-+			sataphy3clk: sataphy1clk@1f23c000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				reg = <0x0 0x1f23c000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "sataphy3clk";
-+				status = "ok";
-+				csr-offset = <0x4>;
-+				csr-mask = <0x3a>;
-+				enable-offset = <0x0>;
-+				enable-mask = <0x06>;
-+			};
- 		};
- 
- 		serial0: serial@1c020000 {
-@@ -187,5 +229,35 @@
- 			interrupt-parent = <&gic>;
- 			interrupts = <0x0 0x4c 0x4>;
- 		};
++Optional properties:
++- status		: Shall be "ok" if enabled or "disabled" if disabled.
++			  Default is "ok".
 +
-+		phy1: phy@1f21a000 {
-+			compatible = "apm,xgene-phy";
-+			reg = <0x0 0x1f21a000 0x0 0x100>;
-+			#phy-cells = <1>;
-+			clocks = <&sataphy1clk 0>;
-+			status = "disabled";
-+			apm,tx-boost-gain = <30 30 30 30 30 30>;
-+			apm,tx-eye-tuning = <2 10 10 2 10 10>;
++Example:
++		sataclk: sataclk {
++			compatible = "fixed-clock";
++			#clock-cells = <1>;
++			clock-frequency = <100000000>;
++			clock-output-names = "sataclk";
 +		};
 +
 +		phy2: phy@1f22a000 {
 +			compatible = "apm,xgene-phy";
 +			reg = <0x0 0x1f22a000 0x0 0x100>;
 +			#phy-cells = <1>;
-+			clocks = <&sataphy2clk 0>;
-+			status = "ok";
-+			apm,tx-boost-gain = <30 30 30 30 30 30>;
-+			apm,tx-eye-tuning = <1 10 10 2 10 10>;
 +		};
 +
 +		phy3: phy@1f23a000 {
 +			compatible = "apm,xgene-phy";
 +			reg = <0x0 0x1f23a000 0x0 0x100>;
 +			#phy-cells = <1>;
-+			clocks = <&sataphy3clk 0>;
-+			status = "ok";
-+			apm,tx-boost-gain = <31 31 31 31 31 31>;
-+			apm,tx-eye-tuning = <2 10 10 2 10 10>;
 +		};
- 	};
- };
++
++		sata2: sata@1a400000 {
++			compatible = "apm,xgene-ahci";
++			reg = <0x0 0x1a400000 0x0 0x1000>,
++			      <0x0 0x1f220000 0x0 0x1000>,
++			      <0x0 0x1f22d000 0x0 0x1000>,
++			      <0x0 0x1f22e000 0x0 0x1000>,
++			      <0x0 0x1f227000 0x0 0x1000>;
++			interrupts = <0x0 0x87 0x4>;
++			status = "ok";
++			clocks = <&sataclk 0>;
++			phys = <&phy2 0>;
++			phy-names = "sata-phy";
++		};
++
++		sata3: sata@1a800000 {
++			compatible = "apm,xgene-ahci-pcie";
++			reg = <0x0 0x1a800000 0x0 0x1000>,
++			      <0x0 0x1f230000 0x0 0x1000>,
++			      <0x0 0x1f23d000 0x0 0x1000>,
++			      <0x0 0x1f23e000 0x0 0x1000>,
++			      <0x0 0x1f237000 0x0 0x1000>;
++			interrupts = <0x0 0x88 0x4>;
++			status = "ok";
++			clocks = <&sataclk 0>;
++			phys = <&phy3 0>;
++			phy-names = "sata-phy";
++		};
 -- 
 1.5.5
 
