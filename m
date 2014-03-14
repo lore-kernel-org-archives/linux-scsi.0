@@ -1,48 +1,56 @@
-From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH] hpsa: fix bad endif placement in RAID 5 mapper code
-Date: Thu, 13 Mar 2014 17:12:50 -0500
-Message-ID: <20140313221250.32274.59064.stgit@beardog.cce.hp.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+From: Fam Zheng <famz@redhat.com>
+Subject: [PATCH v2] scsi: Change sense buffer size to 252
+Date: Fri, 14 Mar 2014 14:00:05 +0800
+Message-ID: <1394776805-6784-1-git-send-email-famz@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g9t1613g.houston.hp.com ([15.240.0.71]:49713 "EHLO
-	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754152AbaCMWOK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Mar 2014 18:14:10 -0400
-Received: from g2t2354.austin.hp.com (g2t2354.austin.hp.com [15.217.128.53])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by g9t1613g.houston.hp.com (Postfix) with ESMTPS id BBB9B60411
-	for <linux-scsi@vger.kernel.org>; Thu, 13 Mar 2014 22:13:51 +0000 (UTC)
+Received: from mx1.redhat.com ([209.132.183.28]:36029 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752170AbaCNF75 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 14 Mar 2014 01:59:57 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: james.bottomley@hansenpartnership.com
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, stephenmcameron@gmail.com, joseph.t.handzik@hp.com, thenzl@redhat.com, michael.miller@canonical.com, scott.teel@hp.com
+To: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, kvm@vger.kernel.org, pbonzini@redhat.com, hare@suse.de
 
-From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+According to SPC-4, section 4.5.2.1, 252 is the limit of sense data. So
+increase the values.
 
-It caused the i/o request to always be counted as ineligible for
-the accelerated i/o path on 32 bit systems and negatively affected
-performance.
+Tested by hacking QEMU to fake virtio-scsi request sense len to 252.
+Without this patch the driver stops working immediately when it gets the
+request.
 
-Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+Signed-off-by: Fam Zheng <famz@redhat.com>
 ---
- drivers/scsi/hpsa.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ include/linux/virtio_scsi.h | 2 +-
+ include/scsi/scsi_cmnd.h    | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index a32a510..eb9af2f 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -3828,8 +3828,8 @@ static int hpsa_scsi_ioaccel_raid_map(struct ctlr_info *h,
- #else
- 		first_group = (first_block % stripesize) / r5or6_blocks_per_row;
- 		last_group = (last_block % stripesize) / r5or6_blocks_per_row;
--		if (first_group != last_group)
- #endif
-+		if (first_group != last_group)
- 			return IO_ACCEL_INELIGIBLE;
+diff --git a/include/linux/virtio_scsi.h b/include/linux/virtio_scsi.h
+index 4195b97..a437f7f 100644
+--- a/include/linux/virtio_scsi.h
++++ b/include/linux/virtio_scsi.h
+@@ -28,7 +28,7 @@
+ #define _LINUX_VIRTIO_SCSI_H
  
- 		/* Verify request is in a single row of RAID 5/6 */
+ #define VIRTIO_SCSI_CDB_SIZE   32
+-#define VIRTIO_SCSI_SENSE_SIZE 96
++#define VIRTIO_SCSI_SENSE_SIZE 252
+ 
+ /* SCSI command request, followed by data-out */
+ struct virtio_scsi_cmd_req {
+diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+index 91558a1..a64dac03 100644
+--- a/include/scsi/scsi_cmnd.h
++++ b/include/scsi/scsi_cmnd.h
+@@ -104,7 +104,7 @@ struct scsi_cmnd {
+ 	struct request *request;	/* The command we are
+ 				   	   working on */
+ 
+-#define SCSI_SENSE_BUFFERSIZE 	96
++#define SCSI_SENSE_BUFFERSIZE 	252
+ 	unsigned char *sense_buffer;
+ 				/* obtained by REQUEST SENSE when
+ 				 * CHECK CONDITION is received on original
+-- 
+1.9.0
 
