@@ -1,40 +1,52 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Update on LSF/MM [was Re: LSF/MM 2014 Call For Proposals]
-Date: Fri, 14 Mar 2014 10:02:25 +0100
-Message-ID: <1394787745.2350.19.camel@dabdike.orange-hotspot.com>
-References: <20131220093022.GV11295@suse.de>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v17 1/4] arm64: Add APM X-Gene SoC 15Gbps Multi-purpose
+ PHY DTS entries
+Date: Fri, 14 Mar 2014 12:08:53 +0100
+Message-ID: <201403141208.53772.arnd@arndb.de>
+References: <1394655573-32645-1-git-send-email-lho@apm.com>
+ <1394655573-32645-2-git-send-email-lho@apm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20131220093022.GV11295@suse.de>
-Sender: owner-linux-mm@kvack.org
-To: Mel Gorman <mgorman@suse.de>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, lsf-pc@lists.linux-foundation.org
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <1394655573-32645-2-git-send-email-lho@apm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Loc Ho <lho@apm.com>
+Cc: devicetree@vger.kernel.org, Suman Tripathi <stripathi@apm.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jcm@redhat.com, patches@apm.com, tj@kernel.org, ddutile@redhat.com, olof@lixom.net, Tuan Phan <tphan@apm.com>, linux-arm-kernel@lists.infradead.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi everyone
+On Wednesday 12 March 2014, Loc Ho wrote:
+> +                       sataphy1clk: sataphy1clk@1f21c000 {
+> +                               compatible = "apm,xgene-device-clock";
+> +                               #clock-cells = <1>;
+> +                               clocks = <&socplldiv2 0>;
+> +                               clock-names = "socplldiv2";
 
-We're about three weeks out from LSF/MM, so the PC is putting together
-the agenda here:
+I think we still need to resolve the question regarding the
+"clock-names" properties in your clock provider nodes. I've commented
+on this in the past, since it shows up in all the x-gene drivers,
+but it's very inconsistent.
 
-https://docs.google.com/spreadsheet/pub?key=0ArurRVMVCSnkdHU2Zk1KbFhmeVZFVmFMQ19nakJYaFE&gid=0
+The binding says
 
-The current list of attendees is:
++- clock-names : shall be the name of the device clock. If missing, use the
++                device name.
 
-https://docs.google.com/spreadsheet/pub?key=0ArurRVMVCSnkdHU2Zk1KbFhmeVZFVmFMQ19nakJYaFE&gid=1
+which to me makes no sense. What will "use the device name", and
+which device? Your clock driver doesn't actually use these strings,
+so could you please fix the binding to remove this, and stop adding
+the strings to any clock nodes?
 
-As usual, we schedule stuff in a just in time, so if you feel there are
-any topics we're missing, please let us know (send an email to
-lsf@lists.linux-foundation.org and cc the relevant linux list).  There's
-always time to add stuff we forgot and, if the topic is very relevant,
-we might even invite you to present it.
+Since nothing ever used these and they are marked "optional"
+in the binding, I don't think there is a chance of breaking
+anything by changing it now.
 
-James
-
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+	Arnd
