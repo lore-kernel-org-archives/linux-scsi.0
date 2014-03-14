@@ -1,13 +1,13 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 02/11][SCSI]mpt2sas: Added new driver module Parameter disable_eedp to Disable EEDP Support
-Date: Fri, 14 Mar 2014 16:37:27 -0400
-Message-ID: <yq1r464wm7s.fsf@sermon.lab.mkp.net>
-References: <20140314153622.GA7947@lsi.com>
+Subject: Re: [PATCH 08/11][SCSI]mpt2sas: Added Reply Descriptor Post Queue (RDPQ) Array support
+Date: Fri, 14 Mar 2014 16:41:00 -0400
+Message-ID: <yq1mwgswm1v.fsf@sermon.lab.mkp.net>
+References: <20140314154256.GA8041@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140314153622.GA7947@lsi.com> (Sreekanth Reddy's message of
-	"Fri, 14 Mar 2014 21:06:22 +0530")
+In-Reply-To: <20140314154256.GA8041@lsi.com> (Sreekanth Reddy's message of
+	"Fri, 14 Mar 2014 21:12:56 +0530")
 Sender: linux-kernel-owner@vger.kernel.org
 To: "Reddy, Sreekanth" <Sreekanth.Reddy@lsi.com>
 Cc: jejb@kernel.org, JBottomley@Parallels.com, linux-scsi@vger.kernel.org, Sathya.Prakash@lsi.com, Nagalakshmi.Nandigama@lsi.com, linux-kernel@vger.kernel.org, sreekanthreddy0547@gmail.com
@@ -15,12 +15,19 @@ List-Id: linux-scsi@vger.kernel.org
 
 >>>>> "Sreekanth" == Reddy, Sreekanth <Sreekanth.Reddy@lsi.com> writes:
 
-Sreekanth> A new mpt2sas driver module parameter 'disable_eedp' is added
-Sreekanth> to Disable EEDP support. By default DIF support is enabled in
-Sreekanth> the driver and this module parameter would allow users to
-Sreekanth> turn it off.
+Sreekanth,
 
-Why don't you just set the prot_mask module parameter to 0?
+Sreekanth> The size of this contiguous block of memory pool is directly
+Sreekanth> proportional to number of MSI-X vectors and the HBA queue
+Sreekanth> depth. For example higher MSIX vectors requires larger
+Sreekanth> contiguous block of memory pool.
+
+Please also consider these patches that fix MSI-X issues on large
+systems:
+
+  http://marc.info/?l=linux-scsi&m=138879464506586
+
+  http://marc.info/?l=linux-scsi&m=138879465206588
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
