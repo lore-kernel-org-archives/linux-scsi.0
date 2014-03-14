@@ -1,197 +1,161 @@
 From: "Reddy, Sreekanth" <Sreekanth.Reddy@lsi.com>
-Subject: [PATCH 1/9][SCSI]mpt3sas: Added new driver module Parameter
- disable_eedp to Disable EEDP Support
-Date: Fri, 14 Mar 2014 21:39:58 +0530
-Message-ID: <20140314160958.GA8350@lsi.com>
+Subject: [PATCH 2/9][SCSI]mpt3sas: MPI2.5 Rev G (2.5.2) specifications
+Date: Fri, 14 Mar 2014 21:40:30 +0530
+Message-ID: <20140314161030.GA8357@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn1blp0183.outbound.protection.outlook.com ([207.46.163.183]:31405
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755798AbaCNQO1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 Mar 2014 12:14:27 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@kernel.org, JBottomley@Parallels.com
 Cc: linux-scsi@vger.kernel.org, Sathya.Prakash@lsi.com, Nagalakshmi.Nandigama@lsi.com, sreekanth.reddy@lsi.com, linux-kernel@vger.kernel.org, sreekanthreddy0547@gmail.com
+List-Id: linux-scsi@vger.kernel.org
 
-A new mpt3sas driver module parameter 'disable_eedp' is added to Disable
-EEDP support. By default DIF support is enabled in the driver and
-this module parameter would allow users to turn it off.
+Below is the change set in MPI2.5 Rev G specification and 2.00.31 header files
+1) Added SCSIStatusQualifier to SCSI IO Error Reply message.
+2) Added ATA Security Freeze Lock to IO Unit Page 1 Flags field.
+3) Added Allow Protection Information bit for IR Volume Create.
 
 Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.c  |   38 ++++++++++++++++-------------
- drivers/scsi/mpt3sas/mpt3sas_base.h  |    1 +
- drivers/scsi/mpt3sas/mpt3sas_scsih.c |   45 ++++++++++++++++++++++-----------
- 3 files changed, 52 insertions(+), 32 deletions(-)
+ drivers/scsi/mpt3sas/mpi/mpi2.h      |    6 ++++--
+ drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h |    8 ++++++--
+ drivers/scsi/mpt3sas/mpi/mpi2_init.h |    6 ++++--
+ drivers/scsi/mpt3sas/mpi/mpi2_raid.h |    6 +++++-
+ 4 files changed, 19 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 0cf4f70..d46956e 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -429,13 +429,16 @@ _base_sas_ioc_info(struct MPT3SAS_ADAPTER *ioc, MPI2DefaultReply_t *mpi_reply,
+diff --git a/drivers/scsi/mpt3sas/mpi/mpi2.h b/drivers/scsi/mpt3sas/mpi/mpi2.h
+index 20da8f9..dc143dd 100644
+--- a/drivers/scsi/mpt3sas/mpi/mpi2.h
++++ b/drivers/scsi/mpt3sas/mpi/mpi2.h
+@@ -8,7 +8,7 @@
+  *                 scatter/gather formats.
+  * Creation Date:  June 21, 2006
+  *
+- * mpi2.h Version:  02.00.29
++ * mpi2.h Version:  02.00.31
+  *
+  * NOTE: Names (typedefs, defines, etc.) beginning with an MPI25 or Mpi25
+  *       prefix are for use only on MPI v2.5 products, and must not be used
+@@ -86,6 +86,8 @@
+  * 11-27-12  02.00.28  Bumped MPI2_HEADER_VERSION_UNIT.
+  * 12-20-12  02.00.29  Bumped MPI2_HEADER_VERSION_UNIT.
+  *                     Added MPI25_SUP_REPLY_POST_HOST_INDEX_OFFSET.
++ * 04-09-13  02.00.30  Bumped MPI2_HEADER_VERSION_UNIT.
++ * 04-17-13  02.00.31  Bumped MPI2_HEADER_VERSION_UNIT.
+  * --------------------------------------------------------------------------
+  */
+ 
+@@ -119,7 +121,7 @@
+ #define MPI2_VERSION_02_05                  (0x0205)
+ 
+ /*Unit and Dev versioning for this MPI header set */
+-#define MPI2_HEADER_VERSION_UNIT            (0x1D)
++#define MPI2_HEADER_VERSION_UNIT            (0x1F)
+ #define MPI2_HEADER_VERSION_DEV             (0x00)
+ #define MPI2_HEADER_VERSION_UNIT_MASK       (0xFF00)
+ #define MPI2_HEADER_VERSION_UNIT_SHIFT      (8)
+diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h b/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
+index 889aa70..5b0e5c1 100644
+--- a/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
++++ b/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
+@@ -6,7 +6,7 @@
+  *         Title:  MPI Configuration messages and pages
+  * Creation Date:  November 10, 2006
+  *
+- *   mpi2_cnfg.h Version:  02.00.24
++ *   mpi2_cnfg.h Version:  02.00.25
+  *
+  * NOTE: Names (typedefs, defines, etc.) beginning with an MPI25 or Mpi25
+  *       prefix are for use only on MPI v2.5 products, and must not be used
+@@ -160,6 +160,9 @@
+  * 12-20-12  02.00.24  Marked MPI2_SASIOUNIT1_CONTROL_CLEAR_AFFILIATION as
+  *                     obsolete for MPI v2.5 and later.
+  *                     Added some defines for 12G SAS speeds.
++ * 04-09-13  02.00.25  Added MPI2_IOUNITPAGE1_ATA_SECURITY_FREEZE_LOCK.
++ *                     Fixed MPI2_IOUNITPAGE5_DMA_CAP_MASK_MAX_REQUESTS to
++ *                     match the specification.
+  * --------------------------------------------------------------------------
+  */
+ 
+@@ -792,6 +795,7 @@ typedef struct _MPI2_CONFIG_PAGE_IO_UNIT_1 {
+ #define MPI2_IOUNITPAGE1_PAGEVERSION                    (0x04)
+ 
+ /*IO Unit Page 1 Flags defines */
++#define MPI2_IOUNITPAGE1_ATA_SECURITY_FREEZE_LOCK       (0x00004000)
+ #define MPI25_IOUNITPAGE1_NEW_DEVICE_FAST_PATH_DISABLE  (0x00002000)
+ #define MPI25_IOUNITPAGE1_DISABLE_FAST_PATH             (0x00001000)
+ #define MPI2_IOUNITPAGE1_ENABLE_HOST_BASED_DISCOVERY    (0x00000800)
+@@ -870,7 +874,7 @@ typedef struct _MPI2_CONFIG_PAGE_IO_UNIT_5 {
+ #define MPI2_IOUNITPAGE5_PAGEVERSION                    (0x00)
+ 
+ /*defines for IO Unit Page 5 DmaEngineCapabilities field */
+-#define MPI2_IOUNITPAGE5_DMA_CAP_MASK_MAX_REQUESTS      (0xFF00)
++#define MPI2_IOUNITPAGE5_DMA_CAP_MASK_MAX_REQUESTS      (0xFFFF0000)
+ #define MPI2_IOUNITPAGE5_DMA_CAP_SHIFT_MAX_REQUESTS     (16)
+ 
+ #define MPI2_IOUNITPAGE5_DMA_CAP_EEDP                   (0x0008)
+diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_init.h b/drivers/scsi/mpt3sas/mpi/mpi2_init.h
+index f7928bf..b3e3331 100644
+--- a/drivers/scsi/mpt3sas/mpi/mpi2_init.h
++++ b/drivers/scsi/mpt3sas/mpi/mpi2_init.h
+@@ -6,7 +6,7 @@
+  *         Title:  MPI SCSI initiator mode messages and structures
+  * Creation Date:  June 23, 2006
+  *
+- * mpi2_init.h Version:  02.00.14
++ * mpi2_init.h Version:  02.00.15
+  *
+  * NOTE: Names (typedefs, defines, etc.) beginning with an MPI25 or Mpi25
+  *       prefix are for use only on MPI v2.5 products, and must not be used
+@@ -44,6 +44,8 @@
+  *                     Priority to match SAM-4.
+  *                     Added EEDPErrorOffset to MPI2_SCSI_IO_REPLY.
+  * 07-10-12  02.00.14  Added MPI2_SCSIIO_CONTROL_SHIFT_DATADIRECTION.
++ * 04-09-13  02.00.15  Added SCSIStatusQualifier field to MPI2_SCSI_IO_REPLY,
++ *                     replacing the Reserved4 field.
+  * --------------------------------------------------------------------------
+  */
+ 
+@@ -347,7 +349,7 @@ typedef struct _MPI2_SCSI_IO_REPLY {
+ 	U32 SenseCount;		/*0x18 */
+ 	U32 ResponseInfo;	/*0x1C */
+ 	U16 TaskTag;		/*0x20 */
+-	U16 Reserved4;		/*0x22 */
++	U16 SCSIStatusQualifier; /* 0x22 */
+ 	U32 BidirectionalTransferCount;	/*0x24 */
+ 	U32 EEDPErrorOffset;	/*0x28 *//*MPI 2.5 only; Reserved in MPI 2.0*/
+ 	U32 Reserved6;		/*0x2C */
+diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_raid.h b/drivers/scsi/mpt3sas/mpi/mpi2_raid.h
+index 7176523..fbe3aae 100644
+--- a/drivers/scsi/mpt3sas/mpi/mpi2_raid.h
++++ b/drivers/scsi/mpt3sas/mpi/mpi2_raid.h
+@@ -6,7 +6,7 @@
+  *         Title:  MPI Integrated RAID messages and structures
+  * Creation Date:  April 26, 2007
+  *
+- *   mpi2_raid.h Version:  02.00.09
++ *   mpi2_raid.h Version:  02.00.10
+  *
+  * Version History
+  * ---------------
+@@ -30,6 +30,7 @@
+  * 02-06-12  02.00.08  Added MPI2_RAID_ACTION_PHYSDISK_HIDDEN.
+  * 07-26-12  02.00.09  Added ElapsedSeconds field to MPI2_RAID_VOL_INDICATOR.
+  *                     Added MPI2_RAID_VOL_FLAGS_ELAPSED_SECONDS_VALID define.
++ * 04-17-13  02.00.10  Added MPI25_RAID_ACTION_ADATA_ALLOW_PI.
+  * --------------------------------------------------------------------------
+  */
+ 
+@@ -46,6 +47,9 @@
+ * RAID Action messages
  ****************************************************************************/
  
- 	case MPI2_IOCSTATUS_EEDP_GUARD_ERROR:
--		desc = "eedp guard error";
-+		if (!ioc->disable_eedp_support)
-+			desc = "eedp guard error";
- 		break;
- 	case MPI2_IOCSTATUS_EEDP_REF_TAG_ERROR:
--		desc = "eedp ref tag error";
-+		if (!ioc->disable_eedp_support)
-+			desc = "eedp ref tag error";
- 		break;
- 	case MPI2_IOCSTATUS_EEDP_APP_TAG_ERROR:
--		desc = "eedp app tag error";
-+		if (!ioc->disable_eedp_support)
-+			desc = "eedp app tag error";
- 		break;
- 
- /****************************************************************************
-@@ -2429,21 +2432,22 @@ _base_static_config_pages(struct MPT3SAS_ADAPTER *ioc)
- 	if (ioc->ir_firmware)
- 		mpt3sas_config_get_manufacturing_pg10(ioc, &mpi_reply,
- 		    &ioc->manu_pg10);
--
--	/*
--	 * Ensure correct T10 PI operation if vendor left EEDPTagMode
--	 * flag unset in NVDATA.
--	 */
--	mpt3sas_config_get_manufacturing_pg11(ioc, &mpi_reply, &ioc->manu_pg11);
--	if (ioc->manu_pg11.EEDPTagMode == 0) {
--		pr_err("%s: overriding NVDATA EEDPTagMode setting\n",
--		    ioc->name);
--		ioc->manu_pg11.EEDPTagMode &= ~0x3;
--		ioc->manu_pg11.EEDPTagMode |= 0x1;
--		mpt3sas_config_set_manufacturing_pg11(ioc, &mpi_reply,
--		    &ioc->manu_pg11);
-+	if (!ioc->disable_eedp_support) {
-+		/*
-+		 * Ensure correct T10 PI operation if vendor left EEDPTagMode
-+		 * flag unset in NVDATA.
-+		 */
-+		mpt3sas_config_get_manufacturing_pg11(ioc, &mpi_reply,
-+							&ioc->manu_pg11);
-+		if (ioc->manu_pg11.EEDPTagMode == 0) {
-+			pr_err("%s: overriding NVDATA EEDPTagMode setting\n",
-+			ioc->name);
-+			ioc->manu_pg11.EEDPTagMode &= ~0x3;
-+			ioc->manu_pg11.EEDPTagMode |= 0x1;
-+			mpt3sas_config_set_manufacturing_pg11(ioc, &mpi_reply,
-+			    &ioc->manu_pg11);
-+		}
- 	}
--
- 	mpt3sas_config_get_bios_pg2(ioc, &mpi_reply, &ioc->bios_pg2);
- 	mpt3sas_config_get_bios_pg3(ioc, &mpi_reply, &ioc->bios_pg3);
- 	mpt3sas_config_get_ioc_pg8(ioc, &mpi_reply, &ioc->ioc_pg8);
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index 0ebf5d9..b1494ce 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -791,6 +791,7 @@ struct MPT3SAS_ADAPTER {
- 	u32		event_context;
- 	void		*event_log;
- 	u32		event_masks[MPI2_EVENT_NOTIFY_EVENTMASK_WORDS];
-+	u8              disable_eedp_support;
- 
- 	/* static config pages */
- 	struct mpt3sas_facts facts;
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index a961fe1..1056cbf 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -116,7 +116,10 @@ static int max_lun = MPT3SAS_MAX_LUN;
- module_param(max_lun, int, 0);
- MODULE_PARM_DESC(max_lun, " max lun, default=16895 ");
- 
--
-+/* Enable or disable EEDP support */
-+static int disable_eedp;
-+module_param(disable_eedp, uint, 0);
-+MODULE_PARM_DESC(disable_eedp, " disable EEDP support: (default=0)");
- 
- 
- /* diag_buffer_enable is bitwise
-@@ -3614,7 +3617,8 @@ _scsih_qcmd_lck(struct scsi_cmnd *scmd, void (*done)(struct scsi_cmnd *))
- 	}
- 	mpi_request = mpt3sas_base_get_msg_frame(ioc, smid);
- 	memset(mpi_request, 0, sizeof(Mpi2SCSIIORequest_t));
--	_scsih_setup_eedp(ioc, scmd, mpi_request);
-+	if (!ioc->disable_eedp_support)
-+		_scsih_setup_eedp(ioc, scmd, mpi_request);
- 
- 	if (scmd->cmd_len == 32)
- 		mpi_control |= 4 << MPI2_SCSIIO_CONTROL_ADDCDBLEN_SHIFT;
-@@ -3769,14 +3773,21 @@ _scsih_scsi_ioc_info(struct MPT3SAS_ADAPTER *ioc, struct scsi_cmnd *scmd,
- 		desc_ioc_state = "scsi ext terminated";
- 		break;
- 	case MPI2_IOCSTATUS_EEDP_GUARD_ERROR:
--		desc_ioc_state = "eedp guard error";
--		break;
-+		if (!ioc->disable_eedp_support) {
-+			desc_ioc_state = "eedp guard error";
-+			break;
-+		}
- 	case MPI2_IOCSTATUS_EEDP_REF_TAG_ERROR:
--		desc_ioc_state = "eedp ref tag error";
--		break;
-+		if (!ioc->disable_eedp_support) {
-+			desc_ioc_state = "eedp ref tag error";
-+			break;
-+		}
- 	case MPI2_IOCSTATUS_EEDP_APP_TAG_ERROR:
--		desc_ioc_state = "eedp app tag error";
--		break;
-+		if (!ioc->disable_eedp_support) {
-+			desc_ioc_state = "eedp app tag error";
-+			break;
-+		}
++/* ActionDataWord defines for use with MPI2_RAID_ACTION_CREATE_VOLUME action */
++#define MPI25_RAID_ACTION_ADATA_ALLOW_PI            (0x80000000)
 +
- 	default:
- 		desc_ioc_state = "unknown";
- 		break;
-@@ -4191,8 +4202,10 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
- 	case MPI2_IOCSTATUS_EEDP_GUARD_ERROR:
- 	case MPI2_IOCSTATUS_EEDP_REF_TAG_ERROR:
- 	case MPI2_IOCSTATUS_EEDP_APP_TAG_ERROR:
-+	if (!ioc->disable_eedp_support) {
- 		_scsih_eedp_error_handling(scmd, ioc_status);
- 		break;
-+	}
- 
- 	case MPI2_IOCSTATUS_SCSI_PROTOCOL_ERROR:
- 	case MPI2_IOCSTATUS_INVALID_FUNCTION:
-@@ -7814,16 +7827,18 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 		goto out_add_shost_fail;
- 	}
- 
--	/* register EEDP capabilities with SCSI layer */
--	if (prot_mask > 0)
--		scsi_host_set_prot(shost, prot_mask);
--	else
--		scsi_host_set_prot(shost, SHOST_DIF_TYPE1_PROTECTION
-+	ioc->disable_eedp_support = disable_eedp;
-+	if (!ioc->disable_eedp_support) {
-+		/* register EEDP capabilities with SCSI layer */
-+		if (prot_mask > 0)
-+			scsi_host_set_prot(shost, prot_mask);
-+		else
-+			scsi_host_set_prot(shost, SHOST_DIF_TYPE1_PROTECTION
- 				   | SHOST_DIF_TYPE2_PROTECTION
- 				   | SHOST_DIF_TYPE3_PROTECTION);
- 
--	scsi_host_set_guard(shost, SHOST_DIX_GUARD_CRC);
--
-+		scsi_host_set_guard(shost, SHOST_DIX_GUARD_CRC);
-+	}
- 	/* event thread */
- 	snprintf(ioc->firmware_event_name, sizeof(ioc->firmware_event_name),
- 	    "fw_event%d", ioc->id);
+ /*ActionDataWord defines for use with MPI2_RAID_ACTION_DELETE_VOLUME action */
+ #define MPI2_RAID_ACTION_ADATA_KEEP_LBA0            (0x00000000)
+ #define MPI2_RAID_ACTION_ADATA_ZERO_LBA0            (0x00000001)
 -- 
 1.7.1
-
