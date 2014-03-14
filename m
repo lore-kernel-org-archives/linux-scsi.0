@@ -1,33 +1,79 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 08/11][SCSI]mpt2sas: Added Reply Descriptor Post Queue (RDPQ) Array support
-Date: Fri, 14 Mar 2014 16:41:00 -0400
-Message-ID: <yq1mwgswm1v.fsf@sermon.lab.mkp.net>
-References: <20140314154256.GA8041@lsi.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [PATCH v6 0/3] Accelerate Storage Resume (2x or more)
+Date: Fri, 14 Mar 2014 13:52:43 -0700
+Message-ID: <20140314205204.1269.44402.stgit@viggo.jf.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140314154256.GA8041@lsi.com> (Sreekanth Reddy's message of
-	"Fri, 14 Mar 2014 21:12:56 +0530")
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Reddy, Sreekanth" <Sreekanth.Reddy@lsi.com>
-Cc: jejb@kernel.org, JBottomley@Parallels.com, linux-scsi@vger.kernel.org, Sathya.Prakash@lsi.com, Nagalakshmi.Nandigama@lsi.com, linux-kernel@vger.kernel.org, sreekanthreddy0547@gmail.com
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: tj@kernel.org, JBottomley@Parallels.com
+Cc: Len Brown <len.brown@intel.com>, linux-scsi@vger.kernel.org, Phillip Susi <psusi@ubuntu.com>, linux-ide@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>, Todd Brandt <todd.e.brandt@linux.intel.com>, Todd Brandt <todd.e.brandt@intel.com>
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "Sreekanth" == Reddy, Sreekanth <Sreekanth.Reddy@lsi.com> writes:
+Changes since v5:
+* Per Tejun, fixed up the naming of the ata_port helper routines
+* Cleaned up the return value of ata_port_pm helper routines to be 'void'
+* Per Tejun, added a check of whether async scanning is disabled to gate
+  whether async resume will be performed out of caution for systems that
+  do not handle staggered spin-up outside of the kernel.  Clarified this
+  in the changelog and added commentary in the code.
 
-Sreekanth,
+===
 
-Sreekanth> The size of this contiguous block of memory pool is directly
-Sreekanth> proportional to number of MSI-X vectors and the HBA queue
-Sreekanth> depth. For example higher MSIX vectors requires larger
-Sreekanth> contiguous block of memory pool.
+It is not everyday that a kernel operation gets > 2x faster!  Great find
+by Todd and his AnalyzeSuspend tool [1].
 
-Please also consider these patches that fix MSI-X issues on large
-systems:
+Todd is on vacation so I am taking care of these patches to make sure
+they get in the queue for 3.15.
 
-  http://marc.info/?l=linux-scsi&m=138879464506586
+The significant changes from Todd's last submission [2]:
 
-  http://marc.info/?l=linux-scsi&m=138879465206588
+1/ Split out the pure cleanup into its own patch, and expand it to clean
+   up libsas as well
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+2/ Move the entirety of scsi_device resume to an async context.  As
+   written, v4 of the patchset overlapped the scsi-start-stop command
+   with the scsi_device_resume().  Now in v5 the queue restart is
+   properly ordered with the completion of the scsi-start-stop command.
+
+Resume completion time as reported by:
+
+"echo devices > /sys/power/pm_test && echo mem > /sys/power/state"
+
+BEFORE: PM: resume of devices complete after 2271.097 msecs
+AFTER:  PM: resume of devices complete after 1057.404 msecs
+
+On a system with two SSDs attached via AHCI.
+
+[1]: Todd's testing showing up to 12x resume latency improvement in some
+cases:
+https://01.org/suspendresume/blogs/tebrandt/2013/hard-disk-resume-optimization-simpler-approach
+
+[2]: Todd's v4 patchset:
+[PATCH v4 0/2] http://marc.info/?l=linux-ide&m=138984698103487&w=2
+[PATCH v4 1/2] http://marc.info/?l=linux-ide&m=138984713203515&w=2
+[PATCH v4 2/2] http://marc.info/?l=linux-ide&m=138984722003539&w=2
+
+---
+
+Dan Williams (2):
+      libata, libsas: kill pm_result and related cleanup
+      scsi: async sd resume
+
+Todd Brandt (1):
+      libata: async resume
+
+
+ drivers/ata/libata-core.c     |  135 ++++++++++++++++++-----------------------
+ drivers/ata/libata-eh.c       |   13 +---
+ drivers/scsi/Kconfig          |    3 +
+ drivers/scsi/libsas/sas_ata.c |   35 ++---------
+ drivers/scsi/scsi.c           |    3 +
+ drivers/scsi/scsi_pm.c        |  128 ++++++++++++++++++++++++++++++---------
+ drivers/scsi/scsi_priv.h      |    2 +
+ drivers/scsi/scsi_scan.c      |    2 -
+ drivers/scsi/sd.c             |    1 
+ include/linux/libata.h        |   11 +--
+ include/scsi/libsas.h         |    1 
+ 11 files changed, 180 insertions(+), 154 deletions(-)
