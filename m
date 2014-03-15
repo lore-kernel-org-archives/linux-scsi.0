@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 2/6] scsi: Return VPD page length in scsi_vpd_inquiry()
-Date: Sat, 15 Mar 2014 09:51:48 +0100
-Message-ID: <1394873512-102073-3-git-send-email-hare@suse.de>
+Subject: [PATCH 5/6] ses: Use vpd information from scsi_device
+Date: Sat, 15 Mar 2014 09:51:51 +0100
+Message-ID: <1394873512-102073-6-git-send-email-hare@suse.de>
 References: <1394873512-102073-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:43225 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:43224 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753167AbaCOIvz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1752906AbaCOIvz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Sat, 15 Mar 2014 04:51:55 -0400
 In-Reply-To: <1394873512-102073-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,80 +14,89 @@ List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-We should be returning the number of bytes of the
-requested VPD page in scsi_vpd_inquiry.
-This makes it easier for the caller to verify the
-required space.
+The scsi_device now has VPD page83 information attached, so
+there is no need to query it again.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/scsi.c | 17 ++++++++++-------
- 1 file changed, 10 insertions(+), 7 deletions(-)
+ drivers/scsi/ses.c | 38 ++++++++++----------------------------
+ 1 file changed, 10 insertions(+), 28 deletions(-)
 
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index d8afec8..9e08d3d 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -954,7 +954,7 @@ EXPORT_SYMBOL(scsi_track_queue_full);
-  * This is an internal helper function.  You probably want to use
-  * scsi_get_vpd_page instead.
-  *
-- * Returns 0 on success or a negative error number.
-+ * Returns size of the vpd page on success or a negative error number.
-  */
- static int scsi_vpd_inquiry(struct scsi_device *sdev, unsigned char *buffer,
- 							u8 page, unsigned len)
-@@ -962,6 +962,9 @@ static int scsi_vpd_inquiry(struct scsi_device *sdev, unsigned char *buffer,
- 	int result;
- 	unsigned char cmd[16];
+diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
+index eba183c..80bfece 100644
+--- a/drivers/scsi/ses.c
++++ b/drivers/scsi/ses.c
+@@ -25,6 +25,7 @@
+ #include <linux/module.h>
+ #include <linux/kernel.h>
+ #include <linux/enclosure.h>
++#include <asm/unaligned.h>
  
-+	if (len < 4)
-+		return -EINVAL;
-+
- 	cmd[0] = INQUIRY;
- 	cmd[1] = 1;		/* EVPD */
- 	cmd[2] = page;
-@@ -982,7 +985,7 @@ static int scsi_vpd_inquiry(struct scsi_device *sdev, unsigned char *buffer,
- 	if (buffer[1] != page)
- 		return -EIO;
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_cmnd.h>
+@@ -448,27 +449,18 @@ static void ses_enclosure_data_process(struct enclosure_device *edev,
+ static void ses_match_to_enclosure(struct enclosure_device *edev,
+ 				   struct scsi_device *sdev)
+ {
+-	unsigned char *buf;
+ 	unsigned char *desc;
+-	unsigned int vpd_len;
+ 	struct efd efd = {
+ 		.addr = 0,
+ 	};
  
--	return 0;
-+	return get_unaligned_be16(&buffer[2]) + 4;
+-	buf = kmalloc(INIT_ALLOC_SIZE, GFP_KERNEL);
+-	if (!buf || scsi_get_vpd_page(sdev, 0x83, buf, INIT_ALLOC_SIZE))
+-		goto free;
+-
+ 	ses_enclosure_data_process(edev, to_scsi_device(edev->edev.parent), 0);
+ 
+-	vpd_len = ((buf[2] << 8) | buf[3]) + 4;
+-	kfree(buf);
+-	buf = kmalloc(vpd_len, GFP_KERNEL);
+-	if (!buf ||scsi_get_vpd_page(sdev, 0x83, buf, vpd_len))
+-		goto free;
++	if (!sdev->vpd_pg83_len)
++		return;
+ 
+-	desc = buf + 4;
+-	while (desc < buf + vpd_len) {
++	desc = sdev->vpd_pg83 + 4;
++	while (desc < sdev->vpd_pg83 + sdev->vpd_pg83_len) {
+ 		enum scsi_protocol proto = desc[0] >> 4;
+ 		u8 code_set = desc[0] & 0x0f;
+ 		u8 piv = desc[1] & 0x80;
+@@ -478,25 +470,15 @@ static void ses_match_to_enclosure(struct enclosure_device *edev,
+ 
+ 		if (piv && code_set == 1 && assoc == 1
+ 		    && proto == SCSI_PROTOCOL_SAS && type == 3 && len == 8)
+-			efd.addr = (u64)desc[4] << 56 |
+-				(u64)desc[5] << 48 |
+-				(u64)desc[6] << 40 |
+-				(u64)desc[7] << 32 |
+-				(u64)desc[8] << 24 |
+-				(u64)desc[9] << 16 |
+-				(u64)desc[10] << 8 |
+-				(u64)desc[11];
++			efd.addr = get_unaligned_be64(&desc[4]);
+ 
+ 		desc += len + 4;
+ 	}
+-	if (!efd.addr)
+-		goto free;
++	if (efd.addr) {
++		efd.dev = &sdev->sdev_gendev;
+ 
+-	efd.dev = &sdev->sdev_gendev;
+-
+-	enclosure_for_each_device(ses_enclosure_find_by_addr, &efd);
+- free:
+-	kfree(buf);
++		enclosure_for_each_device(ses_enclosure_find_by_addr, &efd);
++	}
  }
  
- /**
-@@ -1009,18 +1012,18 @@ int scsi_get_vpd_page(struct scsi_device *sdev, u8 page, unsigned char *buf,
- 
- 	/* Ask for all the pages supported by this device */
- 	result = scsi_vpd_inquiry(sdev, buf, 0, buf_len);
--	if (result)
-+	if (result < 4)
- 		goto fail;
- 
- 	/* If the user actually wanted this page, we can skip the rest */
- 	if (page == 0)
- 		return 0;
- 
--	for (i = 0; i < min((int)buf[3], buf_len - 4); i++)
--		if (buf[i + 4] == page)
-+	for (i = 4; i < min(result, buf_len); i++)
-+		if (buf[i] == page)
- 			goto found;
- 
--	if (i < buf[3] && i >= buf_len - 4)
-+	if (i < result && i >= buf_len)
- 		/* ran off the end of the buffer, give us benefit of doubt */
- 		goto found;
- 	/* The device claims it doesn't support the requested page */
-@@ -1028,7 +1031,7 @@ int scsi_get_vpd_page(struct scsi_device *sdev, u8 page, unsigned char *buf,
- 
-  found:
- 	result = scsi_vpd_inquiry(sdev, buf, page, buf_len);
--	if (result)
-+	if (result < 0)
- 		goto fail;
- 
- 	return 0;
+ static int ses_intf_add(struct device *cdev,
 -- 
 1.7.12.4
 
