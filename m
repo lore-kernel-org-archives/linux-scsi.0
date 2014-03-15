@@ -1,179 +1,225 @@
-From: Ben Hutchings <ben@decadent.org.uk>
-Subject: Bug#741686: linux-image-3.13-1-amd64: systemd-udevd kills long
- running mptsas module initailization, resulting in kernel oops
-Date: Sat, 15 Mar 2014 17:29:59 +0000
-Message-ID: <1394904599.15764.40.camel@deadeye.wl.decadent.org.uk>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 3.14-rc6
+Date: Sat, 15 Mar 2014 10:39:21 -0700
+Message-ID: <1394905161.2166.25.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-QEZQsM7UwKWA9u49nwW/"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:43425 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756219AbaCORaD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 15 Mar 2014 13:30:03 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: DL-MPTFusionLinux@lsi.com
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Tomas Cernaj <tcernaj@gmx.de>, 741686@bugs.debian.org
 
+This is a set of six fixes.  Two are instant crash/null deref types
+(storvsc and isci reset fixes). The two qla2xxx are initialisation
+problems that cause MSI-X failures and card misdetection, the isci
+erroneous macro is actually illegal C that's causing a miscompile with
+certain gcc versions and the be2iscsi bad if expression is a static
+checker fix. 
 
---=-QEZQsM7UwKWA9u49nwW/
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+The patch is available here:
 
-Tomas reports that mptsas can crash if probe is interrupted by a signal:
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-Tomas Cernaj <tcernaj@gmx.de> wrote:
-> Dear Maintainer,
->=20
-> after upgrading from linux-image-3.12 to 3.13, systemd-udevd kills the mp=
-tsas
-> module initialization during boot after 30 seconds while probing the SAS
-> hardware. As a consequence the system can't be booted. Kernel output is
-> attached as precision-boot.log.
->=20
-> I increased systemd's timeout to 45 seconds by adding "udevadm control
-> --timeout=3D45" directly after the daemon start in /usr/share/initramfs-
-> tools/scripts/init-top/udev and regenerating the initrd. This resulted in=
- the
-> kernel failing to load the mptsas module completely, but it could be load=
-ed
-> manually from the initramfs shell. The kernel output is attached in
-> dmesg_manual-load-mptsas-with-udev-timeout-45s.log.
->=20
-> I have a LSI SAS1068E controller with two SAS disks as RAID-0. The mptsas
-> driver normally takes about 30 seconds to initialize.
->=20
-> Kernel output follows. (Note: in this instance I manually added mptsas to=
- /etc
-> /initramfs-tools/modules, but the behavior was the same without this entr=
-y.
-> Also different from the normal boot is netconsole to capture the kernel
-> output.)
+The short changelog is:
 
-Quoting part of that log (full logs are at
-<https://bugs.debian.org/741686>):
+Ales Novak (1):
+      storvsc: NULL pointer dereference fix
 
-> [   32.392600] systemd-udevd[95]: timeout: killing '/sbin/modprobe -b pci=
-:v00001000d00000058sv00001028sd00001F0Ebc01sc00i00' [204]
-> [   33.419390] systemd-udevd[95]: timeout: killing '/sbin/modprobe -b pci=
-:v00001000d00000058sv00001028sd00001F0Ebc01sc00i00' [204]
-> [   33.422860] systemd-udevd[92]: worker [95] /devices/pci0000:20/0000:20=
-:09.0/0000:23:00.0 timeout; kill it
-> [   33.422867] systemd-udevd[92]: seq 688 '/devices/pci0000:20/0000:20:09=
-.0/0000:23:00.0' killed
-> [   33.473577] systemd-udevd[92]: worker [95] terminated by signal 9 (Kil=
-led)
-> [   33.488028] netpoll: netconsole: local port 6665
-> [   33.501909] netpoll: netconsole: local IPv4 address 192.168.1.20
-> [   33.516006] netpoll: netconsole: interface 'eth0'
-> [   33.530072] netpoll: netconsole: remote port 6666
-> [   33.544275] netpoll: netconsole: remote IPv4 address 192.168.1.128
-> [   33.558569] netpoll: netconsole: remote ethernet address ff:ff:ff:ff:f=
-f:ff
-> [   33.572813] netpoll: netconsole: device eth0 not up yet, forcing it
-> [   33.586981] tg3 0000:06:00.0: irq 91 for MSI/MSI-X
-> [   33.683276] IPv6: ADDRCONF(NETDEV_UP): eth0: link is not ready
-> [   34.091924] scsi6: error handler thread failed to spawn, error =3D -12
-> [   34.105904] mptsas: ioc0: WARNING - Unable to register controller with=
- SCSI subsystem
-> [   34.120160] BUG: unable to handle kernel NULL pointer dereference at 0=
-000000000000060
-> [   34.134430] IP: [<ffffffff814a5099>] mutex_lock+0x9/0x25
-> [   34.148658] PGD 0=20
-> [   34.162680] Oops: 0002 [#1] SMP=20
-> [   34.176706] Modules linked in: netconsole(+) configfs sg sr_mod cdrom =
-hid_generic usbhid hid mptsas(+) tg3 ahci scsi_transport_sas ptp mptscsih l=
-ibahci uhci_hcd ehci_pci libata mptbase ehci_hcd pps_core libphy scsi_mod u=
-sbcore usb_common
-> [   34.207141] CPU: 0 PID: 204 Comm: modprobe Tainted: G          I  3.13=
--1-amd64 #1 Debian 3.13.5-1
-> [   34.222620] Hardware name: Dell Inc. Precision WorkStation T5500  /0D8=
-83F, BIOS A05 04/12/2010
-> [   34.238232] task: ffff880312060010 ti: ffff880312126000 task.ti: ffff8=
-80312126000
-> [   34.253972] RIP: 0010:[<ffffffff814a5099>]  [<ffffffff814a5099>] mutex=
-_lock+0x9/0x25
-> [   34.270077] RSP: 0018:ffff880312127ba8  EFLAGS: 00010246
-> [   34.286124] RAX: 0000000000000000 RBX: 0000000000000060 RCX: 000000000=
-0001464
-> [   34.302018] RDX: 0000000000001464 RSI: 0000000000000046 RDI: 000000000=
-0000060
-> [   34.317456] RBP: 0000000000000060 R08: 0000000000000000 R09: 000000000=
-0000312
-> [   34.332672] R10: 000000000000000f R11: 0000000007070707 R12: ffff88031=
-6372000
-> [   34.347735] R13: ffff880316372098 R14: ffffffffa014a3f0 R15: 000000000=
-0000001
-> [   34.362525] FS:  00007fed06cf3700(0000) GS:ffff880323200000(0000) knlG=
-S:0000000000000000
-> [   34.377141] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-> [   34.391580] CR2: 0000000000000060 CR3: 000000031202a000 CR4: 000000000=
-00007f0
-> [   34.406043] Stack:
-> [   34.420328]  0000000000000000 ffffffffa019f4f3 0000000000000000 ffff88=
-0316051000
-> [   34.435163]  ffff880316372000 ffffffffa009c215 ffff880316051000 000000=
-00ffffffff
-> [   34.449977]  ffff880316372000 ffffffffa0146fa8 ffff880316372000 000000=
-0000000000
-> [   34.464604] Call Trace:
-> [   34.479035]  [<ffffffffa019f4f3>] ? scsi_remove_host+0x13/0x100 [scsi_=
-mod]
-> [   34.493578]  [<ffffffffa009c215>] ? mptscsih_remove+0x25/0x80 [mptscsi=
-h]
-> [   34.507795]  [<ffffffffa0146fa8>] ? mptsas_probe+0x398/0x4a0 [mptsas]
-> [   34.521684]  [<ffffffff812a0e8a>] ? local_pci_probe+0x3a/0xa0
-> [   34.535584]  [<ffffffff812a219a>] ? pci_device_probe+0xca/0x120
-> [   34.549436]  [<ffffffff81354c78>] ? driver_probe_device+0x68/0x220
-> [   34.562960]  [<ffffffff81354eeb>] ? __driver_attach+0x7b/0x80
-> [   34.576082]  [<ffffffff81354e70>] ? __device_attach+0x40/0x40
-> [   34.588726]  [<ffffffff81353033>] ? bus_for_each_dev+0x53/0x90
-> [   34.600982]  [<ffffffff81354430>] ? bus_add_driver+0x170/0x220
-> [   34.612910]  [<ffffffffa014d000>] ? 0xffffffffa014cfff
-> [   34.624691]  [<ffffffff81355486>] ? driver_register+0x56/0xd0
-> [   34.636367]  [<ffffffffa014d000>] ? 0xffffffffa014cfff
-> [   34.647907]  [<ffffffffa014d11a>] ? mptsas_init+0x11a/0x1000 [mptsas]
-> [   34.659558]  [<ffffffff81002162>] ? do_one_initcall+0x112/0x170
-> [   34.671205]  [<ffffffff810c6937>] ? load_module+0x1b07/0x23f0
-> [   34.682908]  [<ffffffff810c3530>] ? m_show+0x1c0/0x1c0
-> [   34.694597]  [<ffffffff810c734d>] ? SyS_finit_module+0x6d/0x70
-> [   34.706285]  [<ffffffff814adb39>] ? system_call_fastpath+0x16/0x1b
-> [   34.718018] Code: 00 00 48 89 e6 4c 89 f7 e8 35 56 bf ff e9 40 ff ff f=
-f b8 01 00 00 00 e9 87 fe ff ff 66 0f 1f 44 00 00 53 48 89 fb e8 57 e4 ff f=
-f <f0> ff 0b 79 08 48 89 df e8 3a fe ff ff 65 48 8b 04 25 40 c8 00=20
-> [   34.742873] RIP  [<ffffffff814a5099>] mutex_lock+0x9/0x25
-> [   34.754928]  RSP <ffff880312127ba8>
-> [   34.766735] CR2: 0000000000000060
-> [   34.778493] ---[ end trace 7cf83da47bb3f354 ]---
+Chad Dupuis (1):
+      qla2xxx: Fix multiqueue MSI-X registration.
 
---=20
-Ben Hutchings
-When you say `I wrote a program that crashed Windows', people just stare ..=
-.
-and say `Hey, I got those with the system, *for free*'. - Linus Torvalds
+Dan Williams (1):
+      isci: fix reset timeout handling
 
---=-QEZQsM7UwKWA9u49nwW/
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+Giridhar Malavali (1):
+      qla2xxx: Poll during initialization for ISP25xx and ISP83xx
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
+Lukasz Dorau (1):
+      isci: correct erroneous for_each_isci_host macro
 
-iQIUAwUAUySOF+e/yOyVhhEJAQo0Lg/46T42DwKskJUrouDK1roSRwG4pVwIyBF/
-ujgbLKb1+CR5Kmzi8x5QCw7ovq4sWNigBNX5O81mr2xN0ZIC+zJIs7yEvpryc/av
-IyFtAULzfMQ+plaTe5HELusbhpE04XQvKz/F28IN0qJZwF/QXCbHnqvazjCVtdzx
-+kFfPvmr6+MJhLLls3eg/PkG6WIuKeARsoiv6RcCDUWlH3/Ysyz/1cV9vQpIgAFN
-NLlJITCpzEldOeQrnzysI7DigqWeNqk2TXVipnq39DvG1opUIsSA6ws/4zTjD7ub
-cUwJJ1ZprKu2TSmrFXivi0hnbU6AtqTphrgE1KA6yRVvapgjK38XWjeFf11XLyva
-xJXNfGMICLRrB3I7FCCpmVtWLXHz3NO7TkCOcNbAFNtAx+M4deRbJ6vbHiaOC+j6
-BFPg1FahRiXoVbDbHr3LR0IaGPuVf5xCN9se4EyoiO6tsvXl7IH3UjQND7QRACTx
-8X8ZPoaeeRSmAuErlw1NMkkakMVcpZBtk49FZezhl3MEUmw8op7ZY7sJDhhSSEzb
-XVUbIliWbilD49AiN2H2secRwHLX7taBbFbN4PxT8Sd1ylgwLVOMCANu0iRlwYMb
-hJSlsDGCgYrQwvhxfH1MJsPgdlu9AQqkXHI9RmSQSC6mow6/GjggzDZ1kvD4F3b+
-fgPweA7hlw==
-=4e+I
------END PGP SIGNATURE-----
+Mike Christie (1):
+      be2iscsi: fix bad if expression
 
---=-QEZQsM7UwKWA9u49nwW/--
+The diffstat is:
+
+ drivers/scsi/be2iscsi/be_main.c |  2 +-
+ drivers/scsi/isci/host.h        |  5 ++---
+ drivers/scsi/isci/port_config.c |  7 -------
+ drivers/scsi/isci/task.c        |  2 +-
+ drivers/scsi/qla2xxx/qla_def.h  |  3 +--
+ drivers/scsi/qla2xxx/qla_isr.c  | 46 +++++++++++++++++++++++++++--------------
+ drivers/scsi/storvsc_drv.c      |  3 +++
+ 7 files changed, 38 insertions(+), 30 deletions(-)
+
+With the full diff below.
+
+James
+
+---
+
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index 1f37505..5642a9b 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -325,7 +325,7 @@ static int beiscsi_eh_device_reset(struct scsi_cmnd *sc)
+ 		if (!abrt_task->sc || abrt_task->state == ISCSI_TASK_FREE)
+ 			continue;
+ 
+-		if (abrt_task->sc->device->lun != abrt_task->sc->device->lun)
++		if (sc->device->lun != abrt_task->sc->device->lun)
+ 			continue;
+ 
+ 		/* Invalidate WRB Posted for this Task */
+diff --git a/drivers/scsi/isci/host.h b/drivers/scsi/isci/host.h
+index 4911310..22a9bb1 100644
+--- a/drivers/scsi/isci/host.h
++++ b/drivers/scsi/isci/host.h
+@@ -311,9 +311,8 @@ static inline struct Scsi_Host *to_shost(struct isci_host *ihost)
+ }
+ 
+ #define for_each_isci_host(id, ihost, pdev) \
+-	for (id = 0, ihost = to_pci_info(pdev)->hosts[id]; \
+-	     id < ARRAY_SIZE(to_pci_info(pdev)->hosts) && ihost; \
+-	     ihost = to_pci_info(pdev)->hosts[++id])
++	for (id = 0; id < SCI_MAX_CONTROLLERS && \
++	     (ihost = to_pci_info(pdev)->hosts[id]); id++)
+ 
+ static inline void wait_for_start(struct isci_host *ihost)
+ {
+diff --git a/drivers/scsi/isci/port_config.c b/drivers/scsi/isci/port_config.c
+index 85c77f6..ac87974 100644
+--- a/drivers/scsi/isci/port_config.c
++++ b/drivers/scsi/isci/port_config.c
+@@ -615,13 +615,6 @@ static void sci_apc_agent_link_up(struct isci_host *ihost,
+ 					  SCIC_SDS_APC_WAIT_LINK_UP_NOTIFICATION);
+ 	} else {
+ 		/* the phy is already the part of the port */
+-		u32 port_state = iport->sm.current_state_id;
+-
+-		/* if the PORT'S state is resetting then the link up is from
+-		 * port hard reset in this case, we need to tell the port
+-		 * that link up is recieved
+-		 */
+-		BUG_ON(port_state != SCI_PORT_RESETTING);
+ 		port_agent->phy_ready_mask |= 1 << phy_index;
+ 		sci_port_link_up(iport, iphy);
+ 	}
+diff --git a/drivers/scsi/isci/task.c b/drivers/scsi/isci/task.c
+index 0d30ca8..5d6fda7 100644
+--- a/drivers/scsi/isci/task.c
++++ b/drivers/scsi/isci/task.c
+@@ -801,7 +801,7 @@ int isci_task_I_T_nexus_reset(struct domain_device *dev)
+ 		/* XXX: need to cleanup any ireqs targeting this
+ 		 * domain_device
+ 		 */
+-		ret = TMF_RESP_FUNC_COMPLETE;
++		ret = -ENODEV;
+ 		goto out;
+ 	}
+ 
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index e1fe95e..266724b 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -2996,8 +2996,7 @@ struct qla_hw_data {
+ 				IS_QLA82XX(ha) || IS_QLA83XX(ha) || \
+ 				IS_QLA8044(ha))
+ #define IS_MSIX_NACK_CAPABLE(ha) (IS_QLA81XX(ha) || IS_QLA83XX(ha))
+-#define IS_NOPOLLING_TYPE(ha)	((IS_QLA25XX(ha) || IS_QLA81XX(ha) || \
+-			IS_QLA83XX(ha)) && (ha)->flags.msix_enabled)
++#define IS_NOPOLLING_TYPE(ha)	(IS_QLA81XX(ha) && (ha)->flags.msix_enabled)
+ #define IS_FAC_REQUIRED(ha)	(IS_QLA81XX(ha) || IS_QLA83XX(ha))
+ #define IS_NOCACHE_VPD_TYPE(ha)	(IS_QLA81XX(ha) || IS_QLA83XX(ha))
+ #define IS_ALOGIO_CAPABLE(ha)	(IS_QLA23XX(ha) || IS_FWI2_CAPABLE(ha))
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 9bc86b9..0a1dcb4 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -2880,6 +2880,7 @@ static int
+ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
+ {
+ #define MIN_MSIX_COUNT	2
++#define ATIO_VECTOR	2
+ 	int i, ret;
+ 	struct msix_entry *entries;
+ 	struct qla_msix_entry *qentry;
+@@ -2936,34 +2937,47 @@ msix_failed:
+ 	}
+ 
+ 	/* Enable MSI-X vectors for the base queue */
+-	for (i = 0; i < ha->msix_count; i++) {
++	for (i = 0; i < 2; i++) {
+ 		qentry = &ha->msix_entries[i];
+-		if (QLA_TGT_MODE_ENABLED() && IS_ATIO_MSIX_CAPABLE(ha)) {
+-			ret = request_irq(qentry->vector,
+-				qla83xx_msix_entries[i].handler,
+-				0, qla83xx_msix_entries[i].name, rsp);
+-		} else if (IS_P3P_TYPE(ha)) {
++		if (IS_P3P_TYPE(ha))
+ 			ret = request_irq(qentry->vector,
+ 				qla82xx_msix_entries[i].handler,
+ 				0, qla82xx_msix_entries[i].name, rsp);
+-		} else {
++		else
+ 			ret = request_irq(qentry->vector,
+ 				msix_entries[i].handler,
+ 				0, msix_entries[i].name, rsp);
+-		}
+-		if (ret) {
+-			ql_log(ql_log_fatal, vha, 0x00cb,
+-			    "MSI-X: unable to register handler -- %x/%d.\n",
+-			    qentry->vector, ret);
+-			qla24xx_disable_msix(ha);
+-			ha->mqenable = 0;
+-			goto msix_out;
+-		}
++		if (ret)
++			goto msix_register_fail;
+ 		qentry->have_irq = 1;
+ 		qentry->rsp = rsp;
+ 		rsp->msix = qentry;
+ 	}
+ 
++	/*
++	 * If target mode is enable, also request the vector for the ATIO
++	 * queue.
++	 */
++	if (QLA_TGT_MODE_ENABLED() && IS_ATIO_MSIX_CAPABLE(ha)) {
++		qentry = &ha->msix_entries[ATIO_VECTOR];
++		ret = request_irq(qentry->vector,
++			qla83xx_msix_entries[ATIO_VECTOR].handler,
++			0, qla83xx_msix_entries[ATIO_VECTOR].name, rsp);
++		qentry->have_irq = 1;
++		qentry->rsp = rsp;
++		rsp->msix = qentry;
++	}
++
++msix_register_fail:
++	if (ret) {
++		ql_log(ql_log_fatal, vha, 0x00cb,
++		    "MSI-X: unable to register handler -- %x/%d.\n",
++		    qentry->vector, ret);
++		qla24xx_disable_msix(ha);
++		ha->mqenable = 0;
++		goto msix_out;
++	}
++
+ 	/* Enable MSI-X vector for response queue update for queue 0 */
+ 	if (IS_QLA83XX(ha)) {
+ 		if (ha->msixbase && ha->mqiobase &&
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index 17d7404..9969fa1 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -1419,6 +1419,9 @@ static void storvsc_device_destroy(struct scsi_device *sdevice)
+ {
+ 	struct stor_mem_pools *memp = sdevice->hostdata;
+ 
++	if (!memp)
++		return;
++
+ 	mempool_destroy(memp->request_mempool);
+ 	kmem_cache_destroy(memp->request_pool);
+ 	kfree(memp);
