@@ -1,276 +1,40 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 1/6] scsi_sysfs: Implement 'is_visible' callback
-Date: Sat, 15 Mar 2014 09:51:47 +0100
-Message-ID: <1394873512-102073-2-git-send-email-hare@suse.de>
-References: <1394873512-102073-1-git-send-email-hare@suse.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:43222 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752039AbaCOIvz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 15 Mar 2014 04:51:55 -0400
-In-Reply-To: <1394873512-102073-1-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v17 3/4] ata: Add APM X-Gene SoC AHCI SATA host controller driver
+Date: Sat, 15 Mar 2014 10:01:40 +0100
+Message-ID: <201403151001.40400.arnd@arndb.de>
+References: <1394655573-32645-1-git-send-email-lho@apm.com> <201403142206.36611.arnd@arndb.de> <CAPw-ZTkk3n_6wh-bWnaMf0aL6mgZWxNH7Sf=J9ucv0uvH2trVw@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <CAPw-ZTkk3n_6wh-bWnaMf0aL6mgZWxNH7Sf=J9ucv0uvH2trVw@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Loc Ho <lho@apm.com>
+Cc: Olof Johansson <olof@lixom.net>, Tejun Heo <tj@kernel.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Don Dutile <ddutile@redhat.com>, Jon Masters <jcm@redhat.com>, "patches@apm.com" <patches@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-Instead of modifying attributes after the device has been created
-we should be using the 'is_visible' callback to avoid races.
+On Friday 14 March 2014, Loc Ho wrote:
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
----
- drivers/scsi/scsi_sysfs.c | 184 +++++++++++++++++++++++-----------------------
- 1 file changed, 93 insertions(+), 91 deletions(-)
+> > I still think it's rather unlikely that we will actually see ACPI support
+> > on your platform, btw.
+> >
+> > I'm willing to look at the patches you need for it, but I'm not very
+> > optimistic, in particular because of the kind of hacks you need
+> > for random bits of hardware.
+> >
+> 
+> I am about to post another version. Can you look at the next version?
+> If you still think it needs to be moved to the FW (either U-Boot or
+> Tianocore UEFI boot loader), I will then move out of the Linux driver
+> code.
 
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 9117d0b..196e59a 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -579,7 +579,6 @@ static int scsi_sdev_check_buf_bit(const char *buf)
-  * Create the actual show/store functions and data structures.
-  */
- sdev_rd_attr (device_blocked, "%d\n");
--sdev_rd_attr (queue_depth, "%d\n");
- sdev_rd_attr (device_busy, "%d\n");
- sdev_rd_attr (type, "%d\n");
- sdev_rd_attr (scsi_level, "%d\n");
-@@ -723,7 +722,37 @@ show_queue_type_field(struct device *dev, struct device_attribute *attr,
- 	return snprintf(buf, 20, "%s\n", name);
- }
- 
--static DEVICE_ATTR(queue_type, S_IRUGO, show_queue_type_field, NULL);
-+static ssize_t
-+store_queue_type_field(struct device *dev, struct device_attribute *attr,
-+		       const char *buf, size_t count)
-+{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	struct scsi_host_template *sht = sdev->host->hostt;
-+	int tag_type = 0, retval;
-+	int prev_tag_type = scsi_get_tag_type(sdev);
-+
-+	if (!sdev->tagged_supported || !sht->change_queue_type)
-+		return -EINVAL;
-+
-+	if (strncmp(buf, "ordered", 7) == 0)
-+		tag_type = MSG_ORDERED_TAG;
-+	else if (strncmp(buf, "simple", 6) == 0)
-+		tag_type = MSG_SIMPLE_TAG;
-+	else if (strncmp(buf, "none", 4) != 0)
-+		return -EINVAL;
-+
-+	if (tag_type == prev_tag_type)
-+		return count;
-+
-+	retval = sht->change_queue_type(sdev, tag_type);
-+	if (retval < 0)
-+		return retval;
-+
-+	return count;
-+}
-+
-+static DEVICE_ATTR(queue_type, S_IRUGO | S_IWUSR, show_queue_type_field,
-+		   store_queue_type_field);
- 
- static ssize_t
- show_iostat_counterbits(struct device *dev, struct device_attribute *attr, 				char *buf)
-@@ -797,46 +826,9 @@ DECLARE_EVT(soft_threshold_reached, SOFT_THRESHOLD_REACHED_REPORTED)
- DECLARE_EVT(mode_parameter_change_reported, MODE_PARAMETER_CHANGE_REPORTED)
- DECLARE_EVT(lun_change_reported, LUN_CHANGE_REPORTED)
- 
--/* Default template for device attributes.  May NOT be modified */
--static struct attribute *scsi_sdev_attrs[] = {
--	&dev_attr_device_blocked.attr,
--	&dev_attr_type.attr,
--	&dev_attr_scsi_level.attr,
--	&dev_attr_device_busy.attr,
--	&dev_attr_vendor.attr,
--	&dev_attr_model.attr,
--	&dev_attr_rev.attr,
--	&dev_attr_rescan.attr,
--	&dev_attr_delete.attr,
--	&dev_attr_state.attr,
--	&dev_attr_timeout.attr,
--	&dev_attr_eh_timeout.attr,
--	&dev_attr_iocounterbits.attr,
--	&dev_attr_iorequest_cnt.attr,
--	&dev_attr_iodone_cnt.attr,
--	&dev_attr_ioerr_cnt.attr,
--	&dev_attr_modalias.attr,
--	REF_EVT(media_change),
--	REF_EVT(inquiry_change_reported),
--	REF_EVT(capacity_change_reported),
--	REF_EVT(soft_threshold_reached),
--	REF_EVT(mode_parameter_change_reported),
--	REF_EVT(lun_change_reported),
--	NULL
--};
--
--static struct attribute_group scsi_sdev_attr_group = {
--	.attrs =	scsi_sdev_attrs,
--};
--
--static const struct attribute_group *scsi_sdev_attr_groups[] = {
--	&scsi_sdev_attr_group,
--	NULL
--};
--
- static ssize_t
--sdev_store_queue_depth_rw(struct device *dev, struct device_attribute *attr,
--			  const char *buf, size_t count)
-+sdev_store_queue_depth(struct device *dev, struct device_attribute *attr,
-+		       const char *buf, size_t count)
- {
- 	int depth, retval;
- 	struct scsi_device *sdev = to_scsi_device(dev);
-@@ -859,10 +851,10 @@ sdev_store_queue_depth_rw(struct device *dev, struct device_attribute *attr,
- 
- 	return count;
- }
-+sdev_show_function(queue_depth, "%d\n");
- 
--static struct device_attribute sdev_attr_queue_depth_rw =
--	__ATTR(queue_depth, S_IRUGO | S_IWUSR, sdev_show_queue_depth,
--	       sdev_store_queue_depth_rw);
-+static DEVICE_ATTR(queue_depth, S_IRUGO | S_IWUSR, sdev_show_queue_depth,
-+		   sdev_store_queue_depth);
- 
- static ssize_t
- sdev_show_queue_ramp_up_period(struct device *dev,
-@@ -890,40 +882,73 @@ sdev_store_queue_ramp_up_period(struct device *dev,
- 	return period;
- }
- 
--static struct device_attribute sdev_attr_queue_ramp_up_period =
--	__ATTR(queue_ramp_up_period, S_IRUGO | S_IWUSR,
--	       sdev_show_queue_ramp_up_period,
--	       sdev_store_queue_ramp_up_period);
-+static DEVICE_ATTR(queue_ramp_up_period, S_IRUGO | S_IWUSR,
-+		   sdev_show_queue_ramp_up_period,
-+		   sdev_store_queue_ramp_up_period);
- 
--static ssize_t
--sdev_store_queue_type_rw(struct device *dev, struct device_attribute *attr,
--			 const char *buf, size_t count)
-+static umode_t scsi_sdev_attr_is_visible(struct kobject *kobj,
-+					 struct attribute *attr, int i)
- {
-+	struct device *dev = container_of(kobj, struct device, kobj);
- 	struct scsi_device *sdev = to_scsi_device(dev);
--	struct scsi_host_template *sht = sdev->host->hostt;
--	int tag_type = 0, retval;
--	int prev_tag_type = scsi_get_tag_type(sdev);
- 
--	if (!sdev->tagged_supported || !sht->change_queue_type)
--		return -EINVAL;
- 
--	if (strncmp(buf, "ordered", 7) == 0)
--		tag_type = MSG_ORDERED_TAG;
--	else if (strncmp(buf, "simple", 6) == 0)
--		tag_type = MSG_SIMPLE_TAG;
--	else if (strncmp(buf, "none", 4) != 0)
--		return -EINVAL;
-+	if (attr == &dev_attr_queue_depth.attr &&
-+	    !sdev->host->hostt->change_queue_depth)
-+		return S_IRUGO;
- 
--	if (tag_type == prev_tag_type)
--		return count;
-+	if (attr == &dev_attr_queue_ramp_up_period.attr &&
-+	    !sdev->host->hostt->change_queue_depth)
-+		return 0;
- 
--	retval = sht->change_queue_type(sdev, tag_type);
--	if (retval < 0)
--		return retval;
-+	if (attr == &dev_attr_queue_type.attr &&
-+	    !sdev->host->hostt->change_queue_type)
-+		return S_IRUGO;
- 
--	return count;
-+	return attr->mode;
- }
- 
-+/* Default template for device attributes.  May NOT be modified */
-+static struct attribute *scsi_sdev_attrs[] = {
-+	&dev_attr_device_blocked.attr,
-+	&dev_attr_type.attr,
-+	&dev_attr_scsi_level.attr,
-+	&dev_attr_device_busy.attr,
-+	&dev_attr_vendor.attr,
-+	&dev_attr_model.attr,
-+	&dev_attr_rev.attr,
-+	&dev_attr_rescan.attr,
-+	&dev_attr_delete.attr,
-+	&dev_attr_state.attr,
-+	&dev_attr_timeout.attr,
-+	&dev_attr_eh_timeout.attr,
-+	&dev_attr_iocounterbits.attr,
-+	&dev_attr_iorequest_cnt.attr,
-+	&dev_attr_iodone_cnt.attr,
-+	&dev_attr_ioerr_cnt.attr,
-+	&dev_attr_modalias.attr,
-+	&dev_attr_queue_depth.attr,
-+	&dev_attr_queue_type.attr,
-+	&dev_attr_queue_ramp_up_period.attr,
-+	REF_EVT(media_change),
-+	REF_EVT(inquiry_change_reported),
-+	REF_EVT(capacity_change_reported),
-+	REF_EVT(soft_threshold_reached),
-+	REF_EVT(mode_parameter_change_reported),
-+	REF_EVT(lun_change_reported),
-+	NULL
-+};
-+
-+static struct attribute_group scsi_sdev_attr_group = {
-+	.attrs =	scsi_sdev_attrs,
-+	.is_visible =	scsi_sdev_attr_is_visible,
-+};
-+
-+static const struct attribute_group *scsi_sdev_attr_groups[] = {
-+	&scsi_sdev_attr_group,
-+	NULL
-+};
-+
- static int scsi_target_add(struct scsi_target *starget)
- {
- 	int error;
-@@ -946,10 +971,6 @@ static int scsi_target_add(struct scsi_target *starget)
- 	return 0;
- }
- 
--static struct device_attribute sdev_attr_queue_type_rw =
--	__ATTR(queue_type, S_IRUGO | S_IWUSR, show_queue_type_field,
--	       sdev_store_queue_type_rw);
--
- /**
-  * scsi_sysfs_add_sdev - add scsi device to sysfs
-  * @sdev:	scsi_device to add
-@@ -1003,25 +1024,6 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
- 	transport_add_device(&sdev->sdev_gendev);
- 	sdev->is_visible = 1;
- 
--	/* create queue files, which may be writable, depending on the host */
--	if (sdev->host->hostt->change_queue_depth) {
--		error = device_create_file(&sdev->sdev_gendev,
--					   &sdev_attr_queue_depth_rw);
--		error = device_create_file(&sdev->sdev_gendev,
--					   &sdev_attr_queue_ramp_up_period);
--	}
--	else
--		error = device_create_file(&sdev->sdev_gendev, &dev_attr_queue_depth);
--	if (error)
--		return error;
--
--	if (sdev->host->hostt->change_queue_type)
--		error = device_create_file(&sdev->sdev_gendev, &sdev_attr_queue_type_rw);
--	else
--		error = device_create_file(&sdev->sdev_gendev, &dev_attr_queue_type);
--	if (error)
--		return error;
--
- 	error = bsg_register_queue(rq, &sdev->sdev_gendev, NULL, NULL);
- 
- 	if (error)
--- 
-1.7.12.4
+I would certainly be happier if it could just be moved into the
+firmware or boot loader all the time. The only times we actually
+want to do this stuff in the kernel is when we can't trust the
+boot loader to get it right, or when the kernel has to support
+alternative configurations that the boot loader is not aware of,
+e.g. when you can plug in different kinds of extension boards but
+the boot loader doesn't know which one you have.
 
+	Arnd
