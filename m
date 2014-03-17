@@ -1,122 +1,74 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 16/39] virtio_scsi: use cmd_size
-Date: Mon, 17 Mar 2014 06:27:49 -0700
-Message-ID: <20140317133133.814453025@bombadil.infradead.org>
+Subject: [PATCH 10/39] scsi: remove a useless get/put_device pair in scsi_request_fn
+Date: Mon, 17 Mar 2014 06:27:43 -0700
+Message-ID: <20140317133132.975983240@bombadil.infradead.org>
 References: <20140317132733.789623766@bombadil.infradead.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=0016-virtio_scsi-use-cmd_size.patch
+Content-Disposition: inline; filename=0010-scsi-remove-a-useless-get-put_device-pair-in-scsi_re.patch
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Paolo Bonzini <pbonzini@redhat.com>
+Cc: Bart Van Assche <bvanassche@acm.org>, Tejun Heo <tj@kernel.org>, Hannes Reinecke <hare@suse.de>, Mike Christie <michaelc@cs.wisc.edu>
 List-Id: linux-scsi@vger.kernel.org
 
-Taken almost entirely from Nicholas Bellinger's scsi-mq conversion.
+SCSI devices may only be removed by calling scsi_remove_device().
+That function must invoke blk_cleanup_queue() before the final put
+of sdev->sdev_gendev. Since blk_cleanup_queue() waits for the
+block queue to drain and then tears it down, scsi_request_fn cannot
+be active anymore after blk_cleanup_queue() has returned and hence
+the get_device()/put_device() pair in scsi_request_fn is unnecessary.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Acked-by: Paolo Bonzini <pbonzini@redhat.com>
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+Acked-by: Tejun Heo <tj@kernel.org>
+Acked-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- drivers/scsi/virtio_scsi.c |   25 +++++++------------------
- include/scsi/scsi_cmnd.h   |    9 +++++++++
- 2 files changed, 16 insertions(+), 18 deletions(-)
+ drivers/scsi/scsi_lib.c |   14 +++-----------
+ 1 file changed, 3 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-index 16bfd50..5ec4a73 100644
---- a/drivers/scsi/virtio_scsi.c
-+++ b/drivers/scsi/virtio_scsi.c
-@@ -204,7 +204,6 @@ static void virtscsi_complete_cmd(struct virtio_scsi *vscsi, void *buf)
- 			set_driver_byte(sc, DRIVER_SENSE);
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index f8a77d8..a6d5525 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1558,16 +1558,14 @@ static void scsi_softirq_done(struct request *rq)
+  * Lock status: IO request lock assumed to be held when called.
+  */
+ static void scsi_request_fn(struct request_queue *q)
++	__releases(q->queue_lock)
++	__acquires(q->queue_lock)
+ {
+ 	struct scsi_device *sdev = q->queuedata;
+ 	struct Scsi_Host *shost;
+ 	struct scsi_cmnd *cmd;
+ 	struct request *req;
+ 
+-	if(!get_device(&sdev->sdev_gendev))
+-		/* We must be tearing the block queue down already */
+-		return;
+-
+ 	/*
+ 	 * To start with, we keep looping until the queue is empty, or until
+ 	 * the host is no longer able to accept any more requests.
+@@ -1656,7 +1654,7 @@ static void scsi_request_fn(struct request_queue *q)
+ 			goto out_delay;
  	}
  
--	mempool_free(cmd, virtscsi_cmd_pool);
- 	sc->scsi_done(sc);
+-	goto out;
++	return;
  
- 	atomic_dec(&tgt->reqs);
-@@ -279,8 +278,6 @@ static void virtscsi_complete_free(struct virtio_scsi *vscsi, void *buf)
- 
- 	if (cmd->comp)
- 		complete_all(cmd->comp);
--	else
--		mempool_free(cmd, virtscsi_cmd_pool);
- }
- 
- static void virtscsi_ctrl_done(struct virtqueue *vq)
-@@ -496,10 +493,9 @@ static int virtscsi_queuecommand(struct virtio_scsi *vscsi,
- 				 struct virtio_scsi_vq *req_vq,
- 				 struct scsi_cmnd *sc)
- {
--	struct virtio_scsi_cmd *cmd;
--	int ret;
--
- 	struct Scsi_Host *shost = virtio_scsi_host(vscsi->vdev);
-+	struct virtio_scsi_cmd *cmd = scsi_cmd_priv(sc);
-+
- 	BUG_ON(scsi_sg_count(sc) > shost->sg_tablesize);
- 
- 	/* TODO: check feature bit and fail if unsupported?  */
-@@ -508,11 +504,6 @@ static int virtscsi_queuecommand(struct virtio_scsi *vscsi,
- 	dev_dbg(&sc->device->sdev_gendev,
- 		"cmd %p CDB: %#02x\n", sc, sc->cmnd[0]);
- 
--	ret = SCSI_MLQUEUE_HOST_BUSY;
--	cmd = mempool_alloc(virtscsi_cmd_pool, GFP_ATOMIC);
--	if (!cmd)
--		goto out;
--
- 	memset(cmd, 0, sizeof(*cmd));
- 	cmd->sc = sc;
- 	cmd->req.cmd = (struct virtio_scsi_cmd_req){
-@@ -531,13 +522,9 @@ static int virtscsi_queuecommand(struct virtio_scsi *vscsi,
- 
- 	if (virtscsi_kick_cmd(req_vq, cmd,
- 			      sizeof cmd->req.cmd, sizeof cmd->resp.cmd,
--			      GFP_ATOMIC) == 0)
--		ret = 0;
--	else
--		mempool_free(cmd, virtscsi_cmd_pool);
--
+  not_ready:
+ 	spin_unlock_irq(shost->host_lock);
+@@ -1675,12 +1673,6 @@ static void scsi_request_fn(struct request_queue *q)
+ out_delay:
+ 	if (sdev->device_busy == 0)
+ 		blk_delay_queue(q, SCSI_QUEUE_DELAY);
 -out:
--	return ret;
-+			      GFP_ATOMIC) != 0)
-+		return SCSI_MLQUEUE_HOST_BUSY;
-+	return 0;
+-	/* must be careful here...if we trigger the ->remove() function
+-	 * we cannot be holding the q lock */
+-	spin_unlock_irq(q->queue_lock);
+-	put_device(&sdev->sdev_gendev);
+-	spin_lock_irq(q->queue_lock);
  }
  
- static int virtscsi_queuecommand_single(struct Scsi_Host *sh,
-@@ -683,6 +670,7 @@ static struct scsi_host_template virtscsi_host_template_single = {
- 	.name = "Virtio SCSI HBA",
- 	.proc_name = "virtio_scsi",
- 	.this_id = -1,
-+	.cmd_size = sizeof(struct virtio_scsi_cmd),
- 	.queuecommand = virtscsi_queuecommand_single,
- 	.eh_abort_handler = virtscsi_abort,
- 	.eh_device_reset_handler = virtscsi_device_reset,
-@@ -699,6 +687,7 @@ static struct scsi_host_template virtscsi_host_template_multi = {
- 	.name = "Virtio SCSI HBA",
- 	.proc_name = "virtio_scsi",
- 	.this_id = -1,
-+	.cmd_size = sizeof(struct virtio_scsi_cmd),
- 	.queuecommand = virtscsi_queuecommand_multi,
- 	.eh_abort_handler = virtscsi_abort,
- 	.eh_device_reset_handler = virtscsi_device_reset,
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index dd7c998..e016e2a 100644
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -133,6 +133,15 @@ struct scsi_cmnd {
- 	unsigned char tag;	/* SCSI-II queued command tag */
- };
- 
-+/*
-+ * Return the driver private allocation behind the command.
-+ * Only works if cmd_size is set in the host template.
-+ */
-+static inline void *scsi_cmd_priv(struct scsi_cmnd *cmd)
-+{
-+	return cmd + 1;
-+}
-+
- /* make sure not to use it with REQ_TYPE_BLOCK_PC commands */
- static inline struct scsi_driver *scsi_cmd_to_driver(struct scsi_cmnd *cmd)
- {
+ u64 scsi_calculate_bounce_limit(struct Scsi_Host *shost)
 -- 
 1.7.10.4
