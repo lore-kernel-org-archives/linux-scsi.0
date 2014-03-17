@@ -1,7 +1,7 @@
 From: Sagi Grimberg <sagig@mellanox.com>
-Subject: [PATCH 3/4] Target/iser: Move check signature status to a function
-Date: Mon, 17 Mar 2014 12:52:18 +0200
-Message-ID: <1395053539-31314-4-git-send-email-sagig@mellanox.com>
+Subject: [PATCH 4/4] Target/dif: Introduce protection-passthough-only mode
+Date: Mon, 17 Mar 2014 12:52:19 +0200
+Message-ID: <1395053539-31314-5-git-send-email-sagig@mellanox.com>
 References: <1395053539-31314-1-git-send-email-sagig@mellanox.com>
 Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1395053539-31314-1-git-send-email-sagig@mellanox.com>
@@ -10,163 +10,84 @@ To: nab@linux-iscsi.org
 Cc: oren@mellanox.com, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Remove code duplication from RDMA_READ and RDMA_WRITE
-completions that do basically the same check.
+Some transports (iSCSI/iSER/SRP/FC) support INSERT/STRIP
+capabilities while other transports like loopback/vhost-scsi
+currently don't support these operations (maybe will never do)
+These transports will set protection-passthrough-only
+(prot_pto) bit in the se_cmd structure.
 
 Signed-off-by: Sagi Grimberg <sagig@mellanox.com>
 ---
- drivers/infiniband/ulp/isert/ib_isert.c |  115 +++++++++++++-----------------
- 1 files changed, 50 insertions(+), 65 deletions(-)
+ drivers/target/loopback/tcm_loop.c     |    4 ++++
+ drivers/target/target_core_sbc.c       |    3 +++
+ drivers/target/target_core_transport.c |   13 -------------
+ include/target/target_core_base.h      |    1 +
+ 4 files changed, 8 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/infiniband/ulp/isert/ib_isert.c b/drivers/infiniband/ulp/isert/ib_isert.c
-index faec224..e2d48a9 100644
---- a/drivers/infiniband/ulp/isert/ib_isert.c
-+++ b/drivers/infiniband/ulp/isert/ib_isert.c
-@@ -1657,6 +1657,50 @@ isert_completion_put(struct iser_tx_desc *tx_desc, struct isert_cmd *isert_cmd,
- 	isert_put_cmd(isert_cmd);
- }
+diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
+index fadad7c..1c45195 100644
+--- a/drivers/target/loopback/tcm_loop.c
++++ b/drivers/target/loopback/tcm_loop.c
+@@ -212,6 +212,10 @@ static void tcm_loop_submission_work(struct work_struct *work)
+ 		se_cmd->se_cmd_flags |= SCF_BIDI;
  
-+static int
-+isert_check_pi_status(struct se_cmd *se_cmd, struct ib_mr *sig_mr)
-+{
-+	struct ib_mr_status mr_status;
-+	int ret;
+ 	}
 +
-+	ret = ib_check_mr_status(sig_mr, IB_MR_CHECK_SIG_STATUS, &mr_status);
-+	if (ret) {
-+		pr_err("ib_check_mr_status failed, ret %d\n", ret);
-+		goto fail_mr_status;
-+	}
++	if (scsi_get_prot_op(sc) != SCSI_PROT_NORMAL)
++		se_cmd->prot_pto = true;
 +
-+	if (mr_status.fail_status & IB_MR_CHECK_SIG_STATUS) {
-+		u64 sec_offset_err;
-+		u32 block_size = se_cmd->se_dev->dev_attrib.block_size + 8;
-+
-+		switch (mr_status.sig_err.err_type) {
-+		case IB_SIG_BAD_GUARD:
-+			se_cmd->pi_err = TCM_LOGICAL_BLOCK_GUARD_CHECK_FAILED;
-+			break;
-+		case IB_SIG_BAD_REFTAG:
-+			se_cmd->pi_err = TCM_LOGICAL_BLOCK_REF_TAG_CHECK_FAILED;
-+			break;
-+		case IB_SIG_BAD_APPTAG:
-+			se_cmd->pi_err = TCM_LOGICAL_BLOCK_APP_TAG_CHECK_FAILED;
-+			break;
-+		}
-+		sec_offset_err = mr_status.sig_err.sig_err_offset;
-+		do_div(sec_offset_err, block_size);
-+		se_cmd->bad_sector = sec_offset_err + se_cmd->t_task_lba;
-+
-+		pr_err("isert: PI error found type %d at sector 0x%llx "
-+		       "expected 0x%x vs actual 0x%x\n",
-+		       mr_status.sig_err.err_type,
-+		       (unsigned long long)se_cmd->bad_sector,
-+		       mr_status.sig_err.expected,
-+		       mr_status.sig_err.actual);
-+		ret = 1;
-+	}
-+
-+fail_mr_status:
-+	return ret;
-+}
-+
- static void
- isert_completion_rdma_write(struct iser_tx_desc *tx_desc,
- 			    struct isert_cmd *isert_cmd)
-@@ -1666,44 +1710,14 @@ isert_completion_rdma_write(struct iser_tx_desc *tx_desc,
- 	struct se_cmd *se_cmd = &cmd->se_cmd;
- 	struct isert_conn *isert_conn = isert_cmd->conn;
- 	struct isert_device *device = isert_conn->conn_device;
--	struct ib_mr_status mr_status;
- 	int ret = 0;
+ 	rc = target_submit_cmd_map_sgls(se_cmd, tl_nexus->se_sess, sc->cmnd,
+ 			&tl_cmd->tl_sense_buf[0], tl_cmd->sc->device->lun,
+ 			scsi_bufflen(sc), tcm_loop_sam_attr(sc),
+diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
+index b64a62c..62daef5 100644
+--- a/drivers/target/target_core_sbc.c
++++ b/drivers/target/target_core_sbc.c
+@@ -634,6 +634,9 @@ sbc_check_prot(struct se_device *dev, struct se_cmd *cmd, unsigned char *cdb,
+ {
+ 	u8 protect = cdb[1] >> 5;
  
- 	if (wr->fr_desc && wr->fr_desc->ind & ISERT_PROTECTED) {
--		ret = ib_check_mr_status(wr->fr_desc->pi_ctx->sig_mr,
--					 IB_MR_CHECK_SIG_STATUS, &mr_status);
--		if (ret) {
--			pr_err("ib_check_mr_status failed, ret %d\n", ret);
--			goto fail_mr_status;
--		}
--		if (mr_status.fail_status & IB_MR_CHECK_SIG_STATUS) {
--			u32 block_size = se_cmd->se_dev->dev_attrib.block_size + 8;
--
--			switch (mr_status.sig_err.err_type) {
--			case IB_SIG_BAD_GUARD:
--				se_cmd->pi_err = TCM_LOGICAL_BLOCK_GUARD_CHECK_FAILED;
--				break;
--			case IB_SIG_BAD_REFTAG:
--				se_cmd->pi_err = TCM_LOGICAL_BLOCK_REF_TAG_CHECK_FAILED;
--				break;
--			case IB_SIG_BAD_APPTAG:
--				se_cmd->pi_err = TCM_LOGICAL_BLOCK_APP_TAG_CHECK_FAILED;
--				break;
--			}
--			se_cmd->bad_sector = mr_status.sig_err.sig_err_offset;
--			do_div(se_cmd->bad_sector, block_size);
--
--			pr_err("isert: PI error found type %d at sector 0x%llx "
--			       "expected 0x%x vs actual 0x%x\n",
--			       mr_status.sig_err.err_type,
--			       (unsigned long long)se_cmd->bad_sector,
--			       mr_status.sig_err.expected,
--			       mr_status.sig_err.actual);
--			ret = 1;
--		}
-+		ret = isert_check_pi_status(se_cmd,
-+					    wr->fr_desc->pi_ctx->sig_mr);
-+		wr->fr_desc->ind &= ~ISERT_PROTECTED;
++	if ((!cmd->t_prot_sg || !cmd->t_prot_nents) && cmd->prot_pto)
++		return true;
++
+ 	switch (dev->dev_attrib.pi_prot_type) {
+ 	case TARGET_DIF_TYPE3_PROT:
+ 		cmd->reftag_seed = 0xffffffff;
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index fb7fac5..0a359fa 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -1382,19 +1382,6 @@ int target_submit_cmd_map_sgls(struct se_cmd *se_cmd, struct se_session *se_sess
  	}
  
--fail_mr_status:
- 	device->unreg_rdma_mem(isert_cmd, isert_conn);
- 	wr->send_wr_num = 0;
- 	if (ret)
-@@ -1722,43 +1736,14 @@ isert_completion_rdma_read(struct iser_tx_desc *tx_desc,
- 	struct se_cmd *se_cmd = &cmd->se_cmd;
- 	struct isert_conn *isert_conn = isert_cmd->conn;
- 	struct isert_device *device = isert_conn->conn_device;
--	struct ib_mr_status mr_status;
- 	int ret;
- 
- 	if (wr->fr_desc && wr->fr_desc->ind & ISERT_PROTECTED) {
--		ret = ib_check_mr_status(wr->fr_desc->pi_ctx->sig_mr,
--					 IB_MR_CHECK_SIG_STATUS, &mr_status);
--		if (ret) {
--			pr_err("ib_check_mr_status failed, ret %d\n", ret);
--			goto fail_mr_status;
--		}
--		if (mr_status.fail_status & IB_MR_CHECK_SIG_STATUS) {
--			u32 block_size = se_cmd->se_dev->dev_attrib.block_size + 8;
+ 	/*
+-	 * Fail if protection operation requiers protection
+-	 * information buffers but None are provided!
+-	 */
+-	if ((!se_cmd->t_prot_sg || !se_cmd->t_prot_nents) &&
+-	    (se_cmd->prot_op != TARGET_PROT_NORMAL)) {
+-		pr_err("ERROR: protection information was requested but "
+-		       "protection buffers weren't provided.\n");
+-		transport_generic_request_failure(se_cmd,
+-						  TCM_INVALID_CDB_FIELD);
+-		return 0;
+-	}
 -
--			switch (mr_status.sig_err.err_type) {
--			case IB_SIG_BAD_GUARD:
--				se_cmd->pi_err = TCM_LOGICAL_BLOCK_GUARD_CHECK_FAILED;
--				break;
--			case IB_SIG_BAD_REFTAG:
--				se_cmd->pi_err = TCM_LOGICAL_BLOCK_REF_TAG_CHECK_FAILED;
--				break;
--			case IB_SIG_BAD_APPTAG:
--				se_cmd->pi_err = TCM_LOGICAL_BLOCK_APP_TAG_CHECK_FAILED;
--				break;
--			}
--			se_cmd->bad_sector = mr_status.sig_err.sig_err_offset;
--			do_div(se_cmd->bad_sector, block_size);
--
--			pr_err("isert: PI error found type %d at sector 0x%llx "
--			       "expected 0x%x vs actual 0x%x\n",
--			       mr_status.sig_err.err_type,
--			       (unsigned long long)se_cmd->bad_sector,
--			       mr_status.sig_err.expected,
--			       mr_status.sig_err.actual);
--		}
-+		ret = isert_check_pi_status(se_cmd,
-+					    wr->fr_desc->pi_ctx->sig_mr);
-+		wr->fr_desc->ind &= ~ISERT_PROTECTED;
- 	}
+-	/*
+ 	 * When a non zero sgl_count has been passed perform SGL passthrough
+ 	 * mapping for pre-allocated fabric memory instead of having target
+ 	 * core perform an internal SGL allocation..
+diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
+index 344fd05..f13fd09 100644
+--- a/include/target/target_core_base.h
++++ b/include/target/target_core_base.h
+@@ -564,6 +564,7 @@ struct se_cmd {
+ 	unsigned int		t_prot_nents;
+ 	sense_reason_t		pi_err;
+ 	sector_t		bad_sector;
++	bool			prot_pto;
+ };
  
--fail_mr_status:
- 	iscsit_stop_dataout_timer(cmd);
- 	device->unreg_rdma_mem(isert_cmd, isert_conn);
- 	cmd->write_data_done = wr->data.len;
+ struct se_ua {
 -- 
 1.7.1
