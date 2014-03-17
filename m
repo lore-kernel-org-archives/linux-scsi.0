@@ -1,30 +1,24 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [RFCv2 4/7] vhost/scsi: Add T10 PI IOV -> SGL memory mapping logic
-Date: Mon, 17 Mar 2014 05:32:58 +0000
-Message-ID: <1395034381-656-5-git-send-email-nab@daterainc.com>
+Subject: [RFCv2 1/7] virtio-scsi.h: Add virtio_scsi_cmd_req_pi header definition
+Date: Mon, 17 Mar 2014 05:32:55 +0000
+Message-ID: <1395034381-656-2-git-send-email-nab@daterainc.com>
 References: <1395034381-656-1-git-send-email-nab@daterainc.com>
-Return-path: <kvm-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1395034381-656-1-git-send-email-nab@daterainc.com>
-Sender: kvm-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, kvm-devel <kvm@vger.kernel.org>, "Michael S. Tsirkin" <mst@redhat.com>, Paolo Bonzini <pbonzini@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Sagi Grimberg <sagig@mellanox.com>, "H. Peter Anvin" <hpa@zytor.com>, Nicholas Bellinger <nab@linux-iscsi.org>, Sagi Grimberg <sagig@dev.mellanox.co.il>
 List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch adds vhost_scsi_map_iov_to_prot() to perform the mapping of
-T10 data integrity memory between virtio iov + struct scatterlist using
-get_user_pages_fast() following existing code.
+This patch adds a virtio_scsi_cmd_req_pi header as recommened by
+Paolo that contains do_pi_niov + di_pi_niov elements used for
+signaling when protection information buffers are expected to
+preceed the data buffers.
 
-As with vhost_scsi_map_iov_to_sgl(), this does sanity checks against the
-total prot_sgl_count vs. pre-allocated SGLs, and loops across protection
-iovs using vhost_scsi_map_to_sgl() to perform the actual memory mapping.
-
-Also update tcm_vhost_release_cmd() to release associated tvc_prot_sgl[]
-struct page.
-
-Cc: Michael S. Tsirkin <mst@redhat.com>
 Cc: Paolo Bonzini <pbonzini@redhat.com>
+Cc: Michael S. Tsirkin <mst@redhat.com>
 Cc: Martin K. Petersen <martin.petersen@oracle.com>
 Cc: Christoph Hellwig <hch@lst.de>
 Cc: Hannes Reinecke <hare@suse.de>
@@ -32,87 +26,37 @@ Cc: Sagi Grimberg <sagig@dev.mellanox.co.il>
 Cc: H. Peter Anvin <hpa@zytor.com>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/vhost/scsi.c |   48 +++++++++++++++++++++++++++++++++++++++++++++++-
- 1 files changed, 47 insertions(+), 1 deletions(-)
+ include/linux/virtio_scsi.h |   14 +++++++++++++-
+ 1 files changed, 13 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
-index a2cb289..f720709 100644
---- a/drivers/vhost/scsi.c
-+++ b/drivers/vhost/scsi.c
-@@ -80,6 +80,7 @@ struct tcm_vhost_cmd {
- 	u64 tvc_tag;
- 	/* The number of scatterlists associated with this cmd */
- 	u32 tvc_sgl_count;
-+	u32 tvc_prot_sgl_count;
- 	/* Saved unpacked SCSI LUN for tcm_vhost_submission_work() */
- 	u32 tvc_lun;
- 	/* Pointer to the SGL formatted memory from virtio-scsi */
-@@ -458,12 +459,16 @@ static void tcm_vhost_release_cmd(struct se_cmd *se_cmd)
- 	struct tcm_vhost_cmd *tv_cmd = container_of(se_cmd,
- 				struct tcm_vhost_cmd, tvc_se_cmd);
- 	struct se_session *se_sess = se_cmd->se_sess;
-+	int i;
+diff --git a/include/linux/virtio_scsi.h b/include/linux/virtio_scsi.h
+index 4195b97..4dc5998 100644
+--- a/include/linux/virtio_scsi.h
++++ b/include/linux/virtio_scsi.h
+@@ -35,11 +35,23 @@ struct virtio_scsi_cmd_req {
+ 	u8 lun[8];		/* Logical Unit Number */
+ 	u64 tag;		/* Command identifier */
+ 	u8 task_attr;		/* Task attribute */
+-	u8 prio;
++	u8 prio;		/* SAM command priority field */
+ 	u8 crn;
+ 	u8 cdb[VIRTIO_SCSI_CDB_SIZE];
+ } __packed;
  
- 	if (tv_cmd->tvc_sgl_count) {
--		u32 i;
- 		for (i = 0; i < tv_cmd->tvc_sgl_count; i++)
- 			put_page(sg_page(&tv_cmd->tvc_sgl[i]));
- 	}
-+	if (tv_cmd->tvc_prot_sgl_count) {
-+		for (i = 0; i < tv_cmd->tvc_prot_sgl_count; i++)
-+			put_page(sg_page(&tv_cmd->tvc_prot_sgl[i]));
-+	}
- 
- 	tcm_vhost_put_inflight(tv_cmd->inflight);
- 	percpu_ida_free(&se_sess->sess_tag_pool, se_cmd->map_tag);
-@@ -856,6 +861,47 @@ vhost_scsi_map_iov_to_sgl(struct tcm_vhost_cmd *cmd,
- 	return 0;
- }
- 
-+static int
-+vhost_scsi_map_iov_to_prot(struct tcm_vhost_cmd *cmd,
-+			   struct iovec *iov,
-+			   int niov,
-+			   bool write)
-+{
-+	struct scatterlist *prot_sg = cmd->tvc_prot_sgl;
-+	unsigned int prot_sgl_count = 0;
-+	int ret, i;
++/* SCSI command request, followed by protection information */
++struct virtio_scsi_cmd_req_pi {
++	u8 lun[8];		/* Logical Unit Number */
++	u64 tag;		/* Command identifier */
++	u8 task_attr;		/* Task attribute */
++	u8 prio;		/* SAM command priority field */
++	u8 crn;
++	u16 do_pi_niov;		/* DataOUT PI Number of iovecs */
++	u16 di_pi_niov;		/* DataIN PI Number of iovecs */
++	u8 cdb[VIRTIO_SCSI_CDB_SIZE];
++} __packed;
 +
-+	for (i = 0; i < niov; i++)
-+		prot_sgl_count += iov_num_pages(&iov[i]);
-+
-+	if (prot_sgl_count > TCM_VHOST_PREALLOC_PROT_SGLS) {
-+		pr_err("vhost_scsi_map_iov_to_prot() sgl_count: %u greater than"
-+			" preallocated TCM_VHOST_PREALLOC_PROT_SGLS: %u\n",
-+			prot_sgl_count, TCM_VHOST_PREALLOC_PROT_SGLS);
-+		return -ENOBUFS;
-+	}
-+
-+	pr_debug("%s prot_sg %p prot_sgl_count %u\n", __func__,
-+		 prot_sg, prot_sgl_count);
-+	sg_init_table(prot_sg, prot_sgl_count);
-+	cmd->tvc_prot_sgl_count = prot_sgl_count;
-+
-+	for (i = 0; i < niov; i++) {
-+		ret = vhost_scsi_map_to_sgl(cmd, prot_sg, prot_sgl_count, &iov[i],
-+					    cmd->tvc_upages, write);
-+		if (ret < 0) {
-+			for (i = 0; i < cmd->tvc_prot_sgl_count; i++)
-+				put_page(sg_page(&cmd->tvc_prot_sgl[i]));
-+
-+			cmd->tvc_prot_sgl_count = 0;
-+			return ret;
-+		}
-+		prot_sg += ret;
-+		prot_sgl_count -= ret;
-+	}
-+	return 0;
-+}
-+
- static void tcm_vhost_submission_work(struct work_struct *work)
- {
- 	struct tcm_vhost_cmd *cmd =
+ /* Response, followed by sense data and data-in */
+ struct virtio_scsi_cmd_resp {
+ 	u32 sense_len;		/* Sense data length */
 -- 
 1.7.2.5
-
