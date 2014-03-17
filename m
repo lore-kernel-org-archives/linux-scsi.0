@@ -1,62 +1,144 @@
-From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [RFCv2 1/7] virtio-scsi.h: Add virtio_scsi_cmd_req_pi header definition
-Date: Mon, 17 Mar 2014 05:32:55 +0000
-Message-ID: <1395034381-656-2-git-send-email-nab@daterainc.com>
-References: <1395034381-656-1-git-send-email-nab@daterainc.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1395034381-656-1-git-send-email-nab@daterainc.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, kvm-devel <kvm@vger.kernel.org>, "Michael S. Tsirkin" <mst@redhat.com>, Paolo Bonzini <pbonzini@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Sagi Grimberg <sagig@mellanox.com>, "H. Peter Anvin" <hpa@zytor.com>, Nicholas Bellinger <nab@linux-iscsi.org>, Sagi Grimberg <sagig@dev.mellanox.co.il>
+From: Or Gerlitz <or.gerlitz-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH v2 11/13] SCSI/libiscsi: Add check_protection callback for transports
+Date: Mon, 17 Mar 2014 09:25:35 +0200
+Message-ID: <CAJZOPZ+DtO7AqMgFJqm7uz2zwxk5Gs__J10qHhwB0RbAxzYTkQ@mail.gmail.com>
+References: <1394041431-28399-1-git-send-email-sagig@mellanox.com>
+	<1394041431-28399-12-git-send-email-sagig@mellanox.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1394041431-28399-12-git-send-email-sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
+Cc: Roland Dreier <roland-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Nicholas A. Bellinger" <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Mike Christie <MChristie-5c4llco8/ftWk0Htik3J/w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+On Wed, Mar 5, 2014 at 7:43 PM, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org> wrote:
+>
+> iSCSI needs to be at least aware that a task involves protection
+> information. In case it does, after the transaction completed
+> libiscsi will ask the transport to check the protection status
+> of the transaction.
+>
+> Unlike transport errors, DIF errors should not prevent successful
+> completion of the transaction from the transport point of view,
+> but should be escelated to scsi mid-layer when constructing the
+> scsi result and sense data.
+>
+> check_protection routine will return the ascq corresponding to the
+> DIF error that occured (or 0 if no error happened).
+>
+> return ascq:
+> - 0x1: GUARD_CHECK_FAILED
+> - 0x2: APPTAG_CHECK_FAILED
+> - 0x3: REFTAG_CHECK_FAILED
 
-This patch adds a virtio_scsi_cmd_req_pi header as recommened by
-Paolo that contains do_pi_niov + di_pi_niov elements used for
-signaling when protection information buffers are expected to
-preceed the data buffers.
+Hi Mike, just to remove doubt, this patch is OK with you, right? can
+you please ack it, so we know we're all good for the 3.15 merge window
 
-Cc: Paolo Bonzini <pbonzini@redhat.com>
-Cc: Michael S. Tsirkin <mst@redhat.com>
-Cc: Martin K. Petersen <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Cc: H. Peter Anvin <hpa@zytor.com>
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
----
- include/linux/virtio_scsi.h |   14 +++++++++++++-
- 1 files changed, 13 insertions(+), 1 deletions(-)
+Or.
 
-diff --git a/include/linux/virtio_scsi.h b/include/linux/virtio_scsi.h
-index 4195b97..4dc5998 100644
---- a/include/linux/virtio_scsi.h
-+++ b/include/linux/virtio_scsi.h
-@@ -35,11 +35,23 @@ struct virtio_scsi_cmd_req {
- 	u8 lun[8];		/* Logical Unit Number */
- 	u64 tag;		/* Command identifier */
- 	u8 task_attr;		/* Task attribute */
--	u8 prio;
-+	u8 prio;		/* SAM command priority field */
- 	u8 crn;
- 	u8 cdb[VIRTIO_SCSI_CDB_SIZE];
- } __packed;
- 
-+/* SCSI command request, followed by protection information */
-+struct virtio_scsi_cmd_req_pi {
-+	u8 lun[8];		/* Logical Unit Number */
-+	u64 tag;		/* Command identifier */
-+	u8 task_attr;		/* Task attribute */
-+	u8 prio;		/* SAM command priority field */
-+	u8 crn;
-+	u16 do_pi_niov;		/* DataOUT PI Number of iovecs */
-+	u16 di_pi_niov;		/* DataIN PI Number of iovecs */
-+	u8 cdb[VIRTIO_SCSI_CDB_SIZE];
-+} __packed;
-+
- /* Response, followed by sense data and data-in */
- struct virtio_scsi_cmd_resp {
- 	u32 sense_len;		/* Sense data length */
--- 
-1.7.2.5
+>
+> Signed-off-by: Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+> Signed-off-by: Alex Tabachnik <alext-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+> ---
+>  drivers/scsi/libiscsi.c             |   32 ++++++++++++++++++++++++++++++++
+>  include/scsi/libiscsi.h             |    4 ++++
+>  include/scsi/scsi_transport_iscsi.h |    1 +
+>  3 files changed, 37 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+> index 4046241..3c11acf 100644
+> --- a/drivers/scsi/libiscsi.c
+> +++ b/drivers/scsi/libiscsi.c
+> @@ -395,6 +395,10 @@ static int iscsi_prep_scsi_cmd_pdu(struct iscsi_task *task)
+>                 if (rc)
+>                         return rc;
+>         }
+> +
+> +       if (scsi_get_prot_op(sc) != SCSI_PROT_NORMAL)
+> +               task->protected = true;
+> +
+>         if (sc->sc_data_direction == DMA_TO_DEVICE) {
+>                 unsigned out_len = scsi_out(sc)->length;
+>                 struct iscsi_r2t_info *r2t = &task->unsol_r2t;
+> @@ -823,6 +827,33 @@ static void iscsi_scsi_cmd_rsp(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+>
+>         sc->result = (DID_OK << 16) | rhdr->cmd_status;
+>
+> +       if (task->protected) {
+> +               sector_t sector;
+> +               u8 ascq;
+> +
+> +               /**
+> +                * Transports that didn't implement check_protection
+> +                * callback but still published T10-PI support to scsi-mid
+> +                * deserve this BUG_ON.
+> +                **/
+> +               BUG_ON(!session->tt->check_protection);
+> +
+> +               ascq = session->tt->check_protection(task, &sector);
+> +               if (ascq) {
+> +                       sc->result = DRIVER_SENSE << 24 |
+> +                                    SAM_STAT_CHECK_CONDITION;
+> +                       scsi_build_sense_buffer(1, sc->sense_buffer,
+> +                                               ILLEGAL_REQUEST, 0x10, ascq);
+> +                       sc->sense_buffer[7] = 0xc; /* Additional sense length */
+> +                       sc->sense_buffer[8] = 0;   /* Information desc type */
+> +                       sc->sense_buffer[9] = 0xa; /* Additional desc length */
+> +                       sc->sense_buffer[10] = 0x80; /* Validity bit */
+> +
+> +                       put_unaligned_be64(sector, &sc->sense_buffer[12]);
+> +                       goto out;
+> +               }
+> +       }
+> +
+>         if (rhdr->response != ISCSI_STATUS_CMD_COMPLETED) {
+>                 sc->result = DID_ERROR << 16;
+>                 goto out;
+> @@ -1567,6 +1598,7 @@ static inline struct iscsi_task *iscsi_alloc_task(struct iscsi_conn *conn,
+>         task->have_checked_conn = false;
+>         task->last_timeout = jiffies;
+>         task->last_xfer = jiffies;
+> +       task->protected = false;
+>         INIT_LIST_HEAD(&task->running);
+>         return task;
+>  }
+> diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
+> index 309f513..1457c26 100644
+> --- a/include/scsi/libiscsi.h
+> +++ b/include/scsi/libiscsi.h
+> @@ -133,6 +133,10 @@ struct iscsi_task {
+>         unsigned long           last_xfer;
+>         unsigned long           last_timeout;
+>         bool                    have_checked_conn;
+> +
+> +       /* T10 protection information */
+> +       bool                    protected;
+> +
+>         /* state set/tested under session->lock */
+>         int                     state;
+>         atomic_t                refcount;
+> diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
+> index 88640a4..2555ee5 100644
+> --- a/include/scsi/scsi_transport_iscsi.h
+> +++ b/include/scsi/scsi_transport_iscsi.h
+> @@ -167,6 +167,7 @@ struct iscsi_transport {
+>                                  struct iscsi_bus_flash_conn *fnode_conn);
+>         int (*logout_flashnode_sid) (struct iscsi_cls_session *cls_sess);
+>         int (*get_host_stats) (struct Scsi_Host *shost, char *buf, int len);
+> +       u8 (*check_protection)(struct iscsi_task *task, sector_t *sector);
+>  };
+>
+>  /*
+> --
+> 1.7.1
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
