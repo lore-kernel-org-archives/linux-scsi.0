@@ -1,161 +1,113 @@
-From: Oleg Nesterov <oleg@redhat.com>
-Subject: Re: [v3.13][v3.14][Regression] kthread: make
-	kthread_create()killable
-Date: Mon, 17 Mar 2014 15:22:46 +0100
-Message-ID: <20140317142246.GA27453@redhat.com>
-References: <53236AA2.7030105@canonical.com> <201403150943.BIH30251.FOQLOOtFJHSMVF@I-love.SAKURA.ne.jp> <201403170013.GJF86930.FtVOOQOHLFFMSJ@I-love.SAKURA.ne.jp> <20140316162512.GA9467@redhat.com> <201403172138.GFB43278.OOOFFSQLVHJMtF@I-love.SAKURA.ne.jp>
+From: Josh Boyer <jwboyer@fedoraproject.org>
+Subject: DMA-API mapping errors in vmw_pvscsi
+Date: Mon, 17 Mar 2014 12:52:02 -0400
+Message-ID: <CA+5PVA5CmTJSjaikwtTTLwp1dLwFkYpXVr56ASA4t5n8ESRmOA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <201403172138.GFB43278.OOOFFSQLVHJMtF@I-love.SAKURA.ne.jp>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, "James E.J. Bottomley" <JBottomley@parallels.com>, Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>, Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
-Cc: rientjes@google.com, akpm@linux-foundation.org, joseph.salisbury@canonical.com, torvalds@linux-foundation.org, tj@kernel.org, tglx@linutronix.de, linux-kernel@vger.kernel.org, kernel-team@lists.ubuntu.com, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ob0-f169.google.com ([209.85.214.169]:53650 "EHLO
+	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753117AbaCQQwD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Mar 2014 12:52:03 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Arvind Kumar <arvindkumar@vmware.com>, VMware PV-Drivers <pv-drivers@vmware.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Linux-Kernel@Vger. Kernel. Org" <linux-kernel@vger.kernel.org>
 
-On 03/17, Tetsuo Handa wrote:
->
-> Oleg Nesterov wrote:
-> >
-> > Personally I really dislike this hack. And btw, why we return -ENOMEM if
-> > SIGKILL'ed? Why not EINTR ?
->
-> I chose -ENOMEM because -ENOMEM looked better for conveying that current thread
-> was SIGKILLed by the OOM killer in order to solve no memory state. But I forgot
-> that -ENOMEM will not convey the reason properly if current thread was
-> SIGKILLed by other than the OOM killer. Maybe
->
->   return test_tsk_thread_flag(current, TIF_MEMDIE) ? -ENOMEM : -EINTR;
->
-> rather than
->
->   return -ENOMEM;
+Hi All,
 
-Why complicate the things? Following this logic you can change you
-can change almost every user of, say, fatal_signal_pending() to take
-TIF_MEMDIE into account. For what? Just return -EINTR.
+We've had a few reports[1][2] now on the vmw_pvscsi driver throwing
+DMA-API mapping errors when the DMA_API_DEBUG option is enabled.  I've
+included one from a recent 3.14-rc6 kernel below.  Looking at
+vmw_pvscsi.c, I can see pvscsi_map_buffers is missing the calls to
+pci_dma_mapping_error, which is what causes the warnings to be thrown.
 
-> > > Commit 786235ee "kthread: make kthread_create() killable" changed to
-> > > leave kthread_create() as soon as receiving SIGKILL. But this change
-> > > caused boot failures if systemd-udevd received SIGKILL (probably due
-> > > to timeout) while loading SCSI controller drivers using
-> > > finit_module() [1].
-> >
-> > Shouldn't we fix the caller instead? It should handle the error from
-> > kthread_create() correctly.
-> >
-> > And could you tell who is the caller which doesn't do this? If it can't
-> > be fixed, then, say, it can use workqueue to create a kernel thread.
-> >
->
-> There are many callers.
+However, I'm not familiar with this driver and I can't see what the
+proper error path should be in this case.  pvscsi_map_buffers is a
+void function and doesn't currently have the ability to return an
+error to the caller.  Even if it did, I'm not sure what the proper
+response to an error should be.  Thoughts?
 
-Who else? I mean, who else doesn't handle SIGKILL correctly ?
+josh
 
-> One of them is scsi_host_alloc() which is called
-> upon bootup in order to recognize SCSI storage devices.
->
-> To my surprise, systemd-udevd process sends SIGKILL to worker systemd-udevd
-> processes if they did not complete their jobs within 30 seconds. On some
-> machines, it takes more than 30 seconds to recognize SCSI storage devices.
->
-> On such machines, scsi_host_alloc() is called after the worker process
-> received SIGKILL. Since commit 786235ee "kthread: make kthread_create()
-> killable" broke all callers of kthread_create() who had been able to survive
-> SIGKILL,
+[    2.962772] ------------[ cut here ]------------
+[    2.963764] WARNING: CPU: 1 PID: 6 at lib/dma-debug.c:1140
+check_unmap+0x4ee/0x9e0()
+[    2.965382] vmw_pvscsi 0000:03:00.0: DMA-API: device driver failed
+to check map error[device address=0x0000000078520f80] [size=96 bytes]
+[mapped as single]
+[    2.968214] Modules linked in:
+[    2.968897]  vmwgfx(+) ttm drm ata_generic vmw_pvscsi(+) i2c_core pata_acpi
+[    2.970302] CPU: 1 PID: 6 Comm: kworker/u4:0 Not tainted
+3.14.0-0.rc6.git4.1.fc21.x86_64 #1
+[    2.972028] Hardware name: VMware, Inc. VMware Virtual
+Platform/440BX Desktop Reference Platform, BIOS 6.00 07/30/2013
+[    2.974230] Workqueue: events_unbound async_run_entry_fn
+[    2.975375]  0000000000000000 000000003e328dbc ffff88007fc03bf0
+ffffffff817d19a8
+[    2.977032]  ffff88007fc03c38 ffff88007fc03c28 ffffffff8109671d
+ffff88007bf63540
+[    2.978694]  ffff88007bc52e50 ffffffff82d74a90 0000000000000082
+ffffffff81a2cce8
+[    2.980352] Call Trace:
+[    2.980882]  <IRQ>  [<ffffffff817d19a8>] dump_stack+0x4d/0x66
+[    2.982147]  [<ffffffff8109671d>] warn_slowpath_common+0x7d/0xa0
+[    2.983398]  [<ffffffff8109679c>] warn_slowpath_fmt+0x5c/0x80
+[    2.984606]  [<ffffffff813f5bfe>] check_unmap+0x4ee/0x9e0
+[    2.985731]  [<ffffffff813f6160>] debug_dma_unmap_page+0x70/0x90
+[    2.986981]  [<ffffffffa00196e3>]
+pvscsi_unmap_buffers.isra.12+0x123/0x200 [vmw_pvscsi]
+[    2.988635]  [<ffffffffa00198c6>]
+pvscsi_process_completion_ring+0x106/0x2f0 [vmw_pvscsi]
+[    2.990325]  [<ffffffffa0019b64>] pvscsi_isr+0x34/0xa0 [vmw_pvscsi]
+[    2.991631]  [<ffffffff8110e26e>] handle_irq_event_percpu+0x3e/0x370
+[    2.992952]  [<ffffffff8110e5dd>] handle_irq_event+0x3d/0x60
+[    2.994129]  [<ffffffff811112c7>] handle_edge_irq+0x77/0x130
+[    2.995320]  [<ffffffff8101dd6f>] handle_irq+0xbf/0x150
+[    2.996413]  [<ffffffff8109da62>] ? irq_enter+0x42/0x90
+[    2.997514]  [<ffffffff817e7b0f>] do_IRQ+0x4f/0xf0
+[    2.998521]  [<ffffffff817db8f2>] common_interrupt+0x72/0x72
+[    2.999703]  <EOI>  [<ffffffff817dabab>] ?
+_raw_spin_unlock_irqrestore+0x3b/0x70
+[    3.001587]  [<ffffffffa001a7c0>] pvscsi_queue+0x130/0x840 [vmw_pvscsi]
+[    3.002970]  [<ffffffff8151cbe0>] ?
+ftrace_raw_event_scsi_dispatch_cmd_error+0x220/0x220
+[    3.004681]  [<ffffffff8151d2f7>] scsi_dispatch_cmd+0xb7/0x4e0
+[    3.006095]  [<ffffffff8152575c>] scsi_request_fn+0x33c/0x540
+[    3.007299]  [<ffffffff81396003>] __blk_run_queue+0x33/0x40
+[    3.008464]  [<ffffffff813a0799>] blk_execute_rq_nowait+0xa9/0x140
+[    3.009751]  [<ffffffff813a0993>] blk_execute_rq+0x133/0x1e0
+[    3.010954]  [<ffffffff81272639>] ? bio_phys_segments+0x19/0x20
+[    3.012195]  [<ffffffff8139bbb2>] ? blk_rq_bio_prep+0x72/0xf0
+[    3.013393]  [<ffffffff81524207>] scsi_execute+0xd7/0x160
+[    3.014523]  [<ffffffff81525a4c>] scsi_execute_req_flags+0x8c/0x100
+[    3.015833]  [<ffffffff81527f95>] scsi_probe_and_add_lun+0x235/0xc50
+[    3.036404]  [<ffffffff8150943c>] ? __pm_runtime_resume+0x5c/0x90
+[    3.037679]  [<ffffffff81528e70>] __scsi_scan_target+0x110/0x6d0
+[    3.038936]  [<ffffffff817daba6>] ? _raw_spin_unlock_irqrestore+0x36/0x70
+[    3.040345]  [<ffffffff810f8b45>] ? trace_hardirqs_on_caller+0x105/0x1d0
+[    3.041741]  [<ffffffff810f8c1d>] ? trace_hardirqs_on+0xd/0x10
+[    3.042957]  [<ffffffff815295a6>] scsi_scan_channel.part.6+0x66/0x90
+[    3.044288]  [<ffffffff81529769>] scsi_scan_host_selected+0xf9/0x1c0
+[    3.045773]  [<ffffffff815298c1>] do_scsi_scan_host+0x91/0xa0
+[    3.046977]  [<ffffffff81529a9c>] do_scan_async+0x1c/0x160
+[    3.048125]  [<ffffffff810cc629>] async_run_entry_fn+0x39/0x120
+[    3.049358]  [<ffffffff810bba30>] process_one_work+0x220/0x6f0
+[    3.050572]  [<ffffffff810bb9c4>] ? process_one_work+0x1b4/0x6f0
+[    3.051822]  [<ffffffff810bc01b>] worker_thread+0x11b/0x3a0
+[    3.052987]  [<ffffffff810bbf00>] ? process_one_work+0x6f0/0x6f0
+[    3.054239]  [<ffffffff810c43bf>] kthread+0xff/0x120
+[    3.055285]  [<ffffffff810c42c0>] ? insert_kthread_work+0x80/0x80
+[    3.056558]  [<ffffffff817e577c>] ret_from_fork+0x7c/0xb0
+[    3.057686]  [<ffffffff810c42c0>] ? insert_kthread_work+0x80/0x80
+[    3.058954] ---[ end trace df8f36ebf71b314f ]---
+[    3.059922] Mapped at:
+[    3.060431]  [<ffffffff813f4821>] debug_dma_map_page+0x91/0x140
+[    3.061699]  [<ffffffffa001a911>] pvscsi_queue+0x281/0x840 [vmw_pvscsi]
+[    3.063105]  [<ffffffff8151d2f7>] scsi_dispatch_cmd+0xb7/0x4e0
+[    3.064351]  [<ffffffff8152575c>] scsi_request_fn+0x33c/0x540
+[    3.065607]  [<ffffffff81396003>] __blk_run_queue+0x33/0x40
 
-Well. I do not know if user-space should be blamed or not. But. The worker
-process was killed, the kernel has all rights to check signal_pending() at
-any moment and return to user-mode. Even if we change kthread_create() to
-ignore SIGKILL it still can fail.
 
-And probably there is a bug in the driver. IIUC, the probe hangs, the task
-is killed after 30 seconds, I'd say it should not even call scsi_host_alloc()
-in this case.
-
-
-Lets look at https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1276705
-I do not understand what happens and I know nothing about drivers, scsci,
-but https://launchpadlibrarian.net/165067008/console.log shows
-
-	[   36.539955] scsi4: error handler thread failed to spawn, error = -12
-
-OK, scsi_host_alloc() fails. But it can fail due to another reason,
-
-	[   36.552694] mptsas: ioc0: WARNING - Unable to register controller with SCSI subsystem
-
-mptsas_probe() goes to out_mptsas_probe,
-
-	[   36.569962] BUG: unable to handle kernel NULL pointer dereference at 0000000000000060
-	[   36.573954] IP: [<ffffffff8170fe52>] mutex_lock+0x12/0x2f
-	[   36.573954] PGD 368dd067 PUD 368de067 PMD 0
-	[   36.573954] Oops: 0002 [#1] SMP
-	[   36.573954] Modules linked in: tg3 hid_generic ptp usbhid mptsas(+) mptscsih hid mptbase pps_core scsi_transport_sas
-	[   36.573954] CPU: 1 PID: 130 Comm: systemd-udevd Not tainted 3.13.0-6-generic #23-Ubuntu
-	[   36.573954] Hardware name: Dell Inc. PowerEdge R300/0TY179, BIOS 1.5.2 11/02/2010
-	[   36.573954] task: ffff88003689b000 ti: ffff8800368e8000 task.ti: ffff8800368e8000
-	[   36.573954] RIP: 0010:[<ffffffff8170fe52>]  [<ffffffff8170fe52>] mutex_lock+0x12/0x2f
-	[   36.573954] RSP: 0018:ffff8800368e9b10  EFLAGS: 00010246
-	[   36.573954] RAX: 0000000000000000 RBX: 0000000000000060 RCX: 0000000000000dac
-	[   36.573954] RDX: 000000000000229c RSI: 00000000229e229c RDI: 0000000000000060
-	[   36.573954] RBP: ffff8800368e9b18 R08: 0000000000000086 R09: 00000000000002ac
-	[   36.573954] R10: ffffffff8185a460 R11: ffff8800368e98ae R12: 0000000000000060
-	[   36.573954] R13: ffff880223c4b000 R14: ffff880223c4b098 R15: ffffffffa00953a0
-	[   36.573954] FS:  00007f22a26a1880(0000) GS:ffff88022fc80000(0000) knlGS:0000000000000000
-	[   36.573954] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-	[   36.573954] CR2: 0000000000000060 CR3: 00000000368dc000 CR4: 00000000000407e0
-	[   36.573954] Stack:
-	[   36.573954]  0000000000000000 ffff8800368e9b40 ffffffff814c851d ffff880220153000
-	[   36.573954]  0000000000000000 ffff880223c4b000 ffff8800368e9b70 ffffffffa007d2a1
-	[   36.573954]  ffff880220153000 00000000ffffffff ffff880223c4b000 ffff880223c4b098
-	[   36.573954] Call Trace:
-	[   36.573954]  [<ffffffff814c851d>] scsi_remove_host+0x1d/0x120
-	[   36.573954]  [<ffffffffa007d2a1>] mptscsih_remove+0x31/0xc0 [mptscsih]
-	[   36.573954]  [<ffffffffa008f259>] mptsas_probe+0x419/0x5a0 [mptsas]
-
-and why the error path should OOPS? I think this should be fixed?
-
-> I think fixing this regression at kthread_create() is the appropriate
-> response.
-
-I still can't understand why do you think we should "fix" kthread_create().
-
-> Given that said, which one do we prefer?
->
->   (a) Wait for completion forever after receiving SIGKILL, unless chosen
->       by the OOM killer.
->
->   (b) Wait for completion for only limited duration after receiving SIGKILL.
-
-Personally I dislike both. It should either react to SIGKILL or not, in the
-latter case it would be better to revert this patch, imho.
-
-If we need the urgent hack to fix the regression, then I suggest to change
-scsi_host_alloc() temporary until mptsas (or whatever) is fixed.
-
-Oleg.
-
---- x/drivers/scsi/hosts.c
-+++ x/drivers/scsi/hosts.c
-@@ -447,8 +447,18 @@ struct Scsi_Host *scsi_host_alloc(struct
- 	dev_set_name(&shost->shost_dev, "host%d", shost->host_no);
- 	shost->shost_dev.groups = scsi_sysfs_shost_attr_groups;
- 
--	shost->ehandler = kthread_run(scsi_error_handler, shost,
--			"scsi_eh_%d", shost->host_no);
-+	/*
-+	 * HUGE COMMENT. and kthread_create() needs s/ENOMEM/EINTR/.
-+	 */
-+	for (;;) {
-+		shost->ehandler = kthread_run(scsi_error_handler, shost,
-+						"scsi_eh_%d", shost->host_no);
-+		if (!IS_ERR(shost->ehandler) || PTR_ERR(shost->ehandler) != -EINTR)
-+			break;
-+		clear_thread_flag(TIF_SIGPENDING);
-+	}
-+	recalc_sigpending();
-+
- 	if (IS_ERR(shost->ehandler)) {
- 		printk(KERN_WARNING "scsi%d: error handler thread failed to spawn, error = %ld\n",
- 			shost->host_no, PTR_ERR(shost->ehandler));
+[1] https://bugzilla.redhat.com/show_bug.cgi?id=926917
+[2] https://bugzilla.redhat.com/show_bug.cgi?id=1077118
