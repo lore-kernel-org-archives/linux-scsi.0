@@ -1,196 +1,199 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 19/39] scsi: push host_lock down into scsi_{host,target}_queue_ready
-Date: Mon, 17 Mar 2014 06:27:52 -0700
-Message-ID: <20140317133134.266945660@bombadil.infradead.org>
+Subject: [PATCH 18/39] scsi: remove scsi_end_request
+Date: Mon, 17 Mar 2014 06:27:51 -0700
+Message-ID: <20140317133134.155110080@bombadil.infradead.org>
 References: <20140317132733.789623766@bombadil.infradead.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=0019-scsi-push-host_lock-down-into-scsi_-host-target-_que.patch
+Content-Disposition: inline; filename=0018-scsi-remove-scsi_end_request.patch
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Prepare for not taking a host-wide lock in the dispatch path by pushing
-the lock down into the places that actually need it.  Note that this
-patch is just a preparation step, as it will actually increase lock
-roundtrips and thus decrease performance on its own.
+By folding scsi_end_request into its only caller we can significantly clean
+up the completion logic.  We can use simple goto labels now to only have
+a single place to finish or requeue command there instead of the previous
+convoluted logic.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/scsi_lib.c |   75 ++++++++++++++++++++++++-----------------------
- 1 file changed, 39 insertions(+), 36 deletions(-)
+ drivers/scsi/scsi_lib.c |  114 +++++++++++++----------------------------------
+ 1 file changed, 32 insertions(+), 82 deletions(-)
 
 diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 0bcb7c4..a549044 100644
+index 3012700..0bcb7c4 100644
 --- a/drivers/scsi/scsi_lib.c
 +++ b/drivers/scsi/scsi_lib.c
-@@ -1273,18 +1273,18 @@ static inline int scsi_dev_queue_ready(struct request_queue *q,
- /*
-  * scsi_target_queue_ready: checks if there we can send commands to target
-  * @sdev: scsi device on starget to check.
-- *
-- * Called with the host lock held.
-  */
- static inline int scsi_target_queue_ready(struct Scsi_Host *shost,
- 					   struct scsi_device *sdev)
- {
- 	struct scsi_target *starget = scsi_target(sdev);
-+	int ret = 0;
- 
-+	spin_lock_irq(shost->host_lock);
- 	if (starget->single_lun) {
- 		if (starget->starget_sdev_user &&
- 		    starget->starget_sdev_user != sdev)
--			return 0;
-+			goto out;
- 		starget->starget_sdev_user = sdev;
- 	}
- 
-@@ -1292,57 +1292,66 @@ static inline int scsi_target_queue_ready(struct Scsi_Host *shost,
- 		/*
- 		 * unblock after target_blocked iterates to zero
- 		 */
--		if (--starget->target_blocked == 0) {
--			SCSI_LOG_MLQUEUE(3, starget_printk(KERN_INFO, starget,
--					 "unblocking target at zero depth\n"));
--		} else
--			return 0;
-+		if (--starget->target_blocked != 0)
-+			goto out;
-+
-+		SCSI_LOG_MLQUEUE(3, starget_printk(KERN_INFO, starget,
-+				 "unblocking target at zero depth\n"));
- 	}
- 
- 	if (scsi_target_is_busy(starget)) {
- 		list_move_tail(&sdev->starved_entry, &shost->starved_list);
--		return 0;
-+		goto out;
- 	}
- 
--	return 1;
-+	scsi_target(sdev)->target_busy++;
-+	ret = 1;
-+out:
-+	spin_unlock_irq(shost->host_lock);
-+	return ret;
+@@ -511,66 +511,6 @@ void scsi_run_host_queues(struct Scsi_Host *shost)
+ 		scsi_run_queue(sdev->request_queue);
  }
  
- /*
-  * scsi_host_queue_ready: if we can send requests to shost, return 1 else
-  * return 0. We must end up running the queue again whenever 0 is
-  * returned, else IO can hang.
+-/*
+- * Function:    scsi_end_request()
 - *
-- * Called with host_lock held.
-  */
- static inline int scsi_host_queue_ready(struct request_queue *q,
- 				   struct Scsi_Host *shost,
- 				   struct scsi_device *sdev)
- {
-+	int ret = 0;
-+
-+	spin_lock_irq(shost->host_lock);
-+
- 	if (scsi_host_in_recovery(shost))
--		return 0;
-+		goto out;
- 	if (shost->host_busy == 0 && shost->host_blocked) {
- 		/*
- 		 * unblock after host_blocked iterates to zero
- 		 */
--		if (--shost->host_blocked == 0) {
--			SCSI_LOG_MLQUEUE(3,
--				printk("scsi%d unblocking host at zero depth\n",
--					shost->host_no));
--		} else {
--			return 0;
+- * Purpose:     Post-processing of completed commands (usually invoked at end
+- *		of upper level post-processing and scsi_io_completion).
+- *
+- * Arguments:   cmd	 - command that is complete.
+- *              error    - 0 if I/O indicates success, < 0 for I/O error.
+- *              bytes    - number of bytes of completed I/O
+- *		requeue  - indicates whether we should requeue leftovers.
+- *
+- * Lock status: Assumed that lock is not held upon entry.
+- *
+- * Returns:     cmd if requeue required, NULL otherwise.
+- *
+- * Notes:       This is called for block device requests in order to
+- *              mark some number of sectors as complete.
+- * 
+- *		We are guaranteeing that the request queue will be goosed
+- *		at some point during this call.
+- * Notes:	If cmd was requeued, upon return it will be a stale pointer.
+- */
+-static struct scsi_cmnd *scsi_end_request(struct scsi_cmnd *cmd, int error,
+-					  int bytes, int requeue)
+-{
+-	struct request_queue *q = cmd->device->request_queue;
+-	struct request *req = cmd->request;
+-
+-	/*
+-	 * If there are blocks left over at the end, set up the command
+-	 * to queue the remainder of them.
+-	 */
+-	if (blk_end_request(req, error, bytes)) {
+-		/* kill remainder if no retrys */
+-		if (error && scsi_noretry_cmd(cmd))
+-			blk_end_request_all(req, error);
+-		else {
+-			if (requeue) {
+-				/*
+-				 * Bleah.  Leftovers again.  Stick the
+-				 * leftovers in the front of the
+-				 * queue, and goose the queue again.
+-				 */
+-				scsi_release_buffers(cmd);
+-				scsi_requeue_command(q, cmd);
+-				cmd = NULL;
+-			}
+-			return cmd;
 -		}
-+		if (--shost->host_blocked != 0)
-+			goto out;
+-	}
+-
+-	/*
+-	 * This will goose the queue request function at the end, so we don't
+-	 * need to worry about launching another command.
+-	 */
+-	scsi_release_buffers(cmd);
+-	scsi_next_command(cmd);
+-	return NULL;
+-}
+-
+ static inline unsigned int scsi_sgtable_index(unsigned short nents)
+ {
+ 	unsigned int index;
+@@ -716,16 +656,9 @@ static int __scsi_error_from_host_byte(struct scsi_cmnd *cmd, int result)
+  *
+  * Returns:     Nothing
+  *
+- * Notes:       This function is matched in terms of capabilities to
+- *              the function that created the scatter-gather list.
+- *              In other words, if there are no bounce buffers
+- *              (the normal case for most drivers), we don't need
+- *              the logic to deal with cleaning up afterwards.
+- *
+- *		We must call scsi_end_request().  This will finish off
+- *		the specified number of sectors.  If we are done, the
+- *		command block will be released and the queue function
+- *		will be goosed.  If we are not done then we have to
++ * Notes:       We will finish off the specified number of sectors.  If we
++ *		are done, the command block will be released and the queue
++ *		function will be goosed.  If we are not done then we have to
+  *		figure out what to do next:
+  *
+  *		a) We can call scsi_requeue_command().  The request
+@@ -734,7 +667,7 @@ static int __scsi_error_from_host_byte(struct scsi_cmnd *cmd, int result)
+  *		   be used if we made forward progress, or if we want
+  *		   to switch from READ(10) to READ(6) for example.
+  *
+- *		b) We can call scsi_queue_insert().  The request will
++ *		b) We can call __scsi_queue_insert().  The request will
+  *		   be put back on the queue and retried using the same
+  *		   command as before, possibly after a delay.
+  *
+@@ -792,6 +725,7 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 
+ 			scsi_release_buffers(cmd);
+ 			scsi_release_bidi_buffers(cmd);
 +
-+		SCSI_LOG_MLQUEUE(3,
-+			printk("scsi%d unblocking host at zero depth\n",
-+				shost->host_no));
- 	}
- 	if (scsi_host_is_busy(shost)) {
- 		if (list_empty(&sdev->starved_entry))
- 			list_add_tail(&sdev->starved_entry, &shost->starved_list);
--		return 0;
-+		goto out;
+ 			blk_end_request_all(req, 0);
+ 
+ 			scsi_next_command(cmd);
+@@ -831,12 +765,25 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
  	}
  
- 	/* We're OK to process the command, so we can't be starved */
- 	if (!list_empty(&sdev->starved_entry))
- 		list_del_init(&sdev->starved_entry);
+ 	/*
+-	 * A number of bytes were successfully read.  If there
+-	 * are leftovers and there is some kind of error
+-	 * (result != 0), retry the rest.
++	 * If we finished all bytes in the request we are done now.
+ 	 */
+-	if (scsi_end_request(cmd, error, good_bytes, result == 0) == NULL)
+-		return;
++	if (!blk_end_request(req, error, good_bytes))
++		goto next_command;
++
++	/*
++	 * Kill remainder if no retrys.
++	 */
++	if (error && scsi_noretry_cmd(cmd)) {
++		blk_end_request_all(req, error);
++		goto next_command;
++	}
++
++	/*
++	 * If there had been no error, but we have leftover bytes in the
++	 * requeues just queue the command up again.
++	 */
++	if (result == 0)
++		goto requeue;
  
--	return 1;
-+	shost->host_busy++;
-+	ret = 1;
-+out:
-+	spin_unlock_irq(shost->host_lock);
-+	return ret;
+ 	error = __scsi_error_from_host_byte(cmd, result);
+ 
+@@ -958,7 +905,6 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 	switch (action) {
+ 	case ACTION_FAIL:
+ 		/* Give up and fail the remainder of the request */
+-		scsi_release_buffers(cmd);
+ 		if (!(req->cmd_flags & REQ_QUIET)) {
+ 			if (description)
+ 				scmd_printk(KERN_INFO, cmd, "%s\n",
+@@ -968,12 +914,11 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 				scsi_print_sense("", cmd);
+ 			scsi_print_command(cmd);
+ 		}
+-		if (blk_end_request_err(req, error))
+-			scsi_requeue_command(q, cmd);
+-		else
+-			scsi_next_command(cmd);
+-		break;
++		if (!blk_end_request_err(req, error))
++			goto next_command;
++		/*FALLTHRU*/
+ 	case ACTION_REPREP:
++	requeue:
+ 		/* Unprep the request and put it back at the head of the queue.
+ 		 * A new command will be prepared and issued.
+ 		 */
+@@ -989,6 +934,11 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 		__scsi_queue_insert(cmd, SCSI_MLQUEUE_DEVICE_BUSY, 0);
+ 		break;
+ 	}
++	return;
++
++next_command:
++	scsi_release_buffers(cmd);
++	scsi_next_command(cmd);
  }
  
- /*
-@@ -1506,7 +1515,7 @@ static void scsi_request_fn(struct request_queue *q)
- 			blk_start_request(req);
- 		sdev->device_busy++;
- 
--		spin_unlock(q->queue_lock);
-+		spin_unlock_irq(q->queue_lock);
- 		cmd = req->special;
- 		if (unlikely(cmd == NULL)) {
- 			printk(KERN_CRIT "impossible request in %s.\n"
-@@ -1516,7 +1525,6 @@ static void scsi_request_fn(struct request_queue *q)
- 			blk_dump_rq_flags(req, "foo");
- 			BUG();
- 		}
--		spin_lock(shost->host_lock);
- 
- 		/*
- 		 * We hit this when the driver is using a host wide
-@@ -1527,9 +1535,11 @@ static void scsi_request_fn(struct request_queue *q)
- 		 * a run when a tag is freed.
- 		 */
- 		if (blk_queue_tagged(q) && !blk_rq_tagged(req)) {
-+			spin_lock_irq(shost->host_lock);
- 			if (list_empty(&sdev->starved_entry))
- 				list_add_tail(&sdev->starved_entry,
- 					      &shost->starved_list);
-+			spin_unlock_irq(shost->host_lock);
- 			goto not_ready;
- 		}
- 
-@@ -1537,16 +1547,7 @@ static void scsi_request_fn(struct request_queue *q)
- 			goto not_ready;
- 
- 		if (!scsi_host_queue_ready(q, shost, sdev))
--			goto not_ready;
--
--		scsi_target(sdev)->target_busy++;
--		shost->host_busy++;
--
--		/*
--		 * XXX(hch): This is rather suboptimal, scsi_dispatch_cmd will
--		 *		take the lock again.
--		 */
--		spin_unlock_irq(shost->host_lock);
-+			goto host_not_ready;
- 
- 		/*
- 		 * Finally, initialize any error handling parameters, and set up
-@@ -1565,9 +1566,11 @@ static void scsi_request_fn(struct request_queue *q)
- 
- 	return;
- 
-- not_ready:
-+ host_not_ready:
-+	spin_lock_irq(shost->host_lock);
-+	scsi_target(sdev)->target_busy--;
- 	spin_unlock_irq(shost->host_lock);
--
-+ not_ready:
- 	/*
- 	 * lock q, handle tag, requeue req, and decrement device_busy. We
- 	 * must return with queue_lock held.
+ static int scsi_init_sgtable(struct request *req, struct scsi_data_buffer *sdb,
 -- 
 1.7.10.4
