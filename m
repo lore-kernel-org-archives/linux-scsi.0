@@ -1,33 +1,37 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 03/39] blk-mq: fix blk_mq_end_io_partial
-Date: Mon, 17 Mar 2014 06:27:36 -0700
-Message-ID: <20140317133131.797576672@bombadil.infradead.org>
+Subject: [PATCH 38/39] blk-mq: make blk_mq_start_stopped_hw_queues run a queue even if not
+ stopped
+Date: Mon, 17 Mar 2014 06:28:11 -0700
+Message-ID: <20140317133137.284157634@bombadil.infradead.org>
 References: <20140317132733.789623766@bombadil.infradead.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=0003-blk-mq-fix-blk_mq_end_io_partial.patch
+Content-Disposition: inline; filename=0038-blk-mq-make-blk_mq_start_stopped_hw_queues-run-a-que.patch
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-We need to pass the actual nr_bytes instead of all bytes in the request.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+We need this as a workaround for the scsi midlayer, should be fixed in
+a nicer way eventually.
 ---
- block/blk-mq.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ block/blk-mq.c |    6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
 diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 883f720..d81dc8b 100644
+index 4408c70..4950f8e 100644
 --- a/block/blk-mq.c
 +++ b/block/blk-mq.c
-@@ -285,7 +285,7 @@ void blk_mq_free_request(struct request *rq)
+@@ -677,10 +677,8 @@ void blk_mq_start_stopped_hw_queues(struct request_queue *q, bool async)
+ 	int i;
  
- bool blk_mq_end_io_partial(struct request *rq, int error, unsigned int nr_bytes)
- {
--	if (blk_update_request(rq, error, blk_rq_bytes(rq)))
-+	if (blk_update_request(rq, error, nr_bytes))
- 		return true;
- 
- 	blk_account_io_done(rq);
+ 	queue_for_each_hw_ctx(q, hctx, i) {
+-		if (!test_bit(BLK_MQ_S_STOPPED, &hctx->state))
+-			continue;
+-
+-		clear_bit(BLK_MQ_S_STOPPED, &hctx->state);
++		if (test_bit(BLK_MQ_S_STOPPED, &hctx->state))
++			clear_bit(BLK_MQ_S_STOPPED, &hctx->state);
+ 		blk_mq_run_hw_queue(hctx, async);
+ 	}
+ }
 -- 
 1.7.10.4
