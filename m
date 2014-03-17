@@ -1,82 +1,118 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 24/39] blk-mq: add blk_mq_requeue_request
-Date: Mon, 17 Mar 2014 06:27:57 -0700
-Message-ID: <20140317133134.969559353@bombadil.infradead.org>
+Subject: [PATCH 17/39] scsi: explicitly release bidi buffers
+Date: Mon, 17 Mar 2014 06:27:50 -0700
+Message-ID: <20140317133133.967132978@bombadil.infradead.org>
 References: <20140317132733.789623766@bombadil.infradead.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=0024-blk-mq-add-blk_mq_requeue_request.patch
+Content-Disposition: inline; filename=0017-scsi-explicitly-release-bidi-buffers.patch
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-This allows to requeue a request that has been accepted by ->queue_rq
-earlier.  This is needed by the SCSI layer in various error conditions.
-
-The existing internal blk_mq_requeue_request is renamed to
-__blk_mq_requeue_request as it is a lower level building block for this
-funtionality.
+Instead of trying to guess when we have a BIDI buffer in scsi_release_buffers
+add a function to explicitly free the BIDI ressoures in the one place that
+handles them.  This avoids needing a special __scsi_release_buffers for the
+case where we already have freed the request as well.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- block/blk-mq.c         |   18 ++++++++++++++++--
- include/linux/blk-mq.h |    2 ++
- 2 files changed, 18 insertions(+), 2 deletions(-)
+ drivers/scsi/scsi_lib.c |   47 ++++++++++++++++++++---------------------------
+ 1 file changed, 20 insertions(+), 27 deletions(-)
 
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index c7e723e..9e13761 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -380,7 +380,7 @@ static void blk_mq_start_request(struct request *rq, bool last)
- 		rq->cmd_flags |= REQ_END;
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index debe30a..3012700 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -511,8 +511,6 @@ void scsi_run_host_queues(struct Scsi_Host *shost)
+ 		scsi_run_queue(sdev->request_queue);
  }
  
--static void blk_mq_requeue_request(struct request *rq)
-+static void __blk_mq_requeue_request(struct request *rq)
+-static void __scsi_release_buffers(struct scsi_cmnd *, int);
+-
+ /*
+  * Function:    scsi_end_request()
+  *
+@@ -568,7 +566,7 @@ static struct scsi_cmnd *scsi_end_request(struct scsi_cmnd *cmd, int error,
+ 	 * This will goose the queue request function at the end, so we don't
+ 	 * need to worry about launching another command.
+ 	 */
+-	__scsi_release_buffers(cmd, 0);
++	scsi_release_buffers(cmd);
+ 	scsi_next_command(cmd);
+ 	return NULL;
+ }
+@@ -624,30 +622,10 @@ static void scsi_free_sgtable(struct scsi_data_buffer *sdb)
+ 	__sg_free_table(&sdb->table, SCSI_MAX_SG_SEGMENTS, scsi_sg_free);
+ }
+ 
+-static void __scsi_release_buffers(struct scsi_cmnd *cmd, int do_bidi_check)
+-{
+-
+-	if (cmd->sdb.table.nents)
+-		scsi_free_sgtable(&cmd->sdb);
+-
+-	memset(&cmd->sdb, 0, sizeof(cmd->sdb));
+-
+-	if (do_bidi_check && scsi_bidi_cmnd(cmd)) {
+-		struct scsi_data_buffer *bidi_sdb =
+-			cmd->request->next_rq->special;
+-		scsi_free_sgtable(bidi_sdb);
+-		kmem_cache_free(scsi_sdb_cache, bidi_sdb);
+-		cmd->request->next_rq->special = NULL;
+-	}
+-
+-	if (scsi_prot_sg_count(cmd))
+-		scsi_free_sgtable(cmd->prot_sdb);
+-}
+-
+ /*
+  * Function:    scsi_release_buffers()
+  *
+- * Purpose:     Completion processing for block device I/O requests.
++ * Purpose:     Free resources allocate for a scsi_command.
+  *
+  * Arguments:   cmd	- command that we are bailing.
+  *
+@@ -658,15 +636,29 @@ static void __scsi_release_buffers(struct scsi_cmnd *cmd, int do_bidi_check)
+  * Notes:       In the event that an upper level driver rejects a
+  *		command, we must release resources allocated during
+  *		the __init_io() function.  Primarily this would involve
+- *		the scatter-gather table, and potentially any bounce
+- *		buffers.
++ *		the scatter-gather table.
+  */
+ void scsi_release_buffers(struct scsi_cmnd *cmd)
  {
- 	struct request_queue *q = rq->q;
- 
-@@ -393,6 +393,20 @@ static void blk_mq_requeue_request(struct request *rq)
- 		rq->nr_phys_segments--;
+-	__scsi_release_buffers(cmd, 1);
++	if (cmd->sdb.table.nents)
++		scsi_free_sgtable(&cmd->sdb);
++
++	memset(&cmd->sdb, 0, sizeof(cmd->sdb));
++
++	if (scsi_prot_sg_count(cmd))
++		scsi_free_sgtable(cmd->prot_sdb);
  }
+ EXPORT_SYMBOL(scsi_release_buffers);
  
-+/* XXX: misnamed, only unpreps but leaves the actual requeue to the caller. */
-+void blk_mq_requeue_request(struct request *rq)
++static void scsi_release_bidi_buffers(struct scsi_cmnd *cmd)
 +{
-+	struct request_queue *q = rq->q;
++	struct scsi_data_buffer *bidi_sdb = cmd->request->next_rq->special;
 +
-+	__blk_mq_requeue_request(rq);
-+	blk_clear_rq_complete(rq);
-+
-+	trace_block_rq_requeue(q, rq);
-+
-+	BUG_ON(blk_queued_rq(rq));
++	scsi_free_sgtable(bidi_sdb);
++	kmem_cache_free(scsi_sdb_cache, bidi_sdb);
++	cmd->request->next_rq->special = NULL;
 +}
-+EXPORT_SYMBOL(blk_mq_requeue_request);
 +
- struct blk_mq_timeout_data {
- 	struct blk_mq_hw_ctx *hctx;
- 	unsigned long *next;
-@@ -573,7 +587,7 @@ static void __blk_mq_run_hw_queue(struct blk_mq_hw_ctx *hctx)
- 			 * time
- 			 */
- 			list_add(&rq->queuelist, &rq_list);
--			blk_mq_requeue_request(rq);
-+			__blk_mq_requeue_request(rq);
- 			break;
- 		default:
- 			pr_err("blk-mq: bad return on queue: %d\n", ret);
-diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
-index cac10e1..6325a24 100644
---- a/include/linux/blk-mq.h
-+++ b/include/linux/blk-mq.h
-@@ -148,6 +148,8 @@ static inline void blk_mq_end_io(struct request *rq, int error)
- 	BUG_ON(!done);
- }
+ /**
+  * __scsi_error_from_host_byte - translate SCSI error code into errno
+  * @cmd:	SCSI command (unused)
+@@ -799,6 +791,7 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 			req->next_rq->resid_len = scsi_in(cmd)->resid;
  
-+void blk_mq_requeue_request(struct request *rq);
-+
- void blk_mq_complete_request(struct request *rq);
+ 			scsi_release_buffers(cmd);
++			scsi_release_bidi_buffers(cmd);
+ 			blk_end_request_all(req, 0);
  
- void blk_mq_stop_hw_queue(struct blk_mq_hw_ctx *hctx);
+ 			scsi_next_command(cmd);
 -- 
 1.7.10.4
