@@ -1,323 +1,122 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 21/39] scsi: convert host_busy to atomic_t
-Date: Mon, 17 Mar 2014 06:27:54 -0700
-Message-ID: <20140317133134.564792423@bombadil.infradead.org>
+Subject: [PATCH 16/39] virtio_scsi: use cmd_size
+Date: Mon, 17 Mar 2014 06:27:49 -0700
+Message-ID: <20140317133133.814453025@bombadil.infradead.org>
 References: <20140317132733.789623766@bombadil.infradead.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=0021-scsi-convert-host_busy-to-atomic_t.patch
+Content-Disposition: inline; filename=0016-virtio_scsi-use-cmd_size.patch
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Paolo Bonzini <pbonzini@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Avoid taking the host-wide host_lock to check the per-host queue limit.
-Instead we do an atomic_inc_return early on to grab our slot in the queue,
-and if nessecary decrement it after finishing all checks.
+Taken almost entirely from Nicholas Bellinger's scsi-mq conversion.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Acked-by: Paolo Bonzini <pbonzini@redhat.com>
 ---
- drivers/scsi/advansys.c             |    4 +-
- drivers/scsi/libiscsi.c             |    4 +-
- drivers/scsi/libsas/sas_scsi_host.c |    5 ++-
- drivers/scsi/qlogicpti.c            |    2 +-
- drivers/scsi/scsi.c                 |    2 +-
- drivers/scsi/scsi_error.c           |    6 +--
- drivers/scsi/scsi_lib.c             |   71 +++++++++++++++++++++--------------
- drivers/scsi/scsi_sysfs.c           |    9 ++++-
- include/scsi/scsi_host.h            |   10 ++---
- 9 files changed, 65 insertions(+), 48 deletions(-)
+ drivers/scsi/virtio_scsi.c |   25 +++++++------------------
+ include/scsi/scsi_cmnd.h   |    9 +++++++++
+ 2 files changed, 16 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index d814588..0a6ecbd 100644
---- a/drivers/scsi/advansys.c
-+++ b/drivers/scsi/advansys.c
-@@ -2512,7 +2512,7 @@ static void asc_prt_scsi_host(struct Scsi_Host *s)
- 
- 	printk("Scsi_Host at addr 0x%p, device %s\n", s, dev_name(boardp->dev));
- 	printk(" host_busy %u, host_no %d,\n",
--	       s->host_busy, s->host_no);
-+	       atomic_read(&s->host_busy), s->host_no);
- 
- 	printk(" base 0x%lx, io_port 0x%lx, irq %d,\n",
- 	       (ulong)s->base, (ulong)s->io_port, boardp->irq);
-@@ -3346,7 +3346,7 @@ static void asc_prt_driver_conf(struct seq_file *m, struct Scsi_Host *shost)
- 
- 	seq_printf(m,
- 		   " host_busy %u, max_id %u, max_lun %u, max_channel %u\n",
--		   shost->host_busy, shost->max_id,
-+		   atomic_read(&shost->host_busy), shost->max_id,
- 		   shost->max_lun, shost->max_channel);
- 
- 	seq_printf(m,
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 4046241..718ca88 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -2922,7 +2922,7 @@ void iscsi_conn_teardown(struct iscsi_cls_conn *cls_conn)
- 	 */
- 	for (;;) {
- 		spin_lock_irqsave(session->host->host_lock, flags);
--		if (!session->host->host_busy) { /* OK for ERL == 0 */
-+		if (!atomic_read(&session->host->host_busy)) { /* OK for ERL == 0 */
- 			spin_unlock_irqrestore(session->host->host_lock, flags);
- 			break;
- 		}
-@@ -2930,7 +2930,7 @@ void iscsi_conn_teardown(struct iscsi_cls_conn *cls_conn)
- 		msleep_interruptible(500);
- 		iscsi_conn_printk(KERN_INFO, conn, "iscsi conn_destroy(): "
- 				  "host_busy %d host_failed %d\n",
--				  session->host->host_busy,
-+				  atomic_read(&session->host->host_busy),
- 				  session->host->host_failed);
- 		/*
- 		 * force eh_abort() to unblock
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index da3aee1..9423009 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -812,7 +812,7 @@ retry:
- 	spin_unlock_irq(shost->host_lock);
- 
- 	SAS_DPRINTK("Enter %s busy: %d failed: %d\n",
--		    __func__, shost->host_busy, shost->host_failed);
-+		    __func__, atomic_read(&shost->host_busy), shost->host_failed);
- 	/*
- 	 * Deal with commands that still have SAS tasks (i.e. they didn't
- 	 * complete via the normal sas_task completion mechanism),
-@@ -857,7 +857,8 @@ out:
- 		goto retry;
- 
- 	SAS_DPRINTK("--- Exit %s: busy: %d failed: %d tries: %d\n",
--		    __func__, shost->host_busy, shost->host_failed, tries);
-+		    __func__, atomic_read(&shost->host_busy),
-+		    shost->host_failed, tries);
- }
- 
- enum blk_eh_timer_return sas_scsi_timed_out(struct scsi_cmnd *cmd)
-diff --git a/drivers/scsi/qlogicpti.c b/drivers/scsi/qlogicpti.c
-index 6d48d30..740ae49 100644
---- a/drivers/scsi/qlogicpti.c
-+++ b/drivers/scsi/qlogicpti.c
-@@ -959,7 +959,7 @@ static inline void update_can_queue(struct Scsi_Host *host, u_int in_ptr, u_int
- 	/* Temporary workaround until bug is found and fixed (one bug has been found
- 	   already, but fixing it makes things even worse) -jj */
- 	int num_free = QLOGICPTI_REQ_QUEUE_LEN - REQ_QUEUE_DEPTH(in_ptr, out_ptr) - 64;
--	host->can_queue = host->host_busy + num_free;
-+	host->can_queue = atomic_read(&host->host_busy) + num_free;
- 	host->sg_tablesize = QLOGICPTI_MAX_SG(num_free);
- }
- 
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index eff189f..a0b5e6f 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -596,7 +596,7 @@ void scsi_log_completion(struct scsi_cmnd *cmd, int disposition)
- 			if (level > 3)
- 				scmd_printk(KERN_INFO, cmd,
- 					    "scsi host busy %d failed %d\n",
--					    cmd->device->host->host_busy,
-+					    atomic_read(&cmd->device->host->host_busy),
- 					    cmd->device->host->host_failed);
- 		}
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index 16bfd50..5ec4a73 100644
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -204,7 +204,6 @@ static void virtscsi_complete_cmd(struct virtio_scsi *vscsi, void *buf)
+ 			set_driver_byte(sc, DRIVER_SENSE);
  	}
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 771c16b..759c168 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -59,7 +59,7 @@ static int scsi_try_to_abort_cmd(struct scsi_host_template *,
- /* called with shost->host_lock held */
- void scsi_eh_wakeup(struct Scsi_Host *shost)
- {
--	if (shost->host_busy == shost->host_failed) {
-+	if (atomic_read(&shost->host_busy) == shost->host_failed) {
- 		trace_scsi_eh_wakeup(shost);
- 		wake_up_process(shost->ehandler);
- 		SCSI_LOG_ERROR_RECOVERY(5,
-@@ -2141,7 +2141,7 @@ int scsi_error_handler(void *data)
- 	while (!kthread_should_stop()) {
- 		set_current_state(TASK_INTERRUPTIBLE);
- 		if ((shost->host_failed == 0 && shost->host_eh_scheduled == 0) ||
--		    shost->host_failed != shost->host_busy) {
-+		    shost->host_failed != atomic_read(&shost->host_busy)) {
- 			SCSI_LOG_ERROR_RECOVERY(1,
- 				printk("scsi_eh_%d: sleeping\n",
- 					shost->host_no));
-@@ -2153,7 +2153,7 @@ int scsi_error_handler(void *data)
- 		SCSI_LOG_ERROR_RECOVERY(1,
- 			printk("scsi_eh_%d: waking up %d/%d/%d\n",
- 			       shost->host_no, shost->host_eh_scheduled,
--			       shost->host_failed, shost->host_busy));
-+			       shost->host_failed, atomic_read(&shost->host_busy)));
  
- 		/*
- 		 * We have a host that is failing for some reason.  Figure out
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 01a631e..f1ce764 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -281,14 +281,17 @@ void scsi_device_unbusy(struct scsi_device *sdev)
- 	struct scsi_target *starget = scsi_target(sdev);
- 	unsigned long flags;
+-	mempool_free(cmd, virtscsi_cmd_pool);
+ 	sc->scsi_done(sc);
  
--	spin_lock_irqsave(shost->host_lock, flags);
--	shost->host_busy--;
-+	atomic_dec(&shost->host_busy);
- 	atomic_dec(&starget->target_busy);
-+
- 	if (unlikely(scsi_host_in_recovery(shost) &&
--		     (shost->host_failed || shost->host_eh_scheduled)))
-+		     (shost->host_failed || shost->host_eh_scheduled))) {
-+		spin_lock_irqsave(shost->host_lock, flags);
- 		scsi_eh_wakeup(shost);
--	spin_unlock(shost->host_lock);
--	spin_lock(sdev->request_queue->queue_lock);
-+		spin_unlock_irqrestore(shost->host_lock, flags);
-+	}
-+
-+	spin_lock_irqsave(sdev->request_queue->queue_lock, flags);
- 	sdev->device_busy--;
- 	spin_unlock_irqrestore(sdev->request_queue->queue_lock, flags);
+ 	atomic_dec(&tgt->reqs);
+@@ -279,8 +278,6 @@ static void virtscsi_complete_free(struct virtio_scsi *vscsi, void *buf)
+ 
+ 	if (cmd->comp)
+ 		complete_all(cmd->comp);
+-	else
+-		mempool_free(cmd, virtscsi_cmd_pool);
  }
-@@ -356,7 +359,8 @@ static inline int scsi_target_is_busy(struct scsi_target *starget)
  
- static inline int scsi_host_is_busy(struct Scsi_Host *shost)
+ static void virtscsi_ctrl_done(struct virtqueue *vq)
+@@ -496,10 +493,9 @@ static int virtscsi_queuecommand(struct virtio_scsi *vscsi,
+ 				 struct virtio_scsi_vq *req_vq,
+ 				 struct scsi_cmnd *sc)
  {
--	if ((shost->can_queue > 0 && shost->host_busy >= shost->can_queue) ||
-+	if ((shost->can_queue > 0 &&
-+	     atomic_read(&shost->host_busy) >= shost->can_queue) ||
- 	    shost->host_blocked || shost->host_self_blocked)
- 		return 1;
- 
-@@ -1332,38 +1336,51 @@ static inline int scsi_host_queue_ready(struct request_queue *q,
- 				   struct Scsi_Host *shost,
- 				   struct scsi_device *sdev)
- {
--	int ret = 0;
+-	struct virtio_scsi_cmd *cmd;
+-	int ret;
 -
--	spin_lock_irq(shost->host_lock);
-+	unsigned int busy;
+ 	struct Scsi_Host *shost = virtio_scsi_host(vscsi->vdev);
++	struct virtio_scsi_cmd *cmd = scsi_cmd_priv(sc);
++
+ 	BUG_ON(scsi_sg_count(sc) > shost->sg_tablesize);
  
- 	if (scsi_host_in_recovery(shost))
+ 	/* TODO: check feature bit and fail if unsupported?  */
+@@ -508,11 +504,6 @@ static int virtscsi_queuecommand(struct virtio_scsi *vscsi,
+ 	dev_dbg(&sc->device->sdev_gendev,
+ 		"cmd %p CDB: %#02x\n", sc, sc->cmnd[0]);
+ 
+-	ret = SCSI_MLQUEUE_HOST_BUSY;
+-	cmd = mempool_alloc(virtscsi_cmd_pool, GFP_ATOMIC);
+-	if (!cmd)
 -		goto out;
--	if (shost->host_busy == 0 && shost->host_blocked) {
-+		return 0;
-+
-+	busy = atomic_inc_return(&shost->host_busy) - 1;
-+	if (busy == 0 && shost->host_blocked) {
- 		/*
- 		 * unblock after host_blocked iterates to zero
- 		 */
--		if (--shost->host_blocked != 0)
--			goto out;
-+		spin_lock_irq(shost->host_lock);
-+		if (--shost->host_blocked != 0) {
-+			spin_unlock_irq(shost->host_lock);
-+			goto out_dec;
-+		}
-+		spin_unlock_irq(shost->host_lock);
+-
+ 	memset(cmd, 0, sizeof(*cmd));
+ 	cmd->sc = sc;
+ 	cmd->req.cmd = (struct virtio_scsi_cmd_req){
+@@ -531,13 +522,9 @@ static int virtscsi_queuecommand(struct virtio_scsi *vscsi,
  
- 		SCSI_LOG_MLQUEUE(3,
- 			printk("scsi%d unblocking host at zero depth\n",
- 				shost->host_no));
- 	}
--	if (scsi_host_is_busy(shost)) {
--		if (list_empty(&sdev->starved_entry))
--			list_add_tail(&sdev->starved_entry, &shost->starved_list);
--		goto out;
--	}
-+
-+	if (shost->can_queue > 0 && busy >= shost->can_queue)
-+		goto starved;
-+	if (shost->host_blocked || shost->host_self_blocked)
-+		goto starved;
- 
- 	/* We're OK to process the command, so we can't be starved */
--	if (!list_empty(&sdev->starved_entry))
--		list_del_init(&sdev->starved_entry);
-+	if (!list_empty(&sdev->starved_entry)) {
-+		spin_lock_irq(shost->host_lock);
-+		if (!list_empty(&sdev->starved_entry))
-+			list_del_init(&sdev->starved_entry);
-+		spin_unlock_irq(shost->host_lock);
-+	}
-+
-+	return 1;
- 
--	shost->host_busy++;
--	ret = 1;
+ 	if (virtscsi_kick_cmd(req_vq, cmd,
+ 			      sizeof cmd->req.cmd, sizeof cmd->resp.cmd,
+-			      GFP_ATOMIC) == 0)
+-		ret = 0;
+-	else
+-		mempool_free(cmd, virtscsi_cmd_pool);
+-
 -out:
-+starved:
-+	spin_lock_irq(shost->host_lock);
-+	if (list_empty(&sdev->starved_entry))
-+		list_add_tail(&sdev->starved_entry, &shost->starved_list);
- 	spin_unlock_irq(shost->host_lock);
 -	return ret;
-+out_dec:
-+	atomic_dec(&shost->host_busy);
++			      GFP_ATOMIC) != 0)
++		return SCSI_MLQUEUE_HOST_BUSY;
 +	return 0;
  }
  
- /*
-@@ -1427,12 +1444,8 @@ static void scsi_kill_request(struct request *req, struct request_queue *q)
- 	 * with the locks as normal issue path does.
- 	 */
- 	sdev->device_busy++;
--	spin_unlock(sdev->request_queue->queue_lock);
--	spin_lock(shost->host_lock);
--	shost->host_busy++;
-+	atomic_inc(&shost->host_busy);
- 	atomic_inc(&starget->target_busy);
--	spin_unlock(shost->host_lock);
--	spin_lock(sdev->request_queue->queue_lock);
+ static int virtscsi_queuecommand_single(struct Scsi_Host *sh,
+@@ -683,6 +670,7 @@ static struct scsi_host_template virtscsi_host_template_single = {
+ 	.name = "Virtio SCSI HBA",
+ 	.proc_name = "virtio_scsi",
+ 	.this_id = -1,
++	.cmd_size = sizeof(struct virtio_scsi_cmd),
+ 	.queuecommand = virtscsi_queuecommand_single,
+ 	.eh_abort_handler = virtscsi_abort,
+ 	.eh_device_reset_handler = virtscsi_device_reset,
+@@ -699,6 +687,7 @@ static struct scsi_host_template virtscsi_host_template_multi = {
+ 	.name = "Virtio SCSI HBA",
+ 	.proc_name = "virtio_scsi",
+ 	.this_id = -1,
++	.cmd_size = sizeof(struct virtio_scsi_cmd),
+ 	.queuecommand = virtscsi_queuecommand_multi,
+ 	.eh_abort_handler = virtscsi_abort,
+ 	.eh_device_reset_handler = virtscsi_device_reset,
+diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+index dd7c998..e016e2a 100644
+--- a/include/scsi/scsi_cmnd.h
++++ b/include/scsi/scsi_cmnd.h
+@@ -133,6 +133,15 @@ struct scsi_cmnd {
+ 	unsigned char tag;	/* SCSI-II queued command tag */
+ };
  
- 	blk_complete_request(req);
- }
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 9117d0b..658ee82 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -332,7 +332,6 @@ store_shost_eh_deadline(struct device *dev, struct device_attribute *attr,
- static DEVICE_ATTR(eh_deadline, S_IRUGO | S_IWUSR, show_shost_eh_deadline, store_shost_eh_deadline);
- 
- shost_rd_attr(unique_id, "%u\n");
--shost_rd_attr(host_busy, "%hu\n");
- shost_rd_attr(cmd_per_lun, "%hd\n");
- shost_rd_attr(can_queue, "%hd\n");
- shost_rd_attr(sg_tablesize, "%hu\n");
-@@ -342,6 +341,14 @@ shost_rd_attr(prot_capabilities, "%u\n");
- shost_rd_attr(prot_guard_type, "%hd\n");
- shost_rd_attr2(proc_name, hostt->proc_name, "%s\n");
- 
-+static ssize_t
-+show_host_busy(struct device *dev, struct device_attribute *attr, char *buf)
++/*
++ * Return the driver private allocation behind the command.
++ * Only works if cmd_size is set in the host template.
++ */
++static inline void *scsi_cmd_priv(struct scsi_cmnd *cmd)
 +{
-+	struct Scsi_Host *shost = class_to_shost(dev);
-+	return snprintf(buf, 20, "%hu\n", atomic_read(&shost->host_busy));
++	return cmd + 1;
 +}
-+static DEVICE_ATTR(host_busy, S_IRUGO, show_host_busy, NULL);
 +
- static struct attribute *scsi_sysfs_shost_attrs[] = {
- 	&dev_attr_unique_id.attr,
- 	&dev_attr_host_busy.attr,
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index 94844fc..590e1af 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -603,13 +603,9 @@ struct Scsi_Host {
- 	 */
- 	struct blk_queue_tag	*bqt;
- 
--	/*
--	 * The following two fields are protected with host_lock;
--	 * however, eh routines can safely access during eh processing
--	 * without acquiring the lock.
--	 */
--	unsigned int host_busy;		   /* commands actually active on low-level */
--	unsigned int host_failed;	   /* commands that failed. */
-+	atomic_t host_busy;		   /* commands actually active on low-level */
-+	unsigned int host_failed;	   /* commands that failed.
-+					      protected by host_lock */
- 	unsigned int host_eh_scheduled;    /* EH scheduled without command */
-     
- 	unsigned int host_no;  /* Used for IOCTL_GET_IDLUN, /proc/scsi et al. */
+ /* make sure not to use it with REQ_TYPE_BLOCK_PC commands */
+ static inline struct scsi_driver *scsi_cmd_to_driver(struct scsi_cmnd *cmd)
+ {
 -- 
 1.7.10.4
