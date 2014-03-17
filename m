@@ -1,35 +1,64 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: DMA-API mapping errors in vmw_pvscsi
-Date: Mon, 17 Mar 2014 10:08:10 -0700
-Message-ID: <1395076090.2227.29.camel@dabdike.int.hansenpartnership.com>
-References: <CA+5PVA5CmTJSjaikwtTTLwp1dLwFkYpXVr56ASA4t5n8ESRmOA@mail.gmail.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH 0/4] DIF fixes for kernel 3.15
+Date: Mon, 17 Mar 2014 11:16:18 -0700
+Message-ID: <1395080178.28843.5.camel@haakon3.risingtidesystems.com>
+References: <1395053539-31314-1-git-send-email-sagig@mellanox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CA+5PVA5CmTJSjaikwtTTLwp1dLwFkYpXVr56ASA4t5n8ESRmOA@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Josh Boyer <jwboyer@fedoraproject.org>
-Cc: Arvind Kumar <arvindkumar@vmware.com>, VMware PV-Drivers <pv-drivers@vmware.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Linux-Kernel@Vger. Kernel. Org" <linux-kernel@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:43176 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753542AbaCQSQ7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Mar 2014 14:16:59 -0400
+In-Reply-To: <1395053539-31314-1-git-send-email-sagig@mellanox.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Sagi Grimberg <sagig@mellanox.com>
+Cc: oren@mellanox.com, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Mon, 2014-03-17 at 12:52 -0400, Josh Boyer wrote:
-> Hi All,
+On Mon, 2014-03-17 at 12:52 +0200, Sagi Grimberg wrote:
+> Hey Nic,
 > 
-> We've had a few reports[1][2] now on the vmw_pvscsi driver throwing
-> DMA-API mapping errors when the DMA_API_DEBUG option is enabled.  I've
-> included one from a recent 3.14-rc6 kernel below.  Looking at
-> vmw_pvscsi.c, I can see pvscsi_map_buffers is missing the calls to
-> pci_dma_mapping_error, which is what causes the warnings to be thrown.
+> So here are a couple of fixes for iSER target DIF on top of latest
+> for-next for 3.15.
 > 
-> However, I'm not familiar with this driver and I can't see what the
-> proper error path should be in this case.  pvscsi_map_buffers is a
-> void function and doesn't currently have the ability to return an
-> error to the caller.  Even if it did, I'm not sure what the proper
-> response to an error should be.  Thoughts?
+> Patch #1 fixes suppressed completions for REG_SIG_MR work requests.
+> 
+> Patch #2 fixes accounting of post_send_buf_count when RDMA_READs may
+> get a completion (required in the DIF case).
+> 
+> Patch #3 moves the DIF status check to a function to avoid code
+> duplication (was fixed before but I'm not sure where it got lost).
+> 
+> Patch #4 adds the protection-passthrough-only mode that we agreed on
+> for loopback/vhost_scsi transports.
+> 
+> This set survived a couple of hours of:
+> - Stress IO (with/without DIF)
+> - Live target shutdown & resume (during traffic)
+> - Login/Logout
+> 
+> I can try and split Patch #2 if you want to squash it in.
+> 
+> Sagi Grimberg (4):
+>   Target/iser: Fix signature work requests accounting
+>   Target/iser: Consider DIF and RDMA_READ completions when calculating
+>     post_send counter
+>   Target/iser: Move check signature status to a function
+>   Target/dif: Introduce protection-passthough-only mode
+> 
+>  drivers/infiniband/ulp/isert/ib_isert.c |  164 +++++++++++++++++-------------
+>  drivers/target/loopback/tcm_loop.c      |    4 +
+>  drivers/target/target_core_sbc.c        |    3 +
+>  drivers/target/target_core_transport.c  |   13 ---
+>  include/target/target_core_base.h       |    1 +
+>  5 files changed, 101 insertions(+), 84 deletions(-)
+> 
 
-It's missing checking in two places: from pci_map_single() and on
-scsi_dma_map().  In the latter case, pvscsi_map_buffers needs to return
-an error code and then pvscsi_queue_ring can return -1.
+Applied to target-pending/for-next.
 
-James
+Thanks Sagi!
+
+--nab
+
