@@ -1,47 +1,86 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 07/39] scsi: avoid useless free_list lock roundtrips
-Date: Mon, 17 Mar 2014 06:27:40 -0700
-Message-ID: <20140317133132.458780689@bombadil.infradead.org>
+Subject: [PATCH 08/39] scsi: avoid taking host_lock in scsi_run_queue unless nessecary
+Date: Mon, 17 Mar 2014 06:27:41 -0700
+Message-ID: <20140317133132.655867077@bombadil.infradead.org>
 References: <20140317132733.789623766@bombadil.infradead.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=0007-scsi-avoid-useless-free_list-lock-roundtrips.patch
+Content-Disposition: inline; filename=0008-scsi-avoid-taking-host_lock-in-scsi_run_queue-unless.patch
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Hannes Reinecke <hare@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
-Avoid hitting the host-wide free_list lock unless we need to put a command
-back onto the freelist.
+If we don't have starved devices we don't need to take the host lock
+to iterate over them.  Also split the function up to be more clear.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Acked-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/scsi.c |   11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
+ drivers/scsi/scsi_lib.c |   43 ++++++++++++++++++++++++-------------------
+ 1 file changed, 24 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index d8afec8..fb86479 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -320,13 +320,14 @@ void __scsi_put_command(struct Scsi_Host *shost, struct scsi_cmnd *cmd,
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 62ec84b..aa6a581 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -385,29 +385,12 @@ static inline int scsi_host_is_busy(struct Scsi_Host *shost)
+ 	return 0;
+ }
+ 
+-/*
+- * Function:	scsi_run_queue()
+- *
+- * Purpose:	Select a proper request queue to serve next
+- *
+- * Arguments:	q	- last request's queue
+- *
+- * Returns:     Nothing
+- *
+- * Notes:	The previous command was completely finished, start
+- *		a new one if possible.
+- */
+-static void scsi_run_queue(struct request_queue *q)
++static void scsi_starved_list_run(struct Scsi_Host *shost)
  {
+-	struct scsi_device *sdev = q->queuedata;
+-	struct Scsi_Host *shost;
+ 	LIST_HEAD(starved_list);
++	struct scsi_device *sdev;
  	unsigned long flags;
  
--	/* changing locks here, don't need to restore the irq state */
--	spin_lock_irqsave(&shost->free_list_lock, flags);
- 	if (unlikely(list_empty(&shost->free_list))) {
--		list_add(&cmd->list, &shost->free_list);
--		cmd = NULL;
-+		spin_lock_irqsave(&shost->free_list_lock, flags);
-+		if (list_empty(&shost->free_list)) {
-+			list_add(&cmd->list, &shost->free_list);
-+			cmd = NULL;
-+		}
-+		spin_unlock_irqrestore(&shost->free_list_lock, flags);
- 	}
--	spin_unlock_irqrestore(&shost->free_list_lock, flags);
+-	shost = sdev->host;
+-	if (scsi_target(sdev)->single_lun)
+-		scsi_single_lun_run(sdev);
+-
+ 	spin_lock_irqsave(shost->host_lock, flags);
+ 	list_splice_init(&shost->starved_list, &starved_list);
  
- 	if (likely(cmd != NULL))
- 		scsi_pool_free_command(shost->cmd_pool, cmd);
+@@ -459,6 +442,28 @@ static void scsi_run_queue(struct request_queue *q)
+ 	/* put any unprocessed entries back */
+ 	list_splice(&starved_list, &shost->starved_list);
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
++}
++
++/*
++ * Function:   scsi_run_queue()
++ *
++ * Purpose:    Select a proper request queue to serve next
++ *
++ * Arguments:  q       - last request's queue
++ *
++ * Returns:     Nothing
++ *
++ * Notes:      The previous command was completely finished, start
++ *             a new one if possible.
++ */
++static void scsi_run_queue(struct request_queue *q)
++{
++	struct scsi_device *sdev = q->queuedata;
++
++	if (scsi_target(sdev)->single_lun)
++		scsi_single_lun_run(sdev);
++	if (!list_empty(&sdev->host->starved_list))
++		scsi_starved_list_run(sdev->host);
+ 
+ 	blk_run_queue(q);
+ }
 -- 
 1.7.10.4
