@@ -1,56 +1,62 @@
-From: Sagi Grimberg <sagig@mellanox.com>
-Subject: [PATCH v1] Target/iser: Fail SCSI WRITE command if device detected integrity error
-Date: Tue, 18 Mar 2014 14:52:03 +0200
-Message-ID: <1395147123-15836-1-git-send-email-sagig@mellanox.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH 00/12] scsi/NCR5380: fix debugging macros and #include structure
+Date: Tue, 18 Mar 2014 13:55:12 +0100
+Message-ID: <CAMuHMdUMpdp7deL5zC4hUVTHjyNbtkZ2bNFupo5JiDyuyc345w@mail.gmail.com>
+References: <20140318002822.372705594@telegraphics.com.au>
+	<1395112756.20860.1.camel@joe-AO722>
+	<alpine.LNX.2.00.1403182208590.2018@nippy.intranet>
+	<1395146702.2812.47.camel@joe-AO722>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailp.voltaire.com ([193.47.165.129]:34982 "EHLO mellanox.co.il"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754018AbaCRMw3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 Mar 2014 08:52:29 -0400
+Received: from mail-pd0-f174.google.com ([209.85.192.174]:32976 "EHLO
+	mail-pd0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753891AbaCRMzN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Mar 2014 08:55:13 -0400
+In-Reply-To: <1395146702.2812.47.camel@joe-AO722>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: nab@linux-iscsi.org
-Cc: target-devel@vger.kernel.org, ogerlitz@mellanox.com, oren@mellanox.com, linux-scsi@vger.kernel.org
+To: Joe Perches <joe@perches.com>
+Cc: Finn Thain <fthain@telegraphics.com.au>, "James E.J. Bottomley" <JBottomley@parallels.com>, scsi <linux-scsi@vger.kernel.org>, Sam Creasey <sammy@sammy.net>, Russell King <linux@arm.linux.org.uk>, Michael Schmitz <schmitz@debian.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Linux/m68k <linux-m68k@vger.kernel.org>
 
-If during data-transfer a data-integrity error was detected we
-must fail the command with CHECK_CONDITION and not execute
-the command.
+On Tue, Mar 18, 2014 at 1:45 PM, Joe Perches <joe@perches.com> wrote:
+> NCR does use pr_debug for the dprintk call, but
+> it also doesn't verify fmt/arg matching when not
+> compiled in
+>
+> drivers/scsi/NCR5380.h-#if NDEBUG
+> drivers/scsi/NCR5380.h:#define dprintk(flg, fmt, args...) \
+> drivers/scsi/NCR5380.h- do { if ((NDEBUG) & (flg)) pr_debug(fmt, ## args); } while (0)
+> []
+> drivers/scsi/NCR5380.h-#else
+> drivers/scsi/NCR5380.h:#define dprintk(flg, fmt, args...)     do {} while (0)
+>
+> It'd be nice to change the last do {} while (0)
+> to something like:
+>
+> #define dprintk(flg, fmt, args...) \
+> do { if (0) pr_debug(fmt, ## args); } while (0)
+>
+> so the compiler can always verify but not emit any
+> actual code or format strings.
+>
+> Also, using macros with ... and __VA_ARGS__ is
+> a bit more modern.
+>
+> #define dprintk(flg, fmt, ...) \
+> do { if (0) pr_debug(fmt, ##__VA_ARGS__); } while (0)
 
-Cnages from v0:
-- Added reported-by Or gerlitz
+Na, no_printk():
 
-Signed-off-by: Sagi Grimberg <sagig@mellanox.com>
-Reported-by: Or Gerlitz <ogerlitz@mellanox.com>
----
- drivers/infiniband/ulp/isert/ib_isert.c |    8 ++++++--
- 1 files changed, 6 insertions(+), 2 deletions(-)
+#define dprintk(flg, fmt, ...) no_printk(fmt, ##__VA_ARGS__)
 
-diff --git a/drivers/infiniband/ulp/isert/ib_isert.c b/drivers/infiniband/ulp/isert/ib_isert.c
-index e2d48a9..09bde9f 100644
---- a/drivers/infiniband/ulp/isert/ib_isert.c
-+++ b/drivers/infiniband/ulp/isert/ib_isert.c
-@@ -1736,7 +1736,7 @@ isert_completion_rdma_read(struct iser_tx_desc *tx_desc,
- 	struct se_cmd *se_cmd = &cmd->se_cmd;
- 	struct isert_conn *isert_conn = isert_cmd->conn;
- 	struct isert_device *device = isert_conn->conn_device;
--	int ret;
-+	int ret = 0;
- 
- 	if (wr->fr_desc && wr->fr_desc->ind & ISERT_PROTECTED) {
- 		ret = isert_check_pi_status(se_cmd,
-@@ -1755,7 +1755,11 @@ isert_completion_rdma_read(struct iser_tx_desc *tx_desc,
- 	cmd->i_state = ISTATE_RECEIVED_LAST_DATAOUT;
- 	spin_unlock_bh(&cmd->istate_lock);
- 
--	target_execute_cmd(se_cmd);
-+	if (ret)
-+		transport_send_check_condition_and_sense(se_cmd,
-+							 se_cmd->pi_err, 0);
-+	else
-+		target_execute_cmd(se_cmd);
- }
- 
- static void
--- 
-1.7.1
+Gr{oetje,eeting}s,
 
+                        Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
