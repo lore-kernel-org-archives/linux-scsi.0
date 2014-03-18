@@ -1,75 +1,132 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH v6 1/3] libata, libsas: kill pm_result and related cleanup
-Date: Tue, 18 Mar 2014 09:48:12 -0700
-Message-ID: <CAPcyv4j=rndWzuA2M7Ctnj8BO-Z62n9KuJtay0yJBTTzF=k5KA@mail.gmail.com>
-References: <20140314205204.1269.44402.stgit@viggo.jf.intel.com>
-	<20140314205248.1269.33730.stgit@viggo.jf.intel.com>
-	<20140318160356.GC3642@htj.dyndns.org>
+From: Oleg Nesterov <oleg@redhat.com>
+Subject: Re: [v3.13][v3.14][Regression] kthread:
+	makekthread_create()killable
+Date: Tue, 18 Mar 2014 18:16:20 +0100
+Message-ID: <20140318171620.GA10636@redhat.com>
+References: <201403150943.BIH30251.FOQLOOtFJHSMVF@I-love.SAKURA.ne.jp> <201403170013.GJF86930.FtVOOQOHLFFMSJ@I-love.SAKURA.ne.jp> <20140316162512.GA9467@redhat.com> <201403172138.GFB43278.OOOFFSQLVHJMtF@I-love.SAKURA.ne.jp> <20140317142246.GA27453@redhat.com> <201403182103.BJC78148.tFOFHQOJLOMVSF@I-love.SAKURA.ne.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-vc0-f178.google.com ([209.85.220.178]:51412 "EHLO
-	mail-vc0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753109AbaCRQsN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Mar 2014 12:48:13 -0400
-Received: by mail-vc0-f178.google.com with SMTP id im17so7466920vcb.23
-        for <linux-scsi@vger.kernel.org>; Tue, 18 Mar 2014 09:48:12 -0700 (PDT)
-In-Reply-To: <20140318160356.GC3642@htj.dyndns.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <201403182103.BJC78148.tFOFHQOJLOMVSF@I-love.SAKURA.ne.jp>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Cc: JBottomley@parallels.com, Nagalakshmi.Nandigama@lsi.com, Sreekanth.Reddy@lsi.com, rientjes@google.com, akpm@linux-foundation.org, joseph.salisbury@canonical.com, torvalds@linux-foundation.org, tj@kernel.org, tglx@linutronix.de, linux-kernel@vger.kernel.org, kernel-team@lists.ubuntu.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: James Bottomley <JBottomley@parallels.com>, Phillip Susi <psusi@ubuntu.com>, Todd Brandt <todd.e.brandt@intel.com>, Alan Stern <stern@rowland.harvard.edu>, linux-scsi <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On Tue, Mar 18, 2014 at 9:03 AM, Tejun Heo <tj@kernel.org> wrote:
-> On Fri, Mar 14, 2014 at 01:52:48PM -0700, Dan Williams wrote:
->> Tejun says:
->>   "At least for libata, worrying about suspend/resume failures don't make
->>    whole lot of sense.  If suspend failed, just proceed with suspend.  If
->>    the device can't be woken up afterwards, that's that.  There isn't
->>    anything we could have done differently anyway.  The same for resume, if
->>    spinup fails, the device is dud and the following commands will invoke
->>    EH actions and will eventually fail.  Again, there really isn't any
->>    *choice* to make.  Just making sure the errors are handled gracefully
->>    (ie. don't crash) and the following commands are handled correctly
->>    should be enough."
->>
->> The only libata user that actually cares about the result from a suspend
->> operation is libsas.  However, it only cares about whether queuing a new
->> operation collides with an in-flight one.  All libsas does with the
->> error is retry, but we can just let libata wait for the previous
->> operation before continuing.
->>
->> Other cleanups include:
->> 1/ Unifying all ata port pm operations on an ata_port_pm_ prefix
->> 2/ Marking all ata port pm helper routines as returning void, only
->>    ata_port_pm_ entry points need to fake a 0 return value.
->> 3/ Killing ata_port_{suspend|resume}_common() in favor of calling
->>    ata_port_request_pm() directly
->> 4/ Killing the wrappers that just do a to_ata_port() conversion
->> 5/ Clearly marking the entry points that do async operations with an
->>   _async suffix.
->>
->> Reference: http://marc.info/?l=linux-scsi&m=138995409532286&w=2
->>
->> Cc: Phillip Susi <psusi@ubuntu.com>
->> Cc: Alan Stern <stern@rowland.harvard.edu>
->> Suggested-by: Tejun Heo <tj@kernel.org>
->> Signed-off-by: Todd Brandt <todd.e.brandt@intel.com>
->> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+On 03/18, Tetsuo Handa wrote:
 >
-> Can somebody ack the sas part?
+> Oleg Nesterov wrote:
+> > If we need the urgent hack to fix the regression, then I suggest to change
+> > scsi_host_alloc() temporary until mptsas (or whatever) is fixed.
 >
+> Device initialization taking longer than 30 seconds is possible and is not a
+> hang up. It is systemd which needs to be fixed.
 
-Hmm I'd just as soon self-ack at this point.  I'm cleaning up code I
-wrote a couple years ago, and libsas bugs at this point are
-self-inflicted.
+Perhaps systemd needs the fix too, I do not know. But this is irrelevant,
+I think. Or at least this should be discussed separately.
 
-Top-5 in drivers/scsi/libsas by changeset in the past 5 years:
-    75  Dan Williams
-    12  James Bottomley
-     9  Linus Torvalds
-     7  Tejun Heo
-     4  Sergei Shtylyov
+kthread_run() can fail anyway, mptsas_probe() should not crash the kernel.
 
---
-Dan
+And btw, it is not clear to me if in this case device initialization really
+needs more than 30 seconds... My understanding is probably wrong, so please
+correct me. But it seems that before your "make kthread_create() killable"
+
+	- probe hangs
+
+	- SIGKILL wakes it up
+
+	- so I assume that the probe was interrupted and didn't finish
+	  correctly ???
+
+	- initialization continues, does scsi_host_alloc(), etc, and
+	  everything works fine even if probe was interrupted?
+
+So perhaps that probe should not hang and this should be fixed too ?
+Do you know where exactly it hangs? And where it is woken up by SIGKILL ?
+Or I totally misunderstood ?
+
+> > --- x/drivers/scsi/hosts.c
+> > +++ x/drivers/scsi/hosts.c
+> > @@ -447,8 +447,18 @@ struct Scsi_Host *scsi_host_alloc(struct
+> >  	dev_set_name(&shost->shost_dev, "host%d", shost->host_no);
+> >  	shost->shost_dev.groups = scsi_sysfs_shost_attr_groups;
+> >
+> > -	shost->ehandler = kthread_run(scsi_error_handler, shost,
+> > -			"scsi_eh_%d", shost->host_no);
+> > +	/*
+> > +	 * HUGE COMMENT. and kthread_create() needs s/ENOMEM/EINTR/.
+> > +	 */
+> > +	for (;;) {
+> > +		shost->ehandler = kthread_run(scsi_error_handler, shost,
+> > +						"scsi_eh_%d", shost->host_no);
+> > +		if (!IS_ERR(shost->ehandler) || PTR_ERR(shost->ehandler) != -EINTR)
+> > +			break;
+> > +		clear_thread_flag(TIF_SIGPENDING);
+> > +	}
+> > +	recalc_sigpending();
+> > +
+> >  	if (IS_ERR(shost->ehandler)) {
+> >  		printk(KERN_WARNING "scsi%d: error handler thread failed to spawn, error = %ld\n",
+> >  			shost->host_no, PTR_ERR(shost->ehandler));
+> >
+> >
+>
+> I think we need a bit different version, in order to take TIF_MEMDIE flag into
+> account at the caller of kthread_create(), for the purpose of commit 786235ee
+> is "try to die as soon as possible if chosen by the OOM killer".
+>
+> 	for (;;) {
+> 		shost->ehandler = kthread_run(scsi_error_handler, shost,
+> 					      "scsi_eh_%d", shost->host_no);
+> 		if (PTR_ERR(shost->ehandler) != -EINTR ||
+> 		    test_thread_flag(TIF_MEMDIE))
+
+Well, personally I do not care about TIF_MEMDIE/oom at all. We need the
+temporary hack (unless we have the "right" fix right now) which should be
+reverted later.
+
+>   (1) Changing return code from -ENOMEM to -EINTR may not be sufficient.
+
+You mean, in kthread_create() ? And, sufficient for what?
+
+>       If kmalloc(GFP_KERNEL) in kthread_create_on_node() does something that
+>       calls recalc_sigpending(),
+
+firstly, it should not. And almost every caller of recalc_sigpending() outside
+of core signal code is wrong.
+
+> TIF_SIGPENDING will be set on the second call
+>       to kthread_run(). This will make wait_for_completion_killable() return
+>       -EINTR immediately because the second call to kthread_run() happens only
+>       when current thread already received SIGKILL (by other than the OOM
+>       killer). This may form an infinite busy loop.
+
+Not sure I understand... Yes, wait_for_completion_killable() can return
+immediately if TIF_SIGPENDING will be set again for any reason. Say, another
+signal. But the next iteration will clear TIF_SIGPENDING ?
+
+>      As I think it is difficult to prove that kmalloc(GFP_KERNEL) never sets
+>      TIF_SIGPENDING flag
+
+Ah, I see, you mean that kmalloc() can do this every time. No, this should
+not happen or we have another problem.
+
+In any case. My only point is that the regression should be fixed here, imho.
+And just in case, let me repeat that the code above is the dirty temporary hack.
+I won't insist on the ugly TIF_SIGPENDING games, say, we can use workqueue.
+
+>   (2) I don't like scattering around test_thread_flag(TIF_MEMDIE),
+>       might be other drivers who receive SIGKILL by systemd's 30 seconds
+>       timeout.
+
+Can't understand this part too... and it was you who suggested to check
+TIF_MEMDIE.
+
+Anyway. I agree with any hack in scsi_host_alloc/etc, this is up to
+maintainers. I still think that your change uncovered the problems in
+drivers/message/fusion/, these problems should be fixed somehow.
+
+Dear maintainers, we need your help.
+
+Oleg.
