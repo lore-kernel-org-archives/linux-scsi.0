@@ -1,91 +1,84 @@
-From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Subject: Re: [v3.13][v3.14][Regression] kthread: makekthread_create()killable
-Date: Tue, 18 Mar 2014 21:03:16 +0900
-Message-ID: <201403182103.BJC78148.tFOFHQOJLOMVSF@I-love.SAKURA.ne.jp>
-References: <201403150943.BIH30251.FOQLOOtFJHSMVF@I-love.SAKURA.ne.jp>
-	<201403170013.GJF86930.FtVOOQOHLFFMSJ@I-love.SAKURA.ne.jp>
-	<20140316162512.GA9467@redhat.com>
-	<201403172138.GFB43278.OOOFFSQLVHJMtF@I-love.SAKURA.ne.jp>
-	<20140317142246.GA27453@redhat.com>
+From: Joe Perches <joe@perches.com>
+Subject: Re: [PATCH 00/12] scsi/NCR5380: fix debugging macros and #include
+ structure
+Date: Tue, 18 Mar 2014 05:45:02 -0700
+Message-ID: <1395146702.2812.47.camel@joe-AO722>
+References: <20140318002822.372705594@telegraphics.com.au>
+	 <1395112756.20860.1.camel@joe-AO722>
+	 <alpine.LNX.2.00.1403182208590.2018@nippy.intranet>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from www262.sakura.ne.jp ([202.181.97.72]:62628 "EHLO
-	www262.sakura.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754070AbaCRMDW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Mar 2014 08:03:22 -0400
-In-Reply-To: <20140317142246.GA27453@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <alpine.LNX.2.00.1403182208590.2018@nippy.intranet>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Finn Thain <fthain@telegraphics.com.au>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, Sam Creasey <sammy@sammy.net>, Russell King <linux@arm.linux.org.uk>, Michael Schmitz <schmitz@debian.org>, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-m68k@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: oleg@redhat.com, JBottomley@parallels.com, Nagalakshmi.Nandigama@lsi.com, Sreekanth.Reddy@lsi.com
-Cc: rientjes@google.com, akpm@linux-foundation.org, joseph.salisbury@canonical.com, torvalds@linux-foundation.org, tj@kernel.org, tglx@linutronix.de, linux-kernel@vger.kernel.org, kernel-team@lists.ubuntu.com, linux-scsi@vger.kernel.org
 
-Oleg Nesterov wrote:
-> If we need the urgent hack to fix the regression, then I suggest to change
-> scsi_host_alloc() temporary until mptsas (or whatever) is fixed.
-
-Device initialization taking longer than 30 seconds is possible and is not a
-hang up. It is systemd which needs to be fixed.
-
-> --- x/drivers/scsi/hosts.c
-> +++ x/drivers/scsi/hosts.c
-> @@ -447,8 +447,18 @@ struct Scsi_Host *scsi_host_alloc(struct
->  	dev_set_name(&shost->shost_dev, "host%d", shost->host_no);
->  	shost->shost_dev.groups = scsi_sysfs_shost_attr_groups;
->  
-> -	shost->ehandler = kthread_run(scsi_error_handler, shost,
-> -			"scsi_eh_%d", shost->host_no);
-> +	/*
-> +	 * HUGE COMMENT. and kthread_create() needs s/ENOMEM/EINTR/.
-> +	 */
-> +	for (;;) {
-> +		shost->ehandler = kthread_run(scsi_error_handler, shost,
-> +						"scsi_eh_%d", shost->host_no);
-> +		if (!IS_ERR(shost->ehandler) || PTR_ERR(shost->ehandler) != -EINTR)
-> +			break;
-> +		clear_thread_flag(TIF_SIGPENDING);
-> +	}
-> +	recalc_sigpending();
-> +
->  	if (IS_ERR(shost->ehandler)) {
->  		printk(KERN_WARNING "scsi%d: error handler thread failed to spawn, error = %ld\n",
->  			shost->host_no, PTR_ERR(shost->ehandler));
+On Tue, 2014-03-18 at 23:00 +1100, Finn Thain wrote:
+> On Mon, 17 Mar 2014, Joe Perches wrote:
+> > My preference would be to change dprintk to scsi_dbg
+> Can you be more specific? I gather you're not referring to the debugging 
+> routines in include/scsi/scsi_dbg.h as they aren't equivalent.
 > 
-> 
+> Is it the name "dprintk" you object to?
 
-I think we need a bit different version, in order to take TIF_MEMDIE flag into
-account at the caller of kthread_create(), for the purpose of commit 786235ee
-is "try to die as soon as possible if chosen by the OOM killer".
+It's not an objection, just a preference.
 
-	for (;;) {
-		shost->ehandler = kthread_run(scsi_error_handler, shost,
-					      "scsi_eh_%d", shost->host_no);
-		if (PTR_ERR(shost->ehandler) != -EINTR ||
-		    test_thread_flag(TIF_MEMDIE))
-			break;
-		clear_thread_flag(TIF_SIGPENDING);
-	}
-	recalc_sigpending();
+I'm happy you're trying to wade through it and
+promote some consistency in scsi.  Thank you.
 
-But I have two worrying points.
+> I went looking in drivers/scsi/ for some kind of naming convention for a 
+> conditional printk. There are some other variations on the theme (DEBUG, 
+> PDEBUG, PERROR, etc) but dprintk() seems to be the most popular.
 
-  (1) Changing return code from -ENOMEM to -EINTR may not be sufficient.
+True.  scsi is not what I would call an exemplar
+for style consistency in linux-kernel.
 
-      If kmalloc(GFP_KERNEL) in kthread_create_on_node() does something that
-      calls recalc_sigpending(), TIF_SIGPENDING will be set on the second call
-      to kthread_run(). This will make wait_for_completion_killable() return
-      -EINTR immediately because the second call to kthread_run() happens only
-      when current thread already received SIGKILL (by other than the OOM
-      killer). This may form an infinite busy loop.
+Where is DEBUG #defined for this code?
+git grep -w DEBUG drivers/scsi isn't pretty.
 
-      As I think it is difficult to prove that kmalloc(GFP_KERNEL) never sets
-      TIF_SIGPENDING flag, we would need to call
-      clear_thread_flag(TIF_SIGPENDING) immediately before
-      wait_for_completion_killable() and call recalc_sigpending() immediately
-      after wait_for_completion_killable(). Is this better than taking care of
-      SIGKILL (by other than the OOM killer) on the first call to
-      kthread_run() ?
+I suggest that dprintk be converted to something
+that integrates well with the dynamic_debug
+facility.  Most of the helper functions that
+are integrated with dynamic_debug are named
+something like <some_prefix>_dbg.
 
-  (2) I don't like scattering around test_thread_flag(TIF_MEMDIE), for there
-      might be other drivers who receive SIGKILL by systemd's 30 seconds
-      timeout.
+Most of the scsi dprintk defines (not NCR)
+are similar to:
+
+drivers/scsi/hptiop.h-#if 0
+drivers/scsi/hptiop.h:#define dprintk(fmt, args...) do { printk(fmt, ##args); } while(0)
+drivers/scsi/hptiop.h-#else
+drivers/scsi/hptiop.h:#define dprintk(fmt, args...)
+drivers/scsi/hptiop.h-#endif
+
+No dynamic_debug, no format/arg mismatch checking
+if not compiled in, no KERN_DEBUG level, etc.
+
+NCR does use pr_debug for the dprintk call, but
+it also doesn't verify fmt/arg matching when not
+compiled in
+
+drivers/scsi/NCR5380.h-#if NDEBUG
+drivers/scsi/NCR5380.h:#define dprintk(flg, fmt, args...) \
+drivers/scsi/NCR5380.h- do { if ((NDEBUG) & (flg)) pr_debug(fmt, ## args); } while (0)
+[]
+drivers/scsi/NCR5380.h-#else
+drivers/scsi/NCR5380.h:#define dprintk(flg, fmt, args...)     do {} while (0)
+
+It'd be nice to change the last do {} while (0)
+to something like:
+
+#define dprintk(flg, fmt, args...) \
+do { if (0) pr_debug(fmt, ## args); } while (0)
+
+so the compiler can always verify but not emit any
+actual code or format strings.
+
+Also, using macros with ... and __VA_ARGS__ is
+a bit more modern.
+
+#define dprintk(flg, fmt, ...) \
+do { if (0) pr_debug(fmt, ##__VA_ARGS__); } while (0)
