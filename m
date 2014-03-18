@@ -1,65 +1,58 @@
-From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Subject: RE: [PATCH 6/6] Invalidate VPD page data
-Date: Tue, 18 Mar 2014 14:45:35 +0000
-Message-ID: <94D0CD8314A33A4D9D801C0FE68B4029548CAED0@G4W3202.americas.hpqcorp.net>
-References: <1394873512-102073-1-git-send-email-hare@suse.de>
- <1394873512-102073-7-git-send-email-hare@suse.de>
- <53277311.9000105@tributary.com> <5327ED4A.9020202@suse.de>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v6 1/3] libata, libsas: kill pm_result and related cleanup
+Date: Tue, 18 Mar 2014 12:03:56 -0400
+Message-ID: <20140318160356.GC3642@htj.dyndns.org>
+References: <20140314205204.1269.44402.stgit@viggo.jf.intel.com>
+ <20140314205248.1269.33730.stgit@viggo.jf.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g2t1383g.austin.hp.com ([15.217.136.92]:14039 "EHLO
-	g2t1383g.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756189AbaCROq0 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Mar 2014 10:46:26 -0400
-Received: from g4t3425.houston.hp.com (g4t3425.houston.hp.com [15.201.208.53])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by g2t1383g.austin.hp.com (Postfix) with ESMTPS id E30943005
-	for <linux-scsi@vger.kernel.org>; Tue, 18 Mar 2014 14:46:16 +0000 (UTC)
-In-Reply-To: <5327ED4A.9020202@suse.de>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20140314205248.1269.33730.stgit@viggo.jf.intel.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: JBottomley@Parallels.com, Phillip Susi <psusi@ubuntu.com>, Todd Brandt <todd.e.brandt@intel.com>, Alan Stern <stern@rowland.harvard.edu>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, Jeremy Linton <jlinton@tributary.com>, James Bottomley <jbottomley@parallels.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
+On Fri, Mar 14, 2014 at 01:52:48PM -0700, Dan Williams wrote:
+> Tejun says:
+>   "At least for libata, worrying about suspend/resume failures don't make
+>    whole lot of sense.  If suspend failed, just proceed with suspend.  If
+>    the device can't be woken up afterwards, that's that.  There isn't
+>    anything we could have done differently anyway.  The same for resume, if
+>    spinup fails, the device is dud and the following commands will invoke
+>    EH actions and will eventually fail.  Again, there really isn't any
+>    *choice* to make.  Just making sure the errors are handled gracefully
+>    (ie. don't crash) and the following commands are handled correctly
+>    should be enough."
+> 
+> The only libata user that actually cares about the result from a suspend
+> operation is libsas.  However, it only cares about whether queuing a new
+> operation collides with an in-flight one.  All libsas does with the
+> error is retry, but we can just let libata wait for the previous
+> operation before continuing.
+> 
+> Other cleanups include:
+> 1/ Unifying all ata port pm operations on an ata_port_pm_ prefix
+> 2/ Marking all ata port pm helper routines as returning void, only
+>    ata_port_pm_ entry points need to fake a 0 return value.
+> 3/ Killing ata_port_{suspend|resume}_common() in favor of calling
+>    ata_port_request_pm() directly
+> 4/ Killing the wrappers that just do a to_ata_port() conversion
+> 5/ Clearly marking the entry points that do async operations with an
+>   _async suffix.
+> 
+> Reference: http://marc.info/?l=linux-scsi&m=138995409532286&w=2
+> 
+> Cc: Phillip Susi <psusi@ubuntu.com>
+> Cc: Alan Stern <stern@rowland.harvard.edu>
+> Suggested-by: Tejun Heo <tj@kernel.org>
+> Signed-off-by: Todd Brandt <todd.e.brandt@intel.com>
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 
-> On 03/17/2014 11:11 PM, Jeremy Linton wrote:
-> >
-> > I didn't study the whole code path but does the VPD data get
-> > updated on a 6/2900? I suspect it should be. I can imagine a
-> > number of cases where the luns changed check condition gets
-> > preempted/lost by a device reset. I guess much of that should
-> > be masked by the port login/logout, but its probably better to
-> > be safe...
-> >
+Can somebody ack the sas part?
 
-See the unit attention condition precedence level table in the 
-SCSI Architecture Model (sam5r15 table 54 page 121).
+Thanks.
 
-POWER ON, RESET, OR BUS DEVICE RESET OCCURRED 
-(29h 00h) has the highest precedence, meaning that
-any other unit attention condition might also have 
-occurred but no longer be individually reported.
-
-Similarly, all the others in table 54 have precedence over
-(and thus imply the possibility of) INQUIRY DATA HAS 
-CHANGED.
-
-In addition to the codes in table 54, since INQUIRY DATA 
-HAS CHANGED has a nonzero ASCQ (3Fh 03h),  it also has 
-lower precedence than 3Fh 00h TARGET OPERATING 
-CONDITIONS HAVE CHANGED.
-
-For generic SCSI code, the "protocol specific" codes
-may be the hardest to handle.  That covers these old 
-parallel SCSI codes:
-29h 05h TRANSCEIVER MODE CHANGED TO SINGLE-ENDED
-29h 06h TRANSCEIVER MODE CHANGED TO LVD
-but allows newer protocols to add codes if needed.
-
-You may need the LLD to report an optional list of 
-extra codes to consider at that precedence level.
-
+-- 
+tejun
