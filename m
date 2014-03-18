@@ -1,84 +1,56 @@
-From: Joe Perches <joe@perches.com>
-Subject: Re: [PATCH 00/12] scsi/NCR5380: fix debugging macros and #include
- structure
-Date: Tue, 18 Mar 2014 05:45:02 -0700
-Message-ID: <1395146702.2812.47.camel@joe-AO722>
-References: <20140318002822.372705594@telegraphics.com.au>
-	 <1395112756.20860.1.camel@joe-AO722>
-	 <alpine.LNX.2.00.1403182208590.2018@nippy.intranet>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <alpine.LNX.2.00.1403182208590.2018@nippy.intranet>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, Sam Creasey <sammy@sammy.net>, Russell King <linux@arm.linux.org.uk>, Michael Schmitz <schmitz@debian.org>, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-m68k@vger.kernel.org
+From: Sagi Grimberg <sagig@mellanox.com>
+Subject: [PATCH v1] Target/iser: Fail SCSI WRITE command if device detected integrity error
+Date: Tue, 18 Mar 2014 14:52:03 +0200
+Message-ID: <1395147123-15836-1-git-send-email-sagig@mellanox.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mailp.voltaire.com ([193.47.165.129]:34982 "EHLO mellanox.co.il"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754018AbaCRMw3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 18 Mar 2014 08:52:29 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: nab@linux-iscsi.org
+Cc: target-devel@vger.kernel.org, ogerlitz@mellanox.com, oren@mellanox.com, linux-scsi@vger.kernel.org
 
-On Tue, 2014-03-18 at 23:00 +1100, Finn Thain wrote:
-> On Mon, 17 Mar 2014, Joe Perches wrote:
-> > My preference would be to change dprintk to scsi_dbg
-> Can you be more specific? I gather you're not referring to the debugging 
-> routines in include/scsi/scsi_dbg.h as they aren't equivalent.
-> 
-> Is it the name "dprintk" you object to?
+If during data-transfer a data-integrity error was detected we
+must fail the command with CHECK_CONDITION and not execute
+the command.
 
-It's not an objection, just a preference.
+Cnages from v0:
+- Added reported-by Or gerlitz
 
-I'm happy you're trying to wade through it and
-promote some consistency in scsi.  Thank you.
+Signed-off-by: Sagi Grimberg <sagig@mellanox.com>
+Reported-by: Or Gerlitz <ogerlitz@mellanox.com>
+---
+ drivers/infiniband/ulp/isert/ib_isert.c |    8 ++++++--
+ 1 files changed, 6 insertions(+), 2 deletions(-)
 
-> I went looking in drivers/scsi/ for some kind of naming convention for a 
-> conditional printk. There are some other variations on the theme (DEBUG, 
-> PDEBUG, PERROR, etc) but dprintk() seems to be the most popular.
+diff --git a/drivers/infiniband/ulp/isert/ib_isert.c b/drivers/infiniband/ulp/isert/ib_isert.c
+index e2d48a9..09bde9f 100644
+--- a/drivers/infiniband/ulp/isert/ib_isert.c
++++ b/drivers/infiniband/ulp/isert/ib_isert.c
+@@ -1736,7 +1736,7 @@ isert_completion_rdma_read(struct iser_tx_desc *tx_desc,
+ 	struct se_cmd *se_cmd = &cmd->se_cmd;
+ 	struct isert_conn *isert_conn = isert_cmd->conn;
+ 	struct isert_device *device = isert_conn->conn_device;
+-	int ret;
++	int ret = 0;
+ 
+ 	if (wr->fr_desc && wr->fr_desc->ind & ISERT_PROTECTED) {
+ 		ret = isert_check_pi_status(se_cmd,
+@@ -1755,7 +1755,11 @@ isert_completion_rdma_read(struct iser_tx_desc *tx_desc,
+ 	cmd->i_state = ISTATE_RECEIVED_LAST_DATAOUT;
+ 	spin_unlock_bh(&cmd->istate_lock);
+ 
+-	target_execute_cmd(se_cmd);
++	if (ret)
++		transport_send_check_condition_and_sense(se_cmd,
++							 se_cmd->pi_err, 0);
++	else
++		target_execute_cmd(se_cmd);
+ }
+ 
+ static void
+-- 
+1.7.1
 
-True.  scsi is not what I would call an exemplar
-for style consistency in linux-kernel.
-
-Where is DEBUG #defined for this code?
-git grep -w DEBUG drivers/scsi isn't pretty.
-
-I suggest that dprintk be converted to something
-that integrates well with the dynamic_debug
-facility.  Most of the helper functions that
-are integrated with dynamic_debug are named
-something like <some_prefix>_dbg.
-
-Most of the scsi dprintk defines (not NCR)
-are similar to:
-
-drivers/scsi/hptiop.h-#if 0
-drivers/scsi/hptiop.h:#define dprintk(fmt, args...) do { printk(fmt, ##args); } while(0)
-drivers/scsi/hptiop.h-#else
-drivers/scsi/hptiop.h:#define dprintk(fmt, args...)
-drivers/scsi/hptiop.h-#endif
-
-No dynamic_debug, no format/arg mismatch checking
-if not compiled in, no KERN_DEBUG level, etc.
-
-NCR does use pr_debug for the dprintk call, but
-it also doesn't verify fmt/arg matching when not
-compiled in
-
-drivers/scsi/NCR5380.h-#if NDEBUG
-drivers/scsi/NCR5380.h:#define dprintk(flg, fmt, args...) \
-drivers/scsi/NCR5380.h- do { if ((NDEBUG) & (flg)) pr_debug(fmt, ## args); } while (0)
-[]
-drivers/scsi/NCR5380.h-#else
-drivers/scsi/NCR5380.h:#define dprintk(flg, fmt, args...)     do {} while (0)
-
-It'd be nice to change the last do {} while (0)
-to something like:
-
-#define dprintk(flg, fmt, args...) \
-do { if (0) pr_debug(fmt, ## args); } while (0)
-
-so the compiler can always verify but not emit any
-actual code or format strings.
-
-Also, using macros with ... and __VA_ARGS__ is
-a bit more modern.
-
-#define dprintk(flg, fmt, ...) \
-do { if (0) pr_debug(fmt, ##__VA_ARGS__); } while (0)
