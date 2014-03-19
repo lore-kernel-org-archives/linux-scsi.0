@@ -1,104 +1,50 @@
-From: Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: Re: Deadlock in usb-storage error handling
-Date: Wed, 19 Mar 2014 13:54:18 -0700
-Message-ID: <CAA9_cmfe5XLZ5yPjmhe+dw7YUQA4URCEpUHbpmf++4TpTjnaWA@mail.gmail.com>
-References: <53298181.9020206@gmail.com>
-	<Pine.LNX.4.44L0.1403191449290.887-100000@iolanthe.rowland.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH RESEND 4/7] ipr: Get rid of superfluous call to
+ pci_disbale_msi/msix()
+Date: Wed, 19 Mar 2014 13:57:23 -0700
+Message-ID: <1395262643.2185.47.camel@dabdike.int.hansenpartnership.com>
+References: <20140312210845.384489953@vmlinux.vnet.ibm.com>
+	 <20140312210906.288887472@vmlinux.vnet.ibm.com>
+	 <1395258906.2185.43.camel@dabdike.int.hansenpartnership.com>
+	 <5329FD69.8060100@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <Pine.LNX.4.44L0.1403191449290.887-100000-IYeN2dnnYyZXsRXLowluHWD2FQJk+8+b@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Cc: Andreas Reis <andreas.reis-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, James Bottomley <James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:36768 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753933AbaCSU51 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 19 Mar 2014 16:57:27 -0400
+In-Reply-To: <5329FD69.8060100@linux.vnet.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Brian King <brking@linux.vnet.ibm.com>
+Cc: Wendy Xiong <wenxiong@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Alexander Gordeev <agordeev@redhat.com>
 
-On Wed, Mar 19, 2014 at 1:31 PM, Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org> wrote:
-> On Wed, 19 Mar 2014, Andreas Reis wrote:
->
->> I've uploaded a dmesg with the new debugging patch to bugzilla:
->> https://bugzilla.kernel.org/attachment.cgi?id=130041
->
-> Thanks.  I have now managed to reproduce many of the features of this
-> problem on my own computer.
->
-> James, I will need your help (or help from somebody who understands the
-> SCSI error handler) to figure out how this problem should be fixed.
->
-> Basically, usb-storage deadlocks when the SCSI error handler invokes
-> the eh_device_reset_handler callback while a command is running.  The
-> command has timed out and will never complete normally, because the
-> device's firmware has crashed.  But usb-storage's device-reset routine
-> waits for the current command to finish, which brings everything to a
-> standstill.
->
-> Is this design wrong?  That is, should the device-reset routine wait
-> for currently executing commands to finish, or should it abort them, or
-> what?
->
-> Or should the SCSI error handler abort the running command before
-> invoking the eh_device_reset_handler callback?
->
-> For the record, and in case anyone is curious, here's the detailed
-> sequence of events during my test:
->
->         sd issues a READ(10) command.  For whatever reason, the device
->         goes nuts and the command times out.
->
->         scsi_times_out() calls scsi_abort_command(), which queues an
->         abort request.
->
->         scmd_eh_abort_handler() calls scsi_try_to_abort_cmd(), which
->         succeeds in aborting the READ.
->
->         The READ command is retried (I didn't trace through the details
->         of this).  The retry fails with a Unit Attention (SK=6,
->         ASC=0x29, Reset or Bus Device Reset Occurred).
->
->         The READ command is retried a second time, and it times out
->         again.
->
->         This time around, scsi_times_out() calls scsi_abort_command()
->         unsuccessfully (because the SCSI_EH_ABORT_SCHEDULED flag is
->         still set).
->
->         As a result, scsi_error_handler() calls scsi_unjam_host(),
->         which calls scsi_eh_get_sense().
->
->         That routine calls scsi_request_sense(), which goes into
->         scsi_send_eh_cmnd().
->
->         The calls to shost->hostt->queuecommand() all fail, because the
->         READ command is still running and usb-storage has a queue
->         depth of 1.  The error messages produced by these failures are
->         disconcerting but not dangerous.
->
->         Since the REQUEST SENSE command was never issued,
->         scsi_eh_get_sense() returns 0.
->
->         scsi_unjam_host() goes on to call scsi_eh_abort_cmds(), which
->         does essentially nothing because the SCSI_EH_CANCEL_CMD flag
->         for the only command on work_q is clear.
->         scsi_eh_test_devices() returns 0 because check_list is empty
->         and work_q isn't.
->
->         scsi_unjam_host() then calls scsi_eh_ready_devs().  This
->         routine ends up calling scsi_eh_bus_device_reset(), at which
->         point usb-storage deadlocks as described above.
->
-> (On Andreas's system, the first READ retry times out as opposed to the
-> second retry as on my computer.  I doubt this makes any difference.)
->
-> I can't tell if this is all working as intended or if it went off the
-> tracks somewhere.
->
-> Thanks for any guidance.
->
+On Wed, 2014-03-19 at 15:26 -0500, Brian King wrote:
+> On 03/19/2014 02:55 PM, James Bottomley wrote:
+> > On Wed, 2014-03-12 at 16:08 -0500, wenxiong@vmlinux.vnet.ibm.com wrote:
+> >> From: Alexander Gordeev <agordeev@redhat.com>
+> >>
+> >> There is no need to call pci_disable_msi() or pci_disable_msix()
+> >> in case the call to pci_enable_msi() or pci_enable_msix() failed.
+> >>
+> >> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> >> Acked-by: Brian King <brking@linux.vnet.ibm.com>
+> >> ---
+> > 
+> > This needs a Signed-off-by: from you as well, since you transmitted the
+> > patch to me.  I assume it was just omitted in error and have added it in
+> > the git repository.
+> 
+> Correcting Wendy's email address...
 
-It seems to me we need an ->eh_strategy_handler() that understands the
-usb transport and will escalate to device reset around the time
-scsi_abort_command() fails.
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Humf, that means it's wrong in the Author field of the git commits
+too ... please fix whatever script is sending the wrong email address.
+
+Thanks,
+
+James
+
+
