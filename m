@@ -1,57 +1,100 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [PATCH RESEND 4/7] ipr: Get rid of superfluous call to pci_disbale_msi/msix()
-Date: Wed, 19 Mar 2014 15:26:17 -0500
-Message-ID: <5329FD69.8060100@linux.vnet.ibm.com>
-References: <20140312210845.384489953@vmlinux.vnet.ibm.com> <20140312210906.288887472@vmlinux.vnet.ibm.com> <1395258906.2185.43.camel@dabdike.int.hansenpartnership.com>
+From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Subject: Deadlock in usb-storage error handling
+Date: Wed, 19 Mar 2014 16:31:42 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1403191449290.887-100000@iolanthe.rowland.org>
+References: <53298181.9020206@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.151]:36707 "EHLO
-	e33.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754455AbaCSU0X (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Mar 2014 16:26:23 -0400
-Received: from /spool/local
-	by e33.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
-	Wed, 19 Mar 2014 14:26:23 -0600
-Received: from b03cxnp08025.gho.boulder.ibm.com (b03cxnp08025.gho.boulder.ibm.com [9.17.130.17])
-	by d03dlp03.boulder.ibm.com (Postfix) with ESMTP id 8D67519D8036
-	for <linux-scsi@vger.kernel.org>; Wed, 19 Mar 2014 14:26:16 -0600 (MDT)
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by b03cxnp08025.gho.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s2JKQJIj55836778
-	for <linux-scsi@vger.kernel.org>; Wed, 19 Mar 2014 21:26:19 +0100
-Received: from d03av02.boulder.ibm.com (localhost [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s2JKQJKi031339
-	for <linux-scsi@vger.kernel.org>; Wed, 19 Mar 2014 14:26:19 -0600
-In-Reply-To: <1395258906.2185.43.camel@dabdike.int.hansenpartnership.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <53298181.9020206-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Andreas Reis <andreas.reis-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
+Cc: USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Wendy Xiong <wenxiong@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Alexander Gordeev <agordeev@redhat.com>, Brian King <brking@linux.vnet.ibm.com>
 
-On 03/19/2014 02:55 PM, James Bottomley wrote:
-> On Wed, 2014-03-12 at 16:08 -0500, wenxiong@vmlinux.vnet.ibm.com wrote:
->> From: Alexander Gordeev <agordeev@redhat.com>
->>
->> There is no need to call pci_disable_msi() or pci_disable_msix()
->> in case the call to pci_enable_msi() or pci_enable_msix() failed.
->>
->> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
->> Acked-by: Brian King <brking@linux.vnet.ibm.com>
->> ---
-> 
-> This needs a Signed-off-by: from you as well, since you transmitted the
-> patch to me.  I assume it was just omitted in error and have added it in
-> the git repository.
+On Wed, 19 Mar 2014, Andreas Reis wrote:
 
-Correcting Wendy's email address...
+> I've uploaded a dmesg with the new debugging patch to bugzilla:
+> https://bugzilla.kernel.org/attachment.cgi?id=130041
 
--Brian
+Thanks.  I have now managed to reproduce many of the features of this
+problem on my own computer.
 
--- 
-Brian King
-Power Linux I/O
-IBM Linux Technology Center
+James, I will need your help (or help from somebody who understands the 
+SCSI error handler) to figure out how this problem should be fixed.
 
+Basically, usb-storage deadlocks when the SCSI error handler invokes
+the eh_device_reset_handler callback while a command is running.  The
+command has timed out and will never complete normally, because the
+device's firmware has crashed.  But usb-storage's device-reset routine
+waits for the current command to finish, which brings everything to a
+standstill.
 
+Is this design wrong?  That is, should the device-reset routine wait 
+for currently executing commands to finish, or should it abort them, or 
+what?
+
+Or should the SCSI error handler abort the running command before 
+invoking the eh_device_reset_handler callback?
+
+For the record, and in case anyone is curious, here's the detailed
+sequence of events during my test:
+
+	sd issues a READ(10) command.  For whatever reason, the device
+	goes nuts and the command times out.
+
+	scsi_times_out() calls scsi_abort_command(), which queues an
+	abort request.
+
+	scmd_eh_abort_handler() calls scsi_try_to_abort_cmd(), which
+	succeeds in aborting the READ.
+
+	The READ command is retried (I didn't trace through the details
+	of this).  The retry fails with a Unit Attention (SK=6, 
+	ASC=0x29, Reset or Bus Device Reset Occurred).
+
+	The READ command is retried a second time, and it times out 
+	again.
+
+	This time around, scsi_times_out() calls scsi_abort_command()
+	unsuccessfully (because the SCSI_EH_ABORT_SCHEDULED flag is
+	still set).
+
+	As a result, scsi_error_handler() calls scsi_unjam_host(), 
+	which calls scsi_eh_get_sense().
+
+	That routine calls scsi_request_sense(), which goes into
+	scsi_send_eh_cmnd().
+
+	The calls to shost->hostt->queuecommand() all fail, because the
+	READ command is still running and usb-storage has a queue
+	depth of 1.  The error messages produced by these failures are
+	disconcerting but not dangerous.
+
+	Since the REQUEST SENSE command was never issued, 
+	scsi_eh_get_sense() returns 0.
+
+	scsi_unjam_host() goes on to call scsi_eh_abort_cmds(), which
+	does essentially nothing because the SCSI_EH_CANCEL_CMD flag
+	for the only command on work_q is clear.  
+	scsi_eh_test_devices() returns 0 because check_list is empty
+	and work_q isn't.
+
+	scsi_unjam_host() then calls scsi_eh_ready_devs().  This
+	routine ends up calling scsi_eh_bus_device_reset(), at which 
+	point usb-storage deadlocks as described above.
+
+(On Andreas's system, the first READ retry times out as opposed to the
+second retry as on my computer.  I doubt this makes any difference.)
+
+I can't tell if this is all working as intended or if it went off the 
+tracks somewhere.
+
+Thanks for any guidance.
+
+Alan Stern
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
