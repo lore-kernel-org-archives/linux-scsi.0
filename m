@@ -1,63 +1,36 @@
-From: Joe Perches <joe@perches.com>
-Subject: Re: [PATCH 00/12] scsi/NCR5380: fix debugging macros and #include
- structure
-Date: Tue, 18 Mar 2014 18:54:41 -0700
-Message-ID: <1395194081.8649.7.camel@joe-AO722>
-References: <20140318002822.372705594@telegraphics.com.au>
-	 <1395112756.20860.1.camel@joe-AO722>
-	 <alpine.LNX.2.00.1403182208590.2018@nippy.intranet>
-	 <1395146702.2812.47.camel@joe-AO722>
-	 <CAMuHMdUMpdp7deL5zC4hUVTHjyNbtkZ2bNFupo5JiDyuyc345w@mail.gmail.com>
-	 <1395148051.2812.51.camel@joe-AO722>
-	 <alpine.LNX.2.00.1403190925550.6652@nippy.intranet>
-	 <1395190072.8649.2.camel@joe-AO722>
-	 <alpine.LNX.2.00.1403191240001.23002@nippy.intranet>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH v2] Target/iser: Fail SCSI WRITE command if device
+ detected integrity error
+Date: Tue, 18 Mar 2014 22:07:30 -0700
+Message-ID: <1395205650.536.5.camel@haakon3.risingtidesystems.com>
+References: <1395147507-19035-1-git-send-email-sagig@mellanox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <alpine.LNX.2.00.1403191240001.23002@nippy.intranet>
-Sender: linux-m68k-owner@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, scsi <linux-scsi@vger.kernel.org>, Sam Creasey <sammy@sammy.net>, Russell King <linux@arm.linux.org.uk>, Michael Schmitz <schmitz@debian.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Linux/m68k <linux-m68k@vger.kernel.org>
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1395147507-19035-1-git-send-email-sagig@mellanox.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Sagi Grimberg <sagig@mellanox.com>
+Cc: target-devel@vger.kernel.org, ogerlitz@mellanox.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2014-03-19 at 12:46 +1100, Finn Thain wrote:
-> On Tue, 18 Mar 2014, Joe Perches wrote:
+On Tue, 2014-03-18 at 14:58 +0200, Sagi Grimberg wrote:
+> If during data-transfer a data-integrity error was detected we
+> must fail the command with CHECK_CONDITION and not execute
+> the command.
 > 
-> > But using "if (0)" prevents the no_printk from occurring at all so there 
-> > would be no side-effects and the format & args would still be verified 
-> > by the compiler.
+> Signed-off-by: Sagi Grimberg <sagig@mellanox.com>
+> Reported-by: Or Gerlitz <ogerlitz@mellanox.com>
+> ---
+> Changes from v1:
+> - Fixed typo
 > 
-> I'd prefer this (for symmetry and clarity):
+> Changes from v0:
+> - Added reported-by Or gerlitz
 > 
-> #if NDEBUG
-> #define dprintk(flg, fmt, ...) \
->         do { if ((NDEBUG) & (flg)) pr_debug(fmt, ## __VA_ARGS__); } while (0)
-> #else
-> #define dprintk(flg, fmt, ...) \
->         do { if (0) pr_debug(fmt, ## __VA_ARGS__); } while (0)
-> #endif
-> 
-> But you seem to be asking for this instead:
-> 
-> #if NDEBUG
-> #define dprintk(flg, fmt, ...) \
->         do { if ((NDEBUG) & (flg)) pr_debug(fmt, ## __VA_ARGS__); } while (0)
-> #else
-> #define dprintk(flg, fmt, ...) \
->         do { if (0) no_printk(fmt, ## __VA_ARGS__); } while (0)
-> #endif
-> 
-> Why is that better?
 
-It's not to me.
+Applied to for-next.
 
-I suggested exactly your first block with if (0) pr_debug...
-in the first thing I wrote.
+Thanks Sagi & Or!
 
-https://lkml.org/lkml/2014/3/18/216
-
-Geert suggested no_printk.
-
-cheers, Joe
+--nab
