@@ -1,42 +1,95 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 69441] WARNING: CPU: 0 PID: 4992 at fs/sysfs/group.c:214
- sysfs_remove_group+0xc6/0xd0()
-Date: Wed, 19 Mar 2014 13:02:38 +0000
-Message-ID: <bug-69441-11613-TwYjLIFCov@https.bugzilla.kernel.org/>
-References: <bug-69441-11613@https.bugzilla.kernel.org/>
+From: Oleg Nesterov <oleg@redhat.com>
+Subject: Re: [v3.13][v3.14][Regression] kthread:makekthread_create()killable
+Date: Wed, 19 Mar 2014 18:52:53 +0100
+Message-ID: <20140319175253.GB11923@redhat.com>
+References: <20140316162512.GA9467@redhat.com> <201403172138.GFB43278.OOOFFSQLVHJMtF@I-love.SAKURA.ne.jp> <20140317142246.GA27453@redhat.com> <201403182103.BJC78148.tFOFHQOJLOMVSF@I-love.SAKURA.ne.jp> <20140318171620.GA10636@redhat.com> <201403192049.BBI39025.OVFMOOJtFSHFQL@I-love.SAKURA.ne.jp> <5329C22A.5070206@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:34872 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750801AbaCSRs5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Mar 2014 13:48:57 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 1611A203B8
-	for <linux-scsi@vger.kernel.org>; Wed, 19 Mar 2014 13:02:41 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-	by mail.kernel.org (Postfix) with ESMTP id EA0EA203DF
-	for <linux-scsi@vger.kernel.org>; Wed, 19 Mar 2014 13:02:39 +0000 (UTC)
-In-Reply-To: <bug-69441-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <5329C22A.5070206@canonical.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Joseph Salisbury <joseph.salisbury@canonical.com>
+Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, JBottomley@parallels.com, Nagalakshmi.Nandigama@lsi.com, Sreekanth.Reddy@lsi.com, rientjes@google.com, akpm@linux-foundation.org, torvalds@linux-foundation.org, tj@kernel.org, tglx@linutronix.de, linux-kernel@vger.kernel.org, kernel-team@lists.ubuntu.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=69441
+On 03/19, Joseph Salisbury wrote:
+>
+> On 03/19/2014 07:49 AM, Tetsuo Handa wrote:
 
-Igor Gnatenko <i.gnatenko.brain@gmail.com> changed:
+Hmm. Apparently I missed this email from Tetsuo. I'll reply here.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|RESOLVED                    |REOPENED
-         Resolution|CODE_FIX                    |---
+> > Oleg Nesterov wrote:
+> >
+> >> And btw, it is not clear to me if in this case device initialization really
+> >> needs more than 30 seconds... My understanding is probably wrong, so please
+> >> correct me. But it seems that before your "make kthread_create() killable"
+> >>
+> >> 	- probe hangs
+> >>
+> >> 	- SIGKILL wakes it up
+> >>
+> >> 	- so I assume that the probe was interrupted and didn't finish
+> >> 	  correctly ???
+> >>
+> >> 	- initialization continues, does scsi_host_alloc(), etc, and
+> >> 	  everything works fine even if probe was interrupted?
+> >>
+> > I confirmed that device initialization really took more than 30 seconds
+> > ( comments #51 and #52 ).
 
---- Comment #5 from Igor Gnatenko <i.gnatenko.brain@gmail.com> ---
-We can again reproduce this problem.
+Thanks. However I still think this needs more investigation. May be I'll
+write another email, but given that maintainers do not care...
 
->From RHBZ.
+> >> So perhaps that probe should not hang and this should be fixed too ?
+> >> Do you know where exactly it hangs? And where it is woken up by SIGKILL ?
+> >> Or I totally misunderstood ?
+> > The probe did not hang.
 
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+It doesn't hang forever. Otherwise see above.
+
+> > SIGKILL affected only wait_for_completion_killable()
+> > in kthread_create_on_node() called by mptsas_probe() via scsi_host_alloc().
+
+This wad already clear,
+
+> > Thus, the probe was interrupted because kthread_run() returned an error.
+
+No, #51 / #52 can't prove this. I think that kthread_run() or even
+scsi_host_alloc() was called with fatal_signal_pending(). What did the probe
+task do before? This is not clear. But again, see above.
+
+> >> Ah, I see, you mean that kmalloc() can do this every time. No, this should
+> >> not happen or we have another problem.
+> > Then, what happens if somebody does
+> >
+> >   while (1)
+> >       kill(pid, SIGKILL);
+> >
+> > where pid is the process calling kthread_run() from the "for (;;)" loop in
+> > scsi_host_alloc()?
+
+Nothing good. So what?
+
+Tetsuo, how many time I should repeat that I only tried to suggest the
+temporary dirty hack to close the regression ? ;)
+
+And once again, I agree with any change in scsi_host_alloc/etc, I suggested
+this (pseudo) code for example.
+
+> >> Dear maintainers, we need your help.
+> >>
+> > Right. We found that we can fix this problem by updating systemd-udevd to
+> > support longer timeout ( comment #53 ). Joseph, would you consult systemd
+> > maintainers?
+>
+> Thanks everyone for reviewing this bug.  Message sent to systemd mailing
+> list:
+> http://lists.freedesktop.org/archives/systemd-devel/2014-March/018006.html
+
+OK, good, thanks.
+
+But please do not forget that the kernel crashes. Whatever else we do, this
+should be fixed anyway. And this should be fixed in driver.
+
+Oleg.
