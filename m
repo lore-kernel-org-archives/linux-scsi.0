@@ -1,103 +1,102 @@
-From: Joseph Salisbury <joseph.salisbury@canonical.com>
-Subject: Re: [v3.13][v3.14][Regression] kthread:makekthread_create()killable
-Date: Wed, 19 Mar 2014 12:13:30 -0400
-Message-ID: <5329C22A.5070206@canonical.com>
-References: <20140316162512.GA9467@redhat.com>	<201403172138.GFB43278.OOOFFSQLVHJMtF@I-love.SAKURA.ne.jp>	<20140317142246.GA27453@redhat.com>	<201403182103.BJC78148.tFOFHQOJLOMVSF@I-love.SAKURA.ne.jp>	<20140318171620.GA10636@redhat.com> <201403192049.BBI39025.OVFMOOJtFSHFQL@I-love.SAKURA.ne.jp>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH 2/6] scsi: Return VPD page length in scsi_vpd_inquiry()
+Date: Wed, 19 Mar 2014 17:38:09 +0100
+Message-ID: <5329C7F1.6080406@redhat.com>
+References: <1394873512-102073-1-git-send-email-hare@suse.de> <1394873512-102073-3-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <201403192049.BBI39025.OVFMOOJtFSHFQL@I-love.SAKURA.ne.jp>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, oleg@redhat.com
-Cc: JBottomley@parallels.com, Nagalakshmi.Nandigama@lsi.com, Sreekanth.Reddy@lsi.com, rientjes@google.com, akpm@linux-foundation.org, torvalds@linux-foundation.org, tj@kernel.org, tglx@linutronix.de, linux-kernel@vger.kernel.org, kernel-team@lists.ubuntu.com, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:6176 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754538AbaCSQiT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 19 Mar 2014 12:38:19 -0400
+In-Reply-To: <1394873512-102073-3-git-send-email-hare@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org
 
-On 03/19/2014 07:49 AM, Tetsuo Handa wrote:
-> Oleg Nesterov wrote:
->>>> If we need the urgent hack to fix the regression, then I suggest to change
->>>> scsi_host_alloc() temporary until mptsas (or whatever) is fixed.
->>> Device initialization taking longer than 30 seconds is possible and is not a
->>> hang up. It is systemd which needs to be fixed.
->> Perhaps systemd needs the fix too, I do not know. But this is irrelevant,
->> I think. Or at least this should be discussed separately.
-> I confirmed that this problem goes away if systemd-udevd supports longer
-> timeout.
+On 03/15/2014 09:51 AM, Hannes Reinecke wrote:
+> We should be returning the number of bytes of the
+> requested VPD page in scsi_vpd_inquiry.
+> This makes it easier for the caller to verify the
+> required space.
 >
->> kthread_run() can fail anyway, mptsas_probe() should not crash the kernel.
-> Right. But mptsas_probe() triggering an OOPS is irrelevant to kthread_run()
-> ( comment #27 ).
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> ---
+>  drivers/scsi/scsi.c | 17 ++++++++++-------
+>  1 file changed, 10 insertions(+), 7 deletions(-)
 >
->> And btw, it is not clear to me if in this case device initialization really
->> needs more than 30 seconds... My understanding is probably wrong, so please
->> correct me. But it seems that before your "make kthread_create() killable"
->>
->> 	- probe hangs
->>
->> 	- SIGKILL wakes it up
->>
->> 	- so I assume that the probe was interrupted and didn't finish
->> 	  correctly ???
->>
->> 	- initialization continues, does scsi_host_alloc(), etc, and
->> 	  everything works fine even if probe was interrupted?
->>
-> I confirmed that device initialization really took more than 30 seconds
-> ( comments #51 and #52 ).
->
->> So perhaps that probe should not hang and this should be fixed too ?
->> Do you know where exactly it hangs? And where it is woken up by SIGKILL ?
->> Or I totally misunderstood ?
-> The probe did not hang. SIGKILL affected only wait_for_completion_killable()
-> in kthread_create_on_node() called by mptsas_probe() via scsi_host_alloc().
-> Thus, the probe was interrupted because kthread_run() returned an error.
->
->>> I think we need a bit different version, in order to take TIF_MEMDIE flag into
->>> account at the caller of kthread_create(), for the purpose of commit 786235ee
->>> is "try to die as soon as possible if chosen by the OOM killer".
->>>
->>> 	for (;;) {
->>> 		shost->ehandler = kthread_run(scsi_error_handler, shost,
->>> 					      "scsi_eh_%d", shost->host_no);
->>> 		if (PTR_ERR(shost->ehandler) != -EINTR ||
->>> 		    test_thread_flag(TIF_MEMDIE))
->> Well, personally I do not care about TIF_MEMDIE/oom at all. We need the
->> temporary hack (unless we have the "right" fix right now) which should be
->> reverted later.
-> I do seriously care about TIF_MEMDIE/oom. Last week I respond to a trouble
-> which hit "kernel: request_module() OOM local DoS" (RHBZ #853474) without
-> any malice.
->
->> Not sure I understand... Yes, wait_for_completion_killable() can return
->> immediately if TIF_SIGPENDING will be set again for any reason. Say, another
->> signal. But the next iteration will clear TIF_SIGPENDING ?
->>
->>>      As I think it is difficult to prove that kmalloc(GFP_KERNEL) never sets
->>>      TIF_SIGPENDING flag
->> Ah, I see, you mean that kmalloc() can do this every time. No, this should
->> not happen or we have another problem.
-> Then, what happens if somebody does
->
->   while (1)
->       kill(pid, SIGKILL);
->
-> where pid is the process calling kthread_run() from the "for (;;)" loop in
-> scsi_host_alloc()? Theoretically, it will form an infinite retry loop.
-> Clearing TIF_SIGPENDING does not guarantee that next
-> wait_for_completion_killable() does not return immediately.
-> Doing retry decision at scsi_host_alloc() will make things worse than
-> doing it at kthread_create_on_node().
->
->> Anyway. I agree with any hack in scsi_host_alloc/etc, this is up to
->> maintainers. I still think that your change uncovered the problems in
->> drivers/message/fusion/, these problems should be fixed somehow.
->>
->> Dear maintainers, we need your help.
->>
-> Right. We found that we can fix this problem by updating systemd-udevd to
-> support longer timeout ( comment #53 ). Joseph, would you consult systemd
-> maintainers?
+> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+> index d8afec8..9e08d3d 100644
+> --- a/drivers/scsi/scsi.c
+> +++ b/drivers/scsi/scsi.c
+> @@ -954,7 +954,7 @@ EXPORT_SYMBOL(scsi_track_queue_full);
+>   * This is an internal helper function.  You probably want to use
+>   * scsi_get_vpd_page instead.
+>   *
+> - * Returns 0 on success or a negative error number.
+> + * Returns size of the vpd page on success or a negative error number.
+>   */
+>  static int scsi_vpd_inquiry(struct scsi_device *sdev, unsigned char *buffer,
+>  							u8 page, unsigned len)
+> @@ -962,6 +962,9 @@ static int scsi_vpd_inquiry(struct scsi_device *sdev, unsigned char *buffer,
+>  	int result;
+>  	unsigned char cmd[16];
+>  
+> +	if (len < 4)
+> +		return -EINVAL;
+> +
+>  	cmd[0] = INQUIRY;
+>  	cmd[1] = 1;		/* EVPD */
+>  	cmd[2] = page;
 
-Thanks everyone for reviewing this bug.  Message sent to systemd mailing
-list:
-http://lists.freedesktop.org/archives/systemd-devel/2014-March/018006.html
+The result of scsi_execute_req should be evaluated, it may return a large positive number
+like DRIVER_ERROR << 24.
+
+(resending, my previous mail was rejected by the mailer)
+Cheers, Tomas
+
+> @@ -982,7 +985,7 @@ static int scsi_vpd_inquiry(struct scsi_device *sdev, unsigned char *buffer,
+>  	if (buffer[1] != page)
+>  		return -EIO;
+>  
+> -	return 0;
+> +	return get_unaligned_be16(&buffer[2]) + 4;
+>  }
+>  
+>  /**
+> @@ -1009,18 +1012,18 @@ int scsi_get_vpd_page(struct scsi_device *sdev, u8 page, unsigned char *buf,
+>  
+>  	/* Ask for all the pages supported by this device */
+>  	result = scsi_vpd_inquiry(sdev, buf, 0, buf_len);
+> -	if (result)
+> +	if (result < 4)
+>  		goto fail;
+>  
+>  	/* If the user actually wanted this page, we can skip the rest */
+>  	if (page == 0)
+>  		return 0;
+>  
+> -	for (i = 0; i < min((int)buf[3], buf_len - 4); i++)
+> -		if (buf[i + 4] == page)
+> +	for (i = 4; i < min(result, buf_len); i++)
+> +		if (buf[i] == page)
+>  			goto found;
+>  
+> -	if (i < buf[3] && i >= buf_len - 4)
+> +	if (i < result && i >= buf_len)
+>  		/* ran off the end of the buffer, give us benefit of doubt */
+>  		goto found;
+>  	/* The device claims it doesn't support the requested page */
+> @@ -1028,7 +1031,7 @@ int scsi_get_vpd_page(struct scsi_device *sdev, u8 page, unsigned char *buf,
+>  
+>   found:
+>  	result = scsi_vpd_inquiry(sdev, buf, page, buf_len);
+> -	if (result)
+> +	if (result < 0)
+>  		goto fail;
+>  
+>  	return 0;
+
