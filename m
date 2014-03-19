@@ -1,175 +1,136 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v2 03/12] scsi/NCR5380: remove old CVS keywords
-Date: Wed, 19 Mar 2014 23:35:19 +1100
-Message-ID: <20140319123517.452453292@telegraphics.com.au>
+Subject: [PATCH v2 05/12] scsi/NCR5380: fix build failures when debugging is enabled
+Date: Wed, 19 Mar 2014 23:35:21 +1100
+Message-ID: <20140319123518.052427772@telegraphics.com.au>
 References: <20140319123516.542623278@telegraphics.com.au>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=ncr5380-remove-cvs-keywords
+Content-Disposition: inline; filename=ncr5380-debug-macros-build-failures
 Sender: linux-kernel-owner@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
 Cc: Sam Creasey <sammy@sammy.net>, Russell King <linux@arm.linux.org.uk>, Michael Schmitz <schmitz@debian.org>, Joe Perches <joe@perches.com>, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-m68k@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+The change from cmd->target to cmd->device->id was apparently the purpose of
+commit a7f251228390e87d86c5e3846f99a455517fdd8e in
+kernel/git/tglx/history.git but some instances have been missed.
+
+Also fix the "NDEBUG_LAST_WRITE_SENT" and "NDEBUG_ALL" typo's.
+
+Also fix some format strings (%ul becomes %lu) that caused compiler warnings.
+
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
 ---
- drivers/scsi/NCR5380.c   |    2 --
- drivers/scsi/NCR5380.h   |    4 ----
- drivers/scsi/g_NCR5380.c |    4 ----
- drivers/scsi/g_NCR5380.h |    4 ----
- drivers/scsi/mac_scsi.c  |    4 ----
- drivers/scsi/mac_scsi.h  |    4 ----
- drivers/scsi/sun3_scsi.c |    4 ----
- drivers/scsi/sun3_scsi.h |    4 ----
- drivers/scsi/t128.c      |    4 ----
- drivers/scsi/t128.h      |    4 ----
- 10 files changed, 38 deletions(-)
 
+Changes since v1:
+
+- Fixed a build failure in sun3_NCR5380.c with NDEBUG_LISTS.
+
+---
+ drivers/scsi/NCR5380.c      |   14 +++++++-------
+ drivers/scsi/sun3_NCR5380.c |   10 +++-------
+ 2 files changed, 10 insertions(+), 14 deletions(-)
+
+Index: linux-m68k/drivers/scsi/sun3_NCR5380.c
+===================================================================
+--- linux-m68k.orig/drivers/scsi/sun3_NCR5380.c	2014-03-19 23:23:02.000000000 +1100
++++ linux-m68k/drivers/scsi/sun3_NCR5380.c	2014-03-19 23:34:42.000000000 +1100
+@@ -1012,12 +1012,8 @@ static void NCR5380_main (struct work_st
+ 	    for (tmp = (struct scsi_cmnd *) hostdata->issue_queue,
+ 		 prev = NULL; tmp; prev = tmp, tmp = NEXT(tmp) ) {
+ 
+-#if (NDEBUG & NDEBUG_LISTS)
+ 		if (prev != tmp)
+-		    printk("MAIN tmp=%p   target=%d   busy=%d lun=%d\n",
+-			   tmp, tmp->target, hostdata->busy[tmp->target],
+-			   tmp->lun);
+-#endif
++			dprintk(NDEBUG_LISTS, ("MAIN tmp=%p   target=%d   busy=%d lun=%d\n", tmp, tmp->device->id, hostdata->busy[tmp->device->id], tmp->device->lun));
+ 		/*  When we find one, remove it from the issue queue. */
+ 		/* ++guenther: possible race with Falcon locking */
+ 		if (
+@@ -1049,7 +1045,7 @@ static void NCR5380_main (struct work_st
+ 		     */
+ 		    MAIN_PRINTK("scsi%d: main(): command for target %d "
+ 				"lun %d removed from issue_queue\n",
+-				HOSTNO, tmp->target, tmp->lun);
++				HOSTNO, tmp->device->id, tmp->device->lun);
+ 		    /* 
+ 		     * REQUEST SENSE commands are issued without tagged
+ 		     * queueing, even on SCSI-II devices because the 
+@@ -2587,7 +2583,7 @@ static void NCR5380_reselect (struct Scs
+     
+     hostdata->connected = tmp;
+     RSL_PRINTK("scsi%d: nexus established, target = %d, lun = %d, tag = %d\n",
+-	       HOSTNO, tmp->target, tmp->lun, tmp->tag);
++	       HOSTNO, tmp->device->id, tmp->device->lun, tmp->tag);
+ }
+ 
+ 
 Index: linux-m68k/drivers/scsi/NCR5380.c
 ===================================================================
---- linux-m68k.orig/drivers/scsi/NCR5380.c	2014-03-19 23:23:02.000000000 +1100
-+++ linux-m68k/drivers/scsi/NCR5380.c	2014-03-19 23:34:41.000000000 +1100
-@@ -27,8 +27,6 @@
-  */
- 
- /*
-- * $Log: NCR5380.c,v $
--
-  * Revision 1.10 1998/9/2	Alan Cox
-  *				(alan@lxorguk.ukuu.org.uk)
-  * Fixed up the timer lockups reported so far. Things still suck. Looking 
-Index: linux-m68k/drivers/scsi/NCR5380.h
-===================================================================
---- linux-m68k.orig/drivers/scsi/NCR5380.h	2014-03-19 23:23:02.000000000 +1100
-+++ linux-m68k/drivers/scsi/NCR5380.h	2014-03-19 23:34:41.000000000 +1100
-@@ -21,10 +21,6 @@
-  * 1+ (800) 334-5454
-  */
- 
--/*
-- * $Log: NCR5380.h,v $
-- */
--
- #ifndef NCR5380_H
- #define NCR5380_H
- 
-Index: linux-m68k/drivers/scsi/g_NCR5380.c
-===================================================================
---- linux-m68k.orig/drivers/scsi/g_NCR5380.c	2014-03-19 23:23:02.000000000 +1100
-+++ linux-m68k/drivers/scsi/g_NCR5380.c	2014-03-19 23:34:41.000000000 +1100
-@@ -78,10 +78,6 @@
-  *     
-  */
- 
--/*
-- * $Log: generic_NCR5380.c,v $
-- */
--
- /* settings for DTC3181E card with only Mustek scanner attached */
- #define USLEEP
- #define USLEEP_POLL	1
-Index: linux-m68k/drivers/scsi/g_NCR5380.h
-===================================================================
---- linux-m68k.orig/drivers/scsi/g_NCR5380.h	2014-03-19 23:34:39.000000000 +1100
-+++ linux-m68k/drivers/scsi/g_NCR5380.h	2014-03-19 23:34:41.000000000 +1100
-@@ -25,10 +25,6 @@
-  * 1+ (800) 334-5454
-  */
- 
--/*
-- * $Log: generic_NCR5380.h,v $
-- */
--
- #ifndef GENERIC_NCR5380_H
- #define GENERIC_NCR5380_H
- 
-Index: linux-m68k/drivers/scsi/mac_scsi.c
-===================================================================
---- linux-m68k.orig/drivers/scsi/mac_scsi.c	2014-03-19 23:23:02.000000000 +1100
-+++ linux-m68k/drivers/scsi/mac_scsi.c	2014-03-19 23:34:41.000000000 +1100
-@@ -25,10 +25,6 @@
-  * 1+ (800) 334-5454
-  */
- 
--/*
-- * $Log: mac_NCR5380.c,v $
-- */
--
- #include <linux/types.h>
- #include <linux/stddef.h>
- #include <linux/ctype.h>
-Index: linux-m68k/drivers/scsi/mac_scsi.h
-===================================================================
---- linux-m68k.orig/drivers/scsi/mac_scsi.h	2014-03-19 23:34:39.000000000 +1100
-+++ linux-m68k/drivers/scsi/mac_scsi.h	2014-03-19 23:34:41.000000000 +1100
-@@ -22,10 +22,6 @@
-  * 1+ (800) 334-5454
-  */
- 
--/*
-- * $Log: cumana_NCR5380.h,v $
-- */
--
- #ifndef MAC_NCR5380_H
- #define MAC_NCR5380_H
- 
-Index: linux-m68k/drivers/scsi/sun3_scsi.c
-===================================================================
---- linux-m68k.orig/drivers/scsi/sun3_scsi.c	2014-03-19 23:23:02.000000000 +1100
-+++ linux-m68k/drivers/scsi/sun3_scsi.c	2014-03-19 23:34:41.000000000 +1100
-@@ -45,10 +45,6 @@
-  * USLEEP - enable support for devices that don't disconnect.  Untested.
-  */
- 
--/*
-- * $Log: sun3_NCR5380.c,v $
-- */
--
- #define AUTOSENSE
- 
- #include <linux/types.h>
-Index: linux-m68k/drivers/scsi/sun3_scsi.h
-===================================================================
---- linux-m68k.orig/drivers/scsi/sun3_scsi.h	2014-03-19 23:34:39.000000000 +1100
-+++ linux-m68k/drivers/scsi/sun3_scsi.h	2014-03-19 23:34:41.000000000 +1100
-@@ -29,10 +29,6 @@
-  * 1+ (800) 334-5454
-  */
- 
--/*
-- * $Log: cumana_NCR5380.h,v $
-- */
--
- #ifndef SUN3_NCR5380_H
- #define SUN3_NCR5380_H
- 
-Index: linux-m68k/drivers/scsi/t128.c
-===================================================================
---- linux-m68k.orig/drivers/scsi/t128.c	2014-03-19 23:23:02.000000000 +1100
-+++ linux-m68k/drivers/scsi/t128.c	2014-03-19 23:34:41.000000000 +1100
-@@ -102,10 +102,6 @@
-  * 15 9-11
-  */
-  
--/*
-- * $Log: t128.c,v $
-- */
--
- #include <linux/signal.h>
- #include <linux/io.h>
- #include <linux/blkdev.h>
-Index: linux-m68k/drivers/scsi/t128.h
-===================================================================
---- linux-m68k.orig/drivers/scsi/t128.h	2014-03-19 23:34:39.000000000 +1100
-+++ linux-m68k/drivers/scsi/t128.h	2014-03-19 23:34:41.000000000 +1100
-@@ -34,10 +34,6 @@
-  * 1+ (800) 334-5454
-  */
- 
--/*
-- * $Log: t128.h,v $
-- */
--
- #ifndef T128_H
- #define T128_H
+--- linux-m68k.orig/drivers/scsi/NCR5380.c	2014-03-19 23:34:41.000000000 +1100
++++ linux-m68k/drivers/scsi/NCR5380.c	2014-03-19 23:34:42.000000000 +1100
+@@ -1046,7 +1046,7 @@ static void NCR5380_main(struct work_str
+ 			for (tmp = (Scsi_Cmnd *) hostdata->issue_queue, prev = NULL; tmp; prev = tmp, tmp = (Scsi_Cmnd *) tmp->host_scribble) 
+ 			{
+ 				if (prev != tmp)
+-					dprintk(NDEBUG_LISTS, ("MAIN tmp=%p   target=%d   busy=%d lun=%d\n", tmp, tmp->target, hostdata->busy[tmp->target], tmp->lun));
++					dprintk(NDEBUG_LISTS, ("MAIN tmp=%p   target=%d   busy=%d lun=%d\n", tmp, tmp->device->id, hostdata->busy[tmp->device->id], tmp->device->lun));
+ 				/*  When we find one, remove it from the issue queue. */
+ 				if (!(hostdata->busy[tmp->device->id] & (1 << tmp->device->lun))) {
+ 					if (prev) {
+@@ -1064,7 +1064,7 @@ static void NCR5380_main(struct work_str
+ 					 * On failure, we must add the command back to the
+ 					 *   issue queue so we can keep trying. 
+ 					 */
+-					dprintk(NDEBUG_MAIN|NDEBUG_QUEUES, ("scsi%d : main() : command for target %d lun %d removed from issue_queue\n", instance->host_no, tmp->target, tmp->lun));
++					dprintk(NDEBUG_MAIN|NDEBUG_QUEUES, ("scsi%d : main() : command for target %d lun %d removed from issue_queue\n", instance->host_no, tmp->device->id, tmp->device->lun));
+ 	
+ 					/*
+ 					 * A successful selection is defined as one that 
+@@ -2028,7 +2028,7 @@ static int NCR5380_transfer_dma(struct S
+ 					hostdata->flags &= ~FLAG_CHECK_LAST_BYTE_SENT;
+ 					if (NCR5380_read(TARGET_COMMAND_REG) & TCR_LAST_BYTE_SENT) {
+ 						hostdata->flags |= FLAG_HAS_LAST_BYTE_SENT;
+-						dprintk(NDEBUG_LAST_WRITE_SENT, ("scsi%d : last bit sent works\n", instance->host_no));
++						dprintk(NDEBUG_LAST_BYTE_SENT, ("scsi%d : last byte sent works\n", instance->host_no));
+ 					}
+ 				}
+ 			} else {
+@@ -2454,7 +2454,7 @@ static void NCR5380_information_transfer
+ 				NCR5380_transfer_pio(instance, &phase, &len, &data);
+ 				if (!cmd->device->disconnect && should_disconnect(cmd->cmnd[0])) {
+ 					NCR5380_set_timer(hostdata, USLEEP_SLEEP);
+-					dprintk(NDEBUG_USLEEP, ("scsi%d : issued command, sleeping until %ul\n", instance->host_no, hostdata->time_expires));
++					dprintk(NDEBUG_USLEEP, ("scsi%d : issued command, sleeping until %lu\n", instance->host_no, hostdata->time_expires));
+ 					return;
+ 				}
+ 				break;
+@@ -2466,7 +2466,7 @@ static void NCR5380_information_transfer
+ 				break;
+ 			default:
+ 				printk("scsi%d : unknown phase\n", instance->host_no);
+-				NCR5380_dprint(NDEBUG_ALL, instance);
++				NCR5380_dprint(NDEBUG_ANY, instance);
+ 			}	/* switch(phase) */
+ 		}		/* if (tmp * SR_REQ) */
+ 		else {
+@@ -2474,7 +2474,7 @@ static void NCR5380_information_transfer
+ 			 */
+ 			if (!cmd->device->disconnect && time_after_eq(jiffies, poll_time)) {
+ 				NCR5380_set_timer(hostdata, USLEEP_SLEEP);
+-				dprintk(NDEBUG_USLEEP, ("scsi%d : poll timed out, sleeping until %ul\n", instance->host_no, hostdata->time_expires));
++				dprintk(NDEBUG_USLEEP, ("scsi%d : poll timed out, sleeping until %lu\n", instance->host_no, hostdata->time_expires));
+ 				return;
+ 			}
+ 		}
+@@ -2595,7 +2595,7 @@ static void NCR5380_reselect(struct Scsi
+ 		do_abort(instance);
+ 	} else {
+ 		hostdata->connected = tmp;
+-		dprintk(NDEBUG_RESELECTION, ("scsi%d : nexus established, target = %d, lun = %d, tag = %d\n", instance->host_no, tmp->target, tmp->lun, tmp->tag));
++		dprintk(NDEBUG_RESELECTION, ("scsi%d : nexus established, target = %d, lun = %d, tag = %d\n", instance->host_no, tmp->device->id, tmp->device->lun, tmp->tag));
+ 	}
+ }
  
