@@ -1,130 +1,59 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] [SCSI] megaraid: use GFP_ATOMIC under spin lock
-Date: Wed, 19 Mar 2014 08:21:05 -0700
-Message-ID: <1395242465.2185.5.camel@dabdike.int.hansenpartnership.com>
-References: <CAPgLHd82Wqz_sG9s5RPJ+ad+N73JA+_R+5kG-NQwaTYmzik2Wg@mail.gmail.com>
-	 <811b9a4297a34f07be49db76acb84afb@DM2PR07MB400.namprd07.prod.outlook.com>
-	 <1394706593.2192.13.camel@dabdike>
-	 <b0687451148a4a9eb3258f74aa96c041@BN1PR07MB247.namprd07.prod.outlook.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: BLIST_SINGLELUN
+Date: Wed, 19 Mar 2014 16:42:35 +0100
+Message-ID: <5329BAEB.7090109@suse.de>
+References: <20140318142804.GA25309@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:34926 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S965001AbaCSPVH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Mar 2014 11:21:07 -0400
-In-Reply-To: <b0687451148a4a9eb3258f74aa96c041@BN1PR07MB247.namprd07.prod.outlook.com>
+Received: from cantor2.suse.de ([195.135.220.15]:33773 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965389AbaCSPmh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 19 Mar 2014 11:42:37 -0400
+In-Reply-To: <20140318142804.GA25309@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
-Cc: "Saxena, Sumit" <Sumit.Saxena@lsi.com>, Wei Yongjun <weiyj.lk@gmail.com>, DL-MegaRAID Linux <megaraidlinux@lsi.com>, "simon.puels@gmail.com" <simon.puels@gmail.com>, "jkosina@suse.cz" <jkosina@suse.cz>, "yongjun_wei@trendmicro.com.cn" <yongjun_wei@trendmicro.com.cn>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
 
-On Wed, 2014-03-19 at 07:21 +0000, Desai, Kashyap wrote:
-> 
-> > -----Original Message-----
-> > From: James Bottomley [mailto:James.Bottomley@HansenPartnership.com]
-> > Sent: Thursday, March 13, 2014 4:00 PM
-> > To: Saxena, Sumit
-> > Cc: Wei Yongjun; DL-MegaRAID Linux; simon.puels@gmail.com;
-> > jkosina@suse.cz; yongjun_wei@trendmicro.com.cn; linux-
-> > scsi@vger.kernel.org
-> > Subject: Re: [PATCH] [SCSI] megaraid: use GFP_ATOMIC under spin lock
-> > 
-> > On Wed, 2014-01-08 at 12:16 +0000, Saxena, Sumit wrote:
-> > >
-> > > >-----Original Message-----
-> > > >From: Wei Yongjun [mailto:weiyj.lk@gmail.com]
-> > > >Sent: Friday, December 20, 2013 8:38 AM
-> > > >To: DL-MegaRAID Linux; JBottomley@parallels.com;
-> > > >simon.puels@gmail.com; jkosina@suse.cz
-> > > >Cc: yongjun_wei@trendmicro.com.cn; linux-scsi@vger.kernel.org
-> > > >Subject: [PATCH] [SCSI] megaraid: use GFP_ATOMIC under spin lock
-> > > >
-> > > >From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
-> > > >
-> > > >A spin lock is taken here so we should use GFP_ATOMIC.
-> > > >
-> > > >Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
-> > > >---
-> > > > drivers/scsi/megaraid/megaraid_mm.c | 2 +-
-> > > > 1 file changed, 1 insertion(+), 1 deletion(-)
-> > > >
-> > > >diff --git a/drivers/scsi/megaraid/megaraid_mm.c
-> > > >b/drivers/scsi/megaraid/megaraid_mm.c
-> > > >index a706927..99fa5d3 100644
-> > > >--- a/drivers/scsi/megaraid/megaraid_mm.c
-> > > >+++ b/drivers/scsi/megaraid/megaraid_mm.c
-> > > >@@ -570,7 +570,7 @@ mraid_mm_attach_buf(mraid_mmadp_t *adp,
-> > uioc_t
-> > > >*kioc, int xferlen)
-> > > >
-> > > > 	kioc->pool_index	= right_pool;
-> > > > 	kioc->free_buf		= 1;
-> > > >-	kioc->buf_vaddr 	= pci_pool_alloc(pool->handle, GFP_KERNEL,
-> > > >+	kioc->buf_vaddr		= pci_pool_alloc(pool->handle,
-> > > >GFP_ATOMIC,
-> > > > 							&kioc->buf_paddr);
-> > > > 	spin_unlock_irqrestore(&pool->lock, flags);
-> > > >
-> > > >
-> > > Acked-by: Sumit Saxena <sumit.saxena@lsi.com>
-> > 
-> > This doesn't look like the right fix to me.  What is the function of
-> > pool->lock around this code region?  The only data you use from the pool
-> > is pool->handle which is set up at init time ... there's no need to use a lock to
-> > read a piece of data which is effectively constant, so just drop the lock.
-> 
-> 
-> Just trying to understand why pool->lock was used here.
-> 
-> Looks like this code may require synchronization using pool->lock
-> while modifying anything in kioc.
+On 03/18/2014 03:28 PM, Christoph Hellwig wrote:
+> Does anyone still have a device listed in the blacklist with
+> BLIST_SINGLELUN?
+>=20
+> From reading the source code I'm not sure the code actually works as
+> expected currently, or did for a long time.
+>=20
+> While scsi_target_queue_ready makes sure to only queue commands to th=
+e
+> right lun as long as starget_sdev_user is set, scsi_single_lun_run
+> clears starget_sdev_user as soon as the any command completes on a
+> target marked with the flag, allowing the following situation:
+>=20
+>  - cmd 1 lun 0		submitted
+>  - cmd 2 lun 0		submitted
+>  - cmd 1 lun 0		completed
+>  - cmd 9 lun 1		submitted
+>=20
+> and thus having commands for two luns in flight at the same time
+> if we hit the narrow enough race of entering the scsi_request_fn
+> for lun 1 before scsi_single_lun_run does so for lun 0.
 
-It's possible, but kioc seems to be allocated and freed per thread in
-the driver (mraid_mm_ioctl) so looks to me to require no locking once
-you have it allocated because there's a single thread of control per
-ioctl.
+You know what, I've been looking at that, too.
+And indeed, it looks like you're right.
 
-> Below code is part of "mraid_mm_dealloc_kioc".. and here also
-> pool->lock is used before accessing 
-> Kioc->free_buf variable.
-> 
->                 /* This routine may be called in non-isr context also */
->                 spin_lock_irqsave(&pool->lock, flags);
->  
->                 /*
->                  * While attaching the dma buffer, if we didn't get the 
->                  * required buffer from the pool, we would have allocated 
->                  * it at the run time and set the free_buf flag. We must 
->                  * free that buffer. Otherwise, just mark that the buffer is 
->                  * not in use
->                  */
->                 if (kioc->free_buf == 1)
->                         pci_pool_free(pool->handle, kioc->buf_vaddr,
->                                                         kioc->buf_paddr);
->                 else
->                         pool->in_use = 0;
->  
->                 spin_unlock_irqrestore(&pool->lock, flags); 
+I do wonder, though, why we don't do away with the
+starget_sdev_user and just set max_target_blocked to 1 ...
 
-In this code, pool->lock protects variables in the pool (in this case
-->in_use) which looks to be correct.  It's the chunk further down that
-appears to have no use for the locking.
+Cheers,
 
-> This code is not actively change now by LSI, so doing too much of
-> experiment may break something.
-> Considering pool->lock usage as a valid (As you suggested it may be
-> possible candidate for optimization.), 
-> do you consider including change proposed in this patch ?
-
-Well, if you make this change, kmalloc GFP_ATOMIC will fail far more
-than kmalloc GFP_KERNEL.  That failure will be passed straight back to
-the caller of the ioctl which, presumably, is your raid tool.  What will
-that do?  Fail or Retry? If it fails, removing the locking would be
-best, if it retries, we can probably do the GFP_ATOMIC hack.
-
-James
-
-
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
