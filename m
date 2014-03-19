@@ -1,211 +1,258 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v2 07/12] scsi/NCR5380: adopt NCR5380_dprint() and NCR5380_dprint_phase()
-Date: Wed, 19 Mar 2014 23:35:23 +1100
-Message-ID: <20140319123518.642821564@telegraphics.com.au>
+Subject: [PATCH v2 09/12] scsi/NCR5380: fix and standardize NDEBUG macros
+Date: Wed, 19 Mar 2014 23:35:25 +1100
+Message-ID: <20140319123519.242426165@telegraphics.com.au>
 References: <20140319123516.542623278@telegraphics.com.au>
-Return-path: <linux-m68k-owner@vger.kernel.org>
-Content-Disposition: inline; filename=ncr5380-debug-macros-substitute-NCRPRINT
-Sender: linux-m68k-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:51081 "EHLO
+	kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933518AbaCSX2E (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Mar 2014 19:28:04 -0400
+Content-Disposition: inline; filename=ncr5380-debug-macros-fix-NDEBUG
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
 Cc: Sam Creasey <sammy@sammy.net>, Russell King <linux@arm.linux.org.uk>, Michael Schmitz <schmitz@debian.org>, Joe Perches <joe@perches.com>, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-m68k@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
 
-All NCR5380 drivers already include the NCR5380.h header. Better to
-adopt those macros rather than have three variations on them.
+All three NCR5380 core driver implementations share the same NCR5380.h
+header file so they need to agree on certain macro definitions.
 
-Moreover, the macros in NCR5380.h are preferable anyway: the atari_NCR5380
-and sun3_NCR5380 versions are inflexible. For example, they can't accomodate
-NCR5380_dprint(NDEBUG_MAIN | NDEBUG_QUEUES, ...)
+The flag bit used by the NDEBUG_MERGING macro in atari_NCR5380 and
+sun3_NCR5380 collides with the bit used by NDEBUG_LISTS.
 
-Replace the NCR_PRINT* macros from atari_NCR5380.h and sun3_NCR5380.h with
-the equivalent macros from NCR5380.h.
+Moreover, NDEBUG_ABORT appears in NCR5380.c so it should be defined in
+NCR5380.h rather than in each of the many drivers using that core.
+
+An undefined NDEBUG_ABORT macro caused compiler errors and led to dodgy
+workarounds in the core driver that can now be removed.
+(See commits f566a576bca09de85bf477fc0ab2c8c96405b77b and
+185a7a1cd79b9891e3c17abdb103ba1c98d6ca7a.)
+
+Move all of the NDEBUG_ABORT, NDEBUG_TAGS and NDEBUG_MERGING macro
+definitions into NCR5380.h where all the other NDEBUG macros live.
+
+Also, incorrect "#ifdef NDEBUG" becomes "#if NDEBUG" to fix the warning:
+drivers/scsi/mac_scsi.c: At top level:
+drivers/scsi/NCR5380.c:418: warning: 'NCR5380_print' defined but not used
+drivers/scsi/NCR5380.c:459: warning: 'NCR5380_print_phase' defined but not used
+
+The debugging code is now enabled when NDEBUG != 0.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
 ---
- drivers/scsi/atari_NCR5380.c |   22 +++++++++++-----------
- drivers/scsi/sun3_NCR5380.c  |   22 +++++++++++-----------
- 2 files changed, 22 insertions(+), 22 deletions(-)
 
-Index: linux-m68k/drivers/scsi/atari_NCR5380.c
+Changes since v1:
+- Use C99 __VA_ARGS__ for dprintk() macro.
+- Get the compiler to check pr_debug() parameters regardless of NDEBUG.
+
+---
+ drivers/scsi/NCR5380.c       |    7 -------
+ drivers/scsi/NCR5380.h       |   24 +++++++++++++++++++-----
+ drivers/scsi/atari_NCR5380.c |   10 ----------
+ drivers/scsi/atari_scsi.c    |    6 ------
+ drivers/scsi/dtc.c           |    2 --
+ drivers/scsi/mac_scsi.c      |    6 ------
+ drivers/scsi/sun3_NCR5380.c  |    8 +-------
+ drivers/scsi/sun3_scsi.c     |    6 ------
+ drivers/scsi/sun3_scsi_vme.c |    6 ------
+ 9 files changed, 20 insertions(+), 55 deletions(-)
+
+Index: linux-m68k/drivers/scsi/NCR5380.h
 ===================================================================
---- linux-m68k.orig/drivers/scsi/atari_NCR5380.c	2014-03-19 23:23:02.000000000 +1100
-+++ linux-m68k/drivers/scsi/atari_NCR5380.c	2014-03-19 23:34:43.000000000 +1100
-@@ -739,8 +739,8 @@ static void NCR5380_print_status(struct
- 	Scsi_Cmnd *ptr;
- 	unsigned long flags;
+--- linux-m68k.orig/drivers/scsi/NCR5380.h	2014-03-19 23:34:42.000000000 +1100
++++ linux-m68k/drivers/scsi/NCR5380.h	2014-03-19 23:34:44.000000000 +1100
+@@ -56,6 +56,9 @@
+ #define NDEBUG_C400_PREAD	0x100000
+ #define NDEBUG_C400_PWRITE	0x200000
+ #define NDEBUG_LISTS		0x400000
++#define NDEBUG_ABORT		0x800000
++#define NDEBUG_TAGS		0x1000000
++#define NDEBUG_MERGING		0x2000000
  
--	NCR_PRINT(NDEBUG_ANY);
--	NCR_PRINT_PHASE(NDEBUG_ANY);
-+	NCR5380_dprint(NDEBUG_ANY, instance);
-+	NCR5380_dprint_phase(NDEBUG_ANY, instance);
+ #define NDEBUG_ANY		0xFFFFFFFFUL
  
- 	hostdata = (struct NCR5380_hostdata *)instance->hostdata;
+@@ -288,9 +291,24 @@ struct NCR5380_hostdata {
  
-@@ -1268,7 +1268,7 @@ static irqreturn_t NCR5380_intr(int irq,
- 	INT_PRINTK("scsi%d: BASR=%02x\n", HOSTNO, basr);
- 	/* dispatch to appropriate routine if found and done=0 */
- 	if (basr & BASR_IRQ) {
--		NCR_PRINT(NDEBUG_INTR);
-+		NCR5380_dprint(NDEBUG_INTR, instance);
- 		if ((NCR5380_read(STATUS_REG) & (SR_SEL|SR_IO)) == (SR_SEL|SR_IO)) {
- 			done = 0;
- 			ENABLE_IRQ();
-@@ -1396,7 +1396,7 @@ static int NCR5380_select(struct Scsi_Ho
- 	unsigned long flags;
+ #ifdef __KERNEL__
  
- 	hostdata->restart_select = 0;
--	NCR_PRINT(NDEBUG_ARBITRATION);
-+	NCR5380_dprint(NDEBUG_ARBITRATION, instance);
- 	ARB_PRINTK("scsi%d: starting arbitration, id = %d\n", HOSTNO,
- 		   instance->this_id);
+-#define dprintk(flg, fmt, ...)         do {} while (0)
++#ifndef NDEBUG
++#define NDEBUG (0)
++#endif
++
++#define dprintk(flg, fmt, ...) \
++	do { if ((NDEBUG) & (flg)) pr_debug(fmt, ## __VA_ARGS__); } while (0)
++
++#if NDEBUG
++#define NCR5380_dprint(flg, arg) \
++	do { if ((NDEBUG) & (flg)) NCR5380_print(arg); } while (0)
++#define NCR5380_dprint_phase(flg, arg) \
++	do { if ((NDEBUG) & (flg)) NCR5380_print_phase(arg); } while (0)
++static void NCR5380_print_phase(struct Scsi_Host *instance);
++static void NCR5380_print(struct Scsi_Host *instance);
++#else
+ #define NCR5380_dprint(flg, arg)       do {} while (0)
+ #define NCR5380_dprint_phase(flg, arg) do {} while (0)
++#endif
  
-@@ -1617,7 +1617,7 @@ static int NCR5380_select(struct Scsi_Ho
- 			printk(KERN_ERR "scsi%d: weirdness\n", HOSTNO);
- 			if (hostdata->restart_select)
- 				printk(KERN_NOTICE "\trestart select\n");
--			NCR_PRINT(NDEBUG_ANY);
-+			NCR5380_dprint(NDEBUG_ANY, instance);
- 			NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
- 			return -1;
- 		}
-@@ -1742,7 +1742,7 @@ static int NCR5380_transfer_pio(struct S
- 		/* Check for phase mismatch */
- 		if ((tmp & PHASE_MASK) != p) {
- 			PIO_PRINTK("scsi%d: phase mismatch\n", HOSTNO);
--			NCR_PRINT_PHASE(NDEBUG_PIO);
-+			NCR5380_dprint_phase(NDEBUG_PIO, instance);
- 			break;
- 		}
+ #if defined(AUTOPROBE_IRQ)
+ static int NCR5380_probe_irq(struct Scsi_Host *instance, int possible);
+@@ -303,10 +321,6 @@ static irqreturn_t NCR5380_intr(int irq,
+ #endif
+ static void NCR5380_main(struct work_struct *work);
+ static void __maybe_unused NCR5380_print_options(struct Scsi_Host *instance);
+-#ifdef NDEBUG
+-static void NCR5380_print_phase(struct Scsi_Host *instance);
+-static void NCR5380_print(struct Scsi_Host *instance);
+-#endif
+ static int NCR5380_abort(Scsi_Cmnd * cmd);
+ static int NCR5380_bus_reset(Scsi_Cmnd * cmd);
+ static int NCR5380_queue_command(struct Scsi_Host *, struct scsi_cmnd *);
+Index: linux-m68k/drivers/scsi/atari_scsi.c
+===================================================================
+--- linux-m68k.orig/drivers/scsi/atari_scsi.c	2014-03-19 23:34:44.000000000 +1100
++++ linux-m68k/drivers/scsi/atari_scsi.c	2014-03-19 23:34:44.000000000 +1100
+@@ -67,12 +67,6 @@
  
-@@ -1764,18 +1764,18 @@ static int NCR5380_transfer_pio(struct S
- 		if (!(p & SR_IO)) {
- 			if (!((p & SR_MSG) && c > 1)) {
- 				NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_DATA);
--				NCR_PRINT(NDEBUG_PIO);
-+				NCR5380_dprint(NDEBUG_PIO, instance);
- 				NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE |
- 					      ICR_ASSERT_DATA | ICR_ASSERT_ACK);
- 			} else {
- 				NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE |
- 					      ICR_ASSERT_DATA | ICR_ASSERT_ATN);
--				NCR_PRINT(NDEBUG_PIO);
-+				NCR5380_dprint(NDEBUG_PIO, instance);
- 				NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE |
- 					      ICR_ASSERT_DATA | ICR_ASSERT_ATN | ICR_ASSERT_ACK);
- 			}
- 		} else {
--			NCR_PRINT(NDEBUG_PIO);
-+			NCR5380_dprint(NDEBUG_PIO, instance);
- 			NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_ACK);
- 		}
+ #include <linux/module.h>
  
-@@ -1997,7 +1997,7 @@ static void NCR5380_information_transfer
- 			phase = (tmp & PHASE_MASK);
- 			if (phase != old_phase) {
- 				old_phase = phase;
--				NCR_PRINT_PHASE(NDEBUG_INFORMATION);
-+				NCR5380_dprint_phase(NDEBUG_INFORMATION, instance);
- 			}
+-#define NDEBUG (0)
+-
+-#define NDEBUG_ABORT		0x00100000
+-#define NDEBUG_TAGS		0x00200000
+-#define NDEBUG_MERGING		0x00400000
+-
+ #define AUTOSENSE
+ /* For the Atari version, use only polled IO or REAL_DMA */
+ #define	REAL_DMA
+Index: linux-m68k/drivers/scsi/NCR5380.c
+===================================================================
+--- linux-m68k.orig/drivers/scsi/NCR5380.c	2014-03-19 23:34:42.000000000 +1100
++++ linux-m68k/drivers/scsi/NCR5380.c	2014-03-19 23:34:44.000000000 +1100
+@@ -87,13 +87,6 @@
+ #include <scsi/scsi_dbg.h>
+ #include <scsi/scsi_transport_spi.h>
  
- 			if (sink && (phase != PHASE_MSGOUT)) {
-@@ -2451,7 +2451,7 @@ static void NCR5380_information_transfer
- 				break;
- 			default:
- 				printk("scsi%d: unknown phase\n", HOSTNO);
--				NCR_PRINT(NDEBUG_ANY);
-+				NCR5380_dprint(NDEBUG_ANY, instance);
- 			} /* switch(phase) */
- 		} /* if (tmp * SR_REQ) */
- 	} /* while (1) */
+-#ifndef NDEBUG
+-#define NDEBUG 0
+-#endif
+-#ifndef NDEBUG_ABORT
+-#define NDEBUG_ABORT 0
+-#endif
+-
+ #if (NDEBUG & NDEBUG_LISTS)
+ #define LIST(x,y) {printk("LINE:%d   Adding %p to %p\n", __LINE__, (void*)(x), (void*)(y)); if ((x)==(y)) udelay(5); }
+ #define REMOVE(w,x,y,z) {printk("LINE:%d   Removing: %p->%p  %p->%p \n", __LINE__, (void*)(w), (void*)(x), (void*)(y), (void*)(z)); if ((x)==(y)) udelay(5); }
+Index: linux-m68k/drivers/scsi/sun3_scsi_vme.c
+===================================================================
+--- linux-m68k.orig/drivers/scsi/sun3_scsi_vme.c	2014-03-19 23:23:02.000000000 +1100
++++ linux-m68k/drivers/scsi/sun3_scsi_vme.c	2014-03-19 23:34:44.000000000 +1100
+@@ -38,12 +38,6 @@
+ /* dma on! */
+ #define REAL_DMA
+ 
+-#define NDEBUG 0
+-
+-#define NDEBUG_ABORT		0x00100000
+-#define NDEBUG_TAGS		0x00200000
+-#define NDEBUG_MERGING		0x00400000
+-
+ #include "scsi.h"
+ #include "initio.h"
+ #include <scsi/scsi_host.h>
+Index: linux-m68k/drivers/scsi/sun3_scsi.c
+===================================================================
+--- linux-m68k.orig/drivers/scsi/sun3_scsi.c	2014-03-19 23:34:41.000000000 +1100
++++ linux-m68k/drivers/scsi/sun3_scsi.c	2014-03-19 23:34:44.000000000 +1100
+@@ -65,12 +65,6 @@
+ #include <asm/idprom.h>
+ #include <asm/machines.h>
+ 
+-#define NDEBUG 0
+-
+-#define NDEBUG_ABORT		0x00100000
+-#define NDEBUG_TAGS		0x00200000
+-#define NDEBUG_MERGING		0x00400000
+-
+ /* dma on! */
+ #define REAL_DMA
+ 
+Index: linux-m68k/drivers/scsi/mac_scsi.c
+===================================================================
+--- linux-m68k.orig/drivers/scsi/mac_scsi.c	2014-03-19 23:34:41.000000000 +1100
++++ linux-m68k/drivers/scsi/mac_scsi.c	2014-03-19 23:34:44.000000000 +1100
+@@ -54,12 +54,6 @@
+ 
+ #include "NCR5380.h"
+ 
+-#if 0
+-#define NDEBUG (NDEBUG_INTR | NDEBUG_PSEUDO_DMA | NDEBUG_ARBITRATION | NDEBUG_SELECTION | NDEBUG_RESELECTION)
+-#else
+-#define NDEBUG (NDEBUG_ABORT)
+-#endif
+-
+ #define RESET_BOOT
+ #define DRIVER_SETUP
+ 
 Index: linux-m68k/drivers/scsi/sun3_NCR5380.c
 ===================================================================
---- linux-m68k.orig/drivers/scsi/sun3_NCR5380.c	2014-03-19 23:34:42.000000000 +1100
-+++ linux-m68k/drivers/scsi/sun3_NCR5380.c	2014-03-19 23:34:43.000000000 +1100
-@@ -681,8 +681,8 @@ static void NCR5380_print_status(struct
- 	Scsi_Cmnd *ptr;
- 	unsigned long flags;
+--- linux-m68k.orig/drivers/scsi/sun3_NCR5380.c	2014-03-19 23:34:44.000000000 +1100
++++ linux-m68k/drivers/scsi/sun3_NCR5380.c	2014-03-19 23:34:44.000000000 +1100
+@@ -484,7 +484,7 @@ static __inline__ void initialize_SCp(st
  
--	NCR_PRINT(NDEBUG_ANY);
--	NCR_PRINT_PHASE(NDEBUG_ANY);
-+	NCR5380_dprint(NDEBUG_ANY, instance);
-+	NCR5380_dprint_phase(NDEBUG_ANY, instance);
+ #include <linux/delay.h>
  
- 	hostdata = (struct NCR5380_hostdata *)instance->hostdata;
+-#if 1
++#if NDEBUG
+ static struct {
+     unsigned char mask;
+     const char * name;} 
+@@ -572,12 +572,6 @@ static void NCR5380_print_phase(struct S
+     }
+ }
  
-@@ -1192,7 +1192,7 @@ static irqreturn_t NCR5380_intr (int irq
-     INT_PRINTK("scsi%d: BASR=%02x\n", HOSTNO, basr);
-     /* dispatch to appropriate routine if found and done=0 */
-     if (basr & BASR_IRQ) {
--	NCR_PRINT(NDEBUG_INTR);
-+	NCR5380_dprint(NDEBUG_INTR, instance);
- 	if ((NCR5380_read(STATUS_REG) & (SR_SEL|SR_IO)) == (SR_SEL|SR_IO)) {
- 	    done = 0;
- //	    ENABLE_IRQ();
-@@ -1334,7 +1334,7 @@ static int NCR5380_select(struct Scsi_Ho
-     unsigned long flags;
+-#else /* !NDEBUG */
+-
+-/* dummies... */
+-__inline__ void NCR5380_print(struct Scsi_Host *instance) { };
+-__inline__ void NCR5380_print_phase(struct Scsi_Host *instance) { };
+-
+ #endif
  
-     hostdata->restart_select = 0;
--    NCR_PRINT(NDEBUG_ARBITRATION);
-+    NCR5380_dprint(NDEBUG_ARBITRATION, instance);
-     ARB_PRINTK("scsi%d: starting arbitration, id = %d\n", HOSTNO,
- 	       instance->this_id);
+ /*
+Index: linux-m68k/drivers/scsi/dtc.c
+===================================================================
+--- linux-m68k.orig/drivers/scsi/dtc.c	2014-03-19 23:23:02.000000000 +1100
++++ linux-m68k/drivers/scsi/dtc.c	2014-03-19 23:34:44.000000000 +1100
+@@ -3,8 +3,6 @@
+ #define PSEUDO_DMA
+ #define DONT_USE_INTR
+ #define UNSAFE			/* Leave interrupts enabled during pseudo-dma I/O */
+-#define xNDEBUG (NDEBUG_INTR+NDEBUG_RESELECTION+\
+-		 NDEBUG_SELECTION+NDEBUG_ARBITRATION)
+ #define DMA_WORKS_RIGHT
  
-@@ -1555,7 +1555,7 @@ static int NCR5380_select(struct Scsi_Ho
- 	    printk(KERN_ERR "scsi%d: weirdness\n", HOSTNO);
- 	    if (hostdata->restart_select)
- 		printk(KERN_NOTICE "\trestart select\n");
--	    NCR_PRINT(NDEBUG_ANY);
-+	    NCR5380_dprint(NDEBUG_ANY, instance);
- 	    NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
- 	    return -1;
+ 
+Index: linux-m68k/drivers/scsi/atari_NCR5380.c
+===================================================================
+--- linux-m68k.orig/drivers/scsi/atari_NCR5380.c	2014-03-19 23:34:44.000000000 +1100
++++ linux-m68k/drivers/scsi/atari_NCR5380.c	2014-03-19 23:34:44.000000000 +1100
+@@ -626,16 +626,6 @@ static void NCR5380_print_phase(struct S
  	}
-@@ -1681,7 +1681,7 @@ static int NCR5380_transfer_pio( struct
- 	/* Check for phase mismatch */	
- 	if ((tmp & PHASE_MASK) != p) {
- 	    PIO_PRINTK("scsi%d: phase mismatch\n", HOSTNO);
--	    NCR_PRINT_PHASE(NDEBUG_PIO);
-+	    NCR5380_dprint_phase(NDEBUG_PIO, instance);
- 	    break;
- 	}
+ }
  
-@@ -1704,18 +1704,18 @@ static int NCR5380_transfer_pio( struct
- 	    if (!((p & SR_MSG) && c > 1)) {
- 		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | 
- 		    ICR_ASSERT_DATA);
--		NCR_PRINT(NDEBUG_PIO);
-+		NCR5380_dprint(NDEBUG_PIO, instance);
- 		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | 
- 			ICR_ASSERT_DATA | ICR_ASSERT_ACK);
- 	    } else {
- 		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE |
- 		    ICR_ASSERT_DATA | ICR_ASSERT_ATN);
--		NCR_PRINT(NDEBUG_PIO);
-+		NCR5380_dprint(NDEBUG_PIO, instance);
- 		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | 
- 		    ICR_ASSERT_DATA | ICR_ASSERT_ATN | ICR_ASSERT_ACK);
- 	    }
- 	} else {
--	    NCR_PRINT(NDEBUG_PIO);
-+	    NCR5380_dprint(NDEBUG_PIO, instance);
- 	    NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_ACK);
- 	}
+-#else /* !NDEBUG */
+-
+-/* dummies... */
+-static inline void NCR5380_print(struct Scsi_Host *instance)
+-{
+-};
+-static inline void NCR5380_print_phase(struct Scsi_Host *instance)
+-{
+-};
+-
+ #endif
  
-@@ -1927,7 +1927,7 @@ static void NCR5380_information_transfer
- 	    phase = (tmp & PHASE_MASK); 
-  	    if (phase != old_phase) {
- 		old_phase = phase;
--		NCR_PRINT_PHASE(NDEBUG_INFORMATION);
-+		NCR5380_dprint_phase(NDEBUG_INFORMATION, instance);
- 	    }
- 
- 	    if(phase == PHASE_CMDOUT) {
-@@ -2412,7 +2412,7 @@ static void NCR5380_information_transfer
- 		break;
- 	    default:
- 		printk("scsi%d: unknown phase\n", HOSTNO);
--		NCR_PRINT(NDEBUG_ANY);
-+		NCR5380_dprint(NDEBUG_ANY, instance);
- 	    } /* switch(phase) */
- 	} /* if (tmp * SR_REQ) */ 
-     } /* while (1) */
+ /*
+
