@@ -1,136 +1,211 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v2 05/12] scsi/NCR5380: fix build failures when debugging is enabled
-Date: Wed, 19 Mar 2014 23:35:21 +1100
-Message-ID: <20140319123518.052427772@telegraphics.com.au>
+Subject: [PATCH v2 07/12] scsi/NCR5380: adopt NCR5380_dprint() and NCR5380_dprint_phase()
+Date: Wed, 19 Mar 2014 23:35:23 +1100
+Message-ID: <20140319123518.642821564@telegraphics.com.au>
 References: <20140319123516.542623278@telegraphics.com.au>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=ncr5380-debug-macros-build-failures
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <linux-m68k-owner@vger.kernel.org>
+Content-Disposition: inline; filename=ncr5380-debug-macros-substitute-NCRPRINT
+Sender: linux-m68k-owner@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
 Cc: Sam Creasey <sammy@sammy.net>, Russell King <linux@arm.linux.org.uk>, Michael Schmitz <schmitz@debian.org>, Joe Perches <joe@perches.com>, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-m68k@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-The change from cmd->target to cmd->device->id was apparently the purpose of
-commit a7f251228390e87d86c5e3846f99a455517fdd8e in
-kernel/git/tglx/history.git but some instances have been missed.
+All NCR5380 drivers already include the NCR5380.h header. Better to
+adopt those macros rather than have three variations on them.
 
-Also fix the "NDEBUG_LAST_WRITE_SENT" and "NDEBUG_ALL" typo's.
+Moreover, the macros in NCR5380.h are preferable anyway: the atari_NCR5380
+and sun3_NCR5380 versions are inflexible. For example, they can't accomodate
+NCR5380_dprint(NDEBUG_MAIN | NDEBUG_QUEUES, ...)
 
-Also fix some format strings (%ul becomes %lu) that caused compiler warnings.
+Replace the NCR_PRINT* macros from atari_NCR5380.h and sun3_NCR5380.h with
+the equivalent macros from NCR5380.h.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
 ---
+ drivers/scsi/atari_NCR5380.c |   22 +++++++++++-----------
+ drivers/scsi/sun3_NCR5380.c  |   22 +++++++++++-----------
+ 2 files changed, 22 insertions(+), 22 deletions(-)
 
-Changes since v1:
-
-- Fixed a build failure in sun3_NCR5380.c with NDEBUG_LISTS.
-
----
- drivers/scsi/NCR5380.c      |   14 +++++++-------
- drivers/scsi/sun3_NCR5380.c |   10 +++-------
- 2 files changed, 10 insertions(+), 14 deletions(-)
-
-Index: linux-m68k/drivers/scsi/sun3_NCR5380.c
+Index: linux-m68k/drivers/scsi/atari_NCR5380.c
 ===================================================================
---- linux-m68k.orig/drivers/scsi/sun3_NCR5380.c	2014-03-19 23:23:02.000000000 +1100
-+++ linux-m68k/drivers/scsi/sun3_NCR5380.c	2014-03-19 23:34:42.000000000 +1100
-@@ -1012,12 +1012,8 @@ static void NCR5380_main (struct work_st
- 	    for (tmp = (struct scsi_cmnd *) hostdata->issue_queue,
- 		 prev = NULL; tmp; prev = tmp, tmp = NEXT(tmp) ) {
+--- linux-m68k.orig/drivers/scsi/atari_NCR5380.c	2014-03-19 23:23:02.000000000 +1100
++++ linux-m68k/drivers/scsi/atari_NCR5380.c	2014-03-19 23:34:43.000000000 +1100
+@@ -739,8 +739,8 @@ static void NCR5380_print_status(struct
+ 	Scsi_Cmnd *ptr;
+ 	unsigned long flags;
  
--#if (NDEBUG & NDEBUG_LISTS)
- 		if (prev != tmp)
--		    printk("MAIN tmp=%p   target=%d   busy=%d lun=%d\n",
--			   tmp, tmp->target, hostdata->busy[tmp->target],
--			   tmp->lun);
--#endif
-+			dprintk(NDEBUG_LISTS, ("MAIN tmp=%p   target=%d   busy=%d lun=%d\n", tmp, tmp->device->id, hostdata->busy[tmp->device->id], tmp->device->lun));
- 		/*  When we find one, remove it from the issue queue. */
- 		/* ++guenther: possible race with Falcon locking */
- 		if (
-@@ -1049,7 +1045,7 @@ static void NCR5380_main (struct work_st
- 		     */
- 		    MAIN_PRINTK("scsi%d: main(): command for target %d "
- 				"lun %d removed from issue_queue\n",
--				HOSTNO, tmp->target, tmp->lun);
-+				HOSTNO, tmp->device->id, tmp->device->lun);
- 		    /* 
- 		     * REQUEST SENSE commands are issued without tagged
- 		     * queueing, even on SCSI-II devices because the 
-@@ -2587,7 +2583,7 @@ static void NCR5380_reselect (struct Scs
-     
-     hostdata->connected = tmp;
-     RSL_PRINTK("scsi%d: nexus established, target = %d, lun = %d, tag = %d\n",
--	       HOSTNO, tmp->target, tmp->lun, tmp->tag);
-+	       HOSTNO, tmp->device->id, tmp->device->lun, tmp->tag);
- }
+-	NCR_PRINT(NDEBUG_ANY);
+-	NCR_PRINT_PHASE(NDEBUG_ANY);
++	NCR5380_dprint(NDEBUG_ANY, instance);
++	NCR5380_dprint_phase(NDEBUG_ANY, instance);
  
+ 	hostdata = (struct NCR5380_hostdata *)instance->hostdata;
  
-Index: linux-m68k/drivers/scsi/NCR5380.c
-===================================================================
---- linux-m68k.orig/drivers/scsi/NCR5380.c	2014-03-19 23:34:41.000000000 +1100
-+++ linux-m68k/drivers/scsi/NCR5380.c	2014-03-19 23:34:42.000000000 +1100
-@@ -1046,7 +1046,7 @@ static void NCR5380_main(struct work_str
- 			for (tmp = (Scsi_Cmnd *) hostdata->issue_queue, prev = NULL; tmp; prev = tmp, tmp = (Scsi_Cmnd *) tmp->host_scribble) 
- 			{
- 				if (prev != tmp)
--					dprintk(NDEBUG_LISTS, ("MAIN tmp=%p   target=%d   busy=%d lun=%d\n", tmp, tmp->target, hostdata->busy[tmp->target], tmp->lun));
-+					dprintk(NDEBUG_LISTS, ("MAIN tmp=%p   target=%d   busy=%d lun=%d\n", tmp, tmp->device->id, hostdata->busy[tmp->device->id], tmp->device->lun));
- 				/*  When we find one, remove it from the issue queue. */
- 				if (!(hostdata->busy[tmp->device->id] & (1 << tmp->device->lun))) {
- 					if (prev) {
-@@ -1064,7 +1064,7 @@ static void NCR5380_main(struct work_str
- 					 * On failure, we must add the command back to the
- 					 *   issue queue so we can keep trying. 
- 					 */
--					dprintk(NDEBUG_MAIN|NDEBUG_QUEUES, ("scsi%d : main() : command for target %d lun %d removed from issue_queue\n", instance->host_no, tmp->target, tmp->lun));
-+					dprintk(NDEBUG_MAIN|NDEBUG_QUEUES, ("scsi%d : main() : command for target %d lun %d removed from issue_queue\n", instance->host_no, tmp->device->id, tmp->device->lun));
- 	
- 					/*
- 					 * A successful selection is defined as one that 
-@@ -2028,7 +2028,7 @@ static int NCR5380_transfer_dma(struct S
- 					hostdata->flags &= ~FLAG_CHECK_LAST_BYTE_SENT;
- 					if (NCR5380_read(TARGET_COMMAND_REG) & TCR_LAST_BYTE_SENT) {
- 						hostdata->flags |= FLAG_HAS_LAST_BYTE_SENT;
--						dprintk(NDEBUG_LAST_WRITE_SENT, ("scsi%d : last bit sent works\n", instance->host_no));
-+						dprintk(NDEBUG_LAST_BYTE_SENT, ("scsi%d : last byte sent works\n", instance->host_no));
- 					}
- 				}
+@@ -1268,7 +1268,7 @@ static irqreturn_t NCR5380_intr(int irq,
+ 	INT_PRINTK("scsi%d: BASR=%02x\n", HOSTNO, basr);
+ 	/* dispatch to appropriate routine if found and done=0 */
+ 	if (basr & BASR_IRQ) {
+-		NCR_PRINT(NDEBUG_INTR);
++		NCR5380_dprint(NDEBUG_INTR, instance);
+ 		if ((NCR5380_read(STATUS_REG) & (SR_SEL|SR_IO)) == (SR_SEL|SR_IO)) {
+ 			done = 0;
+ 			ENABLE_IRQ();
+@@ -1396,7 +1396,7 @@ static int NCR5380_select(struct Scsi_Ho
+ 	unsigned long flags;
+ 
+ 	hostdata->restart_select = 0;
+-	NCR_PRINT(NDEBUG_ARBITRATION);
++	NCR5380_dprint(NDEBUG_ARBITRATION, instance);
+ 	ARB_PRINTK("scsi%d: starting arbitration, id = %d\n", HOSTNO,
+ 		   instance->this_id);
+ 
+@@ -1617,7 +1617,7 @@ static int NCR5380_select(struct Scsi_Ho
+ 			printk(KERN_ERR "scsi%d: weirdness\n", HOSTNO);
+ 			if (hostdata->restart_select)
+ 				printk(KERN_NOTICE "\trestart select\n");
+-			NCR_PRINT(NDEBUG_ANY);
++			NCR5380_dprint(NDEBUG_ANY, instance);
+ 			NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
+ 			return -1;
+ 		}
+@@ -1742,7 +1742,7 @@ static int NCR5380_transfer_pio(struct S
+ 		/* Check for phase mismatch */
+ 		if ((tmp & PHASE_MASK) != p) {
+ 			PIO_PRINTK("scsi%d: phase mismatch\n", HOSTNO);
+-			NCR_PRINT_PHASE(NDEBUG_PIO);
++			NCR5380_dprint_phase(NDEBUG_PIO, instance);
+ 			break;
+ 		}
+ 
+@@ -1764,18 +1764,18 @@ static int NCR5380_transfer_pio(struct S
+ 		if (!(p & SR_IO)) {
+ 			if (!((p & SR_MSG) && c > 1)) {
+ 				NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_DATA);
+-				NCR_PRINT(NDEBUG_PIO);
++				NCR5380_dprint(NDEBUG_PIO, instance);
+ 				NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE |
+ 					      ICR_ASSERT_DATA | ICR_ASSERT_ACK);
  			} else {
-@@ -2454,7 +2454,7 @@ static void NCR5380_information_transfer
- 				NCR5380_transfer_pio(instance, &phase, &len, &data);
- 				if (!cmd->device->disconnect && should_disconnect(cmd->cmnd[0])) {
- 					NCR5380_set_timer(hostdata, USLEEP_SLEEP);
--					dprintk(NDEBUG_USLEEP, ("scsi%d : issued command, sleeping until %ul\n", instance->host_no, hostdata->time_expires));
-+					dprintk(NDEBUG_USLEEP, ("scsi%d : issued command, sleeping until %lu\n", instance->host_no, hostdata->time_expires));
- 					return;
- 				}
- 				break;
-@@ -2466,7 +2466,7 @@ static void NCR5380_information_transfer
+ 				NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE |
+ 					      ICR_ASSERT_DATA | ICR_ASSERT_ATN);
+-				NCR_PRINT(NDEBUG_PIO);
++				NCR5380_dprint(NDEBUG_PIO, instance);
+ 				NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE |
+ 					      ICR_ASSERT_DATA | ICR_ASSERT_ATN | ICR_ASSERT_ACK);
+ 			}
+ 		} else {
+-			NCR_PRINT(NDEBUG_PIO);
++			NCR5380_dprint(NDEBUG_PIO, instance);
+ 			NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_ACK);
+ 		}
+ 
+@@ -1997,7 +1997,7 @@ static void NCR5380_information_transfer
+ 			phase = (tmp & PHASE_MASK);
+ 			if (phase != old_phase) {
+ 				old_phase = phase;
+-				NCR_PRINT_PHASE(NDEBUG_INFORMATION);
++				NCR5380_dprint_phase(NDEBUG_INFORMATION, instance);
+ 			}
+ 
+ 			if (sink && (phase != PHASE_MSGOUT)) {
+@@ -2451,7 +2451,7 @@ static void NCR5380_information_transfer
  				break;
  			default:
- 				printk("scsi%d : unknown phase\n", instance->host_no);
--				NCR5380_dprint(NDEBUG_ALL, instance);
+ 				printk("scsi%d: unknown phase\n", HOSTNO);
+-				NCR_PRINT(NDEBUG_ANY);
 +				NCR5380_dprint(NDEBUG_ANY, instance);
- 			}	/* switch(phase) */
- 		}		/* if (tmp * SR_REQ) */
- 		else {
-@@ -2474,7 +2474,7 @@ static void NCR5380_information_transfer
- 			 */
- 			if (!cmd->device->disconnect && time_after_eq(jiffies, poll_time)) {
- 				NCR5380_set_timer(hostdata, USLEEP_SLEEP);
--				dprintk(NDEBUG_USLEEP, ("scsi%d : poll timed out, sleeping until %ul\n", instance->host_no, hostdata->time_expires));
-+				dprintk(NDEBUG_USLEEP, ("scsi%d : poll timed out, sleeping until %lu\n", instance->host_no, hostdata->time_expires));
- 				return;
- 			}
- 		}
-@@ -2595,7 +2595,7 @@ static void NCR5380_reselect(struct Scsi
- 		do_abort(instance);
- 	} else {
- 		hostdata->connected = tmp;
--		dprintk(NDEBUG_RESELECTION, ("scsi%d : nexus established, target = %d, lun = %d, tag = %d\n", instance->host_no, tmp->target, tmp->lun, tmp->tag));
-+		dprintk(NDEBUG_RESELECTION, ("scsi%d : nexus established, target = %d, lun = %d, tag = %d\n", instance->host_no, tmp->device->id, tmp->device->lun, tmp->tag));
- 	}
- }
+ 			} /* switch(phase) */
+ 		} /* if (tmp * SR_REQ) */
+ 	} /* while (1) */
+Index: linux-m68k/drivers/scsi/sun3_NCR5380.c
+===================================================================
+--- linux-m68k.orig/drivers/scsi/sun3_NCR5380.c	2014-03-19 23:34:42.000000000 +1100
++++ linux-m68k/drivers/scsi/sun3_NCR5380.c	2014-03-19 23:34:43.000000000 +1100
+@@ -681,8 +681,8 @@ static void NCR5380_print_status(struct
+ 	Scsi_Cmnd *ptr;
+ 	unsigned long flags;
  
+-	NCR_PRINT(NDEBUG_ANY);
+-	NCR_PRINT_PHASE(NDEBUG_ANY);
++	NCR5380_dprint(NDEBUG_ANY, instance);
++	NCR5380_dprint_phase(NDEBUG_ANY, instance);
+ 
+ 	hostdata = (struct NCR5380_hostdata *)instance->hostdata;
+ 
+@@ -1192,7 +1192,7 @@ static irqreturn_t NCR5380_intr (int irq
+     INT_PRINTK("scsi%d: BASR=%02x\n", HOSTNO, basr);
+     /* dispatch to appropriate routine if found and done=0 */
+     if (basr & BASR_IRQ) {
+-	NCR_PRINT(NDEBUG_INTR);
++	NCR5380_dprint(NDEBUG_INTR, instance);
+ 	if ((NCR5380_read(STATUS_REG) & (SR_SEL|SR_IO)) == (SR_SEL|SR_IO)) {
+ 	    done = 0;
+ //	    ENABLE_IRQ();
+@@ -1334,7 +1334,7 @@ static int NCR5380_select(struct Scsi_Ho
+     unsigned long flags;
+ 
+     hostdata->restart_select = 0;
+-    NCR_PRINT(NDEBUG_ARBITRATION);
++    NCR5380_dprint(NDEBUG_ARBITRATION, instance);
+     ARB_PRINTK("scsi%d: starting arbitration, id = %d\n", HOSTNO,
+ 	       instance->this_id);
+ 
+@@ -1555,7 +1555,7 @@ static int NCR5380_select(struct Scsi_Ho
+ 	    printk(KERN_ERR "scsi%d: weirdness\n", HOSTNO);
+ 	    if (hostdata->restart_select)
+ 		printk(KERN_NOTICE "\trestart select\n");
+-	    NCR_PRINT(NDEBUG_ANY);
++	    NCR5380_dprint(NDEBUG_ANY, instance);
+ 	    NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
+ 	    return -1;
+ 	}
+@@ -1681,7 +1681,7 @@ static int NCR5380_transfer_pio( struct
+ 	/* Check for phase mismatch */	
+ 	if ((tmp & PHASE_MASK) != p) {
+ 	    PIO_PRINTK("scsi%d: phase mismatch\n", HOSTNO);
+-	    NCR_PRINT_PHASE(NDEBUG_PIO);
++	    NCR5380_dprint_phase(NDEBUG_PIO, instance);
+ 	    break;
+ 	}
+ 
+@@ -1704,18 +1704,18 @@ static int NCR5380_transfer_pio( struct
+ 	    if (!((p & SR_MSG) && c > 1)) {
+ 		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | 
+ 		    ICR_ASSERT_DATA);
+-		NCR_PRINT(NDEBUG_PIO);
++		NCR5380_dprint(NDEBUG_PIO, instance);
+ 		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | 
+ 			ICR_ASSERT_DATA | ICR_ASSERT_ACK);
+ 	    } else {
+ 		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE |
+ 		    ICR_ASSERT_DATA | ICR_ASSERT_ATN);
+-		NCR_PRINT(NDEBUG_PIO);
++		NCR5380_dprint(NDEBUG_PIO, instance);
+ 		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | 
+ 		    ICR_ASSERT_DATA | ICR_ASSERT_ATN | ICR_ASSERT_ACK);
+ 	    }
+ 	} else {
+-	    NCR_PRINT(NDEBUG_PIO);
++	    NCR5380_dprint(NDEBUG_PIO, instance);
+ 	    NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_ACK);
+ 	}
+ 
+@@ -1927,7 +1927,7 @@ static void NCR5380_information_transfer
+ 	    phase = (tmp & PHASE_MASK); 
+  	    if (phase != old_phase) {
+ 		old_phase = phase;
+-		NCR_PRINT_PHASE(NDEBUG_INFORMATION);
++		NCR5380_dprint_phase(NDEBUG_INFORMATION, instance);
+ 	    }
+ 
+ 	    if(phase == PHASE_CMDOUT) {
+@@ -2412,7 +2412,7 @@ static void NCR5380_information_transfer
+ 		break;
+ 	    default:
+ 		printk("scsi%d: unknown phase\n", HOSTNO);
+-		NCR_PRINT(NDEBUG_ANY);
++		NCR5380_dprint(NDEBUG_ANY, instance);
+ 	    } /* switch(phase) */
+ 	} /* if (tmp * SR_REQ) */ 
+     } /* while (1) */
