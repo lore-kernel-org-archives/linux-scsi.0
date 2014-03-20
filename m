@@ -1,49 +1,59 @@
-From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Subject: Re: Deadlock in usb-storage error handling
-Date: Thu, 20 Mar 2014 15:59:19 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1403201549550.866-100000@iolanthe.rowland.org>
-References: <1395331764.2244.16.camel@dabdike.int.hansenpartnership.com>
+From: Jeff Moyer <jmoyer@redhat.com>
+Subject: Re: [LSF/MM TOPIC] atomic block device
+Date: Thu, 20 Mar 2014 16:10:50 -0400
+Message-ID: <x49ob107hrp.fsf@segfault.boston.devel.redhat.com>
+References: <CAA9_cmf7Y1TL8XqR7dYUn=Pv-En2e0X0FM0zdpkiBkUuNBGKfQ@mail.gmail.com>
+	<1392487335.2178.5.camel@dabdike.int.hansenpartnership.com>
+	<CABBL8E+dQPi=N108+z97F54o=xg7vYk5T1JCBGY+9UetiC6qTg@mail.gmail.com>
+	<1392495902.2178.27.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1395331764.2244.16.camel-sFMDBYUN5F8GjUHQrlYNx2Wm91YjaHnnhRte9Li2A+AAvxtiuMwx3w@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Cc: Andreas Reis <andreas.reis-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:41370 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758075AbaCTULE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 Mar 2014 16:11:04 -0400
+In-Reply-To: <1392495902.2178.27.camel@dabdike.int.hansenpartnership.com>
+	(James Bottomley's message of "Sat, 15 Feb 2014 12:25:02 -0800")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Andy Rudoff <andy@rudoff.com>, Dan Williams <dan.j.williams@intel.com>, lsf-pc@lists.linux-foundation.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, david@fromorbit.com, Chris Mason <clm@fb.com>, Jens Axboe <axboe@kernel.dk>, Bryan E Veal <bryan.e.veal@intel.com>, Annie Foong <annie.foong@intel.com>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Lameter <christoph@lameter.com>
 
-On Thu, 20 Mar 2014, James Bottomley wrote:
+James Bottomley <James.Bottomley@HansenPartnership.com> writes:
 
-> OK, so I think we have three things to do
-> 
->      1. Investigate SCSI and fix it's abort state problem that's causing
->         it not to send the abort second time around
->      2. Fix usb-storage to fail a reset it can't do (i.e. device reset
->         with outstanding commands)
->      3. Find out why we're sending a spurious request sense.
-> 
-> I can look at 1 and 3 if you want to take 2.
+> OK, so what the Database people are currently fretting about is how the
+> Linux cache fights with the WAL.  Pretty much all DBs sit on filesystems
+> these days, so the first question is are block operations even relevant
 
-I wrote a patch for 2.  It turned out not to help much, because I was
-wrong -- while a command is running, usb-storage won't do a bus reset
-either.  The lock occurs in a separate part of the code, where I wasn't
-looking earlier.  When I tested the patch, the device reset failed
-immediately (as desired) and then the attempted bus reset hung.  
-Overall, not much of an improvement...
+Yes, they are relevant so long as there are users.  Not all databases
+run on file systems.  More to the point, I think the spec includes them
+for completeness.
 
-In fact, this restriction on bus resets is important and necessary.  
-USB devices can be composite, meaning they can contain several
-functions all packed into a single device.  If a driver for one of the
-other functions needs to perform a bus reset, we don't want it to
-interrupt an ongoing mass-storage command.  Thus, it is important for
-the reset routine to wait for an outstanding command to complete.
+> and do the (rather scant) file operations fit their need.  The basic
+> problem with the file mode is the granularity.  What does a DB do with
+> transactions which go over the limits?
 
-Anyway, this looks to be a moot point.  With your fix for 1, neither 
-sort of reset was necessary.
+s/transactions/atomic multiwrites?  There are a couple of options,
+there.  You could either emulate the multiwrite transparently to the
+application, or you could fail it.  I think we'd have to support both,
+since some applications will not want the less performant fallback.
 
-Alan Stern
+> It also looks like the NVM file actions need to work over DIO, so the
+> question is how.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+DIO just means avoid using the page cache (or, I guess you could make it
+more generic by saying avoid double buffering).  If the hardware
+supports atomic writes, then this is easy.  If it doesn't, then we can
+still do the emulation.  DIO already has fallback to buffered, so it's
+not like we always honor that flag.
+
+> (And the other problem is that only a few DBs seem to use DIO).
+
+This is the first time I have ever heard anyone state that not using DIO
+was a problem.  :-)  Also, I'm not sure what problem you are thinking
+of.  Perhaps you are referring to the interactions of the WAL and the
+page cache (that you mentioned in the first paragraph).
+
+Cheers,
+Jeff
