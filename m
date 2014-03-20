@@ -1,47 +1,108 @@
-From: Oleg Nesterov <oleg@redhat.com>
-Subject: Re: please fix FUSION (Was: [v3.13][v3.14][Regression]
-	kthread:makekthread_create()killable)
-Date: Thu, 20 Mar 2014 20:23:07 +0100
-Message-ID: <20140320192307.GA11883@redhat.com>
-References: <201403172138.GFB43278.OOOFFSQLVHJMtF@I-love.SAKURA.ne.jp> <20140317142246.GA27453@redhat.com> <201403182103.BJC78148.tFOFHQOJLOMVSF@I-love.SAKURA.ne.jp> <20140318171620.GA10636@redhat.com> <201403192049.BBI39025.OVFMOOJtFSHFQL@I-love.SAKURA.ne.jp> <5329C22A.5070206@canonical.com> <20140319175253.GB11923@redhat.com> <20140319182910.GA14511@redhat.com> <20140319194232.GA6207@redhat.com> <532B1B67.5050104@canonical.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: Deadlock in usb-storage error handling
+Date: Thu, 20 Mar 2014 15:48:07 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1403201518130.863-100000@iolanthe.rowland.org>
+References: <1395339778.2244.41.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <532B1B67.5050104@canonical.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Joseph Salisbury <joseph.salisbury@canonical.com>
-Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, JBottomley@parallels.com, Nagalakshmi.Nandigama@lsi.com, Sreekanth.Reddy@lsi.com, rientjes@google.com, akpm@linux-foundation.org, torvalds@linux-foundation.org, tj@kernel.org, tglx@linutronix.de, linux-kernel@vger.kernel.org, kernel-team@lists.ubuntu.com, linux-scsi@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:42499 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755381AbaCTTsJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Mar 2014 15:48:09 -0400
+In-Reply-To: <1395339778.2244.41.camel@dabdike.int.hansenpartnership.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Andreas Reis <andreas.reis@gmail.com>, USB list <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On 03/20, Joseph Salisbury wrote:
->
-> On 03/19/2014 03:42 PM, Oleg Nesterov wrote:
-> > On 03/19, Oleg Nesterov wrote:
-> >> On 03/19, Oleg Nesterov wrote:
-> >>> But please do not forget that the kernel crashes. Whatever else we do, this
-> >>> should be fixed anyway. And this should be fixed in driver.
-> >> drivers/message/fusion/ is obviously buggy.
-> > Perhaps this is the only problem and Tetsuo is right, this driver
-> > really needs more than 30 secs to probe...
-> >
-> > But if you have a bit of free time, perhaps you can try the stupid
-> > debugging patch below ;) Not sure it will help, but who knows.
-> >
-> > Oleg.
->
-> There was some testing done with your test kernel.  The data collected
-> while running your kernel is available in the bug report:
-> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1276705/comments/58
+On Thu, 20 Mar 2014, James Bottomley wrote:
 
-Joseph, thanks a lot.
+> On Thu, 2014-03-20 at 12:34 -0400, Alan Stern wrote:
+> > On Thu, 20 Mar 2014, James Bottomley wrote:
+> > 
+> > > OK, so I think we have three things to do
+> > > 
+> > >      1. Investigate SCSI and fix it's abort state problem that's causing
+> > >         it not to send the abort second time around
+> > >      2. Fix usb-storage to fail a reset it can't do (i.e. device reset
+> > >         with outstanding commands)
+> > >      3. Find out why we're sending a spurious request sense.
+> > > 
+> > > I can look at 1 and 3 if you want to take 2.
+> > 
+> > It's a deal!  Thanks for your help.
+> 
+> And this looks to be 3: a bug in the way we attach sense data to
+> commands (we shouldn't look for attached sense if the device error code
+> didn't imply there would be any).
+> 
+> James
+> 
+> ---
+> 
+> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+> index 771c16b..d020149 100644
+> --- a/drivers/scsi/scsi_error.c
+> +++ b/drivers/scsi/scsi_error.c
+> @@ -1157,6 +1157,15 @@ int scsi_eh_get_sense(struct list_head *work_q,
+>  					     __func__));
+>  			break;
+>  		}
+> +		if (status_byte(scmd->result) != CHECK_CONDITION)
+> +			/*
+> +			 * don't request sense if there's no check condition
+> +			 * status because the error we're processing isn't one
+> +			 * that has a sense code (and some devices get
+> +			 * confused by sense requests out of the blue)
+> +			 */
+> +			continue;
+> +
+>  		SCSI_LOG_ERROR_RECOVERY(2, scmd_printk(KERN_INFO, scmd,
+>  						  "%s: requesting sense\n",
+>  						  current->comm));
 
-I'll try to read the logs tomorrow, but at first glance Tetsuo was right,
-I do not see a "long" sleep in that log. And it shows that the hack around
-kthread_run() in scsi_host_alloc() won't help. I am wondering why I didn't
-realize this before ;)
+I tried this patch first, because fixing the earlier bug would mask
+this one.
 
-Hmm. Perhaps we should simply change mptsas_init() to block all signals
-until we have the right fix.
+The patch sort of worked.  But the first time I tried it, it failed in
+a rather amusing way.  While the second retry was running and hung,
+scmd->result _was_ equal to CHECK_CONDITION -- because that was the
+result from the _first_ retry, and it had never gotten cleared!
 
-Oleg.
+scmd->result needs to be set to 0 before the queuecommand callback is
+invoked.  I ended up adding this to your patch, and then it worked
+perfectly:
+
+
+Index: usb-3.14/drivers/scsi/scsi_error.c
+===================================================================
+--- usb-3.14.orig/drivers/scsi/scsi_error.c
++++ usb-3.14/drivers/scsi/scsi_error.c
+@@ -924,6 +924,7 @@ void scsi_eh_prep_cmnd(struct scsi_cmnd
+ 	memset(scmd->cmnd, 0, BLK_MAX_CDB);
+ 	memset(&scmd->sdb, 0, sizeof(scmd->sdb));
+ 	scmd->request->next_rq = NULL;
++	scmd->result = 0;
+ 
+ 	if (sense_bytes) {
+ 		scmd->sdb.length = min_t(unsigned, SCSI_SENSE_BUFFERSIZE,
+Index: usb-3.14/drivers/scsi/scsi_lib.c
+===================================================================
+--- usb-3.14.orig/drivers/scsi/scsi_lib.c
++++ usb-3.14/drivers/scsi/scsi_lib.c
+@@ -159,6 +159,7 @@ static void __scsi_queue_insert(struct s
+ 	 * lock such that the kblockd_schedule_work() call happens
+ 	 * before blk_cleanup_queue() finishes.
+ 	 */
++	cmd->result = 0;
+ 	spin_lock_irqsave(q->queue_lock, flags);
+ 	blk_requeue_request(q, cmd->request);
+ 	kblockd_schedule_work(q, &device->requeue_work);
+
+
+Maybe only the second one is necessary, but it seemed best to be
+consistent.
+
+Alan Stern
+
