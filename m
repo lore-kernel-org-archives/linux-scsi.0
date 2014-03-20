@@ -1,66 +1,47 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: Deadlock in usb-storage error handling
-Date: Thu, 20 Mar 2014 11:22:58 -0700
-Message-ID: <1395339778.2244.41.camel@dabdike.int.hansenpartnership.com>
-References: <Pine.LNX.4.44L0.1403201233150.858-100000@iolanthe.rowland.org>
+From: Oleg Nesterov <oleg@redhat.com>
+Subject: Re: please fix FUSION (Was: [v3.13][v3.14][Regression]
+	kthread:makekthread_create()killable)
+Date: Thu, 20 Mar 2014 20:23:07 +0100
+Message-ID: <20140320192307.GA11883@redhat.com>
+References: <201403172138.GFB43278.OOOFFSQLVHJMtF@I-love.SAKURA.ne.jp> <20140317142246.GA27453@redhat.com> <201403182103.BJC78148.tFOFHQOJLOMVSF@I-love.SAKURA.ne.jp> <20140318171620.GA10636@redhat.com> <201403192049.BBI39025.OVFMOOJtFSHFQL@I-love.SAKURA.ne.jp> <5329C22A.5070206@canonical.com> <20140319175253.GB11923@redhat.com> <20140319182910.GA14511@redhat.com> <20140319194232.GA6207@redhat.com> <532B1B67.5050104@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:41119 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933560AbaCTSXC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 Mar 2014 14:23:02 -0400
-In-Reply-To: <Pine.LNX.4.44L0.1403201233150.858-100000@iolanthe.rowland.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <532B1B67.5050104@canonical.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Joseph Salisbury <joseph.salisbury@canonical.com>
+Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, JBottomley@parallels.com, Nagalakshmi.Nandigama@lsi.com, Sreekanth.Reddy@lsi.com, rientjes@google.com, akpm@linux-foundation.org, torvalds@linux-foundation.org, tj@kernel.org, tglx@linutronix.de, linux-kernel@vger.kernel.org, kernel-team@lists.ubuntu.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Andreas Reis <andreas.reis@gmail.com>, USB list <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Thu, 2014-03-20 at 12:34 -0400, Alan Stern wrote:
-> On Thu, 20 Mar 2014, James Bottomley wrote:
-> 
-> > OK, so I think we have three things to do
-> > 
-> >      1. Investigate SCSI and fix it's abort state problem that's causing
-> >         it not to send the abort second time around
-> >      2. Fix usb-storage to fail a reset it can't do (i.e. device reset
-> >         with outstanding commands)
-> >      3. Find out why we're sending a spurious request sense.
-> > 
-> > I can look at 1 and 3 if you want to take 2.
-> 
-> It's a deal!  Thanks for your help.
+On 03/20, Joseph Salisbury wrote:
+>
+> On 03/19/2014 03:42 PM, Oleg Nesterov wrote:
+> > On 03/19, Oleg Nesterov wrote:
+> >> On 03/19, Oleg Nesterov wrote:
+> >>> But please do not forget that the kernel crashes. Whatever else we do, this
+> >>> should be fixed anyway. And this should be fixed in driver.
+> >> drivers/message/fusion/ is obviously buggy.
+> > Perhaps this is the only problem and Tetsuo is right, this driver
+> > really needs more than 30 secs to probe...
+> >
+> > But if you have a bit of free time, perhaps you can try the stupid
+> > debugging patch below ;) Not sure it will help, but who knows.
+> >
+> > Oleg.
+>
+> There was some testing done with your test kernel.  The data collected
+> while running your kernel is available in the bug report:
+> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1276705/comments/58
 
-And this looks to be 3: a bug in the way we attach sense data to
-commands (we shouldn't look for attached sense if the device error code
-didn't imply there would be any).
+Joseph, thanks a lot.
 
-James
+I'll try to read the logs tomorrow, but at first glance Tetsuo was right,
+I do not see a "long" sleep in that log. And it shows that the hack around
+kthread_run() in scsi_host_alloc() won't help. I am wondering why I didn't
+realize this before ;)
 
----
+Hmm. Perhaps we should simply change mptsas_init() to block all signals
+until we have the right fix.
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 771c16b..d020149 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -1157,6 +1157,15 @@ int scsi_eh_get_sense(struct list_head *work_q,
- 					     __func__));
- 			break;
- 		}
-+		if (status_byte(scmd->result) != CHECK_CONDITION)
-+			/*
-+			 * don't request sense if there's no check condition
-+			 * status because the error we're processing isn't one
-+			 * that has a sense code (and some devices get
-+			 * confused by sense requests out of the blue)
-+			 */
-+			continue;
-+
- 		SCSI_LOG_ERROR_RECOVERY(2, scmd_printk(KERN_INFO, scmd,
- 						  "%s: requesting sense\n",
- 						  current->comm));
-
-
-
+Oleg.
