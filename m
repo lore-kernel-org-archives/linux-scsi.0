@@ -1,91 +1,143 @@
-From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH] hpsa: fix bug in figure_lunaddrbytes()
-Date: Thu, 20 Mar 2014 11:34:04 -0500
-Message-ID: <20140320163404.19241.47881.stgit@beardog.cce.hp.com>
+From: Joseph Salisbury <joseph.salisbury@canonical.com>
+Subject: Re: please fix FUSION (Was: [v3.13][v3.14][Regression] kthread:makekthread_create()killable)
+Date: Thu, 20 Mar 2014 12:46:31 -0400
+Message-ID: <532B1B67.5050104@canonical.com>
+References: <20140316162512.GA9467@redhat.com> <201403172138.GFB43278.OOOFFSQLVHJMtF@I-love.SAKURA.ne.jp> <20140317142246.GA27453@redhat.com> <201403182103.BJC78148.tFOFHQOJLOMVSF@I-love.SAKURA.ne.jp> <20140318171620.GA10636@redhat.com> <201403192049.BBI39025.OVFMOOJtFSHFQL@I-love.SAKURA.ne.jp> <5329C22A.5070206@canonical.com> <20140319175253.GB11923@redhat.com> <20140319182910.GA14511@redhat.com> <20140319194232.GA6207@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g2t1383g.austin.hp.com ([15.217.136.92]:35934 "EHLO
-	g2t1383g.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751599AbaCTQfH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Mar 2014 12:35:07 -0400
-Received: from g2t2353.austin.hp.com (g2t2353.austin.hp.com [15.217.128.52])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by g2t1383g.austin.hp.com (Postfix) with ESMTPS id E0362265D
-	for <linux-scsi@vger.kernel.org>; Thu, 20 Mar 2014 16:34:56 +0000 (UTC)
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20140319194232.GA6207@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Oleg Nesterov <oleg@redhat.com>
+Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, JBottomley@parallels.com, Nagalakshmi.Nandigama@lsi.com, Sreekanth.Reddy@lsi.com, rientjes@google.com, akpm@linux-foundation.org, torvalds@linux-foundation.org, tj@kernel.org, tglx@linutronix.de, linux-kernel@vger.kernel.org, kernel-team@lists.ubuntu.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: james.bottomley@hansenpartnership.com
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, stephenmcameron@gmail.com, joseph.t.handzik@hp.com, thenzl@redhat.com, michael.miller@canonical.com, scott.teel@hp.com
 
-From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+On 03/19/2014 03:42 PM, Oleg Nesterov wrote:
+> On 03/19, Oleg Nesterov wrote:
+>> On 03/19, Oleg Nesterov wrote:
+>>> But please do not forget that the kernel crashes. Whatever else we do, this
+>>> should be fixed anyway. And this should be fixed in driver.
+>> drivers/message/fusion/ is obviously buggy.
+> Perhaps this is the only problem and Tetsuo is right, this driver
+> really needs more than 30 secs to probe...
+>
+> But if you have a bit of free time, perhaps you can try the stupid
+> debugging patch below ;) Not sure it will help, but who knows.
+>
+> Oleg.
 
-Depending on whether we use "extended" or "normal"
-CISS_REPORT_LUNS command, the returned data is either
-8 or 24 bytes per LUN, and the code needs to take this
-into account instead of just always assuming 24 bytes
-per LUN.  This would cause physical devices like tape
-drives not to show up when attached to older controllers
-that do not support "HP SSD Smart Path"
+There was some testing done with your test kernel.  The data collected
+while running your kernel is available in the bug report:
+https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1276705/comments/58
 
-Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
----
- drivers/scsi/hpsa.c |   25 ++++++++++++++++++-------
- 1 files changed, 18 insertions(+), 7 deletions(-)
+Thanks again for the assistance!
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 9a6e4a2..63835c4 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -2936,12 +2936,15 @@ static int hpsa_gather_lun_info(struct ctlr_info *h,
- 
- u8 *figure_lunaddrbytes(struct ctlr_info *h, int raid_ctlr_position, int i,
- 	int nphysicals, int nlogicals,
--	struct ReportExtendedLUNdata *physdev_list,
--	struct ReportLUNdata *logdev_list)
-+	void *physdev_list, struct ReportLUNdata *logdev_list,
-+	int physical_mode)
- {
- 	/* Helper function, figure out where the LUN ID info is coming from
- 	 * given index i, lists of physical and logical devices, where in
--	 * the list the raid controller is supposed to appear (first or last)
-+	 * the list the raid controller is supposed to appear (first or last).
-+	 * if extended_physicals is set, then physdev_list points to
-+	 * a struct ReportExtendedLUNdata otherwise it points to a struct
-+	 * ReportLUNdata.
- 	 */
- 
- 	int logicals_start = nphysicals + (raid_ctlr_position == 0);
-@@ -2950,9 +2953,16 @@ u8 *figure_lunaddrbytes(struct ctlr_info *h, int raid_ctlr_position, int i,
- 	if (i == raid_ctlr_position)
- 		return RAID_CTLR_LUNID;
- 
--	if (i < logicals_start)
--		return &physdev_list->LUN[i - (raid_ctlr_position == 0)][0];
--
-+	if (i < logicals_start) {
-+		const int index = i - (raid_ctlr_position == 0);
-+		if (physical_mode) {
-+			struct ReportExtendedLUNdata *p = physdev_list;
-+			return &p->LUN[index][0];
-+		} else {
-+			struct ReportLUNdata *p = physdev_list;
-+			return &p->LUN[index][0];
-+		}
-+	}
- 	if (i < last_device)
- 		return &logdev_list->LUN[i - nphysicals -
- 			(raid_ctlr_position == 0)][0];
-@@ -3065,7 +3075,8 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h, int hostno)
- 
- 		/* Figure out where the LUN ID info is coming from */
- 		lunaddrbytes = figure_lunaddrbytes(h, raid_ctlr_position,
--			i, nphysicals, nlogicals, physdev_list, logdev_list);
-+			i, nphysicals, nlogicals, physdev_list, logdev_list,
-+			physical_mode);
- 		/* skip masked physical devices. */
- 		if (lunaddrbytes[3] & 0xC0 &&
- 			i < nphysicals + (raid_ctlr_position == 0))
-
+>
+> diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
+> index 00d339c..5ecc27e 100644
+> --- a/drivers/message/fusion/mptsas.c
+> +++ b/drivers/message/fusion/mptsas.c
+> @@ -5400,12 +5400,16 @@ mptsas_init(void)
+>  {
+>  	int error;
+>  
+> +	printk(KERN_CRIT "mptsas_init start\n");
+> +	current->flags |= 0x1;
+>  	show_mptmod_ver(my_NAME, my_VERSION);
+>  
+>  	mptsas_transport_template =
+>  	    sas_attach_transport(&mptsas_transport_functions);
+> -	if (!mptsas_transport_template)
+> -		return -ENODEV;
+> +	if (!mptsas_transport_template) {
+> +		error = -ENODEV;
+> +		goto out;
+> +	}
+>  	mptsas_transport_template->eh_timed_out = mptsas_eh_timed_out;
+>  
+>  	mptsasDoneCtx = mpt_register(mptscsih_io_done, MPTSAS_DRIVER,
+> @@ -5428,6 +5432,9 @@ mptsas_init(void)
+>  	if (error)
+>  		sas_release_transport(mptsas_transport_template);
+>  
+> +out:
+> +	current->flags &= ~0x1;
+> +	printk(KERN_CRIT "mptsas_init end\n");
+>  	return error;
+>  }
+>  
+> diff --git a/kernel/kthread.c b/kernel/kthread.c
+> index b5ae3ee..78e643d 100644
+> --- a/kernel/kthread.c
+> +++ b/kernel/kthread.c
+> @@ -291,6 +291,13 @@ struct task_struct *kthread_create_on_node(int (*threadfn)(void *data),
+>  	 * the OOM killer while kthreadd is trying to allocate memory for
+>  	 * new kernel thread.
+>  	 */
+> +
+> +	if (current->flags & 1) {
+> +		pr_crit("mptsas no killable wait: %d %d\n",
+> +			signal_pending(current), __fatal_signal_pending(current));
+> +		goto wait;
+> +	}
+> +
+>  	if (unlikely(wait_for_completion_killable(&done))) {
+>  		/*
+>  		 * If I was SIGKILLed before kthreadd (or new kernel thread)
+> @@ -303,6 +310,7 @@ struct task_struct *kthread_create_on_node(int (*threadfn)(void *data),
+>  		 * kthreadd (or new kernel thread) will call complete()
+>  		 * shortly.
+>  		 */
+> +wait:
+>  		wait_for_completion(&done);
+>  	}
+>  	task = create->result;
+> diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+> index b46131e..2b202bd 100644
+> --- a/kernel/sched/core.c
+> +++ b/kernel/sched/core.c
+> @@ -2655,6 +2655,14 @@ static void __sched __schedule(void)
+>  	unsigned long *switch_count;
+>  	struct rq *rq;
+>  	int cpu;
+> +	bool trace;
+> +
+> +	trace = (current->flags & 1) && current->state && !(preempt_count() & PREEMPT_ACTIVE);
+> +	if (trace) {
+> +		pr_crit("mptsas sched: %lx %d %d\n", current->state,
+> +			signal_pending(current), __fatal_signal_pending(current));
+> +		show_stack(NULL, NULL);
+> +	}
+>  
+>  need_resched:
+>  	preempt_disable();
+> @@ -2733,6 +2741,11 @@ need_resched:
+>  	sched_preempt_enable_no_resched();
+>  	if (need_resched())
+>  		goto need_resched;
+> +
+> +	if (trace) {
+> +		pr_crit("mptsas wake: %d %d\n",
+> +			signal_pending(current), __fatal_signal_pending(current));
+> +	}
+>  }
+>  
+>  static inline void sched_submit_work(struct task_struct *tsk)
+> diff --git a/kernel/signal.c b/kernel/signal.c
+> index 52f881d..d121944 100644
+> --- a/kernel/signal.c
+> +++ b/kernel/signal.c
+> @@ -1152,6 +1152,11 @@ static int send_signal(int sig, struct siginfo *info, struct task_struct *t,
+>  {
+>  	int from_ancestor_ns = 0;
+>  
+> +	if (t->flags & 1) {
+> +		pr_crit("mptsas killed %d\n", sig);
+> +		sched_show_task(t);
+> +	}
+> +
+>  #ifdef CONFIG_PID_NS
+>  	from_ancestor_ns = si_fromuser(info) &&
+>  			   !task_pid_nr_ns(current, task_active_pid_ns(t));
+>
