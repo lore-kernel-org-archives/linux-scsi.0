@@ -1,41 +1,36 @@
-From: "Reddy, Sreekanth" <Sreekanth.Reddy@lsi.com>
-Subject: RE: [PATCH 02/11][SCSI]mpt2sas: Added new driver module Parameter
- disable_eedp to Disable EEDP Support
-Date: Thu, 20 Mar 2014 13:25:00 +0000
-Message-ID: <a13fdb6e86244cf886f992f1ec576f42@DM2PR07MB302.namprd07.prod.outlook.com>
-References: <20140314153622.GA7947@lsi.com>
-	 <yq1r464wm7s.fsf@sermon.lab.mkp.net>
- <1395267671.2185.63.camel@dabdike.int.hansenpartnership.com>
+From: James Bottomley <jbottomley@parallels.com>
+Subject: Re: [PATCH] Fixup vpd page length calculation
+Date: Thu, 20 Mar 2014 13:37:49 +0000
+Message-ID: <1395322669.2244.6.camel@dabdike.int.hansenpartnership.com>
+References: <1395299964-56537-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1395267671.2185.63.camel@dabdike.int.hansenpartnership.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.parallels.com ([199.115.105.18]:33302 "EHLO
+	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758109AbaCTNhv convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Mar 2014 09:37:51 -0400
+In-Reply-To: <1395299964-56537-1-git-send-email-hare@suse.de>
 Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "jejb@kernel.org" <jejb@kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>, "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "sreekanthreddy0547@gmail.com" <sreekanthreddy0547@gmail.com>
+Content-ID: <4F214FE236F14D4A86D29EAEE3E2FB93@sw.swsoft.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "hare@suse.de" <hare@suse.de>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
->>
->> Sreekanth> A new mpt2sas driver module parameter 'disable_eedp' is
->> Sreekanth> added to Disable EEDP support. By default DIF support is
->> Sreekanth> enabled in the driver and this module parameter would allow
->> Sreekanth> users to turn it off.
->>
->> Why don't you just set the prot_mask module parameter to 0?
->
->Is there an answer to this?  It's holding up your patch submission.
->
->James
->
+On Thu, 2014-03-20 at 08:19 +0100, Hannes Reinecke wrote:
+> The VPD page length parameter is not only used for the length,
+> but also to hold any error code. So it needs to be moved to an
+> integer.
+> And we should be resetting the default VPD page length after
+> each iteration so that we do not allocate overly large buffers.
 
-
-Hi Martin,
-
-The prot_mask module parameter is defined for the purpose of setting the DIF and DIX capabilities. 
-The disable_eedp module parameter is added with the intent to disable the complete EEDP related code and operations. This include even reading  manufacting pages to get EEDPTagMode etc. 
-Agree that this could also be achieved using prot_mask. We are giving new parameter to be clear that we are disabling the complete EEDP.
+This is pretty difficult to apply, since three patches are affected.  I
+think I got it right (please check), but next time, I'd prefer the fixed
+patches.
 
 Thanks,
-Sreekanth
+
+James
+
