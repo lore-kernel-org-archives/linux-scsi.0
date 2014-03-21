@@ -1,118 +1,75 @@
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [RFC PATCH 0/5] userspace PI passthrough via AIO/DIO
-Date: Fri, 21 Mar 2014 15:54:37 -0700
-Message-ID: <20140321225437.GB9074@birch.djwong.org>
-References: <20140321043041.8428.79003.stgit@birch.djwong.org>
- <20140321182332.GP10561@lenny.home.zabbo.net>
- <20140321214410.GE23173@kvack.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: please fix FUSION (Was: [v3.13][v3.14][Regression]
+ kthread:makekthread_create()killable)
+Date: Fri, 21 Mar 2014 15:56:31 -0700
+Message-ID: <1395442591.2240.22.camel@dabdike.int.hansenpartnership.com>
+References: <20140317142246.GA27453@redhat.com>
+	 <201403182103.BJC78148.tFOFHQOJLOMVSF@I-love.SAKURA.ne.jp>
+	 <20140318171620.GA10636@redhat.com>
+	 <201403192049.BBI39025.OVFMOOJtFSHFQL@I-love.SAKURA.ne.jp>
+	 <5329C22A.5070206@canonical.com> <20140319175253.GB11923@redhat.com>
+	 <20140319182910.GA14511@redhat.com> <20140319194232.GA6207@redhat.com>
+	 <532B1B67.5050104@canonical.com> <20140320192307.GA11883@redhat.com>
+	 <20140321183443.GA3891@redhat.com>
+	 <CA+55aFx8=AszAeeJnSXnOsJKUhx3JjGJko1XiOKYWWRWiUE+SQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20140321214410.GE23173@kvack.org>
-Sender: owner-linux-mm@kvack.org
-To: Benjamin LaHaise <bcrl@kvack.org>
-Cc: Zach Brown <zab@redhat.com>, axboe@kernel.dk, martin.petersen@oracle.com, JBottomley@parallels.com, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, linux-aio@kvack.org, linux-scsi@vger.kernel.org, linux-mm@kvack.org
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CA+55aFx8=AszAeeJnSXnOsJKUhx3JjGJko1XiOKYWWRWiUE+SQ@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Oleg Nesterov <oleg@redhat.com>, Joseph Salisbury <joseph.salisbury@canonical.com>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Nagalakshmi.Nandigama@lsi.com, Sreekanth.Reddy@lsi.com, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Thomas Gleixner <tglx@linutronix.de>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Ubuntu Kernel Team <kernel-team@lists.ubuntu.com>, Linux SCSI List <linux-scsi@vger.kernel.org>, Tomas Henzl <thenzl@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Mar 21, 2014 at 05:44:10PM -0400, Benjamin LaHaise wrote:
-> Hi folks,
+On Fri, 2014-03-21 at 12:32 -0700, Linus Torvalds wrote:
+> On Fri, Mar 21, 2014 at 11:34 AM, Oleg Nesterov <oleg@redhat.com> wrote:
+> >
+> > Yes, it seems that it actually needs > 30 secs. It spends most of the time
+> > (30.13286 seconds) in [..]
 > 
-> On Fri, Mar 21, 2014 at 11:23:32AM -0700, Zach Brown wrote:
-> > On Thu, Mar 20, 2014 at 09:30:41PM -0700, Darrick J. Wong wrote:
-> > > This RFC provides a rough implementation of a mechanism to allow
-> > > userspace to attach protection information (e.g. T10 DIF) data to a
-> > > disk write and to receive the information alongside a disk read.  The
-> > > interface is an extension to the AIO interface: two new commands
-> > > (IOCB_CMD_P{READ,WRITE}VM) are provided.  The last struct iovec in the
-> > > arg list is interpreted to point to a buffer containing a header,
-> > > followed by the the PI data.
-> > 
-> > Instead of adding commands that indicate that the final element is a
-> > magical pi buffer, why not expand the iocb?
-> > 
-> > In the user iocb, a bit in aio_flags could indicate that aio_reserved2
-> > is a pointer to an extension of the iocb.  In that extension could be a
-> > full iov *, nr_segs for PI data.
+> So how about taking a completely different approach:
 > 
-> I'm inclined to agree with Zach on this item.  Ultimately, we need an 
-> extensible data structure that can be grown without completely revising 
-> the ABI as new parameters are added.  We need something that is either 
-> TLV based, or an extensible array.
-
-Ok.  Let's define IOCB_FLAG_EXTENSIONS as an iocb.aio_flags flag to indicate
-that this struct iocb has extensions attached to it.  Then, iocb.aio_reserved2
-becomes a pointer to an array of extension descriptors, and iocb.aio_reqprio
-becomes a u16 that tells us the array length.  The libaio.h equivalents are
-iocb.u.c.flags, iocb.u.c.__pad3, and iocb.aio_reqprio, respectively.
-
-Next, let's define a conceptual structure for aio extensions:
-
-struct iocb_extension {
-	void *ie_buf;
-	unsigned int ie_buflen;
-	unsigned int ie_type;
-	unsigned int ie_flags;
-};
-
-The actual definitions can be defined in a similar fashion to the other aio
-structures so that the structures are padded to the same layout regardless of
-bitness.  As mentioned above, iocb.aio_reserved2 points to an array of these.
-
-Question: Do we want to allow ie_buf to be struct iovec[]?  Can we leave that
-to the extension designer to decide if they want to support either a S-G list,
-one big (vaddr) buffer, or toggle flags?
-
-For the PI passthrough, I'll define IOCB_EXT_PI as the first ie_type, and move
-the flags argument out of the PI buffer and into ie_flags.
-
-I could also make an IOCB_EXT_REQPRIO where ie_flags = reqprio, but since the
-kernel ignores it right now, I don't see much point.
-
-> > You'd then translate that into a bigger kernel kiocb with a specific
-> > pointer to PI data rather than having to bubble the tests for this magic
-> > final iovec down through the kernel.
-> > 
-> > +       if (iocb->ki_flags & KIOCB_USE_PI) {
-> > +               nr_segs--;
-> > +               pi_iov = (struct iovec *)(iov + nr_segs);
-> > +       }
-> > 
-> > I suggest this because there's already pressure to extend the iocb.
-> > Folks want io priority inputs, completion time outputs, etc.
+>  - just say that waiting for devices in the module init sequence for
+> over 30 seconds is really really wrong.
 > 
-> There are already folks at other companies looking at similar extensions.  
-> I think there are folks at Google who have similar requirements.
-
-To everyone else interested in AIO extensions: I'd love to hear your ideas.
-
-> Do you have time to put in some effort into defining these extensions?
-
-I think so.  Let's see how much we can get done.
-
---D
+>  - make the damn mptsas driver just register the controller from the
+> init sequence, and then do device discovery asynchronously.
 > 
-> 		-ben
+> The ATA layer does this correctly: it synchronously finds each host,
+> but then it does
 > 
-> > It's a much cleaner way to extend the interface without an explosion of
-> > command enums that are really combinations of per-io arguments that are
-> > present or not.
-> > 
-> > And heck, on the sync rw syscall side, add variant that have a pointer
-> > to this same extension struct.  There's nothing inherently aio specific
-> > about having lots more per-io inputs and outputs.
-> > 
-> > - z
+>         /* perform each probe asynchronously */
+>         for (i = 0; i < host->n_ports; i++) {
+>                 struct ata_port *ap = host->ports[i];
+>                 async_schedule(async_port_probe, ap);
+>         }
 > 
-> -- 
-> "Thought is the essence of where you are now."
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> and I really think SCSI drivers should do the same if they have this
+> kind of "ports can take forever to probe" behavior.
+> 
+> What would be the equivalent magic to do this for SCSI? Could we just
+> make something like scsi_probe_and_add_lun() just always do this, the
+> same way ata_host_register() does it?
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Well, we do do this asynchronously.  The idea is that the add host only
+initialises the actual hardware.  The port probing is supposed to be
+done asynchronously (provided the async probe option is enabled in SCSI,
+of course).  The way this is supposed to happen is the driver
+initialises the hardware and then calls scsi_scan_host().  If the
+platform is set up for async scanning, that kicks off all the async
+workqueues and returns (or does it all synchronously if async scanning
+isn't enabled).
+
+It is possible fusion gets this wrong because the sas driver doesn't
+really couple to SCSI's libsas, which is where it would pick up most of
+the generic infrastructure for this.  Plus it depends where all the time
+is being wasted.  The fusion was the last sas chipset I got the specs
+for (under NDA).  It's actually table driven, so if the problem is the
+controller taking ages to fill in the tables it might necessitate a
+fusion specific fix.  I can see from the driver that it seems to do all
+the probing itself instead of relying on probe callbacks from
+scsi_scan_host(), so I know what needs to be fixed ... it's less clear
+how easy this would be given how monolithic the routine looks.
+
+James
