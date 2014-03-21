@@ -1,145 +1,52 @@
-From: Arvind Kumar <arvindkumar@vmware.com>
-Subject: [PATCH] VMW_PVSCSI: Fix the issue of DMA-API related warnings.
-Date: Fri, 21 Mar 2014 11:08:32 -0700
-Message-ID: <1395425313.8462.1254.camel@arvindkumar-dev1.eng.vmware.com>
+From: Zach Brown <zab@redhat.com>
+Subject: Re: [RFC PATCH 0/5] userspace PI passthrough via AIO/DIO
+Date: Fri, 21 Mar 2014 11:23:32 -0700
+Message-ID: <20140321182332.GP10561@lenny.home.zabbo.net>
+References: <20140321043041.8428.79003.stgit@birch.djwong.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-outbound-2.vmware.com ([208.91.2.13]:48662 "EHLO
-	smtp-outbound-2.vmware.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750768AbaCUSQi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 Mar 2014 14:16:38 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20140321043041.8428.79003.stgit@birch.djwong.org>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: axboe@kernel.dk, martin.petersen@oracle.com, JBottomley@parallels.com, bcrl@kvack.org, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, linux-aio@kvack.org, linux-scsi@vger.kernel.org, linux-mm@kvack.org
 List-Id: linux-scsi@vger.kernel.org
-To: JBottomley@parallels.com, linux-scsi@vger.kernel.org
-Cc: pv-drivers@vmware.com, Josh Boyer <jwboyer@fedoraproject.org>
 
-The driver is missing calls to pci_dma_mapping_error() after
-performing the DMA mapping, which caused DMA-API warning to
-show up in dmesg's output. Though that happens only when
-DMA_API_DEBUG option is enabled. This change fixes the issue
-and makes pvscsi_map_buffers() function more robust.
+On Thu, Mar 20, 2014 at 09:30:41PM -0700, Darrick J. Wong wrote:
+> This RFC provides a rough implementation of a mechanism to allow
+> userspace to attach protection information (e.g. T10 DIF) data to a
+> disk write and to receive the information alongside a disk read.  The
+> interface is an extension to the AIO interface: two new commands
+> (IOCB_CMD_P{READ,WRITE}VM) are provided.  The last struct iovec in the
+> arg list is interpreted to point to a buffer containing a header,
+> followed by the the PI data.
 
-Signed-off-by: Arvind Kumar <arvindkumar@vmware.com>
-Cc: Josh Boyer <jwboyer@fedoraproject.org>
----
- drivers/scsi/vmw_pvscsi.c |   45 +++++++++++++++++++++++++++++++++++++++------
- drivers/scsi/vmw_pvscsi.h |    2 +-
- 2 files changed, 40 insertions(+), 7 deletions(-)
+Instead of adding commands that indicate that the final element is a
+magical pi buffer, why not expand the iocb?
 
-diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
-index c88e146..9478a00 100644
---- a/drivers/scsi/vmw_pvscsi.c
-+++ b/drivers/scsi/vmw_pvscsi.c
-@@ -349,9 +349,9 @@ static void pvscsi_create_sg(struct pvscsi_ctx *ctx,
-  * Map all data buffers for a command into PCI space and
-  * setup the scatter/gather list if needed.
-  */
--static void pvscsi_map_buffers(struct pvscsi_adapter *adapter,
--			       struct pvscsi_ctx *ctx, struct scsi_cmnd *cmd,
--			       struct PVSCSIRingReqDesc *e)
-+static int pvscsi_map_buffers(struct pvscsi_adapter *adapter,
-+			      struct pvscsi_ctx *ctx, struct scsi_cmnd *cmd,
-+			      struct PVSCSIRingReqDesc *e)
- {
- 	unsigned count;
- 	unsigned bufflen = scsi_bufflen(cmd);
-@@ -360,18 +360,30 @@ static void pvscsi_map_buffers(struct pvscsi_adapter *adapter,
- 	e->dataLen = bufflen;
- 	e->dataAddr = 0;
- 	if (bufflen == 0)
--		return;
-+		return 0;
- 
- 	sg = scsi_sglist(cmd);
- 	count = scsi_sg_count(cmd);
- 	if (count != 0) {
- 		int segs = scsi_dma_map(cmd);
--		if (segs > 1) {
-+
-+		if (segs == -ENOMEM) {
-+			scmd_printk(KERN_ERR, cmd,
-+				    "vmw_pvscsi: Failed to map cmd sglist for DMA.\n");
-+			return -1;
-+		} else if (segs > 1) {
- 			pvscsi_create_sg(ctx, sg, segs);
- 
- 			e->flags |= PVSCSI_FLAG_CMD_WITH_SG_LIST;
- 			ctx->sglPA = pci_map_single(adapter->dev, ctx->sgl,
- 						    SGL_SIZE, PCI_DMA_TODEVICE);
-+			if (pci_dma_mapping_error(adapter->dev, ctx->sglPA)) {
-+				scmd_printk(KERN_ERR, cmd,
-+					    "vmw_pvscsi: Failed to map ctx sglist for DMA.\n");
-+				scsi_dma_unmap(cmd);
-+				ctx->sglPA = 0;
-+				return -1;
-+			}
- 			e->dataAddr = ctx->sglPA;
- 		} else
- 			e->dataAddr = sg_dma_address(sg);
-@@ -382,8 +394,15 @@ static void pvscsi_map_buffers(struct pvscsi_adapter *adapter,
- 		 */
- 		ctx->dataPA = pci_map_single(adapter->dev, sg, bufflen,
- 					     cmd->sc_data_direction);
-+		if (pci_dma_mapping_error(adapter->dev, ctx->dataPA)) {
-+			scmd_printk(KERN_ERR, cmd,
-+				    "vmw_pvscsi: Failed to map direct data buffer for DMA.\n");
-+			return -1;
-+		}
- 		e->dataAddr = ctx->dataPA;
- 	}
-+
-+	return 0;
- }
- 
- static void pvscsi_unmap_buffers(const struct pvscsi_adapter *adapter,
-@@ -712,6 +731,12 @@ static int pvscsi_queue_ring(struct pvscsi_adapter *adapter,
- 		ctx->sensePA = pci_map_single(adapter->dev, cmd->sense_buffer,
- 					      SCSI_SENSE_BUFFERSIZE,
- 					      PCI_DMA_FROMDEVICE);
-+		if (pci_dma_mapping_error(adapter->dev, ctx->sensePA)) {
-+			scmd_printk(KERN_ERR, cmd,
-+				    "vmw_pvscsi: Failed to map sense buffer for DMA.\n");
-+			ctx->sensePA = 0;
-+			return -1;
-+		}
- 		e->senseAddr = ctx->sensePA;
- 		e->senseLen = SCSI_SENSE_BUFFERSIZE;
- 	} else {
-@@ -737,7 +762,15 @@ static int pvscsi_queue_ring(struct pvscsi_adapter *adapter,
- 	else
- 		e->flags = 0;
- 
--	pvscsi_map_buffers(adapter, ctx, cmd, e);
-+	if (pvscsi_map_buffers(adapter, ctx, cmd, e) != 0) {
-+		if (cmd->sense_buffer) {
-+			pci_unmap_single(adapter->dev, ctx->sensePA,
-+					 SCSI_SENSE_BUFFERSIZE,
-+					 PCI_DMA_FROMDEVICE);
-+			ctx->sensePA = 0;
-+		}
-+		return -1;
-+	}
- 
- 	e->context = pvscsi_map_context(adapter, ctx);
- 
-diff --git a/drivers/scsi/vmw_pvscsi.h b/drivers/scsi/vmw_pvscsi.h
-index ce45888..fe3b759 100644
---- a/drivers/scsi/vmw_pvscsi.h
-+++ b/drivers/scsi/vmw_pvscsi.h
-@@ -26,7 +26,7 @@
- 
- #include <linux/types.h>
- 
--#define PVSCSI_DRIVER_VERSION_STRING   "1.0.5.0-k"
-+#define PVSCSI_DRIVER_VERSION_STRING   "1.0.6.0-k"
- 
- #define PVSCSI_MAX_NUM_SG_ENTRIES_PER_SEGMENT 128
- 
--- 
-1.7.9.5
+In the user iocb, a bit in aio_flags could indicate that aio_reserved2
+is a pointer to an extension of the iocb.  In that extension could be a
+full iov *, nr_segs for PI data.
 
+You'd then translate that into a bigger kernel kiocb with a specific
+pointer to PI data rather than having to bubble the tests for this magic
+final iovec down through the kernel.
 
++       if (iocb->ki_flags & KIOCB_USE_PI) {
++               nr_segs--;
++               pi_iov = (struct iovec *)(iov + nr_segs);
++       }
 
+I suggest this because there's already pressure to extend the iocb.
+Folks want io priority inputs, completion time outputs, etc.
+
+It's a much cleaner way to extend the interface without an explosion of
+command enums that are really combinations of per-io arguments that are
+present or not.
+
+And heck, on the sync rw syscall side, add variant that have a pointer
+to this same extension struct.  There's nothing inherently aio specific
+about having lots more per-io inputs and outputs.
+
+- z
