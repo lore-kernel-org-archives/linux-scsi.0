@@ -1,49 +1,32 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH] Attach VPD page after slave_configure()
-Date: Fri, 21 Mar 2014 09:02:14 +0100
-Message-ID: <1395388934-105873-1-git-send-email-hare@suse.de>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 70751] mpt2sas: system disks dropped when execute SMART tests
+Date: Fri, 21 Mar 2014 13:44:43 +0000
+Message-ID: <bug-70751-11613-5ti7QGEuuX@https.bugzilla.kernel.org/>
+References: <bug-70751-11613@https.bugzilla.kernel.org/>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:36758 "EHLO mx2.suse.de"
+Received: from mail.kernel.org ([198.145.19.201]:33721 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754768AbaCUICW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 Mar 2014 04:02:22 -0400
+	id S1751418AbaCUNor (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 21 Mar 2014 09:44:47 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 542F7202A1
+	for <linux-scsi@vger.kernel.org>; Fri, 21 Mar 2014 13:44:46 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id A04102028D
+	for <linux-scsi@vger.kernel.org>; Fri, 21 Mar 2014 13:44:43 +0000 (UTC)
+In-Reply-To: <bug-70751-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+To: linux-scsi@vger.kernel.org
 
-The LLDD might disable the LUN in slave_configure(), so we should
-attach the VPD pages afterwards.
+https://bugzilla.kernel.org/show_bug.cgi?id=70751
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
----
- drivers/scsi/scsi_scan.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+--- Comment #2 from Mihaly, A. Toth <mihaly.arva-toth+kernelorg@virtual-call-center.eu> ---
+I tried with a newer kernel (3.13.6) and the problem still exists.
 
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 1bac49d..27f96d5 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -953,9 +953,6 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
- 	if (*bflags & BLIST_SKIP_VPD_PAGES)
- 		sdev->skip_vpd_pages = 1;
- 
--	if (sdev->scsi_level >= SCSI_3)
--		scsi_attach_vpd(sdev);
--
- 	transport_configure_device(&sdev->sdev_gendev);
- 
- 	if (sdev->host->hostt->slave_configure) {
-@@ -973,6 +970,9 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
- 		}
- 	}
- 
-+	if (sdev->scsi_level >= SCSI_3)
-+		scsi_attach_vpd(sdev);
-+
- 	sdev->max_queue_depth = sdev->queue_depth;
- 
- 	/*
 -- 
-1.7.12.4
-
+You are receiving this mail because:
+You are watching the assignee of the bug.
