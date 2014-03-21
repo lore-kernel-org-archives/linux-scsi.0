@@ -1,272 +1,193 @@
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH 5/5] blk-integrity: refactor various routines
-Date: Thu, 20 Mar 2014 21:31:15 -0700
-Message-ID: <20140321043115.8428.76652.stgit@birch.djwong.org>
-References: <20140321043041.8428.79003.stgit@birch.djwong.org>
+From: Andrey Zonov <andrey.zonov@gmail.com>
+Subject: SCSI: race condition between scsi_remove_target and scsi_probe_and_add_lun
+Date: Thu, 20 Mar 2014 22:12:17 -0700
+Message-ID: <532BCA31.20902@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-aio@kvack.org>
-In-Reply-To: <20140321043041.8428.79003.stgit@birch.djwong.org>
-Sender: owner-linux-aio@kvack.org
-To: axboe@kernel.dk, martin.petersen@oracle.com, darrick.wong@oracle.com, JBottomley@parallels.com, bcrl@kvack.org, viro@zeniv.linux.org.uk
-Cc: linux-fsdevel@vger.kernel.org, linux-aio@kvack.org, linux-scsi@vger.kernel.org, linux-mm@kvack.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pd0-f180.google.com ([209.85.192.180]:37853 "EHLO
+	mail-pd0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754063AbaCUFMU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Mar 2014 01:12:20 -0400
+Received: by mail-pd0-f180.google.com with SMTP id v10so1878520pde.25
+        for <linux-scsi@vger.kernel.org>; Thu, 20 Mar 2014 22:12:19 -0700 (PDT)
+Received: from zont-osx.local (c-50-136-243-235.hsd1.ca.comcast.net. [50.136.243.235])
+        by mx.google.com with ESMTPSA id xk3sm7336819pbb.65.2014.03.20.22.12.18
+        for <linux-scsi@vger.kernel.org>
+        (version=TLSv1 cipher=ECDHE-RSA-RC4-SHA bits=128/128);
+        Thu, 20 Mar 2014 22:12:19 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Refactor blk-integrity.c to avoid duplicating similar functions, and
-remove all users of pi_buf, since it's really only there to handle the
-(common) case where the kernel auto-generates all the PI data.
+Hi,
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/bio-integrity.c  |  120 +++++++++++++++++++++------------------------------
- include/linux/bio.h |    2 -
- 2 files changed, 49 insertions(+), 73 deletions(-)
+I've got kernel panic on my box which works as FibreChannel initiator.
+I was able to reproduce this panic by setting dev_loss_tmo=2 and
+enabling/disabling ports every 5 seconds on the switch in 5 minutes.  I
+added some debug points in the kernel code and that's what I've got so far:
+
+1. system is inserting new device into __devices list
+
+DEBUG: scsi_sysfs_device_initialize(): sdev=ffff88046a931000 7:0:5:0
+Pid: 910, comm: kworker/u:2 Tainted: P           O 3.2.48-swt9004 #33
+Call Trace:
+[<ffffffff81245c42>] ? scsi_alloc_sdev+0x1d2/0x240
+[<ffffffff8123d4bd>] ? scsi_device_lookup_by_target+0x8d/0xc0
+[<ffffffff8124623a>] ? scsi_probe_and_add_lun+0x42a/0xb20
+[<ffffffff811acb7d>] ? kobject_set_name_vargs+0x6d/0x80
+[<ffffffff81230b4f>] ? dev_set_name+0x3f/0x50
+[<ffffffff811ac782>] ? kobject_get+0x12/0x20
+[<ffffffffa000b3e4>] ? fc_host_match+0x14/0x70 [scsi_transport_fc]
+[<ffffffff8123726f>] ? attribute_container_add_device+0x4f/0x160
+[<ffffffff811ac782>] ? kobject_get+0x12/0x20
+[<ffffffff812304e4>] ? get_device+0x14/0x20
+[<ffffffff812459c5>] ? scsi_alloc_target+0x295/0x2d0
+[<ffffffff81230bca>] ? device_release+0x1a/0x80
+[<ffffffff81246bce>] ? __scsi_scan_target+0xce/0x5f0
+[<ffffffff8102ec22>] ? dequeue_task_fair+0x52/0x150
+[<ffffffff8139a91d>] ? __schedule+0x25d/0x7d0
+[<ffffffff812477b6>] ? scsi_scan_target+0xc6/0xe0
+[<ffffffffa000e75f>] ? fc_scsi_scan_rport+0xaf/0xc0 [scsi_transport_fc]
+[<ffffffff8104eb06>] ? process_one_work+0x116/0x3a0
+[<ffffffff8104f1ec>] ? worker_thread+0x14c/0x400
+[<ffffffff8104f0a0>] ? rescuer_thread+0x310/0x310
+[<ffffffff8104f0a0>] ? rescuer_thread+0x310/0x310
+[<ffffffff81052f06>] ? kthread+0x96/0xa0
+[<ffffffff8139f134>] ? kernel_thread_helper+0x4/0x10
+[<ffffffff81052e70>] ? kthread_worker_fn+0x120/0x120
+[<ffffffff8139f130>] ? gs_change+0xb/0xb
+
+2. later in scsi_probe_and_add_lun() this device is removing
+
+DEBUG: __scsi_remove_device(): sdev=ffff88046a931000 7:0:5:0
+Pid: 910, comm: kworker/u:2 Tainted: P           O 3.2.48-swt9004 #33
+Call Trace:
+[<ffffffff81248c66>] ? __scsi_remove_device+0x46/0x110
+[<ffffffff81246268>] ? scsi_probe_and_add_lun+0x458/0xb20
+[<ffffffff81230b4f>] ? dev_set_name+0x3f/0x50
+[<ffffffff811ac782>] ? kobject_get+0x12/0x20
+[<ffffffff812459c5>] ? scsi_alloc_target+0x295/0x2d0
+[<ffffffff81230bca>] ? device_release+0x1a/0x80
+[<ffffffff81246bce>] ? __scsi_scan_target+0xce/0x5f0
+[<ffffffff8102ec22>] ? dequeue_task_fair+0x52/0x150
+[<ffffffff8139a91d>] ? __schedule+0x25d/0x7d0
+[<ffffffff812477b6>] ? scsi_scan_target+0xc6/0xe0
+[<ffffffffa000e75f>] ? fc_scsi_scan_rport+0xaf/0xc0 [scsi_transport_fc]
+[<ffffffff8104eb06>] ? process_one_work+0x116/0x3a0
+[<ffffffff8104f1ec>] ? worker_thread+0x14c/0x400
+[<ffffffff8104f0a0>] ? rescuer_thread+0x310/0x310
+[<ffffffff8104f0a0>] ? rescuer_thread+0x310/0x310
+[<ffffffff81052f06>] ? kthread+0x96/0xa0
+[<ffffffff8139f134>] ? kernel_thread_helper+0x4/0x10
+[<ffffffff81052e70>] ? kthread_worker_fn+0x120/0x120
+[<ffffffff8139f130>] ? gs_change+0xb/0xb
+
+3. another thread is trying to remove this device because of timeout
+
+DEBUG: __scsi_remove_device(): sdev=ffff88046a931000 7:0:5:0
+Pid: 4, comm: kworker/0:0 Tainted: P           O 3.2.48-swt9004 #33
+Call Trace:
+[<ffffffff81248c66>] ? __scsi_remove_device+0x46/0x110
+[<ffffffff8139b63a>] ? mutex_lock+0x1a/0x40
+[<ffffffff81248d58>] ? scsi_remove_device+0x28/0x40
+[<ffffffff81242a00>] ? scsi_kmap_atomic_sg+0x180/0x180
+[<ffffffff81248ed1>] ? scsi_remove_target+0x141/0x1e0
+[<ffffffff8104eb06>] ? process_one_work+0x116/0x3a0
+[<ffffffff8104f1ec>] ? worker_thread+0x14c/0x400
+[<ffffffff8104f0a0>] ? rescuer_thread+0x310/0x310
+[<ffffffff8104f0a0>] ? rescuer_thread+0x310/0x310
+[<ffffffff81052f06>] ? kthread+0x96/0xa0
+[<ffffffff8139f134>] ? kernel_thread_helper+0x4/0x10
+[<ffffffff81052e70>] ? kthread_worker_fn+0x120/0x120
+[<ffffffff8139f130>] ? gs_change+0xb/0xb
+
+and it's got dead sdev object.  I don't understand how this can happen
+because __scsi_remove_target() iterating over __devices and getting sdev
+reference under host_lock and that should be enough.
+
+DEBUG: kref_put(): kref=ffff88046a9312e0 val=-1
+------------[ cut here ]------------
+WARNING: at lib/kref.c:61 kref_put+0x88/0xc0()
+Hardware name: X9DRi-LN4+/X9DR3-LN4+
+Modules linked in: qla2xxx(O) igb ehci_hcd scsi_transport_fc
+Pid: 4, comm: kworker/0:0 Tainted: P           O 3.2.48-swt9004 #33
+Call Trace:
+[<ffffffff81037bfb>] ? warn_slowpath_common+0x7b/0xc0
+[<ffffffff811ac6c0>] ? kobject_del+0x30/0x30
+[<ffffffff811adb08>] ? kref_put+0x88/0xc0
+[<ffffffff81248cac>] ? __scsi_remove_device+0x8c/0x110
+[<ffffffff8139b63a>] ? mutex_lock+0x1a/0x40
+[<ffffffff81248d58>] ? scsi_remove_device+0x28/0x40
+[<ffffffff81242a00>] ? scsi_kmap_atomic_sg+0x180/0x180
+[<ffffffff81248ed1>] ? scsi_remove_target+0x141/0x1e0
+[<ffffffff8104eb06>] ? process_one_work+0x116/0x3a0
+[<ffffffff8104f1ec>] ? worker_thread+0x14c/0x400
+[<ffffffff8104f0a0>] ? rescuer_thread+0x310/0x310
+[<ffffffff8104f0a0>] ? rescuer_thread+0x310/0x310
+[<ffffffff81052f06>] ? kthread+0x96/0xa0
+[<ffffffff8139f134>] ? kernel_thread_helper+0x4/0x10
+[<ffffffff81052e70>] ? kthread_worker_fn+0x120/0x120
+[<ffffffff8139f130>] ? gs_change+0xb/0xb
+
+Here is the patch which helped me:
+
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 9117d0b..676e5ff 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -1094,6 +1094,7 @@ static void __scsi_remove_target(struct
+scsi_target *starget)
+        unsigned long flags;
+        struct scsi_device *sdev;
+
++       mutex_lock(&shost->scan_mutex);
+        spin_lock_irqsave(shost->host_lock, flags);
+  restart:
+        list_for_each_entry(sdev, &shost->__devices, siblings) {
+@@ -1102,12 +1103,13 @@ static void __scsi_remove_target(struct
+scsi_target *starget)
+                    scsi_device_get(sdev))
+                        continue;
+                spin_unlock_irqrestore(shost->host_lock, flags);
+-               scsi_remove_device(sdev);
++               __scsi_remove_device(sdev);
+                scsi_device_put(sdev);
+                spin_lock_irqsave(shost->host_lock, flags);
+                goto restart;
+        }
+        spin_unlock_irqrestore(shost->host_lock, flags);
++       mutex_unlock(&shost->scan_mutex);
+ }
+
+ /**
+
+I'm not sure about the fix is correct, but I was not able to reproduce
+the panic.
 
 
-diff --git a/fs/bio-integrity.c b/fs/bio-integrity.c
-index 381ee38..3ff1572 100644
---- a/fs/bio-integrity.c
-+++ b/fs/bio-integrity.c
-@@ -97,8 +97,7 @@ void bio_integrity_free(struct bio *bio)
- 	struct bio_integrity_payload *bip = bio->bi_integrity;
- 	struct bio_set *bs = bio->bi_pool;
- 
--	if (bip->bip_owns_buf)
--		kfree(bip->bip_buf);
-+	kfree(bip->bip_buf);
- 
- 	if (bs) {
- 		if (bip->bip_slab != BIO_POOL_NONE)
-@@ -239,9 +238,11 @@ static int bio_integrity_tag(struct bio *bio, void *tag_buf, unsigned int len,
+P.S. Here is another patch which help to detect reference count underflow
+
+diff --git a/include/linux/kref.h b/include/linux/kref.h
+index 484604d..05dd2b3 100644
+--- a/include/linux/kref.h
++++ b/include/linux/kref.h
+@@ -68,9 +68,13 @@ static inline void kref_get(struct kref *kref)
+ static inline int kref_sub(struct kref *kref, unsigned int count,
+             void (*release)(struct kref *kref))
  {
- 	struct bio_integrity_payload *bip = bio->bi_integrity;
- 	struct blk_integrity *bi = bdev_get_integrity(bio->bi_bdev);
--	unsigned int nr_sectors;
--
--	BUG_ON(bip->bip_buf == NULL);
-+	unsigned int nr_sectors, tag_offset, sectors;
-+	void *prot_buf;
-+	unsigned int prot_offset, prot_len;
-+	struct bio_vec *iv;
-+	void (*tag_fn)(void *buf, void *tag_buf, unsigned int);
- 
- 	if (bi->tag_size == 0)
- 		return -1;
-@@ -255,10 +256,30 @@ static int bio_integrity_tag(struct bio *bio, void *tag_buf, unsigned int len,
- 		return -1;
- 	}
- 
--	if (set)
--		bi->set_tag_fn(bip->bip_buf, tag_buf, nr_sectors);
--	else
--		bi->get_tag_fn(bip->bip_buf, tag_buf, nr_sectors);
-+	iv = bip->bip_vec;
-+	prot_offset = iv->bv_offset;
-+	prot_len = iv->bv_len;
-+	prot_buf = kmap_atomic(iv->bv_page);
-+	tag_fn = set ? bi->set_tag_fn : bi->get_tag_fn;
-+	tag_offset = 0;
++       long refs;
 +
-+	while (nr_sectors) {
-+		if (prot_len < bi->tuple_size) {
-+			kunmap_atomic(prot_buf);
-+			iv++;
-+			BUG_ON(iv >= bip->bip_vec + bip->bip_vcnt);
-+			prot_offset = iv->bv_offset;
-+			prot_len = iv->bv_len;
-+			prot_buf = kmap_atomic(iv->bv_page);
-+		}
-+		sectors = min(prot_len / bi->tuple_size, nr_sectors);
-+		tag_fn(prot_buf + prot_offset, tag_buf + tag_offset, sectors);
-+		nr_sectors -= sectors;
-+		tag_offset += sectors * bi->tuple_size;
-+		prot_offset += sectors * bi->tuple_size;
-+		prot_len -= sectors * bi->tuple_size;
-+	}
-+	kunmap_atomic(prot_buf);
- 
- 	return 0;
- }
-@@ -300,28 +321,24 @@ int bio_integrity_get_tag(struct bio *bio, void *tag_buf, unsigned int len)
- }
- EXPORT_SYMBOL(bio_integrity_get_tag);
- 
--/**
-- * bio_integrity_update_user_buffer - Update user-provided PI buffers for a bio
-- * @bio:	bio to generate/verify integrity metadata for
-- */
--int bio_integrity_update_user_buffer(struct bio *bio)
-+typedef int (walk_buf_fn)(struct blk_integrity_exchg *bi, int flags);
-+
-+static int bio_integrity_walk_bufs(struct bio *bio, sector_t sector,
-+				   walk_buf_fn *mod_fn)
- {
- 	struct blk_integrity *bi = bdev_get_integrity(bio->bi_bdev);
- 	struct blk_integrity_exchg bix;
- 	struct bio_vec bv;
- 	struct bvec_iter iter;
--	sector_t sector;
- 	unsigned int sectors, total, ret;
- 	void *prot_buf;
- 	unsigned int prot_offset, prot_len, bv_offset, bv_len;
- 	struct bio_vec *iv;
- 	struct bio_integrity_payload *bip = bio->bi_integrity;
- 
--	if (!bi->mod_user_buf_fn)
-+	if (!mod_fn)
- 		return 0;
- 
--	sector = bio->bi_iter.bi_sector;
--
- 	total = ret = 0;
- 	bix.disk_name = bio->bi_bdev->bd_disk->disk_name;
- 	bix.sector_size = bi->sector_size;
-@@ -351,7 +368,7 @@ int bio_integrity_update_user_buffer(struct bio *bio)
- 			bix.prot_buf = prot_buf + prot_offset;
- 			bix.sector = sector;
- 
--			ret = bi->mod_user_buf_fn(&bix, bip->bip_user_flags);
-+			ret = mod_fn(&bix, bip->bip_user_flags);
- 			if (ret) {
- 				if (ret == -ENOTTY)
- 					ret = 0;
-@@ -374,59 +391,19 @@ int bio_integrity_update_user_buffer(struct bio *bio)
- 	kunmap_atomic(prot_buf);
- 	return ret;
- }
--EXPORT_SYMBOL_GPL(bio_integrity_update_user_buffer);
- 
- /**
-- * bio_integrity_generate_verify - Generate/verify integrity metadata for a bio
-+ * bio_integrity_update_user_buffer - Update user-provided PI buffers for a bio
-  * @bio:	bio to generate/verify integrity metadata for
-- * @operate:	operate number, 1 for generate, 0 for verify
-+ * @sector:	stratin
-  */
--static int bio_integrity_generate_verify(struct bio *bio, int operate)
-+int bio_integrity_update_user_buffer(struct bio *bio)
- {
- 	struct blk_integrity *bi = bdev_get_integrity(bio->bi_bdev);
--	struct blk_integrity_exchg bix;
--	struct bio_vec bv;
--	struct bvec_iter iter;
--	sector_t sector;
--	unsigned int sectors, total, ret;
--	void *prot_buf = bio->bi_integrity->bip_buf;
--
--	if (operate)
--		sector = bio->bi_iter.bi_sector;
--	else
--		sector = bio->bi_integrity->bip_iter.bi_sector;
--
--	total = ret = 0;
--	bix.disk_name = bio->bi_bdev->bd_disk->disk_name;
--	bix.sector_size = bi->sector_size;
--
--	bio_for_each_segment(bv, bio, iter) {
--		void *kaddr = kmap_atomic(bv.bv_page);
--		bix.data_buf = kaddr + bv.bv_offset;
--		bix.data_size = bv.bv_len;
--		bix.prot_buf = prot_buf;
--		bix.sector = sector;
--
--		if (operate) {
--			bi->generate_fn(&bix);
--		} else {
--			ret = bi->verify_fn(&bix);
--			if (ret) {
--				kunmap_atomic(kaddr);
--				return ret;
--			}
--		}
--
--		sectors = bv.bv_len / bi->sector_size;
--		sector += sectors;
--		prot_buf += sectors * bi->tuple_size;
--		total += sectors * bi->tuple_size;
--		BUG_ON(total > bio->bi_integrity->bip_iter.bi_size);
--
--		kunmap_atomic(kaddr);
--	}
--	return ret;
-+	return bio_integrity_walk_bufs(bio, bio->bi_iter.bi_sector,
-+				       bi->mod_user_buf_fn);
- }
-+EXPORT_SYMBOL_GPL(bio_integrity_update_user_buffer);
- 
- /**
-  * bio_integrity_generate - Generate integrity metadata for a bio
-@@ -439,7 +416,9 @@ static int bio_integrity_generate_verify(struct bio *bio, int operate)
-  */
- static void bio_integrity_generate(struct bio *bio)
- {
--	bio_integrity_generate_verify(bio, 1);
-+	struct blk_integrity *bi = bdev_get_integrity(bio->bi_bdev);
-+	bio_integrity_walk_bufs(bio, bio->bi_iter.bi_sector,
-+				(walk_buf_fn *)bi->generate_fn);
- }
- 
- static inline unsigned short blk_integrity_tuple_size(struct blk_integrity *bi)
-@@ -479,7 +458,6 @@ int bio_integrity_prep_buffer(struct bio *bio, int rw,
- 
- 	sectors = bio_integrity_hw_sectors(bi, bio_sectors(bio));
- 
--	/* Allocate kernel buffer for protection data */
- 	len = sectors * blk_integrity_tuple_size(bi);
- 	end = (pi->pi_offset + len + PAGE_SIZE - 1) >> PAGE_SHIFT;
- 	start = pi->pi_offset >> PAGE_SHIFT;
-@@ -497,8 +475,6 @@ int bio_integrity_prep_buffer(struct bio *bio, int rw,
- 		return -EIO;
- 	}
- 
--	bip->bip_owns_buf = 0;
--	bip->bip_buf = NULL;
- 	bip->bip_iter.bi_size = len;
- 	bip->bip_iter.bi_sector = bio->bi_iter.bi_sector;
- 	bip->bip_user_flags = pi->pi_userflags;
-@@ -591,7 +567,6 @@ int bio_integrity_prep(struct bio *bio)
- 		return -EIO;
- 	}
- 
--	bip->bip_owns_buf = 1;
- 	bip->bip_buf = buf;
- 	bip->bip_iter.bi_size = len;
- 	bip->bip_iter.bi_sector = bio->bi_iter.bi_sector;
-@@ -646,7 +621,10 @@ EXPORT_SYMBOL(bio_integrity_prep);
-  */
- static int bio_integrity_verify(struct bio *bio)
- {
--	return bio_integrity_generate_verify(bio, 0);
-+	struct blk_integrity *bi = bdev_get_integrity(bio->bi_bdev);
-+	return bio_integrity_walk_bufs(bio,
-+				       bio->bi_integrity->bip_iter.bi_sector,
-+				       (walk_buf_fn *)bi->verify_fn);
- }
- 
- /**
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index 5bd9618..c2ad1a8 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -292,14 +292,12 @@ struct bio_integrity_payload {
- 
- 	struct bvec_iter	bip_iter;
- 
--	/* kill - should just use bip_vec */
- 	void			*bip_buf;	/* generated integrity data */
- 
- 	bio_end_io_t		*bip_end_io;	/* saved I/O completion fn */
- 
- 	unsigned short		bip_slab;	/* slab the bip came from */
- 	unsigned short		bip_vcnt;	/* # of integrity bio_vecs */
--	unsigned		bip_owns_buf:1;	/* should free bip_buf */
- 
- 	struct work_struct	bip_work;	/* I/O completion */
- 
+        WARN_ON(release == NULL);
 
---
-To unsubscribe, send a message with 'unsubscribe linux-aio' in
-the body to majordomo@kvack.org.  For more info on Linux AIO,
-see: http://www.kvack.org/aio/
-Don't email: <a href=mailto:"aart@kvack.org">aart@kvack.org</a>
+-       if (atomic_sub_and_test((int) count, &kref->refcount)) {
++       refs = atomic_sub_return((int) count, &kref->refcount);
++       WARN_ON(refs < 0);
++       if (refs == 0) {
+                release(kref);
+                return 1;
+        }
+
+-- 
+Andrey Zonov
