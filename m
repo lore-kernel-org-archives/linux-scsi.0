@@ -1,62 +1,105 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [RESEND][PATCH 1/2] lib/scatterlist: Make ARCH_HAS_SG_CHAIN an
- actual Kconfig
-Date: Sat, 22 Mar 2014 15:59:11 -0700
-Message-ID: <1395529151.2143.64.camel@dabdike.int.hansenpartnership.com>
-References: <1395512032-20575-1-git-send-email-lauraa@codeaurora.org>
-	 <1395512032-20575-2-git-send-email-lauraa@codeaurora.org>
-	 <1395523881.2143.58.camel@dabdike.int.hansenpartnership.com>
-	 <20140322222306.GM7528@n2100.arm.linux.org.uk>
-	 <1395527860.2143.61.camel@dabdike.int.hansenpartnership.com>
-	 <20140322225201.GN7528@n2100.arm.linux.org.uk>
+From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Subject: Re: please fix FUSION (Was:[v3.13][v3.14][Regression]kthread:makekthread_create()killable)
+Date: Sun, 23 Mar 2014 08:50:21 +0900
+Message-ID: <201403230850.FGE57320.QOtJHFSMOVLFFO@I-love.SAKURA.ne.jp>
+References: <532B1B67.5050104@canonical.com>
+	<20140320192307.GA11883@redhat.com>
+	<20140321183443.GA3891@redhat.com>
+	<201403221525.FJC69759.MSLOtHOJOVFFQF@I-love.SAKURA.ne.jp>
+	<20140322192511.GA14811@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ia64-owner@vger.kernel.org>
-In-Reply-To: <20140322225201.GN7528@n2100.arm.linux.org.uk>
-Sender: linux-ia64-owner@vger.kernel.org
-To: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Cc: Laura Abbott <lauraa@codeaurora.org>, Fenghua Yu <fenghua.yu@intel.com>, Tony Luck <tony.luck@intel.com>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Benjamin Herrenschmidt <benh@kernel.crashing.org>, x86@kernel.org, Heiko Carstens <heiko.carstens@de.ibm.com>, linux-kernel@vger.kernel.org, linux390@de.ibm.com, sparclinux@vger.kernel.org, Ingo Molnar <mingo@redhat.com>, Paul Mackerras <paulus@samba.org>, "H. Peter Anvin" <hpa@zytor.com>, Martin Schwidefsky <schwidefsky@de.ibm.com>, linux-ia64@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>, linuxppc-dev@lists.ozlabs.org, "David S. Miller" <davem@davemloft.net>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20140322192511.GA14811@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: oleg@redhat.com
+Cc: joseph.salisbury@canonical.com, JBottomley@parallels.com, Nagalakshmi.Nandigama@lsi.com, Sreekanth.Reddy@lsi.com, rientjes@google.com, akpm@linux-foundation.org, torvalds@linux-foundation.org, tj@kernel.org, tglx@linutronix.de, linux-kernel@vger.kernel.org, kernel-team@lists.ubuntu.com, linux-scsi@vger.kernel.org, thenzl@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, 2014-03-22 at 22:52 +0000, Russell King - ARM Linux wrote:
-> On Sat, Mar 22, 2014 at 03:37:40PM -0700, James Bottomley wrote:
-> > On Sat, 2014-03-22 at 22:23 +0000, Russell King - ARM Linux wrote:
-> > > On Sat, Mar 22, 2014 at 02:31:21PM -0700, James Bottomley wrote:
-> > > > Perhaps now might be the time to ask which are the remaining
-> > > > architectures that cannot do SG chaining and then we can fix them and
-> > > > pull the whole thing out.
-> > > 
-> > > Not quite.  You're making the assumption that we can be sure that all
-> > > the scatterlist users on an architecture have been converted - that's
-> > > simply not true on ARM.
-> > 
-> > No I'm not, I said "now might be the time to ask which are the remaining
-> > architectures that cannot do SG chaining"
+Oleg Nesterov wrote:
+> On 03/22, Tetsuo Handa wrote:
+> >
+> > Oleg Nesterov wrote:
+> > > Tetsuo, what do you think?
+> >
+> > I don't like blocking SIGKILL while doing operations that depend on memory
+> > allocation by other processes. If the OOM killer is triggered and it chose
+> > the process blocking SIGKILL in mptsas_init() (I know it unlikely happens),
+> > it generates the OOM killer deadlock.
 > 
-> And I'm disagreeing with that statement which implies that it's something
-> that is an architecture wide property for any particular architecture.
+> It seems that we do not understand each other.
 > 
-> Right now in mainline, if ARM has IOMMU support enabled, then SG_CHAIN
-> support will also be enabled.  I've a patch out of tree which I've been
-> using for years which enables SG_CHAIN for a particular SoC (Dove).
-> Otherwise, it doesn't have support for SG_CHAIN.
+
+I'm agreeing with you regarding long term solution. I think that I and you
+do not understand each other regarding which approach should be used for short
+term solution.
+
+> I do not like this hack too. And it is even wrong, you can't really block
+> SIGKILL. And it is unnecessary in a sense that (I think) it is fine that
+> module_init() reacts to SIGKILL and aborts, just the fact it crashes the
+> kernel in the error paths is not fine.
+
+I expect that kernel code reacts to SIGKILL and aborts, but current code
+(not only fusion but any code) is not ready for reacting to SIGKILL due to
+use of uninterruptible versions of lock/wait etc. operators.
+
+> The driver should be fixed anyway. As for timeout, either userspace/systemd
+> should be changed to not send SIGKILL after 30 secs, or (better) the driver
+> should be changed to not waste 30 secs.
+
+I'm not asserting that we should not fix the driver and the userspace.
+I agree that we should fix the driver to respond SIGKILL properly and
+fix the userspace not to send SIGKILL on hard coded timeout.
+
 > 
-> PARISC on the other hand (as you list) has no support to enable SG_CHAIN
-> under any circumstances.
+> The hack I sent can only serve as a short term solution, it should be
+> reverted once we have something better. And, otoh, this hack only affects
+> the problematic driver which should be fixed in any case.
 > 
-> Where we're disagreeing is whether this is something that is always-on or
-> always-off for any particular architecture.
+> Do you see my point? I can be wrong, but I think that you constantly
+> misunderstand the intent.
+> 
+> > My preference is to fix kthread_create() to handle SIGKILL gracefully.
+> 
+> And now I do not understand you too. I do not understand why should we
+> "fix" kthread_create().
 
-Actually, I don't disagree with that.  PA used to share sb_iommu with
-ia64 (it's the same chipset for the HP versions), but we can't now
-because ia64 is chained and we're not and there's no way to say chained
-for this platform but not for these other more legacy ones.  If you have
-a proposal for this, I'd be interested, so I don't have to do an all or
-nothing conversion, but the config option isn't it because our platform
-configuration is runtime determined (we usually select every driver and
-let the actual one be chosen at runtime from the config table).
+I can see your point. But as for kernel for Ubuntu 14.04 LTS (which the date
+of kernel freeze comes shortly), fixing kthread_create() is the safer choice,
+for we haven't proved that the fusion is the only kernel code which is
+disturbed by commit 786235ee.
 
-James
+After we confirmed that there is no more kernel code which is disturbed by
+commit 786235ee, we can revert the "kthread: Handle SIGKILL gracefully in
+kthread_create()." patch.
 
+> 
+> > Many kernel operations (e.g. mutex_lock() wait_event() wait_for_completion())
+> > ignore SIGKILL and the current users depend on SIGKILL being ignored. Thus,
+> > commit 786235ee sounds like a kernel API breakage.
+> 
+> Personally I do not really think so, but OK. In this case lets revert
+> 786235ee.
+> 
+> > Commit 786235ee "kthread: make kthread_create() killable" changed to
+> > leave kthread_create() as soon as receiving SIGKILL. But this change
+> > caused boot failures because systemd-udevd receives SIGKILL due to timeout
+> > while loading SCSI controller drivers using finit_module() [1].
+> 
+> And I still think that 786235ee simply uncovered the problems in this
+> driver. Perhaps we should change kthread_create() for some reason, but
+> (imho) not because we need to help the buggy code.
+> 
 
+I don't mean to help the buggy code. The "kthread: Handle SIGKILL gracefully
+in kthread_create()." patch (or revert commit 786235ee) is short term solution
+(especially for distributions which the date of kernel freeze is approaching).
+
+> > Therefore, this patch changes kthread_create() from "wait forever in
+> > killable state" to "wait for 10 seconds in unkillable state, check for
+> > the OOM killer every second".
+> 
+> Personally I dislike this change. In fact I think it is ugly. But this
+> is only my opinion.
+> 
+> If you convince someone to take this patch I won't argue.
