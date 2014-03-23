@@ -1,36 +1,100 @@
-From: Monam Agarwal <monamagarwal123@gmail.com>
-Subject: [PATCH] drivers/target: Use RCU_INIT_POINTER(x, NULL) in tcm_fc/tfc_sess.c
-Date: Mon, 24 Mar 2014 00:09:49 +0530
-Message-ID: <1395599989-8183-1-git-send-email-monamagarwal123@gmail.com>
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
-To: nab@linux-iscsi.org, nab@daterainc.com, yongjun_wei@trendmicro.com.cn, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Jayamohan Kallickal <jayamohank@gmail.com>
+Subject: [PATCH 1/4] be2iscsi: Fix retreving MCCQ_WRB in non-embedded Mbox path
+Date: Sun, 23 Mar 2014 18:10:45 -0400
+Message-ID: <1395612648-25851-1-git-send-email-Jayamohan.Kallickal@emulex.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pd0-f170.google.com ([209.85.192.170]:63022 "EHLO
+	mail-pd0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750749AbaCWWLF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Mar 2014 18:11:05 -0400
+Received: by mail-pd0-f170.google.com with SMTP id v10so4537669pde.29
+        for <linux-scsi@vger.kernel.org>; Sun, 23 Mar 2014 15:11:03 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jbottomley@parallels.com, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
+Cc: Jayamohan Kallickal <Jayamohan.Kallickal@emulex.com>, John Soni Jose <sony.john-n@emulex.com>
 
-This patch replaces rcu_assign_pointer(x, NULL) with RCU_INIT_POINTER(x, NULL)
+ Getting WRB for MCCQ posting was done before looking if tag is
+ available or not. This lead to increase phba->ctrl.mcc_obj.q.used
+ variable and the WARN_ON message was coming from wrb_from_mccq().
+ Moved getting wrb from mccq after checking for the tag.
 
-The rcu_assign_pointer() ensures that the initialization of a structure       
-is carried out before storing a pointer to that structure. 
-And in the case of the NULL pointer, there is no structure to initialize. 
-So, rcu_assign_pointer(p, NULL) can be safely converted to RCU_INIT_POINTER(p, NULL)
+ In wrb_from_mccq(), memset is done before returning wrb ptr.
+ Removed memset of mccq wrb from all other functions.
 
-Signed-off-by: Monam Agarwal <monamagarwal123@gmail.com>
+Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
+Signed-off-by: Jayamohan Kallickal <Jayamohan.Kallickal@emulex.com>
 ---
- drivers/target/tcm_fc/tfc_sess.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/be2iscsi/be_mgmt.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/target/tcm_fc/tfc_sess.c b/drivers/target/tcm_fc/tfc_sess.c
-index ae52c08..ca7b1ed 100644
---- a/drivers/target/tcm_fc/tfc_sess.c
-+++ b/drivers/target/tcm_fc/tfc_sess.c
-@@ -97,7 +97,7 @@ static void ft_tport_delete(struct ft_tport *tport)
- 	ft_sess_delete_all(tport);
- 	lport = tport->lport;
- 	BUG_ON(tport != lport->prov[FC_TYPE_FCP]);
--	rcu_assign_pointer(lport->prov[FC_TYPE_FCP], NULL);
-+	RCU_INIT_POINTER(lport->prov[FC_TYPE_FCP], NULL);
+diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
+index 088bdf7..712911f 100644
+--- a/drivers/scsi/be2iscsi/be_mgmt.c
++++ b/drivers/scsi/be2iscsi/be_mgmt.c
+@@ -447,8 +447,8 @@ unsigned int mgmt_vendor_specific_fw_cmd(struct be_ctrl_info *ctrl,
+ 					 struct be_dma_mem *nonemb_cmd)
+ {
+ 	struct be_cmd_resp_hdr *resp;
+-	struct be_mcc_wrb *wrb = wrb_from_mccq(phba);
+-	struct be_sge *mcc_sge = nonembedded_sgl(wrb);
++	struct be_mcc_wrb *wrb;
++	struct be_sge *mcc_sge;
+ 	unsigned int tag = 0;
+ 	struct iscsi_bsg_request *bsg_req = job->request;
+ 	struct be_bsg_vendor_cmd *req = nonemb_cmd->va;
+@@ -465,7 +465,6 @@ unsigned int mgmt_vendor_specific_fw_cmd(struct be_ctrl_info *ctrl,
+ 	req->sector = sector;
+ 	req->offset = offset;
+ 	spin_lock(&ctrl->mbox_lock);
+-	memset(wrb, 0, sizeof(*wrb));
  
- 	tpg = tport->tpg;
- 	if (tpg) {
+ 	switch (bsg_req->rqst_data.h_vendor.vendor_cmd[0]) {
+ 	case BEISCSI_WRITE_FLASH:
+@@ -495,6 +494,8 @@ unsigned int mgmt_vendor_specific_fw_cmd(struct be_ctrl_info *ctrl,
+ 		return tag;
+ 	}
+ 
++	wrb = wrb_from_mccq(phba);
++	mcc_sge = nonembedded_sgl(wrb);
+ 	be_wrb_hdr_prepare(wrb, nonemb_cmd->size, false,
+ 			   job->request_payload.sg_cnt);
+ 	mcc_sge->pa_hi = cpu_to_le32(upper_32_bits(nonemb_cmd->dma));
+@@ -525,7 +526,6 @@ int mgmt_epfw_cleanup(struct beiscsi_hba *phba, unsigned short ulp_num)
+ 	int status = 0;
+ 
+ 	spin_lock(&ctrl->mbox_lock);
+-	memset(wrb, 0, sizeof(*wrb));
+ 
+ 	be_wrb_hdr_prepare(wrb, sizeof(*req), true, 0);
+ 	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_ISCSI,
+@@ -702,7 +702,6 @@ int mgmt_open_connection(struct beiscsi_hba *phba,
+ 		return tag;
+ 	}
+ 	wrb = wrb_from_mccq(phba);
+-	memset(wrb, 0, sizeof(*wrb));
+ 	sge = nonembedded_sgl(wrb);
+ 
+ 	req = nonemb_cmd->va;
+@@ -804,7 +803,7 @@ static int mgmt_exec_nonemb_cmd(struct beiscsi_hba *phba,
+ 				int resp_buf_len)
+ {
+ 	struct be_ctrl_info *ctrl = &phba->ctrl;
+-	struct be_mcc_wrb *wrb = wrb_from_mccq(phba);
++	struct be_mcc_wrb *wrb;
+ 	struct be_sge *sge;
+ 	unsigned int tag;
+ 	int rc = 0;
+@@ -816,7 +815,8 @@ static int mgmt_exec_nonemb_cmd(struct beiscsi_hba *phba,
+ 		rc = -ENOMEM;
+ 		goto free_cmd;
+ 	}
+-	memset(wrb, 0, sizeof(*wrb));
++
++	wrb = wrb_from_mccq(phba);
+ 	wrb->tag0 |= tag;
+ 	sge = nonembedded_sgl(wrb);
+ 
 -- 
-1.7.9.5
+1.8.5.3
+
