@@ -1,54 +1,70 @@
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [RFC PATCH 0/5] userspace PI passthrough via AIO/DIO
-Date: Sun, 23 Mar 2014 15:02:44 +0100
-Message-ID: <20140323140244.GF2813@quack.suse.cz>
-References: <20140321043041.8428.79003.stgit@birch.djwong.org>
- <20140321182332.GP10561@lenny.home.zabbo.net>
- <20140321214410.GE23173@kvack.org>
- <20140321225437.GB9074@birch.djwong.org>
- <20140322002909.GT10561@lenny.home.zabbo.net>
- <20140322023216.GC9074@birch.djwong.org>
- <20140322094320.GD9074@birch.djwong.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: please fix FUSION
+ (Was:[v3.13][v3.14][Regression]kthread:makekthread_create()killable)
+Date: Sun, 23 Mar 2014 07:19:28 -0700
+Message-ID: <1395584368.2200.3.camel@dabdike.int.hansenpartnership.com>
+References: <20140321183443.GA3891@redhat.com>
+	 <201403221525.FJC69759.MSLOtHOJOVFFQF@I-love.SAKURA.ne.jp>
+	 <20140322192511.GA14811@redhat.com>
+	 <alpine.DEB.2.02.1403222201300.18573@ionos.tec.linutronix.de>
+	 <alpine.DEB.2.02.1403222242450.18573@ionos.tec.linutronix.de>
+	 <201403230857.IGH51500.FOHtQMFVOFOLJS@I-love.SAKURA.ne.jp>
+	 <alpine.DEB.2.02.1403230856500.18573@ionos.tec.linutronix.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20140322094320.GD9074@birch.djwong.org>
-Sender: owner-linux-mm@kvack.org
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Zach Brown <zab@redhat.com>, Benjamin LaHaise <bcrl@kvack.org>, axboe@kernel.dk, martin.petersen@oracle.com, JBottomley@parallels.com, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, linux-aio@kvack.org, linux-scsi@vger.kernel.org, linux-mm@kvack.org
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <alpine.DEB.2.02.1403230856500.18573@ionos.tec.linutronix.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, oleg@redhat.com, joseph.salisbury@canonical.com, Nagalakshmi.Nandigama@lsi.com, Sreekanth.Reddy@lsi.com, rientjes@google.com, akpm@linux-foundation.org, torvalds@linux-foundation.org, tj@kernel.org, linux-kernel@vger.kernel.org, kernel-team@lists.ubuntu.com, linux-scsi@vger.kernel.org, thenzl@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat 22-03-14 02:43:20, Darrick J. Wong wrote:
-> On Fri, Mar 21, 2014 at 07:32:16PM -0700, Darrick J. Wong wrote:
-> > On Fri, Mar 21, 2014 at 05:29:09PM -0700, Zach Brown wrote:
-> > > I'll admit, though, that I don't really like having to fetch the 'has'
-> > > bits first to find out how large the rest of the struct is.  Maybe
-> > > that's not worth worrying about.
+On Sun, 2014-03-23 at 09:04 +0100, Thomas Gleixner wrote:
+> On Sun, 23 Mar 2014, Tetsuo Handa wrote:
+> 
+> > Thomas Gleixner wrote:
+> > > But then systemd/udev mutters:
+> > > 
+> > >    "You migh be able to work around the timeout with udev rules and
+> > >     OPTIONS+="event_timeout=120", but that code was maybe never used
+> > >     or tested, so it might not work correctly." [1]
+> > > 
+> > > AFAICT from the ubuntu bug system [2] nobody bothered even to try that.
+> > > 
+> > > And if the udev/systemd event_timeout option is broken it's way better
+> > > to fix that one instead of hacking random heuristics into the kernel.
 > > 
-> > I'm not worrying about having to pluck 'has' out of the structure, but needing
-> > a function to tell me how big of a buffer I need for a given pile of flags
-> > seems ... icky.  But maybe the ease of modifying strace and security auditors
-> > would make it worth it?
+> > I haven't tried the event_timeout= option but I think it will not work.
+> > The timeout is hard coded as shown below and there will be no chance for taking
+> > the event_timeout= option into account.
+> > 
+> > ---------- systemd-204/src/udev/udevd.c start ----------
+> > (...snipped...)
+> >                         /* check for hanging events */
+> >                         udev_list_node_foreach(loop, &worker_list) {
+> >                                 struct worker *worker = node_to_worker(loop);
+> > 
+> >                                 if (worker->state != WORKER_RUNNING)
+> >                                         continue;
+> > 
+> >                                 if ((now(CLOCK_MONOTONIC) - worker->event_start_usec) > 30 * 1000 * 1000) {
 > 
-> How about explicitly specifying the structure size in struct some_more_args,
-> and checking that against whatever we find in .has?  Hm.  I still think that's
-> too clever for my brain to keep together for long.
+> And because systemd has an immutable hardcoded random timeout we add
+> another hardcoded random timeout into kthread_create() to work around
+> that.
 > 
-> I'm also nervous that we could be creating this monster of a structure wherein
-> some user wants to tack the first and last hints ever created onto an IO, so
-> now we have to lug this huge structure around that has space for hints that
-> we're not going to use, and most of which is zeroes.
-  Well, why does it matter that the structure would be big? Are do you
-think the memory consumption would matter?
+> How broken is that?
+> 
+> And it seems other people have solved it:
+> 
+>     http://www.redhat.com/archives/lvm-devel/2013-September/msg00036.html
 
-								Honza
--- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+I agree with Thomas.  A hardcoded timeout is a systemd bug.  However,
+could I get confirmation, while you can use this bug to do it, that the
+patch back in this thread actually fixes the crash when scsi_alloc_host
+fails, that's the serious SCSI bug, in my view?
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Thanks,
+
+James
