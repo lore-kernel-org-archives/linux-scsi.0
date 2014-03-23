@@ -1,62 +1,50 @@
-From: Thomas Gleixner <tglx@linutronix.de>
-Subject: Re: please fix FUSION
- (Was:[v3.13][v3.14][Regression]kthread:makekthread_create()killable)
-Date: Sun, 23 Mar 2014 09:04:22 +0100 (CET)
-Message-ID: <alpine.DEB.2.02.1403230856500.18573@ionos.tec.linutronix.de>
-References: <20140321183443.GA3891@redhat.com> <201403221525.FJC69759.MSLOtHOJOVFFQF@I-love.SAKURA.ne.jp> <20140322192511.GA14811@redhat.com> <alpine.DEB.2.02.1403222201300.18573@ionos.tec.linutronix.de> <alpine.DEB.2.02.1403222242450.18573@ionos.tec.linutronix.de>
- <201403230857.IGH51500.FOHtQMFVOFOLJS@I-love.SAKURA.ne.jp>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [RESEND][PATCH 1/2] lib/scatterlist: Make ARCH_HAS_SG_CHAIN an
+ actual Kconfig
+Date: Sun, 23 Mar 2014 19:58:33 +1100
+Message-ID: <1395565113.3460.106.camel@pasglop>
+References: <1395512032-20575-1-git-send-email-lauraa@codeaurora.org>
+ <1395512032-20575-2-git-send-email-lauraa@codeaurora.org>
+ <1395543886.3460.95.camel@pasglop> <20140323070343.GA17945@infradead.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from www.linutronix.de ([62.245.132.108]:56846 "EHLO
-	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750974AbaCWIEX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Mar 2014 04:04:23 -0400
-In-Reply-To: <201403230857.IGH51500.FOHtQMFVOFOLJS@I-love.SAKURA.ne.jp>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <20140323070343.GA17945@infradead.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-ia64@vger.kernel.org, Heiko Carstens <heiko.carstens@de.ibm.com>, Paul Mackerras <paulus@samba.org>, "H. Peter
+ Anvin" <hpa@zytor.com>, sparclinux@vger.kernel.org, linux-s390@vger.kernel.org, Russell King <linux@arm.linux.org.uk>, linux-scsi@vger.kernel.org, x86@kernel.org, Ingo Molnar <mingo@redhat.com>, Fenghua Yu <fenghua.yu@intel.com>, Laura Abbott <lauraa@codeaurora.org>, Thomas Gleixner <tglx@linutronix.de>, linux-arm-kernel@lists.infradead.org, Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Martin Schwidefsky <schwidefsky@de.ibm.com>, linux390@de.ibm.com, Andrew Morton <akpm@linux-foundation.org>, linuxppc-dev@lists.ozlabs.org, "David S. Miller" <davem@davemloft.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Cc: oleg@redhat.com, joseph.salisbury@canonical.com, JBottomley@parallels.com, Nagalakshmi.Nandigama@lsi.com, Sreekanth.Reddy@lsi.com, rientjes@google.com, akpm@linux-foundation.org, torvalds@linux-foundation.org, tj@kernel.org, linux-kernel@vger.kernel.org, kernel-team@lists.ubuntu.com, linux-scsi@vger.kernel.org, thenzl@redhat.com
 
-On Sun, 23 Mar 2014, Tetsuo Handa wrote:
-
-> Thomas Gleixner wrote:
-> > But then systemd/udev mutters:
+On Sun, 2014-03-23 at 00:03 -0700, Christoph Hellwig wrote:
+> On Sun, Mar 23, 2014 at 02:04:46PM +1100, Benjamin Herrenschmidt wrote:
 > > 
-> >    "You migh be able to work around the timeout with udev rules and
-> >     OPTIONS+="event_timeout=120", but that code was maybe never used
-> >     or tested, so it might not work correctly." [1]
+> > > diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
+> > > index 1594945..8122294 100644
+> > > --- a/arch/arm/Kconfig
+> > > +++ b/arch/arm/Kconfig
+> > > @@ -82,6 +82,7 @@ config ARM
+> > >  	  <http://www.arm.linux.org.uk/>.
+> > >  
+> > >  config ARM_HAS_SG_CHAIN
+> > > +	select ARCH_HAS_SG_CHAIN
+> > >  	bool
+> > >  
 > > 
-> > AFAICT from the ubuntu bug system [2] nobody bothered even to try that.
-> > 
-> > And if the udev/systemd event_timeout option is broken it's way better
-> > to fix that one instead of hacking random heuristics into the kernel.
+> > Heh, a self-selecting config option... I didn't know that trick !
 > 
-> I haven't tried the event_timeout= option but I think it will not work.
-> The timeout is hard coded as shown below and there will be no chance for taking
-> the event_timeout= option into account.
-> 
-> ---------- systemd-204/src/udev/udevd.c start ----------
-> (...snipped...)
->                         /* check for hanging events */
->                         udev_list_node_foreach(loop, &worker_list) {
->                                 struct worker *worker = node_to_worker(loop);
-> 
->                                 if (worker->state != WORKER_RUNNING)
->                                         continue;
-> 
->                                 if ((now(CLOCK_MONOTONIC) - worker->event_start_usec) > 30 * 1000 * 1000) {
+> ARM vs ARCH.  However the arm variant of the variable should probably be
+> consolidated into the ARCH one as a follow up.
 
-And because systemd has an immutable hardcoded random timeout we add
-another hardcoded random timeout into kthread_create() to work around
-that.
+Oh right... sorry for the noise.
 
-How broken is that?
-
-And it seems other people have solved it:
-
-    http://www.redhat.com/archives/lvm-devel/2013-September/msg00036.html
-
-Thanks,
-
-	tglx
+Ben.
