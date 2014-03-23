@@ -1,100 +1,45 @@
 From: Jayamohan Kallickal <jayamohank@gmail.com>
-Subject: [PATCH 1/4] be2iscsi: Fix retreving MCCQ_WRB in non-embedded Mbox path
-Date: Sun, 23 Mar 2014 18:10:45 -0400
-Message-ID: <1395612648-25851-1-git-send-email-Jayamohan.Kallickal@emulex.com>
+Subject: [PATCH 2/4] be2iscsi: relinquishing control after processing 512 CQE
+Date: Sun, 23 Mar 2014 18:10:46 -0400
+Message-ID: <1395612648-25851-2-git-send-email-Jayamohan.Kallickal@emulex.com>
+References: <1395612648-25851-1-git-send-email-Jayamohan.Kallickal@emulex.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pd0-f170.google.com ([209.85.192.170]:63022 "EHLO
-	mail-pd0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750749AbaCWWLF (ORCPT
+Received: from mail-pd0-f177.google.com ([209.85.192.177]:36316 "EHLO
+	mail-pd0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750872AbaCWWLF (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Mar 2014 18:11:05 -0400
-Received: by mail-pd0-f170.google.com with SMTP id v10so4537669pde.29
-        for <linux-scsi@vger.kernel.org>; Sun, 23 Mar 2014 15:11:03 -0700 (PDT)
+Received: by mail-pd0-f177.google.com with SMTP id y10so4488121pdj.22
+        for <linux-scsi@vger.kernel.org>; Sun, 23 Mar 2014 15:11:05 -0700 (PDT)
+In-Reply-To: <1395612648-25851-1-git-send-email-Jayamohan.Kallickal@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
-Cc: Jayamohan Kallickal <Jayamohan.Kallickal@emulex.com>, John Soni Jose <sony.john-n@emulex.com>
+Cc: Jayamohan Kallickal <Jayamohan.Kallickal@emulex.com>, Minh Tran <minhduc.tran@emulex.com>, John Soni Jose <sony.john-n@emulex.com>
 
- Getting WRB for MCCQ posting was done before looking if tag is
- available or not. This lead to increase phba->ctrl.mcc_obj.q.used
- variable and the WARN_ON message was coming from wrb_from_mccq().
- Moved getting wrb from mccq after checking for the tag.
+ stuck in IO poll for a long time. In such cases driver
+ did not rearm which could lead to unprocessed eq.Change
+ sched iopoll once then check for valid bit of eqe from
+ eq in be_iopoll.
 
- In wrb_from_mccq(), memset is done before returning wrb ptr.
- Removed memset of mccq wrb from all other functions.
-
+Signed-off-by: Minh Tran <minhduc.tran@emulex.com>
 Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
 Signed-off-by: Jayamohan Kallickal <Jayamohan.Kallickal@emulex.com>
 ---
- drivers/scsi/be2iscsi/be_mgmt.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+ drivers/scsi/be2iscsi/be_main.h | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
-index 088bdf7..712911f 100644
---- a/drivers/scsi/be2iscsi/be_mgmt.c
-+++ b/drivers/scsi/be2iscsi/be_mgmt.c
-@@ -447,8 +447,8 @@ unsigned int mgmt_vendor_specific_fw_cmd(struct be_ctrl_info *ctrl,
- 					 struct be_dma_mem *nonemb_cmd)
- {
- 	struct be_cmd_resp_hdr *resp;
--	struct be_mcc_wrb *wrb = wrb_from_mccq(phba);
--	struct be_sge *mcc_sge = nonembedded_sgl(wrb);
-+	struct be_mcc_wrb *wrb;
-+	struct be_sge *mcc_sge;
- 	unsigned int tag = 0;
- 	struct iscsi_bsg_request *bsg_req = job->request;
- 	struct be_bsg_vendor_cmd *req = nonemb_cmd->va;
-@@ -465,7 +465,6 @@ unsigned int mgmt_vendor_specific_fw_cmd(struct be_ctrl_info *ctrl,
- 	req->sector = sector;
- 	req->offset = offset;
- 	spin_lock(&ctrl->mbox_lock);
--	memset(wrb, 0, sizeof(*wrb));
+diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
+index 9380b55..d5901a7 100644
+--- a/drivers/scsi/be2iscsi/be_main.h
++++ b/drivers/scsi/be2iscsi/be_main.h
+@@ -63,6 +63,7 @@
+ #define BE2_SGE			32
+ #define BE2_DEFPDU_HDR_SZ	64
+ #define BE2_DEFPDU_DATA_SZ	8192
++#define BE2_MAX_NUM_CQ_PROC	512
  
- 	switch (bsg_req->rqst_data.h_vendor.vendor_cmd[0]) {
- 	case BEISCSI_WRITE_FLASH:
-@@ -495,6 +494,8 @@ unsigned int mgmt_vendor_specific_fw_cmd(struct be_ctrl_info *ctrl,
- 		return tag;
- 	}
- 
-+	wrb = wrb_from_mccq(phba);
-+	mcc_sge = nonembedded_sgl(wrb);
- 	be_wrb_hdr_prepare(wrb, nonemb_cmd->size, false,
- 			   job->request_payload.sg_cnt);
- 	mcc_sge->pa_hi = cpu_to_le32(upper_32_bits(nonemb_cmd->dma));
-@@ -525,7 +526,6 @@ int mgmt_epfw_cleanup(struct beiscsi_hba *phba, unsigned short ulp_num)
- 	int status = 0;
- 
- 	spin_lock(&ctrl->mbox_lock);
--	memset(wrb, 0, sizeof(*wrb));
- 
- 	be_wrb_hdr_prepare(wrb, sizeof(*req), true, 0);
- 	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_ISCSI,
-@@ -702,7 +702,6 @@ int mgmt_open_connection(struct beiscsi_hba *phba,
- 		return tag;
- 	}
- 	wrb = wrb_from_mccq(phba);
--	memset(wrb, 0, sizeof(*wrb));
- 	sge = nonembedded_sgl(wrb);
- 
- 	req = nonemb_cmd->va;
-@@ -804,7 +803,7 @@ static int mgmt_exec_nonemb_cmd(struct beiscsi_hba *phba,
- 				int resp_buf_len)
- {
- 	struct be_ctrl_info *ctrl = &phba->ctrl;
--	struct be_mcc_wrb *wrb = wrb_from_mccq(phba);
-+	struct be_mcc_wrb *wrb;
- 	struct be_sge *sge;
- 	unsigned int tag;
- 	int rc = 0;
-@@ -816,7 +815,8 @@ static int mgmt_exec_nonemb_cmd(struct beiscsi_hba *phba,
- 		rc = -ENOMEM;
- 		goto free_cmd;
- 	}
--	memset(wrb, 0, sizeof(*wrb));
-+
-+	wrb = wrb_from_mccq(phba);
- 	wrb->tag0 |= tag;
- 	sge = nonembedded_sgl(wrb);
- 
+ #define MAX_CPUS		64
+ #define BEISCSI_MAX_NUM_CPUS	7
 -- 
 1.8.5.3
 
