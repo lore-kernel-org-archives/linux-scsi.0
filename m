@@ -1,50 +1,54 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [RESEND][PATCH 1/2] lib/scatterlist: Make ARCH_HAS_SG_CHAIN an
- actual Kconfig
-Date: Sun, 23 Mar 2014 19:58:33 +1100
-Message-ID: <1395565113.3460.106.camel@pasglop>
-References: <1395512032-20575-1-git-send-email-lauraa@codeaurora.org>
- <1395512032-20575-2-git-send-email-lauraa@codeaurora.org>
- <1395543886.3460.95.camel@pasglop> <20140323070343.GA17945@infradead.org>
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [RFC PATCH 0/5] userspace PI passthrough via AIO/DIO
+Date: Sun, 23 Mar 2014 15:02:44 +0100
+Message-ID: <20140323140244.GF2813@quack.suse.cz>
+References: <20140321043041.8428.79003.stgit@birch.djwong.org>
+ <20140321182332.GP10561@lenny.home.zabbo.net>
+ <20140321214410.GE23173@kvack.org>
+ <20140321225437.GB9074@birch.djwong.org>
+ <20140322002909.GT10561@lenny.home.zabbo.net>
+ <20140322023216.GC9074@birch.djwong.org>
+ <20140322094320.GD9074@birch.djwong.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <20140323070343.GA17945@infradead.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-ia64@vger.kernel.org, Heiko Carstens <heiko.carstens@de.ibm.com>, Paul Mackerras <paulus@samba.org>, "H. Peter
- Anvin" <hpa@zytor.com>, sparclinux@vger.kernel.org, linux-s390@vger.kernel.org, Russell King <linux@arm.linux.org.uk>, linux-scsi@vger.kernel.org, x86@kernel.org, Ingo Molnar <mingo@redhat.com>, Fenghua Yu <fenghua.yu@intel.com>, Laura Abbott <lauraa@codeaurora.org>, Thomas Gleixner <tglx@linutronix.de>, linux-arm-kernel@lists.infradead.org, Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Martin Schwidefsky <schwidefsky@de.ibm.com>, linux390@de.ibm.com, Andrew Morton <akpm@linux-foundation.org>, linuxppc-dev@lists.ozlabs.org, "David S. Miller" <davem@davemloft.net>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <20140322094320.GD9074@birch.djwong.org>
+Sender: owner-linux-mm@kvack.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Zach Brown <zab@redhat.com>, Benjamin LaHaise <bcrl@kvack.org>, axboe@kernel.dk, martin.petersen@oracle.com, JBottomley@parallels.com, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, linux-aio@kvack.org, linux-scsi@vger.kernel.org, linux-mm@kvack.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, 2014-03-23 at 00:03 -0700, Christoph Hellwig wrote:
-> On Sun, Mar 23, 2014 at 02:04:46PM +1100, Benjamin Herrenschmidt wrote:
+On Sat 22-03-14 02:43:20, Darrick J. Wong wrote:
+> On Fri, Mar 21, 2014 at 07:32:16PM -0700, Darrick J. Wong wrote:
+> > On Fri, Mar 21, 2014 at 05:29:09PM -0700, Zach Brown wrote:
+> > > I'll admit, though, that I don't really like having to fetch the 'has'
+> > > bits first to find out how large the rest of the struct is.  Maybe
+> > > that's not worth worrying about.
 > > 
-> > > diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
-> > > index 1594945..8122294 100644
-> > > --- a/arch/arm/Kconfig
-> > > +++ b/arch/arm/Kconfig
-> > > @@ -82,6 +82,7 @@ config ARM
-> > >  	  <http://www.arm.linux.org.uk/>.
-> > >  
-> > >  config ARM_HAS_SG_CHAIN
-> > > +	select ARCH_HAS_SG_CHAIN
-> > >  	bool
-> > >  
-> > 
-> > Heh, a self-selecting config option... I didn't know that trick !
+> > I'm not worrying about having to pluck 'has' out of the structure, but needing
+> > a function to tell me how big of a buffer I need for a given pile of flags
+> > seems ... icky.  But maybe the ease of modifying strace and security auditors
+> > would make it worth it?
 > 
-> ARM vs ARCH.  However the arm variant of the variable should probably be
-> consolidated into the ARCH one as a follow up.
+> How about explicitly specifying the structure size in struct some_more_args,
+> and checking that against whatever we find in .has?  Hm.  I still think that's
+> too clever for my brain to keep together for long.
+> 
+> I'm also nervous that we could be creating this monster of a structure wherein
+> some user wants to tack the first and last hints ever created onto an IO, so
+> now we have to lug this huge structure around that has space for hints that
+> we're not going to use, and most of which is zeroes.
+  Well, why does it matter that the structure would be big? Are do you
+think the memory consumption would matter?
 
-Oh right... sorry for the noise.
+								Honza
+-- 
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
 
-Ben.
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
