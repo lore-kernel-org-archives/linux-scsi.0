@@ -1,15 +1,11 @@
 From: Monam Agarwal <monamagarwal123@gmail.com>
-Subject: [PATCH] drivers/scsi: Use RCU_INIT_POINTER(x, NULL) in libfc/fc_libfc.c
-Date: Mon, 24 Mar 2014 00:07:05 +0530
-Message-ID: <1395599825-8014-1-git-send-email-monamagarwal123@gmail.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f44.google.com ([209.85.160.44]:59099 "EHLO
-	mail-pb0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750932AbaCWSiF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Mar 2014 14:38:05 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Subject: [PATCH] drivers/target: Use RCU_INIT_POINTER(x, NULL) in tcm_fc/tfc_sess.c
+Date: Mon, 24 Mar 2014 00:09:49 +0530
+Message-ID: <1395599989-8183-1-git-send-email-monamagarwal123@gmail.com>
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: nab@linux-iscsi.org, nab@daterainc.com, yongjun_wei@trendmicro.com.cn, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: robert.w.love@intel.com, JBottomley@parallels.com, fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
 This patch replaces rcu_assign_pointer(x, NULL) with RCU_INIT_POINTER(x, NULL)
 
@@ -20,25 +16,21 @@ So, rcu_assign_pointer(p, NULL) can be safely converted to RCU_INIT_POINTER(p, N
 
 Signed-off-by: Monam Agarwal <monamagarwal123@gmail.com>
 ---
- drivers/scsi/libfc/fc_libfc.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/target/tcm_fc/tfc_sess.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/libfc/fc_libfc.c b/drivers/scsi/libfc/fc_libfc.c
-index 8d65a51a..c11a638 100644
---- a/drivers/scsi/libfc/fc_libfc.c
-+++ b/drivers/scsi/libfc/fc_libfc.c
-@@ -296,9 +296,9 @@ void fc_fc4_deregister_provider(enum fc_fh_type type, struct fc4_prov *prov)
- 	BUG_ON(type >= FC_FC4_PROV_SIZE);
- 	mutex_lock(&fc_prov_mutex);
- 	if (prov->recv)
--		rcu_assign_pointer(fc_passive_prov[type], NULL);
-+		RCU_INIT_POINTER(fc_passive_prov[type], NULL);
- 	else
--		rcu_assign_pointer(fc_active_prov[type], NULL);
-+		RCU_INIT_POINTER(fc_active_prov[type], NULL);
- 	mutex_unlock(&fc_prov_mutex);
- 	synchronize_rcu();
- }
+diff --git a/drivers/target/tcm_fc/tfc_sess.c b/drivers/target/tcm_fc/tfc_sess.c
+index ae52c08..ca7b1ed 100644
+--- a/drivers/target/tcm_fc/tfc_sess.c
++++ b/drivers/target/tcm_fc/tfc_sess.c
+@@ -97,7 +97,7 @@ static void ft_tport_delete(struct ft_tport *tport)
+ 	ft_sess_delete_all(tport);
+ 	lport = tport->lport;
+ 	BUG_ON(tport != lport->prov[FC_TYPE_FCP]);
+-	rcu_assign_pointer(lport->prov[FC_TYPE_FCP], NULL);
++	RCU_INIT_POINTER(lport->prov[FC_TYPE_FCP], NULL);
+ 
+ 	tpg = tport->tpg;
+ 	if (tpg) {
 -- 
 1.7.9.5
-
