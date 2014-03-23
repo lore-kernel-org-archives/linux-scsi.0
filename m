@@ -1,65 +1,41 @@
-From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Subject: Re: please fix FUSION (Was:[v3.13][v3.14][Regression]kthread:makekthread_create()killable)
-Date: Sun, 23 Mar 2014 08:57:00 +0900
-Message-ID: <201403230857.IGH51500.FOHtQMFVOFOLJS@I-love.SAKURA.ne.jp>
-References: <20140321183443.GA3891@redhat.com>
-	<201403221525.FJC69759.MSLOtHOJOVFFQF@I-love.SAKURA.ne.jp>
-	<20140322192511.GA14811@redhat.com>
-	<alpine.DEB.2.02.1403222201300.18573@ionos.tec.linutronix.de>
-	<alpine.DEB.2.02.1403222242450.18573@ionos.tec.linutronix.de>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [RESEND][PATCH 1/2] lib/scatterlist: Make ARCH_HAS_SG_CHAIN an
+ actual Kconfig
+Date: Sun, 23 Mar 2014 14:04:46 +1100
+Message-ID: <1395543886.3460.95.camel@pasglop>
+References: <1395512032-20575-1-git-send-email-lauraa@codeaurora.org>
+ <1395512032-20575-2-git-send-email-lauraa@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from www262.sakura.ne.jp ([202.181.97.72]:53648 "EHLO
-	www262.sakura.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752112AbaCVX51 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 22 Mar 2014 19:57:27 -0400
-In-Reply-To: <alpine.DEB.2.02.1403222242450.18573@ionos.tec.linutronix.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <1395512032-20575-2-git-send-email-lauraa@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Laura Abbott <lauraa@codeaurora.org>
+Cc: Fenghua Yu <fenghua.yu@intel.com>, Tony Luck <tony.luck@intel.com>, Russell King <linux@arm.linux.org.uk>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, x86@kernel.org, Heiko Carstens <heiko.carstens@de.ibm.com>, linux-kernel@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, linux390@de.ibm.com, sparclinux@vger.kernel.org, Ingo Molnar <mingo@redhat.com>, Paul Mackerras <paulus@samba.org>, "H. Peter Anvin" <hpa@zytor.com>, Martin Schwidefsky <schwidefsky@de.ibm.com>, linux-ia64@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>, linuxppc-dev@lists.ozlabs.org, "David S. Miller" <davem@davemloft.net>, linux-arm-kernel@lists.infradead.org
 List-Id: linux-scsi@vger.kernel.org
-To: tglx@linutronix.de, oleg@redhat.com
-Cc: joseph.salisbury@canonical.com, JBottomley@parallels.com, Nagalakshmi.Nandigama@lsi.com, Sreekanth.Reddy@lsi.com, rientjes@google.com, akpm@linux-foundation.org, torvalds@linux-foundation.org, tj@kernel.org, linux-kernel@vger.kernel.org, kernel-team@lists.ubuntu.com, linux-scsi@vger.kernel.org, thenzl@redhat.com
 
-Thomas Gleixner wrote:
-> But then systemd/udev mutters:
-> 
->    "You migh be able to work around the timeout with udev rules and
->     OPTIONS+="event_timeout=120", but that code was maybe never used
->     or tested, so it might not work correctly." [1]
-> 
-> AFAICT from the ubuntu bug system [2] nobody bothered even to try that.
-> 
-> And if the udev/systemd event_timeout option is broken it's way better
-> to fix that one instead of hacking random heuristics into the kernel.
 
-I haven't tried the event_timeout= option but I think it will not work.
-The timeout is hard coded as shown below and there will be no chance for taking
-the event_timeout= option into account.
+> diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
+> index 1594945..8122294 100644
+> --- a/arch/arm/Kconfig
+> +++ b/arch/arm/Kconfig
+> @@ -82,6 +82,7 @@ config ARM
+>  	  <http://www.arm.linux.org.uk/>.
+>  
+>  config ARM_HAS_SG_CHAIN
+> +	select ARCH_HAS_SG_CHAIN
+>  	bool
+>  
 
----------- systemd-204/src/udev/udevd.c start ----------
-(...snipped...)
-                        /* check for hanging events */
-                        udev_list_node_foreach(loop, &worker_list) {
-                                struct worker *worker = node_to_worker(loop);
+Heh, a self-selecting config option... I didn't know that trick !
 
-                                if (worker->state != WORKER_RUNNING)
-                                        continue;
-
-                                if ((now(CLOCK_MONOTONIC) - worker->event_start_usec) > 30 * 1000 * 1000) {
-                                        log_error("worker [%u] %s timeout; kill it\n", worker->pid,
-                                            worker->event ? worker->event->devpath : "<idle>");
-                                        kill(worker->pid, SIGKILL);
-                                        worker->state = WORKER_KILLED;
-                                        /* drop reference taken for state 'running' */
-                                        worker_unref(worker);
-                                        if (worker->event) {
-                                                log_error("seq %llu '%s' killed\n",
-                                                          udev_device_get_seqnum(worker->event->dev), worker->event->devpath);
-                                                worker->event->exitcode = -64;
-                                                event_queue_delete(worker->event, true);
-                                                worker->event = NULL;
-                                        }
-                                }
-                        }
-(...snipped...)
----------- systemd-204/src/udev/udevd.c end ----------
+Ben.
