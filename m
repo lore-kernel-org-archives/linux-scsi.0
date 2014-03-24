@@ -1,272 +1,62 @@
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH 6/6] blk-integrity: refactor various routines
-Date: Mon, 24 Mar 2014 09:23:13 -0700
-Message-ID: <20140324162313.10848.7587.stgit@birch.djwong.org>
-References: <20140324162231.10848.4863.stgit@birch.djwong.org>
+From: Oleg Nesterov <oleg@redhat.com>
+Subject: Re: please fix FUSION (Was:
+	[v3.13][v3.14][Regression]kthread:makekthread_create()killable)
+Date: Mon, 24 Mar 2014 18:01:15 +0100
+Message-ID: <20140324170115.GA30307@redhat.com>
+References: <20140319182910.GA14511@redhat.com> <20140319194232.GA6207@redhat.com> <532B1B67.5050104@canonical.com> <20140320192307.GA11883@redhat.com> <20140321183443.GA3891@redhat.com> <201403221525.FJC69759.MSLOtHOJOVFFQF@I-love.SAKURA.ne.jp> <20140322192511.GA14811@redhat.com> <1395521330.2143.51.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20140324162231.10848.4863.stgit@birch.djwong.org>
-Sender: owner-linux-mm@kvack.org
-To: axboe@kernel.dk, zab@redhat.com, martin.petersen@oracle.com, darrick.wong@oracle.com, JBottomley@parallels.com, jmoyer@redhat.com, bcrl@kvack.org, viro@zeniv.linux.org.uk
-Cc: linux-fsdevel@vger.kernel.org, linux-aio@kvack.org, linux-scsi@vger.kernel.org, linux-mm@kvack.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1395521330.2143.51.camel@dabdike.int.hansenpartnership.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, joseph.salisbury@canonical.com, Nagalakshmi.Nandigama@lsi.com, Sreekanth.Reddy@lsi.com, rientjes@google.com, akpm@linux-foundation.org, torvalds@linux-foundation.org, tj@kernel.org, tglx@linutronix.de, linux-kernel@vger.kernel.org, kernel-team@lists.ubuntu.com, linux-scsi@vger.kernel.org, thenzl@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-Refactor blk-integrity.c to avoid duplicating similar functions, and
-remove all users of pi_buf, since it's really only there to handle the
-(common) case where the kernel auto-generates all the PI data.
+On 03/22, James Bottomley wrote:
+>
+> OK, the fix from the SCSI point of view is to make the mpt teardown path
+> actually work.  The whole thing looks to be a complete mess because
+> there's another place where it will do the wrong thing in
+> mptscsih_remove().  You always have to call mpt_detach() otherwise the
+> device doesn't get removed from the lists.  In theory this patch fixes
+> both bugs in the driver.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/bio-integrity.c  |  120 +++++++++++++++++++++------------------------------
- include/linux/bio.h |    2 -
- 2 files changed, 49 insertions(+), 73 deletions(-)
+Yes, I obviously thought about the same change ;)
 
+But note that mpt_detach() doesn't look correct too. This is almost
+off-topic, but still...
 
-diff --git a/fs/bio-integrity.c b/fs/bio-integrity.c
-index 381ee38..3ff1572 100644
---- a/fs/bio-integrity.c
-+++ b/fs/bio-integrity.c
-@@ -97,8 +97,7 @@ void bio_integrity_free(struct bio *bio)
- 	struct bio_integrity_payload *bip = bio->bi_integrity;
- 	struct bio_set *bs = bio->bi_pool;
- 
--	if (bip->bip_owns_buf)
--		kfree(bip->bip_buf);
-+	kfree(bip->bip_buf);
- 
- 	if (bs) {
- 		if (bip->bip_slab != BIO_POOL_NONE)
-@@ -239,9 +238,11 @@ static int bio_integrity_tag(struct bio *bio, void *tag_buf, unsigned int len,
- {
- 	struct bio_integrity_payload *bip = bio->bi_integrity;
- 	struct blk_integrity *bi = bdev_get_integrity(bio->bi_bdev);
--	unsigned int nr_sectors;
--
--	BUG_ON(bip->bip_buf == NULL);
-+	unsigned int nr_sectors, tag_offset, sectors;
-+	void *prot_buf;
-+	unsigned int prot_offset, prot_len;
-+	struct bio_vec *iv;
-+	void (*tag_fn)(void *buf, void *tag_buf, unsigned int);
- 
- 	if (bi->tag_size == 0)
- 		return -1;
-@@ -255,10 +256,30 @@ static int bio_integrity_tag(struct bio *bio, void *tag_buf, unsigned int len,
- 		return -1;
- 	}
- 
--	if (set)
--		bi->set_tag_fn(bip->bip_buf, tag_buf, nr_sectors);
--	else
--		bi->get_tag_fn(bip->bip_buf, tag_buf, nr_sectors);
-+	iv = bip->bip_vec;
-+	prot_offset = iv->bv_offset;
-+	prot_len = iv->bv_len;
-+	prot_buf = kmap_atomic(iv->bv_page);
-+	tag_fn = set ? bi->set_tag_fn : bi->get_tag_fn;
-+	tag_offset = 0;
-+
-+	while (nr_sectors) {
-+		if (prot_len < bi->tuple_size) {
-+			kunmap_atomic(prot_buf);
-+			iv++;
-+			BUG_ON(iv >= bip->bip_vec + bip->bip_vcnt);
-+			prot_offset = iv->bv_offset;
-+			prot_len = iv->bv_len;
-+			prot_buf = kmap_atomic(iv->bv_page);
-+		}
-+		sectors = min(prot_len / bi->tuple_size, nr_sectors);
-+		tag_fn(prot_buf + prot_offset, tag_buf + tag_offset, sectors);
-+		nr_sectors -= sectors;
-+		tag_offset += sectors * bi->tuple_size;
-+		prot_offset += sectors * bi->tuple_size;
-+		prot_len -= sectors * bi->tuple_size;
-+	}
-+	kunmap_atomic(prot_buf);
- 
- 	return 0;
- }
-@@ -300,28 +321,24 @@ int bio_integrity_get_tag(struct bio *bio, void *tag_buf, unsigned int len)
- }
- EXPORT_SYMBOL(bio_integrity_get_tag);
- 
--/**
-- * bio_integrity_update_user_buffer - Update user-provided PI buffers for a bio
-- * @bio:	bio to generate/verify integrity metadata for
-- */
--int bio_integrity_update_user_buffer(struct bio *bio)
-+typedef int (walk_buf_fn)(struct blk_integrity_exchg *bi, int flags);
-+
-+static int bio_integrity_walk_bufs(struct bio *bio, sector_t sector,
-+				   walk_buf_fn *mod_fn)
- {
- 	struct blk_integrity *bi = bdev_get_integrity(bio->bi_bdev);
- 	struct blk_integrity_exchg bix;
- 	struct bio_vec bv;
- 	struct bvec_iter iter;
--	sector_t sector;
- 	unsigned int sectors, total, ret;
- 	void *prot_buf;
- 	unsigned int prot_offset, prot_len, bv_offset, bv_len;
- 	struct bio_vec *iv;
- 	struct bio_integrity_payload *bip = bio->bi_integrity;
- 
--	if (!bi->mod_user_buf_fn)
-+	if (!mod_fn)
- 		return 0;
- 
--	sector = bio->bi_iter.bi_sector;
--
- 	total = ret = 0;
- 	bix.disk_name = bio->bi_bdev->bd_disk->disk_name;
- 	bix.sector_size = bi->sector_size;
-@@ -351,7 +368,7 @@ int bio_integrity_update_user_buffer(struct bio *bio)
- 			bix.prot_buf = prot_buf + prot_offset;
- 			bix.sector = sector;
- 
--			ret = bi->mod_user_buf_fn(&bix, bip->bip_user_flags);
-+			ret = mod_fn(&bix, bip->bip_user_flags);
- 			if (ret) {
- 				if (ret == -ENOTTY)
- 					ret = 0;
-@@ -374,59 +391,19 @@ int bio_integrity_update_user_buffer(struct bio *bio)
- 	kunmap_atomic(prot_buf);
- 	return ret;
- }
--EXPORT_SYMBOL_GPL(bio_integrity_update_user_buffer);
- 
- /**
-- * bio_integrity_generate_verify - Generate/verify integrity metadata for a bio
-+ * bio_integrity_update_user_buffer - Update user-provided PI buffers for a bio
-  * @bio:	bio to generate/verify integrity metadata for
-- * @operate:	operate number, 1 for generate, 0 for verify
-+ * @sector:	stratin
-  */
--static int bio_integrity_generate_verify(struct bio *bio, int operate)
-+int bio_integrity_update_user_buffer(struct bio *bio)
- {
- 	struct blk_integrity *bi = bdev_get_integrity(bio->bi_bdev);
--	struct blk_integrity_exchg bix;
--	struct bio_vec bv;
--	struct bvec_iter iter;
--	sector_t sector;
--	unsigned int sectors, total, ret;
--	void *prot_buf = bio->bi_integrity->bip_buf;
--
--	if (operate)
--		sector = bio->bi_iter.bi_sector;
--	else
--		sector = bio->bi_integrity->bip_iter.bi_sector;
--
--	total = ret = 0;
--	bix.disk_name = bio->bi_bdev->bd_disk->disk_name;
--	bix.sector_size = bi->sector_size;
--
--	bio_for_each_segment(bv, bio, iter) {
--		void *kaddr = kmap_atomic(bv.bv_page);
--		bix.data_buf = kaddr + bv.bv_offset;
--		bix.data_size = bv.bv_len;
--		bix.prot_buf = prot_buf;
--		bix.sector = sector;
--
--		if (operate) {
--			bi->generate_fn(&bix);
--		} else {
--			ret = bi->verify_fn(&bix);
--			if (ret) {
--				kunmap_atomic(kaddr);
--				return ret;
--			}
--		}
--
--		sectors = bv.bv_len / bi->sector_size;
--		sector += sectors;
--		prot_buf += sectors * bi->tuple_size;
--		total += sectors * bi->tuple_size;
--		BUG_ON(total > bio->bi_integrity->bip_iter.bi_size);
--
--		kunmap_atomic(kaddr);
--	}
--	return ret;
-+	return bio_integrity_walk_bufs(bio, bio->bi_iter.bi_sector,
-+				       bi->mod_user_buf_fn);
- }
-+EXPORT_SYMBOL_GPL(bio_integrity_update_user_buffer);
- 
- /**
-  * bio_integrity_generate - Generate integrity metadata for a bio
-@@ -439,7 +416,9 @@ static int bio_integrity_generate_verify(struct bio *bio, int operate)
-  */
- static void bio_integrity_generate(struct bio *bio)
- {
--	bio_integrity_generate_verify(bio, 1);
-+	struct blk_integrity *bi = bdev_get_integrity(bio->bi_bdev);
-+	bio_integrity_walk_bufs(bio, bio->bi_iter.bi_sector,
-+				(walk_buf_fn *)bi->generate_fn);
- }
- 
- static inline unsigned short blk_integrity_tuple_size(struct blk_integrity *bi)
-@@ -479,7 +458,6 @@ int bio_integrity_prep_buffer(struct bio *bio, int rw,
- 
- 	sectors = bio_integrity_hw_sectors(bi, bio_sectors(bio));
- 
--	/* Allocate kernel buffer for protection data */
- 	len = sectors * blk_integrity_tuple_size(bi);
- 	end = (pi->pi_offset + len + PAGE_SIZE - 1) >> PAGE_SHIFT;
- 	start = pi->pi_offset >> PAGE_SHIFT;
-@@ -497,8 +475,6 @@ int bio_integrity_prep_buffer(struct bio *bio, int rw,
- 		return -EIO;
- 	}
- 
--	bip->bip_owns_buf = 0;
--	bip->bip_buf = NULL;
- 	bip->bip_iter.bi_size = len;
- 	bip->bip_iter.bi_sector = bio->bi_iter.bi_sector;
- 	bip->bip_user_flags = pi->pi_userflags;
-@@ -591,7 +567,6 @@ int bio_integrity_prep(struct bio *bio)
- 		return -EIO;
- 	}
- 
--	bip->bip_owns_buf = 1;
- 	bip->bip_buf = buf;
- 	bip->bip_iter.bi_size = len;
- 	bip->bip_iter.bi_sector = bio->bi_iter.bi_sector;
-@@ -646,7 +621,10 @@ EXPORT_SYMBOL(bio_integrity_prep);
-  */
- static int bio_integrity_verify(struct bio *bio)
- {
--	return bio_integrity_generate_verify(bio, 0);
-+	struct blk_integrity *bi = bdev_get_integrity(bio->bi_bdev);
-+	return bio_integrity_walk_bufs(bio,
-+				       bio->bi_integrity->bip_iter.bi_sector,
-+				       (walk_buf_fn *)bi->verify_fn);
- }
- 
- /**
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index 5bd9618..c2ad1a8 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -292,14 +292,12 @@ struct bio_integrity_payload {
- 
- 	struct bvec_iter	bip_iter;
- 
--	/* kill - should just use bip_vec */
- 	void			*bip_buf;	/* generated integrity data */
- 
- 	bio_end_io_t		*bip_end_io;	/* saved I/O completion fn */
- 
- 	unsigned short		bip_slab;	/* slab the bip came from */
- 	unsigned short		bip_vcnt;	/* # of integrity bio_vecs */
--	unsigned		bip_owns_buf:1;	/* should free bip_buf */
- 
- 	struct work_struct	bip_work;	/* I/O completion */
- 
+At least it needs s/cancel_delayed_work/cancel_delayed_work_sync/ to
+sync with mpt_fault_reset_work().
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+And it is not clear if it is safe to simply destroy ->fw_event_q,
+perhaps it can't have the pending works if the caller is teardown
+path, and otherwise we rely on mptsas_cleanup_fw_event_q(), I do
+not know... but mptsas_cleanup_fw_event_q() needs _sync too I guess,
+and obviously mptsas_free_fw_event() should be called unconditionally.
+
+OTOH, mpt_attach() doesn't verify that ->fw_event_q was created
+succesfully. And, if mpt_do_ioc_recovery() fails it destroys
+->reset_work_q but not ->fw_event_q. Looks like this driver needs
+some cleanups.
+
+> --- a/drivers/message/fusion/mptscsih.c
+> +++ b/drivers/message/fusion/mptscsih.c
+> @@ -1176,10 +1176,14 @@ mptscsih_remove(struct pci_dev *pdev)
+>  	MPT_SCSI_HOST		*hd;
+>  	int sz1;
+>
+> +	if (!host)
+> +		/* not brought up far enough to do scsi_host_attach() */
+                                                   ^^^^^^^^^^^^^^^^
+scsi_host_alloc ;)
+
+> +		goto out;
+> +
+
+Yes, I think this is correct. mpt_attach() does kzalloc(MPT_ADAPTER) so
+we can probably rely on ->sh == NULL if _alloc failed.
+
+Oleg.
