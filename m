@@ -1,175 +1,64 @@
 From: Andy Grover <agrover@redhat.com>
-Subject: [PATCHv2 RESEND 9/9] target: Refactor core_enable_device_list_for_node
-Date: Mon, 24 Mar 2014 16:43:18 -0700
-Message-ID: <1395704598-31073-10-git-send-email-agrover@redhat.com>
+Subject: [PATCHv2 RESEND 4/9] target: core_tpg_post_dellun can return void
+Date: Mon, 24 Mar 2014 16:43:13 -0700
+Message-ID: <1395704598-31073-5-git-send-email-agrover@redhat.com>
 References: <1395704598-31073-1-git-send-email-agrover@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:30085 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:2658 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751466AbaCXXnY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Mar 2014 19:43:24 -0400
+	id S1751211AbaCXXnW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 24 Mar 2014 19:43:22 -0400
 In-Reply-To: <1395704598-31073-1-git-send-email-agrover@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: target-devel@vger.kernel.org
 Cc: linux-scsi@vger.kernel.org
 
-Create helper functions to alloc a deve and to transition it from
-demo mode to explicit.
+Nothing in it can raise an error.
 
 Signed-off-by: Andy Grover <agrover@redhat.com>
 ---
- drivers/target/target_core_device.c | 121 ++++++++++++++++++++++--------------
- 1 file changed, 74 insertions(+), 47 deletions(-)
+ drivers/target/target_core_internal.h | 2 +-
+ drivers/target/target_core_tpg.c      | 5 +----
+ 2 files changed, 2 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-index 0bd09c8..c15b7aa 100644
---- a/drivers/target/target_core_device.c
-+++ b/drivers/target/target_core_device.c
-@@ -288,6 +288,73 @@ void core_update_device_list_access(
- 	spin_unlock_irq(&nacl->device_list_lock);
+diff --git a/drivers/target/target_core_internal.h b/drivers/target/target_core_internal.h
+index de9cab7..463fddc 100644
+--- a/drivers/target/target_core_internal.h
++++ b/drivers/target/target_core_internal.h
+@@ -83,7 +83,7 @@ struct se_lun *core_tpg_alloc_lun(struct se_portal_group *, u32);
+ int	core_tpg_add_lun(struct se_portal_group *, struct se_lun *,
+ 		u32, struct se_device *);
+ struct se_lun *core_tpg_pre_dellun(struct se_portal_group *, u32 unpacked_lun);
+-int	core_tpg_post_dellun(struct se_portal_group *, struct se_lun *);
++void core_tpg_post_dellun(struct se_portal_group *, struct se_lun *);
+ 
+ /* target_core_transport.c */
+ extern struct kmem_cache *se_tmr_req_cache;
+diff --git a/drivers/target/target_core_tpg.c b/drivers/target/target_core_tpg.c
+index 82a25e1..321268d 100644
+--- a/drivers/target/target_core_tpg.c
++++ b/drivers/target/target_core_tpg.c
+@@ -825,18 +825,15 @@ struct se_lun *core_tpg_pre_dellun(
+ 	return lun;
  }
  
-+static struct se_dev_entry *core_alloc_se_dev_entry(
-+	struct se_lun *lun,
-+	struct se_lun_acl *lun_acl,
-+	u32 mapped_lun,
-+	u32 lun_access,
-+	struct se_node_acl *nacl)
-+{
-+	struct se_dev_entry *deve;
-+
-+	/* Holding locks, can't sleep */
-+	deve = kzalloc(sizeof(*deve), GFP_ATOMIC);
-+	if (!deve)
-+		return ERR_PTR(-ENOMEM);
-+
-+	atomic_set(&deve->ua_count, 0);
-+	atomic_set(&deve->pr_ref_count, 0);
-+	spin_lock_init(&deve->ua_lock);
-+	INIT_LIST_HEAD(&deve->alua_port_list);
-+	INIT_LIST_HEAD(&deve->ua_list);
-+	deve->se_lun = lun;
-+	deve->se_lun_acl = lun_acl;
-+	deve->mapped_lun = mapped_lun;
-+
-+	if (lun_access & TRANSPORT_LUNFLAGS_READ_WRITE)
-+		deve->lun_flags |= TRANSPORT_LUNFLAGS_READ_WRITE;
-+	else
-+		deve->lun_flags |= TRANSPORT_LUNFLAGS_READ_ONLY;
-+
-+	deve->creation_time = get_jiffies_64();
-+
-+	nacl->device_list[mapped_lun] = deve;
-+
-+	return deve;
-+}
-+
-+static int core_transition_deve_to_explicit(
-+	struct se_lun *lun,
-+	struct se_lun_acl *lun_acl,
-+	struct se_dev_entry *deve,
-+	u32 lun_access)
-+{
-+	if (deve->se_lun_acl != NULL) {
-+		pr_err("struct se_dev_entry->se_lun_acl"
-+		       " already set for demo mode -> explicit"
-+		       " LUN ACL transition\n");
-+		return -EINVAL;
-+	}
-+	if (deve->se_lun != lun) {
-+		pr_err("struct se_dev_entry->se_lun does"
-+		       " match passed struct se_lun for demo mode"
-+		       " -> explicit LUN ACL transition\n");
-+		return -EINVAL;
-+	}
-+
-+	deve->se_lun_acl = lun_acl;
-+
-+	if (lun_access & TRANSPORT_LUNFLAGS_READ_WRITE) {
-+		deve->lun_flags &= ~TRANSPORT_LUNFLAGS_READ_ONLY;
-+		deve->lun_flags |= TRANSPORT_LUNFLAGS_READ_WRITE;
-+	} else {
-+		deve->lun_flags &= ~TRANSPORT_LUNFLAGS_READ_WRITE;
-+		deve->lun_flags |= TRANSPORT_LUNFLAGS_READ_ONLY;
-+	}
-+
-+	return 0;
-+}
-+
- /*      core_enable_device_list_for_node():
-  *
-  * Called with tpg_lun_lock held & irqs off
-@@ -314,62 +381,22 @@ int core_enable_device_list_for_node(
- 	 * + mapped_lun that was setup in demo mode..
- 	 */
- 	if (deve) {
--		if (deve->se_lun_acl != NULL) {
--			pr_err("struct se_dev_entry->se_lun_acl"
--			       " already set for demo mode -> explicit"
--			       " LUN ACL transition\n");
--			ret = -EINVAL;
--			goto out;
--		}
--		if (deve->se_lun != lun) {
--			pr_err("struct se_dev_entry->se_lun does"
--			       " match passed struct se_lun for demo mode"
--			       " -> explicit LUN ACL transition\n");
--			ret = -EINVAL;
--			goto out;
--		}
--		deve->se_lun_acl = lun_acl;
+-int core_tpg_post_dellun(
++void core_tpg_post_dellun(
+ 	struct se_portal_group *tpg,
+ 	struct se_lun *lun)
+ {
+ 	core_clear_lun_from_tpg(lun, tpg);
+ 	transport_clear_lun_ref(lun);
 -
--		if (lun_access & TRANSPORT_LUNFLAGS_READ_WRITE) {
--			deve->lun_flags &= ~TRANSPORT_LUNFLAGS_READ_ONLY;
--			deve->lun_flags |= TRANSPORT_LUNFLAGS_READ_WRITE;
--		} else {
--			deve->lun_flags &= ~TRANSPORT_LUNFLAGS_READ_WRITE;
--			deve->lun_flags |= TRANSPORT_LUNFLAGS_READ_ONLY;
--		}
--
-+		ret = core_transition_deve_to_explicit(lun, lun_acl, deve,
-+						       lun_access);
- 		goto out;
- 	}
+ 	core_dev_unexport(lun->lun_se_dev, tpg, lun);
  
--	deve = kzalloc(sizeof(*deve), GFP_ATOMIC);
--	if (!deve) {
--		spin_unlock_irq(&nacl->device_list_lock);
--		return -ENOMEM;
-+	deve = core_alloc_se_dev_entry(lun, lun_acl, mapped_lun, lun_access, nacl);
-+	if (IS_ERR(deve)) {
-+		ret = PTR_ERR(deve);
-+		goto out;
- 	}
- 
--	nacl->device_list[mapped_lun] = deve;
+ 	spin_lock(&tpg->tpg_lun_lock);
+ 	lun->lun_status = TRANSPORT_LUN_STATUS_FREE;
+ 	spin_unlock(&tpg->tpg_lun_lock);
 -
--	atomic_set(&deve->ua_count, 0);
--	atomic_set(&deve->pr_ref_count, 0);
--	spin_lock_init(&deve->ua_lock);
--	INIT_LIST_HEAD(&deve->alua_port_list);
--	INIT_LIST_HEAD(&deve->ua_list);
--	deve->se_lun = lun;
--	deve->se_lun_acl = lun_acl;
--	deve->mapped_lun = mapped_lun;
--
--	if (lun_access & TRANSPORT_LUNFLAGS_READ_WRITE)
--		deve->lun_flags |= TRANSPORT_LUNFLAGS_READ_WRITE;
--	else
--		deve->lun_flags |= TRANSPORT_LUNFLAGS_READ_ONLY;
--
--	deve->creation_time = get_jiffies_64();
--	deve->attach_count++;
--
- 	spin_lock(&port->sep_alua_lock);
- 	list_add_tail(&deve->alua_port_list, &port->sep_alua_list);
- 	spin_unlock(&port->sep_alua_lock);
- 
-+	deve->attach_count++;
- out:
- 	spin_unlock(&nacl->device_list_lock);
- 
+-	return 0;
+ }
 -- 
 1.8.5.3
 
