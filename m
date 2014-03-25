@@ -1,17 +1,40 @@
-From: "Adrian Gillian  Bayford" <clany391@morrisville.edu>
-Subject: You have received 1.5m pounds as donation see link www.bbc.co.uk/news/uk-england-19254228 send name address and phone number for info
-Date: Tue, 25 Mar 2014 11:22:06 +0530
-Message-ID: <35a0a700-19cb-4636-90b8-f489868e5fab__17308.6564675488$1395726770$gmane$org@system38.csntprod.morrisville.edu>
-Reply-To: <adrian_bayford11@yahoo.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="Windows-1251"
-Content-Transfer-Encoding: 7bit
+From: Maurizio Lombardi <mlombard@redhat.com>
+Subject: [PATCH] scsi: fix potential NULL pointer dereference.
+Date: Tue, 25 Mar 2014 13:58:53 +0100
+Message-ID: <1395752333-12185-1-git-send-email-mlombard@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn1bun0252.outbound.protection.outlook.com ([157.56.111.252]:30916
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751972AbaCYFwa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Mar 2014 01:52:30 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:51914 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751787AbaCYM7L (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Mar 2014 08:59:11 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: JBottomley@Parallels.com
+Cc: linux-scsi@vger.kernel.org, m.lombardi85@gmail.com
+
+The scsi_get_command() function returns NULL if
+it fails to allocate the scsi_cmnd structure.
+If this happens, a NULL pointer will be dereferenced.
+
+Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
+---
+ drivers/scsi/scsi_error.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 78b004d..4021849 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -2289,6 +2289,9 @@ scsi_reset_provider(struct scsi_device *dev, int flag)
+ 		return FAILED;
+ 
+ 	scmd = scsi_get_command(dev, GFP_KERNEL);
++	if (!scmd)
++		return FAILED;
++
+ 	blk_rq_init(NULL, &req);
+ 	scmd->request = &req;
+ 
+-- 
+Maurizio Lombardi
 
