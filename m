@@ -1,399 +1,270 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 28/39] scsi: reintroduce scsi_driver.init_command
-Date: Wed, 26 Mar 2014 02:46:54 -0700
-Message-ID: <20140326094654.GB30655@infradead.org>
-References: <20140317132733.789623766@bombadil.infradead.org>
- <20140317133135.514350463@bombadil.infradead.org>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH 19/35] hpsa: add task management for ioaccel mode 2
+Date: Wed, 26 Mar 2014 17:09:00 +0100
+Message-ID: <5332FB9C.3030404@redhat.com>
+References: <20140218195251.15787.55872.stgit@beardog.cce.hp.com> <20140218195645.15787.67456.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20140317133135.514350463@bombadil.infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:45954 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754083AbaCZQQm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 26 Mar 2014 12:16:42 -0400
+In-Reply-To: <20140218195645.15787.67456.stgit@beardog.cce.hp.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>, james.bottomley@hansenpartnership.com
+Cc: dab@hp.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, stephenmcameron@gmail.com, joseph.t.handzik@hp.com, michael.miller@canonical.com, scott.teel@hp.com
 
-This is another one I'd like to send off to James ASAP, can I get some
-reviews?
-
-On Mon, Mar 17, 2014 at 06:28:01AM -0700, Christoph Hellwig wrote:
-> Instead of letting the ULD play games with the prep_fn move back to
-> the model of a central prep_fn with a callback to the ULD.  This
-> already cleans up and shortens the code by itself, and will be required
-> to properly support blk-mq in the SCSI midlayer.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+On 02/18/2014 08:56 PM, Stephen M. Cameron wrote:
+> From: Scott Teel <scott.teel@hp.com>
+>
+> Underlying firmware cannot handle task abort on accelerated path (SSD Smart Path).
+> Change abort requests for accelerated path commands to physical target reset.
+> Send reset request on normal IO path.
+>
+> Signed-off-by: Scott Teel <scott.teel@hp.com>
+> Signed-off-by: Mike Miller <michael.miller@canonical.com>
+> Acked-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 > ---
->  drivers/scsi/scsi_lib.c    |   66 ++++++++++++++++++++++++++------------------
->  drivers/scsi/sd.c          |   46 +++++++++++-------------------
->  drivers/scsi/sr.c          |   19 ++++---------
->  include/scsi/scsi_driver.h |    8 ++----
->  4 files changed, 63 insertions(+), 76 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index a23e8c3..9889c75 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -470,6 +470,16 @@ void scsi_requeue_run_queue(struct work_struct *work)
->  	scsi_run_queue(q);
+>  drivers/scsi/hpsa.c     |  166 ++++++++++++++++++++++++++++++++++++++++++++++-
+>  drivers/scsi/hpsa_cmd.h |    7 +-
+>  2 files changed, 167 insertions(+), 6 deletions(-)
+>
+> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+> index 021d077..8880f54 100644
+> --- a/drivers/scsi/hpsa.c
+> +++ b/drivers/scsi/hpsa.c
+> @@ -2307,6 +2307,85 @@ static int add_ext_target_dev(struct ctlr_info *h,
 >  }
 >  
-> +static void scsi_uninit_command(struct scsi_cmnd *cmd)
+>  /*
+> + * Get address of physical disk used for an ioaccel2 mode command:
+> + *	1. Extract ioaccel2 handle from the command.
+> + *	2. Find a matching ioaccel2 handle from list of physical disks.
+> + *	3. Return:
+> + *		1 and set scsi3addr to address of matching physical
+> + *		0 if no matching physical disk was found.
+> + */
+> +static int hpsa_get_pdisk_of_ioaccel2(struct ctlr_info *h,
+> +	struct CommandList *ioaccel2_cmd_to_abort, unsigned char *scsi3addr)
 > +{
-> +	if (cmd->request->cmd_type == REQ_TYPE_FS) {
-> +		struct scsi_driver *drv = scsi_cmd_to_driver(cmd);
+> +	struct ReportExtendedLUNdata *physicals = NULL;
+> +	int responsesize = 24;	/* size of physical extended response */
+> +	int extended = 2;	/* flag forces reporting 'other dev info'. */
+> +	int reportsize = sizeof(*physicals) + HPSA_MAX_PHYS_LUN * responsesize;
+> +	u32 nphysicals = 0;	/* number of reported physical devs */
+> +	int found = 0;		/* found match (1) or not (0) */
+> +	u32 find;		/* handle we need to match */
+> +	int i;
+> +	struct scsi_cmnd *scmd;	/* scsi command within request being aborted */
+> +	struct hpsa_scsi_dev_t *d; /* device of request being aborted */
+> +	struct io_accel2_cmd *c2a; /* ioaccel2 command to abort */
+> +	u32 it_nexus;		/* 4 byte device handle for the ioaccel2 cmd */
+> +	u32 scsi_nexus;		/* 4 byte device handle for the ioaccel2 cmd */
 > +
-> +		if (drv->uninit_command)
-> +			drv->uninit_command(cmd);
+> +	if (ioaccel2_cmd_to_abort->cmd_type != CMD_IOACCEL2)
+> +		return 0; /* no match */
+> +
+> +	/* point to the ioaccel2 device handle */
+> +	c2a = &h->ioaccel2_cmd_pool[ioaccel2_cmd_to_abort->cmdindex];
+> +	if (c2a == NULL)
+> +		return 0; /* no match */
+> +
+> +	scmd = (struct scsi_cmnd *) ioaccel2_cmd_to_abort->scsi_cmd;
+> +	if (scmd == NULL)
+> +		return 0; /* no match */
+> +
+> +	d = scmd->device->hostdata;
+> +	if (d == NULL)
+> +		return 0; /* no match */
+> +
+> +	it_nexus = cpu_to_le32((u32) d->ioaccel_handle);
+> +	scsi_nexus = cpu_to_le32((u32) c2a->scsi_nexus);
+> +	find = c2a->scsi_nexus;
+> +
+> +	/* Get the list of physical devices */
+> +	physicals = kzalloc(reportsize, GFP_KERNEL);
+
+Hi, please add a test for physicals != NULL
+Tomas 
+
+> +	if (hpsa_scsi_do_report_phys_luns(h, (struct ReportLUNdata *) physicals,
+> +		reportsize, extended)) {
+> +		dev_err(&h->pdev->dev,
+> +			"Can't lookup %s device handle: report physical LUNs failed.\n",
+> +			"HP SSD Smart Path");
+> +		kfree(physicals);
+> +		return 0;
 > +	}
+> +	nphysicals = be32_to_cpu(*((__be32 *)physicals->LUNListLength)) /
+> +							responsesize;
+> +
+> +
+> +	/* find ioaccel2 handle in list of physicals: */
+> +	for (i = 0; i < nphysicals; i++) {
+> +		/* handle is in bytes 28-31 of each lun */
+> +		if (memcmp(&((struct ReportExtendedLUNdata *)
+> +				physicals)->LUN[i][20], &find, 4) != 0) {
+> +			continue; /* didn't match */
+> +		}
+> +		found = 1;
+> +		memcpy(scsi3addr, &((struct ReportExtendedLUNdata *)
+> +					physicals)->LUN[i][0], 8);
+> +		break; /* found it */
+> +	}
+> +
+> +	kfree(physicals);
+> +	if (found)
+> +		return 1;
+> +	else
+> +		return 0;
+> +
+> +}
+> +/*
+>   * Do CISS_REPORT_PHYS and CISS_REPORT_LOG.  Data is returned in physdev,
+>   * logdev.  The number of luns in physdev and logdev are returned in
+>   * *nphysicals and *nlogicals, respectively.
+> @@ -3423,12 +3502,20 @@ static void hpsa_get_tag(struct ctlr_info *h,
+>  			&h->ioaccel_cmd_pool[c->cmdindex];
+>  		*tagupper = cm1->Tag.upper;
+>  		*taglower = cm1->Tag.lower;
+> -	} else {
+> -		*tagupper = c->Header.Tag.upper;
+> -		*taglower = c->Header.Tag.lower;
+> +		return;
+> +	}
+> +	if (c->cmd_type == CMD_IOACCEL2) {
+> +		struct io_accel2_cmd *cm2 = (struct io_accel2_cmd *)
+> +			&h->ioaccel2_cmd_pool[c->cmdindex];
+> +		*tagupper = cm2->Tag.upper;
+> +		*taglower = cm2->Tag.lower;
+> +		return;
+>  	}
+> +	*tagupper = c->Header.Tag.upper;
+> +	*taglower = c->Header.Tag.lower;
+>  }
+>  
+> +
+>  static int hpsa_send_abort(struct ctlr_info *h, unsigned char *scsi3addr,
+>  	struct CommandList *abort, int swizzle)
+>  {
+> @@ -3524,6 +3611,71 @@ static struct CommandList *hpsa_find_cmd_in_queue_by_tag(struct ctlr_info *h,
+>  	return NULL;
+>  }
+>  
+> +/* ioaccel2 path firmware cannot handle abort task requests.
+> + * Change abort requests to physical target reset, and send to the
+> + * address of the physical disk used for the ioaccel 2 command.
+> + * Return 0 on success (IO_OK)
+> + *	 -1 on failure
+> + */
+> +
+> +static int hpsa_send_reset_as_abort_ioaccel2(struct ctlr_info *h,
+> +	unsigned char *scsi3addr, struct CommandList *abort)
+> +{
+> +	int rc = IO_OK;
+> +	struct scsi_cmnd *scmd; /* scsi command within request being aborted */
+> +	struct hpsa_scsi_dev_t *dev; /* device to which scsi cmd was sent */
+> +	unsigned char phys_scsi3addr[8]; /* addr of phys disk with volume */
+> +	unsigned char *psa = &phys_scsi3addr[0];
+> +
+> +	/* Get a pointer to the hpsa logical device. */
+> +	scmd = (struct scsi_cmnd *) abort->scsi_cmd;
+> +	dev = (struct hpsa_scsi_dev_t *)(scmd->device->hostdata);
+> +	if (dev == NULL) {
+> +		dev_warn(&h->pdev->dev,
+> +			"Cannot abort: no device pointer for command.\n");
+> +			return -1; /* not abortable */
+> +	}
+> +
+> +	if (!dev->offload_enabled) {
+> +		dev_warn(&h->pdev->dev,
+> +			"Can't abort: device is not operating in HP SSD Smart Path mode.\n");
+> +		return -1; /* not abortable */
+> +	}
+> +
+> +	/* Incoming scsi3addr is logical addr. We need physical disk addr. */
+> +	if (!hpsa_get_pdisk_of_ioaccel2(h, abort, psa)) {
+> +		dev_warn(&h->pdev->dev, "Can't abort: Failed lookup of physical address.\n");
+> +		return -1; /* not abortable */
+> +	}
+> +
+> +	/* send the reset */
+> +	rc = hpsa_send_reset(h, psa, HPSA_RESET_TYPE_TARGET);
+> +	if (rc != 0) {
+> +		dev_warn(&h->pdev->dev,
+> +			"Reset as abort: Failed on physical device at scsi3addr 0x%02x%02x%02x%02x%02x%02x%02x%02x\n",
+> +			psa[0], psa[1], psa[2], psa[3],
+> +			psa[4], psa[5], psa[6], psa[7]);
+> +		return rc; /* failed to reset */
+> +	}
+> +
+> +	/* wait for device to recover */
+> +	if (wait_for_device_to_become_ready(h, psa) != 0) {
+> +		dev_warn(&h->pdev->dev,
+> +			"Reset as abort: Failed: Device never recovered from reset: 0x%02x%02x%02x%02x%02x%02x%02x%02x\n",
+> +			psa[0], psa[1], psa[2], psa[3],
+> +			psa[4], psa[5], psa[6], psa[7]);
+> +		return -1;  /* failed to recover */
+> +	}
+> +
+> +	/* device recovered */
+> +	dev_info(&h->pdev->dev,
+> +		"Reset as abort: Device recovered from reset: scsi3addr 0x%02x%02x%02x%02x%02x%02x%02x%02x\n",
+> +		psa[0], psa[1], psa[2], psa[3],
+> +		psa[4], psa[5], psa[6], psa[7]);
+> +
+> +	return rc; /* success */
 > +}
 > +
->  /*
->   * Function:	scsi_requeue_command()
->   *
-> @@ -494,6 +504,8 @@ static void scsi_requeue_command(struct request_queue *q, struct scsi_cmnd *cmd)
->  	struct request *req = cmd->request;
->  	unsigned long flags;
+>  /* Some Smart Arrays need the abort tag swizzled, and some don't.  It's hard to
+>   * tell which kind we're dealing with, so we send the abort both ways.  There
+>   * shouldn't be any collisions between swizzled and unswizzled tags due to the
+> @@ -3537,6 +3689,14 @@ static int hpsa_send_abort_both_ways(struct ctlr_info *h,
+>  	struct CommandList *c;
+>  	int rc = 0, rc2 = 0;
 >  
-> +	scsi_uninit_command(cmd);
+> +	/* ioccelerator mode 2 commands should be aborted via the
+> +	 * accelerated path, since RAID path is unaware of these commands,
+> +	 * but underlying firmware can't handle abort TMF.
+> +	 * Change abort to physical device reset.
+> +	 */
+> +	if (abort->cmd_type == CMD_IOACCEL2)
+> +		return hpsa_send_reset_as_abort_ioaccel2(h, scsi3addr, abort);
 > +
->  	spin_lock_irqsave(q->queue_lock, flags);
->  	blk_unprep_request(req);
->  	req->special = NULL;
-> @@ -1078,15 +1090,7 @@ static struct scsi_cmnd *scsi_get_cmd_from_req(struct scsi_device *sdev,
+>  	/* we do not expect to find the swizzled tag in our queue, but
+>  	 * check anyway just to be sure the assumptions which make this
+>  	 * the case haven't become wrong.
+> diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
+> index f6430b4..e048167 100644
+> --- a/drivers/scsi/hpsa_cmd.h
+> +++ b/drivers/scsi/hpsa_cmd.h
+> @@ -82,8 +82,9 @@
+>  #define ATTR_ACA                0x07
 >  
->  int scsi_setup_blk_pc_cmnd(struct scsi_device *sdev, struct request *req)
->  {
-> -	struct scsi_cmnd *cmd;
-> -	int ret = scsi_prep_state_check(sdev, req);
-> -
-> -	if (ret != BLKPREP_OK)
-> -		return ret;
-> -
-> -	cmd = scsi_get_cmd_from_req(sdev, req);
-> -	if (unlikely(!cmd))
-> -		return BLKPREP_DEFER;
-> +	struct scsi_cmnd *cmd = req->special;
+>  /* cdb type */
+> -#define TYPE_CMD				0x00
+> -#define TYPE_MSG				0x01
+> +#define TYPE_CMD		0x00
+> +#define TYPE_MSG		0x01
+> +#define TYPE_IOACCEL2_CMD	0x81 /* 0x81 is not used by hardware */
 >  
->  	/*
->  	 * BLOCK_PC requests may transfer data, in which case they must
-> @@ -1130,15 +1134,11 @@ EXPORT_SYMBOL(scsi_setup_blk_pc_cmnd);
+>  /* Message Types  */
+>  #define HPSA_TASK_MANAGEMENT    0x00
+> @@ -525,7 +526,7 @@ struct io_accel2_cmd {
+>   * FIXME: this can't be all I need mfm
 >   */
->  int scsi_setup_fs_cmnd(struct scsi_device *sdev, struct request *req)
->  {
-> -	struct scsi_cmnd *cmd;
-> -	int ret = scsi_prep_state_check(sdev, req);
-> -
-> -	if (ret != BLKPREP_OK)
-> -		return ret;
-> +	struct scsi_cmnd *cmd = req->special;
->  
->  	if (unlikely(sdev->scsi_dh_data && sdev->scsi_dh_data->scsi_dh
->  			 && sdev->scsi_dh_data->scsi_dh->prep_fn)) {
-> -		ret = sdev->scsi_dh_data->scsi_dh->prep_fn(sdev, req);
-> +		int ret = sdev->scsi_dh_data->scsi_dh->prep_fn(sdev, req);
->  		if (ret != BLKPREP_OK)
->  			return ret;
->  	}
-> @@ -1148,16 +1148,13 @@ int scsi_setup_fs_cmnd(struct scsi_device *sdev, struct request *req)
->  	 */
->  	BUG_ON(!req->nr_phys_segments);
->  
-> -	cmd = scsi_get_cmd_from_req(sdev, req);
-> -	if (unlikely(!cmd))
-> -		return BLKPREP_DEFER;
-> -
->  	memset(cmd->cmnd, 0, BLK_MAX_CDB);
->  	return scsi_init_io(cmd, GFP_ATOMIC);
->  }
->  EXPORT_SYMBOL(scsi_setup_fs_cmnd);
->  
-> -int scsi_prep_state_check(struct scsi_device *sdev, struct request *req)
-> +static int
-> +scsi_prep_state_check(struct scsi_device *sdev, struct request *req)
->  {
->  	int ret = BLKPREP_OK;
->  
-> @@ -1209,9 +1206,9 @@ int scsi_prep_state_check(struct scsi_device *sdev, struct request *req)
->  	}
->  	return ret;
->  }
-> -EXPORT_SYMBOL(scsi_prep_state_check);
->  
-> -int scsi_prep_return(struct request_queue *q, struct request *req, int ret)
-> +static int
-> +scsi_prep_return(struct request_queue *q, struct request *req, int ret)
->  {
->  	struct scsi_device *sdev = q->queuedata;
->  
-> @@ -1242,18 +1239,33 @@ int scsi_prep_return(struct request_queue *q, struct request *req, int ret)
->  
->  	return ret;
->  }
-> -EXPORT_SYMBOL(scsi_prep_return);
->  
-> -int scsi_prep_fn(struct request_queue *q, struct request *req)
-> +static int scsi_prep_fn(struct request_queue *q, struct request *req)
->  {
->  	struct scsi_device *sdev = q->queuedata;
-> -	int ret = BLKPREP_KILL;
-> +	struct scsi_cmnd *cmd;
-> +	int ret;
->  
-> -	if (req->cmd_type == REQ_TYPE_BLOCK_PC)
-> +	ret = scsi_prep_state_check(sdev, req);
-> +	if (ret != BLKPREP_OK)
-> +		goto out;
-> +
-> +	cmd = scsi_get_cmd_from_req(sdev, req);
-> +	if (unlikely(!cmd)) {
-> +		ret = BLKPREP_DEFER;
-> +		goto out;
-> +	}
-> +
-> +	if (req->cmd_type == REQ_TYPE_FS)
-> +		ret = scsi_cmd_to_driver(cmd)->init_command(cmd);
-> +	else if (req->cmd_type == REQ_TYPE_BLOCK_PC)
->  		ret = scsi_setup_blk_pc_cmnd(sdev, req);
-> +	else
-> +		ret = BLKPREP_KILL;
-> +
-> +out:
->  	return scsi_prep_return(q, req, ret);
->  }
-> -EXPORT_SYMBOL(scsi_prep_fn);
->  
->  /*
->   * scsi_dev_queue_ready: if we can send requests to sdev, return 1 else
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index 470954a..33e349b 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -109,6 +109,8 @@ static int sd_suspend_system(struct device *);
->  static int sd_suspend_runtime(struct device *);
->  static int sd_resume(struct device *);
->  static void sd_rescan(struct device *);
-> +static int sd_init_command(struct scsi_cmnd *SCpnt);
-> +static void sd_uninit_command(struct scsi_cmnd *SCpnt);
->  static int sd_done(struct scsi_cmnd *);
->  static int sd_eh_action(struct scsi_cmnd *, int);
->  static void sd_read_capacity(struct scsi_disk *sdkp, unsigned char *buffer);
-> @@ -503,6 +505,8 @@ static struct scsi_driver sd_template = {
->  		.pm		= &sd_pm_ops,
->  	},
->  	.rescan			= sd_rescan,
-> +	.init_command		= sd_init_command,
-> +	.uninit_command		= sd_uninit_command,
->  	.done			= sd_done,
->  	.eh_action		= sd_eh_action,
->  };
-> @@ -838,9 +842,9 @@ static int scsi_setup_flush_cmnd(struct scsi_device *sdp, struct request *rq)
->  	return scsi_setup_blk_pc_cmnd(sdp, rq);
->  }
->  
-> -static void sd_unprep_fn(struct request_queue *q, struct request *rq)
-> +static void sd_uninit_command(struct scsi_cmnd *SCpnt)
->  {
-> -	struct scsi_cmnd *SCpnt = rq->special;
-> +	struct request *rq = SCpnt->request;
->  
->  	if (rq->cmd_flags & REQ_DISCARD) {
->  		free_page((unsigned long)rq->buffer);
-> @@ -853,18 +857,10 @@ static void sd_unprep_fn(struct request_queue *q, struct request *rq)
->  	}
->  }
->  
-> -/**
-> - *	sd_prep_fn - build a scsi (read or write) command from
-> - *	information in the request structure.
-> - *	@SCpnt: pointer to mid-level's per scsi command structure that
-> - *	contains request and into which the scsi command is written
-> - *
-> - *	Returns 1 if successful and 0 if error (or cannot be done now).
-> - **/
-> -static int sd_prep_fn(struct request_queue *q, struct request *rq)
-> +static int sd_init_command(struct scsi_cmnd *SCpnt)
->  {
-> -	struct scsi_cmnd *SCpnt;
-> -	struct scsi_device *sdp = q->queuedata;
-> +	struct request *rq = SCpnt->request;
-> +	struct scsi_device *sdp = SCpnt->device;
->  	struct gendisk *disk = rq->rq_disk;
->  	struct scsi_disk *sdkp;
->  	sector_t block = blk_rq_pos(rq);
-> @@ -886,12 +882,6 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
->  	} else if (rq->cmd_flags & REQ_FLUSH) {
->  		ret = scsi_setup_flush_cmnd(sdp, rq);
->  		goto out;
-> -	} else if (rq->cmd_type == REQ_TYPE_BLOCK_PC) {
-> -		ret = scsi_setup_blk_pc_cmnd(sdp, rq);
-> -		goto out;
-> -	} else if (rq->cmd_type != REQ_TYPE_FS) {
-> -		ret = BLKPREP_KILL;
-> -		goto out;
->  	}
->  	ret = scsi_setup_fs_cmnd(sdp, rq);
->  	if (ret != BLKPREP_OK)
-> @@ -903,11 +893,10 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
->  	 * is used for a killable error condition */
->  	ret = BLKPREP_KILL;
->  
-> -	SCSI_LOG_HLQUEUE(1, scmd_printk(KERN_INFO, SCpnt,
-> -					"sd_prep_fn: block=%llu, "
-> -					"count=%d\n",
-> -					(unsigned long long)block,
-> -					this_count));
-> +	SCSI_LOG_HLQUEUE(1,
-> +		scmd_printk(KERN_INFO, SCpnt,
-> +			"%s: block=%llu, count=%d\n",
-> +			__func__, (unsigned long long)block, this_count));
->  
->  	if (!sdp || !scsi_device_online(sdp) ||
->  	    block + blk_rq_sectors(rq) > get_capacity(disk)) {
-> @@ -1127,7 +1116,7 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
->  	 */
->  	ret = BLKPREP_OK;
->   out:
-> -	return scsi_prep_return(q, rq, ret);
-> + 	return ret;
->  }
->  
->  /**
-> @@ -1663,6 +1652,8 @@ static int sd_done(struct scsi_cmnd *SCpnt)
->  	unsigned char op = SCpnt->cmnd[0];
->  	unsigned char unmap = SCpnt->cmnd[1] & 8;
->  
-> +	sd_uninit_command(SCpnt);
-> +
->  	if (req->cmd_flags & REQ_DISCARD || req->cmd_flags & REQ_WRITE_SAME) {
->  		if (!result) {
->  			good_bytes = blk_rq_bytes(req);
-> @@ -2872,9 +2863,6 @@ static void sd_probe_async(void *data, async_cookie_t cookie)
->  
->  	sd_revalidate_disk(gd);
->  
-> -	blk_queue_prep_rq(sdp->request_queue, sd_prep_fn);
-> -	blk_queue_unprep_rq(sdp->request_queue, sd_unprep_fn);
-> -
->  	gd->driverfs_dev = &sdp->sdev_gendev;
->  	gd->flags = GENHD_FL_EXT_DEVT;
->  	if (sdp->removable) {
-> @@ -3021,8 +3009,6 @@ static int sd_remove(struct device *dev)
->  	scsi_autopm_get_device(sdkp->device);
->  
->  	async_synchronize_full_domain(&scsi_sd_probe_domain);
-> -	blk_queue_prep_rq(sdkp->device->request_queue, scsi_prep_fn);
-> -	blk_queue_unprep_rq(sdkp->device->request_queue, NULL);
->  	device_del(&sdkp->dev);
->  	del_gendisk(sdkp->disk);
->  	sd_shutdown(dev);
-> diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-> index 40d8592..93cbd36 100644
-> --- a/drivers/scsi/sr.c
-> +++ b/drivers/scsi/sr.c
-> @@ -79,6 +79,7 @@ MODULE_ALIAS_SCSI_DEVICE(TYPE_WORM);
->  static DEFINE_MUTEX(sr_mutex);
->  static int sr_probe(struct device *);
->  static int sr_remove(struct device *);
-> +static int sr_init_command(struct scsi_cmnd *SCpnt);
->  static int sr_done(struct scsi_cmnd *);
->  static int sr_runtime_suspend(struct device *dev);
->  
-> @@ -94,6 +95,7 @@ static struct scsi_driver sr_template = {
->  		.remove		= sr_remove,
->  		.pm		= &sr_pm_ops,
->  	},
-> +	.init_command		= sr_init_command,
->  	.done			= sr_done,
->  };
->  
-> @@ -378,21 +380,14 @@ static int sr_done(struct scsi_cmnd *SCpnt)
->  	return good_bytes;
->  }
->  
-> -static int sr_prep_fn(struct request_queue *q, struct request *rq)
-> +static int sr_init_command(struct scsi_cmnd *SCpnt)
->  {
->  	int block = 0, this_count, s_size;
->  	struct scsi_cd *cd;
-> -	struct scsi_cmnd *SCpnt;
-> -	struct scsi_device *sdp = q->queuedata;
-> +	struct request *rq = SCpnt->request;
-> +	struct scsi_device *sdp = SCpnt->device;
->  	int ret;
->  
-> -	if (rq->cmd_type == REQ_TYPE_BLOCK_PC) {
-> -		ret = scsi_setup_blk_pc_cmnd(sdp, rq);
-> -		goto out;
-> -	} else if (rq->cmd_type != REQ_TYPE_FS) {
-> -		ret = BLKPREP_KILL;
-> -		goto out;
-> -	}
->  	ret = scsi_setup_fs_cmnd(sdp, rq);
->  	if (ret != BLKPREP_OK)
->  		goto out;
-> @@ -517,7 +512,7 @@ static int sr_prep_fn(struct request_queue *q, struct request *rq)
->  	 */
->  	ret = BLKPREP_OK;
->   out:
-> -	return scsi_prep_return(q, rq, ret);
-> +	return ret;
->  }
->  
->  static int sr_block_open(struct block_device *bdev, fmode_t mode)
-> @@ -718,7 +713,6 @@ static int sr_probe(struct device *dev)
->  
->  	/* FIXME: need to handle a get_capabilities failure properly ?? */
->  	get_capabilities(cd);
-> -	blk_queue_prep_rq(sdev->request_queue, sr_prep_fn);
->  	sr_vendor_init(cd);
->  
->  	disk->driverfs_dev = &sdev->sdev_gendev;
-> @@ -993,7 +987,6 @@ static int sr_remove(struct device *dev)
->  
->  	scsi_autopm_get_device(cd->device);
->  
-> -	blk_queue_prep_rq(cd->device->request_queue, scsi_prep_fn);
->  	del_gendisk(cd->disk);
->  
->  	mutex_lock(&sr_ref_mutex);
-> diff --git a/include/scsi/scsi_driver.h b/include/scsi/scsi_driver.h
-> index 20fdfc2..b507729 100644
-> --- a/include/scsi/scsi_driver.h
-> +++ b/include/scsi/scsi_driver.h
-> @@ -6,15 +6,14 @@
->  struct module;
->  struct scsi_cmnd;
->  struct scsi_device;
-> -struct request;
-> -struct request_queue;
-> -
->  
->  struct scsi_driver {
->  	struct module		*owner;
->  	struct device_driver	gendrv;
->  
->  	void (*rescan)(struct device *);
-> +	int (*init_command)(struct scsi_cmnd *);
-> +	void (*uninit_command)(struct scsi_cmnd *);
->  	int (*done)(struct scsi_cmnd *);
->  	int (*eh_action)(struct scsi_cmnd *, int);
->  };
-> @@ -31,8 +30,5 @@ extern int scsi_register_interface(struct class_interface *);
->  
->  int scsi_setup_blk_pc_cmnd(struct scsi_device *sdev, struct request *req);
->  int scsi_setup_fs_cmnd(struct scsi_device *sdev, struct request *req);
-> -int scsi_prep_state_check(struct scsi_device *sdev, struct request *req);
-> -int scsi_prep_return(struct request_queue *q, struct request *req, int ret);
-> -int scsi_prep_fn(struct request_queue *, struct request *);
->  
->  #endif /* _SCSI_SCSI_DRIVER_H */
-> -- 
-> 1.7.10.4
-> 
-> 
+>  #define IOACCEL2_IU_TYPE	0x40
+> -#define IU_TYPE_TMF		0x41
+> +#define IOACCEL2_IU_TMF_TYPE	0x41
+>  #define IOACCEL2_DIR_NO_DATA	0x00
+>  #define IOACCEL2_DIR_DATA_IN	0x01
+>  #define IOACCEL2_DIR_DATA_OUT	0x02
+>
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
----end quoted text---
+
