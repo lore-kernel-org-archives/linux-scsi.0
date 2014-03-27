@@ -1,41 +1,100 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 4/4] scsi: handle command allocation failure in scsi_reset_provider
-Date: Thu, 27 Mar 2014 17:14:22 +0100
-Message-ID: <1395936862-6938-5-git-send-email-hch@lst.de>
-References: <1395936862-6938-1-git-send-email-hch@lst.de>
+From: Jayamohan Kallickal <jayamohank@gmail.com>
+Subject: [PATCH 1/6] be2iscsi: Fix retrieving MCCQ_WRB in non-embedded Mbox path
+Date: Thu, 27 Mar 2014 12:39:25 -0400
+Message-ID: <1395938371-2149-1-git-send-email-Jayamohan.Kallickal@emulex.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:45783 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756879AbaC0Qar (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Mar 2014 12:30:47 -0400
-In-Reply-To: <1395936862-6938-1-git-send-email-hch@lst.de>
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:49050 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754755AbaC0Qjn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Mar 2014 12:39:43 -0400
+Received: by mail-pa0-f41.google.com with SMTP id fa1so3742271pad.28
+        for <linux-scsi@vger.kernel.org>; Thu, 27 Mar 2014 09:39:42 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <JBottomley@Parallels.com>
-Cc: linux-scsi@vger.kernel.org
+To: jbottomley@parallels.com, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
+Cc: Jayamohan Kallickal <Jayamohan.Kallickal@emulex.com>, John Soni Jose <sony.john-n@emulex.com>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+ Getting WRB for MCCQ posting was done before looking if tag is
+ available or not. This lead to increase phba->ctrl.mcc_obj.q.used
+ variable and the WARN_ON message was coming from wrb_from_mccq().
+ Moved getting wrb from mccq after checking for the tag.
+
+ In wrb_from_mccq(), memset is done before returning wrb ptr.
+ Removed memset of mccq wrb from all other functions.
+
+Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
+Signed-off-by: Jayamohan Kallickal <Jayamohan.Kallickal@emulex.com>
 ---
- drivers/scsi/scsi_error.c |    6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/scsi/be2iscsi/be_mgmt.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 771c16b..b989d31 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -2294,6 +2294,12 @@ scsi_reset_provider(struct scsi_device *dev, int flag)
+diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
+index 088bdf7..712911f 100644
+--- a/drivers/scsi/be2iscsi/be_mgmt.c
++++ b/drivers/scsi/be2iscsi/be_mgmt.c
+@@ -447,8 +447,8 @@ unsigned int mgmt_vendor_specific_fw_cmd(struct be_ctrl_info *ctrl,
+ 					 struct be_dma_mem *nonemb_cmd)
+ {
+ 	struct be_cmd_resp_hdr *resp;
+-	struct be_mcc_wrb *wrb = wrb_from_mccq(phba);
+-	struct be_sge *mcc_sge = nonembedded_sgl(wrb);
++	struct be_mcc_wrb *wrb;
++	struct be_sge *mcc_sge;
+ 	unsigned int tag = 0;
+ 	struct iscsi_bsg_request *bsg_req = job->request;
+ 	struct be_bsg_vendor_cmd *req = nonemb_cmd->va;
+@@ -465,7 +465,6 @@ unsigned int mgmt_vendor_specific_fw_cmd(struct be_ctrl_info *ctrl,
+ 	req->sector = sector;
+ 	req->offset = offset;
+ 	spin_lock(&ctrl->mbox_lock);
+-	memset(wrb, 0, sizeof(*wrb));
+ 
+ 	switch (bsg_req->rqst_data.h_vendor.vendor_cmd[0]) {
+ 	case BEISCSI_WRITE_FLASH:
+@@ -495,6 +494,8 @@ unsigned int mgmt_vendor_specific_fw_cmd(struct be_ctrl_info *ctrl,
+ 		return tag;
  	}
  
- 	scmd = scsi_get_command(dev, GFP_KERNEL);
-+	if (!scmd) {
-+		rtn = FAILED;
-+		put_device(&dev->sdev_gendev);
-+		goto out_put_autopm_host;
-+	}
++	wrb = wrb_from_mccq(phba);
++	mcc_sge = nonembedded_sgl(wrb);
+ 	be_wrb_hdr_prepare(wrb, nonemb_cmd->size, false,
+ 			   job->request_payload.sg_cnt);
+ 	mcc_sge->pa_hi = cpu_to_le32(upper_32_bits(nonemb_cmd->dma));
+@@ -525,7 +526,6 @@ int mgmt_epfw_cleanup(struct beiscsi_hba *phba, unsigned short ulp_num)
+ 	int status = 0;
+ 
+ 	spin_lock(&ctrl->mbox_lock);
+-	memset(wrb, 0, sizeof(*wrb));
+ 
+ 	be_wrb_hdr_prepare(wrb, sizeof(*req), true, 0);
+ 	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_ISCSI,
+@@ -702,7 +702,6 @@ int mgmt_open_connection(struct beiscsi_hba *phba,
+ 		return tag;
+ 	}
+ 	wrb = wrb_from_mccq(phba);
+-	memset(wrb, 0, sizeof(*wrb));
+ 	sge = nonembedded_sgl(wrb);
+ 
+ 	req = nonemb_cmd->va;
+@@ -804,7 +803,7 @@ static int mgmt_exec_nonemb_cmd(struct beiscsi_hba *phba,
+ 				int resp_buf_len)
+ {
+ 	struct be_ctrl_info *ctrl = &phba->ctrl;
+-	struct be_mcc_wrb *wrb = wrb_from_mccq(phba);
++	struct be_mcc_wrb *wrb;
+ 	struct be_sge *sge;
+ 	unsigned int tag;
+ 	int rc = 0;
+@@ -816,7 +815,8 @@ static int mgmt_exec_nonemb_cmd(struct beiscsi_hba *phba,
+ 		rc = -ENOMEM;
+ 		goto free_cmd;
+ 	}
+-	memset(wrb, 0, sizeof(*wrb));
 +
- 	blk_rq_init(NULL, &req);
- 	scmd->request = &req;
++	wrb = wrb_from_mccq(phba);
+ 	wrb->tag0 |= tag;
+ 	sge = nonembedded_sgl(wrb);
  
 -- 
-1.7.10.4
+1.8.5.3
 
