@@ -1,13 +1,13 @@
 From: Matthew Wilcox <matthew.r.wilcox@intel.com>
-Subject: [PATCH 4/7] mpt2sas: Remove use of DEF_SCSI_QCMD
-Date: Thu, 27 Mar 2014 16:40:33 -0400
-Message-ID: <3a4ad03264073e94f3453bda0955300ad96f5e95.1395952569.git.matthew.r.wilcox@intel.com>
+Subject: [PATCH 7/7] fusion: Remove use of DEF_SCSI_QCMD
+Date: Thu, 27 Mar 2014 16:40:36 -0400
+Message-ID: <5dff5504277304a24a84295b8e0d128fcd5c99cd.1395952569.git.matthew.r.wilcox@intel.com>
 References: <cover.1395952569.git.matthew.r.wilcox@intel.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from mga11.intel.com ([192.55.52.93]:3867 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755086AbaC0Uky (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Mar 2014 16:40:54 -0400
+	id S1757393AbaC0Ukz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Mar 2014 16:40:55 -0400
 In-Reply-To: <cover.1395952569.git.matthew.r.wilcox@intel.com>
 In-Reply-To: <cover.1395952569.git.matthew.r.wilcox@intel.com>
 References: <cover.1395952569.git.matthew.r.wilcox@intel.com>
@@ -21,51 +21,191 @@ scalability improvement.
 
 Signed-off-by: Matthew Wilcox <matthew.r.wilcox@intel.com>
 ---
- drivers/scsi/mpt2sas/mpt2sas_scsih.c | 9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
+ drivers/message/fusion/mptfc.c    | 12 +++++-------
+ drivers/message/fusion/mptsas.c   | 10 ++++------
+ drivers/message/fusion/mptscsih.c |  8 +++-----
+ drivers/message/fusion/mptscsih.h |  2 +-
+ drivers/message/fusion/mptspi.c   | 12 +++++-------
+ 5 files changed, 18 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-index 33586a3..7351843 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -3950,9 +3950,9 @@ _scsih_setup_direct_io(struct MPT2SAS_ADAPTER *ioc, struct scsi_cmnd *scmd,
-  * SCSI_MLQUEUE_HOST_BUSY if the entire host queue is full
-  */
- static int
--_scsih_qcmd_lck(struct scsi_cmnd *scmd, void (*done)(struct scsi_cmnd *))
-+_scsih_qcmd(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
- {
--	struct MPT2SAS_ADAPTER *ioc = shost_priv(scmd->device->host);
-+	struct MPT2SAS_ADAPTER *ioc = shost_priv(shost);
- 	struct MPT2SAS_DEVICE *sas_device_priv_data;
- 	struct MPT2SAS_TARGET *sas_target_priv_data;
- 	struct _raid_device *raid_device;
-@@ -3960,7 +3960,6 @@ _scsih_qcmd_lck(struct scsi_cmnd *scmd, void (*done)(struct scsi_cmnd *))
- 	u32 mpi_control;
- 	u16 smid;
- 
--	scmd->scsi_done = done;
- 	sas_device_priv_data = scmd->device->hostdata;
- 	if (!sas_device_priv_data || !sas_device_priv_data->sas_target) {
- 		scmd->result = DID_NO_CONNECT << 16;
-@@ -4036,7 +4035,7 @@ _scsih_qcmd_lck(struct scsi_cmnd *scmd, void (*done)(struct scsi_cmnd *))
- 	    MPT_TARGET_FLAGS_RAID_COMPONENT)
- 		mpi_request->Function = MPI2_FUNCTION_RAID_SCSI_IO_PASSTHROUGH;
- 	else
--		mpi_request->Function = MPI2_FUNCTION_SCSI_IO_REQUEST;
-+	mpi_request->Function = MPI2_FUNCTION_SCSI_IO_REQUEST;
- 	mpi_request->DevHandle =
- 	    cpu_to_le16(sas_device_priv_data->sas_target->handle);
- 	mpi_request->DataLength = cpu_to_le32(scsi_bufflen(scmd));
-@@ -4080,8 +4079,6 @@ _scsih_qcmd_lck(struct scsi_cmnd *scmd, void (*done)(struct scsi_cmnd *))
- 	return SCSI_MLQUEUE_HOST_BUSY;
+diff --git a/drivers/message/fusion/mptfc.c b/drivers/message/fusion/mptfc.c
+index fd75108..02a3eef 100644
+--- a/drivers/message/fusion/mptfc.c
++++ b/drivers/message/fusion/mptfc.c
+@@ -649,7 +649,7 @@ mptfc_slave_alloc(struct scsi_device *sdev)
  }
  
--static DEF_SCSI_QCMD(_scsih_qcmd)
+ static int
+-mptfc_qcmd_lck(struct scsi_cmnd *SCpnt, void (*done)(struct scsi_cmnd *))
++mptfc_qcmd(struct Scsi_Host *shost, struct scsi_cmnd *SCpnt)
+ {
+ 	struct mptfc_rport_info	*ri;
+ 	struct fc_rport	*rport = starget_to_rport(scsi_target(SCpnt->device));
+@@ -658,14 +658,14 @@ mptfc_qcmd_lck(struct scsi_cmnd *SCpnt, void (*done)(struct scsi_cmnd *))
+ 
+ 	if (!vdevice || !vdevice->vtarget) {
+ 		SCpnt->result = DID_NO_CONNECT << 16;
+-		done(SCpnt);
++		SCpnt->scsi_done(SCpnt);
+ 		return 0;
+ 	}
+ 
+ 	err = fc_remote_port_chkready(rport);
+ 	if (unlikely(err)) {
+ 		SCpnt->result = err;
+-		done(SCpnt);
++		SCpnt->scsi_done(SCpnt);
+ 		return 0;
+ 	}
+ 
+@@ -673,15 +673,13 @@ mptfc_qcmd_lck(struct scsi_cmnd *SCpnt, void (*done)(struct scsi_cmnd *))
+ 	ri = *((struct mptfc_rport_info **)rport->dd_data);
+ 	if (unlikely(!ri)) {
+ 		SCpnt->result = DID_IMM_RETRY << 16;
+-		done(SCpnt);
++		SCpnt->scsi_done(SCpnt);
+ 		return 0;
+ 	}
+ 
+-	return mptscsih_qcmd(SCpnt,done);
++	return mptscsih_qcmd(SCpnt);
+ }
+ 
+-static DEF_SCSI_QCMD(mptfc_qcmd)
+-
+ /*
+  *	mptfc_display_port_link_speed - displaying link speed
+  *	@ioc: Pointer to MPT_ADAPTER structure
+diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
+index 00d339c..711fcb5 100644
+--- a/drivers/message/fusion/mptsas.c
++++ b/drivers/message/fusion/mptsas.c
+@@ -1896,7 +1896,7 @@ mptsas_slave_alloc(struct scsi_device *sdev)
+ }
+ 
+ static int
+-mptsas_qcmd_lck(struct scsi_cmnd *SCpnt, void (*done)(struct scsi_cmnd *))
++mptsas_qcmd(struct Scsi_Host *shost, struct scsi_cmnd *SCpnt)
+ {
+ 	MPT_SCSI_HOST	*hd;
+ 	MPT_ADAPTER	*ioc;
+@@ -1904,11 +1904,11 @@ mptsas_qcmd_lck(struct scsi_cmnd *SCpnt, void (*done)(struct scsi_cmnd *))
+ 
+ 	if (!vdevice || !vdevice->vtarget || vdevice->vtarget->deleted) {
+ 		SCpnt->result = DID_NO_CONNECT << 16;
+-		done(SCpnt);
++		SCpnt->scsi_done(SCpnt);
+ 		return 0;
+ 	}
+ 
+-	hd = shost_priv(SCpnt->device->host);
++	hd = shost_priv(shost);
+ 	ioc = hd->ioc;
+ 
+ 	if (ioc->sas_discovery_quiesce_io)
+@@ -1917,11 +1917,9 @@ mptsas_qcmd_lck(struct scsi_cmnd *SCpnt, void (*done)(struct scsi_cmnd *))
+ 	if (ioc->debug_level & MPT_DEBUG_SCSI)
+ 		scsi_print_command(SCpnt);
+ 
+-	return mptscsih_qcmd(SCpnt,done);
++	return mptscsih_qcmd(SCpnt);
+ }
+ 
+-static DEF_SCSI_QCMD(mptsas_qcmd)
 -
  /**
-  * _scsih_normalize_sense - normalize descriptor and fixed format sense data
-  * @sense_buffer: sense data returned by target
+  *	mptsas_mptsas_eh_timed_out - resets the scsi_cmnd timeout
+  *		if the device under question is currently in the
+diff --git a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mptscsih.c
+index 727819c..2a1c6f2 100644
+--- a/drivers/message/fusion/mptscsih.c
++++ b/drivers/message/fusion/mptscsih.c
+@@ -1304,7 +1304,6 @@ int mptscsih_show_info(struct seq_file *m, struct Scsi_Host *host)
+ /**
+  *	mptscsih_qcmd - Primary Fusion MPT SCSI initiator IO start routine.
+  *	@SCpnt: Pointer to scsi_cmnd structure
+- *	@done: Pointer SCSI mid-layer IO completion function
+  *
+  *	(linux scsi_host_template.queuecommand routine)
+  *	This is the primary SCSI IO start routine.  Create a MPI SCSIIORequest
+@@ -1313,7 +1312,7 @@ int mptscsih_show_info(struct seq_file *m, struct Scsi_Host *host)
+  *	Returns 0. (rtn value discarded by linux scsi mid-layer)
+  */
+ int
+-mptscsih_qcmd(struct scsi_cmnd *SCpnt, void (*done)(struct scsi_cmnd *))
++mptscsih_qcmd(struct scsi_cmnd *SCpnt)
+ {
+ 	MPT_SCSI_HOST		*hd;
+ 	MPT_FRAME_HDR		*mf;
+@@ -1329,10 +1328,9 @@ mptscsih_qcmd(struct scsi_cmnd *SCpnt, void (*done)(struct scsi_cmnd *))
+ 
+ 	hd = shost_priv(SCpnt->device->host);
+ 	ioc = hd->ioc;
+-	SCpnt->scsi_done = done;
+ 
+-	dmfprintk(ioc, printk(MYIOC_s_DEBUG_FMT "qcmd: SCpnt=%p, done()=%p\n",
+-		ioc->name, SCpnt, done));
++	dmfprintk(ioc, printk(MYIOC_s_DEBUG_FMT "qcmd: SCpnt=%p\n",
++		ioc->name, SCpnt));
+ 
+ 	if (ioc->taskmgmt_quiesce_io)
+ 		return SCSI_MLQUEUE_HOST_BUSY;
+diff --git a/drivers/message/fusion/mptscsih.h b/drivers/message/fusion/mptscsih.h
+index 83f5031..99e3390 100644
+--- a/drivers/message/fusion/mptscsih.h
++++ b/drivers/message/fusion/mptscsih.h
+@@ -113,7 +113,7 @@ extern int mptscsih_resume(struct pci_dev *pdev);
+ #endif
+ extern int mptscsih_show_info(struct seq_file *, struct Scsi_Host *);
+ extern const char * mptscsih_info(struct Scsi_Host *SChost);
+-extern int mptscsih_qcmd(struct scsi_cmnd *SCpnt, void (*done)(struct scsi_cmnd *));
++extern int mptscsih_qcmd(struct scsi_cmnd *SCpnt);
+ extern int mptscsih_IssueTaskMgmt(MPT_SCSI_HOST *hd, u8 type, u8 channel,
+ 	u8 id, int lun, int ctx2abort, ulong timeout);
+ extern void mptscsih_slave_destroy(struct scsi_device *device);
+diff --git a/drivers/message/fusion/mptspi.c b/drivers/message/fusion/mptspi.c
+index 5653e50..49d1133 100644
+--- a/drivers/message/fusion/mptspi.c
++++ b/drivers/message/fusion/mptspi.c
+@@ -780,33 +780,31 @@ static int mptspi_slave_configure(struct scsi_device *sdev)
+ }
+ 
+ static int
+-mptspi_qcmd_lck(struct scsi_cmnd *SCpnt, void (*done)(struct scsi_cmnd *))
++mptspi_qcmd(struct Scsi_Host *shost, struct scsi_cmnd *SCpnt)
+ {
+-	struct _MPT_SCSI_HOST *hd = shost_priv(SCpnt->device->host);
++	struct _MPT_SCSI_HOST *hd = shost_priv(shost);
+ 	VirtDevice	*vdevice = SCpnt->device->hostdata;
+ 	MPT_ADAPTER *ioc = hd->ioc;
+ 
+ 	if (!vdevice || !vdevice->vtarget) {
+ 		SCpnt->result = DID_NO_CONNECT << 16;
+-		done(SCpnt);
++		SCpnt->scsi_done(SCpnt);
+ 		return 0;
+ 	}
+ 
+ 	if (SCpnt->device->channel == 1 &&
+ 		mptscsih_is_phys_disk(ioc, 0, SCpnt->device->id) == 0) {
+ 		SCpnt->result = DID_NO_CONNECT << 16;
+-		done(SCpnt);
++		SCpnt->scsi_done(SCpnt);
+ 		return 0;
+ 	}
+ 
+ 	if (spi_dv_pending(scsi_target(SCpnt->device)))
+ 		ddvprintk(ioc, scsi_print_command(SCpnt));
+ 
+-	return mptscsih_qcmd(SCpnt,done);
++	return mptscsih_qcmd(SCpnt);
+ }
+ 
+-static DEF_SCSI_QCMD(mptspi_qcmd)
+-
+ static void mptspi_slave_destroy(struct scsi_device *sdev)
+ {
+ 	struct scsi_target *starget = scsi_target(sdev);
 -- 
 1.9.0
 
