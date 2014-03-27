@@ -1,73 +1,108 @@
-From: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
-Subject: [linux-next] scsi_attach_vpd() warning at mm/page_alloc.c:2497
-Date: Thu, 27 Mar 2014 13:19:31 +0300
-Message-ID: <20140327101734.GA7022@swordfish.minsk.epam.com>
+From: =?ISO-8859-1?Q?Rapha=EBl_Bauduin?= <rblists@gmail.com>
+Subject: strange observation, the queue depth is (64) meanwhile fw queue depth
+ (65)
+Date: Thu, 27 Mar 2014 15:21:29 +0100
+Message-ID: <lh1c4r$uss$1@ger.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from plane.gmane.org ([80.91.229.3]:52669 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751519AbaC0OZG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Mar 2014 10:25:06 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <lnx-linux-scsi@m.gmane.org>)
+	id 1WTBEu-00087g-B5
+	for linux-scsi@vger.kernel.org; Thu, 27 Mar 2014 15:25:04 +0100
+Received: from 217.64.254.218.mactelecom.net ([217.64.254.218])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Thu, 27 Mar 2014 15:25:04 +0100
+Received: from rblists by 217.64.254.218.mactelecom.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Thu, 27 Mar 2014 15:25:04 +0100
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Hello,
+Hi,
 
-[    1.971778] ------------[ cut here ]------------
-[    1.971960] WARNING: CPU: 1 PID: 6 at mm/page_alloc.c:2497 __alloc_pages_nodemask+0x1b9/0x693()
-[    1.972246] Modules linked in: sd_mod ahci
-[    1.972604] CPU: 1 PID: 6 Comm: kworker/u8:0 Not tainted 3.14.0-rc8-next-20140327-dbg-dirty #202
-[    1.972890] Hardware name: Acer             Aspire 5741G    /Aspire 5741G    , BIOS V1.20 02/08/2011
-[    1.973182] Workqueue: events_unbound async_run_entry_fn
-[    1.973417]  0000000000000000 ffff8801534d5af0 ffffffff813ad822 0000000000000000
-[    1.973994]  ffff8801534d5b28 ffffffff8103c03c ffffffff810ad4e5 00000000001000d0
-[    1.974529]  ffffffff81656fc8 0000000000000000 ffffffff81656fc0 ffff8801534d5b38
-[    1.975125] Call Trace:
-[    1.975306]  [<ffffffff813ad822>] dump_stack+0x4e/0x7a
-[    1.975488]  [<ffffffff8103c03c>] warn_slowpath_common+0x75/0x8e
-[    1.975670]  [<ffffffff810ad4e5>] ? __alloc_pages_nodemask+0x1b9/0x693
-[    1.975853]  [<ffffffff8103c0f4>] warn_slowpath_null+0x15/0x17
-[    1.976035]  [<ffffffff810ad4e5>] __alloc_pages_nodemask+0x1b9/0x693
-[    1.976220]  [<ffffffff81074220>] ? console_unlock+0x2dd/0x2fa
-[    1.976404]  [<ffffffff812a08be>] ? scsi_execute_req_flags+0x9c/0xb3
-[    1.976587]  [<ffffffff810ad9d1>] __get_free_pages+0x12/0x3f
-[    1.976771]  [<ffffffff810d5c66>] __kmalloc+0x37/0x112
-[    1.976951]  [<ffffffff8129b5f4>] scsi_attach_vpd+0x41/0x1a8
-[    1.977133]  [<ffffffff812a3d81>] scsi_probe_and_add_lun+0x8ec/0xa21
-[    1.977317]  [<ffffffff812a40f8>] __scsi_add_device+0xce/0x10a
-[    1.977501]  [<ffffffff812b109a>] ata_scsi_scan_host+0x60/0x142
-[    1.977683]  [<ffffffff812ad6e9>] async_port_probe+0x45/0x4a
-[    1.977873]  [<ffffffff81057e18>] async_run_entry_fn+0x5a/0x110
-[    1.978061]  [<ffffffff8104ee52>] process_one_work+0x1c9/0x2e9
-[    1.978243]  [<ffffffff8104f3ec>] worker_thread+0x1d3/0x2bd
-[    1.978424]  [<ffffffff8104f219>] ? rescuer_thread+0x27d/0x27d
-[    1.978606]  [<ffffffff81053ab4>] kthread+0xd6/0xde
-[    1.978786]  [<ffffffff810539de>] ? kthread_create_on_node+0x162/0x162
-[    1.978970]  [<ffffffff813b2efc>] ret_from_fork+0x7c/0xb0
-[    1.979151]  [<ffffffff810539de>] ? kthread_create_on_node+0x162/0x162
-[    1.979334] ---[ end trace ca7c5bd74b0dca21 ]---
+I have these messages logged on 2 different servers (one production, on=
+e=20
+stand-by) when using recent vanilla kernels.
 
+I have found references to these logs, but this was supposedly=20
+introduced in the 2.6.31 kernel.
+However, running kernel 2.6.32.61, this message does not appear. It=20
+appears when running kernel versions 3.12.15, 3.13.1 and 3.13.6. I=20
+haven't tested other intermediate kernel versions.
 
-scsi_attach_vpd() (at pg0 label) attempts to firstly allocate 255 and later 134217730 bytes.
+We had once the root filesystem remounted read-only on the production=20
+server, and we found no significant error messages other than the one i=
+n=20
+the subject of this mail. This makes me wary to ignore these messages,=20
+and since then we went back to kernel 2.6.32.61.... I've tried running=20
+kernels mentioned above on the stand-by server, and get the errors ther=
+e=20
+too.
 
+Here is the exact error message from dmesg:
 
+[ 3776.788033] sd 7:1:0:0: strange observation, the queue depth is (64)=
+=20
+meanwhile fw queue depth (65)
 
----
+and below are some other extracts from dmesg.
 
-general question,
+Both servers have these errors on a RAID1 volume on which the root=20
+partition is located.
 
-scsi_attach_vpd() is sure that scsi_vpd_inquiry() returns `ret < 0' in case of
-an error and `ret > 0' otherwise:
+I hope someone can help me to resolve this. I can send any information=20
+you might require.
 
-	"Returns size of the vpd page on success or a negative error number."
+Thanks in advance
 
-while this is not exactly true.
-
-scsi_vpd_inquiry() indeed can return -EINVAL, but usually it returns
-scsi_execute_req()->scsi_execute_req_flags()->scsi_execute() status, which
-has different error indication and can be, e.g. for failed blk_get_request()
-in scsi_execute() or failed sense kzalloc() in scsi_execute_req_flags(),
-`DRIVER_ERROR << 24'.
+Rapha=EBl
 
 
-	-ss
+[    2.978053] SCSI subsystem initialized
+[    2.979969] Fusion MPT base driver 3.04.20
+[    2.980059] Copyright (c) 1999-2008 LSI Corporation
+
+
+[    3.712015] ioc0: LSISAS1064E B3: Capabilities=3D{Initiator}
+
+[   16.516096] scsi7 : ioc0: LSISAS1064E B3, FwRev=3D01182b00h, Ports=3D=
+1,=20
+MaxQ=3D286, IRQ=3D16
+[   16.536672] mptsas: ioc0: attaching ssp device: fw_channel 0, fw_id=20
+2, phy 0, sas_addr 0x500000e01ee1a602
+[   16.538312] scsi 7:0:0:0: Direct-Access     FUJITSU  MBC2073RC=20
+  5201 PQ: 0 ANSI: 5
+[   16.542605] mptsas: ioc0: attaching ssp device: fw_channel 0, fw_id=20
+1, phy 1, sas_addr 0x500000e01edab602
+[   16.544158] scsi 7:0:1:0: Direct-Access     FUJITSU  MBC2073RC=20
+  5201 PQ: 0 ANSI: 5
+[   16.548445] mptsas: ioc0: attaching raid volume, channel 1, id 0
+[   16.549304] scsi 7:1:0:0: Direct-Access     LSILOGIC Logical Volume=20
+  3000 PQ: 0 ANSI: 2
+[   16.556492] sd 7:1:0:0: [sdr] 140623872 512-byte logical blocks:=20
+(71.9 GB/67.0 GiB)
+[   16.556824] sd 7:1:0:0: [sdr] Write Protect is off
+[   16.556895] sd 7:1:0:0: [sdr] Mode Sense: 03 00 00 08
+[   16.557109] sd 7:1:0:0: [sdr] No Caching mode page found
+[   16.557180] sd 7:1:0:0: [sdr] Assuming drive cache: write through
+[   16.558258] sd 7:1:0:0: [sdr] No Caching mode page found
+[   16.558329] sd 7:1:0:0: [sdr] Assuming drive cache: write through
+[   16.575039]  sdr: sdr1 sdr2
+[   16.576018] sd 7:1:0:0: [sdr] No Caching mode page found
+[   16.576088] sd 7:1:0:0: [sdr] Assuming drive cache: write through
+[   16.576356] sd 7:1:0:0: [sdr] Attached SCSI disk
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
