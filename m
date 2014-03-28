@@ -1,153 +1,105 @@
-From: Tej Parkash <tej.parkash@qlogic.com>
-Subject: RE: [PATCH 01/10] qla4xxx: Do not wait for IO completion, after
- issuing stop_firmware
-Date: Fri, 28 Mar 2014 02:03:45 +0000
-Message-ID: <E7E62F165003714F8F704DCA1C401CB846C1E2B8@avmb2.qlogic.org>
-References: <1393297625-928-1-git-send-email-vikas.chaudhary@qlogic.com>
- <1393297625-928-2-git-send-email-vikas.chaudhary@qlogic.com>,<5334CB23.2010206@cs.wisc.edu>
-Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_000_E7E62F165003714F8F704DCA1C401CB846C1E2B8avmb2qlogicorg_"
+From: "Dr. Greg Wettstein" <greg@wind.enjellic.com>
+Subject: Re: [Scst-devel] OSS target - VMware SCSI reservation bug conformity.
+Date: Fri, 28 Mar 2014 00:01:40 -0500
+Message-ID: <201403280501.s2S51eC7027504@wind.enjellic.com>
+References: <tommyapeldk@gmail.com>
+Reply-To: greg@enjellic.com
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:40800 "EHLO
-	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757010AbaC1CDr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Mar 2014 22:03:47 -0400
-Received: from pps.filterd (m0045602.ppops.net [127.0.0.1])
-	by mx0a-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id s2S1xDex003872
-	for <linux-scsi@vger.kernel.org>; Thu, 27 Mar 2014 19:03:46 -0700
-Received: from avcashub1.qlogic.com (avcashub2.qlogic.com [198.70.193.116])
-	by mx0a-0016ce01.pphosted.com with ESMTP id 1jvq780phr-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Thu, 27 Mar 2014 19:03:46 -0700
-In-Reply-To: <5334CB23.2010206@cs.wisc.edu>
-Content-Language: en-US
+Received: from wind.enjellic.com ([76.10.64.91]:34130 "EHLO wind.enjellic.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752614AbaC1FBv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 Mar 2014 01:01:51 -0400
+In-Reply-To: Tommy Apel <tommyapeldk@gmail.com>
+       "Re: [Scst-devel] OSS target - VMware SCSI reservation bug conformity." (Mar 27,  9:22pm)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>, Vikas Chaudhary <vikas.chaudhary@qlogic.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, zz-930433 <lalit.chandivade@qlogic.com>
+To: Tommy Apel <tommyapeldk@gmail.com>
+Cc: scst-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
 
---_000_E7E62F165003714F8F704DCA1C401CB846C1E2B8avmb2qlogicorg_
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+On Mar 27,  9:22pm, Tommy Apel wrote:
+} Subject: Re: [Scst-devel] OSS target - VMware SCSI reservation bug conform
 
-Hi Mike,
+Good morning, hope the end of the week is going well for everyone.
 
-qla4xxx_hw_reset is specific to ISP4032, which does not come in same block,=
- there is check of ISP80XX (exclude ISP4032) before we enter this block.
+> 2014-03-27 19:21 GMT+01:00 Dr. Greg Wettstein <greg@wind.enjellic.com>:
+> > Hi, hope the week is going well for everyone.
+> >
+> > There appears to be evidence that VMware has an issue with exact SCSI
+> > standards compliance when it comes to handling corner cases with SCSI
+> > reservation requests.  It appears as if Dell is pushing firmware hot
+> > fixes for the EqualLogic controllers to work around the issue.
 
-Let me know if any other concern.
-
-Thanks
-Tej
-________________________________________
-From: Mike Christie [michaelc@cs.wisc.edu]
-Sent: Friday, March 28, 2014 6:36 AM
-To: Vikas Chaudhary; jbottomley@parallels.com
-Cc: linux-scsi; zz-930433; Tej Parkash
-Subject: Re: [PATCH 01/10] qla4xxx: Do not wait for IO completion, after is=
-suing stop_firmware
-
-On 02/24/2014 07:06 PM, vikas.chaudhary@qlogic.com wrote:
-> From: Tej Parkash <tej.parkash@qlogic.com>
+> Hello lists, excuse me for being a little blunt here, but if what
+> Dr.  Greg is telling here is correct, shouldn't it be vmware that
+> fixed their BUG in their software rather that everybody else asking
+> "how high" when vmware says jump ?
 >
-> Problem:
-> iSCSI stop_firmware mailbox command is not completing outstanding IO.
+> I mean, implementing non-standard things to a standard compliant
+> stack is sort of the wrong path to take I should think, the fact
+> that vmware has a but in their software, closed source I might add,
+> they should fix it not the OSS community.
 >
+> Maybe I'm wrong here, but I believe that standards were made so that
+> everybody could implement a look-the-same / feel-the-same interface
+> instead of inventing the wheel over and over again for every brand
+> known to man kind.
 
+Very understandable sentiments and ones which I certainly sympathize
+with.
 
-What about qla4xxx_hw_reset? I saw the comment in
-qla4_8xxx_stop_firmware saying what you wrote above, but for the old
-qla4xxx_isp_ops I did not see anything like that and it seems to use
-different commands.
+I've been doing this stuff for a long time and unfortunately I believe
+this is a situation where the old meme applies:
 
-________________________________
+	"The wonderful thing about standards is that there are so many
+	 to choose from."
 
-This message and any attached documents contain information from QLogic Cor=
-poration or its wholly-owned subsidiaries that may be confidential. If you =
-are not the intended recipient, you may not read, copy, distribute, or use =
-this information. If you have received this transmission in error, please n=
-otify the sender immediately by reply e-mail and then delete this message.
+I would add to that:
 
---_000_E7E62F165003714F8F704DCA1C401CB846C1E2B8avmb2qlogicorg_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
+	"Everyone should have their own version of their favorite
+	 standard."
 
-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
-UwBNAFQAUAAAAHQAZQBqAC4AcABhAHIAawBhAHMAaABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAf
-AAJdAQAAAC4AAAB0AGUAagAuAHAAYQByAGsAYQBzAGgAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAA
-AAAfAOVfAQAAADYAAABzAGkAcAA6AHQAZQBqAC4AcABhAHIAawBhAHMAaABAAHEAbABvAGcAaQBj
-AC4AYwBvAG0AAAAAAB8AGgwBAAAAGAAAAFQAZQBqACAAUABhAHIAawBhAHMAaAAAAB8AHwwBAAAA
-LgAAAHQAZQBqAC4AcABhAHIAawBhAHMAaABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AHgwB
-AAAACgAAAFMATQBUAFAAAAAAAAIBGQwBAAAAaAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgFQA
-ZQBqACAAUABhAHIAawBhAHMAaAAAAFMATQBUAFAAAAB0AGUAagAuAHAAYQByAGsAYQBzAGgAQABx
-AGwAbwBnAGkAYwAuAGMAbwBtAAAAHwABXQEAAAAuAAAAdABlAGoALgBwAGEAcgBrAGEAcwBoAEAA
-cQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwD4PwEAAAAYAAAAVABlAGoAIABQAGEAcgBrAGEAcwBo
-AAAAHwAjQAEAAAAuAAAAdABlAGoALgBwAGEAcgBrAGEAcwBoAEAAcQBsAG8AZwBpAGMALgBjAG8A
-bQAAAAAAHwAiQAEAAAAKAAAAUwBNAFQAUAAAAAAAAgH5PwEAAABoAAAAAAAAAIErH6S+oxAZnW4A
-3QEPVAIAAACAVABlAGoAIABQAGEAcgBrAGEAcwBoAAAAUwBNAFQAUAAAAHQAZQBqAC4AcABhAHIA
-awBhAHMAaABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAldAQAAAC4AAAB0AGUAagAuAHAAYQBy
-AGsAYQBzAGgAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfADFAAQAAAAIAAAAAAAAACwBAOgEA
-AAAfADBAAQAAAAIAAAAAAAAAHwAaAAEAAAASAAAASQBQAE0ALgBOAG8AdABlAAAAAAADAPE/CQQA
-AAsAQDoBAAAAAwD9P+QEAAACAQswAQAAABAAAABiWE1NM39TRJX5EIDKqCQ+AwAXAAEAAABAADkA
-gFYe8ylKzwFAAAgwO7Cu8ylKzwELACkAAAAAAAsAAIAIIAYAAAAAAMAAAAAAAABGAAAAABSFAAAB
-AAAACwAjAAAAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAeAAAAYQBjAGMAZQBwAHQAbABhAG4A
-ZwB1AGEAZwBlAAAAAAABAAAADAAAAGUAbgAtAFUAUwAAAAsAAIAIIAYAAAAAAMAAAAAAAABGAAAA
-AAaFAAAAAAAAHwA3AAEAAACsAAAAUgBFADoAIABbAFAAQQBUAEMASAAgADAAMQAvADEAMABdACAA
-cQBsAGEANAB4AHgAeAA6ACAARABvACAAbgBvAHQAIAB3AGEAaQB0ACAAZgBvAHIAIABJAE8AIABj
-AG8AbQBwAGwAZQB0AGkAbwBuACwAIABhAGYAdABlAHIAIABpAHMAcwB1AGkAbgBnACAAcwB0AG8A
-cABfAGYAaQByAG0AdwBhAHIAZQAAAB8APQABAAAACgAAAFIARQA6ACAAAAAAAAMANgAAAAAAAwAu
-AAAAAAAfAEIQAQAAAD4AAAA8ADUAMwAzADQAQwBCADIAMwAuADIAMAAxADAAMgAwADYAQABjAHMA
-LgB3AGkAcwBjAC4AZQBkAHUAPgAAAAAAAgFxAAEAAAAgAAAAAQHPMducRA7j6V7MG0OzzD6W6vKV
-KZr2VZiA//+Y3+wfAHAAAQAAAKQAAABbAFAAQQBUAEMASAAgADAAMQAvADEAMABdACAAcQBsAGEA
-NAB4AHgAeAA6ACAARABvACAAbgBvAHQAIAB3AGEAaQB0ACAAZgBvAHIAIABJAE8AIABjAG8AbQBw
-AGwAZQB0AGkAbwBuACwAIABhAGYAdABlAHIAIABpAHMAcwB1AGkAbgBnACAAcwB0AG8AcABfAGYA
-aQByAG0AdwBhAHIAZQAAAB8ANRABAAAAeAAAADwARQA3AEUANgAyAEYAMQA2ADUAMAAwADMANwAx
-ADQARgA4AEYANwAwADQARABDAEEAMQBDADQAMAAxAEMAQgA4ADQANgBDADEARQAyAEIAOABAAGEA
-dgBtAGIAMgAuAHEAbABvAGcAaQBjAC4AbwByAGcAPgAAAB8AORABAAAAMgEAADwAMQAzADkAMwAy
-ADkANwA2ADIANQAtADkAMgA4AC0AMQAtAGcAaQB0AC0AcwBlAG4AZAAtAGUAbQBhAGkAbAAtAHYA
-aQBrAGEAcwAuAGMAaABhAHUAZABoAGEAcgB5AEAAcQBsAG8AZwBpAGMALgBjAG8AbQA+ACAAPAAx
-ADMAOQAzADIAOQA3ADYAMgA1AC0AOQAyADgALQAyAC0AZwBpAHQALQBzAGUAbgBkAC0AZQBtAGEA
-aQBsAC0AdgBpAGsAYQBzAC4AYwBoAGEAdQBkAGgAYQByAHkAQABxAGwAbwBnAGkAYwAuAGMAbwBt
-AD4ALAA8ADUAMwAzADQAQwBCADIAMwAuADIAMAAxADAAMgAwADYAQABjAHMALgB3AGkAcwBjAC4A
-ZQBkAHUAPgAAAAAAAwDeP59OAABAAAcw+yxeFylKzwEDACYAAAAAAAIBRwABAAAALwAAAGM9VVM7
-YT0gO3A9UUxvZ2ljO2w9QVZNQjItMTQwMzI4MDIwMzQ1Wi0xNzMxODcAAAIBFDABAAAADAAAAHoA
-AABtYXX3SAAAAB8A+j8BAAAAGAAAAFQAZQBqACAAUABhAHIAawBhAHMAaAAAAAMADTT9PwAAHwAA
-gIYDAgAAAAAAwAAAAAAAAEYBAAAAIAAAAHgALQBtAHMALQBoAGEAcwAtAGEAdAB0AGEAYwBoAAAA
-AQAAAAIAAAAAAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAIgAAAHgALQBvAHIAaQBnAGkAbgBh
-AHQAaQBuAGcALQBpAHAAAAAAAAEAAAAYAAAAWwAxADAALgAxAC4ANAAuADEAMABdAAAAkSs=
+Every standard ever written has issues with respect to behavior on
+edge cases.  I believe VMware's position is that it has implemented
+the standard properly and if there is a bug it isn't their issue.
 
---_000_E7E62F165003714F8F704DCA1C401CB846C1E2B8avmb2qlogicorg_--
+If there is an issue it is obviously an edge case given that it
+appears to be quite rare.  I've heard suggestions that the possible
+vulnerability window amounts to about 12 seconds a day.
+
+Whatever the reality of the regression, given the litiginous nature of
+our society I think it is highly unlikely for anyone to admit they
+have a bug in terms of standards implementation, particularly in the
+storage industry.  To do so would open one to inevitable data loss
+litigation.
+
+I'm not a fan of 'tuning' standards implemenations but mode pages seem
+to be a reality in the industry and there are ample practical reasons
+for them.  The other reality is that VMware/EMC is a way bigger
+gorilla then the open-source storage stacks whether they be LIO, SCST
+or anything else.
+
+If there is an issue it would seem to be in the best interests of
+those of us committed to open-source storage solutions to understand
+and protect ourselves from the situation.  There is a third saying
+which is important as well:
+
+	"No one ever got fired for buying vendor approved storage."
+
+> /Tommy
+
+Have a good weekend.
+
+Greg
+
+}-- End of excerpt from Tommy Apel
+
+As always,
+Dr. G.W. Wettstein, Ph.D.   Enjellic Systems Development, LLC.
+4206 N. 19th Ave.           Specializing in information infra-structure
+Fargo, ND  58102            development.
+PH: 701-281-1686
+FAX: 701-281-3949           EMAIL: greg@enjellic.com
+------------------------------------------------------------------------------
+"God made man, the appendix was the result of a committee."
+                                -- Dr. G.W. Wettstein
+                                   Guerrilla Tactics for Corporate Survival
