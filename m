@@ -1,65 +1,42 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 2/5] scsi_scan: Restrict sequential scan to 256 LUNs
-Date: Fri, 28 Mar 2014 01:22:15 -0700
-Message-ID: <53353137.2050603@suse.de>
-References: <1386673515-87133-1-git-send-email-hare@suse.de> <1386673515-87133-3-git-send-email-hare@suse.de> <20140327144926.GB16958@infradead.org>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [patch] [SCSI] mpt3sas: tidy up output slightly
+Date: Fri, 28 Mar 2014 11:39:01 +0300
+Message-ID: <20140328083901.GQ25192@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:53538 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751274AbaC1IWR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 Mar 2014 04:22:17 -0400
-In-Reply-To: <20140327144926.GB16958@infradead.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:36750 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752715AbaC1Ij3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Mar 2014 04:39:29 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org
+To: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>
+Cc: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, support@lsi.com, "James E.J. Bottomley" <JBottomley@parallels.com>, DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-On 03/27/2014 07:49 AM, Christoph Hellwig wrote:
-> On Tue, Dec 10, 2013 at 12:05:12PM +0100, Hannes Reinecke wrote:
->> Sequential scan for more than 256 LUNs is very fragile as
->> LUNs might not be numbered sequentially after that point.
->>
->> SAM revisions later than SCSI-3 impose a structure on
->> LUNs larger than 256, making LUN numbers between 256
->> and 16384 illegal.
->> SCSI-3, however allows for plain 64-bit numbers with
->> no internal structure.
->>
->> So restrict sequential LUN scan to 256 LUNs and add a
->> new blacklist flag 'BLIST_SCSI3LUN' to scan up to
->> max_lun devices.
->
-> What do you need the blacklist flag for?  There's no user of it, and
-> supporting that many LUNs without REPORT LUNS support doesn't sound v=
-ery
-> practical anyway.
->
-Because there is no guarantee that pre-SCSI-3 devices (or devices=20
-announcing to be pre-SCSI-3) will not allow to scan more than 256 devic=
-es.
-Thinking of older Symmetrix here with their weird 'SPC-3 masking as=20
-SCSI-2' habit.
+The indenting here for "pr_info("\n");" is not correct.  It's not part
+of the if condition.
 
-Also currently we're allowing to scan beyond 256 without any=20
-restrictions there might be installations out there which rely on this=20
-behaviour.
+Also using pr_info() would put extra characters in the middle of the
+line.  I suppose that people could complain that pr_cont() is racy but
+at least it's better than the original code.
 
-Hence this flag.
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 0cf4f70..aa0e042 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -585,9 +585,9 @@ _base_display_event_data(struct MPT3SAS_ADAPTER *ioc,
+ 		    (event_data->ReasonCode == MPI2_EVENT_SAS_DISC_RC_STARTED) ?
+ 		    "start" : "stop");
+ 		if (event_data->DiscoveryStatus)
+-			pr_info("discovery_status(0x%08x)",
++			pr_cont("discovery_status(0x%08x)",
+ 			    le32_to_cpu(event_data->DiscoveryStatus));
+-			pr_info("\n");
++		pr_cont("\n");
+ 		return;
+ 	}
+ 	case MPI2_EVENT_SAS_BROADCAST_PRIMITIVE:
