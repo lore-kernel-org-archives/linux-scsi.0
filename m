@@ -1,40 +1,57 @@
-From: worley@alum.mit.edu (Dale R. Worley)
-Subject: Re: [Scst-devel] OSS target - VMware SCSI reservation bug conformity.
-Date: Fri, 28 Mar 2014 14:34:33 -0400
-Message-ID: <201403281834.s2SIYXSj005280@hobgoblin.ariadne.com>
-References: <201403280501.s2S51eC7027504@wind.enjellic.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH 0/3] Fix USB deadlock caused by SCSI error handling
+Date: Fri, 28 Mar 2014 15:29:54 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1403281438250.862-100000@iolanthe.rowland.org>
+References: <1396028874.15365.30.camel@dabdike>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from qmta14.emeryville.ca.mail.comcast.net ([76.96.27.212]:39967
-	"EHLO qmta14.emeryville.ca.mail.comcast.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751667AbaC1Sfj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 Mar 2014 14:35:39 -0400
-Received: from hobgoblin.ariadne.com (hobgoblin.ariadne.com [127.0.0.1])
-	by hobgoblin.ariadne.com (8.14.7/8.14.7) with ESMTP id s2SIYXiK005281
-	for <linux-scsi@vger.kernel.org>; Fri, 28 Mar 2014 14:35:03 -0400
-In-reply-to: <201403280501.s2S51eC7027504@wind.enjellic.com>
-	(greg@wind.enjellic.com)
+Received: from iolanthe.rowland.org ([192.131.102.54]:42511 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751902AbaC1T34 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Mar 2014 15:29:56 -0400
+In-Reply-To: <1396028874.15365.30.camel@dabdike>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>, USB list <linux-usb@vger.kernel.org>
 
-> From: "Dr. Greg Wettstein" <greg@wind.enjellic.com>
+On Fri, 28 Mar 2014, James Bottomley wrote:
 
-> If there is an issue it would seem to be in the best interests of
-> those of us committed to open-source storage solutions to understand
-> and protect ourselves from the situation.  There is a third saying
-> which is important as well:
+> This is a set of three patches we agreed to a while ago to eliminate a
+> USB deadlock.  I did rewrite the first patch, if it could be reviewed
+> and tested.
 
-If the question is a legitimate question of interpretation, then the
-better course is probably "be liberal in what you receive and be
-conservative in what you transmit".
+I tested all three patches under the same conditions as before, and 
+they all worked correctly.
 
-Practically speaking, I remember the story of US Robotics modems.  I'm
-told they captured the market for server modems in the days of dialup
-services by testing their modems against every make of modem on the
-market and tweaking its behavior so that it could successfully
-interwork with basically any modem the consumer purchased, no matter
-how crappy.  This level of reliability was very valuable to the
-operators of online services.
+In the revised patch 1, the meaning of SCSI_EH_ABORT_SCHEDULED isn't
+entirely clear.  This boils down to two questions, which I don't 
+know the answers to:
 
-Dale
+	What should happen in scmd_eh_abort_handler() if
+	scsi_host_eh_past_deadline() returns true and thereby
+	prevents scsi_try_to_abort_cmd() from being called?
+	The flag wouldn't get cleared then.
+
+	What should happen if some other pathway manages to call
+	scsi_try_to_abort_cmd() while scmd->abort_work is still
+	sitting on the work queue?  The command would be aborted
+	and the flag would be cleared, but the queued work would
+	remain.  Can this ever happen?
+
+Maybe scmd_eh_abort_handler() should check the flag before doing
+anything.  Is there any sort of sychronization to prevent the same
+incarnation of a command from being aborted twice (or by two different
+threads at the same time)?  If there is, it isn't obvious.
+
+(Also, what's going on at the start of scsi_abort_command()?  Contrary
+to what one might expect, the first part of the function _cancels_ a
+scheduled abort.  And it does so without clearing the
+SCSI_EH_ABORT_SCHEDULED flag.)
+
+Maybe in all these scenarios, the command is doomed to fail anyway so 
+these questions don't make any real difference.  I don't know...
+
+Alan Stern
+
