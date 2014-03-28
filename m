@@ -1,63 +1,40 @@
-From: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Subject: [PATCH 3/3] [SCSI] Fix command result state propagation
-Date: Fri, 28 Mar 2014 10:51:15 -0700
-Message-ID: <1396029075.15365.33.camel@dabdike>
-References: <1396028874.15365.30.camel@dabdike>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1396028874.15365.30.camel@dabdike>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Cc: USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+From: worley@alum.mit.edu (Dale R. Worley)
+Subject: Re: [Scst-devel] OSS target - VMware SCSI reservation bug conformity.
+Date: Fri, 28 Mar 2014 14:34:33 -0400
+Message-ID: <201403281834.s2SIYXSj005280@hobgoblin.ariadne.com>
+References: <201403280501.s2S51eC7027504@wind.enjellic.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from qmta14.emeryville.ca.mail.comcast.net ([76.96.27.212]:39967
+	"EHLO qmta14.emeryville.ca.mail.comcast.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751667AbaC1Sfj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 Mar 2014 14:35:39 -0400
+Received: from hobgoblin.ariadne.com (hobgoblin.ariadne.com [127.0.0.1])
+	by hobgoblin.ariadne.com (8.14.7/8.14.7) with ESMTP id s2SIYXiK005281
+	for <linux-scsi@vger.kernel.org>; Fri, 28 Mar 2014 14:35:03 -0400
+In-reply-to: <201403280501.s2S51eC7027504@wind.enjellic.com>
+	(greg@wind.enjellic.com)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+> From: "Dr. Greg Wettstein" <greg@wind.enjellic.com>
 
-We're seeing a case where the contents of scmd->result isn't being reset after
-a SCSI command encounters an error, is resubmitted, times out and then gets
-handled.  The error handler acts on the stale result of the previous error
-instead of the timeout.  Fix this by properly zeroing the scmd->status before
-the command is resubmitted.
+> If there is an issue it would seem to be in the best interests of
+> those of us committed to open-source storage solutions to understand
+> and protect ourselves from the situation.  There is a third saying
+> which is important as well:
 
-Signed-off-by: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Signed-off-by: James Bottomley <JBottomley-MU7nAjRaF3makBO8gow8eQ@public.gmane.org>
----
- drivers/scsi/scsi_error.c | 1 +
- drivers/scsi/scsi_lib.c   | 1 +
- 2 files changed, 2 insertions(+)
+If the question is a legitimate question of interpretation, then the
+better course is probably "be liberal in what you receive and be
+conservative in what you transmit".
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 221a5bc..335eaf4 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -927,6 +927,7 @@ void scsi_eh_prep_cmnd(struct scsi_cmnd *scmd, struct scsi_eh_save *ses,
- 	memset(scmd->cmnd, 0, BLK_MAX_CDB);
- 	memset(&scmd->sdb, 0, sizeof(scmd->sdb));
- 	scmd->request->next_rq = NULL;
-+	scmd->result = 0;
- 
- 	if (sense_bytes) {
- 		scmd->sdb.length = min_t(unsigned, SCSI_SENSE_BUFFERSIZE,
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 5681c05..b1f4867 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -137,6 +137,7 @@ static void __scsi_queue_insert(struct scsi_cmnd *cmd, int reason, int unbusy)
- 	 * lock such that the kblockd_schedule_work() call happens
- 	 * before blk_cleanup_queue() finishes.
- 	 */
-+	cmd->result = 0;
- 	spin_lock_irqsave(q->queue_lock, flags);
- 	blk_requeue_request(q, cmd->request);
- 	kblockd_schedule_work(q, &device->requeue_work);
--- 
-1.9.1
+Practically speaking, I remember the story of US Robotics modems.  I'm
+told they captured the market for server modems in the days of dialup
+services by testing their modems against every make of modem on the
+market and tweaking its behavior so that it could successfully
+interwork with basically any modem the consumer purchased, no matter
+how crappy.  This level of reliability was very valuable to the
+operators of online services.
 
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Dale
