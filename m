@@ -1,74 +1,65 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: re: uas: Use GFP_NOIO rather then GFP_ATOMIC where possible
-Date: Fri, 28 Mar 2014 11:08:11 +0300
-Message-ID: <20140328080811.GE25192@mwanda>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 2/5] scsi_scan: Restrict sequential scan to 256 LUNs
+Date: Fri, 28 Mar 2014 01:22:15 -0700
+Message-ID: <53353137.2050603@suse.de>
+References: <1386673515-87133-1-git-send-email-hare@suse.de> <1386673515-87133-3-git-send-email-hare@suse.de> <20140327144926.GB16958@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:26333 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751088AbaC1IId (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Mar 2014 04:08:33 -0400
-Content-Disposition: inline
+Received: from cantor2.suse.de ([195.135.220.15]:53538 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751274AbaC1IWR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 Mar 2014 04:22:17 -0400
+In-Reply-To: <20140327144926.GB16958@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: hdegoede@redhat.com
-Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
+To: Christoph Hellwig <hch@infradead.org>
+Cc: James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org
 
-Hello Hans de Goede,
+On 03/27/2014 07:49 AM, Christoph Hellwig wrote:
+> On Tue, Dec 10, 2013 at 12:05:12PM +0100, Hannes Reinecke wrote:
+>> Sequential scan for more than 256 LUNs is very fragile as
+>> LUNs might not be numbered sequentially after that point.
+>>
+>> SAM revisions later than SCSI-3 impose a structure on
+>> LUNs larger than 256, making LUN numbers between 256
+>> and 16384 illegal.
+>> SCSI-3, however allows for plain 64-bit numbers with
+>> no internal structure.
+>>
+>> So restrict sequential LUN scan to 256 LUNs and add a
+>> new blacklist flag 'BLIST_SCSI3LUN' to scan up to
+>> max_lun devices.
+>
+> What do you need the blacklist flag for?  There's no user of it, and
+> supporting that many LUNs without REPORT LUNS support doesn't sound v=
+ery
+> practical anyway.
+>
+Because there is no guarantee that pre-SCSI-3 devices (or devices=20
+announcing to be pre-SCSI-3) will not allow to scan more than 256 devic=
+es.
+Thinking of older Symmetrix here with their weird 'SPC-3 masking as=20
+SCSI-2' habit.
 
-The patch e36e64930cff: "uas: Use GFP_NOIO rather then GFP_ATOMIC
-where possible" from Nov 7, 2013, leads to the following static
-checker warning:
+Also currently we're allowing to scan beyond 256 without any=20
+restrictions there might be installations out there which rely on this=20
+behaviour.
 
-	drivers/usb/storage/uas.c:806 uas_eh_task_mgmt()
-	error: scheduling with locks held: 'spin_lock:lock'
+Hence this flag.
 
-drivers/usb/storage/uas.c
-   789          spin_lock_irqsave(&devinfo->lock, flags);
-   790  
-   791          if (devinfo->resetting) {
-   792                  spin_unlock_irqrestore(&devinfo->lock, flags);
-   793                  return FAILED;
-   794          }
-   795  
-   796          if (devinfo->running_task) {
-   797                  shost_printk(KERN_INFO, shost,
-   798                               "%s: %s: error already running a task\n",
-   799                               __func__, fname);
-   800                  spin_unlock_irqrestore(&devinfo->lock, flags);
-   801                  return FAILED;
-   802          }
-   803  
-   804          devinfo->running_task = 1;
-   805          memset(&devinfo->response, 0, sizeof(devinfo->response));
-   806          sense_urb = uas_submit_sense_urb(cmnd, GFP_NOIO,
-                                                       ^^^^^^^^
-The original code had this as GFP_ATOMIC because we can't sleep while
-we have spin_lock_irqsave() held.
+Cheers,
 
-   807                                           devinfo->use_streams ? tag : 0);
-   808          if (!sense_urb) {
-   809                  shost_printk(KERN_INFO, shost,
-   810                               "%s: %s: submit sense urb failed\n",
-   811                               __func__, fname);
-   812                  devinfo->running_task = 0;
-   813                  spin_unlock_irqrestore(&devinfo->lock, flags);
-   814                  return FAILED;
-   815          }
-   816          if (uas_submit_task_urb(cmnd, GFP_NOIO, function, tag)) {
-                                              ^^^^^^^^
-Same.
-
-   817                  shost_printk(KERN_INFO, shost,
-   818                               "%s: %s: submit task mgmt urb failed\n",
-   819                               __func__, fname);
-   820                  devinfo->running_task = 0;
-   821                  spin_unlock_irqrestore(&devinfo->lock, flags);
-   822                  usb_kill_urb(sense_urb);
-   823                  return FAILED;
-   824          }
-   825          spin_unlock_irqrestore(&devinfo->lock, flags);
-
-regards,
-dan carpenter
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
