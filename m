@@ -1,39 +1,35 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/5] scsi_scan: Restrict sequential scan to 256 LUNs
-Date: Fri, 28 Mar 2014 05:47:47 -0700
-Message-ID: <20140328124747.GA18866@infradead.org>
-References: <1386673515-87133-1-git-send-email-hare@suse.de>
- <1386673515-87133-3-git-send-email-hare@suse.de>
- <20140327144926.GB16958@infradead.org>
- <53353137.2050603@suse.de>
+From: Alhajii Hassan <uzoeio.momii@aol.fr>
+Subject: Good Day To You,
+Date: Fri, 28 Mar 2014 08:58:15 -0400 (EDT)
+Message-ID: <8D1189C84AC5C26-1CC8-8DF__11321.045322302$1396011512$gmane$org@webmail-va025.sysops.aol.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"; format=flowed
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:40107 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751258AbaC1Mrw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Mar 2014 08:47:52 -0400
-Content-Disposition: inline
-In-Reply-To: <53353137.2050603@suse.de>
+Received: from oms-mc02.r1000.mx.aol.com ([64.12.81.67]:53127 "EHLO
+	oms-mc02.r1000.mx.aol.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751340AbaC1M6S convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Mar 2014 08:58:18 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org
 
-On Fri, Mar 28, 2014 at 01:22:15AM -0700, Hannes Reinecke wrote:
-> Because there is no guarantee that pre-SCSI-3 devices (or devices
-> announcing to be pre-SCSI-3) will not allow to scan more than 256
-> devices.
-> Thinking of older Symmetrix here with their weird 'SPC-3 masking as
-> SCSI-2' habit.
+Good Day To You,
 
-Don't we have a blist entry for those to use REPORT LUNS anyway?
-> 
-> Also currently we're allowing to scan beyond 256 without any
-> restrictions there might be installations out there which rely on
-> this behaviour.
-> 
-> Hence this flag.
+My Name is Mr. Hassan Alhajii; I am a banker by profession. I am from 
+Ouagadougou, BurkinaFaso, West Africa. My reason for contacting you is 
+to transfer anabandoned fund$10.6M US Dollars to your account if you 
+agree with me.
 
-Which doesn't really have an effect as-is as it's never set.
+The owner of this fund died since 2004 with his Next Of Kin. I want to 
+present you to the bank as the Next of Kin/beneficiary of this fund.
+
+Further details of the transaction shall be forward to you as soon as I 
+receive your response indicating your interest in handling this 
+transaction.
+
+Have a great day,
+Mr.Hassan Alhajii.
+My  Private E-mail Address At; ( alhajii_hassan9993@ymail.com )
+
+
 
