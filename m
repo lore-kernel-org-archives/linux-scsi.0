@@ -1,108 +1,146 @@
 From: sagi grimberg <sagig@mellanox.com>
-Subject: Re: [PATCH 2/4] tcm_qla2xxx: T10-Dif set harware capability
-Date: Sat, 29 Mar 2014 03:12:59 +0300
-Message-ID: <5336100B.1010604@mellanox.com>
-References: <1396047927-14189-1-git-send-email-quinn.tran@qlogic.com> <1396047927-14189-3-git-send-email-quinn.tran@qlogic.com>
+Subject: Re: [PATCH 3/4] target/rd: T10-Dif: Add init/format support
+Date: Sat, 29 Mar 2014 03:16:18 +0300
+Message-ID: <533610D2.5030205@mellanox.com>
+References: <1396047927-14189-1-git-send-email-quinn.tran@qlogic.com> <1396047927-14189-4-git-send-email-quinn.tran@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1396047927-14189-3-git-send-email-quinn.tran@qlogic.com>
-Sender: target-devel-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from eu1sys200aog115.obsmtp.com ([207.126.144.139]:42180 "EHLO
+	eu1sys200aog115.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751322AbaC2AQ2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 Mar 2014 20:16:28 -0400
+In-Reply-To: <1396047927-14189-4-git-send-email-quinn.tran@qlogic.com>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: Quinn Tran <quinn.tran@qlogic.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 Cc: giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.vasquez@qlogic.com
-List-Id: linux-scsi@vger.kernel.org
 
 On 3/29/2014 2:05 AM, Quinn Tran wrote:
-> Set Protection Type(1,2,3) capabilities, Guarg type (CRC/IPchksm)
-> capabilities bits to let TCM core knows of HW/fabric capabilities.
+> This patch is borrow code from
 >
-> Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
-> Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
+> commit 0f5e2ec46dd64579c0770f3822764f94db4fa465
+> Author: Nicholas Bellinger <nab@linux-iscsi.org>
+> Date:   Sat Jan 18 09:32:56 2014 +0000
+>
+>      target/file: Add DIF protection init/format support
+>
+>      This patch adds support for DIF protection init/format support into
+>      the FILEIO backend.
+>
+>      It involves using a seperate $FILE.protection for storing PI that is
+>      opened via fd_init_prot() using the common pi_prot_type attribute.
+>      The actual formatting of the protection is done via fd_format_prot()
+>      using the common pi_prot_format attribute, that will populate the
+>      initial PI data based upon the currently configured pi_prot_type.
+>
+>      Based on original FILEIO code from Sagi.
+>
+>      v1 changes:
+>        - Fix sparse warnings in fd_init_format_buf (Fengguang)
+>
+>      Cc: Martin K. Petersen <martin.petersen@oracle.com>
+>      Cc: Christoph Hellwig <hch@lst.de>
+>      Cc: Hannes Reinecke <hare@suse.de>
+>      Cc: Sagi Grimberg <sagig@mellanox.com>
+>      Cc: Or Gerlitz <ogerlitz@mellanox.com>
+>      Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 > ---
->   drivers/scsi/qla2xxx/tcm_qla2xxx.c | 23 +++++++++++++++++++++++
->   drivers/scsi/qla2xxx/tcm_qla2xxx.h |  1 +
->   2 files changed, 24 insertions(+)
+>   drivers/target/target_core_rd.c | 64 ++++++++++++++++++++++++++++++++++++++++-
+>   1 file changed, 63 insertions(+), 1 deletion(-)
 >
-> diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-> index b23a0ff..4d93081 100644
-> --- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-> +++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-> @@ -910,12 +910,20 @@ DEF_QLA_TPG_ATTR_BOOL(demo_mode_login_only);
->   DEF_QLA_TPG_ATTRIB(demo_mode_login_only);
->   QLA_TPG_ATTR(demo_mode_login_only, S_IRUGO | S_IWUSR);
+> diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core_rd.c
+> index 66a5aba..01dda0b 100644
+> --- a/drivers/target/target_core_rd.c
+> +++ b/drivers/target/target_core_rd.c
+> @@ -603,7 +603,7 @@ static int rd_init_prot(struct se_device *dev)
+>   {
+>   	struct rd_dev *rd_dev = RD_DEV(dev);
 >   
-> +/*
-> + * Define tcm_qla2xxx_tpg_attrib_s_t10dif_force_on
-> + */
-> +DEF_QLA_TPG_ATTR_BOOL(t10dif_force_on);
-> +DEF_QLA_TPG_ATTRIB(t10dif_force_on);
-> +QLA_TPG_ATTR(t10dif_force_on, S_IRUGO | S_IWUSR);
-> +
->   static struct configfs_attribute *tcm_qla2xxx_tpg_attrib_attrs[] = {
->   	&tcm_qla2xxx_tpg_attrib_generate_node_acls.attr,
->   	&tcm_qla2xxx_tpg_attrib_cache_dynamic_acls.attr,
->   	&tcm_qla2xxx_tpg_attrib_demo_mode_write_protect.attr,
->   	&tcm_qla2xxx_tpg_attrib_prod_mode_write_protect.attr,
->   	&tcm_qla2xxx_tpg_attrib_demo_mode_login_only.attr,
-> +	&tcm_qla2xxx_tpg_attrib_t10dif_force_on.attr,
->   	NULL,
->   };
+> -        if (!dev->dev_attrib.pi_prot_type)
+> +	if (!dev->dev_attrib.pi_prot_type)
+>   		return 0;
 >   
-> @@ -1049,6 +1057,18 @@ static struct se_portal_group *tcm_qla2xxx_make_tpg(
->   	tpg->tpg_attrib.demo_mode_write_protect = 1;
->   	tpg->tpg_attrib.cache_dynamic_acls = 1;
->   	tpg->tpg_attrib.demo_mode_login_only = 1;
-> +	tpg->tpg_attrib.t10dif_force_on = 0;
-> +	tpg->se_tpg.fabric_sup_prot_type = 0;
-> +	tpg->se_tpg.fabric_sup_guard_type = 0;
-
-You can lose guard_type - this is more relevant to the initiator side.
-
-> +
-> +	if (scsi_host_get_prot(lport->qla_vha->host)) {
-> +		tpg->se_tpg.fabric_sup_prot_type = (TARGET_DIF_TYPE0_PROT|
-> +			TARGET_DIF_TYPE1_PROT|TARGET_DIF_TYPE2_PROT|
-> +			TARGET_DIF_TYPE3_PROT);
-> +
-> +		tpg->se_tpg.fabric_sup_guard_type = TARGET_GUARD_CRC|
-> +			TARGET_GUARD_IP;
-> +	}
->   
->   	ret = core_tpg_register(&tcm_qla2xxx_fabric_configfs->tf_ops, wwn,
->   				&tpg->se_tpg, tpg, TRANSPORT_TPG_TYPE_NORMAL);
-> @@ -1127,6 +1147,8 @@ static ssize_t tcm_qla2xxx_npiv_tpg_store_enable(
->   		qlt_stop_phase1(vha->vha_tgt.qla_tgt);
->   	}
->   
-> +	core_tpg_set_fabric_t10dif(se_tpg, tpg->tpg_attrib.t10dif_force_on);
-> +
-
-Any way we can get this logic to be shared also with iscsi, srp, etc... 
-all fabrics should
-be set with t10dif right? so I would imagine it would be better to 
-centralize it right?
-
->   	return count;
+>   	return rd_build_prot_space(rd_dev, dev->prot_length);
+> @@ -616,6 +616,67 @@ static void rd_free_prot(struct se_device *dev)
+>   	rd_release_prot_space(rd_dev);
 >   }
 >   
-> @@ -1169,6 +1191,7 @@ static struct se_portal_group *tcm_qla2xxx_npiv_make_tpg(
->   	tpg->tpg_attrib.demo_mode_write_protect = 1;
->   	tpg->tpg_attrib.cache_dynamic_acls = 1;
->   	tpg->tpg_attrib.demo_mode_login_only = 1;
-> +	tpg->tpg_attrib.t10dif_force_on = 0;
->   
->   	ret = core_tpg_register(&tcm_qla2xxx_npiv_fabric_configfs->tf_ops, wwn,
->   				&tpg->se_tpg, tpg, TRANSPORT_TPG_TYPE_NORMAL);
-> diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.h b/drivers/scsi/qla2xxx/tcm_qla2xxx.h
-> index 33aaac8..62fdce3 100644
-> --- a/drivers/scsi/qla2xxx/tcm_qla2xxx.h
-> +++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.h
-> @@ -28,6 +28,7 @@ struct tcm_qla2xxx_tpg_attrib {
->   	int demo_mode_write_protect;
->   	int prod_mode_write_protect;
->   	int demo_mode_login_only;
-> +	int t10dif_force_on;
+> +static void rd_init_format_buf(struct se_device *dev, unsigned char *buf,
+> +			       u32 unit_size, u32 *ref_tag, u16 app_tag,
+> +			       bool inc_reftag)
+> +{
+> +	unsigned char *p = buf;
+> +	int i;
+> +
+> +	for (i = 0; i < unit_size; i += dev->prot_length) {
+> +		*((u16 *)&p[0]) = 0xffff;
+> +		*((__be16 *)&p[2]) = cpu_to_be16(app_tag);
+> +		*((__be32 *)&p[4]) = cpu_to_be32(*ref_tag);
+> +
+> +		if (inc_reftag)
+> +			(*ref_tag)++;
+> +
+> +		p += dev->prot_length;
+> +	}
+> +}
+> +
+> +static int rd_format_prot(struct se_device *dev)
+> +{
+> +	struct rd_dev *rd_dev = RD_DEV(dev);
+> +	u32 ref_tag = 0;
+> +	int i,j;
+> +	bool inc_reftag = false;
+> +	struct rd_dev_sg_table *pt;
+> +	struct scatterlist *sg;
+> +	void *paddr;
+> +
+> +	if (!dev->dev_attrib.pi_prot_type) {
+> +		pr_err("Unable to format_prot while pi_prot_type == 0\n");
+> +		return -ENODEV;
+> +	}
+> +
+> +	switch (dev->dev_attrib.pi_prot_type) {
+> +	case TARGET_DIF_TYPE3_PROT:
+> +		ref_tag = 0xffffffff;
+> +		break;
+> +	case TARGET_DIF_TYPE2_PROT:
+> +	case TARGET_DIF_TYPE1_PROT:
+> +		inc_reftag = true;
+> +		break;
+> +	default:
+> +		break;
+> +	}
+> +
+> +	for (i=0; i < rd_dev->sg_prot_count; i++) {
+> +		pt= &rd_dev->sg_prot_array[i];
+> +		for_each_sg(pt->sg_table, sg, pt->rd_sg_count, j) {
+> +			paddr = kmap(sg_page(sg)) + sg->offset;
+> +
+> +			rd_init_format_buf(dev, paddr, sg->length, &ref_tag,
+> +					0xffff, inc_reftag);
+> +			kunmap(paddr);
+> +		}
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +
+>   static struct sbc_ops rd_sbc_ops = {
+>   	.execute_rw		= rd_execute_rw,
+>   };
+> @@ -642,6 +703,7 @@ static struct se_subsystem_api rd_mcp_template = {
+>   	.get_device_type	= sbc_get_device_type,
+>   	.get_blocks		= rd_get_blocks,
+>   	.init_prot		= rd_init_prot,
+> +	.format_prot            = rd_format_prot,
+>   	.free_prot		= rd_free_prot,
 >   };
 >   
->   struct tcm_qla2xxx_tpg {
+
+This patch is redundant altogether. rd_mcp already init protection with 
+escape values:
+rc = rd_allocate_sgl_table(rd_dev, sg_table, total_sg_needed, 0xff);
