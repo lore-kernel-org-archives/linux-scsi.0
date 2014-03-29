@@ -1,70 +1,66 @@
 From: Rashika Kheria <rashika.kheria@gmail.com>
-Subject: [PATCH 04/55] scsi: Mark function as static in bfa/bfad_attr.c
-Date: Sat, 29 Mar 2014 23:16:05 +0530
-Message-ID: <2578f45ed96f8d4eb6af5b4d96e14208fb55a0b1.1396114897.git.rashika.kheria@gmail.com>
+Subject: [PATCH 05/55] scsi: Mark function as static in bfa/bfa_ioc.c
+Date: Sat, 29 Mar 2014 23:17:19 +0530
+Message-ID: <4a2fb63485aa5e458af74dd75358d5fa2233c0f2.1396114897.git.rashika.kheria@gmail.com>
 References: <5fd6fa49a592043459f75ed83a72f8c1ed9ddc13.1396114897.git.rashika.kheria@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f44.google.com ([209.85.160.44]:59492 "EHLO
-	mail-pb0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751891AbaC2Rpk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 29 Mar 2014 13:45:40 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
 In-Reply-To: <5fd6fa49a592043459f75ed83a72f8c1ed9ddc13.1396114897.git.rashika.kheria@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
 Cc: Anil Gurumurthy <agurumur@brocade.com>, Vijaya Mohan Guvva <vmohan@brocade.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, josh@joshtriplett.org
+List-Id: linux-scsi@vger.kernel.org
 
-Mark functions as static in bfa/bfad_attr.c because they are not used
+Mark functions as static in bfa/bfa_ioc.c because they are not used
 outside this file.
 
-This eliminates the following warning in bfa/bfad_attr.c:
-drivers/scsi/bfa/bfad_attr.c:446:1: warning: no previous prototype for =
-=E2=80=98bfad_im_issue_fc_host_lip=E2=80=99 [-Wmissing-prototypes]
-drivers/scsi/bfa/bfad_attr.c:574:1: warning: no previous prototype for =
-=E2=80=98bfad_im_vport_set_symbolic_name=E2=80=99 [-Wmissing-prototypes=
-]
+This eliminates the following warning in bfa/bfa_ioc.c:
+drivers/scsi/bfa/bfa_ioc.c:5039:1: warning: no previous prototype for =E2=
+=80=98bfa_diag_intr=E2=80=99 [-Wmissing-prototypes]
+drivers/scsi/bfa/bfa_ioc.c:7002:1: warning: no previous prototype for =E2=
+=80=98bfa_flash_sem_get=E2=80=99 [-Wmissing-prototypes]
+drivers/scsi/bfa/bfa_ioc.c:7015:1: warning: no previous prototype for =E2=
+=80=98bfa_flash_sem_put=E2=80=99 [-Wmissing-prototypes]
 
 Signed-off-by: Rashika Kheria <rashika.kheria@gmail.com>
 Reviewed-by: Josh Triplett <josh@joshtriplett.org>
 ---
- drivers/scsi/bfa/bfad_attr.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/bfa/bfa_ioc.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfad_attr.c b/drivers/scsi/bfa/bfad_attr.=
-c
-index 40be670..9937ce3 100644
---- a/drivers/scsi/bfa/bfad_attr.c
-+++ b/drivers/scsi/bfa/bfad_attr.c
-@@ -442,7 +442,7 @@ bfad_im_vport_create(struct fc_vport *fc_vport, boo=
-l disable)
- 	return status;
+diff --git a/drivers/scsi/bfa/bfa_ioc.c b/drivers/scsi/bfa/bfa_ioc.c
+index 65180e1..d9bed12 100644
+--- a/drivers/scsi/bfa/bfa_ioc.c
++++ b/drivers/scsi/bfa/bfa_ioc.c
+@@ -5035,7 +5035,7 @@ diag_portbeacon_comp(struct bfa_diag_s *diag)
+ /*
+  *	Diag hmbox handler
+  */
+-void
++static void
+ bfa_diag_intr(void *diagarg, struct bfi_mbmsg_s *msg)
+ {
+ 	struct bfa_diag_s *diag =3D diagarg;
+@@ -6998,7 +6998,7 @@ bfa_raw_sem_get(void __iomem *bar)
+=20
  }
 =20
--int
-+static int
- bfad_im_issue_fc_host_lip(struct Scsi_Host *shost)
+-bfa_status_t
++static bfa_status_t
+ bfa_flash_sem_get(void __iomem *bar)
  {
- 	struct bfad_im_port_s *im_port =3D
-@@ -570,7 +570,7 @@ bfad_im_vport_disable(struct fc_vport *fc_vport, bo=
-ol disable)
- 	return 0;
+ 	u32 n =3D FLASH_BLOCKING_OP_MAX;
+@@ -7011,7 +7011,7 @@ bfa_flash_sem_get(void __iomem *bar)
+ 	return BFA_STATUS_OK;
  }
 =20
 -void
 +static void
- bfad_im_vport_set_symbolic_name(struct fc_vport *fc_vport)
+ bfa_flash_sem_put(void __iomem *bar)
  {
- 	struct bfad_vport_s *vport =3D (struct bfad_vport_s *)fc_vport->dd_da=
-ta;
+ 	writel(0, (bar + FLASH_SEM_LOCK_REG));
 --=20
 1.7.9.5
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
