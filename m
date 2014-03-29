@@ -1,179 +1,157 @@
-From: Quinn Tran <quinn.tran@qlogic.com>
-Subject: Re: [PATCH RFC 0/4] add T10-Dif registration for tcm_qla2xxx
-Date: Fri, 28 Mar 2014 23:48:19 +0000
-Message-ID: <504EB66DAC8D234EB8E8560985C2D7AD46CE86F4@avmb2.qlogic.org>
-References: <1396047927-14189-1-git-send-email-quinn.tran@qlogic.com>
+From: sagi grimberg <sagig@mellanox.com>
+Subject: Re: [PATCH 1/4] target/core: T10-Dif: check HW support capabilities
+Date: Sat, 29 Mar 2014 03:05:40 +0300
+Message-ID: <53360E54.5060004@mellanox.com>
+References: <1396047927-14189-1-git-send-email-quinn.tran@qlogic.com> <1396047927-14189-2-git-send-email-quinn.tran@qlogic.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_000_504EB66DAC8D234EB8E8560985C2D7AD46CE86F4avmb2qlogicorg_"
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:52151 "EHLO
-	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751580AbaC1XsV (ORCPT
+Received: from eu1sys200aog112.obsmtp.com ([207.126.144.133]:50546 "EHLO
+	eu1sys200aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751592AbaC2AFx (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 Mar 2014 19:48:21 -0400
-Received: from pps.filterd (m0045602.ppops.net [127.0.0.1])
-	by mx0a-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id s2SNjMRl004171
-	for <linux-scsi@vger.kernel.org>; Fri, 28 Mar 2014 16:48:21 -0700
-Received: from avcashub1.qlogic.com (avcashub1.qlogic.com [198.70.193.115])
-	by mx0a-0016ce01.pphosted.com with ESMTP id 1jvq78237e-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Fri, 28 Mar 2014 16:48:20 -0700
-In-Reply-To: <1396047927-14189-1-git-send-email-quinn.tran@qlogic.com>
-Content-Language: en-US
+	Fri, 28 Mar 2014 20:05:53 -0400
+In-Reply-To: <1396047927-14189-2-git-send-email-quinn.tran@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Quinn Tran <quinn.tran@qlogic.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, sagi grimberg <sagig@mellanox.com>
-Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+To: Quinn Tran <quinn.tran@qlogic.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.vasquez@qlogic.com
 
---_000_504EB66DAC8D234EB8E8560985C2D7AD46CE86F4avmb2qlogicorg_
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <F81D91A8F48AD44DBF6530A4FDE440CB@qlogic.com>
-Content-Transfer-Encoding: quoted-printable
-
-+Sagi
-+Martin
-
-Regards,
-Quinn Tran
-
-
-
-
-On 3/28/14 4:05 PM, "Quinn Tran" <quinn.tran@qlogic.com> wrote:
-
->Nicholas,
+On 3/29/2014 2:05 AM, Quinn Tran wrote:
+> Check lower layer/HW support of T10-dif capability.
+> When the LUN is linked between the underlining fabric
+> and back end device, the Protection Type(1,2,3) is
+> check against each other to make sure both side are
+> capable of supporting the same protection setting.
 >
->Per our conversation at LSF, the following are the patch set
->of bug fix/tweak found during T10-Dif testing and add ability
->for QLogic FC driver to register with TCM its T10-PI capabilities.
+> ln -s /sys/kernel/config/target/core/rd_mcp_0/q_tcm_mcp.0
+> /sys/kernel/config/target/qla2xxx/$L_WWPN/tpgt_1/lun/lun_0/tcm_123
 >
->As for the rest of the other patches that does the actual
->T10-Dif data movement, I will submit them to target-devel and
->stable kernel.
+> Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+> Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
+> ---
+>   drivers/target/target_core_fabric_configfs.c | 20 ++++++++++++++++++++
+>   drivers/target/target_core_tpg.c             |  9 +++++++++
+>   include/target/target_core_base.h            | 14 ++++++++++++++
+>   include/target/target_core_fabric.h          |  1 +
+>   4 files changed, 44 insertions(+)
 >
->Quinn
->-----
->Quinn Tran (4):
->  target/core: T10-Dif: check HW support capabilities
->  tcm_qla2xxx: T10-Dif set harware capability
->  target/rd: T10-Dif: Add init/format support
->  target/rd: T10-Dif: RAM disk is allocating more space than required.
->
-> drivers/scsi/qla2xxx/tcm_qla2xxx.c           | 23 +++++++++
-> drivers/scsi/qla2xxx/tcm_qla2xxx.h           |  1 +
-> drivers/target/target_core_fabric_configfs.c | 20 ++++++++
-> drivers/target/target_core_rd.c              | 70
->+++++++++++++++++++++++++++-
-> drivers/target/target_core_tpg.c             |  9 ++++
-> include/target/target_core_base.h            | 14 ++++++
-> include/target/target_core_fabric.h          |  1 +
-> 7 files changed, 136 insertions(+), 2 deletions(-)
->
->--
->1.8.4.GIT
->
->--
->To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> diff --git a/drivers/target/target_core_fabric_configfs.c b/drivers/target/target_core_fabric_configfs.c
+> index 7de9f04..3ce07ec 100644
+> --- a/drivers/target/target_core_fabric_configfs.c
+> +++ b/drivers/target/target_core_fabric_configfs.c
+> @@ -777,6 +777,26 @@ static int target_fabric_port_link(
+>   				struct se_portal_group, tpg_group);
+>   	tf = se_tpg->se_tpg_wwn->wwn_tf;
+>   
+> +
+> +	if (dev->dev_attrib.pi_prot_type) {
+> +		uint32_t cap[] = { 0,
+> +				   TARGET_DIF_TYPE1_PROTECTION,
+> +				   TARGET_DIF_TYPE2_PROTECTION,
+> +				   TARGET_DIF_TYPE3_PROTECTION};
+> +		uint32_t pt_bits = cap[dev->dev_attrib.pi_prot_type];
+> +		pt_bits &= se_tpg->fabric_sup_prot_type;
 
+At what point should the fabric fill that? it can vary between portals 
+right?
+I would prefer to do that as a function pointer to explicitly ask the 
+fabric it's support.
 
-________________________________
+> +
+> +		/* cross check with fabric to see if t10dif is supported */
+> +		if (!pt_bits) {
+> +			//dev->dev_attrib.pi_prot_type = 0;
 
-This message and any attached documents contain information from QLogic Cor=
-poration or its wholly-owned subsidiaries that may be confidential. If you =
-are not the intended recipient, you may not read, copy, distribute, or use =
-this information. If you have received this transmission in error, please n=
-otify the sender immediately by reply e-mail and then delete this message.
+Probably should lose the comment.
 
---_000_504EB66DAC8D234EB8E8560985C2D7AD46CE86F4avmb2qlogicorg_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
+> +			pr_err("dev[%p]: DIF protection mismatch with fabric "
+> +				"(%s). Transport capability bits[0x%x]\n",
+> +				dev, se_tpg->se_tpg_wwn->wwn_group.cg_item.ci_name,
+> +				se_tpg->fabric_sup_prot_type);
+> +			return -EFAULT;
 
-eJ8+IpMyAQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAADRDQ0NENEVB
-RDQ4MUM1NEQ4RTdDODJEQzZFRTFBNzM5AIkHAQ2ABAACAAAAAgACAAEFgAMADgAAAN4HAwAcABcA
-MAATAAUAYwEBIIADAA4AAADeBwMAHAAXADAAEwAFAGMBAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
-YWlsLk5vdGUAMQgBBIABAD0AAABSZTogW1BBVENIIFJGQyAwLzRdIGFkZCBUMTAtRGlmIHJlZ2lz
-dHJhdGlvbiBmb3IgdGNtX3FsYTJ4eHgAghMBA5AGAEQRAAA1AAAAAgF/AAEAAAA8AAAAPDUwNEVC
-NjZEQUM4RDIzNEVCOEU4NTYwOTg1QzJEN0FENDZDRTg2RjRAYXZtYjIucWxvZ2ljLm9yZz4ACwAf
-DgEAAAACAQkQAQAAAH4FAAB6BQAAmQkAAExaRnU0FqxCYQAKZmJpZAQAAGNjwHBnMTI1MgD+A0Pw
-dGV4dAH3AqQD4wIABGNoCsBzZXQwIO8HbQKDAFARTTIKgAa0AoCWfQqACMg7CWIxOQ7AvwnDFnIK
-MhZxAoAVYioJsHMJ8ASQYXQFsg5QA2Bzom8BgCBFeBHBbhgwXQZSdgSQF7YCEHIAwHR9CFBuGjEQ
-IAXABaAbZGSaIANSIBAiF7JcdgiQ5HdrC4BkNR1TBPAHQA0XcDAKcRfyYmttawZzAZAAICBCTV9C
-4EVHSU59CvwB8QvxVCArBhBnAKBsC4BleQqAK00fgQuBIgQh9VIkZWcLEXMsIfVRdXsLgAOgVBhw
-Is0lvyIiTwEDoDMvMjgvMTQAIDQ6MDUgUE0ILCAiJKgiIDxxySSyLnQlEUBxCQAh0IRjLgWgbT4g
-dwNgpRAgOiLcPk4OUGgG8OphJBc+K9ZQG7EIYRvVKnMYgGkCICAYgCBMZFNGKJB0aBngAhBsfwkA
-A/AZwC8gCXAvowqwdB0RwCASASvWGTAgYnUBMHBmaXgvdHdllGFrL+F1HcAgZAhx5TBhVB6QLUQG
-kBzBH2BzMFMzYWFkNSENwCIAdEZ5K9Ya4SBRTCpiIDxGQzOABRAaMRzAbyB/CXAh0B9gG7ED8C+w
-EkBDnE0gNcAEIDQCUEkb0E5hCrA1kwiQcy4s7kH/BCA2ci+yCXAfYC4QNGEvwX8rIC/ABcAxEweR
-L7AvMWTObz2zGeAA0HR1B0Ar1uU0BmQYgGEgBGAaMAeAPwIwKJA5oAPwMBAxYHVifm01wC+iHLE3
-0B9xGDB0/i0BABowAyA1ASvWH2ECYH0Z4GsEkUMQOo8koyvWLYdGokVbJPMgKDQpK1b7KuBCZS8F
-oStAM/ZJsD2RkmMzEEhXQXFwcAkRIzm7SGljbV8qQGEyrnhNUEm3MWIgEdF3MJLfOcc150jnCyBJ
-uUE1UQuAPTXALxrkSuZPj1CbUkH/OPAN4TMQBAAvIDARHlA0s+sEYDChcwqwYzCyA5EJcM8pkQlx
-RM83RXMvBPAAkH4vTRUywEzoKqBI4FrnfPggMjMhkFvmWD9ZT1pW8zFQWvogMSGQXH9JBUJ0sl9J
-cl9mAaAFEGNiEfpuMpBnA9BawVuRIYFcD99g32HnCyBay1tjNwFAK+W7W+dpDytG52TvYcl0DnC7
-Zs1f0Tlb01LXC4BjCkDXAQBrT2JBYiywZV8LW4G/J/FkDW7PYd5fCl/dNzKBFx5wBCAZlGQokDEz
-Ng9RkRIAIpECIHMoKyk9KJAyM4BDEBIQeEMtKQMs7kbYMS44LjQu7SAQVHm/RudUN9AzUEGB7QTy
-Yi/RHJNoVUEiAB9g/0mwEgAzYS+yIgIooH26IgG4dXgtXYIpYCK3Pi+y+QbgZHk8gkBRB5AuwBnR
-OzfBAMBqBbA+MARgQHZZGDByLkRlBbBnK9ZNf1YyhBdRkQIQLyJOUAJAcKg6Ly+EvS+EFy2HEtlf
-AHRtPxYi3F+Ln4yM3SLcVH7Sg2Y1A26C8BiA7wGQPZEzcVWgdUCydvECIX8LcYcDGwIu8hyDNrUI
-UHIvSyEu1AWxORJ3LIFsef4tMDAYUBxgfdIN0QrAOlH/PdQAwILwfkFi4wEAAjAHMbYuQQAyMHkI
-YDCDbisgvy+jC4AQIB3AHFEJcGMFIP8IkEDSl5KWEpgSCXA1QCiQeQWgcHkokA3hKfB+MHX3ECAo
-kAWxdRIAfrSReZdH9xHQGjCZEmU3cX+iVUEp8n5zQbAEEC7ykUEEkANgcv8okAtQMvCcUZgRBpCC
-8C+y/39yG7EHcAeAlUEQIJRgMkDPgvAJcAtQgvBlLQDAAxH/NQIvsQOgePOcZYNlV6YVQgGmgAAA
-HwBCAAEAAAAWAAAAUQB1AGkAbgBuACAAVAByAGEAbgAAAAAAHwBlAAEAAAAsAAAAcQB1AGkAbgBu
-AC4AdAByAGEAbgBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAGQAAQAAAAoAAABTAE0AVABQAAAA
-AAACAUEAAQAAAGQAAAAAAAAAgSsfpL6jEBmdbgDdAQ9UAgAAAIBRAHUAaQBuAG4AIABUAHIAYQBu
-AAAAUwBNAFQAUAAAAHEAdQBpAG4AbgAuAHQAcgBhAG4AQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAA
-HwACXQEAAAAsAAAAcQB1AGkAbgBuAC4AdAByAGEAbgBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAf
-AOVfAQAAADQAAABzAGkAcAA6AHEAdQBpAG4AbgAuAHQAcgBhAG4AQABxAGwAbwBnAGkAYwAuAGMA
-bwBtAAAAHwAaDAEAAAAWAAAAUQB1AGkAbgBuACAAVAByAGEAbgAAAAAAHwAfDAEAAAAsAAAAcQB1
-AGkAbgBuAC4AdAByAGEAbgBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAB4MAQAAAAoAAABTAE0A
-VABQAAAAAAACARkMAQAAAGQAAAAAAAAAgSsfpL6jEBmdbgDdAQ9UAgAAAIBRAHUAaQBuAG4AIABU
-AHIAYQBuAAAAUwBNAFQAUAAAAHEAdQBpAG4AbgAuAHQAcgBhAG4AQABxAGwAbwBnAGkAYwAuAGMA
-bwBtAAAAHwABXQEAAAAsAAAAcQB1AGkAbgBuAC4AdAByAGEAbgBAAHEAbABvAGcAaQBjAC4AYwBv
-AG0AAAAfAPg/AQAAABYAAABRAHUAaQBuAG4AIABUAHIAYQBuAAAAAAAfACNAAQAAACwAAABxAHUA
-aQBuAG4ALgB0AHIAYQBuAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AIkABAAAACgAAAFMATQBU
-AFAAAAAAAAIB+T8BAAAAZAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgFEAdQBpAG4AbgAgAFQA
-cgBhAG4AAABTAE0AVABQAAAAcQB1AGkAbgBuAC4AdAByAGEAbgBAAHEAbABvAGcAaQBjAC4AYwBv
-AG0AAAAfAAldAQAAACwAAABxAHUAaQBuAG4ALgB0AHIAYQBuAEAAcQBsAG8AZwBpAGMALgBjAG8A
-bQAAAB8AMUABAAAAAgAAAAAAAAALAEA6AQAAAB8AMEABAAAAAgAAAAAAAAAfABoAAQAAABIAAABJ
-AFAATQAuAE4AbwB0AGUAAAAAAAMA8T8JBAAACwBAOgEAAAADAP0/5AQAAAIBCzABAAAAEAAAAEzM
-1OrUgcVNjnyC3G7hpzkDABcAAQAAAEAAOQCA4w4y4ErPAUAACDASjRIy4ErPAQsAAIAIIAYAAAAA
-AMAAAAAAAABGAAAAABSFAAABAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAHgAAAGEAYwBjAGUA
-cAB0AGwAYQBuAGcAdQBhAGcAZQAAAAAAAQAAAAwAAABlAG4ALQBVAFMAAAALAACACCAGAAAAAADA
-AAAAAAAARgAAAAAGhQAAAAAAAB8ANwABAAAAegAAAFIAZQA6ACAAWwBQAEEAVABDAEgAIABSAEYA
-QwAgADAALwA0AF0AIABhAGQAZAAgAFQAMQAwAC0ARABpAGYAIAByAGUAZwBpAHMAdAByAGEAdABp
-AG8AbgAgAGYAbwByACAAdABjAG0AXwBxAGwAYQAyAHgAeAB4AAAAAAAfAD0AAQAAAAoAAABSAGUA
-OgAgAAAAAAADADYAAAAAAB8AQhABAAAAdAAAADwAMQAzADkANgAwADQANwA5ADIANwAtADEANAAx
-ADgAOQAtADEALQBnAGkAdAAtAHMAZQBuAGQALQBlAG0AYQBpAGwALQBxAHUAaQBuAG4ALgB0AHIA
-YQBuAEAAcQBsAG8AZwBpAGMALgBjAG8AbQA+AAAAAgFxAAEAAAAbAAAAAQHPSt9dag9cyf3i30yM
-8eVJEhNAX5r3KqOAAB8AcAABAAAAcgAAAFsAUABBAFQAQwBIACAAUgBGAEMAIAAwAC8ANABdACAA
-YQBkAGQAIABUADEAMAAtAEQAaQBmACAAcgBlAGcAaQBzAHQAcgBhAHQAaQBvAG4AIABmAG8AcgAg
-AHQAYwBtAF8AcQBsAGEAMgB4AHgAeAAAAAAAHwA1EAEAAAB4AAAAPAA1ADAANABFAEIANgA2AEQA
-QQBDADgARAAyADMANABFAEIAOABFADgANQA2ADAAOQA4ADUAQwAyAEQANwBBAEQANAA2AEMARQA4
-ADYARgA0AEAAYQB2AG0AYgAyAC4AcQBsAG8AZwBpAGMALgBvAHIAZwA+AAAAHwA5EAEAAAB0AAAA
-PAAxADMAOQA2ADAANAA3ADkAMgA3AC0AMQA0ADEAOAA5AC0AMQAtAGcAaQB0AC0AcwBlAG4AZAAt
-AGUAbQBhAGkAbAAtAHEAdQBpAG4AbgAuAHQAcgBhAG4AQABxAGwAbwBnAGkAYwAuAGMAbwBtAD4A
-AAADAN4/n04AAEAABzDyaAsy4ErPAQMAJgAAAAAAAgFHAAEAAAAvAAAAYz1VUzthPSA7cD1RTG9n
-aWM7bD1BVk1CMi0xNDAzMjgyMzQ4MTlaLTE3NDM3MgAAHwAVEAEAAABYAAAARgA4ADEARAA5ADEA
-QQA4AEYANAA4AEEARAA0ADQARABCAEYANgA1ADMAMABBADQARgBEAEUANAA0ADAAQwBCAEAAcQBs
-AG8AZwBpAGMALgBjAG8AbQAAAAIBFDABAAAADAAAAIQAAABjaS3dKwAAAB8A+j8BAAAAFgAAAFEA
-dQBpAG4AbgAgAFQAcgBhAG4AAAAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAABYAAAB1AHMAZQBy
-AC0AYQBnAGUAbgB0AAAAAAABAAAARgAAAE0AaQBjAHIAbwBzAG8AZgB0AC0ATQBhAGMATwB1AHQA
-bABvAG8AawAvADEANAAuADMALgA5AC4AMQAzADEAMAAzADAAAAAAAB8AAIAfpOszqHouQr57eeGp
-jlSzAQAAADgAAABDAG8AbgB2AGUAcgBzAGEAdABpAG8AbgBJAG4AZABlAHgAVAByAGEAYwBrAGkA
-bgBnAEUAeAAAAAEAAABEAQAASQBJAD0AMAAxADAAMQBDAEYANABBAEUAMAAzADIANwBFAEUAQwA5
-ADkAMgAxAEUANwBBADcAQgBEADQAOABBADMAQQA2AEYAOAAzADEARABBADkARgBFAEQARQBGADsA
-UwBCAE0ASQBEAD0AMwA7AFMAMQA9ADwAMQAzADkANgAwADQANwA5ADIANwAtADEANAAxADgAOQAt
-ADEALQBnAGkAdAAtAHMAZQBuAGQALQBlAG0AYQBpAGwALQBxAHUAaQBuAG4ALgB0AHIAYQBuAEAA
-cQBsAG8AZwBpAGMALgBjAG8AbQA+ADsAVgBlAHIAcwBpAG8AbgA9AFYAZQByAHMAaQBvAG4AIAAx
-ADQALgAyACAAKABCAHUAaQBsAGQAIAAzADgANwAuADAAKQAsACAAUwB0AGEAZwBlAD0ASAAyAAAA
-AwANNP0/AAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAgAAAAeAAtAG0AcwAtAGgAYQBzAC0AYQB0
-AHQAYQBjAGgAAAABAAAAAgAAAAAAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAiAAAAeAAtAG8A
-cgBpAGcAaQBuAGEAdABpAG4AZwAtAGkAcAAAAAAAAQAAABoAAABbADEAMAAuADMALgAxADAALgA4
-ADEAXQAAAAAA8aw=
+Didn't we agree that this is allowed and the target core should 
+compensate on the lack fabric support?
 
---_000_504EB66DAC8D234EB8E8560985C2D7AD46CE86F4avmb2qlogicorg_--
+> +		}
+> +	}
+> +
+>   	if (lun->lun_se_dev !=  NULL) {
+>   		pr_err("Port Symlink already exists\n");
+>   		return -EEXIST;
+> diff --git a/drivers/target/target_core_tpg.c b/drivers/target/target_core_tpg.c
+> index c036595..9279971 100644
+> --- a/drivers/target/target_core_tpg.c
+> +++ b/drivers/target/target_core_tpg.c
+> @@ -632,6 +632,15 @@ int core_tpg_set_initiator_node_tag(
+>   }
+>   EXPORT_SYMBOL(core_tpg_set_initiator_node_tag);
+>   
+> +void core_tpg_set_fabric_t10dif(
+> +	struct se_portal_group *tpg,
+> +	uint32_t fabric_t10dif_force_on)
+> +{
+> +	tpg->fabric_t10dif_force_on = fabric_t10dif_force_on;
+> +}
+> +EXPORT_SYMBOL(core_tpg_set_fabric_t10dif);
+> +
+
+Is there a user for this function in this patch?
+
+> +
+>   static void core_tpg_lun_ref_release(struct percpu_ref *ref)
+>   {
+>   	struct se_lun *lun = container_of(ref, struct se_lun, lun_ref);
+> diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
+> index ec3e3a3..fc2c0ef 100644
+> --- a/include/target/target_core_base.h
+> +++ b/include/target/target_core_base.h
+> @@ -241,6 +241,17 @@ enum tcm_tmrsp_table {
+>   	TMR_FUNCTION_REJECTED		= 5,
+>   };
+>   
+> +enum target_guard_type_cap {
+> +	TARGET_GUARD_CRC = 1 << 0,
+> +	TARGET_GUARD_IP  = 1 << 1,
+> +};
+> +
+
+So this was dropped in previous rounds, this is more of an initiator 
+thing, the target will always
+receive CRC from the wire and will pass it to the backing device so no 
+need to convert to IP_CSUM.
+
+> +enum target_prot_type_cap {
+> +	TARGET_DIF_TYPE1_PROTECTION = 1 << 0, /* T10 DIF Type 1 */
+> +	TARGET_DIF_TYPE2_PROTECTION = 1 << 1, /* T10 DIF Type 2 */
+> +	TARGET_DIF_TYPE3_PROTECTION = 1 << 2, /* T10 DIF Type 3 */
+> +};
+> +
+>   /*
+>    * Used for target SCSI statistics
+>    */
+> @@ -862,6 +873,9 @@ struct se_portal_group {
+>   	enum transport_tpg_type_table se_tpg_type;
+>   	/* Number of ACLed Initiator Nodes for this TPG */
+>   	u32			num_node_acls;
+> +	u32			fabric_t10dif_force_on;
+> +	u32			fabric_sup_guard_type;
+> +	u32			fabric_sup_prot_type;
+>   	/* Used for PR SPEC_I_PT=1 and REGISTER_AND_MOVE */
+>   	atomic_t		tpg_pr_ref_count;
+>   	/* Spinlock for adding/removing ACLed Nodes */
+> diff --git a/include/target/target_core_fabric.h b/include/target/target_core_fabric.h
+> index 1d10436..4c3dab5 100644
+> --- a/include/target/target_core_fabric.h
+> +++ b/include/target/target_core_fabric.h
+> @@ -152,6 +152,7 @@ int	core_tpg_set_initiator_node_queue_depth(struct se_portal_group *,
+>   		unsigned char *, u32, int);
+>   int	core_tpg_set_initiator_node_tag(struct se_portal_group *,
+>   		struct se_node_acl *, const char *);
+> +void	core_tpg_set_fabric_t10dif(struct se_portal_group *, uint32_t);
+>   int	core_tpg_register(struct target_core_fabric_ops *, struct se_wwn *,
+>   		struct se_portal_group *, void *, int);
+>   int	core_tpg_deregister(struct se_portal_group *);
+
