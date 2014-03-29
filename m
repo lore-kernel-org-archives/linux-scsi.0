@@ -1,8 +1,8 @@
 From: Rashika Kheria <rashika.kheria@gmail.com>
-Subject: [PATCH 49/55] scsi: Move prototype declaration to header file
- scsi_priv.h from scsi_scan.c
-Date: Sun, 30 Mar 2014 00:15:24 +0530
-Message-ID: <6ede28b6caf5d10936d9ea6c7f18d7143406d783.1396114898.git.rashika.kheria@gmail.com>
+Subject: [PATCH 50/55] scsi: Mark function and macro definition as static in
+ be2iscsi/be_main.c
+Date: Sun, 30 Mar 2014 00:16:25 +0530
+Message-ID: <c4a13888f1c3462834fd2d015b627230d996bfa3.1396114898.git.rashika.kheria@gmail.com>
 References: <5fd6fa49a592043459f75ed83a72f8c1ed9ddc13.1396114897.git.rashika.kheria@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
@@ -12,52 +12,99 @@ Content-Disposition: inline
 In-Reply-To: <5fd6fa49a592043459f75ed83a72f8c1ed9ddc13.1396114897.git.rashika.kheria@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, josh@joshtriplett.org
+Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, josh@joshtriplett.org
 List-Id: linux-scsi@vger.kernel.org
 
-Move prototype declarations of functions to header file scsi_priv.h fro=
-m
-scsi_scan.c because they are used by more than one file.
+Mark functions as static in be2iscsi/be_main.c because they are not use=
+d
+outside this file. Also, add static keyword to the macro definition to
+ensure prototype of functions as defined.
 
-This eliminates the following warnings in scsi_lib.c:
-drivers/scsi/scsi_lib.c:466:6: warning: no previous prototype for =E2=80=
-=98scsi_requeue_run_queue=E2=80=99 [-Wmissing-prototypes]
-drivers/scsi/scsi_lib.c:2266:6: warning: no previous prototype for =E2=80=
-=98scsi_evt_thread=E2=80=99 [-Wmissing-prototypes]
+This eliminates the following warning in be2iscsi/be_main.c:
+drivers/scsi/be2iscsi/be_main.c:153:1: warning: no previous prototype f=
+or =E2=80=98beiscsi_log_enable_disp=E2=80=99 [-Wmissing-prototypes]
+drivers/scsi/be2iscsi/be_main.c:153:1: warning: no previous prototype f=
+or =E2=80=98beiscsi_log_enable_change=E2=80=99 [-Wmissing-prototypes]
+drivers/scsi/be2iscsi/be_main.c:153:1: warning: no previous prototype f=
+or =E2=80=98beiscsi_log_enable_store=E2=80=99 [-Wmissing-prototypes]
+drivers/scsi/be2iscsi/be_main.c:153:1: warning: no previous prototype f=
+or =E2=80=98beiscsi_log_enable_init=E2=80=99 [-Wmissing-prototypes]
+drivers/scsi/be2iscsi/be_main.c:4843:5: warning: no previous prototype =
+for =E2=80=98beiscsi_iotask_v2=E2=80=99 [-Wmissing-prototypes]
+drivers/scsi/be2iscsi/be_main.c:5181:6: warning: no previous prototype =
+for =E2=80=98beiscsi_hba_attrs_init=E2=80=99 [-Wmissing-prototypes]
 
 Signed-off-by: Rashika Kheria <rashika.kheria@gmail.com>
 Reviewed-by: Josh Triplett <josh@joshtriplett.org>
 ---
- drivers/scsi/scsi_priv.h |    2 ++
- drivers/scsi/scsi_scan.c |    2 --
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/be2iscsi/be_main.c |   16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
-index f079a59..3fd3b6f 100644
---- a/drivers/scsi/scsi_priv.h
-+++ b/drivers/scsi/scsi_priv.h
-@@ -84,6 +84,8 @@ int scsi_noretry_cmd(struct scsi_cmnd *scmd);
- extern int scsi_maybe_unblock_host(struct scsi_device *sdev);
- extern void scsi_device_unbusy(struct scsi_device *sdev);
- extern void scsi_queue_insert(struct scsi_cmnd *cmd, int reason);
-+void scsi_requeue_run_queue(struct work_struct *work);
-+void scsi_evt_thread(struct work_struct *work);
- extern void scsi_next_command(struct scsi_cmnd *cmd);
- extern void scsi_io_completion(struct scsi_cmnd *, unsigned int);
- extern void scsi_run_host_queues(struct Scsi_Host *shost);
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 307a811..3a67307 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -229,8 +229,6 @@ static struct scsi_device *scsi_alloc_sdev(struct s=
-csi_target *starget,
- 	struct scsi_device *sdev;
- 	int display_failure_msg =3D 1, ret;
- 	struct Scsi_Host *shost =3D dev_to_shost(starget->dev.parent);
--	extern void scsi_evt_thread(struct work_struct *work);
--	extern void scsi_requeue_run_queue(struct work_struct *work);
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be=
+_main.c
+index 1f37505..d9d0087 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -61,7 +61,7 @@ MODULE_PARM_DESC(be_max_phys_size,
+ 		"memory that can be allocated. Range is 16 - 128");
 =20
- 	sdev =3D kzalloc(sizeof(*sdev) + shost->transportt->device_size,
- 		       GFP_ATOMIC);
+ #define beiscsi_disp_param(_name)\
+-ssize_t	\
++static ssize_t	\
+ beiscsi_##_name##_disp(struct device *dev,\
+ 			struct device_attribute *attrib, char *buf)	\
+ {	\
+@@ -74,7 +74,7 @@ beiscsi_##_name##_disp(struct device *dev,\
+ }
+=20
+ #define beiscsi_change_param(_name, _minval, _maxval, _defaval)\
+-int \
++static int \
+ beiscsi_##_name##_change(struct beiscsi_hba *phba, uint32_t val)\
+ {\
+ 	if (val >=3D _minval && val <=3D _maxval) {\
+@@ -93,7 +93,7 @@ beiscsi_##_name##_change(struct beiscsi_hba *phba, ui=
+nt32_t val)\
+ }
+=20
+ #define beiscsi_store_param(_name)  \
+-ssize_t \
++static ssize_t \
+ beiscsi_##_name##_store(struct device *dev,\
+ 			 struct device_attribute *attr, const char *buf,\
+ 			 size_t count) \
+@@ -112,7 +112,7 @@ beiscsi_##_name##_store(struct device *dev,\
+ }
+=20
+ #define beiscsi_init_param(_name, _minval, _maxval, _defval) \
+-int \
++static int \
+ beiscsi_##_name##_init(struct beiscsi_hba *phba, uint32_t val) \
+ { \
+ 	if (val >=3D _minval && val <=3D _maxval) {\
+@@ -4840,9 +4840,9 @@ free_hndls:
+ 	io_task->cmd_bhs =3D NULL;
+ 	return -ENOMEM;
+ }
+-int beiscsi_iotask_v2(struct iscsi_task *task, struct scatterlist *sg,
+-		       unsigned int num_sg, unsigned int xferlen,
+-		       unsigned int writedir)
++static int beiscsi_iotask_v2(struct iscsi_task *task, struct scatterli=
+st *sg,
++			     unsigned int num_sg, unsigned int xferlen,
++			     unsigned int writedir)
+ {
+=20
+ 	struct beiscsi_io_task *io_task =3D task->dd_data;
+@@ -5178,7 +5178,7 @@ static int beiscsi_bsg_request(struct bsg_job *jo=
+b)
+ 	return rc;
+ }
+=20
+-void beiscsi_hba_attrs_init(struct beiscsi_hba *phba)
++static void beiscsi_hba_attrs_init(struct beiscsi_hba *phba)
+ {
+ 	/* Set the logging parameter */
+ 	beiscsi_log_enable_init(phba, beiscsi_log_enable);
 --=20
 1.7.9.5
