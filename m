@@ -1,36 +1,36 @@
 From: Quinn Tran <quinn.tran@qlogic.com>
-Subject: Re: [PATCH 2/4] tcm_qla2xxx: T10-Dif set harware capability
-Date: Mon, 31 Mar 2014 15:38:17 +0000
-Message-ID: <504EB66DAC8D234EB8E8560985C2D7AD46CE91BC@avmb2.qlogic.org>
+Subject: Re: [PATCH 3/4] target/rd: T10-Dif: Add init/format support
+Date: Mon, 31 Mar 2014 16:14:30 +0000
+Message-ID: <504EB66DAC8D234EB8E8560985C2D7AD46CE9A4A@avmb2.qlogic.org>
 References: <1396047927-14189-1-git-send-email-quinn.tran@qlogic.com>
- <1396047927-14189-3-git-send-email-quinn.tran@qlogic.com>
- <5336100B.1010604@mellanox.com>
+ <1396047927-14189-4-git-send-email-quinn.tran@qlogic.com>
+ <533610D2.5030205@mellanox.com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
-	boundary="_000_504EB66DAC8D234EB8E8560985C2D7AD46CE91BCavmb2qlogicorg_"
+	boundary="_000_504EB66DAC8D234EB8E8560985C2D7AD46CE9A4Aavmb2qlogicorg_"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:30433 "EHLO
-	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752932AbaCaPiT (ORCPT
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:47362 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752686AbaCaQOd (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 31 Mar 2014 11:38:19 -0400
-Received: from pps.filterd (m0045602.ppops.net [127.0.0.1])
-	by mx0a-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id s2VFY3ta011601
-	for <linux-scsi@vger.kernel.org>; Mon, 31 Mar 2014 08:38:18 -0700
-Received: from avcashub1.qlogic.com (avcashub2.qlogic.com [198.70.193.116])
-	by mx0a-0016ce01.pphosted.com with ESMTP id 1jvq785p3e-1
+	Mon, 31 Mar 2014 12:14:33 -0400
+Received: from pps.filterd (m0000643.ppops.net [127.0.0.1])
+	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id s2VGDWDH010397
+	for <linux-scsi@vger.kernel.org>; Mon, 31 Mar 2014 09:14:33 -0700
+Received: from avcashub1.qlogic.com (avcashub1.qlogic.com [198.70.193.115])
+	by mx0b-0016ce01.pphosted.com with ESMTP id 1jwyhbm0da-1
 	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Mon, 31 Mar 2014 08:38:18 -0700
-In-Reply-To: <5336100B.1010604@mellanox.com>
+	for <linux-scsi@vger.kernel.org>; Mon, 31 Mar 2014 09:14:32 -0700
+In-Reply-To: <533610D2.5030205@mellanox.com>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: sagi grimberg <sagig@mellanox.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>
 
---_000_504EB66DAC8D234EB8E8560985C2D7AD46CE91BCavmb2qlogicorg_
+--_000_504EB66DAC8D234EB8E8560985C2D7AD46CE9A4Aavmb2qlogicorg_
 Content-Type: text/plain; charset="us-ascii"
-Content-ID: <3CF1216CF1953D4FADADDC1244AF6B92@qlogic.com>
+Content-ID: <4D596C9AB8FB304FBC488311C8EBB5E0@qlogic.com>
 Content-Transfer-Encoding: quoted-printable
 
 
@@ -40,120 +40,145 @@ Quinn Tran
 
 
 
-On 3/28/14 5:12 PM, "sagi grimberg" <sagig@mellanox.com> wrote:
+On 3/28/14 5:16 PM, "sagi grimberg" <sagig@mellanox.com> wrote:
 
 >On 3/29/2014 2:05 AM, Quinn Tran wrote:
->> Set Protection Type(1,2,3) capabilities, Guarg type (CRC/IPchksm)
->> capabilities bits to let TCM core knows of HW/fabric capabilities.
+>> This patch is borrow code from
 >>
->> Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
->> Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
+>> commit 0f5e2ec46dd64579c0770f3822764f94db4fa465
+>> Author: Nicholas Bellinger <nab@linux-iscsi.org>
+>> Date:   Sat Jan 18 09:32:56 2014 +0000
+>>
+>>      target/file: Add DIF protection init/format support
+>>
+>>      This patch adds support for DIF protection init/format support into
+>>      the FILEIO backend.
+>>
+>>      It involves using a seperate $FILE.protection for storing PI that
+>>is
+>>      opened via fd_init_prot() using the common pi_prot_type attribute.
+>>      The actual formatting of the protection is done via
+>>fd_format_prot()
+>>      using the common pi_prot_format attribute, that will populate the
+>>      initial PI data based upon the currently configured pi_prot_type.
+>>
+>>      Based on original FILEIO code from Sagi.
+>>
+>>      v1 changes:
+>>        - Fix sparse warnings in fd_init_format_buf (Fengguang)
+>>
+>>      Cc: Martin K. Petersen <martin.petersen@oracle.com>
+>>      Cc: Christoph Hellwig <hch@lst.de>
+>>      Cc: Hannes Reinecke <hare@suse.de>
+>>      Cc: Sagi Grimberg <sagig@mellanox.com>
+>>      Cc: Or Gerlitz <ogerlitz@mellanox.com>
+>>      Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 >> ---
->>   drivers/scsi/qla2xxx/tcm_qla2xxx.c | 23 +++++++++++++++++++++++
->>   drivers/scsi/qla2xxx/tcm_qla2xxx.h |  1 +
->>   2 files changed, 24 insertions(+)
+>>   drivers/target/target_core_rd.c | 64
+>>++++++++++++++++++++++++++++++++++++++++-
+>>   1 file changed, 63 insertions(+), 1 deletion(-)
 >>
->> diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
->>b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
->> index b23a0ff..4d93081 100644
->> --- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
->> +++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
->> @@ -910,12 +910,20 @@ DEF_QLA_TPG_ATTR_BOOL(demo_mode_login_only);
->>   DEF_QLA_TPG_ATTRIB(demo_mode_login_only);
->>   QLA_TPG_ATTR(demo_mode_login_only, S_IRUGO | S_IWUSR);
+>> diff --git a/drivers/target/target_core_rd.c
+>>b/drivers/target/target_core_rd.c
+>> index 66a5aba..01dda0b 100644
+>> --- a/drivers/target/target_core_rd.c
+>> +++ b/drivers/target/target_core_rd.c
+>> @@ -603,7 +603,7 @@ static int rd_init_prot(struct se_device *dev)
+>>   {
+>>      struct rd_dev *rd_dev =3D RD_DEV(dev);
 >>
->> +/*
->> + * Define tcm_qla2xxx_tpg_attrib_s_t10dif_force_on
->> + */
->> +DEF_QLA_TPG_ATTR_BOOL(t10dif_force_on);
->> +DEF_QLA_TPG_ATTRIB(t10dif_force_on);
->> +QLA_TPG_ATTR(t10dif_force_on, S_IRUGO | S_IWUSR);
->> +
->>   static struct configfs_attribute *tcm_qla2xxx_tpg_attrib_attrs[] =3D {
->>      &tcm_qla2xxx_tpg_attrib_generate_node_acls.attr,
->>      &tcm_qla2xxx_tpg_attrib_cache_dynamic_acls.attr,
->>      &tcm_qla2xxx_tpg_attrib_demo_mode_write_protect.attr,
->>      &tcm_qla2xxx_tpg_attrib_prod_mode_write_protect.attr,
->>      &tcm_qla2xxx_tpg_attrib_demo_mode_login_only.attr,
->> +    &tcm_qla2xxx_tpg_attrib_t10dif_force_on.attr,
->>      NULL,
->>   };
+>> -        if (!dev->dev_attrib.pi_prot_type)
+>> +    if (!dev->dev_attrib.pi_prot_type)
+>>              return 0;
 >>
->> @@ -1049,6 +1057,18 @@ static struct se_portal_group
->>*tcm_qla2xxx_make_tpg(
->>      tpg->tpg_attrib.demo_mode_write_protect =3D 1;
->>      tpg->tpg_attrib.cache_dynamic_acls =3D 1;
->>      tpg->tpg_attrib.demo_mode_login_only =3D 1;
->> +    tpg->tpg_attrib.t10dif_force_on =3D 0;
->> +    tpg->se_tpg.fabric_sup_prot_type =3D 0;
->> +    tpg->se_tpg.fabric_sup_guard_type =3D 0;
->
->You can lose guard_type - this is more relevant to the initiator side.
-
-QT> OK
-
->
->> +
->> +    if (scsi_host_get_prot(lport->qla_vha->host)) {
->> +            tpg->se_tpg.fabric_sup_prot_type =3D (TARGET_DIF_TYPE0_PROT=
-|
->> +                    TARGET_DIF_TYPE1_PROT|TARGET_DIF_TYPE2_PROT|
->> +                    TARGET_DIF_TYPE3_PROT);
->> +
->> +            tpg->se_tpg.fabric_sup_guard_type =3D TARGET_GUARD_CRC|
->> +                    TARGET_GUARD_IP;
->> +    }
->>
->>      ret =3D core_tpg_register(&tcm_qla2xxx_fabric_configfs->tf_ops, wwn=
-,
->>                              &tpg->se_tpg, tpg, TRANSPORT_TPG_TYPE_NORMA=
-L);
->> @@ -1127,6 +1147,8 @@ static ssize_t tcm_qla2xxx_npiv_tpg_store_enable(
->>              qlt_stop_phase1(vha->vha_tgt.qla_tgt);
->>      }
->>
->> +    core_tpg_set_fabric_t10dif(se_tpg, tpg->tpg_attrib.t10dif_force_on)=
-;
->> +
->
->Any way we can get this logic to be shared also with iscsi, srp, etc...
->all fabrics should
->be set with t10dif right? so I would imagine it would be better to
->centralize it right?
-
-QT> Not sure how you want this logic to be shared.  This patch is specific
-to Qlogic driver registering its capabilities.
-
-
->
->>      return count;
+>>      return rd_build_prot_space(rd_dev, dev->prot_length);
+>> @@ -616,6 +616,67 @@ static void rd_free_prot(struct se_device *dev)
+>>      rd_release_prot_space(rd_dev);
 >>   }
 >>
->> @@ -1169,6 +1191,7 @@ static struct se_portal_group
->>*tcm_qla2xxx_npiv_make_tpg(
->>      tpg->tpg_attrib.demo_mode_write_protect =3D 1;
->>      tpg->tpg_attrib.cache_dynamic_acls =3D 1;
->>      tpg->tpg_attrib.demo_mode_login_only =3D 1;
->> +    tpg->tpg_attrib.t10dif_force_on =3D 0;
->>
->>      ret =3D core_tpg_register(&tcm_qla2xxx_npiv_fabric_configfs->tf_ops=
+>> +static void rd_init_format_buf(struct se_device *dev, unsigned char
+>>*buf,
+>> +                           u32 unit_size, u32 *ref_tag, u16 app_tag,
+>> +                           bool inc_reftag)
+>> +{
+>> +    unsigned char *p =3D buf;
+>> +    int i;
+>> +
+>> +    for (i =3D 0; i < unit_size; i +=3D dev->prot_length) {
+>> +            *((u16 *)&p[0]) =3D 0xffff;
+>> +            *((__be16 *)&p[2]) =3D cpu_to_be16(app_tag);
+>> +            *((__be32 *)&p[4]) =3D cpu_to_be32(*ref_tag);
+>> +
+>> +            if (inc_reftag)
+>> +                    (*ref_tag)++;
+>> +
+>> +            p +=3D dev->prot_length;
+>> +    }
+>> +}
+>> +
+>> +static int rd_format_prot(struct se_device *dev)
+>> +{
+>> +    struct rd_dev *rd_dev =3D RD_DEV(dev);
+>> +    u32 ref_tag =3D 0;
+>> +    int i,j;
+>> +    bool inc_reftag =3D false;
+>> +    struct rd_dev_sg_table *pt;
+>> +    struct scatterlist *sg;
+>> +    void *paddr;
+>> +
+>> +    if (!dev->dev_attrib.pi_prot_type) {
+>> +            pr_err("Unable to format_prot while pi_prot_type =3D=3D 0\n=
+");
+>> +            return -ENODEV;
+>> +    }
+>> +
+>> +    switch (dev->dev_attrib.pi_prot_type) {
+>> +    case TARGET_DIF_TYPE3_PROT:
+>> +            ref_tag =3D 0xffffffff;
+>> +            break;
+>> +    case TARGET_DIF_TYPE2_PROT:
+>> +    case TARGET_DIF_TYPE1_PROT:
+>> +            inc_reftag =3D true;
+>> +            break;
+>> +    default:
+>> +            break;
+>> +    }
+>> +
+>> +    for (i=3D0; i < rd_dev->sg_prot_count; i++) {
+>> +            pt=3D &rd_dev->sg_prot_array[i];
+>> +            for_each_sg(pt->sg_table, sg, pt->rd_sg_count, j) {
+>> +                    paddr =3D kmap(sg_page(sg)) + sg->offset;
+>> +
+>> +                    rd_init_format_buf(dev, paddr, sg->length, &ref_tag=
 ,
->>wwn,
->>                              &tpg->se_tpg, tpg, TRANSPORT_TPG_TYPE_NORMA=
-L);
->> diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.h
->>b/drivers/scsi/qla2xxx/tcm_qla2xxx.h
->> index 33aaac8..62fdce3 100644
->> --- a/drivers/scsi/qla2xxx/tcm_qla2xxx.h
->> +++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.h
->> @@ -28,6 +28,7 @@ struct tcm_qla2xxx_tpg_attrib {
->>      int demo_mode_write_protect;
->>      int prod_mode_write_protect;
->>      int demo_mode_login_only;
->> +    int t10dif_force_on;
+>> +                                    0xffff, inc_reftag);
+>> +                    kunmap(paddr);
+>> +            }
+>> +    }
+>> +
+>> +    return 0;
+>> +}
+>> +
+>> +
+>>   static struct sbc_ops rd_sbc_ops =3D {
+>>      .execute_rw             =3D rd_execute_rw,
+>>   };
+>> @@ -642,6 +703,7 @@ static struct se_subsystem_api rd_mcp_template =3D {
+>>      .get_device_type        =3D sbc_get_device_type,
+>>      .get_blocks             =3D rd_get_blocks,
+>>      .init_prot              =3D rd_init_prot,
+>> +    .format_prot            =3D rd_format_prot,
+>>      .free_prot              =3D rd_free_prot,
 >>   };
 >>
->>   struct tcm_qla2xxx_tpg {
+>
+>This patch is redundant altogether. rd_mcp already init protection with
+>escape values:
+>rc =3D rd_allocate_sgl_table(rd_dev, sg_table, total_sg_needed, 0xff);
+
+QT> I see.  Will re-examine my code to live without this function.
+
+>
 
 
 ________________________________
@@ -164,110 +189,119 @@ are not the intended recipient, you may not read, copy, distribute, or use =
 this information. If you have received this transmission in error, please n=
 otify the sender immediately by reply e-mail and then delete this message.
 
---_000_504EB66DAC8D234EB8E8560985C2D7AD46CE91BCavmb2qlogicorg_
+--_000_504EB66DAC8D234EB8E8560985C2D7AD46CE9A4Aavmb2qlogicorg_
 Content-Disposition: attachment; filename="winmail.dat"
 Content-Transfer-Encoding: base64
 Content-Type: application/ms-tnef; name="winmail.dat"
 
-eJ8+ImADAQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAAEYxNzlDNDI3
-NzgyOENENDRBMzM1MUMyOENCOUY4RDRFAEIHAQ2ABAACAAAAAgACAAEFgAMADgAAAN4HAwAfAA8A
-JgARAAEATgEBIIADAA4AAADeBwMAHwAPACYAEQABAE4BAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
-YWlsLk5vdGUAMQgBBIABADwAAABSZTogW1BBVENIIDIvNF0gdGNtX3FsYTJ4eHg6IFQxMC1EaWYg
-c2V0IGhhcndhcmUgY2FwYWJpbGl0eQCQEwEDkAYANBUAADUAAAACAX8AAQAAADwAAAA8NTA0RUI2
-NkRBQzhEMjM0RUI4RTg1NjA5ODVDMkQ3QUQ0NkNFOTFCQ0Bhdm1iMi5xbG9naWMub3JnPgALAB8O
-AQAAAAIBCRABAAAAJQkAACEJAACkFQAATFpGddVh9S5hAApmYmlkBAAAY2PAcGcxMjUyAP4DQ/B0
+eJ8+IggXAQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAADY4OUIxODVB
+MUEyMjQ0NEVBMkZEOTRCODlDNTFFNEI3ADcHAQ2ABAACAAAAAgACAAEFgAMADgAAAN4HAwAfABAA
+DgAeAAEARAEBIIADAA4AAADeBwMAHwAQAA4AHgABAEQBAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
+YWlsLk5vdGUAMQgBBIABADwAAABSZTogW1BBVENIIDMvNF0gdGFyZ2V0L3JkOiBUMTAtRGlmOiBB
+ZGQgaW5pdC9mb3JtYXQgc3VwcG9ydAAWEwEDkAYAKBcAADUAAAACAX8AAQAAADwAAAA8NTA0RUI2
+NkRBQzhEMjM0RUI4RTg1NjA5ODVDMkQ3QUQ0NkNFOUE0QUBhdm1iMi5xbG9naWMub3JnPgALAB8O
+AQAAAAIBCRABAAAAGgsAABYLAACOGAAATFpGdWWc4qxhAApmYmlkBAAAY2PAcGcxMjUyAP4DQ/B0
 ZXh0AfcCpAPjAgAEY2gKwHNldDAg7wdtAoMAUBFNMgqABrQCgJZ9CoAIyDsJYjE5DsC/CcMWcgoy
 FnECgBViKgmwcwnwBJBhdAWyDlADYHOibwGAIEV4EcFuGDBdBlJ2BJAXtgIQcgDAdH0IUG4aMRAg
 BcAFoBtkZJogA1IgECIXslx2CJDkd2sLgGQ1HVME8AdADRdwMApxF/Jia21rBnMBkAAgIEJNX0Lg
 RUdJTn0K/AHxC/KKbAuAZQqAUmVnCxFkcywhlVF1C4ADoFRfGHALkCGkI58kqU8DoDMALzI4LzE0
-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
-OJjSOjH/DGV5A5I/auN8n0pxFBASv/8TxOhePgKLXz9fPb9iKhtO/z4Ca20JPR5/eCU7P2qRPOi9
-BpxfTE9NPAacAXNtBfD+c/ng+uD/kPNx8PFq0RZy4fmgZG9jdU9w/6AFMf+q0A3wGpBDUR2x+dAF
-0KrR2ma8MG1jsQOTQ7awvIE3UoS2sQUSd71w9eB5Le//ECUg+aCtYGK24baAE2D/BfC18baQtODx
-MfLxIxNDoOv/oLaAbAFASbsQ/0LzQf4gf8D/srYi+zAxUfmgIPD/AoDjQPwhdbD/QlbCWMIg8Oxh
-ZHWwIGBwZcH4YHjh93ojdbC2sXWzcbR0UjhX9/fmoDdgWcJlN1H5oLRz/EH8bnMXAOHxqtFR8Tdw
-vDD/lNABsLVg5rFYsh2AGvC2AvfrgDFRVHFtT3BV8fswGuGeYhrwIPBhYBrwZS350P8FoE/jtgHx
-sEOgtWB6UbRzM0919UZ9fQMgZzAAAAAfAEIAAQAAABYAAABRAHUAaQBuAG4AIABUAHIAYQBuAAAA
-AAAfAGUAAQAAACwAAABxAHUAaQBuAG4ALgB0AHIAYQBuAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAA
-AB8AZAABAAAACgAAAFMATQBUAFAAAAAAAAIBQQABAAAAZAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QC
-AAAAgFEAdQBpAG4AbgAgAFQAcgBhAG4AAABTAE0AVABQAAAAcQB1AGkAbgBuAC4AdAByAGEAbgBA
-AHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAJdAQAAACwAAABxAHUAaQBuAG4ALgB0AHIAYQBuAEAA
-cQBsAG8AZwBpAGMALgBjAG8AbQAAAB8A5V8BAAAANAAAAHMAaQBwADoAcQB1AGkAbgBuAC4AdABy
-AGEAbgBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfABoMAQAAABYAAABRAHUAaQBuAG4AIABUAHIA
-YQBuAAAAAAAfAB8MAQAAACwAAABxAHUAaQBuAG4ALgB0AHIAYQBuAEAAcQBsAG8AZwBpAGMALgBj
-AG8AbQAAAB8AHgwBAAAACgAAAFMATQBUAFAAAAAAAAIBGQwBAAAAZAAAAAAAAACBKx+kvqMQGZ1u
-AN0BD1QCAAAAgFEAdQBpAG4AbgAgAFQAcgBhAG4AAABTAE0AVABQAAAAcQB1AGkAbgBuAC4AdABy
-AGEAbgBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAFdAQAAACwAAABxAHUAaQBuAG4ALgB0AHIA
-YQBuAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8A+D8BAAAAFgAAAFEAdQBpAG4AbgAgAFQAcgBh
-AG4AAAAAAB8AI0ABAAAALAAAAHEAdQBpAG4AbgAuAHQAcgBhAG4AQABxAGwAbwBnAGkAYwAuAGMA
-bwBtAAAAHwAiQAEAAAAKAAAAUwBNAFQAUAAAAAAAAgH5PwEAAABkAAAAAAAAAIErH6S+oxAZnW4A
-3QEPVAIAAACAUQB1AGkAbgBuACAAVAByAGEAbgAAAFMATQBUAFAAAABxAHUAaQBuAG4ALgB0AHIA
-YQBuAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8ACV0BAAAALAAAAHEAdQBpAG4AbgAuAHQAcgBh
-AG4AQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAxQAEAAAACAAAAAAAAAAsAQDoBAAAAHwAwQAEA
-AAACAAAAAAAAAB8AGgABAAAAEgAAAEkAUABNAC4ATgBvAHQAZQAAAAAAAwDxPwkEAAALAEA6AQAA
-AAMA/T/kBAAAAgELMAEAAAAQAAAA8XnEJ3gozUSjNRwoy5+NTgMAFwABAAAAQAA5AID6Vjz3TM8B
-QAAIMFh0bTz3TM8BCwAAgAggBgAAAAAAwAAAAAAAAEYAAAAAFIUAAAEAAAAfAACAhgMCAAAAAADA
-AAAAAAAARgEAAAAeAAAAYQBjAGMAZQBwAHQAbABhAG4AZwB1AGEAZwBlAAAAAAABAAAADAAAAGUA
-bgAtAFUAUwAAAAsAAIAIIAYAAAAAAMAAAAAAAABGAAAAAAaFAAAAAAAAHwA3AAEAAAB4AAAAUgBl
-ADoAIABbAFAAQQBUAEMASAAgADIALwA0AF0AIAB0AGMAbQBfAHEAbABhADIAeAB4AHgAOgAgAFQA
-MQAwAC0ARABpAGYAIABzAGUAdAAgAGgAYQByAHcAYQByAGUAIABjAGEAcABhAGIAaQBsAGkAdAB5
-AAAAHwA9AAEAAAAKAAAAUgBlADoAIAAAAAAAAwA2AAAAAAAfAEIQAQAAAEAAAAA8ADUAMwAzADYA
-MQAwADAAQgAuADEAMAAxADAANgAwADQAQABtAGUAbABsAGEAbgBvAHgALgBjAG8AbQA+AAAAAgFx
-AAEAAAAgAAAAAQHPSt9e9ta5B2T2/0evxxeD0FTJx5r3puKAgAOx1YAfAHAAAQAAAHAAAABbAFAA
-QQBUAEMASAAgADIALwA0AF0AIAB0AGMAbQBfAHEAbABhADIAeAB4AHgAOgAgAFQAMQAwAC0ARABp
-AGYAIABzAGUAdAAgAGgAYQByAHcAYQByAGUAIABjAGEAcABhAGIAaQBsAGkAdAB5AAAAHwA1EAEA
-AAB4AAAAPAA1ADAANABFAEIANgA2AEQAQQBDADgARAAyADMANABFAEIAOABFADgANQA2ADAAOQA4
-ADUAQwAyAEQANwBBAEQANAA2AEMARQA5ADEAQgBDAEAAYQB2AG0AYgAyAC4AcQBsAG8AZwBpAGMA
-LgBvAHIAZwA+AAAAHwA5EAEAAAAoAQAAPAAxADMAOQA2ADAANAA3ADkAMgA3AC0AMQA0ADEAOAA5
-AC0AMQAtAGcAaQB0AC0AcwBlAG4AZAAtAGUAbQBhAGkAbAAtAHEAdQBpAG4AbgAuAHQAcgBhAG4A
-QABxAGwAbwBnAGkAYwAuAGMAbwBtAD4AIAA8ADEAMwA5ADYAMAA0ADcAOQAyADcALQAxADQAMQA4
-ADkALQAzAC0AZwBpAHQALQBzAGUAbgBkAC0AZQBtAGEAaQBsAC0AcQB1AGkAbgBuAC4AdAByAGEA
-bgBAAHEAbABvAGcAaQBjAC4AYwBvAG0APgAgADwANQAzADMANgAxADAAMABCAC4AMQAwADEAMAA2
-ADAANABAAG0AZQBsAGwAYQBuAG8AeAAuAGMAbwBtAD4AAAADAN4/n04AAEAABzDY7mM890zPAQMA
-JgAAAAAAAgFHAAEAAAAvAAAAYz1VUzthPSA7cD1RTG9naWM7bD1BVk1CMi0xNDAzMzExNTM4MTda
-LTE3NTAzMQAAHwAVEAEAAABYAAAAMwBDAEYAMQAyADEANgBDAEYAMQA5ADUAMwBEADQARgBBAEQA
-QQBEAEQAQwAxADIANAA0AEEARgA2AEIAOQAyAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAIBFDAB
-AAAADAAAAPYAAAD1SIRXUgAAAB8A+j8BAAAAFgAAAFEAdQBpAG4AbgAgAFQAcgBhAG4AAAAAAB8A
-AICGAwIAAAAAAMAAAAAAAABGAQAAABYAAAB1AHMAZQByAC0AYQBnAGUAbgB0AAAAAAABAAAARgAA
-AE0AaQBjAHIAbwBzAG8AZgB0AC0ATQBhAGMATwB1AHQAbABvAG8AawAvADEANAAuADMALgA5AC4A
-MQAzADEAMAAzADAAAAAAAB8AAIAfpOszqHouQr57eeGpjlSzAQAAADgAAABDAG8AbgB2AGUAcgBz
-AGEAdABpAG8AbgBJAG4AZABlAHgAVAByAGEAYwBrAGkAbgBnAEUAeAAAAAEAAAAQAQAASQBJAD0A
-MAAxADAAMQBDAEYANABDAEYANwAzAEMARgBEADMAMAAwAEQARgA3AEIAOAAzADUARgA1ADQANwBC
-AEUAMwA5ADgAQgA1ADAANQA1AEEAQgAxADEAOAAwADsAUwBCAE0ASQBEAD0ANQA7AFMAMQA9ADwA
-NQAzADMANgAxADAAMABCAC4AMQAwADEAMAA2ADAANABAAG0AZQBsAGwAYQBuAG8AeAAuAGMAbwBt
-AD4AOwBWAGUAcgBzAGkAbwBuAD0AVgBlAHIAcwBpAG8AbgAgADEANAAuADIAIAAoAEIAdQBpAGwA
-ZAAgADMAOAA3AC4AMAApACwAIABTAHQAYQBnAGUAPQBIADIAAAADAA00/T8AAB8AAICGAwIAAAAA
-AMAAAAAAAABGAQAAACAAAAB4AC0AbQBzAC0AaABhAHMALQBhAHQAdABhAGMAaAAAAAEAAAACAAAA
-AAAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAACIAAAB4AC0AbwByAGkAZwBpAG4AYQB0AGkAbgBn
-AC0AaQBwAAAAAAABAAAAHAAAAFsAMQA3ADIALgAzADAALgA0AC4AOQAwAF0AAAAChA==
+IDUAOjE2IFBNLCDAInNhZ2kgCcAHcEJiBJBnIiA8JxJnCkAHgGwLYG5veC5hBaBtPiB3A2AQIDpV
+JHw+JcQ5JgAwJkEy4DowNSBBJtEi+ClMUj4pMFRoBAAgCrB07RHAIC3RBuByA2AH4AWgnwEAHHMt
+Fy0YKQFtaQVAIDBmNWUyBZA0NgBkZDY0NTc5YwgwNzcxMDM4MjKCNzHgZjk0ZGIy8A5hMaAd4C0n
+QXV0aH0FsDoHsA5QNIALYAQgQk8ogQuAGDAFwDxuAaBAUSGhdXgtBABjAJAutQWwZzAZRBiAKZAg
+OEBLBhAFQEoDkTE4MSA5tDozK3A1JqArIyseoD8eoC+fKTA7cx9xGDB0LzZmAxA4IUExwDfgSUbj
+LfApYmN0aQIgLlADAIM8IRrzIHN1cHAJEfc6XztlLblhMcAEID6VHHC/BbE87z3/QyEYkDruaBng
+wEZJTEVJTy6AANCyawnwZC4/DztlSURS7nYG8BowBCB1AJAZwEEgWT6AZXAYYhngJEXiLp9CiUIC
+H2AFsEkyUElFke8YgC0XDfE6/G9JsBhQHGBXHWBJcAVwX0MyX0KCKJ4pSQVFojDCQwFwaU8jeF90
+eUmwQSACQAUQYr00YGVGyEAmUWFC0HUHQP9B8hsRQuBJQRkwRZNCigQg/mQCIBngTnEtF06xGuRP
+Jf867U+vULY+JVGHJuBMIilA5wMQAyA+wHB1C2BJ8UWh7zrtQzIHMUviZBiASXBGUP8SABxgPqBD
+AVkjCHAJcAIw7Gx5G9I8QGcIcBxRULr7Rs87VkJe00MBS5EnMDYQfwMgReUvBwYBJzBhzztWdrYx
+G9AZo3MtCWiVLUXQ/Gl4PoAKsRIAKUAKwAMAfxnABCALgE6nVwVR0FSAKHpGCfBnYKAZsVfIOu1D
+mmM0sE0fgWpxSy4msO8SEASQEgADoDwAwG5iSnD9bvVABbAA0B5wKPNtHzSwrENoBRBLcXAuQEgo
+gXMD8ElQPGgRwDZAH2Au9wEAcS9uEUgAcBhQBCAiAM8hsUZxc3EKwGVAPpASAOd0D23kZYIgRyd1
+J/9w/zVt5E8FwEcEkCGgdHq9eVBvNcF8MnnPOxpTKECFTjEtGTBmLWJ5NL/fNc8232kAgvA66mQF
+EBoxLHMvO9U71F8FoWVfYwsgKPAgfCAx4C0XK3+Gv4fPiCODG2dgPEJndWR5JuA2M0MhEgBuYQIg
+c/goKykm4GdgAQAecELi/CgtbH8tgQ3gASCC4Scw3VqhL4PvhPwtF2KO74//jy02HbEQMIXwNmE1
+AaAYYS4uKzAxwGEwYv844B6gMeCGGILijs+Sfy0Yn4ghLoCW75f/LTZAQGkA4DYwMyw3OfCctJxx
+7x9hQuCFwERxIAsgTtkfYGxydULQSYFfAQAdYGPtGeAqn9FXy1wAADr8nzUvnmGf0aAwotU9B/BE
+X/BERVYooFIWII0PaQGXaJUGkGvAIZ/RLT6f0f5fUYRKcFDJV8mZoKY/p0/fqFusKwlwU3AEoTCk
+nztW/60FnmFR0AMQTsBQ42lxoBD+KKLUJuCpw1DjHnAZwDRw96SJnGQmkCwmoJ0Qs1Kdav9IoA3Q
+nlIDUAngnt+f766I/07ACXAecF7RsA+keqEiIEB/ra858LRdat2137bjJuB11wCBfwJncnItFypr
+kSJ2f6j2wi9YZTlQv4FPAQCQev9bQcOio0ABEFEgJyC/cSaR/mE+sMUTwU/HPztyBuAG8P1DIWO4
+UQGBbGk58KFaqSP7v5u24HCjsWuRslmpJJ4x7mnMuqiNQgIoJ0CjwK1w7y5QeVDD2NBSK6PAsU+h
+SxHG2yooKMVyKikmsHBbMF1PgNAheAEgdwEgzL7T6V9rgBdw1LUyq9UzDmB1USBv16MoxbXfskrW
+n9ehxKLU4jTYbDlQ/ijE1tnr2g+mCMjv3z9olv/deIgg3h/hjy3w0X+yEcy+/7rZyiHoe7ufniVX
+Cr4vtv3/yj+iX6NvuevLBMOxxOXQE/PMz0RRLGrznsid8MEzYN9z0NEw7o/vmbBQZ8URAmD/7UEF
+MPd/7GUeUAJAfBIfYP+24PlQ8560w8wwQTEaUOlfn6jvqf+rB9LP5YhyX5og8HIoIlWBEYpBGJBT
+tV9PIylALcCKQVC7PdAhXBhcbiLxn6yNLUVO/k/xIedv6U/6eRFgLiKkQh8AXwFv/zgeUGmxVEFS
+GEdFVPEQQlBfVFkAUEUzX1BST1R/LQkH7fMH1ZPVr8fqtVBh7mvzng/PENEyER8WvxCV/jEYT9+L
+9mrsYfdvFS//GveMQDNgXEB0Gz8e3wnvCv/9z2k90EXv5A0A+VFQ44VAv7+Q+gAuUIggDp/leXTw
+0A4mJn7AQEnQeVtpXV8dz+IVz7EDsLlQaPlBKP/58CbT+YOMAPxQjAAt0q+B9/lRJ3OMAGooHzEf
+QMH98fXwwWtvgHDsQCcBZZCwoP38UClPgJmg/FANAH9RSZD/+gswX6wtvQ+kQi7R/eIukv8NALHk
+jAAqAMT1NW87nzx739WEjADgiSufP61rv5Ay0v/90z6vP6boa0LP/u2tD+kP70dPWEPqtexWYuCg
+TgBVoO8vMkpF8NChXy6UUFUgUeH9hYB3P6vw0K+BTKg6ibqy6bJeNDKzcjedPexYdtDIYnN5/BBl
+bQ1QDdDdnlJt2LAOQFNgcFxTS2//THGFAuz0BkRNp0oyVh1PC/tV1vmgb3YwalBNX1noWN/fnpc/
+rE4Tnpc6ji4Euk1u/+uZXE+1R13vtSlPD7sOq5Z+VAWAalCwcAyCaTG1UGS/v5CVQJ4x9zDY8JqR
+aJogz27AU9RqgSKRZHmLIY6h3+wCTMCMggVgjqBoq5Z1sFsZkFbhdvcwHaBzIQdyv4XAThP3MFox
+VJH5QWz5dP+wty4Y2PD5gHCQ+VF1oIrAT4rC1YKkh6uVUVSOAEl37LF3AD+gV6/Q9jC1UC3JlFBh
+bY2hIG1sIIVA/4xABHKAkJoQbTMvoI6w0pDtaTFmv5Bs4y5zrHqWc6xf15B6/3vbc6xpE21usHP/
+M1HFoJQwfoFsIPuhLWG/8fpkWkB1fhCeMGlAhUCeMD5h9lCLITfUbQK1QG9tWCBRTGrA6vFDLSBw
+fy0ggSTPwY6gaUAFcMiwbHB5LW93y6JS8v2Qaf3AQGlusHex+6B2MCtAInC/ilGMoIogjECeMISg
+bHUQOkn/4HkvoMWgtVAgbj8FQWrxnhLSYHLxRcFjaf9ToH/xjACG4oVih2Jr4owA+ZtAcHmxIfwB
+DZFM4Yog/c/BdRmxd8OAyYaXy/B3EX2IcWV3AbTwd8MNgGpQc/918H4wbQKAkQPBLSAu0biDf4dS
+/9BsIIeiGbCUMYMRbf9+EISR+8CDsCJwbCC1UFRw/2wgdaA4AK/QfoNq8a9ghiCfuIBUoXfDfhV4
+ln19q+ABldAAAB8AQgABAAAAFgAAAFEAdQBpAG4AbgAgAFQAcgBhAG4AAAAAAB8AZQABAAAALAAA
+AHEAdQBpAG4AbgAuAHQAcgBhAG4AQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwBkAAEAAAAKAAAA
+UwBNAFQAUAAAAAAAAgFBAAEAAABkAAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAUQB1AGkAbgBu
+ACAAVAByAGEAbgAAAFMATQBUAFAAAABxAHUAaQBuAG4ALgB0AHIAYQBuAEAAcQBsAG8AZwBpAGMA
+LgBjAG8AbQAAAB8AAl0BAAAALAAAAHEAdQBpAG4AbgAuAHQAcgBhAG4AQABxAGwAbwBnAGkAYwAu
+AGMAbwBtAAAAHwDlXwEAAAA0AAAAcwBpAHAAOgBxAHUAaQBuAG4ALgB0AHIAYQBuAEAAcQBsAG8A
+ZwBpAGMALgBjAG8AbQAAAB8AGgwBAAAAFgAAAFEAdQBpAG4AbgAgAFQAcgBhAG4AAAAAAB8AHwwB
+AAAALAAAAHEAdQBpAG4AbgAuAHQAcgBhAG4AQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAeDAEA
+AAAKAAAAUwBNAFQAUAAAAAAAAgEZDAEAAABkAAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAUQB1
+AGkAbgBuACAAVAByAGEAbgAAAFMATQBUAFAAAABxAHUAaQBuAG4ALgB0AHIAYQBuAEAAcQBsAG8A
+ZwBpAGMALgBjAG8AbQAAAB8AAV0BAAAALAAAAHEAdQBpAG4AbgAuAHQAcgBhAG4AQABxAGwAbwBn
+AGkAYwAuAGMAbwBtAAAAHwD4PwEAAAAWAAAAUQB1AGkAbgBuACAAVAByAGEAbgAAAAAAHwAjQAEA
+AAAsAAAAcQB1AGkAbgBuAC4AdAByAGEAbgBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfACJAAQAA
+AAoAAABTAE0AVABQAAAAAAACAfk/AQAAAGQAAAAAAAAAgSsfpL6jEBmdbgDdAQ9UAgAAAIBRAHUA
+aQBuAG4AIABUAHIAYQBuAAAAUwBNAFQAUAAAAHEAdQBpAG4AbgAuAHQAcgBhAG4AQABxAGwAbwBn
+AGkAYwAuAGMAbwBtAAAAHwAJXQEAAAAsAAAAcQB1AGkAbgBuAC4AdAByAGEAbgBAAHEAbABvAGcA
+aQBjAC4AYwBvAG0AAAAfADFAAQAAAAIAAAAAAAAACwBAOgEAAAAfADBAAQAAAAIAAAAAAAAAHwAa
+AAEAAAASAAAASQBQAE0ALgBOAG8AdABlAAAAAAADAPE/CQQAAAsAQDoBAAAAAwD9P+QEAAACAQsw
+AQAAABAAAABomxhaGiJETqL9lLicUeS3AwAXAAEAAABAADkAAHeMS/xMzwFAAAgw2BqcS/xMzwEL
+AACACCAGAAAAAADAAAAAAAAARgAAAAAUhQAAAQAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAAB4A
+AABhAGMAYwBlAHAAdABsAGEAbgBnAHUAYQBnAGUAAAAAAAEAAAAMAAAAZQBuAC0AVQBTAAAACwAA
+gAggBgAAAAAAwAAAAAAAAEYAAAAABoUAAAAAAAAfADcAAQAAAHgAAABSAGUAOgAgAFsAUABBAFQA
+QwBIACAAMwAvADQAXQAgAHQAYQByAGcAZQB0AC8AcgBkADoAIABUADEAMAAtAEQAaQBmADoAIABB
+AGQAZAAgAGkAbgBpAHQALwBmAG8AcgBtAGEAdAAgAHMAdQBwAHAAbwByAHQAAAAfAD0AAQAAAAoA
+AABSAGUAOgAgAAAAAAADADYAAAAAAB8AQhABAAAAQAAAADwANQAzADMANgAxADAARAAyAC4ANQAw
+ADMAMAAyADAANQBAAG0AZQBsAGwAYQBuAG8AeAAuAGMAbwBtAD4AAAACAXEAAQAAACAAAAABAc9K
+312uMBVTO3gjS6aIYnXlWLT5mvenzwCAA7sGAB8AcAABAAAAcAAAAFsAUABBAFQAQwBIACAAMwAv
+ADQAXQAgAHQAYQByAGcAZQB0AC8AcgBkADoAIABUADEAMAAtAEQAaQBmADoAIABBAGQAZAAgAGkA
+bgBpAHQALwBmAG8AcgBtAGEAdAAgAHMAdQBwAHAAbwByAHQAAAAfADUQAQAAAHgAAAA8ADUAMAA0
+AEUAQgA2ADYARABBAEMAOABEADIAMwA0AEUAQgA4AEUAOAA1ADYAMAA5ADgANQBDADIARAA3AEEA
+RAA0ADYAQwBFADkAQQA0AEEAQABhAHYAbQBiADIALgBxAGwAbwBnAGkAYwAuAG8AcgBnAD4AAAAf
+ADkQAQAAACgBAAA8ADEAMwA5ADYAMAA0ADcAOQAyADcALQAxADQAMQA4ADkALQAxAC0AZwBpAHQA
+LQBzAGUAbgBkAC0AZQBtAGEAaQBsAC0AcQB1AGkAbgBuAC4AdAByAGEAbgBAAHEAbABvAGcAaQBj
+AC4AYwBvAG0APgAgADwAMQAzADkANgAwADQANwA5ADIANwAtADEANAAxADgAOQAtADQALQBnAGkA
+dAAtAHMAZQBuAGQALQBlAG0AYQBpAGwALQBxAHUAaQBuAG4ALgB0AHIAYQBuAEAAcQBsAG8AZwBp
+AGMALgBjAG8AbQA+ACAAPAA1ADMAMwA2ADEAMABEADIALgA1ADAAMwAwADIAMAA1AEAAbQBlAGwA
+bABhAG4AbwB4AC4AYwBvAG0APgAAAAMA3j+fTgAAQAAHMLj2lEv8TM8BAwAmAAAAAAACAUcAAQAA
+AC8AAABjPVVTO2E9IDtwPVFMb2dpYztsPUFWTUIyLTE0MDMzMTE2MTQzMFotMTc1MDk4AAAfABUQ
+AQAAAFgAAAA0AEQANQA5ADYAQwA5AEEAQgA4AEYAQgAzADAANABGAEIAQwA0ADgAOAAzADEAMQBD
+ADgARQBCAEIANQBFADAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAgEUMAEAAAAMAAAAZQEAAKil
+mbZSAAAAHwD6PwEAAAAWAAAAUQB1AGkAbgBuACAAVAByAGEAbgAAAAAAHwAAgIYDAgAAAAAAwAAA
+AAAAAEYBAAAAFgAAAHUAcwBlAHIALQBhAGcAZQBuAHQAAAAAAAEAAABGAAAATQBpAGMAcgBvAHMA
+bwBmAHQALQBNAGEAYwBPAHUAdABsAG8AbwBrAC8AMQA0AC4AMwAuADkALgAxADMAMQAwADMAMAAA
+AAAAHwAAgB+k6zOoei5Cvnt54amOVLMBAAAAOAAAAEMAbwBuAHYAZQByAHMAYQB0AGkAbwBuAEkA
+bgBkAGUAeABUAHIAYQBjAGsAaQBuAGcARQB4AAAAAQAAABABAABJAEkAPQAwADEAMAAxAEMARgA0
+AEMARgBDADQAQgA0AEQAOABBADYAMwA2ADIAQgA5AEEAQwBEADYANAA0AEEAQwA0ADUANQBDAEEA
+QgA4AEIAMABEADEAQQA4ADcAOwBTAEIATQBJAEQAPQAzADsAUwAxAD0APAA1ADMAMwA2ADEAMABE
+ADIALgA1ADAAMwAwADIAMAA1AEAAbQBlAGwAbABhAG4AbwB4AC4AYwBvAG0APgA7AFYAZQByAHMA
+aQBvAG4APQBWAGUAcgBzAGkAbwBuACAAMQA0AC4AMgAgACgAQgB1AGkAbABkACAAMwA4ADcALgAw
+ACkALAAgAFMAdABhAGcAZQA9AEgAMgAAAAMADTT9PwAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAA
+IAAAAHgALQBtAHMALQBoAGEAcwAtAGEAdAB0AGEAYwBoAAAAAQAAAAIAAAAAAAAAHwAAgIYDAgAA
+AAAAwAAAAAAAAEYBAAAAIgAAAHgALQBvAHIAaQBnAGkAbgBhAHQAaQBuAGcALQBpAHAAAAAAAAEA
+AAAcAAAAWwAxADcAMgAuADMAMAAuADQALgA5ADAAXQAAAKV0
 
---_000_504EB66DAC8D234EB8E8560985C2D7AD46CE91BCavmb2qlogicorg_--
+--_000_504EB66DAC8D234EB8E8560985C2D7AD46CE9A4Aavmb2qlogicorg_--
