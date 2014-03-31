@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 1/4] blk->mq: stop pre-initializing req->special
-Date: Mon, 31 Mar 2014 16:46:12 +0200
-Message-ID: <1396277175-21382-2-git-send-email-hch@lst.de>
+Subject: [PATCH 4/4] blk-mq: support shared tag maps
+Date: Mon, 31 Mar 2014 16:46:15 +0200
+Message-ID: <1396277175-21382-5-git-send-email-hch@lst.de>
 References: <1396277175-21382-1-git-send-email-hch@lst.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1396277175-21382-1-git-send-email-hch@lst.de>
@@ -10,152 +10,212 @@ To: Jens Axboe <axboe@fb.com>
 Cc: Matias Bjorling <m@bjorling.me>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-We can get at the private data easil using pointer arithmetics.  Do so
-instead of initializing req->special so that we don't rely on the
-request state in various initialization functions and shave off another
-few instructions in the fast path.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- block/blk-flush.c          |   10 ++--------
- block/blk-mq.c             |   15 ++-------------
- block/blk-mq.h             |    1 -
- drivers/block/null_blk.c   |    4 ++--
- drivers/block/virtio_blk.c |    6 +++---
- 5 files changed, 9 insertions(+), 27 deletions(-)
+ block/blk-mq-tag.c     |    2 ++
+ block/blk-mq.c         |   83 +++++++++++++++++++++++++++++++++++++++++++-----
+ block/blk-mq.h         |    2 ++
+ include/linux/blk-mq.h |   12 +++++++
+ 4 files changed, 91 insertions(+), 8 deletions(-)
 
-diff --git a/block/blk-flush.c b/block/blk-flush.c
-index 43e6b47..9a0c427 100644
---- a/block/blk-flush.c
-+++ b/block/blk-flush.c
-@@ -306,22 +306,16 @@ static bool blk_kick_flush(struct request_queue *q)
- 	 */
- 	q->flush_pending_idx ^= 1;
+diff --git a/block/blk-mq-tag.c b/block/blk-mq-tag.c
+index 108f82b..a7b1888 100644
+--- a/block/blk-mq-tag.c
++++ b/block/blk-mq-tag.c
+@@ -121,6 +121,8 @@ struct blk_mq_tags *blk_mq_init_tags(unsigned int total_tags,
+ 	if (!tags)
+ 		return NULL;
  
-+	blk_rq_init(q, q->flush_rq);
- 	if (q->mq_ops) {
--		struct blk_mq_ctx *ctx = first_rq->mq_ctx;
--		struct blk_mq_hw_ctx *hctx = q->mq_ops->map_queue(q, ctx->cpu);
--
--		blk_mq_rq_init(hctx, q->flush_rq);
--		q->flush_rq->mq_ctx = ctx;
--
- 		/*
- 		 * Reuse the tag value from the fist waiting request,
- 		 * with blk-mq the tag is generated during request
- 		 * allocation and drivers can rely on it being inside
- 		 * the range they asked for.
- 		 */
-+		q->flush_rq->mq_ctx = first_rq->mq_ctx;
- 		q->flush_rq->tag = first_rq->tag;
--	} else {
--		blk_rq_init(q, q->flush_rq);
- 	}
++	kref_init(&tags->ref_count);
++
+ 	nr_tags = total_tags - reserved_tags;
+ 	nr_cache = nr_tags / num_possible_cpus();
  
- 	q->flush_rq->cmd_type = REQ_TYPE_FS;
 diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 4274ee0..871acd6 100644
+index f1b5d52..3d63d71 100644
 --- a/block/blk-mq.c
 +++ b/block/blk-mq.c
-@@ -248,24 +248,13 @@ struct request *blk_mq_alloc_reserved_request(struct request_queue *q, int rw,
+@@ -1051,8 +1051,10 @@ void blk_mq_free_commands(struct request_queue *q,
  }
- EXPORT_SYMBOL(blk_mq_alloc_reserved_request);
+ EXPORT_SYMBOL(blk_mq_free_commands);
  
--/*
-- * Re-init and set pdu, if we have it
-- */
--void blk_mq_rq_init(struct blk_mq_hw_ctx *hctx, struct request *rq)
--{
--	blk_rq_init(hctx->queue, rq);
--
--	if (hctx->cmd_size)
--		rq->special = blk_mq_rq_to_pdu(rq);
--}
--
- static void __blk_mq_free_request(struct blk_mq_hw_ctx *hctx,
- 				  struct blk_mq_ctx *ctx, struct request *rq)
+-static void blk_mq_free_rq_map(struct blk_mq_tags *tags)
++static void blk_mq_free_rq_map(struct kref *kref)
  {
- 	const int tag = rq->tag;
- 	struct request_queue *q = rq->q;
++	struct blk_mq_tags *tags =
++		container_of(kref, struct blk_mq_tags, ref_count);
+ 	struct page *page;
  
--	blk_mq_rq_init(hctx, rq);
-+	blk_rq_init(hctx->queue, rq);
- 	blk_mq_put_tag(hctx->tags, tag);
+ 	while (!list_empty(&tags->page_list)) {
+@@ -1066,6 +1068,17 @@ static void blk_mq_free_rq_map(struct blk_mq_tags *tags)
+ 	blk_mq_free_tags(tags);
+ }
  
- 	blk_mq_queue_exit(q);
-@@ -1139,7 +1128,7 @@ static int blk_mq_init_rq_map(struct blk_mq_hw_ctx *hctx,
- 		left -= to_do * rq_size;
- 		for (j = 0; j < to_do; j++) {
- 			hctx->rqs[i] = p;
--			blk_mq_rq_init(hctx, hctx->rqs[i]);
-+			blk_rq_init(hctx->queue, hctx->rqs[i]);
- 			p += rq_size;
- 			i++;
- 		}
++static void blk_mq_put_rq_map(struct blk_mq_tags *tags)
++{
++	kref_put(&tags->ref_count, blk_mq_free_rq_map);
++}
++
++static struct blk_mq_tags *blk_mq_get_rq_map(struct blk_mq_tags *tags)
++{
++	kref_get(&tags->ref_count);
++	return tags;
++}
++
+ static size_t order_to_size(unsigned int order)
+ {
+ 	size_t ret = PAGE_SIZE;
+@@ -1144,7 +1157,7 @@ static struct blk_mq_tags *blk_mq_init_rq_map(unsigned int total_tags,
+ 
+ fail:
+ 	pr_warn("%s: failed to allocate requests\n", __func__);
+-	blk_mq_free_rq_map(tags);
++	blk_mq_put_rq_map(tags);
+ 	return NULL;
+ }
+ 
+@@ -1178,10 +1191,14 @@ static int blk_mq_init_hw_queues(struct request_queue *q,
+ 						blk_mq_hctx_notify, hctx);
+ 		blk_mq_register_cpu_notifier(&hctx->cpu_notifier);
+ 
+-		hctx->tags = blk_mq_init_rq_map(hctx->queue_depth,
+-				reg->reserved_tags, reg->cmd_size, node);
+-		if (!hctx->tags)
+-			break;
++		if (reg->shared_tags) {
++			hctx->tags = blk_mq_get_rq_map(reg->shared_tags->tags[i]);
++		} else {
++			hctx->tags = blk_mq_init_rq_map(hctx->queue_depth,
++					reg->reserved_tags, reg->cmd_size, node);
++			if (!hctx->tags)
++				break;
++		}
+ 
+ 		/*
+ 		 * Allocate space for all possible cpus to avoid allocation in
+@@ -1221,7 +1238,7 @@ static int blk_mq_init_hw_queues(struct request_queue *q,
+ 
+ 		blk_mq_unregister_cpu_notifier(&hctx->cpu_notifier);
+ 		if (hctx->tags)
+-			blk_mq_free_rq_map(hctx->tags);
++			blk_mq_put_rq_map(hctx->tags);
+ 		kfree(hctx->ctxs);
+ 	}
+ 
+@@ -1399,7 +1416,7 @@ void blk_mq_free_queue(struct request_queue *q)
+ 		kfree(hctx->ctx_map);
+ 		kfree(hctx->ctxs);
+ 		if (hctx->tags)
+-			blk_mq_free_rq_map(hctx->tags);
++			blk_mq_put_rq_map(hctx->tags);
+ 		blk_mq_unregister_cpu_notifier(&hctx->cpu_notifier);
+ 		if (q->mq_ops->exit_hctx)
+ 			q->mq_ops->exit_hctx(hctx, i);
+@@ -1459,6 +1476,56 @@ static int blk_mq_queue_reinit_notify(struct notifier_block *nb,
+ 	return NOTIFY_OK;
+ }
+ 
++struct blk_mq_shared_tags *blk_mq_alloc_shared_tags(struct blk_mq_reg *reg,
++		int (*init)(void *, struct request *), void *data)
++{
++	struct blk_mq_shared_tags *shared_tags;
++	int i, j;
++
++	shared_tags = kmalloc_node(sizeof(*shared_tags) +
++				reg->nr_hw_queues * sizeof(struct blk_mq_tags),
++				GFP_KERNEL, reg->numa_node);
++	if (!shared_tags)
++		goto out;
++
++	shared_tags->nr_hw_queues = reg->nr_hw_queues;
++	shared_tags->queue_depth = reg->queue_depth;
++	for (i = 0; i < reg->nr_hw_queues; i++) {
++		shared_tags->tags[i] = blk_mq_init_rq_map(reg->queue_depth,
++				reg->reserved_tags, reg->cmd_size, reg->numa_node);
++		if (!shared_tags->tags[i])
++			goto out_unwind;
++
++		for (j = 0; j < reg->queue_depth; j++) {
++			struct request *rq = shared_tags->tags[i]->rqs[j];
++			int ret;
++
++			ret = init(data, rq);
++			BUG_ON(ret);
++		}
++	}
++
++	return shared_tags;
++
++out_unwind:
++	while (--i >= 0)
++		blk_mq_put_rq_map(shared_tags->tags[i]);
++out:
++	return NULL;
++}
++
++void blk_mq_free_shared_tags(struct blk_mq_shared_tags *shared_tags,
++		void (*exit)(void *, struct request *), void *data)
++{
++	int i, j;
++
++	for (i = 0; i < shared_tags->nr_hw_queues; i++) {
++		for (j = 0; j < shared_tags->queue_depth; j++)
++			exit(data, shared_tags->tags[i]->rqs[j]);
++		blk_mq_put_rq_map(shared_tags->tags[i]);
++	}
++}
++
+ void blk_mq_disable_hotplug(void)
+ {
+ 	mutex_lock(&all_q_mutex);
 diff --git a/block/blk-mq.h b/block/blk-mq.h
-index ebbe6ba..238379a 100644
+index eca3a47..d7c753b 100644
 --- a/block/blk-mq.h
 +++ b/block/blk-mq.h
-@@ -27,7 +27,6 @@ void blk_mq_run_hw_queue(struct blk_mq_hw_ctx *hctx, bool async);
- void blk_mq_init_flush(struct request_queue *q);
- void blk_mq_drain_queue(struct request_queue *q);
- void blk_mq_free_queue(struct request_queue *q);
--void blk_mq_rq_init(struct blk_mq_hw_ctx *hctx, struct request *rq);
+@@ -17,6 +17,8 @@ struct blk_mq_tags {
  
- /*
-  * CPU hotplug helpers
-diff --git a/drivers/block/null_blk.c b/drivers/block/null_blk.c
-index 091b9ea..71df69d 100644
---- a/drivers/block/null_blk.c
-+++ b/drivers/block/null_blk.c
-@@ -226,7 +226,7 @@ static void null_cmd_end_timer(struct nullb_cmd *cmd)
+ 	struct request **rqs;
+ 	struct list_head page_list;
++
++	struct kref ref_count;
+ };
  
- static void null_softirq_done_fn(struct request *rq)
- {
--	end_cmd(rq->special);
-+	end_cmd(blk_mq_rq_to_pdu(rq));
- }
+ struct blk_mq_ctx {
+diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
+index 69aa3ad..a564167 100644
+--- a/include/linux/blk-mq.h
++++ b/include/linux/blk-mq.h
+@@ -47,6 +47,12 @@ struct blk_mq_hw_ctx {
+ 	struct kobject		kobj;
+ };
  
- static inline void null_handle_cmd(struct nullb_cmd *cmd)
-@@ -311,7 +311,7 @@ static void null_request_fn(struct request_queue *q)
++struct blk_mq_shared_tags {
++	unsigned int		nr_hw_queues;
++	unsigned int		queue_depth;
++	struct blk_mq_tags	*tags[];
++};
++
+ struct blk_mq_reg {
+ 	struct blk_mq_ops	*ops;
+ 	unsigned int		nr_hw_queues;
+@@ -56,6 +62,7 @@ struct blk_mq_reg {
+ 	int			numa_node;
+ 	unsigned int		timeout;
+ 	unsigned int		flags;		/* BLK_MQ_F_* */
++	struct blk_mq_shared_tags *shared_tags;
+ };
  
- static int null_queue_rq(struct blk_mq_hw_ctx *hctx, struct request *rq)
- {
--	struct nullb_cmd *cmd = rq->special;
-+	struct nullb_cmd *cmd = blk_mq_rq_to_pdu(rq);
+ typedef int (queue_rq_fn)(struct blk_mq_hw_ctx *, struct request *);
+@@ -118,6 +125,11 @@ void blk_mq_unregister_disk(struct gendisk *);
+ int blk_mq_init_commands(struct request_queue *, int (*init)(void *data, struct blk_mq_hw_ctx *, struct request *, unsigned int), void *data);
+ void blk_mq_free_commands(struct request_queue *, void (*free)(void *data, struct blk_mq_hw_ctx *, struct request *, unsigned int), void *data);
  
- 	cmd->rq = rq;
- 	cmd->nq = hctx->driver_data;
-diff --git a/drivers/block/virtio_blk.c b/drivers/block/virtio_blk.c
-index 0eace43..11e8f4b 100644
---- a/drivers/block/virtio_blk.c
-+++ b/drivers/block/virtio_blk.c
-@@ -112,7 +112,7 @@ static int __virtblk_add_req(struct virtqueue *vq,
++struct blk_mq_shared_tags *blk_mq_alloc_shared_tags(struct blk_mq_reg *reg,
++		int (*init)(void *, struct request *), void *data);
++void blk_mq_free_shared_tags(struct blk_mq_shared_tags *shared_tags,
++		void (*exit)(void *, struct request *), void *data);
++
+ void blk_mq_flush_plug_list(struct blk_plug *plug, bool from_schedule);
  
- static inline void virtblk_request_done(struct request *req)
- {
--	struct virtblk_req *vbr = req->special;
-+	struct virtblk_req *vbr = blk_mq_rq_to_pdu(req);
- 	int error = virtblk_result(vbr);
- 
- 	if (req->cmd_type == REQ_TYPE_BLOCK_PC) {
-@@ -154,7 +154,7 @@ static void virtblk_done(struct virtqueue *vq)
- static int virtio_queue_rq(struct blk_mq_hw_ctx *hctx, struct request *req)
- {
- 	struct virtio_blk *vblk = hctx->queue->queuedata;
--	struct virtblk_req *vbr = req->special;
-+	struct virtblk_req *vbr = blk_mq_rq_to_pdu(req);
- 	unsigned long flags;
- 	unsigned int num;
- 	const bool last = (req->cmd_flags & REQ_END) != 0;
-@@ -494,7 +494,7 @@ static int virtblk_init_vbr(void *data, struct blk_mq_hw_ctx *hctx,
- 			     struct request *rq, unsigned int nr)
- {
- 	struct virtio_blk *vblk = data;
--	struct virtblk_req *vbr = rq->special;
-+	struct virtblk_req *vbr = blk_mq_rq_to_pdu(rq);
- 
- 	sg_init_table(vbr->sg, vblk->sg_elems);
- 	return 0;
+ void blk_mq_insert_request(struct request *, bool, bool, bool);
 -- 
 1.7.10.4
