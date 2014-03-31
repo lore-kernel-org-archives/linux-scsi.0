@@ -1,48 +1,98 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 0/7] Performance improvements for LSI SCSI cards
-Date: Sun, 30 Mar 2014 22:54:45 -0700
-Message-ID: <1396245285.22255.52.camel@haakon3.risingtidesystems.com>
-References: <cover.1395952569.git.matthew.r.wilcox@intel.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] aic79xx: fix misuse of static variables
+Date: Mon, 31 Mar 2014 07:56:43 +0200
+Message-ID: <5339039B.8070307@suse.de>
+References: <1396186235-3053-1-git-send-email-minipli@googlemail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:39456 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751182AbaCaFy5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Mar 2014 01:54:57 -0400
-In-Reply-To: <cover.1395952569.git.matthew.r.wilcox@intel.com>
+Received: from cantor2.suse.de ([195.135.220.15]:41417 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751950AbaCaF4p (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 31 Mar 2014 01:56:45 -0400
+In-Reply-To: <1396186235-3053-1-git-send-email-minipli@googlemail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew.r.wilcox@intel.com>
-Cc: linux-scsi@vger.kernel.org, willy@linux.intel.com, "Kashyap, Desai" <kashyap.desai@lsi.com>, "Saxena, Sumit" <Sumit.Saxena@lsi.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Mathias Krause <minipli@googlemail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org, PaX Team <pageexec@freemail.hu>
 
-Hi Matthew,
+On 03/30/2014 03:30 PM, Mathias Krause wrote:
+> The format strings for various printk()s make use of a temporary
+> variable that is declared 'static'. This is probably not intended,
+> so fix those.
+>=20
+> Found in the PaX patch, written by the PaX Team.
+>=20
+> Cc: PaX Team <pageexec@freemail.hu>
+> Cc: Hannes Reinecke <hare@suse.de>
+> Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+> Signed-off-by: Mathias Krause <minipli@googlemail.com>
+> ---
+>=20
+> Remark: Compile tested only! I've no such hardware.
+>=20
+>  drivers/scsi/aic7xxx/aic79xx_pci.c |   18 +++++-------------
+>  1 file changed, 5 insertions(+), 13 deletions(-)
+>=20
+> diff --git a/drivers/scsi/aic7xxx/aic79xx_pci.c b/drivers/scsi/aic7xx=
+x/aic79xx_pci.c
+> index 14b5f8d0e7..cc9bd26f5d 100644
+> --- a/drivers/scsi/aic7xxx/aic79xx_pci.c
+> +++ b/drivers/scsi/aic7xxx/aic79xx_pci.c
+> @@ -827,7 +827,7 @@ ahd_pci_intr(struct ahd_softc *ahd)
+>  		for (bit =3D 0; bit < 8; bit++) {
+> =20
+>  			if ((pci_status[i] & (0x1 << bit)) !=3D 0) {
+> -				static const char *s;
+> +				const char *s;
+> =20
+>  				s =3D pci_status_strings[bit];
+>  				if (i =3D=3D 7/*TARG*/ && bit =3D=3D 3)
+> @@ -887,23 +887,15 @@ ahd_pci_split_intr(struct ahd_softc *ahd, u_int=
+ intstat)
+> =20
+>  		for (bit =3D 0; bit < 8; bit++) {
+> =20
+> -			if ((split_status[i] & (0x1 << bit)) !=3D 0) {
+> -				static const char *s;
+> -
+> -				s =3D split_status_strings[bit];
+> -				printk(s, ahd_name(ahd),
+> +			if ((split_status[i] & (0x1 << bit)) !=3D 0)
+> +				printk(split_status_strings[bit], ahd_name(ahd),
+>  				       split_status_source[i]);
+> -			}
+> =20
+>  			if (i > 1)
+>  				continue;
+> =20
+> -			if ((sg_split_status[i] & (0x1 << bit)) !=3D 0) {
+> -				static const char *s;
+> -
+> -				s =3D split_status_strings[bit];
+> -				printk(s, ahd_name(ahd), "SG");
+> -			}
+> +			if ((sg_split_status[i] & (0x1 << bit)) !=3D 0)
+> +				printk(split_status_strings[bit], ahd_name(ahd), "SG");
+>  		}
+>  	}
+>  	/*
+>=20
+Looks good.
 
-On Thu, 2014-03-27 at 16:40 -0400, Matthew Wilcox wrote:
-> The host lock is a serious scalability problem on 2-socket and larger
-> systems which are doing a lot of I/O.  Before removing the temporary
-> usgae of DEF_SCSI_QCMD, we need to remove all uses of serial_number.
-> 
-> An unrelated performance issue is that reusing the most recent
-> driver-specific data structure to track the I/O instead of the least
-> recently used keeps the cache-hot lines in use, which is a nice
-> performance improvement.  It's already present in the mpt3sas driver,
-> it just didn't make it into the fusion or mpt2sas drivers yet.
-> 
-> Matthew Wilcox (7):
->   mpt3sas: Remove uses of serial_number
->   mpt3sas: Remove use of DEF_SCSI_QCMD
->   mpt2sas: Remove uses of serial_number
->   mpt2sas: Remove use of DEF_SCSI_QCMD
->   mpt2sas: Add free smids to the head, not tail of list
->   fusion: Add free msg frames to the head, not tail of list
->   fusion: Remove use of DEF_SCSI_QCMD
-> 
->  
+Acked-by: Hannes Reinecke <hare@suse.de>
 
-+1 to this long overdue series to enable host_lock-less mode with
-mpt*sas + fusion.  (CC'ing LSI folks + jejb)
+Cheers,
 
-Reviewed-by: Nicholas Bellinger <nab@linux-iscsi.org>
-
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
