@@ -1,121 +1,54 @@
 From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 5/6] be2iscsi: Fix TCP parameters while connection offloading.
-Date: Sun, 30 Mar 2014 23:53:42 -0500
-Message-ID: <5338F4D6.9000303@cs.wisc.edu>
-References: <1395938371-2149-1-git-send-email-Jayamohan.Kallickal@emulex.com> <1395938371-2149-5-git-send-email-Jayamohan.Kallickal@emulex.com>
+Subject: Re: [PATCH 2/6] be2iscsi: relinquishing control after processing
+ 512 CQE
+Date: Mon, 31 Mar 2014 00:25:11 -0500
+Message-ID: <5338FC37.8060906@cs.wisc.edu>
+References: <1395938371-2149-1-git-send-email-Jayamohan.Kallickal@emulex.com> <1395938371-2149-2-git-send-email-Jayamohan.Kallickal@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:56247 "EHLO sabe.cs.wisc.edu"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:56273 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751306AbaCaEyE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 31 Mar 2014 00:54:04 -0400
-In-Reply-To: <1395938371-2149-5-git-send-email-Jayamohan.Kallickal@emulex.com>
+	id S1753120AbaCaFZW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 31 Mar 2014 01:25:22 -0400
+In-Reply-To: <1395938371-2149-2-git-send-email-Jayamohan.Kallickal@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jayamohan Kallickal <jayamohank@gmail.com>
 Cc: jbottomley@parallels.com, linux-scsi@vger.kernel.org, Jayamohan Kallickal <Jayamohan.Kallickal@emulex.com>, Minh Tran <minhduc.tran@emulex.com>, John Soni Jose <sony.john-n@emulex.com>
 
 On 03/27/2014 11:39 AM, Jayamohan Kallickal wrote:
-> +int mgmt_open_connection_v1(struct beiscsi_hba *phba,
-> +			     struct sockaddr *dst_addr,
-> +			     struct beiscsi_endpoint *beiscsi_ep,
-> +			     struct be_dma_mem *nonemb_cmd)
-> +{
-> +	struct hwi_controller *phwi_ctrlr;
-> +	struct hwi_context_memory *phwi_context;
-> +	struct sockaddr_in *daddr_in = (struct sockaddr_in *)dst_addr;
-> +	struct sockaddr_in6 *daddr_in6 = (struct sockaddr_in6 *)dst_addr;
-> +	struct be_ctrl_info *ctrl = &phba->ctrl;
-> +	struct be_mcc_wrb *wrb;
-> +	struct tcp_connect_and_offload_in_v1 *req;
-> +	unsigned short def_hdr_id;
-> +	unsigned short def_data_id;
-> +	struct phys_addr template_address = { 0, 0 };
-> +	struct phys_addr *ptemplate_address;
-> +	unsigned int tag = 0;
-> +	unsigned int i, ulp_num;
-> +	unsigned short cid = beiscsi_ep->ep_cid;
-> +	struct be_sge *sge;
+> @@ -2323,14 +2319,33 @@ void beiscsi_process_all_cqs(struct work_struct *work)
+>  
+>  static int be_iopoll(struct blk_iopoll *iop, int budget)
+>  {
+> -	unsigned int ret;
+> +	unsigned int ret, num_eq_processed;
+>  	struct beiscsi_hba *phba;
+>  	struct be_eq_obj *pbe_eq;
+> +	struct be_eq_entry *eqe = NULL;
+> +	struct be_queue_info *eq;
+>  
+> +	num_eq_processed = 0;
+>  	pbe_eq = container_of(iop, struct be_eq_obj, iopoll);
+> +	phba = pbe_eq->phba;
+> +	eq = &pbe_eq->q;
+> +	eqe = queue_tail_node(eq);
 > +
-> +	phwi_ctrlr = phba->phwi_ctrlr;
-> +	phwi_context = phwi_ctrlr->phwi_ctxt;
-> +
-> +	ulp_num = phwi_ctrlr->wrb_context[BE_GET_CRI_FROM_CID(cid)].ulp_num;
-> +
-> +	def_hdr_id = (unsigned short)HWI_GET_DEF_HDRQ_ID(phba, ulp_num);
-> +	def_data_id = (unsigned short)HWI_GET_DEF_BUFQ_ID(phba, ulp_num);
-> +
-> +	ptemplate_address = &template_address;
-> +	ISCSI_GET_PDU_TEMPLATE_ADDRESS(phba, ptemplate_address);
-> +	spin_lock(&ctrl->mbox_lock);
-> +	tag = alloc_mcc_tag(phba);
-> +	if (!tag) {
-> +		spin_unlock(&ctrl->mbox_lock);
-> +		return tag;
-> +	}
-> +	wrb = wrb_from_mccq(phba);
-> +	sge = nonembedded_sgl(wrb);
-> +
-> +	req = nonemb_cmd->va;
-> +	memset(req, 0, sizeof(*req));
-> +	wrb->tag0 |= tag;
-> +
-> +	be_wrb_hdr_prepare(wrb, sizeof(*req), false, 1);
-> +	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_ISCSI,
-> +			   OPCODE_COMMON_ISCSI_TCP_CONNECT_AND_OFFLOAD,
-> +			   sizeof(*req));
-> +	if (dst_addr->sa_family == PF_INET) {
-> +		__be32 s_addr = daddr_in->sin_addr.s_addr;
-> +		req->ip_address.ip_type = BE2_IPV4;
-> +		req->ip_address.addr[0] = s_addr & 0x000000ff;
-> +		req->ip_address.addr[1] = (s_addr & 0x0000ff00) >> 8;
-> +		req->ip_address.addr[2] = (s_addr & 0x00ff0000) >> 16;
-> +		req->ip_address.addr[3] = (s_addr & 0xff000000) >> 24;
-> +		req->tcp_port = ntohs(daddr_in->sin_port);
-> +		beiscsi_ep->dst_addr = daddr_in->sin_addr.s_addr;
-> +		beiscsi_ep->dst_tcpport = ntohs(daddr_in->sin_port);
-> +		beiscsi_ep->ip_type = BE2_IPV4;
-> +	} else if (dst_addr->sa_family == PF_INET6) {
-> +		req->ip_address.ip_type = BE2_IPV6;
-> +		memcpy(&req->ip_address.addr,
-> +		       &daddr_in6->sin6_addr.in6_u.u6_addr8, 16);
-> +		req->tcp_port = ntohs(daddr_in6->sin6_port);
-> +		beiscsi_ep->dst_tcpport = ntohs(daddr_in6->sin6_port);
-> +		memcpy(&beiscsi_ep->dst6_addr,
-> +		       &daddr_in6->sin6_addr.in6_u.u6_addr8, 16);
-> +		beiscsi_ep->ip_type = BE2_IPV6;
-> +	} else{
-> +		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_CONFIG,
-> +			    "BG_%d : unknown addr family %d\n",
-> +			    dst_addr->sa_family);
-> +		spin_unlock(&ctrl->mbox_lock);
-> +		free_mcc_tag(&phba->ctrl, tag);
-> +		return -EINVAL;
-> +
-> +	}
-> +	req->cid = cid;
-> +	i = phba->nxt_cqid++;
-> +	if (phba->nxt_cqid == phba->num_cpus)
-> +		phba->nxt_cqid = 0;
-> +	req->cq_id = phwi_context->be_cq[i].id;
-> +	beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_CONFIG,
-> +		    "BG_%d : i=%d cq_id=%d\n", i, req->cq_id);
-> +	req->defq_id = def_hdr_id;
-> +	req->hdr_ring_id = def_hdr_id;
-> +	req->data_ring_id = def_data_id;
-> +	req->do_offload = 1;
-> +	req->dataout_template_pa.lo = ptemplate_address->lo;
-> +	req->dataout_template_pa.hi = ptemplate_address->hi;
-> +	sge->pa_hi = cpu_to_le32(upper_32_bits(nonemb_cmd->dma));
-> +	sge->pa_lo = cpu_to_le32(nonemb_cmd->dma & 0xFFFFFFFF);
-> +	sge->len = cpu_to_le32(nonemb_cmd->size);
-> +
-> +	req->hdr.version = 1;
-> +	req->tcp_window_size = 0;
-> +	req->tcp_window_scale_count = 2;
+> +	hwi_ring_eq_db(phba, eq->id, 1, num_eq_processed, 0, 1);
 
-Is this approx 100 lines exactly the same as mgmt_open_connection except
-these 3 lines? Maybe a lib/helper function that does the common 100
-lines then some v1 function over that which does the extra 3 lines.
+Is this right? num_eq_processed will be 0 above. Should this be moved
+down below to after num_eq_processed has been incremented?
+
+
+> +
+> +	while (eqe->dw[offsetof(struct amap_eq_entry, valid) / 32]
+> +			& EQE_VALID_MASK) {
+> +
+> +		AMAP_SET_BITS(struct amap_eq_entry, valid, eqe, 0);
+> +		queue_tail_inc(eq);
+> +		eqe = queue_tail_node(eq);
+> +		num_eq_processed++;
+> +	}
+
