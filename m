@@ -1,72 +1,80 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 3/4] scsi: reintroduce scsi_driver.init_command
-Date: Mon, 31 Mar 2014 12:45:15 +0200
-Message-ID: <20140331104515.GA17822@lst.de>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH 1/3] [SCSI] Fix abort state memory problem
+Date: Mon, 31 Mar 2014 09:06:35 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1403310905430.11739-100000@netrider.rowland.org>
+References: <5339121E.50106@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:32892 "EHLO newverein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753525AbaCaKpS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 31 Mar 2014 06:45:18 -0400
-Content-Disposition: inline
+Received: from netrider.rowland.org ([192.131.102.5]:52296 "HELO
+	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752932AbaCaNGg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Mar 2014 09:06:36 -0400
+In-Reply-To: <5339121E.50106@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: James Bottomley <JBottomley@Parallels.com>, linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, SCSI development list <linux-scsi@vger.kernel.org>, USB list <linux-usb@vger.kernel.org>
 
-> The above call would free the cmnd->cmnd and set it to null. If then
-> scsi_io_completion was going to do some error processing it looks like
-> it could try to access the scsi_cmnd->cmnd field.
+On Mon, 31 Mar 2014, Hannes Reinecke wrote:
+
+> On 03/28/2014 06:49 PM, James Bottomley wrote:
+> > The abort state is being stored persistently across commands, meaning if the
+> > command times out a second time, the error handler thinks an abort is still
+> > pending.  Fix this by properly resetting the abort flag after the abort is
+> > finished.
+> > 
+> > Signed-off-by: James Bottomley <JBottomley@Parallels.com>
+> > ---
+> >  drivers/scsi/scsi_error.c | 9 ++++++---
+> >  1 file changed, 6 insertions(+), 3 deletions(-)
+> > 
+> > diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+> > index 771c16b..b9f3b07 100644
+> > --- a/drivers/scsi/scsi_error.c
+> > +++ b/drivers/scsi/scsi_error.c
+> > @@ -869,10 +869,13 @@ static int scsi_try_bus_device_reset(struct scsi_cmnd *scmd)
+> >  
+> >  static int scsi_try_to_abort_cmd(struct scsi_host_template *hostt, struct scsi_cmnd *scmd)
+> >  {
+> > -	if (!hostt->eh_abort_handler)
+> > -		return FAILED;
+> > +	int retval = FAILED;
+> > +
+> > +	if (hostt->eh_abort_handler)
+> > +		retval = hostt->eh_abort_handler(scmd);
+> >  
+> > -	return hostt->eh_abort_handler(scmd);
+> > +	scmd->eh_eflags &= ~SCSI_EH_ABORT_SCHEDULED;
+> > +	return retval;
+> >  }
+> >  
+> >  static void scsi_abort_eh_cmnd(struct scsi_cmnd *scmd)
+> > 
+> Hmm. No, I don't think this is correct.
 > 
-> With the current code that would not be a problem because the blk unprep
-> callback is not called until the block layer does its request cleanup in
-> blk_finish_request which as you know is after
-> scsi_io_completion/scsi_end_request is done with the cmnd.
+> SCSI_EH_ABORT_SCHEDULED signifies whether scmd_eh_abort_handler()
+> needs to run. As such it needs to be reset when the workqueue item
+> is triggered.
+> 
+> Can you try with this instead?
+> 
+> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+> index 771c16b..9694803 100644
+> --- a/drivers/scsi/scsi_error.c
+> +++ b/drivers/scsi/scsi_error.c
+> @@ -120,6 +120,8 @@ scmd_eh_abort_handler(struct work_struct *work)
+>         struct scsi_device *sdev = scmd->device;
+>         int rtn;
+> 
+> +       scmd->eh_eflags &= ~SCSI_EH_ABORT_SCHEDULED;
+> +
+>         if (scsi_host_eh_past_deadline(sdev->host)) {
+>                 SCSI_LOG_ERROR_RECOVERY(3,
+>                         scmd_printk(KERN_INFO, scmd,
 
-This incremental patches fixes the issue, and makes sure the uninit calls are
-nicely paired like the rest of the I/O completion routines after patch 2:
+This doesn't seem like a good idea either, because the flag is tested 
+later on in scsi_decide_disposition().
 
+Alan Stern
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 48c5c77..8e79612 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -490,8 +490,6 @@ static void scsi_requeue_command(struct request_queue *q, struct scsi_cmnd *cmd)
- 	struct request *req = cmd->request;
- 	unsigned long flags;
- 
--	scsi_uninit_command(cmd);
--
- 	spin_lock_irqsave(q->queue_lock, flags);
- 	blk_unprep_request(req);
- 	req->special = NULL;
-@@ -941,6 +939,7 @@ requeue:
- 		/* Unprep the request and put it back at the head of the queue.
- 		 * A new command will be prepared and issued.
- 		 */
-+		scsi_uninit_command(cmd);
- 		scsi_release_buffers(cmd);
- 		scsi_requeue_command(q, cmd);
- 		break;
-@@ -956,6 +955,7 @@ requeue:
- 	return;
- 
- next_command:
-+	scsi_uninit_command(cmd);
- 	scsi_release_buffers(cmd);
- 	scsi_next_command(cmd);
- }
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index d95c4fd..d99cb3f 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1652,8 +1652,6 @@ static int sd_done(struct scsi_cmnd *SCpnt)
- 	unsigned char op = SCpnt->cmnd[0];
- 	unsigned char unmap = SCpnt->cmnd[1] & 8;
- 
--	sd_uninit_command(SCpnt);
--
- 	if (req->cmd_flags & REQ_DISCARD || req->cmd_flags & REQ_WRITE_SAME) {
- 		if (!result) {
- 			good_bytes = blk_rq_bytes(req);
