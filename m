@@ -1,190 +1,37 @@
-From: Quinn Tran <quinn.tran@qlogic.com>
-Subject: Re: [PATCH 4/4] target/rd: T10-Dif: RAM disk is allocating more
- space than required.
-Date: Mon, 31 Mar 2014 16:15:29 +0000
-Message-ID: <504EB66DAC8D234EB8E8560985C2D7AD46CE9A5A@avmb2.qlogic.org>
-References: <1396047927-14189-1-git-send-email-quinn.tran@qlogic.com>
- <1396047927-14189-5-git-send-email-quinn.tran@qlogic.com>
- <5336125F.2020000@mellanox.com>
+From: Laurence Oberman <oberman.l@gmail.com>
+Subject: scsi_debug driver puzzle
+Date: Mon, 31 Mar 2014 13:32:19 -0400
+Message-ID: <CAAzz28gZtn5HaXwQvmvnyK0wAWn-9et8Z8ZL9HVYDvLqFv9ibA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_000_504EB66DAC8D234EB8E8560985C2D7AD46CE9A5Aavmb2qlogicorg_"
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:19731 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752958AbaCaQPb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 31 Mar 2014 12:15:31 -0400
-Received: from pps.filterd (m0000643.ppops.net [127.0.0.1])
-	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id s2VGDxnh010515
-	for <linux-scsi@vger.kernel.org>; Mon, 31 Mar 2014 09:15:30 -0700
-Received: from avcashub1.qlogic.com (avcashub2.qlogic.com [198.70.193.116])
-	by mx0b-0016ce01.pphosted.com with ESMTP id 1jwyhbm0f8-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Mon, 31 Mar 2014 09:15:30 -0700
-In-Reply-To: <5336125F.2020000@mellanox.com>
-Content-Language: en-US
+Received: from mail-la0-f53.google.com ([209.85.215.53]:57320 "EHLO
+	mail-la0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753814AbaCaRcU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Mar 2014 13:32:20 -0400
+Received: by mail-la0-f53.google.com with SMTP id b8so6155027lan.12
+        for <linux-scsi@vger.kernel.org>; Mon, 31 Mar 2014 10:32:19 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: sagi grimberg <sagig@mellanox.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
---_000_504EB66DAC8D234EB8E8560985C2D7AD46CE9A5Aavmb2qlogicorg_
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <AC12A5C442111444A2762A02D9502B57@qlogic.com>
-Content-Transfer-Encoding: quoted-printable
+Hello
 
+I have what to me is a puzzle but is likely a stupid question about
+the queuecommand interface in the scsi_debug driver.
 
-Regards,
-Quinn Tran
+I see the host template set for  scsi_debug_queuecommand but in the
+driver we have the function declared as int
+scsi_debug_queuecommand_lck
+So how is this working.
 
+Egrep pattern: scsi_debug_queuecommand
 
+  File         Line
+0 scsi_debug.c 3551 int scsi_debug_queuecommand_lck(struct scsi_cmnd
+*SCpnt, done_funct_t done)
+1 scsi_debug.c 3900 static DEF_SCSI_QCMD(scsi_debug_queuecommand)
+2 scsi_debug.c 3912 .queuecommand =  scsi_debug_queuecommand,
 
-
-On 3/28/14 5:22 PM, "sagi grimberg" <sagig@mellanox.com> wrote:
-
->On 3/29/2014 2:05 AM, Quinn Tran wrote:
->> Ram disk is allocating 8x more space than required for diff data.
->> For large RAM disk test, there is small potential for memory
->> starvation.
->>
->> Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
->> Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
->> ---
->>   drivers/target/target_core_rd.c | 6 +++++-
->>   1 file changed, 5 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/target/target_core_rd.c
->>b/drivers/target/target_core_rd.c
->> index 01dda0b..6df177a 100644
->> --- a/drivers/target/target_core_rd.c
->> +++ b/drivers/target/target_core_rd.c
->> @@ -253,7 +253,11 @@ static int rd_build_prot_space(struct rd_dev
->>*rd_dev, int prot_length)
->>      if (rd_dev->rd_flags & RDF_NULLIO)
->>              return 0;
->>
->> -    total_sg_needed =3D rd_dev->rd_page_count / prot_length;
->> +    /* prot_length=3D8byte dif data
->> +     * tot sg needed =3D rd_page_count * (PGSZ/512) * (prot_length/PGSZ=
-) +
->>pad
->> +     * PGSZ canceled each other.
->> +     */
->> +    total_sg_needed =3D (rd_dev->rd_page_count * prot_length / 512) +1;
->
->You probably will want to use block_size instead of hard-coding 512.
->Other then that this makes sense.
-
-QT> agreed
-
->
->>
->>      sg_tables =3D (total_sg_needed / max_sg_per_table) + 1;
->>
->
-
-
-________________________________
-
-This message and any attached documents contain information from QLogic Cor=
-poration or its wholly-owned subsidiaries that may be confidential. If you =
-are not the intended recipient, you may not read, copy, distribute, or use =
-this information. If you have received this transmission in error, please n=
-otify the sender immediately by reply e-mail and then delete this message.
-
---_000_504EB66DAC8D234EB8E8560985C2D7AD46CE9A5Aavmb2qlogicorg_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
-
-eJ8+IjFUAQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAADFEMEI5NTAy
-RTI5RTM3NDNBRDJFNDVGRTBDOTFFOTVGAEMHAQ2ABAACAAAAAgACAAEFgAMADgAAAN4HAwAfABAA
-DwAdAAEARAEBIIADAA4AAADeBwMAHwAQAA8AHQABAEQBAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
-YWlsLk5vdGUAMQgBBIABAFUAAABSZTogW1BBVENIIDQvNF0gdGFyZ2V0L3JkOiBUMTAtRGlmOiBS
-QU0gZGlzayBpcyBhbGxvY2F0aW5nIG1vcmUgc3BhY2UgdGhhbiByZXF1aXJlZC4AoxsBA5AGAEAS
-AAA1AAAAAgF/AAEAAAA8AAAAPDUwNEVCNjZEQUM4RDIzNEVCOEU4NTYwOTg1QzJEN0FENDZDRTlB
-NUFAYXZtYjIucWxvZ2ljLm9yZz4ACwAfDgEAAAACAQkQAQAAAMsFAADHBQAAkAkAAExaRnVqN1xr
-YQAKZmJpZAQAAGNjwHBnMTI1MgD+A0PwdGV4dAH3AqQD4wIABGNoCsBzZXQwIO8HbQKDAFARTTIK
-gAa0AoCWfQqACMg7CWIxOQ7AvwnDFnIKMhZxAoAVYioJsHMJ8ASQYXQFsg5QA2Bzom8BgCBFeBHB
-bhgwXQZSdgSQF7YCEHIAwHR9CFBuGjEQIAXABaAbZGSaIANSIBAiF7JcdgiQ5HdrC4BkNR1TBPAH
-QA0XcDAKcRfyYmttawZzAZAAICBCTV9C4EVHSU59CvwB8QvyimwLgGUKgFJlZwsRZHMsIZVRdQuA
-A6BUXxhwC5AhpCOfJKlPA6AzAC8yOC8xNCA1ADoyMiBQTSwgwCJzYWdpIAnAB3BCYgSQZyIgPCcS
-ZwpAB4BsC2Bub3guYQWgbT4gdwNgECA6VSR8PiXEOSYAMCZBMuA6MDUgQSbRIvgpTDI+KTBSYRyw
-DeFrIF0EACAHQAkAHlB0C4BnMCA4eCAEYAlwIHNVCrBjGeB0GaEgCXBx/yMACXEccAWxDeABIC3g
-GID0YS4tGEYFsQtgJ8AZ4P5SK8At5BAgH2Am4DAABJCbGeAuQXMAwCiQIHApcd8CMAcxMNMHgC9R
-eS0YH2Ledi7BAiAxuC0YUyhAGFAEZC0ZMGYtYnk6qwewDlBoBvBhBCBCKIFTLuEbsTxuAaBAIaF1
-VHgtBABjAJAuBbBn+zf/OQdHMJAN0BHRBdAHQL5hNwAhoCfwJzA9xC40kdk+Y0BxCQAnMGMo8y0Y
-bi1BQC0YQgBkBRAaMXNWLx9xGDB0QqVfBaFlBl8LICjwIHwgNiD2K0RyQWsxHHADEBngGZR+ZCbg
-K6ALgBIAACA3MXP4KCspJuBFkAEAHnA3IvgoLSk3fykwMSNBQCcwuQVAYS9CP0NMLRdiSm+vS38t
-Nh2xEDAgKzBkMXBAMGIuLjZkAEA3jDdhRYAeoDY0NECr70pPTf8tGERxIEz/U28tJ4xAQEEwDqAz
-LDdEYP1YMjFFkFfxH2Eu0EQQC4BTBUALIF9iIwBsWgBwFSlhXy+jKB9gcnVj61nTAQB2LRcqW6Qm
-4Fmy/1qDHnAZwDAASGhCAUIBBpCkIChbpC0+WfFmC2AKZwQgJgfwREZfTuBVTExJT14eYcYJcPZ0
-CHADoDAWIEiPQTBesssYkAGQbFrAZ18YUAmAfRxRPVuVX7MKsBgwQ4F1PVnBL11aYyhEYF6yLyr5
-XVo9ODlQECAxEjFjaB3+IGkQZLEvkC8AZUpmiWkQgChQR1NaLzUOkLYpbcJdaS9uAm6AKy0X/wqw
-CzBq724CG9AAcC/QHnDlHGBlANBoIClwNAExuf1rdS9oHWS/XzttK11pZyHZblMrMWMnKiZZCGBd
-UnJiAaBseSlAAxADIHfnAHAFQBiQIHUSAFUwLpHya1rAaXo0MQCAECBwoP9zADFQEdE48AWgDeAu
-8W5RfTG3TzPyM+IDoDABe+Fo+y5BAMBrB5ESAEbBMbYihv5UKTAnIAnRcLZ5njwJXrP/ZREBkR5w
-BCB2gXWOZzAAwPp4ZQJwBJCFdG/RRYBjL7s8Bom8X4sPi/yJvFSAY/8HkCcRGeAAcBxgAHB7QBiA
-1wGQEcAcUWQuoHUHgAIw/wQgG+EBkAuARqEa5DcxHHTUUUxAEiAIUHI04Bhx75FiBbFKIAQgdznB
-ezA5AOZ3ONEvkHViAJAN4ArA/wiQBCCAAwDAe0AnoBvSRbCjAQA1Iy4gSTFQeXqh/wrAGeAowIAy
-fQI1AWVyCXD+YwUgCJACMCbglwKVgpeCzwlwcKAm4AWgcHkm4A3h/VtAaVogECAm4AWxfDKAU9+Q
-6Za3EdAaMJiCZVWBHGD3gFNbQABxbQQBkWKQsQSQ/QNgcibgC1BywHxBl4EGkN97QJfCgQEEgS4w
-bQeAlLE/ECB7MTlQMEELUHtAZS3/AMADEY6yf7NHw5vVjjUxtgMVQqXwAB8AQgABAAAAFgAAAFEA
-dQBpAG4AbgAgAFQAcgBhAG4AAAAAAB8AZQABAAAALAAAAHEAdQBpAG4AbgAuAHQAcgBhAG4AQABx
-AGwAbwBnAGkAYwAuAGMAbwBtAAAAHwBkAAEAAAAKAAAAUwBNAFQAUAAAAAAAAgFBAAEAAABkAAAA
-AAAAAIErH6S+oxAZnW4A3QEPVAIAAACAUQB1AGkAbgBuACAAVAByAGEAbgAAAFMATQBUAFAAAABx
-AHUAaQBuAG4ALgB0AHIAYQBuAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AAl0BAAAALAAAAHEA
-dQBpAG4AbgAuAHQAcgBhAG4AQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwDlXwEAAAA0AAAAcwBp
-AHAAOgBxAHUAaQBuAG4ALgB0AHIAYQBuAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AGgwBAAAA
-FgAAAFEAdQBpAG4AbgAgAFQAcgBhAG4AAAAAAB8AHwwBAAAALAAAAHEAdQBpAG4AbgAuAHQAcgBh
-AG4AQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAeDAEAAAAKAAAAUwBNAFQAUAAAAAAAAgEZDAEA
-AABkAAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAUQB1AGkAbgBuACAAVAByAGEAbgAAAFMATQBU
-AFAAAABxAHUAaQBuAG4ALgB0AHIAYQBuAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AAV0BAAAA
-LAAAAHEAdQBpAG4AbgAuAHQAcgBhAG4AQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwD4PwEAAAAW
-AAAAUQB1AGkAbgBuACAAVAByAGEAbgAAAAAAHwAjQAEAAAAsAAAAcQB1AGkAbgBuAC4AdAByAGEA
-bgBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfACJAAQAAAAoAAABTAE0AVABQAAAAAAACAfk/AQAA
-AGQAAAAAAAAAgSsfpL6jEBmdbgDdAQ9UAgAAAIBRAHUAaQBuAG4AIABUAHIAYQBuAAAAUwBNAFQA
-UAAAAHEAdQBpAG4AbgAuAHQAcgBhAG4AQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAJXQEAAAAs
-AAAAcQB1AGkAbgBuAC4AdAByAGEAbgBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfADFAAQAAAAIA
-AAAAAAAACwBAOgEAAAAfADBAAQAAAAIAAAAAAAAAHwAaAAEAAAASAAAASQBQAE0ALgBOAG8AdABl
-AAAAAAADAPE/CQQAAAsAQDoBAAAAAwD9P+QEAAACAQswAQAAABAAAAAdC5UC4p43Q60uRf4Mkelf
-AwAXAAEAAABAADkAgCa3bvxMzwFAAAgwmDvjbvxMzwELAACACCAGAAAAAADAAAAAAAAARgAAAAAU
-hQAAAQAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAAB4AAABhAGMAYwBlAHAAdABsAGEAbgBnAHUA
-YQBnAGUAAAAAAAEAAAAMAAAAZQBuAC0AVQBTAAAACwAAgAggBgAAAAAAwAAAAAAAAEYAAAAABoUA
-AAAAAAAfADcAAQAAAKoAAABSAGUAOgAgAFsAUABBAFQAQwBIACAANAAvADQAXQAgAHQAYQByAGcA
-ZQB0AC8AcgBkADoAIABUADEAMAAtAEQAaQBmADoAIABSAEEATQAgAGQAaQBzAGsAIABpAHMAIABh
-AGwAbABvAGMAYQB0AGkAbgBnACAAbQBvAHIAZQAgAHMAcABhAGMAZQAgAHQAaABhAG4AIAByAGUA
-cQB1AGkAcgBlAGQALgAAAAAAHwA9AAEAAAAKAAAAUgBlADoAIAAAAAAAAwA2AAAAAAAfAEIQAQAA
-AEAAAAA8ADUAMwAzADYAMQAyADUARgAuADIAMAAyADAAMAAwADAAQABtAGUAbABsAGEAbgBvAHgA
-LgBjAG8AbQA+AAAAAgFxAAEAAAAgAAAAAQHPSt9epYkW6BEZck+wqtRE32j7qJr3qaiAgAO5cwAf
-AHAAAQAAAKIAAABbAFAAQQBUAEMASAAgADQALwA0AF0AIAB0AGEAcgBnAGUAdAAvAHIAZAA6ACAA
-VAAxADAALQBEAGkAZgA6ACAAUgBBAE0AIABkAGkAcwBrACAAaQBzACAAYQBsAGwAbwBjAGEAdABp
-AG4AZwAgAG0AbwByAGUAIABzAHAAYQBjAGUAIAB0AGgAYQBuACAAcgBlAHEAdQBpAHIAZQBkAC4A
-AAAAAB8ANRABAAAAeAAAADwANQAwADQARQBCADYANgBEAEEAQwA4AEQAMgAzADQARQBCADgARQA4
-ADUANgAwADkAOAA1AEMAMgBEADcAQQBEADQANgBDAEUAOQBBADUAQQBAAGEAdgBtAGIAMgAuAHEA
-bABvAGcAaQBjAC4AbwByAGcAPgAAAB8AORABAAAAKAEAADwAMQAzADkANgAwADQANwA5ADIANwAt
-ADEANAAxADgAOQAtADEALQBnAGkAdAAtAHMAZQBuAGQALQBlAG0AYQBpAGwALQBxAHUAaQBuAG4A
-LgB0AHIAYQBuAEAAcQBsAG8AZwBpAGMALgBjAG8AbQA+ACAAPAAxADMAOQA2ADAANAA3ADkAMgA3
-AC0AMQA0ADEAOAA5AC0ANQAtAGcAaQB0AC0AcwBlAG4AZAAtAGUAbQBhAGkAbAAtAHEAdQBpAG4A
-bgAuAHQAcgBhAG4AQABxAGwAbwBnAGkAYwAuAGMAbwBtAD4AIAA8ADUAMwAzADYAMQAyADUARgAu
-ADIAMAAyADAAMAAwADAAQABtAGUAbABsAGEAbgBvAHgALgBjAG8AbQA+AAAAAwDeP59OAABAAAcw
-eBfcbvxMzwEDACYAAAAAAAIBRwABAAAALwAAAGM9VVM7YT0gO3A9UUxvZ2ljO2w9QVZNQjItMTQw
-MzMxMTYxNTI5Wi0xNzUxMDAAAB8AFRABAAAAWAAAAEEAQwAxADIAQQA1AEMANAA0ADIAMQAxADEA
-NAA0ADQAQQAyADcANgAyAEEAMAAyAEQAOQA1ADAAMgBCADUANwBAAHEAbABvAGcAaQBjAC4AYwBv
-AG0AAAACARQwAQAAAAwAAACGAAAAlfQa7FIAAAAfAPo/AQAAABYAAABRAHUAaQBuAG4AIABUAHIA
-YQBuAAAAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAWAAAAdQBzAGUAcgAtAGEAZwBlAG4AdAAA
-AAAAAQAAAEYAAABNAGkAYwByAG8AcwBvAGYAdAAtAE0AYQBjAE8AdQB0AGwAbwBvAGsALwAxADQA
-LgAzAC4AOQAuADEAMwAxADAAMwAwAAAAAAAfAACAH6TrM6h6LkK+e3nhqY5UswEAAAA4AAAAQwBv
-AG4AdgBlAHIAcwBhAHQAaQBvAG4ASQBuAGQAZQB4AFQAcgBhAGMAawBpAG4AZwBFAHgAAAABAAAA
-EAEAAEkASQA9ADAAMQAwADEAQwBGADQAQwBGAEMANgBFADUARgA1AEIARAAxADMAQwA5ADcAQQBC
-ADIAQwA0AEIAOABGADQAQgA4AEQANgAzADEAOQBDADcAOQBGAEIARgA7AFMAQgBNAEkARAA9ADIA
-OwBTADEAPQA8ADUAMwAzADYAMQAyADUARgAuADIAMAAyADAAMAAwADAAQABtAGUAbABsAGEAbgBv
-AHgALgBjAG8AbQA+ADsAVgBlAHIAcwBpAG8AbgA9AFYAZQByAHMAaQBvAG4AIAAxADQALgAyACAA
-KABCAHUAaQBsAGQAIAAzADgANwAuADAAKQAsACAAUwB0AGEAZwBlAD0ASAAyAAAAAwANNP0/AAAf
-AACAhgMCAAAAAADAAAAAAAAARgEAAAAgAAAAeAAtAG0AcwAtAGgAYQBzAC0AYQB0AHQAYQBjAGgA
-AAABAAAAAgAAAAAAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAiAAAAeAAtAG8AcgBpAGcAaQBu
-AGEAdABpAG4AZwAtAGkAcAAAAAAAAQAAABwAAABbADEANwAyAC4AMwAwAC4ANAAuADkAMABdAAAA
-Y9I=
-
---_000_504EB66DAC8D234EB8E8560985C2D7AD46CE9A5Aavmb2qlogicorg_--
+Thanks
+Laurence
