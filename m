@@ -1,38 +1,33 @@
-From: Michael Schmitz <schmitzmic@gmail.com>
-Subject: [PATCH v3 4/4] m68k/atari - atari_scsi: use correct virt/phys translation for DMA buffer
-Date: Mon, 31 Mar 2014 21:06:08 +1300
-Message-ID: <1396253168-25601-5-git-send-email-schmitz@debian.org>
-References: <1396253168-25601-1-git-send-email-schmitz@debian.org>
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <1396253168-25601-1-git-send-email-schmitz@debian.org>
-Sender: linux-m68k-owner@vger.kernel.org
-To: linux-m68k@vger.kernel.org
-Cc: geert@linux-m68k.org, debian-68k@lists.debian.org, Michael Schmitz <schmitz@debian.org>, linux-scsi@vger.kernel.org
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 3/4] scsi: reintroduce scsi_driver.init_command
+Date: Mon, 31 Mar 2014 01:09:09 -0700
+Message-ID: <20140331080909.GA5270@infradead.org>
+References: <1395936862-6938-1-git-send-email-hch@lst.de>
+ <1395936862-6938-4-git-send-email-hch@lst.de>
+ <5339118D.4060406@cs.wisc.edu>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:50377 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753615AbaCaIJt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Mar 2014 04:09:49 -0400
+Content-Disposition: inline
+In-Reply-To: <5339118D.4060406@cs.wisc.edu>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <JBottomley@Parallels.com>, linux-scsi@vger.kernel.org
 
-With the kernel running from FastRAM instead of ST-RAM, none of ST-RAM is
-mapped by mem_init, and DMA-addressable buffer must be mapped by ioremap.
+On Mon, Mar 31, 2014 at 01:56:13AM -0500, Mike Christie wrote:
+> The above call would free the cmnd->cmnd and set it to null. If then
+> scsi_io_completion was going to do some error processing it looks like
+> it could try to access the scsi_cmnd->cmnd field.
+> 
+> With the current code that would not be a problem because the blk unprep
+> callback is not called until the block layer does its request cleanup in
+> blk_finish_request which as you know is after
+> scsi_io_completion/scsi_end_request is done with the cmnd.
 
-Use platform specific virt/phys translation helpers for this case.
-
-Signed-off-by: Michael Schmitz <schmitz@debian.org>
-Cc: linux-scsi@vger.kernel.org
----
- drivers/scsi/atari_scsi.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/scsi/atari_scsi.c b/drivers/scsi/atari_scsi.c
-index 296c936..a8d721f 100644
---- a/drivers/scsi/atari_scsi.c
-+++ b/drivers/scsi/atari_scsi.c
-@@ -639,7 +639,7 @@ static int __init atari_scsi_detect(struct scsi_host_template *host)
- 					"double buffer\n");
- 			return 0;
- 		}
--		atari_dma_phys_buffer = virt_to_phys(atari_dma_buffer);
-+		atari_dma_phys_buffer = atari_stram_to_phys(atari_dma_buffer);
- 		atari_dma_orig_addr = 0;
- 	}
- #endif
--- 
-1.7.0.4
+Right, we should probabl call ->uninit_command at that place as well
+instead of calling it internall in ->done.
