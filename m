@@ -1,80 +1,106 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 1/4] target/core: T10-Dif: check HW support capabilities
-Date: Mon, 31 Mar 2014 18:19:06 -0700
-Message-ID: <1396315146.22665.82.camel@haakon3.risingtidesystems.com>
-References: <1396047927-14189-1-git-send-email-quinn.tran@qlogic.com>
-	 <1396047927-14189-2-git-send-email-quinn.tran@qlogic.com>
-	 <53360E54.5060004@mellanox.com>
-	 <504EB66DAC8D234EB8E8560985C2D7AD46CE87D7@avmb2.qlogic.org>
-	 <533620C0.9060903@mellanox.com>
-	 <504EB66DAC8D234EB8E8560985C2D7AD46CE9B32@avmb2.qlogic.org>
+From: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>
+Subject: Re: [PATCH 0/3] Fix USB deadlock caused by SCSI error handling
+Date: Tue, 01 Apr 2014 08:14:09 +0200
+Message-ID: <533A5931.4040708@suse.de>
+References: <Pine.LNX.4.44L0.1403310907150.11739-100000@netrider.rowland.org>	 <53397DAE.9010801@suse.de> <1396278224.3152.26.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <504EB66DAC8D234EB8E8560985C2D7AD46CE9B32@avmb2.qlogic.org>
-Sender: target-devel-owner@vger.kernel.org
-To: Quinn Tran <quinn.tran@qlogic.com>
-Cc: sagi grimberg <sagig@mellanox.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1396278224.3152.26.camel-sFMDBYUN5F8GjUHQrlYNx2Wm91YjaHnnhRte9Li2A+AAvxtiuMwx3w@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
+Cc: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 2014-03-31 at 17:53 +0000, Quinn Tran wrote:
-> On 3/28/14 6:24 PM, "sagi grimberg" <sagig@mellanox.com> wrote:
-> 
-> >On 3/29/2014 3:53 AM, Quinn Tran wrote:
+On 03/31/2014 05:03 PM, James Bottomley wrote:
+> [lets split the thread]
+> On Mon, 2014-03-31 at 16:37 +0200, Hannes Reinecke wrote:
+>> On 03/31/2014 03:33 PM, Alan Stern wrote:
+>>> On Mon, 31 Mar 2014, Hannes Reinecke wrote:
+>>>> On 03/28/2014 08:29 PM, Alan Stern wrote:
+>>>>> On Fri, 28 Mar 2014, James Bottomley wrote:
+>>>>> Maybe scmd_eh_abort_handler() should check the flag before doing
+>>>>> anything.  Is there any sort of sychronization to prevent the sam=
+e
+>>>>> incarnation of a command from being aborted twice (or by two diff=
+erent
+>>>>> threads at the same time)?  If there is, it isn't obvious.
+>>>>>
+>>>> See above. scsi_times_out() will only ever called once.
+>>>> What can happen, though, is that _theoretically_ the LLDD might
+>>>> decide to call ->done() on a timed out command when
+>>>> scsi_eh_abort_handler() is still pending.
+>>>
+>>> That's okay.  We can expect the LLDD to have sufficient locking to
+>>> handle that sort of thing without confusion (usb-storage does, for
+>>> example).
+>>>
+>>>>> (Also, what's going on at the start of scsi_abort_command()?  Con=
+trary
+>>>>> to what one might expect, the first part of the function _cancels=
+_ a
+>>>>> scheduled abort.  And it does so without clearing the
+>>>>> SCSI_EH_ABORT_SCHEDULED flag.)
+>>>>>
+>>>> The original idea was this:
+>>>>
+>>>> SCSI_EH_ABORT_SCHEDULED is sticky _per command_.
+>>>> Point is, any command abort is only ever send for a timed-out
+>>>> command. And the main problem for a timed-out command is that we
+>>>> simply _do not_ know what happened for that command. So _if_ a
+>>>> command timed out, _and_ we've send an abort, _and_ the command
+>>>> times out _again_ we'll be running into an endless loop between
+>>>> timeout and aborting, and never returning the command at all.
+>>>>
+>>>> So to prevent this we should set a marker on that command telling =
+it
+>>>> to _not_ try to abort the command again.
+>>>
+>>> I disagree.  We _have_ to abort the command again -- how else can w=
+e
+>>> stop a running command?  To prevent the loop you described, we shou=
+ld
+>>> avoid _retrying_ the command after it is aborted the second time.
+>>>
+>> The actual question is whether it's worth aborting the same command
+>> a second time.
+>> In principle any reset (like LUN reset etc) should clear the
+>> command, too.
+>> And the EH abort functionality is geared around this.
+>> If, for some reason, the transport layer / device driver
+>> requires a command abort to be send then sure, we need
+>> to accommodate for that.
+>=20
+> We already discussed this (that was my first response too).  USB need=
+s
+> all outstanding commands aborted before proceeding to reset.  I'm
+> starting to think the actual way to fix this is to reset the abort
+> scheduled only if we send something else, so this might be a better f=
+ix.
+>=20
+> It doesn't matter if we finish a command with abort scheduled because
+> the command then gets freed and the flags cleaned.
+>=20
+> We can take our time with this because the other two patches, which I
+> can send separately fix the current deadlock (we no longer send an
+> unaborted request sense before the reset), and it can go via rc fixes=
+=2E
+>=20
+Yes, agreed.
 
-<SNIP>
+The USB case seems to be a bit more tricky, and at least I need some
+more time to fully understand the details and implications of this.
 
-> >>>> +            }
-> >>>> +    }
-> >>>> +
-> >>>>       if (lun->lun_se_dev !=  NULL) {
-> >>>>               pr_err("Port Symlink already exists\n");
-> >>>>               return -EEXIST;
-> >>>> diff --git a/drivers/target/target_core_tpg.c
-> >>>> b/drivers/target/target_core_tpg.c
-> >>>> index c036595..9279971 100644
-> >>>> --- a/drivers/target/target_core_tpg.c
-> >>>> +++ b/drivers/target/target_core_tpg.c
-> >>>> @@ -632,6 +632,15 @@ int core_tpg_set_initiator_node_tag(
-> >>>>    }
-> >>>>    EXPORT_SYMBOL(core_tpg_set_initiator_node_tag);
-> >>>>
-> >>>> +void core_tpg_set_fabric_t10dif(
-> >>>> +    struct se_portal_group *tpg,
-> >>>> +    uint32_t fabric_t10dif_force_on)
-> >>>> +{
-> >>>> +    tpg->fabric_t10dif_force_on = fabric_t10dif_force_on;
-> >>>> +}
-> >>>> +EXPORT_SYMBOL(core_tpg_set_fabric_t10dif);
-> >>>> +
-> >>> Is there a user for this function in this patch?
-> >> QT> I'm on the fence with this piece.  Just thinking of a case where DIX
-> >> is not available for initiator side, but user wants to turn on
-> >>protection
-> >> at the link layer.  Our test folks would like to cover this case in the
-> >> future.
-> >
-> >Not sure I understand. Initiator will send the target data+protection
-> >(DIX disabled HBA does INSERT), why does this help?
-> >Why should the target fabric care who generated the protection (OS or
-> >HBA)?
-> 
-> QT> Sorry for the confusion.  The case I'm trying to get at is "Data In
-> Insert" and "Data out strip".    In this case, the protection starts from
-> front end target adapter to the back end storage.  In revisit your
-> previous patch, this case is not covered.
-> 
-> 
+Cheers,
 
-<nod>
-
-So for the TARGET_PROT_DIN_INSERT + TARGET_PROT_DOUT_STRIP cases, the
-target will need to expose INQUIRY PROTECT=1 + other PI related control
-bits when the fabric supports these modes, regardless of what PI is
-supported on the backend device.
-
-Keeping this configuration in mind as well while coding up the
-aforementioned series.  ;)
-
---nab
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare-l3A5Bk7waGM@public.gmane.org			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
