@@ -1,72 +1,43 @@
-From: Mathias Krause <minipli@googlemail.com>
-Subject: Re: [PATCH] aic79xx: fix misuse of static variables
-Date: Tue, 1 Apr 2014 18:45:01 +0200
-Message-ID: <CA+rthh8ELxeq-m3-Xs5pzKbk9hSNkX5ZxFdi4HqrkgwGUtOqZA@mail.gmail.com>
-References: <1396186235-3053-1-git-send-email-minipli@googlemail.com>
-	<1396361441.2187.13.camel@dabdike.int.hansenpartnership.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 1/4] target/core: T10-Dif: check HW support capabilities
+Date: Tue, 01 Apr 2014 13:09:37 -0400
+Message-ID: <yq1k3b9x9gu.fsf@sermon.lab.mkp.net>
+References: <1396047927-14189-1-git-send-email-quinn.tran@qlogic.com>
+	<1396047927-14189-2-git-send-email-quinn.tran@qlogic.com>
+	<53360E54.5060004@mellanox.com>
+	<504EB66DAC8D234EB8E8560985C2D7AD46CE87D7@avmb2.qlogic.org>
+	<533620C0.9060903@mellanox.com>
+	<504EB66DAC8D234EB8E8560985C2D7AD46CE9B32@avmb2.qlogic.org>
+	<1396315146.22665.82.camel@haakon3.risingtidesystems.com>
+	<533A71E9.90308@dev.mellanox.co.il>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-la0-f50.google.com ([209.85.215.50]:53961 "EHLO
-	mail-la0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751729AbaDAQpD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Apr 2014 12:45:03 -0400
-Received: by mail-la0-f50.google.com with SMTP id pv20so2912963lab.37
-        for <linux-scsi@vger.kernel.org>; Tue, 01 Apr 2014 09:45:01 -0700 (PDT)
-In-Reply-To: <1396361441.2187.13.camel@dabdike.int.hansenpartnership.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:30492 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751316AbaDARJw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Apr 2014 13:09:52 -0400
+In-Reply-To: <533A71E9.90308@dev.mellanox.co.il> (Sagi Grimberg's message of
+	"Tue, 01 Apr 2014 10:59:37 +0300")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, PaX Team <pageexec@freemail.hu>
+To: Sagi Grimberg <sagig@dev.mellanox.co.il>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Quinn Tran <quinn.tran@qlogic.com>, sagi grimberg <sagig@mellanox.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-On 1 April 2014 16:10, James Bottomley
-<James.Bottomley@hansenpartnership.com> wrote:
-> On Sun, 2014-03-30 at 15:30 +0200, Mathias Krause wrote:
->> The format strings for various printk()s make use of a temporary
->> variable that is declared 'static'. This is probably not intended,
->> so fix those.
->
-> Actually, it was intended.  It was to work around an assignment to const
-> gcc bug: some versions of gcc won't allow the first assignment to an
-> uninitialised const.
+>>>>> "Sagi" == Sagi Grimberg <sagig@dev.mellanox.co.il> writes:
 
-Could it be you're mixing up 'const char *' with 'char *const'? The
-latter would be the wrong type and would generate an error when tying
-to be assigned after initialization. But the former is totally fine.
-In fact, it is fine with ancient versions of gcc as well. The oldest
-one I managed to get running on my system is gcc 2.7.2.3 from 1998. It
-compiled this little example just fine:
+Sagi> I originally wrote the code to support that. But it got left
+Sagi> behind since I figured it is not an interesting use-case.  If your
+Sagi> beckend doesn't support T10-PI why should the target publish it
+Sagi> support it and ask the device to strip/insert it?  I suppose it is
+Sagi> to allow the initiator to protect half-way, but I don't know how
+Sagi> interesting it is if the data is not stored with protection...
 
-,--[ test.c ]---
-| static const char *strings[] = {
-|   "foo", "bar%s", "ba%z"
-| };
-|
-| int main(int argc, char **argv) {
-|   const char *s;
-|
-|   s = strings[argc];
-|   printf(s, "got ya!");
-|   putchar('\n');
-|
-|   return 0;
-| }
-`---
+That depends what you do on the backend. There are several devices out
+there that expose PI to the host but use a different protection scheme
+internally. And then synthesize PI on the host-facing side. Some even do
+T10 PI to an internal protection scheme and then back to T10 PI when
+talking to the disk drives in the back end.
 
-The same is true for gcc 3.2 -- the oldest supported version according
-to README. It compiles the above example just fine.
-
->  I can't remember how long ago this was, but
-> probably at least 10 years, so it's likely whatever version of gcc that
-> caused the problem is long gone, but someone should check this
-> modification works on our earliest supported version.
-
-I haven't tried compiling the kernel with those old compilers -- I've
-installed them in a very basic chroot environment only -- but as this
-is a very common used pattern, pretty much the rest of the kernel
-wouldn't compile either if gcc would require quirks like this. It's
-standard C, after all.
-
-
-Thanks,
-Mathias
+-- 
+Martin K. Petersen	Oracle Linux Engineering
