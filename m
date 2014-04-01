@@ -1,42 +1,57 @@
-From: Eddie Wai <eddie.wai@broadcom.com>
-Subject: Re: [PATCH v3 0/3] bnx2fc: fix memory leaks and NULL pointer
- dereferences
-Date: Tue, 1 Apr 2014 11:53:36 -0700
-Message-ID: <1396378416.32300.25.camel@lbirv-waie-lx2.broadcom.com>
-References: <1396353502-30083-1-git-send-email-mlombard@redhat.com>
+From: Ondrej Zary <linux@rainbow-software.org>
+Subject: [PATCH 0/2] wd719x: Introduce Western Digital WD7193/7197/7296 PCI SCSI card driver
+Date: Tue, 1 Apr 2014 23:02:46 +0200
+Message-ID: <201404012302.47815.linux@rainbow-software.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:59438 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751363AbaDAS4F (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Apr 2014 14:56:05 -0400
-In-Reply-To: <1396353502-30083-1-git-send-email-mlombard@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Kernel development list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Maurizio Lombardi <mlombard@redhat.com>
-Cc: linux-scsi@vger.kernel.org, jbottomley@parallels.com, m.lombardi85@gmail.com
 
-The patchset looks good.  Thanks.
+Hello,
+this is a new driver for Western Digital WD7193, WD7197 and WD7296 PCI SCSI
+controllers based on WD33C296A chip. These nice cards never worked good with
+Linux.
 
-Acked-by: Eddie Wai <eddie.wai@broadcom.com>
+It's based on old and ugly wd719x driver written back in 2.0 days, then hacked 
+to 2.2 and finally to 2.4 kernels. Most of the code is rewritten: from ~4100 
+lines to ~1200.
 
-On Tue, 2014-04-01 at 13:58 +0200, Maurizio Lombardi wrote:
-> PATCH 1/3 removes a unused variable from the bnx2fc_free_hash_table() function,
-> 
-> PATCH 2/3 fixes a memory leak and some NULL pointer dereferences in the bnx2fc_free_hash_table() function
-> that may happen if bnx2fc_allocate_hash_table() fails.
-> 
-> PATCH 3/3 fixes a memory leak in the bnx2fc_allocate_hash_table() function.
-> 
-> Maurizio Lombardi (3):
->   bnx2fc: remove unused variable hash_table_size
->   bnx2fc: fix memory leak and potential NULL pointer dereference.
->   bnx2fc: fix memory leak in bnx2fc_allocate_hash_table()
-> 
->  drivers/scsi/bnx2fc/bnx2fc_hwi.c | 64 +++++++++++++++++++++++-----------------
->  1 file changed, 37 insertions(+), 27 deletions(-)
-> 
+I've tested the driver on a WD7193 card with some hard drives and CD-ROMs:
+QUANTUM  LP240S GM240S01X 4.6
+IBM      0663L12          e g
+IBM      DORS-32160       WA0A
+SONY     CD-ROM CDU-55S   1.0t
+SONY     CD-ROM CDU-415   1.1g
+
+The card supports TCQ and linked commands (for cmd_per_lun > 1?) but I don't 
+know how it should be implemented in a driver.
+
+Device/bus/host resets seem to work fine when tested by sg_reset.
+But don't know how to test command abort.
+
+The card requires firmware that can be cut out of the Windows NT driver that 
+can be downloaded from WD at: 
+http://support.wdc.com/product/download.asp?groupid=801&sid=27&lang=en
+There is no license anywhere in the file or on the page - so I guess that the 
+firmware cannot be added to linux-firmware.
+
+This script downloads and extracts the firmware:
+
+#!/bin/sh
+wget http://support.wdc.com/download/archive/pciscsi.exe
+lha xi pciscsi.exe pci-scsi.exe
+lha xi pci-scsi.exe nt/wd7296a.sys
+rm pci-scsi.exe
+dd if=wd7296a.sys of=wd719x-risc.bin bs=1 skip=5760 count=14336
+dd if=wd7296a.sys of=wd719x-wcs.bin bs=1 skip=20096 count=514
+rm wd7296a.sys
 
 
+-- 
+Ondrej Zary
