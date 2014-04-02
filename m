@@ -1,47 +1,24 @@
-From: Zach Brown <zab@redhat.com>
-Subject: Re: [PATCH 1/6] fs/bio-integrity: remove duplicate code
-Date: Wed, 2 Apr 2014 12:17:58 -0700
-Message-ID: <20140402191758.GI2394@lenny.home.zabbo.net>
-References: <20140324162231.10848.4863.stgit@birch.djwong.org>
- <20140324162238.10848.96492.stgit@birch.djwong.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Christoph Hellwig <hch@lst.de>
+Subject: blk-mq updates, V3
+Date: Wed,  2 Apr 2014 16:57:09 +0200
+Message-ID: <1396450634-32021-1-git-send-email-hch@lst.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44867 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932723AbaDBTSK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 2 Apr 2014 15:18:10 -0400
-Content-Disposition: inline
-In-Reply-To: <20140324162238.10848.96492.stgit@birch.djwong.org>
+Received: from casper.infradead.org ([85.118.1.10]:51044 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932247AbaDBOzE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Apr 2014 10:55:04 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: axboe@kernel.dk, martin.petersen@oracle.com, JBottomley@parallels.com, jmoyer@redhat.com, bcrl@kvack.org, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, linux-aio@kvack.org, Gu Zheng <guz.fnst@cn.fujitsu.com>, linux-scsi@vger.kernel.org, linux-mm@kvack.org
+To: Jens Axboe <axboe@fb.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-> +static int bio_integrity_generate_verify(struct bio *bio, int operate)
->  {
+The first two patches are unchanged from the last two iterations of
+the series.
 
-> +	if (operate)
-> +		sector = bio->bi_iter.bi_sector;
-> +	else
-> +		sector = bio->bi_integrity->bip_iter.bi_sector;
+Patches 3 and 4 are new: 3 is a preparation for 4 and other future work,
+and patch 4 makes sure that drivers don't have to implement special
+workarounds for the magic flush request.  Patch 5 is an updated version
+of the earlier init/exit_request versions which should make everyone
+happy now as there are no special NULL hardware contexts or negative
+request numbers due to patch 4 sorting out the flush_rq mess.
 
-> +		if (operate) {
-> +			bi->generate_fn(&bix);
-> +		} else {
-> +			ret = bi->verify_fn(&bix);
-> +			if (ret) {
-> +				kunmap_atomic(kaddr);
-> +				return ret;
-> +			}
-> +		}
-
-I was glad to see this replaced with explicit sector and func arguments
-in later refactoring in the 6/ patch.
-
-But I don't think the function poiner casts in that 6/ patch are wise
-(Or even safe all the time, given crazy function pointer trampolines?
-Is that still a thing?).  I'd have made a single walk_fn type that
-returns and have the non-returning iterators just return 0.
-
-- z
