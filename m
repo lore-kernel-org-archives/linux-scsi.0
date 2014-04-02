@@ -1,29 +1,40 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/7] mpt3sas: Remove use of DEF_SCSI_QCMD
-Date: Wed, 2 Apr 2014 03:41:15 -0700
-Message-ID: <20140402104115.GB6510@infradead.org>
-References: <cover.1395952569.git.matthew.r.wilcox@intel.com>
- <2ce8dda9284f463216f4c527d32fee497f9da3ac.1395952569.git.matthew.r.wilcox@intel.com>
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: Re: [PATCH v2 00/23] scsi: Use pci_enable_msix_range() instead of
+ pci_enable_msix()
+Date: Wed, 2 Apr 2014 13:49:32 +0200
+Message-ID: <20140402114932.GB10007@dhcp-26-207.brq.redhat.com>
+References: <cover.1393191330.git.agordeev@redhat.com>
+ <20140313040440.GB26657@google.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:58571 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758143AbaDBKlP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Apr 2014 06:41:15 -0400
+Return-path: <linux-pci-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <2ce8dda9284f463216f4c527d32fee497f9da3ac.1395952569.git.matthew.r.wilcox@intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <20140313040440.GB26657@google.com>
+Sender: linux-pci-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-kernel@vger.kernel.org, iss_storagedev@hp.com, intel-linux-scu@intel.com, support@lsi.com, DL-MPTFusionLinux@lsi.com, qla2xxx-upstream@qlogic.com, iscsi-driver@qlogic.com, pv-drivers@vmware.com, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew.r.wilcox@intel.com>
-Cc: linux-scsi@vger.kernel.org, willy@linux.intel.com
 
-On Thu, Mar 27, 2014 at 04:40:31PM -0400, Matthew Wilcox wrote:
-> Removing the host_lock from the I/O submission path gives a huge
-> scalability improvement.
+On Wed, Mar 12, 2014 at 10:04:40PM -0600, Bjorn Helgaas wrote:
+> Hi James,
+> 
+> I think Alexander sent these to linux-scsi hoping that you would handle
+> them, but I know it's a hassle because they depend on f7fc32c, which went
+> in after the merge window.
+> 
+> I'd be glad to review these and apply them through my tree, unless you want
+> to do it.  I'd like to get these merged in the v3.15 merge window so
+> Alexander can move on to something else.  I haven't checked for merge
+> conflicts with scsi.git yet, but I assume they'd be pretty trivial if there
+> are any.
 
-This looks reasonable to me, but did you do a full audit that all state
-is properly synchronized in the functions called from _scsih_qcmd_lck?
+Hi Bjorn,
 
-If so that should be stated in the patch description.
+It has shifted to v3.16, right?
 
+> Bjorn
+
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
