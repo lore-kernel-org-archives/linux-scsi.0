@@ -1,43 +1,38 @@
-From: Jayamohan Kallickal <Jayamohan.Kallickal@Emulex.Com>
-Subject: RE: [PATCH 02/55] scsi: Mark function as static in
- be2iscsi/be_cmds.c
-Date: Thu, 3 Apr 2014 05:02:57 +0000
-Message-ID: <37724B2049F71D4C9B086F99DDB2DE11570D083C@CMEXMB1.ad.emulex.com>
-References: <5fd6fa49a592043459f75ed83a72f8c1ed9ddc13.1396114897.git.rashika.kheria@gmail.com>
- <e8c6c765e48ea867376850f1bc693f797fa14a53.1396114897.git.rashika.kheria@gmail.com>
+From: Matthew Wilcox <willy@linux.intel.com>
+Subject: Re: [PATCH 2/7] mpt3sas: Remove use of DEF_SCSI_QCMD
+Date: Wed, 2 Apr 2014 09:20:14 -0400
+Message-ID: <20140402132014.GD5667@linux.intel.com>
+References: <cover.1395952569.git.matthew.r.wilcox@intel.com>
+ <2ce8dda9284f463216f4c527d32fee497f9da3ac.1395952569.git.matthew.r.wilcox@intel.com>
+ <20140402104115.GB6510@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <e8c6c765e48ea867376850f1bc693f797fa14a53.1396114897.git.rashika.kheria@gmail.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Rashika Kheria <rashika.kheria@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "josh@joshtriplett.org" <josh@joshtriplett.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:5999 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758688AbaDBNWE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 2 Apr 2014 09:22:04 -0400
+Content-Disposition: inline
+In-Reply-To: <20140402104115.GB6510@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Matthew Wilcox <matthew.r.wilcox@intel.com>, linux-scsi@vger.kernel.org
 
-TG9va3MgZ29vZA0KDQpBY2tlZC1ieTogSmF5YW1vaGFuIEthbGxpY2thbCA8SmF5YW1vaGFuLkth
-bGxpY2thbEBlbXVsZXguY29tPg0KLS0tDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpG
-cm9tOiBSYXNoaWthIEtoZXJpYSBbbWFpbHRvOnJhc2hpa2Eua2hlcmlhQGdtYWlsLmNvbV0gDQpT
-ZW50OiBTYXR1cmRheSwgTWFyY2ggMjksIDIwMTQgMTA6NDQgQU0NClRvOiBsaW51eC1rZXJuZWxA
-dmdlci5rZXJuZWwub3JnDQpDYzogSmF5YW1vaGFuIEthbGxpY2thbDsgSmFtZXMgRS5KLiBCb3R0
-b21sZXk7IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnOyBqb3NoQGpvc2h0cmlwbGV0dC5vcmcN
-ClN1YmplY3Q6IFtQQVRDSCAwMi81NV0gc2NzaTogTWFyayBmdW5jdGlvbiBhcyBzdGF0aWMgaW4g
-YmUyaXNjc2kvYmVfY21kcy5jDQoNCk1hcmsgZnVuY3Rpb24gYXMgc3RhdGljIGluIGJlMmlzY3Np
-L2JlX2NtZHMuYyBiZWNhdXNlIGl0IGlzIG5vdCB1c2VkIG91dHNpZGUgdGhpcyBmaWxlLg0KDQpU
-aGlzIGVsaW1pbmF0ZXMgdGhlIGZvbGxvd2luZyB3YXJuaW5nIGluIGJlMmlzY3NpL2JlX2NtZHMu
-YzoNCmRyaXZlcnMvc2NzaS9iZTJpc2NzaS9iZV9jbWRzLmM6NDAxOjU6IHdhcm5pbmc6IG5vIHBy
-ZXZpb3VzIHByb3RvdHlwZSBmb3Ig4oCYYmVpc2NzaV9wcm9jZXNzX21jY+KAmSBbLVdtaXNzaW5n
-LXByb3RvdHlwZXNdDQoNClNpZ25lZC1vZmYtYnk6IFJhc2hpa2EgS2hlcmlhIDxyYXNoaWthLmto
-ZXJpYUBnbWFpbC5jb20+DQpSZXZpZXdlZC1ieTogSm9zaCBUcmlwbGV0dCA8am9zaEBqb3NodHJp
-cGxldHQub3JnPg0KLS0tDQogZHJpdmVycy9zY3NpL2JlMmlzY3NpL2JlX2NtZHMuYyB8ICAgIDIg
-Ky0NCiAxIGZpbGUgY2hhbmdlZCwgMSBpbnNlcnRpb24oKyksIDEgZGVsZXRpb24oLSkNCg0KZGlm
-ZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9iZTJpc2NzaS9iZV9jbWRzLmMgYi9kcml2ZXJzL3Njc2kv
-YmUyaXNjc2kvYmVfY21kcy5jIGluZGV4IDMzMzgzOTEuLjAyNmMzZTMgMTAwNjQ0DQotLS0gYS9k
-cml2ZXJzL3Njc2kvYmUyaXNjc2kvYmVfY21kcy5jDQorKysgYi9kcml2ZXJzL3Njc2kvYmUyaXNj
-c2kvYmVfY21kcy5jDQpAQCAtMzk4LDcgKzM5OCw3IEBAIHN0YXRpYyB2b2lkIGJlaXNjc2lfY3Ff
-bm90aWZ5KHN0cnVjdCBiZWlzY3NpX2hiYSAqcGhiYSwgdTE2IHFpZCwgYm9vbCBhcm0sICB9DQog
-DQogDQotaW50IGJlaXNjc2lfcHJvY2Vzc19tY2Moc3RydWN0IGJlaXNjc2lfaGJhICpwaGJhKQ0K
-K3N0YXRpYyBpbnQgYmVpc2NzaV9wcm9jZXNzX21jYyhzdHJ1Y3QgYmVpc2NzaV9oYmEgKnBoYmEp
-DQogew0KIAlzdHJ1Y3QgYmVfbWNjX2NvbXBsICpjb21wbDsNCiAJaW50IG51bSA9IDAsIHN0YXR1
-cyA9IDA7DQotLQ0KMS43LjkuNQ0KDQo=
+On Wed, Apr 02, 2014 at 03:41:15AM -0700, Christoph Hellwig wrote:
+> On Thu, Mar 27, 2014 at 04:40:31PM -0400, Matthew Wilcox wrote:
+> > Removing the host_lock from the I/O submission path gives a huge
+> > scalability improvement.
+> 
+> This looks reasonable to me, but did you do a full audit that all state
+> is properly synchronized in the functions called from _scsih_qcmd_lck?
+> 
+> If so that should be stated in the patch description.
+
+I did one for mpt2sas back in July 2011 when I first submitted this patch.
+http://marc.info/?l=linux-scsi&m=130980763617589&w=2
+
+I must confess to having not done so for this iteration.  The equivalent
+to this patch has been in RHEL since 6.2, so I hope that gives us some
+amount of confidence.
+
