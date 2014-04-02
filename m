@@ -1,29 +1,47 @@
 From: Zach Brown <zab@redhat.com>
-Subject: Re: [RFC PATCH DONOTMERGE v2 0/6] userspace PI passthrough via
- AIO/DIO
-Date: Wed, 2 Apr 2014 13:05:23 -0700
-Message-ID: <20140402200523.GL2394@lenny.home.zabbo.net>
+Subject: Re: [PATCH 1/6] fs/bio-integrity: remove duplicate code
+Date: Wed, 2 Apr 2014 12:17:58 -0700
+Message-ID: <20140402191758.GI2394@lenny.home.zabbo.net>
 References: <20140324162231.10848.4863.stgit@birch.djwong.org>
- <20140402191418.GH2394@lenny.home.zabbo.net>
+ <20140324162238.10848.96492.stgit@birch.djwong.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <owner-linux-aio@kvack.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:44867 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932723AbaDBTSK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 2 Apr 2014 15:18:10 -0400
 Content-Disposition: inline
-In-Reply-To: <20140402191418.GH2394@lenny.home.zabbo.net>
-Sender: owner-linux-aio@kvack.org
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: axboe@kernel.dk, martin.petersen@oracle.com, JBottomley@parallels.com, jmoyer@redhat.com, bcrl@kvack.org, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, linux-aio@kvack.org, linux-scsi@vger.kernel.org, linux-mm@kvack.org
+In-Reply-To: <20140324162238.10848.96492.stgit@birch.djwong.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: axboe@kernel.dk, martin.petersen@oracle.com, JBottomley@parallels.com, jmoyer@redhat.com, bcrl@kvack.org, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, linux-aio@kvack.org, Gu Zheng <guz.fnst@cn.fujitsu.com>, linux-scsi@vger.kernel.org, linux-mm@kvack.org
 
-> 's a small number of them with strong semantics because they're a part
-> of the syscall ABI.
+> +static int bio_integrity_generate_verify(struct bio *bio, int operate)
+>  {
 
-("There's" a small number of them..  vim troubles :))
+> +	if (operate)
+> +		sector = bio->bi_iter.bi_sector;
+> +	else
+> +		sector = bio->bi_integrity->bip_iter.bi_sector;
+
+> +		if (operate) {
+> +			bi->generate_fn(&bix);
+> +		} else {
+> +			ret = bi->verify_fn(&bix);
+> +			if (ret) {
+> +				kunmap_atomic(kaddr);
+> +				return ret;
+> +			}
+> +		}
+
+I was glad to see this replaced with explicit sector and func arguments
+in later refactoring in the 6/ patch.
+
+But I don't think the function poiner casts in that 6/ patch are wise
+(Or even safe all the time, given crazy function pointer trampolines?
+Is that still a thing?).  I'd have made a single walk_fn type that
+returns and have the non-returning iterators just return 0.
 
 - z
-
---
-To unsubscribe, send a message with 'unsubscribe linux-aio' in
-the body to majordomo@kvack.org.  For more info on Linux AIO,
-see: http://www.kvack.org/aio/
-Don't email: <a href=mailto:"aart@kvack.org">aart@kvack.org</a>
