@@ -1,23 +1,37 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 5/7] mpt2sas: Add free smids to the head, not tail of list
-Date: Wed, 2 Apr 2014 03:41:57 -0700
-Message-ID: <20140402104157.GD6510@infradead.org>
-References: <cover.1395952569.git.matthew.r.wilcox@intel.com>
- <b74cd5f3a044257f197676fa093a875c637adf2f.1395952569.git.matthew.r.wilcox@intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 1/5] blk-mq: initialize resid_len
+Date: Wed,  2 Apr 2014 16:57:10 +0200
+Message-ID: <1396450634-32021-2-git-send-email-hch@lst.de>
+References: <1396450634-32021-1-git-send-email-hch@lst.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:58578 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758143AbaDBKl5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Apr 2014 06:41:57 -0400
-Content-Disposition: inline
-In-Reply-To: <b74cd5f3a044257f197676fa093a875c637adf2f.1395952569.git.matthew.r.wilcox@intel.com>
+Received: from casper.infradead.org ([85.118.1.10]:51047 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932258AbaDBOzF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Apr 2014 10:55:05 -0400
+In-Reply-To: <1396450634-32021-1-git-send-email-hch@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew.r.wilcox@intel.com>
-Cc: linux-scsi@vger.kernel.org, willy@linux.intel.com
+To: Jens Axboe <axboe@fb.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Looks good,
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ block/blk-mq.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index b1bcc61..44f738e 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -350,6 +350,8 @@ static void blk_mq_start_request(struct request *rq, bool last)
+ 
+ 	trace_block_rq_issue(q, rq);
+ 
++	rq->resid_len = blk_rq_bytes(rq);
++
+ 	/*
+ 	 * Just mark start time and set the started bit. Due to memory
+ 	 * ordering, we know we'll see the correct deadline as long as
+-- 
+1.7.10.4
+
