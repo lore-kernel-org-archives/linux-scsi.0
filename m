@@ -1,24 +1,50 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 6/7] fusion: Add free msg frames to the head, not tail of
- list
-Date: Wed, 2 Apr 2014 03:42:15 -0700
-Message-ID: <20140402104215.GE6510@infradead.org>
-References: <cover.1395952569.git.matthew.r.wilcox@intel.com>
- <4266795d6c7763363a455a37610481172f33351e.1395952569.git.matthew.r.wilcox@intel.com>
+From: Joe Lawrence <joe.lawrence@stratus.com>
+Subject: Re: [PATCH RESEND] scsi_transport_sas: move bsg destructor into
+ sas_rphy_remove
+Date: Wed, 2 Apr 2014 16:48:52 -0400
+Message-ID: <20140402164852.1f20ccb6@jlaw-desktop.mno.stratus.com>
+References: <1396471241-1315-1-git-send-email-joe.lawrence@stratus.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:58581 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758274AbaDBKmQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Apr 2014 06:42:16 -0400
-Content-Disposition: inline
-In-Reply-To: <4266795d6c7763363a455a37610481172f33351e.1395952569.git.matthew.r.wilcox@intel.com>
+Received: from p02c11o145.mxlogic.net ([208.65.144.78]:54461 "EHLO
+	p02c11o145.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932397AbaDBUs5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Apr 2014 16:48:57 -0400
+In-Reply-To: <1396471241-1315-1-git-send-email-joe.lawrence@stratus.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew.r.wilcox@intel.com>
-Cc: linux-scsi@vger.kernel.org, willy@linux.intel.com
+To: Joe Lawrence <joe.lawrence@stratus.com>
+Cc: linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Dan Williams <dan.j.williams@intel.com>, "Reddy, Sreekanth" <Sreekanth.Reddy@lsi.com>
 
-Looks good,
+On Wed, 2 Apr 2014 16:40:41 -0400
+Joe Lawrence <joe.lawrence@stratus.com> wrote:
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Since bsg creation is a side effect of sas_rphy_add, move its
+> complementary removal call into sas_rphy_remove. 
+
+Hello James,
+
+This a resend of a patch posted to quiet an end-device sysfs warning in
+its device deletion path when removing the mpt2sas driver:
+
+  (initial report)
+  sysfs group not found for kobject on mpt2sas unload
+  http://marc.info/?t=138497460000004
+  
+  (patch + ACK + comments)
+  http://marc.info/?t=138609455500001
+
+  (gentoo, LSI repro)
+  mpt2sas driver barfs when force removing a drive on 3.13.1
+  http://marc.info/?t=139122351300001
+
+Dan Williams had a few other suggestions for cleanup in this area, but
+those could be handled in a subsequent patch.  This one missed 3.14
+inclusion and the warning still occurs in Linus's tree as of today
+(post scsi/block merge) hence the repost.
+
+Regards,
+
+-- Joe
