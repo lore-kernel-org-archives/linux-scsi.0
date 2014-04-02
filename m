@@ -1,40 +1,81 @@
-From: Alexander Gordeev <agordeev@redhat.com>
-Subject: Re: [PATCH v2 00/23] scsi: Use pci_enable_msix_range() instead of
- pci_enable_msix()
-Date: Wed, 2 Apr 2014 13:49:32 +0200
-Message-ID: <20140402114932.GB10007@dhcp-26-207.brq.redhat.com>
-References: <cover.1393191330.git.agordeev@redhat.com>
- <20140313040440.GB26657@google.com>
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 3/6] aio/dio: enable PI passthrough
+Date: Wed, 2 Apr 2014 13:44:20 -0700
+Message-ID: <20140402204420.GB10230@birch.djwong.org>
+References: <20140324162231.10848.4863.stgit@birch.djwong.org>
+ <20140324162251.10848.56452.stgit@birch.djwong.org>
+ <20140402200133.GK2394@lenny.home.zabbo.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-pci-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:20660 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933024AbaDBUog (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Apr 2014 16:44:36 -0400
 Content-Disposition: inline
-In-Reply-To: <20140313040440.GB26657@google.com>
-Sender: linux-pci-owner@vger.kernel.org
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-kernel@vger.kernel.org, iss_storagedev@hp.com, intel-linux-scu@intel.com, support@lsi.com, DL-MPTFusionLinux@lsi.com, qla2xxx-upstream@qlogic.com, iscsi-driver@qlogic.com, pv-drivers@vmware.com, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20140402200133.GK2394@lenny.home.zabbo.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Zach Brown <zab@redhat.com>
+Cc: axboe@kernel.dk, martin.petersen@oracle.com, JBottomley@parallels.com, jmoyer@redhat.com, bcrl@kvack.org, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, linux-aio@kvack.org, linux-scsi@vger.kernel.org, linux-mm@kvack.org
 
-On Wed, Mar 12, 2014 at 10:04:40PM -0600, Bjorn Helgaas wrote:
-> Hi James,
+On Wed, Apr 02, 2014 at 01:01:33PM -0700, Zach Brown wrote:
+> > +static int setup_pi_ext(struct kiocb *req, int is_write)
+> > +{
+> > +	struct file *file = req->ki_filp;
+> > +	struct io_extension *ext = &req->ki_ioext->ke_kern;
+> > +	void *p;
+> > +	unsigned long start, end;
+> > +	int retval;
+> > +
+> > +	if (!(file->f_flags & O_DIRECT)) {
+> > +		pr_debug("EINVAL: can't use PI without O_DIRECT.\n");
+> > +		return -EINVAL;
+> > +	}
+> > +
+> > +	BUG_ON(req->ki_ioext->ke_pi_iter.pi_userpages);
+> > +
+> > +	end = (((unsigned long)ext->ie_pi_buf) + ext->ie_pi_buflen +
+> > +		PAGE_SIZE - 1) >> PAGE_SHIFT;
+> > +	start = ((unsigned long)ext->ie_pi_buf) >> PAGE_SHIFT;
+> > +	req->ki_ioext->ke_pi_iter.pi_offset = offset_in_page(ext->ie_pi_buf);
+> > +	req->ki_ioext->ke_pi_iter.pi_len = ext->ie_pi_buflen;
+> > +	req->ki_ioext->ke_pi_iter.pi_nrpages = end - start;
+> > +	p = kzalloc(req->ki_ioext->ke_pi_iter.pi_nrpages *
+> > +		    sizeof(struct page *),
+> > +		    GFP_NOIO);
 > 
-> I think Alexander sent these to linux-scsi hoping that you would handle
-> them, but I know it's a hassle because they depend on f7fc32c, which went
-> in after the merge window.
+> Can userspace give us bad data and get us to generate insane allcation
+> attempt warnings?
+
+Easily.  One of the bits I have to work on for the PI part is figuring out how
+to check with the PI provider that the arguments (the iovec and the pi buffer)
+actually make any sense, in terms of length and alignment requirements (PI
+tuples can't cross pages).  I think it's as simple as adding a bio_integrity
+ops call, and then calling down to it from the kiocb level.
+
+One thing I'm not sure about: What's the largest IO (in terms of # of blocks,
+not # of struct iovecs) that I can throw at the kernel?
+
+> > +	if (p == NULL) {
+> > +		pr_err("%s: no room for page array?\n", __func__);
+> > +		return -ENOMEM;
+> > +	}
+> > +	req->ki_ioext->ke_pi_iter.pi_userpages = p;
+> > +
+> > +	retval = get_user_pages_fast((unsigned long)ext->ie_pi_buf,
+> > +				     req->ki_ioext->ke_pi_iter.pi_nrpages,
+> > +				     is_write,
 > 
-> I'd be glad to review these and apply them through my tree, unless you want
-> to do it.  I'd like to get these merged in the v3.15 merge window so
-> Alexander can move on to something else.  I haven't checked for merge
-> conflicts with scsi.git yet, but I assume they'd be pretty trivial if there
-> are any.
+> Isn't this is_write backwards?  If it's a write syscall then the PI
+> pages is going to be read from.
 
-Hi Bjorn,
+Yes, I think so.  Good catch!
 
-It has shifted to v3.16, right?
-
-> Bjorn
-
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+--D
+> 
+> - z
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
