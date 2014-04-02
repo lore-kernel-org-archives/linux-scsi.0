@@ -1,43 +1,58 @@
-From: Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v2 00/23] scsi: Use pci_enable_msix_range() instead of pci_enable_msix()
-Date: Wed, 2 Apr 2014 11:00:31 -0600
-Message-ID: <CAErSpo4Bz1PCj0kU7WwtJj7zhmomGzRTzcB5N2HKS8tNsNk69Q@mail.gmail.com>
-References: <cover.1393191330.git.agordeev@redhat.com> <20140313040440.GB26657@google.com>
- <20140402114932.GB10007@dhcp-26-207.brq.redhat.com>
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 1/6] fs/bio-integrity: remove duplicate code
+Date: Wed, 2 Apr 2014 13:35:51 -0700
+Message-ID: <20140402203551.GA10230@birch.djwong.org>
+References: <20140324162231.10848.4863.stgit@birch.djwong.org>
+ <20140324162238.10848.96492.stgit@birch.djwong.org>
+ <20140402191758.GI2394@lenny.home.zabbo.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:40891 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932414AbaDBRAw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Apr 2014 13:00:52 -0400
-Received: by mail-ie0-f182.google.com with SMTP id y20so524623ier.13
-        for <linux-scsi@vger.kernel.org>; Wed, 02 Apr 2014 10:00:52 -0700 (PDT)
-In-Reply-To: <20140402114932.GB10007@dhcp-26-207.brq.redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20140402191758.GI2394@lenny.home.zabbo.net>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Zach Brown <zab@redhat.com>
+Cc: axboe@kernel.dk, martin.petersen@oracle.com, JBottomley@parallels.com, jmoyer@redhat.com, bcrl@kvack.org, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, linux-aio@kvack.org, Gu Zheng <guz.fnst@cn.fujitsu.com>, linux-scsi@vger.kernel.org, linux-mm@kvack.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, iss_storagedev@hp.com, intel-linux-scu@intel.com, Support <support@lsi.com>, DL-MPT Fusion Linux <DL-MPTFusionLinux@lsi.com>, qla2xxx-upstream@qlogic.com, iscsi-driver@qlogic.com, pv-drivers@vmware.com, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
 
-On Wed, Apr 2, 2014 at 5:49 AM, Alexander Gordeev <agordeev@redhat.com> wrote:
-> On Wed, Mar 12, 2014 at 10:04:40PM -0600, Bjorn Helgaas wrote:
->> Hi James,
->>
->> I think Alexander sent these to linux-scsi hoping that you would handle
->> them, but I know it's a hassle because they depend on f7fc32c, which went
->> in after the merge window.
->>
->> I'd be glad to review these and apply them through my tree, unless you want
->> to do it.  I'd like to get these merged in the v3.15 merge window so
->> Alexander can move on to something else.  I haven't checked for merge
->> conflicts with scsi.git yet, but I assume they'd be pretty trivial if there
->> are any.
->
-> Hi Bjorn,
->
-> It has shifted to v3.16, right?
+On Wed, Apr 02, 2014 at 12:17:58PM -0700, Zach Brown wrote:
+> > +static int bio_integrity_generate_verify(struct bio *bio, int operate)
+> >  {
+> 
+> > +	if (operate)
+> > +		sector = bio->bi_iter.bi_sector;
+> > +	else
+> > +		sector = bio->bi_integrity->bip_iter.bi_sector;
+> 
+> > +		if (operate) {
+> > +			bi->generate_fn(&bix);
+> > +		} else {
+> > +			ret = bi->verify_fn(&bix);
+> > +			if (ret) {
+> > +				kunmap_atomic(kaddr);
+> > +				return ret;
+> > +			}
+> > +		}
+> 
+> I was glad to see this replaced with explicit sector and func arguments
+> in later refactoring in the 6/ patch.
+> 
+> But I don't think the function poiner casts in that 6/ patch are wise
+> (Or even safe all the time, given crazy function pointer trampolines?
+> Is that still a thing?).  I'd have made a single walk_fn type that
+> returns and have the non-returning iterators just return 0.
 
-Yep, sorry, I meant to get to these, but was too busy, so they'll
-probably go in v3.16.
+Noted.  I cleaned all that crap out just yesterday, so now there's only one
+walk function and some context data that gets passed to the iterator function.
+Much less horrifying.
 
-Bjorn
+(I really only included this patch so that I'd have less rebasing work when
+3.15-rc1 comes out.)
+
+--D
+> 
+> - z
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
