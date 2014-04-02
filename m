@@ -1,95 +1,24 @@
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/6] io: define an interface for IO extensions
-Date: Wed, 2 Apr 2014 16:06:12 -0700
-Message-ID: <20140402230612.GF10230@birch.djwong.org>
-References: <20140324162231.10848.4863.stgit@birch.djwong.org>
- <20140324162244.10848.46322.stgit@birch.djwong.org>
- <20140402194947.GJ2394@lenny.home.zabbo.net>
- <20140402222801.GD10230@birch.djwong.org>
- <20140402225333.GO2394@lenny.home.zabbo.net>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 6/7] fusion: Add free msg frames to the head, not tail of
+ list
+Date: Wed, 2 Apr 2014 03:42:15 -0700
+Message-ID: <20140402104215.GE6510@infradead.org>
+References: <cover.1395952569.git.matthew.r.wilcox@intel.com>
+ <4266795d6c7763363a455a37610481172f33351e.1395952569.git.matthew.r.wilcox@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:58581 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758274AbaDBKmQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Apr 2014 06:42:16 -0400
 Content-Disposition: inline
-In-Reply-To: <20140402225333.GO2394@lenny.home.zabbo.net>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Zach Brown <zab@redhat.com>
-Cc: axboe@kernel.dk, martin.petersen@oracle.com, JBottomley@parallels.com, jmoyer@redhat.com, bcrl@kvack.org, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, linux-aio@kvack.org, linux-scsi@vger.kernel.org, linux-mm@kvack.org
+In-Reply-To: <4266795d6c7763363a455a37610481172f33351e.1395952569.git.matthew.r.wilcox@intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew.r.wilcox@intel.com>
+Cc: linux-scsi@vger.kernel.org, willy@linux.intel.com
 
-On Wed, Apr 02, 2014 at 03:53:33PM -0700, Zach Brown wrote:
-> > > I'd just remove this generic teardown callback path entirely.  If
-> > > there's PI state hanging off the iocb tear it down during iocb teardown.
-> > 
-> > Hmm, I thought aio_complete /was/ iocb teardown time.
-> 
-> Well, usually :).  If you build up before aio_run_iocb() then you nead
-> to teardown in kiocb_free(), which is also called by aio_complete().
+Looks good,
 
-Oh, yeah.  I handle that by tearing down the extensions if stuff fails, though
-I don't remember if that was in this version of the patchset.
-
-> > > (Isn't there some allocate-and-copy-from-userspace helper now? But..)
-> > 
-> > <shrug> Is there?  I didn't find one when I looked, but it wasn't an exhaustive
-> > search.
-> 
-> I could have sworn that I saw something.. ah, right, memdup_user().
-
-Noted. :)
-
-> > > I don't like the rudundancy of the implicit size requirement by a
-> > > field's flag being set being duplicated by the explicit size argument.
-> > > What does that give us, exactly?
-> > 
-> > Either another sanity check or another way to screw up, depending on how you
-> > look at it.  I'd been considering shortening the size field to u32 and adding a
-> > magic number field, but I wonder if that's really necessary.  Seems like it
-> > shouldn't be -- if userland screws up, it's not hard to kill the process.
-> > (Or segv it, or...)
-> 
-> I don't think I'd bother.  The bits should be enough and are already
-> necessary to have explicit indicators of fields being set.
-
-<nod>
-
-> > > Fields in the iocb  As each of these are initialized I'd just
-> > > test the presence bits and __get_user() the userspace arguemnts
-> > > directly, or copy_from_user() something slightly more complicated on to
-> > > the stack.
-> > >
-> > > That gets rid of us having to care about the size at all.  It stops us
-> > > from allocating a kernel copy and pinning it for the duration of the IO.
-> > > We'd just be sampling the present userspace arguments as we initialie
-> > > the iocb during submission.
-> > 
-> > I like this idea.  For the PI extension, nothing particularly error-prone
-> > happens in teardown, which allows the flexibility to copy_from_user any
-> > arguments required, and to copy_to_user any setup errors that happen.  I can
-> > get rid a lot of allocate-and-copy nonsense, as you point out.
-> > 
-> > Ok, I'll migrate my patches towards this strategy, and let's see how much code
-> > goes away. :)
-> 
-> Cool :).
-> 
-> > I've also noticed a bug where if you make one of these PI-extended calls on a
-> > file living on a filesystem, it'll extend the io request's range to be
-> > filesystem block-aligned, which causes all kinds of havoc with the user
-> > provided PI buffers, since they now need to be extended to fit the added
-> > blocks.  Alternately, one could require PI IOs to be fs-block aligned when
-> > dealing with regular files. 
-> 
-> I think, like O_DIRECT, it just has to be aligned or fail :(.
-
-Heh.  O_DIRECT is a hilarious maze of twisty unobvious requirements.  Yuck.
-
-#define O_IMNAIVEENOUGHTOTHINKIKNOWWHATTHISDOES	O_DIRECT
-
---D
-> 
-> - z
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Reviewed-by: Christoph Hellwig <hch@lst.de>
