@@ -1,86 +1,50 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 1/4] target/core: T10-Dif: check HW support capabilities
-Date: Wed, 02 Apr 2014 11:20:54 -0700
-Message-ID: <1396462854.7627.7.camel@haakon3.risingtidesystems.com>
-References: <1396047927-14189-1-git-send-email-quinn.tran@qlogic.com>
-	 <1396047927-14189-2-git-send-email-quinn.tran@qlogic.com>
-	 <53360E54.5060004@mellanox.com>
-	 <504EB66DAC8D234EB8E8560985C2D7AD46CE87D7@avmb2.qlogic.org>
-	 <533620C0.9060903@mellanox.com>
-	 <504EB66DAC8D234EB8E8560985C2D7AD46CE9B32@avmb2.qlogic.org>
-	 <1396315146.22665.82.camel@haakon3.risingtidesystems.com>
-	 <533A71E9.90308@dev.mellanox.co.il> <yq1k3b9x9gu.fsf@sermon.lab.mkp.net>
-	 <533AF70F.4060003@mellanox.com>
-	 <1396374354.18589.13.camel@haakon3.risingtidesystems.com>
-	 <533BB388.2020701@dev.mellanox.co.il>
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 3/6] aio/dio: enable PI passthrough
+Date: Wed, 2 Apr 2014 15:55:37 -0700
+Message-ID: <20140402225537.GE10230@birch.djwong.org>
+References: <20140324162231.10848.4863.stgit@birch.djwong.org>
+ <20140324162251.10848.56452.stgit@birch.djwong.org>
+ <20140402200133.GK2394@lenny.home.zabbo.net>
+ <20140402204420.GB10230@birch.djwong.org>
+ <20140402223311.GN2394@lenny.home.zabbo.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:49312 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932624AbaDBSVQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Apr 2014 14:21:16 -0400
-In-Reply-To: <533BB388.2020701@dev.mellanox.co.il>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <owner-linux-aio@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <20140402223311.GN2394@lenny.home.zabbo.net>
+Sender: owner-linux-aio@kvack.org
+To: Zach Brown <zab@redhat.com>
+Cc: axboe@kernel.dk, martin.petersen@oracle.com, JBottomley@parallels.com, jmoyer@redhat.com, bcrl@kvack.org, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, linux-aio@kvack.org, linux-scsi@vger.kernel.org, linux-mm@kvack.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Cc: sagi grimberg <sagig@mellanox.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Quinn Tran <quinn.tran@qlogic.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-On Wed, 2014-04-02 at 09:51 +0300, Sagi Grimberg wrote:
-> On 4/1/2014 8:45 PM, Nicholas A. Bellinger wrote:
-> > On Tue, 2014-04-01 at 20:27 +0300, sagi grimberg wrote:
-> >> On 4/1/2014 8:09 PM, Martin K. Petersen wrote:
-> >>>>>>>> "Sagi" == Sagi Grimberg <sagig@dev.mellanox.co.il> writes:
-> >>> Sagi> I originally wrote the code to support that. But it got left
-> >>> Sagi> behind since I figured it is not an interesting use-case.  If your
-> >>> Sagi> beckend doesn't support T10-PI why should the target publish it
-> >>> Sagi> support it and ask the device to strip/insert it?  I suppose it is
-> >>> Sagi> to allow the initiator to protect half-way, but I don't know how
-> >>> Sagi> interesting it is if the data is not stored with protection...
-> >>>
-> >>> That depends what you do on the backend. There are several devices out
-> >>> there that expose PI to the host but use a different protection scheme
-> >>> internally. And then synthesize PI on the host-facing side. Some even do
-> >>> T10 PI to an internal protection scheme and then back to T10 PI when
-> >>> talking to the disk drives in the back end.
-> >>>
-> >> Hey Martin,
-> >>
-> >> I understand, but even for internal different T10-PI schemes, is
-> >> stripping protection from incoming data
-> >> at the fabric level (and then do whatever with it in the backend level)
-> >> the right thing to do here?
-> >> I mean we basically lose protection across the PCI with this scheme
-> >> aren't we?
-> >>
-> > The WRITE_STRIP + READ_INSERT case would be still be useful for IBLOCK
-> > backends that don't support real hw PI, so that at least the protection
-> > can be in place for data movement between physical machines.
-> >
-> > Also, I think the amount of changes required to support this type of
-> > configuration in target-core are quite small.
+On Wed, Apr 02, 2014 at 03:33:11PM -0700, Zach Brown wrote:
+> > One thing I'm not sure about: What's the largest IO (in terms of # of blocks,
+> > not # of struct iovecs) that I can throw at the kernel?
 > 
-> So trying to understand how this will come to use.
-> Target will publish the fabric T10-PI support based only on the 
-> transport configuration (not accounting the backing devices configuration).
+> Yeah, dunno.  I'd guess big :).  I'd hope that the PI code already has a
+> way to clamp the size of bios if there's a limit to the size of PI data
+> that can be managed downstream?
 
-Yes, passing in the transport configuration for PI at
-transport_init_session() time seems to make the most sense here in order
-to address all fabric types.
+I guess if we restricted the size of the PI buffer to a page's worth of
+pointers to struct page, that limits us to 128M on x64 with DIF and 512b
+sectors.  That's not really a whole lot; I suppose one could (ab)use vmalloc.
 
-> Then upon each cmd the target will look on {backstore configuration, 
-> PROTECT bit, transport configuration} - then will decide on protection
-> operation (STRIP/INSERT/PASS).
+Yes, blk-integrity clamps the size of the bio to fit the downstream device's
+maximum integrity sg size.  See max_integrity_segments for details, or the
+mostly-undocumented sg_prot_tablesize sysfs attribute that reveals it.
+
+I don't know what a practical limit is; scsi_debug sets it to 65536.
+
+--D
 > 
-> Looks right?
-> 
+> - z
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Correct.
-
-I'm thinking it makes sense for target-core to perform the WRITE_INSERT
-+ READ_STRIP (in software) when the transport does not directly support
-PI, but the backend has PI enabled.
-
---nab
-
+--
+To unsubscribe, send a message with 'unsubscribe linux-aio' in
+the body to majordomo@kvack.org.  For more info on Linux AIO,
+see: http://www.kvack.org/aio/
+Don't email: <a href=mailto:"aart@kvack.org">aart@kvack.org</a>
