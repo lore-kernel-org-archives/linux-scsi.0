@@ -1,33 +1,38 @@
-From: sagi grimberg <sagig@mellanox.com>
-Subject: Re: [PATCH 2/4] tcm_qla2xxx: T10-Dif set harware capability
-Date: Wed, 2 Apr 2014 13:26:23 +0300
-Message-ID: <533BE5CF.1040800@mellanox.com>
-References: <1396047927-14189-1-git-send-email-quinn.tran@qlogic.com>	 <1396047927-14189-3-git-send-email-quinn.tran@qlogic.com>	 <5336100B.1010604@mellanox.com>	 <504EB66DAC8D234EB8E8560985C2D7AD46CE91BC@avmb2.qlogic.org>	 <1396314671.22665.76.camel@haakon3.risingtidesystems.com>	 <533A731E.4000709@dev.mellanox.co.il> <1396374013.18589.9.camel@haakon3.risingtidesystems.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [RFC] blk-mq: support for shared tags
+Date: Wed, 2 Apr 2014 09:46:32 +0200
+Message-ID: <20140402074632.GA11359@lst.de>
+References: <1396277175-21382-1-git-send-email-hch@lst.de> <533B56D5.5070803@bjorling.me>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1396374013.18589.9.camel@haakon3.risingtidesystems.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Sagi Grimberg <sagig@dev.mellanox.co.il>
-Cc: Quinn Tran <quinn.tran@qlogic.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <533B56D5.5070803@bjorling.me>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Matias Bjorling <m@bjorling.me>
+Cc: Jens Axboe <axboe@fb.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 4/1/2014 8:40 PM, Nicholas A. Bellinger wrote:
-> <SNIP>
->> So no way to get it centralized?
-> Yes, still working on how that might look..
->
->>   I still don't understand the iscsi/iser constraint.
-> Every other fabric aside from iscsi/iser could simply provide a
-> TFO->get_fabric_prot(se_tpg) to query for supported PI.
->
-> The reason why iscsi/iser is unique is because we can have different
-> network portals (eg: iser protected + traditional iscsi unprotected) on
-> the same se_tpg endpoint.
+On Tue, Apr 01, 2014 at 05:16:21PM -0700, Matias Bjorling wrote:
+> Hi Christoph,
+> 
+> Can you rebase it on top of 3.14. I have trouble applying it for testing.
 
-I see. That seems solvable to me... perhaps the easiest thing is to just 
-go ahead and support T10-PI
-in iscsi-tcp (SW)...
+Hi Martin,
 
-Sagi.
+the series is based on top of Jens' for-next branch.  I've also pushed out a
+git tree to the blk-mq-share-tags.2 branch of
+
+	git://git.infradead.org/users/hch/scsi.git
+
+to make testing and reviewing easier.
+
+> For nvme, there's need for two separate types of queues. The admin queue
+> (before initializing blk-mq) and the actual hardware queues.
+> 
+> Should we allow the driver to get/put tags before initializing blk-mq?
+> Or let drivers implement their own framework?
+
+What do you mean with initializing blk-mq?  We need to allocate data
+structures for sure, and I don't see much else in terms of initialization
+in blk-mq.
