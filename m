@@ -1,45 +1,23 @@
-From: Zach Brown <zab@redhat.com>
-Subject: Re: [RFC PATCH DONOTMERGE v2 0/6] userspace PI passthrough via
- AIO/DIO
-Date: Wed, 2 Apr 2014 12:14:18 -0700
-Message-ID: <20140402191418.GH2394@lenny.home.zabbo.net>
-References: <20140324162231.10848.4863.stgit@birch.djwong.org>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/7] mpt3sas: Remove uses of serial_number
+Date: Wed, 2 Apr 2014 03:39:19 -0700
+Message-ID: <20140402103919.GA6510@infradead.org>
+References: <cover.1395952569.git.matthew.r.wilcox@intel.com>
+ <d338e3c08ab5826774d4dc038faa9a3b99347ea9.1395952569.git.matthew.r.wilcox@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <owner-linux-aio@kvack.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:58566 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758292AbaDBKjT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Apr 2014 06:39:19 -0400
 Content-Disposition: inline
-In-Reply-To: <20140324162231.10848.4863.stgit@birch.djwong.org>
-Sender: owner-linux-aio@kvack.org
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: axboe@kernel.dk, martin.petersen@oracle.com, JBottomley@parallels.com, jmoyer@redhat.com, bcrl@kvack.org, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, linux-aio@kvack.org, linux-scsi@vger.kernel.org, linux-mm@kvack.org
+In-Reply-To: <d338e3c08ab5826774d4dc038faa9a3b99347ea9.1395952569.git.matthew.r.wilcox@intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew.r.wilcox@intel.com>
+Cc: linux-scsi@vger.kernel.org, willy@linux.intel.com
 
-On Mon, Mar 24, 2014 at 09:22:31AM -0700, Darrick J. Wong wrote:
-> This RFC provides a rough implementation of a mechanism to allow
-> userspace to attach protection information (e.g. T10 DIF) data to a
-> disk write and to receive the information alongside a disk read.
+Looks good,
 
-I have some comments for you! :)  Mostly about the interface up in aio.
-I don't have all that much to say about the bio/pi bits.
-
-> Patch #2 implements a generic IO extension interface so that we can
-> receive a struct io_extension from userspace containing the structure
-> size, a flag telling us which extensions we'd like to use (ie_has),
-> and (eventually) extension data.  There's a small framework for
-> mapping ie_has bits to actual extensions.
-
-I still really don't think that we should be thinking of these as
-generic extensions.  We're talking about arguments to syscalls.  's a
-small number of them with strong semantics because they're a part of the
-syscall ABI.  I don't think we should implement them by iterating over
-per-field ops structs.
-
-Anyway, more in reply to the patches.
-
-- z
-
---
-To unsubscribe, send a message with 'unsubscribe linux-aio' in
-the body to majordomo@kvack.org.  For more info on Linux AIO,
-see: http://www.kvack.org/aio/
-Don't email: <a href=mailto:"aart@kvack.org">aart@kvack.org</a>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
