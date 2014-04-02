@@ -1,50 +1,95 @@
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 3/6] aio/dio: enable PI passthrough
-Date: Wed, 2 Apr 2014 15:55:37 -0700
-Message-ID: <20140402225537.GE10230@birch.djwong.org>
-References: <20140324162231.10848.4863.stgit@birch.djwong.org>
- <20140324162251.10848.56452.stgit@birch.djwong.org>
- <20140402200133.GK2394@lenny.home.zabbo.net>
- <20140402204420.GB10230@birch.djwong.org>
- <20140402223311.GN2394@lenny.home.zabbo.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <owner-linux-aio@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20140402223311.GN2394@lenny.home.zabbo.net>
-Sender: owner-linux-aio@kvack.org
-To: Zach Brown <zab@redhat.com>
-Cc: axboe@kernel.dk, martin.petersen@oracle.com, JBottomley@parallels.com, jmoyer@redhat.com, bcrl@kvack.org, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, linux-aio@kvack.org, linux-scsi@vger.kernel.org, linux-mm@kvack.org
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 4/5] blk-mq: make ->flush_rq fully transparent to drivers
+Date: Wed,  2 Apr 2014 16:57:13 +0200
+Message-ID: <1396450634-32021-5-git-send-email-hch@lst.de>
+References: <1396450634-32021-1-git-send-email-hch@lst.de>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1396450634-32021-1-git-send-email-hch@lst.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jens Axboe <axboe@fb.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Apr 02, 2014 at 03:33:11PM -0700, Zach Brown wrote:
-> > One thing I'm not sure about: What's the largest IO (in terms of # of blocks,
-> > not # of struct iovecs) that I can throw at the kernel?
-> 
-> Yeah, dunno.  I'd guess big :).  I'd hope that the PI code already has a
-> way to clamp the size of bios if there's a limit to the size of PI data
-> that can be managed downstream?
+Drivers shouldn't have to care about the block layer setting aside a
+request to implement the flush state machine.  We already override the
+mq context and tag to make it more transparent, but so far haven't deal
+with the driver private data in the request.  Make sure to override this
+as well, and while we're at it add a proper helper sitting in blk-mq.c
+that implements the full impersonation.
 
-I guess if we restricted the size of the PI buffer to a page's worth of
-pointers to struct page, that limits us to 128M on x64 with DIF and 512b
-sectors.  That's not really a whole lot; I suppose one could (ab)use vmalloc.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ block/blk-flush.c |   12 ++----------
+ block/blk-mq.c    |   20 ++++++++++++++++++++
+ block/blk-mq.h    |    2 ++
+ 3 files changed, 24 insertions(+), 10 deletions(-)
 
-Yes, blk-integrity clamps the size of the bio to fit the downstream device's
-maximum integrity sg size.  See max_integrity_segments for details, or the
-mostly-undocumented sg_prot_tablesize sysfs attribute that reveals it.
-
-I don't know what a practical limit is; scsi_debug sets it to 65536.
-
---D
-> 
-> - z
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
---
-To unsubscribe, send a message with 'unsubscribe linux-aio' in
-the body to majordomo@kvack.org.  For more info on Linux AIO,
-see: http://www.kvack.org/aio/
-Don't email: <a href=mailto:"aart@kvack.org">aart@kvack.org</a>
+diff --git a/block/blk-flush.c b/block/blk-flush.c
+index 9a0c427..b218f61 100644
+--- a/block/blk-flush.c
++++ b/block/blk-flush.c
+@@ -307,16 +307,8 @@ static bool blk_kick_flush(struct request_queue *q)
+ 	q->flush_pending_idx ^= 1;
+ 
+ 	blk_rq_init(q, q->flush_rq);
+-	if (q->mq_ops) {
+-		/*
+-		 * Reuse the tag value from the fist waiting request,
+-		 * with blk-mq the tag is generated during request
+-		 * allocation and drivers can rely on it being inside
+-		 * the range they asked for.
+-		 */
+-		q->flush_rq->mq_ctx = first_rq->mq_ctx;
+-		q->flush_rq->tag = first_rq->tag;
+-	}
++	if (q->mq_ops)
++		blk_mq_clone_flush_request(q->flush_rq, first_rq);
+ 
+ 	q->flush_rq->cmd_type = REQ_TYPE_FS;
+ 	q->flush_rq->cmd_flags = WRITE_FLUSH | REQ_FLUSH_SEQ;
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 871acd6..289b7e5 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -272,6 +272,26 @@ void blk_mq_free_request(struct request *rq)
+ 	__blk_mq_free_request(hctx, ctx, rq);
+ }
+ 
++/*
++ * Clone all relevant state from a request that has been put on hold in
++ * the flush state machine into the preallocated flush request that hangs
++ * off the request queue.
++ *
++ * For a driver the flush request should be invisible, that's why we are
++ * impersonating the original request here.
++ */
++void blk_mq_clone_flush_request(struct request *flush_rq,
++		struct request *orig_rq)
++{
++	struct blk_mq_hw_ctx *hctx =
++		orig_rq->q->mq_ops->map_queue(orig_rq->q, orig_rq->mq_ctx->cpu);
++
++	flush_rq->mq_ctx = orig_rq->mq_ctx;
++	flush_rq->tag = orig_rq->tag;
++	memcpy(blk_mq_rq_to_pdu(flush_rq), blk_mq_rq_to_pdu(orig_rq),
++		hctx->cmd_size);
++}
++
+ bool blk_mq_end_io_partial(struct request *rq, int error, unsigned int nr_bytes)
+ {
+ 	if (blk_update_request(rq, error, nr_bytes))
+diff --git a/block/blk-mq.h b/block/blk-mq.h
+index 238379a..7964dad 100644
+--- a/block/blk-mq.h
++++ b/block/blk-mq.h
+@@ -27,6 +27,8 @@ void blk_mq_run_hw_queue(struct blk_mq_hw_ctx *hctx, bool async);
+ void blk_mq_init_flush(struct request_queue *q);
+ void blk_mq_drain_queue(struct request_queue *q);
+ void blk_mq_free_queue(struct request_queue *q);
++void blk_mq_clone_flush_request(struct request *flush_rq,
++		struct request *orig_rq);
+ 
+ /*
+  * CPU hotplug helpers
+-- 
+1.7.10.4
