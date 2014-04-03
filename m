@@ -1,7 +1,7 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH 1/9] target/iblock: Fix double bioset_integrity_free bug
-Date: Thu,  3 Apr 2014 09:35:45 +0000
-Message-ID: <1396517753-23546-2-git-send-email-nab@daterainc.com>
+Subject: [PATCH 5/9] target/sbc: Only expose PI read_cap16 bits when supported by fabric
+Date: Thu,  3 Apr 2014 09:35:49 +0000
+Message-ID: <1396517753-23546-6-git-send-email-nab@daterainc.com>
 References: <1396517753-23546-1-git-send-email-nab@daterainc.com>
 Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1396517753-23546-1-git-send-email-nab@daterainc.com>
@@ -12,40 +12,43 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch fixes a double free bug during IBLOCK backend shutdown
-where bioset_integrity_free() was incorrectly called ahead of
-bioset_free(), who is already making the same call directly.
-
-This bug was introduced with commit ecebbf6cc, and will end up
-triggering a general protection fault in iblock_free_device()
+Only expose the PI protection type bits in READ_CAPACITY_16
+if the session + fabric support DIX PASS operations.
 
 Cc: Martin K. Petersen <martin.petersen@oracle.com>
 Cc: Sagi Grimberg <sagig@mellanox.com>
 Cc: Or Gerlitz <ogerlitz@mellanox.com>
 Cc: Quinn Tran <quinn.tran@qlogic.com>
 Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>
-Cc: <stable@vger.kernel.org> #3.14+
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_iblock.c |    5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+ drivers/target/target_core_sbc.c |    7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
-index 554d4f7..9e0232c 100644
---- a/drivers/target/target_core_iblock.c
-+++ b/drivers/target/target_core_iblock.c
-@@ -203,10 +203,9 @@ static void iblock_free_device(struct se_device *dev)
+diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
+index ec204f7..f2d73dd 100644
+--- a/drivers/target/target_core_sbc.c
++++ b/drivers/target/target_core_sbc.c
+@@ -89,6 +89,7 @@ static sense_reason_t
+ sbc_emulate_readcapacity_16(struct se_cmd *cmd)
+ {
+ 	struct se_device *dev = cmd->se_dev;
++	struct se_session *sess = cmd->se_sess;
+ 	unsigned char *rbuf;
+ 	unsigned char buf[32];
+ 	unsigned long long blocks = dev->transport->get_blocks(dev);
+@@ -109,8 +110,10 @@ sbc_emulate_readcapacity_16(struct se_cmd *cmd)
+ 	/*
+ 	 * Set P_TYPE and PROT_EN bits for DIF support
+ 	 */
+-	if (dev->dev_attrib.pi_prot_type)
+-		buf[12] = (dev->dev_attrib.pi_prot_type - 1) << 1 | 0x1;
++	if (sess->sup_prot_ops & (TARGET_PROT_DIN_PASS | TARGET_PROT_DOUT_PASS)) {
++		if (dev->dev_attrib.pi_prot_type)
++			buf[12] = (dev->dev_attrib.pi_prot_type - 1) << 1 | 0x1;
++	}
  
- 	if (ib_dev->ibd_bd != NULL)
- 		blkdev_put(ib_dev->ibd_bd, FMODE_WRITE|FMODE_READ|FMODE_EXCL);
--	if (ib_dev->ibd_bio_set != NULL) {
--		bioset_integrity_free(ib_dev->ibd_bio_set);
-+	if (ib_dev->ibd_bio_set != NULL)
- 		bioset_free(ib_dev->ibd_bio_set);
--	}
-+
- 	kfree(ib_dev);
- }
- 
+ 	if (dev->transport->get_lbppbe)
+ 		buf[13] = dev->transport->get_lbppbe(dev) & 0x0f;
 -- 
 1.7.10.4
