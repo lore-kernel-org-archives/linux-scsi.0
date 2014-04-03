@@ -1,60 +1,43 @@
-From: sagi grimberg <sagig@mellanox.com>
-Subject: Re: [PATCH 1/4] target/core: T10-Dif: check HW support capabilities
-Date: Wed, 2 Apr 2014 14:43:43 +0300
-Message-ID: <533BF7EF.2080609@mellanox.com>
-References: <1396047927-14189-1-git-send-email-quinn.tran@qlogic.com>	 <1396047927-14189-2-git-send-email-quinn.tran@qlogic.com>	 <53360E54.5060004@mellanox.com>	 <504EB66DAC8D234EB8E8560985C2D7AD46CE87D7@avmb2.qlogic.org>	 <533620C0.9060903@mellanox.com>	 <504EB66DAC8D234EB8E8560985C2D7AD46CE9B32@avmb2.qlogic.org>	 <1396315146.22665.82.camel@haakon3.risingtidesystems.com>	 <533A71E9.90308@dev.mellanox.co.il> <yq1k3b9x9gu.fsf@sermon.lab.mkp.net>	 <533AF70F.4060003@mellanox.com> <1396374354.18589.13.camel@haakon3.risingtidesystems.com>
+From: Jayamohan Kallickal <Jayamohan.Kallickal@Emulex.Com>
+Subject: RE: [PATCH 02/55] scsi: Mark function as static in
+ be2iscsi/be_cmds.c
+Date: Thu, 3 Apr 2014 05:02:57 +0000
+Message-ID: <37724B2049F71D4C9B086F99DDB2DE11570D083C@CMEXMB1.ad.emulex.com>
+References: <5fd6fa49a592043459f75ed83a72f8c1ed9ddc13.1396114897.git.rashika.kheria@gmail.com>
+ <e8c6c765e48ea867376850f1bc693f797fa14a53.1396114897.git.rashika.kheria@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1396374354.18589.13.camel@haakon3.risingtidesystems.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagig@dev.mellanox.co.il>, Quinn Tran <quinn.tran@qlogic.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <e8c6c765e48ea867376850f1bc693f797fa14a53.1396114897.git.rashika.kheria@gmail.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Rashika Kheria <rashika.kheria@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "josh@joshtriplett.org" <josh@joshtriplett.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 4/1/2014 8:45 PM, Nicholas A. Bellinger wrote:
-> On Tue, 2014-04-01 at 20:27 +0300, sagi grimberg wrote:
->> On 4/1/2014 8:09 PM, Martin K. Petersen wrote:
->>>>>>>> "Sagi" == Sagi Grimberg <sagig@dev.mellanox.co.il> writes:
->>> Sagi> I originally wrote the code to support that. But it got left
->>> Sagi> behind since I figured it is not an interesting use-case.  If your
->>> Sagi> beckend doesn't support T10-PI why should the target publish it
->>> Sagi> support it and ask the device to strip/insert it?  I suppose it is
->>> Sagi> to allow the initiator to protect half-way, but I don't know how
->>> Sagi> interesting it is if the data is not stored with protection...
->>>
->>> That depends what you do on the backend. There are several devices out
->>> there that expose PI to the host but use a different protection scheme
->>> internally. And then synthesize PI on the host-facing side. Some even do
->>> T10 PI to an internal protection scheme and then back to T10 PI when
->>> talking to the disk drives in the back end.
->>>
->> Hey Martin,
->>
->> I understand, but even for internal different T10-PI schemes, is
->> stripping protection from incoming data
->> at the fabric level (and then do whatever with it in the backend level)
->> the right thing to do here?
->> I mean we basically lose protection across the PCI with this scheme
->> aren't we?
->>
-> The WRITE_STRIP + READ_INSERT case would be still be useful for IBLOCK
-> backends that don't support real hw PI, so that at least the protection
-> can be in place for data movement between physical machines.
->
-> Also, I think the amount of changes required to support this type of
-> configuration in target-core are quite small.
-
-Not sure I understood your intention here.
-Do you mean that the backstore doesn't support T10-PI, the transport 
-support T10-PI and target publish to fabric that it support T10-PI?
-This will lead to the DIN_INSERT/DOUT_STRIP you are referring to right?
-Is there any value to publish the fabric PI support if your backing 
-device doesn't support it?
-
-The opposite case (backstore support, transport no support) it makes 
-sense to NOT publish support and do half-way protection in SW
-(the backstore is formatted with PI).
-
-Sagi.
+TG9va3MgZ29vZA0KDQpBY2tlZC1ieTogSmF5YW1vaGFuIEthbGxpY2thbCA8SmF5YW1vaGFuLkth
+bGxpY2thbEBlbXVsZXguY29tPg0KLS0tDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpG
+cm9tOiBSYXNoaWthIEtoZXJpYSBbbWFpbHRvOnJhc2hpa2Eua2hlcmlhQGdtYWlsLmNvbV0gDQpT
+ZW50OiBTYXR1cmRheSwgTWFyY2ggMjksIDIwMTQgMTA6NDQgQU0NClRvOiBsaW51eC1rZXJuZWxA
+dmdlci5rZXJuZWwub3JnDQpDYzogSmF5YW1vaGFuIEthbGxpY2thbDsgSmFtZXMgRS5KLiBCb3R0
+b21sZXk7IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnOyBqb3NoQGpvc2h0cmlwbGV0dC5vcmcN
+ClN1YmplY3Q6IFtQQVRDSCAwMi81NV0gc2NzaTogTWFyayBmdW5jdGlvbiBhcyBzdGF0aWMgaW4g
+YmUyaXNjc2kvYmVfY21kcy5jDQoNCk1hcmsgZnVuY3Rpb24gYXMgc3RhdGljIGluIGJlMmlzY3Np
+L2JlX2NtZHMuYyBiZWNhdXNlIGl0IGlzIG5vdCB1c2VkIG91dHNpZGUgdGhpcyBmaWxlLg0KDQpU
+aGlzIGVsaW1pbmF0ZXMgdGhlIGZvbGxvd2luZyB3YXJuaW5nIGluIGJlMmlzY3NpL2JlX2NtZHMu
+YzoNCmRyaXZlcnMvc2NzaS9iZTJpc2NzaS9iZV9jbWRzLmM6NDAxOjU6IHdhcm5pbmc6IG5vIHBy
+ZXZpb3VzIHByb3RvdHlwZSBmb3Ig4oCYYmVpc2NzaV9wcm9jZXNzX21jY+KAmSBbLVdtaXNzaW5n
+LXByb3RvdHlwZXNdDQoNClNpZ25lZC1vZmYtYnk6IFJhc2hpa2EgS2hlcmlhIDxyYXNoaWthLmto
+ZXJpYUBnbWFpbC5jb20+DQpSZXZpZXdlZC1ieTogSm9zaCBUcmlwbGV0dCA8am9zaEBqb3NodHJp
+cGxldHQub3JnPg0KLS0tDQogZHJpdmVycy9zY3NpL2JlMmlzY3NpL2JlX2NtZHMuYyB8ICAgIDIg
+Ky0NCiAxIGZpbGUgY2hhbmdlZCwgMSBpbnNlcnRpb24oKyksIDEgZGVsZXRpb24oLSkNCg0KZGlm
+ZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9iZTJpc2NzaS9iZV9jbWRzLmMgYi9kcml2ZXJzL3Njc2kv
+YmUyaXNjc2kvYmVfY21kcy5jIGluZGV4IDMzMzgzOTEuLjAyNmMzZTMgMTAwNjQ0DQotLS0gYS9k
+cml2ZXJzL3Njc2kvYmUyaXNjc2kvYmVfY21kcy5jDQorKysgYi9kcml2ZXJzL3Njc2kvYmUyaXNj
+c2kvYmVfY21kcy5jDQpAQCAtMzk4LDcgKzM5OCw3IEBAIHN0YXRpYyB2b2lkIGJlaXNjc2lfY3Ff
+bm90aWZ5KHN0cnVjdCBiZWlzY3NpX2hiYSAqcGhiYSwgdTE2IHFpZCwgYm9vbCBhcm0sICB9DQog
+DQogDQotaW50IGJlaXNjc2lfcHJvY2Vzc19tY2Moc3RydWN0IGJlaXNjc2lfaGJhICpwaGJhKQ0K
+K3N0YXRpYyBpbnQgYmVpc2NzaV9wcm9jZXNzX21jYyhzdHJ1Y3QgYmVpc2NzaV9oYmEgKnBoYmEp
+DQogew0KIAlzdHJ1Y3QgYmVfbWNjX2NvbXBsICpjb21wbDsNCiAJaW50IG51bSA9IDAsIHN0YXR1
+cyA9IDA7DQotLQ0KMS43LjkuNQ0KDQo=
