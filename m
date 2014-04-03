@@ -1,161 +1,261 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 3/5] blk-mq: do not initialize req->special
-Date: Wed,  2 Apr 2014 16:57:12 +0200
-Message-ID: <1396450634-32021-4-git-send-email-hch@lst.de>
-References: <1396450634-32021-1-git-send-email-hch@lst.de>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1396450634-32021-1-git-send-email-hch@lst.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@fb.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+From: Quinn Tran <quinn.tran@qlogic.com>
+Subject: Re: [PATCH 1/4] target/core: T10-Dif: check HW support capabilities
+Date: Thu, 3 Apr 2014 01:18:48 +0000
+Message-ID: <504EB66DAC8D234EB8E8560985C2D7AD46CEBAA9@avmb2.qlogic.org>
+References: <1396047927-14189-1-git-send-email-quinn.tran@qlogic.com>
+ <1396047927-14189-2-git-send-email-quinn.tran@qlogic.com>
+ <53360E54.5060004@mellanox.com>
+ <504EB66DAC8D234EB8E8560985C2D7AD46CE87D7@avmb2.qlogic.org>
+ <533620C0.9060903@mellanox.com>
+ <504EB66DAC8D234EB8E8560985C2D7AD46CE9B32@avmb2.qlogic.org>
+ <1396315146.22665.82.camel@haakon3.risingtidesystems.com>
+ <533A71E9.90308@dev.mellanox.co.il> <yq1k3b9x9gu.fsf@sermon.lab.mkp.net>
+ <533AF70F.4060003@mellanox.com>
+ <1396374354.18589.13.camel@haakon3.risingtidesystems.com>
+ <533BB388.2020701@dev.mellanox.co.il>
+ <1396462854.7627.7.camel@haakon3.risingtidesystems.com>
+Mime-Version: 1.0
+Content-Type: multipart/mixed;
+	boundary="_000_504EB66DAC8D234EB8E8560985C2D7AD46CEBAA9avmb2qlogicorg_"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:63650 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933695AbaDCBSw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Apr 2014 21:18:52 -0400
+Received: from pps.filterd (m0000643.ppops.net [127.0.0.1])
+	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id s331ITTN002980
+	for <linux-scsi@vger.kernel.org>; Wed, 2 Apr 2014 18:18:51 -0700
+Received: from avcashub1.qlogic.com (avcashub3.qlogic.com [198.70.193.117])
+	by mx0b-0016ce01.pphosted.com with ESMTP id 1jwyhbs5d4-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Wed, 02 Apr 2014 18:18:51 -0700
+In-Reply-To: <1396462854.7627.7.camel@haakon3.risingtidesystems.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Sagi Grimberg <sagig@dev.mellanox.co.il>
+Cc: sagi grimberg <sagig@mellanox.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-Drivers can reach their private data easily using the blk_mq_rq_to_pdu
-helper and don't need req->special.  By not initializing it code can
-be simplified nicely, and we also shave off a few more instructions from
-the I/O path.
+--_000_504EB66DAC8D234EB8E8560985C2D7AD46CEBAA9avmb2qlogicorg_
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <6CCE991F6EE00A49B056C2FDCD7D6D84@qlogic.com>
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- block/blk-flush.c          |   10 ++--------
- block/blk-mq.c             |   15 ++-------------
- block/blk-mq.h             |    1 -
- drivers/block/null_blk.c   |    4 ++--
- drivers/block/virtio_blk.c |    6 +++---
- 5 files changed, 9 insertions(+), 27 deletions(-)
 
-diff --git a/block/blk-flush.c b/block/blk-flush.c
-index 43e6b47..9a0c427 100644
---- a/block/blk-flush.c
-+++ b/block/blk-flush.c
-@@ -306,22 +306,16 @@ static bool blk_kick_flush(struct request_queue *q)
- 	 */
- 	q->flush_pending_idx ^= 1;
- 
-+	blk_rq_init(q, q->flush_rq);
- 	if (q->mq_ops) {
--		struct blk_mq_ctx *ctx = first_rq->mq_ctx;
--		struct blk_mq_hw_ctx *hctx = q->mq_ops->map_queue(q, ctx->cpu);
--
--		blk_mq_rq_init(hctx, q->flush_rq);
--		q->flush_rq->mq_ctx = ctx;
--
- 		/*
- 		 * Reuse the tag value from the fist waiting request,
- 		 * with blk-mq the tag is generated during request
- 		 * allocation and drivers can rely on it being inside
- 		 * the range they asked for.
- 		 */
-+		q->flush_rq->mq_ctx = first_rq->mq_ctx;
- 		q->flush_rq->tag = first_rq->tag;
--	} else {
--		blk_rq_init(q, q->flush_rq);
- 	}
- 
- 	q->flush_rq->cmd_type = REQ_TYPE_FS;
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 4274ee0..871acd6 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -248,24 +248,13 @@ struct request *blk_mq_alloc_reserved_request(struct request_queue *q, int rw,
- }
- EXPORT_SYMBOL(blk_mq_alloc_reserved_request);
- 
--/*
-- * Re-init and set pdu, if we have it
-- */
--void blk_mq_rq_init(struct blk_mq_hw_ctx *hctx, struct request *rq)
--{
--	blk_rq_init(hctx->queue, rq);
--
--	if (hctx->cmd_size)
--		rq->special = blk_mq_rq_to_pdu(rq);
--}
--
- static void __blk_mq_free_request(struct blk_mq_hw_ctx *hctx,
- 				  struct blk_mq_ctx *ctx, struct request *rq)
- {
- 	const int tag = rq->tag;
- 	struct request_queue *q = rq->q;
- 
--	blk_mq_rq_init(hctx, rq);
-+	blk_rq_init(hctx->queue, rq);
- 	blk_mq_put_tag(hctx->tags, tag);
- 
- 	blk_mq_queue_exit(q);
-@@ -1139,7 +1128,7 @@ static int blk_mq_init_rq_map(struct blk_mq_hw_ctx *hctx,
- 		left -= to_do * rq_size;
- 		for (j = 0; j < to_do; j++) {
- 			hctx->rqs[i] = p;
--			blk_mq_rq_init(hctx, hctx->rqs[i]);
-+			blk_rq_init(hctx->queue, hctx->rqs[i]);
- 			p += rq_size;
- 			i++;
- 		}
-diff --git a/block/blk-mq.h b/block/blk-mq.h
-index ebbe6ba..238379a 100644
---- a/block/blk-mq.h
-+++ b/block/blk-mq.h
-@@ -27,7 +27,6 @@ void blk_mq_run_hw_queue(struct blk_mq_hw_ctx *hctx, bool async);
- void blk_mq_init_flush(struct request_queue *q);
- void blk_mq_drain_queue(struct request_queue *q);
- void blk_mq_free_queue(struct request_queue *q);
--void blk_mq_rq_init(struct blk_mq_hw_ctx *hctx, struct request *rq);
- 
- /*
-  * CPU hotplug helpers
-diff --git a/drivers/block/null_blk.c b/drivers/block/null_blk.c
-index 091b9ea..71df69d 100644
---- a/drivers/block/null_blk.c
-+++ b/drivers/block/null_blk.c
-@@ -226,7 +226,7 @@ static void null_cmd_end_timer(struct nullb_cmd *cmd)
- 
- static void null_softirq_done_fn(struct request *rq)
- {
--	end_cmd(rq->special);
-+	end_cmd(blk_mq_rq_to_pdu(rq));
- }
- 
- static inline void null_handle_cmd(struct nullb_cmd *cmd)
-@@ -311,7 +311,7 @@ static void null_request_fn(struct request_queue *q)
- 
- static int null_queue_rq(struct blk_mq_hw_ctx *hctx, struct request *rq)
- {
--	struct nullb_cmd *cmd = rq->special;
-+	struct nullb_cmd *cmd = blk_mq_rq_to_pdu(rq);
- 
- 	cmd->rq = rq;
- 	cmd->nq = hctx->driver_data;
-diff --git a/drivers/block/virtio_blk.c b/drivers/block/virtio_blk.c
-index 0eace43..11e8f4b 100644
---- a/drivers/block/virtio_blk.c
-+++ b/drivers/block/virtio_blk.c
-@@ -112,7 +112,7 @@ static int __virtblk_add_req(struct virtqueue *vq,
- 
- static inline void virtblk_request_done(struct request *req)
- {
--	struct virtblk_req *vbr = req->special;
-+	struct virtblk_req *vbr = blk_mq_rq_to_pdu(req);
- 	int error = virtblk_result(vbr);
- 
- 	if (req->cmd_type == REQ_TYPE_BLOCK_PC) {
-@@ -154,7 +154,7 @@ static void virtblk_done(struct virtqueue *vq)
- static int virtio_queue_rq(struct blk_mq_hw_ctx *hctx, struct request *req)
- {
- 	struct virtio_blk *vblk = hctx->queue->queuedata;
--	struct virtblk_req *vbr = req->special;
-+	struct virtblk_req *vbr = blk_mq_rq_to_pdu(req);
- 	unsigned long flags;
- 	unsigned int num;
- 	const bool last = (req->cmd_flags & REQ_END) != 0;
-@@ -494,7 +494,7 @@ static int virtblk_init_vbr(void *data, struct blk_mq_hw_ctx *hctx,
- 			     struct request *rq, unsigned int nr)
- {
- 	struct virtio_blk *vblk = data;
--	struct virtblk_req *vbr = rq->special;
-+	struct virtblk_req *vbr = blk_mq_rq_to_pdu(rq);
- 
- 	sg_init_table(vbr->sg, vblk->sg_elems);
- 	return 0;
--- 
-1.7.10.4
+Regards,
+Quinn Tran
+
+
+
+
+On 4/2/14 11:20 AM, "Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
+
+>On Wed, 2014-04-02 at 09:51 +0300, Sagi Grimberg wrote:
+>> On 4/1/2014 8:45 PM, Nicholas A. Bellinger wrote:
+>> > On Tue, 2014-04-01 at 20:27 +0300, sagi grimberg wrote:
+>> >> On 4/1/2014 8:09 PM, Martin K. Petersen wrote:
+>> >>>>>>>> "Sagi" =3D=3D Sagi Grimberg <sagig@dev.mellanox.co.il> writes:
+>> >>> Sagi> I originally wrote the code to support that. But it got left
+>> >>> Sagi> behind since I figured it is not an interesting use-case.  If
+>>your
+>> >>> Sagi> beckend doesn't support T10-PI why should the target publish
+>>it
+>> >>> Sagi> support it and ask the device to strip/insert it?  I suppose
+>>it is
+>> >>> Sagi> to allow the initiator to protect half-way, but I don't know
+>>how
+>> >>> Sagi> interesting it is if the data is not stored with protection...
+>> >>>
+>> >>> That depends what you do on the backend. There are several devices
+>>out
+>> >>> there that expose PI to the host but use a different protection
+>>scheme
+>> >>> internally. And then synthesize PI on the host-facing side. Some
+>>even do
+>> >>> T10 PI to an internal protection scheme and then back to T10 PI when
+>> >>> talking to the disk drives in the back end.
+>> >>>
+>> >> Hey Martin,
+>> >>
+>> >> I understand, but even for internal different T10-PI schemes, is
+>> >> stripping protection from incoming data
+>> >> at the fabric level (and then do whatever with it in the backend
+>>level)
+>> >> the right thing to do here?
+>> >> I mean we basically lose protection across the PCI with this scheme
+>> >> aren't we?
+>> >>
+>> > The WRITE_STRIP + READ_INSERT case would be still be useful for IBLOCK
+>> > backends that don't support real hw PI, so that at least the
+>>protection
+>> > can be in place for data movement between physical machines.
+>> >
+>> > Also, I think the amount of changes required to support this type of
+>> > configuration in target-core are quite small.
+>>
+>> So trying to understand how this will come to use.
+>> Target will publish the fabric T10-PI support based only on the
+>> transport configuration (not accounting the backing devices
+>>configuration).
+>
+>Yes, passing in the transport configuration for PI at
+>transport_init_session() time seems to make the most sense here in order
+>to address all fabric types.
+
+QT> Ack.  Registering PI cap per IT nexus would fit all fabrics.
+
+>
+>> Then upon each cmd the target will look on {backstore configuration,
+>> PROTECT bit, transport configuration} - then will decide on protection
+>> operation (STRIP/INSERT/PASS).
+>>
+>> Looks right?
+>>
+>
+>Correct.
+>
+>I'm thinking it makes sense for target-core to perform the WRITE_INSERT
+>+ READ_STRIP (in software) when the transport does not directly support
+>PI, but the backend has PI enabled.
+>
+>--nab
+
+QT> I see, this cover the case of a transport within a Portal does support
+PI.
+
+>
+
+
+________________________________
+
+This message and any attached documents contain information from QLogic Cor=
+poration or its wholly-owned subsidiaries that may be confidential. If you =
+are not the intended recipient, you may not read, copy, distribute, or use =
+this information. If you have received this transmission in error, please n=
+otify the sender immediately by reply e-mail and then delete this message.
+
+--_000_504EB66DAC8D234EB8E8560985C2D7AD46CEBAA9avmb2qlogicorg_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
+
+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
+TQBUAFAAAAAAAAIBQQABAAAAZAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgFEAdQBpAG4AbgAg
+AFQAcgBhAG4AAABTAE0AVABQAAAAcQB1AGkAbgBuAC4AdAByAGEAbgBAAHEAbABvAGcAaQBjAC4A
+YwBvAG0AAAAfAAJdAQAAACwAAABxAHUAaQBuAG4ALgB0AHIAYQBuAEAAcQBsAG8AZwBpAGMALgBj
+AG8AbQAAAB8A5V8BAAAANAAAAHMAaQBwADoAcQB1AGkAbgBuAC4AdAByAGEAbgBAAHEAbABvAGcA
+aQBjAC4AYwBvAG0AAAAfABoMAQAAABYAAABRAHUAaQBuAG4AIABUAHIAYQBuAAAAAAAfAB8MAQAA
+ACwAAABxAHUAaQBuAG4ALgB0AHIAYQBuAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AHgwBAAAA
+CgAAAFMATQBUAFAAAAAAAAIBGQwBAAAAZAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgFEAdQBp
+AG4AbgAgAFQAcgBhAG4AAABTAE0AVABQAAAAcQB1AGkAbgBuAC4AdAByAGEAbgBAAHEAbABvAGcA
+aQBjAC4AYwBvAG0AAAAfAAFdAQAAACwAAABxAHUAaQBuAG4ALgB0AHIAYQBuAEAAcQBsAG8AZwBp
+AGMALgBjAG8AbQAAAB8A+D8BAAAAFgAAAFEAdQBpAG4AbgAgAFQAcgBhAG4AAAAAAB8AI0ABAAAA
+LAAAAHEAdQBpAG4AbgAuAHQAcgBhAG4AQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAiQAEAAAAK
+AAAAUwBNAFQAUAAAAAAAAgH5PwEAAABkAAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAUQB1AGkA
+bgBuACAAVAByAGEAbgAAAFMATQBUAFAAAABxAHUAaQBuAG4ALgB0AHIAYQBuAEAAcQBsAG8AZwBp
+AGMALgBjAG8AbQAAAB8ACV0BAAAALAAAAHEAdQBpAG4AbgAuAHQAcgBhAG4AQABxAGwAbwBnAGkA
+YwAuAGMAbwBtAAAAHwAxQAEAAAACAAAAAAAAAAsAQDoBAAAAHwAwQAEAAAACAAAAAAAAAB8AGgAB
+AAAAEgAAAEkAUABNAC4ATgBvAHQAZQAAAAAAAwDxPwkEAAALAEA6AQAAAAMA/T/kBAAAAgELMAEA
+AAAQAAAATUl53pPMSEaCxB4H2TL0vwMAFwABAAAAQAA5AABMD6raTs8BQAAIMFkNlqraTs8BCwAA
+gAggBgAAAAAAwAAAAAAAAEYAAAAAFIUAAAEAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAeAAAA
+YQBjAGMAZQBwAHQAbABhAG4AZwB1AGEAZwBlAAAAAAABAAAADAAAAGUAbgAtAFUAUwAAAAsAAIAI
+IAYAAAAAAMAAAAAAAABGAAAAAAaFAAAAAAAAHwA3AAEAAACIAAAAUgBlADoAIABbAFAAQQBUAEMA
+SAAgADEALwA0AF0AIAB0AGEAcgBnAGUAdAAvAGMAbwByAGUAOgAgAFQAMQAwAC0ARABpAGYAOgAg
+AGMAaABlAGMAawAgAEgAVwAgAHMAdQBwAHAAbwByAHQAIABjAGEAcABhAGIAaQBsAGkAdABpAGUA
+cwAAAB8APQABAAAACgAAAFIAZQA6ACAAAAAAAAMANgAAAAAAHwBCEAEAAABwAAAAPAAxADMAOQA2
+ADQANgAyADgANQA0AC4ANwA2ADIANwAuADcALgBjAGEAbQBlAGwAQABoAGEAYQBrAG8AbgAzAC4A
+cgBpAHMAaQBuAGcAdABpAGQAZQBzAHkAcwB0AGUAbQBzAC4AYwBvAG0APgAAAAIBcQABAAAALwAA
+AAEBz03NKR0L4x0Rh5NPuEwX7R0HBeOa/XkfgIAABRQAgADbmQCAAMCEAP///2cAAB8AcAABAAAA
+gAAAAFsAUABBAFQAQwBIACAAMQAvADQAXQAgAHQAYQByAGcAZQB0AC8AYwBvAHIAZQA6ACAAVAAx
+ADAALQBEAGkAZgA6ACAAYwBoAGUAYwBrACAASABXACAAcwB1AHAAcABvAHIAdAAgAGMAYQBwAGEA
+YgBpAGwAaQB0AGkAZQBzAAAAHwA1EAEAAAB4AAAAPAA1ADAANABFAEIANgA2AEQAQQBDADgARAAy
+ADMANABFAEIAOABFADgANQA2ADAAOQA4ADUAQwAyAEQANwBBAEQANAA2AEMARQBCAEEAQQA5AEAA
+YQB2AG0AYgAyAC4AcQBsAG8AZwBpAGMALgBvAHIAZwA+AAAAHwA5EAEAAADOBAAAPAAxADMAOQA2
+ADAANAA3ADkAMgA3AC0AMQA0ADEAOAA5AC0AMQAtAGcAaQB0AC0AcwBlAG4AZAAtAGUAbQBhAGkA
+bAAtAHEAdQBpAG4AbgAuAHQAcgBhAG4AQABxAGwAbwBnAGkAYwAuAGMAbwBtAD4AIAA8ADEAMwA5
+ADYAMAA0ADcAOQAyADcALQAxADQAMQA4ADkALQAyAC0AZwBpAHQALQBzAGUAbgBkAC0AZQBtAGEA
+aQBsAC0AcQB1AGkAbgBuAC4AdAByAGEAbgBAAHEAbABvAGcAaQBjAC4AYwBvAG0APgAgADwANQAz
+ADMANgAwAEUANQA0AC4ANQAwADYAMAAwADAANABAAG0AZQBsAGwAYQBuAG8AeAAuAGMAbwBtAD4A
+IAA8ADUAMAA0AEUAQgA2ADYARABBAEMAOABEADIAMwA0AEUAQgA4AEUAOAA1ADYAMAA5ADgANQBD
+ADIARAA3AEEARAA0ADYAQwBFADgANwBEADcAQABhAHYAbQBiADIALgBxAGwAbwBnAGkAYwAuAG8A
+cgBnAD4AIAA8ADUAMwAzADYAMgAwAEMAMAAuADkAMAA2ADAAOQAwADMAQABtAGUAbABsAGEAbgBv
+AHgALgBjAG8AbQA+ACAAPAA1ADAANABFAEIANgA2AEQAQQBDADgARAAyADMANABFAEIAOABFADgA
+NQA2ADAAOQA4ADUAQwAyAEQANwBBAEQANAA2AEMARQA5AEIAMwAyAEAAYQB2AG0AYgAyAC4AcQBs
+AG8AZwBpAGMALgBvAHIAZwA+ACAAPAAxADMAOQA2ADMAMQA1ADEANAA2AC4AMgAyADYANgA1AC4A
+OAAyAC4AYwBhAG0AZQBsAEAAaABhAGEAawBvAG4AMwAuAHIAaQBzAGkAbgBnAHQAaQBkAGUAcwB5
+AHMAdABlAG0AcwAuAGMAbwBtAD4AIAA8ADUAMwAzAEEANwAxAEUAOQAuADkAMAAzADAAOABAAGQA
+ZQB2AC4AbQBlAGwAbABhAG4AbwB4AC4AYwBvAC4AaQBsAD4AIAA8AHkAcQAxAGsAMwBiADkAeAA5
+AGcAdQAuAGYAcwBmAEAAcwBlAHIAbQBvAG4ALgBsAGEAYgAuAG0AawBwAC4AbgBlAHQAPgAgADwA
+NQAzADMAQQBGADcAMABGAC4ANAAwADYAMAAwADAAMwBAAG0AZQBsAGwAYQBuAG8AeAAuAGMAbwBt
+AD4AIAA8ADEAMwA5ADYAMwA3ADQAMwA1ADQALgAxADgANQA4ADkALgAxADMALgBjAGEAbQBlAGwA
+QABoAGEAYQBrAG8AbgAzAC4AcgBpAHMAaQBuAGcAdABpAGQAZQBzAHkAcwB0AGUAbQBzAC4AYwBv
+AG0APgAgADwANQAzADMAQgBCADMAOAA4AC4AMgAwADIAMAA3ADAAMQBAAGQAZQB2AC4AbQBlAGwA
+bABhAG4AbwB4AC4AYwBvAC4AaQBsAD4AIAA8ADEAMwA5ADYANAA2ADIAOAA1ADQALgA3ADYAMgA3
+AC4ANwAuAGMAYQBtAGUAbABAAGgAYQBhAGsAbwBuADMALgByAGkAcwBpAG4AZwB0AGkAZABlAHMA
+eQBzAHQAZQBtAHMALgBjAG8AbQA+AAAAAAADAN4/n04AAEAABzA56Y6q2k7PAQMAJgAAAAAAAgFH
+AAEAAAAvAAAAYz1VUzthPSA7cD1RTG9naWM7bD1BVk1CMi0xNDA0MDMwMTE4NDhaLTE3ODU5MgAA
+HwAVEAEAAABYAAAANgBDAEMARQA5ADkAMQBGADYARQBFADAAMABBADQAOQBCADAANQA2AEMAMgBG
+AEQAQwBEADcARAA2AEQAOAA0AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAIBFDABAAAADAAAAJoB
+AACrQpovUgAAAB8A+j8BAAAAFgAAAFEAdQBpAG4AbgAgAFQAcgBhAG4AAAAAAB8AAICGAwIAAAAA
+AMAAAAAAAABGAQAAABYAAAB1AHMAZQByAC0AYQBnAGUAbgB0AAAAAAABAAAARgAAAE0AaQBjAHIA
+bwBzAG8AZgB0AC0ATQBhAGMATwB1AHQAbABvAG8AawAvADEANAAuADMALgA5AC4AMQAzADEAMAAz
+ADAAAAAAAB8AAIAfpOszqHouQr57eeGpjlSzAQAAADgAAABDAG8AbgB2AGUAcgBzAGEAdABpAG8A
+bgBJAG4AZABlAHgAVAByAGEAYwBrAGkAbgBnAEUAeAAAAAEAAABAAQAASQBJAD0AMAAxADAAMQBD
+AEYANABFAEQAQQBBAEEANgBFAEEARQA5ADkAMAA4ADgARgAzAEYARgA3ADQANwBCADkAMAA0ADcA
+NABCADYAQQA2ADcAMgA5ADkARgBFADsAUwBCAE0ASQBEAD0AMwA7AFMAMQA9ADwAMQAzADkANgA0
+ADYAMgA4ADUANAAuADcANgAyADcALgA3AC4AYwBhAG0AZQBsAEAAaABhAGEAawBvAG4AMwAuAHIA
+aQBzAGkAbgBnAHQAaQBkAGUAcwB5AHMAdABlAG0AcwAuAGMAbwBtAD4AOwBWAGUAcgBzAGkAbwBu
+AD0AVgBlAHIAcwBpAG8AbgAgADEANAAuADIAIAAoAEIAdQBpAGwAZAAgADMAOAA3AC4AMAApACwA
+IABTAHQAYQBnAGUAPQBIADIAAAADAA00/T8AAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAACAAAAB4
+AC0AbQBzAC0AaABhAHMALQBhAHQAdABhAGMAaAAAAAEAAAACAAAAAAAAAB8AAICGAwIAAAAAAMAA
+AAAAAABGAQAAACIAAAB4AC0AbwByAGkAZwBpAG4AYQB0AGkAbgBnAC0AaQBwAAAAAAABAAAAGgAA
+AFsAMQAwAC4AMwAuADEAMAAuADgAMQBdAAAAAADI3A==
+
+--_000_504EB66DAC8D234EB8E8560985C2D7AD46CEBAA9avmb2qlogicorg_--
