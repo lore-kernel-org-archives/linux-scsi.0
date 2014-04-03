@@ -1,7 +1,7 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH 9/9] target: Enable READ_STRIP emulation in target_complete_ok_work
-Date: Thu,  3 Apr 2014 09:35:53 +0000
-Message-ID: <1396517753-23546-10-git-send-email-nab@daterainc.com>
+Subject: [PATCH 6/9] target/sbc: Add sbc_dif_write_insert software emulation
+Date: Thu,  3 Apr 2014 09:35:50 +0000
+Message-ID: <1396517753-23546-7-git-send-email-nab@daterainc.com>
 References: <1396517753-23546-1-git-send-email-nab@daterainc.com>
 Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1396517753-23546-1-git-send-email-nab@daterainc.com>
@@ -12,12 +12,12 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch enables the use of READ_STRIP software emulation in
-target_complete_ok_work() code for I/O READs.
+This patch adds WRITE_INSERT emulation within target-core
+using TYPE1 / TYPE3 PI modes.
 
-This is useful when the fabric does not support READ_STRIP hardware
-offload, but would still like to interact with backend device
-that have T10 PI enabled.
+This is useful in order for existing legacy fabrics that do not
+support protection offloads to interact with backend devices that
+currently have T10 PI enabled.
 
 Cc: Martin K. Petersen <martin.petersen@oracle.com>
 Cc: Sagi Grimberg <sagig@mellanox.com>
@@ -26,59 +26,76 @@ Cc: Quinn Tran <quinn.tran@qlogic.com>
 Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_transport.c |   33 ++++++++++++++++++++++++++++++++
- 1 file changed, 33 insertions(+)
+ drivers/target/target_core_sbc.c     |   44 ++++++++++++++++++++++++++++++++++
+ include/target/target_core_backend.h |    1 +
+ 2 files changed, 45 insertions(+)
 
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 530a9e8..a184103 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -1905,6 +1905,24 @@ static void transport_handle_queue_full(
- 	schedule_work(&cmd->se_dev->qf_work_queue);
+diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
+index f2d73dd..97b207d 100644
+--- a/drivers/target/target_core_sbc.c
++++ b/drivers/target/target_core_sbc.c
+@@ -1096,6 +1096,50 @@ err:
  }
+ EXPORT_SYMBOL(sbc_execute_unmap);
  
-+static bool target_check_read_strip(struct se_cmd *cmd)
++void
++sbc_dif_write_insert(struct se_cmd *cmd)
 +{
-+	sense_reason_t rc;
++	struct se_device *dev = cmd->se_dev;
++	struct se_dif_v1_tuple *sdt;
++	struct scatterlist *dsg, *psg = cmd->t_prot_sg;
++	sector_t sector = cmd->t_task_lba;
++	void *daddr, *paddr;
++	int i, j, offset = 0;
 +
-+	if (cmd->prot_op != TARGET_PROT_DIN_STRIP)
-+		return false;
++	for_each_sg(cmd->t_data_sg, dsg, cmd->t_data_nents, i) {
++		daddr = kmap_atomic(sg_page(dsg)) + dsg->offset;
++		paddr = kmap_atomic(sg_page(psg)) + psg->offset;
 +
-+	if (!(cmd->se_sess->sup_prot_ops & TARGET_PROT_DIN_STRIP)) {
-+		rc = sbc_dif_read_strip(cmd);
-+		if (rc) {
-+			cmd->pi_err = rc;
-+			return true;
++		for (j = 0; j < dsg->length; j += dev->dev_attrib.block_size) {
++
++			if (offset >= psg->length) {
++				kunmap_atomic(paddr);
++				psg = sg_next(psg);
++				paddr = kmap_atomic(sg_page(psg)) + psg->offset;
++				offset = 0;
++			}
++
++			sdt = paddr + offset;
++			sdt->guard_tag = cpu_to_be16(crc_t10dif(daddr + j,
++						dev->dev_attrib.block_size));
++			if (dev->dev_attrib.pi_prot_type == TARGET_DIF_TYPE1_PROT)
++				sdt->ref_tag = cpu_to_be32(sector & 0xffffffff);
++			sdt->app_tag = 0;
++
++			pr_debug("DIF WRITE INSERT sector: %llu guard_tag: 0x%04x"
++				 " app_tag: 0x%04x ref_tag: %u\n",
++				 (unsigned long long)sector, sdt->guard_tag,
++				 sdt->app_tag, be32_to_cpu(sdt->ref_tag));
++
++			sector++;
++			offset += sizeof(struct se_dif_v1_tuple);
 +		}
-+	}
 +
-+	return false;
++		kunmap_atomic(paddr);
++		kunmap_atomic(daddr);
++	}
 +}
 +
- static void target_complete_ok_work(struct work_struct *work)
- {
- 	struct se_cmd *cmd = container_of(work, struct se_cmd, work);
-@@ -1969,6 +1987,21 @@ static void target_complete_ok_work(struct work_struct *work)
- 					cmd->data_length;
- 		}
- 		spin_unlock(&cmd->se_lun->lun_sep_lock);
-+		/*
-+		 * Perform READ_STRIP of PI using software emulation when
-+		 * backend had PI enabled, if the transport will not be
-+		 * performing hardware READ_STRIP offload.
-+		 */
-+		if (target_check_read_strip(cmd)) {
-+			ret = transport_send_check_condition_and_sense(cmd,
-+						cmd->pi_err, 0);
-+			if (ret == -EAGAIN || ret == -ENOMEM)
-+				goto queue_full;
-+
-+			transport_lun_remove_cmd(cmd);
-+			transport_cmd_check_stop_to_fabric(cmd);
-+			return;
-+		}
- 
- 		trace_target_cmd_complete(cmd);
- 		ret = cmd->se_tfo->queue_data_in(cmd);
+ static sense_reason_t
+ sbc_dif_v1_verify(struct se_device *dev, struct se_dif_v1_tuple *sdt,
+ 		  const void *p, sector_t sector, unsigned int ei_lba)
+diff --git a/include/target/target_core_backend.h b/include/target/target_core_backend.h
+index 7020e33..8e6eac6 100644
+--- a/include/target/target_core_backend.h
++++ b/include/target/target_core_backend.h
+@@ -73,6 +73,7 @@ sense_reason_t sbc_execute_unmap(struct se_cmd *cmd,
+ 	sense_reason_t (*do_unmap_fn)(struct se_cmd *cmd, void *priv,
+ 				      sector_t lba, sector_t nolb),
+ 	void *priv);
++void	sbc_dif_write_insert(struct se_cmd *);
+ sense_reason_t	sbc_dif_verify_write(struct se_cmd *, sector_t, unsigned int,
+ 				     unsigned int, struct scatterlist *, int);
+ sense_reason_t	sbc_dif_verify_read(struct se_cmd *, sector_t, unsigned int,
 -- 
 1.7.10.4
