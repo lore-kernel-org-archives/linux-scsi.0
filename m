@@ -1,54 +1,96 @@
-From: Matias Bjorling <m@bjorling.me>
-Subject: Re: [RFC] blk-mq: support for shared tags
-Date: Wed, 02 Apr 2014 21:10:12 -0700
-Message-ID: <533CDF24.9030902@bjorling.me>
-References: <1396277175-21382-1-git-send-email-hch@lst.de> <533B56D5.5070803@bjorling.me> <20140402074632.GA11359@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140402074632.GA11359@lst.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@fb.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+From: "Nicholas A. Bellinger" <nab@daterainc.com>
+Subject: [PATCH 8/9] target/sbc: Add sbc_dif_read_strip software emulation
+Date: Thu,  3 Apr 2014 09:35:52 +0000
+Message-ID: <1396517753-23546-9-git-send-email-nab@daterainc.com>
+References: <1396517753-23546-1-git-send-email-nab@daterainc.com>
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1396517753-23546-1-git-send-email-nab@daterainc.com>
+Sender: target-devel-owner@vger.kernel.org
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagig@mellanox.com>, Or Gerlitz <ogerlitz@mellanox.com>, Quinn Tran <quinn.tran@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 04/02/2014 12:46 AM, Christoph Hellwig wrote:
-> On Tue, Apr 01, 2014 at 05:16:21PM -0700, Matias Bjorling wrote:
->> Hi Christoph,
->>
->> Can you rebase it on top of 3.14. I have trouble applying it for testing.
-> 
-> Hi Martin,
-> 
-> the series is based on top of Jens' for-next branch.  I've also pushed out a
-> git tree to the blk-mq-share-tags.2 branch of
-> 
-> 	git://git.infradead.org/users/hch/scsi.git
-> 
-> to make testing and reviewing easier.
->
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Thanks.
+Split up __sbc_dif_verify_read() so that VERIFY READ emulation can
+perform target-core specific READ_STRIP, seperate from the existing
+FILEIO/RAMDISK backend emulation code.
 
-Regarding the tags API. I think the best approach is a struct
-blk_mq_tags_reg. That'll make their parameters very visible in the
-drivers. I'll send a patch with the change, using the nvme driver as an
-example.
+Also add sbc_dif_read_strip() in order to determine number of sectors
+using cmd->prot_length, and skip the extra sbc_dif_copy_prot().
 
->> For nvme, there's need for two separate types of queues. The admin queue
->> (before initializing blk-mq) and the actual hardware queues.
->>
->> Should we allow the driver to get/put tags before initializing blk-mq?
->> Or let drivers implement their own framework?
-> 
-> What do you mean with initializing blk-mq?  We need to allocate data
-> structures for sure, and I don't see much else in terms of initialization
-> in blk-mq.
-> 
+Cc: Martin K. Petersen <martin.petersen@oracle.com>
+Cc: Sagi Grimberg <sagig@mellanox.com>
+Cc: Or Gerlitz <ogerlitz@mellanox.com>
+Cc: Quinn Tran <quinn.tran@qlogic.com>
+Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+---
+ drivers/target/target_core_sbc.c     |   31 +++++++++++++++++++++++++++----
+ include/target/target_core_backend.h |    1 +
+ 2 files changed, 28 insertions(+), 4 deletions(-)
 
-For the nvme driver, there's a single admin queue, which is outside
-blk-mq's control, and the X normal queues. Should we allow the shared
-tags structure to be used (get/put) for the admin queue, without
-initializing blk-mq? or should the drivers simply implement their own
-tags for their admin queue?
+diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
+index 97b207d..55c3526 100644
+--- a/drivers/target/target_core_sbc.c
++++ b/drivers/target/target_core_sbc.c
+@@ -1271,9 +1271,9 @@ sbc_dif_verify_write(struct se_cmd *cmd, sector_t start, unsigned int sectors,
+ }
+ EXPORT_SYMBOL(sbc_dif_verify_write);
+ 
+-sense_reason_t
+-sbc_dif_verify_read(struct se_cmd *cmd, sector_t start, unsigned int sectors,
+-		    unsigned int ei_lba, struct scatterlist *sg, int sg_off)
++static sense_reason_t
++__sbc_dif_verify_read(struct se_cmd *cmd, sector_t start, unsigned int sectors,
++		      unsigned int ei_lba, struct scatterlist *sg, int sg_off)
+ {
+ 	struct se_device *dev = cmd->se_dev;
+ 	struct se_dif_v1_tuple *sdt;
+@@ -1326,8 +1326,31 @@ sbc_dif_verify_read(struct se_cmd *cmd, sector_t start, unsigned int sectors,
+ 		kunmap_atomic(paddr);
+ 		kunmap_atomic(daddr);
+ 	}
+-	sbc_dif_copy_prot(cmd, sectors, true, sg, sg_off);
+ 
+ 	return 0;
+ }
++
++sense_reason_t
++sbc_dif_read_strip(struct se_cmd *cmd)
++{
++	struct se_device *dev = cmd->se_dev;
++	u32 sectors = cmd->prot_length / dev->prot_length;
++
++	return __sbc_dif_verify_read(cmd, cmd->t_task_lba, sectors, 0,
++				     cmd->t_prot_sg, 0);
++}
++
++sense_reason_t
++sbc_dif_verify_read(struct se_cmd *cmd, sector_t start, unsigned int sectors,
++		    unsigned int ei_lba, struct scatterlist *sg, int sg_off)
++{
++	sense_reason_t rc;
++
++	rc = __sbc_dif_verify_read(cmd, start, sectors, ei_lba, sg, sg_off);
++	if (rc)
++		return rc;
++
++	sbc_dif_copy_prot(cmd, sectors, true, sg, sg_off);
++	return 0;
++}
+ EXPORT_SYMBOL(sbc_dif_verify_read);
+diff --git a/include/target/target_core_backend.h b/include/target/target_core_backend.h
+index 8e6eac6..68e2820 100644
+--- a/include/target/target_core_backend.h
++++ b/include/target/target_core_backend.h
+@@ -78,6 +78,7 @@ sense_reason_t	sbc_dif_verify_write(struct se_cmd *, sector_t, unsigned int,
+ 				     unsigned int, struct scatterlist *, int);
+ sense_reason_t	sbc_dif_verify_read(struct se_cmd *, sector_t, unsigned int,
+ 				    unsigned int, struct scatterlist *, int);
++sense_reason_t	sbc_dif_read_strip(struct se_cmd *);
+ 
+ void	transport_set_vpd_proto_id(struct t10_vpd *, unsigned char *);
+ int	transport_set_vpd_assoc(struct t10_vpd *, unsigned char *);
+-- 
+1.7.10.4
