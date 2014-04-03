@@ -1,86 +1,77 @@
-From: Joe Lawrence <joe.lawrence@stratus.com>
-Subject: [PATCH RESEND] scsi_transport_sas: move bsg destructor into sas_rphy_remove
-Date: Wed, 2 Apr 2014 16:40:41 -0400
-Message-ID: <1396471241-1315-1-git-send-email-joe.lawrence@stratus.com>
+From: Jayamohan Kallickal <Jayamohan.Kallickal@Emulex.Com>
+Subject: RE: [PATCH 3/6] be2iscsi: Fix MCCQ posting for Mbx-Cmd after driver
+ initialization is complete
+Date: Thu, 3 Apr 2014 05:02:56 +0000
+Message-ID: <d28ae082-c08a-4ac1-ad7f-044d6220fb98@CMEXHTCAS1.ad.emulex.com>
+References: <1395938371-2149-1-git-send-email-Jayamohan.Kallickal@emulex.com>
+ <1395938371-2149-3-git-send-email-Jayamohan.Kallickal@emulex.com>
+ <5334C639.9000007@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from p02c11o149.mxlogic.net ([208.65.144.82]:36463 "EHLO
-	p02c11o149.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932397AbaDBUt1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Apr 2014 16:49:27 -0400
+Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:22360 "EHLO
+	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932877AbaDCFDA convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Apr 2014 01:03:00 -0400
+In-Reply-To: <5334C639.9000007@cs.wisc.edu>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Joe Lawrence <joe.lawrence@stratus.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Dan Williams <dan.j.williams@intel.com>, "Reddy, Sreekanth" <Sreekanth.Reddy@lsi.com>
+To: Mike Christie <michaelc@cs.wisc.edu>, Jayamohan Kallickal <jayamohank@gmail.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: Sony John-N <Sony.John-N@Emulex.Com>, "cleech@redhat.com" <cleech@redhat.com>
 
-The recent change in sysfs, bcdde7e221a8750f9b62b6d0bd31b72ea4ad9309
-"sysfs: make __sysfs_remove_dir() recursive" revealed an asymmetric
-rphy device creation/deletion sequence in scsi_transport_sas:
 
-  modprobe mpt2sas
-    sas_rphy_add
-      device_add A               rphy->dev
-      device_add B               sas_device transport class
-      device_add C               sas_end_device transport class
-      device_add D               bsg class
 
-  rmmod mpt2sas
-    sas_rphy_delete
-      sas_rphy_remove
-        device_del B
-        device_del C
-        device_del A
-          sysfs_remove_group     recursive sysfs dir removal
-      sas_rphy_free
-        device_del D             warning
+-----Original Message-----
+From: Mike Christie [mailto:michaelc@cs.wisc.edu] 
+Sent: Thursday, March 27, 2014 5:46 PM
+To: Jayamohan Kallickal; jbottomley@parallels.com; linux-scsi@vger.kernel.org
+Cc: Jayamohan Kallickal; Sony John-N
+Subject: Re: [PATCH 3/6] be2iscsi: Fix MCCQ posting for Mbx-Cmd after driver initialization is complete
 
-  where device A is the parent of B, C, and D.
+On 03/27/2014 09:39 AM, Jayamohan Kallickal wrote:
+>  Even before probe for function was completed, iSCSI Daemon had 
+> initiated login  to target while OS was coming up. The targets which 
+> had node.startup=automatic,  login process was initiated.Since 
+> function specific initialization was still in  progress this lead to kernel panic.
+>  The reson was MCCQ was not yet created and login Mbx_Cmd was sent on MCCQ.
+>  wrb_from_mccq() failed with kernel-panic access.
+> 
+>  In the fix checking in alloc_mcc_tag() if driver initialization is complete or not.
+>  Based on the result driver continues or return with an Error.
+> 
+> Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
+> Signed-off-by: Jayamohan Kallickal <Jayamohan.Kallickal@emulex.com>
+> ---
+>  drivers/scsi/be2iscsi/be_cmds.c | 8 ++++++++  
+> drivers/scsi/be2iscsi/be_main.c | 2 ++  
+> drivers/scsi/be2iscsi/be_main.h | 1 +
+>  3 files changed, 11 insertions(+)
+> 
+> diff --git a/drivers/scsi/be2iscsi/be_cmds.c 
+> b/drivers/scsi/be2iscsi/be_cmds.c index 1432ed5..4cabf5f 100644
+> --- a/drivers/scsi/be2iscsi/be_cmds.c
+> +++ b/drivers/scsi/be2iscsi/be_cmds.c
+> @@ -118,6 +118,14 @@ unsigned int alloc_mcc_tag(struct beiscsi_hba 
+> *phba)  {
+>  	unsigned int tag = 0;
+>  
+> +
+> +	if (phba->state & BE_ADAPTER_INIT_PHASE) {
+> +		beiscsi_log(phba, KERN_ERR,
+> +			    BEISCSI_LOG_INIT | BEISCSI_LOG_CONFIG,
+> +			    "BC_%d : Driver Initialization still in progress\n");
+> +		return tag;
+> +	}
+> +
 
-When sas_rphy_free tries to unregister the bsg request queue (device D
-above), the ensuing sysfs cleanup discovers that its sysfs group has
-already been removed and emits a warning, "sysfs group... not found for
-kobject 'end_device-X:0'".
+>I think normally we do not call scsi_host_add and expose the host until the driver can handle requests from entry points like sysfs and queuecommand.
 
-Since bsg creation is a side effect of sas_rphy_add, move its
-complementary removal call into sas_rphy_remove. This imposes the
-following tear-down order for the devices above: D, B, C, A.
+>Can you just move iscsi_host_add from beiscsi_hba_alloc to beiscsi_dev_probe after beiscsi_setup_boot_info is called?
 
-Note the sas_device and sas_end_device transport class devices (B and C
-above) are created and destroyed both via the list match traversal in
-attribute_container_device_trigger, so the order in which they are
-handled is fixed. This is fine as long as they are deleted before their
-parent device.
+Tried moving iscsi_add_host and it did not help the issue where the ep_connect was being called before the probe is completed.
 
-Signed-off-by: Joe Lawrence <joe.lawrence@stratus.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Dan Williams <dan.j.williams@intel.com>
-Cc: "Reddy, Sreekanth" <Sreekanth.Reddy@lsi.com>
----
- drivers/scsi/scsi_transport_sas.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+Chris Leech has a solution for this and when applied along with this patch works for us.
 
-diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
-index 1b68142..c341f85 100644
---- a/drivers/scsi/scsi_transport_sas.c
-+++ b/drivers/scsi/scsi_transport_sas.c
-@@ -1621,8 +1621,6 @@ void sas_rphy_free(struct sas_rphy *rphy)
- 	list_del(&rphy->list);
- 	mutex_unlock(&sas_host->lock);
- 
--	sas_bsg_remove(shost, rphy);
--
- 	transport_destroy_device(dev);
- 
- 	put_device(dev);
-@@ -1681,6 +1679,7 @@ sas_rphy_remove(struct sas_rphy *rphy)
- 	}
- 
- 	sas_rphy_unlink(rphy);
-+	sas_bsg_remove(NULL, rphy);
- 	transport_remove_device(dev);
- 	device_del(dev);
- }
--- 
-1.8.3.1
 
