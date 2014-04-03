@@ -1,96 +1,93 @@
-From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH 8/9] target/sbc: Add sbc_dif_read_strip software emulation
-Date: Thu,  3 Apr 2014 09:35:52 +0000
-Message-ID: <1396517753-23546-9-git-send-email-nab@daterainc.com>
-References: <1396517753-23546-1-git-send-email-nab@daterainc.com>
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1396517753-23546-1-git-send-email-nab@daterainc.com>
-Sender: target-devel-owner@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagig@mellanox.com>, Or Gerlitz <ogerlitz@mellanox.com>, Quinn Tran <quinn.tran@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: [Announce] sg3_utils-1.38 available
+Date: Thu, 03 Apr 2014 00:51:21 -0400
+Message-ID: <533CE8C9.9050609@interlog.com>
+Reply-To: dgilbert@interlog.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: SCSI development list <linux-scsi@vger.kernel.org>
+Cc: =?ISO-8859-1?Q?Dan_Hor=E1k?= <dhorak@redhat.com>, Ritesh Raj Sarraf <rrs@researchut.com>, "Robin H. Johnson" <robbat2@gentoo.org>, Martin Pitt <mpitt@debian.org>, Hannes Reinecke <hare@suse.de>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+sg3_utils is a package of command line utilities for sending
+SCSI and some ATA commands to devices. This package targets
+the Linux 3, 2.6 and 2.4 kernel series. It also has ports to
+FreeBSD, Tru64, Solaris, and Windows (cygwin and MinGW).
 
-Split up __sbc_dif_verify_read() so that VERIFY READ emulation can
-perform target-core specific READ_STRIP, seperate from the existing
-FILEIO/RAMDISK backend emulation code.
+Users of sg_xcopy note that the default recipient of the
+xcopy(lid1) command has changed from the source to the
+destination device. An environment variable [XCOPY_TO_SRC] can
+re-instate the previous default. This version tracks various
+changes made by www.t10.org since October 2013.
 
-Also add sbc_dif_read_strip() in order to determine number of sectors
-using cmd->prot_length, and skip the extra sbc_dif_copy_prot().
+For an overview of sg3_utils and downloads see this page:
+     http://sg.danny.cz/sg/sg3_utils.html
+The sg_ses utility (for enclosure devices) is discussed at:
+     http://sg.danny.cz/sg/sg_ses.html
+A full changelog can be found at:
+     http://sg.danny.cz/sg/p/sg3_utils.ChangeLog
 
-Cc: Martin K. Petersen <martin.petersen@oracle.com>
-Cc: Sagi Grimberg <sagig@mellanox.com>
-Cc: Or Gerlitz <ogerlitz@mellanox.com>
-Cc: Quinn Tran <quinn.tran@qlogic.com>
-Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
----
- drivers/target/target_core_sbc.c     |   31 +++++++++++++++++++++++++++----
- include/target/target_core_backend.h |    1 +
- 2 files changed, 28 insertions(+), 4 deletions(-)
+A release announcement will be sent to freecode.com .
 
-diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
-index 97b207d..55c3526 100644
---- a/drivers/target/target_core_sbc.c
-+++ b/drivers/target/target_core_sbc.c
-@@ -1271,9 +1271,9 @@ sbc_dif_verify_write(struct se_cmd *cmd, sector_t start, unsigned int sectors,
- }
- EXPORT_SYMBOL(sbc_dif_verify_write);
- 
--sense_reason_t
--sbc_dif_verify_read(struct se_cmd *cmd, sector_t start, unsigned int sectors,
--		    unsigned int ei_lba, struct scatterlist *sg, int sg_off)
-+static sense_reason_t
-+__sbc_dif_verify_read(struct se_cmd *cmd, sector_t start, unsigned int sectors,
-+		      unsigned int ei_lba, struct scatterlist *sg, int sg_off)
- {
- 	struct se_device *dev = cmd->se_dev;
- 	struct se_dif_v1_tuple *sdt;
-@@ -1326,8 +1326,31 @@ sbc_dif_verify_read(struct se_cmd *cmd, sector_t start, unsigned int sectors,
- 		kunmap_atomic(paddr);
- 		kunmap_atomic(daddr);
- 	}
--	sbc_dif_copy_prot(cmd, sectors, true, sg, sg_off);
- 
- 	return 0;
- }
-+
-+sense_reason_t
-+sbc_dif_read_strip(struct se_cmd *cmd)
-+{
-+	struct se_device *dev = cmd->se_dev;
-+	u32 sectors = cmd->prot_length / dev->prot_length;
-+
-+	return __sbc_dif_verify_read(cmd, cmd->t_task_lba, sectors, 0,
-+				     cmd->t_prot_sg, 0);
-+}
-+
-+sense_reason_t
-+sbc_dif_verify_read(struct se_cmd *cmd, sector_t start, unsigned int sectors,
-+		    unsigned int ei_lba, struct scatterlist *sg, int sg_off)
-+{
-+	sense_reason_t rc;
-+
-+	rc = __sbc_dif_verify_read(cmd, start, sectors, ei_lba, sg, sg_off);
-+	if (rc)
-+		return rc;
-+
-+	sbc_dif_copy_prot(cmd, sectors, true, sg, sg_off);
-+	return 0;
-+}
- EXPORT_SYMBOL(sbc_dif_verify_read);
-diff --git a/include/target/target_core_backend.h b/include/target/target_core_backend.h
-index 8e6eac6..68e2820 100644
---- a/include/target/target_core_backend.h
-+++ b/include/target/target_core_backend.h
-@@ -78,6 +78,7 @@ sense_reason_t	sbc_dif_verify_write(struct se_cmd *, sector_t, unsigned int,
- 				     unsigned int, struct scatterlist *, int);
- sense_reason_t	sbc_dif_verify_read(struct se_cmd *, sector_t, unsigned int,
- 				    unsigned int, struct scatterlist *, int);
-+sense_reason_t	sbc_dif_read_strip(struct se_cmd *);
- 
- void	transport_set_vpd_proto_id(struct t10_vpd *, unsigned char *);
- int	transport_set_vpd_assoc(struct t10_vpd *, unsigned char *);
--- 
-1.7.10.4
+Changelog for sg3_utils-1.38 [20140401] [svn: r563]
+   - sg_ses: add --dev-slot-num= and --sas-addr=
+     - fix --data=- problem with large buffers
+     - new --data=@FN to read hex data from file FN
+     - error and warning message cleanup
+     - add --maxlen= option
+   - sg_inq: add --block=0|1 option to control opens
+     - add --inhex=FN to read response in ASCII hex from
+       a file; --inhex=FN --raw reads response in binary
+     - make -HHH (-HHHH for '-p ai') output suitable for
+       another sg_inq invocation to use --inhex to decode
+     - add LU_CONG to standard inquiry response output
+     - decode ASCII information VPD pages
+     - add HAW_ZBC in block dev char. VPD page (sbc4r01)
+     - sync version descriptors dated 20131126
+     - allow --page=-1 to force std INQUIRY decoding
+     - fix overflow in encode_whitespaces
+     - improve unit serial number display (VPD page 0x80)
+   - sg_vpd: add LU_CONG to standard inquiry response output
+     - add --inhex=FN to read response in ASCII hex from
+       a file; --inhex=FN --raw reads response in binary
+     - decode Third Party Copy (tpc) page
+     - add HAW_ZBC in block dev char. VPD page (sbc4r01)
+     - add LTO and DDS vendor pages
+     - allow --page=num to restrict --enumerate output
+   - sg_persist: add PROUT: Replace Lost Reservation (spc4r36)
+     - add --transport-id= for SOP: 'sop,<routing_id_in_hex>'
+   - sg_readcap: for --16 show physical block size if
+     different from logical block size
+   - sg_xcopy: environment variables: XCOPY_TO_SRC and
+     XCOPY_TO_DST indicate where xcopy command is sent
+     - change default to send xcopy to dst (was src)
+     - improve CL handling of short options (e.g. '-vv')
+   - sg_luns: guard against garbage response
+   - sg_decode_sense: with --nospace ignore spaces on
+     command line, so multiple arguments are concatenated
+   - sg_write_same: repeat if unit attention
+   - sg_rtpg: fix indexing bug with --extended option
+   - sg_logs: placeholder for pending defects lpage
+   - sg_unmap: fix another problem with --grpnum= option
+   - sg_lib.h: add PDT_ZBC define (spc4r36p)
+   - sg_lib_data: sync asc/ascq codes with T10 dated 20140320
+     - add pdt string for ZBC (spc4r36p)
+   - sg_lib: extensions to sg_get_num() and sg_get_llnum()
+   - sg_cmds_extra: fix sa bug in sg_ll_3party_copy_out()
+   - scripts/rescan-scsi-bus.sh: check if FC driver exports
+     issue_lip before using it
+     - man page added (Linux only)
+   - scripts/59-scsi-sg3_utils.rules: linux specific udev rules
+   - examples: add sg_tst_excl3 for testing O_EXCL
+     - improve sg_tst_excl and sg_tst_excl2
+     - add sg_tst_context for testing file handle contexts
+   - upgrade automake to version 1.13.3
+   - add suse directory and 'spec' file to facilitate builds
+
+Changelog for sg3_utils-1.37 [20131014] [svn: r522]
+...
+
+Doug Gilbert
