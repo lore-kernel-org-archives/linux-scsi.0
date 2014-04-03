@@ -1,7 +1,7 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH 6/9] target/sbc: Add sbc_dif_write_insert software emulation
-Date: Thu,  3 Apr 2014 09:35:50 +0000
-Message-ID: <1396517753-23546-7-git-send-email-nab@daterainc.com>
+Subject: [PATCH 4/9] target/spc: Only expose PI mode page bits when supported by fabric
+Date: Thu,  3 Apr 2014 09:35:48 +0000
+Message-ID: <1396517753-23546-5-git-send-email-nab@daterainc.com>
 References: <1396517753-23546-1-git-send-email-nab@daterainc.com>
 Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1396517753-23546-1-git-send-email-nab@daterainc.com>
@@ -12,12 +12,8 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch adds WRITE_INSERT emulation within target-core
-using TYPE1 / TYPE3 PI modes.
-
-This is useful in order for existing legacy fabrics that do not
-support protection offloads to interact with backend devices that
-currently have T10 PI enabled.
+Only expose the control modepage bit for Application Tag Owner (ATO)
+if the session + fabric support DIX PASS operations.
 
 Cc: Martin K. Petersen <martin.petersen@oracle.com>
 Cc: Sagi Grimberg <sagig@mellanox.com>
@@ -26,76 +22,112 @@ Cc: Quinn Tran <quinn.tran@qlogic.com>
 Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_sbc.c     |   44 ++++++++++++++++++++++++++++++++++
- include/target/target_core_backend.h |    1 +
- 2 files changed, 45 insertions(+)
+ drivers/target/target_core_spc.c |   28 +++++++++++++++++-----------
+ 1 file changed, 17 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
-index f2d73dd..97b207d 100644
---- a/drivers/target/target_core_sbc.c
-+++ b/drivers/target/target_core_sbc.c
-@@ -1096,6 +1096,50 @@ err:
+diff --git a/drivers/target/target_core_spc.c b/drivers/target/target_core_spc.c
+index d4c6a31..8653666 100644
+--- a/drivers/target/target_core_spc.c
++++ b/drivers/target/target_core_spc.c
+@@ -769,7 +769,7 @@ out:
+ 	return ret;
  }
- EXPORT_SYMBOL(sbc_execute_unmap);
  
-+void
-+sbc_dif_write_insert(struct se_cmd *cmd)
-+{
+-static int spc_modesense_rwrecovery(struct se_device *dev, u8 pc, u8 *p)
++static int spc_modesense_rwrecovery(struct se_cmd *cmd, u8 pc, u8 *p)
+ {
+ 	p[0] = 0x01;
+ 	p[1] = 0x0a;
+@@ -782,8 +782,11 @@ out:
+ 	return 12;
+ }
+ 
+-static int spc_modesense_control(struct se_device *dev, u8 pc, u8 *p)
++static int spc_modesense_control(struct se_cmd *cmd, u8 pc, u8 *p)
+ {
 +	struct se_device *dev = cmd->se_dev;
-+	struct se_dif_v1_tuple *sdt;
-+	struct scatterlist *dsg, *psg = cmd->t_prot_sg;
-+	sector_t sector = cmd->t_task_lba;
-+	void *daddr, *paddr;
-+	int i, j, offset = 0;
++	struct se_session *sess = cmd->se_sess;
 +
-+	for_each_sg(cmd->t_data_sg, dsg, cmd->t_data_nents, i) {
-+		daddr = kmap_atomic(sg_page(dsg)) + dsg->offset;
-+		paddr = kmap_atomic(sg_page(psg)) + psg->offset;
-+
-+		for (j = 0; j < dsg->length; j += dev->dev_attrib.block_size) {
-+
-+			if (offset >= psg->length) {
-+				kunmap_atomic(paddr);
-+				psg = sg_next(psg);
-+				paddr = kmap_atomic(sg_page(psg)) + psg->offset;
-+				offset = 0;
-+			}
-+
-+			sdt = paddr + offset;
-+			sdt->guard_tag = cpu_to_be16(crc_t10dif(daddr + j,
-+						dev->dev_attrib.block_size));
-+			if (dev->dev_attrib.pi_prot_type == TARGET_DIF_TYPE1_PROT)
-+				sdt->ref_tag = cpu_to_be32(sector & 0xffffffff);
-+			sdt->app_tag = 0;
-+
-+			pr_debug("DIF WRITE INSERT sector: %llu guard_tag: 0x%04x"
-+				 " app_tag: 0x%04x ref_tag: %u\n",
-+				 (unsigned long long)sector, sdt->guard_tag,
-+				 sdt->app_tag, be32_to_cpu(sdt->ref_tag));
-+
-+			sector++;
-+			offset += sizeof(struct se_dif_v1_tuple);
-+		}
-+
-+		kunmap_atomic(paddr);
-+		kunmap_atomic(daddr);
+ 	p[0] = 0x0a;
+ 	p[1] = 0x0a;
+ 
+@@ -875,8 +878,10 @@ static int spc_modesense_control(struct se_device *dev, u8 pc, u8 *p)
+ 	 * type, shall not modify the contents of the LOGICAL BLOCK REFERENCE
+ 	 * TAG field.
+ 	 */
+-	if (dev->dev_attrib.pi_prot_type)
+-		p[5] |= 0x80;
++	if (sess->sup_prot_ops & (TARGET_PROT_DIN_PASS | TARGET_PROT_DOUT_PASS)) {
++		if (dev->dev_attrib.pi_prot_type)
++			p[5] |= 0x80;
 +	}
-+}
+ 
+ 	p[8] = 0xff;
+ 	p[9] = 0xff;
+@@ -886,8 +891,10 @@ out:
+ 	return 12;
+ }
+ 
+-static int spc_modesense_caching(struct se_device *dev, u8 pc, u8 *p)
++static int spc_modesense_caching(struct se_cmd *cmd, u8 pc, u8 *p)
+ {
++	struct se_device *dev = cmd->se_dev;
 +
- static sense_reason_t
- sbc_dif_v1_verify(struct se_device *dev, struct se_dif_v1_tuple *sdt,
- 		  const void *p, sector_t sector, unsigned int ei_lba)
-diff --git a/include/target/target_core_backend.h b/include/target/target_core_backend.h
-index 7020e33..8e6eac6 100644
---- a/include/target/target_core_backend.h
-+++ b/include/target/target_core_backend.h
-@@ -73,6 +73,7 @@ sense_reason_t sbc_execute_unmap(struct se_cmd *cmd,
- 	sense_reason_t (*do_unmap_fn)(struct se_cmd *cmd, void *priv,
- 				      sector_t lba, sector_t nolb),
- 	void *priv);
-+void	sbc_dif_write_insert(struct se_cmd *);
- sense_reason_t	sbc_dif_verify_write(struct se_cmd *, sector_t, unsigned int,
- 				     unsigned int, struct scatterlist *, int);
- sense_reason_t	sbc_dif_verify_read(struct se_cmd *, sector_t, unsigned int,
+ 	p[0] = 0x08;
+ 	p[1] = 0x12;
+ 
+@@ -903,7 +910,7 @@ out:
+ 	return 20;
+ }
+ 
+-static int spc_modesense_informational_exceptions(struct se_device *dev, u8 pc, unsigned char *p)
++static int spc_modesense_informational_exceptions(struct se_cmd *cmd, u8 pc, unsigned char *p)
+ {
+ 	p[0] = 0x1c;
+ 	p[1] = 0x0a;
+@@ -919,7 +926,7 @@ out:
+ static struct {
+ 	uint8_t		page;
+ 	uint8_t		subpage;
+-	int		(*emulate)(struct se_device *, u8, unsigned char *);
++	int		(*emulate)(struct se_cmd *, u8, unsigned char *);
+ } modesense_handlers[] = {
+ 	{ .page = 0x01, .subpage = 0x00, .emulate = spc_modesense_rwrecovery },
+ 	{ .page = 0x08, .subpage = 0x00, .emulate = spc_modesense_caching },
+@@ -1057,7 +1064,7 @@ static sense_reason_t spc_emulate_modesense(struct se_cmd *cmd)
+ 			 * the only two possibilities).
+ 			 */
+ 			if ((modesense_handlers[i].subpage & ~subpage) == 0) {
+-				ret = modesense_handlers[i].emulate(dev, pc, &buf[length]);
++				ret = modesense_handlers[i].emulate(cmd, pc, &buf[length]);
+ 				if (!ten && length + ret >= 255)
+ 					break;
+ 				length += ret;
+@@ -1070,7 +1077,7 @@ static sense_reason_t spc_emulate_modesense(struct se_cmd *cmd)
+ 	for (i = 0; i < ARRAY_SIZE(modesense_handlers); ++i)
+ 		if (modesense_handlers[i].page == page &&
+ 		    modesense_handlers[i].subpage == subpage) {
+-			length += modesense_handlers[i].emulate(dev, pc, &buf[length]);
++			length += modesense_handlers[i].emulate(cmd, pc, &buf[length]);
+ 			goto set_length;
+ 		}
+ 
+@@ -1102,7 +1109,6 @@ set_length:
+ 
+ static sense_reason_t spc_emulate_modeselect(struct se_cmd *cmd)
+ {
+-	struct se_device *dev = cmd->se_dev;
+ 	char *cdb = cmd->t_task_cdb;
+ 	bool ten = cdb[0] == MODE_SELECT_10;
+ 	int off = ten ? 8 : 4;
+@@ -1138,7 +1144,7 @@ static sense_reason_t spc_emulate_modeselect(struct se_cmd *cmd)
+ 		if (modesense_handlers[i].page == page &&
+ 		    modesense_handlers[i].subpage == subpage) {
+ 			memset(tbuf, 0, SE_MODE_PAGE_BUF);
+-			length = modesense_handlers[i].emulate(dev, 0, tbuf);
++			length = modesense_handlers[i].emulate(cmd, 0, tbuf);
+ 			goto check_contents;
+ 		}
+ 
 -- 
 1.7.10.4
