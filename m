@@ -1,93 +1,137 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: [Announce] sg3_utils-1.38 available
-Date: Thu, 03 Apr 2014 00:51:21 -0400
-Message-ID: <533CE8C9.9050609@interlog.com>
-Reply-To: dgilbert@interlog.com
+From: Jayamohan Kallickal <Jayamohan.Kallickal@Emulex.Com>
+Subject: RE: [PATCH 5/6] be2iscsi: Fix TCP parameters while connection
+ offloading.
+Date: Thu, 3 Apr 2014 05:02:54 +0000
+Message-ID: <df7be47d-07f0-42e5-8bd2-2da4ede7d1e7@CMEXHTCAS1.ad.emulex.com>
+References: <1395938371-2149-1-git-send-email-Jayamohan.Kallickal@emulex.com>
+ <1395938371-2149-5-git-send-email-Jayamohan.Kallickal@emulex.com>
+ <5338F4D6.9000303@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: SCSI development list <linux-scsi@vger.kernel.org>
-Cc: =?ISO-8859-1?Q?Dan_Hor=E1k?= <dhorak@redhat.com>, Ritesh Raj Sarraf <rrs@researchut.com>, "Robin H. Johnson" <robbat2@gentoo.org>, Martin Pitt <mpitt@debian.org>, Hannes Reinecke <hare@suse.de>, linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:22360 "EHLO
+	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932874AbaDCFDA convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Apr 2014 01:03:00 -0400
+In-Reply-To: <5338F4D6.9000303@cs.wisc.edu>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>, Jayamohan Kallickal <jayamohank@gmail.com>
+Cc: "jbottomley@parallels.com" <jbottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Minh Duc Tran <MinhDuc.Tran@Emulex.Com>, Sony John-N <Sony.John-N@Emulex.Com>
 
-sg3_utils is a package of command line utilities for sending
-SCSI and some ATA commands to devices. This package targets
-the Linux 3, 2.6 and 2.4 kernel series. It also has ports to
-FreeBSD, Tru64, Solaris, and Windows (cygwin and MinGW).
 
-Users of sg_xcopy note that the default recipient of the
-xcopy(lid1) command has changed from the source to the
-destination device. An environment variable [XCOPY_TO_SRC] can
-re-instate the previous default. This version tracks various
-changes made by www.t10.org since October 2013.
 
-For an overview of sg3_utils and downloads see this page:
-     http://sg.danny.cz/sg/sg3_utils.html
-The sg_ses utility (for enclosure devices) is discussed at:
-     http://sg.danny.cz/sg/sg_ses.html
-A full changelog can be found at:
-     http://sg.danny.cz/sg/p/sg3_utils.ChangeLog
+-----Original Message-----
+From: Mike Christie [mailto:michaelc@cs.wisc.edu] 
+Sent: Sunday, March 30, 2014 9:54 PM
+To: Jayamohan Kallickal
+Cc: jbottomley@parallels.com; linux-scsi@vger.kernel.org; Jayamohan Kallickal; Minh Duc Tran; Sony John-N
+Subject: Re: [PATCH 5/6] be2iscsi: Fix TCP parameters while connection offloading.
 
-A release announcement will be sent to freecode.com .
+On 03/27/2014 11:39 AM, Jayamohan Kallickal wrote:
+> +int mgmt_open_connection_v1(struct beiscsi_hba *phba,
+> +			     struct sockaddr *dst_addr,
+> +			     struct beiscsi_endpoint *beiscsi_ep,
+> +			     struct be_dma_mem *nonemb_cmd) {
+> +	struct hwi_controller *phwi_ctrlr;
+> +	struct hwi_context_memory *phwi_context;
+> +	struct sockaddr_in *daddr_in = (struct sockaddr_in *)dst_addr;
+> +	struct sockaddr_in6 *daddr_in6 = (struct sockaddr_in6 *)dst_addr;
+> +	struct be_ctrl_info *ctrl = &phba->ctrl;
+> +	struct be_mcc_wrb *wrb;
+> +	struct tcp_connect_and_offload_in_v1 *req;
+> +	unsigned short def_hdr_id;
+> +	unsigned short def_data_id;
+> +	struct phys_addr template_address = { 0, 0 };
+> +	struct phys_addr *ptemplate_address;
+> +	unsigned int tag = 0;
+> +	unsigned int i, ulp_num;
+> +	unsigned short cid = beiscsi_ep->ep_cid;
+> +	struct be_sge *sge;
+> +
+> +	phwi_ctrlr = phba->phwi_ctrlr;
+> +	phwi_context = phwi_ctrlr->phwi_ctxt;
+> +
+> +	ulp_num = phwi_ctrlr->wrb_context[BE_GET_CRI_FROM_CID(cid)].ulp_num;
+> +
+> +	def_hdr_id = (unsigned short)HWI_GET_DEF_HDRQ_ID(phba, ulp_num);
+> +	def_data_id = (unsigned short)HWI_GET_DEF_BUFQ_ID(phba, ulp_num);
+> +
+> +	ptemplate_address = &template_address;
+> +	ISCSI_GET_PDU_TEMPLATE_ADDRESS(phba, ptemplate_address);
+> +	spin_lock(&ctrl->mbox_lock);
+> +	tag = alloc_mcc_tag(phba);
+> +	if (!tag) {
+> +		spin_unlock(&ctrl->mbox_lock);
+> +		return tag;
+> +	}
+> +	wrb = wrb_from_mccq(phba);
+> +	sge = nonembedded_sgl(wrb);
+> +
+> +	req = nonemb_cmd->va;
+> +	memset(req, 0, sizeof(*req));
+> +	wrb->tag0 |= tag;
+> +
+> +	be_wrb_hdr_prepare(wrb, sizeof(*req), false, 1);
+> +	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_ISCSI,
+> +			   OPCODE_COMMON_ISCSI_TCP_CONNECT_AND_OFFLOAD,
+> +			   sizeof(*req));
+> +	if (dst_addr->sa_family == PF_INET) {
+> +		__be32 s_addr = daddr_in->sin_addr.s_addr;
+> +		req->ip_address.ip_type = BE2_IPV4;
+> +		req->ip_address.addr[0] = s_addr & 0x000000ff;
+> +		req->ip_address.addr[1] = (s_addr & 0x0000ff00) >> 8;
+> +		req->ip_address.addr[2] = (s_addr & 0x00ff0000) >> 16;
+> +		req->ip_address.addr[3] = (s_addr & 0xff000000) >> 24;
+> +		req->tcp_port = ntohs(daddr_in->sin_port);
+> +		beiscsi_ep->dst_addr = daddr_in->sin_addr.s_addr;
+> +		beiscsi_ep->dst_tcpport = ntohs(daddr_in->sin_port);
+> +		beiscsi_ep->ip_type = BE2_IPV4;
+> +	} else if (dst_addr->sa_family == PF_INET6) {
+> +		req->ip_address.ip_type = BE2_IPV6;
+> +		memcpy(&req->ip_address.addr,
+> +		       &daddr_in6->sin6_addr.in6_u.u6_addr8, 16);
+> +		req->tcp_port = ntohs(daddr_in6->sin6_port);
+> +		beiscsi_ep->dst_tcpport = ntohs(daddr_in6->sin6_port);
+> +		memcpy(&beiscsi_ep->dst6_addr,
+> +		       &daddr_in6->sin6_addr.in6_u.u6_addr8, 16);
+> +		beiscsi_ep->ip_type = BE2_IPV6;
+> +	} else{
+> +		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_CONFIG,
+> +			    "BG_%d : unknown addr family %d\n",
+> +			    dst_addr->sa_family);
+> +		spin_unlock(&ctrl->mbox_lock);
+> +		free_mcc_tag(&phba->ctrl, tag);
+> +		return -EINVAL;
+> +
+> +	}
+> +	req->cid = cid;
+> +	i = phba->nxt_cqid++;
+> +	if (phba->nxt_cqid == phba->num_cpus)
+> +		phba->nxt_cqid = 0;
+> +	req->cq_id = phwi_context->be_cq[i].id;
+> +	beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_CONFIG,
+> +		    "BG_%d : i=%d cq_id=%d\n", i, req->cq_id);
+> +	req->defq_id = def_hdr_id;
+> +	req->hdr_ring_id = def_hdr_id;
+> +	req->data_ring_id = def_data_id;
+> +	req->do_offload = 1;
+> +	req->dataout_template_pa.lo = ptemplate_address->lo;
+> +	req->dataout_template_pa.hi = ptemplate_address->hi;
+> +	sge->pa_hi = cpu_to_le32(upper_32_bits(nonemb_cmd->dma));
+> +	sge->pa_lo = cpu_to_le32(nonemb_cmd->dma & 0xFFFFFFFF);
+> +	sge->len = cpu_to_le32(nonemb_cmd->size);
+> +
+> +	req->hdr.version = 1;
+> +	req->tcp_window_size = 0;
+> +	req->tcp_window_scale_count = 2;
 
-Changelog for sg3_utils-1.38 [20140401] [svn: r563]
-   - sg_ses: add --dev-slot-num= and --sas-addr=
-     - fix --data=- problem with large buffers
-     - new --data=@FN to read hex data from file FN
-     - error and warning message cleanup
-     - add --maxlen= option
-   - sg_inq: add --block=0|1 option to control opens
-     - add --inhex=FN to read response in ASCII hex from
-       a file; --inhex=FN --raw reads response in binary
-     - make -HHH (-HHHH for '-p ai') output suitable for
-       another sg_inq invocation to use --inhex to decode
-     - add LU_CONG to standard inquiry response output
-     - decode ASCII information VPD pages
-     - add HAW_ZBC in block dev char. VPD page (sbc4r01)
-     - sync version descriptors dated 20131126
-     - allow --page=-1 to force std INQUIRY decoding
-     - fix overflow in encode_whitespaces
-     - improve unit serial number display (VPD page 0x80)
-   - sg_vpd: add LU_CONG to standard inquiry response output
-     - add --inhex=FN to read response in ASCII hex from
-       a file; --inhex=FN --raw reads response in binary
-     - decode Third Party Copy (tpc) page
-     - add HAW_ZBC in block dev char. VPD page (sbc4r01)
-     - add LTO and DDS vendor pages
-     - allow --page=num to restrict --enumerate output
-   - sg_persist: add PROUT: Replace Lost Reservation (spc4r36)
-     - add --transport-id= for SOP: 'sop,<routing_id_in_hex>'
-   - sg_readcap: for --16 show physical block size if
-     different from logical block size
-   - sg_xcopy: environment variables: XCOPY_TO_SRC and
-     XCOPY_TO_DST indicate where xcopy command is sent
-     - change default to send xcopy to dst (was src)
-     - improve CL handling of short options (e.g. '-vv')
-   - sg_luns: guard against garbage response
-   - sg_decode_sense: with --nospace ignore spaces on
-     command line, so multiple arguments are concatenated
-   - sg_write_same: repeat if unit attention
-   - sg_rtpg: fix indexing bug with --extended option
-   - sg_logs: placeholder for pending defects lpage
-   - sg_unmap: fix another problem with --grpnum= option
-   - sg_lib.h: add PDT_ZBC define (spc4r36p)
-   - sg_lib_data: sync asc/ascq codes with T10 dated 20140320
-     - add pdt string for ZBC (spc4r36p)
-   - sg_lib: extensions to sg_get_num() and sg_get_llnum()
-   - sg_cmds_extra: fix sa bug in sg_ll_3party_copy_out()
-   - scripts/rescan-scsi-bus.sh: check if FC driver exports
-     issue_lip before using it
-     - man page added (Linux only)
-   - scripts/59-scsi-sg3_utils.rules: linux specific udev rules
-   - examples: add sg_tst_excl3 for testing O_EXCL
-     - improve sg_tst_excl and sg_tst_excl2
-     - add sg_tst_context for testing file handle contexts
-   - upgrade automake to version 1.13.3
-   - add suse directory and 'spec' file to facilitate builds
+>Is this approx 100 lines exactly the same as mgmt_open_connection except these 3 lines? Maybe a lib/helper function that does the common 100 lines then >some v1 function over that which does the extra 3 lines.
 
-Changelog for sg3_utils-1.37 [20131014] [svn: r522]
-...
+Agreed. Will redo this
 
-Doug Gilbert
+Thanks
+Jay
+--
