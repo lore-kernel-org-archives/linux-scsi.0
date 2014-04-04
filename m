@@ -1,7 +1,8 @@
 From: Andy Grover <agrover-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 1/5] target/tcm_fc: Don't export ft_lport_list
-Date: Fri,  4 Apr 2014 16:54:11 -0700
-Message-ID: <1396655655-31060-2-git-send-email-agrover@redhat.com>
+Subject: [PATCH 5/5] target/tcm_fc: Rename ft_tport_create to
+	ft_tport_get
+Date: Fri,  4 Apr 2014 16:54:15 -0700
+Message-ID: <1396655655-31060-6-git-send-email-agrover@redhat.com>
 References: <1396655655-31060-1-git-send-email-agrover@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,38 +22,44 @@ To: target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 Cc: fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-Nobody outside tfc_conf.c uses it.
+Because it doesn't always create, if there's an existing one it just
+returns it.
 
 Signed-off-by: Andy Grover <agrover-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 ---
- drivers/target/tcm_fc/tcm_fc.h   | 1 -
- drivers/target/tcm_fc/tfc_conf.c | 2 +-
- 2 files changed, 1 insertion(+), 2 deletions(-)
+ drivers/target/tcm_fc/tfc_sess.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/target/tcm_fc/tcm_fc.h b/drivers/target/tcm_fc/tcm_fc.h
-index 4f4b971..aba6861 100644
---- a/drivers/target/tcm_fc/tcm_fc.h
-+++ b/drivers/target/tcm_fc/tcm_fc.h
-@@ -128,7 +128,6 @@ struct ft_cmd {
- 	u32 sg_cnt;			/* No. of item in scatterlist */
- };
+diff --git a/drivers/target/tcm_fc/tfc_sess.c b/drivers/target/tcm_fc/tfc_sess.c
+index 0475142..746adb8 100644
+--- a/drivers/target/tcm_fc/tfc_sess.c
++++ b/drivers/target/tcm_fc/tfc_sess.c
+@@ -51,7 +51,7 @@ static void ft_sess_delete_all(struct ft_tport *);
+  * Lookup or allocate target local port.
+  * Caller holds ft_lport_lock.
+  */
+-static struct ft_tport *ft_tport_create(struct fc_lport *lport)
++static struct ft_tport *ft_tport_get(struct fc_lport *lport)
+ {
+ 	struct ft_tpg *tpg;
+ 	struct ft_tport *tport;
+@@ -114,7 +114,7 @@ static void ft_tport_delete(struct ft_tport *tport)
+ void ft_lport_add(struct fc_lport *lport, void *arg)
+ {
+ 	mutex_lock(&ft_lport_lock);
+-	ft_tport_create(lport);
++	ft_tport_get(lport);
+ 	mutex_unlock(&ft_lport_lock);
+ }
  
--extern struct list_head ft_lport_list;
- extern struct mutex ft_lport_lock;
- extern struct fc4_prov ft_prov;
- extern struct target_fabric_configfs *ft_configfs;
-diff --git a/drivers/target/tcm_fc/tfc_conf.c b/drivers/target/tcm_fc/tfc_conf.c
-index b8b5a71..9c2da1f 100644
---- a/drivers/target/tcm_fc/tfc_conf.c
-+++ b/drivers/target/tcm_fc/tfc_conf.c
-@@ -50,7 +50,7 @@
+@@ -351,7 +351,7 @@ static int ft_prli_locked(struct fc_rport_priv *rdata, u32 spp_len,
+ 	struct ft_node_acl *acl;
+ 	u32 fcp_parm;
  
- struct target_fabric_configfs *ft_configfs;
+-	tport = ft_tport_create(rdata->local_port);
++	tport = ft_tport_get(rdata->local_port);
+ 	if (!tport)
+ 		goto not_target;	/* not a target for this local port */
  
--LIST_HEAD(ft_lport_list);
-+static LIST_HEAD(ft_lport_list);
- DEFINE_MUTEX(ft_lport_lock);
- 
- unsigned int ft_debug_logging;
 -- 
 1.9.0
