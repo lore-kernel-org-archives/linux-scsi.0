@@ -1,97 +1,269 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 6/11] lpfc 10.2.8000.0: Fix FW dump using sysfs
-Date: Fri, 4 Apr 2014 13:52:12 -0400
-Message-ID: <1396633932.1924.19.camel@myfc17>
+Subject: [PATCH 7/11] lpfc 10.2.8000.0: Convert runtime references to old
+ xlane cfg param to fof cfg param
+Date: Fri, 4 Apr 2014 13:52:21 -0400
+Message-ID: <1396633941.1924.20.camel@myfc17>
 Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:53483 "EHLO
-	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753794AbaDDRwO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Apr 2014 13:52:14 -0400
+Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:41598 "EHLO
+	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753378AbaDDRwX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Apr 2014 13:52:23 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Fix FW dump using sysfs
+Convert runtime references to old xlane cfg param to fof cfg param
 
 
 Signed-off-by: James Smart <james.smart@emulex.com>
 
  ---
 
- lpfc.h      |    1 +
- lpfc_attr.c |    7 ++++++-
- lpfc_sli.c  |   13 ++++++++++---
- 3 files changed, 17 insertions(+), 4 deletions(-)
+ lpfc_attr.c    |   12 ++++++------
+ lpfc_debugfs.c |    2 +-
+ lpfc_init.c    |    9 ++++-----
+ lpfc_scsi.c    |   20 ++++++++++----------
+ lpfc_sli.c     |    7 +++----
+ 5 files changed, 24 insertions(+), 26 deletions(-)
 
 
 diff -upNr a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
---- a/drivers/scsi/lpfc/lpfc_attr.c	2014-03-31 16:21:36.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_attr.c	2014-04-03 10:24:25.958308791 -0400
-@@ -919,10 +919,15 @@ lpfc_sli4_pdev_reg_request(struct lpfc_h
- 		phba->cfg_sriov_nr_virtfn = 0;
+--- a/drivers/scsi/lpfc/lpfc_attr.c	2014-04-03 10:24:25.958308791 -0400
++++ b/drivers/scsi/lpfc/lpfc_attr.c	2014-04-03 10:24:27.545308870 -0400
+@@ -2369,7 +2369,7 @@ lpfc_oas_tgt_store(struct device *dev, s
+ 	uint8_t wwpn[WWN_SZ];
+ 	int rc;
+ 
+-	if (!phba->cfg_EnableXLane)
++	if (!phba->cfg_fof)
+ 		return -EPERM;
+ 
+ 	/* count may include a LF at end of string */
+@@ -2437,7 +2437,7 @@ lpfc_oas_vpt_store(struct device *dev, s
+ 	uint8_t wwpn[WWN_SZ];
+ 	int rc;
+ 
+-	if (!phba->cfg_EnableXLane)
++	if (!phba->cfg_fof)
+ 		return -EPERM;
+ 
+ 	/* count may include a LF at end of string */
+@@ -2504,7 +2504,7 @@ lpfc_oas_lun_state_store(struct device *
+ 	struct lpfc_hba *phba = ((struct lpfc_vport *)shost->hostdata)->phba;
+ 	int val = 0;
+ 
+-	if (!phba->cfg_EnableXLane)
++	if (!phba->cfg_fof)
+ 		return -EPERM;
+ 
+ 	if (!isdigit(buf[0]))
+@@ -2570,7 +2570,7 @@ lpfc_oas_lun_state_set(struct lpfc_hba *
+ 
+ 	int rc = 0;
+ 
+-	if (!phba->cfg_EnableXLane)
++	if (!phba->cfg_fof)
+ 		return -EPERM;
+ 
+ 	if (oas_state) {
+@@ -2675,7 +2675,7 @@ lpfc_oas_lun_show(struct device *dev, st
+ 	uint64_t oas_lun;
+ 	int len = 0;
+ 
+-	if (!phba->cfg_EnableXLane)
++	if (!phba->cfg_fof)
+ 		return -EPERM;
+ 
+ 	if (wwn_to_u64(phba->cfg_oas_vpt_wwpn) == 0)
+@@ -2721,7 +2721,7 @@ lpfc_oas_lun_store(struct device *dev, s
+ 	uint64_t scsi_lun;
+ 	ssize_t rc;
+ 
+-	if (!phba->cfg_EnableXLane)
++	if (!phba->cfg_fof)
+ 		return -EPERM;
+ 
+ 	if (wwn_to_u64(phba->cfg_oas_vpt_wwpn) == 0)
+diff -upNr a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
+--- a/drivers/scsi/lpfc/lpfc_debugfs.c	2014-03-31 16:21:36.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_debugfs.c	2014-04-03 10:24:27.553308871 -0400
+@@ -2314,7 +2314,7 @@ proc_cq:
+ 			goto too_big;
  	}
  
-+	if (opcode == LPFC_FW_DUMP)
-+		phba->hba_flag |= HBA_FW_DUMP_OP;
-+
- 	status = lpfc_do_offline(phba, LPFC_EVT_OFFLINE);
+-	if (phba->cfg_EnableXLane) {
++	if (phba->cfg_fof) {
  
--	if (status != 0)
-+	if (status != 0) {
-+		phba->hba_flag &= ~HBA_FW_DUMP_OP;
- 		return status;
-+	}
+ 		/* OAS CQ */
+ 		qp = phba->sli4_hba.oas_cq;
+diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+--- a/drivers/scsi/lpfc/lpfc_init.c	2014-04-03 10:24:24.223308703 -0400
++++ b/drivers/scsi/lpfc/lpfc_init.c	2014-04-03 10:24:27.567308872 -0400
+@@ -10938,7 +10938,7 @@ lpfc_sli4_oas_verify(struct lpfc_hba *ph
+ 	if (phba->sli4_hba.pc_sli4_params.oas_supported) {
+ 		phba->cfg_fof = 1;
+ 	} else {
+-		phba->cfg_EnableXLane = 0;
++		phba->cfg_fof = 0;
+ 		if (phba->device_data_mem_pool)
+ 			mempool_destroy(phba->device_data_mem_pool);
+ 		phba->device_data_mem_pool = NULL;
+@@ -10968,7 +10968,7 @@ lpfc_fof_queue_setup(struct lpfc_hba *ph
+ 	if (rc)
+ 		return -ENOMEM;
  
- 	/* wait for the device to be quiesced before firmware reset */
- 	msleep(100);
-diff -upNr a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
---- a/drivers/scsi/lpfc/lpfc.h	2014-03-31 16:21:36.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc.h	2014-04-03 10:24:25.959308791 -0400
-@@ -640,6 +640,7 @@ struct lpfc_hba {
- #define HBA_DEVLOSS_TMO         0x2000 /* HBA in devloss timeout */
- #define HBA_RRQ_ACTIVE		0x4000 /* process the rrq active list */
- #define HBA_FCP_IOQ_FLUSH	0x8000 /* FCP I/O queues being flushed */
-+#define HBA_FW_DUMP_OP		0x10000 /* Skips fn reset before FW dump */
- 	uint32_t fcp_ring_in_use; /* When polling test if intr-hndlr active*/
- 	struct lpfc_dmabuf slim2p;
+-	if (phba->cfg_EnableXLane) {
++	if (phba->cfg_fof) {
  
-diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
---- a/drivers/scsi/lpfc/lpfc_sli.c	2014-04-03 10:24:24.244308704 -0400
-+++ b/drivers/scsi/lpfc/lpfc_sli.c	2014-04-03 10:24:26.012308793 -0400
-@@ -4036,12 +4036,13 @@ lpfc_sli4_brdreset(struct lpfc_hba *phba
+ 		rc = lpfc_cq_create(phba, phba->sli4_hba.oas_cq,
+ 				    phba->sli4_hba.fof_eq, LPFC_WCQ, LPFC_FCP);
+@@ -10987,8 +10987,7 @@ lpfc_fof_queue_setup(struct lpfc_hba *ph
+ 	return 0;
+ 
+ out_oas_wq:
+-	if (phba->cfg_EnableXLane)
+-		lpfc_cq_destroy(phba, phba->sli4_hba.oas_cq);
++	lpfc_cq_destroy(phba, phba->sli4_hba.oas_cq);
+ out_oas_cq:
+ 	lpfc_eq_destroy(phba, phba->sli4_hba.fof_eq);
+ 	return rc;
+@@ -11022,7 +11021,7 @@ lpfc_fof_queue_create(struct lpfc_hba *p
+ 
+ 	phba->sli4_hba.fof_eq = qdesc;
+ 
+-	if (phba->cfg_EnableXLane) {
++	if (phba->cfg_fof) {
+ 
+ 		/* Create OAS CQ */
+ 		qdesc = lpfc_sli4_queue_alloc(phba, phba->sli4_hba.cq_esize,
+diff -upNr a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+--- a/drivers/scsi/lpfc/lpfc_scsi.c	2014-04-03 10:24:22.342308608 -0400
++++ b/drivers/scsi/lpfc/lpfc_scsi.c	2014-04-03 10:24:27.569308872 -0400
+@@ -73,7 +73,7 @@ lpfc_rport_data_from_scsi_device(struct
  {
- 	struct lpfc_sli *psli = &phba->sli;
- 	uint16_t cfg_value;
--	int rc;
-+	int rc = 0;
+ 	struct lpfc_vport *vport = (struct lpfc_vport *)sdev->host->hostdata;
  
- 	/* Reset HBA */
- 	lpfc_printf_log(phba, KERN_INFO, LOG_SLI,
--			"0295 Reset HBA Data: x%x x%x\n",
--			phba->pport->port_state, psli->sli_flag);
-+			"0295 Reset HBA Data: x%x x%x x%x\n",
-+			phba->pport->port_state, psli->sli_flag,
-+			phba->hba_flag);
+-	if (vport->phba->cfg_EnableXLane)
++	if (vport->phba->cfg_fof)
+ 		return ((struct lpfc_device_data *)sdev->hostdata)->rport_data;
+ 	else
+ 		return (struct lpfc_rport_data *)sdev->hostdata;
+@@ -3462,7 +3462,7 @@ lpfc_scsi_prep_dma_buf_s4(struct lpfc_hb
+ 	 * If the OAS driver feature is enabled and the lun is enabled for
+ 	 * OAS, set the oas iocb related flags.
+ 	 */
+-	if ((phba->cfg_EnableXLane) && ((struct lpfc_device_data *)
++	if ((phba->cfg_fof) && ((struct lpfc_device_data *)
+ 		scsi_cmnd->device->hostdata)->oas_enabled)
+ 		lpfc_cmd->cur_iocbq.iocb_flag |= LPFC_IO_OAS;
+ 	return 0;
+@@ -5504,7 +5504,7 @@ lpfc_slave_alloc(struct scsi_device *sde
+ 	if (!rport || fc_remote_port_chkready(rport))
+ 		return -ENXIO;
  
- 	/* perform board reset */
- 	phba->fc_eventTag = 0;
-@@ -4054,6 +4055,12 @@ lpfc_sli4_brdreset(struct lpfc_hba *phba
- 	phba->fcf.fcf_flag = 0;
- 	spin_unlock_irq(&phba->hbalock);
+-	if (phba->cfg_EnableXLane) {
++	if (phba->cfg_fof) {
  
-+	/* SLI4 INTF 2: if FW dump is being taken skip INIT_PORT */
-+	if (phba->hba_flag & HBA_FW_DUMP_OP) {
-+		phba->hba_flag &= ~HBA_FW_DUMP_OP;
-+		return rc;
-+	}
-+
- 	/* Now physically reset the device */
- 	lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
- 			"0389 Performing PCI function reset!\n");
+ 		/*
+ 		 * Check to see if the device data structure for the lun
+@@ -5629,7 +5629,7 @@ lpfc_slave_destroy(struct scsi_device *s
+ 	struct lpfc_device_data *device_data = sdev->hostdata;
+ 
+ 	atomic_dec(&phba->sdev_cnt);
+-	if ((phba->cfg_EnableXLane) && (device_data)) {
++	if ((phba->cfg_fof) && (device_data)) {
+ 		spin_lock_irqsave(&phba->devicelock, flags);
+ 		device_data->available = false;
+ 		if (!device_data->oas_enabled)
+@@ -5668,7 +5668,7 @@ lpfc_create_device_data(struct lpfc_hba
+ 	int memory_flags;
+ 
+ 	if (unlikely(!phba) || !vport_wwpn || !target_wwpn  ||
+-	    !(phba->cfg_EnableXLane))
++	    !(phba->cfg_fof))
+ 		return NULL;
+ 
+ 	/* Attempt to create the device data to contain lun info */
+@@ -5706,7 +5706,7 @@ lpfc_delete_device_data(struct lpfc_hba
+ {
+ 
+ 	if (unlikely(!phba) || !lun_info  ||
+-	    !(phba->cfg_EnableXLane))
++	    !(phba->cfg_fof))
+ 		return;
+ 
+ 	if (!list_empty(&lun_info->listentry))
+@@ -5740,7 +5740,7 @@ __lpfc_get_device_data(struct lpfc_hba *
+ 	struct lpfc_device_data *lun_info;
+ 
+ 	if (unlikely(!phba) || !list || !vport_wwpn || !target_wwpn ||
+-	    !phba->cfg_EnableXLane)
++	    !phba->cfg_fof)
+ 		return NULL;
+ 
+ 	/* Check to see if the lun is already enabled for OAS. */
+@@ -5802,7 +5802,7 @@ lpfc_find_next_oas_lun(struct lpfc_hba *
+ 	    !starting_lun || !found_vport_wwpn ||
+ 	    !found_target_wwpn || !found_lun || !found_lun_status ||
+ 	    (*starting_lun == NO_MORE_OAS_LUN) ||
+-	    !phba->cfg_EnableXLane)
++	    !phba->cfg_fof)
+ 		return false;
+ 
+ 	lun = *starting_lun;
+@@ -5886,7 +5886,7 @@ lpfc_enable_oas_lun(struct lpfc_hba *phb
+ 	unsigned long flags;
+ 
+ 	if (unlikely(!phba) || !vport_wwpn || !target_wwpn ||
+-	    !phba->cfg_EnableXLane)
++	    !phba->cfg_fof)
+ 		return false;
+ 
+ 	spin_lock_irqsave(&phba->devicelock, flags);
+@@ -5943,7 +5943,7 @@ lpfc_disable_oas_lun(struct lpfc_hba *ph
+ 	unsigned long flags;
+ 
+ 	if (unlikely(!phba) || !vport_wwpn || !target_wwpn ||
+-	    !phba->cfg_EnableXLane)
++	    !phba->cfg_fof)
+ 		return false;
+ 
+ 	spin_lock_irqsave(&phba->devicelock, flags);
+diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+--- a/drivers/scsi/lpfc/lpfc_sli.c	2014-04-03 10:24:26.012308793 -0400
++++ b/drivers/scsi/lpfc/lpfc_sli.c	2014-04-03 10:24:27.586308873 -0400
+@@ -5058,7 +5058,7 @@ lpfc_sli4_arm_cqeq_intr(struct lpfc_hba
+ 		} while (++fcp_eqidx < phba->cfg_fcp_io_channel);
+ 	}
+ 
+-	if (phba->cfg_EnableXLane)
++	if (phba->cfg_fof)
+ 		lpfc_sli4_cq_release(phba->sli4_hba.oas_cq, LPFC_QUEUE_REARM);
+ 
+ 	if (phba->sli4_hba.hba_eq) {
+@@ -8693,8 +8693,7 @@ __lpfc_sli_issue_iocb_s4(struct lpfc_hba
+ 
+ 	if ((piocb->iocb_flag & LPFC_IO_FCP) ||
+ 	    (piocb->iocb_flag & LPFC_USE_FCPWQIDX)) {
+-		if (!phba->cfg_EnableXLane || (!(piocb->iocb_flag &
+-			LPFC_IO_OAS))) {
++		if (!phba->cfg_fof || (!(piocb->iocb_flag & LPFC_IO_OAS))) {
+ 			wq = phba->sli4_hba.fcp_wq[piocb->fcp_wqidx];
+ 		} else {
+ 			wq = phba->sli4_hba.oas_wq;
+@@ -8789,7 +8788,7 @@ lpfc_sli_issue_iocb(struct lpfc_hba *phb
+ 
+ 	if (phba->sli_rev == LPFC_SLI_REV4) {
+ 		if (piocb->iocb_flag &  LPFC_IO_FCP) {
+-			if (!phba->cfg_EnableXLane || (!(piocb->iocb_flag &
++			if (!phba->cfg_fof || (!(piocb->iocb_flag &
+ 				LPFC_IO_OAS))) {
+ 				if (unlikely(!phba->sli4_hba.fcp_wq))
+ 					return IOCB_ERROR;
 
 
 
