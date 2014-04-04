@@ -1,48 +1,31 @@
-From: Andy Grover <agrover-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH] target/tcm_fc: Fix use-after-free of ft_tpg
-Date: Fri,  4 Apr 2014 16:44:37 -0700
-Message-ID: <1396655077-30912-1-git-send-email-agrover@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-List-Unsubscribe: <http://lists.open-fcoe.org/mailman/options/fcoe-devel>,
- <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.open-fcoe.org/pipermail/fcoe-devel>
-List-Post: <mailto:fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-List-Help: <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.open-fcoe.org/mailman/listinfo/fcoe-devel>,
- <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
-Errors-To: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
-Sender: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
-To: target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Andy Grover <agrover@redhat.com>
+Subject: [PATCH 0/5] target/tcm_fc: Misc. fixups
+Date: Fri,  4 Apr 2014 16:54:10 -0700
+Message-ID: <1396655655-31060-1-git-send-email-agrover@redhat.com>
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: target-devel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, fcoe-devel@open-fcoe.org
 List-Id: linux-scsi@vger.kernel.org
 
-ft_del_tpg checks tpg->tport is set before unlinking the tpg from the
-tport when the tpg is being removed. Set this pointer in ft_tport_create,
-or the unlinking won't happen in ft_del_tpg and tport->tpg will reference
-a deleted object.
+Hi nab and fcoe developers,
 
-see https://bugzilla.redhat.com/show_bug.cgi?id=1071340
+In fixing the other issue I just posted a patch for, I found some other
+things in the tcm_fc fabric that could be improved. Please take a look?
 
-Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Signed-off-by: Andy Grover <agrover-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
----
- drivers/target/tcm_fc/tfc_sess.c | 1 +
- 1 file changed, 1 insertion(+)
+Thanks! -- Regards -- Andy
 
-diff --git a/drivers/target/tcm_fc/tfc_sess.c b/drivers/target/tcm_fc/tfc_sess.c
-index 0475142..1329726 100644
---- a/drivers/target/tcm_fc/tfc_sess.c
-+++ b/drivers/target/tcm_fc/tfc_sess.c
-@@ -68,6 +68,7 @@ static struct ft_tport *ft_tport_create(struct fc_lport *lport)
- 
- 	if (tport) {
- 		tport->tpg = tpg;
-+		tpg->tport = tport;
- 		return tport;
- 	}
- 
+Andy Grover (5):
+  target/tcm_fc: Don't export ft_lport_list
+  target/tcm_fc: Limit to 1 TPG per wwn
+  target/tcm_fc: Rename structs and list members for clarity
+  target/tcm_fc: Rename ft_{add,del}_lport to {add,del}_wwn
+  target/tcm_fc: Rename ft_tport_create to ft_tport_get
+
+ drivers/target/tcm_fc/tcm_fc.h   | 12 +++----
+ drivers/target/tcm_fc/tfc_conf.c | 75 ++++++++++++++++++++--------------------
+ drivers/target/tcm_fc/tfc_sess.c |  6 ++--
+ 3 files changed, 46 insertions(+), 47 deletions(-)
+
 -- 
 1.9.0
