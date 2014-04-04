@@ -1,39 +1,48 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: esp_scsi QTAG in FAS216
-Date: Fri, 04 Apr 2014 16:28:30 -0400 (EDT)
-Message-ID: <20140404.162830.1700547572091852195.davem@davemloft.net>
-References: <CAOmrzkKP4YcvnHcrtucMvS9WSaeg+6-qnobOWN6hBK=wkUHemg@mail.gmail.com>
-	<CAMuHMdUH=9sv-Vb3ZTAGyfvEQOO0x0x1cUYhfd7040k8d+bSYg@mail.gmail.com>
-	<5231DF69.6070807@aalto.fi>
+From: Andy Grover <agrover-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH] target/tcm_fc: Fix use-after-free of ft_tpg
+Date: Fri,  4 Apr 2014 16:44:37 -0700
+Message-ID: <1396655077-30912-1-git-send-email-agrover@redhat.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <5231DF69.6070807@aalto.fi>
-Sender: linux-m68k-owner@vger.kernel.org
-To: tuomas.vainikka@aalto.fi
-Cc: geert@linux-m68k.org, schmitzmic@gmail.com, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+List-Unsubscribe: <http://lists.open-fcoe.org/mailman/options/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.open-fcoe.org/pipermail/fcoe-devel>
+List-Post: <mailto:fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+List-Help: <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.open-fcoe.org/mailman/listinfo/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
+Errors-To: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+Sender: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+To: target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Tuomas Vainikka <tuomas.vainikka@aalto.fi>
-Date: Thu, 12 Sep 2013 18:36:09 +0300
+ft_del_tpg checks tpg->tport is set before unlinking the tpg from the
+tport when the tpg is being removed. Set this pointer in ft_tport_create,
+or the unlinking won't happen in ft_del_tpg and tport->tpg will reference
+a deleted object.
 
-> Does anyone have the register descriptions for the FAS216 chip? It
-> would seem that receiving only one byte during reconnect is perfectly
-> normal [1] unless SCSI-2 features are explicitly enabled (which
-> esp_scsi doesn't seem to be doing).
+see https://bugzilla.redhat.com/show_bug.cgi?id=1071340
 
-This is quite possibly true.  I've never see it happen myself while
-testing the driver though.
+Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Signed-off-by: Andy Grover <agrover-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+---
+ drivers/target/tcm_fc/tfc_sess.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-> Also, looking at the timeout formulae in the old NCR53C9x.c driver,
-> the values would be different for FAS216. Why was this dropped from
-> the modern esp_scsi?
-
-I've never seen a formula for any ESP or FAS chip for the timeout
-other than the one mentioned in huge comment in
-esp_set_clock_params(), although I do see the 7668 instead of 8192
-factor being used in the old NCR53C9x driver.
-
-I wrote esp_scsi.c based upon the old sparc ESP driver and the docs
-I had available to me.
+diff --git a/drivers/target/tcm_fc/tfc_sess.c b/drivers/target/tcm_fc/tfc_sess.c
+index 0475142..1329726 100644
+--- a/drivers/target/tcm_fc/tfc_sess.c
++++ b/drivers/target/tcm_fc/tfc_sess.c
+@@ -68,6 +68,7 @@ static struct ft_tport *ft_tport_create(struct fc_lport *lport)
+ 
+ 	if (tport) {
+ 		tport->tpg = tpg;
++		tpg->tport = tport;
+ 		return tport;
+ 	}
+ 
+-- 
+1.9.0
