@@ -1,7 +1,8 @@
 From: Andy Grover <agrover-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 2/5] target/tcm_fc: Limit to 1 TPG per wwn
-Date: Fri,  4 Apr 2014 16:54:12 -0700
-Message-ID: <1396655655-31060-3-git-send-email-agrover@redhat.com>
+Subject: [PATCH 4/5] target/tcm_fc: Rename ft_{add,
+	del}_lport to {add, del}_wwn
+Date: Fri,  4 Apr 2014 16:54:14 -0700
+Message-ID: <1396655655-31060-5-git-send-email-agrover@redhat.com>
 References: <1396655655-31060-1-git-send-email-agrover@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,107 +22,64 @@ To: target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 Cc: fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-tcm_fc doesn't support multiple TPGs per wwn. For proof, see
-ft_lport_find_tpg. Enforce this in the code.
+These functions are not adding or deleting an lport. They are adding a
+wwn that may match with an lport that is present on the system.
 
-Replace ft_lport_wwn.tpg_list with a single pointer. We can't fold ft_tpg
-into ft_lport_wwn because they can have different lifetimes.
+Renaming ft_del_lport also means we won't have functions named
+both ft_del_lport and ft_lport_del any more.
 
 Signed-off-by: Andy Grover <agrover-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 ---
- drivers/target/tcm_fc/tcm_fc.h   |  3 +--
- drivers/target/tcm_fc/tfc_conf.c | 20 +++++++++++---------
- 2 files changed, 12 insertions(+), 11 deletions(-)
+ drivers/target/tcm_fc/tfc_conf.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/target/tcm_fc/tcm_fc.h b/drivers/target/tcm_fc/tcm_fc.h
-index aba6861..7290f8f 100644
---- a/drivers/target/tcm_fc/tcm_fc.h
-+++ b/drivers/target/tcm_fc/tcm_fc.h
-@@ -96,7 +96,6 @@ struct ft_tpg {
- 	u32 index;
- 	struct ft_lport_acl *lport_acl;
- 	struct ft_tport *tport;		/* active tport or NULL */
--	struct list_head list;		/* linkage in ft_lport_acl tpg_list */
- 	struct list_head lun_list;	/* head of LUNs */
- 	struct se_portal_group se_tpg;
- 	struct workqueue_struct *workqueue;
-@@ -105,8 +104,8 @@ struct ft_tpg {
- struct ft_lport_acl {
- 	u64 wwpn;
- 	char name[FT_NAMELEN];
-+	struct ft_tpg *tpg;
- 	struct list_head list;
--	struct list_head tpg_list;
- 	struct se_wwn fc_lport_wwn;
- };
- 
 diff --git a/drivers/target/tcm_fc/tfc_conf.c b/drivers/target/tcm_fc/tfc_conf.c
-index 9c2da1f..ccfa328 100644
+index bd7d544..efdcb96 100644
 --- a/drivers/target/tcm_fc/tfc_conf.c
 +++ b/drivers/target/tcm_fc/tfc_conf.c
-@@ -318,6 +318,11 @@ static struct se_portal_group *ft_add_tpg(
- 	if (index > UINT_MAX)
+@@ -403,7 +403,7 @@ struct ft_tpg *ft_lport_find_tpg(struct fc_lport *lport)
+  * Add lport to allowed config.
+  * The name is the WWPN in lower-case ASCII, colon-separated bytes.
+  */
+-static struct se_wwn *ft_add_lport(
++static struct se_wwn *ft_add_wwn(
+ 	struct target_fabric_configfs *tf,
+ 	struct config_group *group,
+ 	const char *name)
+@@ -412,7 +412,7 @@ static struct se_wwn *ft_add_lport(
+ 	struct ft_lport_wwn *old_ft_wwn;
+ 	u64 wwpn;
+ 
+-	pr_debug("add lport %s\n", name);
++	pr_debug("add wwn %s\n", name);
+ 	if (ft_parse_wwn(name, &wwpn, 1) < 0)
  		return NULL;
- 
-+	if ((index != 1)) {
-+		pr_err("Error, a single TPG=1 is used for HW port mappings\n");
-+		return ERR_PTR(-ENOSYS);
-+	}
-+
- 	lacl = container_of(wwn, struct ft_lport_acl, fc_lport_wwn);
- 	tpg = kzalloc(sizeof(*tpg), GFP_KERNEL);
- 	if (!tpg)
-@@ -342,7 +347,7 @@ static struct se_portal_group *ft_add_tpg(
- 	tpg->workqueue = wq;
- 
- 	mutex_lock(&ft_lport_lock);
--	list_add_tail(&tpg->list, &lacl->tpg_list);
-+	lacl->tpg = tpg;
- 	mutex_unlock(&ft_lport_lock);
- 
- 	return &tpg->se_tpg;
-@@ -351,6 +356,7 @@ static struct se_portal_group *ft_add_tpg(
- static void ft_del_tpg(struct se_portal_group *se_tpg)
- {
- 	struct ft_tpg *tpg = container_of(se_tpg, struct ft_tpg, se_tpg);
-+	struct ft_lport_acl *lacl = tpg->lport_acl;
- 
- 	pr_debug("del tpg %s\n",
- 		    config_item_name(&tpg->se_tpg.tpg_group.cg_item));
-@@ -361,7 +367,8 @@ static void ft_del_tpg(struct se_portal_group *se_tpg)
- 	synchronize_rcu();
- 
- 	mutex_lock(&ft_lport_lock);
--	list_del(&tpg->list);
-+	lacl->tpg = NULL;
-+
- 	if (tpg->tport) {
- 		tpg->tport->tpg = NULL;
- 		tpg->tport = NULL;
-@@ -381,14 +388,10 @@ static void ft_del_tpg(struct se_portal_group *se_tpg)
- struct ft_tpg *ft_lport_find_tpg(struct fc_lport *lport)
- {
- 	struct ft_lport_acl *lacl;
--	struct ft_tpg *tpg;
- 
- 	list_for_each_entry(lacl, &ft_lport_list, list) {
--		if (lacl->wwpn == lport->wwpn) {
--			list_for_each_entry(tpg, &lacl->tpg_list, list)
--				return tpg; /* XXX for now return first entry */
--			return NULL;
--		}
-+		if (lacl->wwpn == lport->wwpn)
-+			return lacl->tpg;
- 	}
- 	return NULL;
+ 	ft_wwn = kzalloc(sizeof(*ft_wwn), GFP_KERNEL);
+@@ -435,12 +435,12 @@ static struct se_wwn *ft_add_lport(
+ 	return &ft_wwn->se_wwn;
  }
-@@ -417,7 +420,6 @@ static struct se_wwn *ft_add_lport(
- 	if (!lacl)
- 		return NULL;
- 	lacl->wwpn = wwpn;
--	INIT_LIST_HEAD(&lacl->tpg_list);
  
+-static void ft_del_lport(struct se_wwn *wwn)
++static void ft_del_wwn(struct se_wwn *wwn)
+ {
+ 	struct ft_lport_wwn *ft_wwn = container_of(wwn,
+ 				struct ft_lport_wwn, se_wwn);
+ 
+-	pr_debug("del lport %s\n", ft_wwn->name);
++	pr_debug("del wwn %s\n", ft_wwn->name);
  	mutex_lock(&ft_lport_lock);
- 	list_for_each_entry(old_lacl, &ft_lport_list, list) {
+ 	list_del(&ft_wwn->ft_wwn_node);
+ 	mutex_unlock(&ft_lport_lock);
+@@ -542,8 +542,8 @@ static struct target_core_fabric_ops ft_fabric_ops = {
+ 	 * Setup function pointers for generic logic in
+ 	 * target_core_fabric_configfs.c
+ 	 */
+-	.fabric_make_wwn =		&ft_add_lport,
+-	.fabric_drop_wwn =		&ft_del_lport,
++	.fabric_make_wwn =		&ft_add_wwn,
++	.fabric_drop_wwn =		&ft_del_wwn,
+ 	.fabric_make_tpg =		&ft_add_tpg,
+ 	.fabric_drop_tpg =		&ft_del_tpg,
+ 	.fabric_post_link =		NULL,
 -- 
 1.9.0
