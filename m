@@ -1,269 +1,227 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 7/11] lpfc 10.2.8000.0: Convert runtime references to old
- xlane cfg param to fof cfg param
-Date: Fri, 4 Apr 2014 13:52:21 -0400
-Message-ID: <1396633941.1924.20.camel@myfc17>
+Subject: [PATCH 8/11] lpfc 10.2.8000.0: Fixed locking for scsi task
+ management commands
+Date: Fri, 4 Apr 2014 13:52:31 -0400
+Message-ID: <1396633951.1924.21.camel@myfc17>
 Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:41598 "EHLO
+Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:41605 "EHLO
 	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753378AbaDDRwX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Apr 2014 13:52:23 -0400
+	with ESMTP id S1753638AbaDDRwd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Apr 2014 13:52:33 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Convert runtime references to old xlane cfg param to fof cfg param
+Fixed locking for scsi task management commands.
 
 
 Signed-off-by: James Smart <james.smart@emulex.com>
 
  ---
 
- lpfc_attr.c    |   12 ++++++------
- lpfc_debugfs.c |    2 +-
- lpfc_init.c    |    9 ++++-----
- lpfc_scsi.c    |   20 ++++++++++----------
- lpfc_sli.c     |    7 +++----
- 5 files changed, 24 insertions(+), 26 deletions(-)
+ lpfc_crtn.h |    3 +
+ lpfc_scsi.c |   25 ++++++++++--
+ lpfc_sli.c  |  118 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 141 insertions(+), 5 deletions(-)
 
 
-diff -upNr a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
---- a/drivers/scsi/lpfc/lpfc_attr.c	2014-04-03 10:24:25.958308791 -0400
-+++ b/drivers/scsi/lpfc/lpfc_attr.c	2014-04-03 10:24:27.545308870 -0400
-@@ -2369,7 +2369,7 @@ lpfc_oas_tgt_store(struct device *dev, s
- 	uint8_t wwpn[WWN_SZ];
- 	int rc;
+diff -upNr a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
+--- a/drivers/scsi/lpfc/lpfc_crtn.h	2014-04-03 10:24:24.211308703 -0400
++++ b/drivers/scsi/lpfc/lpfc_crtn.h	2014-04-03 10:24:31.784309084 -0400
+@@ -311,6 +311,9 @@ int lpfc_sli_issue_abort_iotag(struct lp
+ int lpfc_sli_sum_iocb(struct lpfc_vport *, uint16_t, uint64_t, lpfc_ctx_cmd);
+ int lpfc_sli_abort_iocb(struct lpfc_vport *, struct lpfc_sli_ring *, uint16_t,
+ 			uint64_t, lpfc_ctx_cmd);
++int
++lpfc_sli_abort_taskmgmt(struct lpfc_vport *, struct lpfc_sli_ring *,
++			uint16_t, uint64_t, lpfc_ctx_cmd);
  
--	if (!phba->cfg_EnableXLane)
-+	if (!phba->cfg_fof)
- 		return -EPERM;
- 
- 	/* count may include a LF at end of string */
-@@ -2437,7 +2437,7 @@ lpfc_oas_vpt_store(struct device *dev, s
- 	uint8_t wwpn[WWN_SZ];
- 	int rc;
- 
--	if (!phba->cfg_EnableXLane)
-+	if (!phba->cfg_fof)
- 		return -EPERM;
- 
- 	/* count may include a LF at end of string */
-@@ -2504,7 +2504,7 @@ lpfc_oas_lun_state_store(struct device *
- 	struct lpfc_hba *phba = ((struct lpfc_vport *)shost->hostdata)->phba;
- 	int val = 0;
- 
--	if (!phba->cfg_EnableXLane)
-+	if (!phba->cfg_fof)
- 		return -EPERM;
- 
- 	if (!isdigit(buf[0]))
-@@ -2570,7 +2570,7 @@ lpfc_oas_lun_state_set(struct lpfc_hba *
- 
- 	int rc = 0;
- 
--	if (!phba->cfg_EnableXLane)
-+	if (!phba->cfg_fof)
- 		return -EPERM;
- 
- 	if (oas_state) {
-@@ -2675,7 +2675,7 @@ lpfc_oas_lun_show(struct device *dev, st
- 	uint64_t oas_lun;
- 	int len = 0;
- 
--	if (!phba->cfg_EnableXLane)
-+	if (!phba->cfg_fof)
- 		return -EPERM;
- 
- 	if (wwn_to_u64(phba->cfg_oas_vpt_wwpn) == 0)
-@@ -2721,7 +2721,7 @@ lpfc_oas_lun_store(struct device *dev, s
- 	uint64_t scsi_lun;
- 	ssize_t rc;
- 
--	if (!phba->cfg_EnableXLane)
-+	if (!phba->cfg_fof)
- 		return -EPERM;
- 
- 	if (wwn_to_u64(phba->cfg_oas_vpt_wwpn) == 0)
-diff -upNr a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
---- a/drivers/scsi/lpfc/lpfc_debugfs.c	2014-03-31 16:21:36.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_debugfs.c	2014-04-03 10:24:27.553308871 -0400
-@@ -2314,7 +2314,7 @@ proc_cq:
- 			goto too_big;
- 	}
- 
--	if (phba->cfg_EnableXLane) {
-+	if (phba->cfg_fof) {
- 
- 		/* OAS CQ */
- 		qp = phba->sli4_hba.oas_cq;
-diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
---- a/drivers/scsi/lpfc/lpfc_init.c	2014-04-03 10:24:24.223308703 -0400
-+++ b/drivers/scsi/lpfc/lpfc_init.c	2014-04-03 10:24:27.567308872 -0400
-@@ -10938,7 +10938,7 @@ lpfc_sli4_oas_verify(struct lpfc_hba *ph
- 	if (phba->sli4_hba.pc_sli4_params.oas_supported) {
- 		phba->cfg_fof = 1;
- 	} else {
--		phba->cfg_EnableXLane = 0;
-+		phba->cfg_fof = 0;
- 		if (phba->device_data_mem_pool)
- 			mempool_destroy(phba->device_data_mem_pool);
- 		phba->device_data_mem_pool = NULL;
-@@ -10968,7 +10968,7 @@ lpfc_fof_queue_setup(struct lpfc_hba *ph
- 	if (rc)
- 		return -ENOMEM;
- 
--	if (phba->cfg_EnableXLane) {
-+	if (phba->cfg_fof) {
- 
- 		rc = lpfc_cq_create(phba, phba->sli4_hba.oas_cq,
- 				    phba->sli4_hba.fof_eq, LPFC_WCQ, LPFC_FCP);
-@@ -10987,8 +10987,7 @@ lpfc_fof_queue_setup(struct lpfc_hba *ph
- 	return 0;
- 
- out_oas_wq:
--	if (phba->cfg_EnableXLane)
--		lpfc_cq_destroy(phba, phba->sli4_hba.oas_cq);
-+	lpfc_cq_destroy(phba, phba->sli4_hba.oas_cq);
- out_oas_cq:
- 	lpfc_eq_destroy(phba, phba->sli4_hba.fof_eq);
- 	return rc;
-@@ -11022,7 +11021,7 @@ lpfc_fof_queue_create(struct lpfc_hba *p
- 
- 	phba->sli4_hba.fof_eq = qdesc;
- 
--	if (phba->cfg_EnableXLane) {
-+	if (phba->cfg_fof) {
- 
- 		/* Create OAS CQ */
- 		qdesc = lpfc_sli4_queue_alloc(phba, phba->sli4_hba.cq_esize,
+ void lpfc_mbox_timeout(unsigned long);
+ void lpfc_mbox_timeout_handler(struct lpfc_hba *);
 diff -upNr a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
---- a/drivers/scsi/lpfc/lpfc_scsi.c	2014-04-03 10:24:22.342308608 -0400
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c	2014-04-03 10:24:27.569308872 -0400
-@@ -73,7 +73,7 @@ lpfc_rport_data_from_scsi_device(struct
- {
- 	struct lpfc_vport *vport = (struct lpfc_vport *)sdev->host->hostdata;
+--- a/drivers/scsi/lpfc/lpfc_scsi.c	2014-04-03 10:24:27.569308872 -0400
++++ b/drivers/scsi/lpfc/lpfc_scsi.c	2014-04-03 10:24:31.787309084 -0400
+@@ -4783,7 +4783,9 @@ lpfc_abort_handler(struct scsi_cmnd *cmn
+ 	struct lpfc_scsi_buf *lpfc_cmd;
+ 	IOCB_t *cmd, *icmd;
+ 	int ret = SUCCESS, status = 0;
+-	unsigned long flags;
++	struct lpfc_sli_ring *pring_s4;
++	int ring_number, ret_val;
++	unsigned long flags, iflags;
+ 	DECLARE_WAIT_QUEUE_HEAD_ONSTACK(waitq);
  
--	if (vport->phba->cfg_EnableXLane)
-+	if (vport->phba->cfg_fof)
- 		return ((struct lpfc_device_data *)sdev->hostdata)->rport_data;
- 	else
- 		return (struct lpfc_rport_data *)sdev->hostdata;
-@@ -3462,7 +3462,7 @@ lpfc_scsi_prep_dma_buf_s4(struct lpfc_hb
- 	 * If the OAS driver feature is enabled and the lun is enabled for
- 	 * OAS, set the oas iocb related flags.
- 	 */
--	if ((phba->cfg_EnableXLane) && ((struct lpfc_device_data *)
-+	if ((phba->cfg_fof) && ((struct lpfc_device_data *)
- 		scsi_cmnd->device->hostdata)->oas_enabled)
- 		lpfc_cmd->cur_iocbq.iocb_flag |= LPFC_IO_OAS;
- 	return 0;
-@@ -5504,7 +5504,7 @@ lpfc_slave_alloc(struct scsi_device *sde
- 	if (!rport || fc_remote_port_chkready(rport))
- 		return -ENXIO;
+ 	status = fc_block_scsi_eh(cmnd);
+@@ -4880,11 +4882,23 @@ lpfc_abort_handler(struct scsi_cmnd *cmn
  
--	if (phba->cfg_EnableXLane) {
-+	if (phba->cfg_fof) {
+ 	abtsiocb->iocb_cmpl = lpfc_sli_abort_fcp_cmpl;
+ 	abtsiocb->vport = vport;
++	if (phba->sli_rev == LPFC_SLI_REV4) {
++		ring_number = MAX_SLI3_CONFIGURED_RINGS + iocb->fcp_wqidx;
++		pring_s4 = &phba->sli.ring[ring_number];
++		/* Note: both hbalock and ring_lock must be set here */
++		spin_lock_irqsave(&pring_s4->ring_lock, iflags);
++		ret_val = __lpfc_sli_issue_iocb(phba, pring_s4->ringno,
++						abtsiocb, 0);
++		spin_unlock_irqrestore(&pring_s4->ring_lock, iflags);
++	} else {
++		ret_val = __lpfc_sli_issue_iocb(phba, LPFC_FCP_RING,
++						abtsiocb, 0);
++	}
+ 	/* no longer need the lock after this point */
+ 	spin_unlock_irqrestore(&phba->hbalock, flags);
  
- 		/*
- 		 * Check to see if the device data structure for the lun
-@@ -5629,7 +5629,7 @@ lpfc_slave_destroy(struct scsi_device *s
- 	struct lpfc_device_data *device_data = sdev->hostdata;
+-	if (lpfc_sli_issue_iocb(phba, LPFC_FCP_RING, abtsiocb, 0) ==
+-	    IOCB_ERROR) {
++
++	if (ret_val == IOCB_ERROR) {
+ 		lpfc_sli_release_iocbq(phba, abtsiocb);
+ 		ret = FAILED;
+ 		goto out;
+@@ -5185,8 +5199,9 @@ lpfc_reset_flush_io_context(struct lpfc_
  
- 	atomic_dec(&phba->sdev_cnt);
--	if ((phba->cfg_EnableXLane) && (device_data)) {
-+	if ((phba->cfg_fof) && (device_data)) {
- 		spin_lock_irqsave(&phba->devicelock, flags);
- 		device_data->available = false;
- 		if (!device_data->oas_enabled)
-@@ -5668,7 +5668,7 @@ lpfc_create_device_data(struct lpfc_hba
- 	int memory_flags;
- 
- 	if (unlikely(!phba) || !vport_wwpn || !target_wwpn  ||
--	    !(phba->cfg_EnableXLane))
-+	    !(phba->cfg_fof))
- 		return NULL;
- 
- 	/* Attempt to create the device data to contain lun info */
-@@ -5706,7 +5706,7 @@ lpfc_delete_device_data(struct lpfc_hba
- {
- 
- 	if (unlikely(!phba) || !lun_info  ||
--	    !(phba->cfg_EnableXLane))
-+	    !(phba->cfg_fof))
- 		return;
- 
- 	if (!list_empty(&lun_info->listentry))
-@@ -5740,7 +5740,7 @@ __lpfc_get_device_data(struct lpfc_hba *
- 	struct lpfc_device_data *lun_info;
- 
- 	if (unlikely(!phba) || !list || !vport_wwpn || !target_wwpn ||
--	    !phba->cfg_EnableXLane)
-+	    !phba->cfg_fof)
- 		return NULL;
- 
- 	/* Check to see if the lun is already enabled for OAS. */
-@@ -5802,7 +5802,7 @@ lpfc_find_next_oas_lun(struct lpfc_hba *
- 	    !starting_lun || !found_vport_wwpn ||
- 	    !found_target_wwpn || !found_lun || !found_lun_status ||
- 	    (*starting_lun == NO_MORE_OAS_LUN) ||
--	    !phba->cfg_EnableXLane)
-+	    !phba->cfg_fof)
- 		return false;
- 
- 	lun = *starting_lun;
-@@ -5886,7 +5886,7 @@ lpfc_enable_oas_lun(struct lpfc_hba *phb
- 	unsigned long flags;
- 
- 	if (unlikely(!phba) || !vport_wwpn || !target_wwpn ||
--	    !phba->cfg_EnableXLane)
-+	    !phba->cfg_fof)
- 		return false;
- 
- 	spin_lock_irqsave(&phba->devicelock, flags);
-@@ -5943,7 +5943,7 @@ lpfc_disable_oas_lun(struct lpfc_hba *ph
- 	unsigned long flags;
- 
- 	if (unlikely(!phba) || !vport_wwpn || !target_wwpn ||
--	    !phba->cfg_EnableXLane)
-+	    !phba->cfg_fof)
- 		return false;
- 
- 	spin_lock_irqsave(&phba->devicelock, flags);
+ 	cnt = lpfc_sli_sum_iocb(vport, tgt_id, lun_id, context);
+ 	if (cnt)
+-		lpfc_sli_abort_iocb(vport, &phba->sli.ring[phba->sli.fcp_ring],
+-				    tgt_id, lun_id, context);
++		lpfc_sli_abort_taskmgmt(vport,
++					&phba->sli.ring[phba->sli.fcp_ring],
++					tgt_id, lun_id, context);
+ 	later = msecs_to_jiffies(2 * vport->cfg_devloss_tmo * 1000) + jiffies;
+ 	while (time_after(later, jiffies) && cnt) {
+ 		schedule_timeout_uninterruptible(msecs_to_jiffies(20));
 diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
---- a/drivers/scsi/lpfc/lpfc_sli.c	2014-04-03 10:24:26.012308793 -0400
-+++ b/drivers/scsi/lpfc/lpfc_sli.c	2014-04-03 10:24:27.586308873 -0400
-@@ -5058,7 +5058,7 @@ lpfc_sli4_arm_cqeq_intr(struct lpfc_hba
- 		} while (++fcp_eqidx < phba->cfg_fcp_io_channel);
- 	}
+--- a/drivers/scsi/lpfc/lpfc_sli.c	2014-04-03 10:24:27.586308873 -0400
++++ b/drivers/scsi/lpfc/lpfc_sli.c	2014-04-03 10:24:31.802309085 -0400
+@@ -10097,6 +10097,124 @@ lpfc_sli_abort_iocb(struct lpfc_vport *v
+ }
  
--	if (phba->cfg_EnableXLane)
-+	if (phba->cfg_fof)
- 		lpfc_sli4_cq_release(phba->sli4_hba.oas_cq, LPFC_QUEUE_REARM);
- 
- 	if (phba->sli4_hba.hba_eq) {
-@@ -8693,8 +8693,7 @@ __lpfc_sli_issue_iocb_s4(struct lpfc_hba
- 
- 	if ((piocb->iocb_flag & LPFC_IO_FCP) ||
- 	    (piocb->iocb_flag & LPFC_USE_FCPWQIDX)) {
--		if (!phba->cfg_EnableXLane || (!(piocb->iocb_flag &
--			LPFC_IO_OAS))) {
-+		if (!phba->cfg_fof || (!(piocb->iocb_flag & LPFC_IO_OAS))) {
- 			wq = phba->sli4_hba.fcp_wq[piocb->fcp_wqidx];
- 		} else {
- 			wq = phba->sli4_hba.oas_wq;
-@@ -8789,7 +8788,7 @@ lpfc_sli_issue_iocb(struct lpfc_hba *phb
- 
- 	if (phba->sli_rev == LPFC_SLI_REV4) {
- 		if (piocb->iocb_flag &  LPFC_IO_FCP) {
--			if (!phba->cfg_EnableXLane || (!(piocb->iocb_flag &
-+			if (!phba->cfg_fof || (!(piocb->iocb_flag &
- 				LPFC_IO_OAS))) {
- 				if (unlikely(!phba->sli4_hba.fcp_wq))
- 					return IOCB_ERROR;
+ /**
++ * lpfc_sli_abort_taskmgmt - issue abort for all commands on a host/target/LUN
++ * @vport: Pointer to virtual port.
++ * @pring: Pointer to driver SLI ring object.
++ * @tgt_id: SCSI ID of the target.
++ * @lun_id: LUN ID of the scsi device.
++ * @taskmgmt_cmd: LPFC_CTX_LUN/LPFC_CTX_TGT/LPFC_CTX_HOST.
++ *
++ * This function sends an abort command for every SCSI command
++ * associated with the given virtual port pending on the ring
++ * filtered by lpfc_sli_validate_fcp_iocb function.
++ * When taskmgmt_cmd == LPFC_CTX_LUN, the function sends abort only to the
++ * FCP iocbs associated with lun specified by tgt_id and lun_id
++ * parameters
++ * When taskmgmt_cmd == LPFC_CTX_TGT, the function sends abort only to the
++ * FCP iocbs associated with SCSI target specified by tgt_id parameter.
++ * When taskmgmt_cmd == LPFC_CTX_HOST, the function sends abort to all
++ * FCP iocbs associated with virtual port.
++ * This function returns number of iocbs it aborted .
++ * This function is called with no locks held right after a taskmgmt
++ * command is sent.
++ **/
++int
++lpfc_sli_abort_taskmgmt(struct lpfc_vport *vport, struct lpfc_sli_ring *pring,
++			uint16_t tgt_id, uint64_t lun_id, lpfc_ctx_cmd cmd)
++{
++	struct lpfc_hba *phba = vport->phba;
++	struct lpfc_iocbq *abtsiocbq;
++	struct lpfc_iocbq *iocbq;
++	IOCB_t *icmd;
++	int sum, i, ret_val;
++	unsigned long iflags;
++	struct lpfc_sli_ring *pring_s4;
++	uint32_t ring_number;
++
++	spin_lock_irq(&phba->hbalock);
++
++	/* all I/Os are in process of being flushed */
++	if (phba->hba_flag & HBA_FCP_IOQ_FLUSH) {
++		spin_unlock_irq(&phba->hbalock);
++		return 0;
++	}
++	sum = 0;
++
++	for (i = 1; i <= phba->sli.last_iotag; i++) {
++		iocbq = phba->sli.iocbq_lookup[i];
++
++		if (lpfc_sli_validate_fcp_iocb(iocbq, vport, tgt_id, lun_id,
++					       cmd) != 0)
++			continue;
++
++		/*
++		 * If the iocbq is already being aborted, don't take a second
++		 * action, but do count it.
++		 */
++		if (iocbq->iocb_flag & LPFC_DRIVER_ABORTED)
++			continue;
++
++		/* issue ABTS for this IOCB based on iotag */
++		abtsiocbq = __lpfc_sli_get_iocbq(phba);
++		if (abtsiocbq == NULL)
++			continue;
++
++		icmd = &iocbq->iocb;
++		abtsiocbq->iocb.un.acxri.abortType = ABORT_TYPE_ABTS;
++		abtsiocbq->iocb.un.acxri.abortContextTag = icmd->ulpContext;
++		if (phba->sli_rev == LPFC_SLI_REV4)
++			abtsiocbq->iocb.un.acxri.abortIoTag =
++							 iocbq->sli4_xritag;
++		else
++			abtsiocbq->iocb.un.acxri.abortIoTag = icmd->ulpIoTag;
++		abtsiocbq->iocb.ulpLe = 1;
++		abtsiocbq->iocb.ulpClass = icmd->ulpClass;
++		abtsiocbq->vport = vport;
++
++		/* ABTS WQE must go to the same WQ as the WQE to be aborted */
++		abtsiocbq->fcp_wqidx = iocbq->fcp_wqidx;
++		if (iocbq->iocb_flag & LPFC_IO_FCP)
++			abtsiocbq->iocb_flag |= LPFC_USE_FCPWQIDX;
++
++		if (lpfc_is_link_up(phba))
++			abtsiocbq->iocb.ulpCommand = CMD_ABORT_XRI_CN;
++		else
++			abtsiocbq->iocb.ulpCommand = CMD_CLOSE_XRI_CN;
++
++		/* Setup callback routine and issue the command. */
++		abtsiocbq->iocb_cmpl = lpfc_sli_abort_fcp_cmpl;
++
++		/*
++		 * Indicate the IO is being aborted by the driver and set
++		 * the caller's flag into the aborted IO.
++		 */
++		iocbq->iocb_flag |= LPFC_DRIVER_ABORTED;
++
++		if (phba->sli_rev == LPFC_SLI_REV4) {
++			ring_number = MAX_SLI3_CONFIGURED_RINGS +
++					 iocbq->fcp_wqidx;
++			pring_s4 = &phba->sli.ring[ring_number];
++			/* Note: both hbalock and ring_lock must be set here */
++			spin_lock_irqsave(&pring_s4->ring_lock, iflags);
++			ret_val = __lpfc_sli_issue_iocb(phba, pring_s4->ringno,
++							abtsiocbq, 0);
++			spin_unlock_irqrestore(&pring_s4->ring_lock, iflags);
++		} else {
++			ret_val = __lpfc_sli_issue_iocb(phba, pring->ringno,
++							abtsiocbq, 0);
++		}
++
++
++		if (ret_val == IOCB_ERROR)
++			__lpfc_sli_release_iocbq(phba, abtsiocbq);
++		else
++			sum++;
++	}
++	spin_unlock_irq(&phba->hbalock);
++	return sum;
++}
++
++/**
+  * lpfc_sli_wake_iocb_wait - lpfc_sli_issue_iocb_wait's completion handler
+  * @phba: Pointer to HBA context object.
+  * @cmdiocbq: Pointer to command iocb.
 
 
 
