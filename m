@@ -1,66 +1,39 @@
-From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 11/11] lpfc 10.2.8000.0: Update lpfc version to driver
- version 10.2.8000.0
-Date: Fri, 4 Apr 2014 13:53:03 -0400
-Message-ID: <1396633983.1924.24.camel@myfc17>
-Reply-To: <james.smart@emulex.com>
+From: David Miller <davem@davemloft.net>
+Subject: Re: esp_scsi QTAG in FAS216
+Date: Fri, 04 Apr 2014 16:28:30 -0400 (EDT)
+Message-ID: <20140404.162830.1700547572091852195.davem@davemloft.net>
+References: <CAOmrzkKP4YcvnHcrtucMvS9WSaeg+6-qnobOWN6hBK=wkUHemg@mail.gmail.com>
+	<CAMuHMdUH=9sv-Vb3ZTAGyfvEQOO0x0x1cUYhfd7040k8d+bSYg@mail.gmail.com>
+	<5231DF69.6070807@aalto.fi>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:53506 "EHLO
-	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753595AbaDDRxH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Apr 2014 13:53:07 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-m68k-owner@vger.kernel.org>
+In-Reply-To: <5231DF69.6070807@aalto.fi>
+Sender: linux-m68k-owner@vger.kernel.org
+To: tuomas.vainikka@aalto.fi
+Cc: geert@linux-m68k.org, schmitzmic@gmail.com, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-Update lpfc version to driver version 10.2.8000.0
+From: Tuomas Vainikka <tuomas.vainikka@aalto.fi>
+Date: Thu, 12 Sep 2013 18:36:09 +0300
 
+> Does anyone have the register descriptions for the FAS216 chip? It
+> would seem that receiving only one byte during reconnect is perfectly
+> normal [1] unless SCSI-2 features are explicitly enabled (which
+> esp_scsi doesn't seem to be doing).
 
-Signed-off-by: James Smart <james.smart@emulex.com>
+This is quite possibly true.  I've never see it happen myself while
+testing the driver though.
 
- ---
+> Also, looking at the timeout formulae in the old NCR53C9x.c driver,
+> the values would be different for FAS216. Why was this dropped from
+> the modern esp_scsi?
 
- lpfc_attr.c    |    2 +-
- lpfc_version.h |    4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+I've never seen a formula for any ESP or FAS chip for the timeout
+other than the one mentioned in huge comment in
+esp_set_clock_params(), although I do see the 7668 instead of 8192
+factor being used in the old NCR53C9x driver.
 
-
-diff -upNr a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
---- a/drivers/scsi/lpfc/lpfc_attr.c	2014-04-03 10:24:27.545308870 -0400
-+++ b/drivers/scsi/lpfc/lpfc_attr.c	2014-04-03 10:24:37.110309352 -0400
-@@ -1,7 +1,7 @@
- /*******************************************************************
-  * This file is part of the Emulex Linux Device Driver for         *
-  * Fibre Channel Host Bus Adapters.                                *
-- * Copyright (C) 2004-2013 Emulex.  All rights reserved.           *
-+ * Copyright (C) 2004-2014 Emulex.  All rights reserved.           *
-  * EMULEX and SLI are trademarks of Emulex.                        *
-  * www.emulex.com                                                  *
-  * Portions Copyright (C) 2004-2005 Christoph Hellwig              *
-diff -upNr a/drivers/scsi/lpfc/lpfc_version.h b/drivers/scsi/lpfc/lpfc_version.h
---- a/drivers/scsi/lpfc/lpfc_version.h	2014-03-31 16:21:37.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_version.h	2014-04-03 10:24:37.112309352 -0400
-@@ -1,7 +1,7 @@
- /*******************************************************************
-  * This file is part of the Emulex Linux Device Driver for         *
-  * Fibre Channel Host Bus Adapters.                                *
-- * Copyright (C) 2004-2013 Emulex.  All rights reserved.           *
-+ * Copyright (C) 2004-2014 Emulex.  All rights reserved.           *
-  * EMULEX and SLI are trademarks of Emulex.                        *
-  * www.emulex.com                                                  *
-  *                                                                 *
-@@ -18,7 +18,7 @@
-  * included with this package.                                     *
-  *******************************************************************/
- 
--#define LPFC_DRIVER_VERSION "8.3.45"
-+#define LPFC_DRIVER_VERSION "10.2.8000.0."
- #define LPFC_DRIVER_NAME		"lpfc"
- 
- /* Used for SLI 2/3 */
-
-
-
+I wrote esp_scsi.c based upon the old sparc ESP driver and the docs
+I had available to me.
