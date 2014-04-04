@@ -1,227 +1,108 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 8/11] lpfc 10.2.8000.0: Fixed locking for scsi task
- management commands
-Date: Fri, 4 Apr 2014 13:52:31 -0400
-Message-ID: <1396633951.1924.21.camel@myfc17>
+Subject: [PATCH 9/11] lpfc 10.2.8000.0: Update Copyright on changed files
+Date: Fri, 4 Apr 2014 13:52:41 -0400
+Message-ID: <1396633961.1924.22.camel@myfc17>
 Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:41605 "EHLO
+Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:41611 "EHLO
 	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753638AbaDDRwd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Apr 2014 13:52:33 -0400
+	with ESMTP id S1753419AbaDDRwn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Apr 2014 13:52:43 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Fixed locking for scsi task management commands.
+Update Copyright on changed files
 
 
 Signed-off-by: James Smart <james.smart@emulex.com>
 
  ---
 
- lpfc_crtn.h |    3 +
- lpfc_scsi.c |   25 ++++++++++--
- lpfc_sli.c  |  118 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 141 insertions(+), 5 deletions(-)
+ lpfc_crtn.h    |    2 +-
+ lpfc_debugfs.c |    2 +-
+ lpfc_els.c     |    2 +-
+ lpfc_init.c    |    2 +-
+ lpfc_scsi.c    |    2 +-
+ lpfc_sli.c     |    2 +-
+ 6 files changed, 6 insertions(+), 6 deletions(-)
 
 
 diff -upNr a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
---- a/drivers/scsi/lpfc/lpfc_crtn.h	2014-04-03 10:24:24.211308703 -0400
-+++ b/drivers/scsi/lpfc/lpfc_crtn.h	2014-04-03 10:24:31.784309084 -0400
-@@ -311,6 +311,9 @@ int lpfc_sli_issue_abort_iotag(struct lp
- int lpfc_sli_sum_iocb(struct lpfc_vport *, uint16_t, uint64_t, lpfc_ctx_cmd);
- int lpfc_sli_abort_iocb(struct lpfc_vport *, struct lpfc_sli_ring *, uint16_t,
- 			uint64_t, lpfc_ctx_cmd);
-+int
-+lpfc_sli_abort_taskmgmt(struct lpfc_vport *, struct lpfc_sli_ring *,
-+			uint16_t, uint64_t, lpfc_ctx_cmd);
- 
- void lpfc_mbox_timeout(unsigned long);
- void lpfc_mbox_timeout_handler(struct lpfc_hba *);
+--- a/drivers/scsi/lpfc/lpfc_crtn.h	2014-04-03 10:24:31.784309084 -0400
++++ b/drivers/scsi/lpfc/lpfc_crtn.h	2014-04-03 10:24:35.333309263 -0400
+@@ -1,7 +1,7 @@
+ /*******************************************************************
+  * This file is part of the Emulex Linux Device Driver for         *
+  * Fibre Channel Host Bus Adapters.                                *
+- * Copyright (C) 2004-2013 Emulex.  All rights reserved.           *
++ * Copyright (C) 2004-2014 Emulex.  All rights reserved.           *
+  * EMULEX and SLI are trademarks of Emulex.                        *
+  * www.emulex.com                                                  *
+  *                                                                 *
+diff -upNr a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
+--- a/drivers/scsi/lpfc/lpfc_debugfs.c	2014-04-03 10:24:27.553308871 -0400
++++ b/drivers/scsi/lpfc/lpfc_debugfs.c	2014-04-03 10:24:35.344309263 -0400
+@@ -1,7 +1,7 @@
+ /*******************************************************************
+  * This file is part of the Emulex Linux Device Driver for         *
+  * Fibre Channel Host Bus Adapters.                                *
+- * Copyright (C) 2007-2012 Emulex.  All rights reserved.           *
++ * Copyright (C) 2007-2014 Emulex.  All rights reserved.           *
+  * EMULEX and SLI are trademarks of Emulex.                        *
+  * www.emulex.com                                                  *
+  *                                                                 *
+diff -upNr a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+--- a/drivers/scsi/lpfc/lpfc_els.c	2014-03-31 16:21:36.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_els.c	2014-04-03 10:24:35.355309264 -0400
+@@ -1,7 +1,7 @@
+ /*******************************************************************
+  * This file is part of the Emulex Linux Device Driver for         *
+  * Fibre Channel Host Bus Adapters.                                *
+- * Copyright (C) 2004-2013 Emulex.  All rights reserved.           *
++ * Copyright (C) 2004-2014 Emulex.  All rights reserved.           *
+  * EMULEX and SLI are trademarks of Emulex.                        *
+  * www.emulex.com                                                  *
+  * Portions Copyright (C) 2004-2005 Christoph Hellwig              *
+diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+--- a/drivers/scsi/lpfc/lpfc_init.c	2014-04-03 10:24:27.567308872 -0400
++++ b/drivers/scsi/lpfc/lpfc_init.c	2014-04-03 10:24:35.359309264 -0400
+@@ -1,7 +1,7 @@
+ /*******************************************************************
+  * This file is part of the Emulex Linux Device Driver for         *
+  * Fibre Channel Host Bus Adapters.                                *
+- * Copyright (C) 2004-2013 Emulex.  All rights reserved.           *
++ * Copyright (C) 2004-2014 Emulex.  All rights reserved.           *
+  * EMULEX and SLI are trademarks of Emulex.                        *
+  * www.emulex.com                                                  *
+  * Portions Copyright (C) 2004-2005 Christoph Hellwig              *
 diff -upNr a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
---- a/drivers/scsi/lpfc/lpfc_scsi.c	2014-04-03 10:24:27.569308872 -0400
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c	2014-04-03 10:24:31.787309084 -0400
-@@ -4783,7 +4783,9 @@ lpfc_abort_handler(struct scsi_cmnd *cmn
- 	struct lpfc_scsi_buf *lpfc_cmd;
- 	IOCB_t *cmd, *icmd;
- 	int ret = SUCCESS, status = 0;
--	unsigned long flags;
-+	struct lpfc_sli_ring *pring_s4;
-+	int ring_number, ret_val;
-+	unsigned long flags, iflags;
- 	DECLARE_WAIT_QUEUE_HEAD_ONSTACK(waitq);
- 
- 	status = fc_block_scsi_eh(cmnd);
-@@ -4880,11 +4882,23 @@ lpfc_abort_handler(struct scsi_cmnd *cmn
- 
- 	abtsiocb->iocb_cmpl = lpfc_sli_abort_fcp_cmpl;
- 	abtsiocb->vport = vport;
-+	if (phba->sli_rev == LPFC_SLI_REV4) {
-+		ring_number = MAX_SLI3_CONFIGURED_RINGS + iocb->fcp_wqidx;
-+		pring_s4 = &phba->sli.ring[ring_number];
-+		/* Note: both hbalock and ring_lock must be set here */
-+		spin_lock_irqsave(&pring_s4->ring_lock, iflags);
-+		ret_val = __lpfc_sli_issue_iocb(phba, pring_s4->ringno,
-+						abtsiocb, 0);
-+		spin_unlock_irqrestore(&pring_s4->ring_lock, iflags);
-+	} else {
-+		ret_val = __lpfc_sli_issue_iocb(phba, LPFC_FCP_RING,
-+						abtsiocb, 0);
-+	}
- 	/* no longer need the lock after this point */
- 	spin_unlock_irqrestore(&phba->hbalock, flags);
- 
--	if (lpfc_sli_issue_iocb(phba, LPFC_FCP_RING, abtsiocb, 0) ==
--	    IOCB_ERROR) {
-+
-+	if (ret_val == IOCB_ERROR) {
- 		lpfc_sli_release_iocbq(phba, abtsiocb);
- 		ret = FAILED;
- 		goto out;
-@@ -5185,8 +5199,9 @@ lpfc_reset_flush_io_context(struct lpfc_
- 
- 	cnt = lpfc_sli_sum_iocb(vport, tgt_id, lun_id, context);
- 	if (cnt)
--		lpfc_sli_abort_iocb(vport, &phba->sli.ring[phba->sli.fcp_ring],
--				    tgt_id, lun_id, context);
-+		lpfc_sli_abort_taskmgmt(vport,
-+					&phba->sli.ring[phba->sli.fcp_ring],
-+					tgt_id, lun_id, context);
- 	later = msecs_to_jiffies(2 * vport->cfg_devloss_tmo * 1000) + jiffies;
- 	while (time_after(later, jiffies) && cnt) {
- 		schedule_timeout_uninterruptible(msecs_to_jiffies(20));
+--- a/drivers/scsi/lpfc/lpfc_scsi.c	2014-04-03 10:24:31.787309084 -0400
++++ b/drivers/scsi/lpfc/lpfc_scsi.c	2014-04-03 10:24:35.374309265 -0400
+@@ -1,7 +1,7 @@
+ /*******************************************************************
+  * This file is part of the Emulex Linux Device Driver for         *
+  * Fibre Channel Host Bus Adapters.                                *
+- * Copyright (C) 2004-2013 Emulex.  All rights reserved.           *
++ * Copyright (C) 2004-2014 Emulex.  All rights reserved.           *
+  * EMULEX and SLI are trademarks of Emulex.                        *
+  * www.emulex.com                                                  *
+  * Portions Copyright (C) 2004-2005 Christoph Hellwig              *
 diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
---- a/drivers/scsi/lpfc/lpfc_sli.c	2014-04-03 10:24:27.586308873 -0400
-+++ b/drivers/scsi/lpfc/lpfc_sli.c	2014-04-03 10:24:31.802309085 -0400
-@@ -10097,6 +10097,124 @@ lpfc_sli_abort_iocb(struct lpfc_vport *v
- }
- 
- /**
-+ * lpfc_sli_abort_taskmgmt - issue abort for all commands on a host/target/LUN
-+ * @vport: Pointer to virtual port.
-+ * @pring: Pointer to driver SLI ring object.
-+ * @tgt_id: SCSI ID of the target.
-+ * @lun_id: LUN ID of the scsi device.
-+ * @taskmgmt_cmd: LPFC_CTX_LUN/LPFC_CTX_TGT/LPFC_CTX_HOST.
-+ *
-+ * This function sends an abort command for every SCSI command
-+ * associated with the given virtual port pending on the ring
-+ * filtered by lpfc_sli_validate_fcp_iocb function.
-+ * When taskmgmt_cmd == LPFC_CTX_LUN, the function sends abort only to the
-+ * FCP iocbs associated with lun specified by tgt_id and lun_id
-+ * parameters
-+ * When taskmgmt_cmd == LPFC_CTX_TGT, the function sends abort only to the
-+ * FCP iocbs associated with SCSI target specified by tgt_id parameter.
-+ * When taskmgmt_cmd == LPFC_CTX_HOST, the function sends abort to all
-+ * FCP iocbs associated with virtual port.
-+ * This function returns number of iocbs it aborted .
-+ * This function is called with no locks held right after a taskmgmt
-+ * command is sent.
-+ **/
-+int
-+lpfc_sli_abort_taskmgmt(struct lpfc_vport *vport, struct lpfc_sli_ring *pring,
-+			uint16_t tgt_id, uint64_t lun_id, lpfc_ctx_cmd cmd)
-+{
-+	struct lpfc_hba *phba = vport->phba;
-+	struct lpfc_iocbq *abtsiocbq;
-+	struct lpfc_iocbq *iocbq;
-+	IOCB_t *icmd;
-+	int sum, i, ret_val;
-+	unsigned long iflags;
-+	struct lpfc_sli_ring *pring_s4;
-+	uint32_t ring_number;
-+
-+	spin_lock_irq(&phba->hbalock);
-+
-+	/* all I/Os are in process of being flushed */
-+	if (phba->hba_flag & HBA_FCP_IOQ_FLUSH) {
-+		spin_unlock_irq(&phba->hbalock);
-+		return 0;
-+	}
-+	sum = 0;
-+
-+	for (i = 1; i <= phba->sli.last_iotag; i++) {
-+		iocbq = phba->sli.iocbq_lookup[i];
-+
-+		if (lpfc_sli_validate_fcp_iocb(iocbq, vport, tgt_id, lun_id,
-+					       cmd) != 0)
-+			continue;
-+
-+		/*
-+		 * If the iocbq is already being aborted, don't take a second
-+		 * action, but do count it.
-+		 */
-+		if (iocbq->iocb_flag & LPFC_DRIVER_ABORTED)
-+			continue;
-+
-+		/* issue ABTS for this IOCB based on iotag */
-+		abtsiocbq = __lpfc_sli_get_iocbq(phba);
-+		if (abtsiocbq == NULL)
-+			continue;
-+
-+		icmd = &iocbq->iocb;
-+		abtsiocbq->iocb.un.acxri.abortType = ABORT_TYPE_ABTS;
-+		abtsiocbq->iocb.un.acxri.abortContextTag = icmd->ulpContext;
-+		if (phba->sli_rev == LPFC_SLI_REV4)
-+			abtsiocbq->iocb.un.acxri.abortIoTag =
-+							 iocbq->sli4_xritag;
-+		else
-+			abtsiocbq->iocb.un.acxri.abortIoTag = icmd->ulpIoTag;
-+		abtsiocbq->iocb.ulpLe = 1;
-+		abtsiocbq->iocb.ulpClass = icmd->ulpClass;
-+		abtsiocbq->vport = vport;
-+
-+		/* ABTS WQE must go to the same WQ as the WQE to be aborted */
-+		abtsiocbq->fcp_wqidx = iocbq->fcp_wqidx;
-+		if (iocbq->iocb_flag & LPFC_IO_FCP)
-+			abtsiocbq->iocb_flag |= LPFC_USE_FCPWQIDX;
-+
-+		if (lpfc_is_link_up(phba))
-+			abtsiocbq->iocb.ulpCommand = CMD_ABORT_XRI_CN;
-+		else
-+			abtsiocbq->iocb.ulpCommand = CMD_CLOSE_XRI_CN;
-+
-+		/* Setup callback routine and issue the command. */
-+		abtsiocbq->iocb_cmpl = lpfc_sli_abort_fcp_cmpl;
-+
-+		/*
-+		 * Indicate the IO is being aborted by the driver and set
-+		 * the caller's flag into the aborted IO.
-+		 */
-+		iocbq->iocb_flag |= LPFC_DRIVER_ABORTED;
-+
-+		if (phba->sli_rev == LPFC_SLI_REV4) {
-+			ring_number = MAX_SLI3_CONFIGURED_RINGS +
-+					 iocbq->fcp_wqidx;
-+			pring_s4 = &phba->sli.ring[ring_number];
-+			/* Note: both hbalock and ring_lock must be set here */
-+			spin_lock_irqsave(&pring_s4->ring_lock, iflags);
-+			ret_val = __lpfc_sli_issue_iocb(phba, pring_s4->ringno,
-+							abtsiocbq, 0);
-+			spin_unlock_irqrestore(&pring_s4->ring_lock, iflags);
-+		} else {
-+			ret_val = __lpfc_sli_issue_iocb(phba, pring->ringno,
-+							abtsiocbq, 0);
-+		}
-+
-+
-+		if (ret_val == IOCB_ERROR)
-+			__lpfc_sli_release_iocbq(phba, abtsiocbq);
-+		else
-+			sum++;
-+	}
-+	spin_unlock_irq(&phba->hbalock);
-+	return sum;
-+}
-+
-+/**
-  * lpfc_sli_wake_iocb_wait - lpfc_sli_issue_iocb_wait's completion handler
-  * @phba: Pointer to HBA context object.
-  * @cmdiocbq: Pointer to command iocb.
+--- a/drivers/scsi/lpfc/lpfc_sli.c	2014-04-03 10:24:31.802309085 -0400
++++ b/drivers/scsi/lpfc/lpfc_sli.c	2014-04-03 10:24:35.389309266 -0400
+@@ -1,7 +1,7 @@
+ /*******************************************************************
+  * This file is part of the Emulex Linux Device Driver for         *
+  * Fibre Channel Host Bus Adapters.                                *
+- * Copyright (C) 2004-2013 Emulex.  All rights reserved.           *
++ * Copyright (C) 2004-2014 Emulex.  All rights reserved.           *
+  * EMULEX and SLI are trademarks of Emulex.                        *
+  * www.emulex.com                                                  *
+  * Portions Copyright (C) 2004-2005 Christoph Hellwig              *
 
 
 
