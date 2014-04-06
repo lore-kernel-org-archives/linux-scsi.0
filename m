@@ -1,61 +1,49 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] target/tcm_fc: Fix use-after-free of ft_tpg
-Date: Sun, 06 Apr 2014 15:59:36 -0700
-Message-ID: <1396825176.31010.5.camel@haakon3.risingtidesystems.com>
-References: <1396655077-30912-1-git-send-email-agrover@redhat.com>
+From: "Nicholas A. Bellinger" <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>
+Subject: Re: [PATCH 0/5] target/tcm_fc: Misc. fixups
+Date: Sun, 06 Apr 2014 16:08:40 -0700
+Message-ID: <1396825720.31010.6.camel@haakon3.risingtidesystems.com>
+References: <1396655655-31060-1-git-send-email-agrover@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:35410 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753162AbaDFW7f (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Apr 2014 18:59:35 -0400
-In-Reply-To: <1396655077-30912-1-git-send-email-agrover@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+In-Reply-To: <1396655655-31060-1-git-send-email-agrover-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+List-Unsubscribe: <http://lists.open-fcoe.org/mailman/options/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.open-fcoe.org/pipermail/fcoe-devel>
+List-Post: <mailto:fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+List-Help: <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.open-fcoe.org/mailman/listinfo/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
+Errors-To: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+Sender: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+To: Andy Grover <agrover-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andy Grover <agrover@redhat.com>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, fcoe-devel@open-fcoe.org
 
-Hi Andy,
-
-On Fri, 2014-04-04 at 16:44 -0700, Andy Grover wrote:
-> ft_del_tpg checks tpg->tport is set before unlinking the tpg from the
-> tport when the tpg is being removed. Set this pointer in ft_tport_create,
-> or the unlinking won't happen in ft_del_tpg and tport->tpg will reference
-> a deleted object.
+On Fri, 2014-04-04 at 16:54 -0700, Andy Grover wrote:
+> Hi nab and fcoe developers,
 > 
-> see https://bugzilla.redhat.com/show_bug.cgi?id=1071340
+> In fixing the other issue I just posted a patch for, I found some other
+> things in the tcm_fc fabric that could be improved. Please take a look?
 > 
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Andy Grover <agrover@redhat.com>
-> ---
->  drivers/target/tcm_fc/tfc_sess.c | 1 +
->  1 file changed, 1 insertion(+)
+> Thanks! -- Regards -- Andy
 > 
-> diff --git a/drivers/target/tcm_fc/tfc_sess.c b/drivers/target/tcm_fc/tfc_sess.c
-> index 0475142..1329726 100644
-> --- a/drivers/target/tcm_fc/tfc_sess.c
-> +++ b/drivers/target/tcm_fc/tfc_sess.c
-> @@ -68,6 +68,7 @@ static struct ft_tport *ft_tport_create(struct fc_lport *lport)
->  
->  	if (tport) {
->  		tport->tpg = tpg;
-> +		tpg->tport = tport;
->  		return tport;
->  	}
->  
+> Andy Grover (5):
+>   target/tcm_fc: Don't export ft_lport_list
+>   target/tcm_fc: Limit to 1 TPG per wwn
+>   target/tcm_fc: Rename structs and list members for clarity
+>   target/tcm_fc: Rename ft_{add,del}_lport to {add,del}_wwn
+>   target/tcm_fc: Rename ft_tport_create to ft_tport_get
+> 
+>  drivers/target/tcm_fc/tcm_fc.h   | 12 +++----
+>  drivers/target/tcm_fc/tfc_conf.c | 75 ++++++++++++++++++++--------------------
+>  drivers/target/tcm_fc/tfc_sess.c |  6 ++--
+>  3 files changed, 46 insertions(+), 47 deletions(-)
+> 
 
-I'm confused how this addresses the bug above..?
+These all look reasonable.
 
-Does this mean the bug is only triggered when a previously
-configured /sys/kernel/config/target/fc/$FCOE_WWPN/$TPGT has been
-removed, and then a new PLOGI picks up a left-over pointer to an
-endpoint that previously had been released..?
-
-Care to add a more detailed commit explaining the exact details..?
+Applied to target-pending/for-next.
 
 --nab
-
-
-
