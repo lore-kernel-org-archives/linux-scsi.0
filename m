@@ -1,73 +1,95 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH 1/6] virtio-scsi.h: Add virtio_scsi_cmd_req_pi + VIRTIO_SCSI_F_T10_PI bits
-Date: Sun,  6 Apr 2014 21:32:04 +0000
-Message-ID: <1396819929-29687-2-git-send-email-nab@daterainc.com>
+Subject: [PATCH 3/6] vhost/scsi: Add preallocation of protection SGLs
+Date: Sun,  6 Apr 2014 21:32:06 +0000
+Message-ID: <1396819929-29687-4-git-send-email-nab@daterainc.com>
 References: <1396819929-29687-1-git-send-email-nab@daterainc.com>
 Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1396819929-29687-1-git-send-email-nab@daterainc.com>
 Sender: target-devel-owner@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, "Michael S. Tsirkin" <mst@redhat.com>, Paolo Bonzini <pbonzini@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, "H. Peter Anvin" <hpa@zytor.com>, Nicholas Bellinger <nab@linux-iscsi.org>, Sagi Grimberg <sagig@dev.mellanox.co.il>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, "Michael S. Tsirkin" <mst@redhat.com>, Paolo Bonzini <pbonzini@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, "H. Peter Anvin" <hpa@zytor.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch adds a virtio_scsi_cmd_req_pi header as recommened by
-Paolo that contains do_pi_niov + di_pi_niov elements used for
-signaling when protection information buffers are expected to
-preceed the data buffers.
+This patch updates tcm_vhost_make_nexus() to pre-allocate per descriptor
+tcm_vhost_cmd->tvc_prot_sgl[] used to expose protection SGLs from within
+virtio-scsi guest memory to vhost-scsi.
 
-Also add new VIRTIO_SCSI_F_T10_PI feature bit to be used to signal
-host support.
-
-Cc: Paolo Bonzini <pbonzini@redhat.com>
 Cc: Michael S. Tsirkin <mst@redhat.com>
+Cc: Paolo Bonzini <pbonzini@redhat.com>
 Cc: Martin K. Petersen <martin.petersen@oracle.com>
 Cc: Christoph Hellwig <hch@lst.de>
 Cc: Hannes Reinecke <hare@suse.de>
-Cc: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Cc: H. Peter Anvin <hpa@zytor.com>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- include/linux/virtio_scsi.h |   15 ++++++++++++++-
+ drivers/vhost/scsi.c |   15 ++++++++++++++-
  1 file changed, 14 insertions(+), 1 deletion(-)
 
-diff --git a/include/linux/virtio_scsi.h b/include/linux/virtio_scsi.h
-index 4195b97..590d249 100644
---- a/include/linux/virtio_scsi.h
-+++ b/include/linux/virtio_scsi.h
-@@ -35,11 +35,23 @@ struct virtio_scsi_cmd_req {
- 	u8 lun[8];		/* Logical Unit Number */
- 	u64 tag;		/* Command identifier */
- 	u8 task_attr;		/* Task attribute */
--	u8 prio;
-+	u8 prio;		/* SAM command priority field */
- 	u8 crn;
- 	u8 cdb[VIRTIO_SCSI_CDB_SIZE];
- } __packed;
+diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
+index ae434db..30402e6 100644
+--- a/drivers/vhost/scsi.c
++++ b/drivers/vhost/scsi.c
+@@ -58,6 +58,7 @@
+ #define TCM_VHOST_DEFAULT_TAGS 256
+ #define TCM_VHOST_PREALLOC_SGLS 2048
+ #define TCM_VHOST_PREALLOC_UPAGES 2048
++#define TCM_VHOST_PREALLOC_PROT_SGLS 512
  
-+/* SCSI command request, followed by protection information */
-+struct virtio_scsi_cmd_req_pi {
-+	u8 lun[8];		/* Logical Unit Number */
-+	u64 tag;		/* Command identifier */
-+	u8 task_attr;		/* Task attribute */
-+	u8 prio;		/* SAM command priority field */
-+	u8 crn;
-+	u16 do_pi_niov;		/* DataOUT PI Number of iovecs */
-+	u16 di_pi_niov;		/* DataIN PI Number of iovecs */
-+	u8 cdb[VIRTIO_SCSI_CDB_SIZE];
-+} __packed;
+ struct vhost_scsi_inflight {
+ 	/* Wait for the flush operation to finish */
+@@ -83,6 +84,7 @@ struct tcm_vhost_cmd {
+ 	u32 tvc_lun;
+ 	/* Pointer to the SGL formatted memory from virtio-scsi */
+ 	struct scatterlist *tvc_sgl;
++	struct scatterlist *tvc_prot_sgl;
+ 	struct page **tvc_upages;
+ 	/* Pointer to response */
+ 	struct virtio_scsi_cmd_resp __user *tvc_resp;
+@@ -722,7 +724,7 @@ vhost_scsi_get_tag(struct vhost_virtqueue *vq,
+ 	struct tcm_vhost_cmd *cmd;
+ 	struct tcm_vhost_nexus *tv_nexus;
+ 	struct se_session *se_sess;
+-	struct scatterlist *sg;
++	struct scatterlist *sg, *prot_sg;
+ 	struct page **pages;
+ 	int tag;
+ 
+@@ -741,10 +743,12 @@ vhost_scsi_get_tag(struct vhost_virtqueue *vq,
+ 
+ 	cmd = &((struct tcm_vhost_cmd *)se_sess->sess_cmd_map)[tag];
+ 	sg = cmd->tvc_sgl;
++	prot_sg = cmd->tvc_prot_sgl;
+ 	pages = cmd->tvc_upages;
+ 	memset(cmd, 0, sizeof(struct tcm_vhost_cmd));
+ 
+ 	cmd->tvc_sgl = sg;
++	cmd->tvc_prot_sgl = prot_sg;
+ 	cmd->tvc_upages = pages;
+ 	cmd->tvc_se_cmd.map_tag = tag;
+ 	cmd->tvc_tag = v_req->tag;
+@@ -1703,6 +1707,7 @@ static void tcm_vhost_free_cmd_map_res(struct tcm_vhost_nexus *nexus,
+ 		tv_cmd = &((struct tcm_vhost_cmd *)se_sess->sess_cmd_map)[i];
+ 
+ 		kfree(tv_cmd->tvc_sgl);
++		kfree(tv_cmd->tvc_prot_sgl);
+ 		kfree(tv_cmd->tvc_upages);
+ 	}
+ }
+@@ -1762,6 +1767,14 @@ static int tcm_vhost_make_nexus(struct tcm_vhost_tpg *tpg,
+ 			pr_err("Unable to allocate tv_cmd->tvc_upages\n");
+ 			goto out;
+ 		}
 +
- /* Response, followed by sense data and data-in */
- struct virtio_scsi_cmd_resp {
- 	u32 sense_len;		/* Sense data length */
-@@ -97,6 +109,7 @@ struct virtio_scsi_config {
- #define VIRTIO_SCSI_F_INOUT                    0
- #define VIRTIO_SCSI_F_HOTPLUG                  1
- #define VIRTIO_SCSI_F_CHANGE                   2
-+#define VIRTIO_SCSI_F_T10_PI		       3
- 
- /* Response codes */
- #define VIRTIO_SCSI_S_OK                       0
++		tv_cmd->tvc_prot_sgl = kzalloc(sizeof(struct scatterlist) *
++					TCM_VHOST_PREALLOC_PROT_SGLS, GFP_KERNEL);
++		if (!tv_cmd->tvc_prot_sgl) {
++			mutex_unlock(&tpg->tv_tpg_mutex);
++			pr_err("Unable to allocate tv_cmd->tvc_prot_sgl\n");
++			goto out;
++		}
+ 	}
+ 	/*
+ 	 * Since we are running in 'demo mode' this call with generate a
 -- 
 1.7.10.4
