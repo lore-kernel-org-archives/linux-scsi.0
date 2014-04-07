@@ -1,65 +1,44 @@
-From: Matei Oprea <eu@opreamatei.ro>
-Subject: Re: [PATCH] scsi: lpfc: lpfc_init: use kcalloc for allocating memory
-Date: Mon, 7 Apr 2014 15:37:41 +0300
-Message-ID: <CABeAxadUHD9wdyJQs0V4bC+pbXSutssBaY7wXSs1bVVqbD_DQA@mail.gmail.com>
-References: <1395175900-9659-1-git-send-email-eu@opreamatei.ro>
+From: Sagi Grimberg <sagig@dev.mellanox.co.il>
+Subject: blk-mq queue selection and queue_rq preemption
+Date: Mon, 07 Apr 2014 15:44:18 +0300
+Message-ID: <53429DA2.4030708@dev.mellanox.co.il>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oa0-f43.google.com ([209.85.219.43]:40327 "EHLO
-	mail-oa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754945AbaDGMhm convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Apr 2014 08:37:42 -0400
-Received: by mail-oa0-f43.google.com with SMTP id eb12so6565890oac.30
-        for <linux-scsi@vger.kernel.org>; Mon, 07 Apr 2014 05:37:42 -0700 (PDT)
-In-Reply-To: <1395175900-9659-1-git-send-email-eu@opreamatei.ro>
+Received: from mail-we0-f172.google.com ([74.125.82.172]:60206 "EHLO
+	mail-we0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754826AbaDGMoX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Apr 2014 08:44:23 -0400
+Received: by mail-we0-f172.google.com with SMTP id t61so6759775wes.31
+        for <linux-scsi@vger.kernel.org>; Mon, 07 Apr 2014 05:44:22 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jbottomley@parallels.com
-Cc: james.smart@emulex.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Matei Oprea <eu@opreamatei.ro>, ROSEdu Kernel Community <firefly@lists.rosedu.org>
+To: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Or Gerlitz <ogerlitz@mellanox.com>, Oren Duer <oren@mellanox.com>
 
-Any comments on this ?
-=E1=90=A7
+Hey Jens, Christoph & Co,
 
-On Tue, Mar 18, 2014 at 10:51 PM, Matei Oprea <eu@opreamatei.ro> wrote:
-> It's easier to use kcalloc for allocating arrays. While at it
-> also remove useless casting value.
->
-> Signed-off-by: Matei Oprea <eu@opreamatei.ro>
-> Cc: ROSEdu Kernel Community <firefly@lists.rosedu.org>
-> ---
->  drivers/scsi/lpfc/lpfc_init.c |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_i=
-nit.c
-> index 68c94cc..0a51ca5 100644
-> --- a/drivers/scsi/lpfc/lpfc_init.c
-> +++ b/drivers/scsi/lpfc/lpfc_init.c
-> @@ -4731,9 +4731,9 @@ lpfc_sli_driver_resource_setup(struct lpfc_hba =
-*phba)
->         }
->
->         if (!phba->sli.ring)
-> -               phba->sli.ring =3D (struct lpfc_sli_ring *)
-> -                       kzalloc(LPFC_SLI3_MAX_RING *
-> +               phba->sli.ring =3D kcalloc(LPFC_SLI3_MAX_RING,
->                         sizeof(struct lpfc_sli_ring), GFP_KERNEL);
-> +
->         if (!phba->sli.ring)
->                 return -ENOMEM;
->
-> --
-> 1.7.9.5
->
+I raised this question at LSF but didn't get a clear answer on this matter.
+So it seems to me that the hctx selection and the actual request 
+dispatch (queue_rq) are preemptive:
+(1) blk_mq_get_ctx(q);
+(2) map_queue(q, ctx->cpu);
+...
+(3) blk_mq_put_ctx(ctx);
+(4) blk_mq_run_hw_queue(hctx, async);
 
+It is possible that an MQ device driver may want to implement a lockless 
+scheme counting on (running) CPU <-> hctx attachment.
+Generally speaking, I think that LLDs will be more comfortable knowing 
+that they are not preemptive in the dispatch flow.
 
+My question is, is this a must? if so can you please explain why?
 
---=20
-Oprea Matei
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Is it possible to put the hctx (restoring preemption) after run_hw_queue 
+allowing to LLDs to be sure that the selected queue
+match the running CPU?
+
+Thanks,
+
+Sagi.
