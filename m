@@ -1,89 +1,376 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 6/6] virtio-scsi: Enable DIF/DIX modes in SCSI host LLD
-Date: Mon, 07 Apr 2014 02:13:16 -0700
-Message-ID: <1396861996.19888.28.camel@haakon3.risingtidesystems.com>
+From: "Michael S. Tsirkin" <mst@redhat.com>
+Subject: Re: [PATCH 5/6] vhost/scsi: Enable T10 PI IOV -> SGL memory mapping
+Date: Mon, 7 Apr 2014 12:16:54 +0300
+Message-ID: <20140407091654.GC14183@redhat.com>
 References: <1396819929-29687-1-git-send-email-nab@daterainc.com>
-	 <1396819929-29687-7-git-send-email-nab@daterainc.com>
-	 <20140407084518.GA14091@redhat.com>
-	 <1396861019.19888.25.camel@haakon3.risingtidesystems.com>
-	 <20140407090225.GB14183@redhat.com>
+ <1396819929-29687-6-git-send-email-nab@daterainc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:41990 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754821AbaDGJNP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Apr 2014 05:13:15 -0400
-In-Reply-To: <20140407090225.GB14183@redhat.com>
+Received: from mx1.redhat.com ([209.132.183.28]:40467 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753505AbaDGJQb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 7 Apr 2014 05:16:31 -0400
+Content-Disposition: inline
+In-Reply-To: <1396819929-29687-6-git-send-email-nab@daterainc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, "H. Peter Anvin" <hpa@zytor.com>, Sagi Grimberg <sagig@dev.mellanox.co.il>, virtualization@lists.linux-foundation.org
+To: "Nicholas A. Bellinger" <nab@daterainc.com>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, "H. Peter Anvin" <hpa@zytor.com>, Nicholas Bellinger <nab@linux-iscsi.org>, Sagi Grimberg <sagig@dev.mellanox.co.il>
 
-On Mon, 2014-04-07 at 12:02 +0300, Michael S. Tsirkin wrote:
-> On Mon, Apr 07, 2014 at 01:56:59AM -0700, Nicholas A. Bellinger wrote:
-> > On Mon, 2014-04-07 at 11:45 +0300, Michael S. Tsirkin wrote:
-> > > On Sun, Apr 06, 2014 at 09:32:09PM +0000, Nicholas A. Bellinger wrote:
-> > > > From: Nicholas Bellinger <nab@linux-iscsi.org>
-> > > > 
-> > > > This patch updates virtscsi_probe() to setup necessary Scsi_Host
-> > > > level protection resources. (currently hardcoded to 1)
-> > > > 
-> > > > It changes virtscsi_add_cmd() to attach outgoing / incoming
-> > > > protection SGLs preceeding the data payload, and is using the
-> > > > new virtio_scsi_cmd_req_pi->d[oi],pi_niv field to signal
-> > > > to signal to vhost/scsi how many prot_sgs to expect.
-> > > > 
-> > > > v3 changes:
-> > > >   - Use VIRTIO_SCSI_F_T10_PI to determine PI or non PI header (Paolo)
-> > > > 
-> > > > v2 changes:
-> > > >   - Make protection buffer come before data buffer (Paolo)
-> > > >   - Enable virtio_scsi_cmd_req_pi usage (Paolo)
-> > > > 
-> > > > Cc: Paolo Bonzini <pbonzini@redhat.com>
-> > > > Cc: Michael S. Tsirkin <mst@redhat.com>
-> > > > Cc: Martin K. Petersen <martin.petersen@oracle.com>
-> > > > Cc: Christoph Hellwig <hch@lst.de>
-> > > > Cc: Hannes Reinecke <hare@suse.de>
-> > > > Cc: Sagi Grimberg <sagig@dev.mellanox.co.il>
-> > > > Cc: H. Peter Anvin <hpa@zytor.com>
-> > > > Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
-> > > 
-> > > OK but we need to document the new interface in the spec
-> > > (and incidentially, this will be useful to verify the assumptions
-> > > made here and on the host side).
-> > > Could you please submit this proposal to the OASIS Virtio TC
-> > > for inclusion into the next spec draft?
-> > > Ideally as a patch against the tex source, but a prose
-> > > description would do as well.
-> > 
-> > Most certainly.  Please give me a bit to follow up on this, as the next
-> > couple of days are going to be hellishly busy..
-> > 
-> > > The TC meets on a bi-weekly basis, we should be able to ratify
-> > > this quickly.
-> > > 
-> > 
-> > Aside from that, please consider ACK'ing the vhost specific changes so
-> > these can make it into v3.15-rc1 code.
-> > 
-> > --nab
-> > 
+On Sun, Apr 06, 2014 at 09:32:08PM +0000, Nicholas A. Bellinger wrote:
+> From: Nicholas Bellinger <nab@linux-iscsi.org>
 > 
-> Hmm but what if the TC wants to change the interface somewhat?
-
-I don't have a objection to changing the interface post-merge.
-
-> I guess we'll still be able to fix it after the merge window -
-> (or worst case, revert the change) is this what you are suggesting?
+> This patch updates vhost_scsi_handle_vq() to check for the existance
+> of virtio_scsi_cmd_req_pi comparing vq->iov[0].iov_len in order to
+> calculate seperate data + protection SGLs from data_num.
 > 
+> Also update tcm_vhost_submission_work() to pass the pre-allocated
+> cmd->tvc_prot_sgl[] memory into target_submit_cmd_map_sgls(), and
+> update vhost_scsi_get_tag() parameters to accept scsi_tag, lun, and
+> task_attr.
+> 
+> v3 changes:
+>   - Use feature_bit for determining virtio-scsi header type (Paolo)
+> 
+> v2 changes:
+>   - Use virtio_scsi_cmd_req_pi instead of existing ->prio (Paolo)
+>   - Make protection buffer come before data buffer (Paolo)
+>   - Update vhost_scsi_get_tag() parameter usage
+> 
+> Cc: Michael S. Tsirkin <mst@redhat.com>
+> Cc: Paolo Bonzini <pbonzini@redhat.com>
+> Cc: Martin K. Petersen <martin.petersen@oracle.com>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Hannes Reinecke <hare@suse.de>
+> Cc: Sagi Grimberg <sagig@dev.mellanox.co.il>
+> Cc: H. Peter Anvin <hpa@zytor.com>
+> Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+> ---
+>  drivers/vhost/scsi.c |  179 ++++++++++++++++++++++++++++++++++----------------
+>  1 file changed, 121 insertions(+), 58 deletions(-)
+> 
+> diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
+> index eabcf18..19cd21a 100644
+> --- a/drivers/vhost/scsi.c
+> +++ b/drivers/vhost/scsi.c
+> @@ -169,7 +169,8 @@ enum {
+>  };
+>  
+>  enum {
+> -	VHOST_SCSI_FEATURES = VHOST_FEATURES | (1ULL << VIRTIO_SCSI_F_HOTPLUG)
+> +	VHOST_SCSI_FEATURES = VHOST_FEATURES | (1ULL << VIRTIO_SCSI_F_HOTPLUG) |
+> +					       (1ULL << VIRTIO_SCSI_F_T10_PI)
+>  };
+>  
+>  #define VHOST_SCSI_MAX_TARGET	256
+> @@ -720,11 +721,9 @@ static void vhost_scsi_complete_cmd_work(struct vhost_work *work)
+>  }
+>  
+>  static struct tcm_vhost_cmd *
+> -vhost_scsi_get_tag(struct vhost_virtqueue *vq,
+> -			struct tcm_vhost_tpg *tpg,
+> -			struct virtio_scsi_cmd_req *v_req,
+> -			u32 exp_data_len,
+> -			int data_direction)
+> +vhost_scsi_get_tag(struct vhost_virtqueue *vq, struct tcm_vhost_tpg *tpg,
+> +		   unsigned char *cdb, u64 scsi_tag, u16 lun, u8 task_attr,
+> +		   u32 exp_data_len, int data_direction)
+>  {
+>  	struct tcm_vhost_cmd *cmd;
+>  	struct tcm_vhost_nexus *tv_nexus;
+> @@ -756,13 +755,16 @@ vhost_scsi_get_tag(struct vhost_virtqueue *vq,
+>  	cmd->tvc_prot_sgl = prot_sg;
+>  	cmd->tvc_upages = pages;
+>  	cmd->tvc_se_cmd.map_tag = tag;
+> -	cmd->tvc_tag = v_req->tag;
+> -	cmd->tvc_task_attr = v_req->task_attr;
+> +	cmd->tvc_tag = scsi_tag;
+> +	cmd->tvc_lun = lun;
+> +	cmd->tvc_task_attr = task_attr;
+>  	cmd->tvc_exp_data_len = exp_data_len;
+>  	cmd->tvc_data_direction = data_direction;
+>  	cmd->tvc_nexus = tv_nexus;
+>  	cmd->inflight = tcm_vhost_get_inflight(vq);
+>  
+> +	memcpy(cmd->tvc_cdb, cdb, TCM_VHOST_MAX_CDB_SIZE);
+> +
+>  	return cmd;
+>  }
+>  
+> @@ -913,18 +915,15 @@ static void tcm_vhost_submission_work(struct work_struct *work)
+>  		container_of(work, struct tcm_vhost_cmd, work);
+>  	struct tcm_vhost_nexus *tv_nexus;
+>  	struct se_cmd *se_cmd = &cmd->tvc_se_cmd;
+> -	struct scatterlist *sg_ptr, *sg_bidi_ptr = NULL;
+> -	int rc, sg_no_bidi = 0;
+> +	struct scatterlist *sg_ptr, *sg_prot_ptr = NULL;
+> +	int rc;
+>  
+> +	/* FIXME: BIDI operation */
+>  	if (cmd->tvc_sgl_count) {
+>  		sg_ptr = cmd->tvc_sgl;
+> -/* FIXME: Fix BIDI operation in tcm_vhost_submission_work() */
+> -#if 0
+> -		if (se_cmd->se_cmd_flags & SCF_BIDI) {
+> -			sg_bidi_ptr = NULL;
+> -			sg_no_bidi = 0;
+> -		}
+> -#endif
+> +
+> +		if (cmd->tvc_prot_sgl_count)
+> +			sg_prot_ptr = cmd->tvc_prot_sgl;
+>  	} else {
+>  		sg_ptr = NULL;
+>  	}
+> @@ -935,7 +934,7 @@ static void tcm_vhost_submission_work(struct work_struct *work)
+>  			cmd->tvc_lun, cmd->tvc_exp_data_len,
+>  			cmd->tvc_task_attr, cmd->tvc_data_direction,
+>  			TARGET_SCF_ACK_KREF, sg_ptr, cmd->tvc_sgl_count,
+> -			sg_bidi_ptr, sg_no_bidi, NULL, 0);
+> +			NULL, 0, sg_prot_ptr, cmd->tvc_prot_sgl_count);
+>  	if (rc < 0) {
+>  		transport_send_check_condition_and_sense(se_cmd,
+>  				TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE, 0);
+> @@ -967,12 +966,18 @@ vhost_scsi_handle_vq(struct vhost_scsi *vs, struct vhost_virtqueue *vq)
+>  {
+>  	struct tcm_vhost_tpg **vs_tpg;
+>  	struct virtio_scsi_cmd_req v_req;
+> +	struct virtio_scsi_cmd_req_pi v_req_pi;
+>  	struct tcm_vhost_tpg *tpg;
+>  	struct tcm_vhost_cmd *cmd;
+> -	u32 exp_data_len, data_first, data_num, data_direction;
+> +	u64 tag;
+> +	u32 exp_data_len, data_first, data_num, data_direction, prot_first;
+>  	unsigned out, in, i;
+> -	int head, ret;
+> -	u8 target;
+> +	int head, ret, data_niov, prot_niov;
+> +	size_t req_size;
+> +	u16 lun;
+> +	u8 *target, *lunp, task_attr;
+> +	bool hdr_pi;
+> +	unsigned char *req, *cdb;
 
-Yes, but I would think that it is actually fixable.  ;)
+Make req void *, then we won't need the casts?
 
-Otherwise, a v3.16 merge is an option as well.  It's really your +
-Paolo's call here. 
+>  
+>  	mutex_lock(&vq->mutex);
+>  	/*
+> @@ -1003,7 +1008,7 @@ vhost_scsi_handle_vq(struct vhost_scsi *vs, struct vhost_virtqueue *vq)
+>  			break;
+>  		}
+>  
+> -/* FIXME: BIDI operation */
+> +		/* FIXME: BIDI operation */
+>  		if (out == 1 && in == 1) {
+>  			data_direction = DMA_NONE;
+>  			data_first = 0;
+> @@ -1033,29 +1038,47 @@ vhost_scsi_handle_vq(struct vhost_scsi *vs, struct vhost_virtqueue *vq)
+>  			break;
+>  		}
+>  
+> -		if (unlikely(vq->iov[0].iov_len != sizeof(v_req))) {
+> -			vq_err(vq, "Expecting virtio_scsi_cmd_req, got %zu"
+> -				" bytes\n", vq->iov[0].iov_len);
+> -			break;
+> +		if (vs->dev.acked_features & VIRTIO_SCSI_F_T10_PI) {
+> +			if (unlikely(vq->iov[0].iov_len != sizeof(v_req_pi))) {
+> +				pr_err("Expecting virtio_scsi_cmd_req_pi: %zu,"
+> +				       " got %zu\n", sizeof(v_req_pi),
+> +				       vq->iov[0].iov_len);
+> +				break;
+> +			}
 
---nab
+Hmm still relying on a specific IOV layout I see :(
+It's really a violation of the spec even though it works
+fine with Linux guests.
+I know this isn't the only place this is broken but
+can't we finally fix it?
+Since you are touching this code anyway - how about
+not adding more code we need to fix later?
 
+It's not too hard - just verify total length is big enough
+(instead of an exact match), then call
+memcpy_fromiovecend/memcpy_toiovecend.
+(or memcpy_fromiovec if you don't mind that iovec is modified).
+
+This will help make sure
+we are not making interface mistakes like we did for block
+with VIRTIO_BLK_T_SCSI_CMD.
+
+
+Once vhost scsi code will be clean in this respect, we can set
+VIRTIO_F_ANY_LAYOUT to signal this to userspace.
+
+
+> +			req = (unsigned char *)&v_req_pi;
+> +			lunp = &v_req_pi.lun[0];
+> +			target = &v_req_pi.lun[1];
+> +			req_size = sizeof(v_req_pi);
+> +			hdr_pi = true;
+> +		} else {
+> +			if (unlikely(vq->iov[0].iov_len != sizeof(v_req))) {
+> +				pr_err("Expecting virtio_scsi_cmd_req: %zu,"
+> +				       " got %zu\n", sizeof(v_req),
+> +				       vq->iov[0].iov_len);
+> +				break;
+> +			}
+> +			req = (unsigned char *)&v_req;
+> +			lunp = &v_req.lun[0];
+> +			target = &v_req.lun[1];
+> +			req_size = sizeof(v_req);
+> +			hdr_pi = false;
+>  		}
+> +
+>  		pr_debug("Calling __copy_from_user: vq->iov[0].iov_base: %p,"
+> -			" len: %zu\n", vq->iov[0].iov_base, sizeof(v_req));
+> -		ret = __copy_from_user(&v_req, vq->iov[0].iov_base,
+> -				sizeof(v_req));
+> +			 " len: %zu\n", vq->iov[0].iov_base, req_size);
+> +		ret = __copy_from_user(req, vq->iov[0].iov_base, req_size);
+>  		if (unlikely(ret)) {
+>  			vq_err(vq, "Faulted on virtio_scsi_cmd_req\n");
+>  			break;
+>  		}
+>  
+>  		/* virtio-scsi spec requires byte 0 of the lun to be 1 */
+> -		if (unlikely(v_req.lun[0] != 1)) {
+> +		if (unlikely(*lunp != 1)) {
+>  			vhost_scsi_send_bad_target(vs, vq, head, out);
+>  			continue;
+>  		}
+>  
+> -		/* Extract the tpgt */
+> -		target = v_req.lun[1];
+> -		tpg = ACCESS_ONCE(vs_tpg[target]);
+> +		tpg = ACCESS_ONCE(vs_tpg[*target]);
+>  
+>  		/* Target does not exist, fail the request */
+>  		if (unlikely(!tpg)) {
+> @@ -1063,17 +1086,69 @@ vhost_scsi_handle_vq(struct vhost_scsi *vs, struct vhost_virtqueue *vq)
+>  			continue;
+>  		}
+>  
+> +		data_niov = data_num;
+> +		prot_niov = prot_first = 0;
+> +		/*
+> +		 * Determine if any proteciton information iovecs are preceeding
+> +		 * the actual data payload, and adjust data_niov + data_first
+> +		 *
+> +		 * Also extract virtio_scsi header bits for vhost_scsi_get_tag()
+> +		 */
+> +		if (data_num && hdr_pi) {
+> +			if (v_req_pi.do_pi_niov) {
+> +				if (data_direction != DMA_TO_DEVICE) {
+> +					vq_err(vq, "Received non zero do_pi_niov"
+> +						", but wrong data_direction\n");
+> +					goto err_cmd;
+> +				}
+> +				prot_niov = v_req_pi.do_pi_niov;
+> +			} else if (v_req_pi.di_pi_niov) {
+> +				if (data_direction != DMA_FROM_DEVICE) {
+> +					vq_err(vq, "Received non zero di_pi_niov"
+> +						", but wrong data_direction\n");
+> +					goto err_cmd;
+> +				}
+> +				prot_niov = v_req_pi.di_pi_niov;
+> +			}
+> +
+> +			data_niov = data_num - prot_niov;
+> +			prot_first = data_first;
+> +			data_first += prot_niov;
+> +
+> +			tag = v_req_pi.tag;
+> +			task_attr = v_req_pi.task_attr;
+> +			cdb = &v_req_pi.cdb[0];
+> +			lun = ((v_req_pi.lun[2] << 8) | v_req_pi.lun[3]) & 0x3FFF;
+> +		} else {
+> +			tag = v_req.tag;
+> +			task_attr = v_req.task_attr;
+> +			cdb = &v_req.cdb[0];
+> +			lun = ((v_req.lun[2] << 8) | v_req.lun[3]) & 0x3FFF;
+> +		}
+>  		exp_data_len = 0;
+> -		for (i = 0; i < data_num; i++)
+> +		for (i = 0; i < data_niov; i++)
+>  			exp_data_len += vq->iov[data_first + i].iov_len;
+> +		/*
+> +		 * Check that the recieved CDB size does not exceeded our
+> +		 * hardcoded max for vhost-scsi
+> +		 *
+> +		 * TODO what if cdb was too small for varlen cdb header?
+> +		 */
+> +		if (unlikely(scsi_command_size(cdb) > TCM_VHOST_MAX_CDB_SIZE)) {
+> +			vq_err(vq, "Received SCSI CDB with command_size: %d that"
+> +				" exceeds SCSI_MAX_VARLEN_CDB_SIZE: %d\n",
+> +				scsi_command_size(cdb), TCM_VHOST_MAX_CDB_SIZE);
+> +			goto err_cmd;
+> +		}
+>  
+> -		cmd = vhost_scsi_get_tag(vq, tpg, &v_req,
+> +		cmd = vhost_scsi_get_tag(vq, tpg, cdb, tag, lun, task_attr,
+>  					 exp_data_len, data_direction);
+>  		if (IS_ERR(cmd)) {
+>  			vq_err(vq, "vhost_scsi_get_tag failed %ld\n",
+>  					PTR_ERR(cmd));
+>  			goto err_cmd;
+>  		}
+> +
+>  		pr_debug("Allocated tv_cmd: %p exp_data_len: %d, data_direction"
+>  			": %d\n", cmd, exp_data_len, data_direction);
+>  
+> @@ -1081,40 +1156,28 @@ vhost_scsi_handle_vq(struct vhost_scsi *vs, struct vhost_virtqueue *vq)
+>  		cmd->tvc_vq = vq;
+>  		cmd->tvc_resp = vq->iov[out].iov_base;
+>  
+> -		/*
+> -		 * Copy in the recieved CDB descriptor into cmd->tvc_cdb
+> -		 * that will be used by tcm_vhost_new_cmd_map() and down into
+> -		 * target_setup_cmd_from_cdb()
+> -		 */
+> -		memcpy(cmd->tvc_cdb, v_req.cdb, TCM_VHOST_MAX_CDB_SIZE);
+> -		/*
+> -		 * Check that the recieved CDB size does not exceeded our
+> -		 * hardcoded max for tcm_vhost
+> -		 */
+> -		/* TODO what if cdb was too small for varlen cdb header? */
+> -		if (unlikely(scsi_command_size(cmd->tvc_cdb) >
+> -					TCM_VHOST_MAX_CDB_SIZE)) {
+> -			vq_err(vq, "Received SCSI CDB with command_size: %d that"
+> -				" exceeds SCSI_MAX_VARLEN_CDB_SIZE: %d\n",
+> -				scsi_command_size(cmd->tvc_cdb),
+> -				TCM_VHOST_MAX_CDB_SIZE);
+> -			goto err_free;
+> -		}
+> -		cmd->tvc_lun = ((v_req.lun[2] << 8) | v_req.lun[3]) & 0x3FFF;
+> -
+>  		pr_debug("vhost_scsi got command opcode: %#02x, lun: %d\n",
+>  			cmd->tvc_cdb[0], cmd->tvc_lun);
+>  
+> +		if (prot_niov) {
+> +			ret = vhost_scsi_map_iov_to_prot(cmd,
+> +					&vq->iov[prot_first], prot_niov,
+> +					data_direction == DMA_FROM_DEVICE);
+> +			if (unlikely(ret)) {
+> +				vq_err(vq, "Failed to map iov to"
+> +					" prot_sgl\n");
+> +				goto err_free;
+> +			}
+> +		}
+>  		if (data_direction != DMA_NONE) {
+>  			ret = vhost_scsi_map_iov_to_sgl(cmd,
+> -					&vq->iov[data_first], data_num,
+> +					&vq->iov[data_first], data_niov,
+>  					data_direction == DMA_FROM_DEVICE);
+>  			if (unlikely(ret)) {
+>  				vq_err(vq, "Failed to map iov to sgl\n");
+>  				goto err_free;
+>  			}
+>  		}
+> -
+>  		/*
+>  		 * Save the descriptor from vhost_get_vq_desc() to be used to
+>  		 * complete the virtio-scsi request in TCM callback context via
+> -- 
+> 1.7.10.4
