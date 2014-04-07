@@ -1,14 +1,14 @@
 From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [PATCH 3/9] target/spc: Only expose PI inquiry bits when supported
+Subject: Re: [PATCH 4/9] target/spc: Only expose PI mode page bits when supported
  by fabric
-Date: Mon, 07 Apr 2014 10:30:42 +0300
-Message-ID: <53425422.5070801@dev.mellanox.co.il>
-References: <1396517753-23546-1-git-send-email-nab@daterainc.com> <1396517753-23546-4-git-send-email-nab@daterainc.com>
+Date: Mon, 07 Apr 2014 10:31:23 +0300
+Message-ID: <5342544B.1080204@dev.mellanox.co.il>
+References: <1396517753-23546-1-git-send-email-nab@daterainc.com> <1396517753-23546-5-git-send-email-nab@daterainc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1396517753-23546-4-git-send-email-nab@daterainc.com>
+In-Reply-To: <1396517753-23546-5-git-send-email-nab@daterainc.com>
 Sender: target-devel-owner@vger.kernel.org
 To: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagig@mellanox.com>, Or Gerlitz <ogerlitz@mellanox.com>, Quinn Tran <quinn.tran@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Nicholas Bellinger <nab@linux-iscsi.org>
@@ -17,8 +17,8 @@ List-Id: linux-scsi@vger.kernel.org
 On 4/3/2014 12:35 PM, Nicholas A. Bellinger wrote:
 > From: Nicholas Bellinger <nab@linux-iscsi.org>
 >
-> Only expose standard INQUIRY PROTECT=1 and EVPD=0x86 TYPE1/TYPE3
-> PI control bits if the session + fabric support DIX PASS operations.
+> Only expose the control modepage bit for Application Tag Owner (ATO)
+> if the session + fabric support DIX PASS operations.
 >
 > Cc: Martin K. Petersen <martin.petersen@oracle.com>
 > Cc: Sagi Grimberg <sagig@mellanox.com>
@@ -27,62 +27,113 @@ On 4/3/2014 12:35 PM, Nicholas A. Bellinger wrote:
 > Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>
 > Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 > ---
->   drivers/target/target_core_spc.c |   21 ++++++++++++++-------
->   1 file changed, 14 insertions(+), 7 deletions(-)
+>   drivers/target/target_core_spc.c |   28 +++++++++++++++++-----------
+>   1 file changed, 17 insertions(+), 11 deletions(-)
 >
 > diff --git a/drivers/target/target_core_spc.c b/drivers/target/target_core_spc.c
-> index 3bebc71..d4c6a31 100644
+> index d4c6a31..8653666 100644
 > --- a/drivers/target/target_core_spc.c
 > +++ b/drivers/target/target_core_spc.c
-> @@ -71,6 +71,7 @@ spc_emulate_inquiry_std(struct se_cmd *cmd, unsigned char *buf)
->   {
->   	struct se_lun *lun = cmd->se_lun;
->   	struct se_device *dev = cmd->se_dev;
-> +	struct se_session *sess = cmd->se_sess;
+> @@ -769,7 +769,7 @@ out:
+>   	return ret;
+>   }
 >   
->   	/* Set RMB (removable media) for tape devices */
->   	if (dev->transport->get_device_type(dev) == TYPE_TAPE)
-> @@ -101,10 +102,13 @@ spc_emulate_inquiry_std(struct se_cmd *cmd, unsigned char *buf)
->   	if (dev->dev_attrib.emulate_3pc)
->   		buf[5] |= 0x8;
->   	/*
-> -	 * Set Protection (PROTECT) bit when DIF has been enabled.
-> +	 * Set Protection (PROTECT) bit when DIF has been enabled on the
-> +	 * device, and the transport supports VERIFY + PASS.
+> -static int spc_modesense_rwrecovery(struct se_device *dev, u8 pc, u8 *p)
+> +static int spc_modesense_rwrecovery(struct se_cmd *cmd, u8 pc, u8 *p)
+>   {
+>   	p[0] = 0x01;
+>   	p[1] = 0x0a;
+> @@ -782,8 +782,11 @@ out:
+>   	return 12;
+>   }
+>   
+> -static int spc_modesense_control(struct se_device *dev, u8 pc, u8 *p)
+> +static int spc_modesense_control(struct se_cmd *cmd, u8 pc, u8 *p)
+>   {
+> +	struct se_device *dev = cmd->se_dev;
+> +	struct se_session *sess = cmd->se_sess;
+> +
+>   	p[0] = 0x0a;
+>   	p[1] = 0x0a;
+>   
+> @@ -875,8 +878,10 @@ static int spc_modesense_control(struct se_device *dev, u8 pc, u8 *p)
+>   	 * type, shall not modify the contents of the LOGICAL BLOCK REFERENCE
+>   	 * TAG field.
 >   	 */
 > -	if (dev->dev_attrib.pi_prot_type)
-> -		buf[5] |= 0x1;
+> -		p[5] |= 0x80;
 > +	if (sess->sup_prot_ops & (TARGET_PROT_DIN_PASS | TARGET_PROT_DOUT_PASS)) {
 > +		if (dev->dev_attrib.pi_prot_type)
-> +			buf[5] |= 0x1;
+> +			p[5] |= 0x80;
 > +	}
 >   
->   	buf[7] = 0x2; /* CmdQue=1 */
+>   	p[8] = 0xff;
+>   	p[9] = 0xff;
+> @@ -886,8 +891,10 @@ out:
+>   	return 12;
+>   }
 >   
-> @@ -473,16 +477,19 @@ static sense_reason_t
->   spc_emulate_evpd_86(struct se_cmd *cmd, unsigned char *buf)
+> -static int spc_modesense_caching(struct se_device *dev, u8 pc, u8 *p)
+> +static int spc_modesense_caching(struct se_cmd *cmd, u8 pc, u8 *p)
 >   {
->   	struct se_device *dev = cmd->se_dev;
-> +	struct se_session *sess = cmd->se_sess;
+> +	struct se_device *dev = cmd->se_dev;
+> +
+>   	p[0] = 0x08;
+>   	p[1] = 0x12;
 >   
->   	buf[3] = 0x3c;
->   	/*
->   	 * Set GRD_CHK + REF_CHK for TYPE1 protection, or GRD_CHK
->   	 * only for TYPE3 protection.
->   	 */
-> -	if (dev->dev_attrib.pi_prot_type == TARGET_DIF_TYPE1_PROT)
-> -		buf[4] = 0x5;
-> -	else if (dev->dev_attrib.pi_prot_type == TARGET_DIF_TYPE3_PROT)
-> -		buf[4] = 0x4;
-> +	if (sess->sup_prot_ops & (TARGET_PROT_DIN_PASS | TARGET_PROT_DOUT_PASS)) {
-> +		if (dev->dev_attrib.pi_prot_type == TARGET_DIF_TYPE1_PROT)
-> +			buf[4] = 0x5;
-> +		else if (dev->dev_attrib.pi_prot_type == TARGET_DIF_TYPE3_PROT)
-> +			buf[4] = 0x4;
-> +	}
+> @@ -903,7 +910,7 @@ out:
+>   	return 20;
+>   }
 >   
->   	/* Set HEADSUP, ORDSUP, SIMPSUP */
->   	buf[5] = 0x07;
+> -static int spc_modesense_informational_exceptions(struct se_device *dev, u8 pc, unsigned char *p)
+> +static int spc_modesense_informational_exceptions(struct se_cmd *cmd, u8 pc, unsigned char *p)
+>   {
+>   	p[0] = 0x1c;
+>   	p[1] = 0x0a;
+> @@ -919,7 +926,7 @@ out:
+>   static struct {
+>   	uint8_t		page;
+>   	uint8_t		subpage;
+> -	int		(*emulate)(struct se_device *, u8, unsigned char *);
+> +	int		(*emulate)(struct se_cmd *, u8, unsigned char *);
+>   } modesense_handlers[] = {
+>   	{ .page = 0x01, .subpage = 0x00, .emulate = spc_modesense_rwrecovery },
+>   	{ .page = 0x08, .subpage = 0x00, .emulate = spc_modesense_caching },
+> @@ -1057,7 +1064,7 @@ static sense_reason_t spc_emulate_modesense(struct se_cmd *cmd)
+>   			 * the only two possibilities).
+>   			 */
+>   			if ((modesense_handlers[i].subpage & ~subpage) == 0) {
+> -				ret = modesense_handlers[i].emulate(dev, pc, &buf[length]);
+> +				ret = modesense_handlers[i].emulate(cmd, pc, &buf[length]);
+>   				if (!ten && length + ret >= 255)
+>   					break;
+>   				length += ret;
+> @@ -1070,7 +1077,7 @@ static sense_reason_t spc_emulate_modesense(struct se_cmd *cmd)
+>   	for (i = 0; i < ARRAY_SIZE(modesense_handlers); ++i)
+>   		if (modesense_handlers[i].page == page &&
+>   		    modesense_handlers[i].subpage == subpage) {
+> -			length += modesense_handlers[i].emulate(dev, pc, &buf[length]);
+> +			length += modesense_handlers[i].emulate(cmd, pc, &buf[length]);
+>   			goto set_length;
+>   		}
+>   
+> @@ -1102,7 +1109,6 @@ set_length:
+>   
+>   static sense_reason_t spc_emulate_modeselect(struct se_cmd *cmd)
+>   {
+> -	struct se_device *dev = cmd->se_dev;
+>   	char *cdb = cmd->t_task_cdb;
+>   	bool ten = cdb[0] == MODE_SELECT_10;
+>   	int off = ten ? 8 : 4;
+> @@ -1138,7 +1144,7 @@ static sense_reason_t spc_emulate_modeselect(struct se_cmd *cmd)
+>   		if (modesense_handlers[i].page == page &&
+>   		    modesense_handlers[i].subpage == subpage) {
+>   			memset(tbuf, 0, SE_MODE_PAGE_BUF);
+> -			length = modesense_handlers[i].emulate(dev, 0, tbuf);
+> +			length = modesense_handlers[i].emulate(cmd, 0, tbuf);
+>   			goto check_contents;
+>   		}
+>   
 Looks good to me.
 
 Reviewed-by: Sagi Grimberg <sagig@mellanox.com>
