@@ -1,13 +1,13 @@
 From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [PATCH 6/9] target/sbc: Add sbc_dif_write_insert software emulation
-Date: Mon, 07 Apr 2014 10:36:42 +0300
-Message-ID: <5342558A.9070205@dev.mellanox.co.il>
-References: <1396517753-23546-1-git-send-email-nab@daterainc.com> <1396517753-23546-7-git-send-email-nab@daterainc.com>
+Subject: Re: [PATCH 7/9] target: Enable WRITE_INSERT emulation in target_execute_cmd
+Date: Mon, 07 Apr 2014 10:39:27 +0300
+Message-ID: <5342562F.1070706@dev.mellanox.co.il>
+References: <1396517753-23546-1-git-send-email-nab@daterainc.com> <1396517753-23546-8-git-send-email-nab@daterainc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1396517753-23546-7-git-send-email-nab@daterainc.com>
+In-Reply-To: <1396517753-23546-8-git-send-email-nab@daterainc.com>
 Sender: target-devel-owner@vger.kernel.org
 To: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagig@mellanox.com>, Or Gerlitz <ogerlitz@mellanox.com>, Quinn Tran <quinn.tran@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Nicholas Bellinger <nab@linux-iscsi.org>
@@ -16,12 +16,14 @@ List-Id: linux-scsi@vger.kernel.org
 On 4/3/2014 12:35 PM, Nicholas A. Bellinger wrote:
 > From: Nicholas Bellinger <nab@linux-iscsi.org>
 >
-> This patch adds WRITE_INSERT emulation within target-core
-> using TYPE1 / TYPE3 PI modes.
+> This patch enables WRITE_INSERT emulation in target_execute_cmd()
+> in order to locally generate DIF PI before submitting the WRITE
+> to the underlying backend device.
 >
-> This is useful in order for existing legacy fabrics that do not
-> support protection offloads to interact with backend devices that
-> currently have T10 PI enabled.
+> This is required for fabric drivers that currently don't support
+> DIF over-the-wire, in order to inact with backend devices that
+> have hardware (IBLOCK) or software (FILEIO + RAMDISK) support
+> for handling T10 PI.
 >
 > Cc: Martin K. Petersen <martin.petersen@oracle.com>
 > Cc: Sagi Grimberg <sagig@mellanox.com>
@@ -30,83 +32,32 @@ On 4/3/2014 12:35 PM, Nicholas A. Bellinger wrote:
 > Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>
 > Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 > ---
->   drivers/target/target_core_sbc.c     |   44 ++++++++++++++++++++++++++++++++++
->   include/target/target_core_backend.h |    1 +
->   2 files changed, 45 insertions(+)
+>   drivers/target/target_core_transport.c |    9 +++++++++
+>   1 file changed, 9 insertions(+)
 >
-> diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
-> index f2d73dd..97b207d 100644
-> --- a/drivers/target/target_core_sbc.c
-> +++ b/drivers/target/target_core_sbc.c
-> @@ -1096,6 +1096,50 @@ err:
->   }
->   EXPORT_SYMBOL(sbc_execute_unmap);
->   
-> +void
-> +sbc_dif_write_insert(struct se_cmd *cmd)
-
-Better to call it sbc_dif_generate()
-
-> +{
-> +	struct se_device *dev = cmd->se_dev;
-> +	struct se_dif_v1_tuple *sdt;
-> +	struct scatterlist *dsg, *psg = cmd->t_prot_sg;
-> +	sector_t sector = cmd->t_task_lba;
-> +	void *daddr, *paddr;
-> +	int i, j, offset = 0;
-> +
-> +	for_each_sg(cmd->t_data_sg, dsg, cmd->t_data_nents, i) {
-> +		daddr = kmap_atomic(sg_page(dsg)) + dsg->offset;
-> +		paddr = kmap_atomic(sg_page(psg)) + psg->offset;
-> +
-> +		for (j = 0; j < dsg->length; j += dev->dev_attrib.block_size) {
-> +
-> +			if (offset >= psg->length) {
-> +				kunmap_atomic(paddr);
-> +				psg = sg_next(psg);
-> +				paddr = kmap_atomic(sg_page(psg)) + psg->offset;
-> +				offset = 0;
-> +			}
-> +
-> +			sdt = paddr + offset;
-> +			sdt->guard_tag = cpu_to_be16(crc_t10dif(daddr + j,
-> +						dev->dev_attrib.block_size));
-> +			if (dev->dev_attrib.pi_prot_type == TARGET_DIF_TYPE1_PROT)
-> +				sdt->ref_tag = cpu_to_be32(sector & 0xffffffff);
-> +			sdt->app_tag = 0;
-> +
-> +			pr_debug("DIF WRITE INSERT sector: %llu guard_tag: 0x%04x"
-> +				 " app_tag: 0x%04x ref_tag: %u\n",
-> +				 (unsigned long long)sector, sdt->guard_tag,
-> +				 sdt->app_tag, be32_to_cpu(sdt->ref_tag));
-> +
-> +			sector++;
-> +			offset += sizeof(struct se_dif_v1_tuple);
-> +		}
-> +
-> +		kunmap_atomic(paddr);
-> +		kunmap_atomic(daddr);
+> diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+> index 9c820ba..530a9e8 100644
+> --- a/drivers/target/target_core_transport.c
+> +++ b/drivers/target/target_core_transport.c
+> @@ -1767,6 +1767,15 @@ void target_execute_cmd(struct se_cmd *cmd)
+>   	cmd->t_state = TRANSPORT_PROCESSING;
+>   	cmd->transport_state |= CMD_T_ACTIVE|CMD_T_BUSY|CMD_T_SENT;
+>   	spin_unlock_irq(&cmd->t_state_lock);
+> +	/*
+> +	 * Perform WRITE_INSERT of PI using software emulation when backend
+> +	 * device has PI enabled, if the transport has not already generated
+> +	 * PI using hardware WRITE_INSERT offload.
+> +	 */
+> +	if (cmd->prot_op == TARGET_PROT_DOUT_INSERT) {
+> +		if (!(cmd->se_sess->sup_prot_ops & TARGET_PROT_DOUT_INSERT))
+> +			sbc_dif_write_insert(cmd);
 > +	}
-> +}
+>   
+>   	if (target_handle_task_attr(cmd)) {
+>   		spin_lock_irq(&cmd->t_state_lock);
+Looks good to me.
 
-Seems like a substantial code duplication here, can't you reuse the code 
-from verify?
-Maybe use this function also from verify (call generate() and then do 
-compare to t_prot_sg).
+Reviewed-by: Sagi Grimberg <sagig@mellanox.com>
 
-> +
->   static sense_reason_t
->   sbc_dif_v1_verify(struct se_device *dev, struct se_dif_v1_tuple *sdt,
->   		  const void *p, sector_t sector, unsigned int ei_lba)
-> diff --git a/include/target/target_core_backend.h b/include/target/target_core_backend.h
-> index 7020e33..8e6eac6 100644
-> --- a/include/target/target_core_backend.h
-> +++ b/include/target/target_core_backend.h
-> @@ -73,6 +73,7 @@ sense_reason_t sbc_execute_unmap(struct se_cmd *cmd,
->   	sense_reason_t (*do_unmap_fn)(struct se_cmd *cmd, void *priv,
->   				      sector_t lba, sector_t nolb),
->   	void *priv);
-> +void	sbc_dif_write_insert(struct se_cmd *);
->   sense_reason_t	sbc_dif_verify_write(struct se_cmd *, sector_t, unsigned int,
->   				     unsigned int, struct scatterlist *, int);
->   sense_reason_t	sbc_dif_verify_read(struct se_cmd *, sector_t, unsigned int,
+This is useless though without the code setting this prot_op in 
+sbc_set_prot_op_checks()...
