@@ -1,23 +1,29 @@
 From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [PATCH 4/9] target/spc: Only expose PI mode page bits when supported
+Subject: Re: [PATCH 5/9] target/sbc: Only expose PI read_cap16 bits when supported
  by fabric
-Date: Mon, 07 Apr 2014 10:31:23 +0300
-Message-ID: <5342544B.1080204@dev.mellanox.co.il>
-References: <1396517753-23546-1-git-send-email-nab@daterainc.com> <1396517753-23546-5-git-send-email-nab@daterainc.com>
+Date: Mon, 07 Apr 2014 10:32:05 +0300
+Message-ID: <53425475.80603@dev.mellanox.co.il>
+References: <1396517753-23546-1-git-send-email-nab@daterainc.com> <1396517753-23546-6-git-send-email-nab@daterainc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1396517753-23546-5-git-send-email-nab@daterainc.com>
-Sender: target-devel-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:41883 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754834AbaDGHcL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Apr 2014 03:32:11 -0400
+Received: by mail-wi0-f176.google.com with SMTP id r20so4507187wiv.15
+        for <linux-scsi@vger.kernel.org>; Mon, 07 Apr 2014 00:32:10 -0700 (PDT)
+In-Reply-To: <1396517753-23546-6-git-send-email-nab@daterainc.com>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagig@mellanox.com>, Or Gerlitz <ogerlitz@mellanox.com>, Quinn Tran <quinn.tran@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Nicholas Bellinger <nab@linux-iscsi.org>
-List-Id: linux-scsi@vger.kernel.org
 
 On 4/3/2014 12:35 PM, Nicholas A. Bellinger wrote:
 > From: Nicholas Bellinger <nab@linux-iscsi.org>
 >
-> Only expose the control modepage bit for Application Tag Owner (ATO)
+> Only expose the PI protection type bits in READ_CAPACITY_16
 > if the session + fabric support DIX PASS operations.
 >
 > Cc: Martin K. Petersen <martin.petersen@oracle.com>
@@ -27,113 +33,34 @@ On 4/3/2014 12:35 PM, Nicholas A. Bellinger wrote:
 > Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>
 > Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 > ---
->   drivers/target/target_core_spc.c |   28 +++++++++++++++++-----------
->   1 file changed, 17 insertions(+), 11 deletions(-)
+>   drivers/target/target_core_sbc.c |    7 +++++--
+>   1 file changed, 5 insertions(+), 2 deletions(-)
 >
-> diff --git a/drivers/target/target_core_spc.c b/drivers/target/target_core_spc.c
-> index d4c6a31..8653666 100644
-> --- a/drivers/target/target_core_spc.c
-> +++ b/drivers/target/target_core_spc.c
-> @@ -769,7 +769,7 @@ out:
->   	return ret;
->   }
->   
-> -static int spc_modesense_rwrecovery(struct se_device *dev, u8 pc, u8 *p)
-> +static int spc_modesense_rwrecovery(struct se_cmd *cmd, u8 pc, u8 *p)
+> diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
+> index ec204f7..f2d73dd 100644
+> --- a/drivers/target/target_core_sbc.c
+> +++ b/drivers/target/target_core_sbc.c
+> @@ -89,6 +89,7 @@ static sense_reason_t
+>   sbc_emulate_readcapacity_16(struct se_cmd *cmd)
 >   {
->   	p[0] = 0x01;
->   	p[1] = 0x0a;
-> @@ -782,8 +782,11 @@ out:
->   	return 12;
->   }
->   
-> -static int spc_modesense_control(struct se_device *dev, u8 pc, u8 *p)
-> +static int spc_modesense_control(struct se_cmd *cmd, u8 pc, u8 *p)
->   {
-> +	struct se_device *dev = cmd->se_dev;
+>   	struct se_device *dev = cmd->se_dev;
 > +	struct se_session *sess = cmd->se_sess;
-> +
->   	p[0] = 0x0a;
->   	p[1] = 0x0a;
->   
-> @@ -875,8 +878,10 @@ static int spc_modesense_control(struct se_device *dev, u8 pc, u8 *p)
->   	 * type, shall not modify the contents of the LOGICAL BLOCK REFERENCE
->   	 * TAG field.
+>   	unsigned char *rbuf;
+>   	unsigned char buf[32];
+>   	unsigned long long blocks = dev->transport->get_blocks(dev);
+> @@ -109,8 +110,10 @@ sbc_emulate_readcapacity_16(struct se_cmd *cmd)
+>   	/*
+>   	 * Set P_TYPE and PROT_EN bits for DIF support
 >   	 */
 > -	if (dev->dev_attrib.pi_prot_type)
-> -		p[5] |= 0x80;
+> -		buf[12] = (dev->dev_attrib.pi_prot_type - 1) << 1 | 0x1;
 > +	if (sess->sup_prot_ops & (TARGET_PROT_DIN_PASS | TARGET_PROT_DOUT_PASS)) {
 > +		if (dev->dev_attrib.pi_prot_type)
-> +			p[5] |= 0x80;
+> +			buf[12] = (dev->dev_attrib.pi_prot_type - 1) << 1 | 0x1;
 > +	}
 >   
->   	p[8] = 0xff;
->   	p[9] = 0xff;
-> @@ -886,8 +891,10 @@ out:
->   	return 12;
->   }
->   
-> -static int spc_modesense_caching(struct se_device *dev, u8 pc, u8 *p)
-> +static int spc_modesense_caching(struct se_cmd *cmd, u8 pc, u8 *p)
->   {
-> +	struct se_device *dev = cmd->se_dev;
-> +
->   	p[0] = 0x08;
->   	p[1] = 0x12;
->   
-> @@ -903,7 +910,7 @@ out:
->   	return 20;
->   }
->   
-> -static int spc_modesense_informational_exceptions(struct se_device *dev, u8 pc, unsigned char *p)
-> +static int spc_modesense_informational_exceptions(struct se_cmd *cmd, u8 pc, unsigned char *p)
->   {
->   	p[0] = 0x1c;
->   	p[1] = 0x0a;
-> @@ -919,7 +926,7 @@ out:
->   static struct {
->   	uint8_t		page;
->   	uint8_t		subpage;
-> -	int		(*emulate)(struct se_device *, u8, unsigned char *);
-> +	int		(*emulate)(struct se_cmd *, u8, unsigned char *);
->   } modesense_handlers[] = {
->   	{ .page = 0x01, .subpage = 0x00, .emulate = spc_modesense_rwrecovery },
->   	{ .page = 0x08, .subpage = 0x00, .emulate = spc_modesense_caching },
-> @@ -1057,7 +1064,7 @@ static sense_reason_t spc_emulate_modesense(struct se_cmd *cmd)
->   			 * the only two possibilities).
->   			 */
->   			if ((modesense_handlers[i].subpage & ~subpage) == 0) {
-> -				ret = modesense_handlers[i].emulate(dev, pc, &buf[length]);
-> +				ret = modesense_handlers[i].emulate(cmd, pc, &buf[length]);
->   				if (!ten && length + ret >= 255)
->   					break;
->   				length += ret;
-> @@ -1070,7 +1077,7 @@ static sense_reason_t spc_emulate_modesense(struct se_cmd *cmd)
->   	for (i = 0; i < ARRAY_SIZE(modesense_handlers); ++i)
->   		if (modesense_handlers[i].page == page &&
->   		    modesense_handlers[i].subpage == subpage) {
-> -			length += modesense_handlers[i].emulate(dev, pc, &buf[length]);
-> +			length += modesense_handlers[i].emulate(cmd, pc, &buf[length]);
->   			goto set_length;
->   		}
->   
-> @@ -1102,7 +1109,6 @@ set_length:
->   
->   static sense_reason_t spc_emulate_modeselect(struct se_cmd *cmd)
->   {
-> -	struct se_device *dev = cmd->se_dev;
->   	char *cdb = cmd->t_task_cdb;
->   	bool ten = cdb[0] == MODE_SELECT_10;
->   	int off = ten ? 8 : 4;
-> @@ -1138,7 +1144,7 @@ static sense_reason_t spc_emulate_modeselect(struct se_cmd *cmd)
->   		if (modesense_handlers[i].page == page &&
->   		    modesense_handlers[i].subpage == subpage) {
->   			memset(tbuf, 0, SE_MODE_PAGE_BUF);
-> -			length = modesense_handlers[i].emulate(dev, 0, tbuf);
-> +			length = modesense_handlers[i].emulate(cmd, 0, tbuf);
->   			goto check_contents;
->   		}
->   
+>   	if (dev->transport->get_lbppbe)
+>   		buf[13] = dev->transport->get_lbppbe(dev) & 0x0f;
 Looks good to me.
 
 Reviewed-by: Sagi Grimberg <sagig@mellanox.com>
