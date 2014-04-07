@@ -1,90 +1,212 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 2/9] target: Pass in transport supported PI at session
- initialization
-Date: Mon, 07 Apr 2014 01:01:55 -0700
-Message-ID: <1396857715.19888.2.camel@haakon3.risingtidesystems.com>
-References: <1396517753-23546-1-git-send-email-nab@daterainc.com>
-	 <1396517753-23546-3-git-send-email-nab@daterainc.com>
-	 <53425386.7090507@dev.mellanox.co.il>
+From: Sagi Grimberg <sagig@dev.mellanox.co.il>
+Subject: Re: [PATCH 6/6] virtio-scsi: Enable DIF/DIX modes in SCSI host LLD
+Date: Mon, 07 Apr 2014 11:03:16 +0300
+Message-ID: <53425BC4.4040707@dev.mellanox.co.il>
+References: <1396819929-29687-1-git-send-email-nab@daterainc.com> <1396819929-29687-7-git-send-email-nab@daterainc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:55483 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752977AbaDGICD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Apr 2014 04:02:03 -0400
-In-Reply-To: <53425386.7090507@dev.mellanox.co.il>
+Received: from mail-wg0-f48.google.com ([74.125.82.48]:43145 "EHLO
+	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752977AbaDGIDV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Apr 2014 04:03:21 -0400
+Received: by mail-wg0-f48.google.com with SMTP id l18so6363166wgh.31
+        for <linux-scsi@vger.kernel.org>; Mon, 07 Apr 2014 01:03:20 -0700 (PDT)
+In-Reply-To: <1396819929-29687-7-git-send-email-nab@daterainc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagig@mellanox.com>, Or Gerlitz <ogerlitz@mellanox.com>, Quinn Tran <quinn.tran@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>
+To: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, "Michael S. Tsirkin" <mst@redhat.com>, Paolo Bonzini <pbonzini@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, "H. Peter Anvin" <hpa@zytor.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 
-On Mon, 2014-04-07 at 10:28 +0300, Sagi Grimberg wrote:
-> On 4/3/2014 12:35 PM, Nicholas A. Bellinger wrote:
-> > From: Nicholas Bellinger <nab@linux-iscsi.org>
-> >
-> > In order to support local WRITE_INSERT + READ_STRIP operations for
-> > non PI enabled fabrics, the fabric driver needs to be able signal
-> > what protection offload operations are supported.
-> >
-> > This is done at session initialization time so the modes can be
-> > signaled by individual se_wwn + se_portal_group endpoints, as well
-> > as optionally across different transports on the same endpoint.
-> >
-> > For iser-target, set TARGET_PROT_ALL if the underlying ib_device
-> > has already signaled PI offload support, and allow this to be
-> > exposed via a new iscsit_transport->iscsit_get_sup_prot_ops()
-> > callback.
-> >
-> > For loopback, set TARGET_PROT_ALL to signal SCSI initiator mode
-> > operation.
-> >
-> > For all other drivers, set TARGET_PROT_NORMAL to disable fabric
-> > level PI.
-> >
-> > Cc: Martin K. Petersen <martin.petersen@oracle.com>
-> > Cc: Sagi Grimberg <sagig@mellanox.com>
-> > Cc: Or Gerlitz <ogerlitz@mellanox.com>
-> > Cc: Quinn Tran <quinn.tran@qlogic.com>
-> > Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>
-> > Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
-> > ---
-> >   drivers/infiniband/ulp/isert/ib_isert.c   |   13 +++++++++++++
-> >   drivers/infiniband/ulp/srpt/ib_srpt.c     |    2 +-
-> >   drivers/scsi/qla2xxx/tcm_qla2xxx.c        |    2 +-
-> >   drivers/target/iscsi/iscsi_target.c       |    6 ++++++
-> >   drivers/target/iscsi/iscsi_target_login.c |    4 +++-
-> >   drivers/target/loopback/tcm_loop.c        |    2 +-
-> >   drivers/target/sbp/sbp_target.c           |    2 +-
-> >   drivers/target/target_core_transport.c    |    8 +++++---
-> >   drivers/target/tcm_fc/tfc_sess.c          |    3 ++-
-> >   drivers/usb/gadget/tcm_usb_gadget.c       |    2 +-
-> >   drivers/vhost/scsi.c                      |    3 ++-
-> >   include/target/iscsi/iscsi_transport.h    |    1 +
-> >   include/target/target_core_base.h         |   19 ++++++++++++-------
-> >   include/target/target_core_fabric.h       |    5 +++--
-> >   14 files changed, 52 insertions(+), 20 deletions(-)
-> >
+On 4/7/2014 12:32 AM, Nicholas A. Bellinger wrote:
+> From: Nicholas Bellinger <nab@linux-iscsi.org>
+>
+> This patch updates virtscsi_probe() to setup necessary Scsi_Host
+> level protection resources. (currently hardcoded to 1)
+>
+> It changes virtscsi_add_cmd() to attach outgoing / incoming
+> protection SGLs preceeding the data payload, and is using the
+> new virtio_scsi_cmd_req_pi->d[oi],pi_niv field to signal
+> to signal to vhost/scsi how many prot_sgs to expect.
+>
+> v3 changes:
+>    - Use VIRTIO_SCSI_F_T10_PI to determine PI or non PI header (Paolo)
+>
+> v2 changes:
+>    - Make protection buffer come before data buffer (Paolo)
+>    - Enable virtio_scsi_cmd_req_pi usage (Paolo)
+>
+> Cc: Paolo Bonzini <pbonzini@redhat.com>
+> Cc: Michael S. Tsirkin <mst@redhat.com>
+> Cc: Martin K. Petersen <martin.petersen@oracle.com>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Hannes Reinecke <hare@suse.de>
+> Cc: Sagi Grimberg <sagig@dev.mellanox.co.il>
+> Cc: H. Peter Anvin <hpa@zytor.com>
+> Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+> ---
+>   drivers/scsi/virtio_scsi.c |   78 ++++++++++++++++++++++++++++++++++----------
+>   1 file changed, 60 insertions(+), 18 deletions(-)
+>
+> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+> index 16bfd50..68d8d1b 100644
+> --- a/drivers/scsi/virtio_scsi.c
+> +++ b/drivers/scsi/virtio_scsi.c
+> @@ -37,6 +37,7 @@ struct virtio_scsi_cmd {
+>   	struct completion *comp;
+>   	union {
+>   		struct virtio_scsi_cmd_req       cmd;
+> +		struct virtio_scsi_cmd_req_pi    cmd_pi;
+>   		struct virtio_scsi_ctrl_tmf_req  tmf;
+>   		struct virtio_scsi_ctrl_an_req   an;
+>   	} req;
+> @@ -440,7 +441,7 @@ static int virtscsi_add_cmd(struct virtqueue *vq,
+>   			    size_t req_size, size_t resp_size, gfp_t gfp)
+>   {
+>   	struct scsi_cmnd *sc = cmd->sc;
+> -	struct scatterlist *sgs[4], req, resp;
+> +	struct scatterlist *sgs[6], req, resp;
+>   	struct sg_table *out, *in;
+>   	unsigned out_num = 0, in_num = 0;
+>   
+> @@ -458,16 +459,24 @@ static int virtscsi_add_cmd(struct virtqueue *vq,
+>   	sgs[out_num++] = &req;
+>   
+>   	/* Data-out buffer.  */
+> -	if (out)
+> +	if (out) {
+> +		/* Place WRITE protection SGLs before Data OUT payload */
+> +		if (scsi_prot_sg_count(sc))
 
-<SNIP>
+Didn't we agree that the LLD should not discard the scmnd prot_op? Martin?
 
-> > diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-> > index 96aee43..78cab13 100644
-> > --- a/drivers/target/iscsi/iscsi_target.c
-> > +++ b/drivers/target/iscsi/iscsi_target.c
-> > @@ -511,6 +511,11 @@ static void iscsit_aborted_task(struct iscsi_conn *conn, struct iscsi_cmd *cmd)
-> >   	__iscsit_free_cmd(cmd, scsi_cmd, true);
-> >   }
-> >   
-> > +static enum target_prot_op iscsit_get_sup_prot_ops(struct iscsi_conn *conn)
-> 
-> I think it is more correct that this routine will return a bitmap (u32) 
-> and not the enumeration itself.
-> 
+> +			sgs[out_num++] = scsi_prot_sglist(sc);
+>   		sgs[out_num++] = out->sgl;
+> +	}
+>   
+>   	/* Response header.  */
+>   	sg_init_one(&resp, &cmd->resp, resp_size);
+>   	sgs[out_num + in_num++] = &resp;
+>   
+>   	/* Data-in buffer */
+> -	if (in)
+> +	if (in) {
+> +		/* Place READ protection SGLs before Data IN payload */
+> +		if (scsi_prot_sg_count(sc))
 
-Yeah, I was originally unsure if using bitmask ops on enums was OK, but
-AFAICT it's perfectly safe and works fine here for this case.
+Same here.
 
---nab 
+> +			sgs[out_num + in_num++] = scsi_prot_sglist(sc);
+>   		sgs[out_num + in_num++] = in->sgl;
+> +	}
+>   
+>   	return virtqueue_add_sgs(vq, sgs, out_num, in_num, cmd, gfp);
+>   }
+> @@ -492,12 +501,36 @@ static int virtscsi_kick_cmd(struct virtio_scsi_vq *vq,
+>   	return err;
+>   }
+>   
+> +static void virtio_scsi_init_hdr(struct virtio_scsi_cmd_req *cmd,
+> +				 struct scsi_cmnd *sc)
+> +{
+> +	cmd->lun[0] = 1;
+> +	cmd->lun[1] = sc->device->id;
+> +	cmd->lun[2] = (sc->device->lun >> 8) | 0x40;
+> +	cmd->lun[3] = sc->device->lun & 0xff;
+> +	cmd->tag = (unsigned long)sc;
+> +	cmd->task_attr = VIRTIO_SCSI_S_SIMPLE;
+> +	cmd->prio = 0;
+> +	cmd->crn = 0;
+> +}
+> +
+> +static void virtio_scsi_init_hdr_pi(struct virtio_scsi_cmd_req_pi *cmd_pi,
+> +				    struct scsi_cmnd *sc)
+> +{
+> +	virtio_scsi_init_hdr((struct virtio_scsi_cmd_req *)cmd_pi, sc);
+> +
+> +	if (sc->sc_data_direction == DMA_TO_DEVICE)
+> +		cmd_pi->do_pi_niov = scsi_prot_sg_count(sc);
+> +	else if (sc->sc_data_direction == DMA_FROM_DEVICE)
+> +		cmd_pi->di_pi_niov = scsi_prot_sg_count(sc);
+> +}
+> +
+>   static int virtscsi_queuecommand(struct virtio_scsi *vscsi,
+>   				 struct virtio_scsi_vq *req_vq,
+>   				 struct scsi_cmnd *sc)
+>   {
+>   	struct virtio_scsi_cmd *cmd;
+> -	int ret;
+> +	int ret, req_size;
+>   
+>   	struct Scsi_Host *shost = virtio_scsi_host(vscsi->vdev);
+>   	BUG_ON(scsi_sg_count(sc) > shost->sg_tablesize);
+> @@ -515,22 +548,20 @@ static int virtscsi_queuecommand(struct virtio_scsi *vscsi,
+>   
+>   	memset(cmd, 0, sizeof(*cmd));
+>   	cmd->sc = sc;
+> -	cmd->req.cmd = (struct virtio_scsi_cmd_req){
+> -		.lun[0] = 1,
+> -		.lun[1] = sc->device->id,
+> -		.lun[2] = (sc->device->lun >> 8) | 0x40,
+> -		.lun[3] = sc->device->lun & 0xff,
+> -		.tag = (unsigned long)sc,
+> -		.task_attr = VIRTIO_SCSI_S_SIMPLE,
+> -		.prio = 0,
+> -		.crn = 0,
+> -	};
+>   
+>   	BUG_ON(sc->cmd_len > VIRTIO_SCSI_CDB_SIZE);
+> -	memcpy(cmd->req.cmd.cdb, sc->cmnd, sc->cmd_len);
+>   
+> -	if (virtscsi_kick_cmd(req_vq, cmd,
+> -			      sizeof cmd->req.cmd, sizeof cmd->resp.cmd,
+> +	if (virtio_has_feature(vscsi->vdev, VIRTIO_SCSI_F_T10_PI)) {
+> +		virtio_scsi_init_hdr_pi(&cmd->req.cmd_pi, sc);
+> +		memcpy(cmd->req.cmd_pi.cdb, sc->cmnd, sc->cmd_len);
+> +		req_size = sizeof(cmd->req.cmd_pi);
+> +	} else {
+> +		virtio_scsi_init_hdr(&cmd->req.cmd, sc);
+> +		memcpy(cmd->req.cmd.cdb, sc->cmnd, sc->cmd_len);
+> +		req_size = sizeof(cmd->req.cmd);
+> +	}
+> +
+> +	if (virtscsi_kick_cmd(req_vq, cmd, req_size, sizeof(cmd->resp.cmd),
+>   			      GFP_ATOMIC) == 0)
+>   		ret = 0;
+>   	else
+> @@ -871,7 +902,7 @@ static int virtscsi_probe(struct virtio_device *vdev)
+>   {
+>   	struct Scsi_Host *shost;
+>   	struct virtio_scsi *vscsi;
+> -	int err;
+> +	int err, host_prot;
+>   	u32 sg_elems, num_targets;
+>   	u32 cmd_per_lun;
+>   	u32 num_queues;
+> @@ -921,6 +952,16 @@ static int virtscsi_probe(struct virtio_device *vdev)
+>   	shost->max_id = num_targets;
+>   	shost->max_channel = 0;
+>   	shost->max_cmd_len = VIRTIO_SCSI_CDB_SIZE;
+> +
+> +	if (virtio_has_feature(vdev, VIRTIO_SCSI_F_T10_PI)) {
+> +		host_prot = SHOST_DIF_TYPE1_PROTECTION | SHOST_DIF_TYPE2_PROTECTION |
+> +			    SHOST_DIF_TYPE3_PROTECTION | SHOST_DIX_TYPE1_PROTECTION |
+> +			    SHOST_DIX_TYPE2_PROTECTION | SHOST_DIX_TYPE3_PROTECTION;
+> +
+> +		scsi_host_set_prot(shost, host_prot);
+> +		scsi_host_set_guard(shost, SHOST_DIX_GUARD_CRC);
+> +	}
+> +
+>   	err = scsi_add_host(shost, &vdev->dev);
+>   	if (err)
+>   		goto scsi_add_host_failed;
+> @@ -990,6 +1031,7 @@ static struct virtio_device_id id_table[] = {
+>   static unsigned int features[] = {
+>   	VIRTIO_SCSI_F_HOTPLUG,
+>   	VIRTIO_SCSI_F_CHANGE,
+> +	VIRTIO_SCSI_F_T10_PI,
+>   };
+>   
+>   static struct virtio_driver virtio_scsi_driver = {
 
