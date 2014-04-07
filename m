@@ -1,113 +1,223 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+From: "Michael S. Tsirkin" <mst@redhat.com>
 Subject: Re: [PATCH 6/6] virtio-scsi: Enable DIF/DIX modes in SCSI host LLD
-Date: Mon, 07 Apr 2014 01:40:57 -0700
-Message-ID: <1396860057.19888.20.camel@haakon3.risingtidesystems.com>
+Date: Mon, 7 Apr 2014 11:45:18 +0300
+Message-ID: <20140407084518.GA14091@redhat.com>
 References: <1396819929-29687-1-git-send-email-nab@daterainc.com>
-	 <1396819929-29687-7-git-send-email-nab@daterainc.com>
-	 <53425BC4.4040707@dev.mellanox.co.il>
+	<1396819929-29687-7-git-send-email-nab@daterainc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <53425BC4.4040707@dev.mellanox.co.il>
-Sender: target-devel-owner@vger.kernel.org
-To: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, "Michael S. Tsirkin" <mst@redhat.com>, Paolo Bonzini <pbonzini@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, "H. Peter Anvin" <hpa@zytor.com>
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+Content-Disposition: inline
+In-Reply-To: <1396819929-29687-7-git-send-email-nab@daterainc.com>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: "Nicholas A. Bellinger" <nab@daterainc.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagig@dev.mellanox.co.il>, virtualization@lists.linux-foundation.org, Sagi Grimberg <sagig@mellanox.com>, target-devel <target-devel@vger.kernel.org>, "H. Peter Anvin" <hpa@zytor.com>, Paolo Bonzini <pbonzini@redhat.com>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 2014-04-07 at 11:03 +0300, Sagi Grimberg wrote:
-> On 4/7/2014 12:32 AM, Nicholas A. Bellinger wrote:
-> > From: Nicholas Bellinger <nab@linux-iscsi.org>
-> >
-> > This patch updates virtscsi_probe() to setup necessary Scsi_Host
-> > level protection resources. (currently hardcoded to 1)
-> >
-> > It changes virtscsi_add_cmd() to attach outgoing / incoming
-> > protection SGLs preceeding the data payload, and is using the
-> > new virtio_scsi_cmd_req_pi->d[oi],pi_niv field to signal
-> > to signal to vhost/scsi how many prot_sgs to expect.
-> >
-> > v3 changes:
-> >    - Use VIRTIO_SCSI_F_T10_PI to determine PI or non PI header (Paolo)
-> >
-> > v2 changes:
-> >    - Make protection buffer come before data buffer (Paolo)
-> >    - Enable virtio_scsi_cmd_req_pi usage (Paolo)
-> >
-> > Cc: Paolo Bonzini <pbonzini@redhat.com>
-> > Cc: Michael S. Tsirkin <mst@redhat.com>
-> > Cc: Martin K. Petersen <martin.petersen@oracle.com>
-> > Cc: Christoph Hellwig <hch@lst.de>
-> > Cc: Hannes Reinecke <hare@suse.de>
-> > Cc: Sagi Grimberg <sagig@dev.mellanox.co.il>
-> > Cc: H. Peter Anvin <hpa@zytor.com>
-> > Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
-> > ---
-> >   drivers/scsi/virtio_scsi.c |   78 ++++++++++++++++++++++++++++++++++----------
-> >   1 file changed, 60 insertions(+), 18 deletions(-)
-> >
-> > diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-> > index 16bfd50..68d8d1b 100644
-> > --- a/drivers/scsi/virtio_scsi.c
-> > +++ b/drivers/scsi/virtio_scsi.c
-> > @@ -37,6 +37,7 @@ struct virtio_scsi_cmd {
-> >   	struct completion *comp;
-> >   	union {
-> >   		struct virtio_scsi_cmd_req       cmd;
-> > +		struct virtio_scsi_cmd_req_pi    cmd_pi;
-> >   		struct virtio_scsi_ctrl_tmf_req  tmf;
-> >   		struct virtio_scsi_ctrl_an_req   an;
-> >   	} req;
-> > @@ -440,7 +441,7 @@ static int virtscsi_add_cmd(struct virtqueue *vq,
-> >   			    size_t req_size, size_t resp_size, gfp_t gfp)
-> >   {
-> >   	struct scsi_cmnd *sc = cmd->sc;
-> > -	struct scatterlist *sgs[4], req, resp;
-> > +	struct scatterlist *sgs[6], req, resp;
-> >   	struct sg_table *out, *in;
-> >   	unsigned out_num = 0, in_num = 0;
-> >   
-> > @@ -458,16 +459,24 @@ static int virtscsi_add_cmd(struct virtqueue *vq,
-> >   	sgs[out_num++] = &req;
-> >   
-> >   	/* Data-out buffer.  */
-> > -	if (out)
-> > +	if (out) {
-> > +		/* Place WRITE protection SGLs before Data OUT payload */
-> > +		if (scsi_prot_sg_count(sc))
+On Sun, Apr 06, 2014 at 09:32:09PM +0000, Nicholas A. Bellinger wrote:
+> From: Nicholas Bellinger <nab@linux-iscsi.org>
 > 
-> Didn't we agree that the LLD should not discard the scmnd prot_op? Martin?
+> This patch updates virtscsi_probe() to setup necessary Scsi_Host
+> level protection resources. (currently hardcoded to 1)
 > 
-
-Without the initiator providing a protection buffer, there is not much
-else that can be done here.
-
-So for the special case where the protect CDB is set, but no protection
-buffer is provided, the WRITE_INSERT / READ_STRIP emulation should kick
-in on the target side.
-
---nab
-
-> > +			sgs[out_num++] = scsi_prot_sglist(sc);
-> >   		sgs[out_num++] = out->sgl;
-> > +	}
-> >   
-> >   	/* Response header.  */
-> >   	sg_init_one(&resp, &cmd->resp, resp_size);
-> >   	sgs[out_num + in_num++] = &resp;
-> >   
-> >   	/* Data-in buffer */
-> > -	if (in)
-> > +	if (in) {
-> > +		/* Place READ protection SGLs before Data IN payload */
-> > +		if (scsi_prot_sg_count(sc))
+> It changes virtscsi_add_cmd() to attach outgoing / incoming
+> protection SGLs preceeding the data payload, and is using the
+> new virtio_scsi_cmd_req_pi->d[oi],pi_niv field to signal
+> to signal to vhost/scsi how many prot_sgs to expect.
 > 
-> Same here.
+> v3 changes:
+>   - Use VIRTIO_SCSI_F_T10_PI to determine PI or non PI header (Paolo)
 > 
-> > +			sgs[out_num + in_num++] = scsi_prot_sglist(sc);
-> >   		sgs[out_num + in_num++] = in->sgl;
-> > +	}
-> >   
-> >   	return virtqueue_add_sgs(vq, sgs, out_num, in_num, cmd, gfp);
-> >   }
-> >
+> v2 changes:
+>   - Make protection buffer come before data buffer (Paolo)
+>   - Enable virtio_scsi_cmd_req_pi usage (Paolo)
+> 
+> Cc: Paolo Bonzini <pbonzini@redhat.com>
+> Cc: Michael S. Tsirkin <mst@redhat.com>
+> Cc: Martin K. Petersen <martin.petersen@oracle.com>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Hannes Reinecke <hare@suse.de>
+> Cc: Sagi Grimberg <sagig@dev.mellanox.co.il>
+> Cc: H. Peter Anvin <hpa@zytor.com>
+> Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+
+OK but we need to document the new interface in the spec
+(and incidentially, this will be useful to verify the assumptions
+made here and on the host side).
+Could you please submit this proposal to the OASIS Virtio TC
+for inclusion into the next spec draft?
+Ideally as a patch against the tex source, but a prose
+description would do as well.
+The TC meets on a bi-weekly basis, we should be able to ratify
+this quickly.
+
+
+> ---
+>  drivers/scsi/virtio_scsi.c |   78 ++++++++++++++++++++++++++++++++++----------
+>  1 file changed, 60 insertions(+), 18 deletions(-)
+> 
+> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+> index 16bfd50..68d8d1b 100644
+> --- a/drivers/scsi/virtio_scsi.c
+> +++ b/drivers/scsi/virtio_scsi.c
+> @@ -37,6 +37,7 @@ struct virtio_scsi_cmd {
+>  	struct completion *comp;
+>  	union {
+>  		struct virtio_scsi_cmd_req       cmd;
+> +		struct virtio_scsi_cmd_req_pi    cmd_pi;
+>  		struct virtio_scsi_ctrl_tmf_req  tmf;
+>  		struct virtio_scsi_ctrl_an_req   an;
+>  	} req;
+> @@ -440,7 +441,7 @@ static int virtscsi_add_cmd(struct virtqueue *vq,
+>  			    size_t req_size, size_t resp_size, gfp_t gfp)
+>  {
+>  	struct scsi_cmnd *sc = cmd->sc;
+> -	struct scatterlist *sgs[4], req, resp;
+> +	struct scatterlist *sgs[6], req, resp;
+>  	struct sg_table *out, *in;
+>  	unsigned out_num = 0, in_num = 0;
+>  
+> @@ -458,16 +459,24 @@ static int virtscsi_add_cmd(struct virtqueue *vq,
+>  	sgs[out_num++] = &req;
+>  
+>  	/* Data-out buffer.  */
+> -	if (out)
+> +	if (out) {
+> +		/* Place WRITE protection SGLs before Data OUT payload */
+> +		if (scsi_prot_sg_count(sc))
+> +			sgs[out_num++] = scsi_prot_sglist(sc);
+>  		sgs[out_num++] = out->sgl;
+> +	}
+>  
+>  	/* Response header.  */
+>  	sg_init_one(&resp, &cmd->resp, resp_size);
+>  	sgs[out_num + in_num++] = &resp;
+>  
+>  	/* Data-in buffer */
+> -	if (in)
+> +	if (in) {
+> +		/* Place READ protection SGLs before Data IN payload */
+> +		if (scsi_prot_sg_count(sc))
+> +			sgs[out_num + in_num++] = scsi_prot_sglist(sc);
+>  		sgs[out_num + in_num++] = in->sgl;
+> +	}
+>  
+>  	return virtqueue_add_sgs(vq, sgs, out_num, in_num, cmd, gfp);
+>  }
+> @@ -492,12 +501,36 @@ static int virtscsi_kick_cmd(struct virtio_scsi_vq *vq,
+>  	return err;
+>  }
+>  
+> +static void virtio_scsi_init_hdr(struct virtio_scsi_cmd_req *cmd,
+> +				 struct scsi_cmnd *sc)
+> +{
+> +	cmd->lun[0] = 1;
+> +	cmd->lun[1] = sc->device->id;
+> +	cmd->lun[2] = (sc->device->lun >> 8) | 0x40;
+> +	cmd->lun[3] = sc->device->lun & 0xff;
+> +	cmd->tag = (unsigned long)sc;
+> +	cmd->task_attr = VIRTIO_SCSI_S_SIMPLE;
+> +	cmd->prio = 0;
+> +	cmd->crn = 0;
+> +}
+> +
+> +static void virtio_scsi_init_hdr_pi(struct virtio_scsi_cmd_req_pi *cmd_pi,
+> +				    struct scsi_cmnd *sc)
+> +{
+> +	virtio_scsi_init_hdr((struct virtio_scsi_cmd_req *)cmd_pi, sc);
+> +
+> +	if (sc->sc_data_direction == DMA_TO_DEVICE)
+> +		cmd_pi->do_pi_niov = scsi_prot_sg_count(sc);
+> +	else if (sc->sc_data_direction == DMA_FROM_DEVICE)
+> +		cmd_pi->di_pi_niov = scsi_prot_sg_count(sc);
+> +}
+> +
+>  static int virtscsi_queuecommand(struct virtio_scsi *vscsi,
+>  				 struct virtio_scsi_vq *req_vq,
+>  				 struct scsi_cmnd *sc)
+>  {
+>  	struct virtio_scsi_cmd *cmd;
+> -	int ret;
+> +	int ret, req_size;
+>  
+>  	struct Scsi_Host *shost = virtio_scsi_host(vscsi->vdev);
+>  	BUG_ON(scsi_sg_count(sc) > shost->sg_tablesize);
+> @@ -515,22 +548,20 @@ static int virtscsi_queuecommand(struct virtio_scsi *vscsi,
+>  
+>  	memset(cmd, 0, sizeof(*cmd));
+>  	cmd->sc = sc;
+> -	cmd->req.cmd = (struct virtio_scsi_cmd_req){
+> -		.lun[0] = 1,
+> -		.lun[1] = sc->device->id,
+> -		.lun[2] = (sc->device->lun >> 8) | 0x40,
+> -		.lun[3] = sc->device->lun & 0xff,
+> -		.tag = (unsigned long)sc,
+> -		.task_attr = VIRTIO_SCSI_S_SIMPLE,
+> -		.prio = 0,
+> -		.crn = 0,
+> -	};
+>  
+>  	BUG_ON(sc->cmd_len > VIRTIO_SCSI_CDB_SIZE);
+> -	memcpy(cmd->req.cmd.cdb, sc->cmnd, sc->cmd_len);
+>  
+> -	if (virtscsi_kick_cmd(req_vq, cmd,
+> -			      sizeof cmd->req.cmd, sizeof cmd->resp.cmd,
+> +	if (virtio_has_feature(vscsi->vdev, VIRTIO_SCSI_F_T10_PI)) {
+> +		virtio_scsi_init_hdr_pi(&cmd->req.cmd_pi, sc);
+> +		memcpy(cmd->req.cmd_pi.cdb, sc->cmnd, sc->cmd_len);
+> +		req_size = sizeof(cmd->req.cmd_pi);
+> +	} else {
+> +		virtio_scsi_init_hdr(&cmd->req.cmd, sc);
+> +		memcpy(cmd->req.cmd.cdb, sc->cmnd, sc->cmd_len);
+> +		req_size = sizeof(cmd->req.cmd);
+> +	}
+> +
+> +	if (virtscsi_kick_cmd(req_vq, cmd, req_size, sizeof(cmd->resp.cmd),
+>  			      GFP_ATOMIC) == 0)
+>  		ret = 0;
+>  	else
+> @@ -871,7 +902,7 @@ static int virtscsi_probe(struct virtio_device *vdev)
+>  {
+>  	struct Scsi_Host *shost;
+>  	struct virtio_scsi *vscsi;
+> -	int err;
+> +	int err, host_prot;
+>  	u32 sg_elems, num_targets;
+>  	u32 cmd_per_lun;
+>  	u32 num_queues;
+> @@ -921,6 +952,16 @@ static int virtscsi_probe(struct virtio_device *vdev)
+>  	shost->max_id = num_targets;
+>  	shost->max_channel = 0;
+>  	shost->max_cmd_len = VIRTIO_SCSI_CDB_SIZE;
+> +
+> +	if (virtio_has_feature(vdev, VIRTIO_SCSI_F_T10_PI)) {
+> +		host_prot = SHOST_DIF_TYPE1_PROTECTION | SHOST_DIF_TYPE2_PROTECTION |
+> +			    SHOST_DIF_TYPE3_PROTECTION | SHOST_DIX_TYPE1_PROTECTION |
+> +			    SHOST_DIX_TYPE2_PROTECTION | SHOST_DIX_TYPE3_PROTECTION;
+> +
+> +		scsi_host_set_prot(shost, host_prot);
+> +		scsi_host_set_guard(shost, SHOST_DIX_GUARD_CRC);
+> +	}
+> +
+>  	err = scsi_add_host(shost, &vdev->dev);
+>  	if (err)
+>  		goto scsi_add_host_failed;
+> @@ -990,6 +1031,7 @@ static struct virtio_device_id id_table[] = {
+>  static unsigned int features[] = {
+>  	VIRTIO_SCSI_F_HOTPLUG,
+>  	VIRTIO_SCSI_F_CHANGE,
+> +	VIRTIO_SCSI_F_T10_PI,
+>  };
+>  
+>  static struct virtio_driver virtio_scsi_driver = {
+> -- 
+> 1.7.10.4
