@@ -1,51 +1,51 @@
-From: Andy Grover <agrover@redhat.com>
-Subject: [PATCH] target/tcm_fc: Fix use-after-free of ft_tpg
-Date: Mon,  7 Apr 2014 12:11:44 -0700
-Message-ID: <1396897904-20306-1-git-send-email-agrover@redhat.com>
-References: <1396825176.31010.5.camel@haakon3.risingtidesystems.com>
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1396825176.31010.5.camel@haakon3.risingtidesystems.com>
-Sender: target-devel-owner@vger.kernel.org
-To: target-devel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org, fcoe-devel@open-fcoe.org
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: [ANNOUNCE] ddpt, version 0.94 available
+Date: Mon, 07 Apr 2014 15:27:33 -0400
+Message-ID: <5342FC25.4090208@interlog.com>
+Reply-To: dgilbert@interlog.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.infotech.no ([82.134.31.41]:60310 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755537AbaDGT1i (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 7 Apr 2014 15:27:38 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: SCSI development list <linux-scsi@vger.kernel.org>
+Cc: Tomas Fasth <tomfa@debian.org>, =?ISO-8859-1?Q?Dan_Hor=E1k?= <dhorak@redhat.com>, Hannes Reinecke <hare@suse.de>, linux-kernel <linux-kernel@vger.kernel.org>, Thomas Glanzmann <thomas@glanzmann.de>
 
-This can happen:
+ddpt is yet another variant of the venerable Unix dd command
+line utility. This version adds application side support for
+a second offloaded copy mechanism defined by T10 around two
+years ago and already on the market under the name ODX.
 
-- lport created, tport (our per-lport, per-provider context) is allocated.
-  tport->tpg = NULL
-- tpg created
-- a PRLI is received. ft_tport_create is called, tpg is found and
-  tport->tpg is set
-- tpg removed. ft_tpg is freed in ft_del_tpg. Since tpg->tport was not
-  set, tport->tpg is not cleared and points at freed memory
-- Future calls to ft_tport_create return tport via first conditional,
-  instead of searching for new tpg by calling ft_lport_find_tpg.
-  tport->tpg is still invalid, and will access freed memory.
+For more information and downloads see:
+     http://sg.danny.cz/sg/ddpt.html
+     http://sg.danny.cz/sg/ddpt_xcopy_odx.html
 
-This patch sets tpg->tport in ft_tport_create, because that's what
-ft_del_tpg checks, and is the only way to get back to the tport to
-clear tport->tpg.
+Changelog for ddpt-0.94 [20140407] [svn: r277]
+   - xcopy: change default to send xcopy command to dst
+     - add XCOPY_TO_SRC and XCOPY_TO_DST environment
+       variables to guide where to send xcopy command
+   - odx: add new offloaded copy technique, also known
+     as "xcopy v2, lite", that exposes ROD Tokens
+     - ddpt supports 4 odx variants: full copy, zero
+       output blocks, read to tokens and write from
+       tokens. Latter two facilitate network copies
+     - add scatter-gather list capability to seek=,
+       skip= to read from command line, file or stdin
+   - ddptctl: add odx helper utility
+     - can issue individual PT, WUT, RRTI, Report All
+       Rod Tokens, and Copy Operation Abort commands
+     - can decode T10 defined info in Rod Token
+   - improve CL handling of short options (e.g. '-vv')
+   - point svn:externals to rev 563 of sg3_utils
+   - configure: add --disable-libsgutils option so
+     build bypasses that library if present
 
-see https://bugzilla.redhat.com/show_bug.cgi?id=1071340
+Changelog for ddpt-0.93 [20131113] [svn: r242]
+...
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Andy Grover <agrover@redhat.com>
----
- drivers/target/tcm_fc/tfc_sess.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/target/tcm_fc/tfc_sess.c b/drivers/target/tcm_fc/tfc_sess.c
-index 0475142..1329726 100644
---- a/drivers/target/tcm_fc/tfc_sess.c
-+++ b/drivers/target/tcm_fc/tfc_sess.c
-@@ -68,6 +68,7 @@ static struct ft_tport *ft_tport_create(struct fc_lport *lport)
- 
- 	if (tport) {
- 		tport->tpg = tpg;
-+		tpg->tport = tport;
- 		return tport;
- 	}
- 
--- 
-1.9.0
+Doug Gilbert
