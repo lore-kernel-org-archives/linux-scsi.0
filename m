@@ -1,51 +1,62 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: [ANNOUNCE] ddpt, version 0.94 available
-Date: Mon, 07 Apr 2014 15:27:33 -0400
-Message-ID: <5342FC25.4090208@interlog.com>
-Reply-To: dgilbert@interlog.com
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: blk-mq queue selection and queue_rq preemption
+Date: Mon, 07 Apr 2014 13:45:39 -0600
+Message-ID: <53430063.1020503@kernel.dk>
+References: <53429DA2.4030708@dev.mellanox.co.il>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:60310 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755537AbaDGT1i (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 7 Apr 2014 15:27:38 -0400
+Received: from mail-pd0-f182.google.com ([209.85.192.182]:52813 "EHLO
+	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752718AbaDGTpk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Apr 2014 15:45:40 -0400
+Received: by mail-pd0-f182.google.com with SMTP id y10so6976782pdj.41
+        for <linux-scsi@vger.kernel.org>; Mon, 07 Apr 2014 12:45:40 -0700 (PDT)
+In-Reply-To: <53429DA2.4030708@dev.mellanox.co.il>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI development list <linux-scsi@vger.kernel.org>
-Cc: Tomas Fasth <tomfa@debian.org>, =?ISO-8859-1?Q?Dan_Hor=E1k?= <dhorak@redhat.com>, Hannes Reinecke <hare@suse.de>, linux-kernel <linux-kernel@vger.kernel.org>, Thomas Glanzmann <thomas@glanzmann.de>
+To: Sagi Grimberg <sagig@dev.mellanox.co.il>, Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Or Gerlitz <ogerlitz@mellanox.com>, Oren Duer <oren@mellanox.com>
 
-ddpt is yet another variant of the venerable Unix dd command
-line utility. This version adds application side support for
-a second offloaded copy mechanism defined by T10 around two
-years ago and already on the market under the name ODX.
+On 04/07/2014 06:44 AM, Sagi Grimberg wrote:
+> Hey Jens, Christoph & Co,
+>
+> I raised this question at LSF but didn't get a clear answer on this matter.
+> So it seems to me that the hctx selection and the actual request
+> dispatch (queue_rq) are preemptive:
+> (1) blk_mq_get_ctx(q);
+> (2) map_queue(q, ctx->cpu);
+> ...
+> (3) blk_mq_put_ctx(ctx);
+> (4) blk_mq_run_hw_queue(hctx, async);
+>
+> It is possible that an MQ device driver may want to implement a lockless
+> scheme counting on (running) CPU <-> hctx attachment.
+> Generally speaking, I think that LLDs will be more comfortable knowing
+> that they are not preemptive in the dispatch flow.
+>
+> My question is, is this a must? if so can you please explain why?
+>
+> Is it possible to put the hctx (restoring preemption) after run_hw_queue
+> allowing to LLDs to be sure that the selected queue
+> match the running CPU?
 
-For more information and downloads see:
-     http://sg.danny.cz/sg/ddpt.html
-     http://sg.danny.cz/sg/ddpt_xcopy_odx.html
+It's a good question, and one I have thought about before. As you note, 
+in the existing code, the mappings are what I would refer to as "soft". 
+Generally speaking, CPU X will always map to hardware queue Y, but there 
+are no specific guarantees made to effect. It would be trivial to make 
+this mapping hard, and I'd be very open to doing that. But so far I 
+haven't seen cases where it would improve things. If you end up being 
+preempted and moved to a different CPU, it doesn't really matter if this 
+happens before or after you queued the IO - the completion will end up 
+in the "wrong" location regardless.
 
-Changelog for ddpt-0.94 [20140407] [svn: r277]
-   - xcopy: change default to send xcopy command to dst
-     - add XCOPY_TO_SRC and XCOPY_TO_DST environment
-       variables to guide where to send xcopy command
-   - odx: add new offloaded copy technique, also known
-     as "xcopy v2, lite", that exposes ROD Tokens
-     - ddpt supports 4 odx variants: full copy, zero
-       output blocks, read to tokens and write from
-       tokens. Latter two facilitate network copies
-     - add scatter-gather list capability to seek=,
-       skip= to read from command line, file or stdin
-   - ddptctl: add odx helper utility
-     - can issue individual PT, WUT, RRTI, Report All
-       Rod Tokens, and Copy Operation Abort commands
-     - can decode T10 defined info in Rod Token
-   - improve CL handling of short options (e.g. '-vv')
-   - point svn:externals to rev 563 of sg3_utils
-   - configure: add --disable-libsgutils option so
-     build bypasses that library if present
+But if drivers can be simplified and improved through relying on hard 
+mappings (and preempt hence disabled), then I would definitely provide 
+that possibility as well. If it doesn't hurt by default, we can just 
+switch to that model.
 
-Changelog for ddpt-0.93 [20131113] [svn: r242]
-...
+-- 
+Jens Axboe
 
-Doug Gilbert
