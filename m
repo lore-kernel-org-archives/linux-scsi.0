@@ -1,78 +1,65 @@
-From: "Reddy, Sreekanth" <Sreekanth.Reddy@lsi.com>
-Subject: RE: [PATCH 0/7] Performance improvements for LSI SCSI cards
-Date: Mon, 7 Apr 2014 11:51:28 +0000
-Message-ID: <f1c6b225cf2043ec92c0b3b8ab2c9593@DM2PR07MB302.namprd07.prod.outlook.com>
-References: <cover.1395952569.git.matthew.r.wilcox@intel.com>
+From: Matei Oprea <eu@opreamatei.ro>
+Subject: Re: [PATCH] scsi: lpfc: lpfc_init: use kcalloc for allocating memory
+Date: Mon, 7 Apr 2014 15:37:41 +0300
+Message-ID: <CABeAxadUHD9wdyJQs0V4bC+pbXSutssBaY7wXSs1bVVqbD_DQA@mail.gmail.com>
+References: <1395175900-9659-1-git-send-email-eu@opreamatei.ro>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn1blp0184.outbound.protection.outlook.com ([207.46.163.184]:46320
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754774AbaDGLvc convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Apr 2014 07:51:32 -0400
-In-Reply-To: <cover.1395952569.git.matthew.r.wilcox@intel.com>
-Content-Language: en-US
+Received: from mail-oa0-f43.google.com ([209.85.219.43]:40327 "EHLO
+	mail-oa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754945AbaDGMhm convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Apr 2014 08:37:42 -0400
+Received: by mail-oa0-f43.google.com with SMTP id eb12so6565890oac.30
+        for <linux-scsi@vger.kernel.org>; Mon, 07 Apr 2014 05:37:42 -0700 (PDT)
+In-Reply-To: <1395175900-9659-1-git-send-email-eu@opreamatei.ro>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew.r.wilcox@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jejb@kernel.org" <jejb@kernel.org>
-Cc: "willy@linux.intel.com" <willy@linux.intel.com>, "James Bottomley (James.Bottomley@hansenpartnership.com)" <James.Bottomley@hansenpartnership.com>, "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>, "Krishnamoorthy, Praveen" <Praveen.Krishnamoorthy@lsi.com>
+To: jbottomley@parallels.com
+Cc: james.smart@emulex.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Matei Oprea <eu@opreamatei.ro>, ROSEdu Kernel Community <firefly@lists.rosedu.org>
 
-Hi James,
+Any comments on this ?
+=E1=90=A7
 
-This patch set seem to be fine. Please consider this patch set as Acked-by: "Sreekanth Reddy" <Sreekanth.reddy@lsi.com>.
+On Tue, Mar 18, 2014 at 10:51 PM, Matei Oprea <eu@opreamatei.ro> wrote:
+> It's easier to use kcalloc for allocating arrays. While at it
+> also remove useless casting value.
+>
+> Signed-off-by: Matei Oprea <eu@opreamatei.ro>
+> Cc: ROSEdu Kernel Community <firefly@lists.rosedu.org>
+> ---
+>  drivers/scsi/lpfc/lpfc_init.c |    4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_i=
+nit.c
+> index 68c94cc..0a51ca5 100644
+> --- a/drivers/scsi/lpfc/lpfc_init.c
+> +++ b/drivers/scsi/lpfc/lpfc_init.c
+> @@ -4731,9 +4731,9 @@ lpfc_sli_driver_resource_setup(struct lpfc_hba =
+*phba)
+>         }
+>
+>         if (!phba->sli.ring)
+> -               phba->sli.ring =3D (struct lpfc_sli_ring *)
+> -                       kzalloc(LPFC_SLI3_MAX_RING *
+> +               phba->sli.ring =3D kcalloc(LPFC_SLI3_MAX_RING,
+>                         sizeof(struct lpfc_sli_ring), GFP_KERNEL);
+> +
+>         if (!phba->sli.ring)
+>                 return -ENOMEM;
+>
+> --
+> 1.7.9.5
+>
 
-Regards,
-Sreekanth
 
->-----Original Message-----
->From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
->owner@vger.kernel.org] On Behalf Of Matthew Wilcox
->Sent: Friday, March 28, 2014 2:10 AM
->To: linux-scsi@vger.kernel.org
->Cc: Matthew Wilcox; willy@linux.intel.com
->Subject: [PATCH 0/7] Performance improvements for LSI SCSI cards
->
->The host lock is a serious scalability problem on 2-socket and larger systems
->which are doing a lot of I/O.  Before removing the temporary usgae of
->DEF_SCSI_QCMD, we need to remove all uses of serial_number.
->
->An unrelated performance issue is that reusing the most recent driver-specific
->data structure to track the I/O instead of the least recently used keeps the
->cache-hot lines in use, which is a nice performance improvement.  It's already
->present in the mpt3sas driver, it just didn't make it into the fusion or mpt2sas
->drivers yet.
->
->Matthew Wilcox (7):
->  mpt3sas: Remove uses of serial_number
->  mpt3sas: Remove use of DEF_SCSI_QCMD
->  mpt2sas: Remove uses of serial_number
->  mpt2sas: Remove use of DEF_SCSI_QCMD
->  mpt2sas: Add free smids to the head, not tail of list
->  fusion: Add free msg frames to the head, not tail of list
->  fusion: Remove use of DEF_SCSI_QCMD
->
-> drivers/message/fusion/mptbase.c     |  2 +-
-> drivers/message/fusion/mptfc.c       | 12 +++++-------
-> drivers/message/fusion/mptsas.c      | 10 ++++------
-> drivers/message/fusion/mptscsih.c    |  8 +++-----
-> drivers/message/fusion/mptscsih.h    |  2 +-
-> drivers/message/fusion/mptspi.c      | 12 +++++-------
-> drivers/scsi/mpt2sas/mpt2sas_base.c  |  8 ++++----
->drivers/scsi/mpt2sas/mpt2sas_base.h  |  2 +-
-> drivers/scsi/mpt2sas/mpt2sas_ctl.c   |  2 +-
-> drivers/scsi/mpt2sas/mpt2sas_scsih.c | 24 +++++++++---------------
->drivers/scsi/mpt3sas/mpt3sas_base.h  |  2 +-
-> drivers/scsi/mpt3sas/mpt3sas_ctl.c   |  2 +-
-> drivers/scsi/mpt3sas/mpt3sas_scsih.c | 24 +++++++++---------------
-> 13 files changed, 45 insertions(+), 65 deletions(-)
->
->--
->1.9.0
->
->--
->To unsubscribe from this list: send the line "unsubscribe linux-scsi" in the body
->of a message to majordomo@vger.kernel.org More majordomo info at
->http://vger.kernel.org/majordomo-info.html
 
+--=20
+Oprea Matei
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
