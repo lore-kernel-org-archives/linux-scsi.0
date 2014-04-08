@@ -1,43 +1,74 @@
-From: =?UTF-8?B?RW1pbGlhIEFybm9sZA==?= <emilia43436@list.ru>
-Subject: =?UTF-8?B?SmV0enQgZ2lidCBlcyBlaW5lbiBBdXN3ZWcgYXVzIElocmVuIEdlbGRwcm8g?=
- =?UTF-8?B?YmxlbWVu?=
-Date: Tue, 08 Apr 2014 11:50:21 +0400
-Message-ID: <1396943421.728415081@f376.i.mail.ru>
-Reply-To: =?UTF-8?B?RW1pbGlhIEFybm9sZA==?= <emilia43436@list.ru>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 73621] Kernel exception loading sym53c8xx on dual AMD Athlon
+ Tyan S2460 motherboard
+Date: Tue, 08 Apr 2014 09:39:17 +0000
+Message-ID: <bug-73621-11613-PL9Lh5NEfT@https.bugzilla.kernel.org/>
+References: <bug-73621-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fallback5.mail.ru ([94.100.176.59]:37256 "EHLO
-	fallback5.mail.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754698AbaDHHui (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Apr 2014 03:50:38 -0400
-Received: from f376.i.mail.ru (f376.i.mail.ru [217.69.141.18])
-	by fallback5.mail.ru (mPOP.Fallback_MX) with ESMTP id DCC321132F7B6
-	for <linux-scsi@vger.kernel.org>; Tue,  8 Apr 2014 11:50:34 +0400 (MSK)
-Received: from mail by f376.i.mail.ru with local (envelope-from <emilia43436@list.ru>)
-	id 1WXQnV-0003ls-UK
-	for linux-scsi@vger.kernel.org; Tue, 08 Apr 2014 11:50:22 +0400
+Received: from mail.kernel.org ([198.145.19.201]:46515 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756040AbaDHJjU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 8 Apr 2014 05:39:20 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id F321B20303
+	for <linux-scsi@vger.kernel.org>; Tue,  8 Apr 2014 09:39:18 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+	by mail.kernel.org (Postfix) with ESMTP id F0FDE203AC
+	for <linux-scsi@vger.kernel.org>; Tue,  8 Apr 2014 09:39:17 +0000 (UTC)
+In-Reply-To: <bug-73621-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-CkhhbGxvLCBzaW5kIFNpZSBhbnNwcmVjaGJhciBhdWYgZWluZSB3aXJrbGljaCBndXRlIE5hY2hy
-aWNodD8KCmhhdCBkaWUgSGF1c2JhbmsgSWhuZW4gZGllIEtyZWQgaXRsIGluaSBlIGdlc3RyaWNo
-ZW4/IAoKWmllaGVuIFNpZSBkaWUgS29uc2VxdWVuemVuIHVuZCBob2xlbiBTaWUgc2ljaCBHZWxk
-IGViZW4gd29hbmRlcnMuCgpBdWNoIGJlaSBsYXVmZW5kZW4gVmVycGZsaWNodHVuZ2VuIHVuZCBi
-ZXJlaXRzIHZvbiBJaHJlciBlaWdlbmVuIEhhdXNiYW5rIGFiZ2VsZWhudGVtIEFudHJhZyBrw7Zu
-bmVuIHdpciBJaG5lbiBlaW5lbiBLcmVkaXQgdmVybWl0dGVsbiB6dSBuaWVkcmlnZW4gWmluc2Vu
-ICh6dW0gQmVpc3BpZWwgYWIgMywyJSBmw7xyIFNlbGJzdMOkbmRpZ2UsIGFiIDEsOCUgWmluc2Vu
-IHAuYS4gZsO8ciBIw6R1c2xlYmF1ZXIsIGFiIDMsMiUgZsO8ciBQcml2YXQuCkR1cmNoIGRpZSBs
-YW5nZW4gTGF1ZnplaXRlbiB2b24gMTAgSmFocmVuIGbDvHIgR2V3ZXJiZSB1bmQgUHJpdmF0IGJl
-bGFzdGV0IFNpZSBkaWUgUmF0ZSBuaWNodCBzb25kZXJsaWNoLiBJaHJlbiBLcmVkaXQgYmVrb21t
-ZW4gU2llIGpldHp0IGF1cyBTw7xkYW1lcmlrYSBvaG5lIGRpZSDDvGJsaWNoZW4gU2NoaWthbmVu
-LCBvaG5lIGRpZSBzb25zdCDDvGJsaWNoZSBBdXNrdW5mdCB1bmQgaW4gbnVyIDggVGFnZW4uIAoK
-QWxzbyBpZGVhbCBmw7xyIFVudGVybmVobWVuc2dyw7xuZGVyLCBBbmdlc3RlbGx0ZSB1bmQgUmVu
-dG5lci4KSG9sZW4gU2llIHNpY2ggS2FwaXRhbCBkb3J0LCB3byBkaWUgVHJlc29yZSB2b2xsIHNp
-bmQsIGRpZSBaaW5zZW4gZXh0cmVtIGfDvG5zdGlnIHVuZCBkaWUgTGF1ZnplaXRlbiBsYW5nIHNp
-bmQuIFNpZSBiZWnDn2VuIGF1ZiBHcmFuaXQgYmVpIElocmVyIEJhbmssIHdpciBoYWJlbiBkaWUg
-QWx0ZXJuYXRpdmUuCgoKQWxsZXMgd2VpdGVyZSBhdWYgdW5zZXJlciBTZWl0ZTogIERpcmVjdElu
-dGVyQ3JlZGl0IHVuZCBmw7xnZW4gU2llIGFuIGNvIG0KCkJpcyBiYWxkCgpGLiBCYXVlcgoKCgoK
-Cg==
+https://bugzilla.kernel.org/show_bug.cgi?id=73621
+
+Alan <alan@lxorguk.ukuu.org.uk> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |alan@lxorguk.ukuu.org.uk
+
+--- Comment #1 from Alan <alan@lxorguk.ukuu.org.uk> ---
+Incorrect memory frees on error path
+
+[    4.522582] sym0: <825> rev 0x2 at pci 0000:00:09.0 irq 10
+[    4.552156] sym0: No NVRAM, ID 7, Fast-10, SE, parity checking
+[    4.580096] CACHE TEST FAILED: script execution failed.
+[    4.608092] start=35bbf900, pc=0000680c, end=35bbf92c
+[    4.636239] sym0: CACHE INCORRECTLY CONFIGURED.
+[    4.664419] sym0: giving up ...
+[    4.692375] ------------[ cut here ]------------
+[    4.693343] WARNING: at
+/usr/src/linux-3.10.36/arch/x86/include/asm/dma-mapping.h:166
+___free_dma_mem_cluster+0xe9/0xf0 [sym53c8xx]()
+[    4.693343] Modules linked in: sym53c8xx(+) w83627hf hwmon_vid hwmon xfs
+[    4.693343] CPU: 0 PID: 174 Comm: modprobe Not tainted 3.10.36-smp #1
+[    4.693343] Hardware name: Tyan Guinness/Guinness, BIOS PGNA02-8   
+12/12/2002
+[    4.693343]  00000000 00000000 f51a9a74 c14d3e30 f51a9a9c c10386ce c15dcb79
+f8276d54
+[    4.693343]  000000a6 f8274ba9 f8274ba9 f511d130 f511d000 c166e640 f51a9aac
+c1038792
+[    4.693343]  00000009 00000000 f51a9adc f8274ba9 f5108400 f6414100 f5801d80
+35096000
+[    4.693343] Call Trace:
+[    4.693343]  [<c14d3e30>] dump_stack+0x16/0x18
+[    4.693343]  [<c10386ce>] warn_slowpath_common+0x5e/0x80
+[    4.693343]  [<f8274ba9>] ? ___free_dma_mem_cluster+0xe9/0xf0 [sym53c8xx]
+[    4.693343]  [<f8274ba9>] ? ___free_dma_mem_cluster+0xe9/0xf0 [sym53c8xx]
+[    4.693343]  [<c1038792>] warn_slowpath_null+0x22/0x30
+[    4.693343]  [<f8274ba9>] ___free_dma_mem_cluster+0xe9/0xf0 [sym53c8xx]
+[    4.693343]  [<f827479b>] __sym_mfree+0x9b/0xd0 [sym53c8xx]
+[    4.693343]  [<c102e4ea>] ? free_memtype+0x9a/0x1c0
+[    4.693343]  [<c110b27a>] ? lazy_max_pages+0x1a/0x30
+[    4.693343]  [<f8274cdd>] __sym_mfree_dma+0x6d/0x80 [sym53c8xx]
+[    4.693343]  [<f8274589>] sym_hcb_free+0x79/0x1a0 [sym53c8xx]
+[    4.693343]  [<f826b87e>] sym_free_resources+0x3e/0x80 [sym53c8xx]
+[    4.693343]  [<f826d578>] sym2_probe+0x8a8/0xa10 [sym53c8xx]
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
