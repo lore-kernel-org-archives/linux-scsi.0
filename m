@@ -1,53 +1,38 @@
-From: Matei Oprea <eu@opreamatei.ro>
-Subject: [PATCH] scsi: lpfc: lpfc_init: use kcalloc for allocating memory
-Date: Tue,  8 Apr 2014 23:42:26 +0300
-Message-ID: <1396989746-29647-1-git-send-email-eu@opreamatei.ro>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ee0-f52.google.com ([74.125.83.52]:34114 "EHLO
-	mail-ee0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756639AbaDHUmf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Apr 2014 16:42:35 -0400
-Received: by mail-ee0-f52.google.com with SMTP id e49so1104256eek.25
-        for <linux-scsi@vger.kernel.org>; Tue, 08 Apr 2014 13:42:34 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [PATCH 5/6] vhost/scsi: Enable T10 PI IOV -> SGL memory mapping
+Date: Tue, 08 Apr 2014 16:36:08 -0400
+Message-ID: <53445DB8.2010705@redhat.com>
+References: <1396819929-29687-1-git-send-email-nab@daterainc.com> <1396819929-29687-6-git-send-email-nab@daterainc.com> <20140407091654.GC14183@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <20140407091654.GC14183@redhat.com>
+Sender: target-devel-owner@vger.kernel.org
+To: "Michael S. Tsirkin" <mst@redhat.com>, "Nicholas A. Bellinger" <nab@daterainc.com>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, "H. Peter Anvin" <hpa@zytor.com>, Nicholas Bellinger <nab@linux-iscsi.org>, Sagi Grimberg <sagig@dev.mellanox.co.il>
 List-Id: linux-scsi@vger.kernel.org
-To: jbottomley@parallels.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Matei Oprea <eu@opreamatei.ro>, ROSEdu Kernel Community <firefly@lists.rosedu.org>
 
-It's easier to use kcalloc for allocating arrays. While at it
-also remove useless casting value.
+Il 07/04/2014 05:16, Michael S. Tsirkin ha scritto:
+> Hmm still relying on a specific IOV layout I see :(
+> It's really a violation of the spec even though it works
+> fine with Linux guests.
+> I know this isn't the only place this is broken but
+> can't we finally fix it?
+> Since you are touching this code anyway - how about
+> not adding more code we need to fix later?
+>
+> It's not too hard - just verify total length is big enough
+> (instead of an exact match), then call
+> memcpy_fromiovecend/memcpy_toiovecend.
+> (or memcpy_fromiovec if you don't mind that iovec is modified).
+>
+> This will help make sure
+> we are not making interface mistakes like we did for block
+> with VIRTIO_BLK_T_SCSI_CMD.
 
-Signed-off-by: Matei Oprea <eu@opreamatei.ro>
-Cc: ROSEdu Kernel Community <firefly@lists.rosedu.org>
----
- drivers/scsi/lpfc/lpfc_init.c | 14 ++++++++------
- 1 file changed, 8 insertions(+), 6 deletions(-)
+And like we were about to make here. :(
 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 635eeb3..1528f34 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -4742,12 +4742,14 @@ lpfc_sli_driver_resource_setup(struct lpfc_hba *phba)
- 			phba->cfg_sg_seg_cnt = LPFC_DEFAULT_MENLO_SG_SEG_CNT;
- 	}
- 
--	if (!phba->sli.ring)
--		phba->sli.ring = (struct lpfc_sli_ring *)
--			kzalloc(LPFC_SLI3_MAX_RING *
--			sizeof(struct lpfc_sli_ring), GFP_KERNEL);
--	if (!phba->sli.ring)
--		return -ENOMEM;
-+	if (unlikely(!phba->sli.ring)) {
-+		phba->sli.ring = kcalloc(LPFC_SLI3_MAX_RING,
-+				sizeof(struct lpfc_sli_ring),
-+				GFP_KERNEL);
-+
-+		if (!phba->sli.ring)
-+			return -ENOMEM;
-+	}
- 
- 	/*
- 	 * Since lpfc_sg_seg_cnt is module parameter, the sg_dma_buf_size
--- 
-1.9.1
+We really should fix this for kernel 3.16 and QEMU 2.1.
 
+Paolo
