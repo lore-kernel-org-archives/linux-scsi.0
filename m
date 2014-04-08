@@ -1,41 +1,87 @@
-From: hujianyang <hujianyang@huawei.com>
-Subject: [PATCH] scsi: Fix the comment of sd_major
-Date: Tue, 8 Apr 2014 13:29:50 +0800
-Message-ID: <5343894E.7000902@huawei.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] ch: add refcounting
+Date: Tue,  8 Apr 2014 08:27:17 +0200
+Message-ID: <1396938437-29616-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:51671 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756079AbaDHFaF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Apr 2014 01:30:05 -0400
+Received: from cantor2.suse.de ([195.135.220.15]:52517 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750789AbaDHG1T (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 8 Apr 2014 02:27:19 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: hujianyang@huawei.com
+To: James Bottomley <jbottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-Fix the comment of sd_major to right major numbers.
+The 'scsi_changer' structure needs refcounting, as the device
+might be removed while the fd is still open.
 
-Signed-off-by: hujianyang <hujianyang@huawei.com>
-
+Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/sd.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/scsi/ch.c | 16 ++++++++++++++--
+ 1 file changed, 14 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 470954a..02ff975 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -529,7 +529,7 @@ static struct kobject *sd_default_probe(dev_t devt, int *partno, void *data)
-  * ones with major1, ... Disk 256 is for major0 again, disk 272
-  * for major1, ...
-  * As we stay compatible with our numbering scheme, we can reuse
-- * the well-know SCSI majors 8, 65--71, 136--143.
-+ * the well-know SCSI majors 8, 65--71, 128--135.
-  */
- static int sd_major(int major_idx)
+diff --git a/drivers/scsi/ch.c b/drivers/scsi/ch.c
+index 2a32374..adb5426 100644
+--- a/drivers/scsi/ch.c
++++ b/drivers/scsi/ch.c
+@@ -102,6 +102,7 @@ do {									\
+ static struct class * ch_sysfs_class;
+ 
+ typedef struct {
++	struct kref         ref;
+ 	struct list_head    list;
+ 	int                 minor;
+ 	char                name[8];
+@@ -565,13 +566,23 @@ static int ch_gstatus(scsi_changer *ch, int type, unsigned char __user *dest)
+ 
+ /* ------------------------------------------------------------------------ */
+ 
++static void ch_destroy(struct kref *ref)
++{
++	scsi_changer *ch = container_of(ref, scsi_changer, ref);
++
++	kfree(ch->dt);
++	kfree(ch);
++}
++
+ static int
+ ch_release(struct inode *inode, struct file *file)
  {
+ 	scsi_changer *ch = file->private_data;
+ 
+ 	scsi_device_put(ch->device);
++	ch->device = NULL;
+ 	file->private_data = NULL;
++	kref_put(&ch->ref, ch_destroy);
+ 	return 0;
+ }
+ 
+@@ -590,6 +601,7 @@ ch_open(struct inode *inode, struct file *file)
+ 		mutex_unlock(&ch_mutex);
+ 		return -ENXIO;
+ 	}
++	kref_get(&ch->ref);
+ 	spin_unlock(&ch_index_lock);
+ 
+ 	file->private_data = ch;
+@@ -931,6 +943,7 @@ static int ch_probe(struct device *dev)
+ 	}
+ 
+ 	mutex_init(&ch->lock);
++	kref_init(&ch->ref);
+ 	ch->device = sd;
+ 	ch_readconfig(ch);
+ 	if (init)
+@@ -956,8 +969,7 @@ static int ch_remove(struct device *dev)
+ 	spin_unlock(&ch_index_lock);
+ 
+ 	device_destroy(ch_sysfs_class, MKDEV(SCSI_CHANGER_MAJOR,ch->minor));
+-	kfree(ch->dt);
+-	kfree(ch);
++	kref_put(&ch->ref, ch_destroy);
+ 	return 0;
+ }
+ 
 -- 
-1.6.0.2
+1.7.12.4
 
