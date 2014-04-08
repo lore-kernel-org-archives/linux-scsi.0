@@ -1,31 +1,53 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH 6/6] virtio-scsi: Enable DIF/DIX modes in SCSI host LLD
-Date: Tue, 08 Apr 2014 16:35:06 -0400
-Message-ID: <53445D7A.6030301@redhat.com>
-References: <1396819929-29687-1-git-send-email-nab@daterainc.com>	 <1396819929-29687-7-git-send-email-nab@daterainc.com>	 <20140407084518.GA14091@redhat.com>	 <1396861019.19888.25.camel@haakon3.risingtidesystems.com>	 <20140407090225.GB14183@redhat.com> <1396861996.19888.28.camel@haakon3.risingtidesystems.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1396861996.19888.28.camel@haakon3.risingtidesystems.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, "Michael S. Tsirkin" <mst@redhat.com>
-Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, "H. Peter Anvin" <hpa@zytor.com>, Sagi Grimberg <sagig@dev.mellanox.co.il>, virtualization@lists.linux-foundation.org
+From: Matei Oprea <eu@opreamatei.ro>
+Subject: [PATCH] scsi: lpfc: lpfc_init: use kcalloc for allocating memory
+Date: Tue,  8 Apr 2014 23:42:26 +0300
+Message-ID: <1396989746-29647-1-git-send-email-eu@opreamatei.ro>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ee0-f52.google.com ([74.125.83.52]:34114 "EHLO
+	mail-ee0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756639AbaDHUmf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Apr 2014 16:42:35 -0400
+Received: by mail-ee0-f52.google.com with SMTP id e49so1104256eek.25
+        for <linux-scsi@vger.kernel.org>; Tue, 08 Apr 2014 13:42:34 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jbottomley@parallels.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Matei Oprea <eu@opreamatei.ro>, ROSEdu Kernel Community <firefly@lists.rosedu.org>
 
-Il 07/04/2014 05:13, Nicholas A. Bellinger ha scritto:
->> > I guess we'll still be able to fix it after the merge window -
->> > (or worst case, revert the change) is this what you are suggesting?
->> >
-> Yes, but I would think that it is actually fixable.  ;)
->
-> Otherwise, a v3.16 merge is an option as well.  It's really your +
-> Paolo's call here.
+It's easier to use kcalloc for allocating arrays. While at it
+also remove useless casting value.
 
-With s/niov/nbytes/, I think the interface is fine.  If you can do it 
-this week, it is your call as target maintainer...
+Signed-off-by: Matei Oprea <eu@opreamatei.ro>
+Cc: ROSEdu Kernel Community <firefly@lists.rosedu.org>
+---
+ drivers/scsi/lpfc/lpfc_init.c | 14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
 
-I don't have to do much more than give my acked-by for the changes to 
-the virtio-scsi drivers, it's up to you whether to use it for 3.15 or 3.16.
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 635eeb3..1528f34 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -4742,12 +4742,14 @@ lpfc_sli_driver_resource_setup(struct lpfc_hba *phba)
+ 			phba->cfg_sg_seg_cnt = LPFC_DEFAULT_MENLO_SG_SEG_CNT;
+ 	}
+ 
+-	if (!phba->sli.ring)
+-		phba->sli.ring = (struct lpfc_sli_ring *)
+-			kzalloc(LPFC_SLI3_MAX_RING *
+-			sizeof(struct lpfc_sli_ring), GFP_KERNEL);
+-	if (!phba->sli.ring)
+-		return -ENOMEM;
++	if (unlikely(!phba->sli.ring)) {
++		phba->sli.ring = kcalloc(LPFC_SLI3_MAX_RING,
++				sizeof(struct lpfc_sli_ring),
++				GFP_KERNEL);
++
++		if (!phba->sli.ring)
++			return -ENOMEM;
++	}
+ 
+ 	/*
+ 	 * Since lpfc_sg_seg_cnt is module parameter, the sg_dma_buf_size
+-- 
+1.9.1
 
-Paolo
