@@ -1,42 +1,97 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 72541] CentOS 6.5 -- mpt2sas0: _base_fault_reset_work : SAS
- host is non-operational !!!!
-Date: Tue, 08 Apr 2014 10:49:14 +0000
-Message-ID: <bug-72541-11613-gX4xtANMUw@https.bugzilla.kernel.org/>
-References: <bug-72541-11613@https.bugzilla.kernel.org/>
+From: Sagi Grimberg <sagig@dev.mellanox.co.il>
+Subject: Re: blk-mq queue selection and queue_rq preemption
+Date: Tue, 08 Apr 2014 14:10:50 +0300
+Message-ID: <5343D93A.3070709@dev.mellanox.co.il>
+References: <53429DA2.4030708@dev.mellanox.co.il> <53430063.1020503@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:50407 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756501AbaDHKtR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 8 Apr 2014 06:49:17 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 7F75D201DD
-	for <linux-scsi@vger.kernel.org>; Tue,  8 Apr 2014 10:49:16 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id 9CE2D20303
-	for <linux-scsi@vger.kernel.org>; Tue,  8 Apr 2014 10:49:15 +0000 (UTC)
-In-Reply-To: <bug-72541-11613@https.bugzilla.kernel.org/>
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:41211 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756036AbaDHLK5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Apr 2014 07:10:57 -0400
+Received: by mail-wi0-f169.google.com with SMTP id hm4so7685377wib.4
+        for <linux-scsi@vger.kernel.org>; Tue, 08 Apr 2014 04:10:55 -0700 (PDT)
+In-Reply-To: <53430063.1020503@kernel.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Or Gerlitz <ogerlitz@mellanox.com>, Oren Duer <oren@mellanox.com>, Max Gurtovoy <maxg@mellanox.com>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=72541
+On 4/7/2014 10:45 PM, Jens Axboe wrote:
+> On 04/07/2014 06:44 AM, Sagi Grimberg wrote:
+>> Hey Jens, Christoph & Co,
+>>
+>> I raised this question at LSF but didn't get a clear answer on this 
+>> matter.
+>> So it seems to me that the hctx selection and the actual request
+>> dispatch (queue_rq) are preemptive:
+>> (1) blk_mq_get_ctx(q);
+>> (2) map_queue(q, ctx->cpu);
+>> ...
+>> (3) blk_mq_put_ctx(ctx);
+>> (4) blk_mq_run_hw_queue(hctx, async);
+>>
+>> It is possible that an MQ device driver may want to implement a lockless
+>> scheme counting on (running) CPU <-> hctx attachment.
+>> Generally speaking, I think that LLDs will be more comfortable knowing
+>> that they are not preemptive in the dispatch flow.
+>>
+>> My question is, is this a must? if so can you please explain why?
+>>
+>> Is it possible to put the hctx (restoring preemption) after run_hw_queue
+>> allowing to LLDs to be sure that the selected queue
+>> match the running CPU?
+>
+> It's a good question, and one I have thought about before. As you 
+> note, in the existing code, the mappings are what I would refer to as 
+> "soft". Generally speaking, CPU X will always map to hardware queue Y, 
+> but there are no specific guarantees made to effect. It would be 
+> trivial to make this mapping hard, and I'd be very open to doing that. 
+> But so far I haven't seen cases where it would improve things. If you 
+> end up being preempted and moved to a different CPU, it doesn't really 
+> matter if this happens before or after you queued the IO - the 
+> completion will end up in the "wrong" location regardless.
+>
+> But if drivers can be simplified and improved through relying on hard 
+> mappings (and preempt hence disabled), then I would definitely provide 
+> that possibility as well. If it doesn't hurt by default, we can just 
+> switch to that model.
+>
 
-Alan <alan@lxorguk.ukuu.org.uk> changed:
+Hey Jens, thanks for the quick response!
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|NEW                         |RESOLVED
-                 CC|                            |alan@lxorguk.ukuu.org.uk
-         Resolution|---                         |OBSOLETE
+So in my driver I would definitely want to rely on hard mappings.
+The reason is that I maintain a context for IO completions (lets call it 
+"completer") and a submission queue percpu.
+The completer handles IO completions and also peeks at the submission 
+queue to handle pending IOs.
+I wish to keep mutual exclusion between the completer and the submission 
+context.
+The driver is capable of setting the IO submission so that the 
+completion will end up on the same core.
 
---- Comment #1 from Alan <alan@lxorguk.ukuu.org.uk> ---
-2.6.32 is years obsolete as far as upstream is concerned. Please take it up
-with your vendor
+Hard mappings providing non-preemptive submission flows will guarantee 
+that the above scheme will work.
+At the moment I do:
+(1) queue = hctx->driver_data
+process request...
+(2) cpu = get_cpu()
+(3) if (cpu != queue.id)
+             queue = queues[cpu]
+(4) submit_io(queue)
+(5) put_cpu()
 
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+So, adding hard_map indicator to blk_mq_reg will be great.
+
+As I mentioned in the general case, I think that LLDs will be more 
+comfortable with hard mappings in order to avoid/reduce
+lock contention in the submission path and also possibly exploiting 
+cache/NUMA locality. Moreover I think that setting the device to generate
+IO completion on the submission CPU is common practice for blk-mq 
+implementation. isn't it?
+
+I would definitely like to get more input from the driver folks on this.
+
+Sagi.
