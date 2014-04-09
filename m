@@ -1,44 +1,39 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 71231] System unresponsable after a lot of LUNs have been added
- to the system
-Date: Wed, 09 Apr 2014 17:50:49 +0000
-Message-ID: <bug-71231-11613-HwCpzf3hDd@https.bugzilla.kernel.org/>
-References: <bug-71231-11613@https.bugzilla.kernel.org/>
+From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Subject: Re: [PATCH 0/3] Fix USB deadlock caused by SCSI error handling
+Date: Wed, 9 Apr 2014 14:02:11 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1404091358340.28384-100000@netrider.rowland.org>
+References: <53458680.4090500@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:52874 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933143AbaDIRuw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 9 Apr 2014 13:50:52 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id DE8B1206BD
-	for <linux-scsi@vger.kernel.org>; Wed,  9 Apr 2014 17:50:51 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id 13472206B1
-	for <linux-scsi@vger.kernel.org>; Wed,  9 Apr 2014 17:50:51 +0000 (UTC)
-In-Reply-To: <bug-71231-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <53458680.4090500-l3A5Bk7waGM@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>, Andreas Reis <andreas.reis-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=71231
+On Wed, 9 Apr 2014, Hannes Reinecke wrote:
 
-Hannes Reinecke <hare@suse.de> changed:
+> > I finally got a chance to try it out.  It does seem to do what we want.
+> > I didn't track the flow of control in complete detail, but the command
+> > definitely got aborted both times it was issued.
+> >
+> Good, so it is as I thought. James, can we include this patch instead of 
+> your prior solution?
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |hare@suse.de
+First, we should have the original bug reporter try it out.
 
---- Comment #12 from Hannes Reinecke <hare@suse.de> ---
-Comment #3 is the well-known printk lockup.
+Andreas, the patch in question can be found here:
 
-Try to increase the speed on the serial console.
-Or alternatively try the patch by Jan Kara, should've been posted to lkml.
+	http://marc.info/?l=linux-usb&m=139627666606597&w=2
 
-Nothing to do with SCSI, except for the number of messages printed.
+Can you try this in place of the 1/3 patch posted by James?  It should 
+have the same effect, of preventing your system from crashing when the 
+READ command fails.
 
--- 
-You are receiving this mail because:
-You are the assignee for the bug.
+Alan Stern
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
