@@ -1,125 +1,57 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: blk-mq queue selection and queue_rq preemption
-Date: Wed, 09 Apr 2014 07:37:24 -0600
-Message-ID: <53454D14.50804@kernel.dk>
-References: <53429DA2.4030708@dev.mellanox.co.il> <53430063.1020503@kernel.dk> <5343D93A.3070709@dev.mellanox.co.il> <53441879.3010909@kernel.dk> <534538A4.6050103@dev.mellanox.co.il>
+From: Jens Axboe <axboe@fb.com>
+Subject: Re: [PATCH 3/4] blk-mq: move request structures into struct blk_mq_tags
+Date: Wed, 9 Apr 2014 10:23:32 -0600
+Message-ID: <53457404.5070800@fb.com>
+References: <1396277175-21382-1-git-send-email-hch@lst.de> <1396277175-21382-4-git-send-email-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f53.google.com ([209.85.160.53]:48569 "EHLO
-	mail-pb0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933253AbaDINhY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Apr 2014 09:37:24 -0400
-Received: by mail-pb0-f53.google.com with SMTP id rp16so2504290pbb.40
-        for <linux-scsi@vger.kernel.org>; Wed, 09 Apr 2014 06:37:23 -0700 (PDT)
-In-Reply-To: <534538A4.6050103@dev.mellanox.co.il>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1396277175-21382-4-git-send-email-hch@lst.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Matias Bjorling <m@bjorling.me>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sagi Grimberg <sagig@dev.mellanox.co.il>, Christoph Hellwig <hch@lst.de>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Or Gerlitz <ogerlitz@mellanox.com>, Oren Duer <oren@mellanox.com>, Max Gurtovoy <maxg@mellanox.com>
 
-On 04/09/2014 06:10 AM, Sagi Grimberg wrote:
-> On 4/8/2014 6:40 PM, Jens Axboe wrote:
->> On 2014-04-08 05:10, Sagi Grimberg wrote:
->>> On 4/7/2014 10:45 PM, Jens Axboe wrote:
->>>> On 04/07/2014 06:44 AM, Sagi Grimberg wrote:
->>>>> Hey Jens, Christoph & Co,
->>>>>
->>>>> I raised this question at LSF but didn't get a clear answer on this
->>>>> matter.
->>>>> So it seems to me that the hctx selection and the actual request
->>>>> dispatch (queue_rq) are preemptive:
->>>>> (1) blk_mq_get_ctx(q);
->>>>> (2) map_queue(q, ctx->cpu);
->>>>> ...
->>>>> (3) blk_mq_put_ctx(ctx);
->>>>> (4) blk_mq_run_hw_queue(hctx, async);
->>>>>
->>>>> It is possible that an MQ device driver may want to implement a
->>>>> lockless
->>>>> scheme counting on (running) CPU <-> hctx attachment.
->>>>> Generally speaking, I think that LLDs will be more comfortable knowing
->>>>> that they are not preemptive in the dispatch flow.
->>>>>
->>>>> My question is, is this a must? if so can you please explain why?
->>>>>
->>>>> Is it possible to put the hctx (restoring preemption) after
->>>>> run_hw_queue
->>>>> allowing to LLDs to be sure that the selected queue
->>>>> match the running CPU?
->>>>
->>>> It's a good question, and one I have thought about before. As you
->>>> note, in the existing code, the mappings are what I would refer to as
->>>> "soft". Generally speaking, CPU X will always map to hardware queue Y,
->>>> but there are no specific guarantees made to effect. It would be
->>>> trivial to make this mapping hard, and I'd be very open to doing that.
->>>> But so far I haven't seen cases where it would improve things. If you
->>>> end up being preempted and moved to a different CPU, it doesn't really
->>>> matter if this happens before or after you queued the IO - the
->>>> completion will end up in the "wrong" location regardless.
->>>>
->>>> But if drivers can be simplified and improved through relying on hard
->>>> mappings (and preempt hence disabled), then I would definitely provide
->>>> that possibility as well. If it doesn't hurt by default, we can just
->>>> switch to that model.
->>>>
->>>
->>> Hey Jens, thanks for the quick response!
->>>
->>> So in my driver I would definitely want to rely on hard mappings.
->>> The reason is that I maintain a context for IO completions (lets call it
->>> "completer") and a submission queue percpu.
->>> The completer handles IO completions and also peeks at the submission
->>> queue to handle pending IOs.
->>> I wish to keep mutual exclusion between the completer and the submission
->>> context.
->>> The driver is capable of setting the IO submission so that the
->>> completion will end up on the same core.
->>>
->>> Hard mappings providing non-preemptive submission flows will guarantee
->>> that the above scheme will work.
->>> At the moment I do:
->>> (1) queue = hctx->driver_data
->>> process request...
->>> (2) cpu = get_cpu()
->>> (3) if (cpu != queue.id)
->>>              queue = queues[cpu]
->>> (4) submit_io(queue)
->>> (5) put_cpu()
->>>
->>> So, adding hard_map indicator to blk_mq_reg will be great.
->>>
->>> As I mentioned in the general case, I think that LLDs will be more
->>> comfortable with hard mappings in order to avoid/reduce
->>> lock contention in the submission path and also possibly exploiting
->>> cache/NUMA locality. Moreover I think that setting the device to
->>> generate
->>> IO completion on the submission CPU is common practice for blk-mq
->>> implementation. isn't it?
->>>
->>> I would definitely like to get more input from the driver folks on this.
->>
->> I've rolled up a set of changes to test this out, I have attached the
->> small series. As I originally stated, it was due to performance
->> concerns that I didn't do this originally. If this works better (or
->> the same) on cases where we don't necessarily care about the hard
->> mappings, then we should just do it. It's a cleaner model, and the
->> hardware that has as many queues as CPUs, it's definitely the right
->> (and obvious) thing to do.
->>
->> Note that the attached are TOTALLY untested.
->>
+On 03/31/2014 08:46 AM, Christoph Hellwig wrote:
+> diff --git a/block/blk-mq.h b/block/blk-mq.h
+> index 238379a..eca3a47 100644
+> --- a/block/blk-mq.h
+> +++ b/block/blk-mq.h
+> @@ -1,6 +1,24 @@
+>   #ifndef INT_BLK_MQ_H
+>   #define INT_BLK_MQ_H
 >
-> Thanks Jens!
->
-> I'll give it a go...
+> +#include <linux/percpu_ida.h>
+> +
+> +/*
+> + * Tag address space map.
+> + */
+> +struct blk_mq_tags {
+> +	unsigned int nr_tags;
+> +	unsigned int nr_reserved_tags;
+> +	unsigned int nr_batch_move;
+> +	unsigned int nr_max_cache;
+> +
+> +	struct percpu_ida free_tags;
+> +	struct percpu_ida reserved_tags;
+> +
+> +	struct request **rqs;
+> +	struct list_head page_list;
+> +};
+> +
 
-The patches were since tested, and miraculously, they actually do seem 
-to work as-is. At least from the perspective of "doesn't crash" - I'll 
-need to double check things and add some debug logic to check that we 
-don't run on the wrong CPUs from some paths.
+This should go into block/blk-mq-tag.h.
+
+
+> -static inline struct request *blk_mq_tag_to_rq(struct blk_mq_hw_ctx *hctx,
+> -					       unsigned int tag)
+> -{
+> -	return hctx->rqs[tag];
+> -}
+
+We might as well leave this, the mtip32xx conversion ends up using it. 
+So if we pull it now, it'll just be reintroduced shortly.
 
 -- 
 Jens Axboe
-
