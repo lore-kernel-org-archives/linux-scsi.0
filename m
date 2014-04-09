@@ -1,37 +1,62 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 71231] System unresponsable after a lot of LUNs have been added
- to the system
-Date: Wed, 09 Apr 2014 10:25:32 +0000
-Message-ID: <bug-71231-11613-A0sZgGExmj@https.bugzilla.kernel.org/>
-References: <bug-71231-11613@https.bugzilla.kernel.org/>
+From: Boaz Harrosh <openosd@gmail.com>
+Subject: Re: [PATCH] scsi: lpfc: lpfc_init: use kcalloc for allocating memory
+Date: Wed, 09 Apr 2014 13:48:29 +0300
+Message-ID: <5345257D.6040102@gmail.com>
+References: <1396989746-29647-1-git-send-email-eu@opreamatei.ro>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:53420 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757481AbaDIKZg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 9 Apr 2014 06:25:36 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id A318F2053D
-	for <linux-scsi@vger.kernel.org>; Wed,  9 Apr 2014 10:25:35 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-	by mail.kernel.org (Postfix) with ESMTP id 01E0B20546
-	for <linux-scsi@vger.kernel.org>; Wed,  9 Apr 2014 10:25:33 +0000 (UTC)
-In-Reply-To: <bug-71231-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1396989746-29647-1-git-send-email-eu@opreamatei.ro>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Matei Oprea <eu@opreamatei.ro>, jbottomley@parallels.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, ROSEdu Kernel Community <firefly@lists.rosedu.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=71231
+On 04/08/2014 11:42 PM, Matei Oprea wrote:
+> It's easier to use kcalloc for allocating arrays. While at it
+> also remove useless casting value.
+> 
+> Signed-off-by: Matei Oprea <eu@opreamatei.ro>
+> Cc: ROSEdu Kernel Community <firefly@lists.rosedu.org>
+> ---
+>  drivers/scsi/lpfc/lpfc_init.c | 14 ++++++++------
+>  1 file changed, 8 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+> index 635eeb3..1528f34 100644
+> --- a/drivers/scsi/lpfc/lpfc_init.c
+> +++ b/drivers/scsi/lpfc/lpfc_init.c
+> @@ -4742,12 +4742,14 @@ lpfc_sli_driver_resource_setup(struct lpfc_hba *phba)
+>  			phba->cfg_sg_seg_cnt = LPFC_DEFAULT_MENLO_SG_SEG_CNT;
+>  	}
+>  
+> -	if (!phba->sli.ring)
+> -		phba->sli.ring = (struct lpfc_sli_ring *)
+> -			kzalloc(LPFC_SLI3_MAX_RING *
+> -			sizeof(struct lpfc_sli_ring), GFP_KERNEL);
+> -	if (!phba->sli.ring)
+> -		return -ENOMEM;
+> +	if (unlikely(!phba->sli.ring)) {
 
-Alex <alexandernaumann@gmx.de> changed:
+As Joe Perches said this one is not unlikely, it might or it might not
+depending on state.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-     Kernel Version|3.10.32                     |3.10
-         Regression|No                          |Yes
+> +		phba->sli.ring = kcalloc(LPFC_SLI3_MAX_RING,
+> +				sizeof(struct lpfc_sli_ring),
+> +				GFP_KERNEL);
+> +
+> +		if (!phba->sli.ring)
 
--- 
-You are receiving this mail because:
-You are the assignee for the bug.
+but this one is unlikely. This is the error path so we want
+the hot path to be decoded by the CPU.
+
+> +			return -ENOMEM;
+> +	}
+>  
+>  	/*
+>  	 * Since lpfc_sg_seg_cnt is module parameter, the sg_dma_buf_size
+> 
+
+Cheers
+Boaz
