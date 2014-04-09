@@ -1,57 +1,64 @@
-From: Nathan Fontenot <nfont@linux.vnet.ibm.com>
-Subject: [PATCH] Update Maintainers for IBM Power 842, vscsi, and vfc drivers
-Date: Wed, 09 Apr 2014 13:32:06 -0500
-Message-ID: <53459226.2070002@linux.vnet.ibm.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: hpsa driver bug crack kernel down!
+Date: Wed, 09 Apr 2014 16:08:24 -0700
+Message-ID: <1397084904.9519.62.camel@dabdike>
+References: <20140409023935.GE11839@dhcp-16-105.nay.redhat.com>
+	 <1397083799.2608.20.camel@buesod1.americas.hpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="ISO-8859-15"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1397083799.2608.20.camel@buesod1.americas.hpqcorp.net>
 Sender: linux-kernel-owner@vger.kernel.org
-To: LKML <linux-kernel@vger.kernel.org>, Linux-scsi <linux-scsi@vger.kernel.org>, Brian King <brking@linux.vnet.ibm.com>, Robert Jennings <rob@pochix.net>
+To: Davidlohr Bueso <davidlohr@hp.com>
+Cc: Baoquan He <bhe@redhat.com>, linux-kernel@vger.kernel.org, scameron@beardog.cce.hp.com, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Update the MAINTAINERS file to indicate the current maintainers
-for the IBM Power 842 Compression driver, IBM Power Virtual SCSI
-driver and the IBM Power Virtual FC Driver.
+[+linux-scsi]
+On Wed, 2014-04-09 at 15:49 -0700, Davidlohr Bueso wrote:
+> On Wed, 2014-04-09 at 10:39 +0800, Baoquan He wrote:
+> > Hi,
+> > 
+> > The kernel is 3.14.0+ which is pulled just now. 
+> 
+> Cc'ing more people.
+> 
+> While the hpsa driver appears to be involved in some way, I'm sure if
+> this is a related issue, but as of today's pull I'm getting another
+> problem that causes my DL980 not to come up.
+> 
+> *Massive* amounts of:
+> 
+> DMAR:[fault reason 02] Present bit in context entry is clear
+> dmar: DRHD: handling fault status reg 602
+> dmar: DMAR:[DMA Read] Request device [02:00.0] fault addr 7f61e000
+> 
+> Then:
+> 
+> hpsa 0000:03:00.0: Controller lockup detected: 0xffff0000
+> ...
+> Workqueue: events hpsa_monitor_ctlr_worker [hpsa]
+> ...
+> 
+> Screenshot of the actual LOCKUP: 
+> http://stgolabs.net/hpsa-hard-lockup-3.14+.png
+> 
+> While I haven't bisected, things worked fine until at least until commit
+> 39de65aa2c3e (April 2nd).
+> 
+> Any ideas?
 
-Signed-off-by: Nathan Fontenot <nfont@linux.vnet.ibm.com>
----
- MAINTAINERS |   16 +++++++++++-----
- 1 file changed, 11 insertions(+), 5 deletions(-)
+Well, it's either a DMA remapping issue or a hpsa one.  Your assertion
+that everything worked fine until 39de65aa2c3e would tend to vindicate
+hpsa, because all the hpsa changes went in before that under
 
-Index: linux/MAINTAINERS
-===================================================================
---- linux.orig/MAINTAINERS	2014-04-08 14:14:57.000000000 -0500
-+++ linux/MAINTAINERS	2014-04-08 14:25:29.000000000 -0500
-@@ -4358,7 +4358,7 @@
- F:	drivers/crypto/nx/
- 
- IBM Power 842 compression accelerator
--M:	Robert Jennings <rcj@linux.vnet.ibm.com>
-+M:	Nathan Fontenot <nfont@linux.vnet.ibm.com>
- S:	Supported
- F:	drivers/crypto/nx/nx-842.c
- F:	include/linux/nx842.h
-@@ -4374,12 +4374,18 @@
- S:	Supported
- F:	drivers/net/ethernet/ibm/ibmveth.*
- 
--IBM Power Virtual SCSI/FC Device Drivers
--M:	Robert Jennings <rcj@linux.vnet.ibm.com>
-+IBM Power Virtual SCSI Device Drivers
-+M:	Nathan Fontenot <nfont@linux.vnet.ibm.com>
- L:	linux-scsi@vger.kernel.org
- S:	Supported
--F:	drivers/scsi/ibmvscsi/
--X:	drivers/scsi/ibmvscsi/ibmvstgt.c
-+F:	drivers/scsi/ibmvscsi/ibmvscsi*
-+F:	drivers/scsi/ibmvscsi/viosrp.h
-+
-+IBM Power Virtual FC Device Drivers
-+M:	Brian King <brking@linux.vnet.ibm.com>
-+L:	linux-scsi@vger.kernel.org
-+S:	Supported
-+F:	drivers/scsi/ibmvscsi/ibmvfc*
- 
- IBM ServeRAID RAID DRIVER
- P:	Jack Hammer
+Merge: 3e75c6d b2bff6c
+Author: Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Tue Apr 1 18:49:04 2014 -0700
+
+    Merge tag 'scsi-misc' of
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi
+
+can you revalidate that this commit works OK just to make sure?
+
+James
