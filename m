@@ -1,70 +1,75 @@
-From: David Jeffery <djeffery@redhat.com>
-Subject: [PATCH] sd: medium access timeout counter fails to reset
-Date: Thu, 10 Apr 2014 11:08:30 -0400
-Message-ID: <20140410150830.GA19457@fury.redhat.com>
+From: Bjorn Helgaas <bhelgaas-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: hpsa driver bug crack kernel down!
+Date: Thu, 10 Apr 2014 09:14:59 -0600
+Message-ID: <CAErSpo6EORf02WS1UqP8EMWfHij7W2J5B3ZOoBT90txV85uZZw@mail.gmail.com>
+References: <20140409023935.GE11839@dhcp-16-105.nay.redhat.com>
+	<1397083799.2608.20.camel@buesod1.americas.hpqcorp.net>
+	<1397084904.9519.62.camel@dabdike>
+	<1397085044.9519.63.camel@dabdike>
+	<1397086817.2608.25.camel@buesod1.americas.hpqcorp.net>
+	<1397087425.9519.67.camel@dabdike>
+	<1397089180.2608.27.camel@buesod1.americas.hpqcorp.net>
+	<CAErSpo4H=hcro8sMnt2MzDDVCROpASuUTQWBw37OxodHTyOfyw@mail.gmail.com>
+	<1397111557.2608.29.camel@buesod1.americas.hpqcorp.net>
+	<20140410071535.GX13491@8bytes.org>
+	<1397119587.19944.14.camel@shinybook.infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:64539 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752484AbaDJPLT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Apr 2014 11:11:19 -0400
-Received: from int-mx02.intmail.prod.int.phx2.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s3AFBIbE008345
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <linux-scsi@vger.kernel.org>; Thu, 10 Apr 2014 11:11:19 -0400
-Received: from fury.redhat.com (vpn-63-182.rdu2.redhat.com [10.10.63.182])
-	by int-mx02.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP id s3AFBG97004573
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Thu, 10 Apr 2014 11:11:18 -0400
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <1397119587.19944.14.camel-Fexsq3y4057IgHVZqg5X0TlWvGAXklZc@public.gmane.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
+List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: "Woodhouse, David" <david.woodhouse-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: "bhe-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <bhe-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org" <James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "davidlohr-VXdhtT5mjnY@public.gmane.org" <davidlohr-VXdhtT5mjnY@public.gmane.org>, "scameron-3C9H9nn4BS4HL6m8NFMY+dBPR1lH4CV8@public.gmane.org" <scameron-3C9H9nn4BS4HL6m8NFMY+dBPR1lH4CV8@public.gmane.org>, "jiang.liu-VuQAYsv1563Yd54FQh9/CA@public.gmane.org" <jiang.liu-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-There is an error with the medium access timeout feature of the sd driver. The
-sdkp->medium_access_timed_out value is reset to zero in sd_done() in the wrong
-place.  Currently it is reset to zero only when a command returns sense data.
-This can result in cases where the medium access check falsely triggers from
-timed out commands which are hours or days apart.
-
-For example, an I/O command times out and is aborted.  It then retries and
-succeeds.  But with no sense data generated and returned, the
-medium_access_timed_out value is not reset.  If no sd command returns sense
-data, then the next command to time out (however far in time from the first
-failure) will trigger the medium access timeout and put the device offline.
-
-The resetting of sdkp->medium_access_timed_out should occur before the check
-for sense data.
-
-Signed-off-by: David Jeffery <djeffery@redhat.com>
-
----
-
-To reproduce using scsi_debug, use SCSI_DEBUG_OPT_TIMEOUT or
-SCSI_DEBUG_OPT_MAC_TIMEOUT to force an I/O command to timeout.  Then, remove
-the opt value so the I/O will succeed on retry.  Perform more I/O as desired.
-Finally, repeat the process to make a new I/O command time out.  Without the
-patch, the device will be marked offline even though many I/O commands have
-succeeded between the 2 instances of timed out commands.
-
-
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 470954a..a41e68e 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1689,12 +1689,12 @@ static int sd_done(struct scsi_cmnd *SCpnt)
- 						   sshdr.ascq));
- 	}
- #endif
-+	sdkp->medium_access_timed_out = 0;
-+
- 	if (driver_byte(result) != DRIVER_SENSE &&
- 	    (!sense_valid || sense_deferred))
- 		goto out;
- 
--	sdkp->medium_access_timed_out = 0;
--
- 	switch (sshdr.sense_key) {
- 	case HARDWARE_ERROR:
- 	case MEDIUM_ERROR:
+T24gVGh1LCBBcHIgMTAsIDIwMTQgYXQgMjo0NiBBTSwgV29vZGhvdXNlLCBEYXZpZAo8ZGF2aWQu
+d29vZGhvdXNlQGludGVsLmNvbT4gd3JvdGU6Cgo+PiA+ID4gPj4gPiA+ID4gPiBETUFSOltmYXVs
+dCByZWFzb24gMDJdIFByZXNlbnQgYml0IGluIGNvbnRleHQgZW50cnkgaXMgY2xlYXIKPj4gPiA+
+ID4+ID4gPiA+ID4gZG1hcjogRFJIRDogaGFuZGxpbmcgZmF1bHQgc3RhdHVzIHJlZyA2MDIKPj4g
+PiA+ID4+ID4gPiA+ID4gZG1hcjogRE1BUjpbRE1BIFJlYWRdIFJlcXVlc3QgZGV2aWNlIFswMjow
+MC4wXSBmYXVsdCBhZGRyIDdmNjFlMDAwCj4KPiBUaGF0ICJQcmVzZW50IGJpdCBpbiBjb250ZXh0
+IGVudHJ5IGlzIGNsZWFyIiBmYXVsdCBtZWFucyB0aGF0IHdlIGhhdmUKPiBub3Qgc2V0IHVwICph
+bnkqIG1hcHBpbmdzIGZvciB0aGlzIFBDSSBkZXZpY2XigKYgb24gdGhpcyBJT01NVS4KPgo+PiA+
+IFllcywgc3BlY2lmaWNhbGx5IChmaW5hbGx5IGRvbmUgYmlzZWN0aW5nKToKPj4gPgo+PiA+IGNv
+bW1pdCAyZTQ1NTI4OTMwMzg4NjU4NjAzZWEyNGQ0OWNmNTI4NjdiOTI4ZDNlCj4+ID4gQXV0aG9y
+OiBKaWFuZyBMaXUgPGppYW5nLmxpdUBsaW51eC5pbnRlbC5jb20+Cj4+ID4gRGF0ZTogICBXZWQg
+RmViIDE5IDE0OjA3OjM2IDIwMTQgKzA4MDAKPj4gPgo+PiA+ICAgICBpb21tdS92dC1kOiBVbmlm
+eSB0aGUgd2F5IHRvIHByb2Nlc3MgRE1BUiBkZXZpY2Ugc2NvcGUgYXJyYXkKPgo+IFRoaXMgY29t
+bWl0IGlzIGFib3V0IGhvdyB3ZSBkZWNpZGUgd2hpY2ggSU9NTVUgYSBnaXZlbiBQQ0kgZGV2aWNl
+IGlzCj4gYXR0YWNoZWQgdG8uCj4KPiBUaHVzLCBteSBmaXJzdCBndWVzcyB3b3VsZCBiZSB0aGF0
+IHdlIGFyZSBxdWl0ZSBoYXBwaWx5IHNldHRpbmcgdXAgdGhlCj4gcmVxdWVzdGVkIERNQSBtYXBz
+IG9uIHRoZSAqd3JvbmcqIElPTU1VLCBhbmQgdGhlbiB0YWtpbmcgZmF1bHRzIHdoZW4gdGhlCj4g
+ZGV2aWNlIGFjdHVhbGx5IHRyaWVzIHRvIGRvIERNQS4KPgo+IEhvd2V2ZXIsIEknbSBub3QgMTAw
+JSBjb252aW5jZWQgb2YgdGhhdC4gVGhlIGZhdWx0IGFkZHJlc3MgbG9va3MKPiBzdXNwaWNpb3Vz
+bHkgbGlrZSBhIHRydWUgcGh5c2ljYWwgYWRkcmVzcywgbm90IGEgdmlydHVhbCBidXMgYWRkcmVz
+cyBvZgo+IHRoZSB0eXBlIHRoYXQgd2UnZCBub3JtYWxseSBhbGxvY2F0ZSBmb3IgYSBkbWFfbWFw
+Xyogb3BlcmF0aW9uLiBUaG9zZQo+IHdvdWxkIHN0YXJ0IGF0IDB4ZmZmZmYwMDAgYW5kIHdvcmsg
+ZG93bndhcmRzLCB0eXBpY2FsbHkuCgpJIGxpa2UgdGhlICJ3cm9uZyBJT01NVSAob3Igbm8gSU9N
+TVUgYXQgYWxsKSIgdGhlb3J5LiAgSWYgd2UgZGlkbid0CmNvbm5lY3QgdGhlIGRldmljZSB3aXRo
+IGFuIElPTU1VIGF0IGFsbCwgdGhhdCB3b3VsZCBleHBsYWluIHRoZSBkZXZpY2UKRE1BaW5nIGRp
+cmVjdGx5IHRvIGEgcGh5c2ljYWwgYWRkcmVzcywgd291bGRuJ3QgaXQ/Cgo+IERvIHlvdSBoYXZl
+ICdpb21tdT1wdCcgb24gdGhlIGtlcm5lbCBjb21tYW5kIGxpbmU/IENhbiBJIHNlZSB0aGUgZnVs
+bAo+IGRtZXNnIGFzIHRoaXMgc3lzdGVtIGJvb3RzLCBhbmQgYWxzbyBhIGNvcHkgb2YgdGhlIERN
+QVIgdGFibGU/Cj4KPiBXZSBzaG91bGQgYWxzbyByYXRlLWxpbWl0IERNQSBmYXVsdHMsIHdoaWNo
+IHdvdWxkIGF2b2lkIHRoZSBsb2NrdXAKPiBmYWlsdXJlIG1vZGUuIEJqb3JuLCB3aGF0IHNob3Vs
+ZCBhbiBJT01NVSBkcml2ZXIgKmRvKiB3aGVuIGl0IGRldGVjdHMKPiB0aGF0IGEgZGV2aWNlIGlz
+IGNyZWF0aW5nIGFuIGVuZGxlc3Mgc3RyZWFtIG9mIERNQSBmYXVsdHMgYW5kIGlzbid0Cj4gYWJv
+cnRpbmcgdGhlIHRyYW5zYWN0aW9uPwoKWW91IG1lbnRpb25lZCB0aGF0IFBPV0VSIHdpdGggRUVI
+IGRvZXMgc29tZXRoaW5nIGludGVsbGlnZW50IGluIHRoaXMKY2FzZSwgYnV0IEknbSBub3QgZmFt
+aWxpYXIgd2l0aCB0aGF0IGNvZGUuICBXZSBoYXZlIEFFUiBzdXBwb3J0LCB3aGljaApjYW4gcmVz
+dWx0IGluIHJlc2V0dGluZyBhIGRldmljZSwgYnV0IEkgdGhpbmsgRE1BIGZhdWx0cyBhcmUgcmVw
+b3J0ZWQKZGlmZmVyZW50bHksIGFuZCBJIGRvbid0IHRoaW5rIHRoZXJlJ3MgYW55IG5pY2UgZXhp
+c3Rpbmcgd2F5IGZvciBQQ0kKdG8gZGVhbCB3aXRoIHRoZW0uICBNYXliZSB0aGVyZSBzaG91bGQg
+YmUsIHRob3VnaC4KCkJqb3JuCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fCmlvbW11IG1haWxpbmcgbGlzdAppb21tdUBsaXN0cy5saW51eC1mb3VuZGF0aW9u
+Lm9yZwpodHRwczovL2xpc3RzLmxpbnV4Zm91bmRhdGlvbi5vcmcvbWFpbG1hbi9saXN0aW5mby9p
+b21tdQ==
