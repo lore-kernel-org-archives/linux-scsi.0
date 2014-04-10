@@ -1,49 +1,25 @@
-From: scameron-3C9H9nn4BS4HL6m8NFMY+dBPR1lH4CV8@public.gmane.org
-Subject: [PATCH] hpsa: fix uninitialized trans_support in
-	hpsa_put_ctlr_into_performant_mode()
-Date: Thu, 10 Apr 2014 17:17:04 -0500
-Message-ID: <20140410221704.GA22465@beardog.cce.hp.com>
+From: Davidlohr Bueso <davidlohr@hp.com>
+Subject: Re: [PATCH] hpsa: fix uninitialized trans_support in
+ hpsa_put_ctlr_into_performant_mode()
+Date: Thu, 10 Apr 2014 15:37:39 -0700
+Message-ID: <1397169459.2608.61.camel@buesod1.americas.hpqcorp.net>
+References: <20140410221704.GA22465@beardog.cce.hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-Content-Disposition: inline
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
-List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Cc: linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Baoquan He <bhe-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:INTEL IOMMU (VT-d)" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Davidlohr Bueso <davidlohr-VXdhtT5mjnY@public.gmane.org>, scameron-3C9H9nn4BS4HL6m8NFMY+dBPR1lH4CV8@public.gmane.org, Bjorn Helgaas <bhelgaas-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Jiang Liu <jiang.liu-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Return-path: <linux-pci-owner@vger.kernel.org>
+In-Reply-To: <20140410221704.GA22465@beardog.cce.hp.com>
+Sender: linux-pci-owner@vger.kernel.org
+To: scameron@beardog.cce.hp.com
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Bjorn Helgaas <bhelgaas@google.com>, Baoquan He <bhe@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, Joerg Roedel <joro@8bytes.org>, "open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>, Jiang Liu <jiang.liu@linux.intel.com>
 List-Id: linux-scsi@vger.kernel.org
 
+On Thu, 2014-04-10 at 17:17 -0500, scameron@beardog.cce.hp.com wrote:
+> Without this, you'll see a null pointer dereference in
+> hpsa_enter_performant_mode().
 
-Without this, you'll see a null pointer dereference in
-hpsa_enter_performant_mode().
+So I'm not surprised that this patch doesn't solve the problem I am
+seeing with DMAR and the hpsa driver hard lockup.
 
-Signed-off-by: Stephen M. Cameron <scameron-3C9H9nn4BS4HL6m8NFMY+dBPR1lH4CV8@public.gmane.org>
----
- drivers/scsi/hpsa.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 8cf4a0c..ef4dfdd 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -7463,6 +7463,10 @@ static void hpsa_put_ctlr_into_performant_mode(struct ctlr_info *h)
- 	if (hpsa_simple_mode)
- 		return;
- 
-+	trans_support = readl(&(h->cfgtable->TransportSupport));
-+	if (!(trans_support & PERFORMANT_MODE))
-+		return;
-+
- 	/* Check for I/O accelerator mode support */
- 	if (trans_support & CFGTBL_Trans_io_accel1) {
- 		transMethod |= CFGTBL_Trans_io_accel1 |
--- 
-1.7.1
+In any case it should address Baoquan's original report, so it confirms
+that it is in fact two different sets of issues.
