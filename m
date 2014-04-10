@@ -1,75 +1,72 @@
-From: Bjorn Helgaas <bhelgaas-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: hpsa driver bug crack kernel down!
-Date: Thu, 10 Apr 2014 09:14:59 -0600
-Message-ID: <CAErSpo6EORf02WS1UqP8EMWfHij7W2J5B3ZOoBT90txV85uZZw@mail.gmail.com>
-References: <20140409023935.GE11839@dhcp-16-105.nay.redhat.com>
-	<1397083799.2608.20.camel@buesod1.americas.hpqcorp.net>
-	<1397084904.9519.62.camel@dabdike>
-	<1397085044.9519.63.camel@dabdike>
-	<1397086817.2608.25.camel@buesod1.americas.hpqcorp.net>
-	<1397087425.9519.67.camel@dabdike>
-	<1397089180.2608.27.camel@buesod1.americas.hpqcorp.net>
-	<CAErSpo4H=hcro8sMnt2MzDDVCROpASuUTQWBw37OxodHTyOfyw@mail.gmail.com>
-	<1397111557.2608.29.camel@buesod1.americas.hpqcorp.net>
-	<20140410071535.GX13491@8bytes.org>
-	<1397119587.19944.14.camel@shinybook.infradead.org>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH 0/3] Fix USB deadlock caused by SCSI error handling
+Date: Thu, 10 Apr 2014 11:31:18 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1404101128020.32351-100000@netrider.rowland.org>
+References: <53468297.1040909@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <1397119587.19944.14.camel-Fexsq3y4057IgHVZqg5X0TlWvGAXklZc@public.gmane.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
-List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: "Woodhouse, David" <david.woodhouse-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: "bhe-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <bhe-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org" <James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "davidlohr-VXdhtT5mjnY@public.gmane.org" <davidlohr-VXdhtT5mjnY@public.gmane.org>, "scameron-3C9H9nn4BS4HL6m8NFMY+dBPR1lH4CV8@public.gmane.org" <scameron-3C9H9nn4BS4HL6m8NFMY+dBPR1lH4CV8@public.gmane.org>, "jiang.liu-VuQAYsv1563Yd54FQh9/CA@public.gmane.org" <jiang.liu-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Content-Type: TEXT/PLAIN; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from netrider.rowland.org ([192.131.102.5]:58467 "HELO
+	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753036AbaDJPbT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Apr 2014 11:31:19 -0400
+In-Reply-To: <53468297.1040909@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Andreas Reis <andreas.reis@gmail.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, SCSI development list <linux-scsi@vger.kernel.org>, USB list <linux-usb@vger.kernel.org>
 
-T24gVGh1LCBBcHIgMTAsIDIwMTQgYXQgMjo0NiBBTSwgV29vZGhvdXNlLCBEYXZpZAo8ZGF2aWQu
-d29vZGhvdXNlQGludGVsLmNvbT4gd3JvdGU6Cgo+PiA+ID4gPj4gPiA+ID4gPiBETUFSOltmYXVs
-dCByZWFzb24gMDJdIFByZXNlbnQgYml0IGluIGNvbnRleHQgZW50cnkgaXMgY2xlYXIKPj4gPiA+
-ID4+ID4gPiA+ID4gZG1hcjogRFJIRDogaGFuZGxpbmcgZmF1bHQgc3RhdHVzIHJlZyA2MDIKPj4g
-PiA+ID4+ID4gPiA+ID4gZG1hcjogRE1BUjpbRE1BIFJlYWRdIFJlcXVlc3QgZGV2aWNlIFswMjow
-MC4wXSBmYXVsdCBhZGRyIDdmNjFlMDAwCj4KPiBUaGF0ICJQcmVzZW50IGJpdCBpbiBjb250ZXh0
-IGVudHJ5IGlzIGNsZWFyIiBmYXVsdCBtZWFucyB0aGF0IHdlIGhhdmUKPiBub3Qgc2V0IHVwICph
-bnkqIG1hcHBpbmdzIGZvciB0aGlzIFBDSSBkZXZpY2XigKYgb24gdGhpcyBJT01NVS4KPgo+PiA+
-IFllcywgc3BlY2lmaWNhbGx5IChmaW5hbGx5IGRvbmUgYmlzZWN0aW5nKToKPj4gPgo+PiA+IGNv
-bW1pdCAyZTQ1NTI4OTMwMzg4NjU4NjAzZWEyNGQ0OWNmNTI4NjdiOTI4ZDNlCj4+ID4gQXV0aG9y
-OiBKaWFuZyBMaXUgPGppYW5nLmxpdUBsaW51eC5pbnRlbC5jb20+Cj4+ID4gRGF0ZTogICBXZWQg
-RmViIDE5IDE0OjA3OjM2IDIwMTQgKzA4MDAKPj4gPgo+PiA+ICAgICBpb21tdS92dC1kOiBVbmlm
-eSB0aGUgd2F5IHRvIHByb2Nlc3MgRE1BUiBkZXZpY2Ugc2NvcGUgYXJyYXkKPgo+IFRoaXMgY29t
-bWl0IGlzIGFib3V0IGhvdyB3ZSBkZWNpZGUgd2hpY2ggSU9NTVUgYSBnaXZlbiBQQ0kgZGV2aWNl
-IGlzCj4gYXR0YWNoZWQgdG8uCj4KPiBUaHVzLCBteSBmaXJzdCBndWVzcyB3b3VsZCBiZSB0aGF0
-IHdlIGFyZSBxdWl0ZSBoYXBwaWx5IHNldHRpbmcgdXAgdGhlCj4gcmVxdWVzdGVkIERNQSBtYXBz
-IG9uIHRoZSAqd3JvbmcqIElPTU1VLCBhbmQgdGhlbiB0YWtpbmcgZmF1bHRzIHdoZW4gdGhlCj4g
-ZGV2aWNlIGFjdHVhbGx5IHRyaWVzIHRvIGRvIERNQS4KPgo+IEhvd2V2ZXIsIEknbSBub3QgMTAw
-JSBjb252aW5jZWQgb2YgdGhhdC4gVGhlIGZhdWx0IGFkZHJlc3MgbG9va3MKPiBzdXNwaWNpb3Vz
-bHkgbGlrZSBhIHRydWUgcGh5c2ljYWwgYWRkcmVzcywgbm90IGEgdmlydHVhbCBidXMgYWRkcmVz
-cyBvZgo+IHRoZSB0eXBlIHRoYXQgd2UnZCBub3JtYWxseSBhbGxvY2F0ZSBmb3IgYSBkbWFfbWFw
-Xyogb3BlcmF0aW9uLiBUaG9zZQo+IHdvdWxkIHN0YXJ0IGF0IDB4ZmZmZmYwMDAgYW5kIHdvcmsg
-ZG93bndhcmRzLCB0eXBpY2FsbHkuCgpJIGxpa2UgdGhlICJ3cm9uZyBJT01NVSAob3Igbm8gSU9N
-TVUgYXQgYWxsKSIgdGhlb3J5LiAgSWYgd2UgZGlkbid0CmNvbm5lY3QgdGhlIGRldmljZSB3aXRo
-IGFuIElPTU1VIGF0IGFsbCwgdGhhdCB3b3VsZCBleHBsYWluIHRoZSBkZXZpY2UKRE1BaW5nIGRp
-cmVjdGx5IHRvIGEgcGh5c2ljYWwgYWRkcmVzcywgd291bGRuJ3QgaXQ/Cgo+IERvIHlvdSBoYXZl
-ICdpb21tdT1wdCcgb24gdGhlIGtlcm5lbCBjb21tYW5kIGxpbmU/IENhbiBJIHNlZSB0aGUgZnVs
-bAo+IGRtZXNnIGFzIHRoaXMgc3lzdGVtIGJvb3RzLCBhbmQgYWxzbyBhIGNvcHkgb2YgdGhlIERN
-QVIgdGFibGU/Cj4KPiBXZSBzaG91bGQgYWxzbyByYXRlLWxpbWl0IERNQSBmYXVsdHMsIHdoaWNo
-IHdvdWxkIGF2b2lkIHRoZSBsb2NrdXAKPiBmYWlsdXJlIG1vZGUuIEJqb3JuLCB3aGF0IHNob3Vs
-ZCBhbiBJT01NVSBkcml2ZXIgKmRvKiB3aGVuIGl0IGRldGVjdHMKPiB0aGF0IGEgZGV2aWNlIGlz
-IGNyZWF0aW5nIGFuIGVuZGxlc3Mgc3RyZWFtIG9mIERNQSBmYXVsdHMgYW5kIGlzbid0Cj4gYWJv
-cnRpbmcgdGhlIHRyYW5zYWN0aW9uPwoKWW91IG1lbnRpb25lZCB0aGF0IFBPV0VSIHdpdGggRUVI
-IGRvZXMgc29tZXRoaW5nIGludGVsbGlnZW50IGluIHRoaXMKY2FzZSwgYnV0IEknbSBub3QgZmFt
-aWxpYXIgd2l0aCB0aGF0IGNvZGUuICBXZSBoYXZlIEFFUiBzdXBwb3J0LCB3aGljaApjYW4gcmVz
-dWx0IGluIHJlc2V0dGluZyBhIGRldmljZSwgYnV0IEkgdGhpbmsgRE1BIGZhdWx0cyBhcmUgcmVw
-b3J0ZWQKZGlmZmVyZW50bHksIGFuZCBJIGRvbid0IHRoaW5rIHRoZXJlJ3MgYW55IG5pY2UgZXhp
-c3Rpbmcgd2F5IGZvciBQQ0kKdG8gZGVhbCB3aXRoIHRoZW0uICBNYXliZSB0aGVyZSBzaG91bGQg
-YmUsIHRob3VnaC4KCkJqb3JuCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fCmlvbW11IG1haWxpbmcgbGlzdAppb21tdUBsaXN0cy5saW51eC1mb3VuZGF0aW9u
-Lm9yZwpodHRwczovL2xpc3RzLmxpbnV4Zm91bmRhdGlvbi5vcmcvbWFpbG1hbi9saXN0aW5mby9p
-b21tdQ==
+On Thu, 10 Apr 2014, Hannes Reinecke wrote:
+
+> On 04/10/2014 12:58 PM, Andreas Reis wrote:
+> > That patch appears to work in preventing the crashes, judged on one
+> > repeated appearance of the bug.
+> >=20
+> > dmesg had the usual
+> > [  215.229903] usb 4-2: usb_disable_lpm called, do nothing
+> > [  215.336941] usb 4-2: reset SuperSpeed USB device number 3 using
+> > xhci_hcd
+> > [  215.350296] xhci_hcd 0000:00:14.0: xHCI xhci_drop_endpoint calle=
+d
+> > with disabled ep ffff880427b829c0
+> > [  215.350305] xhci_hcd 0000:00:14.0: xHCI xhci_drop_endpoint calle=
+d
+> > with disabled ep ffff880427b82a08
+> > [  215.350621] usb 4-2: usb_enable_lpm called, do nothing
+> >=20
+> > repeated five times, followed by one
+> > [  282.795801] sd 8:0:0:0: Device offlined - not ready after error
+> > recovery
+> >=20
+> > and then as often as something tried to read from it:
+> > [  295.585472] sd 8:0:0:0: rejecting I/O to offline device
+> >=20
+> > The stick could then be properly un- and remounted (the latter if i=
+t
+> > had been physically replugged) without issue =97 for the bug to
+> > reoccur after one to three minutes. I tried this three times, no
+> > dmesg difference except the ep addresses varied on two of that.
+> >=20
+> Was this just that patch you've tested with or the entire patch serie=
+s?
+>=20
+> If the latter, Alan, is this the expected outcome?
+
+Yes, it is.  The same thing should happen with the entire patch series.
+
+> I would've thought the error recover should _not_ run into
+> offlining devices here, but rather the device should be recovered
+> eventually.
+
+The command times out, it is aborted, and the command is retried.  The
+same thing happens, and we repeat five times.  Eventually the SCSI core
+gives up and declares the device to be offline.
+
+Alan Stern
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
