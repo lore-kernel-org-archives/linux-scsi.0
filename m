@@ -1,14 +1,14 @@
 From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: [PATCH 31/42] qla2xxx: ISP27xx firmware dump template spec updates (including T274).
-Date: Fri, 11 Apr 2014 16:54:36 -0400
-Message-ID: <1397249687-32666-32-git-send-email-saurav.kashyap@qlogic.com>
+Subject: [PATCH 30/42] qla2xxx: Reduce the time we wait for a command to complete during SCSI error handling.
+Date: Fri, 11 Apr 2014 16:54:35 -0400
+Message-ID: <1397249687-32666-31-git-send-email-saurav.kashyap@qlogic.com>
 References: <1397249687-32666-1-git-send-email-saurav.kashyap@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:29328 "EHLO
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:65406 "EHLO
 	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754982AbaDKVcE (ORCPT
+	by vger.kernel.org with ESMTP id S1754980AbaDKVcE (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Fri, 11 Apr 2014 17:32:04 -0400
 In-Reply-To: <1397249687-32666-1-git-send-email-saurav.kashyap@qlogic.com>
@@ -17,270 +17,27 @@ List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Joe Carnuccio <joe.carnuccio@qlogic.com>
+From: Chad Dupuis <chad.dupuis@qlogic.com>
 
-Signed-off-by: Joe Carnuccio <joe.carnuccio@qlogic.com>
+Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
 Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_dbg.c  |    6 +-
- drivers/scsi/qla2xxx/qla_tmpl.c |   90 +++++++++++++++++++++++++++------------
- drivers/scsi/qla2xxx/qla_tmpl.h |   15 ++++++-
- 3 files changed, 78 insertions(+), 33 deletions(-)
+ drivers/scsi/qla2xxx/qla_os.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
-index 8564682..cdff3aa 100644
---- a/drivers/scsi/qla2xxx/qla_dbg.c
-+++ b/drivers/scsi/qla2xxx/qla_dbg.c
-@@ -61,11 +61,11 @@
-  * |                              |                    | 0xb13c-0xb140  |
-  * |                              |                    | 0xb149		|
-  * | MultiQ                       |       0xc00c       |		|
-- * | Misc                         |       0xd300       | 0xd017-0xd019	|
-+ * | Misc                         |       0xd212       | 0xd017-0xd019	|
-  * |                              |                    | 0xd020		|
-- * |                              |                    | 0xd02e-0xd0ff	|
-+ * |                              |                    | 0xd030-0xd0ff	|
-  * |                              |                    | 0xd101-0xd1fe	|
-- * |                              |                    | 0xd212-0xd2fe	|
-+ * |                              |                    | 0xd213-0xd2fe	|
-  * | Target Mode		  |	  0xe070       | 0xe021		|
-  * | Target Mode Management	  |	  0xf072       | 0xf002-0xf003	|
-  * |                              |                    | 0xf046-0xf049  |
-diff --git a/drivers/scsi/qla2xxx/qla_tmpl.c b/drivers/scsi/qla2xxx/qla_tmpl.c
-index 872ec7e..a9fa9b7 100644
---- a/drivers/scsi/qla2xxx/qla_tmpl.c
-+++ b/drivers/scsi/qla2xxx/qla_tmpl.c
-@@ -192,19 +192,6 @@ static inline void (*qla27xx_read_vector(uint width))(void *, void *, ulong *)
- }
- 
- static inline void
--qla27xx_read_off(__iomem struct device_reg_24xx *reg,
--	uint offset, void *buf, ulong *len)
--{
--	void *window = (void *)reg + offset;
--
--	if (buf) {
--		ql_dbg(ql_dbg_misc, NULL, 0xd300,
--		    "%s: @%x\n", __func__, offset);
--	}
--	qla27xx_read32(window, buf, len);
--}
--
--static inline void
- qla27xx_read_reg(__iomem struct device_reg_24xx *reg,
- 	uint offset, void *buf, ulong *len)
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 8f1a098..d1a76a6 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -781,7 +781,7 @@ static int
+ qla2x00_eh_wait_on_command(struct scsi_cmnd *cmd)
  {
-@@ -214,7 +201,6 @@ qla27xx_read_reg(__iomem struct device_reg_24xx *reg,
- 		ql_dbg(ql_dbg_misc, NULL, 0xd014,
- 		    "%s: @%x\n", __func__, offset);
- 	}
--	qla27xx_insert32(offset, buf, len);
- 	qla27xx_read32(window, buf, len);
- }
- 
-@@ -233,7 +219,7 @@ qla27xx_write_reg(__iomem struct device_reg_24xx *reg,
- 
- static inline void
- qla27xx_read_window(__iomem struct device_reg_24xx *reg,
--	uint32_t base, uint offset, uint count, uint width, void *buf,
-+	uint32_t addr, uint offset, uint count, uint width, void *buf,
- 	ulong *len)
- {
- 	void *window = (void *)reg + offset;
-@@ -242,14 +228,14 @@ qla27xx_read_window(__iomem struct device_reg_24xx *reg,
- 	if (buf) {
- 		ql_dbg(ql_dbg_misc, NULL, 0xd016,
- 		    "%s: base=%x offset=%x count=%x width=%x\n",
--		    __func__, base, offset, count, width);
-+		    __func__, addr, offset, count, width);
- 	}
--	qla27xx_write_reg(reg, IOBASE_ADDR, base, buf);
-+	qla27xx_write_reg(reg, IOBASE_ADDR, addr, buf);
- 	while (count--) {
--		qla27xx_insert32(base, buf, len);
-+		qla27xx_insert32(addr, buf, len);
- 		readn(window, buf, len);
- 		window += width;
--		base++;
-+		addr++;
- 	}
- }
- 
-@@ -349,7 +335,8 @@ qla27xx_fwdt_entry_t260(struct scsi_qla_host *vha,
- 
- 	ql_dbg(ql_dbg_misc, vha, 0xd204,
- 	    "%s: rdpci [%lx]\n", __func__, *len);
--	qla27xx_read_reg(reg, ent->t260.pci_addr, buf, len);
-+	qla27xx_insert32(ent->t260.pci_offset, buf, len);
-+	qla27xx_read_reg(reg, ent->t260.pci_offset, buf, len);
- 
- 	return false;
- }
-@@ -362,7 +349,7 @@ qla27xx_fwdt_entry_t261(struct scsi_qla_host *vha,
- 
- 	ql_dbg(ql_dbg_misc, vha, 0xd205,
- 	    "%s: wrpci [%lx]\n", __func__, *len);
--	qla27xx_write_reg(reg, ent->t261.pci_addr, ent->t261.write_data, buf);
-+	qla27xx_write_reg(reg, ent->t261.pci_offset, ent->t261.write_data, buf);
- 
- 	return false;
- }
-@@ -405,9 +392,9 @@ qla27xx_fwdt_entry_t262(struct scsi_qla_host *vha,
- 		goto done;
- 	}
- 
--	if (end < start) {
-+	if (end < start || end == 0) {
- 		ql_dbg(ql_dbg_misc, vha, 0xd023,
--		    "%s: bad range (start=%x end=%x)\n", __func__,
-+		    "%s: unusable range (start=%x end=%x)\n", __func__,
- 		    ent->t262.end_addr, ent->t262.start_addr);
- 		qla27xx_skip_entry(ent, buf);
- 		goto done;
-@@ -465,17 +452,15 @@ qla27xx_fwdt_entry_t263(struct scsi_qla_host *vha,
- 		ql_dbg(ql_dbg_misc, vha, 0xd025,
- 		    "%s: unsupported atio queue\n", __func__);
- 		qla27xx_skip_entry(ent, buf);
--		goto done;
- 	} else {
- 		ql_dbg(ql_dbg_misc, vha, 0xd026,
- 		    "%s: unknown queue %u\n", __func__, ent->t263.queue_type);
- 		qla27xx_skip_entry(ent, buf);
--		goto done;
- 	}
- 
- 	if (buf)
- 		ent->t263.num_queues = count;
--done:
-+
- 	return false;
- }
- 
-@@ -612,7 +597,7 @@ qla27xx_fwdt_entry_t270(struct scsi_qla_host *vha,
- 	while (dwords--) {
- 		qla27xx_write_reg(reg, 0xc0, addr|0x80000000, buf);
- 		qla27xx_insert32(addr, buf, len);
--		qla27xx_read_off(reg, 0xc4, buf, len);
-+		qla27xx_read_reg(reg, 0xc4, buf, len);
- 		addr += sizeof(uint32_t);
- 	}
- 
-@@ -673,9 +658,57 @@ qla27xx_fwdt_entry_t273(struct scsi_qla_host *vha,
- 			    "%s: failed pcicfg read at %lx\n", __func__, addr);
- 		qla27xx_insert32(addr, buf, len);
- 		qla27xx_insert32(value, buf, len);
--		addr += 4;
-+		addr += sizeof(uint32_t);
-+	}
-+
-+	return false;
-+}
-+
-+static int
-+qla27xx_fwdt_entry_t274(struct scsi_qla_host *vha,
-+	struct qla27xx_fwdt_entry *ent, void *buf, ulong *len)
-+{
-+	uint count = 0;
-+	uint i;
-+
-+	ql_dbg(ql_dbg_misc, vha, 0xd212,
-+	    "%s: getqsh(%x) [%lx]\n", __func__, ent->t274.queue_type, *len);
-+	if (ent->t274.queue_type == T274_QUEUE_TYPE_REQ_SHAD) {
-+		for (i = 0; i < vha->hw->max_req_queues; i++) {
-+			struct req_que *req = vha->hw->req_q_map[i];
-+			if (req || !buf) {
-+				qla27xx_insert16(i, buf, len);
-+				qla27xx_insert16(1, buf, len);
-+				qla27xx_insert32(0, buf, len);
-+				count++;
-+			}
-+		}
-+	} else if (ent->t274.queue_type == T274_QUEUE_TYPE_RSP_SHAD) {
-+		for (i = 0; i < vha->hw->max_rsp_queues; i++) {
-+			struct rsp_que *rsp = vha->hw->rsp_q_map[i];
-+			if (rsp || !buf) {
-+				qla27xx_insert16(i, buf, len);
-+				qla27xx_insert16(1, buf, len);
-+				qla27xx_insert32(0, buf, len);
-+				count++;
-+			}
-+		}
-+	} else if (ent->t274.queue_type == T274_QUEUE_TYPE_ATIO_SHAD) {
-+		ql_dbg(ql_dbg_misc, vha, 0xd02e,
-+		    "%s: unsupported atio queue\n", __func__);
-+		qla27xx_skip_entry(ent, buf);
-+	} else {
-+		ql_dbg(ql_dbg_misc, vha, 0xd02f,
-+		    "%s: unknown queue %u\n", __func__, ent->t274.queue_type);
-+		qla27xx_skip_entry(ent, buf);
- 	}
- 
-+	if (buf)
-+		ent->t274.num_queues = count;
-+
-+	if (!count)
-+		qla27xx_skip_entry(ent, buf);
-+
- 	return false;
- }
- 
-@@ -720,6 +753,7 @@ static struct qla27xx_fwdt_entry_call ql27xx_fwdt_entry_call_list[] = {
- 	{ ENTRY_TYPE_WRREMREG		, qla27xx_fwdt_entry_t271  } ,
- 	{ ENTRY_TYPE_RDREMRAM		, qla27xx_fwdt_entry_t272  } ,
- 	{ ENTRY_TYPE_PCICFG		, qla27xx_fwdt_entry_t273  } ,
-+	{ ENTRY_TYPE_GET_SHADOW		, qla27xx_fwdt_entry_t274  } ,
- 	{ -1				, qla27xx_fwdt_entry_other }
- };
- 
-diff --git a/drivers/scsi/qla2xxx/qla_tmpl.h b/drivers/scsi/qla2xxx/qla_tmpl.h
-index ce1593c..1967424 100644
---- a/drivers/scsi/qla2xxx/qla_tmpl.h
-+++ b/drivers/scsi/qla2xxx/qla_tmpl.h
-@@ -52,6 +52,7 @@ struct __packed qla27xx_fwdt_template {
- #define ENTRY_TYPE_WRREMREG		271
- #define ENTRY_TYPE_RDREMRAM		272
- #define ENTRY_TYPE_PCICFG		273
-+#define ENTRY_TYPE_GET_SHADOW		274
- 
- #define CAPTURE_FLAG_PHYS_ONLY		BIT_0
- #define CAPTURE_FLAG_PHYS_VIRT		BIT_1
-@@ -109,12 +110,12 @@ struct __packed qla27xx_fwdt_entry {
- 		} t259;
- 
- 		struct __packed {
--			uint8_t pci_addr;
-+			uint8_t pci_offset;
- 			uint8_t reserved[3];
- 		} t260;
- 
- 		struct __packed {
--			uint8_t pci_addr;
-+			uint8_t pci_offset;
- 			uint8_t reserved[3];
- 			uint32_t write_data;
- 		} t261;
-@@ -186,6 +187,12 @@ struct __packed qla27xx_fwdt_entry {
- 			uint32_t addr;
- 			uint32_t count;
- 		} t273;
-+
-+		struct __packed {
-+			uint32_t num_queues;
-+			uint8_t  queue_type;
-+			uint8_t  reserved[3];
-+		} t274;
- 	};
- };
- 
-@@ -202,4 +209,8 @@ struct __packed qla27xx_fwdt_entry {
- #define T268_BUF_TYPE_EXCH_BUFOFF	2
- #define T268_BUF_TYPE_EXTD_LOGIN	3
- 
-+#define T274_QUEUE_TYPE_REQ_SHAD	1
-+#define T274_QUEUE_TYPE_RSP_SHAD	2
-+#define T274_QUEUE_TYPE_ATIO_SHAD	3
-+
- #endif
+ #define ABORT_POLLING_PERIOD	1000
+-#define ABORT_WAIT_ITER		((10 * 1000) / (ABORT_POLLING_PERIOD))
++#define ABORT_WAIT_ITER		((2 * 1000) / (ABORT_POLLING_PERIOD))
+ 	unsigned long wait_iter = ABORT_WAIT_ITER;
+ 	scsi_qla_host_t *vha = shost_priv(cmd->device->host);
+ 	struct qla_hw_data *ha = vha->hw;
 -- 
 1.7.7
 
