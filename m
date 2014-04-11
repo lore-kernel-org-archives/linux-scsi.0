@@ -1,54 +1,33 @@
-From: Michael Schmitz <schmitzmic@gmail.com>
-Subject: Re: esp_scsi QTAG in FAS216
-Date: Fri, 11 Apr 2014 13:47:58 +1200
-Message-ID: <CAOmrzkK1hoT72zA4CzajCH2uNwkiVPWi8vJQswB=4Q4uf-kSZQ@mail.gmail.com>
-References: <CAOmrzkKP4YcvnHcrtucMvS9WSaeg+6-qnobOWN6hBK=wkUHemg@mail.gmail.com>
-	<CAMuHMdUH=9sv-Vb3ZTAGyfvEQOO0x0x1cUYhfd7040k8d+bSYg@mail.gmail.com>
-	<5231DF69.6070807@aalto.fi>
-	<20140404.162830.1700547572091852195.davem@davemloft.net>
-	<CAOmrzkL_6Y2RhpKANmTEWL53-6Ts+PF9Hhk_4Fh1s0wx7f_NhQ@mail.gmail.com>
-	<CACz-3rg3LNFKNPUNwc1OF_O_b5k=28hw8Nj50dWhxy4A5_QbVg@mail.gmail.com>
+From: Jens Axboe <axboe@fb.com>
+Subject: Re: [PATCH 3/4] blk-mq: move request structures into struct blk_mq_tags
+Date: Thu, 10 Apr 2014 20:42:27 -0600
+Message-ID: <53475693.7050609@fb.com>
+References: <1396277175-21382-1-git-send-email-hch@lst.de> <1396277175-21382-4-git-send-email-hch@lst.de> <53457404.5070800@fb.com> <20140410100144.GB20342@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <CACz-3rg3LNFKNPUNwc1OF_O_b5k=28hw8Nj50dWhxy4A5_QbVg@mail.gmail.com>
-Sender: linux-m68k-owner@vger.kernel.org
-To: Kars de Jong <jongk@linux-m68k.org>
-Cc: David Miller <davem@davemloft.net>, Tuomas Vainikka <tuomas.vainikka@aalto.fi>, Geert Uytterhoeven <geert@linux-m68k.org>, Linux/m68k <linux-m68k@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20140410100144.GB20342@lst.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Matias Bjorling <m@bjorling.me>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hello Kars,
-
-
->> > I've never seen a formula for any ESP or FAS chip for the timeout
->> > other than the one mentioned in huge comment in
->> > esp_set_clock_params(), although I do see the 7668 instead of 8192
->> > factor being used in the old NCR53C9x driver.
->>
->> I haven't gone far enough back in the 53C9x revision history to be
->> certain. but it would seem to me that Kars de Jong added that FAS
->> special case.
->>
->> Can you confirm that, Kars? Any recollection as to the reason?
+On 2014-04-10 04:01, Christoph Hellwig wrote:
+> On Wed, Apr 09, 2014 at 10:23:32AM -0600, Jens Axboe wrote:
+>> This should go into block/blk-mq-tag.h.
 >
-> That is the value that's in the data manual of the Symbios Logic
-> SYM53CF94/96-2 (the actual chip that's in my Amiga SCSI controller).
+> Ok.
 >
-> Funny, according to the QLogic FAS2x6 manual the value should be 7682
-> for FAS216/216U/236/236U chips...
+>> We might as well leave this, the mtip32xx conversion ends up using it. So
+>> if we pull it now, it'll just be reintroduced shortly.
 >
-> I don't think it's all that important. It only means that the actual
-> selection timeout used by the chip will be slightly shorter than it is
-> supposed to be.
+> It's back in the latest revision of the patch, just taking a
+> struct blk_mq_tag pointer now so that it can be used by SCSI as well.
+>
+> I've also changed an opencode variant of it to use the helper.
 
-Thanks for checking that - I agree that it might not amount to much.
+Great. Will you send out an updated patchset?
 
-The more important issue is the one about the one-byte reconnect
-message. Does the manual speak to that particular issue? Any hint on
-how we could enable SCSI-2 features on chip init?
-
-Can you point me to a source for the manuals if possible?
-
-Cheers,
-
-  Michael
+-- 
+Jens Axboe
