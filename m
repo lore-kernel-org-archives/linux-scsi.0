@@ -1,86 +1,59 @@
-From: Robert Jennings <rob@pochix.net>
-Subject: Re: [PATCH] Update Maintainers for IBM Power 842, vscsi, and vfc
- drivers
-Date: Fri, 11 Apr 2014 10:42:56 -0500
-Message-ID: <53480D80.4080404@pochix.net>
-References: <53459226.2070002@linux.vnet.ibm.com>
+From: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
+Subject: Re: LSI SAS - SSDs with  DRAT and DZAT
+Date: Fri, 11 Apr 2014 18:57:18 +0200
+Message-ID: <53481EEE.3090405@itwm.fraunhofer.de>
+References: <1391730975.3449.16.camel@sonic.justonedata.com>	 <yq1vbwqslek.fsf@sermon.lab.mkp.net>	 <1391806363.2761.8.camel@sonic.justonedata.com>	 <yq1mwi2skoz.fsf@sermon.lab.mkp.net>	 <1391808293.2761.9.camel@sonic.justonedata.com>	 <yq1iosqs8fx.fsf@sermon.lab.mkp.net>	 <1391984895.13523.13.camel@tardis.intricatesoftware.com> <1392172050.2761.37.camel@sonic.justonedata.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ob0-f173.google.com ([209.85.214.173]:58087 "EHLO
-	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755407AbaDKPm6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Apr 2014 11:42:58 -0400
-Received: by mail-ob0-f173.google.com with SMTP id gq1so6235361obb.18
-        for <linux-scsi@vger.kernel.org>; Fri, 11 Apr 2014 08:42:57 -0700 (PDT)
-In-Reply-To: <53459226.2070002@linux.vnet.ibm.com>
+Received: from mailgw1.uni-kl.de ([131.246.120.220]:37250 "EHLO
+	mailgw1.uni-kl.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759563AbaDKQ5W (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Apr 2014 12:57:22 -0400
+Received: from itwm2.itwm.fhg.de (itwm2.itwm.fhg.de [131.246.191.3])
+	by mailgw1.uni-kl.de (8.14.3/8.14.3/Debian-9.4) with ESMTP id s3BGvKRv032720
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Fri, 11 Apr 2014 18:57:20 +0200
+In-Reply-To: <1392172050.2761.37.camel@sonic.justonedata.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Nathan Fontenot <nfont@linux.vnet.ibm.com>, LKML <linux-kernel@vger.kernel.org>, Linux-scsi <linux-scsi@vger.kernel.org>, Brian King <brking@linux.vnet.ibm.com>
+To: Kurt Miller <kurt@intricatesoftware.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA512
-
-
-
-On 04/09/2014 01:32 PM, Nathan Fontenot wrote:
-> Update the MAINTAINERS file to indicate the current maintainers
-> for the IBM Power 842 Compression driver, IBM Power Virtual SCSI
-> driver and the IBM Power Virtual FC Driver.
-> 
-> Signed-off-by: Nathan Fontenot <nfont@linux.vnet.ibm.com>
-
-Nathan, sorry I didn't take care of this before I gave up
-rcj@linux.ibm.com.
-
-Acked-by: Robert Jennings <rob@pochix.net>
-
-> --- MAINTAINERS |   16 +++++++++++----- 1 file changed, 11 
-> insertions(+), 5 deletions(-)
-> 
-> Index: linux/MAINTAINERS 
-> ===================================================================
+On 02/12/2014 03:27 AM, Kurt Miller wrote:
+> I can report that the Samsung 840 Pro*does*  support trim on the LSI
+> SAS2008. As suspected it supports deterministic read zeros after trim.
 >
->
-> 
-- --- linux.orig/MAINTAINERS	2014-04-08 14:14:57.000000000 -0500
-> +++ linux/MAINTAINERS	2014-04-08 14:25:29.000000000 -0500 @@ 
-> -4358,7 +4358,7 @@ F:	drivers/crypto/nx/
-> 
-> IBM Power 842 compression accelerator -M:	Robert Jennings 
-> <rcj@linux.vnet.ibm.com> +M:	Nathan Fontenot 
-> <nfont@linux.vnet.ibm.com> S:	Supported F: 
-> drivers/crypto/nx/nx-842.c F:	include/linux/nx842.h @@ -4374,12 
-> +4374,18 @@ S:	Supported F:	drivers/net/ethernet/ibm/ibmveth.*
-> 
-> -IBM Power Virtual SCSI/FC Device Drivers -M:	Robert Jennings 
-> <rcj@linux.vnet.ibm.com> +IBM Power Virtual SCSI Device Drivers
-> +M: Nathan Fontenot <nfont@linux.vnet.ibm.com> L: 
-> linux-scsi@vger.kernel.org S:	Supported -F:	drivers/scsi/ibmvscsi/
->  -X:	drivers/scsi/ibmvscsi/ibmvstgt.c +F: 
-> drivers/scsi/ibmvscsi/ibmvscsi* +F:	drivers/scsi/ibmvscsi/viosrp.h
->  + +IBM Power Virtual FC Device Drivers +M:	Brian King 
-> <brking@linux.vnet.ibm.com> +L:	linux-scsi@vger.kernel.org +S: 
-> Supported +F:	drivers/scsi/ibmvscsi/ibmvfc*
-> 
-> IBM ServeRAID RAID DRIVER P:	Jack Hammer
-> 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.14 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+> One other thing to note, in my testing the P16 LSI firmware has broken
+> trim support. P14 and P15 report incorrect values for
+> /sys/block/sdX/queue/discard_granularity. P17 and P18 appear to work
+> fine and report correct values for discard_granularity.
 
-iQIcBAEBCgAGBQJTSA1/AAoJEHQMPZ7t8u1zbmwQAJXdfa1pObeOpukcuE924zGH
-jKxeDsFSLSrkxltO7vVMZ/y2LsKJtOaNXy1GzSqX7y3TbaDv2hWYi+GcI6/AlBl+
-cgTtMBfYmSUpyuOxEdDzkj4KRx8cF02V0ajCcCqkwTqwvDw5JWBR3/sjDTAvYhes
-RzCv3Fl6F3Nf0ksTmmmUxlAmXUITH++4paYTZjrTW2N4YVUKVVzszr4K0dFqqqlW
-Ffi/brOXPF7ItfdL4/cEm5j2cZPh/zMLHJb24z67WMmzhCIUELzBjlEFRsBalaz/
-X+/pKED01KqNiOpWOLR7FKWZlNkiHV2ZB9QxoUAsepI/s94TxOK94nNHiT6feunG
-5WQjrwiWYC2ntG/arNITtz/t+Hs0OKsAvT5mCQ4W+e+UzHB/61zeN3p2/avrA0H6
-A33yN2BeHkUyR3ra4uzhn+Sx2nOJvArMNGrnw+LAxrxg17ymE7qGvAqGmDExeTRl
-dLJv58B94QlchIgApuESQ4pLGvftvgT0bE/34DgWcTIBzQyTneTn5UTCOYR9h6hA
-wpDPmujlt5aEEb2Pm11pJSJ7lvY8MoPOqyc7aHWPkz7t6qfKEdJ8IquRFAyqi+/6
-MeiinUCUW1Tp4gif+sy+Dc8UIsMIniUDeyA0//aWZCkA+CfF++P89WWdke/c2t+X
-otp+JW8ZqTgHZi1DUuiv
-=TcEI
------END PGP SIGNATURE-----
+We are just looking for SSDs for our new compute cluster and would like 
+to get SSDs that support trim on LSI sas controllers out of the box.
+Unfortunately, for a test sample of Samsungs MZ7WD240HCFV discard is not 
+enabled by default, so probably DRAT and DZAT are missing
+(I can't test that right now, as 'hdparm -I' does not seem to work with 
+devices attached to the controller).
+
+A colleague just told me that Samsung 840 Pro are also not an ideal 
+option, as these have set overprovisioning to 0 bytes by default and 
+there only seems to be windows tool to set it to a higher value. Not a 
+nice idea if you want to do that for dozens or hundreds of drives.
+
+Any other suggestions for ~240GB SSDs supporting DRAT and DZAT or 
+trim-on-lsi-sas in general? The LSI support link sent by Kurt [1] is 
+also not perfect with respect to trim, as it lists Intel510, although we 
+definitely know that Intel510s are disabled by default and forcing 
+write-same trim causes data corruption (unmap works, though).
+
+
+Thanks in advance,
+Bernd
+
+
+[1]
+> http://www.lsi.com/downloads/Public/Host%20Bus%20Adapters/Host%20Bus%20Adapters%20Common%20Files/LSI_6Gb_SAS_SATA_HBA_Compatibility_List.pdf
+
+
