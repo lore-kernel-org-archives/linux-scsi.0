@@ -1,67 +1,103 @@
-From: "Saxena, Sumit" <Sumit.Saxena@lsi.com>
-Subject: RE: [PATCH 52/55] scsi: Move prototype declaration to header file
- megaraid/megaraid_sas.h from megaraid/megaraid_sas_fusion.c
-Date: Fri, 11 Apr 2014 06:10:24 +0000
-Message-ID: <6ec8bc9720b841c8b3b3f9d7fdbd38b1@DM2PR07MB400.namprd07.prod.outlook.com>
-References: <5fd6fa49a592043459f75ed83a72f8c1ed9ddc13.1396114897.git.rashika.kheria@gmail.com>
- <f1f0ea7aadc1c722efdcbaecf3ac9d8dfe3afc5d.1396114898.git.rashika.kheria@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn1blp0184.outbound.protection.outlook.com ([207.46.163.184]:22681
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750790AbaDKGK2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Apr 2014 02:10:28 -0400
-In-Reply-To: <f1f0ea7aadc1c722efdcbaecf3ac9d8dfe3afc5d.1396114898.git.rashika.kheria@gmail.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+From: Fam Zheng <famz@redhat.com>
+Subject: [PATCH] virtio-scsi: Skip setting affinity on uninitialized vq
+Date: Fri, 11 Apr 2014 15:23:45 +0800
+Message-ID: <1397201025-26412-1-git-send-email-famz@redhat.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, kvm@vger.kernel.org, pbonzini@redhat.com, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Rashika Kheria <rashika.kheria@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Cc: DL-MegaRAID Linux <megaraidlinux@lsi.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "josh@joshtriplett.org" <josh@joshtriplett.org>
 
-DQoNCj4tLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPkZyb206IFJhc2hpa2EgS2hlcmlhIFtt
-YWlsdG86cmFzaGlrYS5raGVyaWFAZ21haWwuY29tXQ0KPlNlbnQ6IFN1bmRheSwgTWFyY2ggMzAs
-IDIwMTQgMTI6MTkgQU0NCj5UbzogbGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZw0KPkNjOiBE
-TC1NZWdhUkFJRCBMaW51eDsgSmFtZXMgRS5KLiBCb3R0b21sZXk7IGxpbnV4LXNjc2lAdmdlci5r
-ZXJuZWwub3JnOw0KPmpvc2hAam9zaHRyaXBsZXR0Lm9yZw0KPlN1YmplY3Q6IFtQQVRDSCA1Mi81
-NV0gc2NzaTogTW92ZSBwcm90b3R5cGUgZGVjbGFyYXRpb24gdG8gaGVhZGVyIGZpbGUNCj5tZWdh
-cmFpZC9tZWdhcmFpZF9zYXMuaCBmcm9tIG1lZ2FyYWlkL21lZ2FyYWlkX3Nhc19mdXNpb24uYw0K
-Pg0KPk1vdmUgcHJvdG90eXBlIGRlY2xhcmF0aW9uIG9mIGZ1bmN0aW9uIHRvIGhlYWRlciBmaWxl
-DQo+bWVnYXJhaWQvbWVnYXJhaWRfc2FzLmggZnJvbSBtZWdhcmFpZC9tZWdhcmFpZF9zYXNfZnVz
-aW9uLmMgYmVjYXVzZSBpdCBpcw0KPnVzZWQgYnkgbW9yZSB0aGFuIG9uZSBmaWxlLg0KPg0KPlRo
-aXMgZWxpbWluYXRlcyB0aGUgZm9sbG93aW5nIHdhcm5pbmcgaW4gbWVnYXJhaWQvbWVnYXJhaWRf
-c2FzX2ZwLmM6DQo+ZHJpdmVycy9zY3NpL21lZ2FyYWlkL21lZ2FyYWlkX3Nhc19mcC5jOjEyMjM6
-NTogd2FybmluZzogbm8gcHJldmlvdXMNCj5wcm90b3R5cGUgZm9yIOKAmGdldF91cGRhdGVkX2Rl
-dl9oYW5kbGXigJkgWy1XbWlzc2luZy1wcm90b3R5cGVzXQ0KPg0KPlNpZ25lZC1vZmYtYnk6IFJh
-c2hpa2EgS2hlcmlhIDxyYXNoaWthLmtoZXJpYUBnbWFpbC5jb20+DQo+UmV2aWV3ZWQtYnk6IEpv
-c2ggVHJpcGxldHQgPGpvc2hAam9zaHRyaXBsZXR0Lm9yZz4NCj4tLS0NCj4gZHJpdmVycy9zY3Np
-L21lZ2FyYWlkL21lZ2FyYWlkX3Nhcy5oICAgICAgICB8ICAgIDMgKysrDQo+IGRyaXZlcnMvc2Nz
-aS9tZWdhcmFpZC9tZWdhcmFpZF9zYXNfZnVzaW9uLmMgfCAgICAyIC0tDQo+IDIgZmlsZXMgY2hh
-bmdlZCwgMyBpbnNlcnRpb25zKCspLCAyIGRlbGV0aW9ucygtKQ0KPg0KPmRpZmYgLS1naXQgYS9k
-cml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJhaWRfc2FzLmgNCj5iL2RyaXZlcnMvc2NzaS9tZWdh
-cmFpZC9tZWdhcmFpZF9zYXMuaA0KPmluZGV4IDNiMGFmYjQuLjE3ZmU3MDYgMTAwNjQ0DQo+LS0t
-IGEvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21lZ2FyYWlkX3Nhcy5oDQo+KysrIGIvZHJpdmVycy9z
-Y3NpL21lZ2FyYWlkL21lZ2FyYWlkX3Nhcy5oDQo+QEAgLTE3MzcsNiArMTczNyw5IEBAIG1lZ2Fz
-YXNfY2hlY2tfYW5kX3Jlc3RvcmVfcXVldWVfZGVwdGgoc3RydWN0DQo+bWVnYXNhc19pbnN0YW5j
-ZSAqaW5zdGFuY2UpOyAgdm9pZCBtZWdhc2FzX2ZyZWVfY21kcyhzdHJ1Y3QNCj5tZWdhc2FzX2lu
-c3RhbmNlICppbnN0YW5jZSk7ICBpbnQgbWVnYXNhc19hbGxvY19jbWRzKHN0cnVjdA0KPm1lZ2Fz
-YXNfaW5zdGFuY2UgKmluc3RhbmNlKTsNCj4NCj4rdTE2IGdldF91cGRhdGVkX2Rldl9oYW5kbGUo
-c3RydWN0IExEX0xPQURfQkFMQU5DRV9JTkZPICpsYkluZm8sDQo+KwkJCSAgIHN0cnVjdCBJT19S
-RVFVRVNUX0lORk8gKmluX2luZm8pOw0KPisNCj4gdTgNCj4gTVJfQnVpbGRSYWlkQ29udGV4dChz
-dHJ1Y3QgbWVnYXNhc19pbnN0YW5jZSAqaW5zdGFuY2UsDQo+IAkJICAgIHN0cnVjdCBJT19SRVFV
-RVNUX0lORk8gKmlvX2luZm8sDQo+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9t
-ZWdhcmFpZF9zYXNfZnVzaW9uLmMNCj5iL2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9z
-YXNfZnVzaW9uLmMNCj5pbmRleCBjZTYyMTljLi5iM2Q3OWY0IDEwMDY0NA0KPi0tLSBhL2RyaXZl
-cnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXNfZnVzaW9uLmMNCj4rKysgYi9kcml2ZXJzL3Nj
-c2kvbWVnYXJhaWQvbWVnYXJhaWRfc2FzX2Z1c2lvbi5jDQo+QEAgLTYzLDggKzYzLDYgQEAgd2Fp
-dF9hbmRfcG9sbChzdHJ1Y3QgbWVnYXNhc19pbnN0YW5jZSAqaW5zdGFuY2UsIHN0cnVjdA0KPm1l
-Z2FzYXNfY21kICpjbWQpOyAgaW50ICBtZWdhc2FzX2NsZWFyX2ludHJfZnVzaW9uKHN0cnVjdA0K
-Pm1lZ2FzYXNfcmVnaXN0ZXJfc2V0IF9faW9tZW0gKnJlZ3MpOw0KPg0KPi11MTYgZ2V0X3VwZGF0
-ZWRfZGV2X2hhbmRsZShzdHJ1Y3QgTERfTE9BRF9CQUxBTkNFX0lORk8gKmxiSW5mbywNCj4tCQkJ
-ICAgc3RydWN0IElPX1JFUVVFU1RfSU5GTyAqaW5faW5mbyk7DQo+IGludCBtZWdhc2FzX3RyYW5z
-aXRpb25fdG9fcmVhZHkoc3RydWN0IG1lZ2FzYXNfaW5zdGFuY2UgKmluc3RhbmNlLCBpbnQgb2Ny
-KTsNCj4NCj4gZXh0ZXJuIHUzMiBtZWdhc2FzX2RiZ19sdmw7DQoNCkFja2VkLWJ5OiBTdW1pdCBT
-YXhlbmEgPHN1bWl0LnNheGVuYUBsc2kuY29tPg0KDQotU3VtaXQNCj4tLQ0KPjEuNy45LjUNCj4N
-Cg0K
+virtscsi_init calls virtscsi_remove_vqs on err, even before initializing
+the vqs. The latter calls virtscsi_set_affinity, so let's check the
+pointer there before setting affinity on it.
+
+This fixes a panic when setting device's num_queues=2 on RHEL 6.5:
+
+qemu-system-x86_64 ... \
+-device virtio-scsi-pci,id=scsi0,addr=0x13,...,num_queues=2 \
+-drive file=/stor/vm/dummy.raw,id=drive-scsi-disk,... \
+-device scsi-hd,drive=drive-scsi-disk,...
+
+[    0.354734] scsi0 : Virtio SCSI HBA
+[    0.379504] BUG: unable to handle kernel NULL pointer dereference at 0000000000000020
+[    0.380141] IP: [<ffffffff814741ef>] __virtscsi_set_affinity+0x4f/0x120
+[    0.380141] PGD 0
+[    0.380141] Oops: 0000 [#1] SMP
+[    0.380141] CPU: 0 PID: 1 Comm: swapper/0 Not tainted 3.14.0+ #5
+[    0.380141] Hardware name: Red Hat KVM, BIOS 0.5.1 01/01/2007
+[    0.380141] task: ffff88003c9f0000 ti: ffff88003c9f8000 task.ti: ffff88003c9f8000
+[    0.380141] RIP: 0010:[<ffffffff814741ef>]  [<ffffffff814741ef>] __virtscsi_set_affinity+0x4f/0x120
+[    0.380141] RSP: 0000:ffff88003c9f9c08  EFLAGS: 00010256
+[    0.380141] RAX: 0000000000000000 RBX: ffff88003c3a9d40 RCX: 0000000000001070
+[    0.380141] RDX: 0000000000000002 RSI: 0000000000000000 RDI: 0000000000000000
+[    0.380141] RBP: ffff88003c9f9c28 R08: 00000000000136c0 R09: ffff88003c801c00
+[    0.380141] R10: ffffffff81475229 R11: 0000000000000008 R12: 0000000000000000
+[    0.380141] R13: ffffffff81cc7ca8 R14: ffff88003cac3d40 R15: ffff88003cac37a0
+[    0.380141] FS:  0000000000000000(0000) GS:ffff88003e400000(0000) knlGS:0000000000000000
+[    0.380141] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+[    0.380141] CR2: 0000000000000020 CR3: 0000000001c0e000 CR4: 00000000000006f0
+[    0.380141] Stack:
+[    0.380141]  ffff88003c3a9d40 0000000000000000 ffff88003cac3d80 ffff88003cac3d40
+[    0.380141]  ffff88003c9f9c48 ffffffff814742e8 ffff88003c26d000 ffff88003c26d000
+[    0.380141]  ffff88003c9f9c68 ffffffff81474321 ffff88003c26d000 ffff88003c3a9d40
+[    0.380141] Call Trace:
+[    0.380141]  [<ffffffff814742e8>] virtscsi_set_affinity+0x28/0x40
+[    0.380141]  [<ffffffff81474321>] virtscsi_remove_vqs+0x21/0x50
+[    0.380141]  [<ffffffff81475231>] virtscsi_init+0x91/0x240
+[    0.380141]  [<ffffffff81365290>] ? vp_get+0x50/0x70
+[    0.380141]  [<ffffffff81475544>] virtscsi_probe+0xf4/0x280
+[    0.380141]  [<ffffffff81363ea5>] virtio_dev_probe+0xe5/0x140
+[    0.380141]  [<ffffffff8144c669>] driver_probe_device+0x89/0x230
+[    0.380141]  [<ffffffff8144c8ab>] __driver_attach+0x9b/0xa0
+[    0.380141]  [<ffffffff8144c810>] ? driver_probe_device+0x230/0x230
+[    0.380141]  [<ffffffff8144c810>] ? driver_probe_device+0x230/0x230
+[    0.380141]  [<ffffffff8144ac1c>] bus_for_each_dev+0x8c/0xb0
+[    0.380141]  [<ffffffff8144c499>] driver_attach+0x19/0x20
+[    0.380141]  [<ffffffff8144bf28>] bus_add_driver+0x198/0x220
+[    0.380141]  [<ffffffff8144ce9f>] driver_register+0x5f/0xf0
+[    0.380141]  [<ffffffff81d27c91>] ? spi_transport_init+0x79/0x79
+[    0.380141]  [<ffffffff8136403b>] register_virtio_driver+0x1b/0x30
+[    0.380141]  [<ffffffff81d27d19>] init+0x88/0xd6
+[    0.380141]  [<ffffffff81d27c18>] ? scsi_init_procfs+0x5b/0x5b
+[    0.380141]  [<ffffffff81ce88a7>] do_one_initcall+0x7f/0x10a
+[    0.380141]  [<ffffffff81ce8aa7>] kernel_init_freeable+0x14a/0x1de
+[    0.380141]  [<ffffffff81ce8b3b>] ? kernel_init_freeable+0x1de/0x1de
+[    0.380141]  [<ffffffff817dec20>] ? rest_init+0x80/0x80
+[    0.380141]  [<ffffffff817dec29>] kernel_init+0x9/0xf0
+[    0.380141]  [<ffffffff817e68fc>] ret_from_fork+0x7c/0xb0
+[    0.380141]  [<ffffffff817dec20>] ? rest_init+0x80/0x80
+[    0.380141] RIP  [<ffffffff814741ef>] __virtscsi_set_affinity+0x4f/0x120
+[    0.380141]  RSP <ffff88003c9f9c08>
+[    0.380141] CR2: 0000000000000020
+[    0.380141] ---[ end trace 8074b70c3d5e1d73 ]---
+[    0.475018] Kernel panic - not syncing: Attempted to kill init! exitcode=0x00000009
+[    0.475018]
+[    0.475068] Kernel Offset: 0x0 from 0xffffffff81000000 (relocation range: 0xffffffff80000000-0xffffffff9fffffff)
+[    0.475068] ---[ end Kernel panic - not syncing: Attempted to kill init! exitcode=0x00000009
+
+Signed-off-by: Fam Zheng <famz@redhat.com>
+---
+ drivers/scsi/virtio_scsi.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index 16bfd50..3019267 100644
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -750,8 +750,12 @@ static void __virtscsi_set_affinity(struct virtio_scsi *vscsi, bool affinity)
+ 
+ 		vscsi->affinity_hint_set = true;
+ 	} else {
+-		for (i = 0; i < vscsi->num_queues; i++)
++		for (i = 0; i < vscsi->num_queues; i++) {
++			if (!vscsi->req_vqs[i].vq) {
++				continue;
++			}
+ 			virtqueue_set_affinity(vscsi->req_vqs[i].vq, -1);
++		}
+ 
+ 		vscsi->affinity_hint_set = false;
+ 	}
+-- 
+1.9.1
