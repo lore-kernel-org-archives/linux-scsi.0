@@ -1,77 +1,147 @@
 From: "Saxena, Sumit" <Sumit.Saxena@lsi.com>
-Subject: RE: [PATCH trivial 1/3] megaraid_sas: Spelling s/intance/instance/
-Date: Fri, 11 Apr 2014 06:02:39 +0000
-Message-ID: <1323d0a306474383a4d3f50db610a8ce@DM2PR07MB400.namprd07.prod.outlook.com>
-References: <1395693423-5134-1-git-send-email-geert@linux-m68k.org>
+Subject: RE: [PATCH 29/55] scsi: Mark functions as static in
+ megaraid/megaraid_sas_fusion.c
+Date: Fri, 11 Apr 2014 06:04:19 +0000
+Message-ID: <fc3692b5308c4171ae09bb8fb63e9078@DM2PR07MB400.namprd07.prod.outlook.com>
+References: <5fd6fa49a592043459f75ed83a72f8c1ed9ddc13.1396114897.git.rashika.kheria@gmail.com>
+ <a0017455228e59c42db9004e315b69e763e25aa3.1396114898.git.rashika.kheria@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn1blp0184.outbound.protection.outlook.com ([207.46.163.184]:36658
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+Received: from mail-by2lp0242.outbound.protection.outlook.com ([207.46.163.242]:12915
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750810AbaDKGCn convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Apr 2014 02:02:43 -0400
-In-Reply-To: <1395693423-5134-1-git-send-email-geert@linux-m68k.org>
+	id S1754908AbaDKGEY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Apr 2014 02:04:24 -0400
+In-Reply-To: <a0017455228e59c42db9004e315b69e763e25aa3.1396114898.git.rashika.kheria@gmail.com>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Geert Uytterhoeven <geert@linux-m68k.org>, Jiri Kosina <trivial@kernel.org>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Geert Uytterhoeven <geert+renesas@glider.be>, DL-MegaRAID Linux <megaraidlinux@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Rashika Kheria <rashika.kheria@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Cc: DL-MegaRAID Linux <megaraidlinux@lsi.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "josh@joshtriplett.org" <josh@joshtriplett.org>
 
-
-
->-----Original Message-----
->From: Geert Uytterhoeven [mailto:geert@linux-m68k.org]
->Sent: Tuesday, March 25, 2014 2:07 AM
->To: Jiri Kosina
->Cc: linux-kernel@vger.kernel.org; Geert Uytterhoeven; DL-MegaRAID Linux;
->linux-scsi@vger.kernel.org
->Subject: [PATCH trivial 1/3] megaraid_sas: Spelling s/intance/instance/
->
->From: Geert Uytterhoeven <geert+renesas@glider.be>
->
->Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
->Cc: Neela Syam Kolli <megaraidlinux@lsi.com>
->Cc: linux-scsi@vger.kernel.org
->---
-> drivers/scsi/megaraid/megaraid_sas_base.c   |    2 +-
-> drivers/scsi/megaraid/megaraid_sas_fusion.c |    2 +-
-> 2 files changed, 2 insertions(+), 2 deletions(-)
->
->diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c
->b/drivers/scsi/megaraid/megaraid_sas_base.c
->index 3b7ad10497fe..10082678077c 100644
->--- a/drivers/scsi/megaraid/megaraid_sas_base.c
->+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
->@@ -3865,7 +3865,7 @@ fail_ready_state:
->
-> /**
->  * megasas_release_mfi -	Reverses the FW initialization
->- * @intance:			Adapter soft state
->+ * @instance:			Adapter soft state
->  */
-> static void megasas_release_mfi(struct megasas_instance *instance)  { diff --
->git a/drivers/scsi/megaraid/megaraid_sas_fusion.c
->b/drivers/scsi/megaraid/megaraid_sas_fusion.c
->index f6555921fd7a..f7d68f65f974 100644
->--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
->+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
->@@ -2164,7 +2164,7 @@ megasas_issue_dcmd_fusion(struct
->megasas_instance *instance,
->
-> /**
->  * megasas_release_fusion -	Reverses the FW initialization
->- * @intance:			Adapter soft state
->+ * @instance:			Adapter soft state
->  */
-> void
-> megasas_release_fusion(struct megasas_instance *instance)
-
-Acked-by: Sumit Saxena <sumit.saxena@lsi.com>
-
--Sumit
->--
->1.7.9.5
->
-
+DQoNCj4tLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPkZyb206IFJhc2hpa2EgS2hlcmlhIFtt
+YWlsdG86cmFzaGlrYS5raGVyaWFAZ21haWwuY29tXQ0KPlNlbnQ6IFNhdHVyZGF5LCBNYXJjaCAy
+OSwgMjAxNCAxMTo0NyBQTQ0KPlRvOiBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnDQo+Q2M6
+IERMLU1lZ2FSQUlEIExpbnV4OyBKYW1lcyBFLkouIEJvdHRvbWxleTsgbGludXgtc2NzaUB2Z2Vy
+Lmtlcm5lbC5vcmc7DQo+am9zaEBqb3NodHJpcGxldHQub3JnDQo+U3ViamVjdDogW1BBVENIIDI5
+LzU1XSBzY3NpOiBNYXJrIGZ1bmN0aW9ucyBhcyBzdGF0aWMgaW4NCj5tZWdhcmFpZC9tZWdhcmFp
+ZF9zYXNfZnVzaW9uLmMNCj4NCj5NYXJrIGZ1bmN0aW9ucyBhcyBzdGF0aWMgaW4gbWVnYXJhaWQv
+bWVnYXJhaWRfc2FzX2Z1c2lvbi5jIGJlY2F1c2UgdGhleSBhcmUNCj5ub3QgdXNlZCBvdXRzaWRl
+IHRoaXMgZmlsZS4NCj4NCj5UaGlzIGVsaW1pbmF0ZXMgdGhlIHdhcm5pbmdzIG9mIGZvbGxvd2lu
+ZyB0eXBlIGluDQo+bWVnYXJhaWQvbWVnYXJhaWRfc2FzX2Z1c2lvbi5jOg0KPmRyaXZlcnMvc2Nz
+aS9tZWdhcmFpZC9tZWdhcmFpZF9zYXNfZnVzaW9uLmM6OTE6MTogd2FybmluZzogbm8gcHJldmlv
+dXMNCj5wcm90b3R5cGUgZm9yIOKAmG1lZ2FzYXNfZW5hYmxlX2ludHJfZnVzaW9u4oCZIFstV21p
+c3NpbmctcHJvdG90eXBlc10NCj4NCj5TaWduZWQtb2ZmLWJ5OiBSYXNoaWthIEtoZXJpYSA8cmFz
+aGlrYS5raGVyaWFAZ21haWwuY29tPg0KPlJldmlld2VkLWJ5OiBKb3NoIFRyaXBsZXR0IDxqb3No
+QGpvc2h0cmlwbGV0dC5vcmc+DQo+LS0tDQo+IGRyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFp
+ZF9zYXNfZnVzaW9uLmMgfCAgIDM5ICsrKysrKysrKysrKysrLS0tLS0tLS0tDQo+LS0tLQ0KPiAx
+IGZpbGUgY2hhbmdlZCwgMjAgaW5zZXJ0aW9ucygrKSwgMTkgZGVsZXRpb25zKC0pDQo+DQo+ZGlm
+ZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXNfZnVzaW9uLmMNCj5i
+L2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXNfZnVzaW9uLmMNCj5pbmRleCAyODA2
+ZDZkLi5jZTYyMTljIDEwMDY0NA0KPi0tLSBhL2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFp
+ZF9zYXNfZnVzaW9uLmMNCj4rKysgYi9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJhaWRfc2Fz
+X2Z1c2lvbi5jDQo+QEAgLTc0LDcgKzc0LDcgQEAgZXh0ZXJuIGludCByZXNldHdhaXR0aW1lOw0K
+PiAgKiBtZWdhc2FzX2VuYWJsZV9pbnRyX2Z1c2lvbiAtCUVuYWJsZXMgaW50ZXJydXB0cw0KPiAg
+KiBAcmVnczoJCQlNRkkgcmVnaXN0ZXIgc2V0DQo+ICAqLw0KPi12b2lkDQo+K3N0YXRpYyB2b2lk
+DQo+IG1lZ2FzYXNfZW5hYmxlX2ludHJfZnVzaW9uKHN0cnVjdCBtZWdhc2FzX2luc3RhbmNlICpp
+bnN0YW5jZSkgIHsNCj4gCXN0cnVjdCBtZWdhc2FzX3JlZ2lzdGVyX3NldCBfX2lvbWVtICpyZWdz
+OyBAQCAtOTQsNyArOTQsNyBAQA0KPm1lZ2FzYXNfZW5hYmxlX2ludHJfZnVzaW9uKHN0cnVjdCBt
+ZWdhc2FzX2luc3RhbmNlICppbnN0YW5jZSkNCj4gICogbWVnYXNhc19kaXNhYmxlX2ludHJfZnVz
+aW9uIC0gRGlzYWJsZXMgaW50ZXJydXB0DQo+ICAqIEByZWdzOgkJCSBNRkkgcmVnaXN0ZXIgc2V0
+DQo+ICAqLw0KPi12b2lkDQo+K3N0YXRpYyB2b2lkDQo+IG1lZ2FzYXNfZGlzYWJsZV9pbnRyX2Z1
+c2lvbihzdHJ1Y3QgbWVnYXNhc19pbnN0YW5jZSAqaW5zdGFuY2UpICB7DQo+IAl1MzIgbWFzayA9
+IDB4RkZGRkZGRkY7DQo+QEAgLTEzNCw4ICsxMzQsOCBAQCBtZWdhc2FzX2NsZWFyX2ludHJfZnVz
+aW9uKHN0cnVjdA0KPm1lZ2FzYXNfcmVnaXN0ZXJfc2V0IF9faW9tZW0gKnJlZ3MpDQo+ICAqDQo+
+ICAqIFJldHVybnMgYSBmcmVlIGNvbW1hbmQgZnJvbSB0aGUgcG9vbA0KPiAgKi8NCj4tc3RydWN0
+IG1lZ2FzYXNfY21kX2Z1c2lvbiAqbWVnYXNhc19nZXRfY21kX2Z1c2lvbihzdHJ1Y3QNCj5tZWdh
+c2FzX2luc3RhbmNlDQo+LQkJCQkJCSAgKmluc3RhbmNlKQ0KPitzdGF0aWMgc3RydWN0IG1lZ2Fz
+YXNfY21kX2Z1c2lvbiAqbWVnYXNhc19nZXRfY21kX2Z1c2lvbigNCj4rCQkJCSAgc3RydWN0IG1l
+Z2FzYXNfaW5zdGFuY2UgKmluc3RhbmNlKQ0KPiB7DQo+IAl1bnNpZ25lZCBsb25nIGZsYWdzOw0K
+PiAJc3RydWN0IGZ1c2lvbl9jb250ZXh0ICpmdXNpb24gPQ0KPkBAIC0zNjMsNyArMzYzLDcgQEAg
+c3RhdGljIGludCBtZWdhc2FzX2NyZWF0ZV9mcmFtZV9wb29sX2Z1c2lvbihzdHJ1Y3QNCj5tZWdh
+c2FzX2luc3RhbmNlICppbnN0YW5jZSkNCj4gICogYW5kIGlzIHVzZWQgYXMgU01JRCBvZiB0aGUg
+Y21kLg0KPiAgKiBTTUlEIHZhbHVlIHJhbmdlIGlzIGZyb20gMSB0byBtYXhfZndfY21kcy4NCj4g
+ICovDQo+LWludA0KPitzdGF0aWMgaW50DQo+IG1lZ2FzYXNfYWxsb2NfY21kc19mdXNpb24oc3Ry
+dWN0IG1lZ2FzYXNfaW5zdGFuY2UgKmluc3RhbmNlKSAgew0KPiAJaW50IGksIGosIGNvdW50Ow0K
+PkBAIC05MTksNyArOTE5LDcgQEAgbWVnYXNhc19kaXNwbGF5X2ludGVsX2JyYW5kaW5nKHN0cnVj
+dA0KPm1lZ2FzYXNfaW5zdGFuY2UgKmluc3RhbmNlKQ0KPiAgKg0KPiAgKiBUaGlzIGlzIHRoZSBt
+YWluIGZ1bmN0aW9uIGZvciBpbml0aWFsaXppbmcgZmlybXdhcmUuDQo+ICAqLw0KPi11MzINCj4r
+c3RhdGljIHUzMg0KPiBtZWdhc2FzX2luaXRfYWRhcHRlcl9mdXNpb24oc3RydWN0IG1lZ2FzYXNf
+aW5zdGFuY2UgKmluc3RhbmNlKSAgew0KPiAJc3RydWN0IG1lZ2FzYXNfcmVnaXN0ZXJfc2V0IF9f
+aW9tZW0gKnJlZ19zZXQ7IEBAIC0xMDM3LDcgKzEwMzcsNw0KPkBAIGZhaWxfYWxsb2NfbWZpX2Nt
+ZHM6DQo+ICAqIEBmcmFtZV9jb3VudCA6CQlOdW1iZXIgb2YgZnJhbWVzIGZvciB0aGUgY29tbWFu
+ZA0KPiAgKiBAcmVncyA6CQkJTUZJIHJlZ2lzdGVyIHNldA0KPiAgKi8NCj4tdm9pZA0KPitzdGF0
+aWMgdm9pZA0KPiBtZWdhc2FzX2ZpcmVfY21kX2Z1c2lvbihzdHJ1Y3QgbWVnYXNhc19pbnN0YW5j
+ZSAqaW5zdGFuY2UsDQo+IAkJCWRtYV9hZGRyX3QgcmVxX2Rlc2NfbG8sDQo+IAkJCXUzMiByZXFf
+ZGVzY19oaSwNCj5AQCAtMTA1OSw3ICsxMDU5LDcgQEAgbWVnYXNhc19maXJlX2NtZF9mdXNpb24o
+c3RydWN0IG1lZ2FzYXNfaW5zdGFuY2UNCj4qaW5zdGFuY2UsDQo+ICAqIEBleHRfc3RhdHVzIDoJ
+ZXh0IHN0YXR1cyBvZiBjbWQgcmV0dXJuZWQgYnkgRlcNCj4gICovDQo+DQo+LXZvaWQNCj4rc3Rh
+dGljIHZvaWQNCj4gbWFwX2NtZF9zdGF0dXMoc3RydWN0IG1lZ2FzYXNfY21kX2Z1c2lvbiAqY21k
+LCB1OCBzdGF0dXMsIHU4DQo+ZXh0X3N0YXR1cykgIHsNCj4NCj5AQCAtMTE5OSw3ICsxMTk5LDcg
+QEAgbWVnYXNhc19tYWtlX3NnbF9mdXNpb24oc3RydWN0IG1lZ2FzYXNfaW5zdGFuY2UNCj4qaW5z
+dGFuY2UsDQo+ICAqDQo+ICAqIFVzZWQgdG8gc2V0IHRoZSBQRCBMQkEgaW4gQ0RCIGZvciBGUCBJ
+T3MNCj4gICovDQo+LXZvaWQNCj4rc3RhdGljIHZvaWQNCj4gbWVnYXNhc19zZXRfcGRfbGJhKHN0
+cnVjdCBNUEkyX1JBSURfU0NTSV9JT19SRVFVRVNUICppb19yZXF1ZXN0LCB1OA0KPmNkYl9sZW4s
+DQo+IAkJICAgc3RydWN0IElPX1JFUVVFU1RfSU5GTyAqaW9faW5mbywgc3RydWN0IHNjc2lfY21u
+ZCAqc2NwLA0KPiAJCSAgIHN0cnVjdCBNUl9GV19SQUlEX01BUF9BTEwgKmxvY2FsX21hcF9wdHIs
+IHUzMg0KPnJlZl90YWcpIEBAIC0xMzc2LDcgKzEzNzYsNyBAQCBtZWdhc2FzX3NldF9wZF9sYmEo
+c3RydWN0DQo+TVBJMl9SQUlEX1NDU0lfSU9fUkVRVUVTVCAqaW9fcmVxdWVzdCwgdTggY2RiX2xl
+biwNCj4gICogUHJlcGFyZXMgdGhlIGlvX3JlcXVlc3QgYW5kIGNoYWluIGVsZW1lbnRzIChzZ19m
+cmFtZSkgZm9yIElPDQo+ICAqIFRoZSBJTyBjYW4gYmUgZm9yIFBEIChGYXN0IFBhdGgpIG9yIExE
+DQo+ICAqLw0KPi12b2lkDQo+K3N0YXRpYyB2b2lkDQo+IG1lZ2FzYXNfYnVpbGRfbGRpb19mdXNp
+b24oc3RydWN0IG1lZ2FzYXNfaW5zdGFuY2UgKmluc3RhbmNlLA0KPiAJCQkgIHN0cnVjdCBzY3Np
+X2NtbmQgKnNjcCwNCj4gCQkJICBzdHJ1Y3QgbWVnYXNhc19jbWRfZnVzaW9uICpjbWQpDQo+QEAg
+LTE2NzgsNyArMTY3OCw3IEBAIE5vbkZhc3RQYXRoOg0KPiAgKiBJbnZva2VzIGhlbHBlciBmdW5j
+dGlvbnMgdG8gcHJlcGFyZSByZXF1ZXN0IGZyYW1lcw0KPiAgKiBhbmQgc2V0cyBmbGFncyBhcHBy
+b3ByaWF0ZSBmb3IgSU8vTm9uLUlPIGNtZA0KPiAgKi8NCj4taW50DQo+K3N0YXRpYyBpbnQNCj4g
+bWVnYXNhc19idWlsZF9pb19mdXNpb24oc3RydWN0IG1lZ2FzYXNfaW5zdGFuY2UgKmluc3RhbmNl
+LA0KPiAJCQlzdHJ1Y3Qgc2NzaV9jbW5kICpzY3AsDQo+IAkJCXN0cnVjdCBtZWdhc2FzX2NtZF9m
+dXNpb24gKmNtZCkNCj5AQCAtMTc0OSw3ICsxNzQ5LDcgQEAgbWVnYXNhc19idWlsZF9pb19mdXNp
+b24oc3RydWN0IG1lZ2FzYXNfaW5zdGFuY2UNCj4qaW5zdGFuY2UsDQo+IAlyZXR1cm4gMDsNCj4g
+fQ0KPg0KPi11bmlvbiBNRUdBU0FTX1JFUVVFU1RfREVTQ1JJUFRPUl9VTklPTiAqDQo+K3N0YXRp
+YyB1bmlvbiBNRUdBU0FTX1JFUVVFU1RfREVTQ1JJUFRPUl9VTklPTiAqDQo+IG1lZ2FzYXNfZ2V0
+X3JlcXVlc3RfZGVzY3JpcHRvcihzdHJ1Y3QgbWVnYXNhc19pbnN0YW5jZSAqaW5zdGFuY2UsIHUx
+Ng0KPmluZGV4KSAgew0KPiAJdTggKnA7DQo+QEAgLTE4MjksNyArMTgyOSw3IEBAIG1lZ2FzYXNf
+YnVpbGRfYW5kX2lzc3VlX2NtZF9mdXNpb24oc3RydWN0DQo+bWVnYXNhc19pbnN0YW5jZSAqaW5z
+dGFuY2UsDQo+ICAqIEBpbnN0YW5jZToJCQlBZGFwdGVyIHNvZnQgc3RhdGUNCj4gICogQ29tcGxl
+dGVzIGFsbCBjb21tYW5kcyB0aGF0IGlzIGluIHJlcGx5IGRlc2NyaXB0b3IgcXVldWUNCj4gICov
+DQo+LWludA0KPitzdGF0aWMgaW50DQo+IGNvbXBsZXRlX2NtZF9mdXNpb24oc3RydWN0IG1lZ2Fz
+YXNfaW5zdGFuY2UgKmluc3RhbmNlLCB1MzIgTVNJeEluZGV4KSAgew0KPiAJdW5pb24gTVBJMl9S
+RVBMWV9ERVNDUklQVE9SU19VTklPTiAqZGVzYzsgQEAgLTE5NzQsNyArMTk3NCw3DQo+QEAgY29t
+cGxldGVfY21kX2Z1c2lvbihzdHJ1Y3QgbWVnYXNhc19pbnN0YW5jZSAqaW5zdGFuY2UsIHUzMg0K
+Pk1TSXhJbmRleCkNCj4gICoNCj4gICogVGFza2xldCB0byBjb21wbGV0ZSBjbWRzDQo+ICAqLw0K
+Pi12b2lkDQo+K3N0YXRpYyB2b2lkDQo+IG1lZ2FzYXNfY29tcGxldGVfY21kX2RwY19mdXNpb24o
+dW5zaWduZWQgbG9uZyBpbnN0YW5jZV9hZGRyKSAgew0KPiAJc3RydWN0IG1lZ2FzYXNfaW5zdGFu
+Y2UgKmluc3RhbmNlID0NCj5AQCAtMTk5OSw3ICsxOTk5LDcgQEAgbWVnYXNhc19jb21wbGV0ZV9j
+bWRfZHBjX2Z1c2lvbih1bnNpZ25lZCBsb25nDQo+aW5zdGFuY2VfYWRkcikNCj4gLyoqDQo+ICAq
+IG1lZ2FzYXNfaXNyX2Z1c2lvbiAtIGlzciBlbnRyeSBwb2ludA0KPiAgKi8NCj4taXJxcmV0dXJu
+X3QgbWVnYXNhc19pc3JfZnVzaW9uKGludCBpcnEsIHZvaWQgKmRldnApDQo+K3N0YXRpYyBpcnFy
+ZXR1cm5fdCBtZWdhc2FzX2lzcl9mdXNpb24oaW50IGlycSwgdm9pZCAqZGV2cCkNCj4gew0KPiAJ
+c3RydWN0IG1lZ2FzYXNfaXJxX2NvbnRleHQgKmlycV9jb250ZXh0ID0gZGV2cDsNCj4gCXN0cnVj
+dCBtZWdhc2FzX2luc3RhbmNlICppbnN0YW5jZSA9IGlycV9jb250ZXh0LT5pbnN0YW5jZTsgQEAg
+LQ0KPjIwMzgsNyArMjAzOCw3IEBAIGlycXJldHVybl90IG1lZ2FzYXNfaXNyX2Z1c2lvbihpbnQg
+aXJxLCB2b2lkICpkZXZwKQ0KPiAgKiBtZmlfY21kOgkJCW1lZ2FzYXNfY21kIHBvaW50ZXINCj4g
+ICoNCj4gICovDQo+LXU4DQo+K3N0YXRpYyB1OA0KPiBidWlsZF9tcHRfbWZpX3Bhc3NfdGhydShz
+dHJ1Y3QgbWVnYXNhc19pbnN0YW5jZSAqaW5zdGFuY2UsDQo+IAkJCXN0cnVjdCBtZWdhc2FzX2Nt
+ZCAqbWZpX2NtZCkNCj4gew0KPkBAIC0yMTAxLDcgKzIxMDEsNyBAQCBidWlsZF9tcHRfbWZpX3Bh
+c3NfdGhydShzdHJ1Y3QgbWVnYXNhc19pbnN0YW5jZQ0KPippbnN0YW5jZSwNCj4gICogQGNtZDoJ
+CQltZmkgY21kIHRvIGJ1aWxkDQo+ICAqDQo+ICAqLw0KPi11bmlvbiBNRUdBU0FTX1JFUVVFU1Rf
+REVTQ1JJUFRPUl9VTklPTiAqDQo+K3N0YXRpYyB1bmlvbiBNRUdBU0FTX1JFUVVFU1RfREVTQ1JJ
+UFRPUl9VTklPTiAqDQo+IGJ1aWxkX21wdF9jbWQoc3RydWN0IG1lZ2FzYXNfaW5zdGFuY2UgKmlu
+c3RhbmNlLCBzdHJ1Y3QgbWVnYXNhc19jbWQNCj4qY21kKSAgew0KPiAJdW5pb24gTUVHQVNBU19S
+RVFVRVNUX0RFU0NSSVBUT1JfVU5JT04gKnJlcV9kZXNjOyBAQCAtDQo+MjEzNCw3ICsyMTM0LDcg
+QEAgYnVpbGRfbXB0X2NtZChzdHJ1Y3QgbWVnYXNhc19pbnN0YW5jZSAqaW5zdGFuY2UsDQo+c3Ry
+dWN0IG1lZ2FzYXNfY21kICpjbWQpDQo+ICAqIEBjbWQ6CQkJbWZpIGNtZCBwb2ludGVyDQo+ICAq
+DQo+ICAqLw0KPi12b2lkDQo+K3N0YXRpYyB2b2lkDQo+IG1lZ2FzYXNfaXNzdWVfZGNtZF9mdXNp
+b24oc3RydWN0IG1lZ2FzYXNfaW5zdGFuY2UgKmluc3RhbmNlLA0KPiAJCQkgIHN0cnVjdCBtZWdh
+c2FzX2NtZCAqY21kKQ0KPiB7DQo+QEAgLTIxOTcsNyArMjE5Nyw4IEBAIG1lZ2FzYXNfY2hlY2tf
+cmVzZXRfZnVzaW9uKHN0cnVjdA0KPm1lZ2FzYXNfaW5zdGFuY2UgKmluc3RhbmNlLCAgfQ0KPg0K
+PiAvKiBUaGlzIGZ1bmN0aW9uIHdhaXRzIGZvciBvdXRzdGFuZGluZyBjb21tYW5kcyBvbiBmdXNp
+b24gdG8gY29tcGxldGUgKi8gLQ0KPmludCBtZWdhc2FzX3dhaXRfZm9yX291dHN0YW5kaW5nX2Z1
+c2lvbihzdHJ1Y3QgbWVnYXNhc19pbnN0YW5jZQ0KPippbnN0YW5jZSkNCj4rc3RhdGljIGludCBt
+ZWdhc2FzX3dhaXRfZm9yX291dHN0YW5kaW5nX2Z1c2lvbihzdHJ1Y3QgbWVnYXNhc19pbnN0YW5j
+ZQ0KPisJCQkJCSAgICAgICAqaW5zdGFuY2UpDQo+IHsNCj4gCWludCBpLCBvdXRzdGFuZGluZywg
+cmV0dmFsID0gMDsNCj4gCXUzMiBmd19zdGF0ZTsNCg0KQWNrZWQtYnk6IFN1bWl0IFNheGVuYSA8
+c3VtaXQuc2F4ZW5hQGxzaS5jb20+DQoNCi1TdW1pdA0KPi0tDQo+MS43LjkuNQ0KPg0KDQo=
