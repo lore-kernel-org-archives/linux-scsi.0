@@ -1,42 +1,38 @@
-From: Paul Bolle <pebolle@tiscali.nl>
-Subject: Re: aic94xx: maybe uninitialized variable in asd_process_ctrl_a_user
-Date: Fri, 11 Apr 2014 10:19:09 +0200
-Message-ID: <1397204349.22353.11.camel@x220>
-References: <CADU+-uBr9UctHt1crnYAjYm5uNYmva2KDh5BZyZtkRG9_Xm-ag@mail.gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 71231] System unresponsable after a lot of LUNs have been added
+ to the system
+Date: Fri, 11 Apr 2014 08:20:21 +0000
+Message-ID: <bug-71231-11613-PZpXIyS82p@https.bugzilla.kernel.org/>
+References: <bug-71231-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CADU+-uBr9UctHt1crnYAjYm5uNYmva2KDh5BZyZtkRG9_Xm-ag@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Filipe Brandenburger <filbranden@google.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Michel Lespinasse <walken@google.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.19.201]:39044 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755672AbaDKIU0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Apr 2014 04:20:26 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 60F4320829
+	for <linux-scsi@vger.kernel.org>; Fri, 11 Apr 2014 08:20:25 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+	by mail.kernel.org (Postfix) with ESMTP id A2073207FB
+	for <linux-scsi@vger.kernel.org>; Fri, 11 Apr 2014 08:20:23 +0000 (UTC)
+In-Reply-To: <bug-71231-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Thu, 2014-04-10 at 22:13 -0700, Filipe Brandenburger wrote:
-> While building a recent kernel with -Werror I found this warning:
-> 
-> drivers/scsi/aic94xx/aic94xx_sds.c: In function 'asd_read_flash':
-> drivers/scsi/aic94xx/aic94xx_sds.c:597:21: error: 'offs' may be used
-> uninitialized in this function [-Werror=maybe-uninitialized]
-> drivers/scsi/aic94xx/aic94xx_sds.c:985:6: note: 'offs' was declared here
+https://bugzilla.kernel.org/show_bug.cgi?id=71231
 
-This warning is actually rather old.
+--- Comment #13 from Alex <alexandernaumann@gmx.de> ---
+Thanks for these tips.
+It looks like disabling serial console helps.
 
-> This looks like a valid complaint from the compiler, since in
-> asd_process_ctrl_a_user if the call to asd_find_flash_de fails (and
-> returns -ENOENT) then offs will not be set, but that will not prevent
-> the variable to be later passed to the call to asd_read_flash_seg
-> later in that same function.
-> 
-> Would you please have a look at it? Let me know if there's a more
-> appropriate way to report these issues (e.g. bug tracker.)
+But I need this one.
+I will try to get his patches working so that I can enbale serial console
+again.
 
-I tried a few times to fix this warning.
-
-In the end I just asked Fedora to disable aic94xx in their kernel builds
-(which they did for Rawhide, their development branch). See
-https://lists.fedoraproject.org/pipermail/kernel/2014-January/004759.html for all the boring details.
-
-
-Paul Bolle
+-- 
+You are receiving this mail because:
+You are the assignee for the bug.
