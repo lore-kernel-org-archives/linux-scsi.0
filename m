@@ -1,210 +1,43 @@
 From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: [PATCH 29/42] qla2xxx: Check the QLA8044_CRB_DRV_ACTIVE_INDEX register when we are not the owner of the reset.
-Date: Fri, 11 Apr 2014 16:54:34 -0400
-Message-ID: <1397249687-32666-30-git-send-email-saurav.kashyap@qlogic.com>
+Subject: [PATCH 05/42] qla2xxx: Correct ISP83xx/ISP27xx mislogic in setting out_mb in qla25xx_init_req_que().
+Date: Fri, 11 Apr 2014 16:54:10 -0400
+Message-ID: <1397249687-32666-6-git-send-email-saurav.kashyap@qlogic.com>
 References: <1397249687-32666-1-git-send-email-saurav.kashyap@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:53168 "EHLO
+Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:28561 "EHLO
 	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754689AbaDKVcB (ORCPT
+	by vger.kernel.org with ESMTP id S1755379AbaDKVcq (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Apr 2014 17:32:01 -0400
+	Fri, 11 Apr 2014 17:32:46 -0400
 In-Reply-To: <1397249687-32666-1-git-send-email-saurav.kashyap@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Hiral Patel <hiral.patel@qlogic.com>
+From: Joe Carnuccio <joe.carnuccio@qlogic.com>
 
-Signed-off-by: Hiral Patel <hiral.patel@qlogic.com>
+Signed-off-by: Joe Carnuccio <joe.carnuccio@qlogic.com>
 Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_dbg.c |    1 +
- drivers/scsi/qla2xxx/qla_nx2.c |  120 +++++++++++++++++++---------------------
- drivers/scsi/qla2xxx/qla_nx2.h |    1 +
- 3 files changed, 59 insertions(+), 63 deletions(-)
+ drivers/scsi/qla2xxx/qla_mbx.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
-index e48084f..8564682 100644
---- a/drivers/scsi/qla2xxx/qla_dbg.c
-+++ b/drivers/scsi/qla2xxx/qla_dbg.c
-@@ -51,6 +51,7 @@
-  * | Virtual Port                 |       0xa007       |		|
-  * | ISP82XX Specific             |       0xb157       | 0xb002,0xb024  |
-  * |                              |                    | 0xb09e,0xb0ae  |
-+ * |				  |		       | 0xb0c3,0xb0c6  |
-  * |                              |                    | 0xb0e0-0xb0ef  |
-  * |                              |                    | 0xb085,0xb0dc  |
-  * |                              |                    | 0xb107,0xb108  |
-diff --git a/drivers/scsi/qla2xxx/qla_nx2.c b/drivers/scsi/qla2xxx/qla_nx2.c
-index e5b4a40..da9e390 100644
---- a/drivers/scsi/qla2xxx/qla_nx2.c
-+++ b/drivers/scsi/qla2xxx/qla_nx2.c
-@@ -1633,7 +1633,7 @@ static void
- qla8044_need_reset_handler(struct scsi_qla_host *vha)
- {
- 	uint32_t dev_state = 0, drv_state, drv_active;
--	unsigned long reset_timeout, dev_init_timeout;
-+	unsigned long reset_timeout;
- 	struct qla_hw_data *ha = vha->hw;
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index 9570597..601562f 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -3688,7 +3688,7 @@ qla25xx_init_req_que(struct scsi_qla_host *vha, struct req_que *req)
  
- 	ql_log(ql_log_fatal, vha, 0xb0c2,
-@@ -1647,84 +1647,78 @@ qla8044_need_reset_handler(struct scsi_qla_host *vha)
- 		qla8044_idc_lock(ha);
- 	}
- 
-+	dev_state = qla8044_rd_direct(vha,
-+	    QLA8044_CRB_DEV_STATE_INDEX);
- 	drv_state = qla8044_rd_direct(vha,
- 	    QLA8044_CRB_DRV_STATE_INDEX);
- 	drv_active = qla8044_rd_direct(vha,
- 	    QLA8044_CRB_DRV_ACTIVE_INDEX);
- 
- 	ql_log(ql_log_info, vha, 0xb0c5,
--	    "%s(%ld): drv_state = 0x%x, drv_active = 0x%x\n",
--	    __func__, vha->host_no, drv_state, drv_active);
-+	    "%s(%ld): drv_state = 0x%x, drv_active = 0x%x dev_state = 0x%x\n",
-+	    __func__, vha->host_no, drv_state, drv_active, dev_state);
- 
--	if (!ha->flags.nic_core_reset_owner) {
--		ql_dbg(ql_dbg_p3p, vha, 0xb0c3,
--		    "%s(%ld): reset acknowledged\n",
--		    __func__, vha->host_no);
--		qla8044_set_rst_ready(vha);
--
--		/* Non-reset owners ACK Reset and wait for device INIT state
--		 * as part of Reset Recovery by Reset Owner
--		 */
--		dev_init_timeout = jiffies + (ha->fcoe_reset_timeout * HZ);
-+	qla8044_set_rst_ready(vha);
- 
--		do {
--			if (time_after_eq(jiffies, dev_init_timeout)) {
--				ql_log(ql_log_info, vha, 0xb0c4,
--				    "%s: Non Reset owner: Reset Ack Timeout!\n",
--				    __func__);
--				break;
--			}
-+	/* wait for 10 seconds for reset ack from all functions */
-+	reset_timeout = jiffies + (ha->fcoe_reset_timeout * HZ);
- 
--			qla8044_idc_unlock(ha);
--			msleep(1000);
--			qla8044_idc_lock(ha);
--
--			dev_state = qla8044_rd_direct(vha,
--					QLA8044_CRB_DEV_STATE_INDEX);
--		} while (((drv_state & drv_active) != drv_active) &&
--		    (dev_state == QLA8XXX_DEV_NEED_RESET));
--	} else {
--		qla8044_set_rst_ready(vha);
--
--		/* wait for 10 seconds for reset ack from all functions */
--		reset_timeout = jiffies + (ha->fcoe_reset_timeout * HZ);
--
--		while ((drv_state & drv_active) != drv_active) {
--			if (time_after_eq(jiffies, reset_timeout)) {
--				ql_log(ql_log_info, vha, 0xb0c6,
--				    "%s: RESET TIMEOUT!"
--				    "drv_state: 0x%08x, drv_active: 0x%08x\n",
--				    QLA2XXX_DRIVER_NAME, drv_state, drv_active);
--				break;
--			}
-+	do {
-+		if (time_after_eq(jiffies, reset_timeout)) {
-+			ql_log(ql_log_info, vha, 0xb0c4,
-+			    "%s: Function %d: Reset Ack Timeout!, drv_state: 0x%08x, drv_active: 0x%08x\n",
-+			    __func__, ha->portnum, drv_state, drv_active);
-+			break;
-+		}
- 
--			qla8044_idc_unlock(ha);
--			msleep(1000);
--			qla8044_idc_lock(ha);
-+		qla8044_idc_unlock(ha);
-+		msleep(1000);
-+		qla8044_idc_lock(ha);
- 
--			drv_state = qla8044_rd_direct(vha,
--			    QLA8044_CRB_DRV_STATE_INDEX);
--			drv_active = qla8044_rd_direct(vha,
--			    QLA8044_CRB_DRV_ACTIVE_INDEX);
--		}
-+		dev_state = qla8044_rd_direct(vha,
-+		    QLA8044_CRB_DEV_STATE_INDEX);
-+		drv_state = qla8044_rd_direct(vha,
-+		    QLA8044_CRB_DRV_STATE_INDEX);
-+		drv_active = qla8044_rd_direct(vha,
-+		    QLA8044_CRB_DRV_ACTIVE_INDEX);
-+	} while (((drv_state & drv_active) != drv_active) &&
-+	    (dev_state == QLA8XXX_DEV_NEED_RESET));
- 
--		if (drv_state != drv_active) {
--			ql_log(ql_log_info, vha, 0xb0c7,
--			    "%s(%ld): Reset_owner turning off drv_active "
--			    "of non-acking function 0x%x\n", __func__,
--			    vha->host_no, (drv_active ^ drv_state));
--			drv_active = drv_active & drv_state;
--			qla8044_wr_direct(vha, QLA8044_CRB_DRV_ACTIVE_INDEX,
--			    drv_active);
-+	/* Remove IDC participation of functions not acknowledging */
-+	if (drv_state != drv_active) {
-+		ql_log(ql_log_info, vha, 0xb0c7,
-+		    "%s(%ld): Function %d turning off drv_active of non-acking function 0x%x\n",
-+		    __func__, vha->host_no, ha->portnum,
-+		    (drv_active ^ drv_state));
-+		drv_active = drv_active & drv_state;
-+		qla8044_wr_direct(vha, QLA8044_CRB_DRV_ACTIVE_INDEX,
-+		    drv_active);
-+	} else {
-+		/*
-+		 * Reset owner should execute reset recovery,
-+		 * if all functions acknowledged
-+		 */
-+		if ((ha->flags.nic_core_reset_owner) &&
-+		    (dev_state == QLA8XXX_DEV_NEED_RESET)) {
-+			ha->flags.nic_core_reset_owner = 0;
-+			qla8044_device_bootstrap(vha);
-+			return;
- 		}
-+	}
- 
--		/*
--		* Clear RESET OWNER, will be set at next reset
--		* by next RST_OWNER
--		*/
-+	/* Exit if non active function */
-+	if (!(drv_active & (1 << ha->portnum))) {
- 		ha->flags.nic_core_reset_owner = 0;
-+		return;
-+	}
- 
--		/* Start Reset Recovery */
-+	/*
-+	 * Execute Reset Recovery if Reset Owner or Function 7
-+	 * is the only active function
-+	 */
-+	if (ha->flags.nic_core_reset_owner ||
-+	    ((drv_state & drv_active) == QLA8044_FUN7_ACTIVE_INDEX)) {
-+		ha->flags.nic_core_reset_owner = 0;
- 		qla8044_device_bootstrap(vha);
- 	}
- }
-diff --git a/drivers/scsi/qla2xxx/qla_nx2.h b/drivers/scsi/qla2xxx/qla_nx2.h
-index c9ff2cb..ada3605 100644
---- a/drivers/scsi/qla2xxx/qla_nx2.h
-+++ b/drivers/scsi/qla2xxx/qla_nx2.h
-@@ -133,6 +133,7 @@
- #define QLA8044_LINK_SPEED(f)		(0x36E0+(((f) >> 2) * 4))
- #define QLA8044_MAX_LINK_SPEED(f)       (0x36F0+(((f) / 4) * 4))
- #define QLA8044_LINK_SPEED_FACTOR	10
-+#define QLA8044_FUN7_ACTIVE_INDEX	0x80
- 
- /* FLASH API Defines */
- #define QLA8044_FLASH_MAX_WAIT_USEC	100
+ 	if (IS_QLA81XX(ha) || IS_QLA83XX(ha) || IS_QLA27XX(ha))
+ 		mcp->in_mb |= MBX_1;
+-	if (IS_QLA83XX(ha) || !IS_QLA27XX(ha)) {
++	if (IS_QLA83XX(ha) || IS_QLA27XX(ha)) {
+ 		mcp->out_mb |= MBX_15;
+ 		/* debug q create issue in SR-IOV */
+ 		mcp->in_mb |= MBX_9 | MBX_8 | MBX_7;
 -- 
 1.7.7
 
