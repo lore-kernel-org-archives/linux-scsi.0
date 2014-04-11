@@ -1,60 +1,56 @@
 From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: [PATCH 24/42] qla2xxx: ISP8044 poll ipmdio bus timeout improvement.
-Date: Fri, 11 Apr 2014 16:54:29 -0400
-Message-ID: <1397249687-32666-25-git-send-email-saurav.kashyap@qlogic.com>
+Subject: [PATCH 02/42] qla2xxx: Do not schedule reset when one is already active when receiving an invalid status handle.
+Date: Fri, 11 Apr 2014 16:54:07 -0400
+Message-ID: <1397249687-32666-3-git-send-email-saurav.kashyap@qlogic.com>
 References: <1397249687-32666-1-git-send-email-saurav.kashyap@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:40727 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754438AbaDKVcj (ORCPT
+Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:45336 "EHLO
+	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754837AbaDKVcH (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Apr 2014 17:32:39 -0400
+	Fri, 11 Apr 2014 17:32:07 -0400
 In-Reply-To: <1397249687-32666-1-git-send-email-saurav.kashyap@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Joe Carnuccio <joe.carnuccio@qlogic.com>
+From: Chad Dupuis <chad.dupuis@qlogic.com>
 
-Signed-off-by: Joe Carnuccio <joe.carnuccio@qlogic.com>
+If an adapter reset is already in progress, do not schedule another one when
+we receive an invalid status handle.
+
+Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
 Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_nx2.c |   15 +++++++--------
- 1 files changed, 7 insertions(+), 8 deletions(-)
+ drivers/scsi/qla2xxx/qla_isr.c |   12 +++++++-----
+ 1 files changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_nx2.c b/drivers/scsi/qla2xxx/qla_nx2.c
-index 75e947a..e5b4a40 100644
---- a/drivers/scsi/qla2xxx/qla_nx2.c
-+++ b/drivers/scsi/qla2xxx/qla_nx2.c
-@@ -175,18 +175,17 @@ qla8044_poll_wait_ipmdio_bus_idle(struct scsi_qla_host *vha,
- 	uint32_t temp;
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 95314ef..7549d09 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -2009,11 +2009,13 @@ qla2x00_status_entry(scsi_qla_host_t *vha, struct rsp_que *rsp, void *pkt)
+ 		ql_dbg(ql_dbg_io, vha, 0x3017,
+ 		    "Invalid status handle (0x%x).\n", sts->handle);
  
- 	/* jiffies after 100 msecs */
--	timeout = jiffies + (HZ / 1000) * TIMEOUT_100_MS;
-+	timeout = jiffies + msecs_to_jiffies(TIMEOUT_100_MS);
- 	do {
- 		temp = qla8044_ipmdio_rd_reg(vha, addr1, addr3, mask, addr2);
- 		if ((temp & 0x1) != 1)
- 			break;
--	} while (!time_after_eq(jiffies, timeout));
--
--	if (time_after_eq(jiffies, timeout)) {
--		ql_log(ql_log_warn, vha, 0xb152,
--		    "Error in processing mdiobus idle\n");
--		return -1;
--	}
-+		if (time_after_eq(jiffies, timeout)) {
-+			ql_log(ql_log_warn, vha, 0xb152,
-+			    "Error in processing mdiobus idle\n");
-+			return -1;
+-		if (IS_P3P_TYPE(ha))
+-			set_bit(FCOE_CTX_RESET_NEEDED, &vha->dpc_flags);
+-		else
+-			set_bit(ISP_ABORT_NEEDED, &vha->dpc_flags);
+-		qla2xxx_wake_dpc(vha);
++		if (!test_bit(ABORT_ISP_ACTIVE, &vha->dpc_flags)) {
++			if (IS_P3P_TYPE(ha))
++				set_bit(FCOE_CTX_RESET_NEEDED, &vha->dpc_flags);
++			else
++				set_bit(ISP_ABORT_NEEDED, &vha->dpc_flags);
++			qla2xxx_wake_dpc(vha);
 +		}
-+	} while (1);
+ 		return;
+ 	}
  
- 	return 0;
- }
 -- 
 1.7.7
 
