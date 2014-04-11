@@ -1,109 +1,122 @@
 From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: [PATCH 09/42] qla2xxx: Allow the next firmware dump if the previous dump capture fails for ISP8044.
-Date: Fri, 11 Apr 2014 16:54:14 -0400
-Message-ID: <1397249687-32666-10-git-send-email-saurav.kashyap@qlogic.com>
+Subject: [PATCH 14/42] qla2xxx: Track the process when the ROM_LOCK failure happens
+Date: Fri, 11 Apr 2014 16:54:19 -0400
+Message-ID: <1397249687-32666-15-git-send-email-saurav.kashyap@qlogic.com>
 References: <1397249687-32666-1-git-send-email-saurav.kashyap@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:19218 "EHLO
+Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:32035 "EHLO
 	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754688AbaDKVb6 (ORCPT
+	by vger.kernel.org with ESMTP id S1754706AbaDKVb7 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Apr 2014 17:31:58 -0400
+	Fri, 11 Apr 2014 17:31:59 -0400
 In-Reply-To: <1397249687-32666-1-git-send-email-saurav.kashyap@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-Signed-off-by: Giridhar Malavali <giridhar.malvali@qlogic.com>
+From: Hiral Patel <hiral.patel@qlogic.com>
+
+Signed-off-by: Hiral Patel <hiral.patel@qlogic.com>
 Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_def.h |    1 +
- drivers/scsi/qla2xxx/qla_nx.c  |   12 ++++++------
- drivers/scsi/qla2xxx/qla_nx2.c |    3 +++
- drivers/scsi/qla2xxx/qla_os.c  |    1 +
- 4 files changed, 11 insertions(+), 6 deletions(-)
+ drivers/scsi/qla2xxx/qla_nx.c |   20 ++++++++++++++------
+ drivers/scsi/qla2xxx/qla_nx.h |    3 ---
+ 2 files changed, 14 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 89bece7..bab1cf1 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -3141,6 +3141,7 @@ struct qla_hw_data {
- 	uint32_t	fw_dump_len;
- 	int		fw_dumped;
- 	int		fw_dump_reading;
-+	int		prev_minidump_failed;
- 	dma_addr_t	eft_dma;
- 	void		*eft;
- /* Current size of mctp dump is 0x086064 bytes */
 diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
-index 81388e9..3c5819a 100644
+index 3c5819a..61774bc 100644
 --- a/drivers/scsi/qla2xxx/qla_nx.c
 +++ b/drivers/scsi/qla2xxx/qla_nx.c
-@@ -3142,18 +3142,18 @@ qla82xx_check_md_needed(scsi_qla_host_t *vha)
- 
- 	if (ql2xmdenable) {
- 		if (!ha->fw_dumped) {
--			if (fw_major_version != ha->fw_major_version ||
-+			if ((fw_major_version != ha->fw_major_version ||
- 			    fw_minor_version != ha->fw_minor_version ||
--			    fw_subminor_version != ha->fw_subminor_version) {
-+			    fw_subminor_version != ha->fw_subminor_version) ||
-+			    (ha->prev_minidump_failed)) {
- 				ql_dbg(ql_dbg_p3p, vha, 0xb02d,
--				    "Firmware version differs "
--				    "Previous version: %d:%d:%d - "
--				    "New version: %d:%d:%d\n",
-+				    "Firmware version differs Previous version: %d:%d:%d - New version: %d:%d:%d, prev_minidump_failed: %d.\n",
- 				    fw_major_version, fw_minor_version,
- 				    fw_subminor_version,
- 				    ha->fw_major_version,
- 				    ha->fw_minor_version,
--				    ha->fw_subminor_version);
-+				    ha->fw_subminor_version,
-+				    ha->prev_minidump_failed);
- 				/* Release MiniDump resources */
- 				qla82xx_md_free(vha);
- 				/* ALlocate MiniDump resources */
-diff --git a/drivers/scsi/qla2xxx/qla_nx2.c b/drivers/scsi/qla2xxx/qla_nx2.c
-index e381835..d36a623 100644
---- a/drivers/scsi/qla2xxx/qla_nx2.c
-+++ b/drivers/scsi/qla2xxx/qla_nx2.c
-@@ -3125,6 +3125,7 @@ skip_nxt_entry:
- 		    "Dump data mismatch: Data collected: "
- 		    "[0x%x], total_data_size:[0x%x]\n",
- 		    data_collected, ha->md_dump_size);
-+		rval = QLA_FUNCTION_FAILED;
- 		goto md_failed;
+@@ -860,13 +860,14 @@ qla82xx_rom_lock(struct qla_hw_data *ha)
+ 		}
+ 		timeout++;
  	}
- 
-@@ -3149,10 +3150,12 @@ qla8044_get_minidump(struct scsi_qla_host *vha)
- 
- 	if (!qla8044_collect_md_data(vha)) {
- 		ha->fw_dumped = 1;
-+		ha->prev_minidump_failed = 0;
- 	} else {
- 		ql_log(ql_log_fatal, vha, 0xb0db,
- 		    "%s: Unable to collect minidump\n",
- 		    __func__);
-+		ha->prev_minidump_failed = 1;
- 	}
+-	qla82xx_wr_32(ha, QLA82XX_ROM_LOCK_ID, ROM_LOCK_DRIVER);
++	qla82xx_wr_32(ha, QLA82XX_ROM_LOCK_ID, ha->portnum);
+ 	return 0;
  }
  
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 1b1cd75..0114ea4 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -2885,6 +2885,7 @@ skip_dpc:
+ static void
+ qla82xx_rom_unlock(struct qla_hw_data *ha)
+ {
++	qla82xx_wr_32(ha, QLA82XX_ROM_LOCK_ID, 0xffffffff);
+ 	qla82xx_rd_32(ha, QLA82XX_PCIE_REG(PCIE_SEM2_UNLOCK));
+ }
  
- 	base_vha->flags.init_done = 1;
- 	base_vha->flags.online = 1;
-+	ha->prev_minidump_failed = 0;
+@@ -950,6 +951,7 @@ static int
+ qla82xx_rom_fast_read(struct qla_hw_data *ha, int addr, int *valp)
+ {
+ 	int ret, loops = 0;
++	uint32_t lock_owner = 0;
+ 	scsi_qla_host_t *vha = pci_get_drvdata(ha->pdev);
  
- 	ql_dbg(ql_dbg_init, base_vha, 0x00f2,
- 	    "Init done and hba is online.\n");
+ 	while ((qla82xx_rom_lock(ha) != 0) && (loops < 50000)) {
+@@ -958,8 +960,10 @@ qla82xx_rom_fast_read(struct qla_hw_data *ha, int addr, int *valp)
+ 		loops++;
+ 	}
+ 	if (loops >= 50000) {
++		lock_owner = qla82xx_rd_32(ha, QLA82XX_ROM_LOCK_ID);
+ 		ql_log(ql_log_fatal, vha, 0x00b9,
+-		    "Failed to acquire SEM2 lock.\n");
++		    "Failed to acquire SEM2 lock, Lock Owner %u.\n",
++		    lock_owner);
+ 		return -1;
+ 	}
+ 	ret = qla82xx_do_rom_fast_read(ha, addr, valp);
+@@ -1057,6 +1061,7 @@ static int
+ ql82xx_rom_lock_d(struct qla_hw_data *ha)
+ {
+ 	int loops = 0;
++	uint32_t lock_owner = 0;
+ 	scsi_qla_host_t *vha = pci_get_drvdata(ha->pdev);
+ 
+ 	while ((qla82xx_rom_lock(ha) != 0) && (loops < 50000)) {
+@@ -1065,8 +1070,9 @@ ql82xx_rom_lock_d(struct qla_hw_data *ha)
+ 		loops++;
+ 	}
+ 	if (loops >= 50000) {
++		lock_owner = qla82xx_rd_32(ha, QLA82XX_ROM_LOCK_ID);
+ 		ql_log(ql_log_warn, vha, 0xb010,
+-		    "ROM lock failed.\n");
++		    "ROM lock failed, Lock Owner %u.\n", lock_owner);
+ 		return -1;
+ 	}
+ 	return 0;
+@@ -2811,12 +2817,14 @@ static void
+ qla82xx_rom_lock_recovery(struct qla_hw_data *ha)
+ {
+ 	scsi_qla_host_t *vha = pci_get_drvdata(ha->pdev);
++	uint32_t lock_owner = 0;
+ 
+-	if (qla82xx_rom_lock(ha))
++	if (qla82xx_rom_lock(ha)) {
++		lock_owner = qla82xx_rd_32(ha, QLA82XX_ROM_LOCK_ID);
+ 		/* Someone else is holding the lock. */
+ 		ql_log(ql_log_info, vha, 0xb022,
+-		    "Resetting rom_lock.\n");
+-
++		    "Resetting rom_lock, Lock Owner %u.\n", lock_owner);
++	}
+ 	/*
+ 	 * Either we got the lock, or someone
+ 	 * else died while holding it.
+diff --git a/drivers/scsi/qla2xxx/qla_nx.h b/drivers/scsi/qla2xxx/qla_nx.h
+index d57f6fe..d978a5d 100644
+--- a/drivers/scsi/qla2xxx/qla_nx.h
++++ b/drivers/scsi/qla2xxx/qla_nx.h
+@@ -333,9 +333,6 @@
+ #define QLA82XX_ROMUSB_ROM_INSTR_OPCODE		(ROMUSB_ROM + 0x0004)
+ #define QLA82XX_ROMUSB_GLB_CAS_RST		(ROMUSB_GLB + 0x0038)
+ 
+-/* Lock IDs for ROM lock */
+-#define ROM_LOCK_DRIVER       0x0d417340
+-
+ #define QLA82XX_PCI_CRB_WINDOWSIZE 0x00100000	 /* all are 1MB windows */
+ #define QLA82XX_PCI_CRB_WINDOW(A) \
+ 	(QLA82XX_PCI_CRBSPACE + (A)*QLA82XX_PCI_CRB_WINDOWSIZE)
 -- 
 1.7.7
 
