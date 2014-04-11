@@ -1,145 +1,157 @@
 From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: [PATCH 08/42] qla2xxx: Add pci device id 0x2271.
-Date: Fri, 11 Apr 2014 16:54:13 -0400
-Message-ID: <1397249687-32666-9-git-send-email-saurav.kashyap@qlogic.com>
+Subject: [PATCH 40/42] qla2xxx: Do logins from a chip reset in DPC thread instead of the error handler thread.
+Date: Fri, 11 Apr 2014 16:54:45 -0400
+Message-ID: <1397249687-32666-41-git-send-email-saurav.kashyap@qlogic.com>
 References: <1397249687-32666-1-git-send-email-saurav.kashyap@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:26935 "EHLO
-	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754468AbaDKVcf (ORCPT
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:40689 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754854AbaDKVcG (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Apr 2014 17:32:35 -0400
+	Fri, 11 Apr 2014 17:32:06 -0400
 In-Reply-To: <1397249687-32666-1-git-send-email-saurav.kashyap@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Joe Carnuccio <joe.carnuccio@qlogic.com>
+From: Chad Dupuis <chad.dupuis@qlogic.com>
 
-Signed-off-by: Joe Carnuccio <joe.carnuccio@qlogic.com>
+Attempting to do any logins from the SCSI reset handler can lead to a deadlock
+scenario if a rport times out and the FC transport layer.  Move doing any port
+logins to the DPC thread so as not to impede the progress of the SCSI error
+handler thread and avoid deadlock situations.
+
+Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
 Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_def.h |    8 ++++++--
- drivers/scsi/qla2xxx/qla_os.c  |   21 +++++++++++++++------
- 2 files changed, 21 insertions(+), 8 deletions(-)
+ drivers/scsi/qla2xxx/qla_dbg.c  |    6 +++-
+ drivers/scsi/qla2xxx/qla_init.c |   40 ++------------------------------------
+ 2 files changed, 7 insertions(+), 39 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 6a10613..89bece7 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -2907,6 +2907,8 @@ struct qla_hw_data {
- #define PCI_DEVICE_ID_QLOGIC_ISP8031	0x8031
- #define PCI_DEVICE_ID_QLOGIC_ISP2031	0x2031
- #define PCI_DEVICE_ID_QLOGIC_ISP2071	0x2071
-+#define PCI_DEVICE_ID_QLOGIC_ISP2271	0x2271
+diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
+index 781ca5b..96f7d71 100644
+--- a/drivers/scsi/qla2xxx/qla_dbg.c
++++ b/drivers/scsi/qla2xxx/qla_dbg.c
+@@ -45,8 +45,10 @@
+  * |                              |                    | 0x70ad-0x70ae  |
+  * |                              |                    | 0x70d7-0x70db  |
+  * |                              |                    | 0x70de-0x70df  |
+- * | Task Management              |       0x803d       | 0x8025-0x8026  |
+- * |                              |                    | 0x800b,0x8039  |
++ * | Task Management              |       0x803d       | 0x8000,0x800b  |
++ * |                              |                    | 0x8025,0x8026  |
++ * |                              |                    | 0x8031,0x8032  |
++ * |                              |                    | 0x8039,0x803c  |
+  * | AER/EEH                      |       0x9011       |		|
+  * | Virtual Port                 |       0xa007       |		|
+  * | ISP82XX Specific             |       0xb157       | 0xb002,0xb024  |
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 20b569e..e218441 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -4736,7 +4736,6 @@ static int
+ qla2x00_restart_isp(scsi_qla_host_t *vha)
+ {
+ 	int status = 0;
+-	uint32_t wait_time;
+ 	struct qla_hw_data *ha = vha->hw;
+ 	struct req_que *req = ha->req_q_map[0];
+ 	struct rsp_que *rsp = ha->rsp_q_map[0];
+@@ -4753,14 +4752,12 @@ qla2x00_restart_isp(scsi_qla_host_t *vha)
+ 	if (!status && !(status = qla2x00_init_rings(vha))) {
+ 		clear_bit(RESET_MARKER_NEEDED, &vha->dpc_flags);
+ 		ha->flags.chip_reset_done = 1;
 +
- 	uint32_t	device_type;
- #define DT_ISP2100                      BIT_0
- #define DT_ISP2200                      BIT_1
-@@ -2928,7 +2930,8 @@ struct qla_hw_data {
- #define DT_ISPFX00			BIT_17
- #define DT_ISP8044			BIT_18
- #define DT_ISP2071			BIT_19
--#define DT_ISP_LAST			(DT_ISP2071 << 1)
-+#define DT_ISP2271			BIT_20
-+#define DT_ISP_LAST			(DT_ISP2271 << 1)
+ 		/* Initialize the queues in use */
+ 		qla25xx_init_queues(ha);
  
- #define DT_T10_PI                       BIT_25
- #define DT_IIDMA                        BIT_26
-@@ -2959,6 +2962,7 @@ struct qla_hw_data {
- #define IS_QLA8031(ha)	(DT_MASK(ha) & DT_ISP8031)
- #define IS_QLAFX00(ha)	(DT_MASK(ha) & DT_ISPFX00)
- #define IS_QLA2071(ha)	(DT_MASK(ha) & DT_ISP2071)
-+#define IS_QLA2271(ha)	(DT_MASK(ha) & DT_ISP2271)
+ 		status = qla2x00_fw_ready(vha);
+ 		if (!status) {
+-			ql_dbg(ql_dbg_taskm, vha, 0x8031,
+-			    "Start configure loop status = %d.\n", status);
+-
+ 			/* Issue a marker after FW becomes ready. */
+ 			qla2x00_marker(vha, req, rsp, 0, 0, MK_SYNC_ALL);
  
- #define IS_QLA23XX(ha)  (IS_QLA2300(ha) || IS_QLA2312(ha) || IS_QLA2322(ha) || \
- 			IS_QLA6312(ha) || IS_QLA6322(ha))
-@@ -2967,7 +2971,7 @@ struct qla_hw_data {
- #define IS_QLA25XX(ha)  (IS_QLA2532(ha))
- #define IS_QLA83XX(ha)	(IS_QLA2031(ha) || IS_QLA8031(ha))
- #define IS_QLA84XX(ha)  (IS_QLA8432(ha))
--#define IS_QLA27XX(ha)  (IS_QLA2071(ha))
-+#define IS_QLA27XX(ha)  (IS_QLA2071(ha) || IS_QLA2271(ha))
- #define IS_QLA24XX_TYPE(ha)     (IS_QLA24XX(ha) || IS_QLA54XX(ha) || \
- 				IS_QLA84XX(ha))
- #define IS_CNA_CAPABLE(ha)	(IS_QLA81XX(ha) || IS_QLA82XX(ha) || \
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 19e99cc..1b1cd75 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -2270,6 +2270,13 @@ qla2x00_set_isp_flags(struct qla_hw_data *ha)
- 		ha->device_type |= DT_IIDMA;
- 		ha->fw_srisc_address = RISC_START_ADDRESS_2400;
- 		break;
-+	case PCI_DEVICE_ID_QLOGIC_ISP2271:
-+		ha->device_type |= DT_ISP2271;
-+		ha->device_type |= DT_ZIO_SUPPORTED;
-+		ha->device_type |= DT_FWI2;
-+		ha->device_type |= DT_IIDMA;
-+		ha->fw_srisc_address = RISC_START_ADDRESS_2400;
-+		break;
+@@ -4775,24 +4772,12 @@ qla2x00_restart_isp(scsi_qla_host_t *vha)
+ 				qlt_24xx_process_atio_queue(vha);
+ 			spin_unlock_irqrestore(&ha->hardware_lock, flags);
+ 
+-			/* Wait at most MAX_TARGET RSCNs for a stable link. */
+-			wait_time = 256;
+-			do {
+-				clear_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags);
+-				qla2x00_configure_loop(vha);
+-				wait_time--;
+-			} while (!atomic_read(&vha->loop_down_timer) &&
+-				!(test_bit(ISP_ABORT_NEEDED, &vha->dpc_flags))
+-				&& wait_time && (test_bit(LOOP_RESYNC_NEEDED,
+-				&vha->dpc_flags)));
++			set_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags);
+ 		}
+ 
+ 		/* if no cable then assume it's good */
+ 		if ((vha->device_flags & DFLG_NO_CABLE))
+ 			status = 0;
+-
+-		ql_dbg(ql_dbg_taskm, vha, 0x8032,
+-		    "Configure loop done, status = 0x%x.\n", status);
+ 	}
+ 	return (status);
+ }
+@@ -6139,7 +6124,6 @@ int
+ qla82xx_restart_isp(scsi_qla_host_t *vha)
+ {
+ 	int status, rval;
+-	uint32_t wait_time;
+ 	struct qla_hw_data *ha = vha->hw;
+ 	struct req_que *req = ha->req_q_map[0];
+ 	struct rsp_que *rsp = ha->rsp_q_map[0];
+@@ -6153,31 +6137,15 @@ qla82xx_restart_isp(scsi_qla_host_t *vha)
+ 
+ 		status = qla2x00_fw_ready(vha);
+ 		if (!status) {
+-			ql_log(ql_log_info, vha, 0x803c,
+-			    "Start configure loop, status =%d.\n", status);
+-
+ 			/* Issue a marker after FW becomes ready. */
+ 			qla2x00_marker(vha, req, rsp, 0, 0, MK_SYNC_ALL);
+-
+ 			vha->flags.online = 1;
+-			/* Wait at most MAX_TARGET RSCNs for a stable link. */
+-			wait_time = 256;
+-			do {
+-				clear_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags);
+-				qla2x00_configure_loop(vha);
+-				wait_time--;
+-			} while (!atomic_read(&vha->loop_down_timer) &&
+-			    !(test_bit(ISP_ABORT_NEEDED, &vha->dpc_flags)) &&
+-			    wait_time &&
+-			    (test_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags)));
++			set_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags);
+ 		}
+ 
+ 		/* if no cable then assume it's good */
+ 		if ((vha->device_flags & DFLG_NO_CABLE))
+ 			status = 0;
+-
+-		ql_log(ql_log_info, vha, 0x8000,
+-		    "Configure loop done, status = 0x%x.\n", status);
  	}
  
- 	if (IS_QLA82XX(ha))
-@@ -2346,7 +2353,8 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	    pdev->device == PCI_DEVICE_ID_QLOGIC_ISP8031 ||
- 	    pdev->device == PCI_DEVICE_ID_QLOGIC_ISPF001 ||
- 	    pdev->device == PCI_DEVICE_ID_QLOGIC_ISP8044 ||
--	    pdev->device == PCI_DEVICE_ID_QLOGIC_ISP2071) {
-+	    pdev->device == PCI_DEVICE_ID_QLOGIC_ISP2071 ||
-+	    pdev->device == PCI_DEVICE_ID_QLOGIC_ISP2271) {
- 		bars = pci_select_bars(pdev, IORESOURCE_MEM);
- 		mem_only = 1;
- 		ql_dbg_pci(ql_dbg_init, pdev, 0x0007,
-@@ -5325,7 +5333,7 @@ qla2x00_timer(scsi_qla_host_t *vha)
- #define FW_ISP82XX	7
- #define FW_ISP2031	8
- #define FW_ISP8031	9
--#define FW_ISP2071	10
-+#define FW_ISP27XX	10
+ 	if (!status) {
+@@ -6191,8 +6159,6 @@ qla82xx_restart_isp(scsi_qla_host_t *vha)
+ 			vha->marker_needed = 1;
+ 		}
  
- #define FW_FILE_ISP21XX	"ql2100_fw.bin"
- #define FW_FILE_ISP22XX	"ql2200_fw.bin"
-@@ -5337,7 +5345,7 @@ qla2x00_timer(scsi_qla_host_t *vha)
- #define FW_FILE_ISP82XX	"ql8200_fw.bin"
- #define FW_FILE_ISP2031	"ql2600_fw.bin"
- #define FW_FILE_ISP8031	"ql8300_fw.bin"
--#define FW_FILE_ISP2071	"ql2700_fw.bin"
-+#define FW_FILE_ISP27XX	"ql2700_fw.bin"
+-		vha->flags.online = 1;
+-
+ 		ha->isp_ops->enable_intrs(ha);
  
- 
- static DEFINE_MUTEX(qla_fw_lock);
-@@ -5353,7 +5361,7 @@ static struct fw_blob qla_fw_blobs[FW_BLOBS] = {
- 	{ .name = FW_FILE_ISP82XX, },
- 	{ .name = FW_FILE_ISP2031, },
- 	{ .name = FW_FILE_ISP8031, },
--	{ .name = FW_FILE_ISP2071, },
-+	{ .name = FW_FILE_ISP27XX, },
- };
- 
- struct fw_blob *
-@@ -5382,8 +5390,8 @@ qla2x00_request_firmware(scsi_qla_host_t *vha)
- 		blob = &qla_fw_blobs[FW_ISP2031];
- 	} else if (IS_QLA8031(ha)) {
- 		blob = &qla_fw_blobs[FW_ISP8031];
--	} else if (IS_QLA2071(ha)) {
--		blob = &qla_fw_blobs[FW_ISP2071];
-+	} else if (IS_QLA27XX(ha)) {
-+		blob = &qla_fw_blobs[FW_ISP27XX];
- 	} else {
- 		return NULL;
- 	}
-@@ -5714,6 +5722,7 @@ static struct pci_device_id qla2xxx_pci_tbl[] = {
- 	{ PCI_DEVICE(PCI_VENDOR_ID_QLOGIC, PCI_DEVICE_ID_QLOGIC_ISPF001) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_QLOGIC, PCI_DEVICE_ID_QLOGIC_ISP8044) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_QLOGIC, PCI_DEVICE_ID_QLOGIC_ISP2071) },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_QLOGIC, PCI_DEVICE_ID_QLOGIC_ISP2271) },
- 	{ 0 },
- };
- MODULE_DEVICE_TABLE(pci, qla2xxx_pci_tbl);
+ 		ha->isp_abort_cnt = 0;
 -- 
 1.7.7
 
