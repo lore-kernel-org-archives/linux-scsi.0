@@ -1,45 +1,66 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 0/6] qla4xxx: 5.04.00-k6: Updates for scsi "misc" branch
-Date: Fri, 11 Apr 2014 12:31:30 -0500
-Message-ID: <534826F2.8070000@cs.wisc.edu>
-References: <1397092349-25332-1-git-send-email-vikas.chaudhary@qlogic.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [GIT PULL] async scsi resume for 3.15
+Date: Fri, 11 Apr 2014 11:20:50 -0700
+Message-ID: <1397240450.2626.37.camel@dabdike.int.hansenpartnership.com>
+References: <1397179458.4303.23.camel@dwillia2-mobl2.amr.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="ISO-8859-15"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:52950 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752291AbaDKRbq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Apr 2014 13:31:46 -0400
-In-Reply-To: <1397092349-25332-1-git-send-email-vikas.chaudhary@qlogic.com>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:60500 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754743AbaDKSUw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Apr 2014 14:20:52 -0400
+In-Reply-To: <1397179458.4303.23.camel@dwillia2-mobl2.amr.corp.intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: vikas.chaudhary@qlogic.com
-Cc: jbottomley@parallels.com, linux-scsi@vger.kernel.org, giridhar.malavali@qlogic.com
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Todd E Brandt <todd.e.brandt@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>, "Brown, Len" <len.brown@intel.com>, Phillip Susi <psusi@ubuntu.com>
 
-On 04/09/2014 08:12 PM, vikas.chaudhary@qlogic.com wrote:
-> From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+On Thu, 2014-04-10 at 18:24 -0700, Dan Williams wrote:
+> Hi Linus,
 > 
-> James,
+> James might still be in the process of sending this your way.  However,
+> given the proximity to -rc1, my reasoning for sending this directly is:
 > 
-> Please apply the following patches to the scsi tree at your earliest convenience.
+> 1/ It provides a tangible speed up for a non-esoteric use case (laptop
+> resume):
 > 
-> Adheer Chandravanshi (2):
->       qla4xxx: Fix smatch warning in func qla4xxx_get_ep_param
->       qla4xxx: Fix smatch warning in func qla4xxx_conn_get_param
+>   https://01.org/suspendresume/blogs/tebrandt/2013/hard-disk-resume-optimization-simpler-approach
 > 
-> Nilesh Javali (2):
->       qla4xxx: Export sysfs DDBs from DPC handler
->       qla4xxx: Fix memory leak for ha->saved_acb
+> 2/ You already pulled the first half of this enabling from Tejun.
+> Quoting Tejun's ATA pull request:
 > 
-> Tej Parkash (1):
->       qla4xxx: Disable INTx interrupt for ISP82XX
+>   "Dan finishes the patchset to make libata PM operations
+>    asynchronous.  Combined with one patch being routed through scsi,
+>    this should speed resume measurably."
 > 
-> Vikas Chaudhary (1):
->       qla4xxx: Update driver version to 5.04.00-k6
+> 3/ As far as I can tell it is acceptable to James:
 > 
+>   http://marc.info/?l=linux-scsi&m=139499409510791&w=2
+>   http://marc.info/?l=linux-scsi&m=139508044602605&w=2
+>   http://marc.info/?l=linux-scsi&m=139536062515216&w=2
+> 
+> 4/ I promised Todd I would get it upstream before he returns from
+> vacation.
+> 
+> Please pull, thank you.
 
-Looks ok.
+OK, so this missed the SCSI cutoff window because the series wasn't
+finalised until 17 March and, originally, I thought Linus would cut us
+off at -rc7 which was 16 March.  In reality we got an extra week, but I
+spent that ironing out a few late arriving bugs in the tree itself
+rather than integrating features.
 
-Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
+For drivers, I'm willing to buck the release protocols a bit because
+they're self contained, but for core features, they are supposed to be
+all finalised by -rc5.  Plus Linus bites me every time I do it even for
+drivers, so I was actually letting the scars heal a bit.
+
+I also don't see this in linux-next, unless I'm not looking in the right
+place, so it would be a bit of a risk adding it just before -rc1.
+
+James
+
 
