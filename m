@@ -1,22 +1,42 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 3/4] blk-mq: move request structures into struct
-	blk_mq_tags
-Date: Fri, 11 Apr 2014 09:33:36 +0200
-Message-ID: <20140411073336.GA26328@lst.de>
-References: <1396277175-21382-1-git-send-email-hch@lst.de> <1396277175-21382-4-git-send-email-hch@lst.de> <53457404.5070800@fb.com> <20140410100144.GB20342@lst.de> <53475693.7050609@fb.com>
+From: Paul Bolle <pebolle@tiscali.nl>
+Subject: Re: aic94xx: maybe uninitialized variable in asd_process_ctrl_a_user
+Date: Fri, 11 Apr 2014 10:19:09 +0200
+Message-ID: <1397204349.22353.11.camel@x220>
+References: <CADU+-uBr9UctHt1crnYAjYm5uNYmva2KDh5BZyZtkRG9_Xm-ag@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <53475693.7050609@fb.com>
+In-Reply-To: <CADU+-uBr9UctHt1crnYAjYm5uNYmva2KDh5BZyZtkRG9_Xm-ag@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@fb.com>
-Cc: Christoph Hellwig <hch@lst.de>, Matias Bjorling <m@bjorling.me>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Filipe Brandenburger <filbranden@google.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Michel Lespinasse <walken@google.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Apr 10, 2014 at 08:42:27PM -0600, Jens Axboe wrote:
-> Great. Will you send out an updated patchset?
+On Thu, 2014-04-10 at 22:13 -0700, Filipe Brandenburger wrote:
+> While building a recent kernel with -Werror I found this warning:
+> 
+> drivers/scsi/aic94xx/aic94xx_sds.c: In function 'asd_read_flash':
+> drivers/scsi/aic94xx/aic94xx_sds.c:597:21: error: 'offs' may be used
+> uninitialized in this function [-Werror=maybe-uninitialized]
+> drivers/scsi/aic94xx/aic94xx_sds.c:985:6: note: 'offs' was declared here
 
-I was waiting for you to apply the previous series, but I'll just resend my
-whole set of outstanding patches, it'll need a bit of rebasing against
-your updated tree anyway.
+This warning is actually rather old.
+
+> This looks like a valid complaint from the compiler, since in
+> asd_process_ctrl_a_user if the call to asd_find_flash_de fails (and
+> returns -ENOENT) then offs will not be set, but that will not prevent
+> the variable to be later passed to the call to asd_read_flash_seg
+> later in that same function.
+> 
+> Would you please have a look at it? Let me know if there's a more
+> appropriate way to report these issues (e.g. bug tracker.)
+
+I tried a few times to fix this warning.
+
+In the end I just asked Fedora to disable aic94xx in their kernel builds
+(which they did for Rawhide, their development branch). See
+https://lists.fedoraproject.org/pipermail/kernel/2014-January/004759.html for all the boring details.
+
+
+Paul Bolle
