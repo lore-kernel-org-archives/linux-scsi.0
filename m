@@ -1,14 +1,14 @@
 From: Paolo Bonzini <pbonzini@redhat.com>
 Subject: Re: [PATCH] virtio-scsi: Skip setting affinity on uninitialized vq
-Date: Fri, 11 Apr 2014 20:10:23 -0400
-Message-ID: <5348846F.6020405@redhat.com>
+Date: Fri, 11 Apr 2014 20:11:34 -0400
+Message-ID: <534884B6.3010609@redhat.com>
 References: <1397201025-26412-1-git-send-email-famz@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1397201025-26412-1-git-send-email-famz@redhat.com>
-Sender: stable-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: Fam Zheng <famz@redhat.com>, linux-kernel@vger.kernel.org
 Cc: linux-scsi@vger.kernel.org, kvm@vger.kernel.org, stable@vger.kernel.org, James Bottomley <JBottomley@Parallels.com>
 List-Id: linux-scsi@vger.kernel.org
@@ -107,11 +107,7 @@ Il 11/04/2014 03:23, Fam Zheng ha scritto:
 >  	}
 >
 
-You put the if inside the loop, but it's really all or nothing since the 
-failure point is find_vqs.
-
-Not a problem though; the queues are few and this is not a hot path anyway.
-
-Acked-by: Paolo Bonzini <pbonzini@redhat.com>
+Fam, please send v2 with "Cc: stable@vger.kernel.org" in the commit 
+message and my Acked-by.
 
 Paolo
