@@ -1,7 +1,7 @@
-From: Kars de Jong <jongk@linux-m68k.org>
+From: Michael Schmitz <schmitzmic@gmail.com>
 Subject: Re: esp_scsi QTAG in FAS216
-Date: Sun, 13 Apr 2014 16:47:45 +0200
-Message-ID: <CACz-3rjNixJBjKxzjpneFE8BHKpzR-hvhWsabT_AtrWZZUgvsA@mail.gmail.com>
+Date: Mon, 14 Apr 2014 10:38:09 +1200
+Message-ID: <CAOmrzkJZEZigKEyb5_66H2FNaEX7F_TXyvQNMpMZu1MyuOudBw@mail.gmail.com>
 References: <CAOmrzkKP4YcvnHcrtucMvS9WSaeg+6-qnobOWN6hBK=wkUHemg@mail.gmail.com>
 	<CAMuHMdUH=9sv-Vb3ZTAGyfvEQOO0x0x1cUYhfd7040k8d+bSYg@mail.gmail.com>
 	<5231DF69.6070807@aalto.fi>
@@ -9,100 +9,95 @@ References: <CAOmrzkKP4YcvnHcrtucMvS9WSaeg+6-qnobOWN6hBK=wkUHemg@mail.gmail.com>
 	<CAOmrzkL_6Y2RhpKANmTEWL53-6Ts+PF9Hhk_4Fh1s0wx7f_NhQ@mail.gmail.com>
 	<CACz-3rg3LNFKNPUNwc1OF_O_b5k=28hw8Nj50dWhxy4A5_QbVg@mail.gmail.com>
 	<CAOmrzkK1hoT72zA4CzajCH2uNwkiVPWi8vJQswB=4Q4uf-kSZQ@mail.gmail.com>
+	<CACz-3rjNixJBjKxzjpneFE8BHKpzR-hvhWsabT_AtrWZZUgvsA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <CAOmrzkK1hoT72zA4CzajCH2uNwkiVPWi8vJQswB=4Q4uf-kSZQ@mail.gmail.com>
-Sender: linux-m68k-owner@vger.kernel.org
-To: Michael Schmitz <schmitzmic@gmail.com>
-Cc: David Miller <davem@davemloft.net>, Tuomas Vainikka <tuomas.vainikka@aalto.fi>, Geert Uytterhoeven <geert@linux-m68k.org>, Linux/m68k <linux-m68k@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ob0-f169.google.com ([209.85.214.169]:63803 "EHLO
+	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751468AbaDMWiK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 13 Apr 2014 18:38:10 -0400
+In-Reply-To: <CACz-3rjNixJBjKxzjpneFE8BHKpzR-hvhWsabT_AtrWZZUgvsA@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Kars de Jong <jongk@linux-m68k.org>
+Cc: David Miller <davem@davemloft.net>, Tuomas Vainikka <tuomas.vainikka@aalto.fi>, Geert Uytterhoeven <geert@linux-m68k.org>, Linux/m68k <linux-m68k@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>
 
-Hi Michael,
+Hi Kars,
 
+thanks for the PDFs!
 
-2014-04-11 3:47 GMT+02:00 Michael Schmitz <schmitzmic@gmail.com>:
-> The more important issue is the one about the one-byte reconnect
-> message. Does the manual speak to that particular issue? Any hint on
-> how we could enable SCSI-2 features on chip init?
+> Bit 2 SCSI-2
+>
+> Setting this bit allows the FSC to support two new features adopted in
+> SCSI-2: the 3-byte message exchange for Tagged-Queueing and Group 2
+> commands. These features can also be set independently in the Config 3
+> register.
+>
+> Tagged-Queueing
+> When this bit is set and the FSC is selected with ATN (Attention), it
+> will request either one or three message bytes depending on whether
+> ATN remains true or goes false. If ATN is still true after the first
+> byte has been received, the FSC may request two more message bytes
+> before switching to Command phase. If ATN goes false, it will switch
+> to Command phase after the first message byte. When the bit is not set
+> it will request a single message byte (as a target) when selected with
+> ATN, and abort the selection sequence (as an initiator) if the target
+> does not switch to Command phase after one message byte has been
+> transferred.
 
-There's the SCSI2 bit in the Config 2 register and/or the QTE bit in
-the Config 3 register. The 53CF9x-2 manual says about SCSI-2 bit:
+That appears to be our problem if I recall correctly Tuomas' debugging
+report. (reselection, not selection as initiator). As
+esp_slave_configure() enables queue tags regardless of chip config,
+we'd best make certain the chip is configured correctly.
 
-Bit 2 SCSI-2
+The SCSI2 bit is used to test for presence of config register 2 in
+esp_get_revision but later cleared in the same function. It appears
+we'd need to set it after the call to scsi_esp_register() - can you
+test whether that obsoletes the zorro_esp_slave_configure hack,
+Tuomas?
 
-Setting this bit allows the FSC to support two new features adopted in
-SCSI-2: the 3-byte message exchange for Tagged-Queueing and Group 2
-commands. These features can also be set independently in the Config 3
-register.
+diff --git a/drivers/scsi/zorro_esp.c b/drivers/scsi/zorro_esp.c
+index 1a1eb95..b33c3b5 100644
+--- a/drivers/scsi/zorro_esp.c
++++ b/drivers/scsi/zorro_esp.c
+@@ -418,9 +418,6 @@ static int zorro_esp_init_one(struct zorro_dev *z,
+                return -EBUSY;
+        }
 
-Tagged-Queueing
-When this bit is set and the FSC is selected with ATN (Attention), it
-will request either one or three message bytes depending on whether
-ATN remains true or goes false. If ATN is still true after the first
-byte has been received, the FSC may request two more message bytes
-before switching to Command phase. If ATN goes false, it will switch
-to Command phase after the first message byte. When the bit is not set
-it will request a single message byte (as a target) when selected with
-ATN, and abort the selection sequence (as an initiator) if the target
-does not switch to Command phase after one message byte has been
-transferred.
+-       /* Fill in the required pieces of hostdata */
+-       scsi_esp_template.slave_configure = zorro_esp_slave_configure;
+-
+        host = scsi_host_alloc(tpnt, sizeof(struct esp));
 
-Group 2 Commands
-(seems to only be relevant for target mode).
+        if (!host) {
+@@ -508,6 +505,10 @@ static int zorro_esp_init_one(struct zorro_dev *z,
+        if (err)
+                goto fail_free_irq;
 
-And about the QTE bit:
++       esp->config2 = ESP_CONFIG2_SCSI2ENAB;
++       zorro_esp_write8(esp, esp->config2, ESP_CFG2);
++
++
+        zorro_set_drvdata(z, host);
 
-Bit 6 Queue Tag Enable
-
-When this bit is set, the 53CF94/96 can receive 3-byte messages during
-bus-initiated Select With ATN. This feature is also enabled by setting
-bit 3 in the Configuration 2 register.
-The message bytes consist of a one-byte identify message and a
-two-byte queue tag message. The middle byte is the tagged queue
-message itself and the last byte is the tag value (0 to 255). When
-this bit is set, the second byte is checked to see if it is a valid
-queue tagging message. If the value of the byte is not 20, 21 or 22h,
-the sequence halts and an interrupt is generated. When this bit is not
-set, the chip aborts the Select With ATN sequence after it receives
-one Identify Message byte, if ATN is still asserted.
-
-Then there is a section called "Bus Initiated Reselection":
-
-Bus Initiated Reselection
-The FSC will allow itself to be reselected as an initiator by a target
-if it has previously received the Enable Selection/Reselection
-command. If the sequence completes normally, the following information
-will be in the FIFO:
-
-* Bus ID
-* Identify Message
-* Optional 2-byte queue tag message
-
-The bus ID will always be present and will always be one byte. It is
-an un-encoded version of the state of the bus during Reselection
-phase.
-
-The identify message will always be present and will always be one byte.
-
-If queue tagging is enabled, and the target is sending a queue tag
-message, the target will also send two queue tag message bytes.
-
-> Can you point me to a source for the manuals if possible?
-
-I only have dead tree versions of the QLogic manual and the Symbios
-Logic manual.
-
-The only public place I know of is bitsavers, they do have a manual
-for the 53C94/95/96 online here:
-http://bitsavers.trailing-edge.com/pdf/ncr/scsi/NCR_53C94_53C95_53C96_Data_Sheet_Feb90.pdf.
-
-I put the 53C90A/B manual online at
-http://members.home.nl/karsdejong/NCR53C90ab.pdf and a preliminary
-version of the 53CF94/96-2 at
-http://members.home.nl/karsdejong/NCR53CF9x-2.pdf.
+        return 0;
 
 
-Kind regards,
+> Group 2 Commands
+> (seems to only be relevant for target mode).
+>
+> And about the QTE bit:
+>
+> Bit 6 Queue Tag Enable
+>
+> When this bit is set, the 53CF94/96 can receive 3-byte messages during
+> bus-initiated Select With ATN. This feature is also enabled by setting
+> bit 3 in the Configuration 2 register.
 
-Kars.
+My preference would be to set this one (named ESP_CONFIG3_TBMS). Your
+opinion, Dave?
+
+Cheers,
+
+  Michael
