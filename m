@@ -1,69 +1,46 @@
 From: Alexander Gordeev <agordeev@redhat.com>
-Subject: [PATCH v2 RESEND 11/23] lpfc: Remove superfluous call to pci_disable_msix()
-Date: Mon, 14 Apr 2014 10:05:35 +0200
-Message-ID: <ba0ef012ee339cf014780eba1d3272fc216a1e01.1397461652.git.agordeev@redhat.com>
+Subject: [PATCH v2 RESEND 07/23] fnic: Use pci_enable_msix_exact() instead of pci_enable_msix()
+Date: Mon, 14 Apr 2014 10:05:31 +0200
+Message-ID: <faa0100d9f97cbc3a97fddd6d723274df34df979.1397461652.git.agordeev@redhat.com>
 References: <cover.1397461652.git.agordeev@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1397461652.git.agordeev@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>, James Smart <james.smart@emulex.com>, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>, Hiral Patel <hiralpat@cisco.com>, Suma Ramars <sramars@cisco.com>, Brian Uchino <buchino@cisco.com>, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-There is no need to call pci_disable_msix() in case
-the previous call to pci_enable_msix() failed
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range()  or pci_enable_msi_exact()
+and pci_enable_msix_range() or pci_enable_msix_exact()
+interfaces.
 
 Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: James Smart <james.smart@emulex.com>
+Cc: Hiral Patel <hiralpat@cisco.com>
+Cc: Suma Ramars <sramars@cisco.com>
+Cc: Brian Uchino <buchino@cisco.com>
 Cc: linux-scsi@vger.kernel.org
 Cc: linux-pci@vger.kernel.org
-Acked-by: James Smart <james.smart@emulex.com>
 ---
- drivers/scsi/lpfc/lpfc_init.c |    9 ++++++---
- 1 files changed, 6 insertions(+), 3 deletions(-)
+ drivers/scsi/fnic/fnic_isr.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 635eeb3..7163f37 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -8131,7 +8131,7 @@ lpfc_sli_enable_msix(struct lpfc_hba *phba)
- 	if (rc) {
- 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
- 				"0420 PCI enable MSI-X failed (%d)\n", rc);
--		goto msi_fail_out;
-+		goto vec_fail_out;
- 	}
- 	for (i = 0; i < LPFC_MSIX_VECTORS; i++)
- 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
-@@ -8209,6 +8209,8 @@ irq_fail_out:
- msi_fail_out:
- 	/* Unconfigure MSI-X capability structure */
- 	pci_disable_msix(phba->pcidev);
-+
-+vec_fail_out:
- 	return rc;
- }
- 
-@@ -8701,7 +8703,7 @@ enable_msix_vectors:
- 	} else if (rc) {
- 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
- 				"0484 PCI enable MSI-X failed (%d)\n", rc);
--		goto msi_fail_out;
-+		goto vec_fail_out;
- 	}
- 
- 	/* Log MSI-X vector assignment */
-@@ -8764,9 +8766,10 @@ cfg_fail_out:
- 			 &phba->sli4_hba.fcp_eq_hdl[index]);
- 	}
- 
--msi_fail_out:
- 	/* Unconfigure MSI-X capability structure */
- 	pci_disable_msix(phba->pcidev);
-+
-+vec_fail_out:
- 	return rc;
- }
- 
+diff --git a/drivers/scsi/fnic/fnic_isr.c b/drivers/scsi/fnic/fnic_isr.c
+index 7d9b54a..a0dd1b6 100644
+--- a/drivers/scsi/fnic/fnic_isr.c
++++ b/drivers/scsi/fnic/fnic_isr.c
+@@ -257,8 +257,8 @@ int fnic_set_intr_mode(struct fnic *fnic)
+ 	    fnic->raw_wq_count >= m &&
+ 	    fnic->wq_copy_count >= o &&
+ 	    fnic->cq_count >= n + m + o) {
+-		if (!pci_enable_msix(fnic->pdev, fnic->msix_entry,
+-				    n + m + o + 1)) {
++		if (!pci_enable_msix_exact(fnic->pdev, fnic->msix_entry,
++					   n + m + o + 1)) {
+ 			fnic->rq_count = n;
+ 			fnic->raw_wq_count = m;
+ 			fnic->wq_copy_count = o;
 -- 
 1.7.7.6
