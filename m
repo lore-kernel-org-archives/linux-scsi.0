@@ -1,13 +1,13 @@
 From: Alexander Gordeev <agordeev@redhat.com>
-Subject: [PATCH v2 RESEND 06/23] csiostor: Use pci_enable_msix_range() instead of pci_enable_msix()
-Date: Mon, 14 Apr 2014 10:05:30 +0200
-Message-ID: <eff3d7370c0f3c9c9183bd304a5d5c9eb70f0bd6.1397461652.git.agordeev@redhat.com>
+Subject: [PATCH v2 RESEND 04/23] bfa: Use pci_enable_msix_exact() instead of pci_enable_msix()
+Date: Mon, 14 Apr 2014 10:05:28 +0200
+Message-ID: <7db0ca73195c7a4b41ec8263e23ffaeb7ff4dce2.1397461652.git.agordeev@redhat.com>
 References: <cover.1397461652.git.agordeev@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1397461652.git.agordeev@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>, Naresh Kumar Inna <naresh@chelsio.com>, Arvind Bhushan <arvindb@chelsio.com>, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>, Anil Gurumurthy <agurumur@brocade.com>, Vijaya Mohan Guvva <vmohan@brocade.com>, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 As result of deprecation of MSI-X/MSI enablement functions
@@ -18,68 +18,53 @@ and pci_enable_msix_range() or pci_enable_msix_exact()
 interfaces.
 
 Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Naresh Kumar Inna <naresh@chelsio.com>
-Cc: Arvind Bhushan <arvindb@chelsio.com>
+Cc: Anil Gurumurthy <agurumur@brocade.com>
+Cc: Vijaya Mohan Guvva <vmohan@brocade.com>
 Cc: linux-scsi@vger.kernel.org
 Cc: linux-pci@vger.kernel.org
 ---
- drivers/scsi/csiostor/csio_hw.h  |    2 +-
- drivers/scsi/csiostor/csio_isr.c |   22 +++++++++-------------
- 2 files changed, 10 insertions(+), 14 deletions(-)
+ drivers/scsi/bfa/bfad.c |   20 ++++++--------------
+ 1 files changed, 6 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/scsi/csiostor/csio_hw.h b/drivers/scsi/csiostor/csio_hw.h
-index 49b1daa..5db2d85 100644
---- a/drivers/scsi/csiostor/csio_hw.h
-+++ b/drivers/scsi/csiostor/csio_hw.h
-@@ -94,7 +94,7 @@ enum {
- };
+diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
+index e7e4774..839c81c 100644
+--- a/drivers/scsi/bfa/bfad.c
++++ b/drivers/scsi/bfa/bfad.c
+@@ -1234,29 +1234,21 @@ bfad_setup_intr(struct bfad_s *bfad)
+ 	if ((bfa_asic_id_ctc(pdev->device) && !msix_disable_ct) ||
+ 	   (bfa_asic_id_cb(pdev->device) && !msix_disable_cb)) {
  
- struct csio_msix_entries {
--	unsigned short	vector;		/* Vector assigned by pci_enable_msix */
-+	unsigned short	vector;		/* Assigned MSI-X vector */
- 	void		*dev_id;	/* Priv object associated w/ this msix*/
- 	char		desc[24];	/* Description of this vector */
- };
-diff --git a/drivers/scsi/csiostor/csio_isr.c b/drivers/scsi/csiostor/csio_isr.c
-index 91ba91d..a8c748a 100644
---- a/drivers/scsi/csiostor/csio_isr.c
-+++ b/drivers/scsi/csiostor/csio_isr.c
-@@ -499,7 +499,7 @@ csio_reduce_sqsets(struct csio_hw *hw, int cnt)
- static int
- csio_enable_msix(struct csio_hw *hw)
- {
--	int rv, i, j, k, n, min, cnt;
-+	int i, j, k, n, min, cnt;
- 	struct csio_msix_entries *entryp;
- 	struct msix_entry *entries;
- 	int extra = CSIO_EXTRA_VECS;
-@@ -521,19 +521,15 @@ csio_enable_msix(struct csio_hw *hw)
+-		error = pci_enable_msix(bfad->pcidev, msix_entries, bfad->nvec);
++		error = pci_enable_msix_exact(bfad->pcidev,
++					      msix_entries, bfad->nvec);
+ 		/* In CT1 & CT2, try to allocate just one vector */
+-		if (error > 0 && bfa_asic_id_ctc(pdev->device)) {
++		if (error == -ENOSPC && bfa_asic_id_ctc(pdev->device)) {
+ 			printk(KERN_WARNING "bfa %s: trying one msix "
+ 			       "vector failed to allocate %d[%d]\n",
+ 			       bfad->pci_name, bfad->nvec, error);
+ 			bfad->nvec = 1;
+-			error = pci_enable_msix(bfad->pcidev,
+-						msix_entries, bfad->nvec);
++			error = pci_enable_msix_exact(bfad->pcidev,
++						      msix_entries, 1);
+ 		}
  
- 	csio_dbg(hw, "FW supp #niq:%d, trying %d msix's\n", hw->cfg_niq, cnt);
- 
--	while ((rv = pci_enable_msix(hw->pdev, entries, cnt)) >= min)
--		cnt = rv;
--	if (!rv) {
--		if (cnt < (hw->num_sqsets + extra)) {
--			csio_dbg(hw, "Reducing sqsets to %d\n", cnt - extra);
--			csio_reduce_sqsets(hw, cnt - extra);
--		}
--	} else {
--		if (rv > 0)
--			csio_info(hw, "Not using MSI-X, remainder:%d\n", rv);
--
-+	cnt = pci_enable_msix_range(hw->pdev, entries, min, cnt);
-+	if (cnt < 0) {
- 		kfree(entries);
--		return -ENOMEM;
-+		return cnt;
-+	}
-+
-+	if (cnt < (hw->num_sqsets + extra)) {
-+		csio_dbg(hw, "Reducing sqsets to %d\n", cnt - extra);
-+		csio_reduce_sqsets(hw, cnt - extra);
- 	}
- 
- 	/* Save off vectors */
+-		/*
+-		 * Only error number of vector is available.
+-		 * We don't have a mechanism to map multiple
+-		 * interrupts into one vector, so even if we
+-		 * can try to request less vectors, we don't
+-		 * know how to associate interrupt events to
+-		 *  vectors. Linux doesn't duplicate vectors
+-		 * in the MSIX table for this case.
+-		 */
+ 		if (error) {
+ 			printk(KERN_WARNING "bfad%d: "
+-			       "pci_enable_msix failed (%d), "
++			       "pci_enable_msix_exact failed (%d), "
+ 			       "use line based.\n",
+ 				bfad->inst_no, error);
+ 			goto line_based;
 -- 
 1.7.7.6
