@@ -1,105 +1,89 @@
-From: scameron-3C9H9nn4BS4HL6m8NFMY+dBPR1lH4CV8@public.gmane.org
-Subject: Re: [PATCH] hpsa: fix uninitialized trans_support in
-	hpsa_put_ctlr_into_performant_mode()
-Date: Mon, 14 Apr 2014 10:52:41 -0500
-Message-ID: <20140414155241.GC21686@beardog.cce.hp.com>
-References: <20140410221704.GA22465@beardog.cce.hp.com>
-	<1397490316.2207.23.camel@dabdike.int.hansenpartnership.com>
+From: Ewan Milne <emilne@redhat.com>
+Subject: Re: [PATCH] sd: medium access timeout counter fails to reset
+Date: Mon, 14 Apr 2014 11:50:13 -0400
+Message-ID: <1397490613.3832.20.camel@localhost.localdomain>
+References: <20140410150830.GA19457@fury.redhat.com>
+Reply-To: emilne@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1397490316.2207.23.camel-sFMDBYUN5F8GjUHQrlYNx2Wm91YjaHnnhRte9Li2A+AAvxtiuMwx3w@public.gmane.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
-List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Cc: linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Baoquan He <bhe-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:INTEL IOMMU (VT-d)" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Davidlohr Bueso <davidlohr-VXdhtT5mjnY@public.gmane.org>, scameron-3C9H9nn4BS4HL6m8NFMY+dBPR1lH4CV8@public.gmane.org, Bjorn Helgaas <bhelgaas-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Jiang Liu <jiang.liu-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:24544 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751369AbaDNQE1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 14 Apr 2014 12:04:27 -0400
+Received: from int-mx12.intmail.prod.int.phx2.redhat.com (int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s3EG4Qdq017933
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+	for <linux-scsi@vger.kernel.org>; Mon, 14 Apr 2014 12:04:27 -0400
+In-Reply-To: <20140410150830.GA19457@fury.redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: djeffery@redhat.com
 
-On Mon, Apr 14, 2014 at 08:45:16AM -0700, James Bottomley wrote:
-> Your subject line is very tame.  It should be the one line summary of
-> why we apply the patch, so it should read something like
+On Thu, 2014-04-10 at 11:08 -0400, David Jeffery wrote:
+> There is an error with the medium access timeout feature of the sd driver. The
+> sdkp->medium_access_timed_out value is reset to zero in sd_done() in the wrong
+> place.  Currently it is reset to zero only when a command returns sense data.
+> This can result in cases where the medium access check falsely triggers from
+> timed out commands which are hours or days apart.
 > 
->  hpsa: fix NULL deref in performant mode
+> For example, an I/O command times out and is aborted.  It then retries and
+> succeeds.  But with no sense data generated and returned, the
+> medium_access_timed_out value is not reset.  If no sd command returns sense
+> data, then the next command to time out (however far in time from the first
+> failure) will trigger the medium access timeout and put the device offline.
 > 
-> On Thu, 2014-04-10 at 17:17 -0500, scameron-3C9H9nn4BS4HL6m8NFMY+dBPR1lH4CV8@public.gmane.org wrote:
-> > Without this, you'll see a null pointer dereference in
-> > hpsa_enter_performant_mode().
+> The resetting of sdkp->medium_access_timed_out should occur before the check
+> for sense data.
 > 
-> The description should be more comprehensible.
-> 
-> I'm clear that the use before initialisation is a bug ... I'm less clear
-> on why it causes an oops.
-> 
-> > Signed-off-by: Stephen M. Cameron <scameron-3C9H9nn4BS4HL6m8NFMY+dBPR1lH4CV8@public.gmane.org>
-> > ---
-> >  drivers/scsi/hpsa.c |    4 ++++
-> >  1 files changed, 4 insertions(+), 0 deletions(-)
-> > 
-> > diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> > index 8cf4a0c..ef4dfdd 100644
-> > --- a/drivers/scsi/hpsa.c
-> > +++ b/drivers/scsi/hpsa.c
-> > @@ -7463,6 +7463,10 @@ static void hpsa_put_ctlr_into_performant_mode(struct ctlr_info *h)
-> >  	if (hpsa_simple_mode)
-> >  		return;
-> >  
-> > +	trans_support = readl(&(h->cfgtable->TransportSupport));
-> > +	if (!(trans_support & PERFORMANT_MODE))
-> > +		return;
-> > +
-> >  	/* Check for I/O accelerator mode support */
-> >  	if (trans_support & CFGTBL_Trans_io_accel1) {
-> >  		transMethod |= CFGTBL_Trans_io_accel1 |
-> 
-> Shouldn't you be moving this check from its previous location, rather
-> than adding a new one that makes the original obsolete?
-
-Oh... I didn't notice that.   So that's what happened to that hunk.
-Yes, that is what should be done.
-
-I will resend the patch after fixing up this and the commit message.
-
--- steve
-
-
-> 
-> James
+> Signed-off-by: David Jeffery <djeffery@redhat.com>
 > 
 > ---
 > 
-> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> index 8cf4a0c..9a6e4a2 100644
-> --- a/drivers/scsi/hpsa.c
-> +++ b/drivers/scsi/hpsa.c
-> @@ -7463,6 +7463,10 @@ static void hpsa_put_ctlr_into_performant_mode(struct ctlr_info *h)
->  	if (hpsa_simple_mode)
->  		return;
->  
-> +	trans_support = readl(&(h->cfgtable->TransportSupport));
-> +	if (!(trans_support & PERFORMANT_MODE))
-> +		return;
-> +
->  	/* Check for I/O accelerator mode support */
->  	if (trans_support & CFGTBL_Trans_io_accel1) {
->  		transMethod |= CFGTBL_Trans_io_accel1 |
-> @@ -7479,10 +7483,6 @@ static void hpsa_put_ctlr_into_performant_mode(struct ctlr_info *h)
->  	}
->  
->  	/* TODO, check that this next line h->nreply_queues is correct */
-> -	trans_support = readl(&(h->cfgtable->TransportSupport));
-> -	if (!(trans_support & PERFORMANT_MODE))
-> -		return;
-> -
->  	h->nreply_queues = h->msix_vector > 0 ? h->msix_vector : 1;
->  	hpsa_get_max_perf_mode_cmds(h);
->  	/* Performant mode ring buffer and supporting data structures */
+> To reproduce using scsi_debug, use SCSI_DEBUG_OPT_TIMEOUT or
+> SCSI_DEBUG_OPT_MAC_TIMEOUT to force an I/O command to timeout.  Then, remove
+> the opt value so the I/O will succeed on retry.  Perform more I/O as desired.
+> Finally, repeat the process to make a new I/O command time out.  Without the
+> patch, the device will be marked offline even though many I/O commands have
+> succeeded between the 2 instances of timed out commands.
 > 
+> 
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index 470954a..a41e68e 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -1689,12 +1689,12 @@ static int sd_done(struct scsi_cmnd *SCpnt)
+>  						   sshdr.ascq));
+>  	}
+>  #endif
+> +	sdkp->medium_access_timed_out = 0;
+> +
+>  	if (driver_byte(result) != DRIVER_SENSE &&
+>  	    (!sense_valid || sense_deferred))
+>  		goto out;
+>  
+> -	sdkp->medium_access_timed_out = 0;
+> -
+>  	switch (sshdr.sense_key) {
+>  	case HARDWARE_ERROR:
+>  	case MEDIUM_ERROR:
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+Hey James-
+
+Is there some reason why this patch was never accepted?  David posted it
+a couple of times last year and Martin ack'ed it, but I don't see it in
+your tree, and I don't see any other comments on it.
+
+It seems like something that ought to be fixed.
+
+Reviewed-by:  Ewan D. Milne <emilne@redhat.com>
+
+
+
+
