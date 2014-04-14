@@ -1,42 +1,34 @@
 From: Alexander Gordeev <agordeev@redhat.com>
-Subject: [PATCH v2 RESEND 05/23] csiostor: Remove superfluous call to pci_disable_msix()
-Date: Mon, 14 Apr 2014 10:05:29 +0200
-Message-ID: <03ab035c5fe475fae9ffd7f4390b103b0afa6c42.1397461652.git.agordeev@redhat.com>
+Subject: [PATCH v2 RESEND 19/23] pmcraid: Get rid of a redundant assignment
+Date: Mon, 14 Apr 2014 10:05:43 +0200
+Message-ID: <4000044a6582a5e60a3ed61aae60186d70eabc94.1397461652.git.agordeev@redhat.com>
 References: <cover.1397461652.git.agordeev@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1397461652.git.agordeev@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>, Naresh Kumar Inna <naresh@chelsio.com>, Arvind Bhushan <arvindb@chelsio.com>, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>, Anil Ravindranath <anil_ravindranath@pmc-sierra.com>, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-There is no need to call pci_disable_msix() in case
-the previous call to pci_enable_msix() failed
-
 Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Naresh Kumar Inna <naresh@chelsio.com>
-Cc: Arvind Bhushan <arvindb@chelsio.com>
+Cc: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
 Cc: linux-scsi@vger.kernel.org
 Cc: linux-pci@vger.kernel.org
 ---
- drivers/scsi/csiostor/csio_isr.c |    4 +---
- 1 files changed, 1 insertions(+), 3 deletions(-)
+ drivers/scsi/pmcraid.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/csiostor/csio_isr.c b/drivers/scsi/csiostor/csio_isr.c
-index 7ee9777..91ba91d 100644
---- a/drivers/scsi/csiostor/csio_isr.c
-+++ b/drivers/scsi/csiostor/csio_isr.c
-@@ -529,10 +529,8 @@ csio_enable_msix(struct csio_hw *hw)
- 			csio_reduce_sqsets(hw, cnt - extra);
- 		}
- 	} else {
--		if (rv > 0) {
--			pci_disable_msix(hw->pdev);
-+		if (rv > 0)
- 			csio_info(hw, "Not using MSI-X, remainder:%d\n", rv);
--		}
+diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
+index be8ce54..c06af7f 100644
+--- a/drivers/scsi/pmcraid.c
++++ b/drivers/scsi/pmcraid.c
+@@ -4746,7 +4746,6 @@ pmcraid_isr_legacy:
+ 	pinstance->hrrq_vector[0].drv_inst = pinstance;
+ 	pinstance->hrrq_vector[0].vector = pdev->irq;
+ 	pinstance->num_hrrq = 1;
+-	rc = 0;
  
- 		kfree(entries);
- 		return -ENOMEM;
+ 	rc = request_irq(pdev->irq, pmcraid_isr, IRQF_SHARED,
+ 			 PMCRAID_DRIVER_NAME, &pinstance->hrrq_vector[0]);
 -- 
 1.7.7.6
