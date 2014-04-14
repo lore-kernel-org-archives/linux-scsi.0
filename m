@@ -1,105 +1,49 @@
-From: Jiang Liu <jiang.liu@linux.intel.com>
-Subject: Re: hpsa driver bug crack kernel down!
-Date: Mon, 14 Apr 2014 15:01:07 +0800
-Message-ID: <534B87B3.1060401@linux.intel.com>
-References: <20140409023935.GE11839@dhcp-16-105.nay.redhat.com>	 <1397083799.2608.20.camel@buesod1.americas.hpqcorp.net>	 <1397084904.9519.62.camel@dabdike> <1397085044.9519.63.camel@dabdike>	 <1397086817.2608.25.camel@buesod1.americas.hpqcorp.net>	 <1397087425.9519.67.camel@dabdike>	 <1397089180.2608.27.camel@buesod1.americas.hpqcorp.net>	 <CAErSpo4H=hcro8sMnt2MzDDVCROpASuUTQWBw37OxodHTyOfyw@mail.gmail.com>	 <1397111557.2608.29.camel@buesod1.americas.hpqcorp.net>	 <20140410071535.GX13491@8bytes.org>	 <1397119587.19944.14.camel@shinybook.infradead.org> <1397146781.2608.46.camel@buesod1.americas.hpqcorp.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: [PATCH v2 RESEND 01/23] be2iscsi: Use pci_enable_msix_exact() instead of pci_enable_msix()
+Date: Mon, 14 Apr 2014 10:05:25 +0200
+Message-ID: <e0864211a693608a8aef6590d3c720f28cea02e5.1397461652.git.agordeev@redhat.com>
+References: <cover.1397461652.git.agordeev@redhat.com>
 Return-path: <linux-pci-owner@vger.kernel.org>
-In-Reply-To: <1397146781.2608.46.camel@buesod1.americas.hpqcorp.net>
+In-Reply-To: <cover.1397461652.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
-To: Davidlohr Bueso <davidlohr@hp.com>, "Woodhouse, David" <david.woodhouse@intel.com>
-Cc: "joro@8bytes.org" <joro@8bytes.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "bhe@redhat.com" <bhe@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>, "James.Bottomley@hansenpartnership.com" <James.Bottomley@hansenpartnership.com>, "bhelgaas@google.com" <bhelgaas@google.com>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "scameron@beardog.cce.hp.com" <scameron@beardog.cce.hp.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>, Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Davidlohr,
-	Thanks for the information!
-	According to lspci output, device 0000:02:00.2 is HP ILO
-controller, device 0000:03:00.0 is RAID controller. Both ILO and
-RAID controllers need to access reserved memory range
-[0x7f61e000 - 0x7f61ffff] in physical mode.
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range()  or pci_enable_msi_exact()
+and pci_enable_msix_range() or pci_enable_msix_exact()
+interfaces.
 
-	According to dmesg output, BIOS has reserved memory and
-IOMMU has setup 1:1 mapping for ILO and RAID controller to access
-this range. Related log messages as below:
-BIOS-e820: [mem 0x000000007f61d000-0x000000008fffffff] reserved
-IOMMU: Setting RMRR:
-IOMMU: Setting identity map for device 0000:03:00.0 [0x7f61e000 -
-0x7f61ffff]
-IOMMU: Setting identity map for device 0000:02:00.0 [0x7f61e000 -
-0x7f61ffff]
-IOMMU: Setting identity map for device 0000:02:00.2 [0x7f61e000 -
-0x7f61ffff]
-=09
-	From the screenshot, device 0000:02:00.2 fails to access
-memory address 0x7f61e000. That indicates IOMMU driver fails to
-setup 1:1 mapping for Reserved Memory Range for ILO controller.
-So could you please help to check whether you could observe boot
-messages like "IOMMU: Setting identity map for device 0000:02:00.2
-[0x7f61e000 - 0x7f61ffff]" with the failure kernel image?
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+Acked-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+---
+ drivers/scsi/be2iscsi/be_main.c |    6 ++----
+ 1 files changed, 2 insertions(+), 4 deletions(-)
 
-	It would be great if boot messages could be saved when
-failing to boot, so we could get more information from log.
-
-	BTW, I have double checked related code, and still can't
-find a reliable explanation for the regression:(
-
-Thanks!
-Gerry
-
-On 2014/4/11 0:19, Davidlohr Bueso wrote:
-> On Thu, 2014-04-10 at 08:46 +0000, Woodhouse, David wrote:
->> On Thu, 2014-04-10 at 09:15 +0200, Joerg Roedel wrote:
->>> [+ David, VT-d maintainer ]
->>>
->>> Jiang, David, can you please have a look into this issue?
->>>
->>
->>>>>>>>>>> DMAR:[fault reason 02] Present bit in context entry is clea=
-r
->>>>>>>>>>> dmar: DRHD: handling fault status reg 602
->>>>>>>>>>> dmar: DMAR:[DMA Read] Request device [02:00.0] fault addr 7=
-f61e000
->>
->> That "Present bit in context entry is clear" fault means that we hav=
-e
->> not set up *any* mappings for this PCI device=E2=80=A6 on this IOMMU=
-=2E
->>
->>>> Yes, specifically (finally done bisecting):
->>>>
->>>> commit 2e45528930388658603ea24d49cf52867b928d3e
->>>> Author: Jiang Liu <jiang.liu@linux.intel.com>
->>>> Date:   Wed Feb 19 14:07:36 2014 +0800
->>>>
->>>>     iommu/vt-d: Unify the way to process DMAR device scope array
->>
->> This commit is about how we decide which IOMMU a given PCI device is
->> attached to.
->>
->> Thus, my first guess would be that we are quite happily setting up t=
-he
->> requested DMA maps on the *wrong* IOMMU, and then taking faults when=
- the
->> device actually tries to do DMA.
->>
->> However, I'm not 100% convinced of that. The fault address looks
->> suspiciously like a true physical address, not a virtual bus address=
- of
->> the type that we'd normally allocate for a dma_map_* operation. Thos=
-e
->> would start at 0xfffff000 and work downwards, typically.
->>
->> Do you have 'iommu=3Dpt' on the kernel command line?=20
->=20
-> No.
->=20
->> Can I see the full
->> dmesg as this system boots, and also a copy of the DMAR table?
->=20
-> Attaching a dmesg from one of the kernels that boots. It doesn't appe=
-ar
-> to have much of the related information... is there any debug config
-> option I can enable that might give you more data?
->=20
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index 0d82229..279b2f9 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -5282,12 +5282,10 @@ static void beiscsi_msix_enable(struct beiscsi_hba *phba)
+ 	for (i = 0; i <= phba->num_cpus; i++)
+ 		phba->msix_entries[i].entry = i;
+ 
+-	status = pci_enable_msix(phba->pcidev, phba->msix_entries,
+-				 (phba->num_cpus + 1));
++	status = pci_enable_msix_exact(phba->pcidev, phba->msix_entries,
++				       phba->num_cpus + 1);
+ 	if (!status)
+ 		phba->msix_enabled = true;
+-
+-	return;
+ }
+ 
+ /*
+-- 
+1.7.7.6
