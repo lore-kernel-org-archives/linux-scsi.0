@@ -1,58 +1,41 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: 3.15-mw:  Oops Workqueue: writeback bdi_writeback_workfn
- (flush-8:16)  RIP: e030:[<ffffffff814c6bc1>]  [<ffffffff814c6bc1>]
- kobject_put+0x11/0x70
-Date: Mon, 14 Apr 2014 04:30:15 -0700
-Message-ID: <20140414113015.GA4765@infradead.org>
-References: <1299097701.20140412133431@eikelenboom.it>
+From: "Darius D." <darius.ski@gmail.com>
+Subject: HPSA related kernel panic on boot in 3.15 rc1 on Proliant with P420i
+Date: Mon, 14 Apr 2014 14:33:11 +0300
+Message-ID: <CAKt3ReJZ14+EAtDKxc6H=r3HCaVPbmX=6H8Rt6UjavkB45xOZw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1299097701.20140412133431@eikelenboom.it>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Sander Eikelenboom <linux@eikelenboom.it>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pb0-f49.google.com ([209.85.160.49]:43510 "EHLO
+	mail-pb0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750948AbaDNLdM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Apr 2014 07:33:12 -0400
+Received: by mail-pb0-f49.google.com with SMTP id jt11so8109039pbb.22
+        for <linux-scsi@vger.kernel.org>; Mon, 14 Apr 2014 04:33:11 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Sat, Apr 12, 2014 at 01:34:31PM +0200, Sander Eikelenboom wrote:
-> Hi,
-> 
-> I just ran into the oops belowafter some uptime.
+Hi,
 
-Classic use after free introduced by my recent changes, sorry.
+on P420i (2GB FBWC) with latest(5.22?) FW, and 2 SSD smart path
+enabled RAID0 arrays (1 and 3 SSD), i get panic on initialization.
+What is sad, i can't capture complete stack trace and it is deep in
+kernel worker, but top items are:
 
-This should fix it:
+SA5_performant_intr_mask+0x30/0x30
+spin_unlock_irqrestore
+hpsa_unit_one
+local_pci_probe
+... kthread worker stuff
 
----
-From: Christoph Hellwig <hch@lst.de>
-Subject: scsi: don't reference freed command in scsi_init_sgtable
 
-When scsi_init_io fails we have to release our device reference, but
-we do this trying to reference the just freed command.  Add a local
-scsi_device pointer to fix this.
+RIP is calc_bucket_map+0x30/0x3a.
 
-Reported-by: Sander Eikelenboom <linux@eikelenboom.it>
-Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 65a123d..54eff6a 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1044,6 +1044,7 @@ static int scsi_init_sgtable(struct request *req, struct scsi_data_buffer *sdb,
-  */
- int scsi_init_io(struct scsi_cmnd *cmd, gfp_t gfp_mask)
- {
-+	struct scsi_device *sdev = cmd->device;
- 	struct request *rq = cmd->request;
- 
- 	int error = scsi_init_sgtable(rq, &cmd->sdb, gfp_mask);
-@@ -1091,7 +1092,7 @@ err_exit:
- 	scsi_release_buffers(cmd);
- 	cmd->request->special = NULL;
- 	scsi_put_command(cmd);
--	put_device(&cmd->device->sdev_gendev);
-+	put_device(&sdev->sdev_gendev);
- 	return error;
- }
- EXPORT_SYMBOL(scsi_init_io);
+Anyone got idea what is going on? 3.14 was working fine with exact
+config, so i suspect it could be HPSA smart path code related.
+
+
+Best regards,
+
+Darius.
