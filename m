@@ -1,13 +1,13 @@
 From: Alexander Gordeev <agordeev@redhat.com>
-Subject: [PATCH v2 RESEND 23/23] vmw_pvscsi: Use pci_enable_msix_exact() instead of pci_enable_msix()
-Date: Mon, 14 Apr 2014 10:05:47 +0200
-Message-ID: <87926834d40cc52b459fd87475ad133bcd68c30e.1397461652.git.agordeev@redhat.com>
+Subject: [PATCH v2 RESEND 21/23] qla2xxx: Use pci_enable_msix_range() instead of pci_enable_msix()
+Date: Mon, 14 Apr 2014 10:05:45 +0200
+Message-ID: <56843dce951ecc7ee986936d91d69a446946d42f.1397461652.git.agordeev@redhat.com>
 References: <cover.1397461652.git.agordeev@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1397461652.git.agordeev@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>, Arvind Kumar <arvindkumar@vmware.com>, pv-drivers@vmware.com, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>, qla2xxx-upstream@qlogic.com, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 As result of deprecation of MSI-X/MSI enablement functions
@@ -17,28 +17,61 @@ new pci_enable_msi_range()  or pci_enable_msi_exact()
 and pci_enable_msix_range() or pci_enable_msix_exact()
 interfaces.
 
+Log message code 0x00c6 preserved, although it is reported
+after successful call to pci_enable_msix_range(), not before
+possibly unsuccessful call to pci_enable_msix(). Consumers
+of the error code should not notice the difference.
+
 Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Arvind Kumar <arvindkumar@vmware.com>
-Cc: pv-drivers@vmware.com
+Cc: qla2xxx-upstream@qlogic.com
 Cc: linux-scsi@vger.kernel.org
 Cc: linux-pci@vger.kernel.org
-Acked-by: Arvind Kumar <arvindkumar@vmware.com>
 ---
- drivers/scsi/vmw_pvscsi.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/scsi/qla2xxx/qla_isr.c |   27 +++++++++++----------------
+ 1 files changed, 11 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
-index c88e146..598f65e 100644
---- a/drivers/scsi/vmw_pvscsi.c
-+++ b/drivers/scsi/vmw_pvscsi.c
-@@ -1194,7 +1194,7 @@ static int pvscsi_setup_msix(const struct pvscsi_adapter *adapter,
- 	struct msix_entry entry = { 0, PVSCSI_VECTOR_COMPLETION };
- 	int ret;
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 95314ef..41eb0dc 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -2918,27 +2918,22 @@ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
+ 	for (i = 0; i < ha->msix_count; i++)
+ 		entries[i].entry = i;
  
--	ret = pci_enable_msix(adapter->dev, &entry, 1);
-+	ret = pci_enable_msix_exact(adapter->dev, &entry, 1);
- 	if (ret)
- 		return ret;
- 
+-	ret = pci_enable_msix(ha->pdev, entries, ha->msix_count);
+-	if (ret) {
+-		if (ret < MIN_MSIX_COUNT)
+-			goto msix_failed;
+-
++	ret = pci_enable_msix_range(ha->pdev,
++				    entries, MIN_MSIX_COUNT, ha->msix_count);
++	if (ret < 0) {
++		ql_log(ql_log_fatal, vha, 0x00c7,
++		    "MSI-X: Failed to enable support, "
++		    "giving   up -- %d/%d.\n",
++		    ha->msix_count, ret);
++		goto msix_out;
++	} else if (ret < ha->msix_count) {
+ 		ql_log(ql_log_warn, vha, 0x00c6,
+ 		    "MSI-X: Failed to enable support "
+ 		    "-- %d/%d\n Retry with %d vectors.\n",
+ 		    ha->msix_count, ret, ret);
+-		ha->msix_count = ret;
+-		ret = pci_enable_msix(ha->pdev, entries, ha->msix_count);
+-		if (ret) {
+-msix_failed:
+-			ql_log(ql_log_fatal, vha, 0x00c7,
+-			    "MSI-X: Failed to enable support, "
+-			    "giving   up -- %d/%d.\n",
+-			    ha->msix_count, ret);
+-			goto msix_out;
+-		}
+-		ha->max_rsp_queues = ha->msix_count - 1;
+ 	}
++	ha->msix_count = ret;
++	ha->max_rsp_queues = ha->msix_count - 1;
+ 	ha->msix_entries = kzalloc(sizeof(struct qla_msix_entry) *
+ 				ha->msix_count, GFP_KERNEL);
+ 	if (!ha->msix_entries) {
 -- 
 1.7.7.6
