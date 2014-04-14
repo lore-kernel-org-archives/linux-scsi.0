@@ -1,47 +1,58 @@
-From: "Western Union" <sostenes.gaia@mpal.mp.br>
-Subject: 500,000.00 Euro
-Date: Sun, 13 Apr 2014 14:15:53 +0200
-Message-ID: <20140413121119.C71C6F9DEBF@mail.mp.al.gov.br>
-Reply-To: wuoutlet@yeah.net
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: 3.15-mw:  Oops Workqueue: writeback bdi_writeback_workfn
+ (flush-8:16)  RIP: e030:[<ffffffff814c6bc1>]  [<ffffffff814c6bc1>]
+ kobject_put+0x11/0x70
+Date: Mon, 14 Apr 2014 04:30:15 -0700
+Message-ID: <20140414113015.GA4765@infradead.org>
+References: <1299097701.20140412133431@eikelenboom.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.mp.al.gov.br ([200.223.178.28]:20815 "EHLO
-	mail.mp.al.gov.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751644AbaDNJgU convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Apr 2014 05:36:20 -0400
-Content-Description: Mail message body
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1299097701.20140412133431@eikelenboom.it>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Sander Eikelenboom <linux@eikelenboom.it>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Recipients <sostenes.gaia@mpal.mp.br>
 
-Sehr geehrte Beg=C3=BCnstigten,
+On Sat, Apr 12, 2014 at 01:34:31PM +0200, Sander Eikelenboom wrote:
+> Hi,
+> 
+> I just ran into the oops belowafter some uptime.
 
-Sie haben als der einzige Beg=C3=BCnstigte der Summe der f=C3=BCnfhunde=
-rttausend Euro (=E2=82=AC 500,000.00 Euro) ausgew=C3=A4hlt wurde, die h=
-ier in WESTERN UNION B=C3=BCro von der ONU-Organisation f=C3=BCr Sie hi=
-nterlegt ist.
+Classic use after free introduced by my recent changes, sorry.
 
-Bitte kontaktieren Sie uns f=C3=BCr Anspr=C3=BCche E-Mail: wuremittance=
-dpt@outlook.com
-
-
-Beachten Sie, wenn Sie die Antwort direkt klicken, k=C3=B6nnen wir Ihre=
- e-Mail nicht erhalten auf Zeit, ist es am besten, Sie reagieren auf di=
-ese e-Mail; wu.claims.dpt1@outlook.com
-
-
-Kundendienst
-Western Union B=C3=BCro
+This should fix it:
 
 ---
-This email is free from viruses and malware because avast! Antivirus pr=
-otection is active.
-http://www.avast.com
+From: Christoph Hellwig <hch@lst.de>
+Subject: scsi: don't reference freed command in scsi_init_sgtable
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+When scsi_init_io fails we have to release our device reference, but
+we do this trying to reference the just freed command.  Add a local
+scsi_device pointer to fix this.
+
+Reported-by: Sander Eikelenboom <linux@eikelenboom.it>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 65a123d..54eff6a 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1044,6 +1044,7 @@ static int scsi_init_sgtable(struct request *req, struct scsi_data_buffer *sdb,
+  */
+ int scsi_init_io(struct scsi_cmnd *cmd, gfp_t gfp_mask)
+ {
++	struct scsi_device *sdev = cmd->device;
+ 	struct request *rq = cmd->request;
+ 
+ 	int error = scsi_init_sgtable(rq, &cmd->sdb, gfp_mask);
+@@ -1091,7 +1092,7 @@ err_exit:
+ 	scsi_release_buffers(cmd);
+ 	cmd->request->special = NULL;
+ 	scsi_put_command(cmd);
+-	put_device(&cmd->device->sdev_gendev);
++	put_device(&sdev->sdev_gendev);
+ 	return error;
+ }
+ EXPORT_SYMBOL(scsi_init_io);
