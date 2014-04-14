@@ -1,13 +1,13 @@
 From: Alexander Gordeev <agordeev@redhat.com>
-Subject: [PATCH v2 RESEND 14/23] megaraid: Use pci_enable_msix_range() instead of pci_enable_msix()
-Date: Mon, 14 Apr 2014 10:05:38 +0200
-Message-ID: <4c833c2a7120915767c71c3262dada8896723e7b.1397461652.git.agordeev@redhat.com>
+Subject: [PATCH v2 RESEND 15/23] mpt2sas: Use pci_enable_msix_exact() instead of pci_enable_msix()
+Date: Mon, 14 Apr 2014 10:05:39 +0200
+Message-ID: <2b4bec5ef13a1991423a6cc3fb1b391b9e7c0aad.1397461652.git.agordeev@redhat.com>
 References: <cover.1397461652.git.agordeev@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1397461652.git.agordeev@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>, Neela Syam Kolli <megaraidlinux@lsi.com>, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>, Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>, Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, support@lsi.com, DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 As result of deprecation of MSI-X/MSI enablement functions
@@ -18,50 +18,33 @@ and pci_enable_msix_range() or pci_enable_msix_exact()
 interfaces.
 
 Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Neela Syam Kolli <megaraidlinux@lsi.com>
+Cc: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>
+Cc: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
+Cc: support@lsi.com
+Cc: DL-MPTFusionLinux@lsi.com
 Cc: linux-scsi@vger.kernel.org
 Cc: linux-pci@vger.kernel.org
 ---
- drivers/scsi/megaraid/megaraid_sas_base.c |   20 +++++++-------------
- 1 files changed, 7 insertions(+), 13 deletions(-)
+ drivers/scsi/mpt2sas/mpt2sas_base.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 2df717c..26f89d4 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -4106,17 +4106,11 @@ static int megasas_init_fw(struct megasas_instance *instance)
- 					     (unsigned int)num_online_cpus());
- 		for (i = 0; i < instance->msix_vectors; i++)
- 			instance->msixentry[i].entry = i;
--		i = pci_enable_msix(instance->pdev, instance->msixentry,
--				    instance->msix_vectors);
--		if (i >= 0) {
--			if (i) {
--				if (!pci_enable_msix(instance->pdev,
--						     instance->msixentry, i))
--					instance->msix_vectors = i;
--				else
--					instance->msix_vectors = 0;
--			}
--		} else
-+		i = pci_enable_msix_range(instance->pdev, instance->msixentry,
-+					  1, instance->msix_vectors);
-+		if (i)
-+			instance->msix_vectors = i;
-+		else
- 			instance->msix_vectors = 0;
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
+index bde63f7..984b605 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+@@ -1432,10 +1432,10 @@ _base_enable_msix(struct MPT2SAS_ADAPTER *ioc)
+ 	for (i = 0, a = entries; i < ioc->reply_queue_count; i++, a++)
+ 		a->entry = i;
  
- 		dev_info(&instance->pdev->dev, "[scsi%d]: FW supports"
-@@ -5136,8 +5130,8 @@ megasas_resume(struct pci_dev *pdev)
- 
- 	/* Now re-enable MSI-X */
- 	if (instance->msix_vectors &&
--	    pci_enable_msix(instance->pdev, instance->msixentry,
--			    instance->msix_vectors))
-+	    pci_enable_msix_exact(instance->pdev, instance->msixentry,
-+				  instance->msix_vectors))
- 		goto fail_reenable_msix;
- 
- 	switch (instance->pdev->device) {
+-	r = pci_enable_msix(ioc->pdev, entries, ioc->reply_queue_count);
++	r = pci_enable_msix_exact(ioc->pdev, entries, ioc->reply_queue_count);
+ 	if (r) {
+-		dfailprintk(ioc, printk(MPT2SAS_INFO_FMT "pci_enable_msix "
+-		    "failed (r=%d) !!!\n", ioc->name, r));
++		dfailprintk(ioc, printk(MPT2SAS_INFO_FMT
++		    "pci_enable_msix_exact failed (r=%d) !!!\n", ioc->name, r));
+ 		kfree(entries);
+ 		goto try_ioapic;
+ 	}
 -- 
 1.7.7.6
