@@ -1,7 +1,7 @@
 From: Alexander Gordeev <agordeev@redhat.com>
-Subject: [PATCH v2 RESEND 12/23] lpfc: Use pci_enable_msix_range() instead of pci_enable_msix()
-Date: Mon, 14 Apr 2014 10:05:36 +0200
-Message-ID: <dbaf436ce4c68bfa9cb72c9940287adbe16fc011.1397461652.git.agordeev@redhat.com>
+Subject: [PATCH v2 RESEND 11/23] lpfc: Remove superfluous call to pci_disable_msix()
+Date: Mon, 14 Apr 2014 10:05:35 +0200
+Message-ID: <ba0ef012ee339cf014780eba1d3272fc216a1e01.1397461652.git.agordeev@redhat.com>
 References: <cover.1397461652.git.agordeev@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1397461652.git.agordeev@redhat.com>
@@ -10,95 +10,60 @@ To: linux-kernel@vger.kernel.org
 Cc: Alexander Gordeev <agordeev@redhat.com>, James Smart <james.smart@emulex.com>, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range()  or pci_enable_msi_exact()
-and pci_enable_msix_range() or pci_enable_msix_exact()
-interfaces.
+There is no need to call pci_disable_msix() in case
+the previous call to pci_enable_msix() failed
 
 Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 Cc: James Smart <james.smart@emulex.com>
 Cc: linux-scsi@vger.kernel.org
 Cc: linux-pci@vger.kernel.org
+Acked-by: James Smart <james.smart@emulex.com>
 ---
- drivers/scsi/lpfc/lpfc_init.c |   38 +++++++++++++++++---------------------
- 1 files changed, 17 insertions(+), 21 deletions(-)
+ drivers/scsi/lpfc/lpfc_init.c |    9 ++++++---
+ 1 files changed, 6 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 7163f37..b109adc 100644
+index 635eeb3..7163f37 100644
 --- a/drivers/scsi/lpfc/lpfc_init.c
 +++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -8100,9 +8100,9 @@ lpfc_sli4_pci_mem_unset(struct lpfc_hba *phba)
-  * @phba: pointer to lpfc hba data structure.
-  *
-  * This routine is invoked to enable the MSI-X interrupt vectors to device
-- * with SLI-3 interface specs. The kernel function pci_enable_msix() is
-- * called to enable the MSI-X vectors. Note that pci_enable_msix(), once
-- * invoked, enables either all or nothing, depending on the current
-+ * with SLI-3 interface specs. The kernel function pci_enable_msix_exact()
-+ * is called to enable the MSI-X vectors. Note that pci_enable_msix_exact(),
-+ * once invoked, enables either all or nothing, depending on the current
-  * availability of PCI vector resources. The device driver is responsible
-  * for calling the individual request_irq() to register each MSI-X vector
-  * with a interrupt handler, which is done in this function. Note that
-@@ -8126,8 +8126,8 @@ lpfc_sli_enable_msix(struct lpfc_hba *phba)
- 		phba->msix_entries[i].entry = i;
- 
- 	/* Configure MSI-X capability structure */
--	rc = pci_enable_msix(phba->pcidev, phba->msix_entries,
--				ARRAY_SIZE(phba->msix_entries));
-+	rc = pci_enable_msix_exact(phba->pcidev, phba->msix_entries,
-+				   ARRAY_SIZE(phba->msix_entries));
+@@ -8131,7 +8131,7 @@ lpfc_sli_enable_msix(struct lpfc_hba *phba)
  	if (rc) {
  		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
  				"0420 PCI enable MSI-X failed (%d)\n", rc);
-@@ -8664,15 +8664,13 @@ out:
-  * @phba: pointer to lpfc hba data structure.
-  *
-  * This routine is invoked to enable the MSI-X interrupt vectors to device
-- * with SLI-4 interface spec. The kernel function pci_enable_msix() is called
-- * to enable the MSI-X vectors. Note that pci_enable_msix(), once invoked,
-- * enables either all or nothing, depending on the current availability of
-- * PCI vector resources. The device driver is responsible for calling the
-- * individual request_irq() to register each MSI-X vector with a interrupt
-- * handler, which is done in this function. Note that later when device is
-- * unloading, the driver should always call free_irq() on all MSI-X vectors
-- * it has done request_irq() on before calling pci_disable_msix(). Failure
-- * to do so results in a BUG_ON() and a device will be left with MSI-X
-+ * with SLI-4 interface spec. The kernel function pci_enable_msix_range()
-+ * is called to enable the MSI-X vectors. The device driver is responsible
-+ * for calling the individual request_irq() to register each MSI-X vector
-+ * with a interrupt handler, which is done in this function. Note that later
-+ * when device is unloading, the driver should always call free_irq() on all
-+ * MSI-X vectors it has done request_irq() on before calling pci_disable_msix()
-+ * Failure to do so results in a BUG_ON() and a device will be left with MSI-X
-  * enabled and leaks its vectors.
-  *
-  * Return codes
-@@ -8694,18 +8692,16 @@ lpfc_sli4_enable_msix(struct lpfc_hba *phba)
- 		phba->sli4_hba.msix_entries[index].entry = index;
- 		vectors++;
+-		goto msi_fail_out;
++		goto vec_fail_out;
  	}
--enable_msix_vectors:
--	rc = pci_enable_msix(phba->pcidev, phba->sli4_hba.msix_entries,
--			     vectors);
--	if (rc > 1) {
--		vectors = rc;
--		goto enable_msix_vectors;
--	} else if (rc) {
+ 	for (i = 0; i < LPFC_MSIX_VECTORS; i++)
+ 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+@@ -8209,6 +8209,8 @@ irq_fail_out:
+ msi_fail_out:
+ 	/* Unconfigure MSI-X capability structure */
+ 	pci_disable_msix(phba->pcidev);
 +
-+	rc = pci_enable_msix_range(phba->pcidev, phba->sli4_hba.msix_entries,
-+				   2, vectors);
-+	if (rc < 0) {
++vec_fail_out:
+ 	return rc;
+ }
+ 
+@@ -8701,7 +8703,7 @@ enable_msix_vectors:
+ 	} else if (rc) {
  		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
  				"0484 PCI enable MSI-X failed (%d)\n", rc);
- 		goto vec_fail_out;
+-		goto msi_fail_out;
++		goto vec_fail_out;
  	}
  
-+	vectors = rc;
  	/* Log MSI-X vector assignment */
- 	for (index = 0; index < vectors; index++)
- 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+@@ -8764,9 +8766,10 @@ cfg_fail_out:
+ 			 &phba->sli4_hba.fcp_eq_hdl[index]);
+ 	}
+ 
+-msi_fail_out:
+ 	/* Unconfigure MSI-X capability structure */
+ 	pci_disable_msix(phba->pcidev);
++
++vec_fail_out:
+ 	return rc;
+ }
+ 
 -- 
 1.7.7.6
