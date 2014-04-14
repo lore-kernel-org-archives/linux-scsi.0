@@ -1,106 +1,105 @@
-From: Tuomas Vainikka <tuomas.vainikka@aalto.fi>
-Subject: Re: esp_scsi QTAG in FAS216
-Date: Mon, 14 Apr 2014 08:05:34 +0300
-Message-ID: <534B6C9E.3070307@aalto.fi>
-References: <CAOmrzkK1hoT72zA4CzajCH2uNwkiVPWi8vJQswB=4Q4uf-kSZQ@mail.gmail.com>	<CACz-3rjNixJBjKxzjpneFE8BHKpzR-hvhWsabT_AtrWZZUgvsA@mail.gmail.com>	<CAOmrzkJZEZigKEyb5_66H2FNaEX7F_TXyvQNMpMZu1MyuOudBw@mail.gmail.com> <20140413.221414.853080853067673824.davem@davemloft.net>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+Subject: Re: hpsa driver bug crack kernel down!
+Date: Mon, 14 Apr 2014 15:01:07 +0800
+Message-ID: <534B87B3.1060401@linux.intel.com>
+References: <20140409023935.GE11839@dhcp-16-105.nay.redhat.com>	 <1397083799.2608.20.camel@buesod1.americas.hpqcorp.net>	 <1397084904.9519.62.camel@dabdike> <1397085044.9519.63.camel@dabdike>	 <1397086817.2608.25.camel@buesod1.americas.hpqcorp.net>	 <1397087425.9519.67.camel@dabdike>	 <1397089180.2608.27.camel@buesod1.americas.hpqcorp.net>	 <CAErSpo4H=hcro8sMnt2MzDDVCROpASuUTQWBw37OxodHTyOfyw@mail.gmail.com>	 <1397111557.2608.29.camel@buesod1.americas.hpqcorp.net>	 <20140410071535.GX13491@8bytes.org>	 <1397119587.19944.14.camel@shinybook.infradead.org> <1397146781.2608.46.camel@buesod1.americas.hpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <20140413.221414.853080853067673824.davem@davemloft.net>
-Sender: linux-m68k-owner@vger.kernel.org
-To: David Miller <davem@davemloft.net>, schmitzmic@gmail.com
-Cc: jongk@linux-m68k.org, geert@linux-m68k.org, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-pci-owner@vger.kernel.org>
+In-Reply-To: <1397146781.2608.46.camel@buesod1.americas.hpqcorp.net>
+Sender: linux-pci-owner@vger.kernel.org
+To: Davidlohr Bueso <davidlohr@hp.com>, "Woodhouse, David" <david.woodhouse@intel.com>
+Cc: "joro@8bytes.org" <joro@8bytes.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "bhe@redhat.com" <bhe@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>, "James.Bottomley@hansenpartnership.com" <James.Bottomley@hansenpartnership.com>, "bhelgaas@google.com" <bhelgaas@google.com>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "scameron@beardog.cce.hp.com" <scameron@beardog.cce.hp.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 14.04.2014 05:14, David Miller wrote:
-> From: Michael Schmitz <schmitzmic@gmail.com>
-> Date: Mon, 14 Apr 2014 10:38:09 +1200
->
->> That appears to be our problem if I recall correctly Tuomas' debugging
->> report. (reselection, not selection as initiator). As
->> esp_slave_configure() enables queue tags regardless of chip config,
->> we'd best make certain the chip is configured correctly.
+Hi Davidlohr,
+	Thanks for the information!
+	According to lspci output, device 0000:02:00.2 is HP ILO
+controller, device 0000:03:00.0 is RAID controller. Both ILO and
+RAID controllers need to access reserved memory range
+[0x7f61e000 - 0x7f61ffff] in physical mode.
+
+	According to dmesg output, BIOS has reserved memory and
+IOMMU has setup 1:1 mapping for ILO and RAID controller to access
+this range. Related log messages as below:
+BIOS-e820: [mem 0x000000007f61d000-0x000000008fffffff] reserved
+IOMMU: Setting RMRR:
+IOMMU: Setting identity map for device 0000:03:00.0 [0x7f61e000 -
+0x7f61ffff]
+IOMMU: Setting identity map for device 0000:02:00.0 [0x7f61e000 -
+0x7f61ffff]
+IOMMU: Setting identity map for device 0000:02:00.2 [0x7f61e000 -
+0x7f61ffff]
+=09
+	From the screenshot, device 0000:02:00.2 fails to access
+memory address 0x7f61e000. That indicates IOMMU driver fails to
+setup 1:1 mapping for Reserved Memory Range for ILO controller.
+So could you please help to check whether you could observe boot
+messages like "IOMMU: Setting identity map for device 0000:02:00.2
+[0x7f61e000 - 0x7f61ffff]" with the failure kernel image?
+
+	It would be great if boot messages could be saved when
+failing to boot, so we could get more information from log.
+
+	BTW, I have double checked related code, and still can't
+find a reliable explanation for the regression:(
+
+Thanks!
+Gerry
+
+On 2014/4/11 0:19, Davidlohr Bueso wrote:
+> On Thu, 2014-04-10 at 08:46 +0000, Woodhouse, David wrote:
+>> On Thu, 2014-04-10 at 09:15 +0200, Joerg Roedel wrote:
+>>> [+ David, VT-d maintainer ]
+>>>
+>>> Jiang, David, can you please have a look into this issue?
+>>>
 >>
->> The SCSI2 bit is used to test for presence of config register 2 in
->> esp_get_revision but later cleared in the same function. It appears
->> we'd need to set it after the call to scsi_esp_register() - can you
->> test whether that obsoletes the zorro_esp_slave_configure hack,
->> Tuomas?
->   ...
->>> Group 2 Commands
->>> (seems to only be relevant for target mode).
->>>
->>> And about the QTE bit:
->>>
->>> Bit 6 Queue Tag Enable
->>>
->>> When this bit is set, the 53CF94/96 can receive 3-byte messages during
->>> bus-initiated Select With ATN. This feature is also enabled by setting
->>> bit 3 in the Configuration 2 register.
->> My preference would be to set this one (named ESP_CONFIG3_TBMS). Your
->> opinion, Dave?
-> As seems to be agreed upon here, the SCSI2 bit in the CONFIG2 register
-> (ESP_CONFIG2_SCSI2ENAB) is only for when the chip is used in target
-> mode.  So it is not relevant for our discussion because this driver is
-> for initiator mode operation only.
->
-> But some pieces of documentation seem like they might not agree on
-> this point.
->
-> With respect to bit 3 in the config3 register, it can take on one of
-> two meaning depending upon chip revision.  As per ESP_CONFIG3_{TMS,FCLK}
-> it either controls fast SCSI clocking, or it enabled 3 byte message
-> recognition.
->
-> But oddly in the NCR53CX docs:
->
-> 	http://www.ibiblio.org/pub/historic-linux/early-ports/Sparc/NCR/NCR53C9X.txt
->
-> it speaks as if ESP_CONFIG3_TMS and ESP_CONFIG3_TENB are merely finer
-> grained versions of config2 register setting ESP_CONFIG2_SCSI2ENAB,
-> which enables both features.
->
-> Again I looked at the FreeBSD driver and for all chips after plain
-> esp100, they set ESP_CONFIG2_SCSI2ENAB.
->
-> Can we try testing the following patch?
->
-> ====================
-> esp_scsi: Set SCSI2 bit in config2 register.
->
-> This should allow proper recognition of 3 byte reselection
-> on all esp100a and later chips.
->
-> Reported-by: Kars de Jong <jongk@linux-m68k.org>
-> Reported-by: Michael Schmitz <schmitzmic@gmail.com>
-> Signed-off-by: David S. Miller <davem@davemloft.net>
->
-> diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
-> index 55548dc..16f69e0 100644
-> --- a/drivers/scsi/esp_scsi.c
-> +++ b/drivers/scsi/esp_scsi.c
-> @@ -2160,7 +2160,7 @@ static void esp_get_revision(struct esp *esp)
->   		 */
->   		esp->rev = ESP100;
->   	} else {
-> -		esp->config2 = 0;
-> +		esp->config2 = ESP_CONFIG2_SCSI2ENAB;
->   		esp_set_all_config3(esp, 5);
->   		esp->prev_cfg3 = 5;
->   		esp_write8(esp->config2, ESP_CFG2);
-> @@ -2187,8 +2187,6 @@ static void esp_get_revision(struct esp *esp)
->   			} else {
->   				esp->rev = ESP236;
->   			}
-> -			esp->config2 = 0;
-> -			esp_write8(esp->config2, ESP_CFG2);
->   		}
->   	}
->   }
-
-I'll test these out soon.
-
-Michael, where can I pull the latest version of zorro_esp?
-
--Tuomas
+>>>>>>>>>>> DMAR:[fault reason 02] Present bit in context entry is clea=
+r
+>>>>>>>>>>> dmar: DRHD: handling fault status reg 602
+>>>>>>>>>>> dmar: DMAR:[DMA Read] Request device [02:00.0] fault addr 7=
+f61e000
+>>
+>> That "Present bit in context entry is clear" fault means that we hav=
+e
+>> not set up *any* mappings for this PCI device=E2=80=A6 on this IOMMU=
+=2E
+>>
+>>>> Yes, specifically (finally done bisecting):
+>>>>
+>>>> commit 2e45528930388658603ea24d49cf52867b928d3e
+>>>> Author: Jiang Liu <jiang.liu@linux.intel.com>
+>>>> Date:   Wed Feb 19 14:07:36 2014 +0800
+>>>>
+>>>>     iommu/vt-d: Unify the way to process DMAR device scope array
+>>
+>> This commit is about how we decide which IOMMU a given PCI device is
+>> attached to.
+>>
+>> Thus, my first guess would be that we are quite happily setting up t=
+he
+>> requested DMA maps on the *wrong* IOMMU, and then taking faults when=
+ the
+>> device actually tries to do DMA.
+>>
+>> However, I'm not 100% convinced of that. The fault address looks
+>> suspiciously like a true physical address, not a virtual bus address=
+ of
+>> the type that we'd normally allocate for a dma_map_* operation. Thos=
+e
+>> would start at 0xfffff000 and work downwards, typically.
+>>
+>> Do you have 'iommu=3Dpt' on the kernel command line?=20
+>=20
+> No.
+>=20
+>> Can I see the full
+>> dmesg as this system boots, and also a copy of the DMAR table?
+>=20
+> Attaching a dmesg from one of the kernels that boots. It doesn't appe=
+ar
+> to have much of the related information... is there any debug config
+> option I can enable that might give you more data?
+>=20
