@@ -1,98 +1,103 @@
-From: Jiang Liu <jiang.liu@linux.intel.com>
-Subject: Re: hpsa driver bug crack kernel down!
-Date: Mon, 14 Apr 2014 16:57:47 +0800
-Message-ID: <534BA30B.5040102@linux.intel.com>
-References: <20140409023935.GE11839@dhcp-16-105.nay.redhat.com>	 <1397083799.2608.20.camel@buesod1.americas.hpqcorp.net>	 <1397084904.9519.62.camel@dabdike> <1397085044.9519.63.camel@dabdike>	 <1397086817.2608.25.camel@buesod1.americas.hpqcorp.net>	 <1397087425.9519.67.camel@dabdike>	 <1397089180.2608.27.camel@buesod1.americas.hpqcorp.net>	 <CAErSpo4H=hcro8sMnt2MzDDVCROpASuUTQWBw37OxodHTyOfyw@mail.gmail.com>	 <1397111557.2608.29.camel@buesod1.americas.hpqcorp.net>	 <20140410071535.GX13491@8bytes.org>	 <1397119587.19944.14.camel@shinybook.infradead.org> <1397146781.2608.46.camel@buesod1.americas.hpqcorp.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1397146781.2608.46.camel@buesod1.americas.hpqcorp.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Davidlohr Bueso <davidlohr@hp.com>, "Woodhouse, David" <david.woodhouse@intel.com>
-Cc: "joro@8bytes.org" <joro@8bytes.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "bhe@redhat.com" <bhe@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>, "James.Bottomley@hansenpartnership.com" <James.Bottomley@hansenpartnership.com>, "bhelgaas@google.com" <bhelgaas@google.com>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "scameron@beardog.cce.hp.com" <scameron@beardog.cce.hp.com>
+From: Michael Schmitz <schmitzmic@gmail.com>
+Subject: Re: esp_scsi QTAG in FAS216
+Date: Mon, 14 Apr 2014 21:01:02 +1200
+Message-ID: <0ee24dc77b71e282562b794aaa4039cd@gmail.com>
+References: <CAOmrzkK1hoT72zA4CzajCH2uNwkiVPWi8vJQswB=4Q4uf-kSZQ@mail.gmail.com> <CACz-3rjNixJBjKxzjpneFE8BHKpzR-hvhWsabT_AtrWZZUgvsA@mail.gmail.com> <CAOmrzkJZEZigKEyb5_66H2FNaEX7F_TXyvQNMpMZu1MyuOudBw@mail.gmail.com> <20140413.221414.853080853067673824.davem@davemloft.net>
+Mime-Version: 1.0 (Apple Message framework v624)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-m68k-owner@vger.kernel.org>
+In-Reply-To: <20140413.221414.853080853067673824.davem@davemloft.net>
+Sender: linux-m68k-owner@vger.kernel.org
+To: David Miller <davem@davemloft.net>
+Cc: linux-m68k@vger.kernel.org, geert@linux-m68k.org, jongk@linux-m68k.org, tuomas.vainikka@aalto.fi, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi all,
-	I guess I found the root cause. It's a bug in matching
-device scope, variable 'level' should be decreased when walking up PCI
-topology.
-	Could you please help to test following patch?
-Thanks!
-Gerry
+Hi Dave,
 
-diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
-index f445c10..1f8308c 100644
---- a/drivers/iommu/dmar.c
-+++ b/drivers/iommu/dmar.c
-@@ -152,7 +152,7 @@ dmar_alloc_pci_notify_info(struct pci_dev *dev,
-unsigned long event)
-        info->seg =3D pci_domain_nr(dev->bus);
-        info->level =3D level;
-        if (event =3D=3D BUS_NOTIFY_ADD_DEVICE) {
--               for (tmp =3D dev, level--; tmp; tmp =3D tmp->bus->self)=
- {
-+               for (tmp =3D dev, level--; tmp; level--, tmp =3D
-tmp->bus->self) {
-                        info->path[level].device =3D PCI_SLOT(tmp->devf=
-n);
-                        info->path[level].function =3D PCI_FUNC(tmp->de=
-vfn);
-                        if (pci_is_root_bus(tmp->bus))
+>>> When this bit is set, the 53CF94/96 can receive 3-byte messages  
+>>> during
+>>> bus-initiated Select With ATN. This feature is also enabled by  
+>>> setting
+>>> bit 3 in the Configuration 2 register.
+>>
+>> My preference would be to set this one (named ESP_CONFIG3_TBMS). Your
+>> opinion, Dave?
+>
+> As seems to be agreed upon here, the SCSI2 bit in the CONFIG2 register
+> (ESP_CONFIG2_SCSI2ENAB) is only for when the chip is used in target
+> mode.  So it is not relevant for our discussion because this driver is
+> for initiator mode operation only.
+
+Agreed. ESP_CONFIG2_SCSI2ENAB might do more than we intend, and have  
+unintended side effects. It's just easier to test whether this fixes  
+our problem.
+
+>
+> But some pieces of documentation seem like they might not agree on
+> this point.
+>
+> With respect to bit 3 in the config3 register, it can take on one of
+> two meaning depending upon chip revision.  As per  
+> ESP_CONFIG3_{TMS,FCLK}
+> it either controls fast SCSI clocking, or it enabled 3 byte message
+> recognition.
+>
+> But oddly in the NCR53CX docs:
+>
+> 	http://www.ibiblio.org/pub/historic-linux/early-ports/Sparc/NCR/ 
+> NCR53C9X.txt
+>
+> it speaks as if ESP_CONFIG3_TMS and ESP_CONFIG3_TENB are merely finer
+> grained versions of config2 register setting ESP_CONFIG2_SCSI2ENAB,
+> which enables both features.
+
+That's what I understood from the bits Kars quoted, yes. And in the  
+Amiga driver cases, it will always be the 3 byte message feature  
+controlled by that bit, as far as I can see.
+
+>
+> Again I looked at the FreeBSD driver and for all chips after plain
+> esp100, they set ESP_CONFIG2_SCSI2ENAB.
+>
+> Can we try testing the following patch?
+
+That would be even easier than setting it explicitly in the Zorro  
+driver, thanks,
+
+	Michael
 
 
-On 2014/4/11 0:19, Davidlohr Bueso wrote:
-> On Thu, 2014-04-10 at 08:46 +0000, Woodhouse, David wrote:
->> On Thu, 2014-04-10 at 09:15 +0200, Joerg Roedel wrote:
->>> [+ David, VT-d maintainer ]
->>>
->>> Jiang, David, can you please have a look into this issue?
->>>
->>
->>>>>>>>>>> DMAR:[fault reason 02] Present bit in context entry is clea=
-r
->>>>>>>>>>> dmar: DRHD: handling fault status reg 602
->>>>>>>>>>> dmar: DMAR:[DMA Read] Request device [02:00.0] fault addr 7=
-f61e000
->>
->> That "Present bit in context entry is clear" fault means that we hav=
-e
->> not set up *any* mappings for this PCI device=E2=80=A6 on this IOMMU=
-=2E
->>
->>>> Yes, specifically (finally done bisecting):
->>>>
->>>> commit 2e45528930388658603ea24d49cf52867b928d3e
->>>> Author: Jiang Liu <jiang.liu@linux.intel.com>
->>>> Date:   Wed Feb 19 14:07:36 2014 +0800
->>>>
->>>>     iommu/vt-d: Unify the way to process DMAR device scope array
->>
->> This commit is about how we decide which IOMMU a given PCI device is
->> attached to.
->>
->> Thus, my first guess would be that we are quite happily setting up t=
-he
->> requested DMA maps on the *wrong* IOMMU, and then taking faults when=
- the
->> device actually tries to do DMA.
->>
->> However, I'm not 100% convinced of that. The fault address looks
->> suspiciously like a true physical address, not a virtual bus address=
- of
->> the type that we'd normally allocate for a dma_map_* operation. Thos=
-e
->> would start at 0xfffff000 and work downwards, typically.
->>
->> Do you have 'iommu=3Dpt' on the kernel command line?=20
->=20
-> No.
->=20
->> Can I see the full
->> dmesg as this system boots, and also a copy of the DMAR table?
->=20
-> Attaching a dmesg from one of the kernels that boots. It doesn't appe=
-ar
-> to have much of the related information... is there any debug config
-> option I can enable that might give you more data?
->=20
+>
+> ====================
+> esp_scsi: Set SCSI2 bit in config2 register.
+>
+> This should allow proper recognition of 3 byte reselection
+> on all esp100a and later chips.
+>
+> Reported-by: Kars de Jong <jongk@linux-m68k.org>
+> Reported-by: Michael Schmitz <schmitzmic@gmail.com>
+> Signed-off-by: David S. Miller <davem@davemloft.net>
+>
+> diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
+> index 55548dc..16f69e0 100644
+> --- a/drivers/scsi/esp_scsi.c
+> +++ b/drivers/scsi/esp_scsi.c
+> @@ -2160,7 +2160,7 @@ static void esp_get_revision(struct esp *esp)
+>  		 */
+>  		esp->rev = ESP100;
+>  	} else {
+> -		esp->config2 = 0;
+> +		esp->config2 = ESP_CONFIG2_SCSI2ENAB;
+>  		esp_set_all_config3(esp, 5);
+>  		esp->prev_cfg3 = 5;
+>  		esp_write8(esp->config2, ESP_CFG2);
+> @@ -2187,8 +2187,6 @@ static void esp_get_revision(struct esp *esp)
+>  			} else {
+>  				esp->rev = ESP236;
+>  			}
+> -			esp->config2 = 0;
+> -			esp_write8(esp->config2, ESP_CFG2);
+>  		}
+>  	}
+>  }
