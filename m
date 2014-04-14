@@ -1,65 +1,64 @@
-From: Alexander Gordeev <agordeev@redhat.com>
-Subject: [PATCH v2 RESEND 03/23] bfa: Cleanup bfad_setup_intr() function
-Date: Mon, 14 Apr 2014 10:05:27 +0200
-Message-ID: <29a53def04235be5b589838a851df8f90788247a.1397461652.git.agordeev@redhat.com>
-References: <cover.1397461652.git.agordeev@redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <cover.1397461652.git.agordeev@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>, Anil Gurumurthy <agurumur@brocade.com>, Vijaya Mohan Guvva <vmohan@brocade.com>, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 74011] New: strange observation, the queue depth is (64)
+ meanwhile fw queue depth (65)
+Date: Mon, 14 Apr 2014 08:48:51 +0000
+Message-ID: <bug-74011-11613@https.bugzilla.kernel.org/>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.19.201]:37177 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751235AbaDNIsy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 14 Apr 2014 04:48:54 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id D74C6201FA
+	for <linux-scsi@vger.kernel.org>; Mon, 14 Apr 2014 08:48:52 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+	by mail.kernel.org (Postfix) with ESMTP id 8C660201ED
+	for <linux-scsi@vger.kernel.org>; Mon, 14 Apr 2014 08:48:51 +0000 (UTC)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Anil Gurumurthy <agurumur@brocade.com>
-Cc: Vijaya Mohan Guvva <vmohan@brocade.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Acked-by: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
----
- drivers/scsi/bfa/bfad.c |   18 ++++++++----------
- 1 files changed, 8 insertions(+), 10 deletions(-)
+https://bugzilla.kernel.org/show_bug.cgi?id=74011
 
-diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
-index 972ff8d..e7e4774 100644
---- a/drivers/scsi/bfa/bfad.c
-+++ b/drivers/scsi/bfa/bfad.c
-@@ -1219,7 +1219,7 @@ bfad_install_msix_handler(struct bfad_s *bfad)
- int
- bfad_setup_intr(struct bfad_s *bfad)
- {
--	int error = 0;
-+	int error;
- 	u32 mask = 0, i, num_bit = 0, max_bit = 0;
- 	struct msix_entry msix_entries[MAX_MSIX_ENTRY];
- 	struct pci_dev *pdev = bfad->pcidev;
-@@ -1279,20 +1279,18 @@ bfad_setup_intr(struct bfad_s *bfad)
- 
- 		bfad->bfad_flags |= BFAD_MSIX_ON;
- 
--		return error;
-+		return 0;
- 	}
- 
- line_based:
--	error = 0;
--	if (request_irq
--	    (bfad->pcidev->irq, (irq_handler_t) bfad_intx, BFAD_IRQ_FLAGS,
--	     BFAD_DRIVER_NAME, bfad) != 0) {
--		/* Enable interrupt handler failed */
--		return 1;
--	}
-+	error = request_irq(bfad->pcidev->irq, (irq_handler_t)bfad_intx,
-+			    BFAD_IRQ_FLAGS, BFAD_DRIVER_NAME, bfad);
-+	if (error)
-+		return error;
-+
- 	bfad->bfad_flags |= BFAD_INTX_ON;
- 
--	return error;
-+	return 0;
- }
- 
- void
+            Bug ID: 74011
+           Summary: strange observation, the queue depth is (64) meanwhile
+                    fw queue depth (65)
+           Product: IO/Storage
+           Version: 2.5
+    Kernel Version: 3.2 to 3.14.0
+          Hardware: x86-64
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: SCSI
+          Assignee: linux-scsi@vger.kernel.org
+          Reporter: rblists@gmail.com
+        Regression: No
+
+Created attachment 132121
+  --> https://bugzilla.kernel.org/attachment.cgi?id=132121&action=edit
+System information
+
+I get this error on the disk containing the root partition
+This happens on recent kernels, but not on the 2.6.32.61 kernel.
+The code generating these messages is however identical in 2.6.32.61 and newer
+kernels.
+This doesn't especially happen when the system is under high load.
+
+This happens on both our production and stand-by server. Production server was
+switched back to 2.6.32.61.
+
+Attached file contains system information of the stand-by server running kernel
+3.14.0 (cpuinfo.txt  lspci.txt  meminfo.txt  proc_scsi_scsi.txt 
+ver_linux.txt).
+
+I can provide more info and perform tests if needed.
+
 -- 
-1.7.7.6
+You are receiving this mail because:
+You are the assignee for the bug.
