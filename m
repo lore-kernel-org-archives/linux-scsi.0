@@ -1,82 +1,162 @@
-From: Josh Boyer <jwboyer@fedoraproject.org>
-Subject: 3.15 drivers/net/ethernet/broadcom/cnic.c:576 suspicious
- rcu_dereference_check() usage!
-Date: Tue, 15 Apr 2014 08:17:01 -0400
-Message-ID: <CA+5PVA6C7W3wd9t0CVrVDo+qGvHOZGTL_Z8LFe84BMXjwOmn_w@mail.gmail.com>
+From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+Subject: Re: [PATCH v2 RESEND 22/23] qla4xxx: Use pci_enable_msix_exact()
+ instead of pci_enable_msix()
+Date: Tue, 15 Apr 2014 12:48:35 +0000
+Message-ID: <3FC4AB8B47ECD546BCD4B361A64BEACD8C68C56A@avmb3.qlogic.org>
+References: <cover.1397461652.git.agordeev@redhat.com>
+ <c9fde58b669724b9f1a3e744439b69ca39b5f4bb.1397461652.git.agordeev@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "David S. Miller" <davem@davemloft.net>, Michael Chan <mchan@broadcom.com>, Eddie Wai <eddie.wai@broadcom.com>
-Cc: netdev <netdev@vger.kernel.org>, "Linux-Kernel@Vger. Kernel. Org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: multipart/mixed;
+	boundary="_000_3FC4AB8B47ECD546BCD4B361A64BEACD8C68C56Aavmb3qlogicorg_"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:6610 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754932AbaDOMsj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 15 Apr 2014 08:48:39 -0400
+In-Reply-To: <c9fde58b669724b9f1a3e744439b69ca39b5f4bb.1397461652.git.agordeev@redhat.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alexander Gordeev <agordeev@redhat.com>, linux-kernel <linux-kernel@vger.kernel.org>
+Cc: Dept-Eng iSCSI Driver <Dept-iSCSIDriver@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-pci <linux-pci@vger.kernel.org>
 
-Hi All,
+--_000_3FC4AB8B47ECD546BCD4B361A64BEACD8C68C56Aavmb3qlogicorg_
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <CD473CCDA2AC8D4DA2903807F80D4ADE@qlogic.com>
+Content-Transfer-Encoding: quoted-printable
 
-We've had a report [1] of the bnx2i/cnic driver(s) throwing suspicious
-RCU usage with 3.15 merge window kernels on an i686 machine.  This
-corresponds to Linux v3.14-12812-g321d03c86732.  I've included the
-dump below.
 
-Has anyone seen this issue before?
 
-josh
+On 14/04/14 1:35 pm, "Alexander Gordeev" <agordeev@redhat.com> wrote:
 
-[1] https://bugzilla.redhat.com/show_bug.cgi?id=1087813
+>As result of deprecation of MSI-X/MSI enablement functions
+>pci_enable_msix() and pci_enable_msi_block() all drivers
+>using these two interfaces need to be updated to use the
+>new pci_enable_msi_range()  or pci_enable_msi_exact()
+>and pci_enable_msix_range() or pci_enable_msix_exact()
+>interfaces.
+>
+>Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+>Cc: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+>Cc: iscsi-driver@qlogic.com
+>Cc: linux-scsi@vger.kernel.org
+>Cc: linux-pci@vger.kernel.org
+>---
+> drivers/scsi/qla4xxx/ql4_nx.c |    2 +-
+> 1 files changed, 1 insertions(+), 1 deletions(-)
+>
+>diff --git a/drivers/scsi/qla4xxx/ql4_nx.c b/drivers/scsi/qla4xxx/ql4_nx.c
+>index 63328c8..a3e69e6 100644
+>--- a/drivers/scsi/qla4xxx/ql4_nx.c
+>+++ b/drivers/scsi/qla4xxx/ql4_nx.c
+>@@ -3787,7 +3787,7 @@ qla4_8xxx_enable_msix(struct scsi_qla_host *ha)
+> 	for (i =3D 0; i < QLA_MSIX_ENTRIES; i++)
+> 		entries[i].entry =3D qla4_8xxx_msix_entries[i].entry;
+>=20
+>-	ret =3D pci_enable_msix(ha->pdev, entries, ARRAY_SIZE(entries));
+>+	ret =3D pci_enable_msix_exact(ha->pdev, entries, ARRAY_SIZE(entries));
+> 	if (ret) {
+> 		ql4_printk(KERN_WARNING, ha,
+> 		    "MSI-X: Failed to enable support -- %d/%d\n",
+>--=20
+>1.7.7.6
 
-[   90.432418] ===============================
-[   90.511920] [ INFO: suspicious RCU usage. ]
-[   90.511922] 3.15.0-0.rc0.git13.1.fc21.i686 #1 Not tainted
-[   90.511922] -------------------------------
-[   90.511923] drivers/net/ethernet/broadcom/cnic.c:576 suspicious
-rcu_dereference_check() usage!
-[   90.511923]
-[   90.511923] other info that might help us debug this:
-[   90.511923]
-[   90.511924]
-[   90.511924] rcu_scheduler_active = 1, debug_locks = 0
-[   90.511925] 3 locks held by anaconda/1320:
-[   90.511932]  #0:  (rtnl_mutex){+.+.+.}, at: [<c09c6474>] rtnl_lock+0x14/0x20
-[   90.511937]  #1:  (&bnx2i_dev_lock){+.+...}, at: [<f80d45df>]
-bnx2i_ulp_init+0x2f/0x140 [bnx2i]
-[   90.511940]  #2:  (cnic_lock){+.+...}, at: [<f80c8328>]
-cnic_register_device+0x38/0x2d0 [cnic]
-[   90.511941]
-[   90.511941] stack backtrace:
-[   90.511942] CPU: 3 PID: 1320 Comm: anaconda Not tainted
-3.15.0-0.rc0.git13.1.fc21.i686 #1
-[   90.511943] Hardware name: HP ProLiant DL360 G7, BIOS P68 01/28/2011
-[   90.511946]  00000000 2cd0aecd 00000000 dc0d3cf4 c0ae271d 00000001
-dc0d3d1c c04ac226
-[   90.511948]  c0cb548e c0cdb161 00000001 00000000 dc160000 00000001
-ec75a2c0 ec75a32c
-[   90.511950]  dc0d3d90 f80c8442 00000003 f80d45df 00000001 df49393c
-00000000 ec75a330
-[   90.511951] Call Trace:
-[   90.511956]  [<c0ae271d>] dump_stack+0x48/0x60
-[   90.511959]  [<c04ac226>] lockdep_rcu_suspicious+0xd6/0x100
-[   90.511961]  [<f80c8442>] cnic_register_device+0x152/0x2d0 [cnic]
-[   90.511967]  [<f80d45df>] ? bnx2i_ulp_init+0x2f/0x140 [bnx2i]
-[   90.511969]  [<c04add2b>] ? trace_hardirqs_on+0xb/0x10
-[   90.511972]  [<f80d45df>] ? bnx2i_ulp_init+0x2f/0x140 [bnx2i]
-[   90.511974]  [<f80d45df>] ? bnx2i_ulp_init+0x2f/0x140 [bnx2i]
-[   90.511977]  [<f80d45f9>] bnx2i_ulp_init+0x49/0x140 [bnx2i]
-[   90.511979]  [<f80c65e1>] cnic_register_driver+0xe1/0x180 [cnic]
-[   90.511982]  [<f7d93000>] ? 0xf7d92fff
-[   90.511984]  [<f7d9308b>] bnx2i_mod_init+0x8b/0x1000 [bnx2i]
-[   90.511986]  [<f7d93000>] ? 0xf7d92fff
-[   90.511988]  [<c040049a>] do_one_initcall+0xca/0x1a0
-[   90.511990]  [<f7d93000>] ? 0xf7d92fff
-[   90.511992]  [<c0445777>] ? set_memory_ro+0x37/0x40
-[   90.511995]  [<c04e3b96>] load_module+0x1fe6/0x2480
-[   90.511999]  [<c04dfb99>] ? copy_module_from_fd.isra.45+0x109/0x1a0
-[   90.512001]  [<c04e41ed>] SyS_finit_module+0x8d/0xd0
-[   90.512003]  [<c04a97ab>] ? up_write+0x1b/0x30
-[   90.512005]  [<c056defb>] ? vm_mmap_pgoff+0x9b/0xc0
-[   90.512010]  [<c0af39df>] sysenter_do_call+0x12/0x38
-[   90.512012]  [<c0ae0000>] ? mtrr_check.part.2+0x32/0x57
-[   90.512304] bnx2i [04:00.01]: ISCSI_INIT passed
-[  155.484180] INFO: rcu_sched detected stalls on CPUs/tasks: {}
-(detected by 7, t=65099 jiffies, g=4371, c=4370, q=172)
-[  155.634698] INFO: Stall ended before state dump start
-[-- MARK -- Tue Apr 15 09:30:01 2014]
+Acked-By: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+
+
+
+--_000_3FC4AB8B47ECD546BCD4B361A64BEACD8C68C56Aavmb3qlogicorg_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
+
+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
+cAA6AHYAaQBrAGEAcwAuAGMAaABhAHUAZABoAGEAcgB5AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAA
+AAAAHwAaDAEAAAAgAAAAVgBpAGsAYQBzACAAQwBoAGEAdQBkAGgAYQByAHkAAAAfAB8MAQAAADYA
+AAB2AGkAawBhAHMALgBjAGgAYQB1AGQAaABhAHIAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAA
+AB8AHgwBAAAACgAAAFMATQBUAFAAAAAAAAIBGQwBAAAAeAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QC
+AAAAgFYAaQBrAGEAcwAgAEMAaABhAHUAZABoAGEAcgB5AAAAUwBNAFQAUAAAAHYAaQBrAGEAcwAu
+AGMAaABhAHUAZABoAGEAcgB5AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AAV0BAAAANgAAAHYA
+aQBrAGEAcwAuAGMAaABhAHUAZABoAGEAcgB5AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwD4
+PwEAAAAgAAAAVgBpAGsAYQBzACAAQwBoAGEAdQBkAGgAYQByAHkAAAAfACNAAQAAADYAAAB2AGkA
+awBhAHMALgBjAGgAYQB1AGQAaABhAHIAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AIkAB
+AAAACgAAAFMATQBUAFAAAAAAAAIB+T8BAAAAeAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgFYA
+aQBrAGEAcwAgAEMAaABhAHUAZABoAGEAcgB5AAAAUwBNAFQAUAAAAHYAaQBrAGEAcwAuAGMAaABh
+AHUAZABoAGEAcgB5AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8ACV0BAAAANgAAAHYAaQBrAGEA
+cwAuAGMAaABhAHUAZABoAGEAcgB5AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwAxQAEAAAAC
+AAAAAAAAAAsAQDoBAAAAHwAwQAEAAAACAAAAAAAAAB8AGgABAAAAEgAAAEkAUABNAC4ATgBvAHQA
+ZQAAAAAAAwDxPwkEAAALAEA6AQAAAAMA/T/kBAAAAgELMAEAAAAQAAAAwpvCi0DlR0mGXId+t4TY
+xwMAFwABAAAAQAA5AIBTlwOpWM8BQAAIMHdtmwOpWM8BCwAAgAggBgAAAAAAwAAAAAAAAEYAAAAA
+FIUAAAEAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAeAAAAYQBjAGMAZQBwAHQAbABhAG4AZwB1
+AGEAZwBlAAAAAAABAAAADAAAAGUAbgAtAFUAUwAAAAsAAIAIIAYAAAAAAMAAAAAAAABGAAAAAAaF
+AAAAAAAAHwA3AAEAAAC8AAAAUgBlADoAIABbAFAAQQBUAEMASAAgAHYAMgAgAFIARQBTAEUATgBE
+ACAAMgAyAC8AMgAzAF0AIABxAGwAYQA0AHgAeAB4ADoAIABVAHMAZQAgAHAAYwBpAF8AZQBuAGEA
+YgBsAGUAXwBtAHMAaQB4AF8AZQB4AGEAYwB0ACgAKQAgAGkAbgBzAHQAZQBhAGQAIABvAGYAIABw
+AGMAaQBfAGUAbgBhAGIAbABlAF8AbQBzAGkAeAAoACkAAAAfAD0AAQAAAAoAAABSAGUAOgAgAAAA
+AAADADYAAAAAAB8AQhABAAAAnAAAADwAYwA5AGYAZABlADUAOABiADYANgA5ADcAMgA0AGIAOQBm
+ADEAYQAzAGUANwA0ADQANAAzADkAYgA2ADkAYwBhADMAOQBiADUAZgA0AGIAYgAuADEAMwA5ADcA
+NAA2ADEANgA1ADIALgBnAGkAdAAuAGEAZwBvAHIAZABlAGUAdgBAAHIAZQBkAGgAYQB0AC4AYwBv
+AG0APgAAAAIBcQABAAAAGwAAAAEBz1e4Mk4BUTz7QM9On1P/cv6ynW+bE3QfAAAfAHAAAQAAALQA
+AABbAFAAQQBUAEMASAAgAHYAMgAgAFIARQBTAEUATgBEACAAMgAyAC8AMgAzAF0AIABxAGwAYQA0
+AHgAeAB4ADoAIABVAHMAZQAgAHAAYwBpAF8AZQBuAGEAYgBsAGUAXwBtAHMAaQB4AF8AZQB4AGEA
+YwB0ACgAKQAgAGkAbgBzAHQAZQBhAGQAIABvAGYAIABwAGMAaQBfAGUAbgBhAGIAbABlAF8AbQBz
+AGkAeAAoACkAAAAfADUQAQAAAHgAAAA8ADMARgBDADQAQQBCADgAQgA0ADcARQBDAEQANQA0ADYA
+QgBDAEQANABCADMANgAxAEEANgA0AEIARQBBAEMARAA4AEMANgA4AEMANQA2AEEAQABhAHYAbQBi
+ADMALgBxAGwAbwBnAGkAYwAuAG8AcgBnAD4AAAAfADkQAQAAAPIAAAA8AGMAbwB2AGUAcgAuADEA
+MwA5ADcANAA2ADEANgA1ADIALgBnAGkAdAAuAGEAZwBvAHIAZABlAGUAdgBAAHIAZQBkAGgAYQB0
+AC4AYwBvAG0APgAgADwAYwA5AGYAZABlADUAOABiADYANgA5ADcAMgA0AGIAOQBmADEAYQAzAGUA
+NwA0ADQANAAzADkAYgA2ADkAYwBhADMAOQBiADUAZgA0AGIAYgAuADEAMwA5ADcANAA2ADEANgA1
+ADIALgBnAGkAdAAuAGEAZwBvAHIAZABlAGUAdgBAAHIAZQBkAGgAYQB0AC4AYwBvAG0APgAAAAAA
+AwDeP59OAABAAAcw5cOKA6lYzwEDACYAAAAAAAIBRwABAAAALwAAAGM9VVM7YT0gO3A9UUxvZ2lj
+O2w9QVZNQjMtMTQwNDE1MTI0ODM1Wi0xNDk5MjMAAB8AFRABAAAAWAAAAEMARAA0ADcAMwBDAEMA
+RABBADIAQQBDADgARAA0AEQAQQAyADkAMAAzADgAMAA3AEYAOAAwAEQANABBAEQARQBAAHEAbABv
+AGcAaQBjAC4AYwBvAG0AAAACARQwAQAAAAwAAABgAAAAoz8qlE8AAAAfAPo/AQAAACAAAABWAGkA
+awBhAHMAIABDAGgAYQB1AGQAaABhAHIAeQAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAABYAAAB1
+AHMAZQByAC0AYQBnAGUAbgB0AAAAAAABAAAARgAAAE0AaQBjAHIAbwBzAG8AZgB0AC0ATQBhAGMA
+TwB1AHQAbABvAG8AawAvADEANAAuADMALgA5AC4AMQAzADEAMAAzADAAAAAAAB8AAIAfpOszqHou
+Qr57eeGpjlSzAQAAADgAAABDAG8AbgB2AGUAcgBzAGEAdABpAG8AbgBJAG4AZABlAHgAVAByAGEA
+YwBrAGkAbgBnAEUAeAAAAAEAAABuAQAASQBJAD0AMAAxADAAMQBDAEYANQA4AEEAOQAwADMAOQBG
+AEEAOQBDADkAMgBGADcAOQBBAEUARABFADQARAA4ADIAMQAzAEIAMwBGADcARgBFAEMAOAAwADUA
+NgBBADsAUwBCAE0ASQBEAD0ANgA0ADsAUwAxAD0APABjADkAZgBkAGUANQA4AGIANgA2ADkANwAy
+ADQAYgA5AGYAMQBhADMAZQA3ADQANAA0ADMAOQBiADYAOQBjAGEAMwA5AGIANQBmADQAYgBiAC4A
+MQAzADkANwA0ADYAMQA2ADUAMgAuAGcAaQB0AC4AYQBnAG8AcgBkAGUAZQB2AEAAcgBlAGQAaABh
+AHQALgBjAG8AbQA+ADsAVgBlAHIAcwBpAG8AbgA9AFYAZQByAHMAaQBvAG4AIAAxADQALgAyACAA
+KABCAHUAaQBsAGQAIAAzADgANwAuADAAKQAsACAAUwB0AGEAZwBlAD0ASAAyAAAAAAADAA00/T8A
+AB8AAICGAwIAAAAAAMAAAAAAAABGAQAAACAAAAB4AC0AbQBzAC0AaABhAHMALQBhAHQAdABhAGMA
+aAAAAAEAAAACAAAAAAAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAACIAAAB4AC0AbwByAGkAZwBp
+AG4AYQB0AGkAbgBnAC0AaQBwAAAAAAABAAAAHAAAAFsAMQAwAC4AMwA1AC4ANAAuADEANwAwAF0A
+AACZeg==
+
+--_000_3FC4AB8B47ECD546BCD4B361A64BEACD8C68C56Aavmb3qlogicorg_--
