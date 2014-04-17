@@ -1,35 +1,37 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] sd: medium access timeout counter fails to reset
-Date: Thu, 17 Apr 2014 15:23:50 -0400
-Message-ID: <yq1tx9rep4p.fsf@sermon.lab.mkp.net>
-References: <20140410150830.GA19457@fury.redhat.com>
-	<1397490613.3832.20.camel@localhost.localdomain>
+Subject: Re: LSI SAS - SSDs with  DRAT and DZAT
+Date: Thu, 17 Apr 2014 15:42:00 -0400
+Message-ID: <yq1lhv3eoaf.fsf@sermon.lab.mkp.net>
+References: <1391730975.3449.16.camel@sonic.justonedata.com>
+	<yq1vbwqslek.fsf@sermon.lab.mkp.net>
+	<1391806363.2761.8.camel@sonic.justonedata.com>
+	<yq1mwi2skoz.fsf@sermon.lab.mkp.net>
+	<1391808293.2761.9.camel@sonic.justonedata.com>
+	<yq1iosqs8fx.fsf@sermon.lab.mkp.net>
+	<1391984895.13523.13.camel@tardis.intricatesoftware.com>
+	<1392172050.2761.37.camel@sonic.justonedata.com>
+	<53481EEE.3090405@itwm.fraunhofer.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:27868 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:37036 "EHLO
 	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751110AbaDQTX6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Apr 2014 15:23:58 -0400
-In-Reply-To: <1397490613.3832.20.camel@localhost.localdomain> (Ewan Milne's
-	message of "Mon, 14 Apr 2014 11:50:13 -0400")
+	with ESMTP id S1752034AbaDQTmg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Apr 2014 15:42:36 -0400
+In-Reply-To: <53481EEE.3090405@itwm.fraunhofer.de> (Bernd Schubert's message
+	of "Fri, 11 Apr 2014 18:57:18 +0200")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: emilne@redhat.com
-Cc: linux-scsi@vger.kernel.org, djeffery@redhat.com
+To: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
+Cc: Kurt Miller <kurt@intricatesoftware.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 
->>>>> "Ewan" == Ewan Milne <emilne@redhat.com> writes:
+>>>>> "Bernd" == Bernd Schubert <bernd.schubert@itwm.fraunhofer.de> writes:
 
-Ewan> Is there some reason why this patch was never accepted?  David
-Ewan> posted it a couple of times last year and Martin ack'ed it, but I
-Ewan> don't see it in your tree, and I don't see any other comments on
-Ewan> it.
+Bernd> Any other suggestions for ~240GB SSDs supporting DRAT and DZAT or
+Bernd> trim-on-lsi-sas in general?
 
-I still don't have any objections.
-
-FWIW, the reason my patch didn't handle the recovery scenario is that
-the devices I originally wrote it for never came back (irreversibly
-stuck head assembly or dead FTL).
+intel drives (other than the 510 which was a one-off) are generally
+very well-behaved.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
