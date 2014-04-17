@@ -1,45 +1,41 @@
-From: Ming Lei <tom.leiming@gmail.com>
-Subject: Re: [PATCH 5/7] blk-mq: initialize request on allocation
-Date: Thu, 17 Apr 2014 23:07:59 +0800
-Message-ID: <CACVXFVNR-FQPkN9j41GKtx71rXR=u0tJZbeWRf7c3setm5m+FA@mail.gmail.com>
-References: <1397464212-4454-1-git-send-email-hch@lst.de>
-	<1397464212-4454-6-git-send-email-hch@lst.de>
-	<CACVXFVMAq0qw5vXqShmhcTTA5nww_OYaVz-yiEaf3_Q3-nrJfQ@mail.gmail.com>
-	<20140417145705.GA14787@lst.de>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: Please help me to review the patch about supporting SATA PM in LIBSAS
+Date: Thu, 17 Apr 2014 09:03:31 -0700
+Message-ID: <CAPcyv4iK0NRw1o9nL6YEwm3ymRvvB9799WS+6hE5O7gm5ACH_g@mail.gmail.com>
+References: <CAP0P+NUR1AAxfGT5artyJeD7NNnkq2R=oHJ06VN3zQiLj9qTFw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ve0-f172.google.com ([209.85.128.172]:58543 "EHLO
-	mail-ve0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753117AbaDQPIA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Apr 2014 11:08:00 -0400
-In-Reply-To: <20140417145705.GA14787@lst.de>
+Received: from mail-ve0-f176.google.com ([209.85.128.176]:54861 "EHLO
+	mail-ve0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751001AbaDQQDb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Apr 2014 12:03:31 -0400
+Received: by mail-ve0-f176.google.com with SMTP id db11so724607veb.35
+        for <linux-scsi@vger.kernel.org>; Thu, 17 Apr 2014 09:03:31 -0700 (PDT)
+In-Reply-To: <CAP0P+NUR1AAxfGT5artyJeD7NNnkq2R=oHJ06VN3zQiLj9qTFw@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>, Matias Bjorling <m@bjorling.me>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux SCSI List <linux-scsi@vger.kernel.org>
+To: xiangliang yu <yxlraid@gmail.com>
+Cc: James Bottomley <JBottomley@parallels.com>, Praveen Murali <pmurali@logicube.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Thu, Apr 17, 2014 at 10:57 PM, Christoph Hellwig <hch@lst.de> wrote:
-> On Thu, Apr 17, 2014 at 10:54:23PM +0800, Ming Lei wrote:
->> On Mon, Apr 14, 2014 at 4:30 PM, Christoph Hellwig <hch@lst.de> wrote:
->> > If we want to share tag and request allocation between queues we cannot
->> > initialize the request at init/free time, but need to initialize it
->> > at allocation time as it might get used for different queues over its
->> > lifetime.
->>
->> Could you explain the use pattern? Looks you mean there are
->> still users of the tag/req even after it is freed, that looks a bit
->> weird since the tag/req can still be reallocated in another path
->> after it is freed.
+On Wed, Apr 16, 2014 at 8:07 PM, xiangliang yu <yxlraid@gmail.com> wrote:
+> hi,
 >
-> No difference in use pattern.  But blk_rq_init initializes the rq->q field,
-> and a request might get reused for a different queue.
+> The patch is support SATA PM device and can  find all devices that is
+> attached to PM.
+> Until now, i have tested the identified, hot-plug and IO function and
+> result is ok except one mvsas timeout issue.
+> i'll continue to debug mvsas issue, but i don't know whether the
+> libsas code of the patch is ok.
+> So, please help me to review the patch if you feel free. thanks!
+> the patch is as below:
 
-If so, it may be better to only initialize the rq->q in allocation
-because Jens said 'It's done that way because of presumed cache
-hotness on completion'.
+Can you help me with a bit more description on the design of the
+patch?  Details like why you decided to implement pieces the way you
+did, and comments on the difficulties / trade-offs you ran into would
+really be helpful for reviewing.  Not just for me, but for anyone else
+on the mailing list who might be able to offer some review cycles if
+they had a small amount of background on the libsas/libata details.
 
-
-Thanks,
--- 
-Ming Lei
+--
+Dan
