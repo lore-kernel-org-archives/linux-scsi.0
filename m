@@ -1,50 +1,42 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] target: Allow non-supporting backends to set
- pi_prot_type to 0
-Date: Thu, 17 Apr 2014 17:14:08 -0700
-Message-ID: <1397780048.28248.76.camel@haakon3.risingtidesystems.com>
-References: <1397596392-32552-1-git-send-email-agrover@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1397596392-32552-1-git-send-email-agrover@redhat.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Andy Grover <agrover@redhat.com>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, frirajder@gmail.com
+From: Alexey Khoroshilov <khoroshilov@ispras.ru>
+Subject: [PATCH] [SCSI] bfa: allocate memory with GFP_ATOMIC in spinlock context
+Date: Fri, 18 Apr 2014 00:25:49 -0700
+Message-ID: <1397805949-20502-1-git-send-email-khoroshilov@ispras.ru>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.ispras.ru ([83.149.199.45]:56847 "EHLO mail.ispras.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750959AbaDRH0J (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Apr 2014 03:26:09 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>
+Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
 
-On Tue, 2014-04-15 at 14:13 -0700, Andy Grover wrote:
-> Userspace tools assume if a value is read from configfs, it is valid
-> and will not cause an error if the same value is written back. The only
-> valid value for pi_prot_type for backends not supporting DIF is 0, so allow
-> this particular value to be set without returning an error.
-> 
-> Reported-by: Krzysztof Chojnowski <frirajder@gmail.com>
-> Signed-off-by: Andy Grover <agrover@redhat.com>
-> ---
->  drivers/target/target_core_device.c | 4 ++++
->  1 file changed, 4 insertions(+)
-> 
-> diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-> index 65001e1..382b66b 100644
-> --- a/drivers/target/target_core_device.c
-> +++ b/drivers/target/target_core_device.c
-> @@ -936,6 +936,10 @@ int se_dev_set_pi_prot_type(struct se_device *dev, int flag)
->  		return 0;
->  	}
->  	if (!dev->transport->init_prot || !dev->transport->free_prot) {
-> +		/* 0 is only allowed value for non-supporting backends */
-> +		if (flag == 0)
-> +			return 0;
-> +
->  		pr_err("DIF protection not supported by backend: %s\n",
->  		       dev->transport->name);
->  		return -ENOSYS;
+bfa_fcb_pbc_vport_create() is called only from bfa_fcs_pbc_vport_init(),
+that is called only from bfad_drv_start() with bfad_lock spinlock held.
+So the patch replaces GFP_KERNEL with GFP_ATOMIC to avoid
+sleeping in atomic spinlock context.
 
-Applied to target-pending/queue, and will merge into master as soon as
-the rebase to v3.15-rc occurs.
+Found by Linux Driver Verification project (linuxtesting.org).
 
-Thanks!
+Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
+---
+ drivers/scsi/bfa/bfad.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
---nab
+diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
+index cc0fbcdc5192..8f46d1b72fb8 100644
+--- a/drivers/scsi/bfa/bfad.c
++++ b/drivers/scsi/bfa/bfad.c
+@@ -652,7 +652,7 @@ bfad_vport_create(struct bfad_s *bfad, u16 vf_id,
+ 	unsigned long	flags;
+ 	struct completion fcomp;
+ 
+-	vport = kzalloc(sizeof(struct bfad_vport_s), GFP_KERNEL);
++	vport = kzalloc(sizeof(struct bfad_vport_s), GFP_ATOMIC);
+ 	if (!vport) {
+ 		rc = BFA_STATUS_ENOMEM;
+ 		goto ext;
+-- 
+1.8.3.2
+
