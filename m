@@ -1,62 +1,61 @@
-From: Jerome Martin <tramjoe.merin@gmail.com>
-Subject: Re: [PATCH] target: Allow non-supporting backends to set pi_prot_type
- to 0
-Date: Fri, 18 Apr 2014 16:25:35 +0200
-Message-ID: <535135DF.6000708@gmail.com>
-References: <1397596392-32552-1-git-send-email-agrover@redhat.com> <1397780048.28248.76.camel@haakon3.risingtidesystems.com>
+From: Kurt Miller <kurt@intricatesoftware.com>
+Subject: Re: LSI SAS - SSDs with DRAT and DZAT
+Date: Fri, 18 Apr 2014 11:23:06 -0400
+Message-ID: <1397834586.12035.14.camel@sonic.justonedata.com>
+References: <1391730975.3449.16.camel@sonic.justonedata.com>
+	 <yq1vbwqslek.fsf@sermon.lab.mkp.net>
+	 <1391806363.2761.8.camel@sonic.justonedata.com>
+	 <yq1mwi2skoz.fsf@sermon.lab.mkp.net>
+	 <1391808293.2761.9.camel@sonic.justonedata.com>
+	 <yq1iosqs8fx.fsf@sermon.lab.mkp.net>
+	 <1391984895.13523.13.camel@tardis.intricatesoftware.com>
+	 <1392172050.2761.37.camel@sonic.justonedata.com>
+	 <53481EEE.3090405@itwm.fraunhofer.de> <yq1lhv3eoaf.fsf@sermon.lab.mkp.net>
+	 <1397773953.12035.2.camel@sonic.justonedata.com>
+	 <CAN7X1Un4=dTyvRbyt=0j6Q+=OBcXRDB+0J+dLPZCboKdxyTTzQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1397780048.28248.76.camel@haakon3.risingtidesystems.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Andy Grover <agrover@redhat.com>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, frirajder@gmail.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from 4133fa24.cst.lightpath.net ([65.51.250.36]:45879 "EHLO
+	mail1.intricatesoftware.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751988AbaDRPXQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Apr 2014 11:23:16 -0400
+In-Reply-To: <CAN7X1Un4=dTyvRbyt=0j6Q+=OBcXRDB+0J+dLPZCboKdxyTTzQ@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Purush Gupta <purush.gupta@nutanix.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>, linux-scsi@vger.kernel.org
 
-Excellent, thank you Nic and Andy, that will fix the issue with 
-rtslib/targetcli main branch too.
+On Thu, 2014-04-17 at 16:10 -0700, Purush Gupta wrote:
+> Kurt, Just curious which LSI firmware version are you using?
 
-On 04/18/2014 02:14 AM, Nicholas A. Bellinger wrote:
-> On Tue, 2014-04-15 at 14:13 -0700, Andy Grover wrote:
->> Userspace tools assume if a value is read from configfs, it is valid
->> and will not cause an error if the same value is written back. The only
->> valid value for pi_prot_type for backends not supporting DIF is 0, so allow
->> this particular value to be set without returning an error.
->>
->> Reported-by: Krzysztof Chojnowski <frirajder@gmail.com>
->> Signed-off-by: Andy Grover <agrover@redhat.com>
->> ---
->>   drivers/target/target_core_device.c | 4 ++++
->>   1 file changed, 4 insertions(+)
->>
->> diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
->> index 65001e1..382b66b 100644
->> --- a/drivers/target/target_core_device.c
->> +++ b/drivers/target/target_core_device.c
->> @@ -936,6 +936,10 @@ int se_dev_set_pi_prot_type(struct se_device *dev, int flag)
->>   		return 0;
->>   	}
->>   	if (!dev->transport->init_prot || !dev->transport->free_prot) {
->> +		/* 0 is only allowed value for non-supporting backends */
->> +		if (flag == 0)
->> +			return 0;
->> +
->>   		pr_err("DIF protection not supported by backend: %s\n",
->>   		       dev->transport->name);
->>   		return -ENOSYS;
->
-> Applied to target-pending/queue, and will merge into master as soon as
-> the rebase to v3.15-rc occurs.
->
-> Thanks!
->
-> --nab
->
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe target-devel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+currently 18.
+
+Intel S3500 on LSI SAS 9207-8i IT:
+Linux thorin 3.11.0-12-generic #19-Ubuntu SMP Wed Oct 9 16:20:46 UTC
+2013 x86_64 x86_64 x86_64 GNU/Linux
+[    3.077947] mpt2sas0: LSISAS2308: FWVersion(18.00.00.00),
+ChipRevision(0x05), BiosVersion(07.22.01.00)
+[    3.276611] scsi 1:0:1:0: Direct-Access     ATA      INTEL SSDSC2BB48
+0355 PQ: 0 ANSI: 6
+[    3.528271] sd 1:0:1:0: [sdb] 937703088 512-byte logical blocks: (480
+GB/447 GiB)
+cat /sys/block/sdb/queue/discard_granularity 
+512
+
+Samsung 840 Pro on LSI 9211-8i IT:
+Linux gloin 3.11.0-12-generic #19-Ubuntu SMP Wed Oct 9 16:20:46 UTC 2013
+x86_64 x86_64 x86_64 GNU/Linux
+[    2.948533] mpt2sas0: LSISAS2008: FWVersion(18.00.00.00),
+ChipRevision(0x03), BiosVersion(07.35.00.00)
+[    2.968993] scsi 2:0:1:0: Direct-Access     ATA      Samsung SSD 840
+5B0Q PQ: 0 ANSI: 6
+[    2.976587] sd 2:0:1:0: [sdb] 1000215216 512-byte logical blocks:
+(512 GB/476 GiB)
+cat /sys/block/sdb/queue/discard_granularity 
+512
+
+-Kurt
+
