@@ -1,43 +1,50 @@
-From: Kurt Miller <kurt@intricatesoftware.com>
-Subject: Re: LSI SAS - SSDs with  DRAT and DZAT
-Date: Thu, 17 Apr 2014 18:32:33 -0400
-Message-ID: <1397773953.12035.2.camel@sonic.justonedata.com>
-References: <1391730975.3449.16.camel@sonic.justonedata.com>
-	 <yq1vbwqslek.fsf@sermon.lab.mkp.net>
-	 <1391806363.2761.8.camel@sonic.justonedata.com>
-	 <yq1mwi2skoz.fsf@sermon.lab.mkp.net>
-	 <1391808293.2761.9.camel@sonic.justonedata.com>
-	 <yq1iosqs8fx.fsf@sermon.lab.mkp.net>
-	 <1391984895.13523.13.camel@tardis.intricatesoftware.com>
-	 <1392172050.2761.37.camel@sonic.justonedata.com>
-	 <53481EEE.3090405@itwm.fraunhofer.de> <yq1lhv3eoaf.fsf@sermon.lab.mkp.net>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH] target: Allow non-supporting backends to set
+ pi_prot_type to 0
+Date: Thu, 17 Apr 2014 17:14:08 -0700
+Message-ID: <1397780048.28248.76.camel@haakon3.risingtidesystems.com>
+References: <1397596392-32552-1-git-send-email-agrover@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 4133fa24.cst.lightpath.net ([65.51.250.36]:12242 "EHLO
-	mail1.intricatesoftware.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750928AbaDQWix (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Apr 2014 18:38:53 -0400
-In-Reply-To: <yq1lhv3eoaf.fsf@sermon.lab.mkp.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1397596392-32552-1-git-send-email-agrover@redhat.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Andy Grover <agrover@redhat.com>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, frirajder@gmail.com
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>, linux-scsi@vger.kernel.org
 
-On Thu, 2014-04-17 at 15:42 -0400, Martin K. Petersen wrote:
-> >>>>> "Bernd" == Bernd Schubert <bernd.schubert@itwm.fraunhofer.de> writes:
+On Tue, 2014-04-15 at 14:13 -0700, Andy Grover wrote:
+> Userspace tools assume if a value is read from configfs, it is valid
+> and will not cause an error if the same value is written back. The only
+> valid value for pi_prot_type for backends not supporting DIF is 0, so allow
+> this particular value to be set without returning an error.
 > 
-> Bernd> Any other suggestions for ~240GB SSDs supporting DRAT and DZAT or
-> Bernd> trim-on-lsi-sas in general?
+> Reported-by: Krzysztof Chojnowski <frirajder@gmail.com>
+> Signed-off-by: Andy Grover <agrover@redhat.com>
+> ---
+>  drivers/target/target_core_device.c | 4 ++++
+>  1 file changed, 4 insertions(+)
 > 
-> intel drives (other than the 510 which was a one-off) are generally
-> very well-behaved.
-> 
+> diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
+> index 65001e1..382b66b 100644
+> --- a/drivers/target/target_core_device.c
+> +++ b/drivers/target/target_core_device.c
+> @@ -936,6 +936,10 @@ int se_dev_set_pi_prot_type(struct se_device *dev, int flag)
+>  		return 0;
+>  	}
+>  	if (!dev->transport->init_prot || !dev->transport->free_prot) {
+> +		/* 0 is only allowed value for non-supporting backends */
+> +		if (flag == 0)
+> +			return 0;
+> +
+>  		pr_err("DIF protection not supported by backend: %s\n",
+>  		       dev->transport->name);
+>  		return -ENOSYS;
 
-Both Intel S3500 Series and Samsung 840 Pro SSDs with LSI in IT mode are
-working well in my development lab here, including TRIM support.
+Applied to target-pending/queue, and will merge into master as soon as
+the rebase to v3.15-rc occurs.
 
--Kurt
+Thanks!
 
+--nab
