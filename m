@@ -1,102 +1,48 @@
-From: Suman Tripathi <stripathi@apm.com>
-Subject: [PATCH 1/2] PHY: Add function set_rate to generic PHY framework
-Date: Fri, 18 Apr 2014 23:35:54 +0530
-Message-ID: <1397844354-13412-1-git-send-email-stripathi@apm.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: kishon@ti.com, tj@kernel.org
-Cc: olof@lixom.net, arnd@arndb.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>, Loc Ho <lho@apm.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: Please help me to review the patch about supporting SATA PM in LIBSAS
+Date: Fri, 18 Apr 2014 12:13:03 -0700
+Message-ID: <CAA9_cmeS0_3ge6oRj7MrvD=+Rymk1EVp1JkzREBm-cDGoE=efQ@mail.gmail.com>
+References: <CAP0P+NUR1AAxfGT5artyJeD7NNnkq2R=oHJ06VN3zQiLj9qTFw@mail.gmail.com>
+	<CAPcyv4iK0NRw1o9nL6YEwm3ymRvvB9799WS+6hE5O7gm5ACH_g@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-qg0-f46.google.com ([209.85.192.46]:44666 "EHLO
+	mail-qg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751197AbaDRTNF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Apr 2014 15:13:05 -0400
+Received: by mail-qg0-f46.google.com with SMTP id 63so1933518qgz.5
+        for <linux-scsi@vger.kernel.org>; Fri, 18 Apr 2014 12:13:03 -0700 (PDT)
+In-Reply-To: <CAPcyv4iK0NRw1o9nL6YEwm3ymRvvB9799WS+6hE5O7gm5ACH_g@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: xiangliang yu <yxlraid@gmail.com>
+Cc: James Bottomley <JBottomley@parallels.com>, Praveen Murali <pmurali@logicube.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-This patch adds function set_rate to the generic PHY framework operation
-structure. This function can be called to instruct the PHY underlying
-layer at specified lane to configure for specified rate.
+On Thu, Apr 17, 2014 at 9:03 AM, Dan Williams <dan.j.williams@intel.com> wrote:
+> On Wed, Apr 16, 2014 at 8:07 PM, xiangliang yu <yxlraid@gmail.com> wrote:
+>> hi,
+>>
+>> The patch is support SATA PM device and can  find all devices that is
+>> attached to PM.
+>> Until now, i have tested the identified, hot-plug and IO function and
+>> result is ok except one mvsas timeout issue.
+>> i'll continue to debug mvsas issue, but i don't know whether the
+>> libsas code of the patch is ok.
+>> So, please help me to review the patch if you feel free. thanks!
+>> the patch is as below:
+>
+> Can you help me with a bit more description on the design of the
+> patch?  Details like why you decided to implement pieces the way you
+> did, and comments on the difficulties / trade-offs you ran into would
+> really be helpful for reviewing.  Not just for me, but for anyone else
+> on the mailing list who might be able to offer some review cycles if
+> they had a small amount of background on the libsas/libata details.
+>
 
-Signed-off-by: Loc Ho <lho@apm.com>
-Signed-off-by: Suman Tripathi <stripathi@apm.com>
----
- drivers/phy/phy-core.c  | 27 +++++++++++++++++++++++++++
- include/linux/phy/phy.h |  8 ++++++++
- 2 files changed, 35 insertions(+)
+...also, please resend as an attachment so that the whitespace remains in tact.
 
-diff --git a/drivers/phy/phy-core.c b/drivers/phy/phy-core.c
-index 645c867..51f82e0 100644
---- a/drivers/phy/phy-core.c
-+++ b/drivers/phy/phy-core.c
-@@ -258,6 +258,33 @@ int phy_power_off(struct phy *phy)
- EXPORT_SYMBOL_GPL(phy_power_off);
+Thanks.
 
- /**
-+ * phy_set_rate - set an specified lane at an specified rate
-+ * @phy: phy instance to be set
-+ * @lane: zero-based lane index
-+ * @rate: operating rate in bps (bits per second)
-+ *
-+ * Returns 0 if successful, -ENOTSUPP if not supported
-+ * -EINVAL if parameter out of range.
-+ */
-+int phy_set_rate(struct phy *phy, int lane, u64 rate)
-+{
-+	int ret = 0;
-+
-+	mutex_lock(&phy->mutex);
-+ 	if (phy->ops->set_rate) {
-+		ret = phy->ops->set_rate(phy, lane, rate);
-+		if (ret < 0) {
-+			dev_err(&phy->dev, "phy set rate failed --> %d\n",
-+				ret);
-+		}
-+	}
-+	mutex_unlock(&phy->mutex);
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(phy_set_rate);
-+
-+/**
-  * of_phy_get() - lookup and obtain a reference to a phy by phandle
-  * @dev: device that requests this phy
-  * @index: the index of the phy
-diff --git a/include/linux/phy/phy.h b/include/linux/phy/phy.h
-index e273e5a..2dfcb34 100644
---- a/include/linux/phy/phy.h
-+++ b/include/linux/phy/phy.h
-@@ -27,6 +27,7 @@ struct phy;
-  * @exit: operation to be performed while exiting
-  * @power_on: powering on the phy
-  * @power_off: powering off the phy
-+ * @set_rate: set the rate
-  * @owner: the module owner containing the ops
-  */
- struct phy_ops {
-@@ -34,6 +35,7 @@ struct phy_ops {
- 	int	(*exit)(struct phy *phy);
- 	int	(*power_on)(struct phy *phy);
- 	int	(*power_off)(struct phy *phy);
-+	int     (*set_rate)(struct phy *phy, int lane, u64 rate);
- 	struct module *owner;
- };
-
-@@ -137,6 +139,7 @@ int phy_init(struct phy *phy);
- int phy_exit(struct phy *phy);
- int phy_power_on(struct phy *phy);
- int phy_power_off(struct phy *phy);
-+int phy_set_rate(struct phy *phy, int lane, u64 rate);
- static inline int phy_get_bus_width(struct phy *phy)
- {
- 	return phy->attrs.bus_width;
-@@ -217,6 +220,11 @@ static inline int phy_power_off(struct phy *phy)
- 	return -ENOSYS;
- }
-
-+static inline int phy_set_rate(struct phy *phy, int lane, u64 rate)
-+{
-+	return -ENOSYS;
-+}
-+
- static inline int phy_get_bus_width(struct phy *phy)
- {
- 	return -ENOSYS;
 --
-1.8.2.1
-
+Dan
