@@ -1,37 +1,53 @@
-From: "Mr. Frank Lukas" <franky@live.com>
-Subject: =?utf-8?q?Investitionsm=C3=B6glichkei_***?=
-Date: Sun, 20 Apr 2014 14:52:13 +0200
-Message-ID: <SERVER2009N9WBYShdm0000351d@mailsrv.red-stones.ru>
-Reply-To: fran-lukas@qq.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [188.191.240.69] ([188.191.240.69]:12140 "EHLO
-	mailsrv.red-stones.ru" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1755357AbaDTNGt convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 20 Apr 2014 09:06:49 -0400
-Content-Description: Mail message body
-Sender: linux-scsi-owner@vger.kernel.org
+From: Terence Eden <terence.eden@gmail.com>
+Subject: [PATCH 2/2] Correcting a spelling mistake which was causing some confusion - "recieved_value" should be "received_value".
+Date: Mon, 21 Apr 2014 19:19:46 +0100
+Message-ID: <1398104386-15313-1-git-send-email-terence.eden@gmail.com>
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: target-devel@vger.kernel.org, linux-kernel@vger.kernel.org, trivial@kernel.org, Terence Eden <github.com@shkspr.mobi>
 List-Id: linux-scsi@vger.kernel.org
-To: Recipients <franky@live.com>
 
-=46=FCr die Achtung der: Executive Officer,
+From: Terence Eden <github.com@shkspr.mobi>
 
- Ihr Firmenprofil Operationen und meine Aufmerksamkeit, im Einklang mit=
- meinem aktuellen Diversifizierung und Expansion in die Schaffung von s=
-trategischen Partnerschaft w=FCrde ich gerne wissen, ob es verf=FCgbar =
-Partnerschaft Optionen und =D6ffnungen f=FCr neue Investoren innerhalb =
-Ihrer Firma.
 
- Wir sind eine Gruppe von Investoren, die in unternehmerischen Teams mi=
-t gro=DFen Ideen und einem Kapitalbedarf investieren, um ihre Ideen in =
-gro=DFen Unternehmen zu machen.
+Signed-off-by: Terence Eden <github.com@shkspr.mobi>
+---
+ drivers/target/iscsi/iscsi_target_parameters.c |   10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-Bitte antworten Sie hier: (fran-lukas@qq.com)
-=46rank Lukas
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/target/iscsi/iscsi_target_parameters.c b/drivers/target/iscsi/iscsi_target_parameters.c
+index 4d2e23f..ce88892 100644
+--- a/drivers/target/iscsi/iscsi_target_parameters.c
++++ b/drivers/target/iscsi/iscsi_target_parameters.c
+@@ -1240,7 +1240,7 @@ static int iscsi_check_proposer_state(struct iscsi_param *param, char *value)
+ 	}
+ 
+ 	if (IS_TYPE_NUMBER_RANGE(param)) {
+-		u32 left_val = 0, right_val = 0, recieved_value = 0;
++		u32 left_val = 0, right_val = 0, received_value = 0;
+ 		char *left_val_ptr = NULL, *right_val_ptr = NULL;
+ 		char *tilde_ptr = NULL;
+ 
+@@ -1268,15 +1268,15 @@ static int iscsi_check_proposer_state(struct iscsi_param *param, char *value)
+ 		right_val_ptr = param->value + strlen(left_val_ptr) + 1;
+ 		left_val = simple_strtoul(left_val_ptr, NULL, 0);
+ 		right_val = simple_strtoul(right_val_ptr, NULL, 0);
+-		recieved_value = simple_strtoul(value, NULL, 0);
++		received_value = simple_strtoul(value, NULL, 0);
+ 
+ 		*tilde_ptr = '~';
+ 
+-		if ((recieved_value < left_val) ||
+-		    (recieved_value > right_val)) {
++		if ((received_value < left_val) ||
++		    (received_value > right_val)) {
+ 			pr_err("Illegal response \"%s=%u\", value must"
+ 				" be between %u and %u.\n", param->name,
+-				recieved_value, left_val, right_val);
++				received_value, left_val, right_val);
+ 			return -1;
+ 		}
+ 	} else if (IS_TYPE_VALUE_LIST(param)) {
+-- 
+1.7.9.5
