@@ -1,53 +1,65 @@
-From: Terence Eden <terence.eden@gmail.com>
-Subject: [PATCH 2/2] Correcting a spelling mistake which was causing some confusion - "recieved_value" should be "received_value".
-Date: Mon, 21 Apr 2014 19:19:46 +0100
-Message-ID: <1398104386-15313-1-git-send-email-terence.eden@gmail.com>
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: target-devel@vger.kernel.org, linux-kernel@vger.kernel.org, trivial@kernel.org, Terence Eden <github.com@shkspr.mobi>
+From: Maurizio Lombardi <mlombard@redhat.com>
+Subject: [PATCH] scsi: replace numeric messages with string error messages when blk_execute_rq fails.  Also add printing of sense info.
+Date: Tue, 22 Apr 2014 13:44:16 +0200
+Message-ID: <1398167056-14582-1-git-send-email-mlombard@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:36702 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755707AbaDVLoW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 Apr 2014 07:44:22 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: JBottomley@Parallels.com, hch@lst.de
 
-From: Terence Eden <github.com@shkspr.mobi>
-
-
-Signed-off-by: Terence Eden <github.com@shkspr.mobi>
+Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
 ---
- drivers/target/iscsi/iscsi_target_parameters.c |   10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/scsi/device_handler/scsi_dh_alua.c | 18 ++++++++++++------
+ 1 file changed, 12 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/target/iscsi/iscsi_target_parameters.c b/drivers/target/iscsi/iscsi_target_parameters.c
-index 4d2e23f..ce88892 100644
---- a/drivers/target/iscsi/iscsi_target_parameters.c
-+++ b/drivers/target/iscsi/iscsi_target_parameters.c
-@@ -1240,7 +1240,7 @@ static int iscsi_check_proposer_state(struct iscsi_param *param, char *value)
+diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+index 5248c88..1903ae5 100644
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+@@ -25,6 +25,7 @@
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_eh.h>
+ #include <scsi/scsi_dh.h>
++#include <scsi/scsi_dbg.h>
+ 
+ #define ALUA_DH_NAME "alua"
+ #define ALUA_DH_VER "1.3"
+@@ -163,9 +164,12 @@ static int submit_vpd_inquiry(struct scsi_device *sdev, struct alua_dh_data *h)
+ 
+ 	err = blk_execute_rq(rq->q, NULL, rq, 1);
+ 	if (err == -EIO) {
+-		sdev_printk(KERN_INFO, sdev,
+-			    "%s: evpd inquiry failed with %x\n",
+-			    ALUA_DH_NAME, rq->errors);
++		sdev_printk(KERN_INFO, sdev, "%s: evpd inquiry failed\n",
++			    ALUA_DH_NAME);
++		scsi_show_result(rq->errors);
++		if (driver_byte(rq->errors) & DRIVER_SENSE)
++			__scsi_print_sense("alua vpd_inquiry", rq->sense,
++					   rq->sense_len);
+ 		h->senselen = rq->sense_len;
+ 		err = SCSI_DH_IO;
  	}
+@@ -206,9 +210,11 @@ static unsigned submit_rtpg(struct scsi_device *sdev, struct alua_dh_data *h,
  
- 	if (IS_TYPE_NUMBER_RANGE(param)) {
--		u32 left_val = 0, right_val = 0, recieved_value = 0;
-+		u32 left_val = 0, right_val = 0, received_value = 0;
- 		char *left_val_ptr = NULL, *right_val_ptr = NULL;
- 		char *tilde_ptr = NULL;
- 
-@@ -1268,15 +1268,15 @@ static int iscsi_check_proposer_state(struct iscsi_param *param, char *value)
- 		right_val_ptr = param->value + strlen(left_val_ptr) + 1;
- 		left_val = simple_strtoul(left_val_ptr, NULL, 0);
- 		right_val = simple_strtoul(right_val_ptr, NULL, 0);
--		recieved_value = simple_strtoul(value, NULL, 0);
-+		received_value = simple_strtoul(value, NULL, 0);
- 
- 		*tilde_ptr = '~';
- 
--		if ((recieved_value < left_val) ||
--		    (recieved_value > right_val)) {
-+		if ((received_value < left_val) ||
-+		    (received_value > right_val)) {
- 			pr_err("Illegal response \"%s=%u\", value must"
- 				" be between %u and %u.\n", param->name,
--				recieved_value, left_val, right_val);
-+				received_value, left_val, right_val);
- 			return -1;
- 		}
- 	} else if (IS_TYPE_VALUE_LIST(param)) {
+ 	err = blk_execute_rq(rq->q, NULL, rq, 1);
+ 	if (err == -EIO) {
+-		sdev_printk(KERN_INFO, sdev,
+-			    "%s: rtpg failed with %x\n",
+-			    ALUA_DH_NAME, rq->errors);
++		sdev_printk(KERN_INFO, sdev, "%s: rtpg failed\n", ALUA_DH_NAME);
++		scsi_show_result(rq->errors);
++		if (driver_byte(rq->errors) & DRIVER_SENSE)
++			__scsi_print_sense("alua submit_rtpg", rq->sense,
++					   rq->sense_len);
+ 		h->senselen = rq->sense_len;
+ 		err = SCSI_DH_IO;
+ 	}
 -- 
-1.7.9.5
+Maurizio Lombardi
+
