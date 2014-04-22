@@ -1,148 +1,42 @@
-From: Matthieu CASTET <matthieu.castet@parrot.com>
-Subject: Buffer I/O error after s2ram with usb storage
-Date: Tue, 22 Apr 2014 16:01:15 +0200
-Message-ID: <20140422160115.46d8d2bf@parrot.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
+From: Marek Vasut <marex@denx.de>
+Subject: [PATCH V2] [SCSI] esas2r: Fix comment
+Date: Tue, 22 Apr 2014 20:23:39 +0200
+Message-ID: <1398191019-5018-1-git-send-email-marex@denx.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.aswsp.com ([193.34.35.150]:60061 "EHLO mail.aswsp.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932237AbaDVOBT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 Apr 2014 10:01:19 -0400
+Received: from mail-out.m-online.net ([212.18.0.9]:60426 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751303AbaDVSXq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Apr 2014 14:23:46 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: James Bottomley <JBottomley@Parallels.com>, TARUISI Hiroaki <taruishi.hiroak@jp.fujitsu.com>
+Cc: Marek Vasut <marex@denx.de>, James Bottomley <JBottomley@Parallels.com>, Bradley Grove <bgrove@attotech.com>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 
-Hi,
+Minor fix for a message in the driver so that it matches the function name.
 
-while playing with suspend to ram I found a strange behavior with usb
-key.
+Signed-off-by: Marek Vasut <marex@denx.de>
+Cc: James Bottomley <JBottomley@Parallels.com>
+Cc: Bradley Grove <bgrove@attotech.com>
+Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+---
+ drivers/scsi/esas2r/esas2r_main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-This can be easily reproduced by doing :
-- plug a usb key
-- start to read the usb key : "cat /dev/sdx > /dev/null"
-- go to suspend : "echo mem > /sys/power/state"
-- while in suspend, unplug and replug the usb key (simulate usb power
-loss for computer that keep power)
-- exit suspend
-- there is read error on the usb key
+V2: Post to linux-scsi, tweak the commit message.
 
+diff --git a/drivers/scsi/esas2r/esas2r_main.c b/drivers/scsi/esas2r/esas2r_main.c
+index f37f3e3..6504a19 100644
+--- a/drivers/scsi/esas2r/esas2r_main.c
++++ b/drivers/scsi/esas2r/esas2r_main.c
+@@ -390,7 +390,7 @@ static int esas2r_probe(struct pci_dev *pcid,
+ 	esas2r_log_dev(ESAS2R_LOG_INFO, &(pcid->dev),
+ 		       "pci_enable_device() OK");
+ 	esas2r_log_dev(ESAS2R_LOG_INFO, &(pcid->dev),
+-		       "after pci_device_enable() enable_cnt: %d",
++		       "after pci_enable_device() enable_cnt: %d",
+ 		       pcid->enable_cnt.counter);
+ 
+ 	host = scsi_host_alloc(&driver_template, host_alloc_size);
+-- 
+1.8.5.3
 
-Because the power was cut during s2ram, the usb stack reset the device
-<1>.
-When new data transfer are done, we got a UNIT_ATTENTION from the
-device <2> and IO error are returned to user space application.
-
-After some investigation it seems some (all on the 3 I tested) usb key
-report as removable, and scsi layer abort the transfer in case of
-UNIT_ATTENTION <3>.
-
-The usb storage driver call scsi_report_bus_reset after device reset,
-but because of commit dfcf7775 <4>, we don't ignore unit attention if
-"sshdr.asc == 0x28 && sshdr.ascq == 0x00" ("Not-ready to ready").
-
-If dfcf7775 is reverted there is no more Buffer I/O error.
-
-Is that possible to find a way to restore the behavior before dfcf7775
-commit (no Buffer I/O error after device reset) after a suspend to ram ?
-
-
-Matthieu CASTET
-
-PS : the same error happen if sg_reset -b /dev/sdx is used on the
-device.
-
-
-<1>
-[  117.070255] usb 2-1.4: reset high-speed USB device number 3 using
-ehci-pci [...]
-[  117.543922] Restarting tasks ... done.
-[  117.548390] video LNXVIDEO:01: Restoring backlight state
-<2>
-[  117.549179] sd 6:0:0:0: [sdb] Media Changed
-[  117.549184] sd 6:0:0:0: [sdb]  
-[  117.549187] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
-[  117.549189] sd 6:0:0:0: [sdb]  
-[  117.549191] Sense Key : Unit Attention [current] 
-[  117.549195] Info fld=0x0
-[  117.549197] sd 6:0:0:0: [sdb]  
-[  117.549201] Add. Sense: Not ready to ready change, medium may have
-changed [  117.549203] sd 6:0:0:0: [sdb] CDB: 
-[  117.549205] Read(10): 28 00 00 02 c9 00 00 00 f0 00
-[  117.549212] end_request: I/O error, dev sdb, sector 182528
-[  117.549218] Buffer I/O error on device sdb1, logical block 22560
-[  117.549225] Buffer I/O error on device sdb1, logical block 22561
-[  117.549228] Buffer I/O error on device sdb1, logical block 22562
-[  117.549231] Buffer I/O error on device sdb1, logical block 22563
-[  117.549233] Buffer I/O error on device sdb1, logical block 22564
-[  117.549235] Buffer I/O error on device sdb1, logical block 22565
-[  117.549238] Buffer I/O error on device sdb1, logical block 22566
-[  117.549240] Buffer I/O error on device sdb1, logical block 22567
-[  117.549243] Buffer I/O error on device sdb1, logical block 22568
-[  117.549245] Buffer I/O error on device sdb1, logical block 22569
-[  117.809462] sd 6:0:0:0: [sdb] No Caching mode page found
-[  117.809470] sd 6:0:0:0: [sdb] Assuming drive cache: write through
-[  117.812696] sd 6:0:0:0: [sdb] No Caching mode page found
-[  117.812703] sd 6:0:0:0: [sdb] Assuming drive cache: write through
-[  117.813688]  sdb: sdb1
-
-
-<3>
-        case UNIT_ATTENTION:
-            if (cmd->device->removable) {
-                /* Detected disc change.  Set a bit
-                 * and quietly refuse further access.
-                 */
-                cmd->device->changed = 1;
-                description = "Media Changed";
-                action = ACTION_FAIL;
-            } else {
-                /* Must have been a power glitch, or a
-                 * bus reset.  Could not have been a
-                 * media change, so we just retry the
-                 * command and see what happens.
-                 */
-                action = ACTION_RETRY;
-            }
-
-<4>
-commit dfcf7775815504d13a1d273073810058caf84b9d
-Author: TARUISI Hiroaki <taruishi.hiroak@jp.fujitsu.com>
-Date:   Thu Aug 11 20:25:20 2011 +0900
-
-    [SCSI] Fix out of spec CD-ROM problem with media change
-    
-    Some CD-ROMs fail to report a media change correctly.  The specific
-    one for this patch simply fails to respond to commands, then gives a
-    UNIT ATTENTION after being reset which returns ASC/ASCQ 28/00.  This
-    is out of spec behaviour, but add a check in the eat CC/UA on reset
-    path to catch this case so the CD-ROM will function somewhat properly.
-    
-    [jejb: fixed up white space and accepted without signoff]
-    Signed-off-by: James Bottomley <JBottomley@Parallels.com>
-
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index a4b9cdb..dc6131e 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -293,8 +293,16 @@ static int scsi_check_sense(struct scsi_cmnd *scmd)
-                 * so that we can deal with it there.
-                 */
-                if (scmd->device->expecting_cc_ua) {
--                       scmd->device->expecting_cc_ua = 0;
--                       return NEEDS_RETRY;
-+                       /*
-+                        * Because some device does not queue unit
-+                        * attentions correctly, we carefully check
-+                        * additional sense code and qualifier so as
-+                        * not to squash media change unit attention.
-+                        */
-+                       if (sshdr.asc != 0x28 || sshdr.ascq != 0x00) {
-+                               scmd->device->expecting_cc_ua = 0;
-+                               return NEEDS_RETRY;
-+                       }
-                }
-                /*
-                 * if the device is in the process of becoming ready, we
