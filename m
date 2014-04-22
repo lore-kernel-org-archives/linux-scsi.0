@@ -1,65 +1,148 @@
-From: Maurizio Lombardi <mlombard@redhat.com>
-Subject: [PATCH] scsi: replace numeric messages with string error messages when blk_execute_rq fails.  Also add printing of sense info.
-Date: Tue, 22 Apr 2014 13:44:16 +0200
-Message-ID: <1398167056-14582-1-git-send-email-mlombard@redhat.com>
+From: Matthieu CASTET <matthieu.castet@parrot.com>
+Subject: Buffer I/O error after s2ram with usb storage
+Date: Tue, 22 Apr 2014 16:01:15 +0200
+Message-ID: <20140422160115.46d8d2bf@parrot.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36702 "EHLO mx1.redhat.com"
+Received: from mail.aswsp.com ([193.34.35.150]:60061 "EHLO mail.aswsp.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755707AbaDVLoW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 Apr 2014 07:44:22 -0400
+	id S932237AbaDVOBT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 Apr 2014 10:01:19 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: JBottomley@Parallels.com, hch@lst.de
+Cc: James Bottomley <JBottomley@Parallels.com>, TARUISI Hiroaki <taruishi.hiroak@jp.fujitsu.com>
 
-Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
----
- drivers/scsi/device_handler/scsi_dh_alua.c | 18 ++++++++++++------
- 1 file changed, 12 insertions(+), 6 deletions(-)
+Hi,
 
-diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index 5248c88..1903ae5 100644
---- a/drivers/scsi/device_handler/scsi_dh_alua.c
-+++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -25,6 +25,7 @@
- #include <scsi/scsi.h>
- #include <scsi/scsi_eh.h>
- #include <scsi/scsi_dh.h>
-+#include <scsi/scsi_dbg.h>
- 
- #define ALUA_DH_NAME "alua"
- #define ALUA_DH_VER "1.3"
-@@ -163,9 +164,12 @@ static int submit_vpd_inquiry(struct scsi_device *sdev, struct alua_dh_data *h)
- 
- 	err = blk_execute_rq(rq->q, NULL, rq, 1);
- 	if (err == -EIO) {
--		sdev_printk(KERN_INFO, sdev,
--			    "%s: evpd inquiry failed with %x\n",
--			    ALUA_DH_NAME, rq->errors);
-+		sdev_printk(KERN_INFO, sdev, "%s: evpd inquiry failed\n",
-+			    ALUA_DH_NAME);
-+		scsi_show_result(rq->errors);
-+		if (driver_byte(rq->errors) & DRIVER_SENSE)
-+			__scsi_print_sense("alua vpd_inquiry", rq->sense,
-+					   rq->sense_len);
- 		h->senselen = rq->sense_len;
- 		err = SCSI_DH_IO;
- 	}
-@@ -206,9 +210,11 @@ static unsigned submit_rtpg(struct scsi_device *sdev, struct alua_dh_data *h,
- 
- 	err = blk_execute_rq(rq->q, NULL, rq, 1);
- 	if (err == -EIO) {
--		sdev_printk(KERN_INFO, sdev,
--			    "%s: rtpg failed with %x\n",
--			    ALUA_DH_NAME, rq->errors);
-+		sdev_printk(KERN_INFO, sdev, "%s: rtpg failed\n", ALUA_DH_NAME);
-+		scsi_show_result(rq->errors);
-+		if (driver_byte(rq->errors) & DRIVER_SENSE)
-+			__scsi_print_sense("alua submit_rtpg", rq->sense,
-+					   rq->sense_len);
- 		h->senselen = rq->sense_len;
- 		err = SCSI_DH_IO;
- 	}
--- 
-Maurizio Lombardi
+while playing with suspend to ram I found a strange behavior with usb
+key.
 
+This can be easily reproduced by doing :
+- plug a usb key
+- start to read the usb key : "cat /dev/sdx > /dev/null"
+- go to suspend : "echo mem > /sys/power/state"
+- while in suspend, unplug and replug the usb key (simulate usb power
+loss for computer that keep power)
+- exit suspend
+- there is read error on the usb key
+
+
+Because the power was cut during s2ram, the usb stack reset the device
+<1>.
+When new data transfer are done, we got a UNIT_ATTENTION from the
+device <2> and IO error are returned to user space application.
+
+After some investigation it seems some (all on the 3 I tested) usb key
+report as removable, and scsi layer abort the transfer in case of
+UNIT_ATTENTION <3>.
+
+The usb storage driver call scsi_report_bus_reset after device reset,
+but because of commit dfcf7775 <4>, we don't ignore unit attention if
+"sshdr.asc == 0x28 && sshdr.ascq == 0x00" ("Not-ready to ready").
+
+If dfcf7775 is reverted there is no more Buffer I/O error.
+
+Is that possible to find a way to restore the behavior before dfcf7775
+commit (no Buffer I/O error after device reset) after a suspend to ram ?
+
+
+Matthieu CASTET
+
+PS : the same error happen if sg_reset -b /dev/sdx is used on the
+device.
+
+
+<1>
+[  117.070255] usb 2-1.4: reset high-speed USB device number 3 using
+ehci-pci [...]
+[  117.543922] Restarting tasks ... done.
+[  117.548390] video LNXVIDEO:01: Restoring backlight state
+<2>
+[  117.549179] sd 6:0:0:0: [sdb] Media Changed
+[  117.549184] sd 6:0:0:0: [sdb]  
+[  117.549187] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+[  117.549189] sd 6:0:0:0: [sdb]  
+[  117.549191] Sense Key : Unit Attention [current] 
+[  117.549195] Info fld=0x0
+[  117.549197] sd 6:0:0:0: [sdb]  
+[  117.549201] Add. Sense: Not ready to ready change, medium may have
+changed [  117.549203] sd 6:0:0:0: [sdb] CDB: 
+[  117.549205] Read(10): 28 00 00 02 c9 00 00 00 f0 00
+[  117.549212] end_request: I/O error, dev sdb, sector 182528
+[  117.549218] Buffer I/O error on device sdb1, logical block 22560
+[  117.549225] Buffer I/O error on device sdb1, logical block 22561
+[  117.549228] Buffer I/O error on device sdb1, logical block 22562
+[  117.549231] Buffer I/O error on device sdb1, logical block 22563
+[  117.549233] Buffer I/O error on device sdb1, logical block 22564
+[  117.549235] Buffer I/O error on device sdb1, logical block 22565
+[  117.549238] Buffer I/O error on device sdb1, logical block 22566
+[  117.549240] Buffer I/O error on device sdb1, logical block 22567
+[  117.549243] Buffer I/O error on device sdb1, logical block 22568
+[  117.549245] Buffer I/O error on device sdb1, logical block 22569
+[  117.809462] sd 6:0:0:0: [sdb] No Caching mode page found
+[  117.809470] sd 6:0:0:0: [sdb] Assuming drive cache: write through
+[  117.812696] sd 6:0:0:0: [sdb] No Caching mode page found
+[  117.812703] sd 6:0:0:0: [sdb] Assuming drive cache: write through
+[  117.813688]  sdb: sdb1
+
+
+<3>
+        case UNIT_ATTENTION:
+            if (cmd->device->removable) {
+                /* Detected disc change.  Set a bit
+                 * and quietly refuse further access.
+                 */
+                cmd->device->changed = 1;
+                description = "Media Changed";
+                action = ACTION_FAIL;
+            } else {
+                /* Must have been a power glitch, or a
+                 * bus reset.  Could not have been a
+                 * media change, so we just retry the
+                 * command and see what happens.
+                 */
+                action = ACTION_RETRY;
+            }
+
+<4>
+commit dfcf7775815504d13a1d273073810058caf84b9d
+Author: TARUISI Hiroaki <taruishi.hiroak@jp.fujitsu.com>
+Date:   Thu Aug 11 20:25:20 2011 +0900
+
+    [SCSI] Fix out of spec CD-ROM problem with media change
+    
+    Some CD-ROMs fail to report a media change correctly.  The specific
+    one for this patch simply fails to respond to commands, then gives a
+    UNIT ATTENTION after being reset which returns ASC/ASCQ 28/00.  This
+    is out of spec behaviour, but add a check in the eat CC/UA on reset
+    path to catch this case so the CD-ROM will function somewhat properly.
+    
+    [jejb: fixed up white space and accepted without signoff]
+    Signed-off-by: James Bottomley <JBottomley@Parallels.com>
+
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index a4b9cdb..dc6131e 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -293,8 +293,16 @@ static int scsi_check_sense(struct scsi_cmnd *scmd)
+                 * so that we can deal with it there.
+                 */
+                if (scmd->device->expecting_cc_ua) {
+-                       scmd->device->expecting_cc_ua = 0;
+-                       return NEEDS_RETRY;
++                       /*
++                        * Because some device does not queue unit
++                        * attentions correctly, we carefully check
++                        * additional sense code and qualifier so as
++                        * not to squash media change unit attention.
++                        */
++                       if (sshdr.asc != 0x28 || sshdr.ascq != 0x00) {
++                               scmd->device->expecting_cc_ua = 0;
++                               return NEEDS_RETRY;
++                       }
+                }
+                /*
+                 * if the device is in the process of becoming ready, we
