@@ -1,55 +1,38 @@
-From: Bradley Grove <bgrove@attotech.com>
-Subject: Re: [PATCH V2] [SCSI] esas2r: Fix comment
-Date: Wed, 23 Apr 2014 16:41:17 -0400
-Message-ID: <5358256D.6070504@attotech.com>
-References: <1398191019-5018-1-git-send-email-marex@denx.de>
+From: Andy Grover <agrover@redhat.com>
+Subject: Re: [PATCHv2 RESEND 0/9] target: Save memory on unused se_dev_entrys
+ and se_luns
+Date: Wed, 23 Apr 2014 15:36:27 -0700
+Message-ID: <5358406B.5040906@redhat.com>
+References: <1395704598-31073-1-git-send-email-agrover@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sw.attotech.com ([208.69.85.34]:37188 "EHLO
-	NOTESERV1.attotech.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932616AbaDWU41 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Apr 2014 16:56:27 -0400
-In-Reply-To: <1398191019-5018-1-git-send-email-marex@denx.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1395704598-31073-1-git-send-email-agrover@redhat.com>
+Sender: target-devel-owner@vger.kernel.org
+To: target-devel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Marek Vasut <marex@denx.de>, linux-scsi@vger.kernel.org
-Cc: James Bottomley <JBottomley@Parallels.com>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 
-
-This looks fine to me.
-
-Acked-by: Bradley Grove <bgrove@attotech.com>
-
-Thanks,
-Brad
-
-On 04/22/2014 02:23 PM, Marek Vasut wrote:
-> Minor fix for a message in the driver so that it matches the function name.
+On 03/24/2014 04:43 PM, Andy Grover wrote:
+> Hi nab, hch, and all,
 >
-> Signed-off-by: Marek Vasut <marex@denx.de>
-> Cc: James Bottomley <JBottomley@Parallels.com>
-> Cc: Bradley Grove <bgrove@attotech.com>
-> Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-> ---
->   drivers/scsi/esas2r/esas2r_main.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
+> This patchset reduces the amount of memory for se_dev_entry and se_lun
+> arrays by waiting to allocate array members, and includes some related
+> simplification patches too. This is a rework of a few patches I submitted
+> in December in a larger series, but keeping it simple by sticking with
+> fixed-size arrays for device_list and tpg_lun_list for now.
 >
-> V2: Post to linux-scsi, tweak the commit message.
+> Testing: created and removed luns and mapped luns, worked ok.
 >
-> diff --git a/drivers/scsi/esas2r/esas2r_main.c b/drivers/scsi/esas2r/esas2r_main.c
-> index f37f3e3..6504a19 100644
-> --- a/drivers/scsi/esas2r/esas2r_main.c
-> +++ b/drivers/scsi/esas2r/esas2r_main.c
-> @@ -390,7 +390,7 @@ static int esas2r_probe(struct pci_dev *pcid,
->   	esas2r_log_dev(ESAS2R_LOG_INFO, &(pcid->dev),
->   		       "pci_enable_device() OK");
->   	esas2r_log_dev(ESAS2R_LOG_INFO, &(pcid->dev),
-> -		       "after pci_device_enable() enable_cnt: %d",
-> +		       "after pci_enable_device() enable_cnt: %d",
->   		       pcid->enable_cnt.counter);
->
->   	host = scsi_host_alloc(&driver_template, host_alloc_size);
->
+> Changes in resend:
+>    Rebase to latest target-pending/for-next
+> Changes in v2:
+>    Added patches 1-2, which ensure locking around the arrays
+>    Added patch 9, refactors enable_device_list_for_node
+>    Patch 7/6 folded into series
 
+Does this set look ok, or any other changes needed? Just haven't heard 
+anything.
+
+Thanks -- Andy
