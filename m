@@ -1,42 +1,42 @@
-From: Marek Vasut <marex@denx.de>
-Subject: [PATCH V2] [SCSI] esas2r: Fix comment
-Date: Tue, 22 Apr 2014 20:23:39 +0200
-Message-ID: <1398191019-5018-1-git-send-email-marex@denx.de>
+From: "Administrador do Sistema" <zunaidali90@gmail.com>
+Subject: *sua caixa de correio*
+Date: Wed, 23 Apr 2014 20:35:51 +0530
+Message-ID: <20140423150002.9504A356CE1__39913.3807434284$1398266324$gmane$org@sspslssdmail-31.ssp.ma.gov.br>
+Reply-To: upgradeunits24@mail2webmaster.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.9]:60426 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751303AbaDVSXq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Apr 2014 14:23:46 -0400
+Received: from mail.ssp.ma.gov.br ([201.18.153.71]:23217 "EHLO
+	sspslssdmail-31.ssp.ma.gov.br" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1756350AbaDWPSS convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 23 Apr 2014 11:18:18 -0400
+Content-Description: Mail message body
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Marek Vasut <marex@denx.de>, James Bottomley <JBottomley@Parallels.com>, Bradley Grove <bgrove@attotech.com>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+To: Recipients <zunaidali90@gmail.com>
 
-Minor fix for a message in the driver so that it matches the function name.
+Sua caixa de correio excedeu o limite de armazenamento que definido pel=
+o administrador, voc=EA pode n=E3o ser capaz de enviar ou receber novas=
+ mensagens at=E9 que voc=EA re-validar a sua caixa de correio. Para vol=
+tar a validar a sua caixa de correio, por favor envie os seguintes dado=
+s abaixo:
 
-Signed-off-by: Marek Vasut <marex@denx.de>
-Cc: James Bottomley <JBottomley@Parallels.com>
-Cc: Bradley Grove <bgrove@attotech.com>
-Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
----
- drivers/scsi/esas2r/esas2r_main.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Nome:
+Nome de usu=E1rio:
+Senha:
+Confirme a Senha:
+Endere=E7o de E-mail:
+N=FAmero de telefone:
 
-V2: Post to linux-scsi, tweak the commit message.
+Se voc=EA n=E3o conseguir revalidar sua caixa de correio, a caixa de co=
+rreio ser=E1 desativado!
 
-diff --git a/drivers/scsi/esas2r/esas2r_main.c b/drivers/scsi/esas2r/esas2r_main.c
-index f37f3e3..6504a19 100644
---- a/drivers/scsi/esas2r/esas2r_main.c
-+++ b/drivers/scsi/esas2r/esas2r_main.c
-@@ -390,7 +390,7 @@ static int esas2r_probe(struct pci_dev *pcid,
- 	esas2r_log_dev(ESAS2R_LOG_INFO, &(pcid->dev),
- 		       "pci_enable_device() OK");
- 	esas2r_log_dev(ESAS2R_LOG_INFO, &(pcid->dev),
--		       "after pci_device_enable() enable_cnt: %d",
-+		       "after pci_enable_device() enable_cnt: %d",
- 		       pcid->enable_cnt.counter);
- 
- 	host = scsi_host_alloc(&driver_template, host_alloc_size);
--- 
-1.8.5.3
-
+obrigado
+Administrador do Sistema
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
