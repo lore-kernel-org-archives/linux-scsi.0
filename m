@@ -1,38 +1,42 @@
-From: Andy Grover <agrover@redhat.com>
-Subject: Re: [PATCHv2 RESEND 0/9] target: Save memory on unused se_dev_entrys
- and se_luns
-Date: Wed, 23 Apr 2014 15:36:27 -0700
-Message-ID: <5358406B.5040906@redhat.com>
-References: <1395704598-31073-1-git-send-email-agrover@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1395704598-31073-1-git-send-email-agrover@redhat.com>
-Sender: target-devel-owner@vger.kernel.org
-To: target-devel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Christoph Hellwig <hch@lst.de>
+From: Xiangliang Yu <yxlraid@gmail.com>
+Subject: [PATCH 0/3] libsas: add support for port multiplier
+Date: Thu, 24 Apr 2014 21:27:03 +0800
+Message-ID: <1398346023-10225-1-git-send-email-yxlraid@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: tj@kernel.org, JBottomley@parallels.com
+Cc: dan.j.williams@intel.com, todd.e.brandt@intel.com, lukasz.dorau@intel.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 03/24/2014 04:43 PM, Andy Grover wrote:
-> Hi nab, hch, and all,
->
-> This patchset reduces the amount of memory for se_dev_entry and se_lun
-> arrays by waiting to allocate array members, and includes some related
-> simplification patches too. This is a rework of a few patches I submitted
-> in December in a larger series, but keeping it simple by sticking with
-> fixed-size arrays for device_list and tpg_lun_list for now.
->
-> Testing: created and removed luns and mapped luns, worked ok.
->
-> Changes in resend:
->    Rebase to latest target-pending/for-next
-> Changes in v2:
->    Added patches 1-2, which ensure locking around the arrays
->    Added patch 9, refactors enable_device_list_for_node
->    Patch 7/6 folded into series
+This patch set will support SATA port multiplier(PM) in LIBSAS. 
 
-Does this set look ok, or any other changes needed? Just haven't heard 
-anything.
+LIBSAS is need to implement several key handling to support SATA PM:
+First,low level driver notify libsas that SATA PM is attached to HBA port.
+Then, LIBSAS will need to schedule SATA PMP error handler to scan SATA device
+that is attached to PM, so we must implemet port softreset and PMP reset 
+handling.
+If find SATA devices, we should add the devices into SAS transport layer.
+In order to find SAS domain device we must implemet device type transformation
+: scsi device -> (port number) -> ata device -> domain device. Then, we can
+execute IO operation.
 
-Thanks -- Andy
+In these patches, patch 1 is change SATA error handler.
+And patch 2 will add SATA device into SAS layer and implement device type
+transformation. Patch 3 implement SATA functional interface in mvsas.
+
+ drivers/ata/libata-scsi.c           |   48 +++-
+ drivers/scsi/libsas/sas_ata.c       |  584 ++++++++++++++++++++++++++++++++++-
+ drivers/scsi/libsas/sas_discover.c  |   25 ++-
+ drivers/scsi/libsas/sas_internal.h  |    7 +
+ drivers/scsi/libsas/sas_phy.c       |    1 +
+ drivers/scsi/libsas/sas_port.c      |   12 +
+ drivers/scsi/libsas/sas_scsi_host.c |   12 +-
+ drivers/scsi/mvsas/mv_64xx.c        |    2 +
+ drivers/scsi/mvsas/mv_94xx.c        |   19 ++
+ drivers/scsi/mvsas/mv_defs.h        |    1 +
+ drivers/scsi/mvsas/mv_init.c        |    7 +
+ drivers/scsi/mvsas/mv_sas.c         |  246 +++++++++++++++-
+ drivers/scsi/mvsas/mv_sas.h         |    9 +
+ include/scsi/libsas.h               |   19 +-
+ include/scsi/sas_ata.h              |    5 +
+ 15 files changed, 970 insertions(+), 27 deletions(-)
