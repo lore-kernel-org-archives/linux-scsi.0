@@ -1,283 +1,440 @@
 From: Xiangliang Yu <yxlraid@gmail.com>
-Subject: [PATCH 1/3] libsas: modify SATA error handler
-Date: Thu, 24 Apr 2014 21:27:27 +0800
-Message-ID: <1398346047-10276-1-git-send-email-yxlraid@gmail.com>
+Subject: [PATCH 3/3] mvsas: implement port mulitplier functional interface
+Date: Thu, 24 Apr 2014 21:28:57 +0800
+Message-ID: <1398346137-10402-1-git-send-email-yxlraid@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: tj@kernel.org, JBottomley@parallels.com
 Cc: dan.j.williams@intel.com, todd.e.brandt@intel.com, lukasz.dorau@intel.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Xiangliang Yu <yxlraid@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Add support for SATA port softreset and port multiplier error
-handling.
+Implement PM interface of libsas to prepare for SATA PM support.
 
 Signed-off-by: Xiangliang Yu <yxlraid@gmail.com>
 ---
- drivers/scsi/libsas/sas_ata.c |  226 ++++++++++++++++++++++++++++++++++++++++-
- include/scsi/libsas.h         |    6 +
- 2 files changed, 231 insertions(+), 1 deletions(-)
+ drivers/scsi/mvsas/mv_64xx.c |    2 +
+ drivers/scsi/mvsas/mv_94xx.c |   19 ++++
+ drivers/scsi/mvsas/mv_defs.h |    1 +
+ drivers/scsi/mvsas/mv_init.c |    7 ++
+ drivers/scsi/mvsas/mv_sas.c  |  246 +++++++++++++++++++++++++++++++++++++++++-
+ drivers/scsi/mvsas/mv_sas.h  |    9 ++
+ 6 files changed, 281 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index 766098a..29a19fd 100644
---- a/drivers/scsi/libsas/sas_ata.c
-+++ b/drivers/scsi/libsas/sas_ata.c
-@@ -442,6 +442,226 @@ static int sas_ata_hard_reset(struct ata_link *link, unsigned int *class,
- 	return ret;
+diff --git a/drivers/scsi/mvsas/mv_64xx.c b/drivers/scsi/mvsas/mv_64xx.c
+index 8bb0699..bb257cb 100644
+--- a/drivers/scsi/mvsas/mv_64xx.c
++++ b/drivers/scsi/mvsas/mv_64xx.c
+@@ -780,6 +780,8 @@ const struct mvs_dispatch mvs_64xx_dispatch = {
+ 	mvs_64xx_iounmap,
+ 	mvs_64xx_isr,
+ 	mvs_64xx_isr_status,
++	NULL,
++	NULL,
+ 	mvs_64xx_interrupt_enable,
+ 	mvs_64xx_interrupt_disable,
+ 	mvs_read_phy_ctl,
+diff --git a/drivers/scsi/mvsas/mv_94xx.c b/drivers/scsi/mvsas/mv_94xx.c
+index 1e4479f..9d547a7 100644
+--- a/drivers/scsi/mvsas/mv_94xx.c
++++ b/drivers/scsi/mvsas/mv_94xx.c
+@@ -602,6 +602,23 @@ static u32 mvs_94xx_isr_status(struct mvs_info *mvi, int irq)
+ 	return stat;
  }
  
-+static void sas_ata_freeze(struct ata_port *ap)
++static u32 mvs_94xx_read_isr_stat(struct mvs_info *mvi)
 +{
-+	struct domain_device *dev = ap->private_data;
-+	struct sas_ha_struct *sas_ha = dev->port->ha;
-+	struct Scsi_Host *host = sas_ha->core.shost;
-+	struct sas_internal *i = to_sas_internal(host->transportt);
++	void __iomem *regs = mvi->regs;
++	u32 stat = 0;
 +
-+	if (i->dft->lldd_dev_freeze)
-+		i->dft->lldd_dev_freeze(dev);
++	stat = mr32(MVS_INT_STAT);
++
++	return stat;
 +}
 +
-+static void sas_ata_thaw(struct ata_port *ap)
++static void mvs_94xx_write_isr_stat(struct mvs_info *mvi, u32 stat)
 +{
-+	struct domain_device *dev = ap->private_data;
-+	struct sas_ha_struct *sas_ha = dev->port->ha;
-+	struct Scsi_Host *host = sas_ha->core.shost;
-+	struct sas_internal *i = to_sas_internal(host->transportt);
++	void __iomem *regs = mvi->regs;
 +
-+	if (i->dft->lldd_dev_thaw)
-+		i->dft->lldd_dev_thaw(dev);
++	mw32(MVS_INT_STAT, stat);
 +}
 +
-+static int sas_ata_wait_task_done(struct sas_task *task, unsigned long timeout,
-+		int (*check_done)(struct sas_task *task))
-+{
-+	struct ata_port *ap = task->uldd_task;
-+	unsigned long deadline;
-+	int done;
-+
-+	if (!check_done) {
-+		SAS_DPRINTK("check function is null.\n");
-+		return -1;
-+	}
-+
-+	deadline = ata_deadline(jiffies, timeout);
-+	done = check_done(task);
-+
-+	while (done && time_before(jiffies, deadline)) {
-+		ata_msleep(ap, 1);
-+
-+		done = check_done(task);
-+	}
-+
-+	return done;
-+}
-+
-+static int sas_ata_exec_polled_cmd(struct ata_port *ap, struct ata_taskfile *tf,
-+		int pmp, unsigned long timeout)
-+{
-+	struct domain_device *dev = ap->private_data;
-+	struct sas_ha_struct *sas_ha = dev->port->ha;
-+	struct Scsi_Host *host = sas_ha->core.shost;
-+	struct sas_internal *i = to_sas_internal(host->transportt);
-+	struct sas_task *task = NULL;
-+	int ret = -1;
-+
-+	if (!i->dft->lldd_execute_task) {
-+		SAS_DPRINTK("execute function is null.\n");
-+		return ret;
-+	}
-+
-+	task = sas_alloc_task(GFP_ATOMIC);
-+	if (!task) {
-+		SAS_DPRINTK("failed to alloc sas task.\n");
-+		goto fail;
-+	}
-+
-+	task->dev = dev;
-+	task->task_proto = SAS_PROTOCOL_SATA;
-+	task->uldd_task = ap;
-+
-+	ata_tf_to_fis(tf, pmp, 0, (u8 *)&task->ata_task.fis);
-+	task->ata_task.retry_count = 1;
-+	task->task_state_flags = SAS_TASK_STATE_PENDING;
-+	task->task_state_flags |= SAS_TASK_NEED_DEV_RESET;
-+
-+	ret = i->dft->lldd_execute_task(task, 1, GFP_ATOMIC);
-+	if (ret) {
-+		SAS_DPRINTK("failed to send internal task.\n");
-+		goto fail;
-+	}
-+
-+	if (timeout) {
-+		ret = sas_ata_wait_task_done(task, timeout,
-+				i->dft->lldd_wait_task_done);
-+		if (ret) {
-+			SAS_DPRINTK("get wrong status.\n");
-+			goto fail;
-+		}
-+	}
-+	list_del_init(&task->list);
-+	sas_free_task(task);
-+
-+	return 0;
-+fail:
-+	if (task) {
-+		list_del_init(&task->list);
-+		sas_free_task(task);
-+	}
-+
-+	return ret;
-+}
-+
-+static int sas_ata_soft_reset(struct ata_link *link, unsigned int *class,
-+			      unsigned long deadline)
-+{
-+	struct ata_taskfile tf;
-+	struct ata_port *ap = link->ap;
-+	struct domain_device *dev = ap->private_data;
-+	struct sas_ha_struct *sas_ha = dev->port->ha;
-+	struct Scsi_Host *host = sas_ha->core.shost;
-+	struct sas_internal *i = to_sas_internal(host->transportt);
-+	struct sas_phy *phy;
-+	unsigned long now, msecs;
-+	unsigned int pmp;
-+	int ret = -1;
-+	int (*check_ready)(struct ata_link *link);
-+
-+	phy = sas_get_local_phy(dev);
-+	if (scsi_is_sas_phy_local(phy))
-+		check_ready = local_ata_check_ready;
-+	else
-+		check_ready = smp_ata_check_ready;
-+	sas_put_local_phy(phy);
-+
-+	pmp = sata_srst_pmp(link);
-+
-+	msecs = 0;
-+	now = jiffies;
-+	if (time_after(deadline, now))
-+		msecs = jiffies_to_msecs(deadline - now);
-+
-+	memset(&tf, 0, sizeof(struct ata_taskfile));
-+	tf.ctl = ATA_SRST;
-+	tf.device = ATA_DEVICE_OBS;
-+
-+	if (sas_ata_exec_polled_cmd(ap, &tf, pmp, msecs)) {
-+		ret = -EIO;
-+		goto fail;
-+	}
-+
-+	tf.ctl &= ~ATA_SRST;
-+	sas_ata_exec_polled_cmd(ap, &tf, pmp, msecs);
-+
-+	ret = ata_wait_after_reset(link, deadline, check_ready);
-+	if (ret) {
-+		SAS_DPRINTK("device is not ready.\n");
-+		ret = -EIO;
-+		goto fail;
-+	} else {
-+		if (i->dft->lldd_dev_classify)
-+			*class = i->dft->lldd_dev_classify(dev);
-+	}
-+
-+	return 0;
-+
-+fail:
-+	SAS_DPRINTK("failed to reset.\n");
-+	return ret;
-+}
-+
-+/* According sata 3.0 spec 13.15.4.2, enable the device port */
-+static int sas_ata_pmp_hard_reset(struct ata_link *link, unsigned int *class,
-+			      unsigned long deadline)
-+{
-+	struct ata_port *ap = link->ap;
-+	struct domain_device *dev = ap->private_data;
-+	struct sas_ha_struct *sas_ha = dev->port->ha;
-+	struct Scsi_Host *host = sas_ha->core.shost;
-+	struct sas_internal *i = to_sas_internal(host->transportt);
-+	int ret = -1;
-+	u32 scontrol = 0;
-+
-+	set_bit(SAS_DEV_RESET, &dev->state);
-+
-+	ret = sata_scr_read(link, SCR_CONTROL, &scontrol);
-+	if (ret)
-+		goto error;
-+
-+	/* enable device port */
-+	scontrol = 0x1;
-+	ret = sata_scr_write(link, SCR_CONTROL, scontrol);
-+	if (ret)
-+		goto error;
-+
-+	ata_msleep(ap, 1);
-+
-+	scontrol = 0x0;
-+	ret = sata_scr_write(link, SCR_CONTROL, scontrol);
-+	if (ret)
-+		goto error;
-+
-+	ata_msleep(ap, 10);
-+
-+	/* check device link status */
-+	if (ata_link_offline(link)) {
-+		SAS_DPRINTK("link is offline.\n");
-+		goto error;
-+	}
-+
-+	/* clear X bit */
-+	scontrol = 0xFFFFFFFF;
-+	ret = sata_scr_write(link, SCR_ERROR, scontrol);
-+	if (ret)
-+		goto error;
-+
-+	/* may be need to wait for device sig */
-+	ata_msleep(ap, 3);
-+
-+	/* check device class */
-+	if (i->dft->lldd_dev_classify)
-+		*class = i->dft->lldd_dev_classify(dev);
-+
-+	return 0;
-+
-+error:
-+	SAS_DPRINTK("failed to hard reset.\n");
-+	return ret;
-+}
-+
- /*
-  * notify the lldd to forget the sas_task for this internal ata command
-  * that bypasses scsi-eh
-@@ -551,8 +771,12 @@ void sas_ata_end_eh(struct ata_port *ap)
- static struct ata_port_operations sas_sata_ops = {
- 	.prereset		= ata_std_prereset,
- 	.hardreset		= sas_ata_hard_reset,
-+	.softreset		= sas_ata_soft_reset,
-+	.pmp_hardreset		= sas_ata_pmp_hard_reset,
-+	.freeze			= sas_ata_freeze,
-+	.thaw			= sas_ata_thaw,
- 	.postreset		= ata_std_postreset,
--	.error_handler		= ata_std_error_handler,
-+	.error_handler		= sata_pmp_error_handler,
- 	.post_internal_cmd	= sas_ata_post_internal,
- 	.qc_defer               = ata_std_qc_defer,
- 	.qc_prep		= ata_noop_qc_prep,
-diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index ef7872c..a26466a 100644
---- a/include/scsi/libsas.h
-+++ b/include/scsi/libsas.h
-@@ -689,6 +689,12 @@ struct sas_domain_function_template {
- 	/* GPIO support */
- 	int (*lldd_write_gpio)(struct sas_ha_struct *, u8 reg_type,
- 			       u8 reg_index, u8 reg_count, u8 *write_data);
-+
-+	/* ATA EH functions */
-+	void (*lldd_dev_freeze)(struct domain_device *);
-+	void (*lldd_dev_thaw)(struct domain_device *);
-+	int (*lldd_wait_task_done)(struct sas_task *);
-+	int (*lldd_dev_classify)(struct domain_device *);
+ static irqreturn_t mvs_94xx_isr(struct mvs_info *mvi, int irq, u32 stat)
+ {
+ 	void __iomem *regs = mvi->regs;
+@@ -1013,6 +1030,8 @@ const struct mvs_dispatch mvs_94xx_dispatch = {
+ 	mvs_94xx_iounmap,
+ 	mvs_94xx_isr,
+ 	mvs_94xx_isr_status,
++	mvs_94xx_read_isr_stat,
++	mvs_94xx_write_isr_stat,
+ 	mvs_94xx_interrupt_enable,
+ 	mvs_94xx_interrupt_disable,
+ 	mvs_read_phy_ctl,
+diff --git a/drivers/scsi/mvsas/mv_defs.h b/drivers/scsi/mvsas/mv_defs.h
+index f545194..4a25bb6 100644
+--- a/drivers/scsi/mvsas/mv_defs.h
++++ b/drivers/scsi/mvsas/mv_defs.h
+@@ -401,6 +401,7 @@ enum mvs_event_flags {
+ 	PHY_PLUG_IN		= (1U << 0),	/* phy plug in */
+ 	PHY_PLUG_OUT		= (1U << 1),	/* phy plug out */
+ 	EXP_BRCT_CHG		= (1U << 2),	/* broadcast change */
++	PHY_SNTF_RCVD		= (1U << 3),	/* pm sntf received */
  };
  
- extern int sas_register_ha(struct sas_ha_struct *);
+ enum mvs_port_type {
+diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
+index 5ff978b..779f853 100644
+--- a/drivers/scsi/mvsas/mv_init.c
++++ b/drivers/scsi/mvsas/mv_init.c
+@@ -94,6 +94,12 @@ static struct sas_domain_function_template mvs_transport_ops = {
+ 	.lldd_port_formed	= mvs_port_formed,
+ 	.lldd_port_deformed     = mvs_port_deformed,
+ 
++	.lldd_dev_freeze        = mvs_dev_freeze,
++	.lldd_dev_thaw          = mvs_dev_thaw,
++	.lldd_wait_task_done    = mvs_wait_task_done,
++	.lldd_ata_check_ready   = mvs_check_ready,
++	.lldd_dev_classify      = mvs_dev_classify,
++	.lldd_dev_set           = mvs_dev_set,
+ };
+ 
+ static void mvs_phy_init(struct mvs_info *mvi, int phy_id)
+@@ -251,6 +257,7 @@ static int mvs_alloc(struct mvs_info *mvi, struct Scsi_Host *shost)
+ 		mvi->port[i].wide_port_phymap = 0;
+ 		mvi->port[i].port_attached = 0;
+ 		INIT_LIST_HEAD(&mvi->port[i].list);
++		mvi->port[i].sig = 0xFFFFFFFF;
+ 	}
+ 	for (i = 0; i < MVS_MAX_DEVICES; i++) {
+ 		mvi->devices[i].taskfileset = MVS_ID_NOT_MAPPED;
+diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
+index 6c1f223..537c7d6 100644
+--- a/drivers/scsi/mvsas/mv_sas.c
++++ b/drivers/scsi/mvsas/mv_sas.c
+@@ -443,13 +443,15 @@ static int mvs_task_prep_ata(struct mvs_info *mvi,
+ {
+ 	struct sas_ha_struct *sha = mvi->sas;
+ 	struct sas_task *task = tei->task;
+-	struct domain_device *dev = task->dev;
++	struct domain_device *dev = task->dev, *parent = NULL;
+ 	struct mvs_device *mvi_dev = dev->lldd_dev;
+ 	struct mvs_cmd_hdr *hdr = tei->hdr;
+ 	struct asd_sas_port *sas_port = dev->port;
+-	struct sas_phy *sphy = dev->phy;
+-	struct asd_sas_phy *sas_phy = sha->sas_phy[sphy->number];
++	struct sas_phy *sphy = NULL;
++	struct asd_sas_phy *sas_phy = NULL;
+ 	struct mvs_slot_info *slot;
++	struct host_to_dev_fis *fis;
++	struct ata_queued_cmd *qc = NULL;
+ 	void *buf_prd;
+ 	u32 tag = tei->tag, hdr_tag;
+ 	u32 flags, del_q;
+@@ -464,6 +466,13 @@ static int mvs_task_prep_ata(struct mvs_info *mvi,
+ 			mvi_dev->device_id);
+ 		return -EBUSY;
+ 	}
++	if (dev->parent) {
++		parent = dev->parent;
++		sphy = parent->phy;
++	} else
++		sphy = dev->phy;
++	sas_phy = sha->sas_phy[sphy->number];
++
+ 	slot = &mvi->slot_info[tag];
+ 	slot->tx = mvi->tx_prod;
+ 	del_q = TXQ_MODE_I | tag |
+@@ -484,6 +493,19 @@ static int mvs_task_prep_ata(struct mvs_info *mvi,
+ 			flags |= MCH_ATAPI;
+ 	}
+ 
++	if (task->task_state_flags & SAS_TASK_NEED_DEV_RESET)
++		flags |= MCH_RESET;
++
++	if (!(task->task_state_flags & SAS_TASK_NEED_DEV_RESET)) {
++		qc = task->uldd_task;
++		fis = &task->ata_task.fis;
++		if ((qc->tf.command == ATA_CMD_PMP_READ) ||
++		       (qc->tf.command == ATA_CMD_PMP_WRITE))
++			flags |= 0xF;    /* pm control port */
++		else
++			flags |= fis->flags & 0xF;
++	}
++
+ 	hdr->flags = cpu_to_le32(flags);
+ 
+ 	if (task->ata_task.use_ncq && mvs_get_ncq_tag(task, &hdr_tag))
+@@ -491,6 +513,13 @@ static int mvs_task_prep_ata(struct mvs_info *mvi,
+ 	else
+ 		hdr_tag = tag;
+ 
++	if (!(task->task_state_flags & SAS_TASK_NEED_DEV_RESET)) {
++		qc = task->uldd_task;
++		if ((qc->tf.command == ATA_CMD_PMP_READ) ||
++		       (qc->tf.command == ATA_CMD_PMP_WRITE))
++			hdr_tag = 0;
++	}
++
+ 	hdr->tags = cpu_to_le32(hdr_tag);
+ 
+ 	hdr->data_len = cpu_to_le32(task->total_xfer_len);
+@@ -1369,6 +1398,215 @@ void mvs_dev_gone(struct domain_device *dev)
+ 	mvs_dev_gone_notify(dev);
+ }
+ 
++void mvs_dev_freeze(struct domain_device *dev)
++{
++	struct mvs_device *mvi_dev = dev->lldd_dev;
++	struct mvs_info *mvi = mvi_dev->mvi_info;
++
++	if (!mvi) {
++		mv_dprintk("mvi is null.\n");
++		return;
++	}
++
++	MVS_CHIP_DISP->interrupt_disable(mvi);
++}
++
++void mvs_dev_thaw(struct domain_device *dev)
++{
++	struct mvs_device *mvi_dev = dev->lldd_dev;
++	struct mvs_info *mvi = mvi_dev->mvi_info;
++
++	if (!mvi) {
++		mv_dprintk("mvi is null.\n");
++		return;
++	}
++
++	MVS_CHIP_DISP->interrupt_enable(mvi);
++}
++
++int mvs_wait_task_done(struct sas_task *task)
++{
++	struct domain_device *dev = task->dev;
++	struct mvs_device *mdev = dev->lldd_dev;
++	struct mvs_slot_info *slot = (struct mvs_slot_info *)task->lldd_task;
++	u32 slot_idx = slot->slot_tag;
++	struct mvs_info *mvi = mdev->mvi_info;
++	unsigned int rx_prod_idx, rx_desc;
++	int ret = -1;
++	u32 reg;
++
++	reg = MVS_CHIP_DISP->read_isr_status(mvi);
++
++	rx_prod_idx = mvi->rx_cons;
++
++	mvi->rx_cons = le32_to_cpu(mvi->rx[0]);
++	if (mvi->rx_cons == 0xFFF)
++		return ret;
++
++	if (unlikely(mvi->rx_cons == rx_prod_idx))
++		mvi->rx_cons = MVS_CHIP_DISP->rx_update(mvi) & RX_RING_SZ_MASK;
++
++	if (reg & 0x1) {
++		/* free slot resource */
++
++		task->task_state_flags = SAS_TASK_STATE_DONE;
++		if (mdev && mdev->running_req)
++			mdev->running_req--;
++		if (sas_protocol_ata(task->task_proto))
++			mvs_free_reg_set(mvi, mdev);
++
++		mvs_slot_task_free(mvi, task, slot, slot_idx);
++
++		/* clear int register */
++		MVS_CHIP_DISP->write_isr_status(mvi, reg & 0x1);
++		reg = MVS_CHIP_DISP->read_isr_status(mvi);
++
++		rx_desc = le32_to_cpu(mvi->rx[mvi->rx_cons + 1]);
++
++		return 0;
++	}
++
++	if (mvi->rx_cons == rx_prod_idx)
++		return ret;
++
++	rx_desc = le32_to_cpu(mvi->rx[mvi->rx_cons + 1]);
++	if (rx_desc & RXQ_DONE)
++		ret = 0;
++
++	ret = MVS_CHIP_DISP->read_isr_status(mvi);
++	if (reg & 0x1)
++		MVS_CHIP_DISP->write_isr_status(mvi, reg & 0x1);
++
++	return ret;
++}
++
++int mvs_check_ready(struct domain_device *dev)
++{
++	struct mvs_device *mdev = dev->lldd_dev;
++	struct mvs_info *mvi = mdev->mvi_info;
++	struct asd_sas_port *sas_port = dev->port;
++	struct mvs_port *port = sas_port->lldd_port;
++	int i = 0;
++	u32 reg, status = 0;
++
++	while (&(mvi->port[i]) != port)
++		i++;
++
++	BUG_ON(!mvi);
++
++	reg = MVS_CHIP_DISP->read_port_irq_stat(mvi, i);
++	if (reg == 0 && test_bit(SAS_DEV_RESET, &dev->state)) {
++		clear_bit(SAS_DEV_RESET, &dev->state);
++		return 1;
++	}
++	status = mvs_is_phy_ready(mvi, i);
++	if (!status) {
++		mv_dprintk("phy is not ready.\n");
++		return 1;
++	}
++
++	if (reg & PHYEV_UNASSOC_FIS) {
++		reg = readl(UNASSOC_D2H_FIS(i));
++
++	} else if (reg & PHYEV_SIG_FIS) {
++		MVS_CHIP_DISP->write_port_cfg_addr(mvi, i, PHYR_SATA_SIG0);
++		reg = cpu_to_le32(MVS_CHIP_DISP->read_port_cfg_data(mvi, i));
++	}
++
++	status = (reg >> 16) & 0xFF;
++
++	if (status & 0x80)
++		return 0;
++
++	return 1;
++}
++
++static u32 mvs_get_dev_sig(struct mvs_info *mvi, int phy, u32 reg)
++{
++	u32 sig = 0, val;
++
++	if (reg & PHYEV_UNASSOC_FIS) {
++
++		val = readl(UNASSOC_D2H_FIS(phy) + 0xC);
++		val = val & 0xFF;
++		sig |= val;
++		val = readl(UNASSOC_D2H_FIS(phy) + 0x4);
++		val = val & 0xFFFFFF;
++		sig |= (val << 8);
++
++		memset(UNASSOC_D2H_FIS(phy), 0, 4);
++		memset(UNASSOC_D2H_FIS(phy) + 0x4, 0, 4);
++		memset(UNASSOC_D2H_FIS(phy) + 0x8, 0, 4);
++		memset(UNASSOC_D2H_FIS(phy) + 0xC, 0, 4);
++
++	} else if (reg & PHYEV_SIG_FIS) {
++		MVS_CHIP_DISP->write_port_cfg_addr(mvi, phy, PHYR_SATA_SIG3);
++		val = cpu_to_le32(MVS_CHIP_DISP->read_port_cfg_data(mvi, phy));
++		val = val & 0xFF;
++		sig |= val;
++		MVS_CHIP_DISP->write_port_cfg_addr(mvi, phy, PHYR_SATA_SIG1);
++		val = cpu_to_le32(MVS_CHIP_DISP->read_port_cfg_data(mvi, phy));
++		val = val & 0xFFFFFF;
++		sig |= (val << 8);
++	}
++
++	return sig;
++}
++
++int mvs_dev_classify(struct domain_device *dev)
++{
++	struct mvs_device *mdev = dev->lldd_dev;
++	struct mvs_info *mvi = mdev->mvi_info;
++	struct asd_sas_port *sas_port = dev->port;
++	struct mvs_port *port = sas_port->lldd_port;
++	int i = 0;
++	u32 reg, sig;
++
++	if (test_and_clear_bit(SAS_DEV_RESET, &dev->state)) {
++		sig = port->sig;
++		port->sig = 0xFFFFFFFF;
++
++		goto out;
++	}
++
++	while (&mvi->port[i] != port)
++		i++;
++
++	reg = MVS_CHIP_DISP->read_port_irq_stat(mvi, i);
++
++	port->sig = mvs_get_dev_sig(mvi, i, reg);
++	sig = port->sig;
++	port->sig = 0xFFFFFFFF;
++
++	reg = MVS_CHIP_DISP->read_port_irq_stat(mvi, i);
++	MVS_CHIP_DISP->write_port_irq_stat(mvi, i, reg);
++	reg = MVS_CHIP_DISP->read_port_irq_stat(mvi, i);
++out:
++
++	if (sig == 0x96690101)
++		return ATA_DEV_PMP;
++	else if (sig == 0x101)
++		return ATA_DEV_ATA;
++	else
++		return ATA_DEV_UNKNOWN;
++}
++
++void mvs_dev_set(struct domain_device *dev)
++{
++	struct ata_port *ap;
++
++	if (dev->parent &&
++		(dev->parent->dev_type == SAS_SATA_PM))
++		return;
++
++	ap = dev->sata_dev.ap;
++
++	/* add support PM and AN */
++	ap->flags |= (ATA_FLAG_PMP | ATA_FLAG_AN);
++
++	return;
++}
++
+ static void mvs_task_done(struct sas_task *task)
+ {
+ 	if (!del_timer(&task->slow_task->timer))
+@@ -1519,6 +1757,8 @@ int mvs_I_T_nexus_reset(struct domain_device *dev)
+     struct mvs_device * mvi_dev = (struct mvs_device *)dev->lldd_dev;
+ 	struct mvs_info *mvi = mvi_dev->mvi_info;
+ 
++	set_bit(SAS_DEV_RESET, &dev->state);
++
+ 	if (mvi_dev->dev_status != MVS_DEV_EH)
+ 		return TMF_RESP_FUNC_COMPLETE;
+ 	else
+diff --git a/drivers/scsi/mvsas/mv_sas.h b/drivers/scsi/mvsas/mv_sas.h
+index d6b19dc..090c074 100644
+--- a/drivers/scsi/mvsas/mv_sas.h
++++ b/drivers/scsi/mvsas/mv_sas.h
+@@ -113,6 +113,8 @@ struct mvs_dispatch {
+ 	void (*chip_iounmap)(struct mvs_info *mvi);
+ 	irqreturn_t (*isr)(struct mvs_info *mvi, int irq, u32 stat);
+ 	u32 (*isr_status)(struct mvs_info *mvi, int irq);
++	u32 (*read_isr_status)(struct mvs_info *mvi);
++	void (*write_isr_status)(struct mvs_info *mvi, u32 stat);
+ 	void (*interrupt_enable)(struct mvs_info *mvi);
+ 	void (*interrupt_disable)(struct mvs_info *mvi);
+ 
+@@ -214,6 +216,7 @@ struct mvs_port {
+ 	u8			port_attached;
+ 	u8			wide_port_phymap;
+ 	struct list_head	list;
++	u32			sig;
+ };
+ 
+ struct mvs_phy {
+@@ -484,5 +487,11 @@ void mvs_int_port(struct mvs_info *mvi, int phy_no, u32 events);
+ void mvs_update_phyinfo(struct mvs_info *mvi, int i, int get_st);
+ int mvs_int_rx(struct mvs_info *mvi, bool self_clear);
+ struct mvs_device *mvs_find_dev_by_reg_set(struct mvs_info *mvi, u8 reg_set);
++void mvs_dev_freeze(struct domain_device *dev);
++void mvs_dev_thaw(struct domain_device *dev);
++int mvs_wait_task_done(struct sas_task *task);
++int mvs_check_ready(struct domain_device *dev);
++int mvs_dev_classify(struct domain_device *dev);
++void mvs_dev_set(struct domain_device *dev);
+ #endif
+ 
 -- 
 1.7.1
