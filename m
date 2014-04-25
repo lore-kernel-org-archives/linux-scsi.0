@@ -1,29 +1,25 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCHv2 RESEND 0/9] target: Save memory on unused
-	se_dev_entrys and se_luns
-Date: Fri, 25 Apr 2014 07:34:58 +0200
-Message-ID: <20140425053458.GA30932@lst.de>
-References: <1395704598-31073-1-git-send-email-agrover@redhat.com> <5358406B.5040906@redhat.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH 0/1] random vs blk-mq
+Date: Fri, 25 Apr 2014 00:36:10 -0700
+Message-ID: <20140425073610.GA2143@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <target-devel-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <5358406B.5040906@redhat.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Andy Grover <agrover@redhat.com>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Theodore Ts'o <tytso@mit.edu>, Jens Axboe <axboe@kernel.dk>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Apr 23, 2014 at 03:36:27PM -0700, Andy Grover wrote:
-> Does this set look ok, or any other changes needed? Just haven't heard 
-> anything.
+A tester found out that we need add_disk_randomness for my scsi-mq
+branch.  The patch applied exports add_disk_randomness so that modular
+scsi still works with a driver that either uses the low-level I/O
+completion routines for the old block layer, or blk-mq, and I'd love
+to get this in through Jens' tree which has all the other block work
+scsi-mq requires.
 
-Hi Andy,
-
-the series looks reasonable to me, at least for the points I previously
-comment on.
-
-Cheers,
-	Christoph
-
-p.s. it helps to cc me if you want a quick reply.
+But this also brings up an interesting question:  blk-mq currently
+does not set QUEUE_FLAG_ADD_RANDOM in the default queue flags, so
+simply converting a driver to blk-mq will mean it stops contributing
+to the random pool.  Do we need a more fine grained way to control
+this, especially for SCSI?
