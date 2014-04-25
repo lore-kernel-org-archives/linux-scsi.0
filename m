@@ -1,37 +1,33 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 2/2] scsi: don't reference freed command in scsi_prep_return
-Date: Fri, 25 Apr 2014 13:09:50 +0200
-Message-ID: <1398424190-21325-3-git-send-email-hch@lst.de>
-References: <1398424190-21325-1-git-send-email-hch@lst.de>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1398424190-21325-1-git-send-email-hch@lst.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>, James Bottomley <JBottomley@Parallels.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH] scsi: replace numeric messages with string error
+	messages when blk_execute_rq fails.  Also add printing of sense
+	info.
+Date: Fri, 25 Apr 2014 15:12:19 +0200
+Message-ID: <20140425131219.GA20644@lst.de>
+References: <1398167056-14582-1-git-send-email-mlombard@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.211]:45078 "EHLO newverein.lst.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751927AbaDYNMW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 25 Apr 2014 09:12:22 -0400
+Content-Disposition: inline
+In-Reply-To: <1398167056-14582-1-git-send-email-mlombard@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Maurizio Lombardi <mlombard@redhat.com>
+Cc: linux-scsi@vger.kernel.org, JBottomley@Parallels.com, hch@lst.de
 
-In the kill case of scsi_prep_return we have to release our device
-reference, but we do this trying to reference the just freed command.
-Use the local sdev pointer instead.
+On Tue, Apr 22, 2014 at 01:44:16PM +0200, Maurizio Lombardi wrote:
+> Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
+> ---
+>  drivers/scsi/device_handler/scsi_dh_alua.c | 18 ++++++++++++------
+>  1 file changed, 12 insertions(+), 6 deletions(-)
 
-Reported-by: Joe Lawrence <joe.lawrence@stratus.com>
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/scsi/scsi_lib.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 54eff6a..7fa54fe 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1274,7 +1274,7 @@ int scsi_prep_return(struct request_queue *q, struct request *req, int ret)
- 			struct scsi_cmnd *cmd = req->special;
- 			scsi_release_buffers(cmd);
- 			scsi_put_command(cmd);
--			put_device(&cmd->device->sdev_gendev);
-+			put_device(&sdev->sdev_gendev);
- 			req->special = NULL;
- 		}
- 		break;
--- 
-1.7.10.4
+Looks useful, but why do we have basically two copies of the same
+code for different commands? Looking at them in detail they mostly look
+like copies of scsi_execute/scsi_execute_req_flags and should be switched
+to that.
+
