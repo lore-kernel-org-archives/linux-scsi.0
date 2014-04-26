@@ -1,326 +1,70 @@
-From: Michael Schmitz <schmitzmic@gmail.com>
-Subject: Re: [PATCH v2 10/12] scsi/NCR5380: remove unused macro definitions
-Date: Sat, 26 Apr 2014 13:53:10 +1200
-Message-ID: <535B1186.60303@gmail.com>
-References: <20140319123516.542623278@telegraphics.com.au> <20140319123519.542428071@telegraphics.com.au>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH v2 00/12] scsi/NCR5380: fix debugging macros and
+ #include structure
+Date: Sat, 26 Apr 2014 10:21:03 -0700
+Message-ID: <1398532863.24466.2.camel@dabdike.int.hansenpartnership.com>
+References: <20140319123516.542623278@telegraphics.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="ISO-8859-15"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140319123519.542428071@telegraphics.com.au>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <linux-m68k-owner@vger.kernel.org>
+In-Reply-To: <20140319123516.542623278@telegraphics.com.au>
+Sender: linux-m68k-owner@vger.kernel.org
 To: Finn Thain <fthain@telegraphics.com.au>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, Sam Creasey <sammy@sammy.net>, Russell King <linux@arm.linux.org.uk>, Michael Schmitz <schmitz@debian.org>, Joe Perches <joe@perches.com>, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-m68k@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, Sam Creasey <sammy@sammy.net>, Russell King <linux@arm.linux.org.uk>, Michael Schmitz <schmitz@debian.org>, Joe Perches <joe@perches.com>, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-m68k@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Acked-by: MIchael Schmitz <schmitz@debian.org>
+On Wed, 2014-03-19 at 23:35 +1100, Finn Thain wrote:
+> This patch series addresses several issues with NCR5380 drivers:
+> 
+> 1. The complex network of #include directives.
+> 
+> 2. Three inconsistent implementations of the core driver all attempting
+>    to share the same macro definitions in NCR5380.h.
+> 
+> 3. Broken debugging code.
+> 
+> In the past these issues have led to compiler warnings and ugly hacks to
+> fix build failures.
+> 
+> This patch series fixes the debugging code by reducing the divergence
+> between the various core driver implementations.
+> 
+> The final two patches in the series further reduce divergence by refactoring
+> sun3_scsi.c and sun3_scsi_vme.c so that they follow the same structure as
+> the other NCR5380 drivers.
+> 
+> By the end of this patch series over 800 net lines of code have been
+> removed. This is mostly duplicated code that's easily eliminated once the
+> debugging code is made consistent (and some dead code is removed).
+> 
+> Better uniformity and less duplication should assist future work such as
+> modernization and trivial clean-up.
+> 
+> To make code review easier I've tried to keep these patches succinct and
+> free of extraneous changes. Though I did run checkpatch.pl, I've ignored
+> whitespace issues in existing code. I will send separate patches for
+> whitespace clean-up of NCR5380 drivers.
+> 
+> All NCR5380 drivers have been compile-tested with this patch series:
+>   arm/cumana_1.c
+>   arm/oak.c
+>   atari_scsi.c
+>   dmx3191d.c
+>   dtc.c
+>   g_NCR5380.c
+>   g_NCR5380_mmio.c
+>   mac_scsi.c
+>   pas16.c
+>   sun3_scsi.c
+>   sun3_scsi_vme.c
+>   t128.c
+> 
+> I've successfully regression tested this patch series using mac_scsi on a 
+> PowerBook 180. The debugging macros are now usable again.
 
-> Remove the unused (and divergent) debugging macro definitions from
-> the sun3_NCR5380 and atari_NCR5380 drivers. These drivers have been
-> converted to use the common macros in NCR5380.h.
->
-> Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
->
-> ---
->   drivers/scsi/atari_scsi.h |   93 -----------------------
->   drivers/scsi/sun3_scsi.h  |  181 ----------------------------------------------
->   2 files changed, 274 deletions(-)
->
-> Index: linux-m68k/drivers/scsi/atari_scsi.h
-> ===================================================================
-> --- linux-m68k.orig/drivers/scsi/atari_scsi.h	2014-03-19 23:23:02.000000000 +1100
-> +++ linux-m68k/drivers/scsi/atari_scsi.h	2014-03-19 23:34:45.000000000 +1100
-> @@ -80,99 +80,6 @@
->   #define SCSI_RESET_HOST_RESET 0x200
->   #define SCSI_RESET_ACTION   0xff
->   
-> -/* Debugging printk definitions:
-> - *
-> - *  ARB  -> arbitration
-> - *  ASEN -> auto-sense
-> - *  DMA  -> DMA
-> - *  HSH  -> PIO handshake
-> - *  INF  -> information transfer
-> - *  INI  -> initialization
-> - *  INT  -> interrupt
-> - *  LNK  -> linked commands
-> - *  MAIN -> NCR5380_main() control flow
-> - *  NDAT -> no data-out phase
-> - *  NWR  -> no write commands
-> - *  PIO  -> PIO transfers
-> - *  PDMA -> pseudo DMA (unused on Atari)
-> - *  QU   -> queues
-> - *  RSL  -> reselections
-> - *  SEL  -> selections
-> - *  USL  -> usleep cpde (unused on Atari)
-> - *  LBS  -> last byte sent (unused on Atari)
-> - *  RSS  -> restarting of selections
-> - *  EXT  -> extended messages
-> - *  ABRT -> aborting and resetting
-> - *  TAG  -> queue tag handling
-> - *  MER  -> merging of consec. buffers
-> - *
-> - */
-> -
-> -#define dprint(flg, format...)			\
-> -({						\
-> -	if (NDEBUG & (flg))			\
-> -		printk(KERN_DEBUG format);	\
-> -})
-> -
-> -#define ARB_PRINTK(format, args...) \
-> -	dprint(NDEBUG_ARBITRATION, format , ## args)
-> -#define ASEN_PRINTK(format, args...) \
-> -	dprint(NDEBUG_AUTOSENSE, format , ## args)
-> -#define DMA_PRINTK(format, args...) \
-> -	dprint(NDEBUG_DMA, format , ## args)
-> -#define HSH_PRINTK(format, args...) \
-> -	dprint(NDEBUG_HANDSHAKE, format , ## args)
-> -#define INF_PRINTK(format, args...) \
-> -	dprint(NDEBUG_INFORMATION, format , ## args)
-> -#define INI_PRINTK(format, args...) \
-> -	dprint(NDEBUG_INIT, format , ## args)
-> -#define INT_PRINTK(format, args...) \
-> -	dprint(NDEBUG_INTR, format , ## args)
-> -#define LNK_PRINTK(format, args...) \
-> -	dprint(NDEBUG_LINKED, format , ## args)
-> -#define MAIN_PRINTK(format, args...) \
-> -	dprint(NDEBUG_MAIN, format , ## args)
-> -#define NDAT_PRINTK(format, args...) \
-> -	dprint(NDEBUG_NO_DATAOUT, format , ## args)
-> -#define NWR_PRINTK(format, args...) \
-> -	dprint(NDEBUG_NO_WRITE, format , ## args)
-> -#define PIO_PRINTK(format, args...) \
-> -	dprint(NDEBUG_PIO, format , ## args)
-> -#define PDMA_PRINTK(format, args...) \
-> -	dprint(NDEBUG_PSEUDO_DMA, format , ## args)
-> -#define QU_PRINTK(format, args...) \
-> -	dprint(NDEBUG_QUEUES, format , ## args)
-> -#define RSL_PRINTK(format, args...) \
-> -	dprint(NDEBUG_RESELECTION, format , ## args)
-> -#define SEL_PRINTK(format, args...) \
-> -	dprint(NDEBUG_SELECTION, format , ## args)
-> -#define USL_PRINTK(format, args...) \
-> -	dprint(NDEBUG_USLEEP, format , ## args)
-> -#define LBS_PRINTK(format, args...) \
-> -	dprint(NDEBUG_LAST_BYTE_SENT, format , ## args)
-> -#define RSS_PRINTK(format, args...) \
-> -	dprint(NDEBUG_RESTART_SELECT, format , ## args)
-> -#define EXT_PRINTK(format, args...) \
-> -	dprint(NDEBUG_EXTENDED, format , ## args)
-> -#define ABRT_PRINTK(format, args...) \
-> -	dprint(NDEBUG_ABORT, format , ## args)
-> -#define TAG_PRINTK(format, args...) \
-> -	dprint(NDEBUG_TAGS, format , ## args)
-> -#define MER_PRINTK(format, args...) \
-> -	dprint(NDEBUG_MERGING, format , ## args)
-> -
-> -/* conditional macros for NCR5380_print_{,phase,status} */
-> -
-> -#define NCR_PRINT(mask)	\
-> -	((NDEBUG & (mask)) ? NCR5380_print(instance) : (void)0)
-> -
-> -#define NCR_PRINT_PHASE(mask) \
-> -	((NDEBUG & (mask)) ? NCR5380_print_phase(instance) : (void)0)
-> -
-> -#define NCR_PRINT_STATUS(mask) \
-> -	((NDEBUG & (mask)) ? NCR5380_print_status(instance) : (void)0)
-> -
-> -
->   #endif /* ndef ASM */
->   #endif /* ATARI_SCSI_H */
->   
-> Index: linux-m68k/drivers/scsi/sun3_scsi.h
-> ===================================================================
-> --- linux-m68k.orig/drivers/scsi/sun3_scsi.h	2014-03-19 23:34:41.000000000 +1100
-> +++ linux-m68k/drivers/scsi/sun3_scsi.h	2014-03-19 23:34:45.000000000 +1100
-> @@ -182,188 +182,7 @@ struct sun3_udc_regs {
->   
->   #define VME_DATA24 0x3d00
->   
-> -// debugging printk's, taken from atari_scsi.h
-> -/* Debugging printk definitions:
-> - *
-> - *  ARB  -> arbitration
-> - *  ASEN -> auto-sense
-> - *  DMA  -> DMA
-> - *  HSH  -> PIO handshake
-> - *  INF  -> information transfer
-> - *  INI  -> initialization
-> - *  INT  -> interrupt
-> - *  LNK  -> linked commands
-> - *  MAIN -> NCR5380_main() control flow
-> - *  NDAT -> no data-out phase
-> - *  NWR  -> no write commands
-> - *  PIO  -> PIO transfers
-> - *  PDMA -> pseudo DMA (unused on Atari)
-> - *  QU   -> queues
-> - *  RSL  -> reselections
-> - *  SEL  -> selections
-> - *  USL  -> usleep cpde (unused on Atari)
-> - *  LBS  -> last byte sent (unused on Atari)
-> - *  RSS  -> restarting of selections
-> - *  EXT  -> extended messages
-> - *  ABRT -> aborting and resetting
-> - *  TAG  -> queue tag handling
-> - *  MER  -> merging of consec. buffers
-> - *
-> - */
-> -
->   #include "NCR5380.h"
->   
-> -#if NDEBUG & NDEBUG_ARBITRATION
-> -#define ARB_PRINTK(format, args...) \
-> -	printk(KERN_DEBUG format , ## args)
-> -#else
-> -#define ARB_PRINTK(format, args...)
-> -#endif
-> -#if NDEBUG & NDEBUG_AUTOSENSE
-> -#define ASEN_PRINTK(format, args...) \
-> -	printk(KERN_DEBUG format , ## args)
-> -#else
-> -#define ASEN_PRINTK(format, args...)
-> -#endif
-> -#if NDEBUG & NDEBUG_DMA
-> -#define DMA_PRINTK(format, args...) \
-> -	printk(KERN_DEBUG format , ## args)
-> -#else
-> -#define DMA_PRINTK(format, args...)
-> -#endif
-> -#if NDEBUG & NDEBUG_HANDSHAKE
-> -#define HSH_PRINTK(format, args...) \
-> -	printk(KERN_DEBUG format , ## args)
-> -#else
-> -#define HSH_PRINTK(format, args...)
-> -#endif
-> -#if NDEBUG & NDEBUG_INFORMATION
-> -#define INF_PRINTK(format, args...) \
-> -	printk(KERN_DEBUG format , ## args)
-> -#else
-> -#define INF_PRINTK(format, args...)
-> -#endif
-> -#if NDEBUG & NDEBUG_INIT
-> -#define INI_PRINTK(format, args...) \
-> -	printk(KERN_DEBUG format , ## args)
-> -#else
-> -#define INI_PRINTK(format, args...)
-> -#endif
-> -#if NDEBUG & NDEBUG_INTR
-> -#define INT_PRINTK(format, args...) \
-> -	printk(KERN_DEBUG format , ## args)
-> -#else
-> -#define INT_PRINTK(format, args...)
-> -#endif
-> -#if NDEBUG & NDEBUG_LINKED
-> -#define LNK_PRINTK(format, args...) \
-> -	printk(KERN_DEBUG format , ## args)
-> -#else
-> -#define LNK_PRINTK(format, args...)
-> -#endif
-> -#if NDEBUG & NDEBUG_MAIN
-> -#define MAIN_PRINTK(format, args...) \
-> -	printk(KERN_DEBUG format , ## args)
-> -#else
-> -#define MAIN_PRINTK(format, args...)
-> -#endif
-> -#if NDEBUG & NDEBUG_NO_DATAOUT
-> -#define NDAT_PRINTK(format, args...) \
-> -	printk(KERN_DEBUG format , ## args)
-> -#else
-> -#define NDAT_PRINTK(format, args...)
-> -#endif
-> -#if NDEBUG & NDEBUG_NO_WRITE
-> -#define NWR_PRINTK(format, args...) \
-> -	printk(KERN_DEBUG format , ## args)
-> -#else
-> -#define NWR_PRINTK(format, args...)
-> -#endif
-> -#if NDEBUG & NDEBUG_PIO
-> -#define PIO_PRINTK(format, args...) \
-> -	printk(KERN_DEBUG format , ## args)
-> -#else
-> -#define PIO_PRINTK(format, args...)
-> -#endif
-> -#if NDEBUG & NDEBUG_PSEUDO_DMA
-> -#define PDMA_PRINTK(format, args...) \
-> -	printk(KERN_DEBUG format , ## args)
-> -#else
-> -#define PDMA_PRINTK(format, args...)
-> -#endif
-> -#if NDEBUG & NDEBUG_QUEUES
-> -#define QU_PRINTK(format, args...) \
-> -	printk(KERN_DEBUG format , ## args)
-> -#else
-> -#define QU_PRINTK(format, args...)
-> -#endif
-> -#if NDEBUG & NDEBUG_RESELECTION
-> -#define RSL_PRINTK(format, args...) \
-> -	printk(KERN_DEBUG format , ## args)
-> -#else
-> -#define RSL_PRINTK(format, args...)
-> -#endif
-> -#if NDEBUG & NDEBUG_SELECTION
-> -#define SEL_PRINTK(format, args...) \
-> -	printk(KERN_DEBUG format , ## args)
-> -#else
-> -#define SEL_PRINTK(format, args...)
-> -#endif
-> -#if NDEBUG & NDEBUG_USLEEP
-> -#define USL_PRINTK(format, args...) \
-> -	printk(KERN_DEBUG format , ## args)
-> -#else
-> -#define USL_PRINTK(format, args...)
-> -#endif
-> -#if NDEBUG & NDEBUG_LAST_BYTE_SENT
-> -#define LBS_PRINTK(format, args...) \
-> -	printk(KERN_DEBUG format , ## args)
-> -#else
-> -#define LBS_PRINTK(format, args...)
-> -#endif
-> -#if NDEBUG & NDEBUG_RESTART_SELECT
-> -#define RSS_PRINTK(format, args...) \
-> -	printk(KERN_DEBUG format , ## args)
-> -#else
-> -#define RSS_PRINTK(format, args...)
-> -#endif
-> -#if NDEBUG & NDEBUG_EXTENDED
-> -#define EXT_PRINTK(format, args...) \
-> -	printk(KERN_DEBUG format , ## args)
-> -#else
-> -#define EXT_PRINTK(format, args...)
-> -#endif
-> -#if NDEBUG & NDEBUG_ABORT
-> -#define ABRT_PRINTK(format, args...) \
-> -	printk(KERN_DEBUG format , ## args)
-> -#else
-> -#define ABRT_PRINTK(format, args...)
-> -#endif
-> -#if NDEBUG & NDEBUG_TAGS
-> -#define TAG_PRINTK(format, args...) \
-> -	printk(KERN_DEBUG format , ## args)
-> -#else
-> -#define TAG_PRINTK(format, args...)
-> -#endif
-> -#if NDEBUG & NDEBUG_MERGING
-> -#define MER_PRINTK(format, args...) \
-> -	printk(KERN_DEBUG format , ## args)
-> -#else
-> -#define MER_PRINTK(format, args...)
-> -#endif
-> -
-> -/* conditional macros for NCR5380_print_{,phase,status} */
-> -
-> -#define NCR_PRINT(mask)	\
-> -	((NDEBUG & (mask)) ? NCR5380_print(instance) : (void)0)
-> -
-> -#define NCR_PRINT_PHASE(mask) \
-> -	((NDEBUG & (mask)) ? NCR5380_print_phase(instance) : (void)0)
-> -
-> -#define NCR_PRINT_STATUS(mask) \
-> -	((NDEBUG & (mask)) ? NCR5380_print_status(instance) : (void)0)
-> -
-> -
-> -
->   #endif /* SUN3_NCR5380_H */
->   
->
+OK, so this is a pretty big change to an unmaintained driver.  I'll take
+it if you're willing to maintain the driver afterwards ... in which case
+I need another patch to add you to the MAINTAINERS file.
+
+James
