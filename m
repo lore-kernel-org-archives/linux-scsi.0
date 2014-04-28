@@ -1,173 +1,75 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [GIT PULL] SCSI fixes for 3.15-rc3
-Date: Mon, 28 Apr 2014 23:08:26 +0200
-Message-ID: <535EC34A.50605@redhat.com>
-References: <1398437960.2159.4.camel@dabdike.int.hansenpartnership.com>
+From: Loc Ho <lho-qTEPVZfXA3Y@public.gmane.org>
+Subject: Re: [PATCH v18 3/4] ata: Add APM X-Gene SoC AHCI SATA host controller driver
+Date: Mon, 28 Apr 2014 16:12:02 -0700
+Message-ID: <CAPw-ZTmGA5rtVmHx5jZedkey2iJD7L+3-905W=4G4rAJ=BeWgA@mail.gmail.com>
+References: <1394841201-29495-1-git-send-email-lho@apm.com>
+	<1394841201-29495-3-git-send-email-lho@apm.com>
+	<1394841201-29495-4-git-send-email-lho@apm.com>
+	<201403151019.49316.arnd@arndb.de>
+	<CAPw-ZTksg3z8GY55jb7-yP1wfq2BF6apB9KBgbokpshKbiiAaw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1398437960.2159.4.camel@dabdike.int.hansenpartnership.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <CAPw-ZTksg3z8GY55jb7-yP1wfq2BF6apB9KBgbokpshKbiiAaw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, Kishon Vijay Abraham I <kishon-l0cyMroinI0@public.gmane.org>, balbi-l0cyMroinI0@public.gmane.org
+Cc: Olof Johansson <olof-nZhT3qVonbNeoWH0uzbU5w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, Don Dutile <ddutile-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jon Masters <jcm-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "patches-qTEPVZfXA3Y@public.gmane.org" <patches-qTEPVZfXA3Y@public.gmane.org>, Tuan Phan <tphan-qTEPVZfXA3Y@public.gmane.org>, Suman Tripathi <stripathi-qTEPVZfXA3Y@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Il 25/04/2014 16:59, James Bottomley ha scritto:
-> This is a set of seven fixes, three (hpsa) and free'd command references
-> correcting bugs in the last round of updates and the remaining four
-> correcting problems within the SCSI error handler that was causing a
-> deadlock within USB.
->
-> The patch is available here:
->
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
->
-> The short changelog is:
->
-> Alan Stern (1):
->       Fix command result state propagation
->
-> Christoph Hellwig (2):
->       don't reference freed command in scsi_prep_return
->       don't reference freed command in scsi_init_sgtable
->
-> Hannes Reinecke (1):
->       Fix USB deadlock caused by SCSI error handling
->
-> James Bottomley (2):
->       More USB deadlock fixes
->       Fix spurious request sense in error handling
->
-> scameron@beardog.cce.hp.com (1):
->       hpsa: fix NULL dereference in hpsa_put_ctlr_into_performant_mode()
->
-> And the diffstat:
->
->  drivers/scsi/hpsa.c       |  8 ++++----
->  drivers/scsi/scsi_error.c | 12 ++++++++++++
->  drivers/scsi/scsi_lib.c   |  6 ++++--
->  3 files changed, 20 insertions(+), 6 deletions(-)
->
-> With full diffs below.
+Hi Kishon/Felipe,
 
-James,
+> >> This patch adds support for the APM X-Gene SoC AHCI SATA host controller
+> >> driver. It requires the corresponding APM X-Gene SoC PHY driver. This
+> >> initial version only supports Gen3 speed.
+> >
+> > This version seems workable, thanks for the quick follow-up.
+> >
+> > The comment about Gen3 speed above reminds me that you took some
+> > shortcuts to get here and you removed support for some features
+> > as well as some bug workarounds in the process. I'm guessing some
+> > of them won't be necessary because they are only for prototype
+> > hardware or for early boot loader versions that don't yet set up
+> > the hardware right, but others actually need to come back.
+> >
+> > That is usually a good approach, but I'd also like to make sure we can
+> > deal with them nicely when you have to add them back later, and don't
+> > have to add ugly extensions to the DT binding to support the old dtb
+> > files.
+> >
+> > Can you list (also in the changelog) the parts of the driver that you
+> > have taken out for now and that you expect to add back at later
+> > stage? I think that would be helpful for perspective.
+> >
+>
+> Here is an list of patches that we will be preparing for once the
+> basic driver is completed. Do you want me to re-generate the patch
+> change log with this info?
+>
+> 1. Support for Gen1/Gen2/Gen3
+> Solution: The simplest solution is to have the PHY framework support
+> setting the desire speed. I had argued with the TI folks but they are
+> reluctant to add this function to the framework. They argued that this
+> is still not generic enough. I will start the discussion again later
+> on. The other possibility (but not sure if this is doable) is to have
+> the PHY init function to be smarter and do the necessary operation
+> assuming the underlying PHY is capable in detecting the link up speed.
+> I will need to check the spec of this.
 
-can you queue http://article.gmane.org/gmane.linux.kernel/1682301/raw 
-please?
 
-Thanks,
+In order for the X-Gene SATA PHY to support SATA Gen1 and Gen2 speed,
+we need an method to instruct the underlying PHY driver to switch to
+an specified setting after link up. For this errata, Suman Tripathi
+had submitted the patch [1]. It is not possible to hide this within
+the PHY driver. Each instance of the PHY driver controls two ports. By
+calling the exit function and then init function, it will affect the
+other ports - which is not the correct behavior. At this point, we
+don't see any solution besides introduce an PHY framework function
+set_rate. Can you let us know if this solution is acceptable?
 
-Paolo
+[1] https://lkml.org/lkml/2014/4/18/491
 
-> James
->
-> ---
->
-> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> index 8cf4a0c..9a6e4a2 100644
-> --- a/drivers/scsi/hpsa.c
-> +++ b/drivers/scsi/hpsa.c
-> @@ -7463,6 +7463,10 @@ static void hpsa_put_ctlr_into_performant_mode(struct ctlr_info *h)
->  	if (hpsa_simple_mode)
->  		return;
->
-> +	trans_support = readl(&(h->cfgtable->TransportSupport));
-> +	if (!(trans_support & PERFORMANT_MODE))
-> +		return;
-> +
->  	/* Check for I/O accelerator mode support */
->  	if (trans_support & CFGTBL_Trans_io_accel1) {
->  		transMethod |= CFGTBL_Trans_io_accel1 |
-> @@ -7479,10 +7483,6 @@ static void hpsa_put_ctlr_into_performant_mode(struct ctlr_info *h)
->  	}
->
->  	/* TODO, check that this next line h->nreply_queues is correct */
-> -	trans_support = readl(&(h->cfgtable->TransportSupport));
-> -	if (!(trans_support & PERFORMANT_MODE))
-> -		return;
-> -
->  	h->nreply_queues = h->msix_vector > 0 ? h->msix_vector : 1;
->  	hpsa_get_max_perf_mode_cmds(h);
->  	/* Performant mode ring buffer and supporting data structures */
-> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> index 771c16b..f17aa7a 100644
-> --- a/drivers/scsi/scsi_error.c
-> +++ b/drivers/scsi/scsi_error.c
-> @@ -189,6 +189,7 @@ scsi_abort_command(struct scsi_cmnd *scmd)
->  		/*
->  		 * Retry after abort failed, escalate to next level.
->  		 */
-> +		scmd->eh_eflags &= ~SCSI_EH_ABORT_SCHEDULED;
->  		SCSI_LOG_ERROR_RECOVERY(3,
->  			scmd_printk(KERN_INFO, scmd,
->  				    "scmd %p previous abort failed\n", scmd));
-> @@ -920,10 +921,12 @@ void scsi_eh_prep_cmnd(struct scsi_cmnd *scmd, struct scsi_eh_save *ses,
->  	ses->prot_op = scmd->prot_op;
->
->  	scmd->prot_op = SCSI_PROT_NORMAL;
-> +	scmd->eh_eflags = 0;
->  	scmd->cmnd = ses->eh_cmnd;
->  	memset(scmd->cmnd, 0, BLK_MAX_CDB);
->  	memset(&scmd->sdb, 0, sizeof(scmd->sdb));
->  	scmd->request->next_rq = NULL;
-> +	scmd->result = 0;
->
->  	if (sense_bytes) {
->  		scmd->sdb.length = min_t(unsigned, SCSI_SENSE_BUFFERSIZE,
-> @@ -1157,6 +1160,15 @@ int scsi_eh_get_sense(struct list_head *work_q,
->  					     __func__));
->  			break;
->  		}
-> +		if (status_byte(scmd->result) != CHECK_CONDITION)
-> +			/*
-> +			 * don't request sense if there's no check condition
-> +			 * status because the error we're processing isn't one
-> +			 * that has a sense code (and some devices get
-> +			 * confused by sense requests out of the blue)
-> +			 */
-> +			continue;
-> +
->  		SCSI_LOG_ERROR_RECOVERY(2, scmd_printk(KERN_INFO, scmd,
->  						  "%s: requesting sense\n",
->  						  current->comm));
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 65a123d..9db097a 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -137,6 +137,7 @@ static void __scsi_queue_insert(struct scsi_cmnd *cmd, int reason, int unbusy)
->  	 * lock such that the kblockd_schedule_work() call happens
->  	 * before blk_cleanup_queue() finishes.
->  	 */
-> +	cmd->result = 0;
->  	spin_lock_irqsave(q->queue_lock, flags);
->  	blk_requeue_request(q, cmd->request);
->  	kblockd_schedule_work(q, &device->requeue_work);
-> @@ -1044,6 +1045,7 @@ static int scsi_init_sgtable(struct request *req, struct scsi_data_buffer *sdb,
->   */
->  int scsi_init_io(struct scsi_cmnd *cmd, gfp_t gfp_mask)
->  {
-> +	struct scsi_device *sdev = cmd->device;
->  	struct request *rq = cmd->request;
->
->  	int error = scsi_init_sgtable(rq, &cmd->sdb, gfp_mask);
-> @@ -1091,7 +1093,7 @@ err_exit:
->  	scsi_release_buffers(cmd);
->  	cmd->request->special = NULL;
->  	scsi_put_command(cmd);
-> -	put_device(&cmd->device->sdev_gendev);
-> +	put_device(&sdev->sdev_gendev);
->  	return error;
->  }
->  EXPORT_SYMBOL(scsi_init_io);
-> @@ -1273,7 +1275,7 @@ int scsi_prep_return(struct request_queue *q, struct request *req, int ret)
->  			struct scsi_cmnd *cmd = req->special;
->  			scsi_release_buffers(cmd);
->  			scsi_put_command(cmd);
-> -			put_device(&cmd->device->sdev_gendev);
-> +			put_device(&sdev->sdev_gendev);
->  			req->special = NULL;
->  		}
->  		break;
->
->
+-Loc
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
