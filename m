@@ -1,64 +1,112 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] scsi_debug: simple short transfer injection
-Date: Mon, 28 Apr 2014 17:58:51 +0200
-Message-ID: <1398700731-13669-1-git-send-email-hch@lst.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:53340 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751891AbaD1P4k (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Apr 2014 11:56:40 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Ondrej Zary <linux@rainbow-software.org>
+Subject: Re: 3.2.57 regression: isci driver broken: Unable to reset I T nexus?
+Date: Mon, 28 Apr 2014 18:28:01 +0200
+Message-ID: <201404281828.02179.linux@rainbow-software.org>
+References: <201404281303.24977.linux@rainbow-software.org> <1398700228.97992.2.camel@djiang5-desk1.amr.corp.intel.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1398700228.97992.2.camel@djiang5-desk1.amr.corp.intel.com>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Jiang, Dave" <dave.jiang@intel.com>
+Cc: Dan Williams <dan.j.williams@intel.com>, intel-linux-scu <intel-linux-scu@intel.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Doug Gilbert <dgilbert@interlog.com>
-Cc: linux-scsi@vger.kernel.org
 
-Add an option to only transfer half the data for every n-th command.
+On Monday 28 April 2014 17:50:29 Jiang, Dave wrote:
+> On Mon, 2014-04-28 at 13:03 +0200, Ondrej Zary wrote:
+> > Hello,
+> > just upgraded a server running 3.2.54-2 to 3.2.57-3 (Debian Wheezy) and
+> > it does not boot anymore because of isci driver breakage.
+>
+> I would not run anything less than 3.8 for the isci controller. 3.2 is
+> VERY old for that particular driver and likely very unstable. The
+> product version of that driver plus libsas started with 3.8. Also I'm
+> concerned that you aren't using the platform OEM parameters. You need to
+> turn your OROM or EFI driver on for the SAS controller.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/scsi/scsi_debug.c |    8 ++++++++
- 1 file changed, 8 insertions(+)
+It's a Cisco UCS C22 M3 server with a crappy LSI fakeraid that cannot even be 
+disabled. It was a pain to make it boot properly - had to use dmraid. But it 
+has been working fine since then (2012). Until now.
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 6de6b1a..5f64dc8 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -130,6 +130,7 @@ static const char * scsi_debug_version_date = "20100324";
- #define SCSI_DEBUG_OPT_DIF_ERR   32
- #define SCSI_DEBUG_OPT_DIX_ERR   64
- #define SCSI_DEBUG_OPT_MAC_TIMEOUT  128
-+#define SCSI_DEBUG_OPT_SHORT_TRANSFER	256
- /* When "every_nth" > 0 then modulo "every_nth" commands:
-  *   - a no response is simulated if SCSI_DEBUG_OPT_TIMEOUT is set
-  *   - a RECOVERED_ERROR is simulated on successful read and write
-@@ -3583,6 +3584,7 @@ int scsi_debug_queuecommand_lck(struct scsi_cmnd *SCpnt, done_funct_t done)
- 	int inj_transport = 0;
- 	int inj_dif = 0;
- 	int inj_dix = 0;
-+	int inj_short = 0;
- 	int delay_override = 0;
- 	int unmap = 0;
- 
-@@ -3628,6 +3630,8 @@ int scsi_debug_queuecommand_lck(struct scsi_cmnd *SCpnt, done_funct_t done)
- 			inj_dif = 1; /* to reads and writes below */
- 		else if (SCSI_DEBUG_OPT_DIX_ERR & scsi_debug_opts)
- 			inj_dix = 1; /* to reads and writes below */
-+		else if (SCSI_DEBUG_OPT_SHORT_TRANSFER & scsi_debug_opts)
-+			inj_short = 1;
- 	}
- 
- 	if (devip->wlun) {
-@@ -3744,6 +3748,10 @@ read:
- 		if (scsi_debug_fake_rw)
- 			break;
- 		get_data_transfer_info(cmd, &lba, &num, &ei_lba);
-+
-+		if (inj_short)
-+			num /= 2;
-+
- 		errsts = resp_read(SCpnt, lba, num, devip, ei_lba);
- 		if (inj_recovered && (0 == errsts)) {
- 			mk_sense_buffer(devip, RECOVERED_ERROR,
+I guess that it could be caused by the following commit but haven't tested it:
+commit 584ec12265192bf49dfa270d517380f6723a6956
+Author: Dan Williams <dan.j.williams@intel.com>
+Date:   Thu Feb 6 12:23:01 2014 -0800
+
+
+> > A (partial) log transcription:
+> > sas: DOING DISCOVERY on port 0, pid:5
+> > sas: Enter sas_scsi_recover_host
+> > ata1: sas eh calling libata port error handler
+> > sas: sas_ata_hard_reset: Unable to reset I T nexus?
+> > sas: sas_ata_hard_reset: Found ATA device.
+> > sas: sas_ata_hard_reset: Unable to soft reset
+> > sas: sas_ata_hard_reset: Found ATA device.
+> > ata1: reset failed (errno=-11), retrying in 10 secs
+> > sas: sas_ata_hard_reset: Unable to reset I T nexus?
+> > sas: sas_ata_hard_reset: Found ATA device.
+> > sas: sas_ata_hard_reset: Unable to soft reset
+> > sas: sas_ata_hard_reset: Found ATA device.
+> > ata1: reset failed (errno=-11), retrying in 35 secs
+> > ata1: reset failed, giving up
+> > sas: --- Exit sas_scsi_recover_host
+> > sas: DONE DISCOVERY on port 0, pid: 5, result:0
+> > sas: phy-0:1 added to port-0:1, phy_mask:0x2 (5fcfffff00000002)
+> > sas: DOING DISCOVERY on port 1, pid:5
+> > sas: Enter sas_scsi_recover_host
+> > ata1: sas eh calling libata port error handler
+> > sas: sas_ata_hard_reset: Unable to reset I T nexus?
+> > sas: sas_ata_hard_reset: Found ATA device.
+> > sas: sas_ata_hard_reset: Unable to soft reset
+> > sas: sas_ata_hard_reset: Found ATA device.
+> > ata2: reset failed (errno=-11), retrying in 10 secs
+> > sas: sas_ata_hard_reset: Unable to reset I T nexus?
+> > sas: sas_ata_hard_reset: Found ATA device.
+> > sas: sas_ata_hard_reset: Unable to soft reset
+> > sas: sas_ata_hard_reset: Found ATA device.
+> > ata2: reset failed (errno=-11), retrying in 35 secs
+> > ata2: reset failed, giving up
+> >
+> >
+> > It should look like this (v3.2.54-2):
+> > isci: Intel(R) C600 SAS Controller Driver - version 1.0.0
+> > isci 0000:03:00.0: driver configured for rev: 6 silicon
+> > isci 0000:03:00.0: firmware: agent loaded isci/isci_firmware.bin into
+> > memory isci 0000:03:00.0: OEM SAS parameters (version: 1.3) loaded
+> > (firmware) isci 0000:03:00.0: setting latency timer to 64
+> > scsi0 : isci
+> > scsi1 : isci
+> > isci 0000:03:00.0: irq 81 for MSI/MSI-X
+> > isci 0000:03:00.0: irq 82 for MSI/MSI-X
+> > isci 0000:03:00.0: irq 83 for MSI/MSI-X
+> > isci 0000:03:00.0: irq 84 for MSI/MSI-X
+> > sas: phy-0:0 added to port-0:0, phy_mask:0x1 (5fcfffff00000001)
+> > sas: DOING DISCOVERY on port 0, pid:5
+> > sas: Enter sas_scsi_recover_host
+> > ata1: sas eh calling libata port error handler
+> > sas: sas_ata_hard_reset: Found ATA device.
+> > ata1.00: ATA-8: ST9500620NS, CC02, max UDMA/133
+> > ata1.00: 976773168 sectors, multi 0: LBA48 NCQ (depth 31/32)
+> > ata1.00: configured for UDMA/133
+> > sas: --- Exit sas_scsi_recover_host
+> > scsi 0:0:0:0: Direct-Access     ATA      ST9500620NS      CC02 PQ: 0
+> > ANSI: 5 sas: DONE DISCOVERY on port 0, pid:5, result:0
+> > sas: phy-0:1 added to port-0:1, phy_mask:0x2 (5fcfffff00000002)
+> > sas: DOING DISCOVERY on port 1, pid:5
+> > sas: Enter sas_scsi_recover_host
+> > ata1: sas eh calling libata port error handler
+> > ata2: sas eh calling libata port error handler
+> > sas: sas_ata_hard_reset: Found ATA device.
+> > ata2.00: ATA-8: ST9500620NS, CC02, max UDMA/133
+> > ata2.00: 976773168 sectors, multi 0: LBA48 NCQ (depth 31/32)
+> > ata2.00: configured for UDMA/133
+> > sas: --- Exit sas_scsi_recover_host
+> > scsi 0:0:1:0: Direct-Access     ATA      ST9500620NS      CC02 PQ: 0
+> > ANSI: 5 sas: DONE DISCOVERY on port 1, pid:5, result:0
+
+
 -- 
-1.7.10.4
-
+Ondrej Zary
