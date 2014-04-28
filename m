@@ -1,56 +1,21 @@
-From: Jerry Snitselaar <dev@snitselaar.org>
-Subject: [PATCH 1/2] virtio_scsi: blank line after declaration cleanup
-Date: Sun, 27 Apr 2014 23:31:06 -0700
-Message-ID: <1398666667-24721-1-git-send-email-dev@snitselaar.org>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: two small scsi fixes for 3.15-rc3
+Date: Mon, 28 Apr 2014 11:03:09 +0200
+Message-ID: <20140428090309.GA6571@lst.de>
+References: <1398424190-21325-1-git-send-email-hch@lst.de> <1398438048.2159.5.camel@dabdike.int.hansenpartnership.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1398438048.2159.5.camel@dabdike.int.hansenpartnership.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Clean up of coding style warnings from checkpatch
+On Fri, Apr 25, 2014 at 08:00:48AM -0700, James Bottomley wrote:
+> You should have received my git tree emails that they were already in
+> SCSI fixes ... didn't you?  I certainly got a copy.
 
-Signed-off-by: Jerry Snitselaar <dev@snitselaar.org>
----
- drivers/scsi/virtio_scsi.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-index 16bfd50..fa0b25f 100644
---- a/drivers/scsi/virtio_scsi.c
-+++ b/drivers/scsi/virtio_scsi.c
-@@ -498,8 +498,8 @@ static int virtscsi_queuecommand(struct virtio_scsi *vscsi,
- {
- 	struct virtio_scsi_cmd *cmd;
- 	int ret;
--
- 	struct Scsi_Host *shost = virtio_scsi_host(vscsi->vdev);
-+
- 	BUG_ON(scsi_sg_count(sc) > shost->sg_tablesize);
- 
- 	/* TODO: check feature bit and fail if unsupported?  */
-@@ -661,6 +661,7 @@ static int virtscsi_target_alloc(struct scsi_target *starget)
- {
- 	struct virtio_scsi_target_state *tgt =
- 				kmalloc(sizeof(*tgt), GFP_KERNEL);
-+
- 	if (!tgt)
- 		return -ENOMEM;
- 
-@@ -675,6 +676,7 @@ static int virtscsi_target_alloc(struct scsi_target *starget)
- static void virtscsi_target_destroy(struct scsi_target *starget)
- {
- 	struct virtio_scsi_target_state *tgt = starget->hostdata;
-+
- 	kfree(tgt);
- }
- 
-@@ -768,6 +770,7 @@ static int virtscsi_cpu_callback(struct notifier_block *nfb,
- 				 unsigned long action, void *hcpu)
- {
- 	struct virtio_scsi *vscsi = container_of(nfb, struct virtio_scsi, nb);
-+
- 	switch(action) {
- 	case CPU_ONLINE:
- 	case CPU_ONLINE_FROZEN:
--- 
-2.0.0.rc0
+I've not seen a single reply to the patches either in my inbox or on
+linux-scsi.
