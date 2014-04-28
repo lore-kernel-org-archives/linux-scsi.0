@@ -1,21 +1,91 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: two small scsi fixes for 3.15-rc3
-Date: Mon, 28 Apr 2014 11:03:09 +0200
-Message-ID: <20140428090309.GA6571@lst.de>
-References: <1398424190-21325-1-git-send-email-hch@lst.de> <1398438048.2159.5.camel@dabdike.int.hansenpartnership.com>
+From: Ondrej Zary <linux@rainbow-software.org>
+Subject: 3.2.57 regression: isci driver broken: Unable to reset I T nexus?
+Date: Mon, 28 Apr 2014 13:03:24 +0200
+Message-ID: <201404281303.24977.linux@rainbow-software.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1398438048.2159.5.camel@dabdike.int.hansenpartnership.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Intel SCU Linux support <intel-linux-scu@intel.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Apr 25, 2014 at 08:00:48AM -0700, James Bottomley wrote:
-> You should have received my git tree emails that they were already in
-> SCSI fixes ... didn't you?  I certainly got a copy.
+Hello,
+just upgraded a server running 3.2.54-2 to 3.2.57-3 (Debian Wheezy) and it
+does not boot anymore because of isci driver breakage.
 
-I've not seen a single reply to the patches either in my inbox or on
-linux-scsi.
+A (partial) log transcription:
+sas: DOING DISCOVERY on port 0, pid:5
+sas: Enter sas_scsi_recover_host
+ata1: sas eh calling libata port error handler
+sas: sas_ata_hard_reset: Unable to reset I T nexus?
+sas: sas_ata_hard_reset: Found ATA device.
+sas: sas_ata_hard_reset: Unable to soft reset
+sas: sas_ata_hard_reset: Found ATA device.
+ata1: reset failed (errno=-11), retrying in 10 secs
+sas: sas_ata_hard_reset: Unable to reset I T nexus?
+sas: sas_ata_hard_reset: Found ATA device.
+sas: sas_ata_hard_reset: Unable to soft reset
+sas: sas_ata_hard_reset: Found ATA device.
+ata1: reset failed (errno=-11), retrying in 35 secs
+ata1: reset failed, giving up
+sas: --- Exit sas_scsi_recover_host
+sas: DONE DISCOVERY on port 0, pid: 5, result:0
+sas: phy-0:1 added to port-0:1, phy_mask:0x2 (5fcfffff00000002)
+sas: DOING DISCOVERY on port 1, pid:5
+sas: Enter sas_scsi_recover_host
+ata1: sas eh calling libata port error handler
+sas: sas_ata_hard_reset: Unable to reset I T nexus?
+sas: sas_ata_hard_reset: Found ATA device.
+sas: sas_ata_hard_reset: Unable to soft reset
+sas: sas_ata_hard_reset: Found ATA device.
+ata2: reset failed (errno=-11), retrying in 10 secs
+sas: sas_ata_hard_reset: Unable to reset I T nexus?
+sas: sas_ata_hard_reset: Found ATA device.
+sas: sas_ata_hard_reset: Unable to soft reset
+sas: sas_ata_hard_reset: Found ATA device.
+ata2: reset failed (errno=-11), retrying in 35 secs
+ata2: reset failed, giving up
+
+
+It should look like this (v3.2.54-2):
+isci: Intel(R) C600 SAS Controller Driver - version 1.0.0
+isci 0000:03:00.0: driver configured for rev: 6 silicon
+isci 0000:03:00.0: firmware: agent loaded isci/isci_firmware.bin into memory
+isci 0000:03:00.0: OEM SAS parameters (version: 1.3) loaded (firmware)
+isci 0000:03:00.0: setting latency timer to 64
+scsi0 : isci
+scsi1 : isci
+isci 0000:03:00.0: irq 81 for MSI/MSI-X
+isci 0000:03:00.0: irq 82 for MSI/MSI-X
+isci 0000:03:00.0: irq 83 for MSI/MSI-X
+isci 0000:03:00.0: irq 84 for MSI/MSI-X
+sas: phy-0:0 added to port-0:0, phy_mask:0x1 (5fcfffff00000001)
+sas: DOING DISCOVERY on port 0, pid:5
+sas: Enter sas_scsi_recover_host
+ata1: sas eh calling libata port error handler
+sas: sas_ata_hard_reset: Found ATA device.
+ata1.00: ATA-8: ST9500620NS, CC02, max UDMA/133
+ata1.00: 976773168 sectors, multi 0: LBA48 NCQ (depth 31/32)
+ata1.00: configured for UDMA/133
+sas: --- Exit sas_scsi_recover_host
+scsi 0:0:0:0: Direct-Access     ATA      ST9500620NS      CC02 PQ: 0 ANSI: 5
+sas: DONE DISCOVERY on port 0, pid:5, result:0
+sas: phy-0:1 added to port-0:1, phy_mask:0x2 (5fcfffff00000002)
+sas: DOING DISCOVERY on port 1, pid:5
+sas: Enter sas_scsi_recover_host
+ata1: sas eh calling libata port error handler
+ata2: sas eh calling libata port error handler
+sas: sas_ata_hard_reset: Found ATA device.
+ata2.00: ATA-8: ST9500620NS, CC02, max UDMA/133
+ata2.00: 976773168 sectors, multi 0: LBA48 NCQ (depth 31/32)
+ata2.00: configured for UDMA/133
+sas: --- Exit sas_scsi_recover_host
+scsi 0:0:1:0: Direct-Access     ATA      ST9500620NS      CC02 PQ: 0 ANSI: 5
+sas: DONE DISCOVERY on port 1, pid:5, result:0
+
+-- 
+Ondrej Zary
