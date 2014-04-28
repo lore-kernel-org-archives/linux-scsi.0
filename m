@@ -1,70 +1,49 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH v2 00/12] scsi/NCR5380: fix debugging macros and
- #include structure
-Date: Sat, 26 Apr 2014 10:21:03 -0700
-Message-ID: <1398532863.24466.2.camel@dabdike.int.hansenpartnership.com>
-References: <20140319123516.542623278@telegraphics.com.au>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <20140319123516.542623278@telegraphics.com.au>
-Sender: linux-m68k-owner@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: linux-scsi@vger.kernel.org, Sam Creasey <sammy@sammy.net>, Russell King <linux@arm.linux.org.uk>, Michael Schmitz <schmitz@debian.org>, Joe Perches <joe@perches.com>, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-m68k@vger.kernel.org
+From: Jerry Snitselaar <dev@snitselaar.org>
+Subject: [PATCH 2/2] virtio_scsi: space required before open parenthesis
+Date: Sun, 27 Apr 2014 23:31:07 -0700
+Message-ID: <1398666667-24721-2-git-send-email-dev@snitselaar.org>
+References: <1398666667-24721-1-git-send-email-dev@snitselaar.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pd0-f176.google.com ([209.85.192.176]:56342 "EHLO
+	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751455AbaD1GbT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Apr 2014 02:31:19 -0400
+Received: by mail-pd0-f176.google.com with SMTP id y10so384272pdj.21
+        for <linux-scsi@vger.kernel.org>; Sun, 27 Apr 2014 23:31:19 -0700 (PDT)
+In-Reply-To: <1398666667-24721-1-git-send-email-dev@snitselaar.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, 2014-03-19 at 23:35 +1100, Finn Thain wrote:
-> This patch series addresses several issues with NCR5380 drivers:
-> 
-> 1. The complex network of #include directives.
-> 
-> 2. Three inconsistent implementations of the core driver all attempting
->    to share the same macro definitions in NCR5380.h.
-> 
-> 3. Broken debugging code.
-> 
-> In the past these issues have led to compiler warnings and ugly hacks to
-> fix build failures.
-> 
-> This patch series fixes the debugging code by reducing the divergence
-> between the various core driver implementations.
-> 
-> The final two patches in the series further reduce divergence by refactoring
-> sun3_scsi.c and sun3_scsi_vme.c so that they follow the same structure as
-> the other NCR5380 drivers.
-> 
-> By the end of this patch series over 800 net lines of code have been
-> removed. This is mostly duplicated code that's easily eliminated once the
-> debugging code is made consistent (and some dead code is removed).
-> 
-> Better uniformity and less duplication should assist future work such as
-> modernization and trivial clean-up.
-> 
-> To make code review easier I've tried to keep these patches succinct and
-> free of extraneous changes. Though I did run checkpatch.pl, I've ignored
-> whitespace issues in existing code. I will send separate patches for
-> whitespace clean-up of NCR5380 drivers.
-> 
-> All NCR5380 drivers have been compile-tested with this patch series:
->   arm/cumana_1.c
->   arm/oak.c
->   atari_scsi.c
->   dmx3191d.c
->   dtc.c
->   g_NCR5380.c
->   g_NCR5380_mmio.c
->   mac_scsi.c
->   pas16.c
->   sun3_scsi.c
->   sun3_scsi_vme.c
->   t128.c
-> 
-> I've successfully regression tested this patch series using mac_scsi on a 
-> PowerBook 180. The debugging macros are now usable again.
+Fix coding style warnings from checkpatch
 
-OK, so this is a pretty big change to an unmaintained driver.  I'll take
-it if you're willing to maintain the driver afterwards ... in which case
-I need another patch to add you to the MAINTAINERS file.
+Signed-off-by: Jerry Snitselaar <dev@snitselaar.org>
+---
+ drivers/scsi/virtio_scsi.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-James
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index 9f2fccc..9248a1e 100644
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -723,7 +723,7 @@ static struct scsi_host_template virtscsi_host_template_multi = {
+ 	do { \
+ 		typeof(((struct virtio_scsi_config *)0)->fld) __val = (val); \
+ 		virtio_cwrite(vdev, struct virtio_scsi_config, fld, &__val); \
+-	} while(0)
++	} while (0)
+ 
+ static void __virtscsi_set_affinity(struct virtio_scsi *vscsi, bool affinity)
+ {
+@@ -771,7 +771,7 @@ static int virtscsi_cpu_callback(struct notifier_block *nfb,
+ {
+ 	struct virtio_scsi *vscsi = container_of(nfb, struct virtio_scsi, nb);
+ 
+-	switch(action) {
++	switch (action) {
+ 	case CPU_ONLINE:
+ 	case CPU_ONLINE_FROZEN:
+ 	case CPU_DEAD:
+-- 
+2.0.0.rc0
+
