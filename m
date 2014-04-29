@@ -1,34 +1,49 @@
 From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [patch]  [SCSI] osst: indent for loop body
-Date: Tue, 29 Apr 2014 15:39:53 +0300
-Message-ID: <20140429123953.GA18437@mwanda>
+Subject: Re: [patch] [SCSI] mpt3sas: tidy up output slightly
+Date: Tue, 29 Apr 2014 15:45:22 +0300
+Message-ID: <20140429124522.GR4963@mwanda>
+References: <20140328083901.GQ25192@mwanda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:48786 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933248AbaD2MkU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Apr 2014 08:40:20 -0400
+Return-path: <kernel-janitors-owner@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <20140328083901.GQ25192@mwanda>
+Sender: kernel-janitors-owner@vger.kernel.org
+To: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>
+Cc: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, support@lsi.com, "James E.J. Bottomley" <JBottomley@parallels.com>, DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Willem Riede <osst@riede.org>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, osst-users@lists.sourceforge.net, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-The for body loop isn't indented at all so it's confusing.
+Hi Nagalakshmi,
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Welcome back from vacation.  Please Ack this patch because output is
+still badly fromatted in linux-next.
 
-diff --git a/drivers/scsi/osst.c b/drivers/scsi/osst.c
-index 21883a2..3074f6b 100644
---- a/drivers/scsi/osst.c
-+++ b/drivers/scsi/osst.c
-@@ -5430,7 +5430,7 @@ static int append_to_buffer(const char __user *ubp, struct osst_buffer *st_bp, i
- 
- 	for (i=0, offset=st_bp->buffer_bytes;
- 	     i < st_bp->sg_segs && offset >= st_bp->sg[i].length; i++)
--	offset -= st_bp->sg[i].length;
-+		offset -= st_bp->sg[i].length;
- 	if (i == st_bp->sg_segs) {  /* Should never happen */
- 		printk(KERN_WARNING "osst :A: Append_to_buffer offset overflow.\n");
- 		return (-EIO);
+regards,
+dan carpenter
+
+On Fri, Mar 28, 2014 at 11:39:01AM +0300, Dan Carpenter wrote:
+> The indenting here for "pr_info("\n");" is not correct.  It's not part
+> of the if condition.
+> 
+> Also using pr_info() would put extra characters in the middle of the
+> line.  I suppose that people could complain that pr_cont() is racy but
+> at least it's better than the original code.
+> 
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> 
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+> index 0cf4f70..aa0e042 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+> @@ -585,9 +585,9 @@ _base_display_event_data(struct MPT3SAS_ADAPTER *ioc,
+>  		    (event_data->ReasonCode == MPI2_EVENT_SAS_DISC_RC_STARTED) ?
+>  		    "start" : "stop");
+>  		if (event_data->DiscoveryStatus)
+> -			pr_info("discovery_status(0x%08x)",
+> +			pr_cont("discovery_status(0x%08x)",
+>  			    le32_to_cpu(event_data->DiscoveryStatus));
+> -			pr_info("\n");
+> +		pr_cont("\n");
+>  		return;
+>  	}
+>  	case MPI2_EVENT_SAS_BROADCAST_PRIMITIVE:
