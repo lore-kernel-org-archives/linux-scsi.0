@@ -1,47 +1,26 @@
-From: =?UTF-8?B?V2VybmVyIEhhcnRtYW5u?= <harald13098@mail.ru>
-Subject: =?UTF-8?B?QW5kZXJlIEzDpG5kZXIgaGFiZW4gZGllIGJlc3NlcmVuIEJhbiBrZW4gdW5k?=
- =?UTF-8?B?IGRpZSBiZXNzZXJlbiBLb25kaXRpb25lbiBmw7xyIEtyIGVkaXQgZQ==?=
-Date: Tue, 29 Apr 2014 09:12:09 +0400
-Message-ID: <1398748329.703598938@f356.i.mail.ru>
-Reply-To: =?UTF-8?B?V2VybmVyIEhhcnRtYW5u?= <harald13098@mail.ru>
+From: "Mr. Shanka R Clifford" <richardclifford12@gmail.com>
+Subject: Hello from Shanka.
+Date: Tue, 29 Apr 2014 17:04:16 +0800
+Message-ID: <535f6b31.88cc440a.32b2.ffffeec1@mx.google.com>
+Reply-To: rcliff11@accountant.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fallback2.mail.ru ([94.100.176.87]:47786 "EHLO
-	fallback6.mail.ru" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753995AbaD2FQs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Apr 2014 01:16:48 -0400
-Received: from f356.i.mail.ru (f356.i.mail.ru [217.69.140.252])
-	by fallback6.mail.ru (mPOP.Fallback_MX) with ESMTP id 0063637D88B3
-	for <linux-scsi@vger.kernel.org>; Tue, 29 Apr 2014 09:12:23 +0400 (MSK)
-Received: from mail by f356.i.mail.ru with local (envelope-from <harald13098@mail.ru>)
-	id 1Wf0Kv-0001mi-VD
-	for linux-scsi@vger.kernel.org; Tue, 29 Apr 2014 09:12:10 +0400
+Received: from mail-pb0-f68.google.com ([209.85.160.68]:44981 "EHLO
+	mail-pb0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751818AbaD2JEu convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Apr 2014 05:04:50 -0400
+Content-Description: Mail message body
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Recipients <richardclifford12@gmail.com>
 
-CkhhbGxvLCAgICAgaWNoIGhhYmUgZWluZSBndXRlIE5hY2hyaWNodCBmw7xyIFNpZSAuLi4KCgp3
-aWUgbGFuZ2Ugd29sbGVuIFNpZSBub2NoIGJlaSBJaHJlciBIYXVzYmFuayB1bSBHZSBsZCBiZXR0
-ZWxuPyAKCkdlaGVuIFNpZSBkb2NoIGRvcnRoaW4sIHdvIG1hbiBTaWUgYWxzIEt1bmRlbiBub2No
-IGFuc3TDpG5kaWcgYmVoYW5kZWx0LgoKQXVjaCBiZWkgc2NobGVjaHRlciBBdXNrdW5mdCB1bmQg
-YmVyZWl0cyB2b24gSWhyZXIgZWlnZW5lbiBIYXVzYmFuayBhYmdlbGVobnRlbSBBbnRyYWcga8O2
-bm5lbiB3aXIgSWhuZW4gZWluIERhcmxlaGVuIHZlcm1pdHRlbG4genUgZ8O8bnN0aWdlbiBLb25k
-aXRpb25lbiAgKHp1bSBCZWlzcGllbCBhYiAzLDIlIGbDvHIgU2VsYnN0w6RuZGlnZSwgYWIgMSw4
-JSBaaW5zZW4gcC5hLiBmw7xyIEjDpHVzbGViYXVlciwgYWIgMywyJSBmw7xyIFByaXZhdC4KCkR1
-cmNoIGRpZSBleHRyZW0gbGFuZ2VuIExhdWZ6ZWl0ZW4gdm9uIDEwIGJ6dy4gMjAgSmFocmVuIGJl
-bGFzdGV0IFNpZSBkaWUgbXRsLiBaYWhsdW5nIG5pY2h0IHNvbmRlcmxpY2guIApVbnNlcmUgS29v
-cGVyYXRpb25zcGFydG5lciBzaW5kIG1laHJlcmUgQmFua2VuLCB1bmQgd2lyIGvDvG1tZXJuIHVu
-cyB1bSBhbGxlIERldGFpbHMuIApBbHNvIGlkZWFsIGbDvHIgSnVuZ3VudGVybmVobWVyLCBBbmdl
-c3RlbGx0ZSB1bmQgUGVuc2lvbsOkcmUuClNvIGtvbW1lbiBTaWUgenVtIE5ldUtyZWRpdCBpbSBF
-aWx0ZW1wby4KCgpXZW5uIFNpZSBuZXVnaWVyaWcgZ2V3b3JkZW4gc2luZCwgZGFubiBnZWh0IGVz
-IGhpZXIgd2VpdGVyIC4uLjogRElSRUNUSU5URVJDUkVESVQgdW5kIGVyZ8OkbnplbiBTaWUgCmNv
-IG0KCkhvbGVuIFNpZSBzaWNoIElocmVuIGZyaXNjaGVuIEtyZWRpdCBkb3J0LCB3byBkaWUgR2Vs
-ZHNwZWljaGVyIHZvbGwgc2luZCwgZGllIFppbnNlbiB1bmdsYXVibGljaCBuaWVkcmlnIHVuZCBk
-aWUgTGF1ZnplaXRlbiBsYW5nIHNpbmQuIAoKQmlzIGJhbGQKCkRhbmllbCBTY2h1bHoKCk1pdGFy
-YmVpdGVyIGltIHN1cHBvcnQKCgpTaWUgaGFiZW4gZGllc2UgTmFjaHJpY2h0IGJla29tbWVuLCB3
-ZWlsIHdpciBJaHJlIFJlZ2lzdHJpZXJ1bmcgdm9uIGVpbmVtIERyaXR0YW5iaWV0ZXIgZXJoYWx0
-ZW4gaGFiZW4uIFdlbm4gU2llIHNpY2ggYXVzIHVuc2VyZXIgTGlzdGUgbMO2c2NoZW4gd29sbGVu
-LCBkYW5uIHJ1ZmVuIFNpZSB1bnNlcmUgU2VpdGUgYXVmLiBEZW4gU2NoYWx0ZXIgZmluZGVuIFNp
-ZSBpbiBkZXIgRnXDn25hdmlnYXRpb24uCgoK
+Greetings with due respect,
+
+My name is, Mr.Shanka R Clifford accountant with HSBC bank here in Malaysia. I have  secured  and protected deposit file of life changing $9.5 Million US Dollar belonging to Late depositor .My bank will release and transfer to your account in less than fourteen working days .This  is possible only if you trust and willingly interested to work with me in confidence.More details shall be given to you as soon as i hear from you with full data. I suggest you call on my private phone number and email me at ( rcliff11@accountant.com ).I have the feeling that someone in your position is in capacity to handle this amount and can keep a secret under mutual trust.
+ 
+Yours Sincerely,
+
+Mr Shanka .R. Clifford.
++60 1126394325.
