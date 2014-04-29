@@ -1,73 +1,47 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH] scsi_debug: simple short transfer injection
-Date: Tue, 29 Apr 2014 00:12:46 -0400
-Message-ID: <535F26BE.9000009@interlog.com>
-References: <1398700731-13669-1-git-send-email-hch@lst.de>
-Reply-To: dgilbert@interlog.com
+From: =?UTF-8?B?V2VybmVyIEhhcnRtYW5u?= <harald13098@mail.ru>
+Subject: =?UTF-8?B?QW5kZXJlIEzDpG5kZXIgaGFiZW4gZGllIGJlc3NlcmVuIEJhbiBrZW4gdW5k?=
+ =?UTF-8?B?IGRpZSBiZXNzZXJlbiBLb25kaXRpb25lbiBmw7xyIEtyIGVkaXQgZQ==?=
+Date: Tue, 29 Apr 2014 09:12:09 +0400
+Message-ID: <1398748329.703598938@f356.i.mail.ru>
+Reply-To: =?UTF-8?B?V2VybmVyIEhhcnRtYW5u?= <harald13098@mail.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:49902 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753559AbaD2EMv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Apr 2014 00:12:51 -0400
-In-Reply-To: <1398700731-13669-1-git-send-email-hch@lst.de>
+Received: from fallback2.mail.ru ([94.100.176.87]:47786 "EHLO
+	fallback6.mail.ru" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753995AbaD2FQs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Apr 2014 01:16:48 -0400
+Received: from f356.i.mail.ru (f356.i.mail.ru [217.69.140.252])
+	by fallback6.mail.ru (mPOP.Fallback_MX) with ESMTP id 0063637D88B3
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Apr 2014 09:12:23 +0400 (MSK)
+Received: from mail by f356.i.mail.ru with local (envelope-from <harald13098@mail.ru>)
+	id 1Wf0Kv-0001mi-VD
+	for linux-scsi@vger.kernel.org; Tue, 29 Apr 2014 09:12:10 +0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On 14-04-28 11:58 AM, Christoph Hellwig wrote:
-> Add an option to only transfer half the data for every n-th command.
->
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-Acked-by: Douglas Gilbert <dgilbert@interlog.com>
-
-> ---
->   drivers/scsi/scsi_debug.c |    8 ++++++++
->   1 file changed, 8 insertions(+)
->
-> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-> index 6de6b1a..5f64dc8 100644
-> --- a/drivers/scsi/scsi_debug.c
-> +++ b/drivers/scsi/scsi_debug.c
-> @@ -130,6 +130,7 @@ static const char * scsi_debug_version_date = "20100324";
->   #define SCSI_DEBUG_OPT_DIF_ERR   32
->   #define SCSI_DEBUG_OPT_DIX_ERR   64
->   #define SCSI_DEBUG_OPT_MAC_TIMEOUT  128
-> +#define SCSI_DEBUG_OPT_SHORT_TRANSFER	256
->   /* When "every_nth" > 0 then modulo "every_nth" commands:
->    *   - a no response is simulated if SCSI_DEBUG_OPT_TIMEOUT is set
->    *   - a RECOVERED_ERROR is simulated on successful read and write
-> @@ -3583,6 +3584,7 @@ int scsi_debug_queuecommand_lck(struct scsi_cmnd *SCpnt, done_funct_t done)
->   	int inj_transport = 0;
->   	int inj_dif = 0;
->   	int inj_dix = 0;
-> +	int inj_short = 0;
->   	int delay_override = 0;
->   	int unmap = 0;
->
-> @@ -3628,6 +3630,8 @@ int scsi_debug_queuecommand_lck(struct scsi_cmnd *SCpnt, done_funct_t done)
->   			inj_dif = 1; /* to reads and writes below */
->   		else if (SCSI_DEBUG_OPT_DIX_ERR & scsi_debug_opts)
->   			inj_dix = 1; /* to reads and writes below */
-> +		else if (SCSI_DEBUG_OPT_SHORT_TRANSFER & scsi_debug_opts)
-> +			inj_short = 1;
->   	}
->
->   	if (devip->wlun) {
-> @@ -3744,6 +3748,10 @@ read:
->   		if (scsi_debug_fake_rw)
->   			break;
->   		get_data_transfer_info(cmd, &lba, &num, &ei_lba);
-> +
-> +		if (inj_short)
-> +			num /= 2;
-> +
->   		errsts = resp_read(SCpnt, lba, num, devip, ei_lba);
->   		if (inj_recovered && (0 == errsts)) {
->   			mk_sense_buffer(devip, RECOVERED_ERROR,
->
-
+CkhhbGxvLCAgICAgaWNoIGhhYmUgZWluZSBndXRlIE5hY2hyaWNodCBmw7xyIFNpZSAuLi4KCgp3
+aWUgbGFuZ2Ugd29sbGVuIFNpZSBub2NoIGJlaSBJaHJlciBIYXVzYmFuayB1bSBHZSBsZCBiZXR0
+ZWxuPyAKCkdlaGVuIFNpZSBkb2NoIGRvcnRoaW4sIHdvIG1hbiBTaWUgYWxzIEt1bmRlbiBub2No
+IGFuc3TDpG5kaWcgYmVoYW5kZWx0LgoKQXVjaCBiZWkgc2NobGVjaHRlciBBdXNrdW5mdCB1bmQg
+YmVyZWl0cyB2b24gSWhyZXIgZWlnZW5lbiBIYXVzYmFuayBhYmdlbGVobnRlbSBBbnRyYWcga8O2
+bm5lbiB3aXIgSWhuZW4gZWluIERhcmxlaGVuIHZlcm1pdHRlbG4genUgZ8O8bnN0aWdlbiBLb25k
+aXRpb25lbiAgKHp1bSBCZWlzcGllbCBhYiAzLDIlIGbDvHIgU2VsYnN0w6RuZGlnZSwgYWIgMSw4
+JSBaaW5zZW4gcC5hLiBmw7xyIEjDpHVzbGViYXVlciwgYWIgMywyJSBmw7xyIFByaXZhdC4KCkR1
+cmNoIGRpZSBleHRyZW0gbGFuZ2VuIExhdWZ6ZWl0ZW4gdm9uIDEwIGJ6dy4gMjAgSmFocmVuIGJl
+bGFzdGV0IFNpZSBkaWUgbXRsLiBaYWhsdW5nIG5pY2h0IHNvbmRlcmxpY2guIApVbnNlcmUgS29v
+cGVyYXRpb25zcGFydG5lciBzaW5kIG1laHJlcmUgQmFua2VuLCB1bmQgd2lyIGvDvG1tZXJuIHVu
+cyB1bSBhbGxlIERldGFpbHMuIApBbHNvIGlkZWFsIGbDvHIgSnVuZ3VudGVybmVobWVyLCBBbmdl
+c3RlbGx0ZSB1bmQgUGVuc2lvbsOkcmUuClNvIGtvbW1lbiBTaWUgenVtIE5ldUtyZWRpdCBpbSBF
+aWx0ZW1wby4KCgpXZW5uIFNpZSBuZXVnaWVyaWcgZ2V3b3JkZW4gc2luZCwgZGFubiBnZWh0IGVz
+IGhpZXIgd2VpdGVyIC4uLjogRElSRUNUSU5URVJDUkVESVQgdW5kIGVyZ8OkbnplbiBTaWUgCmNv
+IG0KCkhvbGVuIFNpZSBzaWNoIElocmVuIGZyaXNjaGVuIEtyZWRpdCBkb3J0LCB3byBkaWUgR2Vs
+ZHNwZWljaGVyIHZvbGwgc2luZCwgZGllIFppbnNlbiB1bmdsYXVibGljaCBuaWVkcmlnIHVuZCBk
+aWUgTGF1ZnplaXRlbiBsYW5nIHNpbmQuIAoKQmlzIGJhbGQKCkRhbmllbCBTY2h1bHoKCk1pdGFy
+YmVpdGVyIGltIHN1cHBvcnQKCgpTaWUgaGFiZW4gZGllc2UgTmFjaHJpY2h0IGJla29tbWVuLCB3
+ZWlsIHdpciBJaHJlIFJlZ2lzdHJpZXJ1bmcgdm9uIGVpbmVtIERyaXR0YW5iaWV0ZXIgZXJoYWx0
+ZW4gaGFiZW4uIFdlbm4gU2llIHNpY2ggYXVzIHVuc2VyZXIgTGlzdGUgbMO2c2NoZW4gd29sbGVu
+LCBkYW5uIHJ1ZmVuIFNpZSB1bnNlcmUgU2VpdGUgYXVmLiBEZW4gU2NoYWx0ZXIgZmluZGVuIFNp
+ZSBpbiBkZXIgRnXDn25hdmlnYXRpb24uCgoK
