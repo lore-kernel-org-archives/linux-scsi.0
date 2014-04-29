@@ -1,77 +1,40 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: Re: [SCSI] bfa: Added support to obtain SFP info.
-Date: Tue, 29 Apr 2014 15:51:00 +0300
-Message-ID: <20140429125100.GS4963@mwanda>
-References: <20140327230514.GA15507@mwanda>
- <20140327230737.GB7045@mwanda>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH] scsi: qla2xxx: print port name via %*phC
+Date: Tue, 29 Apr 2014 17:26:41 +0300
+Message-ID: <1398781601-10658-1-git-send-email-andriy.shevchenko@linux.intel.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:19169 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750753AbaD2MvJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Apr 2014 08:51:09 -0400
-Content-Disposition: inline
-In-Reply-To: <20140327230737.GB7045@mwanda>
+Received: from mga02.intel.com ([134.134.136.20]:56889 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752160AbaD2O0r (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Apr 2014 10:26:47 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Vijaya Mohan Guvva <vmohan@brocade.com>, Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>
+To: qla2xxx-upstream@qlogic.com, linux-scsi@vger.kernel.org
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 
-Krishna isn't around any more.  Does anyone else know what's going on
-in this code?  It looks buggy to me.
+Instead of pushing each byte via stack let's use custom specifier which allows
+to print small buffers as a hex string.
 
-regards,
-dan carpenter
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-On Fri, Mar 28, 2014 at 02:07:37AM +0300, Dan Carpenter wrote:
-> On Fri, Mar 28, 2014 at 02:05:14AM +0300, Dan Carpenter wrote:
-> > Hello Krishna Gudipati,
-> > 
-> > The patch 51e569aa1f0c: "[SCSI] bfa: Added support to obtain SFP
-> > info." from Jun 24, 2011, leads to the following static checker
-> > warning:
-> > 
-> > 	drivers/scsi/bfa/bfa_ioc.c:3668 bfa_cb_sfp_state_query()
-> > 	warn: add curly braces?
-> > 
-> > drivers/scsi/bfa/bfa_ioc.c
-> >   3659  static void
-> >   3660  bfa_cb_sfp_state_query(struct bfa_sfp_s *sfp)
-> >   3661  {
-> >   3662          bfa_trc(sfp, sfp->portspeed);
-> >   3663          if (sfp->media) {
-> >   3664                  bfa_sfp_media_get(sfp);
-> >   3665                  if (sfp->state_query_cbfn)
-> >                                                    ^
-> > Add a curly brace here?
-> > 
-> >   3666                          sfp->state_query_cbfn(sfp->state_query_cbarg,
-> >   3667                                          sfp->status);
-> >   3668                          sfp->media = NULL;
-> >   3669                  }
-> >   3670  
-> >   3671                  if (sfp->portspeed) {
-> >   3672                          sfp->status = bfa_sfp_speed_valid(sfp, sfp->portspeed);
-> >   3673                          if (sfp->state_query_cbfn)
-> >   3674                                  sfp->state_query_cbfn(sfp->state_query_cbarg,
-> >   3675                                                  sfp->status);
-> >   3676                                  sfp->portspeed = BFA_PORT_SPEED_UNKNOWN;
-> 
-> It looks like this if statement needs curly braces as well.
-> 
-> regards,
-> dan carpenter
-> 
-> >   3677                  }
-> >   3678  
-> >   3679                  sfp->state_query_lock = 0;
-> >   3680                  sfp->state_query_cbfn = NULL;
-> > 
-> >                 ^
-> > And another close curly brace here?
-> > 
-> >   3681  }
-> > 
-> > regards,
-> > dan carpenter
+diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+index 68fb66fd..c9b2421 100644
+--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
++++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+@@ -1492,9 +1492,7 @@ static int tcm_qla2xxx_check_initiator_node_acl(
+ 	 * match the format by tcm_qla2xxx explict ConfigFS NodeACLs.
+ 	 */
+ 	memset(&port_name, 0, 36);
+-	snprintf(port_name, 36, "%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x",
+-		fc_wwpn[0], fc_wwpn[1], fc_wwpn[2], fc_wwpn[3], fc_wwpn[4],
+-		fc_wwpn[5], fc_wwpn[6], fc_wwpn[7]);
++	snprintf(port_name, sizeof(port_name), "%8phC", fc_wwpn);
+ 	/*
+ 	 * Locate our struct se_node_acl either from an explict NodeACL created
+ 	 * via ConfigFS, or via running in TPG demo mode.
+-- 
+1.9.2
+
