@@ -1,25 +1,48 @@
-From: Xiangliang Yu <yuxiangl@marvell.com>
-Subject: RE: PATCH: mvsas: add support for Supermicro AOC-SAS2LP-MV8
-Date: Mon, 28 Apr 2014 19:56:24 -0700
-Message-ID: <F766E4F80769BD478052FB6533FA745D4F63685A27@SC-VEXCH4.marvell.com>
-References: <20140428145201.GG29712@fi.muni.cz>
-	 <F766E4F80769BD478052FB6533FA745D4F6368598F@SC-VEXCH4.marvell.com>
- <1398735385.2419.69.camel@dabdike.int.hansenpartnership.com>
+From: Michael Schmitz <schmitzmic@gmail.com>
+Subject: Re: [PATCH v2 00/12] scsi/NCR5380: fix debugging macros and #include structure
+Date: Tue, 29 Apr 2014 15:15:05 +1200
+Message-ID: <CAOmrzk+kuepC7QR4uchP_zxk7-Bi7faiF-Z5jGX9KMcHn-7_9Q@mail.gmail.com>
+References: <20140319123516.542623278@telegraphics.com.au>
+	<1398532863.24466.2.camel@dabdike.int.hansenpartnership.com>
+	<alpine.LNX.2.00.1404291202190.32739@nippy.intranet>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1398735385.2419.69.camel@dabdike.int.hansenpartnership.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Jan Kasprzak <kas@fi.muni.cz>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-m68k-owner@vger.kernel.org>
+In-Reply-To: <alpine.LNX.2.00.1404291202190.32739@nippy.intranet>
+Sender: linux-m68k-owner@vger.kernel.org
+To: Finn Thain <fthain@telegraphics.com.au>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, scsi <linux-scsi@vger.kernel.org>, Sam Creasey <sammy@sammy.net>, Russell King <linux@arm.linux.org.uk>, Michael Schmitz <schmitz@debian.org>, Joe Perches <joe@perches.com>, Linux Kernel Development <linux-kernel@vger.kernel.org>, linux-arm-kernel@lists.infradead.org, Linux/m68k <linux-m68k@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-> Ben Hutchings already submitted a patch for this twice, which I cc'd you
-> on:
-> 
-> http://marc.info/?t=139277203900003
-> 
-> will you ack it?  
-I can't find this mail in my mail box.
+Finn,
+
+On Tue, Apr 29, 2014 at 2:22 PM, Finn Thain <fthain@telegraphics.com.au> wrote:
+>
+> On Sat, 26 Apr 2014, James Bottomley wrote:
+>
+>> OK, so this is a pretty big change to an unmaintained driver.  I'll take
+>> it if you're willing to maintain the driver afterwards ... in which case
+>> I need another patch to add you to the MAINTAINERS file.
+>
+> Sure, I'm happy to support these patches and future work I plan to do on
+> the driver.
+>
+> What additional responsibilities would come with adding my name the
+> MAINTAINERS file?
+>
+> Perhaps Michael and Sam would be interested in sharing the role, for atari
+> and sun3 NCR5380 drivers (?)
+
+If you insist ...
+
+(kidding - I"m OK with it if James thinks it's worth it)
+
+Cheers,
+
+  Michael
+
+>
+> I only have hardware to test mac_scsi but I can obtain a Domex DMX3191D
+> PCI card on ebay.
+>
+> --
