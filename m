@@ -1,12 +1,12 @@
 From: Maurizio Lombardi <mlombard@redhat.com>
-Subject: [PATCH] bio: modify __bio_add_page() to accept pages that don't start a new segment
-Date: Tue, 29 Apr 2014 16:58:18 +0200
-Message-ID: <1398783498-19814-1-git-send-email-mlombard@redhat.com>
+Subject: [PATCH V2] bio: modify __bio_add_page() to accept pages that don't start a new segment
+Date: Tue, 29 Apr 2014 17:51:33 +0200
+Message-ID: <1398786693-26790-1-git-send-email-mlombard@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-Sender: linux-fsdevel-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: viro@zeniv.linux.org.uk
 Cc: akpm@linux-foundation.org, linux-fsdevel@vger.kernel.org, JBottomley@parallels.com, hch@lst.de, linux-scsi@vger.kernel.org, kmo@daterainc.com, linux-kernel@vger.kernel.org, m.lombardi85@gmail.com
 List-Id: linux-scsi@vger.kernel.org
@@ -37,14 +37,23 @@ y
 
 Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
 ---
- fs/bio.c | 50 ++++++++++++++++++++++++++++----------------------
- 1 file changed, 28 insertions(+), 22 deletions(-)
+ fs/bio.c | 51 +++++++++++++++++++++++++++++----------------------
+ 1 file changed, 29 insertions(+), 22 deletions(-)
 
 diff --git a/fs/bio.c b/fs/bio.c
-index 6f0362b..9a3a0b1 100644
+index 6f0362b..a31e12b 100644
 --- a/fs/bio.c
 +++ b/fs/bio.c
-@@ -750,29 +750,31 @@ static int __bio_add_page(struct request_queue *q=
+@@ -699,6 +699,7 @@ static int __bio_add_page(struct request_queue *q, =
+struct bio *bio, struct page
+ 			  unsigned int max_sectors)
+ {
+ 	int retried_segments =3D 0;
++	unsigned int bi_phys_segments_orig;
+ 	struct bio_vec *bvec;
+=20
+ 	/*
+@@ -750,29 +751,32 @@ static int __bio_add_page(struct request_queue *q=
 , struct bio *bio, struct page
  		return 0;
 =20
@@ -59,6 +68,7 @@ index 6f0362b..9a3a0b1 100644
 +	bvec->bv_len =3D len;
 +	bvec->bv_offset =3D offset;
 +	bio->bi_vcnt++;
++	bi_phys_segments_orig =3D bio->bi_phys_segments;
 +	bio->bi_phys_segments++;
 +
 +	/*
@@ -90,7 +100,7 @@ index 6f0362b..9a3a0b1 100644
  	 * if queue has other restrictions (eg varying max sector size
  	 * depending on offset), it can specify a merge_bvec_fn in the
  	 * queue to get further control
-@@ -789,23 +791,27 @@ static int __bio_add_page(struct request_queue *q=
+@@ -789,23 +793,26 @@ static int __bio_add_page(struct request_queue *q=
 , struct bio *bio, struct page
  		 * merge_bvec_fn() returns number of bytes it can accept
  		 * at this offset
@@ -121,8 +131,7 @@ index 6f0362b..9a3a0b1 100644
 +	bvec->bv_len =3D 0;
 +	bvec->bv_offset =3D 0;
 +	bio->bi_vcnt--;
-+	if (!retried_segments)
-+		bio->bi_phys_segments--;
++	bio->bi_phys_segments =3D bi_phys_segments_orig;
 +
 +	return 0;
  }
@@ -130,9 +139,3 @@ index 6f0362b..9a3a0b1 100644
  /**
 --=20
 Maurizio Lombardi
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-fsdevel=
-" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
