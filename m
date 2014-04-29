@@ -1,48 +1,75 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH v2 00/12] scsi/NCR5380: fix debugging macros and
- #include structure
-Date: Tue, 29 Apr 2014 07:41:16 -0700
-Message-ID: <1398782476.2218.20.camel@dabdike.int.hansenpartnership.com>
-References: <20140319123516.542623278@telegraphics.com.au>
-	 <1398532863.24466.2.camel@dabdike.int.hansenpartnership.com>
-	 <alpine.LNX.2.00.1404291202190.32739@nippy.intranet>
-	 <CAOmrzk+kuepC7QR4uchP_zxk7-Bi7faiF-Z5jGX9KMcHn-7_9Q@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <CAOmrzk+kuepC7QR4uchP_zxk7-Bi7faiF-Z5jGX9KMcHn-7_9Q@mail.gmail.com>
-Sender: linux-m68k-owner@vger.kernel.org
-To: Michael Schmitz <schmitzmic@gmail.com>
-Cc: Finn Thain <fthain@telegraphics.com.au>, scsi <linux-scsi@vger.kernel.org>, Sam Creasey <sammy@sammy.net>, Russell King <linux@arm.linux.org.uk>, Michael Schmitz <schmitz@debian.org>, Joe Perches <joe@perches.com>, Linux Kernel Development <linux-kernel@vger.kernel.org>, linux-arm-kernel@lists.infradead.org, Linux/m68k <linux-m68k@vger.kernel.org>
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH] scsi: remove private hex2bin() implementation
+Date: Tue, 29 Apr 2014 17:42:06 +0300
+Message-ID: <1398782526-12592-1-git-send-email-andriy.shevchenko@linux.intel.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:46786 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757710AbaD2OmK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Apr 2014 10:42:10 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>
 
-On Tue, 2014-04-29 at 15:15 +1200, Michael Schmitz wrote:
-> Finn,
-> 
-> On Tue, Apr 29, 2014 at 2:22 PM, Finn Thain <fthain@telegraphics.com.au> wrote:
-> >
-> > On Sat, 26 Apr 2014, James Bottomley wrote:
-> >
-> >> OK, so this is a pretty big change to an unmaintained driver.  I'll take
-> >> it if you're willing to maintain the driver afterwards ... in which case
-> >> I need another patch to add you to the MAINTAINERS file.
-> >
-> > Sure, I'm happy to support these patches and future work I plan to do on
-> > the driver.
-> >
-> > What additional responsibilities would come with adding my name the
-> > MAINTAINERS file?
-> >
-> > Perhaps Michael and Sam would be interested in sharing the role, for atari
-> > and sun3 NCR5380 drivers (?)
-> 
-> If you insist ...
-> 
-> (kidding - I"m OK with it if James thinks it's worth it)
+The function sas_parse_addr() could be easily substituted by hex2bin() which is
+in kernel library code.
 
-As long as you understand how it works and how to fix it, the more the
-merrier.  It gives me more people to yell at if something goes wrong
-with the driver.
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: "James E.J. Bottomley" <James.Bottomley@suse.de>
+Cc: linux-scsi@vger.kernel.org
+---
+ drivers/scsi/libsas/sas_scsi_host.c | 23 +++++++----------------
+ 1 file changed, 7 insertions(+), 16 deletions(-)
 
-James
+diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
+index 25d0f12..03344ad 100644
+--- a/drivers/scsi/libsas/sas_scsi_host.c
++++ b/drivers/scsi/libsas/sas_scsi_host.c
+@@ -27,6 +27,7 @@
+ #include <linux/firmware.h>
+ #include <linux/export.h>
+ #include <linux/ctype.h>
++#include <linux/kernel.h>
+ 
+ #include "sas_internal.h"
+ 
+@@ -1167,21 +1168,6 @@ void sas_target_destroy(struct scsi_target *starget)
+ 	sas_put_device(found_dev);
+ }
+ 
+-static void sas_parse_addr(u8 *sas_addr, const char *p)
+-{
+-	int i;
+-	for (i = 0; i < SAS_ADDR_SIZE; i++) {
+-		u8 h, l;
+-		if (!*p)
+-			break;
+-		h = isdigit(*p) ? *p-'0' : toupper(*p)-'A'+10;
+-		p++;
+-		l = isdigit(*p) ? *p-'0' : toupper(*p)-'A'+10;
+-		p++;
+-		sas_addr[i] = (h<<4) | l;
+-	}
+-}
+-
+ #define SAS_STRING_ADDR_SIZE	16
+ 
+ int sas_request_addr(struct Scsi_Host *shost, u8 *addr)
+@@ -1198,7 +1184,12 @@ int sas_request_addr(struct Scsi_Host *shost, u8 *addr)
+ 		goto out;
+ 	}
+ 
+-	sas_parse_addr(addr, fw->data);
++	res = hex2bin(addr, fw->data,
++		      min_t(size_t, SAS_ADDR_SIZE, strlen(fw->data)) / 2);
++	if (res) {
++		res = -EINVAL;
++		goto out;
++	}
+ 
+ out:
+ 	release_firmware(fw);
+-- 
+1.9.2
+
