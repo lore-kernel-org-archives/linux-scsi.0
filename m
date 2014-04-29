@@ -1,75 +1,55 @@
 From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH] scsi: remove private hex2bin() implementation
-Date: Tue, 29 Apr 2014 17:42:06 +0300
-Message-ID: <1398782526-12592-1-git-send-email-andriy.shevchenko@linux.intel.com>
+Subject: [PATCH] scsi: fnic: use kernel's '%pM' format option to print MAC
+Date: Tue, 29 Apr 2014 17:45:23 +0300
+Message-ID: <1398782723-13433-1-git-send-email-andriy.shevchenko@linux.intel.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:46786 "EHLO mga02.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:62039 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757710AbaD2OmK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Apr 2014 10:42:10 -0400
+	id S1757819AbaD2Opv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Apr 2014 10:45:51 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>
+To: linux-scsi@vger.kernel.org, Hiral Patel <hiralpat@cisco.com>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Tom Tucker <tom@opengridcomputing.com>, Steve Wise <swise@opengridcomputing.com>, linux-rdma@vger.kernel.org
 
-The function sas_parse_addr() could be easily substituted by hex2bin() which is
-in kernel library code.
+Instead of supplying each byte through stack let's use %pM specifier.
 
 Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: "James E.J. Bottomley" <James.Bottomley@suse.de>
-Cc: linux-scsi@vger.kernel.org
+Cc: Tom Tucker <tom@opengridcomputing.com>
+Cc: Steve Wise <swise@opengridcomputing.com>
+Cc: linux-rdma@vger.kernel.org
 ---
- drivers/scsi/libsas/sas_scsi_host.c | 23 +++++++----------------
- 1 file changed, 7 insertions(+), 16 deletions(-)
+ drivers/scsi/fnic/vnic_dev.c | 10 ++--------
+ 1 file changed, 2 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index 25d0f12..03344ad 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -27,6 +27,7 @@
- #include <linux/firmware.h>
- #include <linux/export.h>
- #include <linux/ctype.h>
-+#include <linux/kernel.h>
+diff --git a/drivers/scsi/fnic/vnic_dev.c b/drivers/scsi/fnic/vnic_dev.c
+index 9795d6f..ba69d61 100644
+--- a/drivers/scsi/fnic/vnic_dev.c
++++ b/drivers/scsi/fnic/vnic_dev.c
+@@ -499,10 +499,7 @@ void vnic_dev_add_addr(struct vnic_dev *vdev, u8 *addr)
  
- #include "sas_internal.h"
- 
-@@ -1167,21 +1168,6 @@ void sas_target_destroy(struct scsi_target *starget)
- 	sas_put_device(found_dev);
+ 	err = vnic_dev_cmd(vdev, CMD_ADDR_ADD, &a0, &a1, wait);
+ 	if (err)
+-		printk(KERN_ERR
+-			"Can't add addr [%02x:%02x:%02x:%02x:%02x:%02x], %d\n",
+-			addr[0], addr[1], addr[2], addr[3], addr[4], addr[5],
+-			err);
++		pr_err("Can't add addr [%pM], %d\n", addr, err);
  }
  
--static void sas_parse_addr(u8 *sas_addr, const char *p)
--{
--	int i;
--	for (i = 0; i < SAS_ADDR_SIZE; i++) {
--		u8 h, l;
--		if (!*p)
--			break;
--		h = isdigit(*p) ? *p-'0' : toupper(*p)-'A'+10;
--		p++;
--		l = isdigit(*p) ? *p-'0' : toupper(*p)-'A'+10;
--		p++;
--		sas_addr[i] = (h<<4) | l;
--	}
--}
--
- #define SAS_STRING_ADDR_SIZE	16
+ void vnic_dev_del_addr(struct vnic_dev *vdev, u8 *addr)
+@@ -517,10 +514,7 @@ void vnic_dev_del_addr(struct vnic_dev *vdev, u8 *addr)
  
- int sas_request_addr(struct Scsi_Host *shost, u8 *addr)
-@@ -1198,7 +1184,12 @@ int sas_request_addr(struct Scsi_Host *shost, u8 *addr)
- 		goto out;
- 	}
+ 	err = vnic_dev_cmd(vdev, CMD_ADDR_DEL, &a0, &a1, wait);
+ 	if (err)
+-		printk(KERN_ERR
+-			"Can't del addr [%02x:%02x:%02x:%02x:%02x:%02x], %d\n",
+-			addr[0], addr[1], addr[2], addr[3], addr[4], addr[5],
+-			err);
++		pr_err("Can't del addr [%pM], %d\n", addr, err);
+ }
  
--	sas_parse_addr(addr, fw->data);
-+	res = hex2bin(addr, fw->data,
-+		      min_t(size_t, SAS_ADDR_SIZE, strlen(fw->data)) / 2);
-+	if (res) {
-+		res = -EINVAL;
-+		goto out;
-+	}
- 
- out:
- 	release_firmware(fw);
+ int vnic_dev_notify_set(struct vnic_dev *vdev, u16 intr)
 -- 
 1.9.2
 
