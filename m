@@ -1,49 +1,77 @@
 From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: Re: [patch] [SCSI] mpt3sas: tidy up output slightly
-Date: Tue, 29 Apr 2014 15:45:22 +0300
-Message-ID: <20140429124522.GR4963@mwanda>
-References: <20140328083901.GQ25192@mwanda>
+Subject: Re: [SCSI] bfa: Added support to obtain SFP info.
+Date: Tue, 29 Apr 2014 15:51:00 +0300
+Message-ID: <20140429125100.GS4963@mwanda>
+References: <20140327230514.GA15507@mwanda>
+ <20140327230737.GB7045@mwanda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <kernel-janitors-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:19169 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750753AbaD2MvJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Apr 2014 08:51:09 -0400
 Content-Disposition: inline
-In-Reply-To: <20140328083901.GQ25192@mwanda>
-Sender: kernel-janitors-owner@vger.kernel.org
-To: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>
-Cc: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, support@lsi.com, "James E.J. Bottomley" <JBottomley@parallels.com>, DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
+In-Reply-To: <20140327230737.GB7045@mwanda>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Vijaya Mohan Guvva <vmohan@brocade.com>, Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>
 
-Hi Nagalakshmi,
-
-Welcome back from vacation.  Please Ack this patch because output is
-still badly fromatted in linux-next.
+Krishna isn't around any more.  Does anyone else know what's going on
+in this code?  It looks buggy to me.
 
 regards,
 dan carpenter
 
-On Fri, Mar 28, 2014 at 11:39:01AM +0300, Dan Carpenter wrote:
-> The indenting here for "pr_info("\n");" is not correct.  It's not part
-> of the if condition.
+On Fri, Mar 28, 2014 at 02:07:37AM +0300, Dan Carpenter wrote:
+> On Fri, Mar 28, 2014 at 02:05:14AM +0300, Dan Carpenter wrote:
+> > Hello Krishna Gudipati,
+> > 
+> > The patch 51e569aa1f0c: "[SCSI] bfa: Added support to obtain SFP
+> > info." from Jun 24, 2011, leads to the following static checker
+> > warning:
+> > 
+> > 	drivers/scsi/bfa/bfa_ioc.c:3668 bfa_cb_sfp_state_query()
+> > 	warn: add curly braces?
+> > 
+> > drivers/scsi/bfa/bfa_ioc.c
+> >   3659  static void
+> >   3660  bfa_cb_sfp_state_query(struct bfa_sfp_s *sfp)
+> >   3661  {
+> >   3662          bfa_trc(sfp, sfp->portspeed);
+> >   3663          if (sfp->media) {
+> >   3664                  bfa_sfp_media_get(sfp);
+> >   3665                  if (sfp->state_query_cbfn)
+> >                                                    ^
+> > Add a curly brace here?
+> > 
+> >   3666                          sfp->state_query_cbfn(sfp->state_query_cbarg,
+> >   3667                                          sfp->status);
+> >   3668                          sfp->media = NULL;
+> >   3669                  }
+> >   3670  
+> >   3671                  if (sfp->portspeed) {
+> >   3672                          sfp->status = bfa_sfp_speed_valid(sfp, sfp->portspeed);
+> >   3673                          if (sfp->state_query_cbfn)
+> >   3674                                  sfp->state_query_cbfn(sfp->state_query_cbarg,
+> >   3675                                                  sfp->status);
+> >   3676                                  sfp->portspeed = BFA_PORT_SPEED_UNKNOWN;
 > 
-> Also using pr_info() would put extra characters in the middle of the
-> line.  I suppose that people could complain that pr_cont() is racy but
-> at least it's better than the original code.
+> It looks like this if statement needs curly braces as well.
 > 
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> regards,
+> dan carpenter
 > 
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-> index 0cf4f70..aa0e042 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-> @@ -585,9 +585,9 @@ _base_display_event_data(struct MPT3SAS_ADAPTER *ioc,
->  		    (event_data->ReasonCode == MPI2_EVENT_SAS_DISC_RC_STARTED) ?
->  		    "start" : "stop");
->  		if (event_data->DiscoveryStatus)
-> -			pr_info("discovery_status(0x%08x)",
-> +			pr_cont("discovery_status(0x%08x)",
->  			    le32_to_cpu(event_data->DiscoveryStatus));
-> -			pr_info("\n");
-> +		pr_cont("\n");
->  		return;
->  	}
->  	case MPI2_EVENT_SAS_BROADCAST_PRIMITIVE:
+> >   3677                  }
+> >   3678  
+> >   3679                  sfp->state_query_lock = 0;
+> >   3680                  sfp->state_query_cbfn = NULL;
+> > 
+> >                 ^
+> > And another close curly brace here?
+> > 
+> >   3681  }
+> > 
+> > regards,
+> > dan carpenter
