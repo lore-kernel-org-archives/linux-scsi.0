@@ -1,40 +1,48 @@
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH] scsi: qla2xxx: print port name via %*phC
-Date: Tue, 29 Apr 2014 17:26:41 +0300
-Message-ID: <1398781601-10658-1-git-send-email-andriy.shevchenko@linux.intel.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:56889 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752160AbaD2O0r (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Apr 2014 10:26:47 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH v2 00/12] scsi/NCR5380: fix debugging macros and
+ #include structure
+Date: Tue, 29 Apr 2014 07:41:16 -0700
+Message-ID: <1398782476.2218.20.camel@dabdike.int.hansenpartnership.com>
+References: <20140319123516.542623278@telegraphics.com.au>
+	 <1398532863.24466.2.camel@dabdike.int.hansenpartnership.com>
+	 <alpine.LNX.2.00.1404291202190.32739@nippy.intranet>
+	 <CAOmrzk+kuepC7QR4uchP_zxk7-Bi7faiF-Z5jGX9KMcHn-7_9Q@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-m68k-owner@vger.kernel.org>
+In-Reply-To: <CAOmrzk+kuepC7QR4uchP_zxk7-Bi7faiF-Z5jGX9KMcHn-7_9Q@mail.gmail.com>
+Sender: linux-m68k-owner@vger.kernel.org
+To: Michael Schmitz <schmitzmic@gmail.com>
+Cc: Finn Thain <fthain@telegraphics.com.au>, scsi <linux-scsi@vger.kernel.org>, Sam Creasey <sammy@sammy.net>, Russell King <linux@arm.linux.org.uk>, Michael Schmitz <schmitz@debian.org>, Joe Perches <joe@perches.com>, Linux Kernel Development <linux-kernel@vger.kernel.org>, linux-arm-kernel@lists.infradead.org, Linux/m68k <linux-m68k@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: qla2xxx-upstream@qlogic.com, linux-scsi@vger.kernel.org
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 
-Instead of pushing each byte via stack let's use custom specifier which allows
-to print small buffers as a hex string.
+On Tue, 2014-04-29 at 15:15 +1200, Michael Schmitz wrote:
+> Finn,
+> 
+> On Tue, Apr 29, 2014 at 2:22 PM, Finn Thain <fthain@telegraphics.com.au> wrote:
+> >
+> > On Sat, 26 Apr 2014, James Bottomley wrote:
+> >
+> >> OK, so this is a pretty big change to an unmaintained driver.  I'll take
+> >> it if you're willing to maintain the driver afterwards ... in which case
+> >> I need another patch to add you to the MAINTAINERS file.
+> >
+> > Sure, I'm happy to support these patches and future work I plan to do on
+> > the driver.
+> >
+> > What additional responsibilities would come with adding my name the
+> > MAINTAINERS file?
+> >
+> > Perhaps Michael and Sam would be interested in sharing the role, for atari
+> > and sun3 NCR5380 drivers (?)
+> 
+> If you insist ...
+> 
+> (kidding - I"m OK with it if James thinks it's worth it)
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- drivers/scsi/qla2xxx/tcm_qla2xxx.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+As long as you understand how it works and how to fix it, the more the
+merrier.  It gives me more people to yell at if something goes wrong
+with the driver.
 
-diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-index 68fb66fd..c9b2421 100644
---- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-+++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-@@ -1492,9 +1492,7 @@ static int tcm_qla2xxx_check_initiator_node_acl(
- 	 * match the format by tcm_qla2xxx explict ConfigFS NodeACLs.
- 	 */
- 	memset(&port_name, 0, 36);
--	snprintf(port_name, 36, "%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x",
--		fc_wwpn[0], fc_wwpn[1], fc_wwpn[2], fc_wwpn[3], fc_wwpn[4],
--		fc_wwpn[5], fc_wwpn[6], fc_wwpn[7]);
-+	snprintf(port_name, sizeof(port_name), "%8phC", fc_wwpn);
- 	/*
- 	 * Locate our struct se_node_acl either from an explict NodeACL created
- 	 * via ConfigFS, or via running in TPG demo mode.
--- 
-1.9.2
-
+James
