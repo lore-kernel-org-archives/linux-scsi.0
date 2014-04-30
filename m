@@ -1,115 +1,150 @@
-From: ching <ching2048@areca.com.tw>
-Subject: [PATCH v1.0 4/16] arcmsr: limit max SCSI command request
-Date: Wed, 30 Apr 2014 18:42:35 +0800
-Message-ID: <1398854555.6930.9.camel@localhost>
+From: Saurav Kashyap <saurav.kashyap@qlogic.com>
+Subject: Re: [PATCH] scsi: qla2xxx: print port name via %*phC
+Date: Wed, 30 Apr 2014 10:43:42 +0000
+Message-ID: <F5D084D6342F9B479C34599BB0A03E4D8988E43E@AVMB1.qlogic.org>
+References: <1398781601-10658-1-git-send-email-andriy.shevchenko@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="_000_F5D084D6342F9B479C34599BB0A03E4D8988E43EAVMB1qlogicorg_"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-vc0-f171.google.com ([209.85.220.171]:41666 "EHLO
-	mail-vc0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751330AbaD3Kmm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Apr 2014 06:42:42 -0400
-Received: by mail-vc0-f171.google.com with SMTP id ld13so1958836vcb.30
-        for <linux-scsi@vger.kernel.org>; Wed, 30 Apr 2014 03:42:41 -0700 (PDT)
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:27312 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757840AbaD3Knp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Apr 2014 06:43:45 -0400
+Received: from pps.filterd (m0000643.ppops.net [127.0.0.1])
+	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id s3UAcehd003981
+	for <linux-scsi@vger.kernel.org>; Wed, 30 Apr 2014 03:43:45 -0700
+Received: from avcashub1.qlogic.com (avcashub1.qlogic.com [198.70.193.115])
+	by mx0b-0016ce01.pphosted.com with ESMTP id 1kj1t3k25d-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Wed, 30 Apr 2014 03:43:44 -0700
+In-Reply-To: <1398781601-10658-1-git-send-email-andriy.shevchenko@linux.intel.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jbottomley@parallels.com, dan.carpenter@oracle.com, thenzl@redhat.com, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-From: Ching<ching2048@areca.com.tw>
+--_000_F5D084D6342F9B479C34599BB0A03E4D8988E43EAVMB1qlogicorg_
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <01190BE759F1E5459AD266CD8814A37C@qlogic.com>
+Content-Transfer-Encoding: quoted-printable
 
-Limit SCSI command request to prevent command overflow.
-
-Signed-off-by: Ching<ching2048@areca.com.tw>
----
-
-diff -uprN a/drivers/scsi/arcmsr/arcmsr.h b/drivers/scsi/arcmsr/arcmsr.h
---- a/drivers/scsi/arcmsr/arcmsr.h	2014-04-28 16:25:06.000000000 +0800
-+++ b/drivers/scsi/arcmsr/arcmsr.h	2014-04-28 18:08:10.000000000 +0800
-@@ -45,11 +45,12 @@
- #include <linux/interrupt.h>
- struct device_attribute;
- /*The limit of outstanding scsi command that firmware can handle*/
--#define ARCMSR_MAX_OUTSTANDING_CMD						256
- #ifdef CONFIG_XEN
- 	#define ARCMSR_MAX_FREECCB_NUM	160
-+#define ARCMSR_MAX_OUTSTANDING_CMD	155
- #else
- 	#define ARCMSR_MAX_FREECCB_NUM	320
-+#define ARCMSR_MAX_OUTSTANDING_CMD	255
- #endif
- #define ARCMSR_DRIVER_VERSION		"v1.30.00.04-20140428"
- #define ARCMSR_SCSI_INITIATOR_ID						255
-@@ -598,6 +599,7 @@ struct AdapterControlBlock
- 				#define	FW_DEADLOCK	0x0010
- 	atomic_t 			rq_map_token;
- 	atomic_t			ante_token_value;
-+	uint32_t	maxOutstanding;
- };/* HW_DEVICE_EXTENSION */
- /*
- *******************************************************************************
-diff -uprN a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
---- a/drivers/scsi/arcmsr/arcmsr_hba.c	2014-04-30 15:03:00.000000000 +0800
-+++ b/drivers/scsi/arcmsr/arcmsr_hba.c	2014-04-30 15:08:08.000000000 +0800
-@@ -134,7 +134,7 @@ static struct scsi_host_template arcmsr_
- 	.eh_bus_reset_handler	= arcmsr_bus_reset,
- 	.bios_param		= arcmsr_bios_param,
- 	.change_queue_depth	= arcmsr_adjust_disk_queue_depth,
--	.can_queue		= ARCMSR_MAX_FREECCB_NUM,
-+	.can_queue		= ARCMSR_MAX_OUTSTANDING_CMD,
- 	.this_id			= ARCMSR_SCSI_INITIATOR_ID,
- 	.sg_tablesize	        	= ARCMSR_DEFAULT_SG_ENTRIES, 
- 	.max_sectors    	    	= ARCMSR_MAX_XFER_SECTORS_C, 
-@@ -729,7 +729,7 @@ static int arcmsr_probe(struct pci_dev *
- 	host->max_lun = ARCMSR_MAX_TARGETLUN;
- 	host->max_id = ARCMSR_MAX_TARGETID;		/*16:8*/
- 	host->max_cmd_len = 16;	 			/*this is issue of 64bit LBA ,over 2T byte*/
--	host->can_queue = ARCMSR_MAX_FREECCB_NUM;	/* max simultaneous cmds */		
-+	host->can_queue = ARCMSR_MAX_OUTSTANDING_CMD;	/* max simultaneous cmds */		
- 	host->cmd_per_lun = ARCMSR_MAX_CMD_PERLUN;	    
- 	host->this_id = ARCMSR_SCSI_INITIATOR_ID;
- 	host->unique_id = (bus << 8) | dev_fun;
-@@ -2261,8 +2261,7 @@ static int arcmsr_queue_command_lck(stru
- 		arcmsr_handle_virtual_command(acb, cmd);
- 		return 0;
- 	}
--	if (atomic_read(&acb->ccboutstandingcount) >=
--			ARCMSR_MAX_OUTSTANDING_CMD)
-+	if (atomic_read(&acb->ccboutstandingcount) >= acb->maxOutstanding)
- 		return SCSI_MLQUEUE_HOST_BUSY;
- 	ccb = arcmsr_get_freeccb(acb);
- 	if (!ccb)
-@@ -2473,12 +2472,26 @@ static bool arcmsr_get_hbc_config(struct
- }
- static bool arcmsr_get_firmware_spec(struct AdapterControlBlock *acb)
- {
--	if (acb->adapter_type == ACB_ADAPTER_TYPE_A)
--		return arcmsr_get_hba_config(acb);
--	else if (acb->adapter_type == ACB_ADAPTER_TYPE_B)
--		return arcmsr_get_hbb_config(acb);
-+	bool rtn = false;
-+
-+	switch (acb->adapter_type) {
-+	case ACB_ADAPTER_TYPE_A:
-+		rtn = arcmsr_get_hba_config(acb);
-+		break;
-+	case ACB_ADAPTER_TYPE_B:
-+		rtn = arcmsr_get_hbb_config(acb);
-+		break;
-+	case ACB_ADAPTER_TYPE_C:
-+		rtn = arcmsr_get_hbc_config(acb);
-+		break;
-+	default:
-+		break;
-+	}
-+	if(acb->firm_numbers_queue > ARCMSR_MAX_OUTSTANDING_CMD)
-+		acb->maxOutstanding = ARCMSR_MAX_OUTSTANDING_CMD;
- 	else
--		return arcmsr_get_hbc_config(acb);
-+		acb->maxOutstanding = acb->firm_numbers_queue - 1;
-+	return rtn;
- }
- 
- static int arcmsr_polling_hba_ccbdone(struct AdapterControlBlock *acb,
+Acked-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 
 
+>Instead of pushing each byte via stack let's use custom specifier which
+>allows
+>to print small buffers as a hex string.
+>
+>Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+>---
+> drivers/scsi/qla2xxx/tcm_qla2xxx.c | 4 +---
+> 1 file changed, 1 insertion(+), 3 deletions(-)
+>
+>diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+>b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+>index 68fb66fd..c9b2421 100644
+>--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+>+++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+>@@ -1492,9 +1492,7 @@ static int tcm_qla2xxx_check_initiator_node_acl(
+> 	 * match the format by tcm_qla2xxx explict ConfigFS NodeACLs.
+> 	 */
+> 	memset(&port_name, 0, 36);
+>-	snprintf(port_name, 36, "%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x",
+>-		fc_wwpn[0], fc_wwpn[1], fc_wwpn[2], fc_wwpn[3], fc_wwpn[4],
+>-		fc_wwpn[5], fc_wwpn[6], fc_wwpn[7]);
+>+	snprintf(port_name, sizeof(port_name), "%8phC", fc_wwpn);
+> 	/*
+> 	 * Locate our struct se_node_acl either from an explict NodeACL created
+> 	 * via ConfigFS, or via running in TPG demo mode.
+>--=20
+>1.9.2
+>
+
+
+--_000_F5D084D6342F9B479C34599BB0A03E4D8988E43EAVMB1qlogicorg_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
+
+eJ8+IotBAQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAAEY4MTJBOTQ0
+RDMxMkMxNDFCNUY1RUVDQkI0N0MwRkM2AFYHAQ2ABAACAAAAAgACAAEFgAMADgAAAN4HBAAeAAoA
+KwAqAAMAaQEBIIADAA4AAADeBwQAHgAKACsAKgADAGkBAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
+YWlsLk5vdGUAMQgBBIABADUAAABSZTogW1BBVENIXSBzY3NpOiBxbGEyeHh4OiBwcmludCBwb3J0
+IG5hbWUgdmlhICUqcGhDAFQRAQOQBgBQEAAANQAAAAIBfwABAAAAPAAAADxGNUQwODRENjM0MkY5
+QjQ3OUMzNDU5OUJCMEEwM0U0RDg5ODhFNDNFQEFWTUIxLnFsb2dpYy5vcmc+AAsAHw4BAAAAAgEJ
+EAEAAADhAwAA3QMAAJQGAABMWkZ15TdL92EACmZiaWQEAABjY8BwZzEyNTIA/gND8HRleHQB9wKk
+A+MCAARjaArAc2V0MCDvB20CgwBQEU0yCoAGtAKAln0KgAjIOwliMTkOwL8JwxZyCjIWcQKAFWIq
+CbBzCfAEkGF0BbIOUANgc6JvAYAgRXgRwW4YMF0GUnYEkBe2AhByAMB0fQhQbhoxECAFwAWgG2Rk
+miADUiAQIheyXHYIkOR3awuAZDUdUwTwB0ANF3AwCnEX8mJrbWsGcwGQACAgQk1fQuBFR0lOfQr8
+AfEL8RAgQWNrCYAtYnkGOgYBCHBhdiBLYQBzaHlhcCA8c0kiUy5rIsRAcQkAZ4UOUC4FoG0+XGwL
+gGZlCoEk+z5JAIAQIGFjHGAZMCBwdSLQC4BntiAmgBHAICIAECAgHWAsYSAfYSGwIB5wdCd3BCAn
+ABngYycAGJAcsHPOcAWQBpAIkSB3JyARwP8lxgdACQAeMCXGGJAm4AUQ3wIwKEAAwCtAJ7B1ASAE
+kOcEICLALXAgaBAwKEEsUYxnLiXGJcZTaWcYUKsh4BkwZiHzQR3AeQYArS3QdhHACfBrLCA8AHCy
+ZAUQeS4i0DDmQCTxSHV4LixhZWwkmj42LTQgJcYgMaEaMXMviwTwAJAvJDBhMng18GAvdGNtXzW1
+JJAgoHwgNCArNCoxHHDnAxApMRmjZCw4EQuAEgBFACBpAiAoKyk5ADMPNNAzMBIQOaFzKC0pdy6O
+DeABICA0ICRgBUBh7i807zX/JcZiPM893z7nkx2xLeE2OA2wNjYFcIIuJJA5YjI0Mjgg8R6RNjQ0
+M6k8r0B/Psk+K0eQJ7BE70X/PudAQMk8QDE0FoAsOTdAStP8NyBKkR9hOZA28CxiNjn2XzEBIbBf
+C4A8gAcwGJGUX24EcV8A0GwoNFdhDIIgICogGxEnkXS/LdAccBrzJ7FMmidgeAtQTw5QBUAbQSoQ
+Z0YF8E5hBHFBQ0xzLndPdi+LTvwHgG0SASgmcAkRLU5QYQeAOQAwOgE2KScWIDO2T4NzbixDZihH
+VhlW8DkAIiUwSPA6c1mvWr8iLFc7T4MRsF+Ad3dwblswXTkAVV1WMV3pMl3pM13pNFdd4Fw/XUc1
+Xek2Xek3Ol1XGCtXz1ZGAJB6ZQ8ZMFiYOfFZkDhwaENvXBBdRlcYT3QvGBBPDkzebx5QJ+EIYS4C
+dVJREgD/TlcnYDyALdAFwByDA5FSBv9TFRvQCXBrEQswTw4oElKG7zkABbEoEmuwbgMAJ0ELgPkS
+QFBHOjEEYE/wBHEud8NEoSXGMS45Lg7ALpwHJOUVQnYwAAAAHwBCAAEAAAAeAAAAUwBhAHUAcgBh
+AHYAIABLAGEAcwBoAHkAYQBwAAAAAAAfAGUAAQAAADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgA
+eQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwBkAAEAAAAKAAAAUwBNAFQAUAAAAAAAAgFB
+AAEAAAB0AAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkA
+YQBwAAAAUwBNAFQAUAAAAHMAYQB1AHIAYQB2AC4AawBhAHMAaAB5AGEAcABAAHEAbABvAGcAaQBj
+AC4AYwBvAG0AAAAfAAJdAQAAADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwA
+bwBnAGkAYwAuAGMAbwBtAAAAHwDlXwEAAAA8AAAAcwBpAHAAOgBzAGEAdQByAGEAdgAuAGsAYQBz
+AGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAaDAEAAAAeAAAAUwBhAHUAcgBhAHYA
+IABLAGEAcwBoAHkAYQBwAAAAAAAfAB8MAQAAADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBh
+AHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAeDAEAAAAKAAAAUwBNAFQAUAAAAAAAAgEZDAEA
+AAB0AAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBw
+AAAAUwBNAFQAUAAAAHMAYQB1AHIAYQB2AC4AawBhAHMAaAB5AGEAcABAAHEAbABvAGcAaQBjAC4A
+YwBvAG0AAAAfAAFdAQAAADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBn
+AGkAYwAuAGMAbwBtAAAAHwD4PwEAAAAeAAAAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAA
+AAAfACNAAQAAADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAu
+AGMAbwBtAAAAHwAiQAEAAAAKAAAAUwBNAFQAUAAAAAAAAgH5PwEAAAB0AAAAAAAAAIErH6S+oxAZ
+nW4A3QEPVAIAAACAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAUwBNAFQAUAAAAHMAYQB1
+AHIAYQB2AC4AawBhAHMAaAB5AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAldAQAAADQA
+AABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAx
+QAEAAAACAAAAAAAAAAsAQDoBAAAAHwAwQAEAAAACAAAAAAAAAB8AGgABAAAAEgAAAEkAUABNAC4A
+TgBvAHQAZQAAAAAAAwDxPwkEAAALAEA6AQAAAAMA/T/kBAAAAgELMAEAAAAQAAAA+BKpRNMSwUG1
+9e7LtHwPxgMAFwABAAAAQAA5AACDnA1hZM8BQAAIMFqPFw5hZM8BCwAAgAggBgAAAAAAwAAAAAAA
+AEYAAAAAFIUAAAEAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAeAAAAYQBjAGMAZQBwAHQAbABh
+AG4AZwB1AGEAZwBlAAAAAAABAAAADAAAAGUAbgAtAFUAUwAAAAsAAIAIIAYAAAAAAMAAAAAAAABG
+AAAAAAaFAAAAAAAAHwA3AAEAAABqAAAAUgBlADoAIABbAFAAQQBUAEMASABdACAAcwBjAHMAaQA6
+ACAAcQBsAGEAMgB4AHgAeAA6ACAAcAByAGkAbgB0ACAAcABvAHIAdAAgAG4AYQBtAGUAIAB2AGkA
+YQAgACUAKgBwAGgAQwAAAAAAHwA9AAEAAAAKAAAAUgBlADoAIAAAAAAAAwA2AAAAAAAfAEIQAQAA
+AIwAAAA8ADEAMwA5ADgANwA4ADEANgAwADEALQAxADAANgA1ADgALQAxAC0AZwBpAHQALQBzAGUA
+bgBkAC0AZQBtAGEAaQBsAC0AYQBuAGQAcgBpAHkALgBzAGgAZQB2AGMAaABlAG4AawBvAEAAbABp
+AG4AdQB4AC4AaQBuAHQAZQBsAC4AYwBvAG0APgAAAAIBcQABAAAAFgAAAAEBz2RhDhE3k2oWUc5F
+opObePQ+k2MAAB8AcAABAAAAYgAAAFsAUABBAFQAQwBIAF0AIABzAGMAcwBpADoAIABxAGwAYQAy
+AHgAeAB4ADoAIABwAHIAaQBuAHQAIABwAG8AcgB0ACAAbgBhAG0AZQAgAHYAaQBhACAAJQAqAHAA
+aABDAAAAAAAfADUQAQAAAHgAAAA8AEYANQBEADAAOAA0AEQANgAzADQAMgBGADkAQgA0ADcAOQBD
+ADMANAA1ADkAOQBCAEIAMABBADAAMwBFADQARAA4ADkAOAA4AEUANAAzAEUAQABBAFYATQBCADEA
+LgBxAGwAbwBnAGkAYwAuAG8AcgBnAD4AAAAfADkQAQAAAIwAAAA8ADEAMwA5ADgANwA4ADEANgAw
+ADEALQAxADAANgA1ADgALQAxAC0AZwBpAHQALQBzAGUAbgBkAC0AZQBtAGEAaQBsAC0AYQBuAGQA
+cgBpAHkALgBzAGgAZQB2AGMAaABlAG4AawBvAEAAbABpAG4AdQB4AC4AaQBuAHQAZQBsAC4AYwBv
+AG0APgAAAAMA3j+fTgAAQAAHMJOd+A1hZM8BAwAmAAAAAAACAUcAAQAAAC8AAABjPVVTO2E9IDtw
+PVFMb2dpYztsPUFWTUIxLTE0MDQzMDEwNDM0MlotMTQwNTIyAAAfABUQAQAAAFgAAAAwADEAMQA5
+ADAAQgBFADcANQA5AEYAMQBFADUANAA1ADkAQQBEADIANgA2AEMARAA4ADgAMQA0AEEAMwA3AEMA
+QABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAgEUMAEAAAAMAAAAYAAAAO8FaGNBAAAAHwD6PwEAAAAe
+AAAAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAAAAfAACAhgMCAAAAAADAAAAAAAAARgEA
+AAAWAAAAdQBzAGUAcgAtAGEAZwBlAG4AdAAAAAAAAQAAAEYAAABNAGkAYwByAG8AcwBvAGYAdAAt
+AE0AYQBjAE8AdQB0AGwAbwBvAGsALwAxADQALgAzAC4AOQAuADEAMwAxADAAMwAwAAAAAAAfAACA
+H6TrM6h6LkK+e3nhqY5UswEAAAA4AAAAQwBvAG4AdgBlAHIAcwBhAHQAaQBvAG4ASQBuAGQAZQB4
+AFQAcgBhAGMAawBpAG4AZwBFAHgAAAABAAAAWAEAAEkASQA9ADAAMQAwADEAQwBGADYANAA2ADEA
+MABFAEEAMgA4ADgANABDAEMANgBEADgAQQBFAEMARgA0ADEAQQBGADMAQQA5ADQAQwA2ADMAOAA2
+AEIANQA4ADQARAA7AFMAQgBNAEkARAA9ADEAOwBTAEIAVAA9ADEANwAwADsAUwAyAD0APABEADYA
+MwBCADkAOAAwADQAQwBCADYAMwBBAEQANABGAEEAQQBEADkANgA2ADAAMwA3ADYAOQA1ADYANgA0
+ADYANAA3ADEAMQAwAEYAQgBEAEAAYQB2AG0AYgAyAC4AcQBsAG8AZwBpAGMALgBvAHIAZwA+ADsA
+VgBlAHIAcwBpAG8AbgA9AFYAZQByAHMAaQBvAG4AIAAxADQALgAyACAAKABCAHUAaQBsAGQAIAAz
+ADgANwAuADAAKQAsACAAUwB0AGEAZwBlAD0ASAA5AAAAAwANNP0/AAAfAACAhgMCAAAAAADAAAAA
+AAAARgEAAAAgAAAAeAAtAG0AcwAtAGgAYQBzAC0AYQB0AHQAYQBjAGgAAAABAAAAAgAAAAAAAAAf
+AACAhgMCAAAAAADAAAAAAAAARgEAAAAiAAAAeAAtAG8AcgBpAGcAaQBuAGEAdABpAG4AZwAtAGkA
+cAAAAAAAAQAAABoAAABbADEAMAAuADMANQAuADcALgAzADIAXQAAAAAAoR0=
+
+--_000_F5D084D6342F9B479C34599BB0A03E4D8988E43EAVMB1qlogicorg_--
