@@ -1,150 +1,80 @@
-From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: Re: [PATCH] scsi: qla2xxx: print port name via %*phC
-Date: Wed, 30 Apr 2014 10:43:42 +0000
-Message-ID: <F5D084D6342F9B479C34599BB0A03E4D8988E43E@AVMB1.qlogic.org>
-References: <1398781601-10658-1-git-send-email-andriy.shevchenko@linux.intel.com>
+From: ching <ching2048@areca.com.tw>
+Subject: [PATCH v1.0 5/16] arcmsr: fix abort command function
+Date: Wed, 30 Apr 2014 18:49:22 +0800
+Message-ID: <1398854962.6930.14.camel@localhost>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_000_F5D084D6342F9B479C34599BB0A03E4D8988E43EAVMB1qlogicorg_"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:27312 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757840AbaD3Knp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Apr 2014 06:43:45 -0400
-Received: from pps.filterd (m0000643.ppops.net [127.0.0.1])
-	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id s3UAcehd003981
-	for <linux-scsi@vger.kernel.org>; Wed, 30 Apr 2014 03:43:45 -0700
-Received: from avcashub1.qlogic.com (avcashub1.qlogic.com [198.70.193.115])
-	by mx0b-0016ce01.pphosted.com with ESMTP id 1kj1t3k25d-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Wed, 30 Apr 2014 03:43:44 -0700
-In-Reply-To: <1398781601-10658-1-git-send-email-andriy.shevchenko@linux.intel.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: jbottomley@parallels.com, dan.carpenter@oracle.com, thenzl@redhat.com, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
---_000_F5D084D6342F9B479C34599BB0A03E4D8988E43EAVMB1qlogicorg_
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <01190BE759F1E5459AD266CD8814A37C@qlogic.com>
-Content-Transfer-Encoding: quoted-printable
+From: Ching<ching2048@areca.com.tw>
 
-Acked-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
+Fix abort command and its relate function.
 
+Signed-off-by: Ching<ching2048@areca.com.tw>
+---
 
->Instead of pushing each byte via stack let's use custom specifier which
->allows
->to print small buffers as a hex string.
->
->Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
->---
-> drivers/scsi/qla2xxx/tcm_qla2xxx.c | 4 +---
-> 1 file changed, 1 insertion(+), 3 deletions(-)
->
->diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
->b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
->index 68fb66fd..c9b2421 100644
->--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
->+++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
->@@ -1492,9 +1492,7 @@ static int tcm_qla2xxx_check_initiator_node_acl(
-> 	 * match the format by tcm_qla2xxx explict ConfigFS NodeACLs.
-> 	 */
-> 	memset(&port_name, 0, 36);
->-	snprintf(port_name, 36, "%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x",
->-		fc_wwpn[0], fc_wwpn[1], fc_wwpn[2], fc_wwpn[3], fc_wwpn[4],
->-		fc_wwpn[5], fc_wwpn[6], fc_wwpn[7]);
->+	snprintf(port_name, sizeof(port_name), "%8phC", fc_wwpn);
-> 	/*
-> 	 * Locate our struct se_node_acl either from an explict NodeACL created
-> 	 * via ConfigFS, or via running in TPG demo mode.
->--=20
->1.9.2
->
-
-
---_000_F5D084D6342F9B479C34599BB0A03E4D8988E43EAVMB1qlogicorg_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
-
-eJ8+IotBAQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAAEY4MTJBOTQ0
-RDMxMkMxNDFCNUY1RUVDQkI0N0MwRkM2AFYHAQ2ABAACAAAAAgACAAEFgAMADgAAAN4HBAAeAAoA
-KwAqAAMAaQEBIIADAA4AAADeBwQAHgAKACsAKgADAGkBAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
-YWlsLk5vdGUAMQgBBIABADUAAABSZTogW1BBVENIXSBzY3NpOiBxbGEyeHh4OiBwcmludCBwb3J0
-IG5hbWUgdmlhICUqcGhDAFQRAQOQBgBQEAAANQAAAAIBfwABAAAAPAAAADxGNUQwODRENjM0MkY5
-QjQ3OUMzNDU5OUJCMEEwM0U0RDg5ODhFNDNFQEFWTUIxLnFsb2dpYy5vcmc+AAsAHw4BAAAAAgEJ
-EAEAAADhAwAA3QMAAJQGAABMWkZ15TdL92EACmZiaWQEAABjY8BwZzEyNTIA/gND8HRleHQB9wKk
-A+MCAARjaArAc2V0MCDvB20CgwBQEU0yCoAGtAKAln0KgAjIOwliMTkOwL8JwxZyCjIWcQKAFWIq
-CbBzCfAEkGF0BbIOUANgc6JvAYAgRXgRwW4YMF0GUnYEkBe2AhByAMB0fQhQbhoxECAFwAWgG2Rk
-miADUiAQIheyXHYIkOR3awuAZDUdUwTwB0ANF3AwCnEX8mJrbWsGcwGQACAgQk1fQuBFR0lOfQr8
-AfEL8RAgQWNrCYAtYnkGOgYBCHBhdiBLYQBzaHlhcCA8c0kiUy5rIsRAcQkAZ4UOUC4FoG0+XGwL
-gGZlCoEk+z5JAIAQIGFjHGAZMCBwdSLQC4BntiAmgBHAICIAECAgHWAsYSAfYSGwIB5wdCd3BCAn
-ABngYycAGJAcsHPOcAWQBpAIkSB3JyARwP8lxgdACQAeMCXGGJAm4AUQ3wIwKEAAwCtAJ7B1ASAE
-kOcEICLALXAgaBAwKEEsUYxnLiXGJcZTaWcYUKsh4BkwZiHzQR3AeQYArS3QdhHACfBrLCA8AHCy
-ZAUQeS4i0DDmQCTxSHV4LixhZWwkmj42LTQgJcYgMaEaMXMviwTwAJAvJDBhMng18GAvdGNtXzW1
-JJAgoHwgNCArNCoxHHDnAxApMRmjZCw4EQuAEgBFACBpAiAoKyk5ADMPNNAzMBIQOaFzKC0pdy6O
-DeABICA0ICRgBUBh7i807zX/JcZiPM893z7nkx2xLeE2OA2wNjYFcIIuJJA5YjI0Mjgg8R6RNjQ0
-M6k8r0B/Psk+K0eQJ7BE70X/PudAQMk8QDE0FoAsOTdAStP8NyBKkR9hOZA28CxiNjn2XzEBIbBf
-C4A8gAcwGJGUX24EcV8A0GwoNFdhDIIgICogGxEnkXS/LdAccBrzJ7FMmidgeAtQTw5QBUAbQSoQ
-Z0YF8E5hBHFBQ0xzLndPdi+LTvwHgG0SASgmcAkRLU5QYQeAOQAwOgE2KScWIDO2T4NzbixDZihH
-VhlW8DkAIiUwSPA6c1mvWr8iLFc7T4MRsF+Ad3dwblswXTkAVV1WMV3pMl3pM13pNFdd4Fw/XUc1
-Xek2Xek3Ol1XGCtXz1ZGAJB6ZQ8ZMFiYOfFZkDhwaENvXBBdRlcYT3QvGBBPDkzebx5QJ+EIYS4C
-dVJREgD/TlcnYDyALdAFwByDA5FSBv9TFRvQCXBrEQswTw4oElKG7zkABbEoEmuwbgMAJ0ELgPkS
-QFBHOjEEYE/wBHEud8NEoSXGMS45Lg7ALpwHJOUVQnYwAAAAHwBCAAEAAAAeAAAAUwBhAHUAcgBh
-AHYAIABLAGEAcwBoAHkAYQBwAAAAAAAfAGUAAQAAADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgA
-eQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwBkAAEAAAAKAAAAUwBNAFQAUAAAAAAAAgFB
-AAEAAAB0AAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkA
-YQBwAAAAUwBNAFQAUAAAAHMAYQB1AHIAYQB2AC4AawBhAHMAaAB5AGEAcABAAHEAbABvAGcAaQBj
-AC4AYwBvAG0AAAAfAAJdAQAAADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwA
-bwBnAGkAYwAuAGMAbwBtAAAAHwDlXwEAAAA8AAAAcwBpAHAAOgBzAGEAdQByAGEAdgAuAGsAYQBz
-AGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAaDAEAAAAeAAAAUwBhAHUAcgBhAHYA
-IABLAGEAcwBoAHkAYQBwAAAAAAAfAB8MAQAAADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBh
-AHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAeDAEAAAAKAAAAUwBNAFQAUAAAAAAAAgEZDAEA
-AAB0AAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBw
-AAAAUwBNAFQAUAAAAHMAYQB1AHIAYQB2AC4AawBhAHMAaAB5AGEAcABAAHEAbABvAGcAaQBjAC4A
-YwBvAG0AAAAfAAFdAQAAADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBn
-AGkAYwAuAGMAbwBtAAAAHwD4PwEAAAAeAAAAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAA
-AAAfACNAAQAAADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAu
-AGMAbwBtAAAAHwAiQAEAAAAKAAAAUwBNAFQAUAAAAAAAAgH5PwEAAAB0AAAAAAAAAIErH6S+oxAZ
-nW4A3QEPVAIAAACAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAUwBNAFQAUAAAAHMAYQB1
-AHIAYQB2AC4AawBhAHMAaAB5AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAldAQAAADQA
-AABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAx
-QAEAAAACAAAAAAAAAAsAQDoBAAAAHwAwQAEAAAACAAAAAAAAAB8AGgABAAAAEgAAAEkAUABNAC4A
-TgBvAHQAZQAAAAAAAwDxPwkEAAALAEA6AQAAAAMA/T/kBAAAAgELMAEAAAAQAAAA+BKpRNMSwUG1
-9e7LtHwPxgMAFwABAAAAQAA5AACDnA1hZM8BQAAIMFqPFw5hZM8BCwAAgAggBgAAAAAAwAAAAAAA
-AEYAAAAAFIUAAAEAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAeAAAAYQBjAGMAZQBwAHQAbABh
-AG4AZwB1AGEAZwBlAAAAAAABAAAADAAAAGUAbgAtAFUAUwAAAAsAAIAIIAYAAAAAAMAAAAAAAABG
-AAAAAAaFAAAAAAAAHwA3AAEAAABqAAAAUgBlADoAIABbAFAAQQBUAEMASABdACAAcwBjAHMAaQA6
-ACAAcQBsAGEAMgB4AHgAeAA6ACAAcAByAGkAbgB0ACAAcABvAHIAdAAgAG4AYQBtAGUAIAB2AGkA
-YQAgACUAKgBwAGgAQwAAAAAAHwA9AAEAAAAKAAAAUgBlADoAIAAAAAAAAwA2AAAAAAAfAEIQAQAA
-AIwAAAA8ADEAMwA5ADgANwA4ADEANgAwADEALQAxADAANgA1ADgALQAxAC0AZwBpAHQALQBzAGUA
-bgBkAC0AZQBtAGEAaQBsAC0AYQBuAGQAcgBpAHkALgBzAGgAZQB2AGMAaABlAG4AawBvAEAAbABp
-AG4AdQB4AC4AaQBuAHQAZQBsAC4AYwBvAG0APgAAAAIBcQABAAAAFgAAAAEBz2RhDhE3k2oWUc5F
-opObePQ+k2MAAB8AcAABAAAAYgAAAFsAUABBAFQAQwBIAF0AIABzAGMAcwBpADoAIABxAGwAYQAy
-AHgAeAB4ADoAIABwAHIAaQBuAHQAIABwAG8AcgB0ACAAbgBhAG0AZQAgAHYAaQBhACAAJQAqAHAA
-aABDAAAAAAAfADUQAQAAAHgAAAA8AEYANQBEADAAOAA0AEQANgAzADQAMgBGADkAQgA0ADcAOQBD
-ADMANAA1ADkAOQBCAEIAMABBADAAMwBFADQARAA4ADkAOAA4AEUANAAzAEUAQABBAFYATQBCADEA
-LgBxAGwAbwBnAGkAYwAuAG8AcgBnAD4AAAAfADkQAQAAAIwAAAA8ADEAMwA5ADgANwA4ADEANgAw
-ADEALQAxADAANgA1ADgALQAxAC0AZwBpAHQALQBzAGUAbgBkAC0AZQBtAGEAaQBsAC0AYQBuAGQA
-cgBpAHkALgBzAGgAZQB2AGMAaABlAG4AawBvAEAAbABpAG4AdQB4AC4AaQBuAHQAZQBsAC4AYwBv
-AG0APgAAAAMA3j+fTgAAQAAHMJOd+A1hZM8BAwAmAAAAAAACAUcAAQAAAC8AAABjPVVTO2E9IDtw
-PVFMb2dpYztsPUFWTUIxLTE0MDQzMDEwNDM0MlotMTQwNTIyAAAfABUQAQAAAFgAAAAwADEAMQA5
-ADAAQgBFADcANQA5AEYAMQBFADUANAA1ADkAQQBEADIANgA2AEMARAA4ADgAMQA0AEEAMwA3AEMA
-QABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAgEUMAEAAAAMAAAAYAAAAO8FaGNBAAAAHwD6PwEAAAAe
-AAAAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAAAAfAACAhgMCAAAAAADAAAAAAAAARgEA
-AAAWAAAAdQBzAGUAcgAtAGEAZwBlAG4AdAAAAAAAAQAAAEYAAABNAGkAYwByAG8AcwBvAGYAdAAt
-AE0AYQBjAE8AdQB0AGwAbwBvAGsALwAxADQALgAzAC4AOQAuADEAMwAxADAAMwAwAAAAAAAfAACA
-H6TrM6h6LkK+e3nhqY5UswEAAAA4AAAAQwBvAG4AdgBlAHIAcwBhAHQAaQBvAG4ASQBuAGQAZQB4
-AFQAcgBhAGMAawBpAG4AZwBFAHgAAAABAAAAWAEAAEkASQA9ADAAMQAwADEAQwBGADYANAA2ADEA
-MABFAEEAMgA4ADgANABDAEMANgBEADgAQQBFAEMARgA0ADEAQQBGADMAQQA5ADQAQwA2ADMAOAA2
-AEIANQA4ADQARAA7AFMAQgBNAEkARAA9ADEAOwBTAEIAVAA9ADEANwAwADsAUwAyAD0APABEADYA
-MwBCADkAOAAwADQAQwBCADYAMwBBAEQANABGAEEAQQBEADkANgA2ADAAMwA3ADYAOQA1ADYANgA0
-ADYANAA3ADEAMQAwAEYAQgBEAEAAYQB2AG0AYgAyAC4AcQBsAG8AZwBpAGMALgBvAHIAZwA+ADsA
-VgBlAHIAcwBpAG8AbgA9AFYAZQByAHMAaQBvAG4AIAAxADQALgAyACAAKABCAHUAaQBsAGQAIAAz
-ADgANwAuADAAKQAsACAAUwB0AGEAZwBlAD0ASAA5AAAAAwANNP0/AAAfAACAhgMCAAAAAADAAAAA
-AAAARgEAAAAgAAAAeAAtAG0AcwAtAGgAYQBzAC0AYQB0AHQAYQBjAGgAAAABAAAAAgAAAAAAAAAf
-AACAhgMCAAAAAADAAAAAAAAARgEAAAAiAAAAeAAtAG8AcgBpAGcAaQBuAGEAdABpAG4AZwAtAGkA
-cAAAAAAAAQAAABoAAABbADEAMAAuADMANQAuADcALgAzADIAXQAAAAAAoR0=
-
---_000_F5D084D6342F9B479C34599BB0A03E4D8988E43EAVMB1qlogicorg_--
+diff -uprN a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c	2014-04-30 15:08:08.000000000 +0800
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c	2014-04-30 15:09:06.000000000 +0800
+@@ -2523,7 +2523,7 @@ static int arcmsr_polling_hba_ccbdone(st
+ 		}
+ 		arcmsr_cdb = (struct ARCMSR_CDB *)(acb->vir2phy_offset + (flag_ccb << 5));
+ 		ccb = container_of(arcmsr_cdb, struct CommandControlBlock, arcmsr_cdb);
+-		poll_ccb_done = (ccb == poll_ccb) ? 1:0;
++		poll_ccb_done |= (ccb == poll_ccb) ? 1 : 0;
+ 		if ((ccb->acb != acb) || (ccb->startdone != ARCMSR_CCB_START)) {
+ 			if ((ccb->startdone == ARCMSR_CCB_ABORTED) || (ccb == poll_ccb)) {
+ 				printk(KERN_NOTICE "arcmsr%d: scsi id = %d lun = %d ccb = '0x%p'"
+@@ -2587,7 +2587,7 @@ static int arcmsr_polling_hbb_ccbdone(st
+ 		/* check if command done with no error*/
+ 		arcmsr_cdb = (struct ARCMSR_CDB *)(acb->vir2phy_offset + (flag_ccb << 5));
+ 		ccb = container_of(arcmsr_cdb, struct CommandControlBlock, arcmsr_cdb);
+-		poll_ccb_done = (ccb == poll_ccb) ? 1:0;
++		poll_ccb_done |= (ccb == poll_ccb) ? 1 : 0;
+ 		if ((ccb->acb != acb) || (ccb->startdone != ARCMSR_CCB_START)) {
+ 			if ((ccb->startdone == ARCMSR_CCB_ABORTED) || (ccb == poll_ccb)) {
+ 				printk(KERN_NOTICE "arcmsr%d: scsi id = %d lun = %d ccb = '0x%p'"
+@@ -2643,7 +2643,7 @@ polling_hbc_ccb_retry:
+ 		ccb_cdb_phy = (flag_ccb & 0xFFFFFFF0);
+ 		arcmsr_cdb = (struct ARCMSR_CDB *)(acb->vir2phy_offset + ccb_cdb_phy);/*frame must be 32 bytes aligned*/
+ 		pCCB = container_of(arcmsr_cdb, struct CommandControlBlock, arcmsr_cdb);
+-		poll_ccb_done = (pCCB == poll_ccb) ? 1 : 0;
++		poll_ccb_done |= (pCCB == poll_ccb) ? 1 : 0;
+ 		/* check ifcommand done with no error*/
+ 		if ((pCCB->acb != acb) || (pCCB->startdone != ARCMSR_CCB_START)) {
+ 			if (pCCB->startdone == ARCMSR_CCB_ABORTED) {
+@@ -3245,6 +3245,8 @@ static int arcmsr_abort(struct scsi_cmnd
+ 		(struct AdapterControlBlock *)cmd->device->host->hostdata;
+ 	int i = 0;
+ 	int rtn = FAILED;
++	uint32_t intmask_org;
++
+ 	printk(KERN_NOTICE
+ 		"arcmsr%d: abort device command of scsi id = %d lun = %d \n",
+ 		acb->host->host_no, cmd->device->id, cmd->device->lun);
+@@ -3256,9 +3258,12 @@ static int arcmsr_abort(struct scsi_cmnd
+ 	** we need to handle it as soon as possible and exit
+ 	************************************************
+ 	*/
+-	if (!atomic_read(&acb->ccboutstandingcount))
++	if (!atomic_read(&acb->ccboutstandingcount)) {
++		acb->acb_flags &= ~ACB_F_ABORT;
+ 		return rtn;
++	}
+ 
++	intmask_org = arcmsr_disable_outbound_ints(acb);
+ 	for (i = 0; i < ARCMSR_MAX_FREECCB_NUM; i++) {
+ 		struct CommandControlBlock *ccb = acb->pccb_pool[i];
+ 		if (ccb->startdone == ARCMSR_CCB_START && ccb->pcmd == cmd) {
+@@ -3268,6 +3273,7 @@ static int arcmsr_abort(struct scsi_cmnd
+ 		}
+ 	}
+ 	acb->acb_flags &= ~ACB_F_ABORT;
++	arcmsr_enable_outbound_ints(acb, intmask_org);
+ 	return rtn;
+ }
+ 
