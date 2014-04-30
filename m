@@ -1,60 +1,74 @@
-From: "Stewart, Sean" <Sean.Stewart@netapp.com>
-Subject: Re: [PATCH 16/16] scsi_dh_alua: Use workqueue for RTPG
-Date: Tue, 29 Apr 2014 21:47:36 +0000
-Message-ID: <1398808055.29991.15.camel@ict-vth-stewarts01.ict.englab.netapp.com>
-References: <1391160600-19652-1-git-send-email-hare@suse.de>
-	 <1391160600-19652-17-git-send-email-hare@suse.de>
+From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
+Subject: How to get more sequential IO merged at elevator
+Date: Wed, 30 Apr 2014 07:02:36 +0000
+Message-ID: <33fd994ed1f241d8991f1c1de4a06907@BN1PR07MB247.namprd07.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx11.netapp.com ([216.240.18.76]:38762 "EHLO mx11.netapp.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754127AbaD2Vrt convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Apr 2014 17:47:49 -0400
-In-Reply-To: <1391160600-19652-17-git-send-email-hare@suse.de>
+Received: from mail-bl2lp0208.outbound.protection.outlook.com ([207.46.163.208]:54913
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751426AbaD3HC5 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Apr 2014 03:02:57 -0400
 Content-Language: en-US
-Content-ID: <368F1A0EAE7561469D0D3FC48B930D38@hq.netapp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <jbottomley@parallels.com>, "George, Martin" <Martin.George@netapp.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: "axboe@kernel.dk" <axboe@kernel.dk>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Fri, 2014-01-31 at 10:30 +0100, Hannes Reinecke wrote:
-> @@ -797,37 +838,40 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
->  		off = 8 + (ucp[7] * 4);
->  	}
->  
-> -	sdev_printk(KERN_INFO, sdev,
-> -		    "%s: port group %02x state %c %s supports %c%c%c%c%c%c%c\n",
-> -		    ALUA_DH_NAME, pg->group_id, print_alua_state(pg->state),
-> -		    pg->pref ? "preferred" : "non-preferred",
-> -		    valid_states&TPGS_SUPPORT_TRANSITION?'T':'t',
-> -		    valid_states&TPGS_SUPPORT_OFFLINE?'O':'o',
-> -		    valid_states&TPGS_SUPPORT_LBA_DEPENDENT?'L':'l',
-> -		    valid_states&TPGS_SUPPORT_UNAVAILABLE?'U':'u',
-> -		    valid_states&TPGS_SUPPORT_STANDBY?'S':'s',
-> -		    valid_states&TPGS_SUPPORT_NONOPTIMIZED?'N':'n',
-> -		    valid_states&TPGS_SUPPORT_OPTIMIZED?'A':'a');
-Hannes,
+Jens,
 
-I was wondering why this was changed from an sdev_printk to a printk? I
-can see the AAS of a TPG on a target, but with it this way I do not know
-with respect to what logical unit it is.
+While working on one issue of less IOPs for sequential READ/WRITE, I fo=
+und interesting stuffs which was causing performance drop for sequentia=
+l IO.=A0 I did some reverse engineering on Block layer code to understa=
+nd how to get benefit from any sysfs parameters settings, but could not=
+ find anything useful to solve this issue.=20
 
-> +	printk(KERN_INFO "%s: target %s port group %02x state %c %s "
-> +	       "supports %c%c%c%c%c%c%c\n", ALUA_DH_NAME, pg->target_id_str,
-> +	       pg->group_id, print_alua_state(pg->state),
-> +	       pg->pref ? "preferred" : "non-preferred",
-> +	       valid_states&TPGS_SUPPORT_TRANSITION?'T':'t',
-> +	       valid_states&TPGS_SUPPORT_OFFLINE?'O':'o',
-> +	       valid_states&TPGS_SUPPORT_LBA_DEPENDENT?'L':'l',
-> +	       valid_states&TPGS_SUPPORT_UNAVAILABLE?'U':'u',
-> +	       valid_states&TPGS_SUPPORT_STANDBY?'S':'s',
-> +	       valid_states&TPGS_SUPPORT_NONOPTIMIZED?'N':'n',
-> +	       valid_states&TPGS_SUPPORT_OPTIMIZED?'A':'a');
->  
->  
+I have described problem statement and root cause of this issue in this=
+ mail thread.=20
 
-Thanks,
-Sean
+Problem statement - "Cannot achieve Sequential read/write performance, =
+because of back merge is not happening frequently"
+
+Here is my understanding of back merge done in elevator.
+
+Linux block layer is responsible for merging/sorting of the IO with the=
+ help of Elevator hook in OS + IO scheduler.
+IO scheduler does not have any role in merging sequential IO. It is don=
+e in Elevator hook, so choosing any IO scheduler in Linux will not help=
+ (OR you can consider that behavior will be unchanged irrespective of I=
+O scheduler). Any sequential IO will be merge at Elevator code path.
+
+1. When IO comes from upper layer, it will be queued at Elevator/IO sch=
+eduler level. =A0It will also add IO into hash look up which will be us=
+ed for merge and other purpose.
+2. Elevator code will search any outstanding IO (in the queue of the sa=
+me layer). If there is any chance to merge it, it will perform  (BACK M=
+ERGE) merge=20
+3. If there is no merge possible, IO will be queued to the next level (=
+which is IO scheduler).
+4. In IO completion Path, IO scheduler will post IO to the Driver queue=
+, if at all there is any outstanding IO. (There are many other conditio=
+n, but this is very common code path)
+
+To merge more command, #2 should find more outstanding in hash table lo=
+ok up. This is possible if flow control start either at block layer/Dri=
+ver level.
+It means, driver/block layer forcefully delay IO submission to next lev=
+el and give more chance at elevator code to merge more IO via accumulat=
+ing more IO from user space.
+
+If I manually change queue depth of the device to lower value (between =
+1-8), which is doing only Sequential IO.. I am able to see maximum IO c=
+oming to the driver after merge and it eventually increase the IOPs.
+
+Is there any way to increase possibility of merged IO coming from block=
+ layer to the Low level driver ?
+
+Thanks, Kashyap
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
