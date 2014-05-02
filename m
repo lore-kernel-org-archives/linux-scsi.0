@@ -1,65 +1,40 @@
-From: "Reddy, Sreekanth" <Sreekanth.Reddy@lsi.com>
-Subject: RE: [patch] [SCSI] mpt3sas: tidy up output slightly
-Date: Fri, 2 May 2014 11:44:42 +0000
-Message-ID: <fa09e003610140d3940f5aafd431c3c9@DM2PR07MB302.namprd07.prod.outlook.com>
-References: <20140328083901.GQ25192@mwanda>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 0/3] libsas: add support for port multiplier
+Date: Fri, 2 May 2014 11:36:17 -0400
+Message-ID: <20140502153617.GH10204@htj.dyndns.org>
+References: <1398346023-10225-1-git-send-email-yxlraid@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2lp0208.outbound.protection.outlook.com ([207.46.163.208]:55977
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751669AbaEBLo6 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 May 2014 07:44:58 -0400
-In-Reply-To: <20140328083901.GQ25192@mwanda>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1398346023-10225-1-git-send-email-yxlraid@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Xiangliang Yu <yxlraid@gmail.com>
+Cc: JBottomley@parallels.com, dan.j.williams@intel.com, todd.e.brandt@intel.com, lukasz.dorau@intel.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>, "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
-Cc: Support <support@lsi.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, DL-MPT Fusion Linux <DL-MPTFusionLinux@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
 
-James,
+On Thu, Apr 24, 2014 at 09:27:03PM +0800, Xiangliang Yu wrote:
+> This patch set will support SATA port multiplier(PM) in LIBSAS. 
+> 
+> LIBSAS is need to implement several key handling to support SATA PM:
+> First,low level driver notify libsas that SATA PM is attached to HBA port.
+> Then, LIBSAS will need to schedule SATA PMP error handler to scan SATA device
+> that is attached to PM, so we must implemet port softreset and PMP reset 
+> handling.
+> If find SATA devices, we should add the devices into SAS transport layer.
+> In order to find SAS domain device we must implemet device type transformation
+> : scsi device -> (port number) -> ata device -> domain device. Then, we can
+> execute IO operation.
+> 
+> In these patches, patch 1 is change SATA error handler.
+> And patch 2 will add SATA device into SAS layer and implement device type
+> transformation. Patch 3 implement SATA functional interface in mvsas.
 
-This patch seem to be fine. Please consider this patch.
+Please properly thread the patchset from the next posting.
 
-Regards,
-Sreekanth
+Dan, can you please take a look at this?
 
->-----Original Message-----
->From: Dan Carpenter [mailto:dan.carpenter@oracle.com]
->Sent: Friday, March 28, 2014 2:09 PM
->To: Nandigama, Nagalakshmi
->Cc: Reddy, Sreekanth; Support; James E.J. Bottomley; DL-MPT Fusion Linux;
->linux-scsi@vger.kernel.org; kernel-janitors@vger.kernel.org
->Subject: [patch] [SCSI] mpt3sas: tidy up output slightly
->
->The indenting here for "pr_info("\n");" is not correct.  It's not part of the if
->condition.
->
->Also using pr_info() would put extra characters in the middle of the line.  I
->suppose that people could complain that pr_cont() is racy but at least it's
->better than the original code.
->
->Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
->
->diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c
->b/drivers/scsi/mpt3sas/mpt3sas_base.c
->index 0cf4f70..aa0e042 100644
->--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
->+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
->@@ -585,9 +585,9 @@ _base_display_event_data(struct MPT3SAS_ADAPTER
->*ioc,
-> 		    (event_data->ReasonCode ==
->MPI2_EVENT_SAS_DISC_RC_STARTED) ?
-> 		    "start" : "stop");
-> 		if (event_data->DiscoveryStatus)
->-			pr_info("discovery_status(0x%08x)",
->+			pr_cont("discovery_status(0x%08x)",
-> 			    le32_to_cpu(event_data->DiscoveryStatus));
->-			pr_info("\n");
->+		pr_cont("\n");
-> 		return;
-> 	}
-> 	case MPI2_EVENT_SAS_BROADCAST_PRIMITIVE:
+Thanks.
 
+-- 
+tejun
