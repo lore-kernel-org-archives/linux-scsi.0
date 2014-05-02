@@ -1,208 +1,65 @@
-From: ching <ching2048@areca.com.tw>
-Subject: Re: [PATCH v1.0 2/16] arcmsr: Support MSI-X interrupt
-Date: Fri, 02 May 2014 19:44:08 +0800
-Message-ID: <1399031048.5711.3.camel@localhost>
-References: <1398851412.1769.16.camel@localhost>
-	 <20140502083101.GB4963@mwanda>
+From: "Reddy, Sreekanth" <Sreekanth.Reddy@lsi.com>
+Subject: RE: [patch] [SCSI] mpt3sas: tidy up output slightly
+Date: Fri, 2 May 2014 11:44:42 +0000
+Message-ID: <fa09e003610140d3940f5aafd431c3c9@DM2PR07MB302.namprd07.prod.outlook.com>
+References: <20140328083901.GQ25192@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-vc0-f179.google.com ([209.85.220.179]:63931 "EHLO
-	mail-vc0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751878AbaEBLoR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 May 2014 07:44:17 -0400
-Received: by mail-vc0-f179.google.com with SMTP id ij19so5226915vcb.38
-        for <linux-scsi@vger.kernel.org>; Fri, 02 May 2014 04:44:16 -0700 (PDT)
-In-Reply-To: <20140502083101.GB4963@mwanda>
+Received: from mail-bl2lp0208.outbound.protection.outlook.com ([207.46.163.208]:55977
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751669AbaEBLo6 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 May 2014 07:44:58 -0400
+In-Reply-To: <20140328083901.GQ25192@mwanda>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: jbottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, thenzl@redhat.com
+To: Dan Carpenter <dan.carpenter@oracle.com>, "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
+Cc: Support <support@lsi.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, DL-MPT Fusion Linux <DL-MPTFusionLinux@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
 
-Thanks for Dan's advice.
-I will revise the patch code.
-Next upload will be PATCH v1.1 16 patches.
+James,
 
-On Fri, 2014-05-02 at 11:31 +0300, Dan Carpenter wrote:
-> On Wed, Apr 30, 2014 at 05:50:12PM +0800, ching wrote:
-> > From: Ching<ching2048@areca.com.tw>
-> > 
-> > Adding code for supporting MSI-X interrupt
-> > 
-> > Signed-off-by: Ching<ching2048@areca.com.tw>
-> > ---
-> 
-> These patches seem to be broken up nicely into patches which do one
-> thing per patch and they are much easier to review now.  Thanks!
-> 
-> > +static int arcmsr_request_irq(struct pci_dev *pdev, struct AdapterControlBlock *acb)
-> > +{
-> > +	int	i, j, r;
-> > +	struct msix_entry entries[ARCMST_NUM_MSIX_VECTORS];
-> > +
-> 
-> This function is more confusing than necessary and it goes over the 80
-> character limit.  One hint for improving it is that you should always
-> test for failure and handle the failure condition first before moving
-> on.  In other words reverse these tests.
-> 
-> Also let's rename LEG_INT to legacy_int: and MSI_INT to msi_int:.
-> 
-> > +	if (pci_find_capability(pdev, PCI_CAP_ID_MSIX)) {
-> 
-> 	if (!pci_find_capability(pdev, PCI_CAP_ID_MSIX))
-> 		goto msi_int;
-> 
-> We can pull the following code in one indent level.
-> 
-> > +		for (i = 0; i < ARCMST_NUM_MSIX_VECTORS; i++) {
-> > +			entries[i].entry = i;
-> > +		}
-> 
-> Remove unneeded curly braces.
-> 
-> > +		r = pci_enable_msix(pdev, entries, ARCMST_NUM_MSIX_VECTORS);
-> 
-> 		if (r < 0)
-> 			goto msi_int;
-> 
-> > +		if (r == 0) {
-> > +			for (i = 0; i < ARCMST_NUM_MSIX_VECTORS; i++) {
-> > +				if (request_irq(entries[i].vector,
-> > +					arcmsr_do_interrupt, 0, "arcmsr", acb)) {
-> > +					pr_warn("arcmsr%d: request_irq =%d failed!\n",
-> > +						acb->host->host_no, pdev->irq);
-> > +					for (j = 0 ; j < i ; j++)
-> > +						free_irq(entries[i].vector, acb);
-> > +					pci_disable_msix(pdev);
-> > +					goto MSI_INT;
-> > +				}
-> > +				acb->entries[i] = entries[i];
-> > +			}
-> > +			acb->acb_flags |= ACB_F_MSIX_ENABLED;
-> > +			pr_warn("arcmsr%d: msi-x enabled\n", acb->host->host_no);
-> 
-> This should be pr_info().  pr_warn() will probably trigger a popup in
-> gnome.
-> 			return ARC_SUCCESS;
-> 
-> Returning right away is easier to understand than a return at the end
-> of the function.
-> 
-> > +		} else if (r > 0) {
-> 
-> This else statement is not needed because we already handled the other
-> cases.  Pull the code in one additional indent level.
-> 
-> > +			if (!pci_enable_msix(pdev, entries, r)) {
-> 
-> 			if (pci_enable_msix(pdev, entries, r))
-> 				goto msi_int;
-> 
-> Pull the code in a third indent level.
-> 
-> > +				for (i = 0; i < r; i++) {
-> > +					if (request_irq(entries[i].vector,
-> > +						arcmsr_do_interrupt, 0, "arcmsr", acb)) {
-> > +						pr_warn("arcmsr%d: request_irq =%d failed!\n",
-> > +							acb->host->host_no, pdev->irq);
-> > +						for (j = 0 ; j < i ; j++)
-> > +							free_irq(entries[i].vector, acb);
-> > +						pci_disable_msix(pdev);
-> > +						goto MSI_INT;
-> > +					}
-> > +					acb->entries[i] = entries[i];
-> > +				}
-> > +				acb->acb_flags |= ACB_F_MSIX_ENABLED;
-> > +				pr_warn("arcmsr%d: msi-x enabled\n", acb->host->host_no);
-> 
-> 
-> Same thing.  Change this to pr_info() and add a return ARC_SUCCESS;
-> 
-> > +			} else {
-> > +				goto MSI_INT;
-> > +			}
-> > +		} else {
-> 
-> 
-> Ok.  At this point we have removed a lot of indenting so we are back to
-> level 1 indenting.
-> 
-> msi_int:
-> 	if (!pci_find_capability(pdev, PCI_CAP_ID_MSI))
-> 		goto legacy_int;
-> 	if (pci_enable_msi(pdev))
-> 		goto legacy_int;
-> 	if (request_irq(...)) {
-> 		....
-> 		goto legacy_int;
+This patch seem to be fine. Please consider this patch.
+
+Regards,
+Sreekanth
+
+>-----Original Message-----
+>From: Dan Carpenter [mailto:dan.carpenter@oracle.com]
+>Sent: Friday, March 28, 2014 2:09 PM
+>To: Nandigama, Nagalakshmi
+>Cc: Reddy, Sreekanth; Support; James E.J. Bottomley; DL-MPT Fusion Linux;
+>linux-scsi@vger.kernel.org; kernel-janitors@vger.kernel.org
+>Subject: [patch] [SCSI] mpt3sas: tidy up output slightly
+>
+>The indenting here for "pr_info("\n");" is not correct.  It's not part of the if
+>condition.
+>
+>Also using pr_info() would put extra characters in the middle of the line.  I
+>suppose that people could complain that pr_cont() is racy but at least it's
+>better than the original code.
+>
+>Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+>
+>diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c
+>b/drivers/scsi/mpt3sas/mpt3sas_base.c
+>index 0cf4f70..aa0e042 100644
+>--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
+>+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+>@@ -585,9 +585,9 @@ _base_display_event_data(struct MPT3SAS_ADAPTER
+>*ioc,
+> 		    (event_data->ReasonCode ==
+>MPI2_EVENT_SAS_DISC_RC_STARTED) ?
+> 		    "start" : "stop");
+> 		if (event_data->DiscoveryStatus)
+>-			pr_info("discovery_status(0x%08x)",
+>+			pr_cont("discovery_status(0x%08x)",
+> 			    le32_to_cpu(event_data->DiscoveryStatus));
+>-			pr_info("\n");
+>+		pr_cont("\n");
+> 		return;
 > 	}
-> 
-> > +MSI_INT:
-> > +			if (pci_find_capability(pdev, PCI_CAP_ID_MSI)) {
-> > +				if (pci_enable_msi(pdev))
-> > +					goto LEG_INT;
-> > +				if (request_irq(pdev->irq, arcmsr_do_interrupt,
-> > +					IRQF_SHARED, "arcmsr", acb)) {
-> > +					pr_warn("arcmsr%d: request_irq =%d failed!\n",
-> > +						acb->host->host_no, pdev->irq);
-> > +					pci_disable_msi(pdev);
-> > +					goto LEG_INT;
-> > +				}
-> > +				acb->acb_flags |= ACB_F_MSI_ENABLED;
-> > +				pr_warn("arcmsr%d: msi enabled\n", acb->host->host_no);
-> 
-> return sucess.
-> 
-> > +			} else {
-> > +				goto LEG_INT;
-> > +			}
-> > +		}
-> 
-> 
-> The following block is all duplicative code and we have already handled
-> msi_int.  Just delete it.
-> 
-> > +	} else if (pci_find_capability(pdev, PCI_CAP_ID_MSI)) {
-> > +		if (pci_enable_msi(pdev))
-> > +			goto LEG_INT;
-> > +		if (request_irq(pdev->irq, arcmsr_do_interrupt,
-> > +			IRQF_SHARED, "arcmsr", acb)) {
-> > +			pr_warn("arcmsr%d: request_irq =%d failed!\n",
-> > +				acb->host->host_no, pdev->irq);
-> > +			pci_disable_msi(pdev);
-> > +			goto LEG_INT;
-> > +		}
-> > +		acb->acb_flags |= ACB_F_MSI_ENABLED;
-> > +		pr_warn("arcmsr%d: msi enabled\n", acb->host->host_no);
-> > +	} else {
-> 
-> Ok.  We're back to level one indenting now.
-> 
-> legacy_int:
-> 	if (request_irq(...) {
-> 		...
-> 		return ARC_FAILURE;
-> 	}
-> 	return ARC_SUCCESS;
-> 
-> Flipping the conditions around and adding immediate returns makes the
-> code a lot easier to read.
-> 
-> > +LEG_INT:
-> > +		if (request_irq(pdev->irq, arcmsr_do_interrupt,
-> > +			IRQF_SHARED, "arcmsr", acb)) {
-> > +			pr_warn("arcmsr%d: request_irq = %d failed!\n",
-> > +				acb->host->host_no, pdev->irq);
-> > +			return ARC_FAILURE;
-> > +		}
-> > +	}
-> > +	return ARC_SUCCESS;
-> > +}
-> > +
-> 
-> regards,
-> dan carpenter
-
+> 	case MPI2_EVENT_SAS_BROADCAST_PRIMITIVE:
 
