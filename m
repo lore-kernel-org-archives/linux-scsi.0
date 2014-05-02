@@ -1,58 +1,41 @@
-From: =?UTF-8?B?6buD5riF6ZqG?= <ching2048@areca.com.tw>
-Subject: Re: [PATCH v1.0 1/11] arcmsr: Revise interrupt service routine relate function
-Date: Fri, 2 May 2014 17:51:48 +0800
-Message-ID: <CAKiknE8ZapUdnygsAVB8rwv_HwnT-+diXVVKaNby8YCiHzYK4g@mail.gmail.com>
-References: <1398850855.1769.11.camel@localhost>
-	<1398876964.2182.13.camel@dabdike.int.hansenpartnership.com>
+From: "Mr.Alba Paul" <mr.albapaul01@gmail.com>
+Subject: CAN I TRUST YOU
+Date: Fri, 2 May 2014 10:34:07 +0000
+Message-ID: <CACJ4WT79p9z8=nWSm88Z3GPdg7FE5=D9EvzXABjGqPQmka9EGg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wi0-f182.google.com ([209.85.212.182]:33561 "EHLO
-	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751318AbaEBJvu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 May 2014 05:51:50 -0400
-Received: by mail-wi0-f182.google.com with SMTP id d1so2053130wiv.9
-        for <linux-scsi@vger.kernel.org>; Fri, 02 May 2014 02:51:49 -0700 (PDT)
-In-Reply-To: <1398876964.2182.13.camel@dabdike.int.hansenpartnership.com>
+Received: from mail-ob0-f196.google.com ([209.85.214.196]:54491 "EHLO
+	mail-ob0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751015AbaEBKeI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 May 2014 06:34:08 -0400
+Received: by mail-ob0-f196.google.com with SMTP id wp4so1180676obc.11
+        for <linux-scsi@vger.kernel.org>; Fri, 02 May 2014 03:34:07 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "dan.carpenter@oracle.com" <dan.carpenter@oracle.com>, "thenzl@redhat.com" <thenzl@redhat.com>
 
-Hi James,
+Greetings,
 
-Indeed, it makes you confusion that I mistake typing the subject.
-It should be [PATCH v1.0 1/16] , but not [PATCH v1.0 1/11].
-Why I use v1.0 other than v1.4? Changing from 11 patches to 16 patches.
-Because I spend a long time to simplify each patch, so patch number is increase.
-It is easier to review.
+Please kindly accept my apology for sending unsolicited mail to you.I
+believe you are a highly respected personality, considering the fact
+that I sourced your profile from a human resource profile database on
+your country. Though, I do not know to what extent you are familiar
+with events.
 
-I am so sorry for late to response that make you are inconvenient.
->From now on, I will response quickly.
+I am Banker by profession my name is Mr.Alba Paul ,currently holding
+the post of Director Auditing and Accounting unit here in the bank,i
+have a vital information about an unclaimed fund under my custody
+here.
 
-Thanks for your advice.
+And the opportunity of transferring the left over funds ($10.5
+million) our bank deceased customer late Richard Burson, who died on
+(Egypt Air Flight 990) along with his family.
 
-2014-05-01 0:56 GMT+08:00 James Bottomley <jbottomley@parallels.com>:
-> On Wed, 2014-04-30 at 17:40 +0800, ching wrote:
->> From: Ching<ching2048@areca.com.tw>
->>
->> Rewrite interrupt service routine relate function to fix command
->> timeout on controller very heavy loading.
->
-> OK, so I think you've confused us a bit.  This looks to be an update of
-> your previous v1.4 patch set, yet it's now called v1.0?
->
-> Could you please include a cover letter as patch 0/x like you see
-> everyone else doing on the list?  In this cover letter can you tell us
-> what the disposition of the previous feedback is and what other changes
-> have you done? You didn't reply to any of the comments, have have you
-> fixed them?  It's very dispiriting to review 11 patches, give feedback
-> and not hear anything ... and then have to review an even longer set of
-> patches just to see if anything was done about your previous comments.
->
-> The less interactive you are with reviews, the less chance there is that
-> people will review updates ... without external reviewers, you go on a
-> very long backlog of things I have to review before the patches get in.
->
-> James
->
+Hence i am inviting you for a business deal where this money can be
+shared between us in the ratio of 65/35 as a brotherhood.
+
+If you agree to my business proposal, further details of the transfer
+will be forwarded to you as soon as i receive your return mail.
+
+Respectfully yours
+Mr.Alba Paul
