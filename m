@@ -1,99 +1,27 @@
-From: Hiral Shah <hishah@cisco.com>
-Subject: [PATCH 4/4] [SCSI]fnic: assign FIP_ALL_FCF_MACS to fcoe_all_fcfs
-Date: Fri,  2 May 2014 17:46:31 -0700
-Message-ID: <1399077991-26928-1-git-send-email-hishah@cisco.com>
+From: "Gva Abogados" <Molly.Mee@acf.hhs.gov>
+Subject: Please Acknowledge My Proposal
+Date: Sat, 3 May 2014 12:20:40 -0000
+Message-ID: <281f66fefbbe04055c78ea619c75c388.squirrel__44428.3342840665$1399124315$gmane$org@162.222.106.162>
+Reply-To: jdomingosanchez@aim.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtv-iport-2.cisco.com ([173.36.130.13]:13464 "EHLO
-	mtv-iport-2.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751388AbaECAvh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 May 2014 20:51:37 -0400
+Received: from [162.222.106.162] ([162.222.106.162]:37834 "EHLO ns1.bing.com"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751128AbaECNiE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 3 May 2014 09:38:04 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Hiral Shah <hishah@cisco.com>, Sesidhar Baddela <sebaddel@cisco.com>
 
-1) Assgning FIP_ALL_FCF_MACS to fcoe_all_fcfs allows VLAN request to be sent
-to correct Mac address for VLAN Discovery otherwise VLAN request will be
-sent to invalid address hence FLOGI never happens.
+Please Acknowledge My Proposal!!
 
-2) Simplify the copy_and_format_trace_data code and log the correct Link event
-for fnic control path tracing in case of link status UP->UP.
+My name is Mr. Juan Martin Domingo a lawyer resident in Spain. I am
+writing to let you know I have some FUNDS I want to transfer and am
+seeking if you can be a beneficiary...Do not hesitate to Contact me for
+more information if interested: gva_abogados@aim.com
 
-3) Increment Fnic driver version
-
-Signed-off-by: Hiral Shah <hishah@cisco.com>
-Signed-off-by: Sesidhar Baddela <sebaddel@cisco.com>
----
- drivers/scsi/fnic/fnic.h       | 2 +-
- drivers/scsi/fnic/fnic_fcs.c   | 5 +++--
- drivers/scsi/fnic/fnic_trace.c | 5 ++---
- 3 files changed, 6 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/scsi/fnic/fnic.h b/drivers/scsi/fnic/fnic.h
-index 1d3521e..bf8d34c 100644
---- a/drivers/scsi/fnic/fnic.h
-+++ b/drivers/scsi/fnic/fnic.h
-@@ -39,7 +39,7 @@
- 
- #define DRV_NAME		"fnic"
- #define DRV_DESCRIPTION		"Cisco FCoE HBA Driver"
--#define DRV_VERSION		"1.6.0.10"
-+#define DRV_VERSION		"1.6.0.11"
- #define PFX			DRV_NAME ": "
- #define DFX                     DRV_NAME "%d: "
- 
-diff --git a/drivers/scsi/fnic/fnic_fcs.c b/drivers/scsi/fnic/fnic_fcs.c
-index 1b948f6..f3984b4 100644
---- a/drivers/scsi/fnic/fnic_fcs.c
-+++ b/drivers/scsi/fnic/fnic_fcs.c
-@@ -35,7 +35,7 @@
- #include "cq_enet_desc.h"
- #include "cq_exch_desc.h"
- 
--static u8 fcoe_all_fcfs[ETH_ALEN];
-+static u8 fcoe_all_fcfs[ETH_ALEN] = FIP_ALL_FCF_MACS;
- struct workqueue_struct *fnic_fip_queue;
- struct workqueue_struct *fnic_event_queue;
- 
-@@ -101,13 +101,14 @@ void fnic_handle_link(struct work_struct *work)
- 				FNIC_FCS_DBG(KERN_DEBUG, fnic->lport->host,
- 					     "link up\n");
- 				fcoe_ctlr_link_up(&fnic->ctlr);
--			} else
-+			} else {
- 				/* UP -> UP */
- 				spin_unlock_irqrestore(&fnic->fnic_lock, flags);
- 				fnic_fc_trace_set_data(
- 					fnic->lport->host->host_no, FNIC_FC_LE,
- 					"Link Status: UP_UP",
- 					strlen("Link Status: UP_UP"));
-+			}
- 		}
- 	} else if (fnic->link_status) {
- 		/* DOWN -> UP */
-diff --git a/drivers/scsi/fnic/fnic_trace.c b/drivers/scsi/fnic/fnic_trace.c
-index c772859..121a5d7 100644
---- a/drivers/scsi/fnic/fnic_trace.c
-+++ b/drivers/scsi/fnic/fnic_trace.c
-@@ -743,7 +743,7 @@ void copy_and_format_trace_data(struct fc_trace_hdr *tdata,
- 
- 	fmt = "%02d:%02d:%04ld %02d:%02d:%02d.%09lu ns%8x       %c%8x\t";
- 	len += snprintf(fnic_dbgfs_prt->buffer + len,
--		(fnic_fc_trace_max_pages * PAGE_SIZE * 3) - len,
-+		max_size - len,
- 		fmt,
- 		tm.tm_mon + 1, tm.tm_mday, tm.tm_year + 1900,
- 		tm.tm_hour, tm.tm_min, tm.tm_sec,
-@@ -767,8 +767,7 @@ void copy_and_format_trace_data(struct fc_trace_hdr *tdata,
- 				j == ethhdr_len + fcoehdr_len + fchdr_len ||
- 				(i > 3 && j%fchdr_len == 0)) {
- 				len += snprintf(fnic_dbgfs_prt->buffer
--					+ len, (fnic_fc_trace_max_pages
--					* PAGE_SIZE * 3) - len,
-+					+ len, max_size - len,
- 					"\n\t\t\t\t\t\t\t\t");
- 				i++;
- 			}
--- 
-1.8.5.4
+Sincerely
+Juan Martin Domingo.
+Domijdo@aim.com
 
