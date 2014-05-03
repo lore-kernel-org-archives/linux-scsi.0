@@ -1,27 +1,38 @@
-From: "Gva Abogados" <Molly.Mee@acf.hhs.gov>
-Subject: Please Acknowledge My Proposal
-Date: Sat, 3 May 2014 12:20:40 -0000
-Message-ID: <281f66fefbbe04055c78ea619c75c388.squirrel__44428.3342840665$1399124315$gmane$org@162.222.106.162>
-Reply-To: jdomingosanchez@aim.com
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [patch] [SCSI] qla2xxx: fix incorrect debug printk
+Date: Sat, 3 May 2014 23:21:35 +0300
+Message-ID: <20140503202135.GD32753@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [162.222.106.162] ([162.222.106.162]:37834 "EHLO ns1.bing.com"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751128AbaECNiE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 3 May 2014 09:38:04 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: kernel-janitors-owner@vger.kernel.org
+To: qla2xxx-upstream@qlogic.com
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Please Acknowledge My Proposal!!
+There are missing curly braces here so it prints that the recovery
+failed even when it succeeded.
 
-My name is Mr. Juan Martin Domingo a lawyer resident in Spain. I am
-writing to let you know I have some FUNDS I want to transfer and am
-seeking if you can be a beneficiary...Do not hesitate to Contact me for
-more information if interested: gva_abogados@aim.com
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+---
+static checker stuff.  not tested.
 
-Sincerely
-Juan Martin Domingo.
-Domijdo@aim.com
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index afc8481..00754a2 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -4913,12 +4913,13 @@ qla2x00_do_dpc(void *data)
+ 				if (qlafx00_reset_initialize(base_vha)) {
+ 					/* Failed. Abort isp later. */
 
++					    &base_vha->dpc_flags)) {
+ 						set_bit(ISP_UNRECOVERABLE,
+ 						    &base_vha->dpc_flags);
+ 						ql_dbg(ql_dbg_dpc, base_vha,
+ 						    0x4021,
+ 						    "Reset Recovery Failed\n");
++					}
+ 				}
+ 			}
+ 
