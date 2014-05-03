@@ -1,65 +1,99 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH RESEND] scsi_transport_sas: move bsg destructor into sas_rphy_remove
-Date: Fri, 2 May 2014 12:26:40 -0700
-Message-ID: <CAPcyv4jcD9RG9B4vjcE8227Yx09j3v+OPNxhE58ZbFo2202mnA@mail.gmail.com>
-References: <1396471241-1315-1-git-send-email-joe.lawrence@stratus.com>
-	<20140402164852.1f20ccb6@jlaw-desktop.mno.stratus.com>
-	<20140502150132.6ddd8a0c@jlaw-desktop.mno.stratus.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+From: Hiral Shah <hishah@cisco.com>
+Subject: [PATCH 4/4] [SCSI]fnic: assign FIP_ALL_FCF_MACS to fcoe_all_fcfs
+Date: Fri,  2 May 2014 17:46:31 -0700
+Message-ID: <1399077991-26928-1-git-send-email-hishah@cisco.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ve0-f177.google.com ([209.85.128.177]:33572 "EHLO
-	mail-ve0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752136AbaEBT0l (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 May 2014 15:26:41 -0400
-Received: by mail-ve0-f177.google.com with SMTP id db11so1174375veb.8
-        for <linux-scsi@vger.kernel.org>; Fri, 02 May 2014 12:26:40 -0700 (PDT)
-In-Reply-To: <20140502150132.6ddd8a0c@jlaw-desktop.mno.stratus.com>
+Received: from mtv-iport-2.cisco.com ([173.36.130.13]:13464 "EHLO
+	mtv-iport-2.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751388AbaECAvh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 May 2014 20:51:37 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Joe Lawrence <joe.lawrence@stratus.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, "Reddy, Sreekanth" <Sreekanth.Reddy@lsi.com>
+To: linux-scsi@vger.kernel.org
+Cc: Hiral Shah <hishah@cisco.com>, Sesidhar Baddela <sebaddel@cisco.com>
 
-On Fri, May 2, 2014 at 12:01 PM, Joe Lawrence <joe.lawrence@stratus.com> wrote:
-> On Wed, 2 Apr 2014 16:48:52 -0400
-> Joe Lawrence <joe.lawrence@stratus.com> wrote:
->
->> On Wed, 2 Apr 2014 16:40:41 -0400
->> Joe Lawrence <joe.lawrence@stratus.com> wrote:
->>
->> > Since bsg creation is a side effect of sas_rphy_add, move its
->> > complementary removal call into sas_rphy_remove.
->>
->> Hello James,
->>
->> This a resend of a patch posted to quiet an end-device sysfs warning in
->> its device deletion path when removing the mpt2sas driver:
->>
->>   (initial report)
->>   sysfs group not found for kobject on mpt2sas unload
->>   http://marc.info/?t=138497460000004
->>
->>   (patch + ACK + comments)
->>   http://marc.info/?t=138609455500001
->>
->>   (gentoo, LSI repro)
->>   mpt2sas driver barfs when force removing a drive on 3.13.1
->>   http://marc.info/?t=139122351300001
->>
->> Dan Williams had a few other suggestions for cleanup in this area, but
->> those could be handled in a subsequent patch.  This one missed 3.14
->> inclusion and the warning still occurs in Linus's tree as of today
->> (post scsi/block merge) hence the repost.
->
-> Ping? Just reproduced on 3.15-rc3.  Also found this:
->
->   (~500 repro count on Fedora Problem Tracker)
->   http://retrace.fedoraproject.org/faf/problems/1623421/
->
+1) Assgning FIP_ALL_FCF_MACS to fcoe_all_fcfs allows VLAN request to be sent
+to correct Mac address for VLAN Discovery otherwise VLAN request will be
+sent to invalid address hence FLOGI never happens.
 
-Hmm, looks like the re-send is missing my ack.  Feel free to add:
+2) Simplify the copy_and_format_trace_data code and log the correct Link event
+for fnic control path tracing in case of link status UP->UP.
 
-Acked-by: Dan Williams <dan.j.williams@intel.com>
+3) Increment Fnic driver version
 
-James, do you want me to shepherd sas infrastructure bits
-(libsas/scsi_transport_sas) along in my own tree, or...?
+Signed-off-by: Hiral Shah <hishah@cisco.com>
+Signed-off-by: Sesidhar Baddela <sebaddel@cisco.com>
+---
+ drivers/scsi/fnic/fnic.h       | 2 +-
+ drivers/scsi/fnic/fnic_fcs.c   | 5 +++--
+ drivers/scsi/fnic/fnic_trace.c | 5 ++---
+ 3 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/scsi/fnic/fnic.h b/drivers/scsi/fnic/fnic.h
+index 1d3521e..bf8d34c 100644
+--- a/drivers/scsi/fnic/fnic.h
++++ b/drivers/scsi/fnic/fnic.h
+@@ -39,7 +39,7 @@
+ 
+ #define DRV_NAME		"fnic"
+ #define DRV_DESCRIPTION		"Cisco FCoE HBA Driver"
+-#define DRV_VERSION		"1.6.0.10"
++#define DRV_VERSION		"1.6.0.11"
+ #define PFX			DRV_NAME ": "
+ #define DFX                     DRV_NAME "%d: "
+ 
+diff --git a/drivers/scsi/fnic/fnic_fcs.c b/drivers/scsi/fnic/fnic_fcs.c
+index 1b948f6..f3984b4 100644
+--- a/drivers/scsi/fnic/fnic_fcs.c
++++ b/drivers/scsi/fnic/fnic_fcs.c
+@@ -35,7 +35,7 @@
+ #include "cq_enet_desc.h"
+ #include "cq_exch_desc.h"
+ 
+-static u8 fcoe_all_fcfs[ETH_ALEN];
++static u8 fcoe_all_fcfs[ETH_ALEN] = FIP_ALL_FCF_MACS;
+ struct workqueue_struct *fnic_fip_queue;
+ struct workqueue_struct *fnic_event_queue;
+ 
+@@ -101,13 +101,14 @@ void fnic_handle_link(struct work_struct *work)
+ 				FNIC_FCS_DBG(KERN_DEBUG, fnic->lport->host,
+ 					     "link up\n");
+ 				fcoe_ctlr_link_up(&fnic->ctlr);
+-			} else
++			} else {
+ 				/* UP -> UP */
+ 				spin_unlock_irqrestore(&fnic->fnic_lock, flags);
+ 				fnic_fc_trace_set_data(
+ 					fnic->lport->host->host_no, FNIC_FC_LE,
+ 					"Link Status: UP_UP",
+ 					strlen("Link Status: UP_UP"));
++			}
+ 		}
+ 	} else if (fnic->link_status) {
+ 		/* DOWN -> UP */
+diff --git a/drivers/scsi/fnic/fnic_trace.c b/drivers/scsi/fnic/fnic_trace.c
+index c772859..121a5d7 100644
+--- a/drivers/scsi/fnic/fnic_trace.c
++++ b/drivers/scsi/fnic/fnic_trace.c
+@@ -743,7 +743,7 @@ void copy_and_format_trace_data(struct fc_trace_hdr *tdata,
+ 
+ 	fmt = "%02d:%02d:%04ld %02d:%02d:%02d.%09lu ns%8x       %c%8x\t";
+ 	len += snprintf(fnic_dbgfs_prt->buffer + len,
+-		(fnic_fc_trace_max_pages * PAGE_SIZE * 3) - len,
++		max_size - len,
+ 		fmt,
+ 		tm.tm_mon + 1, tm.tm_mday, tm.tm_year + 1900,
+ 		tm.tm_hour, tm.tm_min, tm.tm_sec,
+@@ -767,8 +767,7 @@ void copy_and_format_trace_data(struct fc_trace_hdr *tdata,
+ 				j == ethhdr_len + fcoehdr_len + fchdr_len ||
+ 				(i > 3 && j%fchdr_len == 0)) {
+ 				len += snprintf(fnic_dbgfs_prt->buffer
+-					+ len, (fnic_fc_trace_max_pages
+-					* PAGE_SIZE * 3) - len,
++					+ len, max_size - len,
+ 					"\n\t\t\t\t\t\t\t\t");
+ 				i++;
+ 			}
+-- 
+1.8.5.4
+
