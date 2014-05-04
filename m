@@ -1,31 +1,76 @@
-From: RAGHAVENDRA GANIGA <ravi23ganiga@gmail.com>
-Subject: scsi: add support for am53c94
-Date: Sun, 04 May 2014 04:51:59 +0530
-Message-ID: <53657A17.9030308@gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 3.15-rc4
+Date: Sat, 03 May 2014 22:53:06 -0700
+Message-ID: <1399182786.2505.42.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="ISO-8859-15"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pd0-f172.google.com ([209.85.192.172]:34926 "EHLO
-	mail-pd0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753178AbaECXWG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 3 May 2014 19:22:06 -0400
-Received: by mail-pd0-f172.google.com with SMTP id g10so6563110pdj.3
-        for <linux-scsi@vger.kernel.org>; Sat, 03 May 2014 16:22:06 -0700 (PDT)
-Received: from [192.168.0.101] ([123.201.195.107])
-        by mx.google.com with ESMTPSA id yj6sm29601729pab.19.2014.05.03.16.22.03
-        for <linux-scsi@vger.kernel.org>
-        (version=TLSv1 cipher=ECDHE-RSA-RC4-SHA bits=128/128);
-        Sat, 03 May 2014 16:22:05 -0700 (PDT)
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:50151 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750713AbaEDFxJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 4 May 2014 01:53:09 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-i wanted to write support for
-am53c94 based scsi controller
+This is two patches both fixing bugs in drivers (virtio-scsi and
+mpt2sas) causing an oops in certain circumstances.
 
-so is there any work already
-done on this controller, or
-i can start working on this
+The patch is available here:
 
-please suggest
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+
+The short changelog is:
+
+Fam Zheng (1):
+      virtio-scsi: Skip setting affinity on uninitialized vq
+
+Tyler Stachecki (1):
+      mpt2sas: Don't disable device twice at suspend.
+
+And diffstat:
+
+ drivers/scsi/mpt2sas/mpt2sas_scsih.c | 1 -
+ drivers/scsi/virtio_scsi.c           | 6 +++++-
+ 2 files changed, 5 insertions(+), 2 deletions(-)
+
+With full diff below.
+
+James
+
+---
+
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+index 7f0af4f..6fd7d40 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+@@ -8293,7 +8293,6 @@ _scsih_suspend(struct pci_dev *pdev, pm_message_t state)
+ 
+ 	mpt2sas_base_free_resources(ioc);
+ 	pci_save_state(pdev);
+-	pci_disable_device(pdev);
+ 	pci_set_power_state(pdev, device_state);
+ 	return 0;
+ }
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index 16bfd50..db3b494 100644
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -750,8 +750,12 @@ static void __virtscsi_set_affinity(struct virtio_scsi *vscsi, bool affinity)
+ 
+ 		vscsi->affinity_hint_set = true;
+ 	} else {
+-		for (i = 0; i < vscsi->num_queues; i++)
++		for (i = 0; i < vscsi->num_queues; i++) {
++			if (!vscsi->req_vqs[i].vq)
++				continue;
++
+ 			virtqueue_set_affinity(vscsi->req_vqs[i].vq, -1);
++		}
+ 
+ 		vscsi->affinity_hint_set = false;
+ 	}
+
+
