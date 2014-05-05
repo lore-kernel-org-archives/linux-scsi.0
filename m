@@ -1,152 +1,93 @@
-From: Jay Kallickal <jayamohank@gmail.com>
-Subject: [PATCH 4/8] be2iscsi: Fix TCP parameters while connection offloading.
-Date: Mon,  5 May 2014 21:41:27 -0400
-Message-ID: <1399340492-2136-4-git-send-email-jkallickal@emulex.com>
-References: <1399340492-2136-1-git-send-email-jkallickal@emulex.com>
+From: ching <ching2048@areca.com.tw>
+Subject: [PATCH v1.1 6/16] arcmsr: precise checking adapter ID
+Date: Mon, 05 May 2014 17:35:54 +0800
+Message-ID: <1399282554.4398.23.camel@localhost>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:45745 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933469AbaEFBlv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 May 2014 21:41:51 -0400
-Received: by mail-pa0-f50.google.com with SMTP id fb1so3347090pad.37
-        for <linux-scsi@vger.kernel.org>; Mon, 05 May 2014 18:41:50 -0700 (PDT)
-In-Reply-To: <1399340492-2136-1-git-send-email-jkallickal@emulex.com>
+Received: from mail-ve0-f169.google.com ([209.85.128.169]:56624 "EHLO
+	mail-ve0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755347AbaEEJgB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 May 2014 05:36:01 -0400
+Received: by mail-ve0-f169.google.com with SMTP id jx11so8524486veb.0
+        for <linux-scsi@vger.kernel.org>; Mon, 05 May 2014 02:36:00 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jbottomley@parallels.com, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
-Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, Minh Tran <minhduc.tran@emulex.com>, John Soni Jose <sony.john-n@emulex.com>
+To: jbottomley@parallels.com, dan.carpenter@oracle.com, thenzl@redhat.com, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-From: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+From: Ching<ching2048@areca.com.tw>
 
- SKH-R adapter, TCP Window Size/Scale parameters are passed
- in TCP Connection Offload Mbx Command.
+Rewriteing the arcmsr_define_adapter_type function to precisely check adapter ID.
+This can prevent an unknown adapter be used as a default adapter type by driver.
 
-Signed-off-by: Minh Tran <minhduc.tran@emulex.com>
-Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
-Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+Signed-off-by: Ching<ching2048@areca.com.tw>
 ---
- drivers/scsi/be2iscsi/be_cmds.h  | 21 +++++++++++++++++++++
- drivers/scsi/be2iscsi/be_iscsi.c | 12 +++++++++---
- drivers/scsi/be2iscsi/be_mgmt.c  | 13 ++++++++++---
- 3 files changed, 40 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/be2iscsi/be_cmds.h b/drivers/scsi/be2iscsi/be_cmds.h
-index cd4410f..cc7405c 100644
---- a/drivers/scsi/be2iscsi/be_cmds.h
-+++ b/drivers/scsi/be2iscsi/be_cmds.h
-@@ -71,6 +71,7 @@ struct be_mcc_wrb {
- #define BEISCSI_FW_MBX_TIMEOUT	100
+diff -uprN a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c	2014-05-02 19:31:08.000000000 +0800
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c	2014-05-02 19:32:24.000000000 +0800
+@@ -295,24 +295,43 @@ static int arcmsr_bios_param(struct scsi
+ 	return 0;
+ }
  
- /* MBOX Command VER */
-+#define MBX_CMD_VER1	0x01
- #define MBX_CMD_VER2	0x02
- 
- struct be_mcc_compl {
-@@ -1013,6 +1014,26 @@ struct tcp_connect_and_offload_in {
- 	u8 rsvd0[3];
- } __packed;
- 
-+struct tcp_connect_and_offload_in_v1 {
-+	struct be_cmd_req_hdr hdr;
-+	struct ip_addr_format ip_address;
-+	u16 tcp_port;
-+	u16 cid;
-+	u16 cq_id;
-+	u16 defq_id;
-+	struct phys_addr dataout_template_pa;
-+	u16 hdr_ring_id;
-+	u16 data_ring_id;
-+	u8 do_offload;
-+	u8 ifd_state;
-+	u8 rsvd0[2];
-+	u16 tcp_window_size;
-+	u8 tcp_window_scale_count;
-+	u8 rsvd1;
-+	u32 tcp_mss:24;
-+	u8 rsvd2;
-+} __packed;
+-static void arcmsr_define_adapter_type(struct AdapterControlBlock *acb)
++static bool arcmsr_define_adapter_type(struct AdapterControlBlock *acb)
+ {
+ 	struct pci_dev *pdev = acb->pdev;
+ 	u16 dev_id;
 +
- struct tcp_connect_and_offload_out {
- 	struct be_cmd_resp_hdr hdr;
- 	u32 connection_handle;
-diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
-index a3df433..fd284ff 100644
---- a/drivers/scsi/be2iscsi/be_iscsi.c
-+++ b/drivers/scsi/be2iscsi/be_iscsi.c
-@@ -1106,7 +1106,7 @@ static int beiscsi_open_conn(struct iscsi_endpoint *ep,
- 	struct beiscsi_hba *phba = beiscsi_ep->phba;
- 	struct tcp_connect_and_offload_out *ptcpcnct_out;
- 	struct be_dma_mem nonemb_cmd;
--	unsigned int tag;
-+	unsigned int tag, req_memsize;
- 	int ret = -ENOMEM;
- 
- 	beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_CONFIG,
-@@ -1127,8 +1127,14 @@ static int beiscsi_open_conn(struct iscsi_endpoint *ep,
- 		       (beiscsi_ep->ep_cid)] = ep;
- 
- 	beiscsi_ep->cid_vld = 0;
-+
-+	if (is_chip_be2_be3r(phba))
-+		req_memsize = sizeof(struct tcp_connect_and_offload_in);
-+	else
-+		req_memsize = sizeof(struct tcp_connect_and_offload_in_v1);
-+
- 	nonemb_cmd.va = pci_alloc_consistent(phba->ctrl.pdev,
--				sizeof(struct tcp_connect_and_offload_in),
-+				req_memsize,
- 				&nonemb_cmd.dma);
- 	if (nonemb_cmd.va == NULL) {
- 
-@@ -1139,7 +1145,7 @@ static int beiscsi_open_conn(struct iscsi_endpoint *ep,
- 		beiscsi_free_ep(beiscsi_ep);
- 		return -ENOMEM;
+ 	pci_read_config_word(pdev, PCI_DEVICE_ID, &dev_id);
+ 	acb->dev_id = dev_id;
+ 	switch (dev_id) {
+-	case 0x1880: {
++	case 0x1880:
+ 		acb->adapter_type = ACB_ADAPTER_TYPE_C;
+-		}
+ 		break;
+-	case 0x1201: {
++	case 0x1200:
++	case 0x1201:
++	case 0x1202:
+ 		acb->adapter_type = ACB_ADAPTER_TYPE_B;
+-		}
+ 		break;
+-
+-	default: acb->adapter_type = ACB_ADAPTER_TYPE_A;
++	case 0x1110:
++	case 0x1120:
++	case 0x1130:
++	case 0x1160:
++	case 0x1170:
++	case 0x1210:
++	case 0x1220:
++	case 0x1230:
++	case 0x1260:
++	case 0x1270:
++	case 0x1280:
++	case 0x1380:
++	case 0x1381:
++	case 0x1680:
++		acb->adapter_type = ACB_ADAPTER_TYPE_A;
++		break;
++	default:
++		pr_notice("Unknown device ID = 0x%x\n", dev_id);
++		return false;
  	}
--	nonemb_cmd.size = sizeof(struct tcp_connect_and_offload_in);
-+	nonemb_cmd.size = req_memsize;
- 	memset(nonemb_cmd.va, 0, nonemb_cmd.size);
- 	tag = mgmt_open_connection(phba, dst_addr, beiscsi_ep, &nonemb_cmd);
- 	if (tag <= 0) {
-diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
-index 52a36fb..6045aa7 100644
---- a/drivers/scsi/be2iscsi/be_mgmt.c
-+++ b/drivers/scsi/be2iscsi/be_mgmt.c
-@@ -712,7 +712,7 @@ int mgmt_open_connection(struct beiscsi_hba *phba,
- 	struct sockaddr_in6 *daddr_in6 = (struct sockaddr_in6 *)dst_addr;
- 	struct be_ctrl_info *ctrl = &phba->ctrl;
- 	struct be_mcc_wrb *wrb;
--	struct tcp_connect_and_offload_in *req;
-+	struct tcp_connect_and_offload_in_v1 *req;
- 	unsigned short def_hdr_id;
- 	unsigned short def_data_id;
- 	struct phys_addr template_address = { 0, 0 };
-@@ -745,10 +745,10 @@ int mgmt_open_connection(struct beiscsi_hba *phba,
- 	memset(req, 0, sizeof(*req));
- 	wrb->tag0 |= tag;
++	return true;
+ }
  
--	be_wrb_hdr_prepare(wrb, sizeof(*req), false, 1);
-+	be_wrb_hdr_prepare(wrb, nonemb_cmd->size, false, 1);
- 	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_ISCSI,
- 			   OPCODE_COMMON_ISCSI_TCP_CONNECT_AND_OFFLOAD,
--			   sizeof(*req));
-+			   nonemb_cmd->size);
- 	if (dst_addr->sa_family == PF_INET) {
- 		__be32 s_addr = daddr_in->sin_addr.s_addr;
- 		req->ip_address.ip_type = BE2_IPV4;
-@@ -794,6 +794,13 @@ int mgmt_open_connection(struct beiscsi_hba *phba,
- 	sge->pa_hi = cpu_to_le32(upper_32_bits(nonemb_cmd->dma));
- 	sge->pa_lo = cpu_to_le32(nonemb_cmd->dma & 0xFFFFFFFF);
- 	sge->len = cpu_to_le32(nonemb_cmd->size);
-+
-+	if (!is_chip_be2_be3r(phba)) {
-+		req->hdr.version = MBX_CMD_VER1;
-+		req->tcp_window_size = 0;
-+		req->tcp_window_scale_count = 2;
-+	}
-+
- 	be_mcc_notify(phba);
- 	spin_unlock(&ctrl->mbox_lock);
- 	return tag;
--- 
-1.8.5.3
+ static uint8_t arcmsr_hba_wait_msgint_ready(struct AdapterControlBlock *acb)
+@@ -733,7 +752,9 @@ static int arcmsr_probe(struct pci_dev *
+ 			ACB_F_MESSAGE_WQBUFFER_READED);
+ 	acb->acb_flags &= ~ACB_F_SCSISTOPADAPTER;
+ 	INIT_LIST_HEAD(&acb->ccb_free_list);
+-	arcmsr_define_adapter_type(acb);
++	error = arcmsr_define_adapter_type(acb);
++	if (!error)
++		goto pci_release_regs;
+ 	error = arcmsr_remap_pciregion(acb);
+ 	if(!error){
+ 		goto pci_release_regs;
+
 
