@@ -1,65 +1,84 @@
-From: ching <ching2048@areca.com.tw>
-Subject: [PATCH v1.1 9/16] arcmsr: modify printing adapter model number and
- F/W messages
-Date: Mon, 05 May 2014 17:51:06 +0800
-Message-ID: <1399283466.4398.36.camel@localhost>
+From: =?UTF-8?B?6buD5riF6ZqG?= <ching2048@areca.com.tw>
+Subject: Re: [PATCH v1.1 2/16] arcmsr: Adding code to support MSI-X interrupt
+Date: Mon, 5 May 2014 18:43:53 +0800
+Message-ID: <CAKiknE8i5ov3RfGaUjnNmZj1FuouYS3cP5q5CAGfwC82wX3NZw@mail.gmail.com>
+References: <1399279631.18695.27.camel@localhost>
+	<20140505102830.GN4963@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: jbottomley@parallels.com, dan.carpenter@oracle.com, thenzl@redhat.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-we0-f178.google.com ([74.125.82.178]:55194 "EHLO
+	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756222AbaEEKny (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 May 2014 06:43:54 -0400
+Received: by mail-we0-f178.google.com with SMTP id u56so6505098wes.9
+        for <linux-scsi@vger.kernel.org>; Mon, 05 May 2014 03:43:53 -0700 (PDT)
+In-Reply-To: <20140505102830.GN4963@mwanda>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: James Bottomley <jbottomley@parallels.com>, Tomas Henzl <thenzl@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-From: Ching<ching2048@areca.com.tw>
+Hi Dan,
 
-Revise printing model name and firmware version order.
+Thanks for correcting this bug.
 
-Signed-off-by: Ching<ching2048@areca.com.tw>
----
+Regards,
+Ching
 
-diff -uprN a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
---- a/drivers/scsi/arcmsr/arcmsr_hba.c	2014-05-02 19:53:06.000000000 +0800
-+++ b/drivers/scsi/arcmsr/arcmsr_hba.c	2014-05-02 19:53:24.000000000 +0800
-@@ -2258,10 +2258,10 @@ static bool arcmsr_get_hba_config(struct
- 		iop_device_map++;
- 		count--;
- 	}
--	printk(KERN_NOTICE "Areca RAID Controller%d: F/W %s & Model %s\n", 
-+	pr_notice("Areca RAID Controller%d: Model %s, F/W %s\n",
- 		acb->host->host_no,
--		acb->firm_version,
--		acb->firm_model);
-+		acb->firm_model,
-+		acb->firm_version);
- 	acb->signature = readl(&reg->message_rwbuffer[0]);
- 	acb->firm_request_len = readl(&reg->message_rwbuffer[1]);
- 	acb->firm_numbers_queue = readl(&reg->message_rwbuffer[2]);
-@@ -2334,10 +2334,10 @@ static bool arcmsr_get_hbb_config(struct
- 		count--;
- 	}
- 	
--	printk(KERN_NOTICE "Areca RAID Controller%d: F/W %s & Model %s\n",
-+	pr_notice("Areca RAID Controller%d: Model %s, F/W %s\n",
- 		acb->host->host_no,
--		acb->firm_version,
--		acb->firm_model);
-+		acb->firm_model,
-+		acb->firm_version);
- 
- 	acb->signature = readl(&reg->message_rwbuffer[1]);
- 	/*firm_signature,1,00-03*/
-@@ -2400,10 +2400,10 @@ static bool arcmsr_get_hbc_config(struct
- 		iop_firm_version++;
- 		count--;
- 	}
--	printk(KERN_NOTICE "Areca RAID Controller%d: F/W %s & Model %s\n",
-+	pr_notice("Areca RAID Controller%d: Model %s, F/W %s\n",
- 		pACB->host->host_no,
--		pACB->firm_version,
--		pACB->firm_model);
-+		pACB->firm_model,
-+		pACB->firm_version);
- 	pACB->firm_request_len = readl(&reg->msgcode_rwbuffer[1]);   /*firm_request_len,1,04-07*/
- 	pACB->firm_numbers_queue = readl(&reg->msgcode_rwbuffer[2]); /*firm_numbers_queue,2,08-11*/
- 	pACB->firm_sdram_size = readl(&reg->msgcode_rwbuffer[3]);    /*firm_sdram_size,3,12-15*/
+2014-05-05 18:28 GMT+08:00 Dan Carpenter <dan.carpenter@oracle.com>:
+> On Mon, May 05, 2014 at 04:47:11PM +0800, ching wrote:
+>> +static int
+>> +arcmsr_request_irq(struct pci_dev *pdev, struct AdapterControlBlock *acb)
+>> +{
+>> +     int     i, j, r;
+>> +     struct msix_entry entries[ARCMST_NUM_MSIX_VECTORS];
+>> +
+>> +     if (!pci_find_capability(pdev, PCI_CAP_ID_MSIX))
+>> +             goto msi_int;
+>> +     for (i = 0; i < ARCMST_NUM_MSIX_VECTORS; i++)
+>> +             entries[i].entry = i;
+>> +     r = pci_enable_msix(pdev, entries, ARCMST_NUM_MSIX_VECTORS);
+>> +     if (r < 0)
+>> +             goto msi_int;
+>> +     if (r == 0) {
+>> +             for (i = 0; i < ARCMST_NUM_MSIX_VECTORS; i++) {
+>> +                     if (request_irq(entries[i].vector,
+>> +                             arcmsr_do_interrupt, 0, "arcmsr", acb)) {
+>> +                             pr_warn("arcmsr%d: request_irq =%d failed!\n",
+>> +                                     acb->host->host_no, pdev->irq);
+>> +                             for (j = 0 ; j < i ; j++)
+>> +                                     free_irq(entries[i].vector, acb);
+>
+> This is a bug here.  Sorry for not noticing the first time I reviewed
+> this patch.  It should be "j" instead of "i" in
+> free_irq(entries[i].vector, acb);.
+>
+>> +                             pci_disable_msix(pdev);
+>> +                             goto msi_int;
+>> +                     }
+>> +                     acb->entries[i] = entries[i];
+>> +             }
+>> +             acb->acb_flags |= ACB_F_MSIX_ENABLED;
+>> +             pr_info("arcmsr%d: msi-x enabled\n", acb->host->host_no);
+>> +             return ARC_SUCCESS;
+>> +     } else {
+>> +             if (pci_enable_msix(pdev, entries, r))
+>> +                     goto msi_int;
+>> +             for (i = 0; i < r; i++) {
+>> +                     if (request_irq(entries[i].vector,
+>> +                             arcmsr_do_interrupt, 0, "arcmsr", acb)) {
+>> +                             pr_warn("arcmsr%d: request_irq =%d failed!\n",
+>> +                                     acb->host->host_no, pdev->irq);
+>> +                             for (j = 0 ; j < i ; j++)
+>> +                                     free_irq(entries[i].vector, acb);
+>
+> The same thing here.
+>
+> But otherwise so far as style goes this function is a lot better in
+> this version.  Thanks.  Also the patchset is split up nicely into
+> patches which do one thing per patch so that's nice as well.
+>
+> regards,
+> dan carpenter
+>
