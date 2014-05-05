@@ -1,55 +1,45 @@
-From: ching <ching2048@areca.com.tw>
-Subject: [PATCH v1.1 8/16] arcmsr: remove calling
- arcmsr_hbb_enable_driver_mode
-Date: Mon, 05 May 2014 17:45:19 +0800
-Message-ID: <1399283119.4398.31.camel@localhost>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: Re: [PATCH v1.0 14/16] arcmsr: fix sparse checking error
+Date: Mon, 5 May 2014 15:10:36 +0300
+Message-ID: <20140505121036.GO4963@mwanda>
+References: <1398857906.6930.59.camel@localhost>
+ <20140502091315.GG4963@mwanda>
+ <CAKiknE-cJZpkpjMEPiX_cP4iC3e_b5huk2WJBvK2FpkKHecJoQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: jbottomley@parallels.com, dan.carpenter@oracle.com, thenzl@redhat.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:49692 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756587AbaEEMKx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 May 2014 08:10:53 -0400
+Content-Disposition: inline
+In-Reply-To: <CAKiknE-cJZpkpjMEPiX_cP4iC3e_b5huk2WJBvK2FpkKHecJoQ@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: =?utf-8?B?6buD5riF6ZqG?= <ching2048@areca.com.tw>
+Cc: James Bottomley <jbottomley@parallels.com>, Tomas Henzl <thenzl@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-From: Ching<ching2048@areca.com.tw>
+On Mon, May 05, 2014 at 12:10:39PM +0800, =E9=BB=83=E6=B8=85=E9=9A=86 w=
+rote:
+> Hi Dan,
+>=20
+> In this patch, there are several replace of call readl() or writel()
+> by direct access to memory.
+> Because in main memory, we allocated a block of memory for
+> post_qbuffer and done_qbuffer.
+> These memory are access by both of CPU and IOP, they are not hardware=
+ registers.
+> This change will not introduce a bug. I have verified it.
+>=20
 
-Removing call arcmsr_hbb_enable_driver_mode by in-line code.
+Oh yeah.  I see that now.  I got mixed up.
 
-Signed-off-by: Ching<ching2048@areca.com.tw>
----
+regards,
+dan carpenter
 
-diff -uprN a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
---- a/drivers/scsi/arcmsr/arcmsr_hba.c	2014-05-02 19:52:26.000000000 +0800
-+++ b/drivers/scsi/arcmsr/arcmsr_hba.c	2014-05-02 19:53:06.000000000 +0800
-@@ -892,17 +892,6 @@ static uint8_t arcmsr_abort_allcmd(struc
- 	return rtnval;
- }
- 
--static bool arcmsr_hbb_enable_driver_mode(struct AdapterControlBlock *pacb)
--{
--	struct MessageUnit_B *reg = pacb->pmuB;
--	writel(ARCMSR_MESSAGE_START_DRIVER_MODE, reg->drv2iop_doorbell);
--	if (!arcmsr_hbb_wait_msgint_ready(pacb)) {
--		printk(KERN_ERR "arcmsr%d: can't set driver mode. \n", pacb->host->host_no);
--		return false;
--	}
--    	return true;
--}
--
- static void arcmsr_pci_unmap_dma(struct CommandControlBlock *ccb)
- {
- 	struct scsi_cmnd *pcmd = ccb->pcmd;
-@@ -2715,7 +2704,12 @@ static int arcmsr_iop_confirm(struct Ada
- 			timeout \n",acb->host->host_no);
- 			return 1;
- 		}
--		arcmsr_hbb_enable_driver_mode(acb);
-+		writel(ARCMSR_MESSAGE_START_DRIVER_MODE, reg->drv2iop_doorbell);
-+		if (!arcmsr_hbb_wait_msgint_ready(acb)) {
-+			pr_err("arcmsr%d: can't set driver mode.\n",
-+				acb->host->host_no);
-+			return 1;
-+		}
- 		}
- 		break;
- 	case ACB_ADAPTER_TYPE_C: {
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
