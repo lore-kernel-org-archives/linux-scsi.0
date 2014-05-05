@@ -1,78 +1,68 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH RESEND] scsi_transport_sas: move bsg destructor into
- sas_rphy_remove
-Date: Sun, 04 May 2014 12:11:54 -0700
-Message-ID: <1399230714.2171.47.camel@dabdike.int.hansenpartnership.com>
-References: <1396471241-1315-1-git-send-email-joe.lawrence@stratus.com>
-	 <20140402164852.1f20ccb6@jlaw-desktop.mno.stratus.com>
-	 <20140502150132.6ddd8a0c@jlaw-desktop.mno.stratus.com>
-	 <CAPcyv4jcD9RG9B4vjcE8227Yx09j3v+OPNxhE58ZbFo2202mnA@mail.gmail.com>
+From: =?UTF-8?B?6buD5riF6ZqG?= <ching2048@areca.com.tw>
+Subject: Re: [PATCH v1.0 14/16] arcmsr: fix sparse checking error
+Date: Mon, 5 May 2014 12:10:39 +0800
+Message-ID: <CAKiknE-cJZpkpjMEPiX_cP4iC3e_b5huk2WJBvK2FpkKHecJoQ@mail.gmail.com>
+References: <1398857906.6930.59.camel@localhost>
+	<20140502091315.GG4963@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:51766 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751851AbaEDTLz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 4 May 2014 15:11:55 -0400
-In-Reply-To: <CAPcyv4jcD9RG9B4vjcE8227Yx09j3v+OPNxhE58ZbFo2202mnA@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20140502091315.GG4963@mwanda>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: James Bottomley <jbottomley@parallels.com>, Tomas Henzl <thenzl@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Joe Lawrence <joe.lawrence@stratus.com>, linux-scsi <linux-scsi@vger.kernel.org>, "Reddy, Sreekanth" <Sreekanth.Reddy@lsi.com>
 
-On Fri, 2014-05-02 at 12:26 -0700, Dan Williams wrote:
-> On Fri, May 2, 2014 at 12:01 PM, Joe Lawrence <joe.lawrence@stratus.com> wrote:
-> > On Wed, 2 Apr 2014 16:48:52 -0400
-> > Joe Lawrence <joe.lawrence@stratus.com> wrote:
-> >
-> >> On Wed, 2 Apr 2014 16:40:41 -0400
-> >> Joe Lawrence <joe.lawrence@stratus.com> wrote:
-> >>
-> >> > Since bsg creation is a side effect of sas_rphy_add, move its
-> >> > complementary removal call into sas_rphy_remove.
-> >>
-> >> Hello James,
-> >>
-> >> This a resend of a patch posted to quiet an end-device sysfs warning in
-> >> its device deletion path when removing the mpt2sas driver:
-> >>
-> >>   (initial report)
-> >>   sysfs group not found for kobject on mpt2sas unload
-> >>   http://marc.info/?t=138497460000004
-> >>
-> >>   (patch + ACK + comments)
-> >>   http://marc.info/?t=138609455500001
-> >>
-> >>   (gentoo, LSI repro)
-> >>   mpt2sas driver barfs when force removing a drive on 3.13.1
-> >>   http://marc.info/?t=139122351300001
-> >>
-> >> Dan Williams had a few other suggestions for cleanup in this area, but
-> >> those could be handled in a subsequent patch.  This one missed 3.14
-> >> inclusion and the warning still occurs in Linus's tree as of today
-> >> (post scsi/block merge) hence the repost.
-> >
-> > Ping? Just reproduced on 3.15-rc3.  Also found this:
-> >
-> >   (~500 repro count on Fedora Problem Tracker)
-> >   http://retrace.fedoraproject.org/faf/problems/1623421/
-> >
-> 
-> Hmm, looks like the re-send is missing my ack.  Feel free to add:
-> 
-> Acked-by: Dan Williams <dan.j.williams@intel.com>
-> 
-> James, do you want me to shepherd sas infrastructure bits
-> (libsas/scsi_transport_sas) along in my own tree, or...?
+Hi Dan,
 
-Well, let's try a tree for enhancements ... you know the drill: signed
-pull to me on or before -rc6.
+In this patch, there are several replace of call readl() or writel()
+by direct access to memory.
+Because in main memory, we allocated a block of memory for
+post_qbuffer and done_qbuffer.
+These memory are access by both of CPU and IOP, they are not hardware registers.
+This change will not introduce a bug. I have verified it.
 
-This one, based on the fedora tracker info (only just shown) looks like
-a bug affecting older kernels, so necessitating a cc to stable, right?
-I'll take it through scsi-fixes
+Thanks for your comment.
 
-James
+Regards,
+Ching
 
 
+2014-05-02 17:13 GMT+08:00 Dan Carpenter <dan.carpenter@oracle.com>:
+> On Wed, Apr 30, 2014 at 07:38:26PM +0800, ching wrote:
+>> From: Ching<ching2048@areca.com.tw>
+>>
+>> Fix sparse utility checking errors.
+>>
+>
+> I was expecting that this patch would add __iomem annotations throughout
+> but in several places it actually removes calls to readl() and writel()
+> as well.
+>
+>>       case ACB_ADAPTER_TYPE_C:{
+>> -             struct MessageUnit_C *reg = (struct MessageUnit_C *)acb->pmuC;
+>> +             struct MessageUnit_C __iomem *reg = acb->pmuC;
+>>               /* disable all outbound interrupt */
+>>               orig_mask = readl(&reg->host_int_mask); /* disable outbound message0 int */
+>>               writel(orig_mask|ARCMSR_HBCMU_ALL_INTMASKENABLE, &reg->host_int_mask);v
+>> @@ -1085,8 +1085,9 @@ static void arcmsr_done4abort_postqueue(
+>>               /*clear all outbound posted Q*/
+>>               writel(ARCMSR_DOORBELL_INT_CLEAR_PATTERN, reg->iop2drv_doorbell); /* clear doorbell interrupt */
+>>               for (i = 0; i < ARCMSR_MAX_HBB_POSTQUEUE; i++) {
+>> -                     if ((flag_ccb = readl(&reg->done_qbuffer[i])) != 0) {
+>> -                             writel(0, &reg->done_qbuffer[i]);
+>> +                     flag_ccb = reg->done_qbuffer[i];
+>> +                     if (flag_ccb != 0) {
+>> +                             reg->done_qbuffer[i] = 0;
+>>                               pARCMSR_CDB = (struct ARCMSR_CDB *)(acb->vir2phy_offset+(flag_ccb << 5));/*frame must be 32 bytes aligned*/
+>>                               pCCB = container_of(pARCMSR_CDB, struct CommandControlBlock, arcmsr_cdb);
+>>                               error = (flag_ccb & ARCMSR_CCBREPLY_FLAG_ERROR_MODE0) ? true : false;
+>
+> I don't know the hardware, but it doesn't even seem to make sense to me.
+> if "reg" is an __iomem pointer surely an offset into reg is an iomem
+> pointer as well.
+>
+> I am worried that this introduces a bug.
+>
+> regards,
+> dan carpenter
