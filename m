@@ -1,102 +1,142 @@
-From: Jay Kallickal <jayamohank@gmail.com>
-Subject: [PATCH 1/8] be2iscsi: Fix retrieving MCCQ_WRB in non-embedded Mbox path
-Date: Mon,  5 May 2014 21:41:24 -0400
-Message-ID: <1399340492-2136-1-git-send-email-jkallickal@emulex.com>
+From: ching <ching2048@areca.com.tw>
+Subject: [PATCH v1.1 3/16] arcmsr: adding code to support system hibernation
+Date: Mon, 05 May 2014 16:51:10 +0800
+Message-ID: <1399279870.18695.31.camel@localhost>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f48.google.com ([209.85.220.48]:38162 "EHLO
-	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933469AbaEFBlp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 May 2014 21:41:45 -0400
-Received: by mail-pa0-f48.google.com with SMTP id rd3so2049942pab.35
-        for <linux-scsi@vger.kernel.org>; Mon, 05 May 2014 18:41:44 -0700 (PDT)
+Received: from mail-vc0-f177.google.com ([209.85.220.177]:35613 "EHLO
+	mail-vc0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752419AbaEEIvR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 May 2014 04:51:17 -0400
+Received: by mail-vc0-f177.google.com with SMTP id if11so8107298vcb.22
+        for <linux-scsi@vger.kernel.org>; Mon, 05 May 2014 01:51:16 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jbottomley@parallels.com, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
-Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, John Soni Jose <sony.john-n@emulex.com>
+To: jbottomley@parallels.com, dan.carpenter@oracle.com, thenzl@redhat.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+From: Ching<ching2048@areca.com.tw>
 
- Getting WRB for MCCQ posting was done before looking if tag is
- available or not. This lead to increase phba->ctrl.mcc_obj.q.used
- variable and the WARN_ON message was coming from wrb_from_mccq().
- Moved getting wrb from mccq after checking for the tag.
+Adding code to support system hibernation.
 
- In wrb_from_mccq(), memset is done before returning wrb ptr.
- Removed memset of mccq wrb from all other functions.
-
-Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
-Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+Signed-off-by: Ching<ching2048@areca.com.tw>
 ---
- drivers/scsi/be2iscsi/be_mgmt.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
-index 088bdf7..712911f 100644
---- a/drivers/scsi/be2iscsi/be_mgmt.c
-+++ b/drivers/scsi/be2iscsi/be_mgmt.c
-@@ -447,8 +447,8 @@ unsigned int mgmt_vendor_specific_fw_cmd(struct be_ctrl_info *ctrl,
- 					 struct be_dma_mem *nonemb_cmd)
- {
- 	struct be_cmd_resp_hdr *resp;
--	struct be_mcc_wrb *wrb = wrb_from_mccq(phba);
--	struct be_sge *mcc_sge = nonembedded_sgl(wrb);
-+	struct be_mcc_wrb *wrb;
-+	struct be_sge *mcc_sge;
- 	unsigned int tag = 0;
- 	struct iscsi_bsg_request *bsg_req = job->request;
- 	struct be_bsg_vendor_cmd *req = nonemb_cmd->va;
-@@ -465,7 +465,6 @@ unsigned int mgmt_vendor_specific_fw_cmd(struct be_ctrl_info *ctrl,
- 	req->sector = sector;
- 	req->offset = offset;
- 	spin_lock(&ctrl->mbox_lock);
--	memset(wrb, 0, sizeof(*wrb));
+diff -uprN a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c	2014-05-02 19:30:34.000000000 +0800
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c	2014-05-02 19:28:56.000000000 +0800
+@@ -89,11 +89,15 @@ static int arcmsr_bios_param(struct scsi
+ static int arcmsr_queue_command(struct Scsi_Host *h, struct scsi_cmnd *cmd);
+ static int arcmsr_probe(struct pci_dev *pdev,
+ 				const struct pci_device_id *id);
++static int arcmsr_suspend(struct pci_dev *pdev, pm_message_t state);
++static int arcmsr_resume(struct pci_dev *pdev);
+ static void arcmsr_remove(struct pci_dev *pdev);
+ static void arcmsr_shutdown(struct pci_dev *pdev);
+ static void arcmsr_iop_init(struct AdapterControlBlock *acb);
+ static void arcmsr_free_ccb_pool(struct AdapterControlBlock *acb);
+ static u32 arcmsr_disable_outbound_ints(struct AdapterControlBlock *acb);
++static void arcmsr_enable_outbound_ints(struct AdapterControlBlock *acb,
++	u32 intmask_org);
+ static void arcmsr_stop_adapter_bgrb(struct AdapterControlBlock *acb);
+ static void arcmsr_flush_hba_cache(struct AdapterControlBlock *acb);
+ static void arcmsr_flush_hbb_cache(struct AdapterControlBlock *acb);
+@@ -167,6 +171,8 @@ static struct pci_driver arcmsr_pci_driv
+ 	.id_table			= arcmsr_device_id_table,
+ 	.probe			= arcmsr_probe,
+ 	.remove			= arcmsr_remove,
++	.suspend		= arcmsr_suspend,
++	.resume			= arcmsr_resume,
+ 	.shutdown		= arcmsr_shutdown,
+ };
+ /*
+@@ -780,6 +786,86 @@ pci_disable_dev:
+ 	return -ENODEV;
+ }
  
- 	switch (bsg_req->rqst_data.h_vendor.vendor_cmd[0]) {
- 	case BEISCSI_WRITE_FLASH:
-@@ -495,6 +494,8 @@ unsigned int mgmt_vendor_specific_fw_cmd(struct be_ctrl_info *ctrl,
- 		return tag;
- 	}
- 
-+	wrb = wrb_from_mccq(phba);
-+	mcc_sge = nonembedded_sgl(wrb);
- 	be_wrb_hdr_prepare(wrb, nonemb_cmd->size, false,
- 			   job->request_payload.sg_cnt);
- 	mcc_sge->pa_hi = cpu_to_le32(upper_32_bits(nonemb_cmd->dma));
-@@ -525,7 +526,6 @@ int mgmt_epfw_cleanup(struct beiscsi_hba *phba, unsigned short ulp_num)
- 	int status = 0;
- 
- 	spin_lock(&ctrl->mbox_lock);
--	memset(wrb, 0, sizeof(*wrb));
- 
- 	be_wrb_hdr_prepare(wrb, sizeof(*req), true, 0);
- 	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_ISCSI,
-@@ -702,7 +702,6 @@ int mgmt_open_connection(struct beiscsi_hba *phba,
- 		return tag;
- 	}
- 	wrb = wrb_from_mccq(phba);
--	memset(wrb, 0, sizeof(*wrb));
- 	sge = nonembedded_sgl(wrb);
- 
- 	req = nonemb_cmd->va;
-@@ -804,7 +803,7 @@ static int mgmt_exec_nonemb_cmd(struct beiscsi_hba *phba,
- 				int resp_buf_len)
- {
- 	struct be_ctrl_info *ctrl = &phba->ctrl;
--	struct be_mcc_wrb *wrb = wrb_from_mccq(phba);
-+	struct be_mcc_wrb *wrb;
- 	struct be_sge *sge;
- 	unsigned int tag;
- 	int rc = 0;
-@@ -816,7 +815,8 @@ static int mgmt_exec_nonemb_cmd(struct beiscsi_hba *phba,
- 		rc = -ENOMEM;
- 		goto free_cmd;
- 	}
--	memset(wrb, 0, sizeof(*wrb));
++static int arcmsr_suspend(struct pci_dev *pdev, pm_message_t state)
++{
++	int i;
++	uint32_t intmask_org;
++	struct Scsi_Host *host = pci_get_drvdata(pdev);
++	struct AdapterControlBlock *acb =
++		(struct AdapterControlBlock *)host->hostdata;
 +
-+	wrb = wrb_from_mccq(phba);
- 	wrb->tag0 |= tag;
- 	sge = nonembedded_sgl(wrb);
- 
--- 
-1.8.5.3
++	intmask_org = arcmsr_disable_outbound_ints(acb);
++	if (acb->acb_flags & ACB_F_MSI_ENABLED) {
++		free_irq(pdev->irq, acb);
++		pci_disable_msi(pdev);
++	} else if (acb->acb_flags & ACB_F_MSIX_ENABLED) {
++		for (i = 0; i < ARCMST_NUM_MSIX_VECTORS; i++)
++			free_irq(acb->entries[i].vector, acb);
++		pci_disable_msix(pdev);
++	} else
++		free_irq(pdev->irq, acb);
++	del_timer_sync(&acb->eternal_timer);
++	flush_scheduled_work();
++	arcmsr_stop_adapter_bgrb(acb);
++	arcmsr_flush_adapter_cache(acb);
++	arcmsr_enable_outbound_ints(acb, intmask_org);
++	pci_set_drvdata(pdev, host);
++	pci_save_state(pdev);
++	pci_disable_device(pdev);
++	pci_set_power_state(pdev, pci_choose_state(pdev, state));
++	return 0;
++}
++
++static int arcmsr_resume(struct pci_dev *pdev)
++{
++	int error;
++	struct Scsi_Host *host = pci_get_drvdata(pdev);
++	struct AdapterControlBlock *acb =
++		(struct AdapterControlBlock *)host->hostdata;
++
++	pci_set_power_state(pdev, PCI_D0);
++	pci_enable_wake(pdev, PCI_D0, 0);
++	pci_restore_state(pdev);
++	if (pci_enable_device(pdev)) {
++		pr_warn("%s: pci_enable_device error\n", __func__);
++		return -ENODEV;
++	}
++	error = pci_set_dma_mask(pdev, DMA_BIT_MASK(64));
++	if (error) {
++		error = pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
++		if (error) {
++			pr_warn("scsi%d: No suitable DMA mask available\n",
++			       host->host_no);
++			goto controller_unregister;
++		}
++	}
++	pci_set_master(pdev);
++	if (arcmsr_request_irq(pdev, acb) == ARC_FAILURE)
++		goto controller_stop;
++	arcmsr_iop_init(acb);
++	INIT_WORK(&acb->arcmsr_do_message_isr_bh, arcmsr_message_isr_bh_fn);
++	atomic_set(&acb->rq_map_token, 16);
++	atomic_set(&acb->ante_token_value, 16);
++	acb->fw_flag = FW_NORMAL;
++	init_timer(&acb->eternal_timer);
++	acb->eternal_timer.expires = jiffies + msecs_to_jiffies(6 * HZ);
++	acb->eternal_timer.data = (unsigned long) acb;
++	acb->eternal_timer.function = &arcmsr_request_device_map;
++	add_timer(&acb->eternal_timer);
++	return 0;
++controller_stop:
++	arcmsr_stop_adapter_bgrb(acb);
++	arcmsr_flush_adapter_cache(acb);
++controller_unregister:
++	scsi_remove_host(host);
++	arcmsr_free_ccb_pool(acb);
++	arcmsr_unmap_pciregion(acb);
++	pci_release_regions(pdev);
++	scsi_host_put(host);
++	pci_disable_device(pdev);
++	return -ENODEV;
++}
++
+ static uint8_t arcmsr_abort_hba_allcmd(struct AdapterControlBlock *acb)
+ {
+ 	struct MessageUnit_A __iomem *reg = acb->pmuA;
+
 
