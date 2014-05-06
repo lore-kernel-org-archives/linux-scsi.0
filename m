@@ -1,39 +1,43 @@
-From: Alexander Gordeev <agordeev@redhat.com>
-Subject: Re: [PATCH v1.1 2/16 update 2] arcmsr:  Adding code to support MSI-X
+From: ching <ching2048@areca.com.tw>
+Subject: Re: [PATCH v1.1 2/16 update] arcmsr:  Adding code to support MSI-X
  interrupt
-Date: Tue, 6 May 2014 15:15:54 +0200
-Message-ID: <20140506131553.GA3847@dhcp-26-207.brq.redhat.com>
-References: <1399364269.6486.12.camel@localhost>
- <5368DB95.10304@redhat.com>
+Date: Tue, 06 May 2014 16:04:42 +0800
+Message-ID: <1399363482.6486.3.camel@localhost>
+References: <1399288512.4398.79.camel@localhost>
+	 <536789CA.5010604@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34960 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752279AbaEFNOg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 6 May 2014 09:14:36 -0400
-Content-Disposition: inline
-In-Reply-To: <5368DB95.10304@redhat.com>
+Received: from mail-vc0-f180.google.com ([209.85.220.180]:53176 "EHLO
+	mail-vc0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934240AbaEFIEu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 May 2014 04:04:50 -0400
+Received: by mail-vc0-f180.google.com with SMTP id hq16so510731vcb.11
+        for <linux-scsi@vger.kernel.org>; Tue, 06 May 2014 01:04:49 -0700 (PDT)
+In-Reply-To: <536789CA.5010604@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Tomas Henzl <thenzl@redhat.com>
-Cc: ching <ching2048@areca.com.tw>, jbottomley@parallels.com, dan.carpenter@oracle.com, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Cc: jbottomley@parallels.com, dan.carpenter@oracle.com, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On Tue, May 06, 2014 at 02:54:45PM +0200, Tomas Henzl wrote:
-> On 05/06/2014 10:17 AM, ching wrote:
+Thanks for Tomas' suggestion.
+I will have a new update for this patch.
+
+On Mon, 2014-05-05 at 14:53 +0200, Tomas Henzl wrote:
+> On 05/05/2014 01:15 PM, ching wrote:
 > > From: Ching<ching2048@areca.com.tw>
 > >
-> > Adding code to support MSI-X interrupt.
+> > Adding code for supporting MSI-X interrupt.
 > >
-> > This update has modification by Tomas' suggestion.
-> > And I add a msix_vector_count for free_irq.
+> > This update is for fixing bug of previous [PATCH v1.1 2/16].
 > >
 > > Signed-off-by: Ching<ching2048@areca.com.tw>
 > > ---
 > >
 > > diff -uprN a/drivers/scsi/arcmsr/arcmsr.h b/drivers/scsi/arcmsr/arcmsr.h
 > > --- a/drivers/scsi/arcmsr/arcmsr.h	2014-04-28 16:02:46.000000000 +0800
-> > +++ b/drivers/scsi/arcmsr/arcmsr.h	2014-05-06 15:24:36.000000000 +0800
+> > +++ b/drivers/scsi/arcmsr/arcmsr.h	2014-04-28 16:25:06.000000000 +0800
 > > @@ -64,6 +64,7 @@ struct device_attribute;
 > >  #define ARCMSR_MAX_HBB_POSTQUEUE						264
 > >  #define ARCMSR_MAX_XFER_LEN							0x26000 /* 152K */
@@ -59,18 +63,10 @@ On Tue, May 06, 2014 at 02:54:45PM +0200, Tomas Henzl wrote:
 > >  	struct CommandControlBlock *			pccb_pool[ARCMSR_MAX_FREECCB_NUM];
 > >  	/* used for memory free */
 > >  	struct list_head		ccb_free_list;
-> > @@ -594,6 +598,7 @@ struct AdapterControlBlock
-> >  				#define	FW_DEADLOCK	0x0010
-> >  	atomic_t 			rq_map_token;
-> >  	atomic_t			ante_token_value;
-> > +	int		msix_vector_count;
-> >  };/* HW_DEVICE_EXTENSION */
-> >  /*
-> >  *******************************************************************************
 > > diff -uprN a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
 > > --- a/drivers/scsi/arcmsr/arcmsr_hba.c	2014-04-28 15:58:34.000000000 +0800
-> > +++ b/drivers/scsi/arcmsr/arcmsr_hba.c	2014-05-06 15:20:48.000000000 +0800
-> > @@ -603,6 +603,65 @@ static void arcmsr_message_isr_bh_fn(str
+> > +++ b/drivers/scsi/arcmsr/arcmsr_hba.c	2014-05-05 18:57:03.000000000 +0800
+> > @@ -603,6 +603,79 @@ static void arcmsr_message_isr_bh_fn(str
 > >  	}
 > >  }
 > >  
@@ -85,43 +81,74 @@ On Tue, May 06, 2014 at 02:54:45PM +0200, Tomas Henzl wrote:
 > > +	for (i = 0; i < ARCMST_NUM_MSIX_VECTORS; i++)
 > > +		entries[i].entry = i;
 > > +	r = pci_enable_msix(pdev, entries, ARCMST_NUM_MSIX_VECTORS);
-> 
-> The use of pci_enable_msix is deprecated, please use pci_enable_msix_range or
-> pci_enable_msix_exact instead. Sorry for not noticing the first time I reviewed
-> this patch.
-> 
 > > +	if (r < 0)
 > > +		goto msi_int;
-> > +	if (r) {
+> > +	if (r == 0) {
+> > +		for (i = 0; i < ARCMST_NUM_MSIX_VECTORS; i++) {
+> > +			if (request_irq(entries[i].vector,
+> > +				arcmsr_do_interrupt, 0, "arcmsr", acb)) {
+> > +				pr_warn("arcmsr%d: request_irq =%d failed!\n",
+> > +					acb->host->host_no, pdev->irq);
+> > +				for (j = 0 ; j < i ; j++)
+> > +					free_irq(entries[j].vector, acb);
+> > +				pci_disable_msix(pdev);
+> > +				goto msi_int;
+> > +			}
+> > +			acb->entries[i] = entries[i];
+> > +		}
+> > +		acb->acb_flags |= ACB_F_MSIX_ENABLED;
+> > +		pr_info("arcmsr%d: msi-x enabled\n", acb->host->host_no);
+> > +		return ARC_SUCCESS;
+> > +	} else {
 > > +		if (pci_enable_msix(pdev, entries, r))
 > > +			goto msi_int;
-> > +	} else
-> > +		r = ARCMST_NUM_MSIX_VECTORS;
-> > +	acb->msix_vector_count = r;
-> > +	for (i = 0; i < r; i++) {
-> > +		if (request_irq(entries[i].vector,
-> > +			arcmsr_do_interrupt, 0, "arcmsr", acb)) {
-> > +			pr_warn("arcmsr%d: request_irq =%d failed!\n",
-> > +				acb->host->host_no, pdev->irq);
-> > +			for (j = 0 ; j < i ; j++)
-> > +				free_irq(entries[j].vector, acb);
-> > +			pci_disable_msix(pdev);
-> > +			goto msi_int;
+> > +		for (i = 0; i < r; i++) {
+> > +			if (request_irq(entries[i].vector,
+> > +				arcmsr_do_interrupt, 0, "arcmsr", acb)) {
+> > +				pr_warn("arcmsr%d: request_irq =%d failed!\n",
+> > +					acb->host->host_no, pdev->irq);
+> > +				for (j = 0 ; j < i ; j++)
+> > +					free_irq(entries[j].vector, acb);
+> > +				pci_disable_msix(pdev);
+> > +				goto msi_int;
+> > +			}
+> > +			acb->entries[i] = entries[i];
 > > +		}
-> > +		acb->entries[i] = entries[i];
+> > +		acb->acb_flags |= ACB_F_MSIX_ENABLED;
+> > +		pr_info("arcmsr%d: msi-x enabled\n", acb->host->host_no);
+> > +		return ARC_SUCCESS;
 > > +	}
-> > +	acb->acb_flags |= ACB_F_MSIX_ENABLED;
-> > +	pr_info("arcmsr%d: msi-x enabled\n", acb->host->host_no);
-> > +	return ARC_SUCCESS;
+> 
+> Hi Ching, Dan,
+> the above construction might be simplified even a bit more - 
+> 	if (r) 
+> 		if (pci_enable_msix(pdev, entries, r))
+> 			goto msi_int;
+> 	else 
+> 		r = ARCMST_NUM_MSIX_VECTORS;
+> 		
+> 	for (i = 0; i < r; i++) {
+> 		if (request_irq(entries[i].vector,
+> 			arcmsr_do_interrupt, 0, "arcmsr", acb)) {
+> 			pr_warn("arcmsr%d: request_irq =%d failed!\n",
+> 				acb->host->host_no, pdev->irq);
+> 			for (j = 0 ; j < i ; j++)
+> 				free_irq(entries[j].vector, acb);
+> 			pci_disable_msix(pdev);
+> 			goto msi_int;
+> 		}
+> 		acb->entries[i] = entries[i];
+> 	}
+> 	acb->acb_flags |= ACB_F_MSIX_ENABLED;
+> 	pr_info("arcmsr%d: msi-x enabled\n", acb->host->host_no);
+> 	return ARC_SUCCESS;
+> Otherwise as Dan said the function looks now good
+> thanks, tomas
+> 
 > > +msi_int:
 > > +	if (!pci_find_capability(pdev, PCI_CAP_ID_MSI))
 > > +		goto legacy_int;
 > > +	if (pci_enable_msi(pdev))
-> 
-> Similarly here, use the new pci_enable_msi_range() or pci_enable_msi_exact()
-
-Nope, pci_enable_msi() is not going to deprecate and could be used here.
-
 > > +		goto legacy_int;
 > > +	if (request_irq(pdev->irq, arcmsr_do_interrupt,
 > > +		IRQF_SHARED, "arcmsr", acb)) {
@@ -146,7 +173,7 @@ Nope, pci_enable_msi() is not going to deprecate and could be used here.
 > >  static int arcmsr_probe(struct pci_dev *pdev, const struct pci_device_id *id)
 > >  {
 > >  	struct Scsi_Host *host;
-> > @@ -667,16 +726,13 @@ static int arcmsr_probe(struct pci_dev *
+> > @@ -667,16 +740,13 @@ static int arcmsr_probe(struct pci_dev *
 > >  	if(error){
 > >  		goto free_hbb_mu;
 > >  	}
@@ -165,7 +192,7 @@ Nope, pci_enable_msi() is not going to deprecate and could be used here.
 > >      	scsi_scan_host(host);
 > >  	INIT_WORK(&acb->arcmsr_do_message_isr_bh, arcmsr_message_isr_bh_fn);
 > >  	atomic_set(&acb->rq_map_token, 16);
-> > @@ -992,6 +1048,22 @@ static void arcmsr_done4abort_postqueue(
+> > @@ -992,6 +1062,22 @@ static void arcmsr_done4abort_postqueue(
 > >  	}
 > >  	}
 > >  }
@@ -178,7 +205,7 @@ Nope, pci_enable_msi() is not going to deprecate and could be used here.
 > > +		free_irq(pdev->irq, acb);
 > > +		pci_disable_msi(pdev);
 > > +	} else if (acb->acb_flags & ACB_F_MSIX_ENABLED) {
-> > +		for (i = 0; i < acb->msix_vector_count; i++)
+> > +		for (i = 0; i < ARCMST_NUM_MSIX_VECTORS; i++)
 > > +			free_irq(acb->entries[i].vector, acb);
 > > +		pci_disable_msix(pdev);
 > > +	} else
@@ -188,7 +215,7 @@ Nope, pci_enable_msi() is not going to deprecate and could be used here.
 > >  static void arcmsr_remove(struct pci_dev *pdev)
 > >  {
 > >  	struct Scsi_Host *host = pci_get_drvdata(pdev);
-> > @@ -1029,7 +1101,7 @@ static void arcmsr_remove(struct pci_dev
+> > @@ -1029,7 +1115,7 @@ static void arcmsr_remove(struct pci_dev
 > >  			}
 > >  		}
 > >  	}
@@ -197,7 +224,7 @@ Nope, pci_enable_msi() is not going to deprecate and could be used here.
 > >  	arcmsr_free_ccb_pool(acb);
 > >  	arcmsr_free_hbb_mu(acb);
 > >  	arcmsr_unmap_pciregion(acb);
-> > @@ -1045,6 +1117,7 @@ static void arcmsr_shutdown(struct pci_d
+> > @@ -1045,6 +1131,7 @@ static void arcmsr_shutdown(struct pci_d
 > >  		(struct AdapterControlBlock *)host->hostdata;
 > >  	del_timer_sync(&acb->eternal_timer);
 > >  	arcmsr_disable_outbound_ints(acb);
@@ -205,7 +232,7 @@ Nope, pci_enable_msi() is not going to deprecate and could be used here.
 > >  	flush_work(&acb->arcmsr_do_message_isr_bh);
 > >  	arcmsr_stop_adapter_bgrb(acb);
 > >  	arcmsr_flush_adapter_cache(acb);
-> > @@ -2516,8 +2589,6 @@ static int arcmsr_iop_confirm(struct Ada
+> > @@ -2516,8 +2603,6 @@ static int arcmsr_iop_confirm(struct Ada
 > >  	case ACB_ADAPTER_TYPE_A: {
 > >  		if (cdb_phyaddr_hi32 != 0) {
 > >  			struct MessageUnit_A __iomem *reg = acb->pmuA;
@@ -214,7 +241,7 @@ Nope, pci_enable_msi() is not going to deprecate and could be used here.
 > >  			writel(ARCMSR_SIGNATURE_SET_CONFIG, \
 > >  						&reg->message_rwbuffer[0]);
 > >  			writel(cdb_phyaddr_hi32, &reg->message_rwbuffer[1]);
-> > @@ -2529,7 +2600,6 @@ static int arcmsr_iop_confirm(struct Ada
+> > @@ -2529,7 +2614,6 @@ static int arcmsr_iop_confirm(struct Ada
 > >  				acb->host->host_no);
 > >  				return 1;
 > >  			}
@@ -222,7 +249,7 @@ Nope, pci_enable_msi() is not going to deprecate and could be used here.
 > >  		}
 > >  		}
 > >  		break;
-> > @@ -2539,8 +2609,6 @@ static int arcmsr_iop_confirm(struct Ada
+> > @@ -2539,8 +2623,6 @@ static int arcmsr_iop_confirm(struct Ada
 > >  		uint32_t __iomem *rwbuffer;
 > >  
 > >  		struct MessageUnit_B *reg = acb->pmuB;
@@ -231,7 +258,7 @@ Nope, pci_enable_msi() is not going to deprecate and could be used here.
 > >  		reg->postq_index = 0;
 > >  		reg->doneq_index = 0;
 > >  		writel(ARCMSR_MESSAGE_SET_POST_WINDOW, reg->drv2iop_doorbell);
-> > @@ -2569,7 +2637,6 @@ static int arcmsr_iop_confirm(struct Ada
+> > @@ -2569,7 +2651,6 @@ static int arcmsr_iop_confirm(struct Ada
 > >  			return 1;
 > >  		}
 > >  		arcmsr_hbb_enable_driver_mode(acb);
@@ -247,7 +274,4 @@ Nope, pci_enable_msi() is not going to deprecate and could be used here.
 > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+
