@@ -1,290 +1,152 @@
-From: ching <ching2048@areca.com.tw>
-Subject: [PATCH v1.1 1/16] arcmsr: Revise interrupt service routine relate
- function to fix command timeout
-Date: Mon, 05 May 2014 16:43:16 +0800
-Message-ID: <1399279396.18695.24.camel@localhost>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: Jay Kallickal <jayamohank@gmail.com>
+Subject: [PATCH 4/8] be2iscsi: Fix TCP parameters while connection offloading.
+Date: Mon,  5 May 2014 21:41:27 -0400
+Message-ID: <1399340492-2136-4-git-send-email-jkallickal@emulex.com>
+References: <1399340492-2136-1-git-send-email-jkallickal@emulex.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:58687 "EHLO
-	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755059AbaEEInY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 May 2014 04:43:24 -0400
-Received: by mail-vc0-f174.google.com with SMTP id ib6so8203412vcb.33
-        for <linux-scsi@vger.kernel.org>; Mon, 05 May 2014 01:43:23 -0700 (PDT)
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:45745 "EHLO
+	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933469AbaEFBlv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 May 2014 21:41:51 -0400
+Received: by mail-pa0-f50.google.com with SMTP id fb1so3347090pad.37
+        for <linux-scsi@vger.kernel.org>; Mon, 05 May 2014 18:41:50 -0700 (PDT)
+In-Reply-To: <1399340492-2136-1-git-send-email-jkallickal@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jbottomley@parallels.com, dan.carpenter@oracle.com, thenzl@redhat.com, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: jbottomley@parallels.com, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
+Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, Minh Tran <minhduc.tran@emulex.com>, John Soni Jose <sony.john-n@emulex.com>
 
-From: Ching<ching2048@areca.com.tw>
+From: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 
-Rewrite interrupt service routine relate function to fix command timeout on controller very heavy loading.
+ SKH-R adapter, TCP Window Size/Scale parameters are passed
+ in TCP Connection Offload Mbx Command.
 
-Signed-off-by: Ching<ching2048@areca.com.tw>
+Signed-off-by: Minh Tran <minhduc.tran@emulex.com>
+Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
+Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 ---
+ drivers/scsi/be2iscsi/be_cmds.h  | 21 +++++++++++++++++++++
+ drivers/scsi/be2iscsi/be_iscsi.c | 12 +++++++++---
+ drivers/scsi/be2iscsi/be_mgmt.c  | 13 ++++++++++---
+ 3 files changed, 40 insertions(+), 6 deletions(-)
 
-diff -uprN a/drivers/scsi/arcmsr/arcmsr.h b/drivers/scsi/arcmsr/arcmsr.h
---- a/drivers/scsi/arcmsr/arcmsr.h	2014-02-06 17:47:43.000000000 +0800
-+++ b/drivers/scsi/arcmsr/arcmsr.h	2014-04-28 16:02:46.000000000 +0800
-@@ -51,7 +51,7 @@ struct device_attribute;
- #else
- 	#define ARCMSR_MAX_FREECCB_NUM	320
- #endif
--#define ARCMSR_DRIVER_VERSION		     "Driver Version 1.20.00.15 2010/08/05"
-+#define ARCMSR_DRIVER_VERSION		"v1.30.00.04-20140428"
- #define ARCMSR_SCSI_INITIATOR_ID						255
- #define ARCMSR_MAX_XFER_SECTORS							512
- #define ARCMSR_MAX_XFER_SECTORS_B						4096
-diff -uprN a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
---- a/drivers/scsi/arcmsr/arcmsr_hba.c	2014-04-03 17:29:03.000000000 +0800
-+++ b/drivers/scsi/arcmsr/arcmsr_hba.c	2014-04-28 15:58:34.000000000 +0800
-@@ -1441,14 +1441,15 @@ static void arcmsr_hba_doorbell_isr(stru
- 	uint32_t outbound_doorbell;
- 	struct MessageUnit_A __iomem *reg = acb->pmuA;
- 	outbound_doorbell = readl(&reg->outbound_doorbell);
--	writel(outbound_doorbell, &reg->outbound_doorbell);
--	if (outbound_doorbell & ARCMSR_OUTBOUND_IOP331_DATA_WRITE_OK) {
--		arcmsr_iop2drv_data_wrote_handle(acb);
--	}
--
--	if (outbound_doorbell & ARCMSR_OUTBOUND_IOP331_DATA_READ_OK) {
--		arcmsr_iop2drv_data_read_handle(acb);
--	}
-+	do {
-+		writel(outbound_doorbell, &reg->outbound_doorbell);
-+		if (outbound_doorbell & ARCMSR_OUTBOUND_IOP331_DATA_WRITE_OK)
-+			arcmsr_iop2drv_data_wrote_handle(acb);
-+		if (outbound_doorbell & ARCMSR_OUTBOUND_IOP331_DATA_READ_OK)
-+			arcmsr_iop2drv_data_read_handle(acb);
-+		outbound_doorbell = readl(&reg->outbound_doorbell);
-+	} while (outbound_doorbell & (ARCMSR_OUTBOUND_IOP331_DATA_WRITE_OK
-+		| ARCMSR_OUTBOUND_IOP331_DATA_READ_OK));
- }
- static void arcmsr_hbc_doorbell_isr(struct AdapterControlBlock *pACB)
- {
-@@ -1462,17 +1463,19 @@ static void arcmsr_hbc_doorbell_isr(stru
- 	*******************************************************************
- 	*/
- 	outbound_doorbell = readl(&reg->outbound_doorbell);
--	writel(outbound_doorbell, &reg->outbound_doorbell_clear);/*clear interrupt*/
--	if (outbound_doorbell & ARCMSR_HBCMU_IOP2DRV_DATA_WRITE_OK) {
--		arcmsr_iop2drv_data_wrote_handle(pACB);
--	}
--	if (outbound_doorbell & ARCMSR_HBCMU_IOP2DRV_DATA_READ_OK) {
--		arcmsr_iop2drv_data_read_handle(pACB);
--	}
--	if (outbound_doorbell & ARCMSR_HBCMU_IOP2DRV_MESSAGE_CMD_DONE) {
--		arcmsr_hbc_message_isr(pACB);    /* messenger of "driver to iop commands" */
--	}
--	return;
-+	do {
-+		writel(outbound_doorbell, &reg->outbound_doorbell_clear);
-+		readl(&reg->outbound_doorbell_clear);
-+		if (outbound_doorbell & ARCMSR_HBCMU_IOP2DRV_DATA_WRITE_OK)
-+			arcmsr_iop2drv_data_wrote_handle(pACB);
-+		if (outbound_doorbell & ARCMSR_HBCMU_IOP2DRV_DATA_READ_OK)
-+			arcmsr_iop2drv_data_read_handle(pACB);
-+		if (outbound_doorbell & ARCMSR_HBCMU_IOP2DRV_MESSAGE_CMD_DONE)
-+			arcmsr_hbc_message_isr(pACB);
-+		outbound_doorbell = readl(&reg->outbound_doorbell);
-+	} while (outbound_doorbell & (ARCMSR_HBCMU_IOP2DRV_DATA_WRITE_OK
-+		| ARCMSR_HBCMU_IOP2DRV_DATA_READ_OK
-+		| ARCMSR_HBCMU_IOP2DRV_MESSAGE_CMD_DONE));
- }
- static void arcmsr_hba_postqueue_isr(struct AdapterControlBlock *acb)
- {
-@@ -1521,21 +1524,22 @@ static void arcmsr_hbc_postqueue_isr(str
- 	/* areca cdb command done */
- 	/* Use correct offset and size for syncing */
+diff --git a/drivers/scsi/be2iscsi/be_cmds.h b/drivers/scsi/be2iscsi/be_cmds.h
+index cd4410f..cc7405c 100644
+--- a/drivers/scsi/be2iscsi/be_cmds.h
++++ b/drivers/scsi/be2iscsi/be_cmds.h
+@@ -71,6 +71,7 @@ struct be_mcc_wrb {
+ #define BEISCSI_FW_MBX_TIMEOUT	100
  
--	while (readl(&phbcmu->host_int_status) &
--	ARCMSR_HBCMU_OUTBOUND_POSTQUEUE_ISR){
--	/* check if command done with no error*/
--	flag_ccb = readl(&phbcmu->outbound_queueport_low);
--	ccb_cdb_phy = (flag_ccb & 0xFFFFFFF0);/*frame must be 32 bytes aligned*/
--	arcmsr_cdb = (struct ARCMSR_CDB *)(acb->vir2phy_offset + ccb_cdb_phy);
--	ccb = container_of(arcmsr_cdb, struct CommandControlBlock, arcmsr_cdb);
--	error = (flag_ccb & ARCMSR_CCBREPLY_FLAG_ERROR_MODE1) ? true : false;
--	/* check if command done with no error */
--	arcmsr_drain_donequeue(acb, ccb, error);
--	if (throttling == ARCMSR_HBC_ISR_THROTTLING_LEVEL) {
--		writel(ARCMSR_HBCMU_DRV2IOP_POSTQUEUE_THROTTLING, &phbcmu->inbound_doorbell);
--		break;
--	}
--	throttling++;
-+	while ((flag_ccb = readl(&phbcmu->outbound_queueport_low)) != 0xFFFFFFFF) {
-+		ccb_cdb_phy = (flag_ccb & 0xFFFFFFF0);
-+		arcmsr_cdb = (struct ARCMSR_CDB *)(acb->vir2phy_offset
-+			+ ccb_cdb_phy);
-+		ccb = container_of(arcmsr_cdb, struct CommandControlBlock,
-+			arcmsr_cdb);
-+		error = (flag_ccb & ARCMSR_CCBREPLY_FLAG_ERROR_MODE1)
-+			? true : false;
-+		/* check if command done with no error */
-+		arcmsr_drain_donequeue(acb, ccb, error);
-+		throttling++;
-+		if (throttling == ARCMSR_HBC_ISR_THROTTLING_LEVEL) {
-+			writel(ARCMSR_HBCMU_DRV2IOP_POSTQUEUE_THROTTLING,
-+				&phbcmu->inbound_doorbell);
-+			throttling = 0;
-+		}
+ /* MBOX Command VER */
++#define MBX_CMD_VER1	0x01
+ #define MBX_CMD_VER2	0x02
+ 
+ struct be_mcc_compl {
+@@ -1013,6 +1014,26 @@ struct tcp_connect_and_offload_in {
+ 	u8 rsvd0[3];
+ } __packed;
+ 
++struct tcp_connect_and_offload_in_v1 {
++	struct be_cmd_req_hdr hdr;
++	struct ip_addr_format ip_address;
++	u16 tcp_port;
++	u16 cid;
++	u16 cq_id;
++	u16 defq_id;
++	struct phys_addr dataout_template_pa;
++	u16 hdr_ring_id;
++	u16 data_ring_id;
++	u8 do_offload;
++	u8 ifd_state;
++	u8 rsvd0[2];
++	u16 tcp_window_size;
++	u8 tcp_window_scale_count;
++	u8 rsvd1;
++	u32 tcp_mss:24;
++	u8 rsvd2;
++} __packed;
++
+ struct tcp_connect_and_offload_out {
+ 	struct be_cmd_resp_hdr hdr;
+ 	u32 connection_handle;
+diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
+index a3df433..fd284ff 100644
+--- a/drivers/scsi/be2iscsi/be_iscsi.c
++++ b/drivers/scsi/be2iscsi/be_iscsi.c
+@@ -1106,7 +1106,7 @@ static int beiscsi_open_conn(struct iscsi_endpoint *ep,
+ 	struct beiscsi_hba *phba = beiscsi_ep->phba;
+ 	struct tcp_connect_and_offload_out *ptcpcnct_out;
+ 	struct be_dma_mem nonemb_cmd;
+-	unsigned int tag;
++	unsigned int tag, req_memsize;
+ 	int ret = -ENOMEM;
+ 
+ 	beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_CONFIG,
+@@ -1127,8 +1127,14 @@ static int beiscsi_open_conn(struct iscsi_endpoint *ep,
+ 		       (beiscsi_ep->ep_cid)] = ep;
+ 
+ 	beiscsi_ep->cid_vld = 0;
++
++	if (is_chip_be2_be3r(phba))
++		req_memsize = sizeof(struct tcp_connect_and_offload_in);
++	else
++		req_memsize = sizeof(struct tcp_connect_and_offload_in_v1);
++
+ 	nonemb_cmd.va = pci_alloc_consistent(phba->ctrl.pdev,
+-				sizeof(struct tcp_connect_and_offload_in),
++				req_memsize,
+ 				&nonemb_cmd.dma);
+ 	if (nonemb_cmd.va == NULL) {
+ 
+@@ -1139,7 +1145,7 @@ static int beiscsi_open_conn(struct iscsi_endpoint *ep,
+ 		beiscsi_free_ep(beiscsi_ep);
+ 		return -ENOMEM;
  	}
- }
- /*
-@@ -1584,21 +1588,22 @@ static int arcmsr_handle_hba_isr(struct 
- 	struct MessageUnit_A __iomem *reg = acb->pmuA;
- 	outbound_intstatus = readl(&reg->outbound_intstatus) &
- 		acb->outbound_int_enable;
--	if (!(outbound_intstatus & ARCMSR_MU_OUTBOUND_HANDLE_INT))	{
--		return 1;
--	}
--	writel(outbound_intstatus, &reg->outbound_intstatus);
--	if (outbound_intstatus & ARCMSR_MU_OUTBOUND_DOORBELL_INT)	{
--		arcmsr_hba_doorbell_isr(acb);
--	}
--	if (outbound_intstatus & ARCMSR_MU_OUTBOUND_POSTQUEUE_INT) {
--		arcmsr_hba_postqueue_isr(acb);
--	}
--	if(outbound_intstatus & ARCMSR_MU_OUTBOUND_MESSAGE0_INT) 	{
--		/* messenger of "driver to iop commands" */
--		arcmsr_hba_message_isr(acb);
--	}
--	return 0;
-+	if (!(outbound_intstatus & ARCMSR_MU_OUTBOUND_HANDLE_INT))
-+		return IRQ_NONE;
-+	do {
-+		writel(outbound_intstatus, &reg->outbound_intstatus);
-+		if (outbound_intstatus & ARCMSR_MU_OUTBOUND_DOORBELL_INT)
-+			arcmsr_hba_doorbell_isr(acb);
-+		if (outbound_intstatus & ARCMSR_MU_OUTBOUND_POSTQUEUE_INT)
-+			arcmsr_hba_postqueue_isr(acb);
-+		if (outbound_intstatus & ARCMSR_MU_OUTBOUND_MESSAGE0_INT)
-+			arcmsr_hba_message_isr(acb);
-+		outbound_intstatus = readl(&reg->outbound_intstatus) &
-+			acb->outbound_int_enable;
-+	} while (outbound_intstatus & (ARCMSR_MU_OUTBOUND_DOORBELL_INT
-+		| ARCMSR_MU_OUTBOUND_POSTQUEUE_INT
-+		| ARCMSR_MU_OUTBOUND_MESSAGE0_INT));
-+	return IRQ_HANDLED;
- }
+-	nonemb_cmd.size = sizeof(struct tcp_connect_and_offload_in);
++	nonemb_cmd.size = req_memsize;
+ 	memset(nonemb_cmd.va, 0, nonemb_cmd.size);
+ 	tag = mgmt_open_connection(phba, dst_addr, beiscsi_ep, &nonemb_cmd);
+ 	if (tag <= 0) {
+diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
+index 52a36fb..6045aa7 100644
+--- a/drivers/scsi/be2iscsi/be_mgmt.c
++++ b/drivers/scsi/be2iscsi/be_mgmt.c
+@@ -712,7 +712,7 @@ int mgmt_open_connection(struct beiscsi_hba *phba,
+ 	struct sockaddr_in6 *daddr_in6 = (struct sockaddr_in6 *)dst_addr;
+ 	struct be_ctrl_info *ctrl = &phba->ctrl;
+ 	struct be_mcc_wrb *wrb;
+-	struct tcp_connect_and_offload_in *req;
++	struct tcp_connect_and_offload_in_v1 *req;
+ 	unsigned short def_hdr_id;
+ 	unsigned short def_data_id;
+ 	struct phys_addr template_address = { 0, 0 };
+@@ -745,10 +745,10 @@ int mgmt_open_connection(struct beiscsi_hba *phba,
+ 	memset(req, 0, sizeof(*req));
+ 	wrb->tag0 |= tag;
  
- static int arcmsr_handle_hbb_isr(struct AdapterControlBlock *acb)
-@@ -1608,27 +1613,25 @@ static int arcmsr_handle_hbb_isr(struct 
- 	outbound_doorbell = readl(reg->iop2drv_doorbell) &
- 				acb->outbound_int_enable;
- 	if (!outbound_doorbell)
--		return 1;
--
--	writel(~outbound_doorbell, reg->iop2drv_doorbell);
--	/*in case the last action of doorbell interrupt clearance is cached,
--	this action can push HW to write down the clear bit*/
--	readl(reg->iop2drv_doorbell);
--	writel(ARCMSR_DRV2IOP_END_OF_INTERRUPT, reg->drv2iop_doorbell);
--	if (outbound_doorbell & ARCMSR_IOP2DRV_DATA_WRITE_OK) {
--		arcmsr_iop2drv_data_wrote_handle(acb);
--	}
--	if (outbound_doorbell & ARCMSR_IOP2DRV_DATA_READ_OK) {
--		arcmsr_iop2drv_data_read_handle(acb);
--	}
--	if (outbound_doorbell & ARCMSR_IOP2DRV_CDB_DONE) {
--		arcmsr_hbb_postqueue_isr(acb);
--	}
--	if(outbound_doorbell & ARCMSR_IOP2DRV_MESSAGE_CMD_DONE) {
--		/* messenger of "driver to iop commands" */
--		arcmsr_hbb_message_isr(acb);
--	}
--	return 0;
-+		return IRQ_NONE;
-+	do {
-+		writel(~outbound_doorbell, reg->iop2drv_doorbell);
-+		writel(ARCMSR_DRV2IOP_END_OF_INTERRUPT, reg->drv2iop_doorbell);
-+		if (outbound_doorbell & ARCMSR_IOP2DRV_DATA_WRITE_OK)
-+			arcmsr_iop2drv_data_wrote_handle(acb);
-+		if (outbound_doorbell & ARCMSR_IOP2DRV_DATA_READ_OK)
-+			arcmsr_iop2drv_data_read_handle(acb);
-+		if (outbound_doorbell & ARCMSR_IOP2DRV_CDB_DONE)
-+			arcmsr_hbb_postqueue_isr(acb);
-+		if (outbound_doorbell & ARCMSR_IOP2DRV_MESSAGE_CMD_DONE)
-+			arcmsr_hbb_message_isr(acb);
-+		outbound_doorbell = readl(reg->iop2drv_doorbell) &
-+			acb->outbound_int_enable;
-+	} while (outbound_doorbell & (ARCMSR_IOP2DRV_DATA_WRITE_OK
-+		| ARCMSR_IOP2DRV_DATA_READ_OK
-+		| ARCMSR_IOP2DRV_CDB_DONE
-+		| ARCMSR_IOP2DRV_MESSAGE_CMD_DONE));
-+	return IRQ_HANDLED;
- }
- 
- static int arcmsr_handle_hbc_isr(struct AdapterControlBlock *pACB)
-@@ -1640,44 +1643,37 @@ static int arcmsr_handle_hbc_isr(struct 
- 	**   check outbound intstatus
- 	*********************************************
- 	*/
--	host_interrupt_status = readl(&phbcmu->host_int_status);
--	if (!host_interrupt_status) {
--		/*it must be share irq*/
--		return 1;
--	}
--	/* MU ioctl transfer doorbell interrupts*/
--	if (host_interrupt_status & ARCMSR_HBCMU_OUTBOUND_DOORBELL_ISR) {
--		arcmsr_hbc_doorbell_isr(pACB);   /* messenger of "ioctl message read write" */
--	}
--	/* MU post queue interrupts*/
--	if (host_interrupt_status & ARCMSR_HBCMU_OUTBOUND_POSTQUEUE_ISR) {
--		arcmsr_hbc_postqueue_isr(pACB);  /* messenger of "scsi commands" */
--	}
--	return 0;
-+	host_interrupt_status = readl(&phbcmu->host_int_status) &
-+		(ARCMSR_HBCMU_OUTBOUND_POSTQUEUE_ISR |
-+		ARCMSR_HBCMU_OUTBOUND_DOORBELL_ISR);
-+	if (!host_interrupt_status)
-+		return IRQ_NONE;
-+	do {
-+		if (host_interrupt_status & ARCMSR_HBCMU_OUTBOUND_DOORBELL_ISR)
-+			arcmsr_hbc_doorbell_isr(pACB);
-+		/* MU post queue interrupts*/
-+		if (host_interrupt_status & ARCMSR_HBCMU_OUTBOUND_POSTQUEUE_ISR)
-+			arcmsr_hbc_postqueue_isr(pACB);
-+		host_interrupt_status = readl(&phbcmu->host_int_status);
-+	} while (host_interrupt_status & (ARCMSR_HBCMU_OUTBOUND_POSTQUEUE_ISR |
-+		ARCMSR_HBCMU_OUTBOUND_DOORBELL_ISR));
-+	return IRQ_HANDLED;
- }
- static irqreturn_t arcmsr_interrupt(struct AdapterControlBlock *acb)
- {
- 	switch (acb->adapter_type) {
--	case ACB_ADAPTER_TYPE_A: {
--		if (arcmsr_handle_hba_isr(acb)) {
--			return IRQ_NONE;
--		}
--		}
-+	case ACB_ADAPTER_TYPE_A:
-+		return arcmsr_handle_hba_isr(acb);
- 		break;
--
--	case ACB_ADAPTER_TYPE_B: {
--		if (arcmsr_handle_hbb_isr(acb)) {
--			return IRQ_NONE;
--		}
--		}
-+	case ACB_ADAPTER_TYPE_B:
-+		return arcmsr_handle_hbb_isr(acb);
- 		break;
--	 case ACB_ADAPTER_TYPE_C: {
--		if (arcmsr_handle_hbc_isr(acb)) {
--			return IRQ_NONE;
--		}
--		}
-+	case ACB_ADAPTER_TYPE_C:
-+		return arcmsr_handle_hbc_isr(acb);
-+		break;
-+	default:
-+		return IRQ_NONE;
- 	}
--	return IRQ_HANDLED;
- }
- 
- static void arcmsr_iop_parking(struct AdapterControlBlock *acb)
-
+-	be_wrb_hdr_prepare(wrb, sizeof(*req), false, 1);
++	be_wrb_hdr_prepare(wrb, nonemb_cmd->size, false, 1);
+ 	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_ISCSI,
+ 			   OPCODE_COMMON_ISCSI_TCP_CONNECT_AND_OFFLOAD,
+-			   sizeof(*req));
++			   nonemb_cmd->size);
+ 	if (dst_addr->sa_family == PF_INET) {
+ 		__be32 s_addr = daddr_in->sin_addr.s_addr;
+ 		req->ip_address.ip_type = BE2_IPV4;
+@@ -794,6 +794,13 @@ int mgmt_open_connection(struct beiscsi_hba *phba,
+ 	sge->pa_hi = cpu_to_le32(upper_32_bits(nonemb_cmd->dma));
+ 	sge->pa_lo = cpu_to_le32(nonemb_cmd->dma & 0xFFFFFFFF);
+ 	sge->len = cpu_to_le32(nonemb_cmd->size);
++
++	if (!is_chip_be2_be3r(phba)) {
++		req->hdr.version = MBX_CMD_VER1;
++		req->tcp_window_size = 0;
++		req->tcp_window_scale_count = 2;
++	}
++
+ 	be_mcc_notify(phba);
+ 	spin_unlock(&ctrl->mbox_lock);
+ 	return tag;
+-- 
+1.8.5.3
 
