@@ -1,42 +1,78 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: How to get more sequential IO merged at elevator
-Date: Tue, 06 May 2014 08:16:49 -0600
-Message-ID: <5368EED1.2030207@kernel.dk>
-References: <471cb78e78284a109ca9cc2571ebb9c6@BN1PR07MB247.namprd07.prod.outlook.com>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: virtio-scsi: two questions related with picking up queue
+Date: Tue, 06 May 2014 15:17:15 +0200
+Message-ID: <5368E0DB.5010000@redhat.com>
+References: <CACVXFVNeBbJgA6h5n1Mt7vp7_Es67N5KEpZ0en4O+9GnD6wp+A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:32792 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750830AbaEFOQp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 May 2014 10:16:45 -0400
-Received: by mail-pa0-f43.google.com with SMTP id hz1so563472pad.30
-        for <linux-scsi@vger.kernel.org>; Tue, 06 May 2014 07:16:44 -0700 (PDT)
-In-Reply-To: <471cb78e78284a109ca9cc2571ebb9c6@BN1PR07MB247.namprd07.prod.outlook.com>
+Received: from mx1.redhat.com ([209.132.183.28]:27525 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750751AbaEFNRg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 6 May 2014 09:17:36 -0400
+In-Reply-To: <CACVXFVNeBbJgA6h5n1Mt7vp7_Es67N5KEpZ0en4O+9GnD6wp+A@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Ming Lei <tom.leiming@gmail.com>, Linux SCSI List <linux-scsi@vger.kernel.org>, Wanlong Gao <gaowanlong@cn.fujitsu.com>, Asias He <asias@redhat.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Rusty Russell <rusty@rustcorp.com.au>
 
-On 05/06/2014 04:06 AM, Desai, Kashyap wrote:
-> I got some clue on what was going on while doing 4K sequential read using fio.
-> 
-> If I use ioengine in fio script as "libaio", I see " do_io_submit" call plug/unplug the queue before submitting the IO.
-> It means after every IO, we expect to send IO immediately to the next layer. If at all there are any pending IO do merge.. but not due to plugging.
-> 
-> This is what happens on my test. Every time IO comes from application with libaio engine, it send down to the elevator/io-scheduler because queue was unplugged in 
-> do_io_submit(). Moment I reduce the queue depth of the block device, merge start because of congestion at scsi mid layer.
-> 
-> If I use, mmap engine, I see merged IO coming to the device driver because of plugging. I really don't know how it works, but gave a try and found merge happen because of plugging. ( I confirm using blktrace)
-> 
-> Is there any ioengine in <fio> (or any other parameter setting), which can use plugging mechanism of block layer to merge more IO other than mmap ?
+Il 06/05/2014 11:26, Ming Lei ha scritto:
+> Hi Paolo and All,
+>
+> One question is about ACCESS_ONCE() in virtscsi_pick_vq(),
+> looks it needn't since both reading and writing tgt->req_vq holds
+> tgt->tgt_lock.
 
-O_DIRECT IO is sync by nature, which is why it is sent off immediately
-instead of held for potentially merging. mmap is not. You should be able
-to provoke merging by submitting more than 1 IO at the time. See the
-iodepth_batch settings for fio.
+You're right.  It should be possible to avoid the lock in 
+virtscsi_pick_vq like this:
 
--- 
-Jens Axboe
+	value = atomic_read(&tgt->reqs);
+retry:
+	if (value != 0) {
+		old_value = atomic_cmpxchg(&tgt->regs, value, value + 1)
+		if (old_value != value) {
+			value = old_value;
+			goto retry;
+		}
+
+		smp_mb__after_atomic_cmpxchg(); // you get the idea :)
+		vq = ACCESS_ONCE(tgt->req_vq);
+	} else {
+	        spin_lock_irqsave(&tgt->tgt_lock, flags);
+
+		// tgt->reqs may not be 0 anymore, need to recheck
+		value = atomic_read(&tgt->reqs);
+		if (atomic_read(&tgt->reqs) != 0) {
+		        spin_unlock_irqrestore(&tgt->tgt_lock, flags);
+			goto retry;
+		}
+
+		// tgt->reqs now will remain fixed to 0.
+		...
+		tgt->req_vq = vq = ...;
+		smp_wmb();
+		atomic_set(&tgt->reqs, 1);
+	        spin_unlock_irqrestore(&tgt->tgt_lock, flags);
+	}
+
+	return vq;
+
+and then you would need the ACCESS_ONCE but I'm not sure it's worthwhile.
+
+> Another one is about the comment in virtscsi_req_done(), which
+> said smp_read_barrier_depends() is needed for avoiding
+> out of order between reading req_vq and decreasing tgt->reqs.
+> But if I understand correctly, in virtscsi_req_done(), req_vq is
+> read from vscsi->req_vqs[vq->index - VIRTIO_SCSI_VQ_BASE],
+> instead of tgt->req_vq, and the former won't change wrt.
+> inc/dec tgt->reqs, so can the barrier be removed?
+
+Right.  The comment is obsolete and dates to before vq->index existed.
+
+Paolo
+
+> Any comments about the above?
+>
+> Thanks,
+>
 
