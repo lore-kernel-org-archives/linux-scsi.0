@@ -1,36 +1,59 @@
-From: Ming Lei <tom.leiming@gmail.com>
-Subject: virtio-scsi: two questions related with picking up queue
-Date: Tue, 6 May 2014 17:26:15 +0800
-Message-ID: <CACVXFVNeBbJgA6h5n1Mt7vp7_Es67N5KEpZ0en4O+9GnD6wp+A@mail.gmail.com>
+From: Michael Schmitz <schmitzmic@gmail.com>
+Subject: Re: [PATCH] MAINTAINERS: add an entry for all the NCR5380 drivers
+Date: Wed, 7 May 2014 08:16:33 +1200
+Message-ID: <CAOmrzkKFiEW6sMXr6nxgjGW=Bf2EUbBoBC=sXVLPH=r8iY8BCg@mail.gmail.com>
+References: <alpine.LNX.2.00.1405051458460.16664@nippy.intranet>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ve0-f182.google.com ([209.85.128.182]:41515 "EHLO
-	mail-ve0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752325AbaEFJ0Q (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 May 2014 05:26:16 -0400
-Received: by mail-ve0-f182.google.com with SMTP id sa20so4038572veb.27
-        for <linux-scsi@vger.kernel.org>; Tue, 06 May 2014 02:26:15 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <alpine.LNX.2.00.1405051458460.16664@nippy.intranet>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Finn Thain <fthain@telegraphics.com.au>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, scsi <linux-scsi@vger.kernel.org>, Sam Creasey <sammy@sammy.net>, Russell King <linux@arm.linux.org.uk>, Joe Perches <joe@perches.com>, Linux Kernel Development <linux-kernel@vger.kernel.org>, linux-arm-kernel@lists.infradead.org, Linux/m68k <linux-m68k@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Linux SCSI List <linux-scsi@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, Wanlong Gao <gaowanlong@cn.fujitsu.com>, Asias He <asias@redhat.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Rusty Russell <rusty@rustcorp.com.au>
 
-Hi Paolo and All,
+Acked-by: Michael Schmitz <schmitzmic@gmail.com>
 
-One question is about ACCESS_ONCE() in virtscsi_pick_vq(),
-looks it needn't since both reading and writing tgt->req_vq holds
-tgt->tgt_lock.
-
-Another one is about the comment in virtscsi_req_done(), which
-said smp_read_barrier_depends() is needed for avoiding
-out of order between reading req_vq and decreasing tgt->reqs.
-But if I understand correctly, in virtscsi_req_done(), req_vq is
-read from vscsi->req_vqs[vq->index - VIRTIO_SCSI_VQ_BASE],
-instead of tgt->req_vq, and the former won't change wrt.
-inc/dec tgt->reqs, so can the barrier be removed?
-
-Any comments about the above?
-
-Thanks,
--- 
-Ming Lei
+On Mon, May 5, 2014 at 5:35 PM, Finn Thain <fthain@telegraphics.com.au> wrote:
+>
+> Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
+> Cc: Michael Schmitz <schmitzmic@gmail.com>
+>
+> ---
+>
+> As requested:
+> http://marc.info/?l=linux-arm-kernel&m=139853302724112&w=2
+>
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index e67ea24..60ea600 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -5996,6 +5996,28 @@ M:       Petr Vandrovec <petr@vandrovec.name>
+>  S:     Odd Fixes
+>  F:     fs/ncpfs/
+>
+> +NCR 5380 SCSI DRIVERS
+> +M:     Finn Thain <fthain@telegraphics.com.au>
+> +M:     Michael Schmitz <schmitzmic@gmail.com>
+> +L:     linux-scsi@vger.kernel.org
+> +S:     Maintained
+> +F:     Documentation/scsi/g_NCR5380.txt
+> +F:     drivers/scsi/NCR5380.*
+> +F:     drivers/scsi/arm/cumana_1.c
+> +F:     drivers/scsi/arm/oak.c
+> +F:     drivers/scsi/atari_NCR5380.c
+> +F:     drivers/scsi/atari_scsi.*
+> +F:     drivers/scsi/dmx3191d.c
+> +F:     drivers/scsi/dtc.*
+> +F:     drivers/scsi/g_NCR5380.*
+> +F:     drivers/scsi/g_NCR5380_mmio.c
+> +F:     drivers/scsi/mac_scsi.*
+> +F:     drivers/scsi/pas16.*
+> +F:     drivers/scsi/sun3_NCR5380.c
+> +F:     drivers/scsi/sun3_scsi.*
+> +F:     drivers/scsi/sun3_scsi_vme.c
+> +F:     drivers/scsi/t128.*
+> +
+>  NCR DUAL 700 SCSI DRIVER (MICROCHANNEL)
+>  M:     "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+>  L:     linux-scsi@vger.kernel.org
