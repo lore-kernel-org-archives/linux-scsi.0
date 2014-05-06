@@ -1,107 +1,102 @@
-From: ching <ching2048@areca.com.tw>
-Subject: [PATCH v1.1 4/16] arcmsr: limit max number of SCSI command request
-Date: Mon, 05 May 2014 17:08:56 +0800
-Message-ID: <1399280936.4398.6.camel@localhost>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: jbottomley@parallels.com, dan.carpenter@oracle.com, thenzl@redhat.com, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+From: Jay Kallickal <jayamohank@gmail.com>
+Subject: [PATCH 1/8] be2iscsi: Fix retrieving MCCQ_WRB in non-embedded Mbox path
+Date: Mon,  5 May 2014 21:41:24 -0400
+Message-ID: <1399340492-2136-1-git-send-email-jkallickal@emulex.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pa0-f48.google.com ([209.85.220.48]:38162 "EHLO
+	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933469AbaEFBlp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 May 2014 21:41:45 -0400
+Received: by mail-pa0-f48.google.com with SMTP id rd3so2049942pab.35
+        for <linux-scsi@vger.kernel.org>; Mon, 05 May 2014 18:41:44 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jbottomley@parallels.com, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
+Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, John Soni Jose <sony.john-n@emulex.com>
 
-From: Ching<ching2048@areca.com.tw>
+From: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 
-Have a limitation of max number of SCSI command request to prevent command overflow.
+ Getting WRB for MCCQ posting was done before looking if tag is
+ available or not. This lead to increase phba->ctrl.mcc_obj.q.used
+ variable and the WARN_ON message was coming from wrb_from_mccq().
+ Moved getting wrb from mccq after checking for the tag.
 
-Signed-off-by: Ching<ching2048@areca.com.tw>
+ In wrb_from_mccq(), memset is done before returning wrb ptr.
+ Removed memset of mccq wrb from all other functions.
+
+Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
+Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 ---
+ drivers/scsi/be2iscsi/be_mgmt.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-diff -uprN a/drivers/scsi/arcmsr/arcmsr.h b/drivers/scsi/arcmsr/arcmsr.h
---- a/drivers/scsi/arcmsr/arcmsr.h	2014-04-28 16:25:06.000000000 +0800
-+++ b/drivers/scsi/arcmsr/arcmsr.h	2014-04-28 18:08:10.000000000 +0800
-@@ -45,11 +45,12 @@
- #include <linux/interrupt.h>
- struct device_attribute;
- /*The limit of outstanding scsi command that firmware can handle*/
--#define ARCMSR_MAX_OUTSTANDING_CMD						256
- #ifdef CONFIG_XEN
- 	#define ARCMSR_MAX_FREECCB_NUM	160
-+#define ARCMSR_MAX_OUTSTANDING_CMD	155
- #else
- 	#define ARCMSR_MAX_FREECCB_NUM	320
-+#define ARCMSR_MAX_OUTSTANDING_CMD	255
- #endif
- #define ARCMSR_DRIVER_VERSION		"v1.30.00.04-20140428"
- #define ARCMSR_SCSI_INITIATOR_ID						255
-@@ -598,6 +599,7 @@ struct AdapterControlBlock
- 				#define	FW_DEADLOCK	0x0010
- 	atomic_t 			rq_map_token;
- 	atomic_t			ante_token_value;
-+	uint32_t	maxOutstanding;
- };/* HW_DEVICE_EXTENSION */
- /*
- *******************************************************************************
-diff -uprN a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
---- a/drivers/scsi/arcmsr/arcmsr_hba.c	2014-05-02 19:28:56.000000000 +0800
-+++ b/drivers/scsi/arcmsr/arcmsr_hba.c	2014-05-02 19:30:08.000000000 +0800
-@@ -134,7 +134,7 @@ static struct scsi_host_template arcmsr_
- 	.eh_bus_reset_handler	= arcmsr_bus_reset,
- 	.bios_param		= arcmsr_bios_param,
- 	.change_queue_depth	= arcmsr_adjust_disk_queue_depth,
--	.can_queue		= ARCMSR_MAX_FREECCB_NUM,
-+	.can_queue		= ARCMSR_MAX_OUTSTANDING_CMD,
- 	.this_id			= ARCMSR_SCSI_INITIATOR_ID,
- 	.sg_tablesize	        	= ARCMSR_DEFAULT_SG_ENTRIES, 
- 	.max_sectors    	    	= ARCMSR_MAX_XFER_SECTORS_C, 
-@@ -716,7 +716,7 @@ static int arcmsr_probe(struct pci_dev *
- 	host->max_lun = ARCMSR_MAX_TARGETLUN;
- 	host->max_id = ARCMSR_MAX_TARGETID;		/*16:8*/
- 	host->max_cmd_len = 16;	 			/*this is issue of 64bit LBA ,over 2T byte*/
--	host->can_queue = ARCMSR_MAX_FREECCB_NUM;	/* max simultaneous cmds */		
-+	host->can_queue = ARCMSR_MAX_OUTSTANDING_CMD;	/* max simultaneous cmds */		
- 	host->cmd_per_lun = ARCMSR_MAX_CMD_PERLUN;	    
- 	host->this_id = ARCMSR_SCSI_INITIATOR_ID;
- 	host->unique_id = (bus << 8) | dev_fun;
-@@ -2248,8 +2248,7 @@ static int arcmsr_queue_command_lck(stru
- 		arcmsr_handle_virtual_command(acb, cmd);
- 		return 0;
- 	}
--	if (atomic_read(&acb->ccboutstandingcount) >=
--			ARCMSR_MAX_OUTSTANDING_CMD)
-+	if (atomic_read(&acb->ccboutstandingcount) >= acb->maxOutstanding)
- 		return SCSI_MLQUEUE_HOST_BUSY;
- 	ccb = arcmsr_get_freeccb(acb);
- 	if (!ccb)
-@@ -2460,12 +2459,26 @@ static bool arcmsr_get_hbc_config(struct
- }
- static bool arcmsr_get_firmware_spec(struct AdapterControlBlock *acb)
+diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
+index 088bdf7..712911f 100644
+--- a/drivers/scsi/be2iscsi/be_mgmt.c
++++ b/drivers/scsi/be2iscsi/be_mgmt.c
+@@ -447,8 +447,8 @@ unsigned int mgmt_vendor_specific_fw_cmd(struct be_ctrl_info *ctrl,
+ 					 struct be_dma_mem *nonemb_cmd)
  {
--	if (acb->adapter_type == ACB_ADAPTER_TYPE_A)
--		return arcmsr_get_hba_config(acb);
--	else if (acb->adapter_type == ACB_ADAPTER_TYPE_B)
--		return arcmsr_get_hbb_config(acb);
-+	bool rtn = false;
-+
-+	switch (acb->adapter_type) {
-+	case ACB_ADAPTER_TYPE_A:
-+		rtn = arcmsr_get_hba_config(acb);
-+		break;
-+	case ACB_ADAPTER_TYPE_B:
-+		rtn = arcmsr_get_hbb_config(acb);
-+		break;
-+	case ACB_ADAPTER_TYPE_C:
-+		rtn = arcmsr_get_hbc_config(acb);
-+		break;
-+	default:
-+		break;
-+	}
-+	if(acb->firm_numbers_queue > ARCMSR_MAX_OUTSTANDING_CMD)
-+		acb->maxOutstanding = ARCMSR_MAX_OUTSTANDING_CMD;
- 	else
--		return arcmsr_get_hbc_config(acb);
-+		acb->maxOutstanding = acb->firm_numbers_queue - 1;
-+	return rtn;
- }
+ 	struct be_cmd_resp_hdr *resp;
+-	struct be_mcc_wrb *wrb = wrb_from_mccq(phba);
+-	struct be_sge *mcc_sge = nonembedded_sgl(wrb);
++	struct be_mcc_wrb *wrb;
++	struct be_sge *mcc_sge;
+ 	unsigned int tag = 0;
+ 	struct iscsi_bsg_request *bsg_req = job->request;
+ 	struct be_bsg_vendor_cmd *req = nonemb_cmd->va;
+@@ -465,7 +465,6 @@ unsigned int mgmt_vendor_specific_fw_cmd(struct be_ctrl_info *ctrl,
+ 	req->sector = sector;
+ 	req->offset = offset;
+ 	spin_lock(&ctrl->mbox_lock);
+-	memset(wrb, 0, sizeof(*wrb));
  
- static int arcmsr_polling_hba_ccbdone(struct AdapterControlBlock *acb,
+ 	switch (bsg_req->rqst_data.h_vendor.vendor_cmd[0]) {
+ 	case BEISCSI_WRITE_FLASH:
+@@ -495,6 +494,8 @@ unsigned int mgmt_vendor_specific_fw_cmd(struct be_ctrl_info *ctrl,
+ 		return tag;
+ 	}
+ 
++	wrb = wrb_from_mccq(phba);
++	mcc_sge = nonembedded_sgl(wrb);
+ 	be_wrb_hdr_prepare(wrb, nonemb_cmd->size, false,
+ 			   job->request_payload.sg_cnt);
+ 	mcc_sge->pa_hi = cpu_to_le32(upper_32_bits(nonemb_cmd->dma));
+@@ -525,7 +526,6 @@ int mgmt_epfw_cleanup(struct beiscsi_hba *phba, unsigned short ulp_num)
+ 	int status = 0;
+ 
+ 	spin_lock(&ctrl->mbox_lock);
+-	memset(wrb, 0, sizeof(*wrb));
+ 
+ 	be_wrb_hdr_prepare(wrb, sizeof(*req), true, 0);
+ 	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_ISCSI,
+@@ -702,7 +702,6 @@ int mgmt_open_connection(struct beiscsi_hba *phba,
+ 		return tag;
+ 	}
+ 	wrb = wrb_from_mccq(phba);
+-	memset(wrb, 0, sizeof(*wrb));
+ 	sge = nonembedded_sgl(wrb);
+ 
+ 	req = nonemb_cmd->va;
+@@ -804,7 +803,7 @@ static int mgmt_exec_nonemb_cmd(struct beiscsi_hba *phba,
+ 				int resp_buf_len)
+ {
+ 	struct be_ctrl_info *ctrl = &phba->ctrl;
+-	struct be_mcc_wrb *wrb = wrb_from_mccq(phba);
++	struct be_mcc_wrb *wrb;
+ 	struct be_sge *sge;
+ 	unsigned int tag;
+ 	int rc = 0;
+@@ -816,7 +815,8 @@ static int mgmt_exec_nonemb_cmd(struct beiscsi_hba *phba,
+ 		rc = -ENOMEM;
+ 		goto free_cmd;
+ 	}
+-	memset(wrb, 0, sizeof(*wrb));
++
++	wrb = wrb_from_mccq(phba);
+ 	wrb->tag0 |= tag;
+ 	sge = nonembedded_sgl(wrb);
+ 
+-- 
+1.8.5.3
+
