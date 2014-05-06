@@ -1,269 +1,126 @@
-From: Jay Kallickal <jayamohank@gmail.com>
-Subject: [PATCH 3/8] be2iscsi: Fix interrupt Coalescing mechanism.
-Date: Mon,  5 May 2014 21:41:26 -0400
-Message-ID: <1399340492-2136-3-git-send-email-jkallickal@emulex.com>
-References: <1399340492-2136-1-git-send-email-jkallickal@emulex.com>
+From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
+Subject: RE: How to get more sequential IO merged at elevator
+Date: Tue, 6 May 2014 10:06:34 +0000
+Message-ID: <471cb78e78284a109ca9cc2571ebb9c6@BN1PR07MB247.namprd07.prod.outlook.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pd0-f181.google.com ([209.85.192.181]:42222 "EHLO
-	mail-pd0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933469AbaEFBlt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 May 2014 21:41:49 -0400
-Received: by mail-pd0-f181.google.com with SMTP id w10so7327728pde.26
-        for <linux-scsi@vger.kernel.org>; Mon, 05 May 2014 18:41:49 -0700 (PDT)
-In-Reply-To: <1399340492-2136-1-git-send-email-jkallickal@emulex.com>
+Received: from mail-bl2lp0208.outbound.protection.outlook.com ([207.46.163.208]:13339
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S934646AbaEFKGt convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 May 2014 06:06:49 -0400
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jbottomley@parallels.com, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
-Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, Minh Tran <minhduc.tran@emulex.com>, John Soni Jose <sony.john-n@emulex.com>
+To: "axboe@kernel.dk" <axboe@kernel.dk>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-From: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+I got some clue on what was going on while doing 4K sequential read usi=
+ng fio.
 
-Signed-off-by: Minh Tran <minhduc.tran@emulex.com>
-Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
-Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
----
- drivers/scsi/be2iscsi/be.h      | 11 ++++++++
- drivers/scsi/be2iscsi/be_cmds.h | 10 ++++++-
- drivers/scsi/be2iscsi/be_main.c | 58 +++++++++++++++++++++++++++++++++++++++--
- drivers/scsi/be2iscsi/be_main.h |  5 ++--
- drivers/scsi/be2iscsi/be_mgmt.c | 37 ++++++++++++++++++++++++++
- drivers/scsi/be2iscsi/be_mgmt.h |  2 ++
- 6 files changed, 118 insertions(+), 5 deletions(-)
+If I use ioengine in fio script as "libaio", I see " do_io_submit" call=
+ plug/unplug the queue before submitting the IO.
+It means after every IO, we expect to send IO immediately to the next l=
+ayer. If at all there are any pending IO do merge.. but not due to plug=
+ging.
 
-diff --git a/drivers/scsi/be2iscsi/be.h b/drivers/scsi/be2iscsi/be.h
-index 1bfb0bd..25c2164 100644
---- a/drivers/scsi/be2iscsi/be.h
-+++ b/drivers/scsi/be2iscsi/be.h
-@@ -83,9 +83,20 @@ static inline void queue_tail_inc(struct be_queue_info *q)
- 
- /*ISCSI */
- 
-+struct be_aic_obj {		/* Adaptive interrupt coalescing (AIC) info */
-+	bool enable;
-+	u32 min_eqd;		/* in usecs */
-+	u32 max_eqd;		/* in usecs */
-+	u32 prev_eqd;		/* in usecs */
-+	u32 et_eqd;		/* configured val when aic is off */
-+	ulong jiffs;
-+	u64 eq_prev;		/* Used to calculate eqe */
-+};
-+
- struct be_eq_obj {
- 	bool todo_mcc_cq;
- 	bool todo_cq;
-+	u32 cq_count;
- 	struct be_queue_info q;
- 	struct beiscsi_hba *phba;
- 	struct be_queue_info *cq;
-diff --git a/drivers/scsi/be2iscsi/be_cmds.h b/drivers/scsi/be2iscsi/be_cmds.h
-index 7cf7f99..cd4410f 100644
---- a/drivers/scsi/be2iscsi/be_cmds.h
-+++ b/drivers/scsi/be2iscsi/be_cmds.h
-@@ -271,6 +271,12 @@ struct be_cmd_resp_eq_create {
- 	u16 rsvd0;		/* sword */
- } __packed;
- 
-+struct be_set_eqd {
-+	u32 eq_id;
-+	u32 phase;
-+	u32 delay_multiplier;
-+} __packed;
-+
- struct mgmt_chap_format {
- 	u32 flags;
- 	u8  intr_chap_name[256];
-@@ -622,7 +628,7 @@ struct be_cmd_req_modify_eq_delay {
- 		u32 eq_id;
- 		u32 phase;
- 		u32 delay_multiplier;
--	} delay[8];
-+	} delay[MAX_CPUS];
- } __packed;
- 
- /******************** Get MAC ADDR *******************/
-@@ -708,6 +714,8 @@ unsigned int be_cmd_get_port_speed(struct beiscsi_hba *phba);
- 
- void free_mcc_tag(struct be_ctrl_info *ctrl, unsigned int tag);
- 
-+int be_cmd_modify_eq_delay(struct beiscsi_hba *phba, struct be_set_eqd *,
-+			    int num);
- int beiscsi_mccq_compl(struct beiscsi_hba *phba,
- 			uint32_t tag, struct be_mcc_wrb **wrb,
- 			struct be_dma_mem *mbx_cmd_mem);
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index a73af29..9ff8667 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -2271,6 +2271,7 @@ static int be_iopoll(struct blk_iopoll *iop, int budget)
- 
- 	pbe_eq = container_of(iop, struct be_eq_obj, iopoll);
- 	ret = beiscsi_process_cq(pbe_eq);
-+	pbe_eq->cq_count += ret;
- 	if (ret < budget) {
- 		phba = pbe_eq->phba;
- 		blk_iopoll_complete(iop);
-@@ -3825,9 +3826,9 @@ static int hwi_init_port(struct beiscsi_hba *phba)
- 
- 	phwi_ctrlr = phba->phwi_ctrlr;
- 	phwi_context = phwi_ctrlr->phwi_ctxt;
--	phwi_context->max_eqd = 0;
-+	phwi_context->max_eqd = 128;
- 	phwi_context->min_eqd = 0;
--	phwi_context->cur_eqd = 64;
-+	phwi_context->cur_eqd = 0;
- 	be_cmd_fw_initialize(&phba->ctrl);
- 
- 	status = beiscsi_create_eqs(phba, phwi_context);
-@@ -5282,6 +5283,57 @@ static void beiscsi_msix_enable(struct beiscsi_hba *phba)
- 	return;
- }
- 
-+static void be_eqd_update(struct beiscsi_hba *phba)
-+{
-+	struct be_set_eqd set_eqd[MAX_CPUS];
-+	struct be_aic_obj *aic;
-+	struct be_eq_obj *pbe_eq;
-+	struct hwi_controller *phwi_ctrlr;
-+	struct hwi_context_memory *phwi_context;
-+	int eqd, i, num = 0;
-+	ulong now;
-+	u32 pps, delta;
-+	unsigned int tag;
-+
-+	phwi_ctrlr = phba->phwi_ctrlr;
-+	phwi_context = phwi_ctrlr->phwi_ctxt;
-+
-+	for (i = 0; i <= phba->num_cpus; i++) {
-+		aic = &phba->aic_obj[i];
-+		pbe_eq = &phwi_context->be_eq[i];
-+		now = jiffies;
-+		if (!aic->jiffs || time_before(now, aic->jiffs) ||
-+		    pbe_eq->cq_count < aic->eq_prev) {
-+			aic->jiffs = now;
-+			aic->eq_prev = pbe_eq->cq_count;
-+			continue;
-+		}
-+		delta = jiffies_to_msecs(now - aic->jiffs);
-+		pps = (((u32)(pbe_eq->cq_count - aic->eq_prev) * 1000) / delta);
-+		eqd = (pps / 1500) << 2;
-+
-+		if (eqd < 8)
-+			eqd = 0;
-+		eqd = min_t(u32, eqd, phwi_context->max_eqd);
-+		eqd = max_t(u32, eqd, phwi_context->min_eqd);
-+
-+		aic->jiffs = now;
-+		aic->eq_prev = pbe_eq->cq_count;
-+
-+		if (eqd != aic->prev_eqd) {
-+			set_eqd[num].delay_multiplier = (eqd * 65)/100;
-+			set_eqd[num].eq_id = pbe_eq->q.id;
-+			aic->prev_eqd = eqd;
-+			num++;
-+		}
-+	}
-+	if (num) {
-+		tag = be_cmd_modify_eq_delay(phba, set_eqd, num);
-+		if (tag)
-+			beiscsi_mccq_compl(phba, tag, NULL, NULL);
-+	}
-+}
-+
- /*
-  * beiscsi_hw_health_check()- Check adapter health
-  * @work: work item to check HW health
-@@ -5295,6 +5347,8 @@ beiscsi_hw_health_check(struct work_struct *work)
- 		container_of(work, struct beiscsi_hba,
- 			     beiscsi_hw_check_task.work);
- 
-+	be_eqd_update(phba);
-+
- 	beiscsi_ue_detect(phba);
- 
- 	schedule_delayed_work(&phba->beiscsi_hw_check_task,
-diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
-index 9380b55..dc56ea9 100644
---- a/drivers/scsi/be2iscsi/be_main.h
-+++ b/drivers/scsi/be2iscsi/be_main.h
-@@ -71,8 +71,8 @@
- 
- #define BEISCSI_SGLIST_ELEMENTS	30
- 
--#define BEISCSI_CMD_PER_LUN	128	/* scsi_host->cmd_per_lun */
--#define BEISCSI_MAX_SECTORS	2048	/* scsi_host->max_sectors */
-+#define BEISCSI_CMD_PER_LUN	128 /* scsi_host->cmd_per_lun */
-+#define BEISCSI_MAX_SECTORS	1024 /* scsi_host->max_sectors */
- #define BEISCSI_TEMPLATE_HDR_PER_CXN_SIZE 128 /* Template size per cxn */
- 
- #define BEISCSI_MAX_CMD_LEN	16	/* scsi_host->max_cmd_len */
-@@ -427,6 +427,7 @@ struct beiscsi_hba {
- 	struct mgmt_session_info boot_sess;
- 	struct invalidate_command_table inv_tbl[128];
- 
-+	struct be_aic_obj aic_obj[MAX_CPUS];
- 	unsigned int attr_log_enable;
- 	int (*iotask_fn)(struct iscsi_task *,
- 			struct scatterlist *sg,
-diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
-index 712911f..52a36fb 100644
---- a/drivers/scsi/be2iscsi/be_mgmt.c
-+++ b/drivers/scsi/be2iscsi/be_mgmt.c
-@@ -155,6 +155,43 @@ void beiscsi_ue_detect(struct beiscsi_hba *phba)
- 	}
- }
- 
-+int be_cmd_modify_eq_delay(struct beiscsi_hba *phba,
-+		 struct be_set_eqd *set_eqd, int num)
-+{
-+	struct be_ctrl_info *ctrl = &phba->ctrl;
-+	struct be_mcc_wrb *wrb;
-+	struct be_cmd_req_modify_eq_delay *req;
-+	unsigned int tag = 0;
-+	int i;
-+
-+	spin_lock(&ctrl->mbox_lock);
-+	tag = alloc_mcc_tag(phba);
-+	if (!tag) {
-+		spin_unlock(&ctrl->mbox_lock);
-+		return tag;
-+	}
-+
-+	wrb = wrb_from_mccq(phba);
-+	req = embedded_payload(wrb);
-+
-+	wrb->tag0 |= tag;
-+	be_wrb_hdr_prepare(wrb, sizeof(*req), true, 0);
-+	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_COMMON,
-+		OPCODE_COMMON_MODIFY_EQ_DELAY, sizeof(*req));
-+
-+	req->num_eq = cpu_to_le32(num);
-+	for (i = 0; i < num; i++) {
-+		req->delay[i].eq_id = cpu_to_le32(set_eqd[i].eq_id);
-+		req->delay[i].phase = 0;
-+		req->delay[i].delay_multiplier =
-+				cpu_to_le32(set_eqd[i].delay_multiplier);
-+	}
-+
-+	be_mcc_notify(phba);
-+	spin_unlock(&ctrl->mbox_lock);
-+	return tag;
-+}
-+
- /**
-  * mgmt_reopen_session()- Reopen a session based on reopen_type
-  * @phba: Device priv structure instance
-diff --git a/drivers/scsi/be2iscsi/be_mgmt.h b/drivers/scsi/be2iscsi/be_mgmt.h
-index 01b8c97..24a8fc5 100644
---- a/drivers/scsi/be2iscsi/be_mgmt.h
-+++ b/drivers/scsi/be2iscsi/be_mgmt.h
-@@ -335,5 +335,7 @@ void beiscsi_offload_cxn_v0(struct beiscsi_offload_params *params,
- void beiscsi_offload_cxn_v2(struct beiscsi_offload_params *params,
- 			     struct wrb_handle *pwrb_handle);
- void beiscsi_ue_detect(struct beiscsi_hba *phba);
-+int be_cmd_modify_eq_delay(struct beiscsi_hba *phba,
-+			 struct be_set_eqd *, int num);
- 
- #endif
--- 
-1.8.5.3
+This is what happens on my test. Every time IO comes from application w=
+ith libaio engine, it send down to the elevator/io-scheduler because qu=
+eue was unplugged in=20
+do_io_submit(). Moment I reduce the queue depth of the block device, me=
+rge start because of congestion at scsi mid layer.
 
+If I use, mmap engine, I see merged IO coming to the device driver beca=
+use of plugging. I really don't know how it works, but gave a try and f=
+ound merge happen because of plugging. ( I confirm using blktrace)
+
+Is there any ioengine in <fio> (or any other parameter setting), which =
+can use plugging mechanism of block layer to merge more IO other than m=
+map ?
+
+~ Kashyap
+
+> -----Original Message-----
+> From: Desai, Kashyap
+> Sent: Wednesday, April 30, 2014 12:33 PM
+> To: 'axboe@kernel.dk'
+> Cc: linux-scsi@vger.kernel.org
+> Subject: How to get more sequential IO merged at elevator
+>=20
+> Jens,
+>=20
+> While working on one issue of less IOPs for sequential READ/WRITE, I =
+found
+> interesting stuffs which was causing performance drop for sequential =
+IO.=A0 I
+> did some reverse engineering on Block layer code to understand how to=
+ get
+> benefit from any sysfs parameters settings, but could not find anythi=
+ng
+> useful to solve this issue.
+>=20
+> I have described problem statement and root cause of this issue in th=
+is mail
+> thread.
+>=20
+> Problem statement - "Cannot achieve Sequential read/write performance=
+,
+> because of back merge is not happening frequently"
+>=20
+> Here is my understanding of back merge done in elevator.
+>=20
+> Linux block layer is responsible for merging/sorting of the IO with t=
+he help of
+> Elevator hook in OS + IO scheduler.
+> IO scheduler does not have any role in merging sequential IO. It is d=
+one in
+> Elevator hook, so choosing any IO scheduler in Linux will not help (O=
+R you can
+> consider that behavior will be unchanged irrespective of IO scheduler=
+). Any
+> sequential IO will be merge at Elevator code path.
+>=20
+> 1. When IO comes from upper layer, it will be queued at Elevator/IO
+> scheduler level. =A0It will also add IO into hash look up which will =
+be used for
+> merge and other purpose.
+> 2. Elevator code will search any outstanding IO (in the queue of the =
+same
+> layer). If there is any chance to merge it, it will perform  (BACK ME=
+RGE)
+> merge 3. If there is no merge possible, IO will be queued to the next=
+ level
+> (which is IO scheduler).
+> 4. In IO completion Path, IO scheduler will post IO to the Driver que=
+ue, if at all
+> there is any outstanding IO. (There are many other condition, but thi=
+s is very
+> common code path)
+>=20
+> To merge more command, #2 should find more outstanding in hash table
+> look up. This is possible if flow control start either at block layer=
+/Driver level.
+> It means, driver/block layer forcefully delay IO submission to next l=
+evel and
+> give more chance at elevator code to merge more IO via accumulating m=
+ore
+> IO from user space.
+>=20
+> If I manually change queue depth of the device to lower value (betwee=
+n 1-
+> 8), which is doing only Sequential IO.. I am able to see maximum IO c=
+oming to
+> the driver after merge and it eventually increase the IOPs.
+>=20
+> Is there any way to increase possibility of merged IO coming from blo=
+ck layer
+> to the Low level driver ?
+>=20
+> Thanks, Kashyap
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
