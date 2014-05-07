@@ -1,173 +1,72 @@
-From: Giridhar Malavali <giridhar.malavali@qlogic.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
 Subject: Re: [PATCH] iscsi_ibft: search for broadcom specific ibft sign
-Date: Wed, 7 May 2014 20:19:24 +0000
-Message-ID: <D63B9804CB63AD4FAAD966037695664647124360@avmb2.qlogic.org>
-References: <20140507192158.GA17806@phenom.dumpdata.com>
+Date: Wed, 07 May 2014 15:30:30 -0500
+Message-ID: <536A97E6.6000907@cs.wisc.edu>
+References: <1399453220-21663-1-git-send-email-vikas.chaudhary@qlogic.com> <20140507134757.GC12826@phenom.dumpdata.com> <1399489950.2227.63.camel@dabdike.int.hansenpartnership.com> <20140507192158.GA17806@phenom.dumpdata.com> <536A8E67.7030805@cs.wisc.edu> <20140507201524.GA26303@fenchurch.internal.datastacks.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_000_D63B9804CB63AD4FAAD966037695664647124360avmb2qlogicorg_"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:5118 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750938AbaEGUT2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 May 2014 16:19:28 -0400
-Received: from pps.filterd (m0000643.ppops.net [127.0.0.1])
-	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id s47KIlsb001360
-	for <linux-scsi@vger.kernel.org>; Wed, 7 May 2014 13:19:27 -0700
-Received: from avcashub1.qlogic.com (avcashub3.qlogic.com [198.70.193.117])
-	by mx0b-0016ce01.pphosted.com with ESMTP id 1knygen5np-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Wed, 07 May 2014 13:19:27 -0700
-In-Reply-To: <20140507192158.GA17806@phenom.dumpdata.com>
-Content-Language: en-US
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:37057 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751033AbaEGUay (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 7 May 2014 16:30:54 -0400
+In-Reply-To: <20140507201524.GA26303@fenchurch.internal.datastacks.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, James Bottomley <jbottomley@parallels.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, "konrad@kernel.org" <konrad@kernel.org>, Vikas Chaudhary <vikas.chaudhary@qlogic.com>, "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>, "pjones@redhat.com" <pjones@redhat.com>, Dept-Eng iSCSI Driver <Dept-iSCSIDriver@qlogic.com>
+To: Peter Jones <pjones@redhat.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, James Bottomley <jbottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "giridhar.malavali@qlogic.com" <giridhar.malavali@qlogic.com>, "konrad@kernel.org" <konrad@kernel.org>, "vikas.chaudhary@qlogic.com" <vikas.chaudhary@qlogic.com>, "iscsi-driver@qlogic.com" <iscsi-driver@qlogic.com>
 
---_000_D63B9804CB63AD4FAAD966037695664647124360avmb2qlogicorg_
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <F6A79ECB37A89C4EB1ED82B8BF3878F1@qlogic.com>
-Content-Transfer-Encoding: quoted-printable
+On 05/07/2014 03:15 PM, Peter Jones wrote:
+> On Wed, May 07, 2014 at 02:49:59PM -0500, Mike Christie wrote:
+>> On 05/07/2014 02:21 PM, Konrad Rzeszutek Wilk wrote:
+>>> On Wed, May 07, 2014 at 07:12:31PM +0000, James Bottomley wrote:
+>>>> On Wed, 2014-05-07 at 09:47 -0400, Konrad Rzeszutek Wilk wrote:
+>>>>> On Wed, May 07, 2014 at 05:00:20AM -0400, vikas.chaudhary@qlogic.com wrote:
+>>>>>> From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+>>>>>>
+>>>>>> Broadcom iscsi offload firmware uses a non standard ibft sign of "BIFT".
+>>>>>
+>>>>> Why? If it uses the standard iBFT format why does it use
+>>>>> a non-standard signature?
+>>>>
+>>>> This is useful as an academic exercise (and perhaps even a reminder to
+>>>> broadcom not to do it again) but I don't think we can make it a show
+>>>> stopper.  The boards have shipped with the non-standard signature, so we
+>>>> have to work with them.
+>>>
+>>> I agree as the train has left, but this got me thinking about these
+>>> questions that I hope Qlogic folks could answer:
+>>>
+>>>  - Mention what else is different - perhaps there are other entries that
+>>>    are a bit different? Or maybe the are some non-standard ones added on?
+>>>
+>>>  - How has this been tested? As in had all the fields been tested (so CHAP
+>>>    on/off, extra ports, etc).
+>>>
+>>
+>> This supports the same stuff as was added in the original commit for
+>> that string:
+>>
+>> 140363500ddadad0c09cb512cc0c96a4d3efa053
+>>
+>> It just was not carried over in the acpi specific table in commit
+>> 935a9fee51c945b8942be2d7b4bae069167b4886.
+> 
+> Okay, but that patch leaves the scanning for it pre-ACPI intact. 
 
+Before 935a9fee51c945b8942be2d7b4bae069167b4886, didn't we check for
+BIFT in the ACPI table case?
 
+Before that patch, we used to do:
+drivers/firmware/iscsi_ibft_find.c:find_ibft_region()
 
-On 5/7/14 12:21 PM, "Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com> wrote:
+        for (i = 0; i < ARRAY_SIZE(ibft_signs) && !ibft_addr; i++)
+                acpi_table_parse(ibft_signs[i].sign, acpi_find_ibft);
 
->On Wed, May 07, 2014 at 07:12:31PM +0000, James Bottomley wrote:
->> On Wed, 2014-05-07 at 09:47 -0400, Konrad Rzeszutek Wilk wrote:
->> > On Wed, May 07, 2014 at 05:00:20AM -0400, vikas.chaudhary@qlogic.com
->>wrote:
->> > > From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
->> > >=20
->> > > Broadcom iscsi offload firmware uses a non standard ibft sign of
->>"BIFT".
->> >=20
->> > Why? If it uses the standard iBFT format why does it use
->> > a non-standard signature?
->>=20
->> This is useful as an academic exercise (and perhaps even a reminder to
->> broadcom not to do it again) but I don't think we can make it a show
->> stopper.  The boards have shipped with the non-standard signature, so we
->> have to work with them.
->
->I agree as the train has left, but this got me thinking about these
->questions that I hope Qlogic folks could answer:
->
-> - Mention what else is different - perhaps there are other entries that
->   are a bit different? Or maybe the are some non-standard ones added on?
+and BIFT was in that ibft_signs array.
 
-We are looking into this and will update.
-
->
-> - How has this been tested? As in had all the fields been tested (so CHAP
->   on/off, extra ports, etc).
->
-> - Do future hardware of these cards use the standard one? If so what are
->they?
->   "Anything produced in 2012 and later.." ?
-> - Is the subset of hardware that use the non-standard small enough?
->Would it
->   be good to mention it in the commit.
-
-Sure, we will provide the required details in commit information.
-
-
-
->
->Thanks!
->>=20
->> James
->>=20
+I was just saying I thought since we added support for BIFT, we had been
+checking for it in the ACPI case.
 
 
---_000_D63B9804CB63AD4FAAD966037695664647124360avmb2qlogicorg_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
-
-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
-AAAAAAAfAGQAAQAAAAoAAABTAE0AVABQAAAAAAACAUEAAQAAAIAAAAAAAAAAgSsfpL6jEBmdbgDd
-AQ9UAgAAAIBHAGkAcgBpAGQAaABhAHIAIABNAGEAbABhAHYAYQBsAGkAAABTAE0AVABQAAAAZwBp
-AHIAaQBkAGgAYQByAC4AbQBhAGwAYQB2AGEAbABpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8A
-Al0BAAAAOgAAAGcAaQByAGkAZABoAGEAcgAuAG0AYQBsAGEAdgBhAGwAaQBAAHEAbABvAGcAaQBj
-AC4AYwBvAG0AAAAAAB8A5V8BAAAAQgAAAHMAaQBwADoAZwBpAHIAaQBkAGgAYQByAC4AbQBhAGwA
-YQB2AGEAbABpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwAaDAEAAAAkAAAARwBpAHIAaQBk
-AGgAYQByACAATQBhAGwAYQB2AGEAbABpAAAAHwAfDAEAAAA6AAAAZwBpAHIAaQBkAGgAYQByAC4A
-bQBhAGwAYQB2AGEAbABpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwAeDAEAAAAKAAAAUwBN
-AFQAUAAAAAAAAgEZDAEAAACAAAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACARwBpAHIAaQBkAGgA
-YQByACAATQBhAGwAYQB2AGEAbABpAAAAUwBNAFQAUAAAAGcAaQByAGkAZABoAGEAcgAuAG0AYQBs
-AGEAdgBhAGwAaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAFdAQAAADoAAABnAGkAcgBpAGQA
-aABhAHIALgBtAGEAbABhAHYAYQBsAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfAPg/AQAA
-ACQAAABHAGkAcgBpAGQAaABhAHIAIABNAGEAbABhAHYAYQBsAGkAAAAfACNAAQAAADoAAABnAGkA
-cgBpAGQAaABhAHIALgBtAGEAbABhAHYAYQBsAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAf
-ACJAAQAAAAoAAABTAE0AVABQAAAAAAACAfk/AQAAAIAAAAAAAAAAgSsfpL6jEBmdbgDdAQ9UAgAA
-AIBHAGkAcgBpAGQAaABhAHIAIABNAGEAbABhAHYAYQBsAGkAAABTAE0AVABQAAAAZwBpAHIAaQBk
-AGgAYQByAC4AbQBhAGwAYQB2AGEAbABpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8ACV0BAAAA
-OgAAAGcAaQByAGkAZABoAGEAcgAuAG0AYQBsAGEAdgBhAGwAaQBAAHEAbABvAGcAaQBjAC4AYwBv
-AG0AAAAAAB8AMUABAAAAAgAAAAAAAAALAEA6AQAAAB8AMEABAAAAAgAAAAAAAAAfABoAAQAAABIA
-AABJAFAATQAuAE4AbwB0AGUAAAAAAAMA8T8JBAAACwBAOgEAAAADAP0/5AQAAAIBCzABAAAAEAAA
-AFcUiEdtfMpDo+gDp8zA6qIDABcAAQAAAEAAOQAAriOjMWrPAUAACDB2S2CjMWrPAQsAAIAIIAYA
-AAAAAMAAAAAAAABGAAAAABSFAAABAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAHgAAAGEAYwBj
-AGUAcAB0AGwAYQBuAGcAdQBhAGcAZQAAAAAAAQAAAAwAAABlAG4ALQBVAFMAAAALAACACCAGAAAA
-AADAAAAAAAAARgAAAAAGhQAAAAAAAB8ANwABAAAAfgAAAFIAZQA6ACAAWwBQAEEAVABDAEgAXQAg
-AGkAcwBjAHMAaQBfAGkAYgBmAHQAOgAgAHMAZQBhAHIAYwBoACAAZgBvAHIAIABiAHIAbwBhAGQA
-YwBvAG0AIABzAHAAZQBjAGkAZgBpAGMAIABpAGIAZgB0ACAAcwBpAGcAbgAAAAAAHwA9AAEAAAAK
-AAAAUgBlADoAIAAAAAAAAwA2AAAAAAAfAEIQAQAAAFoAAAA8ADIAMAAxADQAMAA1ADAANwAxADkA
-MgAxADUAOAAuAEcAQQAxADcAOAAwADYAQABwAGgAZQBuAG8AbQAuAGQAdQBtAHAAZABhAHQAYQAu
-AGMAbwBtAD4AAAAAAAIBcQABAAAAKgAAAAEBz2nWyQhOmHs4jX5JpHtlPPmmXmebNZeSgIAAWq+A
-gAACpAD//5qzAAAAHwBwAAEAAAB2AAAAWwBQAEEAVABDAEgAXQAgAGkAcwBjAHMAaQBfAGkAYgBm
-AHQAOgAgAHMAZQBhAHIAYwBoACAAZgBvAHIAIABiAHIAbwBhAGQAYwBvAG0AIABzAHAAZQBjAGkA
-ZgBpAGMAIABpAGIAZgB0ACAAcwBpAGcAbgAAAAAAHwA1EAEAAAB4AAAAPABEADYAMwBCADkAOAAw
-ADQAQwBCADYAMwBBAEQANABGAEEAQQBEADkANgA2ADAAMwA3ADYAOQA1ADYANgA0ADYANAA3ADEA
-MgA0ADMANgAwAEAAYQB2AG0AYgAyAC4AcQBsAG8AZwBpAGMALgBvAHIAZwA+AAAAAwDeP59OAABA
-AAcwtohbozFqzwEDACYAAAAAAAIBRwABAAAALwAAAGM9VVM7YT0gO3A9UUxvZ2ljO2w9QVZNQjIt
-MTQwNTA3MjAxOTI0Wi0xNTg4NDYAAB8AFRABAAAAWAAAAEYANgBBADcAOQBFAEMAQgAzADcAQQA4
-ADkAQwA0AEUAQgAxAEUARAA4ADIAQgA4AEIARgAzADgANwA4AEYAMQBAAHEAbABvAGcAaQBjAC4A
-YwBvAG0AAAACARQwAQAAAAwAAADsAAAA/YIkh08AAAAfAPo/AQAAACQAAABHAGkAcgBpAGQAaABh
-AHIAIABNAGEAbABhAHYAYQBsAGkAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAWAAAAdQBzAGUA
-cgAtAGEAZwBlAG4AdAAAAAAAAQAAAEYAAABNAGkAYwByAG8AcwBvAGYAdAAtAE0AYQBjAE8AdQB0
-AGwAbwBvAGsALwAxADQALgAzAC4AOAAuADEAMwAwADkAMQAzAAAAAAAfAACAH6TrM6h6LkK+e3nh
-qY5UswEAAAA4AAAAQwBvAG4AdgBlAHIAcwBhAHQAaQBvAG4ASQBuAGQAZQB4AFQAcgBhAGMAawBp
-AG4AZwBFAHgAAAABAAAAKgEAAEkASQA9ADAAMQAwADEAQwBGADYAQQAzADEAQQAzAEEANQAxADUA
-NgAyADUAMQBGADIAMgA1AEUARAA0ADYAQQA4ADIAQgA4ADEAMQA0AEEAOAA2AEMAOAA2AEIAQQA7
-AFMAQgBNAEkARAA9ADEAOwBTADEAPQA8ADIAMAAxADQAMAA1ADAANwAxADkAMgAxADUAOAAuAEcA
-QQAxADcAOAAwADYAQABwAGgAZQBuAG8AbQAuAGQAdQBtAHAAZABhAHQAYQAuAGMAbwBtAD4AOwBW
-AGUAcgBzAGkAbwBuAD0AVgBlAHIAcwBpAG8AbgAgADEANAAuADIAIAAoAEIAdQBpAGwAZAAgADMA
-OAA3AC4AMAApACwAIABTAHQAYQBnAGUAPQBIADIAAAAAAAMADTT9PwAAHwAAgIYDAgAAAAAAwAAA
-AAAAAEYBAAAAIAAAAHgALQBtAHMALQBoAGEAcwAtAGEAdAB0AGEAYwBoAAAAAQAAAAIAAAAAAAAA
-HwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAIgAAAHgALQBvAHIAaQBnAGkAbgBhAHQAaQBuAGcALQBp
-AHAAAAAAAAEAAAAcAAAAWwAxADAALgAyADkALgAyAC4AMQAwADIAXQAAAGum
-
---_000_D63B9804CB63AD4FAAD966037695664647124360avmb2qlogicorg_--
