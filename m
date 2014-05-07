@@ -1,52 +1,41 @@
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Subject: Re: [PATCH] iscsi_ibft: search for broadcom specific ibft sign
-Date: Wed, 7 May 2014 09:47:57 -0400
-Message-ID: <20140507134757.GC12826@phenom.dumpdata.com>
-References: <1399453220-21663-1-git-send-email-vikas.chaudhary@qlogic.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Ming Lei <tom.leiming@gmail.com>
+Subject: [PATCH 1/2] virtio_scsi: remove ACCESS_ONCE() in virtscsi_pick_vq
+Date: Wed,  7 May 2014 22:12:45 +0800
+Message-ID: <1399471966-17715-1-git-send-email-tom.leiming@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:46494 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932832AbaEGNtv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 May 2014 09:49:51 -0400
-Content-Disposition: inline
-In-Reply-To: <1399453220-21663-1-git-send-email-vikas.chaudhary@qlogic.com>
+Received: from mail-pa0-f52.google.com ([209.85.220.52]:58738 "EHLO
+	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750933AbaEGONF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 May 2014 10:13:05 -0400
+Received: by mail-pa0-f52.google.com with SMTP id kx10so1267574pab.11
+        for <linux-scsi@vger.kernel.org>; Wed, 07 May 2014 07:13:04 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: vikas.chaudhary@qlogic.com
-Cc: jbottomley@parallels.com, michaelc@cs.wisc.edu, pjones@redhat.com, konrad@kernel.org, linux-scsi@vger.kernel.org, giridhar.malavali@qlogic.com, iscsi-driver@qlogic.com
+To: "James E.J. Bottomley" <JBottomley@parallels.com>, Paolo Bonzini <pbonzini@redhat.com>
+Cc: linux-scsi@vger.kernel.org, Wanlong Gao <gaowanlong@cn.fujitsu.com>, Rusty Russell <rusty@rustcorp.com.au>, Ming Lei <tom.leiming@gmail.com>
 
-On Wed, May 07, 2014 at 05:00:20AM -0400, vikas.chaudhary@qlogic.com wrote:
-> From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-> 
-> Broadcom iscsi offload firmware uses a non standard ibft sign of "BIFT".
+Access to tgt->req_vq is strictly serialized by spin_lock
+of tgt->tgt_lock, so the ACCESS_ONCE() isn't necessary.
 
-Why? If it uses the standard iBFT format why does it use
-a non-standard signature?
+Cc: Paolo Bonzini <pbonzini@redhat.com>
+Signed-off-by: Ming Lei <tom.leiming@gmail.com>
+---
+ drivers/scsi/virtio_scsi.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> This patch modifies the ibft search code to search for "BIFT" along
-> with the other possible values.
-> 
-> Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-> Acked-by: Kevin Tran <ktran@broadcom.com>
-> Acked-by: Eddie Wai <eddie.wai@broadcom.com>
-> ---
->  drivers/firmware/iscsi_ibft.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/firmware/iscsi_ibft.c b/drivers/firmware/iscsi_ibft.c
-> index 3ee852c..071c2c9 100644
-> --- a/drivers/firmware/iscsi_ibft.c
-> +++ b/drivers/firmware/iscsi_ibft.c
-> @@ -756,6 +756,7 @@ static const struct {
->  	 */
->  	{ ACPI_SIG_IBFT },
->  	{ "iBFT" },
-> +	{ "BIFT" },	/* Broadcom iSCSI Offload */
->  };
->  
->  static void __init acpi_find_ibft_region(void)
-> -- 
-> 1.8.2.GIT
-> 
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index 16bfd50..aead20f 100644
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -565,7 +565,7 @@ static struct virtio_scsi_vq *virtscsi_pick_vq(struct virtio_scsi *vscsi,
+ 	 * the smp_read_barrier_depends() in virtscsi_req_done.
+ 	 */
+ 	if (atomic_inc_return(&tgt->reqs) > 1)
+-		vq = ACCESS_ONCE(tgt->req_vq);
++		vq = tgt->req_vq;
+ 	else {
+ 		queue_num = smp_processor_id();
+ 		while (unlikely(queue_num >= vscsi->num_queues))
+-- 
+1.7.9.5
+
