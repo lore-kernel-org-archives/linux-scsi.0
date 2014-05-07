@@ -1,36 +1,58 @@
-From: Ming Lei <tom.leiming@gmail.com>
-Subject: Re: [PATCH 2/2] virtio_scsi: remove smp_read_barrier_depends
-Date: Wed, 7 May 2014 22:36:27 +0800
-Message-ID: <CACVXFVMx-P4uvyDy4UnxByA-ZHopoOCHC5Fh33P+AQk2VDSoBA@mail.gmail.com>
-References: <1399471989-17890-1-git-send-email-tom.leiming@gmail.com>
-	<536A40A1.6000805@redhat.com>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [PATCH] virtio_scsi: remove ACCESS_ONCE() and smp_read_barrier_depends()
+Date: Wed, 07 May 2014 17:50:39 +0200
+Message-ID: <536A564F.3060605@redhat.com>
+References: <1399473279-24871-1-git-send-email-tom.leiming@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-vc0-f180.google.com ([209.85.220.180]:60545 "EHLO
-	mail-vc0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755855AbaEGOg2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 May 2014 10:36:28 -0400
-Received: by mail-vc0-f180.google.com with SMTP id hy4so577804vcb.11
-        for <linux-scsi@vger.kernel.org>; Wed, 07 May 2014 07:36:27 -0700 (PDT)
-In-Reply-To: <536A40A1.6000805@redhat.com>
+Received: from mx1.redhat.com ([209.132.183.28]:32865 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933855AbaEGPvE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 7 May 2014 11:51:04 -0400
+In-Reply-To: <1399473279-24871-1-git-send-email-tom.leiming@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Paolo Bonzini <pbonzini@redhat.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, Linux SCSI List <linux-scsi@vger.kernel.org>, Wanlong Gao <gaowanlong@cn.fujitsu.com>, Rusty Russell <rusty@rustcorp.com.au>
+To: Ming Lei <tom.leiming@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org, Wanlong Gao <gaowanlong@cn.fujitsu.com>, Rusty Russell <rusty@rustcorp.com.au>
 
-On Wed, May 7, 2014 at 10:18 PM, Paolo Bonzini <pbonzini@redhat.com> wrote:
->
->
-> tgt_lock is held to serialize reading and writing req_vq.  Reading req_vq
-> could be done locklessly, but we do not do it yet.
->
-> You can also merge the two patches together.
+Il 07/05/2014 16:34, Ming Lei ha scritto:
+>   *
+> - * An interesting effect of this policy is that only writes to req_vq need to
+> - * take the tgt_lock.  Read can be done outside the lock because:
+> - *
+> - * - writes of req_vq only occur when atomic_inc_return(&tgt->reqs) returns 1.
+> - *   In that case, no other CPU is reading req_vq: even if they were in
+> - *   virtscsi_queuecommand_multi, they would be spinning on tgt_lock.
+> - *
+> - * - reads of req_vq only occur when the target is not idle (reqs != 0).
+> - *   A CPU that enters virtscsi_queuecommand_multi will not modify req_vq.
+> + * tgt_lock is held to serialize reading and writing req_vq. Reading req_vq
+> + * could be done locklessly, but we do not do it yet.
+>   *
+>   * Similarly, decrements of reqs are never concurrent with writes of req_vq.
+>   * Thus they can happen outside the tgt_lock, provided of course we make reqs
 
-OK, please ignore these two patches, and I have sent out
-the merged one.
+The part you deleted explains _why_ decrements of reqs are never 
+concurrent with writes of req_vq.  Perhaps:
 
+ * An interesting effect of this policy is that only increments to reqs and writes
+ * to req_vq need to take the tgt_lock.  Reads of req_vq and decrements or req_vq
+ * can be done outside the lock because:
+ *
+ * - writes of req_vq only occur when atomic_inc_return(&tgt->reqs) returns 1.
+ *   In that case, no other CPU is reading req_vq: even if they were in
+ *   virtscsi_queuecommand_multi, they would be spinning on tgt_lock.
+ *
+ * - reads of req_vq only occur when the target is not idle (reqs != 0).
+ *   A CPU that enters virtscsi_queuecommand_multi will not modify req_vq.
+ *
+ * - likewise, decrements of reqs only occur when reqs != 0.  If the decremented
+ *   value is zero, the first CPU that enters virtscsi_queuecommand_multi will
+ *   modify req_vq and the others will spin on tgt_lock.
+ *
+ * We do not try to read req_vq locklessly for simplicity, so tgt_lock is used
+ * to serialize reads of req_vq too.
 
-Thanks,
--- 
-Ming Lei
+Paolo
