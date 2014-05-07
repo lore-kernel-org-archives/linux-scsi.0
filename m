@@ -1,79 +1,82 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] iscsi_ibft: search for broadcom specific ibft sign
-Date: Wed, 07 May 2014 15:57:23 -0500
-Message-ID: <536A9E33.70406@cs.wisc.edu>
-References: <1399453220-21663-1-git-send-email-vikas.chaudhary@qlogic.com> <20140507134757.GC12826@phenom.dumpdata.com> <1399489950.2227.63.camel@dabdike.int.hansenpartnership.com> <20140507192158.GA17806@phenom.dumpdata.com> <536A8E67.7030805@cs.wisc.edu> <20140507201524.GA26303@fenchurch.internal.datastacks.com> <536A97E6.6000907@cs.wisc.edu>
+From: James Smart <james.smart@emulex.com>
+Subject: [REPOST] [PATCH 1/1] lpfc: Add iotag memory barrier
+Date: Wed, 7 May 2014 17:16:46 -0400
+Message-ID: <1399497406.1068.3.camel@myfc17>
+Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:37117 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750786AbaEGU5j (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 7 May 2014 16:57:39 -0400
-In-Reply-To: <536A97E6.6000907@cs.wisc.edu>
+Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:16202 "EHLO
+	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750968AbaEGVQs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 May 2014 17:16:48 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Peter Jones <pjones@redhat.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, James Bottomley <jbottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "giridhar.malavali@qlogic.com" <giridhar.malavali@qlogic.com>, "konrad@kernel.org" <konrad@kernel.org>, "vikas.chaudhary@qlogic.com" <vikas.chaudhary@qlogic.com>, "iscsi-driver@qlogic.com" <iscsi-driver@qlogic.com>
+To: linux-scsi@vger.kernel.org
 
-On 05/07/2014 03:30 PM, Mike Christie wrote:
-> On 05/07/2014 03:15 PM, Peter Jones wrote:
->> On Wed, May 07, 2014 at 02:49:59PM -0500, Mike Christie wrote:
->>> On 05/07/2014 02:21 PM, Konrad Rzeszutek Wilk wrote:
->>>> On Wed, May 07, 2014 at 07:12:31PM +0000, James Bottomley wrote:
->>>>> On Wed, 2014-05-07 at 09:47 -0400, Konrad Rzeszutek Wilk wrote:
->>>>>> On Wed, May 07, 2014 at 05:00:20AM -0400, vikas.chaudhary@qlogic.com wrote:
->>>>>>> From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
->>>>>>>
->>>>>>> Broadcom iscsi offload firmware uses a non standard ibft sign of "BIFT".
->>>>>>
->>>>>> Why? If it uses the standard iBFT format why does it use
->>>>>> a non-standard signature?
->>>>>
->>>>> This is useful as an academic exercise (and perhaps even a reminder to
->>>>> broadcom not to do it again) but I don't think we can make it a show
->>>>> stopper.  The boards have shipped with the non-standard signature, so we
->>>>> have to work with them.
->>>>
->>>> I agree as the train has left, but this got me thinking about these
->>>> questions that I hope Qlogic folks could answer:
->>>>
->>>>  - Mention what else is different - perhaps there are other entries that
->>>>    are a bit different? Or maybe the are some non-standard ones added on?
->>>>
->>>>  - How has this been tested? As in had all the fields been tested (so CHAP
->>>>    on/off, extra ports, etc).
->>>>
->>>
->>> This supports the same stuff as was added in the original commit for
->>> that string:
->>>
->>> 140363500ddadad0c09cb512cc0c96a4d3efa053
->>>
->>> It just was not carried over in the acpi specific table in commit
->>> 935a9fee51c945b8942be2d7b4bae069167b4886.
->>
->> Okay, but that patch leaves the scanning for it pre-ACPI intact. 
-> 
-> Before 935a9fee51c945b8942be2d7b4bae069167b4886, didn't we check for
-> BIFT in the ACPI table case?
-> 
-> Before that patch, we used to do:
-> drivers/firmware/iscsi_ibft_find.c:find_ibft_region()
-> 
->         for (i = 0; i < ARRAY_SIZE(ibft_signs) && !ibft_addr; i++)
->                 acpi_table_parse(ibft_signs[i].sign, acpi_find_ibft);
-> 
-> and BIFT was in that ibft_signs array.
-> 
-> I was just saying I thought since we added support for BIFT, we had been
-> checking for it in the ACPI case.
+Checkpatch wants comments prior to mb() insertions. A good idea. Added the comments.
+
+---
+
+Add a memory barrier to ensure the valid bit is read before
+any of the cqe payload is read. This fixes an issue seen
+on Power where the cqe payload was getting loaded before
+the valid bit. When this occurred, we saw an iotag out of
+range error when a command completed, but since the iotag
+looked invalid the command didn't get completed to scsi core.
+Later we hit the command timeout, attempted to abort the command,
+then waited for the aborted command to get returned. Since the
+adapter already returned the command, we timeout waiting,
+and end up escalating EEH all the way to host reset. This
+patch fixes this issue.
+
+Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+Signed-off-by: James Smart <james.smart@emulex.com>
+
+ ---
+
+ lpfc_sli.c |   21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
 
 
-I think I am in the wrong. When I added that support I thought BIFT was
-supposed to be for both the ACPI and the RAM case, so I had coded it
-like above. I am not seeing that in the old mails though, so you might
-be right and they just are now adding support for ACPI. Will just wait
-for qlogic/broadcom.
+diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+--- a/drivers/scsi/lpfc/lpfc_sli.c	2014-03-31 16:21:37.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_sli.c	2014-05-07 17:15:05.057890521 -0400
+@@ -265,6 +265,16 @@ lpfc_sli4_eq_get(struct lpfc_queue *q)
+ 		return NULL;
+ 
+ 	q->hba_index = idx;
++
++	/*
++	 * insert barrier for instruction interlock : data from the hardware
++	 * must have the valid bit checked before it can be copied and acted
++	 * upon. Given what was seen in lpfc_sli4_cq_get() of speculative 
++	 * instructions allowing action on content before valid bit checked,
++	 * add barrier here as well. May not be needed as "content" is a
++	 * single 32-bit entity here (vs multi word structure for cq's).
++	 */
++	mb();
+ 	return eqe;
+ }
+ 
+@@ -370,6 +380,17 @@ lpfc_sli4_cq_get(struct lpfc_queue *q)
+ 
+ 	cqe = q->qe[q->hba_index].cqe;
+ 	q->hba_index = idx;
++
++	/*
++	 * insert barrier for instruction interlock : data from the hardware
++	 * must have the valid bit checked before it can be copied and acted
++	 * upon. Speculative instructions were allowing a bcopy at the start
++	 * of lpfc_sli4_fp_handle_wcqe(), which is called immediately 
++	 * after our return, to copy data before the valid bit check above
++	 * was done. As such, some of the copied data was stale. The barrier
++	 * ensures the check is before any data is copied.
++	 */
++	mb();
+ 	return cqe;
+ }
+ 
+
 
