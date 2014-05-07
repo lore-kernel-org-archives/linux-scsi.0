@@ -1,111 +1,67 @@
-From: Ming Lei <tom.leiming@gmail.com>
-Subject: [PATCH] virtio_scsi: remove ACCESS_ONCE() and smp_read_barrier_depends()
-Date: Wed,  7 May 2014 22:34:39 +0800
-Message-ID: <1399473279-24871-1-git-send-email-tom.leiming@gmail.com>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: [PATCH 1/1] lpfc: Add iotag memory barrier
+Date: Wed, 07 May 2014 09:35:11 -0500
+Message-ID: <201405071435.s47EZbMQ029755@d03av03.boulder.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:63504 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750859AbaEGOfC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 May 2014 10:35:02 -0400
-Received: by mail-pa0-f42.google.com with SMTP id rd3so1282409pab.29
-        for <linux-scsi@vger.kernel.org>; Wed, 07 May 2014 07:35:01 -0700 (PDT)
+Received: from e36.co.us.ibm.com ([32.97.110.154]:39843 "EHLO
+	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751505AbaEGOgO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 May 2014 10:36:14 -0400
+Received: from /spool/local
+	by e36.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
+	Wed, 7 May 2014 08:36:14 -0600
+Received: from b03cxnp08025.gho.boulder.ibm.com (b03cxnp08025.gho.boulder.ibm.com [9.17.130.17])
+	by d03dlp01.boulder.ibm.com (Postfix) with ESMTP id C45171FF003D
+	for <linux-scsi@vger.kernel.org>; Wed,  7 May 2014 08:36:11 -0600 (MDT)
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by b03cxnp08025.gho.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s47Ea3UC64749572
+	for <linux-scsi@vger.kernel.org>; Wed, 7 May 2014 16:36:11 +0200
+Received: from d03av03.boulder.ibm.com (localhost [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s47EZbTv032288
+	for <linux-scsi@vger.kernel.org>; Wed, 7 May 2014 08:35:38 -0600
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>, Paolo Bonzini <pbonzini@redhat.com>
-Cc: linux-scsi@vger.kernel.org, Wanlong Gao <gaowanlong@cn.fujitsu.com>, Rusty Russell <rusty@rustcorp.com.au>, Ming Lei <tom.leiming@gmail.com>
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, james.smart@emulex.com, brking@linux.vnet.ibm.com
 
-Access to tgt->req_vq is strictly serialized by spin_lock
-of tgt->tgt_lock, so the ACCESS_ONCE() isn't necessary.
 
-smp_read_barrier_depends() in virtscsi_req_done was introduced
-to order reading req_vq and decreasing tgt->reqs, but it isn't
-needed now because req_vq is read from
-scsi->req_vqs[vq->index - VIRTIO_SCSI_VQ_BASE] instead of
-tgt->req_vq, so remove the unnecessary barrier.
+Add a memory barrier to ensure the valid bit is read before
+any of the cqe payload is read. This fixes an issue seen
+on Power where the cqe payload was getting loaded before
+the valid bit. When this occurred, we saw an iotag out of
+range error when a command completed, but since the iotag
+looked invalid the command didn't get completed to scsi core.
+Later we hit the command timeout, attempted to abort the command,
+then waited for the aborted command to get returned. Since the
+adapter already returned the command, we timeout waiting,
+and end up escalating EEH all the way to host reset. This
+patch fixes this issue.
 
-Also remove related comment about the barrier.
-
-Cc: Paolo Bonzini <pbonzini@redhat.com>
-Signed-off-by: Ming Lei <tom.leiming@gmail.com>
+Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
 ---
- drivers/scsi/virtio_scsi.c |   49 +++-----------------------------------------
- 1 file changed, 3 insertions(+), 46 deletions(-)
 
-diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-index 16bfd50..697fa53 100644
---- a/drivers/scsi/virtio_scsi.c
-+++ b/drivers/scsi/virtio_scsi.c
-@@ -73,15 +73,8 @@ struct virtio_scsi_vq {
-  * queue, and also lets the driver optimize the IRQ affinity for the virtqueues
-  * (each virtqueue's affinity is set to the CPU that "owns" the queue).
-  *
-- * An interesting effect of this policy is that only writes to req_vq need to
-- * take the tgt_lock.  Read can be done outside the lock because:
-- *
-- * - writes of req_vq only occur when atomic_inc_return(&tgt->reqs) returns 1.
-- *   In that case, no other CPU is reading req_vq: even if they were in
-- *   virtscsi_queuecommand_multi, they would be spinning on tgt_lock.
-- *
-- * - reads of req_vq only occur when the target is not idle (reqs != 0).
-- *   A CPU that enters virtscsi_queuecommand_multi will not modify req_vq.
-+ * tgt_lock is held to serialize reading and writing req_vq. Reading req_vq
-+ * could be done locklessly, but we do not do it yet.
-  *
-  * Similarly, decrements of reqs are never concurrent with writes of req_vq.
-  * Thus they can happen outside the tgt_lock, provided of course we make reqs
-@@ -238,38 +231,6 @@ static void virtscsi_req_done(struct virtqueue *vq)
- 	int index = vq->index - VIRTIO_SCSI_VQ_BASE;
- 	struct virtio_scsi_vq *req_vq = &vscsi->req_vqs[index];
+ drivers/scsi/lpfc/lpfc_sli.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+diff -puN drivers/scsi/lpfc/lpfc_sli.c~lpfc_iotag_barrier drivers/scsi/lpfc/lpfc_sli.c
+--- linux/drivers/scsi/lpfc/lpfc_sli.c~lpfc_iotag_barrier	2014-05-07 09:28:23.000000000 -0500
++++ linux-bjking1/drivers/scsi/lpfc/lpfc_sli.c	2014-05-07 09:28:23.000000000 -0500
+@@ -265,6 +265,7 @@ lpfc_sli4_eq_get(struct lpfc_queue *q)
+ 		return NULL;
  
--	/*
--	 * Read req_vq before decrementing the reqs field in
--	 * virtscsi_complete_cmd.
--	 *
--	 * With barriers:
--	 *
--	 * 	CPU #0			virtscsi_queuecommand_multi (CPU #1)
--	 * 	------------------------------------------------------------
--	 * 	lock vq_lock
--	 * 	read req_vq
--	 * 	read reqs (reqs = 1)
--	 * 	write reqs (reqs = 0)
--	 * 				increment reqs (reqs = 1)
--	 * 				write req_vq
--	 *
--	 * Possible reordering without barriers:
--	 *
--	 * 	CPU #0			virtscsi_queuecommand_multi (CPU #1)
--	 * 	------------------------------------------------------------
--	 * 	lock vq_lock
--	 * 	read reqs (reqs = 1)
--	 * 	write reqs (reqs = 0)
--	 * 				increment reqs (reqs = 1)
--	 * 				write req_vq
--	 * 	read (wrong) req_vq
--	 *
--	 * We do not need a full smp_rmb, because req_vq is required to get
--	 * to tgt->reqs: tgt is &vscsi->tgt[sc->device->id], where sc is stored
--	 * in the virtqueue as the user token.
--	 */
--	smp_read_barrier_depends();
--
- 	virtscsi_vq_done(vscsi, req_vq, virtscsi_complete_cmd);
- };
+ 	q->hba_index = idx;
++	mb();
+ 	return eqe;
+ }
  
-@@ -560,12 +521,8 @@ static struct virtio_scsi_vq *virtscsi_pick_vq(struct virtio_scsi *vscsi,
+@@ -370,6 +371,7 @@ lpfc_sli4_cq_get(struct lpfc_queue *q)
  
- 	spin_lock_irqsave(&tgt->tgt_lock, flags);
+ 	cqe = q->qe[q->hba_index].cqe;
+ 	q->hba_index = idx;
++	mb();
+ 	return cqe;
+ }
  
--	/*
--	 * The memory barrier after atomic_inc_return matches
--	 * the smp_read_barrier_depends() in virtscsi_req_done.
--	 */
- 	if (atomic_inc_return(&tgt->reqs) > 1)
--		vq = ACCESS_ONCE(tgt->req_vq);
-+		vq = tgt->req_vq;
- 	else {
- 		queue_num = smp_processor_id();
- 		while (unlikely(queue_num >= vscsi->num_queues))
--- 
-1.7.9.5
+_
 
