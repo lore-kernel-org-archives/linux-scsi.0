@@ -1,82 +1,67 @@
-From: James Smart <james.smart@emulex.com>
-Subject: [REPOST] [PATCH 1/1] lpfc: Add iotag memory barrier
-Date: Wed, 7 May 2014 17:16:46 -0400
-Message-ID: <1399497406.1068.3.camel@myfc17>
-Reply-To: <james.smart@emulex.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 7/8] be2iscsi: Fix processing cqe for cxn whose endpoint
+ is freed
+Date: Wed, 07 May 2014 17:18:38 -0500
+Message-ID: <536AB13E.6080906@cs.wisc.edu>
+References: <1399340492-2136-1-git-send-email-jkallickal@emulex.com> <1399340492-2136-7-git-send-email-jkallickal@emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:16202 "EHLO
-	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750968AbaEGVQs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 May 2014 17:16:48 -0400
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:37273 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750966AbaEGWSv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 7 May 2014 18:18:51 -0400
+In-Reply-To: <1399340492-2136-7-git-send-email-jkallickal@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Jay Kallickal <jayamohank@gmail.com>
+Cc: jbottomley@parallels.com, linux-scsi@vger.kernel.org, Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, Minh Tran <minhduc.tran@emulex.com>, John Soni Jose <sony.john-n@emulex.com>
 
-Checkpatch wants comments prior to mb() insertions. A good idea. Added the comments.
+On 05/05/2014 08:41 PM, Jay Kallickal wrote:
+> From: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+> 
+>  During heavy IO in multipath environment with many active sessions
+>  and port-bouncing happening, there is a race condition because of
+>  which beiscsi_prcess_cqe() gets called for a connection whose
+>  endpoint is freed.
+> 
+>  Checking endpoint reference for a connection before processing in
+>  beiscsi_process_cq().
+> 
+> Signed-off-by: Minh Tran <minhduc.tran@emulex.com>
+> Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
+> Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+> ---
+>  drivers/scsi/be2iscsi/be_main.c | 11 +++++++++++
+>  1 file changed, 11 insertions(+)
+> 
+> diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+> index dccda6c..5a7022f 100644
+> --- a/drivers/scsi/be2iscsi/be_main.c
+> +++ b/drivers/scsi/be2iscsi/be_main.c
+> @@ -2110,6 +2110,16 @@ static unsigned int beiscsi_process_cq(struct be_eq_obj *pbe_eq)
+>  
+>  		cri_index = BE_GET_CRI_FROM_CID(cid);
+>  		ep = phba->ep_array[cri_index];
+> +		if (unlikely(ep == NULL)) {
+> +			/* connection has already been freed
+> +			 * just move on to next one
+> +			 */
+> +			beiscsi_log(phba, KERN_WARNING,
+> +				    BEISCSI_LOG_INIT,
+> +				    "BM_%d : proc cqe of disconn ep: cid %d\n",
+> +				    cid);
+> +			goto proc_next_cqe;
+> +		}
+>  		beiscsi_ep = ep->dd_data;
+>  		beiscsi_conn = beiscsi_ep->conn;
+>  
 
----
+It looks like if that race is possible then we could also free the ep
+while you are accessing right? I think you would need to get a ref to
+the ep.
 
-Add a memory barrier to ensure the valid bit is read before
-any of the cqe payload is read. This fixes an issue seen
-on Power where the cqe payload was getting loaded before
-the valid bit. When this occurred, we saw an iotag out of
-range error when a command completed, but since the iotag
-looked invalid the command didn't get completed to scsi core.
-Later we hit the command timeout, attempted to abort the command,
-then waited for the aborted command to get returned. Since the
-adapter already returned the command, we timeout waiting,
-and end up escalating EEH all the way to host reset. This
-patch fixes this issue.
-
-Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
-Signed-off-by: James Smart <james.smart@emulex.com>
-
- ---
-
- lpfc_sli.c |   21 +++++++++++++++++++++
- 1 file changed, 21 insertions(+)
-
-
-diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
---- a/drivers/scsi/lpfc/lpfc_sli.c	2014-03-31 16:21:37.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_sli.c	2014-05-07 17:15:05.057890521 -0400
-@@ -265,6 +265,16 @@ lpfc_sli4_eq_get(struct lpfc_queue *q)
- 		return NULL;
- 
- 	q->hba_index = idx;
-+
-+	/*
-+	 * insert barrier for instruction interlock : data from the hardware
-+	 * must have the valid bit checked before it can be copied and acted
-+	 * upon. Given what was seen in lpfc_sli4_cq_get() of speculative 
-+	 * instructions allowing action on content before valid bit checked,
-+	 * add barrier here as well. May not be needed as "content" is a
-+	 * single 32-bit entity here (vs multi word structure for cq's).
-+	 */
-+	mb();
- 	return eqe;
- }
- 
-@@ -370,6 +380,17 @@ lpfc_sli4_cq_get(struct lpfc_queue *q)
- 
- 	cqe = q->qe[q->hba_index].cqe;
- 	q->hba_index = idx;
-+
-+	/*
-+	 * insert barrier for instruction interlock : data from the hardware
-+	 * must have the valid bit checked before it can be copied and acted
-+	 * upon. Speculative instructions were allowing a bcopy at the start
-+	 * of lpfc_sli4_fp_handle_wcqe(), which is called immediately 
-+	 * after our return, to copy data before the valid bit check above
-+	 * was done. As such, some of the copied data was stale. The barrier
-+	 * ensures the check is before any data is copied.
-+	 */
-+	mb();
- 	return cqe;
- }
- 
-
-
+What command/function tells the card to stop sending the driver
+events/notifications/ios for that connection? Is it beiscsi_close_conn
+or mgmt_invalidate_connection?
