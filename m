@@ -1,67 +1,36 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: [PATCH 1/1] lpfc: Add iotag memory barrier
-Date: Wed, 07 May 2014 09:35:11 -0500
-Message-ID: <201405071435.s47EZbMQ029755@d03av03.boulder.ibm.com>
+From: Ming Lei <tom.leiming@gmail.com>
+Subject: Re: [PATCH 2/2] virtio_scsi: remove smp_read_barrier_depends
+Date: Wed, 7 May 2014 22:36:27 +0800
+Message-ID: <CACVXFVMx-P4uvyDy4UnxByA-ZHopoOCHC5Fh33P+AQk2VDSoBA@mail.gmail.com>
+References: <1399471989-17890-1-git-send-email-tom.leiming@gmail.com>
+	<536A40A1.6000805@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e36.co.us.ibm.com ([32.97.110.154]:39843 "EHLO
-	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751505AbaEGOgO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 May 2014 10:36:14 -0400
-Received: from /spool/local
-	by e36.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
-	Wed, 7 May 2014 08:36:14 -0600
-Received: from b03cxnp08025.gho.boulder.ibm.com (b03cxnp08025.gho.boulder.ibm.com [9.17.130.17])
-	by d03dlp01.boulder.ibm.com (Postfix) with ESMTP id C45171FF003D
-	for <linux-scsi@vger.kernel.org>; Wed,  7 May 2014 08:36:11 -0600 (MDT)
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by b03cxnp08025.gho.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s47Ea3UC64749572
-	for <linux-scsi@vger.kernel.org>; Wed, 7 May 2014 16:36:11 +0200
-Received: from d03av03.boulder.ibm.com (localhost [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s47EZbTv032288
-	for <linux-scsi@vger.kernel.org>; Wed, 7 May 2014 08:35:38 -0600
+Received: from mail-vc0-f180.google.com ([209.85.220.180]:60545 "EHLO
+	mail-vc0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755855AbaEGOg2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 May 2014 10:36:28 -0400
+Received: by mail-vc0-f180.google.com with SMTP id hy4so577804vcb.11
+        for <linux-scsi@vger.kernel.org>; Wed, 07 May 2014 07:36:27 -0700 (PDT)
+In-Reply-To: <536A40A1.6000805@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, james.smart@emulex.com, brking@linux.vnet.ibm.com
+To: Paolo Bonzini <pbonzini@redhat.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, Linux SCSI List <linux-scsi@vger.kernel.org>, Wanlong Gao <gaowanlong@cn.fujitsu.com>, Rusty Russell <rusty@rustcorp.com.au>
+
+On Wed, May 7, 2014 at 10:18 PM, Paolo Bonzini <pbonzini@redhat.com> wrote:
+>
+>
+> tgt_lock is held to serialize reading and writing req_vq.  Reading req_vq
+> could be done locklessly, but we do not do it yet.
+>
+> You can also merge the two patches together.
+
+OK, please ignore these two patches, and I have sent out
+the merged one.
 
 
-Add a memory barrier to ensure the valid bit is read before
-any of the cqe payload is read. This fixes an issue seen
-on Power where the cqe payload was getting loaded before
-the valid bit. When this occurred, we saw an iotag out of
-range error when a command completed, but since the iotag
-looked invalid the command didn't get completed to scsi core.
-Later we hit the command timeout, attempted to abort the command,
-then waited for the aborted command to get returned. Since the
-adapter already returned the command, we timeout waiting,
-and end up escalating EEH all the way to host reset. This
-patch fixes this issue.
-
-Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
----
-
- drivers/scsi/lpfc/lpfc_sli.c |    2 ++
- 1 file changed, 2 insertions(+)
-
-diff -puN drivers/scsi/lpfc/lpfc_sli.c~lpfc_iotag_barrier drivers/scsi/lpfc/lpfc_sli.c
---- linux/drivers/scsi/lpfc/lpfc_sli.c~lpfc_iotag_barrier	2014-05-07 09:28:23.000000000 -0500
-+++ linux-bjking1/drivers/scsi/lpfc/lpfc_sli.c	2014-05-07 09:28:23.000000000 -0500
-@@ -265,6 +265,7 @@ lpfc_sli4_eq_get(struct lpfc_queue *q)
- 		return NULL;
- 
- 	q->hba_index = idx;
-+	mb();
- 	return eqe;
- }
- 
-@@ -370,6 +371,7 @@ lpfc_sli4_cq_get(struct lpfc_queue *q)
- 
- 	cqe = q->qe[q->hba_index].cqe;
- 	q->hba_index = idx;
-+	mb();
- 	return cqe;
- }
- 
-_
-
+Thanks,
+-- 
+Ming Lei
