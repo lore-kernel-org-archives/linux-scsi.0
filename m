@@ -1,57 +1,145 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 05/19] hpsa: change doorbell reset delay to ten seconds
-Date: Thu, 08 May 2014 14:27:48 -0500
-Message-ID: <20140508192748.13481.59689.stgit@beardog.cce.hp.com>
+Subject: [PATCH 06/19] hpsa: use gcc aligned attribute instead of manually
+	padding structs
+Date: Thu, 08 May 2014 14:27:53 -0500
+Message-ID: <20140508192753.13481.69864.stgit@beardog.cce.hp.com>
 References: <20140508192239.13481.81880.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g9t1613g.houston.hp.com ([15.240.0.71]:53427 "EHLO
+Received: from g9t1613g.houston.hp.com ([15.240.0.71]:53389 "EHLO
 	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755534AbaEHT3v (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 May 2014 15:29:51 -0400
+	with ESMTP id S1755530AbaEHT3s (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 May 2014 15:29:48 -0400
 Received: from g2t2354.austin.hp.com (g2t2354.austin.hp.com [15.217.128.53])
 	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by g9t1613g.houston.hp.com (Postfix) with ESMTPS id DC2606396D
-	for <linux-scsi@vger.kernel.org>; Thu,  8 May 2014 19:29:39 +0000 (UTC)
+	by g9t1613g.houston.hp.com (Postfix) with ESMTPS id 24B9E6352D
+	for <linux-scsi@vger.kernel.org>; Thu,  8 May 2014 19:29:04 +0000 (UTC)
 In-Reply-To: <20140508192239.13481.81880.stgit@beardog.cce.hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: james.bottomley@hansenpartnership.com
 Cc: justin.lindley@hp.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, stephenmcameron@gmail.com, joseph.t.handzik@hp.com, thenzl@redhat.com, michael.miller@canonical.com, elliott@hp.com, scott.teel@hp.com
 
-From: Justin Lindley <justin.lindley@hp.com>
+From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-After 3.22 firmware, PMC firmware guys tell us the
-previous 5 second delay after a reset now needs to
-be 10 secs to avoid a PCIe error due to the driver
-looking at the controller too soon after the reset.
-
-Signed-off-by: Justin Lindley <justin.lindley@hp.com>
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- drivers/scsi/hpsa.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/hpsa.c     |    3 ---
+ drivers/scsi/hpsa_cmd.h |   33 ++++++---------------------------
+ 2 files changed, 6 insertions(+), 30 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 1df9a8a..2220b32 100644
+index 2220b32..b1ecfd8 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -5831,12 +5831,12 @@ static int hpsa_controller_hard_reset(struct pci_dev *pdev,
- 		dev_info(&pdev->dev, "using doorbell to reset controller\n");
- 		writel(use_doorbell, vaddr + SA5_DOORBELL);
+@@ -6925,7 +6925,6 @@ reinit_after_soft_reset:
+ 	 * the 5 lower bits of the address are used by the hardware. and by
+ 	 * the driver.  See comments in hpsa.h for more info.
+ 	 */
+-#define COMMANDLIST_ALIGNMENT 128
+ 	BUILD_BUG_ON(sizeof(struct CommandList) % COMMANDLIST_ALIGNMENT);
+ 	h = kzalloc(sizeof(*h), GFP_KERNEL);
+ 	if (!h)
+@@ -7398,7 +7397,6 @@ static int hpsa_alloc_ioaccel_cmd_and_bft(struct ctlr_info *h)
+ 	 * because the 7 lower bits of the address are used by the
+ 	 * hardware.
+ 	 */
+-#define IOACCEL1_COMMANDLIST_ALIGNMENT 128
+ 	BUILD_BUG_ON(sizeof(struct io_accel1_cmd) %
+ 			IOACCEL1_COMMANDLIST_ALIGNMENT);
+ 	h->ioaccel_cmd_pool =
+@@ -7436,7 +7434,6 @@ static int ioaccel2_alloc_cmds_and_bft(struct ctlr_info *h)
+ 	if (h->ioaccel_maxsg > IOACCEL2_MAXSGENTRIES)
+ 		h->ioaccel_maxsg = IOACCEL2_MAXSGENTRIES;
  
--		/* PMC hardware guys tell us we need a 5 second delay after
-+		/* PMC hardware guys tell us we need a 10 second delay after
- 		 * doorbell reset and before any attempt to talk to the board
- 		 * at all to ensure that this actually works and doesn't fall
- 		 * over in some weird corner cases.
- 		 */
--		msleep(5000);
-+		msleep(10000);
- 	} else { /* Try to do it the PCI power state way */
+-#define IOACCEL2_COMMANDLIST_ALIGNMENT 128
+ 	BUILD_BUG_ON(sizeof(struct io_accel2_cmd) %
+ 			IOACCEL2_COMMANDLIST_ALIGNMENT);
+ 	h->ioaccel2_cmd_pool =
+diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
+index b5cc705..9737ac2 100644
+--- a/drivers/scsi/hpsa_cmd.h
++++ b/drivers/scsi/hpsa_cmd.h
+@@ -375,6 +375,7 @@ struct ctlr_info; /* defined in hpsa.h */
+  *        or a bus address.
+  */
  
- 		/* Quoting from the Open CISS Specification: "The Power
++#define COMMANDLIST_ALIGNMENT 128
+ struct CommandList {
+ 	struct CommandListHeader Header;
+ 	struct RequestBlock      Request;
+@@ -389,21 +390,7 @@ struct CommandList {
+ 	struct list_head list;
+ 	struct completion *waiting;
+ 	void   *scsi_cmd;
+-
+-/* on 64 bit architectures, to get this to be 32-byte-aligned
+- * it so happens we need PAD_64 bytes of padding, on 32 bit systems,
+- * we need PAD_32 bytes of padding (see below).   This does that.
+- * If it happens that 64 bit and 32 bit systems need different
+- * padding, PAD_32 and PAD_64 can be set independently, and.
+- * the code below will do the right thing.
+- */
+-#define IS_32_BIT ((8 - sizeof(long))/4)
+-#define IS_64_BIT (!IS_32_BIT)
+-#define PAD_32 (40)
+-#define PAD_64 (12)
+-#define COMMANDLIST_PAD (IS_32_BIT * PAD_32 + IS_64_BIT * PAD_64)
+-	u8 pad[COMMANDLIST_PAD];
+-};
++} __attribute__((aligned(COMMANDLIST_ALIGNMENT)));
+ 
+ /* Max S/G elements in I/O accelerator command */
+ #define IOACCEL1_MAXSGENTRIES           24
+@@ -413,6 +400,7 @@ struct CommandList {
+  * Structure for I/O accelerator (mode 1) commands.
+  * Note that this structure must be 128-byte aligned in size.
+  */
++#define IOACCEL1_COMMANDLIST_ALIGNMENT 128
+ struct io_accel1_cmd {
+ 	u16 dev_handle;			/* 0x00 - 0x01 */
+ 	u8  reserved1;			/* 0x02 */
+@@ -440,12 +428,7 @@ struct io_accel1_cmd {
+ 	struct vals32 host_addr;	/* 0x70 - 0x77 */
+ 	u8  CISS_LUN[8];		/* 0x78 - 0x7F */
+ 	struct SGDescriptor SG[IOACCEL1_MAXSGENTRIES];
+-#define IOACCEL1_PAD_64 0
+-#define IOACCEL1_PAD_32 0
+-#define IOACCEL1_PAD (IS_32_BIT * IOACCEL1_PAD_32 + \
+-			IS_64_BIT * IOACCEL1_PAD_64)
+-	u8 pad[IOACCEL1_PAD];
+-};
++} __attribute__((aligned(IOACCEL1_COMMANDLIST_ALIGNMENT)));
+ 
+ #define IOACCEL1_FUNCTION_SCSIIO        0x00
+ #define IOACCEL1_SGLOFFSET              32
+@@ -510,14 +493,11 @@ struct io_accel2_scsi_response {
+ 	u8 sense_data_buff[32];		/* sense/response data buffer */
+ };
+ 
+-#define IOACCEL2_64_PAD 76
+-#define IOACCEL2_32_PAD 76
+-#define IOACCEL2_PAD (IS_32_BIT * IOACCEL2_32_PAD + \
+-			IS_64_BIT * IOACCEL2_64_PAD)
+ /*
+  * Structure for I/O accelerator (mode 2 or m2) commands.
+  * Note that this structure must be 128-byte aligned in size.
+  */
++#define IOACCEL2_COMMANDLIST_ALIGNMENT 128
+ struct io_accel2_cmd {
+ 	u8  IU_type;			/* IU Type */
+ 	u8  direction;			/* direction, memtype, and encryption */
+@@ -544,8 +524,7 @@ struct io_accel2_cmd {
+ 	u32 tweak_upper;		/* Encryption tweak, upper 4 bytes */
+ 	struct ioaccel2_sg_element sg[IOACCEL2_MAXSGENTRIES];
+ 	struct io_accel2_scsi_response error_data;
+-	u8 pad[IOACCEL2_PAD];
+-};
++} __attribute__((aligned(IOACCEL2_COMMANDLIST_ALIGNMENT)));
+ 
+ /*
+  * defines for Mode 2 command struct
 
