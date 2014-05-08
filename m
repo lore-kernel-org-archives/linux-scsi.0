@@ -1,22 +1,17 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 04/19] hpsa: allow passthru ioctls to work with bidirectional
-	commands
-Date: Thu, 08 May 2014 14:27:43 -0500
-Message-ID: <20140508192743.13481.58573.stgit@beardog.cce.hp.com>
+Subject: [PATCH 18/19] hpsa: report check condition even if no sense data
+	present for ioaccel2 mode
+Date: Thu, 08 May 2014 14:28:56 -0500
+Message-ID: <20140508192856.13481.43269.stgit@beardog.cce.hp.com>
 References: <20140508192239.13481.81880.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g9t1613g.houston.hp.com ([15.240.0.71]:53388 "EHLO
-	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755513AbaEHT3o (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 May 2014 15:29:44 -0400
-Received: from g2t2354.austin.hp.com (g2t2354.austin.hp.com [15.217.128.53])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by g9t1613g.houston.hp.com (Postfix) with ESMTPS id 3849563931
-	for <linux-scsi@vger.kernel.org>; Thu,  8 May 2014 19:28:54 +0000 (UTC)
+Received: from g4t3427.houston.hp.com ([15.201.208.55]:44543 "EHLO
+	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755524AbaEHT3r (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 May 2014 15:29:47 -0400
 In-Reply-To: <20140508192239.13481.81880.stgit@beardog.cce.hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -25,53 +20,39 @@ Cc: justin.lindley@hp.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.or
 
 From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-Treat the the data direction bits as a bit mask allowing both
-READ and WRITE at the same time instead of testing for equality
-to see if it's a exclusively a READ or a WRITE.
+It shouldn't happen that we get a check condition with no sense data, but if it
+does, we shouldn't just drop the check condition on the floor.
 
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- drivers/scsi/hpsa.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/hpsa.c |    7 +++++--
+ 1 files changed, 5 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 7ba4e30..1df9a8a 100644
+index 9d4a0bd..3446b8d 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -4956,7 +4956,7 @@ static int hpsa_passthru_ioctl(struct ctlr_info *h, void __user *argp)
- 		buff = kmalloc(iocommand.buf_size, GFP_KERNEL);
- 		if (buff == NULL)
- 			return -EFAULT;
--		if (iocommand.Request.Type.Direction == XFER_WRITE) {
-+		if (iocommand.Request.Type.Direction & XFER_WRITE) {
- 			/* Copy the data into the buffer we created */
- 			if (copy_from_user(buff, iocommand.buf,
- 				iocommand.buf_size)) {
-@@ -5019,7 +5019,7 @@ static int hpsa_passthru_ioctl(struct ctlr_info *h, void __user *argp)
- 		rc = -EFAULT;
- 		goto out;
- 	}
--	if (iocommand.Request.Type.Direction == XFER_READ &&
-+	if ((iocommand.Request.Type.Direction & XFER_READ) &&
- 		iocommand.buf_size > 0) {
- 		/* Copy the data out of the buffer we created */
- 		if (copy_to_user(iocommand.buf, buff, iocommand.buf_size)) {
-@@ -5096,7 +5096,7 @@ static int hpsa_big_passthru_ioctl(struct ctlr_info *h, void __user *argp)
- 			status = -ENOMEM;
- 			goto cleanup1;
- 		}
--		if (ioc->Request.Type.Direction == XFER_WRITE) {
-+		if (ioc->Request.Type.Direction & XFER_WRITE) {
- 			if (copy_from_user(buff[sg_used], data_ptr, sz)) {
- 				status = -ENOMEM;
- 				goto cleanup1;
-@@ -5148,7 +5148,7 @@ static int hpsa_big_passthru_ioctl(struct ctlr_info *h, void __user *argp)
- 		status = -EFAULT;
- 		goto cleanup0;
- 	}
--	if (ioc->Request.Type.Direction == XFER_READ && ioc->buf_size > 0) {
-+	if ((ioc->Request.Type.Direction & XFER_READ) && ioc->buf_size > 0) {
- 		/* Copy the data out of the buffer we created */
- 		BYTE __user *ptr = ioc->buf;
- 		for (i = 0; i < sg_used; i++) {
+@@ -1556,9 +1556,13 @@ static int handle_ioaccel_mode2_error(struct ctlr_info *h,
+ 			dev_warn(&h->pdev->dev,
+ 				"%s: task complete with check condition.\n",
+ 				"HP SSD Smart Path");
++			cmd->result |= SAM_STAT_CHECK_CONDITION;
+ 			if (c2->error_data.data_present !=
+-					IOACCEL2_SENSE_DATA_PRESENT)
++					IOACCEL2_SENSE_DATA_PRESENT) {
++				memset(cmd->sense_buffer, 0,
++					SCSI_SENSE_BUFFERSIZE);
+ 				break;
++			}
+ 			/* copy the sense data */
+ 			data_len = c2->error_data.sense_data_len;
+ 			if (data_len > SCSI_SENSE_BUFFERSIZE)
+@@ -1568,7 +1572,6 @@ static int handle_ioaccel_mode2_error(struct ctlr_info *h,
+ 					sizeof(c2->error_data.sense_data_buff);
+ 			memcpy(cmd->sense_buffer,
+ 				c2->error_data.sense_data_buff, data_len);
+-			cmd->result |= SAM_STAT_CHECK_CONDITION;
+ 			retry = 1;
+ 			break;
+ 		case IOACCEL2_STATUS_SR_TASK_COMP_BUSY:
 
