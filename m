@@ -1,119 +1,102 @@
-From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Subject: RE: [PATCH 10/19] hpsa: set irq affinity hints to route MSI-X
- vectors across CPUs
-Date: Thu, 8 May 2014 22:04:20 +0000
-Message-ID: <94D0CD8314A33A4D9D801C0FE68B402956F07F98@G4W3202.americas.hpqcorp.net>
-References: <20140508192239.13481.81880.stgit@beardog.cce.hp.com>
- <20140508192814.13481.56930.stgit@beardog.cce.hp.com>
- <alpine.LNX.2.03.1405090221590.1977@cisco.com>
+From: Chen Gang <gang.chen.5i5j@gmail.com>
+Subject: [PATCH] drivers: scsi: mvsas: fix compiling issue by adding 'MVS_'
+ for "enum pci_interrupt_cause"
+Date: Fri, 09 May 2014 07:45:20 +0800
+Message-ID: <536C1710.1010108@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3426.houston.hp.com ([15.201.208.54]:57185 "EHLO
-	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754809AbaEHWFc convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 May 2014 18:05:32 -0400
-In-Reply-To: <alpine.LNX.2.03.1405090221590.1977@cisco.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: JBottomley@parallels.com, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Guan Xuetao <gxt@mprc.pku.edu.cn>
+Cc: linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Govindarajulu Varadarajan <gvaradar@cisco.com>, "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Cc: "james.bottomley@hansenpartnership.com" <james.bottomley@hansenpartnership.com>, "Lindley, Justin" <justin.lindley@hp.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "stephenmcameron@gmail.com" <stephenmcameron@gmail.com>, "Handzik, Joe" <joseph.t.handzik@hp.com>, "thenzl@redhat.com" <thenzl@redhat.com>, "michael.miller@canonical.com" <michael.miller@canonical.com>, "Teel, Scott Stacy" <scott.stacy.teel@hp.com>
+
+The direct cause is IRQ_SPI is already defined as a macro in unicore32
+architecture (also, blackfin and mips architectures define it). The
+related error (unicore32  with allmodconfig)
+
+    CC [M]  drivers/scsi/mvsas/mv_94xx.o
+  In file included from drivers/scsi/mvsas/mv_94xx.c:27:
+  drivers/scsi/mvsas/mv_94xx.h:176: error: expected identifier before numeric constant
+
+And "enum pci_interrupt_cause" may will be useful for kernel drivers,
+although at present, it is not used in kernel. So add 'MVS_' for it.
 
 
-
-> -----Original Message-----
-> From: Govindarajulu Varadarajan [mailto:gvaradar@cisco.com]
-> Sent: Thursday, 08 May, 2014 4:12 PM
-> To: Stephen M. Cameron
-> Cc: james.bottomley@hansenpartnership.com; Lindley, Justin;
-> martin.petersen@oracle.com; linux-scsi@vger.kernel.org;
-> stephenmcameron@gmail.com; Handzik, Joe; thenzl@redhat.com;
-> michael.miller@canonical.com; Elliott, Robert (Server Storage); Teel, Scott
-> Stacy
-> Subject: Re: [PATCH 10/19] hpsa: set irq affinity hints to route MSI-X
-> vectors across CPUs
-> 
-> 
-> 
-> On Thu, 8 May 2014, Stephen M. Cameron wrote:
-> 
-> > From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
-> >
-> > Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
-> > ---
-> > drivers/scsi/hpsa.c |   17 ++++++++++++++++-
-> > 1 files changed, 16 insertions(+), 1 deletions(-)
-> >
-> > diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> > index 9c44f26..e8090e2 100644
-> > --- a/drivers/scsi/hpsa.c
-> > +++ b/drivers/scsi/hpsa.c
-> > @@ -6608,6 +6608,17 @@ static void hpsa_free_cmd_pool(struct ctlr_info *h)
-> > 			h->ioaccel_cmd_pool, h->ioaccel_cmd_pool_dhandle);
-> > }
-> >
-> > +static void hpsa_irq_affinity_hints(struct ctlr_info *h)
-> > +{
-> > +	int i, cpu, rc;
-> > +
-> > +	cpu = cpumask_first(cpu_online_mask);
-> 
-> Maybe consider setting cpu affinity hint based on numa locality 
-> of pcie device and cpu? Instead of blindly assigning all online 
-> cpu in order.
-> 
-> Something like
-> 
->  	cpu = cpumask_first(cpumask_of_node(numa_node))
-> 
-> > +	for (i = 0; i < h->msix_vector; i++) {
-> > +		rc = irq_set_affinity_hint(h->intr[i], get_cpu_mask(cpu));
-> 
-> You are not using return value rc. Why declare it?
-> 
-> Thanks
-> Govind
-> > +		cpu = cpumask_next(cpu, cpu_online_mask);
-> > +	}
-> > +}
-> > +
-
-We think matching the locality of the application is more 
-important - delivering the message write carrying the MSI-X
-interrupt across the CPU-to-CPU interconnect is less expensive 
-than delivering it to the closest CPU and doing hardirq 
-processing there, which causes cache traffic between that 
-CPU and the CPU used for:
-a) submission by the application and driver stack;
-b) softirq processing; and
-c) completion processing by the application.
-
-That presumes the application thread is not wandering
-to a different CPU after submission before completion.
-If so, any choice is bound to be wrong sometimes.
-
-If the block layer queue has rq_affinity=2, the softirq is
-handled on the submitting CPU core; if rq_affinity=1, it
-is handled on any core sharing the L3 cache (i.e., 
-the same physical CPU socket).
-
-With hyperthreading, the hyperthreaded sibling of the
-submitting CPU core should be equally good at hardirq 
-and softirq processing.  Is there an 
-architecture-independent call in linux to report 
-the CPUs sharing the same L1 (and L2) cache (i.e.,
-the siblings)?  cpus_share_cache(), used by the block 
-layer for rq_affinity=1, just reports CPUs sharing the 
-same last level (L3) cache domain.  That still results 
-in L2 traffic between cores inside a socket.
-
+Signed-off-by: Chen Gang <gang.chen.5i5j@gmail.com>
 ---
-Rob Elliott    HP Server Storage
+ drivers/scsi/mvsas/mv_94xx.h | 58 ++++++++++++++++++++++----------------------
+ 1 file changed, 29 insertions(+), 29 deletions(-)
 
-
-
-
-
-
+diff --git a/drivers/scsi/mvsas/mv_94xx.h b/drivers/scsi/mvsas/mv_94xx.h
+index 487aa6f..14e1974 100644
+--- a/drivers/scsi/mvsas/mv_94xx.h
++++ b/drivers/scsi/mvsas/mv_94xx.h
+@@ -150,35 +150,35 @@ enum chip_register_bits {
+ 
+ enum pci_interrupt_cause {
+ 	/*  MAIN_IRQ_CAUSE (R10200) Bits*/
+-	IRQ_COM_IN_I2O_IOP0            = (1 << 0),
+-	IRQ_COM_IN_I2O_IOP1            = (1 << 1),
+-	IRQ_COM_IN_I2O_IOP2            = (1 << 2),
+-	IRQ_COM_IN_I2O_IOP3            = (1 << 3),
+-	IRQ_COM_OUT_I2O_HOS0           = (1 << 4),
+-	IRQ_COM_OUT_I2O_HOS1           = (1 << 5),
+-	IRQ_COM_OUT_I2O_HOS2           = (1 << 6),
+-	IRQ_COM_OUT_I2O_HOS3           = (1 << 7),
+-	IRQ_PCIF_TO_CPU_DRBL0          = (1 << 8),
+-	IRQ_PCIF_TO_CPU_DRBL1          = (1 << 9),
+-	IRQ_PCIF_TO_CPU_DRBL2          = (1 << 10),
+-	IRQ_PCIF_TO_CPU_DRBL3          = (1 << 11),
+-	IRQ_PCIF_DRBL0                 = (1 << 12),
+-	IRQ_PCIF_DRBL1                 = (1 << 13),
+-	IRQ_PCIF_DRBL2                 = (1 << 14),
+-	IRQ_PCIF_DRBL3                 = (1 << 15),
+-	IRQ_XOR_A                      = (1 << 16),
+-	IRQ_XOR_B                      = (1 << 17),
+-	IRQ_SAS_A                      = (1 << 18),
+-	IRQ_SAS_B                      = (1 << 19),
+-	IRQ_CPU_CNTRL                  = (1 << 20),
+-	IRQ_GPIO                       = (1 << 21),
+-	IRQ_UART                       = (1 << 22),
+-	IRQ_SPI                        = (1 << 23),
+-	IRQ_I2C                        = (1 << 24),
+-	IRQ_SGPIO                      = (1 << 25),
+-	IRQ_COM_ERR                    = (1 << 29),
+-	IRQ_I2O_ERR                    = (1 << 30),
+-	IRQ_PCIE_ERR                   = (1 << 31),
++	MVS_IRQ_COM_IN_I2O_IOP0        = (1 << 0),
++	MVS_IRQ_COM_IN_I2O_IOP1        = (1 << 1),
++	MVS_IRQ_COM_IN_I2O_IOP2        = (1 << 2),
++	MVS_IRQ_COM_IN_I2O_IOP3        = (1 << 3),
++	MVS_IRQ_COM_OUT_I2O_HOS0       = (1 << 4),
++	MVS_IRQ_COM_OUT_I2O_HOS1       = (1 << 5),
++	MVS_IRQ_COM_OUT_I2O_HOS2       = (1 << 6),
++	MVS_IRQ_COM_OUT_I2O_HOS3       = (1 << 7),
++	MVS_IRQ_PCIF_TO_CPU_DRBL0      = (1 << 8),
++	MVS_IRQ_PCIF_TO_CPU_DRBL1      = (1 << 9),
++	MVS_IRQ_PCIF_TO_CPU_DRBL2      = (1 << 10),
++	MVS_IRQ_PCIF_TO_CPU_DRBL3      = (1 << 11),
++	MVS_IRQ_PCIF_DRBL0             = (1 << 12),
++	MVS_IRQ_PCIF_DRBL1             = (1 << 13),
++	MVS_IRQ_PCIF_DRBL2             = (1 << 14),
++	MVS_IRQ_PCIF_DRBL3             = (1 << 15),
++	MVS_IRQ_XOR_A                  = (1 << 16),
++	MVS_IRQ_XOR_B                  = (1 << 17),
++	MVS_IRQ_SAS_A                  = (1 << 18),
++	MVS_IRQ_SAS_B                  = (1 << 19),
++	MVS_IRQ_CPU_CNTRL              = (1 << 20),
++	MVS_IRQ_GPIO                   = (1 << 21),
++	MVS_IRQ_UART                   = (1 << 22),
++	MVS_IRQ_SPI                    = (1 << 23),
++	MVS_IRQ_I2C                    = (1 << 24),
++	MVS_IRQ_SGPIO                  = (1 << 25),
++	MVS_IRQ_COM_ERR                = (1 << 29),
++	MVS_IRQ_I2O_ERR                = (1 << 30),
++	MVS_IRQ_PCIE_ERR               = (1 << 31),
+ };
+ 
+ union reg_phy_cfg {
+-- 
+1.9.2.459.g68773ac
