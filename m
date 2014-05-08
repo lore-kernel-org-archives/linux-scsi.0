@@ -1,65 +1,96 @@
-From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 19/19] hpsa: remove messages about volume status VPD inquiry
-	page not supported
-Date: Thu, 08 May 2014 14:29:01 -0500
-Message-ID: <20140508192901.13481.59780.stgit@beardog.cce.hp.com>
-References: <20140508192239.13481.81880.stgit@beardog.cce.hp.com>
+From: Govindarajulu Varadarajan <gvaradar@cisco.com>
+Subject: Re: [PATCH 10/19] hpsa: set irq affinity hints to route MSI-X vectors
+ across CPUs
+Date: Fri, 9 May 2014 02:41:54 +0530 (IST)
+Message-ID: <alpine.LNX.2.03.1405090221590.1977@cisco.com>
+References: <20140508192239.13481.81880.stgit@beardog.cce.hp.com> <20140508192814.13481.56930.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3427.houston.hp.com ([15.201.208.55]:44576 "EHLO
-	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755513AbaEHT3w (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 May 2014 15:29:52 -0400
-In-Reply-To: <20140508192239.13481.81880.stgit@beardog.cce.hp.com>
+Received: from bgl-iport-2.cisco.com ([72.163.197.26]:16822 "EHLO
+	bgl-iport-2.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754600AbaEHVWR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 May 2014 17:22:17 -0400
+In-Reply-To: <20140508192814.13481.56930.stgit@beardog.cce.hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: james.bottomley@hansenpartnership.com
-Cc: justin.lindley@hp.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, stephenmcameron@gmail.com, joseph.t.handzik@hp.com, thenzl@redhat.com, michael.miller@canonical.com, elliott@hp.com, scott.teel@hp.com
+To: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
+Cc: james.bottomley@hansenpartnership.com, justin.lindley@hp.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, stephenmcameron@gmail.com, joseph.t.handzik@hp.com, thenzl@redhat.com, michael.miller@canonical.com, elliott@hp.com, scott.teel@hp.com
 
-From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-They are annoying and do not help anyone.
 
-Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
----
- drivers/scsi/hpsa.c |   12 +++---------
- 1 files changed, 3 insertions(+), 9 deletions(-)
+On Thu, 8 May 2014, Stephen M. Cameron wrote:
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 3446b8d..2fe8705 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -2516,27 +2516,21 @@ static int hpsa_get_volume_status(struct ctlr_info *h,
- 		return HPSA_VPD_LV_STATUS_UNSUPPORTED;
- 
- 	/* Does controller have VPD for logical volume status? */
--	if (!hpsa_vpd_page_supported(h, scsi3addr, HPSA_VPD_LV_STATUS)) {
--		dev_warn(&h->pdev->dev, "Logical volume status VPD page is unsupported.\n");
-+	if (!hpsa_vpd_page_supported(h, scsi3addr, HPSA_VPD_LV_STATUS))
- 		goto exit_failed;
--	}
- 
- 	/* Get the size of the VPD return buffer */
- 	rc = hpsa_scsi_do_inquiry(h, scsi3addr, VPD_PAGE | HPSA_VPD_LV_STATUS,
- 					buf, HPSA_VPD_HEADER_SZ);
--	if (rc != 0) {
--		dev_warn(&h->pdev->dev, "Logical volume status VPD inquiry failed.\n");
-+	if (rc != 0)
- 		goto exit_failed;
--	}
- 	size = buf[3];
- 
- 	/* Now get the whole VPD buffer */
- 	rc = hpsa_scsi_do_inquiry(h, scsi3addr, VPD_PAGE | HPSA_VPD_LV_STATUS,
- 					buf, size + HPSA_VPD_HEADER_SZ);
--	if (rc != 0) {
--		dev_warn(&h->pdev->dev, "Logical volume status VPD inquiry failed.\n");
-+	if (rc != 0)
- 		goto exit_failed;
--	}
- 	status = buf[4]; /* status byte */
- 
- 	kfree(buf);
+> From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+>
+> Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+> ---
+> drivers/scsi/hpsa.c |   17 ++++++++++++++++-
+> 1 files changed, 16 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+> index 9c44f26..e8090e2 100644
+> --- a/drivers/scsi/hpsa.c
+> +++ b/drivers/scsi/hpsa.c
+> @@ -6608,6 +6608,17 @@ static void hpsa_free_cmd_pool(struct ctlr_info *h)
+> 			h->ioaccel_cmd_pool, h->ioaccel_cmd_pool_dhandle);
+> }
+>
+> +static void hpsa_irq_affinity_hints(struct ctlr_info *h)
+> +{
+> +	int i, cpu, rc;
+> +
+> +	cpu = cpumask_first(cpu_online_mask);
 
+May be consider setting cpu affinity hint based on numa locality of pcie device
+and cpu? Instead of blindly assigning all online cpu in order.
+
+Some thing like
+
+ 	cpu = cpumask_first(cpumask_of_node(numa_node))
+
+> +	for (i = 0; i < h->msix_vector; i++) {
+> +		rc = irq_set_affinity_hint(h->intr[i], get_cpu_mask(cpu));
+
+You are not using return value rc. Why declare it?
+
+Thanks
+Govind
+> +		cpu = cpumask_next(cpu, cpu_online_mask);
+> +	}
+> +}
+> +
+> static int hpsa_request_irq(struct ctlr_info *h,
+> 	irqreturn_t (*msixhandler)(int, void *),
+> 	irqreturn_t (*intxhandler)(int, void *))
+> @@ -6627,6 +6638,7 @@ static int hpsa_request_irq(struct ctlr_info *h,
+> 			rc = request_irq(h->intr[i], msixhandler,
+> 					0, h->devname,
+> 					&h->q[i]);
+> +		hpsa_irq_affinity_hints(h);
+> 	} else {
+> 		/* Use single reply pool */
+> 		if (h->msix_vector > 0 || h->msi_vector) {
+> @@ -6678,12 +6690,15 @@ static void free_irqs(struct ctlr_info *h)
+> 	if (!h->msix_vector || h->intr_mode != PERF_MODE_INT) {
+> 		/* Single reply queue, only one irq to free */
+> 		i = h->intr_mode;
+> +		irq_set_affinity_hint(h->intr[i], NULL);
+> 		free_irq(h->intr[i], &h->q[i]);
+> 		return;
+> 	}
+>
+> -	for (i = 0; i < h->msix_vector; i++)
+> +	for (i = 0; i < h->msix_vector; i++) {
+> +		irq_set_affinity_hint(h->intr[i], NULL);
+> 		free_irq(h->intr[i], &h->q[i]);
+> +	}
+> }
+>
+> static void hpsa_free_irqs_and_disable_msix(struct ctlr_info *h)
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
