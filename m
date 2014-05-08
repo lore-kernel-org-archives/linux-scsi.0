@@ -1,65 +1,89 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 03/19] hpsa: remove unused fields from struct ctlr_info
-Date: Thu, 08 May 2014 14:27:38 -0500
-Message-ID: <20140508192737.13481.8019.stgit@beardog.cce.hp.com>
+Subject: [PATCH 12/19] hpsa: avoid unnecessary readl on every command
+	submission
+Date: Thu, 08 May 2014 14:28:25 -0500
+Message-ID: <20140508192825.13481.65829.stgit@beardog.cce.hp.com>
 References: <20140508192239.13481.81880.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g9t1613g.houston.hp.com ([15.240.0.71]:52930 "EHLO
-	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755053AbaEHT2k (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 May 2014 15:28:40 -0400
-Received: from g5t1627.atlanta.hp.com (g5t1627.atlanta.hp.com [15.192.137.10])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by g9t1613g.houston.hp.com (Postfix) with ESMTPS id 7F35C6391F
-	for <linux-scsi@vger.kernel.org>; Thu,  8 May 2014 19:28:40 +0000 (UTC)
+Received: from g4t3427.houston.hp.com ([15.201.208.55]:44132 "EHLO
+	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755115AbaEHT3P (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 May 2014 15:29:15 -0400
 In-Reply-To: <20140508192239.13481.81880.stgit@beardog.cce.hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: james.bottomley@hansenpartnership.com
 Cc: justin.lindley@hp.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, stephenmcameron@gmail.com, joseph.t.handzik@hp.com, thenzl@redhat.com, michael.miller@canonical.com, elliott@hp.com, scott.teel@hp.com
 
-From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+From: root <root@rhel6u2e-s1.ldev.net>
 
-The fields "major", "max_outstanding", and "usage_count"
-of struct ctlr_info were not used for anything.
+for controllers which support either of the ioaccel transport methods.
 
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- drivers/scsi/hpsa.c |    2 --
- drivers/scsi/hpsa.h |    3 ---
- 2 files changed, 0 insertions(+), 5 deletions(-)
+ drivers/scsi/hpsa.c |    7 +++++++
+ drivers/scsi/hpsa.h |   15 ++++++++++++++-
+ 2 files changed, 21 insertions(+), 1 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index ef66905..7ba4e30 100644
+index acb88e5..ad73017 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -5481,8 +5481,6 @@ static void start_io(struct ctlr_info *h)
- 		 * condition.
- 		 */
- 		h->commands_outstanding++;
--		if (h->commands_outstanding > h->max_outstanding)
--			h->max_outstanding = h->commands_outstanding;
+@@ -7323,6 +7323,13 @@ static void hpsa_enter_performant_mode(struct ctlr_info *h, u32 trans_support)
+ 	 * 10 = 6 s/g entry or 24k
+ 	 */
  
- 		/* Tell the controller execute command */
- 		spin_unlock_irqrestore(&h->lock, flags);
++	/* If the controller supports either ioaccel method then
++	 * we can also use the RAID stack submit path that does not
++	 * perform the superfluous readl() after each command submission.
++	 */
++	if (trans_support & (CFGTBL_Trans_io_accel1 | CFGTBL_Trans_io_accel2))
++		access = SA5_performant_access_no_read;
++
+ 	/* Controller spec: zero out this buffer. */
+ 	for (i = 0; i < h->nreply_queues; i++)
+ 		memset(h->reply_queue[i].head, 0, h->reply_queue_size);
 diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
-index 44235a2..b988e04 100644
+index 8e8310e..1855469 100644
 --- a/drivers/scsi/hpsa.h
 +++ b/drivers/scsi/hpsa.h
-@@ -115,11 +115,8 @@ struct ctlr_info {
- 	int 	nr_cmds; /* Number of commands allowed on this controller */
- 	struct CfgTable __iomem *cfgtable;
- 	int	interrupts_enabled;
--	int	major;
- 	int 	max_commands;
- 	int	commands_outstanding;
--	int 	max_outstanding; /* Debug */
--	int	usage_count;  /* number of opens all all minor devices */
- #	define PERF_MODE_INT	0
- #	define DOORBELL_INT	1
- #	define SIMPLE_MODE_INT	2
+@@ -345,6 +345,12 @@ static void SA5_submit_command(struct ctlr_info *h,
+ 	(void) readl(h->vaddr + SA5_SCRATCHPAD_OFFSET);
+ }
+ 
++static void SA5_submit_command_no_read(struct ctlr_info *h,
++	struct CommandList *c)
++{
++	writel(c->busaddr, h->vaddr + SA5_REQUEST_PORT_OFFSET);
++}
++
+ static void SA5_submit_command_ioaccel2(struct ctlr_info *h,
+ 	struct CommandList *c)
+ {
+@@ -352,7 +358,6 @@ static void SA5_submit_command_ioaccel2(struct ctlr_info *h,
+ 		writel(c->busaddr, h->vaddr + IOACCEL2_INBOUND_POSTQ_32);
+ 	else
+ 		writel(c->busaddr, h->vaddr + SA5_REQUEST_PORT_OFFSET);
+-	(void) readl(h->vaddr + SA5_SCRATCHPAD_OFFSET);
+ }
+ 
+ /*
+@@ -563,6 +568,14 @@ static struct access_method SA5_performant_access = {
+ 	SA5_performant_completed,
+ };
+ 
++static struct access_method SA5_performant_access_no_read = {
++	SA5_submit_command_no_read,
++	SA5_performant_intr_mask,
++	SA5_fifo_full,
++	SA5_performant_intr_pending,
++	SA5_performant_completed,
++};
++
+ struct board_type {
+ 	u32	board_id;
+ 	char	*product_name;
 
