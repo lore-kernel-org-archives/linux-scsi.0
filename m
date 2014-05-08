@@ -1,123 +1,98 @@
-From: Ming Lei <tom.leiming@gmail.com>
-Subject: [PATCH v2] virtio_scsi: remove ACCESS_ONCE() and smp_read_barrier_depends()
-Date: Thu,  8 May 2014 15:23:45 +0800
-Message-ID: <1399533826-29217-1-git-send-email-tom.leiming@gmail.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:44163 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751192AbaEHHZY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 May 2014 03:25:24 -0400
-Received: by mail-pa0-f50.google.com with SMTP id fb1so2379263pad.9
-        for <linux-scsi@vger.kernel.org>; Thu, 08 May 2014 00:25:24 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [RFC] SCSI support for SMR/ZBC commands
+Date: Thu, 08 May 2014 10:31:40 +0200
+Message-ID: <536B40EC.4070905@suse.de>
+References: <CACs+NxSQovDcanMXBbqr+rd=7TCa99DKzxkGQvuM9+_oy3BGBA@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <CACs+NxSQovDcanMXBbqr+rd=7TCa99DKzxkGQvuM9+_oy3BGBA@mail.gmail.com>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: HanBin Yoon <hanbinyoon@google.com>, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Cc: tytso@mit.edu
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>, Paolo Bonzini <pbonzini@redhat.com>
-Cc: linux-scsi@vger.kernel.org, Wanlong Gao <gaowanlong@cn.fujitsu.com>, Rusty Russell <rusty@rustcorp.com.au>, Ming Lei <tom.leiming@gmail.com>
 
-Access to tgt->req_vq is strictly serialized by spin_lock
-of tgt->tgt_lock, so the ACCESS_ONCE() isn't necessary.
+On 05/05/2014 11:28 PM, HanBin Yoon wrote:
+> SMR (Shingled Magnetic Recording) disk drives are able to achieve hig=
+her areal
+> density, at the cost of making media write operations to the disk mor=
+e
+> inflexible (i.e., divides the disk into multiple zones, each of which=
+ can be
+> written sequentially only).
+>
+> Following on some discussions in the Linux filesystem community aroun=
+d SMR
+> [1][2], I'd like to work on adding early support for SMR-related SCSI=
+ commands
+> (ZBC, or Zoned Block Commands [3]). First, I'd like to ask the Linux =
+SCSI/
+> filesystem communities for advice and recommendations on how to go ab=
+out it.
+>
+> [1] http://thread.gmane.org/gmane.linux.file-systems/81970/focus=3D82=
+309
+> [2] http://www.spinics.net/lists/linux-fsdevel/msg72305.html
+> [3] http://www.t10.org/cgi-bin/ac.pl?t=3Dd&f=3D14-010r8.pdf
+>
+> I'm thinking of classifying an SMR disk drive as an sd-type SCSI devi=
+ce, as SMR
+> is expected to be delivered in the form of an add-on/enhancement to e=
+xisting
+> traditional disk drives. SMR disk drives will continue to support ran=
+dom read
+> capability.
+>
+> As for exposing ZBC to upper layers of the stack, I'm thinking of two=
+ potential
+> ways:
+>    A) As an ioctl handled by sd_ioctl(), in drivers/scsi/sd.c
+>    B) As a request command flag type handled by sd_prep_fn(), in
+>       drivers/scsi/sd.c
+>
+The actual idea was that ZMR/ZBC devices will show up as a separate=20
+SCSI device type. This should be handled as a separate sub-type of=20
+the existing 'sd' driver.
 
-smp_read_barrier_depends() in virtscsi_req_done was introduced
-to order reading req_vq and decreasing tgt->reqs, but it isn't
-needed now because req_vq is read from
-scsi->req_vqs[vq->index - VIRTIO_SCSI_VQ_BASE] instead of
-tgt->req_vq, so remove the unnecessary barrier.
+We have discussed the problem with exposing zones to upper layers;=20
+as there'll be quite a lot of zones per device (in the order of=20
+1000) it's impractical to expose these zones via sysfs individually.
+If there were a way to expose the zone information in compact way we=20
+might want to revisit this.
 
-Also remove related comment about the barrier.
+I'm not quite convinced that we need an additional ioctl for the two=20
+new commands; my initial plan here is to add support for this in=20
+sg3_utils and use the stock SG_IO here.
 
-Cc: Paolo Bonzini <pbonzini@redhat.com>
-Signed-off-by: Ming Lei <tom.leiming@gmail.com>
----
-v2:
-	- take Paolo's comment on decrements of reqs
+I would start by adding support for the special request (as you=20
+already did in your second patch), and to figure out if and how the=20
+zone information could be held in the block request_queue structure.
 
-v1:
-	- fix comment on decrements of reqs with writing of req_vq
-	as suggested by Paolo
+Problem here is that we need to tweak the allocator to not issue=20
+requests spanning two zones. So either we'll be setting up a=20
+device-mapper target here (like dm-switch or suchlike) which will=20
+format the I/O for us, or we're pushing this information into the=20
+block layer proper.
 
- drivers/scsi/virtio_scsi.c |   53 +++++---------------------------------------
- 1 file changed, 6 insertions(+), 47 deletions(-)
+I really would like to see the real solution of pushing it into the=20
+block layer / request_queue limitations, but for that we'll need=20
+some efficient way of storing and looking up the zone configuration.
 
-diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-index 16bfd50..13dd500 100644
---- a/drivers/scsi/virtio_scsi.c
-+++ b/drivers/scsi/virtio_scsi.c
-@@ -73,17 +73,12 @@ struct virtio_scsi_vq {
-  * queue, and also lets the driver optimize the IRQ affinity for the virtqueues
-  * (each virtqueue's affinity is set to the CPU that "owns" the queue).
-  *
-- * An interesting effect of this policy is that only writes to req_vq need to
-- * take the tgt_lock.  Read can be done outside the lock because:
-+ * tgt_lock is held to serialize reading and writing req_vq. Reading req_vq
-+ * could be done locklessly, but we do not do it yet.
-  *
-- * - writes of req_vq only occur when atomic_inc_return(&tgt->reqs) returns 1.
-- *   In that case, no other CPU is reading req_vq: even if they were in
-- *   virtscsi_queuecommand_multi, they would be spinning on tgt_lock.
-- *
-- * - reads of req_vq only occur when the target is not idle (reqs != 0).
-- *   A CPU that enters virtscsi_queuecommand_multi will not modify req_vq.
-- *
-- * Similarly, decrements of reqs are never concurrent with writes of req_vq.
-+ * Decrements of reqs are never concurrent with writes of req_vq: before the
-+ * decrement reqs will be != 0; after the decrement the virtqueue completion
-+ * routine will not use the req_vq so it can be changed by a new request.
-  * Thus they can happen outside the tgt_lock, provided of course we make reqs
-  * an atomic_t.
-  */
-@@ -238,38 +233,6 @@ static void virtscsi_req_done(struct virtqueue *vq)
- 	int index = vq->index - VIRTIO_SCSI_VQ_BASE;
- 	struct virtio_scsi_vq *req_vq = &vscsi->req_vqs[index];
- 
--	/*
--	 * Read req_vq before decrementing the reqs field in
--	 * virtscsi_complete_cmd.
--	 *
--	 * With barriers:
--	 *
--	 * 	CPU #0			virtscsi_queuecommand_multi (CPU #1)
--	 * 	------------------------------------------------------------
--	 * 	lock vq_lock
--	 * 	read req_vq
--	 * 	read reqs (reqs = 1)
--	 * 	write reqs (reqs = 0)
--	 * 				increment reqs (reqs = 1)
--	 * 				write req_vq
--	 *
--	 * Possible reordering without barriers:
--	 *
--	 * 	CPU #0			virtscsi_queuecommand_multi (CPU #1)
--	 * 	------------------------------------------------------------
--	 * 	lock vq_lock
--	 * 	read reqs (reqs = 1)
--	 * 	write reqs (reqs = 0)
--	 * 				increment reqs (reqs = 1)
--	 * 				write req_vq
--	 * 	read (wrong) req_vq
--	 *
--	 * We do not need a full smp_rmb, because req_vq is required to get
--	 * to tgt->reqs: tgt is &vscsi->tgt[sc->device->id], where sc is stored
--	 * in the virtqueue as the user token.
--	 */
--	smp_read_barrier_depends();
--
- 	virtscsi_vq_done(vscsi, req_vq, virtscsi_complete_cmd);
- };
- 
-@@ -560,12 +523,8 @@ static struct virtio_scsi_vq *virtscsi_pick_vq(struct virtio_scsi *vscsi,
- 
- 	spin_lock_irqsave(&tgt->tgt_lock, flags);
- 
--	/*
--	 * The memory barrier after atomic_inc_return matches
--	 * the smp_read_barrier_depends() in virtscsi_req_done.
--	 */
- 	if (atomic_inc_return(&tgt->reqs) > 1)
--		vq = ACCESS_ONCE(tgt->req_vq);
-+		vq = tgt->req_vq;
- 	else {
- 		queue_num = smp_processor_id();
- 		while (unlikely(queue_num >= vscsi->num_queues))
--- 
-1.7.9.5
+Ted T'so said he would be having some code for that ... Ted?
 
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
+)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-fsdevel=
+" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
