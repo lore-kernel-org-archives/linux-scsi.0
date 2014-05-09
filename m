@@ -1,232 +1,121 @@
-From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
 Subject: Re: [PATCH] iscsi_ibft: search for broadcom specific ibft sign
-Date: Fri, 9 May 2014 11:50:20 +0000
-Message-ID: <3FC4AB8B47ECD546BCD4B361A64BEACD8C69A63A@avmb3.qlogic.org>
+Date: Fri, 9 May 2014 09:20:05 -0400
+Message-ID: <20140509132005.GB2899@phenom.dumpdata.com>
 References: <1399453220-21663-1-git-send-email-vikas.chaudhary@qlogic.com>
  <20140507134757.GC12826@phenom.dumpdata.com>
  <1399489950.2227.63.camel@dabdike.int.hansenpartnership.com>
- <20140507192158.GA17806@phenom.dumpdata.com> <536A8E67.7030805@cs.wisc.edu>
+ <20140507192158.GA17806@phenom.dumpdata.com>
+ <536A8E67.7030805@cs.wisc.edu>
  <20140507201524.GA26303@fenchurch.internal.datastacks.com>
- <536A97E6.6000907@cs.wisc.edu> <536A9E33.70406@cs.wisc.edu>
+ <536A97E6.6000907@cs.wisc.edu>
+ <536A9E33.70406@cs.wisc.edu>
+ <3FC4AB8B47ECD546BCD4B361A64BEACD8C69A63A@avmb3.qlogic.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_000_3FC4AB8B47ECD546BCD4B361A64BEACD8C69A63Aavmb3qlogicorg_"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:34384 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755485AbaEILuX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 May 2014 07:50:23 -0400
-Received: from pps.filterd (m0000643.ppops.net [127.0.0.1])
-	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id s49BnHqT020683
-	for <linux-scsi@vger.kernel.org>; Fri, 9 May 2014 04:50:23 -0700
-Received: from avcashub1.qlogic.com (avcashub1.qlogic.com [198.70.193.115])
-	by mx0b-0016ce01.pphosted.com with ESMTP id 1knygeqmdr-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Fri, 09 May 2014 04:50:22 -0700
-In-Reply-To: <536A9E33.70406@cs.wisc.edu>
-Content-Language: en-US
+Received: from aserp1040.oracle.com ([141.146.126.69]:21220 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754928AbaEINWA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 May 2014 09:22:00 -0400
+Content-Disposition: inline
+In-Reply-To: <3FC4AB8B47ECD546BCD4B361A64BEACD8C69A63A@avmb3.qlogic.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>, Peter Jones <pjones@redhat.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, James Bottomley <jbottomley@parallels.com>, linux-scsi <linux-scsi@vger.kernel.org>, Giridhar Malavali <giridhar.malavali@qlogic.com>, "konrad@kernel.org" <konrad@kernel.org>, Dept-Eng iSCSI Driver <Dept-iSCSIDriver@qlogic.com>
+To: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, Peter Jones <pjones@redhat.com>, James Bottomley <jbottomley@parallels.com>, linux-scsi <linux-scsi@vger.kernel.org>, Giridhar Malavali <giridhar.malavali@qlogic.com>, "konrad@kernel.org" <konrad@kernel.org>, Dept-Eng iSCSI Driver <Dept-iSCSIDriver@qlogic.com>
 
---_000_3FC4AB8B47ECD546BCD4B361A64BEACD8C69A63Aavmb3qlogicorg_
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <82F916F6506F5547950CB09F4BED6750@qlogic.com>
-Content-Transfer-Encoding: quoted-printable
+On Fri, May 09, 2014 at 11:50:20AM +0000, Vikas Chaudhary wrote:
+> 
+> 
+> On 08/05/14 2:27 am, "Mike Christie" <michaelc@cs.wisc.edu> wrote:
+> 
+> >On 05/07/2014 03:30 PM, Mike Christie wrote:
+> >> On 05/07/2014 03:15 PM, Peter Jones wrote:
+> >>> On Wed, May 07, 2014 at 02:49:59PM -0500, Mike Christie wrote:
+> >>>> On 05/07/2014 02:21 PM, Konrad Rzeszutek Wilk wrote:
+> >>>>> On Wed, May 07, 2014 at 07:12:31PM +0000, James Bottomley wrote:
+> >>>>>> On Wed, 2014-05-07 at 09:47 -0400, Konrad Rzeszutek Wilk wrote:
+> >>>>>>> On Wed, May 07, 2014 at 05:00:20AM -0400,
+> >>>>>>>vikas.chaudhary@qlogic.com wrote:
+> >>>>>>>> From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+> >>>>>>>>
+> >>>>>>>> Broadcom iscsi offload firmware uses a non standard ibft sign of
+> >>>>>>>>"BIFT".
+> >>>>>>>
+> >>>>>>> Why? If it uses the standard iBFT format why does it use
+> >>>>>>> a non-standard signature?
+> >>>>>>
+> >>>>>> This is useful as an academic exercise (and perhaps even a reminder
+> >>>>>>to
+> >>>>>> broadcom not to do it again) but I don't think we can make it a show
+> >>>>>> stopper.  The boards have shipped with the non-standard signature,
+> >>>>>>so we
+> >>>>>> have to work with them.
+> >>>>>
+> >>>>> I agree as the train has left, but this got me thinking about these
+> >>>>> questions that I hope Qlogic folks could answer:
+> >>>>>
+> >>>>>  - Mention what else is different - perhaps there are other entries
+> >>>>>that
+> >>>>>    are a bit different? Or maybe the are some non-standard ones
+> >>>>>added on?
+> >>>>>
+> >>>>>  - How has this been tested? As in had all the fields been tested
+> >>>>>(so CHAP
+> >>>>>    on/off, extra ports, etc).
+> >>>>>
+> >>>>
+> >>>> This supports the same stuff as was added in the original commit for
+> >>>> that string:
+> >>>>
+> >>>> 140363500ddadad0c09cb512cc0c96a4d3efa053
+> >>>>
+> >>>> It just was not carried over in the acpi specific table in commit
+> >>>> 935a9fee51c945b8942be2d7b4bae069167b4886.
+> >>>
+> >>> Okay, but that patch leaves the scanning for it pre-ACPI intact.
+> >> 
+> >> Before 935a9fee51c945b8942be2d7b4bae069167b4886, didn't we check for
+> >> BIFT in the ACPI table case?
+> >> 
+> >> Before that patch, we used to do:
+> >> drivers/firmware/iscsi_ibft_find.c:find_ibft_region()
+> >> 
+> >>         for (i = 0; i < ARRAY_SIZE(ibft_signs) && !ibft_addr; i++)
+> >>                 acpi_table_parse(ibft_signs[i].sign, acpi_find_ibft);
+> >> 
+> >> and BIFT was in that ibft_signs array.
+> >> 
+> >> I was just saying I thought since we added support for BIFT, we had been
+> >> checking for it in the ACPI case.
+> >
+> >
+> >I think I am in the wrong. When I added that support I thought BIFT was
+> >supposed to be for both the ACPI and the RAM case, so I had coded it
+> >like above. I am not seeing that in the old mails though, so you might
+> >be right and they just are now adding support for ACPI. Will just wait
+> >for qlogic/broadcom.
+> 
+> Mike, In your original patch 140363500ddadad0c09cb512cc0c96a4d3efa053 we
+> are checking for BIFT, and BIFT was in ibft_signs[] array which is defined
+> in iscsi_ibft_find.c.
+> Latter when patch 935a9fee51c945b8942be2d7b4bae069167b4886 get added, this
+> patch defined new array of ibft_signs[] in iscsi_ibft.c which does not
+> have BIFT signature.
+> Patch 935a9fee51c945b8942be2d7b4bae069167b4886 added to fix finding IBFT
+> ACPI table on UEFI. We are just enhancing this patch.
 
+In a nutsheel this is a fix for a regression that has been there since 3.2
+and introduced by 935a9fee51c945b8942be2d7b4bae069167b4886 ("ibft: Fix finding
+IBFT ACPI table on UEFI").
 
+Vikas,
+Could you resend the patch and include these details in the commit messages:
+That this is a fix for said regression and what cards it impacts (or firmwares).
 
-On 08/05/14 2:27 am, "Mike Christie" <michaelc@cs.wisc.edu> wrote:
+Thank you.
 
->On 05/07/2014 03:30 PM, Mike Christie wrote:
->> On 05/07/2014 03:15 PM, Peter Jones wrote:
->>> On Wed, May 07, 2014 at 02:49:59PM -0500, Mike Christie wrote:
->>>> On 05/07/2014 02:21 PM, Konrad Rzeszutek Wilk wrote:
->>>>> On Wed, May 07, 2014 at 07:12:31PM +0000, James Bottomley wrote:
->>>>>> On Wed, 2014-05-07 at 09:47 -0400, Konrad Rzeszutek Wilk wrote:
->>>>>>> On Wed, May 07, 2014 at 05:00:20AM -0400,
->>>>>>>vikas.chaudhary@qlogic.com wrote:
->>>>>>>> From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
->>>>>>>>
->>>>>>>> Broadcom iscsi offload firmware uses a non standard ibft sign of
->>>>>>>>"BIFT".
->>>>>>>
->>>>>>> Why? If it uses the standard iBFT format why does it use
->>>>>>> a non-standard signature?
->>>>>>
->>>>>> This is useful as an academic exercise (and perhaps even a reminder
->>>>>>to
->>>>>> broadcom not to do it again) but I don't think we can make it a show
->>>>>> stopper.  The boards have shipped with the non-standard signature,
->>>>>>so we
->>>>>> have to work with them.
->>>>>
->>>>> I agree as the train has left, but this got me thinking about these
->>>>> questions that I hope Qlogic folks could answer:
->>>>>
->>>>>  - Mention what else is different - perhaps there are other entries
->>>>>that
->>>>>    are a bit different? Or maybe the are some non-standard ones
->>>>>added on?
->>>>>
->>>>>  - How has this been tested? As in had all the fields been tested
->>>>>(so CHAP
->>>>>    on/off, extra ports, etc).
->>>>>
->>>>
->>>> This supports the same stuff as was added in the original commit for
->>>> that string:
->>>>
->>>> 140363500ddadad0c09cb512cc0c96a4d3efa053
->>>>
->>>> It just was not carried over in the acpi specific table in commit
->>>> 935a9fee51c945b8942be2d7b4bae069167b4886.
->>>
->>> Okay, but that patch leaves the scanning for it pre-ACPI intact.
->>=20
->> Before 935a9fee51c945b8942be2d7b4bae069167b4886, didn't we check for
->> BIFT in the ACPI table case?
->>=20
->> Before that patch, we used to do:
->> drivers/firmware/iscsi_ibft_find.c:find_ibft_region()
->>=20
->>         for (i =3D 0; i < ARRAY_SIZE(ibft_signs) && !ibft_addr; i++)
->>                 acpi_table_parse(ibft_signs[i].sign, acpi_find_ibft);
->>=20
->> and BIFT was in that ibft_signs array.
->>=20
->> I was just saying I thought since we added support for BIFT, we had been
->> checking for it in the ACPI case.
->
->
->I think I am in the wrong. When I added that support I thought BIFT was
->supposed to be for both the ACPI and the RAM case, so I had coded it
->like above. I am not seeing that in the old mails though, so you might
->be right and they just are now adding support for ACPI. Will just wait
->for qlogic/broadcom.
-
-Mike, In your original patch 140363500ddadad0c09cb512cc0c96a4d3efa053 we
-are checking for BIFT, and BIFT was in ibft_signs[] array which is defined
-in iscsi_ibft_find.c.
-Latter when patch 935a9fee51c945b8942be2d7b4bae069167b4886 get added, this
-patch defined new array of ibft_signs[] in iscsi_ibft.c which does not
-have BIFT signature.
-Patch 935a9fee51c945b8942be2d7b4bae069167b4886 added to fix finding IBFT
-ACPI table on UEFI. We are just enhancing this patch.
-
-
---_000_3FC4AB8B47ECD546BCD4B361A64BEACD8C69A63Aavmb3qlogicorg_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
-
-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
-4J/PoN+h5LsjoA3gZGNiZAJUcGM+4P+T6h+wUUGSZqbjnhQeUBIA/1lYqD+kOSOgZAFOMRxgYeNN
-KjlkBRAaMXMvTaYvdUzDX09yX02gHcBI4DqftTK01AlwRUACICgpr49XfrS386YyKE0APSKQOwdM
-sCSwh3BSUkFZX3BTSVpFuMC08k/Cc+FiwCYmICG044ORGlC5TLArK7a5vL6dMl+eEw5fCrESALop
-W2ldLu9PwiOgvcO1pykWILbfV7H/XaGtw5HSknMvgbo4e/EYcH55p58qomMgkdKbI5DweUdykq6x
-ZSB1Z2hPom7+YzGRb7GDo5AlpiNRMrHT/4fihrIqSKyTpfmuGq8yUYf/zS7HEmPCb1FMoZKEJjEZ
-wP9moFNgXnFvUYOjlNTItccY/8KWJwaQI7I1gMGmMgbgaHX/puNdklRiuaAwQK8yI6BrIf91QT4x
-BaCSM34HIaAj8XLR3xowZqDPI2GiEgBlcpLDVH+ShXaxAMADEFRCx1LWo3n/CGBkYE/Qx4AnBoDB
-kvHHgf/VpS7QmyNN8k6gB+CDkXKS/8iqpuLQMQMQAyCbJZ7opjJ9RRQvYRZRhiGVI9IjoEn/A6Dc
-IQXAkueklJcPmB+ZJL9rSE3yyxvJZMJevtldxET/VeEk4XojARAhsYm262K0nv1RhkwYgBuiVfBe
-caSUqV//qm+h5HHAEhCSBCOgcYIhlf+klO1VTpAH0exkGTDrjO47/0jg7LVWM2GhIZVng63DWMf9
-UYZQ8M/x3/Lq0MVh8E2g/nhNkR3AxtNVQSGVrolOsfhVRUbggnvkmyMJ8Bmhf10w2eNbMaST400V
-QgTgAAAAHwBCAAEAAAAgAAAAVgBpAGsAYQBzACAAQwBoAGEAdQBkAGgAYQByAHkAAAAfAGUAAQAA
-ADYAAAB2AGkAawBhAHMALgBjAGgAYQB1AGQAaABhAHIAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0A
-AAAAAB8AZAABAAAACgAAAFMATQBUAFAAAAAAAAIBQQABAAAAeAAAAAAAAACBKx+kvqMQGZ1uAN0B
-D1QCAAAAgFYAaQBrAGEAcwAgAEMAaABhAHUAZABoAGEAcgB5AAAAUwBNAFQAUAAAAHYAaQBrAGEA
-cwAuAGMAaABhAHUAZABoAGEAcgB5AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AAl0BAAAANgAA
-AHYAaQBrAGEAcwAuAGMAaABhAHUAZABoAGEAcgB5AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAA
-HwDlXwEAAAA+AAAAcwBpAHAAOgB2AGkAawBhAHMALgBjAGgAYQB1AGQAaABhAHIAeQBAAHEAbABv
-AGcAaQBjAC4AYwBvAG0AAAAAAB8AGgwBAAAAIAAAAFYAaQBrAGEAcwAgAEMAaABhAHUAZABoAGEA
-cgB5AAAAHwAfDAEAAAA2AAAAdgBpAGsAYQBzAC4AYwBoAGEAdQBkAGgAYQByAHkAQABxAGwAbwBn
-AGkAYwAuAGMAbwBtAAAAAAAfAB4MAQAAAAoAAABTAE0AVABQAAAAAAACARkMAQAAAHgAAAAAAAAA
-gSsfpL6jEBmdbgDdAQ9UAgAAAIBWAGkAawBhAHMAIABDAGgAYQB1AGQAaABhAHIAeQAAAFMATQBU
-AFAAAAB2AGkAawBhAHMALgBjAGgAYQB1AGQAaABhAHIAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0A
-AAAfAAFdAQAAADYAAAB2AGkAawBhAHMALgBjAGgAYQB1AGQAaABhAHIAeQBAAHEAbABvAGcAaQBj
-AC4AYwBvAG0AAAAAAB8A+D8BAAAAIAAAAFYAaQBrAGEAcwAgAEMAaABhAHUAZABoAGEAcgB5AAAA
-HwAjQAEAAAA2AAAAdgBpAGsAYQBzAC4AYwBoAGEAdQBkAGgAYQByAHkAQABxAGwAbwBnAGkAYwAu
-AGMAbwBtAAAAAAAfACJAAQAAAAoAAABTAE0AVABQAAAAAAACAfk/AQAAAHgAAAAAAAAAgSsfpL6j
-EBmdbgDdAQ9UAgAAAIBWAGkAawBhAHMAIABDAGgAYQB1AGQAaABhAHIAeQAAAFMATQBUAFAAAAB2
-AGkAawBhAHMALgBjAGgAYQB1AGQAaABhAHIAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAld
-AQAAADYAAAB2AGkAawBhAHMALgBjAGgAYQB1AGQAaABhAHIAeQBAAHEAbABvAGcAaQBjAC4AYwBv
-AG0AAAAAAB8AMUABAAAAAgAAAAAAAAALAEA6AQAAAB8AMEABAAAAAgAAAAAAAAAfABoAAQAAABIA
-AABJAFAATQAuAE4AbwB0AGUAAAAAAAMA8T8JBAAACwBAOgEAAAADAP0/5AQAAAIBCzABAAAAEAAA
-AEIGmwLRnyRIpL5/98wVJ3kDABcAAQAAAEAAOQAAplLafGvPAUAACDBPFp/afGvPAQsAAIAIIAYA
-AAAAAMAAAAAAAABGAAAAABSFAAABAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAHgAAAGEAYwBj
-AGUAcAB0AGwAYQBuAGcAdQBhAGcAZQAAAAAAAQAAAAwAAABlAG4ALQBVAFMAAAALAACACCAGAAAA
-AADAAAAAAAAARgAAAAAGhQAAAAAAAB8ANwABAAAAfgAAAFIAZQA6ACAAWwBQAEEAVABDAEgAXQAg
-AGkAcwBjAHMAaQBfAGkAYgBmAHQAOgAgAHMAZQBhAHIAYwBoACAAZgBvAHIAIABiAHIAbwBhAGQA
-YwBvAG0AIABzAHAAZQBjAGkAZgBpAGMAIABpAGIAZgB0ACAAcwBpAGcAbgAAAAAAHwA9AAEAAAAK
-AAAAUgBlADoAIAAAAAAAAwA2AAAAAAAfAEIQAQAAADoAAAA8ADUAMwA2AEEAOQBFADMAMwAuADcA
-MAA0ADAANgBAAGMAcwAuAHcAaQBzAGMALgBlAGQAdQA+AAAAAAACAXEAAQAAAD4AAAABAc9p1skS
-RhwXFVk8QqtpJfjk8jbAmzWXkoCAAFqvgIAAAqQAgAAH1ICAAAcaAIAABDgAgAAHg4CAAugGgAAA
-HwBwAAEAAAB2AAAAWwBQAEEAVABDAEgAXQAgAGkAcwBjAHMAaQBfAGkAYgBmAHQAOgAgAHMAZQBh
-AHIAYwBoACAAZgBvAHIAIABiAHIAbwBhAGQAYwBvAG0AIABzAHAAZQBjAGkAZgBpAGMAIABpAGIA
-ZgB0ACAAcwBpAGcAbgAAAAAAHwA1EAEAAAB4AAAAPAAzAEYAQwA0AEEAQgA4AEIANAA3AEUAQwBE
-ADUANAA2AEIAQwBEADQAQgAzADYAMQBBADYANABCAEUAQQBDAEQAOABDADYAOQBBADYAMwBBAEAA
-YQB2AG0AYgAzAC4AcQBsAG8AZwBpAGMALgBvAHIAZwA+AAAAHwA5EAEAAADYAgAAPAAxADMAOQA5
-ADQANQAzADIAMgAwAC0AMgAxADYANgAzAC0AMQAtAGcAaQB0AC0AcwBlAG4AZAAtAGUAbQBhAGkA
-bAAtAHYAaQBrAGEAcwAuAGMAaABhAHUAZABoAGEAcgB5AEAAcQBsAG8AZwBpAGMALgBjAG8AbQA+
-ACAAPAAyADAAMQA0ADAANQAwADcAMQAzADQANwA1ADcALgBHAEMAMQAyADgAMgA2AEAAcABoAGUA
-bgBvAG0ALgBkAHUAbQBwAGQAYQB0AGEALgBjAG8AbQA+ACAAPAAxADMAOQA5ADQAOAA5ADkANQAw
-AC4AMgAyADIANwAuADYAMwAuAGMAYQBtAGUAbABAAGQAYQBiAGQAaQBrAGUALgBpAG4AdAAuAGgA
-YQBuAHMAZQBuAHAAYQByAHQAbgBlAHIAcwBoAGkAcAAuAGMAbwBtAD4AIAA8ADIAMAAxADQAMAA1
-ADAANwAxADkAMgAxADUAOAAuAEcAQQAxADcAOAAwADYAQABwAGgAZQBuAG8AbQAuAGQAdQBtAHAA
-ZABhAHQAYQAuAGMAbwBtAD4AIAA8ADUAMwA2AEEAOABFADYANwAuADcAMAAzADAAOAAwADUAQABj
-AHMALgB3AGkAcwBjAC4AZQBkAHUAPgAgADwAMgAwADEANAAwADUAMAA3ADIAMAAxADUAMgA0AC4A
-RwBBADIANgAzADAAMwBAAGYAZQBuAGMAaAB1AHIAYwBoAC4AaQBuAHQAZQByAG4AYQBsAC4AZABh
-AHQAYQBzAHQAYQBjAGsAcwAuAGMAbwBtAD4AIAA8ADUAMwA2AEEAOQA3AEUANgAuADYAMAAwADAA
-OQAwADcAQABjAHMALgB3AGkAcwBjAC4AZQBkAHUAPgAgADwANQAzADYAQQA5AEUAMwAzAC4ANwAw
-ADQAMAA2AEAAYwBzAC4AdwBpAHMAYwAuAGUAZAB1AD4AAAADAN4/n04AAEAABzC9bI7afGvPAQMA
-JgAAAAAAAgFHAAEAAAAvAAAAYz1VUzthPSA7cD1RTG9naWM7bD1BVk1CMy0xNDA1MDkxMTUwMjBa
-LTE2NzM2MwAAHwAVEAEAAABYAAAAOAAyAEYAOQAxADYARgA2ADUAMAA2AEYANQA1ADQANwA5ADUA
-MABDAEIAMAA5AEYANABCAEUARAA2ADcANQAwAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAIBFDAB
-AAAADAAAAKcBAAC2xK4ITwAAAB8A+j8BAAAAIAAAAFYAaQBrAGEAcwAgAEMAaABhAHUAZABoAGEA
-cgB5AAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAFgAAAHUAcwBlAHIALQBhAGcAZQBuAHQAAAAA
-AAEAAABGAAAATQBpAGMAcgBvAHMAbwBmAHQALQBNAGEAYwBPAHUAdABsAG8AbwBrAC8AMQA0AC4A
-MwAuADkALgAxADMAMQAwADMAMAAAAAAAHwAAgB+k6zOoei5Cvnt54amOVLMBAAAAOAAAAEMAbwBu
-AHYAZQByAHMAYQB0AGkAbwBuAEkAbgBkAGUAeABUAHIAYQBjAGsAaQBuAGcARQB4AAAAAQAAAAwB
-AABJAEkAPQAwADEAMAAxAEMARgA2AEIANwBDAEQAQQAwAEQARAA0ADIARQAxADMANQA0ADUARAA3
-ADEANAA2ADgAOQAyADIAMwAxAEYAMAAyAEMAQQA5ADYARQA2AEMAOwBTAEIATQBJAEQAPQA3ADUA
-OwBTADEAPQA8ADUAMwA2AEEAOQBFADMAMwAuADcAMAA0ADAANgBAAGMAcwAuAHcAaQBzAGMALgBl
-AGQAdQA+ADsAVgBlAHIAcwBpAG8AbgA9AFYAZQByAHMAaQBvAG4AIAAxADQALgAyACAAKABCAHUA
-aQBsAGQAIAAzADgANwAuADAAKQAsACAAUwB0AGEAZwBlAD0ASAAyAAAAAwANNP0/AAAfAACAhgMC
-AAAAAADAAAAAAAAARgEAAAAgAAAAeAAtAG0AcwAtAGgAYQBzAC0AYQB0AHQAYQBjAGgAAAABAAAA
-AgAAAAAAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAiAAAAeAAtAG8AcgBpAGcAaQBuAGEAdABp
-AG4AZwAtAGkAcAAAAAAAAQAAABgAAABbADEAMAAuADEALgA0AC4AMQAwAF0AAADbXQ==
-
---_000_3FC4AB8B47ECD546BCD4B361A64BEACD8C69A63Aavmb3qlogicorg_--
+Since this is a regression I can send the patch to Linus right away - but
+I really would like to have that information in the git commit message
+so that Linus doesn't look funny at me.
