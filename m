@@ -1,25 +1,68 @@
-From: adm_freytes <adm_freytes@cgdweb.com.ar>
-Subject: =?UTF-8?Q?odpowiedzie=C4=87?=
-Date: Sat, 10 May 2014 08:29:20 +0530
-Message-ID: <c497fcf280d7cbcdd15be57dd398fb63__36673.2289352969$1399692130$gmane$org@cgdweb.com.ar>
-Reply-To: esq.dinchambers@kosovaks.com
+From: loody <miloody@gmail.com>
+Subject: Weird I/O errors with USB Hard disk
+Date: Sat, 10 May 2014 22:38:17 +0800
+Message-ID: <CANudz+s6iyZtLLVcJ-tcZVRP1gAJOQzU4Spq23=yRd8PcvfK_Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dns4.cgdweb.com.ar ([190.110.184.2]:49306 "EHLO
-	smtp.cgdweb.com.ar" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754650AbaEJDVx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 May 2014 23:21:53 -0400
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:56154 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757272AbaEJOiS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 10 May 2014 10:38:18 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>
 
-Biuro promocji Microsoft pojawi=C5=82y sw=C3=B3j e-mail dziewi=C4=99=C4=
-=87set tysi=C4=99cy=20
-dolar=C3=B3w. Wy=C5=9Blij dane, nazwisko, numer telefonu i kraj
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+hi all:
+I have a USB hard disk and when I play specific file.
+it will show below message
+( I purpose enable usb/storage/transport.c debug message about urb debug)
+what makes me confused are
+1. Does " Unhandled sense code" mean the " SCSI Request Sense" command?
+2. if #1 is correct, there should be any error handling for not keep
+sending following commands. Why usb driver keep clear this halt
+enpoint?
+isn't there any timeout mechanism no matter in scsi layer or usb layer?
+
+appreciate your help
+
+
+[22:06:48]clearing endpoint halt for pipe 0xc0008280
+[22:06:48]sd 0:0:0:0: [sda] Unhandled sense code
+[22:06:48]sd 0:0:0:0: [sda]  Result: hostbyte=0x10 driverbyte=0x08
+[22:06:48]sd 0:0:0:0: [sda]  Sense Key : 0x3 [current]
+[22:06:48]sd 0:0:0:0: [sda]  ASC=0x11 ASCQ=0x0
+[22:06:48]sd 0:0:0:0: [sda] CDB: cdb[0]=0x28: 28 00 00 24 42 22 00 00 f0 00
+[22:06:48]end_request: critical target error, dev sda, sector 2376226
+[22:06:48]-- short read transfer
+[22:06:48]clearing endpoint halt for pipe 0xc0008280
+[22:06:48]-- short read transfer
+[22:06:48]clearing endpoint halt for pipe 0xc0008280
+[22:06:48]-- short read transfer
+[22:06:48]clearing endpoint halt for pipe 0xc0008280
+[22:06:48]-- short read transfer
+[22:06:48]clearing endpoint halt for pipe 0xc0008280
+[22:06:48]-- short read transfer
+[22:06:48]clearing endpoint halt for pipe 0xc0008280
+[22:06:48]-- short read transfer
+[22:06:48]clearing endpoint halt for pipe 0xc0008280
+[22:06:48]-- short read transfer
+[22:06:49]-- short read transfer
+[22:06:49]clearing endpoint halt for pipe 0xc0008280
+[22:06:49]-- short read transfer
+[22:06:49]clearing endpoint halt for pipe 0xc0008280
+[22:06:49]-- short read transfer
+[22:06:49]clearing endpoint halt for pipe 0xc0008280
+[22:06:49]-- short read transfer
+[22:06:49]clearing endpoint halt for pipe 0xc0008280
+[22:06:49]-- short read transfer
+[22:06:49]clearing endpoint halt for pipe 0xc0008280
+[22:06:49]-- short read transfer
+[22:06:49]clearing endpoint halt for pipe 0xc0008280
+[22:06:49]-- short read transfer
+[22:06:49]clearing endpoint halt for pipe 0xc0008280
+[22:06:49]-- short read transfer
+[22:06:49]clearing endpoint halt for pipe 0xc0008280
+[22:06:49]-- short read transfer
+[22:06:49]clearing endpoint halt for pipe 0xc0008280
+..................
