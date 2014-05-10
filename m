@@ -1,81 +1,57 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: Weird I/O errors with USB Hard disk
-Date: Sat, 10 May 2014 10:05:36 -0700
-Message-ID: <1399741536.2528.6.camel@dabdike.int.hansenpartnership.com>
-References: <CANudz+s6iyZtLLVcJ-tcZVRP1gAJOQzU4Spq23=yRd8PcvfK_Q@mail.gmail.com>
-	 <1399734627.2528.2.camel@dabdike.int.hansenpartnership.com>
-	 <CANudz+v6w4M5K-MET0qSWVKK1H9xfCOYjUDWNtX-h96h3xTd6w@mail.gmail.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH] pm80xx : Fix missing NULL pointer checks and memory leaks
+Date: Sat, 10 May 2014 21:04:12 +0200
+Message-ID: <536E782C.2090702@redhat.com>
+References: <1399615261-15932-1-git-send-email-Suresh.Thiagarajan@pmcs.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:49040 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757829AbaEJRFi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 10 May 2014 13:05:38 -0400
-In-Reply-To: <CANudz+v6w4M5K-MET0qSWVKK1H9xfCOYjUDWNtX-h96h3xTd6w@mail.gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:65220 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751545AbaEJTEW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 10 May 2014 15:04:22 -0400
+In-Reply-To: <1399615261-15932-1-git-send-email-Suresh.Thiagarajan@pmcs.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: loody <miloody@gmail.com>
-Cc: linux-scsi@vger.kernel.org, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>
+To: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>, linux-scsi@vger.kernel.org
+Cc: xjtuwjp@gmail.com, JBottomley@parallels.com, Vasanthalakshmi.Tharmarajan@pmcs.com, Viswas.G@pmcs.com
 
-On Sun, 2014-05-11 at 00:43 +0800, loody wrote:
-> hi James:
-> 
-> 
-> 2014-05-10 23:10 GMT+08:00 James Bottomley
-> <James.Bottomley@hansenpartnership.com>:
-> > On Sat, 2014-05-10 at 22:38 +0800, loody wrote:
-> >> hi all:
-> >> I have a USB hard disk and when I play specific file.
-> >> it will show below message
-> >> ( I purpose enable usb/storage/transport.c debug message about urb debug)
-> >> what makes me confused are
-> >> 1. Does " Unhandled sense code" mean the " SCSI Request Sense" command?
-> >
-> > Error handling couldn't correct the error so it was passed up.
-> >
-> >> 2. if #1 is correct, there should be any error handling for not keep
-> >> sending following commands. Why usb driver keep clear this halt
-> >> enpoint?
-> >> isn't there any timeout mechanism no matter in scsi layer or usb layer?
-> >>
-> >> appreciate your help
-> >>
-> >>
-> >> [22:06:48]clearing endpoint halt for pipe 0xc0008280
-> >> [22:06:48]sd 0:0:0:0: [sda] Unhandled sense code
-> >> [22:06:48]sd 0:0:0:0: [sda]  Result: hostbyte=0x10 driverbyte=0x08
-> >> [22:06:48]sd 0:0:0:0: [sda]  Sense Key : 0x3 [current]
-> >> [22:06:48]sd 0:0:0:0: [sda]  ASC=0x11 ASCQ=0x0
-> >> [22:06:48]sd 0:0:0:0: [sda] CDB: cdb[0]=0x28: 28 00 00 24 42 22 00 00 f0 00
-> >> [22:06:48]end_request: critical target error, dev sda, sector 2376226
-> >
-> > If you compiled your kernel with SCSI messages it would tell you that
-> > this is a medium error, unrecovered read error in sector 2376226
-> >
-> > The device is failing and the sector cannot be recovered.
-> in my opinion, the OS will not hang up when this problem happen, right?
-> But my platform is always trying to clear halt endpoint, and it seems
-> Block or File system layer still try to access this sector.
+On 05/09/2014 08:01 AM, Suresh Thiagarajan wrote:
+> Checking return value for the memory allocattion and freeing it
+> while exiting the function
 
-That depends on what's being done and the configuration of the layers
-above.  For this error SCSI passes up as fast as possible.  The log
-implied some churn below in USB.  On a real FS, the page should
-eventually be marked as error, which should cause this to stop, but
-there are a variety of daemons which poke the disk, it could be one of
-them.
+The fix seems fine to me.
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 
-> is that related to file node open method or file read method?
-> such that read bad sector will hang up the OS.
+Tomas
 
-Depends, it's definitely possible to trigger repeat behaviour with a DIO
-read because there's no memory of the error in the page cache.  There
-may be other ways.
-
-James
-
-
-
+>
+> Signed-off-by: Viswas G <Viswas.G@pmcs.com>
+> Signed-off-by: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
+> ---
+>  drivers/scsi/pm8001/pm8001_ctl.c |    3 +++
+>  1 files changed, 3 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/scsi/pm8001/pm8001_ctl.c b/drivers/scsi/pm8001/pm8001_ctl.c
+> index 28b4e81..5f68571 100644
+> --- a/drivers/scsi/pm8001/pm8001_ctl.c
+> +++ b/drivers/scsi/pm8001/pm8001_ctl.c
+> @@ -395,6 +395,8 @@ static ssize_t pm8001_ctl_bios_version_show(struct device *cdev,
+>  	payload.offset = 0;
+>  	payload.length = 4096;
+>  	payload.func_specific = kzalloc(4096, GFP_KERNEL);
+> +	if (!payload.func_specific)
+> +		return -ENOMEM;
+>  	PM8001_CHIP_DISP->get_nvmd_req(pm8001_ha, &payload);
+>  	wait_for_completion(&completion);
+>  	virt_addr = pm8001_ha->memoryMap.region[NVMD].virt_ptr;
+> @@ -402,6 +404,7 @@ static ssize_t pm8001_ctl_bios_version_show(struct device *cdev,
+>  		bios_index++)
+>  		str += sprintf(str, "%c",
+>  			*((u8 *)((u8 *)virt_addr+bios_index)));
+> +	kfree(payload.func_specific);
+>  	return str - buf;
+>  }
+>  static DEVICE_ATTR(bios_version, S_IRUGO, pm8001_ctl_bios_version_show, NULL);
 
