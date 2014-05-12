@@ -1,55 +1,80 @@
-From: Jack Wang <xjtuwjp@gmail.com>
-Subject: Re: [PATCH] pm80xx : Fix missing NULL pointer checks and memory leaks
-Date: Mon, 12 May 2014 10:08:46 +0200
-Message-ID: <5370818E.4070601@gmail.com>
-References: <1399615261-15932-1-git-send-email-Suresh.Thiagarajan@pmcs.com>
+From: ching <ching2048@areca.com.tw>
+Subject: Re: [PATCH v1.1 2/16 update 3] arcmsr:  Adding code to support
+ MSI-X interrupt
+Date: Mon, 12 May 2014 19:55:33 +0800
+Message-ID: <1399895733.4349.2.camel@localhost>
+References: <1399463548.23184.6.camel@localhost>
+	 <536A43AF.6060908@redhat.com> <1399549025.25794.4.camel@localhost>
+	 <536CB8EB.3040401@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ee0-f48.google.com ([74.125.83.48]:56985 "EHLO
-	mail-ee0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752640AbaELII4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 12 May 2014 04:08:56 -0400
-Received: by mail-ee0-f48.google.com with SMTP id e49so4336985eek.21
-        for <linux-scsi@vger.kernel.org>; Mon, 12 May 2014 01:08:54 -0700 (PDT)
-In-Reply-To: <1399615261-15932-1-git-send-email-Suresh.Thiagarajan@pmcs.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <536CB8EB.3040401@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tomas Henzl <thenzl@redhat.com>
+Cc: jbottomley@parallels.com, dan.carpenter@oracle.com, agordeev@redhat.com, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
-Cc: linux-scsi@vger.kernel.org, JBottomley@parallels.com, Vasanthalakshmi.Tharmarajan@pmcs.com, Viswas.G@pmcs.com
 
-On 05/09/2014 08:01 AM, Suresh Thiagarajan wrote:
-> Checking return value for the memory allocattion and freeing it
-> while exiting the function
+Hi Tomas,
+
+Thanks for your remind again.
+The patch 17/17 will be as following.
+---
+
+diff -uprN a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c	2014-05-08 17:45:34.000000000 +0800
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c	2014-05-12 10:50:28.000000000 +0800
+@@ -778,12 +778,11 @@ static int arcmsr_probe(struct pci_dev *
+ 	}
+ 	error = scsi_add_host(host, &pdev->dev);
+ 	if(error){
+-		goto RAID_controller_stop;
++		goto free_ccb_pool;
+ 	}
+ 	if (arcmsr_request_irq(pdev, acb) == ARC_FAILURE)
+ 		goto scsi_host_remove;
+ 	arcmsr_iop_init(acb);
+-    	scsi_scan_host(host);
+ 	INIT_WORK(&acb->arcmsr_do_message_isr_bh, arcmsr_message_isr_bh_fn);
+ 	atomic_set(&acb->rq_map_token, 16);
+ 	atomic_set(&acb->ante_token_value, 16);
+@@ -795,13 +794,17 @@ static int arcmsr_probe(struct pci_dev *
+ 	add_timer(&acb->eternal_timer);
+ 	if(arcmsr_alloc_sysfs_attr(acb))
+ 		goto out_free_sysfs;
++    	scsi_scan_host(host);
+ 	return 0;
+ out_free_sysfs:
+-scsi_host_remove:
+-	scsi_remove_host(host);
+-RAID_controller_stop:
++	del_timer_sync(&acb->eternal_timer);
++	flush_scheduled_work();
+ 	arcmsr_stop_adapter_bgrb(acb);
+ 	arcmsr_flush_adapter_cache(acb);
++	arcmsr_free_irq(pdev, acb);
++scsi_host_remove:
++	scsi_remove_host(host);
++free_ccb_pool:
+ 	arcmsr_free_ccb_pool(acb);
+ free_hbb_mu:
+ 	arcmsr_free_mu(acb);
+
+
+
+On Fri, 2014-05-09 at 13:15 +0200, Tomas Henzl wrote:
+> On 05/08/2014 01:37 PM, ching wrote:
+> > Hi Tomas,
+> >
+> > Thanks for your suggestion.
+> > I will add a new patch 17/17 at last.
 > 
-> Signed-off-by: Viswas G <Viswas.G@pmcs.com>
-> Signed-off-by: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
-> ---
->  drivers/scsi/pm8001/pm8001_ctl.c |    3 +++
->  1 files changed, 3 insertions(+), 0 deletions(-)
+> This additional patch was meant for moving the scsi_scan_host, because it's
+> nor related to the ms-x interrupts. Probably  the maintainer will prefer
+> a single patch which changes msi-x at once, I don't care.
+> To the patch below - you should also free the allocated irqs as I wrote previously.
 > 
-> diff --git a/drivers/scsi/pm8001/pm8001_ctl.c b/drivers/scsi/pm8001/pm8001_ctl.c
-> index 28b4e81..5f68571 100644
-> --- a/drivers/scsi/pm8001/pm8001_ctl.c
-> +++ b/drivers/scsi/pm8001/pm8001_ctl.c
-> @@ -395,6 +395,8 @@ static ssize_t pm8001_ctl_bios_version_show(struct device *cdev,
->  	payload.offset = 0;
->  	payload.length = 4096;
->  	payload.func_specific = kzalloc(4096, GFP_KERNEL);
-> +	if (!payload.func_specific)
-> +		return -ENOMEM;
->  	PM8001_CHIP_DISP->get_nvmd_req(pm8001_ha, &payload);
->  	wait_for_completion(&completion);
->  	virt_addr = pm8001_ha->memoryMap.region[NVMD].virt_ptr;
-> @@ -402,6 +404,7 @@ static ssize_t pm8001_ctl_bios_version_show(struct device *cdev,
->  		bios_index++)
->  		str += sprintf(str, "%c",
->  			*((u8 *)((u8 *)virt_addr+bios_index)));
-> +	kfree(payload.func_specific);
->  	return str - buf;
->  }
->  static DEVICE_ATTR(bios_version, S_IRUGO, pm8001_ctl_bios_version_show, NULL);
+> Cheers,
+> Tomas
 > 
-Thanks, looks good.
-Acked-by: Jack Wang <xjtuwjp@gmail.com>
