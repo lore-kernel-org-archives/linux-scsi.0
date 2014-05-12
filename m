@@ -1,45 +1,48 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 69441] WARNING: CPU: 0 PID: 4992 at fs/sysfs/group.c:214
- sysfs_remove_group+0xc6/0xd0()
-Date: Mon, 12 May 2014 15:42:12 +0000
-Message-ID: <bug-69441-11613-Kwb2SIqKQ6@https.bugzilla.kernel.org/>
-References: <bug-69441-11613@https.bugzilla.kernel.org/>
+From: James Smart <james.smart@emulex.com>
+Subject: [PATCH 0/5] lpfc 10.2.8001.0: Update lpfc to revision 10.2.8001.0
+Date: Mon, 12 May 2014 11:52:48 -0400
+Message-ID: <1399909968.25346.7.camel@myfc17>
+Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:48293 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751000AbaELPmR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 May 2014 11:42:17 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 32E1F200CF
-	for <linux-scsi@vger.kernel.org>; Mon, 12 May 2014 15:42:16 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id 6754120165
-	for <linux-scsi@vger.kernel.org>; Mon, 12 May 2014 15:42:14 +0000 (UTC)
-In-Reply-To: <bug-69441-11613@https.bugzilla.kernel.org/>
+Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:59265 "EHLO
+	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752151AbaELPwu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 12 May 2014 11:52:50 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=69441
+Update lpfc version to driver version 10.2.8001.0
 
-Alan Stern <stern@rowland.harvard.edu> changed:
+Note: we've revised our version number string...
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |stern@rowland.harvard.edu
+This patch set updates the lpfc driver to revision 10.2.8001.0
 
---- Comment #6 from Alan Stern <stern@rowland.harvard.edu> ---
-This problem has been fixed by commit e63ed0d7a980 ([SCSI] fix our current
-target reap infrastructure), which is part of 3.15-rc1.  It will not be ported
-to earlier stable kernels until James Bottomley is satisfied that it does not
-introduce any new bugs.  That is why you still see reports of this problem on
-the distribution Bugzillas from users running 3.13.y and 3.14.y.
+The patches for 10.2.8001.0 contain:
+- Fix for cleaning up stale ring flag and sp_queue_event entries.
+- Fix for initializing RRQ bitmap
+- Removed obsolete PCI IDs from the driver.
+- Fix ExpressLane priority setup
+- Update lpfc version to driver version 10.2.8001.0
 
-The bug report should be closed.
 
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+The patches were cut against scsi.git, branch "misc", with the patches
+for 10.2.8000.0 applied.
+
+Note: this patch set does not include the recent lpfc patch from
+Brian King. That patch should also be pulled in:
+marc.info/?l=linux-scsi&w=2&r=1&s=lpfc&q=b
+
+
+-- james s
+
+
+Signed-off-by: James Smart <james.smart@emulex.com>
+
+
+
+
+
