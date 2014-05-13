@@ -1,55 +1,288 @@
-From: <vikas.chaudhary@qlogic.com>
-Subject: [PATCH v2] iscsi_ibft: Fix finding Broadcom specific ibft sign
-Date: Tue, 13 May 2014 07:41:32 -0400
-Message-ID: <1399981292-11054-1-git-send-email-vikas.chaudhary@qlogic.com>
+From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+Subject: Re: [PATCH] iscsi_ibft: search for broadcom specific ibft sign
+Date: Tue, 13 May 2014 12:17:28 +0000
+Message-ID: <3FC4AB8B47ECD546BCD4B361A64BEACD8C69DB39@avmb3.qlogic.org>
+References: <1399453220-21663-1-git-send-email-vikas.chaudhary@qlogic.com>
+ <20140507134757.GC12826@phenom.dumpdata.com>
+ <1399489950.2227.63.camel@dabdike.int.hansenpartnership.com>
+ <20140507192158.GA17806@phenom.dumpdata.com> <536A8E67.7030805@cs.wisc.edu>
+ <20140507201524.GA26303@fenchurch.internal.datastacks.com>
+ <536A97E6.6000907@cs.wisc.edu> <536A9E33.70406@cs.wisc.edu>
+ <3FC4AB8B47ECD546BCD4B361A64BEACD8C69A63A@avmb3.qlogic.org>
+ <20140509132005.GB2899@phenom.dumpdata.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/mixed;
+	boundary="_000_3FC4AB8B47ECD546BCD4B361A64BEACD8C69DB39avmb3qlogicorg_"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:15843 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753411AbaEMMNY convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 May 2014 08:13:24 -0400
+Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:50418 "EHLO
+	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759395AbaEMMRa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 May 2014 08:17:30 -0400
+Received: from pps.filterd (m0045602.ppops.net [127.0.0.1])
+	by mx0a-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id s4DCFnnu006174
+	for <linux-scsi@vger.kernel.org>; Tue, 13 May 2014 05:17:30 -0700
+Received: from avcashub1.qlogic.com (avcashub3.qlogic.com [198.70.193.117])
+	by mx0a-0016ce01.pphosted.com with ESMTP id 1kreqav7dg-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Tue, 13 May 2014 05:17:30 -0700
+In-Reply-To: <20140509132005.GB2899@phenom.dumpdata.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jbottomley@parallels.com, michaelc@cs.wisc.edu, pjones@redhat.com, konrad@kernel.org
-Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, giridhar.malavali@qlogic.com, iscsi-driver@qlogic.com
+To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, Peter Jones <pjones@redhat.com>, James Bottomley <jbottomley@parallels.com>, linux-scsi <linux-scsi@vger.kernel.org>, Giridhar Malavali <giridhar.malavali@qlogic.com>, "konrad@kernel.org" <konrad@kernel.org>, Dept-Eng iSCSI Driver <Dept-iSCSIDriver@qlogic.com>
 
-=46rom: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+--_000_3FC4AB8B47ECD546BCD4B361A64BEACD8C69DB39avmb3qlogicorg_
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <44DC5834D8E41846BFA84B8BCB712EDF@qlogic.com>
+Content-Transfer-Encoding: quoted-printable
 
-Search for Broadcom specific ibft sign "BIFT"
-along with other possible values on UEFI
 
-This patch is fix for regression introduced in
-=E2=80=9C935a9fee51c945b8942be2d7b4bae069167b4886=E2=80=9D.
-https://lkml.org/lkml/2011/12/16/353
 
-This impacts Broadcom CNA for iSCSI Boot on UEFI platform.
+On 09/05/14 6:50 pm, "Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>
+wrote:
 
-Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
----
- drivers/firmware/iscsi_ibft.c | 1 +
- 1 file changed, 1 insertion(+)
+>On Fri, May 09, 2014 at 11:50:20AM +0000, Vikas Chaudhary wrote:
+>>=20
+>>=20
+>> On 08/05/14 2:27 am, "Mike Christie" <michaelc@cs.wisc.edu> wrote:
+>>=20
+>> >On 05/07/2014 03:30 PM, Mike Christie wrote:
+>> >> On 05/07/2014 03:15 PM, Peter Jones wrote:
+>> >>> On Wed, May 07, 2014 at 02:49:59PM -0500, Mike Christie wrote:
+>> >>>> On 05/07/2014 02:21 PM, Konrad Rzeszutek Wilk wrote:
+>> >>>>> On Wed, May 07, 2014 at 07:12:31PM +0000, James Bottomley wrote:
+>> >>>>>> On Wed, 2014-05-07 at 09:47 -0400, Konrad Rzeszutek Wilk wrote:
+>> >>>>>>> On Wed, May 07, 2014 at 05:00:20AM -0400,
+>> >>>>>>>vikas.chaudhary@qlogic.com wrote:
+>> >>>>>>>> From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+>> >>>>>>>>
+>> >>>>>>>> Broadcom iscsi offload firmware uses a non standard ibft sign
+>>of
+>> >>>>>>>>"BIFT".
+>> >>>>>>>
+>> >>>>>>> Why? If it uses the standard iBFT format why does it use
+>> >>>>>>> a non-standard signature?
+>> >>>>>>
+>> >>>>>> This is useful as an academic exercise (and perhaps even a
+>>reminder
+>> >>>>>>to
+>> >>>>>> broadcom not to do it again) but I don't think we can make it a
+>>show
+>> >>>>>> stopper.  The boards have shipped with the non-standard
+>>signature,
+>> >>>>>>so we
+>> >>>>>> have to work with them.
+>> >>>>>
+>> >>>>> I agree as the train has left, but this got me thinking about
+>>these
+>> >>>>> questions that I hope Qlogic folks could answer:
+>> >>>>>
+>> >>>>>  - Mention what else is different - perhaps there are other
+>>entries
+>> >>>>>that
+>> >>>>>    are a bit different? Or maybe the are some non-standard ones
+>> >>>>>added on?
+>> >>>>>
+>> >>>>>  - How has this been tested? As in had all the fields been tested
+>> >>>>>(so CHAP
+>> >>>>>    on/off, extra ports, etc).
+>> >>>>>
+>> >>>>
+>> >>>> This supports the same stuff as was added in the original commit
+>>for
+>> >>>> that string:
+>> >>>>
+>> >>>> 140363500ddadad0c09cb512cc0c96a4d3efa053
+>> >>>>
+>> >>>> It just was not carried over in the acpi specific table in commit
+>> >>>> 935a9fee51c945b8942be2d7b4bae069167b4886.
+>> >>>
+>> >>> Okay, but that patch leaves the scanning for it pre-ACPI intact.
+>> >>=20
+>> >> Before 935a9fee51c945b8942be2d7b4bae069167b4886, didn't we check for
+>> >> BIFT in the ACPI table case?
+>> >>=20
+>> >> Before that patch, we used to do:
+>> >> drivers/firmware/iscsi_ibft_find.c:find_ibft_region()
+>> >>=20
+>> >>         for (i =3D 0; i < ARRAY_SIZE(ibft_signs) && !ibft_addr; i++)
+>> >>                 acpi_table_parse(ibft_signs[i].sign, acpi_find_ibft);
+>> >>=20
+>> >> and BIFT was in that ibft_signs array.
+>> >>=20
+>> >> I was just saying I thought since we added support for BIFT, we had
+>>been
+>> >> checking for it in the ACPI case.
+>> >
+>> >
+>> >I think I am in the wrong. When I added that support I thought BIFT was
+>> >supposed to be for both the ACPI and the RAM case, so I had coded it
+>> >like above. I am not seeing that in the old mails though, so you might
+>> >be right and they just are now adding support for ACPI. Will just wait
+>> >for qlogic/broadcom.
+>>=20
+>> Mike, In your original patch 140363500ddadad0c09cb512cc0c96a4d3efa053 we
+>> are checking for BIFT, and BIFT was in ibft_signs[] array which is
+>>defined
+>> in iscsi_ibft_find.c.
+>> Latter when patch 935a9fee51c945b8942be2d7b4bae069167b4886 get added,
+>>this
+>> patch defined new array of ibft_signs[] in iscsi_ibft.c which does not
+>> have BIFT signature.
+>> Patch 935a9fee51c945b8942be2d7b4bae069167b4886 added to fix finding IBFT
+>> ACPI table on UEFI. We are just enhancing this patch.
+>
+>In a nutsheel this is a fix for a regression that has been there since 3.2
+>and introduced by 935a9fee51c945b8942be2d7b4bae069167b4886 ("ibft: Fix
+>finding
+>IBFT ACPI table on UEFI").
+>
+>Vikas,
+>Could you resend the patch and include these details in the commit
+>messages:
+>That this is a fix for said regression and what cards it impacts (or
+>firmwares).
+>
+>Thank you.
+>
+>Since this is a regression I can send the patch to Linus right away - but
+>I really would like to have that information in the git commit message
+>so that Linus doesn't look funny at me.
 
-diff --git a/drivers/firmware/iscsi_ibft.c b/drivers/firmware/iscsi_ibf=
-t.c
-index 3ee852c..071c2c9 100644
---- a/drivers/firmware/iscsi_ibft.c
-+++ b/drivers/firmware/iscsi_ibft.c
-@@ -756,6 +756,7 @@ static const struct {
- 	 */
- 	{ ACPI_SIG_IBFT },
- 	{ "iBFT" },
-+	{ "BIFT" },	/* Broadcom iSCSI Offload */
- };
-=20
- static void __init acpi_find_ibft_region(void)
---=20
-1.8.2.GIT
+I have posted updated patch here:-
+http://marc.info/?l=3Dlinux-scsi&m=3D139998320611652&w=3D2
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+Vikas.
+
+
+--_000_3FC4AB8B47ECD546BCD4B361A64BEACD8C69DB39avmb3qlogicorg_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
+
+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
+v4BckP4oqohb1tRQMH84EXSB+EH9PX9T4kM4aCYZ5+Jc8TM8/XKRTLXwZfD5plwQTrCMoP9zkSN3
+JgGdQUdxieP0c3KR/36U9kRkxI0CqIVS4LNRqZP/hKE3I9W2fTGIQ0NUZXJ0EvVSwG/FQXW94E6w
+iGGWIH9gZtW18uIYwe+xnFFcUHDPXVBOArykj2I6LdW17iBgdHA6Ly/3MGzwLiFHQi8/bD0jAXV4
+A2eQWxEmbT0xMzlRUiA4MzIsADEsMDXwMiZ3PSiG1bU+gzHHMzGDTH19fdYAVnAAAAAfAEIAAQAA
+ACAAAABWAGkAawBhAHMAIABDAGgAYQB1AGQAaABhAHIAeQAAAB8AZQABAAAANgAAAHYAaQBrAGEA
+cwAuAGMAaABhAHUAZABoAGEAcgB5AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwBkAAEAAAAK
+AAAAUwBNAFQAUAAAAAAAAgFBAAEAAAB4AAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAVgBpAGsA
+YQBzACAAQwBoAGEAdQBkAGgAYQByAHkAAABTAE0AVABQAAAAdgBpAGsAYQBzAC4AYwBoAGEAdQBk
+AGgAYQByAHkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwACXQEAAAA2AAAAdgBpAGsAYQBzAC4A
+YwBoAGEAdQBkAGgAYQByAHkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfAOVfAQAAAD4AAABz
+AGkAcAA6AHYAaQBrAGEAcwAuAGMAaABhAHUAZABoAGEAcgB5AEAAcQBsAG8AZwBpAGMALgBjAG8A
+bQAAAAAAHwAaDAEAAAAgAAAAVgBpAGsAYQBzACAAQwBoAGEAdQBkAGgAYQByAHkAAAAfAB8MAQAA
+ADYAAAB2AGkAawBhAHMALgBjAGgAYQB1AGQAaABhAHIAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0A
+AAAAAB8AHgwBAAAACgAAAFMATQBUAFAAAAAAAAIBGQwBAAAAeAAAAAAAAACBKx+kvqMQGZ1uAN0B
+D1QCAAAAgFYAaQBrAGEAcwAgAEMAaABhAHUAZABoAGEAcgB5AAAAUwBNAFQAUAAAAHYAaQBrAGEA
+cwAuAGMAaABhAHUAZABoAGEAcgB5AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AAV0BAAAANgAA
+AHYAaQBrAGEAcwAuAGMAaABhAHUAZABoAGEAcgB5AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAA
+HwD4PwEAAAAgAAAAVgBpAGsAYQBzACAAQwBoAGEAdQBkAGgAYQByAHkAAAAfACNAAQAAADYAAAB2
+AGkAawBhAHMALgBjAGgAYQB1AGQAaABhAHIAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8A
+IkABAAAACgAAAFMATQBUAFAAAAAAAAIB+T8BAAAAeAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAA
+gFYAaQBrAGEAcwAgAEMAaABhAHUAZABoAGEAcgB5AAAAUwBNAFQAUAAAAHYAaQBrAGEAcwAuAGMA
+aABhAHUAZABoAGEAcgB5AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8ACV0BAAAANgAAAHYAaQBr
+AGEAcwAuAGMAaABhAHUAZABoAGEAcgB5AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwAxQAEA
+AAACAAAAAAAAAAsAQDoBAAAAHwAwQAEAAAACAAAAAAAAAB8AGgABAAAAEgAAAEkAUABNAC4ATgBv
+AHQAZQAAAAAAAwDxPwkEAAALAEA6AQAAAAMA/T/kBAAAAgELMAEAAAAQAAAA5ylw3aCtHU+KJ+Bw
+qWM1aQMAFwABAAAAQAA5AAC8Vk6lbs8BQAAIMBTmf06lbs8BCwAAgAggBgAAAAAAwAAAAAAAAEYA
+AAAAFIUAAAEAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAeAAAAYQBjAGMAZQBwAHQAbABhAG4A
+ZwB1AGEAZwBlAAAAAAABAAAADAAAAGUAbgAtAFUAUwAAAAsAAIAIIAYAAAAAAMAAAAAAAABGAAAA
+AAaFAAAAAAAAHwA3AAEAAAB+AAAAUgBlADoAIABbAFAAQQBUAEMASABdACAAaQBzAGMAcwBpAF8A
+aQBiAGYAdAA6ACAAcwBlAGEAcgBjAGgAIABmAG8AcgAgAGIAcgBvAGEAZABjAG8AbQAgAHMAcABl
+AGMAaQBmAGkAYwAgAGkAYgBmAHQAIABzAGkAZwBuAAAAAAAfAD0AAQAAAAoAAABSAGUAOgAgAAAA
+AAADADYAAAAAAB8AQhABAAAAWAAAADwAMgAwADEANAAwADUAMAA5ADEAMwAyADAAMAA1AC4ARwBC
+ADIAOAA5ADkAQABwAGgAZQBuAG8AbQAuAGQAdQBtAHAAZABhAHQAYQAuAGMAbwBtAD4AAAACAXEA
+AQAAAEgAAAABAc9p1skSRhwXFVk8QqtpJfjk8jbAmzWXkoCAAFqvgIAAAqQAgAAH1ICAAAcaAIAA
+BDgAgAAHg4CAAugGgP//vN+AgAaUBQAfAHAAAQAAAHYAAABbAFAAQQBUAEMASABdACAAaQBzAGMA
+cwBpAF8AaQBiAGYAdAA6ACAAcwBlAGEAcgBjAGgAIABmAG8AcgAgAGIAcgBvAGEAZABjAG8AbQAg
+AHMAcABlAGMAaQBmAGkAYwAgAGkAYgBmAHQAIABzAGkAZwBuAAAAAAAfADUQAQAAAHgAAAA8ADMA
+RgBDADQAQQBCADgAQgA0ADcARQBDAEQANQA0ADYAQgBDAEQANABCADMANgAxAEEANgA0AEIARQBB
+AEMARAA4AEMANgA5AEQAQgAzADkAQABhAHYAbQBiADMALgBxAGwAbwBnAGkAYwAuAG8AcgBnAD4A
+AAAfADkQAQAAAKgDAAA8ADEAMwA5ADkANAA1ADMAMgAyADAALQAyADEANgA2ADMALQAxAC0AZwBp
+AHQALQBzAGUAbgBkAC0AZQBtAGEAaQBsAC0AdgBpAGsAYQBzAC4AYwBoAGEAdQBkAGgAYQByAHkA
+QABxAGwAbwBnAGkAYwAuAGMAbwBtAD4AIAA8ADIAMAAxADQAMAA1ADAANwAxADMANAA3ADUANwAu
+AEcAQwAxADIAOAAyADYAQABwAGgAZQBuAG8AbQAuAGQAdQBtAHAAZABhAHQAYQAuAGMAbwBtAD4A
+IAA8ADEAMwA5ADkANAA4ADkAOQA1ADAALgAyADIAMgA3AC4ANgAzAC4AYwBhAG0AZQBsAEAAZABh
+AGIAZABpAGsAZQAuAGkAbgB0AC4AaABhAG4AcwBlAG4AcABhAHIAdABuAGUAcgBzAGgAaQBwAC4A
+YwBvAG0APgAgADwAMgAwADEANAAwADUAMAA3ADEAOQAyADEANQA4AC4ARwBBADEANwA4ADAANgBA
+AHAAaABlAG4AbwBtAC4AZAB1AG0AcABkAGEAdABhAC4AYwBvAG0APgAgADwANQAzADYAQQA4AEUA
+NgA3AC4ANwAwADMAMAA4ADAANQBAAGMAcwAuAHcAaQBzAGMALgBlAGQAdQA+ACAAPAAyADAAMQA0
+ADAANQAwADcAMgAwADEANQAyADQALgBHAEEAMgA2ADMAMAAzAEAAZgBlAG4AYwBoAHUAcgBjAGgA
+LgBpAG4AdABlAHIAbgBhAGwALgBkAGEAdABhAHMAdABhAGMAawBzAC4AYwBvAG0APgAgADwANQAz
+ADYAQQA5ADcARQA2AC4ANgAwADAAMAA5ADAANwBAAGMAcwAuAHcAaQBzAGMALgBlAGQAdQA+ACAA
+PAA1ADMANgBBADkARQAzADMALgA3ADAANAAwADYAQABjAHMALgB3AGkAcwBjAC4AZQBkAHUAPgAg
+ADwAMwBGAEMANABBAEIAOABCADQANwBFAEMARAA1ADQANgBCAEMARAA0AEIAMwA2ADEAQQA2ADQA
+QgBFAEEAQwBEADgAQwA2ADkAQQA2ADMAQQBAAGEAdgBtAGIAMwAuAHEAbABvAGcAaQBjAC4AbwBy
+AGcAPgAgADwAMgAwADEANAAwADUAMAA5ADEAMwAyADAAMAA1AC4ARwBCADIAOAA5ADkAQABwAGgA
+ZQBuAG8AbQAuAGQAdQBtAHAAZABhAHQAYQAuAGMAbwBtAD4AAAADAN4/n04AAEAABzCcYHZOpW7P
+AQMAJgAAAAAAAgFHAAEAAAAvAAAAYz1VUzthPSA7cD1RTG9naWM7bD1BVk1CMy0xNDA1MTMxMjE3
+MjhaLTE2OTM1NQAAHwAVEAEAAABYAAAANAA0AEQAQwA1ADgAMwA0AEQAOABFADQAMQA4ADQANgBC
+AEYAQQA4ADQAQgA4AEIAQwBCADcAMQAyAEUARABGAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAIB
+FDABAAAADAAAAAsCAAAX3KMkTwAAAB8A+j8BAAAAIAAAAFYAaQBrAGEAcwAgAEMAaABhAHUAZABo
+AGEAcgB5AAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAFgAAAHUAcwBlAHIALQBhAGcAZQBuAHQA
+AAAAAAEAAABGAAAATQBpAGMAcgBvAHMAbwBmAHQALQBNAGEAYwBPAHUAdABsAG8AbwBrAC8AMQA0
+AC4AMwAuADkALgAxADMAMQAwADMAMAAAAAAAHwAAgB+k6zOoei5Cvnt54amOVLMBAAAAOAAAAEMA
+bwBuAHYAZQByAHMAYQB0AGkAbwBuAEkAbgBkAGUAeABUAHIAYQBjAGsAaQBuAGcARQB4AAAAAQAA
+ACoBAABJAEkAPQAwADEAMAAxAEMARgA2AEUAQQA1ADQARQBEAEQANwA1ADkAOQA2ADQAQQAwAEIA
+MAA1ADMANAA1ADkARgAzADIARgBEAEMARQAzAEEARQA2ADMAMwAwAEMAOwBTAEIATQBJAEQAPQAy
+ADIAOwBTADEAPQA8ADIAMAAxADQAMAA1ADAAOQAxADMAMgAwADAANQAuAEcAQgAyADgAOQA5AEAA
+cABoAGUAbgBvAG0ALgBkAHUAbQBwAGQAYQB0AGEALgBjAG8AbQA+ADsAVgBlAHIAcwBpAG8AbgA9
+AFYAZQByAHMAaQBvAG4AIAAxADQALgAyACAAKABCAHUAaQBsAGQAIAAzADgANwAuADAAKQAsACAA
+UwB0AGEAZwBlAD0ASAAyAAAAAAADAA00/T8AAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAACAAAAB4
+AC0AbQBzAC0AaABhAHMALQBhAHQAdABhAGMAaAAAAAEAAAACAAAAAAAAAB8AAICGAwIAAAAAAMAA
+AAAAAABGAQAAACIAAAB4AC0AbwByAGkAZwBpAG4AYQB0AGkAbgBnAC0AaQBwAAAAAAABAAAAGAAA
+AFsAMQAwAC4AMQAuADQALgAxADAAXQAAABKL
+
+--_000_3FC4AB8B47ECD546BCD4B361A64BEACD8C69DB39avmb3qlogicorg_--
