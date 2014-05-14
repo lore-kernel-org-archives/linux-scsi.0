@@ -1,86 +1,103 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH v1.2 17/16] arcmsr: fixed calling scsi_scan_host after
- all initialization done
-Date: Wed, 14 May 2014 14:53:47 +0200
-Message-ID: <5373675B.5030102@redhat.com>
-References: <1400068509.6957.62.camel@localhost>
+From: Mathias Krause <minipli@googlemail.com>
+Subject: Re: [PATCH RESEND] aic79xx: fix misuse of static variables
+Date: Wed, 14 May 2014 21:33:22 +0200
+Message-ID: <CA+rthh_pih01jQtSkEwJOdM8TmScydnTnEDKAN7e=ARYMfZgTg@mail.gmail.com>
+References: <1398937706-16337-1-git-send-email-minipli@googlemail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1400068509.6957.62.camel@localhost>
-Sender: linux-kernel-owner@vger.kernel.org
-To: ching <ching2048@areca.com.tw>, jbottomley@parallels.com, dan.carpenter@oracle.com, agordeev@redhat.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-la0-f47.google.com ([209.85.215.47]:65107 "EHLO
+	mail-la0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750871AbaENTdX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 May 2014 15:33:23 -0400
+Received: by mail-la0-f47.google.com with SMTP id pn19so16030lab.34
+        for <linux-scsi@vger.kernel.org>; Wed, 14 May 2014 12:33:22 -0700 (PDT)
+In-Reply-To: <1398937706-16337-1-git-send-email-minipli@googlemail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org, Mathias Krause <minipli@googlemail.com>, PaX Team <pageexec@freemail.hu>
 
-On 05/14/2014 01:55 PM, ching wrote:
-> From: Ching<ching2048@areca.com.tw>
+On 1 May 2014 11:48, Mathias Krause <minipli@googlemail.com> wrote:
+> The format strings for various printk()s make use of a temporary
+> variable that is declared 'static'. This is probably not intended,
+> so fix those.
 >
-> This is a new patch after patch v1.1 series.
+> Found in the PaX patch, written by the PaX Team.
 >
-> Fixed calling scsi_scan_host until all initialization are done.
-> And fixed error path free allocated resource.
->
-> Signed-off-by: Ching<ching2048@areca.com.tw>
+> Signed-off-by: Mathias Krause <minipli@googlemail.com>
+> Acked-by: Hannes Reinecke <hare@suse.de>
+> Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+> Cc: PaX Team <pageexec@freemail.hu>
 > ---
 >
-> diff -uprN a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
-> --- a/drivers/scsi/arcmsr/arcmsr_hba.c	2014-05-08 17:45:34.000000000 +0800
-> +++ b/drivers/scsi/arcmsr/arcmsr_hba.c	2014-05-14 18:29:30.000000000 +0800
-> @@ -112,6 +112,7 @@ static void arcmsr_hbaD_message_isr(stru
->  static void arcmsr_hardware_reset(struct AdapterControlBlock *acb);
->  static const char *arcmsr_info(struct Scsi_Host *);
->  static irqreturn_t arcmsr_interrupt(struct AdapterControlBlock *acb);
-> +static void arcmsr_free_irq(struct pci_dev *, struct AdapterControlBlock *);
->  static int arcmsr_adjust_disk_queue_depth(struct scsi_device *sdev,
->  					  int queue_depth, int reason)
->  {
-> @@ -778,12 +779,11 @@ static int arcmsr_probe(struct pci_dev *
->  	}
->  	error = scsi_add_host(host, &pdev->dev);
->  	if(error){
-> -		goto RAID_controller_stop;
-> +		goto free_ccb_pool;
->  	}
->  	if (arcmsr_request_irq(pdev, acb) == ARC_FAILURE)
->  		goto scsi_host_remove;
->  	arcmsr_iop_init(acb);
-> -    	scsi_scan_host(host);
->  	INIT_WORK(&acb->arcmsr_do_message_isr_bh, arcmsr_message_isr_bh_fn);
->  	atomic_set(&acb->rq_map_token, 16);
->  	atomic_set(&acb->ante_token_value, 16);
-> @@ -795,13 +795,17 @@ static int arcmsr_probe(struct pci_dev *
->  	add_timer(&acb->eternal_timer);
->  	if(arcmsr_alloc_sysfs_attr(acb))
->  		goto out_free_sysfs;
-> +    	scsi_scan_host(host);
->  	return 0;
->  out_free_sysfs:
-> -scsi_host_remove:
-> -	scsi_remove_host(host);
-> -RAID_controller_stop:
-> +	del_timer_sync(&acb->eternal_timer);
-> + 	flush_work(&acb->arcmsr_do_message_isr_bh);
-
-In your driver you use both flush_work(struct work_struct *) and flush_scheduled_work(),
-the second form is used used to flush the shared workqueue. 
-That said (and I think you use just one queue) you should decide which one is correct.
-In my previous mail I have asked about flush_work because i have it seen elsewhere in
-your code, now I've noticed the use of schedule_work and that means that you are using the global wq.
- 
-
->  	arcmsr_stop_adapter_bgrb(acb);
->  	arcmsr_flush_adapter_cache(acb);
-> +	arcmsr_free_irq(pdev, acb);
-> +scsi_host_remove:
-> +	scsi_remove_host(host);
-> +free_ccb_pool:
->  	arcmsr_free_ccb_pool(acb);
->  free_hbb_mu:
->  	arcmsr_free_mu(acb);
+> Resend as this patch hasn't been picked up yet, nor was it declined.
 >
+> James, I cannot find any hint on the interwebs to the compiler bug you
+> mentioned in [1] -- neither in [2] (the patch that introduced that code in
+> 2002 for v2.5.53) nor in [3] (which confirms the code in question looked the
+> same for v2.4.22). Therefore I see no reason to not apply this patch. Even
+> more so, as Hannes, the maintainer of this driver, already ACK'ed this
+> patch.
 >
+> Thanks,
+> Mathias
+>
+> [1] http://www.spinics.net/lists/linux-scsi/msg73532.html
+> [2] https://git.kernel.org/cgit/linux/kernel/git/tglx/history.git/commit/?id=f58eb66c0b0acc97f3787decd9a30694be867dbf
+> [3] http://lxr.linux.no/linux-old+v2.4.22/drivers/scsi/aic7xxx/aic79xx_pci.c
+>
+> Remark: Compile tested only! I've no such hardware.
+>
+>  drivers/scsi/aic7xxx/aic79xx_pci.c |   18 +++++-------------
+>  1 file changed, 5 insertions(+), 13 deletions(-)
+>
+> diff --git a/drivers/scsi/aic7xxx/aic79xx_pci.c b/drivers/scsi/aic7xxx/aic79xx_pci.c
+> index 14b5f8d0e7..cc9bd26f5d 100644
+> --- a/drivers/scsi/aic7xxx/aic79xx_pci.c
+> +++ b/drivers/scsi/aic7xxx/aic79xx_pci.c
+> @@ -827,7 +827,7 @@ ahd_pci_intr(struct ahd_softc *ahd)
+>                 for (bit = 0; bit < 8; bit++) {
+>
+>                         if ((pci_status[i] & (0x1 << bit)) != 0) {
+> -                               static const char *s;
+> +                               const char *s;
+>
+>                                 s = pci_status_strings[bit];
+>                                 if (i == 7/*TARG*/ && bit == 3)
+> @@ -887,23 +887,15 @@ ahd_pci_split_intr(struct ahd_softc *ahd, u_int intstat)
+>
+>                 for (bit = 0; bit < 8; bit++) {
+>
+> -                       if ((split_status[i] & (0x1 << bit)) != 0) {
+> -                               static const char *s;
+> -
+> -                               s = split_status_strings[bit];
+> -                               printk(s, ahd_name(ahd),
+> +                       if ((split_status[i] & (0x1 << bit)) != 0)
+> +                               printk(split_status_strings[bit], ahd_name(ahd),
+>                                        split_status_source[i]);
+> -                       }
+>
+>                         if (i > 1)
+>                                 continue;
+>
+> -                       if ((sg_split_status[i] & (0x1 << bit)) != 0) {
+> -                               static const char *s;
+> -
+> -                               s = split_status_strings[bit];
+> -                               printk(s, ahd_name(ahd), "SG");
+> -                       }
+> +                       if ((sg_split_status[i] & (0x1 << bit)) != 0)
+> +                               printk(split_status_strings[bit], ahd_name(ahd), "SG");
+>                 }
+>         }
+>         /*
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 1.7.10.4
+>
+
+
+Ping. James, Hannes? Why so silent about this patch?
+
+Mathias
