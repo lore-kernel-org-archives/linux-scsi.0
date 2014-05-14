@@ -1,89 +1,93 @@
 From: ching <ching2048@areca.com.tw>
-Subject: [PATCH v1.2 5/16] arcmsr: bugfix of abort command return status
-Date: Wed, 14 May 2014 19:18:45 +0800
-Message-ID: <1400066325.6957.31.camel@localhost>
+Subject: [PATCH v1.2 6/16] arcmsr: precise checking adapter ID
+Date: Wed, 14 May 2014 19:20:43 +0800
+Message-ID: <1400066443.6957.33.camel@localhost>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-vc0-f179.google.com ([209.85.220.179]:61301 "EHLO
-	mail-vc0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751814AbaENLSw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 May 2014 07:18:52 -0400
-Received: by mail-vc0-f179.google.com with SMTP id im17so2221781vcb.10
-        for <linux-scsi@vger.kernel.org>; Wed, 14 May 2014 04:18:51 -0700 (PDT)
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:46192 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754824AbaENLUu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 May 2014 07:20:50 -0400
+Received: by mail-vc0-f174.google.com with SMTP id lh14so2212098vcb.33
+        for <linux-scsi@vger.kernel.org>; Wed, 14 May 2014 04:20:49 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com, dan.carpenter@oracle.com, thenzl@redhat.com, agordeev@redhat.com, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
 From: Ching<ching2048@areca.com.tw>
 
-Fix a bug of return status from calling arcmsr_polling_ccbdone.
-The original code may return a FAILED if abort command is SUCCESS.
+Rewriteing the arcmsr_define_adapter_type function to precisely check adapter ID.
+This can prevent an unknown adapter be used as a default adapter type by driver.
 
 Signed-off-by: Ching<ching2048@areca.com.tw>
 ---
 
 diff -uprN a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
---- a/drivers/scsi/arcmsr/arcmsr_hba.c	2014-05-07 18:43:40.000000000 +0800
-+++ b/drivers/scsi/arcmsr/arcmsr_hba.c	2014-05-07 18:44:40.000000000 +0800
-@@ -2482,7 +2482,7 @@ static int arcmsr_polling_hba_ccbdone(st
- 		}
- 		arcmsr_cdb = (struct ARCMSR_CDB *)(acb->vir2phy_offset + (flag_ccb << 5));
- 		ccb = container_of(arcmsr_cdb, struct CommandControlBlock, arcmsr_cdb);
--		poll_ccb_done = (ccb == poll_ccb) ? 1:0;
-+		poll_ccb_done |= (ccb == poll_ccb) ? 1 : 0;
- 		if ((ccb->acb != acb) || (ccb->startdone != ARCMSR_CCB_START)) {
- 			if ((ccb->startdone == ARCMSR_CCB_ABORTED) || (ccb == poll_ccb)) {
- 				printk(KERN_NOTICE "arcmsr%d: scsi id = %d lun = %d ccb = '0x%p'"
-@@ -2546,7 +2546,7 @@ static int arcmsr_polling_hbb_ccbdone(st
- 		/* check if command done with no error*/
- 		arcmsr_cdb = (struct ARCMSR_CDB *)(acb->vir2phy_offset + (flag_ccb << 5));
- 		ccb = container_of(arcmsr_cdb, struct CommandControlBlock, arcmsr_cdb);
--		poll_ccb_done = (ccb == poll_ccb) ? 1:0;
-+		poll_ccb_done |= (ccb == poll_ccb) ? 1 : 0;
- 		if ((ccb->acb != acb) || (ccb->startdone != ARCMSR_CCB_START)) {
- 			if ((ccb->startdone == ARCMSR_CCB_ABORTED) || (ccb == poll_ccb)) {
- 				printk(KERN_NOTICE "arcmsr%d: scsi id = %d lun = %d ccb = '0x%p'"
-@@ -2602,7 +2602,7 @@ polling_hbc_ccb_retry:
- 		ccb_cdb_phy = (flag_ccb & 0xFFFFFFF0);
- 		arcmsr_cdb = (struct ARCMSR_CDB *)(acb->vir2phy_offset + ccb_cdb_phy);/*frame must be 32 bytes aligned*/
- 		pCCB = container_of(arcmsr_cdb, struct CommandControlBlock, arcmsr_cdb);
--		poll_ccb_done = (pCCB == poll_ccb) ? 1 : 0;
-+		poll_ccb_done |= (pCCB == poll_ccb) ? 1 : 0;
- 		/* check ifcommand done with no error*/
- 		if ((pCCB->acb != acb) || (pCCB->startdone != ARCMSR_CCB_START)) {
- 			if (pCCB->startdone == ARCMSR_CCB_ABORTED) {
-@@ -3204,6 +3204,8 @@ static int arcmsr_abort(struct scsi_cmnd
- 		(struct AdapterControlBlock *)cmd->device->host->hostdata;
- 	int i = 0;
- 	int rtn = FAILED;
-+	uint32_t intmask_org;
-+
- 	printk(KERN_NOTICE
- 		"arcmsr%d: abort device command of scsi id = %d lun = %d \n",
- 		acb->host->host_no, cmd->device->id, cmd->device->lun);
-@@ -3215,9 +3217,12 @@ static int arcmsr_abort(struct scsi_cmnd
- 	** we need to handle it as soon as possible and exit
- 	************************************************
- 	*/
--	if (!atomic_read(&acb->ccboutstandingcount))
-+	if (!atomic_read(&acb->ccboutstandingcount)) {
-+		acb->acb_flags &= ~ACB_F_ABORT;
- 		return rtn;
-+	}
- 
-+	intmask_org = arcmsr_disable_outbound_ints(acb);
- 	for (i = 0; i < ARCMSR_MAX_FREECCB_NUM; i++) {
- 		struct CommandControlBlock *ccb = acb->pccb_pool[i];
- 		if (ccb->startdone == ARCMSR_CCB_START && ccb->pcmd == cmd) {
-@@ -3227,6 +3232,7 @@ static int arcmsr_abort(struct scsi_cmnd
- 		}
- 	}
- 	acb->acb_flags &= ~ACB_F_ABORT;
-+	arcmsr_enable_outbound_ints(acb, intmask_org);
- 	return rtn;
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c	2014-05-07 18:44:40.000000000 +0800
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c	2014-05-07 18:45:20.000000000 +0800
+@@ -295,24 +295,43 @@ static int arcmsr_bios_param(struct scsi
+ 	return 0;
  }
  
+-static void arcmsr_define_adapter_type(struct AdapterControlBlock *acb)
++static bool arcmsr_define_adapter_type(struct AdapterControlBlock *acb)
+ {
+ 	struct pci_dev *pdev = acb->pdev;
+ 	u16 dev_id;
++
+ 	pci_read_config_word(pdev, PCI_DEVICE_ID, &dev_id);
+ 	acb->dev_id = dev_id;
+ 	switch (dev_id) {
+-	case 0x1880: {
++	case 0x1880:
+ 		acb->adapter_type = ACB_ADAPTER_TYPE_C;
+-		}
+ 		break;
+-	case 0x1201: {
++	case 0x1200:
++	case 0x1201:
++	case 0x1202:
+ 		acb->adapter_type = ACB_ADAPTER_TYPE_B;
+-		}
+ 		break;
+-
+-	default: acb->adapter_type = ACB_ADAPTER_TYPE_A;
++	case 0x1110:
++	case 0x1120:
++	case 0x1130:
++	case 0x1160:
++	case 0x1170:
++	case 0x1210:
++	case 0x1220:
++	case 0x1230:
++	case 0x1260:
++	case 0x1270:
++	case 0x1280:
++	case 0x1380:
++	case 0x1381:
++	case 0x1680:
++		acb->adapter_type = ACB_ADAPTER_TYPE_A;
++		break;
++	default:
++		pr_notice("Unknown device ID = 0x%x\n", dev_id);
++		return false;
+ 	}
++	return true;
+ }
+ 
+ static uint8_t arcmsr_hba_wait_msgint_ready(struct AdapterControlBlock *acb)
+@@ -714,7 +733,9 @@ static int arcmsr_probe(struct pci_dev *
+ 			ACB_F_MESSAGE_WQBUFFER_READED);
+ 	acb->acb_flags &= ~ACB_F_SCSISTOPADAPTER;
+ 	INIT_LIST_HEAD(&acb->ccb_free_list);
+-	arcmsr_define_adapter_type(acb);
++	error = arcmsr_define_adapter_type(acb);
++	if (!error)
++		goto pci_release_regs;
+ 	error = arcmsr_remap_pciregion(acb);
+ 	if(!error){
+ 		goto pci_release_regs;
 
 
