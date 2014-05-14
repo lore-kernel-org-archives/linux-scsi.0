@@ -1,47 +1,63 @@
 From: Andy Grover <agrover@redhat.com>
-Subject: [PATCH 1/2] target: Don't allow setting WC emulation if device doesn't support
-Date: Wed, 14 May 2014 15:48:06 -0700
-Message-ID: <1400107687-15797-1-git-send-email-agrover@redhat.com>
+Subject: [PATCH] block: Export REQ_FLUSH status via sysfs
+Date: Wed, 14 May 2014 15:51:48 -0700
+Message-ID: <1400107908-16095-1-git-send-email-agrover@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:2246 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:56541 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751324AbaENWsI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 May 2014 18:48:08 -0400
+	id S1753310AbaENWvt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 14 May 2014 18:51:49 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: target-devel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: target-devel@vger.kernel.org
 
-Just like for pSCSI, if the transport sets get_write_cache, then it is
-not valid to enable write cache emulation for it. Return an error.
-
-see https://bugzilla.redhat.com/show_bug.cgi?id=1082675
+Whether this is set or not is important for whether good performance is
+possible, when using the block device as a backstore for the kernel
+target. Exposing this will let kernel target configuration tools provide
+this information to the user when configuring LIO targets.
 
 Reviewed-by: Chris Leech <cleech@redhat.com>
 Signed-off-by: Andy Grover <agrover@redhat.com>
 ---
- drivers/target/target_core_device.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ block/genhd.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-index 65001e1..d461ecb 100644
---- a/drivers/target/target_core_device.c
-+++ b/drivers/target/target_core_device.c
-@@ -798,10 +798,10 @@ int se_dev_set_emulate_write_cache(struct se_device *dev, int flag)
- 		pr_err("emulate_write_cache not supported for pSCSI\n");
- 		return -EINVAL;
- 	}
--	if (dev->transport->get_write_cache) {
--		pr_warn("emulate_write_cache cannot be changed when underlying"
--			" HW reports WriteCacheEnabled, ignoring request\n");
--		return 0;
-+	if (flag &&
-+	    dev->transport->get_write_cache) {
-+		pr_err("emulate_write_cache not supported for this device\n");
-+		return -EINVAL;
- 	}
+diff --git a/block/genhd.c b/block/genhd.c
+index 791f419..258fadc 100644
+--- a/block/genhd.c
++++ b/block/genhd.c
+@@ -958,6 +958,14 @@ static ssize_t disk_capability_show(struct device *dev,
+ 	return sprintf(buf, "%x\n", disk->flags);
+ }
  
- 	dev->dev_attrib.emulate_write_cache = flag;
++static ssize_t req_flush_show(struct device *dev,
++				    struct device_attribute *attr, char *buf)
++{
++	struct gendisk *disk = dev_to_disk(dev);
++
++	return sprintf(buf, "%x\n", !!(disk->queue->flush_flags & REQ_FLUSH));
++}
++
+ static ssize_t disk_alignment_offset_show(struct device *dev,
+ 					  struct device_attribute *attr,
+ 					  char *buf)
+@@ -985,6 +993,7 @@ static DEVICE_ATTR(alignment_offset, S_IRUGO, disk_alignment_offset_show, NULL);
+ static DEVICE_ATTR(discard_alignment, S_IRUGO, disk_discard_alignment_show,
+ 		   NULL);
+ static DEVICE_ATTR(capability, S_IRUGO, disk_capability_show, NULL);
++static DEVICE_ATTR(req_flush, S_IRUGO, req_flush_show, NULL);
+ static DEVICE_ATTR(stat, S_IRUGO, part_stat_show, NULL);
+ static DEVICE_ATTR(inflight, S_IRUGO, part_inflight_show, NULL);
+ #ifdef CONFIG_FAIL_MAKE_REQUEST
+@@ -1006,6 +1015,7 @@ static struct attribute *disk_attrs[] = {
+ 	&dev_attr_alignment_offset.attr,
+ 	&dev_attr_discard_alignment.attr,
+ 	&dev_attr_capability.attr,
++	&dev_attr_req_flush.attr,
+ 	&dev_attr_stat.attr,
+ 	&dev_attr_inflight.attr,
+ #ifdef CONFIG_FAIL_MAKE_REQUEST
 -- 
 1.9.0
 
