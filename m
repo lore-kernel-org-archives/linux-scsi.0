@@ -1,104 +1,169 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH v1.2 17/16] arcmsr: fixed calling scsi_scan_host after
- all initialization done
-Date: Thu, 15 May 2014 13:52:54 +0200
-Message-ID: <5374AA96.7070206@redhat.com>
-References: <1400068509.6957.62.camel@localhost>	 <5373675B.5030102@redhat.com> <1400150952.7179.2.camel@localhost>
+From: Arvind Kumar <arvindkumar@vmware.com>
+Subject: Re: [Pv-drivers] [PATCH] VMW_PVSCSI: Fix the issue of DMA-API
+ related	warnings.
+Date: Thu, 15 May 2014 10:59:36 -0700
+Message-ID: <1400176776.6848.2.camel@arvindkumar-dev1.eng.vmware.com>
+References: <1395425313.8462.1254.camel@arvindkumar-dev1.eng.vmware.com>
+	 <1435545714.1314052.1397499424792.JavaMail.root@vmware.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:18204 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751967AbaEOLxC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 15 May 2014 07:53:02 -0400
-In-Reply-To: <1400150952.7179.2.camel@localhost>
+Received: from smtp-outbound-1.vmware.com ([208.91.2.12]:40780 "EHLO
+	smtp-outbound-1.vmware.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753167AbaEOSHU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 15 May 2014 14:07:20 -0400
+In-Reply-To: <1435545714.1314052.1397499424792.JavaMail.root@vmware.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: ching <ching2048@areca.com.tw>
-Cc: jbottomley@parallels.com, dan.carpenter@oracle.com, agordeev@redhat.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: JBottomley@parallels.com
+Cc: pv-drivers@vmware.com, Josh Boyer <jwboyer@fedoraproject.org>, linux-scsi@vger.kernel.org
 
-On 05/15/2014 12:49 PM, ching wrote:
-> Hi Tomas,
->
-> Then I will have a patch 18/16 to replace flush_scheduled_work with flush_work.
-> Thanks for your advice.
+Hi James,
 
-Here http://www.makelinux.net/ldd3/chp-7-sect-6 is a short text about workqueue,
-the use of schedule_work in your sources means that you use the global queue.
-If that is true, flush_scheduled_work is the right choice.
+I was wondering if you got time to get to this one. It would be great
+if you could please help out with getting this patch in.
 
->
-> On Wed, 2014-05-14 at 14:53 +0200, Tomas Henzl wrote:
->> On 05/14/2014 01:55 PM, ching wrote:
->>> From: Ching<ching2048@areca.com.tw>
->>>
->>> This is a new patch after patch v1.1 series.
->>>
->>> Fixed calling scsi_scan_host until all initialization are done.
->>> And fixed error path free allocated resource.
->>>
->>> Signed-off-by: Ching<ching2048@areca.com.tw>
->>> ---
->>>
->>> diff -uprN a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
->>> --- a/drivers/scsi/arcmsr/arcmsr_hba.c	2014-05-08 17:45:34.000000000 +0800
->>> +++ b/drivers/scsi/arcmsr/arcmsr_hba.c	2014-05-14 18:29:30.000000000 +0800
->>> @@ -112,6 +112,7 @@ static void arcmsr_hbaD_message_isr(stru
->>>  static void arcmsr_hardware_reset(struct AdapterControlBlock *acb);
->>>  static const char *arcmsr_info(struct Scsi_Host *);
->>>  static irqreturn_t arcmsr_interrupt(struct AdapterControlBlock *acb);
->>> +static void arcmsr_free_irq(struct pci_dev *, struct AdapterControlBlock *);
->>>  static int arcmsr_adjust_disk_queue_depth(struct scsi_device *sdev,
->>>  					  int queue_depth, int reason)
->>>  {
->>> @@ -778,12 +779,11 @@ static int arcmsr_probe(struct pci_dev *
->>>  	}
->>>  	error = scsi_add_host(host, &pdev->dev);
->>>  	if(error){
->>> -		goto RAID_controller_stop;
->>> +		goto free_ccb_pool;
->>>  	}
->>>  	if (arcmsr_request_irq(pdev, acb) == ARC_FAILURE)
->>>  		goto scsi_host_remove;
->>>  	arcmsr_iop_init(acb);
->>> -    	scsi_scan_host(host);
->>>  	INIT_WORK(&acb->arcmsr_do_message_isr_bh, arcmsr_message_isr_bh_fn);
->>>  	atomic_set(&acb->rq_map_token, 16);
->>>  	atomic_set(&acb->ante_token_value, 16);
->>> @@ -795,13 +795,17 @@ static int arcmsr_probe(struct pci_dev *
->>>  	add_timer(&acb->eternal_timer);
->>>  	if(arcmsr_alloc_sysfs_attr(acb))
->>>  		goto out_free_sysfs;
->>> +    	scsi_scan_host(host);
->>>  	return 0;
->>>  out_free_sysfs:
->>> -scsi_host_remove:
->>> -	scsi_remove_host(host);
->>> -RAID_controller_stop:
->>> +	del_timer_sync(&acb->eternal_timer);
->>> + 	flush_work(&acb->arcmsr_do_message_isr_bh);
->> In your driver you use both flush_work(struct work_struct *) and flush_scheduled_work(),
->> the second form is used used to flush the shared workqueue. 
->> That said (and I think you use just one queue) you should decide which one is correct.
->> In my previous mail I have asked about flush_work because i have it seen elsewhere in
->> your code, now I've noticed the use of schedule_work and that means that you are using the global wq.
->>  
->>
->>>  	arcmsr_stop_adapter_bgrb(acb);
->>>  	arcmsr_flush_adapter_cache(acb);
->>> +	arcmsr_free_irq(pdev, acb);
->>> +scsi_host_remove:
->>> +	scsi_remove_host(host);
->>> +free_ccb_pool:
->>>  	arcmsr_free_ccb_pool(acb);
->>>  free_hbb_mu:
->>>  	arcmsr_free_mu(acb);
->>>
->>>
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Thanks!
+Arvind
+
+On Mon, 2014-04-14 at 11:17 -0700, Arvind Kumar wrote:
+> Hi James,
+> 
+> Could you please help getting this in?
+> 
+> Thanks!
+> Arvind
+> 
+> ----- Original Message -----
+> From: "Arvind Kumar" <arvindkumar@vmware.com>
+> To: JBottomley@parallels.com, linux-scsi@vger.kernel.org
+> Cc: pv-drivers@vmware.com, "Josh Boyer" <jwboyer@fedoraproject.org>
+> Sent: Friday, March 21, 2014 11:08:32 AM
+> Subject: [Pv-drivers] [PATCH] VMW_PVSCSI: Fix the issue of DMA-API related	warnings.
+> 
+> The driver is missing calls to pci_dma_mapping_error() after
+> performing the DMA mapping, which caused DMA-API warning to
+> show up in dmesg's output. Though that happens only when
+> DMA_API_DEBUG option is enabled. This change fixes the issue
+> and makes pvscsi_map_buffers() function more robust.
+> 
+> Signed-off-by: Arvind Kumar <arvindkumar@vmware.com>
+> Cc: Josh Boyer <jwboyer@fedoraproject.org>
+> ---
+>  drivers/scsi/vmw_pvscsi.c |   45 +++++++++++++++++++++++++++++++++++++++------
+>  drivers/scsi/vmw_pvscsi.h |    2 +-
+>  2 files changed, 40 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
+> index c88e146..9478a00 100644
+> --- a/drivers/scsi/vmw_pvscsi.c
+> +++ b/drivers/scsi/vmw_pvscsi.c
+> @@ -349,9 +349,9 @@ static void pvscsi_create_sg(struct pvscsi_ctx *ctx,
+>   * Map all data buffers for a command into PCI space and
+>   * setup the scatter/gather list if needed.
+>   */
+> -static void pvscsi_map_buffers(struct pvscsi_adapter *adapter,
+> -			       struct pvscsi_ctx *ctx, struct scsi_cmnd *cmd,
+> -			       struct PVSCSIRingReqDesc *e)
+> +static int pvscsi_map_buffers(struct pvscsi_adapter *adapter,
+> +			      struct pvscsi_ctx *ctx, struct scsi_cmnd *cmd,
+> +			      struct PVSCSIRingReqDesc *e)
+>  {
+>  	unsigned count;
+>  	unsigned bufflen = scsi_bufflen(cmd);
+> @@ -360,18 +360,30 @@ static void pvscsi_map_buffers(struct pvscsi_adapter *adapter,
+>  	e->dataLen = bufflen;
+>  	e->dataAddr = 0;
+>  	if (bufflen == 0)
+> -		return;
+> +		return 0;
+>  
+>  	sg = scsi_sglist(cmd);
+>  	count = scsi_sg_count(cmd);
+>  	if (count != 0) {
+>  		int segs = scsi_dma_map(cmd);
+> -		if (segs > 1) {
+> +
+> +		if (segs == -ENOMEM) {
+> +			scmd_printk(KERN_ERR, cmd,
+> +				    "vmw_pvscsi: Failed to map cmd sglist for DMA.\n");
+> +			return -1;
+> +		} else if (segs > 1) {
+>  			pvscsi_create_sg(ctx, sg, segs);
+>  
+>  			e->flags |= PVSCSI_FLAG_CMD_WITH_SG_LIST;
+>  			ctx->sglPA = pci_map_single(adapter->dev, ctx->sgl,
+>  						    SGL_SIZE, PCI_DMA_TODEVICE);
+> +			if (pci_dma_mapping_error(adapter->dev, ctx->sglPA)) {
+> +				scmd_printk(KERN_ERR, cmd,
+> +					    "vmw_pvscsi: Failed to map ctx sglist for DMA.\n");
+> +				scsi_dma_unmap(cmd);
+> +				ctx->sglPA = 0;
+> +				return -1;
+> +			}
+>  			e->dataAddr = ctx->sglPA;
+>  		} else
+>  			e->dataAddr = sg_dma_address(sg);
+> @@ -382,8 +394,15 @@ static void pvscsi_map_buffers(struct pvscsi_adapter *adapter,
+>  		 */
+>  		ctx->dataPA = pci_map_single(adapter->dev, sg, bufflen,
+>  					     cmd->sc_data_direction);
+> +		if (pci_dma_mapping_error(adapter->dev, ctx->dataPA)) {
+> +			scmd_printk(KERN_ERR, cmd,
+> +				    "vmw_pvscsi: Failed to map direct data buffer for DMA.\n");
+> +			return -1;
+> +		}
+>  		e->dataAddr = ctx->dataPA;
+>  	}
+> +
+> +	return 0;
+>  }
+>  
+>  static void pvscsi_unmap_buffers(const struct pvscsi_adapter *adapter,
+> @@ -712,6 +731,12 @@ static int pvscsi_queue_ring(struct pvscsi_adapter *adapter,
+>  		ctx->sensePA = pci_map_single(adapter->dev, cmd->sense_buffer,
+>  					      SCSI_SENSE_BUFFERSIZE,
+>  					      PCI_DMA_FROMDEVICE);
+> +		if (pci_dma_mapping_error(adapter->dev, ctx->sensePA)) {
+> +			scmd_printk(KERN_ERR, cmd,
+> +				    "vmw_pvscsi: Failed to map sense buffer for DMA.\n");
+> +			ctx->sensePA = 0;
+> +			return -1;
+> +		}
+>  		e->senseAddr = ctx->sensePA;
+>  		e->senseLen = SCSI_SENSE_BUFFERSIZE;
+>  	} else {
+> @@ -737,7 +762,15 @@ static int pvscsi_queue_ring(struct pvscsi_adapter *adapter,
+>  	else
+>  		e->flags = 0;
+>  
+> -	pvscsi_map_buffers(adapter, ctx, cmd, e);
+> +	if (pvscsi_map_buffers(adapter, ctx, cmd, e) != 0) {
+> +		if (cmd->sense_buffer) {
+> +			pci_unmap_single(adapter->dev, ctx->sensePA,
+> +					 SCSI_SENSE_BUFFERSIZE,
+> +					 PCI_DMA_FROMDEVICE);
+> +			ctx->sensePA = 0;
+> +		}
+> +		return -1;
+> +	}
+>  
+>  	e->context = pvscsi_map_context(adapter, ctx);
+>  
+> diff --git a/drivers/scsi/vmw_pvscsi.h b/drivers/scsi/vmw_pvscsi.h
+> index ce45888..fe3b759 100644
+> --- a/drivers/scsi/vmw_pvscsi.h
+> +++ b/drivers/scsi/vmw_pvscsi.h
+> @@ -26,7 +26,7 @@
+>  
+>  #include <linux/types.h>
+>  
+> -#define PVSCSI_DRIVER_VERSION_STRING   "1.0.5.0-k"
+> +#define PVSCSI_DRIVER_VERSION_STRING   "1.0.6.0-k"
+>  
+>  #define PVSCSI_MAX_NUM_SG_ENTRIES_PER_SEGMENT 128
+>  
+
 
