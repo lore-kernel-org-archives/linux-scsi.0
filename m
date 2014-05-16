@@ -1,15 +1,15 @@
-From: Ian Abbott <abbotti@mev.co.uk>
-Subject: Re: [PATCH 1/2] scsi: hyper-v storvsc switch up to SPC-3
-Date: Fri, 16 May 2014 18:39:11 +0100
-Message-ID: <53764D3F.3060008@mev.co.uk>
-References: <1400254748-21573-1-git-send-email-abbotti@mev.co.uk>	
- <1400254748-21573-2-git-send-email-abbotti@mev.co.uk>
- <1400260496.2221.44.camel@dabdike.int.hansenpartnership.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 2/2] scsi: hyper-v storvsc -- host takes MAINTENANCE_IN
+ commands badly -- elide them
+Date: Fri, 16 May 2014 10:42:50 -0700
+Message-ID: <1400262170.2221.53.camel@dabdike.int.hansenpartnership.com>
+References: <1400254748-21573-1-git-send-email-abbotti@mev.co.uk>
+ <1400254748-21573-3-git-send-email-abbotti@mev.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <1400260496.2221.44.camel@dabdike.int.hansenpartnership.com>
+In-Reply-To: <1400254748-21573-3-git-send-email-abbotti@mev.co.uk>
 List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
  <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
 List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
@@ -19,41 +19,51 @@ List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driver
  <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
 Errors-To: driverdev-devel-bounces@linuxdriverproject.org
 Sender: driverdev-devel-bounces@linuxdriverproject.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Ian Abbott <abbotti@mev.co.uk>
 Cc: Tim Gardner <tim.gardner@canonical.com>, linux-scsi@vger.kernel.org, Haiyang Zhang <haiyangz@microsoft.com>, Andy Whitcroft <apw@canonical.com>, devel@linuxdriverproject.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 2014-05-16 18:14, James Bottomley wrote:
-> On Fri, 2014-05-16 at 16:39 +0100, Ian Abbott wrote:
->> From: Andy Whitcroft <apw@canonical.com>
->>
->> Suggested-by: James Bottomley <James.Bottomley@HansenPartnership.com>
->
-> That is my patch, isn't it, just with a slightly modified comment:
->
-> http://marc.info/?l=linux-scsi&m=137908428211951
+On Fri, 2014-05-16 at 16:39 +0100, Ian Abbott wrote:
+> From: Andy Whitcroft <apw@canonical.com>
+> 
+> BugLink: http://bugs.launchpad.net/bugs/1234417
 
-I believe so, yes.  Looking at Ubuntu's kernel repository, Andy reverted 
-his original 4 patches and applied your patch instead.  I'm not sure 
-about the other patch (PATCH 2/2) that disables the MAINTENANCE_IN 
-command.  Perhaps that was needed as a consequence of claiming to be 
-SCSI level SPC-3?
+This is a pretty low quality bug report; where's the analysis that
+should be in your patch?
 
-> Andy promised to go off and test it and that's where the thread ended. I
-> take it the results of the testing was positive?  I was expecting him to
-> report back on that so KY could ack the patch.
->
-> James
+The problem is, is it not, that when you turn on trim we now also probe
+for write same using report opcodes (which is a SAI MAINTENANCE IN
+commad) and that's causing the boot hang.
 
-The patch seems to be in Ubuntu Saucy's 3.11 kernel version 3.11.0-12.18 
-onwards - see 
-http://kernel.ubuntu.com/git?p=ubuntu/ubuntu-saucy.git;a=log;h=refs/tags/Ubuntu-3.11.0-12.18 
-for the logs.
+Firstly, that might be an indicator that the SPC3 route isn't a good one
+because there might be more hidden nasties like this ... and that goes
+back to how much testing have you done with the patch I suggested?
 
-Would you like me to resubmit the patch with you as the author?  There 
-isn't a "Signed-off-by:" line for you on this patch at the moment.  Is 
-it okay for me to add one?
+If it is only a WRITE SAME problem, then the preferred route would be
+simply to set no_write_same in the template.
 
--- 
--=( Ian Abbott @ MEV Ltd.    E-mail: <abbotti@mev.co.uk>        )=-
--=( Tel: +44 (0)161 477 1898   FAX: +44 (0)161 718 3587         )=-
+James
+
+> Signed-off-by: Andy Whitcroft <apw@canonical.com>
+> Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
+> ---
+> Original patch title was "UBUNTU: SAUCE: storvsc -- host takes
+> MAINTENANCE_IN commands badly elide them".  Changed by Ian Abbott
+> <abbotti@mev.co.uk>
+> ---
+>  drivers/scsi/storvsc_drv.c | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+> index 3903c8a..c1eddd1 100644
+> --- a/drivers/scsi/storvsc_drv.c
+> +++ b/drivers/scsi/storvsc_drv.c
+> @@ -1539,6 +1539,8 @@ static bool storvsc_scsi_cmd_ok(struct scsi_cmnd *scmnd)
+>  	 * this. So, don't send it.
+>  	 */
+>  	case SET_WINDOW:
+> +	/* the host does not handle MAINTENANCE_IN preventing boot.*/
+> +	case MAINTENANCE_IN:
+>  		scmnd->result = ILLEGAL_REQUEST << 16;
+>  		allowed = false;
+>  		break;
