@@ -1,40 +1,45 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: SCSI "staging" tree for linux-next?
-Date: Fri, 16 May 2014 15:38:20 +0200
-Message-ID: <537614CC.6020602@suse.de>
-References: <20140515052645.GA26266@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140515052645.GA26266@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, James Bottomley <JBottomley@Parallels.com>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Ian Abbott <abbotti@mev.co.uk>
+Subject: [PATCH 2/2] scsi: hyper-v storvsc -- host takes MAINTENANCE_IN commands badly -- elide them
+Date: Fri, 16 May 2014 16:39:08 +0100
+Message-ID: <1400254748-21573-3-git-send-email-abbotti@mev.co.uk>
+References: <1400254748-21573-1-git-send-email-abbotti@mev.co.uk>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.mev.co.uk ([62.49.15.74]:58763 "EHLO mail.mev.co.uk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933035AbaEPPjP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 16 May 2014 11:39:15 -0400
+In-Reply-To: <1400254748-21573-1-git-send-email-abbotti@mev.co.uk>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, devel@linuxdriverproject.org
+Cc: Andy Whitcroft <apw@canonical.com>, "K. Y. Srinivasan" <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Tim Gardner <tim.gardner@canonical.com>
 
-On 05/15/2014 07:26 AM, Christoph Hellwig wrote:
-> Hi James,
->
-> we're past -rc5 and no SCSI patches have been collected for 3.16 yet,
-> despite a lot of patches including a lot of reviewed ones pending on =
-the
-> list.
->
-> I'd really love to get at least some testing for all the work that
-> sometimes has been pending for months in linux-next and would offer t=
-o
-> put together a tree of reviewed patches for linux-next.  Is this fine
-> with you?
->
-Seconded. Having a staging tree would make my life _so_ much easier.
+From: Andy Whitcroft <apw@canonical.com>
 
-Cheers,
+BugLink: http://bugs.launchpad.net/bugs/1234417
+Signed-off-by: Andy Whitcroft <apw@canonical.com>
+Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
+---
+Original patch title was "UBUNTU: SAUCE: storvsc -- host takes
+MAINTENANCE_IN commands badly elide them".  Changed by Ian Abbott
+<abbotti@mev.co.uk>
+---
+ drivers/scsi/storvsc_drv.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index 3903c8a..c1eddd1 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -1539,6 +1539,8 @@ static bool storvsc_scsi_cmd_ok(struct scsi_cmnd *scmnd)
+ 	 * this. So, don't send it.
+ 	 */
+ 	case SET_WINDOW:
++	/* the host does not handle MAINTENANCE_IN preventing boot.*/
++	case MAINTENANCE_IN:
+ 		scmnd->result = ILLEGAL_REQUEST << 16;
+ 		allowed = false;
+ 		break;
+-- 
+1.9.2
+
