@@ -1,14 +1,13 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: Re: [PATCH 1/2] scsi: hyper-v storvsc switch up to SPC-3
-Date: Fri, 16 May 2014 20:11:51 +0300
-Message-ID: <20140516171151.GH8897@mwanda>
+Date: Fri, 16 May 2014 10:14:56 -0700
+Message-ID: <1400260496.2221.44.camel@dabdike.int.hansenpartnership.com>
 References: <1400254748-21573-1-git-send-email-abbotti@mev.co.uk>
  <1400254748-21573-2-git-send-email-abbotti@mev.co.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-Content-Disposition: inline
 In-Reply-To: <1400254748-21573-2-git-send-email-abbotti@mev.co.uk>
 List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
  <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
@@ -20,16 +19,20 @@ List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driver
 Errors-To: driverdev-devel-bounces@linuxdriverproject.org
 Sender: driverdev-devel-bounces@linuxdriverproject.org
 To: Ian Abbott <abbotti@mev.co.uk>
-Cc: linux-scsi@vger.kernel.org, Haiyang Zhang <haiyangz@microsoft.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Andy Whitcroft <apw@canonical.com>, devel@linuxdriverproject.org, Tim Gardner <tim.gardner@canonical.com>
+Cc: Tim Gardner <tim.gardner@canonical.com>, linux-scsi@vger.kernel.org, Haiyang Zhang <haiyangz@microsoft.com>, Andy Whitcroft <apw@canonical.com>, devel@linuxdriverproject.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, May 16, 2014 at 04:39:07PM +0100, Ian Abbott wrote:
+On Fri, 2014-05-16 at 16:39 +0100, Ian Abbott wrote:
 > From: Andy Whitcroft <apw@canonical.com>
 > 
 > Suggested-by: James Bottomley <James.Bottomley@HansenPartnership.com>
-> Signed-off-by: Andy Whitcroft <apw@canonical.com>
 
-You should be signing these as well.
+That is my patch, isn't it, just with a slightly modified comment:
 
-regards,
-dan carpenter
+http://marc.info/?l=linux-scsi&m=137908428211951
+
+Andy promised to go off and test it and that's where the thread ended. I
+take it the results of the testing was positive?  I was expecting him to
+report back on that so KY could ack the patch.
+
+James
