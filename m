@@ -1,74 +1,64 @@
-From: Mateusz Guzik <mguzik@redhat.com>
-Subject: Re: [PATCH] kref: warn on uninitialized kref
-Date: Sat, 17 May 2014 13:04:55 +0200
-Message-ID: <20140517110454.GA1939@mguzik.redhat.com>
-References: <alpine.LRH.2.02.1405170647430.15837@file01.intranet.prod.int.rdu2.redhat.com>
- <alpine.LRH.2.02.1405170650440.15837@file01.intranet.prod.int.rdu2.redhat.com>
+From: PathStone Capital Finance <pathstone-capitalfinance@admin.in.th>
+Subject: =?iso-8859-1?b?cPQ/aT9reQ==?= ponuka 3%
+Date: Sat, 17 May 2014 14:19:28 +0200
+Message-ID: <20140517141928.404552sdad2jez0w__14456.7841584378$1400329784$gmane$org@webmail.nordixnett.no>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1;
+	DelSp=Yes	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.nordixnett.no ([195.18.176.59]:45901 "EHLO
+	mail.nordixnett.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757168AbaEQM31 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 17 May 2014 08:29:27 -0400
 Content-Disposition: inline
-In-Reply-To: <alpine.LRH.2.02.1405170650440.15837@file01.intranet.prod.int.rdu2.redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Mikulas Patocka <mpatocka@redhat.com>
-Cc: Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, linux-kernel@vger.kernel.org, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, May 17, 2014 at 06:53:17AM -0400, Mikulas Patocka wrote:
-> I found a memory leak in iSCSI target that was caused by kref initialized
-> to zero (the memory object was allocated with kzalloc, kref_init was not
-> called and kref_put_spinlock_irqsave was called which changed "0" to "-1"
-> and didn't free the object).
-> 
-> Similar bugs may exist in other kernel areas, so I submit this patch that
-> adds a check to kref.h. If the value is zero or negative, we can assume
-> that it is uninitialized and we warn about it.
-> 
-> Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
-> 
-> ---
->  include/linux/kref.h |    4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> Index: linux-3.15-rc5/include/linux/kref.h
-> ===================================================================
-> --- linux-3.15-rc5.orig/include/linux/kref.h	2013-07-02 22:23:38.000000000 +0200
-> +++ linux-3.15-rc5/include/linux/kref.h	2014-05-16 18:56:18.000000000 +0200
-> @@ -69,7 +69,7 @@ static inline int kref_sub(struct kref *
->  	     void (*release)(struct kref *kref))
->  {
->  	WARN_ON(release == NULL);
-> -
-> +	WARN_ON_ONCE(atomic_read(&kref->refcount) <= 0);
->  	if (atomic_sub_and_test((int) count, &kref->refcount)) {
->  		release(kref);
->  		return 1;
-> @@ -119,6 +119,7 @@ static inline int kref_put_spinlock_irqs
->  	unsigned long flags;
->  
->  	WARN_ON(release == NULL);
-> +	WARN_ON_ONCE(atomic_read(&kref->refcount) <= 0);
->  	if (atomic_add_unless(&kref->refcount, -1, 1))
->  		return 0;
->  	spin_lock_irqsave(lock, flags);
-> @@ -136,6 +137,7 @@ static inline int kref_put_mutex(struct 
->  				 struct mutex *lock)
->  {
->  	WARN_ON(release == NULL);
-> +	WARN_ON_ONCE(atomic_read(&kref->refcount) <= 0);
->  	if (unlikely(!atomic_add_unless(&kref->refcount, -1, 1))) {
->  		mutex_lock(lock);
->  		if (unlikely(!atomic_dec_and_test(&kref->refcount))) {
 
-This has a side effect of detecting some overputs, which is nice.
+Dobr=FD de? p=E1n/madam,
 
-However, could be made better if kref_sub checked that refs you want to
-take don't put the count below 0.
+Vitajte na PathStone Capital Finance,
 
-i.e.
-WARN_ON(count > atomic_read(&kref->refcount));
+Potrebujete =FAver?
 
-this also detects your original problem.
+Kontaktujte n=E1s e?te dnes p=F4?i?ky t=FA?ite, zabezpe?=EDme ak=FDko?v=
+ek =FAver =20
+v=E1m vyhovovalo v=E1? rozpo?et na n=EDzkou =FArokovou sadzbou 3%. Ak m=
+=E1te =20
+z=E1ujem, vypl?te podrobnosti ni??ie:
 
--- 
-Mateusz Guzik
+Poskytujeme v?etky druhy jednotlivcov a podnikov, ak m=E1te z=E1ujem o =
+=20
+na?e =FAverov=E9 slu?by, kontaktujte n=E1s a kompletn=FD program podrob=
+nosti =20
+ni??ie:
+Rozsah slu?ieb od minim=E1lne 5,000,00 EUR a maxim=E1lne 20, 000.000.00=
+ =20
+EUR =FArokovou sadzbou 3%.
+
+Cel=E9 meno:...
+Kontaktn=E1 adresa:...
+Phone:............................
+Krajina...
+Suma potrebn=E1 ako =FAver:...
+Doba trvania =FAveru:...
+Gender:..............................
+
+V potvrden=ED o tento mail, m=F4?eme za?a? so spracovan=EDm svoje p=F4?=
+i?ky. =20
+Existuje viac z=EDska? t=FDm, dosta? =FAver od tejto spolo?nosti.
+
+Kontaktujte n=E1s pre viac info:
+E-mail: [pathstone-capitalfinance@admin.in.th]
+
+?ak=E1me na odpove? pre viac inform=E1ci=ED.
+S pozdravom
+
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
