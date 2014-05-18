@@ -1,12 +1,18 @@
 From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-Subject: [PATCH] scsi: mpt2sas: mpt2sas_base.c:  Fix for possible null pointer dereference
-Date: Sun, 18 May 2014 18:10:39 +0200
-Message-ID: <1400429439-11184-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>, Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
-Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>, support@lsi.com, "James E.J. Bottomley" <JBottomley@parallels.com>, DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: mvsas: mv_sas.c:  Fix for possible null pointer dereference
+Date: Sun, 18 May 2014 18:12:26 +0200
+Message-ID: <1400429547-11342-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ee0-f41.google.com ([74.125.83.41]:44345 "EHLO
+	mail-ee0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751368AbaERQLl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 18 May 2014 12:11:41 -0400
+Received: by mail-ee0-f41.google.com with SMTP id t10so2936191eei.28
+        for <linux-scsi@vger.kernel.org>; Sun, 18 May 2014 09:11:40 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>, Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Cc: Jiri Kosina <jkosina@suse.cz>, Randy Dunlap <rdunlap@infradead.org>, Masanari Iida <standby24x7@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
 There is otherwise a risk of a possible null pointer dereference.
 
@@ -14,23 +20,47 @@ Was largely found by using a static code analysis program called cppcheck.
 
 Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
 ---
- drivers/scsi/mpt2sas/mpt2sas_base.c |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/scsi/mvsas/mv_sas.c |   24 ++++++++++++++----------
+ 1 file changed, 14 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-index bde63f7..7ccc7e4 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -3581,7 +3581,9 @@ mpt2sas_port_enable_done(struct MPT2SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
+diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
+index 6c1f223..ac52f7c 100644
+--- a/drivers/scsi/mvsas/mv_sas.c
++++ b/drivers/scsi/mvsas/mv_sas.c
+@@ -1344,19 +1344,23 @@ void mvs_dev_gone_notify(struct domain_device *dev)
+ {
+ 	unsigned long flags = 0;
+ 	struct mvs_device *mvi_dev = dev->lldd_dev;
+-	struct mvs_info *mvi = mvi_dev->mvi_info;
+-
+-	spin_lock_irqsave(&mvi->lock, flags);
++	struct mvs_info *mvi;
+ 
+-	if (mvi_dev) {
+-		mv_dprintk("found dev[%d:%x] is gone.\n",
+-			mvi_dev->device_id, mvi_dev->dev_type);
+-		mvs_release_task(mvi, dev);
+-		mvs_free_reg_set(mvi, mvi_dev);
+-		mvs_free_dev(mvi_dev);
+-	} else {
++	if (!mvi_dev) {
+ 		mv_dprintk("found dev has gone.\n");
++		return;
  	}
- 	ioc->port_enable_cmds.status &= ~MPT2_CMD_PENDING;
++
++	mvi = mvi_dev->mvi_info;
++
++	spin_lock_irqsave(&mvi->lock, flags);
++
++	mv_dprintk("found dev[%d:%x] is gone.\n",
++		mvi_dev->device_id, mvi_dev->dev_type);
++	mvs_release_task(mvi, dev);
++	mvs_free_reg_set(mvi, mvi_dev);
++	mvs_free_dev(mvi_dev);
++
+ 	dev->lldd_dev = NULL;
+ 	mvi_dev->sas_device = NULL;
  
--	ioc_status = le16_to_cpu(mpi_reply->IOCStatus) & MPI2_IOCSTATUS_MASK;
-+	if (mpi_reply) {
-+		ioc_status = le16_to_cpu(mpi_reply->IOCStatus) & MPI2_IOCSTATUS_MASK;
-+	}
- 
- 	if (ioc_status != MPI2_IOCSTATUS_SUCCESS)
- 		ioc->port_enable_failed = 1;
 -- 
 1.7.10.4
+
