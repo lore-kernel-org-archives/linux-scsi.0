@@ -1,11 +1,11 @@
 From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-Subject: [PATCH] message: fusion: mptscsih.c:  Fix for possible null pointer dereference
-Date: Sun, 18 May 2014 17:59:43 +0200
-Message-ID: <1400428783-10162-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+Subject: [PATCH] scsi: bfa: bfa_fcs_lport.c:  Fix for possible null pointer dereference
+Date: Sun, 18 May 2014 18:06:03 +0200
+Message-ID: <1400429163-10747-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>, Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
-Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>, support@lsi.com, DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>
+Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 There is otherwise a risk of a possible null pointer dereference.
@@ -14,25 +14,27 @@ Was largely found by using a static code analysis program called cppcheck.
 
 Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
 ---
- drivers/message/fusion/mptscsih.c |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/scsi/bfa/bfa_fcs_lport.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mptscsih.c
-index 727819c..b323b23 100644
---- a/drivers/message/fusion/mptscsih.c
-+++ b/drivers/message/fusion/mptscsih.c
-@@ -1279,9 +1279,11 @@ mptscsih_info(struct Scsi_Host *SChost)
+diff --git a/drivers/scsi/bfa/bfa_fcs_lport.c b/drivers/scsi/bfa/bfa_fcs_lport.c
+index ff75ef8..542d5c6 100644
+--- a/drivers/scsi/bfa/bfa_fcs_lport.c
++++ b/drivers/scsi/bfa/bfa_fcs_lport.c
+@@ -5826,12 +5826,13 @@ bfa_fcs_lport_get_rport_max_speed(bfa_fcs_lport_t *port)
+ 	bfa_port_speed_t max_speed = 0;
+ 	struct bfa_port_attr_s port_attr;
+ 	bfa_port_speed_t port_speed, rport_speed;
+-	bfa_boolean_t trl_enabled = bfa_fcport_is_ratelim(port->fcs->bfa);
++	bfa_boolean_t trl_enabled;
  
- 		mpt_print_ioc_summary(h->ioc, h->info_kbuf, &size, 0, 0);
- 		h->info_kbuf[size-1] = '\0';
-+
-+		return h->info_kbuf;
- 	}
  
--	return h->info_kbuf;
-+	return NULL;
- }
+ 	if (port == NULL)
+ 		return 0;
  
- int mptscsih_show_info(struct seq_file *m, struct Scsi_Host *host)
++	trl_enabled = bfa_fcport_is_ratelim(port->fcs->bfa);
+ 	fcs = port->fcs;
+ 
+ 	/* Get Physical port's current speed */
 -- 
 1.7.10.4
