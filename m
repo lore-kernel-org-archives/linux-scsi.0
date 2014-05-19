@@ -1,30 +1,30 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: tgt infrastructure removal
-Date: Mon, 19 May 2014 07:09:33 -0700
-Message-ID: <20140519140933.GA14641@infradead.org>
-References: <1397557614-21243-1-git-send-email-hch@lst.de>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: dangling pointers and/or reentrancy in scmd_eh_abort_handler?
+Date: Mon, 19 May 2014 17:08:56 +0200
+Message-ID: <537A1E88.9080803@acm.org>
+References: <537A105B.4080504@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:32880 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751630AbaESOJg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 May 2014 10:09:36 -0400
-Content-Disposition: inline
-In-Reply-To: <1397557614-21243-1-git-send-email-hch@lst.de>
+Received: from andre.telenet-ops.be ([195.130.132.53]:48304 "EHLO
+	andre.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751853AbaESPI6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 May 2014 11:08:58 -0400
+In-Reply-To: <537A105B.4080504@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org
+To: Paolo Bonzini <pbonzini@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>, Ulrich Obergfell <uobergfe@redhat.com>
 
-Any comments on this series?
+On 05/19/14 16:08, Paolo Bonzini wrote:
+> 2) reentrancy: the softirq handler and scmd_eh_abort_handler can run
+> concurrently, and call scsi_finish_command without any lock protecting
+> the calls.  You can then get memory corruption.
 
-The last time the subject came up in
-http://marc.info/?t=139056945300005&r=1&w=2 Tomo said:
+I'm not sure what the recommended approach is to address this race. But
+it is possible to address this in the LLD. See e.g. the srp_claim_req()
+function in the SRP LLD and how it is invoked from the reply handler,
+the abort handler and the reset handlers in that LLD.
 
-"I'm not sure there are any users of the driver. I guess that
-you could try to remove the driver to see if someone would complain."
-
-and Hannes brought up a mysteria out of tree user in SLES that so far
-hasn't complained.
+Bart.
 
