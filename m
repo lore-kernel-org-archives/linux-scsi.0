@@ -1,35 +1,200 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: dangling pointers and/or reentrancy in scmd_eh_abort_handler?
-Date: Mon, 19 May 2014 08:25:30 -0700
-Message-ID: <20140519152530.GA15433@infradead.org>
-References: <537A105B.4080504@redhat.com>
- <537A1E88.9080803@acm.org>
+From: Saurav Kashyap <saurav.kashyap@qlogic.com>
+Subject: Re: [PATCH 2/13 v2] [SCSI] qla2xxx: make return of 0 explicit
+Date: Mon, 19 May 2014 16:07:52 +0000
+Message-ID: <F5D084D6342F9B479C34599BB0A03E4D01284E742E@AVMB1.qlogic.org>
+References: <1400474832-22422-1-git-send-email-Julia.Lawall@lip6.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+	boundary="_000_F5D084D6342F9B479C34599BB0A03E4D01284E742EAVMB1qlogicor_"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:53413 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754363AbaESPZd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 May 2014 11:25:33 -0400
-Content-Disposition: inline
-In-Reply-To: <537A1E88.9080803@acm.org>
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:4882 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753343AbaESQH5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 19 May 2014 12:07:57 -0400
+Received: from pps.filterd (m0000643.ppops.net [127.0.0.1])
+	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id s4JFu8k2013663
+	for <linux-scsi@vger.kernel.org>; Mon, 19 May 2014 09:07:56 -0700
+Received: from avcashub1.qlogic.com (avcashub2.qlogic.com [198.70.193.116])
+	by mx0b-0016ce01.pphosted.com with ESMTP id 1kurt1jnam-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Mon, 19 May 2014 09:07:55 -0700
+In-Reply-To: <1400474832-22422-1-git-send-email-Julia.Lawall@lip6.fr>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Paolo Bonzini <pbonzini@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>, Ulrich Obergfell <uobergfe@redhat.com>
+To: Julia Lawall <Julia.Lawall@lip6.fr>, Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@qlogic.com>
+Cc: "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-On Mon, May 19, 2014 at 05:08:56PM +0200, Bart Van Assche wrote:
-> On 05/19/14 16:08, Paolo Bonzini wrote:
-> > 2) reentrancy: the softirq handler and scmd_eh_abort_handler can run
-> > concurrently, and call scsi_finish_command without any lock protecting
-> > the calls.  You can then get memory corruption.
-> 
-> I'm not sure what the recommended approach is to address this race. But
-> it is possible to address this in the LLD. See e.g. the srp_claim_req()
-> function in the SRP LLD and how it is invoked from the reply handler,
-> the abort handler and the reset handlers in that LLD.
+--_000_F5D084D6342F9B479C34599BB0A03E4D01284E742EAVMB1qlogicor_
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <DD9E880DFA7C314B8FED822F49BFDCDF@qlogic.com>
+Content-Transfer-Encoding: quoted-printable
 
-blk-mq triest to solve this a test_and_set_bit for a completion flag
-at the block layer for completions vs timeouts.  I think doing this in
-the SCSI layer as well would be very useful as we can't expect Joe
-Random Driver Developer to get it right in every driver.
+Hi Julia,
+
+Status is already set to 0 at the beginning of the function, I think
+we should just "return status" here to be consistent with the rest of
+the function.
+
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+diff --git a/drivers/scsi/qla2xxx/qla_init.c
+b/drivers/scsi/qla2xxx/qla_init.c
+index 76af6b6..e339833 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -4587,7 +4587,6 @@ qla2x00_abort_isp(scsi_qla_host_t *vha)
+                if (unlikely(pci_channel_offline(ha->pdev) &&
+                    ha->flags.pci_channel_io_perm_failure)) {
+                        clear_bit(ISP_ABORT_RETRY, &vha->dpc_flags);
+-                       status =3D 0;
+                        return status;
+                }
+=3D=3D=3D=3D=3D=3D=3D=3D=3D
+
+Thanks,
+~Saurav
+=20
+
+
+
+
+>From: Julia Lawall <Julia.Lawall@lip6.fr>
+>
+>Delete unnecessary use of a local variable to immediately return 0.
+>
+>A simplified version of the semantic patch that fixes this problem is as
+>follows: (http://coccinelle.lip6.fr/)
+>
+>// <smpl>
+>@r exists@
+>local idexpression ret;
+>expression e;
+>position p;
+>@@
+>
+>-ret =3D 0;
+>... when !=3D ret =3D e
+>return=20
+>- ret
+>+ 0
+>  ;
+>// </smpl>
+>
+>Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+>
+>---
+>Changed subject line, which was not appreciated by some spam filters.
+>
+> drivers/scsi/qla2xxx/qla_init.c |    3 +--
+> 1 file changed, 1 insertion(+), 2 deletions(-)
+>
+>diff --git a/drivers/scsi/qla2xxx/qla_init.c
+>b/drivers/scsi/qla2xxx/qla_init.c
+>index 38aeb54..a63f9b6 100644
+>--- a/drivers/scsi/qla2xxx/qla_init.c
+>+++ b/drivers/scsi/qla2xxx/qla_init.c
+>@@ -4593,8 +4593,7 @@ qla2x00_abort_isp(scsi_qla_host_t *vha)
+> 		if (unlikely(pci_channel_offline(ha->pdev) &&
+> 		    ha->flags.pci_channel_io_perm_failure)) {
+> 			clear_bit(ISP_ABORT_RETRY, &vha->dpc_flags);
+>-			status =3D 0;
+>-			return status;
+>+			return 0;
+> 		}
+>=20
+> 		ha->isp_ops->get_flash_version(vha, req->ring);
+
+
+--_000_F5D084D6342F9B479C34599BB0A03E4D01284E742EAVMB1qlogicor_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
+
+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
+YQBwAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AZAABAAAACgAAAFMATQBUAFAAAAAAAAIBQQAB
+AAAAdAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgFMAYQB1AHIAYQB2ACAASwBhAHMAaAB5AGEA
+cAAAAFMATQBUAFAAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAu
+AGMAbwBtAAAAHwACXQEAAAA0AAAAcwBhAHUAcgBhAHYALgBrAGEAcwBoAHkAYQBwAEAAcQBsAG8A
+ZwBpAGMALgBjAG8AbQAAAB8A5V8BAAAAPAAAAHMAaQBwADoAcwBhAHUAcgBhAHYALgBrAGEAcwBo
+AHkAYQBwAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AGgwBAAAAHgAAAFMAYQB1AHIAYQB2ACAA
+SwBhAHMAaAB5AGEAcAAAAAAAHwAfDAEAAAA0AAAAcwBhAHUAcgBhAHYALgBrAGEAcwBoAHkAYQBw
+AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AHgwBAAAACgAAAFMATQBUAFAAAAAAAAIBGQwBAAAA
+dAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgFMAYQB1AHIAYQB2ACAASwBhAHMAaAB5AGEAcAAA
+AFMATQBUAFAAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMA
+bwBtAAAAHwABXQEAAAA0AAAAcwBhAHUAcgBhAHYALgBrAGEAcwBoAHkAYQBwAEAAcQBsAG8AZwBp
+AGMALgBjAG8AbQAAAB8A+D8BAAAAHgAAAFMAYQB1AHIAYQB2ACAASwBhAHMAaAB5AGEAcAAAAAAA
+HwAjQAEAAAA0AAAAcwBhAHUAcgBhAHYALgBrAGEAcwBoAHkAYQBwAEAAcQBsAG8AZwBpAGMALgBj
+AG8AbQAAAB8AIkABAAAACgAAAFMATQBUAFAAAAAAAAIB+T8BAAAAdAAAAAAAAACBKx+kvqMQGZ1u
+AN0BD1QCAAAAgFMAYQB1AHIAYQB2ACAASwBhAHMAaAB5AGEAcAAAAFMATQBUAFAAAABzAGEAdQBy
+AGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAJXQEAAAA0AAAA
+cwBhAHUAcgBhAHYALgBrAGEAcwBoAHkAYQBwAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AMUAB
+AAAAAgAAAAAAAAALAEA6AQAAAB8AMEABAAAAAgAAAAAAAAAfABoAAQAAABIAAABJAFAATQAuAE4A
+bwB0AGUAAAAAAAMA8T8JBAAACwBAOgEAAAADAP0/5AQAAAIBCzABAAAAEAAAACkA0IEoilBNvjY8
+T6hBIQIDABcAAQAAAEAAOQAAPJB8fHPPAUAACDDFH/l8fHPPAQsAAIAIIAYAAAAAAMAAAAAAAABG
+AAAAABSFAAABAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAHgAAAGEAYwBjAGUAcAB0AGwAYQBu
+AGcAdQBhAGcAZQAAAAAAAQAAAAwAAABlAG4ALQBVAFMAAAALAACACCAGAAAAAADAAAAAAAAARgAA
+AAAGhQAAAAAAAB8ANwABAAAAfAAAAFIAZQA6ACAAWwBQAEEAVABDAEgAIAAyAC8AMQAzACAAdgAy
+AF0AIABbAFMAQwBTAEkAXQAgAHEAbABhADIAeAB4AHgAOgAgAG0AYQBrAGUAIAByAGUAdAB1AHIA
+bgAgAG8AZgAgADAAIABlAHgAcABsAGkAYwBpAHQAAAAfAD0AAQAAAAoAAABSAGUAOgAgAAAAAAAD
+ADYAAAAAAB8AQhABAAAAcgAAADwAMQA0ADAAMAA0ADcANAA4ADMAMgAtADIAMgA0ADIAMgAtADEA
+LQBnAGkAdAAtAHMAZQBuAGQALQBlAG0AYQBpAGwALQBKAHUAbABpAGEALgBMAGEAdwBhAGwAbABA
+AGwAaQBwADYALgBmAHIAPgAAAAAAAgFxAAEAAAAWAAAAAQHPc3x8ejEU5j1TE0y1VAc+6onFnQAA
+HwBwAAEAAAB0AAAAWwBQAEEAVABDAEgAIAAyAC8AMQAzACAAdgAyAF0AIABbAFMAQwBTAEkAXQAg
+AHEAbABhADIAeAB4AHgAOgAgAG0AYQBrAGUAIAByAGUAdAB1AHIAbgAgAG8AZgAgADAAIABlAHgA
+cABsAGkAYwBpAHQAAAAfADUQAQAAAHwAAAA8AEYANQBEADAAOAA0AEQANgAzADQAMgBGADkAQgA0
+ADcAOQBDADMANAA1ADkAOQBCAEIAMABBADAAMwBFADQARAAwADEAMgA4ADQARQA3ADQAMgBFAEAA
+QQBWAE0AQgAxAC4AcQBsAG8AZwBpAGMALgBvAHIAZwA+AAAAHwA5EAEAAAByAAAAPAAxADQAMAAw
+ADQANwA0ADgAMwAyAC0AMgAyADQAMgAyAC0AMQAtAGcAaQB0AC0AcwBlAG4AZAAtAGUAbQBhAGkA
+bAAtAEoAdQBsAGkAYQAuAEwAYQB3AGEAbABsAEAAbABpAHAANgAuAGYAcgA+AAAAAAADAN4/n04A
+AEAABzBTYMJ8fHPPAQMAJgAAAAAAAgFHAAEAAAAtAAAAYz1VUzthPSA7cD1RTG9naWM7bD1BVk1C
+MS0xNDA1MTkxNjA3NTJaLTg0MjcAAAAAHwAVEAEAAABYAAAARABEADkARQA4ADgAMABEAEYAQQA3
+AEMAMwAxADQAQgA4AEYARQBEADgAMgAyAEYANAA5AEIARgBEAEMARABGAEAAcQBsAG8AZwBpAGMA
+LgBjAG8AbQAAAAIBFDABAAAADAAAAJIAAAB199maSAAAAB8A+j8BAAAAHgAAAFMAYQB1AHIAYQB2
+ACAASwBhAHMAaAB5AGEAcAAAAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAFgAAAHUAcwBlAHIA
+LQBhAGcAZQBuAHQAAAAAAAEAAABGAAAATQBpAGMAcgBvAHMAbwBmAHQALQBNAGEAYwBPAHUAdABs
+AG8AbwBrAC8AMQA0AC4AMwAuADkALgAxADMAMQAwADMAMAAAAAAAHwAAgB+k6zOoei5Cvnt54amO
+VLMBAAAAOAAAAEMAbwBuAHYAZQByAHMAYQB0AGkAbwBuAEkAbgBkAGUAeABUAHIAYQBjAGsAaQBu
+AGcARQB4AAAAAQAAAF4BAABJAEkAPQAwADEAMAAxAEMARgA3ADMANwBDADcAQwBGADEARAAyAEIA
+MAA3AEQANAA4ADYAMwAwAEEANABCADgAQgBDADMANwA1ADcAMQAwADQAMQAxAEMAQQBCADkAOwBT
+AEIATQBJAEQAPQAyADMAOwBTAEIAVAA9ADIAOAAzADsAUwAyAD0APAA4ADYARgA3AEIAOAA3ADcA
+RQAyAEEAQQBFAEMANAA5AEIANwAxADEAMgBGAEMAOQA2ADkAMQA1ADAAQwA4AEIAMAAxADIAOAA1
+AEYAQgAwADYANwBAAEEAVgBNAEIAMQAuAHEAbABvAGcAaQBjAC4AbwByAGcAPgA7AFYAZQByAHMA
+aQBvAG4APQBWAGUAcgBzAGkAbwBuACAAMQA0AC4AMgAgACgAQgB1AGkAbABkACAAMwA4ADcALgAw
+ACkALAAgAFMAdABhAGcAZQA9AEgAOQAAAAAAAwANNP0/AAAfAACAhgMCAAAAAADAAAAAAAAARgEA
+AAAgAAAAeAAtAG0AcwAtAGgAYQBzAC0AYQB0AHQAYQBjAGgAAAABAAAAAgAAAAAAAAAfAACAhgMC
+AAAAAADAAAAAAAAARgEAAAAiAAAAeAAtAG8AcgBpAGcAaQBuAGEAdABpAG4AZwAtAGkAcAAAAAAA
+AQAAABoAAABbADEAMAAuADMANQAuADcALgAzADcAXQAAAAAAWqs=
+
+--_000_F5D084D6342F9B479C34599BB0A03E4D01284E742EAVMB1qlogicor_--
