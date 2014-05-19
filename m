@@ -1,134 +1,74 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 1/2] virtio_scsi: use cmd_size
-Date: Mon, 19 May 2014 10:44:40 -0700
-Message-ID: <1400521480.10964.3.camel@haakon3.risingtidesystems.com>
+Subject: Re: [PATCH 2/2] scsi_debug: simple short transfer injection
+Date: Mon, 19 May 2014 10:45:25 -0700
+Message-ID: <1400521525.10964.4.camel@haakon3.risingtidesystems.com>
 References: <1398955911-20688-1-git-send-email-hch@lst.de>
-	 <1398955911-20688-2-git-send-email-hch@lst.de>
+	 <1398955911-20688-3-git-send-email-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:41016 "EHLO
+Received: from mail.linux-iscsi.org ([67.23.28.174]:41026 "EHLO
 	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752137AbaESRos (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 May 2014 13:44:48 -0400
-In-Reply-To: <1398955911-20688-2-git-send-email-hch@lst.de>
+	with ESMTP id S932438AbaESRp0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 May 2014 13:45:26 -0400
+In-Reply-To: <1398955911-20688-3-git-send-email-hch@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>
 Cc: James Bottomley <JBottomley@Parallels.com>, linux-scsi@vger.kernel.org
 
 On Thu, 2014-05-01 at 16:51 +0200, Christoph Hellwig wrote:
-> Taken almost entirely from Nicholas Bellinger's scsi-mq conversion.
+> Add an option to only transfer half the data for every n-th command.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Acked-by: Paolo Bonzini <pbonzini@redhat.com>
-> ---
+> Acked-by: Douglas Gilbert <dgilbert@interlog.com>
 
 Reviewed-by: Nicholas Bellinger <nab@linux-iscsi.org>
 
->  drivers/scsi/virtio_scsi.c |   25 +++++++------------------
->  include/scsi/scsi_cmnd.h   |    9 +++++++++
->  2 files changed, 16 insertions(+), 18 deletions(-)
+> ---
+>  drivers/scsi/scsi_debug.c |    8 ++++++++
+>  1 file changed, 8 insertions(+)
 > 
-> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-> index 16bfd50..5ec4a73 100644
-> --- a/drivers/scsi/virtio_scsi.c
-> +++ b/drivers/scsi/virtio_scsi.c
-> @@ -204,7 +204,6 @@ static void virtscsi_complete_cmd(struct virtio_scsi *vscsi, void *buf)
->  			set_driver_byte(sc, DRIVER_SENSE);
+> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+> index f3e9cc0..1328a26 100644
+> --- a/drivers/scsi/scsi_debug.c
+> +++ b/drivers/scsi/scsi_debug.c
+> @@ -130,6 +130,7 @@ static const char * scsi_debug_version_date = "20100324";
+>  #define SCSI_DEBUG_OPT_DIF_ERR   32
+>  #define SCSI_DEBUG_OPT_DIX_ERR   64
+>  #define SCSI_DEBUG_OPT_MAC_TIMEOUT  128
+> +#define SCSI_DEBUG_OPT_SHORT_TRANSFER	256
+>  /* When "every_nth" > 0 then modulo "every_nth" commands:
+>   *   - a no response is simulated if SCSI_DEBUG_OPT_TIMEOUT is set
+>   *   - a RECOVERED_ERROR is simulated on successful read and write
+> @@ -3583,6 +3584,7 @@ int scsi_debug_queuecommand_lck(struct scsi_cmnd *SCpnt, done_funct_t done)
+>  	int inj_transport = 0;
+>  	int inj_dif = 0;
+>  	int inj_dix = 0;
+> +	int inj_short = 0;
+>  	int delay_override = 0;
+>  	int unmap = 0;
+>  
+> @@ -3628,6 +3630,8 @@ int scsi_debug_queuecommand_lck(struct scsi_cmnd *SCpnt, done_funct_t done)
+>  			inj_dif = 1; /* to reads and writes below */
+>  		else if (SCSI_DEBUG_OPT_DIX_ERR & scsi_debug_opts)
+>  			inj_dix = 1; /* to reads and writes below */
+> +		else if (SCSI_DEBUG_OPT_SHORT_TRANSFER & scsi_debug_opts)
+> +			inj_short = 1;
 >  	}
 >  
-> -	mempool_free(cmd, virtscsi_cmd_pool);
->  	sc->scsi_done(sc);
->  
->  	atomic_dec(&tgt->reqs);
-> @@ -279,8 +278,6 @@ static void virtscsi_complete_free(struct virtio_scsi *vscsi, void *buf)
->  
->  	if (cmd->comp)
->  		complete_all(cmd->comp);
-> -	else
-> -		mempool_free(cmd, virtscsi_cmd_pool);
->  }
->  
->  static void virtscsi_ctrl_done(struct virtqueue *vq)
-> @@ -496,10 +493,9 @@ static int virtscsi_queuecommand(struct virtio_scsi *vscsi,
->  				 struct virtio_scsi_vq *req_vq,
->  				 struct scsi_cmnd *sc)
->  {
-> -	struct virtio_scsi_cmd *cmd;
-> -	int ret;
-> -
->  	struct Scsi_Host *shost = virtio_scsi_host(vscsi->vdev);
-> +	struct virtio_scsi_cmd *cmd = scsi_cmd_priv(sc);
+>  	if (devip->wlun) {
+> @@ -3744,6 +3748,10 @@ read:
+>  		if (scsi_debug_fake_rw)
+>  			break;
+>  		get_data_transfer_info(cmd, &lba, &num, &ei_lba);
 > +
->  	BUG_ON(scsi_sg_count(sc) > shost->sg_tablesize);
->  
->  	/* TODO: check feature bit and fail if unsupported?  */
-> @@ -508,11 +504,6 @@ static int virtscsi_queuecommand(struct virtio_scsi *vscsi,
->  	dev_dbg(&sc->device->sdev_gendev,
->  		"cmd %p CDB: %#02x\n", sc, sc->cmnd[0]);
->  
-> -	ret = SCSI_MLQUEUE_HOST_BUSY;
-> -	cmd = mempool_alloc(virtscsi_cmd_pool, GFP_ATOMIC);
-> -	if (!cmd)
-> -		goto out;
-> -
->  	memset(cmd, 0, sizeof(*cmd));
->  	cmd->sc = sc;
->  	cmd->req.cmd = (struct virtio_scsi_cmd_req){
-> @@ -531,13 +522,9 @@ static int virtscsi_queuecommand(struct virtio_scsi *vscsi,
->  
->  	if (virtscsi_kick_cmd(req_vq, cmd,
->  			      sizeof cmd->req.cmd, sizeof cmd->resp.cmd,
-> -			      GFP_ATOMIC) == 0)
-> -		ret = 0;
-> -	else
-> -		mempool_free(cmd, virtscsi_cmd_pool);
-> -
-> -out:
-> -	return ret;
-> +			      GFP_ATOMIC) != 0)
-> +		return SCSI_MLQUEUE_HOST_BUSY;
-> +	return 0;
->  }
->  
->  static int virtscsi_queuecommand_single(struct Scsi_Host *sh,
-> @@ -683,6 +670,7 @@ static struct scsi_host_template virtscsi_host_template_single = {
->  	.name = "Virtio SCSI HBA",
->  	.proc_name = "virtio_scsi",
->  	.this_id = -1,
-> +	.cmd_size = sizeof(struct virtio_scsi_cmd),
->  	.queuecommand = virtscsi_queuecommand_single,
->  	.eh_abort_handler = virtscsi_abort,
->  	.eh_device_reset_handler = virtscsi_device_reset,
-> @@ -699,6 +687,7 @@ static struct scsi_host_template virtscsi_host_template_multi = {
->  	.name = "Virtio SCSI HBA",
->  	.proc_name = "virtio_scsi",
->  	.this_id = -1,
-> +	.cmd_size = sizeof(struct virtio_scsi_cmd),
->  	.queuecommand = virtscsi_queuecommand_multi,
->  	.eh_abort_handler = virtscsi_abort,
->  	.eh_device_reset_handler = virtscsi_device_reset,
-> diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-> index dd7c998..e016e2a 100644
-> --- a/include/scsi/scsi_cmnd.h
-> +++ b/include/scsi/scsi_cmnd.h
-> @@ -133,6 +133,15 @@ struct scsi_cmnd {
->  	unsigned char tag;	/* SCSI-II queued command tag */
->  };
->  
-> +/*
-> + * Return the driver private allocation behind the command.
-> + * Only works if cmd_size is set in the host template.
-> + */
-> +static inline void *scsi_cmd_priv(struct scsi_cmnd *cmd)
-> +{
-> +	return cmd + 1;
-> +}
+> +		if (inj_short)
+> +			num /= 2;
 > +
->  /* make sure not to use it with REQ_TYPE_BLOCK_PC commands */
->  static inline struct scsi_driver *scsi_cmd_to_driver(struct scsi_cmnd *cmd)
->  {
+>  		errsts = resp_read(SCpnt, lba, num, devip, ei_lba);
+>  		if (inj_recovered && (0 == errsts)) {
+>  			mk_sense_buffer(devip, RECOVERED_ERROR,
 
 
