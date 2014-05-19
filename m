@@ -1,55 +1,50 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: [PATCH] scsi: dc395x.c:  Fix for possible null pointer dereference
-Date: Sun, 18 May 2014 21:50:42 +0200 (CEST)
-Message-ID: <Pine.LNX.4.64.1405182147500.23804@axis700.grange>
-References: <1400429349-11040-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: SCSI "staging" tree for linux-next?
+Date: Mon, 19 May 2014 09:20:02 +0900
+Message-ID: <1400458802.2288.11.camel@dabdike>
+References: <20140515052645.GA26266@infradead.org>
+	 <537614CC.6020602@suse.de>
+	 <1400277676.16968.2.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1400429349-11040-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+In-Reply-To: <1400277676.16968.2.camel@dabdike.int.hansenpartnership.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-Cc: Oliver Neukum <oliver@neukum.org>, Ali Akcaagac <aliakc@web.de>, Jamie Lenehan <lenehan@twibble.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, dc395x@twibble.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Christoph Hellwig <hch@infradead.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, 18 May 2014, Rickard Strandqvist wrote:
-
-> There is otherwise a risk of a possible null pointer dereference.
+On Fri, 2014-05-16 at 15:01 -0700, James Bottomley wrote:
+> On Fri, 2014-05-16 at 15:38 +0200, Hannes Reinecke wrote:
+> > On 05/15/2014 07:26 AM, Christoph Hellwig wrote:
+> > > Hi James,
+> > >
+> > > we're past -rc5 and no SCSI patches have been collected for 3.16 yet,
+> > > despite a lot of patches including a lot of reviewed ones pending on the
+> > > list.
+> > >
+> > > I'd really love to get at least some testing for all the work that
+> > > sometimes has been pending for months in linux-next and would offer to
+> > > put together a tree of reviewed patches for linux-next.  Is this fine
+> > > with you?
+> > >
+> > Seconded. Having a staging tree would make my life _so_ much easier.
 > 
-> Was largely found by using a static code analysis program called cppcheck.
-> 
-> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-> ---
->  drivers/scsi/dc395x.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
-> index 83d9bf6..0d86bc7 100644
-> --- a/drivers/scsi/dc395x.c
-> +++ b/drivers/scsi/dc395x.c
-> @@ -2637,7 +2637,7 @@ static struct ScsiReqBlk *msgin_qtag(struct AdapterCtlBlk *acb,
->  	struct ScsiReqBlk *srb = NULL;
->  	struct ScsiReqBlk *i;
->  	dprintkdbg(DBG_0, "msgin_qtag: (0x%p) tag=%i srb=%p\n",
-> -		   srb->cmd, tag, srb);
-> +		   srb ? srb->cmd : 0, tag, srb);
+> OK, I think we can do this easily.  Send me your staging branches and
+> I'll pull them into a global staging branch and merge it with for-next
+> in linux-scsi ... this will ensure we don't get yelled at for duplicate
+> commits causing merge rejections in linux-next.  Since staging will be
+> volatile and for the purposes of testing patches on upstream track, we
+> don't need signed tags or anything.
 
-There's not just a risk, it is a NULL-pointer dereference, so, just remove 
-it, e.g. like
+Ping ... Git URL, anyone?
 
-> -	dprintkdbg(DBG_0, "msgin_qtag: (0x%p) tag=%i srb=%p\n",
-> -		   srb->cmd, tag, srb);
-> +	dprintkdbg(DBG_0, "msgin_qtag: tag=%i\n", tag);
+I thought this was something you really wanted and an essential
+component to making your lives easier?
 
-Thanks
-Guennadi
+Like I said, just the URL will work for a staging tree, I don't need
+signed tags or commit descriptions ... although if testing by next or
+Fengguang shows fatal problems, I'll drop the branch.
 
->  	if (!(dcb->tag_mask & (1 << tag)))
->  		dprintkl(KERN_DEBUG,
-> -- 
-> 1.7.10.4
-
----
-Guennadi Liakhovetski, Ph.D.
-Freelance Open-Source Software Developer
-http://www.open-technology.de/
+James
