@@ -1,48 +1,52 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: dangling pointers and/or reentrancy in scmd_eh_abort_handler?
-Date: Mon, 19 May 2014 18:43:50 +0200
-Message-ID: <537A34C6.7090905@acm.org>
-References: <537A105B.4080504@redhat.com> <537A1E88.9080803@acm.org> <537A2CB8.9060302@redhat.com>
+From: Eddie Wai <eddie.wai@broadcom.com>
+Subject: Re: [PATCH] bnx2i: Make boot_nic entry visible in the sysfs
+ session objects
+Date: Mon, 19 May 2014 09:54:06 -0700
+Message-ID: <1400518446.28308.2.camel@lbirv-waie-lx2.broadcom.com>
+References: <1400499133-32196-1-git-send-email-vikas.chaudhary@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from andre.telenet-ops.be ([195.130.132.53]:51708 "EHLO
-	andre.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932516AbaESQnx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 May 2014 12:43:53 -0400
-In-Reply-To: <537A2CB8.9060302@redhat.com>
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:17861 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753183AbaESQ5x (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 May 2014 12:57:53 -0400
+In-Reply-To: <1400499133-32196-1-git-send-email-vikas.chaudhary@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Paolo Bonzini <pbonzini@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>, Ulrich Obergfell <uobergfe@redhat.com>
+To: vikas.chaudhary@qlogic.com
+Cc: jbottomley@parallels.com, michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org, giridhar.malavali@qlogic.com, Tej Parkash <tej.parkash@qlogic.com>
 
-On 05/19/14 18:09, Paolo Bonzini wrote:
-> Il 19/05/2014 17:08, Bart Van Assche ha scritto:
->> On 05/19/14 16:08, Paolo Bonzini wrote:
->>> 2) reentrancy: the softirq handler and scmd_eh_abort_handler can run
->>> concurrently, and call scsi_finish_command without any lock protecting
->>> the calls.  You can then get memory corruption.
->>
->> I'm not sure what the recommended approach is to address this race. But
->> it is possible to address this in the LLD. See e.g. the srp_claim_req()
->> function in the SRP LLD and how it is invoked from the reply handler,
->> the abort handler and the reset handlers in that LLD.
-> 
-> That's not enough, unless I'm missing something.  Say the request
-> handler claims the request and the abort handler doesn't:
-> 
-> - the request handler calls scsi_done and ends up in scsi_finish_command.
-> 
-> - the abort handler will return SUCCESS, and scmd_eh_abort_handler then
-> calls scsi_finish_command.
+FYI, this was part of the boot_nic sysfs patch which would allow iscsid
+to sync_session with info from the iBFT for iSCSI BFS via offload.
 
-It depends on how the SCSI abort handler gets invoked. If the SCSI abort
-handler gets invoked because a SCSI command timed out that means that
-the block layer has already detected a timeout and also that the
-REQ_ATOM_COMPLETE bit has already been set. In this scenario if a SCSI
-LLD invokes scsi_done() that causes blk_complete_request() to return
-without invoking __blk_complete_request() and hence without invoking
-scsi_softirq_done().
+This looks good to me.
 
-Bart.
+Acked-by: Eddie Wai <eddie.wai@broadcom.com>
+
+On Mon, 2014-05-19 at 07:32 -0400, vikas.chaudhary@qlogic.com wrote:
+> From: Tej Parkash <tej.parkash@qlogic.com>
+> 
+> Signed-off-by: Tej Parkash <tej.parkash@qlogic.com>
+> Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+> ---
+>  drivers/scsi/bnx2i/bnx2i_iscsi.c | 3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+> index 166543f..cabc8c1 100644
+> --- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
+> +++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+> @@ -2234,6 +2234,9 @@ static umode_t bnx2i_attr_is_visible(int param_type, int param)
+>  		case ISCSI_PARAM_TGT_RESET_TMO:
+>  		case ISCSI_PARAM_IFACE_NAME:
+>  		case ISCSI_PARAM_INITIATOR_NAME:
+> +		case ISCSI_PARAM_BOOT_ROOT:
+> +		case ISCSI_PARAM_BOOT_NIC:
+> +		case ISCSI_PARAM_BOOT_TARGET:
+>  			return S_IRUGO;
+>  		default:
+>  			return 0;
+
 
