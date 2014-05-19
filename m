@@ -1,19 +1,25 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2] [PATCH] drivers: scsi: mvsas: fix compiling issue by
- adding 'MVS_' for "enum pci_interrupt_cause"
-Date: Mon, 19 May 2014 10:18:39 -0700
-Message-ID: <20140519171839.GB32250@infradead.org>
-References: <536C2D2B.6090501@gmail.com>
+Subject: Re: [PATCH 3/5] lpfc 10.2.8001.0: Removed obsolete PCI IDs from the
+ driver
+Date: Mon, 19 May 2014 10:19:44 -0700
+Message-ID: <20140519171944.GC32250@infradead.org>
+References: <1399910007.25346.10.camel@myfc17>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:60467 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932375AbaESRTo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 May 2014 13:19:44 -0400
 Content-Disposition: inline
-In-Reply-To: <536C2D2B.6090501@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Chen Gang <gang.chen.5i5j@gmail.com>
-Cc: JBottomley@parallels.com, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Guan Xuetao <gxt@mprc.pku.edu.cn>, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+In-Reply-To: <1399910007.25346.10.camel@myfc17>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Smart <james.smart@emulex.com>
+Cc: linux-scsi@vger.kernel.org
 
-Looks good to me,
+On Mon, May 12, 2014 at 11:53:27AM -0400, James Smart wrote:
+> Removed obsolete PCI IDs from the driver.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+How are these obsolete?
+
