@@ -1,130 +1,90 @@
-From: "Michael S. Tsirkin" <mst@redhat.com>
-Subject: Re: [PATCH 6/6] virtio-scsi: Enable DIF/DIX modes in SCSI host LLD
-Date: Tue, 20 May 2014 01:43:18 +0300
-Message-ID: <20140519224318.GC29605@redhat.com>
-References: <1396819929-29687-1-git-send-email-nab@daterainc.com>
-	<1396819929-29687-7-git-send-email-nab@daterainc.com>
-	<20140407084518.GA14091@redhat.com>
-	<1396861019.19888.25.camel@haakon3.risingtidesystems.com>
-	<20140507091305.GA20044@redhat.com>
-	<1400526423.10964.31.camel@haakon3.risingtidesystems.com>
-	<20140519191527.GC32382@redhat.com>
-	<1400532890.10964.44.camel@haakon3.risingtidesystems.com>
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+Subject: Re: [ANNOUNCE] scsi patch queue tree
+Date: Tue, 20 May 2014 10:03:43 +1000
+Message-ID: <20140520100343.31490551@canb.auug.org.au>
+References: <20140519140614.GA12183@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-Content-Disposition: inline
-In-Reply-To: <1400532890.10964.44.camel@haakon3.risingtidesystems.com>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagig@dev.mellanox.co.il>, virtualization@lists.linux-foundation.org, Sagi Grimberg <sagig@mellanox.com>, target-devel <target-devel@vger.kernel.org>, "H. Peter Anvin" <hpa@zytor.com>, Paolo Bonzini <pbonzini@redhat.com>, "Nicholas A. Bellinger" <nab@daterainc.com>, Christoph Hellwig <hch@lst.de>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ boundary="Sig_/SA1utnxSaG3OjH0zuGrH_th"; protocol="application/pgp-signature"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20140519140614.GA12183@infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, May 19, 2014 at 01:54:50PM -0700, Nicholas A. Bellinger wrote:
-> On Mon, 2014-05-19 at 22:15 +0300, Michael S. Tsirkin wrote:
-> > On Mon, May 19, 2014 at 12:07:03PM -0700, Nicholas A. Bellinger wrote:
-> > > On Wed, 2014-05-07 at 12:13 +0300, Michael S. Tsirkin wrote:
-> > > > On Mon, Apr 07, 2014 at 01:56:59AM -0700, Nicholas A. Bellinger wrote:
-> > > > > On Mon, 2014-04-07 at 11:45 +0300, Michael S. Tsirkin wrote:
-> > > > > > On Sun, Apr 06, 2014 at 09:32:09PM +0000, Nicholas A. Bellinger wrote:
-> > > > > > > From: Nicholas Bellinger <nab@linux-iscsi.org>
-> > > > > > > 
-> > > > > > > This patch updates virtscsi_probe() to setup necessary Scsi_Host
-> > > > > > > level protection resources. (currently hardcoded to 1)
-> > > > > > > 
-> > > > > > > It changes virtscsi_add_cmd() to attach outgoing / incoming
-> > > > > > > protection SGLs preceeding the data payload, and is using the
-> > > > > > > new virtio_scsi_cmd_req_pi->d[oi],pi_niv field to signal
-> > > > > > > to signal to vhost/scsi how many prot_sgs to expect.
-> > > > > > > 
-> > > > > > > v3 changes:
-> > > > > > >   - Use VIRTIO_SCSI_F_T10_PI to determine PI or non PI header (Paolo)
-> > > > > > > 
-> > > > > > > v2 changes:
-> > > > > > >   - Make protection buffer come before data buffer (Paolo)
-> > > > > > >   - Enable virtio_scsi_cmd_req_pi usage (Paolo)
-> > > > > > > 
-> > > > > > > Cc: Paolo Bonzini <pbonzini@redhat.com>
-> > > > > > > Cc: Michael S. Tsirkin <mst@redhat.com>
-> > > > > > > Cc: Martin K. Petersen <martin.petersen@oracle.com>
-> > > > > > > Cc: Christoph Hellwig <hch@lst.de>
-> > > > > > > Cc: Hannes Reinecke <hare@suse.de>
-> > > > > > > Cc: Sagi Grimberg <sagig@dev.mellanox.co.il>
-> > > > > > > Cc: H. Peter Anvin <hpa@zytor.com>
-> > > > > > > Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
-> > > > > > 
-> > > > > > OK but we need to document the new interface in the spec
-> > > > > > (and incidentially, this will be useful to verify the assumptions
-> > > > > > made here and on the host side).
-> > > > > > Could you please submit this proposal to the OASIS Virtio TC
-> > > > > > for inclusion into the next spec draft?
-> > > > > > Ideally as a patch against the tex source, but a prose
-> > > > > > description would do as well.
-> > > > > 
-> > > > > Most certainly.  Please give me a bit to follow up on this, as the next
-> > > > > couple of days are going to be hellishly busy..
-> > > > 
-> > > > Ping.
-> > > > We really need to get this moving to have the interface reviewed for
-> > > > the next merge window.
-> > > > 
-> > > 
-> > > Hi MST,
-> > > 
-> > > So I've finally got some cycles to get back to this code, and wanted to
-> > > verify the outstanding items you had previously raised:
-> > > 
-> > > - Convert vhost-scsi to be independent of IOV layout using 
-> > >   memcpy_fromiovecend. (Does this effect existing non PI virtio-scsi 
-> > >   operation..?)
-> > 
-> > Ideally yes.
-> 
-> Er, so changing vhost-scsi to be independent of IOV layout will have the
-> side effect of breaking existing non PI virtio-scsi logic..?
+--Sig_/SA1utnxSaG3OjH0zuGrH_th
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Sorry I didn't make myself clear.
-I merely think that all code should do memcpy_fromiovecend etc.
-If done peoperly guests will not notice unless they test
-VIRTIO_F_ANY_LAYOUT.
+Hi Christoph,
 
+On Mon, 19 May 2014 07:06:14 -0700 Christoph Hellwig <hch@infradead.org> wr=
+ote:
+>
+> I'd like to announce the new scsi patch queue tree, which will pick up
+> any scsi core or driver patches promptly to allow easy integration and
+> feedback that contributors might be used to from other kernel subsystems.
+>=20
+> There are two branches, one for the SCSI core and upper level drivers,
+> and one for low-level (hardware) drivers:
+>=20
+>   git://git.infradead.org/users/hch/scsi-queue.git core-for-3.16
+>   git://git.infradead.org/users/hch/scsi-queue.git drivers-for-3.16=20
+>=20
+> The rules for the tree are:
+>=20
+>  - it has at least two positive reviews (non-author signoff, reviewed-by
+>    or acked-by tags).   In practice this means it had at least one and
+>    I added another one.
+>  - no negative review on the mailing list
+>  - it applies cleanly
+>  - it compiles cleanly (drivers for architectures I can't test excluded)
+>  - for core the core branch: survives a full xfstests run
+>=20
+> I went through the linux-scsi archives for March, April and May and
+> applied all patches that clearly fit the above criteria, but it's fairly
+> like I missed some.
+>=20
+> If I'm missing your patch(es):
+>=20
+>  - resend it unless it was sent in the last few weeks
+>  - make sure all reviews are recorded in the most recent post of the
+>    patch(es)
+>  - ping the list for additional reviewers
+>=20
+> For now the prime intent of the tree is to feed it to James, although
+> I'd welcome everyone interested to pull and test it.  If the scheme
+> proves successful I'd love to invite more core scsi contributors to help
+> with it and move to a shared kernel.org tree.
 
+Is this a request for inclusion of those branches into linux-next
+separately from the scsi tree itself?
 
-> > 
-> > > - Report VIRTIO_F_ANY_LAYOUT feature bit to userspace.
-> > > - Convert virtio_scsi_cmd_req_pi to bytes field instead of number of 
-> > >   iovecs.
-> > > - Ensure virtio_scsi_cmd_req_pi is naturally aligned
-> > 
-> > It turns out other virtio scsi commands aren't aligned?
-> 
-> Correct, virtio_scsi_cmd_req is currently 51 bytes.
-> 
-> > If true we don't need to make an exception here.
-> 
-> <nod>
-> 
-> > 
-> > > - Figure out why QEMU is not acking (any) vhost-scsi feature bits
-> > > 
-> > > Is there anything else that you'd like to see for an initial merge, or
-> > > other issues that need to be addressed with the above..?
-> > > 
-> > > --nab
-> > 
-> > FYI Paolo sent a spec patch for the feature.
-> > Have you seen it?
-> > 
-> 
-> Yep, looks fine.
-> 
-> --nab
+--=20
+Cheers,
+Stephen Rothwell                    sfr@canb.auug.org.au
+
+--Sig_/SA1utnxSaG3OjH0zuGrH_th
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iQIcBAEBCAAGBQJTepvkAAoJEMDTa8Ir7ZwV3z4P/0lUm5v6aqqR5TFFAGZRXCuW
+PKn/RKorDYW/Fq0uJDM9n2u1xjPG3l8RFEHzTSDQMr8o+/z6aM0mYbvEHyQ98fYu
+qy0ov8qh+XsoCEBhyIUZC5IsyP+rOPGP7LCO2yX3Pf+fGhEFTYjgPH0ByUZGD11s
+SPhniNh8M7j+0DU/AgzSfjfxhLiyWpVDcDckp4HJeZ45gsnI8dy6/87PUmQSOMtH
+AqJDQ/AHjjy1qBqovLuHzn3atxfAXmteTBtb1MvsT5v6uomDV37AGBfXl2iLOcAF
+FSXorAU2cnT/0rFdwKW7ydEON5i0k74hRd/59RpnNPj6Q7LZm9KF9LEWNT4d1Uxx
+2s5Mwjpw5LdfcgRQRmHA+pfFZUOdk3LJlEI5O2aui2c5T6Vef6cgGFBBUhkHtCkq
+O57DIg+/aE7X8ShDPDgE5HecZ5f6whtxVh9avl7DUlXRljsI1orMVJeS9lZqkTEW
+m/TamKUOCULn8CKWrF+l0U71vRzcVUl6Hxenzm13krwIUNbcPp6LGNRtDeitwnvh
+x55qs862kKnMfVjbqGNVs6hbdDVGlakOtBcEUNpnYN3wXB9LcB8ih7/sNl2KT5OD
+YZo2sPJI1FudOfw8DxoZDmE29+S0+wMNOJ2o+zftBKme1XiTE9PWNJDJI1VvKD+R
+kVB99lxnydNWpXhCTpQ/
+=EcVt
+-----END PGP SIGNATURE-----
+
+--Sig_/SA1utnxSaG3OjH0zuGrH_th--
