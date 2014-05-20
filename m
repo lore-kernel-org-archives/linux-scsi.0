@@ -1,58 +1,45 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: dangling pointers and/or reentrancy in scmd_eh_abort_handler?
-Date: Tue, 20 May 2014 09:32:05 +0200
-Message-ID: <537B04F5.4080808@acm.org>
-References: <537A105B.4080504@redhat.com> <537A1E88.9080803@acm.org> <537A2CB8.9060302@redhat.com> <537A34C6.7090905@acm.org>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [PATCH 6/6] virtio-scsi: Enable DIF/DIX modes in SCSI host LLD
+Date: Tue, 20 May 2014 10:35:28 +0200
+Message-ID: <537B13D0.3030007@redhat.com>
+References: <1396819929-29687-1-git-send-email-nab@daterainc.com>	 <1396819929-29687-7-git-send-email-nab@daterainc.com>	 <20140407084518.GA14091@redhat.com>	 <1396861019.19888.25.camel@haakon3.risingtidesystems.com>	 <20140507091305.GA20044@redhat.com> <1400526423.10964.31.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from andre.telenet-ops.be ([195.130.132.53]:33839 "EHLO
-	andre.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751164AbaETHcI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 May 2014 03:32:08 -0400
-In-Reply-To: <537A34C6.7090905@acm.org>
+Received: from mx1.redhat.com ([209.132.183.28]:42490 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751164AbaETIfw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 May 2014 04:35:52 -0400
+In-Reply-To: <1400526423.10964.31.camel@haakon3.risingtidesystems.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Paolo Bonzini <pbonzini@redhat.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Ulrich Obergfell <uobergfe@redhat.com>
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, "Michael S. Tsirkin" <mst@redhat.com>
+Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, "H. Peter Anvin" <hpa@zytor.com>, Sagi Grimberg <sagig@dev.mellanox.co.il>, virtualization@lists.linux-foundation.org
 
-On 05/19/14 18:43, Bart Van Assche wrote:
-> On 05/19/14 18:09, Paolo Bonzini wrote:
->> Il 19/05/2014 17:08, Bart Van Assche ha scritto:
->>> On 05/19/14 16:08, Paolo Bonzini wrote:
->>>> 2) reentrancy: the softirq handler and scmd_eh_abort_handler can run
->>>> concurrently, and call scsi_finish_command without any lock protecting
->>>> the calls.  You can then get memory corruption.
->>>
->>> I'm not sure what the recommended approach is to address this race. But
->>> it is possible to address this in the LLD. See e.g. the srp_claim_req()
->>> function in the SRP LLD and how it is invoked from the reply handler,
->>> the abort handler and the reset handlers in that LLD.
->>
->> That's not enough, unless I'm missing something.  Say the request
->> handler claims the request and the abort handler doesn't:
->>
->> - the request handler calls scsi_done and ends up in scsi_finish_command.
->>
->> - the abort handler will return SUCCESS, and scmd_eh_abort_handler then
->> calls scsi_finish_command.
-> 
-> It depends on how the SCSI abort handler gets invoked. If the SCSI abort
-> handler gets invoked because a SCSI command timed out that means that
-> the block layer has already detected a timeout and also that the
-> REQ_ATOM_COMPLETE bit has already been set. In this scenario if a SCSI
-> LLD invokes scsi_done() that causes blk_complete_request() to return
-> without invoking __blk_complete_request() and hence without invoking
-> scsi_softirq_done().
+Il 19/05/2014 21:07, Nicholas A. Bellinger ha scritto:
+> Hi MST,
+>
+> So I've finally got some cycles to get back to this code, and wanted to
+> verify the outstanding items you had previously raised:
+>
+> - Convert vhost-scsi to be independent of IOV layout using
+>   memcpy_fromiovecend. (Does this effect existing non PI virtio-scsi
+>   operation..?)
+> - Report VIRTIO_F_ANY_LAYOUT feature bit to userspace.
+> - Convert virtio_scsi_cmd_req_pi to bytes field instead of number of
+>   iovecs.
 
-(replying to my own e-mail)
+This is the only item really required, since the bytes field is what 
+will be in VIRTIO 1.0.  The other would be nice to have, but not a 
+blocker for PI support.
 
-Please note that scsi_eh_abort_cmds() neither checks nor sets the
-REQ_ATOM_COMPLETE bit before it invokes hostt->eh_abort_handler(). Would
-it make sense to modify that function such that it invokes
-blk_abort_request() instead ? That last function atomically
-test-and-sets the REQ_ATOM_COMPLETE bit before invoking the timeout handler.
+> - Ensure virtio_scsi_cmd_req_pi is naturally aligned
 
-Bart.
+mst already commented on this.
 
+> - Figure out why QEMU is not acking (any) vhost-scsi feature bits
+
+This is a separate bug, isn't it?  It need not block PI support.
+
+Paolo
