@@ -1,42 +1,52 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 76241] USB Device Not Recognised
-Date: Tue, 20 May 2014 11:08:21 +0000
-Message-ID: <bug-76241-11613-pi0JF4Qdna@https.bugzilla.kernel.org/>
-References: <bug-76241-11613@https.bugzilla.kernel.org/>
+From: Chad Dupuis <chad.dupuis@qlogic.com>
+Subject: Re: [PATCH 3/5] qla2xxx: Restrict max_lun to 16-bit for older HBAs
+Date: Tue, 20 May 2014 09:32:57 -0400
+Message-ID: <alpine.OSX.2.00.1405200932160.1003@administrators-macbook-pro.local>
+References: <1400583791-123120-1-git-send-email-hare@suse.de> <1400583791-123120-4-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; format=flowed; charset="US-ASCII"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:35400 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752237AbaETLIZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 May 2014 07:08:25 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 08DFF2038C
-	for <linux-scsi@vger.kernel.org>; Tue, 20 May 2014 11:08:24 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-	by mail.kernel.org (Postfix) with ESMTP id AF81320375
-	for <linux-scsi@vger.kernel.org>; Tue, 20 May 2014 11:08:22 +0000 (UTC)
-In-Reply-To: <bug-76241-11613@https.bugzilla.kernel.org/>
+Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:60387 "EHLO
+	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751801AbaETNdd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 May 2014 09:33:33 -0400
+In-Reply-To: <1400583791-123120-4-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, James Bottomley <jbottomley@parallels.com>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=76241
 
-Alan <alan@lxorguk.ukuu.org.uk> changed:
+On Tue, 20 May 2014, Hannes Reinecke wrote:
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|REOPENED                    |RESOLVED
-         Resolution|---                         |OBSOLETE
+> Older HBAs are only capable of supporting 16-bit LUNs,
+> so we need to make sure to adjust max_lun accordingly.
+>
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> Acked-by: Chad Dupuis <chad.dupuis@qlogic.com>
+> ---
+> drivers/scsi/qla2xxx/qla_os.c | 7 ++++++-
+> 1 file changed, 6 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+> index 19e99cc..264d97e 100644
+> --- a/drivers/scsi/qla2xxx/qla_os.c
+> +++ b/drivers/scsi/qla2xxx/qla_os.c
+> @@ -2656,7 +2656,12 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+> 	else
+> 		host->max_cmd_len = MAX_CMDSZ;
+> 	host->max_channel = MAX_BUSES - 1;
+> -	host->max_lun = ql2xmaxlun;
+> +	/* Older HBAs support only 16-bit LUNs */
+> +	if (!IS_QLAFX00(ha) && !IS_FWI2_CAPABLE(ha) &&
+> +	    ql2xmaxlun > 0xffff)
+> +		host->max_lun = 0xffff;
+> +	else
+> +		host->max_lun = ql2xmaxlun;
+> 	host->transportt = qla2xxx_transport_template;
+> 	sht->vendor_id = (SCSI_NL_VID_TYPE_PCI | PCI_VENDOR_ID_QLOGIC);
+>
+>
 
---- Comment #4 from Alan <alan@lxorguk.ukuu.org.uk> ---
-2.6.27 is obsolete as far as upstream is concerned. We don't care.
-
-Possibly you can find a business that still supports ancient ancient Linux but
-we don't even look at bug reports for it any more.
-
--- 
-You are receiving this mail because:
-You are the assignee for the bug.
+New patch looks good as well.
