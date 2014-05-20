@@ -1,103 +1,36 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH] virtio_scsi: don't call virtqueue_add_sgs(... GFP_NOIO)
- holding spinlock.
-Date: Tue, 20 May 2014 10:36:40 +0200
-Message-ID: <537B1418.2010508@redhat.com>
-References: <87tx8lhw36.fsf@rustcorp.com.au>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: dangling pointers and/or reentrancy in scmd_eh_abort_handler?
+Date: Tue, 20 May 2014 10:46:51 +0200
+Message-ID: <537B167B.801@acm.org>
+References: <537A105B.4080504@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: text/plain; charset=ISO-8859-15
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:9061 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751164AbaETIgv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 May 2014 04:36:51 -0400
-In-Reply-To: <87tx8lhw36.fsf@rustcorp.com.au>
+Received: from andre.telenet-ops.be ([195.130.132.53]:37396 "EHLO
+	andre.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750747AbaETIqx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 May 2014 04:46:53 -0400
+In-Reply-To: <537A105B.4080504@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Rusty Russell <rusty@rustcorp.com.au>, stefanha@linux.vnet.ibm.com
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Hannes Reinecke <hare@suse.de>
+Cc: Paolo Bonzini <pbonzini@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>, Ulrich Obergfell <uobergfe@redhat.com>
 
-Il 20/05/2014 07:12, Rusty Russell ha scritto:
-> This triggers every time we do a SCSI abort:
->
-> virtscsi_tmf -> virtscsi_kick_cmd (grab lock and call) -> virtscsi_add_cmd
-> 	-> virtqueue_add_sgs (GFP_NOIO)
->
-> Logs look like this:
->  sd 0:0:0:0: [sda] abort
->  BUG: sleeping function called from invalid context at mm/slub.c:966
->  in_atomic(): 1, irqs_disabled(): 1, pid: 6, name: kworker/u2:0
->  3 locks held by kworker/u2:0/6:
->   #0:  ("scsi_tmf_%d"shost->host_no){......}, at: [<c0153180>] process_one_work+0xe0/0x3d0
->   #1:  ((&(&cmd->abort_work)->work)){......}, at: [<c0153180>] process_one_work+0xe0/0x3d0
->   #2:  (&(&virtscsi_vq->vq_lock)->rlock){......}, at: [<c043f508>] virtscsi_kick_cmd+0x18/0x1b0
->  CPU: 0 PID: 6 Comm: kworker/u2:0 Not tainted 3.15.0-rc5+ #110
->  Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.7.5-rc1-0-gb1d4dc9-20140515_140003-nilsson.home.kraxel.org 04/01/2014
->  Workqueue: scsi_tmf_0 scmd_eh_abort_handler
->
-> Signed-off-by: Rusty Russell <rusty@rustcorp.com.au>
->
-> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-> index db3b494e5926..62757afd93bb 100644
-> --- a/drivers/scsi/virtio_scsi.c
-> +++ b/drivers/scsi/virtio_scsi.c
-> @@ -433,11 +433,10 @@ static void virtscsi_event_done(struct virtqueue *vq)
->   * @cmd		: command structure
->   * @req_size	: size of the request buffer
->   * @resp_size	: size of the response buffer
-> - * @gfp	: flags to use for memory allocations
->   */
->  static int virtscsi_add_cmd(struct virtqueue *vq,
->  			    struct virtio_scsi_cmd *cmd,
-> -			    size_t req_size, size_t resp_size, gfp_t gfp)
-> +			    size_t req_size, size_t resp_size)
->  {
->  	struct scsi_cmnd *sc = cmd->sc;
->  	struct scatterlist *sgs[4], req, resp;
-> @@ -469,19 +468,19 @@ static int virtscsi_add_cmd(struct virtqueue *vq,
->  	if (in)
->  		sgs[out_num + in_num++] = in->sgl;
->
-> -	return virtqueue_add_sgs(vq, sgs, out_num, in_num, cmd, gfp);
-> +	return virtqueue_add_sgs(vq, sgs, out_num, in_num, cmd, GFP_ATOMIC);
->  }
->
->  static int virtscsi_kick_cmd(struct virtio_scsi_vq *vq,
->  			     struct virtio_scsi_cmd *cmd,
-> -			     size_t req_size, size_t resp_size, gfp_t gfp)
-> +			     size_t req_size, size_t resp_size)
->  {
->  	unsigned long flags;
->  	int err;
->  	bool needs_kick = false;
->
->  	spin_lock_irqsave(&vq->vq_lock, flags);
-> -	err = virtscsi_add_cmd(vq->vq, cmd, req_size, resp_size, gfp);
-> +	err = virtscsi_add_cmd(vq->vq, cmd, req_size, resp_size);
->  	if (!err)
->  		needs_kick = virtqueue_kick_prepare(vq->vq);
->
-> @@ -530,8 +529,7 @@ static int virtscsi_queuecommand(struct virtio_scsi *vscsi,
->  	memcpy(cmd->req.cmd.cdb, sc->cmnd, sc->cmd_len);
->
->  	if (virtscsi_kick_cmd(req_vq, cmd,
-> -			      sizeof cmd->req.cmd, sizeof cmd->resp.cmd,
-> -			      GFP_ATOMIC) == 0)
-> +			      sizeof cmd->req.cmd, sizeof cmd->resp.cmd) == 0)
->  		ret = 0;
->  	else
->  		mempool_free(cmd, virtscsi_cmd_pool);
-> @@ -596,8 +594,7 @@ static int virtscsi_tmf(struct virtio_scsi *vscsi, struct virtio_scsi_cmd *cmd)
->
->  	cmd->comp = &comp;
->  	if (virtscsi_kick_cmd(&vscsi->ctrl_vq, cmd,
-> -			      sizeof cmd->req.tmf, sizeof cmd->resp.tmf,
-> -			      GFP_NOIO) < 0)
-> +			      sizeof cmd->req.tmf, sizeof cmd->resp.tmf) < 0)
->  		goto out;
->
->  	wait_for_completion(&comp);
->
+On 05/19/14 16:08, Paolo Bonzini wrote:
+> 1) dangling pointers: scsi_put_command calls cancel_delayed_work(), but
+> that doesn't mean that the scmd_eh_abort_handler couldn't be already
+> running.  If the scmd_eh_abort_handler starts while the softirq handler
+> is calling scsi_put_command (e.g. scsi_finish_command ->
+> scsi_io_completion -> scsi_end_request -> scsi_next_command), the
+> pointer to the Scsi_Cmnd* becomes invalid in the middle of the abort
+> handler.
 
-Acked-by: Paolo Bonzini <pbonzini@redhat.com>
+Hannes, can you clarify why a cancel_delayed_work() statement was added
+in scsi_put_command() ? How can scsi_put_command() get invoked after the
+SCSI timeout handler queued &scmd->abort_work and before the function
+associated with that work struct (scmd_eh_abort_handler()) is called ?
+
+Thanks,
+
+Bart.
