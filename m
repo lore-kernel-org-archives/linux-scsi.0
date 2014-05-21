@@ -1,59 +1,178 @@
-From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Subject: RE: [PATCH RESEND] scsi: Output error messages using structured
- printk in single line
-Date: Wed, 21 May 2014 03:18:52 +0000
-Message-ID: <94D0CD8314A33A4D9D801C0FE68B402956F1CF5A@G4W3202.americas.hpqcorp.net>
-References: <20140227041738.31316.14684.stgit@yunodevel>
- <1400638922.2481.18.camel@dabdike>
+From: Anil Gurumurthy <Anil.Gurumurthy@qlogic.com>
+Subject: RE: [PATCH] scsi: bfa: bfa_fcs_lport.c:  Fix for possible null
+ pointer dereference
+Date: Wed, 21 May 2014 06:28:31 +0000
+Message-ID: <20B1A3CBD98F3845B3F5F56D8597EF59F8930D@avmb2.qlogic.org>
+References: <1400429163-10747-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1400638922.2481.18.camel@dabdike>
+Content-Type: multipart/mixed;
+	boundary="_000_20B1A3CBD98F3845B3F5F56D8597EF59F8930Davmb2qlogicorg_"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:16099 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750841AbaEUG2e (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 21 May 2014 02:28:34 -0400
+Received: from pps.filterd (m0000643.ppops.net [127.0.0.1])
+	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id s4L6SXZQ015936
+	for <linux-scsi@vger.kernel.org>; Tue, 20 May 2014 23:28:33 -0700
+Received: from avcashub1.qlogic.com (avcashub3.qlogic.com [198.70.193.117])
+	by mx0b-0016ce01.pphosted.com with ESMTP id 1kurt1p8ne-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Tue, 20 May 2014 23:28:33 -0700
+In-Reply-To: <1400429163-10747-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
 Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, Yoshihiro YUNOMAE <yoshihiro.yunomae.ez@hitachi.com>
-Cc: Hannes Reinecke <hare@suse.de>, Prarit Bhargava <prarit@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Kay Sievers <kay@vrfy.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Hidehiro Kawai <hidehiro.kawai.ez@hitachi.com>, "yrl.pp-manager.tt@hitachi.com" <yrl.pp-manager.tt@hitachi.com>, Masami Hiramatsu <masami.hiramatsu.pt@hitachi.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>, Sudarsana Kalluru <Sudarsana.Kalluru@qlogic.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+
+--_000_20B1A3CBD98F3845B3F5F56D8597EF59F8930Davmb2qlogicorg_
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+
+Thanks for the patch.
+Acked-by: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
+
+-----Original Message-----
+From: Rickard Strandqvist [mailto:rickard_strandqvist@spectrumdigital.se]
+Sent: 18 May 2014 21:36
+To: Anil Gurumurthy; Sudarsana Kalluru
+Cc: Rickard Strandqvist; James E.J. Bottomley; linux-scsi; linux-kernel
+Subject: [PATCH] scsi: bfa: bfa_fcs_lport.c: Fix for possible null pointer =
+dereference
+
+There is otherwise a risk of a possible null pointer dereference.
+
+Was largely found by using a static code analysis program called cppcheck.
+
+Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+---
+ drivers/scsi/bfa/bfa_fcs_lport.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/bfa/bfa_fcs_lport.c b/drivers/scsi/bfa/bfa_fcs_lp=
+ort.c
+index ff75ef8..542d5c6 100644
+--- a/drivers/scsi/bfa/bfa_fcs_lport.c
++++ b/drivers/scsi/bfa/bfa_fcs_lport.c
+@@ -5826,12 +5826,13 @@ bfa_fcs_lport_get_rport_max_speed(bfa_fcs_lport_t *=
+port)
+        bfa_port_speed_t max_speed =3D 0;
+        struct bfa_port_attr_s port_attr;
+        bfa_port_speed_t port_speed, rport_speed;
+-       bfa_boolean_t trl_enabled =3D bfa_fcport_is_ratelim(port->fcs->bfa)=
+;
++       bfa_boolean_t trl_enabled;
 
 
+        if (port =3D=3D NULL)
+                return 0;
 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> owner@vger.kernel.org] On Behalf Of James Bottomley
-> Sent: Tuesday, May 20, 2014 9:22 PM
-> To: Yoshihiro YUNOMAE
-> Cc: Hannes Reinecke; Prarit Bhargava; linux-scsi@vger.kernel.org; Kay
-> Sievers; linux-kernel@vger.kernel.org; Hidehiro Kawai; yrl.pp-
-> manager.tt@hitachi.com; Masami Hiramatsu
-> Subject: Re: [PATCH RESEND] scsi: Output error messages using structured
-> printk in single line
-> 
-> On Thu, 2014-02-27 at 13:17 +0900, Yoshihiro YUNOMAE wrote:
-> > +/* Maximum size of a local buffer for structured printk */
-> > +#define SCSI_LOG_LINE_MAX 512
-> > +
-> > +/* Local buffer for structured printk */
-> > +struct scsi_log_line {
-> > +	int offset;
-> > +	char buf[SCSI_LOG_LINE_MAX];
-> > +};
-> 
-> This piece isn't going to fly; it's an on stack allocation of 0.5kb;
-> that's too much for small stack kernels.  Just changing this to a kalloc
-> is going be problematic too because we're in the io paths and the
-> allocation may fail.  So I appreciate the problem, but I don't think the
-> solution works.  Could we just tag the messages and use grep to put them
-> back together?
-> 
-> James
-> 
++       trl_enabled =3D bfa_fcport_is_ratelim(port->fcs->bfa);
+        fcs =3D port->fcs;
 
-When the system gets busy, I've seen CDB bytes strung out with each
-byte getting its own timestamp, with messages from different devices
-and threads interleaved together, so like the idea of printing each 
-line with a single printk() call.
+        /* Get Physical port's current speed */
+--
+1.7.10.4
 
-Most lines aren't anywhere near 512 bytes long.  Can this be coded to 
-let the calling function define an appropriate buffer size for
-whatever it is printing, with sizeof() used to bounds check?
+
+________________________________
+
+This message and any attached documents contain information from QLogic Cor=
+poration or its wholly-owned subsidiaries that may be confidential. If you =
+are not the intended recipient, you may not read, copy, distribute, or use =
+this information. If you have received this transmission in error, please n=
+otify the sender immediately by reply e-mail and then delete this message.
+
+--_000_20B1A3CBD98F3845B3F5F56D8597EF59F8930Davmb2qlogicorg_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
+
+eJ8+Ip1mAQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAAEY1QTE3NkNG
+QUMyQ0JENEI4QUU3MzM0RTI1QjUwQjMyAGEHAQ2ABAACAAAAAgACAAEFgAMADgAAAN4HBQAVAAYA
+HAAfAAMAQwEBIIADAA4AAADeBwUAFQAGABwAHwADAEMBAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
+YWlsLk5vdGUAMQgBBIABAFMAAABSRTogW1BBVENIXSBzY3NpOiBiZmE6IGJmYV9mY3NfbHBvcnQu
+YzogIEZpeCBmb3IgcG9zc2libGUgbnVsbCBwb2ludGVyIGRlcmVmZXJlbmNlAMocAQOQBgB0EQAA
+PwAAAAIBfwABAAAAOgAAADwyMEIxQTNDQkQ5OEYzODQ1QjNGNUY1NkQ4NTk3RUY1OUY4OTMwREBh
+dm1iMi5xbG9naWMub3JnPgAAAAsAHw4BAAAAAgEJEAEAAACkBQAAoAUAAJEJAABMWkZ1rnTqu2EA
+CmZiaWQEAABjY8BwZzEyNTIA/gND8HRleHQB9wKkA+MCAARjaArAc2V0MCDvB20CgwBQEU0yCoAG
+tAKAln0KgAjIOwliMTkOwL8JwxZyCjIWcQKAFWIqCbBzCfAEkGF0BbIOUANgc6JvAYAgRXgRwW4Y
+MF0GUnYEkBe2AhByAMB0fQhQbhoxECAFwAWgG2RkmiADUiAQIheyXHYIkOR3awuAZDUdUwTwB0AN
+F3AwCnEX8mJrbWsGcwGQACAgQk1fQuBFR0lOfQr8AfEL8Z8SQBmhH1AccAWxdGgZ4EUKsHQRwC5c
+bAuAZREKgEFjawmALWJ5KDogQQMCRwhwdW1jCHAiUHkgPABwAxAuUmckZ0BxCQBnDlAuWQWgbT4i
+9SL1LSeiTzsFECZAbgdABdAHkHNhtxgwJ6Mi9UYDYSPgUg5QtmsLEQYAdBhwHcBxHWC5H2AgWwDA
+AxAYkDoFEI0qM18fYCq3QHNwBZB/KqAkgA3gJkABkCVAEgBdTyL1BmACMCPgMTgF0GETJOAB0DE0
+L3AxOjNaNiL1VCuwI/47BgB1xmQR4QBwYSBLB0AKQHMkcCL1Q2Mp/ysCMcBKQmEHgkUuSi4fsG8f
+AkADcB5wMbEjAXV4Ld8E8ACQNjYjgASgZQlQLlUYdWJqLTEwsFtQQWBUQ0hdIDayMLBiFGZhOZNf
+EbBzX2yOcAkRJnAwsEZpeCID+zqQBBBpAmAZ4DZwMqA7gR8LgBuiBIEBED0BbmNl1ybMIaA9ASAE
+ACA1sD6RTwPxGeAyYAUQc2s/AGafP6E7nzyuIuYi9VdhBCC1C2ByGDBsJOACEHUdwHs5oCTgdQCQ
+GcA/oR9hdN8OUBvRAQA/oChBeQCQBCD+cANgCcA1ABvQMpEcUQ5g1nARwAWQa0KNUygQGFC7I6AZ
+MGYjszOvKyE8K99/LO8t8ia2KRg84AUQGjFzOi82si85sU+COjogfEIgUOEzICsrTjcxzxxwAxAZ
+4BmUZCwvcD7QCwCAG4FpAiBzKCspH1LQUfABAB5wU2IoLSl3JswN4AEgICegLbE/oC/7Ts9P3mJW
+f1eOIvUdsRAwERxwZjc1ARA4Li7INTQyHdBjNi8AHqD4NjQ0JzhWX1mfWqZRQE4rWI9er1qmQEBV
+8DXwODI2LA6QUTBjRFEg22MBOgtfGDBlQHJlEwDAbnhLoEyACYAoZIwFQCr/OpJUxlDiUOI6AmUT
+ZkNnceFmByA9IDAWIGgcS7H+dS1AaOgYgCqgS6BAYWyl/2reaP9pOFLQZaRmQ2rWXYB3bngG4Abw
+ZQBwZ3EqoGz+XwnwAaBHQmqgOgRlEwQAL2WQGIA3sAdwKDqSLT73OkF1sDmxKWrWYFBx/3MM72rW
+JsxuVgaQIHVjapBqoHBOVUxMZ/5uVglwdP8IcAOgasd2fXM/dE91X2renzpBapGBh3j9blYvKiRA
+eRIQIFAk0A5BKFE6kic9BCBjCHA9UQVAakQqL0MnNyL1MS43Lh6QLvtc5ibMX4sfjAw9rj7hB4H/
+KLJF8RxgAHAk4GzRANAiYPkcYGRvh0AHgAIwhyECIZ8LcVMBGuRTcRx0UUwmMn4gCFBlopFUBbEt
+wAQgd+5oBvBEAElQd0khOUA4UP8AkA3gCsAIkAQgIlAYgGnx/STgYlJBAiBSEAEAAjAHMXU1gElA
+MHkIYD+gPrFuvzWwIkNBclsxHGAJcGMFIH8IkAIwUtCXEpWSl5IJcGHzUsEFoHB5UtAN4SqgQLD+
+dRAgUtAFsUTAGeAiUD7h35D5lscR0BowmJJlYLEcYPOcAyqic20EAZFykMEEkP0DYHJS0AtQd+A/
+gZeRBpDfJOAiUhIAWzGTQW0HgJTB/4EhlbEk4AlwC1Ak4CjgK2L/jrMiUQOgVCOb5Y5FIuYVQgGm
+AB8AQgABAAAAIAAAAEEAbgBpAGwAIABHAHUAcgB1AG0AdQByAHQAaAB5AAAAHwBlAAEAAAA2AAAA
+QQBuAGkAbAAuAEcAdQByAHUAbQB1AHIAdABoAHkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAf
+AGQAAQAAAAoAAABTAE0AVABQAAAAAAACAUEAAQAAAHgAAAAAAAAAgSsfpL6jEBmdbgDdAQ9UAgAA
+AIBBAG4AaQBsACAARwB1AHIAdQBtAHUAcgB0AGgAeQAAAFMATQBUAFAAAABBAG4AaQBsAC4ARwB1
+AHIAdQBtAHUAcgB0AGgAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAJdAQAAADYAAABBAG4A
+aQBsAC4ARwB1AHIAdQBtAHUAcgB0AGgAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8A5V8B
+AAAAPgAAAHMAaQBwADoAYQBuAGkAbAAuAGcAdQByAHUAbQB1AHIAdABoAHkAQABxAGwAbwBnAGkA
+YwAuAGMAbwBtAAAAAAAfABoMAQAAACAAAABBAG4AaQBsACAARwB1AHIAdQBtAHUAcgB0AGgAeQAA
+AB8AHwwBAAAANgAAAEEAbgBpAGwALgBHAHUAcgB1AG0AdQByAHQAaAB5AEAAcQBsAG8AZwBpAGMA
+LgBjAG8AbQAAAAAAHwAeDAEAAAAKAAAAUwBNAFQAUAAAAAAAAgEZDAEAAAB4AAAAAAAAAIErH6S+
+oxAZnW4A3QEPVAIAAACAQQBuAGkAbAAgAEcAdQByAHUAbQB1AHIAdABoAHkAAABTAE0AVABQAAAA
+QQBuAGkAbAAuAEcAdQByAHUAbQB1AHIAdABoAHkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAB
+XQEAAAA2AAAAQQBuAGkAbAAuAEcAdQByAHUAbQB1AHIAdABoAHkAQABxAGwAbwBnAGkAYwAuAGMA
+bwBtAAAAAAAfAPg/AQAAACAAAABBAG4AaQBsACAARwB1AHIAdQBtAHUAcgB0AGgAeQAAAB8AI0AB
+AAAANgAAAEEAbgBpAGwALgBHAHUAcgB1AG0AdQByAHQAaAB5AEAAcQBsAG8AZwBpAGMALgBjAG8A
+bQAAAAAAHwAiQAEAAAAKAAAAUwBNAFQAUAAAAAAAAgH5PwEAAAB4AAAAAAAAAIErH6S+oxAZnW4A
+3QEPVAIAAACAQQBuAGkAbAAgAEcAdQByAHUAbQB1AHIAdABoAHkAAABTAE0AVABQAAAAQQBuAGkA
+bAAuAEcAdQByAHUAbQB1AHIAdABoAHkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAJXQEAAAA2
+AAAAQQBuAGkAbAAuAEcAdQByAHUAbQB1AHIAdABoAHkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAA
+AAAfADFAAQAAAAIAAAAAAAAACwBAOgEAAAAfADBAAQAAAAIAAAAAAAAAHwAaAAEAAAASAAAASQBQ
+AE0ALgBOAG8AdABlAAAAAAADAPE/CQQAAAsAQDoBAAAAAwD9P+QEAAACAQswAQAAABAAAAD1oXbP
+rCy9S4rnM04ltQsyAwAXAAEAAABAADkAgBE44r10zwFAAAgwKDx04r10zwELACkAAAAAAAsAIwAA
+AAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAHgAAAGEAYwBjAGUAcAB0AGwAYQBuAGcAdQBhAGcA
+ZQAAAAAAAQAAAAwAAABlAG4ALQBVAFMAAAALAACACCAGAAAAAADAAAAAAAAARgAAAAAGhQAAAAAA
+AB8ANwABAAAApgAAAFIARQA6ACAAWwBQAEEAVABDAEgAXQAgAHMAYwBzAGkAOgAgAGIAZgBhADoA
+IABiAGYAYQBfAGYAYwBzAF8AbABwAG8AcgB0AC4AYwA6ACAAIABGAGkAeAAgAGYAbwByACAAcABv
+AHMAcwBpAGIAbABlACAAbgB1AGwAbAAgAHAAbwBpAG4AdABlAHIAIABkAGUAcgBlAGYAZQByAGUA
+bgBjAGUAAAAAAB8APQABAAAACgAAAFIARQA6ACAAAAAAAAMANgAAAAAAAwAuAAAAAAAfAEIQAQAA
+AJYAAAA8ADEANAAwADAANAAyADkAMQA2ADMALQAxADAANwA0ADcALQAxAC0AZwBpAHQALQBzAGUA
+bgBkAC0AZQBtAGEAaQBsAC0AcgBpAGMAawBhAHIAZABfAHMAdAByAGEAbgBkAHEAdgBpAHMAdABA
+AHMAcABlAGMAdAByAHUAbQBkAGkAZwBpAHQAYQBsAC4AcwBlAD4AAAAAAAIBcQABAAAAGwAAAAEB
+z3Ky91pyoCPsbstEujkOx5JGW9ubSpYdEAAfAHAAAQAAAJ4AAABbAFAAQQBUAEMASABdACAAcwBj
+AHMAaQA6ACAAYgBmAGEAOgAgAGIAZgBhAF8AZgBjAHMAXwBsAHAAbwByAHQALgBjADoAIAAgAEYA
+aQB4ACAAZgBvAHIAIABwAG8AcwBzAGkAYgBsAGUAIABuAHUAbABsACAAcABvAGkAbgB0AGUAcgAg
+AGQAZQByAGUAZgBlAHIAZQBuAGMAZQAAAAAAHwA1EAEAAAB0AAAAPAAyADAAQgAxAEEAMwBDAEIA
+RAA5ADgARgAzADgANAA1AEIAMwBGADUARgA1ADYARAA4ADUAOQA3AEUARgA1ADkARgA4ADkAMwAw
+AEQAQABhAHYAbQBiADIALgBxAGwAbwBnAGkAYwAuAG8AcgBnAD4AAAAfADkQAQAAAJYAAAA8ADEA
+NAAwADAANAAyADkAMQA2ADMALQAxADAANwA0ADcALQAxAC0AZwBpAHQALQBzAGUAbgBkAC0AZQBt
+AGEAaQBsAC0AcgBpAGMAawBhAHIAZABfAHMAdAByAGEAbgBkAHEAdgBpAHMAdABAAHMAcABlAGMA
+dAByAHUAbQBkAGkAZwBpAHQAYQBsAC4AcwBlAD4AAAAAAAMA3j+fTgAACwAAgAggBgAAAAAAwAAA
+AAAAAEYAAAAAA4UAAAAAAAADAACACCAGAAAAAADAAAAAAAAARgAAAAABhQAAAAAAAAMAgBD/////
+QAAHMIir0+C9dM8BCwACAAEAAAADACYAAAAAAAsAKwAAAAAAAgFHAAEAAAAvAAAAYz1VUzthPSA7
+cD1RTG9naWM7bD1BVk1CMi0xNDA1MjEwNjI4MzFaLTIxODM1NwAAAgEQMAEAAABGAAAAAAAAAKX2
+ulj4lJxAl6rmQzpEVr8HACCxo8vZjzhFs/X1bYWX71kAAAD0jRgAAGcEMYzLcaJIpV3ex7oIX3kA
+S3qmFlwAAAAAHwD6PwEAAAAgAAAAQQBuAGkAbAAgAEcAdQByAHUAbQB1AHIAdABoAHkAAAADAAlZ
+AQAAAAMAAIAIIAYAAAAAAMAAAAAAAABGAAAAABCFAAAAAAAACwAAgAggBgAAAAAAwAAAAAAAAEYA
+AAAADoUAAAAAAAADAACACCAGAAAAAADAAAAAAAAARgAAAAAYhQAAAAAAAAsAAIAIIAYAAAAAAMAA
+AAAAAABGAAAAAIKFAAAAAAAAHwAAgAggBgAAAAAAwAAAAAAAAEYAAAAA2IUAAAEAAAASAAAASQBQ
+AE0ALgBOAG8AdABlAAAAAAADAA00/T8AAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAACAAAAB4AC0A
+bQBzAC0AaABhAHMALQBhAHQAdABhAGMAaAAAAAEAAAACAAAAAAAAAB8AAICGAwIAAAAAAMAAAAAA
+AABGAQAAACIAAAB4AC0AbwByAGkAZwBpAG4AYQB0AGkAbgBnAC0AaQBwAAAAAAABAAAAGAAAAFsA
+MQAwAC4AMQAuADQALgAxADAAXQAAAJ7R
+
+--_000_20B1A3CBD98F3845B3F5F56D8597EF59F8930Davmb2qlogicorg_--
