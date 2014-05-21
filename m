@@ -1,147 +1,51 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH RFC] Remove the cancel_delayed_work() call from scsi_put_command()
-Date: Wed, 21 May 2014 15:30:33 +0200
-Message-ID: <537CAA79.2030304@acm.org>
+From: Andy Whitcroft <apw@canonical.com>
+Subject: Re: [PATCH 0/2] scsi: hyper-v storvsc changes by Ubuntu
+Date: Wed, 21 May 2014 15:24:36 +0100
+Message-ID: <CAO=4fJMamZvda-EKQx7SwH8yf8Q4YMR+gkhH7Yy0mUYHZZM0iA@mail.gmail.com>
+References: <1400254748-21573-1-git-send-email-abbotti@mev.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from andre.telenet-ops.be ([195.130.132.53]:60281 "EHLO
-	andre.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751336AbaEUNam (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 May 2014 09:30:42 -0400
+Received: from mail-qg0-f51.google.com ([209.85.192.51]:41974 "EHLO
+	mail-qg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752076AbaEUOYg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 May 2014 10:24:36 -0400
+Received: by mail-qg0-f51.google.com with SMTP id q107so3281519qgd.24
+        for <linux-scsi@vger.kernel.org>; Wed, 21 May 2014 07:24:36 -0700 (PDT)
+In-Reply-To: <1400254748-21573-1-git-send-email-abbotti@mev.co.uk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: Hannes Reinecke <hare@suse.de>, Paolo Bonzini <pbonzini@redhat.com>, Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>, Joe Lawrence <jdl1291@gmail.com>
+To: Ian Abbott <abbotti@mev.co.uk>
+Cc: linux-scsi@vger.kernel.org, devel@linuxdriverproject.org, "K. Y. Srinivasan" <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Tim Gardner <tim.gardner@canonical.com>
 
-scmd->abort_work is only scheduled after the block layer has marked
-the request associated with a command as complete and for commands
-that are not on the eh_cmd_q list. A SCSI command is only requeued
-after the scmd->abort_work handler has started (requeueing clears
-the "complete" flag). This means that the cancel_delayed_work()
-statement in scsi_put_command() is a no-op. Hence remove it.
+On 16 May 2014 16:39, Ian Abbott <abbotti@mev.co.uk> wrote:
+> These changes to the Microsoft Hyper-V storage driver in Ubuntu Saucy's
+> 3.13 kernel look useful for the mainline kernel, especially as they
+> enable 'TRIM' support.
+>
+> Andy Whitcroft (2):
+>   scsi: hyper-v storvsc switch up to SPC-3
+>   scsi: hyper-v storvsc -- host takes MAINTENANCE_IN commands badly --
+>     elide them
+>
+>  drivers/scsi/storvsc_drv.c | 10 ++++++++++
+>  1 file changed, 10 insertions(+)
 
-Additionally, document how it is avoided that scsi_finish_command()
-and the SCSI error handler code are invoked concurrently for the
-same command via WARN_ON_ONCE() statements. This should avoid that
-the scsi error handler code confuses its readers.
 
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: Paolo Bonzini <pbonzini@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>
-Cc: Jens Axboe <axboe@fb.com>
-Cc: Joe Lawrence <jdl1291@gmail.com>
----
- block/blk-softirq.c       |  6 ++++++
- drivers/scsi/scsi.c       |  2 --
- drivers/scsi/scsi_error.c | 28 ++++++++++++++++++++++++++++
- include/linux/blkdev.h    |  1 +
- 4 files changed, 35 insertions(+), 2 deletions(-)
+The back story here is a little complex.  The main issue is that the
+Hyper-V drives claim to be SPC-2, and yet implement the SPC-3
+extensions for TRIM.  We did attempt to upstream quirks to allow these
+features to be negotiated specifically for the Hyper-V virtual drives
+(minimum regression potential) but these were NAKd, and it was
+suggested that just overriding the Hyper-V drives to SPC-3
+unconditionally was more appropriate.  The first of the patches here
+does does this.  This has been sitting in our tree for some time as it
+was not clear that this would be entirely safe, though the SPC-3 bits
+are in theory at least mostly detected.  That said this change has
+been in Ubuntu for a full cycle now and does not seem to have caused
+any issues.  If KY is happy we should likely submit it formally.  The
+second fix I believed was already being submitted to mainline.
 
-diff --git a/block/blk-softirq.c b/block/blk-softirq.c
-index 53b1737..59bb52d 100644
---- a/block/blk-softirq.c
-+++ b/block/blk-softirq.c
-@@ -172,6 +172,12 @@ void blk_complete_request(struct request *req)
- }
- EXPORT_SYMBOL(blk_complete_request);
- 
-+bool blk_rq_completed(struct request *rq)
-+{
-+	return test_bit(REQ_ATOM_COMPLETE, &rq->atomic_flags);
-+}
-+EXPORT_SYMBOL(blk_rq_completed);
-+
- static __init int blk_softirq_init(void)
- {
- 	int i;
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 88d46fe..04a282a 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -334,8 +334,6 @@ void scsi_put_command(struct scsi_cmnd *cmd)
- 	list_del_init(&cmd->list);
- 	spin_unlock_irqrestore(&cmd->device->list_lock, flags);
- 
--	cancel_delayed_work(&cmd->abort_work);
--
- 	__scsi_put_command(cmd->device->host, cmd);
- }
- EXPORT_SYMBOL(scsi_put_command);
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 14ce3b4..32a8cd1 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -108,6 +108,28 @@ static int scsi_host_eh_past_deadline(struct Scsi_Host *shost)
- 	return 1;
- }
- 
-+static bool scmd_being_handled_in_other_context(struct scsi_cmnd *scmd)
-+{
-+	struct Scsi_Host *shost = scmd->device->host;
-+	struct scsi_cmnd *c;
-+	unsigned long flags;
-+	bool ret = false;
-+
-+	if (!blk_rq_completed(scmd->request))
-+		return true;
-+
-+	spin_lock_irqsave(shost->host_lock, flags);
-+	list_for_each_entry(c, &shost->eh_cmd_q, eh_entry) {
-+		if (c == scmd) {
-+			ret = true;
-+			break;
-+		}
-+	}
-+	spin_unlock_irqrestore(shost->host_lock, flags);
-+
-+	return ret;
-+}
-+
- /**
-  * scmd_eh_abort_handler - Handle command aborts
-  * @work:	command to be aborted.
-@@ -120,6 +142,8 @@ scmd_eh_abort_handler(struct work_struct *work)
- 	struct scsi_device *sdev = scmd->device;
- 	int rtn;
- 
-+	WARN_ON_ONCE(scmd_being_handled_in_other_context(scmd));
-+
- 	if (scsi_host_eh_past_deadline(sdev->host)) {
- 		SCSI_LOG_ERROR_RECOVERY(3,
- 			scmd_printk(KERN_INFO, scmd,
-@@ -185,6 +209,8 @@ scsi_abort_command(struct scsi_cmnd *scmd)
- 	struct Scsi_Host *shost = sdev->host;
- 	unsigned long flags;
- 
-+	WARN_ON_ONCE(scmd_being_handled_in_other_context(scmd));
-+
- 	if (scmd->eh_eflags & SCSI_EH_ABORT_SCHEDULED) {
- 		/*
- 		 * Retry after abort failed, escalate to next level.
-@@ -237,6 +263,8 @@ int scsi_eh_scmd_add(struct scsi_cmnd *scmd, int eh_flag)
- 	unsigned long flags;
- 	int ret = 0;
- 
-+	WARN_ON_ONCE(scmd_being_handled_in_other_context(scmd));
-+
- 	if (!shost->ehandler)
- 		return 0;
- 
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 0d84981..a621bc5 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -952,6 +952,7 @@ extern void blk_complete_request(struct request *);
- extern void __blk_complete_request(struct request *);
- extern void blk_abort_request(struct request *);
- extern void blk_unprep_request(struct request *);
-+extern bool blk_rq_completed(struct request *);
- 
- /*
-  * Access functions for manipulating queue properties
--- 
-1.8.4.5
+KY?
 
+-apw
