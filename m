@@ -1,30 +1,29 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: [ANNOUNCE]: SCST 2.2 pre-release freeze
-Date: Wed, 21 May 2014 21:10:16 -0700
-Message-ID: <537D78A8.4030604@vlnb.net>
+From: "Christian Organization" <adsl@sunet.com.au>
+Subject: (unknown)
+Date: Thu, 22 May 2014 10:06:14 +1000 (EST)
+Message-ID: <59595.197.228.132.27.1400717174.squirrel__22773.2973093682$1400735573$gmane$org@webmail.sunet.com.au>
+Reply-To: mercantilefinanceloanservice@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: scst-devel <scst-devel@lists.sourceforge.net>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sunet.com.au ([203.206.208.88]:42487 "EHLO jupiter.sunet.com.au"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751093AbaEVFMY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 May 2014 01:12:24 -0400
+Subject: 
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi All,
 
-I'm glad to announce SCST 3.0 pre-release code freeze in the SCST SVN branch 3.0.x
+Good day,
 
-You can get it by command:
+We are Christian organization, we give loan to those who are dedicated
+Christians, contact us at mercantilefinanceloanservice@yahoo.com
 
-$ svn co https://scst.svn.sourceforge.net/svnroot/scst/branches/3.0.x
+Regard
 
-It is going to be released after few weeks of testing, if nothing bad found.
+Mercantile
 
-SCST is alternative SCSI target stack for Linux. SCST allows creation of sophisticated storage devices, which provide advanced functionality, like replication, thin provisioning, deduplication, high availability, automatic backup, etc. Majority of recently developed SAN appliances, especially higher end ones, are SCST based. It might well be that your favorite storage appliance running SCST in the firmware.
 
-More info about SCST and its modules you can find on: http://scst.sourceforge.net
 
-Thanks to all who made it happen!
-
-Vlad
