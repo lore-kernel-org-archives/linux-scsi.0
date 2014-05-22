@@ -1,14 +1,16 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH-v2 0/6] vhost/scsi: Add T10 PI SGL passthrough support
-Date: Thu, 22 May 2014 02:26:16 +0000
-Message-ID: <1400725582-5521-1-git-send-email-nab@daterainc.com>
+Subject: [PATCH-v2 3/6] vhost/scsi: Add preallocation of protection SGLs
+Date: Thu, 22 May 2014 02:26:19 +0000
+Message-ID: <1400725582-5521-4-git-send-email-nab@daterainc.com>
+References: <1400725582-5521-1-git-send-email-nab@daterainc.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ob0-f182.google.com ([209.85.214.182]:41330 "EHLO
-	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752085AbaEVCvA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 May 2014 22:51:00 -0400
-Received: by mail-ob0-f182.google.com with SMTP id wn1so3117004obc.13
-        for <linux-scsi@vger.kernel.org>; Wed, 21 May 2014 19:50:59 -0700 (PDT)
+Received: from mail-oa0-f53.google.com ([209.85.219.53]:58024 "EHLO
+	mail-oa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752909AbaEVCvF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 May 2014 22:51:05 -0400
+Received: by mail-oa0-f53.google.com with SMTP id m1so3316277oag.40
+        for <linux-scsi@vger.kernel.org>; Wed, 21 May 2014 19:51:04 -0700 (PDT)
+In-Reply-To: <1400725582-5521-1-git-send-email-nab@daterainc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
@@ -16,57 +18,85 @@ Cc: linux-scsi <linux-scsi@vger.kernel.org>, "Michael S. Tsirkin" <mst@redhat.co
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Hi MST, MKP, Paolo & Co,
+This patch updates tcm_vhost_make_nexus() to pre-allocate per descriptor
+tcm_vhost_cmd->tvc_prot_sgl[] used to expose protection SGLs from within
+virtio-scsi guest memory to vhost-scsi.
 
-Here is the v2 patch series for adding T1O protection information (PI)
-SGL passthrough support between virtio-scsi LLD + vhost-scsi fabric
-endpoints.
+Cc: Michael S. Tsirkin <mst@redhat.com>
+Cc: Paolo Bonzini <pbonzini@redhat.com>
+Cc: Martin K. Petersen <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+---
+ drivers/vhost/scsi.c |   15 ++++++++++++++-
+ 1 file changed, 14 insertions(+), 1 deletion(-)
 
-Following MST's recommendation, it includes the changes for using
-bytes intead of number of iovecs in virtio_scsi_cmd_req_pi along with
-the associated changes to virtio-scsi + vhost/scsi code.
-
-For vhost/scsi, this includes walking the leading iovec's length(s)
-to determine where protection payload ends, and real data payload 
-starts.  For virtio-scsi LLD code, this includes locating struct
-blk_integrity for using blk_rq_sectors + ->tuple_size to calculate
-the total bytes for outgoing cmd_pi->pi_bytes[out,in] values.
-
-The full list of changes from last series include:
-
-  - Use pi_bytesout + pi_bytesin instead of niovs in virtio-scsi PI
-    header (mst + paolo)
-  - Add prot_pto=1 in tcm_vhost_submission_work() when no PI buffer
-    exists (nab)
-  - Get rid of req + cdb pointer casts in vhost_scsi_handle_vq (mst)
-  - Ensure that virtio_scsi_cmd_req_pi processing happens regardless
-    of data_num in vhost_scsi_handle_vq (nab)
-  - Pass TARGET_PROT_ALL into transport_init_session_tags() (nab)
-  - Convert vhost_scsi_handle_vq to use memcpy_fromiovecend() (mst)
-  - Convert vhost_scsi_handle_vq to use pi_bytesout + pi_bytesin (nab)
-  - Convert virtio_scsi_init_hdr_pi() to use pi_bytesout + pi_bytesin
-    (mst + paolo + nab)
-  - Use blk_integrity->tuple_size to calculate pi bytes (nab)
-
-Please review for v3.16-rc1 code.
-
-Thanks!
-
---nab
-
-Nicholas Bellinger (6):
-  virtio-scsi.h: Add virtio_scsi_cmd_req_pi + VIRTIO_SCSI_F_T10_PI bits
-  vhost/scsi: Move sanity check into vhost_scsi_map_iov_to_sgl
-  vhost/scsi: Add preallocation of protection SGLs
-  vhost/scsi: Add T10 PI IOV -> SGL memory mapping logic
-  vhost/scsi: Enable T10 PI IOV -> SGL memory mapping
-  virtio-scsi: Enable DIF/DIX modes in SCSI host LLD
-
- drivers/scsi/virtio_scsi.c  |   86 +++++++++---
- drivers/vhost/scsi.c        |  305 +++++++++++++++++++++++++++++--------------
- include/linux/virtio_scsi.h |   15 ++-
- 3 files changed, 292 insertions(+), 114 deletions(-)
-
+diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
+index ae434db..30402e6 100644
+--- a/drivers/vhost/scsi.c
++++ b/drivers/vhost/scsi.c
+@@ -58,6 +58,7 @@
+ #define TCM_VHOST_DEFAULT_TAGS 256
+ #define TCM_VHOST_PREALLOC_SGLS 2048
+ #define TCM_VHOST_PREALLOC_UPAGES 2048
++#define TCM_VHOST_PREALLOC_PROT_SGLS 512
+ 
+ struct vhost_scsi_inflight {
+ 	/* Wait for the flush operation to finish */
+@@ -83,6 +84,7 @@ struct tcm_vhost_cmd {
+ 	u32 tvc_lun;
+ 	/* Pointer to the SGL formatted memory from virtio-scsi */
+ 	struct scatterlist *tvc_sgl;
++	struct scatterlist *tvc_prot_sgl;
+ 	struct page **tvc_upages;
+ 	/* Pointer to response */
+ 	struct virtio_scsi_cmd_resp __user *tvc_resp;
+@@ -722,7 +724,7 @@ vhost_scsi_get_tag(struct vhost_virtqueue *vq,
+ 	struct tcm_vhost_cmd *cmd;
+ 	struct tcm_vhost_nexus *tv_nexus;
+ 	struct se_session *se_sess;
+-	struct scatterlist *sg;
++	struct scatterlist *sg, *prot_sg;
+ 	struct page **pages;
+ 	int tag;
+ 
+@@ -741,10 +743,12 @@ vhost_scsi_get_tag(struct vhost_virtqueue *vq,
+ 
+ 	cmd = &((struct tcm_vhost_cmd *)se_sess->sess_cmd_map)[tag];
+ 	sg = cmd->tvc_sgl;
++	prot_sg = cmd->tvc_prot_sgl;
+ 	pages = cmd->tvc_upages;
+ 	memset(cmd, 0, sizeof(struct tcm_vhost_cmd));
+ 
+ 	cmd->tvc_sgl = sg;
++	cmd->tvc_prot_sgl = prot_sg;
+ 	cmd->tvc_upages = pages;
+ 	cmd->tvc_se_cmd.map_tag = tag;
+ 	cmd->tvc_tag = v_req->tag;
+@@ -1703,6 +1707,7 @@ static void tcm_vhost_free_cmd_map_res(struct tcm_vhost_nexus *nexus,
+ 		tv_cmd = &((struct tcm_vhost_cmd *)se_sess->sess_cmd_map)[i];
+ 
+ 		kfree(tv_cmd->tvc_sgl);
++		kfree(tv_cmd->tvc_prot_sgl);
+ 		kfree(tv_cmd->tvc_upages);
+ 	}
+ }
+@@ -1762,6 +1767,14 @@ static int tcm_vhost_make_nexus(struct tcm_vhost_tpg *tpg,
+ 			pr_err("Unable to allocate tv_cmd->tvc_upages\n");
+ 			goto out;
+ 		}
++
++		tv_cmd->tvc_prot_sgl = kzalloc(sizeof(struct scatterlist) *
++					TCM_VHOST_PREALLOC_PROT_SGLS, GFP_KERNEL);
++		if (!tv_cmd->tvc_prot_sgl) {
++			mutex_unlock(&tpg->tv_tpg_mutex);
++			pr_err("Unable to allocate tv_cmd->tvc_prot_sgl\n");
++			goto out;
++		}
+ 	}
+ 	/*
+ 	 * Since we are running in 'demo mode' this call with generate a
 -- 
 1.7.10.4
 
