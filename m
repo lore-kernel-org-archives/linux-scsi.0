@@ -1,77 +1,46 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH-v2 0/6] vhost/scsi: Add T10 PI SGL passthrough support
-Date: Thu, 22 May 2014 10:37:44 +0200
-Message-ID: <537DB758.6010407@redhat.com>
-References: <1400725582-5521-1-git-send-email-nab@daterainc.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH RESEND] scsi: Output error messages using structured
+ printk in single line
+Date: Thu, 22 May 2014 02:06:51 -0700
+Message-ID: <20140522090651.GA14854@infradead.org>
+References: <20140227041738.31316.14684.stgit@yunodevel>
+ <1400638922.2481.18.camel@dabdike>
+ <94D0CD8314A33A4D9D801C0FE68B402956F1CF5A@G4W3202.americas.hpqcorp.net>
+ <537C4822.6000204@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:22893 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751285AbaEVIh7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 May 2014 04:37:59 -0400
-In-Reply-To: <1400725582-5521-1-git-send-email-nab@daterainc.com>
+Received: from bombadil.infradead.org ([198.137.202.9]:59072 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751538AbaEVJG7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 22 May 2014 05:06:59 -0400
+Content-Disposition: inline
+In-Reply-To: <537C4822.6000204@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, "Michael S. Tsirkin" <mst@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, "H. Peter Anvin" <hpa@zytor.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Elliott, Robert (Server Storage)" <Elliott@hp.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Yoshihiro YUNOMAE <yoshihiro.yunomae.ez@hitachi.com>, Prarit Bhargava <prarit@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Kay Sievers <kay@vrfy.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Hidehiro Kawai <hidehiro.kawai.ez@hitachi.com>, "yrl.pp-manager.tt@hitachi.com" <yrl.pp-manager.tt@hitachi.com>, Masami Hiramatsu <masami.hiramatsu.pt@hitachi.com>
 
-Il 22/05/2014 04:26, Nicholas A. Bellinger ha scritto:
-> From: Nicholas Bellinger <nab@linux-iscsi.org>
->
-> Hi MST, MKP, Paolo & Co,
->
-> Here is the v2 patch series for adding T1O protection information (PI)
-> SGL passthrough support between virtio-scsi LLD + vhost-scsi fabric
-> endpoints.
->
-> Following MST's recommendation, it includes the changes for using
-> bytes intead of number of iovecs in virtio_scsi_cmd_req_pi along with
-> the associated changes to virtio-scsi + vhost/scsi code.
->
-> For vhost/scsi, this includes walking the leading iovec's length(s)
-> to determine where protection payload ends, and real data payload
-> starts.  For virtio-scsi LLD code, this includes locating struct
-> blk_integrity for using blk_rq_sectors + ->tuple_size to calculate
-> the total bytes for outgoing cmd_pi->pi_bytes[out,in] values.
->
-> The full list of changes from last series include:
->
->   - Use pi_bytesout + pi_bytesin instead of niovs in virtio-scsi PI
->     header (mst + paolo)
->   - Add prot_pto=1 in tcm_vhost_submission_work() when no PI buffer
->     exists (nab)
->   - Get rid of req + cdb pointer casts in vhost_scsi_handle_vq (mst)
->   - Ensure that virtio_scsi_cmd_req_pi processing happens regardless
->     of data_num in vhost_scsi_handle_vq (nab)
->   - Pass TARGET_PROT_ALL into transport_init_session_tags() (nab)
->   - Convert vhost_scsi_handle_vq to use memcpy_fromiovecend() (mst)
->   - Convert vhost_scsi_handle_vq to use pi_bytesout + pi_bytesin (nab)
->   - Convert virtio_scsi_init_hdr_pi() to use pi_bytesout + pi_bytesin
->     (mst + paolo + nab)
->   - Use blk_integrity->tuple_size to calculate pi bytes (nab)
->
-> Please review for v3.16-rc1 code.
->
-> Thanks!
->
-> --nab
->
-> Nicholas Bellinger (6):
->   virtio-scsi.h: Add virtio_scsi_cmd_req_pi + VIRTIO_SCSI_F_T10_PI bits
->   vhost/scsi: Move sanity check into vhost_scsi_map_iov_to_sgl
->   vhost/scsi: Add preallocation of protection SGLs
->   vhost/scsi: Add T10 PI IOV -> SGL memory mapping logic
->   vhost/scsi: Enable T10 PI IOV -> SGL memory mapping
->   virtio-scsi: Enable DIF/DIX modes in SCSI host LLD
->
->  drivers/scsi/virtio_scsi.c  |   86 +++++++++---
->  drivers/vhost/scsi.c        |  305 +++++++++++++++++++++++++++++--------------
->  include/linux/virtio_scsi.h |   15 ++-
->  3 files changed, 292 insertions(+), 114 deletions(-)
->
+On Wed, May 21, 2014 at 08:30:58AM +0200, Hannes Reinecke wrote:
+> While this works reasonably well for most things, printing out
+> decoded sense with just one line (and not end up in massive switch()
+> statements) is near impossible.
+> 
+> Plus you'll end up having to use a static buffer at one point, which
+> again increases the stack size.
+> 
+> The alternative approach as discussed at LSF is to move scsi_logging
+> over to tracing. There is already some coding for scsi tracing, but
+> in most cases it just duplicates existing logging statements.
+> So if we were to replace the entire scsi_logging infrastructure
+> with scsi tracing most of the issues (like chopped-up CDBs) would
+> be gone.
+> Plus we would have a far better control about _what_ is being printed.
+> 
+> And yes, I do have some patches for that :-)
 
-Looks good, thanks!
+I think any detailed logging of sense codes, cdbs and co should move
+to tracing.  In fact generally any non-defauly logging probably is
+better off in the tracing subsystems, but there might be a few
+exceptions.
 
-Paolo
