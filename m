@@ -1,60 +1,51 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH RFC] Remove the cancel_delayed_work() call from scsi_put_command()
-Date: Thu, 22 May 2014 18:22:13 +0200
-Message-ID: <537E2435.7030705@redhat.com>
-References: <537CAA79.2030304@acm.org>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH] bnx2i: Make boot_nic entry visible in the sysfs session
+ objects
+Date: Thu, 22 May 2014 12:29:03 -0500
+Message-ID: <537E33DF.30808@cs.wisc.edu>
+References: <1400499133-32196-1-git-send-email-vikas.chaudhary@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ee0-f52.google.com ([74.125.83.52]:49826 "EHLO
-	mail-ee0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750754AbaEVQWS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 22 May 2014 12:22:18 -0400
-Received: by mail-ee0-f52.google.com with SMTP id e53so2716962eek.25
-        for <linux-scsi@vger.kernel.org>; Thu, 22 May 2014 09:22:17 -0700 (PDT)
-In-Reply-To: <537CAA79.2030304@acm.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:39117 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750883AbaEVR3V (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 May 2014 13:29:21 -0400
+In-Reply-To: <1400499133-32196-1-git-send-email-vikas.chaudhary@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>, Joe Lawrence <jdl1291@gmail.com>
+To: vikas.chaudhary@qlogic.com
+Cc: jbottomley@parallels.com, linux-scsi@vger.kernel.org, giridhar.malavali@qlogic.com, Tej Parkash <tej.parkash@qlogic.com>
 
-Il 21/05/2014 15:30, Bart Van Assche ha scritto:
-> +static bool scmd_being_handled_in_other_context(struct scsi_cmnd *scmd)
-> +{
-> +	struct Scsi_Host *shost = scmd->device->host;
-> +	struct scsi_cmnd *c;
-> +	unsigned long flags;
-> +	bool ret = false;
-> +
-> +	if (!blk_rq_completed(scmd->request))
-> +		return true;
-> +
-> +	spin_lock_irqsave(shost->host_lock, flags);
-> +	list_for_each_entry(c, &shost->eh_cmd_q, eh_entry) {
-> +		if (c == scmd) {
-> +			ret = true;
-> +			break;
-> +		}
-> +	}
-> +	spin_unlock_irqrestore(shost->host_lock, flags);
-> +
-> +	return ret;
-> +}
-> +
->  /**
->   * scmd_eh_abort_handler - Handle command aborts
->   * @work:	command to be aborted.
-> @@ -120,6 +142,8 @@ scmd_eh_abort_handler(struct work_struct *work)
->  	struct scsi_device *sdev = scmd->device;
->  	int rtn;
->
-> +	WARN_ON_ONCE(scmd_being_handled_in_other_context(scmd));
+On 05/19/2014 06:32 AM, vikas.chaudhary@qlogic.com wrote:
+> From: Tej Parkash <tej.parkash@qlogic.com>
+> 
+> Signed-off-by: Tej Parkash <tej.parkash@qlogic.com>
+> Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+> ---
+>  drivers/scsi/bnx2i/bnx2i_iscsi.c | 3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+> index 166543f..cabc8c1 100644
+> --- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
+> +++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+> @@ -2234,6 +2234,9 @@ static umode_t bnx2i_attr_is_visible(int param_type, int param)
+>  		case ISCSI_PARAM_TGT_RESET_TMO:
+>  		case ISCSI_PARAM_IFACE_NAME:
+>  		case ISCSI_PARAM_INITIATOR_NAME:
+> +		case ISCSI_PARAM_BOOT_ROOT:
+> +		case ISCSI_PARAM_BOOT_NIC:
+> +		case ISCSI_PARAM_BOOT_TARGET:
+>  			return S_IRUGO;
+>  		default:
+>  			return 0;
 
-What about a simpler, though less accuracte
+I think we also wanted this for the chelsio driver, but I need to set it
+up to test. So for now, looks ok to me. If chelsio needs it, I can send
+a patch for that when done testing.
 
-	WARN_ON(!blk_rq_completed(scmd->request));
 
-that doesn't need the host_lock?
+Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
 
-Paolo
