@@ -1,98 +1,74 @@
-From: "Michael S. Tsirkin" <mst@redhat.com>
-Subject: Re: [PATCH-v2 1/6] virtio-scsi.h: Add virtio_scsi_cmd_req_pi +
- VIRTIO_SCSI_F_T10_PI bits
-Date: Thu, 22 May 2014 09:57:16 +0300
-Message-ID: <20140522065716.GB29474@redhat.com>
-References: <1400725582-5521-1-git-send-email-nab@daterainc.com>
- <1400725582-5521-2-git-send-email-nab@daterainc.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 76681] Adaptec 7805H SAS HBA (pm80xx) cannot survive ACPI S3 or
+ ACPI S4
+Date: Thu, 22 May 2014 08:13:36 +0000
+Message-ID: <bug-76681-11613-G01XvVomfU@https.bugzilla.kernel.org/>
+References: <bug-76681-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <target-devel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1400725582-5521-2-git-send-email-nab@daterainc.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@daterainc.com>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, "H. Peter Anvin" <hpa@zytor.com>, Nicholas Bellinger <nab@linux-iscsi.org>, Sagi Grimberg <sagig@dev.mellanox.co.il>, Rusty Russell <rusty@rustcorp.com.au>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.19.201]:50062 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750906AbaEVINk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 May 2014 04:13:40 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id D10FF201E4
+	for <linux-scsi@vger.kernel.org>; Thu, 22 May 2014 08:13:39 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id 1EB322026C
+	for <linux-scsi@vger.kernel.org>; Thu, 22 May 2014 08:13:37 +0000 (UTC)
+In-Reply-To: <bug-76681-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Thu, May 22, 2014 at 02:26:17AM +0000, Nicholas A. Bellinger wrote:
-> From: Nicholas Bellinger <nab@linux-iscsi.org>
-> 
-> This patch adds a virtio_scsi_cmd_req_pi header as recommened by
-> Paolo that contains do_pi_niov + di_pi_niov elements used for
-> signaling when protection information buffers are expected to
-> preceed the data buffers.
+https://bugzilla.kernel.org/show_bug.cgi?id=76681
 
-Cc rusty.
-Rusty could you please Ack merging this through Nicholas' tree
-together with the vhost changes?
+Jack Wang <xjtuwjp@gmail.com> changed:
 
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |xjtuwjp@gmail.com
 
-> Also add new VIRTIO_SCSI_F_T10_PI feature bit to be used to signal
-> host support.
-> 
-> v4 changes:
+--- Comment #1 from Jack Wang <xjtuwjp@gmail.com> ---
+Sorry, I don't have hardware to test, could you try patch below:
+diff --git a/drivers/scsi/pm8001/pm8001_init.c
+b/drivers/scsi/pm8001/pm8001_init.c
+index f7c1896..083a030 100644
+--- a/drivers/scsi/pm8001/pm8001_init.c
++++ b/drivers/scsi/pm8001/pm8001_init.c
+@@ -916,6 +916,7 @@ static int pm8001_pci_suspend(struct pci_dev *pdev,
+pm_message_t state)
+        int i;
+        u32 device_state;
+        pm8001_ha = sha->lldd_ha;
++       sas_suspend_ha(sha);
+        flush_workqueue(pm8001_wq);
+        scsi_block_requests(pm8001_ha->shost);
+        if (!pdev->pm_cap) {
+@@ -980,7 +981,7 @@ static int pm8001_pci_resume(struct pci_dev *pdev)
+        rc = pci_go_44(pdev);
+        if (rc)
+                goto err_out_disable;
+-
++       sas_prep_resume_ha(sha);
+        /* chip soft rst only for spc */
+        if (pm8001_ha->chip_id == chip_8001) {
+                PM8001_CHIP_DISP->chip_soft_rst(pm8001_ha);
+@@ -1009,6 +1010,9 @@ static int pm8001_pci_resume(struct pci_dev *pdev)
+                        PM8001_CHIP_DISP->interrupt_enable(pm8001_ha, i);
+        }
+        scsi_unblock_requests(pm8001_ha->shost);
++       pm8001_scan_start(pm8001_ha->shost);
++       msleep(100);
++       sas_resume_ha(sha);
+        return 0;
 
-v2? Proably best to drop versioning info from commit log,
-move it out to notes (after ---)
+ err_out_disable:
 
->    - Use pi_bytesout + pi_bytesin instead of niovs (mst + paolo)
+Jack
 
-Right, so maybe update the commit log above to match?
-It gave me pause.
-
-> Cc: Paolo Bonzini <pbonzini@redhat.com>
-> Cc: Michael S. Tsirkin <mst@redhat.com>
-> Cc: Martin K. Petersen <martin.petersen@oracle.com>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Hannes Reinecke <hare@suse.de>
-> Cc: Sagi Grimberg <sagig@dev.mellanox.co.il>
-> Cc: H. Peter Anvin <hpa@zytor.com>
-> Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
-> ---
->  include/linux/virtio_scsi.h |   15 ++++++++++++++-
->  1 file changed, 14 insertions(+), 1 deletion(-)
-> 
-> diff --git a/include/linux/virtio_scsi.h b/include/linux/virtio_scsi.h
-> index 4195b97..7344906 100644
-> --- a/include/linux/virtio_scsi.h
-> +++ b/include/linux/virtio_scsi.h
-> @@ -35,11 +35,23 @@ struct virtio_scsi_cmd_req {
->  	u8 lun[8];		/* Logical Unit Number */
->  	u64 tag;		/* Command identifier */
->  	u8 task_attr;		/* Task attribute */
-> -	u8 prio;
-> +	u8 prio;		/* SAM command priority field */
->  	u8 crn;
->  	u8 cdb[VIRTIO_SCSI_CDB_SIZE];
->  } __packed;
->  
-> +/* SCSI command request, followed by protection information */
-> +struct virtio_scsi_cmd_req_pi {
-> +	u8 lun[8];		/* Logical Unit Number */
-> +	u64 tag;		/* Command identifier */
-> +	u8 task_attr;		/* Task attribute */
-> +	u8 prio;		/* SAM command priority field */
-> +	u8 crn;
-> +	u32 pi_bytesout;	/* DataOUT PI Number of bytes */
-> +	u32 pi_bytesin;		/* DataIN PI Number of bytes */
-> +	u8 cdb[VIRTIO_SCSI_CDB_SIZE];
-> +} __packed;
-> +
->  /* Response, followed by sense data and data-in */
->  struct virtio_scsi_cmd_resp {
->  	u32 sense_len;		/* Sense data length */
-> @@ -97,6 +109,7 @@ struct virtio_scsi_config {
->  #define VIRTIO_SCSI_F_INOUT                    0
->  #define VIRTIO_SCSI_F_HOTPLUG                  1
->  #define VIRTIO_SCSI_F_CHANGE                   2
-> +#define VIRTIO_SCSI_F_T10_PI		       3
-
-Could you pad this with spaces and not tabs so it aligns nicely
-with stuff above it?
-
->  
->  /* Response codes */
->  #define VIRTIO_SCSI_S_OK                       0
-> -- 
-> 1.7.10.4
+-- 
+You are receiving this mail because:
+You are the assignee for the bug.
