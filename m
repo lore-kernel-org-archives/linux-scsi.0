@@ -1,7 +1,7 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH-v2 6/6] virtio-scsi: Enable DIF/DIX modes in SCSI host LLD
-Date: Thu, 22 May 2014 02:26:22 +0000
-Message-ID: <1400725582-5521-7-git-send-email-nab@daterainc.com>
+Subject: [PATCH-v2 4/6] vhost/scsi: Add T10 PI IOV -> SGL memory mapping logic
+Date: Thu, 22 May 2014 02:26:20 +0000
+Message-ID: <1400725582-5521-5-git-send-email-nab@daterainc.com>
 References: <1400725582-5521-1-git-send-email-nab@daterainc.com>
 Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1400725582-5521-1-git-send-email-nab@daterainc.com>
@@ -12,28 +12,19 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch updates virtscsi_probe() to setup necessary Scsi_Host
-level protection resources. (currently hardcoded to 1)
+This patch adds vhost_scsi_map_iov_to_prot() to perform the mapping of
+T10 data integrity memory between virtio iov + struct scatterlist using
+get_user_pages_fast() following existing code.
 
-It changes virtscsi_add_cmd() to attach outgoing / incoming
-protection SGLs preceeding the data payload, and is using the
-new virtio_scsi_cmd_req_pi->d[oi],pi_niv field to signal
-to signal to vhost/scsi how many prot_sgs to expect.
+As with vhost_scsi_map_iov_to_sgl(), this does sanity checks against the
+total prot_sgl_count vs. pre-allocated SGLs, and loops across protection
+iovs using vhost_scsi_map_to_sgl() to perform the actual memory mapping.
 
-v4 changes:
-  - Convert virtio_scsi_init_hdr_pi to use pi_bytesout + pi_bytesin
-    (mst + paolo + nab)
-  - Use blk_integrity->tuple_size to calculate pi bytes (nab)
+Also update tcm_vhost_release_cmd() to release associated tvc_prot_sgl[]
+struct page.
 
-v3 changes:
-  - Use VIRTIO_SCSI_F_T10_PI to determine PI or non PI header (Paolo)
-
-v2 changes:
-  - Make protection buffer come before data buffer (Paolo)
-  - Enable virtio_scsi_cmd_req_pi usage (Paolo)
-
-Cc: Paolo Bonzini <pbonzini@redhat.com>
 Cc: Michael S. Tsirkin <mst@redhat.com>
+Cc: Paolo Bonzini <pbonzini@redhat.com>
 Cc: Martin K. Petersen <martin.petersen@oracle.com>
 Cc: Christoph Hellwig <hch@lst.de>
 Cc: Hannes Reinecke <hare@suse.de>
@@ -41,170 +32,86 @@ Cc: Sagi Grimberg <sagig@dev.mellanox.co.il>
 Cc: H. Peter Anvin <hpa@zytor.com>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/scsi/virtio_scsi.c |   86 ++++++++++++++++++++++++++++++++++----------
- 1 file changed, 68 insertions(+), 18 deletions(-)
+ drivers/vhost/scsi.c |   48 +++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 47 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-index 16bfd50..cc634b0 100644
---- a/drivers/scsi/virtio_scsi.c
-+++ b/drivers/scsi/virtio_scsi.c
-@@ -37,6 +37,7 @@ struct virtio_scsi_cmd {
- 	struct completion *comp;
- 	union {
- 		struct virtio_scsi_cmd_req       cmd;
-+		struct virtio_scsi_cmd_req_pi    cmd_pi;
- 		struct virtio_scsi_ctrl_tmf_req  tmf;
- 		struct virtio_scsi_ctrl_an_req   an;
- 	} req;
-@@ -440,7 +441,7 @@ static int virtscsi_add_cmd(struct virtqueue *vq,
- 			    size_t req_size, size_t resp_size, gfp_t gfp)
- {
- 	struct scsi_cmnd *sc = cmd->sc;
--	struct scatterlist *sgs[4], req, resp;
-+	struct scatterlist *sgs[6], req, resp;
- 	struct sg_table *out, *in;
- 	unsigned out_num = 0, in_num = 0;
+diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
+index 30402e6..eabcf18 100644
+--- a/drivers/vhost/scsi.c
++++ b/drivers/vhost/scsi.c
+@@ -80,6 +80,7 @@ struct tcm_vhost_cmd {
+ 	u64 tvc_tag;
+ 	/* The number of scatterlists associated with this cmd */
+ 	u32 tvc_sgl_count;
++	u32 tvc_prot_sgl_count;
+ 	/* Saved unpacked SCSI LUN for tcm_vhost_submission_work() */
+ 	u32 tvc_lun;
+ 	/* Pointer to the SGL formatted memory from virtio-scsi */
+@@ -458,12 +459,16 @@ static void tcm_vhost_release_cmd(struct se_cmd *se_cmd)
+ 	struct tcm_vhost_cmd *tv_cmd = container_of(se_cmd,
+ 				struct tcm_vhost_cmd, tvc_se_cmd);
+ 	struct se_session *se_sess = se_cmd->se_sess;
++	int i;
  
-@@ -458,16 +459,24 @@ static int virtscsi_add_cmd(struct virtqueue *vq,
- 	sgs[out_num++] = &req;
- 
- 	/* Data-out buffer.  */
--	if (out)
-+	if (out) {
-+		/* Place WRITE protection SGLs before Data OUT payload */
-+		if (scsi_prot_sg_count(sc))
-+			sgs[out_num++] = scsi_prot_sglist(sc);
- 		sgs[out_num++] = out->sgl;
+ 	if (tv_cmd->tvc_sgl_count) {
+-		u32 i;
+ 		for (i = 0; i < tv_cmd->tvc_sgl_count; i++)
+ 			put_page(sg_page(&tv_cmd->tvc_sgl[i]));
+ 	}
++	if (tv_cmd->tvc_prot_sgl_count) {
++		for (i = 0; i < tv_cmd->tvc_prot_sgl_count; i++)
++			put_page(sg_page(&tv_cmd->tvc_prot_sgl[i]));
 +	}
  
- 	/* Response header.  */
- 	sg_init_one(&resp, &cmd->resp, resp_size);
- 	sgs[out_num + in_num++] = &resp;
- 
- 	/* Data-in buffer */
--	if (in)
-+	if (in) {
-+		/* Place READ protection SGLs before Data IN payload */
-+		if (scsi_prot_sg_count(sc))
-+			sgs[out_num + in_num++] = scsi_prot_sglist(sc);
- 		sgs[out_num + in_num++] = in->sgl;
-+	}
- 
- 	return virtqueue_add_sgs(vq, sgs, out_num, in_num, cmd, gfp);
- }
-@@ -492,12 +501,44 @@ static int virtscsi_kick_cmd(struct virtio_scsi_vq *vq,
- 	return err;
+ 	tcm_vhost_put_inflight(tv_cmd->inflight);
+ 	percpu_ida_free(&se_sess->sess_tag_pool, se_cmd->map_tag);
+@@ -861,6 +866,47 @@ vhost_scsi_map_iov_to_sgl(struct tcm_vhost_cmd *cmd,
+ 	return 0;
  }
  
-+static void virtio_scsi_init_hdr(struct virtio_scsi_cmd_req *cmd,
-+				 struct scsi_cmnd *sc)
++static int
++vhost_scsi_map_iov_to_prot(struct tcm_vhost_cmd *cmd,
++			   struct iovec *iov,
++			   int niov,
++			   bool write)
 +{
-+	cmd->lun[0] = 1;
-+	cmd->lun[1] = sc->device->id;
-+	cmd->lun[2] = (sc->device->lun >> 8) | 0x40;
-+	cmd->lun[3] = sc->device->lun & 0xff;
-+	cmd->tag = (unsigned long)sc;
-+	cmd->task_attr = VIRTIO_SCSI_S_SIMPLE;
-+	cmd->prio = 0;
-+	cmd->crn = 0;
-+}
++	struct scatterlist *prot_sg = cmd->tvc_prot_sgl;
++	unsigned int prot_sgl_count = 0;
++	int ret, i;
 +
-+static void virtio_scsi_init_hdr_pi(struct virtio_scsi_cmd_req_pi *cmd_pi,
-+				    struct scsi_cmnd *sc)
-+{
-+	struct request *rq = sc->request;
-+	struct blk_integrity *bi;
++	for (i = 0; i < niov; i++)
++		prot_sgl_count += iov_num_pages(&iov[i]);
 +
-+	virtio_scsi_init_hdr((struct virtio_scsi_cmd_req *)cmd_pi, sc);
-+
-+	if (!rq || !scsi_prot_sg_count(sc))
-+		return;
-+
-+	bi = blk_get_integrity(rq->rq_disk);
-+
-+	if (sc->sc_data_direction == DMA_TO_DEVICE)
-+		cmd_pi->pi_bytesout = blk_rq_sectors(rq) * bi->tuple_size;
-+	else if (sc->sc_data_direction == DMA_FROM_DEVICE)
-+		cmd_pi->pi_bytesin = blk_rq_sectors(rq) * bi->tuple_size;
-+}
-+
- static int virtscsi_queuecommand(struct virtio_scsi *vscsi,
- 				 struct virtio_scsi_vq *req_vq,
- 				 struct scsi_cmnd *sc)
- {
- 	struct virtio_scsi_cmd *cmd;
--	int ret;
-+	int ret, req_size;
- 
- 	struct Scsi_Host *shost = virtio_scsi_host(vscsi->vdev);
- 	BUG_ON(scsi_sg_count(sc) > shost->sg_tablesize);
-@@ -515,22 +556,20 @@ static int virtscsi_queuecommand(struct virtio_scsi *vscsi,
- 
- 	memset(cmd, 0, sizeof(*cmd));
- 	cmd->sc = sc;
--	cmd->req.cmd = (struct virtio_scsi_cmd_req){
--		.lun[0] = 1,
--		.lun[1] = sc->device->id,
--		.lun[2] = (sc->device->lun >> 8) | 0x40,
--		.lun[3] = sc->device->lun & 0xff,
--		.tag = (unsigned long)sc,
--		.task_attr = VIRTIO_SCSI_S_SIMPLE,
--		.prio = 0,
--		.crn = 0,
--	};
- 
- 	BUG_ON(sc->cmd_len > VIRTIO_SCSI_CDB_SIZE);
--	memcpy(cmd->req.cmd.cdb, sc->cmnd, sc->cmd_len);
- 
--	if (virtscsi_kick_cmd(req_vq, cmd,
--			      sizeof cmd->req.cmd, sizeof cmd->resp.cmd,
-+	if (virtio_has_feature(vscsi->vdev, VIRTIO_SCSI_F_T10_PI)) {
-+		virtio_scsi_init_hdr_pi(&cmd->req.cmd_pi, sc);
-+		memcpy(cmd->req.cmd_pi.cdb, sc->cmnd, sc->cmd_len);
-+		req_size = sizeof(cmd->req.cmd_pi);
-+	} else {
-+		virtio_scsi_init_hdr(&cmd->req.cmd, sc);
-+		memcpy(cmd->req.cmd.cdb, sc->cmnd, sc->cmd_len);
-+		req_size = sizeof(cmd->req.cmd);
++	if (prot_sgl_count > TCM_VHOST_PREALLOC_PROT_SGLS) {
++		pr_err("vhost_scsi_map_iov_to_prot() sgl_count: %u greater than"
++			" preallocated TCM_VHOST_PREALLOC_PROT_SGLS: %u\n",
++			prot_sgl_count, TCM_VHOST_PREALLOC_PROT_SGLS);
++		return -ENOBUFS;
 +	}
 +
-+	if (virtscsi_kick_cmd(req_vq, cmd, req_size, sizeof(cmd->resp.cmd),
- 			      GFP_ATOMIC) == 0)
- 		ret = 0;
- 	else
-@@ -871,7 +910,7 @@ static int virtscsi_probe(struct virtio_device *vdev)
- {
- 	struct Scsi_Host *shost;
- 	struct virtio_scsi *vscsi;
--	int err;
-+	int err, host_prot;
- 	u32 sg_elems, num_targets;
- 	u32 cmd_per_lun;
- 	u32 num_queues;
-@@ -921,6 +960,16 @@ static int virtscsi_probe(struct virtio_device *vdev)
- 	shost->max_id = num_targets;
- 	shost->max_channel = 0;
- 	shost->max_cmd_len = VIRTIO_SCSI_CDB_SIZE;
++	pr_debug("%s prot_sg %p prot_sgl_count %u\n", __func__,
++		 prot_sg, prot_sgl_count);
++	sg_init_table(prot_sg, prot_sgl_count);
++	cmd->tvc_prot_sgl_count = prot_sgl_count;
 +
-+	if (virtio_has_feature(vdev, VIRTIO_SCSI_F_T10_PI)) {
-+		host_prot = SHOST_DIF_TYPE1_PROTECTION | SHOST_DIF_TYPE2_PROTECTION |
-+			    SHOST_DIF_TYPE3_PROTECTION | SHOST_DIX_TYPE1_PROTECTION |
-+			    SHOST_DIX_TYPE2_PROTECTION | SHOST_DIX_TYPE3_PROTECTION;
++	for (i = 0; i < niov; i++) {
++		ret = vhost_scsi_map_to_sgl(cmd, prot_sg, prot_sgl_count, &iov[i],
++					    cmd->tvc_upages, write);
++		if (ret < 0) {
++			for (i = 0; i < cmd->tvc_prot_sgl_count; i++)
++				put_page(sg_page(&cmd->tvc_prot_sgl[i]));
 +
-+		scsi_host_set_prot(shost, host_prot);
-+		scsi_host_set_guard(shost, SHOST_DIX_GUARD_CRC);
++			cmd->tvc_prot_sgl_count = 0;
++			return ret;
++		}
++		prot_sg += ret;
++		prot_sgl_count -= ret;
 +	}
++	return 0;
++}
 +
- 	err = scsi_add_host(shost, &vdev->dev);
- 	if (err)
- 		goto scsi_add_host_failed;
-@@ -990,6 +1039,7 @@ static struct virtio_device_id id_table[] = {
- static unsigned int features[] = {
- 	VIRTIO_SCSI_F_HOTPLUG,
- 	VIRTIO_SCSI_F_CHANGE,
-+	VIRTIO_SCSI_F_T10_PI,
- };
- 
- static struct virtio_driver virtio_scsi_driver = {
+ static void tcm_vhost_submission_work(struct work_struct *work)
+ {
+ 	struct tcm_vhost_cmd *cmd =
 -- 
 1.7.10.4
