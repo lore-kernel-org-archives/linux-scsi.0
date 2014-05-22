@@ -1,57 +1,35 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH 0/2] scsi: hyper-v storvsc changes by Ubuntu
-Date: Thu, 22 May 2014 10:49:20 +0000
-Message-ID: <3fdc70fd644041d5975b4d1427571f78@BY2PR03MB299.namprd03.prod.outlook.com>
-References: <1400254748-21573-1-git-send-email-abbotti@mev.co.uk>
- <CAO=4fJMamZvda-EKQx7SwH8yf8Q4YMR+gkhH7Yy0mUYHZZM0iA@mail.gmail.com>
+From: Rusty Russell <rusty@rustcorp.com.au>
+Subject: Re: [PATCH-v2 1/6] virtio-scsi.h: Add virtio_scsi_cmd_req_pi + VIRTIO_SCSI_F_T10_PI bits
+Date: Thu, 22 May 2014 20:30:18 +0930
+Message-ID: <87vbsyqdrx.fsf@rustcorp.com.au>
+References: <1400725582-5521-1-git-send-email-nab@daterainc.com> <1400725582-5521-2-git-send-email-nab@daterainc.com> <20140522065716.GB29474@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2lp0235.outbound.protection.outlook.com ([207.46.163.235]:51424
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752404AbaEVKtX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 May 2014 06:49:23 -0400
-In-Reply-To: <CAO=4fJMamZvda-EKQx7SwH8yf8Q4YMR+gkhH7Yy0mUYHZZM0iA@mail.gmail.com>
-Content-Language: en-US
+Received: from ozlabs.org ([103.22.144.67]:42979 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751993AbaEVLJO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 May 2014 07:09:14 -0400
+In-Reply-To: <20140522065716.GB29474@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andy Whitcroft <apw@canonical.com>, Ian Abbott <abbotti@mev.co.uk>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, Haiyang Zhang <haiyangz@microsoft.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Tim Gardner <tim.gardner@canonical.com>
+To: "Michael S. Tsirkin" <mst@redhat.com>, "Nicholas A. Bellinger" <nab@daterainc.com>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, "H. Peter Anvin" <hpa@zytor.com>, Nicholas Bellinger <nab@linux-iscsi.org>, Sagi Grimberg <sagig@dev.mellanox.co.il>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQW5keSBXaGl0Y3JvZnQg
-W21haWx0bzphcHdAY2Fub25pY2FsLmNvbV0NCj4gU2VudDogV2VkbmVzZGF5LCBNYXkgMjEsIDIw
-MTQgNzoyNSBBTQ0KPiBUbzogSWFuIEFiYm90dA0KPiBDYzogbGludXgtc2NzaUB2Z2VyLmtlcm5l
-bC5vcmc7IGRldmVsQGxpbnV4ZHJpdmVycHJvamVjdC5vcmc7IEtZIFNyaW5pdmFzYW47DQo+IEhh
-aXlhbmcgWmhhbmc7IEphbWVzIEUuSi4gQm90dG9tbGV5OyBUaW0gR2FyZG5lcg0KPiBTdWJqZWN0
-OiBSZTogW1BBVENIIDAvMl0gc2NzaTogaHlwZXItdiBzdG9ydnNjIGNoYW5nZXMgYnkgVWJ1bnR1
-DQo+IA0KPiBPbiAxNiBNYXkgMjAxNCAxNjozOSwgSWFuIEFiYm90dCA8YWJib3R0aUBtZXYuY28u
-dWs+IHdyb3RlOg0KPiA+IFRoZXNlIGNoYW5nZXMgdG8gdGhlIE1pY3Jvc29mdCBIeXBlci1WIHN0
-b3JhZ2UgZHJpdmVyIGluIFVidW50dQ0KPiA+IFNhdWN5J3MNCj4gPiAzLjEzIGtlcm5lbCBsb29r
-IHVzZWZ1bCBmb3IgdGhlIG1haW5saW5lIGtlcm5lbCwgZXNwZWNpYWxseSBhcyB0aGV5DQo+ID4g
-ZW5hYmxlICdUUklNJyBzdXBwb3J0Lg0KPiA+DQo+ID4gQW5keSBXaGl0Y3JvZnQgKDIpOg0KPiA+
-ICAgc2NzaTogaHlwZXItdiBzdG9ydnNjIHN3aXRjaCB1cCB0byBTUEMtMw0KPiA+ICAgc2NzaTog
-aHlwZXItdiBzdG9ydnNjIC0tIGhvc3QgdGFrZXMgTUFJTlRFTkFOQ0VfSU4gY29tbWFuZHMgYmFk
-bHkgLS0NCj4gPiAgICAgZWxpZGUgdGhlbQ0KPiA+DQo+ID4gIGRyaXZlcnMvc2NzaS9zdG9ydnNj
-X2Rydi5jIHwgMTAgKysrKysrKysrKw0KPiA+ICAxIGZpbGUgY2hhbmdlZCwgMTAgaW5zZXJ0aW9u
-cygrKQ0KPiANCj4gDQo+IFRoZSBiYWNrIHN0b3J5IGhlcmUgaXMgYSBsaXR0bGUgY29tcGxleC4g
-IFRoZSBtYWluIGlzc3VlIGlzIHRoYXQgdGhlIEh5cGVyLVYNCj4gZHJpdmVzIGNsYWltIHRvIGJl
-IFNQQy0yLCBhbmQgeWV0IGltcGxlbWVudCB0aGUgU1BDLTMgZXh0ZW5zaW9ucyBmb3IgVFJJTS4N
-Cj4gV2UgZGlkIGF0dGVtcHQgdG8gdXBzdHJlYW0gcXVpcmtzIHRvIGFsbG93IHRoZXNlIGZlYXR1
-cmVzIHRvIGJlIG5lZ290aWF0ZWQNCj4gc3BlY2lmaWNhbGx5IGZvciB0aGUgSHlwZXItViB2aXJ0
-dWFsIGRyaXZlcyAobWluaW11bSByZWdyZXNzaW9uIHBvdGVudGlhbCkgYnV0DQo+IHRoZXNlIHdl
-cmUgTkFLZCwgYW5kIGl0IHdhcyBzdWdnZXN0ZWQgdGhhdCBqdXN0IG92ZXJyaWRpbmcgdGhlIEh5
-cGVyLVYNCj4gZHJpdmVzIHRvIFNQQy0zIHVuY29uZGl0aW9uYWxseSB3YXMgbW9yZSBhcHByb3By
-aWF0ZS4gIFRoZSBmaXJzdCBvZiB0aGUNCj4gcGF0Y2hlcyBoZXJlIGRvZXMgZG9lcyB0aGlzLiAg
-VGhpcyBoYXMgYmVlbiBzaXR0aW5nIGluIG91ciB0cmVlIGZvciBzb21lIHRpbWUNCj4gYXMgaXQg
-d2FzIG5vdCBjbGVhciB0aGF0IHRoaXMgd291bGQgYmUgZW50aXJlbHkgc2FmZSwgdGhvdWdoIHRo
-ZSBTUEMtMyBiaXRzIGFyZQ0KPiBpbiB0aGVvcnkgYXQgbGVhc3QgbW9zdGx5IGRldGVjdGVkLiAg
-VGhhdCBzYWlkIHRoaXMgY2hhbmdlIGhhcyBiZWVuIGluIFVidW50dQ0KPiBmb3IgYSBmdWxsIGN5
-Y2xlIG5vdyBhbmQgZG9lcyBub3Qgc2VlbSB0byBoYXZlIGNhdXNlZCBhbnkgaXNzdWVzLiAgSWYg
-S1kgaXMNCj4gaGFwcHkgd2Ugc2hvdWxkIGxpa2VseSBzdWJtaXQgaXQgZm9ybWFsbHkuICBUaGUg
-c2Vjb25kIGZpeCBJIGJlbGlldmVkIHdhcw0KPiBhbHJlYWR5IGJlaW5nIHN1Ym1pdHRlZCB0byBt
-YWlubGluZS4NCj4gDQo+IEtZPw0KDQpUaGUgV2luZG93cyBndXlzIGFyZSBub3QgY3VycmVudGx5
-IGNvbWZvcnRhYmxlIGNsYWltaW5nIGNvbmZvcm1hbmNlIHRvIFNQQy0zLCBhcyB0aGV5IGhhdmUg
-bm90IGRvbmUNCnRoZSBuZWNlc3NhcnkgdGVzdGluZy4gVGhpcyB3aWxsIGNoYW5nZSBob3BlZnVs
-bHkgc29vbi4NCg0KSy4gWQ0KPiANCj4gLWFwdw0K
+"Michael S. Tsirkin" <mst@redhat.com> writes:
+> On Thu, May 22, 2014 at 02:26:17AM +0000, Nicholas A. Bellinger wrote:
+>> From: Nicholas Bellinger <nab@linux-iscsi.org>
+>> 
+>> This patch adds a virtio_scsi_cmd_req_pi header as recommened by
+>> Paolo that contains do_pi_niov + di_pi_niov elements used for
+>> signaling when protection information buffers are expected to
+>> preceed the data buffers.
+>
+> Cc rusty.
+> Rusty could you please Ack merging this through Nicholas' tree
+> together with the vhost changes?
+
+Acked-by: Rusty Russell <rusty@rustcorp.com.au>
+
+Thanks,
+Rusty.
