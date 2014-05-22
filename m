@@ -1,27 +1,57 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 5/5] scsi: use 64-bit value for 'max_luns'
-Date: Thu, 22 May 2014 02:10:56 -0700
-Message-ID: <20140522091056.GF14854@infradead.org>
-References: <1400583791-123120-1-git-send-email-hare@suse.de>
- <1400583791-123120-6-git-send-email-hare@suse.de>
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: [PATCH 0/2] scsi: hyper-v storvsc changes by Ubuntu
+Date: Thu, 22 May 2014 10:49:20 +0000
+Message-ID: <3fdc70fd644041d5975b4d1427571f78@BY2PR03MB299.namprd03.prod.outlook.com>
+References: <1400254748-21573-1-git-send-email-abbotti@mev.co.uk>
+ <CAO=4fJMamZvda-EKQx7SwH8yf8Q4YMR+gkhH7Yy0mUYHZZM0iA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:33899 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752205AbaEVJK5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 22 May 2014 05:10:57 -0400
-Content-Disposition: inline
-In-Reply-To: <1400583791-123120-6-git-send-email-hare@suse.de>
+Received: from mail-by2lp0235.outbound.protection.outlook.com ([207.46.163.235]:51424
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752404AbaEVKtX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 May 2014 06:49:23 -0400
+In-Reply-To: <CAO=4fJMamZvda-EKQx7SwH8yf8Q4YMR+gkhH7Yy0mUYHZZM0iA@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, James Bottomley <jbottomley@parallels.com>
+To: Andy Whitcroft <apw@canonical.com>, Ian Abbott <abbotti@mev.co.uk>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, Haiyang Zhang <haiyangz@microsoft.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Tim Gardner <tim.gardner@canonical.com>
 
-On Tue, May 20, 2014 at 01:03:11PM +0200, Hannes Reinecke wrote:
-> Now that we're using 64-bit LUNs internally we need to increase
-> the size of max_luns to 64 bits, too.
-
-Looks good,
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQW5keSBXaGl0Y3JvZnQg
+W21haWx0bzphcHdAY2Fub25pY2FsLmNvbV0NCj4gU2VudDogV2VkbmVzZGF5LCBNYXkgMjEsIDIw
+MTQgNzoyNSBBTQ0KPiBUbzogSWFuIEFiYm90dA0KPiBDYzogbGludXgtc2NzaUB2Z2VyLmtlcm5l
+bC5vcmc7IGRldmVsQGxpbnV4ZHJpdmVycHJvamVjdC5vcmc7IEtZIFNyaW5pdmFzYW47DQo+IEhh
+aXlhbmcgWmhhbmc7IEphbWVzIEUuSi4gQm90dG9tbGV5OyBUaW0gR2FyZG5lcg0KPiBTdWJqZWN0
+OiBSZTogW1BBVENIIDAvMl0gc2NzaTogaHlwZXItdiBzdG9ydnNjIGNoYW5nZXMgYnkgVWJ1bnR1
+DQo+IA0KPiBPbiAxNiBNYXkgMjAxNCAxNjozOSwgSWFuIEFiYm90dCA8YWJib3R0aUBtZXYuY28u
+dWs+IHdyb3RlOg0KPiA+IFRoZXNlIGNoYW5nZXMgdG8gdGhlIE1pY3Jvc29mdCBIeXBlci1WIHN0
+b3JhZ2UgZHJpdmVyIGluIFVidW50dQ0KPiA+IFNhdWN5J3MNCj4gPiAzLjEzIGtlcm5lbCBsb29r
+IHVzZWZ1bCBmb3IgdGhlIG1haW5saW5lIGtlcm5lbCwgZXNwZWNpYWxseSBhcyB0aGV5DQo+ID4g
+ZW5hYmxlICdUUklNJyBzdXBwb3J0Lg0KPiA+DQo+ID4gQW5keSBXaGl0Y3JvZnQgKDIpOg0KPiA+
+ICAgc2NzaTogaHlwZXItdiBzdG9ydnNjIHN3aXRjaCB1cCB0byBTUEMtMw0KPiA+ICAgc2NzaTog
+aHlwZXItdiBzdG9ydnNjIC0tIGhvc3QgdGFrZXMgTUFJTlRFTkFOQ0VfSU4gY29tbWFuZHMgYmFk
+bHkgLS0NCj4gPiAgICAgZWxpZGUgdGhlbQ0KPiA+DQo+ID4gIGRyaXZlcnMvc2NzaS9zdG9ydnNj
+X2Rydi5jIHwgMTAgKysrKysrKysrKw0KPiA+ICAxIGZpbGUgY2hhbmdlZCwgMTAgaW5zZXJ0aW9u
+cygrKQ0KPiANCj4gDQo+IFRoZSBiYWNrIHN0b3J5IGhlcmUgaXMgYSBsaXR0bGUgY29tcGxleC4g
+IFRoZSBtYWluIGlzc3VlIGlzIHRoYXQgdGhlIEh5cGVyLVYNCj4gZHJpdmVzIGNsYWltIHRvIGJl
+IFNQQy0yLCBhbmQgeWV0IGltcGxlbWVudCB0aGUgU1BDLTMgZXh0ZW5zaW9ucyBmb3IgVFJJTS4N
+Cj4gV2UgZGlkIGF0dGVtcHQgdG8gdXBzdHJlYW0gcXVpcmtzIHRvIGFsbG93IHRoZXNlIGZlYXR1
+cmVzIHRvIGJlIG5lZ290aWF0ZWQNCj4gc3BlY2lmaWNhbGx5IGZvciB0aGUgSHlwZXItViB2aXJ0
+dWFsIGRyaXZlcyAobWluaW11bSByZWdyZXNzaW9uIHBvdGVudGlhbCkgYnV0DQo+IHRoZXNlIHdl
+cmUgTkFLZCwgYW5kIGl0IHdhcyBzdWdnZXN0ZWQgdGhhdCBqdXN0IG92ZXJyaWRpbmcgdGhlIEh5
+cGVyLVYNCj4gZHJpdmVzIHRvIFNQQy0zIHVuY29uZGl0aW9uYWxseSB3YXMgbW9yZSBhcHByb3By
+aWF0ZS4gIFRoZSBmaXJzdCBvZiB0aGUNCj4gcGF0Y2hlcyBoZXJlIGRvZXMgZG9lcyB0aGlzLiAg
+VGhpcyBoYXMgYmVlbiBzaXR0aW5nIGluIG91ciB0cmVlIGZvciBzb21lIHRpbWUNCj4gYXMgaXQg
+d2FzIG5vdCBjbGVhciB0aGF0IHRoaXMgd291bGQgYmUgZW50aXJlbHkgc2FmZSwgdGhvdWdoIHRo
+ZSBTUEMtMyBiaXRzIGFyZQ0KPiBpbiB0aGVvcnkgYXQgbGVhc3QgbW9zdGx5IGRldGVjdGVkLiAg
+VGhhdCBzYWlkIHRoaXMgY2hhbmdlIGhhcyBiZWVuIGluIFVidW50dQ0KPiBmb3IgYSBmdWxsIGN5
+Y2xlIG5vdyBhbmQgZG9lcyBub3Qgc2VlbSB0byBoYXZlIGNhdXNlZCBhbnkgaXNzdWVzLiAgSWYg
+S1kgaXMNCj4gaGFwcHkgd2Ugc2hvdWxkIGxpa2VseSBzdWJtaXQgaXQgZm9ybWFsbHkuICBUaGUg
+c2Vjb25kIGZpeCBJIGJlbGlldmVkIHdhcw0KPiBhbHJlYWR5IGJlaW5nIHN1Ym1pdHRlZCB0byBt
+YWlubGluZS4NCj4gDQo+IEtZPw0KDQpUaGUgV2luZG93cyBndXlzIGFyZSBub3QgY3VycmVudGx5
+IGNvbWZvcnRhYmxlIGNsYWltaW5nIGNvbmZvcm1hbmNlIHRvIFNQQy0zLCBhcyB0aGV5IGhhdmUg
+bm90IGRvbmUNCnRoZSBuZWNlc3NhcnkgdGVzdGluZy4gVGhpcyB3aWxsIGNoYW5nZSBob3BlZnVs
+bHkgc29vbi4NCg0KSy4gWQ0KPiANCj4gLWFwdw0K
