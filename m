@@ -1,75 +1,86 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [target:for-next 20/20] drivers/scsi/virtio_scsi.c:531:48:
- error: dereferencing pointer to incomplete type
-Date: Thu, 22 May 2014 13:46:30 -0700
-Message-ID: <1400791590.26558.6.camel@haakon3.risingtidesystems.com>
-References: <537d6b74.lQGMmmapPq/MP5Nx%fengguang.wu@intel.com>
+From: Joe Lawrence <joe.lawrence@stratus.com>
+Subject: [PATCH] scsi_transport_sas: move bsg destructor into sas_rphy_remove
+Date: Thu, 22 May 2014 17:30:54 -0400
+Message-ID: <1400794254-23426-1-git-send-email-joe.lawrence@stratus.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:49891 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751699AbaEVUqc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 22 May 2014 16:46:32 -0400
-In-Reply-To: <537d6b74.lQGMmmapPq/MP5Nx%fengguang.wu@intel.com>
+Received: from p01c12o143.mxlogic.net ([208.65.145.66]:55786 "EHLO
+	p01c12o143.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751618AbaEVVc1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 22 May 2014 17:32:27 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: kbuild test robot <fengguang.wu@intel.com>
-Cc: kbuild-all@01.org, Paolo Bonzini <pbonzini@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: Dan Williams <dan.j.williams@intel.com>, Joe Lawrence <joe.lawrence@stratus.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Christoph Hellwig <hch@infradead.org>
 
-Hi Fengguang,
+The recent change in sysfs, bcdde7e221a8750f9b62b6d0bd31b72ea4ad9309
+"sysfs: make __sysfs_remove_dir() recursive" revealed an asymmetric
+rphy device creation/deletion sequence in scsi_transport_sas:
 
-On Thu, 2014-05-22 at 11:13 +0800, kbuild test robot wrote:
-> tree:   git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git for-next
-> head:   4baaa7d589e24bfe87dfd6c7a1229108be404a28
-> commit: 4baaa7d589e24bfe87dfd6c7a1229108be404a28 [20/20] virtio-scsi: Enable DIF/DIX modes in SCSI host LLD
-> config: x86_64-randconfig-x000 (attached as .config)
-> 
-> All error/warnings:
-> 
->    drivers/scsi/virtio_scsi.c: In function 'virtio_scsi_init_hdr_pi':
-> >> drivers/scsi/virtio_scsi.c:531:48: error: dereferencing pointer to incomplete type
->       cmd_pi->pi_bytesout = blk_rq_sectors(rq) * bi->tuple_size;
->                                                    ^
-> >> drivers/scsi/virtio_scsi.c:533:47: error: dereferencing pointer to incomplete type
->       cmd_pi->pi_bytesin = blk_rq_sectors(rq) * bi->tuple_size;
->                                                   ^
-> 
-> vim +531 drivers/scsi/virtio_scsi.c
-> 
->    525		if (!rq || !scsi_prot_sg_count(sc))
->    526			return;
->    527	
->    528		bi = blk_get_integrity(rq->rq_disk);
->    529	
->    530		if (sc->sc_data_direction == DMA_TO_DEVICE)
->  > 531			cmd_pi->pi_bytesout = blk_rq_sectors(rq) * bi->tuple_size;
->    532		else if (sc->sc_data_direction == DMA_FROM_DEVICE)
->  > 533			cmd_pi->pi_bytesin = blk_rq_sectors(rq) * bi->tuple_size;
->    534	}
->    535	
->    536	static int virtscsi_queuecommand(struct virtio_scsi *vscsi,
-> 
+  modprobe mpt2sas
+    sas_rphy_add
+      device_add A               rphy->dev
+      device_add B               sas_device transport class
+      device_add C               sas_end_device transport class
+      device_add D               bsg class
 
-Squashing the following into the original commit to enable blk-integrity
-for virtio-scsi to address the randconfig build failure above.
+  rmmod mpt2sas
+    sas_rphy_delete
+      sas_rphy_remove
+        device_del B
+        device_del C
+        device_del A
+          sysfs_remove_group     recursive sysfs dir removal
+      sas_rphy_free
+        device_del D             warning
 
-Thanks!
+  where device A is the parent of B, C, and D.
 
---nab
+When sas_rphy_free tries to unregister the bsg request queue (device D
+above), the ensuing sysfs cleanup discovers that its sysfs group has
+already been removed and emits a warning, "sysfs group... not found for
+kobject 'end_device-X:0'".
 
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 02832d6..baca589 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -1773,6 +1773,7 @@ config SCSI_BFA_FC
- config SCSI_VIRTIO
-        tristate "virtio-scsi support"
-        depends on VIRTIO
-+       select BLK_DEV_INTEGRITY
-        help
-           This is the virtual HBA driver for virtio.  If the kernel will
-           be used in a virtual machine, say Y or M.
+Since bsg creation is a side effect of sas_rphy_add, move its
+complementary removal call into sas_rphy_remove. This imposes the
+following tear-down order for the devices above: D, B, C, A.
 
+Note the sas_device and sas_end_device transport class devices (B and C
+above) are created and destroyed both via the list match traversal in
+attribute_container_device_trigger, so the order in which they are
+handled is fixed. This is fine as long as they are deleted before their
+parent device.
+
+Signed-off-by: Joe Lawrence <joe.lawrence@stratus.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Christoph Hellwig <hch@infradead.org>
+Acked-by: Dan Williams <dan.j.williams@intel.com>
+---
+ drivers/scsi/scsi_transport_sas.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
+index 1b68142..c341f85 100644
+--- a/drivers/scsi/scsi_transport_sas.c
++++ b/drivers/scsi/scsi_transport_sas.c
+@@ -1621,8 +1621,6 @@ void sas_rphy_free(struct sas_rphy *rphy)
+ 	list_del(&rphy->list);
+ 	mutex_unlock(&sas_host->lock);
+ 
+-	sas_bsg_remove(shost, rphy);
+-
+ 	transport_destroy_device(dev);
+ 
+ 	put_device(dev);
+@@ -1681,6 +1679,7 @@ sas_rphy_remove(struct sas_rphy *rphy)
+ 	}
+ 
+ 	sas_rphy_unlink(rphy);
++	sas_bsg_remove(NULL, rphy);
+ 	transport_remove_device(dev);
+ 	device_del(dev);
+ }
+-- 
+1.7.10.4
 
