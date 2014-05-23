@@ -1,55 +1,59 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: [PATCHv2 1/2] ibmvscsi: Abort init sequence during error recovery
-Date: Fri, 23 May 2014 10:52:10 -0500
-Message-ID: <201405231552.s4NFqA9C027982@d01av01.pok.ibm.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 3/5] lpfc 10.2.8001.0: Removed obsolete PCI IDs from the
+ driver
+Date: Fri, 23 May 2014 17:58:42 +0200
+Message-ID: <537F7032.6060001@suse.de>
+References: <1399910007.25346.10.camel@myfc17> <20140519171944.GC32250@infradead.org> <537A41E6.8010607@emulex.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e7.ny.us.ibm.com ([32.97.182.137]:50981 "EHLO e7.ny.us.ibm.com"
+Received: from cantor2.suse.de ([195.135.220.15]:34597 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752301AbaEWPwV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 23 May 2014 11:52:21 -0400
-Received: from /spool/local
-	by e7.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
-	Fri, 23 May 2014 11:52:20 -0400
-Received: from b01cxnp23032.gho.pok.ibm.com (b01cxnp23032.gho.pok.ibm.com [9.57.198.27])
-	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id ECDC4C9003E
-	for <linux-scsi@vger.kernel.org>; Fri, 23 May 2014 11:52:06 -0400 (EDT)
-Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
-	by b01cxnp23032.gho.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s4NFqChI4653456
-	for <linux-scsi@vger.kernel.org>; Fri, 23 May 2014 15:52:12 GMT
-Received: from d01av01.pok.ibm.com (localhost [127.0.0.1])
-	by d01av01.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s4NFqB89028021
-	for <linux-scsi@vger.kernel.org>; Fri, 23 May 2014 11:52:11 -0400
+	id S1753128AbaEWP6p (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 23 May 2014 11:58:45 -0400
+In-Reply-To: <537A41E6.8010607@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, nfont@linux.vnet.ibm.com, brking@linux.vnet.ibm.com
+To: james.smart@emulex.com, Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org
 
+On 05/19/2014 07:39 PM, James Smart wrote:
+> :)
+>
+> for those distros, that want to pull only upstream'd patches, and whe=
+re
+> customers expect someone to take phone calls on any hardware recogniz=
+ed
+> by the distro... the patch is to remove the hardware Emulex/the distr=
+o
+> won't answer any questions for anymore.
+>
+> true - the hardware, if you can find it lying around somewhere, may
+> still function. It won't get firmware updates, nor any mindshare. I'm
+> not sure where the policy is for upstream - is it truly once known, c=
+an
+> never be taken away ?
+>
+Problem is, no-one does.
 
-If a CRQ reset is triggered for some reason while in the middle
-of performing VSCSI adapter initialization, we don't want to
-call the done function for the initialization MAD commands as
-this will only result in two threads attempting initialization
-at the same time, resulting in failures.
+But I've proposed a micro-conf at LPC in October to discuss exactly
+this. You're welcomed to join :-)
+It would be good to have a mechanism which would retain the=20
+functionality, but at the same time indicating that for any errors
+you might be on your own.
 
-Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
----
+Cheers,
 
- drivers/scsi/ibmvscsi/ibmvscsi.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff -puN drivers/scsi/ibmvscsi/ibmvscsi.c~ibmvscsi_purge_fix drivers/scsi/ibmvscsi/ibmvscsi.c
---- linux/drivers/scsi/ibmvscsi/ibmvscsi.c~ibmvscsi_purge_fix	2014-05-23 10:36:04.000000000 -0500
-+++ linux-bjking1/drivers/scsi/ibmvscsi/ibmvscsi.c	2014-05-23 10:50:03.000000000 -0500
-@@ -797,7 +797,8 @@ static void purge_requests(struct ibmvsc
- 				       evt->hostdata->dev);
- 			if (evt->cmnd_done)
- 				evt->cmnd_done(evt->cmnd);
--		} else if (evt->done)
-+		} else if (evt->done && evt->crq.format != VIOSRP_MAD_FORMAT &&
-+			   evt->iu.srp.login_req.opcode != SRP_LOGIN_REQ)
- 			evt->done(evt);
- 		free_event_struct(&evt->hostdata->pool, evt);
- 		spin_lock_irqsave(hostdata->host->host_lock, flags);
-_
-
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
