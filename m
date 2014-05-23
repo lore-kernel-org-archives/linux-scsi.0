@@ -1,80 +1,56 @@
-From: "K. Y. Srinivasan" <kys@microsoft.com>
-Subject: [PATCH 1/1] Drivers: scsi: storvsc: Change the limits to reflect the values on the host
-Date: Thu, 22 May 2014 19:51:52 -0700
-Message-ID: <1400813512-22394-1-git-send-email-kys@microsoft.com>
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
-To: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, jbottomley@parallels.com, jasowang@redhat.com, apw@canonical.com, linux-scsi@vger.kernel.org
-Cc: "K. Y. Srinivasan" <kys@microsoft.com>, stable@vger.kernel.org
+From: "Nicholas A. Bellinger" <nab@daterainc.com>
+Subject: [PATCH-scsi-for-next] tcm_qla2xxx: Set correct protection flags when DIF/DIX is enabled
+Date: Fri, 23 May 2014 02:04:23 +0000
+Message-ID: <1400810663-24731-1-git-send-email-nab@daterainc.com>
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Quinn Tran <quinn.tran@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <JBottomley@Parallels.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hyper-V hosts can support multiple targets and multiple channels and larger number of
-LUNs per target. Update the code to reflect this. With this patch we can correctly
-enumerate all the paths in a multi-path storage environment.
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-MS-TFS: 173725
+With the advent of per session protection flags in v3.15-rc1 code,
+a target fabric driver supporting T10 PI needs to declare it's own
+protection capabilities at transport_init_session() time.
 
-Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
-Cc: <stable@vger.kernel.org>
+This patch updates tcm_qla2xxx_check_initiator_node_acl() to extract
+the T10 PI capabilities using scsi_qla_host_t->flags.difdix_supported,
+and sets TARGET_PROT_ALL (all forms of PASS + INSERT + STRIP operations
+supported by HW fabric offloads) when available.
+
+Cc: Quinn Tran <quinn.tran@qlogic.com>
+Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>
+Cc: Saurav Kashyap <saurav.kashyap@qlogic.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: James Bottomley <JBottomley@Parallels.com>
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/scsi/storvsc_drv.c |   36 ++++++++++++++++++++++--------------
- 1 files changed, 22 insertions(+), 14 deletions(-)
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 9969fa1..5a63772 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -331,16 +331,15 @@ static int storvsc_timeout = 180;
- static void storvsc_on_channel_callback(void *context);
- 
- /*
-- * In Hyper-V, each port/path/target maps to 1 scsi host adapter.  In
-- * reality, the path/target is not used (ie always set to 0) so our
-- * scsi host adapter essentially has 1 bus with 1 target that contains
-- * up to 256 luns.
-+ * In Hyper-V, each port/path/target maps to 1 scsi host adapter.
-  */
--#define STORVSC_MAX_LUNS_PER_TARGET			64
--#define STORVSC_MAX_TARGETS				1
--#define STORVSC_MAX_CHANNELS				1
+diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+index 896cb23..8c10438 100644
+--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
++++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+@@ -1501,7 +1501,8 @@ static int tcm_qla2xxx_check_initiator_node_acl(
+ 	struct qla_tgt_sess *sess = qla_tgt_sess;
+ 	unsigned char port_name[36];
+ 	unsigned long flags;
 -
-+#define STORVSC_MAX_LUNS_PER_TARGET			255
-+#define STORVSC_MAX_TARGETS				2
-+#define STORVSC_MAX_CHANNELS				8
++	int prot_flags = (vha->flags.difdix_supported) ? TARGET_PROT_ALL :
++							 TARGET_PROT_NORMAL;
+ 	lport = vha->vha_tgt.target_lport_ptr;
+ 	if (!lport) {
+ 		pr_err("Unable to locate struct tcm_qla2xxx_lport\n");
+@@ -1518,7 +1519,7 @@ static int tcm_qla2xxx_check_initiator_node_acl(
+ 	}
+ 	se_tpg = &tpg->se_tpg;
  
-+#define STORVSC_FC_MAX_LUNS_PER_TARGET			255
-+#define STORVSC_FC_MAX_TARGETS				128
-+#define STORVSC_FC_MAX_CHANNELS				8
- 
- struct storvsc_cmd_request {
- 	struct list_head entry;
-@@ -1789,12 +1788,21 @@ static int storvsc_probe(struct hv_device *device,
- 	host_dev->path = stor_device->path_id;
- 	host_dev->target = stor_device->target_id;
- 
--	/* max # of devices per target */
--	host->max_lun = STORVSC_MAX_LUNS_PER_TARGET;
--	/* max # of targets per channel */
--	host->max_id = STORVSC_MAX_TARGETS;
--	/* max # of channels */
--	host->max_channel = STORVSC_MAX_CHANNELS - 1;
-+	if (dev_id->driver_data == SFC_GUID) {
-+		/* max # of devices per target */
-+		host->max_lun = STORVSC_FC_MAX_LUNS_PER_TARGET;
-+		/* max # of targets per channel */
-+		host->max_id = STORVSC_FC_MAX_TARGETS;
-+		/* max # of channels */
-+		host->max_channel = STORVSC_FC_MAX_CHANNELS - 1;
-+	} else {
-+		/* max # of devices per target */
-+		host->max_lun = STORVSC_MAX_LUNS_PER_TARGET;
-+		/* max # of targets per channel */
-+		host->max_id = STORVSC_MAX_TARGETS;
-+		/* max # of channels */
-+		host->max_channel = STORVSC_MAX_CHANNELS - 1;
-+	}
- 	/* max cmd length */
- 	host->max_cmd_len = STORVSC_MAX_CMD_LEN;
- 
+-	se_sess = transport_init_session(TARGET_PROT_NORMAL);
++	se_sess = transport_init_session(prot_flags);
+ 	if (IS_ERR(se_sess)) {
+ 		pr_err("Unable to initialize struct se_session\n");
+ 		return PTR_ERR(se_sess);
 -- 
-1.7.4.1
+1.7.10.4
