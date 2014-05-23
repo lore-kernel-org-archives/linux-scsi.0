@@ -1,59 +1,58 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 3/5] lpfc 10.2.8001.0: Removed obsolete PCI IDs from the
- driver
-Date: Fri, 23 May 2014 17:58:42 +0200
-Message-ID: <537F7032.6060001@suse.de>
-References: <1399910007.25346.10.camel@myfc17> <20140519171944.GC32250@infradead.org> <537A41E6.8010607@emulex.com>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCHv2 1/2] ibmvscsi: Abort init sequence during error recovery
+Date: Fri, 23 May 2014 18:03:44 +0200
+Message-ID: <537F7160.7080403@acm.org>
+References: <201405231552.s4NFqA9C027982@d01av01.pok.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:34597 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753128AbaEWP6p (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 23 May 2014 11:58:45 -0400
-In-Reply-To: <537A41E6.8010607@emulex.com>
+Received: from xavier.telenet-ops.be ([195.130.132.52]:41680 "EHLO
+	xavier.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751628AbaEWQDp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 May 2014 12:03:45 -0400
+In-Reply-To: <201405231552.s4NFqA9C027982@d01av01.pok.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: james.smart@emulex.com, Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi@vger.kernel.org
+To: Brian King <brking@linux.vnet.ibm.com>
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, nfont@linux.vnet.ibm.com
 
-On 05/19/2014 07:39 PM, James Smart wrote:
-> :)
->
-> for those distros, that want to pull only upstream'd patches, and whe=
-re
-> customers expect someone to take phone calls on any hardware recogniz=
-ed
-> by the distro... the patch is to remove the hardware Emulex/the distr=
-o
-> won't answer any questions for anymore.
->
-> true - the hardware, if you can find it lying around somewhere, may
-> still function. It won't get firmware updates, nor any mindshare. I'm
-> not sure where the policy is for upstream - is it truly once known, c=
-an
-> never be taken away ?
->
-Problem is, no-one does.
+On 05/23/14 17:52, Brian King wrote:
+> If a CRQ reset is triggered for some reason while in the middle
+> of performing VSCSI adapter initialization, we don't want to
+> call the done function for the initialization MAD commands as
+> this will only result in two threads attempting initialization
+> at the same time, resulting in failures.
+> 
+> Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+> ---
+> 
+>  drivers/scsi/ibmvscsi/ibmvscsi.c |    3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff -puN drivers/scsi/ibmvscsi/ibmvscsi.c~ibmvscsi_purge_fix drivers/scsi/ibmvscsi/ibmvscsi.c
+> --- linux/drivers/scsi/ibmvscsi/ibmvscsi.c~ibmvscsi_purge_fix	2014-05-23 10:36:04.000000000 -0500
+> +++ linux-bjking1/drivers/scsi/ibmvscsi/ibmvscsi.c	2014-05-23 10:50:03.000000000 -0500
+> @@ -797,7 +797,8 @@ static void purge_requests(struct ibmvsc
+>  				       evt->hostdata->dev);
+>  			if (evt->cmnd_done)
+>  				evt->cmnd_done(evt->cmnd);
+> -		} else if (evt->done)
+> +		} else if (evt->done && evt->crq.format != VIOSRP_MAD_FORMAT &&
+> +			   evt->iu.srp.login_req.opcode != SRP_LOGIN_REQ)
+>  			evt->done(evt);
+>  		free_event_struct(&evt->hostdata->pool, evt);
+>  		spin_lock_irqsave(hostdata->host->host_lock, flags);
 
-But I've proposed a micro-conf at LPC in October to discuss exactly
-this. You're welcomed to join :-)
-It would be good to have a mechanism which would retain the=20
-functionality, but at the same time indicating that for any errors
-you might be on your own.
+Hello Brian,
 
-Cheers,
+Does this mean that the SRP-over-CRQ protocol is still in use for
+communication between partitions ? Had you already noticed the "tgt
+infrastructure removal" patch series
+(http://thread.gmane.org/gmane.linux.scsi/90119) ? Feedback would be
+appreciated.
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+
+Bart.
+
