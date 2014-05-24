@@ -1,32 +1,33 @@
-From: Paul Bolle <pebolle@tiscali.nl>
-Subject: Re: [PATCH] [SCSI] dc395x: remove check for
- CONFIG_SCSI_DC395x_TRMS1040_TRADMAP
-Date: Sat, 24 May 2014 13:46:11 +0200
-Message-ID: <1400931971.22523.27.camel@x220>
-References: <1400929758.22523.2.camel@x220>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] acornscsi: remove linked command support
+Date: Sat, 24 May 2014 16:13:37 +0400
+Message-ID: <1400933617.6956.34.camel@dabdike.int.hansenpartnership.com>
+References: <1400926433.31526.89.camel@x220> <538075E0.4080001@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="ISO-8859-15"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cpsmtpb-ews10.kpnxchange.com ([213.75.39.15]:64281 "EHLO
-	cpsmtpb-ews10.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750893AbaEXLqO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 24 May 2014 07:46:14 -0400
-In-Reply-To: <1400929758.22523.2.camel@x220>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <538075E0.4080001@suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Paul Bolle <pebolle@tiscali.nl>, Russell King <linux@arm.linux.org.uk>, linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Oliver Neukum <oliver@neukum.org>, Ali Akcaagac <aliakc@web.de>, Jamie Lenehan <lenehan@twibble.org>, "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-> This is an automatically generated Delivery Status Notification.
+On Sat, 2014-05-24 at 12:35 +0200, Hannes Reinecke wrote:
+[...]
+> I'm all for it. Removing never-really-implemented feature on obsolete 
+> hardware is always a good idea.
 > 
-> Delivery to the following recipients failed.
-> 
->        dc395x@twibble.org
+> Acked-by: Hannes Reinecke <hare@suse.de>
 
-Anyone else seeing this too?
+Wait, no, that's not a good idea.  We leave obsolete drivers to bitrot.
+Particularly we try not to touch them unless we have to because there
+might be a few people still using them and the more we tamper, the
+greater the risk that something gets broken.  On that principle, since
+there's no real reason to remove the code, it should stay ... until the
+whole driver bitrots to the extent that we can no-longer compile it.
 
+However, I'll do this if the Maintainer (rmk) acks ... because if it
+breaks he gets to fix it.
 
-Paul Bolle
-
+James
