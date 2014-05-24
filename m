@@ -1,120 +1,131 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] qla2xxx: Convert to percpu_ida session tag
- pre-allocation
-Date: Fri, 23 May 2014 19:33:22 -0700
-Message-ID: <1400898802.6476.25.camel@haakon3.risingtidesystems.com>
-References: <1400892216-9784-1-git-send-email-nab@daterainc.com>
+From: Paul Bolle <pebolle@tiscali.nl>
+Subject: [PATCH] acornscsi: remove linked command support
+Date: Sat, 24 May 2014 12:13:53 +0200
+Message-ID: <1400926433.31526.89.camel@x220>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:47718 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751151AbaEXCd3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 May 2014 22:33:29 -0400
-In-Reply-To: <1400892216-9784-1-git-send-email-nab@daterainc.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Russell King <linux@arm.linux.org.uk>, "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@daterainc.com>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Quinn Tran <quinn.tran@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Chad Dupuis <chad.dupuis@qlogic.com>, Roland Dreier <roland@kernel.org>, Christoph Hellwig <hch@lst.de>
 
-Hi Qlogic folks,
+The acornscsi driver was added in v2.1.88. It has always #undef-ed
+CONFIG_SCSI_ACORNSCSI_LINK near the top of acornscsi.c. And, just to be
+sure, it has also always triggered a preprocessor error if
+CONFIG_SCSI_ACORNSCSI_LINK was still defined. But, as far as I can see,
+it has never even been possible to set SCSI_ACORNSCSI_LINK through
+kconfig, or its predecessors, in the first place.
 
-A question for you below..
+Let's remove the code involved.
 
-On Sat, 2014-05-24 at 00:43 +0000, Nicholas A. Bellinger wrote:
-> From: Nicholas Bellinger <nab@linux-iscsi.org>
-> 
-> This patch converts qla2xxx target code to use generic percpu_ida
-> tag allocation provided by target-core, thus removing the original
-> kmem_cache_zalloc() for each struct qla_tgt_cmd descriptor in the
-> incoming ATIO packet fast-path.
-> 
-> This includes the conversion of qlt_handle_cmd_for_atio() to perform
-> qla_tgt_sess lookup before dispatching a command descriptor into
-> qla_tgt_wq process context, along with handling the case where no
-> active session exists, and subsequently kicking off a seperate
-> process context for qlt_create_sess_from_atio() to create a new one.
-> 
-> It also includes moving tag allocation into generic code within
-> qlt_get_tag(), so that the same logic can be shared between
-> qlt_handle_cmd_for_atio() + qlt_create_sess_from_atio() contexts.
-> Also, __qlt_do_work() has been made generic between both normal
-> process context in qlt_do_work() + qlt_create_sess_from_atio().
-> 
-> Next, update qlt_free_cmd() to release the percpu-ida tags, and
-> drop the now-unused global qla_tgt_cmd_cachep.
-> 
-> Finally in tcm_qla2xxx code, tcm_qla2xxx_check_initiator_node_acl()
-> has been updated to use transport_init_session_tags() along with a
-> hardcoded TCM_QLA2XXX_DEFAULT_TAGS=512 as the number of qla_tgt_cmd
-> descriptors to pre-allocate per qla_tgt_sess instance.
-> 
-> Cc: Saurav Kashyap <saurav.kashyap@qlogic.com>
-> Cc: Quinn Tran <quinn.tran@qlogic.com>
-> Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>
-> Cc: Chad Dupuis <chad.dupuis@qlogic.com>
-> Cc: Roland Dreier <roland@kernel.org>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
-> ---
->  drivers/scsi/qla2xxx/qla_target.c  |  195 ++++++++++++++++++++++++------------
->  drivers/scsi/qla2xxx/qla_target.h  |    6 ++
->  drivers/scsi/qla2xxx/tcm_qla2xxx.c |    4 +-
->  drivers/scsi/qla2xxx/tcm_qla2xxx.h |    2 +
->  4 files changed, 142 insertions(+), 65 deletions(-)
-> 
+Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
+---
+Untested.
 
-<SNIP>
+Also interesting: SCSI_ACORNSCSI_TAGGED_QUEUE can be set through
+kconfig, but its macro will be #undef-ed at the top of acornscsi.c. I
+suppose that #undef could be dropped.
 
-> diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-> index 68fb66f..34db344 100644
-> --- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-> +++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-> @@ -1482,7 +1482,9 @@ static int tcm_qla2xxx_check_initiator_node_acl(
->  	}
->  	se_tpg = &tpg->se_tpg;
->  
-> -	se_sess = transport_init_session(TARGET_PROT_NORMAL);
-> +	se_sess = transport_init_session_tags(TCM_QLA2XXX_DEFAULT_TAGS,
-> +					      sizeof(struct qla_tgt_cmd),
-> +					      TARGET_PROT_NORMAL);
->  	if (IS_ERR(se_sess)) {
->  		pr_err("Unable to initialize struct se_session\n");
->  		return PTR_ERR(se_sess);
-> diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.h b/drivers/scsi/qla2xxx/tcm_qla2xxx.h
-> index 33aaac8..b0a3ea5 100644
-> --- a/drivers/scsi/qla2xxx/tcm_qla2xxx.h
-> +++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.h
-> @@ -4,6 +4,8 @@
->  #define TCM_QLA2XXX_VERSION	"v0.1"
->  /* length of ASCII WWPNs including pad */
->  #define TCM_QLA2XXX_NAMELEN	32
-> +/* Number of pre-allocated per-session tags */
-> +#define TCM_QLA2XXX_DEFAULT_TAGS 512
->  
+And finally: CONFIG_ACORNSCSI_CONSTANTS has to be set manually. But if
+we'd just drop the CONFIG_ prefix acornscsi.c would become a pet peeve
+free zone.
 
-So a question wrt to the TCM_QLA2XXX_DEFAULT_TAGS value above used to
-determine the number of qla_tgt_cmd descriptors to pre-allocate at
-qla_tgt_sess creation time..
+ drivers/scsi/arm/acornscsi.c | 53 --------------------------------------------
+ 1 file changed, 53 deletions(-)
 
-This value needs to line up with the total number of possible incoming
-ATIO packets, plus the number of qla_tgt_cmd descriptors that have not
-been acknowledged with a CTIO packet.  Typically with other fabrics that
-have been converted to use percpu_ida, we over-allocate the number of
-per-session tags in order to completely avoid the slow-path where
-percpu_ida has to steal tags from another CPU.
-
-AFAICT, there is no way at the qla_target driver level to enforce
-per-session queue_depth + reflect the depth at the initiator port, so
-the number of tags needs to be the worst case number of HW descriptors
-that a single session can consume + number of unacknowledged
-descriptors.
-
-So the question is, is there already a define somewhere in qla2xxx code
-that TCM_QLA2XXX_DEFAULT_TAGS can use as a starting point..?  If not,
-what is the total number of outstanding commands that a single session
-(or single port..?) can expect to handle at a given time..?
-
---nab
-
+diff --git a/drivers/scsi/arm/acornscsi.c b/drivers/scsi/arm/acornscsi.c
+index 059ff477a398..2e797a367608 100644
+--- a/drivers/scsi/arm/acornscsi.c
++++ b/drivers/scsi/arm/acornscsi.c
+@@ -62,13 +62,6 @@
+  */
+ #undef CONFIG_SCSI_ACORNSCSI_TAGGED_QUEUE
+ /*
+- * SCSI-II Linked command support.
+- *
+- * The higher level code doesn't support linked commands yet, and so the option
+- * is undef'd here.
+- */
+-#undef CONFIG_SCSI_ACORNSCSI_LINK
+-/*
+  * SCSI-II Synchronous transfer support.
+  *
+  * Tried and tested...
+@@ -160,10 +153,6 @@
+ #error "Yippee!  ABORT TAG is now defined!  Remove this error!"
+ #endif
+ 
+-#ifdef CONFIG_SCSI_ACORNSCSI_LINK
+-#error SCSI2 LINKed commands not supported (yet)!
+-#endif
+-
+ #ifdef USE_DMAC
+ /*
+  * DMAC setup parameters
+@@ -1668,42 +1657,6 @@ void acornscsi_message(AS_Host *host)
+ 	}
+ 	break;
+ 
+-#ifdef CONFIG_SCSI_ACORNSCSI_LINK
+-    case LINKED_CMD_COMPLETE:
+-    case LINKED_FLG_CMD_COMPLETE:
+-	/*
+-	 * We don't support linked commands yet
+-	 */
+-	if (0) {
+-#if (DEBUG & DEBUG_LINK)
+-	    printk("scsi%d.%c: lun %d tag %d linked command complete\n",
+-		    host->host->host_no, acornscsi_target(host), host->SCpnt->tag);
+-#endif
+-	    /*
+-	     * A linked command should only terminate with one of these messages
+-	     * if there are more linked commands available.
+-	     */
+-	    if (!host->SCpnt->next_link) {
+-		printk(KERN_WARNING "scsi%d.%c: lun %d tag %d linked command complete, but no next_link\n",
+-			instance->host_no, acornscsi_target(host), host->SCpnt->tag);
+-		acornscsi_sbic_issuecmd(host, CMND_ASSERTATN);
+-		msgqueue_addmsg(&host->scsi.msgs, 1, ABORT);
+-	    } else {
+-		struct scsi_cmnd *SCpnt = host->SCpnt;
+-
+-		acornscsi_dma_cleanup(host);
+-
+-		host->SCpnt = host->SCpnt->next_link;
+-		host->SCpnt->tag = SCpnt->tag;
+-		SCpnt->result = DID_OK | host->scsi.SCp.Message << 8 | host->Scsi.SCp.Status;
+-		SCpnt->done(SCpnt);
+-
+-		/* initialise host->SCpnt->SCp */
+-	    }
+-	    break;
+-	}
+-#endif
+-
+     default: /* reject message */
+ 	printk(KERN_ERR "scsi%d.%c: unrecognised message %02X, rejecting\n",
+ 		host->host->host_no, acornscsi_target(host),
+@@ -2825,9 +2778,6 @@ char *acornscsi_info(struct Scsi_Host *host)
+ #ifdef CONFIG_SCSI_ACORNSCSI_TAGGED_QUEUE
+     " TAG"
+ #endif
+-#ifdef CONFIG_SCSI_ACORNSCSI_LINK
+-    " LINK"
+-#endif
+ #if (DEBUG & DEBUG_NO_WRITE)
+     " NOWRITE (" __stringify(NO_WRITE) ")"
+ #endif
+@@ -2851,9 +2801,6 @@ static int acornscsi_show_info(struct seq_file *m, struct Scsi_Host *instance)
+ #ifdef CONFIG_SCSI_ACORNSCSI_TAGGED_QUEUE
+     " TAG"
+ #endif
+-#ifdef CONFIG_SCSI_ACORNSCSI_LINK
+-    " LINK"
+-#endif
+ #if (DEBUG & DEBUG_NO_WRITE)
+     " NOWRITE (" __stringify(NO_WRITE) ")"
+ #endif
+-- 
+1.9.0
