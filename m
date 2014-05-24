@@ -1,58 +1,64 @@
-From: Paul Bolle <pebolle@tiscali.nl>
-Subject: Re: [PATCH] acornscsi: remove linked command support
-Date: Sat, 24 May 2014 15:16:35 +0200
-Message-ID: <1400937395.22523.55.camel@x220>
-References: <1400926433.31526.89.camel@x220> <538075E0.4080001@suse.de>
-	 <1400933617.6956.34.camel@dabdike.int.hansenpartnership.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 3.15-rc6
+Date: Sat, 24 May 2014 17:51:13 +0400
+Message-ID: <1400939473.6956.40.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="ISO-8859-15"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1400933617.6956.34.camel@dabdike.int.hansenpartnership.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Hannes Reinecke <hare@suse.de>, Russell King <linux@arm.linux.org.uk>, linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:48193 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751262AbaEXNvU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 24 May 2014 09:51:20 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-On Sat, 2014-05-24 at 16:13 +0400, James Bottomley wrote:
-> Wait, no, that's not a good idea.  We leave obsolete drivers to bitrot.
-> Particularly we try not to touch them unless we have to because there
-> might be a few people still using them and the more we tamper, the
-> greater the risk that something gets broken.
+This is a single fix for a bug exposed by a sysfs change in 3.13 which
+now causes libsas to trigger a warn on in device removal.
 
-Which is also a way to notice whether people still use those obsolete
-drivers.
+The patch is available here:
 
-> On that principle, since
-> there's no real reason to remove the code,
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-(Unless one carries the hope that any check, treewide, for a CONFIG_*
-macro can be linked to a proper Kconfig symbol.)
+The short changelog is:
 
-> it should stay ... until the
-> whole driver bitrots to the extent that we can no-longer compile it.
+Joe Lawrence (1):
+      scsi_transport_sas: move bsg destructor into sas_rphy_remove
 
-I've run into this depreciation policy before. With aic7xxx_old (which I
-eventually convinced Fedora to disable, a few relases before it was
-removed from the tree). With aic94xx (which I also convinced Fedora to
-disable). I also tried multiple times to shut up advansys' compile
-time[1]. It seems SCSI might risk not to notice their bitrot, because
-eventually everybody stops compiling these obsolete drivers, leaving
-SCSI without feedback on their state.
+And the diffstat:
 
-Anyhow, SCSI seems to be the only subsystem that uses this subcategory
-of not-really-maintained drivers. Other subsystems appear to allow
-anything to be fixed, even trivialities, which are what I tend to fix,
-and only stop allowing fixes if the drivers involved are going to be
-removed anyway. But maybe I just never ran into that category in other
-subsystems.
+ drivers/scsi/scsi_transport_sas.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-> However, I'll do this if the Maintainer (rmk) acks ... because if it
-> breaks he gets to fix it.
+With full diff below.
+
+James
+
+---
+
+diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
+index 1b68142..c341f85 100644
+--- a/drivers/scsi/scsi_transport_sas.c
++++ b/drivers/scsi/scsi_transport_sas.c
+@@ -1621,8 +1621,6 @@ void sas_rphy_free(struct sas_rphy *rphy)
+ 	list_del(&rphy->list);
+ 	mutex_unlock(&sas_host->lock);
+ 
+-	sas_bsg_remove(shost, rphy);
+-
+ 	transport_destroy_device(dev);
+ 
+ 	put_device(dev);
+@@ -1681,6 +1679,7 @@ sas_rphy_remove(struct sas_rphy *rphy)
+ 	}
+ 
+ 	sas_rphy_unlink(rphy);
++	sas_bsg_remove(NULL, rphy);
+ 	transport_remove_device(dev);
+ 	device_del(dev);
+ }
 
 
-Paul Bolle
-
-[1] advansys prints a pointless compile time warning, on purpose.
-Clearly no one cares about its "wide board" support, but for some reason
-that warning needs to stay in. (Fedora declined to disable that driver.)
