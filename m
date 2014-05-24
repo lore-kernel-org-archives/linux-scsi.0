@@ -1,55 +1,99 @@
-From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH] iser-target: Add missing target_put_sess_cmd for ImmedateData failure
-Date: Fri, 23 May 2014 19:32:49 +0000
-Message-ID: <1400873569-3606-1-git-send-email-nab@daterainc.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oa0-f52.google.com ([209.85.219.52]:49787 "EHLO
-	mail-oa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751304AbaEWT5a (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 May 2014 15:57:30 -0400
-Received: by mail-oa0-f52.google.com with SMTP id eb12so6133882oac.39
-        for <linux-scsi@vger.kernel.org>; Fri, 23 May 2014 12:57:29 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+From: Venkatesh Srinivas <venkateshs@google.com>
+Subject: [PATCH] virtio-scsi: Implement change_queue_depth for virtscsi targets
+Date: Fri, 23 May 2014 18:07:45 -0700
+Message-ID: <1400893665-13128-1-git-send-email-venkateshs@google.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: linux-scsi@vger.kernel.org, pbonzini@redhat.com, nab@daterainc.com, virtualization@lists.linux-foundation.org, martin.petersen@oracle.com, digitaleric@google.com, vsrinivas@ops101.org
 List-Id: linux-scsi@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Sagi Grimberg <sagig@dev.mellanox.co.il>, Or Gerlitz <ogerlitz@mellanox.com>
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+change_queue_depth allows changing per-target queue depth via sysfs.
 
-This patch addresses a bug where an early exception for SCSI WRITE
-with ImmediateData=Yes was missing the target_put_sess_cmd() call
-to drop the extra se_cmd->cmd_kref reference obtained during the
-normal iscsit_setup_scsi_cmd() codepath execution.
+It also allows the SCSI midlayer to ramp down the number of concurrent
+inflight requests in response to a SCSI BUSY status response and allows
+the midlayer to ramp the count back up to the device maximum when the
+BUSY condition has resolved.
 
-This bug was manifesting itself during session shutdown within
-isert_cq_rx_comp_err() where target_wait_for_sess_cmds() would
-end up waiting indefinately for the last se_cmd->cmd_kref put to
-occur for the failed SCSI WRITE + ImmediateData descriptors.
-
-This fix follows what traditional iscsi-target code already does
-for the same failure case within iscsit_get_immediate_data().
-
-Reported-by: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Cc: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Cc: Or Gerlitz <ogerlitz@mellanox.com>
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+Signed-off-by: Venkatesh Srinivas <venkateshs@google.com>
 ---
- drivers/infiniband/ulp/isert/ib_isert.c |    2 ++
- 1 file changed, 2 insertions(+)
+ drivers/scsi/virtio_scsi.c | 33 +++++++++++++++++++++++++++++++++
+ 1 file changed, 33 insertions(+)
 
-diff --git a/drivers/infiniband/ulp/isert/ib_isert.c b/drivers/infiniband/ulp/isert/ib_isert.c
-index b622783..52c5ab8 100644
---- a/drivers/infiniband/ulp/isert/ib_isert.c
-+++ b/drivers/infiniband/ulp/isert/ib_isert.c
-@@ -1209,6 +1209,8 @@ sequence_cmd:
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index db3b494..6cd39cd 100644
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -26,6 +26,7 @@
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_device.h>
+ #include <scsi/scsi_cmnd.h>
++#include <scsi/scsi_tcq.h>
  
- 	if (!rc && dump_payload == false && unsol_data)
- 		iscsit_set_unsoliticed_dataout(cmd);
-+	else if (dump_payload && imm_data)
-+		target_put_sess_cmd(conn->sess->se_sess, &cmd->se_cmd);
- 
- 	return 0;
+ #define VIRTIO_SCSI_MEMPOOL_SZ 64
+ #define VIRTIO_SCSI_EVENT_LEN 8
+@@ -633,6 +634,36 @@ static int virtscsi_device_reset(struct scsi_cmnd *sc)
+ 	return virtscsi_tmf(vscsi, cmd);
  }
+ 
++/**
++ * virtscsi_change_queue_depth() - Change a virtscsi target's queue depth
++ * @sdev:	Virtscsi target whose queue depth to change
++ * @qdepth:	New queue depth
++ * @reason:	Reason for the queue depth change.
++ */
++static int virtscsi_change_queue_depth(struct scsi_device *sdev,
++				       int qdepth,
++				       int reason)
++{
++	struct Scsi_Host *shost = sdev->host;
++	int max_depth = shost->cmd_per_lun;
++
++	switch (reason) {
++	case SCSI_QDEPTH_QFULL: /* Drop qdepth in response to BUSY state */
++		scsi_track_queue_full(sdev, qdepth);
++		break;
++	case SCSI_QDEPTH_RAMP_UP: /* Raise qdepth after BUSY state resolved */
++	case SCSI_QDEPTH_DEFAULT: /* Manual change via sysfs */
++		scsi_adjust_queue_depth(sdev,
++					scsi_get_tag_type(sdev),
++					min(max_depth, qdepth));
++		break;
++	default:
++		return -EOPNOTSUPP;
++	}
++
++	return sdev->queue_depth;
++}
++
+ static int virtscsi_abort(struct scsi_cmnd *sc)
+ {
+ 	struct virtio_scsi *vscsi = shost_priv(sc->device->host);
+@@ -684,6 +715,7 @@ static struct scsi_host_template virtscsi_host_template_single = {
+ 	.proc_name = "virtio_scsi",
+ 	.this_id = -1,
+ 	.queuecommand = virtscsi_queuecommand_single,
++	.change_queue_depth = virtscsi_change_queue_depth,
+ 	.eh_abort_handler = virtscsi_abort,
+ 	.eh_device_reset_handler = virtscsi_device_reset,
+ 
+@@ -700,6 +732,7 @@ static struct scsi_host_template virtscsi_host_template_multi = {
+ 	.proc_name = "virtio_scsi",
+ 	.this_id = -1,
+ 	.queuecommand = virtscsi_queuecommand_multi,
++	.change_queue_depth = virtscsi_change_queue_depth,
+ 	.eh_abort_handler = virtscsi_abort,
+ 	.eh_device_reset_handler = virtscsi_device_reset,
+ 
 -- 
-1.7.10.4
-
+1.9.1.423.g4596e3a
