@@ -1,42 +1,44 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: esp_scsi QTAG in FAS216
-Date: Sun, 25 May 2014 10:56:09 +0200
-Message-ID: <CAMuHMdVWNh8511ThemX6DqvwCabRw4iqcg863CqgtC1FvOPJ8A@mail.gmail.com>
-References: <CAOmrzkK1hoT72zA4CzajCH2uNwkiVPWi8vJQswB=4Q4uf-kSZQ@mail.gmail.com>
-	<CACz-3rjNixJBjKxzjpneFE8BHKpzR-hvhWsabT_AtrWZZUgvsA@mail.gmail.com>
-	<CAOmrzkJZEZigKEyb5_66H2FNaEX7F_TXyvQNMpMZu1MyuOudBw@mail.gmail.com>
-	<20140413.221414.853080853067673824.davem@davemloft.net>
-	<534B6C9E.3070307@aalto.fi>
-	<529ac1e986ffc7a0c361a7f758e0abc3@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <529ac1e986ffc7a0c361a7f758e0abc3@gmail.com>
-Sender: linux-m68k-owner@vger.kernel.org
-To: Michael Schmitz <schmitzmic@gmail.com>
-Cc: Tuomas Vainikka <tuomas.vainikka@aalto.fi>, scsi <linux-scsi@vger.kernel.org>, Linux/m68k <linux-m68k@vger.kernel.org>, David Miller <davem@davemloft.net>, Kars de Jong <jongk@linux-m68k.org>
+From: Akinobu Mita <akinobu.mita@gmail.com>
+Subject: [PATCH 0/4] scsi: increase upper limit for max_sectors
+Date: Sun, 25 May 2014 21:43:32 +0900
+Message-ID: <1401021816-10423-1-git-send-email-akinobu.mita@gmail.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pb0-f41.google.com ([209.85.160.41]:44004 "EHLO
+	mail-pb0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751419AbaEYMoD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 25 May 2014 08:44:03 -0400
+Received: by mail-pb0-f41.google.com with SMTP id uo5so6390988pbc.0
+        for <linux-scsi@vger.kernel.org>; Sun, 25 May 2014 05:44:02 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Akinobu Mita <akinobu.mita@gmail.com>, Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <JBottomley@parallels.com>, Douglas Gilbert <dgilbert@interlog.com>
 
-Hi Michael,
+This patchset increases the SCSI mid level's limitation for max_sectors
+upto the block layer's limitation for max_hw_sectors, and enables the
+scsi_debug driver to request read/write commands with huge transfer
+length.  This also includes a few fixes for the problems which can be
+caused by huge max_sectors in the block layer.
 
-[sorry for the long delay]
+Akinobu Mita (4):
+  block: fix BLKSECTGET ioctl when max_sectors is greater than USHRT_MAX
+  block: fix SG_[GS]ET_RESERVED_SIZE ioctl when max_sectors is huge
+  scsi: increase upper limit for max_sectors
+  scsi_debug: allow huge transfer length for read/write commands
 
-On Mon, Apr 14, 2014 at 10:51 AM, Michael Schmitz <schmitzmic@gmail.com> wrote:
-> Not sure my patch had ever made it into Geert's m68k-queue - except for the
-> patch in my previous mail, my zorro_esp.c is still the same as I got from
-> you in October last year. The project has been on the back burner for too
-> long ...
+ block/compat_ioctl.c      |  6 ++++--
+ block/ioctl.c             |  5 ++++-
+ block/scsi_ioctl.c        | 15 +++++++++++----
+ drivers/scsi/scsi_debug.c |  6 +++---
+ drivers/scsi/sd.c         |  5 +----
+ drivers/scsi/sg.c         | 17 +++++++++++++----
+ include/scsi/scsi_host.h  |  4 ++--
+ 7 files changed, 38 insertions(+), 20 deletions(-)
 
-I don't think it makes much sense to add it to my queue, as it's purely SCSI
-and not critical for current m68k.
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Douglas Gilbert <dgilbert@interlog.com>
+Cc: linux-scsi@vger.kernel.org
+-- 
+1.9.1
 
-Gr{oetje,eeting}s,
-
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
