@@ -1,63 +1,42 @@
-From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [PATCH] iser-target: Add missing target_put_sess_cmd for ImmedateData
- failure
-Date: Sun, 25 May 2014 10:52:52 +0300
-Message-ID: <5381A154.4040302@dev.mellanox.co.il>
-References: <1400873569-3606-1-git-send-email-nab@daterainc.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: esp_scsi QTAG in FAS216
+Date: Sun, 25 May 2014 10:56:09 +0200
+Message-ID: <CAMuHMdVWNh8511ThemX6DqvwCabRw4iqcg863CqgtC1FvOPJ8A@mail.gmail.com>
+References: <CAOmrzkK1hoT72zA4CzajCH2uNwkiVPWi8vJQswB=4Q4uf-kSZQ@mail.gmail.com>
+	<CACz-3rjNixJBjKxzjpneFE8BHKpzR-hvhWsabT_AtrWZZUgvsA@mail.gmail.com>
+	<CAOmrzkJZEZigKEyb5_66H2FNaEX7F_TXyvQNMpMZu1MyuOudBw@mail.gmail.com>
+	<20140413.221414.853080853067673824.davem@davemloft.net>
+	<534B6C9E.3070307@aalto.fi>
+	<529ac1e986ffc7a0c361a7f758e0abc3@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-we0-f172.google.com ([74.125.82.172]:45422 "EHLO
-	mail-we0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751289AbaEYHw4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 25 May 2014 03:52:56 -0400
-Received: by mail-we0-f172.google.com with SMTP id k48so6735514wev.17
-        for <linux-scsi@vger.kernel.org>; Sun, 25 May 2014 00:52:54 -0700 (PDT)
-In-Reply-To: <1400873569-3606-1-git-send-email-nab@daterainc.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-m68k-owner@vger.kernel.org>
+In-Reply-To: <529ac1e986ffc7a0c361a7f758e0abc3@gmail.com>
+Sender: linux-m68k-owner@vger.kernel.org
+To: Michael Schmitz <schmitzmic@gmail.com>
+Cc: Tuomas Vainikka <tuomas.vainikka@aalto.fi>, scsi <linux-scsi@vger.kernel.org>, Linux/m68k <linux-m68k@vger.kernel.org>, David Miller <davem@davemloft.net>, Kars de Jong <jongk@linux-m68k.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Or Gerlitz <ogerlitz@mellanox.com>
 
-On 5/23/2014 10:32 PM, Nicholas A. Bellinger wrote:
-> From: Nicholas Bellinger <nab@linux-iscsi.org>
->
-> This patch addresses a bug where an early exception for SCSI WRITE
-> with ImmediateData=Yes was missing the target_put_sess_cmd() call
-> to drop the extra se_cmd->cmd_kref reference obtained during the
-> normal iscsit_setup_scsi_cmd() codepath execution.
->
-> This bug was manifesting itself during session shutdown within
-> isert_cq_rx_comp_err() where target_wait_for_sess_cmds() would
-> end up waiting indefinately for the last se_cmd->cmd_kref put to
-> occur for the failed SCSI WRITE + ImmediateData descriptors.
->
-> This fix follows what traditional iscsi-target code already does
-> for the same failure case within iscsit_get_immediate_data().
->
-> Reported-by: Sagi Grimberg <sagig@dev.mellanox.co.il>
-> Cc: Sagi Grimberg <sagig@dev.mellanox.co.il>
-> Cc: Or Gerlitz <ogerlitz@mellanox.com>
-> Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
-> ---
->   drivers/infiniband/ulp/isert/ib_isert.c |    2 ++
->   1 file changed, 2 insertions(+)
->
-> diff --git a/drivers/infiniband/ulp/isert/ib_isert.c b/drivers/infiniband/ulp/isert/ib_isert.c
-> index b622783..52c5ab8 100644
-> --- a/drivers/infiniband/ulp/isert/ib_isert.c
-> +++ b/drivers/infiniband/ulp/isert/ib_isert.c
-> @@ -1209,6 +1209,8 @@ sequence_cmd:
->   
->   	if (!rc && dump_payload == false && unsol_data)
->   		iscsit_set_unsoliticed_dataout(cmd);
-> +	else if (dump_payload && imm_data)
-> +		target_put_sess_cmd(conn->sess->se_sess, &cmd->se_cmd);
->   
->   	return 0;
->   }
+Hi Michael,
 
-Thanks Nic!
+[sorry for the long delay]
 
-Tested-by: Sagi Grimberg <sagig@mellanox.com>
+On Mon, Apr 14, 2014 at 10:51 AM, Michael Schmitz <schmitzmic@gmail.com> wrote:
+> Not sure my patch had ever made it into Geert's m68k-queue - except for the
+> patch in my previous mail, my zorro_esp.c is still the same as I got from
+> you in October last year. The project has been on the back burner for too
+> long ...
+
+I don't think it makes much sense to add it to my queue, as it's purely SCSI
+and not critical for current m68k.
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
