@@ -1,138 +1,94 @@
-From: Paul Bolle <pebolle@tiscali.nl>
-Subject: [PATCH] qla2xxx: remove stub qlt_check_srr_debug()
-Date: Sat, 24 May 2014 16:03:12 +0200
-Message-ID: <1400940192.22523.59.camel@x220>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] acornscsi: remove linked command support
+Date: Sun, 25 May 2014 11:42:51 +0400
+Message-ID: <1401003771.2322.33.camel@dabdike.int.hansenpartnership.com>
+References: <1400926433.31526.89.camel@x220> <538075E0.4080001@suse.de>
+	 <1400933617.6956.34.camel@dabdike.int.hansenpartnership.com>
+	 <1400937395.22523.55.camel@x220>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="ISO-8859-15"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: qla2xxx-upstream@qlogic.com, "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:49972 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751270AbaEYHm4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 25 May 2014 03:42:56 -0400
+In-Reply-To: <1400937395.22523.55.camel@x220>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Paul Bolle <pebolle@tiscali.nl>
+Cc: Hannes Reinecke <hare@suse.de>, Russell King <linux@arm.linux.org.uk>, linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-qlt_check_srr_debug() was added in v3.5. It is a stub function unless
-CONFIG_QLA_TGT_DEBUG_SRR is defined. But CONFIG_QLA_TGT_DEBUG_SRR will
-never be defined, because the Kconfig symbol QLA_TGT_DEBUG_SRR was never
-added to the tree.
+On Sat, 2014-05-24 at 15:16 +0200, Paul Bolle wrote:
+> On Sat, 2014-05-24 at 16:13 +0400, James Bottomley wrote:
+> > Wait, no, that's not a good idea.  We leave obsolete drivers to bitrot.
+> > Particularly we try not to touch them unless we have to because there
+> > might be a few people still using them and the more we tamper, the
+> > greater the risk that something gets broken.
+> 
+> Which is also a way to notice whether people still use those obsolete
+> drivers.
 
-Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
----
-Compile tested.
+Really, no.  We don't deliberately break old drivers to see if anyone
+notices.  Usually the feedback loop is months to years for the long tail
+to notice and by that time fixing the problem becomes a real pain if you
+allow driver churn.
 
-Or was it intended for this to set it by hand? In that case: please drop
-the CONFIG_ prefix, and, perhaps add a comment about its purpose.
+We keep old drivers that compile until there's a problem caused usually
+by something like API changes.
 
- drivers/scsi/qla2xxx/qla_target.c | 90 ---------------------------------------
- 1 file changed, 90 deletions(-)
+> > On that principle, since
+> > there's no real reason to remove the code,
+> 
+> (Unless one carries the hope that any check, treewide, for a CONFIG_*
+> macro can be linked to a proper Kconfig symbol.)
 
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 0cb73074c199..9729411faf45 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -1747,95 +1747,6 @@ static inline int qlt_need_explicit_conf(struct qla_hw_data *ha,
- 		    cmd->conf_compl_supported;
- }
- 
--#ifdef CONFIG_QLA_TGT_DEBUG_SRR
--/*
-- *  Original taken from the XFS code
-- */
--static unsigned long qlt_srr_random(void)
--{
--	static int Inited;
--	static unsigned long RandomValue;
--	static DEFINE_SPINLOCK(lock);
--	/* cycles pseudo-randomly through all values between 1 and 2^31 - 2 */
--	register long rv;
--	register long lo;
--	register long hi;
--	unsigned long flags;
--
--	spin_lock_irqsave(&lock, flags);
--	if (!Inited) {
--		RandomValue = jiffies;
--		Inited = 1;
--	}
--	rv = RandomValue;
--	hi = rv / 127773;
--	lo = rv % 127773;
--	rv = 16807 * lo - 2836 * hi;
--	if (rv <= 0)
--		rv += 2147483647;
--	RandomValue = rv;
--	spin_unlock_irqrestore(&lock, flags);
--	return rv;
--}
--
--static void qlt_check_srr_debug(struct qla_tgt_cmd *cmd, int *xmit_type)
--{
--#if 0 /* This is not a real status packets lost, so it won't lead to SRR */
--	if ((*xmit_type & QLA_TGT_XMIT_STATUS) && (qlt_srr_random() % 200)
--	    == 50) {
--		*xmit_type &= ~QLA_TGT_XMIT_STATUS;
--		ql_dbg(ql_dbg_tgt_mgt, cmd->vha, 0xf015,
--		    "Dropping cmd %p (tag %d) status", cmd, cmd->tag);
--	}
--#endif
--	/*
--	 * It's currently not possible to simulate SRRs for FCP_WRITE without
--	 * a physical link layer failure, so don't even try here..
--	 */
--	if (cmd->dma_data_direction != DMA_FROM_DEVICE)
--		return;
--
--	if (qlt_has_data(cmd) && (cmd->sg_cnt > 1) &&
--	    ((qlt_srr_random() % 100) == 20)) {
--		int i, leave = 0;
--		unsigned int tot_len = 0;
--
--		while (leave == 0)
--			leave = qlt_srr_random() % cmd->sg_cnt;
--
--		for (i = 0; i < leave; i++)
--			tot_len += cmd->sg[i].length;
--
--		ql_dbg(ql_dbg_tgt_mgt, cmd->vha, 0xf016,
--		    "Cutting cmd %p (tag %d) buffer"
--		    " tail to len %d, sg_cnt %d (cmd->bufflen %d,"
--		    " cmd->sg_cnt %d)", cmd, cmd->tag, tot_len, leave,
--		    cmd->bufflen, cmd->sg_cnt);
--
--		cmd->bufflen = tot_len;
--		cmd->sg_cnt = leave;
--	}
--
--	if (qlt_has_data(cmd) && ((qlt_srr_random() % 100) == 70)) {
--		unsigned int offset = qlt_srr_random() % cmd->bufflen;
--
--		ql_dbg(ql_dbg_tgt_mgt, cmd->vha, 0xf017,
--		    "Cutting cmd %p (tag %d) buffer head "
--		    "to offset %d (cmd->bufflen %d)", cmd, cmd->tag, offset,
--		    cmd->bufflen);
--		if (offset == 0)
--			*xmit_type &= ~QLA_TGT_XMIT_DATA;
--		else if (qlt_set_data_offset(cmd, offset)) {
--			ql_dbg(ql_dbg_tgt_mgt, cmd->vha, 0xf018,
--			    "qlt_set_data_offset() failed (tag %d)", cmd->tag);
--		}
--	}
--}
--#else
--static inline void qlt_check_srr_debug(struct qla_tgt_cmd *cmd, int *xmit_type)
--{}
--#endif
--
- static void qlt_24xx_init_ctio_to_isp(struct ctio7_to_24xx *ctio,
- 	struct qla_tgt_prm *prm)
- {
-@@ -1918,7 +1829,6 @@ int qlt_xmit_response(struct qla_tgt_cmd *cmd, int xmit_type,
- 	int res;
- 
- 	memset(&prm, 0, sizeof(prm));
--	qlt_check_srr_debug(cmd, &xmit_type);
- 
- 	ql_dbg(ql_dbg_tgt, cmd->vha, 0xe018,
- 	    "is_send_status=%d, cmd->bufflen=%d, cmd->sg_cnt=%d, "
--- 
-1.9.0
+The check can be fixed.  If you look at what Fengguang Wu does, he has a
+list of expected problems which he diffs.  Don't churn the tree to match
+the checker, make the checker match the tree.
+
+> > it should stay ... until the
+> > whole driver bitrots to the extent that we can no-longer compile it.
+> 
+> I've run into this depreciation policy before. With aic7xxx_old (which I
+> eventually convinced Fedora to disable, a few relases before it was
+> removed from the tree). With aic94xx (which I also convinced Fedora to
+> disable). I also tried multiple times to shut up advansys' compile
+> time[1]. It seems SCSI might risk not to notice their bitrot, because
+> eventually everybody stops compiling these obsolete drivers, leaving
+> SCSI without feedback on their state.
+
+Why would we care?  If it compiles that's fine, it's not causing a
+problem and it might just be useful to somebody.
+
+The time obsolete drivers cause problems is tree or subsystem wide API
+changes.  Then we look at the amount of work required and sometimes
+remove them or do hack fixes. 
+
+> Anyhow, SCSI seems to be the only subsystem that uses this subcategory
+> of not-really-maintained drivers. Other subsystems appear to allow
+> anything to be fixed, even trivialities, which are what I tend to fix,
+> and only stop allowing fixes if the drivers involved are going to be
+> removed anyway. But maybe I just never ran into that category in other
+> subsystems.
+
+Try ide ... they have the same policy.
+
+Try to understand the reason: we have a long tail of people using
+obsolete systems who we try not to break.  Any change to an unmaintained
+driver which can't be tested risks that ... and I'm the one who would
+have to try to sort out the problem when it's noticed, hence the
+caution.  If we allow trivial churn, by the time the breakage is noticed
+(usually months to years later), the driver will have picked up a ton of
+changes and finding the problem one becomes really hard.  So
+unmaintained drivers get a default deep freeze maintenance policy.
+
+Even for a maintained driver, if the maintainer has little access to the
+hardware and few users they may also choose a deep freeze maintenance
+policy for the same reasons above; that's why no changes without
+maintainer ack.
+
+James
+
+
