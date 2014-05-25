@@ -1,94 +1,63 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] acornscsi: remove linked command support
-Date: Sun, 25 May 2014 11:42:51 +0400
-Message-ID: <1401003771.2322.33.camel@dabdike.int.hansenpartnership.com>
-References: <1400926433.31526.89.camel@x220> <538075E0.4080001@suse.de>
-	 <1400933617.6956.34.camel@dabdike.int.hansenpartnership.com>
-	 <1400937395.22523.55.camel@x220>
+From: Sagi Grimberg <sagig@dev.mellanox.co.il>
+Subject: Re: [PATCH] iser-target: Add missing target_put_sess_cmd for ImmedateData
+ failure
+Date: Sun, 25 May 2014 10:52:52 +0300
+Message-ID: <5381A154.4040302@dev.mellanox.co.il>
+References: <1400873569-3606-1-git-send-email-nab@daterainc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:49972 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751270AbaEYHm4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 25 May 2014 03:42:56 -0400
-In-Reply-To: <1400937395.22523.55.camel@x220>
+Received: from mail-we0-f172.google.com ([74.125.82.172]:45422 "EHLO
+	mail-we0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751289AbaEYHw4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 25 May 2014 03:52:56 -0400
+Received: by mail-we0-f172.google.com with SMTP id k48so6735514wev.17
+        for <linux-scsi@vger.kernel.org>; Sun, 25 May 2014 00:52:54 -0700 (PDT)
+In-Reply-To: <1400873569-3606-1-git-send-email-nab@daterainc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Paul Bolle <pebolle@tiscali.nl>
-Cc: Hannes Reinecke <hare@suse.de>, Russell King <linux@arm.linux.org.uk>, linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Or Gerlitz <ogerlitz@mellanox.com>
 
-On Sat, 2014-05-24 at 15:16 +0200, Paul Bolle wrote:
-> On Sat, 2014-05-24 at 16:13 +0400, James Bottomley wrote:
-> > Wait, no, that's not a good idea.  We leave obsolete drivers to bitrot.
-> > Particularly we try not to touch them unless we have to because there
-> > might be a few people still using them and the more we tamper, the
-> > greater the risk that something gets broken.
-> 
-> Which is also a way to notice whether people still use those obsolete
-> drivers.
+On 5/23/2014 10:32 PM, Nicholas A. Bellinger wrote:
+> From: Nicholas Bellinger <nab@linux-iscsi.org>
+>
+> This patch addresses a bug where an early exception for SCSI WRITE
+> with ImmediateData=Yes was missing the target_put_sess_cmd() call
+> to drop the extra se_cmd->cmd_kref reference obtained during the
+> normal iscsit_setup_scsi_cmd() codepath execution.
+>
+> This bug was manifesting itself during session shutdown within
+> isert_cq_rx_comp_err() where target_wait_for_sess_cmds() would
+> end up waiting indefinately for the last se_cmd->cmd_kref put to
+> occur for the failed SCSI WRITE + ImmediateData descriptors.
+>
+> This fix follows what traditional iscsi-target code already does
+> for the same failure case within iscsit_get_immediate_data().
+>
+> Reported-by: Sagi Grimberg <sagig@dev.mellanox.co.il>
+> Cc: Sagi Grimberg <sagig@dev.mellanox.co.il>
+> Cc: Or Gerlitz <ogerlitz@mellanox.com>
+> Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+> ---
+>   drivers/infiniband/ulp/isert/ib_isert.c |    2 ++
+>   1 file changed, 2 insertions(+)
+>
+> diff --git a/drivers/infiniband/ulp/isert/ib_isert.c b/drivers/infiniband/ulp/isert/ib_isert.c
+> index b622783..52c5ab8 100644
+> --- a/drivers/infiniband/ulp/isert/ib_isert.c
+> +++ b/drivers/infiniband/ulp/isert/ib_isert.c
+> @@ -1209,6 +1209,8 @@ sequence_cmd:
+>   
+>   	if (!rc && dump_payload == false && unsol_data)
+>   		iscsit_set_unsoliticed_dataout(cmd);
+> +	else if (dump_payload && imm_data)
+> +		target_put_sess_cmd(conn->sess->se_sess, &cmd->se_cmd);
+>   
+>   	return 0;
+>   }
 
-Really, no.  We don't deliberately break old drivers to see if anyone
-notices.  Usually the feedback loop is months to years for the long tail
-to notice and by that time fixing the problem becomes a real pain if you
-allow driver churn.
+Thanks Nic!
 
-We keep old drivers that compile until there's a problem caused usually
-by something like API changes.
-
-> > On that principle, since
-> > there's no real reason to remove the code,
-> 
-> (Unless one carries the hope that any check, treewide, for a CONFIG_*
-> macro can be linked to a proper Kconfig symbol.)
-
-The check can be fixed.  If you look at what Fengguang Wu does, he has a
-list of expected problems which he diffs.  Don't churn the tree to match
-the checker, make the checker match the tree.
-
-> > it should stay ... until the
-> > whole driver bitrots to the extent that we can no-longer compile it.
-> 
-> I've run into this depreciation policy before. With aic7xxx_old (which I
-> eventually convinced Fedora to disable, a few relases before it was
-> removed from the tree). With aic94xx (which I also convinced Fedora to
-> disable). I also tried multiple times to shut up advansys' compile
-> time[1]. It seems SCSI might risk not to notice their bitrot, because
-> eventually everybody stops compiling these obsolete drivers, leaving
-> SCSI without feedback on their state.
-
-Why would we care?  If it compiles that's fine, it's not causing a
-problem and it might just be useful to somebody.
-
-The time obsolete drivers cause problems is tree or subsystem wide API
-changes.  Then we look at the amount of work required and sometimes
-remove them or do hack fixes. 
-
-> Anyhow, SCSI seems to be the only subsystem that uses this subcategory
-> of not-really-maintained drivers. Other subsystems appear to allow
-> anything to be fixed, even trivialities, which are what I tend to fix,
-> and only stop allowing fixes if the drivers involved are going to be
-> removed anyway. But maybe I just never ran into that category in other
-> subsystems.
-
-Try ide ... they have the same policy.
-
-Try to understand the reason: we have a long tail of people using
-obsolete systems who we try not to break.  Any change to an unmaintained
-driver which can't be tested risks that ... and I'm the one who would
-have to try to sort out the problem when it's noticed, hence the
-caution.  If we allow trivial churn, by the time the breakage is noticed
-(usually months to years later), the driver will have picked up a ton of
-changes and finding the problem one becomes really hard.  So
-unmaintained drivers get a default deep freeze maintenance policy.
-
-Even for a maintained driver, if the maintainer has little access to the
-hardware and few users they may also choose a deep freeze maintenance
-policy for the same reasons above; that's why no changes without
-maintainer ack.
-
-James
-
-
+Tested-by: Sagi Grimberg <sagig@mellanox.com>
