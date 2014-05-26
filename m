@@ -1,104 +1,58 @@
-From: Yoshihiro YUNOMAE <yoshihiro.yunomae.ez@hitachi.com>
-Subject: Re: Re: [PATCH RESEND] scsi: Output error messages using structured
- printk in single line
-Date: Mon, 26 May 2014 17:09:36 +0900
-Message-ID: <5382F6C0.3040407@hitachi.com>
-References: <20140227041738.31316.14684.stgit@yunodevel> <1400638922.2481.18.camel@dabdike> <94D0CD8314A33A4D9D801C0FE68B402956F1CF5A@G4W3202.americas.hpqcorp.net> <537C4822.6000204@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <537C4822.6000204@suse.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Elliott, Robert (Server Storage)" <Elliott@hp.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Prarit Bhargava <prarit@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Kay Sievers <kay@vrfy.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Hidehiro Kawai <hidehiro.kawai.ez@hitachi.com>, "yrl.pp-manager.tt@hitachi.com" <yrl.pp-manager.tt@hitachi.com>, Masami Hiramatsu <masami.hiramatsu.pt@hitachi.com>
+From: Maurizio Lombardi <mlombard@redhat.com>
+Subject: [PATCH] scsi_lib: replace ambiguous "Unhandled error code" messages.
+Date: Mon, 26 May 2014 12:13:24 +0200
+Message-ID: <1401099204-18050-1-git-send-email-mlombard@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:1131 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751731AbaEZKNv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 26 May 2014 06:13:51 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: hch@infradead.org, James.Bottomley@HansenPartnership.com
 
-Hi Hannes,
+During IO with fabric faults, one generally sees several "Unhandled error
+code" messages in the syslog as shown below:
 
-(2014/05/21 15:30), Hannes Reinecke wrote:
-> On 05/21/2014 05:18 AM, Elliott, Robert (Server Storage) wrote:
->>
->>
->>> -----Original Message-----
->>> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
->>> owner@vger.kernel.org] On Behalf Of James Bottomley
->>> Sent: Tuesday, May 20, 2014 9:22 PM
->>> To: Yoshihiro YUNOMAE
->>> Cc: Hannes Reinecke; Prarit Bhargava; linux-scsi@vger.kernel.org; Kay
->>> Sievers; linux-kernel@vger.kernel.org; Hidehiro Kawai; yrl.pp-
->>> manager.tt@hitachi.com; Masami Hiramatsu
->>> Subject: Re: [PATCH RESEND] scsi: Output error messages using structured
->>> printk in single line
->>>
->>> On Thu, 2014-02-27 at 13:17 +0900, Yoshihiro YUNOMAE wrote:
->>>> +/* Maximum size of a local buffer for structured printk */
->>>> +#define SCSI_LOG_LINE_MAX 512
->>>> +
->>>> +/* Local buffer for structured printk */
->>>> +struct scsi_log_line {
->>>> +    int offset;
->>>> +    char buf[SCSI_LOG_LINE_MAX];
->>>> +};
->>>
->>> This piece isn't going to fly; it's an on stack allocation of 0.5kb;
->>> that's too much for small stack kernels.  Just changing this to a kalloc
->>> is going be problematic too because we're in the io paths and the
->>> allocation may fail.  So I appreciate the problem, but I don't think the
->>> solution works.  Could we just tag the messages and use grep to put them
->>> back together?
->>>
->>> James
->>>
->>
->> When the system gets busy, I've seen CDB bytes strung out with each
->> byte getting its own timestamp, with messages from different devices
->> and threads interleaved together, so like the idea of printing each
->> line with a single printk() call.
->>
->> Most lines aren't anywhere near 512 bytes long.  Can this be coded to
->> let the calling function define an appropriate buffer size for
->> whatever it is printing, with sizeof() used to bounds check?
->>
->>
-> As mentioned several times, I'm working on a patchset to update
-> scsi logging.
->
-> The original patchset tried to convert any logging message into a single
-> statement, which wouldn't be broken up even under heavy load.
->
-> While this works reasonably well for most things, printing out decoded
-> sense with just one line (and not end up in massive switch()
-> statements) is near impossible.
->
-> Plus you'll end up having to use a static buffer at one point, which
-> again increases the stack size.
->
-> The alternative approach as discussed at LSF is to move scsi_logging
-> over to tracing. There is already some coding for scsi tracing, but
+sd 4:0:6:2: [sdbw] Unhandled error code
+sd 4:0:6:2: [sdbw] Result: hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK
+sd 4:0:6:2: [sdbw] CDB: Read(10): 28 00 00 00 00 00 00 00 08 00
+end_request: I/O error, dev sdbw, sector 0
 
-Oh, I didn't attend the meeting, so I didn't know it.
-Did you completely change the development from fixing scsi_logging
-to using tracing?
+This comes from scsi_io_completion (in scsi_lib.c) while handling error
+codes other than DID_RESET or not deferred sense keys i.e. this is
+actually handled by the SCSI mid layer. But what gets displayed here is
+"Unhandled error code" which is quite misleading as it indicates
+something that is not addressed by the mid layer.
 
-> in most cases it just duplicates existing logging statements.
-> So if we were to replace the entire scsi_logging infrastructure
-> with scsi tracing most of the issues (like chopped-up CDBs) would
-> be gone.
-> Plus we would have a far better control about _what_ is being printed.
->
-> And yes, I do have some patches for that :-)
+This patch replaces "Unhandled error code" with "Extended error description
+not available".
 
-I would like to develop the feature together because this
-is an important problem.
-Would you upload the patches to your tree?
-And, would you share current status and issues with us?
+Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
+---
+ drivers/scsi/scsi_lib.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Thank you,
-Yoshihiro YUNOMAE
-
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 9db097a..f2a1e13 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -955,12 +955,12 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 			action = ACTION_FAIL;
+ 			break;
+ 		default:
+-			description = "Unhandled sense code";
++			description = "Extended sense code description not available";
+ 			action = ACTION_FAIL;
+ 			break;
+ 		}
+ 	} else {
+-		description = "Unhandled error code";
++		description = "Extended error code description not available";
+ 		action = ACTION_FAIL;
+ 	}
+ 
 -- 
-Yoshihiro YUNOMAE
-Software Platform Research Dept. Linux Technology Center
-Hitachi, Ltd., Yokohama Research Laboratory
-E-mail: yoshihiro.yunomae.ez@hitachi.com
+Maurizio Lombardi
+
