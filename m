@@ -1,47 +1,66 @@
-From: Michael Schmitz <schmitzmic@gmail.com>
-Subject: Re: esp_scsi QTAG in FAS216
-Date: Mon, 26 May 2014 13:15:22 +1200
-Message-ID: <CAOmrzkK-jDF7h_HLH=8qPTs+eevFf5-S_dDTfD2P2BZ6hxcW0Q@mail.gmail.com>
-References: <CAOmrzkK1hoT72zA4CzajCH2uNwkiVPWi8vJQswB=4Q4uf-kSZQ@mail.gmail.com>
-	<CACz-3rjNixJBjKxzjpneFE8BHKpzR-hvhWsabT_AtrWZZUgvsA@mail.gmail.com>
-	<CAOmrzkJZEZigKEyb5_66H2FNaEX7F_TXyvQNMpMZu1MyuOudBw@mail.gmail.com>
-	<20140413.221414.853080853067673824.davem@davemloft.net>
-	<534B6C9E.3070307@aalto.fi>
-	<529ac1e986ffc7a0c361a7f758e0abc3@gmail.com>
-	<CAMuHMdVWNh8511ThemX6DqvwCabRw4iqcg863CqgtC1FvOPJ8A@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ob0-f173.google.com ([209.85.214.173]:52442 "EHLO
-	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751356AbaEZBPY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 25 May 2014 21:15:24 -0400
-In-Reply-To: <CAMuHMdVWNh8511ThemX6DqvwCabRw4iqcg863CqgtC1FvOPJ8A@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Sujit Reddy Thumma <sthumma@codeaurora.org>
+Subject: [RESEND PATCH V7 0/6] scsi: ufs: TM, fatal-error handling and other fixes
+Date: Mon, 26 May 2014 10:59:09 +0530
+Message-ID: <1401082155-23184-1-git-send-email-sthumma@codeaurora.org>
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: vinholikatti@gmail.com, santoshsy@gmail.com, linux-scsi@vger.kernel.org, JBottomley@parallels.com
+Cc: Sujit Reddy Thumma <sthumma@codeaurora.org>, linux-arm-msm@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Tuomas Vainikka <tuomas.vainikka@aalto.fi>, scsi <linux-scsi@vger.kernel.org>, Linux/m68k <linux-m68k@vger.kernel.org>, David Miller <davem@davemloft.net>, Kars de Jong <jongk@linux-m68k.org>
 
-Hi Geert,
+This patch version fixes various static checker warnings along with fixing
+usage of deprecated flush_work_sync() API that led James drop the patchset
+from scsi-misc tree.
 
-> [sorry for the long delay]
+The first patch fixes many issues with current task management handling
+in UFSHCD driver. Others improve error handling in various scenarios.
 
-Tell me about it :-) I haven't had a good idea how to address this
-problem so rather kept mum about it.
+These patches are rebased on scsi-misc and are ack'ed by UFS maintainer.
 
-> On Mon, Apr 14, 2014 at 10:51 AM, Michael Schmitz <schmitzmic@gmail.com> wrote:
->> Not sure my patch had ever made it into Geert's m68k-queue - except for the
->> patch in my previous mail, my zorro_esp.c is still the same as I got from
->> you in October last year. The project has been on the back burner for too
->> long ...
->
-> I don't think it makes much sense to add it to my queue, as it's purely SCSI
-> and not critical for current m68k.
+Changes from v6:
+	- Two new patches to fix static checker warnings
+	- remove usage of deprecated flush_work_sync() API.
+Changes from v5:
+	- correct typo in [PATCH V5 1/4] scsi: ufs: Fix broken task ...
+	- correct poll wait in [PATCH V5 2/4] scsi: ufs: Fix hardware ...
+	- Included Tested-by and Reviewed-by ack's.
+Changes from v4:
+	- Addressed comments from Seungwon Jeon on V3
+	- Updated with proper locking while ufshcd state changes
+	- Retained LUN reset instead of device reset with DME_END_POINT_RESET
+	- Removed error handling decisions dependent on OCS value
+	- Simplified fatal error handling to abort the requests first
+	  and then carry out reset.
+Changes from v3:
+	- Rebased.
+Changes from v2:
+	- [PATCH V3 1/4]: Make the task management command task tag unique
+	  across SCSI/NOP/QUERY request tags.
+	- [PATCH V3 3/4]: While handling device/host reset, wait for
+	  pending fatal handler to return if running.
+Changes from v1:
+	- [PATCH V2 1/4]: Fix a race condition because of overloading
+	  outstanding_tasks variable to lock the slots. A new variable
+	  tm_slots_in_use will track which slots are in use by the driver.
+	- [PATCH V2 2/4]: Commit text update to clarify the hardware race
+	  with more details.
+	- [PATCH V2 3/4]: Minor cleanup and rebase
+	- [PATCH V2 4/4]: Fix a bug - sleeping in atomic context
 
-Fine, Ill try and resolve that with Dave then. Tuomas will need to do
-the testing (unless someone wants to drop off the necessary hardware
-with me - unlikely).
+Sujit Reddy Thumma (6):
+  scsi: ufs: fix endianness sparse warnings
+  scsi: ufs: make undeclared functions static
+  scsi: ufs: Fix broken task management command implementation
+  scsi: ufs: Fix hardware race conditions while aborting a command
+  scsi: ufs: Fix device and host reset methods
+  scsi: ufs: Improve UFS fatal error handling
 
-Thanks,
+ drivers/scsi/ufs/ufs.h    |  36 +--
+ drivers/scsi/ufs/ufshcd.c | 722 +++++++++++++++++++++++++++++++---------------
+ drivers/scsi/ufs/ufshcd.h |  22 +-
+ drivers/scsi/ufs/ufshci.h |  32 +-
+ 4 files changed, 545 insertions(+), 267 deletions(-)
 
-  Michael
+-- 
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member
+of Code Aurora Forum, hosted by The Linux Foundation.
