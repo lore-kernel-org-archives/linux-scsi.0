@@ -1,72 +1,68 @@
 From: Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH 2/3] block: Introduce blk_rq_completed()
-Date: Mon, 26 May 2014 17:15:03 +0200
-Message-ID: <53835A77.1090708@acm.org>
-References: <538359DB.9080601@acm.org> <53835A52.9010306@acm.org>
+Subject: [PATCH 3/3] Make SCSI error handler code easier to understand
+Date: Mon, 26 May 2014 17:15:41 +0200
+Message-ID: <53835A9D.3090104@acm.org>
+References: <538359DB.9080601@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from albert.telenet-ops.be ([195.130.137.90]:46934 "EHLO
 	albert.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752619AbaEZPPD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 May 2014 11:15:03 -0400
-In-Reply-To: <53835A52.9010306@acm.org>
+	with ESMTP id S1752539AbaEZPPm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 May 2014 11:15:42 -0400
+In-Reply-To: <538359DB.9080601@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@infradead.org>
 Cc: Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@kernel.dk>, Paolo Bonzini <pbonzini@redhat.com>, Joe Lawrence <jdl1291@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Make it possible to test the REQ_ATOM_COMPLETE bit from outside the
-block layer core.
+Every now and then someone asks how it is avoided that the SCSI error
+handler and the SCSI completion handler are invoked concurrently for
+the same SCSI command. Add a few WARN_ON_ONCE() statements that make
+it clear how this is avoided.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-Cc: Jens Axboe <axboe@fb.com>
 Cc: Hannes Reinecke <hare@suse.de>
 Cc: Paolo Bonzini <pbonzini@redhat.com>
 Cc: Christoph Hellwig <hch@infradead.org>
+Cc: Jens Axboe <axboe@fb.com>
 Cc: Joe Lawrence <joe.lawrence@stratus.com>
 ---
- block/blk-softirq.c    | 13 +++++++++++++
- include/linux/blkdev.h |  1 +
- 2 files changed, 14 insertions(+)
+ drivers/scsi/scsi_error.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/block/blk-softirq.c b/block/blk-softirq.c
-index 53b1737..fc7d160 100644
---- a/block/blk-softirq.c
-+++ b/block/blk-softirq.c
-@@ -172,6 +172,19 @@ void blk_complete_request(struct request *req)
- }
- EXPORT_SYMBOL(blk_complete_request);
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 5232583..aee0dc0 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -120,6 +120,8 @@ scmd_eh_abort_handler(struct work_struct *work)
+ 	struct scsi_device *sdev = scmd->device;
+ 	int rtn;
  
-+/**
-+ * blk_rq_completed - whether or not a request has been completed
-+ *
-+ * Intended for debugging purposes only. Any completion handler code should go
-+ * into the softirq_done_fn() and/or in the rq_timed_out_fn() request_queue
-+ * callback functions.
-+ */
-+bool blk_rq_completed(struct request *rq)
-+{
-+	return test_bit(REQ_ATOM_COMPLETE, &rq->atomic_flags);
-+}
-+EXPORT_SYMBOL(blk_rq_completed);
++	WARN_ON_ONCE(!blk_rq_completed(scmd->request));
 +
- static __init int blk_softirq_init(void)
- {
- 	int i;
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 0d84981..a621bc5 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -952,6 +952,7 @@ extern void blk_complete_request(struct request *);
- extern void __blk_complete_request(struct request *);
- extern void blk_abort_request(struct request *);
- extern void blk_unprep_request(struct request *);
-+extern bool blk_rq_completed(struct request *);
+ 	if (scsi_host_eh_past_deadline(sdev->host)) {
+ 		SCSI_LOG_ERROR_RECOVERY(3,
+ 			scmd_printk(KERN_INFO, scmd,
+@@ -185,6 +187,8 @@ scsi_abort_command(struct scsi_cmnd *scmd)
+ 	struct Scsi_Host *shost = sdev->host;
+ 	unsigned long flags;
  
- /*
-  * Access functions for manipulating queue properties
++	WARN_ON_ONCE(!blk_rq_completed(scmd->request));
++
+ 	if (scmd->eh_eflags & SCSI_EH_ABORT_SCHEDULED) {
+ 		/*
+ 		 * Retry after abort failed, escalate to next level.
+@@ -237,6 +241,8 @@ int scsi_eh_scmd_add(struct scsi_cmnd *scmd, int eh_flag)
+ 	unsigned long flags;
+ 	int ret = 0;
+ 
++	WARN_ON_ONCE(!blk_rq_completed(scmd->request));
++
+ 	if (!shost->ehandler)
+ 		return 0;
+ 
 -- 
 1.8.4.5
 
