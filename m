@@ -1,23 +1,40 @@
-From: "Yao Yuta" <lib@portobello.school.nz>
-Subject: Did you get my last message?
-Date: Mon, 26 May 2014 15:22:50 -0700
-Message-ID: <20140526152311.5C3B9CD4CF2__1775.69347802109$1401120586$gmane$org@tintin.portobello.school.nz>
-Reply-To: <yaoyuta2014@126.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] scsi_lib: replace ambiguous "Unhandled error code"
+ messages.
+Date: Mon, 26 May 2014 09:25:06 -0700
+Message-ID: <20140526162506.GB18319@infradead.org>
+References: <1401099204-18050-1-git-send-email-mlombard@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="Windows-1251"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 219-89-113-121.adsl.xtra.co.nz ([219.89.113.121]:58714 "EHLO
-	tintin.portobello.school.nz" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752642AbaEZQJY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 26 May 2014 12:09:24 -0400
+Received: from bombadil.infradead.org ([198.137.202.9]:46271 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750855AbaEZQZG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 May 2014 12:25:06 -0400
+Content-Disposition: inline
+In-Reply-To: <1401099204-18050-1-git-send-email-mlombard@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Maurizio Lombardi <mlombard@redhat.com>
+Cc: linux-scsi@vger.kernel.org, hch@infradead.org, James.Bottomley@HansenPartnership.com
 
-Please I would like you to keep this proposal as a top secret and delete it if you are not interested and get back to me if you are interested for details as regards to the transfer of $24,500,000 to you. 
-This money initially belongs to a Libyan client who died in the libya crisis and had no next of kin in his account-opening package in my bank here in Hong kong where I am a bank director. 
-In other to achieve this, I shall require your full name, and telephone number to reach you.Most importantly, a confirmation of acceptance from you will be needed after which I shall furnish you with the full details of this transaction.
-Yours Truly,
-Yao Yuta
+On Mon, May 26, 2014 at 12:13:24PM +0200, Maurizio Lombardi wrote:
+> During IO with fabric faults, one generally sees several "Unhandled error
+> code" messages in the syslog as shown below:
+> 
+> sd 4:0:6:2: [sdbw] Unhandled error code
+> sd 4:0:6:2: [sdbw] Result: hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK
+> sd 4:0:6:2: [sdbw] CDB: Read(10): 28 00 00 00 00 00 00 00 08 00
+> end_request: I/O error, dev sdbw, sector 0
+> 
+> This comes from scsi_io_completion (in scsi_lib.c) while handling error
+> codes other than DID_RESET or not deferred sense keys i.e. this is
+> actually handled by the SCSI mid layer. But what gets displayed here is
+> "Unhandled error code" which is quite misleading as it indicates
+> something that is not addressed by the mid layer.
+> 
+> This patch replaces "Unhandled error code" with "Extended error description
+> not available".
+
+How about simple not setting description at all for this case?
+
