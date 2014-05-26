@@ -1,40 +1,45 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] scsi_lib: replace ambiguous "Unhandled error code"
- messages.
-Date: Mon, 26 May 2014 09:25:06 -0700
-Message-ID: <20140526162506.GB18319@infradead.org>
-References: <1401099204-18050-1-git-send-email-mlombard@redhat.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [target:for-next 20/20] drivers/scsi/virtio_scsi.c:531:48: error: dereferencing pointer to incomplete type
+Date: Mon, 26 May 2014 13:30:33 -0400
+Message-ID: <yq1d2f0ih1i.fsf@sermon.lab.mkp.net>
+References: <537d6b74.lQGMmmapPq/MP5Nx%fengguang.wu@intel.com>
+	<1400791590.26558.6.camel@haakon3.risingtidesystems.com>
+	<537F12C1.4080407@redhat.com>
+	<1400867110.30565.6.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:46271 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750855AbaEZQZG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 May 2014 12:25:06 -0400
-Content-Disposition: inline
-In-Reply-To: <1401099204-18050-1-git-send-email-mlombard@redhat.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:23819 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751706AbaEZRan (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 May 2014 13:30:43 -0400
+In-Reply-To: <1400867110.30565.6.camel@haakon3.risingtidesystems.com>
+	(Nicholas A. Bellinger's message of "Fri, 23 May 2014 10:45:10 -0700")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Maurizio Lombardi <mlombard@redhat.com>
-Cc: linux-scsi@vger.kernel.org, hch@infradead.org, James.Bottomley@HansenPartnership.com
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Paolo Bonzini <pbonzini@redhat.com>, kbuild test robot <fengguang.wu@intel.com>, kbuild-all@01.org, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Mon, May 26, 2014 at 12:13:24PM +0200, Maurizio Lombardi wrote:
-> During IO with fabric faults, one generally sees several "Unhandled error
-> code" messages in the syslog as shown below:
-> 
-> sd 4:0:6:2: [sdbw] Unhandled error code
-> sd 4:0:6:2: [sdbw] Result: hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK
-> sd 4:0:6:2: [sdbw] CDB: Read(10): 28 00 00 00 00 00 00 00 08 00
-> end_request: I/O error, dev sdbw, sector 0
-> 
-> This comes from scsi_io_completion (in scsi_lib.c) while handling error
-> codes other than DID_RESET or not deferred sense keys i.e. this is
-> actually handled by the SCSI mid layer. But what gets displayed here is
-> "Unhandled error code" which is quite misleading as it indicates
-> something that is not addressed by the mid layer.
-> 
-> This patch replaces "Unhandled error code" with "Extended error description
-> not available".
+>>>>> "Nic" == Nicholas A Bellinger <nab@linux-iscsi.org> writes:
 
-How about simple not setting description at all for this case?
+>> What about #ifdef'ing VIRTIO_SCSI_F_T10_PI support out if
+>> !CONFIG_BLK_DEV_INTEGRITY?
 
+Nic> I figured it was slightly cleaner to enable BLK_DEV_INTEGRITY by
+Nic> default when referencing struct blk_integrity (following what
+Nic> IBLOCK does), than adding the equivalent #ifdef's..
+
+Nic> MKP, do you have a preference on this..?
+
+Well, I guess how important the virtio stuff is in the embedded space?
+
+In the block layer we have all these wrappers that allow things to Do
+The Right Thing when the BLK_DEV_INTEGRITY is disabled. I'm not entirely
+sure it worth the hassle to do the same for target and virtio. The
+memory savings aren't that big to begin with.
+
+And besides, the bip pointer field in struct bio is about to become
+generic with my impending copy offload patches anyway,
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
