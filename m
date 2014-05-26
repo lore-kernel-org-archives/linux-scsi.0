@@ -1,45 +1,52 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [target:for-next 20/20] drivers/scsi/virtio_scsi.c:531:48: error: dereferencing pointer to incomplete type
-Date: Mon, 26 May 2014 13:30:33 -0400
-Message-ID: <yq1d2f0ih1i.fsf@sermon.lab.mkp.net>
-References: <537d6b74.lQGMmmapPq/MP5Nx%fengguang.wu@intel.com>
-	<1400791590.26558.6.camel@haakon3.risingtidesystems.com>
-	<537F12C1.4080407@redhat.com>
-	<1400867110.30565.6.camel@haakon3.risingtidesystems.com>
+From: HUSAM AL SAYED <Husamalsayed@asia.com>
+Subject: Your Urgent reply.
+Date: Mon, 26 May 2014 22:00:48 +0400
+Message-ID: <CAKFyHyqE-jAV0G8GqYW7H_3cUYv2iXVQm5a6-m1VNZWRhKVXAg__32633.51027058$1401127305$gmane$org@mail.gmail.com>
+Reply-To: Husamalsayed@asia.com
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:23819 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751706AbaEZRan (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 May 2014 13:30:43 -0400
-In-Reply-To: <1400867110.30565.6.camel@haakon3.risingtidesystems.com>
-	(Nicholas A. Bellinger's message of "Fri, 23 May 2014 10:45:10 -0700")
+Received: from mail-wg0-f65.google.com ([74.125.82.65]:48423 "EHLO
+	mail-wg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752075AbaEZSAu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 May 2014 14:00:50 -0400
+Received: by mail-wg0-f65.google.com with SMTP id k14so1533511wgh.0
+        for <linux-scsi@vger.kernel.org>; Mon, 26 May 2014 11:00:49 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Paolo Bonzini <pbonzini@redhat.com>, kbuild test robot <fengguang.wu@intel.com>, kbuild-all@01.org, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
->>>>> "Nic" == Nicholas A Bellinger <nab@linux-iscsi.org> writes:
+Dear Friend,
 
->> What about #ifdef'ing VIRTIO_SCSI_F_T10_PI support out if
->> !CONFIG_BLK_DEV_INTEGRITY?
 
-Nic> I figured it was slightly cleaner to enable BLK_DEV_INTEGRITY by
-Nic> default when referencing struct blk_integrity (following what
-Nic> IBLOCK does), than adding the equivalent #ifdef's..
+Compliments of the day.This mail May be a surprise to you Because you
+did not give me the permission to do so and Neither do you know me but
+before I tell you about myself I want you to please forgive me for
+sending this mail without your permission I have been in search of
+someone with this last name so when I saw you online, I was pushed to
+contact you and see how best we can assist each other. I am Mr. Husam
+Al Sayed, a Bank Officer here in U.A.E. I believe it is the wish of
+God for me to come across you now. I am having an important business
+discussion I wish to share with you which I  believe will interest
+you, because it is in connection with your last name and you are going
+to benefit from it.
 
-Nic> MKP, do you have a preference on this..?
+One Late peter who was among the death victims in the May 27 2006
+Earthquake disaster in Java, Indonesia that killed over 5,000 people.
+He was in Indonesia on a business trip and that was how he met his
+end. My bank management is yet to know about his death, I knew about
+it because he was my friend and I am his account officer.he did not
+mention any Next of Kin/ Heir when the account was opened, and he was
+not married and no children. Last week my Bank Management requested
+that he should give instructions on what to do about his funds,I know
+this will happen and that is why I have been looking for a means to
+handle the situation,
 
-Well, I guess how important the virtio stuff is in the embedded space?
+If you are interested send me your private Email Address so that i can
+send you more details of the transaction,
+Thanks for your understanding
 
-In the block layer we have all these wrappers that allow things to Do
-The Right Thing when the BLK_DEV_INTEGRITY is disabled. I'm not entirely
-sure it worth the hassle to do the same for target and virtio. The
-memory savings aren't that big to begin with.
+I am waiting for your reply.
 
-And besides, the bip pointer field in struct bio is about to become
-generic with my impending copy offload patches anyway,
+Best regards,
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Mr. Husam Al Sayed
