@@ -1,12 +1,12 @@
 From: Benoit Taine <benoit.taine@lip6.fr>
-Subject: [PATCH 10/18] aacraid: Use kmemdup instead of kmalloc + memcpy
-Date: Mon, 26 May 2014 17:21:19 +0200
-Message-ID: <1401117687-28911-11-git-send-email-benoit.taine@lip6.fr>
+Subject: [PATCH 7/18] qla2xxx: Use kmemdup instead of kmalloc + memcpy
+Date: Mon, 26 May 2014 17:21:16 +0200
+Message-ID: <1401117687-28911-8-git-send-email-benoit.taine@lip6.fr>
 References: <1401117687-28911-1-git-send-email-benoit.taine@lip6.fr>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1401117687-28911-1-git-send-email-benoit.taine@lip6.fr>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Adaptec OEM Raid Solutions <aacraid@adaptec.com>
+To: qla2xxx-upstream@qlogic.com
 Cc: benoit.taine@lip6.fr, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
@@ -17,29 +17,27 @@ Signed-off-by: Benoit Taine <benoit.taine@lip6.fr>
 ---
 Tested by compilation without errors.
 
- drivers/scsi/aacraid/commctrl.c |    7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+ drivers/scsi/qla2xxx/qla_mbx.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
-index fbcd48d..0cdb16b 100644
---- a/drivers/scsi/aacraid/commctrl.c
-+++ b/drivers/scsi/aacraid/commctrl.c
-@@ -635,15 +635,14 @@ static int aac_send_raw_srb(struct aac_dev* dev, void __user * arg)
- 			}
- 		} else {
- 			struct user_sgmap* usg;
--			usg = kmalloc(actual_fibsize - sizeof(struct aac_srb)
--			  + sizeof(struct sgmap), GFP_KERNEL);
-+			usg = kmemdup(upsg, actual_fibsize -
-+				sizeof(struct aac_srb) + sizeof(struct sgmap),
-+				GFP_KERNEL);
- 			if (!usg) {
- 				dprintk((KERN_DEBUG"aacraid: Allocation error in Raw SRB command\n"));
- 				rcode = -ENOMEM;
- 				goto cleanup;
- 			}
--			memcpy (usg, upsg, actual_fibsize - sizeof(struct aac_srb)
--			  + sizeof(struct sgmap));
- 			actual_fibsize = actual_fibsize64;
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index 7f39e36..1c33a77 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -1319,7 +1319,7 @@ qla2x00_get_node_name_list(scsi_qla_host_t *vha, void **out_data, int *out_len)
  
- 			for (i = 0; i < usg->count; i++) {
+ 		left = 0;
+ 
+-		list = kzalloc(dma_size, GFP_KERNEL);
++		list = kmemdup(pmap, dma_size, GFP_KERNEL);
+ 		if (!list) {
+ 			ql_log(ql_log_warn, vha, 0x1140,
+ 			    "%s(%ld): failed to allocate node names list "
+@@ -1328,7 +1328,6 @@ qla2x00_get_node_name_list(scsi_qla_host_t *vha, void **out_data, int *out_len)
+ 			goto out_free;
+ 		}
+ 
+-		memcpy(list, pmap, dma_size);
+ restart:
+ 		dma_free_coherent(&ha->pdev->dev, dma_size, pmap, pmap_dma);
+ 	}
