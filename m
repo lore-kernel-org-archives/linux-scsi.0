@@ -1,324 +1,104 @@
-From: Sujit Reddy Thumma <sthumma@codeaurora.org>
-Subject: Re: [PATCH V7 1/6] scsi: ufs: fix endianness sparse warnings
-Date: Mon, 26 May 2014 11:04:14 +0530
-Message-ID: <5382D256.1060400@codeaurora.org>
-References: <1379589248-3317-1-git-send-email-sthumma@codeaurora.org> <1379589248-3317-2-git-send-email-sthumma@codeaurora.org> <CAKVbJB8k4T90re2m+UWRigZrFyJ9SX0VNz0HqnvmJngZ1mxrHw@mail.gmail.com> <CAKVbJB8Mw2rrt+gdQbjoLmjKNC=wNpBUErCQT2qRhZdra5N=0A@mail.gmail.com>
+From: Yoshihiro YUNOMAE <yoshihiro.yunomae.ez@hitachi.com>
+Subject: Re: Re: [PATCH RESEND] scsi: Output error messages using structured
+ printk in single line
+Date: Mon, 26 May 2014 17:09:36 +0900
+Message-ID: <5382F6C0.3040407@hitachi.com>
+References: <20140227041738.31316.14684.stgit@yunodevel> <1400638922.2481.18.camel@dabdike> <94D0CD8314A33A4D9D801C0FE68B402956F1CF5A@G4W3202.americas.hpqcorp.net> <537C4822.6000204@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:36588 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751355AbaEZFeU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 May 2014 01:34:20 -0400
-In-Reply-To: <CAKVbJB8Mw2rrt+gdQbjoLmjKNC=wNpBUErCQT2qRhZdra5N=0A@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <537C4822.6000204@suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Elliott, Robert (Server Storage)" <Elliott@hp.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Prarit Bhargava <prarit@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Kay Sievers <kay@vrfy.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Hidehiro Kawai <hidehiro.kawai.ez@hitachi.com>, "yrl.pp-manager.tt@hitachi.com" <yrl.pp-manager.tt@hitachi.com>, Masami Hiramatsu <masami.hiramatsu.pt@hitachi.com>
 List-Id: linux-scsi@vger.kernel.org
-To: vinayak holikatti <vinholikatti@gmail.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, Santosh Y <santoshsy@gmail.com>, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org
 
-On 11/18/2013 2:34 PM, vinayak holikatti wrote:
-> On Mon, Sep 23, 2013 at 5:44 PM, vinayak holikatti
-> <vinholikatti@gmail.com> wrote:
->> On Thu, Sep 19, 2013 at 4:44 PM, Sujit Reddy Thumma
->> <sthumma@codeaurora.org> wrote:
->>>
->>> Fix many warnings with incorrect endian assumptions
->>> which makes the code unportable to new architectures.
->>>
->>> The UFS specification defines the byte order as big-endian
->>> for UPIU structure and little-endian for the host controller
->>> transfer/task management descriptors.
->>>
->>> Signed-off-by: Sujit Reddy Thumma <sthumma@codeaurora.org>
->>> ---
->>>   drivers/scsi/ufs/ufs.h    | 36 ++++++++++++++++++------------------
->>>   drivers/scsi/ufs/ufshcd.c | 42 ++++++++----------------------------------
->>>   drivers/scsi/ufs/ufshci.h | 32 ++++++++++++++++----------------
->>>   3 files changed, 42 insertions(+), 68 deletions(-)
->>>
->>> diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
->>> index 7210500..f42d1ce 100644
->>> --- a/drivers/scsi/ufs/ufs.h
->>> +++ b/drivers/scsi/ufs/ufs.h
->>> @@ -196,9 +196,9 @@ enum {
->>>    * @dword_2: UPIU header DW-2
->>>    */
->>>   struct utp_upiu_header {
->>> -       u32 dword_0;
->>> -       u32 dword_1;
->>> -       u32 dword_2;
->>> +       __be32 dword_0;
->>> +       __be32 dword_1;
->>> +       __be32 dword_2;
->>>   };
->>>
->>>   /**
->>> @@ -207,7 +207,7 @@ struct utp_upiu_header {
->>>    * @cdb: Command Descriptor Block CDB DW-4 to DW-7
->>>    */
->>>   struct utp_upiu_cmd {
->>> -       u32 exp_data_transfer_len;
->>> +       __be32 exp_data_transfer_len;
->>>          u8 cdb[MAX_CDB_SIZE];
->>>   };
->>>
->>> @@ -228,10 +228,10 @@ struct utp_upiu_query {
->>>          u8 idn;
->>>          u8 index;
->>>          u8 selector;
->>> -       u16 reserved_osf;
->>> -       u16 length;
->>> -       u32 value;
->>> -       u32 reserved[2];
->>> +       __be16 reserved_osf;
->>> +       __be16 length;
->>> +       __be32 value;
->>> +       __be32 reserved[2];
->>>   };
->>>
->>>   /**
->>> @@ -256,9 +256,9 @@ struct utp_upiu_req {
->>>    * @sense_data: Sense data field DW-8 to DW-12
->>>    */
->>>   struct utp_cmd_rsp {
->>> -       u32 residual_transfer_count;
->>> -       u32 reserved[4];
->>> -       u16 sense_data_len;
->>> +       __be32 residual_transfer_count;
->>> +       __be32 reserved[4];
->>> +       __be16 sense_data_len;
->>>          u8 sense_data[18];
->>>   };
->>>
->>> @@ -286,10 +286,10 @@ struct utp_upiu_rsp {
->>>    */
->>>   struct utp_upiu_task_req {
->>>          struct utp_upiu_header header;
->>> -       u32 input_param1;
->>> -       u32 input_param2;
->>> -       u32 input_param3;
->>> -       u32 reserved[2];
->>> +       __be32 input_param1;
->>> +       __be32 input_param2;
->>> +       __be32 input_param3;
->>> +       __be32 reserved[2];
->>>   };
->>>
->>>   /**
->>> @@ -301,9 +301,9 @@ struct utp_upiu_task_req {
->>>    */
->>>   struct utp_upiu_task_rsp {
->>>          struct utp_upiu_header header;
->>> -       u32 output_param1;
->>> -       u32 output_param2;
->>> -       u32 reserved[3];
->>> +       __be32 output_param1;
->>> +       __be32 output_param2;
->>> +       __be32 reserved[3];
->>>   };
->>>
->>>   /**
->>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
->>> index 04884d6..064c9d9 100644
->>> --- a/drivers/scsi/ufs/ufshcd.c
->>> +++ b/drivers/scsi/ufs/ufshcd.c
->>> @@ -163,7 +163,7 @@ static inline int ufshcd_is_device_present(u32 reg_hcs)
->>>    */
->>>   static inline int ufshcd_get_tr_ocs(struct ufshcd_lrb *lrbp)
->>>   {
->>> -       return lrbp->utr_descriptor_ptr->header.dword_2 & MASK_OCS;
->>> +       return le32_to_cpu(lrbp->utr_descriptor_ptr->header.dword_2) & MASK_OCS;
->>>   }
->>>
->>>   /**
->>> @@ -176,7 +176,7 @@ static inline int ufshcd_get_tr_ocs(struct ufshcd_lrb *lrbp)
->>>   static inline int
->>>   ufshcd_get_tmr_ocs(struct utp_task_req_desc *task_req_descp)
->>>   {
->>> -       return task_req_descp->header.dword_2 & MASK_OCS;
->>> +       return le32_to_cpu(task_req_descp->header.dword_2) & MASK_OCS;
->>>   }
->>>
->>>   /**
->>> @@ -390,26 +390,6 @@ static inline void ufshcd_copy_sense_data(struct ufshcd_lrb *lrbp)
->>>   }
->>>
->>>   /**
->>> - * ufshcd_query_to_cpu() - formats the buffer to native cpu endian
->>> - * @response: upiu query response to convert
->>> - */
->>> -static inline void ufshcd_query_to_cpu(struct utp_upiu_query *response)
->>> -{
->>> -       response->length = be16_to_cpu(response->length);
->>> -       response->value = be32_to_cpu(response->value);
->>> -}
->>> -
->>> -/**
->>> - * ufshcd_query_to_be() - formats the buffer to big endian
->>> - * @request: upiu query request to convert
->>> - */
->>> -static inline void ufshcd_query_to_be(struct utp_upiu_query *request)
->>> -{
->>> -       request->length = cpu_to_be16(request->length);
->>> -       request->value = cpu_to_be32(request->value);
->>> -}
->>> -
->>> -/**
->>>    * ufshcd_copy_query_response() - Copy the Query Response and the data
->>>    * descriptor
->>>    * @hba: per adapter instance
->>> @@ -425,7 +405,6 @@ void ufshcd_copy_query_response(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
->>>                          UPIU_RSP_CODE_OFFSET;
->>>
->>>          memcpy(&query_res->upiu_res, &lrbp->ucd_rsp_ptr->qr, QUERY_OSF_SIZE);
->>> -       ufshcd_query_to_cpu(&query_res->upiu_res);
->>>
->>>
->>>          /* Get the descriptor */
->>> @@ -749,7 +728,7 @@ static void ufshcd_prepare_utp_query_req_upiu(struct ufs_hba *hba,
->>>   {
->>>          struct utp_upiu_req *ucd_req_ptr = lrbp->ucd_req_ptr;
->>>          struct ufs_query *query = &hba->dev_cmd.query;
->>> -       u16 len = query->request.upiu_req.length;
->>> +       u16 len = be16_to_cpu(query->request.upiu_req.length);
->>>          u8 *descp = (u8 *)lrbp->ucd_req_ptr + GENERAL_UPIU_REQUEST_SIZE;
->>>
->>>          /* Query request header */
->>> @@ -766,7 +745,6 @@ static void ufshcd_prepare_utp_query_req_upiu(struct ufs_hba *hba,
->>>          /* Copy the Query Request buffer as is */
->>>          memcpy(&ucd_req_ptr->qr, &query->request.upiu_req,
->>>                          QUERY_OSF_SIZE);
->>> -       ufshcd_query_to_be(&ucd_req_ptr->qr);
->>>
->>>          /* Copy the Descriptor */
->>>          if ((len > 0) && (query->request.upiu_req.opcode ==
->>> @@ -1151,7 +1129,7 @@ static int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
->>>          }
->>>
->>>          if (flag_res)
->>> -               *flag_res = (response->upiu_res.value &
->>> +               *flag_res = (be32_to_cpu(response->upiu_res.value) &
->>>                                  MASK_QUERY_UPIU_FLAG_LOC) & 0x1;
->>>
->>>   out_unlock:
->>> @@ -1195,7 +1173,7 @@ int ufshcd_query_attr(struct ufs_hba *hba, enum query_opcode opcode,
->>>          switch (opcode) {
->>>          case UPIU_QUERY_OPCODE_WRITE_ATTR:
->>>                  request->query_func = UPIU_QUERY_FUNC_STANDARD_WRITE_REQUEST;
->>> -               request->upiu_req.value = *attr_val;
->>> +               request->upiu_req.value = cpu_to_be32(*attr_val);
->>>                  break;
->>>          case UPIU_QUERY_OPCODE_READ_ATTR:
->>>                  request->query_func = UPIU_QUERY_FUNC_STANDARD_READ_REQUEST;
->>> @@ -1222,7 +1200,7 @@ int ufshcd_query_attr(struct ufs_hba *hba, enum query_opcode opcode,
->>>                  goto out_unlock;
->>>          }
->>>
->>> -       *attr_val = response->upiu_res.value;
->>> +       *attr_val = be32_to_cpu(response->upiu_res.value);
->>>
->>>   out_unlock:
->>>          mutex_unlock(&hba->dev_cmd.lock);
->>> @@ -2568,12 +2546,8 @@ ufshcd_issue_tm_cmd(struct ufs_hba *hba,
->>>          task_req_upiup->header.dword_1 =
->>>                  UPIU_HEADER_DWORD(0, tm_function, 0, 0);
->>>
->>> -       task_req_upiup->input_param1 = lrbp->lun;
->>> -       task_req_upiup->input_param1 =
->>> -               cpu_to_be32(task_req_upiup->input_param1);
->>> -       task_req_upiup->input_param2 = lrbp->task_tag;
->>> -       task_req_upiup->input_param2 =
->>> -               cpu_to_be32(task_req_upiup->input_param2);
->>> +       task_req_upiup->input_param1 = cpu_to_be32(lrbp->lun);
->>> +       task_req_upiup->input_param2 = cpu_to_be32(lrbp->task_tag);
->>>
->>>          /* send command to the controller */
->>>          __set_bit(free_slot, &hba->outstanding_tasks);
->>> diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
->>> index 0475c66..9abc7e3 100644
->>> --- a/drivers/scsi/ufs/ufshci.h
->>> +++ b/drivers/scsi/ufs/ufshci.h
->>> @@ -304,10 +304,10 @@ enum {
->>>    * @size: size of physical segment DW-3
->>>    */
->>>   struct ufshcd_sg_entry {
->>> -       u32    base_addr;
->>> -       u32    upper_addr;
->>> -       u32    reserved;
->>> -       u32    size;
->>> +       __le32    base_addr;
->>> +       __le32    upper_addr;
->>> +       __le32    reserved;
->>> +       __le32    size;
->>>   };
->>>
->>>   /**
->>> @@ -330,10 +330,10 @@ struct utp_transfer_cmd_desc {
->>>    * @dword3: Descriptor Header DW3
->>>    */
->>>   struct request_desc_header {
->>> -       u32 dword_0;
->>> -       u32 dword_1;
->>> -       u32 dword_2;
->>> -       u32 dword_3;
->>> +       __le32 dword_0;
->>> +       __le32 dword_1;
->>> +       __le32 dword_2;
->>> +       __le32 dword_3;
->>>   };
->>>
->>>   /**
->>> @@ -352,16 +352,16 @@ struct utp_transfer_req_desc {
->>>          struct request_desc_header header;
->>>
->>>          /* DW 4-5*/
->>> -       u32  command_desc_base_addr_lo;
->>> -       u32  command_desc_base_addr_hi;
->>> +       __le32  command_desc_base_addr_lo;
->>> +       __le32  command_desc_base_addr_hi;
->>>
->>>          /* DW 6 */
->>> -       u16  response_upiu_length;
->>> -       u16  response_upiu_offset;
->>> +       __le16  response_upiu_length;
->>> +       __le16  response_upiu_offset;
->>>
->>>          /* DW 7 */
->>> -       u16  prd_table_length;
->>> -       u16  prd_table_offset;
->>> +       __le16  prd_table_length;
->>> +       __le16  prd_table_offset;
->>>   };
->>>
->>>   /**
->>> @@ -376,10 +376,10 @@ struct utp_task_req_desc {
->>>          struct request_desc_header header;
->>>
->>>          /* DW 4-11 */
->>> -       u32 task_req_upiu[TASK_REQ_UPIU_SIZE_DWORDS];
->>> +       __le32 task_req_upiu[TASK_REQ_UPIU_SIZE_DWORDS];
->>>
->>>          /* DW 12-19 */
->>> -       u32 task_rsp_upiu[TASK_RSP_UPIU_SIZE_DWORDS];
->>> +       __le32 task_rsp_upiu[TASK_RSP_UPIU_SIZE_DWORDS];
->>>   };
->>>
->>>   #endif /* End of Header */
->>>
->> Acked-by: Vinayak Holikatti <vinholikatti@gmail.com>
->
-> Hi James,
->
-> Please merge this series of patches to scsi 'misc' branch. Let us know
-> if you are expecting any changes.
->
+Hi Hannes,
 
-Hi James,
+(2014/05/21 15:30), Hannes Reinecke wrote:
+> On 05/21/2014 05:18 AM, Elliott, Robert (Server Storage) wrote:
+>>
+>>
+>>> -----Original Message-----
+>>> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+>>> owner@vger.kernel.org] On Behalf Of James Bottomley
+>>> Sent: Tuesday, May 20, 2014 9:22 PM
+>>> To: Yoshihiro YUNOMAE
+>>> Cc: Hannes Reinecke; Prarit Bhargava; linux-scsi@vger.kernel.org; Kay
+>>> Sievers; linux-kernel@vger.kernel.org; Hidehiro Kawai; yrl.pp-
+>>> manager.tt@hitachi.com; Masami Hiramatsu
+>>> Subject: Re: [PATCH RESEND] scsi: Output error messages using structured
+>>> printk in single line
+>>>
+>>> On Thu, 2014-02-27 at 13:17 +0900, Yoshihiro YUNOMAE wrote:
+>>>> +/* Maximum size of a local buffer for structured printk */
+>>>> +#define SCSI_LOG_LINE_MAX 512
+>>>> +
+>>>> +/* Local buffer for structured printk */
+>>>> +struct scsi_log_line {
+>>>> +    int offset;
+>>>> +    char buf[SCSI_LOG_LINE_MAX];
+>>>> +};
+>>>
+>>> This piece isn't going to fly; it's an on stack allocation of 0.5kb;
+>>> that's too much for small stack kernels.  Just changing this to a kalloc
+>>> is going be problematic too because we're in the io paths and the
+>>> allocation may fail.  So I appreciate the problem, but I don't think the
+>>> solution works.  Could we just tag the messages and use grep to put them
+>>> back together?
+>>>
+>>> James
+>>>
+>>
+>> When the system gets busy, I've seen CDB bytes strung out with each
+>> byte getting its own timestamp, with messages from different devices
+>> and threads interleaved together, so like the idea of printing each
+>> line with a single printk() call.
+>>
+>> Most lines aren't anywhere near 512 bytes long.  Can this be coded to
+>> let the calling function define an appropriate buffer size for
+>> whatever it is printing, with sizeof() used to bounds check?
+>>
+>>
+> As mentioned several times, I'm working on a patchset to update
+> scsi logging.
+>
+> The original patchset tried to convert any logging message into a single
+> statement, which wouldn't be broken up even under heavy load.
+>
+> While this works reasonably well for most things, printing out decoded
+> sense with just one line (and not end up in massive switch()
+> statements) is near impossible.
+>
+> Plus you'll end up having to use a static buffer at one point, which
+> again increases the stack size.
+>
+> The alternative approach as discussed at LSF is to move scsi_logging
+> over to tracing. There is already some coding for scsi tracing, but
 
-I have sent the patches again rebased on scsi-misc. Could you please
-merge them?
+Oh, I didn't attend the meeting, so I didn't know it.
+Did you completely change the development from fixing scsi_logging
+to using tracing?
+
+> in most cases it just duplicates existing logging statements.
+> So if we were to replace the entire scsi_logging infrastructure
+> with scsi tracing most of the issues (like chopped-up CDBs) would
+> be gone.
+> Plus we would have a far better control about _what_ is being printed.
+>
+> And yes, I do have some patches for that :-)
+
+I would like to develop the feature together because this
+is an important problem.
+Would you upload the patches to your tree?
+And, would you share current status and issues with us?
+
+Thank you,
+Yoshihiro YUNOMAE
 
 -- 
-Regards,
-Sujit
+Yoshihiro YUNOMAE
+Software Platform Research Dept. Linux Technology Center
+Hitachi, Ltd., Yokohama Research Laboratory
+E-mail: yoshihiro.yunomae.ez@hitachi.com
