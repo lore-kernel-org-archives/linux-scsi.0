@@ -1,52 +1,51 @@
-From: HUSAM AL SAYED <Husamalsayed@asia.com>
-Subject: Your Urgent reply.
-Date: Mon, 26 May 2014 22:00:48 +0400
-Message-ID: <CAKFyHyqE-jAV0G8GqYW7H_3cUYv2iXVQm5a6-m1VNZWRhKVXAg__32633.51027058$1401127305$gmane$org@mail.gmail.com>
-Reply-To: Husamalsayed@asia.com
+From: Maurizio Lombardi <mlombard@redhat.com>
+Subject: Re: [PATCH] scsi_lib: replace ambiguous "Unhandled error code"
+ messages.
+Date: Mon, 26 May 2014 21:27:15 +0200
+Message-ID: <20140526192715.GA2271@dhcp-27-189.brq.redhat.com>
+References: <1401099204-18050-1-git-send-email-mlombard@redhat.com>
+ <20140526162506.GB18319@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wg0-f65.google.com ([74.125.82.65]:48423 "EHLO
-	mail-wg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752075AbaEZSAu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 May 2014 14:00:50 -0400
-Received: by mail-wg0-f65.google.com with SMTP id k14so1533511wgh.0
-        for <linux-scsi@vger.kernel.org>; Mon, 26 May 2014 11:00:49 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:40431 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752042AbaEZT1p (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 26 May 2014 15:27:45 -0400
+Content-Disposition: inline
+In-Reply-To: <20140526162506.GB18319@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, hch@infradead.org, James.Bottomley@HansenPartnership.com
 
-Dear Friend,
+Hi,
 
+On Mon, May 26, 2014 at 09:25:06AM -0700, Christoph Hellwig wrote:
+> On Mon, May 26, 2014 at 12:13:24PM +0200, Maurizio Lombardi wrote:
+> > During IO with fabric faults, one generally sees several "Unhandled error
+> > code" messages in the syslog as shown below:
+> > 
+> > sd 4:0:6:2: [sdbw] Unhandled error code
+> > sd 4:0:6:2: [sdbw] Result: hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK
+> > sd 4:0:6:2: [sdbw] CDB: Read(10): 28 00 00 00 00 00 00 00 08 00
+> > end_request: I/O error, dev sdbw, sector 0
+> > 
+> > This comes from scsi_io_completion (in scsi_lib.c) while handling error
+> > codes other than DID_RESET or not deferred sense keys i.e. this is
+> > actually handled by the SCSI mid layer. But what gets displayed here is
+> > "Unhandled error code" which is quite misleading as it indicates
+> > something that is not addressed by the mid layer.
+> > 
+> > This patch replaces "Unhandled error code" with "Extended error description
+> > not available".
+> 
+> How about simple not setting description at all for this case?
+> 
 
-Compliments of the day.This mail May be a surprise to you Because you
-did not give me the permission to do so and Neither do you know me but
-before I tell you about myself I want you to please forgive me for
-sending this mail without your permission I have been in search of
-someone with this last name so when I saw you online, I was pushed to
-contact you and see how best we can assist each other. I am Mr. Husam
-Al Sayed, a Bank Officer here in U.A.E. I believe it is the wish of
-God for me to come across you now. I am having an important business
-discussion I wish to share with you which I  believe will interest
-you, because it is in connection with your last name and you are going
-to benefit from it.
+It has already been proposed before but James didn't like the idea.
 
-One Late peter who was among the death victims in the May 27 2006
-Earthquake disaster in Java, Indonesia that killed over 5,000 people.
-He was in Indonesia on a business trip and that was how he met his
-end. My bank management is yet to know about his death, I knew about
-it because he was my friend and I am his account officer.he did not
-mention any Next of Kin/ Heir when the account was opened, and he was
-not married and no children. Last week my Bank Management requested
-that he should give instructions on what to do about his funds,I know
-this will happen and that is why I have been looking for a means to
-handle the situation,
+http://markmail.org/message/dumujpz4gfp3s4fp#query:+page:1+mid:dumujpz4gfp3s4fp+state:results
 
-If you are interested send me your private Email Address so that i can
-send you more details of the transaction,
-Thanks for your understanding
+Regards,
+Maurizio Lombardi
 
-I am waiting for your reply.
-
-Best regards,
-
-Mr. Husam Al Sayed
