@@ -1,57 +1,48 @@
-From: Vaughan Cao <vaughan.cao@oracle.com>
-Subject: [PATCH] notify block layer when using temporary change to cache_type
-Date: Tue, 27 May 2014 19:39:14 +0800
-Message-ID: <1401190754-6822-1-git-send-email-vaughan.cao@oracle.com>
+From: Maurizio Lombardi <mlombard@redhat.com>
+Subject: Re: [PATCH V3] bio: modify __bio_add_page() to accept pages that
+ don't start a new segment
+Date: Tue, 27 May 2014 13:58:59 +0200
+Message-ID: <20140527115859.GA30458@dhcp-27-189.brq.redhat.com>
+References: <1398952615-22034-1-git-send-email-mlombard@redhat.com>
+ <CACVXFVNSZ7+MxW8-SiLXUFW6pGJ7b-OQzf8-KLzcXyE7BvhbbA@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:37333 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751142AbaE0Lib (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 May 2014 07:38:31 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:34167 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751678AbaE0L7K (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 May 2014 07:59:10 -0400
+Content-Disposition: inline
+In-Reply-To: <CACVXFVNSZ7+MxW8-SiLXUFW6pGJ7b-OQzf8-KLzcXyE7BvhbbA@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: JBottomley@parallels.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, vaughan.cao@oracle.com
+To: Ming Lei <tom.leiming@gmail.com>
+Cc: Al Viro <viro@zeniv.linux.org.uk>, Andrew Morton <akpm@linux-foundation.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Kent Overstreet <kmo@daterainc.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, m.lombardi85@gmail.com
 
-This is a fix for commit:
-  39c60a0948cc06139e2fbfe084f83cb7e7deae3b sd: fix array cache flushing bug causing performance problems
-We must notify the block layer via q->flush_flags after temporary change the cache_type to write through.
-If not, SYNCHRONIZE CACHE command will still be generated.
+On Tue, May 27, 2014 at 06:15:45PM +0800, Ming Lei wrote:
+> 
+> If the page can be merged to last segment, it should have been
+> covered by code in branch of 'if (bio->bi_vcnt > 0) ...', shouldn't it?
+> 
+> Or maybe it is better to make that code cover your case since
+> looks your case is similar with that one according to your commit
+> log.
+>
 
-Signed-off-by: Vaughan Cao <vaughan.cao@oracle.com>
----
- drivers/scsi/sd.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+I realized that maybe you mean this branch:
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 6146b9d..366e48b 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -144,6 +144,7 @@ sd_store_cache_type(struct device *dev, struct device_attribute *attr,
- 	struct scsi_sense_hdr sshdr;
- 	static const char temp[] = "temporary ";
- 	int len;
-+	unsigned flush;
- 
- 	if (sdp->type != TYPE_DISK)
- 		/* no cache control on RBC devices; theoretically they
-@@ -174,6 +175,17 @@ sd_store_cache_type(struct device *dev, struct device_attribute *attr,
- 	if (sdkp->cache_override) {
- 		sdkp->WCE = wce;
- 		sdkp->RCD = rcd;
-+
-+		/* set flush_flags to notify the block layer */
-+		flush = 0;
-+		if (sdkp->WCE) {
-+			flush |= REQ_FLUSH;
-+			if (sdkp->DPOFUA)
-+				flush |= REQ_FUA;
-+		}
-+
-+		blk_queue_flush(sdkp->disk->queue, flush);
-+
- 		return count;
- 	}
- 
--- 
-1.9.0
+if (bio->bi_vcnt > 1 && (BIOVEC_PHYS_MERGEABLE(bvec-1, bvec)))
 
+right?
+In this case the branch is not even reached in the original code because
+the function returned an error way before executing it (line 760)
+
+There was already a patchset trying to modify the code in a different way than mine:
+
+https://groups.google.com/forum/#!msg/linux.kernel/3IanUpBVhFQ/3Xbg3yLRFp4J
+
+but it has been ignored and in my opinion it takes a more
+complicated approach.
+
+Regards,
+Maurizio Lombardi
