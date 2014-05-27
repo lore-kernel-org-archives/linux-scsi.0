@@ -1,29 +1,33 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH 1/3] Remove two cancel_delayed_work() calls from the error
- handler
-Date: Tue, 27 May 2014 11:06:03 +0200
-Message-ID: <5384557B.8040908@redhat.com>
-References: <538359DB.9080601@acm.org> <53835A52.9010306@acm.org>		 <53835C55.6070400@redhat.com> <5384476F.6010705@acm.org>	 <1401178172.14454.12.camel@dabdike> <53844E8E.7010404@acm.org> <1401180980.14454.31.camel@dabdike>
+From: Ming Lei <tom.leiming@gmail.com>
+Subject: Re: [PATCH V3] bio: modify __bio_add_page() to accept pages that
+ don't start a new segment
+Date: Tue, 27 May 2014 18:15:45 +0800
+Message-ID: <CACVXFVNSZ7+MxW8-SiLXUFW6pGJ7b-OQzf8-KLzcXyE7BvhbbA@mail.gmail.com>
+References: <1398952615-22034-1-git-send-email-mlombard@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49033 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751684AbaE0JGi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 May 2014 05:06:38 -0400
-In-Reply-To: <1401180980.14454.31.camel@dabdike>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1398952615-22034-1-git-send-email-mlombard@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Maurizio Lombardi <mlombard@redhat.com>
+Cc: Al Viro <viro@zeniv.linux.org.uk>, Andrew Morton <akpm@linux-foundation.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Christoph Hellwig <hch@lst.de>, Linux SCSI List <linux-scsi@vger.kernel.org>, Kent Overstreet <kmo@daterainc.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, m.lombardi85@gmail.com
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>, "bvanassche@acm.org" <bvanassche@acm.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "hare@suse.de" <hare@suse.de>, "axboe@kernel.dk" <axboe@kernel.dk>, "jdl1291@gmail.com" <jdl1291@gmail.com>
 
-Il 27/05/2014 10:56, James Bottomley ha scritto:
-> The whole reason BUG_ON doesn't leave a log trace is to try to prevent
-> corruption propagating to the data storage devices.  What you propose
-> would be inviting that corruption in the name of getting a log entry.
+Hi Maurizio,
 
-Even this is not entirely correct.  kdump can be used to capture the 
-full log of the BUG_ON.
+On Thu, May 1, 2014 at 9:56 PM, Maurizio Lombardi <mlombard@redhat.com> wrote:
+> The original behaviour is to refuse to add a new page if the maximum number
+> of segments has been reached, regardless of the fact the page we are
+> going to add can be merged into the last segment or not.
 
-Paolo
+If the page can be merged to last segment, it should have been
+covered by code in branch of 'if (bio->bi_vcnt > 0) ...', shouldn't it?
+
+Or maybe it is better to make that code cover your case since
+looks your case is similar with that one according to your commit
+log.
+
+
+Thanks,
+-- 
+Ming Lei
