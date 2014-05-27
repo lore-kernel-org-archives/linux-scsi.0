@@ -1,63 +1,75 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] notify block layer when using temporary change to
- cache_type
-Date: Tue, 27 May 2014 20:18:16 +0400
-Message-ID: <1401207496.14454.90.camel@dabdike>
-References: <1401190754-6822-1-git-send-email-vaughan.cao@oracle.com>
+From: Venkatesh Srinivas <venkateshs@google.com>
+Subject: Re: [PATCH] virtio-scsi: replace target spinlock with seqcount
+Date: Tue, 27 May 2014 09:50:31 -0700
+Message-ID: <20140527165031.GA21827@google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1401190754-6822-1-git-send-email-vaughan.cao@oracle.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Vaughan Cao <vaughan.cao@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ie0-f180.google.com ([209.85.223.180]:58747 "EHLO
+	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751922AbaE0Que (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 May 2014 12:50:34 -0400
+Received: by mail-ie0-f180.google.com with SMTP id tp5so8795021ieb.25
+        for <linux-scsi@vger.kernel.org>; Tue, 27 May 2014 09:50:34 -0700 (PDT)
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: tom.leiming@gmail.com, Paolo Bonzini <pbonzini@redhat.com>
 
-On Tue, 2014-05-27 at 19:39 +0800, Vaughan Cao wrote:
-> This is a fix for commit:
->   39c60a0948cc06139e2fbfe084f83cb7e7deae3b sd: fix array cache flushing bug causing performance problems
-> We must notify the block layer via q->flush_flags after temporary change the cache_type to write through.
-> If not, SYNCHRONIZE CACHE command will still be generated.
-> 
-> Signed-off-by: Vaughan Cao <vaughan.cao@oracle.com>
-> ---
->  drivers/scsi/sd.c | 12 ++++++++++++
->  1 file changed, 12 insertions(+)
-> 
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index 6146b9d..366e48b 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -144,6 +144,7 @@ sd_store_cache_type(struct device *dev, struct device_attribute *attr,
+Hi,
 
-This is a weird function name.  The name in the vanilla kernel is
-cache_type_store().
+I think this patch has a small race involving just two commands:
 
->  	struct scsi_sense_hdr sshdr;
->  	static const char temp[] = "temporary ";
->  	int len;
-> +	unsigned flush;
->  
->  	if (sdp->type != TYPE_DISK)
->  		/* no cache control on RBC devices; theoretically they
-> @@ -174,6 +175,17 @@ sd_store_cache_type(struct device *dev, struct device_attribute *attr,
->  	if (sdkp->cache_override) {
->  		sdkp->WCE = wce;
->  		sdkp->RCD = rcd;
-> +
-> +		/* set flush_flags to notify the block layer */
-> +		flush = 0;
-> +		if (sdkp->WCE) {
-> +			flush |= REQ_FLUSH;
-> +			if (sdkp->DPOFUA)
-> +				flush |= REQ_FUA;
-> +		}
-> +
-> +		blk_queue_flush(sdkp->disk->queue, flush);
-> +
+1. The first command to a target is in virtscsi_pick_vq(), after
+    atomic_inc_return(&tgt->tgt_lock)) but before write_seqcount_begin()
+2. A second command to the same target enters virtscsi_pick_vq(). It
+    will hit the same atomic inc, take the upper branch of the
+    conditional, and read out a stale (or NULL) tgt->req_vq.
 
-Is there a reason you cut and paste from sd_revalidate_disk() instead of
-just calling it directly?
+Specifically:
 
-James
+@@ -508,19 +507,33 @@ static struct virtio_scsi_vq *virtscsi_pick_vq(struct virtio_scsi *vscsi,
+  	unsigned long flags;
+  	u32 queue_num;
+  
+-	spin_lock_irqsave(&tgt->tgt_lock, flags);
++	local_irq_save(flags);
++	if (atomic_inc_return(&tgt->reqs) > 1) {
++		unsigned long seq;
++
++		do {
++			seq = read_seqcount_begin(&tgt->tgt_seq);
++			vq = tgt->req_vq;
++		} while (read_seqcount_retry(&tgt->tgt_seq, seq));
++	} else {
+
+A second virtscsi_pick_vq() here will read a stale or NULL tgt->req_vq.
+
++		/* no writes can be concurrent because of atomic_t */
++		write_seqcount_begin(&tgt->tgt_seq);
++
++		/* keep previous req_vq if there is reader found */
++		if (unlikely(atomic_read(&tgt->reqs) > 1)) {
++			vq = tgt->req_vq;
++			goto unlock;
++		}
+  
+-	if (atomic_inc_return(&tgt->reqs) > 1)
+-		vq = tgt->req_vq;
+-	else {
+  		queue_num = smp_processor_id();
+  		while (unlikely(queue_num >= vscsi->num_queues))
+  			queue_num -= vscsi->num_queues;
+-
+  		tgt->req_vq = vq = &vscsi->req_vqs[queue_num];
++ unlock:
++		write_seqcount_end(&tgt->tgt_seq);
+  	}
++	local_irq_restore(flags);
+  
+-	spin_unlock_irqrestore(&tgt->tgt_lock, flags);
+  	return vq;
+
+Thanks,
+-- vs;
