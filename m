@@ -1,47 +1,165 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH 1/3] Remove two cancel_delayed_work() calls from the error
- handler
-Date: Tue, 27 May 2014 10:36:30 +0200
-Message-ID: <53844E8E.7010404@acm.org>
-References: <538359DB.9080601@acm.org> <53835A52.9010306@acm.org>	 <53835C55.6070400@redhat.com> <5384476F.6010705@acm.org> <1401178172.14454.12.camel@dabdike>
+From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+Subject: Re: [PATCH 4/18] qla4xxx: Use kmemdup instead of kmalloc + memcpy
+Date: Tue, 27 May 2014 08:38:21 +0000
+Message-ID: <3FC4AB8B47ECD546BCD4B361A64BEACD8C6AE268@avmb3.qlogic.org>
+References: <1401117687-28911-1-git-send-email-benoit.taine@lip6.fr>
+ <1401117687-28911-5-git-send-email-benoit.taine@lip6.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="_000_3FC4AB8B47ECD546BCD4B361A64BEACD8C6AE268avmb3qlogicorg_"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from andre.telenet-ops.be ([195.130.132.53]:57445 "EHLO
-	andre.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751706AbaE0Igc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 May 2014 04:36:32 -0400
-In-Reply-To: <1401178172.14454.12.camel@dabdike>
+Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:3730 "EHLO
+	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752322AbaE0IiY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 May 2014 04:38:24 -0400
+Received: from pps.filterd (m0045602.ppops.net [127.0.0.1])
+	by mx0a-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id s4R8Xbni031600
+	for <linux-scsi@vger.kernel.org>; Tue, 27 May 2014 01:38:24 -0700
+Received: from avcashub1.qlogic.com (avcashub3.qlogic.com [198.70.193.117])
+	by mx0a-0016ce01.pphosted.com with ESMTP id 1m1snxdxtf-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Tue, 27 May 2014 01:38:24 -0700
+In-Reply-To: <1401117687-28911-5-git-send-email-benoit.taine@lip6.fr>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "hare@suse.de" <hare@suse.de>, "pbonzini@redhat.com" <pbonzini@redhat.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "jdl1291@gmail.com" <jdl1291@gmail.com>
+To: Benoit Taine <benoit.taine@lip6.fr>
+Cc: Dept-Eng iSCSI Driver <Dept-iSCSIDriver@qlogic.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
 
-On 05/27/14 10:09, James Bottomley wrote:
-> On Tue, 2014-05-27 at 10:06 +0200, Bart Van Assche wrote:
->> As you probably know scsi_put_command() can get called from softirq
->> context. A BUG_ON() in that context might make it unnecessary hard for a
->> user to collect call traces.
-> 
-> Why?  The messages dumped are the same, the trace just starts from the
-> IRQ context ... I don't see what the problem is.
-> 
-> The question isn't ease of gathering the data, it's correctness.  The
-> point is that if the assert fails we have a free of an in-use command
-> leading to a nasty use after free ... the machine state is hosed at that
-> point.
+--_000_3FC4AB8B47ECD546BCD4B361A64BEACD8C6AE268avmb3qlogicorg_
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <FCD91A72DABCAF49B381B23A4552EF44@qlogic.com>
+Content-Transfer-Encoding: quoted-printable
 
-Please keep in mind that even if the SCSI mid-layer functions correctly
-it is still possible that another driver in the system could cause these
-tests to fail if it triggers e.g. a use-after-free.
 
-If BUG_ON() is invoked the dumped message will be displayed on the
-screen but will not be saved in the system log. This is inconvenient
-because it means that if someone wants to capture the dumped message a
-camera is necessary and one has to step to the physical console to
-capture this message. Using WARN_ON() or WARN_ON_ONCE() makes it a lot
-easier for users to capture any message that is displayed.
 
-Bart.
+On 26/05/14 8:51 pm, "Benoit Taine" <benoit.taine@lip6.fr> wrote:
 
+>This issue was reported by coccicheck using the semantic patch
+>at scripts/coccinelle/api/memdup.cocci
+>
+>Signed-off-by: Benoit Taine <benoit.taine@lip6.fr>
+>---
+>Tested by compilation without errors.
+>
+> drivers/scsi/qla4xxx/ql4_os.c |    7 +++----
+> 1 file changed, 3 insertions(+), 4 deletions(-)
+>
+>diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+>index 9eef7d4..3202063 100644
+>--- a/drivers/scsi/qla4xxx/ql4_os.c
+>+++ b/drivers/scsi/qla4xxx/ql4_os.c
+>@@ -3565,14 +3565,13 @@ static int qla4xxx_copy_from_fwddb_param(struct
+>iscsi_bus_flash_session *sess,
+> 	if (test_bit(OPT_IPV6_DEVICE, &options)) {
+> 		conn->ipv6_traffic_class =3D fw_ddb_entry->ipv4_tos;
+>=20
+>-		conn->link_local_ipv6_addr =3D kzalloc(IPv6_ADDR_LEN, GFP_KERNEL);
+>+		conn->link_local_ipv6_addr =3D kmemdup(
+>+					fw_ddb_entry->link_local_ipv6_addr,
+>+					IPv6_ADDR_LEN, GFP_KERNEL);
+> 		if (!conn->link_local_ipv6_addr) {
+> 			rc =3D -ENOMEM;
+> 			goto exit_copy;
+> 		}
+>-
+>-		memcpy(conn->link_local_ipv6_addr,
+>-		       fw_ddb_entry->link_local_ipv6_addr, IPv6_ADDR_LEN);
+> 	} else {
+> 		conn->ipv4_tos =3D fw_ddb_entry->ipv4_tos;
+> 	}
+
+Acked-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+=20
+
+
+--_000_3FC4AB8B47ECD546BCD4B361A64BEACD8C6AE268avmb3qlogicorg_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
+
+eJ8+Iq8fAQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAADQ1NjZCMzky
+Q0M0QTA5NDE5MDg1RjBERjY0MjlGQTBBACEHAQ2ABAACAAAAAgACAAEFgAMADgAAAN4HBQAbAAgA
+JgAVAAIASgEBIIADAA4AAADeBwUAGwAIACYAFQACAEoBAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
+YWlsLk5vdGUAMQgBBIABAEIAAABSZTogW1BBVENIIDQvMThdIHFsYTR4eHg6IFVzZSBrbWVtZHVw
+IGluc3RlYWQgb2Yga21hbGxvYyArIG1lbWNweQCvFQEDkAYAGBEAADUAAAACAX8AAQAAADwAAAA8
+M0ZDNEFCOEI0N0VDRDU0NkJDRDRCMzYxQTY0QkVBQ0Q4QzZBRTI2OEBhdm1iMy5xbG9naWMub3Jn
+PgALAB8OAQAAAAIBCRABAAAAKQQAACUEAACwBwAATFpGda2nv99hAApmYmlkBAAAY2PAcGcxMjUy
+AP4DQ/B0ZXh0AfcCpAPjAgAEY2gKwHNldDAg7wdtAoMAUBFNMgqABrQCgJZ9CoAIyDsJYjE5DsC/
+CcMWcgoyFnECgBViKgmwcwnwBJBhdAWyDlADYHOibwGAIEV4EcFuGDBdBlJ2BJAXtgIQcgDAdH0I
+UG4aMRAgBcAFoBtkZJogA1IgECIXslx2CJDkd2sLgGQ1HVME8AdADRdwMApxF/Jia21rBnMBkAAg
+IEJNX0LgRUdJTn0K/AHxC/JabAuAZQqBIaRPA6AyADYvMDUvMTQgADg6NTEgcG0sSCAiQgnwb2kF
+QFRBC3FlIiA8YiPjLosBkCGxQCGgcDYuA1BYPiB3A2AQIDohnD50VGgEACAEAQpQJhBhmwQgCXBw
+CREcUWJ5G9EUY2MOUGgFkGsgdW8AkBnAHMApgCASAAOBdP8OUCNwGIARwCb2GIAqYAUDLHMvKSMY
+UGwecC9hCHBpLweAbWR1cI4uKSMm9ib2U2lnGFCkZC0ZMGYtKPA6H7DvI+kkryW0JvYtMtAm9weQ
+/Si3bS1AC2AqwAIgJhAkEL5oCGAFQASQA2AR8C4uPnwgZAUQGjEsYATwAJAvMnELYDR4N/A3oTRf
+IxkQLdAgfCA40Tcgris5MDLRMvcgI2BmAxDrGeAZlGQjoDMnsACAG4HhNKFzKCspI6AjEAEAcx5w
+O6QtKS4+DeABICBlMtBnJBFhLzbvN/tinz7vN+sm9h2xEDAgOQnggGY3ZDQuLjMB0I0B0DY7MB6R
+NjQ0Mll/Ps9B3ycUOTFAz0bfJxRAgkA+YDM1NjUsIwH+K0s0OzBK8R9hKsILgAVAxT/FXwWgcHlf
+A1JN4CB3ZGRiXwqxYW3CKB9gcnVjdELHSSIcX2Ip0E3gC2BzaF/XEgAEEDSiKlDiLDZXDIJ7J7A+
+UCgQIB9gUDAkECgAT1BUX0lQVjaAX0RFVklDRSOg5iZNsDujKSkDMAAAUdqTUlMb4W4tQzBwdlPg
+fU8QYQEgDlBNkFCRBCA9uRxwd19OYgnwTxB5VrP7OFAYkHMWIFHXMmZV7SGhrGtfCQAeUV9W02FO
+YLMFwFgAa3oHQFvxKFOwAVbxQUREUl9MRQJOI6BHRlBfS0WgUk5FTClZhytav/dbz1zTLXQoX09j
+SlgdYM//XLFRt2M/UlNdn16vVclSot4hYG9cV1UfVedyKuBYAMItaVBPTUVNak9WFOpnJkBvNVB4
+JBBNk2/PfVKAXCBAWjdaPy1xDmB5/ihrz2YvWpl4RWSfdh8joO9oq2o9czE1UGwSAG1/VjvfWTNX
+/1kPfHYhnEEpoC9xUS/iVmlrKDFDEdB19mQR0SkAPB1gg7Et0IQGqkA/wG8+kGMt0W0upg9aFiGV
+FUKH8AAAAB8AQgABAAAAIAAAAFYAaQBrAGEAcwAgAEMAaABhAHUAZABoAGEAcgB5AAAAHwBlAAEA
+AAA2AAAAdgBpAGsAYQBzAC4AYwBoAGEAdQBkAGgAYQByAHkAQABxAGwAbwBnAGkAYwAuAGMAbwBt
+AAAAAAAfAGQAAQAAAAoAAABTAE0AVABQAAAAAAACAUEAAQAAAHgAAAAAAAAAgSsfpL6jEBmdbgDd
+AQ9UAgAAAIBWAGkAawBhAHMAIABDAGgAYQB1AGQAaABhAHIAeQAAAFMATQBUAFAAAAB2AGkAawBh
+AHMALgBjAGgAYQB1AGQAaABhAHIAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAJdAQAAADYA
+AAB2AGkAawBhAHMALgBjAGgAYQB1AGQAaABhAHIAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAA
+AB8A5V8BAAAAPgAAAHMAaQBwADoAdgBpAGsAYQBzAC4AYwBoAGEAdQBkAGgAYQByAHkAQABxAGwA
+bwBnAGkAYwAuAGMAbwBtAAAAAAAfABoMAQAAACAAAABWAGkAawBhAHMAIABDAGgAYQB1AGQAaABh
+AHIAeQAAAB8AHwwBAAAANgAAAHYAaQBrAGEAcwAuAGMAaABhAHUAZABoAGEAcgB5AEAAcQBsAG8A
+ZwBpAGMALgBjAG8AbQAAAAAAHwAeDAEAAAAKAAAAUwBNAFQAUAAAAAAAAgEZDAEAAAB4AAAAAAAA
+AIErH6S+oxAZnW4A3QEPVAIAAACAVgBpAGsAYQBzACAAQwBoAGEAdQBkAGgAYQByAHkAAABTAE0A
+VABQAAAAdgBpAGsAYQBzAC4AYwBoAGEAdQBkAGgAYQByAHkAQABxAGwAbwBnAGkAYwAuAGMAbwBt
+AAAAHwABXQEAAAA2AAAAdgBpAGsAYQBzAC4AYwBoAGEAdQBkAGgAYQByAHkAQABxAGwAbwBnAGkA
+YwAuAGMAbwBtAAAAAAAfAPg/AQAAACAAAABWAGkAawBhAHMAIABDAGgAYQB1AGQAaABhAHIAeQAA
+AB8AI0ABAAAANgAAAHYAaQBrAGEAcwAuAGMAaABhAHUAZABoAGEAcgB5AEAAcQBsAG8AZwBpAGMA
+LgBjAG8AbQAAAAAAHwAiQAEAAAAKAAAAUwBNAFQAUAAAAAAAAgH5PwEAAAB4AAAAAAAAAIErH6S+
+oxAZnW4A3QEPVAIAAACAVgBpAGsAYQBzACAAQwBoAGEAdQBkAGgAYQByAHkAAABTAE0AVABQAAAA
+dgBpAGsAYQBzAC4AYwBoAGEAdQBkAGgAYQByAHkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAJ
+XQEAAAA2AAAAdgBpAGsAYQBzAC4AYwBoAGEAdQBkAGgAYQByAHkAQABxAGwAbwBnAGkAYwAuAGMA
+bwBtAAAAAAAfADFAAQAAAAIAAAAAAAAACwBAOgEAAAAfADBAAQAAAAIAAAAAAAAAHwAaAAEAAAAS
+AAAASQBQAE0ALgBOAG8AdABlAAAAAAADAPE/CQQAAAsAQDoBAAAAAwD9P+QEAAACAQswAQAAABAA
+AABFZrOSzEoJQZCF8N9kKfoKAwAXAAEAAABAADkAgDzmA4d5zwFAAAgwhSl0BId5zwELAACACCAG
+AAAAAADAAAAAAAAARgAAAAAUhQAAAQAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAAB4AAABhAGMA
+YwBlAHAAdABsAGEAbgBnAHUAYQBnAGUAAAAAAAEAAAAMAAAAZQBuAC0AVQBTAAAACwAAgAggBgAA
+AAAAwAAAAAAAAEYAAAAABoUAAAAAAAAfADcAAQAAAIQAAABSAGUAOgAgAFsAUABBAFQAQwBIACAA
+NAAvADEAOABdACAAcQBsAGEANAB4AHgAeAA6ACAAVQBzAGUAIABrAG0AZQBtAGQAdQBwACAAaQBu
+AHMAdABlAGEAZAAgAG8AZgAgAGsAbQBhAGwAbABvAGMAIAArACAAbQBlAG0AYwBwAHkAAAAfAD0A
+AQAAAAoAAABSAGUAOgAgAAAAAAADADYAAAAAAB8AQhABAAAAcgAAADwAMQA0ADAAMQAxADEANwA2
+ADgANwAtADIAOAA5ADEAMQAtADUALQBnAGkAdAAtAHMAZQBuAGQALQBlAG0AYQBpAGwALQBiAGUA
+bgBvAGkAdAAuAHQAYQBpAG4AZQBAAGwAaQBwADYALgBmAHIAPgAAAAAAAgFxAAEAAAAbAAAAAQHP
+ePYlgijUvmhmgEidfvbMQNO+4ZtU7asAAB8AcAABAAAAfAAAAFsAUABBAFQAQwBIACAANAAvADEA
+OABdACAAcQBsAGEANAB4AHgAeAA6ACAAVQBzAGUAIABrAG0AZQBtAGQAdQBwACAAaQBuAHMAdABl
+AGEAZAAgAG8AZgAgAGsAbQBhAGwAbABvAGMAIAArACAAbQBlAG0AYwBwAHkAAAAfADUQAQAAAHgA
+AAA8ADMARgBDADQAQQBCADgAQgA0ADcARQBDAEQANQA0ADYAQgBDAEQANABCADMANgAxAEEANgA0
+AEIARQBBAEMARAA4AEMANgBBAEUAMgA2ADgAQABhAHYAbQBiADMALgBxAGwAbwBnAGkAYwAuAG8A
+cgBnAD4AAAAfADkQAQAAAOQAAAA8ADEANAAwADEAMQAxADcANgA4ADcALQAyADgAOQAxADEALQAx
+AC0AZwBpAHQALQBzAGUAbgBkAC0AZQBtAGEAaQBsAC0AYgBlAG4AbwBpAHQALgB0AGEAaQBuAGUA
+QABsAGkAcAA2AC4AZgByAD4AIAA8ADEANAAwADEAMQAxADcANgA4ADcALQAyADgAOQAxADEALQA1
+AC0AZwBpAHQALQBzAGUAbgBkAC0AZQBtAGEAaQBsAC0AYgBlAG4AbwBpAHQALgB0AGEAaQBuAGUA
+QABsAGkAcAA2AC4AZgByAD4AAAADAN4/n04AAEAABzDjBG0Eh3nPAQMAJgAAAAAAAgFHAAEAAAAs
+AAAAYz1VUzthPSA7cD1RTG9naWM7bD1BVk1CMy0xNDA1MjcwODM4MjFaLTMxOQAfABUQAQAAAFgA
+AABGAEMARAA5ADEAQQA3ADIARABBAEIAQwBBAEYANAA5AEIAMwA4ADEAQgAyADMAQQA0ADUANQAy
+AEUARgA0ADQAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAgEUMAEAAAAMAAAATQAAALdfdXRPAAAA
+HwD6PwEAAAAgAAAAVgBpAGsAYQBzACAAQwBoAGEAdQBkAGgAYQByAHkAAAAfAACAhgMCAAAAAADA
+AAAAAAAARgEAAAAWAAAAdQBzAGUAcgAtAGEAZwBlAG4AdAAAAAAAAQAAAEYAAABNAGkAYwByAG8A
+cwBvAGYAdAAtAE0AYQBjAE8AdQB0AGwAbwBvAGsALwAxADQALgAzAC4AOQAuADEAMwAxADAAMwAw
+AAAAAAAfAACAH6TrM6h6LkK+e3nhqY5UswEAAAA4AAAAQwBvAG4AdgBlAHIAcwBhAHQAaQBvAG4A
+SQBuAGQAZQB4AFQAcgBhAGMAawBpAG4AZwBFAHgAAAABAAAAQgEAAEkASQA9ADAAMQAwADEAQwBG
+ADcAOQA4ADcAMAA0ADgARQBEAEUAOABGAEYAMwAzAEQANQAyADMAOAA0ADMAQgA4ADMANAA4AEMA
+NgBCAEIARgAzAEQARAA3AEYAQgA7AFMAQgBNAEkARAA9ADIAOwBTADEAPQA8ADEANAAwADEAMQAx
+ADcANgA4ADcALQAyADgAOQAxADEALQA1AC0AZwBpAHQALQBzAGUAbgBkAC0AZQBtAGEAaQBsAC0A
+YgBlAG4AbwBpAHQALgB0AGEAaQBuAGUAQABsAGkAcAA2AC4AZgByAD4AOwBWAGUAcgBzAGkAbwBu
+AD0AVgBlAHIAcwBpAG8AbgAgADEANAAuADIAIAAoAEIAdQBpAGwAZAAgADMAOAA3AC4AMAApACwA
+IABTAHQAYQBnAGUAPQBIADIAAAAAAAMADTT9PwAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAIAAA
+AHgALQBtAHMALQBoAGEAcwAtAGEAdAB0AGEAYwBoAAAAAQAAAAIAAAAAAAAAHwAAgIYDAgAAAAAA
+wAAAAAAAAEYBAAAAIgAAAHgALQBvAHIAaQBnAGkAbgBhAHQAaQBuAGcALQBpAHAAAAAAAAEAAAAY
+AAAAWwAxADAALgAxAC4ANAAuADEAMABdAAAAsl8=
+
+--_000_3FC4AB8B47ECD546BCD4B361A64BEACD8C6AE268avmb3qlogicorg_--
