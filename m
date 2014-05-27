@@ -1,163 +1,97 @@
-From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: Re: [PATCH 7/18] qla2xxx: Use kmemdup instead of kmalloc + memcpy
-Date: Tue, 27 May 2014 05:01:24 +0000
-Message-ID: <F5D084D6342F9B479C34599BB0A03E4D01284E9569@AVMB1.qlogic.org>
-References: <1401117687-28911-1-git-send-email-benoit.taine@lip6.fr>
- <1401117687-28911-8-git-send-email-benoit.taine@lip6.fr>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 1/3] Remove two cancel_delayed_work() calls from the error
+ handler
+Date: Tue, 27 May 2014 07:40:21 +0200
+Message-ID: <53842545.50502@suse.de>
+References: <538359DB.9080601@acm.org> <53835A52.9010306@acm.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_000_F5D084D6342F9B479C34599BB0A03E4D01284E9569AVMB1qlogicor_"
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:32603 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751359AbaE0FB2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 May 2014 01:01:28 -0400
-Received: from pps.filterd (m0000643.ppops.net [127.0.0.1])
-	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id s4R4vjQ8021879
-	for <linux-scsi@vger.kernel.org>; Mon, 26 May 2014 22:01:27 -0700
-Received: from avcashub1.qlogic.com (avcashub3.qlogic.com [198.70.193.117])
-	by mx0b-0016ce01.pphosted.com with ESMTP id 1kurt23frx-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Mon, 26 May 2014 22:01:27 -0700
-In-Reply-To: <1401117687-28911-8-git-send-email-benoit.taine@lip6.fr>
-Content-Language: en-US
+Received: from cantor2.suse.de ([195.135.220.15]:53133 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752845AbaE0FkZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 May 2014 01:40:25 -0400
+In-Reply-To: <53835A52.9010306@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Benoit Taine <benoit.taine@lip6.fr>, Chad Dupuis <chad.dupuis@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
+To: Bart Van Assche <bvanassche@acm.org>, James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@infradead.org>
+Cc: Jens Axboe <axboe@kernel.dk>, Paolo Bonzini <pbonzini@redhat.com>, Joe Lawrence <jdl1291@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
---_000_F5D084D6342F9B479C34599BB0A03E4D01284E9569AVMB1qlogicor_
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <D1FF50CF43F07340AE9E534D83A345EF@qlogic.com>
-Content-Transfer-Encoding: quoted-printable
-
-Acked-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
-
-
-
->This issue was reported by coccicheck using the semantic patch
->at scripts/coccinelle/api/memdup.cocci
+On 05/26/2014 05:14 PM, Bart Van Assche wrote:
+> scsi_put_command() is either invoked before a command is queued or
+> after a command has completed. scsi_cmnd.abort_work is scheduled
+> after a command has timed out and before it is finished. The block
+> layer guarantees that either the softirq_done_fn() or the
+> rq_timed_out_fn() function is invoked but not both. This means that
+> scsi_put_command() is never invoked while abort_work is scheduled.
+> Hence remove the cancel_delayed_work() call from scsi_put_command().
 >
->Signed-off-by: Benoit Taine <benoit.taine@lip6.fr>
->---
->Tested by compilation without errors.
+> Similarly, scsi_abort_command() is only invoked from the SCSI
+> timeout handler. If scsi_abort_command() is invoked for a SCSI
+> command with the SCSI_EH_ABORT_SCHEDULED flag set this means that
+> scmd_eh_abort_handler() has already invoked scsi_queue_insert() and
+> hence that scsi_cmnd.abort_work is no longer pending. Hence also
+> remove the cancel_delayed_work() call from scsi_abort_command().
 >
-> drivers/scsi/qla2xxx/qla_mbx.c |    3 +--
-> 1 file changed, 1 insertion(+), 2 deletions(-)
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> Cc: Hannes Reinecke <hare@suse.de>
+> Cc: Paolo Bonzini <pbonzini@redhat.com>
+> Cc: Christoph Hellwig <hch@infradead.org>
+> Cc: Jens Axboe <axboe@fb.com>
+> Cc: Joe Lawrence <joe.lawrence@stratus.com>
+> ---
+>   drivers/scsi/scsi.c       | 2 +-
+>   drivers/scsi/scsi_error.c | 2 +-
+>   2 files changed, 2 insertions(+), 2 deletions(-)
 >
->diff --git a/drivers/scsi/qla2xxx/qla_mbx.c
->b/drivers/scsi/qla2xxx/qla_mbx.c
->index 7f39e36..1c33a77 100644
->--- a/drivers/scsi/qla2xxx/qla_mbx.c
->+++ b/drivers/scsi/qla2xxx/qla_mbx.c
->@@ -1319,7 +1319,7 @@ qla2x00_get_node_name_list(scsi_qla_host_t *vha,
->void **out_data, int *out_len)
->=20
-> 		left =3D 0;
->=20
->-		list =3D kzalloc(dma_size, GFP_KERNEL);
->+		list =3D kmemdup(pmap, dma_size, GFP_KERNEL);
-> 		if (!list) {
-> 			ql_log(ql_log_warn, vha, 0x1140,
-> 			    "%s(%ld): failed to allocate node names list "
->@@ -1328,7 +1328,6 @@ qla2x00_get_node_name_list(scsi_qla_host_t *vha,
->void **out_data, int *out_len)
-> 			goto out_free;
-> 		}
->=20
->-		memcpy(list, pmap, dma_size);
-> restart:
-> 		dma_free_coherent(&ha->pdev->dev, dma_size, pmap, pmap_dma);
-> 	}
+> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+> index 88d46fe..c972eab 100644
+> --- a/drivers/scsi/scsi.c
+> +++ b/drivers/scsi/scsi.c
+> @@ -334,7 +334,7 @@ void scsi_put_command(struct scsi_cmnd *cmd)
+>   	list_del_init(&cmd->list);
+>   	spin_unlock_irqrestore(&cmd->device->list_lock, flags);
 >
+> -	cancel_delayed_work(&cmd->abort_work);
+> +	WARN_ON_ONCE(delayed_work_pending(&cmd->abort_work));
+>
+>   	__scsi_put_command(cmd->device->host, cmd);
+>   }
+> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+> index f17aa7a..5232583 100644
+> --- a/drivers/scsi/scsi_error.c
+> +++ b/drivers/scsi/scsi_error.c
+> @@ -193,7 +193,7 @@ scsi_abort_command(struct scsi_cmnd *scmd)
+>   		SCSI_LOG_ERROR_RECOVERY(3,
+>   			scmd_printk(KERN_INFO, scmd,
+>   				    "scmd %p previous abort failed\n", scmd));
+> -		cancel_delayed_work(&scmd->abort_work);
+> +		WARN_ON_ONCE(delayed_work_pending(&scmd->abort_work));
+>   		return FAILED;
+>   	}
+>
+>
+The first bit is okay, the second isn't.
 
+The second bit is for these cases where the abort got scheduled (in=20
+scsi_abort_command()), but the workqueue didn't get executed by the=20
+time the next timeout occured.
+I know, highly unlikely, but there is no safeguarding that it=20
+_cannot_ happen.
+So the second cancel_delayed_work() has to stay.
 
---_000_F5D084D6342F9B479C34599BB0A03E4D01284E9569AVMB1qlogicor_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
+Cheers,
 
-eJ8+Il4KAQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAADJDODZFNjFB
-NDlFNjg2NEJBMEJCMUNBNTcwNEUwQ0ZDAFcHAQ2ABAACAAAAAgACAAEFgAMADgAAAN4HBQAbAAUA
-AQAYAAIAJQEBIIADAA4AAADeBwUAGwAFAAEAGAACACUBAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
-YWlsLk5vdGUAMQgBBIABAEIAAABSZTogW1BBVENIIDcvMThdIHFsYTJ4eHg6IFVzZSBrbWVtZHVw
-IGluc3RlYWQgb2Yga21hbGxvYyArIG1lbWNweQCwFQEDkAYA6BAAADUAAAACAX8AAQAAAD4AAAA8
-RjVEMDg0RDYzNDJGOUI0NzlDMzQ1OTlCQjBBMDNFNEQwMTI4NEU5NTY5QEFWTUIxLnFsb2dpYy5v
-cmc+AAAACwAfDgEAAAACAQkQAQAAAAAEAAD8AwAA8gYAAExaRnU+mWt4YQAKZmJpZAQAAGNjwHBn
-MTI1MgD+A0PwdGV4dAH3AqQD4wIABGNoCsBzZXQwIO8HbQKDAFARTTIKgAa0AoCWfQqACMg7CWIx
-OQ7AvwnDFnIKMhZxAoAVYioJsHMJ8ASQYXQFsg5QA2Bzom8BgCBFeBHBbhgwXQZSdgSQF7YCEHIA
-wHR9CFBuGjEQIAXABaAbZGSaIANSIBAiF7JcdgiQ5HdrC4BkNR1TBPAHQA0XcDAKcRfyYmttawZz
-AZAAICBCTV9C4EVHSU59CvwB8QvxECBBY2sJgC1ieQY6BgEIcGF2IEthAHNoeWFwIDxzSSJTLmsi
-xEBxCQBnhQ5QLgWgbT5cbAuAjmUKgST/JZE+VGgEAKYgBAEKUCB3IsAgCXCecAkRHFEiABvRY2MO
-UOJoBZBrIHUAkBnAHMCtKMAgEgADgXQOUCAKsD50EcAmNhiAKaAFA3MvKyhjGFBsHnAvIwBpL+EH
-gG1kdXAkkSiBJjZxJjZTaWcYUCHgGTBmpSHzQgnwb2kFQFQLcWkZ4DxiL3MuAZAlcUCxJWBwNi4D
-UC3nLTIQ9yY3B5An920sgAtgKgACIPsnUC+gaAhgBUAEkANgEfDyLi1+IGQFEBoxK6AE8MUAkC8k
-MGEyeDcwNuKKXwbQeCSQIHwgOCHIMyArMiggMRxwAxDzGeAZlGQsOTELgBIAACDRM+EoKyk6IDI2
-ECwgwxIQM+FzKC0pLX4N4J0BICAyECRgBUBhLzYv+zc7JjZiPe8+/yZjHbEQMIAgN2YzOWUzMUAA
-LjFjMzNhNzfjOTAeoDY0NDGZPc9BX30mRStH4CggRX9GjyZjQFJAPWAxMxZwLEQgKy9K5UqhSRMe
-oF8YMHRf1y+AAQBMsGEHgF8lYB9guihIwl83cjRQH2BfBUDUKnYR0CwmNnYvkBxg5CoqNGFfZBiA
-TuA6UfdOkU/yHnBuPBcDMFF3DJONAaAgHnAZQT0gMBYgn1F+MjBSl01xU1FregdAUQkAYyhkAMBf
-AJB6AmU6IEdGUF9LRaBSTkVMKVOXK1TP6Sy0KHAAwHA6IFZPV1ujUngGkCAoIU1iKQMwvwAAW45S
-wyQwTVAkUChexD5fJ2AEoDogTsJTcHgxODE0ME73Xew4IiIloTvgJWxkKSIgZgtw/x5wHGAYkEVQ
-VfIYgBngTMIvZCBNIQQgVVMiSiwyOPtLJGYhNkvPTN9N707/UA/zUR1eCmdvY3FrEgNQCeD7W29S
-8FwgQFO/UocssQ5g/HkoaII6IFm8W1kJcB9j7jpuz1oDbnJfBaAowAlwiQIwKCYR0C0+cAEA/nZ3
-AHcxWfpZtFmya0AAwB9bXW/ZJVwVQnwQHwBCAAEAAAAeAAAAUwBhAHUAcgBhAHYAIABLAGEAcwBo
-AHkAYQBwAAAAAAAfAGUAAQAAADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwA
-bwBnAGkAYwAuAGMAbwBtAAAAHwBkAAEAAAAKAAAAUwBNAFQAUAAAAAAAAgFBAAEAAAB0AAAAAAAA
-AIErH6S+oxAZnW4A3QEPVAIAAACAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAUwBNAFQA
-UAAAAHMAYQB1AHIAYQB2AC4AawBhAHMAaAB5AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAf
-AAJdAQAAADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMA
-bwBtAAAAHwDlXwEAAAA8AAAAcwBpAHAAOgBzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABx
-AGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAaDAEAAAAeAAAAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkA
-YQBwAAAAAAAfAB8MAQAAADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBn
-AGkAYwAuAGMAbwBtAAAAHwAeDAEAAAAKAAAAUwBNAFQAUAAAAAAAAgEZDAEAAAB0AAAAAAAAAIEr
-H6S+oxAZnW4A3QEPVAIAAACAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAUwBNAFQAUAAA
-AHMAYQB1AHIAYQB2AC4AawBhAHMAaAB5AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAFd
-AQAAADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBt
-AAAAHwD4PwEAAAAeAAAAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAAAAfACNAAQAAADQA
-AABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAi
-QAEAAAAKAAAAUwBNAFQAUAAAAAAAAgH5PwEAAAB0AAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACA
-UwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAUwBNAFQAUAAAAHMAYQB1AHIAYQB2AC4AawBh
-AHMAaAB5AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAldAQAAADQAAABzAGEAdQByAGEA
-dgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAxQAEAAAACAAAAAAAA
-AAsAQDoBAAAAHwAwQAEAAAACAAAAAAAAAB8AGgABAAAAEgAAAEkAUABNAC4ATgBvAHQAZQAAAAAA
-AwDxPwkEAAALAEA6AQAAAAMA/T/kBAAAAgELMAEAAAAQAAAALIbmGknmhkuguxylcE4M/AMAFwAB
-AAAAQAA5AACqKbVoec8BQAAIMMMQX7Voec8BCwAAgAggBgAAAAAAwAAAAAAAAEYAAAAAFIUAAAEA
-AAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAeAAAAYQBjAGMAZQBwAHQAbABhAG4AZwB1AGEAZwBl
-AAAAAAABAAAADAAAAGUAbgAtAFUAUwAAAAsAAIAIIAYAAAAAAMAAAAAAAABGAAAAAAaFAAAAAAAA
-HwA3AAEAAACEAAAAUgBlADoAIABbAFAAQQBUAEMASAAgADcALwAxADgAXQAgAHEAbABhADIAeAB4
-AHgAOgAgAFUAcwBlACAAawBtAGUAbQBkAHUAcAAgAGkAbgBzAHQAZQBhAGQAIABvAGYAIABrAG0A
-YQBsAGwAbwBjACAAKwAgAG0AZQBtAGMAcAB5AAAAHwA9AAEAAAAKAAAAUgBlADoAIAAAAAAAAwA2
-AAAAAAAfAEIQAQAAAHIAAAA8ADEANAAwADEAMQAxADcANgA4ADcALQAyADgAOQAxADEALQA4AC0A
-ZwBpAHQALQBzAGUAbgBkAC0AZQBtAGEAaQBsAC0AYgBlAG4AbwBpAHQALgB0AGEAaQBuAGUAQABs
-AGkAcAA2AC4AZgByAD4AAAAAAAIBcQABAAAAFgAAAAEBz3lotWQ9MvP0pX9Nu+YRymIbs5MAAB8A
-cAABAAAAfAAAAFsAUABBAFQAQwBIACAANwAvADEAOABdACAAcQBsAGEAMgB4AHgAeAA6ACAAVQBz
-AGUAIABrAG0AZQBtAGQAdQBwACAAaQBuAHMAdABlAGEAZAAgAG8AZgAgAGsAbQBhAGwAbABvAGMA
-IAArACAAbQBlAG0AYwBwAHkAAAAfADUQAQAAAHwAAAA8AEYANQBEADAAOAA0AEQANgAzADQAMgBG
-ADkAQgA0ADcAOQBDADMANAA1ADkAOQBCAEIAMABBADAAMwBFADQARAAwADEAMgA4ADQARQA5ADUA
-NgA5AEAAQQBWAE0AQgAxAC4AcQBsAG8AZwBpAGMALgBvAHIAZwA+AAAAHwA5EAEAAADkAAAAPAAx
-ADQAMAAxADEAMQA3ADYAOAA3AC0AMgA4ADkAMQAxAC0AMQAtAGcAaQB0AC0AcwBlAG4AZAAtAGUA
-bQBhAGkAbAAtAGIAZQBuAG8AaQB0AC4AdABhAGkAbgBlAEAAbABpAHAANgAuAGYAcgA+ACAAPAAx
-ADQAMAAxADEAMQA3ADYAOAA3AC0AMgA4ADkAMQAxAC0AOAAtAGcAaQB0AC0AcwBlAG4AZAAtAGUA
-bQBhAGkAbAAtAGIAZQBuAG8AaQB0AC4AdABhAGkAbgBlAEAAbABpAHAANgAuAGYAcgA+AAAAAwDe
-P59OAABAAAcwW4BCtWh5zwEDACYAAAAAAAIBRwABAAAALgAAAGM9VVM7YT0gO3A9UUxvZ2ljO2w9
-QVZNQjEtMTQwNTI3MDUwMTI0Wi0xMjQwMwAAAB8AFRABAAAAWAAAAEQAMQBGAEYANQAwAEMARgA0
-ADMARgAwADcAMwA0ADAAQQBFADkARQA1ADMANABEADgAMwBBADMANAA1AEUARgBAAHEAbABvAGcA
-aQBjAC4AYwBvAG0AAAACARQwAQAAAAwAAABUAAAA+/mEO0EAAAAfAPo/AQAAAB4AAABTAGEAdQBy
-AGEAdgAgAEsAYQBzAGgAeQBhAHAAAAAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAABYAAAB1AHMA
-ZQByAC0AYQBnAGUAbgB0AAAAAAABAAAARgAAAE0AaQBjAHIAbwBzAG8AZgB0AC0ATQBhAGMATwB1
-AHQAbABvAG8AawAvADEANAAuADMALgA5AC4AMQAzADEAMAAzADAAAAAAAB8AAIAfpOszqHouQr57
-eeGpjlSzAQAAADgAAABDAG8AbgB2AGUAcgBzAGEAdABpAG8AbgBJAG4AZABlAHgAVAByAGEAYwBr
-AGkAbgBnAEUAeAAAAAEAAABYAQAASQBJAD0AMAAxADAAMQBDAEYANwA5ADYAOABCADUANAAyADMA
-RQAwAEUANQA2ADkARgBEADgAOAAzADQANQA5AEYARQBCAEUAMgA5AEIAMQAxAEQAOQAyADMANQA0
-ADsAUwBCAE0ASQBEAD0ANgA2ADsAUwBCAFQAPQAzADEAOwBTADIAPQA8AEQANgAzAEIAOQA4ADAA
-NABDAEIANgAzAEEARAA0AEYAQQBBAEQAOQA2ADYAMAAzADcANgA5ADUANgA2ADQANgA0ADcAMQA1
-ADUANwA5ADMAQABhAHYAbQBiADIALgBxAGwAbwBnAGkAYwAuAG8AcgBnAD4AOwBWAGUAcgBzAGkA
-bwBuAD0AVgBlAHIAcwBpAG8AbgAgADEANAAuADIAIAAoAEIAdQBpAGwAZAAgADMAOAA3AC4AMAAp
-ACwAIABTAHQAYQBnAGUAPQBIADkAAAADAA00/T8AAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAACAA
-AAB4AC0AbQBzAC0AaABhAHMALQBhAHQAdABhAGMAaAAAAAEAAAACAAAAAAAAAB8AAICGAwIAAAAA
-AMAAAAAAAABGAQAAACIAAAB4AC0AbwByAGkAZwBpAG4AYQB0AGkAbgBnAC0AaQBwAAAAAAABAAAA
-HgAAAFsAMQAwAC4AMwA1AC4AMQAwADIALgA0ADgAXQAAAAAAuTo=
-
---_000_F5D084D6342F9B479C34599BB0A03E4D01284E9569AVMB1qlogicor_--
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
