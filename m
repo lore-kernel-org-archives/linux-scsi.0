@@ -1,54 +1,45 @@
-From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: iSCSI Expected Data Transfer Length for T10-PI
-Date: Tue, 27 May 2014 20:12:18 +0300
-Message-ID: <5384C772.80007@dev.mellanox.co.il>
-References: <53820C9B.3090003@dev.mellanox.co.il> <8D3D17ACE214DC429325B2B98F3AE712076C662FE9@MX15A.corp.emc.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <8D3D17ACE214DC429325B2B98F3AE712076C662FE9@MX15A.corp.emc.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "Black, David" <david.black@emc.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, Mike Christie <michaelc@cs.wisc.edu>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>, Oren Duer <oren@mellanox.com>, "james.smart@emulex.com" <james.smart@emulex.com>, Or Gerlitz <ogerlitz@mellanox.com>, "cbm@chadalapaka.com" <cbm@chadalapaka.com>, "julians@infinidat.com" <julians@infinidat.com>, "meth@il.ibm.com" <meth@il.ibm.com>, "blaine@ethernetalliance.org" <blaine@ethernetalliance.org>
+From: Fabian Frederick <fabf@skynet.be>
+Subject: [PATCH 1/1] drivers/scsi/lpfc/lpfc_init.c: remove unnecessary casting
+Date: Tue, 27 May 2014 19:49:18 +0200
+Message-ID: <1401212958-7710-1-git-send-email-fabf@skynet.be>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mailrelay008.isp.belgacom.be ([195.238.6.174]:12760 "EHLO
+	mailrelay008.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751372AbaE0RtX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 May 2014 13:49:23 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Fabian Frederick <fabf@skynet.be>, James Smart <james.smart@emulex.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
 
-On 5/27/2014 2:58 PM, Black, David wrote:
-> Hi Sagi,
+Fix coccicheck warning:
+"WARNING: casting value returned by k[cmz]alloc to (struct lpfc_sli_ring *) is useless."
 
-Hey David,
+Cc: James Smart <james.smart@emulex.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+Signed-off-by: Fabian Frederick <fabf@skynet.be>
+---
+ drivers/scsi/lpfc/lpfc_init.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
->
->> RFC-7143 states:
->> "the Expected Data Transfer Length field contains the number of bytes of
->> data involved in this SCSI operation."
->> Since this field relates to *data bytes* I kept T10-PI implicit wrt this
->> field. The iSCSI target calculates the
->> total transfer length (data + protection) from the cdb transfer length
->> field and protect bits.
-> That is wrong.  At the SCSI transport interface (both iSCSI and FCP are
-> SCSI transports), the concept of "data bytes" includes SCSI protection
-> information.
->
->> In FC, the fc_dl field was updated to relate to the total number of
->> transfer bytes and includes
->> data and protection bytes. virtio_scsi was added with a header PI
->> section (virtio_scsi_cmd_req_pi).
-> That is the correct approach.
->
-> At the SCSI transport interface (both FCP and iSCSI are SCSI transports),
-> no distinction is made between user data and protection information.
-> therefore, a transfer of 512 bytes of user data + 8 bytes of protection
-> information is a 520 byte transfer for both protocols.
->
-> The authority for this is SAM-5, or SAM-4 if one wants to refer to an
-> approved standard.  Neither are open to interpretation on this point.
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 635eeb3..50f2a1f 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -4743,9 +4743,9 @@ lpfc_sli_driver_resource_setup(struct lpfc_hba *phba)
+ 	}
+ 
+ 	if (!phba->sli.ring)
+-		phba->sli.ring = (struct lpfc_sli_ring *)
+-			kzalloc(LPFC_SLI3_MAX_RING *
+-			sizeof(struct lpfc_sli_ring), GFP_KERNEL);
++		phba->sli.ring = kzalloc(LPFC_SLI3_MAX_RING *
++					 sizeof(struct lpfc_sli_ring),
++					 GFP_KERNEL);
+ 	if (!phba->sli.ring)
+ 		return -ENOMEM;
+ 
+-- 
+1.8.4.5
 
-I see, thanks for clarifying this for me.
-
-> All SCSI transports are supposed to behave the same way.  I hope this
-> can be corrected quickly.
-
-No problem, I'll fix it.
-
-Sagi.
