@@ -1,40 +1,70 @@
-From: Maurizio Lombardi <mlombard@redhat.com>
-Subject: Re: [PATCH V3] bio: modify __bio_add_page() to accept pages that
- don't start a new segment
-Date: Tue, 27 May 2014 13:14:04 +0200
-Message-ID: <20140527111404.GE2205@dhcp-27-189.brq.redhat.com>
-References: <1398952615-22034-1-git-send-email-mlombard@redhat.com>
- <CACVXFVNSZ7+MxW8-SiLXUFW6pGJ7b-OQzf8-KLzcXyE7BvhbbA@mail.gmail.com>
+From: James Bottomley <jbottomley@parallels.com>
+Subject: Re: [PATCH 2/3] block: Introduce blk_rq_completed()
+Date: Tue, 27 May 2014 11:26:12 +0000
+Message-ID: <1401189970.14454.60.camel@dabdike>
+References: <538359DB.9080601@acm.org> <53835A52.9010306@acm.org>
+					 <53835A77.1090708@acm.org> <1401118025.3303.5.camel@dabdike>
+				 <5384439C.1040604@acm.org> <1401179019.14454.18.camel@dabdike>
+			 <5384541B.1010400@acm.org> <1401186086.14454.43.camel@dabdike>
+		 <53846D3E.6050901@redhat.com> <1401188364.14454.51.camel@dabdike>
+	 <53847364.7060900@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:64206 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750904AbaE0LOP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 May 2014 07:14:15 -0400
-Content-Disposition: inline
-In-Reply-To: <CACVXFVNSZ7+MxW8-SiLXUFW6pGJ7b-OQzf8-KLzcXyE7BvhbbA@mail.gmail.com>
+Received: from mx2.parallels.com ([199.115.105.18]:51723 "EHLO
+	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751886AbaE0L0O convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 May 2014 07:26:14 -0400
+In-Reply-To: <53847364.7060900@redhat.com>
+Content-Language: en-US
+Content-ID: <2A9CB90D6C90D44090B2E6DEB2352AA2@sw.swsoft.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ming Lei <tom.leiming@gmail.com>
-Cc: Al Viro <viro@zeniv.linux.org.uk>, Andrew Morton <akpm@linux-foundation.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Kent Overstreet <kmo@daterainc.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, m.lombardi85@gmail.com
+To: "pbonzini@redhat.com" <pbonzini@redhat.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "bvanassche@acm.org" <bvanassche@acm.org>, "hch@infradead.org" <hch@infradead.org>, "hare@suse.de" <hare@suse.de>, "axboe@kernel.dk" <axboe@kernel.dk>, "jdl1291@gmail.com" <jdl1291@gmail.com>
 
-On Tue, May 27, 2014 at 06:15:45PM +0800, Ming Lei wrote:
+On Tue, 2014-05-27 at 13:13 +0200, Paolo Bonzini wrote:
+> Il 27/05/2014 12:59, James Bottomley ha scritto:
+> > On Tue, 2014-05-27 at 12:47 +0200, Paolo Bonzini wrote:
+> >> Il 27/05/2014 12:21, James Bottomley ha scritto:
+> >>> I could also see us one day extending the TMF capability to abort any
+> >>> running command, which would make even an assertion of block timed out
+> >>> or completed invalid.
+> >>
+> >> Actually the assertion would remain valid, and that's exactly what Bart
+> >> wants to document with this assertion.
+> >
+> > No, it wouldn't: if we abort a running command by definition the command
+> > hadn't timed out and might not be completed.  This is required by TMF
+> > handling because now you have an abort racing with a completion.  Either
+> > the command completes normally because it misses the abort or the abort
+> > gets to it and its returned status is set to TASK_ABORTED.  That's the
+> > only way you can tell if the abort was successful or not.
+> >
+> > If you're thinking we would tell block to ignore returning commands
+> > before issuing the abort, we'd never be able to tell if the abort were
+> > successful, so we have to allow the race to collect the status.
 > 
-> If the page can be merged to last segment, it should have been
-> covered by code in branch of 'if (bio->bi_vcnt > 0) ...', shouldn't it?
-> 
-> Or maybe it is better to make that code cover your case since
-> looks your case is similar with that one according to your commit
-> log.
+> You could use a different mechanism than a softirq to tell the abort 
+> were successful, for example by overriding scsi_done.  But with respect 
+> to the block layer, the mechanics of avoiding the race and double-free 
+> would probably be the same.
 
-the code in this branch does not cover our case, it is intended to cover the case
-where __bio_add_page() is called multiple times with the *same* page as parameter.
-My patch deals with the case when __bio_add_page() is called with *different* pages
-as parameter but physically adjacent to each other.
+I think there's some confusion about what the race and double free is:
+It only occurs with timeouts.  In a timeout situation, the host had
+decided it's not waiting any longer for the target to respond and
+proceeds to error recovery.  At any time between the host making this
+decision up to the point it kicks the target hard enough to clear all
+in-flight commands, the target may return the command.  If we didn't
+have some ignore function on command completions while we're handling
+errors, this would lead to double completion.
 
-That said it is true that maybe this branch can be extended to also cover the case
-I'm dealing with and try to avoid the problem that commit 3979ef4dcf introduced.
+If we decided to allow arbitrary aborts of running commands, we would
+send a TMF in during the normal (i.e. un timed out) command period.
+Because there's no timeout involved, there's no double free problem.
+The race in this case is whether the abort catches the command or not
+and to mediate that race we need the normal status return.
 
-Thanks,
-Maurizio Lombardi
+James
+
