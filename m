@@ -1,84 +1,59 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 3/3] Make SCSI error handler code easier to understand
-Date: Tue, 27 May 2014 07:42:15 +0200
-Message-ID: <538425B7.8030405@suse.de>
-References: <538359DB.9080601@acm.org> <53835A9D.3090104@acm.org>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH 1/3] Remove two cancel_delayed_work() calls from the error
+ handler
+Date: Tue, 27 May 2014 08:08:39 +0200
+Message-ID: <53842BE7.5060304@acm.org>
+References: <538359DB.9080601@acm.org> <53835A52.9010306@acm.org> <53842545.50502@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:53163 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751713AbaE0FmR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 May 2014 01:42:17 -0400
-In-Reply-To: <53835A9D.3090104@acm.org>
+Received: from andre.telenet-ops.be ([195.130.132.53]:37460 "EHLO
+	andre.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750949AbaE0GIl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 May 2014 02:08:41 -0400
+In-Reply-To: <53842545.50502@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>, James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@infradead.org>
+To: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@infradead.org>
 Cc: Jens Axboe <axboe@kernel.dk>, Paolo Bonzini <pbonzini@redhat.com>, Joe Lawrence <jdl1291@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 05/26/2014 05:15 PM, Bart Van Assche wrote:
-> Every now and then someone asks how it is avoided that the SCSI error
-> handler and the SCSI completion handler are invoked concurrently for
-> the same SCSI command. Add a few WARN_ON_ONCE() statements that make
-> it clear how this is avoided.
->
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> Cc: Hannes Reinecke <hare@suse.de>
-> Cc: Paolo Bonzini <pbonzini@redhat.com>
-> Cc: Christoph Hellwig <hch@infradead.org>
-> Cc: Jens Axboe <axboe@fb.com>
-> Cc: Joe Lawrence <joe.lawrence@stratus.com>
-> ---
->   drivers/scsi/scsi_error.c | 6 ++++++
->   1 file changed, 6 insertions(+)
->
-> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> index 5232583..aee0dc0 100644
-> --- a/drivers/scsi/scsi_error.c
-> +++ b/drivers/scsi/scsi_error.c
-> @@ -120,6 +120,8 @@ scmd_eh_abort_handler(struct work_struct *work)
->   	struct scsi_device *sdev =3D scmd->device;
->   	int rtn;
->
-> +	WARN_ON_ONCE(!blk_rq_completed(scmd->request));
-> +
->   	if (scsi_host_eh_past_deadline(sdev->host)) {
->   		SCSI_LOG_ERROR_RECOVERY(3,
->   			scmd_printk(KERN_INFO, scmd,
-> @@ -185,6 +187,8 @@ scsi_abort_command(struct scsi_cmnd *scmd)
->   	struct Scsi_Host *shost =3D sdev->host;
->   	unsigned long flags;
->
-> +	WARN_ON_ONCE(!blk_rq_completed(scmd->request));
-> +
->   	if (scmd->eh_eflags & SCSI_EH_ABORT_SCHEDULED) {
->   		/*
->   		 * Retry after abort failed, escalate to next level.
-> @@ -237,6 +241,8 @@ int scsi_eh_scmd_add(struct scsi_cmnd *scmd, int =
-eh_flag)
->   	unsigned long flags;
->   	int ret =3D 0;
->
-> +	WARN_ON_ONCE(!blk_rq_completed(scmd->request));
-> +
->   	if (!shost->ehandler)
->   		return 0;
->
->
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+On 05/27/14 07:40, Hannes Reinecke wrote:
+> On 05/26/2014 05:14 PM, Bart Van Assche wrote:
+>> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+>> index f17aa7a..5232583 100644
+>> --- a/drivers/scsi/scsi_error.c
+>> +++ b/drivers/scsi/scsi_error.c
+>> @@ -193,7 +193,7 @@ scsi_abort_command(struct scsi_cmnd *scmd)
+>>           SCSI_LOG_ERROR_RECOVERY(3,
+>>               scmd_printk(KERN_INFO, scmd,
+>>                       "scmd %p previous abort failed\n", scmd));
+>> -        cancel_delayed_work(&scmd->abort_work);
+>> +        WARN_ON_ONCE(delayed_work_pending(&scmd->abort_work));
+>>           return FAILED;
+>>       }
+>>
+>>
+> The first bit is okay, the second isn't.
+> 
+> The second bit is for these cases where the abort got scheduled (in
+> scsi_abort_command()), but the workqueue didn't get executed by the time
+> the next timeout occured.
+> I know, highly unlikely, but there is no safeguarding that it _cannot_
+> happen.
+> So the second cancel_delayed_work() has to stay.
 
-Cheers,
+But how could that next timeout occur while abort_work is still pending
+? The block layer removes a request from the timeout list before
+invoking the timeout handler (see also blk_rq_check_expired()). This
+means that no block layer timers are active after abort_work has been
+scheduled and before scmd_eh_abort_handler() is called. This also means
+that a second timeout can only occur after a SCSI command has been
+reinserted to a SCSI device queue. And such a reinsertion can only occur
+after scmd_eh_abort_handler() has started. The pending bit is cleared
+from a work struct before the associated handler is invoked. This is why
+I think the above cancel_delayed_work() statement is not necessary. Or
+did I perhaps overlook something ?
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Bart.
+
