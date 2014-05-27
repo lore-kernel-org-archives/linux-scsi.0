@@ -1,70 +1,57 @@
-From: James Bottomley <jbottomley@parallels.com>
-Subject: Re: [PATCH 2/3] block: Introduce blk_rq_completed()
-Date: Tue, 27 May 2014 11:26:12 +0000
-Message-ID: <1401189970.14454.60.camel@dabdike>
-References: <538359DB.9080601@acm.org> <53835A52.9010306@acm.org>
-					 <53835A77.1090708@acm.org> <1401118025.3303.5.camel@dabdike>
-				 <5384439C.1040604@acm.org> <1401179019.14454.18.camel@dabdike>
-			 <5384541B.1010400@acm.org> <1401186086.14454.43.camel@dabdike>
-		 <53846D3E.6050901@redhat.com> <1401188364.14454.51.camel@dabdike>
-	 <53847364.7060900@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+From: Vaughan Cao <vaughan.cao@oracle.com>
+Subject: [PATCH] notify block layer when using temporary change to cache_type
+Date: Tue, 27 May 2014 19:39:14 +0800
+Message-ID: <1401190754-6822-1-git-send-email-vaughan.cao@oracle.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.parallels.com ([199.115.105.18]:51723 "EHLO
-	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751886AbaE0L0O convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 May 2014 07:26:14 -0400
-In-Reply-To: <53847364.7060900@redhat.com>
-Content-Language: en-US
-Content-ID: <2A9CB90D6C90D44090B2E6DEB2352AA2@sw.swsoft.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:37333 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751142AbaE0Lib (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 May 2014 07:38:31 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "pbonzini@redhat.com" <pbonzini@redhat.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "bvanassche@acm.org" <bvanassche@acm.org>, "hch@infradead.org" <hch@infradead.org>, "hare@suse.de" <hare@suse.de>, "axboe@kernel.dk" <axboe@kernel.dk>, "jdl1291@gmail.com" <jdl1291@gmail.com>
+To: JBottomley@parallels.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, vaughan.cao@oracle.com
 
-On Tue, 2014-05-27 at 13:13 +0200, Paolo Bonzini wrote:
-> Il 27/05/2014 12:59, James Bottomley ha scritto:
-> > On Tue, 2014-05-27 at 12:47 +0200, Paolo Bonzini wrote:
-> >> Il 27/05/2014 12:21, James Bottomley ha scritto:
-> >>> I could also see us one day extending the TMF capability to abort any
-> >>> running command, which would make even an assertion of block timed out
-> >>> or completed invalid.
-> >>
-> >> Actually the assertion would remain valid, and that's exactly what Bart
-> >> wants to document with this assertion.
-> >
-> > No, it wouldn't: if we abort a running command by definition the command
-> > hadn't timed out and might not be completed.  This is required by TMF
-> > handling because now you have an abort racing with a completion.  Either
-> > the command completes normally because it misses the abort or the abort
-> > gets to it and its returned status is set to TASK_ABORTED.  That's the
-> > only way you can tell if the abort was successful or not.
-> >
-> > If you're thinking we would tell block to ignore returning commands
-> > before issuing the abort, we'd never be able to tell if the abort were
-> > successful, so we have to allow the race to collect the status.
-> 
-> You could use a different mechanism than a softirq to tell the abort 
-> were successful, for example by overriding scsi_done.  But with respect 
-> to the block layer, the mechanics of avoiding the race and double-free 
-> would probably be the same.
+This is a fix for commit:
+  39c60a0948cc06139e2fbfe084f83cb7e7deae3b sd: fix array cache flushing bug causing performance problems
+We must notify the block layer via q->flush_flags after temporary change the cache_type to write through.
+If not, SYNCHRONIZE CACHE command will still be generated.
 
-I think there's some confusion about what the race and double free is:
-It only occurs with timeouts.  In a timeout situation, the host had
-decided it's not waiting any longer for the target to respond and
-proceeds to error recovery.  At any time between the host making this
-decision up to the point it kicks the target hard enough to clear all
-in-flight commands, the target may return the command.  If we didn't
-have some ignore function on command completions while we're handling
-errors, this would lead to double completion.
+Signed-off-by: Vaughan Cao <vaughan.cao@oracle.com>
+---
+ drivers/scsi/sd.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-If we decided to allow arbitrary aborts of running commands, we would
-send a TMF in during the normal (i.e. un timed out) command period.
-Because there's no timeout involved, there's no double free problem.
-The race in this case is whether the abort catches the command or not
-and to mediate that race we need the normal status return.
-
-James
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 6146b9d..366e48b 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -144,6 +144,7 @@ sd_store_cache_type(struct device *dev, struct device_attribute *attr,
+ 	struct scsi_sense_hdr sshdr;
+ 	static const char temp[] = "temporary ";
+ 	int len;
++	unsigned flush;
+ 
+ 	if (sdp->type != TYPE_DISK)
+ 		/* no cache control on RBC devices; theoretically they
+@@ -174,6 +175,17 @@ sd_store_cache_type(struct device *dev, struct device_attribute *attr,
+ 	if (sdkp->cache_override) {
+ 		sdkp->WCE = wce;
+ 		sdkp->RCD = rcd;
++
++		/* set flush_flags to notify the block layer */
++		flush = 0;
++		if (sdkp->WCE) {
++			flush |= REQ_FLUSH;
++			if (sdkp->DPOFUA)
++				flush |= REQ_FUA;
++		}
++
++		blk_queue_flush(sdkp->disk->queue, flush);
++
+ 		return count;
+ 	}
+ 
+-- 
+1.9.0
 
