@@ -1,48 +1,53 @@
-From: Maurizio Lombardi <mlombard@redhat.com>
-Subject: Re: [PATCH V3] bio: modify __bio_add_page() to accept pages that
- don't start a new segment
-Date: Tue, 27 May 2014 13:58:59 +0200
-Message-ID: <20140527115859.GA30458@dhcp-27-189.brq.redhat.com>
-References: <1398952615-22034-1-git-send-email-mlombard@redhat.com>
- <CACVXFVNSZ7+MxW8-SiLXUFW6pGJ7b-OQzf8-KLzcXyE7BvhbbA@mail.gmail.com>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [PATCH 2/3] block: Introduce blk_rq_completed()
+Date: Tue, 27 May 2014 13:52:02 +0200
+Message-ID: <53847C62.9070704@redhat.com>
+References: <538359DB.9080601@acm.org> <53835A52.9010306@acm.org>					 <53835A77.1090708@acm.org> <1401118025.3303.5.camel@dabdike>				 <5384439C.1040604@acm.org> <1401179019.14454.18.camel@dabdike>			 <5384541B.1010400@acm.org> <1401186086.14454.43.camel@dabdike>		 <53846D3E.6050901@redhat.com> <1401188364.14454.51.camel@dabdike>	 <53847364.7060900@redhat.com> <1401189970.14454.60.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34167 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:51225 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751678AbaE0L7K (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 May 2014 07:59:10 -0400
-Content-Disposition: inline
-In-Reply-To: <CACVXFVNSZ7+MxW8-SiLXUFW6pGJ7b-OQzf8-KLzcXyE7BvhbbA@mail.gmail.com>
+	id S1752215AbaE0Lwh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 May 2014 07:52:37 -0400
+In-Reply-To: <1401189970.14454.60.camel@dabdike>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ming Lei <tom.leiming@gmail.com>
-Cc: Al Viro <viro@zeniv.linux.org.uk>, Andrew Morton <akpm@linux-foundation.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Kent Overstreet <kmo@daterainc.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, m.lombardi85@gmail.com
+To: James Bottomley <jbottomley@parallels.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "bvanassche@acm.org" <bvanassche@acm.org>, "hch@infradead.org" <hch@infradead.org>, "hare@suse.de" <hare@suse.de>, "axboe@kernel.dk" <axboe@kernel.dk>, "jdl1291@gmail.com" <jdl1291@gmail.com>
 
-On Tue, May 27, 2014 at 06:15:45PM +0800, Ming Lei wrote:
-> 
-> If the page can be merged to last segment, it should have been
-> covered by code in branch of 'if (bio->bi_vcnt > 0) ...', shouldn't it?
-> 
-> Or maybe it is better to make that code cover your case since
-> looks your case is similar with that one according to your commit
-> log.
+Il 27/05/2014 13:26, James Bottomley ha scritto:
+>> You could use a different mechanism than a softirq to tell the abort
+>> were successful, for example by overriding scsi_done.  But with respect
+>> to the block layer, the mechanics of avoiding the race and double-free
+>> would probably be the same.
 >
+> I think there's some confusion about what the race and double free is:
+> It only occurs with timeouts.  In a timeout situation, the host had
+> decided it's not waiting any longer for the target to respond and
+> proceeds to error recovery.  At any time between the host making this
+> decision up to the point it kicks the target hard enough to clear all
+> in-flight commands, the target may return the command.  If we didn't
+> have some ignore function on command completions while we're handling
+> errors, this would lead to double completion.
+>
+> If we decided to allow arbitrary aborts of running commands, we would
+> send a TMF in during the normal (i.e. un timed out) command period.
+> Because there's no timeout involved, there's no double free problem.
+> The race in this case is whether the abort catches the command or not
+> and to mediate that race we need the normal status return.
 
-I realized that maybe you mean this branch:
+I'm not sure why "no timeout" implies "no double free".  There would 
+still be a race between the interrupt handler and softirq on one side, 
+and the abort handler on the other.  The interrupt handler's call to 
+cmd->scsi_done ends up triggering the softirq and thus freeing the 
+command with scsi_put_command.  The abort handler, as you mentioned, 
+wants the status return so it needs the interrupt handler to run---but 
+not the softirq.
 
-if (bio->bi_vcnt > 1 && (BIOVEC_PHYS_MERGEABLE(bvec-1, bvec)))
+A simple way to avoid this could be to skip the softirq processing, by 
+marking the request block-layer-complete, and do everything in the abort 
+handler.  The interrupt handler would still run and fill in the status.
 
-right?
-In this case the branch is not even reached in the original code because
-the function returned an error way before executing it (line 760)
-
-There was already a patchset trying to modify the code in a different way than mine:
-
-https://groups.google.com/forum/#!msg/linux.kernel/3IanUpBVhFQ/3Xbg3yLRFp4J
-
-but it has been ignored and in my opinion it takes a more
-complicated approach.
-
-Regards,
-Maurizio Lombardi
+Paolo
