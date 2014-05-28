@@ -1,98 +1,93 @@
-From: Vaughan Cao <vaughan.cao@oracle.com>
-Subject: Re: [PATCH] notify block layer when using temporary change to cache_type
-Date: Wed, 28 May 2014 12:58:27 +0800
-Message-ID: <1401253107-16138-1-git-send-email-vaughan.cao@oracle.com>
-References: <1401190754-6822-1-git-send-email-vaughan.cao@oracle.com> <1401207496.14454.90.camel@dabdike>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1401207496.14454.90.camel@dabdike>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, vaughan.cao@oracle.com
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [PATCH] virtio-scsi: replace target spinlock with seqcount
+Date: Wed, 28 May 2014 10:52:24 +0200
+Message-ID: <5385A3C8.7090305@redhat.com>
+References: <20140527165031.GA21827@google.com>	<5384C3F4.6080101@redhat.com> <CACVXFVN8qaJVkipoKmvepfm0nAoeV0hGagzc=o=3DqVymDt+Xw@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:46273 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752272AbaE1Iwa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 28 May 2014 04:52:30 -0400
+In-Reply-To: <CACVXFVN8qaJVkipoKmvepfm0nAoeV0hGagzc=o=3DqVymDt+Xw@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Ming Lei <tom.leiming@gmail.com>
+Cc: Venkatesh Srinivas <venkateshs@google.com>, Linux SCSI List <linux-scsi@vger.kernel.org>
 
-On 05/28/2014 12:18 AM, James Bottomley wrote:
-> On Tue, 2014-05-27 at 19:39 +0800, Vaughan Cao wrote:
->> This is a fix for commit:
->>   39c60a0948cc06139e2fbfe084f83cb7e7deae3b sd: fix array cache flushing bug causing performance problems
->> We must notify the block layer via q->flush_flags after temporary change the cache_type to write through.
->> If not, SYNCHRONIZE CACHE command will still be generated.
+Il 28/05/2014 03:48, Ming Lei ha scritto:
+> On Wed, May 28, 2014 at 12:57 AM, Paolo Bonzini <pbonzini@redhat.com> wrote:
+>> Il 27/05/2014 18:50, Venkatesh Srinivas ha scritto:
 >>
->> Signed-off-by: Vaughan Cao <vaughan.cao@oracle.com>
->> ---
->>  drivers/scsi/sd.c | 12 ++++++++++++
->>  1 file changed, 12 insertions(+)
+>>> Hi,
+>>>
+>>> I think this patch has a small race involving just two commands:
+>>>
+>>> 1. The first command to a target is in virtscsi_pick_vq(), after
+>>>    atomic_inc_return(&tgt->tgt_lock)) but before write_seqcount_begin()
+>
+> Good catch, thanks Venkatesh
+>
+> And it doesn't happen in my test, so looks it won't be easy to trigger, :-)
+
+No, it's basically impossible because the race window is very small and 
+the first command (INQUIRY or REPORT LUNS) is likely to be synchronous 
+anyway.  But it's there anyway.
+
+>>> Specifically:
+>>>
+>>> @@ -508,19 +507,33 @@ static struct virtio_scsi_vq
+>>> *virtscsi_pick_vq(struct virtio_scsi *vscsi,
+>>>      unsigned long flags;
+>>>      u32 queue_num;
+>>>
+>>> -    spin_lock_irqsave(&tgt->tgt_lock, flags);
+>>> +    local_irq_save(flags);
+>>> +    if (atomic_inc_return(&tgt->reqs) > 1) {
+>>> +        unsigned long seq;
+>>> +
+>>> +        do {
+>>> +            seq = read_seqcount_begin(&tgt->tgt_seq);
+>>> +            vq = tgt->req_vq;
+>>> +        } while (read_seqcount_retry(&tgt->tgt_seq, seq));
+>>> +    } else {
+>>>
+>>> A second virtscsi_pick_vq() here will read a stale or NULL tgt->req_vq.
 >>
->> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
->> index 6146b9d..366e48b 100644
->> --- a/drivers/scsi/sd.c
->> +++ b/drivers/scsi/sd.c
->> @@ -144,6 +144,7 @@ sd_store_cache_type(struct device *dev, struct device_attribute *attr,
-> This is a weird function name.  The name in the vanilla kernel is
-> cache_type_store().
-Sorry, this patch is created on oracle uek kernel, I just checked it can
-apply to vanilla kernel cleanly and didn't notice they are using
-different device attribute function name.
-
->>  	struct scsi_sense_hdr sshdr;
->>  	static const char temp[] = "temporary ";
->>  	int len;
->> +	unsigned flush;
->>  
->>  	if (sdp->type != TYPE_DISK)
->>  		/* no cache control on RBC devices; theoretically they
->> @@ -174,6 +175,17 @@ sd_store_cache_type(struct device *dev, struct device_attribute *attr,
->>  	if (sdkp->cache_override) {
->>  		sdkp->WCE = wce;
->>  		sdkp->RCD = rcd;
+>>
+>> The NULL case is true, indeed I was going to send a patch to initialize
+>> tgt->req_vq but I have not tested it.
+>>
+>> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+>> index fc054935eb1f..f0b4cdbfceb0 100644
+>> --- a/drivers/scsi/virtio_scsi.c
+>> +++ b/drivers/scsi/virtio_scsi.c
+>> @@ -618,14 +631,17 @@ static int virtscsi_abort(struct scsi_cmnd *sc)
+>>
+>>  static int virtscsi_target_alloc(struct scsi_target *starget)
+>>  {
+>> +       struct Scsi_Host *sh = dev_to_shost(starget->dev.parent);
+>> +       struct virtio_scsi *vscsi = shost_priv(sh);
 >> +
->> +		/* set flush_flags to notify the block layer */
->> +		flush = 0;
->> +		if (sdkp->WCE) {
->> +			flush |= REQ_FLUSH;
->> +			if (sdkp->DPOFUA)
->> +				flush |= REQ_FUA;
->> +		}
->> +
->> +		blk_queue_flush(sdkp->disk->queue, flush);
->> +
-> Is there a reason you cut and paste from sd_revalidate_disk() instead of
-> just calling it directly?
-No, I just want to keep the modification as small as possible. Checked
-the actions of sd_revalidate_disk() again, it seems no harm to call it
-from here. Also actual actions are skipped in sd_read_cache_type() if
-cache_override!=0, so I suppose your original plan is to jump to
-sd_revalidate_disk() from here.
-
-However, that way may not be acceptable after further code review.
-Changing the sdkp->WCE,RCD will cause these real parameters of the
-underlying device *lost*. In sd_shutdown() and sd_suspend_common(), we
-need them to call sd_sync_cache() if necessary. I don't think this
-action is avoidable, just for the performance issue to solve. And we
-can't change the mode just by setting q->flush_flags while leave
-sdkp->WCE,RCD untouched either, because cache_type_show() needs
-sdkp->WCE,RCD to present the temporary config to userspace.
-
-static void sd_shutdown(struct device *dev)
-{
-...
-	if (sdkp->WCE && sdkp->media_present) {
-		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
-		sd_sync_cache(sdkp);
-	}
-
-static int sd_suspend_common(struct device *dev, bool ignore_stop_errors)
-{
-...
-	if (sdkp->WCE && sdkp->media_present) {
-		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
-		ret = sd_sync_cache(sdkp);
-
-So, It seems new fields like realWCE and readRCD in scsi_disk are needed
-to save those configuration. What's your opinion?
-
-Vaughan
+>>         struct virtio_scsi_target_state *tgt =
+>>                                 kmalloc(sizeof(*tgt), GFP_KERNEL);
+>>         if (!tgt)
+>>                 return -ENOMEM;
+>>
+>>
+>>         seqcount_init(&tgt->tgt_seq);
+>>         atomic_set(&tgt->reqs, 0);
+>> -       tgt->req_vq = NULL;
+>> +       tgt->req_vq = &vscsi->req_vqs[0];
+>>
+>>         starget->hostdata = tgt;
+>>         return 0;
 >
-> James
->
->
->
+> Paolo, do you need me to integrate this one into the patch? or
+> you will make it as one standalone?
+
+I will integrate it myself after testing it.
+
+Paolo
