@@ -1,51 +1,108 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [target:for-next 20/20] drivers/scsi/virtio_scsi.c:531:48:
- error: dereferencing pointer to incomplete type
-Date: Tue, 27 May 2014 15:21:44 -0700
-Message-ID: <1401229304.12413.24.camel@haakon3.risingtidesystems.com>
-References: <537d6b74.lQGMmmapPq/MP5Nx%fengguang.wu@intel.com>
-	 <1400791590.26558.6.camel@haakon3.risingtidesystems.com>
-	 <537F12C1.4080407@redhat.com>
-	 <1400867110.30565.6.camel@haakon3.risingtidesystems.com>
-	 <yq1d2f0ih1i.fsf@sermon.lab.mkp.net>
+From: Ming Lei <tom.leiming@gmail.com>
+Subject: Re: [PATCH] virtio-scsi: replace target spinlock with seqcount
+Date: Wed, 28 May 2014 09:48:50 +0800
+Message-ID: <CACVXFVN8qaJVkipoKmvepfm0nAoeV0hGagzc=o=3DqVymDt+Xw@mail.gmail.com>
+References: <20140527165031.GA21827@google.com>
+	<5384C3F4.6080101@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:57613 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752544AbaE0WVq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 May 2014 18:21:46 -0400
-In-Reply-To: <yq1d2f0ih1i.fsf@sermon.lab.mkp.net>
+Received: from mail-vc0-f171.google.com ([209.85.220.171]:43226 "EHLO
+	mail-vc0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751966AbaE1Bsv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 May 2014 21:48:51 -0400
+Received: by mail-vc0-f171.google.com with SMTP id lc6so11686050vcb.30
+        for <linux-scsi@vger.kernel.org>; Tue, 27 May 2014 18:48:51 -0700 (PDT)
+In-Reply-To: <5384C3F4.6080101@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Paolo Bonzini <pbonzini@redhat.com>, kbuild test robot <fengguang.wu@intel.com>, kbuild-all@01.org, linux-scsi <linux-scsi@vger.kernel.org>
+To: Paolo Bonzini <pbonzini@redhat.com>
+Cc: Venkatesh Srinivas <venkateshs@google.com>, Linux SCSI List <linux-scsi@vger.kernel.org>
 
-On Mon, 2014-05-26 at 13:30 -0400, Martin K. Petersen wrote:
-> >>>>> "Nic" == Nicholas A Bellinger <nab@linux-iscsi.org> writes:
-> 
-> >> What about #ifdef'ing VIRTIO_SCSI_F_T10_PI support out if
-> >> !CONFIG_BLK_DEV_INTEGRITY?
-> 
-> Nic> I figured it was slightly cleaner to enable BLK_DEV_INTEGRITY by
-> Nic> default when referencing struct blk_integrity (following what
-> Nic> IBLOCK does), than adding the equivalent #ifdef's..
-> 
-> Nic> MKP, do you have a preference on this..?
-> 
-> Well, I guess how important the virtio stuff is in the embedded space?
-> 
-> In the block layer we have all these wrappers that allow things to Do
-> The Right Thing when the BLK_DEV_INTEGRITY is disabled. I'm not entirely
-> sure it worth the hassle to do the same for target and virtio. The
-> memory savings aren't that big to begin with.
-> 
-> And besides, the bip pointer field in struct bio is about to become
-> generic with my impending copy offload patches anyway,
-> 
+On Wed, May 28, 2014 at 12:57 AM, Paolo Bonzini <pbonzini@redhat.com> wrote:
+> Il 27/05/2014 18:50, Venkatesh Srinivas ha scritto:
+>
+>> Hi,
+>>
+>> I think this patch has a small race involving just two commands:
+>>
+>> 1. The first command to a target is in virtscsi_pick_vq(), after
+>>    atomic_inc_return(&tgt->tgt_lock)) but before write_seqcount_begin()
 
-In that case, I'll leave as is unless Paolo has an objection.
+Good catch, thanks Venkatesh
 
---nab
+And it doesn't happen in my test, so looks it won't be easy to trigger, :-)
 
+>> 2. A second command to the same target enters virtscsi_pick_vq(). It
+>>    will hit the same atomic inc, take the upper branch of the
+>>    conditional, and read out a stale (or NULL) tgt->req_vq.
+
+Yes, that can't be avoided without spinlock and the 'stale' req_vq is
+still fine, and it isn't a big deal since the window is very very small.
+
+>>
+>> Specifically:
+>>
+>> @@ -508,19 +507,33 @@ static struct virtio_scsi_vq
+>> *virtscsi_pick_vq(struct virtio_scsi *vscsi,
+>>      unsigned long flags;
+>>      u32 queue_num;
+>>
+>> -    spin_lock_irqsave(&tgt->tgt_lock, flags);
+>> +    local_irq_save(flags);
+>> +    if (atomic_inc_return(&tgt->reqs) > 1) {
+>> +        unsigned long seq;
+>> +
+>> +        do {
+>> +            seq = read_seqcount_begin(&tgt->tgt_seq);
+>> +            vq = tgt->req_vq;
+>> +        } while (read_seqcount_retry(&tgt->tgt_seq, seq));
+>> +    } else {
+>>
+>> A second virtscsi_pick_vq() here will read a stale or NULL tgt->req_vq.
+>
+>
+> The NULL case is true, indeed I was going to send a patch to initialize
+> tgt->req_vq but I have not tested it.
+>
+> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+> index fc054935eb1f..f0b4cdbfceb0 100644
+> --- a/drivers/scsi/virtio_scsi.c
+> +++ b/drivers/scsi/virtio_scsi.c
+> @@ -618,14 +631,17 @@ static int virtscsi_abort(struct scsi_cmnd *sc)
+>
+>  static int virtscsi_target_alloc(struct scsi_target *starget)
+>  {
+> +       struct Scsi_Host *sh = dev_to_shost(starget->dev.parent);
+> +       struct virtio_scsi *vscsi = shost_priv(sh);
+> +
+>         struct virtio_scsi_target_state *tgt =
+>                                 kmalloc(sizeof(*tgt), GFP_KERNEL);
+>         if (!tgt)
+>                 return -ENOMEM;
+>
+>
+>         seqcount_init(&tgt->tgt_seq);
+>         atomic_set(&tgt->reqs, 0);
+> -       tgt->req_vq = NULL;
+> +       tgt->req_vq = &vscsi->req_vqs[0];
+>
+>         starget->hostdata = tgt;
+>         return 0;
+
+Paolo, do you need me to integrate this one into the patch? or
+you will make it as one standalone?
+
+>
+>
+> The case of a stale req_vq is okay and is the (IMO reasonable) price to
+> pay for allowing more concurrency.  If you have concurrent requests
+> from multiple VCPUs, multiqueue is not great for your workload anyway,
+> at least with the current steering algorithm.
+>
+> Paolo
+
+
+Thanks,
+-- 
+Ming Lei
