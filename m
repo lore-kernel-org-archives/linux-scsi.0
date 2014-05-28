@@ -1,108 +1,76 @@
-From: Ming Lei <tom.leiming@gmail.com>
-Subject: Re: [PATCH] virtio-scsi: replace target spinlock with seqcount
-Date: Wed, 28 May 2014 09:48:50 +0800
-Message-ID: <CACVXFVN8qaJVkipoKmvepfm0nAoeV0hGagzc=o=3DqVymDt+Xw@mail.gmail.com>
-References: <20140527165031.GA21827@google.com>
-	<5384C3F4.6080101@redhat.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: [Announce] smp_utils-0.98 available
+Date: Wed, 28 May 2014 00:07:05 -0400
+Message-ID: <538560E9.1030907@interlog.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-vc0-f171.google.com ([209.85.220.171]:43226 "EHLO
-	mail-vc0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751966AbaE1Bsv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 May 2014 21:48:51 -0400
-Received: by mail-vc0-f171.google.com with SMTP id lc6so11686050vcb.30
-        for <linux-scsi@vger.kernel.org>; Tue, 27 May 2014 18:48:51 -0700 (PDT)
-In-Reply-To: <5384C3F4.6080101@redhat.com>
+Received: from smtp.infotech.no ([82.134.31.41]:36005 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750709AbaE1EHN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 28 May 2014 00:07:13 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by smtp.infotech.no (Postfix) with ESMTP id 9F5042041BD
+	for <linux-scsi@vger.kernel.org>; Wed, 28 May 2014 06:07:09 +0200 (CEST)
+Received: from smtp.infotech.no ([127.0.0.1])
+	by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id 7RfmIkXgUh7e for <linux-scsi@vger.kernel.org>;
+	Wed, 28 May 2014 06:07:07 +0200 (CEST)
+Received: from [192.168.48.86] (host-23-251-189-16.dyn.295.ca [23.251.189.16])
+	by smtp.infotech.no (Postfix) with ESMTPA id EAB1C20415B
+	for <linux-scsi@vger.kernel.org>; Wed, 28 May 2014 06:07:06 +0200 (CEST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Paolo Bonzini <pbonzini@redhat.com>
-Cc: Venkatesh Srinivas <venkateshs@google.com>, Linux SCSI List <linux-scsi@vger.kernel.org>
+To: SCSI development list <linux-scsi@vger.kernel.org>
 
-On Wed, May 28, 2014 at 12:57 AM, Paolo Bonzini <pbonzini@redhat.com> wrote:
-> Il 27/05/2014 18:50, Venkatesh Srinivas ha scritto:
->
->> Hi,
->>
->> I think this patch has a small race involving just two commands:
->>
->> 1. The first command to a target is in virtscsi_pick_vq(), after
->>    atomic_inc_return(&tgt->tgt_lock)) but before write_seqcount_begin()
+smp_utils is a package of command line utilities for invoking
+SMP functions to monitor and manage SAS expanders. SMP is the
+Serial Attached SCSI (SAS) Serial Management Protocol. A SAS Host
+Bus Adapter (HBA) includes a SMP initiator (along with SSP and
+STP initiators). A SAS expander contains a SMP target. Several
+SAS HBAs have a SMP pass through interface that can be used to
+send SMP requests and receive the responses. This package is
+designed to work with the Linux kernel (lk) 2.6 and 3 series,
+FreeBSD 9.0 (and later) and recent Solaris versions.
 
-Good catch, thanks Venkatesh
+Three interfaces are available for Linux: "sgv4", "mptctl" and
+"aac". The "sgv4" interface uses the bsg driver. The "aac"
+interface is new in this version and requires a recent aacraid
+driver and firmware in the controller.
 
-And it doesn't happen in my test, so looks it won't be easy to trigger, :-)
+For an overview, examples and downloads of smp_utils see:
+http://sg.danny.cz/sg/smp_utils.html
 
->> 2. A second command to the same target enters virtscsi_pick_vq(). It
->>    will hit the same atomic inc, take the upper branch of the
->>    conditional, and read out a stale (or NULL) tgt->req_vq.
+Changelog for smp_utils-0.98 [20140526] [svn:r138]
+   - add Linux aacraid support, interface name : aac
+     - device name has form /dev/aac[N[,E_ID]]
+   - smp_discover, smp_discover_list: in 1 line summary use
+     routing attribute "U" instead of "T" if "table to
+     table supported" set in report general response
+     - output device slot (group) number if len > 109
+     - add 'attached persistent capable' bit (spl3r2)
+     - add pwr_dis_* fields (spl3r3)
+     - add '--cap' option to decode phy capabilities
+     - change 'end device' to 'SAS or SATA device'
+   - smp_discover: '-mm' produces full output for each phy
+   - smp_rep_broadcast: add broadcast type names
+   - smp_general: add 'initiates ssp close' and 'ssp
+     maximum connect time limit' fields (spl3r04)
+   - add support for mpt3ctl (Linux LSI 12 Gbps HBAs)
+   - change binary install from /usr/sbin to /usr/bin since
+     sbin caused problems
+   - examples folder scripts cleanup
+   - make code more C11/C++ friendly
 
-Yes, that can't be avoided without spinlock and the 'stale' req_vq is
-still fine, and it isn't a big deal since the window is very very small.
+Changelog for smp_utils-0.97 [20120120] [svn:r116]
+...
 
->>
->> Specifically:
->>
->> @@ -508,19 +507,33 @@ static struct virtio_scsi_vq
->> *virtscsi_pick_vq(struct virtio_scsi *vscsi,
->>      unsigned long flags;
->>      u32 queue_num;
->>
->> -    spin_lock_irqsave(&tgt->tgt_lock, flags);
->> +    local_irq_save(flags);
->> +    if (atomic_inc_return(&tgt->reqs) > 1) {
->> +        unsigned long seq;
->> +
->> +        do {
->> +            seq = read_seqcount_begin(&tgt->tgt_seq);
->> +            vq = tgt->req_vq;
->> +        } while (read_seqcount_retry(&tgt->tgt_seq, seq));
->> +    } else {
->>
->> A second virtscsi_pick_vq() here will read a stale or NULL tgt->req_vq.
->
->
-> The NULL case is true, indeed I was going to send a patch to initialize
-> tgt->req_vq but I have not tested it.
->
-> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-> index fc054935eb1f..f0b4cdbfceb0 100644
-> --- a/drivers/scsi/virtio_scsi.c
-> +++ b/drivers/scsi/virtio_scsi.c
-> @@ -618,14 +631,17 @@ static int virtscsi_abort(struct scsi_cmnd *sc)
->
->  static int virtscsi_target_alloc(struct scsi_target *starget)
->  {
-> +       struct Scsi_Host *sh = dev_to_shost(starget->dev.parent);
-> +       struct virtio_scsi *vscsi = shost_priv(sh);
-> +
->         struct virtio_scsi_target_state *tgt =
->                                 kmalloc(sizeof(*tgt), GFP_KERNEL);
->         if (!tgt)
->                 return -ENOMEM;
->
->
->         seqcount_init(&tgt->tgt_seq);
->         atomic_set(&tgt->reqs, 0);
-> -       tgt->req_vq = NULL;
-> +       tgt->req_vq = &vscsi->req_vqs[0];
->
->         starget->hostdata = tgt;
->         return 0;
+SAS expanders often include a SCSI Enclosure Services (SES)
+device. SES devices can be accessed with the sg_ses utility
+in the sg3_utils version 1.38 package.
+See http://sg.danny.cz/sg/sg3_utils.html and
+http://sg.danny.cz/sg/sg_ses.html
 
-Paolo, do you need me to integrate this one into the patch? or
-you will make it as one standalone?
-
->
->
-> The case of a stale req_vq is okay and is the (IMO reasonable) price to
-> pay for allowing more concurrency.  If you have concurrent requests
-> from multiple VCPUs, multiqueue is not great for your workload anyway,
-> at least with the current steering algorithm.
->
-> Paolo
-
-
-Thanks,
--- 
-Ming Lei
+Doug Gilbert
