@@ -1,96 +1,95 @@
-From: Ewan Milne <emilne@redhat.com>
-Subject: Re: [PATCHv2 0/5] Support 64-bit LUNs
-Date: Wed, 28 May 2014 16:30:11 -0400
-Message-ID: <1401309011.3813.212.camel@localhost.localdomain>
-References: <1400583791-123120-1-git-send-email-hare@suse.de>
-Reply-To: emilne@redhat.com
+From: Joe Lawrence <joe.lawrence@stratus.com>
+Subject: Re: Make SCSI error handler code easier to understand
+Date: Wed, 28 May 2014 16:15:28 -0400
+Message-ID: <20140528161528.55443865@jlaw-desktop.mno.stratus.com>
+References: <538359DB.9080601@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52444 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751525AbaE1Uan (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 28 May 2014 16:30:43 -0400
-In-Reply-To: <1400583791-123120-1-git-send-email-hare@suse.de>
+Received: from p01c11o147.mxlogic.net ([208.65.144.70]:37551 "EHLO
+	p01c11o147.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751694AbaE1Uhb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 May 2014 16:37:31 -0400
+In-Reply-To: <538359DB.9080601@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, James Bottomley <jbottomley@parallels.com>
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@kernel.dk>, Paolo Bonzini <pbonzini@redhat.com>, Joe Lawrence <jdl1291@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Bill Kuzeja <william.kuzeja@stratus.com>
 
-On Tue, 2014-05-20 at 13:03 +0200, Hannes Reinecke wrote:
-> Hi all,
-> 
-> this patchset updates the SCSI stack to support full 64-bit LUNs.
-> The first patch is a simple fix; the next patch updates
-> the sequential scan logic to be compliant with SPC.
-> The third patch addresses a firmware issue with earlier
-> qla2xxx HBAs.
-> The last two patches update the SCSI stack and all drivers
-> to use 64-bit LUNs where appropriate.
-> 
-> Two drivers have issues with 64bit LUNs:
-> - The qla2xxx driver uses a 32-bit LUN value for TMFs.
->   But as the driver uses a max_lun value from 0xFFFF
->   we should be safe for the time being.
-> - The zfcp driver uses a 32-bit LUN for debug records; the
->   record format would need to be updated to cope with
->   64-bit LUNs. But again, this driver uses 0xFFFFFFFF
->   for max_lun, so it doesn't do any harm.
-> 
-> The other changes have been pretty straightforward.
-> 
-...
+On Mon, 26 May 2014 17:12:27 +0200
+Bart Van Assche <bvanassche@acm.org> wrote:
 
-So, the patches look like they will work fine...  I think we
-should make sure the comments/documentation match the code, though.
+> Every now and then someone asks how it is avoided that the SCSI error
+> handler and the SCSI completion handler are invoked concurrently for
+> the same SCSI command. Hence this patch series that should make the SCSI
+> error handler code a little easier to understand.
 
-For example:
-  - Remove this reference in Documentation/scsi/tmscsim.txt:
+Hi Bart,
 
-  "The default for LUN Check depends on CONFIG_SCSI_MULTI_LUN."
+We talked about REQ_ATOM_COMPLETE a while back (so I may be one of
+those people who periodically ask about SCSI error handling /
+completion), and I just thought I'd chime in here to clarify the
+scenario we were worried about.
 
-  - include/scsi/scsi_host.h comment needs adjusting due to
-    fields moved in struct Scsi_Host:
+Before d555a2ab "[SCSI] Fix spurious request sense in error handling"
+we saw the following sequence of events:
 
-        /*                                                                                                                                                                                                         
-         * These three parameters can be used to allow for wide
-scsi,                                                                                                                                              
-         * and for host adapters that support multiple
-busses                                                                                                                                                      
-         * The first two should be set to 1 more than the actual max
-id                                                                                                                                            
-         * or lun (e.g. 8 for SCSI parallel
-systems).                                                                                                                                                              
-         */
-        unsigned int max_channel;
-        unsigned int max_id;
-        u64 max_lun;
+  [ 1394.345991] sd 2:0:1:0: [sdw] Done:
+  [ 1394.361790] TIMEOUT
+  [ 1394.374148] sd 2:0:1:0: [sdw]
+  [ 1394.388775] Result: hostbyte=DID_ERROR driverbyte=DRIVER_OK
+  [ 1394.409068] sd 2:0:1:0: [sdw] CDB:
+  [ 1394.424782] Read(10): 28 00 00 00 00 18 00 00 08 00
+  [ 1394.443772] sd 2:0:1:0: [sdw] scmd ffff88104dce02c0 abort scheduled
+  [ 1394.474026] sd 2:0:1:0: [sdw] aborting command ffff88104dce02c0
+  [ 1394.573338] qla2xxx [0000:46:00.0]-801c:2: Abort command issued nexus=2:1:0 --  1 2002.
+  [ 1394.609313] sd 2:0:1:0: [sdw] scmd ffff88104dce02c0 retry aborted command
+  
+  [ 1425.397434] sd 2:0:1:0: [sdw] Done:
+  [ 1425.417802] TIMEOUT
+  [ 1425.431914] sd 2:0:1:0: [sdw]
+  [ 1425.448247] Result: hostbyte=DID_TIME_OUT driverbyte=DRIVER_OK
+  [ 1425.470736] sd 2:0:1:0: [sdw] CDB:
+  [ 1425.488005] Read(10): 28 00 00 00 00 18 00 00 08 00
+  [ 1425.508472] sd 2:0:1:0: [sdw] scmd ffff88104dce02c0 previous abort failed
+  [ 1425.533299] scsi_eh_2: waking up 0/1/1
+  [ 1425.551189] sd 2:0:1:0: scsi_eh_prt_fail_stats: cmds failed: 1, cancel: 0
+  [ 1425.575897] Total of 1 commands on 1 devices require eh work
+  [ 1425.597970] sd 2:0:1:0: [sdw] scsi_eh_2: requesting sense
 
-  - int_to_scsilun() and scsilun_to_int() no longer take/return an int.
-    Yes, the names are exported and that is a pain but it seems to me
-    that this is just asking for an inadvertent truncation of the value.
-    Also, the following comment is no longer true:
+  ie, something like:
 
- *     Note: the scsilun_to_int() routine does not truly handle
-all                                                                                                                                                
- *     8bytes of the lun value. This functions restores only as
-much                                                                                                                                               
- *     as was set by the routine.          
+  CMD -> .queuecommand ... timeout
+  ABORT -> .eh_abort_handler
+  CMD (retry) -> .queuecommand ... timeout
+  ABORT -> scsi_eh_scmd_add(scmd, SCSI_EH_CANCEL_CMD)
+  ... into scsi_error_handler ...
+  REQUEST SENSE -> .queuecommand
 
-So, is ibmvfc the only driver that actually supports a LUN value that is
->32 bits?  Or do we have other drivers that are ready to use this?
+We eventually found our way into scsi_unjam_host, which "*knows*
+that all commands on the bus have either completed, failed or timed
+out.", and then scsi_send_eh_cmnd, which "hijacks" a SCSI command
+structure.  Presumably the second comment follows from the first.
 
-Regardless, I think we should move forward with these changes.
-My concerns could easily be addressed with a subsequent patch.
+But in the case of timeout, when was the LLDD informed to abort or
+forget about that scsi command structure?
 
-Reviewed-by: Ewan D. Milne <emilne@redhat.com>
+In our testing, it appeared that the LLDD's .queuecommand was called
+back-to-back with the same scsi_cmnd pointer.  The driver in question
+was qla2xxx, who keeps a driver-private structure to scsi_cmnd
+mapping (assumed to be one-to-one) that got confused by this sequence
+of events.
 
+After d555a2ab, in this scenario scsi_unjam_host skips the request
+sense and escalates to the next level (scsi_eh_abort_cmds), skipping
+straight to the abort as we would have expected...  This avoids the
+scsi_cmnd "hijack"... but was it ever safe to do so in the first place?
 
+Or should LLDD expect to gracefully handle the same scsi_cmnd pointer
+coming into .queuecommand w/o an intermediate abort or other
+scsi_host_template callback?
 
+Regards,
 
-
-
-                                         
-
-
+-- Joe
