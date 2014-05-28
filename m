@@ -1,33 +1,41 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: Re: [PATCH 3/4] scsi: increase upper limit for max_sectors
-Date: Wed, 28 May 2014 21:28:00 +0900
-Message-ID: <CAC5umygh5YBrpt-L8utZVdmwN-8xUhp99JuOJzUhRD4Hn6f7yg@mail.gmail.com>
-References: <1401021816-10423-1-git-send-email-akinobu.mita@gmail.com>
-	<1401021816-10423-4-git-send-email-akinobu.mita@gmail.com>
-	<20140528103931.GC13542@infradead.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] acornscsi: remove linked command support
+Date: Wed, 28 May 2014 18:26:44 +0400
+Message-ID: <1401287204.2288.28.camel@dabdike>
+References: <1400926433.31526.89.camel@x220>
+	 <20140528104114.GE13542@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-la0-f54.google.com ([209.85.215.54]:38325 "EHLO
-	mail-la0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752124AbaE1M2C (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 May 2014 08:28:02 -0400
-Received: by mail-la0-f54.google.com with SMTP id pv20so7198828lab.41
-        for <linux-scsi@vger.kernel.org>; Wed, 28 May 2014 05:28:00 -0700 (PDT)
-In-Reply-To: <20140528103931.GC13542@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20140528104114.GE13542@infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Christoph Hellwig <hch@infradead.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <JBottomley@parallels.com>, Douglas Gilbert <dgilbert@interlog.com>
+Cc: Paul Bolle <pebolle@tiscali.nl>, Russell King <linux@arm.linux.org.uk>, linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-Hi Christoph,
+On Wed, 2014-05-28 at 03:41 -0700, Christoph Hellwig wrote:
+> On Sat, May 24, 2014 at 12:13:53PM +0200, Paul Bolle wrote:
+> > The acornscsi driver was added in v2.1.88. It has always #undef-ed
+> > CONFIG_SCSI_ACORNSCSI_LINK near the top of acornscsi.c. And, just to be
+> > sure, it has also always triggered a preprocessor error if
+> > CONFIG_SCSI_ACORNSCSI_LINK was still defined. But, as far as I can see,
+> > it has never even been possible to set SCSI_ACORNSCSI_LINK through
+> > kconfig, or its predecessors, in the first place.
+> > 
+> > Let's remove the code involved.
+> > 
+> > Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
+> 
+> Looks good,
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> 
+> And I have to disagree with James here, removing code that isn't even
+> compiled always is an improvement, especially for an unmaintained
+> driver.
 
-Thanks for your review.
+Well, as I said, this is in theory a maintained driver, so just get an
+ack from Russell and this debate is moot.
 
-2014-05-28 19:39 GMT+09:00 Christoph Hellwig <hch@infradead.org>:
-> Looks good, but I think this should be three patches, one for the ioctl
-> in sg, one for the command selection in sd, and one to change the field
-> with in the scsi core.
-
-OK, I'll break this into three patches and rearrange the patchset for
-next submission.
+James
