@@ -1,55 +1,50 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] notify block layer when using temporary change to
- cache_type
-Date: Wed, 28 May 2014 04:23:29 -0700
-Message-ID: <20140528112329.GA11953@infradead.org>
-References: <1401190754-6822-1-git-send-email-vaughan.cao@oracle.com>
- <1401207496.14454.90.camel@dabdike>
- <1401253107-16138-1-git-send-email-vaughan.cao@oracle.com>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [target:for-next 20/20] drivers/scsi/virtio_scsi.c:531:48: error:
+ dereferencing pointer to incomplete type
+Date: Wed, 28 May 2014 13:25:40 +0200
+Message-ID: <5385C7B4.7080603@redhat.com>
+References: <537d6b74.lQGMmmapPq/MP5Nx%fengguang.wu@intel.com>	 <1400791590.26558.6.camel@haakon3.risingtidesystems.com>	 <537F12C1.4080407@redhat.com>	 <1400867110.30565.6.camel@haakon3.risingtidesystems.com>	 <yq1d2f0ih1i.fsf@sermon.lab.mkp.net> <1401229304.12413.24.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1401253107-16138-1-git-send-email-vaughan.cao@oracle.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Vaughan Cao <vaughan.cao@oracle.com>
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:41829 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751778AbaE1LZs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 28 May 2014 07:25:48 -0400
+In-Reply-To: <1401229304.12413.24.camel@haakon3.risingtidesystems.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: kbuild test robot <fengguang.wu@intel.com>, kbuild-all@01.org, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Wed, May 28, 2014 at 12:58:27PM +0800, Vaughan Cao wrote:
-> No, I just want to keep the modification as small as possible. Checked
-> the actions of sd_revalidate_disk() again, it seems no harm to call it
-> from here. Also actual actions are skipped in sd_read_cache_type() if
-> cache_override!=0, so I suppose your original plan is to jump to
-> sd_revalidate_disk() from here.
+Il 28/05/2014 00:21, Nicholas A. Bellinger ha scritto:
+> On Mon, 2014-05-26 at 13:30 -0400, Martin K. Petersen wrote:
+>>>>>>> "Nic" == Nicholas A Bellinger <nab@linux-iscsi.org> writes:
+>>
+>>>> What about #ifdef'ing VIRTIO_SCSI_F_T10_PI support out if
+>>>> !CONFIG_BLK_DEV_INTEGRITY?
+>>
+>> Nic> I figured it was slightly cleaner to enable BLK_DEV_INTEGRITY by
+>> Nic> default when referencing struct blk_integrity (following what
+>> Nic> IBLOCK does), than adding the equivalent #ifdef's..
+>>
+>> Nic> MKP, do you have a preference on this..?
+>>
+>> Well, I guess how important the virtio stuff is in the embedded space?
+>>
+>> In the block layer we have all these wrappers that allow things to Do
+>> The Right Thing when the BLK_DEV_INTEGRITY is disabled. I'm not entirely
+>> sure it worth the hassle to do the same for target and virtio. The
+>> memory savings aren't that big to begin with.
+>>
+>> And besides, the bip pointer field in struct bio is about to become
+>> generic with my impending copy offload patches anyway,
+>>
+>
+> In that case, I'll leave as is unless Paolo has an objection.
 
-I think the right fix is to factor out a helper like:
+No, that's fine.
 
-static void sd_set_flush_flag(struct scsi_disk *sdkp)
-{
-	unsigned flush = 0;
+Paolo
 
-	if (sdkp->WCE) {
-		flush |= REQ_FLUSH;
-		if (sdkp->DPOFUA)
-			flush |= REQ_FUA;
-	}
-
-	blk_queue_flush(sdkp->disk->queue, flush);
-}
-
-which can be called from sd_revalidate_disk and cache_type_store.
-
-> 
-> However, that way may not be acceptable after further code review.
-> Changing the sdkp->WCE,RCD will cause these real parameters of the
-> underlying device *lost*. In sd_shutdown() and sd_suspend_common(), we
-> need them to call sd_sync_cache() if necessary. I don't think this
-> action is avoidable, just for the performance issue to solve. And we
-> can't change the mode just by setting q->flush_flags while leave
-> sdkp->WCE,RCD untouched either, because cache_type_show() needs
-> sdkp->WCE,RCD to present the temporary config to userspace.
-
-If the user overrides the cache type he should expect data not to be
-flushed, so I don't really think this is na issue.  Even if it is it
-should be a separate issue as it already exists before your patch.
