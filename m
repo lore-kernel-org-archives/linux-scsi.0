@@ -1,36 +1,36 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 7/8] be2iscsi: Fix processing cqe for cxn whose endpoint
- is freed
-Date: Wed, 28 May 2014 08:51:05 -0700
-Message-ID: <20140528155105.GA14246@infradead.org>
-References: <1399340492-2136-1-git-send-email-jkallickal@emulex.com>
- <1399340492-2136-7-git-send-email-jkallickal@emulex.com>
- <536AB13E.6080906@cs.wisc.edu>
+Subject: Re: [PATCH] scsi/NCR5380: dprintk macro
+Date: Wed, 28 May 2014 08:53:36 -0700
+Message-ID: <20140528155336.GB14981@infradead.org>
+References: <alpine.LNX.2.00.1405290020570.3539@nippy.intranet>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:36372 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752044AbaE1PvM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 May 2014 11:51:12 -0400
+Return-path: <linux-m68k-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <536AB13E.6080906@cs.wisc.edu>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <alpine.LNX.2.00.1405290020570.3539@nippy.intranet>
+Sender: linux-m68k-owner@vger.kernel.org
+To: Finn Thain <fthain@telegraphics.com.au>
+Cc: Christoph Hellwig <hch@infradead.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, Sam Creasey <sammy@sammy.net>, Russell King <linux@arm.linux.org.uk>, Michael Schmitz <schmitz@debian.org>, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-m68k@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Jay Kallickal <jayamohank@gmail.com>, jbottomley@parallels.com, linux-scsi@vger.kernel.org, Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, Minh Tran <minhduc.tran@emulex.com>, John Soni Jose <sony.john-n@emulex.com>
 
-On Wed, May 07, 2014 at 05:18:38PM -0500, Mike Christie wrote:
-> It looks like if that race is possible then we could also free the ep
-> while you are accessing right? I think you would need to get a ref to
-> the ep.
+On Thu, May 29, 2014 at 12:43:43AM +1000, Finn Thain wrote:
 > 
-> What command/function tells the card to stop sending the driver
-> events/notifications/ios for that connection? Is it beiscsi_close_conn
-> or mgmt_invalidate_connection?
+> This is the delta between the two submissions:
+> [PATCH 00/12] scsi/NCR5380: fix debugging macros and #include structure
+> and
+> [PATCH v2 00/12] scsi/NCR5380: fix debugging macros and #include structure
+> 
+> The macro definition changes were discussed on the mailing list during 
+> review. The idea is to get the compiler to check the parameters of 
+> disabled printk() calls so that the debugging code doesn't rot again.
+> 
+> Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
-Jay,
+Thanks a lot Finn!
 
-can you look into this issue please?  I've applied the series to the
-scsi queue for now, but I'd really prefer to see this addressed ASAP.
+> I know the whitespace is wrong throughout these drivers but when I put 
+> this patch series together it seemed best to defer the whitespace cleanup. 
+>(I still intend to do that cleanup.)
 
+Yes, I ignored the whitespace warnings in the debug macro cleanups.  I
+fixed them up for the "newly" added code in the sun3 driver merge.
