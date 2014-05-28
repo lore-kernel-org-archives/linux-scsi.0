@@ -1,32 +1,44 @@
-From: Robert Love <robert.w.love@intel.com>
-Subject: Open-FCoE Maintainer Transition
-Date: Wed, 28 May 2014 12:46:24 -0700
-Message-ID: <53863D10.8030504@intel.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 76681] Adaptec 7805H SAS HBA (pm80xx) cannot survive ACPI S3 or
+ ACPI S4
+Date: Wed, 28 May 2014 20:10:15 +0000
+Message-ID: <bug-76681-11613-M0E5Vg91Ds@https.bugzilla.kernel.org/>
+References: <bug-76681-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:32579 "EHLO mga01.intel.com"
+Received: from mail.kernel.org ([198.145.19.201]:38426 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751353AbaE1Tq3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 28 May 2014 15:46:29 -0400
+	id S1755251AbaE1UKS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 28 May 2014 16:10:18 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id A711D20306
+	for <linux-scsi@vger.kernel.org>; Wed, 28 May 2014 20:10:17 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+	by mail.kernel.org (Postfix) with ESMTP id B5C9020304
+	for <linux-scsi@vger.kernel.org>; Wed, 28 May 2014 20:10:16 +0000 (UTC)
+In-Reply-To: <bug-76681-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org
-Cc: robert.w.love@intel.com, "Dev, Vasu" <vasu.dev@intel.com>
+To: linux-scsi@vger.kernel.org
 
-Hello community,
+https://bugzilla.kernel.org/show_bug.cgi?id=76681
 
-    It is with mixed feelings that I send this mail to state that I am 
-transitioning maintainership of Open-FCoE. I'm still working on Linux 
-solutions, but now I'm focusing on SDN/NfV technologies. I'll still be 
-around and I'll continue to help where I can.
+Bradley Grove <bgrove@attotech.com> changed:
 
-    Vasu Dev will take over the Open-FCoE project. He's been a developer 
-on the project since the beginning and understands the code base very well.
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |bgrove@attotech.com
 
-    I'll send a patch to update MAINTAINERS shortly.
+--- Comment #2 from Bradley Grove <bgrove@attotech.com> ---
+We've hit the same issue when using the pm80xx driver with our PM8001 based
+card.   After applying Jack's patch we encountered another issue.  When
+powering up after hibernation, the driver receives a MPI event,
+HW_EVENT_PHY_START_STATUS.   The handler for this tries to signal an
+uninitialized completion.   I've been able to work around this by setting the
+HBA struct flags to PM8001F_INIT_TIME until restore() completes.
 
-    It has been a pleasure working with everyone,
-
-Thanks, //Rob
+-- 
+You are receiving this mail because:
+You are the assignee for the bug.
