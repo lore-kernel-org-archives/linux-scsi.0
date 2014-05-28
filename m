@@ -1,41 +1,51 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] acornscsi: remove linked command support
-Date: Wed, 28 May 2014 18:26:44 +0400
-Message-ID: <1401287204.2288.28.camel@dabdike>
-References: <1400926433.31526.89.camel@x220>
-	 <20140528104114.GE13542@infradead.org>
+Subject: Re: [PATCH] scsi_lib: replace ambiguous "Unhandled error code"
+ messages.
+Date: Wed, 28 May 2014 18:27:52 +0400
+Message-ID: <1401287272.2288.29.camel@dabdike>
+References: <1401099204-18050-1-git-send-email-mlombard@redhat.com>
+	 <20140526162506.GB18319@infradead.org>
+	 <20140526192715.GA2271@dhcp-27-189.brq.redhat.com>
+	 <20140528110018.GA30751@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="ISO-8859-15"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140528104114.GE13542@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Paul Bolle <pebolle@tiscali.nl>, Russell King <linux@arm.linux.org.uk>, linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:33203 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932191AbaE1O14 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 28 May 2014 10:27:56 -0400
+In-Reply-To: <20140528110018.GA30751@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Maurizio Lombardi <mlombard@redhat.com>, linux-scsi@vger.kernel.org
 
-On Wed, 2014-05-28 at 03:41 -0700, Christoph Hellwig wrote:
-> On Sat, May 24, 2014 at 12:13:53PM +0200, Paul Bolle wrote:
-> > The acornscsi driver was added in v2.1.88. It has always #undef-ed
-> > CONFIG_SCSI_ACORNSCSI_LINK near the top of acornscsi.c. And, just to be
-> > sure, it has also always triggered a preprocessor error if
-> > CONFIG_SCSI_ACORNSCSI_LINK was still defined. But, as far as I can see,
-> > it has never even been possible to set SCSI_ACORNSCSI_LINK through
-> > kconfig, or its predecessors, in the first place.
+On Wed, 2014-05-28 at 04:00 -0700, Christoph Hellwig wrote:
+> On Mon, May 26, 2014 at 09:27:15PM +0200, Maurizio Lombardi wrote:
+> > > How about simple not setting description at all for this case?
+> > > 
 > > 
-> > Let's remove the code involved.
+> > It has already been proposed before but James didn't like the idea.
 > > 
-> > Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
+> > http://markmail.org/message/dumujpz4gfp3s4fp#query:+page:1+mid:dumujpz4gfp3s4fp+state:results
 > 
-> Looks good,
+> James never replied to Robs question.  I can't think of any value add
+> that "Unhandled XYZ" adds when we already get a usesul message from the
+> same error.
 > 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> 
-> And I have to disagree with James here, removing code that isn't even
-> compiled always is an improvement, especially for an unmaintained
-> driver.
+> James, care to comment what'd you like to see printed here?
 
-Well, as I said, this is in theory a maintained driver, so just get an
-ack from Russell and this debate is moot.
+I'm happy with eliminating "Unhanndled Error Code" because that is
+misleading ... we should only get there if we have a DID_X return and
+they're all fatal errors which will be printed.
+
+I'm less happy removing "Unhandled Sense Code".  The danger is that we
+get some harmless sense code we should have handled and instead error
+the command.  Since for this error we know the next print will be the
+sense code, what about changing it to "Failing Command with sense code:"
 
 James
+
+
