@@ -1,36 +1,46 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] scsi/NCR5380: dprintk macro
-Date: Wed, 28 May 2014 08:53:36 -0700
-Message-ID: <20140528155336.GB14981@infradead.org>
-References: <alpine.LNX.2.00.1405290020570.3539@nippy.intranet>
+From: Sujit Reddy Thumma <sthumma@codeaurora.org>
+Subject: Re: [ANNOUNCE] scsi patch queue tree
+Date: Wed, 28 May 2014 21:31:14 +0530
+Message-ID: <5386084A.6030003@codeaurora.org>
+References: <20140519140614.GA12183@infradead.org> <20140520100343.31490551@canb.auug.org.au> <20140520053928.GA1751@infradead.org> <20140521094636.515289e8@canb.auug.org.au> <1400639101.2481.19.camel@dabdike> <20140528105429.GA20549@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-m68k-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.LNX.2.00.1405290020570.3539@nippy.intranet>
-Sender: linux-m68k-owner@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: Christoph Hellwig <hch@infradead.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, Sam Creasey <sammy@sammy.net>, Russell King <linux@arm.linux.org.uk>, Michael Schmitz <schmitz@debian.org>, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-m68k@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20140528105429.GA20549@infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, May 29, 2014 at 12:43:43AM +1000, Finn Thain wrote:
-> 
-> This is the delta between the two submissions:
-> [PATCH 00/12] scsi/NCR5380: fix debugging macros and #include structure
-> and
-> [PATCH v2 00/12] scsi/NCR5380: fix debugging macros and #include structure
-> 
-> The macro definition changes were discussed on the mailing list during 
-> review. The idea is to get the compiler to check the parameters of 
-> disabled printk() calls so that the debugging code doesn't rot again.
-> 
-> Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
+On 5/28/2014 4:24 PM, Christoph Hellwig wrote:
+> I've pushed the following changes to the drivers-for-3.16 tree.  I've
+> there's anyting matching the rules that I did forget please resend
+> and/or ping me.
+>
+>
+> ----------------------------------------------------------------
+> Benoit Taine (2):
+>        qla4xxx: Use kmemdup instead of kmalloc + memcpy
+>        qla2xxx: Use kmemdup instead of kmalloc + memcpy
+>
+> Dan Carpenter (1):
+>        qla2xxx: fix incorrect debug printk
+>
+> Dolev Raviv (4):
+>        scsi: ufs: query descriptor API
+>        scsi: ufs: device query status and size check
+>        scsi: ufs: Logical Unit (LU) command queue depth
+>        scsi: ufs: Fix queue depth handling for best effort cases
 
-Thanks a lot Finn!
+The above 4 patches are just posted to mailing lists with no
+review/ack's yet. I believe it still went in because the sender has
+modified the author name to himself and signed-off by is present by the
+original author which worked as a positive review for your rules. I
+have asked the sender to check why the original author name is changed.
+Meanwhile, I believe these patches should get some more time for review.
 
-> I know the whitespace is wrong throughout these drivers but when I put 
-> this patch series together it seemed best to defer the whitespace cleanup. 
->(I still intend to do that cleanup.)
 
-Yes, I ignored the whitespace warnings in the debug macro cleanups.  I
-fixed them up for the "newly" added code in the sun3 driver merge.
+-- 
+Regards,
+Sujit
