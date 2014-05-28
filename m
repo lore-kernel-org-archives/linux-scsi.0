@@ -1,76 +1,98 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: [Announce] smp_utils-0.98 available
-Date: Wed, 28 May 2014 00:07:05 -0400
-Message-ID: <538560E9.1030907@interlog.com>
-Reply-To: dgilbert@interlog.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:36005 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750709AbaE1EHN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 28 May 2014 00:07:13 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by smtp.infotech.no (Postfix) with ESMTP id 9F5042041BD
-	for <linux-scsi@vger.kernel.org>; Wed, 28 May 2014 06:07:09 +0200 (CEST)
-Received: from smtp.infotech.no ([127.0.0.1])
-	by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id 7RfmIkXgUh7e for <linux-scsi@vger.kernel.org>;
-	Wed, 28 May 2014 06:07:07 +0200 (CEST)
-Received: from [192.168.48.86] (host-23-251-189-16.dyn.295.ca [23.251.189.16])
-	by smtp.infotech.no (Postfix) with ESMTPA id EAB1C20415B
-	for <linux-scsi@vger.kernel.org>; Wed, 28 May 2014 06:07:06 +0200 (CEST)
-Sender: linux-scsi-owner@vger.kernel.org
+From: Vaughan Cao <vaughan.cao@oracle.com>
+Subject: Re: [PATCH] notify block layer when using temporary change to cache_type
+Date: Wed, 28 May 2014 12:58:27 +0800
+Message-ID: <1401253107-16138-1-git-send-email-vaughan.cao@oracle.com>
+References: <1401190754-6822-1-git-send-email-vaughan.cao@oracle.com> <1401207496.14454.90.camel@dabdike>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1401207496.14454.90.camel@dabdike>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, vaughan.cao@oracle.com
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI development list <linux-scsi@vger.kernel.org>
 
-smp_utils is a package of command line utilities for invoking
-SMP functions to monitor and manage SAS expanders. SMP is the
-Serial Attached SCSI (SAS) Serial Management Protocol. A SAS Host
-Bus Adapter (HBA) includes a SMP initiator (along with SSP and
-STP initiators). A SAS expander contains a SMP target. Several
-SAS HBAs have a SMP pass through interface that can be used to
-send SMP requests and receive the responses. This package is
-designed to work with the Linux kernel (lk) 2.6 and 3 series,
-FreeBSD 9.0 (and later) and recent Solaris versions.
+On 05/28/2014 12:18 AM, James Bottomley wrote:
+> On Tue, 2014-05-27 at 19:39 +0800, Vaughan Cao wrote:
+>> This is a fix for commit:
+>>   39c60a0948cc06139e2fbfe084f83cb7e7deae3b sd: fix array cache flushing bug causing performance problems
+>> We must notify the block layer via q->flush_flags after temporary change the cache_type to write through.
+>> If not, SYNCHRONIZE CACHE command will still be generated.
+>>
+>> Signed-off-by: Vaughan Cao <vaughan.cao@oracle.com>
+>> ---
+>>  drivers/scsi/sd.c | 12 ++++++++++++
+>>  1 file changed, 12 insertions(+)
+>>
+>> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+>> index 6146b9d..366e48b 100644
+>> --- a/drivers/scsi/sd.c
+>> +++ b/drivers/scsi/sd.c
+>> @@ -144,6 +144,7 @@ sd_store_cache_type(struct device *dev, struct device_attribute *attr,
+> This is a weird function name.  The name in the vanilla kernel is
+> cache_type_store().
+Sorry, this patch is created on oracle uek kernel, I just checked it can
+apply to vanilla kernel cleanly and didn't notice they are using
+different device attribute function name.
 
-Three interfaces are available for Linux: "sgv4", "mptctl" and
-"aac". The "sgv4" interface uses the bsg driver. The "aac"
-interface is new in this version and requires a recent aacraid
-driver and firmware in the controller.
+>>  	struct scsi_sense_hdr sshdr;
+>>  	static const char temp[] = "temporary ";
+>>  	int len;
+>> +	unsigned flush;
+>>  
+>>  	if (sdp->type != TYPE_DISK)
+>>  		/* no cache control on RBC devices; theoretically they
+>> @@ -174,6 +175,17 @@ sd_store_cache_type(struct device *dev, struct device_attribute *attr,
+>>  	if (sdkp->cache_override) {
+>>  		sdkp->WCE = wce;
+>>  		sdkp->RCD = rcd;
+>> +
+>> +		/* set flush_flags to notify the block layer */
+>> +		flush = 0;
+>> +		if (sdkp->WCE) {
+>> +			flush |= REQ_FLUSH;
+>> +			if (sdkp->DPOFUA)
+>> +				flush |= REQ_FUA;
+>> +		}
+>> +
+>> +		blk_queue_flush(sdkp->disk->queue, flush);
+>> +
+> Is there a reason you cut and paste from sd_revalidate_disk() instead of
+> just calling it directly?
+No, I just want to keep the modification as small as possible. Checked
+the actions of sd_revalidate_disk() again, it seems no harm to call it
+from here. Also actual actions are skipped in sd_read_cache_type() if
+cache_override!=0, so I suppose your original plan is to jump to
+sd_revalidate_disk() from here.
 
-For an overview, examples and downloads of smp_utils see:
-http://sg.danny.cz/sg/smp_utils.html
+However, that way may not be acceptable after further code review.
+Changing the sdkp->WCE,RCD will cause these real parameters of the
+underlying device *lost*. In sd_shutdown() and sd_suspend_common(), we
+need them to call sd_sync_cache() if necessary. I don't think this
+action is avoidable, just for the performance issue to solve. And we
+can't change the mode just by setting q->flush_flags while leave
+sdkp->WCE,RCD untouched either, because cache_type_show() needs
+sdkp->WCE,RCD to present the temporary config to userspace.
 
-Changelog for smp_utils-0.98 [20140526] [svn:r138]
-   - add Linux aacraid support, interface name : aac
-     - device name has form /dev/aac[N[,E_ID]]
-   - smp_discover, smp_discover_list: in 1 line summary use
-     routing attribute "U" instead of "T" if "table to
-     table supported" set in report general response
-     - output device slot (group) number if len > 109
-     - add 'attached persistent capable' bit (spl3r2)
-     - add pwr_dis_* fields (spl3r3)
-     - add '--cap' option to decode phy capabilities
-     - change 'end device' to 'SAS or SATA device'
-   - smp_discover: '-mm' produces full output for each phy
-   - smp_rep_broadcast: add broadcast type names
-   - smp_general: add 'initiates ssp close' and 'ssp
-     maximum connect time limit' fields (spl3r04)
-   - add support for mpt3ctl (Linux LSI 12 Gbps HBAs)
-   - change binary install from /usr/sbin to /usr/bin since
-     sbin caused problems
-   - examples folder scripts cleanup
-   - make code more C11/C++ friendly
-
-Changelog for smp_utils-0.97 [20120120] [svn:r116]
+static void sd_shutdown(struct device *dev)
+{
 ...
+	if (sdkp->WCE && sdkp->media_present) {
+		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
+		sd_sync_cache(sdkp);
+	}
 
-SAS expanders often include a SCSI Enclosure Services (SES)
-device. SES devices can be accessed with the sg_ses utility
-in the sg3_utils version 1.38 package.
-See http://sg.danny.cz/sg/sg3_utils.html and
-http://sg.danny.cz/sg/sg_ses.html
+static int sd_suspend_common(struct device *dev, bool ignore_stop_errors)
+{
+...
+	if (sdkp->WCE && sdkp->media_present) {
+		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
+		ret = sd_sync_cache(sdkp);
 
-Doug Gilbert
+So, It seems new fields like realWCE and readRCD in scsi_disk are needed
+to save those configuration. What's your opinion?
+
+Vaughan
+>
+> James
+>
+>
+>
