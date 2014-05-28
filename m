@@ -1,31 +1,63 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [ANNOUNCE] scsi patch queue tree
-Date: Wed, 28 May 2014 09:03:58 -0700
-Message-ID: <20140528160358.GA8782@infradead.org>
-References: <20140519140614.GA12183@infradead.org>
- <20140520100343.31490551@canb.auug.org.au>
- <20140520053928.GA1751@infradead.org>
- <20140521094636.515289e8@canb.auug.org.au>
- <1400639101.2481.19.camel@dabdike>
- <20140528105429.GA20549@infradead.org>
- <5386084A.6030003@codeaurora.org>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: [PATCH, repost] mptfusion: fix msgContext in mptctl_hp_hostinfo
+Date: Wed, 28 May 2014 18:04:20 +0200
+Message-ID: <53860904.1090507@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <5386084A.6030003@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Sujit Reddy Thumma <sthumma@codeaurora.org>
-Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:34355 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752074AbaE1QE0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 28 May 2014 12:04:26 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+Cc: "Desai, Kashyap" <Kashyap.Desai@lsi.com>, "Desai, Kashyap" <Kashyap.Desai@avagotech.com>, David Jeffery <djeffery@redhat.com>
 
-On Wed, May 28, 2014 at 09:31:14PM +0530, Sujit Reddy Thumma wrote:
-> The above 4 patches are just posted to mailing lists with no
-> review/ack's yet. I believe it still went in because the sender has
-> modified the author name to himself and signed-off by is present by the
-> original author which worked as a positive review for your rules. I
-> have asked the sender to check why the original author name is changed.
-> Meanwhile, I believe these patches should get some more time for review.
+Hi,
 
-Yes, I did count this as a positive review for now.  I can drop the
-patches for now.
+without this patch the istwiRWRequest->MsgContext is always set to zero,
+this patch saves the MsgContext in a msgcontext variable and then restores
+the value.
+Thanks to  David Jeffery who found the issue and did the analysis.
+
+Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+Acked-by: Desai, Kashyap <Kashyap.Desai@lsi.com>
+---
+ drivers/message/fusion/mptctl.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/message/fusion/mptctl.c b/drivers/message/fusion/mptctl.c
+index dcc8385..8a050e8 100644
+--- a/drivers/message/fusion/mptctl.c
++++ b/drivers/message/fusion/mptctl.c
+@@ -2432,9 +2432,9 @@ mptctl_hp_hostinfo(unsigned long arg, unsigned int data_size)
+ 	int			rc, cim_rev;
+ 	ToolboxIstwiReadWriteRequest_t	*IstwiRWRequest;
+ 	MPT_FRAME_HDR		*mf = NULL;
+-	MPIHeader_t		*mpi_hdr;
+ 	unsigned long		timeleft;
+ 	int			retval;
++	u32			msgcontext;
+ 
+ 	/* Reset long to int. Should affect IA64 and SPARC only
+ 	 */
+@@ -2581,11 +2581,11 @@ mptctl_hp_hostinfo(unsigned long arg, unsigned int data_size)
+ 	}
+ 
+ 	IstwiRWRequest = (ToolboxIstwiReadWriteRequest_t *)mf;
+-	mpi_hdr = (MPIHeader_t *) mf;
++	msgcontext = IstwiRWRequest->MsgContext;
+ 	memset(IstwiRWRequest,0,sizeof(ToolboxIstwiReadWriteRequest_t));
++	IstwiRWRequest->MsgContext = msgcontext;
+ 	IstwiRWRequest->Function = MPI_FUNCTION_TOOLBOX;
+ 	IstwiRWRequest->Tool = MPI_TOOLBOX_ISTWI_READ_WRITE_TOOL;
+-	IstwiRWRequest->MsgContext = mpi_hdr->MsgContext;
+ 	IstwiRWRequest->Flags = MPI_TB_ISTWI_FLAGS_READ;
+ 	IstwiRWRequest->NumAddressBytes = 0x01;
+ 	IstwiRWRequest->DataLength = cpu_to_le16(0x04);
+-- 
+1.8.3.1
+
+
