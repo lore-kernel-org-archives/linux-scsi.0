@@ -1,36 +1,33 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 05/12] scsi/NCR5380: fix build failures when debugging is
- enabled
-Date: Wed, 28 May 2014 05:13:39 -0700
-Message-ID: <20140528121339.GA29126@infradead.org>
-References: <20140318004212.612472697@telegraphics.com.au>
- <20140318004214.102469994@telegraphics.com.au>
- <20140528095015.GE26617@infradead.org>
- <alpine.LNX.2.00.1405282207580.31798@nippy.intranet>
+From: Akinobu Mita <akinobu.mita@gmail.com>
+Subject: Re: [PATCH 3/4] scsi: increase upper limit for max_sectors
+Date: Wed, 28 May 2014 21:28:00 +0900
+Message-ID: <CAC5umygh5YBrpt-L8utZVdmwN-8xUhp99JuOJzUhRD4Hn6f7yg@mail.gmail.com>
+References: <1401021816-10423-1-git-send-email-akinobu.mita@gmail.com>
+	<1401021816-10423-4-git-send-email-akinobu.mita@gmail.com>
+	<20140528103931.GC13542@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-m68k-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.LNX.2.00.1405282207580.31798@nippy.intranet>
-Sender: linux-m68k-owner@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: Christoph Hellwig <hch@infradead.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, Sam Creasey <sammy@sammy.net>, Russell King <linux@arm.linux.org.uk>, Michael Schmitz <schmitz@debian.org>, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-m68k@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-la0-f54.google.com ([209.85.215.54]:38325 "EHLO
+	mail-la0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752124AbaE1M2C (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 May 2014 08:28:02 -0400
+Received: by mail-la0-f54.google.com with SMTP id pv20so7198828lab.41
+        for <linux-scsi@vger.kernel.org>; Wed, 28 May 2014 05:28:00 -0700 (PDT)
+In-Reply-To: <20140528103931.GC13542@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <JBottomley@parallels.com>, Douglas Gilbert <dgilbert@interlog.com>
 
-On Wed, May 28, 2014 at 10:09:33PM +1000, Finn Thain wrote:
-> [PATCH v2 05/12] scsi/NCR5380: fix build failures when debugging is enabled
-> [PATCH v2 06/12] scsi/NCR5380: fix dprintk macro usage and definition
-> [PATCH v2 09/12] scsi/NCR5380: fix and standardize NDEBUG macros
-> 
-> And several patches in the v2 submission had some acked-by tags added.
-> 
-> The v2 series is the one to merge (but I think James intends to do that).
+Hi Christoph,
 
-I've pulled this version into the for-3.16 drivers tree I'm collection
-for james:
+Thanks for your review.
 
-  http://git.infradead.org/users/hch/scsi-queue.git/shortlog/refs/heads/drivers-for-3.16
+2014-05-28 19:39 GMT+09:00 Christoph Hellwig <hch@infradead.org>:
+> Looks good, but I think this should be three patches, one for the ioctl
+> in sg, one for the command selection in sd, and one to change the field
+> with in the scsi core.
 
-  git://git.infradead.org/users/hch/scsi-queue.git drivers-for-3.16
-
-Can you send incremental changes if needed?
+OK, I'll break this into three patches and rearrange the patchset for
+next submission.
