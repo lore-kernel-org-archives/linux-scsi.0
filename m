@@ -1,22 +1,22 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 2 04/24] hpsa: allow passthru ioctls to work with
-	bidirectional commands
-Date: Thu, 29 May 2014 10:52:41 -0500
-Message-ID: <20140529155241.8180.83841.stgit@beardog.cce.hp.com>
+Subject: [PATCH 2 06/24] hpsa: use gcc aligned attribute instead of manually
+	padding structs
+Date: Thu, 29 May 2014 10:52:52 -0500
+Message-ID: <20140529155252.8180.97525.stgit@beardog.cce.hp.com>
 References: <20140529154739.8180.50710.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g9t1613g.houston.hp.com ([15.240.0.71]:37796 "EHLO
-	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757730AbaE2Pyh (ORCPT
+Received: from g2t1383g.austin.hp.com ([15.217.136.92]:19799 "EHLO
+	g2t1383g.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757731AbaE2Pyh (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 May 2014 11:54:37 -0400
 Received: from g2t2352.austin.hp.com (g2t2352.austin.hp.com [15.217.128.51])
 	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by g9t1613g.houston.hp.com (Postfix) with ESMTPS id D83A46240F
-	for <linux-scsi@vger.kernel.org>; Thu, 29 May 2014 15:54:07 +0000 (UTC)
+	by g2t1383g.austin.hp.com (Postfix) with ESMTPS id 87B722B02
+	for <linux-scsi@vger.kernel.org>; Thu, 29 May 2014 15:35:08 +0000 (UTC)
 In-Reply-To: <20140529154739.8180.50710.stgit@beardog.cce.hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -25,55 +25,122 @@ Cc: webb.scales@hp.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, 
 
 From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-Treat the the data direction bits as a bit mask allowing both
-READ and WRITE at the same time instead of testing for equality
-to see if it's a exclusively a READ or a WRITE.
-
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
-Reviewed-by: Mike Miller <michael.miller@canonical.com>
 Reviewed-by: Webb Scales <webb.scales@hp.com>
 ---
- drivers/scsi/hpsa.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/hpsa.c     |    3 ---
+ drivers/scsi/hpsa_cmd.h |   33 ++++++---------------------------
+ 2 files changed, 6 insertions(+), 30 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 7ba4e30..1df9a8a 100644
+index 2220b32..b1ecfd8 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -4956,7 +4956,7 @@ static int hpsa_passthru_ioctl(struct ctlr_info *h, void __user *argp)
- 		buff = kmalloc(iocommand.buf_size, GFP_KERNEL);
- 		if (buff == NULL)
- 			return -EFAULT;
--		if (iocommand.Request.Type.Direction == XFER_WRITE) {
-+		if (iocommand.Request.Type.Direction & XFER_WRITE) {
- 			/* Copy the data into the buffer we created */
- 			if (copy_from_user(buff, iocommand.buf,
- 				iocommand.buf_size)) {
-@@ -5019,7 +5019,7 @@ static int hpsa_passthru_ioctl(struct ctlr_info *h, void __user *argp)
- 		rc = -EFAULT;
- 		goto out;
- 	}
--	if (iocommand.Request.Type.Direction == XFER_READ &&
-+	if ((iocommand.Request.Type.Direction & XFER_READ) &&
- 		iocommand.buf_size > 0) {
- 		/* Copy the data out of the buffer we created */
- 		if (copy_to_user(iocommand.buf, buff, iocommand.buf_size)) {
-@@ -5096,7 +5096,7 @@ static int hpsa_big_passthru_ioctl(struct ctlr_info *h, void __user *argp)
- 			status = -ENOMEM;
- 			goto cleanup1;
- 		}
--		if (ioc->Request.Type.Direction == XFER_WRITE) {
-+		if (ioc->Request.Type.Direction & XFER_WRITE) {
- 			if (copy_from_user(buff[sg_used], data_ptr, sz)) {
- 				status = -ENOMEM;
- 				goto cleanup1;
-@@ -5148,7 +5148,7 @@ static int hpsa_big_passthru_ioctl(struct ctlr_info *h, void __user *argp)
- 		status = -EFAULT;
- 		goto cleanup0;
- 	}
--	if (ioc->Request.Type.Direction == XFER_READ && ioc->buf_size > 0) {
-+	if ((ioc->Request.Type.Direction & XFER_READ) && ioc->buf_size > 0) {
- 		/* Copy the data out of the buffer we created */
- 		BYTE __user *ptr = ioc->buf;
- 		for (i = 0; i < sg_used; i++) {
+@@ -6925,7 +6925,6 @@ reinit_after_soft_reset:
+ 	 * the 5 lower bits of the address are used by the hardware. and by
+ 	 * the driver.  See comments in hpsa.h for more info.
+ 	 */
+-#define COMMANDLIST_ALIGNMENT 128
+ 	BUILD_BUG_ON(sizeof(struct CommandList) % COMMANDLIST_ALIGNMENT);
+ 	h = kzalloc(sizeof(*h), GFP_KERNEL);
+ 	if (!h)
+@@ -7398,7 +7397,6 @@ static int hpsa_alloc_ioaccel_cmd_and_bft(struct ctlr_info *h)
+ 	 * because the 7 lower bits of the address are used by the
+ 	 * hardware.
+ 	 */
+-#define IOACCEL1_COMMANDLIST_ALIGNMENT 128
+ 	BUILD_BUG_ON(sizeof(struct io_accel1_cmd) %
+ 			IOACCEL1_COMMANDLIST_ALIGNMENT);
+ 	h->ioaccel_cmd_pool =
+@@ -7436,7 +7434,6 @@ static int ioaccel2_alloc_cmds_and_bft(struct ctlr_info *h)
+ 	if (h->ioaccel_maxsg > IOACCEL2_MAXSGENTRIES)
+ 		h->ioaccel_maxsg = IOACCEL2_MAXSGENTRIES;
+ 
+-#define IOACCEL2_COMMANDLIST_ALIGNMENT 128
+ 	BUILD_BUG_ON(sizeof(struct io_accel2_cmd) %
+ 			IOACCEL2_COMMANDLIST_ALIGNMENT);
+ 	h->ioaccel2_cmd_pool =
+diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
+index b5cc705..db89245 100644
+--- a/drivers/scsi/hpsa_cmd.h
++++ b/drivers/scsi/hpsa_cmd.h
+@@ -375,6 +375,7 @@ struct ctlr_info; /* defined in hpsa.h */
+  *        or a bus address.
+  */
+ 
++#define COMMANDLIST_ALIGNMENT 128
+ struct CommandList {
+ 	struct CommandListHeader Header;
+ 	struct RequestBlock      Request;
+@@ -389,21 +390,7 @@ struct CommandList {
+ 	struct list_head list;
+ 	struct completion *waiting;
+ 	void   *scsi_cmd;
+-
+-/* on 64 bit architectures, to get this to be 32-byte-aligned
+- * it so happens we need PAD_64 bytes of padding, on 32 bit systems,
+- * we need PAD_32 bytes of padding (see below).   This does that.
+- * If it happens that 64 bit and 32 bit systems need different
+- * padding, PAD_32 and PAD_64 can be set independently, and.
+- * the code below will do the right thing.
+- */
+-#define IS_32_BIT ((8 - sizeof(long))/4)
+-#define IS_64_BIT (!IS_32_BIT)
+-#define PAD_32 (40)
+-#define PAD_64 (12)
+-#define COMMANDLIST_PAD (IS_32_BIT * PAD_32 + IS_64_BIT * PAD_64)
+-	u8 pad[COMMANDLIST_PAD];
+-};
++} __aligned(COMMANDLIST_ALIGNMENT);
+ 
+ /* Max S/G elements in I/O accelerator command */
+ #define IOACCEL1_MAXSGENTRIES           24
+@@ -413,6 +400,7 @@ struct CommandList {
+  * Structure for I/O accelerator (mode 1) commands.
+  * Note that this structure must be 128-byte aligned in size.
+  */
++#define IOACCEL1_COMMANDLIST_ALIGNMENT 128
+ struct io_accel1_cmd {
+ 	u16 dev_handle;			/* 0x00 - 0x01 */
+ 	u8  reserved1;			/* 0x02 */
+@@ -440,12 +428,7 @@ struct io_accel1_cmd {
+ 	struct vals32 host_addr;	/* 0x70 - 0x77 */
+ 	u8  CISS_LUN[8];		/* 0x78 - 0x7F */
+ 	struct SGDescriptor SG[IOACCEL1_MAXSGENTRIES];
+-#define IOACCEL1_PAD_64 0
+-#define IOACCEL1_PAD_32 0
+-#define IOACCEL1_PAD (IS_32_BIT * IOACCEL1_PAD_32 + \
+-			IS_64_BIT * IOACCEL1_PAD_64)
+-	u8 pad[IOACCEL1_PAD];
+-};
++} __aligned(IOACCEL1_COMMANDLIST_ALIGNMENT);
+ 
+ #define IOACCEL1_FUNCTION_SCSIIO        0x00
+ #define IOACCEL1_SGLOFFSET              32
+@@ -510,14 +493,11 @@ struct io_accel2_scsi_response {
+ 	u8 sense_data_buff[32];		/* sense/response data buffer */
+ };
+ 
+-#define IOACCEL2_64_PAD 76
+-#define IOACCEL2_32_PAD 76
+-#define IOACCEL2_PAD (IS_32_BIT * IOACCEL2_32_PAD + \
+-			IS_64_BIT * IOACCEL2_64_PAD)
+ /*
+  * Structure for I/O accelerator (mode 2 or m2) commands.
+  * Note that this structure must be 128-byte aligned in size.
+  */
++#define IOACCEL2_COMMANDLIST_ALIGNMENT 128
+ struct io_accel2_cmd {
+ 	u8  IU_type;			/* IU Type */
+ 	u8  direction;			/* direction, memtype, and encryption */
+@@ -544,8 +524,7 @@ struct io_accel2_cmd {
+ 	u32 tweak_upper;		/* Encryption tweak, upper 4 bytes */
+ 	struct ioaccel2_sg_element sg[IOACCEL2_MAXSGENTRIES];
+ 	struct io_accel2_scsi_response error_data;
+-	u8 pad[IOACCEL2_PAD];
+-};
++} __aligned(IOACCEL2_COMMANDLIST_ALIGNMENT);
+ 
+ /*
+  * defines for Mode 2 command struct
 
