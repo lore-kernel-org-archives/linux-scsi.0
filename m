@@ -1,72 +1,41 @@
-From: scameron@beardog.cce.hp.com
-Subject: Re: [PATCH v2, repost] hpsa: remove unneeded loop
-Date: Thu, 29 May 2014 09:51:28 -0500
-Message-ID: <20140529145128.GO6970@beardog.cce.hp.com>
-References: <53873DEB.1080504@redhat.com>
+From: Akinobu Mita <akinobu.mita@gmail.com>
+Subject: Re: [PATCH 3/4] scsi: increase upper limit for max_sectors
+Date: Fri, 30 May 2014 00:04:37 +0900
+Message-ID: <CAC5umygh2a28Wu5mWr5-zqbxpV3Wi2D3aZZgkgYNZJvLbLgAbA@mail.gmail.com>
+References: <1401021816-10423-1-git-send-email-akinobu.mita@gmail.com>
+	<1401021816-10423-4-git-send-email-akinobu.mita@gmail.com>
+	<94D0CD8314A33A4D9D801C0FE68B402958ABC354@G4W3296.americas.hpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3426.houston.hp.com ([15.201.208.54]:30173 "EHLO
-	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932720AbaE2OwT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 May 2014 10:52:19 -0400
-Content-Disposition: inline
-In-Reply-To: <53873DEB.1080504@redhat.com>
+Received: from mail-lb0-f179.google.com ([209.85.217.179]:52443 "EHLO
+	mail-lb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756143AbaE2PEi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 May 2014 11:04:38 -0400
+Received: by mail-lb0-f179.google.com with SMTP id c11so263838lbj.38
+        for <linux-scsi@vger.kernel.org>; Thu, 29 May 2014 08:04:37 -0700 (PDT)
+In-Reply-To: <94D0CD8314A33A4D9D801C0FE68B402958ABC354@G4W3296.americas.hpqcorp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>
-Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, scameron@beardog.cce.hp.com
+To: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <JBottomley@parallels.com>, Douglas Gilbert <dgilbert@interlog.com>
 
-On Thu, May 29, 2014 at 04:02:19PM +0200, Tomas Henzl wrote:
-> Originally this was first patch in a series, but while the  other patches
-> were accepted, this one was forgotten.
-> The code below is adapted for the latest sources.
-> 
-> The cmd_pool_bits is protected everywhere with a spinlock,
-> we don't need the test_and_set_bit, set_bit is enough and the loop
-> can be removed too.
-> 
-> Signed-off-by: Tomas Henzl <thenzl@redhat.com>
-> ---
->  drivers/scsi/hpsa.c | 15 ++++++---------
->  1 file changed, 6 insertions(+), 9 deletions(-)
-> 
-> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> index 9a6e4a2..c8267f3 100644
-> --- a/drivers/scsi/hpsa.c
-> +++ b/drivers/scsi/hpsa.c
-> @@ -4680,15 +4680,12 @@ static struct CommandList *cmd_alloc(struct ctlr_info *h)
->  	unsigned long flags;
->  
->  	spin_lock_irqsave(&h->lock, flags);
-> -	do {
-> -		i = find_first_zero_bit(h->cmd_pool_bits, h->nr_cmds);
-> -		if (i == h->nr_cmds) {
-> -			spin_unlock_irqrestore(&h->lock, flags);
-> -			return NULL;
-> -		}
-> -	} while (test_and_set_bit
-> -		 (i & (BITS_PER_LONG - 1),
-> -		  h->cmd_pool_bits + (i / BITS_PER_LONG)) != 0);
-> +	i = find_first_zero_bit(h->cmd_pool_bits, h->nr_cmds);
-> +	if (i == h->nr_cmds) {
-> +		spin_unlock_irqrestore(&h->lock, flags);
-> +		return NULL;
-> +	}
-> +	set_bit(i & (BITS_PER_LONG - 1), h->cmd_pool_bits + (i / BITS_PER_LONG));
->  	spin_unlock_irqrestore(&h->lock, flags);
->  
->  	c = h->cmd_pool + i;
-> -- 
-> 1.8.3.1
-> 
+2014-05-29 1:18 GMT+09:00 Elliott, Robert (Server Storage) <Elliott@hp.com>:
+>
+>> -----Original Message-----
+>> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+>> owner@vger.kernel.org] On Behalf Of Akinobu Mita
+>> Sent: Sunday, 25 May, 2014 7:44 AM
+>> To: linux-scsi@vger.kernel.org
+>> Cc: Akinobu Mita; Jens Axboe; James E.J. Bottomley; Douglas Gilbert
+>> Subject: [PATCH 3/4] scsi: increase upper limit for max_sectors
+>>
+> ...
+>> -     } else if (sdp->use_16_for_rw) {
+>> +     } else if ((this_count > 0xffff) || sdp->use_16_for_rw) {
+>
+> Suggestion: reorder those so the unlikely case of a huge
+> this_count is on the right side of the || operator.
 
-I don't quite remember, but I think it was forgotten because I became
-more interested in removing all the locks from the main i/o path of hpsa
-for performance reasons (I have had a rather large patch series in the
-works for quite a while now to do that, maybe it will be ready for 3.17,
-we'll see.) So this looks ok, but if things go according to plan it won't
-be relevant for very long.
-
--- steve
-
+No problem.  I'll make this change in the next version.
+Thanks for your suggestion.
