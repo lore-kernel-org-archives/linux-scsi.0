@@ -1,543 +1,352 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 13/14] lib: Add T10 Protection Information functions
-Date: Wed, 28 May 2014 23:28:47 -0400
-Message-ID: <1401334128-15499-14-git-send-email-martin.petersen@oracle.com>
+Subject: [PATCH 14/14] sd: Honor block layer integrity handling flags
+Date: Wed, 28 May 2014 23:28:48 -0400
+Message-ID: <1401334128-15499-15-git-send-email-martin.petersen@oracle.com>
 References: <1401334128-15499-1-git-send-email-martin.petersen@oracle.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:26969 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:26980 "EHLO
 	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755954AbaE2D33 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 May 2014 23:29:29 -0400
+	with ESMTP id S1755956AbaE2D3a (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 May 2014 23:29:30 -0400
 In-Reply-To: <1401334128-15499-1-git-send-email-martin.petersen@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: axboe@fb.com, nab@daterainc.com, sagig@dev.mellanox.co.il, linux-scsi@vger.kernel.org
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 
-The T10 Protection Information format is also used by some devices that
-do not go through the SCSI layer (virtual block devices, NVMe). Relocate
-the relevant functions to a library that can be used without involving
-SCSI.
+A set of flags introduced in the block layer enable better control over
+how protection information is handled. These flags are useful for both
+error injection and data recovery purposes. Checking can be enabled and
+disabled for controller and disk, and the guard tag format is now a
+per-I/O property.
+
+Update sd_protect_op to communicate the relevant information to the
+low-level device driver via a set of flags in scsi_cmnd.
 
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 ---
- block/Kconfig              |   1 +
- drivers/scsi/Kconfig       |   2 +-
- drivers/scsi/sd_dif.c      | 193 +++------------------------------------------
- include/linux/crc-t10dif.h |   5 +-
- include/linux/t10-pi.h     |  28 +++++++
- lib/Kconfig                |   7 ++
- lib/Makefile               |   2 +
- lib/t10-pi.c               | 164 ++++++++++++++++++++++++++++++++++++++
- 8 files changed, 219 insertions(+), 183 deletions(-)
- create mode 100644 include/linux/t10-pi.h
- create mode 100644 lib/t10-pi.c
+ drivers/scsi/sd.c        | 56 ++++++++++++++++++++++++++++++++++++------------
+ drivers/scsi/sd.h        |  4 ++--
+ drivers/scsi/sd_dif.c    | 55 +++++++++++++++++++++--------------------------
+ include/scsi/scsi_cmnd.h | 29 ++++++++++++++++++++++++-
+ 4 files changed, 96 insertions(+), 48 deletions(-)
 
-diff --git a/block/Kconfig b/block/Kconfig
-index 2429515c05c2..947658db8456 100644
---- a/block/Kconfig
-+++ b/block/Kconfig
-@@ -77,6 +77,7 @@ config BLK_DEV_BSGLIB
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 96af195224f2..cd01dd8bed52 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -592,10 +592,11 @@ static void scsi_disk_put(struct scsi_disk *sdkp)
+ 	mutex_unlock(&sd_ref_mutex);
+ }
  
- config BLK_DEV_INTEGRITY
- 	bool "Block layer data integrity support"
-+	select T10_PI if BLK_DEV_INTEGRITY
- 	---help---
- 	Some storage devices allow extra information to be
- 	stored/retrieved to help protect the data.  The block layer
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 02832d64d918..1096b16b2a0c 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -69,7 +69,7 @@ comment "SCSI support type (disk, tape, CD-ROM)"
- config BLK_DEV_SD
- 	tristate "SCSI disk support"
- 	depends on SCSI
--	select CRC_T10DIF if BLK_DEV_INTEGRITY
-+	select T10_PI if BLK_DEV_INTEGRITY
- 	---help---
- 	  If you want to use SCSI hard disks, Fibre Channel disks,
- 	  Serial ATA (SATA) or Parallel ATA (PATA) hard disks,
+-static void sd_prot_op(struct scsi_cmnd *scmd, unsigned int dif)
++static unsigned char sd_setup_protect_cmnd(struct scsi_cmnd *scmd,
++					   unsigned int dix, unsigned int dif)
+ {
++	struct bio_integrity_payload *bip = bio_integrity(scmd->request->bio);
+ 	unsigned int prot_op = SCSI_PROT_NORMAL;
+-	unsigned int dix = scsi_prot_sg_count(scmd);
+ 
+ 	if (scmd->sc_data_direction == DMA_FROM_DEVICE) {
+ 		if (dif && dix)
+@@ -613,8 +614,37 @@ static void sd_prot_op(struct scsi_cmnd *scmd, unsigned int dif)
+ 			prot_op = SCSI_PROT_WRITE_STRIP;
+ 	}
+ 
+-	scsi_set_prot_op(scmd, prot_op);
++	/* Let HBA know which protection type is used so it knows which
++	 * fields to check.
++	 */
+ 	scsi_set_prot_type(scmd, dif);
++	scsi_set_prot_op(scmd, prot_op);
++
++	if (dix && bip_get_flag(bip, BIP_IP_CHECKSUM))
++		scmd->prot_flags |= SCSI_PROT_IP_CHECKSUM;
++
++	if (dif != SD_DIF_TYPE3_PROTECTION)
++		scmd->prot_flags |= SCSI_PROT_REF_INCREMENT;
++
++	if (prot_op != SCSI_PROT_WRITE_INSERT &&
++	    prot_op != SCSI_PROT_READ_INSERT &&
++	    !bip_get_flag(bip, BIP_CTRL_NOCHECK)) {
++		scmd->prot_flags |= SCSI_PROT_GUARD_CHECK;
++
++		if (dif != SD_DIF_TYPE3_PROTECTION)
++			scmd->prot_flags |= SCSI_PROT_REF_CHECK;
++	}
++
++	if (dif) {
++		scmd->prot_flags |= SCSI_PROT_TRANSFER_PI;
++
++		if (bip_get_flag(bip, BIP_DISK_NOCHECK))
++			return 3 << 5; /* Transmit but do not check PI */
++		else
++			return 1 << 5; /* Transmit and check PI */
++	}
++
++	return 0;
+ }
+ 
+ static void sd_config_discard(struct scsi_disk *sdkp, unsigned int mode)
+@@ -867,7 +897,8 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
+ 	sector_t block = blk_rq_pos(rq);
+ 	sector_t threshold;
+ 	unsigned int this_count = blk_rq_sectors(rq);
+-	int ret, host_dif;
++	unsigned int dif, dix;
++	int ret;
+ 	unsigned char protect;
+ 
+ 	/*
+@@ -994,7 +1025,7 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
+ 		SCpnt->sc_data_direction = DMA_TO_DEVICE;
+ 
+ 		if (blk_integrity_rq(rq))
+-			sd_dif_prepare(rq, block, sdp->sector_size);
++			sd_dif_prepare(SCpnt);
+ 
+ 	} else if (rq_data_dir(rq) == READ) {
+ 		SCpnt->cmnd[0] = READ_6;
+@@ -1010,14 +1041,15 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
+ 					"writing" : "reading", this_count,
+ 					blk_rq_sectors(rq)));
+ 
+-	/* Set RDPROTECT/WRPROTECT if disk is formatted with DIF */
+-	host_dif = scsi_host_dif_capable(sdp->host, sdkp->protection_type);
+-	if (host_dif)
+-		protect = 1 << 5;
++	dix = scsi_prot_sg_count(SCpnt);
++	dif = scsi_host_dif_capable(SCpnt->device->host, sdkp->protection_type);
++
++	if (dif || dix)
++		protect = sd_setup_protect_cmnd(SCpnt, dix, dif);
+ 	else
+ 		protect = 0;
+ 
+-	if (host_dif == SD_DIF_TYPE2_PROTECTION) {
++	if (protect && sdkp->protection_type == SD_DIF_TYPE2_PROTECTION) {
+ 		SCpnt->cmnd = mempool_alloc(sd_cdb_pool, GFP_ATOMIC);
+ 
+ 		if (unlikely(SCpnt->cmnd == NULL)) {
+@@ -1105,10 +1137,6 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
+ 	}
+ 	SCpnt->sdb.length = this_count * sdp->sector_size;
+ 
+-	/* If DIF or DIX is enabled, tell HBA how to handle request */
+-	if (host_dif || scsi_prot_sg_count(SCpnt))
+-		sd_prot_op(SCpnt, host_dif);
+-
+ 	/*
+ 	 * We shouldn't disconnect in the middle of a sector, so with a dumb
+ 	 * host adapter, it's safe to assume that we can at least transfer
+diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+index 620871efbf0a..4c6ed26b3613 100644
+--- a/drivers/scsi/sd.h
++++ b/drivers/scsi/sd.h
+@@ -175,7 +175,7 @@ struct sd_dif_tuple {
+ #ifdef CONFIG_BLK_DEV_INTEGRITY
+ 
+ extern void sd_dif_config_host(struct scsi_disk *);
+-extern void sd_dif_prepare(struct request *rq, sector_t, unsigned int);
++extern void sd_dif_prepare(struct scsi_cmnd *scmd);
+ extern void sd_dif_complete(struct scsi_cmnd *, unsigned int);
+ 
+ #else /* CONFIG_BLK_DEV_INTEGRITY */
+@@ -183,7 +183,7 @@ extern void sd_dif_complete(struct scsi_cmnd *, unsigned int);
+ static inline void sd_dif_config_host(struct scsi_disk *disk)
+ {
+ }
+-static inline int sd_dif_prepare(struct request *rq, sector_t s, unsigned int a)
++static inline int sd_dif_prepare(struct scsi_cmnd *scmd)
+ {
+ 	return 0;
+ }
 diff --git a/drivers/scsi/sd_dif.c b/drivers/scsi/sd_dif.c
-index 033d30d37952..d7109fff327d 100644
+index d7109fff327d..bcc6d952e725 100644
 --- a/drivers/scsi/sd_dif.c
 +++ b/drivers/scsi/sd_dif.c
-@@ -21,7 +21,7 @@
+@@ -138,23 +138,22 @@ void sd_dif_config_host(struct scsi_disk *sdkp)
+  *
+  * Type 3 does not have a reference tag so no remapping is required.
   */
+-void sd_dif_prepare(struct request *rq, sector_t hw_sector,
+-		    unsigned int sector_sz)
++void sd_dif_prepare(struct scsi_cmnd *scmd)
+ {
+-	const int tuple_sz = sizeof(struct sd_dif_tuple);
++	const int tuple_sz = sizeof(struct t10_pi_tuple);
+ 	struct bio *bio;
+ 	struct scsi_disk *sdkp;
+-	struct sd_dif_tuple *sdt;
++	struct t10_pi_tuple *pi;
+ 	u32 phys, virt;
  
- #include <linux/blkdev.h>
--#include <linux/crc-t10dif.h>
-+#include <linux/t10-pi.h>
+-	sdkp = rq->bio->bi_bdev->bd_disk->private_data;
++	sdkp = scsi_disk(scmd->request->rq_disk);
  
- #include <scsi/scsi.h>
- #include <scsi/scsi_cmnd.h>
-@@ -33,204 +33,37 @@
- #include <scsi/scsi_ioctl.h>
- #include <scsi/scsicam.h>
+ 	if (sdkp->protection_type == SD_DIF_TYPE3_PROTECTION)
+ 		return;
  
--#include <net/checksum.h>
--
- #include "sd.h"
+-	phys = hw_sector & 0xffffffff;
++	phys = scsi_prot_ref_tag(scmd);
  
--typedef __u16 (csum_fn) (void *, unsigned int);
--
--static __u16 sd_dif_crc_fn(void *data, unsigned int len)
--{
--	return cpu_to_be16(crc_t10dif(data, len));
--}
--
--static __u16 sd_dif_ip_fn(void *data, unsigned int len)
--{
--	return ip_compute_csum(data, len);
--}
--
--/*
-- * Type 1 and Type 2 protection use the same format: 16 bit guard tag,
-- * 16 bit app tag, 32 bit reference tag.
-- */
--static void sd_dif_type1_generate(struct blk_integrity_iter *iter, csum_fn *fn)
--{
--	void *buf = iter->data_buf;
--	struct sd_dif_tuple *sdt = iter->prot_buf;
--	sector_t seed = iter->seed;
--	unsigned int i;
--
--	for (i = 0 ; i < iter->data_size ; i += iter->interval, sdt++) {
--		sdt->guard_tag = fn(buf, iter->interval);
--		sdt->ref_tag = cpu_to_be32(seed & 0xffffffff);
--		sdt->app_tag = 0;
--
--		buf += iter->interval;
--		seed++;
--	}
--}
--
--static int sd_dif_type1_generate_crc(struct blk_integrity_iter *iter)
--{
--	sd_dif_type1_generate(iter, sd_dif_crc_fn);
--	return 0;
--}
--
--static int sd_dif_type1_generate_ip(struct blk_integrity_iter *iter)
--{
--	sd_dif_type1_generate(iter, sd_dif_ip_fn);
--	return 0;
--}
--
--static int sd_dif_type1_verify(struct blk_integrity_iter *iter, csum_fn *fn)
--{
--	void *buf = iter->data_buf;
--	struct sd_dif_tuple *sdt = iter->prot_buf;
--	sector_t seed = iter->seed;
--	unsigned int i;
--	__u16 csum;
--
--	for (i = 0 ; i < iter->data_size ; i += iter->interval, sdt++) {
--		/* Unwritten sectors */
--		if (sdt->app_tag == 0xffff)
--			return 0;
--
--		if (be32_to_cpu(sdt->ref_tag) != (seed & 0xffffffff)) {
--			printk(KERN_ERR
--			       "%s: ref tag error on sector %lu (rcvd %u)\n",
--			       iter->disk_name, (unsigned long)seed,
--			       be32_to_cpu(sdt->ref_tag));
--			return -EIO;
--		}
--
--		csum = fn(buf, iter->interval);
--
--		if (sdt->guard_tag != csum) {
--			printk(KERN_ERR "%s: guard tag error on sector %lu " \
--			       "(rcvd %04x, data %04x)\n", iter->disk_name,
--			       (unsigned long)seed,
--			       be16_to_cpu(sdt->guard_tag), be16_to_cpu(csum));
--			return -EIO;
--		}
--
--		buf += iter->interval;
--		seed++;
--	}
--
--	return 0;
--}
--
--static int sd_dif_type1_verify_crc(struct blk_integrity_iter *iter)
--{
--	return sd_dif_type1_verify(iter, sd_dif_crc_fn);
--}
--
--static int sd_dif_type1_verify_ip(struct blk_integrity_iter *iter)
--{
--	return sd_dif_type1_verify(iter, sd_dif_ip_fn);
--}
--
- static struct blk_integrity dif_type1_integrity_crc = {
- 	.name			= "T10-DIF-TYPE1-CRC",
--	.generate_fn		= sd_dif_type1_generate_crc,
--	.verify_fn		= sd_dif_type1_verify_crc,
--	.tuple_size		= sizeof(struct sd_dif_tuple),
-+	.generate_fn		= t10_pi_type1_generate_crc,
-+	.verify_fn		= t10_pi_type1_verify_crc,
-+	.tuple_size		= sizeof(struct t10_pi_tuple),
- 	.tag_size		= 0,
- };
+-	__rq_for_each_bio(bio, rq) {
++	__rq_for_each_bio(bio, scmd->request) {
+ 		struct bio_integrity_payload *bip = bio_integrity(bio);
+ 		struct bio_vec iv;
+ 		struct bvec_iter iter;
+@@ -167,19 +166,18 @@ void sd_dif_prepare(struct request *rq, sector_t hw_sector,
+ 		virt = bip_get_seed(bip) & 0xffffffff;
  
- static struct blk_integrity dif_type1_integrity_ip = {
- 	.name			= "T10-DIF-TYPE1-IP",
--	.generate_fn		= sd_dif_type1_generate_ip,
--	.verify_fn		= sd_dif_type1_verify_ip,
--	.tuple_size		= sizeof(struct sd_dif_tuple),
-+	.generate_fn		= t10_pi_type1_generate_ip,
-+	.verify_fn		= t10_pi_type1_verify_ip,
-+	.tuple_size		= sizeof(struct t10_pi_tuple),
- 	.tag_size		= 0,
- };
+ 		bip_for_each_vec(iv, bip, iter) {
+-			sdt = kmap_atomic(iv.bv_page)
+-				+ iv.bv_offset;
++			pi = kmap_atomic(iv.bv_page) + iv.bv_offset;
  
--
--/*
-- * Type 3 protection has a 16-bit guard tag and 16 + 32 bits of opaque
-- * tag space.
-- */
--static void sd_dif_type3_generate(struct blk_integrity_iter *iter, csum_fn *fn)
--{
--	void *buf = iter->data_buf;
--	struct sd_dif_tuple *sdt = iter->prot_buf;
--	unsigned int i;
--
--	for (i = 0 ; i < iter->data_size ; i += iter->interval, sdt++) {
--		sdt->guard_tag = fn(buf, iter->interval);
--		sdt->ref_tag = 0;
--		sdt->app_tag = 0;
--
--		buf += iter->interval;
--	}
--}
--
--static int sd_dif_type3_generate_crc(struct blk_integrity_iter *iter)
--{
--	sd_dif_type3_generate(iter, sd_dif_crc_fn);
--	return 0;
--}
--
--static int sd_dif_type3_generate_ip(struct blk_integrity_iter *iter)
--{
--	sd_dif_type3_generate(iter, sd_dif_ip_fn);
--	return 0;
--}
--
--static int sd_dif_type3_verify(struct blk_integrity_iter *iter, csum_fn *fn)
--{
--	void *buf = iter->data_buf;
--	struct sd_dif_tuple *sdt = iter->prot_buf;
--	sector_t seed = iter->seed;
--	unsigned int i;
--	__u16 csum;
--
--	for (i = 0 ; i < iter->data_size ; i += iter->interval, sdt++) {
--		/* Unwritten sectors */
--		if (sdt->app_tag == 0xffff && sdt->ref_tag == 0xffffffff)
--			return 0;
--
--		csum = fn(buf, iter->interval);
--
--		if (sdt->guard_tag != csum) {
--			printk(KERN_ERR "%s: guard tag error on sector %lu " \
--			       "(rcvd %04x, data %04x)\n", iter->disk_name,
--			       (unsigned long)seed,
--			       be16_to_cpu(sdt->guard_tag), be16_to_cpu(csum));
--			return -EIO;
--		}
--
--		buf += iter->interval;
--		seed++;
--	}
--
--	return 0;
--}
--
--static int sd_dif_type3_verify_crc(struct blk_integrity_iter *iter)
--{
--	return sd_dif_type3_verify(iter, sd_dif_crc_fn);
--}
--
--static int sd_dif_type3_verify_ip(struct blk_integrity_iter *iter)
--{
--	return sd_dif_type3_verify(iter, sd_dif_ip_fn);
--}
--
- static struct blk_integrity dif_type3_integrity_crc = {
- 	.name			= "T10-DIF-TYPE3-CRC",
--	.generate_fn		= sd_dif_type3_generate_crc,
--	.verify_fn		= sd_dif_type3_verify_crc,
--	.tuple_size		= sizeof(struct sd_dif_tuple),
-+	.generate_fn		= t10_pi_type3_generate_crc,
-+	.verify_fn		= t10_pi_type3_verify_crc,
-+	.tuple_size		= sizeof(struct t10_pi_tuple),
- 	.tag_size		= 0,
- };
+-			for (j = 0; j < iv.bv_len; j += tuple_sz, sdt++) {
++			for (j = 0; j < iv.bv_len; j += tuple_sz, pi++) {
  
- static struct blk_integrity dif_type3_integrity_ip = {
- 	.name			= "T10-DIF-TYPE3-IP",
--	.generate_fn		= sd_dif_type3_generate_ip,
--	.verify_fn		= sd_dif_type3_verify_ip,
--	.tuple_size		= sizeof(struct sd_dif_tuple),
-+	.generate_fn		= t10_pi_type3_generate_ip,
-+	.verify_fn		= t10_pi_type3_verify_ip,
-+	.tuple_size		= sizeof(struct t10_pi_tuple),
- 	.tag_size		= 0,
- };
+-				if (be32_to_cpu(sdt->ref_tag) == virt)
+-					sdt->ref_tag = cpu_to_be32(phys);
++				if (be32_to_cpu(pi->ref_tag) == virt)
++					pi->ref_tag = cpu_to_be32(phys);
  
-diff --git a/include/linux/crc-t10dif.h b/include/linux/crc-t10dif.h
-index b3cb71f0d3b0..cf53d0773ce3 100644
---- a/include/linux/crc-t10dif.h
-+++ b/include/linux/crc-t10dif.h
-@@ -6,7 +6,8 @@
- #define CRC_T10DIF_DIGEST_SIZE 2
- #define CRC_T10DIF_BLOCK_SIZE 1
+ 				virt++;
+ 				phys++;
+ 			}
  
--__u16 crc_t10dif_generic(__u16 crc, const unsigned char *buffer, size_t len);
--__u16 crc_t10dif(unsigned char const *, size_t);
-+extern __u16 crc_t10dif_generic(__u16 crc, const unsigned char *buffer,
-+				size_t len);
-+extern __u16 crc_t10dif(unsigned char const *, size_t);
+-			kunmap_atomic(sdt);
++			kunmap_atomic(pi);
+ 		}
  
- #endif
-diff --git a/include/linux/t10-pi.h b/include/linux/t10-pi.h
-new file mode 100644
-index 000000000000..6d8e138c9471
---- /dev/null
-+++ b/include/linux/t10-pi.h
-@@ -0,0 +1,28 @@
-+#ifndef _LINUX_T10_PI_H
-+#define _LINUX_T10_PI_H
+ 		bip_set_flag(bip, BIP_MAPPED_INTEGRITY);
+@@ -192,11 +190,11 @@ void sd_dif_prepare(struct request *rq, sector_t hw_sector,
+  */
+ void sd_dif_complete(struct scsi_cmnd *scmd, unsigned int good_bytes)
+ {
+-	const int tuple_sz = sizeof(struct sd_dif_tuple);
++	const int tuple_sz = sizeof(struct t10_pi_tuple);
+ 	struct scsi_disk *sdkp;
+ 	struct bio *bio;
+-	struct sd_dif_tuple *sdt;
+-	unsigned int j, sectors, sector_sz;
++	struct t10_pi_tuple *pi;
++	unsigned int j, intervals;
+ 	u32 phys, virt;
+ 
+ 	sdkp = scsi_disk(scmd->request->rq_disk);
+@@ -204,12 +202,8 @@ void sd_dif_complete(struct scsi_cmnd *scmd, unsigned int good_bytes)
+ 	if (sdkp->protection_type == SD_DIF_TYPE3_PROTECTION || good_bytes == 0)
+ 		return;
+ 
+-	sector_sz = scmd->device->sector_size;
+-	sectors = good_bytes / sector_sz;
+-
+-	phys = blk_rq_pos(scmd->request) & 0xffffffff;
+-	if (sector_sz == 4096)
+-		phys >>= 3;
++	intervals = good_bytes / scmd->device->sector_size;
++	phys = scsi_prot_ref_tag(scmd);
+ 
+ 	__rq_for_each_bio(bio, scmd->request) {
+ 		struct bio_integrity_payload *bip = bio_integrity(bio);
+@@ -219,25 +213,24 @@ void sd_dif_complete(struct scsi_cmnd *scmd, unsigned int good_bytes)
+ 		virt = bip_get_seed(bip) & 0xffffffff;
+ 
+ 		bip_for_each_vec(iv, bip, iter) {
+-			sdt = kmap_atomic(iv.bv_page)
+-				+ iv.bv_offset;
++			pi = kmap_atomic(iv.bv_page) + iv.bv_offset;
+ 
+-			for (j = 0; j < iv.bv_len; j += tuple_sz, sdt++) {
++			for (j = 0; j < iv.bv_len; j += tuple_sz, pi++) {
+ 
+-				if (sectors == 0) {
+-					kunmap_atomic(sdt);
++				if (intervals == 0) {
++					kunmap_atomic(pi);
+ 					return;
+ 				}
+ 
+-				if (be32_to_cpu(sdt->ref_tag) == phys)
+-					sdt->ref_tag = cpu_to_be32(virt);
++				if (be32_to_cpu(pi->ref_tag) == phys)
++					pi->ref_tag = cpu_to_be32(virt);
+ 
+ 				virt++;
+ 				phys++;
+-				sectors--;
++				intervals--;
+ 			}
+ 
+-			kunmap_atomic(sdt);
++			kunmap_atomic(pi);
+ 		}
+ 	}
+ }
+diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+index dd7c998221b3..efa4e8da3ec0 100644
+--- a/include/scsi/scsi_cmnd.h
++++ b/include/scsi/scsi_cmnd.h
+@@ -9,9 +9,10 @@
+ #include <linux/scatterlist.h>
+ 
+ struct Scsi_Host;
+-struct scsi_device;
+ struct scsi_driver;
+ 
++#include <scsi/scsi_device.h>
 +
-+#include <linux/types.h>
-+#include <linux/blkdev.h>
-+
-+/*
-+ * T10 Protection Information tuple.
-+ */
-+struct t10_pi_tuple {
-+	__be16 guard_tag;	/* Checksum */
-+	__be16 app_tag;		/* Opaque storage */
-+	__be32 ref_tag;		/* Target LBA or indirect LBA */
+ /*
+  * MAX_COMMAND_SIZE is:
+  * The longest fixed-length SCSI CDB as per the SCSI standard.
+@@ -80,6 +81,7 @@ struct scsi_cmnd {
+ 
+ 	unsigned char prot_op;
+ 	unsigned char prot_type;
++	unsigned char prot_flags;
+ 
+ 	unsigned short cmd_len;
+ 	enum dma_data_direction sc_data_direction;
+@@ -245,6 +247,20 @@ static inline unsigned char scsi_get_prot_op(struct scsi_cmnd *scmd)
+ 	return scmd->prot_op;
+ }
+ 
++enum scsi_prot_flags {
++	SCSI_PROT_TRANSFER_PI		= 1 << 0,
++	SCSI_PROT_GUARD_CHECK		= 1 << 1,
++	SCSI_PROT_REF_CHECK		= 1 << 2,
++	SCSI_PROT_REF_INCREMENT		= 1 << 3,
++	SCSI_PROT_IP_CHECKSUM		= 1 << 4,
 +};
 +
-+extern int t10_pi_type1_generate_crc(struct blk_integrity_iter *);
-+extern int t10_pi_type1_verify_crc(struct blk_integrity_iter *);
++static inline unsigned int scsi_prot_flagged(struct scsi_cmnd *scmd,
++					     enum scsi_prot_flags flag)
++{
++	return scmd->prot_flags & flag;
++}
 +
-+extern int t10_pi_type1_generate_ip(struct blk_integrity_iter *);
-+extern int t10_pi_type1_verify_ip(struct blk_integrity_iter *);
-+
-+extern int t10_pi_type3_generate_crc(struct blk_integrity_iter *);
-+extern int t10_pi_type3_verify_crc(struct blk_integrity_iter *);
-+
-+extern int t10_pi_type3_generate_ip(struct blk_integrity_iter *);
-+extern int t10_pi_type3_verify_ip(struct blk_integrity_iter *);
-+
-+#endif
-diff --git a/lib/Kconfig b/lib/Kconfig
-index 4771fb3f4da4..4e7b1ba722ea 100644
---- a/lib/Kconfig
-+++ b/lib/Kconfig
-@@ -198,6 +198,13 @@ config RANDOM32_SELFTEST
- 	  This option enables the 32 bit PRNG library functions to perform a
- 	  self test on initialization.
+ /*
+  * The controller usually does not know anything about the target it
+  * is communicating with.  However, when DIX is enabled the controller
+@@ -273,6 +289,17 @@ static inline sector_t scsi_get_lba(struct scsi_cmnd *scmd)
+ 	return blk_rq_pos(scmd->request);
+ }
  
-+config T10_PI
-+	tristate "Functions for generating and verifying T10 Protection Information"
-+	select CRC_T10DIF
-+	select CRYPTO_CRCT10DIF
-+	help
-+	  This code is for use with the block layer data integrity subsystem.
-+
- #
- # compression support is select'ed if needed
- #
-diff --git a/lib/Makefile b/lib/Makefile
-index 0cd7b68e1382..c93dc958c7e6 100644
---- a/lib/Makefile
-+++ b/lib/Makefile
-@@ -164,6 +164,8 @@ obj-$(CONFIG_ASN1) += asn1_decoder.o
- 
- obj-$(CONFIG_FONT_SUPPORT) += fonts/
- 
-+obj-$(CONFIG_T10_PI) += t10-pi.o
-+
- hostprogs-y	:= gen_crc32table
- clean-files	:= crc32table.h
- 
-diff --git a/lib/t10-pi.c b/lib/t10-pi.c
-new file mode 100644
-index 000000000000..6e2f9b8bb404
---- /dev/null
-+++ b/lib/t10-pi.c
-@@ -0,0 +1,164 @@
-+/*
-+ * t10_pi.c - Functions for generating and verifying T10 Protection
-+ *	      Information.
-+ *
-+ * Copyright (C) 2007, 2008, 2014 Oracle Corporation
-+ * Written by: Martin K. Petersen <martin.petersen@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License version
-+ * 2 as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; see the file COPYING.  If not, write to
-+ * the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139,
-+ * USA.
-+ *
-+ */
-+
-+#include <linux/t10-pi.h>
-+#include <linux/blkdev.h>
-+#include <linux/crc-t10dif.h>
-+#include <net/checksum.h>
-+
-+typedef __u16 (csum_fn) (void *, unsigned int);
-+
-+static __u16 t10_pi_crc_fn(void *data, unsigned int len)
++static inline unsigned int scsi_prot_interval(struct scsi_cmnd *scmd)
 +{
-+	return cpu_to_be16(crc_t10dif(data, len));
++	return scmd->device->sector_size;
 +}
 +
-+static __u16 t10_pi_ip_fn(void *data, unsigned int len)
++static inline u32 scsi_prot_ref_tag(struct scsi_cmnd *scmd)
 +{
-+	return ip_compute_csum(data, len);
++	return blk_rq_pos(scmd->request) >>
++		(ilog2(scsi_prot_interval(scmd)) - 9) & 0xffffffff;
 +}
 +
-+/*
-+ * Type 1 and Type 2 protection use the same format: 16 bit guard tag,
-+ * 16 bit app tag, 32 bit reference tag. Type 3 does not define the ref
-+ * tag.
-+ */
-+static int t10_pi_generate(struct blk_integrity_iter *iter, csum_fn *fn,
-+			   unsigned int type)
-+{
-+	unsigned int i;
-+
-+	for (i = 0 ; i < iter->data_size ; i += iter->interval) {
-+		struct t10_pi_tuple *pi = iter->prot_buf;
-+
-+		pi->guard_tag = fn(iter->data_buf, iter->interval);
-+		pi->app_tag = 0;
-+
-+		if (type == 1)
-+			pi->ref_tag = cpu_to_be32(iter->seed & 0xffffffff);
-+		else
-+			pi->ref_tag = 0;
-+
-+		iter->data_buf += iter->interval;
-+		iter->prot_buf += sizeof(struct t10_pi_tuple);
-+		iter->seed++;
-+	}
-+
-+	return 0;
-+}
-+
-+static int t10_pi_verify(struct blk_integrity_iter *iter, csum_fn *fn,
-+				unsigned int type)
-+{
-+	unsigned int i;
-+
-+	for (i = 0 ; i < iter->data_size ; i += iter->interval) {
-+		struct t10_pi_tuple *pi = iter->prot_buf;
-+		__u16 csum;
-+
-+		switch (type) {
-+		case 1:
-+		case 2:
-+			if (pi->app_tag == 0xffff)
-+				goto next;
-+
-+			if (be32_to_cpu(pi->ref_tag) !=
-+			    (iter->seed & 0xffffffff)) {
-+				pr_err("%s: ref tag error at location %lu " \
-+				       "(rcvd %u)\n", iter->disk_name,
-+				       iter->seed, be32_to_cpu(pi->ref_tag));
-+				return -EKERNREF;
-+			}
-+			break;
-+		case 3:
-+			if (pi->app_tag == 0xffff && pi->ref_tag == 0xffffffff)
-+				goto next;
-+			break;
-+		}
-+
-+		csum = fn(iter->data_buf, iter->interval);
-+
-+		if (pi->guard_tag != csum) {
-+			pr_err("%s: guard tag error at location %lu " \
-+			       "(rcvd %04x, data %04x)\n", iter->disk_name,
-+			       (unsigned long)iter->seed,
-+			       be16_to_cpu(pi->guard_tag), be16_to_cpu(csum));
-+			return -EKERNGRD;
-+		}
-+
-+next:
-+		iter->data_buf += iter->interval;
-+		iter->prot_buf += sizeof(struct t10_pi_tuple);
-+		iter->seed++;
-+	}
-+
-+	return 0;
-+}
-+
-+int t10_pi_type1_generate_crc(struct blk_integrity_iter *iter)
-+{
-+	return t10_pi_generate(iter, t10_pi_crc_fn, 1);
-+}
-+EXPORT_SYMBOL(t10_pi_type1_generate_crc);
-+
-+int t10_pi_type1_generate_ip(struct blk_integrity_iter *iter)
-+{
-+	return t10_pi_generate(iter, t10_pi_ip_fn, 1);
-+}
-+EXPORT_SYMBOL(t10_pi_type1_generate_ip);
-+
-+int t10_pi_type1_verify_crc(struct blk_integrity_iter *iter)
-+{
-+	return t10_pi_verify(iter, t10_pi_crc_fn, 1);
-+}
-+EXPORT_SYMBOL(t10_pi_type1_verify_crc);
-+
-+int t10_pi_type1_verify_ip(struct blk_integrity_iter *iter)
-+{
-+	return t10_pi_verify(iter, t10_pi_ip_fn, 1);
-+}
-+EXPORT_SYMBOL(t10_pi_type1_verify_ip);
-+
-+int t10_pi_type3_generate_crc(struct blk_integrity_iter *iter)
-+{
-+	return t10_pi_generate(iter, t10_pi_crc_fn, 3);
-+}
-+EXPORT_SYMBOL(t10_pi_type3_generate_crc);
-+
-+int t10_pi_type3_generate_ip(struct blk_integrity_iter *iter)
-+{
-+	return t10_pi_generate(iter, t10_pi_ip_fn, 3);
-+}
-+EXPORT_SYMBOL(t10_pi_type3_generate_ip);
-+
-+int t10_pi_type3_verify_crc(struct blk_integrity_iter *iter)
-+{
-+	return t10_pi_verify(iter, t10_pi_crc_fn, 3);
-+}
-+EXPORT_SYMBOL(t10_pi_type3_verify_crc);
-+
-+int t10_pi_type3_verify_ip(struct blk_integrity_iter *iter)
-+{
-+	return t10_pi_verify(iter, t10_pi_ip_fn, 3);
-+}
-+EXPORT_SYMBOL(t10_pi_type3_verify_ip);
+ static inline unsigned scsi_prot_sg_count(struct scsi_cmnd *cmd)
+ {
+ 	return cmd->prot_sdb ? cmd->prot_sdb->table.nents : 0;
 -- 
 1.9.0
 
