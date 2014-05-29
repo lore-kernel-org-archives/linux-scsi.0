@@ -1,17 +1,21 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 2 13/24] hpsa: Rearrange start_io to avoid one unlock/lock
-	sequence in main io path
-Date: Thu, 29 May 2014 10:53:28 -0500
-Message-ID: <20140529155328.8180.36330.stgit@beardog.cce.hp.com>
+Subject: [PATCH 2 03/24] hpsa: remove unused fields from struct ctlr_info
+Date: Thu, 29 May 2014 10:52:31 -0500
+Message-ID: <20140529155231.8180.55127.stgit@beardog.cce.hp.com>
 References: <20140529154739.8180.50710.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g6t1524.atlanta.hp.com ([15.193.200.67]:34197 "EHLO
-	g6t1524.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757417AbaE2PyU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 May 2014 11:54:20 -0400
+Received: from g2t1383g.austin.hp.com ([15.217.136.92]:19775 "EHLO
+	g2t1383g.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757688AbaE2Pyf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 May 2014 11:54:35 -0400
+Received: from g2t2354.austin.hp.com (g2t2354.austin.hp.com [15.217.128.53])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by g2t1383g.austin.hp.com (Postfix) with ESMTPS id 026251D5A
+	for <linux-scsi@vger.kernel.org>; Thu, 29 May 2014 15:34:49 +0000 (UTC)
 In-Reply-To: <20140529154739.8180.50710.stgit@beardog.cce.hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,80 +24,44 @@ Cc: webb.scales@hp.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, 
 
 From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
+The fields "major", "max_outstanding", and "usage_count"
+of struct ctlr_info were not used for anything.
+
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
-Reviewed-by: Joe Handzik <joseph.t.handzik@hp.com>
+Reviewed-by: Mike Miller <michael.miller@canonical.com>
+Reviewed-by: Webb Scales <webb.scales@hp.com>
 ---
- drivers/scsi/hpsa.c |   24 ++++++++++++++++--------
- 1 files changed, 16 insertions(+), 8 deletions(-)
+ drivers/scsi/hpsa.c |    2 --
+ drivers/scsi/hpsa.h |    3 ---
+ 2 files changed, 0 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index ad73017..c6ed5ea 100644
+index ef66905..7ba4e30 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -194,7 +194,8 @@ static int number_of_controllers;
- static irqreturn_t do_hpsa_intr_intx(int irq, void *dev_id);
- static irqreturn_t do_hpsa_intr_msi(int irq, void *dev_id);
- static int hpsa_ioctl(struct scsi_device *dev, int cmd, void *arg);
--static void start_io(struct ctlr_info *h);
-+static void lock_and_start_io(struct ctlr_info *h);
-+static void start_io(struct ctlr_info *h, unsigned long *flags);
- 
- #ifdef CONFIG_COMPAT
- static int hpsa_compat_ioctl(struct scsi_device *dev, int cmd, void *arg);
-@@ -845,8 +846,8 @@ static void enqueue_cmd_and_start_io(struct ctlr_info *h,
- 	spin_lock_irqsave(&h->lock, flags);
- 	addQ(&h->reqQ, c);
- 	h->Qdepth++;
-+	start_io(h, &flags);
- 	spin_unlock_irqrestore(&h->lock, flags);
--	start_io(h);
- }
- 
- static inline void removeQ(struct CommandList *c)
-@@ -5452,13 +5453,12 @@ static void __iomem *remap_pci_mem(ulong base, ulong size)
- 
- /* Takes cmds off the submission queue and sends them to the hardware,
-  * then puts them on the queue of cmds waiting for completion.
-+ * Assumes h->lock is held
-  */
--static void start_io(struct ctlr_info *h)
-+static void start_io(struct ctlr_info *h, unsigned long *flags)
- {
- 	struct CommandList *c;
--	unsigned long flags;
- 
--	spin_lock_irqsave(&h->lock, flags);
- 	while (!list_empty(&h->reqQ)) {
- 		c = list_entry(h->reqQ.next, struct CommandList, list);
- 		/* can't do anything if fifo is full */
-@@ -5483,10 +5483,18 @@ static void start_io(struct ctlr_info *h)
+@@ -5481,8 +5481,6 @@ static void start_io(struct ctlr_info *h)
+ 		 * condition.
+ 		 */
  		h->commands_outstanding++;
+-		if (h->commands_outstanding > h->max_outstanding)
+-			h->max_outstanding = h->commands_outstanding;
  
  		/* Tell the controller execute command */
--		spin_unlock_irqrestore(&h->lock, flags);
-+		spin_unlock_irqrestore(&h->lock, *flags);
- 		h->access.submit_command(h, c);
--		spin_lock_irqsave(&h->lock, flags);
-+		spin_lock_irqsave(&h->lock, *flags);
- 	}
-+}
-+
-+static void lock_and_start_io(struct ctlr_info *h)
-+{
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&h->lock, flags);
-+	start_io(h, &flags);
- 	spin_unlock_irqrestore(&h->lock, flags);
- }
- 
-@@ -5554,7 +5562,7 @@ static inline void finish_cmd(struct CommandList *c)
- 	else if (c->cmd_type == CMD_IOCTL_PEND)
- 		complete(c->waiting);
- 	if (unlikely(io_may_be_stalled))
--		start_io(h);
-+		lock_and_start_io(h);
- }
- 
- static inline u32 hpsa_tag_contains_index(u32 tag)
+ 		spin_unlock_irqrestore(&h->lock, flags);
+diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
+index 44235a2..b988e04 100644
+--- a/drivers/scsi/hpsa.h
++++ b/drivers/scsi/hpsa.h
+@@ -115,11 +115,8 @@ struct ctlr_info {
+ 	int 	nr_cmds; /* Number of commands allowed on this controller */
+ 	struct CfgTable __iomem *cfgtable;
+ 	int	interrupts_enabled;
+-	int	major;
+ 	int 	max_commands;
+ 	int	commands_outstanding;
+-	int 	max_outstanding; /* Debug */
+-	int	usage_count;  /* number of opens all all minor devices */
+ #	define PERF_MODE_INT	0
+ #	define DOORBELL_INT	1
+ #	define SIMPLE_MODE_INT	2
 
