@@ -1,89 +1,142 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 10/14] block: Integrity checksum flag
-Date: Wed, 28 May 2014 23:28:44 -0400
-Message-ID: <1401334128-15499-11-git-send-email-martin.petersen@oracle.com>
+Subject: [PATCH 12/14] block: Add specific data integrity errors
+Date: Wed, 28 May 2014 23:28:46 -0400
+Message-ID: <1401334128-15499-13-git-send-email-martin.petersen@oracle.com>
 References: <1401334128-15499-1-git-send-email-martin.petersen@oracle.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:33073 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755950AbaE2D3Y (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 May 2014 23:29:24 -0400
+Received: from userp1040.oracle.com ([156.151.31.81]:26967 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755950AbaE2D33 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 May 2014 23:29:29 -0400
 In-Reply-To: <1401334128-15499-1-git-send-email-martin.petersen@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: axboe@fb.com, nab@daterainc.com, sagig@dev.mellanox.co.il, linux-scsi@vger.kernel.org
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 
-Make the choice of checksum a per-I/O property by introducing a flag
-that can be inspected by the SCSI layer.
+Introduce a set of error codes that can be used by the block integrity
+subsystem to signal which class of error was encountered by either the
+I/O controller or the storage device.
 
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 ---
- block/bio-integrity.c  | 3 +++
- drivers/scsi/sd_dif.c  | 6 ++++--
- include/linux/bio.h    | 1 +
- include/linux/blkdev.h | 1 +
- 4 files changed, 9 insertions(+), 2 deletions(-)
+ block/blk-core.c                 | 12 ++++++++++++
+ drivers/md/dm-mpath.c            |  9 +++++++++
+ drivers/scsi/scsi_lib.c          | 30 ++++++++++++++++++++++++++++--
+ include/uapi/asm-generic/errno.h | 11 +++++++++++
+ 4 files changed, 60 insertions(+), 2 deletions(-)
 
-diff --git a/block/bio-integrity.c b/block/bio-integrity.c
-index 877bce028766..4eb7893a7559 100644
---- a/block/bio-integrity.c
-+++ b/block/bio-integrity.c
-@@ -303,6 +303,9 @@ int bio_integrity_prep(struct bio *bio)
- 	bip->bip_iter.bi_size = len;
- 	bip_set_seed(bip, bio->bi_iter.bi_sector);
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 5b6f768a7c01..9e8b9649baf7 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -2428,6 +2428,18 @@ bool blk_update_request(struct request *req, int error, unsigned int nr_bytes)
+ 		case -ENODATA:
+ 			error_type = "critical medium";
+ 			break;
++		case -ECTRLGRD:
++		case -ECTRLAPP:
++		case -ECTRLREF:
++		case -EDISKGRD:
++		case -EDISKAPP:
++		case -EDISKREF:
++		case -EKERNGRD:
++		case -EKERNAPP:
++		case -EKERNREF:
++		case -EILSEQ:
++			error_type = "data integrity";
++			break;
+ 		case -EIO:
+ 		default:
+ 			error_type = "I/O";
+diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
+index aa009e865871..a8756cdd1002 100644
+--- a/drivers/md/dm-mpath.c
++++ b/drivers/md/dm-mpath.c
+@@ -1208,6 +1208,15 @@ static int noretry_error(int error)
+ 	case -EOPNOTSUPP:
+ 	case -EREMOTEIO:
+ 	case -EILSEQ:
++	case -ECTRLGRD:
++	case -ECTRLAPP:
++	case -ECTRLREF:
++	case -EDISKGRD:
++	case -EDISKAPP:
++	case -EDISKREF:
++	case -EKERNGRD:
++	case -EKERNAPP:
++	case -EKERNREF:
+ 	case -ENODATA:
+ 	case -ENOSPC:
+ 		return 1;
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 3cc82d3dec78..4f369d6f1162 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -892,7 +892,20 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 			} else if (sshdr.asc == 0x10) /* DIX */ {
+ 				description = "Host Data Integrity Failure";
+ 				action = ACTION_FAIL;
+-				error = -EILSEQ;
++				switch (sshdr.ascq) {
++				case 0x1:
++					error = -ECTRLGRD;
++					break;
++				case 0x2:
++					error = -ECTRLAPP;
++					break;
++				case 0x3:
++					error = -ECTRLREF;
++					break;
++				default:
++					error = -EILSEQ;
++					break;
++				}
+ 			/* INVALID COMMAND OPCODE or INVALID FIELD IN CDB */
+ 			} else if (sshdr.asc == 0x20 || sshdr.asc == 0x24) {
+ 				switch (cmd->cmnd[0]) {
+@@ -920,7 +933,20 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 			action = ACTION_FAIL;
+ 			if (sshdr.asc == 0x10) { /* DIF */
+ 				description = "Target Data Integrity Failure";
+-				error = -EILSEQ;
++				switch (sshdr.ascq) {
++				case 0x1:
++					error = -EDISKGRD;
++					break;
++				case 0x2:
++					error = -EDISKAPP;
++					break;
++				case 0x3:
++					error = -EDISKREF;
++					break;
++				default:
++					error = -EILSEQ;
++					break;
++				}
+ 			}
+ 			break;
+ 		case NOT_READY:
+diff --git a/include/uapi/asm-generic/errno.h b/include/uapi/asm-generic/errno.h
+index 1e1ea6e6e7a5..d89af4ba1e04 100644
+--- a/include/uapi/asm-generic/errno.h
++++ b/include/uapi/asm-generic/errno.h
+@@ -110,4 +110,15 @@
  
-+	if (bi->flags & BLK_INTEGRITY_IP_CHECKSUM)
-+		bip_set_flag(bip, BIP_IP_CHECKSUM);
+ #define EHWPOISON	133	/* Memory page has hardware error */
+ 
++/* data integrity errors */
++#define ECTRLGRD	134	/* I/O controller detected guard tag error */
++#define ECTRLAPP	135	/* I/O controller detected app tag error */
++#define ECTRLREF	136	/* I/O controller detected ref tag error */
++#define EDISKGRD	137	/* Storage device detected guard tag error */
++#define EDISKAPP	138	/* Storage device detected app tag error */
++#define EDISKREF	139	/* Storage device detected ref tag error */
++#define EKERNGRD	140	/* Kernel detected guard tag error */
++#define EKERNAPP	141	/* Kernel detected app tag error */
++#define EKERNREF	142	/* Kernel detected ref tag error */
 +
- 	/* Map it */
- 	offset = offset_in_page(buf);
- 	for (i = 0 ; i < nr_pages ; i++) {
-diff --git a/drivers/scsi/sd_dif.c b/drivers/scsi/sd_dif.c
-index 95d5cb806f58..033d30d37952 100644
---- a/drivers/scsi/sd_dif.c
-+++ b/drivers/scsi/sd_dif.c
-@@ -255,12 +255,14 @@ void sd_dif_config_host(struct scsi_disk *sdkp)
- 		return;
- 
- 	/* Enable DMA of protection information */
--	if (scsi_host_get_guard(sdkp->device->host) & SHOST_DIX_GUARD_IP)
-+	if (scsi_host_get_guard(sdkp->device->host) & SHOST_DIX_GUARD_IP) {
- 		if (type == SD_DIF_TYPE3_PROTECTION)
- 			blk_integrity_register(disk, &dif_type3_integrity_ip);
- 		else
- 			blk_integrity_register(disk, &dif_type1_integrity_ip);
--	else
-+
-+		disk->integrity->flags |= BLK_INTEGRITY_IP_CHECKSUM;
-+	} else
- 		if (type == SD_DIF_TYPE3_PROTECTION)
- 			blk_integrity_register(disk, &dif_type3_integrity_crc);
- 		else
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index adc806325c36..83e4725f6aca 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -309,6 +309,7 @@ enum bip_flags {
- 	BIP_MAPPED_INTEGRITY,	/* integrity metadata has been remapped */
- 	BIP_CTRL_NOCHECK,	/* disable controller integrity checking */
- 	BIP_DISK_NOCHECK,	/* disable disk integrity checking */
-+	BIP_IP_CHECKSUM,	/* IP checksum */
- };
- 
- static inline bool bip_get_flag(struct bio_integrity_payload *bip,
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 4be0446a8817..9bf6f761f1ac 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -1432,6 +1432,7 @@ enum blk_integrity_flags {
- 	BLK_INTEGRITY_VERIFY		= 1 << 0,
- 	BLK_INTEGRITY_GENERATE		= 1 << 1,
- 	BLK_INTEGRITY_DISK		= 1 << 2,
-+	BLK_INTEGRITY_IP_CHECKSUM	= 1 << 3,
- };
- 
- struct blk_integrity_iter {
+ #endif
 -- 
 1.9.0
 
