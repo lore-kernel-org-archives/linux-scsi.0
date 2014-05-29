@@ -1,17 +1,16 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 2 08/24] hpsa: choose number of reply queues more
-	intelligently.
-Date: Thu, 29 May 2014 10:53:02 -0500
-Message-ID: <20140529155302.8180.17597.stgit@beardog.cce.hp.com>
+Subject: [PATCH 2 09/24] hpsa: allocate reply queues individually
+Date: Thu, 29 May 2014 10:53:07 -0500
+Message-ID: <20140529155307.8180.30614.stgit@beardog.cce.hp.com>
 References: <20140529154739.8180.50710.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g6t1524.atlanta.hp.com ([15.193.200.67]:34010 "EHLO
+Received: from g6t1524.atlanta.hp.com ([15.193.200.67]:34036 "EHLO
 	g6t1524.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757420AbaE2Px5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 May 2014 11:53:57 -0400
+	with ESMTP id S1757700AbaE2Px7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 May 2014 11:53:59 -0400
 In-Reply-To: <20140529154739.8180.50710.stgit@beardog.cce.hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,42 +19,197 @@ Cc: webb.scales@hp.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, 
 
 From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-No sense having 8 or 16 reply queues if you only have 4 cpus,
-and likewise no sense limiting to 8 reply queues if you have
-many more cpus.
+Now that we can allocate more than 4 reply queues (up to 64)
+we shouldn't try to make them share the same allocation but
+should allocate them separately.
 
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 Reviewed-by: Mike Miller <michael.miller@canonical.com>
 Reviewed-by: Scott Teel <scott.teel@hp.com>
 ---
- drivers/scsi/hpsa.c     |    2 ++
- drivers/scsi/hpsa_cmd.h |    2 +-
- 2 files changed, 3 insertions(+), 1 deletions(-)
+ drivers/scsi/hpsa.c |   53 +++++++++++++++++++++++++++++++--------------------
+ drivers/scsi/hpsa.h |   13 ++++++-------
+ 2 files changed, 38 insertions(+), 28 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index b1ecfd8..b903e86 100644
+index b903e86..9c44f26 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -6157,6 +6157,8 @@ static void hpsa_interrupt_mode(struct ctlr_info *h)
- 	if (pci_find_capability(h->pdev, PCI_CAP_ID_MSIX)) {
- 		dev_info(&h->pdev->dev, "MSIX\n");
- 		h->msix_vector = MAX_REPLY_QUEUES;
-+		if (h->msix_vector > num_online_cpus())
-+			h->msix_vector = num_online_cpus();
- 		err = pci_enable_msix(h->pdev, hpsa_msix_entries,
- 				      h->msix_vector);
- 		if (err > 0) {
-diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
-index db89245..104b67b 100644
---- a/drivers/scsi/hpsa_cmd.h
-+++ b/drivers/scsi/hpsa_cmd.h
-@@ -615,7 +615,7 @@ struct TransTable_struct {
- 	u32            RepQCount;
- 	u32            RepQCtrAddrLow32;
- 	u32            RepQCtrAddrHigh32;
--#define MAX_REPLY_QUEUES 8
-+#define MAX_REPLY_QUEUES 64
- 	struct vals32  RepQAddr[MAX_REPLY_QUEUES];
+@@ -695,7 +695,7 @@ static inline void addQ(struct list_head *list, struct CommandList *c)
+ static inline u32 next_command(struct ctlr_info *h, u8 q)
+ {
+ 	u32 a;
+-	struct reply_pool *rq = &h->reply_queue[q];
++	struct reply_queue_buffer *rq = &h->reply_queue[q];
+ 	unsigned long flags;
+ 
+ 	if (h->transMethod & CFGTBL_Trans_io_accel1)
+@@ -6700,6 +6700,20 @@ static void hpsa_free_irqs_and_disable_msix(struct ctlr_info *h)
+ #endif /* CONFIG_PCI_MSI */
+ }
+ 
++static void hpsa_free_reply_queues(struct ctlr_info *h)
++{
++	int i;
++
++	for (i = 0; i < h->nreply_queues; i++) {
++		if (!h->reply_queue[i].head)
++			continue;
++		pci_free_consistent(h->pdev, h->reply_queue_size,
++			h->reply_queue[i].head, h->reply_queue[i].busaddr);
++		h->reply_queue[i].head = NULL;
++		h->reply_queue[i].busaddr = 0;
++	}
++}
++
+ static void hpsa_undo_allocations_after_kdump_soft_reset(struct ctlr_info *h)
+ {
+ 	hpsa_free_irqs_and_disable_msix(h);
+@@ -6707,8 +6721,7 @@ static void hpsa_undo_allocations_after_kdump_soft_reset(struct ctlr_info *h)
+ 	hpsa_free_cmd_pool(h);
+ 	kfree(h->ioaccel1_blockFetchTable);
+ 	kfree(h->blockFetchTable);
+-	pci_free_consistent(h->pdev, h->reply_pool_size,
+-		h->reply_pool, h->reply_pool_dhandle);
++	hpsa_free_reply_queues(h);
+ 	if (h->vaddr)
+ 		iounmap(h->vaddr);
+ 	if (h->transtable)
+@@ -7157,8 +7170,7 @@ static void hpsa_remove_one(struct pci_dev *pdev)
+ 	pci_free_consistent(h->pdev,
+ 		h->nr_cmds * sizeof(struct ErrorInfo),
+ 		h->errinfo_pool, h->errinfo_pool_dhandle);
+-	pci_free_consistent(h->pdev, h->reply_pool_size,
+-		h->reply_pool, h->reply_pool_dhandle);
++	hpsa_free_reply_queues(h);
+ 	kfree(h->cmd_pool_bits);
+ 	kfree(h->blockFetchTable);
+ 	kfree(h->ioaccel1_blockFetchTable);
+@@ -7271,7 +7283,8 @@ static void hpsa_enter_performant_mode(struct ctlr_info *h, u32 trans_support)
+ 	 */
+ 
+ 	/* Controller spec: zero out this buffer. */
+-	memset(h->reply_pool, 0, h->reply_pool_size);
++	for (i = 0; i < h->nreply_queues; i++)
++		memset(h->reply_queue[i].head, 0, h->reply_queue_size);
+ 
+ 	bft[7] = SG_ENTRIES_IN_CMD + 4;
+ 	calc_bucket_map(bft, ARRAY_SIZE(bft),
+@@ -7287,8 +7300,7 @@ static void hpsa_enter_performant_mode(struct ctlr_info *h, u32 trans_support)
+ 
+ 	for (i = 0; i < h->nreply_queues; i++) {
+ 		writel(0, &h->transtable->RepQAddr[i].upper);
+-		writel(h->reply_pool_dhandle +
+-			(h->max_commands * sizeof(u64) * i),
++		writel(h->reply_queue[i].busaddr,
+ 			&h->transtable->RepQAddr[i].lower);
+ 	}
+ 
+@@ -7336,8 +7348,10 @@ static void hpsa_enter_performant_mode(struct ctlr_info *h, u32 trans_support)
+ 				h->ioaccel1_blockFetchTable);
+ 
+ 		/* initialize all reply queue entries to unused */
+-		memset(h->reply_pool, (u8) IOACCEL_MODE1_REPLY_UNUSED,
+-				h->reply_pool_size);
++		for (i = 0; i < h->nreply_queues; i++)
++			memset(h->reply_queue[i].head,
++				(u8) IOACCEL_MODE1_REPLY_UNUSED,
++				h->reply_queue_size);
+ 
+ 		/* set all the constant fields in the accelerator command
+ 		 * frames once at init time to save CPU cycles later.
+@@ -7493,16 +7507,17 @@ static void hpsa_put_ctlr_into_performant_mode(struct ctlr_info *h)
+ 		}
+ 	}
+ 
+-	/* TODO, check that this next line h->nreply_queues is correct */
+ 	h->nreply_queues = h->msix_vector > 0 ? h->msix_vector : 1;
+ 	hpsa_get_max_perf_mode_cmds(h);
+ 	/* Performant mode ring buffer and supporting data structures */
+-	h->reply_pool_size = h->max_commands * sizeof(u64) * h->nreply_queues;
+-	h->reply_pool = pci_alloc_consistent(h->pdev, h->reply_pool_size,
+-				&(h->reply_pool_dhandle));
++	h->reply_queue_size = h->max_commands * sizeof(u64);
+ 
+ 	for (i = 0; i < h->nreply_queues; i++) {
+-		h->reply_queue[i].head = &h->reply_pool[h->max_commands * i];
++		h->reply_queue[i].head = pci_alloc_consistent(h->pdev,
++						h->reply_queue_size,
++						&(h->reply_queue[i].busaddr));
++		if (!h->reply_queue[i].head)
++			goto clean_up;
+ 		h->reply_queue[i].size = h->max_commands;
+ 		h->reply_queue[i].wraparound = 1;  /* spec: init to 1 */
+ 		h->reply_queue[i].current_entry = 0;
+@@ -7511,18 +7526,14 @@ static void hpsa_put_ctlr_into_performant_mode(struct ctlr_info *h)
+ 	/* Need a block fetch table for performant mode */
+ 	h->blockFetchTable = kmalloc(((SG_ENTRIES_IN_CMD + 1) *
+ 				sizeof(u32)), GFP_KERNEL);
+-
+-	if ((h->reply_pool == NULL)
+-		|| (h->blockFetchTable == NULL))
++	if (!h->blockFetchTable)
+ 		goto clean_up;
+ 
+ 	hpsa_enter_performant_mode(h, trans_support);
+ 	return;
+ 
+ clean_up:
+-	if (h->reply_pool)
+-		pci_free_consistent(h->pdev, h->reply_pool_size,
+-			h->reply_pool, h->reply_pool_dhandle);
++	hpsa_free_reply_queues(h);
+ 	kfree(h->blockFetchTable);
+ }
+ 
+diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
+index da67c07..fa63576 100644
+--- a/drivers/scsi/hpsa.h
++++ b/drivers/scsi/hpsa.h
+@@ -57,11 +57,12 @@ struct hpsa_scsi_dev_t {
+ 
  };
  
+-struct reply_pool {
++struct reply_queue_buffer {
+ 	u64 *head;
+ 	size_t size;
+ 	u8 wraparound;
+ 	u32 current_entry;
++	dma_addr_t busaddr;
+ };
+ 
+ #pragma pack(1)
+@@ -173,11 +174,9 @@ struct ctlr_info {
+ 	/*
+ 	 * Performant mode completion buffers
+ 	 */
+-	u64 *reply_pool;
+-	size_t reply_pool_size;
+-	struct reply_pool reply_queue[MAX_REPLY_QUEUES];
++	size_t reply_queue_size;
++	struct reply_queue_buffer reply_queue[MAX_REPLY_QUEUES];
+ 	u8 nreply_queues;
+-	dma_addr_t reply_pool_dhandle;
+ 	u32 *blockFetchTable;
+ 	u32 *ioaccel1_blockFetchTable;
+ 	u32 *ioaccel2_blockFetchTable;
+@@ -391,7 +390,7 @@ static void SA5_performant_intr_mask(struct ctlr_info *h, unsigned long val)
+ 
+ static unsigned long SA5_performant_completed(struct ctlr_info *h, u8 q)
+ {
+-	struct reply_pool *rq = &h->reply_queue[q];
++	struct reply_queue_buffer *rq = &h->reply_queue[q];
+ 	unsigned long flags, register_value = FIFO_EMPTY;
+ 
+ 	/* msi auto clears the interrupt pending bit. */
+@@ -506,7 +505,7 @@ static bool SA5_ioaccel_mode1_intr_pending(struct ctlr_info *h)
+ static unsigned long SA5_ioaccel_mode1_completed(struct ctlr_info *h, u8 q)
+ {
+ 	u64 register_value;
+-	struct reply_pool *rq = &h->reply_queue[q];
++	struct reply_queue_buffer *rq = &h->reply_queue[q];
+ 	unsigned long flags;
+ 
+ 	BUG_ON(q >= h->nreply_queues);
 
