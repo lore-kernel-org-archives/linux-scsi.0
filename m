@@ -1,82 +1,74 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 2 10/24] hpsa: set irq affinity hints to route MSI-X vectors
-	across CPUs
-Date: Thu, 29 May 2014 10:53:13 -0500
-Message-ID: <20140529155312.8180.51635.stgit@beardog.cce.hp.com>
+Subject: [PATCH 2 19/24] hpsa: fix memory leak in hpsa_hba_mode_enabled
+Date: Thu, 29 May 2014 10:54:00 -0500
+Message-ID: <20140529155359.8180.16415.stgit@beardog.cce.hp.com>
 References: <20140529154739.8180.50710.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g9t1613g.houston.hp.com ([15.240.0.71]:37816 "EHLO
-	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757753AbaE2Pyi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 May 2014 11:54:38 -0400
-Received: from g5t1626.atlanta.hp.com (g5t1626.atlanta.hp.com [15.192.137.9])
+Received: from g2t1383g.austin.hp.com ([15.217.136.92]:19867 "EHLO
+	g2t1383g.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932809AbaE2PzB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 May 2014 11:55:01 -0400
+Received: from g2t2354.austin.hp.com (g2t2354.austin.hp.com [15.217.128.53])
 	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by g9t1613g.houston.hp.com (Postfix) with ESMTPS id 89DF062139
-	for <linux-scsi@vger.kernel.org>; Thu, 29 May 2014 15:54:16 +0000 (UTC)
+	by g2t1383g.austin.hp.com (Postfix) with ESMTPS id F3633DD3
+	for <linux-scsi@vger.kernel.org>; Thu, 29 May 2014 15:35:43 +0000 (UTC)
 In-Reply-To: <20140529154739.8180.50710.stgit@beardog.cce.hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: james.bottomley@parallels.com
 Cc: webb.scales@hp.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, justin.lindley@hp.com, stephenmcameron@gmail.com, joseph.t.handzik@hp.com, thenzl@redhat.com, michael.miller@canonical.com, scott.teel@hp.com, hch@lst.de, dan.carpenter@oracle.com
 
-From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+From: Joe Handzik <joseph.t.handzik@hp.com>
 
+And while we're at it fix a magic number
+
+Signed-off-by: Joe Handzik <joseph.t.handzik@hp.com>
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
-Reviewed-by: Mike Miller <michael.miller@canonical.com>
-Reviewed-by: Scott Teel <scott.teel@hp.com>
+Reviewed-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- drivers/scsi/hpsa.c |   17 ++++++++++++++++-
- 1 files changed, 16 insertions(+), 1 deletions(-)
+ drivers/scsi/hpsa.c |    7 ++++++-
+ drivers/scsi/hpsa.h |    1 +
+ 2 files changed, 7 insertions(+), 1 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 9c44f26..e8090e2 100644
+index 3446b8d..e2f85e7 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -6608,6 +6608,17 @@ static void hpsa_free_cmd_pool(struct ctlr_info *h)
- 			h->ioaccel_cmd_pool, h->ioaccel_cmd_pool_dhandle);
- }
- 
-+static void hpsa_irq_affinity_hints(struct ctlr_info *h)
-+{
-+	int i, cpu, rc;
-+
-+	cpu = cpumask_first(cpu_online_mask);
-+	for (i = 0; i < h->msix_vector; i++) {
-+		rc = irq_set_affinity_hint(h->intr[i], get_cpu_mask(cpu));
-+		cpu = cpumask_next(cpu, cpu_online_mask);
-+	}
-+}
-+
- static int hpsa_request_irq(struct ctlr_info *h,
- 	irqreturn_t (*msixhandler)(int, void *),
- 	irqreturn_t (*intxhandler)(int, void *))
-@@ -6627,6 +6638,7 @@ static int hpsa_request_irq(struct ctlr_info *h,
- 			rc = request_irq(h->intr[i], msixhandler,
- 					0, h->devname,
- 					&h->q[i]);
-+		hpsa_irq_affinity_hints(h);
- 	} else {
- 		/* Use single reply pool */
- 		if (h->msix_vector > 0 || h->msi_vector) {
-@@ -6678,12 +6690,15 @@ static void free_irqs(struct ctlr_info *h)
- 	if (!h->msix_vector || h->intr_mode != PERF_MODE_INT) {
- 		/* Single reply queue, only one irq to free */
- 		i = h->intr_mode;
-+		irq_set_affinity_hint(h->intr[i], NULL);
- 		free_irq(h->intr[i], &h->q[i]);
- 		return;
+@@ -2973,6 +2973,7 @@ u8 *figure_lunaddrbytes(struct ctlr_info *h, int raid_ctlr_position, int i,
+ static int hpsa_hba_mode_enabled(struct ctlr_info *h)
+ {
+ 	int rc;
++	int hba_mode_enabled;
+ 	struct bmic_controller_parameters *ctlr_params;
+ 	ctlr_params = kzalloc(sizeof(struct bmic_controller_parameters),
+ 		GFP_KERNEL);
+@@ -2985,7 +2986,11 @@ static int hpsa_hba_mode_enabled(struct ctlr_info *h)
+ 		kfree(ctlr_params);
+ 		return 0;
  	}
- 
--	for (i = 0; i < h->msix_vector; i++)
-+	for (i = 0; i < h->msix_vector; i++) {
-+		irq_set_affinity_hint(h->intr[i], NULL);
- 		free_irq(h->intr[i], &h->q[i]);
-+	}
+-	return ctlr_params->nvram_flags & (1 << 3) ? 1 : 0;
++
++	hba_mode_enabled =
++		((ctlr_params->nvram_flags & HBA_MODE_ENABLED_FLAG) != 0);
++	kfree(ctlr_params);
++	return hba_mode_enabled;
  }
  
- static void hpsa_free_irqs_and_disable_msix(struct ctlr_info *h)
+ static void hpsa_update_scsi_devices(struct ctlr_info *h, int hostno)
+diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
+index 18f5093..24472ce 100644
+--- a/drivers/scsi/hpsa.h
++++ b/drivers/scsi/hpsa.h
+@@ -91,6 +91,7 @@ struct bmic_controller_parameters {
+ 	u8   automatic_drive_slamming;
+ 	u8   reserved1;
+ 	u8   nvram_flags;
++#define HBA_MODE_ENABLED_FLAG (1 << 3)
+ 	u8   cache_nvram_flags;
+ 	u8   drive_config_flags;
+ 	u16  reserved2;
 
