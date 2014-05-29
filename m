@@ -1,58 +1,72 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH 6/6] [SCSI] sd: Implement copy offload support
-Date: Thu, 29 May 2014 10:48:18 -0400
-Message-ID: <538748B2.2020508@interlog.com>
-References: <1401335565-29865-1-git-send-email-martin.petersen@oracle.com> <1401335565-29865-7-git-send-email-martin.petersen@oracle.com>
-Reply-To: dgilbert@interlog.com
+From: scameron@beardog.cce.hp.com
+Subject: Re: [PATCH v2, repost] hpsa: remove unneeded loop
+Date: Thu, 29 May 2014 09:51:28 -0500
+Message-ID: <20140529145128.GO6970@beardog.cce.hp.com>
+References: <53873DEB.1080504@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:37162 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932940AbaE2OsZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 29 May 2014 10:48:25 -0400
-In-Reply-To: <1401335565-29865-7-git-send-email-martin.petersen@oracle.com>
+Received: from g4t3426.houston.hp.com ([15.201.208.54]:30173 "EHLO
+	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932720AbaE2OwT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 May 2014 10:52:19 -0400
+Content-Disposition: inline
+In-Reply-To: <53873DEB.1080504@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, axboe@fb.com, nab@daterainc.com, linux-scsi@vger.kernel.org
+To: Tomas Henzl <thenzl@redhat.com>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, scameron@beardog.cce.hp.com
 
-On 14-05-28 11:52 PM, Martin K. Petersen wrote:
-> Implement support for hardware copy offload. This initial implementation
-> only supports EXTENDED COPY(LID1). If need be we can add support for
-> LID4 or token copy at a later date.
->
-> If a device has the 3PC flag set in the standard INQUIRY response we'll
-> issue a RECEIVE COPY OPERATION PARAMETERS command. We require the device
-> to support two copy source/copy destination descriptors and one block to
-> block (0x02) segment descriptor. The device must support the NAA
-> identification descriptor (0xE4). If the device is capable we'll set the
-> queue limits to indicate that the device supports copy offload.
+On Thu, May 29, 2014 at 04:02:19PM +0200, Tomas Henzl wrote:
+> Originally this was first patch in a series, but while the  other patches
+> were accepted, this one was forgotten.
+> The code below is adapted for the latest sources.
+> 
+> The cmd_pool_bits is protected everywhere with a spinlock,
+> we don't need the test_and_set_bit, set_bit is enough and the loop
+> can be removed too.
+> 
+> Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+> ---
+>  drivers/scsi/hpsa.c | 15 ++++++---------
+>  1 file changed, 6 insertions(+), 9 deletions(-)
+> 
+> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+> index 9a6e4a2..c8267f3 100644
+> --- a/drivers/scsi/hpsa.c
+> +++ b/drivers/scsi/hpsa.c
+> @@ -4680,15 +4680,12 @@ static struct CommandList *cmd_alloc(struct ctlr_info *h)
+>  	unsigned long flags;
+>  
+>  	spin_lock_irqsave(&h->lock, flags);
+> -	do {
+> -		i = find_first_zero_bit(h->cmd_pool_bits, h->nr_cmds);
+> -		if (i == h->nr_cmds) {
+> -			spin_unlock_irqrestore(&h->lock, flags);
+> -			return NULL;
+> -		}
+> -	} while (test_and_set_bit
+> -		 (i & (BITS_PER_LONG - 1),
+> -		  h->cmd_pool_bits + (i / BITS_PER_LONG)) != 0);
+> +	i = find_first_zero_bit(h->cmd_pool_bits, h->nr_cmds);
+> +	if (i == h->nr_cmds) {
+> +		spin_unlock_irqrestore(&h->lock, flags);
+> +		return NULL;
+> +	}
+> +	set_bit(i & (BITS_PER_LONG - 1), h->cmd_pool_bits + (i / BITS_PER_LONG));
+>  	spin_unlock_irqrestore(&h->lock, flags);
+>  
+>  	c = h->cmd_pool + i;
+> -- 
+> 1.8.3.1
+> 
 
-SPC-4 has downgraded the RECEIVE COPY OPERATION PARAMETERS command
-in favour of the new Third Party Copy (TPC) VPD page [0x8f]. If the
-latter is present, it should be used. Most real world implementations
-of XCOPY(LID1) comply (loosely) with SPC-2 and SPC-3 since VMWare's
-VAAI is the effective "standard".
+I don't quite remember, but I think it was forgotten because I became
+more interested in removing all the locks from the main i/o path of hpsa
+for performance reasons (I have had a rather large patch series in the
+works for quite a while now to do that, maybe it will be ready for 3.17,
+we'll see.) So this looks ok, but if things go according to plan it won't
+be relevant for very long.
 
-Further I noticed some ODX ** implementations which do use that TPC
-VPD page, do not implement its (SPC-4 defined) mandatory descriptors
-(0x1 and 0x8001) needed to support XCOPY(LID1). Perhaps there may be
-some convergence after SPC-4 becomes a standard.
+-- steve
 
-In any case, this patch set looks good.
-
-May I also point out the NAB's target subsystem has a block to
-block XCOPY(LID1) implementation. So it can be used to test
-this patch set. The standards require copies between LUs in
-the same target to be supported (if xcopy is supported),
-otherwise support is optional (i.e. between LUs in different
-targets). Hence most implementations restrict the LUs to being
-in the same target.
-
-Doug Gilbert
-
-
-** ODX is MS's name for the subset of XCOPY(LID4) defined in
-    SBC-3 using the POPULATE TOKEN and WRITE USING TOKEN
-    commands. So this is a "token copy" referred to above.
