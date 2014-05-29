@@ -1,41 +1,89 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: Re: [PATCH 3/4] scsi: increase upper limit for max_sectors
-Date: Fri, 30 May 2014 00:04:37 +0900
-Message-ID: <CAC5umygh2a28Wu5mWr5-zqbxpV3Wi2D3aZZgkgYNZJvLbLgAbA@mail.gmail.com>
-References: <1401021816-10423-1-git-send-email-akinobu.mita@gmail.com>
-	<1401021816-10423-4-git-send-email-akinobu.mita@gmail.com>
-	<94D0CD8314A33A4D9D801C0FE68B402958ABC354@G4W3296.americas.hpqcorp.net>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH v2, repost] hpsa: remove unneeded loop
+Date: Thu, 29 May 2014 17:21:36 +0200
+Message-ID: <53875080.7080600@redhat.com>
+References: <53873DEB.1080504@redhat.com> <20140529145128.GO6970@beardog.cce.hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-lb0-f179.google.com ([209.85.217.179]:52443 "EHLO
-	mail-lb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756143AbaE2PEi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 May 2014 11:04:38 -0400
-Received: by mail-lb0-f179.google.com with SMTP id c11so263838lbj.38
-        for <linux-scsi@vger.kernel.org>; Thu, 29 May 2014 08:04:37 -0700 (PDT)
-In-Reply-To: <94D0CD8314A33A4D9D801C0FE68B402958ABC354@G4W3296.americas.hpqcorp.net>
+Received: from mx1.redhat.com ([209.132.183.28]:20125 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757339AbaE2PWp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 29 May 2014 11:22:45 -0400
+In-Reply-To: <20140529145128.GO6970@beardog.cce.hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <JBottomley@parallels.com>, Douglas Gilbert <dgilbert@interlog.com>
+To: scameron@beardog.cce.hp.com
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-2014-05-29 1:18 GMT+09:00 Elliott, Robert (Server Storage) <Elliott@hp.com>:
->
->> -----Original Message-----
->> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
->> owner@vger.kernel.org] On Behalf Of Akinobu Mita
->> Sent: Sunday, 25 May, 2014 7:44 AM
->> To: linux-scsi@vger.kernel.org
->> Cc: Akinobu Mita; Jens Axboe; James E.J. Bottomley; Douglas Gilbert
->> Subject: [PATCH 3/4] scsi: increase upper limit for max_sectors
+On 05/29/2014 04:51 PM, scameron@beardog.cce.hp.com wrote:
+> On Thu, May 29, 2014 at 04:02:19PM +0200, Tomas Henzl wrote:
+>> Originally this was first patch in a series, but while the  other patches
+>> were accepted, this one was forgotten.
+>> The code below is adapted for the latest sources.
 >>
-> ...
->> -     } else if (sdp->use_16_for_rw) {
->> +     } else if ((this_count > 0xffff) || sdp->use_16_for_rw) {
->
-> Suggestion: reorder those so the unlikely case of a huge
-> this_count is on the right side of the || operator.
+>> The cmd_pool_bits is protected everywhere with a spinlock,
+>> we don't need the test_and_set_bit, set_bit is enough and the loop
+>> can be removed too.
+>>
+>> Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+>> ---
+>>  drivers/scsi/hpsa.c | 15 ++++++---------
+>>  1 file changed, 6 insertions(+), 9 deletions(-)
+>>
+>> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+>> index 9a6e4a2..c8267f3 100644
+>> --- a/drivers/scsi/hpsa.c
+>> +++ b/drivers/scsi/hpsa.c
+>> @@ -4680,15 +4680,12 @@ static struct CommandList *cmd_alloc(struct ctlr_info *h)
+>>  	unsigned long flags;
+>>  
+>>  	spin_lock_irqsave(&h->lock, flags);
+>> -	do {
+>> -		i = find_first_zero_bit(h->cmd_pool_bits, h->nr_cmds);
+>> -		if (i == h->nr_cmds) {
+>> -			spin_unlock_irqrestore(&h->lock, flags);
+>> -			return NULL;
+>> -		}
+>> -	} while (test_and_set_bit
+>> -		 (i & (BITS_PER_LONG - 1),
+>> -		  h->cmd_pool_bits + (i / BITS_PER_LONG)) != 0);
+>> +	i = find_first_zero_bit(h->cmd_pool_bits, h->nr_cmds);
+>> +	if (i == h->nr_cmds) {
+>> +		spin_unlock_irqrestore(&h->lock, flags);
+>> +		return NULL;
+>> +	}
+>> +	set_bit(i & (BITS_PER_LONG - 1), h->cmd_pool_bits + (i / BITS_PER_LONG));
+>>  	spin_unlock_irqrestore(&h->lock, flags);
+>>  
+>>  	c = h->cmd_pool + i;
+>> -- 
+>> 1.8.3.1
+>>
+> I don't quite remember, but I think it was forgotten because I became
+> more interested in removing all the locks from the main i/o path of hpsa
+> for performance reasons (I have had a rather large patch series in the
+> works for quite a while now to do that, maybe it will be ready for 3.17,
+> we'll see.) So this looks ok, but if things go according to plan it won't
+> be relevant for very long.
 
-No problem.  I'll make this change in the next version.
-Thanks for your suggestion.
+We have discussed it quite long ago - http://www.spinics.net/lists/linux-scsi/msg67782.html
+the conclusion was "I think we should go with your patch as is -- leave the spin lock,
+but get rid of the unnecessary loop." That's why I've reposted it.
+
+This patch it's just a smallish simplification and maybe performace impovement, (again very small),
+so when there is something being prepared which rewrites the function anyway we can skip it,
+I'll leave the decision on you.
+
+tomash
+
+
+>
+> -- steve
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
