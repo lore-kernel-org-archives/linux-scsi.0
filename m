@@ -1,136 +1,119 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 09/14] block: Relocate integrity flags
-Date: Wed, 28 May 2014 23:28:43 -0400
-Message-ID: <1401334128-15499-10-git-send-email-martin.petersen@oracle.com>
+Subject: [PATCH 08/14] block: Add a disk flag to block integrity profile
+Date: Wed, 28 May 2014 23:28:42 -0400
+Message-ID: <1401334128-15499-9-git-send-email-martin.petersen@oracle.com>
 References: <1401334128-15499-1-git-send-email-martin.petersen@oracle.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:33059 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:33066 "EHLO
 	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755944AbaE2D3V (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 May 2014 23:29:21 -0400
+	with ESMTP id S1755944AbaE2D3W (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 May 2014 23:29:22 -0400
 In-Reply-To: <1401334128-15499-1-git-send-email-martin.petersen@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: axboe@fb.com, nab@daterainc.com, sagig@dev.mellanox.co.il, linux-scsi@vger.kernel.org
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 
-Move flags affecting the integrity code out of the bio bi_flags and into
-the block integrity payload.
+So far we have relied on the app tag size to determine whether a disk
+has been formatted with T10 protection information or not. However, not
+all target devices provide application tag storage.
+
+Add a flag to the block integrity profile that indicates whether the
+disk has been formatted with protection information.
 
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 ---
- block/bio-integrity.c     |  4 ++--
- drivers/scsi/sd_dif.c     |  4 ++--
- include/linux/bio.h       | 27 ++++++++++++++++++++++++++-
- include/linux/blk_types.h |  6 ++----
- 4 files changed, 32 insertions(+), 9 deletions(-)
+ Documentation/ABI/testing/sysfs-block |  9 +++++++++
+ block/blk-integrity.c                 | 11 +++++++++++
+ drivers/scsi/sd_dif.c                 |  8 +++++++-
+ include/linux/blkdev.h                |  1 +
+ 4 files changed, 28 insertions(+), 1 deletion(-)
 
-diff --git a/block/bio-integrity.c b/block/bio-integrity.c
-index c91181e3d18d..877bce028766 100644
---- a/block/bio-integrity.c
-+++ b/block/bio-integrity.c
-@@ -98,7 +98,7 @@ void bio_integrity_free(struct bio *bio)
- 	struct bio_integrity_payload *bip = bio_integrity(bio);
- 	struct bio_set *bs = bio->bi_pool;
+diff --git a/Documentation/ABI/testing/sysfs-block b/Documentation/ABI/testing/sysfs-block
+index 279da08f7541..5876e163c430 100644
+--- a/Documentation/ABI/testing/sysfs-block
++++ b/Documentation/ABI/testing/sysfs-block
+@@ -53,6 +53,15 @@ Description:
+ 		512 bytes of data.
  
--	if (bip->bip_owns_buf)
-+	if (bip_get_flag(bip, BIP_BLOCK_INTEGRITY))
- 		kfree(page_address(bip->bip_vec->bv_page) +
- 		      bip->bip_vec->bv_offset);
  
-@@ -299,7 +299,7 @@ int bio_integrity_prep(struct bio *bio)
- 		return -EIO;
- 	}
- 
--	bip->bip_owns_buf = 1;
-+	bip_set_flag(bip, BIP_BLOCK_INTEGRITY);
- 	bip->bip_iter.bi_size = len;
- 	bip_set_seed(bip, bio->bi_iter.bi_sector);
- 
-diff --git a/drivers/scsi/sd_dif.c b/drivers/scsi/sd_dif.c
-index 1d401f864fbe..95d5cb806f58 100644
---- a/drivers/scsi/sd_dif.c
-+++ b/drivers/scsi/sd_dif.c
-@@ -326,7 +326,7 @@ void sd_dif_prepare(struct request *rq, sector_t hw_sector,
- 		unsigned int j;
- 
- 		/* Already remapped? */
--		if (bio_flagged(bio, BIO_MAPPED_INTEGRITY))
-+		if (bip_get_flag(bip, BIP_MAPPED_INTEGRITY))
- 			break;
- 
- 		virt = bip_get_seed(bip) & 0xffffffff;
-@@ -347,7 +347,7 @@ void sd_dif_prepare(struct request *rq, sector_t hw_sector,
- 			kunmap_atomic(sdt);
- 		}
- 
--		bio->bi_flags |= (1 << BIO_MAPPED_INTEGRITY);
-+		bip_set_flag(bip, BIP_MAPPED_INTEGRITY);
- 	}
++What:		/sys/block/<disk>/integrity/disk
++Date:		February 2011
++Contact:	Martin K. Petersen <martin.petersen@oracle.com>
++Description:
++		Indicates whether a storage device is capable of
++		persistently storing integrity metadata. Set if the
++		device is T10 PI-capable.
++
++
+ What:		/sys/block/<disk>/integrity/write_generate
+ Date:		June 2008
+ Contact:	Martin K. Petersen <martin.petersen@oracle.com>
+diff --git a/block/blk-integrity.c b/block/blk-integrity.c
+index 95f451a3c581..8cf87655152b 100644
+--- a/block/blk-integrity.c
++++ b/block/blk-integrity.c
+@@ -307,6 +307,11 @@ static ssize_t integrity_generate_show(struct blk_integrity *bi, char *page)
+ 	return sprintf(page, "%d\n", (bi->flags & BLK_INTEGRITY_GENERATE) != 0);
  }
  
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index 295545de8790..adc806325c36 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -296,7 +296,7 @@ struct bio_integrity_payload {
- 
- 	unsigned short		bip_slab;	/* slab the bip came from */
- 	unsigned short		bip_vcnt;	/* # of integrity bio_vecs */
--	unsigned		bip_owns_buf:1;	/* should free bip_buf */
-+	unsigned short		bip_flags;	/* control flags */
- 
- 	struct work_struct	bip_work;	/* I/O completion */
- 
-@@ -304,6 +304,31 @@ struct bio_integrity_payload {
- 	struct bio_vec		bip_inline_vecs[0];/* embedded bvec array */
++static ssize_t integrity_disk_show(struct blk_integrity *bi, char *page)
++{
++	return sprintf(page, "%u\n", (bi->flags & BLK_INTEGRITY_DISK) != 0);
++}
++
+ static struct integrity_sysfs_entry integrity_format_entry = {
+ 	.attr = { .name = "format", .mode = S_IRUGO },
+ 	.show = integrity_format_show,
+@@ -329,11 +334,17 @@ static struct integrity_sysfs_entry integrity_generate_entry = {
+ 	.store = integrity_generate_store,
  };
  
-+enum bip_flags {
-+	BIP_BLOCK_INTEGRITY = 0,/* block layer owns integrity data, not fs */
-+	BIP_MAPPED_INTEGRITY,	/* integrity metadata has been remapped */
-+	BIP_CTRL_NOCHECK,	/* disable controller integrity checking */
-+	BIP_DISK_NOCHECK,	/* disable disk integrity checking */
++static struct integrity_sysfs_entry integrity_disk_entry = {
++	.attr = { .name = "disk", .mode = S_IRUGO },
++	.show = integrity_disk_show,
 +};
 +
-+static inline bool bip_get_flag(struct bio_integrity_payload *bip,
-+	enum bip_flags flag)
-+{
-+	if (bip && bip->bip_flags & (1 << flag))
-+		return true;
-+
-+	return false;
-+}
-+
-+static inline void bip_set_flag(struct bio_integrity_payload *bip,
-+	enum bip_flags flag)
-+{
-+	if (!bip)
-+		return;
-+
-+	bip->bip_flags |= (1 << flag);
-+}
-+
- static inline sector_t bip_get_seed(struct bio_integrity_payload *bip)
- {
- 	return bip->bip_iter.bi_sector;
-diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-index 9cce1fcd6793..b2e389a16534 100644
---- a/include/linux/blk_types.h
-+++ b/include/linux/blk_types.h
-@@ -120,10 +120,8 @@ struct bio {
- #define BIO_USER_MAPPED 6	/* contains user pages */
- #define BIO_EOPNOTSUPP	7	/* not supported */
- #define BIO_NULL_MAPPED 8	/* contains invalid user pages */
--#define BIO_FS_INTEGRITY 9	/* fs owns integrity data, not block layer */
--#define BIO_QUIET	10	/* Make BIO Quiet */
--#define BIO_MAPPED_INTEGRITY 11/* integrity metadata has been remapped */
--#define BIO_SNAP_STABLE	12	/* bio data must be snapshotted during write */
-+#define BIO_QUIET	9	/* Make BIO Quiet */
-+#define BIO_SNAP_STABLE	10	/* bio data must be snapshotted during write */
+ static struct attribute *integrity_attrs[] = {
+ 	&integrity_format_entry.attr,
+ 	&integrity_tag_size_entry.attr,
+ 	&integrity_verify_entry.attr,
+ 	&integrity_generate_entry.attr,
++	&integrity_disk_entry.attr,
+ 	NULL,
+ };
  
- /*
-  * Flags starting here get preserved by bio_reset() - this includes
+diff --git a/drivers/scsi/sd_dif.c b/drivers/scsi/sd_dif.c
+index 801c41851a01..1d401f864fbe 100644
+--- a/drivers/scsi/sd_dif.c
++++ b/drivers/scsi/sd_dif.c
+@@ -270,7 +270,13 @@ void sd_dif_config_host(struct scsi_disk *sdkp)
+ 		  "Enabling DIX %s protection\n", disk->integrity->name);
+ 
+ 	/* Signal to block layer that we support sector tagging */
+-	if (dif && type && sdkp->ATO) {
++	if (dif && type) {
++
++		disk->integrity->flags |= BLK_INTEGRITY_DISK;
++
++		if (!sdkp)
++			return;
++
+ 		if (type == SD_DIF_TYPE3_PROTECTION)
+ 			disk->integrity->tag_size = sizeof(u16) + sizeof(u32);
+ 		else
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index bb44630d27f8..4be0446a8817 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -1431,6 +1431,7 @@ static inline uint64_t rq_io_start_time_ns(struct request *req)
+ enum blk_integrity_flags {
+ 	BLK_INTEGRITY_VERIFY		= 1 << 0,
+ 	BLK_INTEGRITY_GENERATE		= 1 << 1,
++	BLK_INTEGRITY_DISK		= 1 << 2,
+ };
+ 
+ struct blk_integrity_iter {
 -- 
 1.9.0
 
