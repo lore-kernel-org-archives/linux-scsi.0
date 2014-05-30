@@ -1,73 +1,128 @@
 From: Neil Horman <nhorman@tuxdriver.com>
-Subject: [PATCH] fc: ensure scan_work isn't active when freeing fc_rport
-Date: Fri, 30 May 2014 10:59:34 -0400
-Message-ID: <1401461974-7879-1-git-send-email-nhorman@tuxdriver.com>
+Subject: [PATCH] bnx2fc: Improve stats update mechanism
+Date: Fri, 30 May 2014 11:01:55 -0400
+Message-ID: <1401462115-8072-1-git-send-email-nhorman@tuxdriver.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:33380 "EHLO
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:33460 "EHLO
 	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932413AbaE3O7y (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 30 May 2014 10:59:54 -0400
+	with ESMTP id S933058AbaE3PCJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 30 May 2014 11:02:09 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: fcoe-devel@open-fcoe.org
 Cc: Neil Horman <nhorman@tuxdriver.com>, linux-scsi@vger.kernel.org, Robert Love <robert.w.love@intel.com>, Vasu Dev <vasu.dev@intel.com>
 
-debugfs caught this:
-WARNING: at lib/debugobjects.c:260 debug_print_object+0x83/0xa0()
-ODEBUG: free active (active state 0) object type: work_struct
-hint: fc_scsi_scan_rport+0x0/0xd0 [scsi_transport_fc]
- CPU: 1 PID: 184 Comm: kworker/1:1 Tainted: G        W
---------------   3.10.0-123.el7.x86_64.debug #1
-Hardware name: HP ProLiant DL120 G7, BIOS J01 07/01/2013
-Workqueue: fc_wq_5 fc_rport_final_delete [scsi_transport_fc]
-Call Trace:
-[<ffffffff8169efec>] dump_stack+0x19/0x1b
-[<ffffffff8106cbd1>] warn_slowpath_common+0x61/0x80
-[<ffffffff8106cc4c>] warn_slowpath_fmt+0x5c/0x80
-[<ffffffff8133e003>] debug_print_object+0x83/0xa0
-[<ffffffffa04e2f40>] ? fc_parse_wwn+0x100/0x100
+Recently had this warning reported:
 
-[<ffffffff8133f23b>] debug_check_no_obj_freed+0x22b/0x270
-[<ffffffffa04e127e>] ? fc_rport_dev_release+0x1e/0x30
-[<ffffffff811db3e9>] kfree+0xd9/0x2d0
-[<ffffffffa04e127e>] fc_rport_dev_release+0x1e/0x30
-[<ffffffff81428032>] device_release+0x32/0xa0
-[<ffffffff8132701e>] kobject_release+0x7e/0x1b0
-[<ffffffff81326ed8>] kobject_put+0x28/0x60
-[<ffffffff81428397>] put_device+0x17/0x20
-[<ffffffffa04e5025>] fc_rport_final_delete+0x165/0x210
-[<ffffffff810959b0>] process_one_work+0x220/0x710
-[<ffffffff81095944>] ? process_one_work+0x1b4/0x710
-[<ffffffff81095fbb>] worker_thread+0x11b/0x3a0
-[<ffffffff81095ea0>] ? process_one_work+0x710/0x710
-[<ffffffff8109e0cd>] kthread+0xed/0x100
-[<ffffffff8109dfe0>] ? insert_kthread_work+0x80/0x80
-[<ffffffff816b2fec>] ret_from_fork+0x7c/0xb0
-[<ffffffff8109dfe0>] ? insert_kthread_work+0x80/0x80
+[  290.489047] Call Trace:
+[  290.489053]  [<ffffffff8169efec>] dump_stack+0x19/0x1b
+[  290.489055]  [<ffffffff810ac7a9>] __might_sleep+0x179/0x230
+[  290.489057]  [<ffffffff816a4ad5>] mutex_lock_nested+0x55/0x520
+[  290.489061]  [<ffffffffa01b9905>] ? bnx2fc_l2_rcv_thread+0xc5/0x4c0 [bnx2fc]
+[  290.489065]  [<ffffffffa0174c1a>] fc_vport_id_lookup+0x3a/0xa0 [libfc]
+[  290.489068]  [<ffffffffa01b9a6c>] bnx2fc_l2_rcv_thread+0x22c/0x4c0 [bnx2fc]
+[  290.489070]  [<ffffffffa01b9840>] ? bnx2fc_vport_destroy+0x110/0x110 [bnx2fc]
+[  290.489073]  [<ffffffff8109e0cd>] kthread+0xed/0x100
+[  290.489075]  [<ffffffff8109dfe0>] ? insert_kthread_work+0x80/0x80
+[  290.489077]  [<ffffffff816b2fec>] ret_from_fork+0x7c/0xb0
+[  290.489078]  [<ffffffff8109dfe0>] ? insert_kthread_work+0x80/0x80
 
-Seems to be because the scan_work work_struct might be active when the housing
-fc_rport struct gets freed.  Ensure that we cancel it prior to freeing the rport
+Its due to the fact that we call a potentially sleeping function from the bnx2fc
+rcv path with preemption disabled (via the get_cpu call embedded in the per-cpu
+variable stats lookup in bnx2fc_l2_rcv_thread.
+
+Easy enough fix, we can just move the stats collection later in the function
+where we are sure we won't preempt or sleep.  This also allows us to not have to
+enable pre-emption when doing a per-cpu lookup, since we're certain not to get
+rescheduled.
 
 Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
 CC: linux-scsi@vger.kernel.org
 CC: Robert Love <robert.w.love@intel.com>
 CC: Vasu Dev <vasu.dev@intel.com>
 ---
- drivers/scsi/scsi_transport_fc.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c | 16 ++++------------
+ 1 file changed, 4 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-index 4628fd5..5bd552c 100644
---- a/drivers/scsi/scsi_transport_fc.c
-+++ b/drivers/scsi/scsi_transport_fc.c
-@@ -2548,6 +2548,7 @@ fc_rport_final_delete(struct work_struct *work)
- 			fc_flush_devloss(shost);
- 		if (!cancel_delayed_work(&rport->dev_loss_work))
- 			fc_flush_devloss(shost);
-+		cancel_work_sync(&rport->scan_work);
- 		spin_lock_irqsave(shost->host_lock, flags);
- 		rport->flags &= ~FC_RPORT_DEVLOSS_PENDING;
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+index 9b94850..475eee5 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+@@ -516,23 +516,17 @@ static void bnx2fc_recv_frame(struct sk_buff *skb)
+ 	skb_pull(skb, sizeof(struct fcoe_hdr));
+ 	fr_len = skb->len - sizeof(struct fcoe_crc_eof);
+ 
+-	stats = per_cpu_ptr(lport->stats, get_cpu());
+-	stats->RxFrames++;
+-	stats->RxWords += fr_len / FCOE_WORD_TO_BYTE;
+-
+ 	fp = (struct fc_frame *)skb;
+ 	fc_frame_init(fp);
+ 	fr_dev(fp) = lport;
+ 	fr_sof(fp) = hp->fcoe_sof;
+ 	if (skb_copy_bits(skb, fr_len, &crc_eof, sizeof(crc_eof))) {
+-		put_cpu();
+ 		kfree_skb(skb);
+ 		return;
  	}
+ 	fr_eof(fp) = crc_eof.fcoe_eof;
+ 	fr_crc(fp) = crc_eof.fcoe_crc32;
+ 	if (pskb_trim(skb, fr_len)) {
+-		put_cpu();
+ 		kfree_skb(skb);
+ 		return;
+ 	}
+@@ -544,7 +538,6 @@ static void bnx2fc_recv_frame(struct sk_buff *skb)
+ 		port = lport_priv(vn_port);
+ 		if (!ether_addr_equal(port->data_src_addr, dest_mac)) {
+ 			BNX2FC_HBA_DBG(lport, "fpma mismatch\n");
+-			put_cpu();
+ 			kfree_skb(skb);
+ 			return;
+ 		}
+@@ -552,7 +545,6 @@ static void bnx2fc_recv_frame(struct sk_buff *skb)
+ 	if (fh->fh_r_ctl == FC_RCTL_DD_SOL_DATA &&
+ 	    fh->fh_type == FC_TYPE_FCP) {
+ 		/* Drop FCP data. We dont this in L2 path */
+-		put_cpu();
+ 		kfree_skb(skb);
+ 		return;
+ 	}
+@@ -562,7 +554,6 @@ static void bnx2fc_recv_frame(struct sk_buff *skb)
+ 		case ELS_LOGO:
+ 			if (ntoh24(fh->fh_s_id) == FC_FID_FLOGI) {
+ 				/* drop non-FIP LOGO */
+-				put_cpu();
+ 				kfree_skb(skb);
+ 				return;
+ 			}
+@@ -572,22 +563,23 @@ static void bnx2fc_recv_frame(struct sk_buff *skb)
+ 
+ 	if (fh->fh_r_ctl == FC_RCTL_BA_ABTS) {
+ 		/* Drop incoming ABTS */
+-		put_cpu();
+ 		kfree_skb(skb);
+ 		return;
+ 	}
+ 
++	stats = per_cpu_ptr(lport->stats, smp_processor_id());
++	stats->RxFrames++;
++	stats->RxWords += fr_len / FCOE_WORD_TO_BYTE;
++
+ 	if (le32_to_cpu(fr_crc(fp)) !=
+ 			~crc32(~0, skb->data, fr_len)) {
+ 		if (stats->InvalidCRCCount < 5)
+ 			printk(KERN_WARNING PFX "dropping frame with "
+ 			       "CRC error\n");
+ 		stats->InvalidCRCCount++;
+-		put_cpu();
+ 		kfree_skb(skb);
+ 		return;
+ 	}
+-	put_cpu();
+ 	fc_exch_recv(lport, fp);
+ }
+ 
 -- 
 1.8.3.1
 
