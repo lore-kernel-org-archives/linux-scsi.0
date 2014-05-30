@@ -1,48 +1,42 @@
 From: Fabian Frederick <fabf@skynet.be>
-Subject: [PATCH 1/1] drivers/scsi/aacraid/commctrl.c: replace kmalloc/copy_from_user by memdup_user
-Date: Fri, 30 May 2014 18:37:43 +0200
-Message-ID: <1401467863-7188-1-git-send-email-fabf@skynet.be>
+Subject: [PATCH 1/1] drivers/scsi/libsas/sas_scsi_host.c: use PTR_ERR_OR_ZERO
+Date: Fri, 30 May 2014 18:52:16 +0200
+Message-ID: <1401468736-9789-1-git-send-email-fabf@skynet.be>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailrelay007.isp.belgacom.be ([195.238.6.173]:2321 "EHLO
-	mailrelay007.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754547AbaE3Qht (ORCPT
+Received: from mailrelay006.isp.belgacom.be ([195.238.6.172]:40845 "EHLO
+	mailrelay006.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751268AbaE3QwN (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 May 2014 12:37:49 -0400
+	Fri, 30 May 2014 12:52:13 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Fabian Frederick <fabf@skynet.be>, "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Fabian Frederick <fabf@skynet.be>, Lukasz Dorau <lukasz.dorau@intel.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
 
+replace IS_ERR/PTR_ERR
+
+Cc: Lukasz Dorau <lukasz.dorau@intel.com>
 Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
 Signed-off-by: Fabian Frederick <fabf@skynet.be>
 ---
- drivers/scsi/aacraid/commctrl.c | 12 +++---------
- 1 file changed, 3 insertions(+), 9 deletions(-)
+ drivers/scsi/libsas/sas_scsi_host.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
-index fbcd48d..3d5d6a6 100644
---- a/drivers/scsi/aacraid/commctrl.c
-+++ b/drivers/scsi/aacraid/commctrl.c
-@@ -517,16 +517,10 @@ static int aac_send_raw_srb(struct aac_dev* dev, void __user * arg)
- 		goto cleanup;
- 	}
+diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
+index 25d0f12..400a2aa 100644
+--- a/drivers/scsi/libsas/sas_scsi_host.c
++++ b/drivers/scsi/libsas/sas_scsi_host.c
+@@ -1093,9 +1093,7 @@ int sas_init_queue(struct sas_ha_struct *sas_ha)
  
--	user_srbcmd = kmalloc(fibsize, GFP_KERNEL);
--	if (!user_srbcmd) {
--		dprintk((KERN_DEBUG"aacraid: Could not make a copy of the srb\n"));
--		rcode = -ENOMEM;
--		goto cleanup;
--	}
--	if(copy_from_user(user_srbcmd, user_srb,fibsize)){
-+	user_srbcmd = memdup_user(user_srb, fibsize);
-+	if (IS_ERR(user_srbcmd)) {
- 		dprintk((KERN_DEBUG"aacraid: Could not copy srb from user\n"));
--		rcode = -EFAULT;
--		goto cleanup;
-+		return PTR_ERR(user_srbcmd);
- 	}
+ 	core->queue_thread = kthread_run(sas_queue_thread, sas_ha,
+ 					 "sas_queue_%d", core->shost->host_no);
+-	if (IS_ERR(core->queue_thread))
+-		return PTR_ERR(core->queue_thread);
+-	return 0;
++	return PTR_ERR_OR_ZERO(core->queue_thread);
+ }
  
- 	user_reply = arg+fibsize;
+ void sas_shutdown_queue(struct sas_ha_struct *sas_ha)
 -- 
 1.8.4.5
 
