@@ -1,43 +1,73 @@
-From: Jan Kasprzak <kas@fi.muni.cz>
-Subject: Re: PATCH: mvsas: add support for Supermicro AOC-SAS2LP-MV8
-Date: Fri, 30 May 2014 14:50:11 +0200
-Message-ID: <20140530125011.GN9638@fi.muni.cz>
-References: <20140428145201.GG29712@fi.muni.cz>
- <F766E4F80769BD478052FB6533FA745D4F6368598F@SC-VEXCH4.marvell.com>
- <1398735385.2419.69.camel@dabdike.int.hansenpartnership.com>
- <F766E4F80769BD478052FB6533FA745D4F63685A27@SC-VEXCH4.marvell.com>
- <20140516120642.GW9638@fi.muni.cz>
- <20140528110815.GA19539@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20140528110815.GA19539@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Xiangliang Yu <yuxiangl@marvell.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+From: Neil Horman <nhorman@tuxdriver.com>
+Subject: [PATCH] fc: ensure scan_work isn't active when freeing fc_rport
+Date: Fri, 30 May 2014 10:59:34 -0400
+Message-ID: <1401461974-7879-1-git-send-email-nhorman@tuxdriver.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:33380 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932413AbaE3O7y (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 30 May 2014 10:59:54 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: fcoe-devel@open-fcoe.org
+Cc: Neil Horman <nhorman@tuxdriver.com>, linux-scsi@vger.kernel.org, Robert Love <robert.w.love@intel.com>, Vasu Dev <vasu.dev@intel.com>
 
-Christoph Hellwig wrote:
-: On Fri, May 16, 2014 at 02:06:42PM +0200, Jan Kasprzak wrote:
-: > any news with this patch? Will it be acked by you and submitted upstream?
-: > Thanks!
-: 
-: Give me an Acked-by and I'll pull it in.
+debugfs caught this:
+WARNING: at lib/debugobjects.c:260 debug_print_object+0x83/0xa0()
+ODEBUG: free active (active state 0) object type: work_struct
+hint: fc_scsi_scan_rport+0x0/0xd0 [scsi_transport_fc]
+ CPU: 1 PID: 184 Comm: kworker/1:1 Tainted: G        W
+--------------   3.10.0-123.el7.x86_64.debug #1
+Hardware name: HP ProLiant DL120 G7, BIOS J01 07/01/2013
+Workqueue: fc_wq_5 fc_rport_final_delete [scsi_transport_fc]
+Call Trace:
+[<ffffffff8169efec>] dump_stack+0x19/0x1b
+[<ffffffff8106cbd1>] warn_slowpath_common+0x61/0x80
+[<ffffffff8106cc4c>] warn_slowpath_fmt+0x5c/0x80
+[<ffffffff8133e003>] debug_print_object+0x83/0xa0
+[<ffffffffa04e2f40>] ? fc_parse_wwn+0x100/0x100
 
-Acked-By: Jan "Yenya" Kasprzak <kas@fi.muni.cz>
+[<ffffffff8133f23b>] debug_check_no_obj_freed+0x22b/0x270
+[<ffffffffa04e127e>] ? fc_rport_dev_release+0x1e/0x30
+[<ffffffff811db3e9>] kfree+0xd9/0x2d0
+[<ffffffffa04e127e>] fc_rport_dev_release+0x1e/0x30
+[<ffffffff81428032>] device_release+0x32/0xa0
+[<ffffffff8132701e>] kobject_release+0x7e/0x1b0
+[<ffffffff81326ed8>] kobject_put+0x28/0x60
+[<ffffffff81428397>] put_device+0x17/0x20
+[<ffffffffa04e5025>] fc_rport_final_delete+0x165/0x210
+[<ffffffff810959b0>] process_one_work+0x220/0x710
+[<ffffffff81095944>] ? process_one_work+0x1b4/0x710
+[<ffffffff81095fbb>] worker_thread+0x11b/0x3a0
+[<ffffffff81095ea0>] ? process_one_work+0x710/0x710
+[<ffffffff8109e0cd>] kthread+0xed/0x100
+[<ffffffff8109dfe0>] ? insert_kthread_work+0x80/0x80
+[<ffffffff816b2fec>] ret_from_fork+0x7c/0xb0
+[<ffffffff8109dfe0>] ? insert_kthread_work+0x80/0x80
 
-Not sure whether I should ack my own patch, though. But you may apply
-it to the original one, which is identical to what I did.
-http://marc.info/?l=linux-scsi&m=139277202005675&w=2
+Seems to be because the scan_work work_struct might be active when the housing
+fc_rport struct gets freed.  Ensure that we cancel it prior to freeing the rport
 
-Thanks!
+Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
+CC: linux-scsi@vger.kernel.org
+CC: Robert Love <robert.w.love@intel.com>
+CC: Vasu Dev <vasu.dev@intel.com>
+---
+ drivers/scsi/scsi_transport_fc.c | 1 +
+ 1 file changed, 1 insertion(+)
 
--Y.
-
+diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+index 4628fd5..5bd552c 100644
+--- a/drivers/scsi/scsi_transport_fc.c
++++ b/drivers/scsi/scsi_transport_fc.c
+@@ -2548,6 +2548,7 @@ fc_rport_final_delete(struct work_struct *work)
+ 			fc_flush_devloss(shost);
+ 		if (!cancel_delayed_work(&rport->dev_loss_work))
+ 			fc_flush_devloss(shost);
++		cancel_work_sync(&rport->scan_work);
+ 		spin_lock_irqsave(shost->host_lock, flags);
+ 		rport->flags &= ~FC_RPORT_DEVLOSS_PENDING;
+ 	}
 -- 
-| Jan "Yenya" Kasprzak  <kas at {fi.muni.cz - work | yenya.net - private}> |
-| New GPG 4096R/A45477D5 - see http://www.fi.muni.cz/~kas/pgp-rollover.txt |
-| http://www.fi.muni.cz/~kas/    Journal: http://www.fi.muni.cz/~kas/blog/ |
-  There's clearly a balance between "octopus merges are fine" and "Christ,
-  that's not an octopus, that's a Cthulhu merge".         --Linus Torvalds
+1.8.3.1
+
