@@ -1,90 +1,78 @@
-From: Paul Bolle <pebolle@tiscali.nl>
-Subject: [PATCH] ncr53c8xx: remove ancient configuration macros
-Date: Fri, 30 May 2014 10:10:00 +0200
-Message-ID: <1401437400.6101.17.camel@x220>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-doc-owner@vger.kernel.org>
-Sender: linux-doc-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>, Randy Dunlap <rdunlap@infradead.org>
-Cc: linux-scsi@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Liu Ping Fan <kernelfans@gmail.com>
+Subject: [RFC 0/9] fix for the race issue between scsi timer and in-flight scmd
+Date: Fri, 30 May 2014 16:15:38 +0800
+Message-ID: <1401437747-2097-1-git-send-email-pingfank@linux.vnet.ibm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-yh0-f46.google.com ([209.85.213.46]:35338 "EHLO
+	mail-yh0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751562AbaE3IMq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 30 May 2014 04:12:46 -0400
+Received: by mail-yh0-f46.google.com with SMTP id 29so1287371yhl.19
+        for <linux-scsi@vger.kernel.org>; Fri, 30 May 2014 01:12:45 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Adaptec OEM Raid Solutions <aacraid@adaptec.com>, Jens Axboe <axboe@kernel.dk>, Paolo Bonzini <pbonzini@redhat.com>, Stefan Hajnoczi <stefanha@redhat.com>, Jeff Moyer <jmoyer@redhat.com>
 
-It has not been possible to set CONFIG_SCSI_NCR53C8XX_FORCE_SYNC_NEGO,
-CONFIG_SCSI_NCR53C8XX_DISABLE_MPARITY_CHECK, and
-CONFIG_SCSI_NCR53C8XX_DISABLE_PARITY_CHECK through the configuration
-system since v2.1.20. Remove these ancient macros.
+When running io stress test on large latency scsi-disk, e.g guest with virtscsi
+on a nfs image. It can trigger the BUG_ON(test_bit(REQ_ATOM_COMPLETE, &req->atomic_flags));
+in blk_start_request().
+Since there is a race between latency "finishing" scmd and the re-allocated scmd.
+I.e a request is still referred by a scmd, but we had turn it back to
+slab. 
 
-To enable (or disable) the functionality they covered one should edit a
-header file and set related preprocessor macros. Since this is actually
-a documented feature those related macros remain available.
+This series introduces the ref on scmd to exclude this issue, and the following is ref rules.
 
-Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
----
-Untested.
+  inc ref rules is like the following:
+    When setup a scmd, inited as 1. When add a timer inc 1.
+  
+  dec ref rules is like the following:
+    -for the normal ref
+       scsi_done() will drop the ref when fail to acquire REQ_ATOM_COMPLETE immediately
+       or drop the ref by scsi_end_request()
+       or drop by return SUCCESS_REMOVE
+    -for a timer ref
+       when deleting timer, if !list_empty(timeout_list), then there is a timer ref, and
+       drop it.
 
-Note that the documentation still contains
-    insmod ncr53c8xx
 
-Besides insmod being outdated, the modules that use ncr53c8xx's code
-appear to be NCR_Q720_mod.ko and zalon7xx.ko. So the documentation needs
-probably to be updated to reflect this.
+patch1-2: fix the current potential bug 
+patch3~6: prepare for the mechanism for the ref
+patch7:   the ref rules core
+patch8-9:  e.g and test-issue for the new mechanism. Since lack of many virtscsi background,
+           patch8 may be poor and need to be improved :)
 
- Documentation/scsi/ncr53c8xx.txt |  5 -----
- drivers/scsi/ncr53c8xx.h         | 12 ------------
- 2 files changed, 17 deletions(-)
 
-diff --git a/Documentation/scsi/ncr53c8xx.txt b/Documentation/scsi/ncr53c8xx.txt
-index 49c7b723225b..df4a1b97e659 100644
---- a/Documentation/scsi/ncr53c8xx.txt
-+++ b/Documentation/scsi/ncr53c8xx.txt
-@@ -580,11 +580,6 @@ CONFIG_SCSI_NCR53C8XX_SYNC            (default answer: 5)
-     This frequency can be changed later with the "setsync" control command.
-     0 means "asynchronous data transfers".
- 
--CONFIG_SCSI_NCR53C8XX_FORCE_SYNC_NEGO (default answer: n)
--    Force synchronous negotiation for all SCSI-2 devices.
--    Some SCSI-2 devices do not report this feature in byte 7 of inquiry 
--    response but do support it properly (TAMARACK scanners for example).
--
- CONFIG_SCSI_NCR53C8XX_NO_DISCONNECT   (default and only reasonable answer: n)
-     If you suspect a device of yours does not properly support disconnections,
-     you can answer "y". Then, all SCSI devices will never disconnect the bus 
-diff --git a/drivers/scsi/ncr53c8xx.h b/drivers/scsi/ncr53c8xx.h
-index e34ec5a2ea5e..8043635982bc 100644
---- a/drivers/scsi/ncr53c8xx.h
-+++ b/drivers/scsi/ncr53c8xx.h
-@@ -148,29 +148,17 @@
- /*
-  * Force synchronous negotiation for all targets
-  */
--#ifdef CONFIG_SCSI_NCR53C8XX_FORCE_SYNC_NEGO
--#define SCSI_NCR_SETUP_FORCE_SYNC_NEGO	(1)
--#else
- #define SCSI_NCR_SETUP_FORCE_SYNC_NEGO	(0)
--#endif
- 
- /*
-  * Disable master parity checking (flawed hardwares need that)
-  */
--#ifdef CONFIG_SCSI_NCR53C8XX_DISABLE_MPARITY_CHECK
--#define SCSI_NCR_SETUP_MASTER_PARITY	(0)
--#else
- #define SCSI_NCR_SETUP_MASTER_PARITY	(1)
--#endif
- 
- /*
-  * Disable scsi parity checking (flawed devices may need that)
-  */
--#ifdef CONFIG_SCSI_NCR53C8XX_DISABLE_PARITY_CHECK
--#define SCSI_NCR_SETUP_SCSI_PARITY	(0)
--#else
- #define SCSI_NCR_SETUP_SCSI_PARITY	(1)
--#endif
- 
- /*
-  * Settle time after reset at boot-up
+Note: all the patches are based on rhel7, whose kernel version is linux-3.10.
+      I will rebase them onto the latest commit if my method is practical.
+
+
+Liu Ping Fan (9):
+  block: make timeout_list protectd by REQ_ATOM_COMPLETE bit
+  scsi: ensure request is dequeue when finishing scmd
+  scsi: introduce new internal flag SUCCESS_REMOVE
+  blk: change the prototype of blk_complete_request()
+  blk: change funcs' prototype to expose the ref of timer
+  blk: split the reclaim of req from blk_finish_request()
+  scsi: adopt ref on scsi_cmnd to avoid a race on request
+  scsi: virtscsi: work around to abort a scmd
+  scsi: ibmvscsi: return SUCCESS_REMOVE when finding a abort cmd
+
+ block/blk-core.c                 | 67 ++++++++++++++++++++++++++++++-----
+ block/blk-softirq.c              | 13 +++++--
+ block/blk-timeout.c              | 15 +++++---
+ block/blk.h                      |  3 +-
+ drivers/scsi/ibmvscsi/ibmvscsi.c |  2 +-
+ drivers/scsi/scsi.c              | 33 ++++++++++++-----
+ drivers/scsi/scsi_error.c        | 10 +++++-
+ drivers/scsi/scsi_lib.c          | 76 +++++++++++++++++++++++++++++++---------
+ drivers/scsi/scsi_priv.h         |  4 +++
+ drivers/scsi/virtio_scsi.c       | 61 ++++++++++++++++++++++++++++++--
+ include/linux/blkdev.h           |  9 +++--
+ include/scsi/scsi.h              |  1 +
+ include/scsi/scsi_cmnd.h         |  1 +
+ 13 files changed, 246 insertions(+), 49 deletions(-)
+
 -- 
-1.9.3
+1.8.1.4
 
