@@ -1,24 +1,44 @@
-From: "Kong Hui" <huik@long.com.hk>
-Subject: Get back to me
-Date: Thu, 29 May 2014 16:36:50 -0700
-Message-ID: <20140529233555.6639FEF4675__41892.2207355083$1401410150$gmane$org@tintin.portobello.school.nz>
-Reply-To: <konghui2014@yeah.net>
+From: Paul Bolle <pebolle@tiscali.nl>
+Subject: [PATCH] ncr53c8xx: remove remnants of integrity checking
+Date: Fri, 30 May 2014 09:27:46 +0200
+Message-ID: <1401434866.6101.3.camel@x220>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="Windows-1251"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 219-89-113-121.adsl.xtra.co.nz ([219.89.113.121]:64499 "EHLO
-	tintin.portobello.school.nz" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751538AbaE3AfQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 29 May 2014 20:35:16 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-I am a bank director from Hong Kong, I want you to be my partner in a
-business project of mutual benefit. Get back to me if interested.
+The code for integrity checking was removed in v2.6.10. Remove its
+remnants now.
 
+Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
+---
+Untested.
 
-Thank you,
-Kong Hui.
+ drivers/scsi/ncr53c8xx.h | 8 --------
+ 1 file changed, 8 deletions(-)
+
+diff --git a/drivers/scsi/ncr53c8xx.h b/drivers/scsi/ncr53c8xx.h
+index 0e008dacf679..736a9df68d58 100644
+--- a/drivers/scsi/ncr53c8xx.h
++++ b/drivers/scsi/ncr53c8xx.h
+@@ -63,14 +63,6 @@
+ #define SCSI_NCR_BOOT_COMMAND_LINE_SUPPORT
+ #define SCSI_NCR_DEBUG_INFO_SUPPORT
+ 
+-/*
+-**	To disable integrity checking, do not define the 
+-**	following option.
+-*/
+-#ifdef	CONFIG_SCSI_NCR53C8XX_INTEGRITY_CHECK
+-#	define SCSI_NCR_ENABLE_INTEGRITY_CHECK
+-#endif
+-
+ /* ---------------------------------------------------------------------
+ ** Take into account kernel configured parameters.
+ ** Most of these options can be overridden at startup by a command line.
+-- 
+1.9.3
