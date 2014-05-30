@@ -1,72 +1,256 @@
-From: Fabian Frederick <fabf@skynet.be>
-Subject: [RFC 1/1] drivers/scsi/bfa/bfad_debugfs.c: replace 2 kzalloc/copy_from_user to memdup_user
-Date: Fri, 30 May 2014 19:07:36 +0200
-Message-ID: <1401469656-10332-1-git-send-email-fabf@skynet.be>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [RFC 00/32] making inode time stamps y2038 ready
+Date: Fri, 30 May 2014 22:01:24 +0200
+Message-ID: <1401480116-1973111-1-git-send-email-arnd@arndb.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
-Cc: Fabian Frederick <fabf@skynet.be>, linux-scsi@vger.kernel.org, Anil Gurumurthy <anil.gurumurthy@qlogic.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-arch@vger.kernel.org, joseph@codesourcery.com, john.stultz@linaro.org, hch@infradead.org, tglx@linutronix.de, geert@linux-m68k.org, lftan@altera.com, hpa@zytor.com, linux-fsdevel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, coda@cs.cmu.edu, codalist@coda.cs.cmu.edu, fuse-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, linux-btrfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-scsi@vger.kernel.org, logfs@logfs.org, ocfs2-devel@oss.oracle.com, reiserfs-devel@vger.kernel.org, samba-technical@lists.samba.org, xfs@oss.sgi.com
 List-Id: linux-scsi@vger.kernel.org
 
-(memdup_user can be used to replace kmalloc/copy_from_user. Not sure if it's ok with kzalloc ...)
+Based on the recent discussion about 64-bit time_t for new
+architectures, and for solving the year 2038 problem in general,
+I decided to try out what it would take to solve part of the
+kernel side of things.
 
-Cc: linux-scsi@vger.kernel.org
-Cc: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Signed-off-by: Fabian Frederick <fabf@skynet.be>
----
- drivers/scsi/bfa/bfad_debugfs.c | 30 ++++++++++--------------------
- 1 file changed, 10 insertions(+), 20 deletions(-)
+This is a proof-of-concept work to get us to the point where
+two system calls (utimes and stat) provide a working interface
+to user space to pass 64-bit inode time stamps in and out of
+the kernel all the way to the file systems.
 
-diff --git a/drivers/scsi/bfa/bfad_debugfs.c b/drivers/scsi/bfa/bfad_debugfs.c
-index 8e83d04..07b9e36 100644
---- a/drivers/scsi/bfa/bfad_debugfs.c
-+++ b/drivers/scsi/bfa/bfad_debugfs.c
-@@ -260,17 +260,12 @@ bfad_debugfs_write_regrd(struct file *file, const char __user *buf,
- 	unsigned long flags;
- 	void *kern_buf;
- 
--	kern_buf = kzalloc(nbytes, GFP_KERNEL);
-+	kern_buf = memdup_user((void __user *)buf, nbytes);
- 
--	if (!kern_buf) {
--		printk(KERN_INFO "bfad[%d]: Failed to allocate buffer\n",
--				bfad->inst_no);
--		return -ENOMEM;
--	}
--
--	if (copy_from_user(kern_buf, (void  __user *)buf, nbytes)) {
--		kfree(kern_buf);
--		return -ENOMEM;
-+	if (IS_ERR(kern_buf)) {
-+		printk(KERN_INFO "bfad[%d]: Failed to copy buffer\n",
-+		       bfad->inst_no);
-+		return PTR_ERR(kern_buf);
- 	}
- 
- 	rc = sscanf(kern_buf, "%x:%x", &addr, &len);
-@@ -336,17 +331,12 @@ bfad_debugfs_write_regwr(struct file *file, const char __user *buf,
- 	unsigned long flags;
- 	void *kern_buf;
- 
--	kern_buf = kzalloc(nbytes, GFP_KERNEL);
-+	kern_buf = memdup_user((void __user *)buf, nbytes);
- 
--	if (!kern_buf) {
--		printk(KERN_INFO "bfad[%d]: Failed to allocate buffer\n",
--				bfad->inst_no);
--		return -ENOMEM;
--	}
--
--	if (copy_from_user(kern_buf, (void  __user *)buf, nbytes)) {
--		kfree(kern_buf);
--		return -ENOMEM;
-+	if (IS_ERR(kern_buf)) {
-+		printk(KERN_INFO "bfad[%d]: Failed to copy buffer\n",
-+		       bfad->inst_no);
-+		return PTR_ERR(kern_buf);
- 	}
- 
- 	rc = sscanf(kern_buf, "%x:%x", &addr, &val);
+I picked this because it is a fairly isolated problem, as the
+inode time stamps are rarely assigned to any other time values.
+As a byproduct of this work, I documented for each of the file
+systems we support how long the on-disk format can work[1].
+
+Obviously we also need to convert all the other syscalls and
+have a proper libc implementation using those for this to
+be really useful, but it's a start and it can be tested
+independently (I didn't so far, want to wait for initial
+feedback).
+
+All the interesting stuff is in the first five patches here,
+the rest is the straightforward conversion of all file systems
+that use 'timespec' values internally.
+
+There are of course a number of open questions:
+
+a) is this the right approach in general? The previous discussion
+   pointed this way, but there may be other opinions.
+b) what type should we use internally to represent inode time
+   stamps? The code contains three different versions that would
+   all work, we just have to pick a good tradeoff between
+   efficiency and the range of times we want to cover.
+c) Should we continue this way for all 32-bit platforms for
+   consistency, including future ones, or should we go to
+   different 64-bit types right away? My feeling is that the
+   second approach would complicate this work.
+
+	Arnd
+
+[1] http://kernelnewbies.org/y2038
+
+Arnd Bergmann (32):
+  fs: introduce new 'struct inode_time'
+  uapi: add struct __kernel_timespec{32,64}
+  fs: introduce sys_utimens64at
+  fs: introduce sys_newfstat64/sys_newfstatat64
+  arch: hook up new stat and utimes syscalls
+  isofs: fix timestamps beyond 2027
+  fs/nfs: convert to struct inode_time
+  fs/ceph: convert to 'struct inode_time'
+  fs/pstore: convert to struct inode_time
+  fs/coda: convert to struct inode_time
+  xfs: convert to struct inode_time
+  btrfs: convert to struct inode_time
+  ext3: convert to struct inode_time
+  ext4: convert to struct inode_time
+  cifs: convert to struct inode_time
+  ntfs: convert to struct inode_time
+  ubifs: convert to struct inode_time
+  ocfs2: convert to struct inode_time
+  fs/fat: convert to struct inode_time
+  afs: convert to struct inode_time
+  udf: convert to struct inode_time
+  fs: convert simple fs to inode_time
+  logfs: convert to struct inode_time
+  hfs, hfsplus: convert to struct inode_time
+  gfs2: convert to struct inode_time
+  reiserfs: convert to struct inode_time
+  jffs2: convert to struct inode_time
+  adfs: convert to struct inode_time
+  f2fs: convert to struct inode_time
+  fuse: convert to struct inode_time
+  scsi: fnic: use current_kernel_time() for timestamp
+  fs: use new inode_time definition unconditionally
+
+ arch/alpha/kernel/osf_sys.c        |  2 +-
+ arch/arm/include/asm/unistd.h      |  2 +-
+ arch/arm/include/uapi/asm/stat.h   | 25 +++++++++++++++++
+ arch/arm/include/uapi/asm/unistd.h |  3 +++
+ arch/arm/kernel/calls.S            |  3 +++
+ arch/arm64/include/asm/unistd32.h  |  5 +++-
+ arch/x86/include/uapi/asm/stat.h   | 28 +++++++++++++++++++
+ arch/x86/syscalls/syscall_32.tbl   |  3 +++
+ drivers/block/rbd.c                |  2 +-
+ drivers/firmware/efi/efi-pstore.c  | 28 +++++++++----------
+ drivers/scsi/fnic/fnic_trace.c     |  2 +-
+ drivers/tty/tty_io.c               |  2 +-
+ drivers/usb/gadget/f_fs.c          |  2 +-
+ fs/adfs/inode.c                    |  4 +--
+ fs/afs/afs.h                       |  6 ++---
+ fs/afs/fsclient.c                  |  2 +-
+ fs/attr.c                          |  8 +++---
+ fs/btrfs/file.c                    |  6 ++---
+ fs/btrfs/inode.c                   |  4 +--
+ fs/btrfs/ioctl.c                   |  4 +--
+ fs/btrfs/root-tree.c               |  2 +-
+ fs/btrfs/transaction.c             |  2 +-
+ fs/ceph/cache.c                    |  2 +-
+ fs/ceph/caps.c                     |  6 ++---
+ fs/ceph/file.c                     |  4 +--
+ fs/ceph/inode.c                    | 20 +++++++-------
+ fs/ceph/super.h                    |  8 +++---
+ fs/cifs/cache.c                    |  6 ++---
+ fs/cifs/cifsglob.h                 |  6 ++---
+ fs/cifs/cifsproto.h                |  6 ++---
+ fs/cifs/cifssmb.c                  |  5 ++--
+ fs/cifs/inode.c                    |  2 +-
+ fs/cifs/netmisc.c                  | 15 ++++++-----
+ fs/coda/coda_linux.c               | 18 ++++++++-----
+ fs/compat.c                        | 19 ++-----------
+ fs/configfs/inode.c                |  6 ++---
+ fs/cramfs/inode.c                  |  2 +-
+ fs/ext3/inode.c                    |  4 +--
+ fs/ext4/ext4.h                     | 10 +++----
+ fs/ext4/extents.c                  |  2 +-
+ fs/f2fs/file.c                     |  6 ++---
+ fs/fat/dir.c                       |  2 +-
+ fs/fat/fat.h                       |  6 ++---
+ fs/fat/misc.c                      |  4 +--
+ fs/fat/namei_msdos.c               |  8 +++---
+ fs/fat/namei_vfat.c                | 10 +++----
+ fs/fuse/inode.c                    |  6 ++---
+ fs/gfs2/dir.c                      |  6 ++---
+ fs/gfs2/glops.c                    |  4 +--
+ fs/hfs/hfs_fs.h                    |  2 +-
+ fs/hfsplus/hfsplus_fs.h            |  2 +-
+ fs/inode.c                         | 18 ++++++-------
+ fs/isofs/util.c                    |  2 +-
+ fs/jffs2/os-linux.h                |  2 +-
+ fs/locks.c                         |  4 +--
+ fs/logfs/readwrite.c               | 18 ++++++-------
+ fs/nfs/callback.h                  |  4 +--
+ fs/nfs/callback_xdr.c              |  6 ++---
+ fs/nfs/file.c                      |  2 +-
+ fs/nfs/fscache-index.c             |  8 +++---
+ fs/nfs/inode.c                     | 10 +++----
+ fs/nfs/internal.h                  |  4 +--
+ fs/nfs/netns.h                     |  2 +-
+ fs/nfs/nfs2xdr.c                   |  8 +++---
+ fs/nfs/nfs3xdr.c                   | 10 +++----
+ fs/nfs/nfs4xdr.c                   | 20 +++++++-------
+ fs/nfsd/nfs3xdr.c                  |  6 ++---
+ fs/nfsd/nfsfh.h                    |  4 +--
+ fs/nfsd/nfsxdr.c                   |  2 +-
+ fs/ntfs/inode.c                    | 12 ++++-----
+ fs/ntfs/time.h                     |  8 +++---
+ fs/ocfs2/dlmglue.c                 | 16 +++++------
+ fs/ocfs2/file.c                    |  6 ++---
+ fs/ocfs2/ocfs2.h                   |  2 +-
+ fs/pstore/inode.c                  |  2 +-
+ fs/pstore/internal.h               |  2 +-
+ fs/pstore/platform.c               |  2 +-
+ fs/pstore/ram.c                    | 18 +++++++------
+ fs/reiserfs/namei.c                |  2 +-
+ fs/reiserfs/xattr.c                |  4 +--
+ fs/stat.c                          | 55 ++++++++++++++++++++++++++++++++++++++
+ fs/ubifs/dir.c                     |  2 +-
+ fs/ubifs/file.c                    | 16 +++++------
+ fs/ubifs/misc.h                    |  2 +-
+ fs/udf/udf_i.h                     |  2 +-
+ fs/udf/udf_sb.h                    |  2 +-
+ fs/udf/udfdecl.h                   |  7 ++---
+ fs/udf/udftime.c                   |  7 ++---
+ fs/utimes.c                        | 47 +++++++++++++++++++++++++++-----
+ fs/xfs/time.h                      |  4 +--
+ fs/xfs/xfs_inode.c                 |  2 +-
+ fs/xfs/xfs_iops.c                  |  2 +-
+ fs/xfs/xfs_trans_inode.c           |  6 ++---
+ include/linux/ceph/decode.h        |  8 +++---
+ include/linux/ceph/osd_client.h    |  4 +--
+ include/linux/compat.h             |  2 +-
+ include/linux/fs.h                 | 32 +++++++++++-----------
+ include/linux/nfs_fs_sb.h          |  2 +-
+ include/linux/nfs_xdr.h            | 14 +++++-----
+ include/linux/pstore.h             |  4 +--
+ include/linux/stat.h               |  6 ++---
+ include/linux/syscalls.h           |  9 ++++++-
+ include/linux/time.h               | 44 +++++++++++++++++++++++++++---
+ include/uapi/asm-generic/stat.h    | 29 ++++++++++++++++++--
+ include/uapi/asm-generic/unistd.h  |  8 +++++-
+ include/uapi/linux/coda.h          |  1 +
+ include/uapi/linux/time.h          | 40 ++++++++++++++++++++++++++-
+ init/initramfs.c                   |  2 +-
+ kernel/audit.c                     |  2 +-
+ kernel/auditsc.c                   |  2 +-
+ kernel/time.c                      | 44 +++++++++++++++++++++++++-----
+ kernel/time/timekeeping.c          | 16 +++++++++++
+ net/ceph/auth_x.c                  |  2 +-
+ net/ceph/osd_client.c              |  4 +--
+ 114 files changed, 642 insertions(+), 333 deletions(-)
+
 -- 
-1.8.4.5
+1.8.3.2
+
+Bcc: "J. Bruce Fields" <bfields@fieldses.org>
+Bcc: "Theodore Ts'o" <tytso@mit.edu>
+Bcc: Adrian Hunter <adrian.hunter@intel.com>
+Bcc: Andreas Dilger <adilger.kernel@dilger.ca>
+Bcc: Andrew Morton <akpm@linux-foundation.org>
+Bcc: Anton Altaparmakov <anton@tuxera.com>
+Bcc: Anton Vorontsov <anton@enomsg.org>
+Bcc: Artem Bityutskiy <dedekind1@gmail.com>
+Bcc: Brian Uchino <buchino@cisco.com>
+Bcc: Chris Mason <clm@fb.com>
+Bcc: Colin Cross <ccross@android.com>
+Bcc: Dave Chinner <david@fromorbit.com>
+Bcc: David Howells <dhowells@redhat.com>
+Bcc: David Woodhouse <dwmw2@infradead.org>
+Bcc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Bcc: Hiral Patel <hiralpat@cisco.com>
+Bcc: Jaegeuk Kim <jaegeuk.kim@samsung.com>
+Bcc: Jan Harkes <jaharkes@cs.cmu.edu>
+Bcc: Jan Kara <jack@suse.cz>
+Bcc: Joel Becker <jlbec@evilplan.org>
+Bcc: Joern Engel <joern@logfs.org>
+Bcc: Josef Bacik <jbacik@fb.com>
+Bcc: Kees Cook <keescook@chromium.org>
+Bcc: Mark Fasheh <mfasheh@suse.com>
+Bcc: Miklos Szeredi <miklos@szeredi.hu>
+Bcc: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
+Bcc: Prasad Joshi <prasadjoshi.linux@gmail.com>
+Bcc: Sage Weil <sage@inktank.com>
+Bcc: Steve French <sfrench@samba.org>
+Bcc: Steven Whitehouse <swhiteho@redhat.com>
+Bcc: Suma Ramars <sramars@cisco.com>
+Bcc: Tony Luck <tony.luck@intel.com>
+Cc: ceph-devel@vger.kernel.org
+Cc: cluster-devel@redhat.com
+Cc: coda@cs.cmu.edu
+Cc: codalist@coda.cs.cmu.edu
+Cc: fuse-devel@lists.sourceforge.net
+Cc: linux-afs@lists.infradead.org
+Cc: linux-btrfs@vger.kernel.org
+Cc: linux-cifs@vger.kernel.org
+Cc: linux-ext4@vger.kernel.org
+Cc: linux-f2fs-devel@lists.sourceforge.net
+Cc: linux-mtd@lists.infradead.org
+Cc: linux-nfs@vger.kernel.org
+Cc: linux-ntfs-dev@lists.sourceforge.net
+Cc: linux-scsi@vger.kernel.org
+Cc: logfs@logfs.org
+Cc: ocfs2-devel@oss.oracle.com
+Cc: reiserfs-devel@vger.kernel.org
+Cc: samba-technical@lists.samba.org
+Cc: xfs@oss.sgi.com
