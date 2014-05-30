@@ -1,43 +1,142 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [RFC 31/32] scsi: fnic: use current_kernel_time() for timestamp
-Date: Fri, 30 May 2014 22:01:55 +0200
-Message-ID: <1401480116-1973111-32-git-send-email-arnd@arndb.de>
-References: <1401480116-1973111-1-git-send-email-arnd@arndb.de>
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <1401480116-1973111-1-git-send-email-arnd@arndb.de>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-arch@vger.kernel.org, joseph@codesourcery.com, john.stultz@linaro.org, hch@infradead.org, tglx@linutronix.de, geert@linux-m68k.org, lftan@altera.com, hpa@zytor.com, linux-fsdevel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, Hiral Patel <hiralpat@cisco.com>, Suma Ramars <sramars@cisco.com>, Brian Uchino <buchino@cisco.com>, linux-scsi@vger.kernel.org
+From: Eddie Wai <eddie.wai@broadcom.com>
+Subject: Re: [Open-FCoE] [PATCH] bnx2fc: Improve stats update mechanism
+Date: Fri, 30 May 2014 14:59:43 -0700
+Message-ID: <1401487183.3956.28.camel@lbirv-waie-lx2.broadcom.com>
+References: <1401462115-8072-1-git-send-email-nhorman@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:56227 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754324AbaE3WDr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 30 May 2014 18:03:47 -0400
+In-Reply-To: <1401462115-8072-1-git-send-email-nhorman@tuxdriver.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Neil Horman <nhorman@tuxdriver.com>
+Cc: fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org
 
-The fnic driver currently uses the CURRENT_TIME macro to
-generate a timestamp. Since this is otherwise used only in
-file system code and we want to change the type, it's
-better for this driver to use the equivalent function that
-continues to return a struct timespec.
+Thanks for fixing this.  The patch generally looks good, but I do have a
+few comments.
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-Cc: Hiral Patel <hiralpat@cisco.com>
-Cc: Suma Ramars <sramars@cisco.com>
-Cc: Brian Uchino <buchino@cisco.com>
-Cc: linux-scsi@vger.kernel.org
----
- drivers/scsi/fnic/fnic_trace.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On Fri, 2014-05-30 at 11:01 -0400, Neil Horman wrote:
+> Recently had this warning reported:
+> 
+> [  290.489047] Call Trace:
+> [  290.489053]  [<ffffffff8169efec>] dump_stack+0x19/0x1b
+> [  290.489055]  [<ffffffff810ac7a9>] __might_sleep+0x179/0x230
+> [  290.489057]  [<ffffffff816a4ad5>] mutex_lock_nested+0x55/0x520
+> [  290.489061]  [<ffffffffa01b9905>] ? bnx2fc_l2_rcv_thread+0xc5/0x4c0 [bnx2fc]
+> [  290.489065]  [<ffffffffa0174c1a>] fc_vport_id_lookup+0x3a/0xa0 [libfc]
+> [  290.489068]  [<ffffffffa01b9a6c>] bnx2fc_l2_rcv_thread+0x22c/0x4c0 [bnx2fc]
+> [  290.489070]  [<ffffffffa01b9840>] ? bnx2fc_vport_destroy+0x110/0x110 [bnx2fc]
+> [  290.489073]  [<ffffffff8109e0cd>] kthread+0xed/0x100
+> [  290.489075]  [<ffffffff8109dfe0>] ? insert_kthread_work+0x80/0x80
+> [  290.489077]  [<ffffffff816b2fec>] ret_from_fork+0x7c/0xb0
+> [  290.489078]  [<ffffffff8109dfe0>] ? insert_kthread_work+0x80/0x80
+> 
+> Its due to the fact that we call a potentially sleeping function from the bnx2fc
+> rcv path with preemption disabled (via the get_cpu call embedded in the per-cpu
+> variable stats lookup in bnx2fc_l2_rcv_thread.
+> 
+> Easy enough fix, we can just move the stats collection later in the function
+> where we are sure we won't preempt or sleep.  This also allows us to not have to
+> enable pre-emption when doing a per-cpu lookup, since we're certain not to get
+You mean this allows us to not have to 'disable' pre-emption, right? 
 
-diff --git a/drivers/scsi/fnic/fnic_trace.c b/drivers/scsi/fnic/fnic_trace.c
-index c772859..2659538 100644
---- a/drivers/scsi/fnic/fnic_trace.c
-+++ b/drivers/scsi/fnic/fnic_trace.c
-@@ -612,7 +612,7 @@ int fnic_fc_trace_set_data(u32 host_no, u8 frame_type,
- 			fc_trace_entries.rd_idx = 0;
- 	}
- 
--	fc_buf->time_stamp = CURRENT_TIME;
-+	fc_buf->time_stamp = current_kernel_time();
- 	fc_buf->host_no = host_no;
- 	fc_buf->frame_type = frame_type;
- 
--- 
-1.8.3.2
+Can you elaborate on how we can be sure that we won't get preempted
+immediately after retrieving the CPU variable?  I would think it'll be
+okay to call get_cpu at this stage as there won't be any sleepable mutex
+lock calls before the put_cpu.
+> rescheduled.
+> 
+> Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
+> CC: linux-scsi@vger.kernel.org
+> CC: Robert Love <robert.w.love@intel.com>
+> CC: Vasu Dev <vasu.dev@intel.com>
+> ---
+>  drivers/scsi/bnx2fc/bnx2fc_fcoe.c | 16 ++++------------
+>  1 file changed, 4 insertions(+), 12 deletions(-)
+> 
+> diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+> index 9b94850..475eee5 100644
+> --- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+> +++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+> @@ -516,23 +516,17 @@ static void bnx2fc_recv_frame(struct sk_buff *skb)
+>  	skb_pull(skb, sizeof(struct fcoe_hdr));
+>  	fr_len = skb->len - sizeof(struct fcoe_crc_eof);
+>  
+> -	stats = per_cpu_ptr(lport->stats, get_cpu());
+> -	stats->RxFrames++;
+> -	stats->RxWords += fr_len / FCOE_WORD_TO_BYTE;
+> -
+>  	fp = (struct fc_frame *)skb;
+>  	fc_frame_init(fp);
+>  	fr_dev(fp) = lport;
+>  	fr_sof(fp) = hp->fcoe_sof;
+>  	if (skb_copy_bits(skb, fr_len, &crc_eof, sizeof(crc_eof))) {
+> -		put_cpu();
+>  		kfree_skb(skb);
+>  		return;
+>  	}
+>  	fr_eof(fp) = crc_eof.fcoe_eof;
+>  	fr_crc(fp) = crc_eof.fcoe_crc32;
+>  	if (pskb_trim(skb, fr_len)) {
+> -		put_cpu();
+>  		kfree_skb(skb);
+>  		return;
+>  	}
+> @@ -544,7 +538,6 @@ static void bnx2fc_recv_frame(struct sk_buff *skb)
+>  		port = lport_priv(vn_port);
+>  		if (!ether_addr_equal(port->data_src_addr, dest_mac)) {
+>  			BNX2FC_HBA_DBG(lport, "fpma mismatch\n");
+> -			put_cpu();
+>  			kfree_skb(skb);
+>  			return;
+>  		}
+> @@ -552,7 +545,6 @@ static void bnx2fc_recv_frame(struct sk_buff *skb)
+>  	if (fh->fh_r_ctl == FC_RCTL_DD_SOL_DATA &&
+>  	    fh->fh_type == FC_TYPE_FCP) {
+>  		/* Drop FCP data. We dont this in L2 path */
+> -		put_cpu();
+>  		kfree_skb(skb);
+>  		return;
+>  	}
+> @@ -562,7 +554,6 @@ static void bnx2fc_recv_frame(struct sk_buff *skb)
+>  		case ELS_LOGO:
+>  			if (ntoh24(fh->fh_s_id) == FC_FID_FLOGI) {
+>  				/* drop non-FIP LOGO */
+> -				put_cpu();
+>  				kfree_skb(skb);
+>  				return;
+>  			}
+> @@ -572,22 +563,23 @@ static void bnx2fc_recv_frame(struct sk_buff *skb)
+>  
+>  	if (fh->fh_r_ctl == FC_RCTL_BA_ABTS) {
+>  		/* Drop incoming ABTS */
+> -		put_cpu();
+>  		kfree_skb(skb);
+>  		return;
+>  	}
+>  
+> +	stats = per_cpu_ptr(lport->stats, smp_processor_id());
+> +	stats->RxFrames++;
+> +	stats->RxWords += fr_len / FCOE_WORD_TO_BYTE;
+> +
+>  	if (le32_to_cpu(fr_crc(fp)) !=
+>  			~crc32(~0, skb->data, fr_len)) {
+>  		if (stats->InvalidCRCCount < 5)
+>  			printk(KERN_WARNING PFX "dropping frame with "
+>  			       "CRC error\n");
+>  		stats->InvalidCRCCount++;
+> -		put_cpu();
+>  		kfree_skb(skb);
+>  		return;
+>  	}
+> -	put_cpu();
+>  	fc_exch_recv(lport, fp);
+>  }
+>  
+
 
