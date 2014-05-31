@@ -1,303 +1,102 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 5/6] scsi: use 64-bit value for 'max_luns'
-Date: Sat, 31 May 2014 11:01:17 +0200
-Message-ID: <1401526878-119472-6-git-send-email-hare@suse.de>
-References: <1401526878-119472-1-git-send-email-hare@suse.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:47227 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752917AbaEaJB0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 31 May 2014 05:01:26 -0400
-In-Reply-To: <1401526878-119472-1-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
+Subject: Re: [PATCH] bnx2fc: Improve stats update mechanism
+Date: Sat, 31 May 2014 08:37:57 -0400
+Message-ID: <20140531123757.GA27590@localhost.localdomain>
+References: <1401462115-8072-1-git-send-email-nhorman@tuxdriver.com>
+ <1401487183.3956.28.camel@lbirv-waie-lx2.broadcom.com>
+ <20140531024754.GB27184@localhost.localdomain>
+ <DBC33EB2-5AB1-4DFC-B7DE-EAAC47C0E978@broadcom.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <DBC33EB2-5AB1-4DFC-B7DE-EAAC47C0E978-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
+List-Unsubscribe: <http://lists.open-fcoe.org/mailman/options/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.open-fcoe.org/pipermail/fcoe-devel>
+List-Post: <mailto:fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+List-Help: <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.open-fcoe.org/mailman/listinfo/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
+Errors-To: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+Sender: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+To: Eddie Wai <eddie.wai-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
+Cc: "fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org" <fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Ewan Milne <emilne@redhat.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-Now that we're using 64-bit LUNs internally we need to increase
-the size of max_luns to 64 bits, too.
+On Sat, May 31, 2014 at 05:13:11AM +0000, Eddie Wai wrote:
+> 
+> 
+> On May 30, 2014, at 7:48 PM, "Neil Horman" <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org> wrote:
+> 
+> > On Fri, May 30, 2014 at 02:59:43PM -0700, Eddie Wai wrote:
+> >> Thanks for fixing this.  The patch generally looks good, but I do have a
+> >> few comments.
+> >> 
+> >> On Fri, 2014-05-30 at 11:01 -0400, Neil Horman wrote:
+> >>> Recently had this warning reported:
+> >>> 
+> >>> [  290.489047] Call Trace:
+> >>> [  290.489053]  [<ffffffff8169efec>] dump_stack+0x19/0x1b
+> >>> [  290.489055]  [<ffffffff810ac7a9>] __might_sleep+0x179/0x230
+> >>> [  290.489057]  [<ffffffff816a4ad5>] mutex_lock_nested+0x55/0x520
+> >>> [  290.489061]  [<ffffffffa01b9905>] ? bnx2fc_l2_rcv_thread+0xc5/0x4c0 [bnx2fc]
+> >>> [  290.489065]  [<ffffffffa0174c1a>] fc_vport_id_lookup+0x3a/0xa0 [libfc]
+> >>> [  290.489068]  [<ffffffffa01b9a6c>] bnx2fc_l2_rcv_thread+0x22c/0x4c0 [bnx2fc]
+> >>> [  290.489070]  [<ffffffffa01b9840>] ? bnx2fc_vport_destroy+0x110/0x110 [bnx2fc]
+> >>> [  290.489073]  [<ffffffff8109e0cd>] kthread+0xed/0x100
+> >>> [  290.489075]  [<ffffffff8109dfe0>] ? insert_kthread_work+0x80/0x80
+> >>> [  290.489077]  [<ffffffff816b2fec>] ret_from_fork+0x7c/0xb0
+> >>> [  290.489078]  [<ffffffff8109dfe0>] ? insert_kthread_work+0x80/0x80
+> >>> 
+> >>> Its due to the fact that we call a potentially sleeping function from the bnx2fc
+> >>> rcv path with preemption disabled (via the get_cpu call embedded in the per-cpu
+> >>> variable stats lookup in bnx2fc_l2_rcv_thread.
+> >>> 
+> >>> Easy enough fix, we can just move the stats collection later in the function
+> >>> where we are sure we won't preempt or sleep.  This also allows us to not have to
+> >>> enable pre-emption when doing a per-cpu lookup, since we're certain not to get
+> >> You mean this allows us to not have to 'disable' pre-emption, right? 
+> >> 
+> >> Can you elaborate on how we can be sure that we won't get preempted
+> >> immediately after retrieving the CPU variable?  I would think it'll be
+> >> okay to call get_cpu at this stage as there won't be any sleepable mutex
+> >> lock calls before the put_cpu.
+> > We can't be sure, but I would assert it doesn't really matter at this point.
+> > The area in which we update stats is so small that, even if we do hit the
+> > unlikely chance that we get pre-empted, and then rescheduled on a different cpu,
+> > it won't matter.  We could add the get_cpu/put_cpu back if you're really intent
+> > on it, but I'm not sure its worthwhile given that this is a hot path.
+> I agree with your assessment.  But code wise just so bnx2fc is consistent to the software FCoE counterpart, I would advice to use the same get_cpu to retrieve that stats CPU variable.  Thanks.
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Christoph Hellwig <hch@infradead.org>
-Reviewed-by: Ewan Milne <emilne@redhat.com>
----
- drivers/message/i2o/i2o_scsi.c       |  2 +-
- drivers/scsi/advansys.c              |  2 +-
- drivers/scsi/cxgbi/libcxgbi.c        |  2 +-
- drivers/scsi/cxgbi/libcxgbi.h        |  2 +-
- drivers/scsi/dc395x.c                |  2 +-
- drivers/scsi/eata.c                  |  2 +-
- drivers/scsi/ibmvscsi/ibmvfc.c       |  4 ++--
- drivers/scsi/lpfc/lpfc_attr.c        | 10 +++++++++-
- drivers/scsi/megaraid.c              |  2 +-
- drivers/scsi/mpt3sas/mpt3sas_scsih.c |  4 ++--
- drivers/scsi/qla2xxx/qla_gbl.h       |  2 +-
- drivers/scsi/qla2xxx/qla_os.c        |  6 +++---
- drivers/scsi/scsi_scan.c             |  6 +++---
- include/linux/moduleparam.h          |  5 +++++
- include/scsi/scsi_host.h             |  6 +++---
- kernel/params.c                      |  1 +
- 16 files changed, 36 insertions(+), 22 deletions(-)
+Actually I woke up this morning meaning to send a follow on note addressing
+that.  The Soft FCoE counterpart to this function acutally works the way bnx2fc
+reception does after my patch here.  Thats because the stats are updated with
+the cpu held, but the frame is actually received by the fc layer immediately
+after cpu_put is called.  The implication is that the task can get preempted
+right after we update the stats and re-enable preemption, meaning that we may
+actually receive the frame on a different cpu than the cpu we updated the stats
+on.  I was planning on sending a patch to switch get_cpu/put_cpu in the soft
+FCoE code to just use smp_processor_id(), since it doesn't help anything.
 
-diff --git a/drivers/message/i2o/i2o_scsi.c b/drivers/message/i2o/i2o_scsi.c
-index e7de92c..8152e9fa 100644
---- a/drivers/message/i2o/i2o_scsi.c
-+++ b/drivers/message/i2o/i2o_scsi.c
-@@ -287,7 +287,7 @@ static int i2o_scsi_probe(struct device *dev)
- 	}
- 
- 	if (le64_to_cpu(lun) >= scsi_host->max_lun) {
--		osm_warn("SCSI device lun (%llu) >= max_lun of I2O host (%d)",
-+		osm_warn("SCSI device lun (%llu) >= max_lun of I2O host (%llu)",
- 			 le64_to_cpu(lun), scsi_host->max_lun);
- 		return -EFAULT;
- 	}
-diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index d814588..e716d0a 100644
---- a/drivers/scsi/advansys.c
-+++ b/drivers/scsi/advansys.c
-@@ -3345,7 +3345,7 @@ static void asc_prt_driver_conf(struct seq_file *m, struct Scsi_Host *shost)
- 		shost->host_no);
- 
- 	seq_printf(m,
--		   " host_busy %u, max_id %u, max_lun %u, max_channel %u\n",
-+		   " host_busy %u, max_id %u, max_lun %llu, max_channel %u\n",
- 		   shost->host_busy, shost->max_id,
- 		   shost->max_lun, shost->max_channel);
- 
-diff --git a/drivers/scsi/cxgbi/libcxgbi.c b/drivers/scsi/cxgbi/libcxgbi.c
-index b44c1cf..dc812069 100644
---- a/drivers/scsi/cxgbi/libcxgbi.c
-+++ b/drivers/scsi/cxgbi/libcxgbi.c
-@@ -245,7 +245,7 @@ void cxgbi_hbas_remove(struct cxgbi_device *cdev)
- }
- EXPORT_SYMBOL_GPL(cxgbi_hbas_remove);
- 
--int cxgbi_hbas_add(struct cxgbi_device *cdev, unsigned int max_lun,
-+int cxgbi_hbas_add(struct cxgbi_device *cdev, u64 max_lun,
- 		unsigned int max_id, struct scsi_host_template *sht,
- 		struct scsi_transport_template *stt)
- {
-diff --git a/drivers/scsi/cxgbi/libcxgbi.h b/drivers/scsi/cxgbi/libcxgbi.h
-index 8135f04..538d7a6 100644
---- a/drivers/scsi/cxgbi/libcxgbi.h
-+++ b/drivers/scsi/cxgbi/libcxgbi.h
-@@ -692,7 +692,7 @@ struct cxgbi_device *cxgbi_device_register(unsigned int, unsigned int);
- void cxgbi_device_unregister(struct cxgbi_device *);
- void cxgbi_device_unregister_all(unsigned int flag);
- struct cxgbi_device *cxgbi_device_find_by_lldev(void *);
--int cxgbi_hbas_add(struct cxgbi_device *, unsigned int, unsigned int,
-+int cxgbi_hbas_add(struct cxgbi_device *, u64, unsigned int,
- 			struct scsi_host_template *,
- 			struct scsi_transport_template *);
- void cxgbi_hbas_remove(struct cxgbi_device *);
-diff --git a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
-index dff461f..0c6be0a 100644
---- a/drivers/scsi/dc395x.c
-+++ b/drivers/scsi/dc395x.c
-@@ -4638,7 +4638,7 @@ static int dc395x_show_info(struct seq_file *m, struct Scsi_Host *host)
- 	SPRINTF("irq_level 0x%04x, ", acb->irq_level);
- 	SPRINTF(" SelTimeout %ims\n", (1638 * acb->sel_timeout) / 1000);
- 
--	SPRINTF("MaxID %i, MaxLUN %i, ", host->max_id, host->max_lun);
-+	SPRINTF("MaxID %i, MaxLUN %llu, ", host->max_id, host->max_lun);
- 	SPRINTF("AdapterID %i\n", host->this_id);
- 
- 	SPRINTF("tag_max_num %i", acb->tag_max_num);
-diff --git a/drivers/scsi/eata.c b/drivers/scsi/eata.c
-index 0f27ac1..03372cf 100644
---- a/drivers/scsi/eata.c
-+++ b/drivers/scsi/eata.c
-@@ -1399,7 +1399,7 @@ static int port_detect(unsigned long port_base, unsigned int j,
- 
- 	if (shost->max_id > 8 || shost->max_lun > 8)
- 		printk
--		    ("%s: wide SCSI support enabled, max_id %u, max_lun %u.\n",
-+		    ("%s: wide SCSI support enabled, max_id %u, max_lun %llu.\n",
- 		     ha->board_name, shost->max_id, shost->max_lun);
- 
- 	for (i = 0; i <= shost->max_channel; i++)
-diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
-index 23f5ba5..a83a068 100644
---- a/drivers/scsi/ibmvscsi/ibmvfc.c
-+++ b/drivers/scsi/ibmvscsi/ibmvfc.c
-@@ -46,7 +46,7 @@
- 
- static unsigned int init_timeout = IBMVFC_INIT_TIMEOUT;
- static unsigned int default_timeout = IBMVFC_DEFAULT_TIMEOUT;
--static unsigned int max_lun = IBMVFC_MAX_LUN;
-+static u64 max_lun = IBMVFC_MAX_LUN;
- static unsigned int max_targets = IBMVFC_MAX_TARGETS;
- static unsigned int max_requests = IBMVFC_MAX_REQUESTS_DEFAULT;
- static unsigned int disc_threads = IBMVFC_MAX_DISC_THREADS;
-@@ -71,7 +71,7 @@ MODULE_PARM_DESC(default_timeout,
- module_param_named(max_requests, max_requests, uint, S_IRUGO);
- MODULE_PARM_DESC(max_requests, "Maximum requests for this adapter. "
- 		 "[Default=" __stringify(IBMVFC_MAX_REQUESTS_DEFAULT) "]");
--module_param_named(max_lun, max_lun, uint, S_IRUGO);
-+module_param_named(max_lun, max_lun, ullong, S_IRUGO);
- MODULE_PARM_DESC(max_lun, "Maximum allowed LUN. "
- 		 "[Default=" __stringify(IBMVFC_MAX_LUN) "]");
- module_param_named(max_targets, max_targets, uint, S_IRUGO);
-diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index 8d5b6ce..c8ae443 100644
---- a/drivers/scsi/lpfc/lpfc_attr.c
-+++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -1993,6 +1993,14 @@ lpfc_vport_param_show(name)\
- lpfc_vport_param_init(name, defval, minval, maxval)\
- static DEVICE_ATTR(lpfc_##name, S_IRUGO , lpfc_##name##_show, NULL)
- 
-+#define LPFC_VPORT_ULL_ATTR_R(name, defval, minval, maxval, desc) \
-+static uint64_t lpfc_##name = defval;\
-+module_param(lpfc_##name, ullong, S_IRUGO);\
-+MODULE_PARM_DESC(lpfc_##name, desc);\
-+lpfc_vport_param_show(name)\
-+lpfc_vport_param_init(name, defval, minval, maxval)\
-+static DEVICE_ATTR(lpfc_##name, S_IRUGO , lpfc_##name##_show, NULL)
-+
- #define LPFC_VPORT_ATTR_RW(name, defval, minval, maxval, desc) \
- static uint lpfc_##name = defval;\
- module_param(lpfc_##name, uint, S_IRUGO);\
-@@ -4591,7 +4599,7 @@ LPFC_VPORT_ATTR(discovery_threads, 32, 1, 64, "Maximum number of ELS commands "
- # Value range is [0,65535]. Default value is 255.
- # NOTE: The SCSI layer might probe all allowed LUN on some old targets.
- */
--LPFC_VPORT_ATTR_R(max_luns, 255, 0, 65535, "Maximum allowed LUN ID");
-+LPFC_VPORT_ULL_ATTR_R(max_luns, 255, 0, 65535, "Maximum allowed LUN ID");
- 
- /*
- # lpfc_poll_tmo: .Milliseconds driver will wait between polling FCP ring.
-diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
-index 6bb2b52..ac5d94c 100644
---- a/drivers/scsi/megaraid.c
-+++ b/drivers/scsi/megaraid.c
-@@ -1860,7 +1860,7 @@ megaraid_info(struct Scsi_Host *host)
- 		 "LSI Logic MegaRAID %s %d commands %d targs %d chans %d luns",
- 		 adapter->fw_version, adapter->product_info.max_commands,
- 		 adapter->host->max_id, adapter->host->max_channel,
--		 adapter->host->max_lun);
-+		 (u32)adapter->host->max_lun);
- 	return buffer;
- }
- 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index a961fe1..4b3327e 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -112,8 +112,8 @@ MODULE_PARM_DESC(missing_delay, " device missing delay , io missing delay");
- 
- /* scsi-mid layer global parmeter is max_report_luns, which is 511 */
- #define MPT3SAS_MAX_LUN (16895)
--static int max_lun = MPT3SAS_MAX_LUN;
--module_param(max_lun, int, 0);
-+static u64 max_lun = MPT3SAS_MAX_LUN;
-+module_param(max_lun, ullong, 0);
- MODULE_PARM_DESC(max_lun, " max lun, default=16895 ");
- 
- 
-diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
-index 8f9ef8c..7355769 100644
---- a/drivers/scsi/qla2xxx/qla_gbl.h
-+++ b/drivers/scsi/qla2xxx/qla_gbl.h
-@@ -113,7 +113,7 @@ extern int ql2xenabledif;
- extern int ql2xenablehba_err_chk;
- extern int ql2xtargetreset;
- extern int ql2xdontresethba;
--extern unsigned int ql2xmaxlun;
-+extern uint64_t ql2xmaxlun;
- extern int ql2xmdcapmask;
- extern int ql2xmdenable;
- 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 666cca5..4dd17ff 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -202,8 +202,8 @@ MODULE_PARM_DESC(ql2xdontresethba,
- 		" 0 (Default) -- Reset on failure.\n"
- 		" 1 -- Do not reset on failure.\n");
- 
--uint ql2xmaxlun = MAX_LUNS;
--module_param(ql2xmaxlun, uint, S_IRUGO);
-+uint64_t ql2xmaxlun = MAX_LUNS;
-+module_param(ql2xmaxlun, ullong, S_IRUGO);
- MODULE_PARM_DESC(ql2xmaxlun,
- 		"Defines the maximum LU number to register with the SCSI "
- 		"midlayer. Default is 65535.");
-@@ -2671,7 +2671,7 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	ql_dbg(ql_dbg_init, base_vha, 0x0033,
- 	    "max_id=%d this_id=%d "
- 	    "cmd_per_len=%d unique_id=%d max_cmd_len=%d max_channel=%d "
--	    "max_lun=%d transportt=%p, vendor_id=%llu.\n", host->max_id,
-+	    "max_lun=%llu transportt=%p, vendor_id=%llu.\n", host->max_id,
- 	    host->this_id, host->cmd_per_lun, host->unique_id,
- 	    host->max_cmd_len, host->max_channel, host->max_lun,
- 	    host->transportt, sht->vendor_id);
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 1a71547..fa57a04 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -81,11 +81,11 @@ static const char *scsi_null_device_strs = "nullnullnullnull";
- 
- #define MAX_SCSI_LUNS	512
- 
--static unsigned int max_scsi_luns = MAX_SCSI_LUNS;
-+static u64 max_scsi_luns = MAX_SCSI_LUNS;
- 
--module_param_named(max_luns, max_scsi_luns, uint, S_IRUGO|S_IWUSR);
-+module_param_named(max_luns, max_scsi_luns, ullong, S_IRUGO|S_IWUSR);
- MODULE_PARM_DESC(max_luns,
--		 "last scsi LUN (should be between 1 and 2^32-1)");
-+		 "last scsi LUN (should be between 1 and 2^64-1)");
- 
- #ifdef CONFIG_SCSI_SCAN_ASYNC
- #define SCSI_SCAN_TYPE_DEFAULT "async"
-diff --git a/include/linux/moduleparam.h b/include/linux/moduleparam.h
-index 204a677..21e2ba6 100644
---- a/include/linux/moduleparam.h
-+++ b/include/linux/moduleparam.h
-@@ -381,6 +381,11 @@ extern int param_set_ulong(const char *val, const struct kernel_param *kp);
- extern int param_get_ulong(char *buffer, const struct kernel_param *kp);
- #define param_check_ulong(name, p) __param_check(name, p, unsigned long)
- 
-+extern struct kernel_param_ops param_ops_ullong;
-+extern int param_set_ullong(const char *val, const struct kernel_param *kp);
-+extern int param_get_ullong(char *buffer, const struct kernel_param *kp);
-+#define param_check_ullong(name, p) __param_check(name, p, unsigned long long)
-+
- extern struct kernel_param_ops param_ops_charp;
- extern int param_set_charp(const char *val, const struct kernel_param *kp);
- extern int param_get_charp(char *buffer, const struct kernel_param *kp);
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index 94844fc..597710d 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -623,11 +623,11 @@ struct Scsi_Host {
- 	 * These three parameters can be used to allow for wide scsi,
- 	 * and for host adapters that support multiple busses
- 	 * The first two should be set to 1 more than the actual max id
--	 * or lun (i.e. 8 for normal systems).
-+	 * or lun (e.g. 8 for SCSI parallel systems).
- 	 */
--	unsigned int max_id;
--	unsigned int max_lun;
- 	unsigned int max_channel;
-+	unsigned int max_id;
-+	u64 max_lun;
- 
- 	/*
- 	 * This is a unique identifier that must be assigned so that we
-diff --git a/kernel/params.c b/kernel/params.c
-index b00142e..2b2a9dd 100644
---- a/kernel/params.c
-+++ b/kernel/params.c
-@@ -253,6 +253,7 @@ STANDARD_PARAM_DEF(int, int, "%i", kstrtoint);
- STANDARD_PARAM_DEF(uint, unsigned int, "%u", kstrtouint);
- STANDARD_PARAM_DEF(long, long, "%li", kstrtol);
- STANDARD_PARAM_DEF(ulong, unsigned long, "%lu", kstrtoul);
-+STANDARD_PARAM_DEF(ullong, unsigned long long, "%llu", kstrtoull);
- 
- int param_set_charp(const char *val, const struct kernel_param *kp)
- {
--- 
-1.7.12.4
+bnx2fc is actually in a slightly better position than soft FCoE.  soft FCoE
+creates a thread for each cpu, but doesn't explicitly assign single cpu affinity
+for each task, meaning per-cpu stats are actually relevant.  For bnx2fc, you
+only create a single task at module init, meaning there is no parallel reception
+of frames.  As such the per-cpu tasks are really more of an aggregate measure
+(since the stat updates are all serialized anyway by the single thread accross
+cpus).
 
+The bottom line is that you can't hold a cpu while both doing the work of frame
+reception and updating statistics, unless you want to avoid sleeping functions
+in the entire receive path, and once you separate the two by only holding the
+cpu during stats update, you run the risk of changing the cpu after you've
+processed the frame, but before you dereference the per_cpu pointer.
+
+I can still re-add the get_cpu/put_cpu if you want, but I really don't see the
+purpose of the extra overhead given the above, and my intention is to remove it
+from the soft FCoE code as well.
+
+Regards
+Neil
