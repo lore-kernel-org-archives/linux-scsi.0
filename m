@@ -1,109 +1,63 @@
-From: Peter Senna Tschudin <peter.senna@gmail.com>
-Subject: [PATCH 3/11] isci: Remove useless return variables
-Date: Sat, 31 May 2014 10:14:03 -0300
-Message-ID: <1401542051-3174-3-git-send-email-peter.senna@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Intel SCU Linux support <intel-linux-scu@intel.com>
-Cc: kernel-janitors@vger.kernel.org, Artur Paszkiewicz <artur.paszkiewicz@intel.com>, Dave Jiang <dave.jiang@intel.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Vyacheslav Dubeyko <slava@dubeyko.com>
+Subject: Re: [RFC 00/32] making inode time stamps y2038 ready
+Date: Sat, 31 May 2014 18:30:49 +0400
+Message-ID: <1401546649.2413.6.camel@slavad-CELSIUS-H720>
+References: <1401480116-1973111-1-git-send-email-arnd@arndb.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-btrfs-owner@vger.kernel.org>
+In-Reply-To: <1401480116-1973111-1-git-send-email-arnd@arndb.de>
+Sender: linux-btrfs-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org, joseph@codesourcery.com, john.stultz@linaro.org, hch@infradead.org, tglx@linutronix.de, geert@linux-m68k.org, lftan@altera.com, hpa@zytor.com, linux-fsdevel@vger.kernel.org, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, coda@cs.cmu.edu, codalist@coda.cs.cmu.edu, fuse-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, linux-btrfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-scsi@vger.kernel.org, logfs@logfs.org, ocfs2-devel@oss.oracle.com, reiserfs-devel@vger.kernel.org, samba-technical@lists.samba.org, xfs@oss.sgi.com
 List-Id: linux-scsi@vger.kernel.org
 
-This patch remove variables that are initialized with a constant,
-are never updated, and are only used as parameter of return.
-Return the constant instead of using a variable.
+Hi Arnd,
 
-Verified by compilation only.
+On Fri, 2014-05-30 at 22:01 +0200, Arnd Bergmann wrote:
 
-The coccinelle script that find and fixes this issue is:
-// <smpl>
-@@
-type T;
-constant C;
-identifier ret;
-@@
-- T ret = C;
-... when != ret
-    when strict
-return
-- ret
-+ C
-;
-// </smpl>
+[snip]
+> 
+> Arnd Bergmann (32):
+>   fs: introduce new 'struct inode_time'
+>   uapi: add struct __kernel_timespec{32,64}
+>   fs: introduce sys_utimens64at
+>   fs: introduce sys_newfstat64/sys_newfstatat64
+>   arch: hook up new stat and utimes syscalls
+>   isofs: fix timestamps beyond 2027
+>   fs/nfs: convert to struct inode_time
+>   fs/ceph: convert to 'struct inode_time'
+>   fs/pstore: convert to struct inode_time
+>   fs/coda: convert to struct inode_time
+>   xfs: convert to struct inode_time
+>   btrfs: convert to struct inode_time
+>   ext3: convert to struct inode_time
+>   ext4: convert to struct inode_time
+>   cifs: convert to struct inode_time
+>   ntfs: convert to struct inode_time
+>   ubifs: convert to struct inode_time
+>   ocfs2: convert to struct inode_time
+>   fs/fat: convert to struct inode_time
+>   afs: convert to struct inode_time
+>   udf: convert to struct inode_time
+>   fs: convert simple fs to inode_time
+>   logfs: convert to struct inode_time
+>   hfs, hfsplus: convert to struct inode_time
+>   gfs2: convert to struct inode_time
+>   reiserfs: convert to struct inode_time
+>   jffs2: convert to struct inode_time
+>   adfs: convert to struct inode_time
+>   f2fs: convert to struct inode_time
+>   fuse: convert to struct inode_time
+>   scsi: fnic: use current_kernel_time() for timestamp
+>   fs: use new inode_time definition unconditionally
+> 
 
-Signed-off-by: Peter Senna Tschudin <peter.senna@gmail.com>
+By the way, what about NILFS2? Is NILFS2 ready for suggested approach
+without any changes?
 
----
- drivers/scsi/isci/request.c |   15 ++++-----------
- 1 file changed, 4 insertions(+), 11 deletions(-)
+Thanks,
+Vyacheslav Dubeyko.
 
-diff --git a/drivers/scsi/isci/request.c b/drivers/scsi/isci/request.c
-index 56e3809..ecf7924 100644
---- a/drivers/scsi/isci/request.c
-+++ b/drivers/scsi/isci/request.c
-@@ -1480,8 +1480,6 @@ static enum sci_status
- stp_request_pio_await_h2d_completion_tc_event(struct isci_request *ireq,
- 					      u32 completion_code)
- {
--	enum sci_status status = SCI_SUCCESS;
--
- 	switch (SCU_GET_COMPLETION_TL_STATUS(completion_code)) {
- 	case SCU_MAKE_COMPLETION_STATUS(SCU_TASK_DONE_GOOD):
- 		ireq->scu_status = SCU_TASK_DONE_GOOD;
-@@ -1500,7 +1498,7 @@ stp_request_pio_await_h2d_completion_tc_event(struct isci_request *ireq,
- 		break;
- 	}
- 
--	return status;
-+	return SCI_SUCCESS;
- }
- 
- static enum sci_status
-@@ -2103,8 +2101,6 @@ sci_io_request_frame_handler(struct isci_request *ireq,
- static enum sci_status stp_request_udma_await_tc_event(struct isci_request *ireq,
- 						       u32 completion_code)
- {
--	enum sci_status status = SCI_SUCCESS;
--
- 	switch (SCU_GET_COMPLETION_TL_STATUS(completion_code)) {
- 	case SCU_MAKE_COMPLETION_STATUS(SCU_TASK_DONE_GOOD):
- 		ireq->scu_status = SCU_TASK_DONE_GOOD;
-@@ -2148,14 +2144,12 @@ static enum sci_status stp_request_udma_await_tc_event(struct isci_request *ireq
- 		break;
- 	}
- 
--	return status;
-+	return SCI_SUCCESS;
- }
- 
- static enum sci_status atapi_raw_completion(struct isci_request *ireq, u32 completion_code,
- 						  enum sci_base_request_states next)
- {
--	enum sci_status status = SCI_SUCCESS;
--
- 	switch (SCU_GET_COMPLETION_TL_STATUS(completion_code)) {
- 	case SCU_MAKE_COMPLETION_STATUS(SCU_TASK_DONE_GOOD):
- 		ireq->scu_status = SCU_TASK_DONE_GOOD;
-@@ -2174,7 +2168,7 @@ static enum sci_status atapi_raw_completion(struct isci_request *ireq, u32 compl
- 		break;
- 	}
- 
--	return status;
-+	return SCI_SUCCESS;
- }
- 
- static enum sci_status atapi_data_tc_completion_handler(struct isci_request *ireq,
-@@ -3444,7 +3438,6 @@ int isci_request_execute(struct isci_host *ihost, struct isci_remote_device *ide
- 	enum sci_status status = SCI_FAILURE_UNSUPPORTED_PROTOCOL;
- 	struct isci_request *ireq;
- 	unsigned long flags;
--	int ret = 0;
- 
- 	/* do common allocation and init of request object. */
- 	ireq = isci_io_request_from_tag(ihost, task, tag);
-@@ -3524,5 +3517,5 @@ int isci_request_execute(struct isci_host *ihost, struct isci_remote_device *ide
- 		status = SCI_SUCCESS;
- 	}
- 
--	return ret;
-+	return 0;
- }
+
