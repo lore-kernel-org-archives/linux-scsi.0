@@ -1,68 +1,126 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 2/6] scsi_scan: Restrict sequential scan to 256 LUNs
-Date: Sat, 31 May 2014 11:01:14 +0200
-Message-ID: <1401526878-119472-3-git-send-email-hare@suse.de>
-References: <1401526878-119472-1-git-send-email-hare@suse.de>
+Subject: [PATCHv3 0/6]  Support 64-bit LUNs
+Date: Sat, 31 May 2014 11:01:12 +0200
+Message-ID: <1401526878-119472-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:47219 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:47217 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752987AbaEaJBX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 31 May 2014 05:01:23 -0400
-In-Reply-To: <1401526878-119472-1-git-send-email-hare@suse.de>
+	id S1753026AbaEaJBY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 31 May 2014 05:01:24 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@infradead.org>, Ewan Milne <emilne@redhat.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-Sequential scan for more than 256 LUNs is very fragile as
-LUNs might not be numbered sequentially after that point.
+Hi all,
 
-SAM revisions later than SCSI-3 impose a structure on
-LUNs larger than 256, making LUN numbers between 256
-and 16384 illegal.
-SCSI-3, however allows for plain 64-bit numbers with
-no internal structure.
+this patchset updates the SCSI stack to support full 64-bit LUNs.
+The first patch is a simple fix; the next patch updates
+the sequential scan logic to be compliant with SPC.
+The third patch addresses a firmware issue with earlier
+qla2xxx HBAs.
+The next two patches update the SCSI stack and all drivers
+to use 64-bit LUNs where appropriate.
+And finally we need to update the conversion routine
+scsilun_to_int() to cope with 64bit LUNs.
 
-So restrict sequential LUN scan to 256 LUNs and add a
-new blacklist flag 'BLIST_SCSI3LUN' to scan up to
-max_lun devices.
+Two drivers have issues with 64bit LUNs:
+- The qla2xxx driver uses a 32-bit LUN value for TMFs.
+  But as the driver uses a max_lun value from 0xFFFF
+  we should be safe for the time being.
+- The zfcp driver uses a 32-bit LUN for debug records; the
+  record format would need to be updated to cope with
+  64-bit LUNs. But again, this driver uses 0xFFFFFFFF
+  for max_lun, so it doesn't do any harm.
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Christoph Hellwig <hch@infradead.org>
-Reviewed-by: Ewan Milne <emilne@redhat.com>
----
- drivers/scsi/scsi_scan.c    | 6 ++++++
- include/scsi/scsi_devinfo.h | 2 ++
- 2 files changed, 8 insertions(+)
+The other changes have been pretty straightforward.
 
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 8564bdc..a02f7b0 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -1235,6 +1235,12 @@ static void scsi_sequential_lun_scan(struct scsi_target *starget,
- 		max_dev_lun = min(8U, max_dev_lun);
- 
- 	/*
-+	 * Stop scanning at 255 unless BLIST_SCSI3LUN
-+	 */
-+	if (!(bflags & BLIST_SCSI3LUN))
-+		max_dev_lun = min(256U, max_dev_lun);
-+
-+	/*
- 	 * We have already scanned LUN 0, so start at LUN 1. Keep scanning
- 	 * until we reach the max, or no LUN is found and we are not
- 	 * sparse_lun.
-diff --git a/include/scsi/scsi_devinfo.h b/include/scsi/scsi_devinfo.h
-index 447d2d7..8670c04 100644
---- a/include/scsi/scsi_devinfo.h
-+++ b/include/scsi/scsi_devinfo.h
-@@ -32,4 +32,6 @@
- #define BLIST_ATTACH_PQ3	0x1000000 /* Scan: Attach to PQ3 devices */
- #define BLIST_NO_DIF		0x2000000 /* Disable T10 PI (DIF) */
- #define BLIST_SKIP_VPD_PAGES	0x4000000 /* Ignore SBC-3 VPD pages */
-+#define BLIST_SCSI3LUN		0x8000000 /* Scan more than 256 LUNs
-+					     for sequential scan */
- #endif
+Changed to v2:
+- Add patch to fixup scsilun_to_int
+- Add Reviewed-by: where applicable
+- Remove last references to SCSI_MULTI_LUN
+
+Hannes Reinecke (6):
+  scsi: Remove CONFIG_SCSI_MULTI_LUN
+  scsi_scan: Restrict sequential scan to 256 LUNs
+  qla2xxx: Restrict max_lun to 16-bit for older HBAs
+  scsi: use 64-bit LUNs
+  scsi: use 64-bit value for 'max_luns'
+  scsi_scan: Fixup scsilun_to_int()
+
+ Documentation/scsi/tmscsim.txt       |  2 -
+ drivers/ata/libata-scsi.c            |  2 +-
+ drivers/ata/libata.h                 |  2 +-
+ drivers/message/fusion/mptscsih.c    |  2 +-
+ drivers/message/i2o/i2o_scsi.c       | 11 ++--
+ drivers/s390/scsi/zfcp_dbf.c         |  3 +-
+ drivers/s390/scsi/zfcp_unit.c        |  4 +-
+ drivers/scsi/Kconfig                 | 14 ------
+ drivers/scsi/NCR5380.c               |  2 +-
+ drivers/scsi/aacraid/linit.c         |  2 +-
+ drivers/scsi/advansys.c              |  2 +-
+ drivers/scsi/aha152x.c               |  6 +--
+ drivers/scsi/aic7xxx/aic79xx.h       |  2 +-
+ drivers/scsi/aic7xxx/aic79xx_osm.c   |  6 +--
+ drivers/scsi/aic7xxx/aic79xx_proc.c  |  2 +-
+ drivers/scsi/aic7xxx/aic7xxx_osm.c   | 11 ++--
+ drivers/scsi/aic7xxx/aic7xxx_proc.c  |  2 +-
+ drivers/scsi/arcmsr/arcmsr_hba.c     |  8 +--
+ drivers/scsi/csiostor/csio_scsi.c    | 24 ++++-----
+ drivers/scsi/cxgbi/libcxgbi.c        |  2 +-
+ drivers/scsi/cxgbi/libcxgbi.h        |  2 +-
+ drivers/scsi/dc395x.c                | 51 ++++++++-----------
+ drivers/scsi/eata.c                  |  4 +-
+ drivers/scsi/fnic/fnic_scsi.c        |  4 +-
+ drivers/scsi/hpsa.c                  |  2 +-
+ drivers/scsi/ibmvscsi/ibmvfc.c       |  4 +-
+ drivers/scsi/libiscsi.c              |  8 +--
+ drivers/scsi/libsas/sas_scsi_host.c  | 11 ++--
+ drivers/scsi/lpfc/lpfc_attr.c        | 10 +++-
+ drivers/scsi/lpfc/lpfc_scsi.c        | 36 ++++++-------
+ drivers/scsi/megaraid.c              |  6 +--
+ drivers/scsi/megaraid/mega_common.h  |  2 +-
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c |  4 +-
+ drivers/scsi/ncr53c8xx.h             |  4 --
+ drivers/scsi/pmcraid.c               |  2 +-
+ drivers/scsi/qla2xxx/qla_def.h       |  6 +--
+ drivers/scsi/qla2xxx/qla_gbl.h       | 18 +++----
+ drivers/scsi/qla2xxx/qla_iocb.c      | 11 ++--
+ drivers/scsi/qla2xxx/qla_isr.c       |  4 +-
+ drivers/scsi/qla2xxx/qla_mbx.c       | 12 ++---
+ drivers/scsi/qla2xxx/qla_mr.c        |  8 +--
+ drivers/scsi/qla2xxx/qla_os.c        | 48 ++++++++++--------
+ drivers/scsi/qla4xxx/ql4_glbl.h      |  4 +-
+ drivers/scsi/qla4xxx/ql4_iocb.c      |  2 +-
+ drivers/scsi/qla4xxx/ql4_isr.c       | 22 ++++----
+ drivers/scsi/qla4xxx/ql4_mbx.c       |  6 +--
+ drivers/scsi/qla4xxx/ql4_os.c        | 20 ++++----
+ drivers/scsi/scsi.c                  |  8 +--
+ drivers/scsi/scsi_debug.c            | 15 +++---
+ drivers/scsi/scsi_priv.h             |  2 +-
+ drivers/scsi/scsi_proc.c             |  2 +-
+ drivers/scsi/scsi_scan.c             | 97 +++++++++++++++---------------------
+ drivers/scsi/scsi_sysfs.c            | 14 +++---
+ drivers/scsi/scsi_transport_fc.c     |  4 +-
+ drivers/scsi/scsi_transport_iscsi.c  |  4 +-
+ drivers/scsi/scsi_transport_sas.c    |  2 +-
+ drivers/scsi/sg.c                    |  4 +-
+ drivers/scsi/sym53c8xx_2/sym_glue.c  |  2 +-
+ drivers/scsi/sym53c8xx_2/sym_hipd.h  |  2 +-
+ drivers/target/loopback/tcm_loop.c   |  2 +-
+ drivers/target/target_core_pscsi.c   | 12 ++---
+ drivers/usb/storage/Kconfig          |  4 +-
+ drivers/usb/storage/sddr09.c         |  4 +-
+ drivers/usb/storage/usb.c            | 10 ++--
+ include/linux/moduleparam.h          |  5 ++
+ include/scsi/scsi.h                  |  2 +-
+ include/scsi/scsi_device.h           | 22 ++++----
+ include/scsi/scsi_devinfo.h          |  2 +
+ include/scsi/scsi_host.h             |  6 +--
+ include/scsi/scsi_transport.h        |  2 +-
+ kernel/params.c                      |  1 +
+ 71 files changed, 314 insertions(+), 334 deletions(-)
+
 -- 
 1.7.12.4
 
