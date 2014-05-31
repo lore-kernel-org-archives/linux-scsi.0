@@ -1,126 +1,89 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv3 0/6]  Support 64-bit LUNs
-Date: Sat, 31 May 2014 11:01:12 +0200
-Message-ID: <1401526878-119472-1-git-send-email-hare@suse.de>
+Subject: [PATCH 6/6] scsi_scan: Fixup scsilun_to_int()
+Date: Sat, 31 May 2014 11:01:18 +0200
+Message-ID: <1401526878-119472-7-git-send-email-hare@suse.de>
+References: <1401526878-119472-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:47217 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:47218 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753026AbaEaJBY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 31 May 2014 05:01:24 -0400
+	id S1753671AbaEaJBX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 31 May 2014 05:01:23 -0400
+In-Reply-To: <1401526878-119472-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@infradead.org>, Ewan Milne <emilne@redhat.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-Hi all,
+scsilun_to_int() has an error which prevents it from generating
+correct LUN numbers for 64bit values.
+Also we should remove the misleading comment about portions of
+the LUN being ignored; the initiator should treat the LUN as
+an opaque value.
+And, finally, the example given should use the correct
+prefix (here: extended flat space addressing scheme).
 
-this patchset updates the SCSI stack to support full 64-bit LUNs.
-The first patch is a simple fix; the next patch updates
-the sequential scan logic to be compliant with SPC.
-The third patch addresses a firmware issue with earlier
-qla2xxx HBAs.
-The next two patches update the SCSI stack and all drivers
-to use 64-bit LUNs where appropriate.
-And finally we need to update the conversion routine
-scsilun_to_int() to cope with 64bit LUNs.
+Suggested-by: Doug Gilbert <dgilbert@interlog.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/scsi/scsi_scan.c | 29 ++++++++++++-----------------
+ 1 file changed, 12 insertions(+), 17 deletions(-)
 
-Two drivers have issues with 64bit LUNs:
-- The qla2xxx driver uses a 32-bit LUN value for TMFs.
-  But as the driver uses a max_lun value from 0xFFFF
-  we should be safe for the time being.
-- The zfcp driver uses a 32-bit LUN for debug records; the
-  record format would need to be updated to cope with
-  64-bit LUNs. But again, this driver uses 0xFFFFFFFF
-  for max_lun, so it doesn't do any harm.
-
-The other changes have been pretty straightforward.
-
-Changed to v2:
-- Add patch to fixup scsilun_to_int
-- Add Reviewed-by: where applicable
-- Remove last references to SCSI_MULTI_LUN
-
-Hannes Reinecke (6):
-  scsi: Remove CONFIG_SCSI_MULTI_LUN
-  scsi_scan: Restrict sequential scan to 256 LUNs
-  qla2xxx: Restrict max_lun to 16-bit for older HBAs
-  scsi: use 64-bit LUNs
-  scsi: use 64-bit value for 'max_luns'
-  scsi_scan: Fixup scsilun_to_int()
-
- Documentation/scsi/tmscsim.txt       |  2 -
- drivers/ata/libata-scsi.c            |  2 +-
- drivers/ata/libata.h                 |  2 +-
- drivers/message/fusion/mptscsih.c    |  2 +-
- drivers/message/i2o/i2o_scsi.c       | 11 ++--
- drivers/s390/scsi/zfcp_dbf.c         |  3 +-
- drivers/s390/scsi/zfcp_unit.c        |  4 +-
- drivers/scsi/Kconfig                 | 14 ------
- drivers/scsi/NCR5380.c               |  2 +-
- drivers/scsi/aacraid/linit.c         |  2 +-
- drivers/scsi/advansys.c              |  2 +-
- drivers/scsi/aha152x.c               |  6 +--
- drivers/scsi/aic7xxx/aic79xx.h       |  2 +-
- drivers/scsi/aic7xxx/aic79xx_osm.c   |  6 +--
- drivers/scsi/aic7xxx/aic79xx_proc.c  |  2 +-
- drivers/scsi/aic7xxx/aic7xxx_osm.c   | 11 ++--
- drivers/scsi/aic7xxx/aic7xxx_proc.c  |  2 +-
- drivers/scsi/arcmsr/arcmsr_hba.c     |  8 +--
- drivers/scsi/csiostor/csio_scsi.c    | 24 ++++-----
- drivers/scsi/cxgbi/libcxgbi.c        |  2 +-
- drivers/scsi/cxgbi/libcxgbi.h        |  2 +-
- drivers/scsi/dc395x.c                | 51 ++++++++-----------
- drivers/scsi/eata.c                  |  4 +-
- drivers/scsi/fnic/fnic_scsi.c        |  4 +-
- drivers/scsi/hpsa.c                  |  2 +-
- drivers/scsi/ibmvscsi/ibmvfc.c       |  4 +-
- drivers/scsi/libiscsi.c              |  8 +--
- drivers/scsi/libsas/sas_scsi_host.c  | 11 ++--
- drivers/scsi/lpfc/lpfc_attr.c        | 10 +++-
- drivers/scsi/lpfc/lpfc_scsi.c        | 36 ++++++-------
- drivers/scsi/megaraid.c              |  6 +--
- drivers/scsi/megaraid/mega_common.h  |  2 +-
- drivers/scsi/mpt3sas/mpt3sas_scsih.c |  4 +-
- drivers/scsi/ncr53c8xx.h             |  4 --
- drivers/scsi/pmcraid.c               |  2 +-
- drivers/scsi/qla2xxx/qla_def.h       |  6 +--
- drivers/scsi/qla2xxx/qla_gbl.h       | 18 +++----
- drivers/scsi/qla2xxx/qla_iocb.c      | 11 ++--
- drivers/scsi/qla2xxx/qla_isr.c       |  4 +-
- drivers/scsi/qla2xxx/qla_mbx.c       | 12 ++---
- drivers/scsi/qla2xxx/qla_mr.c        |  8 +--
- drivers/scsi/qla2xxx/qla_os.c        | 48 ++++++++++--------
- drivers/scsi/qla4xxx/ql4_glbl.h      |  4 +-
- drivers/scsi/qla4xxx/ql4_iocb.c      |  2 +-
- drivers/scsi/qla4xxx/ql4_isr.c       | 22 ++++----
- drivers/scsi/qla4xxx/ql4_mbx.c       |  6 +--
- drivers/scsi/qla4xxx/ql4_os.c        | 20 ++++----
- drivers/scsi/scsi.c                  |  8 +--
- drivers/scsi/scsi_debug.c            | 15 +++---
- drivers/scsi/scsi_priv.h             |  2 +-
- drivers/scsi/scsi_proc.c             |  2 +-
- drivers/scsi/scsi_scan.c             | 97 +++++++++++++++---------------------
- drivers/scsi/scsi_sysfs.c            | 14 +++---
- drivers/scsi/scsi_transport_fc.c     |  4 +-
- drivers/scsi/scsi_transport_iscsi.c  |  4 +-
- drivers/scsi/scsi_transport_sas.c    |  2 +-
- drivers/scsi/sg.c                    |  4 +-
- drivers/scsi/sym53c8xx_2/sym_glue.c  |  2 +-
- drivers/scsi/sym53c8xx_2/sym_hipd.h  |  2 +-
- drivers/target/loopback/tcm_loop.c   |  2 +-
- drivers/target/target_core_pscsi.c   | 12 ++---
- drivers/usb/storage/Kconfig          |  4 +-
- drivers/usb/storage/sddr09.c         |  4 +-
- drivers/usb/storage/usb.c            | 10 ++--
- include/linux/moduleparam.h          |  5 ++
- include/scsi/scsi.h                  |  2 +-
- include/scsi/scsi_device.h           | 22 ++++----
- include/scsi/scsi_devinfo.h          |  2 +
- include/scsi/scsi_host.h             |  6 +--
- include/scsi/scsi_transport.h        |  2 +-
- kernel/params.c                      |  1 +
- 71 files changed, 314 insertions(+), 334 deletions(-)
-
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index fa57a04..42843ec 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -1263,25 +1263,23 @@ static void scsi_sequential_lun_scan(struct scsi_target *starget,
+  *     truncation before using this function.
+  *
+  * Notes:
+- *     The struct scsi_lun is assumed to be four levels, with each level
+- *     effectively containing a SCSI byte-ordered (big endian) short; the
+- *     addressing bits of each level are ignored (the highest two bits).
+  *     For a description of the LUN format, post SCSI-3 see the SCSI
+  *     Architecture Model, for SCSI-3 see the SCSI Controller Commands.
+  *
+- *     Given a struct scsi_lun of: 0a 04 0b 03 00 00 00 00, this function returns
+- *     the integer: 0x0b030a04
++ *     Given a struct scsi_lun of: d2 04 0b 03 00 00 00 00, this function
++ *     returns the integer: 0x0b03d204
+  **/
+ u64 scsilun_to_int(struct scsi_lun *scsilun)
+ {
+-	int i;
+-	u64 lun;
++	const unsigned char * cp;
++	uint64_t res;
+ 
+-	lun = 0;
+-	for (i = 0; i < sizeof(lun); i += 2)
+-		lun = lun | (((scsilun->scsi_lun[i] << 8) |
+-			      scsilun->scsi_lun[i + 1]) << (i * 8));
+-	return lun;
++	res = (scsilun->scsi_lun[6] << 8) + scsilun->scsi_lun[7];
++	for (cp = scsilun->scsi_lun + 4; cp >= scsilun->scsi_lun; cp -= 2) {
++		res <<= 16;
++		res += (*cp << 8) + *(cp + 1);
++	}
++	return res;
+ }
+ EXPORT_SYMBOL(scsilun_to_int);
+ 
+@@ -1294,13 +1292,10 @@ EXPORT_SYMBOL(scsilun_to_int);
+  *     Reverts the functionality of the scsilun_to_int, which packed
+  *     an 8-byte lun value into an int. This routine unpacks the int
+  *     back into the lun value.
+- *     Note: the scsilun_to_int() routine does not truly handle all
+- *     8bytes of the lun value. This functions restores only as much
+- *     as was set by the routine.
+  *
+  * Notes:
+- *     Given an integer : 0x0b030a04,  this function returns a
+- *     scsi_lun of : struct scsi_lun of: 0a 04 0b 03 00 00 00 00
++ *     Given an integer : 0x0b03d204,  this function returns a
++ *     scsi_lun of : struct scsi_lun of: d2 04 0b 03 00 00 00 00
+  *
+  **/
+ void int_to_scsilun(u64 lun, struct scsi_lun *scsilun)
 -- 
 1.7.12.4
 
