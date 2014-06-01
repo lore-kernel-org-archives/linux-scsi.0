@@ -1,26 +1,34 @@
-From: Richard Cochran <richardcochran@gmail.com>
-Subject: Re: [RFC 00/32] making inode time stamps y2038 ready
-Date: Sun, 1 Jun 2014 06:46:09 +0200
-Message-ID: <20140601044609.GD3722@localhost.localdomain>
-References: <1401480116-1973111-1-git-send-email-arnd@arndb.de>
- <20140531145114.GA3721@localhost.localdomain>
- <6347520.8jMPlVsFjM@wuerfel>
- <20140531182237.GA5382@localhost.localdomain>
- <57071155-5a08-4579-9189-92d442cd65e7@email.android.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-arch-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <57071155-5a08-4579-9189-92d442cd65e7@email.android.com>
-Sender: linux-arch-owner@vger.kernel.org
-To: "H. Peter Anvin" <hpa@zytor.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org, hch@infradead.org, linux-mtd@lists.infradead.org, logfs@logfs.org, linux-afs@lists.infradead.org, joseph@codesourcery.com, linux-arch@vger.kernel.org, linux-cifs@vger.kernel.org, linux-scsi@vger.kernel.org, ceph-devel@vger.kernel.org, codalist@TELEMANN.coda.cs.cmu.edu, cluster-devel@redhat.com, coda@cs.cmu.edu, geert@linux-m68k.org, linux-ext4@vger.kernel.org, fuse-devel@lists.sourceforge.net, reiserfs-devel@vger.kernel.org, xfs@oss.sgi.com, john.stultz@linaro.org, tglx@linutronix.de, linux-nfs@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, samba-technical@lists.samba.org, linux-f2fs-devel@lists.sourceforge.net, ocfs2-devel@oss.oracle.com, linux-fsdevel@vger.kernel.org, lftan@altera.com, linux-btrfs@vger.kernel.org
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Subject: [PATCH] scsi: advansys.c:  Cleaning up uninitialized variables
+Date: Sun,  1 Jun 2014 15:03:45 +0200
+Message-ID: <1401627825-17179-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>, "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, May 31, 2014 at 12:34:12PM -0700, H. Peter Anvin wrote:
-> Typically they are using 64-bit signed seconds.
+There is a risk that the variable will be used without being initialized.
 
-Okay, that is what I wanted to know.
+This was largely found by using a static code analysis program called cppcheck.
 
-Thanks,
-Richard
+Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+---
+ drivers/scsi/advansys.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
+index d814588..201ea3b 100644
+--- a/drivers/scsi/advansys.c
++++ b/drivers/scsi/advansys.c
+@@ -11394,7 +11394,7 @@ static int advansys_board_found(struct Scsi_Host *shost, unsigned int iop,
+ 	struct asc_board *boardp = shost_priv(shost);
+ 	ASC_DVC_VAR *asc_dvc_varp = NULL;
+ 	ADV_DVC_VAR *adv_dvc_varp = NULL;
+-	int share_irq, warn_code, ret;
++	int share_irq, warn_code, ret = 0;
+ 
+ 	pdev = (bus_type == ASC_IS_PCI) ? to_pci_dev(boardp->dev) : NULL;
+ 
+-- 
+1.7.10.4
