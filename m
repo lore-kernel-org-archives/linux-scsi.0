@@ -1,18 +1,18 @@
 From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-Subject: [PATCH] scsi: mpt3sas: mpt3sas_transport.c:  Cleaning up uninitialized variables
-Date: Sun,  1 Jun 2014 15:08:37 +0200
-Message-ID: <1401628118-17506-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+Subject: [PATCH] scsi: pm8001: pm80xx_hwi.c:  Cleaning up uninitialized variables
+Date: Sun,  1 Jun 2014 15:13:30 +0200
+Message-ID: <1401628410-17824-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:51751 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751967AbaFANHp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 1 Jun 2014 09:07:45 -0400
-Received: by mail-wi0-f176.google.com with SMTP id n15so3180131wiw.15
-        for <linux-scsi@vger.kernel.org>; Sun, 01 Jun 2014 06:07:44 -0700 (PDT)
+Received: from mail-we0-f181.google.com ([74.125.82.181]:53679 "EHLO
+	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752225AbaFANMh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 1 Jun 2014 09:12:37 -0400
+Received: by mail-we0-f181.google.com with SMTP id w61so4017522wes.12
+        for <linux-scsi@vger.kernel.org>; Sun, 01 Jun 2014 06:12:36 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>, Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
-Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>, support@lsi.com, "James E.J. Bottomley" <JBottomley@parallels.com>, DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: xjtuwjp@gmail.com, lindar_liu@usish.com
+Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
 There is a risk that the variable will be used without being initialized.
 
@@ -20,33 +20,47 @@ This was largely found by using a static code analysis program called cppcheck.
 
 Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
 ---
- drivers/scsi/mpt3sas/mpt3sas_transport.c |    6 ++----
+ drivers/scsi/pm8001/pm80xx_hwi.c |    6 ++----
  1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_transport.c b/drivers/scsi/mpt3sas/mpt3sas_transport.c
-index 65170cb..f648dc4 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_transport.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_transport.c
-@@ -305,8 +305,8 @@ _transport_expander_report_manufacture(struct MPT3SAS_ADAPTER *ioc,
- 	void *data_out = NULL;
- 	dma_addr_t data_out_dma;
- 	dma_addr_t data_in_dma;
--	size_t data_in_sz;
--	size_t data_out_sz;
-+	size_t data_in_sz = sizeof(struct rep_manu_reply);
-+	size_t data_out_sz = sizeof(struct rep_manu_request);
- 	u16 wait_state_count;
+diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
+index d70587f..add019b 100644
+--- a/drivers/scsi/pm8001/pm80xx_hwi.c
++++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+@@ -948,7 +948,7 @@ static int
+ pm80xx_get_encrypt_info(struct pm8001_hba_info *pm8001_ha)
+ {
+ 	u32 scratch3_value;
+-	int ret;
++	int ret = -1;
  
- 	if (ioc->shost_recovery || ioc->pci_error_recovery) {
-@@ -357,8 +357,6 @@ _transport_expander_report_manufacture(struct MPT3SAS_ADAPTER *ioc,
- 	mpi_request = mpt3sas_base_get_msg_frame(ioc, smid);
- 	ioc->transport_cmds.smid = smid;
+ 	/* Read encryption status from SCRATCH PAD 3 */
+ 	scratch3_value = pm8001_cr32(pm8001_ha, 0, MSGU_SCRATCH_PAD_3);
+@@ -982,7 +982,7 @@ pm80xx_get_encrypt_info(struct pm8001_hba_info *pm8001_ha)
+ 		pm8001_ha->encrypt_info.status = 0xFFFFFFFF;
+ 		pm8001_ha->encrypt_info.cipher_mode = 0;
+ 		pm8001_ha->encrypt_info.sec_mode = 0;
+-		return 0;
++		ret = 0;
+ 	} else if ((scratch3_value & SCRATCH_PAD3_ENC_MASK) ==
+ 				SCRATCH_PAD3_ENC_DIS_ERR) {
+ 		pm8001_ha->encrypt_info.status =
+@@ -1004,7 +1004,6 @@ pm80xx_get_encrypt_info(struct pm8001_hba_info *pm8001_ha)
+ 			scratch3_value, pm8001_ha->encrypt_info.cipher_mode,
+ 			pm8001_ha->encrypt_info.sec_mode,
+ 			pm8001_ha->encrypt_info.status));
+-		ret = -1;
+ 	} else if ((scratch3_value & SCRATCH_PAD3_ENC_MASK) ==
+ 				 SCRATCH_PAD3_ENC_ENA_ERR) {
  
--	data_out_sz = sizeof(struct rep_manu_request);
--	data_in_sz = sizeof(struct rep_manu_reply);
- 	data_out = pci_alloc_consistent(ioc->pdev, data_out_sz + data_in_sz,
- 	    &data_out_dma);
- 
+@@ -1028,7 +1027,6 @@ pm80xx_get_encrypt_info(struct pm8001_hba_info *pm8001_ha)
+ 			scratch3_value, pm8001_ha->encrypt_info.cipher_mode,
+ 			pm8001_ha->encrypt_info.sec_mode,
+ 			pm8001_ha->encrypt_info.status));
+-		ret = -1;
+ 	}
+ 	return ret;
+ }
 -- 
 1.7.10.4
 
