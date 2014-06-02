@@ -1,67 +1,78 @@
 From: Joe Lawrence <joe.lawrence@stratus.com>
-Subject: [PATCH 2/4] mpt3sas: correct scsi_{target,device} hostdata allocation
-Date: Mon, 2 Jun 2014 10:38:07 -0400
-Message-ID: <1401719887-18491-1-git-send-email-joe.lawrence@stratus.com>
+Subject: [PATCH 4/4] mpt2sas: annotate ioc->reply_post_host_index as __iomem
+Date: Mon, 2 Jun 2014 10:38:32 -0400
+Message-ID: <1401719912-18532-1-git-send-email-joe.lawrence@stratus.com>
 References: <1401719672-18352-1-git-send-email-joe.lawrence@stratus.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from p01c12o141.mxlogic.net ([208.65.145.64]:46361 "EHLO
-	p01c12o141.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755011AbaFBOiV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Jun 2014 10:38:21 -0400
+Received: from p02c11o149.mxlogic.net ([208.65.144.82]:36698 "EHLO
+	p02c11o149.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754472AbaFBOin (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Jun 2014 10:38:43 -0400
 In-Reply-To: <1401719672-18352-1-git-send-email-joe.lawrence@stratus.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Dan Carpenter <dan.carpenter@oracle.com>, Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, Joe Lawrence <joe.lawrence@stratus.com>
 
-In _scsih_{slave,target}_alloc, an incorrect structure type is passed
-to sizeof() when allocating storage for hostdata.  Luckily larger
-structure types were used, so at least the wrong sizes were safe:
+The MPT2SAS_ADAPTER reply_post_host_index[] holds calculated addresses
+in memory mapped register space.  Add an "__iomem" annotation to silence
+the following sparse warnings:
 
-  struct scsi_device (1784 bytes) > struct MPT3SAS_DEVICE (24 bytes)
-  struct scsi_target (760 bytes)  > struct MPT3SAS_TARGET (32 bytes)
+  drivers/scsi/mpt2sas/mpt2sas_base.c:1006:43:
+    warning: incorrect type in argument 2 (different address spaces)
+       expected void volatile [noderef] <asn:2>*addr
+       got unsigned long long [usertype] *<noident>
 
-This fixes the following smatch warnings:
-
-  drivers/scsi/mpt3sas/mpt3sas_scsih.c:1166 _scsih_target_alloc()
-    warn: struct type mismatch 'MPT3SAS_TARGET vs scsi_target'
-
-  drivers/scsi/mpt3sas/mpt3sas_scsih.c:1280 _scsih_slave_alloc()
-    warn: struct type mismatch 'MPT3SAS_DEVICE vs scsi_device'
+  drivers/scsi/mpt2sas/mpt2sas_base.c:4299:22:
+    warning: cast removes address space of expression
+  drivers/scsi/mpt2sas/mpt2sas_base.c:4303:27:
+    warning: cast removes address space of expression
 
 Signed-off-by: Joe Lawrence <joe.lawrence@stratus.com>
 Cc: Dan Carpenter <dan.carpenter@oracle.com>
 Cc: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_scsih.c |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/scsi/mpt2sas/mpt2sas_base.c |    9 +++++----
+ drivers/scsi/mpt2sas/mpt2sas_base.h |    2 +-
+ 2 files changed, 6 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index a961fe1..e6f0720 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -1163,7 +1163,8 @@ _scsih_target_alloc(struct scsi_target *starget)
- 	unsigned long flags;
- 	struct sas_rphy *rphy;
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
+index bde63f7..a6e477e 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+@@ -4295,12 +4295,13 @@ mpt2sas_base_attach(struct MPT2SAS_ADAPTER *ioc)
+ 		goto out_free_resources;
  
--	sas_target_priv_data = kzalloc(sizeof(struct scsi_target), GFP_KERNEL);
-+	sas_target_priv_data = kzalloc(sizeof(*sas_target_priv_data),
-+				       GFP_KERNEL);
- 	if (!sas_target_priv_data)
- 		return -ENOMEM;
+ 	if (ioc->is_warpdrive) {
+-		ioc->reply_post_host_index[0] =
+-		    (resource_size_t *)&ioc->chip->ReplyPostHostIndex;
++		ioc->reply_post_host_index[0] = (resource_size_t __iomem *)
++		    &ioc->chip->ReplyPostHostIndex;
  
-@@ -1277,7 +1278,8 @@ _scsih_slave_alloc(struct scsi_device *sdev)
- 	struct _sas_device *sas_device;
- 	unsigned long flags;
+ 		for (i = 1; i < ioc->cpu_msix_table_sz; i++)
+-			ioc->reply_post_host_index[i] = (resource_size_t *)
+-			((u8 *)&ioc->chip->Doorbell + (0x4000 + ((i - 1)
++			ioc->reply_post_host_index[i] =
++			(resource_size_t __iomem *)
++			((u8 __iomem *)&ioc->chip->Doorbell + (0x4000 + ((i - 1)
+ 			* 4)));
+ 	}
  
--	sas_device_priv_data = kzalloc(sizeof(struct scsi_device), GFP_KERNEL);
-+	sas_device_priv_data = kzalloc(sizeof(*sas_device_priv_data),
-+				       GFP_KERNEL);
- 	if (!sas_device_priv_data)
- 		return -ENOMEM;
- 
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
+index 1f2ac3a..23d0c85 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.h
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
+@@ -837,7 +837,7 @@ struct MPT2SAS_ADAPTER {
+ 	u8		msix_enable;
+ 	u16		msix_vector_count;
+ 	u8		*cpu_msix_table;
+-	resource_size_t	**reply_post_host_index;
++	resource_size_t	__iomem **reply_post_host_index;
+ 	u16		cpu_msix_table_sz;
+ 	u32		ioc_reset_count;
+ 	MPT2SAS_FLUSH_RUNNING_CMDS schedule_dead_ioc_flush_running_cmds;
 -- 
 1.7.10.4
 
