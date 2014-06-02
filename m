@@ -1,170 +1,89 @@
-From: Quinn Tran <quinn.tran@qlogic.com>
-Subject: Re: [PATCH] qla2xxx: Convert to percpu_ida session tag
- pre-allocation
-Date: Mon, 2 Jun 2014 23:32:43 +0000
-Message-ID: <504EB66DAC8D234EB8E8560985C2D7AD46D18873@avmb2.qlogic.org>
-References: <1400892216-9784-1-git-send-email-nab@daterainc.com>
- <1400898802.6476.25.camel@haakon3.risingtidesystems.com>
- <504EB66DAC8D234EB8E8560985C2D7AD46D0994E@avmb2.qlogic.org>
- <1401747155.32085.19.camel@haakon3.risingtidesystems.com>
+From: Vasu Dev <vasu.dev-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Subject: Re: [PATCH] fc: ensure scan_work isn't active when
+ freeing fc_rport
+Date: Mon, 02 Jun 2014 16:22:50 -0700
+Message-ID: <1401751370.5752.5.camel@vi-devel>
+References: <1401461974-7879-1-git-send-email-nhorman@tuxdriver.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_000_504EB66DAC8D234EB8E8560985C2D7AD46D18873avmb2qlogicorg_"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:12199 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752425AbaFBXcq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Jun 2014 19:32:46 -0400
-Received: from pps.filterd (m0000643.ppops.net [127.0.0.1])
-	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id s52NTex8020624
-	for <linux-scsi@vger.kernel.org>; Mon, 2 Jun 2014 16:32:45 -0700
-Received: from avcashub1.qlogic.com (avcashub2.qlogic.com [198.70.193.116])
-	by mx0b-0016ce01.pphosted.com with ESMTP id 1m7xrnu3w1-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Mon, 02 Jun 2014 16:32:45 -0700
-In-Reply-To: <1401747155.32085.19.camel@haakon3.risingtidesystems.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Chad Dupuis <chad.dupuis@qlogic.com>, Roland Dreier <roland@kernel.org>, Christoph Hellwig <hch@lst.de>
-
---_000_504EB66DAC8D234EB8E8560985C2D7AD46D18873avmb2qlogicorg_
 Content-Type: text/plain; charset="us-ascii"
-Content-ID: <00A32F3EA31060458BCBB576614E0693@qlogic.com>
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
+Return-path: <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+In-Reply-To: <1401461974-7879-1-git-send-email-nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
+List-Unsubscribe: <http://lists.open-fcoe.org/mailman/options/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.open-fcoe.org/pipermail/fcoe-devel>
+List-Post: <mailto:fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+List-Help: <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.open-fcoe.org/mailman/listinfo/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
+Errors-To: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+Sender: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+To: Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
+Cc: fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-Id: linux-scsi@vger.kernel.org
+
+On Fri, 2014-05-30 at 10:59 -0400, Neil Horman wrote:
+> debugfs caught this:
+> WARNING: at lib/debugobjects.c:260 debug_print_object+0x83/0xa0()
+> ODEBUG: free active (active state 0) object type: work_struct
+> hint: fc_scsi_scan_rport+0x0/0xd0 [scsi_transport_fc]
+>  CPU: 1 PID: 184 Comm: kworker/1:1 Tainted: G        W
+> --------------   3.10.0-123.el7.x86_64.debug #1
+> Hardware name: HP ProLiant DL120 G7, BIOS J01 07/01/2013
+> Workqueue: fc_wq_5 fc_rport_final_delete [scsi_transport_fc]
+> Call Trace:
+> [<ffffffff8169efec>] dump_stack+0x19/0x1b
+> [<ffffffff8106cbd1>] warn_slowpath_common+0x61/0x80
+> [<ffffffff8106cc4c>] warn_slowpath_fmt+0x5c/0x80
+> [<ffffffff8133e003>] debug_print_object+0x83/0xa0
+> [<ffffffffa04e2f40>] ? fc_parse_wwn+0x100/0x100
+> 
+> [<ffffffff8133f23b>] debug_check_no_obj_freed+0x22b/0x270
+> [<ffffffffa04e127e>] ? fc_rport_dev_release+0x1e/0x30
+> [<ffffffff811db3e9>] kfree+0xd9/0x2d0
+> [<ffffffffa04e127e>] fc_rport_dev_release+0x1e/0x30
+> [<ffffffff81428032>] device_release+0x32/0xa0
+> [<ffffffff8132701e>] kobject_release+0x7e/0x1b0
+> [<ffffffff81326ed8>] kobject_put+0x28/0x60
+> [<ffffffff81428397>] put_device+0x17/0x20
+> [<ffffffffa04e5025>] fc_rport_final_delete+0x165/0x210
+> [<ffffffff810959b0>] process_one_work+0x220/0x710
+> [<ffffffff81095944>] ? process_one_work+0x1b4/0x710
+> [<ffffffff81095fbb>] worker_thread+0x11b/0x3a0
+> [<ffffffff81095ea0>] ? process_one_work+0x710/0x710
+> [<ffffffff8109e0cd>] kthread+0xed/0x100
+> [<ffffffff8109dfe0>] ? insert_kthread_work+0x80/0x80
+> [<ffffffff816b2fec>] ret_from_fork+0x7c/0xb0
+> [<ffffffff8109dfe0>] ? insert_kthread_work+0x80/0x80
+> 
+> Seems to be because the scan_work work_struct might be active when the housing
+> fc_rport struct gets freed.  Ensure that we cancel it prior to freeing the rport
+> 
+> Signed-off-by: Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
+> CC: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> CC: Robert Love <robert.w.love-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+> CC: Vasu Dev <vasu.dev-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+> ---
+>  drivers/scsi/scsi_transport_fc.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+> index 4628fd5..5bd552c 100644
+> --- a/drivers/scsi/scsi_transport_fc.c
+> +++ b/drivers/scsi/scsi_transport_fc.c
+> @@ -2548,6 +2548,7 @@ fc_rport_final_delete(struct work_struct *work)
+>  			fc_flush_devloss(shost);
+>  		if (!cancel_delayed_work(&rport->dev_loss_work))
+>  			fc_flush_devloss(shost);
+> +		cancel_work_sync(&rport->scan_work);
+
+Make sense to ensure pending work canceled, adding James Smart for his
+ACK as transport FC class author. 
 
 
-Regards,
-Quinn Tran
+Reviewed-by: Vasu Dev <vasu.dev-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org> 
 
 
-
-
-On 6/2/14 3:12 PM, "Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
-
->>
->>Extra size note, the true value should be extracted from
->>"ha->fw_xcb_count", if this field is set.  Otherwise, default back to
->>TCM_QLA2XXX_DEFAULT_TAGS.
->
->Ok, squashing the following patch into the original to use
->ha->fw_xcb_count (if available) for determining the worst-case per
->session number of tags.  Note this currently ends up being ~1.7 MB of
->pre-allocated descriptors per session.
-
-QT>  Ack.
-
->
->Also, I assume the pad is required for ha->fw_xcb_count as well..  In
->that case, the patch below also adds a extra define for 40 extra tags
->following your pad comment above.
-
-QT> Pad is not required if the value is read from ha->fw_xcb_count.
-
-
->
->--nab
->
-
-
-________________________________
-
-This message and any attached documents contain information from QLogic Cor=
-poration or its wholly-owned subsidiaries that may be confidential. If you =
-are not the intended recipient, you may not read, copy, distribute, or use =
-this information. If you have received this transmission in error, please n=
-otify the sender immediately by reply e-mail and then delete this message.
-
---_000_504EB66DAC8D234EB8E8560985C2D7AD46D18873avmb2qlogicorg_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
-
-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
-aQBuAG4ALgB0AHIAYQBuAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AGgwBAAAAFgAAAFEAdQBp
-AG4AbgAgAFQAcgBhAG4AAAAAAB8AHwwBAAAALAAAAHEAdQBpAG4AbgAuAHQAcgBhAG4AQABxAGwA
-bwBnAGkAYwAuAGMAbwBtAAAAHwAeDAEAAAAKAAAAUwBNAFQAUAAAAAAAAgEZDAEAAABkAAAAAAAA
-AIErH6S+oxAZnW4A3QEPVAIAAACAUQB1AGkAbgBuACAAVAByAGEAbgAAAFMATQBUAFAAAABxAHUA
-aQBuAG4ALgB0AHIAYQBuAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AAV0BAAAALAAAAHEAdQBp
-AG4AbgAuAHQAcgBhAG4AQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwD4PwEAAAAWAAAAUQB1AGkA
-bgBuACAAVAByAGEAbgAAAAAAHwAjQAEAAAAsAAAAcQB1AGkAbgBuAC4AdAByAGEAbgBAAHEAbABv
-AGcAaQBjAC4AYwBvAG0AAAAfACJAAQAAAAoAAABTAE0AVABQAAAAAAACAfk/AQAAAGQAAAAAAAAA
-gSsfpL6jEBmdbgDdAQ9UAgAAAIBRAHUAaQBuAG4AIABUAHIAYQBuAAAAUwBNAFQAUAAAAHEAdQBp
-AG4AbgAuAHQAcgBhAG4AQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAJXQEAAAAsAAAAcQB1AGkA
-bgBuAC4AdAByAGEAbgBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfADFAAQAAAAIAAAAAAAAACwBA
-OgEAAAAfADBAAQAAAAIAAAAAAAAAHwAaAAEAAAASAAAASQBQAE0ALgBOAG8AdABlAAAAAAADAPE/
-CQQAAAsAQDoBAAAAAwD9P+QEAAACAQswAQAAABAAAAA0VlnAsPu+RZ5llpbuI8MtAwAXAAEAAABA
-ADkAgB9s87p+zwFAAAgwkxnz87p+zwELAACACCAGAAAAAADAAAAAAAAARgAAAAAUhQAAAQAAAB8A
-AICGAwIAAAAAAMAAAAAAAABGAQAAAB4AAABhAGMAYwBlAHAAdABsAGEAbgBnAHUAYQBnAGUAAAAA
-AAEAAAAMAAAAZQBuAC0AVQBTAAAACwAAgAggBgAAAAAAwAAAAAAAAEYAAAAABoUAAAAAAAAfADcA
-AQAAAIwAAABSAGUAOgAgAFsAUABBAFQAQwBIAF0AIABxAGwAYQAyAHgAeAB4ADoAIABDAG8AbgB2
-AGUAcgB0ACAAdABvACAAcABlAHIAYwBwAHUAXwBpAGQAYQAgAHMAZQBzAHMAaQBvAG4AIAB0AGEA
-ZwAgAHAAcgBlAC0AYQBsAGwAbwBjAGEAdABpAG8AbgAAAB8APQABAAAACgAAAFIAZQA6ACAAAAAA
-AAMANgAAAAAAHwBCEAEAAAB0AAAAPAAxADQAMAAxADcANAA3ADEANQA1AC4AMwAyADAAOAA1AC4A
-MQA5AC4AYwBhAG0AZQBsAEAAaABhAGEAawBvAG4AMwAuAHIAaQBzAGkAbgBnAHQAaQBkAGUAcwB5
-AHMAdABlAG0AcwAuAGMAbwBtAD4AAAACAXEAAQAAACoAAAABAc927K31Wwm1AHcWTbbSU7aGxJgz
-m094jwCACJL8AIAG23eA//+hCYAAAB8AcAABAAAAhAAAAFsAUABBAFQAQwBIAF0AIABxAGwAYQAy
-AHgAeAB4ADoAIABDAG8AbgB2AGUAcgB0ACAAdABvACAAcABlAHIAYwBwAHUAXwBpAGQAYQAgAHMA
-ZQBzAHMAaQBvAG4AIAB0AGEAZwAgAHAAcgBlAC0AYQBsAGwAbwBjAGEAdABpAG8AbgAAAB8ANRAB
-AAAAeAAAADwANQAwADQARQBCADYANgBEAEEAQwA4AEQAMgAzADQARQBCADgARQA4ADUANgAwADkA
-OAA1AEMAMgBEADcAQQBEADQANgBEADEAOAA4ADcAMwBAAGEAdgBtAGIAMgAuAHEAbABvAGcAaQBj
-AC4AbwByAGcAPgAAAB8AORABAAAAyAEAADwAMQA0ADAAMAA4ADkAMgAyADEANgAtADkANwA4ADQA
-LQAxAC0AZwBpAHQALQBzAGUAbgBkAC0AZQBtAGEAaQBsAC0AbgBhAGIAQABkAGEAdABlAHIAYQBp
-AG4AYwAuAGMAbwBtAD4AIAA8ADEANAAwADAAOAA5ADgAOAAwADIALgA2ADQANwA2AC4AMgA1AC4A
-YwBhAG0AZQBsAEAAaABhAGEAawBvAG4AMwAuAHIAaQBzAGkAbgBnAHQAaQBkAGUAcwB5AHMAdABl
-AG0AcwAuAGMAbwBtAD4AIAA8ADUAMAA0AEUAQgA2ADYARABBAEMAOABEADIAMwA0AEUAQgA4AEUA
-OAA1ADYAMAA5ADgANQBDADIARAA3AEEARAA0ADYARAAwADkAOQA0AEUAQABhAHYAbQBiADIALgBx
-AGwAbwBnAGkAYwAuAG8AcgBnAD4AIAA8ADEANAAwADEANwA0ADcAMQA1ADUALgAzADIAMAA4ADUA
-LgAxADkALgBjAGEAbQBlAGwAQABoAGEAYQBrAG8AbgAzAC4AcgBpAHMAaQBuAGcAdABpAGQAZQBz
-AHkAcwB0AGUAbQBzAC4AYwBvAG0APgAAAAMA3j+fTgAAQAAHMNJW7vO6fs8BAwAmAAAAAAACAUcA
-AQAAACwAAABjPVVTO2E9IDtwPVFMb2dpYztsPUFWTUIyLTE0MDYwMjIzMzI0M1otOTQ5AB8AFRAB
-AAAAWAAAADAAMABBADMAMgBGADMARQBBADMAMQAwADYAMAA0ADUAOABCAEMAQgBCADUANwA2ADYA
-MQA0AEUAMAA2ADkAMwBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAACARQwAQAAAAwAAABnAAAASuSb
-nFIAAAAfAPo/AQAAABYAAABRAHUAaQBuAG4AIABUAHIAYQBuAAAAAAAfAACAhgMCAAAAAADAAAAA
-AAAARgEAAAAWAAAAdQBzAGUAcgAtAGEAZwBlAG4AdAAAAAAAAQAAAEYAAABNAGkAYwByAG8AcwBv
-AGYAdAAtAE0AYQBjAE8AdQB0AGwAbwBvAGsALwAxADQALgA0AC4AMQAuADEANAAwADMAMgA2AAAA
-AAAfAACAH6TrM6h6LkK+e3nhqY5UswEAAAA4AAAAQwBvAG4AdgBlAHIAcwBhAHQAaQBvAG4ASQBu
-AGQAZQB4AFQAcgBhAGMAawBpAG4AZwBFAHgAAAABAAAARAEAAEkASQA9ADAAMQAwADEAQwBGADcA
-RQBCAEEARgAzADIAMwAzAEMANgA0ADUAQwBDAEIAQQA5ADcAMAA0AEIAQgBEADkARAAzADQARgA3
-AEYAMQBFADEAOQA0ADcAQgA7AFMAQgBNAEkARAA9ADMAOwBTADEAPQA8ADEANAAwADEANwA0ADcA
-MQA1ADUALgAzADIAMAA4ADUALgAxADkALgBjAGEAbQBlAGwAQABoAGEAYQBrAG8AbgAzAC4AcgBp
-AHMAaQBuAGcAdABpAGQAZQBzAHkAcwB0AGUAbQBzAC4AYwBvAG0APgA7AFYAZQByAHMAaQBvAG4A
-PQBWAGUAcgBzAGkAbwBuACAAMQA0AC4AMgAgACgAQgB1AGkAbABkACAAMwA4ADcALgAwACkALAAg
-AFMAdABhAGcAZQA9AEgAMgAAAAMADTT9PwAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAIAAAAHgA
-LQBtAHMALQBoAGEAcwAtAGEAdAB0AGEAYwBoAAAAAQAAAAIAAAAAAAAAHwAAgIYDAgAAAAAAwAAA
-AAAAAEYBAAAAIgAAAHgALQBvAHIAaQBnAGkAbgBhAHQAaQBuAGcALQBpAHAAAAAAAAEAAAAaAAAA
-WwAxADAALgAzAC4AMQAwAC4AOAAxAF0AAAAAAIiH
-
---_000_504EB66DAC8D234EB8E8560985C2D7AD46D18873avmb2qlogicorg_--
+>  		spin_lock_irqsave(shost->host_lock, flags);
+>  		rport->flags &= ~FC_RPORT_DEVLOSS_PENDING;
+>  	}
