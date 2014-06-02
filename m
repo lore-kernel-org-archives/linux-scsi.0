@@ -1,27 +1,54 @@
-From: "Joseph S. Myers" <joseph@codesourcery.com>
-Subject: Re: [RFC 00/32] making inode time stamps y2038 ready
-Date: Mon, 2 Jun 2014 13:52:19 +0000
-Message-ID: <Pine.LNX.4.64.1406021350030.19591@digraph.polyomino.org.uk>
-References: <1401480116-1973111-1-git-send-email-arnd@arndb.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Return-path: <linux-arch-owner@vger.kernel.org>
-In-Reply-To: <1401480116-1973111-1-git-send-email-arnd@arndb.de>
-Sender: linux-arch-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org, john.stultz@linaro.org, hch@infradead.org, tglx@linutronix.de, geert@linux-m68k.org, lftan@altera.com, hpa@zytor.com, linux-fsdevel@vger.kernel.org, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, coda@cs.cmu.edu, codalist@coda.cs.cmu.edu, fuse-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, linux-btrfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-scsi@vger.kernel.org, logfs@logfs.org, ocfs2-devel@oss.oracle.com, reiserfs-devel@vger.kernel.org, samba-technical@lists.samba.org, xfs@oss.sgi.com
+From: Akinobu Mita <akinobu.mita@gmail.com>
+Subject: [PATCH v2 0/6] scsi: increase upper limit for max_sectors
+Date: Mon,  2 Jun 2014 22:56:43 +0900
+Message-ID: <1401717409-5236-1-git-send-email-akinobu.mita@gmail.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pb0-f42.google.com ([209.85.160.42]:60766 "EHLO
+	mail-pb0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753850AbaFBN5E (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Jun 2014 09:57:04 -0400
+Received: by mail-pb0-f42.google.com with SMTP id md12so4270892pbc.1
+        for <linux-scsi@vger.kernel.org>; Mon, 02 Jun 2014 06:57:03 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Akinobu Mita <akinobu.mita@gmail.com>, "Elliott, Robert" <Elliott@hp.com>, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <JBottomley@parallels.com>, Douglas Gilbert <dgilbert@interlog.com>
 
-On Fri, 30 May 2014, Arnd Bergmann wrote:
+This patchset increases the SCSI mid level's limitation for max_sectors
+upto the block layer's limitation for max_hw_sectors, and enables the
+scsi_debug driver to request read/write commands with huge transfer
+length.  This also includes a few fixes for the problems which can be
+caused by huge max_sectors.
 
-> a) is this the right approach in general? The previous discussion
->    pointed this way, but there may be other opinions.
+* Changes in v2
+- Add Reviewed-by line
+- Split the scsi core change into three patches, suggested by Christoph Hellwig
+- Reorder conditional in command selection, suggested by Elliott, Robert
 
-The syscall changes seem like the sort of thing I'd expect, although 
-patches adding new syscalls or otherwise affecting the kernel/userspace 
-interface (as opposed to those relating to an individual filesystem) 
-should go to linux-api as well as other relevant lists.
+Akinobu Mita (6):
+  block: fix BLKSECTGET ioctl when max_sectors is greater than USHRT_MAX
+  block: fix SG_[GS]ET_RESERVED_SIZE ioctl when max_sectors is huge
+  sg: prevent integer overflow when converting from sectors to bytes
+  sd: use READ_16 or WRITE_16 when transfer length is greater than
+    0xffff
+  scsi: increase upper limit for max_sectors
+  scsi_debug: allow huge transfer length for read/write commands
 
+ block/compat_ioctl.c      |  6 ++++--
+ block/ioctl.c             |  5 ++++-
+ block/scsi_ioctl.c        | 15 +++++++++++----
+ drivers/scsi/scsi_debug.c |  6 +++---
+ drivers/scsi/sd.c         |  5 +----
+ drivers/scsi/sg.c         | 17 +++++++++++++----
+ include/scsi/scsi_host.h  |  4 ++--
+ 7 files changed, 38 insertions(+), 20 deletions(-)
+
+Cc: "Elliott, Robert" <Elliott@hp.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Douglas Gilbert <dgilbert@interlog.com>
+Cc: linux-scsi@vger.kernel.org
 -- 
-Joseph S. Myers
-joseph@codesourcery.com
+1.9.1
+
