@@ -1,41 +1,50 @@
-From: "hch@infradead.org" <hch@infradead.org>
-Subject: Re: [PATCH 7/8] be2iscsi: Fix processing cqe for cxn whose endpoint
- is freed
-Date: Mon, 2 Jun 2014 13:32:43 -0700
-Message-ID: <20140602203243.GA11802@infradead.org>
-References: <1399340492-2136-1-git-send-email-jkallickal@emulex.com>
- <1399340492-2136-7-git-send-email-jkallickal@emulex.com>
- <536AB13E.6080906@cs.wisc.edu>
- <0eb11761-3b46-44d0-b35a-16d121fe1df4@CMEXHTCAS2.ad.emulex.com>
- <20140602064601.GA6630@infradead.org>
- <1401736926.12939.13.camel@dabdike.int.hansenpartnership.com>
- <20140602193349.GA11555@infradead.org>
- <CA+55aFy+VTFqBi5aQLdB7=04wWmf+gvZzQ1vdrSEuscN7k3xGw@mail.gmail.com>
- <20140602200813.GA8118@infradead.org>
- <CA+55aFxGkJe9zaUtjGqU9Wy9_pepXUidKVM3oGjUYztCA8erAA@mail.gmail.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH 1/6] block: Replace bi_integrity with bi_special
+Date: Mon, 02 Jun 2014 13:35:42 -0700
+Message-ID: <1401741342.32085.0.camel@haakon3.risingtidesystems.com>
+References: <1401335565-29865-1-git-send-email-martin.petersen@oracle.com>
+	 <1401335565-29865-2-git-send-email-martin.petersen@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:38012 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751986AbaFBUco (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Jun 2014 16:32:44 -0400
-Content-Disposition: inline
-In-Reply-To: <CA+55aFxGkJe9zaUtjGqU9Wy9_pepXUidKVM3oGjUYztCA8erAA@mail.gmail.com>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:43206 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752794AbaFBUfx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Jun 2014 16:35:53 -0400
+In-Reply-To: <1401335565-29865-2-git-send-email-martin.petersen@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: "hch@infradead.org" <hch@infradead.org>, James Bottomley <jbottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "MinhDuc.Tran@Emulex.Com" <MinhDuc.Tran@emulex.com>, "jayamohank@gmail.com" <jayamohank@gmail.com>, "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>, "Sony.John-N@Emulex.Com" <Sony.John-N@emulex.com>, "Jayamohan.Kallickal@Emulex.Com" <Jayamohan.Kallickal@emulex.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: axboe@fb.com, nab@daterainc.com, linux-scsi@vger.kernel.org
 
-On Mon, Jun 02, 2014 at 01:24:22PM -0700, Linus Torvalds wrote:
-> If it isn't a particularly large patch and doesn't have any other
-> issues, I'd suggest just reverting it.
+On Wed, 2014-05-28 at 23:52 -0400, Martin K. Petersen wrote:
+> For commands like REQ_COPY we need a way to pass extra information along
+> with each bio. Like integrity metadata this information must be
+> available at the bottom of the stack so bi_private does not suffice.
 > 
-> Particularly large patches can be worth undoing just to avoid
-> unnecessary noise in "git blame" etc, but that's an issue mainly for
-> things like whitespace crap that really touches a *lot* of code and so
-> the noise is a big thing.
+> Rename the existing bi_integrity field to bi_special and make it a union
+> so we can have different bio extensions for each class of command.
+> 
+> We previously used bi_integrity != NULL as a way to identify whether a
+> bio had integrity metadata or not. Introduce a REQ_INTEGRITY to be the
+> indicator now that bi_special can contain different things.
+> 
+> In addition, bio_integrity(bio) will now return a pointer to the
+> integrity payload (when applicable).
+> 
+> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+> ---
+>  Documentation/block/data-integrity.txt | 10 +++++-----
+>  block/bio-integrity.c                  | 23 ++++++++++++-----------
+>  drivers/scsi/sd_dif.c                  |  8 ++++----
+>  include/linux/bio.h                    | 10 +++++++---
+>  include/linux/blk_types.h              |  8 ++++++--
+>  include/linux/blkdev.h                 |  7 ++-----
+>  6 files changed, 36 insertions(+), 30 deletions(-)
+> 
 
-It's an smal and simple driver patch:
+Looks fine.
 
-http://git.infradead.org/users/hch/scsi-queue.git/commitdiff/4f96827dd55981ec4bfcbc7584eb155bcd8d1849
+Reviewed-by: Nicholas Bellinger <nab@linux-iscsi.org>
+
