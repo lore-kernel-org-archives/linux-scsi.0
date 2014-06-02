@@ -1,35 +1,22 @@
-From: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
-Subject: Re: [RFC 1/1] drivers/scsi/bfa/bfad_debugfs.c: replace 2
- kzalloc/copy_from_user to memdup_user
-Date: Mon, 2 Jun 2014 15:53:40 +0100
-Message-ID: <20140602155340.0814cf04@alan.etchedpixels.co.uk>
-References: <1401469656-10332-1-git-send-email-fabf@skynet.be>
+From: Dick Kennedy <Dick.Kennedy@Emulex.Com>
+Subject: Re: [PATCH V2 0/5] lpfc 10.2.8001.0: Update lpfc to revision
+ 10.2.8001.0
+Date: Mon, 2 Jun 2014 14:57:56 +0000
+Message-ID: <6cc5ab1a-431d-497c-b9cd-5ac1c23e27d6@CMEXHTCAS2.ad.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1401469656-10332-1-git-send-email-fabf@skynet.be>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Fabian Frederick <fabf@skynet.be>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Anil Gurumurthy <anil.gurumurthy@qlogic.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:6591 "EHLO
+	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755137AbaFBO6A convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Jun 2014 10:58:00 -0400
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: James Smart <James.Smart@Emulex.Com>
 
-On Fri, 30 May 2014 19:07:36 +0200
-Fabian Frederick <fabf@skynet.be> wrote:
+Looks good.
+Reviewed-By: Dick Kennedy <dick.kennedy@emulex.com>
 
-> (memdup_user can be used to replace kmalloc/copy_from_user. Not sure if it's ok with kzalloc ...)
-
-
-> +	kern_buf = memdup_user((void __user *)buf, nbytes);
-
-> +	if (IS_ERR(kern_buf)) {
-> +		printk(KERN_INFO "bfad[%d]: Failed to copy buffer\n",
-> +		       bfad->inst_no);
-
-While you are tidying up lose the printk KERN_INFO stuff here, it really
-isn't needed.
-
-Looks good to me and it also fixes the incorrect return of -ENOMEM the
-old code had on a copy_from_user failing.
-
-Alan
