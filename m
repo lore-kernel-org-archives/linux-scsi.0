@@ -1,29 +1,63 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: PATCH: mvsas: add support for Supermicro AOC-SAS2LP-MV8
-Date: Sun, 1 Jun 2014 23:46:39 -0700
-Message-ID: <20140602064639.GB6630@infradead.org>
-References: <20140428145201.GG29712@fi.muni.cz>
- <F766E4F80769BD478052FB6533FA745D4F6368598F@SC-VEXCH4.marvell.com>
- <1398735385.2419.69.camel@dabdike.int.hansenpartnership.com>
- <F766E4F80769BD478052FB6533FA745D4F63685A27@SC-VEXCH4.marvell.com>
- <20140516120642.GW9638@fi.muni.cz>
- <20140528110815.GA19539@infradead.org>
- <20140530125011.GN9638@fi.muni.cz>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20140530125011.GN9638@fi.muni.cz>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jan Kasprzak <kas@fi.muni.cz>
-Cc: Christoph Hellwig <hch@infradead.org>, Xiangliang Yu <yuxiangl@marvell.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 0/3] Initial SMR drive support
+Date: Mon,  2 Jun 2014 09:01:15 +0200
+Message-ID: <1401692478-23557-1-git-send-email-hare@suse.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:37290 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752039AbaFBHBW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 2 Jun 2014 03:01:22 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <jbottomley@parallels.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-On Fri, May 30, 2014 at 02:50:11PM +0200, Jan Kasprzak wrote:
-> Not sure whether I should ack my own patch, though. But you may apply
-> it to the original one, which is identical to what I did.
-> http://marc.info/?l=linux-scsi&m=139277202005675&w=2
+Hi all,
 
-Yes, that's what I will do.
+this is a first stab at implementing SMR support.
+The powers that be decided to call the ATA implementation
+'ZAC' (zoned access commands), and the SCSI implementation
+'ZBC' (zoned block commands).
 
-Thanks a lot!
+This is just basic enablement to get ZAC and ZBC drives
+detected as such. None of the specific commands like
+'report zones' or 'reset write pointer' have been
+implemented yet. Reasoning here is that the format
+of the 'report zones' command is still not finalized.
+Currently the formats for the ZAC log page and
+the ZBZ 'report zones' command are not identical,
+so one would need some translation logic here.
+But I was given to understand that both should be
+made identical for the final standard.
+
+Hannes Reinecke (3):
+  libata: consolidate ata_dev_classify()
+  libata: Implement ATA_DEV_ZAC
+  scsi: Implement 'ZBC' device type
+
+ drivers/ata/libahci.c               | 11 +++----
+ drivers/ata/libata-core.c           | 34 +++++++++++++-------
+ drivers/ata/libata-eh.c             |  7 +++--
+ drivers/ata/libata-scsi.c           | 13 ++++++--
+ drivers/ata/libata-sff.c            |  2 +-
+ drivers/ata/libata-transport.c      |  1 +
+ drivers/ata/sata_fsl.c              | 11 +++----
+ drivers/ata/sata_inic162x.c         |  2 +-
+ drivers/ata/sata_sil24.c            |  2 +-
+ drivers/scsi/aic94xx/aic94xx_task.c | 10 +++---
+ drivers/scsi/isci/request.c         |  4 +--
+ drivers/scsi/libsas/sas_ata.c       | 63 +++++--------------------------------
+ drivers/scsi/mvsas/mv_sas.c         |  4 +--
+ drivers/scsi/pm8001/pm8001_hwi.c    |  2 +-
+ drivers/scsi/pm8001/pm80xx_hwi.c    |  2 +-
+ drivers/scsi/scsi.c                 |  2 ++
+ drivers/scsi/scsi_scan.c            |  1 +
+ drivers/scsi/sd.c                   | 16 ++++++----
+ include/linux/libata.h              |  8 +++--
+ include/scsi/libsas.h               |  2 +-
+ include/scsi/scsi.h                 |  1 +
+ 21 files changed, 90 insertions(+), 108 deletions(-)
+
+-- 
+1.7.12.4
+
