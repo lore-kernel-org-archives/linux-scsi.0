@@ -1,76 +1,37 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: [PATCH v2 6/6] scsi_debug: allow huge transfer length for read/write commands
-Date: Mon,  2 Jun 2014 22:56:49 +0900
-Message-ID: <1401717409-5236-7-git-send-email-akinobu.mita@gmail.com>
-References: <1401717409-5236-1-git-send-email-akinobu.mita@gmail.com>
+From: Joe Lawrence <joe.lawrence@stratus.com>
+Subject: [PATCH 0/4] mpt2/mpt3 static checker fixups
+Date: Mon, 2 Jun 2014 10:34:28 -0400
+Message-ID: <1401719672-18352-1-git-send-email-joe.lawrence@stratus.com>
+Mime-Version: 1.0
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:51890 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754578AbaFBN5U (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Jun 2014 09:57:20 -0400
-Received: by mail-pa0-f44.google.com with SMTP id lj1so4233050pab.17
-        for <linux-scsi@vger.kernel.org>; Mon, 02 Jun 2014 06:57:20 -0700 (PDT)
-In-Reply-To: <1401717409-5236-1-git-send-email-akinobu.mita@gmail.com>
+Received: from p01c12o143.mxlogic.net ([208.65.145.66]:47604 "EHLO
+	p01c12o143.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754128AbaFBOep (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Jun 2014 10:34:45 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Akinobu Mita <akinobu.mita@gmail.com>, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <JBottomley@parallels.com>, Douglas Gilbert <dgilbert@interlog.com>
+Cc: Dan Carpenter <dan.carpenter@oracle.com>, Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, Joe Lawrence <joe.lawrence@stratus.com>
 
-This change enables to test read/write commands with huge transfer
-length such as 1GB.  For example:
+Hello Sreekanth, Dan,
 
-	# modprobe scsi_debug dev_size_mb=1024 clustering=1 opts=1
-	# cat /sys/block/$DEV/queue/max_hw_sectors_kb > \
-		/sys/block/$DEV/queue/max_sectors_kb
-	# fio --name=test --rw=write --bs=1g --size=1g --filename=/dev/$DEV \
-		--mem=mmaphuge  --direct=1
+These are a few minor smatch and sparse static checker fixes for the LSI
+mpt2 and mpt3 drivers.  The first three fix real potential bugs and the
+last cleans up a noisy complaint from sparse.
 
-The data type of max_sectors in scsi_host_template has been extended
-to unsigned int by the previous change.  So we can increase it from
-0xffff to 0xffffffff to allow such huge transfer length.
+Joe Lawrence (4):
+  mpt2sas: correct scsi_{target,device} hostdata allocation
+  mpt3sas: correct scsi_{target,device} hostdata allocation
+  mpt3sas: fix possible memory leak in mpt3sas_send_trigger_data_event
+  mpt2sas: annotate ioc->reply_post_host_index as __iomem
 
-Also, this increases sg_tablesize and max_segment_size, otherwise the
-maximum transfer length is limited to 64MB.
-(sg_tablesize * max_segment_size = 256 * 256KB)
+ drivers/scsi/mpt2sas/mpt2sas_base.c  |    9 +++++----
+ drivers/scsi/mpt2sas/mpt2sas_base.h  |    2 +-
+ drivers/scsi/mpt2sas/mpt2sas_scsih.c |    6 ++++--
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c |   10 +++++++---
+ 4 files changed, 17 insertions(+), 10 deletions(-)
 
-Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Douglas Gilbert <dgilbert@interlog.com>
-Cc: linux-scsi@vger.kernel.org
----
-No change from previous version.
-
- drivers/scsi/scsi_debug.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index f3e9cc0..35ce1fa 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -2483,7 +2483,7 @@ static int scsi_debug_slave_configure(struct scsi_device *sdp)
- 	if (sdp->host->cmd_per_lun)
- 		scsi_adjust_queue_depth(sdp, SDEBUG_TAGGED_QUEUING,
- 					sdp->host->cmd_per_lun);
--	blk_queue_max_segment_size(sdp->request_queue, 256 * 1024);
-+	blk_queue_max_segment_size(sdp->request_queue, -1U);
- 	if (scsi_debug_no_uld)
- 		sdp->no_uld_attach = 1;
- 	return 0;
-@@ -3938,9 +3938,9 @@ static struct scsi_host_template sdebug_driver_template = {
- 	.bios_param =		scsi_debug_biosparam,
- 	.can_queue =		SCSI_DEBUG_CANQUEUE,
- 	.this_id =		7,
--	.sg_tablesize =		256,
-+	.sg_tablesize =		SCSI_MAX_SG_CHAIN_SEGMENTS,
- 	.cmd_per_lun =		16,
--	.max_sectors =		0xffff,
-+	.max_sectors =		-1U,
- 	.use_clustering = 	DISABLE_CLUSTERING,
- 	.module =		THIS_MODULE,
- };
 -- 
-1.9.1
+1.7.10.4
 
