@@ -1,58 +1,44 @@
-From: "Joseph S. Myers" <joseph@codesourcery.com>
+From: "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>
 Subject: Re: [RFC 00/32] making inode time stamps y2038 ready
-Date: Mon, 2 Jun 2014 21:02:15 +0000
-Message-ID: <Pine.LNX.4.64.1406022044090.27099@digraph.polyomino.org.uk>
-References: <1401480116-1973111-1-git-send-email-arnd@arndb.de>
- <Pine.LNX.4.64.1406021350030.19591@digraph.polyomino.org.uk>
- <4233989.Saca0ocOUr@wuerfel>
+Date: Mon, 02 Jun 2014 14:57:26 -0700
+Message-ID: <538CF346.2070504@zytor.com>
+References: <1401480116-1973111-1-git-send-email-arnd@arndb.de> <4233989.Saca0ocOUr@wuerfel> <538CCFDE.2010107@zytor.com> <7175692.dpgYFMbTaP@wuerfel>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Return-path: <reiserfs-devel-owner@vger.kernel.org>
-In-Reply-To: <4233989.Saca0ocOUr@wuerfel>
-Sender: reiserfs-devel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org, john.stultz@linaro.org, hch@infradead.org, tglx@linutronix.de, geert@linux-m68k.org, lftan@altera.com, hpa@zytor.com, linux-fsdevel@vger.kernel.org, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, coda@cs.cmu.edu, codalist@coda.cs.cmu.edu, fuse-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, linux-btrfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-scsi@vger.kernel.org, logfs@logfs.org, ocfs2-devel@oss.oracle.com, reiserfs-devel@vger.kernel.org, samba-technical@lists.samba.org, xfs@oss.sgi.com
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-cifs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <7175692.dpgYFMbTaP@wuerfel>
+Sender: linux-cifs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
+Cc: "Joseph S. Myers" <joseph-qD8j1LwMmJjtCj0u4l0SBw@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arch-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, john.stultz-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org, lftan-EIB2kfCEclfQT0dZR+AlfA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, ceph-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cluster-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, coda-ETDLCGt7PQU3uPMLIKxrzw@public.gmane.org, codalist-ySnCqBnJi5yMVn35/9/JlcWGCVk0P7UB@public.gmane.org, fuse-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-afs-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-btrfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-cifs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ext4-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-f2fs-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ntfs-dev-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, logfs-PCqxUs/MD9bYtjvyW6yDsg@public.gmane.org, ocfs2-devel-N0ozoZBvEnrZJqsBc5GL+g@public.gmane.org, reiserfs-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, samba-technical-w/Ol4Ecudpl8XjKLYN78aQ@public.gmane.org, xfs-VZNHf3L845pBDgjK7y7TUQ@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 2 Jun 2014, Arnd Bergmann wrote:
-
-> Ok. Sorry about missing linux-api, I confused it with linux-arch, which
-> may not be as relevant here, except for the one question whether we
-> actually want to have the new ABI on all 32-bit architectures or only
-> as an opt-in for those that expect to stay around for another 24 years.
-
-For glibc I think it will make the most sense to add the support for 
-64-bit time_t across all architectures that currently have 32-bit time_t 
-(with the new interfaces having fallback support to implementation in 
-terms of the 32-bit kernel interfaces, if the 64-bit syscalls are 
-unavailable either at runtime or in the kernel headers against which glibc 
-is compiled - this fallback code will of course need to check for overflow 
-when passing a time value to the kernel, hopefully with error handling 
-consistent with whatever the kernel ends up doing when a filesystem can't 
-support a timestamp).  If some architectures don't provide the new 
-interfaces in the kernel then that will mean the fallback code in glibc 
-can't be removed until glibc support for those architectures is removed 
-(as opposed to removing it when glibc no longer supports kernels predating 
-the kernel support).
-
-> Two more questions for you:
+On 06/02/2014 12:55 PM, Arnd Bergmann wrote:
+>>
+>> The bit that is really going to hurt is every single ioctl that uses a
+>> timespec.
+>>
+>> Honestly, though, I really don't understand the point with "struct
+>> inode_time".  It seems like the zeroeth-order thing is to change the
+>> kernel internal version of struct timespec to have a 64-bit time... it
+>> isn't just about inodes.  We then should be explicit about the external
+>> uses of time, and use accessors.
 > 
-> - are you (and others) happy with adding this type of stat syscall
->   (fstatat64/fstat64) as opposed to the more generic xstat that has
->   been discussed in the past and that never made it through the bike-
->   shedding discussion?
+> I picked these because they are fairly isolated from all other uses,
+> in particular since inode times are the only things where we really
+> care about times in the distant past or future (decades away as opposed
+> to things that happened between boot and shutdown).
+> 
 
-I am.
+If nothing else, I would expect to be able to set the system time to
+weird values for testing.  So I'm not so sure I agree with that...
 
-> - once we have enough buy-in from reviewers to merge this initial
->   series, should we proceed to define rest of the syscall ABI
->   (minus driver ioctls) so glibc and kernel can do the conversion
->   on top of that, or should we better try to do things one syscall
->   family at a time and actually get the kernel to handle them
->   correctly internally?
+> For other kernel-internal uses, we may be better off migrating to
+> a completely different representation, such as nanoseconds since
+> boot or the architecture specific ktime_t, but this is really something
+> to decide for each subsystem.
 
-I don't have any comments on that ordering question.
+Having a bunch of different time representations in the kernel seems
+like a real headache...
 
--- 
-Joseph S. Myers
-joseph@codesourcery.com
+	-hpa
