@@ -1,120 +1,75 @@
-From: Ewan Milne <emilne@redhat.com>
-Subject: Re: [PATCH] sd: Limit transfer length
-Date: Mon, 02 Jun 2014 15:53:43 -0400
-Message-ID: <1401738823.26039.12.camel@localhost.localdomain>
-References: <yq17g4z86te.fsf@sermon.lab.mkp.net>
-Reply-To: emilne@redhat.com
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [RFC 00/32] making inode time stamps y2038 ready
+Date: Mon, 02 Jun 2014 21:55:52 +0200
+Message-ID: <7175692.dpgYFMbTaP@wuerfel>
+References: <1401480116-1973111-1-git-send-email-arnd@arndb.de> <4233989.Saca0ocOUr@wuerfel> <538CCFDE.2010107@zytor.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:62227 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751952AbaFBTx4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 2 Jun 2014 15:53:56 -0400
-In-Reply-To: <yq17g4z86te.fsf@sermon.lab.mkp.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-arch-owner@vger.kernel.org>
+In-Reply-To: <538CCFDE.2010107@zytor.com>
+Sender: linux-arch-owner@vger.kernel.org
+To: "H. Peter Anvin" <hpa@zytor.com>
+Cc: "Joseph S. Myers" <joseph@codesourcery.com>, linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org, john.stultz@linaro.org, hch@infradead.org, tglx@linutronix.de, geert@linux-m68k.org, lftan@altera.com, linux-fsdevel@vger.kernel.org, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, coda@cs.cmu.edu, codalist@telemann.coda.cs.cmu.edu, fuse-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, linux-btrfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-scsi@vger.kernel.org, logfs@logfs.org, ocfs2-devel@oss.oracle.com, reiserfs-devel@vger.kernel.org, samba-technical@lists.samba.org, xfs@oss.sgi.com
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Akinobu Mita <akinobu.mita@gmail.com>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <JBottomley@parallels.com>, Douglas Gilbert <dgilbert@interlog.com>
 
-On Mon, 2014-06-02 at 15:11 -0400, Martin K. Petersen wrote:
-> Until now the per-command transfer length has exclusively been gated by
-> the max_sectors parameter in the scsi_host template. Given that the size
-> of this parameter has been bumped to an unsigned int we have to be
-> careful not to exceed the target device's capabilities.
+On Monday 02 June 2014 12:26:22 H. Peter Anvin wrote:
+> On 06/02/2014 12:19 PM, Arnd Bergmann wrote:
+> > On Monday 02 June 2014 13:52:19 Joseph S. Myers wrote:
+> >> On Fri, 30 May 2014, Arnd Bergmann wrote:
+> >>
+> >>> a) is this the right approach in general? The previous discussion
+> >>>    pointed this way, but there may be other opinions.
+> >>
+> >> The syscall changes seem like the sort of thing I'd expect, although 
+> >> patches adding new syscalls or otherwise affecting the kernel/userspace 
+> >> interface (as opposed to those relating to an individual filesystem) 
+> >> should go to linux-api as well as other relevant lists.
+> > 
+> > Ok. Sorry about missing linux-api, I confused it with linux-arch, which
+> > may not be as relevant here, except for the one question whether we
+> > actually want to have the new ABI on all 32-bit architectures or only
+> > as an opt-in for those that expect to stay around for another 24 years.
+> > 
+> > Two more questions for you:
+> > 
+> > - are you (and others) happy with adding this type of stat syscall
+> >   (fstatat64/fstat64) as opposed to the more generic xstat that has
+> >   been discussed in the past and that never made it through the bike-
+> >   shedding discussion?
+> > 
+> > - once we have enough buy-in from reviewers to merge this initial
+> >   series, should we proceed to define rest of the syscall ABI
+> >   (minus driver ioctls) so glibc and kernel can do the conversion
+> >   on top of that, or should we better try to do things one syscall
+> >   family at a time and actually get the kernel to handle them
+> >   correctly internally?
+> > 
 > 
-> If the if the device specifies a Maximum Transfer Length in the Block
-> Limits VPD we'll use that value. Otherwise we'll use 0xffffffff for
-> devices that have use_16_for_rw set and 0xffff for the rest. We then
-> combine the chosen disk limit with max_sectors in the host template. The
-> smaller of the two will be used to set the max_hw_sectors queue limit.
+> The bit that is really going to hurt is every single ioctl that uses a
+> timespec.
 > 
-> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-> 
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index 321faf603035..56018f37518d 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -2228,7 +2228,11 @@ got_data:
->  		}
->  	}
->  
-> -	sdp->use_16_for_rw = (sdkp->capacity > 0xffffffff);
-> +	if (sdkp->capacity > 0xffffffff) {
-> +		sdp->use_16_for_rw = 1;
-> +		sdkp->max_xfer_blocks = SD_MAX_XFER_BLOCKS;
-> +	} else
-> +		sdkp->max_xfer_blocks = SD_DEF_XFER_BLOCKS;
->  
->  	/* Rescale capacity to 512-byte units */
->  	if (sector_size == 4096)
-> @@ -2540,6 +2544,7 @@ static void sd_read_block_limits(struct scsi_disk *sdkp)
->  {
->  	unsigned int sector_sz = sdkp->device->sector_size;
->  	const int vpd_len = 64;
-> +	u32 max_xfer_length;
->  	unsigned char *buffer = kmalloc(vpd_len, GFP_KERNEL);
->  
->  	if (!buffer ||
-> @@ -2547,6 +2552,10 @@ static void sd_read_block_limits(struct scsi_disk *sdkp)
->  	    scsi_get_vpd_page(sdkp->device, 0xb0, buffer, vpd_len))
->  		goto out;
->  
-> +	max_xfer_length = get_unaligned_be32(&buffer[8]);
-> +	if (max_xfer_length)
-> +		sdkp->max_xfer_blocks = max_xfer_length;
-> +
->  	blk_queue_io_min(sdkp->disk->queue,
->  			 get_unaligned_be16(&buffer[6]) * sector_sz);
->  	blk_queue_io_opt(sdkp->disk->queue,
-> @@ -2702,6 +2711,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
->  	struct scsi_device *sdp = sdkp->device;
->  	unsigned char *buffer;
->  	unsigned flush = 0;
-> +	unsigned int max_xfer;
->  
->  	SCSI_LOG_HLQUEUE(3, sd_printk(KERN_INFO, sdkp,
->  				      "sd_revalidate_disk\n"));
-> @@ -2755,6 +2765,10 @@ static int sd_revalidate_disk(struct gendisk *disk)
->  
->  	blk_queue_flush(sdkp->disk->queue, flush);
->  
-> +	max_xfer = min_not_zero((unsigned int)sdp->host->max_sectors,
-> +				(unsigned int)sdkp->max_xfer_blocks);
-> +	max_xfer <<= ilog2(sdp->sector_size) - 9;
-> +	blk_queue_max_hw_sectors(sdkp->disk->queue, max_xfer);
->  	set_capacity(disk, sdkp->capacity);
->  	sd_config_write_same(sdkp);
->  	kfree(buffer);
-> diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
-> index 620871efbf0a..4c3ab8377fd3 100644
-> --- a/drivers/scsi/sd.h
-> +++ b/drivers/scsi/sd.h
-> @@ -44,6 +44,8 @@ enum {
->  };
->  
->  enum {
-> +	SD_DEF_XFER_BLOCKS = 0xffff,
-> +	SD_MAX_XFER_BLOCKS = 0xffffffff,
->  	SD_MAX_WS10_BLOCKS = 0xffff,
->  	SD_MAX_WS16_BLOCKS = 0x7fffff,
->  };
-> @@ -64,6 +66,7 @@ struct scsi_disk {
->  	struct gendisk	*disk;
->  	atomic_t	openers;
->  	sector_t	capacity;	/* size in 512-byte sectors */
-> +	u32		max_xfer_blocks;
->  	u32		max_ws_blocks;
->  	u32		max_unmap_blocks;
->  	u32		unmap_granularity;
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Honestly, though, I really don't understand the point with "struct
+> inode_time".  It seems like the zeroeth-order thing is to change the
+> kernel internal version of struct timespec to have a 64-bit time... it
+> isn't just about inodes.  We then should be explicit about the external
+> uses of time, and use accessors.
 
-Looks good.
+I picked these because they are fairly isolated from all other uses,
+in particular since inode times are the only things where we really
+care about times in the distant past or future (decades away as opposed
+to things that happened between boot and shutdown).
 
-Reviewed-by: Ewan D. Milne <emilne@redhat.com>
+For other kernel-internal uses, we may be better off migrating to
+a completely different representation, such as nanoseconds since
+boot or the architecture specific ktime_t, but this is really something
+to decide for each subsystem.
 
+I just tried building an arm32 kernel with a s64 time_t, and that
+failed horribly, I get linker errors for missing 64-bit divides
+and lots of warnings for code that expects time_t pointers to
+functions taking a 'long' or vice versa. I also think the only
+way to maintain ABI compatibility is to separate the internal uses
+from the interface, which means auditing all code in the end.
 
+	Arnd
