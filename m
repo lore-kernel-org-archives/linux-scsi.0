@@ -1,26 +1,29 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 7/8] be2iscsi: Fix processing cqe for cxn whose endpoint
- is freed
-Date: Sun, 1 Jun 2014 23:46:01 -0700
-Message-ID: <20140602064601.GA6630@infradead.org>
-References: <1399340492-2136-1-git-send-email-jkallickal@emulex.com>
- <1399340492-2136-7-git-send-email-jkallickal@emulex.com>
- <536AB13E.6080906@cs.wisc.edu>
- <0eb11761-3b46-44d0-b35a-16d121fe1df4@CMEXHTCAS2.ad.emulex.com>
+Subject: Re: PATCH: mvsas: add support for Supermicro AOC-SAS2LP-MV8
+Date: Sun, 1 Jun 2014 23:46:39 -0700
+Message-ID: <20140602064639.GB6630@infradead.org>
+References: <20140428145201.GG29712@fi.muni.cz>
+ <F766E4F80769BD478052FB6533FA745D4F6368598F@SC-VEXCH4.marvell.com>
+ <1398735385.2419.69.camel@dabdike.int.hansenpartnership.com>
+ <F766E4F80769BD478052FB6533FA745D4F63685A27@SC-VEXCH4.marvell.com>
+ <20140516120642.GW9638@fi.muni.cz>
+ <20140528110815.GA19539@infradead.org>
+ <20140530125011.GN9638@fi.muni.cz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:41760 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752440AbaFBGqK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Jun 2014 02:46:10 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <0eb11761-3b46-44d0-b35a-16d121fe1df4@CMEXHTCAS2.ad.emulex.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <20140530125011.GN9638@fi.muni.cz>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jan Kasprzak <kas@fi.muni.cz>
+Cc: Christoph Hellwig <hch@infradead.org>, Xiangliang Yu <yuxiangl@marvell.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Sony John-N <Sony.John-N@Emulex.Com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, Jay Kallickal <jayamohank@gmail.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Jayamohan Kallickal <Jayamohan.Kallickal@Emulex.Com>, Minh Duc Tran <MinhDuc.Tran@Emulex.Com>
 
+On Fri, May 30, 2014 at 02:50:11PM +0200, Jan Kasprzak wrote:
+> Not sure whether I should ack my own patch, though. But you may apply
+> it to the original one, which is identical to what I did.
+> http://marc.info/?l=linux-scsi&m=139277202005675&w=2
 
-I will pull out that patch from the drivers queue, thanks.
+Yes, that's what I will do.
 
+Thanks a lot!
