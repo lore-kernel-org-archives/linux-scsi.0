@@ -1,55 +1,30 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 2/2] TARGET/sbc,loopback: Adjust command data length in case pi exists on the wire
-Date: Mon, 02 Jun 2014 12:54:35 -0400
-Message-ID: <yq1fvjn9rqs.fsf@sermon.lab.mkp.net>
-References: <1401639581-20111-1-git-send-email-sagig@mellanox.com>
-	<1401639581-20111-3-git-send-email-sagig@mellanox.com>
+Subject: Re: [PATCH v2 4/6] sd: use READ_16 or WRITE_16 when transfer length is greater than 0xffff
+Date: Mon, 02 Jun 2014 13:00:13 -0400
+Message-ID: <yq1bnub9rhe.fsf@sermon.lab.mkp.net>
+References: <1401717409-5236-1-git-send-email-akinobu.mita@gmail.com>
+	<1401717409-5236-5-git-send-email-akinobu.mita@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1401639581-20111-3-git-send-email-sagig@mellanox.com> (Sagi
-	Grimberg's message of "Sun, 1 Jun 2014 19:19:41 +0300")
-Sender: target-devel-owner@vger.kernel.org
-To: Sagi Grimberg <sagig@mellanox.com>
-Cc: nab@linux-iscsi.org, michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-rdma@vger.kernel.org, oren@mellanox.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:30486 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752574AbaFBRAb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Jun 2014 13:00:31 -0400
+In-Reply-To: <1401717409-5236-5-git-send-email-akinobu.mita@gmail.com>
+	(Akinobu Mita's message of "Mon, 2 Jun 2014 22:56:47 +0900")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Akinobu Mita <akinobu.mita@gmail.com>
+Cc: linux-scsi@vger.kernel.org, "Elliott, Robert" <Elliott@hp.com>, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <JBottomley@parallels.com>, Douglas Gilbert <dgilbert@interlog.com>
 
->>>>> "Sagi" == Sagi Grimberg <sagig@mellanox.com> writes:
+>>>>> "Akinobu" == Akinobu Mita <akinobu.mita@gmail.com> writes:
 
-Sagi,
+Akinobu> This change makes the scsi disk driver handle the requests
+Akinobu> whose transfer length is greater than 0xffff with READ_16 or
+Akinobu> WRITE_16.
 
-Sagi> In various areas of the code, it is assumed that
-Sagi> se_cmd-> data_length describes pure data. In case
-Sagi> that protection information exists over the wire (protect bits is
-Sagi> are on) the target core decrease the protection length from the
-Sagi> data length (instead of each transport peeking in the cdb).
-
-I completely agree with the notion of including PI in the transport byte
-count.
-
-Why do you open code the transfer length adjustment below?
-
-+			/**
-+			 * Adjust data_length to include
-+			 * protection information
-+			 **/
-+			switch (sc->device->sector_size) {
-+			case 512:
-+				data_len += (data_len >> 9) * 8;
-+				break;
-+			case 1024:
-+				data_len += (data_len >> 10) * 8;
-+				break;
-+			case 2048:
-+				data_len += (data_len >> 11) * 8;
-+				break;
-+			case 4096:
-+				data_len += (data_len >> 12) * 8;
-+				break;
-+			default:
-+				data_len +=
-+				(data_len >> ilog2(sc->device->sector_size)) * 8;
-+			}
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
