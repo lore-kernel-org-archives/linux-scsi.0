@@ -1,60 +1,46 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH V2] sd: Reduce log level to KERN_NOTICE for missing
- caching mode page
-Date: Mon, 02 Jun 2014 12:14:33 -0700
-Message-ID: <1401736473.12939.10.camel@dabdike.int.hansenpartnership.com>
-References: <1401734883-9540-1-git-send-email-a.c.kalker@gmail.com>
+From: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
+Subject: Re: [RFC 00/32] making inode time stamps y2038 ready
+Date: Mon, 02 Jun 2014 21:19:55 +0200
+Message-ID: <4233989.Saca0ocOUr@wuerfel>
+References: <1401480116-1973111-1-git-send-email-arnd@arndb.de> <Pine.LNX.4.64.1406021350030.19591@digraph.polyomino.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:55828 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752348AbaFBTOj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Jun 2014 15:14:39 -0400
-In-Reply-To: <1401734883-9540-1-git-send-email-a.c.kalker@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-cifs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <Pine.LNX.4.64.1406021350030.19591-9YEB1lltEqivcGRMvF24k2I39yigxGEX@public.gmane.org>
+Sender: linux-cifs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: "Joseph S. Myers" <joseph-qD8j1LwMmJjtCj0u4l0SBw@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arch-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, john.stultz-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org, lftan-EIB2kfCEclfQT0dZR+AlfA@public.gmane.org, hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, ceph-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cluster-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, coda-ETDLCGt7PQU3uPMLIKxrzw@public.gmane.org, codalist-/uMB558Y47wP4a1z8dhFYw@public.gmane.org, fuse-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-afs-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-btrfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-cifs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ext4-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-f2fs-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ntfs-dev-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, logfs-PCqxUs/MD9bYtjvyW6yDsg@public.gmane.org, ocfs2-devel-N0ozoZBvEnrZJqsBc5GL+g@public.gmane.org, reiserfs-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, samba-technical-w/Ol4Ecudpl8XjKLYN78aQ@public.gmane.org, xfs-VZNHf3L845pBDgjK7y7TUQ@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alain Kalker <a.c.kalker@gmail.com>
-Cc: linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-On Mon, 2014-06-02 at 20:48 +0200, Alain Kalker wrote:
-> Reduce the lernel log level to KERN_NOTICE for messages related
-> to a missing caching mode page.
+On Monday 02 June 2014 13:52:19 Joseph S. Myers wrote:
+> On Fri, 30 May 2014, Arnd Bergmann wrote:
 > 
-> Reasons why I think this change is justified:
-> - The condition is not an error; the existing workaround of assuming
->   a write through cache doesn't limit functionality in any way.
+> > a) is this the right approach in general? The previous discussion
+> >    pointed this way, but there may be other opinions.
+> 
+> The syscall changes seem like the sort of thing I'd expect, although 
+> patches adding new syscalls or otherwise affecting the kernel/userspace 
+> interface (as opposed to those relating to an individual filesystem) 
+> should go to linux-api as well as other relevant lists.
 
-That's not actually correct.  The condition may be an error.  We have
-some USB attached storage devices with writeback caches which don't
-supply caching information.  Treating a writeback device as writethrough
-is a potential error because you may lose data as a result of it.
+Ok. Sorry about missing linux-api, I confused it with linux-arch, which
+may not be as relevant here, except for the one question whether we
+actually want to have the new ABI on all 32-bit architectures or only
+as an opt-in for those that expect to stay around for another 24 years.
 
-The error is that we've made an assumption which may damage your data.
+Two more questions for you:
 
-The problem for us is that we can't tell if the assumption is going to
-be fatal or not ... the message is harmless for older USB devices.
+- are you (and others) happy with adding this type of stat syscall
+  (fstatat64/fstat64) as opposed to the more generic xstat that has
+  been discussed in the past and that never made it through the bike-
+  shedding discussion?
 
-> - It doesn't warrant a warning either: as it is most likely
->   a hardware limitation, there is little that an ordinary user can do
->   about it besides replacing the affected hardware.
->   Making it a warning would still break quiet boot (kernel commandline
->   parameter 'quiet'), and may still trip log monitoring software
->   unneccessarily, either on every boot or whenever an affected
->   external device is plugged in.
-> - It should be a notice, for it is a normal but significant condition,
->   as it may impact write performance. This would bring it on par with
->   the log messages in the same function.
+- once we have enough buy-in from reviewers to merge this initial
+  series, should we proceed to define rest of the syscall ABI
+  (minus driver ioctls) so glibc and kernel can do the conversion
+  on top of that, or should we better try to do things one syscall
+  family at a time and actually get the kernel to handle them
+  correctly internally?
 
-But this message may serve a purpose:  If you see it and you find you do
-have a USB device with a writeback cache, you can set the boot system to
-correct the cache type assumption and we'll send the correcting
-synchronize cache commands.
-
-It certainly helps bug triagers identify issues which may require adding
-a particular device to the list that need to be treated as writeback.
-
-James
-
-
+	Arnd
