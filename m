@@ -1,143 +1,170 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+From: Quinn Tran <quinn.tran@qlogic.com>
 Subject: Re: [PATCH] qla2xxx: Convert to percpu_ida session tag
  pre-allocation
-Date: Mon, 02 Jun 2014 15:12:35 -0700
-Message-ID: <1401747155.32085.19.camel@haakon3.risingtidesystems.com>
+Date: Mon, 2 Jun 2014 23:32:43 +0000
+Message-ID: <504EB66DAC8D234EB8E8560985C2D7AD46D18873@avmb2.qlogic.org>
 References: <1400892216-9784-1-git-send-email-nab@daterainc.com>
-	 <1400898802.6476.25.camel@haakon3.risingtidesystems.com>
-	 <504EB66DAC8D234EB8E8560985C2D7AD46D0994E@avmb2.qlogic.org>
+ <1400898802.6476.25.camel@haakon3.risingtidesystems.com>
+ <504EB66DAC8D234EB8E8560985C2D7AD46D0994E@avmb2.qlogic.org>
+ <1401747155.32085.19.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <504EB66DAC8D234EB8E8560985C2D7AD46D0994E@avmb2.qlogic.org>
-Sender: target-devel-owner@vger.kernel.org
-To: Quinn Tran <quinn.tran@qlogic.com>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Chad Dupuis <chad.dupuis@qlogic.com>, Roland Dreier <roland@kernel.org>, Christoph Hellwig <hch@lst.de>
+Content-Type: multipart/mixed;
+	boundary="_000_504EB66DAC8D234EB8E8560985C2D7AD46D18873avmb2qlogicorg_"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:12199 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752425AbaFBXcq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Jun 2014 19:32:46 -0400
+Received: from pps.filterd (m0000643.ppops.net [127.0.0.1])
+	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id s52NTex8020624
+	for <linux-scsi@vger.kernel.org>; Mon, 2 Jun 2014 16:32:45 -0700
+Received: from avcashub1.qlogic.com (avcashub2.qlogic.com [198.70.193.116])
+	by mx0b-0016ce01.pphosted.com with ESMTP id 1m7xrnu3w1-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Mon, 02 Jun 2014 16:32:45 -0700
+In-Reply-To: <1401747155.32085.19.camel@haakon3.risingtidesystems.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Chad Dupuis <chad.dupuis@qlogic.com>, Roland Dreier <roland@kernel.org>, Christoph Hellwig <hch@lst.de>
 
-On Thu, 2014-05-29 at 20:29 +0000, Quinn Tran wrote:
-> On 5/23/14 7:33 PM, "Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
+--_000_504EB66DAC8D234EB8E8560985C2D7AD46D18873avmb2qlogicorg_
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <00A32F3EA31060458BCBB576614E0693@qlogic.com>
+Content-Transfer-Encoding: quoted-printable
 
-<SNIP>
 
-> >> diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-> >>b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-> >> index 68fb66f..34db344 100644
-> >> --- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-> >> +++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-> >> @@ -1482,7 +1482,9 @@ static int tcm_qla2xxx_check_initiator_node_acl(
-> >>      }
-> >>      se_tpg = &tpg->se_tpg;
-> >>
-> >> -    se_sess = transport_init_session(TARGET_PROT_NORMAL);
-> >> +    se_sess = transport_init_session_tags(TCM_QLA2XXX_DEFAULT_TAGS,
-> >> +                                          sizeof(struct qla_tgt_cmd),
-> >> +                                          TARGET_PROT_NORMAL);
-> >>      if (IS_ERR(se_sess)) {
-> >>              pr_err("Unable to initialize struct se_session\n");
-> >>              return PTR_ERR(se_sess);
-> >> diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.h
-> >>b/drivers/scsi/qla2xxx/tcm_qla2xxx.h
-> >> index 33aaac8..b0a3ea5 100644
-> >> --- a/drivers/scsi/qla2xxx/tcm_qla2xxx.h
-> >> +++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.h
-> >> @@ -4,6 +4,8 @@
-> >>  #define TCM_QLA2XXX_VERSION "v0.1"
-> >>  /* length of ASCII WWPNs including pad */
-> >>  #define TCM_QLA2XXX_NAMELEN 32
-> >> +/* Number of pre-allocated per-session tags */
-> >> +#define TCM_QLA2XXX_DEFAULT_TAGS 512
-> >>
-> >
-> >So a question wrt to the TCM_QLA2XXX_DEFAULT_TAGS value above used to
-> >determine the number of qla_tgt_cmd descriptors to pre-allocate at
-> >qla_tgt_sess creation time..
-> >
-> >This value needs to line up with the total number of possible incoming
-> >ATIO packets, plus the number of qla_tgt_cmd descriptors that have not
-> >been acknowledged with a CTIO packet.  Typically with other fabrics that
-> >have been converted to use percpu_ida, we over-allocate the number of
-> >per-session tags in order to completely avoid the slow-path where
-> >percpu_ida has to steal tags from another CPU.
-> >
-> >AFAICT, there is no way at the qla_target driver level to enforce
-> >per-session queue_depth + reflect the depth at the initiator port, so
-> >the number of tags needs to be the worst case number of HW descriptors
-> >that a single session can consume + number of unacknowledged
-> >descriptors.
-> 
-> QT> QLA driver & FW currently do not have queue_depth control at a per
-> session level. Instead, the descriptor pool (i.e. Exchange pool) is manage
-> by FW at the Port level.
-> 
-> >
-> >So the question is, is there already a define somewhere in qla2xxx code
-> >that TCM_QLA2XXX_DEFAULT_TAGS can use as a starting point..?  If not,
-> >what is the total number of outstanding commands that a single session
-> >(or single port..?) can expect to handle at a given time..?
-> 
-> QT> Typically, the worst case value we see is 2048 for each port.  It's
-> currently not #define.  This value can change over time.  A good starting
-> default value for TCM_QLA2XXX_DEFAULT_TAGS would be 2048 + %2 pad = 2088.
-> 
+Regards,
+Quinn Tran
 
-<nod>, thanks for the extra background.
 
-> Extra size note, the true value should be extracted from
-> "ha->fw_xcb_count", if this field is set.  Otherwise, default back to
-> TCM_QLA2XXX_DEFAULT_TAGS.
-> 
 
-Ok, squashing the following patch into the original to use
-ha->fw_xcb_count (if available) for determining the worst-case per
-session number of tags.  Note this currently ends up being ~1.7 MB of
-pre-allocated descriptors per session.
 
-Also, I assume the pad is required for ha->fw_xcb_count as well..  In
-that case, the patch below also adds a extra define for 40 extra tags
-following your pad comment above.
+On 6/2/14 3:12 PM, "Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
 
---nab
+>>
+>>Extra size note, the true value should be extracted from
+>>"ha->fw_xcb_count", if this field is set.  Otherwise, default back to
+>>TCM_QLA2XXX_DEFAULT_TAGS.
+>
+>Ok, squashing the following patch into the original to use
+>ha->fw_xcb_count (if available) for determining the worst-case per
+>session number of tags.  Note this currently ends up being ~1.7 MB of
+>pre-allocated descriptors per session.
 
-diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-index 34db344..8b7743f 100644
---- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-+++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-@@ -1465,6 +1465,8 @@ static int tcm_qla2xxx_check_initiator_node_acl(
-        struct qla_tgt_sess *sess = qla_tgt_sess;
-        unsigned char port_name[36];
-        unsigned long flags;
-+       int num_tags = (ha->fw_xcb_count) ? ha->fw_xcb_count :
-+                      TCM_QLA2XXX_DEFAULT_TAGS;
- 
-        lport = vha->vha_tgt.target_lport_ptr;
-        if (!lport) {
-@@ -1482,7 +1484,7 @@ static int tcm_qla2xxx_check_initiator_node_acl(
-        }
-        se_tpg = &tpg->se_tpg;
- 
--       se_sess = transport_init_session_tags(TCM_QLA2XXX_DEFAULT_TAGS,
-+       se_sess = transport_init_session_tags(num_tags + TCM_QLA2XXX_PAD_TAGS,
-                                              sizeof(struct qla_tgt_cmd),
-                                              TARGET_PROT_NORMAL);
-        if (IS_ERR(se_sess)) {
-diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.h b/drivers/scsi/qla2xxx/tcm_qla2xxx.h
-index b0a3ea5..04d6728 100644
---- a/drivers/scsi/qla2xxx/tcm_qla2xxx.h
-+++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.h
-@@ -4,8 +4,12 @@
- #define TCM_QLA2XXX_VERSION    "v0.1"
- /* length of ASCII WWPNs including pad */
- #define TCM_QLA2XXX_NAMELEN    32
--/* Number of pre-allocated per-session tags */
--#define TCM_QLA2XXX_DEFAULT_TAGS 512
-+/*
-+ * Number of pre-allocated per-session tags, based upon the worst-case
-+ * per port number of iocbs
-+ */
-+#define TCM_QLA2XXX_DEFAULT_TAGS 2048
-+#define TCM_QLA2XXX_PAD_TAGS   40
- 
- #include "qla_target.h"
- 
+QT>  Ack.
+
+>
+>Also, I assume the pad is required for ha->fw_xcb_count as well..  In
+>that case, the patch below also adds a extra define for 40 extra tags
+>following your pad comment above.
+
+QT> Pad is not required if the value is read from ha->fw_xcb_count.
+
+
+>
+>--nab
+>
+
+
+________________________________
+
+This message and any attached documents contain information from QLogic Cor=
+poration or its wholly-owned subsidiaries that may be confidential. If you =
+are not the intended recipient, you may not read, copy, distribute, or use =
+this information. If you have received this transmission in error, please n=
+otify the sender immediately by reply e-mail and then delete this message.
+
+--_000_504EB66DAC8D234EB8E8560985C2D7AD46D18873avmb2qlogicorg_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
+
+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
+aQBuAG4ALgB0AHIAYQBuAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AGgwBAAAAFgAAAFEAdQBp
+AG4AbgAgAFQAcgBhAG4AAAAAAB8AHwwBAAAALAAAAHEAdQBpAG4AbgAuAHQAcgBhAG4AQABxAGwA
+bwBnAGkAYwAuAGMAbwBtAAAAHwAeDAEAAAAKAAAAUwBNAFQAUAAAAAAAAgEZDAEAAABkAAAAAAAA
+AIErH6S+oxAZnW4A3QEPVAIAAACAUQB1AGkAbgBuACAAVAByAGEAbgAAAFMATQBUAFAAAABxAHUA
+aQBuAG4ALgB0AHIAYQBuAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AAV0BAAAALAAAAHEAdQBp
+AG4AbgAuAHQAcgBhAG4AQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwD4PwEAAAAWAAAAUQB1AGkA
+bgBuACAAVAByAGEAbgAAAAAAHwAjQAEAAAAsAAAAcQB1AGkAbgBuAC4AdAByAGEAbgBAAHEAbABv
+AGcAaQBjAC4AYwBvAG0AAAAfACJAAQAAAAoAAABTAE0AVABQAAAAAAACAfk/AQAAAGQAAAAAAAAA
+gSsfpL6jEBmdbgDdAQ9UAgAAAIBRAHUAaQBuAG4AIABUAHIAYQBuAAAAUwBNAFQAUAAAAHEAdQBp
+AG4AbgAuAHQAcgBhAG4AQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAJXQEAAAAsAAAAcQB1AGkA
+bgBuAC4AdAByAGEAbgBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfADFAAQAAAAIAAAAAAAAACwBA
+OgEAAAAfADBAAQAAAAIAAAAAAAAAHwAaAAEAAAASAAAASQBQAE0ALgBOAG8AdABlAAAAAAADAPE/
+CQQAAAsAQDoBAAAAAwD9P+QEAAACAQswAQAAABAAAAA0VlnAsPu+RZ5llpbuI8MtAwAXAAEAAABA
+ADkAgB9s87p+zwFAAAgwkxnz87p+zwELAACACCAGAAAAAADAAAAAAAAARgAAAAAUhQAAAQAAAB8A
+AICGAwIAAAAAAMAAAAAAAABGAQAAAB4AAABhAGMAYwBlAHAAdABsAGEAbgBnAHUAYQBnAGUAAAAA
+AAEAAAAMAAAAZQBuAC0AVQBTAAAACwAAgAggBgAAAAAAwAAAAAAAAEYAAAAABoUAAAAAAAAfADcA
+AQAAAIwAAABSAGUAOgAgAFsAUABBAFQAQwBIAF0AIABxAGwAYQAyAHgAeAB4ADoAIABDAG8AbgB2
+AGUAcgB0ACAAdABvACAAcABlAHIAYwBwAHUAXwBpAGQAYQAgAHMAZQBzAHMAaQBvAG4AIAB0AGEA
+ZwAgAHAAcgBlAC0AYQBsAGwAbwBjAGEAdABpAG8AbgAAAB8APQABAAAACgAAAFIAZQA6ACAAAAAA
+AAMANgAAAAAAHwBCEAEAAAB0AAAAPAAxADQAMAAxADcANAA3ADEANQA1AC4AMwAyADAAOAA1AC4A
+MQA5AC4AYwBhAG0AZQBsAEAAaABhAGEAawBvAG4AMwAuAHIAaQBzAGkAbgBnAHQAaQBkAGUAcwB5
+AHMAdABlAG0AcwAuAGMAbwBtAD4AAAACAXEAAQAAACoAAAABAc927K31Wwm1AHcWTbbSU7aGxJgz
+m094jwCACJL8AIAG23eA//+hCYAAAB8AcAABAAAAhAAAAFsAUABBAFQAQwBIAF0AIABxAGwAYQAy
+AHgAeAB4ADoAIABDAG8AbgB2AGUAcgB0ACAAdABvACAAcABlAHIAYwBwAHUAXwBpAGQAYQAgAHMA
+ZQBzAHMAaQBvAG4AIAB0AGEAZwAgAHAAcgBlAC0AYQBsAGwAbwBjAGEAdABpAG8AbgAAAB8ANRAB
+AAAAeAAAADwANQAwADQARQBCADYANgBEAEEAQwA4AEQAMgAzADQARQBCADgARQA4ADUANgAwADkA
+OAA1AEMAMgBEADcAQQBEADQANgBEADEAOAA4ADcAMwBAAGEAdgBtAGIAMgAuAHEAbABvAGcAaQBj
+AC4AbwByAGcAPgAAAB8AORABAAAAyAEAADwAMQA0ADAAMAA4ADkAMgAyADEANgAtADkANwA4ADQA
+LQAxAC0AZwBpAHQALQBzAGUAbgBkAC0AZQBtAGEAaQBsAC0AbgBhAGIAQABkAGEAdABlAHIAYQBp
+AG4AYwAuAGMAbwBtAD4AIAA8ADEANAAwADAAOAA5ADgAOAAwADIALgA2ADQANwA2AC4AMgA1AC4A
+YwBhAG0AZQBsAEAAaABhAGEAawBvAG4AMwAuAHIAaQBzAGkAbgBnAHQAaQBkAGUAcwB5AHMAdABl
+AG0AcwAuAGMAbwBtAD4AIAA8ADUAMAA0AEUAQgA2ADYARABBAEMAOABEADIAMwA0AEUAQgA4AEUA
+OAA1ADYAMAA5ADgANQBDADIARAA3AEEARAA0ADYARAAwADkAOQA0AEUAQABhAHYAbQBiADIALgBx
+AGwAbwBnAGkAYwAuAG8AcgBnAD4AIAA8ADEANAAwADEANwA0ADcAMQA1ADUALgAzADIAMAA4ADUA
+LgAxADkALgBjAGEAbQBlAGwAQABoAGEAYQBrAG8AbgAzAC4AcgBpAHMAaQBuAGcAdABpAGQAZQBz
+AHkAcwB0AGUAbQBzAC4AYwBvAG0APgAAAAMA3j+fTgAAQAAHMNJW7vO6fs8BAwAmAAAAAAACAUcA
+AQAAACwAAABjPVVTO2E9IDtwPVFMb2dpYztsPUFWTUIyLTE0MDYwMjIzMzI0M1otOTQ5AB8AFRAB
+AAAAWAAAADAAMABBADMAMgBGADMARQBBADMAMQAwADYAMAA0ADUAOABCAEMAQgBCADUANwA2ADYA
+MQA0AEUAMAA2ADkAMwBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAACARQwAQAAAAwAAABnAAAASuSb
+nFIAAAAfAPo/AQAAABYAAABRAHUAaQBuAG4AIABUAHIAYQBuAAAAAAAfAACAhgMCAAAAAADAAAAA
+AAAARgEAAAAWAAAAdQBzAGUAcgAtAGEAZwBlAG4AdAAAAAAAAQAAAEYAAABNAGkAYwByAG8AcwBv
+AGYAdAAtAE0AYQBjAE8AdQB0AGwAbwBvAGsALwAxADQALgA0AC4AMQAuADEANAAwADMAMgA2AAAA
+AAAfAACAH6TrM6h6LkK+e3nhqY5UswEAAAA4AAAAQwBvAG4AdgBlAHIAcwBhAHQAaQBvAG4ASQBu
+AGQAZQB4AFQAcgBhAGMAawBpAG4AZwBFAHgAAAABAAAARAEAAEkASQA9ADAAMQAwADEAQwBGADcA
+RQBCAEEARgAzADIAMwAzAEMANgA0ADUAQwBDAEIAQQA5ADcAMAA0AEIAQgBEADkARAAzADQARgA3
+AEYAMQBFADEAOQA0ADcAQgA7AFMAQgBNAEkARAA9ADMAOwBTADEAPQA8ADEANAAwADEANwA0ADcA
+MQA1ADUALgAzADIAMAA4ADUALgAxADkALgBjAGEAbQBlAGwAQABoAGEAYQBrAG8AbgAzAC4AcgBp
+AHMAaQBuAGcAdABpAGQAZQBzAHkAcwB0AGUAbQBzAC4AYwBvAG0APgA7AFYAZQByAHMAaQBvAG4A
+PQBWAGUAcgBzAGkAbwBuACAAMQA0AC4AMgAgACgAQgB1AGkAbABkACAAMwA4ADcALgAwACkALAAg
+AFMAdABhAGcAZQA9AEgAMgAAAAMADTT9PwAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAIAAAAHgA
+LQBtAHMALQBoAGEAcwAtAGEAdAB0AGEAYwBoAAAAAQAAAAIAAAAAAAAAHwAAgIYDAgAAAAAAwAAA
+AAAAAEYBAAAAIgAAAHgALQBvAHIAaQBnAGkAbgBhAHQAaQBuAGcALQBpAHAAAAAAAAEAAAAaAAAA
+WwAxADAALgAzAC4AMQAwAC4AOAAxAF0AAAAAAIiH
+
+--_000_504EB66DAC8D234EB8E8560985C2D7AD46D18873avmb2qlogicorg_--
