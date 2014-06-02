@@ -1,78 +1,79 @@
-From: Joe Lawrence <joe.lawrence@stratus.com>
-Subject: [PATCH 4/4] mpt2sas: annotate ioc->reply_post_host_index as __iomem
-Date: Mon, 2 Jun 2014 10:38:32 -0400
-Message-ID: <1401719912-18532-1-git-send-email-joe.lawrence@stratus.com>
-References: <1401719672-18352-1-git-send-email-joe.lawrence@stratus.com>
+From: scameron@beardog.cce.hp.com
+Subject: Re: [PATCH 2 08/24] hpsa: choose number of reply queues more intelligently.
+Date: Mon, 2 Jun 2014 09:52:06 -0500
+Message-ID: <20140602145206.GH6970@beardog.cce.hp.com>
+References: <20140529154739.8180.50710.stgit@beardog.cce.hp.com> <20140529155302.8180.17597.stgit@beardog.cce.hp.com> <20140602092751.GA30545@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from p02c11o149.mxlogic.net ([208.65.144.82]:36698 "EHLO
-	p02c11o149.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754472AbaFBOin (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Jun 2014 10:38:43 -0400
-In-Reply-To: <1401719672-18352-1-git-send-email-joe.lawrence@stratus.com>
+Received: from g9t1613g.houston.hp.com ([15.240.0.71]:47259 "EHLO
+	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754721AbaFBOxM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Jun 2014 10:53:12 -0400
+Content-Disposition: inline
+In-Reply-To: <20140602092751.GA30545@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Dan Carpenter <dan.carpenter@oracle.com>, Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, Joe Lawrence <joe.lawrence@stratus.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: james.bottomley@parallels.com, webb.scales@hp.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, justin.lindley@hp.com, stephenmcameron@gmail.com, joseph.t.handzik@hp.com, thenzl@redhat.com, michael.miller@canonical.com, scott.teel@hp.com, hch@lst.de, dan.carpenter@oracle.com, linux-pci@vger.kernel.org, scameron@beardog.cce.hp.com
 
-The MPT2SAS_ADAPTER reply_post_host_index[] holds calculated addresses
-in memory mapped register space.  Add an "__iomem" annotation to silence
-the following sparse warnings:
+On Mon, Jun 02, 2014 at 02:27:51AM -0700, Christoph Hellwig wrote:
+> On Thu, May 29, 2014 at 10:53:02AM -0500, Stephen M. Cameron wrote:
+> > From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+> > 
+> > No sense having 8 or 16 reply queues if you only have 4 cpus,
+> > and likewise no sense limiting to 8 reply queues if you have
+> > many more cpus.
+> 
+> I've applied this as it looks good as-is, but shouldn't we also
+> cap the number of MSI-X vectors in common code so that we avoid
+> adding this as boilerplate code to lots of drivers?
 
-  drivers/scsi/mpt2sas/mpt2sas_base.c:1006:43:
-    warning: incorrect type in argument 2 (different address spaces)
-       expected void volatile [noderef] <asn:2>*addr
-       got unsigned long long [usertype] *<noident>
+Maybe so.  Thinking about CPU hotplug, is num_online_cpus()
+the right cap?  Maybe num_possible_cpus() is better in case
+additional cpus coming online are anticipated?
 
-  drivers/scsi/mpt2sas/mpt2sas_base.c:4299:22:
-    warning: cast removes address space of expression
-  drivers/scsi/mpt2sas/mpt2sas_base.c:4303:27:
-    warning: cast removes address space of expression
+-- steve
 
-Signed-off-by: Joe Lawrence <joe.lawrence@stratus.com>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
----
- drivers/scsi/mpt2sas/mpt2sas_base.c |    9 +++++----
- drivers/scsi/mpt2sas/mpt2sas_base.h |    2 +-
- 2 files changed, 6 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-index bde63f7..a6e477e 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -4295,12 +4295,13 @@ mpt2sas_base_attach(struct MPT2SAS_ADAPTER *ioc)
- 		goto out_free_resources;
- 
- 	if (ioc->is_warpdrive) {
--		ioc->reply_post_host_index[0] =
--		    (resource_size_t *)&ioc->chip->ReplyPostHostIndex;
-+		ioc->reply_post_host_index[0] = (resource_size_t __iomem *)
-+		    &ioc->chip->ReplyPostHostIndex;
- 
- 		for (i = 1; i < ioc->cpu_msix_table_sz; i++)
--			ioc->reply_post_host_index[i] = (resource_size_t *)
--			((u8 *)&ioc->chip->Doorbell + (0x4000 + ((i - 1)
-+			ioc->reply_post_host_index[i] =
-+			(resource_size_t __iomem *)
-+			((u8 __iomem *)&ioc->chip->Doorbell + (0x4000 + ((i - 1)
- 			* 4)));
- 	}
- 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
-index 1f2ac3a..23d0c85 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.h
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
-@@ -837,7 +837,7 @@ struct MPT2SAS_ADAPTER {
- 	u8		msix_enable;
- 	u16		msix_vector_count;
- 	u8		*cpu_msix_table;
--	resource_size_t	**reply_post_host_index;
-+	resource_size_t	__iomem **reply_post_host_index;
- 	u16		cpu_msix_table_sz;
- 	u32		ioc_reset_count;
- 	MPT2SAS_FLUSH_RUNNING_CMDS schedule_dead_ioc_flush_running_cmds;
--- 
-1.7.10.4
-
+> 
+> > 
+> > Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+> > Reviewed-by: Mike Miller <michael.miller@canonical.com>
+> > Reviewed-by: Scott Teel <scott.teel@hp.com>
+> > ---
+> >  drivers/scsi/hpsa.c     |    2 ++
+> >  drivers/scsi/hpsa_cmd.h |    2 +-
+> >  2 files changed, 3 insertions(+), 1 deletions(-)
+> > 
+> > diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+> > index b1ecfd8..b903e86 100644
+> > --- a/drivers/scsi/hpsa.c
+> > +++ b/drivers/scsi/hpsa.c
+> > @@ -6157,6 +6157,8 @@ static void hpsa_interrupt_mode(struct ctlr_info *h)
+> >  	if (pci_find_capability(h->pdev, PCI_CAP_ID_MSIX)) {
+> >  		dev_info(&h->pdev->dev, "MSIX\n");
+> >  		h->msix_vector = MAX_REPLY_QUEUES;
+> > +		if (h->msix_vector > num_online_cpus())
+> > +			h->msix_vector = num_online_cpus();
+> >  		err = pci_enable_msix(h->pdev, hpsa_msix_entries,
+> >  				      h->msix_vector);
+> >  		if (err > 0) {
+> > diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
+> > index db89245..104b67b 100644
+> > --- a/drivers/scsi/hpsa_cmd.h
+> > +++ b/drivers/scsi/hpsa_cmd.h
+> > @@ -615,7 +615,7 @@ struct TransTable_struct {
+> >  	u32            RepQCount;
+> >  	u32            RepQCtrAddrLow32;
+> >  	u32            RepQCtrAddrHigh32;
+> > -#define MAX_REPLY_QUEUES 8
+> > +#define MAX_REPLY_QUEUES 64
+> >  	struct vals32  RepQAddr[MAX_REPLY_QUEUES];
+> >  };
+> >  
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> ---end quoted text---
