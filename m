@@ -1,41 +1,48 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] Remove two cancel_delayed_work() calls from the mid-layer
-Date: Mon, 2 Jun 2014 04:32:51 -0700
-Message-ID: <20140602113251.GB26951@infradead.org>
-References: <538C48FC.5000803@acm.org>
+From: Alain Kalker <a.c.kalker@gmail.com>
+Subject: Re: [PATCH] sd: Reduce log level to KERN_NOTICE for missing caching
+ mode page
+Date: Mon, 02 Jun 2014 13:51:04 +0200
+Message-ID: <538C6528.5030504@gmail.com>
+References: <1401706006-7914-1-git-send-email-a.c.kalker@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:46887 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752784AbaFBLc6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Jun 2014 07:32:58 -0400
-Content-Disposition: inline
-In-Reply-To: <538C48FC.5000803@acm.org>
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:37437 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753242AbaFBLvL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Jun 2014 07:51:11 -0400
+Received: by mail-wi0-f169.google.com with SMTP id hi2so4159564wib.2
+        for <linux-scsi@vger.kernel.org>; Mon, 02 Jun 2014 04:51:07 -0700 (PDT)
+Received: from [192.168.1.157] (524B772B.cm-4-4b.dynamic.ziggo.nl. [82.75.119.43])
+        by mx.google.com with ESMTPSA id f2sm31944395wiz.11.2014.06.02.04.51.05
+        for <linux-scsi@vger.kernel.org>
+        (version=TLSv1 cipher=ECDHE-RSA-RC4-SHA bits=128/128);
+        Mon, 02 Jun 2014 04:51:05 -0700 (PDT)
+In-Reply-To: <1401706006-7914-1-git-send-email-a.c.kalker@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, Paolo Bonzini <pbonzini@redhat.com>, Jens Axboe <axboe@kernel.dk>, Joe Lawrence <jdl1291@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On Mon, Jun 02, 2014 at 11:50:52AM +0200, Bart Van Assche wrote:
-> scsi_put_command() is either invoked before blk_start_request() or
-> after block layer processing has completed.  scsi_cmnd.abort_work
-> is scheduled from inside the SCSI timeout handler.  The block layer
-> guarantees that either the regular completion handler
-> (softirq_done_fn()) or the timeout handler (rq_timed_out_fn()) is
-> invoked but not both. This means that scsi_put_command() is never
-> invoked while abort_work is scheduled.  Hence remove the
-> cancel_delayed_work() call from scsi_put_command().
-> 
-> Similarly, scsi_abort_command() is only invoked from the SCSI
-> timeout handler. If scsi_abort_command() is invoked for a SCSI
-> command with the SCSI_EH_ABORT_SCHEDULED flag set this means that
-> scmd_eh_abort_handler() has already invoked scsi_queue_insert() and
-> hence that scsi_cmnd.abort_work is no longer pending. Hence also
-> remove the cancel_delayed_work() call from scsi_abort_command().
-> 
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+On 06/02/2014 12:46 PM, Alain Kalker wrote:
+> Reduce the lernel log level to KERN_NOTICE for messages related
+> to a missing caching mode page.
+>
+> Reasons why I think this change is justified:
+> - The condition is non-fatal; the existing workaround assumes
+>    a write through cache. Although this reduces write performance,
+>    it doesn't limit functionality in any way.
+> - The current log level suggests that immediate action is
+>    required, however, as it is a hardware limitation, there is
+>    nothing much the user can do about it besides replacing the
+>    affected hardware.
+whoops, confused that one with KERN_ALERT, sorry about that.
 
-Looks good,
+Will reword, rebase and repost.
+> - The current situation breaks quiet boot (kernel commandline
+>    parameter 'quiet'), and may trip log monitoring software
+>    unneccessarily, either on every boot or whenever an affected
+>    external device is plugged in.
+>
+> Signed-off-by: Alain Kalker <a.c.kalker@gmail.com>
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
