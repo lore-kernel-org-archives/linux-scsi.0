@@ -1,48 +1,58 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH 5/6] [SCSI] Look up and store NAA if VPD page 0x83 is
- present
-Date: Mon, 02 Jun 2014 22:59:33 +0200
-Message-ID: <538CE5B5.7030407@redhat.com>
-References: <1401335565-29865-1-git-send-email-martin.petersen@oracle.com> <1401335565-29865-6-git-send-email-martin.petersen@oracle.com>
+From: "Joseph S. Myers" <joseph@codesourcery.com>
+Subject: Re: [RFC 00/32] making inode time stamps y2038 ready
+Date: Mon, 2 Jun 2014 21:02:15 +0000
+Message-ID: <Pine.LNX.4.64.1406022044090.27099@digraph.polyomino.org.uk>
+References: <1401480116-1973111-1-git-send-email-arnd@arndb.de>
+ <Pine.LNX.4.64.1406021350030.19591@digraph.polyomino.org.uk>
+ <4233989.Saca0ocOUr@wuerfel>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:41054 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752169AbaFBU7h (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Jun 2014 16:59:37 -0400
-Received: by mail-we0-f174.google.com with SMTP id k48so5898283wev.33
-        for <linux-scsi@vger.kernel.org>; Mon, 02 Jun 2014 13:59:36 -0700 (PDT)
-In-Reply-To: <1401335565-29865-6-git-send-email-martin.petersen@oracle.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="US-ASCII"
+Return-path: <reiserfs-devel-owner@vger.kernel.org>
+In-Reply-To: <4233989.Saca0ocOUr@wuerfel>
+Sender: reiserfs-devel-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org, john.stultz@linaro.org, hch@infradead.org, tglx@linutronix.de, geert@linux-m68k.org, lftan@altera.com, hpa@zytor.com, linux-fsdevel@vger.kernel.org, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, coda@cs.cmu.edu, codalist@coda.cs.cmu.edu, fuse-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, linux-btrfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-scsi@vger.kernel.org, logfs@logfs.org, ocfs2-devel@oss.oracle.com, reiserfs-devel@vger.kernel.org, samba-technical@lists.samba.org, xfs@oss.sgi.com
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, axboe@fb.com, nab@daterainc.com, linux-scsi@vger.kernel.org
 
-Il 29/05/2014 05:52, Martin K. Petersen ha scritto:
-> +	sdev_printk(KERN_ERR, sdev,
-> +		    "%s: VPD page 0x83 NAA descriptor not found\n", __func__);
-> +
-> +	return;
+On Mon, 2 Jun 2014, Arnd Bergmann wrote:
 
-I suspect this error will be relatively common.
+> Ok. Sorry about missing linux-api, I confused it with linux-arch, which
+> may not be as relevant here, except for the one question whether we
+> actually want to have the new ABI on all 32-bit architectures or only
+> as an opt-in for those that expect to stay around for another 24 years.
 
-libata for example has
+For glibc I think it will make the most sense to add the support for 
+64-bit time_t across all architectures that currently have 32-bit time_t 
+(with the new interfaces having fallback support to implementation in 
+terms of the 32-bit kernel interfaces, if the 64-bit syscalls are 
+unavailable either at runtime or in the kernel headers against which glibc 
+is compiled - this fallback code will of course need to check for overflow 
+when passing a time value to the kernel, hopefully with error handling 
+consistent with whatever the kernel ends up doing when a filesystem can't 
+support a timestamp).  If some architectures don't provide the new 
+interfaces in the kernel then that will mean the fallback code in glibc 
+can't be removed until glibc support for those architectures is removed 
+(as opposed to removing it when glibc no longer supports kernels predating 
+the kernel support).
 
-        if (ata_id_has_wwn(args->id)) {
-                /* SAT defined lu world wide name */
-                /* piv=0, assoc=lu, code_set=binary, designator=NAA */
-                rbuf[num + 0] = 1;
-                rbuf[num + 1] = 3;
-                rbuf[num + 3] = ATA_ID_WWN_LEN;
-                num += 4;
-                ata_id_string(args->id, (unsigned char *) rbuf + num,
-                              ATA_ID_WWN, ATA_ID_WWN_LEN);
-                num += ATA_ID_WWN_LEN;
-        }
-        rbuf[3] = num - 4;    /* page len (assume less than 256 bytes) */
+> Two more questions for you:
+> 
+> - are you (and others) happy with adding this type of stat syscall
+>   (fstatat64/fstat64) as opposed to the more generic xstat that has
+>   been discussed in the past and that never made it through the bike-
+>   shedding discussion?
 
-and most of the time IDE disks in a virtual machine are configured without
-a WWN.
+I am.
 
-Paolo
+> - once we have enough buy-in from reviewers to merge this initial
+>   series, should we proceed to define rest of the syscall ABI
+>   (minus driver ioctls) so glibc and kernel can do the conversion
+>   on top of that, or should we better try to do things one syscall
+>   family at a time and actually get the kernel to handle them
+>   correctly internally?
+
+I don't have any comments on that ordering question.
+
+-- 
+Joseph S. Myers
+joseph@codesourcery.com
