@@ -1,88 +1,111 @@
-From: scameron@beardog.cce.hp.com
-Subject: Re: [PATCH 2 08/24] hpsa: choose number of reply queues more intelligently.
-Date: Mon, 2 Jun 2014 10:00:36 -0500
-Message-ID: <20140602150036.GI6970@beardog.cce.hp.com>
-References: <20140529154739.8180.50710.stgit@beardog.cce.hp.com> <20140529155302.8180.17597.stgit@beardog.cce.hp.com> <20140602092751.GA30545@infradead.org> <20140602145206.GH6970@beardog.cce.hp.com>
+From: James Bottomley <jbottomley@parallels.com>
+Subject: Re: [PATCH 6/6] scsi_scan: Fixup scsilun_to_int()
+Date: Mon, 2 Jun 2014 16:03:03 +0000
+Message-ID: <1401724983.2204.12.camel@dabdike.int.hansenpartnership.com>
+References: <1401526878-119472-1-git-send-email-hare@suse.de>
+	 <1401526878-119472-7-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-pci-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20140602145206.GH6970@beardog.cce.hp.com>
-Sender: linux-pci-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: james.bottomley@parallels.com, webb.scales@hp.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, justin.lindley@hp.com, stephenmcameron@gmail.com, joseph.t.handzik@hp.com, thenzl@redhat.com, michael.miller@canonical.com, scott.teel@hp.com, hch@lst.de, dan.carpenter@oracle.com, linux-pci@vger.kernel.org, scameron@beardog.cce.hp.com
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.parallels.com ([199.115.105.18]:45685 "EHLO
+	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753149AbaFBQDJ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Jun 2014 12:03:09 -0400
+In-Reply-To: <1401526878-119472-7-git-send-email-hare@suse.de>
+Content-Language: en-US
+Content-ID: <7BEE6863D6059143856C69BB821D59C2@sw.swsoft.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "hare@suse.de" <hare@suse.de>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "emilne@redhat.com" <emilne@redhat.com>
 
-On Mon, Jun 02, 2014 at 09:52:06AM -0500, scameron@beardog.cce.hp.com wrote:
-> On Mon, Jun 02, 2014 at 02:27:51AM -0700, Christoph Hellwig wrote:
-> > On Thu, May 29, 2014 at 10:53:02AM -0500, Stephen M. Cameron wrote:
-> > > From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
-> > > 
-> > > No sense having 8 or 16 reply queues if you only have 4 cpus,
-> > > and likewise no sense limiting to 8 reply queues if you have
-> > > many more cpus.
-> > 
-> > I've applied this as it looks good as-is, but shouldn't we also
-> > cap the number of MSI-X vectors in common code so that we avoid
-> > adding this as boilerplate code to lots of drivers?
+On Sat, 2014-05-31 at 11:01 +0200, Hannes Reinecke wrote:
+> scsilun_to_int() has an error which prevents it from generating
+> correct LUN numbers for 64bit values.
+> Also we should remove the misleading comment about portions of
+> the LUN being ignored; the initiator should treat the LUN as
+> an opaque value.
+> And, finally, the example given should use the correct
+> prefix (here: extended flat space addressing scheme).
 > 
-> Maybe so.  Thinking about CPU hotplug, is num_online_cpus()
-> the right cap?  Maybe num_possible_cpus() is better in case
-> additional cpus coming online are anticipated?
-
-On second thought, might there be PCI devices which have multiple
-MSIX vectors to signal different things?  I know for smart array
-the idea has occasionally been floated to have an additional vector
-to signal something to the host that is not a command completion,
-although we never implemented such a thing.  Had we done so,
-we would then need num_online_cpus() + 1 vectors.
-
-So maybe it's not a good idea to put such a limit in the generic
-pci code in case some device works in such a way.
-
--- steve
-
-
+> Suggested-by: Doug Gilbert <dgilbert@interlog.com>
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> ---
+>  drivers/scsi/scsi_scan.c | 29 ++++++++++++-----------------
+>  1 file changed, 12 insertions(+), 17 deletions(-)
 > 
-> > 
-> > > 
-> > > Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
-> > > Reviewed-by: Mike Miller <michael.miller@canonical.com>
-> > > Reviewed-by: Scott Teel <scott.teel@hp.com>
-> > > ---
-> > >  drivers/scsi/hpsa.c     |    2 ++
-> > >  drivers/scsi/hpsa_cmd.h |    2 +-
-> > >  2 files changed, 3 insertions(+), 1 deletions(-)
-> > > 
-> > > diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> > > index b1ecfd8..b903e86 100644
-> > > --- a/drivers/scsi/hpsa.c
-> > > +++ b/drivers/scsi/hpsa.c
-> > > @@ -6157,6 +6157,8 @@ static void hpsa_interrupt_mode(struct ctlr_info *h)
-> > >  	if (pci_find_capability(h->pdev, PCI_CAP_ID_MSIX)) {
-> > >  		dev_info(&h->pdev->dev, "MSIX\n");
-> > >  		h->msix_vector = MAX_REPLY_QUEUES;
-> > > +		if (h->msix_vector > num_online_cpus())
-> > > +			h->msix_vector = num_online_cpus();
-> > >  		err = pci_enable_msix(h->pdev, hpsa_msix_entries,
-> > >  				      h->msix_vector);
-> > >  		if (err > 0) {
-> > > diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
-> > > index db89245..104b67b 100644
-> > > --- a/drivers/scsi/hpsa_cmd.h
-> > > +++ b/drivers/scsi/hpsa_cmd.h
-> > > @@ -615,7 +615,7 @@ struct TransTable_struct {
-> > >  	u32            RepQCount;
-> > >  	u32            RepQCtrAddrLow32;
-> > >  	u32            RepQCtrAddrHigh32;
-> > > -#define MAX_REPLY_QUEUES 8
-> > > +#define MAX_REPLY_QUEUES 64
-> > >  	struct vals32  RepQAddr[MAX_REPLY_QUEUES];
-> > >  };
-> > >  
-> > > 
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > ---end quoted text---
+> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+> index fa57a04..42843ec 100644
+> --- a/drivers/scsi/scsi_scan.c
+> +++ b/drivers/scsi/scsi_scan.c
+> @@ -1263,25 +1263,23 @@ static void scsi_sequential_lun_scan(struct scsi_target *starget,
+>   *     truncation before using this function.
+>   *
+>   * Notes:
+> - *     The struct scsi_lun is assumed to be four levels, with each level
+> - *     effectively containing a SCSI byte-ordered (big endian) short; the
+> - *     addressing bits of each level are ignored (the highest two bits).
+>   *     For a description of the LUN format, post SCSI-3 see the SCSI
+>   *     Architecture Model, for SCSI-3 see the SCSI Controller Commands.
+>   *
+> - *     Given a struct scsi_lun of: 0a 04 0b 03 00 00 00 00, this function returns
+> - *     the integer: 0x0b030a04
+> + *     Given a struct scsi_lun of: d2 04 0b 03 00 00 00 00, this function
+> + *     returns the integer: 0x0b03d204
+>   **/
+>  u64 scsilun_to_int(struct scsi_lun *scsilun)
+>  {
+> -	int i;
+> -	u64 lun;
+> +	const unsigned char * cp;
+> +	uint64_t res;
+
+u64 please; uint64_t is for shared headers with userspace only.
+
+> -	lun = 0;
+> -	for (i = 0; i < sizeof(lun); i += 2)
+> -		lun = lun | (((scsilun->scsi_lun[i] << 8) |
+> -			      scsilun->scsi_lun[i + 1]) << (i * 8));
+> -	return lun;
+> +	res = (scsilun->scsi_lun[6] << 8) + scsilun->scsi_lun[7];
+> +	for (cp = scsilun->scsi_lun + 4; cp >= scsilun->scsi_lun; cp -= 2) {
+> +		res <<= 16;
+> +		res += (*cp << 8) + *(cp + 1);
+> +	}
+> +	return res;
+
+This makes the code horrible to read because it implies wrongly that the
+setup isn't the same code as the loop.  If we really have to have it
+done this way, then do
+
+u64 res = 0
+
+for (cp = scsilun->scsi_lun + 6; cp >= scsilun->scsi_lun; cp -= 2) {
+	res <<= 16;
+        res += (*cp << 8) + *(cp + 1);
+}
+return res;
+
+But really, I don't see what's wrong with
+
+u64 lun = 0;
+
+for (i = 0; i < sizeof(lun); i += 2)
+	lun = lun | (((scsilun->scsi_lun[i] << ((i + 1) *8) |
+		      scsilun->scsi_lun[i + 1]) << (i * 8));
+return lun;
+
+
+To my mind, the latter is clearer.
+
+Changing the comment to match a realistic LUN is great.  However,
+somewhere we should say that the reason for this transformation is that
+a single level lun with address method zero matches the standard integer
+luns for lun < 256.
+
+After this is sorted out, the patch looks ready to go to me (you can add
+my reviewed by).
+
+James
+
