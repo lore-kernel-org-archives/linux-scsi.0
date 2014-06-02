@@ -1,56 +1,33 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 3/3] scsi: Implement 'ZBC' device type
-Date: Mon, 02 Jun 2014 10:46:35 +0200
-Message-ID: <538C39EB.90109@suse.de>
-References: <1401692478-23557-1-git-send-email-hare@suse.de> <1401692478-23557-4-git-send-email-hare@suse.de> <20140602083919.GA31170@infradead.org>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/3] libata: consolidate ata_dev_classify()
+Date: Mon, 2 Jun 2014 02:16:25 -0700
+Message-ID: <20140602091625.GA32301@infradead.org>
+References: <1401692478-23557-1-git-send-email-hare@suse.de>
+ <1401692478-23557-2-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:39051 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751998AbaFBIqg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 2 Jun 2014 04:46:36 -0400
-In-Reply-To: <20140602083919.GA31170@infradead.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:38951 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752975AbaFBJQ1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Jun 2014 05:16:27 -0400
+Content-Disposition: inline
+In-Reply-To: <1401692478-23557-2-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
 
-On 06/02/2014 10:39 AM, Christoph Hellwig wrote:
-> On Mon, Jun 02, 2014 at 09:01:18AM +0200, Hannes Reinecke wrote:
->> ZBC (zoned block command aka 'SMR drives') devices will have
->> a new device type 0x14 assigned by T10. So add the necessary
->> mappings to sd.c and make it an alias for ATA ZAC devices.
->
-> The libata changes should defintively be a separate one, the sd chang=
-es
-> probably as well.
->
-> But I'm uneasy with adding anything like this for now, for one the sp=
-ecs
-> aren't even anywhere close to done, and second attaching ZBC devices
-> in general doesn't sound like a very smart idea, we really need a
-> strategy for the sequential required zones first.
->
-In theory, yes.
+On Mon, Jun 02, 2014 at 09:01:16AM +0200, Hannes Reinecke wrote:
+> ata_dev_classify() just uses the 'lbah' and 'lbam'
+> fields from the taskfile, so we can as well use those
+> as arguments and rip out the custom code from sas_ata.
 
-In practice, however, ZAC drives will show up a normal ATA devices=20
-without that patch. Which is leading to even more trouble.
-So with this patch we're at least signalling to the user that=20
-something odd might happen.
+There is no reason why SAS couldn't set up a taskfile structure either,
+but this looks cleaner to me anyway, so:
 
-Cheers,
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+But you really need to run libata changes past the linux-ide list
+and not just the scsi list.
+
