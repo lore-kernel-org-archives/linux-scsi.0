@@ -1,127 +1,34 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] sd: Limit transfer length
-Date: Tue, 03 Jun 2014 18:45:51 -0400
-Message-ID: <yq1sinl3940.fsf@sermon.lab.mkp.net>
-References: <yq17g4z86te.fsf@sermon.lab.mkp.net>
-	<CAC5umyivST2BG7exCH+iCSyCJV-oKz+pW_=ujteCDW1vOTqirQ@mail.gmail.com>
+Subject: Re: [PATCH] [SCSI] Fix T10-DIF-TYPE3 get_tag handler for multi-sector bios
+Date: Tue, 03 Jun 2014 18:50:04 -0400
+Message-ID: <yq1k38x38wz.fsf@sermon.lab.mkp.net>
+References: <1401294293-18770-1-git-send-email-andreas.gruenbacher@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:43753 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755327AbaFCWqE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Jun 2014 18:46:04 -0400
-In-Reply-To: <CAC5umyivST2BG7exCH+iCSyCJV-oKz+pW_=ujteCDW1vOTqirQ@mail.gmail.com>
-	(Akinobu Mita's message of "Wed, 4 Jun 2014 00:10:27 +0900")
+Received: from aserp1040.oracle.com ([141.146.126.69]:22427 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751955AbaFCWuP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Jun 2014 18:50:15 -0400
+In-Reply-To: <1401294293-18770-1-git-send-email-andreas.gruenbacher@gmail.com>
+	(Andreas Gruenbacher's message of "Wed, 28 May 2014 18:24:53 +0200")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <JBottomley@parallels.com>, Douglas Gilbert <dgilbert@interlog.com>
+To: Andreas Gruenbacher <andreas.gruenbacher@gmail.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
 
->>>>> "Akinobu" == Akinobu Mita <akinobu.mita@gmail.com> writes:
+>>>>> "Andreas" == Andreas Gruenbacher <andreas.gruenbacher@gmail.com> writes:
 
-Akinobu> Should we use queue_max_hw_sector(sdkp->disk->queue) instead of
-Akinoby> sdp->host->max_sectors directly?  Because some low-level drivers (ipr
-Akinobu> and pmcraid) may set different max_hw_sectors than
-Akinobu> host->max_sectors in slave_configure().
+Andreas,
 
-Ew! If they muck with the limit they should be updating
-host->max_sectors accordingly. But I agree we should play it safe in
-sd. Updated patch below...
+Andreas> The combined tag size in this case is 6 bytes; fix the loop.
+
+I just posted a patch series that removes the tagging functions because
+nobody was using them. Are you?
+
+The patch looks good otherwise.
+
+Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
-
-
-[SCSI] sd: Limit transfer length
-
-Until now the per-command transfer length has exclusively been gated by
-the max_sectors parameter in the scsi_host template. Given that the size
-of this parameter has been bumped to an unsigned int we have to be
-careful not to exceed the target device's capabilities.
-
-If the if the device specifies a Maximum Transfer Length in the Block
-Limits VPD we'll use that value. Otherwise we'll use 0xffffffff for
-devices that have use_16_for_rw set and 0xffff for the rest. We then
-combine the chosen disk limit with max_sectors in the host template. The
-smaller of the two will be used to set the max_hw_sectors queue limit.
-
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Reviewed-by: Ewan D. Milne <emilne@redhat.com>
-
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 321faf603035..359c1ae919c9 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -2228,7 +2228,11 @@ got_data:
- 		}
- 	}
- 
--	sdp->use_16_for_rw = (sdkp->capacity > 0xffffffff);
-+	if (sdkp->capacity > 0xffffffff) {
-+		sdp->use_16_for_rw = 1;
-+		sdkp->max_xfer_blocks = SD_MAX_XFER_BLOCKS;
-+	} else
-+		sdkp->max_xfer_blocks = SD_DEF_XFER_BLOCKS;
- 
- 	/* Rescale capacity to 512-byte units */
- 	if (sector_size == 4096)
-@@ -2540,6 +2544,7 @@ static void sd_read_block_limits(struct scsi_disk *sdkp)
- {
- 	unsigned int sector_sz = sdkp->device->sector_size;
- 	const int vpd_len = 64;
-+	u32 max_xfer_length;
- 	unsigned char *buffer = kmalloc(vpd_len, GFP_KERNEL);
- 
- 	if (!buffer ||
-@@ -2547,6 +2552,10 @@ static void sd_read_block_limits(struct scsi_disk *sdkp)
- 	    scsi_get_vpd_page(sdkp->device, 0xb0, buffer, vpd_len))
- 		goto out;
- 
-+	max_xfer_length = get_unaligned_be32(&buffer[8]);
-+	if (max_xfer_length)
-+		sdkp->max_xfer_blocks = max_xfer_length;
-+
- 	blk_queue_io_min(sdkp->disk->queue,
- 			 get_unaligned_be16(&buffer[6]) * sector_sz);
- 	blk_queue_io_opt(sdkp->disk->queue,
-@@ -2702,6 +2711,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
- 	struct scsi_device *sdp = sdkp->device;
- 	unsigned char *buffer;
- 	unsigned flush = 0;
-+	unsigned int max_xfer;
- 
- 	SCSI_LOG_HLQUEUE(3, sd_printk(KERN_INFO, sdkp,
- 				      "sd_revalidate_disk\n"));
-@@ -2755,6 +2765,10 @@ static int sd_revalidate_disk(struct gendisk *disk)
- 
- 	blk_queue_flush(sdkp->disk->queue, flush);
- 
-+	max_xfer = min_not_zero(queue_max_hw_sectors(sdkp->disk->queue),
-+				sdkp->max_xfer_blocks);
-+	max_xfer <<= ilog2(sdp->sector_size) - 9;
-+	blk_queue_max_hw_sectors(sdkp->disk->queue, max_xfer);
- 	set_capacity(disk, sdkp->capacity);
- 	sd_config_write_same(sdkp);
- 	kfree(buffer);
-diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
-index 620871efbf0a..4c3ab8377fd3 100644
---- a/drivers/scsi/sd.h
-+++ b/drivers/scsi/sd.h
-@@ -44,6 +44,8 @@ enum {
- };
- 
- enum {
-+	SD_DEF_XFER_BLOCKS = 0xffff,
-+	SD_MAX_XFER_BLOCKS = 0xffffffff,
- 	SD_MAX_WS10_BLOCKS = 0xffff,
- 	SD_MAX_WS16_BLOCKS = 0x7fffff,
- };
-@@ -64,6 +66,7 @@ struct scsi_disk {
- 	struct gendisk	*disk;
- 	atomic_t	openers;
- 	sector_t	capacity;	/* size in 512-byte sectors */
-+	u32		max_xfer_blocks;
- 	u32		max_ws_blocks;
- 	u32		max_unmap_blocks;
- 	u32		unmap_granularity;
