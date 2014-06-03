@@ -1,29 +1,45 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH 1/3] libsas: modify SATA error handler
-Date: Tue, 3 Jun 2014 09:05:03 -0700
-Message-ID: <CAPcyv4g7zMf4UGZPYFk30kh5J_-ot6kuesEjOZJTRbL_UkpQ9g@mail.gmail.com>
-References: <1398346047-10276-1-git-send-email-yxlraid@gmail.com>
-	<CAP0P+NWxxxnQH1e3tXcqwud7EaV4kRRMW46Ad-PWoMWFzgy1eg@mail.gmail.com>
-	<F766E4F80769BD478052FB6533FA745D57320C6287@SC-VEXCH4.marvell.com>
+From: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
+Subject: Re: [PATCH 1/2] libiscsi, iser: Adjust data_length to include protection
+ information
+Date: Tue, 03 Jun 2014 11:06:23 -0500
+Message-ID: <538DF27F.50903@cs.wisc.edu>
+References: <1401639581-20111-1-git-send-email-sagig@mellanox.com> <1401639581-20111-2-git-send-email-sagig@mellanox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ig0-f176.google.com ([209.85.213.176]:38395 "EHLO
-	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932308AbaFCQFD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Jun 2014 12:05:03 -0400
-Received: by mail-ig0-f176.google.com with SMTP id a13so585232igq.9
-        for <linux-scsi@vger.kernel.org>; Tue, 03 Jun 2014 09:05:03 -0700 (PDT)
-In-Reply-To: <F766E4F80769BD478052FB6533FA745D57320C6287@SC-VEXCH4.marvell.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1401639581-20111-2-git-send-email-sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Cc: nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, oren-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Xiangliang Yu <yuxiangl@marvell.com>
-Cc: "tj@kernel.org" <tj@kernel.org>, "JBottomley@parallels.com" <JBottomley@parallels.com>, "todd.e.brandt@intel.com" <todd.e.brandt@intel.com>, "lukasz.dorau@intel.com" <lukasz.dorau@intel.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Tue, Jun 3, 2014 at 12:13 AM, Xiangliang Yu <yuxiangl@marvell.com> wrote:
-> Hi,
->
-> How about the patch?
->
+On 06/01/2014 11:19 AM, Sagi Grimberg wrote:
+>  
+> +/*
+> + * data integrity helpers
+> + */
+> +static inline unsigned
+> +iscsi_prot_len(unsigned data_len, unsigned sector_size)
+> +{
+> +	switch (sector_size) {
+> +	case 512:
+> +		return (data_len >> 9) * 8;
+> +	case 1024:
+> +		return (data_len >> 10) * 8;
+> +	case 2048:
+> +		return (data_len >> 11) * 8;
+> +	case 4096:
+> +		return (data_len >> 12) * 8;
+> +	default:
+> +		return (data_len >> ilog2(sector_size)) * 8;
+> +	}
+> +}
+>  #endif
 
-I'll take a look today.  Sorry for the latency.
+I do not think this should not be in the iscsi code.
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
