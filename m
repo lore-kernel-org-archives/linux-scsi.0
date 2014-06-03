@@ -1,70 +1,47 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 5/6] scsi: use dev_printk() variants for ioctl
-Date: Tue,  3 Jun 2014 13:22:56 +0200
-Message-ID: <1401794577-102277-6-git-send-email-hare@suse.de>
-References: <1401794577-102277-1-git-send-email-hare@suse.de>
+Subject: [PATCH 0/6] First batch of logging cleanups
+Date: Tue,  3 Jun 2014 13:22:51 +0200
+Message-ID: <1401794577-102277-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:38542 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:38541 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752492AbaFCLXA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1753227AbaFCLXA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Tue, 3 Jun 2014 07:23:00 -0400
-In-Reply-To: <1401794577-102277-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
----
- drivers/scsi/scsi_ioctl.c | 17 +++++++++++------
- 1 file changed, 11 insertions(+), 6 deletions(-)
+Hi all,
 
-diff --git a/drivers/scsi/scsi_ioctl.c b/drivers/scsi/scsi_ioctl.c
-index d9564fb..1aaaf43 100644
---- a/drivers/scsi/scsi_ioctl.c
-+++ b/drivers/scsi/scsi_ioctl.c
-@@ -91,12 +91,14 @@ static int ioctl_internal_command(struct scsi_device *sdev, char *cmd,
- 	int result;
- 	struct scsi_sense_hdr sshdr;
- 
--	SCSI_LOG_IOCTL(1, printk("Trying ioctl with scsi command %d\n", *cmd));
-+	SCSI_LOG_IOCTL(1, sdev_printk(KERN_INFO, sdev,
-+				      "Trying ioctl with scsi command %d\n", *cmd));
- 
- 	result = scsi_execute_req(sdev, cmd, DMA_NONE, NULL, 0,
- 				  &sshdr, timeout, retries, NULL);
- 
--	SCSI_LOG_IOCTL(2, printk("Ioctl returned  0x%x\n", result));
-+	SCSI_LOG_IOCTL(2, sdev_printk(KERN_INFO, sdev,
-+				      "Ioctl returned  0x%x\n", result));
- 
- 	if ((driver_byte(result) & DRIVER_SENSE) &&
- 	    (scsi_sense_valid(&sshdr))) {
-@@ -105,9 +107,11 @@ static int ioctl_internal_command(struct scsi_device *sdev, char *cmd,
- 			if (cmd[0] == ALLOW_MEDIUM_REMOVAL)
- 				sdev->lockable = 0;
- 			else
--				printk(KERN_INFO "ioctl_internal_command: "
--				       "ILLEGAL REQUEST asc=0x%x ascq=0x%x\n",
--				       sshdr.asc, sshdr.ascq);
-+				sdev_printk(KERN_INFO, sdev,
-+					    "ioctl_internal_command: "
-+					    "ILLEGAL REQUEST "
-+					    "asc=0x%x ascq=0x%x\n",
-+					    sshdr.asc, sshdr.ascq);
- 			break;
- 		case NOT_READY:	/* This happens if there is no disc in drive */
- 			if (sdev->removable)
-@@ -127,7 +131,8 @@ static int ioctl_internal_command(struct scsi_device *sdev, char *cmd,
- 		}
- 	}
- 
--	SCSI_LOG_IOCTL(2, printk("IOCTL Releasing command\n"));
-+	SCSI_LOG_IOCTL(2, sdev_printk(KERN_INFO, sdev,
-+				      "IOCTL Releasing command\n"));
- 	return result;
- }
- 
+this is the first patch of my SCSI logging cleanup.
+The basic idea here is to use dev_printk() and friends
+throughout the midlayer, so that any logging messages
+are attached with the correct device information.
+
+Hannes Reinecke (6):
+  scsi: Implement sr_printk()
+  scsi: Implement sg_printk()
+  scsi: Implement ch_printk()
+  scsi: Implement st_printk()
+  scsi: use dev_printk() variants for ioctl
+  scsi: use dev_printk variants where possible
+
+ drivers/scsi/ch.c         |  14 +-
+ drivers/scsi/hosts.c      |  15 +-
+ drivers/scsi/scsi.c       |  18 +-
+ drivers/scsi/scsi_error.c | 179 +++++++-------
+ drivers/scsi/scsi_ioctl.c |  17 +-
+ drivers/scsi/scsi_lib.c   |  22 +-
+ drivers/scsi/scsi_scan.c  |  76 +++---
+ drivers/scsi/sg.c         | 189 +++++++++------
+ drivers/scsi/sr.c         |  61 ++---
+ drivers/scsi/sr.h         |   4 +
+ drivers/scsi/sr_ioctl.c   |  26 +-
+ drivers/scsi/sr_vendor.c  |  36 +--
+ drivers/scsi/st.c         | 605 ++++++++++++++++++++++++----------------------
+ 13 files changed, 674 insertions(+), 588 deletions(-)
+
 -- 
 1.7.12.4
 
