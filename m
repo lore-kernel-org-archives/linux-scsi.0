@@ -1,792 +1,573 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 6/6] scsi: use dev_printk variants where possible
-Date: Tue,  3 Jun 2014 13:22:57 +0200
-Message-ID: <1401794577-102277-7-git-send-email-hare@suse.de>
+Subject: [PATCH 2/6] scsi: Implement sg_printk()
+Date: Tue,  3 Jun 2014 13:22:53 +0200
+Message-ID: <1401794577-102277-3-git-send-email-hare@suse.de>
 References: <1401794577-102277-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:38543 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:38544 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751223AbaFCLXB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1752884AbaFCLXB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Tue, 3 Jun 2014 07:23:01 -0400
 In-Reply-To: <1401794577-102277-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Doug Gilbert <dgilbert@interlog.com>
 
-Using dev_printk variants prefixes the logging message with
-the originating device, which makes debugging easier.
+Update the sg driver to use dev_printk() variants instead of
+plain printk(); this will prefix logging messages with the
+appropriate device.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
+Cc: Doug Gilbert <dgilbert@interlog.com>
 ---
- drivers/scsi/hosts.c      |  15 ++--
- drivers/scsi/scsi.c       |  18 ++---
- drivers/scsi/scsi_error.c | 179 +++++++++++++++++++++++++---------------------
- drivers/scsi/scsi_lib.c   |  22 +++---
- drivers/scsi/scsi_scan.c  |  76 ++++++++++----------
- 5 files changed, 164 insertions(+), 146 deletions(-)
+ drivers/scsi/sg.c | 189 +++++++++++++++++++++++++++++++-----------------------
+ 1 file changed, 109 insertions(+), 80 deletions(-)
 
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index 3cbb57a..0632eee 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -204,12 +204,12 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
- 	struct scsi_host_template *sht = shost->hostt;
- 	int error = -EINVAL;
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index df5e961..aeee4de 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -197,11 +197,11 @@ static ssize_t sg_new_write(Sg_fd *sfp, struct file *file,
+ static int sg_common_write(Sg_fd * sfp, Sg_request * srp,
+ 			   unsigned char *cmnd, int timeout, int blocking);
+ static int sg_read_oxfer(Sg_request * srp, char __user *outp, int num_read_xfer);
+-static void sg_remove_scat(Sg_scatter_hold * schp);
++static void sg_remove_scat(Sg_fd * sfp, Sg_scatter_hold * schp);
+ static void sg_build_reserve(Sg_fd * sfp, int req_size);
+ static void sg_link_reserve(Sg_fd * sfp, Sg_request * srp, int size);
+ static void sg_unlink_reserve(Sg_fd * sfp, Sg_request * srp);
+-static Sg_fd *sg_add_sfp(Sg_device * sdp, int dev);
++static Sg_fd *sg_add_sfp(Sg_device * sdp);
+ static void sg_remove_sfp(struct kref *);
+ static Sg_request *sg_get_rq_mark(Sg_fd * sfp, int pack_id);
+ static Sg_request *sg_add_request(Sg_fd * sfp);
+@@ -215,6 +215,10 @@ static void sg_put_dev(Sg_device *sdp);
+ #define SZ_SG_IOVEC sizeof(sg_iovec_t)
+ #define SZ_SG_REQ_INFO sizeof(sg_req_info_t)
  
--	printk(KERN_INFO "scsi%d : %s\n", shost->host_no,
-+	shost_printk(KERN_INFO, shost, "%s\n",
- 			sht->info ? sht->info(shost) : sht->name);
- 
- 	if (!shost->can_queue) {
--		printk(KERN_ERR "%s: can_queue = 0 no longer supported\n",
--				sht->name);
-+		shost_printk(KERN_ERR, shost,
-+			     "can_queue = 0 no longer supported\n");
- 		goto fail;
- 	}
- 
-@@ -450,8 +450,9 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
- 	shost->ehandler = kthread_run(scsi_error_handler, shost,
- 			"scsi_eh_%d", shost->host_no);
- 	if (IS_ERR(shost->ehandler)) {
--		printk(KERN_WARNING "scsi%d: error handler thread failed to spawn, error = %ld\n",
--			shost->host_no, PTR_ERR(shost->ehandler));
-+		shost_printk(KERN_WARNING, shost,
-+			"error handler thread failed to spawn, error = %ld\n",
-+			PTR_ERR(shost->ehandler));
- 		goto fail_kfree;
- 	}
- 
-@@ -584,7 +585,7 @@ EXPORT_SYMBOL(scsi_is_host_device);
- int scsi_queue_work(struct Scsi_Host *shost, struct work_struct *work)
++#define sg_printk(prefix, sdp, fmt, a...) \
++	sdev_printk(prefix, (sdp)->device, "[%s] " fmt, \
++		    (sdp)->disk->disk_name, ##a)
++
+ static int sg_allow_access(struct file *filp, unsigned char *cmd)
  {
- 	if (unlikely(!shost->work_q)) {
--		printk(KERN_ERR
-+		shost_printk(KERN_ERR, shost,
- 			"ERROR: Scsi host '%s' attempted to queue scsi-work, "
- 			"when no workqueue created.\n", shost->hostt->name);
- 		dump_stack();
-@@ -603,7 +604,7 @@ EXPORT_SYMBOL_GPL(scsi_queue_work);
- void scsi_flush_work(struct Scsi_Host *shost)
- {
- 	if (!shost->work_q) {
--		printk(KERN_ERR
-+		shost_printk(KERN_ERR, shost,
- 			"ERROR: Scsi host '%s' attempted to flush scsi-work, "
- 			"when no workqueue created.\n", shost->hostt->name);
- 		dump_stack();
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 88d46fe..41c5423 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -655,7 +655,7 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
+ 	struct sg_fd *sfp = filp->private_data;
+@@ -269,13 +273,14 @@ sg_open(struct inode *inode, struct file *filp)
+ 	int retval;
  
- 	/* Check to see if the scsi lld made this device blocked. */
- 	if (unlikely(scsi_device_blocked(cmd->device))) {
--		/* 
-+		/*
- 		 * in blocked state, the command is just put back on
- 		 * the device queue.  The suspend state has already
- 		 * blocked the queue so future requests should not
-@@ -665,7 +665,8 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
+ 	nonseekable_open(inode, filp);
+-	SCSI_LOG_TIMEOUT(3, printk("sg_open: dev=%d, flags=0x%x\n", dev, flags));
+ 	sdp = sg_get_dev(dev);
+ 	if (IS_ERR(sdp)) {
+ 		retval = PTR_ERR(sdp);
+ 		sdp = NULL;
+ 		goto sg_put;
+ 	}
++	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp,
++				      "sg_open: flags=0x%x\n", flags));
  
- 		scsi_queue_insert(cmd, SCSI_MLQUEUE_DEVICE_BUSY);
+ 	/* This driver's module count bumped by fops_get in <linux/fs.h> */
+ 	/* Prevent the device driver from vanishing while we sleep */
+@@ -329,7 +334,7 @@ sg_open(struct inode *inode, struct file *filp)
+ 		q = sdp->device->request_queue;
+ 		sdp->sg_tablesize = queue_max_segments(q);
+ 	}
+-	if ((sfp = sg_add_sfp(sdp, dev)))
++	if ((sfp = sg_add_sfp(sdp)))
+ 		filp->private_data = sfp;
+ 	else {
+ 		if (flags & O_EXCL) {
+@@ -361,7 +366,7 @@ sg_release(struct inode *inode, struct file *filp)
  
--		SCSI_LOG_MLQUEUE(3, printk("queuecommand : device blocked \n"));
-+		SCSI_LOG_MLQUEUE(3, scmd_printk(KERN_INFO, cmd,
-+			"queuecommand : device blocked\n"));
+ 	if ((!(sfp = (Sg_fd *) filp->private_data)) || (!(sdp = sfp->parentdp)))
+ 		return -ENXIO;
+-	SCSI_LOG_TIMEOUT(3, printk("sg_release: %s\n", sdp->disk->disk_name));
++	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp, "sg_release\n"));
  
- 		/*
- 		 * NOTE: rtn is still zero here because we don't need the
-@@ -674,7 +675,7 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
+ 	set_exclude(sdp, 0);
+ 	wake_up_interruptible(&sdp->o_excl_wait);
+@@ -384,8 +389,8 @@ sg_read(struct file *filp, char __user *buf, size_t count, loff_t * ppos)
+ 
+ 	if ((!(sfp = (Sg_fd *) filp->private_data)) || (!(sdp = sfp->parentdp)))
+ 		return -ENXIO;
+-	SCSI_LOG_TIMEOUT(3, printk("sg_read: %s, count=%d\n",
+-				   sdp->disk->disk_name, (int) count));
++	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp,
++				      "sg_read: count=%d\n", (int) count));
+ 
+ 	if (!access_ok(VERIFY_WRITE, buf, count))
+ 		return -EFAULT;
+@@ -570,8 +575,8 @@ sg_write(struct file *filp, const char __user *buf, size_t count, loff_t * ppos)
+ 
+ 	if ((!(sfp = (Sg_fd *) filp->private_data)) || (!(sdp = sfp->parentdp)))
+ 		return -ENXIO;
+-	SCSI_LOG_TIMEOUT(3, printk("sg_write: %s, count=%d\n",
+-				   sdp->disk->disk_name, (int) count));
++	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp,
++				      "sg_write: count=%d\n", (int) count));
+ 	if (sdp->detached)
+ 		return -ENODEV;
+ 	if (!((filp->f_flags & O_NONBLOCK) ||
+@@ -592,14 +597,16 @@ sg_write(struct file *filp, const char __user *buf, size_t count, loff_t * ppos)
+ 		return -EIO;	/* The minimum scsi command length is 6 bytes. */
+ 
+ 	if (!(srp = sg_add_request(sfp))) {
+-		SCSI_LOG_TIMEOUT(1, printk("sg_write: queue full\n"));
++		SCSI_LOG_TIMEOUT(1, sg_printk(KERN_INFO, sdp,
++					      "sg_write: queue full\n"));
+ 		return -EDOM;
+ 	}
+ 	buf += SZ_SG_HEADER;
+ 	__get_user(opcode, buf);
+ 	if (sfp->next_cmd_len > 0) {
+ 		if (sfp->next_cmd_len > MAX_COMMAND_SIZE) {
+-			SCSI_LOG_TIMEOUT(1, printk("sg_write: command length too long\n"));
++			SCSI_LOG_TIMEOUT(1, sg_printk(KERN_INFO, sdp,
++				"sg_write: command length too long\n"));
+ 			sfp->next_cmd_len = 0;
+ 			sg_remove_request(sfp, srp);
+ 			return -EIO;
+@@ -611,7 +618,7 @@ sg_write(struct file *filp, const char __user *buf, size_t count, loff_t * ppos)
+ 		if ((opcode >= 0xc0) && old_hdr.twelve_byte)
+ 			cmd_size = 12;
+ 	}
+-	SCSI_LOG_TIMEOUT(4, printk(
++	SCSI_LOG_TIMEOUT(4, sg_printk(KERN_INFO, sdp,
+ 		"sg_write:   scsi opcode=0x%02x, cmd_size=%d\n", (int) opcode, cmd_size));
+ /* Determine buffer size.  */
+ 	input_size = count - cmd_size;
+@@ -686,7 +693,8 @@ sg_new_write(Sg_fd *sfp, struct file *file, const char __user *buf,
+ 
+ 	sfp->cmd_q = 1;	/* when sg_io_hdr seen, set command queuing on */
+ 	if (!(srp = sg_add_request(sfp))) {
+-		SCSI_LOG_TIMEOUT(1, printk("sg_new_write: queue full\n"));
++		SCSI_LOG_TIMEOUT(1, sg_printk(KERN_INFO, sfp->parentdp,
++					      "sg_new_write: queue full\n"));
+ 		return -EDOM;
+ 	}
+ 	srp->sg_io_owned = sg_io_owned;
+@@ -755,12 +763,14 @@ sg_common_write(Sg_fd * sfp, Sg_request * srp,
+ 	hp->host_status = 0;
+ 	hp->driver_status = 0;
+ 	hp->resid = 0;
+-	SCSI_LOG_TIMEOUT(4, printk("sg_common_write:  scsi opcode=0x%02x, cmd_size=%d\n",
+-			  (int) cmnd[0], (int) hp->cmd_len));
++	SCSI_LOG_TIMEOUT(4, sg_printk(KERN_INFO, sfp->parentdp,
++			"sg_common_write:  scsi opcode=0x%02x, cmd_size=%d\n",
++			(int) cmnd[0], (int) hp->cmd_len));
+ 
+ 	k = sg_start_req(srp, cmnd);
+ 	if (k) {
+-		SCSI_LOG_TIMEOUT(1, printk("sg_common_write: start_req err=%d\n", k));
++		SCSI_LOG_TIMEOUT(1, sg_printk(KERN_INFO, sfp->parentdp,
++			"sg_common_write: start_req err=%d\n", k));
+ 		sg_finish_rem_req(srp);
+ 		return k;	/* probably out of space --> ENOMEM */
+ 	}
+@@ -820,8 +830,8 @@ sg_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
+ 	if ((!(sfp = (Sg_fd *) filp->private_data)) || (!(sdp = sfp->parentdp)))
+ 		return -ENXIO;
+ 
+-	SCSI_LOG_TIMEOUT(3, printk("sg_ioctl: %s, cmd=0x%x\n",
+-				   sdp->disk->disk_name, (int) cmd_in));
++	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp,
++				   "sg_ioctl: cmd=0x%x\n", (int) cmd_in));
+ 	read_only = (O_RDWR != (filp->f_flags & O_ACCMODE));
+ 
+ 	switch (cmd_in) {
+@@ -873,7 +883,7 @@ sg_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
+ 			sfp->low_dma = 1;
+ 			if ((0 == sfp->low_dma) && (0 == sg_res_in_use(sfp))) {
+ 				val = (int) sfp->reserve.bufflen;
+-				sg_remove_scat(&sfp->reserve);
++				sg_remove_scat(sfp, &sfp->reserve);
+ 				sg_build_reserve(sfp, val);
+ 			}
+ 		} else {
+@@ -949,7 +959,7 @@ sg_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
+ 		if (val != sfp->reserve.bufflen) {
+ 			if (sg_res_in_use(sfp) || sfp->mmap_called)
+ 				return -EBUSY;
+-			sg_remove_scat(&sfp->reserve);
++			sg_remove_scat(sfp, &sfp->reserve);
+ 			sg_build_reserve(sfp, val);
+ 		}
+ 		return 0;
+@@ -1172,8 +1182,8 @@ sg_poll(struct file *filp, poll_table * wait)
+ 			res |= POLLOUT | POLLWRNORM;
+ 	} else if (count < SG_MAX_QUEUE)
+ 		res |= POLLOUT | POLLWRNORM;
+-	SCSI_LOG_TIMEOUT(3, printk("sg_poll: %s, res=0x%x\n",
+-				   sdp->disk->disk_name, (int) res));
++	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp,
++				      "sg_poll: res=0x%x\n", (int) res));
+ 	return res;
+ }
+ 
+@@ -1185,8 +1195,8 @@ sg_fasync(int fd, struct file *filp, int mode)
+ 
+ 	if ((!(sfp = (Sg_fd *) filp->private_data)) || (!(sdp = sfp->parentdp)))
+ 		return -ENXIO;
+-	SCSI_LOG_TIMEOUT(3, printk("sg_fasync: %s, mode=%d\n",
+-				   sdp->disk->disk_name, mode));
++	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp,
++				      "sg_fasync: mode=%d\n", mode));
+ 
+ 	return fasync_helper(fd, filp, mode, &sfp->async_qp);
+ }
+@@ -1205,8 +1215,9 @@ sg_vma_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
+ 	offset = vmf->pgoff << PAGE_SHIFT;
+ 	if (offset >= rsv_schp->bufflen)
+ 		return VM_FAULT_SIGBUS;
+-	SCSI_LOG_TIMEOUT(3, printk("sg_vma_fault: offset=%lu, scatg=%d\n",
+-				   offset, rsv_schp->k_use_sg));
++	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sfp->parentdp,
++				      "sg_vma_fault: offset=%lu, scatg=%d\n",
++				      offset, rsv_schp->k_use_sg));
+ 	sa = vma->vm_start;
+ 	length = 1 << (PAGE_SHIFT + rsv_schp->page_order);
+ 	for (k = 0; k < rsv_schp->k_use_sg && sa < vma->vm_end; k++) {
+@@ -1241,8 +1252,9 @@ sg_mmap(struct file *filp, struct vm_area_struct *vma)
+ 	if ((!filp) || (!vma) || (!(sfp = (Sg_fd *) filp->private_data)))
+ 		return -ENXIO;
+ 	req_sz = vma->vm_end - vma->vm_start;
+-	SCSI_LOG_TIMEOUT(3, printk("sg_mmap starting, vm_start=%p, len=%d\n",
+-				   (void *) vma->vm_start, (int) req_sz));
++	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sfp->parentdp,
++				      "sg_mmap starting, vm_start=%p, len=%d\n",
++				      (void *) vma->vm_start, (int) req_sz));
+ 	if (vma->vm_pgoff)
+ 		return -EINVAL;	/* want no offset */
+ 	rsv_schp = &sfp->reserve;
+@@ -1296,14 +1308,16 @@ static void sg_rq_end_io(struct request *rq, int uptodate)
+ 
+ 	sdp = sfp->parentdp;
+ 	if (unlikely(sdp->detached))
+-		printk(KERN_INFO "sg_rq_end_io: device detached\n");
++		sg_printk(KERN_INFO, sdp,
++			  "sg_rq_end_io: device detached\n");
+ 
+ 	sense = rq->sense;
+ 	result = rq->errors;
+ 	resid = rq->resid_len;
+ 
+-	SCSI_LOG_TIMEOUT(4, printk("sg_cmd_done: %s, pack_id=%d, res=0x%x\n",
+-		sdp->disk->disk_name, srp->header.pack_id, result));
++	SCSI_LOG_TIMEOUT(4, sg_printk(KERN_INFO, sdp,
++				      "sg_cmd_done: pack_id=%d, res=0x%x\n",
++				      srp->header.pack_id, result));
+ 	srp->header.resid = resid;
+ 	ms = jiffies_to_msecs(jiffies);
+ 	srp->header.duration = (ms > srp->header.duration) ?
+@@ -1399,18 +1413,19 @@ static Sg_device *sg_alloc(struct gendisk *disk, struct scsi_device *scsidp)
+ 	if (error < 0) {
+ 		if (error == -ENOSPC) {
+ 			sdev_printk(KERN_WARNING, scsidp,
+-				    "Unable to attach sg device type=%d, minor number exceeds %d\n",
++				    "Unable to attach sg device type=%d, "
++				    "minor number exceeds %d\n",
+ 				    scsidp->type, SG_MAX_DEVS - 1);
+ 			error = -ENODEV;
+ 		} else {
+-			printk(KERN_WARNING
+-			       "idr allocation Sg_device failure: %d\n", error);
++			sdev_printk(KERN_WARNING, scsidp,
++				    "idr allocation Sg_device failure: %d\n",
++				    error);
+ 		}
+ 		goto out_unlock;
+ 	}
+ 	k = error;
+ 
+-	SCSI_LOG_TIMEOUT(3, printk("sg_alloc: dev=%d \n", k));
+ 	sprintf(disk->disk_name, "sg%d", k);
+ 	disk->first_minor = k;
+ 	sdp->disk = disk;
+@@ -1421,6 +1436,8 @@ static Sg_device *sg_alloc(struct gendisk *disk, struct scsi_device *scsidp)
+ 	sdp->index = k;
+ 	kref_init(&sdp->d_ref);
+ 	error = 0;
++	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp,
++				      "sg_alloc: dev=%d \n", k));
+ 
+ out_unlock:
+ 	write_unlock_irqrestore(&sg_index_lock, iflags);
+@@ -1445,7 +1462,7 @@ sg_add(struct device *cl_dev, struct class_interface *cl_intf)
+ 
+ 	disk = alloc_disk(1);
+ 	if (!disk) {
+-		printk(KERN_WARNING "alloc_disk failed\n");
++		sdev_printk(KERN_WARNING, scsidp, "alloc_disk failed\n");
+ 		return -ENOMEM;
+ 	}
+ 	disk->major = SCSI_GENERIC_MAJOR;
+@@ -1453,7 +1470,7 @@ sg_add(struct device *cl_dev, struct class_interface *cl_intf)
+ 	error = -ENOMEM;
+ 	cdev = cdev_alloc();
+ 	if (!cdev) {
+-		printk(KERN_WARNING "cdev_alloc failed\n");
++		sdev_printk(KERN_WARNING, scsidp, "cdev_alloc failed\n");
  		goto out;
  	}
+ 	cdev->owner = THIS_MODULE;
+@@ -1461,7 +1478,7 @@ sg_add(struct device *cl_dev, struct class_interface *cl_intf)
  
--	/* 
-+	/*
- 	 * If SCSI-2 or lower, store the LUN value in cmnd.
- 	 */
- 	if (cmd->device->scsi_level <= SCSI_2 &&
-@@ -690,8 +691,8 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
- 	 * length exceeds what the host adapter can handle.
- 	 */
- 	if (cmd->cmd_len > cmd->device->host->max_cmd_len) {
--		SCSI_LOG_MLQUEUE(3,
--			printk("queuecommand : command too long. "
-+		SCSI_LOG_MLQUEUE(3, scmd_printk(KERN_INFO, cmd,
-+			       "queuecommand : command too long. "
- 			       "cdb_size=%d host->max_cmd_len=%d\n",
- 			       cmd->cmd_len, cmd->device->host->max_cmd_len));
- 		cmd->result = (DID_ABORT << 16);
-@@ -715,14 +716,13 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
- 		    rtn != SCSI_MLQUEUE_TARGET_BUSY)
- 			rtn = SCSI_MLQUEUE_HOST_BUSY;
- 
--		scsi_queue_insert(cmd, rtn);
-+		SCSI_LOG_MLQUEUE(3, scmd_printk(KERN_INFO, cmd,
-+			"queuecommand : request rejected\n"));
- 
--		SCSI_LOG_MLQUEUE(3,
--		    printk("queuecommand : request rejected\n"));
-+		scsi_queue_insert(cmd, rtn);
+ 	sdp = sg_alloc(disk, scsidp);
+ 	if (IS_ERR(sdp)) {
+-		printk(KERN_WARNING "sg_alloc failed\n");
++		sdev_printk(KERN_WARNING, scsidp, "sg_alloc failed\n");
+ 		error = PTR_ERR(sdp);
+ 		goto out;
  	}
- 
-  out:
--	SCSI_LOG_MLQUEUE(3, printk("leaving scsi_dispatch_cmnd()\n"));
- 	return rtn;
- }
- 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 47a1ffc..80b8e06 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -62,8 +62,8 @@ void scsi_eh_wakeup(struct Scsi_Host *shost)
- 	if (shost->host_busy == shost->host_failed) {
- 		trace_scsi_eh_wakeup(shost);
- 		wake_up_process(shost->ehandler);
--		SCSI_LOG_ERROR_RECOVERY(5,
--				printk("Waking error handler thread\n"));
-+		SCSI_LOG_ERROR_RECOVERY(5, shost_printk(KERN_INFO, shost,
-+			"Waking error handler thread\n"));
- 	}
- }
- 
-@@ -319,8 +319,8 @@ int scsi_block_when_processing_errors(struct scsi_device *sdev)
- 
- 	online = scsi_device_online(sdev);
- 
--	SCSI_LOG_ERROR_RECOVERY(5, printk("%s: rtn: %d\n", __func__,
--					  online));
-+	SCSI_LOG_ERROR_RECOVERY(5, sdev_printk(KERN_INFO, sdev,
-+		"%s: rtn: %d\n", __func__, online));
- 
- 	return online;
- }
-@@ -365,8 +365,9 @@ static inline void scsi_eh_prt_fail_stats(struct Scsi_Host *shost,
+@@ -1479,18 +1496,18 @@ sg_add(struct device *cl_dev, struct class_interface *cl_intf)
+ 						      sdp->index),
+ 						sdp, "%s", disk->disk_name);
+ 		if (IS_ERR(sg_class_member)) {
+-			printk(KERN_ERR "sg_add: "
+-			       "device_create failed\n");
++			sdev_printk(KERN_ERR, scsidp, "sg_add: "
++				    "device_create failed\n");
+ 			error = PTR_ERR(sg_class_member);
+ 			goto cdev_add_err;
  		}
- 	}
+ 		error = sysfs_create_link(&scsidp->sdev_gendev.kobj,
+ 					  &sg_class_member->kobj, "generic");
+ 		if (error)
+-			printk(KERN_ERR "sg_add: unable to make symlink "
+-					"'generic' back to sg%d\n", sdp->index);
++			sdev_printk(KERN_ERR, scsidp, "sg_add: "
++				    "unable to make symlink 'generic'\n");
+ 	} else
+-		printk(KERN_WARNING "sg_add: sg_sys Invalid\n");
++		sdev_printk(KERN_WARNING, scsidp, "sg_add: sg_sys Invalid\n");
  
--	SCSI_LOG_ERROR_RECOVERY(2, printk("Total of %d commands on %d"
--					  " devices require eh work\n",
-+	SCSI_LOG_ERROR_RECOVERY(2, shost_printk(KERN_INFO, shost,
-+				   "Total of %d commands on %d"
-+				   " devices require eh work\n",
- 				   total_failures, devices_failed));
- }
- #endif
-@@ -738,8 +739,8 @@ static void scsi_eh_done(struct scsi_cmnd *scmd)
- {
- 	struct completion *eh_action;
+ 	sdev_printk(KERN_NOTICE, scsidp,
+ 		    "Attached scsi generic sg%d type %d\n", sdp->index,
+@@ -1528,8 +1545,7 @@ static void sg_device_destroy(struct kref *kref)
+ 	write_unlock_irqrestore(&sg_index_lock, flags);
  
--	SCSI_LOG_ERROR_RECOVERY(3,
--		printk("%s scmd: %p result: %x\n",
-+	SCSI_LOG_ERROR_RECOVERY(3, scmd_printk(KERN_INFO, scmd,
-+			"%s scmd: %p result: %x\n",
- 			__func__, scmd, scmd->result));
+ 	SCSI_LOG_TIMEOUT(3,
+-		printk("sg_device_destroy: %s\n",
+-			sdp->disk->disk_name));
++		sg_printk(KERN_INFO, sdp, "sg_device_destroy\n"));
  
- 	eh_action = scmd->device->host->eh_action;
-@@ -758,8 +759,8 @@ static int scsi_try_host_reset(struct scsi_cmnd *scmd)
- 	struct Scsi_Host *host = scmd->device->host;
- 	struct scsi_host_template *hostt = host->hostt;
- 
--	SCSI_LOG_ERROR_RECOVERY(3, printk("%s: Snd Host RST\n",
--					  __func__));
-+	SCSI_LOG_ERROR_RECOVERY(3,
-+		shost_printk(KERN_INFO, host, "Snd Host RST\n"));
- 
- 	if (!hostt->eh_host_reset_handler)
- 		return FAILED;
-@@ -788,8 +789,8 @@ static int scsi_try_bus_reset(struct scsi_cmnd *scmd)
- 	struct Scsi_Host *host = scmd->device->host;
- 	struct scsi_host_template *hostt = host->hostt;
- 
--	SCSI_LOG_ERROR_RECOVERY(3, printk("%s: Snd Bus RST\n",
--					  __func__));
-+	SCSI_LOG_ERROR_RECOVERY(3, scmd_printk(KERN_INFO, scmd,
-+		"%s: Snd Bus RST\n", __func__));
- 
- 	if (!hostt->eh_bus_reset_handler)
- 		return FAILED;
-@@ -1036,8 +1037,8 @@ retry:
- 
- 	scsi_log_completion(scmd, rtn);
- 
--	SCSI_LOG_ERROR_RECOVERY(3,
--		printk("%s: scmd: %p, timeleft: %ld\n",
-+	SCSI_LOG_ERROR_RECOVERY(3, scmd_printk(KERN_INFO, scmd,
-+			"%s: scmd: %p, timeleft: %ld\n",
- 			__func__, scmd, timeleft));
- 
- 	/*
-@@ -1051,9 +1052,8 @@ retry:
- 	 */
- 	if (timeleft) {
- 		rtn = scsi_eh_completed_normally(scmd);
--		SCSI_LOG_ERROR_RECOVERY(3,
--			printk("%s: scsi_eh_completed_normally %x\n",
--			       __func__, rtn));
-+		SCSI_LOG_ERROR_RECOVERY(3, scmd_printk(KERN_INFO, scmd,
-+			"%s: scsi_eh_completed_normally %x\n", __func__, rtn));
- 
- 		switch (rtn) {
- 		case SUCCESS:
-@@ -1177,9 +1177,9 @@ int scsi_eh_get_sense(struct list_head *work_q,
- 		if (rtn != SUCCESS)
- 			continue;
- 
--		SCSI_LOG_ERROR_RECOVERY(3, printk("sense requested for %p"
--						  " result %x\n", scmd,
--						  scmd->result));
-+		SCSI_LOG_ERROR_RECOVERY(3, scmd_printk(KERN_INFO, scmd,
-+			"sense requested for %p result %x\n",
-+			scmd, scmd->result));
- 		SCSI_LOG_ERROR_RECOVERY(3, scsi_print_sense("bh", scmd));
- 
- 		rtn = scsi_decide_disposition(scmd);
-@@ -1220,8 +1220,8 @@ retry_tur:
- 	rtn = scsi_send_eh_cmnd(scmd, tur_command, 6,
- 				scmd->device->eh_timeout, 0);
- 
--	SCSI_LOG_ERROR_RECOVERY(3, printk("%s: scmd %p rtn %x\n",
--		__func__, scmd, rtn));
-+	SCSI_LOG_ERROR_RECOVERY(3, scmd_printk(KERN_INFO, scmd,
-+		"%s: scmd %p rtn %x\n", __func__, scmd, rtn));
- 
- 	switch (rtn) {
- 	case NEEDS_RETRY:
-@@ -1323,16 +1323,16 @@ static int scsi_eh_abort_cmds(struct list_head *work_q,
- 					     __func__));
- 			return list_empty(work_q);
- 		}
--		SCSI_LOG_ERROR_RECOVERY(3, printk("%s: aborting cmd:"
--						  "0x%p\n", current->comm,
--						  scmd));
-+		SCSI_LOG_ERROR_RECOVERY(3,
-+			shost_printk(KERN_INFO, shost,
-+				     "%s: aborting cmd: 0x%p\n",
-+				     current->comm, scmd));
- 		rtn = scsi_try_to_abort_cmd(shost->hostt, scmd);
- 		if (rtn == FAILED) {
--			SCSI_LOG_ERROR_RECOVERY(3, printk("%s: aborting"
--							  " cmd failed:"
--							  "0x%p\n",
--							  current->comm,
--							  scmd));
-+			SCSI_LOG_ERROR_RECOVERY(3,
-+				shost_printk(KERN_INFO, shost,
-+					     "%s: aborting cmd failed: 0x%p\n",
-+					     current->comm, scmd));
- 			list_splice_init(&check_list, work_q);
- 			return list_empty(work_q);
- 		}
-@@ -1406,8 +1406,10 @@ static int scsi_eh_stu(struct Scsi_Host *shost,
- 		if (!stu_scmd)
- 			continue;
- 
--		SCSI_LOG_ERROR_RECOVERY(3, printk("%s: Sending START_UNIT to sdev:"
--						  " 0x%p\n", current->comm, sdev));
-+		SCSI_LOG_ERROR_RECOVERY(3,
-+			shost_printk(KERN_INFO, shost,
-+				     "%s: Sending START_UNIT to sdev: 0x%p\n",
-+				     current->comm, sdev));
- 
- 		if (!scsi_eh_try_stu(stu_scmd)) {
- 			if (!scsi_device_online(sdev) ||
-@@ -1421,8 +1423,9 @@ static int scsi_eh_stu(struct Scsi_Host *shost,
- 			}
- 		} else {
- 			SCSI_LOG_ERROR_RECOVERY(3,
--						printk("%s: START_UNIT failed to sdev:"
--						       " 0x%p\n", current->comm, sdev));
-+				shost_printk(KERN_INFO, shost,
-+					     "%s: START_UNIT failed to sdev:"
-+					     " 0x%p\n", current->comm, sdev));
- 		}
- 	}
- 
-@@ -1468,9 +1471,10 @@ static int scsi_eh_bus_device_reset(struct Scsi_Host *shost,
- 		if (!bdr_scmd)
- 			continue;
- 
--		SCSI_LOG_ERROR_RECOVERY(3, printk("%s: Sending BDR sdev:"
--						  " 0x%p\n", current->comm,
--						  sdev));
-+		SCSI_LOG_ERROR_RECOVERY(3,
-+			shost_printk(KERN_INFO, shost,
-+				     "%s: Sending BDR sdev: 0x%p\n",
-+				     current->comm, sdev));
- 		rtn = scsi_try_bus_device_reset(bdr_scmd);
- 		if (rtn == SUCCESS || rtn == FAST_IO_FAIL) {
- 			if (!scsi_device_online(sdev) ||
-@@ -1485,11 +1489,10 @@ static int scsi_eh_bus_device_reset(struct Scsi_Host *shost,
- 				}
- 			}
- 		} else {
--			SCSI_LOG_ERROR_RECOVERY(3, printk("%s: BDR"
--							  " failed sdev:"
--							  "0x%p\n",
--							  current->comm,
--							   sdev));
-+			SCSI_LOG_ERROR_RECOVERY(3,
-+				shost_printk(KERN_INFO, shost,
-+					     "%s: BDR failed sdev: 0x%p\n",
-+					     current->comm, sdev));
- 		}
- 	}
- 
-@@ -1533,15 +1536,17 @@ static int scsi_eh_target_reset(struct Scsi_Host *shost,
- 		scmd = list_entry(tmp_list.next, struct scsi_cmnd, eh_entry);
- 		id = scmd_id(scmd);
- 
--		SCSI_LOG_ERROR_RECOVERY(3, printk("%s: Sending target reset "
--						  "to target %d\n",
--						  current->comm, id));
-+		SCSI_LOG_ERROR_RECOVERY(3,
-+			shost_printk(KERN_INFO, shost,
-+				     "%s: Sending target reset to target %d\n",
-+				     current->comm, id));
- 		rtn = scsi_try_target_reset(scmd);
- 		if (rtn != SUCCESS && rtn != FAST_IO_FAIL)
--			SCSI_LOG_ERROR_RECOVERY(3, printk("%s: Target reset"
--							  " failed target: "
--							  "%d\n",
--							  current->comm, id));
-+			SCSI_LOG_ERROR_RECOVERY(3,
-+				shost_printk(KERN_INFO, shost,
-+					     "%s: Target reset failed"
-+					     " target: %d\n",
-+					     current->comm, id));
- 		list_for_each_entry_safe(scmd, next, &tmp_list, eh_entry) {
- 			if (scmd_id(scmd) != id)
- 				continue;
-@@ -1605,9 +1610,10 @@ static int scsi_eh_bus_reset(struct Scsi_Host *shost,
- 
- 		if (!chan_scmd)
- 			continue;
--		SCSI_LOG_ERROR_RECOVERY(3, printk("%s: Sending BRST chan:"
--						  " %d\n", current->comm,
--						  channel));
-+		SCSI_LOG_ERROR_RECOVERY(3,
-+			shost_printk(KERN_INFO, shost,
-+				     "%s: Sending BRST chan: %d\n",
-+				     current->comm, channel));
- 		rtn = scsi_try_bus_reset(chan_scmd);
- 		if (rtn == SUCCESS || rtn == FAST_IO_FAIL) {
- 			list_for_each_entry_safe(scmd, next, work_q, eh_entry) {
-@@ -1621,10 +1627,10 @@ static int scsi_eh_bus_reset(struct Scsi_Host *shost,
- 				}
- 			}
- 		} else {
--			SCSI_LOG_ERROR_RECOVERY(3, printk("%s: BRST"
--							  " failed chan: %d\n",
--							  current->comm,
--							  channel));
-+			SCSI_LOG_ERROR_RECOVERY(3,
-+				shost_printk(KERN_INFO, shost,
-+					     "%s: BRST failed chan: %d\n",
-+					     current->comm, channel));
- 		}
- 	}
- 	return scsi_eh_test_devices(&check_list, work_q, done_q, 0);
-@@ -1635,7 +1641,8 @@ static int scsi_eh_bus_reset(struct Scsi_Host *shost,
-  * @work_q:	list_head for processed commands.
-  * @done_q:	list_head for processed commands.
-  */
--static int scsi_eh_host_reset(struct list_head *work_q,
-+static int scsi_eh_host_reset(struct Scsi_Host *shost,
-+			      struct list_head *work_q,
- 			      struct list_head *done_q)
- {
- 	struct scsi_cmnd *scmd, *next;
-@@ -1646,8 +1653,10 @@ static int scsi_eh_host_reset(struct list_head *work_q,
- 		scmd = list_entry(work_q->next,
- 				  struct scsi_cmnd, eh_entry);
- 
--		SCSI_LOG_ERROR_RECOVERY(3, printk("%s: Sending HRST\n"
--						  , current->comm));
-+		SCSI_LOG_ERROR_RECOVERY(3,
-+			shost_printk(KERN_INFO, shost,
-+				     "%s: Sending HRST\n",
-+				     current->comm));
- 
- 		rtn = scsi_try_host_reset(scmd);
- 		if (rtn == SUCCESS) {
-@@ -1657,9 +1666,10 @@ static int scsi_eh_host_reset(struct list_head *work_q,
- 					scsi_eh_finish_cmd(scmd, done_q);
- 			}
- 		} else {
--			SCSI_LOG_ERROR_RECOVERY(3, printk("%s: HRST"
--							  " failed\n",
--							  current->comm));
-+			SCSI_LOG_ERROR_RECOVERY(3,
-+				shost_printk(KERN_INFO, shost,
-+					     "%s: HRST failed\n",
-+					     current->comm));
- 		}
- 	}
- 	return scsi_eh_test_devices(&check_list, work_q, done_q, 1);
-@@ -1751,9 +1761,8 @@ int scsi_decide_disposition(struct scsi_cmnd *scmd)
- 	 * up to the top level.
- 	 */
- 	if (!scsi_device_online(scmd->device)) {
--		SCSI_LOG_ERROR_RECOVERY(5, printk("%s: device offline - report"
--						  " as SUCCESS\n",
--						  __func__));
-+		SCSI_LOG_ERROR_RECOVERY(5, scmd_printk(KERN_INFO, scmd,
-+			"%s: device offline - report as SUCCESS\n", __func__));
- 		return SUCCESS;
- 	}
- 
-@@ -1998,8 +2007,7 @@ static void scsi_restart_operations(struct Scsi_Host *shost)
- 	 * ioctls to queued block devices.
- 	 */
- 	SCSI_LOG_ERROR_RECOVERY(3,
--		printk("scsi_eh_%d waking up host to restart\n",
--		       shost->host_no));
-+		shost_printk(KERN_INFO, shost, "waking up host to restart\n"));
- 
- 	spin_lock_irqsave(shost->host_lock, flags);
- 	if (scsi_host_set_state(shost, SHOST_RUNNING))
-@@ -2046,7 +2054,7 @@ void scsi_eh_ready_devs(struct Scsi_Host *shost,
- 		if (!scsi_eh_bus_device_reset(shost, work_q, done_q))
- 			if (!scsi_eh_target_reset(shost, work_q, done_q))
- 				if (!scsi_eh_bus_reset(shost, work_q, done_q))
--					if (!scsi_eh_host_reset(work_q, done_q))
-+					if (!scsi_eh_host_reset(shost, work_q, done_q))
- 						scsi_eh_offline_sdevs(work_q,
- 								      done_q);
- }
-@@ -2065,10 +2073,10 @@ void scsi_eh_flush_done_q(struct list_head *done_q)
- 		if (scsi_device_online(scmd->device) &&
- 		    !scsi_noretry_cmd(scmd) &&
- 		    (++scmd->retries <= scmd->allowed)) {
--			SCSI_LOG_ERROR_RECOVERY(3, printk("%s: flush"
--							  " retry cmd: %p\n",
--							  current->comm,
--							  scmd));
-+			SCSI_LOG_ERROR_RECOVERY(3,
-+				scmd_printk(KERN_INFO, scmd,
-+					     "%s: flush retry cmd: %p\n",
-+					     current->comm, scmd));
- 				scsi_queue_insert(scmd, SCSI_MLQUEUE_EH_RETRY);
- 		} else {
- 			/*
-@@ -2078,9 +2086,10 @@ void scsi_eh_flush_done_q(struct list_head *done_q)
- 			 */
- 			if (!scmd->result)
- 				scmd->result |= (DRIVER_TIMEOUT << 24);
--			SCSI_LOG_ERROR_RECOVERY(3, printk("%s: flush finish"
--							" cmd: %p\n",
--							current->comm, scmd));
-+			SCSI_LOG_ERROR_RECOVERY(3,
-+				scmd_printk(KERN_INFO, scmd,
-+					     "%s: flush finish cmd: %p\n",
-+					     current->comm, scmd));
- 			scsi_finish_command(scmd);
- 		}
- 	}
-@@ -2156,17 +2165,19 @@ int scsi_error_handler(void *data)
- 		if ((shost->host_failed == 0 && shost->host_eh_scheduled == 0) ||
- 		    shost->host_failed != shost->host_busy) {
- 			SCSI_LOG_ERROR_RECOVERY(1,
--				printk("scsi_eh_%d: sleeping\n",
--					shost->host_no));
-+				shost_printk(KERN_INFO, shost,
-+					     "scsi_eh_%d: sleeping\n",
-+					     shost->host_no));
- 			schedule();
- 			continue;
- 		}
- 
- 		__set_current_state(TASK_RUNNING);
- 		SCSI_LOG_ERROR_RECOVERY(1,
--			printk("scsi_eh_%d: waking up %d/%d/%d\n",
--			       shost->host_no, shost->host_eh_scheduled,
--			       shost->host_failed, shost->host_busy));
-+			shost_printk(KERN_INFO, shost,
-+				     "scsi_eh_%d: waking up %d/%d/%d\n",
-+				     shost->host_no, shost->host_eh_scheduled,
-+				     shost->host_failed, shost->host_busy));
- 
- 		/*
- 		 * We have a host that is failing for some reason.  Figure out
-@@ -2200,7 +2211,9 @@ int scsi_error_handler(void *data)
- 	__set_current_state(TASK_RUNNING);
- 
- 	SCSI_LOG_ERROR_RECOVERY(1,
--		printk("Error handler scsi_eh_%d exiting\n", shost->host_no));
-+		shost_printk(KERN_INFO, shost,
-+			     "Error handler scsi_eh_%d exiting\n",
-+			     shost->host_no));
- 	shost->ehandler = NULL;
- 	return 0;
- }
-@@ -2361,8 +2374,8 @@ scsi_reset_provider(struct scsi_device *dev, int flag)
- 	 * suspended while we performed the TMF.
- 	 */
- 	SCSI_LOG_ERROR_RECOVERY(3,
--		printk("%s: waking up host to restart after TMF\n",
--		__func__));
-+		shost_printk(KERN_INFO, shost,
-+			     "waking up host to restart after TMF\n"));
- 
- 	wake_up(&shost->host_wait);
- 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 9f841df..9cbf4dd 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -95,8 +95,8 @@ static void __scsi_queue_insert(struct scsi_cmnd *cmd, int reason, int unbusy)
- 	struct request_queue *q = device->request_queue;
- 	unsigned long flags;
- 
--	SCSI_LOG_MLQUEUE(1,
--		 printk("Inserting command %p into mlqueue\n", cmd));
-+	SCSI_LOG_MLQUEUE(1, scmd_printk(KERN_INFO, cmd,
-+		"Inserting command %p into mlqueue\n", cmd));
- 
- 	/*
- 	 * Set the appropriate busy bit for the device/host.
-@@ -742,9 +742,9 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
- 	 * Next deal with any sectors which we were able to correctly
- 	 * handle.
- 	 */
--	SCSI_LOG_HLCOMPLETE(1, printk("%u sectors total, "
--				      "%d bytes done.\n",
--				      blk_rq_sectors(req), good_bytes));
-+	SCSI_LOG_HLCOMPLETE(1, scmd_printk(KERN_INFO, cmd,
-+		"%u sectors total, %d bytes done.\n",
-+		blk_rq_sectors(req), good_bytes));
- 
- 	/*
- 	 * Recovered errors need reporting, but they're always treated
-@@ -1346,8 +1346,8 @@ static inline int scsi_host_queue_ready(struct request_queue *q,
- 		 */
- 		if (--shost->host_blocked == 0) {
- 			SCSI_LOG_MLQUEUE(3,
--				printk("scsi%d unblocking host at zero depth\n",
--					shost->host_no));
-+				shost_printk(KERN_INFO, shost,
-+					     "unblocking host at zero depth\n"));
- 		} else {
- 			return 0;
- 		}
-@@ -1456,7 +1456,7 @@ static void scsi_softirq_done(struct request *rq)
- 			    wait_for/HZ);
- 		disposition = SUCCESS;
- 	}
--			
-+
- 	scsi_log_completion(cmd, disposition);
- 
- 	switch (disposition) {
-@@ -1504,7 +1504,7 @@ static void scsi_request_fn(struct request_queue *q)
- 		int rtn;
- 		/*
- 		 * get next queueable request.  We do this early to make sure
--		 * that the request is fully prepared even if we cannot 
-+		 * that the request is fully prepared even if we cannot
- 		 * accept it.
- 		 */
- 		req = blk_peek_request(q);
-@@ -2142,9 +2142,9 @@ scsi_device_set_state(struct scsi_device *sdev, enum scsi_device_state state)
- 	return 0;
- 
-  illegal:
--	SCSI_LOG_ERROR_RECOVERY(1, 
-+	SCSI_LOG_ERROR_RECOVERY(1,
- 				sdev_printk(KERN_ERR, sdev,
--					    "Illegal state transition %s->%s\n",
-+					    "Illegal state transition %s->%s",
- 					    scsi_device_state_name(oldstate),
- 					    scsi_device_state_name(state))
- 				);
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index e02b3aa..46563b1 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -198,7 +198,7 @@ static void scsi_unlock_floptical(struct scsi_device *sdev,
- {
- 	unsigned char scsi_cmd[MAX_COMMAND_SIZE];
- 
--	printk(KERN_NOTICE "scsi: unlocking floptical drive\n");
-+	sdev_printk(KERN_NOTICE, sdev, "unlocking floptical drive\n");
- 	scsi_cmd[0] = MODE_SENSE;
- 	scsi_cmd[1] = 0;
- 	scsi_cmd[2] = 0x2e;
-@@ -600,8 +600,8 @@ static int scsi_probe_lun(struct scsi_device *sdev, unsigned char *inq_result,
- 					  HZ / 2 + HZ * scsi_inq_timeout, 3,
- 					  &resid);
- 
--		SCSI_LOG_SCAN_BUS(3, printk(KERN_INFO "scsi scan: INQUIRY %s "
--				"with code 0x%x\n",
-+		SCSI_LOG_SCAN_BUS(3, sdev_printk(KERN_INFO, sdev,
-+				"scsi scan: INQUIRY %s with code 0x%x\n",
- 				result ? "failed" : "successful", result));
- 
- 		if (result) {
-@@ -671,9 +671,10 @@ static int scsi_probe_lun(struct scsi_device *sdev, unsigned char *inq_result,
- 		}
- 
- 	} else if (pass == 2) {
--		printk(KERN_INFO "scsi scan: %d byte inquiry failed.  "
--				"Consider BLIST_INQUIRY_36 for this device\n",
--				try_inquiry_len);
-+		sdev_printk(KERN_INFO, sdev,
-+			    "scsi scan: %d byte inquiry failed.  "
-+			    "Consider BLIST_INQUIRY_36 for this device\n",
-+			    try_inquiry_len);
- 
- 		/* If this pass failed, the third pass goes back and transfers
- 		 * the same amount as we successfully got in the first pass. */
-@@ -706,8 +707,9 @@ static int scsi_probe_lun(struct scsi_device *sdev, unsigned char *inq_result,
- 	 * strings.
- 	 */
- 	if (sdev->inquiry_len < 36) {
--		printk(KERN_INFO "scsi scan: INQUIRY result too short (%d),"
--				" using 36\n", sdev->inquiry_len);
-+		sdev_printk(KERN_INFO, sdev,
-+			    "scsi scan: INQUIRY result too short (%d),"
-+			    " using 36\n", sdev->inquiry_len);
- 		sdev->inquiry_len = 36;
- 	}
- 
-@@ -826,7 +828,8 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
- 		sdev->writeable = 0;
- 		break;
- 	default:
--		printk(KERN_INFO "scsi: unknown device type %d\n", sdev->type);
-+		sdev_printk(KERN_INFO, sdev, "unknown device type %d\n",
-+			    sdev->type);
- 	}
- 
- 	if (sdev->type == TYPE_RBC || sdev->type == TYPE_ROM) {
-@@ -1048,7 +1051,7 @@ static int scsi_probe_and_add_lun(struct scsi_target *starget,
- 	sdev = scsi_device_lookup_by_target(starget, lun);
- 	if (sdev) {
- 		if (rescan || !scsi_device_created(sdev)) {
--			SCSI_LOG_SCAN_BUS(3, printk(KERN_INFO
-+			SCSI_LOG_SCAN_BUS(3, sdev_printk(KERN_INFO, sdev,
- 				"scsi scan: device exists on %s\n",
- 				dev_name(&sdev->sdev_gendev)));
- 			if (sdevp)
-@@ -1135,7 +1138,7 @@ static int scsi_probe_and_add_lun(struct scsi_target *starget,
- 	if (((result[0] >> 5) == 1 || starget->pdt_1f_for_no_lun) &&
- 	    (result[0] & 0x1f) == 0x1f &&
- 	    !scsi_is_wlun(lun)) {
--		SCSI_LOG_SCAN_BUS(3, printk(KERN_INFO
-+		SCSI_LOG_SCAN_BUS(3, sdev_printk(KERN_INFO, sdev,
- 					"scsi scan: peripheral device type"
- 					" of 31, no device added\n"));
- 		res = SCSI_SCAN_TARGET_PRESENT;
-@@ -1188,8 +1191,8 @@ static void scsi_sequential_lun_scan(struct scsi_target *starget,
- 	unsigned int sparse_lun, lun, max_dev_lun;
- 	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
- 
--	SCSI_LOG_SCAN_BUS(3, printk(KERN_INFO "scsi scan: Sequential scan of"
--				    "%s\n", dev_name(&starget->dev)));
-+	SCSI_LOG_SCAN_BUS(3, starget_printk(KERN_INFO, starget,
-+		"scsi scan: Sequential scan\n"));
- 
- 	max_dev_lun = min(max_scsi_luns, shost->max_lun);
- 	/*
-@@ -1430,17 +1433,19 @@ static int scsi_report_lun_scan(struct scsi_target *starget, int bflags,
- 	 * a retry.
- 	 */
- 	for (retries = 0; retries < 3; retries++) {
--		SCSI_LOG_SCAN_BUS(3, printk (KERN_INFO "scsi scan: Sending"
--				" REPORT LUNS to %s (try %d)\n", devname,
-+		SCSI_LOG_SCAN_BUS(3, sdev_printk (KERN_INFO, sdev,
-+				"scsi scan: Sending REPORT LUNS to (try %d)\n",
- 				retries));
- 
- 		result = scsi_execute_req(sdev, scsi_cmd, DMA_FROM_DEVICE,
- 					  lun_data, length, &sshdr,
- 					  SCSI_TIMEOUT + 4 * HZ, 3, NULL);
- 
--		SCSI_LOG_SCAN_BUS(3, printk (KERN_INFO "scsi scan: REPORT LUNS"
--				" %s (try %d) result 0x%x\n", result
--				?  "failed" : "successful", retries, result));
-+		SCSI_LOG_SCAN_BUS(3, sdev_printk (KERN_INFO, sdev,
-+				"scsi scan: REPORT LUNS"
-+				" %s (try %d) result 0x%x\n",
-+				result ?  "failed" : "successful",
-+				retries, result));
- 		if (result == 0)
- 			break;
- 		else if (scsi_sense_valid(&sshdr)) {
-@@ -1466,10 +1471,11 @@ static int scsi_report_lun_scan(struct scsi_target *starget, int bflags,
- 
- 	num_luns = (length / sizeof(struct scsi_lun));
- 	if (num_luns > max_scsi_report_luns) {
--		printk(KERN_WARNING "scsi: On %s only %d (max_scsi_report_luns)"
--		       " of %d luns reported, try increasing"
--		       " max_scsi_report_luns.\n", devname,
--		       max_scsi_report_luns, num_luns);
-+		sdev_printk(KERN_WARNING, sdev,
-+			    "Only %d (max_scsi_report_luns)"
-+			    " of %d luns reported, try increasing"
-+			    " max_scsi_report_luns.\n",
-+			    max_scsi_report_luns, num_luns);
- 		num_luns = max_scsi_report_luns;
- 	}
- 
-@@ -1495,15 +1501,15 @@ static int scsi_report_lun_scan(struct scsi_target *starget, int bflags,
- 			 * this differs from what linux would print for the
- 			 * integer LUN value.
- 			 */
--			printk(KERN_WARNING "scsi: %s lun 0x", devname);
--			data = (char *)lunp->scsi_lun;
--			for (i = 0; i < sizeof(struct scsi_lun); i++)
--				printk("%02x", data[i]);
--			printk(" has a LUN larger than currently supported.\n");
-+			sdev_printk(KERN_WARNING, sdev,
-+				    "lun 0x%8phN has a LUN larger"
-+				    " than currently supported.\n",
-+				    lunp->scsi_lun);
- 		} else if (lun > sdev->host->max_lun) {
--			printk(KERN_WARNING "scsi: %s lun%d has a LUN larger"
--			       " than allowed by the host adapter\n",
--			       devname, lun);
-+			sdev_printk(KERN_WARNING, sdev,
-+				    "lun 0x%8phN has a LUN larger"
-+				    " than allowed by the host adapter\n",
-+				    lunp->scsi_lun);
- 		} else {
- 			int res;
- 
-@@ -1515,8 +1521,8 @@ static int scsi_report_lun_scan(struct scsi_target *starget, int bflags,
- 				 */
- 				sdev_printk(KERN_ERR, sdev,
- 					"Unexpected response"
--				        " from lun %d while scanning, scan"
--				        " aborted\n", lun);
-+					" from lun %d while scanning, scan"
-+					" aborted\n", lun);
- 				break;
- 			}
- 		}
-@@ -1781,8 +1787,7 @@ static struct async_scan_data *scsi_prep_async_scan(struct Scsi_Host *shost)
- 		return NULL;
- 
- 	if (shost->async_scan) {
--		printk("%s called twice for host %d", __func__,
--				shost->host_no);
-+		shost_printk(KERN_INFO, shost, "%s called twice\n", __func__);
- 		dump_stack();
- 		return NULL;
- 	}
-@@ -1835,8 +1840,7 @@ static void scsi_finish_async_scan(struct async_scan_data *data)
- 	mutex_lock(&shost->scan_mutex);
- 
- 	if (!shost->async_scan) {
--		printk("%s called twice for host %d", __func__,
--				shost->host_no);
-+		shost_printk(KERN_INFO, shost, "%s called twice\n", __func__);
- 		dump_stack();
- 		mutex_unlock(&shost->scan_mutex);
+ 	put_disk(sdp->disk);
+ 	kfree(sdp);
+@@ -1545,7 +1561,7 @@ static void sg_remove(struct device *cl_dev, struct class_interface *cl_intf)
+ 	if (!sdp || sdp->detached)
  		return;
+ 
+-	SCSI_LOG_TIMEOUT(3, printk("sg_remove: %s\n", sdp->disk->disk_name));
++	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp, "sg_remove\n"));
+ 
+ 	/* Need a write lock to set sdp->detached. */
+ 	write_lock_irqsave(&sg_index_lock, iflags);
+@@ -1646,8 +1662,9 @@ static int sg_start_req(Sg_request *srp, unsigned char *cmd)
+ 	struct rq_map_data *md, map_data;
+ 	int rw = hp->dxfer_direction == SG_DXFER_TO_DEV ? WRITE : READ;
+ 
+-	SCSI_LOG_TIMEOUT(4, printk(KERN_INFO "sg_start_req: dxfer_len=%d\n",
+-				   dxfer_len));
++	SCSI_LOG_TIMEOUT(4, sg_printk(KERN_INFO, sfp->parentdp,
++				      "sg_start_req: dxfer_len=%d\n",
++				      dxfer_len));
+ 
+ 	rq = blk_get_request(q, rw, GFP_ATOMIC);
+ 	if (!rq)
+@@ -1734,7 +1751,9 @@ static int sg_finish_rem_req(Sg_request * srp)
+ 	Sg_fd *sfp = srp->parentfp;
+ 	Sg_scatter_hold *req_schp = &srp->data;
+ 
+-	SCSI_LOG_TIMEOUT(4, printk("sg_finish_rem_req: res_used=%d\n", (int) srp->res_used));
++	SCSI_LOG_TIMEOUT(4, sg_printk(KERN_INFO, sfp->parentdp,
++				      "sg_finish_rem_req: res_used=%d\n",
++				      (int) srp->res_used));
+ 	if (srp->rq) {
+ 		if (srp->bio)
+ 			ret = blk_rq_unmap_user(srp->bio);
+@@ -1745,7 +1764,7 @@ static int sg_finish_rem_req(Sg_request * srp)
+ 	if (srp->res_used)
+ 		sg_unlink_reserve(sfp, srp);
+ 	else
+-		sg_remove_scat(req_schp);
++		sg_remove_scat(sfp, req_schp);
+ 
+ 	sg_remove_request(sfp, srp);
+ 
+@@ -1779,8 +1798,9 @@ sg_build_indirect(Sg_scatter_hold * schp, Sg_fd * sfp, int buff_size)
+ 		++blk_size;	/* don't know why */
+ 	/* round request up to next highest SG_SECTOR_SZ byte boundary */
+ 	blk_size = ALIGN(blk_size, SG_SECTOR_SZ);
+-	SCSI_LOG_TIMEOUT(4, printk("sg_build_indirect: buff_size=%d, blk_size=%d\n",
+-				   buff_size, blk_size));
++	SCSI_LOG_TIMEOUT(4, sg_printk(KERN_INFO, sfp->parentdp,
++		"sg_build_indirect: buff_size=%d, blk_size=%d\n",
++		buff_size, blk_size));
+ 
+ 	/* N.B. ret_sz carried into this block ... */
+ 	mx_sc_elems = sg_build_sgat(schp, sfp, sg_tablesize);
+@@ -1823,14 +1843,16 @@ retry:
+ 			}
+ 		}
+ 
+-		SCSI_LOG_TIMEOUT(5, printk("sg_build_indirect: k=%d, num=%d, "
+-				 "ret_sz=%d\n", k, num, ret_sz));
++		SCSI_LOG_TIMEOUT(5, sg_printk(KERN_INFO, sfp->parentdp,
++				 "sg_build_indirect: k=%d, num=%d, ret_sz=%d\n",
++				 k, num, ret_sz));
+ 	}		/* end of for loop */
+ 
+ 	schp->page_order = order;
+ 	schp->k_use_sg = k;
+-	SCSI_LOG_TIMEOUT(5, printk("sg_build_indirect: k_use_sg=%d, "
+-			 "rem_sz=%d\n", k, rem_sz));
++	SCSI_LOG_TIMEOUT(5, sg_printk(KERN_INFO, sfp->parentdp,
++			 "sg_build_indirect: k_use_sg=%d, rem_sz=%d\n",
++			 k, rem_sz));
+ 
+ 	schp->bufflen = blk_size;
+ 	if (rem_sz > 0)	/* must have failed */
+@@ -1847,17 +1869,19 @@ out:
+ }
+ 
+ static void
+-sg_remove_scat(Sg_scatter_hold * schp)
++sg_remove_scat(Sg_fd * sfp, Sg_scatter_hold * schp)
+ {
+-	SCSI_LOG_TIMEOUT(4, printk("sg_remove_scat: k_use_sg=%d\n", schp->k_use_sg));
++	SCSI_LOG_TIMEOUT(4, sg_printk(KERN_INFO, sfp->parentdp,
++			 "sg_remove_scat: k_use_sg=%d\n", schp->k_use_sg));
+ 	if (schp->pages && schp->sglist_len > 0) {
+ 		if (!schp->dio_in_use) {
+ 			int k;
+ 
+ 			for (k = 0; k < schp->k_use_sg && schp->pages[k]; k++) {
+-				SCSI_LOG_TIMEOUT(5, printk(
+-				    "sg_remove_scat: k=%d, pg=0x%p\n",
+-				    k, schp->pages[k]));
++				SCSI_LOG_TIMEOUT(5,
++					sg_printk(KERN_INFO, sfp->parentdp,
++					"sg_remove_scat: k=%d, pg=0x%p\n",
++					k, schp->pages[k]));
+ 				__free_pages(schp->pages[k], schp->page_order);
+ 			}
+ 
+@@ -1873,8 +1897,9 @@ sg_read_oxfer(Sg_request * srp, char __user *outp, int num_read_xfer)
+ 	Sg_scatter_hold *schp = &srp->data;
+ 	int k, num;
+ 
+-	SCSI_LOG_TIMEOUT(4, printk("sg_read_oxfer: num_read_xfer=%d\n",
+-				   num_read_xfer));
++	SCSI_LOG_TIMEOUT(4, sg_printk(KERN_INFO, srp->parentfp->parentdp,
++			 "sg_read_oxfer: num_read_xfer=%d\n",
++			 num_read_xfer));
+ 	if ((!outp) || (num_read_xfer <= 0))
+ 		return 0;
+ 
+@@ -1904,14 +1929,15 @@ sg_build_reserve(Sg_fd * sfp, int req_size)
+ {
+ 	Sg_scatter_hold *schp = &sfp->reserve;
+ 
+-	SCSI_LOG_TIMEOUT(4, printk("sg_build_reserve: req_size=%d\n", req_size));
++	SCSI_LOG_TIMEOUT(4, sg_printk(KERN_INFO, sfp->parentdp,
++			 "sg_build_reserve: req_size=%d\n", req_size));
+ 	do {
+ 		if (req_size < PAGE_SIZE)
+ 			req_size = PAGE_SIZE;
+ 		if (0 == sg_build_indirect(schp, sfp, req_size))
+ 			return;
+ 		else
+-			sg_remove_scat(schp);
++			sg_remove_scat(sfp, schp);
+ 		req_size >>= 1;	/* divide by 2 */
+ 	} while (req_size > (PAGE_SIZE / 2));
+ }
+@@ -1924,7 +1950,8 @@ sg_link_reserve(Sg_fd * sfp, Sg_request * srp, int size)
+ 	int k, num, rem;
+ 
+ 	srp->res_used = 1;
+-	SCSI_LOG_TIMEOUT(4, printk("sg_link_reserve: size=%d\n", size));
++	SCSI_LOG_TIMEOUT(4, sg_printk(KERN_INFO, sfp->parentdp,
++			 "sg_link_reserve: size=%d\n", size));
+ 	rem = size;
+ 
+ 	num = 1 << (PAGE_SHIFT + rsv_schp->page_order);
+@@ -1942,7 +1969,8 @@ sg_link_reserve(Sg_fd * sfp, Sg_request * srp, int size)
+ 	}
+ 
+ 	if (k >= rsv_schp->k_use_sg)
+-		SCSI_LOG_TIMEOUT(1, printk("sg_link_reserve: BAD size\n"));
++		SCSI_LOG_TIMEOUT(1, sg_printk(KERN_INFO, sfp->parentdp,
++				 "sg_link_reserve: BAD size\n"));
+ }
+ 
+ static void
+@@ -1950,8 +1978,9 @@ sg_unlink_reserve(Sg_fd * sfp, Sg_request * srp)
+ {
+ 	Sg_scatter_hold *req_schp = &srp->data;
+ 
+-	SCSI_LOG_TIMEOUT(4, printk("sg_unlink_reserve: req->k_use_sg=%d\n",
+-				   (int) req_schp->k_use_sg));
++	SCSI_LOG_TIMEOUT(4, sg_printk(KERN_INFO, srp->parentfp->parentdp,
++				      "sg_unlink_reserve: req->k_use_sg=%d\n",
++				      (int) req_schp->k_use_sg));
+ 	req_schp->k_use_sg = 0;
+ 	req_schp->bufflen = 0;
+ 	req_schp->pages = NULL;
+@@ -2056,7 +2085,7 @@ sg_remove_request(Sg_fd * sfp, Sg_request * srp)
+ }
+ 
+ static Sg_fd *
+-sg_add_sfp(Sg_device * sdp, int dev)
++sg_add_sfp(Sg_device * sdp)
+ {
+ 	Sg_fd *sfp;
+ 	unsigned long iflags;
+@@ -2081,15 +2110,17 @@ sg_add_sfp(Sg_device * sdp, int dev)
+ 	write_lock_irqsave(&sg_index_lock, iflags);
+ 	list_add_tail(&sfp->sfd_siblings, &sdp->sfds);
+ 	write_unlock_irqrestore(&sg_index_lock, iflags);
+-	SCSI_LOG_TIMEOUT(3, printk("sg_add_sfp: sfp=0x%p\n", sfp));
++	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp,
++				      "sg_add_sfp: sfp=0x%p\n", sfp));
+ 	if (unlikely(sg_big_buff != def_reserved_size))
+ 		sg_big_buff = def_reserved_size;
+ 
+ 	bufflen = min_t(int, sg_big_buff,
+ 			queue_max_sectors(sdp->device->request_queue) * 512);
+ 	sg_build_reserve(sfp, bufflen);
+-	SCSI_LOG_TIMEOUT(3, printk("sg_add_sfp:   bufflen=%d, k_use_sg=%d\n",
+-			   sfp->reserve.bufflen, sfp->reserve.k_use_sg));
++	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp,
++			 "sg_add_sfp:   bufflen=%d, k_use_sg=%d\n",
++			 sfp->reserve.bufflen, sfp->reserve.k_use_sg));
+ 
+ 	kref_get(&sdp->d_ref);
+ 	__module_get(THIS_MODULE);
+@@ -2106,17 +2137,15 @@ static void sg_remove_sfp_usercontext(struct work_struct *work)
+ 		sg_finish_rem_req(sfp->headrp);
+ 
+ 	if (sfp->reserve.bufflen > 0) {
+-		SCSI_LOG_TIMEOUT(6,
+-			printk("sg_remove_sfp:    bufflen=%d, k_use_sg=%d\n",
++		SCSI_LOG_TIMEOUT(6, sg_printk(KERN_INFO, sdp,
++				"sg_remove_sfp:    bufflen=%d, k_use_sg=%d\n",
+ 				(int) sfp->reserve.bufflen,
+ 				(int) sfp->reserve.k_use_sg));
+-		sg_remove_scat(&sfp->reserve);
++		sg_remove_scat(sfp, &sfp->reserve);
+ 	}
+ 
+-	SCSI_LOG_TIMEOUT(6,
+-		printk("sg_remove_sfp: %s, sfp=0x%p\n",
+-			sdp->disk->disk_name,
+-			sfp));
++	SCSI_LOG_TIMEOUT(6, sg_printk(KERN_INFO, sdp,
++			"sg_remove_sfp: sfp=0x%p\n", sfp));
+ 	kfree(sfp);
+ 
+ 	scsi_device_put(sdp->device);
 -- 
 1.7.12.4
 
