@@ -1,34 +1,48 @@
-From: Or Gerlitz <or.gerlitz@gmail.com>
-Subject: Re: [PATCH 0/2] Include protection information in iscsi header
-Date: Tue, 3 Jun 2014 10:56:29 +0300
-Message-ID: <CAJZOPZKAwUASYVC26O-e=Qv7ziMHJ8FwTBqpfo4TSoqddcxiZg@mail.gmail.com>
-References: <1401639581-20111-1-git-send-email-sagig@mellanox.com>
-	<CAL1RGDVpPstaXELznXNyUnr_yU95T2ctm63j_Lg0z1P=PY1dYQ@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 3/6] qla2xxx: Restrict max_lun to 16-bit for older HBAs
+Date: Tue,  3 Jun 2014 10:58:54 +0200
+Message-ID: <1401785937-43581-4-git-send-email-hare@suse.de>
+References: <1401785937-43581-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qg0-f50.google.com ([209.85.192.50]:43349 "EHLO
-	mail-qg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932255AbaFCH4b (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Jun 2014 03:56:31 -0400
-In-Reply-To: <CAL1RGDVpPstaXELznXNyUnr_yU95T2ctm63j_Lg0z1P=PY1dYQ@mail.gmail.com>
+Received: from cantor2.suse.de ([195.135.220.15]:35670 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751032AbaFCI67 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 3 Jun 2014 04:58:59 -0400
+In-Reply-To: <1401785937-43581-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Roland Dreier <roland@purestorage.com>
-Cc: Sagi Grimberg <sagig@mellanox.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Mike Christie <michaelc@cs.wisc.edu>, linux-scsi <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, Oren Duer <oren@mellanox.com>
+To: James Bottomley <jbottomley@parallels.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Ewan Milne <emilne@redhat.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-On Tue, Jun 3, 2014 at 9:16 AM, Roland Dreier <roland@purestorage.com> wrote:
-> On Sun, Jun 1, 2014 at 9:19 AM, Sagi Grimberg <sagig@mellanox.com> wrote:
->> Although these patches involve 3 subsystems with different
->> maintainers (scsi, iser, target) I would prefer seeing these
->> patches included together.
->
-> Why?  Because they break wire compatibility?
->
-> I hate to say it but even if they're merged at the same time, you
-> can't guarantee that targets and initiators will be updated together.
+Older HBAs are only capable of supporting 16-bit LUNs,
+so we need to make sure to adjust max_lun accordingly.
 
-Guys, this all deals with code merged in 3.15-rc1, and (thanks god and
-linus that -rc8 took place this cycle) 3.15 isn't out yet!! -- so we
-just need to act quickly and this (having the fix in 3.15 or if too
-late in 3.15.1) would be OK
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+Acked-by: Chad Dupuis <chad.dupuis@qlogic.com>
+Reviewed-by: Christoph Hellwig <hch@infradead.org>
+Reviewed-by: Ewan Milne <emilne@redhat.com>
+---
+ drivers/scsi/qla2xxx/qla_os.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 19e99cc..264d97e 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -2656,7 +2656,12 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	else
+ 		host->max_cmd_len = MAX_CMDSZ;
+ 	host->max_channel = MAX_BUSES - 1;
+-	host->max_lun = ql2xmaxlun;
++	/* Older HBAs support only 16-bit LUNs */
++	if (!IS_QLAFX00(ha) && !IS_FWI2_CAPABLE(ha) &&
++	    ql2xmaxlun > 0xffff)
++		host->max_lun = 0xffff;
++	else
++		host->max_lun = ql2xmaxlun;
+ 	host->transportt = qla2xxx_transport_template;
+ 	sht->vendor_id = (SCSI_NL_VID_TYPE_PCI | PCI_VENDOR_ID_QLOGIC);
+ 
+-- 
+1.7.12.4
+
