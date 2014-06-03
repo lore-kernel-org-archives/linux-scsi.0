@@ -1,284 +1,120 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: [PATCH v5] sg: relax 16 byte cdb restriction
-Date: Tue, 03 Jun 2014 13:18:18 -0400
-Message-ID: <538E035A.10703@interlog.com>
-Reply-To: dgilbert@interlog.com
+From: Eddie Wai <eddie.wai-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
+Subject: Re: [PATCH] bnx2fc: Improve stats update mechanism
+Date: Tue, 3 Jun 2014 10:15:43 -0700
+Message-ID: <1401815743.3956.39.camel@lbirv-waie-lx2.broadcom.com>
+References: <1401462115-8072-1-git-send-email-nhorman@tuxdriver.com>
+ <1401487183.3956.28.camel@lbirv-waie-lx2.broadcom.com>
+ <20140531024754.GB27184@localhost.localdomain>
+ <DBC33EB2-5AB1-4DFC-B7DE-EAAC47C0E978@broadcom.com>
+ <20140531123757.GA27590@localhost.localdomain>
+ <20140603145417.GC20038@hmsreliant.think-freely.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------020006060804050406010404"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:57662 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932560AbaFCRS1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 3 Jun 2014 13:18:27 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+In-Reply-To: <20140603145417.GC20038-B26myB8xz7F8NnZeBjwnZQMhkBWG/bsMQH7oEaQurus@public.gmane.org>
+List-Unsubscribe: <http://lists.open-fcoe.org/mailman/options/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.open-fcoe.org/pipermail/fcoe-devel>
+List-Post: <mailto:fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+List-Help: <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.open-fcoe.org/mailman/listinfo/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
+Errors-To: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+Sender: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+To: Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
+Cc: "fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org" <fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI development list <linux-scsi@vger.kernel.org>, Christian Franke <Christian.Franke@t-online.de>, James Bottomley <james.bottomley@hansenpartnership.com>
 
-This is a multi-part message in MIME format.
---------------020006060804050406010404
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-
-v4 of this patch was sent 20131201.
-
-ChangeLog:
-         - remove the 16 byte CDB (SCSI command) length limit
-           from the sg driver by handling longer CDBs the same
-           way as the bsg driver. Remove comment from sg.h
-           public interface about the cmd_len field being
-           limited to 16 bytes.
-         - remove some dead code caused by this change
-         - cleanup comment block at the top of sg.h, fix urls
-
-Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
-
---------------020006060804050406010404
-Content-Type: text/x-patch;
- name="sg_cdb_dg5.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="sg_cdb_dg5.patch"
-
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index df5e961..177f755 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -7,9 +7,7 @@
-  * Original driver (sg.c):
-  *        Copyright (C) 1992 Lawrence Foard
-  * Version 2 and 3 extensions to driver:
-- *        Copyright (C) 1998 - 2005 Douglas Gilbert
-- *
-- *  Modified  19-JAN-1998  Richard Gooch <rgooch@atnf.csiro.au>  Devfs support
-+ *        Copyright (C) 1998 - 2014 Douglas Gilbert
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License as published by
-@@ -18,11 +16,11 @@
-  *
-  */
- 
--static int sg_version_num = 30534;	/* 2 digits for each component */
--#define SG_VERSION_STR "3.5.34"
-+static int sg_version_num = 30536;	/* 2 digits for each component */
-+#define SG_VERSION_STR "3.5.36"
- 
- /*
-- *  D. P. Gilbert (dgilbert@interlog.com, dougg@triode.net.au), notes:
-+ *  D. P. Gilbert (dgilbert@interlog.com), notes:
-  *      - scsi logging is available via SCSI_LOG_TIMEOUT macros. First
-  *        the kernel/module needs to be built with CONFIG_SCSI_LOGGING
-  *        (otherwise the macros compile to empty statements).
-@@ -64,7 +62,7 @@ static int sg_version_num = 30534;	/* 2 digits for each component */
- 
- #ifdef CONFIG_SCSI_PROC_FS
- #include <linux/proc_fs.h>
--static char *sg_version_date = "20061027";
-+static char *sg_version_date = "20140603";
- 
- static int sg_proc_init(void);
- static void sg_proc_cleanup(void);
-@@ -74,6 +72,11 @@ static void sg_proc_cleanup(void);
- 
- #define SG_MAX_DEVS 32768
- 
-+/* SG_MAX_CDB_SIZE should be 260 (spc4r37 section 3.1.30) however the type
-+ * of sg_io_hdr::cmd_len can only represent 255
-+ */
-+#define SG_MAX_CDB_SIZE 255
-+
- /*
-  * Suppose you want to calculate the formula muldiv(x,m,d)=int(x * m / d)
-  * Then when using 32 bit integers x * m may overflow during the calculation.
-@@ -161,7 +164,7 @@ typedef struct sg_fd {		/* holds the state of a file descriptor */
- 	char low_dma;		/* as in parent but possibly overridden to 1 */
- 	char force_packid;	/* 1 -> pack_id input to read(), 0 -> ignored */
- 	char cmd_q;		/* 1 -> allow command queuing, 0 -> don't */
--	char next_cmd_len;	/* 0 -> automatic (def), >0 -> use on next write() */
-+	unsigned char next_cmd_len; /* 0: automatic, >0: use on next write() */
- 	char keep_orphan;	/* 0 -> drop orphan (def), 1 -> keep for read() */
- 	char mmap_called;	/* 0 -> mmap() never called on this fd */
- 	struct kref f_ref;
-@@ -566,7 +569,7 @@ sg_write(struct file *filp, const char __user *buf, size_t count, loff_t * ppos)
- 	Sg_request *srp;
- 	struct sg_header old_hdr;
- 	sg_io_hdr_t *hp;
--	unsigned char cmnd[MAX_COMMAND_SIZE];
-+	unsigned char cmnd[SG_MAX_CDB_SIZE];
- 
- 	if ((!(sfp = (Sg_fd *) filp->private_data)) || (!(sdp = sfp->parentdp)))
- 		return -ENXIO;
-@@ -598,12 +601,6 @@ sg_write(struct file *filp, const char __user *buf, size_t count, loff_t * ppos)
- 	buf += SZ_SG_HEADER;
- 	__get_user(opcode, buf);
- 	if (sfp->next_cmd_len > 0) {
--		if (sfp->next_cmd_len > MAX_COMMAND_SIZE) {
--			SCSI_LOG_TIMEOUT(1, printk("sg_write: command length too long\n"));
--			sfp->next_cmd_len = 0;
--			sg_remove_request(sfp, srp);
--			return -EIO;
--		}
- 		cmd_size = sfp->next_cmd_len;
- 		sfp->next_cmd_len = 0;	/* reset so only this write() effected */
- 	} else {
-@@ -675,7 +672,7 @@ sg_new_write(Sg_fd *sfp, struct file *file, const char __user *buf,
- 	int k;
- 	Sg_request *srp;
- 	sg_io_hdr_t *hp;
--	unsigned char cmnd[MAX_COMMAND_SIZE];
-+	unsigned char cmnd[SG_MAX_CDB_SIZE];
- 	int timeout;
- 	unsigned long ul_timeout;
- 
-@@ -1645,14 +1642,24 @@ static int sg_start_req(Sg_request *srp, unsigned char *cmd)
- 	struct request_queue *q = sfp->parentdp->device->request_queue;
- 	struct rq_map_data *md, map_data;
- 	int rw = hp->dxfer_direction == SG_DXFER_TO_DEV ? WRITE : READ;
-+	unsigned char *long_cmdp = NULL;
- 
- 	SCSI_LOG_TIMEOUT(4, printk(KERN_INFO "sg_start_req: dxfer_len=%d\n",
- 				   dxfer_len));
-+	if (hp->cmd_len > BLK_MAX_CDB) {
-+		long_cmdp = kzalloc(hp->cmd_len, GFP_KERNEL);
-+		if (!long_cmdp)
-+			return -ENOMEM;
-+	}
- 
- 	rq = blk_get_request(q, rw, GFP_ATOMIC);
--	if (!rq)
-+	if (!rq) {
-+		kfree(long_cmdp);
- 		return -ENOMEM;
-+	}
- 
-+	if (hp->cmd_len > BLK_MAX_CDB)
-+		rq->cmd = long_cmdp;
- 	memcpy(rq->cmd, cmd, hp->cmd_len);
- 
- 	rq->cmd_len = hp->cmd_len;
-@@ -1739,6 +1746,8 @@ static int sg_finish_rem_req(Sg_request * srp)
- 		if (srp->bio)
- 			ret = blk_rq_unmap_user(srp->bio);
- 
-+		if (srp->rq->cmd != srp->rq->__cmd)
-+			kfree(srp->rq->cmd);
- 		blk_put_request(srp->rq);
- 	}
- 
-diff --git a/include/scsi/sg.h b/include/scsi/sg.h
-index a9f3c6f..d8c0c43 100644
---- a/include/scsi/sg.h
-+++ b/include/scsi/sg.h
-@@ -4,77 +4,34 @@
- #include <linux/compiler.h>
- 
- /*
--   History:
--    Started: Aug 9 by Lawrence Foard (entropy@world.std.com), to allow user
--     process control of SCSI devices.
--    Development Sponsored by Killy Corp. NY NY
--Original driver (sg.h):
--*       Copyright (C) 1992 Lawrence Foard
--Version 2 and 3 extensions to driver:
--*       Copyright (C) 1998 - 2006 Douglas Gilbert
--
--    Version: 3.5.34 (20060920)
--    This version is for 2.6 series kernels.
--
--    For a full changelog see http://www.torque.net/sg
--
--Map of SG verions to the Linux kernels in which they appear:
--       ----------        ----------------------------------
--       original          all kernels < 2.2.6
--       2.1.40            2.2.20
--       3.0.x             optional version 3 sg driver for 2.2 series
--       3.1.17++          2.4.0++
--       3.5.30++          2.6.0++
--
--Major new features in SG 3.x driver (cf SG 2.x drivers)
--	- SG_IO ioctl() combines function if write() and read()
--	- new interface (sg_io_hdr_t) but still supports old interface
--	- scatter/gather in user space, direct IO, and mmap supported
--
-- The normal action of this driver is to use the adapter (HBA) driver to DMA
-- data into kernel buffers and then use the CPU to copy the data into the 
-- user space (vice versa for writes). That is called "indirect" IO due to 
-- the double handling of data. There are two methods offered to remove the
-- redundant copy: 1) direct IO and 2) using the mmap() system call to map
-- the reserve buffer (this driver has one reserve buffer per fd) into the
-- user space. Both have their advantages.
-- In terms of absolute speed mmap() is faster. If speed is not a concern, 
-- indirect IO should be fine. Read the documentation for more information.
--
-- ** N.B. To use direct IO 'echo 1 > /proc/scsi/sg/allow_dio' or
--         'echo 1 > /sys/module/sg/parameters/allow_dio' is needed.
--         That attribute is 0 by default. **
-- 
-- Historical note: this SCSI pass-through driver has been known as "sg" for 
-- a decade. In broader kernel discussions "sg" is used to refer to scatter
-- gather techniques. The context should clarify which "sg" is referred to.
--
-- Documentation
-- =============
-- A web site for the SG device driver can be found at:
--	http://www.torque.net/sg  [alternatively check the MAINTAINERS file]
-- The documentation for the sg version 3 driver can be found at:
-- 	http://www.torque.net/sg/p/sg_v3_ho.html
-- This is a rendering from DocBook source [change the extension to "sgml"
-- or "xml"]. There are renderings in "ps", "pdf", "rtf" and "txt" (soon).
-- The SG_IO ioctl is now found in other parts kernel (e.g. the block layer).
-- For more information see http://www.torque.net/sg/sg_io.html
--
-- The older, version 2 documents discuss the original sg interface in detail:
--	http://www.torque.net/sg/p/scsi-generic.txt
--	http://www.torque.net/sg/p/scsi-generic_long.txt
-- Also available: <kernel_source>/Documentation/scsi/scsi-generic.txt
--
-- Utility and test programs are available at the sg web site. They are 
-- packaged as sg3_utils (for the lk 2.4 and 2.6 series) and sg_utils
-- (for the lk 2.2 series).
--*/
-+ * History:
-+ *  Started: Aug 9 by Lawrence Foard (entropy@world.std.com), to allow user
-+ *   process control of SCSI devices.
-+ *  Development Sponsored by Killy Corp. NY NY
-+ *
-+ * Original driver (sg.h):
-+ *       Copyright (C) 1992 Lawrence Foard
-+ * Version 2 and 3 extensions to driver:
-+ *	Copyright (C) 1998 - 2014 Douglas Gilbert
-+ *
-+ *  Version: 3.5.36 (20140603)
-+ *  This version is for 2.6 and 3 series kernels.
-+ *
-+ * Documentation
-+ * =============
-+ * A web site for the SG device driver can be found at:
-+ *	http://sg.danny.cz/sg  [alternatively check the MAINTAINERS file]
-+ * The documentation for the sg version 3 driver can be found at:
-+ *	http://sg.danny.cz/sg/p/sg_v3_ho.html
-+ * Also see: <kernel_source>/Documentation/scsi/scsi-generic.txt
-+ *
-+ * For utility and test programs see: http://sg.danny.cz/sg/sg3_utils.html
-+ */
- 
- #ifdef __KERNEL__
- extern int sg_big_buff; /* for sysctl */
- #endif
- 
--/* New interface introduced in the 3.x SG drivers follows */
- 
- typedef struct sg_iovec /* same structure as used by readv() Linux system */
- {                       /* call. It defines one scatter-gather element. */
-@@ -87,7 +44,7 @@ typedef struct sg_io_hdr
- {
-     int interface_id;           /* [i] 'S' for SCSI generic (required) */
-     int dxfer_direction;        /* [i] data transfer direction  */
--    unsigned char cmd_len;      /* [i] SCSI command length ( <= 16 bytes) */
-+    unsigned char cmd_len;      /* [i] SCSI command length */
-     unsigned char mx_sb_len;    /* [i] max length to write to sbp */
-     unsigned short iovec_count; /* [i] 0 implies no scatter gather */
-     unsigned int dxfer_len;     /* [i] byte count of data transfer */
-
---------------020006060804050406010404--
+On Tue, 2014-06-03 at 10:54 -0400, Neil Horman wrote:
+> On Sat, May 31, 2014 at 08:37:57AM -0400, Neil Horman wrote:
+> > On Sat, May 31, 2014 at 05:13:11AM +0000, Eddie Wai wrote:
+> > > 
+> > > 
+> > > On May 30, 2014, at 7:48 PM, "Neil Horman" <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org> wrote:
+> > > 
+> > > > On Fri, May 30, 2014 at 02:59:43PM -0700, Eddie Wai wrote:
+> > > >> Thanks for fixing this.  The patch generally looks good, but I do have a
+> > > >> few comments.
+> > > >> 
+> > > >> On Fri, 2014-05-30 at 11:01 -0400, Neil Horman wrote:
+> > > >>> Recently had this warning reported:
+> > > >>> 
+> > > >>> [  290.489047] Call Trace:
+> > > >>> [  290.489053]  [<ffffffff8169efec>] dump_stack+0x19/0x1b
+> > > >>> [  290.489055]  [<ffffffff810ac7a9>] __might_sleep+0x179/0x230
+> > > >>> [  290.489057]  [<ffffffff816a4ad5>] mutex_lock_nested+0x55/0x520
+> > > >>> [  290.489061]  [<ffffffffa01b9905>] ? bnx2fc_l2_rcv_thread+0xc5/0x4c0 [bnx2fc]
+> > > >>> [  290.489065]  [<ffffffffa0174c1a>] fc_vport_id_lookup+0x3a/0xa0 [libfc]
+> > > >>> [  290.489068]  [<ffffffffa01b9a6c>] bnx2fc_l2_rcv_thread+0x22c/0x4c0 [bnx2fc]
+> > > >>> [  290.489070]  [<ffffffffa01b9840>] ? bnx2fc_vport_destroy+0x110/0x110 [bnx2fc]
+> > > >>> [  290.489073]  [<ffffffff8109e0cd>] kthread+0xed/0x100
+> > > >>> [  290.489075]  [<ffffffff8109dfe0>] ? insert_kthread_work+0x80/0x80
+> > > >>> [  290.489077]  [<ffffffff816b2fec>] ret_from_fork+0x7c/0xb0
+> > > >>> [  290.489078]  [<ffffffff8109dfe0>] ? insert_kthread_work+0x80/0x80
+> > > >>> 
+> > > >>> Its due to the fact that we call a potentially sleeping function from the bnx2fc
+> > > >>> rcv path with preemption disabled (via the get_cpu call embedded in the per-cpu
+> > > >>> variable stats lookup in bnx2fc_l2_rcv_thread.
+> > > >>> 
+> > > >>> Easy enough fix, we can just move the stats collection later in the function
+> > > >>> where we are sure we won't preempt or sleep.  This also allows us to not have to
+> > > >>> enable pre-emption when doing a per-cpu lookup, since we're certain not to get
+> > > >> You mean this allows us to not have to 'disable' pre-emption, right? 
+> > > >> 
+> > > >> Can you elaborate on how we can be sure that we won't get preempted
+> > > >> immediately after retrieving the CPU variable?  I would think it'll be
+> > > >> okay to call get_cpu at this stage as there won't be any sleepable mutex
+> > > >> lock calls before the put_cpu.
+> > > > We can't be sure, but I would assert it doesn't really matter at this point.
+> > > > The area in which we update stats is so small that, even if we do hit the
+> > > > unlikely chance that we get pre-empted, and then rescheduled on a different cpu,
+> > > > it won't matter.  We could add the get_cpu/put_cpu back if you're really intent
+> > > > on it, but I'm not sure its worthwhile given that this is a hot path.
+> > > I agree with your assessment.  But code wise just so bnx2fc is consistent to the software FCoE counterpart, I would advice to use the same get_cpu to retrieve that stats CPU variable.  Thanks.
+> > 
+> > Actually I woke up this morning meaning to send a follow on note addressing
+> > that.  The Soft FCoE counterpart to this function acutally works the way bnx2fc
+> > reception does after my patch here.  Thats because the stats are updated with
+> > the cpu held, but the frame is actually received by the fc layer immediately
+> > after cpu_put is called.  The implication is that the task can get preempted
+> > right after we update the stats and re-enable preemption, meaning that we may
+> > actually receive the frame on a different cpu than the cpu we updated the stats
+> > on.  I was planning on sending a patch to switch get_cpu/put_cpu in the soft
+> > FCoE code to just use smp_processor_id(), since it doesn't help anything.
+> > 
+> > bnx2fc is actually in a slightly better position than soft FCoE.  soft FCoE
+> > creates a thread for each cpu, but doesn't explicitly assign single cpu affinity
+> > for each task, meaning per-cpu stats are actually relevant.  For bnx2fc, you
+> > only create a single task at module init, meaning there is no parallel reception
+> > of frames.  As such the per-cpu tasks are really more of an aggregate measure
+> > (since the stat updates are all serialized anyway by the single thread accross
+> > cpus).
+That's correct.  bnx2fc uses only a single thread for this L2 recv path
+because fast path traffic normally goes to the offload path.
+> > 
+> > The bottom line is that you can't hold a cpu while both doing the work of frame
+> > reception and updating statistics, unless you want to avoid sleeping functions
+> > in the entire receive path, and once you separate the two by only holding the
+> > cpu during stats update, you run the risk of changing the cpu after you've
+> > processed the frame, but before you dereference the per_cpu pointer.
+> > 
+> > I can still re-add the get_cpu/put_cpu if you want, but I really don't see the
+> > purpose of the extra overhead given the above, and my intention is to remove it
+> > from the soft FCoE code as well.
+Nah, just as long as we are consistent, that's good enough for me!
+Thanks.
+> > 
+> > Regards
+> > Neil
+> > 
+> Can I get further comment or an ACK on this so the fcoe tree can pull it in?
+Acked-by:  Eddie Wai <eddie.wai-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
+> Thanks!
+> Neil
+> 
+> > _______________________________________________
+> > fcoe-devel mailing list
+> > fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org
+> > http://lists.open-fcoe.org/mailman/listinfo/fcoe-devel
+> > 
