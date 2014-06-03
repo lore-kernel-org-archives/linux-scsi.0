@@ -1,83 +1,74 @@
-From: Vaughan Cao <vaughan.cao@oracle.com>
-Subject: [PATCH v2] notify block layer when using temporary change to cache_type
-Date: Tue,  3 Jun 2014 17:37:30 +0800
-Message-ID: <1401788250-8457-1-git-send-email-vaughan.cao@oracle.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 3/6] scsi: Implement ch_printk()
+Date: Tue,  3 Jun 2014 13:22:54 +0200
+Message-ID: <1401794577-102277-4-git-send-email-hare@suse.de>
+References: <1401794577-102277-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:41695 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751201AbaFCJhf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Jun 2014 05:37:35 -0400
+Received: from cantor2.suse.de ([195.135.220.15]:38545 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752753AbaFCLXA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 3 Jun 2014 07:23:00 -0400
+In-Reply-To: <1401794577-102277-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: JBottomley@parallels.com
-Cc: hch@infradead.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, vaughan.cao@oracle.com
+To: James Bottomley <jbottomley@parallels.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-This is a fix for commit:
-  39c60a0948cc06139e2fbfe084f83cb7e7deae3b sd: fix array cache flushing bug causing performance problems
-We must notify the block layer via q->flush_flags after temporary change the cache_type to write through.
-If not, SYNCHRONIZE CACHE command will still be generated.
-This patch factors out a helper that can be called from sd_revalidate_disk and cache_type_store.
+Update the ch driver to use dev_printk() variants instead of
+plain printk(); this will prefix logging messages with the
+appropriate device.
 
-Signed-off-by: Vaughan Cao <vaughan.cao@oracle.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/sd.c | 23 +++++++++++++++--------
- 1 file changed, 15 insertions(+), 8 deletions(-)
+ drivers/scsi/ch.c | 14 +++++++++-----
+ 1 file changed, 9 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index efcbcd1..e4774aa 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -132,6 +132,19 @@ static const char *sd_cache_types[] = {
- 	"write back, no read (daft)"
+diff --git a/drivers/scsi/ch.c b/drivers/scsi/ch.c
+index 2a32374..ba1c3bf 100644
+--- a/drivers/scsi/ch.c
++++ b/drivers/scsi/ch.c
+@@ -84,15 +84,19 @@ static const char * vendor_labels[CH_TYPES-4] = {
  };
+ // module_param_string_array(vendor_labels, NULL, 0444);
  
-+static void sd_set_flush_flag(struct scsi_disk *sdkp)
-+{
-+	unsigned flush = 0;
++#define ch_printk(prefix, ch, fmt, a...) \
++	sdev_printk(prefix, (ch)->device, "[%s] " fmt, \
++		    (ch)->name, ##a)
 +
-+	if (sdkp->WCE) {
-+		flush |= REQ_FLUSH;
-+		if (sdkp->DPOFUA)
-+			flush |= REQ_FUA;
-+	}
-+
-+	blk_queue_flush(sdkp->disk->queue, flush);
-+}
-+
- static ssize_t
- cache_type_store(struct device *dev, struct device_attribute *attr,
- 		 const char *buf, size_t count)
-@@ -175,6 +188,7 @@ cache_type_store(struct device *dev, struct device_attribute *attr,
- 	if (sdkp->cache_override) {
- 		sdkp->WCE = wce;
- 		sdkp->RCD = rcd;
-+		sd_set_flush_flag(sdkp);
- 		return count;
+ #define DPRINTK(fmt, arg...)						\
+ do {									\
+ 	if (debug)							\
+-		printk(KERN_DEBUG "%s: " fmt, ch->name, ##arg);		\
++		ch_printk(KERN_DEBUG, ch, fmt, ##arg);			\
+ } while (0)
+ #define VPRINTK(level, fmt, arg...)					\
+ do {									\
+ 	if (verbose)							\
+-		printk(level "%s: " fmt, ch->name, ##arg);		\
++		ch_printk(level, ch, fmt, ##arg);			\
+ } while (0)
+ 
+ /* ------------------------------------------------------------------- */
+@@ -196,7 +200,7 @@ ch_do_scsi(scsi_changer *ch, unsigned char *cmd,
+ 		__scsi_print_command(cmd);
  	}
  
-@@ -2712,7 +2726,6 @@ static int sd_revalidate_disk(struct gendisk *disk)
- 	struct scsi_disk *sdkp = scsi_disk(disk);
- 	struct scsi_device *sdp = sdkp->device;
- 	unsigned char *buffer;
--	unsigned flush = 0;
+-        result = scsi_execute_req(ch->device, cmd, direction, buffer,
++	result = scsi_execute_req(ch->device, cmd, direction, buffer,
+ 				  buflength, &sshdr, timeout * HZ,
+ 				  MAX_RETRIES, NULL);
  
- 	SCSI_LOG_HLQUEUE(3, sd_printk(KERN_INFO, sdkp,
- 				      "sd_revalidate_disk\n"));
-@@ -2758,13 +2771,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
- 	 * We now have all cache related info, determine how we deal
- 	 * with flush requests.
- 	 */
--	if (sdkp->WCE) {
--		flush |= REQ_FLUSH;
--		if (sdkp->DPOFUA)
--			flush |= REQ_FUA;
--	}
--
--	blk_queue_flush(sdkp->disk->queue, flush);
-+	sd_set_flush_flag(sdkp);
- 
- 	set_capacity(disk, sdkp->capacity);
- 	sd_config_write_same(sdkp);
+@@ -924,8 +928,8 @@ static int ch_probe(struct device *dev)
+ 				  MKDEV(SCSI_CHANGER_MAJOR, ch->minor), ch,
+ 				  "s%s", ch->name);
+ 	if (IS_ERR(class_dev)) {
+-		printk(KERN_WARNING "ch%d: device_create failed\n",
+-		       ch->minor);
++		sdev_printk(KERN_WARNING, sd, "ch%d: device_create failed\n",
++			    ch->minor);
+ 		ret = PTR_ERR(class_dev);
+ 		goto remove_idr;
+ 	}
 -- 
-1.9.0
+1.7.12.4
 
