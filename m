@@ -1,53 +1,41 @@
 From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: [PATCH 3/6] virtio-scsi: avoid cancelling uninitialized work items
-Date: Tue,  3 Jun 2014 21:33:15 +0200
-Message-ID: <1401823998-29167-4-git-send-email-pbonzini@redhat.com>
-References: <1401823998-29167-1-git-send-email-pbonzini@redhat.com>
+Subject: [PATCH resend 0/6] virtio-scsi patches for 3.16 + a midlayer one-liner
+Date: Tue,  3 Jun 2014 21:33:12 +0200
+Message-ID: <1401823998-29167-1-git-send-email-pbonzini@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1401823998-29167-1-git-send-email-pbonzini@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: hch@lst.de, JBottomley@Parallels.com, venkateshs@google.com, stable@vger.kernel.org
+Cc: hch@lst.de, JBottomley@Parallels.com, venkateshs@google.com
 List-Id: linux-scsi@vger.kernel.org
 
-Calling the workqueue interface on uninitialized work items isn't a
-good idea even if they're zeroed. It's not failing catastrophically only
-through happy accidents, and a debug kernel rightfully complains.
+Sorry for the delay, mostly caused by the discussion and testing of
+patch 5.  That's the most important of the bunch, and debugging the
+problem also led to the discovery of a midlayer bug fixed by patch 4.
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
----
- drivers/scsi/virtio_scsi.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+I hope these can make their way into 3.16.  Thanks!
 
-diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-index f0b4cdbfceb0..d66c4ee2c774 100644
---- a/drivers/scsi/virtio_scsi.c
-+++ b/drivers/scsi/virtio_scsi.c
-@@ -253,6 +253,8 @@ static void virtscsi_ctrl_done(struct virtqueue *vq)
- 	virtscsi_vq_done(vscsi, &vscsi->ctrl_vq, virtscsi_complete_free);
- };
- 
-+static void virtscsi_handle_event(struct work_struct *work);
-+
- static int virtscsi_kick_event(struct virtio_scsi *vscsi,
- 			       struct virtio_scsi_event_node *event_node)
- {
-@@ -260,6 +262,7 @@ static int virtscsi_kick_event(struct virtio_scsi *vscsi,
- 	struct scatterlist sg;
- 	unsigned long flags;
- 
-+	INIT_WORK(&event_node->work, virtscsi_handle_event);
- 	sg_init_one(&sg, &event_node->event, sizeof(struct virtio_scsi_event));
- 
- 	spin_lock_irqsave(&vscsi->event_vq.vq_lock, flags);
-@@ -377,7 +380,6 @@ static void virtscsi_complete_event(struct virtio_scsi *vscsi, void *buf)
- {
- 	struct virtio_scsi_event_node *event_node = buf;
- 
--	INIT_WORK(&event_node->work, virtscsi_handle_event);
- 	schedule_work(&event_node->work);
- }
- 
+resend: forgot linux-scsi. :(
+
+Paolo
+
+
+Ming Lei (2):
+  virtio_scsi: remove ACCESS_ONCE() and smp_read_barrier_depends()
+  virtio-scsi: replace target spinlock with seqcount
+
+Paolo Bonzini (2):
+  virtio-scsi: avoid cancelling uninitialized work items
+  virtio-scsi: fix various bad behavior on aborted requests
+
+Ulrich Obergfell (1):
+  scsi_error: fix invalid setting of host byte
+
+Venkatesh Srinivas (1):
+  virtio-scsi: Implement change_queue_depth for virtscsi targets
+
+ drivers/scsi/scsi_error.c  |   2 +-
+ drivers/scsi/virtio_scsi.c | 148 +++++++++++++++++++++++++++------------------
+ 2 files changed, 91 insertions(+), 59 deletions(-)
+
 -- 
 1.8.3.1
