@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 3/6] scsi: Implement ch_printk()
-Date: Tue,  3 Jun 2014 13:22:54 +0200
-Message-ID: <1401794577-102277-4-git-send-email-hare@suse.de>
+Subject: [PATCH 5/6] scsi: use dev_printk() variants for ioctl
+Date: Tue,  3 Jun 2014 13:22:56 +0200
+Message-ID: <1401794577-102277-6-git-send-email-hare@suse.de>
 References: <1401794577-102277-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:38545 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:38542 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752753AbaFCLXA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1752492AbaFCLXA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Tue, 3 Jun 2014 07:23:00 -0400
 In-Reply-To: <1401794577-102277-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,61 +14,57 @@ List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-Update the ch driver to use dev_printk() variants instead of
-plain printk(); this will prefix logging messages with the
-appropriate device.
-
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/ch.c | 14 +++++++++-----
- 1 file changed, 9 insertions(+), 5 deletions(-)
+ drivers/scsi/scsi_ioctl.c | 17 +++++++++++------
+ 1 file changed, 11 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/ch.c b/drivers/scsi/ch.c
-index 2a32374..ba1c3bf 100644
---- a/drivers/scsi/ch.c
-+++ b/drivers/scsi/ch.c
-@@ -84,15 +84,19 @@ static const char * vendor_labels[CH_TYPES-4] = {
- };
- // module_param_string_array(vendor_labels, NULL, 0444);
+diff --git a/drivers/scsi/scsi_ioctl.c b/drivers/scsi/scsi_ioctl.c
+index d9564fb..1aaaf43 100644
+--- a/drivers/scsi/scsi_ioctl.c
++++ b/drivers/scsi/scsi_ioctl.c
+@@ -91,12 +91,14 @@ static int ioctl_internal_command(struct scsi_device *sdev, char *cmd,
+ 	int result;
+ 	struct scsi_sense_hdr sshdr;
  
-+#define ch_printk(prefix, ch, fmt, a...) \
-+	sdev_printk(prefix, (ch)->device, "[%s] " fmt, \
-+		    (ch)->name, ##a)
-+
- #define DPRINTK(fmt, arg...)						\
- do {									\
- 	if (debug)							\
--		printk(KERN_DEBUG "%s: " fmt, ch->name, ##arg);		\
-+		ch_printk(KERN_DEBUG, ch, fmt, ##arg);			\
- } while (0)
- #define VPRINTK(level, fmt, arg...)					\
- do {									\
- 	if (verbose)							\
--		printk(level "%s: " fmt, ch->name, ##arg);		\
-+		ch_printk(level, ch, fmt, ##arg);			\
- } while (0)
+-	SCSI_LOG_IOCTL(1, printk("Trying ioctl with scsi command %d\n", *cmd));
++	SCSI_LOG_IOCTL(1, sdev_printk(KERN_INFO, sdev,
++				      "Trying ioctl with scsi command %d\n", *cmd));
  
- /* ------------------------------------------------------------------- */
-@@ -196,7 +200,7 @@ ch_do_scsi(scsi_changer *ch, unsigned char *cmd,
- 		__scsi_print_command(cmd);
+ 	result = scsi_execute_req(sdev, cmd, DMA_NONE, NULL, 0,
+ 				  &sshdr, timeout, retries, NULL);
+ 
+-	SCSI_LOG_IOCTL(2, printk("Ioctl returned  0x%x\n", result));
++	SCSI_LOG_IOCTL(2, sdev_printk(KERN_INFO, sdev,
++				      "Ioctl returned  0x%x\n", result));
+ 
+ 	if ((driver_byte(result) & DRIVER_SENSE) &&
+ 	    (scsi_sense_valid(&sshdr))) {
+@@ -105,9 +107,11 @@ static int ioctl_internal_command(struct scsi_device *sdev, char *cmd,
+ 			if (cmd[0] == ALLOW_MEDIUM_REMOVAL)
+ 				sdev->lockable = 0;
+ 			else
+-				printk(KERN_INFO "ioctl_internal_command: "
+-				       "ILLEGAL REQUEST asc=0x%x ascq=0x%x\n",
+-				       sshdr.asc, sshdr.ascq);
++				sdev_printk(KERN_INFO, sdev,
++					    "ioctl_internal_command: "
++					    "ILLEGAL REQUEST "
++					    "asc=0x%x ascq=0x%x\n",
++					    sshdr.asc, sshdr.ascq);
+ 			break;
+ 		case NOT_READY:	/* This happens if there is no disc in drive */
+ 			if (sdev->removable)
+@@ -127,7 +131,8 @@ static int ioctl_internal_command(struct scsi_device *sdev, char *cmd,
+ 		}
  	}
  
--        result = scsi_execute_req(ch->device, cmd, direction, buffer,
-+	result = scsi_execute_req(ch->device, cmd, direction, buffer,
- 				  buflength, &sshdr, timeout * HZ,
- 				  MAX_RETRIES, NULL);
+-	SCSI_LOG_IOCTL(2, printk("IOCTL Releasing command\n"));
++	SCSI_LOG_IOCTL(2, sdev_printk(KERN_INFO, sdev,
++				      "IOCTL Releasing command\n"));
+ 	return result;
+ }
  
-@@ -924,8 +928,8 @@ static int ch_probe(struct device *dev)
- 				  MKDEV(SCSI_CHANGER_MAJOR, ch->minor), ch,
- 				  "s%s", ch->name);
- 	if (IS_ERR(class_dev)) {
--		printk(KERN_WARNING "ch%d: device_create failed\n",
--		       ch->minor);
-+		sdev_printk(KERN_WARNING, sd, "ch%d: device_create failed\n",
-+			    ch->minor);
- 		ret = PTR_ERR(class_dev);
- 		goto remove_idr;
- 	}
 -- 
 1.7.12.4
 
