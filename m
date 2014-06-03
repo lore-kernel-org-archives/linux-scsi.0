@@ -1,38 +1,73 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: Re: [PATCH] sd: Limit transfer length
-Date: Wed, 4 Jun 2014 00:10:27 +0900
-Message-ID: <CAC5umyivST2BG7exCH+iCSyCJV-oKz+pW_=ujteCDW1vOTqirQ@mail.gmail.com>
-References: <yq17g4z86te.fsf@sermon.lab.mkp.net>
+From: Daniel Walter <dwalter@google.com>
+Subject: [PATCH v2 09/11] [drivers/scsi] replace strict_strto calls
+Date: Tue, 3 Jun 2014 16:35:10 +0100
+Message-ID: <20140603153510.GA21900@google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-la0-f43.google.com ([209.85.215.43]:58174 "EHLO
-	mail-la0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932080AbaFCPK3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Jun 2014 11:10:29 -0400
-Received: by mail-la0-f43.google.com with SMTP id mc6so3581467lab.16
-        for <linux-scsi@vger.kernel.org>; Tue, 03 Jun 2014 08:10:27 -0700 (PDT)
-In-Reply-To: <yq17g4z86te.fsf@sermon.lab.mkp.net>
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:62756 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932345AbaFCPfP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Jun 2014 11:35:15 -0400
+Received: by mail-wi0-f169.google.com with SMTP id hi2so6264642wib.0
+        for <linux-scsi@vger.kernel.org>; Tue, 03 Jun 2014 08:35:13 -0700 (PDT)
+Received: from google.com ([2620:0:1040:202:2e44:fdff:fe1c:7ea6])
+        by mx.google.com with ESMTPSA id di10sm44796488wjb.1.2014.06.03.08.35.12
+        for <linux-scsi@vger.kernel.org>
+        (version=TLSv1.2 cipher=RC4-SHA bits=128/128);
+        Tue, 03 Jun 2014 08:35:12 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <JBottomley@parallels.com>, Douglas Gilbert <dgilbert@interlog.com>
+To: linux-scsi@vger.kernel.org
 
-2014-06-03 4:11 GMT+09:00 Martin K. Petersen <martin.petersen@oracle.com>:
-> @@ -2755,6 +2765,10 @@ static int sd_revalidate_disk(struct gendisk *disk)
->
->         blk_queue_flush(sdkp->disk->queue, flush);
->
-> +       max_xfer = min_not_zero((unsigned int)sdp->host->max_sectors,
-> +                               (unsigned int)sdkp->max_xfer_blocks);
+From: Daniel Walter <dwalter@google.com>
+Subject: [PATCH v2 09/11] [drivers/scsi] replace strict_strto calls
 
-Should we use queue_max_hw_sector(sdkp->disk->queue) instead of
-sdp->host->max_sectors directly?  Because some low-level drivers (ipr
-and pmcraid) may set different max_hw_sectors than host->max_sectors
-in slave_configure().
+Replace obsolete strict_strto with more appropriate kstrto calls
 
-> +       max_xfer <<= ilog2(sdp->sector_size) - 9;
-> +       blk_queue_max_hw_sectors(sdkp->disk->queue, max_xfer);
->         set_capacity(disk, sdkp->capacity);
->         sd_config_write_same(sdkp);
->         kfree(buffer);
+Signed-off-by: Daniel Walter <dwalter@google.com>
+---
+Resubmit to the mailing list (was submitted to MAINTAINER entry anil_ravindranath@pmc-sierra.com
+but it seems this email no longer exists).
+
+---
+ drivers/scsi/pmcraid.c    | 4 ++--
+ drivers/scsi/scsi_sysfs.c | 4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
+index be8ce54..3762488 100644
+--- a/drivers/scsi/pmcraid.c
++++ b/drivers/scsi/pmcraid.c
+@@ -4213,9 +4213,9 @@ static ssize_t pmcraid_store_log_level(
+ {
+ 	struct Scsi_Host *shost;
+ 	struct pmcraid_instance *pinstance;
+-	unsigned long val;
++	u8 val;
+ 
+-	if (strict_strtoul(buf, 10, &val))
++	if (kstrtou8(buf, 10, &val))
+ 		return -EINVAL;
+ 	/* log-level should be from 0 to 2 */
+ 	if (val > 2)
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 074e8cc..80f715d 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -885,9 +885,9 @@ sdev_store_queue_ramp_up_period(struct device *dev,
+ 				const char *buf, size_t count)
+ {
+ 	struct scsi_device *sdev = to_scsi_device(dev);
+-	unsigned long period;
++	unsigned int period;
+ 
+-	if (strict_strtoul(buf, 10, &period))
++	if (kstrtouint(buf, 10, &period))
+ 		return -EINVAL;
+ 
+ 	sdev->queue_ramp_up_period = msecs_to_jiffies(period);
+-- 
+1.9.3
+
