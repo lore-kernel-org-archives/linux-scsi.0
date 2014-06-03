@@ -1,54 +1,135 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] qla2xxx: Convert to percpu_ida session tag
- pre-allocation
-Date: Mon, 02 Jun 2014 17:09:33 -0700
-Message-ID: <1401754173.32085.20.camel@haakon3.risingtidesystems.com>
-References: <1400892216-9784-1-git-send-email-nab@daterainc.com>
-	 <1400898802.6476.25.camel@haakon3.risingtidesystems.com>
-	 <504EB66DAC8D234EB8E8560985C2D7AD46D0994E@avmb2.qlogic.org>
-	 <1401747155.32085.19.camel@haakon3.risingtidesystems.com>
-	 <504EB66DAC8D234EB8E8560985C2D7AD46D18873@avmb2.qlogic.org>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 5/6] [SCSI] Look up and store NAA if VPD page 0x83 is present
+Date: Mon, 02 Jun 2014 21:00:08 -0400
+Message-ID: <yq11tv67qp3.fsf@sermon.lab.mkp.net>
+References: <1401335565-29865-1-git-send-email-martin.petersen@oracle.com>
+	<1401335565-29865-6-git-send-email-martin.petersen@oracle.com>
+	<538CE5B5.7030407@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <504EB66DAC8D234EB8E8560985C2D7AD46D18873@avmb2.qlogic.org>
-Sender: target-devel-owner@vger.kernel.org
-To: Quinn Tran <quinn.tran@qlogic.com>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Chad Dupuis <chad.dupuis@qlogic.com>, Roland Dreier <roland@kernel.org>, Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:21140 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932297AbaFCBAY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Jun 2014 21:00:24 -0400
+In-Reply-To: <538CE5B5.7030407@redhat.com> (Paolo Bonzini's message of "Mon,
+	02 Jun 2014 22:59:33 +0200")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Paolo Bonzini <pbonzini@redhat.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, axboe@fb.com, nab@daterainc.com, linux-scsi@vger.kernel.org
 
-On Mon, 2014-06-02 at 23:32 +0000, Quinn Tran wrote:
-> Regards,
-> Quinn Tran
-> 
-> 
-> 
-> 
-> On 6/2/14 3:12 PM, "Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
-> 
-> >>
-> >>Extra size note, the true value should be extracted from
-> >>"ha->fw_xcb_count", if this field is set.  Otherwise, default back to
-> >>TCM_QLA2XXX_DEFAULT_TAGS.
-> >
-> >Ok, squashing the following patch into the original to use
-> >ha->fw_xcb_count (if available) for determining the worst-case per
-> >session number of tags.  Note this currently ends up being ~1.7 MB of
-> >pre-allocated descriptors per session.
-> 
-> QT>  Ack.
-> 
-> >
-> >Also, I assume the pad is required for ha->fw_xcb_count as well..  In
-> >that case, the patch below also adds a extra define for 40 extra tags
-> >following your pad comment above.
-> 
-> QT> Pad is not required if the value is read from ha->fw_xcb_count.
-> 
+>>>>> "Paolo" == Paolo Bonzini <pbonzini@redhat.com> writes:
 
-Fixed.
+>> + sdev_printk(KERN_ERR, sdev,
+>> + "%s: VPD page 0x83 NAA descriptor not found\n", __func__);
+>> +
+>> + return;
 
-Thanks Quinn!
+Paolo> I suspect this error will be relatively common.
 
---nab
+You're right. But we would like to see it for devices that actually
+implement copy offload. So I suggest the following tweak...
+
+
+[SCSI] Look up and store NAA if VPD page 0x83 is present
+    
+Copy offloading requires us to know the NAA descriptor for both source
+target device. This descriptor is mandatory in the Device Identification
+VPD page. Locate this descriptor in the returned VPD data so we don't
+have to do lookups for every copy command.
+    
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Reviewed-by: Nicholas Bellinger <nab@linux-iscsi.org>
+
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 88d46fe6bf98..190dca4a8494 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -1024,6 +1024,62 @@ int scsi_get_vpd_page(struct scsi_device *sdev, u8 page, unsigned char *buf,
+ EXPORT_SYMBOL_GPL(scsi_get_vpd_page);
+ 
+ /**
++ * scsi_lookup_naa - Lookup NAA descriptor in VPD page 0x83
++ * @sdev: The device to ask
++ *
++ * Copy offloading requires us to know the NAA descriptor for both
++ * source and target device. This descriptor is mandatory in the Device
++ * Identification VPD page. Locate this descriptor in the returned VPD
++ * data so we don't have to do lookups for every copy command.
++ */
++static void scsi_lookup_naa(struct scsi_device *sdev)
++{
++	unsigned char *buf = sdev->vpd_pg83;
++	unsigned int len = sdev->vpd_pg83_len;
++
++	if (buf[1] != 0x83 || get_unaligned_be16(&buf[2]) == 0) {
++		sdev_printk(KERN_ERR, sdev,
++			    "%s: VPD page 0x83 contains no descriptors\n",
++			    __func__);
++		return;
++	}
++
++	buf += 4;
++	len -= 4;
++
++	do {
++		unsigned int desig_len = buf[3] + 4;
++
++		/* Binary code set */
++		if ((buf[0] & 0xf) != 1)
++			goto skip;
++
++		/* Target association */
++		if ((buf[1] >> 4) & 0x3)
++			goto skip;
++
++		/* NAA designator */
++		if ((buf[1] & 0xf) != 0x3)
++			goto skip;
++
++		sdev->naa = buf;
++		sdev->naa_len = desig_len;
++
++		return;
++
++skip:
++		buf += desig_len;
++		len -= desig_len;
++
++	} while (len > 0);
++
++	sdev_printk(KERN_ERR, sdev,
++		    "%s: VPD page 0x83 NAA descriptor not found\n", __func__);
++
++	return;
++}
++
++/**
+  * scsi_attach_vpd - Attach Vital Product Data to a SCSI device structure
+  * @sdev: The device to ask
+  *
+@@ -1107,6 +1163,10 @@ retry_pg83:
+ 		}
+ 		sdev->vpd_pg83_len = result;
+ 		sdev->vpd_pg83 = vpd_buf;
++
++		/* Lookup NAA if 3PC set in INQUIRY response */
++		if (sdev->inquiry_len >= 6 && sdev->inquiry[5] & (1 << 3))
++			scsi_lookup_naa(sdev);
+ 	}
+ }
+ 
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 5853c913d2b0..67bb70012802 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -119,6 +119,8 @@ struct scsi_device {
+ 	unsigned char *vpd_pg83;
+ 	int vpd_pg80_len;
+ 	unsigned char *vpd_pg80;
++	unsigned char naa_len;
++	unsigned char *naa;
+ 	unsigned char current_tag;	/* current tag */
+ 	struct scsi_target      *sdev_target;   /* used only for single_lun */
+ 
