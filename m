@@ -1,123 +1,51 @@
 From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: [PATCH 2/6] virtio-scsi: replace target spinlock with seqcount
-Date: Tue,  3 Jun 2014 21:33:14 +0200
-Message-ID: <1401823998-29167-3-git-send-email-pbonzini@redhat.com>
+Subject: [PATCH 4/6] scsi_error: fix invalid setting of host byte
+Date: Tue,  3 Jun 2014 21:33:16 +0200
+Message-ID: <1401823998-29167-5-git-send-email-pbonzini@redhat.com>
 References: <1401823998-29167-1-git-send-email-pbonzini@redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:46922 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933929AbaFCTdb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Jun 2014 15:33:31 -0400
 In-Reply-To: <1401823998-29167-1-git-send-email-pbonzini@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: hch@lst.de, JBottomley@Parallels.com, venkateshs@google.com, Ming Lei <ming.lei@canonical.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: hch@lst.de, JBottomley@Parallels.com, venkateshs@google.com, Ulrich Obergfell <uobergfe@redhat.com>, stable@vger.kernel.org
 
-From: Ming Lei <ming.lei@canonical.com>
+From: Ulrich Obergfell <uobergfe@redhat.com>
 
-The spinlock of tgt_lock is only for serializing read and write
-req_vq, one lockless seqcount is enough for the purpose.
+After scsi_try_to_abort_cmd returns, the eh_abort_handler may have
+already found that the command has completed in the device, causing
+the host_byte to be nonzero (e.g. it could be DID_ABORT).  When
+this happens, ORing DID_TIME_OUT into the host byte will corrupt
+the result field and initiate an unwanted command retry.
 
-On one 16core VM with vhost-scsi backend, the patch can improve
-IOPS with 3% on random read test.
+Fix this by using set_host_byte instead, following the model of
+commit 2082ebc45af9c9c648383b8cde0dc1948eadbf31.
 
-Signed-off-by: Ming Lei <ming.lei@canonical.com>
-[Add initialization in virtscsi_target_alloc. - Paolo]
+Cc: stable@vger.kernel.org
+Signed-off-by: Ulrich Obergfell <uobergfe@redhat.com>
 Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
 ---
- drivers/scsi/virtio_scsi.c | 42 +++++++++++++++++++++++++++++-------------
- 1 file changed, 29 insertions(+), 13 deletions(-)
+ drivers/scsi/scsi_error.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-index fc054935eb1f..f0b4cdbfceb0 100644
---- a/drivers/scsi/virtio_scsi.c
-+++ b/drivers/scsi/virtio_scsi.c
-@@ -26,6 +26,7 @@
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_device.h>
- #include <scsi/scsi_cmnd.h>
-+#include <linux/seqlock.h>
- 
- #define VIRTIO_SCSI_MEMPOOL_SZ 64
- #define VIRTIO_SCSI_EVENT_LEN 8
-@@ -73,18 +74,16 @@ struct virtio_scsi_vq {
-  * queue, and also lets the driver optimize the IRQ affinity for the virtqueues
-  * (each virtqueue's affinity is set to the CPU that "owns" the queue).
-  *
-- * tgt_lock is held to serialize reading and writing req_vq. Reading req_vq
-- * could be done locklessly, but we do not do it yet.
-+ * tgt_seq is held to serialize reading and writing req_vq.
-  *
-  * Decrements of reqs are never concurrent with writes of req_vq: before the
-  * decrement reqs will be != 0; after the decrement the virtqueue completion
-  * routine will not use the req_vq so it can be changed by a new request.
-- * Thus they can happen outside the tgt_lock, provided of course we make reqs
-+ * Thus they can happen outside the tgt_seq, provided of course we make reqs
-  * an atomic_t.
-  */
- struct virtio_scsi_target_state {
--	/* This spinlock never held at the same time as vq_lock. */
--	spinlock_t tgt_lock;
-+	seqcount_t tgt_seq;
- 
- 	/* Count of outstanding requests. */
- 	atomic_t reqs;
-@@ -521,19 +520,33 @@ static struct virtio_scsi_vq *virtscsi_pick_vq(struct virtio_scsi *vscsi,
- 	unsigned long flags;
- 	u32 queue_num;
- 
--	spin_lock_irqsave(&tgt->tgt_lock, flags);
-+	local_irq_save(flags);
-+	if (atomic_inc_return(&tgt->reqs) > 1) {
-+		unsigned long seq;
-+
-+		do {
-+			seq = read_seqcount_begin(&tgt->tgt_seq);
-+			vq = tgt->req_vq;
-+		} while (read_seqcount_retry(&tgt->tgt_seq, seq));
-+	} else {
-+		/* no writes can be concurrent because of atomic_t */
-+		write_seqcount_begin(&tgt->tgt_seq);
-+
-+		/* keep previous req_vq if there is reader found */
-+		if (unlikely(atomic_read(&tgt->reqs) > 1)) {
-+			vq = tgt->req_vq;
-+			goto unlock;
-+		}
- 
--	if (atomic_inc_return(&tgt->reqs) > 1)
--		vq = tgt->req_vq;
--	else {
- 		queue_num = smp_processor_id();
- 		while (unlikely(queue_num >= vscsi->num_queues))
- 			queue_num -= vscsi->num_queues;
--
- 		tgt->req_vq = vq = &vscsi->req_vqs[queue_num];
-+ unlock:
-+		write_seqcount_end(&tgt->tgt_seq);
- 	}
-+	local_irq_restore(flags);
- 
--	spin_unlock_irqrestore(&tgt->tgt_lock, flags);
- 	return vq;
- }
- 
-@@ -618,14 +631,17 @@ static int virtscsi_abort(struct scsi_cmnd *sc)
- 
- static int virtscsi_target_alloc(struct scsi_target *starget)
- {
-+	struct Scsi_Host *sh = dev_to_shost(starget->dev.parent);
-+	struct virtio_scsi *vscsi = shost_priv(sh);
-+
- 	struct virtio_scsi_target_state *tgt =
- 				kmalloc(sizeof(*tgt), GFP_KERNEL);
- 	if (!tgt)
- 		return -ENOMEM;
- 
--	spin_lock_init(&tgt->tgt_lock);
-+	seqcount_init(&tgt->tgt_seq);
- 	atomic_set(&tgt->reqs, 0);
--	tgt->req_vq = NULL;
-+	tgt->req_vq = &vscsi->req_vqs[0];
- 
- 	starget->hostdata = tgt;
- 	return 0;
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index f17aa7aa7879..ab06ef6fd726 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -131,7 +131,7 @@ scmd_eh_abort_handler(struct work_struct *work)
+ 				    "aborting command %p\n", scmd));
+ 		rtn = scsi_try_to_abort_cmd(sdev->host->hostt, scmd);
+ 		if (rtn == SUCCESS) {
+-			scmd->result |= DID_TIME_OUT << 16;
++			set_host_byte(scmd, DID_TIME_OUT);
+ 			if (scsi_host_eh_past_deadline(sdev->host)) {
+ 				SCSI_LOG_ERROR_RECOVERY(3,
+ 					scmd_printk(KERN_INFO, scmd,
 -- 
 1.8.3.1
+
+
