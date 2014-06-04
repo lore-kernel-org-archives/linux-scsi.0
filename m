@@ -1,123 +1,66 @@
 From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: [PATCH v3 2/6] virtio-scsi: replace target spinlock with seqcount
-Date: Wed,  4 Jun 2014 13:34:55 +0200
-Message-ID: <1401881699-1456-3-git-send-email-pbonzini@redhat.com>
+Subject: [PATCH v3 5/6] virtio-scsi: fix various bad behavior on aborted requests
+Date: Wed,  4 Jun 2014 13:34:58 +0200
+Message-ID: <1401881699-1456-6-git-send-email-pbonzini@redhat.com>
 References: <1401881699-1456-1-git-send-email-pbonzini@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1401881699-1456-1-git-send-email-pbonzini@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: hch@lst.de, JBottomley@Parallels.com, venkateshs@google.com, Ming Lei <ming.lei@canonical.com>
+Cc: hch@lst.de, JBottomley@Parallels.com, venkateshs@google.com, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Ming Lei <ming.lei@canonical.com>
+Even though the virtio-scsi spec guarantees that all requests related
+to the TMF will have been completed by the time the TMF itself completes,
+the request queue's callback might not have run yet.  This causes requests
+to be completed more than once, and as a result triggers a variety of
+BUGs or oopses.
 
-The spinlock of tgt_lock is only for serializing read and write
-req_vq, one lockless seqcount is enough for the purpose.
-
-On one 16core VM with vhost-scsi backend, the patch can improve
-IOPS with 3% on random read test.
-
-Signed-off-by: Ming Lei <ming.lei@canonical.com>
-[Add initialization in virtscsi_target_alloc. - Paolo]
+Cc: stable@vger.kernel.org
 Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
 ---
- drivers/scsi/virtio_scsi.c | 42 +++++++++++++++++++++++++++++-------------
- 1 file changed, 29 insertions(+), 13 deletions(-)
+ drivers/scsi/virtio_scsi.c | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
 
 diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-index fc054935eb1f..f0b4cdbfceb0 100644
+index d66c4ee2c774..fda9fb358888 100644
 --- a/drivers/scsi/virtio_scsi.c
 +++ b/drivers/scsi/virtio_scsi.c
-@@ -26,6 +26,7 @@
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_device.h>
- #include <scsi/scsi_cmnd.h>
-+#include <linux/seqlock.h>
+@@ -235,6 +235,16 @@ static void virtscsi_req_done(struct virtqueue *vq)
+ 	virtscsi_vq_done(vscsi, req_vq, virtscsi_complete_cmd);
+ };
  
- #define VIRTIO_SCSI_MEMPOOL_SZ 64
- #define VIRTIO_SCSI_EVENT_LEN 8
-@@ -73,18 +74,16 @@ struct virtio_scsi_vq {
-  * queue, and also lets the driver optimize the IRQ affinity for the virtqueues
-  * (each virtqueue's affinity is set to the CPU that "owns" the queue).
-  *
-- * tgt_lock is held to serialize reading and writing req_vq. Reading req_vq
-- * could be done locklessly, but we do not do it yet.
-+ * tgt_seq is held to serialize reading and writing req_vq.
-  *
-  * Decrements of reqs are never concurrent with writes of req_vq: before the
-  * decrement reqs will be != 0; after the decrement the virtqueue completion
-  * routine will not use the req_vq so it can be changed by a new request.
-- * Thus they can happen outside the tgt_lock, provided of course we make reqs
-+ * Thus they can happen outside the tgt_seq, provided of course we make reqs
-  * an atomic_t.
-  */
- struct virtio_scsi_target_state {
--	/* This spinlock never held at the same time as vq_lock. */
--	spinlock_t tgt_lock;
-+	seqcount_t tgt_seq;
- 
- 	/* Count of outstanding requests. */
- 	atomic_t reqs;
-@@ -521,19 +520,33 @@ static struct virtio_scsi_vq *virtscsi_pick_vq(struct virtio_scsi *vscsi,
- 	unsigned long flags;
- 	u32 queue_num;
- 
--	spin_lock_irqsave(&tgt->tgt_lock, flags);
-+	local_irq_save(flags);
-+	if (atomic_inc_return(&tgt->reqs) > 1) {
-+		unsigned long seq;
++static void virtscsi_poll_requests(struct virtio_scsi *vscsi)
++{
++	int i, num_vqs;
 +
-+		do {
-+			seq = read_seqcount_begin(&tgt->tgt_seq);
-+			vq = tgt->req_vq;
-+		} while (read_seqcount_retry(&tgt->tgt_seq, seq));
-+	} else {
-+		/* no writes can be concurrent because of atomic_t */
-+		write_seqcount_begin(&tgt->tgt_seq);
++	num_vqs = vscsi->num_queues;
++	for (i = 0; i < num_vqs; i++)
++		virtscsi_vq_done(vscsi, &vscsi->req_vqs[i],
++				 virtscsi_complete_cmd);
++}
 +
-+		/* keep previous req_vq if there is reader found */
-+		if (unlikely(atomic_read(&tgt->reqs) > 1)) {
-+			vq = tgt->req_vq;
-+			goto unlock;
-+		}
- 
--	if (atomic_inc_return(&tgt->reqs) > 1)
--		vq = tgt->req_vq;
--	else {
- 		queue_num = smp_processor_id();
- 		while (unlikely(queue_num >= vscsi->num_queues))
- 			queue_num -= vscsi->num_queues;
--
- 		tgt->req_vq = vq = &vscsi->req_vqs[queue_num];
-+ unlock:
-+		write_seqcount_end(&tgt->tgt_seq);
- 	}
-+	local_irq_restore(flags);
- 
--	spin_unlock_irqrestore(&tgt->tgt_lock, flags);
- 	return vq;
- }
- 
-@@ -618,14 +631,17 @@ static int virtscsi_abort(struct scsi_cmnd *sc)
- 
- static int virtscsi_target_alloc(struct scsi_target *starget)
+ static void virtscsi_complete_free(struct virtio_scsi *vscsi, void *buf)
  {
-+	struct Scsi_Host *sh = dev_to_shost(starget->dev.parent);
-+	struct virtio_scsi *vscsi = shost_priv(sh);
+ 	struct virtio_scsi_cmd *cmd = buf;
+@@ -579,6 +589,18 @@ static int virtscsi_tmf(struct virtio_scsi *vscsi, struct virtio_scsi_cmd *cmd)
+ 	    cmd->resp.tmf.response == VIRTIO_SCSI_S_FUNCTION_SUCCEEDED)
+ 		ret = SUCCESS;
+ 
++	/*
++	 * The spec guarantees that all requests related to the TMF have
++	 * been completed, but the callback might not have run yet if
++	 * we're using independent interrupts (e.g. MSI).  Poll the
++	 * virtqueues once.
++	 *
++	 * In the abort case, sc->scsi_done will do nothing, because
++	 * the block layer must have detected a timeout and as a result
++	 * REQ_ATOM_COMPLETE has been set.
++	 */
++	virtscsi_poll_requests(vscsi);
 +
- 	struct virtio_scsi_target_state *tgt =
- 				kmalloc(sizeof(*tgt), GFP_KERNEL);
- 	if (!tgt)
- 		return -ENOMEM;
- 
--	spin_lock_init(&tgt->tgt_lock);
-+	seqcount_init(&tgt->tgt_seq);
- 	atomic_set(&tgt->reqs, 0);
--	tgt->req_vq = NULL;
-+	tgt->req_vq = &vscsi->req_vqs[0];
- 
- 	starget->hostdata = tgt;
- 	return 0;
+ out:
+ 	mempool_free(cmd, virtscsi_cmd_pool);
+ 	return ret;
 -- 
 1.8.3.1
