@@ -1,85 +1,47 @@
-From: scameron@beardog.cce.hp.com
-Subject: Re: [PATCH 6/10] hpsa: use safer test on the result of find_first_zero_bit
-Date: Wed, 4 Jun 2014 10:14:10 -0500
-Message-ID: <20140604151410.GF6970@beardog.cce.hp.com>
-References: <1401872880-23685-1-git-send-email-Julia.Lawall@lip6.fr> <1401872880-23685-7-git-send-email-Julia.Lawall@lip6.fr> <20140604145407.GD6970@beardog.cce.hp.com> <alpine.DEB.2.10.1406041706050.2441@hadrien>
+From: "K. Y. Srinivasan" <kys@microsoft.com>
+Subject: [PATCH 1/1] [SCSI] Fix a bug in deriving the FLUSH_TIMEOUT from the
+ basic I/O timeout
+Date: Wed,  4 Jun 2014 09:33:43 -0700
+Message-ID: <1401899623-24194-1-git-send-email-kys@microsoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.10.1406041706050.2441@hadrien>
-Sender: kernel-janitors-owner@vger.kernel.org
-To: Julia Lawall <julia.lawall@lip6.fr>
-Cc: kernel-janitors@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, iss_storagedev@hp.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, scameron@beardog.cce.hp.com
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: driverdev-devel-bounces@linuxdriverproject.org
+To: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org, apw@canonical.com, jasowang@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Jun 04, 2014 at 05:06:44PM +0200, Julia Lawall wrote:
-> 
-> 
-> On Wed, 4 Jun 2014, scameron@beardog.cce.hp.com wrote:
-> 
-> > On Wed, Jun 04, 2014 at 11:07:56AM +0200, Julia Lawall wrote:
-> > > From: Julia Lawall <Julia.Lawall@lip6.fr>
-> > >
-> > > Find_first_zero_bit considers BITS_PER_LONG bits at a time, and thus may
-> > > return a larger number than the maximum position argument if that position
-> > > is not a multiple of BITS_PER_LONG.
-> > >
-> > > The semantic match that finds this problem is as follows:
-> > > (http://coccinelle.lip6.fr/)
-> > >
-> > > // <smpl>
-> > > @@
-> > > expression e1,e2,e3;
-> > > statement S1,S2;
-> > > @@
-> > >
-> > > e1 = find_first_zero_bit(e2,e3)
-> > > ...
-> > > if (e1
-> > > - ==
-> > > + >=
-> > >   e3)
-> > > S1 else S2
-> > > // </smpl>
-> > >
-> > > Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
-> > >
-> > > ---
-> > >  drivers/scsi/hpsa.c |    2 +-
-> > >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > >
-> > > diff -u -p a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> > > --- a/drivers/scsi/hpsa.c
-> > > +++ b/drivers/scsi/hpsa.c
-> > > @@ -4703,7 +4703,7 @@ static struct CommandList *cmd_alloc(str
-> > >  	spin_lock_irqsave(&h->lock, flags);
-> > >  	do {
-> > >  		i = find_first_zero_bit(h->cmd_pool_bits, h->nr_cmds);
-> > > -		if (i == h->nr_cmds) {
-> > > +		if (i >= h->nr_cmds) {
-> > >  			spin_unlock_irqrestore(&h->lock, flags);
-> > >  			return NULL;
-> > >  		}
-> >
-> > Thanks, Ack.
-> >
-> > You can add
-> >
-> > Reviewed-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
-> >
-> > to this patch if you want.
-> >
-> > You might also consider adding "Cc: stable@vger.kernel.org" to the sign-off area.
-> 
-> Actually, it seems that the function can never overshoot the specified
-> limit.  So the change is not needed.
+Commit ID: 7e660100d85af860e7ad763202fff717adcdaacd added code to derive the
+FLUSH_TIMEOUT from the basic I/O timeout. However, this patch did not use the
+basic I/O timeout of the device. Fix this bug.
 
-Well, that would explain why nobody has complained about it in all these years.
-I figured that must have been the case at least on x86, but I thought maybe
-other archictectures might behave differently, and the change seemed harmless
-in any case. 
+Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
+---
+ drivers/scsi/sd.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
 
--- steve
-
-
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index e9689d5..54150b1 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -832,7 +832,9 @@ static int sd_setup_write_same_cmnd(struct scsi_device *sdp, struct request *rq)
+ 
+ static int scsi_setup_flush_cmnd(struct scsi_device *sdp, struct request *rq)
+ {
+-	rq->timeout *= SD_FLUSH_TIMEOUT_MULTIPLIER;
++	int timeout = sdp->request_queue->rq_timeout;
++
++	rq->timeout = (timeout * SD_FLUSH_TIMEOUT_MULTIPLIER);
+ 	rq->retries = SD_MAX_RETRIES;
+ 	rq->cmd[0] = SYNCHRONIZE_CACHE;
+ 	rq->cmd_len = 10;
+-- 
+1.7.4.1
