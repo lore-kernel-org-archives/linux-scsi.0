@@ -1,62 +1,47 @@
-From: Ewan Milne <emilne@redhat.com>
-Subject: Re: [PATCH] sd: bad return code of init_sd
-Date: Wed, 04 Jun 2014 12:44:11 -0400
-Message-ID: <1401900251.26039.47.camel@localhost.localdomain>
-References: <1401831265-8547-1-git-send-email-clement.calmels@free.fr>
-Reply-To: emilne@redhat.com
+From: Joe Lawrence <joe.lawrence@stratus.com>
+Subject: [PATCH 4/7] mptfusion: zero kernel-space source of copy_to_user
+Date: Wed, 4 Jun 2014 12:49:46 -0400
+Message-ID: <1401900589-19672-5-git-send-email-joe.lawrence@stratus.com>
+References: <1401900589-19672-1-git-send-email-joe.lawrence@stratus.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:15703 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751739AbaFDQoR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 4 Jun 2014 12:44:17 -0400
-In-Reply-To: <1401831265-8547-1-git-send-email-clement.calmels@free.fr>
+Received: from p01c11o149.mxlogic.net ([208.65.144.72]:36324 "EHLO
+	p01c11o149.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751098AbaFDQuJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Jun 2014 12:50:09 -0400
+In-Reply-To: <1401900589-19672-1-git-send-email-joe.lawrence@stratus.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: =?ISO-8859-1?Q?Cl=E9ment?= Calmels <clement.calmels@free.fr>
-Cc: JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Joe Lawrence <joe.lawrence@stratus.com>, Christoph Hellwig <hch@infradead.org>, Dan Carpenter <dan.carpenter@oracle.com>, Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
 
-On Tue, 2014-06-03 at 23:34 +0200, Cl=C3=A9ment Calmels wrote:
-> In init_sd function, if kmem_cache_create or mempool_create_slab_pool=
-s
-> calls fail, the error will not be correclty reported because
-> class_register previously set the value of err to 0.
->=20
-> Signed-off-by: Cl=C3=A9ment Calmels <clement.calmels@free.fr>
-> ---
->  drivers/scsi/sd.c | 2 ++
->  1 file changed, 2 insertions(+)
->=20
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index e9689d5..7daa2aa 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -3205,12 +3205,14 @@ static int __init init_sd(void)
->  					 0, 0, NULL);
->  	if (!sd_cdb_cache) {
->  		printk(KERN_ERR "sd: can't init extended cdb cache\n");
-> +		err =3D -ENOMEM;
->  		goto err_out_class;
->  	}
-> =20
->  	sd_cdb_pool =3D mempool_create_slab_pool(SD_MEMPOOL_SIZE, sd_cdb_ca=
-che);
->  	if (!sd_cdb_pool) {
->  		printk(KERN_ERR "sd: can't init extended cdb pool\n");
-> +		err =3D -ENOMEM;
->  		goto err_out_cache;
->  	}
-> =20
+Fixes the following smatch warning:
 
-I posted this same patch on 2/14/2013.  Thanks for reminding me!
+  drivers/message/fusion/mptctl.c:1369 mptctl_getiocinfo() warn:
+    possible info leak 'karg'
 
-Reviewed-by: Ewan D. Milne <emilne@redhat.com>
+Signed-off-by: Joe Lawrence <joe.lawrence@stratus.com>
+Cc: Christoph Hellwig <hch@infradead.org>
+Cc: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
+---
+ drivers/message/fusion/mptctl.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/drivers/message/fusion/mptctl.c b/drivers/message/fusion/mptctl.c
+index dcc8385..e6d8935 100644
+--- a/drivers/message/fusion/mptctl.c
++++ b/drivers/message/fusion/mptctl.c
+@@ -1261,7 +1261,7 @@ mptctl_getiocinfo (unsigned long arg, unsigned int data_size)
+ 	else
+ 		return -EFAULT;
+ 
+-	karg = kmalloc(data_size, GFP_KERNEL);
++	karg = kzalloc(data_size, GFP_KERNEL);
+ 	if (karg == NULL) {
+ 		printk(KERN_ERR MYNAM "%s::mpt_ioctl_iocinfo() @%d - no memory available!\n",
+ 				__FILE__, __LINE__);
+-- 
+1.7.10.4
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
