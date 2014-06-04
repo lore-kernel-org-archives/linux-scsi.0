@@ -1,78 +1,69 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH 1/1] [SCSI] Fix a bug in deriving the FLUSH_TIMEOUT from
- the basic I/O timeout
-Date: Wed, 4 Jun 2014 17:15:15 +0000
-Message-ID: <d61f4b87a72544e4b0c1e1872a76f97b@BY2PR03MB299.namprd03.prod.outlook.com>
-References: <1401899623-24194-1-git-send-email-kys@microsoft.com>
- <1401901323.17510.23.camel@dabdike>
+From: Nicolas Pitre <nicolas.pitre@linaro.org>
+Subject: Re: [RFC 00/32] making inode time stamps y2038 ready
+Date: Wed, 4 Jun 2014 13:30:32 -0400 (EDT)
+Message-ID: <alpine.LFD.2.11.1406041308300.17310@knanqh.ubzr>
+References: <1401480116-1973111-1-git-send-email-arnd@arndb.de>
+ <5011138.W0gbOc20Qp@wuerfel> <20140603213802.GH14410@dastard>
+ <201406041703.47592.arnd@arndb.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <1401901323.17510.23.camel@dabdike>
-Content-Language: en-US
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: driverdev-devel-bounces@linuxdriverproject.org
-To: James Bottomley <jbottomley@parallels.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "jasowang@redhat.com" <jasowang@redhat.com>, "ohering@suse.com" <ohering@suse.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "apw@canonical.com" <apw@canonical.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
+Return-path: <linux-mtd-bounces+gldm-linux-mtd-36=gmane.org@lists.infradead.org>
+In-Reply-To: <201406041703.47592.arnd@arndb.de>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mtd>,
+ <mailto:linux-mtd-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-mtd/>
+List-Post: <mailto:linux-mtd@lists.infradead.org>
+List-Help: <mailto:linux-mtd-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-mtd>,
+ <mailto:linux-mtd-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-mtd" <linux-mtd-bounces@lists.infradead.org>
+Errors-To: linux-mtd-bounces+gldm-linux-mtd-36=gmane.org@lists.infradead.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: hch@infradead.org, Dave Chinner <david@fromorbit.com>, linux-mtd@lists.infradead.org, "H. Peter Anvin" <hpa@zytor.com>, linux-f2fs-devel@lists.sourceforge.net, ceph-devel@vger.kernel.org, "Joseph S. Myers" <joseph@codesourcery.com>, linux-arch@vger.kernel.org, linux-cifs@vger.kernel.org, linux-scsi@vger.kernel.org, linux-afs@lists.infradead.org, cluster-devel@redhat.com, coda@cs.cmu.edu, geert@linux-m68k.org, linux-ext4@vger.kernel.org, codalist@telemann.coda.cs.cmu.edu, fuse-devel@lists.sourceforge.net, reiserfs-devel@vger.kernel.org, xfs@oss.sgi.com, john.stultz@linaro.org, tglx@linutronix.de, linux-nfs@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, samba-technical@lists.samba.org, linux-kernel@vger.kernel.org, logfs@logfs.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, lftan@altera.com, ocfs2-devel@oss.oracle.com
 List-Id: linux-scsi@vger.kernel.org
 
+On Wed, 4 Jun 2014, Arnd Bergmann wrote:
 
-
-> -----Original Message-----
-> From: James Bottomley [mailto:jbottomley@parallels.com]
-> Sent: Wednesday, June 4, 2014 10:02 AM
-> To: KY Srinivasan
-> Cc: linux-kernel@vger.kernel.org; apw@canonical.com;
-> devel@linuxdriverproject.org; hch@infradead.org; linux-
-> scsi@vger.kernel.org; ohering@suse.com; gregkh@linuxfoundation.org;
-> jasowang@redhat.com
-> Subject: Re: [PATCH 1/1] [SCSI] Fix a bug in deriving the FLUSH_TIMEOUT
-> from the basic I/O timeout
+> On Tuesday 03 June 2014, Dave Chinner wrote:
+> > Just ot be pedantic, inodes don't need 96 bit timestamps - some
+> > filesystems can *support up to* 96 bit timestamps. If the kernel
+> > only supports 64 bit timestamps and that's all the kernel can
+> > represent, then the upper bits of the 96 bit on-disk inode
+> > timestamps simply remain zero.
 > 
-> On Wed, 2014-06-04 at 09:33 -0700, K. Y. Srinivasan wrote:
-> > Commit ID: 7e660100d85af860e7ad763202fff717adcdaacd added code to
-> > derive the FLUSH_TIMEOUT from the basic I/O timeout. However, this
-> > patch did not use the basic I/O timeout of the device. Fix this bug.
-> >
-> > Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
-> > ---
-> >  drivers/scsi/sd.c |    4 +++-
-> >  1 files changed, 3 insertions(+), 1 deletions(-)
-> >
-> > diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c index
-> > e9689d5..54150b1 100644
-> > --- a/drivers/scsi/sd.c
-> > +++ b/drivers/scsi/sd.c
-> > @@ -832,7 +832,9 @@ static int sd_setup_write_same_cmnd(struct
-> > scsi_device *sdp, struct request *rq)
-> >
-> >  static int scsi_setup_flush_cmnd(struct scsi_device *sdp, struct
-> > request *rq)  {
-> > -	rq->timeout *= SD_FLUSH_TIMEOUT_MULTIPLIER;
-> > +	int timeout = sdp->request_queue->rq_timeout;
-> > +
-> > +	rq->timeout = (timeout * SD_FLUSH_TIMEOUT_MULTIPLIER);
+> I meant the reverse: since we have file systems that can store
+> 96-bit timestamps when using 64-bit kernels, we need to extend
+> 32-bit kernels to have the same internal representation so we
+> can actually read those file systems correctly.
 > 
-> Could you share where you found this to be a problem?  It looks like a bug in
-> block because all inbound requests being prepared should have a timeout
-> set, so block would be the place to fix it.
-
-Perhaps; what I found was that the value in rq->timeout was 0 coming into
-this function and thus multiplying obviously has no effect.
-
+> > If you move the filesystem between kernels with different time
+> > ranges, then the filesystem needs to be able to tell the kernel what
+> > it's supported range is.  This is where having the VFS limit the
+> > range of supported timestamps is important: the limit is the
+> > min(kernel range, filesystem range). This allows the filesystems
+> > to be indepenent of the kernel time representation, and the kernel
+> > to be independent of the physical filesystem time encoding....
 > 
-> I can't see how this can happen because we definitely add the timer after the
-> request is prepared in my reading of the block code, unless I'm missing some
-> path in block that violates this.
-> 
-> James
+> I agree it makes sense to let the kernel know about the limits
+> of the file system it accesses, but for the reverse, we're probably
+> better off just making the kernel representation large enough (i.e.
+> 96 bits) so it can work with any known file system.
 
-K. Y
+Depends...  96 bit handling may get prohibitive on 32-bit archs.
+
+The important point here is for the kernel to be able to represent the 
+time _range_ used by any known filesystem, not necessarily the time 
+_precision_.
+
+For example, a 64 bit representation can be made of 40 bits for seconds 
+spanning 34865 years, and 24 bits for fractional seconds providing 
+precision down to 60 nanosecs.  That ought to be plenty good on 32 bit 
+systems while still being cheap to handle.
+
+
+Nicolas
+
+______________________________________________________
+Linux MTD discussion mailing list
+http://lists.infradead.org/mailman/listinfo/linux-mtd/
