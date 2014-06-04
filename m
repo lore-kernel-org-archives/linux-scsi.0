@@ -1,94 +1,66 @@
 From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: [PATCH v2 6/6] virtio-scsi: Implement change_queue_depth for virtscsi targets
-Date: Wed,  4 Jun 2014 12:11:43 +0200
-Message-ID: <1401876703-10236-7-git-send-email-pbonzini@redhat.com>
+Subject: [PATCH v2 5/6] virtio-scsi: fix various bad behavior on aborted requests
+Date: Wed,  4 Jun 2014 12:11:42 +0200
+Message-ID: <1401876703-10236-6-git-send-email-pbonzini@redhat.com>
 References: <1401876703-10236-1-git-send-email-pbonzini@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1401876703-10236-1-git-send-email-pbonzini@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: hch@lst.de, JBottomley@Parallels.com, venkateshs@google.com
+Cc: hch@lst.de, JBottomley@Parallels.com, venkateshs@google.com, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Venkatesh Srinivas <venkateshs@google.com>
+Even though the virtio-scsi spec guarantees that all requests related
+to the TMF will have been completed by the time the TMF itself completes,
+the request queue's callback might not have run yet.  This causes requests
+to be completed more than once, and as a result triggers a variety of
+BUGs or oopses.
 
-change_queue_depth allows changing per-target queue depth via sysfs.
-
-It also allows the SCSI midlayer to ramp down the number of concurrent
-inflight requests in response to a SCSI BUSY status response and allows
-the midlayer to ramp the count back up to the device maximum when the
-BUSY condition has resolved.
-
-Signed-off-by: Venkatesh Srinivas <venkateshs@google.com>
+Cc: stable@vger.kernel.org
 Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
 ---
- drivers/scsi/virtio_scsi.c | 33 +++++++++++++++++++++++++++++++++
- 1 file changed, 33 insertions(+)
+ drivers/scsi/virtio_scsi.c | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
 
 diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-index fda9fb358888..de0f8d9b3682 100644
+index d66c4ee2c774..fda9fb358888 100644
 --- a/drivers/scsi/virtio_scsi.c
 +++ b/drivers/scsi/virtio_scsi.c
-@@ -26,6 +26,7 @@
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_device.h>
- #include <scsi/scsi_cmnd.h>
-+#include <scsi/scsi_tcq.h>
- #include <linux/seqlock.h>
+@@ -235,6 +235,16 @@ static void virtscsi_req_done(struct virtqueue *vq)
+ 	virtscsi_vq_done(vscsi, req_vq, virtscsi_complete_cmd);
+ };
  
- #define VIRTIO_SCSI_MEMPOOL_SZ 64
-@@ -629,6 +630,36 @@ static int virtscsi_device_reset(struct scsi_cmnd *sc)
- 	return virtscsi_tmf(vscsi, cmd);
- }
- 
-+/**
-+ * virtscsi_change_queue_depth() - Change a virtscsi target's queue depth
-+ * @sdev:	Virtscsi target whose queue depth to change
-+ * @qdepth:	New queue depth
-+ * @reason:	Reason for the queue depth change.
-+ */
-+static int virtscsi_change_queue_depth(struct scsi_device *sdev,
-+				       int qdepth,
-+				       int reason)
++static void virtscsi_poll_requests(struct virtio_scsi *vscsi)
 +{
-+	struct Scsi_Host *shost = sdev->host;
-+	int max_depth = shost->cmd_per_lun;
++	int i, num_vqs;
 +
-+	switch (reason) {
-+	case SCSI_QDEPTH_QFULL: /* Drop qdepth in response to BUSY state */
-+		scsi_track_queue_full(sdev, qdepth);
-+		break;
-+	case SCSI_QDEPTH_RAMP_UP: /* Raise qdepth after BUSY state resolved */
-+	case SCSI_QDEPTH_DEFAULT: /* Manual change via sysfs */
-+		scsi_adjust_queue_depth(sdev,
-+					scsi_get_tag_type(sdev),
-+					min(max_depth, qdepth));
-+		break;
-+	default:
-+		return -EOPNOTSUPP;
-+	}
-+
-+	return sdev->queue_depth;
++	num_vqs = vscsi->num_queues;
++	for (i = 0; i < num_vqs; i++)
++		virtscsi_vq_done(vscsi, &vscsi->req_vqs[i],
++				 virtscsi_complete_cmd);
 +}
 +
- static int virtscsi_abort(struct scsi_cmnd *sc)
+ static void virtscsi_complete_free(struct virtio_scsi *vscsi, void *buf)
  {
- 	struct virtio_scsi *vscsi = shost_priv(sc->device->host);
-@@ -683,6 +714,7 @@ static struct scsi_host_template virtscsi_host_template_single = {
- 	.proc_name = "virtio_scsi",
- 	.this_id = -1,
- 	.queuecommand = virtscsi_queuecommand_single,
-+	.change_queue_depth = virtscsi_change_queue_depth,
- 	.eh_abort_handler = virtscsi_abort,
- 	.eh_device_reset_handler = virtscsi_device_reset,
+ 	struct virtio_scsi_cmd *cmd = buf;
+@@ -579,6 +589,18 @@ static int virtscsi_tmf(struct virtio_scsi *vscsi, struct virtio_scsi_cmd *cmd)
+ 	    cmd->resp.tmf.response == VIRTIO_SCSI_S_FUNCTION_SUCCEEDED)
+ 		ret = SUCCESS;
  
-@@ -699,6 +731,7 @@ static struct scsi_host_template virtscsi_host_template_multi = {
- 	.proc_name = "virtio_scsi",
- 	.this_id = -1,
- 	.queuecommand = virtscsi_queuecommand_multi,
-+	.change_queue_depth = virtscsi_change_queue_depth,
- 	.eh_abort_handler = virtscsi_abort,
- 	.eh_device_reset_handler = virtscsi_device_reset,
- 
++	/*
++	 * The spec guarantees that all requests related to the TMF have
++	 * been completed, but the callback might not have run yet if
++	 * we're using independent interrupts (e.g. MSI).  Poll the
++	 * virtqueues once.
++	 *
++	 * In the abort case, sc->scsi_done will do nothing, because
++	 * the block layer must have detected a timeout and as a result
++	 * REQ_ATOM_COMPLETE has been set.
++	 */
++	virtscsi_poll_requests(vscsi);
++
+ out:
+ 	mempool_free(cmd, virtscsi_cmd_pool);
+ 	return ret;
 -- 
 1.8.3.1
