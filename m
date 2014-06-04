@@ -1,55 +1,53 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 0/6] First batch of logging cleanups
-Date: Wed, 04 Jun 2014 07:50:52 +0200
-Message-ID: <538EB3BC.7060401@suse.de>
-References: <1401794577-102277-1-git-send-email-hare@suse.de> <yq11tv54p7w.fsf@sermon.lab.mkp.net>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH 4/6] scsi_error: fix invalid setting of host byte
+Date: Wed, 04 Jun 2014 08:33:14 +0200
+Message-ID: <538EBDAA.7090709@acm.org>
+References: <1401823998-29167-1-git-send-email-pbonzini@redhat.com> <1401823998-29167-5-git-send-email-pbonzini@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:53455 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754659AbaFDFuy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 4 Jun 2014 01:50:54 -0400
-In-Reply-To: <yq11tv54p7w.fsf@sermon.lab.mkp.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1401823998-29167-5-git-send-email-pbonzini@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Paolo Bonzini <pbonzini@redhat.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: hch@lst.de, JBottomley@Parallels.com, venkateshs@google.com, Ulrich Obergfell <uobergfe@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
 
-On 06/04/2014 12:12 AM, Martin K. Petersen wrote:
->>>>>> "Hannes" =3D=3D Hannes Reinecke <hare@suse.de> writes:
->
-> Hannes> Hi all, this is the first patch of my SCSI logging cleanup.  =
-The
-> Hannes> basic idea here is to use dev_printk() and friends throughout
-> Hannes> the midlayer, so that any logging messages are attached with =
-the
-> Hannes> correct device information.
->
-> All patches look good to me (except I'd really like to see SCSI loggi=
-ng
-> die a horrible death. Sadly it's an exposed user interface and theref=
-ore
-> hard to nuke).
->
-Hehe.
-That's next in line.
+On 06/03/14 21:33, Paolo Bonzini wrote:
+> From: Ulrich Obergfell <uobergfe@redhat.com>
+> 
+> After scsi_try_to_abort_cmd returns, the eh_abort_handler may have
+> already found that the command has completed in the device, causing
+> the host_byte to be nonzero (e.g. it could be DID_ABORT).  When
+> this happens, ORing DID_TIME_OUT into the host byte will corrupt
+> the result field and initiate an unwanted command retry.
+> 
+> Fix this by using set_host_byte instead, following the model of
+> commit 2082ebc45af9c9c648383b8cde0dc1948eadbf31.
+> 
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Ulrich Obergfell <uobergfe@redhat.com>
+> Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
+> ---
+>  drivers/scsi/scsi_error.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+> index f17aa7aa7879..ab06ef6fd726 100644
+> --- a/drivers/scsi/scsi_error.c
+> +++ b/drivers/scsi/scsi_error.c
+> @@ -131,7 +131,7 @@ scmd_eh_abort_handler(struct work_struct *work)
+>  				    "aborting command %p\n", scmd));
+>  		rtn = scsi_try_to_abort_cmd(sdev->host->hostt, scmd);
+>  		if (rtn == SUCCESS) {
+> -			scmd->result |= DID_TIME_OUT << 16;
+> +			set_host_byte(scmd, DID_TIME_OUT);
+>  			if (scsi_host_eh_past_deadline(sdev->host)) {
+>  				SCSI_LOG_ERROR_RECOVERY(3,
+>  					scmd_printk(KERN_INFO, scmd,
 
-Plan is to move all SCSI_LOGGING_ML_XXX over to scsi_tracing.
-And then slowly working my way up.
+There are three other occurrences in scsi_error.c of "scmd->result |=
+DID_TIME_OUT << 16". Please modify all occurrences to keep the error
+handling code consistent.
 
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Bart.
