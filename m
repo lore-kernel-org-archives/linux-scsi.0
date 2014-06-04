@@ -1,41 +1,99 @@
 From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: [PATCH v3 0/6] virtio-scsi patches for 3.16 + midlayer fix
-Date: Wed,  4 Jun 2014 13:34:53 +0200
-Message-ID: <1401881699-1456-1-git-send-email-pbonzini@redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Subject: [PATCH v3 6/6] virtio-scsi: Implement change_queue_depth for virtscsi targets
+Date: Wed,  4 Jun 2014 13:34:59 +0200
+Message-ID: <1401881699-1456-7-git-send-email-pbonzini@redhat.com>
+References: <1401881699-1456-1-git-send-email-pbonzini@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-we0-f169.google.com ([74.125.82.169]:52379 "EHLO
+	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752648AbaFDLfR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Jun 2014 07:35:17 -0400
+In-Reply-To: <1401881699-1456-1-git-send-email-pbonzini@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 Cc: hch@lst.de, JBottomley@Parallels.com, venkateshs@google.com
-List-Id: linux-scsi@vger.kernel.org
 
-As mentioned in the v1 submission, these patches were delayed a bit
-by the discussion and testing of patch 5.  Debugging the problem also
-led to the discovery of a midlayer bug fixed by patch 4.
+From: Venkatesh Srinivas <venkateshs@google.com>
 
-Paolo
+change_queue_depth allows changing per-target queue depth via sysfs.
 
-v1->v2: fix all occurrences of "scmd->result |= DID_TIME_OUT << 16"
-        in patch 4
+It also allows the SCSI midlayer to ramp down the number of concurrent
+inflight requests in response to a SCSI BUSY status response and allows
+the midlayer to ramp the count back up to the device maximum when the
+BUSY condition has resolved.
 
-v2->v3: really fix all occurrences in patch 4
+Signed-off-by: Venkatesh Srinivas <venkateshs@google.com>
+Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
+---
+ drivers/scsi/virtio_scsi.c | 33 +++++++++++++++++++++++++++++++++
+ 1 file changed, 33 insertions(+)
 
-Ming Lei (2):
-  virtio_scsi: remove ACCESS_ONCE() and smp_read_barrier_depends()
-  virtio-scsi: replace target spinlock with seqcount
-
-Paolo Bonzini (2):
-  virtio-scsi: avoid cancelling uninitialized work items
-  virtio-scsi: fix various bad behavior on aborted requests
-
-Ulrich Obergfell (1):
-  scsi_error: fix invalid setting of host byte
-
-Venkatesh Srinivas (1):
-  virtio-scsi: Implement change_queue_depth for virtscsi targets
-
- drivers/scsi/scsi_error.c  |   6 +-
- drivers/scsi/virtio_scsi.c | 148 +++++++++++++++++++++++++++------------------
- 2 files changed, 93 insertions(+), 61 deletions(-)
-
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index fda9fb358888..de0f8d9b3682 100644
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -26,6 +26,7 @@
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_device.h>
+ #include <scsi/scsi_cmnd.h>
++#include <scsi/scsi_tcq.h>
+ #include <linux/seqlock.h>
+ 
+ #define VIRTIO_SCSI_MEMPOOL_SZ 64
+@@ -629,6 +630,36 @@ static int virtscsi_device_reset(struct scsi_cmnd *sc)
+ 	return virtscsi_tmf(vscsi, cmd);
+ }
+ 
++/**
++ * virtscsi_change_queue_depth() - Change a virtscsi target's queue depth
++ * @sdev:	Virtscsi target whose queue depth to change
++ * @qdepth:	New queue depth
++ * @reason:	Reason for the queue depth change.
++ */
++static int virtscsi_change_queue_depth(struct scsi_device *sdev,
++				       int qdepth,
++				       int reason)
++{
++	struct Scsi_Host *shost = sdev->host;
++	int max_depth = shost->cmd_per_lun;
++
++	switch (reason) {
++	case SCSI_QDEPTH_QFULL: /* Drop qdepth in response to BUSY state */
++		scsi_track_queue_full(sdev, qdepth);
++		break;
++	case SCSI_QDEPTH_RAMP_UP: /* Raise qdepth after BUSY state resolved */
++	case SCSI_QDEPTH_DEFAULT: /* Manual change via sysfs */
++		scsi_adjust_queue_depth(sdev,
++					scsi_get_tag_type(sdev),
++					min(max_depth, qdepth));
++		break;
++	default:
++		return -EOPNOTSUPP;
++	}
++
++	return sdev->queue_depth;
++}
++
+ static int virtscsi_abort(struct scsi_cmnd *sc)
+ {
+ 	struct virtio_scsi *vscsi = shost_priv(sc->device->host);
+@@ -683,6 +714,7 @@ static struct scsi_host_template virtscsi_host_template_single = {
+ 	.proc_name = "virtio_scsi",
+ 	.this_id = -1,
+ 	.queuecommand = virtscsi_queuecommand_single,
++	.change_queue_depth = virtscsi_change_queue_depth,
+ 	.eh_abort_handler = virtscsi_abort,
+ 	.eh_device_reset_handler = virtscsi_device_reset,
+ 
+@@ -699,6 +731,7 @@ static struct scsi_host_template virtscsi_host_template_multi = {
+ 	.proc_name = "virtio_scsi",
+ 	.this_id = -1,
+ 	.queuecommand = virtscsi_queuecommand_multi,
++	.change_queue_depth = virtscsi_change_queue_depth,
+ 	.eh_abort_handler = virtscsi_abort,
+ 	.eh_device_reset_handler = virtscsi_device_reset,
+ 
 -- 
 1.8.3.1
+
