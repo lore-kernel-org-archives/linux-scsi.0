@@ -1,114 +1,47 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: [PATCH v3 1/6] virtio_scsi: remove ACCESS_ONCE() and smp_read_barrier_depends()
-Date: Wed,  4 Jun 2014 13:34:54 +0200
-Message-ID: <1401881699-1456-2-git-send-email-pbonzini@redhat.com>
-References: <1401881699-1456-1-git-send-email-pbonzini@redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1401881699-1456-1-git-send-email-pbonzini@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: hch@lst.de, JBottomley@Parallels.com, venkateshs@google.com, Ming Lei <tom.leiming@gmail.com>
+From: Julia Lawall <julia.lawall@lip6.fr>
+Subject: Re: [PATCH 0/10] use safer test on the result of
+ find_first_zero_bit
+Date: Wed, 4 Jun 2014 15:12:23 +0200 (CEST)
+Message-ID: <alpine.DEB.2.10.1406041510520.2441@hadrien>
+References: <1401872880-23685-1-git-send-email-Julia.Lawall@lip6.fr> <CAMuHMdXsoFUXj4jLMWN6NY7Um19KwWO9Rhx=9=gqWu_K5Ev2kQ@mail.gmail.com> <alpine.DEB.2.10.1406041137270.2441@hadrien> <063D6719AE5E284EB5DD2968C1650D6D1725705F@AcuExch.aculab.com>
+ <alpine.DEB.2.10.1406041148590.2441@hadrien> <CAMuHMdXPBQTYA0c=1hkC7943-_J59TVSFaEKsfY1F2ogV=Ld+A@mail.gmail.com> <alpine.DEB.2.10.1406041258200.2441@hadrien> <CAMuHMdV2wP43Lxf-UtCum37HyMPSboRb6RLNTHzm_ZNOBeJR0g@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+In-Reply-To: <CAMuHMdV2wP43Lxf-UtCum37HyMPSboRb6RLNTHzm_ZNOBeJR0g@mail.gmail.com>
+Sender: kernel-janitors-owner@vger.kernel.org
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Julia Lawall <julia.lawall@lip6.fr>, David Laight <David.Laight@aculab.com>, linux-rdma <linux-rdma@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>, Linux Fbdev development list <linux-fbdev@vger.kernel.org>, Linux-sh list <linux-sh@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>, linux-wireless <linux-wireless@vger.kernel.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, driverdevel <devel@driverdev.osuosl.org>, "iss_storagedev@hp.com" <iss_storagedev@hp.com>, scsi <linux-scsi@vger.kernel.org>, linux-s390 <linux-s390@vger.kernel.org>, "adi-buildroot-devel@lists.sourceforge.net" <adi-buildroot-devel@lists.sourceforge.net>, Arnd Bergmann <arnd@arndb.de>, sebott@linux.vnet.ibm.com
 List-Id: linux-scsi@vger.kernel.org
 
-From: Ming Lei <tom.leiming@gmail.com>
 
-Access to tgt->req_vq is strictly serialized by spin_lock
-of tgt->tgt_lock, so the ACCESS_ONCE() isn't necessary.
 
-smp_read_barrier_depends() in virtscsi_req_done was introduced
-to order reading req_vq and decreasing tgt->reqs, but it isn't
-needed now because req_vq is read from
-scsi->req_vqs[vq->index - VIRTIO_SCSI_VQ_BASE] instead of
-tgt->req_vq, so remove the unnecessary barrier.
+On Wed, 4 Jun 2014, Geert Uytterhoeven wrote:
 
-Also remove related comment about the barrier.
+> Hi Julia,
+>
+> On Wed, Jun 4, 2014 at 1:00 PM, Julia Lawall <julia.lawall@lip6.fr> wrote:
+> > OK, thanks.  I was only looking at the C code.
+> >
+> > But the C code contains a loop that is followed by:
+> >
+> >         if (!size)
+> >                 return result;
+> >         tmp = *p;
+> >
+> > found_first:
+> >         tmp |= ~0UL << size;
+> >         if (tmp == ~0UL)        /* Are any bits zero? */
+> >                 return result + size;   /* Nope. */
+> >
+> > In the first return, it would seem that result == size.  Could the second
+> > one be changed to just return size?  It should not hurt performance.
+>
+> "size" may have been changed between function entry and this line.
+> So you have to store it in a temporary.
 
-Cc: Paolo Bonzini <pbonzini@redhat.com>
-Signed-off-by: Ming Lei <tom.leiming@gmail.com>
-Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
----
- drivers/scsi/virtio_scsi.c | 53 ++++++----------------------------------------
- 1 file changed, 6 insertions(+), 47 deletions(-)
+Sorry, after reflection it seems that indeed size + result is always the
+original size, so it is actually all of the code that uses >= that is
+doing something unnecessary.  == for the failure test is fine.
 
-diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-index db3b494e5926..fc054935eb1f 100644
---- a/drivers/scsi/virtio_scsi.c
-+++ b/drivers/scsi/virtio_scsi.c
-@@ -73,17 +73,12 @@ struct virtio_scsi_vq {
-  * queue, and also lets the driver optimize the IRQ affinity for the virtqueues
-  * (each virtqueue's affinity is set to the CPU that "owns" the queue).
-  *
-- * An interesting effect of this policy is that only writes to req_vq need to
-- * take the tgt_lock.  Read can be done outside the lock because:
-+ * tgt_lock is held to serialize reading and writing req_vq. Reading req_vq
-+ * could be done locklessly, but we do not do it yet.
-  *
-- * - writes of req_vq only occur when atomic_inc_return(&tgt->reqs) returns 1.
-- *   In that case, no other CPU is reading req_vq: even if they were in
-- *   virtscsi_queuecommand_multi, they would be spinning on tgt_lock.
-- *
-- * - reads of req_vq only occur when the target is not idle (reqs != 0).
-- *   A CPU that enters virtscsi_queuecommand_multi will not modify req_vq.
-- *
-- * Similarly, decrements of reqs are never concurrent with writes of req_vq.
-+ * Decrements of reqs are never concurrent with writes of req_vq: before the
-+ * decrement reqs will be != 0; after the decrement the virtqueue completion
-+ * routine will not use the req_vq so it can be changed by a new request.
-  * Thus they can happen outside the tgt_lock, provided of course we make reqs
-  * an atomic_t.
-  */
-@@ -238,38 +233,6 @@ static void virtscsi_req_done(struct virtqueue *vq)
- 	int index = vq->index - VIRTIO_SCSI_VQ_BASE;
- 	struct virtio_scsi_vq *req_vq = &vscsi->req_vqs[index];
- 
--	/*
--	 * Read req_vq before decrementing the reqs field in
--	 * virtscsi_complete_cmd.
--	 *
--	 * With barriers:
--	 *
--	 * 	CPU #0			virtscsi_queuecommand_multi (CPU #1)
--	 * 	------------------------------------------------------------
--	 * 	lock vq_lock
--	 * 	read req_vq
--	 * 	read reqs (reqs = 1)
--	 * 	write reqs (reqs = 0)
--	 * 				increment reqs (reqs = 1)
--	 * 				write req_vq
--	 *
--	 * Possible reordering without barriers:
--	 *
--	 * 	CPU #0			virtscsi_queuecommand_multi (CPU #1)
--	 * 	------------------------------------------------------------
--	 * 	lock vq_lock
--	 * 	read reqs (reqs = 1)
--	 * 	write reqs (reqs = 0)
--	 * 				increment reqs (reqs = 1)
--	 * 				write req_vq
--	 * 	read (wrong) req_vq
--	 *
--	 * We do not need a full smp_rmb, because req_vq is required to get
--	 * to tgt->reqs: tgt is &vscsi->tgt[sc->device->id], where sc is stored
--	 * in the virtqueue as the user token.
--	 */
--	smp_read_barrier_depends();
--
- 	virtscsi_vq_done(vscsi, req_vq, virtscsi_complete_cmd);
- };
- 
-@@ -560,12 +523,8 @@ static struct virtio_scsi_vq *virtscsi_pick_vq(struct virtio_scsi *vscsi,
- 
- 	spin_lock_irqsave(&tgt->tgt_lock, flags);
- 
--	/*
--	 * The memory barrier after atomic_inc_return matches
--	 * the smp_read_barrier_depends() in virtscsi_req_done.
--	 */
- 	if (atomic_inc_return(&tgt->reqs) > 1)
--		vq = ACCESS_ONCE(tgt->req_vq);
-+		vq = tgt->req_vq;
- 	else {
- 		queue_num = smp_processor_id();
- 		while (unlikely(queue_num >= vscsi->num_queues))
--- 
-1.8.3.1
+julia
