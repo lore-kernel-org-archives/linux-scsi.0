@@ -1,65 +1,75 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 16490] "Assuming drive cache: write through" messages probably
- have wrong loglevel
-Date: Wed, 04 Jun 2014 14:19:03 +0000
-Message-ID: <bug-16490-11613-vR11V2gL19@https.bugzilla.kernel.org/>
-References: <bug-16490-11613@https.bugzilla.kernel.org/>
+From: scameron@beardog.cce.hp.com
+Subject: Re: [PATCH 6/10] hpsa: use safer test on the result of find_first_zero_bit
+Date: Wed, 4 Jun 2014 09:54:07 -0500
+Message-ID: <20140604145407.GD6970@beardog.cce.hp.com>
+References: <1401872880-23685-1-git-send-email-Julia.Lawall@lip6.fr> <1401872880-23685-7-git-send-email-Julia.Lawall@lip6.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:43929 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753236AbaFDOTM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 4 Jun 2014 10:19:12 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id E6DFD20328
-	for <linux-scsi@vger.kernel.org>; Wed,  4 Jun 2014 14:19:06 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id BD4EE202E5
-	for <linux-scsi@vger.kernel.org>; Wed,  4 Jun 2014 14:19:04 +0000 (UTC)
-In-Reply-To: <bug-16490-11613@https.bugzilla.kernel.org/>
+Received: from g2t2354.austin.hp.com ([15.217.128.53]:58365 "EHLO
+	g2t2354.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751513AbaFDOzA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Jun 2014 10:55:00 -0400
+Content-Disposition: inline
+In-Reply-To: <1401872880-23685-7-git-send-email-Julia.Lawall@lip6.fr>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Julia Lawall <Julia.Lawall@lip6.fr>
+Cc: kernel-janitors@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, iss_storagedev@hp.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, scameron@beardog.cce.hp.com
 
-https://bugzilla.kernel.org/show_bug.cgi?id=16490
-
-Alain Kalker <a.c.kalker@gmail.com> changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |a.c.kalker@gmail.com
-
---- Comment #8 from Alain Kalker <a.c.kalker@gmail.com> ---
-I submitted a patch to lower the log level to the linux-scsi mailing list.
-The patch was not accepted; James Bottomley offered this very insightful
-explanation why the log level should remain high (quoted here for those who are
-not reading the linux-scsi mailing list):
-
-> [...] The condition may be an error.  We have
-> some USB attached storage devices with writeback caches which don't
-> supply caching information.  Treating a writeback device as writethrough
-> is a potential error because you may lose data as a result of it.
+On Wed, Jun 04, 2014 at 11:07:56AM +0200, Julia Lawall wrote:
+> From: Julia Lawall <Julia.Lawall@lip6.fr>
 > 
-> The error is that we've made an assumption which may damage your data.
+> Find_first_zero_bit considers BITS_PER_LONG bits at a time, and thus may
+> return a larger number than the maximum position argument if that position
+> is not a multiple of BITS_PER_LONG.
 > 
-> The problem for us is that we can't tell if the assumption is going to
-> be fatal or not ... the message is harmless for older USB devices.
+> The semantic match that finds this problem is as follows:
+> (http://coccinelle.lip6.fr/)
+> 
+> // <smpl>
+> @@
+> expression e1,e2,e3;
+> statement S1,S2;
+> @@
+> 
+> e1 = find_first_zero_bit(e2,e3)
+> ...
+> if (e1 
+> - ==
+> + >=
+>   e3)
+> S1 else S2
+> // </smpl>
+> 
+> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+> 
+> ---
+>  drivers/scsi/hpsa.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff -u -p a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+> --- a/drivers/scsi/hpsa.c
+> +++ b/drivers/scsi/hpsa.c
+> @@ -4703,7 +4703,7 @@ static struct CommandList *cmd_alloc(str
+>  	spin_lock_irqsave(&h->lock, flags);
+>  	do {
+>  		i = find_first_zero_bit(h->cmd_pool_bits, h->nr_cmds);
+> -		if (i == h->nr_cmds) {
+> +		if (i >= h->nr_cmds) {
+>  			spin_unlock_irqrestore(&h->lock, flags);
+>  			return NULL;
+>  		}
 
->From doing a little research, I would suggest these steps to mitigate the risk
-(correct me if I'm wrong or have omitted anything):
+Thanks, Ack.
 
-- Find out if the device has write cache enabled by default, by consulting its
-documentation, technical specifications, or by contacting the manufacturer.
-- If the device does have write cache enabled, a quirk parameter can be added
-to either the kernel commandline or as a module parameter for the usb-storage
-module[1]
-- Verify that the device works as expected.
+You can add
 
-[1] For more information on USB storage device quirks and how to configure
-them, see linux/Documentation/kernel-parameters.txt in the Linux kernel source.
+Reviewed-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
--- 
-You are receiving this mail because:
-You are the assignee for the bug.
+to this patch if you want.
+
+You might also consider adding "Cc: stable@vger.kernel.org" to the sign-off area.
+
+-- steve
+
