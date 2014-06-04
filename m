@@ -1,42 +1,77 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [RFC 00/32] making inode time stamps y2038 ready
-Date: Wed, 4 Jun 2014 17:05:27 +0200
-Message-ID: <201406041705.27599.arnd@arndb.de>
-References: <1401480116-1973111-1-git-send-email-arnd@arndb.de> <4233989.Saca0ocOUr@wuerfel> <Pine.LNX.4.64.1406022044090.27099@digraph.polyomino.org.uk>
+From: Julia Lawall <julia.lawall@lip6.fr>
+Subject: Re: [PATCH 6/10] hpsa: use safer test on the result of
+ find_first_zero_bit
+Date: Wed, 4 Jun 2014 17:06:44 +0200 (CEST)
+Message-ID: <alpine.DEB.2.10.1406041706050.2441@hadrien>
+References: <1401872880-23685-1-git-send-email-Julia.Lawall@lip6.fr> <1401872880-23685-7-git-send-email-Julia.Lawall@lip6.fr> <20140604145407.GD6970@beardog.cce.hp.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.1406022044090.27099@digraph.polyomino.org.uk>
+In-Reply-To: <20140604145407.GD6970@beardog.cce.hp.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Joseph S. Myers" <joseph@codesourcery.com>
-Cc: linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org, john.stultz@linaro.org, hch@infradead.org, tglx@linutronix.de, geert@linux-m68k.org, lftan@altera.com, hpa@zytor.com, linux-fsdevel@vger.kernel.org, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, coda@cs.cmu.edu, codalist@coda.cs.cmu.edu, fuse-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, linux-btrfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-scsi@vger.kernel.org, logfs@logfs.org, ocfs2-devel@oss.oracle.com, reiserfs-devel@vger.kernel.org, samba-technical@lists.samba.org, xfs@oss.sgi.com
+To: scameron@beardog.cce.hp.com
+Cc: Julia Lawall <Julia.Lawall@lip6.fr>, kernel-janitors@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, iss_storagedev@hp.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Monday 02 June 2014, Joseph S. Myers wrote:
-> On Mon, 2 Jun 2014, Arnd Bergmann wrote:
-> 
-> > Ok. Sorry about missing linux-api, I confused it with linux-arch, which
-> > may not be as relevant here, except for the one question whether we
-> > actually want to have the new ABI on all 32-bit architectures or only
-> > as an opt-in for those that expect to stay around for another 24 years.
-> 
-> For glibc I think it will make the most sense to add the support for 
-> 64-bit time_t across all architectures that currently have 32-bit time_t 
-> (with the new interfaces having fallback support to implementation in 
-> terms of the 32-bit kernel interfaces, if the 64-bit syscalls are 
-> unavailable either at runtime or in the kernel headers against which glibc 
-> is compiled - this fallback code will of course need to check for overflow 
-> when passing a time value to the kernel, hopefully with error handling 
-> consistent with whatever the kernel ends up doing when a filesystem can't 
-> support a timestamp).  If some architectures don't provide the new 
-> interfaces in the kernel then that will mean the fallback code in glibc 
-> can't be removed until glibc support for those architectures is removed 
-> (as opposed to removing it when glibc no longer supports kernels predating 
-> the kernel support).
 
-Ok, that's a good reason to just provide the new interfaces on all
-architectures right away. Thanks for the insight!
 
-	Arnd
+On Wed, 4 Jun 2014, scameron@beardog.cce.hp.com wrote:
+
+> On Wed, Jun 04, 2014 at 11:07:56AM +0200, Julia Lawall wrote:
+> > From: Julia Lawall <Julia.Lawall@lip6.fr>
+> >
+> > Find_first_zero_bit considers BITS_PER_LONG bits at a time, and thus may
+> > return a larger number than the maximum position argument if that position
+> > is not a multiple of BITS_PER_LONG.
+> >
+> > The semantic match that finds this problem is as follows:
+> > (http://coccinelle.lip6.fr/)
+> >
+> > // <smpl>
+> > @@
+> > expression e1,e2,e3;
+> > statement S1,S2;
+> > @@
+> >
+> > e1 = find_first_zero_bit(e2,e3)
+> > ...
+> > if (e1
+> > - ==
+> > + >=
+> >   e3)
+> > S1 else S2
+> > // </smpl>
+> >
+> > Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+> >
+> > ---
+> >  drivers/scsi/hpsa.c |    2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> >
+> > diff -u -p a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+> > --- a/drivers/scsi/hpsa.c
+> > +++ b/drivers/scsi/hpsa.c
+> > @@ -4703,7 +4703,7 @@ static struct CommandList *cmd_alloc(str
+> >  	spin_lock_irqsave(&h->lock, flags);
+> >  	do {
+> >  		i = find_first_zero_bit(h->cmd_pool_bits, h->nr_cmds);
+> > -		if (i == h->nr_cmds) {
+> > +		if (i >= h->nr_cmds) {
+> >  			spin_unlock_irqrestore(&h->lock, flags);
+> >  			return NULL;
+> >  		}
+>
+> Thanks, Ack.
+>
+> You can add
+>
+> Reviewed-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+>
+> to this patch if you want.
+>
+> You might also consider adding "Cc: stable@vger.kernel.org" to the sign-off area.
+
+Actually, it seems that the function can never overshoot the specified
+limit.  So the change is not needed.
+
+julia
