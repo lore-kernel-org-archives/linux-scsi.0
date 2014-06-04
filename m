@@ -1,53 +1,43 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH 4/6] scsi_error: fix invalid setting of host byte
-Date: Wed, 04 Jun 2014 08:33:14 +0200
-Message-ID: <538EBDAA.7090709@acm.org>
-References: <1401823998-29167-1-git-send-email-pbonzini@redhat.com> <1401823998-29167-5-git-send-email-pbonzini@redhat.com>
+From: Maurizio Lombardi <mlombard@redhat.com>
+Subject: Re: [PATCH] scsi: replace numeric messages with string error
+ messages when blk_execute_rq fails.  Also add printing of sense info.
+Date: Wed, 4 Jun 2014 09:51:22 +0200
+Message-ID: <20140604075122.GA5700@dhcp-27-189.brq.redhat.com>
+References: <1398167056-14582-1-git-send-email-mlombard@redhat.com>
+ <20140425131219.GA20644@lst.de>
+ <20140429093035.GA2219@dhcp-27-189.brq.redhat.com>
+ <20140429180041.GB26194@lst.de>
+ <20140513131015.GB2015@dhcp-27-189.brq.redhat.com>
+ <20140513140724.GA4618@lst.de>
+ <537228D7.3080306@suse.de>
+ <20140513142401.GC2015@dhcp-27-189.brq.redhat.com>
+ <20140515064110.GA7410@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1401823998-29167-5-git-send-email-pbonzini@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Paolo Bonzini <pbonzini@redhat.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: hch@lst.de, JBottomley@Parallels.com, venkateshs@google.com, Ulrich Obergfell <uobergfe@redhat.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:60756 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755544AbaFDHvd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 4 Jun 2014 03:51:33 -0400
+Content-Disposition: inline
+In-Reply-To: <20140515064110.GA7410@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, hare@suse.de
+Cc: linux-scsi@vger.kernel.org, JBottomley@Parallels.com
 
-On 06/03/14 21:33, Paolo Bonzini wrote:
-> From: Ulrich Obergfell <uobergfe@redhat.com>
+On Thu, May 15, 2014 at 08:41:10AM +0200, Christoph Hellwig wrote:
 > 
-> After scsi_try_to_abort_cmd returns, the eh_abort_handler may have
-> already found that the command has completed in the device, causing
-> the host_byte to be nonzero (e.g. it could be DID_ABORT).  When
-> this happens, ORing DID_TIME_OUT into the host byte will corrupt
-> the result field and initiate an unwanted command retry.
+> We now have a readily available copy of EVPD page 0x83 hanging off
+> the scsi device, so the alua device handler should use it.
 > 
-> Fix this by using set_host_byte instead, following the model of
-> commit 2082ebc45af9c9c648383b8cde0dc1948eadbf31.
-> 
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Ulrich Obergfell <uobergfe@redhat.com>
-> Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
-> ---
->  drivers/scsi/scsi_error.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> index f17aa7aa7879..ab06ef6fd726 100644
-> --- a/drivers/scsi/scsi_error.c
-> +++ b/drivers/scsi/scsi_error.c
-> @@ -131,7 +131,7 @@ scmd_eh_abort_handler(struct work_struct *work)
->  				    "aborting command %p\n", scmd));
->  		rtn = scsi_try_to_abort_cmd(sdev->host->hostt, scmd);
->  		if (rtn == SUCCESS) {
-> -			scmd->result |= DID_TIME_OUT << 16;
-> +			set_host_byte(scmd, DID_TIME_OUT);
->  			if (scsi_host_eh_past_deadline(sdev->host)) {
->  				SCSI_LOG_ERROR_RECOVERY(3,
->  					scmd_printk(KERN_INFO, scmd,
+> Hannes, how about you handle that if you're doing major surgery in that
+> area anwyay?
 
-There are three other occurrences in scsi_error.c of "scmd->result |=
-DID_TIME_OUT << 16". Please modify all occurrences to keep the error
-handling code consistent.
+Hannes?
 
-Bart.
+Did you notice this email?
+
+Thanks,
+Maurizio Lombardi
+
