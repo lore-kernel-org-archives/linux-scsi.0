@@ -1,69 +1,62 @@
-From: Nicolas Pitre <nicolas.pitre@linaro.org>
-Subject: Re: [RFC 00/32] making inode time stamps y2038 ready
-Date: Wed, 4 Jun 2014 13:30:32 -0400 (EDT)
-Message-ID: <alpine.LFD.2.11.1406041308300.17310@knanqh.ubzr>
-References: <1401480116-1973111-1-git-send-email-arnd@arndb.de>
- <5011138.W0gbOc20Qp@wuerfel> <20140603213802.GH14410@dastard>
- <201406041703.47592.arnd@arndb.de>
+From: Ewan Milne <emilne@redhat.com>
+Subject: Re: [PATCH] sd: bad return code of init_sd
+Date: Wed, 04 Jun 2014 12:44:11 -0400
+Message-ID: <1401900251.26039.47.camel@localhost.localdomain>
+References: <1401831265-8547-1-git-send-email-clement.calmels@free.fr>
+Reply-To: emilne@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-mtd-bounces+gldm-linux-mtd-36=gmane.org@lists.infradead.org>
-In-Reply-To: <201406041703.47592.arnd@arndb.de>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mtd>,
- <mailto:linux-mtd-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-mtd/>
-List-Post: <mailto:linux-mtd@lists.infradead.org>
-List-Help: <mailto:linux-mtd-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-mtd>,
- <mailto:linux-mtd-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-mtd" <linux-mtd-bounces@lists.infradead.org>
-Errors-To: linux-mtd-bounces+gldm-linux-mtd-36=gmane.org@lists.infradead.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: hch@infradead.org, Dave Chinner <david@fromorbit.com>, linux-mtd@lists.infradead.org, "H. Peter Anvin" <hpa@zytor.com>, linux-f2fs-devel@lists.sourceforge.net, ceph-devel@vger.kernel.org, "Joseph S. Myers" <joseph@codesourcery.com>, linux-arch@vger.kernel.org, linux-cifs@vger.kernel.org, linux-scsi@vger.kernel.org, linux-afs@lists.infradead.org, cluster-devel@redhat.com, coda@cs.cmu.edu, geert@linux-m68k.org, linux-ext4@vger.kernel.org, codalist@telemann.coda.cs.cmu.edu, fuse-devel@lists.sourceforge.net, reiserfs-devel@vger.kernel.org, xfs@oss.sgi.com, john.stultz@linaro.org, tglx@linutronix.de, linux-nfs@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, samba-technical@lists.samba.org, linux-kernel@vger.kernel.org, logfs@logfs.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, lftan@altera.com, ocfs2-devel@oss.oracle.com
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:15703 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751739AbaFDQoR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 4 Jun 2014 12:44:17 -0400
+In-Reply-To: <1401831265-8547-1-git-send-email-clement.calmels@free.fr>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: =?ISO-8859-1?Q?Cl=E9ment?= Calmels <clement.calmels@free.fr>
+Cc: JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, 4 Jun 2014, Arnd Bergmann wrote:
+On Tue, 2014-06-03 at 23:34 +0200, Cl=C3=A9ment Calmels wrote:
+> In init_sd function, if kmem_cache_create or mempool_create_slab_pool=
+s
+> calls fail, the error will not be correclty reported because
+> class_register previously set the value of err to 0.
+>=20
+> Signed-off-by: Cl=C3=A9ment Calmels <clement.calmels@free.fr>
+> ---
+>  drivers/scsi/sd.c | 2 ++
+>  1 file changed, 2 insertions(+)
+>=20
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index e9689d5..7daa2aa 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -3205,12 +3205,14 @@ static int __init init_sd(void)
+>  					 0, 0, NULL);
+>  	if (!sd_cdb_cache) {
+>  		printk(KERN_ERR "sd: can't init extended cdb cache\n");
+> +		err =3D -ENOMEM;
+>  		goto err_out_class;
+>  	}
+> =20
+>  	sd_cdb_pool =3D mempool_create_slab_pool(SD_MEMPOOL_SIZE, sd_cdb_ca=
+che);
+>  	if (!sd_cdb_pool) {
+>  		printk(KERN_ERR "sd: can't init extended cdb pool\n");
+> +		err =3D -ENOMEM;
+>  		goto err_out_cache;
+>  	}
+> =20
 
-> On Tuesday 03 June 2014, Dave Chinner wrote:
-> > Just ot be pedantic, inodes don't need 96 bit timestamps - some
-> > filesystems can *support up to* 96 bit timestamps. If the kernel
-> > only supports 64 bit timestamps and that's all the kernel can
-> > represent, then the upper bits of the 96 bit on-disk inode
-> > timestamps simply remain zero.
-> 
-> I meant the reverse: since we have file systems that can store
-> 96-bit timestamps when using 64-bit kernels, we need to extend
-> 32-bit kernels to have the same internal representation so we
-> can actually read those file systems correctly.
-> 
-> > If you move the filesystem between kernels with different time
-> > ranges, then the filesystem needs to be able to tell the kernel what
-> > it's supported range is.  This is where having the VFS limit the
-> > range of supported timestamps is important: the limit is the
-> > min(kernel range, filesystem range). This allows the filesystems
-> > to be indepenent of the kernel time representation, and the kernel
-> > to be independent of the physical filesystem time encoding....
-> 
-> I agree it makes sense to let the kernel know about the limits
-> of the file system it accesses, but for the reverse, we're probably
-> better off just making the kernel representation large enough (i.e.
-> 96 bits) so it can work with any known file system.
+I posted this same patch on 2/14/2013.  Thanks for reminding me!
 
-Depends...  96 bit handling may get prohibitive on 32-bit archs.
-
-The important point here is for the kernel to be able to represent the 
-time _range_ used by any known filesystem, not necessarily the time 
-_precision_.
-
-For example, a 64 bit representation can be made of 40 bits for seconds 
-spanning 34865 years, and 24 bits for fractional seconds providing 
-precision down to 60 nanosecs.  That ought to be plenty good on 32 bit 
-systems while still being cheap to handle.
+Reviewed-by: Ewan D. Milne <emilne@redhat.com>
 
 
-Nicolas
-
-______________________________________________________
-Linux MTD discussion mailing list
-http://lists.infradead.org/mailman/listinfo/linux-mtd/
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
