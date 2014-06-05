@@ -1,36 +1,34 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v3 4/6] scsi_error: fix invalid setting of host byte
-Date: Thu, 5 Jun 2014 03:12:42 -0700
-Message-ID: <20140605101242.GC8633@infradead.org>
-References: <1401881699-1456-1-git-send-email-pbonzini@redhat.com>
- <1401881699-1456-5-git-send-email-pbonzini@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <stable-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1401881699-1456-5-git-send-email-pbonzini@redhat.com>
-Sender: stable-owner@vger.kernel.org
-To: Paolo Bonzini <pbonzini@redhat.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, hch@lst.de, JBottomley@Parallels.com, venkateshs@google.com, Ulrich Obergfell <uobergfe@redhat.com>, stable@vger.kernel.org
+From: Dolev Raviv <draviv@codeaurora.org>
+Subject: [PATCH V1 0/4] LU queue depth manament
+Date: Thu,  5 Jun 2014 15:44:18 +0300
+Message-ID: <1401972259-15471-1-git-send-email-draviv@codeaurora.org>
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, sthumma@codeaurora.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, Dolev Raviv <draviv@codeaurora.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Jun 04, 2014 at 01:34:57PM +0200, Paolo Bonzini wrote:
-> From: Ulrich Obergfell <uobergfe@redhat.com>
-> 
-> After scsi_try_to_abort_cmd returns, the eh_abort_handler may have
-> already found that the command has completed in the device, causing
-> the host_byte to be nonzero (e.g. it could be DID_ABORT).  When
-> this happens, ORing DID_TIME_OUT into the host byte will corrupt
-> the result field and initiate an unwanted command retry.
-> 
-> Fix this by using set_host_byte instead, following the model of
-> commit 2082ebc45af9c9c648383b8cde0dc1948eadbf31.
-> 
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Ulrich Obergfell <uobergfe@redhat.com>
-> [Fix all instances according to review comments. - Paolo]
-> Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
+Resending patch 4, to fix the author.
 
-Looks good,
+Some UFS devices don't support a LUN queue depth same as the device queue
+depth. This requires reading the unit descriptor for extracting the LU's
+queue depth.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Dolev Raviv (1):
+  scsi: ufs: query descriptor API
+  scsi: ufs: device query status and size check
+  scsi: ufs: Logical Unit (LU) command queue depth
+
+Sujit Reddy Thumma (1):
+  scsi: ufs: Fix queue depth handling for best effort cases
+
+ drivers/scsi/ufs/ufs.h    |  38 +++++-
+ drivers/scsi/ufs/ufshcd.c | 318 ++++++++++++++++++++++++++++++++--------------
+ 2 files changed, 261 insertions(+), 95 deletions(-)
+
+-- 
+1.8.5.2
+
+-- 
+QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member
+of Code Aurora Forum, hosted by The Linux Foundation
