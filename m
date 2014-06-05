@@ -1,32 +1,39 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 5/7] mptfusion: make adapter prod_name[] a pointer
-Date: Thu, 5 Jun 2014 02:31:11 -0700
-Message-ID: <20140605093111.GF727@infradead.org>
+Subject: Re: [PATCH 6/7] mptfusion: combine fw_event_work and its event_data
+Date: Thu, 5 Jun 2014 02:34:29 -0700
+Message-ID: <20140605093429.GG727@infradead.org>
 References: <1401900589-19672-1-git-send-email-joe.lawrence@stratus.com>
- <1401900715-19815-1-git-send-email-joe.lawrence@stratus.com>
+ <1401900729-19855-1-git-send-email-joe.lawrence@stratus.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:38801 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:39127 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750910AbaFEJbL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jun 2014 05:31:11 -0400
+	with ESMTP id S1750776AbaFEJea (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jun 2014 05:34:30 -0400
 Content-Disposition: inline
-In-Reply-To: <1401900715-19815-1-git-send-email-joe.lawrence@stratus.com>
+In-Reply-To: <1401900729-19855-1-git-send-email-joe.lawrence@stratus.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Joe Lawrence <joe.lawrence@stratus.com>
 Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Dan Carpenter <dan.carpenter@oracle.com>, Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
 
-On Wed, Jun 04, 2014 at 12:51:55PM -0400, Joe Lawrence wrote:
-> The struct _MPT_ADAPTER doesn't need a full copy of the product string,
-> so prod_name can point to the string literal storage that the driver
-> already provides.
-> 
-> Avoids the following sparse warning:
-> 
->   drivers/message/fusion/mptbase.c:2858 MptDisplayIocCapabilities()
->     warn: this array is probably non-NULL. 'ioc->prod_name'
+>  
+> -	sz = offsetof(struct fw_event_work, event_data) +
+> -	    sizeof(MpiEventDataSasDeviceStatusChange_t);
+> +	sz = sizeof(*fw_event) +
+> +		sizeof(MpiEventDataSasDeviceStatusChange_t);
+>  	fw_event = kzalloc(sz, GFP_ATOMIC);
+
+Seems like there is no point in keeping the sz variable here and at
+the other occurances.  Not that it really matters, but if we make a pass
+over this code we might as well fix that up, too.
+
+> -	sz = offsetof(struct fw_event_work, event_data);
+> +	sz = sizeof(*fw_event);
+
+Eww, using offsetoff for an allocation size.  Good riddance that this
+gets sorted out.
 
 Looks good,
 
