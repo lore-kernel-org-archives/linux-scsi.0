@@ -1,57 +1,56 @@
-From: Sagi Grimberg <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>
-Subject: Re: [PATCH 1/2] libiscsi, iser: Adjust data_length to include protection
- information
-Date: Thu, 05 Jun 2014 20:29:12 +0300
-Message-ID: <5390A8E8.6080300@dev.mellanox.co.il>
-References: <1401639581-20111-1-git-send-email-sagig@mellanox.com>	<1401639581-20111-2-git-send-email-sagig@mellanox.com>	<538DF27F.50903@cs.wisc.edu> <yq1wqcx3act.fsf@sermon.lab.mkp.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <yq1wqcx3act.fsf-+q57XtR/GgMb6DWv4sQWN6xOck334EZe@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
-Cc: Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, oren-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH 4/4] [SCSI] NCR53c406a: don't call free_dma() by default
+Date: Thu,  5 Jun 2014 23:29:49 +0200
+Message-ID: <1402003789-1990031-5-git-send-email-arnd@arndb.de>
+References: <1402003789-1990031-1-git-send-email-arnd@arndb.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.17.24]:51351 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751409AbaFEV35 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jun 2014 17:29:57 -0400
+In-Reply-To: <1402003789-1990031-1-git-send-email-arnd@arndb.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Arnd Bergmann <arnd@arndb.de>
 
-On 6/4/2014 1:18 AM, Martin K. Petersen wrote:
->>>>>> "Mike" == Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org> writes:
-> Mike> On 06/01/2014 11:19 AM, Sagi Grimberg wrote:
->>> +/*
->>> + * data integrity helpers
->>> + */
->>> +static inline unsigned +iscsi_prot_len(unsigned data_len, unsigned
->>> sector_size) +{
->>> + switch (sector_size) {
->>> + case 512:
->>> + return (data_len >> 9) * 8;
->>> + case 1024:
->>> + return (data_len >> 10) * 8;
->>> + case 2048:
->>> + return (data_len >> 11) * 8;
->>> + case 4096:
->>> + return (data_len >> 12) * 8;
->>> + default:
->>> + return (data_len >> ilog2(sector_size)) * 8;
->>> + }
->>> +}
->>> #endif
-> Mike> I do not think this should not be in the iscsi code.
->
-> In the data integrity update I posted there's a flag saying "transfer PI
-> on the wire". That was meant to be the thing driver's should key off of
-> to adjust transfer length. But I'm also happy to provide a unsigned int
-> scsi_transfer_length(struct scsi_cmnd *) thingy that returns the right
-> byte count. Just bear in mind that the host-facing DIX transfer length
-> may be different.
->
+The NCR53c406a scsi driver normally does not use DMA, unless
+the USE_PIO macro is disabled by modifying the source code.
 
-OK, let me prepare v1 moving this logic to a scsi helper and we'll have 
-another round of comments.
+The call to free_dma() for some reason uses #ifdef USE_DMA,
+which does not do the right thing, since USE_DMA is defined
+as a boolean that is either 0 or 1, but always present.
 
-Thanks,
-Sagi.
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+One case where it gets in the way is randconfig builds on ARM,
+which depending on the configuration does not provide a free_dma()
+function, causing this build error:
+
+drivers/scsi/NCR53c406a.c: In function 'NCR53c406a_release':
+drivers/scsi/NCR53c406a.c:600:3: error: implicit declaration of function 'free_dma' [-Werror=implicit-function-declaration]
+   free_dma(shost->dma_channel);
+   ^
+
+This changes the code to use #if USE_DMA, to match the
+rest of the file, which seems to be what the author intended.
+
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/scsi/NCR53c406a.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/NCR53c406a.c b/drivers/scsi/NCR53c406a.c
+index c91888a..2c78785 100644
+--- a/drivers/scsi/NCR53c406a.c
++++ b/drivers/scsi/NCR53c406a.c
+@@ -595,7 +595,7 @@ static int NCR53c406a_release(struct Scsi_Host *shost)
+ {
+ 	if (shost->irq)
+ 		free_irq(shost->irq, NULL);
+-#ifdef USE_DMA
++#if USE_DMA
+ 	if (shost->dma_channel != 0xff)
+ 		free_dma(shost->dma_channel);
+ #endif
+-- 
+1.8.3.2
+
