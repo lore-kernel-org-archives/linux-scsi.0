@@ -1,67 +1,70 @@
-From: Liu Ping Fan <kernelfans@gmail.com>
-Subject: [PATCH] scsi: ibmvscsi: protect abort handler from done-scmd in flight
-Date: Thu,  5 Jun 2014 14:16:44 +0800
-Message-ID: <1401949004-17725-1-git-send-email-pingfank@linux.vnet.ibm.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-yk0-f181.google.com ([209.85.160.181]:45416 "EHLO
-	mail-yk0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750809AbaFEGNo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jun 2014 02:13:44 -0400
-Received: by mail-yk0-f181.google.com with SMTP id 131so435079ykp.26
-        for <linux-scsi@vger.kernel.org>; Wed, 04 Jun 2014 23:13:43 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH] scsi: bfa: bfad_attr.c:  Optimization of the Code
+Date: Thu, 05 Jun 2014 08:55:59 +0200
+Message-ID: <5390147F.8070803@acm.org>
+References: <1401905288-32642-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1401905288-32642-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>, Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Robert Jennings <rcj@linux.vnet.ibm.com>, Paolo Bonzini <pbonzini@redhat.com>
 
-Take the following scene in guest:
-seqA: scsi_done() -> gapX (before taking REQ_ATOM_COMPLETE)
-seqB: scmd_eh_abort_handler()-> ...-> ibmvscsi_eh_abort_handler()->
-      ...->scsi_put_command(scmd)
+On 06/04/14 20:08, Rickard Strandqvist wrote:
+> Minimized the use of snprintf()
+> And removed a variable that was only used for the temporary storage.
+> 
+> This was partly found using a static code analysis program called cppcheck.
+> 
+> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+> ---
+>  drivers/scsi/bfa/bfad_attr.c |   14 ++++++++------
+>  1 file changed, 8 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/scsi/bfa/bfad_attr.c b/drivers/scsi/bfa/bfad_attr.c
+> index 40be670..5f5917a 100644
+> --- a/drivers/scsi/bfa/bfad_attr.c
+> +++ b/drivers/scsi/bfa/bfad_attr.c
+> @@ -839,12 +839,10 @@ bfad_im_symbolic_name_show(struct device *dev, struct device_attribute *attr,
+>  			(struct bfad_im_port_s *) shost->hostdata[0];
+>  	struct bfad_s *bfad = im_port->bfad;
+>  	struct bfa_lport_attr_s port_attr;
+> -	char symname[BFA_SYMNAME_MAXLEN];
+>  
+>  	bfa_fcs_lport_get_attr(&bfad->bfa_fcs.fabric.bport, &port_attr);
+> -	strncpy(symname, port_attr.port_cfg.sym_name.symname,
+> -			BFA_SYMNAME_MAXLEN);
+> -	return snprintf(buf, PAGE_SIZE, "%s\n", symname);
+> +	return snprintf(buf, PAGE_SIZE, "%s\n",
+> +			port_attr.port_cfg.sym_name.symname);
+>  }
+>  
+>  static ssize_t
+> @@ -865,7 +863,9 @@ static ssize_t
+>  bfad_im_drv_version_show(struct device *dev, struct device_attribute *attr,
+>  				char *buf)
+>  {
+> -	return snprintf(buf, PAGE_SIZE, "%s\n", BFAD_DRIVER_VERSION);
+> +	strncpy(buf, BFAD_DRIVER_VERSION  "\n" , PAGE_SIZE);
+> +	buf[PAGE_SIZE - 1] = '\0';
+> +	return strlen(buf);
+>  }
+>  
+>  static ssize_t
+> @@ -913,7 +913,9 @@ static ssize_t
+>  bfad_im_drv_name_show(struct device *dev, struct device_attribute *attr,
+>  				char *buf)
+>  {
+> -	return snprintf(buf, PAGE_SIZE, "%s\n", BFAD_DRIVER_NAME);
+> +	strncpy(buf, BFAD_DRIVER_NAME  "\n" , PAGE_SIZE);
+> +	buf[PAGE_SIZE - 1] = '\0';
+> +	return strlen(buf);
+>  }
 
-If seqA is scheduled at gapX, and seqB reclaims scmd. Then when seqA
-comes back, it tries to access the scmd when is turned back to mempool.
+This is ugly. Please use sprintf(buf, "%.*s\n", PAGE_SIZE - 1, str)
+instead of strncpy() + strlen().
 
-This patch fixes the race by ensuring when ibmvscsi_eh_abort_handler()
-returns, no scsi_done is in flight
-
-Signed-off-by: Liu Ping Fan <pingfank@linux.vnet.ibm.com>
----
-When trying to figure the scsi_cmnd in flight issue, I learned from Paolo (thanks).
-He showed me the way how virtscsi resolves the race between abort-handler
-and scsi_done in flight. And I think that this method is also needed by ibmvscsi.
----
- drivers/scsi/ibmvscsi/ibmvscsi.c | 11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
-index fa76440..325cef6 100644
---- a/drivers/scsi/ibmvscsi/ibmvscsi.c
-+++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
-@@ -1828,16 +1828,19 @@ static void ibmvscsi_handle_crq(struct viosrp_crq *crq,
- 
- 	if ((crq->status != VIOSRP_OK && crq->status != VIOSRP_OK2) && evt_struct->cmnd)
- 		evt_struct->cmnd->result = DID_ERROR << 16;
--	if (evt_struct->done)
--		evt_struct->done(evt_struct);
--	else
--		dev_err(hostdata->dev, "returned done() is NULL; not running it!\n");
- 
- 	/*
- 	 * Lock the host_lock before messing with these structures, since we
- 	 * are running in a task context
-+	 * Also, this lock helps ibmvscsi_eh_abort_handler() to shield the
-+	 * scsi_done() in flight.
- 	 */
- 	spin_lock_irqsave(evt_struct->hostdata->host->host_lock, flags);
-+	if (evt_struct->done)
-+		evt_struct->done(evt_struct);
-+	else
-+		dev_err(hostdata->dev, "returned done() is NULL; not running it!\n");
-+
- 	list_del(&evt_struct->list);
- 	free_event_struct(&evt_struct->hostdata->pool, evt_struct);
- 	spin_unlock_irqrestore(evt_struct->hostdata->host->host_lock, flags);
--- 
-1.8.1.4
-
+Bart.
