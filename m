@@ -1,48 +1,118 @@
-From: Michael Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 1/1] be2iscsi: remove potential junk pointer free
-Date: Fri, 6 Jun 2014 12:08:27 -0500
-Message-ID: <547C4D6C-7E34-484D-9439-FE57096E5796@cs.wisc.edu>
-References: <5391B294.5020104@redhat.com>
-Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.2\))
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:58851 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751624AbaFFRIi convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Jun 2014 13:08:38 -0400
-In-Reply-To: <5391B294.5020104@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 1/1] [SCSI] Fix a bug in deriving the FLUSH_TIMEOUT from
+ the basic I/O timeout
+Date: Fri, 06 Jun 2014 12:18:57 -0500
+Message-ID: <5391F801.4010107@cs.wisc.edu>
+References: <1401899623-24194-1-git-send-email-kys@microsoft.com>
+ <1401901323.17510.23.camel@dabdike>
+ <d61f4b87a72544e4b0c1e1872a76f97b@BY2PR03MB299.namprd03.prod.outlook.com>
+ <53911A35.7010805@cs.wisc.edu>
+ <d9854e6ff97f4b0087dbe835a2a57c8f@BY2PR03MB299.namprd03.prod.outlook.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <d9854e6ff97f4b0087dbe835a2a57c8f@BY2PR03MB299.namprd03.prod.outlook.com>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: driverdev-devel-bounces@linuxdriverproject.org
+To: KY Srinivasan <kys@microsoft.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "jasowang@redhat.com" <jasowang@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, "ohering@suse.com" <ohering@suse.com>, "hch@infradead.org" <hch@infradead.org>, "apw@canonical.com" <apw@canonical.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, jayamohank@gmail.com, sony.john-n@emulex.com
 
+On 6/5/14, 9:53 PM, KY Srinivasan wrote:
+>
+>
+>> -----Original Message-----
+>> From: Mike Christie [mailto:michaelc@cs.wisc.edu]
+>> Sent: Thursday, June 5, 2014 6:33 PM
+>> To: KY Srinivasan
+>> Cc: James Bottomley; linux-kernel@vger.kernel.org; apw@canonical.com;
+>> devel@linuxdriverproject.org; hch@infradead.org; linux-
+>> scsi@vger.kernel.org; ohering@suse.com; gregkh@linuxfoundation.org;
+>> jasowang@redhat.com
+>> Subject: Re: [PATCH 1/1] [SCSI] Fix a bug in deriving the FLUSH_TIMEOUT
+>> from the basic I/O timeout
+>>
+>> On 06/04/2014 12:15 PM, KY Srinivasan wrote:
+>>>
+>>>
+>>>> -----Original Message-----
+>>>> From: James Bottomley [mailto:jbottomley@parallels.com]
+>>>> Sent: Wednesday, June 4, 2014 10:02 AM
+>>>> To: KY Srinivasan
+>>>> Cc: linux-kernel@vger.kernel.org; apw@canonical.com;
+>>>> devel@linuxdriverproject.org; hch@infradead.org; linux-
+>>>> scsi@vger.kernel.org; ohering@suse.com; gregkh@linuxfoundation.org;
+>>>> jasowang@redhat.com
+>>>> Subject: Re: [PATCH 1/1] [SCSI] Fix a bug in deriving the
+>>>> FLUSH_TIMEOUT from the basic I/O timeout
+>>>>
+>>>> On Wed, 2014-06-04 at 09:33 -0700, K. Y. Srinivasan wrote:
+>>>>> Commit ID: 7e660100d85af860e7ad763202fff717adcdaacd added code to
+>>>>> derive the FLUSH_TIMEOUT from the basic I/O timeout. However, this
+>>>>> patch did not use the basic I/O timeout of the device. Fix this bug.
+>>>>>
+>>>>> Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
+>>>>> ---
+>>>>>   drivers/scsi/sd.c |    4 +++-
+>>>>>   1 files changed, 3 insertions(+), 1 deletions(-)
+>>>>>
+>>>>> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c index
+>>>>> e9689d5..54150b1 100644
+>>>>> --- a/drivers/scsi/sd.c
+>>>>> +++ b/drivers/scsi/sd.c
+>>>>> @@ -832,7 +832,9 @@ static int sd_setup_write_same_cmnd(struct
+>>>>> scsi_device *sdp, struct request *rq)
+>>>>>
+>>>>>   static int scsi_setup_flush_cmnd(struct scsi_device *sdp, struct
+>>>>> request *rq)  {
+>>>>> -	rq->timeout *= SD_FLUSH_TIMEOUT_MULTIPLIER;
+>>>>> +	int timeout = sdp->request_queue->rq_timeout;
+>>>>> +
+>>>>> +	rq->timeout = (timeout * SD_FLUSH_TIMEOUT_MULTIPLIER);
+>>>>
+>>>> Could you share where you found this to be a problem?  It looks like
+>>>> a bug in block because all inbound requests being prepared should
+>>>> have a timeout set, so block would be the place to fix it.
+>>>
+>>> Perhaps; what I found was that the value in rq->timeout was 0 coming
+>>> into this function and thus multiplying obviously has no effect.
+>>>
+>>
+>> I think you are right. We hit this problem because we are doing:
+>>
+>> scsi_request_fn -> blk_peek_request -> sd_prep_fn ->
+>> scsi_setup_flush_cmnd.
+>>
+>> At this time request->timeout is zero so the multiplication does nothing. See
+>> how sd_setup_write_same_cmnd will set the request->timeout at this time.
+>>
+>> Then in scsi_request_fn we do:
+>>
+>> scsi_request_fn -> blk_start_request -> blk_add_timer.
+>>
+>> At this time it will set the request->timeout if something like req block pc
+>> users (like scsi_execute() or block/scsi_ioctl.c) or the write same code
+>> mentioned above have not set the timeout.
+>
+> I don't think this is a recent change. Prior to this commit, we were setting the timeout
+> value in this function; it just happened to be a different constant unrelated to the I/O
+> timeout.
+>
 
-On Jun 6, 2014, at 7:22 AM, Tomas Henzl <thenzl@redhat.com> wrote:
+Yeah, it looks like when 7e660100d85af860e7ad763202fff717adcdaacd was 
+merged we were supposed to initialize it like in your patch in this thread.
 
-> commit 0e7c60c [SCSI] be2iscsi: fix memory leak in error path
-> fixed an potential junk pointer free if  mgmt_get_if_info() returned an error
-> 
-> fix it on one more place
-> 
-> Signed-off-by: Tomas Henzl <thenzl@redhat.com>
-> ---
-> diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
-> index 6045aa7..07934b0 100644
-> --- a/drivers/scsi/be2iscsi/be_mgmt.c
-> +++ b/drivers/scsi/be2iscsi/be_mgmt.c
-> @@ -1008,10 +1008,8 @@ int mgmt_set_ip(struct beiscsi_hba *phba,
-> 		BE2_IPV6 : BE2_IPV4 ;
-> 
-> 	rc = mgmt_get_if_info(phba, ip_type, &if_info);
-> -	if (rc) {
-> -		kfree(if_info);
-> +	if (rc)
-> 		return rc;
-> -	}
-> 
-> 	if (boot_proto == ISCSI_BOOTPROTO_DHCP) {
-> 		if (if_info->dhcp_state) {
-
-Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
-
+I guess we could do your patch in this thread, or if we want the block 
+layer to initialize the timeout before the prep_fn callout is called 
+then we would need to have the blk-flush.c code to that when it sets up 
+the request. If we do the latter, do we want the discard and write same 
+code to initialize the request's timeout before the prep_fn callout is 
+called too?
