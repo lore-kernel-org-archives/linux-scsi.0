@@ -1,89 +1,103 @@
-From: Vasu Dev <vasu.dev@linux.intel.com>
-Subject: Re: [PATCH 1/2] tcm_fc: Generate TASK_SET_FULL status for DataIN
- failures
-Date: Fri, 06 Jun 2014 13:51:05 -0700
-Message-ID: <1402087865.5752.99.camel@vi-devel>
-References: <1402011002-20771-1-git-send-email-nab@daterainc.com>
-	 <1402011002-20771-2-git-send-email-nab@daterainc.com>
+From: Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
+Subject: Re: [PATCH] fc: ensure scan_work isn't active when
+ freeing fc_rport
+Date: Fri, 6 Jun 2014 16:54:09 -0400
+Message-ID: <20140606205409.GD2543@hmsreliant.think-freely.org>
+References: <1401461974-7879-1-git-send-email-nhorman@tuxdriver.com>
+ <1401751370.5752.5.camel@vi-devel>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1402011002-20771-2-git-send-email-nab@daterainc.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@daterainc.com>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, fcoe-devel <fcoe-devel@open-fcoe.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Jun Wu <jwu@stormojo.com>
+Return-path: <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1401751370.5752.5.camel@vi-devel>
+List-Unsubscribe: <http://lists.open-fcoe.org/mailman/options/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.open-fcoe.org/pipermail/fcoe-devel>
+List-Post: <mailto:fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+List-Help: <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.open-fcoe.org/mailman/listinfo/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
+Errors-To: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+Sender: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+To: Vasu Dev <vasu.dev-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Cc: fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 2014-06-05 at 23:30 +0000, Nicholas A. Bellinger wrote:
-> From: Nicholas Bellinger <nab@linux-iscsi.org>
+On Mon, Jun 02, 2014 at 04:22:50PM -0700, Vasu Dev wrote:
+> On Fri, 2014-05-30 at 10:59 -0400, Neil Horman wrote:
+> > debugfs caught this:
+> > WARNING: at lib/debugobjects.c:260 debug_print_object+0x83/0xa0()
+> > ODEBUG: free active (active state 0) object type: work_struct
+> > hint: fc_scsi_scan_rport+0x0/0xd0 [scsi_transport_fc]
+> >  CPU: 1 PID: 184 Comm: kworker/1:1 Tainted: G        W
+> > --------------   3.10.0-123.el7.x86_64.debug #1
+> > Hardware name: HP ProLiant DL120 G7, BIOS J01 07/01/2013
+> > Workqueue: fc_wq_5 fc_rport_final_delete [scsi_transport_fc]
+> > Call Trace:
+> > [<ffffffff8169efec>] dump_stack+0x19/0x1b
+> > [<ffffffff8106cbd1>] warn_slowpath_common+0x61/0x80
+> > [<ffffffff8106cc4c>] warn_slowpath_fmt+0x5c/0x80
+> > [<ffffffff8133e003>] debug_print_object+0x83/0xa0
+> > [<ffffffffa04e2f40>] ? fc_parse_wwn+0x100/0x100
+> > 
+> > [<ffffffff8133f23b>] debug_check_no_obj_freed+0x22b/0x270
+> > [<ffffffffa04e127e>] ? fc_rport_dev_release+0x1e/0x30
+> > [<ffffffff811db3e9>] kfree+0xd9/0x2d0
+> > [<ffffffffa04e127e>] fc_rport_dev_release+0x1e/0x30
+> > [<ffffffff81428032>] device_release+0x32/0xa0
+> > [<ffffffff8132701e>] kobject_release+0x7e/0x1b0
+> > [<ffffffff81326ed8>] kobject_put+0x28/0x60
+> > [<ffffffff81428397>] put_device+0x17/0x20
+> > [<ffffffffa04e5025>] fc_rport_final_delete+0x165/0x210
+> > [<ffffffff810959b0>] process_one_work+0x220/0x710
+> > [<ffffffff81095944>] ? process_one_work+0x1b4/0x710
+> > [<ffffffff81095fbb>] worker_thread+0x11b/0x3a0
+> > [<ffffffff81095ea0>] ? process_one_work+0x710/0x710
+> > [<ffffffff8109e0cd>] kthread+0xed/0x100
+> > [<ffffffff8109dfe0>] ? insert_kthread_work+0x80/0x80
+> > [<ffffffff816b2fec>] ret_from_fork+0x7c/0xb0
+> > [<ffffffff8109dfe0>] ? insert_kthread_work+0x80/0x80
+> > 
+> > Seems to be because the scan_work work_struct might be active when the housing
+> > fc_rport struct gets freed.  Ensure that we cancel it prior to freeing the rport
+> > 
+> > Signed-off-by: Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
+> > CC: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> > CC: Robert Love <robert.w.love-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+> > CC: Vasu Dev <vasu.dev-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+> > ---
+> >  drivers/scsi/scsi_transport_fc.c | 1 +
+> >  1 file changed, 1 insertion(+)
+> > 
+> > diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+> > index 4628fd5..5bd552c 100644
+> > --- a/drivers/scsi/scsi_transport_fc.c
+> > +++ b/drivers/scsi/scsi_transport_fc.c
+> > @@ -2548,6 +2548,7 @@ fc_rport_final_delete(struct work_struct *work)
+> >  			fc_flush_devloss(shost);
+> >  		if (!cancel_delayed_work(&rport->dev_loss_work))
+> >  			fc_flush_devloss(shost);
+> > +		cancel_work_sync(&rport->scan_work);
 > 
-> This patch changes ft_queue_data_in() to set SAM_STAT_TASK_SET_FULL
-> status upon a lport->tt.seq_send() failure, where it will now stop
-> sending subsequent DataIN, and immediately attempt to send the
-> response with exception status.
+> Make sense to ensure pending work canceled, adding James Smart for his
+> ACK as transport FC class author. 
 > 
-> Sending a response with SAM_STAT_TASK_SET_FULL status is useful in
-> order to signal the initiator that it should try to reduce it's
-> current queue_depth, to lower the number of outstanding I/Os on
-> the wire.
 > 
-> Also, add a check to skip sending DataIN if TASK_SET_FULL status
-> has already been set due to a response lport->tt.seq_send()
-> failure, that has asked target-core to requeue a response.
+> Reviewed-by: Vasu Dev <vasu.dev-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org> 
 > 
-> Reported-by: Vasu Dev <vasu.dev@linux.intel.com>
-> Cc: Vasu Dev <vasu.dev@linux.intel.com>
-> Cc: Jun Wu <jwu@stormojo.com>
-> Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
-> ---
->  drivers/target/tcm_fc/tfc_io.c |   14 +++++++++++++-
->  1 file changed, 13 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/target/tcm_fc/tfc_io.c b/drivers/target/tcm_fc/tfc_io.c
-> index e415af3..140659f 100644
-> --- a/drivers/target/tcm_fc/tfc_io.c
-> +++ b/drivers/target/tcm_fc/tfc_io.c
-> @@ -82,6 +82,10 @@ int ft_queue_data_in(struct se_cmd *se_cmd)
->  
->  	if (cmd->aborted)
->  		return 0;
-> +
-> +	if (se_cmd->scsi_status == SAM_STAT_TASK_SET_FULL)
-> +		goto queue_status;
-> +
->  	ep = fc_seq_exch(cmd->seq);
->  	lport = ep->lp;
->  	cmd->seq = lport->tt.seq_start_next(cmd->seq);
-> @@ -178,14 +182,22 @@ int ft_queue_data_in(struct se_cmd *se_cmd)
->  			       FC_TYPE_FCP, f_ctl, fh_off);
->  		error = lport->tt.seq_send(lport, seq, fp);
->  		if (error) {
-> -			/* XXX For now, initiator will retry */
->  			pr_err_ratelimited("%s: Failed to send frame %p, "
->  						"xid <0x%x>, remaining %zu, "
->  						"lso_max <0x%x>\n",
->  						__func__, fp, ep->xid,
->  						remaining, lport->lso_max);
-> +			/*
-> +			 * Generate a TASK_SET_FULL status to notify the
-> +			 * initiator to reduce it's queue_depth, ignoring
-> +			 * the rest of the data-in and immediately attempt
-> +			 * to send the response.
-> +			 */
+Ping on this, Something just occured to me.  I was thinking (perhaps
+erroneously) that this would go through the FCoE tree, but I don't see that
+you've setup a tree yet vasu (and Rob's has been idle for 6 months).  Whats the
+plan for this (and future) fcoe patchs.  Will you have a tree, or will we send
+this through Christophs new scsi tree perhaps?
 
-I see above added check will drop rest of the frames but cannot find
-notifying to initiator with the TASK_SET_FULL status as in comments
-above, may be just the comment needs update otherwise code changes are
-fine.
+Neil
 
-> +			se_cmd->scsi_status = SAM_STAT_TASK_SET_FULL;
-> +			break;
->  		}
->  	}
-> +queue_status:
->  	return ft_queue_status(se_cmd);
->  }
->  
-
-Reviewed-by: Vasu Dev <vasu.dev@intel.com> 
+> 
+> >  		spin_lock_irqsave(shost->host_lock, flags);
+> >  		rport->flags &= ~FC_RPORT_DEVLOSS_PENDING;
+> >  	}
+> 
+> 
+> 
