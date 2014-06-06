@@ -1,33 +1,38 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: Re: [PATCH 4/7] mptfusion: zero kernel-space source of copy_to_user
-Date: Fri, 6 Jun 2014 11:31:04 +0300
-Message-ID: <20140606083104.GA5015@mwanda>
-References: <1401900589-19672-1-git-send-email-joe.lawrence@stratus.com>
- <1401900589-19672-5-git-send-email-joe.lawrence@stratus.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: [PATCH] be2iscsi: add an missing goto in error path
+Date: Fri, 06 Jun 2014 14:06:30 +0200
+Message-ID: <5391AEC6.1040207@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:27588 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751390AbaFFIbo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Jun 2014 04:31:44 -0400
-Content-Disposition: inline
-In-Reply-To: <1401900589-19672-5-git-send-email-joe.lawrence@stratus.com>
+Received: from mx1.redhat.com ([209.132.183.28]:15828 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750759AbaFFMGe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 6 Jun 2014 08:06:34 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Joe Lawrence <joe.lawrence@stratus.com>
-Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
+To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+Cc: jayamohank@gmail.com, sony.john-n@emulex.com
 
-On Wed, Jun 04, 2014 at 12:49:46PM -0400, Joe Lawrence wrote:
-> Fixes the following smatch warning:
-> 
->   drivers/message/fusion/mptctl.c:1369 mptctl_getiocinfo() warn:
->     possible info leak 'karg'
-> 
+a jump to 'free_memory' is apparently missing
 
-This is a false positive.  I will push a fix for this in Smatch next
-week.
+Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+---
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index ac54cf5..442982d 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -4209,6 +4209,8 @@ static int hba_setup_cid_tbls(struct beiscsi_hba *phba)
+ 		kfree(phba->ep_array);
+ 		phba->ep_array = NULL;
+ 		ret = -ENOMEM;
++
++		goto free_memory;
+ 	}
+ 
+ 	for (i = 0; i < phba->params.cxns_per_ctrl; i++) {
+-- 
+1.8.3.1
 
-regards,
-dan carpenter
 
