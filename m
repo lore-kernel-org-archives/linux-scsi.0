@@ -1,48 +1,42 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] mpt3sas: delay scsi_add_host call to work with scsi-mq
-Date: Fri, 6 Jun 2014 00:13:56 -0700
-Message-ID: <20140606071356.GA29477@infradead.org>
-References: <94D0CD8314A33A4D9D801C0FE68B402958B051A0@G4W3202.americas.hpqcorp.net>
+From: Maurizio Lombardi <mlombard@redhat.com>
+Subject: Re: [PATCH] scsi_lib: replace ambiguous "Unhandled error code"
+ messages.
+Date: Fri, 6 Jun 2014 09:32:14 +0200
+Message-ID: <20140606073214.GA2115@dhcp-27-189.brq.redhat.com>
+References: <1401099204-18050-1-git-send-email-mlombard@redhat.com>
+ <20140526162506.GB18319@infradead.org>
+ <20140526192715.GA2271@dhcp-27-189.brq.redhat.com>
+ <20140528110018.GA30751@infradead.org>
+ <1401287272.2288.29.camel@dabdike>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:57006 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751316AbaFFHOA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Jun 2014 03:14:00 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:15056 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751790AbaFFHcm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 6 Jun 2014 03:32:42 -0400
 Content-Disposition: inline
-In-Reply-To: <94D0CD8314A33A4D9D801C0FE68B402958B051A0@G4W3202.americas.hpqcorp.net>
+In-Reply-To: <1401287272.2288.29.camel@dabdike>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Cc: "Nagalakshmi.Nandigama@lsi.com" <Nagalakshmi.Nandigama@lsi.com>, "Sreekanth.Reddy@lsi.com" <Sreekanth.Reddy@lsi.com>, Adam Radford <adam.radford@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Joe Maloy <joe.maloy@avagotech.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
 
-On Fri, Jun 06, 2014 at 01:03:41AM +0000, Elliott, Robert (Server Storage) wrote:
-> In _scsih_probe, delay the call to scsi_add_host until
-> the host template has been completely filled in.
+On Wed, May 28, 2014 at 06:27:52PM +0400, James Bottomley wrote:
+> 
+> I'm happy with eliminating "Unhanndled Error Code" because that is
+> misleading ... we should only get there if we have a DID_X return and
+> they're all fatal errors which will be printed.
+> 
+> I'm less happy removing "Unhandled Sense Code".  The danger is that we
+> get some harmless sense code we should have handled and instead error
+> the command.  Since for this error we know the next print will be the
+> sense code, what about changing it to "Failing Command with sense code:"
 
-Beside scsi-mq not picking up the queue depth callng scsi_add_host
-on a not fully setup host also is dangerous because scsi_add_host sets
-the host life and it can now see userspace LUN scans or removals, so the
-fix is needed either.
+It's ok with me,
 
-The late scsi_remove_host also fixed by your patch is just as dangerous.
+I'm going to resend the patch in a few minutes.
 
-Given the copy and paste nature of the two driver I suspect mpt2sas will
-need the same fix.
+Thanks,
+Maurizio Lombardi
 
-> +	if ((scsi_add_host(shost, &pdev->dev))) {
-> +		pr_err(MPT3SAS_FMT "failure at %s:%d/%s()!\n",
-> +		    ioc->name, __FILE__, __LINE__, __func__);
-> +		goto out_add_shost_fail;
-> +	}
-> +
->  	scsi_scan_host(shost);
-
-No need to fix this now, but discarding the error return from
-scsi_add_host is a bad idea, the function should eventually switch to
-having an int error variable for it.
-
-Looks good,
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
