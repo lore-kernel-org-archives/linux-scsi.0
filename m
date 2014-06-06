@@ -1,77 +1,110 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 1/1] [SCSI] Fix a bug in deriving the FLUSH_TIMEOUT from
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: [PATCH 1/1] [SCSI] Fix a bug in deriving the FLUSH_TIMEOUT from
  the basic I/O timeout
-Date: Thu, 05 Jun 2014 20:32:37 -0500
-Message-ID: <53911A35.7010805@cs.wisc.edu>
-References: <1401899623-24194-1-git-send-email-kys@microsoft.com> <1401901323.17510.23.camel@dabdike> <d61f4b87a72544e4b0c1e1872a76f97b@BY2PR03MB299.namprd03.prod.outlook.com>
+Date: Fri, 6 Jun 2014 02:53:15 +0000
+Message-ID: <d9854e6ff97f4b0087dbe835a2a57c8f@BY2PR03MB299.namprd03.prod.outlook.com>
+References: <1401899623-24194-1-git-send-email-kys@microsoft.com>
+ <1401901323.17510.23.camel@dabdike>
+ <d61f4b87a72544e4b0c1e1872a76f97b@BY2PR03MB299.namprd03.prod.outlook.com>
+ <53911A35.7010805@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <d61f4b87a72544e4b0c1e1872a76f97b@BY2PR03MB299.namprd03.prod.outlook.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: KY Srinivasan <kys@microsoft.com>
-Cc: James Bottomley <jbottomley@parallels.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "apw@canonical.com" <apw@canonical.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "ohering@suse.com" <ohering@suse.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "jasowang@redhat.com" <jasowang@redhat.com>
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <53911A35.7010805@cs.wisc.edu>
+Content-Language: en-US
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: driverdev-devel-bounces@linuxdriverproject.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "jasowang@redhat.com" <jasowang@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, "ohering@suse.com" <ohering@suse.com>, "hch@infradead.org" <hch@infradead.org>, "apw@canonical.com" <apw@canonical.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 06/04/2014 12:15 PM, KY Srinivasan wrote:
+
+
+> -----Original Message-----
+> From: Mike Christie [mailto:michaelc@cs.wisc.edu]
+> Sent: Thursday, June 5, 2014 6:33 PM
+> To: KY Srinivasan
+> Cc: James Bottomley; linux-kernel@vger.kernel.org; apw@canonical.com;
+> devel@linuxdriverproject.org; hch@infradead.org; linux-
+> scsi@vger.kernel.org; ohering@suse.com; gregkh@linuxfoundation.org;
+> jasowang@redhat.com
+> Subject: Re: [PATCH 1/1] [SCSI] Fix a bug in deriving the FLUSH_TIMEOUT
+> from the basic I/O timeout
+> 
+> On 06/04/2014 12:15 PM, KY Srinivasan wrote:
+> >
+> >
+> >> -----Original Message-----
+> >> From: James Bottomley [mailto:jbottomley@parallels.com]
+> >> Sent: Wednesday, June 4, 2014 10:02 AM
+> >> To: KY Srinivasan
+> >> Cc: linux-kernel@vger.kernel.org; apw@canonical.com;
+> >> devel@linuxdriverproject.org; hch@infradead.org; linux-
+> >> scsi@vger.kernel.org; ohering@suse.com; gregkh@linuxfoundation.org;
+> >> jasowang@redhat.com
+> >> Subject: Re: [PATCH 1/1] [SCSI] Fix a bug in deriving the
+> >> FLUSH_TIMEOUT from the basic I/O timeout
+> >>
+> >> On Wed, 2014-06-04 at 09:33 -0700, K. Y. Srinivasan wrote:
+> >>> Commit ID: 7e660100d85af860e7ad763202fff717adcdaacd added code to
+> >>> derive the FLUSH_TIMEOUT from the basic I/O timeout. However, this
+> >>> patch did not use the basic I/O timeout of the device. Fix this bug.
+> >>>
+> >>> Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
+> >>> ---
+> >>>  drivers/scsi/sd.c |    4 +++-
+> >>>  1 files changed, 3 insertions(+), 1 deletions(-)
+> >>>
+> >>> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c index
+> >>> e9689d5..54150b1 100644
+> >>> --- a/drivers/scsi/sd.c
+> >>> +++ b/drivers/scsi/sd.c
+> >>> @@ -832,7 +832,9 @@ static int sd_setup_write_same_cmnd(struct
+> >>> scsi_device *sdp, struct request *rq)
+> >>>
+> >>>  static int scsi_setup_flush_cmnd(struct scsi_device *sdp, struct
+> >>> request *rq)  {
+> >>> -	rq->timeout *= SD_FLUSH_TIMEOUT_MULTIPLIER;
+> >>> +	int timeout = sdp->request_queue->rq_timeout;
+> >>> +
+> >>> +	rq->timeout = (timeout * SD_FLUSH_TIMEOUT_MULTIPLIER);
+> >>
+> >> Could you share where you found this to be a problem?  It looks like
+> >> a bug in block because all inbound requests being prepared should
+> >> have a timeout set, so block would be the place to fix it.
+> >
+> > Perhaps; what I found was that the value in rq->timeout was 0 coming
+> > into this function and thus multiplying obviously has no effect.
+> >
+> 
+> I think you are right. We hit this problem because we are doing:
+> 
+> scsi_request_fn -> blk_peek_request -> sd_prep_fn ->
+> scsi_setup_flush_cmnd.
+> 
+> At this time request->timeout is zero so the multiplication does nothing. See
+> how sd_setup_write_same_cmnd will set the request->timeout at this time.
+> 
+> Then in scsi_request_fn we do:
+> 
+> scsi_request_fn -> blk_start_request -> blk_add_timer.
+> 
+> At this time it will set the request->timeout if something like req block pc
+> users (like scsi_execute() or block/scsi_ioctl.c) or the write same code
+> mentioned above have not set the timeout.
+
+I don't think this is a recent change. Prior to this commit, we were setting the timeout
+value in this function; it just happened to be a different constant unrelated to the I/O
+timeout.
+
+K. Y
 > 
 > 
->> -----Original Message-----
->> From: James Bottomley [mailto:jbottomley@parallels.com]
->> Sent: Wednesday, June 4, 2014 10:02 AM
->> To: KY Srinivasan
->> Cc: linux-kernel@vger.kernel.org; apw@canonical.com;
->> devel@linuxdriverproject.org; hch@infradead.org; linux-
->> scsi@vger.kernel.org; ohering@suse.com; gregkh@linuxfoundation.org;
->> jasowang@redhat.com
->> Subject: Re: [PATCH 1/1] [SCSI] Fix a bug in deriving the FLUSH_TIMEOUT
->> from the basic I/O timeout
->>
->> On Wed, 2014-06-04 at 09:33 -0700, K. Y. Srinivasan wrote:
->>> Commit ID: 7e660100d85af860e7ad763202fff717adcdaacd added code to
->>> derive the FLUSH_TIMEOUT from the basic I/O timeout. However, this
->>> patch did not use the basic I/O timeout of the device. Fix this bug.
->>>
->>> Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
->>> ---
->>>  drivers/scsi/sd.c |    4 +++-
->>>  1 files changed, 3 insertions(+), 1 deletions(-)
->>>
->>> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c index
->>> e9689d5..54150b1 100644
->>> --- a/drivers/scsi/sd.c
->>> +++ b/drivers/scsi/sd.c
->>> @@ -832,7 +832,9 @@ static int sd_setup_write_same_cmnd(struct
->>> scsi_device *sdp, struct request *rq)
->>>
->>>  static int scsi_setup_flush_cmnd(struct scsi_device *sdp, struct
->>> request *rq)  {
->>> -	rq->timeout *= SD_FLUSH_TIMEOUT_MULTIPLIER;
->>> +	int timeout = sdp->request_queue->rq_timeout;
->>> +
->>> +	rq->timeout = (timeout * SD_FLUSH_TIMEOUT_MULTIPLIER);
->>
->> Could you share where you found this to be a problem?  It looks like a bug in
->> block because all inbound requests being prepared should have a timeout
->> set, so block would be the place to fix it.
-> 
-> Perhaps; what I found was that the value in rq->timeout was 0 coming into
-> this function and thus multiplying obviously has no effect.
-> 
-
-I think you are right. We hit this problem because we are doing:
-
-scsi_request_fn -> blk_peek_request -> sd_prep_fn -> scsi_setup_flush_cmnd.
-
-At this time request->timeout is zero so the multiplication does
-nothing. See how sd_setup_write_same_cmnd will set the request->timeout
-at this time.
-
-Then in scsi_request_fn we do:
-
-scsi_request_fn -> blk_start_request -> blk_add_timer.
-
-At this time it will set the request->timeout if something like req
-block pc users (like scsi_execute() or block/scsi_ioctl.c) or the write
-same code mentioned above have not set the timeout.
