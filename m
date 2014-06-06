@@ -1,43 +1,159 @@
-From: Ken Helias <kenhelias@web.de>
-Subject: [PATCH 11/13] iscsi-target: Use list_add_(before|after) macros
-Date: Fri,  6 Jun 2014 19:34:30 +0200
-Message-ID: <1402076072-4044-11-git-send-email-kenhelias@web.de>
-References: <1402076072-4044-1-git-send-email-kenhelias@web.de>
+From: James Bottomley <jbottomley@parallels.com>
+Subject: Re: [PATCH 1/1] [SCSI] Fix a bug in deriving the FLUSH_TIMEOUT from
+ the basic I/O timeout
+Date: Fri, 6 Jun 2014 17:52:48 +0000
+Message-ID: <1402077167.2207.89.camel@dabdike.int.hansenpartnership.com>
+References: <1401899623-24194-1-git-send-email-kys@microsoft.com>
+	 <1401901323.17510.23.camel@dabdike>
+	 <d61f4b87a72544e4b0c1e1872a76f97b@BY2PR03MB299.namprd03.prod.outlook.com>
+	 <53911A35.7010805@cs.wisc.edu>
+	 <d9854e6ff97f4b0087dbe835a2a57c8f@BY2PR03MB299.namprd03.prod.outlook.com>
+	 <5391F801.4010107@cs.wisc.edu>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1402076072-4044-1-git-send-email-kenhelias@web.de>
+In-Reply-To: <5391F801.4010107@cs.wisc.edu>
+Content-Language: en-US
+Content-ID: <6EBF7AC574A9D24DB6472C945B247365@sw.swsoft.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, Ken Helias <kenhelias@firemail.de>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+To: "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "apw@canonical.com" <apw@canonical.com>, "kys@microsoft.com" <kys@microsoft.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "ohering@suse.com" <ohering@suse.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "jasowang@redhat.com" <jasowang@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Ken Helias <kenhelias@firemail.de>
+On Fri, 2014-06-06 at 12:18 -0500, Mike Christie wrote:
+> On 6/5/14, 9:53 PM, KY Srinivasan wrote:
+> >
+> >
+> >> -----Original Message-----
+> >> From: Mike Christie [mailto:michaelc@cs.wisc.edu]
+> >> Sent: Thursday, June 5, 2014 6:33 PM
+> >> To: KY Srinivasan
+> >> Cc: James Bottomley; linux-kernel@vger.kernel.org; apw@canonical.com;
+> >> devel@linuxdriverproject.org; hch@infradead.org; linux-
+> >> scsi@vger.kernel.org; ohering@suse.com; gregkh@linuxfoundation.org;
+> >> jasowang@redhat.com
+> >> Subject: Re: [PATCH 1/1] [SCSI] Fix a bug in deriving the FLUSH_TIMEOUT
+> >> from the basic I/O timeout
+> >>
+> >> On 06/04/2014 12:15 PM, KY Srinivasan wrote:
+> >>>
+> >>>
+> >>>> -----Original Message-----
+> >>>> From: James Bottomley [mailto:jbottomley@parallels.com]
+> >>>> Sent: Wednesday, June 4, 2014 10:02 AM
+> >>>> To: KY Srinivasan
+> >>>> Cc: linux-kernel@vger.kernel.org; apw@canonical.com;
+> >>>> devel@linuxdriverproject.org; hch@infradead.org; linux-
+> >>>> scsi@vger.kernel.org; ohering@suse.com; gregkh@linuxfoundation.org;
+> >>>> jasowang@redhat.com
+> >>>> Subject: Re: [PATCH 1/1] [SCSI] Fix a bug in deriving the
+> >>>> FLUSH_TIMEOUT from the basic I/O timeout
+> >>>>
+> >>>> On Wed, 2014-06-04 at 09:33 -0700, K. Y. Srinivasan wrote:
+> >>>>> Commit ID: 7e660100d85af860e7ad763202fff717adcdaacd added code to
+> >>>>> derive the FLUSH_TIMEOUT from the basic I/O timeout. However, this
+> >>>>> patch did not use the basic I/O timeout of the device. Fix this bug.
+> >>>>>
+> >>>>> Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
+> >>>>> ---
+> >>>>>   drivers/scsi/sd.c |    4 +++-
+> >>>>>   1 files changed, 3 insertions(+), 1 deletions(-)
+> >>>>>
+> >>>>> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c index
+> >>>>> e9689d5..54150b1 100644
+> >>>>> --- a/drivers/scsi/sd.c
+> >>>>> +++ b/drivers/scsi/sd.c
+> >>>>> @@ -832,7 +832,9 @@ static int sd_setup_write_same_cmnd(struct
+> >>>>> scsi_device *sdp, struct request *rq)
+> >>>>>
+> >>>>>   static int scsi_setup_flush_cmnd(struct scsi_device *sdp, struct
+> >>>>> request *rq)  {
+> >>>>> -	rq->timeout *= SD_FLUSH_TIMEOUT_MULTIPLIER;
+> >>>>> +	int timeout = sdp->request_queue->rq_timeout;
+> >>>>> +
+> >>>>> +	rq->timeout = (timeout * SD_FLUSH_TIMEOUT_MULTIPLIER);
+> >>>>
+> >>>> Could you share where you found this to be a problem?  It looks like
+> >>>> a bug in block because all inbound requests being prepared should
+> >>>> have a timeout set, so block would be the place to fix it.
+> >>>
+> >>> Perhaps; what I found was that the value in rq->timeout was 0 coming
+> >>> into this function and thus multiplying obviously has no effect.
+> >>>
+> >>
+> >> I think you are right. We hit this problem because we are doing:
+> >>
+> >> scsi_request_fn -> blk_peek_request -> sd_prep_fn ->
+> >> scsi_setup_flush_cmnd.
+> >>
+> >> At this time request->timeout is zero so the multiplication does nothing. See
+> >> how sd_setup_write_same_cmnd will set the request->timeout at this time.
+> >>
+> >> Then in scsi_request_fn we do:
+> >>
+> >> scsi_request_fn -> blk_start_request -> blk_add_timer.
+> >>
+> >> At this time it will set the request->timeout if something like req block pc
+> >> users (like scsi_execute() or block/scsi_ioctl.c) or the write same code
+> >> mentioned above have not set the timeout.
+> >
+> > I don't think this is a recent change. Prior to this commit, we were setting the timeout
+> > value in this function; it just happened to be a different constant unrelated to the I/O
+> > timeout.
+> >
+> 
+> Yeah, it looks like when 7e660100d85af860e7ad763202fff717adcdaacd was 
+> merged we were supposed to initialize it like in your patch in this thread.
+> 
+> I guess we could do your patch in this thread, or if we want the block 
+> layer to initialize the timeout before the prep_fn callout is called 
+> then we would need to have the blk-flush.c code to that when it sets up 
+> the request. If we do the latter, do we want the discard and write same 
+> code to initialize the request's timeout before the prep_fn callout is 
+> called too?
 
-Many places in the code uses list_add_tail/list_add to insert an entry
-before/after another entry. This confuses the reader because these are usually
-used to add an item to a list_head and not an entry. Better use the self
-explaining function name.
+I looked through the call chain; it seems to be intentional behaviour on
+the part of block.  Just from an mq point of view, it would make better
+code if we unconditionally initialised rq->timeout early and allowed
+prep to modify it and then dumped the if(!req->timeout) in
+blk_add_timer(), but it's a marginal if condition that would compile to
+a conditional store on sensible architectures, so losing the conditional
+probably isn't worth worrying about.
 
-Signed-off-by: Ken Helias <kenhelias@firemail.de>
-Cc: linux-scsi@vger.kernel.org
-Cc: target-devel@vger.kernel.org
+Cc'd Jens for his opinion with the block patch
+
+James
+
 ---
- drivers/target/iscsi/iscsi_target_erl1.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/target/iscsi/iscsi_target_erl1.c b/drivers/target/iscsi/iscsi_target_erl1.c
-index cda4d80..1926d0b 100644
---- a/drivers/target/iscsi/iscsi_target_erl1.c
-+++ b/drivers/target/iscsi/iscsi_target_erl1.c
-@@ -835,8 +835,8 @@ static int iscsit_attach_ooo_cmdsn(
- 					continue;
+diff --git a/block/blk-core.c b/block/blk-core.c
+index a0e3096..cad6b2a 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -111,6 +111,7 @@ void blk_rq_init(struct request_queue *q, struct request *rq)
+ 	rq->cmd = rq->__cmd;
+ 	rq->cmd_len = BLK_MAX_CDB;
+ 	rq->tag = -1;
++	rq->timeout = q->rq_timeout;
+ 	rq->start_time = jiffies;
+ 	set_start_time_ns(rq);
+ 	rq->part = NULL;
+diff --git a/block/blk-timeout.c b/block/blk-timeout.c
+index d96f706..9063ade 100644
+--- a/block/blk-timeout.c
++++ b/block/blk-timeout.c
+@@ -180,13 +180,6 @@ void __blk_add_timer(struct request *req, struct list_head *timeout_list)
  
- 				/* Insert before this entry */
--				list_add(&ooo_cmdsn->ooo_list,
--					ooo_tmp->ooo_list.prev);
-+				list_add_before(&ooo_cmdsn->ooo_list,
-+						&ooo_tmp->ooo_list);
- 				break;
- 			}
- 		}
--- 
-2.0.0
+ 	BUG_ON(!list_empty(&req->timeout_list));
+ 
+-	/*
+-	 * Some LLDs, like scsi, peek at the timeout to prevent a
+-	 * command from being retried forever.
+-	 */
+-	if (!req->timeout)
+-		req->timeout = q->rq_timeout;
+-
+ 	req->deadline = jiffies + req->timeout;
+ 	if (timeout_list)
+ 		list_add_tail(&req->timeout_list, timeout_list);
