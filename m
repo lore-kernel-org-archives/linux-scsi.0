@@ -1,59 +1,77 @@
-From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Subject: [PATCH] mpt3sas: delay scsi_add_host call to work with scsi-mq
-Date: Fri, 6 Jun 2014 01:03:41 +0000
-Message-ID: <94D0CD8314A33A4D9D801C0FE68B402958B051A0@G4W3202.americas.hpqcorp.net>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 1/1] [SCSI] Fix a bug in deriving the FLUSH_TIMEOUT from
+ the basic I/O timeout
+Date: Thu, 05 Jun 2014 20:32:37 -0500
+Message-ID: <53911A35.7010805@cs.wisc.edu>
+References: <1401899623-24194-1-git-send-email-kys@microsoft.com> <1401901323.17510.23.camel@dabdike> <d61f4b87a72544e4b0c1e1872a76f97b@BY2PR03MB299.namprd03.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3426.houston.hp.com ([15.201.208.54]:50807 "EHLO
-	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751643AbaFFBGB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jun 2014 21:06:01 -0400
-Content-Language: en-US
-Content-ID: <6337CEF7BE06094E98821AA6C2F493E5@Compaq.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <d61f4b87a72544e4b0c1e1872a76f97b@BY2PR03MB299.namprd03.prod.outlook.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: KY Srinivasan <kys@microsoft.com>
+Cc: James Bottomley <jbottomley@parallels.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "apw@canonical.com" <apw@canonical.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "ohering@suse.com" <ohering@suse.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "jasowang@redhat.com" <jasowang@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Nagalakshmi.Nandigama@lsi.com" <Nagalakshmi.Nandigama@lsi.com>, "Sreekanth.Reddy@lsi.com" <Sreekanth.Reddy@lsi.com>
-Cc: Adam Radford <adam.radford@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Joe Maloy <joe.maloy@avagotech.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-SW4gX3Njc2loX3Byb2JlLCBkZWxheSB0aGUgY2FsbCB0byBzY3NpX2FkZF9ob3N0IHVudGlsDQp0
-aGUgaG9zdCB0ZW1wbGF0ZSBoYXMgYmVlbiBjb21wbGV0ZWx5IGZpbGxlZCBpbi4NCg0KT3RoZXJ3
-aXNlLCB0aGUgZGVmYXVsdCAuY2FuX3F1ZXVlIHZhbHVlIG9mIDEgY2F1c2VzDQpzY3NpLW1xIHRv
-IHNldCB0aGUgYmxvY2sgbGF5ZXIgcmVxdWVzdCBxdWV1ZSBzaXplDQp0byBpdHMgbWluaW11bSBz
-aXplLCByZXN1bHRpbmcgaW4gYXdmdWwgcGVyZm9ybWFuY2UuDQoNCkluIF9zY3NpaF9wcm9iZSBl
-cnJvciBoYW5kbGluZywgY2FsbCBtcHQzc2FzX2Jhc2VfZGV0YWNoDQpyYXRoZXIgdGhhbiBzY3Np
-X3JlbW92ZV9ob3N0IHRvIHByb3Blcmx5IGNsZWFuIHVwDQppbiByZXZlcnNlIG9yZGVyLg0KDQpJ
-biBfc2NzaWhfcmVtb3ZlLCBjYWxsIHNjc2lfcmVtb3ZlX2hvc3QgZWFybGllcg0KdG8gY2xlYW4g
-dXAgaW4gcmV2ZXJzZSBvcmRlci4NCg0KU2lnbmVkLW9mZi1ieTogUm9iZXJ0IEVsbGlvdHQgPGVs
-bGlvdHRAaHAuY29tPg0KLS0tDQogZHJpdmVycy9zY3NpL21wdDNzYXMvbXB0M3Nhc19zY3NpaC5j
-IHwgICAyMCArKysrKysrKysrLS0tLS0tLS0tLQ0KIDEgZmlsZXMgY2hhbmdlZCwgMTAgaW5zZXJ0
-aW9ucygrKSwgMTAgZGVsZXRpb25zKC0pDQoNCmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvbXB0
-M3Nhcy9tcHQzc2FzX3Njc2loLmMgYi9kcml2ZXJzL3Njc2kvbXB0M3Nhcy9tcHQzc2FzX3Njc2lo
-LmMNCmluZGV4IDE4ZTcxM2QuLjUyOWI1ZmQgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL3Njc2kvbXB0
-M3Nhcy9tcHQzc2FzX3Njc2loLmMNCisrKyBiL2RyaXZlcnMvc2NzaS9tcHQzc2FzL21wdDNzYXNf
-c2NzaWguYw0KQEAgLTc0MzEsOSArNzQzMSw5IEBAIHN0YXRpYyB2b2lkIF9zY3NpaF9yZW1vdmUo
-c3RydWN0IHBjaV9kZXYgKnBkZXYpDQogCX0NCiANCiAJc2FzX3JlbW92ZV9ob3N0KHNob3N0KTsN
-CisJc2NzaV9yZW1vdmVfaG9zdChzaG9zdCk7DQogCW1wdDNzYXNfYmFzZV9kZXRhY2goaW9jKTsN
-CiAJbGlzdF9kZWwoJmlvYy0+bGlzdCk7DQotCXNjc2lfcmVtb3ZlX2hvc3Qoc2hvc3QpOw0KIAlz
-Y3NpX2hvc3RfcHV0KHNob3N0KTsNCiB9DQogDQpAQCAtNzgwMSwxMyArNzgwMSw2IEBAIF9zY3Np
-aF9wcm9iZShzdHJ1Y3QgcGNpX2RldiAqcGRldiwgY29uc3Qgc3RydWN0IHBjaV9kZXZpY2VfaWQg
-KmlkKQ0KIAkJfQ0KIAl9DQogDQotCWlmICgoc2NzaV9hZGRfaG9zdChzaG9zdCwgJnBkZXYtPmRl
-dikpKSB7DQotCQlwcl9lcnIoTVBUM1NBU19GTVQgImZhaWx1cmUgYXQgJXM6JWQvJXMoKSFcbiIs
-DQotCQkgICAgaW9jLT5uYW1lLCBfX0ZJTEVfXywgX19MSU5FX18sIF9fZnVuY19fKTsNCi0JCWxp
-c3RfZGVsKCZpb2MtPmxpc3QpOw0KLQkJZ290byBvdXRfYWRkX3Nob3N0X2ZhaWw7DQotCX0NCi0N
-CiAJLyogcmVnaXN0ZXIgRUVEUCBjYXBhYmlsaXRpZXMgd2l0aCBTQ1NJIGxheWVyICovDQogCWlm
-IChwcm90X21hc2sgPiAwKQ0KIAkJc2NzaV9ob3N0X3NldF9wcm90KHNob3N0LCBwcm90X21hc2sp
-Ow0KQEAgLTc4MzUsMTUgKzc4MjgsMjIgQEAgX3Njc2loX3Byb2JlKHN0cnVjdCBwY2lfZGV2ICpw
-ZGV2LCBjb25zdCBzdHJ1Y3QgcGNpX2RldmljZV9pZCAqaWQpDQogCQkgICAgaW9jLT5uYW1lLCBf
-X0ZJTEVfXywgX19MSU5FX18sIF9fZnVuY19fKTsNCiAJCWdvdG8gb3V0X2F0dGFjaF9mYWlsOw0K
-IAl9DQorDQorCWlmICgoc2NzaV9hZGRfaG9zdChzaG9zdCwgJnBkZXYtPmRldikpKSB7DQorCQlw
-cl9lcnIoTVBUM1NBU19GTVQgImZhaWx1cmUgYXQgJXM6JWQvJXMoKSFcbiIsDQorCQkgICAgaW9j
-LT5uYW1lLCBfX0ZJTEVfXywgX19MSU5FX18sIF9fZnVuY19fKTsNCisJCWdvdG8gb3V0X2FkZF9z
-aG9zdF9mYWlsOw0KKwl9DQorDQogCXNjc2lfc2Nhbl9ob3N0KHNob3N0KTsNCiAJcmV0dXJuIDA7
-DQogDQorIG91dF9hZGRfc2hvc3RfZmFpbDoNCisJbXB0M3Nhc19iYXNlX2RldGFjaChpb2MpOw0K
-ICBvdXRfYXR0YWNoX2ZhaWw6DQogCWRlc3Ryb3lfd29ya3F1ZXVlKGlvYy0+ZmlybXdhcmVfZXZl
-bnRfdGhyZWFkKTsNCiAgb3V0X3RocmVhZF9mYWlsOg0KIAlsaXN0X2RlbCgmaW9jLT5saXN0KTsN
-Ci0Jc2NzaV9yZW1vdmVfaG9zdChzaG9zdCk7DQotIG91dF9hZGRfc2hvc3RfZmFpbDoNCiAJc2Nz
-aV9ob3N0X3B1dChzaG9zdCk7DQogCXJldHVybiAtRU5PREVWOw0KIH0NCg0KLS0tDQpSb2IgRWxs
-aW90dCAgICBIUCBTZXJ2ZXIgU3RvcmFnZQ0KDQoNCg0K
+On 06/04/2014 12:15 PM, KY Srinivasan wrote:
+> 
+> 
+>> -----Original Message-----
+>> From: James Bottomley [mailto:jbottomley@parallels.com]
+>> Sent: Wednesday, June 4, 2014 10:02 AM
+>> To: KY Srinivasan
+>> Cc: linux-kernel@vger.kernel.org; apw@canonical.com;
+>> devel@linuxdriverproject.org; hch@infradead.org; linux-
+>> scsi@vger.kernel.org; ohering@suse.com; gregkh@linuxfoundation.org;
+>> jasowang@redhat.com
+>> Subject: Re: [PATCH 1/1] [SCSI] Fix a bug in deriving the FLUSH_TIMEOUT
+>> from the basic I/O timeout
+>>
+>> On Wed, 2014-06-04 at 09:33 -0700, K. Y. Srinivasan wrote:
+>>> Commit ID: 7e660100d85af860e7ad763202fff717adcdaacd added code to
+>>> derive the FLUSH_TIMEOUT from the basic I/O timeout. However, this
+>>> patch did not use the basic I/O timeout of the device. Fix this bug.
+>>>
+>>> Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
+>>> ---
+>>>  drivers/scsi/sd.c |    4 +++-
+>>>  1 files changed, 3 insertions(+), 1 deletions(-)
+>>>
+>>> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c index
+>>> e9689d5..54150b1 100644
+>>> --- a/drivers/scsi/sd.c
+>>> +++ b/drivers/scsi/sd.c
+>>> @@ -832,7 +832,9 @@ static int sd_setup_write_same_cmnd(struct
+>>> scsi_device *sdp, struct request *rq)
+>>>
+>>>  static int scsi_setup_flush_cmnd(struct scsi_device *sdp, struct
+>>> request *rq)  {
+>>> -	rq->timeout *= SD_FLUSH_TIMEOUT_MULTIPLIER;
+>>> +	int timeout = sdp->request_queue->rq_timeout;
+>>> +
+>>> +	rq->timeout = (timeout * SD_FLUSH_TIMEOUT_MULTIPLIER);
+>>
+>> Could you share where you found this to be a problem?  It looks like a bug in
+>> block because all inbound requests being prepared should have a timeout
+>> set, so block would be the place to fix it.
+> 
+> Perhaps; what I found was that the value in rq->timeout was 0 coming into
+> this function and thus multiplying obviously has no effect.
+> 
+
+I think you are right. We hit this problem because we are doing:
+
+scsi_request_fn -> blk_peek_request -> sd_prep_fn -> scsi_setup_flush_cmnd.
+
+At this time request->timeout is zero so the multiplication does
+nothing. See how sd_setup_write_same_cmnd will set the request->timeout
+at this time.
+
+Then in scsi_request_fn we do:
+
+scsi_request_fn -> blk_start_request -> blk_add_timer.
+
+At this time it will set the request->timeout if something like req
+block pc users (like scsi_execute() or block/scsi_ioctl.c) or the write
+same code mentioned above have not set the timeout.
