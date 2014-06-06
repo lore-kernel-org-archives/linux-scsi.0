@@ -1,56 +1,197 @@
-From: Joe Lawrence <joe.lawrence@stratus.com>
-Subject: Re: [PATCH 6/7] mptfusion: combine fw_event_work and its event_data
-Date: Fri, 6 Jun 2014 17:56:35 -0400
-Message-ID: <20140606175635.6c4fd737@jlaw-desktop.mno.stratus.com>
-References: <1401900589-19672-1-git-send-email-joe.lawrence@stratus.com>
-	<1401900729-19855-1-git-send-email-joe.lawrence@stratus.com>
-	<20140605093429.GG727@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from p02c12o149.mxlogic.net ([208.65.145.82]:49635 "EHLO
-	p02c12o149.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752138AbaFFV4v (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Jun 2014 17:56:51 -0400
-In-Reply-To: <20140605093429.GG727@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Subject: [PATCH] scsi: bfa: bfad_attr.c:  Optimization of the code
+Date: Sat,  7 Jun 2014 00:04:33 +0200
+Message-ID: <1402092273-5992-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>
+Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi@vger.kernel.org, Dan Carpenter <dan.carpenter@oracle.com>, Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
 
-On Thu, 5 Jun 2014 02:34:29 -0700
-Christoph Hellwig <hch@infradead.org> wrote:
+Minimized the use of snprintf()
+And removed a variable that was only used for the temporary storage.
 
-> > diff --git a/drivers/message/fusion/mptsas.h b/drivers/message/fusion/mptsas.h
-> > index 57e86ab..c396483 100644
-> > --- a/drivers/message/fusion/mptsas.h
-> > +++ b/drivers/message/fusion/mptsas.h
-> > @@ -110,7 +110,7 @@ struct fw_event_work {
-> >  	MPT_ADAPTER	*ioc;
-> >  	u32			event;
-> >  	u8			retries;
-> > -	u8			__attribute__((aligned(4))) event_data[1];
-> > +	char			event_data[0] __aligned(4);
-> >  };
+Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+---
+ drivers/scsi/bfa/bfad_attr.c |  114 ++++++++++++++++++++++++------------------
+ 1 file changed, 66 insertions(+), 48 deletions(-)
 
-Is this alignment necessary and if so, should it be more like:
-  __attribute__ ((aligned (sizeof(unsigned long))))
-
-> >  
-> > -	sz = offsetof(struct fw_event_work, event_data) +
-> > -	    sizeof(MpiEventDataSasDeviceStatusChange_t);
-> > +	sz = sizeof(*fw_event) +
-> > +		sizeof(MpiEventDataSasDeviceStatusChange_t);
-> >  	fw_event = kzalloc(sz, GFP_ATOMIC);
-> 
-> Seems like there is no point in keeping the sz variable here and at
-> the other occurances.  Not that it really matters, but if we make a pass
-> over this code we might as well fix that up, too.
+diff --git a/drivers/scsi/bfa/bfad_attr.c b/drivers/scsi/bfa/bfad_attr.c
+index 40be670..3fe75ff 100644
+--- a/drivers/scsi/bfa/bfad_attr.c
++++ b/drivers/scsi/bfa/bfad_attr.c
+@@ -751,69 +751,89 @@ bfad_im_model_desc_show(struct device *dev, struct device_attribute *attr,
+ 	bfa_get_adapter_model(&bfad->bfa, model);
+ 	nports = bfa_get_nports(&bfad->bfa);
+ 	if (!strcmp(model, "Brocade-425"))
+-		snprintf(model_descr, BFA_ADAPTER_MODEL_DESCR_LEN,
+-			"Brocade 4Gbps PCIe dual port FC HBA");
++		strlcpy(model_descr,
++				"Brocade 4Gbps PCIe dual port FC HBA\n",
++				BFA_ADAPTER_MODEL_DESCR_LEN);
+ 	else if (!strcmp(model, "Brocade-825"))
+-		snprintf(model_descr, BFA_ADAPTER_MODEL_DESCR_LEN,
+-			"Brocade 8Gbps PCIe dual port FC HBA");
++		strlcpy(model_descr,
++				"Brocade 8Gbps PCIe dual port FC HBA\n",
++				BFA_ADAPTER_MODEL_DESCR_LEN);
+ 	else if (!strcmp(model, "Brocade-42B"))
+-		snprintf(model_descr, BFA_ADAPTER_MODEL_DESCR_LEN,
+-			"Brocade 4Gbps PCIe dual port FC HBA for HP");
++		strlcpy(model_descr,
++				"Brocade 4Gbps PCIe dual port FC HBA for HP\n",
++				BFA_ADAPTER_MODEL_DESCR_LEN);
+ 	else if (!strcmp(model, "Brocade-82B"))
+-		snprintf(model_descr, BFA_ADAPTER_MODEL_DESCR_LEN,
+-			"Brocade 8Gbps PCIe dual port FC HBA for HP");
++		strlcpy(model_descr,
++				"Brocade 8Gbps PCIe dual port FC HBA for HP\n",
++				BFA_ADAPTER_MODEL_DESCR_LEN);
+ 	else if (!strcmp(model, "Brocade-1010"))
+-		snprintf(model_descr, BFA_ADAPTER_MODEL_DESCR_LEN,
+-			"Brocade 10Gbps single port CNA");
++		strlcpy(model_descr,
++				"Brocade 10Gbps single port CNA\n",
++				BFA_ADAPTER_MODEL_DESCR_LEN);
+ 	else if (!strcmp(model, "Brocade-1020"))
+-		snprintf(model_descr, BFA_ADAPTER_MODEL_DESCR_LEN,
+-			"Brocade 10Gbps dual port CNA");
++		strlcpy(model_descr,
++				"Brocade 10Gbps dual port CNA\n",
++				BFA_ADAPTER_MODEL_DESCR_LEN);
+ 	else if (!strcmp(model, "Brocade-1007"))
+-		snprintf(model_descr, BFA_ADAPTER_MODEL_DESCR_LEN,
+-			"Brocade 10Gbps CNA for IBM Blade Center");
++		strlcpy(model_descr,
++				"Brocade 10Gbps CNA for IBM Blade Center\n",
++				BFA_ADAPTER_MODEL_DESCR_LEN);
+ 	else if (!strcmp(model, "Brocade-415"))
+-		snprintf(model_descr, BFA_ADAPTER_MODEL_DESCR_LEN,
+-			"Brocade 4Gbps PCIe single port FC HBA");
++		strlcpy(model_descr,
++				"Brocade 4Gbps PCIe single port FC HBA\n",
++				BFA_ADAPTER_MODEL_DESCR_LEN);
+ 	else if (!strcmp(model, "Brocade-815"))
+-		snprintf(model_descr, BFA_ADAPTER_MODEL_DESCR_LEN,
+-			"Brocade 8Gbps PCIe single port FC HBA");
++		strlcpy(model_descr,
++				"Brocade 8Gbps PCIe single port FC HBA\n",
++				BFA_ADAPTER_MODEL_DESCR_LEN);
+ 	else if (!strcmp(model, "Brocade-41B"))
+-		snprintf(model_descr, BFA_ADAPTER_MODEL_DESCR_LEN,
+-			"Brocade 4Gbps PCIe single port FC HBA for HP");
++		strlcpy(model_descr,
++				"Brocade 4Gbps PCIe single port FC HBA for HP\n",
++				BFA_ADAPTER_MODEL_DESCR_LEN);
+ 	else if (!strcmp(model, "Brocade-81B"))
+-		snprintf(model_descr, BFA_ADAPTER_MODEL_DESCR_LEN,
+-			"Brocade 8Gbps PCIe single port FC HBA for HP");
++		strlcpy(model_descr,
++				"Brocade 8Gbps PCIe single port FC HBA for HP\n",
++				BFA_ADAPTER_MODEL_DESCR_LEN);
+ 	else if (!strcmp(model, "Brocade-804"))
+-		snprintf(model_descr, BFA_ADAPTER_MODEL_DESCR_LEN,
+-			"Brocade 8Gbps FC HBA for HP Bladesystem C-class");
++		strlcpy(model_descr,
++				"Brocade 8Gbps FC HBA for HP Bladesystem C-class\n",
++				BFA_ADAPTER_MODEL_DESCR_LEN);
+ 	else if (!strcmp(model, "Brocade-1741"))
+-		snprintf(model_descr, BFA_ADAPTER_MODEL_DESCR_LEN,
+-			"Brocade 10Gbps CNA for Dell M-Series Blade Servers");
++		strlcpy(model_descr,
++				"Brocade 10Gbps CNA for Dell M-Series Blade Servers\n",
++				BFA_ADAPTER_MODEL_DESCR_LEN);
+ 	else if (strstr(model, "Brocade-1860")) {
+ 		if (nports == 1 && bfa_ioc_is_cna(&bfad->bfa.ioc))
+-			snprintf(model_descr, BFA_ADAPTER_MODEL_DESCR_LEN,
+-				"Brocade 10Gbps single port CNA");
++			strlcpy(model_descr,
++					"Brocade 10Gbps single port CNA\n",
++					BFA_ADAPTER_MODEL_DESCR_LEN);
+ 		else if (nports == 1 && !bfa_ioc_is_cna(&bfad->bfa.ioc))
+-			snprintf(model_descr, BFA_ADAPTER_MODEL_DESCR_LEN,
+-				"Brocade 16Gbps PCIe single port FC HBA");
++			strlcpy(model_descr,
++					"Brocade 16Gbps PCIe single port FC HBA\n",
++					BFA_ADAPTER_MODEL_DESCR_LEN);
+ 		else if (nports == 2 && bfa_ioc_is_cna(&bfad->bfa.ioc))
+-			snprintf(model_descr, BFA_ADAPTER_MODEL_DESCR_LEN,
+-				"Brocade 10Gbps dual port CNA");
++			strlcpy(model_descr,
++					"Brocade 10Gbps dual port CNA\n",
++					BFA_ADAPTER_MODEL_DESCR_LEN);
+ 		else if (nports == 2 && !bfa_ioc_is_cna(&bfad->bfa.ioc))
+-			snprintf(model_descr, BFA_ADAPTER_MODEL_DESCR_LEN,
+-				"Brocade 16Gbps PCIe dual port FC HBA");
++			strlcpy(model_descr,
++					"Brocade 16Gbps PCIe dual port FC HBA\n",
++					BFA_ADAPTER_MODEL_DESCR_LEN);
+ 	} else if (!strcmp(model, "Brocade-1867")) {
+ 		if (nports == 1 && !bfa_ioc_is_cna(&bfad->bfa.ioc))
+-			snprintf(model_descr, BFA_ADAPTER_MODEL_DESCR_LEN,
+-				"Brocade 16Gbps PCIe single port FC HBA for IBM");
++			strlcpy(model_descr,
++					"Brocade 16Gbps PCIe single port FC HBA for IBM\n",
++					BFA_ADAPTER_MODEL_DESCR_LEN);
+ 		else if (nports == 2 && !bfa_ioc_is_cna(&bfad->bfa.ioc))
+-			snprintf(model_descr, BFA_ADAPTER_MODEL_DESCR_LEN,
+-				"Brocade 16Gbps PCIe dual port FC HBA for IBM");
++			strlcpy(model_descr,
++					"Brocade 16Gbps PCIe dual port FC HBA for IBM\n",
++					BFA_ADAPTER_MODEL_DESCR_LEN);
+ 	} else
+-		snprintf(model_descr, BFA_ADAPTER_MODEL_DESCR_LEN,
+-			"Invalid Model");
++		strlcpy(model_descr,
++				"Invalid Model\n",
++				BFA_ADAPTER_MODEL_DESCR_LEN);
  
-I'll take a look and post up a v2 next week, adding these to a v2
-mpt2/mpt3 set.
-
-Thanks,
-
--- Joe
+-	return snprintf(buf, PAGE_SIZE, "%s\n", model_descr);
++	return strlcpy(buf, model_descr, PAGE_SIZE);
+ }
+ 
+ static ssize_t
+@@ -839,12 +859,10 @@ bfad_im_symbolic_name_show(struct device *dev, struct device_attribute *attr,
+ 			(struct bfad_im_port_s *) shost->hostdata[0];
+ 	struct bfad_s *bfad = im_port->bfad;
+ 	struct bfa_lport_attr_s port_attr;
+-	char symname[BFA_SYMNAME_MAXLEN];
+ 
+ 	bfa_fcs_lport_get_attr(&bfad->bfa_fcs.fabric.bport, &port_attr);
+-	strncpy(symname, port_attr.port_cfg.sym_name.symname,
+-			BFA_SYMNAME_MAXLEN);
+-	return snprintf(buf, PAGE_SIZE, "%s\n", symname);
++	return snprintf(buf, PAGE_SIZE, "%s\n",
++			port_attr.port_cfg.sym_name.symname);
+ }
+ 
+ static ssize_t
+@@ -865,7 +883,7 @@ static ssize_t
+ bfad_im_drv_version_show(struct device *dev, struct device_attribute *attr,
+ 				char *buf)
+ {
+-	return snprintf(buf, PAGE_SIZE, "%s\n", BFAD_DRIVER_VERSION);
++	return strlcpy(buf, BFAD_DRIVER_VERSION  "\n", PAGE_SIZE);
+ }
+ 
+ static ssize_t
+@@ -913,7 +931,7 @@ static ssize_t
+ bfad_im_drv_name_show(struct device *dev, struct device_attribute *attr,
+ 				char *buf)
+ {
+-	return snprintf(buf, PAGE_SIZE, "%s\n", BFAD_DRIVER_NAME);
++	return strlcpy(buf, BFAD_DRIVER_NAME  "\n", PAGE_SIZE);
+ }
+ 
+ static ssize_t
+@@ -932,7 +950,7 @@ bfad_im_num_of_discovered_ports_show(struct device *dev,
+ 	rports = kzalloc(sizeof(struct bfa_rport_qualifier_s) * nrports,
+ 			 GFP_ATOMIC);
+ 	if (rports == NULL)
+-		return snprintf(buf, PAGE_SIZE, "Failed\n");
++		return strlcpy(buf, "Failed\n", PAGE_SIZE);
+ 
+ 	spin_lock_irqsave(&bfad->bfad_lock, flags);
+ 	bfa_fcs_lport_get_rport_quals(port->fcs_port, rports, &nrports);
+-- 
+1.7.10.4
