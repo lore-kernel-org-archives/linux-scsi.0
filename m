@@ -1,110 +1,48 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH 1/1] [SCSI] Fix a bug in deriving the FLUSH_TIMEOUT from
- the basic I/O timeout
-Date: Fri, 6 Jun 2014 02:53:15 +0000
-Message-ID: <d9854e6ff97f4b0087dbe835a2a57c8f@BY2PR03MB299.namprd03.prod.outlook.com>
-References: <1401899623-24194-1-git-send-email-kys@microsoft.com>
- <1401901323.17510.23.camel@dabdike>
- <d61f4b87a72544e4b0c1e1872a76f97b@BY2PR03MB299.namprd03.prod.outlook.com>
- <53911A35.7010805@cs.wisc.edu>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] mpt3sas: delay scsi_add_host call to work with scsi-mq
+Date: Fri, 6 Jun 2014 00:13:56 -0700
+Message-ID: <20140606071356.GA29477@infradead.org>
+References: <94D0CD8314A33A4D9D801C0FE68B402958B051A0@G4W3202.americas.hpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <53911A35.7010805@cs.wisc.edu>
-Content-Language: en-US
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: driverdev-devel-bounces@linuxdriverproject.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "jasowang@redhat.com" <jasowang@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, "ohering@suse.com" <ohering@suse.com>, "hch@infradead.org" <hch@infradead.org>, "apw@canonical.com" <apw@canonical.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:57006 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751316AbaFFHOA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Jun 2014 03:14:00 -0400
+Content-Disposition: inline
+In-Reply-To: <94D0CD8314A33A4D9D801C0FE68B402958B051A0@G4W3202.americas.hpqcorp.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
+Cc: "Nagalakshmi.Nandigama@lsi.com" <Nagalakshmi.Nandigama@lsi.com>, "Sreekanth.Reddy@lsi.com" <Sreekanth.Reddy@lsi.com>, Adam Radford <adam.radford@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Joe Maloy <joe.maloy@avagotech.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
+On Fri, Jun 06, 2014 at 01:03:41AM +0000, Elliott, Robert (Server Storage) wrote:
+> In _scsih_probe, delay the call to scsi_add_host until
+> the host template has been completely filled in.
 
+Beside scsi-mq not picking up the queue depth callng scsi_add_host
+on a not fully setup host also is dangerous because scsi_add_host sets
+the host life and it can now see userspace LUN scans or removals, so the
+fix is needed either.
 
-> -----Original Message-----
-> From: Mike Christie [mailto:michaelc@cs.wisc.edu]
-> Sent: Thursday, June 5, 2014 6:33 PM
-> To: KY Srinivasan
-> Cc: James Bottomley; linux-kernel@vger.kernel.org; apw@canonical.com;
-> devel@linuxdriverproject.org; hch@infradead.org; linux-
-> scsi@vger.kernel.org; ohering@suse.com; gregkh@linuxfoundation.org;
-> jasowang@redhat.com
-> Subject: Re: [PATCH 1/1] [SCSI] Fix a bug in deriving the FLUSH_TIMEOUT
-> from the basic I/O timeout
-> 
-> On 06/04/2014 12:15 PM, KY Srinivasan wrote:
-> >
-> >
-> >> -----Original Message-----
-> >> From: James Bottomley [mailto:jbottomley@parallels.com]
-> >> Sent: Wednesday, June 4, 2014 10:02 AM
-> >> To: KY Srinivasan
-> >> Cc: linux-kernel@vger.kernel.org; apw@canonical.com;
-> >> devel@linuxdriverproject.org; hch@infradead.org; linux-
-> >> scsi@vger.kernel.org; ohering@suse.com; gregkh@linuxfoundation.org;
-> >> jasowang@redhat.com
-> >> Subject: Re: [PATCH 1/1] [SCSI] Fix a bug in deriving the
-> >> FLUSH_TIMEOUT from the basic I/O timeout
-> >>
-> >> On Wed, 2014-06-04 at 09:33 -0700, K. Y. Srinivasan wrote:
-> >>> Commit ID: 7e660100d85af860e7ad763202fff717adcdaacd added code to
-> >>> derive the FLUSH_TIMEOUT from the basic I/O timeout. However, this
-> >>> patch did not use the basic I/O timeout of the device. Fix this bug.
-> >>>
-> >>> Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
-> >>> ---
-> >>>  drivers/scsi/sd.c |    4 +++-
-> >>>  1 files changed, 3 insertions(+), 1 deletions(-)
-> >>>
-> >>> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c index
-> >>> e9689d5..54150b1 100644
-> >>> --- a/drivers/scsi/sd.c
-> >>> +++ b/drivers/scsi/sd.c
-> >>> @@ -832,7 +832,9 @@ static int sd_setup_write_same_cmnd(struct
-> >>> scsi_device *sdp, struct request *rq)
-> >>>
-> >>>  static int scsi_setup_flush_cmnd(struct scsi_device *sdp, struct
-> >>> request *rq)  {
-> >>> -	rq->timeout *= SD_FLUSH_TIMEOUT_MULTIPLIER;
-> >>> +	int timeout = sdp->request_queue->rq_timeout;
-> >>> +
-> >>> +	rq->timeout = (timeout * SD_FLUSH_TIMEOUT_MULTIPLIER);
-> >>
-> >> Could you share where you found this to be a problem?  It looks like
-> >> a bug in block because all inbound requests being prepared should
-> >> have a timeout set, so block would be the place to fix it.
-> >
-> > Perhaps; what I found was that the value in rq->timeout was 0 coming
-> > into this function and thus multiplying obviously has no effect.
-> >
-> 
-> I think you are right. We hit this problem because we are doing:
-> 
-> scsi_request_fn -> blk_peek_request -> sd_prep_fn ->
-> scsi_setup_flush_cmnd.
-> 
-> At this time request->timeout is zero so the multiplication does nothing. See
-> how sd_setup_write_same_cmnd will set the request->timeout at this time.
-> 
-> Then in scsi_request_fn we do:
-> 
-> scsi_request_fn -> blk_start_request -> blk_add_timer.
-> 
-> At this time it will set the request->timeout if something like req block pc
-> users (like scsi_execute() or block/scsi_ioctl.c) or the write same code
-> mentioned above have not set the timeout.
+The late scsi_remove_host also fixed by your patch is just as dangerous.
 
-I don't think this is a recent change. Prior to this commit, we were setting the timeout
-value in this function; it just happened to be a different constant unrelated to the I/O
-timeout.
+Given the copy and paste nature of the two driver I suspect mpt2sas will
+need the same fix.
 
-K. Y
-> 
-> 
+> +	if ((scsi_add_host(shost, &pdev->dev))) {
+> +		pr_err(MPT3SAS_FMT "failure at %s:%d/%s()!\n",
+> +		    ioc->name, __FILE__, __LINE__, __func__);
+> +		goto out_add_shost_fail;
+> +	}
+> +
+>  	scsi_scan_host(shost);
+
+No need to fix this now, but discarding the error return from
+scsi_add_host is a bad idea, the function should eventually switch to
+having an int error variable for it.
+
+Looks good,
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
