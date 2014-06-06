@@ -1,84 +1,59 @@
-From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH 2/2] tcm_fc: Generate TASK_SET_FULL status for response failures
-Date: Thu,  5 Jun 2014 23:30:02 +0000
-Message-ID: <1402011002-20771-3-git-send-email-nab@daterainc.com>
-References: <1402011002-20771-1-git-send-email-nab@daterainc.com>
+From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
+Subject: [PATCH] mpt3sas: delay scsi_add_host call to work with scsi-mq
+Date: Fri, 6 Jun 2014 01:03:41 +0000
+Message-ID: <94D0CD8314A33A4D9D801C0FE68B402958B051A0@G4W3202.americas.hpqcorp.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ob0-f182.google.com ([209.85.214.182]:41328 "EHLO
-	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751739AbaFEXzL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jun 2014 19:55:11 -0400
-Received: by mail-ob0-f182.google.com with SMTP id wn1so1922824obc.27
-        for <linux-scsi@vger.kernel.org>; Thu, 05 Jun 2014 16:55:10 -0700 (PDT)
-In-Reply-To: <1402011002-20771-1-git-send-email-nab@daterainc.com>
+Received: from g4t3426.houston.hp.com ([15.201.208.54]:50807 "EHLO
+	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751643AbaFFBGB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jun 2014 21:06:01 -0400
+Content-Language: en-US
+Content-ID: <6337CEF7BE06094E98821AA6C2F493E5@Compaq.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, fcoe-devel <fcoe-devel@open-fcoe.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Vasu Dev <vasu.dev@linux.intel.com>, Jun Wu <jwu@stormojo.com>
+To: "Nagalakshmi.Nandigama@lsi.com" <Nagalakshmi.Nandigama@lsi.com>, "Sreekanth.Reddy@lsi.com" <Sreekanth.Reddy@lsi.com>
+Cc: Adam Radford <adam.radford@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Joe Maloy <joe.maloy@avagotech.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
-
-This patch changes ft_queue_status() to set SAM_STAT_TASK_SET_FULL
-status upon lport->tt.seq_send( failure, and return -EAGAIN to notify
-target-core to attempt to requeue the response.
-
-It also does the same for a fc_frame_alloc() failures, in order to
-signal the initiator that it should try to reduce it's current
-queue_depth, to lower the number of outstanding I/Os on the wire.
-
-Reported-by: Vasu Dev <vasu.dev@linux.intel.com>
-Cc: Vasu Dev <vasu.dev@linux.intel.com>
-Cc: Jun Wu <jwu@stormojo.com>
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
----
- drivers/target/tcm_fc/tfc_cmd.c |   19 ++++++++++++++++---
- 1 file changed, 16 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/target/tcm_fc/tfc_cmd.c b/drivers/target/tcm_fc/tfc_cmd.c
-index f5fd515..5585038 100644
---- a/drivers/target/tcm_fc/tfc_cmd.c
-+++ b/drivers/target/tcm_fc/tfc_cmd.c
-@@ -128,6 +128,7 @@ int ft_queue_status(struct se_cmd *se_cmd)
- 	struct fc_lport *lport;
- 	struct fc_exch *ep;
- 	size_t len;
-+	int rc;
- 
- 	if (cmd->aborted)
- 		return 0;
-@@ -137,9 +138,10 @@ int ft_queue_status(struct se_cmd *se_cmd)
- 	len = sizeof(*fcp) + se_cmd->scsi_sense_length;
- 	fp = fc_frame_alloc(lport, len);
- 	if (!fp) {
--		/* XXX shouldn't just drop it - requeue and retry? */
--		return 0;
-+		se_cmd->scsi_status = SAM_STAT_TASK_SET_FULL;
-+		return -ENOMEM;
- 	}
-+
- 	fcp = fc_frame_payload_get(fp, len);
- 	memset(fcp, 0, len);
- 	fcp->resp.fr_status = se_cmd->scsi_status;
-@@ -170,7 +172,18 @@ int ft_queue_status(struct se_cmd *se_cmd)
- 	fc_fill_fc_hdr(fp, FC_RCTL_DD_CMD_STATUS, ep->did, ep->sid, FC_TYPE_FCP,
- 		       FC_FC_EX_CTX | FC_FC_LAST_SEQ | FC_FC_END_SEQ, 0);
- 
--	lport->tt.seq_send(lport, cmd->seq, fp);
-+	rc = lport->tt.seq_send(lport, cmd->seq, fp);
-+	if (rc) {
-+		pr_err_ratelimited("%s: Failed to send response frame %p, "
-+				   "xid <0x%x>\n", __func__, fp, ep->xid);
-+		/*
-+		 * Generate a TASK_SET_FULL status to notify the initiator
-+		 * to reduce it's queue_depth after the se_cmd response has
-+		 * been re-queued by target-core.
-+		 */
-+		se_cmd->scsi_status = SAM_STAT_TASK_SET_FULL;
-+		return -ENOMEM;
-+	}
- 	lport->tt.exch_done(cmd->seq);
- 	return 0;
- }
--- 
-1.7.10.4
-
+SW4gX3Njc2loX3Byb2JlLCBkZWxheSB0aGUgY2FsbCB0byBzY3NpX2FkZF9ob3N0IHVudGlsDQp0
+aGUgaG9zdCB0ZW1wbGF0ZSBoYXMgYmVlbiBjb21wbGV0ZWx5IGZpbGxlZCBpbi4NCg0KT3RoZXJ3
+aXNlLCB0aGUgZGVmYXVsdCAuY2FuX3F1ZXVlIHZhbHVlIG9mIDEgY2F1c2VzDQpzY3NpLW1xIHRv
+IHNldCB0aGUgYmxvY2sgbGF5ZXIgcmVxdWVzdCBxdWV1ZSBzaXplDQp0byBpdHMgbWluaW11bSBz
+aXplLCByZXN1bHRpbmcgaW4gYXdmdWwgcGVyZm9ybWFuY2UuDQoNCkluIF9zY3NpaF9wcm9iZSBl
+cnJvciBoYW5kbGluZywgY2FsbCBtcHQzc2FzX2Jhc2VfZGV0YWNoDQpyYXRoZXIgdGhhbiBzY3Np
+X3JlbW92ZV9ob3N0IHRvIHByb3Blcmx5IGNsZWFuIHVwDQppbiByZXZlcnNlIG9yZGVyLg0KDQpJ
+biBfc2NzaWhfcmVtb3ZlLCBjYWxsIHNjc2lfcmVtb3ZlX2hvc3QgZWFybGllcg0KdG8gY2xlYW4g
+dXAgaW4gcmV2ZXJzZSBvcmRlci4NCg0KU2lnbmVkLW9mZi1ieTogUm9iZXJ0IEVsbGlvdHQgPGVs
+bGlvdHRAaHAuY29tPg0KLS0tDQogZHJpdmVycy9zY3NpL21wdDNzYXMvbXB0M3Nhc19zY3NpaC5j
+IHwgICAyMCArKysrKysrKysrLS0tLS0tLS0tLQ0KIDEgZmlsZXMgY2hhbmdlZCwgMTAgaW5zZXJ0
+aW9ucygrKSwgMTAgZGVsZXRpb25zKC0pDQoNCmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvbXB0
+M3Nhcy9tcHQzc2FzX3Njc2loLmMgYi9kcml2ZXJzL3Njc2kvbXB0M3Nhcy9tcHQzc2FzX3Njc2lo
+LmMNCmluZGV4IDE4ZTcxM2QuLjUyOWI1ZmQgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL3Njc2kvbXB0
+M3Nhcy9tcHQzc2FzX3Njc2loLmMNCisrKyBiL2RyaXZlcnMvc2NzaS9tcHQzc2FzL21wdDNzYXNf
+c2NzaWguYw0KQEAgLTc0MzEsOSArNzQzMSw5IEBAIHN0YXRpYyB2b2lkIF9zY3NpaF9yZW1vdmUo
+c3RydWN0IHBjaV9kZXYgKnBkZXYpDQogCX0NCiANCiAJc2FzX3JlbW92ZV9ob3N0KHNob3N0KTsN
+CisJc2NzaV9yZW1vdmVfaG9zdChzaG9zdCk7DQogCW1wdDNzYXNfYmFzZV9kZXRhY2goaW9jKTsN
+CiAJbGlzdF9kZWwoJmlvYy0+bGlzdCk7DQotCXNjc2lfcmVtb3ZlX2hvc3Qoc2hvc3QpOw0KIAlz
+Y3NpX2hvc3RfcHV0KHNob3N0KTsNCiB9DQogDQpAQCAtNzgwMSwxMyArNzgwMSw2IEBAIF9zY3Np
+aF9wcm9iZShzdHJ1Y3QgcGNpX2RldiAqcGRldiwgY29uc3Qgc3RydWN0IHBjaV9kZXZpY2VfaWQg
+KmlkKQ0KIAkJfQ0KIAl9DQogDQotCWlmICgoc2NzaV9hZGRfaG9zdChzaG9zdCwgJnBkZXYtPmRl
+dikpKSB7DQotCQlwcl9lcnIoTVBUM1NBU19GTVQgImZhaWx1cmUgYXQgJXM6JWQvJXMoKSFcbiIs
+DQotCQkgICAgaW9jLT5uYW1lLCBfX0ZJTEVfXywgX19MSU5FX18sIF9fZnVuY19fKTsNCi0JCWxp
+c3RfZGVsKCZpb2MtPmxpc3QpOw0KLQkJZ290byBvdXRfYWRkX3Nob3N0X2ZhaWw7DQotCX0NCi0N
+CiAJLyogcmVnaXN0ZXIgRUVEUCBjYXBhYmlsaXRpZXMgd2l0aCBTQ1NJIGxheWVyICovDQogCWlm
+IChwcm90X21hc2sgPiAwKQ0KIAkJc2NzaV9ob3N0X3NldF9wcm90KHNob3N0LCBwcm90X21hc2sp
+Ow0KQEAgLTc4MzUsMTUgKzc4MjgsMjIgQEAgX3Njc2loX3Byb2JlKHN0cnVjdCBwY2lfZGV2ICpw
+ZGV2LCBjb25zdCBzdHJ1Y3QgcGNpX2RldmljZV9pZCAqaWQpDQogCQkgICAgaW9jLT5uYW1lLCBf
+X0ZJTEVfXywgX19MSU5FX18sIF9fZnVuY19fKTsNCiAJCWdvdG8gb3V0X2F0dGFjaF9mYWlsOw0K
+IAl9DQorDQorCWlmICgoc2NzaV9hZGRfaG9zdChzaG9zdCwgJnBkZXYtPmRldikpKSB7DQorCQlw
+cl9lcnIoTVBUM1NBU19GTVQgImZhaWx1cmUgYXQgJXM6JWQvJXMoKSFcbiIsDQorCQkgICAgaW9j
+LT5uYW1lLCBfX0ZJTEVfXywgX19MSU5FX18sIF9fZnVuY19fKTsNCisJCWdvdG8gb3V0X2FkZF9z
+aG9zdF9mYWlsOw0KKwl9DQorDQogCXNjc2lfc2Nhbl9ob3N0KHNob3N0KTsNCiAJcmV0dXJuIDA7
+DQogDQorIG91dF9hZGRfc2hvc3RfZmFpbDoNCisJbXB0M3Nhc19iYXNlX2RldGFjaChpb2MpOw0K
+ICBvdXRfYXR0YWNoX2ZhaWw6DQogCWRlc3Ryb3lfd29ya3F1ZXVlKGlvYy0+ZmlybXdhcmVfZXZl
+bnRfdGhyZWFkKTsNCiAgb3V0X3RocmVhZF9mYWlsOg0KIAlsaXN0X2RlbCgmaW9jLT5saXN0KTsN
+Ci0Jc2NzaV9yZW1vdmVfaG9zdChzaG9zdCk7DQotIG91dF9hZGRfc2hvc3RfZmFpbDoNCiAJc2Nz
+aV9ob3N0X3B1dChzaG9zdCk7DQogCXJldHVybiAtRU5PREVWOw0KIH0NCg0KLS0tDQpSb2IgRWxs
+aW90dCAgICBIUCBTZXJ2ZXIgU3RvcmFnZQ0KDQoNCg0K
