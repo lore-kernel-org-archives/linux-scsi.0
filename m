@@ -1,34 +1,57 @@
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-Subject: [PATCH] scsi: mpt3sas: mpt3sas_base.c:  Cleaning up wrong return value
-Date: Sat,  7 Jun 2014 16:54:35 +0200
-Message-ID: <1402152875-18650-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>, Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
-Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>, support@lsi.com, "James E.J. Bottomley" <JBottomley@parallels.com>, DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [GIT PULL] target fixes for v3.15
+Date: Sat, 07 Jun 2014 11:18:04 -0700
+Message-ID: <1402165084.16568.10.camel@haakon3.risingtidesystems.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:37201 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752983AbaFGSSP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 7 Jun 2014 14:18:15 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 
-A variable to manage the error code is not returned.
+Hi Linus,
 
-This was partly found using a static code analysis program called cppcheck.
+Here are the remaining fixes for v3.15.  Please go ahead and pull from:
 
-Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
----
- drivers/scsi/mpt3sas/mpt3sas_base.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git master
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 0cf4f70..1140b0a 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -3715,7 +3715,7 @@ _base_send_ioc_init(struct MPT3SAS_ADAPTER *ioc, int sleep_flag)
- 		r = -EIO;
- 	}
- 
--	return 0;
-+	return r;
- }
- 
- /**
--- 
-1.7.10.4
+This series includes:
+
+  - iser-target fix for ImmediateData exception reference count bug (Sagi + nab)
+  - iscsi-target fix for MC/S login + potential iser-target MRDSL buffer
+    overrun (Santosh + Roland)
+  - iser-target fix for v3.15-rc multi network portal shutdown regression (nab)
+  - target fix for allowing READ_CAPCITY during ALUA Standby access state
+    (Chris + nab)
+  - target fix for NULL pointer dereference of alua_access_state for
+    un-configured devices (Chris + nab) 
+
+Thank you,
+
+--nab
+
+Nicholas Bellinger (4):
+  iser-target: Add missing target_put_sess_cmd for ImmedateData failure
+  iser-target: Fix multi network portal shutdown regression
+  target: Allow READ_CAPACITY opcode in ALUA Standby access state
+  target: Fix alua_access_state attribute OOPs for un-configured
+    devices
+
+Roland Dreier (1):
+  iscsi-target: Fix wrong buffer / buffer overrun in
+    iscsi_change_param_value()
+
+ drivers/infiniband/ulp/isert/ib_isert.c   |    2 +
+ drivers/target/iscsi/iscsi_target.c       |    1 +
+ drivers/target/iscsi/iscsi_target_login.c |   70 +++++++++++++----------------
+ drivers/target/iscsi/iscsi_target_tpg.c   |    3 +-
+ drivers/target/target_core_alua.c         |    9 ++++
+ drivers/target/target_core_configfs.c     |    5 +++
+ 6 files changed, 50 insertions(+), 40 deletions(-)
+
