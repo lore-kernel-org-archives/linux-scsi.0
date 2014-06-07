@@ -1,78 +1,41 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [RFC Patch]: scsi: sysfs file cache_type not in sync with mode
- page
-Date: Fri, 06 Jun 2014 21:49:13 -0400
-Message-ID: <53926F99.4030003@interlog.com>
-References: <E1Wt1Sq-0000LA-Ez@bos-lpci1.kendall.corp.akamai.com> <1402095314.2207.105.camel@dabdike.int.hansenpartnership.com>
-Reply-To: dgilbert@interlog.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Subject: [PATCH] scsi: mpt2sas: mpt2sas_base.c:  Cleaning up wrong return value
+Date: Sat,  7 Jun 2014 16:45:49 +0200
+Message-ID: <1402152349-18484-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:53506 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752449AbaFGBtT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 6 Jun 2014 21:49:19 -0400
-In-Reply-To: <1402095314.2207.105.camel@dabdike.int.hansenpartnership.com>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:40869 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752801AbaFGOo4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 7 Jun 2014 10:44:56 -0400
+Received: by mail-lb0-f174.google.com with SMTP id n15so2185699lbi.33
+        for <linux-scsi@vger.kernel.org>; Sat, 07 Jun 2014 07:44:54 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, Pai <vpai@akamai.com>
-Cc: ~t@akamai.com, linux-scsi@vger.kernel.org, ~c@akamai.com
+To: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>, Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
+Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>, support@lsi.com, "James E.J. Bottomley" <JBottomley@parallels.com>, DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 14-06-06 06:55 PM, James Bottomley wrote:
-> On Fri, 2014-06-06 at 17:14 -0400, Pai wrote:
->> Hi All,
->>
->> I noticed that the sysfs file cache_type is not is sync with the information in the mode page. If we change the WCE attribute in the mode page (sdparm --set=WCE /dev/sda  and sdparm --clear=WCE /dev/sda) it does not reflect this in the sysfs file.
->>
->> $ cat /sys/block/sda/device/scsi_disk/6\:0\:0\:0/cache_type
->> write back
->>
->> $ sdparm --clear=WCE /dev/sda
->>      /dev/sda: TOSHIBA   AL13SEB600        0101
->>
->> $ cat /sys/block/sda/device/scsi_disk/6\:0\:0\:0/cache_type
->> write back
->>
->> Ideally cache_type should have changed to 'write through' or 'none'. I have a small one line change that can fix this one. This patch applies against the latest branch "linux-3.15-rc8".
->>
->> Few things to note:
->> 1. revalidate_disk() also reads a whole bunch of other things from the mode page and I don't know if this will have any side effects. This call is made on store_cache_type as well, so I think it should be OK.
->> 2. This is extra work which is not needed in most cases (mode pages hardly change). Is there an event that we can subscribe to when the modpages change?
->>
->> Please review.
->>
->> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
->> index efcbcd1..5b65ccc 100644
->> --- a/drivers/scsi/sd.c
->> +++ b/drivers/scsi/sd.c
->> @@ -256,6 +256,7 @@ static ssize_t
->>   cache_type_show(struct device *dev, struct device_attribute *attr, char *buf)
->>   {
->>   	struct scsi_disk *sdkp = to_scsi_disk(dev);
->> +	revalidate_disk(sdkp->disk);
->>   	int ct = sdkp->RCD + 2*sdkp->WCE;
->>
->>   	return snprintf(buf, 40, "%s\n", sd_cache_types[ct]);
->
-> The behaviour you describe is correct.  The cache type is probed once at
-> init.  If you change the cache behind the back of the linux code, you
-> have to expect that we won't see it.  We're definitely not doing a
-> revalidate on every write just in case, so by extension we expect that
-> to see it via sysfs either you change it through the provided interface
-> (writing to the cache_type file) or you inform the kernel if you change
-> it via other means by issuing the BLKRRPART ioctl.
+A variable to manage the error code is not returned.
 
-Have a look at
-   echo "write through" > /sys/class/scsi_disk/6\:0\:0\:0/cache_type
+This was partly found using a static code analysis program called cppcheck.
 
-and/or
-   echo "write back" > /sys/class/scsi_disk/6\:0\:0\:0/cache_type
+Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+---
+ drivers/scsi/mpt2sas/mpt2sas_base.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-and those strings can be prefixed by "temporary ". The explanation
-and mapping to T10 terms is in drivers/scsi/sd.c cache_type_store(),
-or at least should be.
-
-Doug Gilbert
-
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
+index bde63f7..ed10b74f 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+@@ -3546,7 +3546,7 @@ _base_send_ioc_init(struct MPT2SAS_ADAPTER *ioc, int sleep_flag)
+ 		r = -EIO;
+ 	}
+ 
+-	return 0;
++	return r;
+ }
+ 
+ /**
+-- 
+1.7.10.4
 
