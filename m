@@ -1,86 +1,54 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: SCSI eats error from flush failure during hot plug
-Date: Sat, 07 Jun 2014 12:29:44 -0700
-Message-ID: <1402169384.2236.18.camel@dabdike.int.hansenpartnership.com>
-References: <CAPK7rjcrBuQgoiAxZ9ZASAGugtyHTsHB3ssZegKtuzRdo9TMNQ@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
+From: Sagi Grimberg <sagig@mellanox.com>
+Subject: [PATCH v1 0/3] Include protection information in iscsi header
+Date: Sun,  8 Jun 2014 13:27:05 +0300
+Message-ID: <1402223228-23768-1-git-send-email-sagig@mellanox.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:49186 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753066AbaFGT3q (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 7 Jun 2014 15:29:46 -0400
-In-Reply-To: <CAPK7rjcrBuQgoiAxZ9ZASAGugtyHTsHB3ssZegKtuzRdo9TMNQ@mail.gmail.com>
+Received: from mailp.voltaire.com ([193.47.165.129]:45818 "EHLO mellanox.co.il"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751907AbaFHK1N (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 8 Jun 2014 06:27:13 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Steven Haber <steven@qumulo.com>
-Cc: linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
+To: michaelc@cs.wisc.edu, martin.petersen@oracle.com, nab@linux-iscsi.org, roland@kernel.org
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-rdma@vger.kernel.org
 
-On Thu, 2014-06-05 at 16:52 -0700, Steven Haber wrote:
-> Hello,
-> 
-> I am testing ATA device durability during hot unplug. I have a power
-> fault test suite that has turned up issues with the fsync->SCSI->ATA
-> codepath. If a device is unplugged while an fsync is in progress, ATA
-> returns a flush error to the SCSI driver but scsi_io_completion()
-> seems to disregard it. fsync() returns no error, which should mean
-> that the write was durably flushed to disk. I expect fsync() to return
-> EIO or something similar when the flush isn't acked by the device.
-> 
-> When the failure occurs, the SCSI sense key is set to ABORTED_COMMAND.
-> However, scsi_end_command() is called without any of the sense context
-> and scsi_io_completion() returns early without checking sense at all.
-> 
-> This commit may be related:
-> d6b0c53723753fc0cfda63f56735b225c43e1e9a
-> (http://git.opencores.org/?a=commitdiff&p=linux&h=d6b0c53723753fc0cfda63f56735b225c43e1e9a)
-> 
-> The following patch fixes the issue, but it's a hack. I only have a
-> vague understanding of Linux drivers, so I'm looking for advice on how
-> to make this fix better and get it upstream.
+At the SCSI transport level, there is no distinction between
+user data and protection information. Thus, iscsi header field
+"expected data transfer length" should include protection
+information.
 
-OK, so for some reason this is a zero size REQ_TYPE_FS command, which
-the logic actually assumes we cannot have.
+Patch #1 introduces scsi helpers scsi_transfer_length (compute
+wire transfer byte count) and scsi_prot_len (compute protection
+information byte count).
 
-I suspect REQ_TYPE_FLUSH subtly broke this logic because it's coming
-back to us as REQ_TYPE_FS even though it's been set up (in SCSI) as
-REQ_TYPE_BLOCK_PC.
+Patch #2 modifies iscsi initiator to set correct wire transfer length
+in iscsi header data_length field (and modifies iser accordingly).
 
-On this theory, we'd eat the return codes of all no data transfer
-commands that fail.  I think the generic fix is to make sure that all
-commands initiallised as REQ_TYPE_BLOCK_PC actually have the ->cmd_type
-set to that.
+Patch #3 modifies target core to expect protection information included
+in the wire transfer length (and modifies loopback transport to do so).
 
-There may be some knock on side effects because it doesn't look like the
-block flush code expects us to change the request->cmd_type.  Cc'd Jens
-for opinions on this.
+I have 2 patches that convert lpfc/qla2xxx drivers to use scsi helpers
+but these are completely untested at the moment. Once we get this set
+to land upstream, I can queue them up as RFCs.
 
-Can you try this out and see if it fixes the problem?  If it doesn't,
-we're going to have to get into debugging exactly what this zero length
-request is.
+Changes from v0:
+- Introduce scsi helpers to compute correct transfer length in the
+  presence of protection information (instead of having each transport
+  doing the same computation).
+- Modify iscsi to set correct transfer length using scsi helpers
+- Modify loopback transport to set correct transfer length using
+  scsi helpers
 
-Thanks,
+Sagi Grimberg (3):
+  scsi_cmnd: Introduce scsi_transfer_length helper
+  libiscsi, iser: Adjust data_length to include protection information
+  TARGET/sbc,loopback: Adjust command data length in case pi exists on
+    the wire
 
-James
-
----
-
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 9db097a..78229ec7 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1171,6 +1171,11 @@ int scsi_setup_blk_pc_cmnd(struct scsi_device *sdev, struct request *req)
- 	
- 	cmd->transfersize = blk_rq_bytes(req);
- 	cmd->allowed = req->retries;
-+	/*
-+	 * Thanks to flush and other PC prepared commands, we may
-+	 * not be a REQ_TYPE_BLOCK_PC; make sure we are
-+	 */
-+	req->cmd_type = REQ_TYPE_BLOCK_PC;
- 	return BLKPREP_OK;
- }
- EXPORT_SYMBOL(scsi_setup_blk_pc_cmnd);
-
+ drivers/infiniband/ulp/iser/iser_initiator.c |   34 ++++++----------------
+ drivers/scsi/libiscsi.c                      |   18 ++++++------
+ drivers/target/loopback/tcm_loop.c           |   15 ++++++++--
+ drivers/target/target_core_sbc.c             |   15 ++++++++-
+ include/scsi/scsi_cmnd.h                     |   39 ++++++++++++++++++++++++++
+ 5 files changed, 83 insertions(+), 38 deletions(-)
 
