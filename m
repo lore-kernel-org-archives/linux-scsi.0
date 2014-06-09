@@ -1,89 +1,84 @@
 From: "Michael S. Tsirkin" <mst@redhat.com>
-Subject: Re: [PATCH-v2 1/6] virtio-scsi.h: Add virtio_scsi_cmd_req_pi +
- VIRTIO_SCSI_F_T10_PI bits
-Date: Mon, 9 Jun 2014 16:16:41 +0300
-Message-ID: <20140609131641.GA5034@redhat.com>
+Subject: Re: [PATCH-v2 0/6] vhost/scsi: Add T10 PI SGL passthrough support
+Date: Mon, 9 Jun 2014 16:30:26 +0300
+Message-ID: <20140609133026.GA6239@redhat.com>
 References: <1400725582-5521-1-git-send-email-nab@daterainc.com>
- <1400725582-5521-2-git-send-email-nab@daterainc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <target-devel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1400725582-5521-2-git-send-email-nab@daterainc.com>
+In-Reply-To: <1400725582-5521-1-git-send-email-nab@daterainc.com>
 Sender: target-devel-owner@vger.kernel.org
 To: "Nicholas A. Bellinger" <nab@daterainc.com>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, "H. Peter Anvin" <hpa@zytor.com>, Nicholas Bellinger <nab@linux-iscsi.org>, Sagi Grimberg <sagig@dev.mellanox.co.il>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, "H. Peter Anvin" <hpa@zytor.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, May 22, 2014 at 02:26:17AM +0000, Nicholas A. Bellinger wrote:
+On Thu, May 22, 2014 at 02:26:16AM +0000, Nicholas A. Bellinger wrote:
 > From: Nicholas Bellinger <nab@linux-iscsi.org>
 > 
-> This patch adds a virtio_scsi_cmd_req_pi header as recommened by
-> Paolo that contains do_pi_niov + di_pi_niov elements used for
-> signaling when protection information buffers are expected to
-> preceed the data buffers.
+> Hi MST, MKP, Paolo & Co,
 > 
-> Also add new VIRTIO_SCSI_F_T10_PI feature bit to be used to signal
-> host support.
+> Here is the v2 patch series for adding T1O protection information (PI)
+> SGL passthrough support between virtio-scsi LLD + vhost-scsi fabric
+> endpoints.
 > 
-> v4 changes:
->    - Use pi_bytesout + pi_bytesin instead of niovs (mst + paolo)
+> Following MST's recommendation, it includes the changes for using
+> bytes intead of number of iovecs in virtio_scsi_cmd_req_pi along with
+> the associated changes to virtio-scsi + vhost/scsi code.
 > 
-> Cc: Paolo Bonzini <pbonzini@redhat.com>
-> Cc: Michael S. Tsirkin <mst@redhat.com>
-> Cc: Martin K. Petersen <martin.petersen@oracle.com>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Hannes Reinecke <hare@suse.de>
-> Cc: Sagi Grimberg <sagig@dev.mellanox.co.il>
-> Cc: H. Peter Anvin <hpa@zytor.com>
-> Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
-> ---
->  include/linux/virtio_scsi.h |   15 ++++++++++++++-
->  1 file changed, 14 insertions(+), 1 deletion(-)
+> For vhost/scsi, this includes walking the leading iovec's length(s)
+> to determine where protection payload ends, and real data payload 
+> starts.  For virtio-scsi LLD code, this includes locating struct
+> blk_integrity for using blk_rq_sectors + ->tuple_size to calculate
+> the total bytes for outgoing cmd_pi->pi_bytes[out,in] values.
 > 
-> diff --git a/include/linux/virtio_scsi.h b/include/linux/virtio_scsi.h
-> index 4195b97..7344906 100644
-> --- a/include/linux/virtio_scsi.h
-> +++ b/include/linux/virtio_scsi.h
-> @@ -35,11 +35,23 @@ struct virtio_scsi_cmd_req {
->  	u8 lun[8];		/* Logical Unit Number */
->  	u64 tag;		/* Command identifier */
->  	u8 task_attr;		/* Task attribute */
-> -	u8 prio;
-> +	u8 prio;		/* SAM command priority field */
->  	u8 crn;
->  	u8 cdb[VIRTIO_SCSI_CDB_SIZE];
->  } __packed;
->  
-> +/* SCSI command request, followed by protection information */
-> +struct virtio_scsi_cmd_req_pi {
-> +	u8 lun[8];		/* Logical Unit Number */
-> +	u64 tag;		/* Command identifier */
-> +	u8 task_attr;		/* Task attribute */
-> +	u8 prio;		/* SAM command priority field */
-> +	u8 crn;
-> +	u32 pi_bytesout;	/* DataOUT PI Number of bytes */
-> +	u32 pi_bytesin;		/* DataIN PI Number of bytes */
-> +	u8 cdb[VIRTIO_SCSI_CDB_SIZE];
-> +} __packed;
-> +
->  /* Response, followed by sense data and data-in */
->  struct virtio_scsi_cmd_resp {
->  	u32 sense_len;		/* Sense data length */
-> @@ -97,6 +109,7 @@ struct virtio_scsi_config {
->  #define VIRTIO_SCSI_F_INOUT                    0
->  #define VIRTIO_SCSI_F_HOTPLUG                  1
->  #define VIRTIO_SCSI_F_CHANGE                   2
-> +#define VIRTIO_SCSI_F_T10_PI		       3
+> The full list of changes from last series include:
+> 
+>   - Use pi_bytesout + pi_bytesin instead of niovs in virtio-scsi PI
+>     header (mst + paolo)
+>   - Add prot_pto=1 in tcm_vhost_submission_work() when no PI buffer
+>     exists (nab)
+>   - Get rid of req + cdb pointer casts in vhost_scsi_handle_vq (mst)
+>   - Ensure that virtio_scsi_cmd_req_pi processing happens regardless
+>     of data_num in vhost_scsi_handle_vq (nab)
+>   - Pass TARGET_PROT_ALL into transport_init_session_tags() (nab)
+>   - Convert vhost_scsi_handle_vq to use memcpy_fromiovecend() (mst)
+>   - Convert vhost_scsi_handle_vq to use pi_bytesout + pi_bytesin (nab)
+>   - Convert virtio_scsi_init_hdr_pi() to use pi_bytesout + pi_bytesin
+>     (mst + paolo + nab)
+>   - Use blk_integrity->tuple_size to calculate pi bytes (nab)
+> 
+> Please review for v3.16-rc1 code.
+> 
+> Thanks!
+> 
+> --nab
+
+OK since this conflicts with my vhost locking
+patches, I have rebased this and parked at vhost-review
+branch in my tree.
+
+git://git.kernel.org/pub/scm/linux/kernel/git/mst/vhost.git vhost-review
+
+Nicholas could you please take a look at the patches and confirm this is
+OK ASAP?
+
+If yes I will pack it all up and send to Linus.
 
 
-I'd like to add that it's strange to add a macro and
-only use it in patch 5.
-I believe this is one of the reasons bug in patch 5 went
-unnoticed ...
 
->  
->  /* Response codes */
->  #define VIRTIO_SCSI_S_OK                       0
+> Nicholas Bellinger (6):
+>   virtio-scsi.h: Add virtio_scsi_cmd_req_pi + VIRTIO_SCSI_F_T10_PI bits
+>   vhost/scsi: Move sanity check into vhost_scsi_map_iov_to_sgl
+>   vhost/scsi: Add preallocation of protection SGLs
+>   vhost/scsi: Add T10 PI IOV -> SGL memory mapping logic
+>   vhost/scsi: Enable T10 PI IOV -> SGL memory mapping
+>   virtio-scsi: Enable DIF/DIX modes in SCSI host LLD
+> 
+>  drivers/scsi/virtio_scsi.c  |   86 +++++++++---
+>  drivers/vhost/scsi.c        |  305 +++++++++++++++++++++++++++++--------------
+>  include/linux/virtio_scsi.h |   15 ++-
+>  3 files changed, 292 insertions(+), 114 deletions(-)
+> 
 > -- 
 > 1.7.10.4
