@@ -1,38 +1,75 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [PATCH-v2 0/6] vhost/scsi: Add T10 PI SGL passthrough support
-Date: Tue, 10 Jun 2014 13:56:17 -0700
-Message-ID: <CA+55aFxnswLS1ZxYu5B0yS84ugKgcNUzNkyKxV8Yv0Fnx0TJig@mail.gmail.com>
-References: <1400725582-5521-1-git-send-email-nab@daterainc.com>
-	<20140609133026.GA6239@redhat.com>
-	<1402383912.5774.13.camel@haakon3.risingtidesystems.com>
-	<20140610094254.GC7423@redhat.com>
-	<20140610215217.495d5476@canb.auug.org.au>
-	<20140610130208.GA27702@redhat.com>
-	<1402421957.23024.15.camel@haakon3.risingtidesystems.com>
-	<20140610184531.GA27760@redhat.com>
-	<1402430265.19972.9.camel@haakon3.risingtidesystems.com>
-	<1402430984.2185.116.camel@dabdike.int.hansenpartnership.com>
-	<1402431901.19972.14.camel@haakon3.risingtidesystems.com>
+From: Laurence Oberman <oberman.l@gmail.com>
+Subject: debug_flag added to st tape driver
+Date: Tue, 10 Jun 2014 16:57:06 -0400
+Message-ID: <CAAzz28jMu0VeQHZNHWD0jM3YREZrPERnPvTxONStyaV7foFc_Q@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ve0-f174.google.com ([209.85.128.174]:42230 "EHLO
-	mail-ve0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753119AbaFJU4S (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Jun 2014 16:56:18 -0400
-In-Reply-To: <1402431901.19972.14.camel@haakon3.risingtidesystems.com>
+Received: from mail-lb0-f170.google.com ([209.85.217.170]:49575 "EHLO
+	mail-lb0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753119AbaFJU5I (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Jun 2014 16:57:08 -0400
+Received: by mail-lb0-f170.google.com with SMTP id w7so4300601lbi.1
+        for <linux-scsi@vger.kernel.org>; Tue, 10 Jun 2014 13:57:06 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, "Michael S. Tsirkin" <mst@redhat.com>, Stephen Rothwell <sfr@canb.auug.org.au>, "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, "H. Peter Anvin" <hpa@zytor.com>
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Tue, Jun 10, 2014 at 1:25 PM, Nicholas A. Bellinger
-<nab@linux-iscsi.org> wrote:
->
-> That would work, or I can simply include a pointer to Stephen's patch in
-> the target-pending PULL request after the vhost API changes are merged
-> and Linus can apply himself..
+Hello
 
-Yes. That way I'll include it in the merge, and everything should just work.
+I am tired of building modules to enable SCSI tape driver debug so I
+am hoping this patch is acceptable.
+Tested using kernel 3.14.6
 
-          Linus
+Usage example:
+modprobe st debug_flag=1
+
+diff -Nur a/st.c b/st.c
+--- a/st.c        2014-06-10 16:45:18.522354105 -0400
++++ b/st.c        2014-06-10 16:45:33.953765908 -0400
+@@ -80,6 +80,7 @@
+ static int try_direct_io = TRY_DIRECT_IO;
+ static int try_rdio = 1;
+ static int try_wdio = 1;
++static int debug_flag = 0;
+
+ static struct class st_sysfs_class;
+ static const struct attribute_group *st_dev_groups[];
+@@ -100,6 +101,9 @@
+ MODULE_PARM_DESC(max_sg_segs, "Maximum number of scatter/gather
+segments to use (256)");
+ module_param_named(try_direct_io, try_direct_io, int, 0);
+ MODULE_PARM_DESC(try_direct_io, "Try direct I/O between user buffer
+and tape drive (1)");
++module_param_named(debug_flag, debug_flag, int, 0);
++MODULE_PARM_DESC(debug_flag, "Enable DEBUG, same as setting DEBUG 1
+in source");
++
+
+ /* Extra parameters for testing */
+ module_param_named(try_rdio, try_rdio, int, 0);
+@@ -124,6 +128,9 @@
+         },
+         {
+                 "try_direct_io", &try_direct_io
++        },
++        {
++                "debug_flag", &debug_flag
+         }
+ };
+ #endif
+@@ -4277,7 +4284,9 @@
+ static int __init init_st(void)
+ {
+         int err;
+-
++        debugging = (debug_flag > 0) ? debug_flag : DEBUG;
++        if (debugging)
++                printk(KERN_INFO "st: Debugging enabled debug_flag =
+%d\n",debugging);
+         validate_options();
+
+         printk(KERN_INFO "st: Version %s, fixed bufsize %d, s/g segs %d\n",
+
+Thanks
+Laurence
