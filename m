@@ -1,35 +1,44 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 77631] task scsi_eh_6:537 blocked for more than 120 seconds.
-Date: Tue, 10 Jun 2014 21:44:36 +0000
-Message-ID: <bug-77631-11613-TepdY4UlH2@https.bugzilla.kernel.org/>
-References: <bug-77631-11613@https.bugzilla.kernel.org/>
+From: "Bryn M. Reeves" <bmr@redhat.com>
+Subject: Re: debug_flag added to st tape driver
+Date: Tue, 10 Jun 2014 22:20:30 +0100
+Message-ID: <20140610212029.GA30598@localhost.localdomain>
+References: <CAAzz28jMu0VeQHZNHWD0jM3YREZrPERnPvTxONStyaV7foFc_Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:47748 "EHLO mail.kernel.org"
+Received: from mx1.redhat.com ([209.132.183.28]:17849 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751444AbaFJVoi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Jun 2014 17:44:38 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 024E820274
-	for <linux-scsi@vger.kernel.org>; Tue, 10 Jun 2014 21:44:38 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-	by mail.kernel.org (Postfix) with ESMTP id 8E76B202C8
-	for <linux-scsi@vger.kernel.org>; Tue, 10 Jun 2014 21:44:36 +0000 (UTC)
-In-Reply-To: <bug-77631-11613@https.bugzilla.kernel.org/>
+	id S1753294AbaFJVql (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 10 Jun 2014 17:46:41 -0400
+Content-Disposition: inline
+In-Reply-To: <CAAzz28jMu0VeQHZNHWD0jM3YREZrPERnPvTxONStyaV7foFc_Q@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Laurence Oberman <oberman.l@gmail.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=77631
+On Tue, Jun 10, 2014 at 04:57:06PM -0400, Laurence Oberman wrote:
+> I am tired of building modules to enable SCSI tape driver debug so I
+> am hoping this patch is acceptable.
+> Tested using kernel 3.14.6
+> 
+> Usage example:
+> modprobe st debug_flag=1
 
---- Comment #2 from Mikhail <mikhail.v.gavrilov@gmail.com> ---
-This occurred when I did first reboot after kernel update from 3.14.5 to
-3.14.6.
-After second reboot I have not seen this issue.
-And I did not plug/unplug any USB devices when it occurred.
+Missing Signed-off-by :-)
+ 
+> +module_param_named(debug_flag, debug_flag, int, 0);
 
--- 
-You are receiving this mail because:
-You are the assignee for the bug.
+It's probably not worth making this a sysfs knob as most distros
+still compile st as a module although why not just set debugging
+directly from the module parameter?
+
+> +MODULE_PARM_DESC(debug_flag, "Enable DEBUG, same as setting DEBUG 1
+> in source");
+> +
+
+The description is a bit misleading as a bunch of stuff gets
+compiled out when DEBUG is unset at compile time.
+
+Maybe "same as setting debugging=1" instead?
+
