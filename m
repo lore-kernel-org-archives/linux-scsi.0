@@ -1,63 +1,63 @@
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: Re: [PATCH-v2 0/6] vhost/scsi: Add T10 PI SGL passthrough support
-Date: Wed, 11 Jun 2014 01:47:30 +1000
-Message-ID: <20140611014730.7f3f2e60@canb.auug.org.au>
-References: <1400725582-5521-1-git-send-email-nab@daterainc.com>
-	<20140609133026.GA6239@redhat.com>
-	<1402383912.5774.13.camel@haakon3.risingtidesystems.com>
-	<20140610094254.GC7423@redhat.com>
-	<20140610215217.495d5476@canb.auug.org.au>
-	<20140610130208.GA27702@redhat.com>
+From: Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
+Subject: Re: [PATCH] fc: ensure scan_work isn't active when
+ freeing fc_rport
+Date: Tue, 10 Jun 2014 11:49:31 -0400
+Message-ID: <20140610154931.GE6275@hmsreliant.think-freely.org>
+References: <1401461974-7879-1-git-send-email-nhorman@tuxdriver.com>
+ <1401751370.5752.5.camel@vi-devel>
+ <20140606205409.GD2543@hmsreliant.think-freely.org>
+ <1402337383.5752.153.camel@vi-devel>
+ <20140609191637.GA3535@hmsreliant.think-freely.org>
+ <20140610113841.GC26195@infradead.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- boundary="Sig_/524xNDlSYz=Gl6BhkuEmfW8"; protocol="application/pgp-signature"
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20140610130208.GA27702@redhat.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, "H. Peter Anvin" <hpa@zytor.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20140610113841.GC26195-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+List-Unsubscribe: <http://lists.open-fcoe.org/mailman/options/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.open-fcoe.org/pipermail/fcoe-devel>
+List-Post: <mailto:fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+List-Help: <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.open-fcoe.org/mailman/listinfo/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
+Errors-To: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+Sender: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+To: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
---Sig_/524xNDlSYz=Gl6BhkuEmfW8
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Tue, Jun 10, 2014 at 04:38:41AM -0700, Christoph Hellwig wrote:
+> On Mon, Jun 09, 2014 at 03:16:37PM -0400, Neil Horman wrote:
+> > > Given fcoe is quite mature now and its patches volume is very low, so
+> > > getting its kernel patches directly to scsi subsystem should work fine
+> > > and should be okay with James or Christophs to pull into scsi subsystem
+> > > directly once I've my non-author signoff ACK there as described in this
+> > > announcement at http://marc.info/?l=linux-scsi&m=140050839729415&w=2 
+> > > 
+> > > If no alternate suggestion or objection to this then I'll formally
+> > > announce this on fcoe mailing list.
+> > > 
+> > > However for any huges patches series bomb or RFCs, I'll request fcoe
+> > > developers to send patches against scsi tree at fcoe devel list first
+> > > and then if needed I can roll them up.
+> > > 
+> > > Thanks,
+> > > Vasu
+> > > 
+> > Copy that Vasu, Christoph, is that ok with you?
+> 
+> That's fine with me.  It would help greatly if you could make sure
+> all the paches get a review or two very quickly so I can just pick them
+> up immediately after reviewing them.
+> 
+> 
+Roger that, Vasu has already acked this.  I thought there was a second, but I'm
+not sure, my mailbox is a bit messed up at the moment.
 
-Hi Michael,
+Sorry for not cc-ing you on this sooner, I thought it was going to go through
+the FCoE tree initially
 
-On Tue, 10 Jun 2014 16:02:08 +0300 "Michael S. Tsirkin" <mst@redhat.com> wr=
-ote:
->
-> I don't see how that's possible.
-> Here's a point you might have missed.
-> Nicholas's patch isn't just introducing a merge conflict.
-> It is also buggy.
-
-Ah ha!  Indeed that is a different kettle of fish. :-)
-
---=20
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
-
---Sig_/524xNDlSYz=Gl6BhkuEmfW8
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJTlyiZAAoJEMDTa8Ir7ZwVxIsQAIn7Tbtr8SAJlv2YILJG4XHK
-p4fi4UQE5W2qr+eXkuhdZGvBjxuv+XkRJdagOSXvYTch7HsziJfCoMFEtDHtcs+c
-agsDeHcXzAEXVFSmeDMlPzSgpqfehafGrkNkhvvhdnzrhbs9esUoi4FJZ6Z4u30+
-Of2HR48S2gEKEZgI9k3exVcEF+gWxAYcPTCHFa+QRjEuL6B1udVLwNYamFRlVRev
-XIIxNmisvGQWTFupplT3rFwZhjlY+/8H708+q+RdcIkD9eJInBrKRWDrzgQOvb+N
-0AocnCMq2NABualuVNRtgQmz1eVTt7LqZHabX8PaNMELvAqNRok8scHmZ6cB/f7f
-XQ6+MLfqz+zg3xdhoKK5pHErSTz9Q9tj/dCFHWYmiWvbFi0fKWzmvtUZLVN2wOLp
-nT3aL3wqUKvWytVs8Oxek8xiLjKAmH7afAoZbYKyi628x56Meyk5ZABOMJEXUXUX
-iUXEJdKQzfO1SFPkkwBgU3v7EXLmqKWwIg1WFmDy3bc8RxBYdNvPu+08TY6n1nhH
-RPOMGkpUCsx1WSETin0YcW+0J3WV21Aafmt3cluCSMICThXUid2iucdVXX6MpqDj
-WTx1LOAwusu+uYDn8LsXCNyl/F9mu67eF4sNynkrZFQlxN0sVLUtNdfIko5Faqj6
-9RTyrNoP8nV4QF0mLrC2
-=zGKe
------END PGP SIGNATURE-----
-
---Sig_/524xNDlSYz=Gl6BhkuEmfW8--
+Best
+Neil
