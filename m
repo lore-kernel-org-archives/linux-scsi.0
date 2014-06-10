@@ -1,91 +1,85 @@
-From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [PATCH v1 1/3] scsi_cmnd: Introduce scsi_transfer_length helper
-Date: Tue, 10 Jun 2014 22:16:45 +0300
-Message-ID: <5397599D.5060009@dev.mellanox.co.il>
-References: <1402223228-23768-1-git-send-email-sagig@mellanox.com>	<1402223228-23768-2-git-send-email-sagig@mellanox.com> <yq1fvjcvb8f.fsf@sermon.lab.mkp.net>
+From: "Michael S. Tsirkin" <mst@redhat.com>
+Subject: Re: [PATCH-v2 0/6] vhost/scsi: Add T10 PI SGL passthrough support
+Date: Tue, 10 Jun 2014 22:35:19 +0300
+Message-ID: <20140610193519.GA29609@redhat.com>
+References: <1400725582-5521-1-git-send-email-nab@daterainc.com>
+ <20140609133026.GA6239@redhat.com>
+ <1402383912.5774.13.camel@haakon3.risingtidesystems.com>
+ <20140610094254.GC7423@redhat.com>
+ <20140610215217.495d5476@canb.auug.org.au>
+ <20140610130208.GA27702@redhat.com>
+ <1402421957.23024.15.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <yq1fvjcvb8f.fsf@sermon.lab.mkp.net>
+Content-Disposition: inline
+In-Reply-To: <1402421957.23024.15.camel@haakon3.risingtidesystems.com>
 Sender: target-devel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: michaelc@cs.wisc.edu, nab@linux-iscsi.org, roland@kernel.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-rdma@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>, "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, "H. Peter Anvin" <hpa@zytor.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 6/10/2014 10:02 PM, Martin K. Petersen wrote:
->>>>>> "Sagi" == Sagi Grimberg <sagig@mellanox.com> writes:
-> +static inline unsigned scsi_prot_length(unsigned data_length,
-> +					unsigned sector_size)
-> +{
-> +	switch (sector_size) {
-> +	case 512:
-> +		return (data_length >> 9) * 8;
-> +	case 1024:
-> +		return (data_length >> 10) * 8;
-> +	case 2048:
-> +		return (data_length >> 11) * 8;
-> +	case 4096:
-> +		return (data_length >> 12) * 8;
-> +	default:
-> +		return (data_length >> ilog2(sector_size)) * 8;
-> +	}
-> +}
-> +
-> +static inline unsigned scsi_transfer_length(struct scsi_cmnd *cmd)
-> +{
-> +	unsigned data_length;
-> +
-> +	if (cmd->sc_data_direction == DMA_FROM_DEVICE) {
-> +		data_length = scsi_in(cmd)->length;
-> +		if (scsi_get_prot_op(cmd) ==  SCSI_PROT_NORMAL ||
-> +		    scsi_get_prot_op(cmd) ==  SCSI_PROT_READ_INSERT)
-> +			return data_length;
-> +	} else {
-> +		data_length = scsi_out(cmd)->length;
-> +		if (scsi_get_prot_op(cmd) ==  SCSI_PROT_NORMAL ||
-> +		    scsi_get_prot_op(cmd) ==  SCSI_PROT_WRITE_STRIP)
-> +			return data_length;
-> +	}
-> +
-> +	/* Protection information exists on the wire */
-> +	return data_length + scsi_prot_length(data_length,
-> +					      cmd->device->sector_size);
-> +}
->
-> Let's do this for 3.16:
->
-> static inline unsigned int scsi_transfer_length(struct scsi_cmnd *scmd)
-> {
->          unsigned int xfer_len = blk_rq_bytes(scmd->request);
->          unsigned int prot_op = scsi_get_prot_op(scmd);
->
->          switch (prot_op) {
->          case SCSI_PROT_NORMAL:
->          case SCSI_PROT_WRITE_STRIP:
->          case SCSI_PROT_READ_INSERT:
->               return xfer_len;
->          }
->
->          return xfer_len + (xfer_len >> ilog2(sector_size)) * 8;
-> }
->
-> And then in 3.17 we'll have:
->
-> static inline unsigned int scsi_transfer_length(struct scsi_cmnd *scmd)
-> {
->          unsigned int xfer_len = blk_rq_bytes(scmd->request);
->   
->          if (scsi_prot_flagged(SCSI_PROT_TRANSFER_PI))
->             xfer_len += (xfer_len >> ilog2(scsi_prot_interval(scmd))) * 8;
->
->          return xfer_len;
-> }
->
+On Tue, Jun 10, 2014 at 10:39:17AM -0700, Nicholas A. Bellinger wrote:
+> On Tue, 2014-06-10 at 16:02 +0300, Michael S. Tsirkin wrote:
+> > On Tue, Jun 10, 2014 at 09:52:17PM +1000, Stephen Rothwell wrote:
+> > > Hi Michael,
+> > > 
+> > > On Tue, 10 Jun 2014 12:42:54 +0300 "Michael S. Tsirkin" <mst@redhat.com> wrote:
+> > > >
+> > > > So I see two options:
+> > > > - I go ahead with my changes and you with yours and let Linus resolve
+> > > >   the conflict.  This means bisect build will be broken since the
+> > > >   breakage will likely not be noticed until after the merge.
+> > > 
+> > > Well, since the resolution is known, the one who submits their tree
+> > > later should tell Linus (as suggested by Nicholas).  That is part of
+> > > the point of the linux-next tree ... and therefore there would be no
+> > > bisect problem.
+> > > 
+> > > > > Stephen (CC'ed) has included a fix in today's linux-next for the merge
+> > > > > conflict here:
+> > > > > 
+> > > > > https://lkml.org/lkml/2014/6/10/3
+> > > > > 
+> > > > > Please confirm, as it will be a pointer to Linus within the
+> > > > > target-pending/for-next PULL request.
+> > > > 
+> > > > Yes but this does mean people trying to bisect will
+> > > > hit build breakages, not nice.
+> > > 
+> > > Not necessarily.
+> > > 
+> > > -- 
+> > > Cheers,
+> > > Stephen Rothwell                    sfr@canb.auug.org.au
+> > 
+> > 
+> > I don't see how that's possible.
+> > Here's a point you might have missed.
+> > Nicholas's patch isn't just introducing a merge conflict.
+> > It is also buggy.
+> > Replacing bit access with has_feature silently fixes the bug.
+> > 
+> > So if we want to avoid bisect breakage target tree will
+> > have to be rebased.
+> > 
+> > And if doing that anyway, I don't see any reason not
+> > to merge everything through the vhost tree, esp
+> > since I already put the patches there. Less work for
+> > everyone involved.
+> > 
+> 
+> The problem is with Sagi's recent changes wrt to including T10 PI bytes
+> into expected data transfer length in target-core, you'll end up
+> introducing a different bug into your tree..  ;)
 
-No problem,
+I thought you wanted to fix it after -rc1 anyway?
 
-I'll send out v2 tomorrow (your tonight...)
+> Why don't I simply add Stephen's patch to use vhost_has_feature() in
+> target-pending/for-next, and we just make sure that the vhost PULL
+> request goes out after target-pending..?
+> 
+> --nab
 
-Thanks,
-Sagi.
+I can drop the PI feature bit in rc1. You will apply Sagi's changes and
+then enable the feature in rc2?
