@@ -1,124 +1,102 @@
-From: Neil Horman <nhorman@tuxdriver.com>
-Subject: Re: [Open-FCoE] [PATCH] fc: ensure scan_work isn't active when
- freeing fc_rport
-Date: Mon, 9 Jun 2014 15:16:37 -0400
-Message-ID: <20140609191637.GA3535@hmsreliant.think-freely.org>
-References: <1401461974-7879-1-git-send-email-nhorman@tuxdriver.com>
- <1401751370.5752.5.camel@vi-devel>
- <20140606205409.GD2543@hmsreliant.think-freely.org>
- <1402337383.5752.153.camel@vi-devel>
+From: Vishwanath Pai <vpai@akamai.com>
+Subject: Re: [RFC Patch]: scsi: sysfs file cache_type not in sync with mode
+ page
+Date: Mon, 09 Jun 2014 20:16:19 -0400
+Message-ID: <53964E53.3000106@akamai.com>
+References: <E1Wt1Sq-0000LA-Ez@bos-lpci1.kendall.corp.akamai.com> <1402095314.2207.105.camel@dabdike.int.hansenpartnership.com> <53926F99.4030003@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:44224 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753824AbaFITQv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Jun 2014 15:16:51 -0400
-Content-Disposition: inline
-In-Reply-To: <1402337383.5752.153.camel@vi-devel>
+Received: from prod-mail-xrelay07.akamai.com ([72.246.2.115]:25506 "EHLO
+	prod-mail-xrelay07.akamai.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754160AbaFJAQU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Jun 2014 20:16:20 -0400
+In-Reply-To: <53926F99.4030003@interlog.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vasu Dev <vasu.dev@linux.intel.com>
-Cc: fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org, james.smart@emulex.com, hch@infradead.org
+To: "dgilbert@interlog.com" <dgilbert@interlog.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Mon, Jun 09, 2014 at 11:09:43AM -0700, Vasu Dev wrote:
-> On Fri, 2014-06-06 at 16:54 -0400, Neil Horman wrote:
-> > On Mon, Jun 02, 2014 at 04:22:50PM -0700, Vasu Dev wrote:
-> > > On Fri, 2014-05-30 at 10:59 -0400, Neil Horman wrote:
-> > > > debugfs caught this:
-> > > > WARNING: at lib/debugobjects.c:260 debug_print_object+0x83/0xa0()
-> > > > ODEBUG: free active (active state 0) object type: work_struct
-> > > > hint: fc_scsi_scan_rport+0x0/0xd0 [scsi_transport_fc]
-> > > >  CPU: 1 PID: 184 Comm: kworker/1:1 Tainted: G        W
-> > > > --------------   3.10.0-123.el7.x86_64.debug #1
-> > > > Hardware name: HP ProLiant DL120 G7, BIOS J01 07/01/2013
-> > > > Workqueue: fc_wq_5 fc_rport_final_delete [scsi_transport_fc]
-> > > > Call Trace:
-> > > > [<ffffffff8169efec>] dump_stack+0x19/0x1b
-> > > > [<ffffffff8106cbd1>] warn_slowpath_common+0x61/0x80
-> > > > [<ffffffff8106cc4c>] warn_slowpath_fmt+0x5c/0x80
-> > > > [<ffffffff8133e003>] debug_print_object+0x83/0xa0
-> > > > [<ffffffffa04e2f40>] ? fc_parse_wwn+0x100/0x100
-> > > > 
-> > > > [<ffffffff8133f23b>] debug_check_no_obj_freed+0x22b/0x270
-> > > > [<ffffffffa04e127e>] ? fc_rport_dev_release+0x1e/0x30
-> > > > [<ffffffff811db3e9>] kfree+0xd9/0x2d0
-> > > > [<ffffffffa04e127e>] fc_rport_dev_release+0x1e/0x30
-> > > > [<ffffffff81428032>] device_release+0x32/0xa0
-> > > > [<ffffffff8132701e>] kobject_release+0x7e/0x1b0
-> > > > [<ffffffff81326ed8>] kobject_put+0x28/0x60
-> > > > [<ffffffff81428397>] put_device+0x17/0x20
-> > > > [<ffffffffa04e5025>] fc_rport_final_delete+0x165/0x210
-> > > > [<ffffffff810959b0>] process_one_work+0x220/0x710
-> > > > [<ffffffff81095944>] ? process_one_work+0x1b4/0x710
-> > > > [<ffffffff81095fbb>] worker_thread+0x11b/0x3a0
-> > > > [<ffffffff81095ea0>] ? process_one_work+0x710/0x710
-> > > > [<ffffffff8109e0cd>] kthread+0xed/0x100
-> > > > [<ffffffff8109dfe0>] ? insert_kthread_work+0x80/0x80
-> > > > [<ffffffff816b2fec>] ret_from_fork+0x7c/0xb0
-> > > > [<ffffffff8109dfe0>] ? insert_kthread_work+0x80/0x80
-> > > > 
-> > > > Seems to be because the scan_work work_struct might be active when the housing
-> > > > fc_rport struct gets freed.  Ensure that we cancel it prior to freeing the rport
-> > > > 
-> > > > Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
-> > > > CC: linux-scsi@vger.kernel.org
-> > > > CC: Robert Love <robert.w.love@intel.com>
-> > > > CC: Vasu Dev <vasu.dev@intel.com>
-> > > > ---
-> > > >  drivers/scsi/scsi_transport_fc.c | 1 +
-> > > >  1 file changed, 1 insertion(+)
-> > > > 
-> > > > diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-> > > > index 4628fd5..5bd552c 100644
-> > > > --- a/drivers/scsi/scsi_transport_fc.c
-> > > > +++ b/drivers/scsi/scsi_transport_fc.c
-> > > > @@ -2548,6 +2548,7 @@ fc_rport_final_delete(struct work_struct *work)
-> > > >  			fc_flush_devloss(shost);
-> > > >  		if (!cancel_delayed_work(&rport->dev_loss_work))
-> > > >  			fc_flush_devloss(shost);
-> > > > +		cancel_work_sync(&rport->scan_work);
-> > > 
-> > > Make sense to ensure pending work canceled, adding James Smart for his
-> > > ACK as transport FC class author. 
-> > > 
-> > > 
-> > > Reviewed-by: Vasu Dev <vasu.dev@intel.com> 
-> > > 
-> > Ping on this, Something just occured to me.  I was thinking (perhaps
-> > erroneously) that this would go through the FCoE tree, but I don't see that
-> > you've setup a tree yet vasu (and Rob's has been idle for 6 months).  Whats the
-> > plan for this (and future) fcoe patchs.  Will you have a tree, or will we send
-> > this through Christophs new scsi tree perhaps?
-> > 
-> 
-> Thanks Neil for bringing this, I and Rob also had off list discussion on
-> this just last week. 
-> 
-> Given fcoe is quite mature now and its patches volume is very low, so
-> getting its kernel patches directly to scsi subsystem should work fine
-> and should be okay with James or Christophs to pull into scsi subsystem
-> directly once I've my non-author signoff ACK there as described in this
-> announcement at http://marc.info/?l=linux-scsi&m=140050839729415&w=2 
-> 
-> If no alternate suggestion or objection to this then I'll formally
-> announce this on fcoe mailing list.
-> 
-> However for any huges patches series bomb or RFCs, I'll request fcoe
-> developers to send patches against scsi tree at fcoe devel list first
-> and then if needed I can roll them up.
-> 
-> Thanks,
-> Vasu
-> 
-Copy that Vasu, Christoph, is that ok with you?
+In order to issue a BLKRRPART the drive needs to be unmounted first, this 
+is not always possible on a machine. There is another way though: 
+'echo 1 > /sys/block/sda/device/rescan'. This rescans all the mode pages 
+so that the kernel is in sync.
 
-Neil
+Writing to cache_type does seem to be a better idea than using sdparm, but
+this is erroring out on one of our drives, whereas sdparm sets it without 
+an error.
 
-> 
-> 
-> 
-> 
-> 
-> 
-> 
+$echo "write through" > /sys/class/scsi_disk/6\:0\:0\:0/cache_type 
+-bash: echo: write error: Invalid argument
+
+$dmesg | tail -4
+[1667272.378024] sd 6:0:0:0: [sda]  
+[1667272.378547] Sense Key : Illegal Request [current] 
+[1667272.379254] sd 6:0:0:0: [sda]  
+[1667272.379758] Add. Sense: Invalid field in parameter list
+
+I can think of a scenario where the kernel thinks that WCE is not set and issue
+wrong flush commands and assume that the cache has been cleared. I think we 
+should find a better way to keep the kernel in sync, or inform the kernel of 
+this change.
+
+- Vishwanath
+
+On 06/06/2014 09:49 PM, Douglas Gilbert wrote:
+> On 14-06-06 06:55 PM, James Bottomley wrote:
+>> On Fri, 2014-06-06 at 17:14 -0400, Pai wrote:
+>>> Hi All,
+>>>
+>>> I noticed that the sysfs file cache_type is not is sync with the information in the mode page. If we change the WCE attribute in the mode page (sdparm --set=WCE /dev/sda  and sdparm --clear=WCE /dev/sda) it does not reflect this in the sysfs file.
+>>>
+>>> $ cat /sys/block/sda/device/scsi_disk/6\:0\:0\:0/cache_type
+>>> write back
+>>>
+>>> $ sdparm --clear=WCE /dev/sda
+>>>      /dev/sda: TOSHIBA   AL13SEB600        0101
+>>>
+>>> $ cat /sys/block/sda/device/scsi_disk/6\:0\:0\:0/cache_type
+>>> write back
+>>>
+>>> Ideally cache_type should have changed to 'write through' or 'none'. I have a small one line change that can fix this one. This patch applies against the latest branch "linux-3.15-rc8".
+>>>
+>>> Few things to note:
+>>> 1. revalidate_disk() also reads a whole bunch of other things from the mode page and I don't know if this will have any side effects. This call is made on store_cache_type as well, so I think it should be OK.
+>>> 2. This is extra work which is not needed in most cases (mode pages hardly change). Is there an event that we can subscribe to when the modpages change?
+>>>
+>>> Please review.
+>>>
+>>> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+>>> index efcbcd1..5b65ccc 100644
+>>> --- a/drivers/scsi/sd.c
+>>> +++ b/drivers/scsi/sd.c
+>>> @@ -256,6 +256,7 @@ static ssize_t
+>>>   cache_type_show(struct device *dev, struct device_attribute *attr, char *buf)
+>>>   {
+>>>   	struct scsi_disk *sdkp = to_scsi_disk(dev);
+>>> +	revalidate_disk(sdkp->disk);
+>>>   	int ct = sdkp->RCD + 2*sdkp->WCE;
+>>>
+>>>   	return snprintf(buf, 40, "%s\n", sd_cache_types[ct]);
+>> The behaviour you describe is correct.  The cache type is probed once at
+>> init.  If you change the cache behind the back of the linux code, you
+>> have to expect that we won't see it.  We're definitely not doing a
+>> revalidate on every write just in case, so by extension we expect that
+>> to see it via sysfs either you change it through the provided interface
+>> (writing to the cache_type file) or you inform the kernel if you change
+>> it via other means by issuing the BLKRRPART ioctl.
+> Have a look at
+>    echo "write through" > /sys/class/scsi_disk/6\:0\:0\:0/cache_type
+>
+> and/or
+>    echo "write back" > /sys/class/scsi_disk/6\:0\:0\:0/cache_type
+>
+> and those strings can be prefixed by "temporary ". The explanation
+> and mapping to T10 terms is in drivers/scsi/sd.c cache_type_store(),
+> or at least should be.
+>
+> Doug Gilbert
+>
+>
+
