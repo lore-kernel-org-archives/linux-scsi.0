@@ -1,82 +1,38 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 77631] task scsi_eh_6:537 blocked for more than 120 seconds.
-Date: Tue, 10 Jun 2014 20:55:56 +0000
-Message-ID: <bug-77631-11613-2OZDY3BHgB@https.bugzilla.kernel.org/>
-References: <bug-77631-11613@https.bugzilla.kernel.org/>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [PATCH-v2 0/6] vhost/scsi: Add T10 PI SGL passthrough support
+Date: Tue, 10 Jun 2014 13:56:17 -0700
+Message-ID: <CA+55aFxnswLS1ZxYu5B0yS84ugKgcNUzNkyKxV8Yv0Fnx0TJig@mail.gmail.com>
+References: <1400725582-5521-1-git-send-email-nab@daterainc.com>
+	<20140609133026.GA6239@redhat.com>
+	<1402383912.5774.13.camel@haakon3.risingtidesystems.com>
+	<20140610094254.GC7423@redhat.com>
+	<20140610215217.495d5476@canb.auug.org.au>
+	<20140610130208.GA27702@redhat.com>
+	<1402421957.23024.15.camel@haakon3.risingtidesystems.com>
+	<20140610184531.GA27760@redhat.com>
+	<1402430265.19972.9.camel@haakon3.risingtidesystems.com>
+	<1402430984.2185.116.camel@dabdike.int.hansenpartnership.com>
+	<1402431901.19972.14.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:45869 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752805AbaFJU4A (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Jun 2014 16:56:00 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id A4AE1201C0
-	for <linux-scsi@vger.kernel.org>; Tue, 10 Jun 2014 20:55:59 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-	by mail.kernel.org (Postfix) with ESMTP id 021F3202BE
-	for <linux-scsi@vger.kernel.org>; Tue, 10 Jun 2014 20:55:57 +0000 (UTC)
-In-Reply-To: <bug-77631-11613@https.bugzilla.kernel.org/>
+Received: from mail-ve0-f174.google.com ([209.85.128.174]:42230 "EHLO
+	mail-ve0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753119AbaFJU4S (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Jun 2014 16:56:18 -0400
+In-Reply-To: <1402431901.19972.14.camel@haakon3.risingtidesystems.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, "Michael S. Tsirkin" <mst@redhat.com>, Stephen Rothwell <sfr@canb.auug.org.au>, "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, "H. Peter Anvin" <hpa@zytor.com>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=77631
+On Tue, Jun 10, 2014 at 1:25 PM, Nicholas A. Bellinger
+<nab@linux-iscsi.org> wrote:
+>
+> That would work, or I can simply include a pointer to Stephen's patch in
+> the target-pending PULL request after the vhost API changes are merged
+> and Linus can apply himself..
 
---- Comment #1 from Alan Stern <stern@rowland.harvard.edu> ---
-On Tue, 10 Jun 2014, James Bottomley wrote:
+Yes. That way I'll include it in the merge, and everything should just work.
 
-> From the trace below, this looks to be a USB issue (USB added to cc):
-> the scsi error handler thread is waiting for usb storage to complete the
-> reset.  It's a 3.14.5 kernel, so the previous reset hang because of
-> spurious sense requests should be fixed.
-> 
-> James
-> 
-> 
-> On Tue, 2014-06-10 at 16:50 +0000, bugzilla-daemon@bugzilla.kernel.org
-> wrote:
-> > https://bugzilla.kernel.org/show_bug.cgi?id=77631
-> > 
-> >             Bug ID: 77631
-> >            Summary: task scsi_eh_6:537 blocked for more than 120 seconds.
-> >            Product: IO/Storage
-> >            Version: 2.5
-> >     Kernel Version: 3.14.6
-> >           Hardware: All
-> >                 OS: Linux
-> >               Tree: Mainline
-> >             Status: NEW
-> >           Severity: normal
-> >           Priority: P1
-> >          Component: SCSI
-> >           Assignee: linux-scsi@vger.kernel.org
-> >           Reporter: mikhail.v.gavrilov@gmail.com
-> >         Regression: No
-> > 
-> > Created attachment 138941
-> >   --> https://bugzilla.kernel.org/attachment.cgi?id=138941&action=edit
-> > kernel log
-> > 
-> > task scsi_eh_6:537 blocked for more than 120 seconds.
-
-This line from earlier in the kernel log is highly suspicious:
-
-> [   46.330470] usb-storage: Error in queuecommand_lck: us->srb = ffff88080c532600
-
-This means that the SCSI midlayer called the queuecommand routine twice 
-with no intervening completion, even though the maximum queue depth is 
-only 1.
-
-Mikhail, is this bug reproducible?  If it is, can you post a usbmon 
-trace showing the events leading up to the bug?
-
-Does the bug occur if the device is plugged into a USB-2 bus rather 
-than a USB-3 bus?
-
-Alan Stern
-
--- 
-You are receiving this mail because:
-You are the assignee for the bug.
+          Linus
