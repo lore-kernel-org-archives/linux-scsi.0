@@ -1,62 +1,60 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [RFC 00/32] making inode time stamps y2038 ready
-Date: Tue, 10 Jun 2014 11:54:14 +0200
-Message-ID: <10173877.4plnjUiyX8@wuerfel>
-References: <1401480116-1973111-1-git-send-email-arnd@arndb.de>
-	<8770583.6XeZxCxOY8@wuerfel> <538FB570.8000502@zytor.com>
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Subject: [PATCH v2 linux-scsi-ml] linux-firmware: qla2xxx: Update ql2{4,5}00_fw.bin
+ to version 7.03.00
+Date: Tue, 10 Jun 2014 12:00:39 +0200
+Message-ID: <5396D747.9000107@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <cluster-devel-bounces@redhat.com>
-In-Reply-To: <538FB570.8000502@zytor.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/cluster-devel>,
-	<mailto:cluster-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/cluster-devel>
-List-Post: <mailto:cluster-devel@redhat.com>
-List-Help: <mailto:cluster-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/cluster-devel>,
-	<mailto:cluster-devel-request@redhat.com?subject=subscribe>
-Sender: cluster-devel-bounces@redhat.com
-Errors-To: cluster-devel-bounces@redhat.com
-To: "H. Peter Anvin" <hpa@zytor.com>
-Cc: Nicolas Pitre <nicolas.pitre@linaro.org>, Dave Chinner <david@fromorbit.com>, linux-mtd@lists.infradead.org, linux-f2fs-devel@lists.sourceforge.net, ceph-devel@vger.kernel.org, "Joseph S. Myers" <joseph@codesourcery.com>, linux-arch@vger.kernel.org, linux-cifs@vger.kernel.org, linux-scsi@vger.kernel.org, linux-afs@lists.infradead.org, cluster-devel@redhat.com, coda@cs.cmu.edu, geert@linux-m68k.org, linux-ext4@vger.kernel.org, codalist@telemann.coda.cs.cmu.edu, fuse-devel@lists.sourceforge.net, reiserfs-devel@vger.kernel.org, xfs@oss.sgi.com, john.stultz@linaro.org, tglx@linutronix.de, linux-nfs@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, samba-technical@lists.samba.org, linux-kernel@vger.kernel.org, logfs@logfs.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-we0-f181.google.com ([74.125.82.181]:52699 "EHLO
+	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751839AbaFJKAq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Jun 2014 06:00:46 -0400
+Received: by mail-we0-f181.google.com with SMTP id q59so1867678wes.40
+        for <linux-scsi@vger.kernel.org>; Tue, 10 Jun 2014 03:00:44 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>, Chad Dupuis <chad.dupuis@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Joe Carnuccio <joe.carnuccio@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Qlogic internal list <linux-driver@qlogic.com>, Linux Firmware Maintainers <linux-firmware@kernel.org>
 
-On Wednesday 04 June 2014 17:10:24 H. Peter Anvin wrote:
-> On 06/04/2014 12:24 PM, Arnd Bergmann wrote:
-> > 
-> > For other timekeeping stuff in the kernel, I agree that using some
-> > 64-bit representation (nanoseconds, 32/32 unsigned seconds/nanoseconds,
-> > ...) has advantages, that's exactly the point I was making earlier
-> > against simply extending the internal time_t/timespec to 64-bit
-> > seconds for everything.
-> > 
-> 
-> How much of a performance issue is it to make time_t 64 bits, and for
-> the bits there are, how hard are they to fix?
+resent to linux-scsi-ml, without the binary blob(244K).
 
-Probably very little overhead for most uses, it's more the regression
-potential in the less common parts of the kernel I'm worried about.
+Firmwares were taken from http://ldriver.qlogic.com/firmware/
 
-There is a significant but not overwhelming number of uses of the
-main problematic types in the kernel:
+Cc: Chad Dupuis <chad.dupuis@qlogic.com>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: Joe Carnuccio <joe.carnuccio@qlogic.com>
+Cc: Saurav Kashyap <saurav.kashyap@qlogic.com>
+Cc: Qlogic internal list <linux-driver@qlogic.com>
+Cc: Linux Firmware Maintainers <linux-firmware@kernel.org>
+Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+---
+ WHENCE        |   4 ++--
+ ql2400_fw.bin | Bin 259332 -> 260656 bytes
+ ql2500_fw.bin | Bin 265420 -> 266912 bytes
+ 3 files changed, 2 insertions(+), 2 deletions(-)
 
-arnd@wuerfel:~/arm-soc$ git grep -wl time_t | wc
-    188     188    5566
-arnd@wuerfel:~/arm-soc$ git grep -wl timeval | wc
-    320     320   10353
-arnd@wuerfel:~/arm-soc$ git grep -wl timespec | wc
-    406     406   10886
+diff --git a/WHENCE b/WHENCE
+index 6a64fc2..f257a93 100644
+--- a/WHENCE
++++ b/WHENCE
+@@ -429,9 +429,9 @@ Version: 3.03.28 IPX
+ File: ql2322_fw.bin
+ Version: 3.03.28 IPX
+ File: ql2400_fw.bin
+-Version: 7.01.00 MID
++Version: 7.03.00 MID
+ File: ql2500_fw.bin
+-Version: 7.01.00 MIDQ
++Version: 7.03.00 MIDQ
+  Licence: Redistributable. See LICENCE.qla2xxx for details
 
-I believe we have to audit all of them anyway if we want to change
-the kernel to less problematic types and introduce new user
-interfaces.
+diff --git a/ql2400_fw.bin b/ql2400_fw.bin
+ [...]
 
-IMHO this work is helped if we change the uses to a new type
-as we find the problems. This lets us do the work one subsystem
-at a time and avoid accidental ABI changes. I don't care much what
-type that will be, and having a 96-bit type will certainly work
-well in a lot of cases, but I don't see a strong reason to use
-that over other types, especially when they can be more efficient.
+diff --git a/ql2500_fw.bin b/ql2500_fw.bin
+ [...]
+-- 
+1.9.3
 
-	Arnd
