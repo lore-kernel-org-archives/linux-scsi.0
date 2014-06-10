@@ -1,7 +1,7 @@
 From: Himangi Saraogi <himangi774@gmail.com>
-Subject: [PATCH] aic7xxx/aic7770 : Use kstrdup
-Date: Tue, 10 Jun 2014 19:50:37 +0530
-Message-ID: <20140610142037.GA2993@himangi-Dell>
+Subject: [PATCH] aic7xxx/aic79xx : Use kstrdup
+Date: Tue, 10 Jun 2014 19:54:30 +0530
+Message-ID: <20140610142430.GA3048@himangi-Dell>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
@@ -15,7 +15,6 @@ Use kstrdup when the goal of an allocation is copy a string into the
 allocated region.
 
 The semantic patch that makes this change is as follows:
-
 // <smpl>
 @@
 expression from,to;
@@ -31,27 +30,28 @@ statement S;
 -  strcpy(to, from);
 // </smpl>
 
+
 Signed-off-by: Himangi Saraogi <himangi774@gmail.com>
 Acked-by: Julia Lawall <julia.lawall@lip6.fr>
 ---
- drivers/scsi/aic7xxx/aic7770_osm.c | 3 +--
+ drivers/scsi/aic7xxx/aic79xx_osm_pci.c | 3 +--
  1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/aic7xxx/aic7770_osm.c b/drivers/scsi/aic7xxx/aic7770_osm.c
-index 0cb8ef6..3d401d0 100644
---- a/drivers/scsi/aic7xxx/aic7770_osm.c
-+++ b/drivers/scsi/aic7xxx/aic7770_osm.c
-@@ -85,10 +85,9 @@ aic7770_probe(struct device *dev)
- 	int	error;
- 
- 	sprintf(buf, "ahc_eisa:%d", eisaBase >> 12);
+diff --git a/drivers/scsi/aic7xxx/aic79xx_osm_pci.c b/drivers/scsi/aic7xxx/aic79xx_osm_pci.c
+index 3c85873..8466aa7 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_osm_pci.c
++++ b/drivers/scsi/aic7xxx/aic79xx_osm_pci.c
+@@ -178,10 +178,9 @@ ahd_linux_pci_dev_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		ahd_get_pci_bus(pci),
+ 		ahd_get_pci_slot(pci),
+ 		ahd_get_pci_function(pci));
 -	name = kmalloc(strlen(buf) + 1, GFP_ATOMIC);
 +	name = kstrdup(buf, GFP_ATOMIC);
  	if (name == NULL)
- 		return (ENOMEM);
+ 		return (-ENOMEM);
 -	strcpy(name, buf);
- 	ahc = ahc_alloc(&aic7xxx_driver_template, name);
- 	if (ahc == NULL)
- 		return (ENOMEM);
+ 	ahd = ahd_alloc(NULL, name);
+ 	if (ahd == NULL)
+ 		return (-ENOMEM);
 -- 
 1.9.1
