@@ -1,115 +1,71 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH-v2 0/6] vhost/scsi: Add T10 PI SGL passthrough support
-Date: Tue, 10 Jun 2014 13:25:01 -0700
-Message-ID: <1402431901.19972.14.camel@haakon3.risingtidesystems.com>
-References: <1400725582-5521-1-git-send-email-nab@daterainc.com>
-	 <20140609133026.GA6239@redhat.com>
-	 <1402383912.5774.13.camel@haakon3.risingtidesystems.com>
-	 <20140610094254.GC7423@redhat.com>
-	 <20140610215217.495d5476@canb.auug.org.au>
-	 <20140610130208.GA27702@redhat.com>
-	 <1402421957.23024.15.camel@haakon3.risingtidesystems.com>
-	 <20140610184531.GA27760@redhat.com>
-	 <1402430265.19972.9.camel@haakon3.risingtidesystems.com>
-	 <1402430984.2185.116.camel@dabdike.int.hansenpartnership.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [Bug 77631] New: task scsi_eh_6:537 blocked for more than 120
+ seconds.
+Date: Tue, 10 Jun 2014 16:49:10 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1406101638390.27331-100000@netrider.rowland.org>
+References: <1402421480.2185.75.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:44747 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755195AbaFJUZE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Jun 2014 16:25:04 -0400
-In-Reply-To: <1402430984.2185.116.camel@dabdike.int.hansenpartnership.com>
+Received: from netrider.rowland.org ([192.131.102.5]:45452 "HELO
+	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753845AbaFJUtM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Jun 2014 16:49:12 -0400
+In-Reply-To: <1402421480.2185.75.camel@dabdike.int.hansenpartnership.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "Michael S. Tsirkin" <mst@redhat.com>, Stephen Rothwell <sfr@canb.auug.org.au>, "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, "H. Peter Anvin" <hpa@zytor.com>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: mikhail.v.gavrilov@gmail.com, bugzilla-daemon@bugzilla.kernel.org, SCSI development list <linux-scsi@vger.kernel.org>, USB list <linux-usb@vger.kernel.org>
 
-On Tue, 2014-06-10 at 13:09 -0700, James Bottomley wrote:
-> On Tue, 2014-06-10 at 12:57 -0700, Nicholas A. Bellinger wrote:
-> > On Tue, 2014-06-10 at 21:45 +0300, Michael S. Tsirkin wrote:
-> > > On Tue, Jun 10, 2014 at 10:39:17AM -0700, Nicholas A. Bellinger wrote:
-> > > > On Tue, 2014-06-10 at 16:02 +0300, Michael S. Tsirkin wrote:
-> > > > > On Tue, Jun 10, 2014 at 09:52:17PM +1000, Stephen Rothwell wrote:
-> > > > > > Hi Michael,
-> > > > > > 
-> > > > > > On Tue, 10 Jun 2014 12:42:54 +0300 "Michael S. Tsirkin" <mst@redhat.com> wrote:
-> > > > > > >
-> > > > > > > So I see two options:
-> > > > > > > - I go ahead with my changes and you with yours and let Linus resolve
-> > > > > > >   the conflict.  This means bisect build will be broken since the
-> > > > > > >   breakage will likely not be noticed until after the merge.
-> > > > > > 
-> > > > > > Well, since the resolution is known, the one who submits their tree
-> > > > > > later should tell Linus (as suggested by Nicholas).  That is part of
-> > > > > > the point of the linux-next tree ... and therefore there would be no
-> > > > > > bisect problem.
-> > > > > > 
-> > > > > > > > Stephen (CC'ed) has included a fix in today's linux-next for the merge
-> > > > > > > > conflict here:
-> > > > > > > > 
-> > > > > > > > https://lkml.org/lkml/2014/6/10/3
-> > > > > > > > 
-> > > > > > > > Please confirm, as it will be a pointer to Linus within the
-> > > > > > > > target-pending/for-next PULL request.
-> > > > > > > 
-> > > > > > > Yes but this does mean people trying to bisect will
-> > > > > > > hit build breakages, not nice.
-> > > > > > 
-> > > > > > Not necessarily.
-> > > > > > 
-> > > > > > -- 
-> > > > > > Cheers,
-> > > > > > Stephen Rothwell                    sfr@canb.auug.org.au
-> > > > > 
-> > > > > 
-> > > > > I don't see how that's possible.
-> > > > > Here's a point you might have missed.
-> > > > > Nicholas's patch isn't just introducing a merge conflict.
-> > > > > It is also buggy.
-> > > > > Replacing bit access with has_feature silently fixes the bug.
-> > > > > 
-> > > > > So if we want to avoid bisect breakage target tree will
-> > > > > have to be rebased.
-> > > > > 
-> > > > > And if doing that anyway, I don't see any reason not
-> > > > > to merge everything through the vhost tree, esp
-> > > > > since I already put the patches there. Less work for
-> > > > > everyone involved.
-> > > > > 
-> > > > 
-> > > > The problem is with Sagi's recent changes wrt to including T10 PI bytes
-> > > > into expected data transfer length in target-core, you'll end up
-> > > > introducing a different bug into your tree..  ;)
-> > > > 
-> > > > Why don't I simply add Stephen's patch to use vhost_has_feature() in
-> > > > target-pending/for-next, and we just make sure that the vhost PULL
-> > > > request goes out after target-pending..?
-> > > > 
-> > > > --nab
-> > > 
-> > > Because that depends on vhost API changes :)
-> > > 
+On Tue, 10 Jun 2014, James Bottomley wrote:
+
+> From the trace below, this looks to be a USB issue (USB added to cc):
+> the scsi error handler thread is waiting for usb storage to complete the
+> reset.  It's a 3.14.5 kernel, so the previous reset hang because of
+> spurious sense requests should be fixed.
+> 
+> James
+> 
+> 
+> On Tue, 2014-06-10 at 16:50 +0000, bugzilla-daemon@bugzilla.kernel.org
+> wrote:
+> > https://bugzilla.kernel.org/show_bug.cgi?id=77631
 > > 
-> > Ugh, right.
+> >             Bug ID: 77631
+> >            Summary: task scsi_eh_6:537 blocked for more than 120 seconds.
+> >            Product: IO/Storage
+> >            Version: 2.5
+> >     Kernel Version: 3.14.6
+> >           Hardware: All
+> >                 OS: Linux
+> >               Tree: Mainline
+> >             Status: NEW
+> >           Severity: normal
+> >           Priority: P1
+> >          Component: SCSI
+> >           Assignee: linux-scsi@vger.kernel.org
+> >           Reporter: mikhail.v.gavrilov@gmail.com
+> >         Regression: No
 > > 
-> > In that case, let's see what Linus (CC'ed) prefers to do..
-> 
-> Build a branch with all the patches dependent on the new API based on
-> top of the vhost tree.  Then you send it to Linus after the vhost tree
-> is merged (otherwise you end up being the person sending the vhost
-> tree).
-> 
-> That way there's no API breakage and we get a consistent always
-> buildable tree.
-> 
+> > Created attachment 138941
+> >   --> https://bugzilla.kernel.org/attachment.cgi?id=138941&action=edit
+> > kernel log
+> > 
+> > task scsi_eh_6:537 blocked for more than 120 seconds.
 
-That would work, or I can simply include a pointer to Stephen's patch in
-the target-pending PULL request after the vhost API changes are merged
-and Linus can apply himself..
+This line from earlier in the kernel log is highly suspicious:
 
-Linus, which do you prefer..?
+> [   46.330470] usb-storage: Error in queuecommand_lck: us->srb = ffff88080c532600
 
---nab
+This means that the SCSI midlayer called the queuecommand routine twice 
+with no intervening completion, even though the maximum queue depth is 
+only 1.
+
+Mikhail, is this bug reproducible?  If it is, can you post a usbmon 
+trace showing the events leading up to the bug?
+
+Does the bug occur if the device is plugged into a USB-2 bus rather 
+than a USB-3 bus?
+
+Alan Stern
 
