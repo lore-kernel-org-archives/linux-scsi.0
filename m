@@ -1,85 +1,63 @@
-From: James Bottomley <jbottomley@parallels.com>
-Subject: Re: [PATCH 6/6] scsi_scan: Fixup scsilun_to_int()
-Date: Tue, 10 Jun 2014 15:01:30 +0000
-Message-ID: <1402412490.2185.26.camel@dabdike.int.hansenpartnership.com>
-References: <1401785937-43581-1-git-send-email-hare@suse.de>
-		 <1401785937-43581-7-git-send-email-hare@suse.de>
-	 <5396EE0C.3070108@acm.org>
-	 <1402409172.2185.3.camel@dabdike.int.hansenpartnership.com>
-	 <53971AD5.308@acm.org>
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+Subject: Re: [PATCH-v2 0/6] vhost/scsi: Add T10 PI SGL passthrough support
+Date: Wed, 11 Jun 2014 01:47:30 +1000
+Message-ID: <20140611014730.7f3f2e60@canb.auug.org.au>
+References: <1400725582-5521-1-git-send-email-nab@daterainc.com>
+	<20140609133026.GA6239@redhat.com>
+	<1402383912.5774.13.camel@haakon3.risingtidesystems.com>
+	<20140610094254.GC7423@redhat.com>
+	<20140610215217.495d5476@canb.auug.org.au>
+	<20140610130208.GA27702@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.parallels.com ([199.115.105.18]:40506 "EHLO
-	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750874AbaFJPBd convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Jun 2014 11:01:33 -0400
-In-Reply-To: <53971AD5.308@acm.org>
-Content-Language: en-US
-Content-ID: <86A089C2F40DF243B95135E73B6DD5A7@sw.swsoft.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ boundary="Sig_/524xNDlSYz=Gl6BhkuEmfW8"; protocol="application/pgp-signature"
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <20140610130208.GA27702@redhat.com>
+Sender: target-devel-owner@vger.kernel.org
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, "H. Peter Anvin" <hpa@zytor.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "bvanassche@acm.org" <bvanassche@acm.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "emilne@redhat.com" <emilne@redhat.com>, "hare@suse.de" <hare@suse.de>
 
-On Tue, 2014-06-10 at 16:48 +0200, Bart Van Assche wrote:
-> On 06/10/14 16:06, James Bottomley wrote:
-> > On Tue, 2014-06-10 at 13:37 +0200, Bart Van Assche wrote:
-> >> On 06/03/14 10:58, Hannes Reinecke wrote:
-> >>> + *     Given a struct scsi_lun of: d2 04 0b 03 00 00 00 00, this function
-> >>> + *     returns the integer: 0x0b03d204
-> >>> + *
-> >>> + *     This encoding will return a standard integer LUN for LUNs smaller
-> >>> + *     than 256, which typically use a single level LUN structure with
-> >>> + *     addressing method 0.
-> >>>   **/
-> >>>  u64 scsilun_to_int(struct scsi_lun *scsilun)
-> >>>  {
-> >>> @@ -1279,7 +1280,7 @@ u64 scsilun_to_int(struct scsi_lun *scsilun)
-> >>>  
-> >>>  	lun = 0;
-> >>>  	for (i = 0; i < sizeof(lun); i += 2)
-> >>> -		lun = lun | (((scsilun->scsi_lun[i] << 8) |
-> >>> +		lun = lun | (((scsilun->scsi_lun[i] << ((i + 1) *8)) |
-> >>>  			      scsilun->scsi_lun[i + 1]) << (i * 8));
-> >>>  	return lun;
-> >>>  }
-> >>
-> >> The above code doesn't match the comment header. Parentheses have been
-> >> placed such that each byte with an even index is shifted left (2*i+1)*8
-> >> bits instead of (i+1)*8.
-> > 
-> > I don't see that in the code, which parentheses do you mean?
-> 
-> This patch should change the code into what I think was intended by the
-> comment above scsilun_to_int():
-> 
-> --- a/drivers/scsi/scsi_scan.c
-> +++ b/drivers/scsi/scsi_scan.c
-> @@ -1280,8 +1280,8 @@ u64 scsilun_to_int(struct scsi_lun *scsilun)
->  
->  	lun = 0;
->  	for (i = 0; i < sizeof(lun); i += 2)
-> -		lun = lun | (((scsilun->scsi_lun[i] << ((i + 1) *8)) |
-> -			      scsilun->scsi_lun[i + 1]) << (i * 8));
-> +		lun = lun | (((u64)scsilun->scsi_lun[i] << ((i + 1) *8)) |
-> +			     ((u64)scsilun->scsi_lun[i + 1] << (i * 8)));
->  	return lun;
->  }
->  EXPORT_SYMBOL(scsilun_to_int);
+--Sig_/524xNDlSYz=Gl6BhkuEmfW8
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-So this is nothing to do with a wrong 2*i+1 step, which was your initial
-complaint?  Now it's an arithmetic conversion problem (which looks
-reasonable: on 32 bits, we'll do the shift at the natural size, which is
-u32, so we'll overshift for i>4.  If we're using sizeof(lun) in the for
-loop, the converter should probably be typeof(lun) for consistency).
+Hi Michael,
 
-I don't see your second set of brackets being necessary bitwise or is
-one of the lowest precedence non-logical operators; certainly it's lower
-than shift:
+On Tue, 10 Jun 2014 16:02:08 +0300 "Michael S. Tsirkin" <mst@redhat.com> wr=
+ote:
+>
+> I don't see how that's possible.
+> Here's a point you might have missed.
+> Nicholas's patch isn't just introducing a merge conflict.
+> It is also buggy.
 
-http://en.cppreference.com/w/c/language/operator_precedence
+Ah ha!  Indeed that is a different kettle of fish. :-)
 
-James
+--=20
+Cheers,
+Stephen Rothwell                    sfr@canb.auug.org.au
 
+--Sig_/524xNDlSYz=Gl6BhkuEmfW8
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBCAAGBQJTlyiZAAoJEMDTa8Ir7ZwVxIsQAIn7Tbtr8SAJlv2YILJG4XHK
+p4fi4UQE5W2qr+eXkuhdZGvBjxuv+XkRJdagOSXvYTch7HsziJfCoMFEtDHtcs+c
+agsDeHcXzAEXVFSmeDMlPzSgpqfehafGrkNkhvvhdnzrhbs9esUoi4FJZ6Z4u30+
+Of2HR48S2gEKEZgI9k3exVcEF+gWxAYcPTCHFa+QRjEuL6B1udVLwNYamFRlVRev
+XIIxNmisvGQWTFupplT3rFwZhjlY+/8H708+q+RdcIkD9eJInBrKRWDrzgQOvb+N
+0AocnCMq2NABualuVNRtgQmz1eVTt7LqZHabX8PaNMELvAqNRok8scHmZ6cB/f7f
+XQ6+MLfqz+zg3xdhoKK5pHErSTz9Q9tj/dCFHWYmiWvbFi0fKWzmvtUZLVN2wOLp
+nT3aL3wqUKvWytVs8Oxek8xiLjKAmH7afAoZbYKyi628x56Meyk5ZABOMJEXUXUX
+iUXEJdKQzfO1SFPkkwBgU3v7EXLmqKWwIg1WFmDy3bc8RxBYdNvPu+08TY6n1nhH
+RPOMGkpUCsx1WSETin0YcW+0J3WV21Aafmt3cluCSMICThXUid2iucdVXX6MpqDj
+WTx1LOAwusu+uYDn8LsXCNyl/F9mu67eF4sNynkrZFQlxN0sVLUtNdfIko5Faqj6
+9RTyrNoP8nV4QF0mLrC2
+=zGKe
+-----END PGP SIGNATURE-----
+
+--Sig_/524xNDlSYz=Gl6BhkuEmfW8--
