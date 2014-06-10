@@ -1,74 +1,82 @@
-From: Laurence Oberman <loberman@redhat.com>
-Subject: Debug flag parameter for SCSI tape driver
-Date: Tue, 10 Jun 2014 16:51:15 -0400 (EDT)
-Message-ID: <101311718.17236924.1402433475036.JavaMail.zimbra@redhat.com>
-References: <2027096335.17236699.1402433423338.JavaMail.zimbra@redhat.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 77631] task scsi_eh_6:537 blocked for more than 120 seconds.
+Date: Tue, 10 Jun 2014 20:55:56 +0000
+Message-ID: <bug-77631-11613-2OZDY3BHgB@https.bugzilla.kernel.org/>
+References: <bug-77631-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx4-phx2.redhat.com ([209.132.183.25]:39524 "EHLO
-	mx4-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752578AbaFJUvP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Jun 2014 16:51:15 -0400
-Received: from zmail22.collab.prod.int.phx2.redhat.com (zmail22.collab.prod.int.phx2.redhat.com [10.5.83.26])
-	by mx4-phx2.redhat.com (8.13.8/8.13.8) with ESMTP id s5AKpFeq028509
-	for <linux-scsi@vger.kernel.org>; Tue, 10 Jun 2014 16:51:15 -0400
-In-Reply-To: <2027096335.17236699.1402433423338.JavaMail.zimbra@redhat.com>
+Received: from mail.kernel.org ([198.145.19.201]:45869 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752805AbaFJU4A (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 10 Jun 2014 16:56:00 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id A4AE1201C0
+	for <linux-scsi@vger.kernel.org>; Tue, 10 Jun 2014 20:55:59 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+	by mail.kernel.org (Postfix) with ESMTP id 021F3202BE
+	for <linux-scsi@vger.kernel.org>; Tue, 10 Jun 2014 20:55:57 +0000 (UTC)
+In-Reply-To: <bug-77631-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Hello
+https://bugzilla.kernel.org/show_bug.cgi?id=77631
 
-I am tired of building modules to enable SCSI tape driver debug so I am hoping this patch is acceptable.
-Tested using kernel 3.14.6
+--- Comment #1 from Alan Stern <stern@rowland.harvard.edu> ---
+On Tue, 10 Jun 2014, James Bottomley wrote:
 
-Usage example:
-modprobe st debug_flag=1
+> From the trace below, this looks to be a USB issue (USB added to cc):
+> the scsi error handler thread is waiting for usb storage to complete the
+> reset.  It's a 3.14.5 kernel, so the previous reset hang because of
+> spurious sense requests should be fixed.
+> 
+> James
+> 
+> 
+> On Tue, 2014-06-10 at 16:50 +0000, bugzilla-daemon@bugzilla.kernel.org
+> wrote:
+> > https://bugzilla.kernel.org/show_bug.cgi?id=77631
+> > 
+> >             Bug ID: 77631
+> >            Summary: task scsi_eh_6:537 blocked for more than 120 seconds.
+> >            Product: IO/Storage
+> >            Version: 2.5
+> >     Kernel Version: 3.14.6
+> >           Hardware: All
+> >                 OS: Linux
+> >               Tree: Mainline
+> >             Status: NEW
+> >           Severity: normal
+> >           Priority: P1
+> >          Component: SCSI
+> >           Assignee: linux-scsi@vger.kernel.org
+> >           Reporter: mikhail.v.gavrilov@gmail.com
+> >         Regression: No
+> > 
+> > Created attachment 138941
+> >   --> https://bugzilla.kernel.org/attachment.cgi?id=138941&action=edit
+> > kernel log
+> > 
+> > task scsi_eh_6:537 blocked for more than 120 seconds.
 
-diff -Nur a/st.c b/st.c
---- a/st.c	2014-06-10 16:45:18.522354105 -0400
-+++ b/st.c	2014-06-10 16:45:33.953765908 -0400
-@@ -80,6 +80,7 @@
- static int try_direct_io = TRY_DIRECT_IO;
- static int try_rdio = 1;
- static int try_wdio = 1;
-+static int debug_flag = 0;
- 
- static struct class st_sysfs_class;
- static const struct attribute_group *st_dev_groups[];
-@@ -100,6 +101,9 @@
- MODULE_PARM_DESC(max_sg_segs, "Maximum number of scatter/gather segments to use (256)");
- module_param_named(try_direct_io, try_direct_io, int, 0);
- MODULE_PARM_DESC(try_direct_io, "Try direct I/O between user buffer and tape drive (1)");
-+module_param_named(debug_flag, debug_flag, int, 0);
-+MODULE_PARM_DESC(debug_flag, "Enable DEBUG, same as setting DEBUG 1 in source");
-+
- 
- /* Extra parameters for testing */
- module_param_named(try_rdio, try_rdio, int, 0);
-@@ -124,6 +128,9 @@
- 	},
- 	{
- 		"try_direct_io", &try_direct_io
-+	},
-+	{
-+		"debug_flag", &debug_flag
- 	}
- };
- #endif
-@@ -4277,7 +4284,9 @@
- static int __init init_st(void)
- {
- 	int err;
--
-+	debugging = (debug_flag > 0) ? debug_flag : DEBUG;
-+        if (debugging) 
-+		printk(KERN_INFO "st: Debugging enabled debug_flag = %d\n",debugging);
- 	validate_options();
- 
- 	printk(KERN_INFO "st: Version %s, fixed bufsize %d, s/g segs %d\n",
+This line from earlier in the kernel log is highly suspicious:
 
-Thanks
-Laurence
+> [   46.330470] usb-storage: Error in queuecommand_lck: us->srb = ffff88080c532600
+
+This means that the SCSI midlayer called the queuecommand routine twice 
+with no intervening completion, even though the maximum queue depth is 
+only 1.
+
+Mikhail, is this bug reproducible?  If it is, can you post a usbmon 
+trace showing the events leading up to the bug?
+
+Does the bug occur if the device is plugged into a USB-2 bus rather 
+than a USB-3 bus?
+
+Alan Stern
+
+-- 
+You are receiving this mail because:
+You are the assignee for the bug.
