@@ -1,109 +1,62 @@
-From: "Michael S. Tsirkin" <mst@redhat.com>
-Subject: Re: [PATCH-v2 0/6] vhost/scsi: Add T10 PI SGL passthrough support
-Date: Tue, 10 Jun 2014 12:42:54 +0300
-Message-ID: <20140610094254.GC7423@redhat.com>
-References: <1400725582-5521-1-git-send-email-nab@daterainc.com>
- <20140609133026.GA6239@redhat.com>
- <1402383912.5774.13.camel@haakon3.risingtidesystems.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [RFC 00/32] making inode time stamps y2038 ready
+Date: Tue, 10 Jun 2014 11:54:14 +0200
+Message-ID: <10173877.4plnjUiyX8@wuerfel>
+References: <1401480116-1973111-1-git-send-email-arnd@arndb.de>
+	<8770583.6XeZxCxOY8@wuerfel> <538FB570.8000502@zytor.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58536 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750788AbaFJJml (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Jun 2014 05:42:41 -0400
-Content-Disposition: inline
-In-Reply-To: <1402383912.5774.13.camel@haakon3.risingtidesystems.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
+Return-path: <cluster-devel-bounces@redhat.com>
+In-Reply-To: <538FB570.8000502@zytor.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/cluster-devel>,
+	<mailto:cluster-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/cluster-devel>
+List-Post: <mailto:cluster-devel@redhat.com>
+List-Help: <mailto:cluster-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/cluster-devel>,
+	<mailto:cluster-devel-request@redhat.com?subject=subscribe>
+Sender: cluster-devel-bounces@redhat.com
+Errors-To: cluster-devel-bounces@redhat.com
+To: "H. Peter Anvin" <hpa@zytor.com>
+Cc: Nicolas Pitre <nicolas.pitre@linaro.org>, Dave Chinner <david@fromorbit.com>, linux-mtd@lists.infradead.org, linux-f2fs-devel@lists.sourceforge.net, ceph-devel@vger.kernel.org, "Joseph S. Myers" <joseph@codesourcery.com>, linux-arch@vger.kernel.org, linux-cifs@vger.kernel.org, linux-scsi@vger.kernel.org, linux-afs@lists.infradead.org, cluster-devel@redhat.com, coda@cs.cmu.edu, geert@linux-m68k.org, linux-ext4@vger.kernel.org, codalist@telemann.coda.cs.cmu.edu, fuse-devel@lists.sourceforge.net, reiserfs-devel@vger.kernel.org, xfs@oss.sgi.com, john.stultz@linaro.org, tglx@linutronix.de, linux-nfs@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, samba-technical@lists.samba.org, linux-kernel@vger.kernel.org, logfs@logfs.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, "H. Peter Anvin" <hpa@zytor.com>, Stephen Rothwell <sfr@canb.auug.org.au>
 
-On Tue, Jun 10, 2014 at 12:05:12AM -0700, Nicholas A. Bellinger wrote:
-> On Mon, 2014-06-09 at 16:30 +0300, Michael S. Tsirkin wrote:
-> > On Thu, May 22, 2014 at 02:26:16AM +0000, Nicholas A. Bellinger wrote:
-> > > From: Nicholas Bellinger <nab@linux-iscsi.org>
-> > > 
-> > > Hi MST, MKP, Paolo & Co,
-> > > 
-> > > Here is the v2 patch series for adding T1O protection information (PI)
-> > > SGL passthrough support between virtio-scsi LLD + vhost-scsi fabric
-> > > endpoints.
-> > > 
-> > > Following MST's recommendation, it includes the changes for using
-> > > bytes intead of number of iovecs in virtio_scsi_cmd_req_pi along with
-> > > the associated changes to virtio-scsi + vhost/scsi code.
-> > > 
-> > > For vhost/scsi, this includes walking the leading iovec's length(s)
-> > > to determine where protection payload ends, and real data payload 
-> > > starts.  For virtio-scsi LLD code, this includes locating struct
-> > > blk_integrity for using blk_rq_sectors + ->tuple_size to calculate
-> > > the total bytes for outgoing cmd_pi->pi_bytes[out,in] values.
-> > > 
-> > > The full list of changes from last series include:
-> > > 
-> > >   - Use pi_bytesout + pi_bytesin instead of niovs in virtio-scsi PI
-> > >     header (mst + paolo)
-> > >   - Add prot_pto=1 in tcm_vhost_submission_work() when no PI buffer
-> > >     exists (nab)
-> > >   - Get rid of req + cdb pointer casts in vhost_scsi_handle_vq (mst)
-> > >   - Ensure that virtio_scsi_cmd_req_pi processing happens regardless
-> > >     of data_num in vhost_scsi_handle_vq (nab)
-> > >   - Pass TARGET_PROT_ALL into transport_init_session_tags() (nab)
-> > >   - Convert vhost_scsi_handle_vq to use memcpy_fromiovecend() (mst)
-> > >   - Convert vhost_scsi_handle_vq to use pi_bytesout + pi_bytesin (nab)
-> > >   - Convert virtio_scsi_init_hdr_pi() to use pi_bytesout + pi_bytesin
-> > >     (mst + paolo + nab)
-> > >   - Use blk_integrity->tuple_size to calculate pi bytes (nab)
-> > > 
-> > > Please review for v3.16-rc1 code.
-> > > 
-> > > Thanks!
-> > > 
-> > > --nab
+On Wednesday 04 June 2014 17:10:24 H. Peter Anvin wrote:
+> On 06/04/2014 12:24 PM, Arnd Bergmann wrote:
 > > 
-> > OK since this conflicts with my vhost locking
-> > patches, I have rebased this and parked at vhost-review
-> > branch in my tree.
+> > For other timekeeping stuff in the kernel, I agree that using some
+> > 64-bit representation (nanoseconds, 32/32 unsigned seconds/nanoseconds,
+> > ...) has advantages, that's exactly the point I was making earlier
+> > against simply extending the internal time_t/timespec to 64-bit
+> > seconds for everything.
 > > 
-> > git://git.kernel.org/pub/scm/linux/kernel/git/mst/vhost.git vhost-review
-> > 
-> > Nicholas could you please take a look at the patches and confirm this is
-> > OK ASAP?
-> > 
-> > If yes I will pack it all up and send to Linus.
 > 
-> >From my experience, Linus prefers to fix this type of conflict on his
-> own at merge time, instead of having subsystem maintainers rebase their
-> for-next branches to include other's commits.
+> How much of a performance issue is it to make time_t 64 bits, and for
+> the bits there are, how hard are they to fix?
 
-Cross-device type changes is exactly what vhost tree is there to allow
-so I don't see a problem.
+Probably very little overhead for most uses, it's more the regression
+potential in the less common parts of the kernel I'm worried about.
 
-What Linus does not want is same patch in two trees.
+There is a significant but not overwhelming number of uses of the
+main problematic types in the kernel:
 
-So I see two options:
-- I go ahead with my changes and you with yours and let Linus resolve
-  the conflict.  This means bisect build will be broken since the
-  breakage will likely not be noticed until after the merge.
-- I pick up vhost scsi PI patches on my tree and you drop them from yours.
+arnd@wuerfel:~/arm-soc$ git grep -wl time_t | wc
+    188     188    5566
+arnd@wuerfel:~/arm-soc$ git grep -wl timeval | wc
+    320     320   10353
+arnd@wuerfel:~/arm-soc$ git grep -wl timespec | wc
+    406     406   10886
 
-I prefer option 2 because it's cleaner wrt bisect.
-But if you see a problem, pls let me know.
+I believe we have to audit all of them anyway if we want to change
+the kernel to less problematic types and introduce new user
+interfaces.
 
-> Stephen (CC'ed) has included a fix in today's linux-next for the merge
-> conflict here:
-> 
-> https://lkml.org/lkml/2014/6/10/3
-> 
-> Please confirm, as it will be a pointer to Linus within the
-> target-pending/for-next PULL request.
-> 
-> --nab
+IMHO this work is helped if we change the uses to a new type
+as we find the problems. This lets us do the work one subsystem
+at a time and avoid accidental ABI changes. I don't care much what
+type that will be, and having a 96-bit type will certainly work
+well in a lot of cases, but I don't see a strong reason to use
+that over other types, especially when they can be more efficient.
 
-
-Yes but this does mean people trying to bisect will
-hit build breakages, not nice.
-
--- 
-MST
+	Arnd
