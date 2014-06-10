@@ -1,78 +1,79 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH-v2 0/6] vhost/scsi: Add T10 PI SGL passthrough support
-Date: Tue, 10 Jun 2014 10:39:17 -0700
-Message-ID: <1402421957.23024.15.camel@haakon3.risingtidesystems.com>
-References: <1400725582-5521-1-git-send-email-nab@daterainc.com>
-	 <20140609133026.GA6239@redhat.com>
-	 <1402383912.5774.13.camel@haakon3.risingtidesystems.com>
-	 <20140610094254.GC7423@redhat.com>
-	 <20140610215217.495d5476@canb.auug.org.au>
-	 <20140610130208.GA27702@redhat.com>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCHv4 0/6]  Support 64-bit LUNs
+Date: Tue, 10 Jun 2014 19:58:17 +0200
+Message-ID: <53974739.8070303@acm.org>
+References: <1401785937-43581-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20140610130208.GA27702@redhat.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>, "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, "H. Peter Anvin" <hpa@zytor.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from albert.telenet-ops.be ([195.130.137.90]:38331 "EHLO
+	albert.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751888AbaFJR6T (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Jun 2014 13:58:19 -0400
+In-Reply-To: <1401785937-43581-1-git-send-email-hare@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Ewan Milne <emilne@redhat.com>, linux-scsi@vger.kernel.org
 
-On Tue, 2014-06-10 at 16:02 +0300, Michael S. Tsirkin wrote:
-> On Tue, Jun 10, 2014 at 09:52:17PM +1000, Stephen Rothwell wrote:
-> > Hi Michael,
-> > 
-> > On Tue, 10 Jun 2014 12:42:54 +0300 "Michael S. Tsirkin" <mst@redhat.com> wrote:
-> > >
-> > > So I see two options:
-> > > - I go ahead with my changes and you with yours and let Linus resolve
-> > >   the conflict.  This means bisect build will be broken since the
-> > >   breakage will likely not be noticed until after the merge.
-> > 
-> > Well, since the resolution is known, the one who submits their tree
-> > later should tell Linus (as suggested by Nicholas).  That is part of
-> > the point of the linux-next tree ... and therefore there would be no
-> > bisect problem.
-> > 
-> > > > Stephen (CC'ed) has included a fix in today's linux-next for the merge
-> > > > conflict here:
-> > > > 
-> > > > https://lkml.org/lkml/2014/6/10/3
-> > > > 
-> > > > Please confirm, as it will be a pointer to Linus within the
-> > > > target-pending/for-next PULL request.
-> > > 
-> > > Yes but this does mean people trying to bisect will
-> > > hit build breakages, not nice.
-> > 
-> > Not necessarily.
-> > 
-> > -- 
-> > Cheers,
-> > Stephen Rothwell                    sfr@canb.auug.org.au
+On 06/03/14 10:58, Hannes Reinecke wrote:
+> this patchset updates the SCSI stack to support full 64-bit LUNs.
+> The first patch is a simple fix; the next patch updates
+> the sequential scan logic to be compliant with SPC.
+> The third patch addresses a firmware issue with earlier
+> qla2xxx HBAs.
+> The next two patches update the SCSI stack and all drivers
+> to use 64-bit LUNs where appropriate.
+> And finally we need to update the conversion routines
+> scsilun_to_int to cope with 64bit LUNs.
 > 
+> Two drivers have issues with 64bit LUNs:
+> - The qla2xxx driver uses a 32-bit LUN value for TMFs.
+>   But as the driver uses a max_lun value from 0xFFFF
+>   we should be safe for the time being.
+> - The zfcp driver uses a 32-bit LUN for debug records; the
+>   record format would need to be updated to cope with
+>   64-bit LUNs. But again, this driver uses 0xFFFFFFFF
+>   for max_lun, so it doesn't do any harm.
 > 
-> I don't see how that's possible.
-> Here's a point you might have missed.
-> Nicholas's patch isn't just introducing a merge conflict.
-> It is also buggy.
-> Replacing bit access with has_feature silently fixes the bug.
-> 
-> So if we want to avoid bisect breakage target tree will
-> have to be rebased.
-> 
-> And if doing that anyway, I don't see any reason not
-> to merge everything through the vhost tree, esp
-> since I already put the patches there. Less work for
-> everyone involved.
-> 
+> The other changes have been pretty straightforward.
 
-The problem is with Sagi's recent changes wrt to including T10 PI bytes
-into expected data transfer length in target-core, you'll end up
-introducing a different bug into your tree..  ;)
+Hello Hannes,
 
-Why don't I simply add Stephen's patch to use vhost_has_feature() in
-target-pending/for-next, and we just make sure that the vhost PULL
-request goes out after target-pending..?
+Many SCSI LLD's use int_to_scsilun() in the hot path (queuecommand()).
+This patch series makes the int_to_scsilun() function slightly more
+expensive. Has it been considered to cache the result of int_to_scsilun()
+such that LLD's can copy the cached int_to_scsilun() result instead of
+having to call int_to_scsilun() in the queuecommand() function ?
+Something like the (untested) patch below might be sufficient:
 
---nab
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index e02b3aa..9e50d78 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -244,6 +244,7 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
+ 	sdev->queue_ramp_up_period = SCSI_DEFAULT_RAMP_UP_PERIOD;
+ 	sdev->id = starget->id;
+ 	sdev->lun = lun;
++	int_to_scsilun(lun, &sdev->scsi_lun);
+ 	sdev->channel = starget->channel;
+ 	sdev->sdev_state = SDEV_CREATED;
+ 	INIT_LIST_HEAD(&sdev->siblings);
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 5853c91..48ea68e 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -100,6 +100,8 @@ struct scsi_device {
+ 
+ 	unsigned int id, lun, channel;
+ 
++	struct scsi_lun scsi_lun;	/* int_to_scsilun(lun) */
++
+ 	unsigned int manufacturer;	/* Manufacturer of device, for using 
+ 					 * vendor-specific cmd's */
+ 	unsigned sector_size;	/* size in bytes */
+
+Thanks,
+
+Bart.
