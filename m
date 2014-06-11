@@ -1,39 +1,23 @@
-From: Fabian Frederick <fabf@skynet.be>
-Subject: [PATCH 1/1] drivers/message/i2o/i2o_block.c: remove unnecessary test on unsigned value
-Date: Wed, 11 Jun 2014 20:42:43 +0200
-Message-ID: <1402512163-15639-1-git-send-email-fabf@skynet.be>
+From: worley@alum.mit.edu (Dale R. Worley)
+Subject: Re: [PATCH]: add debug flag parameter for SCSI tape driver
+Date: Wed, 11 Jun 2014 15:35:01 -0400
+Message-ID: <201406111935.s5BJZ1eb001754@hobgoblin.ariadne.com>
+References: <101311718.17236924.1402433475036.JavaMail.zimbra@redhat.com> <1374689615.17272341.1402444113231.JavaMail.zimbra@redhat.com> <1CAC495F-3A9A-45B1-8E15-4B6D3F17114D@kolumbus.fi> <664697763.17697275.1402511065048.JavaMail.zimbra@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailrelay005.isp.belgacom.be ([195.238.6.171]:46340 "EHLO
-	mailrelay005.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752436AbaFKSoC (ORCPT
+Received: from qmta08.westchester.pa.mail.comcast.net ([76.96.62.80]:42403
+	"EHLO qmta08.westchester.pa.mail.comcast.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750963AbaFKTlK (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 Jun 2014 14:44:02 -0400
+	Wed, 11 Jun 2014 15:41:10 -0400
+In-reply-to: <664697763.17697275.1402511065048.JavaMail.zimbra@redhat.com>
+	(loberman@redhat.com)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: aacraid@adaptec.com
-Cc: Fabian Frederick <fabf@skynet.be>, linux-scsi@vger.kernel.org
+To: Laurence Oberman <loberman@redhat.com>
+Cc: kai.makisara@kolumbus.fi, linux-scsi@vger.kernel.org
 
-unsigned value is never < 0
+This thread leads me to ask:  Do people use ANSI-formatted tapes any
+more?  That is, tape volumes with miltiple files, header and trailer
+labels, etc.?
 
-Cc: linux-scsi@vger.kernel.org
-Signed-off-by: Fabian Frederick <fabf@skynet.be>
----
- drivers/message/i2o/i2o_block.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/message/i2o/i2o_block.c b/drivers/message/i2o/i2o_block.c
-index 6fc3866..2b684ec 100644
---- a/drivers/message/i2o/i2o_block.c
-+++ b/drivers/message/i2o/i2o_block.c
-@@ -671,7 +671,7 @@ static int i2o_block_ioctl(struct block_device *bdev, fmode_t mode,
- 		break;
- 	case BLKI2OSRSTRAT:
- 		ret = -EINVAL;
--		if (arg < 0 || arg > CACHE_SMARTFETCH)
-+		if (arg > CACHE_SMARTFETCH)
- 			break;
- 		dev->rcache = arg;
- 		ret = 0;
--- 
-1.8.4.5
-
+Dale
