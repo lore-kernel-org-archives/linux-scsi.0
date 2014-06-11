@@ -1,57 +1,67 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/2] scsi_scan: Send TEST UNIT READY to the LUN before
- scanning
-Date: Wed, 11 Jun 2014 06:40:57 -0700
-Message-ID: <20140611134057.GB12240@infradead.org>
-References: <1401953203-103015-1-git-send-email-hare@suse.de>
- <1401953203-103015-2-git-send-email-hare@suse.de>
+From: "Michael S. Tsirkin" <mst@redhat.com>
+Subject: [PULL] vhost: infrastructure changes for 3.16
+Date: Wed, 11 Jun 2014 16:44:47 +0300
+Message-ID: <20140611134447.GA8208@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:58439 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752127AbaFKNk7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Jun 2014 09:40:59 -0400
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
 Content-Disposition: inline
-In-Reply-To: <1401953203-103015-2-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: sfr@canb.auug.org.au, linux-scsi@vger.kernel.org, kvm@vger.kernel.org, netdev@vger.kernel.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, nab@daterainc.com
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <jbottomley@parallels.com>, Robert Elliot <elliot@hp.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
 
-On Thu, Jun 05, 2014 at 09:26:42AM +0200, Hannes Reinecke wrote:
-> REPORT_LUN_SCAN does not report any outstanding unit attention
-> condition as per SAM. However, the target might not be fully
-> initialized at that time, so we might end up getting a
-> default entry (or even a partially filled one).
-> But as we're not able to process the REPORT LUN DATA HAS CHANGED
-> unit attention correctly we'll be missing out some LUNs during
-> startup.
-> So it's better to send a TEST UNIT READY for modern implementations
-> and wait until the unit attention condition goes away.
-> 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> ---
->  drivers/scsi/scsi_scan.c | 86 ++++++++++++++++++++++++++++++++++++++++--------
->  1 file changed, 73 insertions(+), 13 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-> index e02b3aa..a8e59c3 100644
-> --- a/drivers/scsi/scsi_scan.c
-> +++ b/drivers/scsi/scsi_scan.c
-> @@ -123,6 +123,13 @@ MODULE_PARM_DESC(inq_timeout,
->  		 "Timeout (in seconds) waiting for devices to answer INQUIRY."
->  		 " Default is 20. Some devices may need more; most need less.");
->  
-> +static unsigned int scsi_scan_timeout = SCSI_TIMEOUT/HZ + 58;
-> +
-> +module_param_named(scan_timeout, scsi_scan_timeout, uint, S_IRUGO|S_IWUSR);
-> +MODULE_PARM_DESC(scan_timeout,
-> +		 "Timeout (in seconds) waiting for devices to become ready"
-> +		 " after INQUIRY. Default is 60.");
+Hi Linus,
+Please pull the following.
+Please note this needs to be merged before merging
+target-pending PULL which Nicholas will be sending
+out shortly.
 
-Should this be called tur_timeout, similar to the inq_timeout parameter?
+Thanks!
 
-Otherwise looks good to me,
+The following changes since commit 1860e379875dfe7271c649058aeddffe5afd9d0d:
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+  Linux 3.15 (2014-06-08 11:19:54 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/mst/vhost.git tags/for_linus
+
+for you to fetch changes up to 47283bef7ed356629467d1fac61687756e48f254:
+
+  vhost: move memory pointer to VQs (2014-06-09 16:21:07 +0300)
+
+----------------------------------------------------------------
+vhost: infrastructure changes for 3.16
+
+This reworks vhost core dropping unnecessary RCU uses in favor of VQ mutexes
+which are used on fast path anyway.  This fixes worst-case latency for users
+which change the memory mappings a lot.
+Memory allocation for vhost-net now supports fallback on vmalloc (same as for
+vhost-scsi) this makes it possible to create the device on systems where memory
+is very fragmented, with slightly lower performance.
+
+Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+
+----------------------------------------------------------------
+Michael S. Tsirkin (4):
+      vhost-net: extend device allocation to vmalloc
+      vhost: replace rcu with mutex
+      vhost: move acked_features to VQs
+      vhost: move memory pointer to VQs
+
+ drivers/vhost/vhost.h | 19 ++++------
+ drivers/vhost/net.c   | 35 ++++++++++++-------
+ drivers/vhost/scsi.c  | 26 ++++++++------
+ drivers/vhost/test.c  | 11 +++---
+ drivers/vhost/vhost.c | 97 ++++++++++++++++++++++++++-------------------------
+ 5 files changed, 101 insertions(+), 87 deletions(-)
