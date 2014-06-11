@@ -1,92 +1,53 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH v1 3/3] TARGET/sbc,loopback: Adjust command data length
- in case pi exists on the wire
-Date: Wed, 11 Jun 2014 14:30:15 -0700
-Message-ID: <1402522215.17740.29.camel@haakon3.risingtidesystems.com>
-References: <1402223228-23768-1-git-send-email-sagig@mellanox.com>
-	 <1402223228-23768-4-git-send-email-sagig@mellanox.com>
-	 <1402387450.5774.56.camel@haakon3.risingtidesystems.com>
-	 <504EB66DAC8D234EB8E8560985C2D7AD46D1D00E@avmb2.qlogic.org>
-	 <53980434.1000306@dev.mellanox.co.il>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH] block SG_IO: add SG_FLAG_Q_AT_HEAD flag
+Date: Wed, 11 Jun 2014 16:33:21 -0500
+Message-ID: <5398CB21.3000409@cs.wisc.edu>
+References: <5390786E.8050601@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <53980434.1000306@dev.mellanox.co.il>
-Sender: target-devel-owner@vger.kernel.org
-To: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Cc: Quinn Tran <quinn.tran@qlogic.com>, Sagi Grimberg <sagig@mellanox.com>, "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "roland@kernel.org" <roland@kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "Michael S. Tsirkin" <mst@redhat.com>, Paolo Bonzini <pbonzini@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:39849 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752572AbaFKVdx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 11 Jun 2014 17:33:53 -0400
+In-Reply-To: <5390786E.8050601@interlog.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: dgilbert@interlog.com
+Cc: SCSI development list <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, James Bottomley <james.bottomley@hansenpartnership.com>
 
-On Wed, 2014-06-11 at 10:24 +0300, Sagi Grimberg wrote:
-> On 6/11/2014 12:17 AM, Quinn Tran wrote:
+On 06/05/2014 09:02 AM, Douglas Gilbert wrote:
+> After the SG_IO ioctl was copied into the block layer and
+> later into the bsg driver, subtle differences emerged.
 > 
-> <SNIP>
+> One difference is the way injected commands are queued through
+> the block layer (i.e. this is not SCSI device queueing nor SATA
+> NCQ). Summarizing:
+>   - SG_IO on block layer device: blk_exec*(at_head=false)
+>   - sg device SG_IO: at_head=true
+>   - bsg device SG_IO: at_head=true
 > 
-> > QT> Instead of using existing value within cmd->data_length, can we
-> > calculated data_length based on secstors & blocksize.
-> >
-> > cmd->data_length = sectors * dev->dev_attrib.block_size;
+> Some time ago Boaz Harrosh introduced a sg v4 flag called
+> BSG_FLAG_Q_AT_TAIL to override the bsg driver default. A
+> recent patch titled: "sg: add SG_FLAG_Q_AT_TAIL flag"
+> allowed the sg driver default to be overridden. This patch
+> allows a SG_IO ioctl sent to a block layer device to have
+> its default overridden.
 > 
-> We can do that I suppose...
-> Although it seems weird that the core discards the transport byte-count...
-> Just wandering if we should recalc on the DIF case only or always.
+> ChangeLog:
+>     - introduce SG_FLAG_Q_AT_HEAD flag in sg.h to cause
+>       commands that are injected via a block layer
+>       device SG_IO ioctl to set at_head=true
+>     - make comments clearer about queueing in sg.h since the
+>       header is used both by the sg device and block layer
+>       device implementations of the SG_IO ioctl.
+>     - introduce BSG_FLAG_Q_AT_HEAD in bsg.h for compatibility
+>       (it does nothing) and update comments.
 > 
-
-Yeah, same concern here wrt to discarding the transport length.
-
-This effectively makes the residual handling further down in
-sbc_parse_cdb() -> target_cmd_size_check() always match size ==
-cmd->data_length, because the latter as been recalculated by the former.
-
-Honestly, I don't know if this is a problem for normal READ + WRITE with
-prot=1 as I've never seen size != cmd->data_length for I/O related
-commands, but it does seem potentially dangerous.
-
-> >
-> >  From the QLogic perfective, the cmd->data_length is pull directly from the
-> > wire (i.e. FCP header) when cmd is received.  In essence, it's whatever
-> > the Initiator is set it to.  We does not have any indicator to spot DIF vs
-> > none-DIF cmd when 1st received, unless the code do a peek.
 > 
-> Same for all transports I assume...
-> 
+> Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 
-So just to confirm Quinn, the Qlogic the initiator includes the PI bytes
-into the FCP header data_length for the target-side *_PASS and
-DOUT_STRIP / DIN_INSERT, that is currently passed into
-qla_tgt_ops->handle_cmd(), right..?
+Looks ok to me.
 
-If that is the case, Sagi's v1 to cmd->data_length -= cmd->prot_length
-seems like it would still do right thing for *_PASS and DOUT_STRIP /
-DIN_INSERT, given that cmd->prot_length is calculated in
-sbc_check_prot() based upon dev->prot_length * sectors..
-
-> >
-> > With that said, the cmd->data_length does not guarantee to contain both
-> > "data length" & "protection length" when cmd is submit to
-> > TCM/target_submit_cmd().  In Dif-Insert mode, data_length will only
-> > contain the actual data(no Dif).
-> 
-> No, in the DOUT_INSERT/DIN_STRIP case, protect bits are off and the core 
-> will take the data length as is.
-> This case is covered.
-> 
-
-<nod>
-
-> > It's best that the SBC code re-calculate the actual data length and dif
-> > data length based on the number of sectors derived from the cmd.
-> 
-> Nic, what's your take on this?
-> 
-
-Hard to say.  Discarding the transport length in v2 doesn't seem like a
-good idea, but subtracting from cmd->prot_length in v1 is using the
-sector count from the CDB anyways, so it's essentially the same tradeoff
-of recalculating the transport's cmd->data_length from values within the
-CDB w/ prot=1.
-
-MKP, WDYT..?
-
---nab
+Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
