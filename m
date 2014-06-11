@@ -1,93 +1,65 @@
 From: Sagi Grimberg <sagig@mellanox.com>
-Subject: [PATCH v2 3/3] TARGET/sbc,loopback: Adjust command data length in case pi exists on the wire
-Date: Wed, 11 Jun 2014 12:09:59 +0300
-Message-ID: <1402477799-24610-4-git-send-email-sagig@mellanox.com>
+Subject: [PATCH v2 1/3] scsi_cmnd: Introduce scsi_transfer_length helper
+Date: Wed, 11 Jun 2014 12:09:57 +0300
+Message-ID: <1402477799-24610-2-git-send-email-sagig@mellanox.com>
 References: <1402477799-24610-1-git-send-email-sagig@mellanox.com>
-Return-path: <target-devel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mailp.voltaire.com ([193.47.165.129]:44606 "EHLO mellanox.co.il"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932382AbaFKJPG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 11 Jun 2014 05:15:06 -0400
 In-Reply-To: <1402477799-24610-1-git-send-email-sagig@mellanox.com>
-Sender: target-devel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: michaelc@cs.wisc.edu, martin.petersen@oracle.com, nab@linux-iscsi.org, roland@kernel.org
 Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-rdma@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
 
-In various areas of the code, it is assumed that
-se_cmd->data_length describes pure data. In case
-that protection information exists over the wire
-(protect bits is are on) the target core re-calculates
-the data length from the CDB and the backed device
-block size (instead of each transport peeking in the cdb).
-
-Modify loopback device to include protection information
-in the transferred data length (like other scsi transports).
+In case protection information exists on the wire
+scsi transports should include it in the transfer
+byte count (even if protection information does not
+exist in the host memory space). This helper will
+compute the total transfer length from the scsi
+command data length and protection attributes.
 
 Signed-off-by: Sagi Grimberg <sagig@mellanox.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 ---
- drivers/target/loopback/tcm_loop.c |   15 ++++++++++++---
- drivers/target/target_core_sbc.c   |   15 +++++++++++++--
- 2 files changed, 25 insertions(+), 5 deletions(-)
+ include/scsi/scsi_cmnd.h |   17 +++++++++++++++++
+ 1 files changed, 17 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
-index c886ad1..1f4c015 100644
---- a/drivers/target/loopback/tcm_loop.c
-+++ b/drivers/target/loopback/tcm_loop.c
-@@ -179,7 +179,7 @@ static void tcm_loop_submission_work(struct work_struct *work)
- 	struct tcm_loop_hba *tl_hba;
- 	struct tcm_loop_tpg *tl_tpg;
- 	struct scatterlist *sgl_bidi = NULL;
--	u32 sgl_bidi_count = 0;
-+	u32 sgl_bidi_count = 0, transfer_length;
- 	int rc;
+diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+index dd7c998..a100c6e 100644
+--- a/include/scsi/scsi_cmnd.h
++++ b/include/scsi/scsi_cmnd.h
+@@ -7,6 +7,7 @@
+ #include <linux/types.h>
+ #include <linux/timer.h>
+ #include <linux/scatterlist.h>
++#include <scsi/scsi_device.h>
  
- 	tl_hba = *(struct tcm_loop_hba **)shost_priv(sc->device->host);
-@@ -213,12 +213,21 @@ static void tcm_loop_submission_work(struct work_struct *work)
+ struct Scsi_Host;
+ struct scsi_device;
+@@ -306,4 +307,20 @@ static inline void set_driver_byte(struct scsi_cmnd *cmd, char status)
+ 	cmd->result = (cmd->result & 0x00ffffff) | (status << 24);
+ }
  
- 	}
- 
--	if (!scsi_prot_sg_count(sc) && scsi_get_prot_op(sc) != SCSI_PROT_NORMAL)
-+	transfer_length = scsi_transfer_length(sc);
-+	if (!scsi_prot_sg_count(sc) &&
-+	    scsi_get_prot_op(sc) != SCSI_PROT_NORMAL) {
- 		se_cmd->prot_pto = true;
-+		/*
-+		 * loopback transport doesn't support
-+		 * WRITE_GENERATE, READ_STRIP protection
-+		 * information operations, go ahead unprotected.
-+		 */
-+		transfer_length = scsi_bufflen(sc);
++static inline unsigned scsi_transfer_length(struct scsi_cmnd *scmd)
++{
++	unsigned int xfer_len = blk_rq_bytes(scmd->request);
++	unsigned int prot_op = scsi_get_prot_op(scmd);
++	unsigned int sector_size = scmd->device->sector_size;
++
++	switch (prot_op) {
++	case SCSI_PROT_NORMAL:
++	case SCSI_PROT_WRITE_STRIP:
++	case SCSI_PROT_READ_INSERT:
++		return xfer_len;
 +	}
- 
- 	rc = target_submit_cmd_map_sgls(se_cmd, tl_nexus->se_sess, sc->cmnd,
- 			&tl_cmd->tl_sense_buf[0], tl_cmd->sc->device->lun,
--			scsi_bufflen(sc), tcm_loop_sam_attr(sc),
-+			transfer_length, tcm_loop_sam_attr(sc),
- 			sc->sc_data_direction, 0,
- 			scsi_sglist(sc), scsi_sg_count(sc),
- 			sgl_bidi, sgl_bidi_count,
-diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
-index e022959..4b5716f 100644
---- a/drivers/target/target_core_sbc.c
-+++ b/drivers/target/target_core_sbc.c
-@@ -665,8 +665,19 @@ sbc_check_prot(struct se_device *dev, struct se_cmd *cmd, unsigned char *cdb,
- 
- 	cmd->prot_type = dev->dev_attrib.pi_prot_type;
- 	cmd->prot_length = dev->prot_length * sectors;
--	pr_debug("%s: prot_type=%d, prot_length=%d prot_op=%d prot_checks=%d\n",
--		 __func__, cmd->prot_type, cmd->prot_length,
 +
-+	/**
-+	 * In case protection information exists over the wire
-+	 * we modify command data length to describe pure data.
-+	 * The actual transfer length is data length + protection
-+	 * length
-+	 **/
-+	if (protect)
-+		cmd->data_length = sectors * dev->dev_attrib.block_size;
++	return xfer_len + (xfer_len >> ilog2(sector_size)) * 8;
++}
 +
-+	pr_debug("%s: prot_type=%d, data_length=%d, prot_length=%d "
-+		 "prot_op=%d prot_checks=%d\n",
-+		 __func__, cmd->prot_type, cmd->data_length, cmd->prot_length,
- 		 cmd->prot_op, cmd->prot_checks);
- 
- 	return true;
+ #endif /* _SCSI_SCSI_CMND_H */
 -- 
 1.7.1
+
