@@ -1,53 +1,50 @@
-From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [PATCH v1 3/3] TARGET/sbc,loopback: Adjust command data length
- in case pi exists on the wire
-Date: Wed, 11 Jun 2014 10:24:36 +0300
-Message-ID: <53980434.1000306@dev.mellanox.co.il>
-References: <1402223228-23768-1-git-send-email-sagig@mellanox.com> <1402223228-23768-4-git-send-email-sagig@mellanox.com> <1402387450.5774.56.camel@haakon3.risingtidesystems.com> <504EB66DAC8D234EB8E8560985C2D7AD46D1D00E@avmb2.qlogic.org>
+From: "Michael S. Tsirkin" <mst@redhat.com>
+Subject: Re: [PATCH-v2 0/6] vhost/scsi: Add T10 PI SGL passthrough support
+Date: Wed, 11 Jun 2014 11:04:47 +0300
+Message-ID: <20140611080447.GB7248@redhat.com>
+References: <20140610094254.GC7423@redhat.com>
+ <20140610215217.495d5476@canb.auug.org.au>
+ <20140610130208.GA27702@redhat.com>
+ <1402421957.23024.15.camel@haakon3.risingtidesystems.com>
+ <20140610184531.GA27760@redhat.com>
+ <1402430265.19972.9.camel@haakon3.risingtidesystems.com>
+ <1402430984.2185.116.camel@dabdike.int.hansenpartnership.com>
+ <1402431901.19972.14.camel@haakon3.risingtidesystems.com>
+ <CA+55aFxnswLS1ZxYu5B0yS84ugKgcNUzNkyKxV8Yv0Fnx0TJig@mail.gmail.com>
+ <1402435228.19972.17.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <504EB66DAC8D234EB8E8560985C2D7AD46D1D00E@avmb2.qlogic.org>
-Sender: target-devel-owner@vger.kernel.org
-To: Quinn Tran <quinn.tran@qlogic.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Sagi Grimberg <sagig@mellanox.com>
-Cc: "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "roland@kernel.org" <roland@kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "Michael S. Tsirkin" <mst@redhat.com>, Paolo Bonzini <pbonzini@redhat.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:14139 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755504AbaFKIEl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 11 Jun 2014 04:04:41 -0400
+Content-Disposition: inline
+In-Reply-To: <1402435228.19972.17.camel@haakon3.risingtidesystems.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Stephen Rothwell <sfr@canb.auug.org.au>, "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, "H. Peter Anvin" <hpa@zytor.com>
 
-On 6/11/2014 12:17 AM, Quinn Tran wrote:
+On Tue, Jun 10, 2014 at 02:20:28PM -0700, Nicholas A. Bellinger wrote:
+> On Tue, 2014-06-10 at 13:56 -0700, Linus Torvalds wrote:
+> > On Tue, Jun 10, 2014 at 1:25 PM, Nicholas A. Bellinger
+> > <nab@linux-iscsi.org> wrote:
+> > >
+> > > That would work, or I can simply include a pointer to Stephen's patch in
+> > > the target-pending PULL request after the vhost API changes are merged
+> > > and Linus can apply himself..
+> > 
+> > Yes. That way I'll include it in the merge, and everything should just work.
+> > 
+> 
+> <nod>, sounds good.
+> 
+> MST, please drop the target related patches from your tree, and go ahead
+> and send your PULL request now.
+> 
+> --nab
 
-<SNIP>
+ack.
+Doing it right now.
 
-> QT> Instead of using existing value within cmd->data_length, can we
-> calculated data_length based on secstors & blocksize.
->
-> cmd->data_length = sectors * dev->dev_attrib.block_size;
-
-We can do that I suppose...
-Although it seems weird that the core discards the transport byte-count...
-Just wandering if we should recalc on the DIF case only or always.
-
->
->  From the QLogic perfective, the cmd->data_length is pull directly from the
-> wire (i.e. FCP header) when cmd is received.  In essence, it's whatever
-> the Initiator is set it to.  We does not have any indicator to spot DIF vs
-> none-DIF cmd when 1st received, unless the code do a peek.
-
-Same for all transports I assume...
-
->
-> With that said, the cmd->data_length does not guarantee to contain both
-> "data length" & "protection length" when cmd is submit to
-> TCM/target_submit_cmd().  In Dif-Insert mode, data_length will only
-> contain the actual data(no Dif).
-
-No, in the DOUT_INSERT/DIN_STRIP case, protect bits are off and the core 
-will take the data length as is.
-This case is covered.
-
-> It's best that the SBC code re-calculate the actual data length and dif
-> data length based on the number of sectors derived from the cmd.
-
-Nic, what's your take on this?
-
-Sagi.
