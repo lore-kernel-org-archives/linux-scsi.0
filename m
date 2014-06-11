@@ -1,76 +1,105 @@
-From: Laurence Oberman <loberman@redhat.com>
-Subject: [PATCH]: add debug flag parameter for SCSI tape driver
-Date: Tue, 10 Jun 2014 19:48:33 -0400 (EDT)
-Message-ID: <1374689615.17272341.1402444113231.JavaMail.zimbra@redhat.com>
-References: <101311718.17236924.1402433475036.JavaMail.zimbra@redhat.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCHv4 0/6]  Support 64-bit LUNs
+Date: Wed, 11 Jun 2014 08:34:21 +0200
+Message-ID: <5397F86D.1030503@suse.de>
+References: <1401785937-43581-1-git-send-email-hare@suse.de> <53974739.8070303@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx6-phx2.redhat.com ([209.132.183.39]:40628 "EHLO
-	mx6-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753009AbaFJXsd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Jun 2014 19:48:33 -0400
-Received: from zmail22.collab.prod.int.phx2.redhat.com (zmail22.collab.prod.int.phx2.redhat.com [10.5.83.26])
-	by mx6-phx2.redhat.com (8.14.4/8.14.4) with ESMTP id s5ANmXEK002482
-	for <linux-scsi@vger.kernel.org>; Tue, 10 Jun 2014 19:48:33 -0400
-In-Reply-To: <101311718.17236924.1402433475036.JavaMail.zimbra@redhat.com>
+Received: from cantor2.suse.de ([195.135.220.15]:46889 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750749AbaFKGeW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 11 Jun 2014 02:34:22 -0400
+In-Reply-To: <53974739.8070303@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>, James Bottomley <jbottomley@parallels.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Ewan Milne <emilne@redhat.com>, linux-scsi@vger.kernel.org
 
-Hello
+On 06/10/2014 07:58 PM, Bart Van Assche wrote:
+> On 06/03/14 10:58, Hannes Reinecke wrote:
+>> this patchset updates the SCSI stack to support full 64-bit LUNs.
+>> The first patch is a simple fix; the next patch updates
+>> the sequential scan logic to be compliant with SPC.
+>> The third patch addresses a firmware issue with earlier
+>> qla2xxx HBAs.
+>> The next two patches update the SCSI stack and all drivers
+>> to use 64-bit LUNs where appropriate.
+>> And finally we need to update the conversion routines
+>> scsilun_to_int to cope with 64bit LUNs.
+>>
+>> Two drivers have issues with 64bit LUNs:
+>> - The qla2xxx driver uses a 32-bit LUN value for TMFs.
+>>    But as the driver uses a max_lun value from 0xFFFF
+>>    we should be safe for the time being.
+>> - The zfcp driver uses a 32-bit LUN for debug records; the
+>>    record format would need to be updated to cope with
+>>    64-bit LUNs. But again, this driver uses 0xFFFFFFFF
+>>    for max_lun, so it doesn't do any harm.
+>>
+>> The other changes have been pretty straightforward.
+>
+> Hello Hannes,
+>
+> Many SCSI LLD's use int_to_scsilun() in the hot path (queuecommand())=
+=2E
+> This patch series makes the int_to_scsilun() function slightly more
+> expensive. Has it been considered to cache the result of int_to_scsil=
+un()
+> such that LLD's can copy the cached int_to_scsilun() result instead o=
+f
+> having to call int_to_scsilun() in the queuecommand() function ?
+> Something like the (untested) patch below might be sufficient:
+>
+> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+> index e02b3aa..9e50d78 100644
+> --- a/drivers/scsi/scsi_scan.c
+> +++ b/drivers/scsi/scsi_scan.c
+> @@ -244,6 +244,7 @@ static struct scsi_device *scsi_alloc_sdev(struct=
+ scsi_target *starget,
+>   	sdev->queue_ramp_up_period =3D SCSI_DEFAULT_RAMP_UP_PERIOD;
+>   	sdev->id =3D starget->id;
+>   	sdev->lun =3D lun;
+> +	int_to_scsilun(lun, &sdev->scsi_lun);
+>   	sdev->channel =3D starget->channel;
+>   	sdev->sdev_state =3D SDEV_CREATED;
+>   	INIT_LIST_HEAD(&sdev->siblings);
+> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+> index 5853c91..48ea68e 100644
+> --- a/include/scsi/scsi_device.h
+> +++ b/include/scsi/scsi_device.h
+> @@ -100,6 +100,8 @@ struct scsi_device {
+>
+>   	unsigned int id, lun, channel;
+>
+> +	struct scsi_lun scsi_lun;	/* int_to_scsilun(lun) */
+> +
+>   	unsigned int manufacturer;	/* Manufacturer of device, for using
+>   					 * vendor-specific cmd's */
+>   	unsigned sector_size;	/* size in bytes */
+>
+> Thanks,
+>
+Hmm. No, so far it hasn't been considered. Maybe it's even=20
+worthwhile to move the situation around, ie using primarily the=20
+64-bit LUN and only convert it into an integer if so requested.
+But yeah, it's definitely something we should look into.
 
-Take 2 of this patch, changed module description and subject line.
+Maybe _after_ the patchset is in?
 
-This patch adds a debug_flag parameter that can be set on module load, and allows the DEBUG facility without a module recompile.
-Usage: mpdprobe st debug_flag=1
+Cheers,
 
-Signed-off-by: Laurence Oberman <loberman@redhat.com>
-
-diff -Nur a/st.c b/st.c
---- a/st.c	2014-06-10 16:45:18.522354105 -0400
-+++ b/st.c	2014-06-10 19:40:39.774387990 -0400
-@@ -80,6 +80,7 @@
- static int try_direct_io = TRY_DIRECT_IO;
- static int try_rdio = 1;
- static int try_wdio = 1;
-+static int debug_flag = 0;
- 
- static struct class st_sysfs_class;
- static const struct attribute_group *st_dev_groups[];
-@@ -100,6 +101,9 @@
- MODULE_PARM_DESC(max_sg_segs, "Maximum number of scatter/gather segments to use (256)");
- module_param_named(try_direct_io, try_direct_io, int, 0);
- MODULE_PARM_DESC(try_direct_io, "Try direct I/O between user buffer and tape drive (1)");
-+module_param_named(debug_flag, debug_flag, int, 0);
-+MODULE_PARM_DESC(debug_flag, "Enable DEBUG, same as setting debugging=1");
-+
- 
- /* Extra parameters for testing */
- module_param_named(try_rdio, try_rdio, int, 0);
-@@ -124,6 +128,9 @@
- 	},
- 	{
- 		"try_direct_io", &try_direct_io
-+	},
-+	{
-+		"debug_flag", &debug_flag
- 	}
- };
- #endif
-@@ -4277,7 +4284,9 @@
- static int __init init_st(void)
- {
- 	int err;
--
-+	debugging = (debug_flag > 0) ? debug_flag : DEBUG;
-+        if (debugging) 
-+		printk(KERN_INFO "st: Debugging enabled debug_flag = %d\n",debugging);
- 	validate_options();
- 
- 	printk(KERN_INFO "st: Version %s, fixed bufsize %d, s/g segs %d\n",
-
-
-Thanks
-Laurence
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
+)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
