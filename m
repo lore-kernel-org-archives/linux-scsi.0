@@ -1,23 +1,28 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [ANNOUNCE] scsi patch queue tree
-Date: Wed, 11 Jun 2014 05:01:43 -0700
-Message-ID: <20140611120143.GA26071@infradead.org>
-References: <20140519140614.GA12183@infradead.org>
+Subject: Re: [PATCH v2] notify block layer when using temporary change to
+ cache_type
+Date: Wed, 11 Jun 2014 05:07:13 -0700
+Message-ID: <20140611120713.GB16616@infradead.org>
+References: <1401788250-8457-1-git-send-email-vaughan.cao@oracle.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20140519140614.GA12183@infradead.org>
+In-Reply-To: <1401788250-8457-1-git-send-email-vaughan.cao@oracle.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>, Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Vaughan Cao <vaughan.cao@oracle.com>
+Cc: JBottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-After this first pull for the 3.16 merge window it seems like this
-worked out fairly well - we got a large number of patches in, and all
-reviewed by a second pair of eyes.
+On Tue, Jun 03, 2014 at 05:37:30PM +0800, Vaughan Cao wrote:
+> This is a fix for commit:
+>   39c60a0948cc06139e2fbfe084f83cb7e7deae3b sd: fix array cache flushing bug causing performance problems
+> We must notify the block layer via q->flush_flags after temporary change the cache_type to write through.
+> If not, SYNCHRONIZE CACHE command will still be generated.
+> This patch factors out a helper that can be called from sd_revalidate_disk and cache_type_store.
+> 
+> Signed-off-by: Vaughan Cao <vaughan.cao@oracle.com>
 
-How should we go on from this?  The drivers-for-3.16-2 branch, which had
-the late lpfs and hpsa updates didn't make it into the pull request for
-Linus, do you intend to skip them for this window?  If not do you still
-want to have another branch for the other pending smaller updates?
+Looks good,
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
