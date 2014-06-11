@@ -1,69 +1,36 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH v2 0/3] Include protection information in transport
- header
-Date: Wed, 11 Jun 2014 14:36:09 -0700
-Message-ID: <1402522569.17740.32.camel@haakon3.risingtidesystems.com>
-References: <1402477799-24610-1-git-send-email-sagig@mellanox.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH v5] sg: relax 16 byte cdb restriction
+Date: Wed, 11 Jun 2014 16:37:54 -0500
+Message-ID: <5398CC32.9070201@cs.wisc.edu>
+References: <538E035A.10703@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:35627 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751715AbaFKVgL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Jun 2014 17:36:11 -0400
-In-Reply-To: <1402477799-24610-1-git-send-email-sagig@mellanox.com>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:39854 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750958AbaFKViF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 11 Jun 2014 17:38:05 -0400
+In-Reply-To: <538E035A.10703@interlog.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sagi Grimberg <sagig@mellanox.com>
-Cc: michaelc@cs.wisc.edu, martin.petersen@oracle.com, roland@kernel.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-rdma@vger.kernel.org
+To: dgilbert@interlog.com
+Cc: SCSI development list <linux-scsi@vger.kernel.org>, Christian Franke <Christian.Franke@t-online.de>, James Bottomley <james.bottomley@hansenpartnership.com>
 
-On Wed, 2014-06-11 at 12:09 +0300, Sagi Grimberg wrote:
-> At the SCSI transport level, there is no distinction between
-> user data and protection information. Thus, iscsi header field
-> "expected data transfer length" should include protection
-> information.
+On 06/03/2014 12:18 PM, Douglas Gilbert wrote:
+> v4 of this patch was sent 20131201.
 > 
-> Patch #1 introduces scsi helper scsi_transfer_length which computes
-> wire transfer byte count.
+> ChangeLog:
+>         - remove the 16 byte CDB (SCSI command) length limit
+>           from the sg driver by handling longer CDBs the same
+>           way as the bsg driver. Remove comment from sg.h
+>           public interface about the cmd_len field being
+>           limited to 16 bytes.
+>         - remove some dead code caused by this change
+>         - cleanup comment block at the top of sg.h, fix urls
 > 
-> Patch #2 modifies iscsi initiator to set correct wire transfer length
-> in iscsi header data_length field (and modifies iser accordingly).
-> 
-> Patch #3 modifies target core to re-calculate the pure data length
-> in case of PI presence over the wire (and modifies loopback transport
-> to align with other transports).
-> 
-> Changes from v1:
-> - scsi_cmnd: Rewrite scsi_transfer_length as MKP suggested
-> - Target/sbc: re-calculate the data_length in case PI exists
->   on the wire (instead od deacrease data -= prot)
-> 
-> Changes from v0:
-> - Introduce scsi helpers to compute correct transfer length in the
->   presence of protection information.
-> - Modify iscsi to set correct transfer length using scsi helpers
-> - Modify loopback transport to set correct transfer length using
->   scsi helpers
-> 
-> Sagi Grimberg (3):
->   scsi_cmnd: Introduce scsi_transfer_length helper
->   libiscsi, iser: Adjust data_length to include protection information
->   TARGET/sbc,loopback: Adjust command data length in case pi exists on
->     the wire
-> 
->  drivers/infiniband/ulp/iser/iser_initiator.c |   34 +++++++------------------
->  drivers/scsi/libiscsi.c                      |   18 +++++++-------
->  drivers/target/loopback/tcm_loop.c           |   15 +++++++++--
->  drivers/target/target_core_sbc.c             |   15 ++++++++++-
->  include/scsi/scsi_cmnd.h                     |   17 +++++++++++++
->  5 files changed, 61 insertions(+), 38 deletions(-)
-> 
+> Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 
-Ok, I've applied these to for-next, but let's see what MKP recommends
-for patch #3 wrt to recalculating cmd->data_length.
+Looks ok to me.
 
-Thanks Sagi!
-
---nab
-
+Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
