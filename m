@@ -1,92 +1,137 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 10/14] scsi: only maintain target_blocked if the driver has a target queue limit
-Date: Thu, 12 Jun 2014 15:49:02 +0200
-Message-ID: <1402580946-11470-11-git-send-email-hch@lst.de>
+Subject: [PATCH 11/14] scsi: unwind blk_end_request_all and blk_end_request_err calls
+Date: Thu, 12 Jun 2014 15:49:03 +0200
+Message-ID: <1402580946-11470-12-git-send-email-hch@lst.de>
 References: <1402580946-11470-1-git-send-email-hch@lst.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:59464 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933288AbaFLNrJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Jun 2014 09:47:09 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1402580946-11470-1-git-send-email-hch@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: Jens Axboe <axboe@kernel.dk>, Bart Van Assche <bvanassche@fusionio.com>, Robert Elliot <Elliott@hp.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-This saves us an atomic operation for each I/O submission and completion
-for the usual case where the driver doesn't set a per-target can_queue
-value.  Only a few iscsi hardware offload drivers set the per-target
-can_queue value at the moment.
+Replace the calls to the various blk_end_request variants with opencode
+equivalents.  Blk-mq is using a model that gives the driver control
+between the bio updates and the actual completion, and making the old
+code follow that same model allows us to keep the code more similar for
+both pathes.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/scsi_lib.c |   17 ++++++++++++-----
- 1 file changed, 12 insertions(+), 5 deletions(-)
+ drivers/scsi/scsi_lib.c |   61 ++++++++++++++++++++++++++++++++---------------
+ 1 file changed, 42 insertions(+), 19 deletions(-)
 
 diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 0e33dee..763b3c9 100644
+index 763b3c9..e438726 100644
 --- a/drivers/scsi/scsi_lib.c
 +++ b/drivers/scsi/scsi_lib.c
-@@ -295,7 +295,8 @@ void scsi_device_unbusy(struct scsi_device *sdev)
- 	unsigned long flags;
+@@ -625,6 +625,37 @@ static void scsi_release_bidi_buffers(struct scsi_cmnd *cmd)
+ 	cmd->request->next_rq->special = NULL;
+ }
  
- 	atomic_dec(&shost->host_busy);
--	atomic_dec(&starget->target_busy);
-+	if (starget->can_queue > 0)
-+		atomic_dec(&starget->target_busy);
- 
- 	if (unlikely(scsi_host_in_recovery(shost) &&
- 		     (shost->host_failed || shost->host_eh_scheduled))) {
-@@ -1335,6 +1336,9 @@ static inline int scsi_target_queue_ready(struct Scsi_Host *shost,
- 		spin_unlock_irq(shost->host_lock);
- 	}
- 
-+	if (starget->can_queue <= 0)
-+		return 1;
++static bool scsi_end_request(struct request *req, int error,
++		unsigned int bytes, unsigned int bidi_bytes)
++{
++	struct scsi_cmnd *cmd = req->special;
++	struct scsi_device *sdev = cmd->device;
++	struct request_queue *q = sdev->request_queue;
++	unsigned long flags;
 +
- 	busy = atomic_inc_return(&starget->target_busy) - 1;
- 	if (busy == 0 && atomic_read(&starget->target_blocked) > 0) {
- 		if (atomic_dec_return(&starget->target_blocked) > 0)
-@@ -1344,7 +1348,7 @@ static inline int scsi_target_queue_ready(struct Scsi_Host *shost,
- 				 "unblocking target at zero depth\n"));
++
++	if (blk_update_request(req, error, bytes))
++		return true;
++
++	/* Bidi request must be completed as a whole */
++	if (unlikely(bidi_bytes) &&
++	    blk_update_request(req->next_rq, error, bidi_bytes))
++		return true;
++
++	if (blk_queue_add_random(q))
++		add_disk_randomness(req->rq_disk);
++
++	spin_lock_irqsave(q->queue_lock, flags);
++	blk_finish_request(req, error);
++	spin_unlock_irqrestore(q->queue_lock, flags);
++
++	if (bidi_bytes)
++		scsi_release_bidi_buffers(cmd);
++	scsi_release_buffers(cmd);
++	scsi_next_command(cmd);
++	return false;
++}
++
+ /**
+  * __scsi_error_from_host_byte - translate SCSI error code into errno
+  * @cmd:	SCSI command (unused)
+@@ -697,7 +728,7 @@ static int __scsi_error_from_host_byte(struct scsi_cmnd *cmd, int result)
+  *		   be put back on the queue and retried using the same
+  *		   command as before, possibly after a delay.
+  *
+- *		c) We can call blk_end_request() with -EIO to fail
++ *		c) We can call scsi_end_request() with -EIO to fail
+  *		   the remainder of the request.
+  */
+ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+@@ -749,13 +780,9 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 			 * both sides at once.
+ 			 */
+ 			req->next_rq->resid_len = scsi_in(cmd)->resid;
+-
+-			scsi_release_buffers(cmd);
+-			scsi_release_bidi_buffers(cmd);
+-
+-			blk_end_request_all(req, 0);
+-
+-			scsi_next_command(cmd);
++			if (scsi_end_request(req, 0, blk_rq_bytes(req),
++					blk_rq_bytes(req->next_rq)))
++				BUG();
+ 			return;
+ 		}
+ 	}
+@@ -794,15 +821,16 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 	/*
+ 	 * If we finished all bytes in the request we are done now.
+ 	 */
+-	if (!blk_end_request(req, error, good_bytes))
+-		goto next_command;
++	if (!scsi_end_request(req, error, good_bytes, 0))
++		return;
+ 
+ 	/*
+ 	 * Kill remainder if no retrys.
+ 	 */
+ 	if (error && scsi_noretry_cmd(cmd)) {
+-		blk_end_request_all(req, error);
+-		goto next_command;
++		if (scsi_end_request(req, error, blk_rq_bytes(req), 0))
++			BUG();
++		return;
  	}
  
--	if (starget->can_queue > 0 && busy >= starget->can_queue)
-+	if (busy >= starget->can_queue)
- 		goto starved;
- 	if (atomic_read(&starget->target_blocked) > 0)
- 		goto starved;
-@@ -1356,7 +1360,8 @@ starved:
- 	list_move_tail(&sdev->starved_entry, &shost->starved_list);
- 	spin_unlock_irq(shost->host_lock);
- out_dec:
--	atomic_dec(&starget->target_busy);
-+	if (starget->can_queue > 0)
-+		atomic_dec(&starget->target_busy);
- 	return 0;
- }
- 
-@@ -1473,7 +1478,8 @@ static void scsi_kill_request(struct request *req, struct request_queue *q)
- 	 */
- 	atomic_inc(&sdev->device_busy);
- 	atomic_inc(&shost->host_busy);
--	atomic_inc(&starget->target_busy);
-+	if (starget->can_queue > 0)
-+		atomic_inc(&starget->target_busy);
- 
- 	blk_complete_request(req);
- }
-@@ -1642,7 +1648,8 @@ static void scsi_request_fn(struct request_queue *q)
- 	return;
- 
-  host_not_ready:
--	atomic_dec(&scsi_target(sdev)->target_busy);
-+	if (&scsi_target(sdev)->can_queue > 0)
-+		atomic_dec(&scsi_target(sdev)->target_busy);
-  not_ready:
  	/*
- 	 * lock q, handle tag, requeue req, and decrement device_busy. We
+@@ -947,8 +975,8 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 				scsi_print_sense("", cmd);
+ 			scsi_print_command(cmd);
+ 		}
+-		if (!blk_end_request_err(req, error))
+-			goto next_command;
++		if (!scsi_end_request(req, error, blk_rq_err_bytes(req), 0))
++			return;
+ 		/*FALLTHRU*/
+ 	case ACTION_REPREP:
+ 	requeue:
+@@ -967,11 +995,6 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 		__scsi_queue_insert(cmd, SCSI_MLQUEUE_DEVICE_BUSY, 0);
+ 		break;
+ 	}
+-	return;
+-
+-next_command:
+-	scsi_release_buffers(cmd);
+-	scsi_next_command(cmd);
+ }
+ 
+ static int scsi_init_sgtable(struct request *req, struct scsi_data_buffer *sdb,
 -- 
 1.7.10.4
-
