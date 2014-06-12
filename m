@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 05/14] scsi: push host_lock down into scsi_{host,target}_queue_ready
-Date: Thu, 12 Jun 2014 15:48:57 +0200
-Message-ID: <1402580946-11470-6-git-send-email-hch@lst.de>
+Subject: [PATCH 04/14] scsi: set ->scsi_done before calling scsi_dispatch_cmd
+Date: Thu, 12 Jun 2014 15:48:56 +0200
+Message-ID: <1402580946-11470-5-git-send-email-hch@lst.de>
 References: <1402580946-11470-1-git-send-email-hch@lst.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1402580946-11470-1-git-send-email-hch@lst.de>
@@ -10,188 +10,111 @@ To: James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: Jens Axboe <axboe@kernel.dk>, Bart Van Assche <bvanassche@fusionio.com>, Robert Elliot <Elliott@hp.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Prepare for not taking a host-wide lock in the dispatch path by pushing
-the lock down into the places that actually need it.  Note that this
-patch is just a preparation step, as it will actually increase lock
-roundtrips and thus decrease performance on its own.
+The blk-mq code path will set this to a different function, so make the
+code simpler by setting it up in a legacy-request specific place.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/scsi_lib.c |   75 ++++++++++++++++++++++++-----------------------
- 1 file changed, 39 insertions(+), 36 deletions(-)
+ drivers/scsi/scsi.c     |   23 +----------------------
+ drivers/scsi/scsi_lib.c |   20 ++++++++++++++++++++
+ 2 files changed, 21 insertions(+), 22 deletions(-)
 
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index b91abab..8ca9ed2 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -72,8 +72,6 @@
+ #define CREATE_TRACE_POINTS
+ #include <trace/events/scsi.h>
+ 
+-static void scsi_done(struct scsi_cmnd *cmd);
+-
+ /*
+  * Definitions and constants.
+  */
+@@ -695,8 +693,6 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
+ 	}
+ 
+ 	trace_scsi_dispatch_cmd_start(cmd);
+-
+-	cmd->scsi_done = scsi_done;
+ 	rtn = host->hostt->queuecommand(host, cmd);
+ 	if (rtn) {
+ 		trace_scsi_dispatch_cmd_error(cmd, rtn);
+@@ -712,28 +708,11 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
+ 	return rtn;
+  done:
+ 	SCSI_LOG_MLQUEUE(3, printk("scsi_dispatch_cmnd() failed\n"));
+-	scsi_done(cmd);
++	cmd->scsi_done(cmd);
+ 	return 0;
+ }
+ 
+ /**
+- * scsi_done - Invoke completion on finished SCSI command.
+- * @cmd: The SCSI Command for which a low-level device driver (LLDD) gives
+- * ownership back to SCSI Core -- i.e. the LLDD has finished with it.
+- *
+- * Description: This function is the mid-level's (SCSI Core) interrupt routine,
+- * which regains ownership of the SCSI command (de facto) from a LLDD, and
+- * calls blk_complete_request() for further processing.
+- *
+- * This function is interrupt context safe.
+- */
+-static void scsi_done(struct scsi_cmnd *cmd)
+-{
+-	trace_scsi_dispatch_cmd_done(cmd);
+-	blk_complete_request(cmd->request);
+-}
+-
+-/**
+  * scsi_finish_command - cleanup and pass command back to upper layer
+  * @cmd: the command
+  *
 diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index f0ec249..3d90340 100644
+index 98eb358..f0ec249 100644
 --- a/drivers/scsi/scsi_lib.c
 +++ b/drivers/scsi/scsi_lib.c
-@@ -1300,18 +1300,18 @@ static inline int scsi_dev_queue_ready(struct request_queue *q,
- /*
-  * scsi_target_queue_ready: checks if there we can send commands to target
-  * @sdev: scsi device on starget to check.
-- *
-- * Called with the host lock held.
-  */
- static inline int scsi_target_queue_ready(struct Scsi_Host *shost,
- 					   struct scsi_device *sdev)
- {
- 	struct scsi_target *starget = scsi_target(sdev);
-+	int ret = 0;
+@@ -29,6 +29,8 @@
+ #include <scsi/scsi_eh.h>
+ #include <scsi/scsi_host.h>
  
-+	spin_lock_irq(shost->host_lock);
- 	if (starget->single_lun) {
- 		if (starget->starget_sdev_user &&
- 		    starget->starget_sdev_user != sdev)
--			return 0;
-+			goto out;
- 		starget->starget_sdev_user = sdev;
- 	}
- 
-@@ -1319,57 +1319,66 @@ static inline int scsi_target_queue_ready(struct Scsi_Host *shost,
- 		/*
- 		 * unblock after target_blocked iterates to zero
- 		 */
--		if (--starget->target_blocked == 0) {
--			SCSI_LOG_MLQUEUE(3, starget_printk(KERN_INFO, starget,
--					 "unblocking target at zero depth\n"));
--		} else
--			return 0;
-+		if (--starget->target_blocked != 0)
-+			goto out;
++#include <trace/events/scsi.h>
 +
-+		SCSI_LOG_MLQUEUE(3, starget_printk(KERN_INFO, starget,
-+				 "unblocking target at zero depth\n"));
- 	}
+ #include "scsi_priv.h"
+ #include "scsi_logging.h"
  
- 	if (scsi_target_is_busy(starget)) {
- 		list_move_tail(&sdev->starved_entry, &shost->starved_list);
--		return 0;
-+		goto out;
+@@ -1480,6 +1482,23 @@ static void scsi_softirq_done(struct request *rq)
  	}
- 
--	return 1;
-+	scsi_target(sdev)->target_busy++;
-+	ret = 1;
-+out:
-+	spin_unlock_irq(shost->host_lock);
-+	return ret;
  }
  
++/**
++ * scsi_done - Invoke completion on finished SCSI command.
++ * @cmd: The SCSI Command for which a low-level device driver (LLDD) gives
++ * ownership back to SCSI Core -- i.e. the LLDD has finished with it.
++ *
++ * Description: This function is the mid-level's (SCSI Core) interrupt routine,
++ * which regains ownership of the SCSI command (de facto) from a LLDD, and
++ * calls blk_complete_request() for further processing.
++ *
++ * This function is interrupt context safe.
++ */
++static void scsi_done(struct scsi_cmnd *cmd)
++{
++	trace_scsi_dispatch_cmd_done(cmd);
++	blk_complete_request(cmd->request);
++}
++
  /*
-  * scsi_host_queue_ready: if we can send requests to shost, return 1 else
-  * return 0. We must end up running the queue again whenever 0 is
-  * returned, else IO can hang.
-- *
-- * Called with host_lock held.
-  */
- static inline int scsi_host_queue_ready(struct request_queue *q,
- 				   struct Scsi_Host *shost,
- 				   struct scsi_device *sdev)
- {
-+	int ret = 0;
-+
-+	spin_lock_irq(shost->host_lock);
-+
- 	if (scsi_host_in_recovery(shost))
--		return 0;
-+		goto out;
- 	if (shost->host_busy == 0 && shost->host_blocked) {
+  * Function:    scsi_request_fn()
+  *
+@@ -1582,6 +1601,7 @@ static void scsi_request_fn(struct request_queue *q)
  		/*
- 		 * unblock after host_blocked iterates to zero
+ 		 * Dispatch the command to the low-level driver.
  		 */
--		if (--shost->host_blocked == 0) {
--			SCSI_LOG_MLQUEUE(3,
--				printk("scsi%d unblocking host at zero depth\n",
--					shost->host_no));
--		} else {
--			return 0;
--		}
-+		if (--shost->host_blocked != 0)
-+			goto out;
-+
-+		SCSI_LOG_MLQUEUE(3,
-+			printk("scsi%d unblocking host at zero depth\n",
-+				shost->host_no));
- 	}
- 	if (scsi_host_is_busy(shost)) {
- 		if (list_empty(&sdev->starved_entry))
- 			list_add_tail(&sdev->starved_entry, &shost->starved_list);
--		return 0;
-+		goto out;
- 	}
- 
- 	/* We're OK to process the command, so we can't be starved */
- 	if (!list_empty(&sdev->starved_entry))
- 		list_del_init(&sdev->starved_entry);
- 
--	return 1;
-+	shost->host_busy++;
-+	ret = 1;
-+out:
-+	spin_unlock_irq(shost->host_lock);
-+	return ret;
- }
- 
- /*
-@@ -1550,7 +1559,7 @@ static void scsi_request_fn(struct request_queue *q)
- 			blk_start_request(req);
- 		sdev->device_busy++;
- 
--		spin_unlock(q->queue_lock);
-+		spin_unlock_irq(q->queue_lock);
- 		cmd = req->special;
- 		if (unlikely(cmd == NULL)) {
- 			printk(KERN_CRIT "impossible request in %s.\n"
-@@ -1560,7 +1569,6 @@ static void scsi_request_fn(struct request_queue *q)
- 			blk_dump_rq_flags(req, "foo");
- 			BUG();
- 		}
--		spin_lock(shost->host_lock);
- 
- 		/*
- 		 * We hit this when the driver is using a host wide
-@@ -1571,9 +1579,11 @@ static void scsi_request_fn(struct request_queue *q)
- 		 * a run when a tag is freed.
- 		 */
- 		if (blk_queue_tagged(q) && !blk_rq_tagged(req)) {
-+			spin_lock_irq(shost->host_lock);
- 			if (list_empty(&sdev->starved_entry))
- 				list_add_tail(&sdev->starved_entry,
- 					      &shost->starved_list);
-+			spin_unlock_irq(shost->host_lock);
- 			goto not_ready;
- 		}
- 
-@@ -1581,16 +1591,7 @@ static void scsi_request_fn(struct request_queue *q)
- 			goto not_ready;
- 
- 		if (!scsi_host_queue_ready(q, shost, sdev))
--			goto not_ready;
--
--		scsi_target(sdev)->target_busy++;
--		shost->host_busy++;
--
--		/*
--		 * XXX(hch): This is rather suboptimal, scsi_dispatch_cmd will
--		 *		take the lock again.
--		 */
--		spin_unlock_irq(shost->host_lock);
-+			goto host_not_ready;
- 
- 		/*
- 		 * Finally, initialize any error handling parameters, and set up
-@@ -1613,9 +1614,11 @@ static void scsi_request_fn(struct request_queue *q)
- 
- 	return;
- 
-- not_ready:
-+ host_not_ready:
-+	spin_lock_irq(shost->host_lock);
-+	scsi_target(sdev)->target_busy--;
- 	spin_unlock_irq(shost->host_lock);
--
-+ not_ready:
- 	/*
- 	 * lock q, handle tag, requeue req, and decrement device_busy. We
- 	 * must return with queue_lock held.
++		cmd->scsi_done = scsi_done;
+ 		rtn = scsi_dispatch_cmd(cmd);
+ 		if (rtn) {
+ 			scsi_queue_insert(cmd, rtn);
 -- 
 1.7.10.4
