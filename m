@@ -1,44 +1,43 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 10/14] block: Integrity checksum flag
-Date: Wed, 11 Jun 2014 22:03:17 -0400
-Message-ID: <yq18up2rije.fsf@sermon.lab.mkp.net>
+From: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 12/14] block: Add specific data integrity errors
+Date: Wed, 11 Jun 2014 22:16:01 -0400
+Message-ID: <yq14mzqrhy6.fsf@sermon.lab.mkp.net>
 References: <1401334128-15499-1-git-send-email-martin.petersen@oracle.com>
-	<1401334128-15499-11-git-send-email-martin.petersen@oracle.com>
-	<20140611165228.GE9511@infradead.org>
+	<1401334128-15499-13-git-send-email-martin.petersen@oracle.com>
+	<20140611165455.GG9511@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:18587 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752588AbaFLCDt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Jun 2014 22:03:49 -0400
-In-Reply-To: <20140611165228.GE9511@infradead.org> (Christoph Hellwig's
-	message of "Wed, 11 Jun 2014 09:52:28 -0700")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20140611165455.GG9511-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org> (Christoph Hellwig's
+	message of "Wed, 11 Jun 2014 09:54:55 -0700")
+Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, axboe-b10kYP2dOMg@public.gmane.org, nab-PEzghdH756F8UrSeD/g0lQ@public.gmane.org, sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, axboe@fb.com, nab@daterainc.com, sagig@dev.mellanox.co.il, linux-scsi@vger.kernel.org
 
->>>>> "Christoph" == Christoph Hellwig <hch@infradead.org> writes:
+>>>>> "Christoph" == Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org> writes:
 
->> Make the choice of checksum a per-I/O property by introducing a flag
->> that can be inspected by the SCSI layer.
+>> Introduce a set of error codes that can be used by the block
+>> integrity subsystem to signal which class of error was encountered by
+>> either the I/O controller or the storage device.
 
-Christoph> Why?
+Christoph> I'd also love to see something catching these so that they
+Christoph> don't leak to userspace.
 
-First of all it's desirable to be able to use both IP and CRC checksums
-without having to unload the HBA driver.
+This patch was really meant as an RFC. But it is absolutely my intent to
+expose these to userspace. Albeit only to applications that supply or
+request protection information via Darrick's aio extensions.
 
-Also, there are some corner cases where you have to force the use of CRC
-guard tag even when the HBA supports IP checksums. If you are doing
-recovery and need to read a disk block with bad PI, for instance, you
-must be able to tell the HBA to pass the CRC through verbatim instead of
-attempting to convert it to IP checksum.
+I also use these errors extensively in my test utilities to verify that
+the correct problem gets detected by the correct entity when I inject an
+error.
 
-Another example is qualification tooling that needs to be able to write
-a block with bad PI out to storage. In that case we also have to tell
-the HBA to ignore checking the PI and that it shouldn't attempt a
-checksum conversion.
+I should add that in the past I had a separate error status inside the
+bip that contained the data integrity specific errors. But that involved
+all sorts of evil hacks when bios were cloned, split and stacked. After
+talking to nab about his needs for target I figured it was better to
+just define new error codes and handle them like Hannes did for the
+extended SCSI errors.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
