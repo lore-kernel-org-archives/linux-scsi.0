@@ -1,108 +1,174 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: [PATCH] hpsa: refine the pci enble/disable handling
-Date: Thu, 12 Jun 2014 17:29:31 +0200
-Message-ID: <5399C75B.6020607@redhat.com>
+From: Michael Robbert <mrobbert@mines.edu>
+Subject: All devices on host blocked
+Date: Thu, 12 Jun 2014 17:36:03 +0000
+Message-ID: <CBD800F0-6654-4678-89D4-7FDD1577EFDE@mines.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed;
+	boundary="Apple-Mail=_6D1942F4-E9DE-4D05-8632-7EE99B9C613F";
+	protocol="application/pkcs7-signature"; micalg=sha1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:13182 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756084AbaFLP3h (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 12 Jun 2014 11:29:37 -0400
+Received: from exch-cas4.Mines.EDU ([138.67.132.144]:50019 "EHLO
+	EXCH-CAS4.adit.mines.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751160AbaFLRlZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Jun 2014 13:41:25 -0400
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
-Cc: stephenmcameron@gmail.com, michael.miller@canonical.com, "Handzik, Joe" <joseph.t.handzik@hp.com>
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-When a second(kdump) kernel starts and the hard reset method is used
-the driver calls pci_disable_device without previously enabling it,
-so the kernel shows a warning -
-[   16.876248] WARNING: at drivers/pci/pci.c:1431 pci_disable_device+0x84/0x90()
-[   16.882686] Device hpsa
-disabling already-disabled device
-...
-This patch fixes it, in addition to this I tried to balance also some other pairs
-of enable/disable device in the driver.
-Unfortunately I wasn't able to verify the functionality for the case of a sw reset,
-because of a lack of proper hw.
+--Apple-Mail=_6D1942F4-E9DE-4D05-8632-7EE99B9C613F
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain;
+	charset=us-ascii
 
-Signed-off-by: Tomas Henzl <thenzl@redhat.com>
----
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 5858600..67c41b9 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -5983,7 +5983,6 @@ static int hpsa_kdump_hard_reset_controller(struct pci_dev *pdev)
- 	/* Turn the board off.  This is so that later pci_restore_state()
- 	 * won't turn the board on before the rest of config space is ready.
- 	 */
--	pci_disable_device(pdev);
- 	pci_save_state(pdev);
- 
- 	/* find the first memory BAR, so we can find the cfg table */
-@@ -6031,11 +6030,6 @@ static int hpsa_kdump_hard_reset_controller(struct pci_dev *pdev)
- 		goto unmap_cfgtable;
- 
- 	pci_restore_state(pdev);
--	rc = pci_enable_device(pdev);
--	if (rc) {
--		dev_warn(&pdev->dev, "failed to enable device.\n");
--		goto unmap_cfgtable;
--	}
- 	pci_write_config_word(pdev, 4, command_register);
- 
- 	/* Some devices (notably the HP Smart Array 5i Controller)
-@@ -6548,6 +6542,12 @@ static int hpsa_init_reset_devices(struct pci_dev *pdev)
- 	if (!reset_devices)
- 		return 0;
- 
-+	rc = pci_enable_device(pdev);
-+	if (rc) {
-+		dev_warn(&pdev->dev, "failed to enable device.\n");
-+		return -ENODEV;
-+	}
-+
- 	/* Reset the controller with a PCI power-cycle or via doorbell */
- 	rc = hpsa_kdump_hard_reset_controller(pdev);
- 
-@@ -6556,10 +6556,11 @@ static int hpsa_init_reset_devices(struct pci_dev *pdev)
- 	 * "performant mode".  Or, it might be 640x, which can't reset
- 	 * due to concerns about shared bbwc between 6402/6404 pair.
- 	 */
--	if (rc == -ENOTSUPP)
--		return rc; /* just try to do the kdump anyhow. */
--	if (rc)
--		return -ENODEV;
-+	if (rc) {
-+		if (rc != -ENOTSUPP) /* just try to do the kdump anyhow. */
-+			rc = -ENODEV;
-+		goto out_disable; 
-+	}
- 
- 	/* Now try to get the controller to respond to a no-op */
- 	dev_warn(&pdev->dev, "Waiting for controller to respond to no-op\n");
-@@ -6570,7 +6571,11 @@ static int hpsa_init_reset_devices(struct pci_dev *pdev)
- 			dev_warn(&pdev->dev, "no-op failed%s\n",
- 					(i < 11 ? "; re-trying" : ""));
- 	}
--	return 0;
-+
-+out_disable:
-+
-+	pci_disable_device(pdev);
-+	return rc;
- }
- 
- static int hpsa_allocate_cmd_pool(struct ctlr_info *h)
-@@ -6722,6 +6727,7 @@ static void hpsa_undo_allocations_after_kdump_soft_reset(struct ctlr_info *h)
- 		iounmap(h->transtable);
- 	if (h->cfgtable)
- 		iounmap(h->cfgtable);
-+	pci_disable_device(h->pdev);
- 	pci_release_regions(h->pdev);
- 	kfree(h);
- }
--- 
-1.8.3.1
+I have a large JBOD attached to my server via an LSI SAS2308 PCI =
+card(mpt2sas driver). I've got about 40 drives right now assembled into =
+4 Linux software RAID sets and I am using those RAID volumes as back end =
+devices for GPFS.=20
+Everything was working fine about a week ago when I had 20 drives and 2 =
+RAID volumes then I added 20 new disks, all the same model, and now I am =
+frequently seeing all the devices behind the SAS card reporting =
+device_blocked immediately followed by device_unblocked. These events =
+are correlated with a period of many seconds of no data throughput. This =
+is happening often enough to cause major throughput problems. I have =
+seen similar problem in the past, but they were accompanied by some kind =
+of disk specific error and I could fix the situation by removing the =
+disk. In this case there are no other errors in any log besides the =
+device_blocked and device_unblocked on every single device.
+This system is not in production yet so I can blow it all away if I need =
+to, but I really want to understand what is causing this so that if it =
+does come back once we go into production I'll be able to fix it without =
+major disruptions. I suspect there is a misbehaving drive, but there is =
+nothing pointing to a single drive and I could be completely wrong about =
+that. Does anybody have any clue where to look?
 
+Here is what the error logs look like:
+
+Jun 11 19:29:17 storage003 kernel: sd 6:0:0:0: device_blocked, =
+handle(0x0016)
+Jun 11 19:29:17 storage003 kernel: sd 6:0:1:0: device_blocked, =
+handle(0x000b)
+Jun 11 19:29:17 storage003 kernel: sd 6:0:2:0: device_blocked, =
+handle(0x000c)
+Jun 11 19:29:17 storage003 kernel: ses 6:0:3:0: device_blocked, =
+handle(0x000e)
+Jun 11 19:29:17 storage003 kernel: sd 6:0:4:0: device_blocked, =
+handle(0x000f)
+Jun 11 19:29:17 storage003 kernel: sd 6:0:5:0: device_blocked, =
+handle(0x0010)
+... Same thing for the rest of the devices on host6
+Jun 11 19:29:18 storage003 kernel: sd 6:0:0:0: device_unblocked and set =
+to running, handle(0x0016)
+Jun 11 19:29:18 storage003 kernel: sd 6:0:1:0: device_unblocked and set =
+to running, handle(0x000b)
+Jun 11 19:29:18 storage003 kernel: sd 6:0:2:0: device_unblocked and set =
+to running, handle(0x000c)
+Jun 11 19:29:18 storage003 kernel: ses 6:0:3:0: device_unblocked and set =
+to running, handle(0x000e)
+Jun 11 19:29:18 storage003 kernel: sd 6:0:4:0: device_unblocked and set =
+to running, handle(0x000f)
+Jun 11 19:29:18 storage003 kernel: sd 6:0:5:0: device_unblocked and set =
+to running, handle(0x0010)
+... Same thing for the rest of the devices again.
+
+Thanks,
+Mike Robbert=
+
+--Apple-Mail=_6D1942F4-E9DE-4D05-8632-7EE99B9C613F
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+
+MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIQLTCCBN0w
+ggPFoAMCAQICEHGS++YZX6xNEoV0cTSiGKcwDQYJKoZIhvcNAQEFBQAwezELMAkGA1UEBhMCR0Ix
+GzAZBgNVBAgMEkdyZWF0ZXIgTWFuY2hlc3RlcjEQMA4GA1UEBwwHU2FsZm9yZDEaMBgGA1UECgwR
+Q29tb2RvIENBIExpbWl0ZWQxITAfBgNVBAMMGEFBQSBDZXJ0aWZpY2F0ZSBTZXJ2aWNlczAeFw0w
+NDAxMDEwMDAwMDBaFw0yODEyMzEyMzU5NTlaMIGuMQswCQYDVQQGEwJVUzELMAkGA1UECBMCVVQx
+FzAVBgNVBAcTDlNhbHQgTGFrZSBDaXR5MR4wHAYDVQQKExVUaGUgVVNFUlRSVVNUIE5ldHdvcmsx
+ITAfBgNVBAsTGGh0dHA6Ly93d3cudXNlcnRydXN0LmNvbTE2MDQGA1UEAxMtVVROLVVTRVJGaXJz
+dC1DbGllbnQgQXV0aGVudGljYXRpb24gYW5kIEVtYWlsMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8A
+MIIBCgKCAQEAsjmFpPJ9q0E7YkY3rs3BYHW8OWX5ShpHornMSMxqmNVNNRm5pELlzkniii8efNIx
+B8dOtINknS4p1aJkxIW9hVE1eaROaJB7HHqkkqgX8pgV8pPMyaQylbsMTzC9mKALi+VuG6JG+ni8
+om+rWV6lL8/K2m2qL+usobNqqrcuZzWLeeEeaYji5kbNoKXqvgvOdjp6Dpvq/NonWz1zHyLmSGHG
+TPNpsaguG7bUMSAsvIKKjqQOpdeJQ/wWWq8dcdcRWdq6hw2v+vPhwvCkxWeM1tZUOt4KpLoDd7Nl
+yP0e03RiqhjKaJMeoYV+9Udly/hNVyh00jT/MLbu9mIwFIws6wIDAQABo4IBJzCCASMwHwYDVR0j
+BBgwFoAUoBEKIz6W8Qfs4q8p74Klf9AwpLQwHQYDVR0OBBYEFImCZ33EnSZwAEu0UEh83j2uBG59
+MA4GA1UdDwEB/wQEAwIBBjAPBgNVHRMBAf8EBTADAQH/MB0GA1UdJQQWMBQGCCsGAQUFBwMCBggr
+BgEFBQcDBDARBgNVHSAECjAIMAYGBFUdIAAwewYDVR0fBHQwcjA4oDagNIYyaHR0cDovL2NybC5j
+b21vZG9jYS5jb20vQUFBQ2VydGlmaWNhdGVTZXJ2aWNlcy5jcmwwNqA0oDKGMGh0dHA6Ly9jcmwu
+Y29tb2RvLm5ldC9BQUFDZXJ0aWZpY2F0ZVNlcnZpY2VzLmNybDARBglghkgBhvhCAQEEBAMCAQYw
+DQYJKoZIhvcNAQEFBQADggEBAJ2Vyzy4fqUJxB6/C8LHdo45PJTGEKpPDMngq4RdiVTgZTvzbRx8
+NywlVF+WIfw3hJGdFdwUT4HPVB1rbEVgxy35l1FM+WbKPKCCjKbI8OLp1Er57D9Wyd12jMOCAU9s
+APMeGmF0BEcDqcZAV5G8ZSLFJ2dPV9tkWtmNH7qGL/QGrpxp7en0zykX2OBKnxogL5dMUbtGB8SK
+N04g4wkxaMeexIud6H4RvDJoEJYRmETYKlFgTYjrdDrfQwYyyDlWjDoRUtNBpEMD9O3vMyfbOeAU
+TibJ2PU54om4k123KSZB6rObroP8d3XK6Mq1/uJlSmM+RMTQw16Hc6mYHK9/FX8wggUaMIIEAqAD
+AgECAhBtGeqnGU9qMyLmIjJ6qnHeMA0GCSqGSIb3DQEBBQUAMIGuMQswCQYDVQQGEwJVUzELMAkG
+A1UECBMCVVQxFzAVBgNVBAcTDlNhbHQgTGFrZSBDaXR5MR4wHAYDVQQKExVUaGUgVVNFUlRSVVNU
+IE5ldHdvcmsxITAfBgNVBAsTGGh0dHA6Ly93d3cudXNlcnRydXN0LmNvbTE2MDQGA1UEAxMtVVRO
+LVVTRVJGaXJzdC1DbGllbnQgQXV0aGVudGljYXRpb24gYW5kIEVtYWlsMB4XDTExMDQyODAwMDAw
+MFoXDTIwMDUzMDEwNDgzOFowgZMxCzAJBgNVBAYTAkdCMRswGQYDVQQIExJHcmVhdGVyIE1hbmNo
+ZXN0ZXIxEDAOBgNVBAcTB1NhbGZvcmQxGjAYBgNVBAoTEUNPTU9ETyBDQSBMaW1pdGVkMTkwNwYD
+VQQDEzBDT01PRE8gQ2xpZW50IEF1dGhlbnRpY2F0aW9uIGFuZCBTZWN1cmUgRW1haWwgQ0EwggEi
+MA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCShIRbS1eY1F4vi6ThQMijU1hfZmXxMk73nzJ9
+VdB4TFW3QpTg+SdxB8XGaaS5MsTxQBqQzCdWYn8XtXFpruUgG+TLY15gyqJB9mrho/+43x9IbWVD
+jCouK2M4d9+xF6zC2oIC1tQyatRnbyATj1w1+uVUgK/YcQodNwoCUFNslR2pEBS0mZVZEjH/CaLS
+TNxS297iQAFbSGjdxUq04O0kHzqvcV8H46y/FDuwJXFoPfQP1hdYRhWBPGiLi4MPbXohV+Y0sNsy
+fuNK4aVScmQmkU6lkg//4LFg/RpvaFGZY40ai6XMQpubfSJj06mg/M6ekN9EGfRcWzW6FvOnm//B
+AgMBAAGjggFLMIIBRzAfBgNVHSMEGDAWgBSJgmd9xJ0mcABLtFBIfN49rgRufTAdBgNVHQ4EFgQU
+ehNOAHRbxnhjZCfBL+KgW7x5xXswDgYDVR0PAQH/BAQDAgEGMBIGA1UdEwEB/wQIMAYBAf8CAQAw
+EQYDVR0gBAowCDAGBgRVHSAAMFgGA1UdHwRRME8wTaBLoEmGR2h0dHA6Ly9jcmwudXNlcnRydXN0
+LmNvbS9VVE4tVVNFUkZpcnN0LUNsaWVudEF1dGhlbnRpY2F0aW9uYW5kRW1haWwuY3JsMHQGCCsG
+AQUFBwEBBGgwZjA9BggrBgEFBQcwAoYxaHR0cDovL2NydC51c2VydHJ1c3QuY29tL1VUTkFkZFRy
+dXN0Q2xpZW50X0NBLmNydDAlBggrBgEFBQcwAYYZaHR0cDovL29jc3AudXNlcnRydXN0LmNvbTAN
+BgkqhkiG9w0BAQUFAAOCAQEAhda+eFdVbTN/RFL+QtUGqAEDgIr7DbL9Sr/2r0FJ9RtaxdKtG3Nu
+PukmfOZMmMEwKN/L+0I8oSU+CnXW0D05hmbRoZu1TZtvryhsHa/l6nRaqNqxwPF1ei+eupN5yv7i
+kR5WdLL4jdPgQ3Ib7Y/9YDkgR/uLrzplSDyYPaUlv73vYOBJ5RbI6z9Dg/Dg7g3B080zX5vQvWBq
+szv++tTJOjwf7Zv/m0kzvkIpOYPuM2kugp1FTahp2oAbHj3SGl18R5mlmwhtEpmG1l1XBxunML5L
+SUS4kH7K0Xk467Qz+qA6XSZYnmFVGLQh1ZnV4ENAQjC+6qXnlNKw/vN1+X9u5zCCBiowggUSoAMC
+AQICEE05004FpiQbcKDOPKWMw58wDQYJKoZIhvcNAQEFBQAwgZMxCzAJBgNVBAYTAkdCMRswGQYD
+VQQIExJHcmVhdGVyIE1hbmNoZXN0ZXIxEDAOBgNVBAcTB1NhbGZvcmQxGjAYBgNVBAoTEUNPTU9E
+TyBDQSBMaW1pdGVkMTkwNwYDVQQDEzBDT01PRE8gQ2xpZW50IEF1dGhlbnRpY2F0aW9uIGFuZCBT
+ZWN1cmUgRW1haWwgQ0EwHhcNMTQwNDExMDAwMDAwWhcNMTcwNDEwMjM1OTU5WjCCATwxCzAJBgNV
+BAYTAlVTMQ4wDAYDVQQREwU4MDQwMTERMA8GA1UECBMIQ29sb3JhZG8xDzANBgNVBAcTBkdvbGRl
+bjEZMBcGA1UECRMQMTUwMCBJbGxpbm9pcyBTdDEOMAwGA1UEEhMFODA0MDExITAfBgNVBAoTGENv
+bG9yYWRvIFNjaG9vbCBvZiBNaW5lczENMAsGA1UECxMEQ0NJVDE+MDwGA1UECxM1SXNzdWVkIHRo
+cm91Z2ggQ29sb3JhZG8gU2Nob29sIG9mIE1pbmVzIEUtUEtJIE1hbmFnZXIxHzAdBgNVBAsTFkNv
+cnBvcmF0ZSBTZWN1cmUgRW1haWwxGDAWBgNVBAMTD01pY2hhZWwgUm9iYmVydDEhMB8GCSqGSIb3
+DQEJARYSbXJvYmJlcnRAbWluZXMuZWR1MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA
+rvTqo4e9mUYkDwHrAnVInrVspIDUcyk2SoaNwmwfoc77E2v02k86X778REsrrWxRc0WgPbyyqxzS
+nGZUIcN7Y2j6OPxTpX0aHIeXy6Z/7b30zXRT5TWXPNYndYkunAQXcNABAbG9rgPnNuKHJL+D04LP
+eomn/WvCyKdfyzWXrkh2A7usmHkWvSNQN2t2M+xXDsIrDkHpQQPHUGQKt65DaKHFZ+P2RBO+uNRy
+zW2YiA5Jh/8lSsd3zoxWVQhZdFhm8Af15lqIkKUuIoURXtM+0Jnm3AhzOyM1WH6jeEJaB2IOY7Di
+Up7/iPB1CxCbGKTI8kHVkZggr3P8s7KFYBSgzwIDAQABo4IBzDCCAcgwHwYDVR0jBBgwFoAUehNO
+AHRbxnhjZCfBL+KgW7x5xXswHQYDVR0OBBYEFC3JT9F7vHEk8Txfwa0l/M05rdGIMA4GA1UdDwEB
+/wQEAwIFoDAMBgNVHRMBAf8EAjAAMB0GA1UdJQQWMBQGCCsGAQUFBwMEBggrBgEFBQcDAjBGBgNV
+HSAEPzA9MDsGDCsGAQQBsjEBAgEDBTArMCkGCCsGAQUFBwIBFh1odHRwczovL3NlY3VyZS5jb21v
+ZG8ubmV0L0NQUzBXBgNVHR8EUDBOMEygSqBIhkZodHRwOi8vY3JsLmNvbW9kb2NhLmNvbS9DT01P
+RE9DbGllbnRBdXRoZW50aWNhdGlvbmFuZFNlY3VyZUVtYWlsQ0EuY3JsMIGIBggrBgEFBQcBAQR8
+MHowUgYIKwYBBQUHMAKGRmh0dHA6Ly9jcnQuY29tb2RvY2EuY29tL0NPTU9ET0NsaWVudEF1dGhl
+bnRpY2F0aW9uYW5kU2VjdXJlRW1haWxDQS5jcnQwJAYIKwYBBQUHMAGGGGh0dHA6Ly9vY3NwLmNv
+bW9kb2NhLmNvbTAdBgNVHREEFjAUgRJtcm9iYmVydEBtaW5lcy5lZHUwDQYJKoZIhvcNAQEFBQAD
+ggEBAFyHolsf5vGYPJU1EPBuQ8okVlzEy+UpW59RsvL0QNtq788dW6MlbwlEepPL1AgvQ7JLXDlg
+CC59pU5Gc7xf+M/94J4pYh5mKHlnPmAK9mvbym4BVNZSIOkt3g9IfTI0NmjPNoOnZZyLNtw5AhOO
+cOP74DNw5jI8kovGeofvxexYAXXsyRTvs7Myu/G5krmHl3SwPPybyUwDtEd8DE4Q/JAFqOhyA/fo
+wcPHPbi6+B4s6nFbhqZbo+2hKvJ4rqrbJH95PF8ryHQYPc1yJUV9BjC6YIaBWODfSuvT0E4/ZACc
+3RrxXc4Gu9ikpR789wUaoZXxGGYsG1oDQWP+TZec/AkxggOrMIIDpwIBATCBqDCBkzELMAkGA1UE
+BhMCR0IxGzAZBgNVBAgTEkdyZWF0ZXIgTWFuY2hlc3RlcjEQMA4GA1UEBxMHU2FsZm9yZDEaMBgG
+A1UEChMRQ09NT0RPIENBIExpbWl0ZWQxOTA3BgNVBAMTMENPTU9ETyBDbGllbnQgQXV0aGVudGlj
+YXRpb24gYW5kIFNlY3VyZSBFbWFpbCBDQQIQTTnTTgWmJBtwoM48pYzDnzAJBgUrDgMCGgUAoIIB
+1zAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqGSIb3DQEJBTEPFw0xNDA2MTIxNzM2MDJa
+MCMGCSqGSIb3DQEJBDEWBBQ7HNrvxN8n+JOOgHd4AzIvrJyyRzCBuQYJKwYBBAGCNxAEMYGrMIGo
+MIGTMQswCQYDVQQGEwJHQjEbMBkGA1UECBMSR3JlYXRlciBNYW5jaGVzdGVyMRAwDgYDVQQHEwdT
+YWxmb3JkMRowGAYDVQQKExFDT01PRE8gQ0EgTGltaXRlZDE5MDcGA1UEAxMwQ09NT0RPIENsaWVu
+dCBBdXRoZW50aWNhdGlvbiBhbmQgU2VjdXJlIEVtYWlsIENBAhBNOdNOBaYkG3CgzjyljMOfMIG7
+BgsqhkiG9w0BCRACCzGBq6CBqDCBkzELMAkGA1UEBhMCR0IxGzAZBgNVBAgTEkdyZWF0ZXIgTWFu
+Y2hlc3RlcjEQMA4GA1UEBxMHU2FsZm9yZDEaMBgGA1UEChMRQ09NT0RPIENBIExpbWl0ZWQxOTA3
+BgNVBAMTMENPTU9ETyBDbGllbnQgQXV0aGVudGljYXRpb24gYW5kIFNlY3VyZSBFbWFpbCBDQQIQ
+TTnTTgWmJBtwoM48pYzDnzANBgkqhkiG9w0BAQEFAASCAQBoFo17qOUTOz/ZU0F52CYLzOxPTH1g
+/7oYx9lOOI0jMUfjRJHggFwex5Vrg7sbVusWqNSFHAy/26qFx9ppzhxDynFjfsUCxsg8yVyC7QVH
+nYvSlQ1MaqieDJEuR+qfzX7kkeh+1yZT+idsg2LCQ2J4KPV8FLcb5++5T7jvNu+p4vK65KZexg6F
+TEX7+FnA0oEuV46VwLxu3FAdBB9yjVOtfW7kZietCJFrfLIewcS58FPsM/jI4FKc01ncb6sOQhiQ
+Rp0BanOuKhcGKsfddfiQlv8rVl35XgTjkFdjBafzjP23ldFbS430b735l9RpLx4NJsNrEZ3ssgas
+gvONYh5wAAAAAAAA
+
+--Apple-Mail=_6D1942F4-E9DE-4D05-8632-7EE99B9C613F--
