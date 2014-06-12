@@ -1,43 +1,36 @@
-From: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 12/14] block: Add specific data integrity errors
-Date: Wed, 11 Jun 2014 22:16:01 -0400
-Message-ID: <yq14mzqrhy6.fsf@sermon.lab.mkp.net>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 13/14] lib: Add T10 Protection Information functions
+Date: Wed, 11 Jun 2014 22:23:50 -0400
+Message-ID: <yq1zjhiq30p.fsf@sermon.lab.mkp.net>
 References: <1401334128-15499-1-git-send-email-martin.petersen@oracle.com>
-	<1401334128-15499-13-git-send-email-martin.petersen@oracle.com>
-	<20140611165455.GG9511@infradead.org>
+	<1401334128-15499-14-git-send-email-martin.petersen@oracle.com>
+	<20140611165630.GH9511@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20140611165455.GG9511-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org> (Christoph Hellwig's
-	message of "Wed, 11 Jun 2014 09:54:55 -0700")
-Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, axboe-b10kYP2dOMg@public.gmane.org, nab-PEzghdH756F8UrSeD/g0lQ@public.gmane.org, sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:17986 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752449AbaFLCYU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Jun 2014 22:24:20 -0400
+In-Reply-To: <20140611165630.GH9511@infradead.org> (Christoph Hellwig's
+	message of "Wed, 11 Jun 2014 09:56:30 -0700")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, axboe@fb.com, nab@daterainc.com, sagig@dev.mellanox.co.il, linux-scsi@vger.kernel.org
 
->>>>> "Christoph" == Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org> writes:
+>>>>> "Christoph" == Christoph Hellwig <hch@infradead.org> writes:
 
->> Introduce a set of error codes that can be used by the block
->> integrity subsystem to signal which class of error was encountered by
->> either the I/O controller or the storage device.
+>> static struct blk_integrity dif_type1_integrity_crc = {
 
-Christoph> I'd also love to see something catching these so that they
-Christoph> don't leak to userspace.
+Christoph> Shouldn't the whole profile defintions move to the generic
+Christoph> code as well? 
 
-This patch was really meant as an RFC. But it is absolutely my intent to
-expose these to userspace. Albeit only to applications that supply or
-request protection information via Darrick's aio extensions.
+Yeah, good idea.
 
-I also use these errors extensively in my test utilities to verify that
-the correct problem gets detected by the correct entity when I inject an
-error.
+Christoph> Maybe the code also should live in block/ and not lib/.
 
-I should add that in the past I had a separate error status inside the
-bip that contained the data integrity specific errors. But that involved
-all sorts of evil hacks when bios were cloned, split and stacked. After
-talking to nab about his needs for target I figured it was better to
-just define new error codes and handle them like Hannes did for the
-extended SCSI errors.
+Fine by me. Jens?
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
