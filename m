@@ -1,62 +1,43 @@
-From: Ewan Milne <emilne@redhat.com>
-Subject: Re: [PATCH 1/2] scsi_error: set DID_TIME_OUT correctly
-Date: Fri, 13 Jun 2014 10:32:14 -0400
-Message-ID: <1402669934.3820.117.camel@localhost.localdomain>
-References: <1402660906-74661-1-git-send-email-hare@suse.de>
-	 <1402660906-74661-2-git-send-email-hare@suse.de>
-Reply-To: emilne@redhat.com
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH v4] sg: O_EXCL and other lock handling
+Date: Fri, 13 Jun 2014 10:33:37 -0400
+Message-ID: <539B0BC1.2020303@interlog.com>
+References: <539A453F.5020502@interlog.com> <20140613090316.GA18032@lst.de>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44851 "EHLO mx1.redhat.com"
+Received: from smtp.infotech.no ([82.134.31.41]:38434 "EHLO smtp.infotech.no"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751298AbaFMOcn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 Jun 2014 10:32:43 -0400
-In-Reply-To: <1402660906-74661-2-git-send-email-hare@suse.de>
+	id S1751167AbaFMOdn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 13 Jun 2014 10:33:43 -0400
+In-Reply-To: <20140613090316.GA18032@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@infradead.org>, Bart vn Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>, James Bottomley <james.bottomley@hansenpartnership.com>, Hannes Reinecke <hare@suse.de>, vaughan <vaughan.cao@oracle.com>
 
-On Fri, 2014-06-13 at 14:01 +0200, Hannes Reinecke wrote:
-> Any callbacks in scsi_timeout_out() might return BLK_EH_RESET_TIMER,
-> in which case we should leave the result alone and not set
-> DID_TIME_OUT, as the command didn't actually timeout.
-> 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> ---
->  drivers/scsi/scsi_error.c | 10 +++++-----
->  1 file changed, 5 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> index 47a1ffc..ff176a6 100644
-> --- a/drivers/scsi/scsi_error.c
-> +++ b/drivers/scsi/scsi_error.c
-> @@ -291,11 +291,11 @@ enum blk_eh_timer_return scsi_times_out(struct request *req)
->  		if (scsi_abort_command(scmd) == SUCCESS)
->  			return BLK_EH_NOT_HANDLED;
->  
-> -	scmd->result |= DID_TIME_OUT << 16;
-> -
-> -	if (unlikely(rtn == BLK_EH_NOT_HANDLED &&
-> -		     !scsi_eh_scmd_add(scmd, SCSI_EH_CANCEL_CMD)))
-> -		rtn = BLK_EH_HANDLED;
-> +	if (unlikely(rtn == BLK_EH_NOT_HANDLED)) {
-> +		scmd->result |= DID_TIME_OUT << 16;
-> +		if (!scsi_eh_scmd_add(scmd, SCSI_EH_CANCEL_CMD))
-> +			rtn = BLK_EH_HANDLED;
-> +	}
->  
->  	return rtn;
->  }
+On 14-06-13 05:03 AM, Christoph Hellwig wrote:
+> Hi Doug,
+>
+> this looks generally good to me, but I don't think open_cnt and exclude
+> have to use atomic_t, as they are only ever modified under open_rel_lock.
 
-See Paolo's patch series which includes:
+They are read by 'cat /proc/scsi/sg/debug' [in
+sg_proc_seq_show_debug()] but transient off-by-1 reports
+are not so important. [Prior to locking that block with
+read_lock(sfd_lock) that routine sometimes printed wild
+results, so some care is required.]
 
-[PATCH v3 4/6] scsi_error: fix invalid setting of host byte
+> Can you take a look at the version below?  This changes open_cnt to an
+> int, exclude to a bool, removes the open_cnt underflow check that
+> the VFS takes care for, and streamlines the open path a little bit:
 
-I think your patch won't apply after his.
+sg_open() and sg_release() clean-up looks good. The
+back-up goto at the end of sg_open() reminds me of
+Fortran style :-) More importantly my sg_tst_excl*
+tests give this version the thumbs up.
 
--Ewan
-
+Acked-by: Douglas Gilbert <dgilbert@interlog.com>
 
