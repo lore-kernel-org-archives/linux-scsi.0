@@ -1,25 +1,56 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [GIT PULL] target updates for v3.16-rc1
-Date: Fri, 13 Jun 2014 19:19:30 +0200
-Message-ID: <20140613171930.GA20007@lst.de>
-References: <1402607116.18202.46.camel@haakon3.risingtidesystems.com> <20140613133901.GC7371@lst.de> <1402672861.2224.11.camel@dabdike.int.hansenpartnership.com> <20140613164118.GA17282@lst.de> <1402679044.2224.38.camel@dabdike.int.hansenpartnership.com>
+From: Venkatesh Srinivas <venkateshs@google.com>
+Subject: virtio-scsi issues duplicate tags when async_abort is enabled
+Date: Fri, 13 Jun 2014 10:58:22 -0700
+Message-ID: <CAHdzE-8k6A6kVB7DnOc6_XKg6DANLRFmP9+f4oXE1vPoLhOK=g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1402679044.2224.38.camel@dabdike.int.hansenpartnership.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Linus Torvalds <torvalds@linux-foundation.org>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Stephen Rothwell <sfr@canb.auug.org.au>, Paolo Bonzini <pbonzini@redhat.com>, Quinn Tran <quinn.tran@qlogic.com>, "Michael S. Tsirkin" <mst@redhat.com>, Rusty Russell <rusty@rustcorp.com.au>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:40837 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753308AbaFMR6Y (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Jun 2014 13:58:24 -0400
+Received: by mail-ie0-f177.google.com with SMTP id tp5so2784393ieb.36
+        for <linux-scsi@vger.kernel.org>; Fri, 13 Jun 2014 10:58:23 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: hare@suse.de, hch@infradead.org, Paolo Bonzini <pbonzini@redhat.com>, JBottomley@parallels.com, linux-scsi@vger.kernel.org, stable@vger.kernel.org
 
-On Fri, Jun 13, 2014 at 10:04:04AM -0700, James Bottomley wrote:
-> Yes, there is, that's where we get the conflicts.  The target tree
-> updates the current SCSI drivers with target pieces.  It's hard to
-> separate them out because there's usually some target tree dependency.
+Hi,
 
-That's only really the case for qla2xxx, and it's not been the major
-issue here (the qla2xxx target code is fairly well isolated to start with).
+In Linux 3.14+, SCSI timeouts are handled first without invoking EH;
+this behavior is on by default but can be disabled with the
+per-shost-template no_async_abort flag.
 
-The issue here is that the target tree got the DIF/DIX support for
-virtio_scsi, which really should have gone in through the scsi tree.
+When a SCSI target is attached to a virtio-scsi HBA and is under I/O
+stress (lots of concurrent I/O + some I/O running slowly), we see
+Linux issue commands with duplicate tags, sometimes with tags matching
+commands which are in the process of being aborted; we see this
+readily in the Google Compute Engine hypervisor.
+
+This behaviour is not seen on Linux <= 3.13 and is not seen if 3.14's
+virtio_scsi driver has no_async_abort set to 1.
+
+An ordering we have seen, from the device perspective:
+t0: I/O with tag 18446612135224154432 issued
+t1: TMF Abort for tag 18446612135224154432
+t2: Another I/O with the same tag, 18446612135224154432, issued; same
+offset/size as at t0
+[neither the t0 I/O nor the TMF ABORT have yet returned!]
+
+Another ordering we have seen, from the device perspective:
+t0: I/O with tag 18446612135454768576 issued
+t1: TMF ABORT for tag 18446612135454768576
+t2: I/O 18446612135454768576 completes with appropriate cancelled status
+t3: TMF ABORT completes with OK status
+t4: New I/O with tag 18446612135454768576, matching size/offset as t0
+t5...: [Some other I/Os issued to the same SCSI target]
+t6...: [TMF ABORT for one of the new I/Os; proper return sequence]
+t7...: New I/O with tag 18446612135454768576.
+  [Tag 18446612135454768576 has neither completed nor has it been
+aborted by Linux.]
+
+CC-ing stable as 3.14 and 3.15 are affected; a conservative fix is to
+enable no_async_abort until the problem is better-understood.
+
+Thanks,
+-- vs;
