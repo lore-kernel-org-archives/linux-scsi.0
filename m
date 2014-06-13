@@ -1,48 +1,28 @@
-From: "Reddy, Sreekanth" <Sreekanth.Reddy@avagotech.com>
-Subject: [PATCH] MAINTAINERS: update LSILOGIC MPT FUSION DRIVERS (FC/SAS/SPI)
- maintainers Email IDs
-Date: Fri, 13 Jun 2014 17:57:37 +0530
-Message-ID: <20140613122737.GA6641@avagotech.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [GIT PULL] target updates for v3.16-rc1
+Date: Fri, 13 Jun 2014 15:39:01 +0200
+Message-ID: <20140613133901.GC7371@lst.de>
+References: <1402607116.18202.46.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn1blp0187.outbound.protection.outlook.com ([207.46.163.187]:49036
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750730AbaFMMjX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 Jun 2014 08:39:23 -0400
+Received: from verein.lst.de ([213.95.11.211]:47787 "EHLO newverein.lst.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751181AbaFMNjI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 13 Jun 2014 09:39:08 -0400
 Content-Disposition: inline
+In-Reply-To: <1402607116.18202.46.camel@haakon3.risingtidesystems.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jejb@kernel.org, JBottomley@Parallels.com
-Cc: linux-scsi@vger.kernel.org, sreekanth.reddy@avagotech.com, Nagalakshmi.Nandigama@avagotech.com, MPT-FusionLinux.pdl@avagotech.com
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Stephen Rothwell <sfr@canb.auug.org.au>, Paolo Bonzini <pbonzini@redhat.com>, Quinn Tran <quinn.tran@qlogic.com>, "Michael S. Tsirkin" <mst@redhat.com>, Rusty Russell <rusty@rustcorp.com.au>, Christoph Hellwig <hch@lst.de>
 
+On Thu, Jun 12, 2014 at 02:05:16PM -0700, Nicholas A. Bellinger wrote:
+> The first is with virtio-scsi between what has been merged in scsi.git
+> for "virtio_scsi: use cmd_size", and the "virtio-scsi: Enable DIF/DIX
+> modes in SCSI host LLD" below.  (Adding Paolo + hch CC')
 
-Updating the MAINTAINERS file for the entry LSILOGIC MPT FUSION DRIVERS
-
-Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
----
- MAINTAINERS |    7 +++----
- 1 files changed, 3 insertions(+), 4 deletions(-)
-
-diff --git a/MAINTAINERS b/MAINTAINERS
-index b2cf5cf..4e40d50 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -5352,10 +5352,9 @@ S:	Maintained
- F:	arch/arm/mach-lpc32xx/
- 
- LSILOGIC MPT FUSION DRIVERS (FC/SAS/SPI)
--M:	Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>
--M:	Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
--M:	support@lsi.com
--L:	DL-MPTFusionLinux@lsi.com
-+M:	Nagalakshmi Nandigama <Nagalakshmi.Nandigama@avagotech.com>
-+M:	Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
-+L:	MPT-FusionLinux.pdl@avagotech.com
- L:	linux-scsi@vger.kernel.org
- W:	http://www.lsilogic.com/support
- S:	Supported
--- 
-1.7.1
+Just curious, why did we decide to take the virtio-scsi patches
+through the target tree?  Seems like taking them through the scsi
+tree would have been a lot simpler.
 
