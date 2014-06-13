@@ -1,75 +1,35 @@
-From: James Bottomley <jbottomley@parallels.com>
-Subject: Re: [PATCH 0/2] scsi command timeout fixes
-Date: Fri, 13 Jun 2014 16:52:52 +0000
-Message-ID: <1402678371.2224.35.camel@dabdike.int.hansenpartnership.com>
-References: <1402660906-74661-1-git-send-email-hare@suse.de>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [GIT PULL] target updates for v3.16-rc1
+Date: Fri, 13 Jun 2014 10:04:04 -0700
+Message-ID: <1402679044.2224.38.camel@dabdike.int.hansenpartnership.com>
+References: <1402607116.18202.46.camel@haakon3.risingtidesystems.com>
+	 <20140613133901.GC7371@lst.de>
+	 <1402672861.2224.11.camel@dabdike.int.hansenpartnership.com>
+	 <20140613164118.GA17282@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.parallels.com ([199.115.105.18]:45743 "EHLO
-	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751138AbaFMQw7 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Jun 2014 12:52:59 -0400
-In-Reply-To: <1402660906-74661-1-git-send-email-hare@suse.de>
-Content-Language: en-US
-Content-ID: <67136E4A268965498BD83AAC1C653466@sw.swsoft.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20140613164118.GA17282@lst.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Linus Torvalds <torvalds@linux-foundation.org>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Stephen Rothwell <sfr@canb.auug.org.au>, Paolo Bonzini <pbonzini@redhat.com>, Quinn Tran <quinn.tran@qlogic.com>, "Michael S. Tsirkin" <mst@redhat.com>, Rusty Russell <rusty@rustcorp.com.au>
 List-Id: linux-scsi@vger.kernel.org
-To: "hare@suse.de" <hare@suse.de>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "bvanassche@acm.org" <bvanassche@acm.org>, "emilne@redhat.com" <emilne@redhat.com>
 
-On Fri, 2014-06-13 at 14:01 +0200, Hannes Reinecke wrote:
-> Hi all,
+On Fri, 2014-06-13 at 18:41 +0200, Christoph Hellwig wrote:
+> On Fri, Jun 13, 2014 at 08:21:01AM -0700, James Bottomley wrote:
+> > We've been ineffectively trying to split them between target and
+> > initiator, since it's effectively both.  Now that we seem to have a
+> > workable process, why don't we just take everything (target scsi-queue
+> > and vhost) through the SCSI tree, that way we don't get into these
+> > problems in future.
 > 
-> I've received reports claiming they're seeing a double command completion
-> occasionally when a command timeout happens.
-> 
-> Delving into it I found this this indeed might happening; reason being
-> that the LLDD will only be informed about a timed-out command by
-> calling scsi_try_to_abort_command(). Anytime before that the LLDD
-> is free to assume the command is valid and might call scsi_done() on it.
-> Which then will lead to interesting issues in the error handler.
+> virtio-scsi has nothing to do with the target.  I also think sending
+> target updates through the scsi tree doesn't seem very useful, as there's
+> is no shared code to start with.
 
-Actually, I'm afraid, this reasoning isn't correct.
-
-Completions of timed out commands are mediated by the block layer using
-the REQ_ATOM_COMPLETE flag.
-
-The reason it's an atomic flag is whoever sets it first owns the
-completion.  Before a timeout fires, the timeout and completion actually
-race.  If completion occurs first, the timeout may still fire, but it
-will get harmlessly ignored if the REQ_ATOM_COMPLETE flag is set (it's
-mediated by blk_mark_rq_complete()).
-
-Conversely, after the timeout has fired, the flag is set and any
-incoming completion gets ignored (code in blk_complete_request()).  The
-atomicity of the flag should guarantee we never see double completions.
-
-However, in between the timeout firing and us doing something with the
-command in the error handler, we have to force the LLD to give it up.
-This requires that we take actions to ensure that we've really killed
-the command within the LLD before we start doing things with the command
-in the error handler.  The way we do this is either successful abort,
-which ensures the LLD won't complete the command or successful reset
-which should kill all commands for the LUN/Target/Device etc.
-
-If you're seeing double completions it's either because we have a bug in
-SCSI and are doing something with the command before we know block has
-relinquished it.  That's actually why this bug was so serious:
-
-commit d555a2abf3481f81303d835046a5ec2c4fb3ca8e
-Author: James Bottomley <JBottomley@Parallels.com>
-Date:   Fri Mar 28 10:50:17 2014 -0700
-
-    [SCSI] Fix spurious request sense in error handling
-
-We'd wrongly call request sense on a timed out command and that could
-cause double completions.
-
-Assuming SCSI is correct, we can still get double completions if drivers
-don't actually kill the queued command on abort or reset ... there was a
-nasty bug like this within hpsa for a while.
+Yes, there is, that's where we get the conflicts.  The target tree
+updates the current SCSI drivers with target pieces.  It's hard to
+separate them out because there's usually some target tree dependency.
 
 James
-
