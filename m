@@ -1,40 +1,49 @@
-From: Mrs Teresa AU <demartinalessia@provincia.treviso.it>
-Subject: (unknown)
-Date: Fri, 13 Jun 2014 12:18:44 +0200
-Message-ID: <20140613121844.28165xow6vp939k4@posta1.provincia.treviso.it>
-Reply-To: mrs_tere@126.com
-Mime-Version: 1.0
-Content-Type: text/plain;
- charset=ISO-8859-1;
- DelSp="Yes";
- format="flowed"
-Content-Transfer-Encoding: 7bit
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 1/2] scsi_error: set DID_TIME_OUT correctly
+Date: Fri, 13 Jun 2014 14:01:45 +0200
+Message-ID: <1402660906-74661-2-git-send-email-hare@suse.de>
+References: <1402660906-74661-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 93-62-181-15.ip23.fastwebnet.it ([93.62.181.15]:51168 "EHLO
-	posta1.provincia.treviso.it" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752740AbaFMKwP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 Jun 2014 06:52:15 -0400
-Subject: 
-Content-Disposition: inline
+Received: from cantor2.suse.de ([195.135.220.15]:45832 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750828AbaFMMB5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 13 Jun 2014 08:01:57 -0400
+In-Reply-To: <1402660906-74661-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <jbottomley@parallels.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Bart vn Assche <bvanassche@acm.org>, Ewan Milne <emilne@redhat.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-Although you might be nervous about my e-mail as we have not met  
-before. My name is Mrs Teresa Au, I work with HSBC Hong Kong; there is  
-a sum of USD$23,200,000.00 business proposal I want to share with you.  
-It is absolutely risk  free; if you are interested send me a reply to  
-my private e-mail below : mrs_tere@126.com
+Any callbacks in scsi_timeout_out() might return BLK_EH_RESET_TIMER,
+in which case we should leave the result alone and not set
+DID_TIME_OUT, as the command didn't actually timeout.
 
-Best Regards,
-Email: mrs_tere@126.com
-Mrs Teresa Au.
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/scsi/scsi_error.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-
-
-
-
-
-----------------------------------------------------------------
-Provincia di Treviso - http://www.provincia.treviso.it
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 47a1ffc..ff176a6 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -291,11 +291,11 @@ enum blk_eh_timer_return scsi_times_out(struct request *req)
+ 		if (scsi_abort_command(scmd) == SUCCESS)
+ 			return BLK_EH_NOT_HANDLED;
+ 
+-	scmd->result |= DID_TIME_OUT << 16;
+-
+-	if (unlikely(rtn == BLK_EH_NOT_HANDLED &&
+-		     !scsi_eh_scmd_add(scmd, SCSI_EH_CANCEL_CMD)))
+-		rtn = BLK_EH_HANDLED;
++	if (unlikely(rtn == BLK_EH_NOT_HANDLED)) {
++		scmd->result |= DID_TIME_OUT << 16;
++		if (!scsi_eh_scmd_add(scmd, SCSI_EH_CANCEL_CMD))
++			rtn = BLK_EH_HANDLED;
++	}
+ 
+ 	return rtn;
+ }
+-- 
+1.7.12.4
 
