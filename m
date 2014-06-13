@@ -1,32 +1,37 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: scsi-mq
-Date: Fri, 13 Jun 2014 08:42:57 +0200
-Message-ID: <539A9D71.7020504@acm.org>
-References: <1402580946-11470-1-git-send-email-hch@lst.de>
+From: Ming Lei <ming.lei@canonical.com>
+Subject: Re: [PATCH v1 0/2]ata: Fix the dma state machine lockup for APM
+ X-Gene SoC
+Date: Fri, 13 Jun 2014 16:20:14 +0800
+Message-ID: <CACVXFVMTfNtBe3FXNuo-UqzY5fx+CpGhSCBOspM9G6By8Oi4RA@mail.gmail.com>
+References: <1402574362-24986-1-git-send-email-stripathi@apm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1402580946-11470-1-git-send-email-hch@lst.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Robert Elliot <Elliott@hp.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1402574362-24986-1-git-send-email-stripathi@apm.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Suman Tripathi <stripathi@apm.com>
+Cc: Olof Johansson <olof@lixom.net>, Tejun Heo <tj@kernel.org>, Arnd Bergmann <arnd@arndb.de>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, ddutile@redhat.com, jcm@redhat.com, patches@apm.com
 List-Id: linux-scsi@vger.kernel.org
 
-On 06/12/14 15:48, Christoph Hellwig wrote:
-> The usage of blk-mq dramatically decreases CPU usage under all workloads going
-> down from 100% CPU usage that the old setup can hit easily to usually less
-> than 20% for maxing out storage subsystems with 512 byte reads and writes,
-> and it allows to easily achieve millions of IOPS. Bart and Robert have
-> helped with some very detailed measurements that they might be able to send
-> in reply to this, although these usually involve significantly reworked low
-> level drivers to avoid other bottle necks.
+Hi Suman,
 
-Thanks Christoph for writing up this excellent summary. In case anyone
-is wondering which LLD changes Christoph is referring to: the tests I
-ran myself were with an SRP initiator driver modified to use multiple
-RDMA channels between initiator and target instead of a single channel.
-I will post these changes for review on the linux-rdma mailing list as
-soon as I have the time.
+On Thu, Jun 12, 2014 at 7:59 PM, Suman Tripathi <stripathi@apm.com> wrote:
+> Suman Tripathi (2):
+>   libahci: Implement the function ahci_restart_engine to restart the
+>     port dma engine.
+>   ata: Fix the dma state machine lockup for the PIO mode commands.
+>
+>  drivers/ata/ahci.h       |  3 +++
+>  drivers/ata/ahci_xgene.c | 17 +++--------------
+>  drivers/ata/libahci.c    | 43 +++++++++++++++++++++++++++++++++++++++++++
+>  3 files changed, 49 insertions(+), 14 deletions(-)
 
-Bart.
+Looks the patch doesn't fix the issue of booting hang on my
+mustang board.
+
+And the ata failure message still can be seen.
+
+
+Thanks,
+--
+Ming Lei
