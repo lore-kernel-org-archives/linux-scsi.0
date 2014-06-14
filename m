@@ -1,96 +1,57 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [GIT PULL] Final round of SCSI updates for the 3.15+ merge window
-Date: Fri, 13 Jun 2014 16:57:56 -0700
-Message-ID: <1402703876.2224.112.camel@dabdike.int.hansenpartnership.com>
+From: Venkatesh Srinivas <venkateshs@google.com>
+Subject: Re: virtio-scsi issues duplicate tags when async_abort is enabled
+Date: Fri, 13 Jun 2014 19:50:44 -0700
+Message-ID: <CAHdzE-_dDiHzj4pDUsVOdS26m7z3Rdgdt+9Wh=x-_mJL6XThXQ@mail.gmail.com>
+References: <CAHdzE-8k6A6kVB7DnOc6_XKg6DANLRFmP9+f4oXE1vPoLhOK=g@mail.gmail.com>
+	<20140613185221.GA11872@infradead.org>
+	<1402686574.2224.61.camel@dabdike.int.hansenpartnership.com>
+	<CAHdzE-8kNKgKXyHUwO+HSMnvoHzb-pKW6PLWWLKohk2d+=gqyQ@mail.gmail.com>
+	<1402687105.2224.64.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ig0-f170.google.com ([209.85.213.170]:57689 "EHLO
+	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753722AbaFNCup (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Jun 2014 22:50:45 -0400
+Received: by mail-ig0-f170.google.com with SMTP id h3so2178256igd.3
+        for <linux-scsi@vger.kernel.org>; Fri, 13 Jun 2014 19:50:44 -0700 (PDT)
+In-Reply-To: <1402687105.2224.64.camel@dabdike.int.hansenpartnership.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, Paolo Bonzini <pbonzini@redhat.com>, linux-scsi@vger.kernel.org, stable@vger.kernel.org
 
-This is just a couple of drivers (hpsa and lpfc) that got left out for
-further testing in linux-next.  We also have one fix to a prior
-submission (qla2xxx sparse).
+On 6/13/14, James Bottomley <James.Bottomley@hansenpartnership.com> wrote:
+...
+> OK, I've no idea what's in distro kernels, so you're looking for this
+> fix:
+>
+> commit d555a2abf3481f81303d835046a5ec2c4fb3ca8e
+> Author: James Bottomley <JBottomley@Parallels.com>
+> Date:   Fri Mar 28 10:50:17 2014 -0700
+>
+>     [SCSI] Fix spurious request sense in error handling
+>
+> It went into v3.15-rc3.  It looks like it wasn't backported to stable.
 
-The patch is available here:
+Backporting this fix to 3.14 appears to resolve this problem. Thank you!
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-for-linus
+0) I don't understand how a command would be re-issued while its
+original is inflight without this patch. If we send down a spurious
+REQUESE SENSE and get NO SENSE, scsi_decide_disposition() in
+scsi_eh_get_sense() will return FAILED and not resubmit the command.
+Do you know the trace that results in the duplicate command being sent
+down?
 
-The short changelog is:
+1) virtio-scsi uses the address of the scsi_cmnd as a tag; if
+scsi_eh_get_sense() is invoked for a timed-out command before the
+command returned, the REQUEST SENSE task from scsi_send_eh_cmnd() will
+have the same tag as the unreturned prior task. Scary.
 
-James Smart (16):
-      lpfc: Update lpfc version to driver version 10.2.8001.0
-      lpfc: Fix ExpressLane priority setup
-      lpfc: mark old devices as obsolete
-      lpfc: Fix for initializing RRQ bitmap
-      lpfc: Fix for cleaning up stale ring flag and sp_queue_event entries
-      lpfc: Update lpfc version to driver version 10.2.8000.0
-      lpfc: Update Copyright on changed files from 8.3.45 patches
-      lpfc: Update Copyright on changed files
-      lpfc: Fixed locking for scsi task management commands
-      lpfc: Convert runtime references to old xlane cfg param to fof cfg param
-      lpfc: Fix FW dump using sysfs
-      lpfc: Fix SLI4 s abort loop to process all FCP rings and under ring_lock
-      lpfc: Fixed kernel panic in lpfc_abort_handler
-      lpfc: Fix locking for postbufq when freeing
-      lpfc: Fix locking for lpfc_hba_down_post
-      lpfc: Fix dynamic transitions of FirstBurst from on to off
+2) We would like to see this patch sent to the stable kernel tree; do
+you plan to send it out to stable@? Are there any further tests you
+plan to run on that particular fix before sending it that way?
 
-Justin Lindley (1):
-      hpsa: change doorbell reset delay to ten seconds
-
-Quinn Tran (1):
-      qla2xxx: fix sparse warnings introduced by previous target mode t10-dif patch
-
-Stephen M. Cameron (18):
-      hpsa: fix handling of hpsa_volume_offline return value
-      hpsa: return -ENOMEM not -1 on kzalloc failure in hpsa_get_device_id
-      hpsa: remove messages about volume status VPD inquiry page not supported
-      hpsa: report check condition even if no sense data present for ioaccel2 mode
-      hpsa: remove bad unlikely annotation from device list updating code
-      hpsa: fix event filtering to prevent excessive rescans with old firmware
-      hpsa: kill annoying messages about SSD Smart Path retries
-      hpsa: define extended_report_lun_entry data structure
-      hpsa: Rearrange start_io to avoid one unlock/lock sequence in main io path
-      hpsa: avoid unnecessary readl on every command submission
-      hpsa: use per-cpu variable for lockup_detected
-      hpsa: set irq affinity hints to route MSI-X vectors across CPUs
-      hpsa: allocate reply queues individually
-      hpsa: choose number of reply queues more intelligently.
-      hpsa: remove dev_dbg() calls from hot paths
-      hpsa: use gcc aligned attribute instead of manually padding structs
-      hpsa: allow passthru ioctls to work with bidirectional commands
-      hpsa: remove unused fields from struct ctlr_info
-
-And the diffstat
-
- drivers/scsi/hpsa.c               | 266 ++++++++++++++++++++--------------
- drivers/scsi/hpsa.h               |  42 +++---
- drivers/scsi/hpsa_cmd.h           |  49 +++----
- drivers/scsi/lpfc/lpfc.h          |   3 +-
- drivers/scsi/lpfc/lpfc_attr.c     |  23 +--
- drivers/scsi/lpfc/lpfc_bsg.c      |   2 +-
- drivers/scsi/lpfc/lpfc_bsg.h      |   2 +-
- drivers/scsi/lpfc/lpfc_crtn.h     |   6 +-
- drivers/scsi/lpfc/lpfc_debugfs.c  |   4 +-
- drivers/scsi/lpfc/lpfc_els.c      |   2 +-
- drivers/scsi/lpfc/lpfc_hbadisc.c  |   5 +-
- drivers/scsi/lpfc/lpfc_hw.h       |   2 +-
- drivers/scsi/lpfc/lpfc_hw4.h      |   2 +-
- drivers/scsi/lpfc/lpfc_init.c     | 258 +++++++++++++++++++++++----------
- drivers/scsi/lpfc/lpfc_mem.c      |   2 +-
- drivers/scsi/lpfc/lpfc_scsi.c     |  60 ++++++--
- drivers/scsi/lpfc/lpfc_scsi.h     |   2 +-
- drivers/scsi/lpfc/lpfc_sli.c      | 297 +++++++++++++++++++++++++++++---------
- drivers/scsi/lpfc/lpfc_sli.h      |   2 +-
- drivers/scsi/lpfc/lpfc_sli4.h     |   2 +-
- drivers/scsi/lpfc/lpfc_version.h  |   6 +-
- drivers/scsi/qla2xxx/qla_def.h    |  16 +-
- drivers/scsi/qla2xxx/qla_target.c |  15 +-
- drivers/scsi/qla2xxx/qla_target.h |  16 +-
- 24 files changed, 715 insertions(+), 369 deletions(-)
-
-James
+Thanks,
+-- vs;
