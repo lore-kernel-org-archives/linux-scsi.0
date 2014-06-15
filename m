@@ -1,42 +1,22 @@
-From: Joe Perches <joe@perches.com>
-Subject: [PATCH -next 15/26] bfa: Use dma_zalloc_coherent
-Date: Sun, 15 Jun 2014 13:37:44 -0700
-Message-ID: <bd5384bd59bf7eb9bf616832f5c51fdb96be9764.1402863905.git.joe@perches.com>
-References: <cover.1402863904.git.joe@perches.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <cover.1402863904.git.joe@perches.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
+From: "Angela D.Dawes" <d.angeladawes@outlook.com>
+Subject: Re:
+Date: Sun, 15 Jun 2014 22:36:45 +0200
+Message-ID: <20140615223645.Horde._3zSeNrs6UCWvWHIFk3s5g1@horde5.physi.uni-heidelberg.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8; format=flowed; DelSp=Yes
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from relay.uni-heidelberg.de ([129.206.100.212]:38570 "EHLO
+	relay.uni-heidelberg.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751373AbaFOWAT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 15 Jun 2014 18:00:19 -0400
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Use the zeroing function instead of dma_alloc_coherent & memset(,0,)
+This is a personal email directed to you. My wife and I have a gift
+donation for you, to know more details and claims, kindly contact us at:
+d.angeladawes@outlook.com
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/scsi/bfa/bfad_bsg.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Regards,
+Dave & Angela Dawes
 
-diff --git a/drivers/scsi/bfa/bfad_bsg.c b/drivers/scsi/bfa/bfad_bsg.c
-index 8994fb8..65f3e74 100644
---- a/drivers/scsi/bfa/bfad_bsg.c
-+++ b/drivers/scsi/bfa/bfad_bsg.c
-@@ -3270,13 +3270,13 @@ bfad_fcxp_map_sg(struct bfad_s *bfad, void *payload_kbuf,
- 	/* Allocate dma coherent memory */
- 	buf_info = buf_base;
- 	buf_info->size = payload_len;
--	buf_info->virt = dma_alloc_coherent(&bfad->pcidev->dev, buf_info->size,
--					&buf_info->phys, GFP_KERNEL);
-+	buf_info->virt = dma_zalloc_coherent(&bfad->pcidev->dev,
-+					     buf_info->size, &buf_info->phys,
-+					     GFP_KERNEL);
- 	if (!buf_info->virt)
- 		goto out_free_mem;
- 
- 	/* copy the linear bsg buffer to buf_info */
--	memset(buf_info->virt, 0, buf_info->size);
- 	memcpy(buf_info->virt, payload_kbuf, buf_info->size);
- 
- 	/*
--- 
-1.8.1.2.459.gbcd45b4.dirty
