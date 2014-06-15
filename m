@@ -1,48 +1,63 @@
 From: Joe Perches <joe@perches.com>
-Subject: [PATCH -next 20/26] megaraid: Use dma_zalloc_coherent
-Date: Sun, 15 Jun 2014 13:37:49 -0700
-Message-ID: <c984d1be8d1f03baa81f4d1d319d1de8d51688f1.1402863905.git.joe@perches.com>
+Subject: [PATCH -next 22/26] qla2xxx: Use dma_zalloc_coherent
+Date: Sun, 15 Jun 2014 13:37:51 -0700
+Message-ID: <5e845f43a014ad7dd4ab3a4fdcd95b879bc496ef.1402863905.git.joe@perches.com>
 References: <cover.1402863904.git.joe@perches.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1402863904.git.joe@perches.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
-Cc: Neela Syam Kolli <megaraidlinux@lsi.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
+Cc: qla2xxx-upstream@qlogic.com, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 Use the zeroing function instead of dma_alloc_coherent & memset(,0,)
 
 Signed-off-by: Joe Perches <joe@perches.com>
 ---
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
+ drivers/scsi/qla2xxx/qla_init.c | 10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index 2260041..1b18010 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -608,10 +608,9 @@ megasas_ioc_init_fusion(struct megasas_instance *instance)
- 		goto fail_get_cmd;
- 	}
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index e218441..46990f4 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -1526,8 +1526,8 @@ try_fce:
+ 			    FCE_SIZE, ha->fce, ha->fce_dma);
  
--	IOCInitMessage =
--	  dma_alloc_coherent(&instance->pdev->dev,
--			     sizeof(struct MPI2_IOC_INIT_REQUEST),
--			     &ioc_init_handle, GFP_KERNEL);
-+	IOCInitMessage = dma_zalloc_coherent(&instance->pdev->dev,
-+					     sizeof(struct MPI2_IOC_INIT_REQUEST),
-+					     &ioc_init_handle, GFP_KERNEL);
+ 		/* Allocate memory for Fibre Channel Event Buffer. */
+-		tc = dma_alloc_coherent(&ha->pdev->dev, FCE_SIZE, &tc_dma,
+-		    GFP_KERNEL);
++		tc = dma_zalloc_coherent(&ha->pdev->dev, FCE_SIZE, &tc_dma,
++					 GFP_KERNEL);
+ 		if (!tc) {
+ 			ql_log(ql_log_warn, vha, 0x00be,
+ 			    "Unable to allocate (%d KB) for FCE.\n",
+@@ -1535,7 +1535,6 @@ try_fce:
+ 			goto try_eft;
+ 		}
  
- 	if (!IOCInitMessage) {
- 		printk(KERN_ERR "Could not allocate memory for "
-@@ -620,8 +619,6 @@ megasas_ioc_init_fusion(struct megasas_instance *instance)
- 		goto fail_fw_init;
- 	}
+-		memset(tc, 0, FCE_SIZE);
+ 		rval = qla2x00_enable_fce_trace(vha, tc_dma, FCE_NUM_BUFFERS,
+ 		    ha->fce_mb, &ha->fce_bufs);
+ 		if (rval) {
+@@ -1560,8 +1559,8 @@ try_eft:
+ 			    EFT_SIZE, ha->eft, ha->eft_dma);
  
--	memset(IOCInitMessage, 0, sizeof(struct MPI2_IOC_INIT_REQUEST));
--
- 	IOCInitMessage->Function = MPI2_FUNCTION_IOC_INIT;
- 	IOCInitMessage->WhoInit	= MPI2_WHOINIT_HOST_DRIVER;
- 	IOCInitMessage->MsgVersion = cpu_to_le16(MPI2_VERSION);
+ 		/* Allocate memory for Extended Trace Buffer. */
+-		tc = dma_alloc_coherent(&ha->pdev->dev, EFT_SIZE, &tc_dma,
+-		    GFP_KERNEL);
++		tc = dma_zalloc_coherent(&ha->pdev->dev, EFT_SIZE, &tc_dma,
++					 GFP_KERNEL);
+ 		if (!tc) {
+ 			ql_log(ql_log_warn, vha, 0x00c1,
+ 			    "Unable to allocate (%d KB) for EFT.\n",
+@@ -1569,7 +1568,6 @@ try_eft:
+ 			goto cont_alloc;
+ 		}
+ 
+-		memset(tc, 0, EFT_SIZE);
+ 		rval = qla2x00_enable_eft_trace(vha, tc_dma, EFT_NUM_BUFFERS);
+ 		if (rval) {
+ 			ql_log(ql_log_warn, vha, 0x00c2,
 -- 
 1.8.1.2.459.gbcd45b4.dirty
