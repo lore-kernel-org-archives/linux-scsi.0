@@ -1,175 +1,52 @@
-From: Anil Gurumurthy <Anil.Gurumurthy@qlogic.com>
-Subject: RE: [PATCH -next 15/26] bfa: Use dma_zalloc_coherent
-Date: Mon, 16 Jun 2014 06:31:43 +0000
-Message-ID: <20B1A3CBD98F3845B3F5F56D8597EF59F98DD4@avmb2.qlogic.org>
-References: <cover.1402863904.git.joe@perches.com>
- <bd5384bd59bf7eb9bf616832f5c51fdb96be9764.1402863905.git.joe@perches.com>
+From: Thomas Schwinge <thomas@codesourcery.com>
+Subject: Re: Linux kernel crash (3.2.0-2-amd64) when trying to play audio CD
+Date: Mon, 16 Jun 2014 09:13:20 +0200
+Message-ID: <87sin5z5rj.fsf@schwinge.name>
+References: <87obojef7t.fsf@schwinge.name> <20120616181008.GB20623@liondog.tnic> <87ehpddw9k.fsf@schwinge.name> <20120618142900.GA9710@aftab.osrc.amd.com> <87sjdsd64r.fsf@schwinge.name> <20120618155141.GF8378@aftab.osrc.amd.com> <877gs69oue.fsf@schwinge.name> <20120913125825.GB19691@aftab.osrc.amd.com> <20120917172345.GH13879@aftab.osrc.amd.com> <87ehlu5l5b.fsf@schwinge.name>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_000_20B1A3CBD98F3845B3F5F56D8597EF59F98DD4avmb2qlogicorg_"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:21218 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753666AbaFPGbq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 Jun 2014 02:31:46 -0400
-Received: from pps.filterd (m0000643.ppops.net [127.0.0.1])
-	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id s5G6SVoP018591
-	for <linux-scsi@vger.kernel.org>; Sun, 15 Jun 2014 23:31:45 -0700
-Received: from avcashub1.qlogic.com (avcashub2.qlogic.com [198.70.193.116])
-	by mx0b-0016ce01.pphosted.com with ESMTP id 1mef8q7v50-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Sun, 15 Jun 2014 23:31:45 -0700
-In-Reply-To: <bd5384bd59bf7eb9bf616832f5c51fdb96be9764.1402863905.git.joe@perches.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/signed; boundary="=-=-="; micalg=pgp-sha1;
+	protocol="application/pgp-signature"
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <87ehlu5l5b.fsf@schwinge.name>
+Sender: linux-ide-owner@vger.kernel.org
+To: Borislav Petkov <bp@amd64.org>
+Cc: Borislav Petkov <bp@alien8.de>, debian-kernel@lists.debian.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Joe Perches <joe@perches.com>, linux-kernel <linux-kernel@vger.kernel.org>
-Cc: Sudarsana Kalluru <Sudarsana.Kalluru@qlogic.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
---_000_20B1A3CBD98F3845B3F5F56D8597EF59F98DD4avmb2qlogicorg_
-Content-Type: text/plain; charset="us-ascii"
+--=-=-=
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
-Thanks for the patch.
-Acked-by: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
+Hi!
 
------Original Message-----
-From: Joe Perches [mailto:joe@perches.com]
-Sent: 16 June 2014 02:08
-To: linux-kernel
-Cc: Anil Gurumurthy; Sudarsana Kalluru; James E.J. Bottomley; linux-scsi
-Subject: [PATCH -next 15/26] bfa: Use dma_zalloc_coherent
+On Sat, 22 Sep 2012 13:53:20 +0200, I wrote:
+> On Mon, 17 Sep 2012 19:23:45 +0200, Borislav Petkov <bp@amd64.org> wrote:
+> > On Thu, Sep 13, 2012 at 02:58:25PM +0200, Borislav Petkov wrote:
+> > > Here's the script, let me know how it goes:
+> >=20
+> > Here's a more correct version. [...]
 
-Use the zeroing function instead of dma_alloc_coherent & memset(,0,)
+> However, putting in that one audio CD still crashes the machine: [...]
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/scsi/bfa/bfad_bsg.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/bfa/bfad_bsg.c b/drivers/scsi/bfa/bfad_bsg.c inde=
-x 8994fb8..65f3e74 100644
---- a/drivers/scsi/bfa/bfad_bsg.c
-+++ b/drivers/scsi/bfa/bfad_bsg.c
-@@ -3270,13 +3270,13 @@ bfad_fcxp_map_sg(struct bfad_s *bfad, void *payload=
-_kbuf,
-        /* Allocate dma coherent memory */
-        buf_info =3D buf_base;
-        buf_info->size =3D payload_len;
--       buf_info->virt =3D dma_alloc_coherent(&bfad->pcidev->dev, buf_info-=
->size,
--                                       &buf_info->phys, GFP_KERNEL);
-+       buf_info->virt =3D dma_zalloc_coherent(&bfad->pcidev->dev,
-+                                            buf_info->size, &buf_info->phy=
-s,
-+                                            GFP_KERNEL);
-        if (!buf_info->virt)
-                goto out_free_mem;
-
-        /* copy the linear bsg buffer to buf_info */
--       memset(buf_info->virt, 0, buf_info->size);
-        memcpy(buf_info->virt, payload_kbuf, buf_info->size);
-
-        /*
---
-1.8.1.2.459.gbcd45b4.dirty
+The problem "solved itself": the machine recently died of hardware
+failure.  ;-|
 
 
-________________________________
+Gr=C3=BC=C3=9Fe,
+ Thomas
 
-This message and any attached documents contain information from QLogic Cor=
-poration or its wholly-owned subsidiaries that may be confidential. If you =
-are not the intended recipient, you may not read, copy, distribute, or use =
-this information. If you have received this transmission in error, please n=
-otify the sender immediately by reply e-mail and then delete this message.
+--=-=-=
+Content-Type: application/pgp-signature
 
---_000_20B1A3CBD98F3845B3F5F56D8597EF59F98DD4avmb2qlogicorg_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
 
-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
-AAAAQQBuAGkAbAAuAEcAdQByAHUAbQB1AHIAdABoAHkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAA
-AAAfAGQAAQAAAAoAAABTAE0AVABQAAAAAAACAUEAAQAAAHgAAAAAAAAAgSsfpL6jEBmdbgDdAQ9U
-AgAAAIBBAG4AaQBsACAARwB1AHIAdQBtAHUAcgB0AGgAeQAAAFMATQBUAFAAAABBAG4AaQBsAC4A
-RwB1AHIAdQBtAHUAcgB0AGgAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAJdAQAAADYAAABB
-AG4AaQBsAC4ARwB1AHIAdQBtAHUAcgB0AGgAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8A
-5V8BAAAAPgAAAHMAaQBwADoAYQBuAGkAbAAuAGcAdQByAHUAbQB1AHIAdABoAHkAQABxAGwAbwBn
-AGkAYwAuAGMAbwBtAAAAAAAfABoMAQAAACAAAABBAG4AaQBsACAARwB1AHIAdQBtAHUAcgB0AGgA
-eQAAAB8AHwwBAAAANgAAAEEAbgBpAGwALgBHAHUAcgB1AG0AdQByAHQAaAB5AEAAcQBsAG8AZwBp
-AGMALgBjAG8AbQAAAAAAHwAeDAEAAAAKAAAAUwBNAFQAUAAAAAAAAgEZDAEAAAB4AAAAAAAAAIEr
-H6S+oxAZnW4A3QEPVAIAAACAQQBuAGkAbAAgAEcAdQByAHUAbQB1AHIAdABoAHkAAABTAE0AVABQ
-AAAAQQBuAGkAbAAuAEcAdQByAHUAbQB1AHIAdABoAHkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAA
-HwABXQEAAAA2AAAAQQBuAGkAbAAuAEcAdQByAHUAbQB1AHIAdABoAHkAQABxAGwAbwBnAGkAYwAu
-AGMAbwBtAAAAAAAfAPg/AQAAACAAAABBAG4AaQBsACAARwB1AHIAdQBtAHUAcgB0AGgAeQAAAB8A
-I0ABAAAANgAAAEEAbgBpAGwALgBHAHUAcgB1AG0AdQByAHQAaAB5AEAAcQBsAG8AZwBpAGMALgBj
-AG8AbQAAAAAAHwAiQAEAAAAKAAAAUwBNAFQAUAAAAAAAAgH5PwEAAAB4AAAAAAAAAIErH6S+oxAZ
-nW4A3QEPVAIAAACAQQBuAGkAbAAgAEcAdQByAHUAbQB1AHIAdABoAHkAAABTAE0AVABQAAAAQQBu
-AGkAbAAuAEcAdQByAHUAbQB1AHIAdABoAHkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAJXQEA
-AAA2AAAAQQBuAGkAbAAuAEcAdQByAHUAbQB1AHIAdABoAHkAQABxAGwAbwBnAGkAYwAuAGMAbwBt
-AAAAAAAfADFAAQAAAAIAAAAAAAAACwBAOgEAAAAfADBAAQAAAAIAAAAAAAAAHwAaAAEAAAASAAAA
-SQBQAE0ALgBOAG8AdABlAAAAAAADAPE/CQQAAAsAQDoBAAAAAwD9P+QEAAACAQswAQAAABAAAABl
-PBp90xXUT6fCrtrtWUcvAwAXAAEAAABAADkAgHFmoyyJzwFAAAgwv6OjoyyJzwELACkAAAAAAAsA
-IwAAAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAHgAAAGEAYwBjAGUAcAB0AGwAYQBuAGcAdQBh
-AGcAZQAAAAAAAQAAAAwAAABlAG4ALQBVAFMAAAALAACACCAGAAAAAADAAAAAAAAARgAAAAAGhQAA
-AAAAAB8ANwABAAAAagAAAFIARQA6ACAAWwBQAEEAVABDAEgAIAAtAG4AZQB4AHQAIAAxADUALwAy
-ADYAXQAgAGIAZgBhADoAIABVAHMAZQAgAGQAbQBhAF8AegBhAGwAbABvAGMAXwBjAG8AaABlAHIA
-ZQBuAHQAAAAAAB8APQABAAAACgAAAFIARQA6ACAAAAAAAAMANgAAAAAAAwAuAAAAAAAfAEIQAQAA
-AJQAAAA8AGIAZAA1ADMAOAA0AGIAZAA1ADkAYgBmADcAZQBiADkAYgBmADYAMQA2ADgAMwAyAGYA
-NQBjADUAMQBmAGQAYgA5ADYAYgBlADkANwA2ADQALgAxADQAMAAyADgANgAzADkAMAA1AC4AZwBp
-AHQALgBqAG8AZQBAAHAAZQByAGMAaABlAHMALgBjAG8AbQA+AAAAAgFxAAEAAAAbAAAAAQHPiNnS
-OzzJXOYI+UKmpk6pelJxuZtzRomAAB8AcAABAAAAYgAAAFsAUABBAFQAQwBIACAALQBuAGUAeAB0
-ACAAMQA1AC8AMgA2AF0AIABiAGYAYQA6ACAAVQBzAGUAIABkAG0AYQBfAHoAYQBsAGwAbwBjAF8A
-YwBvAGgAZQByAGUAbgB0AAAAAAAfADUQAQAAAHQAAAA8ADIAMABCADEAQQAzAEMAQgBEADkAOABG
-ADMAOAA0ADUAQgAzAEYANQBGADUANgBEADgANQA5ADcARQBGADUAOQBGADkAOABEAEQANABAAGEA
-dgBtAGIAMgAuAHEAbABvAGcAaQBjAC4AbwByAGcAPgAAAB8AORABAAAA4gAAADwAYwBvAHYAZQBy
-AC4AMQA0ADAAMgA4ADYAMwA5ADAANAAuAGcAaQB0AC4AagBvAGUAQABwAGUAcgBjAGgAZQBzAC4A
-YwBvAG0APgAgADwAYgBkADUAMwA4ADQAYgBkADUAOQBiAGYANwBlAGIAOQBiAGYANgAxADYAOAAz
-ADIAZgA1AGMANQAxAGYAZABiADkANgBiAGUAOQA3ADYANAAuADEANAAwADIAOAA2ADMAOQAwADUA
-LgBnAGkAdAAuAGoAbwBlAEAAcABlAHIAYwBoAGUAcwAuAGMAbwBtAD4AAAAAAAMA3j+fTgAACwAA
-gAggBgAAAAAAwAAAAAAAAEYAAAAAA4UAAAAAAAADAACACCAGAAAAAADAAAAAAAAARgAAAAABhQAA
-AAAAAAMAgBD/////QAAHMF8c6Z8sic8BCwACAAEAAAADACYAAAAAAAsAKwAAAAAAAgFHAAEAAAAu
-AAAAYz1VUzthPSA7cD1RTG9naWM7bD1BVk1CMi0xNDA2MTYwNjMxNDNaLTEwOTE4AAAAAgEQMAEA
-AABGAAAAAAAAAKX2ulj4lJxAl6rmQzpEVr8HACCxo8vZjzhFs/X1bYWX71kAAAD0jRgAAGcEMYzL
-caJIpV3ex7oIX3kAS3qmFr8AAAAAHwD6PwEAAAAgAAAAQQBuAGkAbAAgAEcAdQByAHUAbQB1AHIA
-dABoAHkAAAADAAlZAQAAAAMAAIAIIAYAAAAAAMAAAAAAAABGAAAAABCFAAAAAAAACwAAgAggBgAA
-AAAAwAAAAAAAAEYAAAAADoUAAAAAAAADAACACCAGAAAAAADAAAAAAAAARgAAAAAYhQAAAAAAAAsA
-AIAIIAYAAAAAAMAAAAAAAABGAAAAAIKFAAAAAAAAHwAAgAggBgAAAAAAwAAAAAAAAEYAAAAA2IUA
-AAEAAAASAAAASQBQAE0ALgBOAG8AdABlAAAAAAADAA00/T8AAB8AAICGAwIAAAAAAMAAAAAAAABG
-AQAAACAAAAB4AC0AbQBzAC0AaABhAHMALQBhAHQAdABhAGMAaAAAAAEAAAACAAAAAAAAAB8AAICG
-AwIAAAAAAMAAAAAAAABGAQAAACIAAAB4AC0AbwByAGkAZwBpAG4AYQB0AGkAbgBnAC0AaQBwAAAA
-AAABAAAAGAAAAFsAMQAwAC4AMQAuADQALgAxADAAXQAAAAau
-
---_000_20B1A3CBD98F3845B3F5F56D8597EF59F98DD4avmb2qlogicorg_--
+iQEcBAEBAgAGBQJTnpkQAAoJENuKOtuXzphJkhAIAIHu7gDJt4JYUURhSlbXx7fj
+RStKgtmQwpavuWCVXgjhVyfFvMtRe35L4Ix12m7/W6rNZ+RTwDo+3vbotdxFUagE
+jb5hY985cojG0MAglg2tUzebbjAWvgJHAiopMeTnaWFsTyYzHzbbsdslA/SkEdQO
+4CVGAtMVLD9pnOoP6KHanN7NVD3Q4gxOSKVUDkOlvwLp7hUgNncdDjMM45/Fi7sU
+3dlcVIygLe6OvLH4LAcHAGJ7IlwkvhbqLtbCwLPJ2+Zu1TobndHNGW8MggY7Samy
+0NyPks0z3Ruf663VpIkhdTHpyAJLps6zbW94Aezl/o71RDjHRoBNsBNQQErd+vU=
+=oxc7
+-----END PGP SIGNATURE-----
+--=-=-=--
