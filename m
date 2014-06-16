@@ -1,35 +1,56 @@
-From: Ming Lei <ming.lei@canonical.com>
-Subject: Re: [PATCH v2 0/2]ata: Fix the dma state machine lockup for APM
- X-Gene SoC
-Date: Mon, 16 Jun 2014 23:59:21 +0800
-Message-ID: <CACVXFVPQhwyMN0ynhXkmD+DipmPiSHH2YFN++iwE64o=nghCxA@mail.gmail.com>
-References: <1402911336-31788-1-git-send-email-stripathi@apm.com>
+From: Ann Rudoff <arudoff@wwcc.wy.edu>
+Subject: =?iso-8859-1?Q?RE:_Postkassen_er_n=E6sten_fuld?=
+Date: Mon, 16 Jun 2014 17:17:48 +0000
+Message-ID: <5462452D78B4534FB279021586322D54DFA00C@RS-Mail.horizons.wwcc.cc.wy.us>
+References: <5462452D78B4534FB279021586322D54DF0081@RS-Mail.horizons.wwcc.cc.wy.us>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1402911336-31788-1-git-send-email-stripathi@apm.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Suman Tripathi <stripathi@apm.com>
-Cc: Olof Johansson <olof@lixom.net>, Tejun Heo <tj@kernel.org>, Arnd Bergmann <arnd@arndb.de>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, Don Dutile <ddutile@redhat.com>, Jon Masters <jcm@redhat.com>, patches@apm.com
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from rs-mail.wwcc.wy.edu ([137.90.10.107]:61675 "EHLO
+	rs-mail.wwcc.wy.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752171AbaFPRXg convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Jun 2014 13:23:36 -0400
+In-Reply-To: <5462452D78B4534FB279021586322D54DF0081@RS-Mail.horizons.wwcc.cc.wy.us>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-
-On Mon, Jun 16, 2014 at 5:35 PM, Suman Tripathi <stripathi@apm.com> wrote:
-> Suman Tripathi (2):
->   libahci: Implement the function ahci_restart_engine to restart the
->     port dma engine.
->   ata: Fix the dma state machine lockup for the IDENTIFY DEVICE PIO mode
->     command.
->
->  drivers/ata/ahci.h       |  4 ++++
->  drivers/ata/ahci_xgene.c | 17 +++--------------
->  drivers/ata/libahci.c    | 44 ++++++++++++++++++++++++++++++++++++++++++++
->  3 files changed, 51 insertions(+), 14 deletions(-)
-
-V2 looks good and makes my mutang board bootable, thanks.
-
-Reported-and-tested-by: Ming Lei <ming.lei@canonical.com>
+To: Ann Rudoff <arudoff@wwcc.wy.edu>
 
 
-Thanks,
+________________________________
+=46rom: Ann Rudoff
+Sent: Monday, June 16, 2014 10:29 AM
+To: Ann Rudoff
+Subject: Postkassen er n=E6sten fuld
+
+
+Postkassen er n=E6sten fuld.
+
+
+
+461MB                              500MB
+Nuv=E6rende st=F8rrelse    maksimal st=F8rrelse
+=46or=F8g din postkasse kontingent st=F8rrelse automatisk af
+Klik her
+http://webmasterhelpadmindk1.weebly.com/
+
+
+
+st=F8rrelse og udfylde de n=F8dvendige krav til automatisk at =F8ge din=
+ postkasse kontingent st=F8rrelse.
+
+
+
+VIGTIG NOTE: Du vil ikke kunne sende og modtage postmeddelelser p=E5 48=
+0MB.
+
+
+
+DENS helpdesk
+ADMIN TEAM
 --
-Ming Lei
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
