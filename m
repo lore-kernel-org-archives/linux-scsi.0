@@ -1,52 +1,39 @@
-From: Thomas Schwinge <thomas@codesourcery.com>
-Subject: Re: Linux kernel crash (3.2.0-2-amd64) when trying to play audio CD
-Date: Mon, 16 Jun 2014 09:13:20 +0200
-Message-ID: <87sin5z5rj.fsf@schwinge.name>
-References: <87obojef7t.fsf@schwinge.name> <20120616181008.GB20623@liondog.tnic> <87ehpddw9k.fsf@schwinge.name> <20120618142900.GA9710@aftab.osrc.amd.com> <87sjdsd64r.fsf@schwinge.name> <20120618155141.GF8378@aftab.osrc.amd.com> <877gs69oue.fsf@schwinge.name> <20120913125825.GB19691@aftab.osrc.amd.com> <20120917172345.GH13879@aftab.osrc.amd.com> <87ehlu5l5b.fsf@schwinge.name>
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: Re: [PATCH v2 RESEND 00/23] scsi: Use pci_enable_msix_range()
+ instead of pci_enable_msix()
+Date: Mon, 16 Jun 2014 09:35:56 +0200
+Message-ID: <20140616073556.GA359@dhcp-26-207.brq.redhat.com>
+References: <cover.1397461652.git.agordeev@redhat.com>
+ <20140424170903.GA29593@google.com>
+ <1398361868.6766.0.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-="; micalg=pgp-sha1;
-	protocol="application/pgp-signature"
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <87ehlu5l5b.fsf@schwinge.name>
-Sender: linux-ide-owner@vger.kernel.org
-To: Borislav Petkov <bp@amd64.org>
-Cc: Borislav Petkov <bp@alien8.de>, debian-kernel@lists.debian.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-pci-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1398361868.6766.0.camel@dabdike>
+Sender: linux-pci-owner@vger.kernel.org
+To: James Bottomley <jbottomley@parallels.com>
+Cc: "bhelgaas@google.com" <bhelgaas@google.com>, "DL-MPTFusionLinux@lsi.com" <DL-MPTFusionLinux@lsi.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "intel-linux-scu@intel.com" <intel-linux-scu@intel.com>, "iss_storagedev@hp.com" <iss_storagedev@hp.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "pv-drivers@vmware.com" <pv-drivers@vmware.com>, "qla2xxx-upstream@qlogic.com" <qla2xxx-upstream@qlogic.com>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "support@lsi.com" <support@lsi.com>, "iscsi-driver@qlogic.com" <iscsi-driver@qlogic.com>
 List-Id: linux-scsi@vger.kernel.org
 
---=-=-=
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+On Thu, Apr 24, 2014 at 05:51:09PM +0000, James Bottomley wrote:
+> > These depend on f7fc32c, which appeared in v3.15-rc1.  I had intended
+> > to merge these scsi updates at the same time, but I failed.  Would you
+> > like to take them now that f7fc32c is upstream?
+> 
+> OK, will add them.  I'm planning to base the scsi-misc tree on -rc3 once
+> we have our current crop of fixes upstream.
 
-Hi!
+Hi James,
 
-On Sat, 22 Sep 2012 13:53:20 +0200, I wrote:
-> On Mon, 17 Sep 2012 19:23:45 +0200, Borislav Petkov <bp@amd64.org> wrote:
-> > On Thu, Sep 13, 2012 at 02:58:25PM +0200, Borislav Petkov wrote:
-> > > Here's the script, let me know how it goes:
-> >=20
-> > Here's a more correct version. [...]
+If I need to repost the series to get it into you tree?
 
-> However, putting in that one audio CD still crashes the machine: [...]
+Thanks!
 
-The problem "solved itself": the machine recently died of hardware
-failure.  ;-|
+> James
+> 
 
-
-Gr=C3=BC=C3=9Fe,
- Thomas
-
---=-=-=
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQEcBAEBAgAGBQJTnpkQAAoJENuKOtuXzphJkhAIAIHu7gDJt4JYUURhSlbXx7fj
-RStKgtmQwpavuWCVXgjhVyfFvMtRe35L4Ix12m7/W6rNZ+RTwDo+3vbotdxFUagE
-jb5hY985cojG0MAglg2tUzebbjAWvgJHAiopMeTnaWFsTyYzHzbbsdslA/SkEdQO
-4CVGAtMVLD9pnOoP6KHanN7NVD3Q4gxOSKVUDkOlvwLp7hUgNncdDjMM45/Fi7sU
-3dlcVIygLe6OvLH4LAcHAGJ7IlwkvhbqLtbCwLPJ2+Zu1TobndHNGW8MggY7Samy
-0NyPks0z3Ruf663VpIkhdTHpyAJLps6zbW94Aezl/o71RDjHRoBNsBNQQErd+vU=
-=oxc7
------END PGP SIGNATURE-----
---=-=-=--
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
