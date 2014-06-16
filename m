@@ -1,172 +1,70 @@
-From: Ewan Milne <emilne@redhat.com>
-Subject: Re: [PATCH 2/2] scsi: Do not complete timed-out command
-Date: Mon, 16 Jun 2014 14:23:30 -0400
-Message-ID: <1402943010.6423.67.camel@localhost.localdomain>
-References: <1402660906-74661-1-git-send-email-hare@suse.de>
-	 <1402660906-74661-3-git-send-email-hare@suse.de>
-Reply-To: emilne@redhat.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: bradley.grove@gmail.com
+Subject: [PATCH] pm80xx: Fix hibernation issue
+Date: Mon, 16 Jun 2014 15:30:11 -0400
+Message-ID: <1402947011-3642-1-git-send-email-bgrove@attotech.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:1499 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755193AbaFPSYD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 Jun 2014 14:24:03 -0400
-In-Reply-To: <1402660906-74661-3-git-send-email-hare@suse.de>
+Received: from mail-qa0-f43.google.com ([209.85.216.43]:48460 "EHLO
+	mail-qa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751625AbaFPTa0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Jun 2014 15:30:26 -0400
+Received: by mail-qa0-f43.google.com with SMTP id k15so8148186qaq.30
+        for <linux-scsi@vger.kernel.org>; Mon, 16 Jun 2014 12:30:26 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@infradead.org>, Bart vn Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: JBottomley@parallels.com, xjtuwjp@gmail.com, ebrown@attotech.com, pcullen@attotech.com, Bradley Grove <bgrove@attotech.com>
 
-On Fri, 2014-06-13 at 14:01 +0200, Hannes Reinecke wrote:
-> There is a possible race between scsi_times_out() and scsi_done();
-> the LLDD is only notified about a timed out command by calling
-> scsi_try_to_abort_command(). Anytime before that the LLDD is
-> free to complete the command via scsi_done().
-> By this time, however, the command might've been timed-out already,
-> leaving us with a stale command in the error handler.
-> Fix this by separating out the two meanings of the
-> SCSI_EH_ABORT_SCHEDULED flag; it's used to signal that
-> a) the asynchronous abort has been schedule
-> and
-> b) that an asynchronous abourt had been running, the command
->    has been retried, and has timed out again.
-> 
-> This patch implements a new flag SCSI_EH_CMD_TIMEOUT to signal
-> that a command has run into a timeout (and thus can be used
-> to detect case b) above). The existing flag
-> SCSI_EH_CMD_ABORT_SCHEDULED is now restricted to signal
-> 'the asynchronous abort has been scheduled', and thus should be
-> checked in scsi_done() to avoid the mentioned race.
-> 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> ---
->  drivers/scsi/scsi.c       | 2 ++
->  drivers/scsi/scsi_error.c | 6 ++++--
->  drivers/scsi/scsi_priv.h  | 1 +
->  3 files changed, 7 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-> index 88d46fe..7a58fbe 100644
-> --- a/drivers/scsi/scsi.c
-> +++ b/drivers/scsi/scsi.c
-> @@ -739,6 +739,8 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
->   */
->  static void scsi_done(struct scsi_cmnd *cmd)
->  {
-> +	if (WARN_ON_ONCE(cmd->eh_eflags & SCSI_EH_ABORT_SCHEDULED))
-> +		return;
->  	trace_scsi_dispatch_cmd_done(cmd);
->  	blk_complete_request(cmd->request);
->  }
-> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> index ff176a6..cde9c11 100644
-> --- a/drivers/scsi/scsi_error.c
-> +++ b/drivers/scsi/scsi_error.c
-> @@ -125,11 +125,13 @@ scmd_eh_abort_handler(struct work_struct *work)
->  			scmd_printk(KERN_INFO, scmd,
->  				    "scmd %p eh timeout, not aborting\n",
->  				    scmd));
-> +		scmd->eh_eflags &= ~SCSI_EH_ABORT_SCHEDULED;
->  	} else {
->  		SCSI_LOG_ERROR_RECOVERY(3,
->  			scmd_printk(KERN_INFO, scmd,
->  				    "aborting command %p\n", scmd));
->  		rtn = scsi_try_to_abort_cmd(sdev->host->hostt, scmd);
-> +		scmd->eh_eflags &= ~SCSI_EH_ABORT_SCHEDULED;
->  		if (rtn == SUCCESS) {
->  			scmd->result |= DID_TIME_OUT << 16;
->  			if (scsi_host_eh_past_deadline(sdev->host)) {
-> @@ -185,17 +187,17 @@ scsi_abort_command(struct scsi_cmnd *scmd)
->  	struct Scsi_Host *shost = sdev->host;
->  	unsigned long flags;
->  
-> -	if (scmd->eh_eflags & SCSI_EH_ABORT_SCHEDULED) {
-> +	if (scmd->eh_eflags & SCSI_EH_CMD_TIMEOUT) {
->  		/*
->  		 * Retry after abort failed, escalate to next level.
->  		 */
-> -		scmd->eh_eflags &= ~SCSI_EH_ABORT_SCHEDULED;
->  		SCSI_LOG_ERROR_RECOVERY(3,
->  			scmd_printk(KERN_INFO, scmd,
->  				    "scmd %p previous abort failed\n", scmd));
->  		cancel_delayed_work(&scmd->abort_work);
->  		return FAILED;
->  	}
-> +	scmd->eh_eflags |= SCSI_EH_CMD_TIMEOUT;
->  
->  	/*
->  	 * Do not try a command abort if
-> diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
-> index 48e5b65..66b387d 100644
-> --- a/drivers/scsi/scsi_priv.h
-> +++ b/drivers/scsi/scsi_priv.h
-> @@ -20,6 +20,7 @@ struct scsi_nl_hdr;
->   */
->  #define SCSI_EH_CANCEL_CMD	0x0001	/* Cancel this cmd */
->  #define SCSI_EH_ABORT_SCHEDULED	0x0002	/* Abort has been scheduled */
-> +#define SCSI_EH_CMD_TIMEOUT	0x0004	/* Command has timed out */
->  
->  #define SCSI_SENSE_VALID(scmd) \
->  	(((scmd)->sense_buffer[0] & 0x70) == 0x70)
+From: Bradley Grove <bgrove@attotech.com>
 
-So, let me see if I follow the logic here...
+During hibernation, the HBA firmware may lose power and forget the device
+id info.   This causes the HBA to reject IO upon resume.   The fix is
+to call the libsas power management routines to make the domain device
+forgetful.
 
-This patch changes the meaning of the SCSI_EH_ABORT_SCHEDULED flag
-so that this flag is set during the time the queue_delayed_work() item
-is pending, until the LLD returns from the ->eh_abort_handler() call.
-It also adds a new flag SCSI_EH_CMD_TIMEOUT which is set (essentially)
-when the scmd has timed out, and prevent scsi_abort_command() from
-doing anything more than once (until scmd->eh_eflags is reset).
+This patch also changes the value of pm8001_flags during resume to allow
+completions to work.
 
-I don't quite get why scsi_eh_scmd_add() tests SCSI_EH_ABORT_SCHEDULED:
+This fixes bug 76681: https://bugzilla.kernel.org/show_bug.cgi?id=76681
 
->        if (shost->eh_deadline != -1 && !shost->last_reset)
->                shost->last_reset = jiffies;
->
->        ret = 1;
->        if (scmd->eh_eflags & SCSI_EH_ABORT_SCHEDULED)
->                eh_flag &= ~SCSI_EH_CANCEL_CMD;
->        scmd->eh_eflags |= eh_flag;
->        list_add_tail(&scmd->eh_entry, &shost->eh_cmd_q);
->        shost->host_failed++;
->        scsi_eh_wakeup(shost);
+Signed-off-by: Bradley Grove <bgrove@attotech.com>
+---
+ drivers/scsi/pm8001/pm8001_init.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-...since it seems like that flag wouldn't still be set by the time we
-get to the point where we are adding the scmd to the eh_cmd_q list.
-
-I'm also not sure why this case in scsi_decide_disposition():
-
->        case DID_ABORT:
->                if (scmd->eh_eflags & SCSI_EH_ABORT_SCHEDULED) {
->                        scmd->result |= DID_TIME_OUT << 16;
->                        return SUCCESS;
->                }
-
-...is looking at SCSI_EH_ABORT_SCHEDULED, for similar reasons.
-
-The WARN_ON_ONCE() case in scsi_done():
-
->static void scsi_done(struct scsi_cmnd *cmd)
->{
->        if (WARN_ON_ONCE(cmd->eh_eflags & SCSI_EH_ABORT_SCHEDULED))
->                return;
->        trace_scsi_dispatch_cmd_done(cmd);
->        blk_complete_request(cmd->request);
->}
-
-...seems like it should never go off because of the REQ_ATOM_COMPLETE
-logic in the block layer, assuming that logic is working.
-
-Can you verify this is the intended behavior, or perhaps explain
-what hole this patch is attempting to plug?  It seems like it is
-dealing with the case of scsi_done() being called after a timeout
-but before the delayed_work abort mechanism runs.  Is this actually
-what is happening?
-
-Reviewed-by: Ewan D. Milne <emilne@redhat.com>
-
-
-
+diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+index c4f31b21..9f51a1f 100644
+--- a/drivers/scsi/pm8001/pm8001_init.c
++++ b/drivers/scsi/pm8001/pm8001_init.c
+@@ -957,6 +957,7 @@ static int pm8001_pci_suspend(struct pci_dev *pdev, pm_message_t state)
+ 	int  i, j;
+ 	u32 device_state;
+ 	pm8001_ha = sha->lldd_ha;
++	sas_suspend_ha(sha);
+ 	flush_workqueue(pm8001_wq);
+ 	scsi_block_requests(pm8001_ha->shost);
+ 	if (!pdev->pm_cap) {
+@@ -1026,7 +1027,7 @@ static int pm8001_pci_resume(struct pci_dev *pdev)
+ 	rc = pci_go_44(pdev);
+ 	if (rc)
+ 		goto err_out_disable;
+-
++	sas_prep_resume_ha(sha);
+ 	/* chip soft rst only for spc */
+ 	if (pm8001_ha->chip_id == chip_8001) {
+ 		PM8001_CHIP_DISP->chip_soft_rst(pm8001_ha);
+@@ -1058,7 +1059,12 @@ static int pm8001_pci_resume(struct pci_dev *pdev)
+ 		for (i = 1; i < pm8001_ha->number_of_intr; i++)
+ 			PM8001_CHIP_DISP->interrupt_enable(pm8001_ha, i);
+ 	}
++	pm8001_ha->flags = PM8001F_INIT_TIME;
+ 	scsi_unblock_requests(pm8001_ha->shost);
++	pm8001_scan_start(pm8001_ha->shost);
++	msleep(100);
++	sas_resume_ha(sha);
++	pm8001_ha->flags = PM8001F_RUN_TIME;
+ 	return 0;
+ 
+ err_out_disable:
+-- 
+1.9.3
 
