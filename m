@@ -1,79 +1,36 @@
-From: Jack Wang <xjtuwjp@gmail.com>
-Subject: Re: [PATCH] pm8001: Fix potential null pointer dereference and memory
- leak.
-Date: Tue, 17 Jun 2014 14:28:56 +0200
-Message-ID: <53A03488.9060407@gmail.com>
-References: <1403003740-27487-1-git-send-email-mlombard@redhat.com>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: scsi-mq
+Date: Tue, 17 Jun 2014 16:27:52 +0200
+Message-ID: <53A05068.4080702@acm.org>
+References: <1402580946-11470-1-git-send-email-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wg0-f46.google.com ([74.125.82.46]:48836 "EHLO
-	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932444AbaFQM3L (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Jun 2014 08:29:11 -0400
-Received: by mail-wg0-f46.google.com with SMTP id y10so7075528wgg.5
-        for <linux-scsi@vger.kernel.org>; Tue, 17 Jun 2014 05:29:10 -0700 (PDT)
-In-Reply-To: <1403003740-27487-1-git-send-email-mlombard@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1402580946-11470-1-git-send-email-hch@lst.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Bart Van Assche <bvanassche@fusionio.com>, Robert Elliot <Elliott@hp.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Maurizio Lombardi <mlombard@redhat.com>
-Cc: lindar_liu@usish.com, hch@infradead.org, jbottomley@parallels.com, linux-scsi@vger.kernel.org
 
-On 06/17/2014 01:15 PM, Maurizio Lombardi wrote:
-> The pm8001_get_phy_settings_info() function does not check
-> the kzalloc() return value and does not free the allocated memory.
-> 
-> Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
+On 06/12/14 15:48, Christoph Hellwig wrote:
+> Bart and Robert have helped with some very detailed measurements that they
+> might be able to send in reply to this, although these usually involve
+> significantly reworked low level drivers to avoid other bottle necks.
 
-Looks good, thanks
-Acked-by: Jack Wang <xjtuwjp@gmail.com>
-> ---
->  drivers/scsi/pm8001/pm8001_init.c | 13 ++++++++++---
->  1 file changed, 10 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-> index c4f31b21..e90c89f 100644
-> --- a/drivers/scsi/pm8001/pm8001_init.c
-> +++ b/drivers/scsi/pm8001/pm8001_init.c
-> @@ -677,7 +677,7 @@ static void pm8001_init_sas_add(struct pm8001_hba_info *pm8001_ha)
->   * pm8001_get_phy_settings_info : Read phy setting values.
->   * @pm8001_ha : our hba.
->   */
-> -void pm8001_get_phy_settings_info(struct pm8001_hba_info *pm8001_ha)
-> +static int pm8001_get_phy_settings_info(struct pm8001_hba_info *pm8001_ha)
->  {
->  
->  #ifdef PM8001_READ_VPD
-> @@ -691,11 +691,15 @@ void pm8001_get_phy_settings_info(struct pm8001_hba_info *pm8001_ha)
->  	payload.offset = 0;
->  	payload.length = 4096;
->  	payload.func_specific = kzalloc(4096, GFP_KERNEL);
-> +	if (!payload.func_specific)
-> +		return -ENOMEM;
->  	/* Read phy setting values from flash */
->  	PM8001_CHIP_DISP->get_nvmd_req(pm8001_ha, &payload);
->  	wait_for_completion(&completion);
->  	pm8001_set_phy_profile(pm8001_ha, sizeof(u8), payload.func_specific);
-> +	kfree(payload.func_specific);
->  #endif
-> +	return 0;
->  }
->  
->  #ifdef PM8001_USE_MSIX
-> @@ -879,8 +883,11 @@ static int pm8001_pci_probe(struct pci_dev *pdev,
->  	pm8001_init_sas_add(pm8001_ha);
->  	/* phy setting support for motherboard controller */
->  	if (pdev->subsystem_vendor != PCI_VENDOR_ID_ADAPTEC2 &&
-> -		pdev->subsystem_vendor != 0)
-> -		pm8001_get_phy_settings_info(pm8001_ha);
-> +		pdev->subsystem_vendor != 0) {
-> +		rc = pm8001_get_phy_settings_info(pm8001_ha);
-> +		if (rc)
-> +			goto err_out_shost;
-> +	}
->  	pm8001_post_sas_ha_init(shost, chip);
->  	rc = sas_register_ha(SHOST_TO_SAS_HA(shost));
->  	if (rc)
-> 
+In case someone would like to see the results of the measurements I ran,
+these results can be found here:
+https://docs.google.com/file/d/0B1YQOreL3_FxUXFMSjhmNDBNNTg.
 
+Two important conclusions from the data in that PDF document are as follows:
+- A small but significant performance improvement for the traditional
+  SCSI mid-layer (use_blk_mq=N).
+- A very significant performance improvement for multithreaded
+  workloads with use_blk_mq=Y. As an example, the number of I/O
+  operations per second reported for the random write test increased
+  with 170%. That means 2.7 times the performance
+  of use_blk_mq=N.
+
+I think this means the scsi-mq patches are ready for wider use.
+
+Bart.
