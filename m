@@ -1,36 +1,46 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: scsi-mq
-Date: Tue, 17 Jun 2014 16:27:52 +0200
-Message-ID: <53A05068.4080702@acm.org>
-References: <1402580946-11470-1-git-send-email-hch@lst.de>
+From: Jeff Liu <jeff.liu@oracle.com>
+Subject: [PATCH 11/24] drviers/scsi: check sysfs init return value via IS_ERR
+ at iscsi_boot_create_kset
+Date: Tue, 17 Jun 2014 22:34:50 +0800
+Message-ID: <53A0520A.8050509@oracle.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1402580946-11470-1-git-send-email-hch@lst.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Bart Van Assche <bvanassche@fusionio.com>, Robert Elliot <Elliott@hp.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:50997 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932696AbaFQOfC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Jun 2014 10:35:02 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: JBottomley@parallels.com, gregkh@linuxfoundation.org
+Cc: linux-scsi@vger.kernel.org
 
-On 06/12/14 15:48, Christoph Hellwig wrote:
-> Bart and Robert have helped with some very detailed measurements that they
-> might be able to send in reply to this, although these usually involve
-> significantly reworked low level drivers to avoid other bottle necks.
+From: Jie Liu <jeff.liu@oracle.com>
 
-In case someone would like to see the results of the measurements I ran,
-these results can be found here:
-https://docs.google.com/file/d/0B1YQOreL3_FxUXFMSjhmNDBNNTg.
+kset_create_and_add() has been fixed to return the actual error ptr
+than NULL on failure, update iscsi_boot_create_kset() to check the
+return value via IS_ERR() accordingly.
 
-Two important conclusions from the data in that PDF document are as follows:
-- A small but significant performance improvement for the traditional
-  SCSI mid-layer (use_blk_mq=N).
-- A very significant performance improvement for multithreaded
-  workloads with use_blk_mq=Y. As an example, the number of I/O
-  operations per second reported for the random write test increased
-  with 170%. That means 2.7 times the performance
-  of use_blk_mq=N.
+Cc: James E.J. Bottomley <JBottomley@parallels.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+---
+ drivers/scsi/iscsi_boot_sysfs.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I think this means the scsi-mq patches are ready for wider use.
-
-Bart.
+diff --git a/drivers/scsi/iscsi_boot_sysfs.c b/drivers/scsi/iscsi_boot_sysfs.c
+index 680bf6f..821df62 100644
+--- a/drivers/scsi/iscsi_boot_sysfs.c
++++ b/drivers/scsi/iscsi_boot_sysfs.c
+@@ -443,7 +443,7 @@ struct iscsi_boot_kset *iscsi_boot_create_kset(const char *set_name)
+ 		return NULL;
+ 
+ 	boot_kset->kset = kset_create_and_add(set_name, NULL, firmware_kobj);
+-	if (!boot_kset->kset) {
++	if (IS_ERR(boot_kset->kset)) {
+ 		kfree(boot_kset);
+ 		return NULL;
+ 	}
+-- 
+1.8.3.2
