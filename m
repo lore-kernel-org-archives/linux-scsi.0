@@ -1,46 +1,49 @@
-From: Jeff Liu <jeff.liu@oracle.com>
-Subject: [PATCH 11/24] drviers/scsi: check sysfs init return value via IS_ERR
- at iscsi_boot_create_kset
-Date: Tue, 17 Jun 2014 22:34:50 +0800
-Message-ID: <53A0520A.8050509@oracle.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v2 1/2] libahci: Implement the function
+ ahci_restart_engine to restart the port dma engine.
+Date: Tue, 17 Jun 2014 12:21:56 -0400
+Message-ID: <20140617162156.GI31819@htj.dyndns.org>
+References: <1402911336-31788-1-git-send-email-stripathi@apm.com>
+ <1402911336-31788-2-git-send-email-stripathi@apm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:50997 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932696AbaFQOfC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Jun 2014 10:35:02 -0400
+Received: from mail-qa0-f49.google.com ([209.85.216.49]:46039 "EHLO
+	mail-qa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933325AbaFQQWA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Jun 2014 12:22:00 -0400
+Content-Disposition: inline
+In-Reply-To: <1402911336-31788-2-git-send-email-stripathi@apm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: JBottomley@parallels.com, gregkh@linuxfoundation.org
-Cc: linux-scsi@vger.kernel.org
+To: Suman Tripathi <stripathi@apm.com>
+Cc: olof@lixom.net, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com
 
-From: Jie Liu <jeff.liu@oracle.com>
+Hello,
 
-kset_create_and_add() has been fixed to return the actual error ptr
-than NULL on failure, update iscsi_boot_create_kset() to check the
-return value via IS_ERR() accordingly.
+On Mon, Jun 16, 2014 at 03:05:35PM +0530, Suman Tripathi wrote:
+> This patch implements the function ahci_restart_engine function to restart the port dma engine.
 
-Cc: James E.J. Bottomley <JBottomley@parallels.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Signed-off-by: Jie Liu <jeff.liu@oracle.com>
----
- drivers/scsi/iscsi_boot_sysfs.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Please fit the text under 80 column.
 
-diff --git a/drivers/scsi/iscsi_boot_sysfs.c b/drivers/scsi/iscsi_boot_sysfs.c
-index 680bf6f..821df62 100644
---- a/drivers/scsi/iscsi_boot_sysfs.c
-+++ b/drivers/scsi/iscsi_boot_sysfs.c
-@@ -443,7 +443,7 @@ struct iscsi_boot_kset *iscsi_boot_create_kset(const char *set_name)
- 		return NULL;
- 
- 	boot_kset->kset = kset_create_and_add(set_name, NULL, firmware_kobj);
--	if (!boot_kset->kset) {
-+	if (IS_ERR(boot_kset->kset)) {
- 		kfree(boot_kset);
- 		return NULL;
- 	}
+> ---
+
+I can't apply w/o your SOB.
+
+> +int ahci_restart_engine(struct ata_port *ap)
+> +{
+> +	ahci_stop_engine(ap);
+> +	ahci_start_fis_rx(ap);
+> +	ahci_start_engine(ap);
+> +
+> +	return 0;
+> +}
+> +EXPORT_SYMBOL_GPL(ahci_restart_engine);
+
+Why is this exported?  The next patch doesn't seem to use the function
+outside libahci.c proper.
+
+Thanks.
+
 -- 
-1.8.3.2
+tejun
