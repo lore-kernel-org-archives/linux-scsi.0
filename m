@@ -1,53 +1,36 @@
-From: Greg KH <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH 11/24] drviers/scsi: check sysfs init return value via
- IS_ERR at iscsi_boot_create_kset
-Date: Tue, 17 Jun 2014 12:22:19 -0700
-Message-ID: <20140617192219.GC4319@kroah.com>
-References: <53A0520A.8050509@oracle.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:55398 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756381AbaFQTSX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Jun 2014 15:18:23 -0400
-Content-Disposition: inline
-In-Reply-To: <53A0520A.8050509@oracle.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Fabian Frederick <fabf@skynet.be>
+Subject: [PATCH 1/1] drivers/scsi/aic94xx/aic94xx_init.c: remove null test before kfree
+Date: Tue, 17 Jun 2014 21:17:15 +0200
+Message-ID: <1403032635-5621-1-git-send-email-fabf@skynet.be>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Fabian Frederick <fabf@skynet.be>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Liu <jeff.liu@oracle.com>
-Cc: JBottomley@parallels.com, linux-scsi@vger.kernel.org
 
-On Tue, Jun 17, 2014 at 10:34:50PM +0800, Jeff Liu wrote:
-> From: Jie Liu <jeff.liu@oracle.com>
-> 
-> kset_create_and_add() has been fixed to return the actual error ptr
-> than NULL on failure, update iscsi_boot_create_kset() to check the
-> return value via IS_ERR() accordingly.
-> 
-> Cc: James E.J. Bottomley <JBottomley@parallels.com>
-> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
-> ---
->  drivers/scsi/iscsi_boot_sysfs.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/iscsi_boot_sysfs.c b/drivers/scsi/iscsi_boot_sysfs.c
-> index 680bf6f..821df62 100644
-> --- a/drivers/scsi/iscsi_boot_sysfs.c
-> +++ b/drivers/scsi/iscsi_boot_sysfs.c
-> @@ -443,7 +443,7 @@ struct iscsi_boot_kset *iscsi_boot_create_kset(const char *set_name)
->  		return NULL;
->  
->  	boot_kset->kset = kset_create_and_add(set_name, NULL, firmware_kobj);
-> -	if (!boot_kset->kset) {
-> +	if (IS_ERR(boot_kset->kset)) {
->  		kfree(boot_kset);
->  		return NULL;
->  	}
+Fix checkpatch warning:
+WARNING: kfree(NULL) is safe this check is probably not required
 
-James, please do not take this patch.
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org
+Signed-off-by: Fabian Frederick <fabf@skynet.be>
+---
+ drivers/scsi/aic94xx/aic94xx_init.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-thanks,
-
-greg k-h
+diff --git a/drivers/scsi/aic94xx/aic94xx_init.c b/drivers/scsi/aic94xx/aic94xx_init.c
+index c56741f..0bfdcba 100644
+--- a/drivers/scsi/aic94xx/aic94xx_init.c
++++ b/drivers/scsi/aic94xx/aic94xx_init.c
+@@ -597,8 +597,7 @@ static void asd_destroy_ha_caches(struct asd_ha_struct *asd_ha)
+ 	if (asd_ha->hw_prof.scb_ext)
+ 		asd_free_coherent(asd_ha, asd_ha->hw_prof.scb_ext);
+ 
+-	if (asd_ha->hw_prof.ddb_bitmap)
+-		kfree(asd_ha->hw_prof.ddb_bitmap);
++	kfree(asd_ha->hw_prof.ddb_bitmap);
+ 	asd_ha->hw_prof.ddb_bitmap = NULL;
+ 
+ 	for (i = 0; i < ASD_MAX_PHYS; i++) {
+-- 
+1.8.4.5
