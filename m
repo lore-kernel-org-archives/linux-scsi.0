@@ -1,81 +1,53 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2 2/2] ata: Fix the dma state machine lockup for the
- IDENTIFY DEVICE PIO mode command.
-Date: Tue, 17 Jun 2014 12:31:44 -0400
-Message-ID: <20140617163144.GJ31819@htj.dyndns.org>
-References: <1402911336-31788-1-git-send-email-stripathi@apm.com>
- <1402911336-31788-3-git-send-email-stripathi@apm.com>
+From: Greg KH <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH 11/24] drviers/scsi: check sysfs init return value via
+ IS_ERR at iscsi_boot_create_kset
+Date: Tue, 17 Jun 2014 12:22:19 -0700
+Message-ID: <20140617192219.GC4319@kroah.com>
+References: <53A0520A.8050509@oracle.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qc0-f173.google.com ([209.85.216.173]:33127 "EHLO
-	mail-qc0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964938AbaFQQbs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Jun 2014 12:31:48 -0400
+Received: from mail.linuxfoundation.org ([140.211.169.12]:55398 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756381AbaFQTSX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Jun 2014 15:18:23 -0400
 Content-Disposition: inline
-In-Reply-To: <1402911336-31788-3-git-send-email-stripathi@apm.com>
+In-Reply-To: <53A0520A.8050509@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Suman Tripathi <stripathi@apm.com>
-Cc: olof@lixom.net, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com
+To: Jeff Liu <jeff.liu@oracle.com>
+Cc: JBottomley@parallels.com, linux-scsi@vger.kernel.org
 
-On Mon, Jun 16, 2014 at 03:05:36PM +0530, Suman Tripathi wrote:
-> This patch fixes the dma state machine lockup due to the IDENTIFY DEVICE PIO mode command. The controller is unable to clear the BSY bit after receiving the PIO setup FIS and results the dma state machine to go into the CMFatalErrorUpdate state resulting in the dma state machine lockup.
-
-Ditto on description formatting and SOB.  Also, please describe why
-this patch is removing the restart from read_id.
-
-> +int ahci_complete_pio_cmd(struct ata_port *ap, u32 cmd_done)
-> +{
-> +	struct ata_queued_cmd *qc;
-> +
-> +	while (cmd_done) {
-> +		unsigned int tag = __ffs(cmd_done);
-> +
-> +		qc = ata_qc_from_tag(ap, tag);
-> +		if (qc) {
-> +			/*
-> +			 * For the IDENTIFY DEVICE PIO command,
-> +			 * some controller's unable to clear the BSY bit after
-> +			 * receiving the PIO Setup FIS from device resulting
-> +			 * the DMA state to go into CMFatalErrorUpdate state.
-> +			 * So need to restart the dma engine to get the
-> +			 * controller out of this state.
-> +			 */
-> +			if (qc->tf.command == ATA_CMD_ID_ATA)
-> +				ahci_restart_engine(ap);
-> +		}
-> +		cmd_done &= ~(1 << tag);
-> +	}
-> +
-> +	return 0;
-> +}
-> +
->  static void ahci_error_intr(struct ata_port *ap, u32 irq_stat)
->  {
->  	struct ahci_host_priv *hpriv = ap->host->private_data;
-> @@ -1778,6 +1804,14 @@ static void ahci_handle_port_interrupt(struct ata_port *ap,
+On Tue, Jun 17, 2014 at 10:34:50PM +0800, Jeff Liu wrote:
+> From: Jie Liu <jeff.liu@oracle.com>
+> 
+> kset_create_and_add() has been fixed to return the actual error ptr
+> than NULL on failure, update iscsi_boot_create_kset() to check the
+> return value via IS_ERR() accordingly.
+> 
+> Cc: James E.J. Bottomley <JBottomley@parallels.com>
+> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+> ---
+>  drivers/scsi/iscsi_boot_sysfs.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/iscsi_boot_sysfs.c b/drivers/scsi/iscsi_boot_sysfs.c
+> index 680bf6f..821df62 100644
+> --- a/drivers/scsi/iscsi_boot_sysfs.c
+> +++ b/drivers/scsi/iscsi_boot_sysfs.c
+> @@ -443,7 +443,7 @@ struct iscsi_boot_kset *iscsi_boot_create_kset(const char *set_name)
+>  		return NULL;
+>  
+>  	boot_kset->kset = kset_create_and_add(set_name, NULL, firmware_kobj);
+> -	if (!boot_kset->kset) {
+> +	if (IS_ERR(boot_kset->kset)) {
+>  		kfree(boot_kset);
+>  		return NULL;
 >  	}
-> 
-> 
-> +	/* Due to HW errata, some controllers need special handling
-> +	 * of the completion of some PIO commands.
-> +	 */
-> +	if (hpriv->flags & AHCI_HFLAG_BROKEN_PIO_CMD) {
-> +		u32 cmd_done = ap->qc_active ^ qc_active;
-> +		ahci_complete_pio_cmd(ap, cmd_done);
-> +	}
 
-Heh, I feel this is a bit too specific to bury in libahci.c and don't
-really like adding this sort workaround in the hot path for everybody.
-Then again, ahci interrupt handler isn't exactly structured in a way
-which is easy to wrap and create a custom one.
+James, please do not take this patch.
 
-Does this have to happen from interrupt path tho?  Can't you just
-record the last protocol executed and restart the engine on the next
-qc_issue?
+thanks,
 
-Thanks.
-
--- 
-tejun
+greg k-h
