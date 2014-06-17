@@ -1,36 +1,93 @@
-From: Fabian Frederick <fabf@skynet.be>
-Subject: [PATCH 1/1] drivers/scsi/aic94xx/aic94xx_init.c: remove null test before kfree
-Date: Tue, 17 Jun 2014 21:17:15 +0200
-Message-ID: <1403032635-5621-1-git-send-email-fabf@skynet.be>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Fabian Frederick <fabf@skynet.be>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
+From: Bradley Grove <bgrove@attotech.com>
+Subject: Re: [PATCH] pm80xx: Fix hibernation issue
+Date: Tue, 17 Jun 2014 16:55:06 -0400
+Message-ID: <53A0AB2A.1060301@attotech.com>
+References: <1402947011-3642-1-git-send-email-bgrove@attotech.com> <1402963463.1934.0.camel@jarvis.lan>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sw.attotech.com ([208.69.85.34]:41162 "EHLO
+	NOTESERV1.attotech.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S965210AbaFQVKU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Jun 2014 17:10:20 -0400
+In-Reply-To: <1402963463.1934.0.camel@jarvis.lan>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, bradley.grove@gmail.com
+Cc: linux-scsi@vger.kernel.org, xjtuwjp@gmail.com, ebrown@attotech.com, pcullen@attotech.com
 
-Fix checkpatch warning:
-WARNING: kfree(NULL) is safe this check is probably not required
 
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org
-Signed-off-by: Fabian Frederick <fabf@skynet.be>
----
- drivers/scsi/aic94xx/aic94xx_init.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+James,
 
-diff --git a/drivers/scsi/aic94xx/aic94xx_init.c b/drivers/scsi/aic94xx/aic94xx_init.c
-index c56741f..0bfdcba 100644
---- a/drivers/scsi/aic94xx/aic94xx_init.c
-+++ b/drivers/scsi/aic94xx/aic94xx_init.c
-@@ -597,8 +597,7 @@ static void asd_destroy_ha_caches(struct asd_ha_struct *asd_ha)
- 	if (asd_ha->hw_prof.scb_ext)
- 		asd_free_coherent(asd_ha, asd_ha->hw_prof.scb_ext);
- 
--	if (asd_ha->hw_prof.ddb_bitmap)
--		kfree(asd_ha->hw_prof.ddb_bitmap);
-+	kfree(asd_ha->hw_prof.ddb_bitmap);
- 	asd_ha->hw_prof.ddb_bitmap = NULL;
- 
- 	for (i = 0; i < ASD_MAX_PHYS; i++) {
--- 
-1.8.4.5
+The sleep is there to delay until the work kicked off by the scan start 
+is complete.
+
+Jack Wang and I are working on a different fix that won't require the delay.
+
+Brad
+
+
+On 06/16/2014 08:04 PM, James Bottomley wrote:
+> On Mon, 2014-06-16 at 15:30 -0400, bradley.grove@gmail.com wrote:
+>> From: Bradley Grove <bgrove@attotech.com>
+>>
+>> During hibernation, the HBA firmware may lose power and forget the device
+>> id info.   This causes the HBA to reject IO upon resume.   The fix is
+>> to call the libsas power management routines to make the domain device
+>> forgetful.
+>>
+>> This patch also changes the value of pm8001_flags during resume to allow
+>> completions to work.
+>>
+>> This fixes bug 76681: https://bugzilla.kernel.org/show_bug.cgi?id=76681
+>>
+>> Signed-off-by: Bradley Grove <bgrove@attotech.com>
+>> ---
+>>   drivers/scsi/pm8001/pm8001_init.c | 8 +++++++-
+>>   1 file changed, 7 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+>> index c4f31b21..9f51a1f 100644
+>> --- a/drivers/scsi/pm8001/pm8001_init.c
+>> +++ b/drivers/scsi/pm8001/pm8001_init.c
+>> @@ -957,6 +957,7 @@ static int pm8001_pci_suspend(struct pci_dev *pdev, pm_message_t state)
+>>   	int  i, j;
+>>   	u32 device_state;
+>>   	pm8001_ha = sha->lldd_ha;
+>> +	sas_suspend_ha(sha);
+>>   	flush_workqueue(pm8001_wq);
+>>   	scsi_block_requests(pm8001_ha->shost);
+>>   	if (!pdev->pm_cap) {
+>> @@ -1026,7 +1027,7 @@ static int pm8001_pci_resume(struct pci_dev *pdev)
+>>   	rc = pci_go_44(pdev);
+>>   	if (rc)
+>>   		goto err_out_disable;
+>> -
+>> +	sas_prep_resume_ha(sha);
+>>   	/* chip soft rst only for spc */
+>>   	if (pm8001_ha->chip_id == chip_8001) {
+>>   		PM8001_CHIP_DISP->chip_soft_rst(pm8001_ha);
+>> @@ -1058,7 +1059,12 @@ static int pm8001_pci_resume(struct pci_dev *pdev)
+>>   		for (i = 1; i < pm8001_ha->number_of_intr; i++)
+>>   			PM8001_CHIP_DISP->interrupt_enable(pm8001_ha, i);
+>>   	}
+>> +	pm8001_ha->flags = PM8001F_INIT_TIME;
+>>   	scsi_unblock_requests(pm8001_ha->shost);
+>> +	pm8001_scan_start(pm8001_ha->shost);
+>> +	msleep(100);
+>
+> What's the reason for the 0.1s sleep?  Something tells me it's to try to
+> ensure that all the work kicked off by the scan start is completed in
+> which case a sleep seems to be a bit racy.
+>
+> James
+>
+>> +	sas_resume_ha(sha);
+>> +	pm8001_ha->flags = PM8001F_RUN_TIME;
+>>   	return 0;
+>>
+>>   err_out_disable:
+>
+>
+
