@@ -1,93 +1,52 @@
-From: Bradley Grove <bgrove@attotech.com>
-Subject: Re: [PATCH] pm80xx: Fix hibernation issue
-Date: Tue, 17 Jun 2014 16:55:06 -0400
-Message-ID: <53A0AB2A.1060301@attotech.com>
-References: <1402947011-3642-1-git-send-email-bgrove@attotech.com> <1402963463.1934.0.camel@jarvis.lan>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: scsi-mq
+Date: Tue, 17 Jun 2014 20:44:58 -0700
+Message-ID: <53A10B3A.6050705@kernel.dk>
+References: <1402580946-11470-1-git-send-email-hch@lst.de> <53A05068.4080702@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sw.attotech.com ([208.69.85.34]:41162 "EHLO
-	NOTESERV1.attotech.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S965210AbaFQVKU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Jun 2014 17:10:20 -0400
-In-Reply-To: <1402963463.1934.0.camel@jarvis.lan>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <53A05068.4080702@acm.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>, Christoph Hellwig <hch@lst.de>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Bart Van Assche <bvanassche@fusionio.com>, Robert Elliot <Elliott@hp.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, bradley.grove@gmail.com
-Cc: linux-scsi@vger.kernel.org, xjtuwjp@gmail.com, ebrown@attotech.com, pcullen@attotech.com
 
-
-James,
-
-The sleep is there to delay until the work kicked off by the scan start 
-is complete.
-
-Jack Wang and I are working on a different fix that won't require the delay.
-
-Brad
-
-
-On 06/16/2014 08:04 PM, James Bottomley wrote:
-> On Mon, 2014-06-16 at 15:30 -0400, bradley.grove@gmail.com wrote:
->> From: Bradley Grove <bgrove@attotech.com>
->>
->> During hibernation, the HBA firmware may lose power and forget the device
->> id info.   This causes the HBA to reject IO upon resume.   The fix is
->> to call the libsas power management routines to make the domain device
->> forgetful.
->>
->> This patch also changes the value of pm8001_flags during resume to allow
->> completions to work.
->>
->> This fixes bug 76681: https://bugzilla.kernel.org/show_bug.cgi?id=76681
->>
->> Signed-off-by: Bradley Grove <bgrove@attotech.com>
->> ---
->>   drivers/scsi/pm8001/pm8001_init.c | 8 +++++++-
->>   1 file changed, 7 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
->> index c4f31b21..9f51a1f 100644
->> --- a/drivers/scsi/pm8001/pm8001_init.c
->> +++ b/drivers/scsi/pm8001/pm8001_init.c
->> @@ -957,6 +957,7 @@ static int pm8001_pci_suspend(struct pci_dev *pdev, pm_message_t state)
->>   	int  i, j;
->>   	u32 device_state;
->>   	pm8001_ha = sha->lldd_ha;
->> +	sas_suspend_ha(sha);
->>   	flush_workqueue(pm8001_wq);
->>   	scsi_block_requests(pm8001_ha->shost);
->>   	if (!pdev->pm_cap) {
->> @@ -1026,7 +1027,7 @@ static int pm8001_pci_resume(struct pci_dev *pdev)
->>   	rc = pci_go_44(pdev);
->>   	if (rc)
->>   		goto err_out_disable;
->> -
->> +	sas_prep_resume_ha(sha);
->>   	/* chip soft rst only for spc */
->>   	if (pm8001_ha->chip_id == chip_8001) {
->>   		PM8001_CHIP_DISP->chip_soft_rst(pm8001_ha);
->> @@ -1058,7 +1059,12 @@ static int pm8001_pci_resume(struct pci_dev *pdev)
->>   		for (i = 1; i < pm8001_ha->number_of_intr; i++)
->>   			PM8001_CHIP_DISP->interrupt_enable(pm8001_ha, i);
->>   	}
->> +	pm8001_ha->flags = PM8001F_INIT_TIME;
->>   	scsi_unblock_requests(pm8001_ha->shost);
->> +	pm8001_scan_start(pm8001_ha->shost);
->> +	msleep(100);
+On 2014-06-17 07:27, Bart Van Assche wrote:
+> On 06/12/14 15:48, Christoph Hellwig wrote:
+>> Bart and Robert have helped with some very detailed measurements that they
+>> might be able to send in reply to this, although these usually involve
+>> significantly reworked low level drivers to avoid other bottle necks.
 >
-> What's the reason for the 0.1s sleep?  Something tells me it's to try to
-> ensure that all the work kicked off by the scan start is completed in
-> which case a sleep seems to be a bit racy.
+> In case someone would like to see the results of the measurements I ran,
+> these results can be found here:
+> https://docs.google.com/file/d/0B1YQOreL3_FxUXFMSjhmNDBNNTg.
 >
-> James
->
->> +	sas_resume_ha(sha);
->> +	pm8001_ha->flags = PM8001F_RUN_TIME;
->>   	return 0;
->>
->>   err_out_disable:
->
->
+> Two important conclusions from the data in that PDF document are as follows:
+> - A small but significant performance improvement for the traditional
+>    SCSI mid-layer (use_blk_mq=N).
+> - A very significant performance improvement for multithreaded
+>    workloads with use_blk_mq=Y. As an example, the number of I/O
+>    operations per second reported for the random write test increased
+>    with 170%. That means 2.7 times the performance
+>    of use_blk_mq=N.
 
+Thanks for posting these numbers, Bart. The CPU utilization and IOPS 
+speak a very clear message. The only mystery is why the singe threaded 
+performance is down. That we need to get sort, but it's not a show 
+stopper for inclusion.
+
+If you run the single threaded tests and watch for queue depths, is 
+there a difference between blk-mq=y/scsi-mq and the stock kernel?
+
+> I think this means the scsi-mq patches are ready for wider use.
+
+I would agree. James, I haven't seen any comments from you on this yet. 
+I've run various bits of scsi-mq testing as well, and no ill effects 
+seen. On top of that, Christophs patches are nicely separated and have 
+general benefits even for the non-blk-mq cases. Time to shove them into 
+the queue for the next merge window?
+
+-- 
+Jens Axboe
