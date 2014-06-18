@@ -1,61 +1,130 @@
 From: Joe Lawrence <joe.lawrence@stratus.com>
-Subject: [PATCH 2/6] qla2xxx: Use qla2x00_clear_drv_active on probe failure
-Date: Wed, 18 Jun 2014 10:02:15 -0400
-Message-ID: <1403100139-1798-3-git-send-email-joe.lawrence@stratus.com>
+Subject: [PATCH 5/6] qla2xxx: Prevent removal and board_disable race
+Date: Wed, 18 Jun 2014 10:04:43 -0400
+Message-ID: <1403100284-1872-1-git-send-email-joe.lawrence@stratus.com>
 References: <1403100139-1798-1-git-send-email-joe.lawrence@stratus.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from p02c12o141.mxlogic.net ([208.65.145.74]:56876 "EHLO
-	p02c12o141.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751792AbaFROEa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Jun 2014 10:04:30 -0400
+Received: from p01c11o142.mxlogic.net ([208.65.144.65]:57724 "EHLO
+	p01c11o142.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751792AbaFROF0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Jun 2014 10:05:26 -0400
 In-Reply-To: <1403100139-1798-1-git-send-email-joe.lawrence@stratus.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Chad Dupuis <chad.dupuis@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Don Zickus <dzickus@redhat.com>, Prarit Bhargava <prarit@redhat.com>, Bill Kuzeja <william.kuzeja@stratus.com>, Dave Bulkow <david.bulkow@stratus.com>, Joe Lawrence <joe.lawrence@stratus.com>
 
-Take advantage of commit fe1b806f "qla2xxx: Refactor shutdown code so
-some functionality can be reused" to remove an inlined copy of
-qla2x00_clear_drv_active in the driver's probe hardware error path.
+Introduce mutual exclusion between the qla2xxx_remove_one PCI driver
+callback and qla2x00_disable_board_on_pci_error, which is scheduled as
+board_disable work by qla2x00_check_reg{32,16}_for_disconnect:
+
+* Leave the driver-specific data attached to the underlying PCI device
+intact in qla2x00_disable_board_on_pci_error, so that qla2x00_remove_one
+has enough breadcrumbs to determine that any board_disable work has been
+completed.
+
+* In qla2xxx_remove_one, set a bit to prevent any subsequent
+board_disable work from scheduling, then cancel and wait until pending
+work has completed.
+
+* Reuse the PCI device enable count check in qla2x00_remove_one to
+determine if board_disable has occured.  The original purpose of this
+check was unnecessary since the driver remove function wasn't called
+when the probe fails.
 
 Signed-off-by: Joe Lawrence <joe.lawrence@stratus.com>
 ---
- drivers/scsi/qla2xxx/qla_os.c |   13 +++----------
- 1 file changed, 3 insertions(+), 10 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h |    1 +
+ drivers/scsi/qla2xxx/qla_isr.c |    3 ++-
+ drivers/scsi/qla2xxx/qla_os.c  |   31 +++++++++++++++++++------------
+ 3 files changed, 22 insertions(+), 13 deletions(-)
 
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index 1267b11..7c441c9 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -3404,6 +3404,7 @@ typedef struct scsi_qla_host {
+ 
+ 	unsigned long	pci_flags;
+ #define PFLG_DISCONNECTED	0	/* PCI device removed */
++#define PFLG_DRIVER_REMOVING	1	/* PCI driver .remove */
+ 
+ 	uint32_t	device_flags;
+ #define SWITCH_FOUND		BIT_0
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 2741ad8..ee5eef4 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -117,7 +117,8 @@ qla2x00_check_reg32_for_disconnect(scsi_qla_host_t *vha, uint32_t reg)
+ {
+ 	/* Check for PCI disconnection */
+ 	if (reg == 0xffffffff) {
+-		if (!test_and_set_bit(PFLG_DISCONNECTED, &vha->pci_flags)) {
++		if (!test_and_set_bit(PFLG_DISCONNECTED, &vha->pci_flags) &&
++		    !test_bit(PFLG_DRIVER_REMOVING, &vha->pci_flags)) {
+ 			/*
+ 			 * Schedule this (only once) on the default system
+ 			 * workqueue so that all the adapter workqueues and the
 diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 6a512b7..31913bb 100644
+index 39c9953..51cba37 100644
 --- a/drivers/scsi/qla2xxx/qla_os.c
 +++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -238,6 +238,7 @@ static int qla2xxx_eh_host_reset(struct scsi_cmnd *);
+@@ -3123,15 +3123,25 @@ qla2x00_remove_one(struct pci_dev *pdev)
+ 	scsi_qla_host_t *base_vha;
+ 	struct qla_hw_data  *ha;
  
- static int qla2x00_change_queue_depth(struct scsi_device *, int, int);
- static int qla2x00_change_queue_type(struct scsi_device *, int);
-+static void qla2x00_clear_drv_active(struct qla_hw_data *);
- static void qla2x00_free_device(scsi_qla_host_t *);
- 
- struct scsi_host_template qla2xxx_driver_template = {
-@@ -2946,16 +2947,8 @@ probe_failed:
- 	scsi_host_put(base_vha->host);
- 
- probe_hw_failed:
--	if (IS_QLA82XX(ha)) {
--		qla82xx_idc_lock(ha);
--		qla82xx_clear_drv_active(ha);
--		qla82xx_idc_unlock(ha);
--	}
--	if (IS_QLA8044(ha)) {
--		qla8044_idc_lock(ha);
--		qla8044_clear_drv_active(ha);
--		qla8044_idc_unlock(ha);
--	}
-+	qla2x00_clear_drv_active(ha);
++	base_vha = pci_get_drvdata(pdev);
++	ha = base_vha->hw;
 +
- iospace_config_failed:
- 	if (IS_P3P_TYPE(ha)) {
- 		if (!ha->nx_pcibase)
++	/* Indicate device removal to prevent future board_disable and wait
++	 * until any pending board_disable has completed. */
++	set_bit(PFLG_DRIVER_REMOVING, &base_vha->pci_flags);
++	cancel_work_sync(&ha->board_disable);
++
+ 	/*
+-	 * If the PCI device is disabled that means that probe failed and any
+-	 * resources should be have cleaned up on probe exit.
++	 * If the PCI device is disabled then there was a PCI-disconnect and
++	 * qla2x00_disable_board_on_pci_error has taken care of most of the
++	 * resources.
+ 	 */
+-	if (!atomic_read(&pdev->enable_cnt))
++	if (!atomic_read(&pdev->enable_cnt)) {
++		scsi_host_put(base_vha->host);
++		kfree(ha);
++		pci_set_drvdata(pdev, NULL);
+ 		return;
+-
+-	base_vha = pci_get_drvdata(pdev);
+-	ha = base_vha->hw;
++	}
+ 
+ 	qla2x00_wait_for_hba_ready(base_vha);
+ 
+@@ -4791,18 +4801,15 @@ qla2x00_disable_board_on_pci_error(struct work_struct *work)
+ 	qla82xx_md_free(base_vha);
+ 	qla2x00_free_queues(ha);
+ 
+-	scsi_host_put(base_vha->host);
+-
+ 	qla2x00_unmap_iobases(ha);
+ 
+ 	pci_release_selected_regions(ha->pdev, ha->bars);
+-	kfree(ha);
+-	ha = NULL;
+-
+ 	pci_disable_pcie_error_reporting(pdev);
+ 	pci_disable_device(pdev);
+-	pci_set_drvdata(pdev, NULL);
+ 
++	/*
++	 * Let qla2x00_remove_one cleanup qla_hw_data on device removal.
++	 */
+ }
+ 
+ /**************************************************************************
 -- 
 1.7.10.4
 
