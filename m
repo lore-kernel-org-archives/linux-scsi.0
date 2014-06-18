@@ -1,173 +1,71 @@
 From: Joe Lawrence <joe.lawrence@stratus.com>
-Subject: [PATCH 0/6] qla2xxx device removal fixups
-Date: Wed, 18 Jun 2014 10:02:13 -0400
-Message-ID: <1403100139-1798-1-git-send-email-joe.lawrence@stratus.com>
+Subject: [PATCH 4/6] qla2xxx: Schedule board_disable only once
+Date: Wed, 18 Jun 2014 10:02:17 -0400
+Message-ID: <1403100139-1798-5-git-send-email-joe.lawrence@stratus.com>
+References: <1403100139-1798-1-git-send-email-joe.lawrence@stratus.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from p02c12o148.mxlogic.net ([208.65.145.81]:41447 "EHLO
-	p02c12o148.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751840AbaFRODp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Jun 2014 10:03:45 -0400
+Received: from p01c12o141.mxlogic.net ([208.65.145.64]:50818 "EHLO
+	p01c12o141.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751792AbaFROEJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Jun 2014 10:04:09 -0400
+In-Reply-To: <1403100139-1798-1-git-send-email-joe.lawrence@stratus.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Chad Dupuis <chad.dupuis@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Don Zickus <dzickus@redhat.com>, Prarit Bhargava <prarit@redhat.com>, Bill Kuzeja <william.kuzeja@stratus.com>, Dave Bulkow <david.bulkow@stratus.com>, Joe Lawrence <joe.lawrence@stratus.com>
 
-Hi Chad, Giri, et al.
+There are various callers of qla2x00_check_reg{32,16}_for_disconnect
+that may schedule board removal on PCI-disconnect.  Test-and-set a
+dedicated flag before scheduling board_disable so it is invoked only
+once.
 
-Stratus has been testing the upstream qla2xxx driver against surprise
-device removal and has found a few minor issues along the way.  With
-this patchset, results have been good.  Although the following changes
-may be most interesting on a Stratus platform, they should be applicable
-to general hotplug scenarios on other hardware.
+Signed-off-by: Joe Lawrence <joe.lawrence@stratus.com>
+---
+ drivers/scsi/qla2xxx/qla_def.h |    3 +++
+ drivers/scsi/qla2xxx/qla_isr.c |   14 ++++++++------
+ 2 files changed, 11 insertions(+), 6 deletions(-)
 
-The first two patches are independent from the others and can be
-reviewed as such.  One fixes up a use-after-free and the other
-consolidates some code.
-
-The final four patches are more invasive and modify the scsi_qla_host
-structure to avoid device removal race conditions.  These changes were
-written to demonstrate the problem at hand and minimally fix them in
-order to continue testing.  (For example, adding completely a new
-pci_flags member to scsi_qla_host is probably overkill.) 
-
-We would welcome any feedback or questions about our testing.
-
-Regards,
-
--- Joe
-
-
-Joe Lawrence (6):
-
-  qla2xxx: Fix shost use-after-free on device removal
-
-    scsi_qla_host *base_vha is allocated as part of the Scsi_Host
-    private hostdata[] by qla2x00_create_host.  When the last reference
-    on the host is put by qla2x00_remove_one, it's released along with
-    any hostdata[], rendering base_vha unsafe to dereference.  
-      
-    To safely complete the adapter cleanup in qla2x00_remove_one,
-    use the scsi_qla_host_t *qla_hw_data pointer that is already in
-    hand.
-      
-    To reproduce, set kernel boot option slub_debug=FZPU and remove
-    an adapter instance.
-
-
-  qla2xxx: Use qla2x00_clear_drv_active on probe failure
-
-    Clean up some duplicate code along the way.
-
-
-  qla2xxx: Collect PCI register checks and board_disable scheduling
-
-    PCI register read checks are performed throughout the driver to
-    detect disconnected hardware.  There is currently a function that
-    verifies 32-bit values and schedules board_removal if needed. Other
-    16-bit registers are checked and board_removal scheduling scattered
-    around the driver.
-
-    This change pulls all of these together such that a new 16-bit
-    register check function wrappers the existing 32-bit version and
-    centralizes the scheduling of board_disable work to a single
-    invocation.
-
-    The following patches depend upon this change.
-
-
-  qla2xxx: Schedule board_disable only once
-
-    In automated hot-plug device removal testing, occasionally
-    qla2x00_disable_board_on_pci_error would run twice.  I believe this
-    occurred by a second qla2x00_check_reg_for_disconnect scheduling
-    board_disable while the first instance was still running.
-
-    The easiest solution seemed to be adding a per-adapter flag that
-    could be test_and_set before scheduling board_disable. 
-
-
-  qla2xxx: Prevent removal and board_disable race
-
-    This race was discovered through many iterations of automated PCI
-    hotplug.  The automated test inserts faults on the Stratus platform
-    to simulate device removal.  After removal, it re-adds the devices,
-    simulating PCI hotplug insertion.  Rinse, repeat.
-
-    The race occurs when a Stratus proprietary hotplug driver detects
-    that PCI devices have gone missing and calls into the kernel PCI
-    subsystem to remove them.  At nearly the same time, the qla2xxx
-    driver figures out the same issue and schedules a board_disable.  It
-    takes a few hundred device removals to hit, but it seemed that the
-    problem was that qla2x00_disable_board_on_pci_error started, then
-    qla2xxx_remove_one was invoked, so one of the two started touching
-    already freed resources.
-
-    Although the bug manifested on a Stratus platform running modified
-    drivers, the window for qla2xxx_remove_one to race
-    qla2x00_disable_board_on_pci_error is still present if running stock
-    kernel/drivers on commodity hardware.  It may be difficult to hit,
-    but one could theoretically invoke PCI device removal via sysfs (or
-    simply unload the qla2xxx driver) and for board_disable to run at
-    the same time.
-
-    The fix leaves the Scsi_Host intact during board_disable so that
-    qla2x00_remove_one can safely stop the main timer and
-    cancel_work_sync on any outstanding board_disable work.  A
-    PFLG_DRIVER_REMOVING bit is also set to prevent any other
-    board_disable instances from scheduling.  Once the asynchronous
-    players are out of the way, qla2x00_remove_one can move forward
-    cleaning up whatever remaining resources are still attached.
-
-    The PCI device enable count check in qla2x00_remove_one was
-    re-purposed to determine if board_disable had run.  Its original
-    intention to detect qla2x00_probe_one failure was invalid.  As long
-    as the driver .probe routine returns an -ERRNO, then its counterpart
-    .remove routine is *not* called.
-
-
-  qla2xxx: Prevent probe and board_disable race
-
-    An automated Stratus device removal test hotplug removes devices
-    shortly during/after their initialization.  The test inserts
-    devices, then proceeds to remove them at various 1, 2, 3, 4...
-    second intervals.  This test revealed two bugs:
-
-    1 - The struct isp_operations initialize_adapter callback is invoked
-    by qla2x00_probe_one before ha->board_disable is initialized. The
-    callback will eventually read PCI registers and potentially trigger
-    the disconnection check.  If the board_disable work structure hasn't
-    been initialized, an ugly WARN trace will be emitted. The call stack
-    looked something like:
-
-      qla2x00_probe_one
-        qla2x00_initialize_adapter
-          qla2xxx_get_flash_info
-            qla2xxx_get_flt_info
-              qla25xx_read_optrom_data
-                 qla2x00_dump_ram
-                   qla2x00_mailbox_command
-                     qla24xx_intr_handler
-                       qla2x00_check_reg_for_disconnect
-
-    2 - Races between the qla2x00_disable_board_on_pci_error and
-    qla2x00_probe_one. The latter was written before any asynchronous
-    device removals were introduced by commit f3ddac1 "qla2xxx: Disable
-    adapter when we encounter a PCI disconnect," and proceeds as if it
-    were the only game in town with respect to the underlying device.
-    Restore that assumption by preventing any board_disable scheduling
-    while qla2x00_probe_one is in flight.  Holding off this scheduling
-    prevents the race, as well as avoids bug #1.
-
- drivers/scsi/qla2xxx/qla_def.h |    5 ++++
- drivers/scsi/qla2xxx/qla_gbl.h |    3 +-
- drivers/scsi/qla2xxx/qla_isr.c |   44 +++++++++++++++--------------
- drivers/scsi/qla2xxx/qla_mr.c  |    2 +-
- drivers/scsi/qla2xxx/qla_nx.c  |    6 ++--
- drivers/scsi/qla2xxx/qla_os.c  |   60 ++++++++++++++++++----------------------
- 6 files changed, 61 insertions(+), 59 deletions(-)
-
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index 1fa0104..1267b11 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -3402,6 +3402,9 @@ typedef struct scsi_qla_host {
+ #define FX00_CRITEMP_RECOVERY	25
+ #define FX00_HOST_INFO_RESEND	26
+ 
++	unsigned long	pci_flags;
++#define PFLG_DISCONNECTED	0	/* PCI device removed */
++
+ 	uint32_t	device_flags;
+ #define SWITCH_FOUND		BIT_0
+ #define DFLG_NO_CABLE		BIT_1
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index e1b16ad..2741ad8 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -117,12 +117,14 @@ qla2x00_check_reg32_for_disconnect(scsi_qla_host_t *vha, uint32_t reg)
+ {
+ 	/* Check for PCI disconnection */
+ 	if (reg == 0xffffffff) {
+-		/*
+-		 * Schedule this on the default system workqueue so that all the
+-		 * adapter workqueues and the DPC thread can be shutdown
+-		 * cleanly.
+-		 */
+-		schedule_work(&vha->hw->board_disable);
++		if (!test_and_set_bit(PFLG_DISCONNECTED, &vha->pci_flags)) {
++			/*
++			 * Schedule this (only once) on the default system
++			 * workqueue so that all the adapter workqueues and the
++			 * DPC thread can be shutdown cleanly.
++			 */
++			schedule_work(&vha->hw->board_disable);
++		}
+ 		return true;
+ 	} else
+ 		return false;
 -- 
 1.7.10.4
 
