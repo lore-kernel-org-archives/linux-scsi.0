@@ -1,77 +1,73 @@
-From: bradley.grove@gmail.com
-Subject: [PATCH V2] pm80xx: Fix hibernation issue
-Date: Thu, 19 Jun 2014 11:13:20 -0400
-Message-ID: <1403190800-15022-1-git-send-email-bgrove@attotech.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qc0-f177.google.com ([209.85.216.177]:52481 "EHLO
-	mail-qc0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756534AbaFSPOR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Jun 2014 11:14:17 -0400
-Received: by mail-qc0-f177.google.com with SMTP id r5so2275057qcx.22
-        for <linux-scsi@vger.kernel.org>; Thu, 19 Jun 2014 08:14:16 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+From: Theodore Ts'o <tytso@mit.edu>
+Subject: BUG: scheduling while atomic in blk_mq codepath?
+Date: Thu, 19 Jun 2014 11:35:51 -0400
+Message-ID: <20140619153550.GA12836@thunk.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jens Axboe <axboe@fb.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Bradley Grove <bgrove@attotech.com>, JBottomley@parallels.com, xjtuwjp@gmail.com, ebrown@attotech.com, pcullen@attotech.com
 
-From: Bradley Grove <bgrove@attotech.com>
+While trying to bisect some problems which were introduced sometime
+between 3.15 and 3.16-rc1 (specifically, (1) reads to a block device
+at offset 262144 * 4k are failing with a short read, and (2) block
+device reads are sometimes causing the entire kernel to hang), the
+following BUG got hit.
 
-During hibernation, the HBA firmware may lose power and forget the device
-id info.   This causes the HBA to reject IO upon resume.   The fix is
-to call the libsas power management routines to make the domain device
-forgetful.
+[    0.000000] Linux version 3.15.0-rc8-06047-gaaeb255 (tytso@closure) (gcc version 4.8.3 (Debian 4.8.3-2) ) #1902 SMP Thu Jun 19 11:16:10 EDT 2014
 
-This fixes bug 76681: https://bugzilla.kernel.org/show_bug.cgi?id=76681
+[....] Checking file systems...fsck from util-linux 2.20.1
+/dev/vdg was not cleanly unmounted, check forced.
+[    4.161703] BUG: scheduling while atomic: fsck.ext4/2072/0x0000000266.5%    
+[    4.163673] no locks held by fsck.ext4/2072.
+[    4.164318] Modules linked in:
+[    4.164845] CPU: 0 PID: 2072 Comm: fsck.ext4 Not tainted 3.15.0-rc8-06047-gaaeb255 #1902
+[    4.166047] Hardware name: Bochs Bochs, BIOS Bochs 01/01/2011
+[    4.166917]  00000000 00000000 f52c5ba0 c0832655 f5158610 f52c5bac c082f88a f6501e40
+[    4.168188]  f52c5c20 c08362ca c0eb3e40 c0eb3e40 374d3933 00000001 0396a8da 00000000
+[    4.169474]  f5158610 f51f1674 f4f46a00 f52c5be4 c015dd4b f4f46a00 f52c5bf0 c015dd5e
+[    4.170781] Call Trace:
+[    4.171159]  [<c0832655>] dump_stack+0x48/0x60
+[    4.171838]  [<c082f88a>] __schedule_bug+0x5c/0x6d
+[    4.172572]  [<c08362ca>] __schedule+0x61/0x65a
+[    4.173228]  [<c015dd4b>] ? kvm_clock_read+0x1f/0x29
+[    4.173977]  [<c015dd5e>] ? kvm_clock_get_cycles+0x9/0xc
+[    4.174771]  [<c01b4cb9>] ? timekeeping_get_ns.constprop.14+0x10/0x56
+[    4.175701]  [<c0836922>] schedule+0x5f/0x61
+[    4.176345]  [<c0836aa2>] io_schedule+0x50/0x67
+[    4.177060]  [<c0423b2d>] bt_get+0xaf/0xd1
+[    4.177677]  [<c0198282>] ? wake_up_atomic_t+0x1f/0x1f
+[    4.178444]  [<c0423bfd>] blk_mq_get_tag+0x26/0x82
+[    4.179158]  [<c0420f14>] __blk_mq_alloc_request+0x2a/0x169
+[    4.180022]  [<c04222b5>] blk_mq_map_request+0x137/0x1e3
+[    4.180825]  [<c0422f89>] blk_sq_make_request+0x82/0x145
+[    4.181630]  [<c041a687>] generic_make_request+0x82/0xb5
+[    4.182430]  [<c041a7aa>] submit_bio+0xf0/0x109
+[    4.183113]  [<c019e97c>] ? trace_hardirqs_on_caller+0x14e/0x169
+[    4.184019]  [<c025de72>] _submit_bh+0x1ad/0x1ca
+[    4.184661]  [<c025de9e>] submit_bh+0xf/0x11
+[    4.185267]  [<c025f5c9>] block_read_full_page+0x1e2/0x1f2
+[    4.186073]  [<c025f8cd>] ? I_BDEV+0xa/0xa
+[    4.186695]  [<c020ad30>] ? __lru_cache_add+0x24/0x46
+[    4.187452]  [<c020af13>] ? lru_cache_add+0xd/0xf
+[    4.188130]  [<c025fc04>] blkdev_readpage+0x14/0x16
+[    4.188832]  [<c0209adf>] __do_page_cache_readahead+0x1c0/0x1eb
+[    4.189704]  [<c0209cb9>] ondemand_readahead+0x1af/0x1b9
+[    4.190508]  [<c0209d22>] page_cache_async_readahead+0x5f/0x6a
+[    4.191424]  [<c0202370>] generic_file_aio_read+0x226/0x4f4
+[    4.192272]  [<c0260841>] blkdev_aio_read+0x90/0x9e
+[    4.193017]  [<c02385cd>] do_sync_read+0x52/0x79
+[    4.193731]  [<c023857b>] ? fdput_pos+0x25/0x25
+[    4.194412]  [<c0238d27>] vfs_read+0x72/0xd1
+[    4.195064]  [<c02391da>] SyS_read+0x49/0x7c
+[    4.195700]  [<c083a0c9>] syscall_call+0x7/0xb
+[    4.196385]  [<c0830000>] ? print_usage_bug+0xcd/0x18e
 
-Signed-off-by: Bradley Grove <bgrove@attotech.com>
----
- drivers/scsi/pm8001/pm8001_init.c | 12 ++++++++++--
- 1 file changed, 10 insertions(+), 2 deletions(-)
+Is any of these known problems?  This is blocking me from doing any
+kind of testing at the moment...  (these problems are showing up while
+running KVM using virtio devices).
 
-diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-index c4f31b21..86cf03a 100644
---- a/drivers/scsi/pm8001/pm8001_init.c
-+++ b/drivers/scsi/pm8001/pm8001_init.c
-@@ -957,6 +957,7 @@ static int pm8001_pci_suspend(struct pci_dev *pdev, pm_message_t state)
- 	int  i, j;
- 	u32 device_state;
- 	pm8001_ha = sha->lldd_ha;
-+	sas_suspend_ha(sha);
- 	flush_workqueue(pm8001_wq);
- 	scsi_block_requests(pm8001_ha->shost);
- 	if (!pdev->pm_cap) {
-@@ -1006,6 +1007,7 @@ static int pm8001_pci_resume(struct pci_dev *pdev)
- 	int rc;
- 	u8 i = 0, j;
- 	u32 device_state;
-+	DECLARE_COMPLETION_ONSTACK(completion);
- 	pm8001_ha = sha->lldd_ha;
- 	device_state = pdev->current_state;
- 
-@@ -1026,7 +1028,7 @@ static int pm8001_pci_resume(struct pci_dev *pdev)
- 	rc = pci_go_44(pdev);
- 	if (rc)
- 		goto err_out_disable;
--
-+	sas_prep_resume_ha(sha);
- 	/* chip soft rst only for spc */
- 	if (pm8001_ha->chip_id == chip_8001) {
- 		PM8001_CHIP_DISP->chip_soft_rst(pm8001_ha);
-@@ -1058,7 +1060,13 @@ static int pm8001_pci_resume(struct pci_dev *pdev)
- 		for (i = 1; i < pm8001_ha->number_of_intr; i++)
- 			PM8001_CHIP_DISP->interrupt_enable(pm8001_ha, i);
- 	}
--	scsi_unblock_requests(pm8001_ha->shost);
-+	pm8001_ha->flags = PM8001F_RUN_TIME;
-+	for (i = 0; i < pm8001_ha->chip->n_phy; i++) {
-+		pm8001_ha->phy[i].enable_completion = &completion;
-+		PM8001_CHIP_DISP->phy_start_req(pm8001_ha, i);
-+		wait_for_completion(&completion);
-+	}
-+	sas_resume_ha(sha);
- 	return 0;
- 
- err_out_disable:
--- 
-1.9.3
-
+						- Ted
