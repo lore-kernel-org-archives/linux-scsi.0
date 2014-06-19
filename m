@@ -1,7 +1,7 @@
 From: Suman Tripathi <stripathi@apm.com>
-Subject: [PATCH v3 0/2]]ata: Fix the dma state machine lockup for APM X-Gene SoC
-Date: Thu, 19 Jun 2014 12:18:54 +0530
-Message-ID: <1403160538-31565-2-git-send-email-stripathi@apm.com>
+Subject: [PATCH v3 1/2] libahci: Implement the function ahci_restart_engine to restart the port dma engine.
+Date: Thu, 19 Jun 2014 12:18:55 +0530
+Message-ID: <1403160538-31565-3-git-send-email-stripathi@apm.com>
 References: <1403160538-31565-1-git-send-email-stripathi@apm.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <1403160538-31565-1-git-send-email-stripathi@apm.com>
@@ -10,20 +10,50 @@ To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
 Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>, Loc Ho <lho@apm.com>
 List-Id: linux-scsi@vger.kernel.org
 
+This patch adds an function to restart the port dma engine.
+
 Signed-off-by: Loc Ho <lho@apm.com>
 Signed-off-by: Suman Tripathi <stripathi@apm.com>
 ---
-Suman Tripathi (2):
-  libahci: Implement the function ahci_restart_engine to restart the
-    port dma engine.
-  ata: Fix the dma state machine lockup for the IDENTIFY DEVICE PIO mode
-    command.
+ drivers/ata/ahci.h    |  1 +
+ drivers/ata/libahci.c | 12 ++++++++++++
+ 2 files changed, 13 insertions(+)
 
- drivers/ata/ahci.h       |  2 ++
- drivers/ata/ahci_xgene.c | 70 +++++++++++++++++++++++++++++++++++++++---------
- drivers/ata/libahci.c    | 15 ++++++++++-
- 3 files changed, 73 insertions(+), 14 deletions(-)
+diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+index af63c75..3c1760e 100644
+--- a/drivers/ata/ahci.h
++++ b/drivers/ata/ahci.h
+@@ -372,6 +372,7 @@ int ahci_do_softreset(struct ata_link *link, unsigned int *class,
 
+ int ahci_stop_engine(struct ata_port *ap);
+ void ahci_start_engine(struct ata_port *ap);
++int ahci_restart_engine(struct ata_port *ap);
+ int ahci_check_ready(struct ata_link *link);
+ int ahci_kick_engine(struct ata_port *ap);
+ int ahci_port_resume(struct ata_port *ap);
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index b986145..d1c9122 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -742,6 +742,18 @@ static int ahci_set_lpm(struct ata_link *link, enum ata_lpm_policy policy,
+ 	return 0;
+ }
+
++int ahci_restart_engine(struct ata_port *ap)
++{
++	struct ahci_host_priv *hpriv = ap->host->private_data;
++
++	ahci_stop_engine(ap);
++	ahci_start_fis_rx(ap);
++	hpriv->start_engine(ap);
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(ahci_restart_engine);
++
+ #ifdef CONFIG_PM
+ static void ahci_power_down(struct ata_port *ap)
+ {
 --
 1.8.2.1
 
