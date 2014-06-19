@@ -1,43 +1,29 @@
-From: Maurizio Lombardi <mlombard@redhat.com>
-Subject: [PATCH] bnx2fc: do not scan uninitialized lists in case of error.
-Date: Thu, 19 Jun 2014 15:05:00 +0200
-Message-ID: <1403183100-15011-1-git-send-email-mlombard@redhat.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50752 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752125AbaFSNFJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 19 Jun 2014 09:05:09 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v3 2/2] ata: Fix the dma state machine lockup for the
+ IDENTIFY DEVICE PIO mode command.
+Date: Thu, 19 Jun 2014 10:10:47 -0400
+Message-ID: <20140619141047.GA26904@htj.dyndns.org>
+References: <1403160654-31612-1-git-send-email-stripathi@apm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1403160654-31612-1-git-send-email-stripathi@apm.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Suman Tripathi <stripathi@apm.com>
+Cc: olof@lixom.net, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: eddie.wai@broadcom.com
-Cc: linux-scsi@vger.kernel.org, hch@lst.de, James.Bottomley@HansenPartnership.com
 
-In case of of error, the bnx2fc_cmd_mgr_alloc() function will call
-the bnx2fc_cmd_mgr_free() to perform the cleanup.
-The problem is that in one case the latter may try to scan
-some not-yet initialized lists, resulting in a kernel panic.
+On Thu, Jun 19, 2014 at 12:20:54PM +0530, Suman Tripathi wrote:
+> +	/*
+> +	 * Restart the dma engine if the last cmd issued
+> +	 * is IDENTIFY DEVICE command
+> +	 */
+> +	if (unlikely(ctx->last_cmd[ap->port_no] == ATA_CMD_ID_ATA))
+> +		ahci_restart_engine(ap);
 
-This patch prevents this from happening by freeing the lists
-before calling bnx2fc_cmd_mgr_free().
+Is it really only for IDENTIFY?  Are other PIO commands okay?  The
+previous version applied it to all PIO commands, right?
 
-Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
----
- drivers/scsi/bnx2fc/bnx2fc_io.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
-index 32a5e0a..7bc47fc 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_io.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
-@@ -282,6 +282,8 @@ struct bnx2fc_cmd_mgr *bnx2fc_cmd_mgr_alloc(struct bnx2fc_hba *hba)
- 				       arr_sz, GFP_KERNEL);
- 	if (!cmgr->free_list_lock) {
- 		printk(KERN_ERR PFX "failed to alloc free_list_lock\n");
-+		kfree(cmgr->free_list);
-+		cmgr->free_list = NULL;
- 		goto mem_err;
- 	}
- 
 -- 
-Maurizio Lombardi
-
+tejun
