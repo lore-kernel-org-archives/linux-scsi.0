@@ -1,76 +1,131 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 78281] aacraid: swiotlb buffer is full (sz: 255 bytes)
-Date: Wed, 18 Jun 2014 22:57:03 +0000
-Message-ID: <bug-78281-11613-q3qb78r5pb@https.bugzilla.kernel.org/>
-References: <bug-78281-11613@https.bugzilla.kernel.org/>
+From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
+Subject: RE: scsi-mq
+Date: Thu, 19 Jun 2014 00:58:02 +0000
+Message-ID: <94D0CD8314A33A4D9D801C0FE68B402958B3D123@G9W0745.americas.hpqcorp.net>
+References: <1402580946-11470-1-git-send-email-hch@lst.de>
+ <53A05068.4080702@acm.org> <53A10B3A.6050705@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:43110 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752864AbaFRW5H (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 Jun 2014 18:57:07 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id DBE4D2037F
-	for <linux-scsi@vger.kernel.org>; Wed, 18 Jun 2014 22:57:05 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-	by mail.kernel.org (Postfix) with ESMTP id D4AE020383
-	for <linux-scsi@vger.kernel.org>; Wed, 18 Jun 2014 22:57:03 +0000 (UTC)
-In-Reply-To: <bug-78281-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <53A10B3A.6050705@kernel.dk>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>, Bart Van Assche <bvanassche@acm.org>, Christoph Hellwig <hch@lst.de>, James Bottomley <James.Bottomley@HansenPartnership.com>, "scameron@beardog.cce.hp.com" <scameron@beardog.cce.hp.com>
+Cc: Bart Van Assche <bvanassche@fusionio.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=78281
 
---- Comment #1 from H. Wilmer <lee@yun.yagibdah.de> ---
-PS:
 
-04:00.0 RAID bus controller: Adaptec AAC-RAID (Rocket) (rev 02)
-        Subsystem: IBM ServeRAID 8k/8k-l8
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+
-Stepping- SERR+ FastB2B- DisINTx-
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort-
-<MAbort- >SERR- <PERR- INTx-
-        Latency: 0, Cache Line Size: 64 bytes
-        Interrupt: pin A routed to IRQ 17
-        Region 0: Memory at c9e00000 (64-bit, non-prefetchable) [size=2M]
-        Region 2: Memory at c7fe0000 (64-bit, prefetchable) [size=128K]
-        Region 4: I/O ports at 5000 [size=256]
-        [virtual] Expansion ROM at c7f00000 [disabled] [size=32K]
-        Capabilities: [40] Express (v1) Endpoint, MSI 00
-                DevCap: MaxPayload 256 bytes, PhantFunc 0, Latency L0s <128ns,
-L1 <2us
-                        ExtTag- AttnBtn- AttnInd- PwrInd- RBE- FLReset-
-                DevCtl: Report errors: Correctable- Non-Fatal+ Fatal+
-Unsupported-
-                        RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
-                        MaxPayload 128 bytes, MaxReadReq 4096 bytes
-                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr-
-TransPend-
-                LnkCap: Port #0, Speed 2.5GT/s, Width x8, ASPM L0s L1, Latency
-L0 <64ns, L1 <1us
-                        ClockPM- Surprise- LLActRep- BwNot-
-                LnkCtl: ASPM Disabled; RCB 128 bytes Disabled- Retrain-
-CommClk-
-                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-                LnkSta: Speed 2.5GT/s, Width x4, TrErr- Train- SlotClk+
-DLActive- BWMgmt- ABWMgmt-
-        Capabilities: [e0] MSI: Enable- Count=1/4 Maskable- 64bit+
-                Address: 0000000000000000  Data: 0000
-        Capabilities: [100 v1] Advanced Error Reporting
-                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt-
-RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt-
-RxOF- MalfTLP- ECRC- UnsupReq+ ACSViol-
-                UESvrt: DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt-
-RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
-                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
-                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
-                AERCap: First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
-        Kernel driver in use: aacraid
+> -----Original Message-----
+> From: Jens Axboe [mailto:axboe@kernel.dk]
+> Sent: Tuesday, 17 June, 2014 10:45 PM
+> To: Bart Van Assche; Christoph Hellwig; James Bottomley
+> Cc: Bart Van Assche; Elliott, Robert (Server Storage); linux-
+> scsi@vger.kernel.org; linux-kernel@vger.kernel.org
+> Subject: Re: scsi-mq
+> 
+> On 2014-06-17 07:27, Bart Van Assche wrote:
+> > On 06/12/14 15:48, Christoph Hellwig wrote:
+> >> Bart and Robert have helped with some very detailed measurements that they
+> >> might be able to send in reply to this, although these usually involve
+> >> significantly reworked low level drivers to avoid other bottle necks.
+> >
+> > In case someone would like to see the results of the measurements I ran,
+> > these results can be found here:
+> > https://docs.google.com/file/d/0B1YQOreL3_FxUXFMSjhmNDBNNTg.
+> >
+> > Two important conclusions from the data in that PDF document are as
+> follows:
+> > - A small but significant performance improvement for the traditional
+> >    SCSI mid-layer (use_blk_mq=N).
+> > - A very significant performance improvement for multithreaded
+> >    workloads with use_blk_mq=Y. As an example, the number of I/O
+> >    operations per second reported for the random write test increased
+> >    with 170%. That means 2.7 times the performance
+> >    of use_blk_mq=N.
+> 
+> Thanks for posting these numbers, Bart. The CPU utilization and IOPS
+> speak a very clear message. The only mystery is why the singe threaded
+> performance is down. That we need to get sort, but it's not a show
+> stopper for inclusion.
+> 
+> If you run the single threaded tests and watch for queue depths, is
+> there a difference between blk-mq=y/scsi-mq and the stock kernel?
+> 
+> > I think this means the scsi-mq patches are ready for wider use.
+> 
+> I would agree. James, I haven't seen any comments from you on this yet.
+> I've run various bits of scsi-mq testing as well, and no ill effects
+> seen. On top of that, Christophs patches are nicely separated and have
+> general benefits even for the non-blk-mq cases. Time to shove them into
+> the queue for the next merge window?
+> 
+> --
+> Jens Axboe
 
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+We've been testing the hpsa driver extensively with the scsi-mq-wip trees.
+I don't have numbers with the latest scsi-mq tree yet, but here are some
+performance numbers from scsi-mq-wip.5 through 7.  
+
+scsi-mq slightly underperformed non-scsi-mq when using multiple devices:
+* normal		975K IOPS (16 devices each made from 1 drive)
+* scsi-mq-wip.5	905K IOPS (16 devices each made from 1 drive)
+* scsi-mq-wip.6+	969K IOPS (16 devices... 3 threads per device)
+
+but was much better when using a single device:
+* normal		166K IOPS (1 device made from 8 drives, 1 thread)          
+* normal		266K IOPS (1 device made from 8 drives, 12 threads)
+* scsi-mq-wip.5	880K IOPS (1 device made from 8 drives, 12 threads)
+
+* normal		266K IOPS (1 device made from 16 drives, 12 threads)
+* scsi-mq-wip.5	973K IOPS (1 device made from 16 drives, 12 threads)
+* scsi-mq-wip.6+	979K IOPS (1 device made from 16 drives, 12 threads)
+
+
+The headline improvement is that one device can reach the same performance 
+as multiple devices - no more bottleneck in per-device queue locks limiting 
+performance to around 266K IOPS per device.  Even the scsi_debug driver in
+fake_rw mode hits that limit.
+
+hpsa is limited to one submission queue, so submissions from multiple CPUs 
+still meet inside the driver - SCSI Express will keep them isolated all 
+the way.  hpsa supports one completion queue per CPU, so completions are 
+already isolated.
+
+The blk-mq bitmap tag allocator is working much better than its 
+predecessor, but some combinations of active CPUs and devices still 
+result in low queue depths for some devices.
+
+We haven't fully tested cases where the hardware interrupt is handled
+on a different CPU than the block layer wants to run its completion
+processing per rq_affinity. That was previously scheduled as a softirq,
+but is now handled directly in hardirq processing with IPIs.  This
+changes the CPU utilization %soft and %hard metrics:
+* normal 	5% hard, 25% soft
+* scsi-mq	30% hard, 0% soft
+(with something like 5% usr, 55% sys, 8% iowait idle, 2% idle)
+
+
+Configuration:
+* HP ProLiant DL380p Gen8 with 6 CPU hyperthreading cores (12 logical cores)
+* lockless hpsa driver (forthcoming patches with performance 
+  improvements such as eliminating locks, plus improved error handling)
+* Smart Array P431 RAID controller
+* 16 12 Gb/s SAS SSDs
+* fio: 4 KiB random reads with options:
+  direct=1, ioengine=libaio, norandommap, randrepeat=0,
+  iodepth=96 or 1024, numjobs=1 or 12, thread, 
+  cpus_allowed=0-11, cpus_allowed_policy=split,
+  iodepth_batch=4, iodepth_batch_complete=4, userspace_reap,
+  bs=4096, rw=randread
+  time_based, group_reporting, gtod_reduce
+* block layer queue parameters:
+  nr_requests=1011, add_random=0
+  nomerges=2, rq_affinity=2, max_sectors_kb=max_hw_sectors_kb
+* old version of irqbalance-1.0.4, which still honors 
+  /proc/irq/NN/affinity_hint (the new version defaults to
+  ignoring that)
+
+---
+Rob Elliott    HP Server Storage
