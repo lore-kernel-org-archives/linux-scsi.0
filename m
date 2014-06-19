@@ -1,363 +1,121 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: [RFC] scsi_debug: locks and delays
-Date: Wed, 18 Jun 2014 21:53:44 -0400
-Message-ID: <53A242A8.6050902@interlog.com>
-Reply-To: dgilbert@interlog.com
+From: Saran Neti <sarannmr@gmail.com>
+Subject: Kernel BUG() in block/blk-tag.c:89 causing panic.
+Date: Thu, 19 Jun 2014 00:53:01 -0400
+Message-ID: <CAE6A3M1UUJWL4ZoUsLdtSjaWb92kdB7MvzHVeAgA+3ewBRG=LA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------050606070806040609080501"
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:36097 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756536AbaFSBxu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 Jun 2014 21:53:50 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by smtp.infotech.no (Postfix) with ESMTP id C76082041D4
-	for <linux-scsi@vger.kernel.org>; Thu, 19 Jun 2014 03:53:46 +0200 (CEST)
-Received: from smtp.infotech.no ([127.0.0.1])
-	by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id 2na86oR4bkAz for <linux-scsi@vger.kernel.org>;
-	Thu, 19 Jun 2014 03:53:46 +0200 (CEST)
-Received: from [10.7.0.6] (unknown [10.7.0.6])
-	by smtp.infotech.no (Postfix) with ESMTPA id 03FC6204159
-	for <linux-scsi@vger.kernel.org>; Thu, 19 Jun 2014 03:53:45 +0200 (CEST)
+Received: from mail-ig0-f178.google.com ([209.85.213.178]:45943 "EHLO
+	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756959AbaFSExB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Jun 2014 00:53:01 -0400
+Received: by mail-ig0-f178.google.com with SMTP id hn18so1595066igb.5
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Jun 2014 21:53:01 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI development list <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------050606070806040609080501
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+[ Copied. First sent to linux-hotplug ]
 
-Currently the scsi_debug driver wraps every queued command
-with the host_lock and every mid-level completion callback
-(apart from delay=0) with a spinlock.
+Hi,
 
-Attached is a patch against Linus's tree that also applies
-to lk 3.15.1 . It attempts to address some of these issues.
+I have a many identical looking USB drives in two btrfs multi-device
+configurations. I was unplugging and replugging a few devices to
+identify which physical device belonged to which btrfs filesystem.
+Running "btrfs fi show" during this unplugging/replugging business
+produced the BUG() stack trace shown below. "btrfs fi show" wouldn't
+return and neither would "fdisk -l". When I tried to reboot the
+computer, it panicked forcing me to do a hard reset.
 
-ChangeLog
-   - 'host_lock' option added that simply drops that lock
-     when host_lock=0 (which is the default)
-   - allow delay=-1 [delay=1 (jiffy) is still the default]
-     that uses a tasklet to schedule the response quickly
-   - for completions (when delay!=0) the callback to the
-     mid-level is un-(spin)locked
-   - completions are counted; can be viewed with
-       cat /proc/scsi/scsi_debug/<host_num>
-   - delay_override removed from TEST UNIT READY.
-     This makes 'sg_turs -n 1m -t /dev/bsg/<hctl>' a more
-     realistic test of command overhead. I get about 100k
-     IOPS on my laptop.
+All hard disks are run-of-the-mill Seagate Expansion or Backup Plus
+drives. They all work fine (data and SMART) when kernel
+detects them at the start. I hit the BUG() twice during
+unplugging/replugging them randomly and I think it could've been when
+I swapped USB ports for identical drives (model/version etc.)
 
-This patch has been lightly tested. Perhaps someone could
-throw a scsi-mq test at it.
+If more lspci/lsusb information if needed, let me know. I should be
+able to reproduce it again and if needed insert printks and debug on
+mainline.
 
-Comments welcome.
+# uname -a
+Linux godel 3.15.1-1-ARCH #1 SMP PREEMPT Tue Jun 17 09:32:20 CEST 2014
+x86_64 GNU/Linux
 
-Doug Gilbert
+------------[ cut here ]------------
+kernel BUG at block/blk-tag.c:89!
+invalid opcode: 0000 [#1] PREEMPT SMP
+Modules linked in: bridge stp llc tun nct6775 hwmon_vid hid_microsoft
+uas usb_storage joydev hid_generic ir_lirc_codec mousedev lirc_dev
+ir_mce_kbd_decoder ir_sharp_decoder ir_sanyo_decoder ir_sony_decoder
+ir_jvc_decoder ir_rc6_decoder ir_rc5_decoder ir_nec_decoder rc_rc6_mce
+usbhid mceusb rc_core hid snd_hda_codec_hdmi coretemp hwmon
+x86_pkg_temp_thermal intel_powerclamp kvm_intel kvm iTCO_wdt
+iTCO_vendor_support ppdev mxm_wmi evdev mac_hid ext4 crc16 mbcache
+jbd2 crct10dif_pclmul crc32_pclmul ghash_clmulni_intel cryptd
+microcode snd_hda_codec_realtek i915 snd_hda_codec_generic psmouse
+serio_raw pcspkr snd_hda_intel snd_hda_controller drm_kms_helper drm
+snd_hda_codec snd_hwdep parport_pc i2c_i801 snd_pcm lpc_ich r8169 mii
+parport mei_me thermal fan wmi battery tpm_infineon tpm_tis tpm
+ mei snd_timer video shpchp intel_gtt snd i2c_algo_bit button i2c_core
+soundcore processor btrfs xor atkbd libps2 c
+rc32c_intel ehci_pci ehci_hcd xhci_hcd usbcore usb_common raid6_pq
+i8042 serio sd_mod crc_t10dif crct10dif_common ahci libahci libata
+scsi_mod
+CPU: 0 PID: 821 Comm: systemd-udevd Not tainted 3.15.1-1-ARCH #1
+Hardware name: MSI MS-7850/Z87-G41 PC Mate(MS-7850), BIOS V1.6 02/21/2014
+task: ffff88020a369460 ti: ffff8801f4ff8000 task.ti: ffff8801f4ff8000
+RIP: 0010:[<ffffffff8126b188>]  [<ffffffff8126b188>] blk_free_tags+0x18/0x20
+RSP: 0018:ffff8801f4ffbbb0  EFLAGS: 00010246
+RAX: 0000000000000000 RBX: ffff8801f2845000 RCX: 0000000000340780
+RDX: 0000000000000000 RSI: ffff880037d1a600 RDI: ffff8802112a3a00
+RBP: ffff8801f4ffbbb0 R08: 000000000001b760 R09: ffff880214873800
+R10: ffff88021fa1b760 R11: ffffea0000df4680 R12: ffff88020629f030
+R13: ffff8800b65ca480 R14: ffff8801f28451a0 R15: ffff8800b65c4120
+FS:  00007f4256c9f7c0(0000) GS:ffff88021fa00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f2ba863e038 CR3: 00000001f4fe0000 CR4: 00000000000407f0
+Stack:
+ ffff8801f4ffbbd8 ffffffffa0003230 ffff8801f28451a0 ffff8801f2845190
+ ffff8800b65ca480 ffff8801f4ffbc00 ffffffff8138c552 ffff8801f28451d8
+ ffffffff8189e2c0 ffff8802106f8ac0 ffff8801f4ffbc30 ffffffff8129466a
+Call Trace:
+ [<ffffffffa0003230>] scsi_host_dev_release+0xb0/0xf0 [scsi_mod]
+ [<ffffffff8138c552>] device_release+0x32/0xa0
+ [<ffffffff8129466a>] kobject_release+0x7a/0x1c0
+ [<ffffffff812947dd>] kobject_put+0x2d/0x60
+ [<ffffffff8138c997>] put_device+0x17/0x20
+ [<ffffffffa000af7f>] scsi_target_dev_release+0x1f/0x30 [scsi_mod]
+ [<ffffffff8138c552>] device_release+0x32/0xa0
+ [<ffffffff8129466a>] kobject_release+0x7a/0x1c0
+ [<ffffffff812947dd>] kobject_put+0x2d/0x60
+ [<ffffffff8138c997>] put_device+0x17/0x20
+ [<ffffffffa000e435>] scsi_device_dev_release_usercontext+0x195/0x1a0 [scsi_mod]
+ [<ffffffff81085257>] execute_in_process_context+0x67/0x70
+ [<ffffffffa000e29c>] scsi_device_dev_release+0x1c/0x20 [scsi_mod]
+ [<ffffffff8138c552>] device_release+0x32/0xa0
+ [<ffffffff8129466a>] kobject_release+0x7a/0x1c0
+ [<ffffffff812947dd>] kobject_put+0x2d/0x60
+ [<ffffffff8138c997>] put_device+0x17/0x20
+ [<ffffffffa000180a>] scsi_device_put+0x3a/0x50 [scsi_mod]
+ [<ffffffffa00a4810>] scsi_disk_put+0x30/0x50 [sd_mod]
+ [<ffffffffa00a5821>] sd_release+0x31/0x70 [sd_mod]
+ [<ffffffff811ef642>] __blkdev_put+0x182/0x1c0
+ [<ffffffff811f000c>] blkdev_put+0x4c/0x150
+ [<ffffffff811f01c5>] blkdev_close+0x25/0x30
+ [<ffffffff811b609c>] __fput+0x9c/0x200
+ [<ffffffff811b624e>] ____fput+0xe/0x10
+ [<ffffffff8108a35f>] task_work_run+0x9f/0xe0
+ [<ffffffff81014c55>] do_notify_resume+0x95/0xa0
+ [<ffffffff81515be0>] int_signal+0x12/0x17
+Code: c3 66 90 0f 0b 66 66 66 66 66 2e 0f 1f 84 00 00 00 00 00 0f 1f
+44 00 00 55 48 89 e5 e8 82 ff ff ff 85 c0 74 0
+6 5d c3 0f 1f 40 00 <0f> 0b 66 0f 1f 44 00 00 0f 1f 44 00 00 55 48 89
+e5 53 48 89 fb
+RIP  [<ffffffff8126b188>] blk_free_tags+0x18/0x20
+ RSP <ffff8801f4ffbbb0>
+---[ end trace bc3cb23eb685d10a ]---
+systemd-udevd[185]: worker [821] terminated by signal 11 (Segmentation fault)
 
---------------050606070806040609080501
-Content-Type: text/x-patch;
- name="sdebug_hlock2.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="sdebug_hlock2.patch"
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 1328a26..6e66fe9 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -42,6 +42,9 @@
- #include <linux/scatterlist.h>
- #include <linux/blkdev.h>
- #include <linux/crc-t10dif.h>
-+#include <linux/spinlock.h>
-+#include <linux/interrupt.h>
-+#include <linux/atomic.h>
- 
- #include <net/checksum.h>
- 
-@@ -120,6 +123,7 @@ static const char * scsi_debug_version_date = "20100324";
- #define DEF_VIRTUAL_GB   0
- #define DEF_VPD_USE_HOSTNO 1
- #define DEF_WRITESAME_LENGTH 0xFFFF
-+#define DEF_HOST_LOCK 0
- 
- /* bit mask values for scsi_debug_opts */
- #define SCSI_DEBUG_OPT_NOISE   1
-@@ -198,8 +202,10 @@ static unsigned int scsi_debug_unmap_max_desc = DEF_UNMAP_MAX_DESC;
- static unsigned int scsi_debug_write_same_length = DEF_WRITESAME_LENGTH;
- static bool scsi_debug_removable = DEF_REMOVABLE;
- static bool scsi_debug_clustering;
-+static bool scsi_debug_host_lock = DEF_HOST_LOCK;
- 
- static int scsi_debug_cmnd_count = 0;
-+static atomic_t scsi_debug_completions;
- 
- #define DEV_READONLY(TGT)      (0)
- 
-@@ -254,6 +260,7 @@ typedef void (* done_funct_t) (struct scsi_cmnd *);
- struct sdebug_queued_cmd {
- 	int in_use;
- 	struct timer_list cmnd_timer;
-+	struct tasklet_struct tlet;
- 	done_funct_t done_funct;
- 	struct scsi_cmnd * a_cmnd;
- 	int scsi_result;
-@@ -2365,32 +2372,38 @@ static int resp_xdwriteread(struct scsi_cmnd *scp, unsigned long long lba,
- 	return 0;
- }
- 
--/* When timer goes off this function is called. */
--static void timer_intr_handler(unsigned long indx)
-+/* When timer or tasket goes off this function is called. */
-+static void completion_handler(unsigned long indx)
- {
- 	struct sdebug_queued_cmd * sqcp;
- 	unsigned long iflags;
-+	done_funct_t df;
-+	struct scsi_cmnd *scp;
- 
-+	atomic_inc(&scsi_debug_completions);
- 	if (indx >= scsi_debug_max_queue) {
--		printk(KERN_ERR "scsi_debug:timer_intr_handler: indx too "
-+		printk(KERN_ERR "scsi_debug:completion_handler: index too "
- 		       "large\n");
- 		return;
- 	}
- 	spin_lock_irqsave(&queued_arr_lock, iflags);
- 	sqcp = &queued_arr[(int)indx];
- 	if (! sqcp->in_use) {
--		printk(KERN_ERR "scsi_debug:timer_intr_handler: Unexpected "
--		       "interrupt\n");
-+		printk(KERN_ERR "scsi_debug:completion_handler: Unexpected "
-+		       "completion\n");
- 		spin_unlock_irqrestore(&queued_arr_lock, iflags);
- 		return;
- 	}
-+	scp = sqcp->a_cmnd;
-+	df = sqcp->done_funct;
-+	if (df && scp)
-+		scp->result = sqcp->scsi_result;
- 	sqcp->in_use = 0;
--	if (sqcp->done_funct) {
--		sqcp->a_cmnd->result = sqcp->scsi_result;
--		sqcp->done_funct(sqcp->a_cmnd); /* callback to mid level */
--	}
-+	sqcp->a_cmnd = NULL;
- 	sqcp->done_funct = NULL;
- 	spin_unlock_irqrestore(&queued_arr_lock, iflags);
-+	if (df && scp)
-+		df(scp); /* callback to mid level */
- }
- 
- 
-@@ -2516,7 +2529,10 @@ static int stop_queued_cmnd(struct scsi_cmnd *cmnd)
- 	for (k = 0; k < scsi_debug_max_queue; ++k) {
- 		sqcp = &queued_arr[k];
- 		if (sqcp->in_use && (cmnd == sqcp->a_cmnd)) {
--			del_timer_sync(&sqcp->cmnd_timer);
-+			if (scsi_debug_delay > 0)
-+				del_timer_sync(&sqcp->cmnd_timer);
-+			else if (scsi_debug_delay < 0)
-+				tasklet_kill(&sqcp->tlet);
- 			sqcp->in_use = 0;
- 			sqcp->a_cmnd = NULL;
- 			break;
-@@ -2537,7 +2553,10 @@ static void stop_all_queued(void)
- 	for (k = 0; k < scsi_debug_max_queue; ++k) {
- 		sqcp = &queued_arr[k];
- 		if (sqcp->in_use && sqcp->a_cmnd) {
--			del_timer_sync(&sqcp->cmnd_timer);
-+			if (scsi_debug_delay > 0)
-+				del_timer_sync(&sqcp->cmnd_timer);
-+			else if (scsi_debug_delay < 0)
-+				tasklet_kill(&sqcp->tlet);
- 			sqcp->in_use = 0;
- 			sqcp->a_cmnd = NULL;
- 		}
-@@ -2642,7 +2661,8 @@ static void __init init_all_queued(void)
- 	spin_lock_irqsave(&queued_arr_lock, iflags);
- 	for (k = 0; k < scsi_debug_max_queue; ++k) {
- 		sqcp = &queued_arr[k];
--		init_timer(&sqcp->cmnd_timer);
-+		if (scsi_debug_delay > 0)
-+			init_timer(&sqcp->cmnd_timer);
- 		sqcp->in_use = 0;
- 		sqcp->a_cmnd = NULL;
- 	}
-@@ -2720,7 +2740,7 @@ static int schedule_resp(struct scsi_cmnd * cmnd,
- 			       (SCSI_SENSE_BUFFERSIZE > SDEBUG_SENSE_LEN) ?
- 			       SDEBUG_SENSE_LEN : SCSI_SENSE_BUFFERSIZE);
- 	}
--	if (delta_jiff <= 0) {
-+	if (delta_jiff == 0) {
- 		if (cmnd)
- 			cmnd->result = scsi_result;
- 		if (done)
-@@ -2746,10 +2766,15 @@ static int schedule_resp(struct scsi_cmnd * cmnd,
- 		sqcp->a_cmnd = cmnd;
- 		sqcp->scsi_result = scsi_result;
- 		sqcp->done_funct = done;
--		sqcp->cmnd_timer.function = timer_intr_handler;
--		sqcp->cmnd_timer.data = k;
--		sqcp->cmnd_timer.expires = jiffies + delta_jiff;
--		add_timer(&sqcp->cmnd_timer);
-+		if (delta_jiff > 0) {
-+			sqcp->cmnd_timer.function = completion_handler;
-+			sqcp->cmnd_timer.data = k;
-+			sqcp->cmnd_timer.expires = jiffies + delta_jiff;
-+			add_timer(&sqcp->cmnd_timer);
-+		} else {
-+			tasklet_init(&sqcp->tlet, completion_handler, k);
-+			tasklet_schedule(&sqcp->tlet);
-+		}
- 		spin_unlock_irqrestore(&queued_arr_lock, iflags);
- 		if (cmnd)
- 			cmnd->result = 0;
-@@ -2773,6 +2798,7 @@ module_param_named(dsense, scsi_debug_dsense, int, S_IRUGO | S_IWUSR);
- module_param_named(every_nth, scsi_debug_every_nth, int, S_IRUGO | S_IWUSR);
- module_param_named(fake_rw, scsi_debug_fake_rw, int, S_IRUGO | S_IWUSR);
- module_param_named(guard, scsi_debug_guard, uint, S_IRUGO);
-+module_param_named(host_lock, scsi_debug_host_lock, bool, S_IRUGO | S_IWUSR);
- module_param_named(lbpu, scsi_debug_lbpu, int, S_IRUGO);
- module_param_named(lbpws, scsi_debug_lbpws, int, S_IRUGO);
- module_param_named(lbpws10, scsi_debug_lbpws10, int, S_IRUGO);
-@@ -2809,7 +2835,7 @@ MODULE_VERSION(SCSI_DEBUG_VERSION);
- MODULE_PARM_DESC(add_host, "0..127 hosts allowed(def=1)");
- MODULE_PARM_DESC(ato, "application tag ownership: 0=disk 1=host (def=1)");
- MODULE_PARM_DESC(clustering, "when set enables larger transfers (def=0)");
--MODULE_PARM_DESC(delay, "# of jiffies to delay response(def=1)");
-+MODULE_PARM_DESC(delay, "response delay in jiffies (def=1); 0:imm, -1:tiny");
- MODULE_PARM_DESC(dev_size_mb, "size in MB of ram shared by devs(def=8)");
- MODULE_PARM_DESC(dif, "data integrity field type: 0-3 (def=0)");
- MODULE_PARM_DESC(dix, "data integrity extensions mask (def=0)");
-@@ -2817,6 +2843,7 @@ MODULE_PARM_DESC(dsense, "use descriptor sense format(def=0 -> fixed)");
- MODULE_PARM_DESC(every_nth, "timeout every nth command(def=0)");
- MODULE_PARM_DESC(fake_rw, "fake reads/writes instead of copying (def=0)");
- MODULE_PARM_DESC(guard, "protection checksum: 0=crc, 1=ip (def=0)");
-+MODULE_PARM_DESC(host_lock, "use host_lock around all commands (def=0)");
- MODULE_PARM_DESC(lbpu, "enable LBP, support UNMAP command (def=0)");
- MODULE_PARM_DESC(lbpws, "enable LBP, support WRITE SAME(16) with UNMAP bit (def=0)");
- MODULE_PARM_DESC(lbpws10, "enable LBP, support WRITE SAME(10) with UNMAP bit (def=0)");
-@@ -2881,7 +2908,7 @@ static int scsi_debug_show_info(struct seq_file *m, struct Scsi_Host *host)
- 	    "%s [%s]\n"
- 	    "num_tgts=%d, shared (ram) size=%d MB, opts=0x%x, "
- 	    "every_nth=%d(curr:%d)\n"
--	    "delay=%d, max_luns=%d, scsi_level=%d\n"
-+	    "delay=%d, max_luns=%d, scsi_level=%d, completions=%d\n"
- 	    "sector_size=%d bytes, cylinders=%d, heads=%d, sectors=%d\n"
- 	    "number of aborts=%d, device_reset=%d, bus_resets=%d, "
- 	    "host_resets=%d\ndix_reads=%d dix_writes=%d dif_errors=%d\n",
-@@ -2889,6 +2916,7 @@ static int scsi_debug_show_info(struct seq_file *m, struct Scsi_Host *host)
- 	    scsi_debug_dev_size_mb, scsi_debug_opts, scsi_debug_every_nth,
- 	    scsi_debug_cmnd_count, scsi_debug_delay,
- 	    scsi_debug_max_luns, scsi_debug_scsi_level,
-+	    atomic_read(&scsi_debug_completions),
- 	    scsi_debug_sector_size, sdebug_cylinders_per, sdebug_heads,
- 	    sdebug_sectors_per, num_aborts, num_dev_resets, num_bus_resets,
- 	    num_host_resets, dix_reads, dix_writes, dif_errors);
-@@ -2907,7 +2935,7 @@ static ssize_t delay_store(struct device_driver *ddp, const char *buf,
- 	char work[20];
- 
-         if (1 == sscanf(buf, "%10s", work)) {
--		if ((1 == sscanf(work, "%d", &delay)) && (delay >= 0)) {
-+		if (1 == sscanf(work, "%d", &delay)) {
- 			scsi_debug_delay = delay;
- 			return count;
- 		}
-@@ -3234,6 +3262,24 @@ static ssize_t removable_store(struct device_driver *ddp, const char *buf,
- }
- static DRIVER_ATTR_RW(removable);
- 
-+static ssize_t host_lock_show(struct device_driver *ddp, char *buf)
-+{
-+	return scnprintf(buf, PAGE_SIZE, "%d\n", !!scsi_debug_host_lock);
-+}
-+static ssize_t host_lock_store(struct device_driver *ddp, const char *buf,
-+			       size_t count)
-+{
-+	int n;
-+
-+	if ((count > 0) && (1 == sscanf(buf, "%d", &n)) && (n >= 0)) {
-+		scsi_debug_host_lock = (n > 0);
-+		return count;
-+	}
-+	return -EINVAL;
-+}
-+static DRIVER_ATTR_RW(host_lock);
-+
-+
- /* Note: The following array creates attribute files in the
-    /sys/bus/pseudo/drivers/scsi_debug directory. The advantage of these
-    files (over those found in the /sys/module/scsi_debug/parameters
-@@ -3266,6 +3312,7 @@ static struct attribute *sdebug_drv_attrs[] = {
- 	&driver_attr_ato.attr,
- 	&driver_attr_map.attr,
- 	&driver_attr_removable.attr,
-+	&driver_attr_host_lock.attr,
- 	NULL,
- };
- ATTRIBUTE_GROUPS(sdebug_drv);
-@@ -3570,7 +3617,7 @@ static void sdebug_remove_adapter(void)
- }
- 
- static
--int scsi_debug_queuecommand_lck(struct scsi_cmnd *SCpnt, done_funct_t done)
-+int scsi_debug_queuecommand_int(struct scsi_cmnd *SCpnt, done_funct_t done)
- {
- 	unsigned char *cmd = (unsigned char *) SCpnt->cmnd;
- 	int len, k;
-@@ -3678,7 +3725,7 @@ int scsi_debug_queuecommand_lck(struct scsi_cmnd *SCpnt, done_funct_t done)
- 		errsts = check_readiness(SCpnt, 1, devip);
- 		break;
- 	case TEST_UNIT_READY:     /* mandatory */
--		delay_override = 1;
-+		/* delay_override = 1; */
- 		errsts = check_readiness(SCpnt, 0, devip);
- 		break;
- 	case RESERVE:
-@@ -3926,7 +3973,20 @@ write:
- 			     (delay_override ? 0 : scsi_debug_delay));
- }
- 
--static DEF_SCSI_QCMD(scsi_debug_queuecommand)
-+static int
-+scsi_debug_queuecommand_choose(struct Scsi_Host *shost, struct scsi_cmnd *cmd)
-+{
-+	unsigned long irq_flags;
-+	int rc;
-+
-+	if (scsi_debug_host_lock) {
-+		spin_lock_irqsave(shost->host_lock, irq_flags);
-+		rc = scsi_debug_queuecommand_int(cmd, cmd->scsi_done);
-+		spin_unlock_irqrestore(shost->host_lock, irq_flags);
-+		return rc;
-+	} else
-+		return scsi_debug_queuecommand_int(cmd, cmd->scsi_done);
-+}
- 
- static struct scsi_host_template sdebug_driver_template = {
- 	.show_info =		scsi_debug_show_info,
-@@ -3938,7 +3998,7 @@ static struct scsi_host_template sdebug_driver_template = {
- 	.slave_configure =	scsi_debug_slave_configure,
- 	.slave_destroy =	scsi_debug_slave_destroy,
- 	.ioctl =		scsi_debug_ioctl,
--	.queuecommand =		scsi_debug_queuecommand,
-+	.queuecommand =		scsi_debug_queuecommand_choose,
- 	.eh_abort_handler =	scsi_debug_abort,
- 	.eh_bus_reset_handler = scsi_debug_bus_reset,
- 	.eh_device_reset_handler = scsi_debug_device_reset,
-@@ -4032,7 +4092,7 @@ static int sdebug_driver_probe(struct device * dev)
-         } else
- 		scsi_scan_host(hpnt);
- 
--
-+	atomic_set(&scsi_debug_completions, 0);
-         return error;
- }
- 
-
---------------050606070806040609080501--
+-- 
+Saran
