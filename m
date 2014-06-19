@@ -1,53 +1,52 @@
-From: Theodore Ts'o <tytso@mit.edu>
-Subject: Re: BUG: scheduling while atomic in blk_mq codepath?
-Date: Thu, 19 Jun 2014 12:21:44 -0400
-Message-ID: <20140619162144.GC4907@thunk.org>
-References: <20140619153550.GA12836@thunk.org>
- <53A308DE.7080000@fb.com>
- <20140619160801.GB4907@thunk.org>
+From: Eddie Wai <eddie.wai@broadcom.com>
+Subject: Re: [PATCH] bnx2fc: do not scan uninitialized lists in case of
+ error.
+Date: Thu, 19 Jun 2014 09:56:05 -0700
+Message-ID: <1403196965.31848.7.camel@lbirv-waie-lx2.broadcom.com>
+References: <1403183100-15011-1-git-send-email-mlombard@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20140619160801.GB4907@thunk.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@fb.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:47959 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932232AbaFSRBo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Jun 2014 13:01:44 -0400
+In-Reply-To: <1403183100-15011-1-git-send-email-mlombard@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Maurizio Lombardi <mlombard@redhat.com>
+Cc: linux-scsi@vger.kernel.org, hch@lst.de, James.Bottomley@HansenPartnership.com
 
-On Thu, Jun 19, 2014 at 12:08:01PM -0400, Theodore Ts'o wrote:
-> > The other issue, not sure, not a lot of detail. It may be fixed by the pull
-> > request I sent out yesterday. You can try pulling in:
-> > 
-> > git://git.kernel.dk/linux-block.git for-linus
+On Thu, 2014-06-19 at 15:05 +0200, Maurizio Lombardi wrote:
+> In case of of error, the bnx2fc_cmd_mgr_alloc() function will call
+> the bnx2fc_cmd_mgr_free() to perform the cleanup.
+> The problem is that in one case the latter may try to scan
+> some not-yet initialized lists, resulting in a kernel panic.
 > 
-> Thanks, I'll give that a try.
+> This patch prevents this from happening by freeing the lists
+> before calling bnx2fc_cmd_mgr_free().
+> 
+> Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
+> ---
+>  drivers/scsi/bnx2fc/bnx2fc_io.c | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
+> index 32a5e0a..7bc47fc 100644
+> --- a/drivers/scsi/bnx2fc/bnx2fc_io.c
+> +++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
+> @@ -282,6 +282,8 @@ struct bnx2fc_cmd_mgr *bnx2fc_cmd_mgr_alloc(struct bnx2fc_hba *hba)
+>  				       arr_sz, GFP_KERNEL);
+>  	if (!cmgr->free_list_lock) {
+>  		printk(KERN_ERR PFX "failed to alloc free_list_lock\n");
+> +		kfree(cmgr->free_list);
+> +		cmgr->free_list = NULL;
+>  		goto mem_err;
+>  	}
+>  
+Agreed.  Thanks for fixing this, Maurizio.
 
-I tried merging in your for-linus branch in v3.16-rc1, and I'm seeing
-the following.  On a 32-bit x86 3.15 kernel, run: "mke2fs -t ext3
-/dev/vdc" where /dev/vdc is a 5 gig virtio partition.
-
-The boot 3.16-rc1 with linux-block.git's for_linus branch merged in.
-(Or 3.16-rc1 by itself):
-
-root@candygram:~# e2fsck -fy /dev/vdc
-e2fsck 1.43-WIP (4-Feb-2014)
-Pass 1: Checking inodes, blocks, and sizes
-[   22.872217] random: nonblocking pool is initialized
-Pass 2: Checking directory structure
-Pass 3: Checking directory connectivity
-Pass 4: Checking reference counts
-Pass 5: Checking group summary information
-Error reading block 262144 (Attempt to read block from filesystem resulted in short read) while reading inode and block bitmaps.  Ignore error? yes
-
-Force rewrite? yes
-
-Block bitmap differences:  +(262144--262657)
-Fix? yes
+Acked-by: Eddie Wai <eddie.wai@broadcom.com>
 
 
-/dev/vdc: ***** FILE SYSTEM WAS MODIFIED *****
-/dev/vdc: 11/327680 files (0.0% non-contiguous), 55935/1310720 blocks
-
-With the 3.15 kernel, this works fine.
-
-						- Ted
