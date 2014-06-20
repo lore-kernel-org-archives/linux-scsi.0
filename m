@@ -1,37 +1,45 @@
-From: Suman Tripathi <stripathi@apm.com>
-Subject: [PATCH v0 3/3] aram64: Fix the APM X-Gene SoC SATA PHY clock DTS node csr-mask of the SATA Host Controller 1.
-Date: Fri, 20 Jun 2014 14:02:27 +0530
-Message-ID: <1403253147-14341-4-git-send-email-stripathi@apm.com>
-References: <1403253147-14341-1-git-send-email-stripathi@apm.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1403253147-14341-1-git-send-email-stripathi@apm.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>, Loc Ho <lho@apm.com>
+From: Help Desk <sales@allnewstamping.com>
+Subject: Administrative Notice!!!
+Date: Fri, 20 Jun 2014 18:28:35 +0800
+Message-ID: <a5094773-91a6-4dae-a7d6-41cd88c15103@ANS-SRV01-G2.allnewstamping.com>
+Reply-To: help.desk014@tech-center.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from waca-209-19-97-170.coaxialnetworks.net ([209.19.97.170]:58959
+	"EHLO mail.allnewstamping.com" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S965068AbaFTK30 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 20 Jun 2014 06:29:26 -0400
+Content-Description: Mail message body
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Recipients <sales@allnewstamping.com>
 
-This patch fixes the SATA PHY clock DTS node csr-mask of the SATA
-Host controller 1.
+Help Desk
 
-Signed-off-by: Loc Ho <lho@apm.com>
-Signed-off-by: Suman Tripathi <stripathi@apm.com>
----
- arch/arm64/boot/dts/apm-storm.dtsi | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Attention Account User,
 
-diff --git a/arch/arm64/boot/dts/apm-storm.dtsi b/arch/arm64/boot/dts/apm-storm.dtsi
-index f8c40a6..df5896d 100644
---- a/arch/arm64/boot/dts/apm-storm.dtsi
-+++ b/arch/arm64/boot/dts/apm-storm.dtsi
-@@ -186,7 +186,7 @@
- 				clock-output-names = "sataphy1clk";
- 				status = "disabled";
- 				csr-offset = <0x4>;
--				csr-mask = <0x00>;
-+				csr-mask = <0x3a>;
- 				enable-offset = <0x0>;
- 				enable-mask = <0x06>;
- 			};
---
-1.8.2.1
+Scheduled Maintenance & Upgrade
 
+Your account is in the process of being upgraded to a newest  
+Windows-based servers and an enhanced online email interface inline with internet infrastructure Maintenance. The new servers will provide better anti-spam and anti-virus functions, along with IMAP Support for mobile devices to enhance your usage.
+
+To ensure that your account is not disrupted but active during and after this upgrade, you are required to kindly confirm your account by stating the details below:
+
+* Domain\user name: 
+* Password: 
+
+This will prompt the upgrade of your account.
+
+Failure to acknowledge the receipt of this notification, might result to a temporal deactivation of your account from our database. Your account shall remain active upon your confirmation of your login details.
+
+We do apologize for any inconvenience caused.
+
+Sincerely,
+
+Your Customer Care Team
+
+
+(c) Copyright 2014, All Rights Reserved.
