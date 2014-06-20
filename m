@@ -1,29 +1,40 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: sd_setup_discard_cmnd: BUG: unable to handle kernel NULL pointer dereference at (null)
-Date: Thu, 19 Jun 2014 23:08:22 -0400
-Message-ID: <yq1ionwjn15.fsf@sermon.lab.mkp.net>
-References: <53A28B21.7070500@profihost.ag>
+From: Ming Lei <tom.leiming@gmail.com>
+Subject: Re: [PATCH v3 0/2]]ata: Fix the dma state machine lockup for APM
+ X-Gene SoC
+Date: Fri, 20 Jun 2014 11:59:01 +0800
+Message-ID: <CACVXFVPqhVSoxQQi4kS2+_Xmn9xAFcbRSpvoxU-yGJkxM7FUtw@mail.gmail.com>
+References: <1403160538-31565-1-git-send-email-stripathi@apm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <53A28B21.7070500@profihost.ag> (Stefan Priebe's message of "Thu,
-	19 Jun 2014 09:02:57 +0200")
-Sender: linux-raid-owner@vger.kernel.org
-To: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
-Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, JBottomley@parallels.com, Jens Axboe <axboe@kernel.dk>, konrad.wilk@oracle.com, elder@linaro.org, Josh Durgin <josh.durgin@inktank.com>, Greg KH <gregkh@linuxfoundation.org>, Lars Ellenberg <lars.ellenberg@linbit.com>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1403160538-31565-1-git-send-email-stripathi@apm.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Suman Tripathi <stripathi@apm.com>
+Cc: Olof Johansson <olof@lixom.net>, Tejun Heo <tj@kernel.org>, Arnd Bergmann <arnd@arndb.de>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, Don Dutile <ddutile@redhat.com>, Jon Masters <jcm@redhat.com>, patches@apm.com, Loc Ho <lho@apm.com>
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "Stefan" == Stefan Priebe <- Profihost AG <s.priebe@profihost.ag>> writes:
+Hi Suman,
 
-Stefan> Hi, while using vanilla 3.10.44 with drbd on top of a md raid1.
+On Thu, Jun 19, 2014 at 2:48 PM, Suman Tripathi <stripathi@apm.com> wrote:
+> Signed-off-by: Loc Ho <lho@apm.com>
+> Signed-off-by: Suman Tripathi <stripathi@apm.com>
+> ---
+> Suman Tripathi (2):
+>   libahci: Implement the function ahci_restart_engine to restart the
+>     port dma engine.
+>   ata: Fix the dma state machine lockup for the IDENTIFY DEVICE PIO mode
+>     command.
+>
+>  drivers/ata/ahci.h       |  2 ++
+>  drivers/ata/ahci_xgene.c | 70 +++++++++++++++++++++++++++++++++++++++---------
+>  drivers/ata/libahci.c    | 15 ++++++++++-
+>  3 files changed, 73 insertions(+), 14 deletions(-)
 
-Stefan> I'm pretty often hitting the followin kernel bug.
+These two patches does fix boot failure on our mustang board, thanks
+Suman!
 
-Stefan> [<ffffffff8128105c>] blk_add_request_payload+0xc/0x90
+Reported-and-Tested-by: Ming Lei <ming.lei@canonical.com>
 
-That's really messed up. This means we received a request with no bio.
-
-Does this happen with later kernels?
-
+Thanks,
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Ming Lei
