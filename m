@@ -1,45 +1,52 @@
-From: Help Desk <sales@allnewstamping.com>
-Subject: Administrative Notice!!!
-Date: Fri, 20 Jun 2014 18:28:35 +0800
-Message-ID: <a5094773-91a6-4dae-a7d6-41cd88c15103@ANS-SRV01-G2.allnewstamping.com>
-Reply-To: help.desk014@tech-center.com
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Subject: Re: [PATCH v0 1/3] ata: Fix the watermark threshold for the APM X-Gene
+ SATA host controller driver.
+Date: Fri, 20 Jun 2014 19:24:16 +0400
+Message-ID: <53A45220.1030406@cogentembedded.com>
+References: <1403253147-14341-1-git-send-email-stripathi@apm.com> <1403253147-14341-2-git-send-email-stripathi@apm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from waca-209-19-97-170.coaxialnetworks.net ([209.19.97.170]:58959
-	"EHLO mail.allnewstamping.com" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S965068AbaFTK30 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Jun 2014 06:29:26 -0400
-Content-Description: Mail message body
+Received: from mail-lb0-f169.google.com ([209.85.217.169]:51493 "EHLO
+	mail-lb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753833AbaFTPYI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Jun 2014 11:24:08 -0400
+Received: by mail-lb0-f169.google.com with SMTP id l4so2492686lbv.0
+        for <linux-scsi@vger.kernel.org>; Fri, 20 Jun 2014 08:24:06 -0700 (PDT)
+In-Reply-To: <1403253147-14341-2-git-send-email-stripathi@apm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Recipients <sales@allnewstamping.com>
+To: Suman Tripathi <stripathi@apm.com>, olof@lixom.net, tj@kernel.org, arnd@arndb.de
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>
 
-Help Desk
+Hello.
 
-Attention Account User,
+On 06/20/2014 12:32 PM, Suman Tripathi wrote:
 
-Scheduled Maintenance & Upgrade
+> This patch fixes the watermark threshold of the receive FIFO for the
+> APM X-Gene SATA host controller driver.
 
-Your account is in the process of being upgraded to a newest  
-Windows-based servers and an enhanced online email interface inline with internet infrastructure Maintenance. The new servers will provide better anti-spam and anti-virus functions, along with IMAP Support for mobile devices to enhance your usage.
+> Signed-off-by: Loc Ho <lho@apm.com>
+> Signed-off-by: Suman Tripathi <stripathi@apm.com>
+> ---
+>   drivers/ata/ahci_xgene.c | 8 ++++++++
+>   1 file changed, 8 insertions(+)
 
-To ensure that your account is not disrupted but active during and after this upgrade, you are required to kindly confirm your account by stating the details below:
+> diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
+> index 77c89bf..5f0f750 100644
+> --- a/drivers/ata/ahci_xgene.c
+> +++ b/drivers/ata/ahci_xgene.c
+> @@ -68,6 +68,10 @@
+>   #define PORTAXICFG_OUTTRANS_SET(dst, src) \
+>   		(((dst) & ~0x00f00000) | (((u32)(src) << 0x14) & 0x00f00000))
+>
+> +#define PORTRANSCFG				0xc8
+> +#define PORTRANSCFG_RXWM_SET(dst, src)		\
+> +		(((dst) & ~0x0000007f) | (((u32) (src) << 0) & 0x0000007f))
 
-* Domain\user name: 
-* Password: 
+    Please renmove space after (u32) for consistency with the above macro. And 
+why shift by 0 bits?
 
-This will prompt the upgrade of your account.
+WBR, Sergei
 
-Failure to acknowledge the receipt of this notification, might result to a temporal deactivation of your account from our database. Your account shall remain active upon your confirmation of your login details.
-
-We do apologize for any inconvenience caused.
-
-Sincerely,
-
-Your Customer Care Team
-
-
-(c) Copyright 2014, All Rights Reserved.
