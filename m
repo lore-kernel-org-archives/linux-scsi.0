@@ -1,86 +1,87 @@
-From: Jack Wang <xjtuwjp@gmail.com>
-Subject: Re: [PATCH V2] pm80xx: Fix hibernation issue
-Date: Fri, 20 Jun 2014 09:21:58 +0200
-Message-ID: <53A3E116.4040709@gmail.com>
-References: <1403190800-15022-1-git-send-email-bgrove@attotech.com>
+From: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
+Subject: RE: [PATCH] pm8001: Fix potential null pointer dereference and
+ memory leak.
+Date: Fri, 20 Jun 2014 07:30:43 +0000
+Message-ID: <CE2C58F938F4C44EA74FFF880BAA7E5E1CD7152E@BBYEXM02.pmc-sierra.internal>
+References: <1403003740-27487-1-git-send-email-mlombard@redhat.com>
+ <53A03488.9060407@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:47571 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752794AbaFTHWC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Jun 2014 03:22:02 -0400
-Received: by mail-wi0-f179.google.com with SMTP id cc10so274488wib.0
-        for <linux-scsi@vger.kernel.org>; Fri, 20 Jun 2014 00:22:00 -0700 (PDT)
-In-Reply-To: <1403190800-15022-1-git-send-email-bgrove@attotech.com>
+Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:52622 "EHLO
+	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756845AbaFTIEl convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 20 Jun 2014 04:04:41 -0400
+In-Reply-To: <53A03488.9060407@gmail.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bradley.grove@gmail.com
-Cc: linux-scsi@vger.kernel.org, Bradley Grove <bgrove@attotech.com>, JBottomley@parallels.com, ebrown@attotech.com, pcullen@attotech.com
+To: Jack Wang <xjtuwjp@gmail.com>, Maurizio Lombardi <mlombard@redhat.com>
+Cc: "lindar_liu@usish.com" <lindar_liu@usish.com>, "hch@infradead.org" <hch@infradead.org>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-
-Thanks Brad for testing and fixing.
-Acked-by: Jack Wang <xjtuwjp@gmail.com>
-
-On 06/19/2014 05:13 PM, bradley.grove@gmail.com wrote:
-> From: Bradley Grove <bgrove@attotech.com>
-> 
-> During hibernation, the HBA firmware may lose power and forget the device
-> id info.   This causes the HBA to reject IO upon resume.   The fix is
-> to call the libsas power management routines to make the domain device
-> forgetful.
-> 
-> This fixes bug 76681: https://bugzilla.kernel.org/show_bug.cgi?id=76681
-> 
-> Signed-off-by: Bradley Grove <bgrove@attotech.com>
-> ---
->  drivers/scsi/pm8001/pm8001_init.c | 12 ++++++++++--
->  1 file changed, 10 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-> index c4f31b21..86cf03a 100644
-> --- a/drivers/scsi/pm8001/pm8001_init.c
-> +++ b/drivers/scsi/pm8001/pm8001_init.c
-> @@ -957,6 +957,7 @@ static int pm8001_pci_suspend(struct pci_dev *pdev, pm_message_t state)
->  	int  i, j;
->  	u32 device_state;
->  	pm8001_ha = sha->lldd_ha;
-> +	sas_suspend_ha(sha);
->  	flush_workqueue(pm8001_wq);
->  	scsi_block_requests(pm8001_ha->shost);
->  	if (!pdev->pm_cap) {
-> @@ -1006,6 +1007,7 @@ static int pm8001_pci_resume(struct pci_dev *pdev)
->  	int rc;
->  	u8 i = 0, j;
->  	u32 device_state;
-> +	DECLARE_COMPLETION_ONSTACK(completion);
->  	pm8001_ha = sha->lldd_ha;
->  	device_state = pdev->current_state;
->  
-> @@ -1026,7 +1028,7 @@ static int pm8001_pci_resume(struct pci_dev *pdev)
->  	rc = pci_go_44(pdev);
->  	if (rc)
->  		goto err_out_disable;
-> -
-> +	sas_prep_resume_ha(sha);
->  	/* chip soft rst only for spc */
->  	if (pm8001_ha->chip_id == chip_8001) {
->  		PM8001_CHIP_DISP->chip_soft_rst(pm8001_ha);
-> @@ -1058,7 +1060,13 @@ static int pm8001_pci_resume(struct pci_dev *pdev)
->  		for (i = 1; i < pm8001_ha->number_of_intr; i++)
->  			PM8001_CHIP_DISP->interrupt_enable(pm8001_ha, i);
->  	}
-> -	scsi_unblock_requests(pm8001_ha->shost);
-> +	pm8001_ha->flags = PM8001F_RUN_TIME;
-> +	for (i = 0; i < pm8001_ha->chip->n_phy; i++) {
-> +		pm8001_ha->phy[i].enable_completion = &completion;
-> +		PM8001_CHIP_DISP->phy_start_req(pm8001_ha, i);
-> +		wait_for_completion(&completion);
-> +	}
-> +	sas_resume_ha(sha);
->  	return 0;
->  
->  err_out_disable:
-> 
-
+On Tue, Jun 17, 2014 at 5:58 PM, Jack Wang <xjtuwjp@gmail.com> wrote:
+> On 06/17/2014 01:15 PM, Maurizio Lombardi wrote:
+>> The pm8001_get_phy_settings_info() function does not check
+>> the kzalloc() return value and does not free the allocated memory.
+>>
+>> Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
+>
+> Looks good, thanks
+> Acked-by: Jack Wang <xjtuwjp@gmail.com>
+Looks good, Thanks Maurizio
+Acked-by: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
+>> ---
+>>  drivers/scsi/pm8001/pm8001_init.c | 13 ++++++++++---
+>>  1 file changed, 10 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+>> index c4f31b21..e90c89f 100644
+>> --- a/drivers/scsi/pm8001/pm8001_init.c
+>> +++ b/drivers/scsi/pm8001/pm8001_init.c
+>> @@ -677,7 +677,7 @@ static void pm8001_init_sas_add(struct pm8001_hba_info *pm8001_ha)
+>>   * pm8001_get_phy_settings_info : Read phy setting values.
+>>   * @pm8001_ha : our hba.
+>>   */
+>> -void pm8001_get_phy_settings_info(struct pm8001_hba_info *pm8001_ha)
+>> +static int pm8001_get_phy_settings_info(struct pm8001_hba_info *pm8001_ha)
+>>  {
+>>
+>>  #ifdef PM8001_READ_VPD
+>> @@ -691,11 +691,15 @@ void pm8001_get_phy_settings_info(struct pm8001_hba_info *pm8001_ha)
+>>       payload.offset = 0;
+>>       payload.length = 4096;
+>>       payload.func_specific = kzalloc(4096, GFP_KERNEL);
+>> +     if (!payload.func_specific)
+>> +             return -ENOMEM;
+>>       /* Read phy setting values from flash */
+>>       PM8001_CHIP_DISP->get_nvmd_req(pm8001_ha, &payload);
+>>       wait_for_completion(&completion);
+>>       pm8001_set_phy_profile(pm8001_ha, sizeof(u8), payload.func_specific);
+>> +     kfree(payload.func_specific);
+>>  #endif
+>> +     return 0;
+>>  }
+>>
+>>  #ifdef PM8001_USE_MSIX
+>> @@ -879,8 +883,11 @@ static int pm8001_pci_probe(struct pci_dev *pdev,
+>>       pm8001_init_sas_add(pm8001_ha);
+>>       /* phy setting support for motherboard controller */
+>>       if (pdev->subsystem_vendor != PCI_VENDOR_ID_ADAPTEC2 &&
+>> -             pdev->subsystem_vendor != 0)
+>> -             pm8001_get_phy_settings_info(pm8001_ha);
+>> +             pdev->subsystem_vendor != 0) {
+>> +             rc = pm8001_get_phy_settings_info(pm8001_ha);
+>> +             if (rc)
+>> +                     goto err_out_shost;
+>> +     }
+>>       pm8001_post_sas_ha_init(shost, chip);
+>>       rc = sas_register_ha(SHOST_TO_SAS_HA(shost));
+>>       if (rc)
+>>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
