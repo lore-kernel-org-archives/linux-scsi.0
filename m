@@ -1,131 +1,164 @@
-From: Lars Ellenberg <lars.ellenberg@linbit.com>
-Subject: Re: sd_setup_discard_cmnd: BUG: unable to handle kernel NULL pointer
- dereference at (null)
-Date: Fri, 20 Jun 2014 20:29:56 +0200
-Message-ID: <20140620182956.GB24389@soda.linbit>
-References: <53A28B21.7070500@profihost.ag>
- <yq1ionwjn15.fsf@sermon.lab.mkp.net>
- <20140620155321.GA24389@soda.linbit>
- <yq1wqcbil0c.fsf@sermon.lab.mkp.net>
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: [PATCH 1/1] [SCSI] Fix a bug in deriving the FLUSH_TIMEOUT from
+ the basic I/O timeout
+Date: Fri, 20 Jun 2014 21:36:44 +0000
+Message-ID: <5b926a0a9f264edda91c7c2ab0acb7d1@BY2PR03MB299.namprd03.prod.outlook.com>
+References: <1401899623-24194-1-git-send-email-kys@microsoft.com>
+	 <1401901323.17510.23.camel@dabdike>
+	 <d61f4b87a72544e4b0c1e1872a76f97b@BY2PR03MB299.namprd03.prod.outlook.com>
+	 <53911A35.7010805@cs.wisc.edu>
+	 <d9854e6ff97f4b0087dbe835a2a57c8f@BY2PR03MB299.namprd03.prod.outlook.com>
+	 <5391F801.4010107@cs.wisc.edu>
+ <1402077167.2207.89.camel@dabdike.int.hansenpartnership.com>
+ <539206FA.1020001@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zimbra13.linbit.com ([212.69.166.240]:36387 "EHLO
-	zimbra13.linbit.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752229AbaFTS37 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Jun 2014 14:29:59 -0400
-Content-Disposition: inline
-In-Reply-To: <yq1wqcbil0c.fsf@sermon.lab.mkp.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <539206FA.1020001@kernel.dk>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>, James Bottomley <jbottomley@parallels.com>, "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "apw@canonical.com" <apw@canonical.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "ohering@suse.com" <ohering@suse.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "jasowang@redhat.com" <jasowang@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>, NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, JBottomley@parallels.com, Jens Axboe <axboe@kernel.dk>, konrad.wilk@oracle.com, elder@linaro.org, Josh Durgin <josh.durgin@inktank.com>, Greg KH <gregkh@linuxfoundation.org>
 
-On Fri, Jun 20, 2014 at 12:49:39PM -0400, Martin K. Petersen wrote:
-> >>>>> "Lars" == Lars Ellenberg <lars.ellenberg@linbit.com> writes:
+
+
+> -----Original Message-----
+> From: Jens Axboe [mailto:axboe@kernel.dk]
+> Sent: Friday, June 6, 2014 11:23 AM
+> To: James Bottomley; michaelc@cs.wisc.edu
+> Cc: linux-kernel@vger.kernel.org; hch@infradead.org;
+> devel@linuxdriverproject.org; apw@canonical.com; KY Srinivasan; linux-
+> scsi@vger.kernel.org; ohering@suse.com; gregkh@linuxfoundation.org;
+> jasowang@redhat.com
+> Subject: Re: [PATCH 1/1] [SCSI] Fix a bug in deriving the FLUSH_TIMEOUT
+> from the basic I/O timeout
 > 
-> Lars,
+> On 2014-06-06 11:52, James Bottomley wrote:
+> > On Fri, 2014-06-06 at 12:18 -0500, Mike Christie wrote:
+> >> On 6/5/14, 9:53 PM, KY Srinivasan wrote:
+> >>>
+> >>>
+> >>>> -----Original Message-----
+> >>>> From: Mike Christie [mailto:michaelc@cs.wisc.edu]
+> >>>> Sent: Thursday, June 5, 2014 6:33 PM
+> >>>> To: KY Srinivasan
+> >>>> Cc: James Bottomley; linux-kernel@vger.kernel.org;
+> >>>> apw@canonical.com; devel@linuxdriverproject.org;
+> hch@infradead.org;
+> >>>> linux- scsi@vger.kernel.org; ohering@suse.com;
+> >>>> gregkh@linuxfoundation.org; jasowang@redhat.com
+> >>>> Subject: Re: [PATCH 1/1] [SCSI] Fix a bug in deriving the
+> >>>> FLUSH_TIMEOUT from the basic I/O timeout
+> >>>>
+> >>>> On 06/04/2014 12:15 PM, KY Srinivasan wrote:
+> >>>>>
+> >>>>>
+> >>>>>> -----Original Message-----
+> >>>>>> From: James Bottomley [mailto:jbottomley@parallels.com]
+> >>>>>> Sent: Wednesday, June 4, 2014 10:02 AM
+> >>>>>> To: KY Srinivasan
+> >>>>>> Cc: linux-kernel@vger.kernel.org; apw@canonical.com;
+> >>>>>> devel@linuxdriverproject.org; hch@infradead.org; linux-
+> >>>>>> scsi@vger.kernel.org; ohering@suse.com;
+> >>>>>> gregkh@linuxfoundation.org; jasowang@redhat.com
+> >>>>>> Subject: Re: [PATCH 1/1] [SCSI] Fix a bug in deriving the
+> >>>>>> FLUSH_TIMEOUT from the basic I/O timeout
+> >>>>>>
+> >>>>>> On Wed, 2014-06-04 at 09:33 -0700, K. Y. Srinivasan wrote:
+> >>>>>>> Commit ID: 7e660100d85af860e7ad763202fff717adcdaacd added
+> code
+> >>>>>>> to derive the FLUSH_TIMEOUT from the basic I/O timeout.
+> However,
+> >>>>>>> this patch did not use the basic I/O timeout of the device. Fix this
+> bug.
+> >>>>>>>
+> >>>>>>> Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
+> >>>>>>> ---
+> >>>>>>>    drivers/scsi/sd.c |    4 +++-
+> >>>>>>>    1 files changed, 3 insertions(+), 1 deletions(-)
+> >>>>>>>
+> >>>>>>> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c index
+> >>>>>>> e9689d5..54150b1 100644
+> >>>>>>> --- a/drivers/scsi/sd.c
+> >>>>>>> +++ b/drivers/scsi/sd.c
+> >>>>>>> @@ -832,7 +832,9 @@ static int
+> sd_setup_write_same_cmnd(struct
+> >>>>>>> scsi_device *sdp, struct request *rq)
+> >>>>>>>
+> >>>>>>>    static int scsi_setup_flush_cmnd(struct scsi_device *sdp,
+> >>>>>>> struct request *rq)  {
+> >>>>>>> -	rq->timeout *= SD_FLUSH_TIMEOUT_MULTIPLIER;
+> >>>>>>> +	int timeout = sdp->request_queue->rq_timeout;
+> >>>>>>> +
+> >>>>>>> +	rq->timeout = (timeout *
+> SD_FLUSH_TIMEOUT_MULTIPLIER);
+> >>>>>>
+> >>>>>> Could you share where you found this to be a problem?  It looks
+> >>>>>> like a bug in block because all inbound requests being prepared
+> >>>>>> should have a timeout set, so block would be the place to fix it.
+> >>>>>
+> >>>>> Perhaps; what I found was that the value in rq->timeout was 0
+> >>>>> coming into this function and thus multiplying obviously has no effect.
+> >>>>>
+> >>>>
+> >>>> I think you are right. We hit this problem because we are doing:
+> >>>>
+> >>>> scsi_request_fn -> blk_peek_request -> sd_prep_fn ->
+> >>>> scsi_setup_flush_cmnd.
+> >>>>
+> >>>> At this time request->timeout is zero so the multiplication does
+> >>>> nothing. See how sd_setup_write_same_cmnd will set the request-
+> >timeout at this time.
+> >>>>
+> >>>> Then in scsi_request_fn we do:
+> >>>>
+> >>>> scsi_request_fn -> blk_start_request -> blk_add_timer.
+> >>>>
+> >>>> At this time it will set the request->timeout if something like req
+> >>>> block pc users (like scsi_execute() or block/scsi_ioctl.c) or the
+> >>>> write same code mentioned above have not set the timeout.
+> >>>
+> >>> I don't think this is a recent change. Prior to this commit, we were
+> >>> setting the timeout value in this function; it just happened to be a
+> >>> different constant unrelated to the I/O timeout.
+> >>>
+> >>
+> >> Yeah, it looks like when 7e660100d85af860e7ad763202fff717adcdaacd was
+> >> merged we were supposed to initialize it like in your patch in this thread.
+> >>
+> >> I guess we could do your patch in this thread, or if we want the
+> >> block layer to initialize the timeout before the prep_fn callout is
+> >> called then we would need to have the blk-flush.c code to that when
+> >> it sets up the request. If we do the latter, do we want the discard
+> >> and write same code to initialize the request's timeout before the
+> >> prep_fn callout is called too?
+> >
+> > I looked through the call chain; it seems to be intentional behaviour
+> > on the part of block.  Just from an mq point of view, it would make
+> > better code if we unconditionally initialised rq->timeout early and
+> > allowed prep to modify it and then dumped the if(!req->timeout) in
+> > blk_add_timer(), but it's a marginal if condition that would compile
+> > to a conditional store on sensible architectures, so losing the
+> > conditional probably isn't worth worrying about.
+> >
+> > Cc'd Jens for his opinion with the block patch
 > 
-> Lars> Any bio allocated that will be passed down with REQ_DISCARD has to
-> Lars> be allocated with nr_iovecs = 1 (at least), even though it must
-> Lars> not contain any bio_vec payload.
+> I just committed this one earlier today:
 > 
-> True. Although the correct answer is: Any discard request must be issued
-> by blkdev_issue_discard(). That's the interface.
+> http://git.kernel.dk/?p=linux-
+> block.git;a=commit;h=f6be4fb4bcb396fc3b1c134b7863351972de081f
 > 
-> The hacks we do to carry the information inside the bio constitute an
-> internal interface that is subject to change (it is just about to,
-> actually).
-> 
-> Lars> Though DRBD in 3.10 is not supposed to accept discard requests.
-> Lars> So I'm not sure how it manages to pass them down?
-> 
-> drbd_receiver.c:
-> 
-> static unsigned long wire_flags_to_bio(struct drbd_conf *mdev, u32 dpf)
-> {
->         return  (dpf & DP_RW_SYNC ? REQ_SYNC : 0) |
->                 (dpf & DP_FUA ? REQ_FUA : 0) |
->                 (dpf & DP_FLUSH ? REQ_FLUSH : 0) |
->                 (dpf & DP_DISCARD ? REQ_DISCARD : 0);
-> }
-> 
-> [...]
-> 
-> /* mirrored write */
-> static int receive_Data(struct drbd_tconn *tconn, struct packet_info
-> *pi)
-> {
-> [...]
->        dp_flags = be32_to_cpu(p->dp_flags);
->        rw |= wire_flags_to_bio(mdev, dp_flags);
-> [...]
-> 
-> That's pretty busticated. I suggest you simply remove REQ_DISCARD from
-> that helper for now.
-> 
-> It's also a good idea to disable discard and write same on the client
-> side when you set up the request queue:
-> 
-> 	blk_queue_max_discard_sectors(q, 0);
-> 	blk_queue_max_write_same_sectors(q, 0);
+> since I ran into the same thing on nvme. Either approach is fine with me, as
+> they both allow override of the timeout before insertion. But we've always
+> done the rq->timeout = 0 init, so I think we should just reinstate that
+> behavior.
 
-Our main development still happens out-of-tree,
-trying to be compatible to a large range of kernel versions.
+James,
 
-linux upstream DRBD is supposed to handle discards "correctly"
-(even though not using the proper interface blkdev_issue_discard).
+How is this being fixed now.
 
-But it does not, because one fix apparently slipped through
-when preparing the pull request.
+Regards,
 
-So linux upstream needs:
-diff --git a/drivers/block/drbd/drbd_receiver.c b/drivers/block/drbd/drbd_receiver.c
-index b6c8aaf..5b17ec8 100644
---- a/drivers/block/drbd/drbd_receiver.c
-+++ b/drivers/block/drbd/drbd_receiver.c
-@@ -1337,8 +1337,11 @@ int drbd_submit_peer_request(struct drbd_device *device,
- 		return 0;
- 	}
- 
-+	/* Discards don't have any payload.
-+	 * But the scsi layer still expects a bio_vec it can use internally,
-+	 * see sd_setup_discard_cmnd() and blk_add_request_payload(). */
- 	if (peer_req->flags & EE_IS_TRIM)
--		nr_pages = 0; /* discards don't have any payload. */
-+		nr_pages = 1;
- 
- 	/* In most cases, we will only need one bio.  But in case the lower
- 	 * level restrictions happen to be different at this offset on this
-
-I'll prepare a proper patch with commit message later.
-
-linux upstream DRBD also does blk_queue_max_write_same_sectors(q, 0)
-and blk_queue_max_discard_sectors(q, DRBD_MAX_DISCARD_SECTORS)
-
--------
-For linux 3.10, things are different.
-
-DRBD in linux 3.10 does not set QUEUE_FLAG_DISCARD,
-and does not announce discard capabilities in any other way,
-even though it already contains some preparation steps
-(those pieces your grep foo managed to find above...)
-
-DRBD does a handshake, and if there is no discard capability announced,
-the peer is supposed to never send discards (and stop announcing them
-on his side), even if the peer's DRBD version already supports
-and announces discard capabilities.
-
-So I'm still not really seeing how discard requests would be issued
-by that version of DRBD.
-The local submit path should not allow them (no QUEUE_FLAG_DISCARD set)
-and the remote submit path should not allow them either,
-for the same reason, and because the DRBD handshake does not allow them.
-
-So my current guess would be that Stefan prepared a 3.10.44
-+ "upstream DRBD", but unfortunately not upstream enough?
-
-Stefan, please give more details how to trigger this,
-with which exact DRBD versions on the peers, and what action.
-
-	Lars
+K. Y
