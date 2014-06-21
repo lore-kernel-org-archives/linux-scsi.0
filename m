@@ -1,164 +1,95 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH 1/1] [SCSI] Fix a bug in deriving the FLUSH_TIMEOUT from
- the basic I/O timeout
-Date: Fri, 20 Jun 2014 21:36:44 +0000
-Message-ID: <5b926a0a9f264edda91c7c2ab0acb7d1@BY2PR03MB299.namprd03.prod.outlook.com>
-References: <1401899623-24194-1-git-send-email-kys@microsoft.com>
-	 <1401901323.17510.23.camel@dabdike>
-	 <d61f4b87a72544e4b0c1e1872a76f97b@BY2PR03MB299.namprd03.prod.outlook.com>
-	 <53911A35.7010805@cs.wisc.edu>
-	 <d9854e6ff97f4b0087dbe835a2a57c8f@BY2PR03MB299.namprd03.prod.outlook.com>
-	 <5391F801.4010107@cs.wisc.edu>
- <1402077167.2207.89.camel@dabdike.int.hansenpartnership.com>
- <539206FA.1020001@kernel.dk>
+From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
+Subject: RE: scsi-mq
+Date: Sat, 21 Jun 2014 00:52:22 +0000
+Message-ID: <94D0CD8314A33A4D9D801C0FE68B402958B41923@G9W0745.americas.hpqcorp.net>
+References: <1402580946-11470-1-git-send-email-hch@lst.de>
+ <53A05068.4080702@acm.org> <53A10B3A.6050705@kernel.dk>
+ <53A13B19.2010305@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <539206FA.1020001@kernel.dk>
+In-Reply-To: <53A13B19.2010305@acm.org>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>, James Bottomley <jbottomley@parallels.com>, "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "apw@canonical.com" <apw@canonical.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "ohering@suse.com" <ohering@suse.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "jasowang@redhat.com" <jasowang@redhat.com>
+To: Bart Van Assche <bvanassche@acm.org>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
 
 
 > -----Original Message-----
-> From: Jens Axboe [mailto:axboe@kernel.dk]
-> Sent: Friday, June 6, 2014 11:23 AM
-> To: James Bottomley; michaelc@cs.wisc.edu
-> Cc: linux-kernel@vger.kernel.org; hch@infradead.org;
-> devel@linuxdriverproject.org; apw@canonical.com; KY Srinivasan; linux-
-> scsi@vger.kernel.org; ohering@suse.com; gregkh@linuxfoundation.org;
-> jasowang@redhat.com
-> Subject: Re: [PATCH 1/1] [SCSI] Fix a bug in deriving the FLUSH_TIMEOUT
-> from the basic I/O timeout
+> From: Bart Van Assche [mailto:bvanassche@acm.org]
+> Sent: Wednesday, 18 June, 2014 2:09 AM
+> To: Jens Axboe; Christoph Hellwig; James Bottomley
+> Cc: Elliott, Robert (Server Storage); linux-scsi@vger.kernel.org; linux-
+> kernel@vger.kernel.org
+> Subject: Re: scsi-mq
 > 
-> On 2014-06-06 11:52, James Bottomley wrote:
-> > On Fri, 2014-06-06 at 12:18 -0500, Mike Christie wrote:
-> >> On 6/5/14, 9:53 PM, KY Srinivasan wrote:
-> >>>
-> >>>
-> >>>> -----Original Message-----
-> >>>> From: Mike Christie [mailto:michaelc@cs.wisc.edu]
-> >>>> Sent: Thursday, June 5, 2014 6:33 PM
-> >>>> To: KY Srinivasan
-> >>>> Cc: James Bottomley; linux-kernel@vger.kernel.org;
-> >>>> apw@canonical.com; devel@linuxdriverproject.org;
-> hch@infradead.org;
-> >>>> linux- scsi@vger.kernel.org; ohering@suse.com;
-> >>>> gregkh@linuxfoundation.org; jasowang@redhat.com
-> >>>> Subject: Re: [PATCH 1/1] [SCSI] Fix a bug in deriving the
-> >>>> FLUSH_TIMEOUT from the basic I/O timeout
-> >>>>
-> >>>> On 06/04/2014 12:15 PM, KY Srinivasan wrote:
-> >>>>>
-> >>>>>
-> >>>>>> -----Original Message-----
-> >>>>>> From: James Bottomley [mailto:jbottomley@parallels.com]
-> >>>>>> Sent: Wednesday, June 4, 2014 10:02 AM
-> >>>>>> To: KY Srinivasan
-> >>>>>> Cc: linux-kernel@vger.kernel.org; apw@canonical.com;
-> >>>>>> devel@linuxdriverproject.org; hch@infradead.org; linux-
-> >>>>>> scsi@vger.kernel.org; ohering@suse.com;
-> >>>>>> gregkh@linuxfoundation.org; jasowang@redhat.com
-> >>>>>> Subject: Re: [PATCH 1/1] [SCSI] Fix a bug in deriving the
-> >>>>>> FLUSH_TIMEOUT from the basic I/O timeout
-> >>>>>>
-> >>>>>> On Wed, 2014-06-04 at 09:33 -0700, K. Y. Srinivasan wrote:
-> >>>>>>> Commit ID: 7e660100d85af860e7ad763202fff717adcdaacd added
-> code
-> >>>>>>> to derive the FLUSH_TIMEOUT from the basic I/O timeout.
-> However,
-> >>>>>>> this patch did not use the basic I/O timeout of the device. Fix this
-> bug.
-> >>>>>>>
-> >>>>>>> Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
-> >>>>>>> ---
-> >>>>>>>    drivers/scsi/sd.c |    4 +++-
-> >>>>>>>    1 files changed, 3 insertions(+), 1 deletions(-)
-> >>>>>>>
-> >>>>>>> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c index
-> >>>>>>> e9689d5..54150b1 100644
-> >>>>>>> --- a/drivers/scsi/sd.c
-> >>>>>>> +++ b/drivers/scsi/sd.c
-> >>>>>>> @@ -832,7 +832,9 @@ static int
-> sd_setup_write_same_cmnd(struct
-> >>>>>>> scsi_device *sdp, struct request *rq)
-> >>>>>>>
-> >>>>>>>    static int scsi_setup_flush_cmnd(struct scsi_device *sdp,
-> >>>>>>> struct request *rq)  {
-> >>>>>>> -	rq->timeout *= SD_FLUSH_TIMEOUT_MULTIPLIER;
-> >>>>>>> +	int timeout = sdp->request_queue->rq_timeout;
-> >>>>>>> +
-> >>>>>>> +	rq->timeout = (timeout *
-> SD_FLUSH_TIMEOUT_MULTIPLIER);
-> >>>>>>
-> >>>>>> Could you share where you found this to be a problem?  It looks
-> >>>>>> like a bug in block because all inbound requests being prepared
-> >>>>>> should have a timeout set, so block would be the place to fix it.
-> >>>>>
-> >>>>> Perhaps; what I found was that the value in rq->timeout was 0
-> >>>>> coming into this function and thus multiplying obviously has no effect.
-> >>>>>
-> >>>>
-> >>>> I think you are right. We hit this problem because we are doing:
-> >>>>
-> >>>> scsi_request_fn -> blk_peek_request -> sd_prep_fn ->
-> >>>> scsi_setup_flush_cmnd.
-> >>>>
-> >>>> At this time request->timeout is zero so the multiplication does
-> >>>> nothing. See how sd_setup_write_same_cmnd will set the request-
-> >timeout at this time.
-> >>>>
-> >>>> Then in scsi_request_fn we do:
-> >>>>
-> >>>> scsi_request_fn -> blk_start_request -> blk_add_timer.
-> >>>>
-> >>>> At this time it will set the request->timeout if something like req
-> >>>> block pc users (like scsi_execute() or block/scsi_ioctl.c) or the
-> >>>> write same code mentioned above have not set the timeout.
-> >>>
-> >>> I don't think this is a recent change. Prior to this commit, we were
-> >>> setting the timeout value in this function; it just happened to be a
-> >>> different constant unrelated to the I/O timeout.
-> >>>
-> >>
-> >> Yeah, it looks like when 7e660100d85af860e7ad763202fff717adcdaacd was
-> >> merged we were supposed to initialize it like in your patch in this thread.
-> >>
-> >> I guess we could do your patch in this thread, or if we want the
-> >> block layer to initialize the timeout before the prep_fn callout is
-> >> called then we would need to have the blk-flush.c code to that when
-> >> it sets up the request. If we do the latter, do we want the discard
-> >> and write same code to initialize the request's timeout before the
-> >> prep_fn callout is called too?
-> >
-> > I looked through the call chain; it seems to be intentional behaviour
-> > on the part of block.  Just from an mq point of view, it would make
-> > better code if we unconditionally initialised rq->timeout early and
-> > allowed prep to modify it and then dumped the if(!req->timeout) in
-> > blk_add_timer(), but it's a marginal if condition that would compile
-> > to a conditional store on sensible architectures, so losing the
-> > conditional probably isn't worth worrying about.
-> >
-> > Cc'd Jens for his opinion with the block patch
+...
+> Hello Jens,
 > 
-> I just committed this one earlier today:
+> Fio reports the same queue depth for use_blk_mq=Y (mq below) and
+> use_blk_mq=N (sq below), namely ">=64". However, the number of context
+> switches differs significantly for the random read-write tests.
 > 
-> http://git.kernel.dk/?p=linux-
-> block.git;a=commit;h=f6be4fb4bcb396fc3b1c134b7863351972de081f
-> 
-> since I ran into the same thing on nvme. Either approach is fine with me, as
-> they both allow override of the timeout before insertion. But we've always
-> done the rq->timeout = 0 init, so I think we should just reinstate that
-> behavior.
+...
+> It seems like with the traditional SCSI mid-layer and block core (sq)
+> that the number of context switches does not depend too much on the
+> number of I/O operations but that for the multi-queue SCSI core there
+> are a little bit more than two context switches per I/O in the
+> particular test I ran. The "randrw" script I used for this test takes
+> SCSI LUNs as arguments (/dev/sdX) and starts the fio tool as follows:
 
-James,
+Some of those context switches might be from scsi_end_request(), 
+which always schedules the scsi_requeue_run_queue() function via the
+requeue_work workqueue for scsi-mq.  That causes lots of context 
+switches from a busy application thread (e.g., fio) to a 
+kworker thread.
 
-How is this being fixed now.
+As shown by ftrace:
 
-Regards,
+             fio-19340 [005] dNh. 12067.908444: scsi_io_completion <-scsi_finish_command
+             fio-19340 [005] dNh. 12067.908444: scsi_end_request <-scsi_io_completion
+             fio-19340 [005] dNh. 12067.908444: blk_update_request <-scsi_end_request
+             fio-19340 [005] dNh. 12067.908445: blk_account_io_completion <-blk_update_request
+             fio-19340 [005] dNh. 12067.908445: scsi_mq_free_sgtables <-scsi_end_request
+             fio-19340 [005] dNh. 12067.908445: scsi_free_sgtable <-scsi_mq_free_sgtables
+             fio-19340 [005] dNh. 12067.908445: blk_account_io_done <-__blk_mq_end_io
+             fio-19340 [005] dNh. 12067.908445: blk_mq_free_request <-__blk_mq_end_io
+             fio-19340 [005] dNh. 12067.908446: blk_mq_map_queue <-blk_mq_free_request
+             fio-19340 [005] dNh. 12067.908446: blk_mq_put_tag <-__blk_mq_free_request
+             fio-19340 [005] .N.. 12067.908446: blkdev_direct_IO <-generic_file_direct_write
+    kworker/5:1H-3207  [005] .... 12067.908448: scsi_requeue_run_queue <-process_one_work
+    kworker/5:1H-3207  [005] .... 12067.908448: scsi_run_queue <-scsi_requeue_run_queue
+    kworker/5:1H-3207  [005] .... 12067.908448: blk_mq_start_stopped_hw_queues <-scsi_run_queue
+             fio-19340 [005] .... 12067.908449: blk_start_plug <-do_blockdev_direct_IO
+             fio-19340 [005] .... 12067.908449: blkdev_get_block <-do_direct_IO
+             fio-19340 [005] .... 12067.908450: blk_throtl_bio <-generic_make_request_checks
+             fio-19340 [005] .... 12067.908450: blk_sq_make_request <-generic_make_request
+             fio-19340 [005] .... 12067.908450: blk_queue_bounce <-blk_sq_make_request
+             fio-19340 [005] .... 12067.908450: blk_mq_map_request <-blk_sq_make_request
+             fio-19340 [005] .... 12067.908451: blk_mq_queue_enter <-blk_mq_map_request
+             fio-19340 [005] .... 12067.908451: blk_mq_map_queue <-blk_mq_map_request
+             fio-19340 [005] .... 12067.908451: blk_mq_get_tag <-__blk_mq_alloc_request
+             fio-19340 [005] .... 12067.908451: blk_mq_bio_to_request <-blk_sq_make_request
+             fio-19340 [005] .... 12067.908451: blk_rq_bio_prep <-init_request_from_bio
+             fio-19340 [005] .... 12067.908451: blk_recount_segments <-bio_phys_segments
+             fio-19340 [005] .... 12067.908452: blk_account_io_start <-blk_mq_bio_to_request
+             fio-19340 [005] .... 12067.908452: blk_mq_hctx_mark_pending <-__blk_mq_insert_request
+             fio-19340 [005] .... 12067.908452: blk_mq_run_hw_queue <-blk_sq_make_request
+             fio-19340 [005] .... 12067.908452: blk_mq_start_request <-__blk_mq_run_hw_queue
 
-K. Y
+In one snapshot just tracing scsi_end_request() and
+scsi_request_run_queue(), 30K scsi_end_request() calls yielded 
+20k scsi_request_run_queue() calls.
+
+In this case, blk_mq_start_stopped_hw_queues() doesn't end up
+doing anything since there aren't any stopped queues to restart 
+(blk_mq_run_hw_queue() gets called a bit later during routine 
+fio work); the context switch turned out to be a waste of time.  
+If it did find a stopped queue, then it would call 
+blk_mq_run_hw_queue() itself.
+
+---
+Rob Elliott    HP Server Storage
