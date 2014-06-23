@@ -1,72 +1,33 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH v2 1/3] scsi_cmnd: Introduce scsi_transfer_length helper
-Date: Mon, 23 Jun 2014 16:24:31 -0500
-Message-ID: <53A89B0F.4040300@cs.wisc.edu>
-References: <1402477799-24610-1-git-send-email-sagig@mellanox.com> <1402477799-24610-2-git-send-email-sagig@mellanox.com>
+From: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+Subject: Re: [PATCH 00/22] Add and use pci_zalloc_consistent
+Date: Mon, 23 Jun 2014 14:49:30 -0700 (PDT)
+Message-ID: <20140623.144930.2077608308662590493.davem@davemloft.net>
+References: <cover.1403530604.git.joe@perches.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1402477799-24610-2-git-send-email-sagig@mellanox.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Sagi Grimberg <sagig@mellanox.com>
-Cc: martin.petersen@oracle.com, nab@linux-iscsi.org, roland@kernel.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-rdma@vger.kernel.org
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <cover.1403530604.git.joe-6d6DIl74uiNBDgjK7y7TUQ@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: joe-6d6DIl74uiNBDgjK7y7TUQ@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-atm-general-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, iss_storagedev-VXdhtT5mjnY@public.gmane.org, linux-crypto-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-eata-3umIvqjeSgIeIZ0/mPfg9Q@public.gmane.org, devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, linux-arch-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 06/11/2014 04:09 AM, Sagi Grimberg wrote:
-> In case protection information exists on the wire
-> scsi transports should include it in the transfer
-> byte count (even if protection information does not
-> exist in the host memory space). This helper will
-> compute the total transfer length from the scsi
-> command data length and protection attributes.
+From: Joe Perches <joe-6d6DIl74uiNBDgjK7y7TUQ@public.gmane.org>
+Date: Mon, 23 Jun 2014 06:41:28 -0700
+
+> Adding the helper reduces object code size as well as overall
+> source size line count.
 > 
-> Signed-off-by: Sagi Grimberg <sagig@mellanox.com>
-> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-> ---
->  include/scsi/scsi_cmnd.h |   17 +++++++++++++++++
->  1 files changed, 17 insertions(+), 0 deletions(-)
+> It's also consistent with all the various zalloc mechanisms
+> in the kernel.
 > 
-> diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-> index dd7c998..a100c6e 100644
-> --- a/include/scsi/scsi_cmnd.h
-> +++ b/include/scsi/scsi_cmnd.h
-> @@ -7,6 +7,7 @@
->  #include <linux/types.h>
->  #include <linux/timer.h>
->  #include <linux/scatterlist.h>
-> +#include <scsi/scsi_device.h>
->  
->  struct Scsi_Host;
->  struct scsi_device;
-> @@ -306,4 +307,20 @@ static inline void set_driver_byte(struct scsi_cmnd *cmd, char status)
->  	cmd->result = (cmd->result & 0x00ffffff) | (status << 24);
->  }
->  
-> +static inline unsigned scsi_transfer_length(struct scsi_cmnd *scmd)
-> +{
-> +	unsigned int xfer_len = blk_rq_bytes(scmd->request);
+> Done with a simple cocci script and some typing.
 
-Can you do bidi and dif/dix? If so, then instead of using blk_rq_bytes
-directly should it use the scsi_out/scsi_in macros and access the length
-through the scsi_data_buffer?
+For networking bits:
 
-This does not fix Christoph's bug in the other mail. Just noticed it
-while looking at the code.
-
-
-> +	unsigned int prot_op = scsi_get_prot_op(scmd);
-> +	unsigned int sector_size = scmd->device->sector_size;
-> +
-> +	switch (prot_op) {
-> +	case SCSI_PROT_NORMAL:
-> +	case SCSI_PROT_WRITE_STRIP:
-> +	case SCSI_PROT_READ_INSERT:
-> +		return xfer_len;
-> +	}
-> +
-> +	return xfer_len + (xfer_len >> ilog2(sector_size)) * 8;
-> +}
-> +
->  #endif /* _SCSI_SCSI_CMND_H */
-> 
+Acked-by: David S. Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
