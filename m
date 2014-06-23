@@ -1,81 +1,41 @@
-From: Joe Perches <joe@perches.com>
-Subject: Re: [PATCH 00/22] Add and use pci_zalloc_consistent
-Date: Mon, 23 Jun 2014 12:13:29 -0700
-Message-ID: <1403550809.15811.13.camel@joe-AO725>
-References: <cover.1403530604.git.joe@perches.com>
- <20140623172512.GA1390@garbanzo.do-not-panic.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: sd_setup_discard_cmnd: BUG: unable to handle kernel NULL pointer dereference at (null)
+Date: Mon, 23 Jun 2014 15:37:03 -0400
+Message-ID: <yq1vbrrh0yo.fsf@sermon.lab.mkp.net>
+References: <53A28B21.7070500@profihost.ag>
+	<yq1ionwjn15.fsf@sermon.lab.mkp.net>
+	<20140620155321.GA24389@soda.linbit>
+	<yq1wqcbil0c.fsf@sermon.lab.mkp.net>
+	<20140620182956.GB24389@soda.linbit>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dri-devel-bounces@lists.freedesktop.org>
-In-Reply-To: <20140623172512.GA1390@garbanzo.do-not-panic.com>
-List-Unsubscribe: <http://lists.freedesktop.org/mailman/options/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <http://lists.freedesktop.org/archives/dri-devel>
-List-Post: <mailto:dri-devel@lists.freedesktop.org>
-List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <http://lists.freedesktop.org/mailman/listinfo/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: dri-devel-bounces@lists.freedesktop.org
-Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>, Arnd Bergmann <arnd@arndb.de>
-Cc: devel@driverdev.osuosl.org, linux-arch@vger.kernel.org, linux-scsi@vger.kernel.org, iss_storagedev@hp.com, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, linux-atm-general@lists.sourceforge.net, linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-crypto@vger.kernel.org, linux-media@vger.kernel.org, linux-eata@i-connect.net
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:48676 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755945AbaFWThg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Jun 2014 15:37:36 -0400
+In-Reply-To: <20140620182956.GB24389@soda.linbit> (Lars Ellenberg's message of
+	"Fri, 20 Jun 2014 20:29:56 +0200")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Lars Ellenberg <lars.ellenberg@linbit.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Stefan Priebe - Profihost AG <s.priebe@profihost.ag>, NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, JBottomley@parallels.com, Jens Axboe <axboe@kernel.dk>, konrad.wilk@oracle.com, elder@linaro.org, Josh Durgin <josh.durgin@inktank.com>, Greg KH <gregkh@linuxfoundation.org>
 
-On Mon, 2014-06-23 at 10:25 -0700, Luis R. Rodriguez wrote:
-> On Mon, Jun 23, 2014 at 06:41:28AM -0700, Joe Perches wrote:
-> > Adding the helper reduces object code size as well as overall
-> > source size line count.
-> > 
-> > It's also consistent with all the various zalloc mechanisms
-> > in the kernel.
-> > 
-> > Done with a simple cocci script and some typing.
-> 
-> Awesome, any chance you can paste in the SmPL? Also any chance
-> we can get this added to a make coccicheck so that maintainers
-> moving forward can use that to ensure that no new code is
-> added that uses the old school API?
+>>>>> "Lars" == Lars Ellenberg <lars.ellenberg@linbit.com> writes:
 
-Not many of these are recent.
+Lars,
 
-Arnd Bergmann reasonably suggested that the pci_alloc_consistent
-api be converted the the more widely used dma_alloc_coherent.
+Thanks for fixing this. 
 
-https://lkml.org/lkml/2014/6/23/513
+I'd still like to see you use the lib call instead like you do for
+zeroout. I have some patches in the pipeline for multi-range discard
+support and things are going to break for drbd if you manually roll
+bios.
 
-> Shouldn't these drivers just use the normal dma-mapping API now?
+Lars> linux upstream DRBD also does blk_queue_max_write_same_sectors(q,
+Lars> 0) and blk_queue_max_discard_sectors(q, DRBD_MAX_DISCARD_SECTORS)
 
-and I replied:
+Great!
 
-https://lkml.org/lkml/2014/6/23/525
-
-> Maybe.  I wouldn't mind.
-> They do seem to have a trivial bit of unnecessary overhead for 
-> hwdev == NULL ? NULL : &hwdev->dev
-
-Anyway, here's the little script.
-I'm not sure it's worthwhile to add it though.
-
-$ cat ./scripts/coccinelle/api/alloc/pci_zalloc_consistent.cocci
-///
-/// Use pci_zalloc_consistent rather than
-///     pci_alloc_consistent followed by memset with 0
-///
-/// This considers some simple cases that are common and easy to validate
-/// Note in particular that there are no ...s in the rule, so all of the
-/// matched code has to be contiguous
-///
-/// Blatantly cribbed from: scripts/coccinelle/api/alloc/kzalloc-simple.cocci
-
-@@
-type T, T2;
-expression x;
-expression E1,E2,E3;
-statement S;
-@@
-
-- x = (T)pci_alloc_consistent(E1,E2,E3);
-+ x = pci_zalloc_consistent(E1,E2,E3);
-  if ((x==NULL) || ...) S
-- memset((T2)x,0,E2);
+-- 
+Martin K. Petersen	Oracle Linux Engineering
