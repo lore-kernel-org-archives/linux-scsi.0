@@ -1,90 +1,126 @@
-From: Al Viro <viro@ZenIV.linux.org.uk>
-Subject: [regression] fix 32-bit breakage in block device read(2) (was Re:
- 32-bit bug in iovec iterator changes)
-Date: Mon, 23 Jun 2014 08:44:40 +0100
-Message-ID: <20140623074440.GV18016@ZenIV.linux.org.uk>
-References: <20140621035144.GA8526@thunk.org>
- <20140621055306.GP18016@ZenIV.linux.org.uk>
- <20140621230922.GA13188@thunk.org>
- <20140621234913.GQ18016@ZenIV.linux.org.uk>
- <1403395400.2592.4.camel@jarvis.lan>
- <20140622002618.GR18016@ZenIV.linux.org.uk>
- <1403397164.2177.40.camel@dabdike.int.hansenpartnership.com>
- <20140622005352.GS18016@ZenIV.linux.org.uk>
- <20140622010032.GT18016@ZenIV.linux.org.uk>
- <20140622115007.GA5333@thunk.org>
+From: Saurav Kashyap <saurav.kashyap@qlogic.com>
+Subject: [PATCH] qla2xxx: Fix sparse warning in qla_target.c.
+Date: Mon, 23 Jun 2014 03:30:05 -0400
+Message-ID: <1403508605-17982-1-git-send-email-saurav.kashyap@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:56986 "EHLO
-	ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751099AbaFWHox (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Jun 2014 03:44:53 -0400
-Content-Disposition: inline
-In-Reply-To: <20140622115007.GA5333@thunk.org>
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:4691 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751282AbaFWICm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 23 Jun 2014 04:02:42 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>, Theodore Ts'o <tytso@mit.edu>, James Bottomley <James.Bottomley@HansenPartnership.com>, Dave Chinner <david@fromorbit.com>, Jens Axboe <axboe@fb.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: jbottomley@parallels.com
+Cc: hch@lst.de, giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-On Sun, Jun 22, 2014 at 07:50:07AM -0400, Theodore Ts'o wrote:
-> On Sun, Jun 22, 2014 at 02:00:32AM +0100, Al Viro wrote:
-> > 
-> > PS: I agree that it's worth careful commenting, obviously, but
-> > before sending it to Linus (*with* comments) I want to get a
-> > confirmation that this one-liner actually fixes what Ted is seeing.
-> > I have reproduced it here, and that change makes the breakage go
-> > away in my testing, but I'd like to make sure that we are seeing the
-> > same thing.  Ted?
-> 
-> Hep, that fixes things.  Thanks for explaining what was going on!
+From: Quinn Tran <quinn.tran@qlogic.com>
 
-OK, here it is, hopefully with sufficient comments:
-    
-blkdev_read_iter() wants to cap the iov_iter by the amount of
-data remaining to the end of device.  That's what iov_iter_truncate()
-is for (trim iter->count if it's above the given limit).  So far,
-so good, but the argument of iov_iter_truncate() is size_t, so on
-32bit boxen (in case of a large device) we end up with that upper
-limit truncated down to 32 bits *before* comparing it with iter->count.
-
-Easily fixed by making iov_iter_truncate() take 64bit argument -
-it does the right thing after such change (we only reach the
-assignment in there when the current value of iter->count is greater
-than the limit, i.e. for anything that would get truncated we don't
-reach the assignment at all) and that argument is not the new
-value of iter->count - it's an upper limit for such.
-
-The overhead of passing u64 is not an issue - the thing is inlined,
-so callers passing size_t won't pay any penalty.
-
-Reported-by: Theodore Tso <tytso@mit.edu>
-Tested-by: Theodore Tso <tytso@mit.edu>
-Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
+Signed-off-by: Quinn Tran <quinn.tran@qlogic.com>
+Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 ---
+ drivers/scsi/qla2xxx/qla_target.c |   18 ++++++++++++------
+ drivers/scsi/qla2xxx/qla_target.h |    4 ++--
+ 2 files changed, 14 insertions(+), 8 deletions(-)
 
-diff --git a/include/linux/uio.h b/include/linux/uio.h
-index ddfdb53..17ae7e3 100644
---- a/include/linux/uio.h
-+++ b/include/linux/uio.h
-@@ -94,8 +94,20 @@ static inline size_t iov_iter_count(struct iov_iter *i)
- 	return i->count;
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index 2619ed4..f9dfbc3 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -1129,7 +1129,7 @@ static void qlt_24xx_retry_term_exchange(struct scsi_qla_host *vha,
+ 	ctio->u.status1.flags =
+ 	    __constant_cpu_to_le16(CTIO7_FLAGS_STATUS_MODE_1 |
+ 		CTIO7_FLAGS_TERMINATE);
+-	ctio->u.status1.ox_id = entry->fcp_hdr_le.ox_id;
++	ctio->u.status1.ox_id = cpu_to_le16(entry->fcp_hdr_le.ox_id);
+ 
+ 	qla2x00_start_iocbs(vha, vha->req);
+ 
+@@ -1263,6 +1263,7 @@ static void qlt_24xx_send_task_mgmt_ctio(struct scsi_qla_host *ha,
+ {
+ 	struct atio_from_isp *atio = &mcmd->orig_iocb.atio;
+ 	struct ctio7_to_24xx *ctio;
++	uint16_t temp;
+ 
+ 	ql_dbg(ql_dbg_tgt, ha, 0xe008,
+ 	    "Sending task mgmt CTIO7 (ha=%p, atio=%p, resp_code=%x\n",
+@@ -1293,7 +1294,8 @@ static void qlt_24xx_send_task_mgmt_ctio(struct scsi_qla_host *ha,
+ 	ctio->u.status1.flags = (atio->u.isp24.attr << 9) |
+ 	    __constant_cpu_to_le16(CTIO7_FLAGS_STATUS_MODE_1 |
+ 		CTIO7_FLAGS_SEND_STATUS);
+-	ctio->u.status1.ox_id = swab16(atio->u.isp24.fcp_hdr.ox_id);
++	temp = be16_to_cpu(atio->u.isp24.fcp_hdr.ox_id);
++	ctio->u.status1.ox_id = cpu_to_le16(temp);
+ 	ctio->u.status1.scsi_status =
+ 	    __constant_cpu_to_le16(SS_RESPONSE_INFO_LEN_VALID);
+ 	ctio->u.status1.response_len = __constant_cpu_to_le16(8);
+@@ -1514,6 +1516,7 @@ static int qlt_24xx_build_ctio_pkt(struct qla_tgt_prm *prm,
+ 	struct ctio7_to_24xx *pkt;
+ 	struct qla_hw_data *ha = vha->hw;
+ 	struct atio_from_isp *atio = &prm->cmd->atio;
++	uint16_t temp;
+ 
+ 	pkt = (struct ctio7_to_24xx *)vha->req->ring_ptr;
+ 	prm->pkt = pkt;
+@@ -1542,13 +1545,14 @@ static int qlt_24xx_build_ctio_pkt(struct qla_tgt_prm *prm,
+ 	pkt->initiator_id[2] = atio->u.isp24.fcp_hdr.s_id[0];
+ 	pkt->exchange_addr = atio->u.isp24.exchange_addr;
+ 	pkt->u.status0.flags |= (atio->u.isp24.attr << 9);
+-	pkt->u.status0.ox_id = swab16(atio->u.isp24.fcp_hdr.ox_id);
++	temp = be16_to_cpu(atio->u.isp24.fcp_hdr.ox_id);
++	pkt->u.status0.ox_id = cpu_to_le16(temp);
+ 	pkt->u.status0.relative_offset = cpu_to_le32(prm->cmd->offset);
+ 
+ 	ql_dbg(ql_dbg_tgt, vha, 0xe00c,
+ 	    "qla_target(%d): handle(cmd) -> %08x, timeout %d, ox_id %#x\n",
+-	    vha->vp_idx, pkt->handle, QLA_TGT_TIMEOUT,
+-	    le16_to_cpu(pkt->u.status0.ox_id));
++	    vha->vp_idx, pkt->handle, QLA_TGT_TIMEOUT, temp);
++	    
+ 	return 0;
  }
  
--static inline void iov_iter_truncate(struct iov_iter *i, size_t count)
-+/*
-+ * Cap the iov_iter by given limit; note that the second argument is
-+ * *not* the new size - it's upper limit for such.  Passing it a value
-+ * greater than the amount of data in iov_iter is fine - it'll just do
-+ * nothing in that case.
-+ */
-+static inline void iov_iter_truncate(struct iov_iter *i, u64 count)
- {
-+	/*
-+	 * count doesn't have to fit in size_t - comparison extends both
-+	 * operands to u64 here and any value that would be truncated by
-+	 * conversion in assignement is by definition greater than all
-+	 * values of size_t, including old i->count.
-+	 */
- 	if (i->count > count)
- 		i->count = count;
- }
+@@ -2620,6 +2624,7 @@ static int __qlt_send_term_exchange(struct scsi_qla_host *vha,
+ 	struct qla_hw_data *ha = vha->hw;
+ 	request_t *pkt;
+ 	int ret = 0;
++	uint16_t temp;
+ 
+ 	ql_dbg(ql_dbg_tgt, vha, 0xe01c, "Sending TERM EXCH CTIO (ha=%p)\n", ha);
+ 
+@@ -2656,7 +2661,8 @@ static int __qlt_send_term_exchange(struct scsi_qla_host *vha,
+ 	ctio24->u.status1.flags = (atio->u.isp24.attr << 9) |
+ 	    __constant_cpu_to_le16(CTIO7_FLAGS_STATUS_MODE_1 |
+ 		CTIO7_FLAGS_TERMINATE);
+-	ctio24->u.status1.ox_id = swab16(atio->u.isp24.fcp_hdr.ox_id);
++	temp = be16_to_cpu(atio->u.isp24.fcp_hdr.ox_id);
++	ctio24->u.status1.ox_id = cpu_to_le16(temp);
+ 
+ 	/* Most likely, it isn't needed */
+ 	ctio24->u.status1.residual = get_unaligned((uint32_t *)
+diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
+index fa5630b..a106a8a 100644
+--- a/drivers/scsi/qla2xxx/qla_target.h
++++ b/drivers/scsi/qla2xxx/qla_target.h
+@@ -443,7 +443,7 @@ struct ctio7_to_24xx {
+ 			uint16_t reserved1;
+ 			__le16 flags;
+ 			uint32_t residual;
+-			uint16_t ox_id;
++			__le16 ox_id;
+ 			uint16_t scsi_status;
+ 			uint32_t relative_offset;
+ 			uint32_t reserved2;
+@@ -458,7 +458,7 @@ struct ctio7_to_24xx {
+ 			uint16_t sense_length;
+ 			uint16_t flags;
+ 			uint32_t residual;
+-			uint16_t ox_id;
++			__le16 ox_id;
+ 			uint16_t scsi_status;
+ 			uint16_t response_len;
+ 			uint16_t reserved;
+-- 
+1.7.7
+
