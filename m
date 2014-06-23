@@ -1,39 +1,91 @@
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: Re: [PATCH 00/22] Add and use pci_zalloc_consistent
-Date: Mon, 23 Jun 2014 10:25:12 -0700
-Message-ID: <20140623172512.GA1390@garbanzo.do-not-panic.com>
-References: <cover.1403530604.git.joe@perches.com>
+From: Mikulas Patocka <mpatocka@redhat.com>
+Subject: [PATCH] target: fix deadlock on unload
+Date: Mon, 23 Jun 2014 13:42:37 -0400 (EDT)
+Message-ID: <alpine.LRH.2.02.1406231329430.8277@file01.intranet.prod.int.rdu2.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-Content-Disposition: inline
-In-Reply-To: <cover.1403530604.git.joe@perches.com>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: driverdev-devel-bounces@linuxdriverproject.org
-To: Joe Perches <joe@perches.com>
-Cc: devel@driverdev.osuosl.org, linux-arch@vger.kernel.org, linux-scsi@vger.kernel.org, iss_storagedev@hp.com, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, linux-atm-general@lists.sourceforge.net, linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-crypto@vger.kernel.org, linux-media@vger.kernel.org, linux-eata@i-connect.net
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Jun 23, 2014 at 06:41:28AM -0700, Joe Perches wrote:
-> Adding the helper reduces object code size as well as overall
-> source size line count.
-> 
-> It's also consistent with all the various zalloc mechanisms
-> in the kernel.
-> 
-> Done with a simple cocci script and some typing.
+target: fix deadlock on unload
 
-Awesome, any chance you can paste in the SmPL? Also any chance
-we can get this added to a make coccicheck so that maintainers
-moving forward can use that to ensure that no new code is
-added that uses the old school API?
+On uniprocessor preemptible kernel, target core deadlocks on unload. The
+following events happen:
+* iscsit_del_np is called
+* it calls send_sig(SIGINT, np->np_thread, 1);
+* the scheduler switches to the np_thread
+* the np_thread is woken up, it sees that kthread_should_stop() returns
+  false, so it doesn't terminate
+* the np_thread clears signals with flush_signals(current); and goes back
+  to sleep in iscsit_accept_np
+* the scheduler switches back to iscsit_del_np
+* iscsit_del_np calls kthread_stop(np->np_thread);
+* the np_thread is waiting in iscsit_accept_np and it doesn't respond to
+  kthread_stop
 
-  Luis
+The deadlock could be resolved if the administrator sends SIGINT signal to
+the np_thread with killall -INT iscsi_np
+
+The reproducible deadlock was introduced in commit
+db6077fd0b7dd41dc6ff18329cec979379071f87, but the thread-stopping code was
+racy even before.
+
+This patch fixes the problem. Using kthread_should_stop to stop the
+np_thread is unreliable, so we test np_thread_state instead. If
+np_thread_state equals ISCSI_NP_THREAD_SHUTDOWN, the thread exits.
+
+Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
+Cc: stable@vger.kernel.org
+
+---
+ drivers/target/iscsi/iscsi_target_login.c |   13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
+
+Index: linux-3.14.8/drivers/target/iscsi/iscsi_target_login.c
+===================================================================
+--- linux-3.14.8.orig/drivers/target/iscsi/iscsi_target_login.c	2014-06-19 00:10:44.634113370 +0200
++++ linux-3.14.8/drivers/target/iscsi/iscsi_target_login.c	2014-06-23 19:05:44.887437402 +0200
+@@ -1196,7 +1196,7 @@ old_sess_out:
+ static int __iscsi_target_login_thread(struct iscsi_np *np)
+ {
+ 	u8 *buffer, zero_tsih = 0;
+-	int ret = 0, rc, stop;
++	int ret = 0, rc;
+ 	struct iscsi_conn *conn = NULL;
+ 	struct iscsi_login *login;
+ 	struct iscsi_portal_group *tpg = NULL;
+@@ -1210,6 +1210,9 @@ static int __iscsi_target_login_thread(s
+ 	if (np->np_thread_state == ISCSI_NP_THREAD_RESET) {
+ 		np->np_thread_state = ISCSI_NP_THREAD_ACTIVE;
+ 		complete(&np->np_restart_comp);
++	} else if (np->np_thread_state == ISCSI_NP_THREAD_SHUTDOWN) {
++		spin_unlock_bh(&np->np_thread_lock);
++		goto exit;
+ 	} else {
+ 		np->np_thread_state = ISCSI_NP_THREAD_ACTIVE;
+ 	}
+@@ -1402,10 +1405,8 @@ old_sess_out:
+ 	}
+ 
+ out:
+-	stop = kthread_should_stop();
+-	/* Wait for another socket.. */
+-	if (!stop)
+-		return 1;
++	return 1;
++
+ exit:
+ 	iscsi_stop_login_thread_timer(np);
+ 	spin_lock_bh(&np->np_thread_lock);
+@@ -1422,7 +1423,7 @@ int iscsi_target_login_thread(void *arg)
+ 
+ 	allow_signal(SIGINT);
+ 
+-	while (!kthread_should_stop()) {
++	while (1) {
+ 		ret = __iscsi_target_login_thread(np);
+ 		/*
+ 		 * We break and exit here unless another sock_accept() call
