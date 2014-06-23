@@ -1,39 +1,39 @@
-From: Theodore Ts'o <tytso@mit.edu>
-Subject: Re: [regression] fix 32-bit breakage in block device read(2) (was
- Re: 32-bit bug in iovec iterator changes)
-Date: Mon, 23 Jun 2014 11:43:02 -0400
-Message-ID: <20140623154302.GC14887@thunk.org>
-References: <20140621055306.GP18016@ZenIV.linux.org.uk>
- <20140621230922.GA13188@thunk.org>
- <20140621234913.GQ18016@ZenIV.linux.org.uk>
- <1403395400.2592.4.camel@jarvis.lan>
- <20140622002618.GR18016@ZenIV.linux.org.uk>
- <1403397164.2177.40.camel@dabdike.int.hansenpartnership.com>
- <20140622005352.GS18016@ZenIV.linux.org.uk>
- <20140622010032.GT18016@ZenIV.linux.org.uk>
- <20140622115007.GA5333@thunk.org>
- <20140623074440.GV18016@ZenIV.linux.org.uk>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: Re: [PATCH 00/22] Add and use pci_zalloc_consistent
+Date: Mon, 23 Jun 2014 10:25:12 -0700
+Message-ID: <20140623172512.GA1390@garbanzo.do-not-panic.com>
+References: <cover.1403530604.git.joe@perches.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from imap.thunk.org ([74.207.234.97]:53444 "EHLO imap.thunk.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753909AbaFWPnJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 Jun 2014 11:43:09 -0400
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
 Content-Disposition: inline
-In-Reply-To: <20140623074440.GV18016@ZenIV.linux.org.uk>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <cover.1403530604.git.joe@perches.com>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: driverdev-devel-bounces@linuxdriverproject.org
+To: Joe Perches <joe@perches.com>
+Cc: devel@driverdev.osuosl.org, linux-arch@vger.kernel.org, linux-scsi@vger.kernel.org, iss_storagedev@hp.com, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, linux-atm-general@lists.sourceforge.net, linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-crypto@vger.kernel.org, linux-media@vger.kernel.org, linux-eata@i-connect.net
 List-Id: linux-scsi@vger.kernel.org
-To: Al Viro <viro@ZenIV.linux.org.uk>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Dave Chinner <david@fromorbit.com>, Jens Axboe <axboe@fb.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Mon, Jun 23, 2014 at 08:44:40AM +0100, Al Viro wrote:
+On Mon, Jun 23, 2014 at 06:41:28AM -0700, Joe Perches wrote:
+> Adding the helper reduces object code size as well as overall
+> source size line count.
 > 
-> OK, here it is, hopefully with sufficient comments:
+> It's also consistent with all the various zalloc mechanisms
+> in the kernel.
+> 
+> Done with a simple cocci script and some typing.
 
-The comments look really good.  I assume you'll get this to
-Linus in time for 3.16-rc3?
+Awesome, any chance you can paste in the SmPL? Also any chance
+we can get this added to a make coccicheck so that maintainers
+moving forward can use that to ensure that no new code is
+added that uses the old school API?
 
-Many thanks!!
-
-					- Ted
+  Luis
