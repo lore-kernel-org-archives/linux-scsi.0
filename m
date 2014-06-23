@@ -1,48 +1,59 @@
 From: Andy Grover <agrover@redhat.com>
-Subject: [PATCHv2 RESENDv2 0/9] target: Save memory on unused se_dev_entrys and se_luns
-Date: Mon, 23 Jun 2014 16:55:29 -0700
-Message-ID: <1403567738-13310-1-git-send-email-agrover@redhat.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:17035 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752597AbaFWXzo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 Jun 2014 19:55:44 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Subject: [PATCHv2 RESENDv2 4/9] target: core_tpg_post_dellun can return void
+Date: Mon, 23 Jun 2014 16:55:33 -0700
+Message-ID: <1403567738-13310-5-git-send-email-agrover@redhat.com>
+References: <1403567738-13310-1-git-send-email-agrover@redhat.com>
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1403567738-13310-1-git-send-email-agrover@redhat.com>
+Sender: target-devel-owner@vger.kernel.org
 To: target-devel@vger.kernel.org
 Cc: linux-scsi@vger.kernel.org, hch@lst.de, nab@linux-iscsi.org
+List-Id: linux-scsi@vger.kernel.org
 
-Hi nab, hch, and all,
+Nothing in it can raise an error.
 
-This patchset reduces the amount of memory for se_dev_entry and se_lun
-arrays by waiting to allocate array members until they are
-created. This patch saves up to 261KB per TPG, and up to 65KB per
-ACL. It also fixes a number of locking bugs around these data
-structures.
+Signed-off-by: Andy Grover <agrover@redhat.com>
+---
+ drivers/target/target_core_internal.h | 2 +-
+ drivers/target/target_core_tpg.c      | 5 +----
+ 2 files changed, 2 insertions(+), 5 deletions(-)
 
-Andy Grover (9):
-  target: Add locking to some accesses to nacl.device_list
-  target: Don't unlock/relock tpg_lun_lock in loop in add_node_to_devs
-  target: Allocate se_dev_entrys in device list only when used
-  target: core_tpg_post_dellun can return void
-  target: Change core_dev_del_lun to take a se_lun instead of
-    unpacked_lun
-  target: Rename core_tpg_post_dellun to remove_lun
-  target: Allocate se_luns only when used
-  target: Remove core_tpg_release_virtual_lun0 function
-  target: Refactor core_enable_device_list_for_node
-
- drivers/target/sbp/sbp_target.c              |   6 +-
- drivers/target/target_core_device.c          | 311 +++++++++++++--------------
- drivers/target/target_core_fabric_configfs.c |  35 +--
- drivers/target/target_core_internal.h        |   9 +-
- drivers/target/target_core_pr.c              |  40 +++-
- drivers/target/target_core_spc.c             |   2 +-
- drivers/target/target_core_tpg.c             | 189 ++++------------
- drivers/target/target_core_ua.c              |   3 +
- include/target/target_core_base.h            |  17 +-
- 9 files changed, 246 insertions(+), 366 deletions(-)
-
+diff --git a/drivers/target/target_core_internal.h b/drivers/target/target_core_internal.h
+index de9cab7..463fddc 100644
+--- a/drivers/target/target_core_internal.h
++++ b/drivers/target/target_core_internal.h
+@@ -83,7 +83,7 @@ struct se_lun *core_tpg_alloc_lun(struct se_portal_group *, u32);
+ int	core_tpg_add_lun(struct se_portal_group *, struct se_lun *,
+ 		u32, struct se_device *);
+ struct se_lun *core_tpg_pre_dellun(struct se_portal_group *, u32 unpacked_lun);
+-int	core_tpg_post_dellun(struct se_portal_group *, struct se_lun *);
++void core_tpg_post_dellun(struct se_portal_group *, struct se_lun *);
+ 
+ /* target_core_transport.c */
+ extern struct kmem_cache *se_tmr_req_cache;
+diff --git a/drivers/target/target_core_tpg.c b/drivers/target/target_core_tpg.c
+index 82a25e1..321268d 100644
+--- a/drivers/target/target_core_tpg.c
++++ b/drivers/target/target_core_tpg.c
+@@ -825,18 +825,15 @@ struct se_lun *core_tpg_pre_dellun(
+ 	return lun;
+ }
+ 
+-int core_tpg_post_dellun(
++void core_tpg_post_dellun(
+ 	struct se_portal_group *tpg,
+ 	struct se_lun *lun)
+ {
+ 	core_clear_lun_from_tpg(lun, tpg);
+ 	transport_clear_lun_ref(lun);
+-
+ 	core_dev_unexport(lun->lun_se_dev, tpg, lun);
+ 
+ 	spin_lock(&tpg->tpg_lun_lock);
+ 	lun->lun_status = TRANSPORT_LUN_STATUS_FREE;
+ 	spin_unlock(&tpg->tpg_lun_lock);
+-
+-	return 0;
+ }
 -- 
 1.9.3
-
