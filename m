@@ -1,125 +1,37 @@
-From: Neil Horman <nhorman@tuxdriver.com>
-Subject: [PATCH] bnx2fc: Improve stats update mechanism
-Date: Mon, 23 Jun 2014 10:41:02 -0400
-Message-ID: <1403534462-21131-1-git-send-email-nhorman@tuxdriver.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Neil Horman <nhorman@tuxdriver.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Robert Love <robert.w.love@intel.com>, Vasu Dev <vasu.dev@intel.com>
+From: "Carmen Rofriguez" <carlfern@canada-11.com>
+Subject: You've won a Prize
+Date: Mon, 23 Jun 2014 16:33:22 +0200
+Message-ID: <201406231432.s5NEWE5x031789__24009.2705157169$1403534882$gmane$org@comx2.bbmail.com.hk>
+Reply-To: <payingroll446@yahoo.com.hk>
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="Windows-1251"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mailer11.incnets.com ([210.6.92.70]:46405 "EHLO
+	mailer11.incnets.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754060AbaFWOq4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Jun 2014 10:46:56 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Recently had this warning reported:
+You've won a Prize
+MICROSOFT IBERICA SL"
+YOU 'VE WON.
+ATTN:MICROSOFT IBERICA SL
+Your email has won (EUR244,000,00)
+(TWO HUNDRED AND FOURTY FOUR THOUSAND EURO)
+Batch number:XL73276498AM
+Ref number:QR352899526KC
+This is a millennium scientific computer game in which
+email addresses were used.It is a promotional program aimed at
+encouraging internet users,therefore you do not need to buy ticket to enter
+for it.
+For further development,clarification and procedure please
+Contact:Dr Eduardo Sanchez (Foreign Service Manager
+Email contact:payingroll446@yahoo.com.hk
 
-[  290.489047] Call Trace:
-[  290.489053]  [<ffffffff8169efec>] dump_stack+0x19/0x1b
-[  290.489055]  [<ffffffff810ac7a9>] __might_sleep+0x179/0x230
-[  290.489057]  [<ffffffff816a4ad5>] mutex_lock_nested+0x55/0x520
-[  290.489061]  [<ffffffffa01b9905>] ? bnx2fc_l2_rcv_thread+0xc5/0x4c0 [bnx2fc]
-[  290.489065]  [<ffffffffa0174c1a>] fc_vport_id_lookup+0x3a/0xa0 [libfc]
-[  290.489068]  [<ffffffffa01b9a6c>] bnx2fc_l2_rcv_thread+0x22c/0x4c0 [bnx2fc]
-[  290.489070]  [<ffffffffa01b9840>] ? bnx2fc_vport_destroy+0x110/0x110 [bnx2fc]
-[  290.489073]  [<ffffffff8109e0cd>] kthread+0xed/0x100
-[  290.489075]  [<ffffffff8109dfe0>] ? insert_kthread_work+0x80/0x80
-[  290.489077]  [<ffffffff816b2fec>] ret_from_fork+0x7c/0xb0
-[  290.489078]  [<ffffffff8109dfe0>] ? insert_kthread_work+0x80/0x80
+Regards
+Carmen Rodriguez
+Lottery Co-ordinator
 
-Its due to the fact that we call a potentially sleeping function from the bnx2fc
-rcv path with preemption disabled (via the get_cpu call embedded in the per-cpu
-variable stats lookup in bnx2fc_l2_rcv_thread.
-
-Easy enough fix, we can just move the stats collection later in the function
-where we are sure we won't preempt or sleep.  This also allows us to not have to
-enable pre-emption when doing a per-cpu lookup, since we're certain not to get
-rescheduled.
-
-Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
-CC: "James E.J. Bottomley" <JBottomley@parallels.com>
-CC: Christoph Hellwig <hch@infradead.org>
-CC: linux-scsi@vger.kernel.org
-CC: Robert Love <robert.w.love@intel.com>
-CC: Vasu Dev <vasu.dev@intel.com>
----
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c | 16 ++++------------
- 1 file changed, 4 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-index 9b94850..475eee5 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-@@ -516,23 +516,17 @@ static void bnx2fc_recv_frame(struct sk_buff *skb)
- 	skb_pull(skb, sizeof(struct fcoe_hdr));
- 	fr_len = skb->len - sizeof(struct fcoe_crc_eof);
- 
--	stats = per_cpu_ptr(lport->stats, get_cpu());
--	stats->RxFrames++;
--	stats->RxWords += fr_len / FCOE_WORD_TO_BYTE;
--
- 	fp = (struct fc_frame *)skb;
- 	fc_frame_init(fp);
- 	fr_dev(fp) = lport;
- 	fr_sof(fp) = hp->fcoe_sof;
- 	if (skb_copy_bits(skb, fr_len, &crc_eof, sizeof(crc_eof))) {
--		put_cpu();
- 		kfree_skb(skb);
- 		return;
- 	}
- 	fr_eof(fp) = crc_eof.fcoe_eof;
- 	fr_crc(fp) = crc_eof.fcoe_crc32;
- 	if (pskb_trim(skb, fr_len)) {
--		put_cpu();
- 		kfree_skb(skb);
- 		return;
- 	}
-@@ -544,7 +538,6 @@ static void bnx2fc_recv_frame(struct sk_buff *skb)
- 		port = lport_priv(vn_port);
- 		if (!ether_addr_equal(port->data_src_addr, dest_mac)) {
- 			BNX2FC_HBA_DBG(lport, "fpma mismatch\n");
--			put_cpu();
- 			kfree_skb(skb);
- 			return;
- 		}
-@@ -552,7 +545,6 @@ static void bnx2fc_recv_frame(struct sk_buff *skb)
- 	if (fh->fh_r_ctl == FC_RCTL_DD_SOL_DATA &&
- 	    fh->fh_type == FC_TYPE_FCP) {
- 		/* Drop FCP data. We dont this in L2 path */
--		put_cpu();
- 		kfree_skb(skb);
- 		return;
- 	}
-@@ -562,7 +554,6 @@ static void bnx2fc_recv_frame(struct sk_buff *skb)
- 		case ELS_LOGO:
- 			if (ntoh24(fh->fh_s_id) == FC_FID_FLOGI) {
- 				/* drop non-FIP LOGO */
--				put_cpu();
- 				kfree_skb(skb);
- 				return;
- 			}
-@@ -572,22 +563,23 @@ static void bnx2fc_recv_frame(struct sk_buff *skb)
- 
- 	if (fh->fh_r_ctl == FC_RCTL_BA_ABTS) {
- 		/* Drop incoming ABTS */
--		put_cpu();
- 		kfree_skb(skb);
- 		return;
- 	}
- 
-+	stats = per_cpu_ptr(lport->stats, smp_processor_id());
-+	stats->RxFrames++;
-+	stats->RxWords += fr_len / FCOE_WORD_TO_BYTE;
-+
- 	if (le32_to_cpu(fr_crc(fp)) !=
- 			~crc32(~0, skb->data, fr_len)) {
- 		if (stats->InvalidCRCCount < 5)
- 			printk(KERN_WARNING PFX "dropping frame with "
- 			       "CRC error\n");
- 		stats->InvalidCRCCount++;
--		put_cpu();
- 		kfree_skb(skb);
- 		return;
- 	}
--	put_cpu();
- 	fc_exch_recv(lport, fp);
- }
- 
--- 
-1.8.3.1
