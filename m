@@ -1,54 +1,81 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v1 2/3] ata: Fix the link down in first attempt for the
- APM X-Gene SoC AHCI SATA host controller driver.
-Date: Mon, 23 Jun 2014 14:29:29 -0400
-Message-ID: <20140623182929.GB18451@mtj.dyndns.org>
-References: <1403518538-30697-1-git-send-email-stripathi@apm.com>
- <1403518538-30697-3-git-send-email-stripathi@apm.com>
+From: Joe Perches <joe@perches.com>
+Subject: Re: [PATCH 00/22] Add and use pci_zalloc_consistent
+Date: Mon, 23 Jun 2014 12:13:29 -0700
+Message-ID: <1403550809.15811.13.camel@joe-AO725>
+References: <cover.1403530604.git.joe@perches.com>
+ <20140623172512.GA1390@garbanzo.do-not-panic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1403518538-30697-3-git-send-email-stripathi@apm.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Suman Tripathi <stripathi@apm.com>
-Cc: olof@lixom.net, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <dri-devel-bounces@lists.freedesktop.org>
+In-Reply-To: <20140623172512.GA1390@garbanzo.do-not-panic.com>
+List-Unsubscribe: <http://lists.freedesktop.org/mailman/options/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <http://lists.freedesktop.org/archives/dri-devel>
+List-Post: <mailto:dri-devel@lists.freedesktop.org>
+List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <http://lists.freedesktop.org/mailman/listinfo/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: dri-devel-bounces@lists.freedesktop.org
+Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>, Arnd Bergmann <arnd@arndb.de>
+Cc: devel@driverdev.osuosl.org, linux-arch@vger.kernel.org, linux-scsi@vger.kernel.org, iss_storagedev@hp.com, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, linux-atm-general@lists.sourceforge.net, linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-crypto@vger.kernel.org, linux-media@vger.kernel.org, linux-eata@i-connect.net
 List-Id: linux-scsi@vger.kernel.org
 
-Hello,
-
-On Mon, Jun 23, 2014 at 03:45:37PM +0530, Suman Tripathi wrote:
-> @@ -234,15 +237,20 @@ static int xgene_ahci_do_hardreset(struct ata_link *link,
->  	u8 *d2h_fis = pp->rx_fis + RX_FIS_D2H_REG;
->  	void __iomem *port_mmio = ahci_port_base(ap);
->  	struct ata_taskfile tf;
-> +	int link_down_retry = 0;
->  	int rc;
->  	u32 val;
+On Mon, 2014-06-23 at 10:25 -0700, Luis R. Rodriguez wrote:
+> On Mon, Jun 23, 2014 at 06:41:28AM -0700, Joe Perches wrote:
+> > Adding the helper reduces object code size as well as overall
+> > source size line count.
+> > 
+> > It's also consistent with all the various zalloc mechanisms
+> > in the kernel.
+> > 
+> > Done with a simple cocci script and some typing.
 > 
-> -	/* clear D2H reception area to properly wait for D2H FIS */
-> -	ata_tf_init(link->device, &tf);
-> -	tf.command = ATA_BUSY;
-> -	ata_tf_to_fis(&tf, 0, 0, d2h_fis);
-> -	rc = sata_link_hardreset(link, timing, deadline, online,
-> +	do {
-> +		/* clear D2H reception area to properly wait for D2H FIS */
-> +		ata_tf_init(link->device, &tf);
-> +		tf.command = ATA_BUSY;
-> +		ata_tf_to_fis(&tf, 0, 0, d2h_fis);
-> +		rc = sata_link_hardreset(link, timing, deadline, online,
->  				 ahci_check_ready);
-> +		if (*online)
-> +			break;
-> +	} while (link_down_retry++ < MAX_LINK_DOWN_RETRY);
+> Awesome, any chance you can paste in the SmPL? Also any chance
+> we can get this added to a make coccicheck so that maintainers
+> moving forward can use that to ensure that no new code is
+> added that uses the old school API?
 
-Hmm... so it's retrying w/o extending deadline if the link is reported
-to be offline.  This definitely needs comment explaining what's going
-on.  Wouldn't it make more sense to change @timing instead rather than
-retrying resets?  sata_sil24 already does something similar.  Does,
-f.e., using sata_deb_timing_long for @timing make the problem go away?
+Not many of these are recent.
 
-Thanks.
+Arnd Bergmann reasonably suggested that the pci_alloc_consistent
+api be converted the the more widely used dma_alloc_coherent.
 
--- 
-tejun
+https://lkml.org/lkml/2014/6/23/513
+
+> Shouldn't these drivers just use the normal dma-mapping API now?
+
+and I replied:
+
+https://lkml.org/lkml/2014/6/23/525
+
+> Maybe.  I wouldn't mind.
+> They do seem to have a trivial bit of unnecessary overhead for 
+> hwdev == NULL ? NULL : &hwdev->dev
+
+Anyway, here's the little script.
+I'm not sure it's worthwhile to add it though.
+
+$ cat ./scripts/coccinelle/api/alloc/pci_zalloc_consistent.cocci
+///
+/// Use pci_zalloc_consistent rather than
+///     pci_alloc_consistent followed by memset with 0
+///
+/// This considers some simple cases that are common and easy to validate
+/// Note in particular that there are no ...s in the rule, so all of the
+/// matched code has to be contiguous
+///
+/// Blatantly cribbed from: scripts/coccinelle/api/alloc/kzalloc-simple.cocci
+
+@@
+type T, T2;
+expression x;
+expression E1,E2,E3;
+statement S;
+@@
+
+- x = (T)pci_alloc_consistent(E1,E2,E3);
++ x = pci_zalloc_consistent(E1,E2,E3);
+  if ((x==NULL) || ...) S
+- memset((T2)x,0,E2);
