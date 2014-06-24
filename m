@@ -1,78 +1,47 @@
-From: Keith Busch <keith.busch@intel.com>
-Subject: [RFC PATCH] Let device drivers disable msi on shutdown
-Date: Tue, 24 Jun 2014 10:48:57 -0600
-Message-ID: <1403628537-16367-1-git-send-email-keith.busch@intel.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:24236 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756041AbaFXQxP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Jun 2014 12:53:15 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
+Subject: Re: [PATCH v2 1/3] scsi_cmnd: Introduce scsi_transfer_length helper
+Date: Tue, 24 Jun 2014 12:00:40 -0500
+Message-ID: <53A9AEB8.4040104@cs.wisc.edu>
+References: <1402477799-24610-1-git-send-email-sagig@mellanox.com> <1402477799-24610-2-git-send-email-sagig@mellanox.com> <53A920B2.9060503@cs.wisc.edu> <yq1mwd2h3ju.fsf@sermon.lab.mkp.net> <28678EBD-1AE9-48F9-B9E2-E6A61B042BB1@cs.wisc.edu> <53A9A702.8050503@dev.mellanox.co.il> <20140624163040.GA11499@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20140624163040.GA11499-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: Sagi Grimberg <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org, roland-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: Keith Busch <keith.busch@intel.com>, Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>, Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, Bjorn Helgaas <bhelgaas@google.com>
 
-I'd like to do shutdowns asynchronously so I can shutdown multiple
-devices in parallel, but the pci-driver disables interrupts after my
-driver returns from its '.shutdown', though it needs to rely on these
-interrupts in its asynchronously scheduled shutdown.
+On 06/24/2014 11:30 AM, Christoph Hellwig wrote:
+> On Tue, Jun 24, 2014 at 07:27:46PM +0300, Sagi Grimberg wrote:
+>> This condition only matters in the bidi case, which is not relevant for the
+>> PI case.
+>> I suggested to condition that in libiscsi (posted in the second thread,
+>> copy-paste below).
+>> Although I do agree that scsi_transfer_length() helper is not really just
+>> for PI and not more.
+>> I think Mike's way is cleaner.
+> 
+> But for bidi there are two transfers.  So either scsi_transfer_length()
+> needs to take the scsi_data_buffer, or we need to avoid using it.
+> 
+> For 3.16 I'd prefer something like you're patch below.  This patch which
+> has been rushed in last minute and not through the scsi tree has already
+> causes enough harm.  If you can come up with a clean version to
+> transparently handle the bidi case I'd be happy to pick that up for
+> 3.17.
+> 
+> In the meantime please provide a version of the patch below with a
+> proper description and signoff.
+> 
 
-I tracked the reason for pci disabling msi to ...
+It would be nice to just have one function to call and it just do the
+right thing for the drivers. I am fine with Sagi's libiscsi patch for
+now though:
 
-| commit d52877c7b1afb8c37ebe17e2005040b79cb618b0
-| Author: Yinghai Lu <yhlu.kernel.send@gmail.com>
-| Date:   Wed Apr 23 14:58:09 2008 -0700
-|
-|     pci/irq: let pci_device_shutdown to call pci_msi_shutdown v2
-
-... because mptfusion doesn't disable msi in its shutdown path.
-
-Any reason we can't let the drivers do this instead?
-
-To provide context why I want to do this asynchronously, NVM-Express has
-one PCI device per controller, of which there could be dozens in a system,
-and each one may take many seconds (I've heard over ten in some cases)
-to safely shutdown.
-
-In this patch, mptfusion was compile tested only; I didn't observe any
-adverse affects from running the pci portion.
-
-Signed-off-by: Keith Busch <keith.busch@intel.com>
-Cc: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>
-Cc: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/message/fusion/mptscsih.c |    3 +++
- drivers/pci/pci-driver.c          |    2 --
- 2 files changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mptscsih.c
-index 2a1c6f2..3186e17 100644
---- a/drivers/message/fusion/mptscsih.c
-+++ b/drivers/message/fusion/mptscsih.c
-@@ -1215,6 +1215,9 @@ mptscsih_remove(struct pci_dev *pdev)
- void
- mptscsih_shutdown(struct pci_dev *pdev)
- {
-+	MPT_ADAPTER *ioc = pci_get_drvdata(pdev);
-+	if (ioc->msi_enable)
-+		pci_disable_msi(pdev);
- }
- 
- #ifdef CONFIG_PM
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index 3f8e3db..8079d98 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -453,8 +453,6 @@ static void pci_device_shutdown(struct device *dev)
- 
- 	if (drv && drv->shutdown)
- 		drv->shutdown(pci_dev);
--	pci_msi_shutdown(pci_dev);
--	pci_msix_shutdown(pci_dev);
- 
- #ifdef CONFIG_KEXEC
- 	/*
--- 
-1.7.10.4
-
+Acked-by: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
