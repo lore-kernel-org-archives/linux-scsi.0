@@ -1,33 +1,44 @@
-From: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 00/22] Add and use pci_zalloc_consistent
-Date: Tue, 24 Jun 2014 13:32:49 +0200
-Message-ID: <1403609569.10831.0.camel@jlt4.sipsolutions.net>
-References: <cover.1403530604.git.joe@perches.com>
-	 <20140623172512.GA1390@garbanzo.do-not-panic.com>
-	 <1403550809.15811.13.camel@joe-AO725>
-	 <CAGRGNgVD2f0S-v8YZ-qABEhDJAwk5pp71FU9uLR8aSZ+DhABjg@mail.gmail.com>
-	 (sfid-20140624_012812_032630_4B31BBC9)
+From: Lars Ellenberg <lars.ellenberg@linbit.com>
+Subject: Re: sd_setup_discard_cmnd: BUG: unable to handle kernel NULL pointer
+ dereference at (null)
+Date: Tue, 24 Jun 2014 13:53:24 +0200
+Message-ID: <20140624115324.GB17123@soda.linbit>
+References: <53A28B21.7070500@profihost.ag>
+ <yq1ionwjn15.fsf@sermon.lab.mkp.net>
+ <20140620155321.GA24389@soda.linbit>
+ <yq1wqcbil0c.fsf@sermon.lab.mkp.net>
+ <20140620182956.GB24389@soda.linbit>
+ <yq1vbrrh0yo.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arch-owner@vger.kernel.org>
-In-Reply-To: <CAGRGNgVD2f0S-v8YZ-qABEhDJAwk5pp71FU9uLR8aSZ+DhABjg@mail.gmail.com> (sfid-20140624_012812_032630_4B31BBC9)
-Sender: linux-arch-owner@vger.kernel.org
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: Joe Perches <joe@perches.com>, "Luis R. Rodriguez" <mcgrof@do-not-panic.com>, Arnd Bergmann <arnd@arndb.de>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>, linux-arch@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, iss_storagedev@hp.com, linux-rdma@vger.kernel.org, netdev <netdev@vger.kernel.org>, linux-atm-general@lists.sourceforge.net, linux-wireless <linux-wireless@vger.kernel.org>, dri-devel@lists.freedesktop.org, linux-crypto@vger.kernel.org, linux-eata@i-connect.net, linux-media@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <yq1vbrrh0yo.fsf@sermon.lab.mkp.net>
+Sender: linux-raid-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>, NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, JBottomley@parallels.com, Jens Axboe <axboe@kernel.dk>, konrad.wilk@oracle.com, elder@linaro.org, Josh Durgin <josh.durgin@inktank.com>, Greg KH <gregkh@linuxfoundation.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 2014-06-24 at 09:27 +1000, Julian Calaby wrote:
-
-> > - x = (T)pci_alloc_consistent(E1,E2,E3);
-> > + x = pci_zalloc_consistent(E1,E2,E3);
-> >   if ((x==NULL) || ...) S
-> > - memset((T2)x,0,E2);
+On Mon, Jun 23, 2014 at 03:37:03PM -0400, Martin K. Petersen wrote:
+> >>>>> "Lars" == Lars Ellenberg <lars.ellenberg@linbit.com> writes:
 > 
-> I don't know much about SmPL, but wouldn't having that if statement
-> there reduce your matches?
+> Lars,
+> 
+> Thanks for fixing this. 
+> 
+> I'd still like to see you use the lib call instead like you do for
+> zeroout. I have some patches in the pipeline for multi-range discard
+> support and things are going to break for drbd if you manually roll
+> bios.
 
-Code that matched without the if statement would be buggy, since it
-wouldn't be checking the pci_zalloc_consistent return value properly.l
+Okay, thanks for the heads up.
+I think we just did this so we would not
+have to use a synchronous interface there.
 
-johannes
+We are receiving (from network) and submitting (to lower level IO stack)
+in the same context and would like the submit to be async.
+
+Do you intend to provide an asynchronous interface?
+
+	Lars
+
