@@ -1,39 +1,69 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: sd_setup_discard_cmnd: BUG: unable to handle kernel NULL pointer dereference at (null)
-Date: Tue, 24 Jun 2014 19:11:47 -0400
-Message-ID: <yq1simtgax8.fsf@sermon.lab.mkp.net>
-References: <53A28B21.7070500@profihost.ag>
-	<yq1ionwjn15.fsf@sermon.lab.mkp.net>
-	<20140620155321.GA24389@soda.linbit>
-	<yq1wqcbil0c.fsf@sermon.lab.mkp.net>
-	<20140620182956.GB24389@soda.linbit>
-	<yq1vbrrh0yo.fsf@sermon.lab.mkp.net>
-	<20140624115324.GB17123@soda.linbit>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: [PATCH] cleanup switch in scsi_adjust_queue_depth()
+Date: Tue, 24 Jun 2014 19:23:45 -0400
+Message-ID: <53AA0881.5000505@interlog.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/mixed;
+ boundary="------------070309070102010904080609"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:18958 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751805AbaFXXMW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Jun 2014 19:12:22 -0400
-In-Reply-To: <20140624115324.GB17123@soda.linbit> (Lars Ellenberg's message of
-	"Tue, 24 Jun 2014 13:53:24 +0200")
+Received: from smtp.infotech.no ([82.134.31.41]:59923 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752088AbaFXXXu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Jun 2014 19:23:50 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Lars Ellenberg <lars.ellenberg@linbit.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Stefan Priebe - Profihost AG <s.priebe@profihost.ag>, NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, JBottomley@parallels.com, Jens Axboe <axboe@kernel.dk>, konrad.wilk@oracle.com, elder@linaro.org, Josh Durgin <josh.durgin@inktank.com>, Greg KH <gregkh@linuxfoundation.org>
+To: SCSI development list <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>
 
->>>>> "Lars" == Lars Ellenberg <lars.ellenberg@linbit.com> writes:
+This is a multi-part message in MIME format.
+--------------070309070102010904080609
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Lars> We are receiving (from network) and submitting (to lower level IO
-Lars> stack) in the same context and would like the submit to be async.
+While checking what scsi_adjust_queue_depth() did I
+thought its switch statement could be clearer.
 
-Lars> Do you intend to provide an asynchronous interface?
+ChangeLog:
+   - remove redundant assignment (to sdev->queue_depth)
+   - re-order cases (thus removing the fall-through)
 
-I guess we can look into that if there is a need.
+Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 
-Do different clients share that context? I.e. does a synchronous discard
-block other clients from accessing the drbd server?
+--------------070309070102010904080609
+Content-Type: text/x-patch;
+ name="scsi_adjust_queue_depth1.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="scsi_adjust_queue_depth1.patch"
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+--- linux-3.15/drivers/scsi/scsi.c3151	2014-06-08 21:36:43.815551129 -0400
++++ linux-3.15/drivers/scsi/scsi.c	2014-06-24 19:17:02.474464807 -0400
+@@ -850,6 +850,10 @@ void scsi_adjust_queue_depth(struct scsi
+ 
+ 	sdev->queue_depth = tags;
+ 	switch (tagged) {
++		case 0:
++			sdev->ordered_tags = 0;
++			sdev->simple_tags = 0;
++			break;
+ 		case MSG_ORDERED_TAG:
+ 			sdev->ordered_tags = 1;
+ 			sdev->simple_tags = 1;
+@@ -859,13 +863,11 @@ void scsi_adjust_queue_depth(struct scsi
+ 			sdev->simple_tags = 1;
+ 			break;
+ 		default:
++			sdev->ordered_tags = 0;
++			sdev->simple_tags = 0;
+ 			sdev_printk(KERN_WARNING, sdev,
+ 				    "scsi_adjust_queue_depth, bad queue type, "
+ 				    "disabled\n");
+-		case 0:
+-			sdev->ordered_tags = sdev->simple_tags = 0;
+-			sdev->queue_depth = tags;
+-			break;
+ 	}
+  out:
+ 	spin_unlock_irqrestore(sdev->request_queue->queue_lock, flags);
+
+--------------070309070102010904080609--
