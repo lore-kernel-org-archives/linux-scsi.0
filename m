@@ -1,25 +1,30 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2 1/3] scsi_cmnd: Introduce scsi_transfer_length helper
-Date: Tue, 24 Jun 2014 07:03:59 -0700
-Message-ID: <20140624140359.GA4599@infradead.org>
-References: <1402477799-24610-1-git-send-email-sagig@mellanox.com>
- <1402477799-24610-2-git-send-email-sagig@mellanox.com>
- <53A920B2.9060503@cs.wisc.edu>
- <yq1mwd2h3ju.fsf@sermon.lab.mkp.net>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 1/5] ibmvstgt: remove
+Date: Tue, 24 Jun 2014 16:28:19 +0200
+Message-ID: <20140624142819.GA17733@lst.de>
+References: <1397557614-21243-1-git-send-email-hch@lst.de> <1397557614-21243-2-git-send-email-hch@lst.de> <537F7785.7010304@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <target-devel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.211]:44848 "EHLO newverein.lst.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753396AbaFXO2W (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Jun 2014 10:28:22 -0400
 Content-Disposition: inline
-In-Reply-To: <yq1mwd2h3ju.fsf@sermon.lab.mkp.net>
-Sender: target-devel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, Sagi Grimberg <sagig@mellanox.com>, nab@linux-iscsi.org, roland@kernel.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-rdma@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+In-Reply-To: <537F7785.7010304@linux.vnet.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Brian King <brking@linux.vnet.ibm.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, Nathan Fontenot <nfont@linux.vnet.ibm.com>, Paul Mackerras <paulus@au1.ibm.com>
 
-On Tue, Jun 24, 2014 at 08:53:25AM -0400, Martin K. Petersen wrote:
-> Oh, I see. So things break because iSCSI uses scsi_transfer_length()
-> where the scatterlist length was used in the past.
+On Fri, May 23, 2014 at 11:29:57AM -0500, Brian King wrote:
+> Adding Paul and Nathan to cc here. I'm pretty sure the backend for ibmvscsi in
+> KVM was all done in qemu and there is no dependency on ibmvstgt.
 > 
-> How about this?
+> Unless there is a use case for KVM, I'm OK with this, as the ibmvstgt driver
+> has never been tested or officially supported by IBM. 
 
-This fixes the regression for me.
+Paul, Nathan,
+
+any feedback on this?
+
