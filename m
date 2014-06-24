@@ -1,43 +1,39 @@
-From: Keith Busch <keith.busch@intel.com>
-Subject: RE: [RFC PATCH] Let device drivers disable msi on shutdown
-Date: Tue, 24 Jun 2014 16:25:53 -0600 (MDT)
-Message-ID: <alpine.LRH.2.03.1406241603580.4699@AMR>
-References: <1403628537-16367-1-git-send-email-keith.busch@intel.com> <94D0CD8314A33A4D9D801C0FE68B402958B4AD28@G9W0745.americas.hpqcorp.net>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: sd_setup_discard_cmnd: BUG: unable to handle kernel NULL pointer dereference at (null)
+Date: Tue, 24 Jun 2014 19:11:47 -0400
+Message-ID: <yq1simtgax8.fsf@sermon.lab.mkp.net>
+References: <53A28B21.7070500@profihost.ag>
+	<yq1ionwjn15.fsf@sermon.lab.mkp.net>
+	<20140620155321.GA24389@soda.linbit>
+	<yq1wqcbil0c.fsf@sermon.lab.mkp.net>
+	<20140620182956.GB24389@soda.linbit>
+	<yq1vbrrh0yo.fsf@sermon.lab.mkp.net>
+	<20140624115324.GB17123@soda.linbit>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-pci-owner@vger.kernel.org>
-In-Reply-To: <94D0CD8314A33A4D9D801C0FE68B402958B4AD28@G9W0745.americas.hpqcorp.net>
-Sender: linux-pci-owner@vger.kernel.org
-To: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Cc: "Busch, Keith" <keith.busch@intel.com>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>, Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, Bjorn Helgaas <bhelgaas@google.com>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:18958 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751805AbaFXXMW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Jun 2014 19:12:22 -0400
+In-Reply-To: <20140624115324.GB17123@soda.linbit> (Lars Ellenberg's message of
+	"Tue, 24 Jun 2014 13:53:24 +0200")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Lars Ellenberg <lars.ellenberg@linbit.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Stefan Priebe - Profihost AG <s.priebe@profihost.ag>, NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, JBottomley@parallels.com, Jens Axboe <axboe@kernel.dk>, konrad.wilk@oracle.com, elder@linaro.org, Josh Durgin <josh.durgin@inktank.com>, Greg KH <gregkh@linuxfoundation.org>
 
-On Tue, 24 Jun 2014, Elliott, Robert (Server Storage) wrote:
-> 1. That will cover the .shutdown function used by mptfc.c, mptspi.c,
-> and mptscsih.c, but mptsas.c uses mptsas_shutdown rather than
-> mptscsih_shutdown.  It doesn't call pci_disable_msi either.
+>>>>> "Lars" == Lars Ellenberg <lars.ellenberg@linbit.com> writes:
 
-Missed that; thanks.
+Lars> We are receiving (from network) and submitting (to lower level IO
+Lars> stack) in the same context and would like the submit to be async.
 
-> 2. mptscsih_suspend is another caller of mptscsih_shutdown
-> (although the latter does nothing right now).  This is done
-> before calling mpt_suspend, which writes to some chip registers
-> to disable interrupts before calling pci_disable_msi.  Adding a
-> pci_disable_msi call before those writes might not be safe.
+Lars> Do you intend to provide an asynchronous interface?
 
-Clearly more paths into this function than I investigated.
+I guess we can look into that if there is a need.
 
-> 3. That mptscsih_suspend call chain will result in calling
-> pci_disable_msi twice, which might trigger this in
-> pci_disable_msi -> pci_msi_shutdown:
->        BUG_ON(list_empty(&dev->msi_list));
+Do different clients share that context? I.e. does a synchronous discard
+block other clients from accessing the drbd server?
 
-Ah, but pci_disable_msi will not even invoke pci_msi_shutdown:
-
-         if (!pci_msi_enable || !dev || !dev->msi_enabled)
- 	                return;
-
-The same check is done in pci_msi_shutdown. If that check wasn't there,
-every driver would hit that BUG_ON since most every other pci driver
-disables their interrupts in their shutdown path before returning, and
-then pci-driver calls it again! MPT appears to be the exception.
+-- 
+Martin K. Petersen	Oracle Linux Engineering
