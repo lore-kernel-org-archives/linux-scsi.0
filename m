@@ -1,30 +1,39 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH RESEND] target: Fix a comment in emulate_evpd_86
-Date: Tue, 24 Jun 2014 14:28:52 +0200
-Message-ID: <20140624122852.GA10036@lst.de>
-References: <1403568128-13929-1-git-send-email-agrover@redhat.com>
+From: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
+Subject: Re: [regression] fix 32-bit breakage in block device read(2) (was
+ Re: 32-bit bug in iovec iterator changes)
+Date: Tue, 24 Jun 2014 13:33:08 +0100
+Message-ID: <20140624133308.623d256d@alan.etchedpixels.co.uk>
+References: <20140621055306.GP18016@ZenIV.linux.org.uk>
+	<20140621230922.GA13188@thunk.org>
+	<20140621234913.GQ18016@ZenIV.linux.org.uk>
+	<1403395400.2592.4.camel@jarvis.lan>
+	<20140622002618.GR18016@ZenIV.linux.org.uk>
+	<1403397164.2177.40.camel@dabdike.int.hansenpartnership.com>
+	<20140622005352.GS18016@ZenIV.linux.org.uk>
+	<20140622010032.GT18016@ZenIV.linux.org.uk>
+	<20140622115007.GA5333@thunk.org>
+	<20140623074440.GV18016@ZenIV.linux.org.uk>
+	<20140623154302.GC14887@thunk.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:44474 "EHLO newverein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753310AbaFXM2x (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Jun 2014 08:28:53 -0400
-Content-Disposition: inline
-In-Reply-To: <1403568128-13929-1-git-send-email-agrover@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20140623154302.GC14887@thunk.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Theodore Ts'o <tytso@mit.edu>
+Cc: Al Viro <viro@ZenIV.linux.org.uk>, Linus Torvalds <torvalds@linux-foundation.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Dave Chinner <david@fromorbit.com>, Jens Axboe <axboe@fb.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andy Grover <agrover@redhat.com>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, hch@lst.de, nab@linux-iscsi.org
 
-On Mon, Jun 23, 2014 at 05:02:08PM -0700, Andy Grover wrote:
-> Fix comment to make it clear that check_dev_wce can return true if
-> emulation is in use, but also if it's *not* emulated but the underlying
-> device supports it.
+On Mon, 23 Jun 2014 11:43:02 -0400
+"Theodore Ts'o" <tytso@mit.edu> wrote:
+
+> On Mon, Jun 23, 2014 at 08:44:40AM +0100, Al Viro wrote:
+> > 
+> > OK, here it is, hopefully with sufficient comments:
 > 
-> Reviewed-by: Chris Leech <cleech@redhat.com>
-> Signed-off-by: Andy Grover <agrover@redhat.com>
+> The comments look really good.  I assume you'll get this to
+> Linus in time for 3.16-rc3?
 
-Looks good,
+Fixes the 32GB 'can't partition' bug I reported too.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Alan
