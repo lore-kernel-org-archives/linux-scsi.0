@@ -1,40 +1,39 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2 1/3] scsi_cmnd: Introduce scsi_transfer_length helper
-Date: Tue, 24 Jun 2014 12:31:17 -0400
-Message-ID: <yq1fviugtgq.fsf@sermon.lab.mkp.net>
-References: <1402477799-24610-1-git-send-email-sagig@mellanox.com>
-	<1402477799-24610-2-git-send-email-sagig@mellanox.com>
-	<53A920B2.9060503@cs.wisc.edu> <yq1mwd2h3ju.fsf@sermon.lab.mkp.net>
-	<28678EBD-1AE9-48F9-B9E2-E6A61B042BB1@cs.wisc.edu>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [ANNOUNCE] scsi patch queue tree
+Date: Tue, 24 Jun 2014 08:52:38 -0700
+Message-ID: <20140624155238.GA27828@infradead.org>
+References: <20140519140614.GA12183@infradead.org>
+ <20140611120143.GA26071@infradead.org>
+ <1402496254.2523.3.camel@dabdike.int.hansenpartnership.com>
+ <20140611143128.GA30904@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:48971 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756665AbaFXQdX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Jun 2014 12:33:23 -0400
-In-Reply-To: <28678EBD-1AE9-48F9-B9E2-E6A61B042BB1@cs.wisc.edu> (Michael
-	Christie's message of "Tue, 24 Jun 2014 11:08:54 -0500")
+Received: from bombadil.infradead.org ([198.137.202.9]:34568 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755458AbaFXPwn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Jun 2014 11:52:43 -0400
+Content-Disposition: inline
+In-Reply-To: <20140611143128.GA30904@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Michael Christie <michaelc@cs.wisc.edu>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagig@mellanox.com>, nab@linux-iscsi.org, roland@kernel.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-rdma@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>, Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org
 
->>>>> "Mike" == Michael Christie <michaelc@cs.wisc.edu> writes:
+I've pushed another update to the core-for-3.16 branch.  This includes
+the two error handling fixes (Ewan verified that Hannes patch fixes the
+issues he was seeing), and the fix for the iscsi regression:
 
-Mike> Do we need to check for the data direction. Something like
+Hannes Reinecke (1):
+	scsi_error: set DID_TIME_OUT correctly
 
-Mike> if (scmd->sc_data_direction == DMA_TO_DEVICE)
-Mike> 	xfer_len = scsi_out(scmnd)->length;
-Mike> else
-Mike> 	xfer_len = scsi_in(scmnd)->length;
+Martin K. Petersen (1):
+	scsi: use the scsi data buffer length to extract transfer size
 
-I guess that depends on the context the wrapper is called in. I think
-iscsi is the only place where there's a distinction thanks to bidi.
+Ulrich Obergfell (1):
+	scsi_error: fix invalid setting of host byte
 
-Looks like there are several places where that's done. In that case I
-wonder if we should have explicit scsi_in_transfer_length() and
-scsi_out_transfer_length() wrappers?
+ drivers/scsi/scsi_error.c |   20 ++++++++++----------
+ include/scsi/scsi_cmnd.h  |    2 +-
+ 2 files changed, 11 insertions(+), 11 deletions(-)
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
