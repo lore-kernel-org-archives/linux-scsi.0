@@ -1,125 +1,97 @@
-From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: [PATCH V2] qla2xxx: Fix sparse warning in qla_target.c.
-Date: Tue, 24 Jun 2014 00:22:29 -0400
-Message-ID: <1403583749-21472-1-git-send-email-saurav.kashyap@qlogic.com>
+From: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
+Subject: Re: [PATCH v2 2/3] libiscsi, iser: Adjust data_length to include
+ protection information
+Date: Tue, 24 Jun 2014 01:31:19 -0500
+Message-ID: <53A91B37.1040300@cs.wisc.edu>
+References: <1402477799-24610-1-git-send-email-sagig@mellanox.com> <1402477799-24610-3-git-send-email-sagig@mellanox.com> <20140623205948.GA15165@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:23283 "EHLO
-	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750806AbaFXExH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Jun 2014 00:53:07 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20140623205948.GA15165-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org, roland-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: jbottomley@parallels.com
-Cc: hch@lst.de, giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Quinn Tran <quinn.tran@qlogic.com>
+On 06/23/2014 03:59 PM, Christoph Hellwig wrote:
+> This patch causes a regression when using the iscsi initiator over
+> TCP for me. When mounting a newly created ext4 filesystem I get the
+> following BUG: 
+> 
+> [   31.611803] BUG: unable to handle kernel NULL pointer dereference at 000000000000000c
+> [   31.613563] IP: [<ffffffff8197b38d>] iscsi_tcp_segment_done+0x2bd/0x380
+> [   31.613563] PGD 7a3e4067 PUD 7a45f067 PMD 0 
+> [   31.613563] Oops: 0000 [#1] SMP 
+> [   31.613563] Modules linked in:
+> [   31.613563] CPU: 3 PID: 3739 Comm: kworker/u8:5 Not tainted 3.16.0-rc2 #187
+> [   31.613563] Hardware name: Bochs Bochs, BIOS Bochs 01/01/2007
+> [   31.613563] Workqueue: iscsi_q_2 iscsi_xmitworker
+> [   31.613563] task: ffff88007b33cf10 ti: ffff88007ad94000 task.ti: ffff88007ad94000
+> [   31.613563] RIP: 0010:[<ffffffff8197b38d>]  [<ffffffff8197b38d>] iscsi_tcp_segment_done+0x2bd/0x380
+> [   31.613563] RSP: 0018:ffff88007ad97b38  EFLAGS: 00010246
+> [   31.613563] RAX: 0000000000000000 RBX: ffff88007cd67910 RCX: 0000000000000200
+> [   31.613563] RDX: 0000000000002000 RSI: 0000000000000000 RDI: ffff88007cd67910
+> [   31.613563] RBP: ffff88007ad97b98 R08: 0000000000000200 R09: 0000000000000000
+> [   31.613563] R10: 0000000000000000 R11: 0000000000000001 R12: 0000000000000000
+> [   31.613563] R13: ffff88007cd67780 R14: 0000000000000000 R15: 0000000000000000
+> [   31.613563] FS:  0000000000000000(0000) GS:ffff88007fd80000(0000) knlGS:0000000000000000
+> [   31.613563] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+> [   31.613563] CR2: 000000000000000c CR3: 000000007afd9000 CR4: 00000000000006e0
+> [   31.613563] Stack:
+> [   31.613563]  ffff88007ad97b98 ffffffff81c68fd6 ffffffff81c68f20 ffff88007c8e37c8
+> [   31.613563]  000000007b33d728 ffff88007dc805b0 ffff88007ad97c58 0000000000000200
+> [   31.613563]  ffff88007cd67780 ffff880000c00040 ffff88007ad97c00 ffff88007cd67910
+> [   31.613563] Call Trace:
+> [   31.613563]  [<ffffffff81c68fd6>] ? inet_sendpage+0xb6/0x130
+> [   31.613563]  [<ffffffff81c68f20>] ? inet_dgram_connect+0x80/0x80
+> [   31.613563]  [<ffffffff8197bd95>] iscsi_sw_tcp_pdu_xmit+0xe5/0x2e0
+> [   31.613563]  [<ffffffff8197badf>] ? iscsi_sw_tcp_pdu_init+0x1bf/0x390
+> [   31.613563]  [<ffffffff81979b82>] iscsi_tcp_task_xmit+0xa2/0x2b0
+> [   31.613563]  [<ffffffff81974815>] ? iscsi_xmit_task+0x45/0xd0
+> [   31.613563]  [<ffffffff810fbb8d>] ? trace_hardirqs_on+0xd/0x10
+> [   31.613563]  [<ffffffff810b54a0>] ? __local_bh_enable_ip+0x70/0xd0
+> [   31.613563]  [<ffffffff81974829>] iscsi_xmit_task+0x59/0xd0
+> [   31.613563]  [<ffffffff81978468>] iscsi_xmitworker+0x288/0x330
+> [   31.613563]  [<ffffffff810cc847>] process_one_work+0x1c7/0x490
+> [   31.613563]  [<ffffffff810cc7dd>] ? process_one_work+0x15d/0x490
+> [   31.613563]  [<ffffffff810cd539>] worker_thread+0x119/0x4f0
+> [   31.613563]  [<ffffffff810fbb8d>] ? trace_hardirqs_on+0xd/0x10
+> [   31.613563]  [<ffffffff810cd420>] ? init_pwq+0x190/0x190
+> [   31.613563]  [<ffffffff810d3c3f>] kthread+0xdf/0x100
+> [   31.613563]  [<ffffffff810d3b60>] ? __init_kthread_worker+0x70/0x70
+> [   31.613563]  [<ffffffff81d904bc>] ret_from_fork+0x7c/0xb0
+> [   31.613563]  [<ffffffff810d3b60>] ? __init_kthread_worker+0x70/0x70
+> [   31.613563] Code: 89 03 31 c0 e9 cc fe ff ff 0f 1f 44 00 00 48 8b 7b
+> 30 e8 17 74 de ff 8b 53 10 c7 43 40 00 00 00 00 48 89 43 30 44 89 f6 48
+> 89 df <8b> 40 0c 48 c7 03 00 00 00 00 2b 53 14 39 c2 0f 47 d0 89 53 08 
+> 
+> 
+> (gdb) l *(iscsi_tcp_segment_done+0x2bd)
+> 0xffffffff8197b38d is in iscsi_tcp_segment_done
+> (../drivers/scsi/libiscsi_tcp.c:102).
+> 97	iscsi_tcp_segment_init_sg(struct iscsi_segment *segment,
+> 98				  struct scatterlist *sg, unsigned int offset)
+> 99	{
+> 100		segment->sg = sg;
+> 101		segment->sg_offset = offset;
+> 102		segment->size = min(sg->length - offset,
+> 103				    segment->total_size - segment->total_copied);
+> 104		segment->data = NULL;
+> 105	}
+> 106	
+> 
 
-Signed-off-by: Quinn Tran <quinn.tran@qlogic.com>
-Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
----
- drivers/scsi/qla2xxx/qla_target.c |   17 +++++++++++------
- drivers/scsi/qla2xxx/qla_target.h |    4 ++--
- 2 files changed, 13 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 2619ed4..18d2305 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -1129,7 +1129,7 @@ static void qlt_24xx_retry_term_exchange(struct scsi_qla_host *vha,
- 	ctio->u.status1.flags =
- 	    __constant_cpu_to_le16(CTIO7_FLAGS_STATUS_MODE_1 |
- 		CTIO7_FLAGS_TERMINATE);
--	ctio->u.status1.ox_id = entry->fcp_hdr_le.ox_id;
-+	ctio->u.status1.ox_id = cpu_to_le16(entry->fcp_hdr_le.ox_id);
- 
- 	qla2x00_start_iocbs(vha, vha->req);
- 
-@@ -1263,6 +1263,7 @@ static void qlt_24xx_send_task_mgmt_ctio(struct scsi_qla_host *ha,
- {
- 	struct atio_from_isp *atio = &mcmd->orig_iocb.atio;
- 	struct ctio7_to_24xx *ctio;
-+	uint16_t temp;
- 
- 	ql_dbg(ql_dbg_tgt, ha, 0xe008,
- 	    "Sending task mgmt CTIO7 (ha=%p, atio=%p, resp_code=%x\n",
-@@ -1293,7 +1294,8 @@ static void qlt_24xx_send_task_mgmt_ctio(struct scsi_qla_host *ha,
- 	ctio->u.status1.flags = (atio->u.isp24.attr << 9) |
- 	    __constant_cpu_to_le16(CTIO7_FLAGS_STATUS_MODE_1 |
- 		CTIO7_FLAGS_SEND_STATUS);
--	ctio->u.status1.ox_id = swab16(atio->u.isp24.fcp_hdr.ox_id);
-+	temp = be16_to_cpu(atio->u.isp24.fcp_hdr.ox_id);
-+	ctio->u.status1.ox_id = cpu_to_le16(temp);
- 	ctio->u.status1.scsi_status =
- 	    __constant_cpu_to_le16(SS_RESPONSE_INFO_LEN_VALID);
- 	ctio->u.status1.response_len = __constant_cpu_to_le16(8);
-@@ -1514,6 +1516,7 @@ static int qlt_24xx_build_ctio_pkt(struct qla_tgt_prm *prm,
- 	struct ctio7_to_24xx *pkt;
- 	struct qla_hw_data *ha = vha->hw;
- 	struct atio_from_isp *atio = &prm->cmd->atio;
-+	uint16_t temp;
- 
- 	pkt = (struct ctio7_to_24xx *)vha->req->ring_ptr;
- 	prm->pkt = pkt;
-@@ -1542,13 +1545,13 @@ static int qlt_24xx_build_ctio_pkt(struct qla_tgt_prm *prm,
- 	pkt->initiator_id[2] = atio->u.isp24.fcp_hdr.s_id[0];
- 	pkt->exchange_addr = atio->u.isp24.exchange_addr;
- 	pkt->u.status0.flags |= (atio->u.isp24.attr << 9);
--	pkt->u.status0.ox_id = swab16(atio->u.isp24.fcp_hdr.ox_id);
-+	temp = be16_to_cpu(atio->u.isp24.fcp_hdr.ox_id);
-+	pkt->u.status0.ox_id = cpu_to_le16(temp);
- 	pkt->u.status0.relative_offset = cpu_to_le32(prm->cmd->offset);
- 
- 	ql_dbg(ql_dbg_tgt, vha, 0xe00c,
- 	    "qla_target(%d): handle(cmd) -> %08x, timeout %d, ox_id %#x\n",
--	    vha->vp_idx, pkt->handle, QLA_TGT_TIMEOUT,
--	    le16_to_cpu(pkt->u.status0.ox_id));
-+	    vha->vp_idx, pkt->handle, QLA_TGT_TIMEOUT, temp);
- 	return 0;
- }
- 
-@@ -2620,6 +2623,7 @@ static int __qlt_send_term_exchange(struct scsi_qla_host *vha,
- 	struct qla_hw_data *ha = vha->hw;
- 	request_t *pkt;
- 	int ret = 0;
-+	uint16_t temp;
- 
- 	ql_dbg(ql_dbg_tgt, vha, 0xe01c, "Sending TERM EXCH CTIO (ha=%p)\n", ha);
- 
-@@ -2656,7 +2660,8 @@ static int __qlt_send_term_exchange(struct scsi_qla_host *vha,
- 	ctio24->u.status1.flags = (atio->u.isp24.attr << 9) |
- 	    __constant_cpu_to_le16(CTIO7_FLAGS_STATUS_MODE_1 |
- 		CTIO7_FLAGS_TERMINATE);
--	ctio24->u.status1.ox_id = swab16(atio->u.isp24.fcp_hdr.ox_id);
-+	temp = be16_to_cpu(atio->u.isp24.fcp_hdr.ox_id);
-+	ctio24->u.status1.ox_id = cpu_to_le16(temp);
- 
- 	/* Most likely, it isn't needed */
- 	ctio24->u.status1.residual = get_unaligned((uint32_t *)
-diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
-index fa5630b..a106a8a 100644
---- a/drivers/scsi/qla2xxx/qla_target.h
-+++ b/drivers/scsi/qla2xxx/qla_target.h
-@@ -443,7 +443,7 @@ struct ctio7_to_24xx {
- 			uint16_t reserved1;
- 			__le16 flags;
- 			uint32_t residual;
--			uint16_t ox_id;
-+			__le16 ox_id;
- 			uint16_t scsi_status;
- 			uint32_t relative_offset;
- 			uint32_t reserved2;
-@@ -458,7 +458,7 @@ struct ctio7_to_24xx {
- 			uint16_t sense_length;
- 			uint16_t flags;
- 			uint32_t residual;
--			uint16_t ox_id;
-+			__le16 ox_id;
- 			uint16_t scsi_status;
- 			uint16_t response_len;
- 			uint16_t reserved;
--- 
-1.7.7
+Ok, it looks like scsi_out(scsi_cmnd)->length (iscsi_tcp/libiscsi_tcp
+still uses that for lower level operations since it was not converted to
+support t10 pi) returns a different value than scsi_transfer_length()
+(libiscsi uses this for higher level operations when it was converted to
+t10 support since iser uses that module and also has t10 support) for
+some commands. We then end up incorrectly thinking some requests are the
+wrong size and then hit this. Looking into why exactly this happens.
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
