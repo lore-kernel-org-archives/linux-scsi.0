@@ -1,47 +1,41 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH v2 1/3] scsi_cmnd: Introduce scsi_transfer_length helper
-Date: Tue, 24 Jun 2014 12:08:48 -0500
-Message-ID: <53A9B0A0.6000103@cs.wisc.edu>
-References: <1402477799-24610-1-git-send-email-sagig@mellanox.com> <1402477799-24610-2-git-send-email-sagig@mellanox.com> <53A920B2.9060503@cs.wisc.edu> <yq1mwd2h3ju.fsf@sermon.lab.mkp.net> <28678EBD-1AE9-48F9-B9E2-E6A61B042BB1@cs.wisc.edu> <53A9A702.8050503@dev.mellanox.co.il> <20140624163040.GA11499@infradead.org> <53A9AEB8.4040104@cs.wisc.edu>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 16058] [BUG] Cannot boot any kernel from 2.6.27 on if a 256
+ byte sector SCSI disk is attached
+Date: Tue, 24 Jun 2014 17:13:43 +0000
+Message-ID: <bug-16058-11613-kfhFHu3ocG@https.bugzilla.kernel.org/>
+References: <bug-16058-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <53A9AEB8.4040104@cs.wisc.edu>
-Sender: target-devel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Sagi Grimberg <sagig@dev.mellanox.co.il>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagig@mellanox.com>, nab@linux-iscsi.org, roland@kernel.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-rdma@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.19.201]:59195 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752643AbaFXRNq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Jun 2014 13:13:46 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 2755020377
+	for <linux-scsi@vger.kernel.org>; Tue, 24 Jun 2014 17:13:45 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id B2491202E9
+	for <linux-scsi@vger.kernel.org>; Tue, 24 Jun 2014 17:13:43 +0000 (UTC)
+In-Reply-To: <bug-16058-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On 06/24/2014 12:00 PM, Mike Christie wrote:
-> On 06/24/2014 11:30 AM, Christoph Hellwig wrote:
->> On Tue, Jun 24, 2014 at 07:27:46PM +0300, Sagi Grimberg wrote:
->>> This condition only matters in the bidi case, which is not relevant for the
->>> PI case.
->>> I suggested to condition that in libiscsi (posted in the second thread,
->>> copy-paste below).
->>> Although I do agree that scsi_transfer_length() helper is not really just
->>> for PI and not more.
->>> I think Mike's way is cleaner.
->>
->> But for bidi there are two transfers.  So either scsi_transfer_length()
->> needs to take the scsi_data_buffer, or we need to avoid using it.
->>
->> For 3.16 I'd prefer something like you're patch below.  This patch which
->> has been rushed in last minute and not through the scsi tree has already
->> causes enough harm.  If you can come up with a clean version to
->> transparently handle the bidi case I'd be happy to pick that up for
->> 3.17.
->>
->> In the meantime please provide a version of the patch below with a
->> proper description and signoff.
->>
-> 
-> It would be nice to just have one function to call and it just do the
-> right thing for the drivers. I am fine with Sagi's libiscsi patch for
-> now though:
-> 
-> Acked-by: Mike Christie <michaelc@cs.wisc.edu>
+https://bugzilla.kernel.org/show_bug.cgi?id=16058
 
-Actually, let me take this back for a second. I am not sure if that is
-right.
+xerofoify@gmail.com changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |xerofoify@gmail.com
+
+--- Comment #15 from xerofoify@gmail.com ---
+This bug is against obsolete kernel. Please try with
+newer kernel to see if it's fixed.
+Cheers Nick
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
