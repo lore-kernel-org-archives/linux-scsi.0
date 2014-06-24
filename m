@@ -1,41 +1,27 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 16058] [BUG] Cannot boot any kernel from 2.6.27 on if a 256
- byte sector SCSI disk is attached
-Date: Tue, 24 Jun 2014 17:13:43 +0000
-Message-ID: <bug-16058-11613-kfhFHu3ocG@https.bugzilla.kernel.org/>
-References: <bug-16058-11613@https.bugzilla.kernel.org/>
+From: "ST CHANG" <info@net.com.net>
+Subject: ATTN:::  PROPOSAL
+Date: Tue, 24 Jun 2014 10:40:08 -0700
+Message-ID: <20140624174151.85CEA24EF58B@mail.comune.san-cataldo.cl.it>
+Reply-To: stchang20@Safe-mail.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:59195 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752643AbaFXRNq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Jun 2014 13:13:46 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 2755020377
-	for <linux-scsi@vger.kernel.org>; Tue, 24 Jun 2014 17:13:45 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id B2491202E9
-	for <linux-scsi@vger.kernel.org>; Tue, 24 Jun 2014 17:13:43 +0000 (UTC)
-In-Reply-To: <bug-16058-11613@https.bugzilla.kernel.org/>
+Received: from host204-200-static.118-2-b.business.telecomitalia.it ([2.118.200.204]:52539
+	"EHLO mail.comune.san-cataldo.cl.it" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751826AbaFXSAw convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Jun 2014 14:00:52 -0400
+Content-Description: Mail message body
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Recipients <info@net.com.net>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=16058
+China Steel Corporation (CSAC), is in urgent need of a reputable company,/firm
+or individual to serve as our financial coordinator in Canada, America, Europe,
+Uk. It's a part time job and pays well. If you are interested in working with us
+please reply: stchang011@Safe-mail.net.
 
-xerofoify@gmail.com changed:
+Thank you very much.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |xerofoify@gmail.com
-
---- Comment #15 from xerofoify@gmail.com ---
-This bug is against obsolete kernel. Please try with
-newer kernel to see if it's fixed.
-Cheers Nick
-
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+S T CHANG
