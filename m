@@ -1,40 +1,27 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2 1/3] scsi_cmnd: Introduce scsi_transfer_length helper
-Date: Tue, 24 Jun 2014 09:30:40 -0700
-Message-ID: <20140624163040.GA11499@infradead.org>
-References: <1402477799-24610-1-git-send-email-sagig@mellanox.com>
- <1402477799-24610-2-git-send-email-sagig@mellanox.com>
- <53A920B2.9060503@cs.wisc.edu>
- <yq1mwd2h3ju.fsf@sermon.lab.mkp.net>
- <28678EBD-1AE9-48F9-B9E2-E6A61B042BB1@cs.wisc.edu>
- <53A9A702.8050503@dev.mellanox.co.il>
+Subject: Re: [ANNOUNCE] scsi patch queue tree
+Date: Tue, 24 Jun 2014 08:53:48 -0700
+Message-ID: <20140624155348.GA30669@infradead.org>
+References: <20140519140614.GA12183@infradead.org>
+ <20140611120143.GA26071@infradead.org>
+ <1402496254.2523.3.camel@dabdike.int.hansenpartnership.com>
+ <20140611143128.GA30904@infradead.org>
+ <20140624155238.GA27828@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <target-devel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:36178 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932281AbaFXPxs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Jun 2014 11:53:48 -0400
 Content-Disposition: inline
-In-Reply-To: <53A9A702.8050503@dev.mellanox.co.il>
-Sender: target-devel-owner@vger.kernel.org
-To: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Cc: Michael Christie <michaelc@cs.wisc.edu>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagig@mellanox.com>, nab@linux-iscsi.org, roland@kernel.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-rdma@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+In-Reply-To: <20140624155238.GA27828@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, Jun 24, 2014 at 07:27:46PM +0300, Sagi Grimberg wrote:
-> This condition only matters in the bidi case, which is not relevant for the
-> PI case.
-> I suggested to condition that in libiscsi (posted in the second thread,
-> copy-paste below).
-> Although I do agree that scsi_transfer_length() helper is not really just
-> for PI and not more.
-> I think Mike's way is cleaner.
+I'm also going to put together driver fixes tomorrow, as a gentle
+reminder to patch author:  please try to look for reviewer, as I want a
+second pair of eyes veriying each patch.
 
-But for bidi there are two transfers.  So either scsi_transfer_length()
-needs to take the scsi_data_buffer, or we need to avoid using it.
-
-For 3.16 I'd prefer something like you're patch below.  This patch which
-has been rushed in last minute and not through the scsi tree has already
-causes enough harm.  If you can come up with a clean version to
-transparently handle the bidi case I'd be happy to pick that up for
-3.17.
-
-In the meantime please provide a version of the patch below with a
-proper description and signoff.
