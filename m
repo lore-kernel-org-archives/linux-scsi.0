@@ -1,117 +1,109 @@
-From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Subject: RE: [RFC PATCH] Let device drivers disable msi on shutdown
-Date: Tue, 24 Jun 2014 21:21:10 +0000
-Message-ID: <94D0CD8314A33A4D9D801C0FE68B402958B4AD28@G9W0745.americas.hpqcorp.net>
-References: <1403628537-16367-1-git-send-email-keith.busch@intel.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v4 2/2] ata: Fix the dma state machine lockup for the
+ IDENTIFY DEVICE PIO mode command.
+Date: Tue, 24 Jun 2014 17:55:17 -0400
+Message-ID: <20140624215517.GF14909@htj.dyndns.org>
+References: <1403517193-29776-1-git-send-email-stripathi@apm.com>
+ <1403517193-29776-3-git-send-email-stripathi@apm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g9t1613g.houston.hp.com ([15.240.0.71]:46291 "EHLO
-	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750985AbaFXVWx convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Jun 2014 17:22:53 -0400
-In-Reply-To: <1403628537-16367-1-git-send-email-keith.busch@intel.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1403517193-29776-3-git-send-email-stripathi@apm.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Suman Tripathi <stripathi@apm.com>
+Cc: olof@lixom.net, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Keith Busch <keith.busch@intel.com>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>, Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, Bjorn Helgaas <bhelgaas@google.com>
 
+Hello,
 
+On Mon, Jun 23, 2014 at 03:23:13PM +0530, Suman Tripathi wrote:
+> This patch fixes the dma state machine lockup due to the processing
+> of IDENTIFY DEVICE PIO mode command. The X-Gene AHCI controller
+> has an errata in which it cannot clear the BSY bit after
+> receiving the PIO setup FIS and results the dma state machine to go
+> into the CMFatalErrorUpdate state resulting in the dma state
+> machine lockup. This patch also removes the dma restart workaround
+> from the read_id function as the read_id function is only called by
+> libata layer for ATA_INTERNAL commands. But for somecases eg:
+> PORT MULTIPLIER and udev, the framework will enumerate using SCSI
+> commands and it will not call read_id function.
 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> owner@vger.kernel.org] On Behalf Of Keith Busch
-> Sent: Tuesday, 24 June, 2014 11:49 AM
-> To: linux-pci@vger.kernel.org; linux-scsi@vger.kernel.org
-> Cc: Keith Busch; Nagalakshmi Nandigama; Sreekanth Reddy; Bjorn Helgaas
-> Subject: [RFC PATCH] Let device drivers disable msi on shutdown
+I assume that it's verified that only IDENTIFY is affected?  Please
+try to explicitly follow up on the previous discussions.  It makes
+keeping track a lot easier for the reviewers.
+
+>  /**
+> + * xgene_ahci_qc_issue - Issue commands to the device
+> + * @qc: Command to issue
+> + *
+> + * Due to H/W errata, for the IDENTIFY DEVICE command controller is unable to
+> + * clear the BSY bit after receiving the PIO setup FIS and results the dma
+> + * state machine to go into the CMFatalErrorUpdate state resulting in the dma
+> + * state machine lockup. By restarting the dma engine to move it removes the
+> + * controller out of lock up state.
+> + */
+> +static unsigned int xgene_ahci_qc_issue(struct ata_queued_cmd *qc)
+> +{
+> +	struct ata_port *ap = qc->ap;
+> +	struct ahci_host_priv *hpriv = ap->host->private_data;
+> +	struct xgene_ahci_context *ctx = hpriv->plat_data;
+> +	int rc = 0;
+> +
+> +	/*
+> +	 * Restart the dma engine if the last cmd issued
+> +	 * is IDENTIFY DEVICE command
+> +	 */
+
+I think the function comment is doing a good job of explaining and we
+can lose the above comment.  Comments which explain the code itself is
+useful if the logic involved is complex but I don't think that's the
+case here.
+
+> +	if (unlikely(ctx->last_cmd[ap->port_no] == ATA_CMD_ID_ATA))
+> +		ahci_restart_engine(ap);
+> +
+> +	rc = ahci_qc_issue(qc);
+> +
+> +	/* Save the last command issued */
+> +	ctx->last_cmd[ap->port_no] = qc->tf.command;
+> +
+> +	return rc;
+> +}
+...
+> diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+> index d1c9122..1b86cf4 100644
+> --- a/drivers/ata/libahci.c
+> +++ b/drivers/ata/libahci.c
+> @@ -68,7 +68,6 @@ static ssize_t ahci_transmit_led_message(struct ata_port *ap, u32 state,
 > 
-> I'd like to do shutdowns asynchronously so I can shutdown multiple
-> devices in parallel, but the pci-driver disables interrupts after my
-> driver returns from its '.shutdown', though it needs to rely on these
-> interrupts in its asynchronously scheduled shutdown.
-> 
-> I tracked the reason for pci disabling msi to ...
-> 
-> | commit d52877c7b1afb8c37ebe17e2005040b79cb618b0
-> | Author: Yinghai Lu <yhlu.kernel.send@gmail.com>
-> | Date:   Wed Apr 23 14:58:09 2008 -0700
-> |
-> |     pci/irq: let pci_device_shutdown to call pci_msi_shutdown v2
-> 
-> ... because mptfusion doesn't disable msi in its shutdown path.
-> 
-> Any reason we can't let the drivers do this instead?
-> 
-> To provide context why I want to do this asynchronously, NVM-Express has
-> one PCI device per controller, of which there could be dozens in a system,
-> and each one may take many seconds (I've heard over ten in some cases)
-> to safely shutdown.
-> 
-> In this patch, mptfusion was compile tested only; I didn't observe any
-> adverse affects from running the pci portion.
-> 
-> Signed-off-by: Keith Busch <keith.busch@intel.com>
-> Cc: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>
-> Cc: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  drivers/message/fusion/mptscsih.c |    3 +++
->  drivers/pci/pci-driver.c          |    2 --
->  2 files changed, 3 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/message/fusion/mptscsih.c
-> b/drivers/message/fusion/mptscsih.c
-> index 2a1c6f2..3186e17 100644
-> --- a/drivers/message/fusion/mptscsih.c
-> +++ b/drivers/message/fusion/mptscsih.c
-> @@ -1215,6 +1215,9 @@ mptscsih_remove(struct pci_dev *pdev)
->  void
->  mptscsih_shutdown(struct pci_dev *pdev)
->  {
-> +	MPT_ADAPTER *ioc = pci_get_drvdata(pdev);
-> +	if (ioc->msi_enable)
-> +		pci_disable_msi(pdev);
+>  static int ahci_scr_read(struct ata_link *link, unsigned int sc_reg, u32 *val);
+>  static int ahci_scr_write(struct ata_link *link, unsigned int sc_reg, u32 val);
+> -static unsigned int ahci_qc_issue(struct ata_queued_cmd *qc);
+>  static bool ahci_qc_fill_rtf(struct ata_queued_cmd *qc);
+>  static int ahci_port_start(struct ata_port *ap);
+>  static void ahci_port_stop(struct ata_port *ap);
+> @@ -1952,7 +1951,7 @@ irqreturn_t ahci_interrupt(int irq, void *dev_instance)
 >  }
+>  EXPORT_SYMBOL_GPL(ahci_interrupt);
 > 
->  #ifdef CONFIG_PM
-> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> index 3f8e3db..8079d98 100644
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -453,8 +453,6 @@ static void pci_device_shutdown(struct device *dev)
+> -static unsigned int ahci_qc_issue(struct ata_queued_cmd *qc)
+> +unsigned int ahci_qc_issue(struct ata_queued_cmd *qc)
+>  {
+>  	struct ata_port *ap = qc->ap;
+>  	void __iomem *port_mmio = ahci_port_base(ap);
+> @@ -1981,6 +1980,7 @@ static unsigned int ahci_qc_issue(struct ata_queued_cmd *qc)
 > 
->  	if (drv && drv->shutdown)
->  		drv->shutdown(pci_dev);
-> -	pci_msi_shutdown(pci_dev);
-> -	pci_msix_shutdown(pci_dev);
-> 
->  #ifdef CONFIG_KEXEC
->  	/*
-> --
-> 1.7.10.4
-> 
+>  	return 0;
+>  }
+> +EXPORT_SYMBOL_GPL(ahci_qc_issue);
 
-1. That will cover the .shutdown function used by mptfc.c, mptspi.c, 
-and mptscsih.c, but mptsas.c uses mptsas_shutdown rather than 
-mptscsih_shutdown.  It doesn't call pci_disable_msi either.
+Can we please do this in the previous patch?  "implement
+ahci_restart_engine() and export ahci_qc_issue()" is completely fine
+with me.  Just note in the description that a following patch will
+make use of them.
 
-2. mptscsih_suspend is another caller of mptscsih_shutdown
-(although the latter does nothing right now).  This is done
-before calling mpt_suspend, which writes to some chip registers 
-to disable interrupts before calling pci_disable_msi.  Adding a 
-pci_disable_msi call before those writes might not be safe.  
+Thanks.
 
-3. That mptscsih_suspend call chain will result in calling 
-pci_disable_msi twice, which might trigger this in 
-pci_disable_msi -> pci_msi_shutdown:
-        BUG_ON(list_empty(&dev->msi_list));
-
-
----
-Rob Elliott    HP Server Storage
-
-
-
+-- 
+tejun
