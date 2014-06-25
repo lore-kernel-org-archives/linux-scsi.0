@@ -1,513 +1,127 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH 2/6] scsi: Implement sg_printk()
-Date: Wed, 25 Jun 2014 16:21:19 -0400
-Message-ID: <53AB2F3F.4000607@interlog.com>
-References: <1403707199-102664-1-git-send-email-hare@suse.de> <1403707199-102664-3-git-send-email-hare@suse.de>
-Reply-To: dgilbert@interlog.com
+From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
+Subject: RE: [PATCH V2] scsi_lib: removes ambiguous "Unhandled error code"
+ messages.
+Date: Wed, 25 Jun 2014 20:38:47 +0000
+Message-ID: <94D0CD8314A33A4D9D801C0FE68B402958B4C8CD@G9W0745.americas.hpqcorp.net>
+References: <1402042235-7246-1-git-send-email-mlombard@redhat.com>
+ <20140625110632.GE19181@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:57861 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755347AbaFYUVZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 Jun 2014 16:21:25 -0400
-In-Reply-To: <1403707199-102664-3-git-send-email-hare@suse.de>
+Received: from g4t3425.houston.hp.com ([15.201.208.53]:2495 "EHLO
+	g4t3425.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753849AbaFYUlD convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jun 2014 16:41:03 -0400
+In-Reply-To: <20140625110632.GE19181@infradead.org>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>
-Cc: Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-
-On 14-06-25 10:39 AM, Hannes Reinecke wrote:
-> Update the sg driver to use dev_printk() variants instead of
-> plain printk(); this will prefix logging messages with the
-> appropriate device.
->
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> Acked-by: Doug Gilbert <dgilbert@interlog.com>
-^^^^^^^^^^^
-
-A comment below as I believe you are going to make another
-sweep through these printk()s in the future.
-
-Doug Gilbert
-
-> Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> ---
->   drivers/scsi/sg.c | 163 +++++++++++++++++++++++++++++++-----------------------
->   1 file changed, 95 insertions(+), 68 deletions(-)
->
-> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-> index f27b70d..cb2a18e 100644
-> --- a/drivers/scsi/sg.c
-> +++ b/drivers/scsi/sg.c
-> @@ -199,11 +199,11 @@ static ssize_t sg_new_write(Sg_fd *sfp, struct file *file,
->   static int sg_common_write(Sg_fd * sfp, Sg_request * srp,
->   			   unsigned char *cmnd, int timeout, int blocking);
->   static int sg_read_oxfer(Sg_request * srp, char __user *outp, int num_read_xfer);
-> -static void sg_remove_scat(Sg_scatter_hold * schp);
-> +static void sg_remove_scat(Sg_fd * sfp, Sg_scatter_hold * schp);
->   static void sg_build_reserve(Sg_fd * sfp, int req_size);
->   static void sg_link_reserve(Sg_fd * sfp, Sg_request * srp, int size);
->   static void sg_unlink_reserve(Sg_fd * sfp, Sg_request * srp);
-> -static Sg_fd *sg_add_sfp(Sg_device * sdp, int dev);
-> +static Sg_fd *sg_add_sfp(Sg_device * sdp);
->   static void sg_remove_sfp(struct kref *);
->   static Sg_request *sg_get_rq_mark(Sg_fd * sfp, int pack_id);
->   static Sg_request *sg_add_request(Sg_fd * sfp);
-> @@ -217,6 +217,10 @@ static void sg_device_destroy(struct kref *kref);
->   #define SZ_SG_IOVEC sizeof(sg_iovec_t)
->   #define SZ_SG_REQ_INFO sizeof(sg_req_info_t)
->
-> +#define sg_printk(prefix, sdp, fmt, a...) \
-> +	sdev_printk(prefix, (sdp)->device, "[%s] " fmt, \
-> +		    (sdp)->disk->disk_name, ##a)
-> +
->   static int sg_allow_access(struct file *filp, unsigned char *cmd)
->   {
->   	struct sg_fd *sfp = filp->private_data;
-> @@ -275,13 +279,15 @@ sg_open(struct inode *inode, struct file *filp)
->   	int retval;
->
->   	nonseekable_open(inode, filp);
-> -	SCSI_LOG_TIMEOUT(3, printk("sg_open: dev=%d, flags=0x%x\n", dev, flags));
->   	if ((flags & O_EXCL) && (O_RDONLY == (flags & O_ACCMODE)))
->   		return -EPERM; /* Can't lock it with read only access */
->   	sdp = sg_get_dev(dev);
->   	if (IS_ERR(sdp))
->   		return PTR_ERR(sdp);
->
-> +	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp,
-> +				      "sg_open: flags=0x%x\n", flags));
-> +
->   	/* This driver's module count bumped by fops_get in <linux/fs.h> */
->   	/* Prevent the device driver from vanishing while we sleep */
->   	retval = scsi_device_get(sdp->device);
-> @@ -330,7 +336,7 @@ sg_open(struct inode *inode, struct file *filp)
->   		q = sdp->device->request_queue;
->   		sdp->sg_tablesize = queue_max_segments(q);
->   	}
-> -	sfp = sg_add_sfp(sdp, dev);
-> +	sfp = sg_add_sfp(sdp);
->   	if (IS_ERR(sfp)) {
->   		retval = PTR_ERR(sfp);
->   		goto out_undo;
-> @@ -369,7 +375,7 @@ sg_release(struct inode *inode, struct file *filp)
->
->   	if ((!(sfp = (Sg_fd *) filp->private_data)) || (!(sdp = sfp->parentdp)))
->   		return -ENXIO;
-> -	SCSI_LOG_TIMEOUT(3, printk("sg_release: %s\n", sdp->disk->disk_name));
-> +	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp, "sg_release\n"));
->
->   	mutex_lock(&sdp->open_rel_lock);
->   	scsi_autopm_put_device(sdp->device);
-> @@ -401,8 +407,8 @@ sg_read(struct file *filp, char __user *buf, size_t count, loff_t * ppos)
->
->   	if ((!(sfp = (Sg_fd *) filp->private_data)) || (!(sdp = sfp->parentdp)))
->   		return -ENXIO;
-> -	SCSI_LOG_TIMEOUT(3, printk("sg_read: %s, count=%d\n",
-> -				   sdp->disk->disk_name, (int) count));
-> +	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp,
-> +				      "sg_read: count=%d\n", (int) count));
->
->   	if (!access_ok(VERIFY_WRITE, buf, count))
->   		return -EFAULT;
-> @@ -587,8 +593,8 @@ sg_write(struct file *filp, const char __user *buf, size_t count, loff_t * ppos)
->
->   	if ((!(sfp = (Sg_fd *) filp->private_data)) || (!(sdp = sfp->parentdp)))
->   		return -ENXIO;
-> -	SCSI_LOG_TIMEOUT(3, printk("sg_write: %s, count=%d\n",
-> -				   sdp->disk->disk_name, (int) count));
-> +	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp,
-> +				      "sg_write: count=%d\n", (int) count));
->   	if (atomic_read(&sdp->detaching))
->   		return -ENODEV;
->   	if (!((filp->f_flags & O_NONBLOCK) ||
-> @@ -609,7 +615,8 @@ sg_write(struct file *filp, const char __user *buf, size_t count, loff_t * ppos)
->   		return -EIO;	/* The minimum scsi command length is 6 bytes. */
->
->   	if (!(srp = sg_add_request(sfp))) {
-> -		SCSI_LOG_TIMEOUT(1, printk("sg_write: queue full\n"));
-> +		SCSI_LOG_TIMEOUT(1, sg_printk(KERN_INFO, sdp,
-> +					      "sg_write: queue full\n"));
->   		return -EDOM;
->   	}
->   	buf += SZ_SG_HEADER;
-> @@ -622,7 +629,7 @@ sg_write(struct file *filp, const char __user *buf, size_t count, loff_t * ppos)
->   		if ((opcode >= 0xc0) && old_hdr.twelve_byte)
->   			cmd_size = 12;
->   	}
-> -	SCSI_LOG_TIMEOUT(4, printk(
-> +	SCSI_LOG_TIMEOUT(4, sg_printk(KERN_INFO, sdp,
->   		"sg_write:   scsi opcode=0x%02x, cmd_size=%d\n", (int) opcode, cmd_size));
->   /* Determine buffer size.  */
->   	input_size = count - cmd_size;
-> @@ -697,7 +704,8 @@ sg_new_write(Sg_fd *sfp, struct file *file, const char __user *buf,
->
->   	sfp->cmd_q = 1;	/* when sg_io_hdr seen, set command queuing on */
->   	if (!(srp = sg_add_request(sfp))) {
-> -		SCSI_LOG_TIMEOUT(1, printk("sg_new_write: queue full\n"));
-> +		SCSI_LOG_TIMEOUT(1, sg_printk(KERN_INFO, sfp->parentdp,
-> +					      "sg_new_write: queue full\n"));
->   		return -EDOM;
->   	}
->   	srp->sg_io_owned = sg_io_owned;
-> @@ -766,12 +774,14 @@ sg_common_write(Sg_fd * sfp, Sg_request * srp,
->   	hp->host_status = 0;
->   	hp->driver_status = 0;
->   	hp->resid = 0;
-> -	SCSI_LOG_TIMEOUT(4, printk("sg_common_write:  scsi opcode=0x%02x, cmd_size=%d\n",
-> -			  (int) cmnd[0], (int) hp->cmd_len));
-> +	SCSI_LOG_TIMEOUT(4, sg_printk(KERN_INFO, sfp->parentdp,
-> +			"sg_common_write:  scsi opcode=0x%02x, cmd_size=%d\n",
-> +			(int) cmnd[0], (int) hp->cmd_len));
->
->   	k = sg_start_req(srp, cmnd);
->   	if (k) {
-> -		SCSI_LOG_TIMEOUT(1, printk("sg_common_write: start_req err=%d\n", k));
-> +		SCSI_LOG_TIMEOUT(1, sg_printk(KERN_INFO, sfp->parentdp,
-> +			"sg_common_write: start_req err=%d\n", k));
->   		sg_finish_rem_req(srp);
->   		return k;	/* probably out of space --> ENOMEM */
->   	}
-> @@ -845,8 +855,8 @@ sg_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
->   	if ((!(sfp = (Sg_fd *) filp->private_data)) || (!(sdp = sfp->parentdp)))
->   		return -ENXIO;
->
-> -	SCSI_LOG_TIMEOUT(3, printk("sg_ioctl: %s, cmd=0x%x\n",
-> -				   sdp->disk->disk_name, (int) cmd_in));
-> +	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp,
-> +				   "sg_ioctl: cmd=0x%x\n", (int) cmd_in));
->   	read_only = (O_RDWR != (filp->f_flags & O_ACCMODE));
->
->   	switch (cmd_in) {
-> @@ -898,7 +908,7 @@ sg_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
->   			sfp->low_dma = 1;
->   			if ((0 == sfp->low_dma) && (0 == sg_res_in_use(sfp))) {
->   				val = (int) sfp->reserve.bufflen;
-> -				sg_remove_scat(&sfp->reserve);
-> +				sg_remove_scat(sfp, &sfp->reserve);
->   				sg_build_reserve(sfp, val);
->   			}
->   		} else {
-> @@ -974,7 +984,7 @@ sg_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
->   		if (val != sfp->reserve.bufflen) {
->   			if (sg_res_in_use(sfp) || sfp->mmap_called)
->   				return -EBUSY;
-> -			sg_remove_scat(&sfp->reserve);
-> +			sg_remove_scat(sfp, &sfp->reserve);
->   			sg_build_reserve(sfp, val);
->   		}
->   		return 0;
-> @@ -1197,8 +1207,8 @@ sg_poll(struct file *filp, poll_table * wait)
->   			res |= POLLOUT | POLLWRNORM;
->   	} else if (count < SG_MAX_QUEUE)
->   		res |= POLLOUT | POLLWRNORM;
-> -	SCSI_LOG_TIMEOUT(3, printk("sg_poll: %s, res=0x%x\n",
-> -				   sdp->disk->disk_name, (int) res));
-> +	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp,
-> +				      "sg_poll: res=0x%x\n", (int) res));
->   	return res;
->   }
->
-> @@ -1210,8 +1220,8 @@ sg_fasync(int fd, struct file *filp, int mode)
->
->   	if ((!(sfp = (Sg_fd *) filp->private_data)) || (!(sdp = sfp->parentdp)))
->   		return -ENXIO;
-> -	SCSI_LOG_TIMEOUT(3, printk("sg_fasync: %s, mode=%d\n",
-> -				   sdp->disk->disk_name, mode));
-> +	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp,
-> +				      "sg_fasync: mode=%d\n", mode));
->
->   	return fasync_helper(fd, filp, mode, &sfp->async_qp);
->   }
-> @@ -1230,8 +1240,9 @@ sg_vma_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
->   	offset = vmf->pgoff << PAGE_SHIFT;
->   	if (offset >= rsv_schp->bufflen)
->   		return VM_FAULT_SIGBUS;
-> -	SCSI_LOG_TIMEOUT(3, printk("sg_vma_fault: offset=%lu, scatg=%d\n",
-> -				   offset, rsv_schp->k_use_sg));
-> +	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sfp->parentdp,
-> +				      "sg_vma_fault: offset=%lu, scatg=%d\n",
-> +				      offset, rsv_schp->k_use_sg));
->   	sa = vma->vm_start;
->   	length = 1 << (PAGE_SHIFT + rsv_schp->page_order);
->   	for (k = 0; k < rsv_schp->k_use_sg && sa < vma->vm_end; k++) {
-> @@ -1266,8 +1277,9 @@ sg_mmap(struct file *filp, struct vm_area_struct *vma)
->   	if ((!filp) || (!vma) || (!(sfp = (Sg_fd *) filp->private_data)))
->   		return -ENXIO;
->   	req_sz = vma->vm_end - vma->vm_start;
-> -	SCSI_LOG_TIMEOUT(3, printk("sg_mmap starting, vm_start=%p, len=%d\n",
-> -				   (void *) vma->vm_start, (int) req_sz));
-> +	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sfp->parentdp,
-> +				      "sg_mmap starting, vm_start=%p, len=%d\n",
-> +				      (void *) vma->vm_start, (int) req_sz));
->   	if (vma->vm_pgoff)
->   		return -EINVAL;	/* want no offset */
->   	rsv_schp = &sfp->reserve;
-> @@ -1329,8 +1341,9 @@ sg_rq_end_io(struct request *rq, int uptodate)
->   	result = rq->errors;
->   	resid = rq->resid_len;
->
-> -	SCSI_LOG_TIMEOUT(4, printk("sg_cmd_done: %s, pack_id=%d, res=0x%x\n",
-> -		sdp->disk->disk_name, srp->header.pack_id, result));
-> +	SCSI_LOG_TIMEOUT(4, sg_printk(KERN_INFO, sdp,
-> +				      "sg_cmd_done: pack_id=%d, res=0x%x\n",
-> +				      srp->header.pack_id, result));
-
-That function used to be called sg_cmd_done() but
-another hacker gave it a more reasonable name (?)
-but neglected to fix the printk_s. There are other
-examples, so now I prefer:
-
-   SCSI_LOG_TIMEOUT(4, sg_printk(KERN_INFO, sdp,
-		   "%s: pack_id=%d, res=0x%x\n", __func__,
-		   srp->header.pack_id, result));
+To: Christoph Hellwig <hch@infradead.org>, Maurizio Lombardi <mlombard@redhat.com>
+Cc: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
 
-Oh, and we really shouldn't be printing from this context but
-it works and I have found it useful in debugging :-)
 
->   	srp->header.resid = resid;
->   	ms = jiffies_to_msecs(jiffies);
->   	srp->header.duration = (ms > srp->header.duration) ?
-> @@ -1440,7 +1453,8 @@ sg_alloc(struct gendisk *disk, struct scsi_device *scsidp)
->   	}
->   	k = error;
->
-> -	SCSI_LOG_TIMEOUT(3, printk("sg_alloc: dev=%d \n", k));
-> +	SCSI_LOG_TIMEOUT(3, sdev_printk(KERN_INFO, scsidp,
-> +					"sg_alloc: dev=%d \n", k));
->   	sprintf(disk->disk_name, "sg%d", k);
->   	disk->first_minor = k;
->   	sdp->disk = disk;
-> @@ -1560,8 +1574,7 @@ sg_device_destroy(struct kref *kref)
->   	write_unlock_irqrestore(&sg_index_lock, flags);
->
->   	SCSI_LOG_TIMEOUT(3,
-> -		printk("sg_device_destroy: %s\n",
-> -			sdp->disk->disk_name));
-> +		sg_printk(KERN_INFO, sdp, "sg_device_destroy\n"));
->
->   	put_disk(sdp->disk);
->   	kfree(sdp);
-> @@ -1583,8 +1596,8 @@ sg_remove_device(struct device *cl_dev, struct class_interface *cl_intf)
->   	if (val > 1)
->   		return; /* only want to do following once per device */
->
-> -	SCSI_LOG_TIMEOUT(3, printk("%s: %s\n", __func__,
-> -			 sdp->disk->disk_name));
-> +	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp,
-> +				      "%s\n", __func__));
->
->   	read_lock_irqsave(&sdp->sfd_lock, iflags);
->   	list_for_each_entry(sfp, &sdp->sfds, sfd_siblings) {
-> @@ -1686,8 +1699,9 @@ sg_start_req(Sg_request *srp, unsigned char *cmd)
->   	int rw = hp->dxfer_direction == SG_DXFER_TO_DEV ? WRITE : READ;
->   	unsigned char *long_cmdp = NULL;
->
-> -	SCSI_LOG_TIMEOUT(4, printk(KERN_INFO "sg_start_req: dxfer_len=%d\n",
-> -				   dxfer_len));
-> +	SCSI_LOG_TIMEOUT(4, sg_printk(KERN_INFO, sfp->parentdp,
-> +				      "sg_start_req: dxfer_len=%d\n",
-> +				      dxfer_len));
->
->   	if (hp->cmd_len > BLK_MAX_CDB) {
->   		long_cmdp = kzalloc(hp->cmd_len, GFP_KERNEL);
-> @@ -1785,7 +1799,9 @@ sg_finish_rem_req(Sg_request *srp)
->   	Sg_fd *sfp = srp->parentfp;
->   	Sg_scatter_hold *req_schp = &srp->data;
->
-> -	SCSI_LOG_TIMEOUT(4, printk("sg_finish_rem_req: res_used=%d\n", (int) srp->res_used));
-> +	SCSI_LOG_TIMEOUT(4, sg_printk(KERN_INFO, sfp->parentdp,
-> +				      "sg_finish_rem_req: res_used=%d\n",
-> +				      (int) srp->res_used));
->   	if (srp->rq) {
->   		if (srp->bio)
->   			ret = blk_rq_unmap_user(srp->bio);
-> @@ -1798,7 +1814,7 @@ sg_finish_rem_req(Sg_request *srp)
->   	if (srp->res_used)
->   		sg_unlink_reserve(sfp, srp);
->   	else
-> -		sg_remove_scat(req_schp);
-> +		sg_remove_scat(sfp, req_schp);
->
->   	sg_remove_request(sfp, srp);
->
-> @@ -1832,8 +1848,9 @@ sg_build_indirect(Sg_scatter_hold * schp, Sg_fd * sfp, int buff_size)
->   		++blk_size;	/* don't know why */
->   	/* round request up to next highest SG_SECTOR_SZ byte boundary */
->   	blk_size = ALIGN(blk_size, SG_SECTOR_SZ);
-> -	SCSI_LOG_TIMEOUT(4, printk("sg_build_indirect: buff_size=%d, blk_size=%d\n",
-> -				   buff_size, blk_size));
-> +	SCSI_LOG_TIMEOUT(4, sg_printk(KERN_INFO, sfp->parentdp,
-> +		"sg_build_indirect: buff_size=%d, blk_size=%d\n",
-> +		buff_size, blk_size));
->
->   	/* N.B. ret_sz carried into this block ... */
->   	mx_sc_elems = sg_build_sgat(schp, sfp, sg_tablesize);
-> @@ -1876,14 +1893,16 @@ retry:
->   			}
->   		}
->
-> -		SCSI_LOG_TIMEOUT(5, printk("sg_build_indirect: k=%d, num=%d, "
-> -				 "ret_sz=%d\n", k, num, ret_sz));
-> +		SCSI_LOG_TIMEOUT(5, sg_printk(KERN_INFO, sfp->parentdp,
-> +				 "sg_build_indirect: k=%d, num=%d, ret_sz=%d\n",
-> +				 k, num, ret_sz));
->   	}		/* end of for loop */
->
->   	schp->page_order = order;
->   	schp->k_use_sg = k;
-> -	SCSI_LOG_TIMEOUT(5, printk("sg_build_indirect: k_use_sg=%d, "
-> -			 "rem_sz=%d\n", k, rem_sz));
-> +	SCSI_LOG_TIMEOUT(5, sg_printk(KERN_INFO, sfp->parentdp,
-> +			 "sg_build_indirect: k_use_sg=%d, rem_sz=%d\n",
-> +			 k, rem_sz));
->
->   	schp->bufflen = blk_size;
->   	if (rem_sz > 0)	/* must have failed */
-> @@ -1900,17 +1919,19 @@ out:
->   }
->
->   static void
-> -sg_remove_scat(Sg_scatter_hold * schp)
-> +sg_remove_scat(Sg_fd * sfp, Sg_scatter_hold * schp)
->   {
-> -	SCSI_LOG_TIMEOUT(4, printk("sg_remove_scat: k_use_sg=%d\n", schp->k_use_sg));
-> +	SCSI_LOG_TIMEOUT(4, sg_printk(KERN_INFO, sfp->parentdp,
-> +			 "sg_remove_scat: k_use_sg=%d\n", schp->k_use_sg));
->   	if (schp->pages && schp->sglist_len > 0) {
->   		if (!schp->dio_in_use) {
->   			int k;
->
->   			for (k = 0; k < schp->k_use_sg && schp->pages[k]; k++) {
-> -				SCSI_LOG_TIMEOUT(5, printk(
-> -				    "sg_remove_scat: k=%d, pg=0x%p\n",
-> -				    k, schp->pages[k]));
-> +				SCSI_LOG_TIMEOUT(5,
-> +					sg_printk(KERN_INFO, sfp->parentdp,
-> +					"sg_remove_scat: k=%d, pg=0x%p\n",
-> +					k, schp->pages[k]));
->   				__free_pages(schp->pages[k], schp->page_order);
->   			}
->
-> @@ -1926,8 +1947,9 @@ sg_read_oxfer(Sg_request * srp, char __user *outp, int num_read_xfer)
->   	Sg_scatter_hold *schp = &srp->data;
->   	int k, num;
->
-> -	SCSI_LOG_TIMEOUT(4, printk("sg_read_oxfer: num_read_xfer=%d\n",
-> -				   num_read_xfer));
-> +	SCSI_LOG_TIMEOUT(4, sg_printk(KERN_INFO, srp->parentfp->parentdp,
-> +			 "sg_read_oxfer: num_read_xfer=%d\n",
-> +			 num_read_xfer));
->   	if ((!outp) || (num_read_xfer <= 0))
->   		return 0;
->
-> @@ -1957,14 +1979,15 @@ sg_build_reserve(Sg_fd * sfp, int req_size)
->   {
->   	Sg_scatter_hold *schp = &sfp->reserve;
->
-> -	SCSI_LOG_TIMEOUT(4, printk("sg_build_reserve: req_size=%d\n", req_size));
-> +	SCSI_LOG_TIMEOUT(4, sg_printk(KERN_INFO, sfp->parentdp,
-> +			 "sg_build_reserve: req_size=%d\n", req_size));
->   	do {
->   		if (req_size < PAGE_SIZE)
->   			req_size = PAGE_SIZE;
->   		if (0 == sg_build_indirect(schp, sfp, req_size))
->   			return;
->   		else
-> -			sg_remove_scat(schp);
-> +			sg_remove_scat(sfp, schp);
->   		req_size >>= 1;	/* divide by 2 */
->   	} while (req_size > (PAGE_SIZE / 2));
->   }
-> @@ -1977,7 +2000,8 @@ sg_link_reserve(Sg_fd * sfp, Sg_request * srp, int size)
->   	int k, num, rem;
->
->   	srp->res_used = 1;
-> -	SCSI_LOG_TIMEOUT(4, printk("sg_link_reserve: size=%d\n", size));
-> +	SCSI_LOG_TIMEOUT(4, sg_printk(KERN_INFO, sfp->parentdp,
-> +			 "sg_link_reserve: size=%d\n", size));
->   	rem = size;
->
->   	num = 1 << (PAGE_SHIFT + rsv_schp->page_order);
-> @@ -1995,7 +2019,8 @@ sg_link_reserve(Sg_fd * sfp, Sg_request * srp, int size)
->   	}
->
->   	if (k >= rsv_schp->k_use_sg)
-> -		SCSI_LOG_TIMEOUT(1, printk("sg_link_reserve: BAD size\n"));
-> +		SCSI_LOG_TIMEOUT(1, sg_printk(KERN_INFO, sfp->parentdp,
-> +				 "sg_link_reserve: BAD size\n"));
->   }
->
->   static void
-> @@ -2003,8 +2028,9 @@ sg_unlink_reserve(Sg_fd * sfp, Sg_request * srp)
->   {
->   	Sg_scatter_hold *req_schp = &srp->data;
->
-> -	SCSI_LOG_TIMEOUT(4, printk("sg_unlink_reserve: req->k_use_sg=%d\n",
-> -				   (int) req_schp->k_use_sg));
-> +	SCSI_LOG_TIMEOUT(4, sg_printk(KERN_INFO, srp->parentfp->parentdp,
-> +				      "sg_unlink_reserve: req->k_use_sg=%d\n",
-> +				      (int) req_schp->k_use_sg));
->   	req_schp->k_use_sg = 0;
->   	req_schp->bufflen = 0;
->   	req_schp->pages = NULL;
-> @@ -2109,7 +2135,7 @@ sg_remove_request(Sg_fd * sfp, Sg_request * srp)
->   }
->
->   static Sg_fd *
-> -sg_add_sfp(Sg_device * sdp, int dev)
-> +sg_add_sfp(Sg_device * sdp)
->   {
->   	Sg_fd *sfp;
->   	unsigned long iflags;
-> @@ -2138,15 +2164,18 @@ sg_add_sfp(Sg_device * sdp, int dev)
->   	}
->   	list_add_tail(&sfp->sfd_siblings, &sdp->sfds);
->   	write_unlock_irqrestore(&sdp->sfd_lock, iflags);
-> -	SCSI_LOG_TIMEOUT(3, printk("sg_add_sfp: sfp=0x%p\n", sfp));
-> +	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp,
-> +				      "sg_add_sfp: sfp=0x%p\n", sfp));
->   	if (unlikely(sg_big_buff != def_reserved_size))
->   		sg_big_buff = def_reserved_size;
->
->   	bufflen = min_t(int, sg_big_buff,
->   			max_sectors_bytes(sdp->device->request_queue));
->   	sg_build_reserve(sfp, bufflen);
-> -	SCSI_LOG_TIMEOUT(3, printk("sg_add_sfp:   bufflen=%d, k_use_sg=%d\n",
-> -			   sfp->reserve.bufflen, sfp->reserve.k_use_sg));
-> +	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp,
-> +				      "sg_add_sfp: bufflen=%d, k_use_sg=%d\n",
-> +				      sfp->reserve.bufflen,
-> +				      sfp->reserve.k_use_sg));
->
->   	kref_get(&sdp->d_ref);
->   	__module_get(THIS_MODULE);
-> @@ -2164,17 +2193,15 @@ sg_remove_sfp_usercontext(struct work_struct *work)
->   		sg_finish_rem_req(sfp->headrp);
->
->   	if (sfp->reserve.bufflen > 0) {
-> -		SCSI_LOG_TIMEOUT(6,
-> -			printk("sg_remove_sfp:    bufflen=%d, k_use_sg=%d\n",
-> +		SCSI_LOG_TIMEOUT(6, sg_printk(KERN_INFO, sdp,
-> +				"sg_remove_sfp:    bufflen=%d, k_use_sg=%d\n",
->   				(int) sfp->reserve.bufflen,
->   				(int) sfp->reserve.k_use_sg));
-> -		sg_remove_scat(&sfp->reserve);
-> +		sg_remove_scat(sfp, &sfp->reserve);
->   	}
->
-> -	SCSI_LOG_TIMEOUT(6,
-> -		printk("sg_remove_sfp: %s, sfp=0x%p\n",
-> -			sdp->disk->disk_name,
-> -			sfp));
-> +	SCSI_LOG_TIMEOUT(6, sg_printk(KERN_INFO, sdp,
-> +			"sg_remove_sfp: sfp=0x%p\n", sfp));
->   	kfree(sfp);
->
->   	scsi_device_put(sdp->device);
->
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+> owner@vger.kernel.org] On Behalf Of Christoph Hellwig
+> Sent: Wednesday, 25 June, 2014 6:07 AM
+> To: Maurizio Lombardi
+> Cc: James.Bottomley@HansenPartnership.com; linux-scsi@vger.kernel.org;
+> hch@infradead.org
+> Subject: Re: [PATCH V2] scsi_lib: removes ambiguous "Unhandled error code"
+> messages.
+> 
+> Can I get another review for this one?
+> 
+> On Fri, Jun 06, 2014 at 10:10:35AM +0200, Maurizio Lombardi wrote:
+...
+> > diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+...
+> > @@ -955,14 +955,12 @@ void scsi_io_completion(struct scsi_cmnd *cmd,
+> unsigned int good_bytes)
+> >  			action = ACTION_FAIL;
+> >  			break;
+> >  		default:
+> > -			description = "Unhandled sense code";
+> > +			description = "Failing command with sense code:";
+
+The default case handles sense keys other than:
+	#define NOT_READY           0x02
+	#define ILLEGAL_REQUEST     0x05
+	#define UNIT_ATTENTION      0x06
+	#define ABORTED_COMMAND     0x0b
+	#define VOLUME_OVERFLOW     0x0d
+
+which means these #defines (and any other values)
+#define NO_SENSE            0x00
+#define RECOVERED_ERROR     0x01
+#define MEDIUM_ERROR        0x03
+#define HARDWARE_ERROR      0x04
+#define DATA_PROTECT        0x07
+#define BLANK_CHECK         0x08
+#define COPY_ABORTED        0x0a
+#define MISCOMPARE          0x0e
+
+The other description strings that result in ACTION_FAIL are based
+on the sense key and sometimes the additional sense code:
+description = "Media Changed";
+description = "Host Data Integrity Failure";
+description = "Discard failure";
+description = "Write same failure";
+description = "Invalid command failure";
+description = "Target Data Integrity Failure";
+description = "Device not ready";
+
+Also, there is this one, which is not based on the sense key:
+description = "Command timed out";
+
+Since the ACTION_FAIL case always prints the sense key
+and additional sense code:
+	if (!(req->cmd_flags & REQ_QUIET)) {
+		if (description)
+			scmd_printk(KERN_INFO, cmd, " % \n",
+				description);
+		scsi_print_result(cmd);
+		if (driver_byte(result) & DRIVER_SENSE)
+			scsi_print_sense("", cmd);
+		scsi_print_command(cmd);
+	}
+
+perhaps the description string should be removed altogether?
+
+In this example:
+	sd 1:0:0:0: [sdb] Unhandled sense code
+	sd 1:0:0:0: [sdb]
+	Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+	sd 1:0:0:0: [sdb]
+	Sense Key : Medium Error [current]
+	sd 1:0:0:0: [sdb]
+	Add. Sense: Unrecovered read error
+	sd 1:0:0:0: [sdb] CDB:
+	Read(10): 28 00 00 18 f8 a8 00 00 08 00
+	end_request: critical medium error, dev sdb, sector 1636520
+
+"Sense Key : Medium Error" is much more informative than
+"Unhandled sense code" or "Failing command with sense code".
+All the other descriptions represent failing commands,
+so using different wording is a bit confusing.
+
+For the "Unhandled error code" (for which you are proposing
+removing the string) and the timeout case, the scsi_print_result 
+call already prints hostbyte and driverbyte, which explain what 
+happened in more detail:
+
+	sd 1:0:0:0: [sda] Unhandled error code                                          
+	sd 1:0:0:0: [sda]                                                               
+	Result: hostbyte=DID_TIME_OUT driverbyte=DRIVER_OK                              
+	sd 1:0:0:0: [sda] CDB:                                                          
+	Test Unit Ready:                                                                
+	end_request: I/O error, dev sda, sector 481013632                               
+
+---
+Rob Elliott    HP Server Storage
+
+
+
 
