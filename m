@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 07/14] scsi: convert host_busy to atomic_t
-Date: Wed, 25 Jun 2014 18:51:54 +0200
-Message-ID: <1403715121-1201-8-git-send-email-hch@lst.de>
+Subject: [PATCH 09/14] scsi: fix the {host,target,device}_blocked counter mess
+Date: Wed, 25 Jun 2014 18:51:56 +0200
+Message-ID: <1403715121-1201-10-git-send-email-hch@lst.de>
 References: <1403715121-1201-1-git-send-email-hch@lst.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1403715121-1201-1-git-send-email-hch@lst.de>
@@ -10,316 +10,306 @@ To: James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: Jens Axboe <axboe@kernel.dk>, Bart Van Assche <bvanassche@fusionio.com>, Robert Elliott <Elliott@hp.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Avoid taking the host-wide host_lock to check the per-host queue limit.
-Instead we do an atomic_inc_return early on to grab our slot in the queue,
-and if nessecary decrement it after finishing all checks.
+Seems like these counters are missing any sort of synchronization for
+updates, as a over 10 year old comment from me noted.  Fix this by
+using atomic counters, and while we're at it also make sure they are
+in the same cacheline as the _busy counters and not needlessly stored
+to in every I/O completion.
+
+With the new model the _busy counters can temporarily go negative,
+so all the readers are updated to check for > 0 values.  Longer
+term every successful I/O completion will reset the counters to zero,
+so the temporarily negative values will not cause any harm.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/advansys.c             |    4 +-
- drivers/scsi/libiscsi.c             |    4 +-
- drivers/scsi/libsas/sas_scsi_host.c |    5 ++-
- drivers/scsi/qlogicpti.c            |    2 +-
- drivers/scsi/scsi.c                 |    2 +-
- drivers/scsi/scsi_error.c           |    7 ++--
- drivers/scsi/scsi_lib.c             |   71 +++++++++++++++++++++--------------
- drivers/scsi/scsi_sysfs.c           |    9 ++++-
- include/scsi/scsi_host.h            |   10 ++---
- 9 files changed, 66 insertions(+), 48 deletions(-)
+ drivers/scsi/scsi.c        |   21 ++++++------
+ drivers/scsi/scsi_lib.c    |   82 +++++++++++++++++++++-----------------------
+ drivers/scsi/scsi_sysfs.c  |   10 +++++-
+ include/scsi/scsi_device.h |    7 ++--
+ include/scsi/scsi_host.h   |    7 ++--
+ 5 files changed, 64 insertions(+), 63 deletions(-)
 
-diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index e716d0a..43761c1 100644
---- a/drivers/scsi/advansys.c
-+++ b/drivers/scsi/advansys.c
-@@ -2512,7 +2512,7 @@ static void asc_prt_scsi_host(struct Scsi_Host *s)
- 
- 	printk("Scsi_Host at addr 0x%p, device %s\n", s, dev_name(boardp->dev));
- 	printk(" host_busy %u, host_no %d,\n",
--	       s->host_busy, s->host_no);
-+	       atomic_read(&s->host_busy), s->host_no);
- 
- 	printk(" base 0x%lx, io_port 0x%lx, irq %d,\n",
- 	       (ulong)s->base, (ulong)s->io_port, boardp->irq);
-@@ -3346,7 +3346,7 @@ static void asc_prt_driver_conf(struct seq_file *m, struct Scsi_Host *shost)
- 
- 	seq_printf(m,
- 		   " host_busy %u, max_id %u, max_lun %llu, max_channel %u\n",
--		   shost->host_busy, shost->max_id,
-+		   atomic_read(&shost->host_busy), shost->max_id,
- 		   shost->max_lun, shost->max_channel);
- 
- 	seq_printf(m,
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index f2db82b..f9f3a12 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -2971,7 +2971,7 @@ void iscsi_conn_teardown(struct iscsi_cls_conn *cls_conn)
- 	 */
- 	for (;;) {
- 		spin_lock_irqsave(session->host->host_lock, flags);
--		if (!session->host->host_busy) { /* OK for ERL == 0 */
-+		if (!atomic_read(&session->host->host_busy)) { /* OK for ERL == 0 */
- 			spin_unlock_irqrestore(session->host->host_lock, flags);
- 			break;
- 		}
-@@ -2979,7 +2979,7 @@ void iscsi_conn_teardown(struct iscsi_cls_conn *cls_conn)
- 		msleep_interruptible(500);
- 		iscsi_conn_printk(KERN_INFO, conn, "iscsi conn_destroy(): "
- 				  "host_busy %d host_failed %d\n",
--				  session->host->host_busy,
-+				  atomic_read(&session->host->host_busy),
- 				  session->host->host_failed);
- 		/*
- 		 * force eh_abort() to unblock
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index 7d02a19..24e477d 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -813,7 +813,7 @@ retry:
- 	spin_unlock_irq(shost->host_lock);
- 
- 	SAS_DPRINTK("Enter %s busy: %d failed: %d\n",
--		    __func__, shost->host_busy, shost->host_failed);
-+		    __func__, atomic_read(&shost->host_busy), shost->host_failed);
- 	/*
- 	 * Deal with commands that still have SAS tasks (i.e. they didn't
- 	 * complete via the normal sas_task completion mechanism),
-@@ -858,7 +858,8 @@ out:
- 		goto retry;
- 
- 	SAS_DPRINTK("--- Exit %s: busy: %d failed: %d tries: %d\n",
--		    __func__, shost->host_busy, shost->host_failed, tries);
-+		    __func__, atomic_read(&shost->host_busy),
-+		    shost->host_failed, tries);
- }
- 
- enum blk_eh_timer_return sas_scsi_timed_out(struct scsi_cmnd *cmd)
-diff --git a/drivers/scsi/qlogicpti.c b/drivers/scsi/qlogicpti.c
-index 6d48d30..740ae49 100644
---- a/drivers/scsi/qlogicpti.c
-+++ b/drivers/scsi/qlogicpti.c
-@@ -959,7 +959,7 @@ static inline void update_can_queue(struct Scsi_Host *host, u_int in_ptr, u_int
- 	/* Temporary workaround until bug is found and fixed (one bug has been found
- 	   already, but fixing it makes things even worse) -jj */
- 	int num_free = QLOGICPTI_REQ_QUEUE_LEN - REQ_QUEUE_DEPTH(in_ptr, out_ptr) - 64;
--	host->can_queue = host->host_busy + num_free;
-+	host->can_queue = atomic_read(&host->host_busy) + num_free;
- 	host->sg_tablesize = QLOGICPTI_MAX_SG(num_free);
- }
- 
 diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index d3bd6cf..35a23e2 100644
+index 35a23e2..b362058 100644
 --- a/drivers/scsi/scsi.c
 +++ b/drivers/scsi/scsi.c
-@@ -603,7 +603,7 @@ void scsi_log_completion(struct scsi_cmnd *cmd, int disposition)
- 			if (level > 3)
- 				scmd_printk(KERN_INFO, cmd,
- 					    "scsi host busy %d failed %d\n",
--					    cmd->device->host->host_busy,
-+					    atomic_read(&cmd->device->host->host_busy),
- 					    cmd->device->host->host_failed);
- 		}
- 	}
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index e4a5324..5db8454 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -59,7 +59,7 @@ static int scsi_try_to_abort_cmd(struct scsi_host_template *,
- /* called with shost->host_lock held */
- void scsi_eh_wakeup(struct Scsi_Host *shost)
- {
--	if (shost->host_busy == shost->host_failed) {
-+	if (atomic_read(&shost->host_busy) == shost->host_failed) {
- 		trace_scsi_eh_wakeup(shost);
- 		wake_up_process(shost->ehandler);
- 		SCSI_LOG_ERROR_RECOVERY(5, shost_printk(KERN_INFO, shost,
-@@ -2164,7 +2164,7 @@ int scsi_error_handler(void *data)
- 	while (!kthread_should_stop()) {
- 		set_current_state(TASK_INTERRUPTIBLE);
- 		if ((shost->host_failed == 0 && shost->host_eh_scheduled == 0) ||
--		    shost->host_failed != shost->host_busy) {
-+		    shost->host_failed != atomic_read(&shost->host_busy)) {
- 			SCSI_LOG_ERROR_RECOVERY(1,
- 				shost_printk(KERN_INFO, shost,
- 					     "scsi_eh_%d: sleeping\n",
-@@ -2178,7 +2178,8 @@ int scsi_error_handler(void *data)
- 			shost_printk(KERN_INFO, shost,
- 				     "scsi_eh_%d: waking up %d/%d/%d\n",
- 				     shost->host_no, shost->host_eh_scheduled,
--				     shost->host_failed, shost->host_busy));
-+				     shost->host_failed,
-+				     atomic_read(&shost->host_busy)));
+@@ -729,17 +729,16 @@ void scsi_finish_command(struct scsi_cmnd *cmd)
  
- 		/*
- 		 * We have a host that is failing for some reason.  Figure out
+ 	scsi_device_unbusy(sdev);
+ 
+-        /*
+-         * Clear the flags which say that the device/host is no longer
+-         * capable of accepting new commands.  These are set in scsi_queue.c
+-         * for both the queue full condition on a device, and for a
+-         * host full condition on the host.
+-	 *
+-	 * XXX(hch): What about locking?
+-         */
+-        shost->host_blocked = 0;
+-	starget->target_blocked = 0;
+-        sdev->device_blocked = 0;
++	/*
++	 * Clear the flags which say that the device/target/host is no longer
++	 * capable of accepting new commands.
++	 */
++	if (atomic_read(&shost->host_blocked))
++		atomic_set(&shost->host_blocked, 0);
++	if (atomic_read(&starget->target_blocked))
++		atomic_set(&starget->target_blocked, 0);
++	if (atomic_read(&sdev->device_blocked))
++		atomic_set(&sdev->device_blocked, 0);
+ 
+ 	/*
+ 	 * If we have valid sense information, then some kind of recovery
 diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 5e269d6..5d37d79 100644
+index e23fef5..a39d5ba 100644
 --- a/drivers/scsi/scsi_lib.c
 +++ b/drivers/scsi/scsi_lib.c
-@@ -292,14 +292,17 @@ void scsi_device_unbusy(struct scsi_device *sdev)
- 	struct scsi_target *starget = scsi_target(sdev);
- 	unsigned long flags;
+@@ -99,14 +99,16 @@ scsi_set_blocked(struct scsi_cmnd *cmd, int reason)
+ 	 */
+ 	switch (reason) {
+ 	case SCSI_MLQUEUE_HOST_BUSY:
+-		host->host_blocked = host->max_host_blocked;
++		atomic_set(&host->host_blocked, host->max_host_blocked);
+ 		break;
+ 	case SCSI_MLQUEUE_DEVICE_BUSY:
+ 	case SCSI_MLQUEUE_EH_RETRY:
+-		device->device_blocked = device->max_device_blocked;
++		atomic_set(&device->device_blocked,
++			   device->max_device_blocked);
+ 		break;
+ 	case SCSI_MLQUEUE_TARGET_BUSY:
+-		starget->target_blocked = starget->max_target_blocked;
++		atomic_set(&starget->target_blocked,
++			   starget->max_target_blocked);
+ 		break;
+ 	}
+ }
+@@ -351,30 +353,39 @@ static void scsi_single_lun_run(struct scsi_device *current_sdev)
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
+ }
  
--	spin_lock_irqsave(shost->host_lock, flags);
--	shost->host_busy--;
-+	atomic_dec(&shost->host_busy);
- 	atomic_dec(&starget->target_busy);
-+
- 	if (unlikely(scsi_host_in_recovery(shost) &&
--		     (shost->host_failed || shost->host_eh_scheduled)))
-+		     (shost->host_failed || shost->host_eh_scheduled))) {
-+		spin_lock_irqsave(shost->host_lock, flags);
- 		scsi_eh_wakeup(shost);
--	spin_unlock(shost->host_lock);
--	spin_lock(sdev->request_queue->queue_lock);
-+		spin_unlock_irqrestore(shost->host_lock, flags);
+-static inline int scsi_device_is_busy(struct scsi_device *sdev)
++static inline bool scsi_device_is_busy(struct scsi_device *sdev)
+ {
+ 	if (atomic_read(&sdev->device_busy) >= sdev->queue_depth)
+-		return 1;
+-	if (sdev->device_blocked)
+-		return 1;
++		return true;
++	if (atomic_read(&sdev->device_blocked) > 0)
++		return true;
+ 	return 0;
+ }
+ 
+-static inline int scsi_target_is_busy(struct scsi_target *starget)
++static inline bool scsi_target_is_busy(struct scsi_target *starget)
+ {
+-	return ((starget->can_queue > 0 &&
+-		 atomic_read(&starget->target_busy) >= starget->can_queue) ||
+-		 starget->target_blocked);
++	if (starget->can_queue > 0) {
++		if (atomic_read(&starget->target_busy) >= starget->can_queue)
++			return true;
++		if (atomic_read(&starget->target_blocked) > 0)
++			return true;
 +	}
 +
-+	spin_lock_irqsave(sdev->request_queue->queue_lock, flags);
- 	sdev->device_busy--;
- 	spin_unlock_irqrestore(sdev->request_queue->queue_lock, flags);
++	return false;
  }
-@@ -367,7 +370,8 @@ static inline int scsi_target_is_busy(struct scsi_target *starget)
  
- static inline int scsi_host_is_busy(struct Scsi_Host *shost)
+-static inline int scsi_host_is_busy(struct Scsi_Host *shost)
++static inline bool scsi_host_is_busy(struct Scsi_Host *shost)
  {
--	if ((shost->can_queue > 0 && shost->host_busy >= shost->can_queue) ||
-+	if ((shost->can_queue > 0 &&
-+	     atomic_read(&shost->host_busy) >= shost->can_queue) ||
- 	    shost->host_blocked || shost->host_self_blocked)
- 		return 1;
+-	if ((shost->can_queue > 0 &&
+-	     atomic_read(&shost->host_busy) >= shost->can_queue) ||
+-	    shost->host_blocked || shost->host_self_blocked)
+-		return 1;
++	if (shost->can_queue > 0) {
++		if (atomic_read(&shost->host_busy) >= shost->can_queue)
++			return true;
++		if (atomic_read(&shost->host_blocked) > 0)
++			return true;
++		if (shost->host_self_blocked)
++			return true;
++	}
  
-@@ -1359,38 +1363,51 @@ static inline int scsi_host_queue_ready(struct request_queue *q,
- 				   struct Scsi_Host *shost,
- 				   struct scsi_device *sdev)
- {
--	int ret = 0;
--
--	spin_lock_irq(shost->host_lock);
-+	unsigned int busy;
+-	return 0;
++	return false;
+ }
  
- 	if (scsi_host_in_recovery(shost))
--		goto out;
--	if (shost->host_busy == 0 && shost->host_blocked) {
-+		return 0;
-+
-+	busy = atomic_inc_return(&shost->host_busy) - 1;
-+	if (busy == 0 && shost->host_blocked) {
- 		/*
- 		 * unblock after host_blocked iterates to zero
- 		 */
--		if (--shost->host_blocked != 0)
--			goto out;
-+		spin_lock_irq(shost->host_lock);
-+		if (--shost->host_blocked != 0) {
-+			spin_unlock_irq(shost->host_lock);
-+			goto out_dec;
-+		}
-+		spin_unlock_irq(shost->host_lock);
+ static void scsi_starved_list_run(struct Scsi_Host *shost)
+@@ -1283,11 +1294,8 @@ static inline int scsi_dev_queue_ready(struct request_queue *q,
+ 	unsigned int busy;
+ 
+ 	busy = atomic_inc_return(&sdev->device_busy) - 1;
+-	if (busy == 0 && sdev->device_blocked) {
+-		/*
+-		 * unblock after device_blocked iterates to zero
+-		 */
+-		if (--sdev->device_blocked != 0) {
++	if (busy == 0 && atomic_read(&sdev->device_blocked) > 0) {
++		if (atomic_dec_return(&sdev->device_blocked) > 0) {
+ 			blk_delay_queue(q, SCSI_QUEUE_DELAY);
+ 			goto out_dec;
+ 		}
+@@ -1297,7 +1305,7 @@ static inline int scsi_dev_queue_ready(struct request_queue *q,
+ 
+ 	if (busy >= sdev->queue_depth)
+ 		goto out_dec;
+-	if (sdev->device_blocked)
++	if (atomic_read(&sdev->device_blocked) > 0)
+ 		goto out_dec;
+ 
+ 	return 1;
+@@ -1328,16 +1336,9 @@ static inline int scsi_target_queue_ready(struct Scsi_Host *shost,
+ 	}
+ 
+ 	busy = atomic_inc_return(&starget->target_busy) - 1;
+-	if (busy == 0 && starget->target_blocked) {
+-		/*
+-		 * unblock after target_blocked iterates to zero
+-		 */
+-		spin_lock_irq(shost->host_lock);
+-		if (--starget->target_blocked != 0) {
+-			spin_unlock_irq(shost->host_lock);
++	if (busy == 0 && atomic_read(&starget->target_blocked) > 0) {
++		if (atomic_dec_return(&starget->target_blocked) > 0)
+ 			goto out_dec;
+-		}
+-		spin_unlock_irq(shost->host_lock);
+ 
+ 		SCSI_LOG_MLQUEUE(3, starget_printk(KERN_INFO, starget,
+ 				 "unblocking target at zero depth\n"));
+@@ -1345,7 +1346,7 @@ static inline int scsi_target_queue_ready(struct Scsi_Host *shost,
+ 
+ 	if (starget->can_queue > 0 && busy >= starget->can_queue)
+ 		goto starved;
+-	if (starget->target_blocked)
++	if (atomic_read(&starget->target_blocked) > 0)
+ 		goto starved;
+ 
+ 	return 1;
+@@ -1374,16 +1375,9 @@ static inline int scsi_host_queue_ready(struct request_queue *q,
+ 		return 0;
+ 
+ 	busy = atomic_inc_return(&shost->host_busy) - 1;
+-	if (busy == 0 && shost->host_blocked) {
+-		/*
+-		 * unblock after host_blocked iterates to zero
+-		 */
+-		spin_lock_irq(shost->host_lock);
+-		if (--shost->host_blocked != 0) {
+-			spin_unlock_irq(shost->host_lock);
++	if (busy == 0 && atomic_read(&shost->host_blocked) > 0) {
++		if (atomic_dec_return(&shost->host_blocked) > 0)
+ 			goto out_dec;
+-		}
+-		spin_unlock_irq(shost->host_lock);
  
  		SCSI_LOG_MLQUEUE(3,
  			shost_printk(KERN_INFO, shost,
- 				     "unblocking host at zero depth\n"));
- 	}
--	if (scsi_host_is_busy(shost)) {
--		if (list_empty(&sdev->starved_entry))
--			list_add_tail(&sdev->starved_entry, &shost->starved_list);
--		goto out;
--	}
-+
-+	if (shost->can_queue > 0 && busy >= shost->can_queue)
+@@ -1392,7 +1386,9 @@ static inline int scsi_host_queue_ready(struct request_queue *q,
+ 
+ 	if (shost->can_queue > 0 && busy >= shost->can_queue)
+ 		goto starved;
+-	if (shost->host_blocked || shost->host_self_blocked)
++	if (atomic_read(&shost->host_blocked) > 0)
 +		goto starved;
-+	if (shost->host_blocked || shost->host_self_blocked)
-+		goto starved;
++	if (shost->host_self_blocked)
+ 		goto starved;
  
  	/* We're OK to process the command, so we can't be starved */
--	if (!list_empty(&sdev->starved_entry))
--		list_del_init(&sdev->starved_entry);
-+	if (!list_empty(&sdev->starved_entry)) {
-+		spin_lock_irq(shost->host_lock);
-+		if (!list_empty(&sdev->starved_entry))
-+			list_del_init(&sdev->starved_entry);
-+		spin_unlock_irq(shost->host_lock);
-+	}
- 
--	shost->host_busy++;
--	ret = 1;
--out:
-+	return 1;
-+
-+starved:
-+	spin_lock_irq(shost->host_lock);
-+	if (list_empty(&sdev->starved_entry))
-+		list_add_tail(&sdev->starved_entry, &shost->starved_list);
- 	spin_unlock_irq(shost->host_lock);
--	return ret;
-+out_dec:
-+	atomic_dec(&shost->host_busy);
-+	return 0;
- }
- 
- /*
-@@ -1454,12 +1471,8 @@ static void scsi_kill_request(struct request *req, struct request_queue *q)
- 	 * with the locks as normal issue path does.
- 	 */
- 	sdev->device_busy++;
--	spin_unlock(sdev->request_queue->queue_lock);
--	spin_lock(shost->host_lock);
--	shost->host_busy++;
-+	atomic_inc(&shost->host_busy);
- 	atomic_inc(&starget->target_busy);
--	spin_unlock(shost->host_lock);
--	spin_lock(sdev->request_queue->queue_lock);
- 
- 	blk_complete_request(req);
- }
 diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 5f36788..7ec5e06 100644
+index 54e3dac..deef063 100644
 --- a/drivers/scsi/scsi_sysfs.c
 +++ b/drivers/scsi/scsi_sysfs.c
-@@ -334,7 +334,6 @@ store_shost_eh_deadline(struct device *dev, struct device_attribute *attr,
- static DEVICE_ATTR(eh_deadline, S_IRUGO | S_IWUSR, show_shost_eh_deadline, store_shost_eh_deadline);
- 
- shost_rd_attr(unique_id, "%u\n");
--shost_rd_attr(host_busy, "%hu\n");
- shost_rd_attr(cmd_per_lun, "%hd\n");
- shost_rd_attr(can_queue, "%hd\n");
- shost_rd_attr(sg_tablesize, "%hu\n");
-@@ -344,6 +343,14 @@ shost_rd_attr(prot_capabilities, "%u\n");
- shost_rd_attr(prot_guard_type, "%hd\n");
- shost_rd_attr2(proc_name, hostt->proc_name, "%s\n");
+@@ -584,7 +584,6 @@ static int scsi_sdev_check_buf_bit(const char *buf)
+ /*
+  * Create the actual show/store functions and data structures.
+  */
+-sdev_rd_attr (device_blocked, "%d\n");
+ sdev_rd_attr (type, "%d\n");
+ sdev_rd_attr (scsi_level, "%d\n");
+ sdev_rd_attr (vendor, "%.8s\n");
+@@ -600,6 +599,15 @@ sdev_show_device_busy(struct device *dev, struct device_attribute *attr,
+ }
+ static DEVICE_ATTR(device_busy, S_IRUGO, sdev_show_device_busy, NULL);
  
 +static ssize_t
-+show_host_busy(struct device *dev, struct device_attribute *attr, char *buf)
++sdev_show_device_blocked(struct device *dev, struct device_attribute *attr,
++		char *buf)
 +{
-+	struct Scsi_Host *shost = class_to_shost(dev);
-+	return snprintf(buf, 20, "%hu\n", atomic_read(&shost->host_busy));
++	struct scsi_device *sdev = to_scsi_device(dev);
++	return snprintf(buf, 20, "%d\n", atomic_read(&sdev->device_blocked));
 +}
-+static DEVICE_ATTR(host_busy, S_IRUGO, show_host_busy, NULL);
++static DEVICE_ATTR(device_blocked, S_IRUGO, sdev_show_device_blocked, NULL);
 +
- static struct attribute *scsi_sysfs_shost_attrs[] = {
- 	&dev_attr_unique_id.attr,
- 	&dev_attr_host_busy.attr,
+ /*
+  * TODO: can we make these symlinks to the block layer ones?
+  */
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 5ff3d24..a8a8981 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -82,6 +82,8 @@ struct scsi_device {
+ 	struct list_head    same_target_siblings; /* just the devices sharing same target id */
+ 
+ 	atomic_t device_busy;		/* commands actually active on LLDD */
++	atomic_t device_blocked;	/* Device returned QUEUE_FULL. */
++
+ 	spinlock_t list_lock;
+ 	struct list_head cmd_list;	/* queue of in use SCSI Command structures */
+ 	struct list_head starved_entry;
+@@ -179,8 +181,6 @@ struct scsi_device {
+ 	struct list_head event_list;	/* asserted events */
+ 	struct work_struct event_work;
+ 
+-	unsigned int device_blocked;	/* Device returned QUEUE_FULL. */
+-
+ 	unsigned int max_device_blocked; /* what device_blocked counts down from  */
+ #define SCSI_DEFAULT_DEVICE_BLOCKED	3
+ 
+@@ -290,12 +290,13 @@ struct scsi_target {
+ 						 * the same target will also. */
+ 	/* commands actually active on LLD. */
+ 	atomic_t		target_busy;
++	atomic_t		target_blocked;
++
+ 	/*
+ 	 * LLDs should set this in the slave_alloc host template callout.
+ 	 * If set to zero then there is not limit.
+ 	 */
+ 	unsigned int		can_queue;
+-	unsigned int		target_blocked;
+ 	unsigned int		max_target_blocked;
+ #define SCSI_DEFAULT_TARGET_BLOCKED	3
+ 
 diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index abb6958..3d124f7 100644
+index 3d124f7..7f9bbda 100644
 --- a/include/scsi/scsi_host.h
 +++ b/include/scsi/scsi_host.h
-@@ -603,13 +603,9 @@ struct Scsi_Host {
- 	 */
+@@ -604,6 +604,8 @@ struct Scsi_Host {
  	struct blk_queue_tag	*bqt;
  
--	/*
--	 * The following two fields are protected with host_lock;
--	 * however, eh routines can safely access during eh processing
--	 * without acquiring the lock.
--	 */
--	unsigned int host_busy;		   /* commands actually active on low-level */
--	unsigned int host_failed;	   /* commands that failed. */
-+	atomic_t host_busy;		   /* commands actually active on low-level */
-+	unsigned int host_failed;	   /* commands that failed.
-+					      protected by host_lock */
+ 	atomic_t host_busy;		   /* commands actually active on low-level */
++	atomic_t host_blocked;
++
+ 	unsigned int host_failed;	   /* commands that failed.
+ 					      protected by host_lock */
  	unsigned int host_eh_scheduled;    /* EH scheduled without command */
-     
- 	unsigned int host_no;  /* Used for IOCTL_GET_IDLUN, /proc/scsi et al. */
+@@ -703,11 +705,6 @@ struct Scsi_Host {
+ 	struct workqueue_struct *tmf_work_q;
+ 
+ 	/*
+-	 * Host has rejected a command because it was busy.
+-	 */
+-	unsigned int host_blocked;
+-
+-	/*
+ 	 * Value host_blocked counts down from
+ 	 */
+ 	unsigned int max_host_blocked;
 -- 
 1.7.10.4
