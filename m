@@ -1,209 +1,66 @@
 From: Joe Lawrence <joe.lawrence@stratus.com>
-Subject: [PATCH v2 05/11] mpt3sas: combine fw_event_work and its event_data
-Date: Wed, 25 Jun 2014 17:05:34 -0400
-Message-ID: <1403730334-20132-1-git-send-email-joe.lawrence@stratus.com>
+Subject: [PATCH v2 08/11] mptfusion: use memdup_user
+Date: Wed, 25 Jun 2014 17:06:12 -0400
+Message-ID: <1403730372-20246-1-git-send-email-joe.lawrence@stratus.com>
 References: <1403730058-19872-1-git-send-email-joe.lawrence@stratus.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from p02c12o142.mxlogic.net ([208.65.145.75]:49708 "EHLO
-	p02c12o142.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755949AbaFYVGK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jun 2014 17:06:10 -0400
+Received: from p02c12o147.mxlogic.net ([208.65.145.80]:34638 "EHLO
+	p02c12o147.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754602AbaFYVGe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jun 2014 17:06:34 -0400
 In-Reply-To: <1403730058-19872-1-git-send-email-joe.lawrence@stratus.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Dan Carpenter <dan.carpenter@oracle.com>, Christoph Hellwig <hch@lst.de>, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>, Joe Lawrence <joe.lawrence@stratus.com>
+Cc: Dan Carpenter <dan.carpenter@oracle.com>, Christoph Hellwig <hch@lst.de>, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>, Joe Lawrence <joe.lawrence@stratus.com>, Christoph Hellwig <hch@infradead.org>
 
-Tack the firmware reply event_data payload to the end of its
-corresponding struct fw_event_work allocation.  This matches the
-convention in the mptfusion driver and simplifies the code.
+Let memdup_user handle the kmalloc, copy_from_user and error checking
+kfree code.
 
-This avoids the following smatch warning:
+Spotted by the following smatch (false positive) warning:
 
-  drivers/scsi/mpt3sas/mpt3sas_scsih.c:2519
-    mpt3sas_send_trigger_data_event() warn: possible memory leak of
-    'fw_event'
+  drivers/message/fusion/mptctl.c:1369 mptctl_getiocinfo() warn:
+    possible info leak 'karg'
 
 Signed-off-by: Joe Lawrence <joe.lawrence@stratus.com>
+Cc: Christoph Hellwig <hch@infradead.org>
 Cc: Dan Carpenter <dan.carpenter@oracle.com>
 Cc: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
-Cc: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/mpt3sas/mpt3sas_scsih.c |   56 +++++++++++++++++++---------------
- 1 file changed, 31 insertions(+), 25 deletions(-)
+ drivers/message/fusion/mptctl.c |   18 +++++-------------
+ 1 file changed, 5 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index f3ee3b4..a14be8f 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -190,7 +190,7 @@ struct fw_event_work {
- 	u8			VP_ID;
- 	u8			ignore;
- 	u16			event;
--	void			*event_data;
-+	char			event_data[0] __aligned(4);
- };
+diff --git a/drivers/message/fusion/mptctl.c b/drivers/message/fusion/mptctl.c
+index 8a050e8..b0a892a 100644
+--- a/drivers/message/fusion/mptctl.c
++++ b/drivers/message/fusion/mptctl.c
+@@ -1261,19 +1261,11 @@ mptctl_getiocinfo (unsigned long arg, unsigned int data_size)
+ 	else
+ 		return -EFAULT;
  
- /* raid transport support */
-@@ -2492,7 +2492,6 @@ _scsih_fw_event_free(struct MPT3SAS_ADAPTER *ioc, struct fw_event_work
- 
- 	spin_lock_irqsave(&ioc->fw_event_lock, flags);
- 	list_del(&fw_event->list);
--	kfree(fw_event->event_data);
- 	kfree(fw_event);
- 	spin_unlock_irqrestore(&ioc->fw_event_lock, flags);
- }
-@@ -2513,12 +2512,10 @@ mpt3sas_send_trigger_data_event(struct MPT3SAS_ADAPTER *ioc,
- 
- 	if (ioc->is_driver_loading)
- 		return;
--	fw_event = kzalloc(sizeof(struct fw_event_work), GFP_ATOMIC);
-+	fw_event = kzalloc(sizeof(*fw_event) + sizeof(*event_data),
-+			   GFP_ATOMIC);
- 	if (!fw_event)
- 		return;
--	fw_event->event_data = kzalloc(sizeof(*event_data), GFP_ATOMIC);
--	if (!fw_event->event_data)
--		return;
- 	fw_event->event = MPT3SAS_PROCESS_TRIGGER_DIAG;
- 	fw_event->ioc = ioc;
- 	memcpy(fw_event->event_data, event_data, sizeof(*event_data));
-@@ -3213,7 +3210,8 @@ _scsih_check_topo_delete_events(struct MPT3SAS_ADAPTER *ioc,
- 		if (fw_event->event != MPI2_EVENT_SAS_TOPOLOGY_CHANGE_LIST ||
- 		    fw_event->ignore)
- 			continue;
--		local_event_data = fw_event->event_data;
-+		local_event_data = (Mpi2EventDataSasTopologyChangeList_t *)
-+				   fw_event->event_data;
- 		if (local_event_data->ExpStatus ==
- 		    MPI2_EVENT_SAS_TOPO_ES_ADDED ||
- 		    local_event_data->ExpStatus ==
-@@ -5045,7 +5043,9 @@ _scsih_sas_topology_change_event(struct MPT3SAS_ADAPTER *ioc,
- 	u64 sas_address;
- 	unsigned long flags;
- 	u8 link_rate, prev_link_rate;
--	Mpi2EventDataSasTopologyChangeList_t *event_data = fw_event->event_data;
-+	Mpi2EventDataSasTopologyChangeList_t *event_data =
-+		(Mpi2EventDataSasTopologyChangeList_t *)
-+		fw_event->event_data;
- 
- #ifdef CONFIG_SCSI_MPT3SAS_LOGGING
- 	if (ioc->logging_level & MPT_DEBUG_EVENT_WORK_TASK)
-@@ -5243,7 +5243,8 @@ _scsih_sas_device_status_change_event(struct MPT3SAS_ADAPTER *ioc,
- 	u64 sas_address;
- 	unsigned long flags;
- 	Mpi2EventDataSasDeviceStatusChange_t *event_data =
--	    fw_event->event_data;
-+		(Mpi2EventDataSasDeviceStatusChange_t *)
-+		fw_event->event_data;
- 
- #ifdef CONFIG_SCSI_MPT3SAS_LOGGING
- 	if (ioc->logging_level & MPT_DEBUG_EVENT_WORK_TASK)
-@@ -5339,6 +5340,7 @@ _scsih_sas_enclosure_dev_status_change_event(struct MPT3SAS_ADAPTER *ioc,
- #ifdef CONFIG_SCSI_MPT3SAS_LOGGING
- 	if (ioc->logging_level & MPT_DEBUG_EVENT_WORK_TASK)
- 		_scsih_sas_enclosure_dev_status_change_event_debug(ioc,
-+		     (Mpi2EventDataSasEnclDevStatusChange_t *)
- 		     fw_event->event_data);
- #endif
- }
-@@ -5363,7 +5365,9 @@ _scsih_sas_broadcast_primitive_event(struct MPT3SAS_ADAPTER *ioc,
- 	u32 termination_count;
- 	u32 query_count;
- 	Mpi2SCSITaskManagementReply_t *mpi_reply;
--	Mpi2EventDataSasBroadcastPrimitive_t *event_data = fw_event->event_data;
-+	Mpi2EventDataSasBroadcastPrimitive_t *event_data =
-+		(Mpi2EventDataSasBroadcastPrimitive_t *)
-+		fw_event->event_data;
- 	u16 ioc_status;
- 	unsigned long flags;
- 	int r;
-@@ -5515,7 +5519,8 @@ static void
- _scsih_sas_discovery_event(struct MPT3SAS_ADAPTER *ioc,
- 	struct fw_event_work *fw_event)
- {
--	Mpi2EventDataSasDiscovery_t *event_data = fw_event->event_data;
-+	Mpi2EventDataSasDiscovery_t *event_data =
-+		(Mpi2EventDataSasDiscovery_t *) fw_event->event_data;
- 
- #ifdef CONFIG_SCSI_MPT3SAS_LOGGING
- 	if (ioc->logging_level & MPT_DEBUG_EVENT_WORK_TASK) {
-@@ -6001,7 +6006,9 @@ _scsih_sas_ir_config_change_event(struct MPT3SAS_ADAPTER *ioc,
- 	Mpi2EventIrConfigElement_t *element;
- 	int i;
- 	u8 foreign_config;
--	Mpi2EventDataIrConfigChangeList_t *event_data = fw_event->event_data;
-+	Mpi2EventDataIrConfigChangeList_t *event_data =
-+		(Mpi2EventDataIrConfigChangeList_t *)
-+		fw_event->event_data;
- 
- #ifdef CONFIG_SCSI_MPT3SAS_LOGGING
- 	if (ioc->logging_level & MPT_DEBUG_EVENT_WORK_TASK)
-@@ -6071,7 +6078,8 @@ _scsih_sas_ir_volume_event(struct MPT3SAS_ADAPTER *ioc,
- 	u16 handle;
- 	u32 state;
- 	int rc;
--	Mpi2EventDataIrVolume_t *event_data = fw_event->event_data;
-+	Mpi2EventDataIrVolume_t *event_data =
-+		(Mpi2EventDataIrVolume_t *) fw_event->event_data;
- 
- 	if (ioc->shost_recovery)
- 		return;
-@@ -6154,7 +6162,8 @@ _scsih_sas_ir_physical_disk_event(struct MPT3SAS_ADAPTER *ioc,
- 	Mpi2ConfigReply_t mpi_reply;
- 	Mpi2SasDevicePage0_t sas_device_pg0;
- 	u32 ioc_status;
--	Mpi2EventDataIrPhysicalDisk_t *event_data = fw_event->event_data;
-+	Mpi2EventDataIrPhysicalDisk_t *event_data =
-+		(Mpi2EventDataIrPhysicalDisk_t *) fw_event->event_data;
- 	u64 sas_address;
- 
- 	if (ioc->shost_recovery)
-@@ -6274,7 +6283,9 @@ static void
- _scsih_sas_ir_operation_status_event(struct MPT3SAS_ADAPTER *ioc,
- 	struct fw_event_work *fw_event)
- {
--	Mpi2EventDataIrOperationStatus_t *event_data = fw_event->event_data;
-+	Mpi2EventDataIrOperationStatus_t *event_data =
-+		(Mpi2EventDataIrOperationStatus_t *)
-+		fw_event->event_data;
- 	static struct _raid_device *raid_device;
- 	unsigned long flags;
- 	u16 handle;
-@@ -7036,7 +7047,9 @@ _mpt3sas_fw_work(struct MPT3SAS_ADAPTER *ioc, struct fw_event_work *fw_event)
- 
- 	switch (fw_event->event) {
- 	case MPT3SAS_PROCESS_TRIGGER_DIAG:
--		mpt3sas_process_trigger_data(ioc, fw_event->event_data);
-+		mpt3sas_process_trigger_data(ioc,
-+			(struct SL_WH_TRIGGERS_EVENT_DATA_T *)
-+			fw_event->event_data);
- 		break;
- 	case MPT3SAS_REMOVE_UNRESPONDING_DEVICES:
- 		while (scsi_host_in_recovery(ioc->shost) || ioc->shost_recovery)
-@@ -7194,18 +7207,11 @@ mpt3sas_scsih_event_callback(struct MPT3SAS_ADAPTER *ioc, u8 msix_index,
- 		return 1;
- 	}
- 
--	fw_event = kzalloc(sizeof(struct fw_event_work), GFP_ATOMIC);
--	if (!fw_event) {
--		pr_err(MPT3SAS_FMT "failure at %s:%d/%s()!\n",
--		    ioc->name, __FILE__, __LINE__, __func__);
--		return 1;
+-	karg = kmalloc(data_size, GFP_KERNEL);
+-	if (karg == NULL) {
+-		printk(KERN_ERR MYNAM "%s::mpt_ioctl_iocinfo() @%d - no memory available!\n",
+-				__FILE__, __LINE__);
+-		return -ENOMEM;
 -	}
- 	sz = le16_to_cpu(mpi_reply->EventDataLength) * 4;
--	fw_event->event_data = kzalloc(sz, GFP_ATOMIC);
--	if (!fw_event->event_data) {
-+	fw_event = kzalloc(sizeof(*fw_event) + sz, GFP_ATOMIC);
-+	if (!fw_event) {
- 		pr_err(MPT3SAS_FMT "failure at %s:%d/%s()!\n",
- 		    ioc->name, __FILE__, __LINE__, __func__);
--		kfree(fw_event);
- 		return 1;
+-
+-	if (copy_from_user(karg, uarg, data_size)) {
+-		printk(KERN_ERR MYNAM "%s@%d::mptctl_getiocinfo - "
+-			"Unable to read in mpt_ioctl_iocinfo struct @ %p\n",
+-				__FILE__, __LINE__, uarg);
+-		kfree(karg);
+-		return -EFAULT;
++	karg = memdup_user(uarg, data_size);
++	if (IS_ERR(karg)) {
++		printk(KERN_ERR MYNAM "%s@%d::mpt_ioctl_iocinfo() - memdup_user returned error [%ld]\n",
++				__FILE__, __LINE__, PTR_ERR(karg));
++		return PTR_ERR(karg);
  	}
  
+ 	if (((iocnum = mpt_verify_adapter(karg->hdr.iocnum, &ioc)) < 0) ||
 -- 
 1.7.10.4
 
