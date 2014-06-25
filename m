@@ -1,8 +1,8 @@
 From: "Reddy, Sreekanth" <Sreekanth.Reddy@avagotech.com>
-Subject: [RESEND][PATCH 08/10][SCSI]mpt2sas: Get IOC_FACTS information using
- handshake protocol only after HBA card gets into READY or Operational state
-Date: Wed, 25 Jun 2014 16:05:32 +0530
-Message-ID: <20140625103532.GA12953@avagotech.com>
+Subject: [RESEND][PATCH 09/10][SCSI]mpt2sas: Added module parameter
+ 'unblock_io' to unblock IO's during disk addition
+Date: Wed, 25 Jun 2014 16:06:15 +0530
+Message-ID: <20140625103615.GA12959@avagotech.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-kernel-owner@vger.kernel.org>
@@ -12,464 +12,210 @@ To: jejb@kernel.org, JBottomley@Parallels.com
 Cc: linux-scsi@vger.kernel.org, Sathya.Prakash@avagotech.com, Nagalakshmi.Nandigama@avagotech.com, sreekanth.reddy@avagotech.com, linux-kernel@vger.kernel.org, hch@infradead.org, martin.petersen@oracle.com
 List-Id: linux-scsi@vger.kernel.org
 
-The driver would send IOC facts only if HBA is in operational or ready
-state. If it is in fault state, a diagnostic reset would be issued. It
-would wait for 10 seconds to exit out of reset state. If the HBA continues
-to be in reset state, then the HBA wouldn't be claimed by the driver.
+
+During hot-plugging of a disk(having a flaky link) the disk addition
+stops and any further disk addition or removal doesn't happen on that controller.
+
+This is because, when driver receives DELAY_NOT_RESPONDING for a disk when it is undergoing
+addition in the SCSI Mid layer, the driver would block the I/O to that disk
+resulting in a deadlock. i.e the disk addition work couldn't be completed
+as it can't send any I/O to the disk as I/Os are blocked. Any device removal (TARGET_NOT_RESPONDING)
+or link update(RC_PHY_CHANGED) couldn't be processed as they are in the queue
+to get processed after disk addition.
+
+Description of Change:
+To handle such cases, unblock the I/Os to the disk in ISR context if the disk is undergoing
+addition. The I/Os would get unblocked only if the driver receives RC_PHY_CHANGED reason
+code when the device addition is within the SAS Transport layer.
+
+An module parameter 'unblock_io' is introduced which needs to be set to have this
+functionality enabled. By default this functionality is disabled.
 
 Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 ---
- drivers/scsi/mpt2sas/mpt2sas_base.c |  416 ++++++++++++++++++++---------------
- 1 files changed, 239 insertions(+), 177 deletions(-)
+ drivers/scsi/mpt2sas/mpt2sas_base.h      |    3 +
+ drivers/scsi/mpt2sas/mpt2sas_scsih.c     |   67 ++++++++++++++++++++++++++---
+ drivers/scsi/mpt2sas/mpt2sas_transport.c |   13 ++++++
+ 3 files changed, 76 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-index 81f1d58..697c841 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -1737,6 +1737,238 @@ _base_handshake_req_reply_wait(struct MPT2SAS_ADAPTER *ioc, int request_bytes,
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
+index 32181a6..7de7ba4 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.h
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
+@@ -356,6 +356,8 @@ struct _internal_cmd {
+  * @phy: phy identifier provided in sas device page 0
+  * @responding: used in _scsih_sas_device_mark_responding
+  * @pfa_led_on: flag for PFA LED status
++ * @pend_sas_rphy_add: flag to check if device is in sas_rphy_add()
++ *			addition routine
+  */
+ struct _sas_device {
+ 	struct list_head list;
+@@ -375,6 +377,7 @@ struct _sas_device {
+ 	u8	phy;
+ 	u8	responding;
+ 	u8	pfa_led_on;
++	u8	pend_sas_rphy_add;
+ };
+ 
+ /**
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+index 4a0728a..b08d8fd 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+@@ -105,6 +105,11 @@ static int missing_delay[2] = {-1, -1};
+ module_param_array(missing_delay, int, NULL, 0);
+ MODULE_PARM_DESC(missing_delay, " device missing delay , io missing delay");
+ 
++static int unblock_io;
++module_param(unblock_io, int, 0);
++MODULE_PARM_DESC(unblock_io,
++"unblocks I/O if set to 1 when device is undergoing addition (default=0)");
++
+ /* scsi-mid layer global parmeter is max_report_luns, which is 511 */
+ #define MPT2SAS_MAX_LUN (16895)
+ static int max_lun = MPT2SAS_MAX_LUN;
+@@ -2972,6 +2977,34 @@ _scsih_ublock_io_device(struct MPT2SAS_ADAPTER *ioc, u64 sas_address)
  }
  
  /**
-+ * mpt2sas_base_get_iocstate - Get the current state of a MPT adapter.
-+ * @ioc: Pointer to MPT_ADAPTER structure
-+ * @cooked: Request raw or cooked IOC state
-+ *
-+ * Returns all IOC Doorbell register bits if cooked==0, else just the
-+ * Doorbell bits in MPI_IOC_STATE_MASK.
-+ */
-+u32
-+mpt2sas_base_get_iocstate(struct MPT2SAS_ADAPTER *ioc, int cooked)
-+{
-+	u32 s, sc;
-+
-+	s = readl(&ioc->chip->Doorbell);
-+	sc = s & MPI2_IOC_STATE_MASK;
-+	return cooked ? sc : s;
-+}
-+
-+/**
-+ * _base_wait_on_iocstate - waiting on a particular ioc state
-+ * @ioc_state: controller state { READY, OPERATIONAL, or RESET }
-+ * @timeout: timeout in second
-+ * @sleep_flag: CAN_SLEEP or NO_SLEEP
-+ *
-+ * Returns 0 for success, non-zero for failure.
-+ */
-+static int
-+_base_wait_on_iocstate(struct MPT2SAS_ADAPTER *ioc, u32 ioc_state, int timeout,
-+	int sleep_flag)
-+{
-+	u32 count, cntdn;
-+	u32 current_state;
-+
-+	count = 0;
-+	cntdn = (sleep_flag == CAN_SLEEP) ? 1000*timeout : 2000*timeout;
-+	do {
-+		current_state = mpt2sas_base_get_iocstate(ioc, 1);
-+		if (current_state == ioc_state)
-+			return 0;
-+		if (count && current_state == MPI2_IOC_STATE_FAULT)
-+			break;
-+		if (sleep_flag == CAN_SLEEP)
-+			msleep(1);
-+		else
-+			udelay(500);
-+		count++;
-+	} while (--cntdn);
-+
-+	return current_state;
-+}
-+
-+/**
-+ * _base_diag_reset - the "big hammer" start of day reset
++ * _scsih_ublock_io_device_to_running - set the device state to SDEV_RUNNING
 + * @ioc: per adapter object
-+ * @sleep_flag: CAN_SLEEP or NO_SLEEP
++ * @sas_addr: sas address
 + *
-+ * Returns 0 for success, non-zero for failure.
++ * unblock the device to receive IO during device addition. Device
++ * responsiveness is not checked before unblocking
 + */
-+static int
-+_base_diag_reset(struct MPT2SAS_ADAPTER *ioc, int sleep_flag)
++static void
++_scsih_ublock_io_device_to_running(struct MPT2SAS_ADAPTER *ioc, u64 sas_address)
 +{
-+	u32 host_diagnostic;
-+	u32 ioc_state;
-+	u32 count;
-+	u32 hcb_size;
++	struct MPT2SAS_DEVICE *sas_device_priv_data;
++	struct scsi_device *sdev;
 +
-+	printk(MPT2SAS_INFO_FMT "sending diag reset !!\n", ioc->name);
-+
-+	drsprintk(ioc, printk(MPT2SAS_INFO_FMT "clear interrupts\n",
-+	    ioc->name));
-+
-+	count = 0;
-+	do {
-+		/* Write magic sequence to WriteSequence register
-+		 * Loop until in diagnostic mode
-+		 */
-+		drsprintk(ioc, printk(MPT2SAS_INFO_FMT "write magic sequence\n"
-+		    , ioc->name));
-+		writel(MPI2_WRSEQ_FLUSH_KEY_VALUE, &ioc->chip->WriteSequence);
-+		writel(MPI2_WRSEQ_1ST_KEY_VALUE, &ioc->chip->WriteSequence);
-+		writel(MPI2_WRSEQ_2ND_KEY_VALUE, &ioc->chip->WriteSequence);
-+		writel(MPI2_WRSEQ_3RD_KEY_VALUE, &ioc->chip->WriteSequence);
-+		writel(MPI2_WRSEQ_4TH_KEY_VALUE, &ioc->chip->WriteSequence);
-+		writel(MPI2_WRSEQ_5TH_KEY_VALUE, &ioc->chip->WriteSequence);
-+		writel(MPI2_WRSEQ_6TH_KEY_VALUE, &ioc->chip->WriteSequence);
-+
-+		/* wait 100 msec */
-+		if (sleep_flag == CAN_SLEEP)
-+			msleep(100);
-+		else
-+			mdelay(100);
-+
-+		if (count++ > 20)
-+			goto out;
-+
-+		host_diagnostic = readl(&ioc->chip->HostDiagnostic);
-+		drsprintk(ioc, printk(MPT2SAS_INFO_FMT
-+		  "wrote magic sequence: count(%d), host_diagnostic(0x%08x)\n",
-+		  ioc->name, count, host_diagnostic));
-+
-+	} while ((host_diagnostic & MPI2_DIAG_DIAG_WRITE_ENABLE) == 0);
-+
-+	hcb_size = readl(&ioc->chip->HCBSize);
-+
-+	drsprintk(ioc, printk(MPT2SAS_INFO_FMT "diag reset: issued\n",
-+	    ioc->name));
-+	writel(host_diagnostic | MPI2_DIAG_RESET_ADAPTER,
-+	     &ioc->chip->HostDiagnostic);
-+
-+	/*This delay allows the chip PCIe hardware time to finish reset tasks*/
-+	if (sleep_flag == CAN_SLEEP)
-+		msleep(MPI2_HARD_RESET_PCIE_FIRST_READ_DELAY_MICRO_SEC/1000);
-+	else
-+		mdelay(MPI2_HARD_RESET_PCIE_FIRST_READ_DELAY_MICRO_SEC/1000);
-+
-+	/* Approximately 300 second max wait */
-+	for (count = 0; count < (300000000 /
-+	    MPI2_HARD_RESET_PCIE_SECOND_READ_DELAY_MICRO_SEC); count++) {
-+
-+		host_diagnostic = readl(&ioc->chip->HostDiagnostic);
-+
-+		if (host_diagnostic == 0xFFFFFFFF)
-+			goto out;
-+		if (!(host_diagnostic & MPI2_DIAG_RESET_ADAPTER))
-+			break;
-+
-+		/* Wait to pass the second read delay window */
-+		if (sleep_flag == CAN_SLEEP)
-+			msleep(MPI2_HARD_RESET_PCIE_SECOND_READ_DELAY_MICRO_SEC
-+			      /1000);
-+		else
-+			mdelay(MPI2_HARD_RESET_PCIE_SECOND_READ_DELAY_MICRO_SEC
-+			      /1000);
++	shost_for_each_device(sdev, ioc->shost) {
++		sas_device_priv_data = sdev->hostdata;
++		if (!sas_device_priv_data)
++			continue;
++		if (sas_device_priv_data->sas_target->sas_address
++		    != sas_address)
++			continue;
++		if (sas_device_priv_data->block) {
++			sas_device_priv_data->block = 0;
++			scsi_internal_device_unblock(sdev, SDEV_RUNNING);
++		}
 +	}
-+
-+	if (host_diagnostic & MPI2_DIAG_HCB_MODE) {
-+
-+		drsprintk(ioc, printk(MPT2SAS_INFO_FMT
-+		 "restart adapter assuming HCB Address points to good FW\n",
-+		 ioc->name));
-+		host_diagnostic &= ~MPI2_DIAG_BOOT_DEVICE_SELECT_MASK;
-+		host_diagnostic |= MPI2_DIAG_BOOT_DEVICE_SELECT_HCDW;
-+		writel(host_diagnostic, &ioc->chip->HostDiagnostic);
-+
-+		drsprintk(ioc, printk(MPT2SAS_INFO_FMT
-+		    "re-enable the HCDW\n", ioc->name));
-+		writel(hcb_size | MPI2_HCB_SIZE_HCB_ENABLE,
-+		    &ioc->chip->HCBSize);
-+	}
-+
-+	drsprintk(ioc, printk(MPT2SAS_INFO_FMT "restart the adapter\n",
-+	    ioc->name));
-+	writel(host_diagnostic & ~MPI2_DIAG_HOLD_IOC_RESET,
-+	    &ioc->chip->HostDiagnostic);
-+
-+	drsprintk(ioc, printk(MPT2SAS_INFO_FMT
-+	    "disable writes to the diagnostic register\n", ioc->name));
-+	writel(MPI2_WRSEQ_FLUSH_KEY_VALUE, &ioc->chip->WriteSequence);
-+
-+	drsprintk(ioc, printk(MPT2SAS_INFO_FMT
-+	    "Wait for FW to go to the READY state\n", ioc->name));
-+	ioc_state = _base_wait_on_iocstate(ioc, MPI2_IOC_STATE_READY, 20,
-+	    sleep_flag);
-+	if (ioc_state) {
-+		printk(MPT2SAS_ERR_FMT
-+		    "%s: failed going to ready state(ioc_state=0x%x)\n",
-+		    ioc->name, __func__, ioc_state);
-+		goto out;
-+	}
-+
-+	printk(MPT2SAS_INFO_FMT "diag reset: SUCCESS\n", ioc->name);
-+	return 0;
-+
-+ out:
-+	printk(MPT2SAS_ERR_FMT "diag reset: FAILED\n", ioc->name);
-+	return -EFAULT;
 +}
 +
 +/**
-+ * _base_wait_for_iocstate - Wait until the card is in READY or OPERATIONAL
-+ * @ioc: per adapter object
-+ * @timeout:
-+ * @sleep_flag: CAN_SLEEP or NO_SLEEP
-+ *
-+ * Returns 0 for success, non-zero for failure.
-+ */
-+static int
-+_base_wait_for_iocstate(struct MPT2SAS_ADAPTER *ioc, int timeout,
-+	int sleep_flag)
-+{
-+	u32 ioc_state;
-+	int rc;
-+
-+	dinitprintk(ioc, printk(MPT2SAS_INFO_FMT "%s\n", ioc->name,
-+	    __func__));
-+
-+	if (ioc->pci_error_recovery)
-+		return 0;
-+
-+	ioc_state = mpt2sas_base_get_iocstate(ioc, 0);
-+	dhsprintk(ioc, printk(MPT2SAS_INFO_FMT "%s: ioc_state(0x%08x)\n",
-+	    ioc->name, __func__, ioc_state));
-+
-+	if (((ioc_state & MPI2_IOC_STATE_MASK) == MPI2_IOC_STATE_READY) ||
-+	    (ioc_state & MPI2_IOC_STATE_MASK) == MPI2_IOC_STATE_OPERATIONAL)
-+		return 0;
-+
-+	if (ioc_state & MPI2_DOORBELL_USED) {
-+		dhsprintk(ioc, printk(MPT2SAS_INFO_FMT
-+		    "unexpected doorbell activ!e\n", ioc->name));
-+		goto issue_diag_reset;
-+	}
-+
-+	if ((ioc_state & MPI2_IOC_STATE_MASK) == MPI2_IOC_STATE_FAULT) {
-+		mpt2sas_base_fault_info(ioc, ioc_state &
-+		    MPI2_DOORBELL_DATA_MASK);
-+		goto issue_diag_reset;
-+	}
-+
-+	ioc_state = _base_wait_on_iocstate(ioc, MPI2_IOC_STATE_READY,
-+	    timeout, sleep_flag);
-+	if (ioc_state) {
-+		printk(MPT2SAS_ERR_FMT
-+		    "%s: failed going to ready state (ioc_state=0x%x)\n",
-+		    ioc->name, __func__, ioc_state);
-+		return -EFAULT;
-+	}
-+
-+ issue_diag_reset:
-+	rc = _base_diag_reset(ioc, sleep_flag);
-+	return rc;
-+}
-+/**
-  * _base_get_ioc_facts - obtain ioc facts reply and save in ioc
+  * _scsih_block_io_all_device - set the device state to SDEV_BLOCK
   * @ioc: per adapter object
-  * @sleep_flag: CAN_SLEEP or NO_SLEEP
-@@ -1752,8 +1984,14 @@ _base_get_ioc_facts(struct MPT2SAS_ADAPTER *ioc, int sleep_flag)
- 	int mpi_reply_sz, mpi_request_sz, r;
- 
- 	dinitprintk(ioc, printk(MPT2SAS_INFO_FMT "%s\n", ioc->name,
--	    __func__));
-+		    __func__));
- 
-+	r = _base_wait_for_iocstate(ioc, 10, sleep_flag);
-+	if (r) {
-+		printk(MPT2SAS_ERR_FMT "%s: failed getting to correct state\n",
-+			ioc->name, __func__);
-+		return r;
-+	}
- 	mpi_reply_sz = sizeof(Mpi2IOCFactsReply_t);
- 	mpi_request_sz = sizeof(Mpi2IOCFactsRequest_t);
- 	memset(&mpi_request, 0, mpi_request_sz);
-@@ -3228,57 +3466,6 @@ chain_done:
+  * @handle: device handle
+@@ -3081,21 +3114,23 @@ _scsih_block_io_to_children_attached_to_ex(struct MPT2SAS_ADAPTER *ioc,
  }
  
  /**
-- * mpt2sas_base_get_iocstate - Get the current state of a MPT adapter.
-- * @ioc: Pointer to MPT_ADAPTER structure
-- * @cooked: Request raw or cooked IOC state
-- *
-- * Returns all IOC Doorbell register bits if cooked==0, else just the
-- * Doorbell bits in MPI_IOC_STATE_MASK.
-- */
--u32
--mpt2sas_base_get_iocstate(struct MPT2SAS_ADAPTER *ioc, int cooked)
--{
--	u32 s, sc;
--
--	s = readl(&ioc->chip->Doorbell);
--	sc = s & MPI2_IOC_STATE_MASK;
--	return cooked ? sc : s;
--}
--
--/**
-- * _base_wait_on_iocstate - waiting on a particular ioc state
-- * @ioc_state: controller state { READY, OPERATIONAL, or RESET }
-- * @timeout: timeout in second
-- * @sleep_flag: CAN_SLEEP or NO_SLEEP
-- *
-- * Returns 0 for success, non-zero for failure.
-- */
--static int
--_base_wait_on_iocstate(struct MPT2SAS_ADAPTER *ioc, u32 ioc_state, int timeout,
--    int sleep_flag)
--{
--	u32 count, cntdn;
--	u32 current_state;
--
--	count = 0;
--	cntdn = (sleep_flag == CAN_SLEEP) ? 1000*timeout : 2000*timeout;
--	do {
--		current_state = mpt2sas_base_get_iocstate(ioc, 1);
--		if (current_state == ioc_state)
--			return 0;
--		if (count && current_state == MPI2_IOC_STATE_FAULT)
--			break;
--		if (sleep_flag == CAN_SLEEP)
--			msleep(1);
--		else
--			udelay(500);
--		count++;
--	} while (--cntdn);
--
--	return current_state;
--}
--
--/**
-  * _base_send_ioc_reset - send doorbell reset
+- * _scsih_block_io_to_children_attached_directly
++ * _scsih_handle_io_to_children_attached_directly
   * @ioc: per adapter object
-  * @reset_type: currently only supports: MPI2_FUNCTION_IOC_MESSAGE_UNIT_RESET
-@@ -4039,131 +4226,6 @@ mpt2sas_base_validate_event_type(struct MPT2SAS_ADAPTER *ioc, u32 *event_type)
+  * @event_data: topology change event data
+  *
+- * This routine set sdev state to SDEV_BLOCK for all devices
+- * direct attached during device pull.
++ * This routine set sdev state to SDEV_BLOCK or SDEV_RUNNING for all devices
++ * direct attached during device pull/reconnect.
+  */
+ static void
+-_scsih_block_io_to_children_attached_directly(struct MPT2SAS_ADAPTER *ioc,
+-    Mpi2EventDataSasTopologyChangeList_t *event_data)
++_scsih_handle_io_to_children_attached_directly(struct MPT2SAS_ADAPTER *ioc,
++	Mpi2EventDataSasTopologyChangeList_t *event_data)
+ {
+ 	int i;
+ 	u16 handle;
+ 	u16 reason_code;
+ 	u8 phy_number;
++	struct _sas_device *sas_device;
++	u8 link_rate, prev_link_rate;
+ 
+ 	for (i = 0; i < event_data->NumEntries; i++) {
+ 		handle = le16_to_cpu(event_data->PHY[i].AttachedDevHandle);
+@@ -3106,6 +3141,24 @@ _scsih_block_io_to_children_attached_directly(struct MPT2SAS_ADAPTER *ioc,
+ 		    MPI2_EVENT_SAS_TOPO_RC_MASK;
+ 		if (reason_code == MPI2_EVENT_SAS_TOPO_RC_DELAY_NOT_RESPONDING)
+ 			_scsih_block_io_device(ioc, handle);
++		else if ((reason_code == MPI2_EVENT_SAS_TOPO_RC_PHY_CHANGED) &&
++		    (unblock_io == 1)) {
++			/* unblock only if device is in the process of addition
++			 * within the SCSI Mid Layer (sas_rphy_add) to prevent
++			 * deadlock. Unblocking in other cases can lead to data
++			 * corruption */
++
++			link_rate = event_data->PHY[i].LinkRate >> 4;
++			prev_link_rate = event_data->PHY[i].LinkRate & 0xF;
++			sas_device = _scsih_sas_device_find_by_handle(ioc,
++					handle);
++			if (!sas_device)
++				continue;
++			if ((link_rate > prev_link_rate) &&
++			    (sas_device->pend_sas_rphy_add == 1))
++				_scsih_ublock_io_device_to_running(ioc,
++				    sas_device->sas_address);
++		}
+ 	}
  }
  
- /**
-- * _base_diag_reset - the "big hammer" start of day reset
-- * @ioc: per adapter object
-- * @sleep_flag: CAN_SLEEP or NO_SLEEP
-- *
-- * Returns 0 for success, non-zero for failure.
-- */
--static int
--_base_diag_reset(struct MPT2SAS_ADAPTER *ioc, int sleep_flag)
--{
--	u32 host_diagnostic;
--	u32 ioc_state;
--	u32 count;
--	u32 hcb_size;
--
--	printk(MPT2SAS_INFO_FMT "sending diag reset !!\n", ioc->name);
--	drsprintk(ioc, printk(MPT2SAS_INFO_FMT "clear interrupts\n",
--	    ioc->name));
--
--	count = 0;
--	do {
--		/* Write magic sequence to WriteSequence register
--		 * Loop until in diagnostic mode
--		 */
--		drsprintk(ioc, printk(MPT2SAS_INFO_FMT "write magic "
--		    "sequence\n", ioc->name));
--		writel(MPI2_WRSEQ_FLUSH_KEY_VALUE, &ioc->chip->WriteSequence);
--		writel(MPI2_WRSEQ_1ST_KEY_VALUE, &ioc->chip->WriteSequence);
--		writel(MPI2_WRSEQ_2ND_KEY_VALUE, &ioc->chip->WriteSequence);
--		writel(MPI2_WRSEQ_3RD_KEY_VALUE, &ioc->chip->WriteSequence);
--		writel(MPI2_WRSEQ_4TH_KEY_VALUE, &ioc->chip->WriteSequence);
--		writel(MPI2_WRSEQ_5TH_KEY_VALUE, &ioc->chip->WriteSequence);
--		writel(MPI2_WRSEQ_6TH_KEY_VALUE, &ioc->chip->WriteSequence);
--
--		/* wait 100 msec */
--		if (sleep_flag == CAN_SLEEP)
--			msleep(100);
--		else
--			mdelay(100);
--
--		if (count++ > 20)
--			goto out;
--
--		host_diagnostic = readl(&ioc->chip->HostDiagnostic);
--		drsprintk(ioc, printk(MPT2SAS_INFO_FMT "wrote magic "
--		    "sequence: count(%d), host_diagnostic(0x%08x)\n",
--		    ioc->name, count, host_diagnostic));
--
--	} while ((host_diagnostic & MPI2_DIAG_DIAG_WRITE_ENABLE) == 0);
--
--	hcb_size = readl(&ioc->chip->HCBSize);
--
--	drsprintk(ioc, printk(MPT2SAS_INFO_FMT "diag reset: issued\n",
--	    ioc->name));
--	writel(host_diagnostic | MPI2_DIAG_RESET_ADAPTER,
--	     &ioc->chip->HostDiagnostic);
--
--	/* This delay allows the chip PCIe hardware time to finish reset tasks*/
--	if (sleep_flag == CAN_SLEEP)
--		msleep(MPI2_HARD_RESET_PCIE_FIRST_READ_DELAY_MICRO_SEC/1000);
--	else
--		mdelay(MPI2_HARD_RESET_PCIE_FIRST_READ_DELAY_MICRO_SEC/1000);
--
--	/* Approximately 300 second max wait */
--	for (count = 0; count < (300000000 /
--	    MPI2_HARD_RESET_PCIE_SECOND_READ_DELAY_MICRO_SEC); count++) {
--
--		host_diagnostic = readl(&ioc->chip->HostDiagnostic);
--
--		if (host_diagnostic == 0xFFFFFFFF)
--			goto out;
--		if (!(host_diagnostic & MPI2_DIAG_RESET_ADAPTER))
--			break;
--
--		/* Wait to pass the second read delay window */
--		if (sleep_flag == CAN_SLEEP)
--			msleep(MPI2_HARD_RESET_PCIE_SECOND_READ_DELAY_MICRO_SEC
--			       /1000);
--		else
--			mdelay(MPI2_HARD_RESET_PCIE_SECOND_READ_DELAY_MICRO_SEC
--			       /1000);
--	}
--
--	if (host_diagnostic & MPI2_DIAG_HCB_MODE) {
--
--		drsprintk(ioc, printk(MPT2SAS_INFO_FMT "restart the adapter "
--		    "assuming the HCB Address points to good F/W\n",
--		    ioc->name));
--		host_diagnostic &= ~MPI2_DIAG_BOOT_DEVICE_SELECT_MASK;
--		host_diagnostic |= MPI2_DIAG_BOOT_DEVICE_SELECT_HCDW;
--		writel(host_diagnostic, &ioc->chip->HostDiagnostic);
--
--		drsprintk(ioc, printk(MPT2SAS_INFO_FMT
--		    "re-enable the HCDW\n", ioc->name));
--		writel(hcb_size | MPI2_HCB_SIZE_HCB_ENABLE,
--		    &ioc->chip->HCBSize);
--	}
--
--	drsprintk(ioc, printk(MPT2SAS_INFO_FMT "restart the adapter\n",
--	    ioc->name));
--	writel(host_diagnostic & ~MPI2_DIAG_HOLD_IOC_RESET,
--	    &ioc->chip->HostDiagnostic);
--
--	drsprintk(ioc, printk(MPT2SAS_INFO_FMT "disable writes to the "
--	    "diagnostic register\n", ioc->name));
--	writel(MPI2_WRSEQ_FLUSH_KEY_VALUE, &ioc->chip->WriteSequence);
--
--	drsprintk(ioc, printk(MPT2SAS_INFO_FMT "Wait for FW to go to the "
--	    "READY state\n", ioc->name));
--	ioc_state = _base_wait_on_iocstate(ioc, MPI2_IOC_STATE_READY, 20,
--	    sleep_flag);
--	if (ioc_state) {
--		printk(MPT2SAS_ERR_FMT "%s: failed going to ready state "
--		    " (ioc_state=0x%x)\n", ioc->name, __func__, ioc_state);
--		goto out;
--	}
--
--	printk(MPT2SAS_INFO_FMT "diag reset: SUCCESS\n", ioc->name);
--	return 0;
--
-- out:
--	printk(MPT2SAS_ERR_FMT "diag reset: FAILED\n", ioc->name);
--	return -EFAULT;
--}
--
--/**
-  * _base_make_ioc_ready - put controller in READY state
-  * @ioc: per adapter object
-  * @sleep_flag: CAN_SLEEP or NO_SLEEP
+@@ -3497,7 +3550,7 @@ _scsih_check_topo_delete_events(struct MPT2SAS_ADAPTER *ioc,
+ 
+ 	expander_handle = le16_to_cpu(event_data->ExpanderDevHandle);
+ 	if (expander_handle < ioc->sas_hba.num_phys) {
+-		_scsih_block_io_to_children_attached_directly(ioc, event_data);
++		_scsih_handle_io_to_children_attached_directly(ioc, event_data);
+ 		return;
+ 	}
+ 	if (event_data->ExpStatus ==
+@@ -3515,7 +3568,7 @@ _scsih_check_topo_delete_events(struct MPT2SAS_ADAPTER *ioc,
+ 				_scsih_block_io_device(ioc, handle);
+ 		} while (test_and_clear_bit(handle, ioc->blocking_handles));
+ 	} else if (event_data->ExpStatus == MPI2_EVENT_SAS_TOPO_ES_RESPONDING)
+-		_scsih_block_io_to_children_attached_directly(ioc, event_data);
++		_scsih_handle_io_to_children_attached_directly(ioc, event_data);
+ 
+ 	if (event_data->ExpStatus != MPI2_EVENT_SAS_TOPO_ES_NOT_RESPONDING)
+ 		return;
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_transport.c b/drivers/scsi/mpt2sas/mpt2sas_transport.c
+index 0d1d064..f09f5f3 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_transport.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_transport.c
+@@ -654,6 +654,7 @@ mpt2sas_transport_port_add(struct MPT2SAS_ADAPTER *ioc, u16 handle,
+ 	unsigned long flags;
+ 	struct _sas_node *sas_node;
+ 	struct sas_rphy *rphy;
++	struct _sas_device *sas_device = NULL;
+ 	int i;
+ 	struct sas_port *port;
+ 
+@@ -736,10 +737,22 @@ mpt2sas_transport_port_add(struct MPT2SAS_ADAPTER *ioc, u16 handle,
+ 		    mpt2sas_port->remote_identify.device_type);
+ 
+ 	rphy->identify = mpt2sas_port->remote_identify;
++	if (mpt2sas_port->remote_identify.device_type == SAS_END_DEVICE) {
++		sas_device = mpt2sas_scsih_sas_device_find_by_sas_address(ioc,
++		    mpt2sas_port->remote_identify.sas_address);
++		if (!sas_device) {
++			printk(MPT2SAS_ERR_FMT "failure at %s:%d/%s()!\n",
++			    ioc->name, __FILE__, __LINE__, __func__);
++			goto out_fail;
++		}
++		sas_device->pend_sas_rphy_add = 1;
++	}
+ 	if ((sas_rphy_add(rphy))) {
+ 		printk(MPT2SAS_ERR_FMT "failure at %s:%d/%s()!\n",
+ 		    ioc->name, __FILE__, __LINE__, __func__);
+ 	}
++	if (mpt2sas_port->remote_identify.device_type == SAS_END_DEVICE)
++		sas_device->pend_sas_rphy_add = 0;
+ 	if ((ioc->logging_level & MPT_DEBUG_TRANSPORT))
+ 		dev_printk(KERN_INFO, &rphy->dev, "add: handle(0x%04x), "
+ 		    "sas_addr(0x%016llx)\n", handle,
 -- 
 1.7.1
