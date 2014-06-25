@@ -1,54 +1,70 @@
-From: Eddie Wai <eddie.wai@broadcom.com>
-Subject: Re: [PATCH] scsi: bnx2i: bnx2i_iscsi.c:  Cleaning up variable is
- set more than once
-Date: Wed, 25 Jun 2014 10:13:21 -0700
-Message-ID: <1403716401.10214.2.camel@lbirv-waie-lx2.broadcom.com>
-References: <1403705059-25834-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-	 <53AADC16.9080301@redhat.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH V2] scsi_lib: removes ambiguous "Unhandled error code"
+ messages.
+Date: Wed, 25 Jun 2014 12:41:16 -0500
+Message-ID: <53AB09BC.3020105@cs.wisc.edu>
+References: <1402042235-7246-1-git-send-email-mlombard@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <53AADC16.9080301@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Maurizio Lombardi <mlombard@redhat.com>
-Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:43245 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757670AbaFYRmU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 25 Jun 2014 13:42:20 -0400
+In-Reply-To: <1402042235-7246-1-git-send-email-mlombard@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Maurizio Lombardi <mlombard@redhat.com>
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, hch@infradead.org
 
-On Wed, 2014-06-25 at 16:26 +0200, Maurizio Lombardi wrote:
-> Hi,
+On 06/06/2014 03:10 AM, Maurizio Lombardi wrote:
+> During IO with fabric faults, one generally sees several "Unhandled error
+> code" messages in the syslog as shown below:
 > 
-> On 06/25/2014 04:04 PM, Rickard Strandqvist wrote:
-> > A struct member variable is set to different values without having used in between.
-> > 
-> > This was found using a static code analysis program called cppcheck
-> > 
-> > Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-> > ---
-> >  drivers/scsi/bnx2i/bnx2i_iscsi.c |    1 -
-> >  1 file changed, 1 deletion(-)
-> > 
-> > diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-> > index 166543f..fdf7bc3 100644
-> > --- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
-> > +++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-> > @@ -1643,7 +1643,6 @@ static void bnx2i_conn_get_stats(struct iscsi_cls_conn *cls_conn,
-> >  	stats->r2t_pdus = conn->r2t_pdus_cnt;
-> >  	stats->tmfcmd_pdus = conn->tmfcmd_pdus_cnt;
-> >  	stats->tmfrsp_pdus = conn->tmfrsp_pdus_cnt;
-> > -	stats->custom_length = 3;
-> >  	strcpy(stats->custom[2].desc, "eh_abort_cnt");
-> >  	stats->custom[2].value = conn->eh_abort_cnt;
-> >  	stats->digest_err = 0;
-> > 
+> sd 4:0:6:2: [sdbw] Unhandled error code
+> sd 4:0:6:2: [sdbw] Result: hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK
+> sd 4:0:6:2: [sdbw] CDB: Read(10): 28 00 00 00 00 00 00 00 08 00
+> end_request: I/O error, dev sdbw, sector 0
 > 
-> Eddie,
+> This comes from scsi_io_completion (in scsi_lib.c) while handling error
+> codes other than DID_RESET or not deferred sense keys i.e. this is
+> actually handled by the SCSI mid layer. But what gets displayed here is
+> "Unhandled error code" which is quite misleading as it indicates
+> something that is not addressed by the mid layer.
 > 
-> The code modifies the content of stats->custom[2], so shouldn't custom_length be set to 3?
-> Why is it set to zero at the end of this function?
-Nice find.  This is literally a day1 bug.  Yes, I agree that the
-custom_length should be left at 3.  Otherwise, the nlmsg replied back to
-the application would not have the custom message.  Thanks.
+> This patch removes "Unhandled error code" and replaces "Unhandled sense code"
+> with "Failing command with sense code:".
 > 
-> Regards,
-> Maurizio Lombardi
+> 
+> Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
+> ---
+>  drivers/scsi/scsi_lib.c | 6 ++----
+>  1 file changed, 2 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 9db097a..b3c25cd 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -955,14 +955,12 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+>  			action = ACTION_FAIL;
+>  			break;
+>  		default:
+> -			description = "Unhandled sense code";
+> +			description = "Failing command with sense code:";
+>  			action = ACTION_FAIL;
+>  			break;
+>  		}
+> -	} else {
+> -		description = "Unhandled error code";
+> +	} else
+>  		action = ACTION_FAIL;
+> -	}
+>  
+>  	if (action != ACTION_FAIL &&
+>  	    time_before(cmd->jiffies_at_alloc + wait_for, jiffies)) {
+> 
+
+Looks ok to me.
+
+Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
