@@ -1,87 +1,66 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 5/6] scsi: use 64-bit value for 'max_luns'
-Date: Wed, 25 Jun 2014 05:33:36 -0700
-Message-ID: <20140625123336.GA10603@infradead.org>
-References: <1401785937-43581-1-git-send-email-hare@suse.de>
- <1401785937-43581-6-git-send-email-hare@suse.de>
- <20140625122856.GA3221@infradead.org>
- <53AAC123.2060303@suse.de>
+Subject: Re: [ANNOUNCE] scsi patch queue tree
+Date: Wed, 25 Jun 2014 05:41:29 -0700
+Message-ID: <20140625124129.GB19647@infradead.org>
+References: <20140519140614.GA12183@infradead.org>
+ <20140611120143.GA26071@infradead.org>
+ <1402496254.2523.3.camel@dabdike.int.hansenpartnership.com>
+ <20140611143128.GA30904@infradead.org>
+ <20140624155238.GA27828@infradead.org>
+ <20140624155348.GA30669@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:44559 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754202AbaFYMla (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jun 2014 08:41:30 -0400
 Content-Disposition: inline
-In-Reply-To: <53AAC123.2060303@suse.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <jbottomley@parallels.com>, Ewan Milne <emilne@redhat.com>, linux-scsi@vger.kernel.org, Rusty Russell <rusty@rustcorp.com.au>, linux-kernel@vger.kernel.org
+In-Reply-To: <20140624155348.GA30669@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, Jun 25, 2014 at 02:31:31PM +0200, Hannes Reinecke wrote:
-> Guess I need to redo the patchset yet again ...
-
-If you plan to resend it please also include these fixes for the
-mptfusion driver:
+And here are the for-3.16 driver changes:
 
 
-diff --git a/drivers/message/fusion/mptfc.c b/drivers/message/fusion/mptfc.c
-index 02a3eef..bf2a2ce 100644
---- a/drivers/message/fusion/mptfc.c
-+++ b/drivers/message/fusion/mptfc.c
-@@ -204,7 +204,7 @@ mptfc_block_error_handler(struct scsi_cmnd *SCpnt,
- 	 || (loops > 0 && ioc->active == 0)) {
- 		spin_unlock_irqrestore(shost->host_lock, flags);
- 		dfcprintk (ioc, printk(MYIOC_s_DEBUG_FMT
--			"mptfc_block_error_handler.%d: %d:%d, port status is "
-+			"mptfc_block_error_handler.%d: %d:%llu, port status is "
- 			"%x, active flag %d, deferring %s recovery.\n",
- 			ioc->name, ioc->sh->host_no,
- 			SCpnt->device->id, SCpnt->device->lun,
-@@ -218,7 +218,7 @@ mptfc_block_error_handler(struct scsi_cmnd *SCpnt,
- 	if (ready == DID_NO_CONNECT || !SCpnt->device->hostdata
- 	 || ioc->active == 0) {
- 		dfcprintk (ioc, printk(MYIOC_s_DEBUG_FMT
--			"%s.%d: %d:%d, failing recovery, "
-+			"%s.%d: %d:%llu, failing recovery, "
- 			"port state %x, active %d, vdevice %p.\n", caller,
- 			ioc->name, ioc->sh->host_no,
- 			SCpnt->device->id, SCpnt->device->lun, ready,
-@@ -226,7 +226,7 @@ mptfc_block_error_handler(struct scsi_cmnd *SCpnt,
- 		return FAILED;
- 	}
- 	dfcprintk (ioc, printk(MYIOC_s_DEBUG_FMT
--		"%s.%d: %d:%d, executing recovery.\n", caller,
-+		"%s.%d: %d:%llu, executing recovery.\n", caller,
- 		ioc->name, ioc->sh->host_no,
- 		SCpnt->device->id, SCpnt->device->lun));
- 	return (*func)(SCpnt);
-diff --git a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mptscsih.c
-index 82d991d..5b06d68 100644
---- a/drivers/message/fusion/mptscsih.c
-+++ b/drivers/message/fusion/mptscsih.c
-@@ -536,7 +536,7 @@ mptscsih_info_scsiio(MPT_ADAPTER *ioc, struct scsi_cmnd *sc, SCSIIOReply_t * pSc
- 	}
- 
- 	scsi_print_command(sc);
--	printk(MYIOC_s_DEBUG_FMT "\tfw_channel = %d, fw_id = %d, lun = %d\n",
-+	printk(MYIOC_s_DEBUG_FMT "\tfw_channel = %d, fw_id = %d, lun = %llu\n",
- 	    ioc->name, pScsiReply->Bus, pScsiReply->TargetID, sc->device->lun);
- 	printk(MYIOC_s_DEBUG_FMT "\trequest_len = %d, underflow = %d, "
- 	    "resid = %d\n", ioc->name, scsi_bufflen(sc), sc->underflow,
-@@ -1155,7 +1155,7 @@ mptscsih_report_queue_full(struct scsi_cmnd *sc, SCSIIOReply_t *pScsiReply, SCSI
- 		return;
- 	ioc = hd->ioc;
- 	if (time - hd->last_queue_full > 10 * HZ) {
--		dprintk(ioc, printk(MYIOC_s_WARN_FMT "Device (%d:%d:%d) reported QUEUE_FULL!\n",
-+		dprintk(ioc, printk(MYIOC_s_WARN_FMT "Device (%d:%d:%llu) reported QUEUE_FULL!\n",
- 				ioc->name, 0, sc->device->id, sc->device->lun));
- 		hd->last_queue_full = time;
- 	}
-@@ -2380,7 +2380,7 @@ mptscsih_slave_configure(struct scsi_device *sdev)
- 	vdevice = sdev->hostdata;
- 
- 	dsprintk(ioc, printk(MYIOC_s_DEBUG_FMT
--		"device @ %p, channel=%d, id=%d, lun=%d\n",
-+		"device @ %p, channel=%d, id=%d, lun=%llu\n",
- 		ioc->name, sdev, sdev->channel, sdev->id, sdev->lun));
- 	if (ioc->bus_type == SPI)
- 		dsprintk(ioc, printk(MYIOC_s_DEBUG_FMT
+----------------------------------------------------------------
+Brian King (2):
+      ibmvscsi: Abort init sequence during error recovery
+      ibmvscsi: Add memory barriers for send / receive
+
+Maurizio Lombardi (2):
+      pm8001: Fix potential null pointer dereference and memory leak.
+      bnx2fc: do not scan uninitialized lists in case of error.
+
+Neil Horman (2):
+      fc: ensure scan_work isn't active when freeing fc_rport
+      bnx2fc: Improve stats update mechanism
+
+Paolo Bonzini (2):
+      virtio-scsi: avoid cancelling uninitialized work items
+      virtio-scsi: fix various bad behavior on aborted requests
+
+Quinn Tran (1):
+      qla2xxx: Fix sparse warning in qla_target.c.
+
+Reddy, Sreekanth (1):
+      MAINTAINERS: Update LSILOGIC MPT FUSION DRIVERS (FC/SAS/SPI) maintainers Email IDs
+
+Tomas Henzl (2):
+      be2iscsi: add an missing goto in error path
+      be2iscsi: remove potential junk pointer free
+
+ MAINTAINERS                       |    9 +++++----
+ drivers/scsi/be2iscsi/be_main.c   |    2 ++
+ drivers/scsi/be2iscsi/be_mgmt.c   |    4 +---
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c |   16 ++++------------
+ drivers/scsi/bnx2fc/bnx2fc_io.c   |    2 ++
+ drivers/scsi/ibmvscsi/ibmvscsi.c  |   13 ++++++++++++-
+ drivers/scsi/pm8001/pm8001_init.c |   13 ++++++++++---
+ drivers/scsi/qla2xxx/qla_target.c |   17 +++++++++++------
+ drivers/scsi/qla2xxx/qla_target.h |    4 ++--
+ drivers/scsi/scsi_transport_fc.c  |    1 +
+ drivers/scsi/virtio_scsi.c        |   26 +++++++++++++++++++++++++-
+ 11 files changed, 75 insertions(+), 32 deletions(-)
