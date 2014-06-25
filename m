@@ -1,41 +1,68 @@
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-Subject: [PATCH] scsi: advansys.c:  Cleaning up variable is set more than once
-Date: Wed, 25 Jun 2014 14:23:28 +0200
-Message-ID: <1403699008-22658-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 5/6] scsi: use 64-bit value for 'max_luns'
+Date: Wed, 25 Jun 2014 05:28:56 -0700
+Message-ID: <20140625122856.GA3221@infradead.org>
+References: <1401785937-43581-1-git-send-email-hare@suse.de>
+ <1401785937-43581-6-git-send-email-hare@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1401785937-43581-6-git-send-email-hare@suse.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>, "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@infradead.org>, Ewan Milne <emilne@redhat.com>, linux-scsi@vger.kernel.org, Rusty Russell <rusty@rustcorp.com.au>, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-A struct member variable is set to the same value more than once
+On Tue, Jun 03, 2014 at 10:58:56AM +0200, Hannes Reinecke wrote:
+> Now that we're using 64-bit LUNs internally we need to increase
+> the size of max_luns to 64 bits, too.
+> 
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> Reviewed-by: Christoph Hellwig <hch@infradead.org>
+> Reviewed-by: Ewan Milne <emilne@redhat.com>
 
-This was found using a static code analysis program called cppcheck.
+I just noticed that this has changes to the module param code.
+These should be split into a separate patch and be ACKed by the modules
+maintainer.  I'd still love to take the change through the SCSI tree to
+be able to get this into 3.17 easily.
 
-Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
----
- drivers/scsi/advansys.c |    2 --
- 1 file changed, 2 deletions(-)
+moduleparam changes below:
 
-diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index d814588..8281ae0 100644
---- a/drivers/scsi/advansys.c
-+++ b/drivers/scsi/advansys.c
-@@ -11592,7 +11592,6 @@ static int advansys_board_found(struct Scsi_Host *shost, unsigned int iop,
- 			    adv_dvc_varp->cfg->disc_enable;
- 			ep_38C0800->bios_ctrl = adv_dvc_varp->bios_ctrl;
- 			ep_38C0800->wdtr_able = adv_dvc_varp->wdtr_able;
--			ep_38C0800->tagqng_able = adv_dvc_varp->tagqng_able;
- 			ep_38C0800->sdtr_speed1 = adv_dvc_varp->sdtr_speed1;
- 			ep_38C0800->sdtr_speed2 = adv_dvc_varp->sdtr_speed2;
- 			ep_38C0800->sdtr_speed3 = adv_dvc_varp->sdtr_speed3;
-@@ -11620,7 +11619,6 @@ static int advansys_board_found(struct Scsi_Host *shost, unsigned int iop,
- 			    adv_dvc_varp->cfg->disc_enable;
- 			ep_38C1600->bios_ctrl = adv_dvc_varp->bios_ctrl;
- 			ep_38C1600->wdtr_able = adv_dvc_varp->wdtr_able;
--			ep_38C1600->tagqng_able = adv_dvc_varp->tagqng_able;
- 			ep_38C1600->sdtr_speed1 = adv_dvc_varp->sdtr_speed1;
- 			ep_38C1600->sdtr_speed2 = adv_dvc_varp->sdtr_speed2;
- 			ep_38C1600->sdtr_speed3 = adv_dvc_varp->sdtr_speed3;
--- 
-1.7.10.4
+> diff --git a/include/linux/moduleparam.h b/include/linux/moduleparam.h
+> index 204a677..21e2ba6 100644
+> --- a/include/linux/moduleparam.h
+> +++ b/include/linux/moduleparam.h
+> @@ -381,6 +381,11 @@ extern int param_set_ulong(const char *val, const struct kernel_param *kp);
+>  extern int param_get_ulong(char *buffer, const struct kernel_param *kp);
+>  #define param_check_ulong(name, p) __param_check(name, p, unsigned long)
+>  
+> +extern struct kernel_param_ops param_ops_ullong;
+> +extern int param_set_ullong(const char *val, const struct kernel_param *kp);
+> +extern int param_get_ullong(char *buffer, const struct kernel_param *kp);
+> +#define param_check_ullong(name, p) __param_check(name, p, unsigned long long)
+> +
+>  extern struct kernel_param_ops param_ops_charp;
+>  extern int param_set_charp(const char *val, const struct kernel_param *kp);
+>  extern int param_get_charp(char *buffer, const struct kernel_param *kp);
+
+> diff --git a/kernel/params.c b/kernel/params.c
+> index b00142e..2b2a9dd 100644
+> --- a/kernel/params.c
+> +++ b/kernel/params.c
+> @@ -253,6 +253,7 @@ STANDARD_PARAM_DEF(int, int, "%i", kstrtoint);
+>  STANDARD_PARAM_DEF(uint, unsigned int, "%u", kstrtouint);
+>  STANDARD_PARAM_DEF(long, long, "%li", kstrtol);
+>  STANDARD_PARAM_DEF(ulong, unsigned long, "%lu", kstrtoul);
+> +STANDARD_PARAM_DEF(ullong, unsigned long long, "%llu", kstrtoull);
+>  
+>  int param_set_charp(const char *val, const struct kernel_param *kp)
+>  {
+> -- 
+> 1.7.12.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+---end quoted text---
