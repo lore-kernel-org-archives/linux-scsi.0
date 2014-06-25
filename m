@@ -1,30 +1,49 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 0/7] mptfusion static checker fixups
-Date: Wed, 25 Jun 2014 07:18:52 -0700
-Message-ID: <20140625141852.GA17583@infradead.org>
-References: <1401900589-19672-1-git-send-email-joe.lawrence@stratus.com>
- <20140625110150.GA19181@infradead.org>
- <20140625101811.44a7313a@jlaw-desktop.mno.stratus.com>
+From: Maurizio Lombardi <mlombard@redhat.com>
+Subject: Re: [PATCH] scsi: bnx2i: bnx2i_iscsi.c:  Cleaning up variable is
+ set more than once
+Date: Wed, 25 Jun 2014 16:26:30 +0200
+Message-ID: <53AADC16.9080301@redhat.com>
+References: <1403705059-25834-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:49324 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757215AbaFYOSx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jun 2014 10:18:53 -0400
-Content-Disposition: inline
-In-Reply-To: <20140625101811.44a7313a@jlaw-desktop.mno.stratus.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1403705059-25834-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>, Eddie Wai <eddie.wai@broadcom.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Joe Lawrence <joe.lawrence@stratus.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Dan Carpenter <dan.carpenter@oracle.com>, Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
 
-On Wed, Jun 25, 2014 at 10:18:11AM -0400, Joe Lawrence wrote:
-> Hi Christoph, Sreekanth,
+Hi,
+
+On 06/25/2014 04:04 PM, Rickard Strandqvist wrote:
+> A struct member variable is set to different values without having used in between.
 > 
-> Would it be easier to combine this set with the mpt2/mpt3 changes and
-> repost a V2?  There were a few changes Christoph request in each set,
-> so I can post those up later today.
+> This was found using a static code analysis program called cppcheck
+> 
+> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+> ---
+>  drivers/scsi/bnx2i/bnx2i_iscsi.c |    1 -
+>  1 file changed, 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+> index 166543f..fdf7bc3 100644
+> --- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
+> +++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+> @@ -1643,7 +1643,6 @@ static void bnx2i_conn_get_stats(struct iscsi_cls_conn *cls_conn,
+>  	stats->r2t_pdus = conn->r2t_pdus_cnt;
+>  	stats->tmfcmd_pdus = conn->tmfcmd_pdus_cnt;
+>  	stats->tmfrsp_pdus = conn->tmfrsp_pdus_cnt;
+> -	stats->custom_length = 3;
+>  	strcpy(stats->custom[2].desc, "eh_abort_cnt");
+>  	stats->custom[2].value = conn->eh_abort_cnt;
+>  	stats->digest_err = 0;
+> 
 
-Fine with me.
+Eddie,
 
+The code modifies the content of stats->custom[2], so shouldn't custom_length be set to 3?
+Why is it set to zero at the end of this function?
+
+Regards,
+Maurizio Lombardi
