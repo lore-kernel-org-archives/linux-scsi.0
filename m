@@ -1,388 +1,53 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 1/6] scsi: Implement sr_printk()
-Date: Wed, 25 Jun 2014 16:39:54 +0200
-Message-ID: <1403707199-102664-2-git-send-email-hare@suse.de>
-References: <1403707199-102664-1-git-send-email-hare@suse.de>
+Subject: [PATCHv2 0/6] First batch of logging cleanup
+Date: Wed, 25 Jun 2014 16:39:53 +0200
+Message-ID: <1403707199-102664-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:42301 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:42291 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932241AbaFYOkE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 Jun 2014 10:40:04 -0400
-In-Reply-To: <1403707199-102664-1-git-send-email-hare@suse.de>
+	id S932243AbaFYOkD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 25 Jun 2014 10:40:03 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-Update the sr driver to use dev_printk() variants instead of
-plain printk(); this will prefix logging messages with the
-appropriate device.
+Hi all,
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- drivers/scsi/sr.c        | 61 +++++++++++++++++++++++++-----------------------
- drivers/scsi/sr.h        |  4 ++++
- drivers/scsi/sr_ioctl.c  | 26 +++++++++++++--------
- drivers/scsi/sr_vendor.c | 36 ++++++++++++++--------------
- 4 files changed, 70 insertions(+), 57 deletions(-)
+this is the first patch of my SCSI logging cleanup.
+The basic idea here is to use dev_printk() and friends
+throughout the midlayer, so that any logging messages
+are attached with the correct device information.
 
-diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index 93cbd36..a7ea27c 100644
---- a/drivers/scsi/sr.c
-+++ b/drivers/scsi/sr.c
-@@ -292,8 +292,8 @@ do_tur:
- 	if (!cd->tur_changed) {
- 		if (cd->get_event_changed) {
- 			if (cd->tur_mismatch++ > 8) {
--				sdev_printk(KERN_WARNING, cd->device,
--					    "GET_EVENT and TUR disagree continuously, suppress GET_EVENT events\n");
-+				sr_printk(KERN_WARNING, cd,
-+					  "GET_EVENT and TUR disagree continuously, suppress GET_EVENT events\n");
- 				cd->ignore_get_event = true;
- 			}
- 		} else {
-@@ -322,7 +322,7 @@ static int sr_done(struct scsi_cmnd *SCpnt)
- 	struct scsi_cd *cd = scsi_cd(SCpnt->request->rq_disk);
- 
- #ifdef DEBUG
--	printk("sr.c done: %x\n", result);
-+	scmd_printk(KERN_INFO, SCpnt, "done: %x\n", result);
- #endif
- 
- 	/*
-@@ -398,13 +398,14 @@ static int sr_init_command(struct scsi_cmnd *SCpnt)
- 	 * is used for a killable error condition */
- 	ret = BLKPREP_KILL;
- 
--	SCSI_LOG_HLQUEUE(1, printk("Doing sr request, dev = %s, block = %d\n",
--				cd->disk->disk_name, block));
-+	SCSI_LOG_HLQUEUE(1, scmd_printk(KERN_INFO, SCpnt,
-+		"Doing sr request, block = %d\n", block));
- 
- 	if (!cd->device || !scsi_device_online(cd->device)) {
--		SCSI_LOG_HLQUEUE(2, printk("Finishing %u sectors\n",
--					   blk_rq_sectors(rq)));
--		SCSI_LOG_HLQUEUE(2, printk("Retry with 0x%p\n", SCpnt));
-+		SCSI_LOG_HLQUEUE(2, scmd_printk(KERN_INFO, SCpnt,
-+			"Finishing %u sectors\n", blk_rq_sectors(rq)));
-+		SCSI_LOG_HLQUEUE(2, scmd_printk(KERN_INFO, SCpnt,
-+			"Retry with 0x%p\n", SCpnt));
- 		goto out;
- 	}
- 
-@@ -425,7 +426,8 @@ static int sr_init_command(struct scsi_cmnd *SCpnt)
- 		if (!in_interrupt())
- 			sr_set_blocklength(cd, 2048);
- 		else
--			printk("sr: can't switch blocksize: in interrupt\n");
-+			scmd_printk(KERN_INFO, SCpnt,
-+				    "can't switch blocksize: in interrupt\n");
- 	}
- 
- 	if (s_size != 512 && s_size != 1024 && s_size != 2048) {
-@@ -438,7 +440,7 @@ static int sr_init_command(struct scsi_cmnd *SCpnt)
- 			goto out;
- 		SCpnt->cmnd[0] = WRITE_10;
- 		SCpnt->sc_data_direction = DMA_TO_DEVICE;
-- 	 	cd->cdi.media_written = 1;
-+		cd->cdi.media_written = 1;
- 	} else if (rq_data_dir(rq) == READ) {
- 		SCpnt->cmnd[0] = READ_10;
- 		SCpnt->sc_data_direction = DMA_FROM_DEVICE;
-@@ -475,11 +477,11 @@ static int sr_init_command(struct scsi_cmnd *SCpnt)
- 	this_count = (scsi_bufflen(SCpnt) >> 9) / (s_size >> 9);
- 
- 
--	SCSI_LOG_HLQUEUE(2, printk("%s : %s %d/%u 512 byte blocks.\n",
--				cd->cdi.name,
--				(rq_data_dir(rq) == WRITE) ?
-+	SCSI_LOG_HLQUEUE(2, scmd_printk(KERN_INFO, SCpnt,
-+					"%s %d/%u 512 byte blocks.\n",
-+					(rq_data_dir(rq) == WRITE) ?
- 					"writing" : "reading",
--				this_count, blk_rq_sectors(rq)));
-+					this_count, blk_rq_sectors(rq)));
- 
- 	SCpnt->cmnd[1] = 0;
- 	block = (unsigned int)blk_rq_pos(rq) / (s_size >> 9);
-@@ -810,8 +812,8 @@ static void get_sectorsize(struct scsi_cd *cd)
- 		case 512:
- 			break;
- 		default:
--			printk("%s: unsupported sector size %d.\n",
--			       cd->cdi.name, sector_size);
-+			sr_printk(KERN_INFO, cd,
-+				  "unsupported sector size %d.", sector_size);
- 			cd->capacity = 0;
- 		}
- 
-@@ -853,7 +855,7 @@ static void get_capabilities(struct scsi_cd *cd)
- 	/* allocate transfer buffer */
- 	buffer = kmalloc(512, GFP_KERNEL | GFP_DMA);
- 	if (!buffer) {
--		printk(KERN_ERR "sr: out of memory.\n");
-+		sr_printk(KERN_ERR, cd, "out of memory.\n");
- 		return;
- 	}
- 
-@@ -872,7 +874,7 @@ static void get_capabilities(struct scsi_cd *cd)
- 				 CDC_SELECT_DISC | CDC_SELECT_SPEED |
- 				 CDC_MRW | CDC_MRW_W | CDC_RAM);
- 		kfree(buffer);
--		printk("%s: scsi-1 drive\n", cd->cdi.name);
-+		sr_printk(KERN_INFO, cd, "scsi-1 drive");
- 		return;
- 	}
- 
-@@ -881,22 +883,23 @@ static void get_capabilities(struct scsi_cd *cd)
- 	cd->readcd_known = 1;
- 	cd->readcd_cdda = buffer[n + 5] & 0x01;
- 	/* print some capability bits */
--	printk("%s: scsi3-mmc drive: %dx/%dx %s%s%s%s%s%s\n", cd->cdi.name,
--	       ((buffer[n + 14] << 8) + buffer[n + 15]) / 176,
--	       cd->cdi.speed,
--	       buffer[n + 3] & 0x01 ? "writer " : "", /* CD Writer */
--	       buffer[n + 3] & 0x20 ? "dvd-ram " : "",
--	       buffer[n + 2] & 0x02 ? "cd/rw " : "", /* can read rewriteable */
--	       buffer[n + 4] & 0x20 ? "xa/form2 " : "",	/* can read xa/from2 */
--	       buffer[n + 5] & 0x01 ? "cdda " : "", /* can read audio data */
--	       loadmech[buffer[n + 6] >> 5]);
-+	sr_printk(KERN_INFO, cd,
-+		  "scsi3-mmc drive: %dx/%dx %s%s%s%s%s%s\n",
-+		  ((buffer[n + 14] << 8) + buffer[n + 15]) / 176,
-+		  cd->cdi.speed,
-+		  buffer[n + 3] & 0x01 ? "writer " : "", /* CD Writer */
-+		  buffer[n + 3] & 0x20 ? "dvd-ram " : "",
-+		  buffer[n + 2] & 0x02 ? "cd/rw " : "", /* can read rewriteable */
-+		  buffer[n + 4] & 0x20 ? "xa/form2 " : "",	/* can read xa/from2 */
-+		  buffer[n + 5] & 0x01 ? "cdda " : "", /* can read audio data */
-+		  loadmech[buffer[n + 6] >> 5]);
- 	if ((buffer[n + 6] >> 5) == 0)
- 		/* caddy drives can't close tray... */
- 		cd->cdi.mask |= CDC_CLOSE_TRAY;
- 	if ((buffer[n + 2] & 0x8) == 0)
- 		/* not a DVD drive */
- 		cd->cdi.mask |= CDC_DVD;
--	if ((buffer[n + 3] & 0x20) == 0) 
-+	if ((buffer[n + 3] & 0x20) == 0)
- 		/* can't write DVD-RAM media */
- 		cd->cdi.mask |= CDC_DVD_RAM;
- 	if ((buffer[n + 3] & 0x10) == 0)
-@@ -935,7 +938,7 @@ static void get_capabilities(struct scsi_cd *cd)
- 
- /*
-  * sr_packet() is the entry point for the generic commands generated
-- * by the Uniform CD-ROM layer. 
-+ * by the Uniform CD-ROM layer.
-  */
- static int sr_packet(struct cdrom_device_info *cdi,
- 		struct packet_command *cgc)
-diff --git a/drivers/scsi/sr.h b/drivers/scsi/sr.h
-index 37c8f6b..5334e98 100644
---- a/drivers/scsi/sr.h
-+++ b/drivers/scsi/sr.h
-@@ -55,6 +55,10 @@ typedef struct scsi_cd {
- 	struct gendisk *disk;
- } Scsi_CD;
- 
-+#define sr_printk(prefix, cd, fmt, a...) \
-+	sdev_printk(prefix, (cd)->device, "[%s] " fmt, \
-+		    (cd)->cdi.name, ##a)
-+
- int sr_do_ioctl(Scsi_CD *, struct packet_command *);
- 
- int sr_lock_door(struct cdrom_device_info *, int);
-diff --git a/drivers/scsi/sr_ioctl.c b/drivers/scsi/sr_ioctl.c
-index a3911c3..6389fcf 100644
---- a/drivers/scsi/sr_ioctl.c
-+++ b/drivers/scsi/sr_ioctl.c
-@@ -36,7 +36,6 @@ module_param(xa_test, int, S_IRUGO | S_IWUSR);
-  * the status of the unchecked_isa_dma flag in the host structure */
- #define SR_GFP_DMA(cd) (((cd)->device->host->unchecked_isa_dma) ? GFP_DMA : 0)
- 
--
- static int sr_read_tochdr(struct cdrom_device_info *cdi,
- 		struct cdrom_tochdr *tochdr)
- {
-@@ -219,7 +218,8 @@ int sr_do_ioctl(Scsi_CD *cd, struct packet_command *cgc)
- 		case UNIT_ATTENTION:
- 			SDev->changed = 1;
- 			if (!cgc->quiet)
--				printk(KERN_INFO "%s: disc change detected.\n", cd->cdi.name);
-+				sr_printk(KERN_INFO, cd,
-+					  "disc change detected.\n");
- 			if (retries++ < 10)
- 				goto retry;
- 			err = -ENOMEDIUM;
-@@ -229,7 +229,8 @@ int sr_do_ioctl(Scsi_CD *cd, struct packet_command *cgc)
- 			    sshdr.ascq == 0x01) {
- 				/* sense: Logical unit is in process of becoming ready */
- 				if (!cgc->quiet)
--					printk(KERN_INFO "%s: CDROM not ready yet.\n", cd->cdi.name);
-+					sr_printk(KERN_INFO, cd,
-+						  "CDROM not ready yet.\n");
- 				if (retries++ < 10) {
- 					/* sleep 2 sec and try again */
- 					ssleep(2);
-@@ -241,7 +242,9 @@ int sr_do_ioctl(Scsi_CD *cd, struct packet_command *cgc)
- 				}
- 			}
- 			if (!cgc->quiet)
--				printk(KERN_INFO "%s: CDROM not ready.  Make sure there is a disc in the drive.\n", cd->cdi.name);
-+				sr_printk(KERN_INFO, cd,
-+					  "CDROM not ready.  Make sure there "
-+					  "is a disc in the drive.\n");
- #ifdef DEBUG
- 			scsi_print_sense_hdr("sr", &sshdr);
- #endif
-@@ -259,7 +262,8 @@ int sr_do_ioctl(Scsi_CD *cd, struct packet_command *cgc)
- #endif
- 			break;
- 		default:
--			printk(KERN_ERR "%s: CDROM (ioctl) error, command: ", cd->cdi.name);
-+			sr_printk(KERN_ERR, cd,
-+				  "CDROM (ioctl) error, command: ");
- 			__scsi_print_command(cgc->cmd);
- 			scsi_print_sense_hdr("sr", &sshdr);
- 			err = -EIO;
-@@ -491,8 +495,8 @@ static int sr_read_cd(Scsi_CD *cd, unsigned char *dest, int lba, int format, int
- 	struct packet_command cgc;
- 
- #ifdef DEBUG
--	printk("%s: sr_read_cd lba=%d format=%d blksize=%d\n",
--	       cd->cdi.name, lba, format, blksize);
-+	sr_printk(KERN_INFO, cd, "sr_read_cd lba=%d format=%d blksize=%d\n",
-+		  lba, format, blksize);
- #endif
- 
- 	memset(&cgc, 0, sizeof(struct packet_command));
-@@ -539,7 +543,8 @@ static int sr_read_sector(Scsi_CD *cd, int lba, int blksize, unsigned char *dest
- 		if (-EDRIVE_CANT_DO_THIS != rc)
- 			return rc;
- 		cd->readcd_known = 0;
--		printk("CDROM does'nt support READ CD (0xbe) command\n");
-+		sr_printk(KERN_INFO, cd,
-+			  "CDROM does'nt support READ CD (0xbe) command\n");
- 		/* fall & retry the other way */
- 	}
- 	/* ... if this fails, we switch the blocksize using MODE SELECT */
-@@ -548,7 +553,8 @@ static int sr_read_sector(Scsi_CD *cd, int lba, int blksize, unsigned char *dest
- 			return rc;
- 	}
- #ifdef DEBUG
--	printk("%s: sr_read_sector lba=%d blksize=%d\n", cd->cdi.name, lba, blksize);
-+	sr_printk(KERN_INFO, cd, "sr_read_sector lba=%d blksize=%d\n",
-+		  lba, blksize);
- #endif
- 
- 	memset(&cgc, 0, sizeof(struct packet_command));
-@@ -592,7 +598,7 @@ int sr_is_xa(Scsi_CD *cd)
- 	}
- 	kfree(raw_sector);
- #ifdef DEBUG
--	printk("%s: sr_is_xa: %d\n", cd->cdi.name, is_xa);
-+	sr_printk(KERN_INFO, cd, "sr_is_xa: %d\n", is_xa);
- #endif
- 	return is_xa;
- }
-diff --git a/drivers/scsi/sr_vendor.c b/drivers/scsi/sr_vendor.c
-index 92cc2ef..11a238c 100644
---- a/drivers/scsi/sr_vendor.c
-+++ b/drivers/scsi/sr_vendor.c
-@@ -123,7 +123,7 @@ int sr_set_blocklength(Scsi_CD *cd, int blocklength)
- 		return -ENOMEM;
- 
- #ifdef DEBUG
--	printk("%s: MODE SELECT 0x%x/%d\n", cd->cdi.name, density, blocklength);
-+	sr_printk(KERN_INFO, cd, "MODE SELECT 0x%x/%d\n", density, blocklength);
- #endif
- 	memset(&cgc, 0, sizeof(struct packet_command));
- 	cgc.cmd[0] = MODE_SELECT;
-@@ -144,8 +144,9 @@ int sr_set_blocklength(Scsi_CD *cd, int blocklength)
- 	}
- #ifdef DEBUG
- 	else
--		printk("%s: switching blocklength to %d bytes failed\n",
--		       cd->cdi.name, blocklength);
-+		sr_printk(KERN_INFO, cd,
-+			  "switching blocklength to %d bytes failed\n",
-+			  blocklength);
- #endif
- 	kfree(buffer);
- 	return rc;
-@@ -190,8 +191,8 @@ int sr_cd_check(struct cdrom_device_info *cdi)
- 		if (rc != 0)
- 			break;
- 		if ((buffer[0] << 8) + buffer[1] < 0x0a) {
--			printk(KERN_INFO "%s: Hmm, seems the drive "
--			   "doesn't support multisession CD's\n", cd->cdi.name);
-+			sr_printk(KERN_INFO, cd, "Hmm, seems the drive "
-+			   "doesn't support multisession CD's\n");
- 			no_multi = 1;
- 			break;
- 		}
-@@ -218,9 +219,9 @@ int sr_cd_check(struct cdrom_device_info *cdi)
- 			if (rc != 0)
- 				break;
- 			if (buffer[14] != 0 && buffer[14] != 0xb0) {
--				printk(KERN_INFO "%s: Hmm, seems the cdrom "
--				       "doesn't support multisession CD's\n",
--				       cd->cdi.name);
-+				sr_printk(KERN_INFO, cd, "Hmm, seems the cdrom "
-+					  "doesn't support multisession CD's\n");
-+
- 				no_multi = 1;
- 				break;
- 			}
-@@ -245,9 +246,8 @@ int sr_cd_check(struct cdrom_device_info *cdi)
- 			cgc.timeout = VENDOR_TIMEOUT;
- 			rc = sr_do_ioctl(cd, &cgc);
- 			if (rc == -EINVAL) {
--				printk(KERN_INFO "%s: Hmm, seems the drive "
--				       "doesn't support multisession CD's\n",
--				       cd->cdi.name);
-+				sr_printk(KERN_INFO, cd, "Hmm, seems the drive "
-+					  "doesn't support multisession CD's\n");
- 				no_multi = 1;
- 				break;
- 			}
-@@ -277,8 +277,8 @@ int sr_cd_check(struct cdrom_device_info *cdi)
- 			break;
- 		}
- 		if ((rc = buffer[2]) == 0) {
--			printk(KERN_WARNING
--			       "%s: No finished session\n", cd->cdi.name);
-+			sr_printk(KERN_WARNING, cd,
-+				  "No finished session\n");
- 			break;
- 		}
- 		cgc.cmd[0] = READ_TOC;	/* Read TOC */
-@@ -301,9 +301,9 @@ int sr_cd_check(struct cdrom_device_info *cdi)
- 
- 	default:
- 		/* should not happen */
--		printk(KERN_WARNING
--		   "%s: unknown vendor code (%i), not initialized ?\n",
--		       cd->cdi.name, cd->vendor);
-+		sr_printk(KERN_WARNING, cd,
-+			  "unknown vendor code (%i), not initialized ?\n",
-+			  cd->vendor);
- 		sector = 0;
- 		no_multi = 1;
- 		break;
-@@ -321,8 +321,8 @@ int sr_cd_check(struct cdrom_device_info *cdi)
- 
- #ifdef DEBUG
- 	if (sector)
--		printk(KERN_DEBUG "%s: multisession offset=%lu\n",
--		       cd->cdi.name, sector);
-+		sr_printk(KERN_DEBUG, cd, "multisession offset=%lu\n",
-+			  sector);
- #endif
- 	kfree(buffer);
- 	return rc;
+This patchset is relative to the core-for-3.17 git
+tree from hch + my 64-bit LUN patchset.
+
+Changes to v1:
+- Rebase to apply after 64-bit LUN patchset
+
+Hannes Reinecke (6):
+  scsi: Implement sr_printk()
+  scsi: Implement sg_printk()
+  scsi: Implement ch_printk()
+  scsi: Implement st_printk()
+  scsi: use dev_printk() variants for ioctl
+  scsi: use dev_printk variants where possible
+
+ drivers/scsi/ch.c         |  14 +-
+ drivers/scsi/hosts.c      |  15 +-
+ drivers/scsi/scsi.c       |  18 +-
+ drivers/scsi/scsi_error.c | 179 +++++++-------
+ drivers/scsi/scsi_ioctl.c |  17 +-
+ drivers/scsi/scsi_lib.c   |  22 +-
+ drivers/scsi/scsi_scan.c  |  62 ++---
+ drivers/scsi/sg.c         | 163 +++++++------
+ drivers/scsi/sr.c         |  61 ++---
+ drivers/scsi/sr.h         |   4 +
+ drivers/scsi/sr_ioctl.c   |  26 +-
+ drivers/scsi/sr_vendor.c  |  36 +--
+ drivers/scsi/st.c         | 605 ++++++++++++++++++++++++----------------------
+ 13 files changed, 653 insertions(+), 569 deletions(-)
+
 -- 
 1.7.12.4
 
