@@ -1,207 +1,106 @@
 From: Joe Lawrence <joe.lawrence@stratus.com>
-Subject: [PATCH v2 11/11] mptfusion: tweak null pointer checks
-Date: Wed, 25 Jun 2014 17:06:54 -0400
-Message-ID: <1403730414-20363-1-git-send-email-joe.lawrence@stratus.com>
+Subject: [PATCH v2 10/11] mptfusion: combine fw_event_work and its event_data
+Date: Wed, 25 Jun 2014 17:06:42 -0400
+Message-ID: <1403730402-20324-1-git-send-email-joe.lawrence@stratus.com>
 References: <1403730058-19872-1-git-send-email-joe.lawrence@stratus.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from p01c12o149.mxlogic.net ([208.65.145.72]:35625 "EHLO
-	p01c12o149.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754550AbaFYVHW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jun 2014 17:07:22 -0400
+Received: from p02c11o143.mxlogic.net ([208.65.144.76]:39036 "EHLO
+	p02c11o143.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754550AbaFYVIH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jun 2014 17:08:07 -0400
 In-Reply-To: <1403730058-19872-1-git-send-email-joe.lawrence@stratus.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Dan Carpenter <dan.carpenter@oracle.com>, Christoph Hellwig <hch@lst.de>, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>, Joe Lawrence <joe.lawrence@stratus.com>, Christoph Hellwig <hch@infradead.org>
+Cc: Dan Carpenter <dan.carpenter@oracle.com>, Christoph Hellwig <hch@lst.de>, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>, Joe Lawrence <joe.lawrence@stratus.com>
 
-Fixes the following smatch warnings:
+Tack the firmware reply event_data payload to the end of its
+corresponding struct fw_event_work allocation.  Rework fw_event_work
+allocation calculations to include the event_data size where
+appropriate.
 
-  drivers/message/fusion/mptbase.c:652 mptbase_reply() warn: variable
-    dereferenced before check 'reply' (see line 639)
+This clarifies the code a bit and avoids the following smatch warnings:
 
-      [JL: No-brainer, the enclosing switch statement dereferences
-       reply, so we can't get here unless reply is valid.]
+  drivers/message/fusion/mptsas.c:1003 mptsas_queue_device_delete()
+    error: memcpy() 'fw_event->event_data' too small (29 vs 36)
 
-  drivers/message/fusion/mptsas.c:1255 mptsas_taskmgmt_complete() error:
-    we previously assumed 'pScsiTmReply' could be null (see line 1227)
-
-      [HCH: Reading the code in mptsas_taskmgmt_complete it's pretty
-       obvious that it can't do anything useful if mr/pScsiTmReply are
-       NULL, so I suspect it would be best to just return at the
-       beginning of the function.
-
-       I'd love to understand if it actually could ever be zero, which I
-       doubt.  Maybe the LSI people can shed some light on that?]
-
-  drivers/message/fusion/mptsas.c:3888 mptsas_not_responding_devices()
-    error: we previously assumed 'port_info->phy_info' could be null
-    (see line 3875)
-
-      [HCH: It's pretty obvious from reading mptsas_sas_io_unit_pg0 that
-       we never register a port_info with a NULL phy_info in the lists,
-       so all NULL checks on it could be deleted.]
-
-  drivers/message/fusion/mptscsih.c:1284 mptscsih_info() error:
-    we previously assumed 'h' could be null (see line 1274)
-
-      [HCH: shost_priv can't return NULL, so the if (h) should be
-       removed.]
-
-  drivers/message/fusion/mptscsih.c:1388 mptscsih_qcmd() error: we
-    previously assumed 'vdevice' could be null (see line 1373)
-
-      [HCH: vdevice can't ever be NULL here, it's allocated in
-       ->slave_alloc and thus guaranteed to be around when
-       ->queuecommand is called.]
+  drivers/message/fusion/mptsas.c:1017 mptsas_queue_rescan() error: not
+    allocating enough data 168 vs 160
 
 Signed-off-by: Joe Lawrence <joe.lawrence@stratus.com>
-Cc: Christoph Hellwig <hch@infradead.org>
 Cc: Dan Carpenter <dan.carpenter@oracle.com>
 Cc: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/message/fusion/mptbase.c  |   10 +++----
- drivers/message/fusion/mptsas.c   |   52 ++++++++++++++++++-------------------
- drivers/message/fusion/mptscsih.c |   19 ++++++--------
- 3 files changed, 37 insertions(+), 44 deletions(-)
+ drivers/message/fusion/mptsas.c |   16 ++++++----------
+ drivers/message/fusion/mptsas.h |    2 +-
+ 2 files changed, 7 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-index 9d4c782..a896d94 100644
---- a/drivers/message/fusion/mptbase.c
-+++ b/drivers/message/fusion/mptbase.c
-@@ -649,12 +649,10 @@ mptbase_reply(MPT_ADAPTER *ioc, MPT_FRAME_HDR *req, MPT_FRAME_HDR *reply)
- 	case MPI_FUNCTION_CONFIG:
- 	case MPI_FUNCTION_SAS_IO_UNIT_CONTROL:
- 		ioc->mptbase_cmds.status |= MPT_MGMT_STATUS_COMMAND_GOOD;
--		if (reply) {
--			ioc->mptbase_cmds.status |= MPT_MGMT_STATUS_RF_VALID;
--			memcpy(ioc->mptbase_cmds.reply, reply,
--			    min(MPT_DEFAULT_FRAME_SIZE,
--				4 * reply->u.reply.MsgLength));
--		}
-+		ioc->mptbase_cmds.status |= MPT_MGMT_STATUS_RF_VALID;
-+		memcpy(ioc->mptbase_cmds.reply, reply,
-+		    min(MPT_DEFAULT_FRAME_SIZE,
-+			4 * reply->u.reply.MsgLength));
- 		if (ioc->mptbase_cmds.status & MPT_MGMT_STATUS_PENDING) {
- 			ioc->mptbase_cmds.status &= ~MPT_MGMT_STATUS_PENDING;
- 			complete(&ioc->mptbase_cmds.done);
 diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
-index 5454d838..e3494a6 100644
+index 54b51a9..5454d838 100644
 --- a/drivers/message/fusion/mptsas.c
 +++ b/drivers/message/fusion/mptsas.c
-@@ -1203,27 +1203,28 @@ mptsas_taskmgmt_complete(MPT_ADAPTER *ioc, MPT_FRAME_HDR *mf, MPT_FRAME_HDR *mr)
- 	    "(mf = %p, mr = %p)\n", ioc->name, mf, mr));
+@@ -990,11 +990,10 @@ mptsas_queue_device_delete(MPT_ADAPTER *ioc,
+ 	MpiEventDataSasDeviceStatusChange_t *sas_event_data)
+ {
+ 	struct fw_event_work *fw_event;
+-	int sz;
  
- 	pScsiTmReply = (SCSITaskMgmtReply_t *)mr;
--	if (pScsiTmReply) {
--		dtmprintk(ioc, printk(MYIOC_s_DEBUG_FMT
--		    "\tTaskMgmt completed: fw_channel = %d, fw_id = %d,\n"
--		    "\ttask_type = 0x%02X, iocstatus = 0x%04X "
--		    "loginfo = 0x%08X,\n\tresponse_code = 0x%02X, "
--		    "term_cmnds = %d\n", ioc->name,
--		    pScsiTmReply->Bus, pScsiTmReply->TargetID,
--		    pScsiTmReply->TaskType,
--		    le16_to_cpu(pScsiTmReply->IOCStatus),
--		    le32_to_cpu(pScsiTmReply->IOCLogInfo),
--		    pScsiTmReply->ResponseCode,
--		    le32_to_cpu(pScsiTmReply->TerminationCount)));
--
--		if (pScsiTmReply->ResponseCode)
--			mptscsih_taskmgmt_response_code(ioc,
--			pScsiTmReply->ResponseCode);
--	}
--
--	if (pScsiTmReply && (pScsiTmReply->TaskType ==
-+	if (!pScsiTmReply)
-+		return 0;
-+
-+	dtmprintk(ioc, printk(MYIOC_s_DEBUG_FMT
-+	    "\tTaskMgmt completed: fw_channel = %d, fw_id = %d,\n"
-+	    "\ttask_type = 0x%02X, iocstatus = 0x%04X "
-+	    "loginfo = 0x%08X,\n\tresponse_code = 0x%02X, "
-+	    "term_cmnds = %d\n", ioc->name,
-+	    pScsiTmReply->Bus, pScsiTmReply->TargetID,
-+	    pScsiTmReply->TaskType,
-+	    le16_to_cpu(pScsiTmReply->IOCStatus),
-+	    le32_to_cpu(pScsiTmReply->IOCLogInfo),
-+	    pScsiTmReply->ResponseCode,
-+	    le32_to_cpu(pScsiTmReply->TerminationCount)));
-+
-+	if (pScsiTmReply->ResponseCode)
-+		mptscsih_taskmgmt_response_code(ioc,
-+		pScsiTmReply->ResponseCode);
-+
-+	if (pScsiTmReply->TaskType ==
- 	    MPI_SCSITASKMGMT_TASKTYPE_QUERY_TASK || pScsiTmReply->TaskType ==
--	     MPI_SCSITASKMGMT_TASKTYPE_ABRT_TASK_SET)) {
-+	     MPI_SCSITASKMGMT_TASKTYPE_ABRT_TASK_SET) {
- 		ioc->taskmgmt_cmds.status |= MPT_MGMT_STATUS_COMMAND_GOOD;
- 		ioc->taskmgmt_cmds.status |= MPT_MGMT_STATUS_RF_VALID;
- 		memcpy(ioc->taskmgmt_cmds.reply, mr,
-@@ -3853,10 +3854,8 @@ retry_page:
- 			phy_info = mptsas_find_phyinfo_by_sas_address(ioc,
- 					sas_info->sas_address);
+-	sz = offsetof(struct fw_event_work, event_data) +
+-	    sizeof(MpiEventDataSasDeviceStatusChange_t);
+-	fw_event = kzalloc(sz, GFP_ATOMIC);
++	fw_event = kzalloc(sizeof(*fw_event) +
++			   sizeof(MpiEventDataSasDeviceStatusChange_t),
++			   GFP_ATOMIC);
+ 	if (!fw_event) {
+ 		printk(MYIOC_s_WARN_FMT "%s: failed at (line=%d)\n",
+ 		    ioc->name, __func__, __LINE__);
+@@ -1011,10 +1010,8 @@ static void
+ mptsas_queue_rescan(MPT_ADAPTER *ioc)
+ {
+ 	struct fw_event_work *fw_event;
+-	int sz;
  
--			if (phy_info) {
--				mptsas_del_end_device(ioc, phy_info);
--				goto redo_device_scan;
--			}
-+			mptsas_del_end_device(ioc, phy_info);
-+			goto redo_device_scan;
- 		} else
- 			mptsas_volume_delete(ioc, sas_info->fw.id);
- 	}
-@@ -3867,9 +3866,8 @@ retry_page:
-  redo_expander_scan:
- 	list_for_each_entry(port_info, &ioc->sas_topology, list) {
+-	sz = offsetof(struct fw_event_work, event_data);
+-	fw_event = kzalloc(sz, GFP_ATOMIC);
++	fw_event = kzalloc(sizeof(*fw_event), GFP_ATOMIC);
+ 	if (!fw_event) {
+ 		printk(MYIOC_s_WARN_FMT "%s: failed at (line=%d)\n",
+ 		    ioc->name, __func__, __LINE__);
+@@ -4983,7 +4980,7 @@ static int
+ mptsas_event_process(MPT_ADAPTER *ioc, EventNotificationReply_t *reply)
+ {
+ 	u32 event = le32_to_cpu(reply->Event);
+-	int sz, event_data_sz;
++	int event_data_sz;
+ 	struct fw_event_work *fw_event;
+ 	unsigned long delay;
  
--		if (port_info->phy_info &&
--		    (!(port_info->phy_info[0].identify.device_info &
--		    MPI_SAS_DEVICE_INFO_SMP_TARGET)))
-+		if (!(port_info->phy_info[0].identify.device_info &
-+		    MPI_SAS_DEVICE_INFO_SMP_TARGET))
- 			continue;
- 		found_expander = 0;
- 		handle = 0xFFFF;
-diff --git a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mptscsih.c
-index 2a1c6f2..6b36c7e 100644
---- a/drivers/message/fusion/mptscsih.c
-+++ b/drivers/message/fusion/mptscsih.c
-@@ -1271,15 +1271,13 @@ mptscsih_info(struct Scsi_Host *SChost)
+@@ -5093,8 +5090,7 @@ mptsas_event_process(MPT_ADAPTER *ioc, EventNotificationReply_t *reply)
  
- 	h = shost_priv(SChost);
+ 	event_data_sz = ((reply->MsgLength * 4) -
+ 	    offsetof(EventNotificationReply_t, Data));
+-	sz = offsetof(struct fw_event_work, event_data) + event_data_sz;
+-	fw_event = kzalloc(sz, GFP_ATOMIC);
++	fw_event = kzalloc(sizeof(*fw_event) + event_data_sz, GFP_ATOMIC);
+ 	if (!fw_event) {
+ 		printk(MYIOC_s_WARN_FMT "%s: failed at (line=%d)\n", ioc->name,
+ 		 __func__, __LINE__);
+diff --git a/drivers/message/fusion/mptsas.h b/drivers/message/fusion/mptsas.h
+index 57e86ab..c396483 100644
+--- a/drivers/message/fusion/mptsas.h
++++ b/drivers/message/fusion/mptsas.h
+@@ -110,7 +110,7 @@ struct fw_event_work {
+ 	MPT_ADAPTER	*ioc;
+ 	u32			event;
+ 	u8			retries;
+-	u8			__attribute__((aligned(4))) event_data[1];
++	char			event_data[0] __aligned(4);
+ };
  
--	if (h) {
--		if (h->info_kbuf == NULL)
--			if ((h->info_kbuf = kmalloc(0x1000 /* 4Kb */, GFP_KERNEL)) == NULL)
--				return h->info_kbuf;
--		h->info_kbuf[0] = '\0';
--
--		mpt_print_ioc_summary(h->ioc, h->info_kbuf, &size, 0, 0);
--		h->info_kbuf[size-1] = '\0';
--	}
-+	if (h->info_kbuf == NULL)
-+		if ((h->info_kbuf = kmalloc(0x1000 /* 4Kb */, GFP_KERNEL)) == NULL)
-+			return h->info_kbuf;
-+	h->info_kbuf[0] = '\0';
-+
-+	mpt_print_ioc_summary(h->ioc, h->info_kbuf, &size, 0, 0);
-+	h->info_kbuf[size-1] = '\0';
- 
- 	return h->info_kbuf;
- }
-@@ -1368,8 +1366,7 @@ mptscsih_qcmd(struct scsi_cmnd *SCpnt)
- 	/* Default to untagged. Once a target structure has been allocated,
- 	 * use the Inquiry data to determine if device supports tagged.
- 	 */
--	if (vdevice
--	    && (vdevice->vtarget->tflags & MPT_TARGET_FLAGS_Q_YES)
-+	if ((vdevice->vtarget->tflags & MPT_TARGET_FLAGS_Q_YES)
- 	    && (SCpnt->device->tagged_supported)) {
- 		scsictl = scsidir | MPI_SCSIIO_CONTROL_SIMPLEQ;
- 		if (SCpnt->request && SCpnt->request->ioprio) {
+ struct mptsas_discovery_event {
 -- 
 1.7.10.4
 
