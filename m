@@ -1,34 +1,67 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [regression] fix 32-bit breakage in block device read(2) (was Re:
- 32-bit bug in iovec iterator changes)
-Date: Wed, 25 Jun 2014 09:56:09 -0700
-Message-ID: <CA+55aFyEHiq4UVg=JHH5y=B8UefH8Y3QnrFcnmXy5uLnCDiZbQ@mail.gmail.com>
-References: <20140621035144.GA8526@thunk.org>
-	<20140621055306.GP18016@ZenIV.linux.org.uk>
-	<20140621230922.GA13188@thunk.org>
-	<20140621234913.GQ18016@ZenIV.linux.org.uk>
-	<1403395400.2592.4.camel@jarvis.lan>
-	<20140622002618.GR18016@ZenIV.linux.org.uk>
-	<1403397164.2177.40.camel@dabdike.int.hansenpartnership.com>
-	<20140622005352.GS18016@ZenIV.linux.org.uk>
-	<20140622010032.GT18016@ZenIV.linux.org.uk>
-	<20140622115007.GA5333@thunk.org>
-	<20140623074440.GV18016@ZenIV.linux.org.uk>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: [PATCH] sg: limit maximum cdb size to 252 bytes
+Date: Wed, 25 Jun 2014 13:05:42 -0400
+Message-ID: <53AB0166.8060905@interlog.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140623074440.GV18016@ZenIV.linux.org.uk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Al Viro <viro@zeniv.linux.org.uk>
-Cc: Theodore Ts'o <tytso@mit.edu>, James Bottomley <James.Bottomley@hansenpartnership.com>, Dave Chinner <david@fromorbit.com>, Jens Axboe <axboe@fb.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux SCSI List <linux-scsi@vger.kernel.org>
+Content-Type: multipart/mixed;
+ boundary="------------080307080200080506010405"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.infotech.no ([82.134.31.41]:55768 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757033AbaFYRFs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 25 Jun 2014 13:05:48 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: SCSI development list <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
+Cc: Boaz Harrosh <bharrosh@panasas.com>
 
-Al,
- just checking - did you expect me to take this from the email, or are
-you preparing a pull request?
+This is a multi-part message in MIME format.
+--------------080307080200080506010405
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-               Linus
+Boaz Harrosh commented on the "[PATCH v5] sg: relax 16
+byte cdb restriction" thread that SCSI variable length
+commands (which are all SCSI commands greater than 16
+bytes long) must themselves be a multiple of 4 bytes
+long.
 
-On Mon, Jun 23, 2014 at 12:44 AM, Al Viro <viro@zeniv.linux.org.uk> wrote:
->
-> OK, here it is, hopefully with sufficient comments:
+ChangeLog
+   - limit the maximum cdb size permitted by the sg
+     v3 interface to 252 bytes. Commands that large
+     are called "variable length" and their length
+     needs to be a multiple of 4.
+
+Original patch:
+   Reviewed-by: Boaz Harrosh <boaz@electrozaur.com>
+
+Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+
+
+--------------080307080200080506010405
+Content-Type: text/x-patch;
+ name="sg_cdb252.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="sg_cdb252.patch"
+
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index b6d183a..2e01a9d 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -74,9 +74,10 @@ static void sg_proc_cleanup(void);
+ #define SG_MAX_DEVS 32768
+ 
+ /* SG_MAX_CDB_SIZE should be 260 (spc4r37 section 3.1.30) however the type
+- * of sg_io_hdr::cmd_len can only represent 255
++ * of sg_io_hdr::cmd_len can only represent 255. All SCSI commands greater
++ * than 16 bytes are "variable length" whose length is a multiple of 4
+  */
+-#define SG_MAX_CDB_SIZE 255
++#define SG_MAX_CDB_SIZE 252
+ 
+ /*
+  * Suppose you want to calculate the formula muldiv(x,m,d)=int(x * m / d)
+
+--------------080307080200080506010405--
