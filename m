@@ -1,42 +1,77 @@
-From: Michael Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
-Subject: Re: [PATCH v2 1/3] scsi_cmnd: Introduce scsi_transfer_length helper
-Date: Wed, 25 Jun 2014 10:59:19 -0500
-Message-ID: <8223888D-6AF4-41B8-BFD7-63F23A293134@cs.wisc.edu>
-References: <53A920B2.9060503@cs.wisc.edu> <yq1mwd2h3ju.fsf@sermon.lab.mkp.net> <28678EBD-1AE9-48F9-B9E2-E6A61B042BB1@cs.wisc.edu> <53A9A702.8050503@dev.mellanox.co.il> <20140624163040.GA11499@infradead.org> <53A9AEB8.4040104@cs.wisc.edu> <53A9B0A0.6000103@cs.wisc.edu> <53AA42E6.3090101@cs.wisc.edu> <53AA8CF7.8050102@dev.mellanox.co.il> <53AAA547.40300@dev.mellanox.co.il> <20140625113536.GA30312@infradead.org>
-Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.2\))
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20140625113536.GA30312-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: Sagi Grimberg <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org, roland-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Maurizio Lombardi <mlombard@redhat.com>
+Subject: Re: [PATCH] scsi: pm8001: pm80xx_hwi.c: Cleaning up variable is set
+ more than once
+Date: Wed, 25 Jun 2014 18:08:16 +0200
+Message-ID: <53AAF3F0.3010700@redhat.com>
+References: <1403704907-25672-1-git-send-email-rickard_strandqvist@spectrumdigital.se> <53AAEC1A.20905@redhat.com> <CAN7X1Un3-u-Q428-s1dYk5z4P-Bb=jO-N+x1T+PLhH1fDE1MRw@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAN7X1Un3-u-Q428-s1dYk5z4P-Bb=jO-N+x1T+PLhH1fDE1MRw@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Purush Gupta <purush.gupta@nutanix.com>
+Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>, xjtuwjp@gmail.com, lindar_liu@usish.com, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, Linux Kernel List <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
+Hi,
 
-On Jun 25, 2014, at 6:35 AM, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org> wrote:
+On 06/25/2014 05:41 PM, Purush Gupta wrote:
+> Its possible HW may require programming those fields?
 
-> On Wed, Jun 25, 2014 at 01:32:39PM +0300, Sagi Grimberg wrote:
->> So I tested a bidirectional command using:
->> $ sg_raw --infile=/root/filex --send=1024 --request=1024
->> --outfile=/root/filex "/dev/bsg/7:0:0:0" 53 00 00 00 00 00 00 00 02 00
->> 
->> And I see:
->> kernel: session1: iscsi_prep_scsi_cmd_pdu iscsi prep [bidirectional cid 0 sc
->> ffff880468ca1e00 cdb 0x53 itt 0x16 len 1024 bidi_len 1024 cmdsn 223 win 64]
->> 
->> This confirms what I wrote above, so AFAICT no additional fix is required
->> for libiscsi wrt bidi commands support.
+I'm looking at the code and it doesn't look so, did you see something suspicious?
+
+> May be original
+> contributor of the driver should review...No offense!
+
+I believe it requires the maintainer ACK and it takes precedence in any case, am I wrong?
+
+Regards,
+Maurizio Lombardi
+
 > 
-> Good to know.  I'd really prefer just going with the fix from Martin
-> that I have already queued up for 3.16, and then we can have the fully
-> fledged out "new" scsi_transfer_length() for 3.17.
+> thanks,
+> Purush
 > 
-
-I am fine with this too.
-
-I was way off track. I was more concerned with not wanting to use multiple functions/macros to get the transfer len. That should definitely be done when there is more time.
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> On Wed, Jun 25, 2014 at 8:34 AM, Maurizio Lombardi <mlombard@redhat.com>
+> wrote:
+> 
+>> This one looks good to me,
+>>
+>> Reviewed-by: Maurizio Lombardi <mlombard@redhat.com>
+>>
+>> On 06/25/2014 04:01 PM, Rickard Strandqvist wrote:
+>>> A struct member variable is set to different values without having used
+>> in between.
+>>>
+>>> This was found using a static code analysis program called cppcheck
+>>>
+>>> Signed-off-by: Rickard Strandqvist <
+>> rickard_strandqvist@spectrumdigital.se>
+>>> ---
+>>>  drivers/scsi/pm8001/pm80xx_hwi.c |    1 -
+>>>  1 file changed, 1 deletion(-)
+>>>
+>>> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c
+>> b/drivers/scsi/pm8001/pm80xx_hwi.c
+>>> index d70587f..2698227 100644
+>>> --- a/drivers/scsi/pm8001/pm80xx_hwi.c
+>>> +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+>>> @@ -249,7 +249,6 @@ moreData:
+>>>                               sprintf(pm8001_ha->
+>>>                                       forensic_info.data_buf.direct_data,
+>>>                                               "%08x ", 4);
+>>> -                     pm8001_ha->forensic_info.data_buf.read_len =
+>> 0xFFFFFFFF;
+>>>                       pm8001_ha->forensic_info.data_buf.direct_len =  0;
+>>>                       pm8001_ha->forensic_info.data_buf.direct_offset =
+>> 0;
+>>>                       pm8001_ha->forensic_info.data_buf.read_len = 0;
+>>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+> 
