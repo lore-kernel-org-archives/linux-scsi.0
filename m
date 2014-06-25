@@ -1,66 +1,66 @@
 From: Joe Lawrence <joe.lawrence@stratus.com>
-Subject: [PATCH v2 08/11] mptfusion: use memdup_user
-Date: Wed, 25 Jun 2014 17:06:12 -0400
-Message-ID: <1403730372-20246-1-git-send-email-joe.lawrence@stratus.com>
+Subject: [PATCH v2 07/11] mptfusion: remove redundant kfree checks
+Date: Wed, 25 Jun 2014 17:06:02 -0400
+Message-ID: <1403730362-20208-1-git-send-email-joe.lawrence@stratus.com>
 References: <1403730058-19872-1-git-send-email-joe.lawrence@stratus.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from p02c12o147.mxlogic.net ([208.65.145.80]:34638 "EHLO
-	p02c12o147.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754602AbaFYVGe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jun 2014 17:06:34 -0400
+Received: from p01c12o144.mxlogic.net ([208.65.145.67]:47336 "EHLO
+	p01c12o144.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755322AbaFYVGp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jun 2014 17:06:45 -0400
 In-Reply-To: <1403730058-19872-1-git-send-email-joe.lawrence@stratus.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Dan Carpenter <dan.carpenter@oracle.com>, Christoph Hellwig <hch@lst.de>, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>, Joe Lawrence <joe.lawrence@stratus.com>, Christoph Hellwig <hch@infradead.org>
+Cc: Dan Carpenter <dan.carpenter@oracle.com>, Christoph Hellwig <hch@lst.de>, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>, Joe Lawrence <joe.lawrence@stratus.com>
 
-Let memdup_user handle the kmalloc, copy_from_user and error checking
-kfree code.
+Fixes the following smatch warnings:
 
-Spotted by the following smatch (false positive) warning:
+  drivers/message/fusion/mptfc.c:529 mptfc_target_destroy() info:
+    redundant null check on starget->hostdata calling kfree()
 
-  drivers/message/fusion/mptctl.c:1369 mptctl_getiocinfo() warn:
-    possible info leak 'karg'
+  drivers/message/fusion/mptspi.c:465 mptspi_target_destroy() info:
+    redundant null check on starget->hostdata calling kfree()
 
 Signed-off-by: Joe Lawrence <joe.lawrence@stratus.com>
-Cc: Christoph Hellwig <hch@infradead.org>
 Cc: Dan Carpenter <dan.carpenter@oracle.com>
 Cc: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/message/fusion/mptctl.c |   18 +++++-------------
- 1 file changed, 5 insertions(+), 13 deletions(-)
+ drivers/message/fusion/mptfc.c  |    3 +--
+ drivers/message/fusion/mptspi.c |    3 +--
+ 2 files changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/message/fusion/mptctl.c b/drivers/message/fusion/mptctl.c
-index 8a050e8..b0a892a 100644
---- a/drivers/message/fusion/mptctl.c
-+++ b/drivers/message/fusion/mptctl.c
-@@ -1261,19 +1261,11 @@ mptctl_getiocinfo (unsigned long arg, unsigned int data_size)
- 	else
- 		return -EFAULT;
- 
--	karg = kmalloc(data_size, GFP_KERNEL);
--	if (karg == NULL) {
--		printk(KERN_ERR MYNAM "%s::mpt_ioctl_iocinfo() @%d - no memory available!\n",
--				__FILE__, __LINE__);
--		return -ENOMEM;
--	}
--
--	if (copy_from_user(karg, uarg, data_size)) {
--		printk(KERN_ERR MYNAM "%s@%d::mptctl_getiocinfo - "
--			"Unable to read in mpt_ioctl_iocinfo struct @ %p\n",
--				__FILE__, __LINE__, uarg);
--		kfree(karg);
--		return -EFAULT;
-+	karg = memdup_user(uarg, data_size);
-+	if (IS_ERR(karg)) {
-+		printk(KERN_ERR MYNAM "%s@%d::mpt_ioctl_iocinfo() - memdup_user returned error [%ld]\n",
-+				__FILE__, __LINE__, PTR_ERR(karg));
-+		return PTR_ERR(karg);
+diff --git a/drivers/message/fusion/mptfc.c b/drivers/message/fusion/mptfc.c
+index 02a3eef..21ac845 100644
+--- a/drivers/message/fusion/mptfc.c
++++ b/drivers/message/fusion/mptfc.c
+@@ -525,8 +525,7 @@ mptfc_target_destroy(struct scsi_target *starget)
+ 		if (ri)	/* better be! */
+ 			ri->starget = NULL;
  	}
+-	if (starget->hostdata)
+-		kfree(starget->hostdata);
++	kfree(starget->hostdata);
+ 	starget->hostdata = NULL;
+ }
  
- 	if (((iocnum = mpt_verify_adapter(karg->hdr.iocnum, &ioc)) < 0) ||
+diff --git a/drivers/message/fusion/mptspi.c b/drivers/message/fusion/mptspi.c
+index 7b4db9a..787933d 100644
+--- a/drivers/message/fusion/mptspi.c
++++ b/drivers/message/fusion/mptspi.c
+@@ -461,8 +461,7 @@ static int mptspi_target_alloc(struct scsi_target *starget)
+ static void
+ mptspi_target_destroy(struct scsi_target *starget)
+ {
+-	if (starget->hostdata)
+-		kfree(starget->hostdata);
++	kfree(starget->hostdata);
+ 	starget->hostdata = NULL;
+ }
+ 
 -- 
 1.7.10.4
 
