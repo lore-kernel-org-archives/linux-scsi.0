@@ -1,69 +1,29 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: [PATCH] cleanup switch in scsi_adjust_queue_depth()
-Date: Tue, 24 Jun 2014 19:23:45 -0400
-Message-ID: <53AA0881.5000505@interlog.com>
-Reply-To: dgilbert@interlog.com
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: [PATCH v2 1/3] scsi_cmnd: Introduce scsi_transfer_length helper
+Date: Tue, 24 Jun 2014 18:17:40 -0700
+Message-ID: <53AA2334.8000109@vlnb.net>
+References: <1402477799-24610-1-git-send-email-sagig@mellanox.com> <1402477799-24610-2-git-send-email-sagig@mellanox.com> <53A89B0F.4040300@cs.wisc.edu> <yq1r42fgjbp.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------070309070102010904080609"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:59923 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752088AbaFXXXu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Jun 2014 19:23:50 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <yq1r42fgjbp.fsf@sermon.lab.mkp.net>
+Sender: target-devel-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, Sagi Grimberg <sagig@mellanox.com>, nab@linux-iscsi.org, roland@kernel.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-rdma@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI development list <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>
 
-This is a multi-part message in MIME format.
---------------070309070102010904080609
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Martin K. Petersen, on 06/23/2014 06:58 PM wrote:
+>>>>>> "Mike" == Mike Christie <michaelc@cs.wisc.edu> writes:
+>>> + unsigned int xfer_len = blk_rq_bytes(scmd->request);
+>
+> Mike> Can you do bidi and dif/dix?
+>
+> Nope.
 
-While checking what scsi_adjust_queue_depth() did I
-thought its switch statement could be clearer.
+Correction: at the moment.
 
-ChangeLog:
-   - remove redundant assignment (to sdev->queue_depth)
-   - re-order cases (thus removing the fall-through)
+There is a proposal of READ GATHERED command, which is bidirectional and potentially 
+DIF/DIX.
 
-Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
-
---------------070309070102010904080609
-Content-Type: text/x-patch;
- name="scsi_adjust_queue_depth1.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="scsi_adjust_queue_depth1.patch"
-
---- linux-3.15/drivers/scsi/scsi.c3151	2014-06-08 21:36:43.815551129 -0400
-+++ linux-3.15/drivers/scsi/scsi.c	2014-06-24 19:17:02.474464807 -0400
-@@ -850,6 +850,10 @@ void scsi_adjust_queue_depth(struct scsi
- 
- 	sdev->queue_depth = tags;
- 	switch (tagged) {
-+		case 0:
-+			sdev->ordered_tags = 0;
-+			sdev->simple_tags = 0;
-+			break;
- 		case MSG_ORDERED_TAG:
- 			sdev->ordered_tags = 1;
- 			sdev->simple_tags = 1;
-@@ -859,13 +863,11 @@ void scsi_adjust_queue_depth(struct scsi
- 			sdev->simple_tags = 1;
- 			break;
- 		default:
-+			sdev->ordered_tags = 0;
-+			sdev->simple_tags = 0;
- 			sdev_printk(KERN_WARNING, sdev,
- 				    "scsi_adjust_queue_depth, bad queue type, "
- 				    "disabled\n");
--		case 0:
--			sdev->ordered_tags = sdev->simple_tags = 0;
--			sdev->queue_depth = tags;
--			break;
- 	}
-  out:
- 	spin_unlock_irqrestore(sdev->request_queue->queue_lock, flags);
-
---------------070309070102010904080609--
+Vlad
