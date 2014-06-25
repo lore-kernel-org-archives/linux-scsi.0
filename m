@@ -1,43 +1,40 @@
-From: Maurizio Lombardi <mlombard@redhat.com>
-Subject: Re: [PATCH] scsi: pm8001: pm80xx_hwi.c:  Cleaning up variable is
- set more than once
-Date: Wed, 25 Jun 2014 17:34:50 +0200
-Message-ID: <53AAEC1A.20905@redhat.com>
-References: <1403704907-25672-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 34422] Error-valued pointers used in pointer arithmetic in SCSI
+Date: Wed, 25 Jun 2014 15:50:54 +0000
+Message-ID: <bug-34422-11613-HhqPMCgsvP@https.bugzilla.kernel.org/>
+References: <bug-34422-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1403704907-25672-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>, xjtuwjp@gmail.com, lindar_liu@usish.com
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.19.201]:33625 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757211AbaFYPu5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 25 Jun 2014 11:50:57 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id D50B12039E
+	for <linux-scsi@vger.kernel.org>; Wed, 25 Jun 2014 15:50:56 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id 41990203AA
+	for <linux-scsi@vger.kernel.org>; Wed, 25 Jun 2014 15:50:54 +0000 (UTC)
+In-Reply-To: <bug-34422-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-This one looks good to me,
+https://bugzilla.kernel.org/show_bug.cgi?id=34422
 
-Reviewed-by: Maurizio Lombardi <mlombard@redhat.com>
+xerofoify@gmail.com changed:
 
-On 06/25/2014 04:01 PM, Rickard Strandqvist wrote:
-> A struct member variable is set to different values without having used in between.
-> 
-> This was found using a static code analysis program called cppcheck
-> 
-> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-> ---
->  drivers/scsi/pm8001/pm80xx_hwi.c |    1 -
->  1 file changed, 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-> index d70587f..2698227 100644
-> --- a/drivers/scsi/pm8001/pm80xx_hwi.c
-> +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-> @@ -249,7 +249,6 @@ moreData:
->  				sprintf(pm8001_ha->
->  					forensic_info.data_buf.direct_data,
->  						"%08x ", 4);
-> -			pm8001_ha->forensic_info.data_buf.read_len = 0xFFFFFFFF;
->  			pm8001_ha->forensic_info.data_buf.direct_len =  0;
->  			pm8001_ha->forensic_info.data_buf.direct_offset = 0;
->  			pm8001_ha->forensic_info.data_buf.read_len = 0;
-> 
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |xerofoify@gmail.com
+
+--- Comment #1 from xerofoify@gmail.com ---
+Please check this bug against a newer kernel to see if it's 
+fixed.
+Cheers Nick
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
