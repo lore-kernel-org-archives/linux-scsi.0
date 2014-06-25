@@ -1,70 +1,36 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH V2] scsi_lib: removes ambiguous "Unhandled error code"
- messages.
-Date: Wed, 25 Jun 2014 12:41:16 -0500
-Message-ID: <53AB09BC.3020105@cs.wisc.edu>
-References: <1402042235-7246-1-git-send-email-mlombard@redhat.com>
+From: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH 00/22] Add and use pci_zalloc_consistent
+Date: Wed, 25 Jun 2014 15:41:12 -0400
+Message-ID: <20140625194112.GJ3445@tuxdriver.com>
+References: <cover.1403530604.git.joe@perches.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:43245 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757670AbaFYRmU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 Jun 2014 13:42:20 -0400
-In-Reply-To: <1402042235-7246-1-git-send-email-mlombard@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-arch-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <cover.1403530604.git.joe@perches.com>
+Sender: linux-arch-owner@vger.kernel.org
+To: Joe Perches <joe@perches.com>
+Cc: linux-kernel@vger.kernel.org, linux-atm-general@lists.sourceforge.net, netdev@vger.kernel.org, iss_storagedev@hp.com, linux-crypto@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-rdma@vger.kernel.org, linux-media@vger.kernel.org, linux-wireless@vger.kernel.org, linux-scsi@vger.kernel.org, linux-eata@i-connect.net, devel@driverdev.osuosl.org, linux-arch@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Maurizio Lombardi <mlombard@redhat.com>
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, hch@infradead.org
 
-On 06/06/2014 03:10 AM, Maurizio Lombardi wrote:
-> During IO with fabric faults, one generally sees several "Unhandled error
-> code" messages in the syslog as shown below:
+On Mon, Jun 23, 2014 at 06:41:28AM -0700, Joe Perches wrote:
+> Adding the helper reduces object code size as well as overall
+> source size line count.
 > 
-> sd 4:0:6:2: [sdbw] Unhandled error code
-> sd 4:0:6:2: [sdbw] Result: hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK
-> sd 4:0:6:2: [sdbw] CDB: Read(10): 28 00 00 00 00 00 00 00 08 00
-> end_request: I/O error, dev sdbw, sector 0
+> It's also consistent with all the various zalloc mechanisms
+> in the kernel.
 > 
-> This comes from scsi_io_completion (in scsi_lib.c) while handling error
-> codes other than DID_RESET or not deferred sense keys i.e. this is
-> actually handled by the SCSI mid layer. But what gets displayed here is
-> "Unhandled error code" which is quite misleading as it indicates
-> something that is not addressed by the mid layer.
+> Done with a simple cocci script and some typing.
 > 
-> This patch removes "Unhandled error code" and replaces "Unhandled sense code"
-> with "Failing command with sense code:".
-> 
-> 
-> Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
-> ---
->  drivers/scsi/scsi_lib.c | 6 ++----
->  1 file changed, 2 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 9db097a..b3c25cd 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -955,14 +955,12 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
->  			action = ACTION_FAIL;
->  			break;
->  		default:
-> -			description = "Unhandled sense code";
-> +			description = "Failing command with sense code:";
->  			action = ACTION_FAIL;
->  			break;
->  		}
-> -	} else {
-> -		description = "Unhandled error code";
-> +	} else
->  		action = ACTION_FAIL;
-> -	}
->  
->  	if (action != ACTION_FAIL &&
->  	    time_before(cmd->jiffies_at_alloc + wait_for, jiffies)) {
-> 
+> Joe Perches (22):
 
-Looks ok to me.
+>   ipw2100: Use pci_zalloc_consistent
+>   mwl8k: Use pci_zalloc_consistent
+>   rtl818x: Use pci_zalloc_consistent
+>   rtlwifi: Use pci_zalloc_consistent
 
-Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
+Sure, fine by me.
+
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
