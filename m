@@ -1,40 +1,42 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 34422] Error-valued pointers used in pointer arithmetic in SCSI
-Date: Wed, 25 Jun 2014 15:50:54 +0000
-Message-ID: <bug-34422-11613-HhqPMCgsvP@https.bugzilla.kernel.org/>
-References: <bug-34422-11613@https.bugzilla.kernel.org/>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:33625 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757211AbaFYPu5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 Jun 2014 11:50:57 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id D50B12039E
-	for <linux-scsi@vger.kernel.org>; Wed, 25 Jun 2014 15:50:56 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id 41990203AA
-	for <linux-scsi@vger.kernel.org>; Wed, 25 Jun 2014 15:50:54 +0000 (UTC)
-In-Reply-To: <bug-34422-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Michael Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
+Subject: Re: [PATCH v2 1/3] scsi_cmnd: Introduce scsi_transfer_length helper
+Date: Wed, 25 Jun 2014 10:59:19 -0500
+Message-ID: <8223888D-6AF4-41B8-BFD7-63F23A293134@cs.wisc.edu>
+References: <53A920B2.9060503@cs.wisc.edu> <yq1mwd2h3ju.fsf@sermon.lab.mkp.net> <28678EBD-1AE9-48F9-B9E2-E6A61B042BB1@cs.wisc.edu> <53A9A702.8050503@dev.mellanox.co.il> <20140624163040.GA11499@infradead.org> <53A9AEB8.4040104@cs.wisc.edu> <53A9B0A0.6000103@cs.wisc.edu> <53AA42E6.3090101@cs.wisc.edu> <53AA8CF7.8050102@dev.mellanox.co.il> <53AAA547.40300@dev.mellanox.co.il> <20140625113536.GA30312@infradead.org>
+Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.2\))
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20140625113536.GA30312-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: Sagi Grimberg <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org, roland-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=34422
 
-xerofoify@gmail.com changed:
+On Jun 25, 2014, at 6:35 AM, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org> wrote:
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |xerofoify@gmail.com
+> On Wed, Jun 25, 2014 at 01:32:39PM +0300, Sagi Grimberg wrote:
+>> So I tested a bidirectional command using:
+>> $ sg_raw --infile=/root/filex --send=1024 --request=1024
+>> --outfile=/root/filex "/dev/bsg/7:0:0:0" 53 00 00 00 00 00 00 00 02 00
+>> 
+>> And I see:
+>> kernel: session1: iscsi_prep_scsi_cmd_pdu iscsi prep [bidirectional cid 0 sc
+>> ffff880468ca1e00 cdb 0x53 itt 0x16 len 1024 bidi_len 1024 cmdsn 223 win 64]
+>> 
+>> This confirms what I wrote above, so AFAICT no additional fix is required
+>> for libiscsi wrt bidi commands support.
+> 
+> Good to know.  I'd really prefer just going with the fix from Martin
+> that I have already queued up for 3.16, and then we can have the fully
+> fledged out "new" scsi_transfer_length() for 3.17.
+> 
 
---- Comment #1 from xerofoify@gmail.com ---
-Please check this bug against a newer kernel to see if it's 
-fixed.
-Cheers Nick
+I am fine with this too.
 
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+I was way off track. I was more concerned with not wanting to use multiple functions/macros to get the transfer len. That should definitely be done when there is more time.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
