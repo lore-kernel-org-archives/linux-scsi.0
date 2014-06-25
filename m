@@ -1,127 +1,97 @@
-From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Subject: RE: [PATCH V2] scsi_lib: removes ambiguous "Unhandled error code"
- messages.
-Date: Wed, 25 Jun 2014 20:38:47 +0000
-Message-ID: <94D0CD8314A33A4D9D801C0FE68B402958B4C8CD@G9W0745.americas.hpqcorp.net>
-References: <1402042235-7246-1-git-send-email-mlombard@redhat.com>
- <20140625110632.GE19181@infradead.org>
+From: Joe Lawrence <joe.lawrence@stratus.com>
+Subject: [PATCH v2 00/11] mptfusion/mpt2/mpt3 static checker fixups
+Date: Wed, 25 Jun 2014 17:00:58 -0400
+Message-ID: <1403730058-19872-1-git-send-email-joe.lawrence@stratus.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3425.houston.hp.com ([15.201.208.53]:2495 "EHLO
-	g4t3425.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753849AbaFYUlD convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jun 2014 16:41:03 -0400
-In-Reply-To: <20140625110632.GE19181@infradead.org>
-Content-Language: en-US
+Received: from p01c11o145.mxlogic.net ([208.65.144.68]:46825 "EHLO
+	p01c11o145.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753932AbaFYVCF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jun 2014 17:02:05 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Maurizio Lombardi <mlombard@redhat.com>
-Cc: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: Dan Carpenter <dan.carpenter@oracle.com>, Christoph Hellwig <hch@lst.de>, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>, Joe Lawrence <joe.lawrence@stratus.com>
+
+v2:
+
+Combined the mptfusion and mpt{2,3}sas static checker patches,
+re-ordering them by driver.  Updated Reviewed-by and Acked-by tags as
+well as Sreekanth's email address.  Based off v3.16-rc2, compile tested.
+
+patches dropped:
+
+* mpt3sas: fix possible memory leak in mpt3sas_send_trigger_data_event
+
+  Christoph suggested combining this into a single allocation, so this
+  patch was transformed into two new patches (removing the Reviewed-by
+  and Acked-by tags):
+
+  mpt2sas-combine-fw_event_work-and-its-event_data.patch
+  mpt3sas-combine-fw_event_work-and-its-event_data.patch
+
+* mptfusion: initChainBuffers should return errno
+
+  Christoph noted that the whole callchain uses -1 instead of errno.
+  Let it be.
 
 
+patches modified:
 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> owner@vger.kernel.org] On Behalf Of Christoph Hellwig
-> Sent: Wednesday, 25 June, 2014 6:07 AM
-> To: Maurizio Lombardi
-> Cc: James.Bottomley@HansenPartnership.com; linux-scsi@vger.kernel.org;
-> hch@infradead.org
-> Subject: Re: [PATCH V2] scsi_lib: removes ambiguous "Unhandled error code"
-> messages.
-> 
-> Can I get another review for this one?
-> 
-> On Fri, Jun 06, 2014 at 10:10:35AM +0200, Maurizio Lombardi wrote:
-...
-> > diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-...
-> > @@ -955,14 +955,12 @@ void scsi_io_completion(struct scsi_cmnd *cmd,
-> unsigned int good_bytes)
-> >  			action = ACTION_FAIL;
-> >  			break;
-> >  		default:
-> > -			description = "Unhandled sense code";
-> > +			description = "Failing command with sense code:";
+* mptfusion: zero kernel-space source of copy_to_user
 
-The default case handles sense keys other than:
-	#define NOT_READY           0x02
-	#define ILLEGAL_REQUEST     0x05
-	#define UNIT_ATTENTION      0x06
-	#define ABORTED_COMMAND     0x0b
-	#define VOLUME_OVERFLOW     0x0d
+  A static checker false-positive brought me here, Christoph suggested
+  using memdup_user.
 
-which means these #defines (and any other values)
-#define NO_SENSE            0x00
-#define RECOVERED_ERROR     0x01
-#define MEDIUM_ERROR        0x03
-#define HARDWARE_ERROR      0x04
-#define DATA_PROTECT        0x07
-#define BLANK_CHECK         0x08
-#define COPY_ABORTED        0x0a
-#define MISCOMPARE          0x0e
+* mptfusion: combine fw_event_work and its event_data
 
-The other description strings that result in ACTION_FAIL are based
-on the sense key and sometimes the additional sense code:
-description = "Media Changed";
-description = "Host Data Integrity Failure";
-description = "Discard failure";
-description = "Write same failure";
-description = "Invalid command failure";
-description = "Target Data Integrity Failure";
-description = "Device not ready";
+  Remove the unnecessary sz variables.
 
-Also, there is this one, which is not based on the sense key:
-description = "Command timed out";
+* mptfusion: tweak null pointer checks
 
-Since the ACTION_FAIL case always prints the sense key
-and additional sense code:
-	if (!(req->cmd_flags & REQ_QUIET)) {
-		if (description)
-			scmd_printk(KERN_INFO, cmd, " % \n",
-				description);
-		scsi_print_result(cmd);
-		if (driver_byte(result) & DRIVER_SENSE)
-			scsi_print_sense("", cmd);
-		scsi_print_command(cmd);
-	}
-
-perhaps the description string should be removed altogether?
-
-In this example:
-	sd 1:0:0:0: [sdb] Unhandled sense code
-	sd 1:0:0:0: [sdb]
-	Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
-	sd 1:0:0:0: [sdb]
-	Sense Key : Medium Error [current]
-	sd 1:0:0:0: [sdb]
-	Add. Sense: Unrecovered read error
-	sd 1:0:0:0: [sdb] CDB:
-	Read(10): 28 00 00 18 f8 a8 00 00 08 00
-	end_request: critical medium error, dev sdb, sector 1636520
-
-"Sense Key : Medium Error" is much more informative than
-"Unhandled sense code" or "Failing command with sense code".
-All the other descriptions represent failing commands,
-so using different wording is a bit confusing.
-
-For the "Unhandled error code" (for which you are proposing
-removing the string) and the timeout case, the scsi_print_result 
-call already prints hostbyte and driverbyte, which explain what 
-happened in more detail:
-
-	sd 1:0:0:0: [sda] Unhandled error code                                          
-	sd 1:0:0:0: [sda]                                                               
-	Result: hostbyte=DID_TIME_OUT driverbyte=DRIVER_OK                              
-	sd 1:0:0:0: [sda] CDB:                                                          
-	Test Unit Ready:                                                                
-	end_request: I/O error, dev sda, sector 481013632                               
-
----
-Rob Elliott    HP Server Storage
+  Moved commentry from myself (JL) and Christoph (HCH) into the commit
+  message.
 
 
+In the mpt{2,3}sas-combine-fw_event_work-and-its-event_data patches, I
+was wondering if the alignment attribute should be:
 
+  __attribute__ ((aligned (sizeof(unsigned long))))
+
+instead of:
+
+  char event_data[0] __aligned(4)
+
+Regards,
+
+Joe Lawrence (11):
+  mpt2sas: correct scsi_{target,device} hostdata allocation
+  mpt2sas: combine fw_event_work and its event_data
+  mpt2sas: annotate ioc->reply_post_host_index as __iomem
+  mpt3sas: correct scsi_{target,device} hostdata allocation
+  mpt3sas: combine fw_event_work and its event_data
+  mptfusion: mark file-private functions as static
+  mptfusion: remove redundant kfree checks
+  mptfusion: use memdup_user
+  mptfusion: make adapter prod_name[] a pointer
+  mptfusion: combine fw_event_work and its event_data
+  mptfusion: tweak null pointer checks
+
+ drivers/message/fusion/mptbase.c     |   23 +++++------
+ drivers/message/fusion/mptbase.h     |    2 +-
+ drivers/message/fusion/mptctl.c      |   18 +++------
+ drivers/message/fusion/mptfc.c       |    3 +-
+ drivers/message/fusion/mptsas.c      |   74 ++++++++++++++++------------------
+ drivers/message/fusion/mptsas.h      |    2 +-
+ drivers/message/fusion/mptscsih.c    |   19 ++++-----
+ drivers/message/fusion/mptspi.c      |    5 +--
+ drivers/scsi/mpt2sas/mpt2sas_base.c  |    9 +++--
+ drivers/scsi/mpt2sas/mpt2sas_base.h  |    2 +-
+ drivers/scsi/mpt2sas/mpt2sas_scsih.c |   58 +++++++++++++++-----------
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c |   62 +++++++++++++++-------------
+ 12 files changed, 137 insertions(+), 140 deletions(-)
+
+-- 
+1.7.10.4
 
