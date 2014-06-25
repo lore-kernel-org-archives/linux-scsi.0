@@ -1,44 +1,34 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 01/14] sd: don't use rq->cmd_len before setting it up
-Date: Wed, 25 Jun 2014 18:51:48 +0200
-Message-ID: <1403715121-1201-2-git-send-email-hch@lst.de>
-References: <1403715121-1201-1-git-send-email-hch@lst.de>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [regression] fix 32-bit breakage in block device read(2) (was Re:
+ 32-bit bug in iovec iterator changes)
+Date: Wed, 25 Jun 2014 09:56:09 -0700
+Message-ID: <CA+55aFyEHiq4UVg=JHH5y=B8UefH8Y3QnrFcnmXy5uLnCDiZbQ@mail.gmail.com>
+References: <20140621035144.GA8526@thunk.org>
+	<20140621055306.GP18016@ZenIV.linux.org.uk>
+	<20140621230922.GA13188@thunk.org>
+	<20140621234913.GQ18016@ZenIV.linux.org.uk>
+	<1403395400.2592.4.camel@jarvis.lan>
+	<20140622002618.GR18016@ZenIV.linux.org.uk>
+	<1403397164.2177.40.camel@dabdike.int.hansenpartnership.com>
+	<20140622005352.GS18016@ZenIV.linux.org.uk>
+	<20140622010032.GT18016@ZenIV.linux.org.uk>
+	<20140622115007.GA5333@thunk.org>
+	<20140623074440.GV18016@ZenIV.linux.org.uk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1403715121-1201-1-git-send-email-hch@lst.de>
+In-Reply-To: <20140623074440.GV18016@ZenIV.linux.org.uk>
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Bart Van Assche <bvanassche@fusionio.com>, Robert Elliott <Elliott@hp.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Al Viro <viro@zeniv.linux.org.uk>
+Cc: Theodore Ts'o <tytso@mit.edu>, James Bottomley <James.Bottomley@hansenpartnership.com>, Dave Chinner <david@fromorbit.com>, Jens Axboe <axboe@fb.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux SCSI List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Unlike the old request code blk-mq doesn't initialize cmd_len with a
-default value, so don't rely on it being set in sd_setup_write_same_cmnd.
+Al,
+ just checking - did you expect me to take this from the email, or are
+you preparing a pull request?
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/scsi/sd.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+               Linus
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 9c86e3d..6ec4ffe 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -824,15 +824,16 @@ static int sd_setup_write_same_cmnd(struct scsi_device *sdp, struct request *rq)
- 
- 	rq->__data_len = sdp->sector_size;
- 	rq->timeout = SD_WRITE_SAME_TIMEOUT;
--	memset(rq->cmd, 0, rq->cmd_len);
- 
- 	if (sdkp->ws16 || sector > 0xffffffff || nr_sectors > 0xffff) {
- 		rq->cmd_len = 16;
-+		memset(rq->cmd, 0, rq->cmd_len);
- 		rq->cmd[0] = WRITE_SAME_16;
- 		put_unaligned_be64(sector, &rq->cmd[2]);
- 		put_unaligned_be32(nr_sectors, &rq->cmd[10]);
- 	} else {
- 		rq->cmd_len = 10;
-+		memset(rq->cmd, 0, rq->cmd_len);
- 		rq->cmd[0] = WRITE_SAME;
- 		put_unaligned_be32(sector, &rq->cmd[2]);
- 		put_unaligned_be16(nr_sectors, &rq->cmd[7]);
--- 
-1.7.10.4
+On Mon, Jun 23, 2014 at 12:44 AM, Al Viro <viro@zeniv.linux.org.uk> wrote:
+>
+> OK, here it is, hopefully with sufficient comments:
