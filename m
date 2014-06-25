@@ -1,47 +1,90 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: SCSI eats error from flush failure during hot plug
-Date: Wed, 25 Jun 2014 06:13:44 -0700
-Message-ID: <20140625131344.GA13094@infradead.org>
-References: <CAPK7rjcrBuQgoiAxZ9ZASAGugtyHTsHB3ssZegKtuzRdo9TMNQ@mail.gmail.com>
- <1402169384.2236.18.camel@dabdike.int.hansenpartnership.com>
- <CAPK7rjeG2nJMD3j9qEuJ0LdsCYaUoK+ABMuWdYZG3xaRgEJoYQ@mail.gmail.com>
- <1402334946.2197.17.camel@dabdike.int.hansenpartnership.com>
- <20140611133736.GA12240@infradead.org>
- <1403201159.17294.13.camel@dabdike.int.hansenpartnership.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 4/4] scsi_scan: Fixup scsilun_to_int()
+Date: Wed, 25 Jun 2014 15:27:39 +0200
+Message-ID: <1403702859-74437-5-git-send-email-hare@suse.de>
+References: <1403702859-74437-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:41372 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753576AbaFYNNp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jun 2014 09:13:45 -0400
-Content-Disposition: inline
-In-Reply-To: <1403201159.17294.13.camel@dabdike.int.hansenpartnership.com>
+Received: from cantor2.suse.de ([195.135.220.15]:40283 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756585AbaFYN1n (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 25 Jun 2014 09:27:43 -0400
+In-Reply-To: <1403702859-74437-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Steven Haber <steven@qumulo.com>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
+To: James Bottomley <jbottomley@parallels.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Bart van Assche <bvanassche@acm.org>
 
-On Thu, Jun 19, 2014 at 11:05:59AM -0700, James Bottomley wrote:
-> That's not really a good idea either ... I did think of it.  We'll end
-> up with a cmd_type of REQ_TYPE_FS which because of REQ_FLUSH (or REQ_FUA
-> or REQ_DISCARD or any number of other things) we have to treat as though
-> it were REQ_TYPE_BLOCK_PC.  It's much better to tune handling
-> expectations according to req->cmd_type because that's what we already
-> do.  These commands are actually set up by our handlers, so it's up to
-> us to mark the request type correctly.
+scsilun_to_int() has an error which prevents it from generating
+correct LUN numbers for 64bit values.
+Also we should remove the misleading comment about portions of
+the LUN being ignored; the initiator should treat the LUN as
+an opaque value.
+And, finally, the example given should use the correct
+prefix (here: extended flat space addressing scheme).
 
-Looking at the places where the SCSI midlayer cares about the request
-type:
+This patch includes the modifications suggested by
+Bart van Assche.
 
- - scsi_finish_command to call ->done for non-PC requests.  Given that
-   we called into the driver to setup flush/discard/etc we should also
-   call into the driver on request completion
- - scsi_eh_action: ditto for error handling
- - scsi_noretry_cmd: I don't see why we'd want to treat flush request
-	as having an implicit failfast flag
- - scsi_io_completion: this mostly opts out of all kinds of error
-	handling and retries, not really what we'd want either
- - scsi_unprep_fn: calls ->uninit_command only for !PC request,
-   	so your patch introduces a leak for discard requests
+Cc: Bart van Assche <bvanassche@acm.org>
+Cc: Christoph Hellwig <hch@infradead.org>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: James Bottomley <jbottomley@parallels.com>
+---
+ drivers/scsi/scsi_scan.c | 22 ++++++++++------------
+ 1 file changed, 10 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index fa57a04..553e1c7 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -1263,14 +1263,15 @@ static void scsi_sequential_lun_scan(struct scsi_target *starget,
+  *     truncation before using this function.
+  *
+  * Notes:
+- *     The struct scsi_lun is assumed to be four levels, with each level
+- *     effectively containing a SCSI byte-ordered (big endian) short; the
+- *     addressing bits of each level are ignored (the highest two bits).
+  *     For a description of the LUN format, post SCSI-3 see the SCSI
+  *     Architecture Model, for SCSI-3 see the SCSI Controller Commands.
+  *
+- *     Given a struct scsi_lun of: 0a 04 0b 03 00 00 00 00, this function returns
+- *     the integer: 0x0b030a04
++ *     Given a struct scsi_lun of: d2 04 0b 03 00 00 00 00, this function
++ *     returns the integer: 0x0b03d204
++ *
++ *     This encoding will return a standard integer LUN for LUNs smaller
++ *     than 256, which typically use a single level LUN structure with
++ *     addressing method 0.
+  **/
+ u64 scsilun_to_int(struct scsi_lun *scsilun)
+ {
+@@ -1279,8 +1280,8 @@ u64 scsilun_to_int(struct scsi_lun *scsilun)
+ 
+ 	lun = 0;
+ 	for (i = 0; i < sizeof(lun); i += 2)
+-		lun = lun | (((scsilun->scsi_lun[i] << 8) |
+-			      scsilun->scsi_lun[i + 1]) << (i * 8));
++		lun = lun | (((u64)scsilun->scsi_lun[i] << ((i + 1) *8)) |
++			     ((u64)scsilun->scsi_lun[i + 1] << (i * 8)));
+ 	return lun;
+ }
+ EXPORT_SYMBOL(scsilun_to_int);
+@@ -1294,13 +1295,10 @@ EXPORT_SYMBOL(scsilun_to_int);
+  *     Reverts the functionality of the scsilun_to_int, which packed
+  *     an 8-byte lun value into an int. This routine unpacks the int
+  *     back into the lun value.
+- *     Note: the scsilun_to_int() routine does not truly handle all
+- *     8bytes of the lun value. This functions restores only as much
+- *     as was set by the routine.
+  *
+  * Notes:
+- *     Given an integer : 0x0b030a04,  this function returns a
+- *     scsi_lun of : struct scsi_lun of: 0a 04 0b 03 00 00 00 00
++ *     Given an integer : 0x0b03d204,  this function returns a
++ *     struct scsi_lun of: d2 04 0b 03 00 00 00 00
+  *
+  **/
+ void int_to_scsilun(u64 lun, struct scsi_lun *scsilun)
+-- 
+1.7.12.4
 
