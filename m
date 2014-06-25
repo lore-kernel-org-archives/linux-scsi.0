@@ -1,60 +1,87 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: scsi-mq V2
-Date: Wed, 25 Jun 2014 18:51:47 +0200
-Message-ID: <1403715121-1201-1-git-send-email-hch@lst.de>
+Subject: [PATCH 10/14] scsi: only maintain target_blocked if the driver has a target queue limit
+Date: Wed, 25 Jun 2014 18:51:57 +0200
+Message-ID: <1403715121-1201-11-git-send-email-hch@lst.de>
+References: <1403715121-1201-1-git-send-email-hch@lst.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1403715121-1201-1-git-send-email-hch@lst.de>
 Sender: linux-kernel-owner@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: Jens Axboe <axboe@kernel.dk>, Bart Van Assche <bvanassche@fusionio.com>, Robert Elliott <Elliott@hp.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-This is the second post of the scsi-mq series.
+This saves us an atomic operation for each I/O submission and completion
+for the usual case where the driver doesn't set a per-target can_queue
+value.  Only a few iscsi hardware offload drivers set the per-target
+can_queue value at the moment.
 
-At this point the code is ready for merging and use by developers and early
-adopters.  The core blk-mq code isn't that suitable for slow devices
-yet, mostly due to the lack of an I/O scheduler, but Jens is working on it.
-Similarly there is no dm-multipath support for drivers using blk-mq yet,
-but I'm working on it.  It should also be noted that the code doesn't
-actually support multiple hardware queues or fine grained tuning of the
-blk-mq parameters yet.  All these could be added fairly easily as soon
-as low-level drivers want to make use of them.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/scsi/scsi_lib.c |   17 ++++++++++++-----
+ 1 file changed, 12 insertions(+), 5 deletions(-)
 
-The amount of chances to the existing code are fairly small, and mostly
-speedups or cleanups that also apply to the old path as well.  Because
-of this I also haven't bothered to put it under a config option, just
-like the blk-mq core.
-
-The usage of blk-mq dramatically decreases CPU usage under all workloads going
-down from 100% CPU usage that the old setup can hit easily to usually less
-than 20% for maxing out storage subsystems with 512byte reads and writes,
-and it allows to easily archive millions of IOPS.  Bart and Robert have
-helped with some very detailed measurements that they might be able to send
-in reply to this, although these usually involve significantly reworked low
-level drivers to avoid other bottle necks.
-
-One major objection to previous iterations of this code was the simple
-replacement of the host_lock with atomic counters for the host and busy
-counters.  The host_lock avoidance on it's own already improves performance,
-and with the patch to avoid maintaining the per-target busy counter unless
-needed we now replace a lock round trip on the host_lock with just a single
-atomic increment in the submission path, and a single atomic decrement in
-completion path, which should provide benefits even for the oddest RISC
-architecture.  Longer term I'd still love to get rid of these entirely
-and use the counters in blk-mq, but due to the difference in how they
-are maintained this doesn't seem feasible as long as we still need to
-support the legacy request code path.
-
-Changes from V1:
- - rebased on top of the core-for-3.17 branch, most notable the
-   scsi logging changes
- - fixed handling of cmd_list to prevent crashes for some heavy
-   workloads
- - fixed incorrect handling of !target->can_queue
- - avoid scheduling a workqueue on I/O completions when no queues
-   are congested
-
-In addition to the patches in this thread there also is a git available at:
-
-	git://git.infradead.org/users/hch/scsi.git scsi-mq.2
-
-This work was sponsored by the ION division of Fusion IO.
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index a39d5ba..a64b9d3 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -295,7 +295,8 @@ void scsi_device_unbusy(struct scsi_device *sdev)
+ 	unsigned long flags;
+ 
+ 	atomic_dec(&shost->host_busy);
+-	atomic_dec(&starget->target_busy);
++	if (starget->can_queue > 0)
++		atomic_dec(&starget->target_busy);
+ 
+ 	if (unlikely(scsi_host_in_recovery(shost) &&
+ 		     (shost->host_failed || shost->host_eh_scheduled))) {
+@@ -1335,6 +1336,9 @@ static inline int scsi_target_queue_ready(struct Scsi_Host *shost,
+ 		spin_unlock_irq(shost->host_lock);
+ 	}
+ 
++	if (starget->can_queue <= 0)
++		return 1;
++
+ 	busy = atomic_inc_return(&starget->target_busy) - 1;
+ 	if (busy == 0 && atomic_read(&starget->target_blocked) > 0) {
+ 		if (atomic_dec_return(&starget->target_blocked) > 0)
+@@ -1344,7 +1348,7 @@ static inline int scsi_target_queue_ready(struct Scsi_Host *shost,
+ 				 "unblocking target at zero depth\n"));
+ 	}
+ 
+-	if (starget->can_queue > 0 && busy >= starget->can_queue)
++	if (busy >= starget->can_queue)
+ 		goto starved;
+ 	if (atomic_read(&starget->target_blocked) > 0)
+ 		goto starved;
+@@ -1356,7 +1360,8 @@ starved:
+ 	list_move_tail(&sdev->starved_entry, &shost->starved_list);
+ 	spin_unlock_irq(shost->host_lock);
+ out_dec:
+-	atomic_dec(&starget->target_busy);
++	if (starget->can_queue > 0)
++		atomic_dec(&starget->target_busy);
+ 	return 0;
+ }
+ 
+@@ -1473,7 +1478,8 @@ static void scsi_kill_request(struct request *req, struct request_queue *q)
+ 	 */
+ 	atomic_inc(&sdev->device_busy);
+ 	atomic_inc(&shost->host_busy);
+-	atomic_inc(&starget->target_busy);
++	if (starget->can_queue > 0)
++		atomic_inc(&starget->target_busy);
+ 
+ 	blk_complete_request(req);
+ }
+@@ -1642,7 +1648,8 @@ static void scsi_request_fn(struct request_queue *q)
+ 	return;
+ 
+  host_not_ready:
+-	atomic_dec(&scsi_target(sdev)->target_busy);
++	if (scsi_target(sdev)->can_queue > 0)
++		atomic_dec(&scsi_target(sdev)->target_busy);
+  not_ready:
+ 	/*
+ 	 * lock q, handle tag, requeue req, and decrement device_busy. We
+-- 
+1.7.10.4
