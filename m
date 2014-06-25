@@ -1,77 +1,60 @@
-From: Maurizio Lombardi <mlombard@redhat.com>
-Subject: Re: [PATCH] scsi: pm8001: pm80xx_hwi.c: Cleaning up variable is set
- more than once
-Date: Wed, 25 Jun 2014 18:08:16 +0200
-Message-ID: <53AAF3F0.3010700@redhat.com>
-References: <1403704907-25672-1-git-send-email-rickard_strandqvist@spectrumdigital.se> <53AAEC1A.20905@redhat.com> <CAN7X1Un3-u-Q428-s1dYk5z4P-Bb=jO-N+x1T+PLhH1fDE1MRw@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+From: Christoph Hellwig <hch@lst.de>
+Subject: scsi-mq V2
+Date: Wed, 25 Jun 2014 18:51:47 +0200
+Message-ID: <1403715121-1201-1-git-send-email-hch@lst.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAN7X1Un3-u-Q428-s1dYk5z4P-Bb=jO-N+x1T+PLhH1fDE1MRw@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Purush Gupta <purush.gupta@nutanix.com>
-Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>, xjtuwjp@gmail.com, lindar_liu@usish.com, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, Linux Kernel List <linux-kernel@vger.kernel.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Bart Van Assche <bvanassche@fusionio.com>, Robert Elliott <Elliott@hp.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi,
+This is the second post of the scsi-mq series.
 
-On 06/25/2014 05:41 PM, Purush Gupta wrote:
-> Its possible HW may require programming those fields?
+At this point the code is ready for merging and use by developers and early
+adopters.  The core blk-mq code isn't that suitable for slow devices
+yet, mostly due to the lack of an I/O scheduler, but Jens is working on it.
+Similarly there is no dm-multipath support for drivers using blk-mq yet,
+but I'm working on it.  It should also be noted that the code doesn't
+actually support multiple hardware queues or fine grained tuning of the
+blk-mq parameters yet.  All these could be added fairly easily as soon
+as low-level drivers want to make use of them.
 
-I'm looking at the code and it doesn't look so, did you see something suspicious?
+The amount of chances to the existing code are fairly small, and mostly
+speedups or cleanups that also apply to the old path as well.  Because
+of this I also haven't bothered to put it under a config option, just
+like the blk-mq core.
 
-> May be original
-> contributor of the driver should review...No offense!
+The usage of blk-mq dramatically decreases CPU usage under all workloads going
+down from 100% CPU usage that the old setup can hit easily to usually less
+than 20% for maxing out storage subsystems with 512byte reads and writes,
+and it allows to easily archive millions of IOPS.  Bart and Robert have
+helped with some very detailed measurements that they might be able to send
+in reply to this, although these usually involve significantly reworked low
+level drivers to avoid other bottle necks.
 
-I believe it requires the maintainer ACK and it takes precedence in any case, am I wrong?
+One major objection to previous iterations of this code was the simple
+replacement of the host_lock with atomic counters for the host and busy
+counters.  The host_lock avoidance on it's own already improves performance,
+and with the patch to avoid maintaining the per-target busy counter unless
+needed we now replace a lock round trip on the host_lock with just a single
+atomic increment in the submission path, and a single atomic decrement in
+completion path, which should provide benefits even for the oddest RISC
+architecture.  Longer term I'd still love to get rid of these entirely
+and use the counters in blk-mq, but due to the difference in how they
+are maintained this doesn't seem feasible as long as we still need to
+support the legacy request code path.
 
-Regards,
-Maurizio Lombardi
+Changes from V1:
+ - rebased on top of the core-for-3.17 branch, most notable the
+   scsi logging changes
+ - fixed handling of cmd_list to prevent crashes for some heavy
+   workloads
+ - fixed incorrect handling of !target->can_queue
+ - avoid scheduling a workqueue on I/O completions when no queues
+   are congested
 
-> 
-> thanks,
-> Purush
-> 
-> 
-> On Wed, Jun 25, 2014 at 8:34 AM, Maurizio Lombardi <mlombard@redhat.com>
-> wrote:
-> 
->> This one looks good to me,
->>
->> Reviewed-by: Maurizio Lombardi <mlombard@redhat.com>
->>
->> On 06/25/2014 04:01 PM, Rickard Strandqvist wrote:
->>> A struct member variable is set to different values without having used
->> in between.
->>>
->>> This was found using a static code analysis program called cppcheck
->>>
->>> Signed-off-by: Rickard Strandqvist <
->> rickard_strandqvist@spectrumdigital.se>
->>> ---
->>>  drivers/scsi/pm8001/pm80xx_hwi.c |    1 -
->>>  1 file changed, 1 deletion(-)
->>>
->>> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c
->> b/drivers/scsi/pm8001/pm80xx_hwi.c
->>> index d70587f..2698227 100644
->>> --- a/drivers/scsi/pm8001/pm80xx_hwi.c
->>> +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
->>> @@ -249,7 +249,6 @@ moreData:
->>>                               sprintf(pm8001_ha->
->>>                                       forensic_info.data_buf.direct_data,
->>>                                               "%08x ", 4);
->>> -                     pm8001_ha->forensic_info.data_buf.read_len =
->> 0xFFFFFFFF;
->>>                       pm8001_ha->forensic_info.data_buf.direct_len =  0;
->>>                       pm8001_ha->forensic_info.data_buf.direct_offset =
->> 0;
->>>                       pm8001_ha->forensic_info.data_buf.read_len = 0;
->>>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
-> 
+In addition to the patches in this thread there also is a git available at:
+
+	git://git.infradead.org/users/hch/scsi.git scsi-mq.2
+
+This work was sponsored by the ION division of Fusion IO.
