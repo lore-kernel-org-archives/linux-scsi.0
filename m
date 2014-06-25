@@ -1,66 +1,68 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [ANNOUNCE] scsi patch queue tree
-Date: Wed, 25 Jun 2014 05:41:29 -0700
-Message-ID: <20140625124129.GB19647@infradead.org>
-References: <20140519140614.GA12183@infradead.org>
- <20140611120143.GA26071@infradead.org>
- <1402496254.2523.3.camel@dabdike.int.hansenpartnership.com>
- <20140611143128.GA30904@infradead.org>
- <20140624155238.GA27828@infradead.org>
- <20140624155348.GA30669@infradead.org>
+From: Ewan Milne <emilne@redhat.com>
+Subject: Re: [PATCH 1/1] Add defines for new FC port speeds.
+Date: Wed, 25 Jun 2014 08:55:30 -0400
+Message-ID: <1403700930.6423.253.camel@localhost.localdomain>
+References: <814CB474615D9040840B5BA11313B6CB3D85763C@CMEXMB1.ad.emulex.com>
+Reply-To: emilne@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:44559 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754202AbaFYMla (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jun 2014 08:41:30 -0400
-Content-Disposition: inline
-In-Reply-To: <20140624155348.GA30669@infradead.org>
+Received: from mx1.redhat.com ([209.132.183.28]:15036 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754513AbaFYMzy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 25 Jun 2014 08:55:54 -0400
+In-Reply-To: <814CB474615D9040840B5BA11313B6CB3D85763C@CMEXMB1.ad.emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org
+To: Dick Kennedy <Dick.Kennedy@Emulex.Com>, Christoph Hellwig <hch@infradead.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-And here are the for-3.16 driver changes:
+On Fri, 2014-06-13 at 16:40 +0000, Dick Kennedy wrote:
+> These speeds are to support the next generation of FCoE port speeds.
+> Signed-off-by: rkennedy@emulex.com
+> ---
+>  drivers/scsi/scsi_transport_fc.c |    4 ++++
+>  include/scsi/scsi_transport_fc.h |    4 ++++
+>  2 files changed, 8 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+> index f80908f..454cc28 100644
+> --- a/drivers/scsi/scsi_transport_fc.c
+> +++ b/drivers/scsi/scsi_transport_fc.c
+> @@ -262,6 +262,10 @@ static const struct {
+>         { FC_PORTSPEED_8GBIT,           "8 Gbit" },
+>         { FC_PORTSPEED_16GBIT,          "16 Gbit" },
+>         { FC_PORTSPEED_32GBIT,          "32 Gbit" },
+> +       { FC_PORTSPEED_20GBIT,          "20 Gbit" },
+> +       { FC_PORTSPEED_40GBIT,          "40 Gbit" },
+> +       { FC_PORTSPEED_50GBIT,          "50 Gbit" },
+> +       { FC_PORTSPEED_100GBIT,         "100 Gbit" },
+>         { FC_PORTSPEED_NOT_NEGOTIATED,  "Not Negotiated" },
+>  };
+>  fc_bitfield_name_search(port_speed, fc_port_speed_names)
+> diff --git a/include/scsi/scsi_transport_fc.h b/include/scsi/scsi_transport_fc.h
+> index 8c79980..007a0bc 100644
+> --- a/include/scsi/scsi_transport_fc.h
+> +++ b/include/scsi/scsi_transport_fc.h
+> @@ -131,6 +131,10 @@ enum fc_vport_state {
+>  #define FC_PORTSPEED_8GBIT             0x10
+>  #define FC_PORTSPEED_16GBIT            0x20
+>  #define FC_PORTSPEED_32GBIT            0x40
+> +#define FC_PORTSPEED_20GBIT            0x80
+> +#define FC_PORTSPEED_40GBIT            0x100
+> +#define FC_PORTSPEED_50GBIT            0x200
+> +#define FC_PORTSPEED_100GBIT           0x400
+>  #define FC_PORTSPEED_NOT_NEGOTIATED    (1 << 15) /* Speed not established */
+> 
+>  /*
+> --
+> 1.6.6
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+Reviewed-by: Ewan D. Milne <emilne@redhat.com>
 
 
-----------------------------------------------------------------
-Brian King (2):
-      ibmvscsi: Abort init sequence during error recovery
-      ibmvscsi: Add memory barriers for send / receive
-
-Maurizio Lombardi (2):
-      pm8001: Fix potential null pointer dereference and memory leak.
-      bnx2fc: do not scan uninitialized lists in case of error.
-
-Neil Horman (2):
-      fc: ensure scan_work isn't active when freeing fc_rport
-      bnx2fc: Improve stats update mechanism
-
-Paolo Bonzini (2):
-      virtio-scsi: avoid cancelling uninitialized work items
-      virtio-scsi: fix various bad behavior on aborted requests
-
-Quinn Tran (1):
-      qla2xxx: Fix sparse warning in qla_target.c.
-
-Reddy, Sreekanth (1):
-      MAINTAINERS: Update LSILOGIC MPT FUSION DRIVERS (FC/SAS/SPI) maintainers Email IDs
-
-Tomas Henzl (2):
-      be2iscsi: add an missing goto in error path
-      be2iscsi: remove potential junk pointer free
-
- MAINTAINERS                       |    9 +++++----
- drivers/scsi/be2iscsi/be_main.c   |    2 ++
- drivers/scsi/be2iscsi/be_mgmt.c   |    4 +---
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c |   16 ++++------------
- drivers/scsi/bnx2fc/bnx2fc_io.c   |    2 ++
- drivers/scsi/ibmvscsi/ibmvscsi.c  |   13 ++++++++++++-
- drivers/scsi/pm8001/pm8001_init.c |   13 ++++++++++---
- drivers/scsi/qla2xxx/qla_target.c |   17 +++++++++++------
- drivers/scsi/qla2xxx/qla_target.h |    4 ++--
- drivers/scsi/scsi_transport_fc.c  |    1 +
- drivers/scsi/virtio_scsi.c        |   26 +++++++++++++++++++++++++-
- 11 files changed, 75 insertions(+), 32 deletions(-)
