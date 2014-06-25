@@ -1,106 +1,186 @@
 From: Joe Lawrence <joe.lawrence@stratus.com>
-Subject: [PATCH v2 10/11] mptfusion: combine fw_event_work and its event_data
-Date: Wed, 25 Jun 2014 17:06:42 -0400
-Message-ID: <1403730402-20324-1-git-send-email-joe.lawrence@stratus.com>
+Subject: [PATCH v2 02/11] mpt2sas: combine fw_event_work and its event_data
+Date: Wed, 25 Jun 2014 17:03:33 -0400
+Message-ID: <1403730213-19994-1-git-send-email-joe.lawrence@stratus.com>
 References: <1403730058-19872-1-git-send-email-joe.lawrence@stratus.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from p02c11o143.mxlogic.net ([208.65.144.76]:39036 "EHLO
-	p02c11o143.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754550AbaFYVIH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jun 2014 17:08:07 -0400
+Received: from p01c12o147.mxlogic.net ([208.65.145.70]:60628 "EHLO
+	p01c12o147.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754550AbaFYVIN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jun 2014 17:08:13 -0400
 In-Reply-To: <1403730058-19872-1-git-send-email-joe.lawrence@stratus.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Dan Carpenter <dan.carpenter@oracle.com>, Christoph Hellwig <hch@lst.de>, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>, Joe Lawrence <joe.lawrence@stratus.com>
+Cc: Dan Carpenter <dan.carpenter@oracle.com>, Christoph Hellwig <hch@lst.de>, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>, Joe Lawrence <joe.lawrence@stratus.com>, Christoph Hellwig <hch@infradead.org>
 
 Tack the firmware reply event_data payload to the end of its
-corresponding struct fw_event_work allocation.  Rework fw_event_work
-allocation calculations to include the event_data size where
-appropriate.
-
-This clarifies the code a bit and avoids the following smatch warnings:
-
-  drivers/message/fusion/mptsas.c:1003 mptsas_queue_device_delete()
-    error: memcpy() 'fw_event->event_data' too small (29 vs 36)
-
-  drivers/message/fusion/mptsas.c:1017 mptsas_queue_rescan() error: not
-    allocating enough data 168 vs 160
+corresponding struct fw_event_work allocation.  This matches the
+convention in the mptfusion driver and simplifies the code.
 
 Signed-off-by: Joe Lawrence <joe.lawrence@stratus.com>
 Cc: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>
 Cc: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/message/fusion/mptsas.c |   16 ++++++----------
- drivers/message/fusion/mptsas.h |    2 +-
- 2 files changed, 7 insertions(+), 11 deletions(-)
+ drivers/scsi/mpt2sas/mpt2sas_scsih.c |   52 ++++++++++++++++++++--------------
+ 1 file changed, 30 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
-index 54b51a9..5454d838 100644
---- a/drivers/message/fusion/mptsas.c
-+++ b/drivers/message/fusion/mptsas.c
-@@ -990,11 +990,10 @@ mptsas_queue_device_delete(MPT_ADAPTER *ioc,
- 	MpiEventDataSasDeviceStatusChange_t *sas_event_data)
- {
- 	struct fw_event_work *fw_event;
--	int sz;
- 
--	sz = offsetof(struct fw_event_work, event_data) +
--	    sizeof(MpiEventDataSasDeviceStatusChange_t);
--	fw_event = kzalloc(sz, GFP_ATOMIC);
-+	fw_event = kzalloc(sizeof(*fw_event) +
-+			   sizeof(MpiEventDataSasDeviceStatusChange_t),
-+			   GFP_ATOMIC);
- 	if (!fw_event) {
- 		printk(MYIOC_s_WARN_FMT "%s: failed at (line=%d)\n",
- 		    ioc->name, __func__, __LINE__);
-@@ -1011,10 +1010,8 @@ static void
- mptsas_queue_rescan(MPT_ADAPTER *ioc)
- {
- 	struct fw_event_work *fw_event;
--	int sz;
- 
--	sz = offsetof(struct fw_event_work, event_data);
--	fw_event = kzalloc(sz, GFP_ATOMIC);
-+	fw_event = kzalloc(sizeof(*fw_event), GFP_ATOMIC);
- 	if (!fw_event) {
- 		printk(MYIOC_s_WARN_FMT "%s: failed at (line=%d)\n",
- 		    ioc->name, __func__, __LINE__);
-@@ -4983,7 +4980,7 @@ static int
- mptsas_event_process(MPT_ADAPTER *ioc, EventNotificationReply_t *reply)
- {
- 	u32 event = le32_to_cpu(reply->Event);
--	int sz, event_data_sz;
-+	int event_data_sz;
- 	struct fw_event_work *fw_event;
- 	unsigned long delay;
- 
-@@ -5093,8 +5090,7 @@ mptsas_event_process(MPT_ADAPTER *ioc, EventNotificationReply_t *reply)
- 
- 	event_data_sz = ((reply->MsgLength * 4) -
- 	    offsetof(EventNotificationReply_t, Data));
--	sz = offsetof(struct fw_event_work, event_data) + event_data_sz;
--	fw_event = kzalloc(sz, GFP_ATOMIC);
-+	fw_event = kzalloc(sizeof(*fw_event) + event_data_sz, GFP_ATOMIC);
- 	if (!fw_event) {
- 		printk(MYIOC_s_WARN_FMT "%s: failed at (line=%d)\n", ioc->name,
- 		 __func__, __LINE__);
-diff --git a/drivers/message/fusion/mptsas.h b/drivers/message/fusion/mptsas.h
-index 57e86ab..c396483 100644
---- a/drivers/message/fusion/mptsas.h
-+++ b/drivers/message/fusion/mptsas.h
-@@ -110,7 +110,7 @@ struct fw_event_work {
- 	MPT_ADAPTER	*ioc;
- 	u32			event;
- 	u8			retries;
--	u8			__attribute__((aligned(4))) event_data[1];
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+index 13e49c3..e7801ff 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+@@ -173,7 +173,7 @@ struct fw_event_work {
+ 	u8			VP_ID;
+ 	u8			ignore;
+ 	u16			event;
+-	void			*event_data;
 +	char			event_data[0] __aligned(4);
  };
  
- struct mptsas_discovery_event {
+ /* raid transport support */
+@@ -2834,7 +2834,6 @@ _scsih_fw_event_free(struct MPT2SAS_ADAPTER *ioc, struct fw_event_work
+ 
+ 	spin_lock_irqsave(&ioc->fw_event_lock, flags);
+ 	list_del(&fw_event->list);
+-	kfree(fw_event->event_data);
+ 	kfree(fw_event);
+ 	spin_unlock_irqrestore(&ioc->fw_event_lock, flags);
+ }
+@@ -3520,7 +3519,8 @@ _scsih_check_topo_delete_events(struct MPT2SAS_ADAPTER *ioc,
+ 		if (fw_event->event != MPI2_EVENT_SAS_TOPOLOGY_CHANGE_LIST ||
+ 		    fw_event->ignore)
+ 			continue;
+-		local_event_data = fw_event->event_data;
++		local_event_data = (Mpi2EventDataSasTopologyChangeList_t *)
++			fw_event->event_data;
+ 		if (local_event_data->ExpStatus ==
+ 		    MPI2_EVENT_SAS_TOPO_ES_ADDED ||
+ 		    local_event_data->ExpStatus ==
+@@ -5504,7 +5504,9 @@ _scsih_sas_topology_change_event(struct MPT2SAS_ADAPTER *ioc,
+ 	u64 sas_address;
+ 	unsigned long flags;
+ 	u8 link_rate, prev_link_rate;
+-	Mpi2EventDataSasTopologyChangeList_t *event_data = fw_event->event_data;
++	Mpi2EventDataSasTopologyChangeList_t *event_data =
++		(Mpi2EventDataSasTopologyChangeList_t *)
++		fw_event->event_data;
+ 
+ #ifdef CONFIG_SCSI_MPT2SAS_LOGGING
+ 	if (ioc->logging_level & MPT_DEBUG_EVENT_WORK_TASK)
+@@ -5699,7 +5701,8 @@ _scsih_sas_device_status_change_event(struct MPT2SAS_ADAPTER *ioc,
+ 	u64 sas_address;
+ 	unsigned long flags;
+ 	Mpi2EventDataSasDeviceStatusChange_t *event_data =
+-	    fw_event->event_data;
++		(Mpi2EventDataSasDeviceStatusChange_t *)
++		fw_event->event_data;
+ 
+ #ifdef CONFIG_SCSI_MPT2SAS_LOGGING
+ 	if (ioc->logging_level & MPT_DEBUG_EVENT_WORK_TASK)
+@@ -5794,6 +5797,7 @@ _scsih_sas_enclosure_dev_status_change_event(struct MPT2SAS_ADAPTER *ioc,
+ #ifdef CONFIG_SCSI_MPT2SAS_LOGGING
+ 	if (ioc->logging_level & MPT_DEBUG_EVENT_WORK_TASK)
+ 		_scsih_sas_enclosure_dev_status_change_event_debug(ioc,
++		     (Mpi2EventDataSasEnclDevStatusChange_t *)
+ 		     fw_event->event_data);
+ #endif
+ }
+@@ -5818,7 +5822,9 @@ _scsih_sas_broadcast_primitive_event(struct MPT2SAS_ADAPTER *ioc,
+ 	u32 termination_count;
+ 	u32 query_count;
+ 	Mpi2SCSITaskManagementReply_t *mpi_reply;
+-	Mpi2EventDataSasBroadcastPrimitive_t *event_data = fw_event->event_data;
++	Mpi2EventDataSasBroadcastPrimitive_t *event_data =
++		(Mpi2EventDataSasBroadcastPrimitive_t *)
++		fw_event->event_data;
+ 	u16 ioc_status;
+ 	unsigned long flags;
+ 	int r;
+@@ -5969,7 +5975,9 @@ static void
+ _scsih_sas_discovery_event(struct MPT2SAS_ADAPTER *ioc,
+     struct fw_event_work *fw_event)
+ {
+-	Mpi2EventDataSasDiscovery_t *event_data = fw_event->event_data;
++	Mpi2EventDataSasDiscovery_t *event_data =
++		(Mpi2EventDataSasDiscovery_t *)
++		fw_event->event_data;
+ 
+ #ifdef CONFIG_SCSI_MPT2SAS_LOGGING
+ 	if (ioc->logging_level & MPT_DEBUG_EVENT_WORK_TASK) {
+@@ -6357,7 +6365,9 @@ _scsih_sas_ir_config_change_event(struct MPT2SAS_ADAPTER *ioc,
+ 	Mpi2EventIrConfigElement_t *element;
+ 	int i;
+ 	u8 foreign_config;
+-	Mpi2EventDataIrConfigChangeList_t *event_data = fw_event->event_data;
++	Mpi2EventDataIrConfigChangeList_t *event_data =
++		(Mpi2EventDataIrConfigChangeList_t *)
++		fw_event->event_data;
+ 
+ #ifdef CONFIG_SCSI_MPT2SAS_LOGGING
+ 	if ((ioc->logging_level & MPT_DEBUG_EVENT_WORK_TASK)
+@@ -6425,7 +6435,9 @@ _scsih_sas_ir_volume_event(struct MPT2SAS_ADAPTER *ioc,
+ 	u16 handle;
+ 	u32 state;
+ 	int rc;
+-	Mpi2EventDataIrVolume_t *event_data = fw_event->event_data;
++	Mpi2EventDataIrVolume_t *event_data =
++		(Mpi2EventDataIrVolume_t *)
++		fw_event->event_data;
+ 
+ 	if (ioc->shost_recovery)
+ 		return;
+@@ -6509,7 +6521,9 @@ _scsih_sas_ir_physical_disk_event(struct MPT2SAS_ADAPTER *ioc,
+ 	Mpi2ConfigReply_t mpi_reply;
+ 	Mpi2SasDevicePage0_t sas_device_pg0;
+ 	u32 ioc_status;
+-	Mpi2EventDataIrPhysicalDisk_t *event_data = fw_event->event_data;
++	Mpi2EventDataIrPhysicalDisk_t *event_data =
++		(Mpi2EventDataIrPhysicalDisk_t *)
++		fw_event->event_data;
+ 	u64 sas_address;
+ 
+ 	if (ioc->shost_recovery)
+@@ -6632,7 +6646,9 @@ static void
+ _scsih_sas_ir_operation_status_event(struct MPT2SAS_ADAPTER *ioc,
+     struct fw_event_work *fw_event)
+ {
+-	Mpi2EventDataIrOperationStatus_t *event_data = fw_event->event_data;
++	Mpi2EventDataIrOperationStatus_t *event_data =
++		(Mpi2EventDataIrOperationStatus_t *)
++		fw_event->event_data;
+ 	static struct _raid_device *raid_device;
+ 	unsigned long flags;
+ 	u16 handle;
+@@ -7592,23 +7608,15 @@ mpt2sas_scsih_event_callback(struct MPT2SAS_ADAPTER *ioc, u8 msix_index,
+ 		return;
+ 	}
+ 
+-	fw_event = kzalloc(sizeof(struct fw_event_work), GFP_ATOMIC);
+-	if (!fw_event) {
+-		printk(MPT2SAS_ERR_FMT "failure at %s:%d/%s()!\n",
+-		    ioc->name, __FILE__, __LINE__, __func__);
+-		return;
+-	}
+ 	sz = le16_to_cpu(mpi_reply->EventDataLength) * 4;
+-	fw_event->event_data = kzalloc(sz, GFP_ATOMIC);
+-	if (!fw_event->event_data) {
++	fw_event = kzalloc(sizeof(*fw_event) + sz, GFP_ATOMIC);
++	if (!fw_event) {
+ 		printk(MPT2SAS_ERR_FMT "failure at %s:%d/%s()!\n",
+ 		    ioc->name, __FILE__, __LINE__, __func__);
+-		kfree(fw_event);
+ 		return;
+ 	}
+ 
+-	memcpy(fw_event->event_data, mpi_reply->EventData,
+-	    sz);
++	memcpy(fw_event->event_data, mpi_reply->EventData, sz);
+ 	fw_event->ioc = ioc;
+ 	fw_event->VF_ID = mpi_reply->VF_ID;
+ 	fw_event->VP_ID = mpi_reply->VP_ID;
 -- 
 1.7.10.4
 
