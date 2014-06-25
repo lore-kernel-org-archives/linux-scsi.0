@@ -1,106 +1,209 @@
 From: Joe Lawrence <joe.lawrence@stratus.com>
-Subject: [PATCH v2 06/11] mptfusion: mark file-private functions as static
-Date: Wed, 25 Jun 2014 17:05:49 -0400
-Message-ID: <1403730349-20170-1-git-send-email-joe.lawrence@stratus.com>
+Subject: [PATCH v2 05/11] mpt3sas: combine fw_event_work and its event_data
+Date: Wed, 25 Jun 2014 17:05:34 -0400
+Message-ID: <1403730334-20132-1-git-send-email-joe.lawrence@stratus.com>
 References: <1403730058-19872-1-git-send-email-joe.lawrence@stratus.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from p02c12o145.mxlogic.net ([208.65.145.78]:57670 "EHLO
-	p02c12o145.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755949AbaFYVGE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jun 2014 17:06:04 -0400
+Received: from p02c12o142.mxlogic.net ([208.65.145.75]:49708 "EHLO
+	p02c12o142.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755949AbaFYVGK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jun 2014 17:06:10 -0400
 In-Reply-To: <1403730058-19872-1-git-send-email-joe.lawrence@stratus.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Dan Carpenter <dan.carpenter@oracle.com>, Christoph Hellwig <hch@lst.de>, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>, Joe Lawrence <joe.lawrence@stratus.com>
 
-Fixes the following sparse warnings:
+Tack the firmware reply event_data payload to the end of its
+corresponding struct fw_event_work allocation.  This matches the
+convention in the mptfusion driver and simplifies the code.
 
-  drivers/message/fusion/mptbase.c:7011:1: warning: symbol
-    'mpt_SoftResetHandler' was not declared. Should it be static?
+This avoids the following smatch warning:
 
-  drivers/message/fusion/mptsas.c:1578:23: warning: symbol
-    'mptsas_refreshing_device_handles' was not declared. Should it be
-    static?
-
-  drivers/message/fusion/mptsas.c:3653:24: warning: symbol
-    'mptsas_expander_add' was not declared. Should it be static?
-
-  drivers/message/fusion/mptsas.c:5327:1: warning: symbol
-    'mptsas_shutdown' was not declared. Should it be static?
-
-  drivers/message/fusion/mptspi.c:624:1: warning: symbol
-    'mptscsih_quiesce_raid' was not declared. Should it be static?
+  drivers/scsi/mpt3sas/mpt3sas_scsih.c:2519
+    mpt3sas_send_trigger_data_event() warn: possible memory leak of
+    'fw_event'
 
 Signed-off-by: Joe Lawrence <joe.lawrence@stratus.com>
 Cc: Dan Carpenter <dan.carpenter@oracle.com>
 Cc: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Cc: Christoph Hellwig <hch@lst.de>
 ---
- drivers/message/fusion/mptbase.c |    2 +-
- drivers/message/fusion/mptsas.c  |    6 +++---
- drivers/message/fusion/mptspi.c  |    2 +-
- 3 files changed, 5 insertions(+), 5 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c |   56 +++++++++++++++++++---------------
+ 1 file changed, 31 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-index ebc0af7..ea30033 100644
---- a/drivers/message/fusion/mptbase.c
-+++ b/drivers/message/fusion/mptbase.c
-@@ -7007,7 +7007,7 @@ EXPORT_SYMBOL(mpt_halt_firmware);
-  *	IOC doesn't reply to any outstanding request. This will transfer IOC
-  *	to READY state.
-  **/
--int
-+static int
- mpt_SoftResetHandler(MPT_ADAPTER *ioc, int sleepFlag)
- {
- 	int		 rc;
-diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
-index 711fcb5..54b51a9 100644
---- a/drivers/message/fusion/mptsas.c
-+++ b/drivers/message/fusion/mptsas.c
-@@ -1575,7 +1575,7 @@ mptsas_del_end_device(MPT_ADAPTER *ioc, struct mptsas_phyinfo *phy_info)
- 	mptsas_port_delete(ioc, phy_info->port_details);
- }
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index f3ee3b4..a14be8f 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -190,7 +190,7 @@ struct fw_event_work {
+ 	u8			VP_ID;
+ 	u8			ignore;
+ 	u16			event;
+-	void			*event_data;
++	char			event_data[0] __aligned(4);
+ };
  
--struct mptsas_phyinfo *
-+static struct mptsas_phyinfo *
- mptsas_refreshing_device_handles(MPT_ADAPTER *ioc,
- 	struct mptsas_devinfo *sas_device)
- {
-@@ -3648,7 +3648,7 @@ mptsas_send_expander_event(struct fw_event_work *fw_event)
-  * @handle:
-  *
-  */
--struct mptsas_portinfo *
-+static struct mptsas_portinfo *
- mptsas_expander_add(MPT_ADAPTER *ioc, u16 handle)
- {
- 	struct mptsas_portinfo buffer, *port_info;
-@@ -5321,7 +5321,7 @@ mptsas_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	return error;
- }
+ /* raid transport support */
+@@ -2492,7 +2492,6 @@ _scsih_fw_event_free(struct MPT3SAS_ADAPTER *ioc, struct fw_event_work
  
--void
-+static void
- mptsas_shutdown(struct pci_dev *pdev)
- {
- 	MPT_ADAPTER *ioc = pci_get_drvdata(pdev);
-diff --git a/drivers/message/fusion/mptspi.c b/drivers/message/fusion/mptspi.c
-index 49d1133..7b4db9a 100644
---- a/drivers/message/fusion/mptspi.c
-+++ b/drivers/message/fusion/mptspi.c
-@@ -620,7 +620,7 @@ static void mptspi_read_parameters(struct scsi_target *starget)
- 	spi_width(starget) = (nego & MPI_SCSIDEVPAGE0_NP_WIDE) ? 1 : 0;
+ 	spin_lock_irqsave(&ioc->fw_event_lock, flags);
+ 	list_del(&fw_event->list);
+-	kfree(fw_event->event_data);
+ 	kfree(fw_event);
+ 	spin_unlock_irqrestore(&ioc->fw_event_lock, flags);
  }
+@@ -2513,12 +2512,10 @@ mpt3sas_send_trigger_data_event(struct MPT3SAS_ADAPTER *ioc,
  
--int
-+static int
- mptscsih_quiesce_raid(MPT_SCSI_HOST *hd, int quiesce, u8 channel, u8 id)
+ 	if (ioc->is_driver_loading)
+ 		return;
+-	fw_event = kzalloc(sizeof(struct fw_event_work), GFP_ATOMIC);
++	fw_event = kzalloc(sizeof(*fw_event) + sizeof(*event_data),
++			   GFP_ATOMIC);
+ 	if (!fw_event)
+ 		return;
+-	fw_event->event_data = kzalloc(sizeof(*event_data), GFP_ATOMIC);
+-	if (!fw_event->event_data)
+-		return;
+ 	fw_event->event = MPT3SAS_PROCESS_TRIGGER_DIAG;
+ 	fw_event->ioc = ioc;
+ 	memcpy(fw_event->event_data, event_data, sizeof(*event_data));
+@@ -3213,7 +3210,8 @@ _scsih_check_topo_delete_events(struct MPT3SAS_ADAPTER *ioc,
+ 		if (fw_event->event != MPI2_EVENT_SAS_TOPOLOGY_CHANGE_LIST ||
+ 		    fw_event->ignore)
+ 			continue;
+-		local_event_data = fw_event->event_data;
++		local_event_data = (Mpi2EventDataSasTopologyChangeList_t *)
++				   fw_event->event_data;
+ 		if (local_event_data->ExpStatus ==
+ 		    MPI2_EVENT_SAS_TOPO_ES_ADDED ||
+ 		    local_event_data->ExpStatus ==
+@@ -5045,7 +5043,9 @@ _scsih_sas_topology_change_event(struct MPT3SAS_ADAPTER *ioc,
+ 	u64 sas_address;
+ 	unsigned long flags;
+ 	u8 link_rate, prev_link_rate;
+-	Mpi2EventDataSasTopologyChangeList_t *event_data = fw_event->event_data;
++	Mpi2EventDataSasTopologyChangeList_t *event_data =
++		(Mpi2EventDataSasTopologyChangeList_t *)
++		fw_event->event_data;
+ 
+ #ifdef CONFIG_SCSI_MPT3SAS_LOGGING
+ 	if (ioc->logging_level & MPT_DEBUG_EVENT_WORK_TASK)
+@@ -5243,7 +5243,8 @@ _scsih_sas_device_status_change_event(struct MPT3SAS_ADAPTER *ioc,
+ 	u64 sas_address;
+ 	unsigned long flags;
+ 	Mpi2EventDataSasDeviceStatusChange_t *event_data =
+-	    fw_event->event_data;
++		(Mpi2EventDataSasDeviceStatusChange_t *)
++		fw_event->event_data;
+ 
+ #ifdef CONFIG_SCSI_MPT3SAS_LOGGING
+ 	if (ioc->logging_level & MPT_DEBUG_EVENT_WORK_TASK)
+@@ -5339,6 +5340,7 @@ _scsih_sas_enclosure_dev_status_change_event(struct MPT3SAS_ADAPTER *ioc,
+ #ifdef CONFIG_SCSI_MPT3SAS_LOGGING
+ 	if (ioc->logging_level & MPT_DEBUG_EVENT_WORK_TASK)
+ 		_scsih_sas_enclosure_dev_status_change_event_debug(ioc,
++		     (Mpi2EventDataSasEnclDevStatusChange_t *)
+ 		     fw_event->event_data);
+ #endif
+ }
+@@ -5363,7 +5365,9 @@ _scsih_sas_broadcast_primitive_event(struct MPT3SAS_ADAPTER *ioc,
+ 	u32 termination_count;
+ 	u32 query_count;
+ 	Mpi2SCSITaskManagementReply_t *mpi_reply;
+-	Mpi2EventDataSasBroadcastPrimitive_t *event_data = fw_event->event_data;
++	Mpi2EventDataSasBroadcastPrimitive_t *event_data =
++		(Mpi2EventDataSasBroadcastPrimitive_t *)
++		fw_event->event_data;
+ 	u16 ioc_status;
+ 	unsigned long flags;
+ 	int r;
+@@ -5515,7 +5519,8 @@ static void
+ _scsih_sas_discovery_event(struct MPT3SAS_ADAPTER *ioc,
+ 	struct fw_event_work *fw_event)
  {
- 	MPT_ADAPTER	*ioc = hd->ioc;
+-	Mpi2EventDataSasDiscovery_t *event_data = fw_event->event_data;
++	Mpi2EventDataSasDiscovery_t *event_data =
++		(Mpi2EventDataSasDiscovery_t *) fw_event->event_data;
+ 
+ #ifdef CONFIG_SCSI_MPT3SAS_LOGGING
+ 	if (ioc->logging_level & MPT_DEBUG_EVENT_WORK_TASK) {
+@@ -6001,7 +6006,9 @@ _scsih_sas_ir_config_change_event(struct MPT3SAS_ADAPTER *ioc,
+ 	Mpi2EventIrConfigElement_t *element;
+ 	int i;
+ 	u8 foreign_config;
+-	Mpi2EventDataIrConfigChangeList_t *event_data = fw_event->event_data;
++	Mpi2EventDataIrConfigChangeList_t *event_data =
++		(Mpi2EventDataIrConfigChangeList_t *)
++		fw_event->event_data;
+ 
+ #ifdef CONFIG_SCSI_MPT3SAS_LOGGING
+ 	if (ioc->logging_level & MPT_DEBUG_EVENT_WORK_TASK)
+@@ -6071,7 +6078,8 @@ _scsih_sas_ir_volume_event(struct MPT3SAS_ADAPTER *ioc,
+ 	u16 handle;
+ 	u32 state;
+ 	int rc;
+-	Mpi2EventDataIrVolume_t *event_data = fw_event->event_data;
++	Mpi2EventDataIrVolume_t *event_data =
++		(Mpi2EventDataIrVolume_t *) fw_event->event_data;
+ 
+ 	if (ioc->shost_recovery)
+ 		return;
+@@ -6154,7 +6162,8 @@ _scsih_sas_ir_physical_disk_event(struct MPT3SAS_ADAPTER *ioc,
+ 	Mpi2ConfigReply_t mpi_reply;
+ 	Mpi2SasDevicePage0_t sas_device_pg0;
+ 	u32 ioc_status;
+-	Mpi2EventDataIrPhysicalDisk_t *event_data = fw_event->event_data;
++	Mpi2EventDataIrPhysicalDisk_t *event_data =
++		(Mpi2EventDataIrPhysicalDisk_t *) fw_event->event_data;
+ 	u64 sas_address;
+ 
+ 	if (ioc->shost_recovery)
+@@ -6274,7 +6283,9 @@ static void
+ _scsih_sas_ir_operation_status_event(struct MPT3SAS_ADAPTER *ioc,
+ 	struct fw_event_work *fw_event)
+ {
+-	Mpi2EventDataIrOperationStatus_t *event_data = fw_event->event_data;
++	Mpi2EventDataIrOperationStatus_t *event_data =
++		(Mpi2EventDataIrOperationStatus_t *)
++		fw_event->event_data;
+ 	static struct _raid_device *raid_device;
+ 	unsigned long flags;
+ 	u16 handle;
+@@ -7036,7 +7047,9 @@ _mpt3sas_fw_work(struct MPT3SAS_ADAPTER *ioc, struct fw_event_work *fw_event)
+ 
+ 	switch (fw_event->event) {
+ 	case MPT3SAS_PROCESS_TRIGGER_DIAG:
+-		mpt3sas_process_trigger_data(ioc, fw_event->event_data);
++		mpt3sas_process_trigger_data(ioc,
++			(struct SL_WH_TRIGGERS_EVENT_DATA_T *)
++			fw_event->event_data);
+ 		break;
+ 	case MPT3SAS_REMOVE_UNRESPONDING_DEVICES:
+ 		while (scsi_host_in_recovery(ioc->shost) || ioc->shost_recovery)
+@@ -7194,18 +7207,11 @@ mpt3sas_scsih_event_callback(struct MPT3SAS_ADAPTER *ioc, u8 msix_index,
+ 		return 1;
+ 	}
+ 
+-	fw_event = kzalloc(sizeof(struct fw_event_work), GFP_ATOMIC);
+-	if (!fw_event) {
+-		pr_err(MPT3SAS_FMT "failure at %s:%d/%s()!\n",
+-		    ioc->name, __FILE__, __LINE__, __func__);
+-		return 1;
+-	}
+ 	sz = le16_to_cpu(mpi_reply->EventDataLength) * 4;
+-	fw_event->event_data = kzalloc(sz, GFP_ATOMIC);
+-	if (!fw_event->event_data) {
++	fw_event = kzalloc(sizeof(*fw_event) + sz, GFP_ATOMIC);
++	if (!fw_event) {
+ 		pr_err(MPT3SAS_FMT "failure at %s:%d/%s()!\n",
+ 		    ioc->name, __FILE__, __LINE__, __func__);
+-		kfree(fw_event);
+ 		return 1;
+ 	}
+ 
 -- 
 1.7.10.4
 
