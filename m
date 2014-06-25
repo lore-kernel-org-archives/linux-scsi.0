@@ -1,50 +1,73 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 0/4] ARM randconfig fixes for SCSI
-Date: Wed, 25 Jun 2014 13:04:57 +0200
-Message-ID: <20140625110457.GD19181@infradead.org>
-References: <1402003789-1990031-1-git-send-email-arnd@arndb.de>
+Subject: Re: [PATCH V2] scsi_lib: removes ambiguous "Unhandled error code"
+ messages.
+Date: Wed, 25 Jun 2014 13:06:32 +0200
+Message-ID: <20140625110632.GE19181@infradead.org>
+References: <1402042235-7246-1-git-send-email-mlombard@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:57858 "EHLO
+Received: from casper.infradead.org ([85.118.1.10]:57870 "EHLO
 	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751413AbaFYLCm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jun 2014 07:02:42 -0400
+	with ESMTP id S1753637AbaFYLEP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jun 2014 07:04:15 -0400
 Content-Disposition: inline
-In-Reply-To: <1402003789-1990031-1-git-send-email-arnd@arndb.de>
+In-Reply-To: <1402042235-7246-1-git-send-email-mlombard@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Matthew Wilcox <matthew@wil.cx>, Finn Thain <fthain@telegraphics.com.au>, Michael Schmitz <schmitzmic@gmail.com>
+To: Maurizio Lombardi <mlombard@redhat.com>
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, hch@infradead.org
 
-Can I get another set of reviews for these?
+Can I get another review for this one?
 
-On Thu, Jun 05, 2014 at 11:29:45PM +0200, Arnd Bergmann wrote:
-> Hi James,
+On Fri, Jun 06, 2014 at 10:10:35AM +0200, Maurizio Lombardi wrote:
+> During IO with fabric faults, one generally sees several "Unhandled error
+> code" messages in the syslog as shown below:
 > 
-> These are some fixes for ancient randconfig build bugs I
-> ran into on ARM. Clearly none of these are urgent, but it
-> would be nice to have them merged for 3.17 if they look
-> good to you.
+> sd 4:0:6:2: [sdbw] Unhandled error code
+> sd 4:0:6:2: [sdbw] Result: hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK
+> sd 4:0:6:2: [sdbw] CDB: Read(10): 28 00 00 00 00 00 00 00 08 00
+> end_request: I/O error, dev sdbw, sector 0
 > 
-> Arnd Bergmann (4):
->   [SCSI] Don't build AdvanSys on ARM
->   [SCSI] pas16: don't call free_dma()
->   [SCSI] qlogicfas: don't call free_dma()
->   [SCSI] NCR53c406a: don't call free_dma() by default
+> This comes from scsi_io_completion (in scsi_lib.c) while handling error
+> codes other than DID_RESET or not deferred sense keys i.e. this is
+> actually handled by the SCSI mid layer. But what gets displayed here is
+> "Unhandled error code" which is quite misleading as it indicates
+> something that is not addressed by the mid layer.
 > 
->  drivers/scsi/Kconfig      | 2 +-
->  drivers/scsi/NCR53c406a.c | 2 +-
->  drivers/scsi/pas16.c      | 2 --
->  drivers/scsi/qlogicfas.c  | 2 --
->  4 files changed, 2 insertions(+), 6 deletions(-)
+> This patch removes "Unhandled error code" and replaces "Unhandled sense code"
+> with "Failing command with sense code:".
 > 
+> 
+> Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
+> ---
+>  drivers/scsi/scsi_lib.c | 6 ++----
+>  1 file changed, 2 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 9db097a..b3c25cd 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -955,14 +955,12 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+>  			action = ACTION_FAIL;
+>  			break;
+>  		default:
+> -			description = "Unhandled sense code";
+> +			description = "Failing command with sense code:";
+>  			action = ACTION_FAIL;
+>  			break;
+>  		}
+> -	} else {
+> -		description = "Unhandled error code";
+> +	} else
+>  		action = ACTION_FAIL;
+> -	}
+>  
+>  	if (action != ACTION_FAIL &&
+>  	    time_before(cmd->jiffies_at_alloc + wait_for, jiffies)) {
 > -- 
-> 1.8.3.2
+> Maurizio Lombardi
 > 
-> Cc: Matthew Wilcox <matthew@wil.cx>
-> Cc: Finn Thain <fthain@telegraphics.com.au>
-> Cc: Michael Schmitz <schmitzmic@gmail.com>
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
 > the body of a message to majordomo@vger.kernel.org
