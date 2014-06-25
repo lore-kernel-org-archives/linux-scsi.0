@@ -1,40 +1,80 @@
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-Subject: [PATCH] scsi: bnx2i: bnx2i_iscsi.c:  Cleaning up variable is set more than once
-Date: Wed, 25 Jun 2014 16:04:19 +0200
-Message-ID: <1403705059-25834-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+From: Joe Lawrence <joe.lawrence@stratus.com>
+Subject: Re: [PATCH 0/7] mptfusion static checker fixups
+Date: Wed, 25 Jun 2014 10:18:11 -0400
+Message-ID: <20140625101811.44a7313a@jlaw-desktop.mno.stratus.com>
+References: <1401900589-19672-1-git-send-email-joe.lawrence@stratus.com>
+	<20140625110150.GA19181@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:43564 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756852AbaFYODV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jun 2014 10:03:21 -0400
-Received: by mail-wi0-f173.google.com with SMTP id cc10so7971945wib.12
-        for <linux-scsi@vger.kernel.org>; Wed, 25 Jun 2014 07:03:20 -0700 (PDT)
+Received: from p02c11o147.mxlogic.net ([208.65.144.80]:35250 "EHLO
+	p02c11o147.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757159AbaFYOSP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jun 2014 10:18:15 -0400
+In-Reply-To: <20140625110150.GA19181@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Eddie Wai <eddie.wai@broadcom.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org, Dan Carpenter <dan.carpenter@oracle.com>, Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
 
-A struct member variable is set to different values without having used in between.
+Hi Christoph, Sreekanth,
 
-This was found using a static code analysis program called cppcheck
+Would it be easier to combine this set with the mpt2/mpt3 changes and
+repost a V2?  There were a few changes Christoph request in each set,
+so I can post those up later today.
 
-Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
----
- drivers/scsi/bnx2i/bnx2i_iscsi.c |    1 -
- 1 file changed, 1 deletion(-)
+-- Joe
 
-diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-index 166543f..fdf7bc3 100644
---- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
-+++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-@@ -1643,7 +1643,6 @@ static void bnx2i_conn_get_stats(struct iscsi_cls_conn *cls_conn,
- 	stats->r2t_pdus = conn->r2t_pdus_cnt;
- 	stats->tmfcmd_pdus = conn->tmfcmd_pdus_cnt;
- 	stats->tmfrsp_pdus = conn->tmfrsp_pdus_cnt;
--	stats->custom_length = 3;
- 	strcpy(stats->custom[2].desc, "eh_abort_cnt");
- 	stats->custom[2].value = conn->eh_abort_cnt;
- 	stats->digest_err = 0;
--- 
-1.7.10.4
+On Wed, 25 Jun 2014 13:01:50 +0200
+Christoph Hellwig <hch@infradead.org> wrote:
+
+> Can I get another review for this series?
+> 
+> On Wed, Jun 04, 2014 at 12:49:42PM -0400, Joe Lawrence wrote:
+> > While reviewing the mpt2/mpt3 static checker fixup patchset, Christoph
+> > inquired about mptfusion.  None of the sparse / smatch warnings from the
+> > earlier patchset directly apply to fusion, but there were a few easy to
+> > fix warnings (compile tested only).
+> > 
+> > The patchset is ordered from the smallest/easiest change up to the last
+> > three, which are bit more involved and should be reviewed by LSI,
+> > especially the last one "mptfusion: tweak null pointer checks".  See the
+> > commentary in those patches after the signed-off-by line.
+> > 
+> > Cc: Christoph Hellwig <hch@infradead.org>
+> > Cc: Dan Carpenter <dan.carpenter@oracle.com>
+> > Cc: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
+> > 
+> > Joe Lawrence (7):
+> >   mptfusion: mark file-private functions as static
+> >   mptfusion: remove redundant kfree checks
+> >   mptfusion: initChainBuffers should return errno
+> >   mptfusion: zero kernel-space source of copy_to_user
+> >   mptfusion: make adapter prod_name[] a pointer
+> >   mptfusion: combine fw_event_work and its event_data
+> >   mptfusion: tweak null pointer checks
+> > 
+> >  drivers/message/fusion/mptbase.c  |   29 +++++++++----------
+> >  drivers/message/fusion/mptbase.h  |    2 +-
+> >  drivers/message/fusion/mptctl.c   |    2 +-
+> >  drivers/message/fusion/mptfc.c    |    3 +-
+> >  drivers/message/fusion/mptsas.c   |   57 +++++++++++++++++++------------------
+> >  drivers/message/fusion/mptsas.h   |    2 +-
+> >  drivers/message/fusion/mptscsih.c |    7 +++--
+> >  drivers/message/fusion/mptspi.c   |    5 ++--
+> >  8 files changed, 52 insertions(+), 55 deletions(-)
+> > 
+> > -- 
+> > 1.7.10.4
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> ---end quoted text---
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
