@@ -1,67 +1,54 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: [PATCH] sg: limit maximum cdb size to 252 bytes
-Date: Wed, 25 Jun 2014 13:05:42 -0400
-Message-ID: <53AB0166.8060905@interlog.com>
-Reply-To: dgilbert@interlog.com
+From: Eddie Wai <eddie.wai@broadcom.com>
+Subject: Re: [PATCH] scsi: bnx2i: bnx2i_iscsi.c:  Cleaning up variable is
+ set more than once
+Date: Wed, 25 Jun 2014 10:13:21 -0700
+Message-ID: <1403716401.10214.2.camel@lbirv-waie-lx2.broadcom.com>
+References: <1403705059-25834-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+	 <53AADC16.9080301@redhat.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------080307080200080506010405"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:55768 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757033AbaFYRFs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 Jun 2014 13:05:48 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <53AADC16.9080301@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Maurizio Lombardi <mlombard@redhat.com>
+Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI development list <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
-Cc: Boaz Harrosh <bharrosh@panasas.com>
 
-This is a multi-part message in MIME format.
---------------080307080200080506010405
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-
-Boaz Harrosh commented on the "[PATCH v5] sg: relax 16
-byte cdb restriction" thread that SCSI variable length
-commands (which are all SCSI commands greater than 16
-bytes long) must themselves be a multiple of 4 bytes
-long.
-
-ChangeLog
-   - limit the maximum cdb size permitted by the sg
-     v3 interface to 252 bytes. Commands that large
-     are called "variable length" and their length
-     needs to be a multiple of 4.
-
-Original patch:
-   Reviewed-by: Boaz Harrosh <boaz@electrozaur.com>
-
-Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
-
-
---------------080307080200080506010405
-Content-Type: text/x-patch;
- name="sg_cdb252.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="sg_cdb252.patch"
-
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index b6d183a..2e01a9d 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -74,9 +74,10 @@ static void sg_proc_cleanup(void);
- #define SG_MAX_DEVS 32768
- 
- /* SG_MAX_CDB_SIZE should be 260 (spc4r37 section 3.1.30) however the type
-- * of sg_io_hdr::cmd_len can only represent 255
-+ * of sg_io_hdr::cmd_len can only represent 255. All SCSI commands greater
-+ * than 16 bytes are "variable length" whose length is a multiple of 4
-  */
--#define SG_MAX_CDB_SIZE 255
-+#define SG_MAX_CDB_SIZE 252
- 
- /*
-  * Suppose you want to calculate the formula muldiv(x,m,d)=int(x * m / d)
-
---------------080307080200080506010405--
+On Wed, 2014-06-25 at 16:26 +0200, Maurizio Lombardi wrote:
+> Hi,
+> 
+> On 06/25/2014 04:04 PM, Rickard Strandqvist wrote:
+> > A struct member variable is set to different values without having used in between.
+> > 
+> > This was found using a static code analysis program called cppcheck
+> > 
+> > Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+> > ---
+> >  drivers/scsi/bnx2i/bnx2i_iscsi.c |    1 -
+> >  1 file changed, 1 deletion(-)
+> > 
+> > diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+> > index 166543f..fdf7bc3 100644
+> > --- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
+> > +++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+> > @@ -1643,7 +1643,6 @@ static void bnx2i_conn_get_stats(struct iscsi_cls_conn *cls_conn,
+> >  	stats->r2t_pdus = conn->r2t_pdus_cnt;
+> >  	stats->tmfcmd_pdus = conn->tmfcmd_pdus_cnt;
+> >  	stats->tmfrsp_pdus = conn->tmfrsp_pdus_cnt;
+> > -	stats->custom_length = 3;
+> >  	strcpy(stats->custom[2].desc, "eh_abort_cnt");
+> >  	stats->custom[2].value = conn->eh_abort_cnt;
+> >  	stats->digest_err = 0;
+> > 
+> 
+> Eddie,
+> 
+> The code modifies the content of stats->custom[2], so shouldn't custom_length be set to 3?
+> Why is it set to zero at the end of this function?
+Nice find.  This is literally a day1 bug.  Yes, I agree that the
+custom_length should be left at 3.  Otherwise, the nlmsg replied back to
+the application would not have the custom message.  Thanks.
+> 
+> Regards,
+> Maurizio Lombardi
