@@ -1,49 +1,52 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2 1/3] scsi_cmnd: Introduce scsi_transfer_length helper
-Date: Wed, 25 Jun 2014 02:17:23 -0700
-Message-ID: <20140625091723.GB5360@infradead.org>
-References: <1402477799-24610-2-git-send-email-sagig@mellanox.com>
- <53A920B2.9060503@cs.wisc.edu>
- <yq1mwd2h3ju.fsf@sermon.lab.mkp.net>
- <28678EBD-1AE9-48F9-B9E2-E6A61B042BB1@cs.wisc.edu>
- <53A9A702.8050503@dev.mellanox.co.il>
- <20140624163040.GA11499@infradead.org>
- <53A9AEB8.4040104@cs.wisc.edu>
- <53A9B0A0.6000103@cs.wisc.edu>
- <53AA42E6.3090101@cs.wisc.edu>
- <53AA8CF7.8050102@dev.mellanox.co.il>
+From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+Subject: RE: mptNsas MSI-X fixes
+Date: Wed, 25 Jun 2014 14:40:32 +0530
+Message-ID: <26e11d455c662ede21a32d8dfe24e0f3@mail.gmail.com>
+References: <1388794616-23560-1-git-send-email-martin.petersen@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <target-devel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <53AA8CF7.8050102@dev.mellanox.co.il>
-Sender: target-devel-owner@vger.kernel.org
-To: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagig@mellanox.com>, nab@linux-iscsi.org, roland@kernel.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-rdma@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from exprod7og120.obsmtp.com ([64.18.2.18]:50812 "EHLO
+	exprod7og120.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752361AbaFYJWQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jun 2014 05:22:16 -0400
+Received: by mail-qa0-f45.google.com with SMTP id v10so1291612qac.32
+        for <linux-scsi@vger.kernel.org>; Wed, 25 Jun 2014 02:22:14 -0700 (PDT)
+In-Reply-To: <1388794616-23560-1-git-send-email-martin.petersen@oracle.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: sreekanth.reddy@avagotech.com
 
-> >Sagi's patch was not correct because scsi_in was hardcoded to the transfer
-> >len when bidi was used.
-> 
-> Right, should have condition that in the direction. something like:
-> 
-> transfer_length = sc->sc_data_direction == DMA_TO_DEVICE ?
-> scsi_out(sc)->length : scsi_in(sc)->length;
-> 
-> would probably hit that in testing before sending out a patch.
+Hi James,
 
-We could also pass the dma direction indeed.  Compared to my suggestion
-of passing thr scsi_data_buffer this makes life a lot easier for drivers
-that don't try to support the bidi madness.
+This Patch set seems to be fine. Please consider this patch set as
+Acked-by:  Sreekanth Reddy <Sreekanth.reddy@avagotech.com>
 
-> >There is one issue/question though. Is this working ok with LIO? I left
-> >scsi_transfer_length() with the same behavior as before assuming LIO was
-> >ok and only the iscsi initiator had suffered a regression.
-> 
-> I think that if we go with scsi_in/out_transfer_length then
-> scsi_transfer_length should be removed
-> and LIO can be modified to use scsi_in/out_transfer_length.
-
-drivers/target/loopback/tcm_loop.c doesn't (and absolutely shouldn't!)
-use scsi_transfer_length in target context, it uses it in it's initiator
-side in the same way as iscsi, so the same semantics apply.
+Regards,
+Sreekanth
+>-----Original Message-----
+>From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+>owner@vger.kernel.org] On Behalf Of Martin K. Petersen
+>Sent: Saturday, January 04, 2014 5:47 AM
+>To: linux-scsi@vger.kernel.org
+>Subject: mptNsas MSI-X fixes
+>
+>We found a couple of MSI-X related problems with mptNsas on very large
+>systems. The patches below contain fixes for mpt2sas and mpt3sas
+>respectively.
+>
+> drivers/scsi/mpt2sas/mpt2sas_base.c | 64 ++++++++++++++++++++----------
+>------------------------
+> drivers/scsi/mpt3sas/mpt3sas_base.c | 73 ++++++++++++++++++-------------
+>-------------------------------
+> 2 files changed, 44 insertions(+), 93 deletions(-)
+>
+>--
+>Martin K. Petersen	Oracle Linux Engineering
+>
+>--
+>To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body
+>of a message to majordomo@vger.kernel.org More majordomo info at
+>http://vger.kernel.org/majordomo-info.html
