@@ -1,74 +1,169 @@
 From: Tomas Henzl <thenzl@redhat.com>
-Subject: [PATCH 3/4] pm8001: add a new spinlock to protect the CCB
-Date: Thu, 26 Jun 2014 17:17:35 +0200
-Message-ID: <1403795856-4300-3-git-send-email-thenzl@redhat.com>
+Subject: [PATCH 1/4] pm8001: clean bitmap management functions
+Date: Thu, 26 Jun 2014 17:17:33 +0200
+Message-ID: <1403795856-4300-1-git-send-email-thenzl@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33584 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:41675 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757041AbaFZPSE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1755137AbaFZPSE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Thu, 26 Jun 2014 11:18:04 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: AnandKumar.Santhanam@pmcs.com, Vasanthalakshmi.Tharmarajan@pmcs.com, Suresh.Thiagarajan@pmcs.com, Viswas.G@pmcs.com, Tomas Henzl <thenzl@redhat.com>
 
-Patch adds a new spinlock to protect the ccb management.
-It may happen that concurrent threads become the same tag value 
-from the 'alloc' function', the spinlock prevents this situation.
+In the driver two different functions are used to free the same resource,
+this patch makes the code easier to read. In addittion to that, some
+minor optimisations were made too.
 
 Signed-off-by: Tomas Henzl <thenzl@redhat.com>
 ---
- drivers/scsi/pm8001/pm8001_init.c | 1 +
- drivers/scsi/pm8001/pm8001_sas.c  | 7 ++++++-
- drivers/scsi/pm8001/pm8001_sas.h  | 1 +
- 3 files changed, 8 insertions(+), 1 deletion(-)
+ drivers/scsi/pm8001/pm8001_hwi.c | 10 +++++-----
+ drivers/scsi/pm8001/pm8001_sas.c | 31 +++++++------------------------
+ drivers/scsi/pm8001/pm8001_sas.h |  1 -
+ 3 files changed, 12 insertions(+), 30 deletions(-)
 
-diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-index c4f31b21..56b61e5 100644
---- a/drivers/scsi/pm8001/pm8001_init.c
-+++ b/drivers/scsi/pm8001/pm8001_init.c
-@@ -246,6 +246,7 @@ static int pm8001_alloc(struct pm8001_hba_info *pm8001_ha,
- {
- 	int i;
- 	spin_lock_init(&pm8001_ha->lock);
-+	spin_lock_init(&pm8001_ha->bitmap_lock);
- 	PM8001_INIT_DBG(pm8001_ha,
- 		pm8001_printk("pm8001_alloc: PHY:%x\n",
- 				pm8001_ha->chip->n_phy));
+diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
+index a97be01..9294379 100644
+--- a/drivers/scsi/pm8001/pm8001_hwi.c
++++ b/drivers/scsi/pm8001/pm8001_hwi.c
+@@ -3100,7 +3100,7 @@ void pm8001_mpi_set_dev_state_resp(struct pm8001_hba_info *pm8001_ha,
+ 	complete(pm8001_dev->setds_completion);
+ 	ccb->task = NULL;
+ 	ccb->ccb_tag = 0xFFFFFFFF;
+-	pm8001_ccb_free(pm8001_ha, tag);
++	pm8001_tag_free(pm8001_ha, tag);
+ }
+ 
+ void pm8001_mpi_set_nvmd_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
+@@ -3119,7 +3119,7 @@ void pm8001_mpi_set_nvmd_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ 	}
+ 	ccb->task = NULL;
+ 	ccb->ccb_tag = 0xFFFFFFFF;
+-	pm8001_ccb_free(pm8001_ha, tag);
++	pm8001_tag_free(pm8001_ha, tag);
+ }
+ 
+ void
+@@ -3181,7 +3181,7 @@ pm8001_mpi_get_nvmd_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ 	complete(pm8001_ha->nvmd_completion);
+ 	ccb->task = NULL;
+ 	ccb->ccb_tag = 0xFFFFFFFF;
+-	pm8001_ccb_free(pm8001_ha, tag);
++	pm8001_tag_free(pm8001_ha, tag);
+ }
+ 
+ int pm8001_mpi_local_phy_ctl(struct pm8001_hba_info *pm8001_ha, void *piomb)
+@@ -3588,7 +3588,7 @@ int pm8001_mpi_reg_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ 	complete(pm8001_dev->dcompletion);
+ 	ccb->task = NULL;
+ 	ccb->ccb_tag = 0xFFFFFFFF;
+-	pm8001_ccb_free(pm8001_ha, htag);
++	pm8001_tag_free(pm8001_ha, htag);
+ 	return 0;
+ }
+ 
+@@ -3672,7 +3672,7 @@ int pm8001_mpi_fw_flash_update_resp(struct pm8001_hba_info *pm8001_ha,
+ 	complete(pm8001_ha->nvmd_completion);
+ 	ccb->task = NULL;
+ 	ccb->ccb_tag = 0xFFFFFFFF;
+-	pm8001_ccb_free(pm8001_ha, tag);
++	pm8001_tag_free(pm8001_ha, tag);
+ 	return 0;
+ }
+ 
 diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
-index be55859..34cea82 100644
+index 8a44bc9..be55859 100644
 --- a/drivers/scsi/pm8001/pm8001_sas.c
 +++ b/drivers/scsi/pm8001/pm8001_sas.c
-@@ -77,11 +77,16 @@ inline int pm8001_tag_alloc(struct pm8001_hba_info *pm8001_ha, u32 *tag_out)
- {
- 	unsigned int tag;
- 	void *bitmap = pm8001_ha->tags;
-+	unsigned long flags;
+@@ -58,25 +58,14 @@ static int pm8001_find_tag(struct sas_task *task, u32 *tag)
+ }
  
-+	spin_lock_irqsave(&pm8001_ha->bitmap_lock, flags);
- 	tag = find_first_zero_bit(bitmap, pm8001_ha->tags_num);
--	if (tag >= pm8001_ha->tags_num)
-+	if (tag >= pm8001_ha->tags_num) {
-+		spin_unlock_irqrestore(&pm8001_ha->bitmap_lock, flags);
+ /**
+-  * pm8001_tag_clear - clear the tags bitmap
++  * pm8001_tag_free - free the no more needed tag
+   * @pm8001_ha: our hba struct
+   * @tag: the found tag associated with the task
+   */
+-static void pm8001_tag_clear(struct pm8001_hba_info *pm8001_ha, u32 tag)
+-{
+-	void *bitmap = pm8001_ha->tags;
+-	clear_bit(tag, bitmap);
+-}
+-
+ void pm8001_tag_free(struct pm8001_hba_info *pm8001_ha, u32 tag)
+ {
+-	pm8001_tag_clear(pm8001_ha, tag);
+-}
+-
+-static void pm8001_tag_set(struct pm8001_hba_info *pm8001_ha, u32 tag)
+-{
+ 	void *bitmap = pm8001_ha->tags;
+-	set_bit(tag, bitmap);
++	clear_bit(tag, bitmap);
+ }
+ 
+ /**
+@@ -86,14 +75,13 @@ static void pm8001_tag_set(struct pm8001_hba_info *pm8001_ha, u32 tag)
+   */
+ inline int pm8001_tag_alloc(struct pm8001_hba_info *pm8001_ha, u32 *tag_out)
+ {
+-	unsigned int index, tag;
++	unsigned int tag;
+ 	void *bitmap = pm8001_ha->tags;
+ 
+-	index = find_first_zero_bit(bitmap, pm8001_ha->tags_num);
+-	tag = index;
++	tag = find_first_zero_bit(bitmap, pm8001_ha->tags_num);
+ 	if (tag >= pm8001_ha->tags_num)
  		return -SAS_QUEUE_FULL;
-+	}
- 	set_bit(tag, bitmap);
-+	spin_unlock_irqrestore(&pm8001_ha->bitmap_lock, flags);
+-	pm8001_tag_set(pm8001_ha, tag);
++	set_bit(tag, bitmap);
  	*tag_out = tag;
  	return 0;
  }
+@@ -102,7 +90,7 @@ void pm8001_tag_init(struct pm8001_hba_info *pm8001_ha)
+ {
+ 	int i;
+ 	for (i = 0; i < pm8001_ha->tags_num; ++i)
+-		pm8001_tag_clear(pm8001_ha, i);
++		pm8001_tag_free(pm8001_ha, i);
+ }
+ 
+  /**
+@@ -501,11 +489,6 @@ int pm8001_queue_command(struct sas_task *task, const int num,
+ 	return pm8001_task_exec(task, num, gfp_flags, 0, NULL);
+ }
+ 
+-void pm8001_ccb_free(struct pm8001_hba_info *pm8001_ha, u32 ccb_idx)
+-{
+-	pm8001_tag_clear(pm8001_ha, ccb_idx);
+-}
+-
+ /**
+   * pm8001_ccb_task_free - free the sg for ssp and smp command, free the ccb.
+   * @pm8001_ha: our hba card information
+@@ -542,7 +525,7 @@ void pm8001_ccb_task_free(struct pm8001_hba_info *pm8001_ha,
+ 	ccb->task = NULL;
+ 	ccb->ccb_tag = 0xFFFFFFFF;
+ 	ccb->open_retry = 0;
+-	pm8001_ccb_free(pm8001_ha, ccb_idx);
++	pm8001_tag_free(pm8001_ha, ccb_idx);
+ }
+ 
+  /**
 diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
-index 14106ad..f6b2ac5 100644
+index 1ee06f2..14106ad 100644
 --- a/drivers/scsi/pm8001/pm8001_sas.h
 +++ b/drivers/scsi/pm8001/pm8001_sas.h
-@@ -475,6 +475,7 @@ struct pm8001_hba_info {
- 	struct list_head	list;
- 	unsigned long		flags;
- 	spinlock_t		lock;/* host-wide lock */
-+	spinlock_t		bitmap_lock;
- 	struct pci_dev		*pdev;/* our device */
- 	struct device		*dev;
- 	struct pm8001_hba_memspace io_mem[6];
+@@ -616,7 +616,6 @@ extern struct workqueue_struct *pm8001_wq;
+ int pm8001_tag_alloc(struct pm8001_hba_info *pm8001_ha, u32 *tag_out);
+ void pm8001_tag_init(struct pm8001_hba_info *pm8001_ha);
+ u32 pm8001_get_ncq_tag(struct sas_task *task, u32 *tag);
+-void pm8001_ccb_free(struct pm8001_hba_info *pm8001_ha, u32 ccb_idx);
+ void pm8001_ccb_task_free(struct pm8001_hba_info *pm8001_ha,
+ 	struct sas_task *task, struct pm8001_ccb_info *ccb, u32 ccb_idx);
+ int pm8001_phy_control(struct asd_sas_phy *sas_phy, enum phy_func func,
 -- 
 1.8.3.1
 
