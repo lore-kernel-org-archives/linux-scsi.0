@@ -1,57 +1,28 @@
-From: scameron@beardog.cce.hp.com
-Subject: Re: [PATCH] [SCSI] hpsa: fix non-x86 builds
-Date: Thu, 26 Jun 2014 09:34:45 -0500
-Message-ID: <20140626143445.GO25166@beardog.cce.hp.com>
-References: <6003317.KPlAy1USkq@wuerfel>
+From: loody <miloody@gmail.com>
+Subject: how to firing device event when SD card inserting usb card reader
+Date: Thu, 26 Jun 2014 22:47:27 +0800
+Message-ID: <CANudz+tSTQLOQpNx71+h+cCUnoEshiCyDe+e=9E_ajvoj3a8Dg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <6003317.KPlAy1USkq@wuerfel>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-scsi@vger.kernel.org, jbottomley@parallels.com, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, scameron@beardog.cce.hp.com
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-we0-f178.google.com ([74.125.82.178]:51588 "EHLO
+	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753430AbaFZOrd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Jun 2014 10:47:33 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>
 
-On Thu, Jun 26, 2014 at 03:44:52PM +0200, Arnd Bergmann wrote:
-> commit 28e134464734 "[SCSI] hpsa: enable unit attention reporting"
-> turns on unit attention notifications, but got the change wrong for
-> all architectures other than x86, which now store an uninitialized
-> value into the device register.
-> 
-> Gcc helpfully warns about this:
-> 
-> ../drivers/scsi/hpsa.c: In function 'hpsa_set_driver_support_bits':
-> ../drivers/scsi/hpsa.c:6373:17: warning: 'driver_support' is used uninitialized in this function [-Wuninitialized]
->   driver_support |= ENABLE_UNIT_ATTN;
->                  ^
-> 
-> This moves the #ifdef so only the prefetch-enable is conditional
-> on x86, not also reading the initial register contents. 
-> 
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> Fixes: 28e134464734 "[SCSI] hpsa: enable unit attention reporting"
-> Cc: Stephen M. Cameron <scameron@beardog.cce.hp.com>
-> Cc: stable@vger.kernel.org # v3.14+
-> 
-> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> index 31184b3..d0e487c 100644
-> --- a/drivers/scsi/hpsa.c
-> +++ b/drivers/scsi/hpsa.c
-> @@ -6365,9 +6365,9 @@ static inline void hpsa_set_driver_support_bits(struct ctlr_info *h)
->  {
->  	u32 driver_support;
->  
-> -#ifdef CONFIG_X86
-> -	/* Need to enable prefetch in the SCSI core for 6400 in x86 */
->  	driver_support = readl(&(h->cfgtable->driver_support));
-> +	/* Need to enable prefetch in the SCSI core for 6400 in x86 */
-> +#ifdef CONFIG_X86
->  	driver_support |= ENABLE_SCSI_PREFETCH;
->  #endif
->  	driver_support |= ENABLE_UNIT_ATTN;
+hi all:
+I try below flow:
+1. plug in usb card reader
+2. wait 2 seconds
+3. plug in SD card
 
-Thanks.
+on ubuntu PC system, the udev can get SD plug in event
+but on my embedded system, there is no udev plug event when SD plug in.
 
--- steve
+Is this issue related to media change command?
+if so, should I enable kernel config or do anything in user mode program?
+
+thanks for your help in advance,
