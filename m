@@ -1,12 +1,12 @@
 From: Tomas Henzl <thenzl@redhat.com>
-Subject: [PATCH 2/4] pm8001: honor return value
-Date: Thu, 26 Jun 2014 17:17:34 +0200
-Message-ID: <1403795856-4300-2-git-send-email-thenzl@redhat.com>
+Subject: [PATCH 4/4] pm8001: more fixes to honor return value
+Date: Thu, 26 Jun 2014 17:17:36 +0200
+Message-ID: <1403795856-4300-4-git-send-email-thenzl@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:30588 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:1906 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756906AbaFZPSE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 Jun 2014 11:18:04 -0400
+	id S1757139AbaFZPSH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 26 Jun 2014 11:18:07 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
@@ -14,230 +14,92 @@ Cc: AnandKumar.Santhanam@pmcs.com, Vasanthalakshmi.Tharmarajan@pmcs.com, Suresh.
 
 The driver ignores the return value in a lot of places, fix
 it at least somewhere (and release the resources in such cases),
-to avoid that bad things happen.
+to avoid that bad things happen. 
+A memory leak is fixed too.
 
 Signed-off-by: Tomas Henzl <thenzl@redhat.com>
 ---
- drivers/scsi/pm8001/pm8001_hwi.c | 27 +++++++++++++++++++-------
- drivers/scsi/pm8001/pm80xx_hwi.c | 41 +++++++++++++++++++++++++++++++---------
- 2 files changed, 52 insertions(+), 16 deletions(-)
+ drivers/scsi/pm8001/pm8001_ctl.c  |  5 ++++-
+ drivers/scsi/pm8001/pm8001_init.c | 22 ++++++++++++++++++++--
+ 2 files changed, 24 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-index 9294379..cacb429 100644
---- a/drivers/scsi/pm8001/pm8001_hwi.c
-+++ b/drivers/scsi/pm8001/pm8001_hwi.c
-@@ -1346,7 +1346,7 @@ int pm8001_mpi_build_cmd(struct pm8001_hba_info *pm8001_ha,
- 		&pMessage) < 0) {
- 		PM8001_IO_DBG(pm8001_ha,
- 			pm8001_printk("No free mpi buffer\n"));
--		return -1;
+diff --git a/drivers/scsi/pm8001/pm8001_ctl.c b/drivers/scsi/pm8001/pm8001_ctl.c
+index fe5eee4..211ffd6 100644
+--- a/drivers/scsi/pm8001/pm8001_ctl.c
++++ b/drivers/scsi/pm8001/pm8001_ctl.c
+@@ -397,7 +397,10 @@ static ssize_t pm8001_ctl_bios_version_show(struct device *cdev,
+ 	payload.func_specific = kzalloc(4096, GFP_KERNEL);
+ 	if (!payload.func_specific)
+ 		return -ENOMEM;
+-	PM8001_CHIP_DISP->get_nvmd_req(pm8001_ha, &payload);
++	if (PM8001_CHIP_DISP->get_nvmd_req(pm8001_ha, &payload)) {
++		kfree(payload.func_specific);
 +		return -ENOMEM;
- 	}
- 	BUG_ON(!payload);
- 	/*Copy to the payload*/
-@@ -1751,6 +1751,8 @@ static void pm8001_send_abort_all(struct pm8001_hba_info *pm8001_ha,
- 	task_abort.tag = cpu_to_le32(ccb_tag);
- 
- 	ret = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &task_abort, 0);
-+	if (ret)
-+		pm8001_tag_free(pm8001_ha, ccb_tag);
- 
- }
- 
-@@ -1792,10 +1794,9 @@ static void pm8001_send_read_log(struct pm8001_hba_info *pm8001_ha,
- 			pm8001_printk("Domain device cannot be allocated\n"));
- 		sas_free_task(task);
- 		return;
--	} else {
--		task->dev = dev;
--		task->dev->lldd_dev = pm8001_ha_dev;
- 	}
-+	task->dev = dev;
-+	task->dev->lldd_dev = pm8001_ha_dev;
- 
- 	ccb = &pm8001_ha->ccb_info[ccb_tag];
- 	ccb->device = pm8001_ha_dev;
-@@ -1821,7 +1822,10 @@ static void pm8001_send_read_log(struct pm8001_hba_info *pm8001_ha,
- 	memcpy(&sata_cmd.sata_fis, &fis, sizeof(struct host_to_dev_fis));
- 
- 	res = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &sata_cmd, 0);
--
-+	if (res) {
-+		sas_free_task(task);
-+		pm8001_tag_free(pm8001_ha, ccb_tag);
 +	}
- }
- 
- /**
-@@ -4257,7 +4261,10 @@ static int pm8001_chip_smp_req(struct pm8001_hba_info *pm8001_ha,
- 	smp_cmd.long_smp_req.long_resp_size =
- 		cpu_to_le32((u32)sg_dma_len(&task->smp_task.smp_resp)-4);
- 	build_smp_cmd(pm8001_dev->device_id, smp_cmd.tag, &smp_cmd);
--	pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, (u32 *)&smp_cmd, 0);
-+	rc = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, (u32 *)&smp_cmd, 0);
-+	if (rc)
-+		goto err_out_2;
+ 	wait_for_completion(&completion);
+ 	virt_addr = pm8001_ha->memoryMap.region[NVMD].virt_ptr;
+ 	for (bios_index = BIOSOFFSET; bios_index < BIOS_OFFSET_LIMIT;
+diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+index 3b485d4..9d02a01 100644
+--- a/drivers/scsi/pm8001/pm8001_init.c
++++ b/drivers/scsi/pm8001/pm8001_init.c
+@@ -622,6 +622,8 @@ static void pm8001_init_sas_add(struct pm8001_hba_info *pm8001_ha)
+ 	DECLARE_COMPLETION_ONSTACK(completion);
+ 	struct pm8001_ioctl_payload payload;
+ 	u16 deviceid;
++	int rc;
 +
- 	return 0;
+ 	pci_read_config_word(pm8001_ha->pdev, PCI_DEVICE_ID, &deviceid);
+ 	pm8001_ha->nvmd_completion = &completion;
  
- err_out_2:
-@@ -4789,6 +4796,10 @@ int pm8001_chip_get_nvmd_req(struct pm8001_hba_info *pm8001_ha,
- 		break;
+@@ -639,7 +641,16 @@ static void pm8001_init_sas_add(struct pm8001_hba_info *pm8001_ha)
  	}
- 	rc = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &nvmd_req, 0);
+ 	payload.offset = 0;
+ 	payload.func_specific = kzalloc(payload.length, GFP_KERNEL);
+-	PM8001_CHIP_DISP->get_nvmd_req(pm8001_ha, &payload);
++	if (!payload.func_specific) {
++		PM8001_INIT_DBG(pm8001_ha, pm8001_printk("mem alloc fail\n"));
++		return;
++	}
++	rc = PM8001_CHIP_DISP->get_nvmd_req(pm8001_ha, &payload);
 +	if (rc) {
-+		kfree(fw_control_context);
-+		pm8001_tag_free(pm8001_ha, tag);
++		kfree(payload.func_specific);
++		PM8001_INIT_DBG(pm8001_ha, pm8001_printk("nvmd failed\n"));
++		return;
 +	}
- 	return rc;
- }
+ 	wait_for_completion(&completion);
  
-@@ -5061,7 +5072,7 @@ pm8001_chip_sas_re_initialization(struct pm8001_hba_info *pm8001_ha)
- 	memset(&payload, 0, sizeof(payload));
- 	rc = pm8001_tag_alloc(pm8001_ha, &tag);
- 	if (rc)
--		return -1;
+ 	for (i = 0, j = 0; i <= 7; i++, j++) {
+@@ -662,6 +673,7 @@ static void pm8001_init_sas_add(struct pm8001_hba_info *pm8001_ha)
+ 			pm8001_printk("phy %d sas_addr = %016llx\n", i,
+ 			pm8001_ha->phy[i].dev_sas_addr));
+ 	}
++	kfree(payload.func_specific);
+ #else
+ 	for (i = 0; i < pm8001_ha->chip->n_phy; i++) {
+ 		pm8001_ha->phy[i].dev_sas_addr = 0x50010c600047f9d0ULL;
+@@ -685,6 +697,7 @@ static int pm8001_get_phy_settings_info(struct pm8001_hba_info *pm8001_ha)
+ 	/*OPTION ROM FLASH read for the SPC cards */
+ 	DECLARE_COMPLETION_ONSTACK(completion);
+ 	struct pm8001_ioctl_payload payload;
++	int rc;
+ 
+ 	pm8001_ha->nvmd_completion = &completion;
+ 	/* SAS ADDRESS read from flash / EEPROM */
+@@ -695,7 +708,12 @@ static int pm8001_get_phy_settings_info(struct pm8001_hba_info *pm8001_ha)
+ 	if (!payload.func_specific)
+ 		return -ENOMEM;
+ 	/* Read phy setting values from flash */
+-	PM8001_CHIP_DISP->get_nvmd_req(pm8001_ha, &payload);
++	rc = PM8001_CHIP_DISP->get_nvmd_req(pm8001_ha, &payload);
++	if (rc) {
++		kfree(payload.func_specific);
++		PM8001_INIT_DBG(pm8001_ha, pm8001_printk("nvmd failed\n"));
 +		return -ENOMEM;
- 	ccb = &pm8001_ha->ccb_info[tag];
- 	ccb->ccb_tag = tag;
- 	circularQ = &pm8001_ha->inbnd_q_tbl[0];
-@@ -5070,6 +5081,8 @@ pm8001_chip_sas_re_initialization(struct pm8001_hba_info *pm8001_ha)
- 	payload.sata_hol_tmo = cpu_to_le32(80);
- 	payload.open_reject_cmdretries_data_retries = cpu_to_le32(0xff00ff);
- 	rc = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &payload, 0);
-+	if (rc)
-+		pm8001_tag_free(pm8001_ha, tag);
- 	return rc;
- 
- }
-diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-index d70587f..d392e7a 100644
---- a/drivers/scsi/pm8001/pm80xx_hwi.c
-+++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-@@ -856,6 +856,8 @@ pm80xx_set_thermal_config(struct pm8001_hba_info *pm8001_ha)
- 	payload.cfg_pg[1] = (LTEMPHIL << 24) | (RTEMPHIL << 8);
- 
- 	rc = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &payload, 0);
-+	if (rc)
-+		pm8001_tag_free(pm8001_ha, tag);
- 	return rc;
- 
- }
-@@ -936,6 +938,8 @@ pm80xx_set_sas_protocol_timer_config(struct pm8001_hba_info *pm8001_ha)
- 			 sizeof(SASProtocolTimerConfig_t));
- 
- 	rc = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &payload, 0);
-+	if (rc)
-+		pm8001_tag_free(pm8001_ha, tag);
- 
- 	return rc;
- }
-@@ -1059,6 +1063,8 @@ static int pm80xx_encrypt_update(struct pm8001_hba_info *pm8001_ha)
- 					KEK_MGMT_SUBOP_KEYCARDUPDATE);
- 
- 	rc = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &payload, 0);
-+	if (rc)
-+		pm8001_tag_free(pm8001_ha, tag);
- 
- 	return rc;
- }
-@@ -1383,8 +1389,10 @@ static void pm80xx_send_abort_all(struct pm8001_hba_info *pm8001_ha,
- 	task->task_done = pm8001_task_done;
- 
- 	res = pm8001_tag_alloc(pm8001_ha, &ccb_tag);
--	if (res)
-+	if (res) {
-+		sas_free_task(task);
- 		return;
 +	}
- 
- 	ccb = &pm8001_ha->ccb_info[ccb_tag];
- 	ccb->device = pm8001_ha_dev;
-@@ -1399,7 +1407,10 @@ static void pm80xx_send_abort_all(struct pm8001_hba_info *pm8001_ha,
- 	task_abort.tag = cpu_to_le32(ccb_tag);
- 
- 	ret = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &task_abort, 0);
--
-+	if (ret) {
-+		sas_free_task(task);
-+		pm8001_tag_free(pm8001_ha, ccb_tag);
-+	}
- }
- 
- static void pm80xx_send_read_log(struct pm8001_hba_info *pm8001_ha,
-@@ -1426,6 +1437,7 @@ static void pm80xx_send_read_log(struct pm8001_hba_info *pm8001_ha,
- 
- 	res = pm8001_tag_alloc(pm8001_ha, &ccb_tag);
- 	if (res) {
-+		sas_free_task(task);
- 		PM8001_FAIL_DBG(pm8001_ha,
- 			pm8001_printk("cannot allocate tag !!!\n"));
- 		return;
-@@ -1436,15 +1448,16 @@ static void pm80xx_send_read_log(struct pm8001_hba_info *pm8001_ha,
- 	*/
- 	dev = kzalloc(sizeof(struct domain_device), GFP_ATOMIC);
- 	if (!dev) {
-+		sas_free_task(task);
-+		pm8001_tag_free(pm8001_ha, ccb_tag);
- 		PM8001_FAIL_DBG(pm8001_ha,
- 			pm8001_printk("Domain device cannot be allocated\n"));
--		sas_free_task(task);
- 		return;
--	} else {
--		task->dev = dev;
--		task->dev->lldd_dev = pm8001_ha_dev;
- 	}
- 
-+	task->dev = dev;
-+	task->dev->lldd_dev = pm8001_ha_dev;
-+
- 	ccb = &pm8001_ha->ccb_info[ccb_tag];
- 	ccb->device = pm8001_ha_dev;
- 	ccb->ccb_tag = ccb_tag;
-@@ -1469,7 +1482,11 @@ static void pm80xx_send_read_log(struct pm8001_hba_info *pm8001_ha,
- 	memcpy(&sata_cmd.sata_fis, &fis, sizeof(struct host_to_dev_fis));
- 
- 	res = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &sata_cmd, 0);
--
-+	if (res) {
-+		sas_free_task(task);
-+		pm8001_tag_free(pm8001_ha, ccb_tag);
-+		kfree(dev);
-+	}
- }
- 
- /**
-@@ -3815,7 +3832,9 @@ static int pm80xx_chip_smp_req(struct pm8001_hba_info *pm8001_ha,
- 
- 	build_smp_cmd(pm8001_dev->device_id, smp_cmd.tag,
- 				&smp_cmd, pm8001_ha->smp_exp_mode, length);
--	pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, (u32 *)&smp_cmd, 0);
-+	rc = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, (u32 *)&smp_cmd, 0);
-+	if (rc)
-+		goto err_out_2;
- 	return 0;
- 
- err_out_2:
-@@ -4406,6 +4425,8 @@ static int pm80xx_chip_reg_dev_req(struct pm8001_hba_info *pm8001_ha,
- 		SAS_ADDR_SIZE);
- 
- 	rc = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &payload, 0);
-+	if (rc)
-+		pm8001_tag_free(pm8001_ha, tag);
- 
- 	return rc;
- }
-@@ -4484,7 +4505,9 @@ void mpi_set_phy_profile_req(struct pm8001_hba_info *pm8001_ha,
- 		payload.reserved[j] =  cpu_to_le32(*((u32 *)buf + i));
- 		j++;
- 	}
--	pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &payload, 0);
-+	rc = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &payload, 0);
-+	if (rc)
-+		pm8001_tag_free(pm8001_ha, tag);
- }
- 
- void pm8001_set_phy_profile(struct pm8001_hba_info *pm8001_ha,
+ 	wait_for_completion(&completion);
+ 	pm8001_set_phy_profile(pm8001_ha, sizeof(u8), payload.func_specific);
+ 	kfree(payload.func_specific);
 -- 
 1.8.3.1
 
