@@ -1,46 +1,36 @@
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-Subject: [PATCH v2] scsi: bnx2i: bnx2i_iscsi.c:  Cleaning up variable is set more than once
-Date: Thu, 26 Jun 2014 13:54:49 +0200
-Message-ID: <1403783689-10457-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-la0-f48.google.com ([209.85.215.48]:40585 "EHLO
-	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757330AbaFZLxj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Jun 2014 07:53:39 -0400
-Received: by mail-la0-f48.google.com with SMTP id el20so1746037lab.7
-        for <linux-scsi@vger.kernel.org>; Thu, 26 Jun 2014 04:53:38 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+From: Joe Perches <joe@perches.com>
+Subject: Re: [PATCH v2] scsi: bnx2i: bnx2i_iscsi.c:  Cleaning up variable is
+ set more than once
+Date: Thu, 26 Jun 2014 05:05:03 -0700
+Message-ID: <1403784303.7977.38.camel@joe-AO725>
+References: <1403783689-10457-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1403783689-10457-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Cc: Eddie Wai <eddie.wai@broadcom.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Eddie Wai <eddie.wai@broadcom.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-A struct member variable is set to different values without having used in between.
+On Thu, 2014-06-26 at 13:54 +0200, Rickard Strandqvist wrote:
+> A struct member variable is set to different values without having used in between.
+[]
+> diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+[]
+> @@ -1643,12 +1643,11 @@ static void bnx2i_conn_get_stats(struct iscsi_cls_conn *cls_conn,
+>  	stats->r2t_pdus = conn->r2t_pdus_cnt;
+>  	stats->tmfcmd_pdus = conn->tmfcmd_pdus_cnt;
+>  	stats->tmfrsp_pdus = conn->tmfrsp_pdus_cnt;
+> -	stats->custom_length = 3;
+>  	strcpy(stats->custom[2].desc, "eh_abort_cnt");
+>  	stats->custom[2].value = conn->eh_abort_cnt;
+>  	stats->digest_err = 0;
+>  	stats->timeout_err = 0;
+> -	stats->custom_length = 0;
+> +	stats->custom_length = 3;
 
-This was found using a static code analysis program called cppcheck
+You are changing custom_length from 0 to 3.
 
-Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
----
- drivers/scsi/bnx2i/bnx2i_iscsi.c |    3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-index 166543f..4e17a7f 100644
---- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
-+++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-@@ -1643,12 +1643,11 @@ static void bnx2i_conn_get_stats(struct iscsi_cls_conn *cls_conn,
- 	stats->r2t_pdus = conn->r2t_pdus_cnt;
- 	stats->tmfcmd_pdus = conn->tmfcmd_pdus_cnt;
- 	stats->tmfrsp_pdus = conn->tmfrsp_pdus_cnt;
--	stats->custom_length = 3;
- 	strcpy(stats->custom[2].desc, "eh_abort_cnt");
- 	stats->custom[2].value = conn->eh_abort_cnt;
- 	stats->digest_err = 0;
- 	stats->timeout_err = 0;
--	stats->custom_length = 0;
-+	stats->custom_length = 3;
- }
- 
- 
--- 
-1.7.10.4
-
+Why is this correct?
