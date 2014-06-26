@@ -1,76 +1,49 @@
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-Subject: Re: [PATCH] scsi: bnx2i: bnx2i_iscsi.c: Cleaning up variable is set
- more than once
-Date: Thu, 26 Jun 2014 02:28:14 +0200
-Message-ID: <CAFo99gbp-CeoT-3rNkNJX1m79G+5zi7pJLjX9kYq=FEf1isn=g@mail.gmail.com>
-References: <1403705059-25834-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-	<53AADC16.9080301@redhat.com>
-	<1403716401.10214.2.camel@lbirv-waie-lx2.broadcom.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: sd_setup_discard_cmnd: BUG: unable to handle kernel NULL pointer dereference at (null)
+Date: Wed, 25 Jun 2014 21:44:11 -0400
+Message-ID: <yq17g44e978.fsf@sermon.lab.mkp.net>
+References: <53A28B21.7070500@profihost.ag>
+	<yq1ionwjn15.fsf@sermon.lab.mkp.net>
+	<20140620155321.GA24389@soda.linbit>
+	<yq1wqcbil0c.fsf@sermon.lab.mkp.net>
+	<20140620182956.GB24389@soda.linbit>
+	<yq1vbrrh0yo.fsf@sermon.lab.mkp.net>
+	<20140624115324.GB17123@soda.linbit>
+	<yq1simtgax8.fsf@sermon.lab.mkp.net>
+	<20140625101421.GE17123@soda.linbit>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oa0-f46.google.com ([209.85.219.46]:44510 "EHLO
-	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754810AbaFZA2P (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jun 2014 20:28:15 -0400
-Received: by mail-oa0-f46.google.com with SMTP id m1so3015475oag.19
-        for <linux-scsi@vger.kernel.org>; Wed, 25 Jun 2014 17:28:14 -0700 (PDT)
-In-Reply-To: <1403716401.10214.2.camel@lbirv-waie-lx2.broadcom.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:23703 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756697AbaFZBof (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jun 2014 21:44:35 -0400
+In-Reply-To: <20140625101421.GE17123@soda.linbit> (Lars Ellenberg's message of
+	"Wed, 25 Jun 2014 12:14:21 +0200")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Eddie Wai <eddie.wai@broadcom.com>
-Cc: Maurizio Lombardi <mlombard@redhat.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Lars Ellenberg <lars.ellenberg@linbit.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, JBottomley@parallels.com, Jens Axboe <axboe@kernel.dk>, konrad.wilk@oracle.com, elder@linaro.org, Josh Durgin <josh.durgin@inktank.com>, Greg KH <gregkh@linuxfoundation.org>
 
-2014-06-25 19:13 GMT+02:00 Eddie Wai <eddie.wai@broadcom.com>:
-> On Wed, 2014-06-25 at 16:26 +0200, Maurizio Lombardi wrote:
->> Hi,
->>
->> On 06/25/2014 04:04 PM, Rickard Strandqvist wrote:
->> > A struct member variable is set to different values without having used in between.
->> >
->> > This was found using a static code analysis program called cppcheck
->> >
->> > Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
->> > ---
->> >  drivers/scsi/bnx2i/bnx2i_iscsi.c |    1 -
->> >  1 file changed, 1 deletion(-)
->> >
->> > diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
->> > index 166543f..fdf7bc3 100644
->> > --- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
->> > +++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
->> > @@ -1643,7 +1643,6 @@ static void bnx2i_conn_get_stats(struct iscsi_cls_conn *cls_conn,
->> >     stats->r2t_pdus = conn->r2t_pdus_cnt;
->> >     stats->tmfcmd_pdus = conn->tmfcmd_pdus_cnt;
->> >     stats->tmfrsp_pdus = conn->tmfrsp_pdus_cnt;
->> > -   stats->custom_length = 3;
->> >     strcpy(stats->custom[2].desc, "eh_abort_cnt");
->> >     stats->custom[2].value = conn->eh_abort_cnt;
->> >     stats->digest_err = 0;
->> >
->>
->> Eddie,
->>
->> The code modifies the content of stats->custom[2], so shouldn't custom_length be set to 3?
->> Why is it set to zero at the end of this function?
-> Nice find.  This is literally a day1 bug.  Yes, I agree that the
-> custom_length should be left at 3.  Otherwise, the nlmsg replied back to
-> the application would not have the custom message.  Thanks.
->>
->> Regards,
->> Maurizio Lombardi
->
->
+>>>>> "Lars" == Lars Ellenberg <lars.ellenberg@linbit.com> writes:
 
+Lars> Because the way we do some internal bookkeeping, we announce a max
+Lars> discard of 4 MiB.  
 
-Hi, and thank you!
+Yikes!
 
-If it's not obvious, I do all my fixes without changing the previous
-intent. But obviously it is not always right, rather it is one of main
-reasons to fix this type of error :)
+Lars> Similar for the WRITE_SAME interface (which we do not properly
+Lars> support on the DRBD protocol level yet -- backward compatibility
+Lars> concerns -- but intend to support "soon").
 
-But I'll make a new patch then, with = 3 ?
+Yeah, WRITE SAME can take a long time to complete too. However, we're
+typically issuing them 32 megs at a time.
 
+Lars> If we only have a synchronous interface, we will probably have to
+Lars> either add some "async wrapper", or defer such submissions to
+Lars> worker threads.  I'd prefer to have an async submit path.
 
-Kind regards
-Rickard Strandqvist
+OK, I'll chew on it.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
