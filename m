@@ -1,44 +1,47 @@
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-Subject: [PATCH v3] scsi: bnx2i: bnx2i_iscsi.c:  Fix variable which was set to the wrong value
-Date: Thu, 26 Jun 2014 19:10:33 +0200
-Message-ID: <1403802633-23726-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+From: Steven Haber <steven@qumulo.com>
+Subject: Re: SCSI eats error from flush failure during hot plug
+Date: Thu, 26 Jun 2014 11:13:46 -0700
+Message-ID: <CAPK7rjcvn007mCaCRrsc5q5om8PRoh6vvDbLDs0ztfThRFdqMw@mail.gmail.com>
+References: <CAPK7rjcrBuQgoiAxZ9ZASAGugtyHTsHB3ssZegKtuzRdo9TMNQ@mail.gmail.com>
+	<20140626150208.GA14887@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-la0-f52.google.com ([209.85.215.52]:43931 "EHLO
-	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753131AbaFZRJX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Jun 2014 13:09:23 -0400
-Received: by mail-la0-f52.google.com with SMTP id ty20so2070322lab.25
-        for <linux-scsi@vger.kernel.org>; Thu, 26 Jun 2014 10:09:21 -0700 (PDT)
+Received: from mail-oa0-f47.google.com ([209.85.219.47]:62893 "EHLO
+	mail-oa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753043AbaFZSNr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Jun 2014 14:13:47 -0400
+Received: by mail-oa0-f47.google.com with SMTP id n16so4347020oag.34
+        for <linux-scsi@vger.kernel.org>; Thu, 26 Jun 2014 11:13:46 -0700 (PDT)
+In-Reply-To: <20140626150208.GA14887@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Eddie Wai <eddie.wai@broadcom.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org
 
-After some discussion, all agreed that the previous value was incorrect.
+Sure, I'll run it overnight.
 
-Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
----
- drivers/scsi/bnx2i/bnx2i_iscsi.c |    3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-index 166543f..4e17a7f 100644
---- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
-+++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-@@ -1643,12 +1643,11 @@ static void bnx2i_conn_get_stats(struct iscsi_cls_conn *cls_conn,
- 	stats->r2t_pdus = conn->r2t_pdus_cnt;
- 	stats->tmfcmd_pdus = conn->tmfcmd_pdus_cnt;
- 	stats->tmfrsp_pdus = conn->tmfrsp_pdus_cnt;
--	stats->custom_length = 3;
- 	strcpy(stats->custom[2].desc, "eh_abort_cnt");
- 	stats->custom[2].value = conn->eh_abort_cnt;
- 	stats->digest_err = 0;
- 	stats->timeout_err = 0;
--	stats->custom_length = 0;
-+	stats->custom_length = 3;
- }
- 
- 
--- 
-1.7.10.4
-
+On Thu, Jun 26, 2014 at 8:02 AM, Christoph Hellwig <hch@infradead.org> wrote:
+> Hi Steven,
+>
+> can you test the patch below?
+>
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index f7e3163..9b56e48 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -733,6 +733,14 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+>                         scsi_next_command(cmd);
+>                         return;
+>                 }
+> +       } else if (req->cmd_flags & REQ_FLUSH) {
+> +               /*
+> +                * Flush request don't transfer data, so we can't try
+> +                * to complete the good bytes first before checking
+> +                * the error.
+> +                */
+> +               if (result && !sense_deferred)
+> +                       error = __scsi_error_from_host_byte(cmd, result);
+>         }
+>
+>         /* no bidi support for !REQ_TYPE_BLOCK_PC yet */
