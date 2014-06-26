@@ -1,43 +1,35 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH RESEND] [SCSI] aic94xx: Remove broken fallback for missing 'Ctrl-A' user settings
-Date: Wed, 25 Jun 2014 22:44:53 -0400
-Message-ID: <yq11tuccrtm.fsf@sermon.lab.mkp.net>
-References: <1402267064.23860.42.camel@deadeye.wl.decadent.org.uk>
-	<20140625111244.GB19415@infradead.org>
+From: Finn Thain <fthain@telegraphics.com.au>
+Subject: Re: [PATCH 0/4] ARM randconfig fixes for SCSI
+Date: Thu, 26 Jun 2014 14:11:39 +1000 (EST)
+Message-ID: <alpine.LNX.2.00.1406261340220.6206@nippy.intranet>
+References: <1402003789-1990031-1-git-send-email-arnd@arndb.de> <20140625110457.GD19181@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:39458 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753576AbaFZCph (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jun 2014 22:45:37 -0400
-In-Reply-To: <20140625111244.GB19415@infradead.org> (Christoph Hellwig's
-	message of "Wed, 25 Jun 2014 13:12:44 +0200")
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:52622 "EHLO
+	kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750721AbaFZEMm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Jun 2014 00:12:42 -0400
+In-Reply-To: <20140625110457.GD19181@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@infradead.org>
-Cc: Ben Hutchings <ben@decadent.org.uk>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Arnd Bergmann <arnd@arndb.de>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Matthew Wilcox <matthew@wil.cx>, Michael Schmitz <schmitzmic@gmail.com>
 
->>>>> "Christoph" == Christoph Hellwig <hch@infradead.org> writes:
 
-Christoph> On Sun, Jun 08, 2014 at 11:37:44PM +0100, Ben Hutchings wrote:
->> asd_process_ctrl_a_user() attempts to find user settings in flash,
->> and if they are missing it prepares a substitute structure containing
->> default values for PHY settings.  But having done so, it will still
->> try to read user settings - from some random address in flash, as the
->> local variable 'offs' has not been initialised.
->> 
->> Since asd_common_setup() already sets default PHY settings, there
->> seems to be no need to repeat them here, and we can just return 0.
->> 
->> Compile-tested only.
+On Wed, 25 Jun 2014, Christoph Hellwig wrote:
 
-If I read this correctly we'll get the link rates initialized but the
-sas_addr will no longer be populated for each phy_desc.
+> Can I get another set of reviews for these?
 
-The old code copied the board global sas_addr into dflt_ps before
-calling asd_process_ctrla_phy_settings(). Whereas asd_common_setup()
-does not populate the sas_addr.
+Reviewed-by: Finn Thain <fthain@telegraphics.com.au>
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+(All four patches.)
+
+> >   [SCSI] pas16: don't call free_dma()
+> >   [SCSI] qlogicfas: don't call free_dma()
+
+BTW, I found that the suprious free_dma() calls appeared in 2.5.73 when a 
+generic release implementation was apparently added to drivers that lacked 
+any release method.
+
+--
