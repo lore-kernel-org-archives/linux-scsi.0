@@ -1,47 +1,56 @@
-From: Joe Perches <joe@perches.com>
-Subject: Re: [PATCH v2] scsi: bnx2i: bnx2i_iscsi.c:  Cleaning up variable is
- set more than once
-Date: Thu, 26 Jun 2014 05:17:55 -0700
-Message-ID: <1403785075.7977.46.camel@joe-AO725>
-References: <1403783689-10457-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-	 <1403784303.7977.38.camel@joe-AO725> <53AC0E2A.4040907@redhat.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] [scsi] 3w-xxxx: fix mis-aligned struct accesses
+Date: Thu, 26 Jun 2014 14:58:29 +0200
+Message-ID: <4791230.CGnay5CMcb@wuerfel>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <53AC0E2A.4040907@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Maurizio Lombardi <mlombard@redhat.com>
-Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>, Eddie Wai <eddie.wai@broadcom.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.126.131]:57988 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750755AbaFZM6i (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Jun 2014 08:58:38 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, Adam Radford <linuxraid@lsi.com>
 
-On Thu, 2014-06-26 at 14:12 +0200, Maurizio Lombardi wrote:
-> 
-> On 06/26/2014 02:05 PM, Joe Perches wrote:
-> > On Thu, 2014-06-26 at 13:54 +0200, Rickard Strandqvist wrote:
-> >> A struct member variable is set to different values without having used in between.
-> > []
-> >> diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-> > []
-> >> @@ -1643,12 +1643,11 @@ static void bnx2i_conn_get_stats(struct iscsi_cls_conn *cls_conn,
-> >>  	stats->r2t_pdus = conn->r2t_pdus_cnt;
-> >>  	stats->tmfcmd_pdus = conn->tmfcmd_pdus_cnt;
-> >>  	stats->tmfrsp_pdus = conn->tmfrsp_pdus_cnt;
-> >> -	stats->custom_length = 3;
-> >>  	strcpy(stats->custom[2].desc, "eh_abort_cnt");
-> >>  	stats->custom[2].value = conn->eh_abort_cnt;
-> >>  	stats->digest_err = 0;
-> >>  	stats->timeout_err = 0;
-> >> -	stats->custom_length = 0;
-> >> +	stats->custom_length = 3;
-> > 
-> > You are changing custom_length from 0 to 3.
-> > 
-> > Why is this correct?
-> 
-> http://marc.info/?l=linux-scsi&m=140371670511706&w=2
+Building an allmodconfig ARM kernel, I get multiple such
+warnings because of a spinlock contained in packed structure
+in the 3w-xxxx driver:
 
-Then the subject and commit message are wrong and need
-to be updated to reflect your text.
+../drivers/scsi/3w-xxxx.c: In function 'tw_chrdev_ioctl':
+../drivers/scsi/3w-xxxx.c:1001:68: warning: mis-aligned access used for structure member [-fstrict-volatile-bitfields]
+    timeout = wait_event_timeout(tw_dev->ioctl_wqueue, tw_dev->chrdev_request_id == TW_IOCTL_CHRDEV_FREE, timeout);
+                                                                    ^
+../drivers/scsi/3w-xxxx.c:1001:68: note: when a volatile object spans multiple type-sized locations, the compiler must choose between using a single mis-aligned access to preserve the volatility, or using multiple aligned accesses to avoid runtime faults; this code may fail at runtime if the hardware does not allow this access
 
-This is a bugfix, not a cleanup.
+The same bug apparently was present in 3w-sas and 3w-9xxx, but has been
+fixed in the past. This patch uses the same fix by moving the pragma
+in front of the TW_Device_Extension definition, so it only covers
+hardware structures.
+
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Cc: Adam Radford <linuxraid@lsi.com>
+---
+diff --git a/drivers/scsi/3w-xxxx.h b/drivers/scsi/3w-xxxx.h
+index 49dcf03..29b0b84e 100644
+--- a/drivers/scsi/3w-xxxx.h
++++ b/drivers/scsi/3w-xxxx.h
+@@ -392,6 +392,8 @@ typedef struct TAG_TW_Passthru
+ 	unsigned char padding[12];
+ } TW_Passthru;
+ 
++#pragma pack()
++
+ typedef struct TAG_TW_Device_Extension {
+ 	u32			base_addr;
+ 	unsigned long		*alignment_virtual_address[TW_Q_LENGTH];
+@@ -430,6 +432,4 @@ typedef struct TAG_TW_Device_Extension {
+ 	wait_queue_head_t	ioctl_wqueue;
+ } TW_Device_Extension;
+ 
+-#pragma pack()
+-
+ #endif /* _3W_XXXX_H */
+
