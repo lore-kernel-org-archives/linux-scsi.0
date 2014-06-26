@@ -1,36 +1,44 @@
-From: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Subject: Re: [PATCH v2 1/3] scsi_cmnd: Introduce scsi_transfer_length helper
-Date: Thu, 26 Jun 2014 10:55:51 -0400
-Message-ID: <1403794551.3572.6.camel@dabdike>
-References: <1402477799-24610-1-git-send-email-sagig@mellanox.com>
-	 <1402477799-24610-2-git-send-email-sagig@mellanox.com>
-	 <53AC3402.2080302@acm.org>
+From: Ewan Milne <emilne@redhat.com>
+Subject: Re: [PATCH] sg: limit maximum cdb size to 252 bytes
+Date: Thu, 26 Jun 2014 10:57:14 -0400
+Message-ID: <1403794634.6423.283.camel@localhost.localdomain>
+References: <53AB0166.8060905@interlog.com>
+Reply-To: emilne@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <53AC3402.2080302-HInyCGIudOg@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-Cc: Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org, roland-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:25374 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756791AbaFZO5W (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 26 Jun 2014 10:57:22 -0400
+In-Reply-To: <53AB0166.8060905@interlog.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: dgilbert@interlog.com
+Cc: SCSI development list <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Boaz Harrosh <bharrosh@panasas.com>
 
-On Thu, 2014-06-26 at 16:53 +0200, Bart Van Assche wrote:
-> On 06/11/14 11:09, Sagi Grimberg wrote:
-> > +	return xfer_len + (xfer_len >> ilog2(sector_size)) * 8;
+On Wed, 2014-06-25 at 13:05 -0400, Douglas Gilbert wrote:
+> Boaz Harrosh commented on the "[PATCH v5] sg: relax 16
+> byte cdb restriction" thread that SCSI variable length
+> commands (which are all SCSI commands greater than 16
+> bytes long) must themselves be a multiple of 4 bytes
+> long.
 > 
-> Sorry that I just noticed this now, but why is a shift-right and ilog2()
-> used in the above expression instead of just dividing the transfer
-> length by the sector size ?
+> ChangeLog
+>    - limit the maximum cdb size permitted by the sg
+>      v3 interface to 252 bytes. Commands that large
+>      are called "variable length" and their length
+>      needs to be a multiple of 4.
+> 
+> Original patch:
+>    Reviewed-by: Boaz Harrosh <boaz@electrozaur.com>
+> 
+> Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+> 
 
-It's a performance thing.  Division is really slow on most CPUs.
-However, we know the divisor is a power of two so we re-express the
-division as a shift, which the processor can do really fast.
+Sure.
 
-James
+Reviewed-by: Ewan D. Milne <emilne@redhat.com>
 
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
