@@ -1,67 +1,34 @@
-From: Jack Wang <xjtuwjp@gmail.com>
-Subject: Re: [PATCH] scsi: pm8001: pm80xx_hwi.c:  Cleaning up uninitialized
- variables
-Date: Thu, 26 Jun 2014 10:02:41 +0200
-Message-ID: <53ABD3A1.10400@gmail.com>
-References: <1401628410-17824-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+From: Maurizio Lombardi <mlombard@redhat.com>
+Subject: Re: [PATCH] scsi: bnx2i: bnx2i_iscsi.c: Cleaning up variable is set
+ more than once
+Date: Thu, 26 Jun 2014 10:04:57 +0200
+Message-ID: <53ABD429.9090306@redhat.com>
+References: <1403705059-25834-1-git-send-email-rickard_strandqvist@spectrumdigital.se>	<53AADC16.9080301@redhat.com>	<1403716401.10214.2.camel@lbirv-waie-lx2.broadcom.com> <CAFo99gbp-CeoT-3rNkNJX1m79G+5zi7pJLjX9kYq=FEf1isn=g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1401628410-17824-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+In-Reply-To: <CAFo99gbp-CeoT-3rNkNJX1m79G+5zi7pJLjX9kYq=FEf1isn=g@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-Cc: lindar_liu@usish.com, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>, Eddie Wai <eddie.wai@broadcom.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Looks good, thanks Rickard.
-Acked-by: Jack Wang <xjtuwjp@gmail.com>
-On 06/01/2014 03:13 PM, Rickard Strandqvist wrote:
-> There is a risk that the variable will be used without being initialized.
+Hi,
+
+On 06/26/2014 02:28 AM, Rickard Strandqvist wrote:
 > 
-> This was largely found by using a static code analysis program called cppcheck.
+> If it's not obvious, I do all my fixes without changing the previous
+> intent. But obviously it is not always right, rather it is one of main
+> reasons to fix this type of error :)
+
+Yes it is obvious, your patch was correct (it didn't modify the function behaviour)
+but helped to spot a defect.
+
 > 
-> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-> ---
->  drivers/scsi/pm8001/pm80xx_hwi.c |    6 ++----
->  1 file changed, 2 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-> index d70587f..add019b 100644
-> --- a/drivers/scsi/pm8001/pm80xx_hwi.c
-> +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-> @@ -948,7 +948,7 @@ static int
->  pm80xx_get_encrypt_info(struct pm8001_hba_info *pm8001_ha)
->  {
->  	u32 scratch3_value;
-> -	int ret;
-> +	int ret = -1;
->  
->  	/* Read encryption status from SCRATCH PAD 3 */
->  	scratch3_value = pm8001_cr32(pm8001_ha, 0, MSGU_SCRATCH_PAD_3);
-> @@ -982,7 +982,7 @@ pm80xx_get_encrypt_info(struct pm8001_hba_info *pm8001_ha)
->  		pm8001_ha->encrypt_info.status = 0xFFFFFFFF;
->  		pm8001_ha->encrypt_info.cipher_mode = 0;
->  		pm8001_ha->encrypt_info.sec_mode = 0;
-> -		return 0;
-> +		ret = 0;
->  	} else if ((scratch3_value & SCRATCH_PAD3_ENC_MASK) ==
->  				SCRATCH_PAD3_ENC_DIS_ERR) {
->  		pm8001_ha->encrypt_info.status =
-> @@ -1004,7 +1004,6 @@ pm80xx_get_encrypt_info(struct pm8001_hba_info *pm8001_ha)
->  			scratch3_value, pm8001_ha->encrypt_info.cipher_mode,
->  			pm8001_ha->encrypt_info.sec_mode,
->  			pm8001_ha->encrypt_info.status));
-> -		ret = -1;
->  	} else if ((scratch3_value & SCRATCH_PAD3_ENC_MASK) ==
->  				 SCRATCH_PAD3_ENC_ENA_ERR) {
->  
-> @@ -1028,7 +1027,6 @@ pm80xx_get_encrypt_info(struct pm8001_hba_info *pm8001_ha)
->  			scratch3_value, pm8001_ha->encrypt_info.cipher_mode,
->  			pm8001_ha->encrypt_info.sec_mode,
->  			pm8001_ha->encrypt_info.status));
-> -		ret = -1;
->  	}
->  	return ret;
->  }
-> 
+> But I'll make a new patch then, with = 3 ?
+
+Yes, please submit a new patch which sets custom_length = 3 at the end of the function.
+
+Thanks,
+Maurizio Lombardi
