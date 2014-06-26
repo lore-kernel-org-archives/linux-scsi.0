@@ -1,169 +1,41 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: [PATCH 1/4] pm8001: clean bitmap management functions
-Date: Thu, 26 Jun 2014 17:17:33 +0200
-Message-ID: <1403795856-4300-1-git-send-email-thenzl@redhat.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41675 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755137AbaFZPSE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 Jun 2014 11:18:04 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Bruno Wolff III <bruno@wolff.to>
+Subject: Re: [regression] fix 32-bit breakage in block device read(2) (was
+ Re: 32-bit bug in iovec iterator changes)
+Date: Thu, 26 Jun 2014 10:27:19 -0500
+Message-ID: <20140626152719.GA15967@wolff.to>
+References: <20140621055306.GP18016@ZenIV.linux.org.uk>
+ <20140621230922.GA13188@thunk.org>
+ <20140621234913.GQ18016@ZenIV.linux.org.uk>
+ <1403395400.2592.4.camel@jarvis.lan>
+ <20140622002618.GR18016@ZenIV.linux.org.uk>
+ <1403397164.2177.40.camel@dabdike.int.hansenpartnership.com>
+ <20140622005352.GS18016@ZenIV.linux.org.uk>
+ <20140622010032.GT18016@ZenIV.linux.org.uk>
+ <20140622115007.GA5333@thunk.org>
+ <20140623074440.GV18016@ZenIV.linux.org.uk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20140623074440.GV18016@ZenIV.linux.org.uk>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Al Viro <viro@ZenIV.linux.org.uk>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Theodore Ts'o <tytso@mit.edu>, James Bottomley <James.Bottomley@HansenPartnership.com>, Dave Chinner <david@fromorbit.com>, Jens Axboe <axboe@fb.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: AnandKumar.Santhanam@pmcs.com, Vasanthalakshmi.Tharmarajan@pmcs.com, Suresh.Thiagarajan@pmcs.com, Viswas.G@pmcs.com, Tomas Henzl <thenzl@redhat.com>
 
-In the driver two different functions are used to free the same resource,
-this patch makes the code easier to read. In addittion to that, some
-minor optimisations were made too.
+On Mon, Jun 23, 2014 at 08:44:40 +0100,
+  Al Viro <viro@ZenIV.linux.org.uk> wrote:
+>
+>blkdev_read_iter() wants to cap the iov_iter by the amount of
+>data remaining to the end of device.  That's what iov_iter_truncate()
+>is for (trim iter->count if it's above the given limit).  So far,
+>so good, but the argument of iov_iter_truncate() is size_t, so on
+>32bit boxen (in case of a large device) we end up with that upper
+>limit truncated down to 32 bits *before* comparing it with iter->count.
 
-Signed-off-by: Tomas Henzl <thenzl@redhat.com>
----
- drivers/scsi/pm8001/pm8001_hwi.c | 10 +++++-----
- drivers/scsi/pm8001/pm8001_sas.c | 31 +++++++------------------------
- drivers/scsi/pm8001/pm8001_sas.h |  1 -
- 3 files changed, 12 insertions(+), 30 deletions(-)
-
-diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-index a97be01..9294379 100644
---- a/drivers/scsi/pm8001/pm8001_hwi.c
-+++ b/drivers/scsi/pm8001/pm8001_hwi.c
-@@ -3100,7 +3100,7 @@ void pm8001_mpi_set_dev_state_resp(struct pm8001_hba_info *pm8001_ha,
- 	complete(pm8001_dev->setds_completion);
- 	ccb->task = NULL;
- 	ccb->ccb_tag = 0xFFFFFFFF;
--	pm8001_ccb_free(pm8001_ha, tag);
-+	pm8001_tag_free(pm8001_ha, tag);
- }
- 
- void pm8001_mpi_set_nvmd_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
-@@ -3119,7 +3119,7 @@ void pm8001_mpi_set_nvmd_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 	}
- 	ccb->task = NULL;
- 	ccb->ccb_tag = 0xFFFFFFFF;
--	pm8001_ccb_free(pm8001_ha, tag);
-+	pm8001_tag_free(pm8001_ha, tag);
- }
- 
- void
-@@ -3181,7 +3181,7 @@ pm8001_mpi_get_nvmd_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 	complete(pm8001_ha->nvmd_completion);
- 	ccb->task = NULL;
- 	ccb->ccb_tag = 0xFFFFFFFF;
--	pm8001_ccb_free(pm8001_ha, tag);
-+	pm8001_tag_free(pm8001_ha, tag);
- }
- 
- int pm8001_mpi_local_phy_ctl(struct pm8001_hba_info *pm8001_ha, void *piomb)
-@@ -3588,7 +3588,7 @@ int pm8001_mpi_reg_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 	complete(pm8001_dev->dcompletion);
- 	ccb->task = NULL;
- 	ccb->ccb_tag = 0xFFFFFFFF;
--	pm8001_ccb_free(pm8001_ha, htag);
-+	pm8001_tag_free(pm8001_ha, htag);
- 	return 0;
- }
- 
-@@ -3672,7 +3672,7 @@ int pm8001_mpi_fw_flash_update_resp(struct pm8001_hba_info *pm8001_ha,
- 	complete(pm8001_ha->nvmd_completion);
- 	ccb->task = NULL;
- 	ccb->ccb_tag = 0xFFFFFFFF;
--	pm8001_ccb_free(pm8001_ha, tag);
-+	pm8001_tag_free(pm8001_ha, tag);
- 	return 0;
- }
- 
-diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
-index 8a44bc9..be55859 100644
---- a/drivers/scsi/pm8001/pm8001_sas.c
-+++ b/drivers/scsi/pm8001/pm8001_sas.c
-@@ -58,25 +58,14 @@ static int pm8001_find_tag(struct sas_task *task, u32 *tag)
- }
- 
- /**
--  * pm8001_tag_clear - clear the tags bitmap
-+  * pm8001_tag_free - free the no more needed tag
-   * @pm8001_ha: our hba struct
-   * @tag: the found tag associated with the task
-   */
--static void pm8001_tag_clear(struct pm8001_hba_info *pm8001_ha, u32 tag)
--{
--	void *bitmap = pm8001_ha->tags;
--	clear_bit(tag, bitmap);
--}
--
- void pm8001_tag_free(struct pm8001_hba_info *pm8001_ha, u32 tag)
- {
--	pm8001_tag_clear(pm8001_ha, tag);
--}
--
--static void pm8001_tag_set(struct pm8001_hba_info *pm8001_ha, u32 tag)
--{
- 	void *bitmap = pm8001_ha->tags;
--	set_bit(tag, bitmap);
-+	clear_bit(tag, bitmap);
- }
- 
- /**
-@@ -86,14 +75,13 @@ static void pm8001_tag_set(struct pm8001_hba_info *pm8001_ha, u32 tag)
-   */
- inline int pm8001_tag_alloc(struct pm8001_hba_info *pm8001_ha, u32 *tag_out)
- {
--	unsigned int index, tag;
-+	unsigned int tag;
- 	void *bitmap = pm8001_ha->tags;
- 
--	index = find_first_zero_bit(bitmap, pm8001_ha->tags_num);
--	tag = index;
-+	tag = find_first_zero_bit(bitmap, pm8001_ha->tags_num);
- 	if (tag >= pm8001_ha->tags_num)
- 		return -SAS_QUEUE_FULL;
--	pm8001_tag_set(pm8001_ha, tag);
-+	set_bit(tag, bitmap);
- 	*tag_out = tag;
- 	return 0;
- }
-@@ -102,7 +90,7 @@ void pm8001_tag_init(struct pm8001_hba_info *pm8001_ha)
- {
- 	int i;
- 	for (i = 0; i < pm8001_ha->tags_num; ++i)
--		pm8001_tag_clear(pm8001_ha, i);
-+		pm8001_tag_free(pm8001_ha, i);
- }
- 
-  /**
-@@ -501,11 +489,6 @@ int pm8001_queue_command(struct sas_task *task, const int num,
- 	return pm8001_task_exec(task, num, gfp_flags, 0, NULL);
- }
- 
--void pm8001_ccb_free(struct pm8001_hba_info *pm8001_ha, u32 ccb_idx)
--{
--	pm8001_tag_clear(pm8001_ha, ccb_idx);
--}
--
- /**
-   * pm8001_ccb_task_free - free the sg for ssp and smp command, free the ccb.
-   * @pm8001_ha: our hba card information
-@@ -542,7 +525,7 @@ void pm8001_ccb_task_free(struct pm8001_hba_info *pm8001_ha,
- 	ccb->task = NULL;
- 	ccb->ccb_tag = 0xFFFFFFFF;
- 	ccb->open_retry = 0;
--	pm8001_ccb_free(pm8001_ha, ccb_idx);
-+	pm8001_tag_free(pm8001_ha, ccb_idx);
- }
- 
-  /**
-diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
-index 1ee06f2..14106ad 100644
---- a/drivers/scsi/pm8001/pm8001_sas.h
-+++ b/drivers/scsi/pm8001/pm8001_sas.h
-@@ -616,7 +616,6 @@ extern struct workqueue_struct *pm8001_wq;
- int pm8001_tag_alloc(struct pm8001_hba_info *pm8001_ha, u32 *tag_out);
- void pm8001_tag_init(struct pm8001_hba_info *pm8001_ha);
- u32 pm8001_get_ncq_tag(struct sas_task *task, u32 *tag);
--void pm8001_ccb_free(struct pm8001_hba_info *pm8001_ha, u32 ccb_idx);
- void pm8001_ccb_task_free(struct pm8001_hba_info *pm8001_ha,
- 	struct sas_task *task, struct pm8001_ccb_info *ccb, u32 ccb_idx);
- int pm8001_phy_control(struct asd_sas_phy *sas_phy, enum phy_func func,
--- 
-1.8.3.1
-
+This seems to fix a problem I had 
+(https://bugzilla.kernel.org/show_bug.cgi?id=78711) with a partition device 
+(/dev/sda3) being zero size on 3.16 kernels. However I am having some 
+other issues with 3.16 on i686 and the amount of testing was the raid 
+array using /dev/sda3 appeared to start (which it hadn't previously), but 
+the system hung before finishing the boot process.
