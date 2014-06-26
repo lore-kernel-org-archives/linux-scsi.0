@@ -1,115 +1,58 @@
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-Subject: External USB3 disk fails with "Invalid field in cdb"
-Date: Thu, 26 Jun 2014 20:55:19 +0200
-Message-ID: <20140626205519.314a71ae@wiggum>
+From: "Atchley, Scott" <atchleyes-1Heg1YXhbW8@public.gmane.org>
+Subject: Re: [PATCH v2 1/3] scsi_cmnd: Introduce scsi_transfer_length helper
+Date: Thu, 26 Jun 2014 21:17:34 +0000
+Message-ID: <F7E1F0AA-0764-4C1D-A8FD-8DEE7770AB44@ornl.gov>
+References: <1402477799-24610-1-git-send-email-sagig@mellanox.com>
+ <1402477799-24610-2-git-send-email-sagig@mellanox.com>
+ <53AC3402.2080302@acm.org> <1403794551.3572.6.camel@dabdike>
+ <86EE1A5C-8943-4C87-9A79-899DE85971CA@ornl.gov>
+ <fbbc6688-5a52-4437-93b1-71e8ff84c36c@email.android.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/myzV12/YJzOUahJit=We1k="; protocol="application/pgp-signature"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:49442 "EHLO bues.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751064AbaFZTU0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 Jun 2014 15:20:26 -0400
-Received: by bues.ch with esmtpsa (Exim 4.80)
-	(envelope-from <m@bues.ch>)
-	id 1X0Eqm-0004Ca-Oa
-	for linux-scsi@vger.kernel.org; Thu, 26 Jun 2014 20:56:48 +0200
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <fbbc6688-5a52-4437-93b1-71e8ff84c36c-2ueSQiBKiTY7tOexoI0I+QC/G2K4zDHf@public.gmane.org>
+Content-Language: en-US
+Content-ID: <52FAC9C7F3CB8A4DAB2A2BDA53601002@local>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
+Cc: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, "<michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>" <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>, "<martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "<nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>" <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>, "<roland-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>" <roland-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "<linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "<target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>" <target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "<linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
---Sig_/myzV12/YJzOUahJit=We1k=
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Jun 26, 2014, at 12:38 PM, James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org> wrote:
 
-Hi,
+> On June 26, 2014 11:41:48 AM EDT, "Atchley, Scott" <atchleyes-1Heg1YXhbW8@public.gmane.org> wrote:
+>> On Jun 26, 2014, at 10:55 AM, James Bottomley
+>> <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org> wrote:
+>> 
+>>> On Thu, 2014-06-26 at 16:53 +0200, Bart Van Assche wrote:
+>>>> On 06/11/14 11:09, Sagi Grimberg wrote:
+>>>>> +	return xfer_len + (xfer_len >> ilog2(sector_size)) * 8;
+>>>> 
+>>>> Sorry that I just noticed this now, but why is a shift-right and
+>> ilog2()
+>>>> used in the above expression instead of just dividing the transfer
+>>>> length by the sector size ?
+>>> 
+>>> It's a performance thing.  Division is really slow on most CPUs.
+>>> However, we know the divisor is a power of two so we re-express the
+>>> division as a shift, which the processor can do really fast.
+>>> 
+>>> James
+>> 
+>> I have done this in the past as well, but have you benchmarked it?
+>> Compilers typically do the right thing in this case (i.e replace
+>> division with shift).
+> 
+> The compiler can only do that for values which are reducible to constants at compile time. This is a runtime value, the compiler has no way of deducing that it will be a power of 2
+> 
+> James
 
-I got a new USB3->SATA adapter that throws the following errors
-when trying to mount the ext4 file system on the attached disk.
+You're right, I should have said runtime.
 
-Jun 26 20:47:11 wiggum kernel: [156016.840175] usb 4-2: new SuperSpeed USB =
-device number 8 using xhci_hcd
-Jun 26 20:47:11 wiggum kernel: [156016.856962] usb 4-2: New USB device foun=
-d, idVendor=3D152d, idProduct=3D0567
-Jun 26 20:47:11 wiggum kernel: [156016.856969] usb 4-2: New USB device stri=
-ngs: Mfr=3D1, Product=3D2, SerialNumber=3D3
-Jun 26 20:47:11 wiggum kernel: [156016.856972] usb 4-2: Product: USB to ATA=
-/ATAPI Bridge
-Jun 26 20:47:11 wiggum kernel: [156016.856975] usb 4-2: Manufacturer: JMicr=
-on
-Jun 26 20:47:11 wiggum kernel: [156016.856977] usb 4-2: SerialNumber: xxx
-Jun 26 20:47:11 wiggum kernel: [156016.858030] usb-storage 4-2:1.0: USB Mas=
-s Storage device detected
-Jun 26 20:47:11 wiggum kernel: [156016.858141] scsi22 : usb-storage 4-2:1.0
-Jun 26 20:47:12 wiggum kernel: [156017.857096] scsi 22:0:0:0: Direct-Access=
-     JMicron  Generic          0114 PQ: 0 ANSI: 6
-Jun 26 20:47:12 wiggum kernel: [156017.857427] sd 22:0:0:0: Attached scsi g=
-eneric sg1 type 0
-Jun 26 20:47:12 wiggum kernel: [156017.860670] sd 22:0:0:0: [sdb] Spinning =
-up disk...
-Jun 26 20:47:14 wiggum kernel: [156018.865281] ..ready
-Jun 26 20:47:14 wiggum kernel: [156019.870310] sd 22:0:0:0: [sdb] 976773168=
- 512-byte logical blocks: (500 GB/465 GiB)
-Jun 26 20:47:14 wiggum kernel: [156019.870653] sd 22:0:0:0: [sdb] Write Pro=
-tect is off
-Jun 26 20:47:14 wiggum kernel: [156019.870659] sd 22:0:0:0: [sdb] Mode Sens=
-e: 47 00 10 08
-Jun 26 20:47:14 wiggum kernel: [156019.870956] sd 22:0:0:0: [sdb] Write cac=
-he: enabled, read cache: enabled, supports DPO and FUA
-Jun 26 20:47:14 wiggum kernel: [156019.924517]  sdb: sdb1
-Jun 26 20:47:14 wiggum kernel: [156019.928649] sd 22:0:0:0: [sdb] Attached =
-SCSI disk
-Jun 26 20:47:27 wiggum kernel: [156032.936896] JBD2: Clearing recovery info=
-rmation on journal
-Jun 26 20:47:27 wiggum kernel: [156032.938218] sd 22:0:0:0: [sdb] Invalid c=
-ommand failure
-Jun 26 20:47:27 wiggum kernel: [156032.938222] sd 22:0:0:0: [sdb]
-Jun 26 20:47:27 wiggum kernel: [156032.938225] Result: hostbyte=3DDID_OK dr=
-iverbyte=3DDRIVER_SENSE
-Jun 26 20:47:27 wiggum kernel: [156032.938228] sd 22:0:0:0: [sdb]
-Jun 26 20:47:27 wiggum kernel: [156032.938230] Sense Key : Illegal Request =
-[current]
-Jun 26 20:47:27 wiggum kernel: [156032.938234] sd 22:0:0:0: [sdb]
-Jun 26 20:47:27 wiggum kernel: [156032.938237] Add. Sense: Invalid field in=
- cdb
-Jun 26 20:47:27 wiggum kernel: [156032.938239] sd 22:0:0:0: [sdb] CDB:
-Jun 26 20:47:27 wiggum kernel: [156032.938241] Write(10): 2a 08 1d 04 00 3f=
- 00 00 08 00
-Jun 26 20:47:27 wiggum kernel: [156032.938247] end_request: critical target=
- error, dev sdb, sector 486801471
-Jun 26 20:47:27 wiggum kernel: [156032.938249] Buffer I/O error on device s=
-db1, logical block 60850176
-Jun 26 20:47:27 wiggum kernel: [156032.938251] lost page write due to I/O e=
-rror on sdb1
-Jun 26 20:47:27 wiggum kernel: [156032.938260] JBD2: Error -5 detected when=
- updating journal superblock for sdb1-8.
+However, gcc on Intel seems to choose the right algorithm at runtime. On a trivial app with -O0, I see the same performance for shift and division if the divisor is a power of two. Is see ~38% penalty if the divisor is not a power of 2. With -O3, shift is faster than division by about ~17% when the divisor is a power of two.
 
-Does somebody have a hint to debug this?
-
---=20
-Michael.
-
-
---Sig_/myzV12/YJzOUahJit=We1k=
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBAgAGBQJTrGyaAAoJEPUyvh2QjYsO0PkQAJO1eHSyW0bzFNZXQyLcojV7
-3UR62g+jJU55L004yoMgxWhPbMHu0qlftdB1LNGWIcnDPE23vdZRWAUI4tB9r5IU
-35wcc5H/p9JBs5QTXbigQStFV48P9yLnUUcgkenfEZn7jLPy1PsG2+U1fJ7u4Xph
-kFNQHypOEkZYLAqOU1wKma2pVtleUwYXdnIjQkM3sS1k0ICuCWma8BwAX0LLT7QJ
-RngR3VZ/daf9tdzi5SX3f+MaDnmX6PRK1fyYV260+2DvLOW+dNJeXbZiBGTvVZae
-QxD3ytpe0y8an1ctjBjcZPndG+IrzUSvUdly1r6niyytISux+9oKR46hYjb6fwAL
-oXjZO/V4pY7NEp29LoX7+1SelRayp0DEavrgGsQw3VuLWXAnhbCQX1NCQasfMZ6B
-ocEhctzgw1OvVDu9qmkserQQ66xhxPGensyQCcGM8U+qj7TTLw7g1Gh2lsBEqaAN
-o6geq974DLTaC2hGF80bDgcWuv80pDKsddwMtmixLRiOX9WPXA9i+6o6nm8Jleey
-0o6gOi0kuZP4/yXgdK34lkx0bc446R9f4vVzN4TYgiYFLu4O4Z82hc5i1wuuQql3
-DGaJVLv6NFX2O5+43R+8f9WgJ7iRJ512z0Pf3qT6KhNuCZV0XL7CC09Fp8KiGaNW
-bMSepDckDOZcRnofAeJO
-=A/+H
------END PGP SIGNATURE-----
-
---Sig_/myzV12/YJzOUahJit=We1k=--
+Scott--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
