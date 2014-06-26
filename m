@@ -1,38 +1,67 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/6] scsi: Implement sg_printk()
-Date: Thu, 26 Jun 2014 00:41:57 -0700
-Message-ID: <20140626074157.GB26094@infradead.org>
-References: <1403707199-102664-1-git-send-email-hare@suse.de>
- <1403707199-102664-3-git-send-email-hare@suse.de>
- <53AB2F3F.4000607@interlog.com>
+From: Jack Wang <xjtuwjp@gmail.com>
+Subject: Re: [PATCH] scsi: pm8001: pm80xx_hwi.c:  Cleaning up uninitialized
+ variables
+Date: Thu, 26 Jun 2014 10:02:41 +0200
+Message-ID: <53ABD3A1.10400@gmail.com>
+References: <1401628410-17824-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:33139 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754709AbaFZHmE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Jun 2014 03:42:04 -0400
-Content-Disposition: inline
-In-Reply-To: <53AB2F3F.4000607@interlog.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1401628410-17824-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Cc: lindar_liu@usish.com, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dgilbert@interlog.com>
-Cc: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 
-On Wed, Jun 25, 2014 at 04:21:19PM -0400, Douglas Gilbert wrote:
-> That function used to be called sg_cmd_done() but
-> another hacker gave it a more reasonable name (?)
-> but neglected to fix the printk_s. There are other
-> examples, so now I prefer:
+Looks good, thanks Rickard.
+Acked-by: Jack Wang <xjtuwjp@gmail.com>
+On 06/01/2014 03:13 PM, Rickard Strandqvist wrote:
+> There is a risk that the variable will be used without being initialized.
 > 
->   SCSI_LOG_TIMEOUT(4, sg_printk(KERN_INFO, sdp,
-> 		   "%s: pack_id=%d, res=0x%x\n", __func__,
-> 		   srp->header.pack_id, result));
+> This was largely found by using a static code analysis program called cppcheck.
 > 
+> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+> ---
+>  drivers/scsi/pm8001/pm80xx_hwi.c |    6 ++----
+>  1 file changed, 2 insertions(+), 4 deletions(-)
 > 
-> Oh, and we really shouldn't be printing from this context but
-> it works and I have found it useful in debugging :-)
-
-printk from irq context isn't a problem at all.  And just send me the
-one liner to use __func__ againat the core-for-3.17 tree.
-
+> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
+> index d70587f..add019b 100644
+> --- a/drivers/scsi/pm8001/pm80xx_hwi.c
+> +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+> @@ -948,7 +948,7 @@ static int
+>  pm80xx_get_encrypt_info(struct pm8001_hba_info *pm8001_ha)
+>  {
+>  	u32 scratch3_value;
+> -	int ret;
+> +	int ret = -1;
+>  
+>  	/* Read encryption status from SCRATCH PAD 3 */
+>  	scratch3_value = pm8001_cr32(pm8001_ha, 0, MSGU_SCRATCH_PAD_3);
+> @@ -982,7 +982,7 @@ pm80xx_get_encrypt_info(struct pm8001_hba_info *pm8001_ha)
+>  		pm8001_ha->encrypt_info.status = 0xFFFFFFFF;
+>  		pm8001_ha->encrypt_info.cipher_mode = 0;
+>  		pm8001_ha->encrypt_info.sec_mode = 0;
+> -		return 0;
+> +		ret = 0;
+>  	} else if ((scratch3_value & SCRATCH_PAD3_ENC_MASK) ==
+>  				SCRATCH_PAD3_ENC_DIS_ERR) {
+>  		pm8001_ha->encrypt_info.status =
+> @@ -1004,7 +1004,6 @@ pm80xx_get_encrypt_info(struct pm8001_hba_info *pm8001_ha)
+>  			scratch3_value, pm8001_ha->encrypt_info.cipher_mode,
+>  			pm8001_ha->encrypt_info.sec_mode,
+>  			pm8001_ha->encrypt_info.status));
+> -		ret = -1;
+>  	} else if ((scratch3_value & SCRATCH_PAD3_ENC_MASK) ==
+>  				 SCRATCH_PAD3_ENC_ENA_ERR) {
+>  
+> @@ -1028,7 +1027,6 @@ pm80xx_get_encrypt_info(struct pm8001_hba_info *pm8001_ha)
+>  			scratch3_value, pm8001_ha->encrypt_info.cipher_mode,
+>  			pm8001_ha->encrypt_info.sec_mode,
+>  			pm8001_ha->encrypt_info.status));
+> -		ret = -1;
+>  	}
+>  	return ret;
+>  }
+> 
