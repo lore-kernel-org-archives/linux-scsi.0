@@ -1,51 +1,44 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH v2 1/3] scsi_cmnd: Introduce scsi_transfer_length helper
-Date: Thu, 26 Jun 2014 12:38:42 -0400
-Message-ID: <fbbc6688-5a52-4437-93b1-71e8ff84c36c@email.android.com>
-References: <1402477799-24610-1-git-send-email-sagig@mellanox.com> <1402477799-24610-2-git-send-email-sagig@mellanox.com> <53AC3402.2080302@acm.org> <1403794551.3572.6.camel@dabdike> <86EE1A5C-8943-4C87-9A79-899DE85971CA@ornl.gov>
-Mime-Version: 1.0
-Content-Type: text/plain;
- charset=UTF-8
-Content-Transfer-Encoding: 8bit
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Subject: [PATCH v3] scsi: bnx2i: bnx2i_iscsi.c:  Fix variable which was set to the wrong value
+Date: Thu, 26 Jun 2014 19:10:33 +0200
+Message-ID: <1403802633-23726-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:50455 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757250AbaFZQi4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 Jun 2014 12:38:56 -0400
-In-Reply-To: <86EE1A5C-8943-4C87-9A79-899DE85971CA@ornl.gov>
+Received: from mail-la0-f52.google.com ([209.85.215.52]:43931 "EHLO
+	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753131AbaFZRJX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Jun 2014 13:09:23 -0400
+Received: by mail-la0-f52.google.com with SMTP id ty20so2070322lab.25
+        for <linux-scsi@vger.kernel.org>; Thu, 26 Jun 2014 10:09:21 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Atchley, Scott" <atchleyes@ornl.gov>
-Cc: Bart Van Assche <bvanassche@acm.org>, Sagi Grimberg <sagig@mellanox.com>, "<michaelc@cs.wisc.edu>" <michaelc@cs.wisc.edu>, "<martin.petersen@oracle.com>" <martin.petersen@oracle.com>, "<nab@linux-iscsi.org>" <nab@linux-iscsi.org>, "<roland@kernel.org>" <roland@kernel.org>, "<linux-scsi@vger.kernel.org>" <linux-scsi@vger.kernel.org>, "<target-devel@vger.kernel.org>" <target-devel@vger.kernel.org>, "<linux-rdma@vger.kernel.org>" <linux-rdma@vger.kernel.org>
+To: Eddie Wai <eddie.wai@broadcom.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
+After some discussion, all agreed that the previous value was incorrect.
 
+Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+---
+ drivers/scsi/bnx2i/bnx2i_iscsi.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-On June 26, 2014 11:41:48 AM EDT, "Atchley, Scott" <atchleyes@ornl.gov> wrote:
->On Jun 26, 2014, at 10:55 AM, James Bottomley
-><James.Bottomley@HansenPartnership.com> wrote:
->
->> On Thu, 2014-06-26 at 16:53 +0200, Bart Van Assche wrote:
->>> On 06/11/14 11:09, Sagi Grimberg wrote:
->>>> +	return xfer_len + (xfer_len >> ilog2(sector_size)) * 8;
->>> 
->>> Sorry that I just noticed this now, but why is a shift-right and
->ilog2()
->>> used in the above expression instead of just dividing the transfer
->>> length by the sector size ?
->> 
->> It's a performance thing.  Division is really slow on most CPUs.
->> However, we know the divisor is a power of two so we re-express the
->> division as a shift, which the processor can do really fast.
->> 
->> James
->
->I have done this in the past as well, but have you benchmarked it?
->Compilers typically do the right thing in this case (i.e replace
->division with shift).
-
-The compiler can only do that for values which are reducible to constants at compile time. This is a runtime value, the compiler has no way of deducing that it will be a power of 2
-
-James
+diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+index 166543f..4e17a7f 100644
+--- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
++++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+@@ -1643,12 +1643,11 @@ static void bnx2i_conn_get_stats(struct iscsi_cls_conn *cls_conn,
+ 	stats->r2t_pdus = conn->r2t_pdus_cnt;
+ 	stats->tmfcmd_pdus = conn->tmfcmd_pdus_cnt;
+ 	stats->tmfrsp_pdus = conn->tmfrsp_pdus_cnt;
+-	stats->custom_length = 3;
+ 	strcpy(stats->custom[2].desc, "eh_abort_cnt");
+ 	stats->custom[2].value = conn->eh_abort_cnt;
+ 	stats->digest_err = 0;
+ 	stats->timeout_err = 0;
+-	stats->custom_length = 0;
++	stats->custom_length = 3;
+ }
+ 
+ 
 -- 
-Sent from my Android device with K-9 Mail. Please excuse my brevity.
+1.7.10.4
+
