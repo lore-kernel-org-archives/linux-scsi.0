@@ -1,212 +1,160 @@
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-Subject: Re: External USB3 disk fails with "Invalid field in cdb"
-Date: Fri, 27 Jun 2014 20:51:53 +0200
-Message-ID: <20140627205153.6a8ac916@wiggum>
-References: <20140627195503.49e2dc55@wiggum>
- <Pine.LNX.4.44L0.1406271440130.875-100000@iolanthe.rowland.org>
+From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Subject: Re: [usb-storage] Re: External USB3 disk fails with "Invalid field
+ in cdb"
+Date: Fri, 27 Jun 2014 15:23:42 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1406271521350.875-100000@iolanthe.rowland.org>
+References: <20140627205153.6a8ac916@wiggum>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/cPaG66xLJMU4ar09cCiN2v0"; protocol="application/pgp-signature"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:49698 "EHLO bues.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750862AbaF0Syg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 27 Jun 2014 14:54:36 -0400
-In-Reply-To: <Pine.LNX.4.44L0.1406271440130.875-100000@iolanthe.rowland.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20140627205153.6a8ac916@wiggum>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+Cc: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, "Bryn M. Reeves" <bmr-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, USB Storage list <usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "Bryn M. Reeves" <bmr@redhat.com>, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
 
---Sig_/cPaG66xLJMU4ar09cCiN2v0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Fri, 27 Jun 2014, Michael B=C3=BCsch wrote:
 
-On Fri, 27 Jun 2014 14:42:01 -0400 (EDT)
-Alan Stern <stern@rowland.harvard.edu> wrote:
+> On Fri, 27 Jun 2014 14:42:01 -0400 (EDT)
+> Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org> wrote:
+>=20
+> > Michael, can you post the "lsusb -v" output for this device?  I see=
+ it=20
+> > is made by JMicron; they are notorious for buggy USB-ATA bridges.
+>=20
+> Of course. Here you go:
+>=20
+> Bus 004 Device 009: ID 152d:0567 JMicron Technology Corp. / JMicron U=
+SA Technology Corp.=20
+> Device Descriptor:
+>   bLength                18
+>   bDescriptorType         1
+>   bcdUSB               3.00
+>   bDeviceClass            0 (Defined at Interface level)
+>   bDeviceSubClass         0=20
+>   bDeviceProtocol         0=20
+>   bMaxPacketSize0         9
+>   idVendor           0x152d JMicron Technology Corp. / JMicron USA Te=
+chnology Corp.
+>   idProduct          0x0567=20
+>   bcdDevice            1.14
+>   iManufacturer           1 JMicron
+>   iProduct                2 USB to ATA/ATAPI Bridge
+>   iSerial                 3 xxx
+>   bNumConfigurations      1
+>   Configuration Descriptor:
+>     bLength                 9
+>     bDescriptorType         2
+>     wTotalLength          121
+>     bNumInterfaces          1
+>     bConfigurationValue     1
+>     iConfiguration          4 USB Mass Storage
+>     bmAttributes         0xc0
+>       Self Powered
+>     MaxPower                2mA
+=2E..
 
-> Michael, can you post the "lsusb -v" output for this device?  I see it=20
-> is made by JMicron; they are notorious for buggy USB-ATA bridges.
+> MaxPower=3D2mA is a nice guess for a hard disk. ;)
 
-Of course. Here you go:
+That refers to the amount of power the device draws from the USB bus. =20
+Since the disk drive is self-powered, it doesn't use much bus power.
 
-Bus 004 Device 009: ID 152d:0567 JMicron Technology Corp. / JMicron USA Tec=
-hnology Corp.=20
-Device Descriptor:
-  bLength                18
-  bDescriptorType         1
-  bcdUSB               3.00
-  bDeviceClass            0 (Defined at Interface level)
-  bDeviceSubClass         0=20
-  bDeviceProtocol         0=20
-  bMaxPacketSize0         9
-  idVendor           0x152d JMicron Technology Corp. / JMicron USA Technolo=
-gy Corp.
-  idProduct          0x0567=20
-  bcdDevice            1.14
-  iManufacturer           1 JMicron
-  iProduct                2 USB to ATA/ATAPI Bridge
-  iSerial                 3 xxx
-  bNumConfigurations      1
-  Configuration Descriptor:
-    bLength                 9
-    bDescriptorType         2
-    wTotalLength          121
-    bNumInterfaces          1
-    bConfigurationValue     1
-    iConfiguration          4 USB Mass Storage
-    bmAttributes         0xc0
-      Self Powered
-    MaxPower                2mA
-    Interface Descriptor:
-      bLength                 9
-      bDescriptorType         4
-      bInterfaceNumber        0
-      bAlternateSetting       0
-      bNumEndpoints           2
-      bInterfaceClass         8 Mass Storage
-      bInterfaceSubClass      6 SCSI
-      bInterfaceProtocol     80 Bulk-Only
-      iInterface              6 MSC Bulk-Only Transport
-      Endpoint Descriptor:
-        bLength                 7
-        bDescriptorType         5
-        bEndpointAddress     0x81  EP 1 IN
-        bmAttributes            2
-          Transfer Type            Bulk
-          Synch Type               None
-          Usage Type               Data
-        wMaxPacketSize     0x0400  1x 1024 bytes
-        bInterval               0
-        bMaxBurst              15
-      Endpoint Descriptor:
-        bLength                 7
-        bDescriptorType         5
-        bEndpointAddress     0x02  EP 2 OUT
-        bmAttributes            2
-          Transfer Type            Bulk
-          Synch Type               None
-          Usage Type               Data
-        wMaxPacketSize     0x0400  1x 1024 bytes
-        bInterval               0
-        bMaxBurst              15
-    Interface Descriptor:
-      bLength                 9
-      bDescriptorType         4
-      bInterfaceNumber        0
-      bAlternateSetting       1
-      bNumEndpoints           4
-      bInterfaceClass         8 Mass Storage
-      bInterfaceSubClass      6 SCSI
-      bInterfaceProtocol     98=20
-      iInterface             10 MSC USB Attached SCSI
-      Endpoint Descriptor:
-        bLength                 7
-        bDescriptorType         5
-        bEndpointAddress     0x01  EP 1 OUT
-        bmAttributes            2
-          Transfer Type            Bulk
-          Synch Type               None
-          Usage Type               Data
-        wMaxPacketSize     0x0400  1x 1024 bytes
-        bInterval               0
-        bMaxBurst               0
-        Command pipe (0x01)
-      Endpoint Descriptor:
-        bLength                 7
-        bDescriptorType         5
-        bEndpointAddress     0x82  EP 2 IN
-        bmAttributes            2
-          Transfer Type            Bulk
-          Synch Type               None
-          Usage Type               Data
-        wMaxPacketSize     0x0400  1x 1024 bytes
-        bInterval               0
-        bMaxBurst               0
-        MaxStreams             16
-        Status pipe (0x02)
-      Endpoint Descriptor:
-        bLength                 7
-        bDescriptorType         5
-        bEndpointAddress     0x83  EP 3 IN
-        bmAttributes            2
-          Transfer Type            Bulk
-          Synch Type               None
-          Usage Type               Data
-        wMaxPacketSize     0x0400  1x 1024 bytes
-        bInterval               0
-        bMaxBurst              15
-        MaxStreams             16
-        Data-in pipe (0x03)
-      Endpoint Descriptor:
-        bLength                 7
-        bDescriptorType         5
-        bEndpointAddress     0x04  EP 4 OUT
-        bmAttributes            2
-          Transfer Type            Bulk
-          Synch Type               None
-          Usage Type               Data
-        wMaxPacketSize     0x0400  1x 1024 bytes
-        bInterval               0
-        bMaxBurst              15
-        MaxStreams             16
-        Data-out pipe (0x04)
-Binary Object Store Descriptor:
-  bLength                 5
-  bDescriptorType        15
-  wTotalLength           22
-  bNumDeviceCaps          2
-  USB 2.0 Extension Device Capability:
-    bLength                 7
-    bDescriptorType        16
-    bDevCapabilityType      2
-    bmAttributes   0x00000002
-      Link Power Management (LPM) Supported
-  SuperSpeed USB Device Capability:
-    bLength                10
-    bDescriptorType        16
-    bDevCapabilityType      3
-    bmAttributes         0x00
-    wSpeedsSupported   0x000e
-      Device can operate at Full Speed (12Mbps)
-      Device can operate at High Speed (480Mbps)
-      Device can operate at SuperSpeed (5Gbps)
-    bFunctionalitySupport   1
-      Lowest fully-functional device speed is Full Speed (12Mbps)
-    bU1DevExitLat          10 micro seconds
-    bU2DevExitLat          32 micro seconds
-Device Status:     0x000d
-  Self Powered
-  U1 Enabled
-  U2 Enabled
+Does the patch below do what you and James want?
+
+Alan Stern
 
 
 
-MaxPower=3D2mA is a nice guess for a hard disk. ;)
+Index: usb-3.16/include/linux/usb_usual.h
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+--- usb-3.16.orig/include/linux/usb_usual.h
++++ usb-3.16/include/linux/usb_usual.h
+@@ -70,7 +70,9 @@
+ 	US_FLAG(NEEDS_CAP16,	0x00400000)			\
+ 		/* cannot handle READ_CAPACITY_10 */		\
+ 	US_FLAG(IGNORE_UAS,	0x00800000)			\
+-		/* Device advertises UAS but it is broken */
++		/* Device advertises UAS but it is broken */	\
++	US_FLAG(BROKEN_FUA,	0x01000000)			\
++		/* Cannot handle FUA in WRITE CDBs */		\
+=20
+ #define US_FLAG(name, value)	US_FL_##name =3D value ,
+ enum { US_DO_ALL_FLAGS };
+Index: usb-3.16/include/scsi/scsi_device.h
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+--- usb-3.16.orig/include/scsi/scsi_device.h
++++ usb-3.16/include/scsi/scsi_device.h
+@@ -173,6 +173,7 @@ struct scsi_device {
+ 	unsigned is_visible:1;	/* is the device visible in sysfs */
+ 	unsigned wce_default_on:1;	/* Cache is ON by default */
+ 	unsigned no_dif:1;	/* T10 PI (DIF) should be disabled */
++	unsigned broken_fua:1;		/* Don't set FUA bit */
+=20
+ 	atomic_t disk_events_disable_depth; /* disable depth for disk events =
+*/
+=20
+Index: usb-3.16/drivers/usb/storage/unusual_devs.h
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+--- usb-3.16.orig/drivers/usb/storage/unusual_devs.h
++++ usb-3.16/drivers/usb/storage/unusual_devs.h
+@@ -1936,6 +1936,13 @@ UNUSUAL_DEV(  0x14cd, 0x6600, 0x0201, 0x
+ 		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
+ 		US_FL_IGNORE_RESIDUE ),
+=20
++/* Reported by Michael B=C3=BCsch <m@bues.ch> */
++UNUSUAL_DEV(  0x152d, 0x0567, 0x0114, 0x0114,
++		"JMicron",
++		"USB to ATA/ATAPI Bridge",
++		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
++		US_FL_BROKEN_FUA ),
++
+ /* Reported by Alexandre Oliva <oliva-RGTiaf7OHS4mmTcpzmvVSFAUjnlXr6A1@public.gmane.org>
+  * JMicron responds to USN and several other SCSI ioctls with a
+  * residue that causes subsequent I/O requests to fail.  */
+Index: usb-3.16/drivers/usb/storage/scsiglue.c
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+--- usb-3.16.orig/drivers/usb/storage/scsiglue.c
++++ usb-3.16/drivers/usb/storage/scsiglue.c
+@@ -256,6 +256,10 @@ static int slave_configure(struct scsi_d
+ 		if (us->fflags & US_FL_WRITE_CACHE)
+ 			sdev->wce_default_on =3D 1;
+=20
++		/* A few buggy USB-ATA bridges don't understand FUA */
++		if (us->fflags & US_FL_BROKEN_FUA)
++			sdev->broken_fua =3D 1;
++
+ 	} else {
+=20
+ 		/* Non-disk-type devices don't need to blacklist any pages
+Index: usb-3.16/drivers/scsi/sd.c
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+--- usb-3.16.orig/drivers/scsi/sd.c
++++ usb-3.16/drivers/scsi/sd.c
+@@ -2441,7 +2441,10 @@ sd_read_cache_type(struct scsi_disk *sdk
+ 		}
+=20
+ 		sdkp->DPOFUA =3D (data.device_specific & 0x10) !=3D 0;
+-		if (sdkp->DPOFUA && !sdkp->device->use_10_for_rw) {
++		if (sdp->broken_fua) {
++			sd_first_printk(KERN_NOTICE, sdkp, "Disabling FUA\n");
++			sdkp->DPOFUA =3D 0;
++		} else if (sdkp->DPOFUA && !sdkp->device->use_10_for_rw) {
+ 			sd_first_printk(KERN_NOTICE, sdkp,
+ 				  "Uses READ/WRITE(6), disabling FUA\n");
+ 			sdkp->DPOFUA =3D 0;
 
---=20
-Michael
-
---Sig_/cPaG66xLJMU4ar09cCiN2v0
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBAgAGBQJTrb1JAAoJEPUyvh2QjYsONhUP/jTMjzJhF17En149DAeussxK
-mr/d9owtLKr0GP0H4tfNq3T47lwF+XFN+rBVlF5oO9P44YudVCLyGgDGFQJDWAPk
-fHLaHQIPAcL4Mtds4DvDTWbejonLpF9pmeImfFjGQwqK2afa72uhVhb/CQtIVLHK
-1rKxtp2ZRBoG6IbLo1CSWembLQ6PhuFdZQsz6+PLB1869f+Uc3d8jw82reP3JUHA
-fDZ0FhHo0C3I6jXVhY+/ITjwKCnWpZHdwoVm3xiakM+/ys79f3nUqpyhjm75ohCU
-Ky5rqz5e9wZAoPyP7ezWK/0Ldt9W9K6JE5bHOfgxVFE4pc43tMl8trPzCxlg8Lhq
-GxtzM0QSDp+sqxC2CciNK1bcsKAEJiBNZRdZ2eOW2t1iP1V3R7i7Dkq+RhCqUJj9
-w5FBO35XgMrd6egi8C6+F/Yo261XjBVae3m3VN0aCPRegpiqhpQfoKa81dFUghvG
-j8IgQS1GaaBFoEvZQ7p4GltVSgNfg6KFGohzLwDbDrWE8SzJq+zwHqQb8rdrmOwU
-x2WvRh8X8588WmahcHi/YViBmDazH3S6tH+Yk1XkwhEakw98I/w1gCnQD4ltMSK8
-QEzkCVlBNWDOnJUDBQKLNyjd8DMLbossRMNCmauzOVOvIwbIF/xJA+jcd6gdQBZp
-Gs47rJ26F4GbfLbGQT1G
-=0J5I
------END PGP SIGNATURE-----
-
---Sig_/cPaG66xLJMU4ar09cCiN2v0--
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
