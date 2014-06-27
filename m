@@ -1,61 +1,108 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH 4/4] scsi_scan: Fixup scsilun_to_int()
-Date: Fri, 27 Jun 2014 14:49:13 +0200
-Message-ID: <53AD6849.5080601@acm.org>
-References: <1403702859-74437-1-git-send-email-hare@suse.de> <1403702859-74437-5-git-send-email-hare@suse.de> <53AD1960.70703@acm.org> <53AD1DA5.1040605@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Maurizio Lombardi <mlombard@redhat.com>
+Subject: [PATCH] b2iscsi: Fix memory leak in mgmt_set_ip()
+Date: Fri, 27 Jun 2014 14:55:20 +0200
+Message-ID: <1403873720-9642-1-git-send-email-mlombard@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from michel.telenet-ops.be ([195.130.137.88]:38820 "EHLO
-	michel.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752306AbaF0MtP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Jun 2014 08:49:15 -0400
-In-Reply-To: <53AD1DA5.1040605@suse.de>
+Received: from mx1.redhat.com ([209.132.183.28]:45468 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752537AbaF0M5P (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 27 Jun 2014 08:57:15 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
+To: jayamohan.kallickal@emulex.com
+Cc: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu, hch@infradead.org, JBottomley@parallels.com
 
-On 06/27/14 09:30, Hannes Reinecke wrote:
-> On 06/27/2014 09:12 AM, Bart Van Assche wrote:
->> On 06/25/14 15:27, Hannes Reinecke wrote:
->>> scsilun_to_int() has an error which prevents it from generating
->>> correct LUN numbers for 64bit values.
->>> Also we should remove the misleading comment about portions of
->>> the LUN being ignored; the initiator should treat the LUN as
->>> an opaque value.
->>> And, finally, the example given should use the correct
->>> prefix (here: extended flat space addressing scheme).
->>
->> I'm still not enthusiast about the byte reordering by scsilun_to_int()
->> for extended logical unit addressing. But I can confirm that this patch
->> passed the test that failed with the previous version of the 64-bit LUN
->> patch series. So if you want you can add "Tested-by: Bart van Assche
->> <bvanassche@acm.org>".
->>
-> I can somewhat agree with your sentiment.
-> 
-> It should be possible eg to keep the LUN in native format (as now both
-> have the same length) and only use scsilun_to_int() when
-> displaying the LUN number.
-> 
-> But this needs a careful review, as occasionally the code might want to
-> traverse the LUN numbers by simply incrementing it, which of course
-> won't work anymore then.
-> Which was the main reason why I didn't do so in the first place.
-> 
-> Now, however, the necessary bits are done, so we should have a look at
-> that. Let's see ...
+The if_info pointer is not released by the mgmt_set_ip() function
 
-The first two bits of a SCSI LUN indicate the addressing method. Has it
-been considered to make the LUN encoding and decoding scheme dependent
-on the addressing method, e.g. keeping the current approach for
-multi-level simple LUNs (16 bits each) and preserving the (big endian)
-byte order for the extended logical unit addressing format ? For the
-extended logical unit addressing format the first two bits (ADDRESS
-METHOD) are both equal to one and the subsequent two bits indicate the
-LUN length. As you most likely know more details can be found in SAM-5
-paragraph 4.7.7.5.
+Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
+---
+ drivers/scsi/be2iscsi/be_mgmt.c | 20 +++++++++++---------
+ 1 file changed, 11 insertions(+), 9 deletions(-)
 
-Bart.
+diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
+index 07934b0..a3e5648 100644
+--- a/drivers/scsi/be2iscsi/be_mgmt.c
++++ b/drivers/scsi/be2iscsi/be_mgmt.c
+@@ -1015,7 +1015,7 @@ int mgmt_set_ip(struct beiscsi_hba *phba,
+ 		if (if_info->dhcp_state) {
+ 			beiscsi_log(phba, KERN_WARNING, BEISCSI_LOG_CONFIG,
+ 				    "BG_%d : DHCP Already Enabled\n");
+-			return 0;
++			goto exit;
+ 		}
+ 		/* The ip_param->len is 1 in DHCP case. Setting
+ 		   proper IP len as this it is used while
+@@ -1033,7 +1033,7 @@ int mgmt_set_ip(struct beiscsi_hba *phba,
+ 				sizeof(*reldhcp));
+ 
+ 			if (rc)
+-				return rc;
++				goto exit;
+ 
+ 			reldhcp = nonemb_cmd.va;
+ 			reldhcp->interface_hndl = phba->interface_handle;
+@@ -1044,7 +1044,7 @@ int mgmt_set_ip(struct beiscsi_hba *phba,
+ 				beiscsi_log(phba, KERN_WARNING,
+ 					    BEISCSI_LOG_CONFIG,
+ 					    "BG_%d : Failed to Delete existing dhcp\n");
+-				return rc;
++				goto exit;
+ 			}
+ 		}
+ 	}
+@@ -1054,7 +1054,7 @@ int mgmt_set_ip(struct beiscsi_hba *phba,
+ 		rc = mgmt_static_ip_modify(phba, if_info, ip_param, NULL,
+ 					   IP_ACTION_DEL);
+ 		if (rc)
+-			return rc;
++			goto exit;
+ 	}
+ 
+ 	/* Delete the Gateway settings if mode change is to DHCP */
+@@ -1064,7 +1064,7 @@ int mgmt_set_ip(struct beiscsi_hba *phba,
+ 		if (rc) {
+ 			beiscsi_log(phba, KERN_WARNING, BEISCSI_LOG_CONFIG,
+ 				    "BG_%d : Failed to Get Gateway Addr\n");
+-			return rc;
++			goto exit;
+ 		}
+ 
+ 		if (gtway_addr_set.ip_addr.addr[0]) {
+@@ -1076,7 +1076,7 @@ int mgmt_set_ip(struct beiscsi_hba *phba,
+ 				beiscsi_log(phba, KERN_WARNING,
+ 					    BEISCSI_LOG_CONFIG,
+ 					    "BG_%d : Failed to clear Gateway Addr Set\n");
+-				return rc;
++				goto exit;
+ 			}
+ 		}
+ 	}
+@@ -1087,7 +1087,7 @@ int mgmt_set_ip(struct beiscsi_hba *phba,
+ 			OPCODE_COMMON_ISCSI_NTWK_CONFIG_STATELESS_IP_ADDR,
+ 			sizeof(*dhcpreq));
+ 		if (rc)
+-			return rc;
++			goto exit;
+ 
+ 		dhcpreq = nonemb_cmd.va;
+ 		dhcpreq->flags = BLOCKING;
+@@ -1095,12 +1095,14 @@ int mgmt_set_ip(struct beiscsi_hba *phba,
+ 		dhcpreq->interface_hndl = phba->interface_handle;
+ 		dhcpreq->ip_type = BE2_DHCP_V4;
+ 
+-		return mgmt_exec_nonemb_cmd(phba, &nonemb_cmd, NULL, 0);
++		rc = mgmt_exec_nonemb_cmd(phba, &nonemb_cmd, NULL, 0);
+ 	} else {
+-		return mgmt_static_ip_modify(phba, if_info, ip_param,
++		rc = mgmt_static_ip_modify(phba, if_info, ip_param,
+ 					     subnet_param, IP_ACTION_ADD);
+ 	}
+ 
++exit:
++	kfree(if_info);
+ 	return rc;
+ }
+ 
+-- 
+Maurizio Lombardi
+
