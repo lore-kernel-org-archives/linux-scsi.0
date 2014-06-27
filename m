@@ -1,25 +1,26 @@
-From: John ven den Berg <johnjacknwanne@gmail.com>
-Subject: Re: Your Family.
-Date: Fri, 27 Jun 2014 08:44:55 -0300
-Message-ID: <201406271144.s5RBitKg019343@sapucaia.ufop.br>
-Reply-To: venderbergdjj@gmx.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+From: jgross@suse.com
+Subject: Add XEN pvSCSI support
+Date: Fri, 27 Jun 2014 16:34:32 +0200
+Message-ID: <1403879676-25431-1-git-send-email-jgross@suse.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [200.131.208.21] ([200.131.208.21]:52159 "EHLO sapucaia.ufop.br"
-	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1752866AbaF0NQH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 27 Jun 2014 09:16:07 -0400
-Received: from sapucaia.ufop.br (sapucaia.ufop.br [127.0.0.1])
-	by sapucaia.ufop.br (8.14.4/8.14.4) with ESMTP id s5RBitJm019344
-	for <linux-scsi@vger.kernel.org>; Fri, 27 Jun 2014 08:44:55 -0300
+Received: from cantor2.suse.de ([195.135.220.15]:60081 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752740AbaF0OfA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 27 Jun 2014 10:35:00 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: JBottomley@parallels.com, linux-scsi@vger.kernel.org, xen-devel@lists.xen.org
 
-Compliments. This is in regards to my previous message concerning a deceased client with similar last name with you, I have given you all necessary details about this and I haven't gotten any positive response from you, so kindly get back to me today.
-Thank you,
-John.
+This series adds XEN pvSCSI support. With pvSCSI it is possible to use physical
+SCSI devices from a XEN domain.
 
+The support consists of a backend in the privileged Domain-0 doing the real
+I/O and a frontend in the unprivileged domU passing I/O-requests to the backend.
 
+The code is taken (and adapted) from the original pvSCSI implementation done
+for Linux 2.6 in 2008 by Fujitsu.
+
+[PATCH 1/4] Add XEN pvSCSI protocol description
+[PATCH 2/4] Introduce xen-scsifront module
+[PATCH 3/4] Introduce XEN scsiback module
+[PATCH 4/4] add xen pvscsi maintainer
