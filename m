@@ -1,56 +1,40 @@
-From: Altura Credit Union <amit@goelexports.com>
-Subject: Wir erwarten Ihre Antwort.
-Date: Fri, 27 Jun 2014 11:02:45 +0530
-Message-ID: <11373fcf3f4554590367b8b730738cac@goelexports.com>
-Reply-To: loans.loanfinder.co.uk@zsk.name
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 1/7] scsi: fix comment in scsi_device_set_state()
+Date: Fri, 27 Jun 2014 08:26:59 +0200
+Message-ID: <1403850425-89297-2-git-send-email-hare@suse.de>
+References: <1403850425-89297-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from server09.webcomindia.net ([72.52.226.82]:52631 "EHLO
-	server09.webcomindia.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750819AbaF0Fdn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Jun 2014 01:33:43 -0400
+Received: from cantor2.suse.de ([195.135.220.15]:48830 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752476AbaF0G1J (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 27 Jun 2014 02:27:09 -0400
+In-Reply-To: <1403850425-89297-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <jbottomley@parallels.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
+The function returns '0' if successful; with the original comment
+the function doesn't have a way to indicate success ...
 
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/scsi/scsi_lib.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index d5d22e4..a9d4f65 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -2029,7 +2029,7 @@ EXPORT_SYMBOL(scsi_test_unit_ready);
+  *	@sdev:	scsi device to change the state of.
+  *	@state:	state to change to.
+  *
+- *	Returns zero if unsuccessful or an error if the requested 
++ *	Returns zero if successful or an error if the requested
+  *	transition is illegal.
+  */
+ int
 -- 
-<pre>Attn: Hallo!
+1.7.12.4
 
-Ich bin ein berechtigtes Darlehen Agent Larry Faith von Altura Credit 
-Union Management; Wir bieten Finanzierungsl&ouml;sungen f&uuml;r 
-Unternehmen und hart arbeiten, um unsere Kunden zu gew&auml;hrleisten, 
-die richtige Entscheidung dar&uuml;ber, die welche Anlage am besten 
-f&uuml;r sie und ihr Gesch&auml;ft zu machen ist.
-
-Altura Credit Union Management bietet L&ouml;sungen, die speziell auf 
-Ihre Gesch&auml;ftsanforderungen zugeschnitten: Wenn Sie ein 
-ein-Mann-Band, die auf der Suche nach einem kleinen kurzfristige 
-Darlehen, oder ein gro&szlig;es Konglomerat Unternehmen auf der Suche 
-nach Mitteln, ein neues B&uuml;ro - zu kaufen, wir liefern Ihnen alle 
-Unterst&uuml;tzung und Informationen Sie die Ziffern hinzuf&uuml;gen 
-m&uuml;ssen.
-
-Ben&ouml;tigen Sie einen Kredit? Ob Sie das Darlehen von der Hausbank, 
-sondern alles vergebens beantragt haben? Hier kommt die 
-M&ouml;glichkeit, Darlehen ohne &Auml;rger oder Unannehmlichkeiten zu 
-erhalten. Wir bieten alle Arten von Darlehen 10.000 (Privatkredit) und 
-&uuml;ber dem Zinssatz von 2 %. Hier ist die unsere Kontaktdaten:
-Brauchst du wirklich einen Kredit? Wenn ja, sind Sie uns Folgendes zur 
-Verf&uuml;gung:
-
-* Vor-und Nachname:...
-* Darlehensbetrag ben&ouml;tigt:...
-* Darlehen Dauer:...
-* Land:...
-
-Wir erwarten Ihre Antwort.
-
-Vielen Dank
-Larry Faith
-E-Mail: loans.loanfinder.co.uk@zsk.name
-Office Line: +447042033179
-Altura Union Kreditmanagement</pre>
