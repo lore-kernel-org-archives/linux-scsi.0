@@ -1,67 +1,83 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: scsi-mq V2
-Date: Fri, 27 Jun 2014 16:42:23 +0200
-Message-ID: <53AD82CF.4090701@acm.org>
-References: <1403715121-1201-1-git-send-email-hch@lst.de> <53ABA6A4.8090400@kernel.dk> <94D0CD8314A33A4D9D801C0FE68B402958B4EFB4@G9W0745.americas.hpqcorp.net>
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+Subject: Re: External USB3 disk fails with "Invalid field in cdb"
+Date: Fri, 27 Jun 2014 17:34:32 +0200
+Message-ID: <20140627173432.46ea93bd@marge>
+References: <20140626205519.314a71ae@wiggum>
+ <20140627101540.GB10042@localhost.localdomain>
+ <20140627142223.48c5c18f@wiggum>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <94D0CD8314A33A4D9D801C0FE68B402958B4EFB4@G9W0745.americas.hpqcorp.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Jens Axboe <axboe@kernel.dk>, "Elliott, Robert (Server Storage)" <Elliott@hp.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bues.ch ([80.190.117.144]:49614 "EHLO bues.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753367AbaF0Pg7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 27 Jun 2014 11:36:59 -0400
+In-Reply-To: <20140627142223.48c5c18f@wiggum>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Bryn M. Reeves" <bmr@redhat.com>
+Cc: linux-scsi@vger.kernel.org
 
-On 06/27/14 00:07, Elliott, Robert (Server Storage) wrote:
->> -----Original Message-----
->> From: Jens Axboe [mailto:axboe@kernel.dk]
->> Sent: Wednesday, 25 June, 2014 11:51 PM
->> To: Christoph Hellwig; James Bottomley
->> Cc: Bart Van Assche; Elliott, Robert (Server Storage); linux-
->> scsi@vger.kernel.org; linux-kernel@vger.kernel.org
->> Subject: Re: scsi-mq V2
->>
->> On 2014-06-25 10:51, Christoph Hellwig wrote:
->>> This is the second post of the scsi-mq series.
->>>
-> ...
->>>
->>> Changes from V1:
->>>   - rebased on top of the core-for-3.17 branch, most notable the
->>>     scsi logging changes
->>>   - fixed handling of cmd_list to prevent crashes for some heavy
->>>     workloads
->>>   - fixed incorrect handling of !target->can_queue
->>>   - avoid scheduling a workqueue on I/O completions when no queues
->>>     are congested
->>>
->>> In addition to the patches in this thread there also is a git available at:
->>>
->>> 	git://git.infradead.org/users/hch/scsi.git scsi-mq.2
->>
->> You can add my acked/reviewed-by to the series.
-> 
-> Since March 20th (circa LSF-MM 2014) we've run many hours of tests
-> with hpsa and the scsi-mq tree.  We've also done a little bit of 
-> testing with mpt3sas and, in the last few days, scsi_debug.
-> 
-> Although there are certainly more problems to find and improvements
-> to be made, it's become quite stable.  It's even been used on the
-> boot drives of our test servers.
-> 
-> For the patches in scsi-mq.2 you may add:
-> Tested-by: Robert Elliott <elliott@hp.com>
+I tried the following patch:
 
-Performance of scsi-mq-v2 looks even better than that of scsi-mq-v1. The
-slight single-LUN regression is gone, peak IOPS with use_blk_mq=Y on my
-test setup is now 3x the performance of use_blk_mq=N and latency has
-been reduced further. I think this means reducing the number of context
-switches did really help :-) Detailed measurement results can be found
-on https://drive.google.com/file/d/0B1YQOreL3_FxWmZfbl8xSzRfdGM/.
+Index: linux/drivers/scsi/sd.c
+===================================================================
+--- linux.orig/drivers/scsi/sd.c	2014-06-26 18:40:39.214696552 +0200
++++ linux/drivers/scsi/sd.c	2014-06-27 15:52:30.776159456 +0200
+@@ -2440,7 +2440,7 @@ sd_read_cache_type(struct scsi_disk *sdk
+ 			sdkp->RCD = 0;
+ 		}
+ 
+-		sdkp->DPOFUA = (data.device_specific & 0x10) != 0;
++		sdkp->DPOFUA = 0;
+ 		if (sdkp->DPOFUA && !sdkp->device->use_10_for_rw) {
+ 			sd_first_printk(KERN_NOTICE, sdkp,
+ 				  "Uses READ/WRITE(6), disabling FUA\n");
+ 
 
-If you want you may add to the scsi-mq-v2 patch series:
+This obviously is not the correct thing to do, but it makes the disk usable:
 
-Tested-by: Bart Van Assche <bvanassche@acm.org>
+Jun 27 17:26:50 marge kernel: [  523.909815] usb 2-1: new SuperSpeed USB device number 2 using xhci_hcd
+Jun 27 17:26:50 marge kernel: [  523.929246] usb 2-1: New USB device found, idVendor=152d, idProduct=0567
+Jun 27 17:26:50 marge kernel: [  523.929258] usb 2-1: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+Jun 27 17:26:50 marge kernel: [  523.929265] usb 2-1: Product: USB to ATA/ATAPI Bridge
+Jun 27 17:26:50 marge kernel: [  523.929271] usb 2-1: Manufacturer: JMicron
+Jun 27 17:26:50 marge kernel: [  523.929276] usb 2-1: SerialNumber: xxx
+Jun 27 17:26:50 marge kernel: [  523.930999] usb-storage 2-1:1.0: USB Mass Storage device detected
+Jun 27 17:26:50 marge kernel: [  523.931237] scsi12 : usb-storage 2-1:1.0
+Jun 27 17:26:51 marge kernel: [  524.930451] scsi 12:0:0:0: Direct-Access     JMicron  Generic          0114 PQ: 0 ANSI: 6
+Jun 27 17:26:51 marge kernel: [  524.931228] sd 12:0:0:0: Attached scsi generic sg3 type 0
+Jun 27 17:26:51 marge kernel: [  524.932964] sd 12:0:0:0: [sdd] Spinning up disk...
+Jun 27 17:26:53 marge kernel: [  525.937848] ..ready
+Jun 27 17:26:53 marge kernel: [  526.942395] sd 12:0:0:0: [sdd] 976773168 512-byte logical blocks: (500 GB/465 GiB)
+Jun 27 17:26:53 marge kernel: [  526.943037] sd 12:0:0:0: [sdd] Write Protect is off
+Jun 27 17:26:53 marge kernel: [  526.943048] sd 12:0:0:0: [sdd] Mode Sense: 47 00 10 08
+Jun 27 17:26:53 marge kernel: [  526.943662] sd 12:0:0:0: [sdd] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+Jun 27 17:26:53 marge kernel: [  526.987919]  sdd: sdd1
+Jun 27 17:26:53 marge kernel: [  526.990055] sd 12:0:0:0: [sdd] Attached SCSI disk
+Jun 27 17:27:29 marge kernel: [  563.227849] EXT4-fs (sdd1): warning: mounting fs with errors, running e2fsck is recommended
+Jun 27 17:27:29 marge kernel: [  563.228043] EXT4-fs (sdd1): mounted filesystem with ordered data mode. Opts: (null)
 
-Bart.
+(This is on another machine, but it shows the same behavior without the patch.)
+
+Does somebody have a hint for a real fix?
+
+Note that I also tried the following change, which did _not_ fix the issue:
+
+Index: linux/drivers/scsi/scsi_lib.c
+===================================================================
+--- linux.orig/drivers/scsi/scsi_lib.c	2014-06-27 17:30:27.901581410 +0200
++++ linux/drivers/scsi/scsi_lib.c	2014-06-27 17:32:12.044958922 +0200
+@@ -824,7 +824,7 @@ void scsi_io_completion(struct scsi_cmnd
+ 			 * read past the end of the disk.
+ 			 */
+ 			if ((cmd->device->use_10_for_rw &&
+-			    sshdr.asc == 0x20 && sshdr.ascq == 0x00) &&
++			    (sshdr.asc == 0x20 || sshdr.asc == 0x24) && sshdr.ascq == 0x00) &&
+ 			    (cmd->cmnd[0] == READ_10 ||
+ 			     cmd->cmnd[0] == WRITE_10)) {
+ 				/* This will issue a new 6-byte command. */
+
+-- 
+Michael
