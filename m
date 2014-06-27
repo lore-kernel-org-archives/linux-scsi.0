@@ -1,121 +1,212 @@
-From: Alan Stern <stern@rowland.harvard.edu>
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
 Subject: Re: External USB3 disk fails with "Invalid field in cdb"
-Date: Fri, 27 Jun 2014 14:42:01 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1406271440130.875-100000@iolanthe.rowland.org>
+Date: Fri, 27 Jun 2014 20:51:53 +0200
+Message-ID: <20140627205153.6a8ac916@wiggum>
 References: <20140627195503.49e2dc55@wiggum>
+ <Pine.LNX.4.44L0.1406271440130.875-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/cPaG66xLJMU4ar09cCiN2v0"; protocol="application/pgp-signature"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:37403 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1750990AbaF0SmC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Jun 2014 14:42:02 -0400
-In-Reply-To: <20140627195503.49e2dc55@wiggum>
+Received: from bues.ch ([80.190.117.144]:49698 "EHLO bues.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750862AbaF0Syg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 27 Jun 2014 14:54:36 -0400
+In-Reply-To: <Pine.LNX.4.44L0.1406271440130.875-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: Alan Stern <stern@rowland.harvard.edu>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "Bryn M. Reeves" <bmr@redhat.com>, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
 
-On Fri, 27 Jun 2014, Michael B=C3=BCsch wrote:
+--Sig_/cPaG66xLJMU4ar09cCiN2v0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-> On Fri, 27 Jun 2014 08:48:01 -0700
-> James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
->=20
-> > On Fri, 2014-06-27 at 17:34 +0200, Michael B=C3=BCsch wrote:
-> > > I tried the following patch:
-> > >=20
-> > > Index: linux/drivers/scsi/sd.c
-> > > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> > > --- linux.orig/drivers/scsi/sd.c	2014-06-26 18:40:39.214696552 +0=
-200
-> > > +++ linux/drivers/scsi/sd.c	2014-06-27 15:52:30.776159456 +0200
-> > > @@ -2440,7 +2440,7 @@ sd_read_cache_type(struct scsi_disk *sdk
-> > >  			sdkp->RCD =3D 0;
-> > >  		}
-> > > =20
-> > > -		sdkp->DPOFUA =3D (data.device_specific & 0x10) !=3D 0;
-> > > +		sdkp->DPOFUA =3D 0;
-> > >  		if (sdkp->DPOFUA && !sdkp->device->use_10_for_rw) {
-> > >  			sd_first_printk(KERN_NOTICE, sdkp,
-> > >  				  "Uses READ/WRITE(6), disabling FUA\n");
-> > > =20
-> > >=20
-> > > This obviously is not the correct thing to do, but it makes the d=
-isk usable:
-> > >=20
-> > > Jun 27 17:26:50 marge kernel: [  523.909815] usb 2-1: new SuperSp=
-eed USB device number 2 using xhci_hcd
-> > > Jun 27 17:26:50 marge kernel: [  523.929246] usb 2-1: New USB dev=
-ice found, idVendor=3D152d, idProduct=3D0567
-> > > Jun 27 17:26:50 marge kernel: [  523.929258] usb 2-1: New USB dev=
-ice strings: Mfr=3D1, Product=3D2, SerialNumber=3D3
-> > > Jun 27 17:26:50 marge kernel: [  523.929265] usb 2-1: Product: US=
-B to ATA/ATAPI Bridge
-> > > Jun 27 17:26:50 marge kernel: [  523.929271] usb 2-1: Manufacture=
-r: JMicron
-> > > Jun 27 17:26:50 marge kernel: [  523.929276] usb 2-1: SerialNumbe=
-r: xxx
-> > > Jun 27 17:26:50 marge kernel: [  523.930999] usb-storage 2-1:1.0:=
- USB Mass Storage device detected
-> > > Jun 27 17:26:50 marge kernel: [  523.931237] scsi12 : usb-storage=
- 2-1:1.0
-> > > Jun 27 17:26:51 marge kernel: [  524.930451] scsi 12:0:0:0: Direc=
-t-Access     JMicron  Generic          0114 PQ: 0 ANSI: 6
-> > > Jun 27 17:26:51 marge kernel: [  524.931228] sd 12:0:0:0: Attache=
-d scsi generic sg3 type 0
-> > > Jun 27 17:26:51 marge kernel: [  524.932964] sd 12:0:0:0: [sdd] S=
-pinning up disk...
-> > > Jun 27 17:26:53 marge kernel: [  525.937848] ..ready
-> > > Jun 27 17:26:53 marge kernel: [  526.942395] sd 12:0:0:0: [sdd] 9=
-76773168 512-byte logical blocks: (500 GB/465 GiB)
-> > > Jun 27 17:26:53 marge kernel: [  526.943037] sd 12:0:0:0: [sdd] W=
-rite Protect is off
-> > > Jun 27 17:26:53 marge kernel: [  526.943048] sd 12:0:0:0: [sdd] M=
-ode Sense: 47 00 10 08
-> > > Jun 27 17:26:53 marge kernel: [  526.943662] sd 12:0:0:0: [sdd] W=
-rite cache: enabled, read cache: enabled, doesn't support DPO or FUA
-> > > Jun 27 17:26:53 marge kernel: [  526.987919]  sdd: sdd1
-> > > Jun 27 17:26:53 marge kernel: [  526.990055] sd 12:0:0:0: [sdd] A=
-ttached SCSI disk
-> > > Jun 27 17:27:29 marge kernel: [  563.227849] EXT4-fs (sdd1): warn=
-ing: mounting fs with errors, running e2fsck is recommended
-> > > Jun 27 17:27:29 marge kernel: [  563.228043] EXT4-fs (sdd1): moun=
-ted filesystem with ordered data mode. Opts: (null)
-> > >=20
-> > > (This is on another machine, but it shows the same behavior witho=
-ut the patch.)
-> > >=20
-> > > Does somebody have a hint for a real fix?
-> >=20
-> > I suspect the problem is in the USB bridge: The device reports FUA
-> > support in its initial IDENTIFY, which gets translated to the corre=
-ct
-> > mode page bits, but when we send a READ/WRITE with the FUA bit set,=
- the
-> > bridge doesn't know how to translate it and gives us the error.  Th=
-ere's
-> > probably some way in USB to blacklist the bridge, but we need to
-> > understand the consequences of the blacklist: The device is claimin=
-g a
-> > writeback cache which means if it won't do either FUA or SYNC CACHE=
-,
-> > there's going to be a data integrity failure.
-> >=20
-> > The fact that your initial hack works suggests that sync cache is
-> > accepted by it, so we probably just need a USB blacklist fixing the=
- FUA
-> > problem.
+On Fri, 27 Jun 2014 14:42:01 -0400 (EDT)
+Alan Stern <stern@rowland.harvard.edu> wrote:
 
-Michael, can you post the "lsusb -v" output for this device?  I see it=20
-is made by JMicron; they are notorious for buggy USB-ATA bridges.
+> Michael, can you post the "lsusb -v" output for this device?  I see it=20
+> is made by JMicron; they are notorious for buggy USB-ATA bridges.
 
-Alan Stern
+Of course. Here you go:
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Bus 004 Device 009: ID 152d:0567 JMicron Technology Corp. / JMicron USA Tec=
+hnology Corp.=20
+Device Descriptor:
+  bLength                18
+  bDescriptorType         1
+  bcdUSB               3.00
+  bDeviceClass            0 (Defined at Interface level)
+  bDeviceSubClass         0=20
+  bDeviceProtocol         0=20
+  bMaxPacketSize0         9
+  idVendor           0x152d JMicron Technology Corp. / JMicron USA Technolo=
+gy Corp.
+  idProduct          0x0567=20
+  bcdDevice            1.14
+  iManufacturer           1 JMicron
+  iProduct                2 USB to ATA/ATAPI Bridge
+  iSerial                 3 xxx
+  bNumConfigurations      1
+  Configuration Descriptor:
+    bLength                 9
+    bDescriptorType         2
+    wTotalLength          121
+    bNumInterfaces          1
+    bConfigurationValue     1
+    iConfiguration          4 USB Mass Storage
+    bmAttributes         0xc0
+      Self Powered
+    MaxPower                2mA
+    Interface Descriptor:
+      bLength                 9
+      bDescriptorType         4
+      bInterfaceNumber        0
+      bAlternateSetting       0
+      bNumEndpoints           2
+      bInterfaceClass         8 Mass Storage
+      bInterfaceSubClass      6 SCSI
+      bInterfaceProtocol     80 Bulk-Only
+      iInterface              6 MSC Bulk-Only Transport
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x81  EP 1 IN
+        bmAttributes            2
+          Transfer Type            Bulk
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0400  1x 1024 bytes
+        bInterval               0
+        bMaxBurst              15
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x02  EP 2 OUT
+        bmAttributes            2
+          Transfer Type            Bulk
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0400  1x 1024 bytes
+        bInterval               0
+        bMaxBurst              15
+    Interface Descriptor:
+      bLength                 9
+      bDescriptorType         4
+      bInterfaceNumber        0
+      bAlternateSetting       1
+      bNumEndpoints           4
+      bInterfaceClass         8 Mass Storage
+      bInterfaceSubClass      6 SCSI
+      bInterfaceProtocol     98=20
+      iInterface             10 MSC USB Attached SCSI
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x01  EP 1 OUT
+        bmAttributes            2
+          Transfer Type            Bulk
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0400  1x 1024 bytes
+        bInterval               0
+        bMaxBurst               0
+        Command pipe (0x01)
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x82  EP 2 IN
+        bmAttributes            2
+          Transfer Type            Bulk
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0400  1x 1024 bytes
+        bInterval               0
+        bMaxBurst               0
+        MaxStreams             16
+        Status pipe (0x02)
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x83  EP 3 IN
+        bmAttributes            2
+          Transfer Type            Bulk
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0400  1x 1024 bytes
+        bInterval               0
+        bMaxBurst              15
+        MaxStreams             16
+        Data-in pipe (0x03)
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x04  EP 4 OUT
+        bmAttributes            2
+          Transfer Type            Bulk
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0400  1x 1024 bytes
+        bInterval               0
+        bMaxBurst              15
+        MaxStreams             16
+        Data-out pipe (0x04)
+Binary Object Store Descriptor:
+  bLength                 5
+  bDescriptorType        15
+  wTotalLength           22
+  bNumDeviceCaps          2
+  USB 2.0 Extension Device Capability:
+    bLength                 7
+    bDescriptorType        16
+    bDevCapabilityType      2
+    bmAttributes   0x00000002
+      Link Power Management (LPM) Supported
+  SuperSpeed USB Device Capability:
+    bLength                10
+    bDescriptorType        16
+    bDevCapabilityType      3
+    bmAttributes         0x00
+    wSpeedsSupported   0x000e
+      Device can operate at Full Speed (12Mbps)
+      Device can operate at High Speed (480Mbps)
+      Device can operate at SuperSpeed (5Gbps)
+    bFunctionalitySupport   1
+      Lowest fully-functional device speed is Full Speed (12Mbps)
+    bU1DevExitLat          10 micro seconds
+    bU2DevExitLat          32 micro seconds
+Device Status:     0x000d
+  Self Powered
+  U1 Enabled
+  U2 Enabled
+
+
+
+MaxPower=3D2mA is a nice guess for a hard disk. ;)
+
+--=20
+Michael
+
+--Sig_/cPaG66xLJMU4ar09cCiN2v0
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBAgAGBQJTrb1JAAoJEPUyvh2QjYsONhUP/jTMjzJhF17En149DAeussxK
+mr/d9owtLKr0GP0H4tfNq3T47lwF+XFN+rBVlF5oO9P44YudVCLyGgDGFQJDWAPk
+fHLaHQIPAcL4Mtds4DvDTWbejonLpF9pmeImfFjGQwqK2afa72uhVhb/CQtIVLHK
+1rKxtp2ZRBoG6IbLo1CSWembLQ6PhuFdZQsz6+PLB1869f+Uc3d8jw82reP3JUHA
+fDZ0FhHo0C3I6jXVhY+/ITjwKCnWpZHdwoVm3xiakM+/ys79f3nUqpyhjm75ohCU
+Ky5rqz5e9wZAoPyP7ezWK/0Ldt9W9K6JE5bHOfgxVFE4pc43tMl8trPzCxlg8Lhq
+GxtzM0QSDp+sqxC2CciNK1bcsKAEJiBNZRdZ2eOW2t1iP1V3R7i7Dkq+RhCqUJj9
+w5FBO35XgMrd6egi8C6+F/Yo261XjBVae3m3VN0aCPRegpiqhpQfoKa81dFUghvG
+j8IgQS1GaaBFoEvZQ7p4GltVSgNfg6KFGohzLwDbDrWE8SzJq+zwHqQb8rdrmOwU
+x2WvRh8X8588WmahcHi/YViBmDazH3S6tH+Yk1XkwhEakw98I/w1gCnQD4ltMSK8
+QEzkCVlBNWDOnJUDBQKLNyjd8DMLbossRMNCmauzOVOvIwbIF/xJA+jcd6gdQBZp
+Gs47rJ26F4GbfLbGQT1G
+=0J5I
+-----END PGP SIGNATURE-----
+
+--Sig_/cPaG66xLJMU4ar09cCiN2v0--
