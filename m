@@ -1,64 +1,97 @@
-From: Arkadiusz Miskiewicz <a.miskiewicz@gmail.com>
-Subject: Re: help decoding aacraid errors (3.10.40 kernel)
-Date: Fri, 27 Jun 2014 12:59:18 +0200
-Message-ID: <201406271259.18659.a.miskiewicz@gmail.com>
-References: <201406271055.08750.a.miskiewicz@gmail.com> <20140627104131.GD10042@localhost.localdomain>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 6/7] scsi: Use Scsi_Host as argument for eh_host_reset_handler
+Date: Fri, 27 Jun 2014 13:04:01 +0200
+Message-ID: <53AD4FA1.8090502@suse.de>
+References: <1403850425-89297-1-git-send-email-hare@suse.de> <1403850425-89297-7-git-send-email-hare@suse.de> <53AD4BDB.2040707@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=utf-8
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:42402 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752826AbaF0K7W convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Jun 2014 06:59:22 -0400
-Received: by mail-wi0-f169.google.com with SMTP id hi2so2468693wib.0
-        for <linux-scsi@vger.kernel.org>; Fri, 27 Jun 2014 03:59:21 -0700 (PDT)
-In-Reply-To: <20140627104131.GD10042@localhost.localdomain>
+Received: from cantor2.suse.de ([195.135.220.15]:53659 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753173AbaF0LEE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 27 Jun 2014 07:04:04 -0400
+In-Reply-To: <53AD4BDB.2040707@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Bryn M. Reeves" <bmr@redhat.com>
-Cc: linux-scsi@vger.kernel.org
+To: Steffen Maier <maier@linux.vnet.ibm.com>
+Cc: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
 
-On Friday 27 of June 2014, Bryn M. Reeves wrote:
-> On Fri, Jun 27, 2014 at 10:55:08AM +0200, Arkadiusz Miskiewicz wrote:
-> > [3757350.671860] Result: hostbyte=3D0x00 driverbyte=3D0x08
-> > [3757350.671862] sd 0:0:2:0: [sdc]
-> > [3757350.671863] Sense Key : 0x4 [current]
->=20
-> http://www.t10.org/lists/2sensekey.htm
->=20
-> 0x4 is "hardware error".
->=20
-> > [3757350.671866] sd 0:0:2:0: [sdc]
-> > [3757350.671868] ASC=3D0x44 ASCQ=3D0x0
->=20
-> http://www.t10.org/lists/asc-num.htm
->=20
-> 0x44/0x00 is "internal target failure".
+On 06/27/2014 12:47 PM, Steffen Maier wrote:
+> On 06/27/2014 08:27 AM, Hannes Reinecke wrote:
+>> Issuing a host reset should not rely on any commands.
+>> So use Scsi_Host as argument for eh_host_reset_handler.
+>>
+>> Signed-off-by: Hannes Reinecke <hare@suse.de>
+>> ---
+>
+>>   drivers/s390/scsi/zfcp_scsi.c             |  3 +-
+>
+>>   69 files changed, 289 insertions(+), 379 deletions(-)
+>
+>> diff --git a/drivers/s390/scsi/zfcp_scsi.c
+>> b/drivers/s390/scsi/zfcp_scsi.c
+>> index dc42c93..fe50f69 100644
+>> --- a/drivers/s390/scsi/zfcp_scsi.c
+>> +++ b/drivers/s390/scsi/zfcp_scsi.c
+>> @@ -281,13 +281,14 @@ static int
+>> zfcp_scsi_eh_target_reset_handler(struct scsi_cmnd *scpnt)
+>>       return zfcp_task_mgmt_function(scpnt, FCP_TMF_TGT_RESET);
+>>   }
+>>
+>> -static int zfcp_scsi_eh_host_reset_handler(struct scsi_cmnd *scpnt)
+>> +static int zfcp_scsi_eh_host_reset_handler(struct Scsi_Host *host)
+>>   {
+>>       struct zfcp_scsi_dev *zfcp_sdev =3D sdev_to_zfcp(scpnt->device=
+);
+>
+> Scpnt argument no longer exists, so this line must likely go away to
+> compile.
+>
+>>       struct zfcp_adapter *adapter =3D zfcp_sdev->port->adapter;
+>
+> This needs the assignment from the added line below since zfcp_sdev
+> no longer exists.
+> Alternatively, drop the assignment here, only have the auto variable
+> definition, and do the assignment below with the added line.
+>
+>>       struct fc_rport *rport =3D zfcp_sdev->port->rport;
+>>       int ret;
+>>
+>> +    adapter =3D (struct zfcp_adapter *)host->hostdata[0];
+>>       zfcp_erp_adapter_reopen(adapter, 0, "schrh_1");
+>>       zfcp_erp_wait(adapter);
+>>       ret =3D fc_block_scsi_eh(rport);
+>
+> A question just for my understanding: Calling fc_block_scsi_eh at
+> the end *after* our adapter recovery is OK to wait for rports to
+> become unblocked (or fast_io_failed)?
+> I would guess so.
+>
+Hehe. That's actually a question for _you_ :-)
 
-Thanks for links. I wonder why kernel doesn't decode these to be actual=
-ly=20
-readable without a need for asking on ml - was decoding considered?
+Thing is, 'fc_block_scsi-eh' only waits for the rport to become=20
+unblocked; the unblocking itself would need to be done from the LLDD.
+So I would like to ask the maintainer of the LLDD why this code is=20
+there; normally I would have expected the 'zfcp_erp_wait' to only
+return after the HBA is fully online again.
 
-Anyway Adaptec support helped with details:
+And in general waiting for an rport during host reset is _really_ a=20
+bad idea. The rport might not be present after host reset at all,
+making the check pretty much pointless.
 
-http://ask.adaptec.com/app/answers/detail/a_id/14947/track/AvOF~QqxDv8S=
-~TbvGmIW~yLb_fsq5C75Mv~s~zj~PP8l
+Can't you check whether the HBA is in a working state after=20
+zfcp_erp_wait() and return a status based on that?
 
-Basically this controller finds "bad stripes" and blocks any access to =
-these=20
-areas resulting in errors :-/ What's more interesting there is no recov=
-ery=20
-procedure beside recreation. Fun :-)
+Cheers,
 
-> Regards,
-> Bryn.
-
-
+Hannes
 --=20
-Arkadiusz Mi=C5=9Bkiewicz, arekm / maven.pl
-
-Q: vger.kernel.org postmasters - always rude and impolite, hmm?
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
