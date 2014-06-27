@@ -1,69 +1,71 @@
-From: Maurizio Lombardi <mlombard@redhat.com>
-Subject: Re: [PATCH] b2iscsi: Fix memory leak in mgmt_set_ip()
-Date: Fri, 27 Jun 2014 21:38:10 +0200
-Message-ID: <53ADC822.1040508@redhat.com>
-References: <1403873720-9642-1-git-send-email-mlombard@redhat.com> <53AD9C8A.7010007@redhat.com>
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+Subject: Re: [usb-storage] Re: External USB3 disk fails with "Invalid field
+ in cdb"
+Date: Fri, 27 Jun 2014 21:52:35 +0200
+Message-ID: <20140627215235.4be63476@wiggum>
+References: <20140627205153.6a8ac916@wiggum>
+	<Pine.LNX.4.44L0.1406271521350.875-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/q3wS..JVRY_YblxYTuTs._k"; protocol="application/pgp-signature"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34368 "EHLO mx1.redhat.com"
+Received: from bues.ch ([80.190.117.144]:49721 "EHLO bues.ch"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752136AbaF0Tj5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 27 Jun 2014 15:39:57 -0400
-In-Reply-To: <53AD9C8A.7010007@redhat.com>
+	id S1751403AbaF0Tyv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 27 Jun 2014 15:54:51 -0400
+In-Reply-To: <Pine.LNX.4.44L0.1406271521350.875-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>, jayamohan.kallickal@emulex.com
-Cc: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu, hch@infradead.org, JBottomley@parallels.com
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "Bryn M. Reeves" <bmr@redhat.com>, SCSI development list <linux-scsi@vger.kernel.org>, USB list <linux-usb@vger.kernel.org>, USB Storage list <usb-storage@lists.one-eyed-alien.net>
 
+--Sig_/q3wS..JVRY_YblxYTuTs._k
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
+On Fri, 27 Jun 2014 15:23:42 -0400 (EDT)
+Alan Stern <stern@rowland.harvard.edu> wrote:
 
->> diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
->> index 07934b0..a3e5648 100644
->> --- a/drivers/scsi/be2iscsi/be_mgmt.c
->> +++ b/drivers/scsi/be2iscsi/be_mgmt.c
->> @@ -1015,7 +1015,7 @@ int mgmt_set_ip(struct beiscsi_hba *phba,
->>  		if (if_info->dhcp_state) {
->>  			beiscsi_log(phba, KERN_WARNING, BEISCSI_LOG_CONFIG,
->>  				    "BG_%d : DHCP Already Enabled\n");
->> -			return 0;
->> +			goto exit;
-> 
-> rc should be initialised - so this needs to be added to your patch
+> > MaxPower=3D2mA is a nice guess for a hard disk. ;)
+>=20
+> That refers to the amount of power the device draws from the USB bus. =20
+> Since the disk drive is self-powered, it doesn't use much bus power.
 
-It is initialized at the beginning of the function, and it must contain zero when the "goto exit" is executed.
+Unless the device uses free energy or some other perpetual motion power sou=
+rce,
+it seems that it actually is bus-powered.
+So the self-powered from the descriptor is a lie, too.
 
-int mgmt_set_ip(struct beiscsi_hba *phba,
-                struct iscsi_iface_param_info *ip_param,
-                struct iscsi_iface_param_info *subnet_param,
-                uint32_t boot_proto)
-{
-        struct be_cmd_get_def_gateway_resp gtway_addr_set;
-        struct be_cmd_get_if_info_resp *if_info;
-        struct be_cmd_set_dhcp_req *dhcpreq;
-        struct be_cmd_rel_dhcp_req *reldhcp;
-        struct be_dma_mem nonemb_cmd;
-        uint8_t *gtway_addr;
-        uint32_t ip_type;
-        int rc;
+> Does the patch below do what you and James want?
 
-        if (mgmt_get_all_if_id(phba))
-                return -EIO;
+Yes, this does work. Thanks!
 
-        ip_type = (ip_param->param == ISCSI_NET_PARAM_IPV6_ADDR) ?
-                BE2_IPV6 : BE2_IPV4 ;
+You can add my
+Tested-by: Michael B=C3=BCsch <m@bues.ch>
 
-        rc = mgmt_get_if_info(phba, ip_type, &if_info); <-------------- here
-        if (rc)
-                return rc;
+--=20
+Michael
 
-        if (boot_proto == ISCSI_BOOTPROTO_DHCP) {
-                if (if_info->dhcp_state) {
-                        beiscsi_log(phba, KERN_WARNING, BEISCSI_LOG_CONFIG,
-                                    "BG_%d : DHCP Already Enabled\n");
-                        goto exit;
-                }
+--Sig_/q3wS..JVRY_YblxYTuTs._k
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-Regards,
-Maurizio Lombardi
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBAgAGBQJTrcuGAAoJEPUyvh2QjYsOSB8QAN4lw2mJtlsM7KhVkBj/xV8j
+YIAw5hOy69w1OUz+5UWoph1YDkgI+LpjwkmsmQhp96wi9yEMExuVd7CGJeIPBpVG
+0RktwCfv7zHbmew//6tPazw9YJGRU2Z4B0VjWUT/EOBGfYyw0g05W7xrpxX5XuaQ
+u9dFsCcZTcN0+XiF32cLka6IuTYeObPN4/Lgk1IgYAnJCbQDacf9nPDZxWIMWR6Z
+zKDV5OoR8KDJLM4lXdcTskZJ0X1YpluEn48faVk8FjoLqOkcU44FiNw3pvG+Uc/B
+yPQySxJCbQdT1uRXDrP/VgFsPTs8CfkTI5yfGHE0cuWIeRDEnOjTkN0ppNJMY0jH
+3FjM1UXmSIVbAv3gAPtToc9gvAgH97JdlQEMbhYslMrPJUd2NG14w+tB8o1viuRi
+yBpGRG6tBJcFWzwaSa0Gxo0H3lqlG7A3b4ywq+MEjyZKo4bJCV56l3jjQ96+Eyfr
+Kq7QohPBICr+fJEvwBTlHvgTethyPQmsFaZeUedpUxqTkXuOesEaPZjd8/t7amBx
+dUhn2bZDIUjQDJ2pCGxQqApQge9dzhYbsx6tavXqXaVvfRexRxO6vnuy8a2GuxRY
+/jn224shS+uxAm9+RhliFxcjDhEN6uruPxc+LQmzZxngUPZeF1lJD2GlnfL/Kop9
+l/PNG3oKgHrIopMF7Zco
+=uuCf
+-----END PGP SIGNATURE-----
+
+--Sig_/q3wS..JVRY_YblxYTuTs._k--
