@@ -1,90 +1,124 @@
-From: Mikulas Patocka <mpatocka@redhat.com>
-Subject: Re: [PATCH] target: fix deadlock on unload
-Date: Fri, 27 Jun 2014 08:35:03 -0400 (EDT)
-Message-ID: <alpine.LRH.2.02.1406270816160.24505@file01.intranet.prod.int.rdu2.redhat.com>
-References: <alpine.LRH.2.02.1406231329430.8277@file01.intranet.prod.int.rdu2.redhat.com> <1403842714.22367.8.camel@haakon3.risingtidesystems.com>
+From: Steffen Maier <maier@linux.vnet.ibm.com>
+Subject: Re: [PATCH 5/7] scsi_transport_fc: Use fc_rport as argument for fc_block_scsi_eh
+Date: Fri, 27 Jun 2014 14:46:30 +0200
+Message-ID: <53AD67A6.9060503@linux.vnet.ibm.com>
+References: <1403850425-89297-1-git-send-email-hare@suse.de> <1403850425-89297-6-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1403842714.22367.8.camel@haakon3.risingtidesystems.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e06smtp16.uk.ibm.com ([195.75.94.112]:39560 "EHLO
+	e06smtp16.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751091AbaF0Mqo convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Jun 2014 08:46:44 -0400
+Received: from /spool/local
+	by e06smtp16.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <maier@linux.vnet.ibm.com>;
+	Fri, 27 Jun 2014 13:46:42 +0100
+Received: from b06cxnps4076.portsmouth.uk.ibm.com (d06relay13.portsmouth.uk.ibm.com [9.149.109.198])
+	by d06dlp03.portsmouth.uk.ibm.com (Postfix) with ESMTP id 3957E1B08040
+	for <linux-scsi@vger.kernel.org>; Fri, 27 Jun 2014 13:47:12 +0100 (BST)
+Received: from d06av12.portsmouth.uk.ibm.com (d06av12.portsmouth.uk.ibm.com [9.149.37.247])
+	by b06cxnps4076.portsmouth.uk.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s5RCkdHZ31916054
+	for <linux-scsi@vger.kernel.org>; Fri, 27 Jun 2014 12:46:39 GMT
+Received: from d06av12.portsmouth.uk.ibm.com (localhost [127.0.0.1])
+	by d06av12.portsmouth.uk.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s5RCkYKC022129
+	for <linux-scsi@vger.kernel.org>; Fri, 27 Jun 2014 06:46:38 -0600
+In-Reply-To: <1403850425-89297-6-git-send-email-hare@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, James Smart <james.smart@emulex.com>
 
+On 06/27/2014 08:27 AM, Hannes Reinecke wrote:
+> fc_block_scsi_eh() works on a remote port, so we should be using
+> that as an argument and not the scsi command.
+>
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> Cc: James Smart <james.smart@emulex.com>
+> ---
+>   drivers/s390/scsi/zfcp_scsi.c     |  9 ++++++---
 
+>   10 files changed, 56 insertions(+), 35 deletions(-)
+>
+> diff --git a/drivers/s390/scsi/zfcp_scsi.c b/drivers/s390/scsi/zfcp_s=
+csi.c
+> index 7b35364..dc42c93 100644
+> --- a/drivers/s390/scsi/zfcp_scsi.c
+> +++ b/drivers/s390/scsi/zfcp_scsi.c
+> @@ -173,6 +173,7 @@ static int zfcp_scsi_eh_abort_handler(struct scsi=
+_cmnd *scpnt)
+>   	struct zfcp_adapter *adapter =3D
+>   		(struct zfcp_adapter *) scsi_host->hostdata[0];
+>   	struct zfcp_fsf_req *old_req, *abrt_req;
+> +	struct fc_rport *rport =3D starget_to_rport(scsi_target(scpnt->devi=
+ce));
+>   	unsigned long flags;
+>   	unsigned long old_reqid =3D (unsigned long) scpnt->host_scribble;
+>   	int retval =3D SUCCESS, ret;
+> @@ -199,7 +200,7 @@ static int zfcp_scsi_eh_abort_handler(struct scsi=
+_cmnd *scpnt)
+>   			break;
+>
+>   		zfcp_erp_wait(adapter);
+> -		ret =3D fc_block_scsi_eh(scpnt);
+> +		ret =3D fc_block_scsi_eh(rport);
+>   		if (ret) {
+>   			zfcp_dbf_scsi_abort("abrt_bl", scpnt, NULL);
+>   			return ret;
+> @@ -234,6 +235,7 @@ static int zfcp_task_mgmt_function(struct scsi_cm=
+nd *scpnt, u8 tm_flags)
+>   {
+>   	struct zfcp_scsi_dev *zfcp_sdev =3D sdev_to_zfcp(scpnt->device);
+>   	struct zfcp_adapter *adapter =3D zfcp_sdev->port->adapter;
+> +	struct fc_port *rport =3D zfcp_sdev->port->rport;
 
-On Thu, 26 Jun 2014, Nicholas A. Bellinger wrote:
+typo: struct fc_port =3D> struct fc_rport
 
-> Hi Mikulas,
-> 
-> On Mon, 2014-06-23 at 13:42 -0400, Mikulas Patocka wrote:
-> > target: fix deadlock on unload
-> > 
-> > On uniprocessor preemptible kernel, target core deadlocks on unload. The
-> > following events happen:
-> > * iscsit_del_np is called
-> > * it calls send_sig(SIGINT, np->np_thread, 1);
-> > * the scheduler switches to the np_thread
-> > * the np_thread is woken up, it sees that kthread_should_stop() returns
-> >   false, so it doesn't terminate
-> > * the np_thread clears signals with flush_signals(current); and goes back
-> >   to sleep in iscsit_accept_np
-> > * the scheduler switches back to iscsit_del_np
-> > * iscsit_del_np calls kthread_stop(np->np_thread);
-> > * the np_thread is waiting in iscsit_accept_np and it doesn't respond to
-> >   kthread_stop
-> > 
-> > The deadlock could be resolved if the administrator sends SIGINT signal to
-> > the np_thread with killall -INT iscsi_np
-> > 
-> > The reproducible deadlock was introduced in commit
-> > db6077fd0b7dd41dc6ff18329cec979379071f87, but the thread-stopping code was
-> > racy even before.
-> > 
-> > This patch fixes the problem. Using kthread_should_stop to stop the
-> > np_thread is unreliable, so we test np_thread_state instead. If
-> > np_thread_state equals ISCSI_NP_THREAD_SHUTDOWN, the thread exits.
-> > 
-> > Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
-> > Cc: stable@vger.kernel.org
-> > 
-> 
-> Apologies for the delayed response..
-> 
-> Applied to target-pending/master and including in the next -rc3 PULL
-> request.
-> 
-> Also FYI, I've added '3.12+' to the stable tag to match how far back
-> commit db6077fd0 has been included in stable.
-> 
-> Thanks,
-> 
-> --nab
+>   	struct zfcp_fsf_req *fsf_req =3D NULL;
+>   	int retval =3D SUCCESS, ret;
+>   	int retry =3D 3;
+> @@ -244,7 +246,7 @@ static int zfcp_task_mgmt_function(struct scsi_cm=
+nd *scpnt, u8 tm_flags)
+>   			break;
+>
+>   		zfcp_erp_wait(adapter);
+> -		ret =3D fc_block_scsi_eh(scpnt);
+> +		ret =3D fc_block_scsi_eh(rport);
+>   		if (ret)
+>   			return ret;
+>
+> @@ -283,11 +285,12 @@ static int zfcp_scsi_eh_host_reset_handler(stru=
+ct scsi_cmnd *scpnt)
+>   {
+>   	struct zfcp_scsi_dev *zfcp_sdev =3D sdev_to_zfcp(scpnt->device);
+>   	struct zfcp_adapter *adapter =3D zfcp_sdev->port->adapter;
+> +	struct fc_rport *rport =3D zfcp_sdev->port->rport;
+>   	int ret;
+>
+>   	zfcp_erp_adapter_reopen(adapter, 0, "schrh_1");
+>   	zfcp_erp_wait(adapter);
+> -	ret =3D fc_block_scsi_eh(scpnt);
+> +	ret =3D fc_block_scsi_eh(rport);
+>   	if (ret)
+>   		return ret;
+>
 
-Hi
+--=20
+Mit freundlichen Gr=FC=DFen / Kind regards
+Steffen Maier
 
-I think db6077fd0 should be backported to stable kernels beginning with 
-3.10 (because they set np->np_thread = NULL in 
-__iscsi_target_login_thread). The current 3.10-stable branch misses this 
-patch.
+Linux on System z Development
 
+IBM Deutschland Research & Development GmbH
+Vorsitzende des Aufsichtsrats: Martina Koederitz
+Geschaeftsfuehrung: Dirk Wittkopp
+Sitz der Gesellschaft: Boeblingen
+Registergericht: Amtsgericht Stuttgart, HRB 243294
 
-This patch for unload deadlock should be backported to all stable kernels 
-(because unload is racy there), but because of different code, we should 
-make a different patch for old stable branches.
-
-For example in 3.4.95, __iscsi_target_login_thread contains this code:
-        spin_lock_bh(&np->np_thread_lock);
-        if (np->np_thread_state == ISCSI_NP_THREAD_RESET) {
-                np->np_thread_state = ISCSI_NP_THREAD_ACTIVE;
-                complete(&np->np_restart_comp);
-        } else {
-                np->np_thread_state = ISCSI_NP_THREAD_ACTIVE;
-        }
-        spin_unlock_bh(&np->np_thread_lock);
-If the state is ISCSI_NP_THREAD_SHUTDOWN, the above piece of code will 
-change it to ISCSI_NP_THREAD_ACTIVE and open the same kthread_should_stop 
-race.
-
-Mikulas
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
