@@ -1,54 +1,30 @@
-From: Hannes Reinecke <hare@suse.de>
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: [PATCH 0/7] Use 'Scsi_Host' as argument for host reset
-Date: Fri, 27 Jun 2014 10:14:36 +0200
-Message-ID: <53AD27EC.2030603@suse.de>
-References: <1403850425-89297-1-git-send-email-hare@suse.de> <20140627075938.GD21799@infradead.org>
+Date: Fri, 27 Jun 2014 01:15:44 -0700
+Message-ID: <20140627081544.GA22865@infradead.org>
+References: <1403850425-89297-1-git-send-email-hare@suse.de>
+ <20140627075938.GD21799@infradead.org>
+ <53AD27EC.2030603@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:50399 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752960AbaF0IOi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 27 Jun 2014 04:14:38 -0400
-In-Reply-To: <20140627075938.GD21799@infradead.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:42121 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753110AbaF0IPq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Jun 2014 04:15:46 -0400
+Content-Disposition: inline
+In-Reply-To: <53AD27EC.2030603@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org
 
-On 06/27/2014 09:59 AM, Christoph Hellwig wrote:
-> On Fri, Jun 27, 2014 at 08:26:58AM +0200, Hannes Reinecke wrote:
->> eh_host_reset_handler can only depend on the Scsi_Host, so
->> we should make that explicit by using 'struct Scsi_Host' as
->> argument for it.
->
-> I like where this is going.  Are you going to do a similar conversion
-> away from scsi_cmnd for the other reset methods as well?  It would be
-> good to get them into a single kernel release so that we don't have
-> a churn of lots of small driver API changes.
->
-Yes, that was the plan.
+On Fri, Jun 27, 2014 at 10:14:36AM +0200, Hannes Reinecke wrote:
+> And I didn't want this to linger in my tree, as sending out the entire
+> conversion will result in a massive patchset.
+> 
+> But if you're fine with it ...
 
-I just wanted to push this out to get some feedback.
-Especially the driver changes do warrant some maintainer approval.
+I've not done a formal review yet, but as I said I really like the idea
+behind it.
 
-And I didn't want this to linger in my tree, as sending out the=20
-entire conversion will result in a massive patchset.
-
-But if you're fine with it ...
-
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
