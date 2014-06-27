@@ -1,204 +1,139 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 6/7] scsi: Use Scsi_Host as argument for eh_host_reset_handler
-Date: Fri, 27 Jun 2014 19:52:15 +0200
-Message-ID: <53ADAF4F.3060900@suse.de>
-References: <1403850425-89297-1-git-send-email-hare@suse.de> <1403850425-89297-7-git-send-email-hare@suse.de> <53AD4BDB.2040707@linux.vnet.ibm.com> <53AD8290.7020809@linux.vnet.ibm.com>
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+Subject: Re: External USB3 disk fails with "Invalid field in cdb"
+Date: Fri, 27 Jun 2014 19:55:03 +0200
+Message-ID: <20140627195503.49e2dc55@wiggum>
+References: <20140626205519.314a71ae@wiggum>
+	<20140627101540.GB10042@localhost.localdomain>
+	<20140627142223.48c5c18f@wiggum>
+	<20140627173432.46ea93bd@marge>
+	<1403884081.19382.7.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/.aMnfY+77OnM.BAaK1QGEoG"; protocol="application/pgp-signature"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:34999 "EHLO mx2.suse.de"
+Received: from bues.ch ([80.190.117.144]:49683 "EHLO bues.ch"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751150AbaF0RwS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 27 Jun 2014 13:52:18 -0400
-In-Reply-To: <53AD8290.7020809@linux.vnet.ibm.com>
+	id S1751189AbaF0R4k (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 27 Jun 2014 13:56:40 -0400
+In-Reply-To: <1403884081.19382.7.camel@dabdike.int.hansenpartnership.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Steffen Maier <maier@linux.vnet.ibm.com>
-Cc: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, James Smart <james.smart@emulex.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "Bryn M. Reeves" <bmr@redhat.com>, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
 
-On 06/27/2014 04:41 PM, Steffen Maier wrote:
-> What base does this patch set apply to?
-> I failed with scsi:misc / scsi:fixes / vanilla.
->
-> On 06/27/2014 12:47 PM, Steffen Maier wrote:
->> On 06/27/2014 08:27 AM, Hannes Reinecke wrote:
->>> Issuing a host reset should not rely on any commands.
->>> So use Scsi_Host as argument for eh_host_reset_handler.
->>>
->>> Signed-off-by: Hannes Reinecke <hare@suse.de>
->>> ---
->>
->>>   drivers/s390/scsi/zfcp_scsi.c             |  3 +-
->>
->>>   69 files changed, 289 insertions(+), 379 deletions(-)
->>
->>> diff --git a/drivers/s390/scsi/zfcp_scsi.c
->>> b/drivers/s390/scsi/zfcp_scsi.c
->>> index dc42c93..fe50f69 100644
->>> --- a/drivers/s390/scsi/zfcp_scsi.c
->>> +++ b/drivers/s390/scsi/zfcp_scsi.c
->>> @@ -281,13 +281,14 @@ static int
->>> zfcp_scsi_eh_target_reset_handler(struct scsi_cmnd *scpnt)
->>>       return zfcp_task_mgmt_function(scpnt, FCP_TMF_TGT_RESET);
->>>   }
->>>
->>> -static int zfcp_scsi_eh_host_reset_handler(struct scsi_cmnd *scpnt=
-)
->>> +static int zfcp_scsi_eh_host_reset_handler(struct Scsi_Host *host)
->>>   {
->>>       struct zfcp_scsi_dev *zfcp_sdev =3D sdev_to_zfcp(scpnt->devic=
-e);
->>
->> Scpnt argument no longer exists, so this line must likely go away to
->> compile.
->>
->>>       struct zfcp_adapter *adapter =3D zfcp_sdev->port->adapter;
->>
->> This needs the assignment from the added line below since zfcp_sdev =
-no
->> longer exists.
->> Alternatively, drop the assignment here, only have the auto variable
->> definition, and do the assignment below with the added line.
->>
->>>       struct fc_rport *rport =3D zfcp_sdev->port->rport;
->
-> Oh crap, this also no longer works now. And as a consequence we canno=
-t
-> get a reasonable rport any more now to call fc_block_scsi_eh().
->
-> I think it's us as LLDD calling fc_remote_port_add() anyway as part o=
-f
-> adapter/port recovery, so we trigger the change to an unblocked rport=
-=2E
-> So, now we "only" need to make sure to block long enough for all
-> fc_remote_port_add's to have happened?
-Either that, or have some hook in queuecommand which will return any=20
-command with BUSY until the HBA reset is finished.
+--Sig_/.aMnfY+77OnM.BAaK1QGEoG
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-> zfcp_erp_wait() might not be sufficient which is probably why Christo=
-f
-> introduced fc_block_scsi_eh() in that commit Martin referred to.
->
-> Where's a design document which explains how to correctly use
-> scsi_transport_fc?
->
-Typically the LLDD sets all ports to 'BLOCKED' if it's still doing=20
-discovery (ie during LIP for FC-AL) and then updates the port states
-accordingly once discovery is finished via=20
-fc_remote_port_add()/fc_remote_port_delete().
+On Fri, 27 Jun 2014 08:48:01 -0700
+James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
 
->>>       int ret;
->
-> If adapter recovery fails, e.g. because there is no local light on th=
-e
-> fibre, I would suppose that our recovery ended with a blocked Scsi_Ho=
-st
-> (at the latest after zfcp_erp_wait()).
-No. It's perfectly okay for host_reset to end up with no local light on=
+> On Fri, 2014-06-27 at 17:34 +0200, Michael B=C3=BCsch wrote:
+> > I tried the following patch:
+> >=20
+> > Index: linux/drivers/scsi/sd.c
+> > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> > --- linux.orig/drivers/scsi/sd.c	2014-06-26 18:40:39.214696552 +0200
+> > +++ linux/drivers/scsi/sd.c	2014-06-27 15:52:30.776159456 +0200
+> > @@ -2440,7 +2440,7 @@ sd_read_cache_type(struct scsi_disk *sdk
+> >  			sdkp->RCD =3D 0;
+> >  		}
+> > =20
+> > -		sdkp->DPOFUA =3D (data.device_specific & 0x10) !=3D 0;
+> > +		sdkp->DPOFUA =3D 0;
+> >  		if (sdkp->DPOFUA && !sdkp->device->use_10_for_rw) {
+> >  			sd_first_printk(KERN_NOTICE, sdkp,
+> >  				  "Uses READ/WRITE(6), disabling FUA\n");
+> > =20
+> >=20
+> > This obviously is not the correct thing to do, but it makes the disk us=
+able:
+> >=20
+> > Jun 27 17:26:50 marge kernel: [  523.909815] usb 2-1: new SuperSpeed US=
+B device number 2 using xhci_hcd
+> > Jun 27 17:26:50 marge kernel: [  523.929246] usb 2-1: New USB device fo=
+und, idVendor=3D152d, idProduct=3D0567
+> > Jun 27 17:26:50 marge kernel: [  523.929258] usb 2-1: New USB device st=
+rings: Mfr=3D1, Product=3D2, SerialNumber=3D3
+> > Jun 27 17:26:50 marge kernel: [  523.929265] usb 2-1: Product: USB to A=
+TA/ATAPI Bridge
+> > Jun 27 17:26:50 marge kernel: [  523.929271] usb 2-1: Manufacturer: JMi=
+cron
+> > Jun 27 17:26:50 marge kernel: [  523.929276] usb 2-1: SerialNumber: xxx
+> > Jun 27 17:26:50 marge kernel: [  523.930999] usb-storage 2-1:1.0: USB M=
+ass Storage device detected
+> > Jun 27 17:26:50 marge kernel: [  523.931237] scsi12 : usb-storage 2-1:1=
+.0
+> > Jun 27 17:26:51 marge kernel: [  524.930451] scsi 12:0:0:0: Direct-Acce=
+ss     JMicron  Generic          0114 PQ: 0 ANSI: 6
+> > Jun 27 17:26:51 marge kernel: [  524.931228] sd 12:0:0:0: Attached scsi=
+ generic sg3 type 0
+> > Jun 27 17:26:51 marge kernel: [  524.932964] sd 12:0:0:0: [sdd] Spinnin=
+g up disk...
+> > Jun 27 17:26:53 marge kernel: [  525.937848] ..ready
+> > Jun 27 17:26:53 marge kernel: [  526.942395] sd 12:0:0:0: [sdd] 9767731=
+68 512-byte logical blocks: (500 GB/465 GiB)
+> > Jun 27 17:26:53 marge kernel: [  526.943037] sd 12:0:0:0: [sdd] Write P=
+rotect is off
+> > Jun 27 17:26:53 marge kernel: [  526.943048] sd 12:0:0:0: [sdd] Mode Se=
+nse: 47 00 10 08
+> > Jun 27 17:26:53 marge kernel: [  526.943662] sd 12:0:0:0: [sdd] Write c=
+ache: enabled, read cache: enabled, doesn't support DPO or FUA
+> > Jun 27 17:26:53 marge kernel: [  526.987919]  sdd: sdd1
+> > Jun 27 17:26:53 marge kernel: [  526.990055] sd 12:0:0:0: [sdd] Attache=
+d SCSI disk
+> > Jun 27 17:27:29 marge kernel: [  563.227849] EXT4-fs (sdd1): warning: m=
+ounting fs with errors, running e2fsck is recommended
+> > Jun 27 17:27:29 marge kernel: [  563.228043] EXT4-fs (sdd1): mounted fi=
+lesystem with ordered data mode. Opts: (null)
+> >=20
+> > (This is on another machine, but it shows the same behavior without the=
+ patch.)
+> >=20
+> > Does somebody have a hint for a real fix?
+>=20
+> I suspect the problem is in the USB bridge: The device reports FUA
+> support in its initial IDENTIFY, which gets translated to the correct
+> mode page bits, but when we send a READ/WRITE with the FUA bit set, the
+> bridge doesn't know how to translate it and gives us the error.  There's
+> probably some way in USB to blacklist the bridge, but we need to
+> understand the consequences of the blacklist: The device is claiming a
+> writeback cache which means if it won't do either FUA or SYNC CACHE,
+> there's going to be a data integrity failure.
+>=20
+> The fact that your initial hack works suggests that sync cache is
+> accepted by it, so we probably just need a USB blacklist fixing the FUA
+> problem.
 =20
-the fibre; that is not a failure.
-(Of course, the driver would have to call fc_remote_port_delete() here=20
-first).
-Adapter recovery should only be considered 'failed' if for some reason=20
-the HBA itself doesn't react to the host reset procedure.
 
-> Is that sufficient or do we need to actually return the success of th=
-e
-> host reset from this handler function?
+[Added USB lists to Cc]
 
-Not necessarily. If the communication with the HBA is always assumed to=
-=20
-be working (and, judging from DASD details, this is a safe assumption)
-host reset cannot really fail for zfcp.
 
-> If not, we drop the "ret" variable as well.
-> If yes, how is host reset success defined?
-> Is it success, e.g. if adapter recovery succeeded but there is no lig=
-ht
-> on the fibre?
->
-As mentioned above: Yes, that's perfectly okay.
-It still means that you can communicate with the HBA, otherwise you
-wouldn't even know the current light status :-)
-
->>>
->>> +    adapter =3D (struct zfcp_adapter *)host->hostdata[0];
->>>       zfcp_erp_adapter_reopen(adapter, 0, "schrh_1");
->>>       zfcp_erp_wait(adapter);
->>>       ret =3D fc_block_scsi_eh(rport);
->>
->> A question just for my understanding: Calling fc_block_scsi_eh at th=
-e
->> end *after* our adapter recovery is OK to wait for rports to become
->> unblocked (or fast_io_failed)?
->> I would guess so.
->
-> Maybe we could replace the call to fc_block_scsi_eh() with something
-> like the following which would wait until zfcp called
-> fc_remote_port_add() [synchronously via work item in
-> zfcp_scsi_schedule_rport_register() during port recovery or if link t=
-est
-> with ADISC succeeded] for all ports of the adapter as part of the
-> adapter recovery:
->
-> flush_workqueue(adapter->work_queue);
->
-> That's as coarse granular as the zfcp_erp_wait() just waiting for the
-> queue to run empty, no matter which items were queued.
-> Strictly speaking we would only wait for all rport work items of this
-> adapter, but that's more complicated to code. It would be safer to
-> actually return in time, and not prolong arbitrarily if new work item=
-s
-> were queued meanwhile and the work queue does not become empty, but t=
-hen
-> again flush_workqueue might already be safe compared to drain_workque=
-ue.
->
-Actually, it would be safe to call 'fc_remote_port_delete()' for all=20
-remote ports as the first part of the host_reset() function.
-(Always assuming you're not doing that already; I haven't checked here)=
-=2E
-The you could call zfcp_erp_adapter_reopen() and zfcp_erp_wait() as you=
-=20
-do nowadays.
-But now it wouldn't matter if there are any work items queued or not;
-the ports will be reset if and when the workqueue items are called.
-And the SCSI midlayer wouldn't be sending any commands as the ports are=
-=20
-still in BLOCKED during that time.
-
-Of course, it might be that the ports does in fact vanish during host=20
-reset (dev_loss_tmo might trigger before host reset finished), but the=20
-SCSI layer is well equipped to handle that.
-
-> Can I assume, that fc_remote_port_add() is synchronous and does the
-> rport state change to unblocked before returning?
-Yes.
-
-> If so, I would think this would semantically replace our previous cal=
-l
-> to fc_block_scsi_eh().
->
-No. You cannot assume that the rport is still present after host_reset.
-So I would really not try to call anything rport related in host_reset =
-=2E..
-
-> Does any of this make sense?
->
-Sorta. Hope the same holds for my answers :-)
-
-Cheers,
-
-Hannes
 --=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Michael
+
+--Sig_/.aMnfY+77OnM.BAaK1QGEoG
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBAgAGBQJTra/7AAoJEPUyvh2QjYsOTuYP/j4wB226JBX4+/94ASiICnd1
+NJup7Ivc+s1pVrGu0ClWb3RRMNLbIGPaqJQBB4DwWB2RAA5An0GDyL9W1MVh2qm5
+6tdNcQ8aQuqXlZWj9FRPrpWgu8eInqgIahyaUP7+5C643r70N6mL/vyx1Osytvf6
+YFRZRKhRdPE6Oy1Mct8vkyMZiO01ec8W98yrjtTD0yEazZi4SLNnR4b3WWKj4e6o
+TXsV1J8pyPYvzGrS6n6AHZvhh69Ry+hGppJDzc7qi0V1ChZeisJtJNLLz1kbXuVm
+b6HhsQJ+n1A+RYerW3s2myUEl4uDZcqeM/gFjElc32q9pwMHcPqAk7O0g41Harf7
+0pj5sqX0owhnWsABPKRZ4IwezQSnRwysnDEfJS7yihN3c+lCvA5ywLs7E4J3htTk
+nTG75SwDxSnDsiP62puppsh8Ux4gI9++lv0L1xZ/rKTb1AvnIf5COermmW3PiwRe
+U6OI3KMkFxmS/DSJvvUhjiiGV/bXMqxDMyMFBt5G+7vHY0dpLhvH5fV0rc++j8pm
+a4wnE8H2/BAR2IzeUG7Wa/RhyqQL7kOO4GboLZLFsn9fciMz7LY5tV0FBks9K4YZ
+359dvlNJP5uyV/aN3I4IbL0iZ+GH5B3ZwoMUdVKKsOuvlcFLDrr4576LaaA055ta
+zgtaJ5D9Ajmvt8RFqHYt
+=4HL/
+-----END PGP SIGNATURE-----
+
+--Sig_/.aMnfY+77OnM.BAaK1QGEoG--
