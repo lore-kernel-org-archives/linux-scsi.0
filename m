@@ -1,129 +1,85 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 6/7] scsi: Use Scsi_Host as argument for eh_host_reset_handler
-Date: Fri, 27 Jun 2014 14:00:25 +0200
-Message-ID: <53AD5CD9.1070103@suse.de>
-References: <1403850425-89297-1-git-send-email-hare@suse.de>	 <1403850425-89297-7-git-send-email-hare@suse.de>	 <53AD4BDB.2040707@linux.vnet.ibm.com> <53AD4FA1.8090502@suse.de> <1403869951.11208.30.camel@br9vgx5g.de.ibm.com>
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+Subject: Re: External USB3 disk fails with "Invalid field in cdb"
+Date: Fri, 27 Jun 2014 14:22:23 +0200
+Message-ID: <20140627142223.48c5c18f@wiggum>
+References: <20140626205519.314a71ae@wiggum>
+ <20140627101540.GB10042@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/8DR8cyDMyz.WTorjPUy/GL1"; protocol="application/pgp-signature"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:55212 "EHLO mx2.suse.de"
+Received: from bues.ch ([80.190.117.144]:49584 "EHLO bues.ch"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752845AbaF0MA2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 27 Jun 2014 08:00:28 -0400
-In-Reply-To: <1403869951.11208.30.camel@br9vgx5g.de.ibm.com>
+	id S1753976AbaF0MWa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 27 Jun 2014 08:22:30 -0400
+In-Reply-To: <20140627101540.GB10042@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Martin Peschke <mpeschke@linux.vnet.ibm.com>
-Cc: Steffen Maier <maier@linux.vnet.ibm.com>, James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
+To: "Bryn M. Reeves" <bmr@redhat.com>
+Cc: linux-scsi@vger.kernel.org
 
-On 06/27/2014 01:52 PM, Martin Peschke wrote:
-> On Fri, 2014-06-27 at 13:04 +0200, Hannes Reinecke wrote:
->> On 06/27/2014 12:47 PM, Steffen Maier wrote:
->>> On 06/27/2014 08:27 AM, Hannes Reinecke wrote:
->>>> Issuing a host reset should not rely on any commands.
->>>> So use Scsi_Host as argument for eh_host_reset_handler.
->>>>
->>>> Signed-off-by: Hannes Reinecke <hare@suse.de>
->>>> ---
->>>
->>>>    drivers/s390/scsi/zfcp_scsi.c             |  3 +-
->>>
->>>>    69 files changed, 289 insertions(+), 379 deletions(-)
->>>
->>>> diff --git a/drivers/s390/scsi/zfcp_scsi.c
->>>> b/drivers/s390/scsi/zfcp_scsi.c
->>>> index dc42c93..fe50f69 100644
->>>> --- a/drivers/s390/scsi/zfcp_scsi.c
->>>> +++ b/drivers/s390/scsi/zfcp_scsi.c
->>>> @@ -281,13 +281,14 @@ static int
->>>> zfcp_scsi_eh_target_reset_handler(struct scsi_cmnd *scpnt)
->>>>        return zfcp_task_mgmt_function(scpnt, FCP_TMF_TGT_RESET);
->>>>    }
->>>>
->>>> -static int zfcp_scsi_eh_host_reset_handler(struct scsi_cmnd *scpn=
-t)
->>>> +static int zfcp_scsi_eh_host_reset_handler(struct Scsi_Host *host=
-)
->>>>    {
->>>>        struct zfcp_scsi_dev *zfcp_sdev =3D sdev_to_zfcp(scpnt->dev=
-ice);
->>>
->>> Scpnt argument no longer exists, so this line must likely go away t=
-o
->>> compile.
->>>
->>>>        struct zfcp_adapter *adapter =3D zfcp_sdev->port->adapter;
->>>
->>> This needs the assignment from the added line below since zfcp_sdev
->>> no longer exists.
->>> Alternatively, drop the assignment here, only have the auto variabl=
-e
->>> definition, and do the assignment below with the added line.
->>>
->>>>        struct fc_rport *rport =3D zfcp_sdev->port->rport;
->>>>        int ret;
->>>>
->>>> +    adapter =3D (struct zfcp_adapter *)host->hostdata[0];
->>>>        zfcp_erp_adapter_reopen(adapter, 0, "schrh_1");
->>>>        zfcp_erp_wait(adapter);
->>>>        ret =3D fc_block_scsi_eh(rport);
->>>
->>> A question just for my understanding: Calling fc_block_scsi_eh at
->>> the end *after* our adapter recovery is OK to wait for rports to
->>> become unblocked (or fast_io_failed)?
->>> I would guess so.
->>>
->> Hehe. That's actually a question for _you_ :-)
->
-> git says:
->
-> commit af4de36d911ab907b92c5f3f81ceff8474ed7485
-> Author: Christof Schmitt <christof.schmitt@de.ibm.com>
-> Date:   Tue Nov 24 16:54:16 2009 +0100
->
->      [SCSI] zfcp: Block scsi_eh thread for rport state BLOCKED
->
->      In case the SCSI error recovery starts because of a SCSI command
->      timeout, but then something else triggers the rport to be delete=
-d,
->      the SCSI error recovery will run to the end and set the SCSI dev=
-ice
->      offline. To prevent this, call the FC transport function
->      fc_block_scsi_eh which waits until the rport leaves the BLOCKED
->      state. This guarantees that communication is possible if the rpo=
-rt
->      is ONLINE, or the SCSI devices will be removed if the rport stat=
-e
->      switches to NOT_PRESENT.
->
->
-> Not sure if this reasoning is (still) valid.
->
-> Isn't command timeouts the only reason for scsi eh to kick in?
->
-In principle, no (there are some corner cases when evaluating the=20
-SCSI command result which will trigger scsi_eh).
-But in practice timeout is the most common reason here.
+--Sig_/8DR8cyDMyz.WTorjPUy/GL1
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Also we've done tons of improvements and fixes in this area
-since 2009, so I'm all for removing this.
+Thanks for your analysis.
 
-But without it host_reset can never _ever_ fail with zfcp.
-Is that correct?
+On Fri, 27 Jun 2014 11:15:41 +0100
+"Bryn M. Reeves" <bmr@redhat.com> wrote:
 
-Cheers,
+> On Thu, Jun 26, 2014 at 08:55:19PM +0200, Michael B=C3=BCsch wrote:
+> > Jun 26 20:47:14 wiggum kernel: [156019.870310] sd 22:0:0:0: [sdb] 97677=
+3168 512-byte logical blocks: (500 GB/465 GiB)
+> > Jun 26 20:47:14 wiggum kernel: [156019.870653] sd 22:0:0:0: [sdb] Write=
+ Protect is off
+> > Jun 26 20:47:14 wiggum kernel: [156019.870659] sd 22:0:0:0: [sdb] Mode =
+Sense: 47 00 10 08
+>=20
+> The disk says it supports FUA:
 
-Hannes
+Is this the disk reporting that, or the USB->SATA controller?
+
+The disk works perfectly fine, if connected via on board SATA controller.
+
+> Looks like a WRITE(10) with the FUA bit set:
+>=20
+> > Jun 26 20:47:27 wiggum kernel: [156032.938239] sd 22:0:0:0: [sdb] CDB:
+> > Jun 26 20:47:27 wiggum kernel: [156032.938241] Write(10): 2a 08 1d 04 0=
+0 3f 00 00 08 00
+> >
+> > Does somebody have a hint to debug this?
+>=20
+> I'd guess the device lies about supporting FUA. There seems to be
+> another report on the Debian lists of the same problem with a similar
+> JMicron enclosure:
+
+Is there a workaround for this problem, or even a quirk-patch that I could =
+test?
+
+
 --=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
-)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Michael.
+
+--Sig_/8DR8cyDMyz.WTorjPUy/GL1
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBAgAGBQJTrWH/AAoJEPUyvh2QjYsO1UUP/23ZSEVjOzE0KRBw2VuFZZ2O
+uR/+NJqHBWiJT5cSGUpcsVFsBOAmFeqT83H3bt3vUBgWImLLZ0gxR1WZ6qBNsThX
+fcTG6bfLlXFkmXsqUc3dqZ1VAymll2OFuwOFO9FB3iltEOkNTq/c5T0OyrCOHrzi
+4leNfWWuWSyP9dxm8fIyDBw5oyuULQWYshMwfRRdB7ZxW6xkpooA1fnC305NT6mJ
+tJF9tx6KOXhm2weim2105l6KCEv8Mpzcoza1l5unwNbRGB5rgam/JBo+MVrW2ZlZ
+J29na8LwtFOBAE3wVRfAdpRpEXPtruwdIWY9yTg91oM7l6j87Z/M22tZPjuB+jCg
+B3tyAKeVYaX+BSDUDYQBvHwXoApaff+ZqccnTMBITzGjwSuPRh/dCvbm9y3QHypO
+uG8OzgnQyI7BsqRGpbPtrWhYcr0oqvVpKru9+YVgcHSf8sTXsBih+PAuF2IVYaFS
+PlU+qynm+wgSM3o+9rz3aVJ/ppBrrxl+9ACIPcnEGmJAqtXLg9mnP605bIv4csme
+IWJg5XJ735GCDVVUZW8GcDuUfLJdgaWjYY08N8cmQyq7yrdycM00iCj8hNMwC75Y
+Yqsh5ATzENpYVmge3dvkUsYeDjGdsAkqbVdD4VFbUIEFq8Gu4xqW5Na3pkiyOHJV
+8gvRlwEPBOFhT6mmG1Oi
+=sk08
+-----END PGP SIGNATURE-----
+
+--Sig_/8DR8cyDMyz.WTorjPUy/GL1--
