@@ -1,61 +1,32 @@
-From: Joe Perches <joe@perches.com>
-Subject: [PATCH] MAINTAINERS: Remove two ancient EATA sections
-Date: Sat, 28 Jun 2014 09:54:02 -0700
-Message-ID: <1403974442.9064.25.camel@joe-AO725>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 3/4] Introduce XEN scsiback module
+Date: Sat, 28 Jun 2014 11:09:53 -0700
+Message-ID: <20140628180953.GA10820@infradead.org>
+References: <1403879676-25431-1-git-send-email-jgross@suse.com>
+ <1403879676-25431-4-git-send-email-jgross@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtprelay0089.hostedemail.com ([216.40.44.89]:51380 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751490AbaF1QyG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 28 Jun 2014 12:54:06 -0400
+Received: from bombadil.infradead.org ([198.137.202.9]:59602 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756410AbaF1SKA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 28 Jun 2014 14:10:00 -0400
+Content-Disposition: inline
+In-Reply-To: <1403879676-25431-4-git-send-email-jgross@suse.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: LKML <linux-kernel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
+To: jgross@suse.com
+Cc: JBottomley@parallels.com, linux-scsi@vger.kernel.org, xen-devel@lists.xen.org, target-devel@vger.kernel.org
 
-These haven't had a single ack by the listed maintainer
-in all git history and the email addresses don't work.
+On Fri, Jun 27, 2014 at 04:34:35PM +0200, jgross@suse.com wrote:
+> From: Juergen Gross <jgross@suse.com>
+> 
+> Introduces the XEN pvSCSI backend. With pvSCSI it is possible for a XEN domU
+> to issue SCSI commands to a SCSI LUN assigned to that domU. The SCSI commands
+> are passed to the pvSCSI backend in a driver domain (usually Dom0) which is
+> owner of the physical device. This allows e.g. to use SCSI tape drives in a
+> XEN domU.
 
-And entry for Michael Neuffer is already in CREDITS.
-
-Signed-off-by: Joe Perches <joe@perches.com>
----
- MAINTAINERS | 14 --------------
- 1 file changed, 14 deletions(-)
-
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 8ea4305..93aa52b 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -3189,26 +3189,12 @@ T:	git git://linuxtv.org/anttip/media_tree.git
- S:	Maintained
- F:	drivers/media/tuners/e4000*
- 
--EATA-DMA SCSI DRIVER
--M:	Michael Neuffer <mike@i-Connect.Net>
--L:	linux-eata@i-connect.net
--L:	linux-scsi@vger.kernel.org
--S:	Maintained
--F:	drivers/scsi/eata*
--
- EATA ISA/EISA/PCI SCSI DRIVER
- M:	Dario Ballabio <ballabio_dario@emc.com>
- L:	linux-scsi@vger.kernel.org
- S:	Maintained
- F:	drivers/scsi/eata.c
- 
--EATA-PIO SCSI DRIVER
--M:	Michael Neuffer <mike@i-Connect.Net>
--L:	linux-eata@i-connect.net
--L:	linux-scsi@vger.kernel.org
--S:	Maintained
--F:	drivers/scsi/eata_pio.*
--
- EC100 MEDIA DRIVER
- M:	Antti Palosaari <crope@iki.fi>
- L:	linux-media@vger.kernel.org
-
-
+This should be written against the generic target core infrastructure
+in drivers/target, instead of introducing another simplistic pass
+through only SCSI target.
