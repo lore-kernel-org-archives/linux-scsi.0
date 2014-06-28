@@ -1,103 +1,62 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] target: fix deadlock on unload
-Date: Fri, 27 Jun 2014 23:51:39 -0700
-Message-ID: <1403938299.24355.16.camel@haakon3.risingtidesystems.com>
-References: <alpine.LRH.2.02.1406231329430.8277@file01.intranet.prod.int.rdu2.redhat.com>
-	 <1403842714.22367.8.camel@haakon3.risingtidesystems.com>
-	 <alpine.LRH.2.02.1406270816160.24505@file01.intranet.prod.int.rdu2.redhat.com>
+Subject: [GIT PULL] target fixes for v3.16-rc3
+Date: Sat, 28 Jun 2014 00:28:05 -0700
+Message-ID: <1403940485.24355.31.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <alpine.LRH.2.02.1406270816160.24505@file01.intranet.prod.int.rdu2.redhat.com>
 Sender: target-devel-owner@vger.kernel.org
-To: Mikulas Patocka <mpatocka@redhat.com>
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>target-devel <target-devel@vger.kernel.org>, "Michael S. Tsirkin" <mst@redhat.com>, Mikulas Patocka <mpatocka@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, 2014-06-27 at 08:35 -0400, Mikulas Patocka wrote:
-> 
-> On Thu, 26 Jun 2014, Nicholas A. Bellinger wrote:
-> 
-> > Hi Mikulas,
-> > 
-> > On Mon, 2014-06-23 at 13:42 -0400, Mikulas Patocka wrote:
-> > > target: fix deadlock on unload
-> > > 
-> > > On uniprocessor preemptible kernel, target core deadlocks on unload. The
-> > > following events happen:
-> > > * iscsit_del_np is called
-> > > * it calls send_sig(SIGINT, np->np_thread, 1);
-> > > * the scheduler switches to the np_thread
-> > > * the np_thread is woken up, it sees that kthread_should_stop() returns
-> > >   false, so it doesn't terminate
-> > > * the np_thread clears signals with flush_signals(current); and goes back
-> > >   to sleep in iscsit_accept_np
-> > > * the scheduler switches back to iscsit_del_np
-> > > * iscsit_del_np calls kthread_stop(np->np_thread);
-> > > * the np_thread is waiting in iscsit_accept_np and it doesn't respond to
-> > >   kthread_stop
-> > > 
-> > > The deadlock could be resolved if the administrator sends SIGINT signal to
-> > > the np_thread with killall -INT iscsi_np
-> > > 
-> > > The reproducible deadlock was introduced in commit
-> > > db6077fd0b7dd41dc6ff18329cec979379071f87, but the thread-stopping code was
-> > > racy even before.
-> > > 
-> > > This patch fixes the problem. Using kthread_should_stop to stop the
-> > > np_thread is unreliable, so we test np_thread_state instead. If
-> > > np_thread_state equals ISCSI_NP_THREAD_SHUTDOWN, the thread exits.
-> > > 
-> > > Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
-> > > Cc: stable@vger.kernel.org
-> > > 
-> > 
-> > Apologies for the delayed response..
-> > 
-> > Applied to target-pending/master and including in the next -rc3 PULL
-> > request.
-> > 
-> > Also FYI, I've added '3.12+' to the stable tag to match how far back
-> > commit db6077fd0 has been included in stable.
-> > 
-> > Thanks,
-> > 
-> > --nab
-> 
-> Hi
-> 
-> I think db6077fd0 should be backported to stable kernels beginning with 
-> 3.10 (because they set np->np_thread = NULL in 
-> __iscsi_target_login_thread). The current 3.10-stable branch misses this 
-> patch.
-> 
-> 
-> This patch for unload deadlock should be backported to all stable kernels 
-> (because unload is racy there), but because of different code, we should 
-> make a different patch for old stable branches.
-> 
-> For example in 3.4.95, __iscsi_target_login_thread contains this code:
->         spin_lock_bh(&np->np_thread_lock);
->         if (np->np_thread_state == ISCSI_NP_THREAD_RESET) {
->                 np->np_thread_state = ISCSI_NP_THREAD_ACTIVE;
->                 complete(&np->np_restart_comp);
->         } else {
->                 np->np_thread_state = ISCSI_NP_THREAD_ACTIVE;
->         }
->         spin_unlock_bh(&np->np_thread_lock);
-> If the state is ISCSI_NP_THREAD_SHUTDOWN, the above piece of code will 
-> change it to ISCSI_NP_THREAD_ACTIVE and open the same kthread_should_stop 
-> race.
-> 
+Hi Linus,
 
-Ok, dropping the 'v3.12+' stable tag from this patch, and will include
-it in a PATCH-v3.10.y series together with db6077fd0 once Greg-KH
-attempts to queue it up.
+Here are the target-pending fixes for v3.16-rc3.  Please go ahead and
+pull from:
 
-As for v3.4.x, care to send along a separate patch with your Tested-by +
-Signed-off-by..?
+  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git master
 
-Thanks for the extra stable info!
+Mostly minor fixes this time around.  The highlights include:
+
+  - iscsi-target CHAP authentication fixes to enforce explicit key values
+    (Tejas Vaykole + rahul.rane)
+  - Fix a long-standing OOPs in target-core when a alua configfs attribute
+    is accessed after port symlink has been removed.  (Sebastian Herbszt)
+  - Fix a v3.10.y iscsi-target regression causing the login reject status
+    class/detail to be ignored (Christoph Vu-Brugier)
+  - Fix a v3.10.y iscsi-target regression to avoid rejecting an existing ITT
+    during Data-Out when data-direction is wrong (Santosh Kulkarni + Arshad Hussain)
+  - Fix a iscsi-target related shutdown deadlock on UP kernels (Mikulas Patocka) 
+  - Fix a v3.16-rc1 build issue with vhost-scsi + !CONFIG_NET (MST)
+
+Thank you,
 
 --nab
+
+Michael S. Tsirkin (1):
+  iovec: move memcpy_from/toiovecend to lib/iovec.c
+
+Mikulas Patocka (1):
+  iscsi-target: fix iscsit_del_np deadlock on unload
+
+Nicholas Bellinger (6):
+  iscsi-target: Convert chap_server_compute_md5 to use kstrtoul
+  iscsi-target; Enforce 1024 byte maximum for CHAP_C key value
+  target: Fix left-over se_lun->lun_sep pointer OOPs
+  iscsi-target: Explicily clear login response PDU in exception path
+  tcm_loop: Fix memory leak in tcm_loop_submission_work error path
+  iscsi-target: Avoid rejecting incorrect ITT for Data-Out
+
+ drivers/target/iscsi/iscsi_target.c       |    2 +-
+ drivers/target/iscsi/iscsi_target_auth.c  |   14 ++++++--
+ drivers/target/iscsi/iscsi_target_login.c |   13 +++----
+ drivers/target/iscsi/iscsi_target_util.c  |    2 ++
+ drivers/target/loopback/tcm_loop.c        |    1 +
+ drivers/target/target_core_device.c       |    1 +
+ include/linux/socket.h                    |    4 ---
+ include/linux/uio.h                       |    5 ++-
+ lib/iovec.c                               |   55 +++++++++++++++++++++++++++++
+ net/core/iovec.c                          |   55 -----------------------------
+ 10 files changed, 82 insertions(+), 70 deletions(-)
