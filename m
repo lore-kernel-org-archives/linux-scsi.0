@@ -1,73 +1,103 @@
-From: adam radford <aradford@gmail.com>
-Subject: Re: [PATCH] [scsi] 3w-xxxx: fix mis-aligned struct accesses
-Date: Fri, 27 Jun 2014 16:32:53 -0700
-Message-ID: <CAHtARFH4mHKSUEm--JxraXW3yq4ZctZVnj3yMkQM1h4O8g6qNA@mail.gmail.com>
-References: <4791230.CGnay5CMcb@wuerfel>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH] target: fix deadlock on unload
+Date: Fri, 27 Jun 2014 23:51:39 -0700
+Message-ID: <1403938299.24355.16.camel@haakon3.risingtidesystems.com>
+References: <alpine.LRH.2.02.1406231329430.8277@file01.intranet.prod.int.rdu2.redhat.com>
+	 <1403842714.22367.8.camel@haakon3.risingtidesystems.com>
+	 <alpine.LRH.2.02.1406270816160.24505@file01.intranet.prod.int.rdu2.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-yh0-f41.google.com ([209.85.213.41]:41441 "EHLO
-	mail-yh0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753297AbaF0Xcy convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Jun 2014 19:32:54 -0400
-Received: by mail-yh0-f41.google.com with SMTP id z6so3520390yhz.14
-        for <linux-scsi@vger.kernel.org>; Fri, 27 Jun 2014 16:32:53 -0700 (PDT)
-In-Reply-To: <4791230.CGnay5CMcb@wuerfel>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <alpine.LRH.2.02.1406270816160.24505@file01.intranet.prod.int.rdu2.redhat.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Mikulas Patocka <mpatocka@redhat.com>
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Adam Radford <linuxraid@lsi.com>
 
-On Thu, Jun 26, 2014 at 5:58 AM, Arnd Bergmann <arnd@arndb.de> wrote:
-> Building an allmodconfig ARM kernel, I get multiple such
-> warnings because of a spinlock contained in packed structure
-> in the 3w-xxxx driver:
->
-> ../drivers/scsi/3w-xxxx.c: In function 'tw_chrdev_ioctl':
-> ../drivers/scsi/3w-xxxx.c:1001:68: warning: mis-aligned access used for structure member [-fstrict-volatile-bitfields]
->     timeout = wait_event_timeout(tw_dev->ioctl_wqueue, tw_dev->chrdev_request_id == TW_IOCTL_CHRDEV_FREE, timeout);
->                                                                     ^
-> ../drivers/scsi/3w-xxxx.c:1001:68: note: when a volatile object spans multiple type-sized locations, the compiler must choose between using a single mis-aligned access to preserve the volatility, or using multiple aligned accesses to avoid runtime faults; this code may fail at runtime if the hardware does not allow this access
->
-> The same bug apparently was present in 3w-sas and 3w-9xxx, but has been
-> fixed in the past. This patch uses the same fix by moving the pragma
-> in front of the TW_Device_Extension definition, so it only covers
-> hardware structures.
->
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> Cc: Adam Radford <linuxraid@lsi.com>
-> ---
-> diff --git a/drivers/scsi/3w-xxxx.h b/drivers/scsi/3w-xxxx.h
-> index 49dcf03..29b0b84e 100644
-> --- a/drivers/scsi/3w-xxxx.h
-> +++ b/drivers/scsi/3w-xxxx.h
-> @@ -392,6 +392,8 @@ typedef struct TAG_TW_Passthru
->         unsigned char padding[12];
->  } TW_Passthru;
->
-> +#pragma pack()
-> +
->  typedef struct TAG_TW_Device_Extension {
->         u32                     base_addr;
->         unsigned long           *alignment_virtual_address[TW_Q_LENGTH];
-> @@ -430,6 +432,4 @@ typedef struct TAG_TW_Device_Extension {
->         wait_queue_head_t       ioctl_wqueue;
->  } TW_Device_Extension;
->
-> -#pragma pack()
-> -
->  #endif /* _3W_XXXX_H */
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Fri, 2014-06-27 at 08:35 -0400, Mikulas Patocka wrote:
+> 
+> On Thu, 26 Jun 2014, Nicholas A. Bellinger wrote:
+> 
+> > Hi Mikulas,
+> > 
+> > On Mon, 2014-06-23 at 13:42 -0400, Mikulas Patocka wrote:
+> > > target: fix deadlock on unload
+> > > 
+> > > On uniprocessor preemptible kernel, target core deadlocks on unload. The
+> > > following events happen:
+> > > * iscsit_del_np is called
+> > > * it calls send_sig(SIGINT, np->np_thread, 1);
+> > > * the scheduler switches to the np_thread
+> > > * the np_thread is woken up, it sees that kthread_should_stop() returns
+> > >   false, so it doesn't terminate
+> > > * the np_thread clears signals with flush_signals(current); and goes back
+> > >   to sleep in iscsit_accept_np
+> > > * the scheduler switches back to iscsit_del_np
+> > > * iscsit_del_np calls kthread_stop(np->np_thread);
+> > > * the np_thread is waiting in iscsit_accept_np and it doesn't respond to
+> > >   kthread_stop
+> > > 
+> > > The deadlock could be resolved if the administrator sends SIGINT signal to
+> > > the np_thread with killall -INT iscsi_np
+> > > 
+> > > The reproducible deadlock was introduced in commit
+> > > db6077fd0b7dd41dc6ff18329cec979379071f87, but the thread-stopping code was
+> > > racy even before.
+> > > 
+> > > This patch fixes the problem. Using kthread_should_stop to stop the
+> > > np_thread is unreliable, so we test np_thread_state instead. If
+> > > np_thread_state equals ISCSI_NP_THREAD_SHUTDOWN, the thread exits.
+> > > 
+> > > Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
+> > > Cc: stable@vger.kernel.org
+> > > 
+> > 
+> > Apologies for the delayed response..
+> > 
+> > Applied to target-pending/master and including in the next -rc3 PULL
+> > request.
+> > 
+> > Also FYI, I've added '3.12+' to the stable tag to match how far back
+> > commit db6077fd0 has been included in stable.
+> > 
+> > Thanks,
+> > 
+> > --nab
+> 
+> Hi
+> 
+> I think db6077fd0 should be backported to stable kernels beginning with 
+> 3.10 (because they set np->np_thread = NULL in 
+> __iscsi_target_login_thread). The current 3.10-stable branch misses this 
+> patch.
+> 
+> 
+> This patch for unload deadlock should be backported to all stable kernels 
+> (because unload is racy there), but because of different code, we should 
+> make a different patch for old stable branches.
+> 
+> For example in 3.4.95, __iscsi_target_login_thread contains this code:
+>         spin_lock_bh(&np->np_thread_lock);
+>         if (np->np_thread_state == ISCSI_NP_THREAD_RESET) {
+>                 np->np_thread_state = ISCSI_NP_THREAD_ACTIVE;
+>                 complete(&np->np_restart_comp);
+>         } else {
+>                 np->np_thread_state = ISCSI_NP_THREAD_ACTIVE;
+>         }
+>         spin_unlock_bh(&np->np_thread_lock);
+> If the state is ISCSI_NP_THREAD_SHUTDOWN, the above piece of code will 
+> change it to ISCSI_NP_THREAD_ACTIVE and open the same kthread_should_stop 
+> race.
+> 
 
-Arnd,
+Ok, dropping the 'v3.12+' stable tag from this patch, and will include
+it in a PATCH-v3.10.y series together with db6077fd0 once Greg-KH
+attempts to queue it up.
 
-Thanks for the patch to 3w-xxxx.  This looks good to me.
+As for v3.4.x, care to send along a separate patch with your Tested-by +
+Signed-off-by..?
 
-Acked-by: Adam Radford <aradford@gmail.com>
+Thanks for the extra stable info!
 
--Adam
+--nab
