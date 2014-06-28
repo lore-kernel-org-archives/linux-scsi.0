@@ -1,56 +1,61 @@
-From: Himangi Saraogi <himangi774@gmail.com>
-Subject: [PATCH] isym53c8xx_2/sym_malloc: Drop cast
-Date: Sat, 28 Jun 2014 18:59:07 +0530
-Message-ID: <20140628132907.GA4635@himangi-Dell>
+From: Joe Perches <joe@perches.com>
+Subject: [PATCH] MAINTAINERS: Remove two ancient EATA sections
+Date: Sat, 28 Jun 2014 09:54:02 -0700
+Message-ID: <1403974442.9064.25.camel@joe-AO725>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: julia.lawall@lip6.fr
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtprelay0089.hostedemail.com ([216.40.44.89]:51380 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751490AbaF1QyG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 28 Jun 2014 12:54:06 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: LKML <linux-kernel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
 
-This patch does away with cast on void * and the if as it is unnecessary.
+These haven't had a single ack by the listed maintainer
+in all git history and the email addresses don't work.
 
-The following Coccinelle semantic patch was used for making the change:
+And entry for Michael Neuffer is already in CREDITS.
 
-@r@
-expression x;
-void* e;
-type T;
-identifier f;
-@@
-
-(
-  *((T *)e)
-|
-  ((T *)x)[...]
-|
-  ((T *)x)->f
-|
-- (T *)
-  e
-)
-
-Signed-off-by: Himangi Saraogi <himangi774@gmail.com>
+Signed-off-by: Joe Perches <joe@perches.com>
 ---
-To send to: Matthew Wilcox <matthew@wil.cx>,"James E.J. Bottomley" <JBottomley@parallels.com>,linux-scsi@vger.kernel.org,linux-kernel@vger.kernel.org
- drivers/scsi/sym53c8xx_2/sym_malloc.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ MAINTAINERS | 14 --------------
+ 1 file changed, 14 deletions(-)
 
-diff --git a/drivers/scsi/sym53c8xx_2/sym_malloc.c b/drivers/scsi/sym53c8xx_2/sym_malloc.c
-index 6f9af0d..1dde1e9 100644
---- a/drivers/scsi/sym53c8xx_2/sym_malloc.c
-+++ b/drivers/scsi/sym53c8xx_2/sym_malloc.c
-@@ -95,7 +95,7 @@ static void *___sym_malloc(m_pool_p mp, int size)
- 		}
- 	}
- #ifdef DEBUG
--	printf("___sym_malloc(%d) = %p\n", size, (void *) a);
-+	printf("___sym_malloc(%d) = %p\n", size, a);
- #endif
- 	return a;
- }
--- 
-1.9.1
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 8ea4305..93aa52b 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -3189,26 +3189,12 @@ T:	git git://linuxtv.org/anttip/media_tree.git
+ S:	Maintained
+ F:	drivers/media/tuners/e4000*
+ 
+-EATA-DMA SCSI DRIVER
+-M:	Michael Neuffer <mike@i-Connect.Net>
+-L:	linux-eata@i-connect.net
+-L:	linux-scsi@vger.kernel.org
+-S:	Maintained
+-F:	drivers/scsi/eata*
+-
+ EATA ISA/EISA/PCI SCSI DRIVER
+ M:	Dario Ballabio <ballabio_dario@emc.com>
+ L:	linux-scsi@vger.kernel.org
+ S:	Maintained
+ F:	drivers/scsi/eata.c
+ 
+-EATA-PIO SCSI DRIVER
+-M:	Michael Neuffer <mike@i-Connect.Net>
+-L:	linux-eata@i-connect.net
+-L:	linux-scsi@vger.kernel.org
+-S:	Maintained
+-F:	drivers/scsi/eata_pio.*
+-
+ EC100 MEDIA DRIVER
+ M:	Antti Palosaari <crope@iki.fi>
+ L:	linux-media@vger.kernel.org
+
+
