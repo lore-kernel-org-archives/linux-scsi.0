@@ -1,45 +1,54 @@
-From: Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH] usb-storage/SCSI: Add broken_fua blacklist flag
-Date: Mon, 30 Jun 2014 09:28:10 -0700
-Message-ID: <20140630162810.GF24179@kroah.com>
-References: <Pine.LNX.4.44L0.1406301100300.1550-100000@iolanthe.rowland.org>
- <Pine.LNX.4.44L0.1406301115010.1550-100000@iolanthe.rowland.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.1406301115010.1550-100000-IYeN2dnnYyZXsRXLowluHWD2FQJk+8+b@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Cc: Michael =?iso-8859-1?Q?B=FCsch?= <m@bues.ch>, James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, "Bryn M. Reeves" <bmr-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Matthew Dharm <mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, USB Storage list <usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org>
+From: Fabian Frederick <fabf@skynet.be>
+Subject: [PATCH 1/1] [SCSI] bfa: use ARRAY_SIZE instead of sizeof/sizeof[0]
+Date: Mon, 30 Jun 2014 19:42:42 +0200
+Message-ID: <1404150162-7973-1-git-send-email-fabf@skynet.be>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Fabian Frederick <fabf@skynet.be>, Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Jun 30, 2014 at 11:16:51AM -0400, Alan Stern wrote:
-> On Mon, 30 Jun 2014, Alan Stern wrote:
->=20
-> > Some buggy JMicron USB-ATA bridges don't know how to translate the =
-=46UA
-> > bit in READs or WRITEs.  This patch adds an entry in unusual_devs.h
-> > and a blacklist flag to tell the sd driver not to use FUA.
-> >=20
-> > Signed-off-by: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-> > Reported-by: Michael B=FCsch <m@bues.ch>
-> > Tested-by: Michael B=FCsch <m@bues.ch>
-> > Acked-by: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-> > CC: Matthew Dharm <mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>
-> > CC: <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
->=20
-> Greg:
->=20
-> I forgot to add your name to the recipient list on this patch.  Since
-> James has already Ack'ed it, would you like to take it for your USB
-> tree?
+Use macro definition
 
-Sure, I can take it, thanks.
+Cc: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
+Cc: Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org
+Signed-off-by: Fabian Frederick <fabf@skynet.be>
+---
+ drivers/scsi/bfa/bfa_fcs.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-greg k-h
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/scsi/bfa/bfa_fcs.c b/drivers/scsi/bfa/bfa_fcs.c
+index a3ab5cc..0f19455 100644
+--- a/drivers/scsi/bfa/bfa_fcs.c
++++ b/drivers/scsi/bfa/bfa_fcs.c
+@@ -81,7 +81,7 @@ bfa_fcs_attach(struct bfa_fcs_s *fcs, struct bfa_s *bfa, struct bfad_s *bfad,
+ 	bfa->fcs = BFA_TRUE;
+ 	fcbuild_init();
+ 
+-	for (i = 0; i < sizeof(fcs_modules) / sizeof(fcs_modules[0]); i++) {
++	for (i = 0; i < ARRAY_SIZE(fcs_modules); i++) {
+ 		mod = &fcs_modules[i];
+ 		if (mod->attach)
+ 			mod->attach(fcs);
+@@ -97,7 +97,7 @@ bfa_fcs_init(struct bfa_fcs_s *fcs)
+ 	int	i;
+ 	struct bfa_fcs_mod_s  *mod;
+ 
+-	for (i = 0; i < sizeof(fcs_modules) / sizeof(fcs_modules[0]); i++) {
++	for (i = 0; i < ARRAY_SIZE(fcs_modules); i++) {
+ 		mod = &fcs_modules[i];
+ 		if (mod->modinit)
+ 			mod->modinit(fcs);
+@@ -184,7 +184,7 @@ bfa_fcs_exit(struct bfa_fcs_s *fcs)
+ 
+ 	bfa_wc_init(&fcs->wc, bfa_fcs_exit_comp, fcs);
+ 
+-	nmods = sizeof(fcs_modules) / sizeof(fcs_modules[0]);
++	nmods = ARRAY_SIZE(fcs_modules);
+ 
+ 	for (i = 0; i < nmods; i++) {
+ 
+-- 
+1.8.4.5
