@@ -1,175 +1,162 @@
 From: Andy Grover <agrover@redhat.com>
-Subject: [PATCHv3 8/8] target: Refactor core_enable_device_list_for_node
-Date: Mon, 30 Jun 2014 16:39:47 -0700
-Message-ID: <1404171587-28845-9-git-send-email-agrover@redhat.com>
+Subject: [PATCHv3 5/8] target: Change core_dev_del_lun to take a se_lun instead of unpacked_lun
+Date: Mon, 30 Jun 2014 16:39:44 -0700
+Message-ID: <1404171587-28845-6-git-send-email-agrover@redhat.com>
 References: <1404171587-28845-1-git-send-email-agrover@redhat.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:29718 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756805AbaF3Xjz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 30 Jun 2014 19:39:55 -0400
+Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1404171587-28845-1-git-send-email-agrover@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: target-devel-owner@vger.kernel.org
 To: target-devel@vger.kernel.org
 Cc: linux-scsi@vger.kernel.org, hch@lst.de, nab@linux-iscsi.org
+List-Id: linux-scsi@vger.kernel.org
 
-Create helper functions to alloc a deve and to transition it from
-demo mode to explicit.
+Remove core_tpg_pre_dellun entirely, since we don't need to get/check
+a pointer we already have.
 
+Nothing else can return an error, so core_dev_del_lun can return void.
+
+Rename core_tpg_post_dellun to remove_lun - a clearer name, now that
+pre_dellun is gone.
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Andy Grover <agrover@redhat.com>
 ---
- drivers/target/target_core_device.c | 121 ++++++++++++++++++++++--------------
- 1 file changed, 74 insertions(+), 47 deletions(-)
+ drivers/target/target_core_device.c          | 18 ++++----------
+ drivers/target/target_core_fabric_configfs.c |  2 +-
+ drivers/target/target_core_internal.h        |  5 ++--
+ drivers/target/target_core_tpg.c             | 36 +++-------------------------
+ 4 files changed, 11 insertions(+), 50 deletions(-)
 
 diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-index 4b8149b..2c589a5 100644
+index 0bac890..bd467a4 100644
 --- a/drivers/target/target_core_device.c
 +++ b/drivers/target/target_core_device.c
-@@ -288,6 +288,73 @@ void core_update_device_list_access(
- 	spin_unlock_irq(&nacl->device_list_lock);
- }
- 
-+static struct se_dev_entry *core_alloc_se_dev_entry(
-+	struct se_lun *lun,
-+	struct se_lun_acl *lun_acl,
-+	u32 mapped_lun,
-+	u32 lun_access,
-+	struct se_node_acl *nacl)
-+{
-+	struct se_dev_entry *deve;
-+
-+	/* Holding locks, can't sleep */
-+	deve = kzalloc(sizeof(*deve), GFP_ATOMIC);
-+	if (!deve)
-+		return ERR_PTR(-ENOMEM);
-+
-+	atomic_set(&deve->ua_count, 0);
-+	atomic_set(&deve->pr_ref_count, 0);
-+	spin_lock_init(&deve->ua_lock);
-+	INIT_LIST_HEAD(&deve->alua_port_list);
-+	INIT_LIST_HEAD(&deve->ua_list);
-+	deve->se_lun = lun;
-+	deve->se_lun_acl = lun_acl;
-+	deve->mapped_lun = mapped_lun;
-+
-+	if (lun_access & TRANSPORT_LUNFLAGS_READ_WRITE)
-+		deve->lun_flags |= TRANSPORT_LUNFLAGS_READ_WRITE;
-+	else
-+		deve->lun_flags |= TRANSPORT_LUNFLAGS_READ_ONLY;
-+
-+	deve->creation_time = get_jiffies_64();
-+
-+	nacl->device_list[mapped_lun] = deve;
-+
-+	return deve;
-+}
-+
-+static int core_transition_deve_to_explicit(
-+	struct se_lun *lun,
-+	struct se_lun_acl *lun_acl,
-+	struct se_dev_entry *deve,
-+	u32 lun_access)
-+{
-+	if (deve->se_lun_acl != NULL) {
-+		pr_err("struct se_dev_entry->se_lun_acl"
-+		       " already set for demo mode -> explicit"
-+		       " LUN ACL transition\n");
-+		return -EINVAL;
-+	}
-+	if (deve->se_lun != lun) {
-+		pr_err("struct se_dev_entry->se_lun does"
-+		       " match passed struct se_lun for demo mode"
-+		       " -> explicit LUN ACL transition\n");
-+		return -EINVAL;
-+	}
-+
-+	deve->se_lun_acl = lun_acl;
-+
-+	if (lun_access & TRANSPORT_LUNFLAGS_READ_WRITE) {
-+		deve->lun_flags &= ~TRANSPORT_LUNFLAGS_READ_ONLY;
-+		deve->lun_flags |= TRANSPORT_LUNFLAGS_READ_WRITE;
-+	} else {
-+		deve->lun_flags &= ~TRANSPORT_LUNFLAGS_READ_WRITE;
-+		deve->lun_flags |= TRANSPORT_LUNFLAGS_READ_ONLY;
-+	}
-+
-+	return 0;
-+}
-+
- /*      core_enable_device_list_for_node():
+@@ -1264,24 +1264,16 @@ struct se_lun *core_dev_add_lun(
+  *
   *
   */
-@@ -316,62 +383,22 @@ int core_enable_device_list_for_node(
- 	 * + mapped_lun that was setup in demo mode..
- 	 */
- 	if (deve) {
--		if (deve->se_lun_acl != NULL) {
--			pr_err("struct se_dev_entry->se_lun_acl"
--			       " already set for demo mode -> explicit"
--			       " LUN ACL transition\n");
--			ret = -EINVAL;
--			goto out;
--		}
--		if (deve->se_lun != lun) {
--			pr_err("struct se_dev_entry->se_lun does"
--			       " match passed struct se_lun for demo mode"
--			       " -> explicit LUN ACL transition\n");
--			ret = -EINVAL;
--			goto out;
--		}
--		deve->se_lun_acl = lun_acl;
+-int core_dev_del_lun(
++void core_dev_del_lun(
+ 	struct se_portal_group *tpg,
+-	u32 unpacked_lun)
++	struct se_lun *lun)
+ {
+-	struct se_lun *lun;
 -
--		if (lun_access & TRANSPORT_LUNFLAGS_READ_WRITE) {
--			deve->lun_flags &= ~TRANSPORT_LUNFLAGS_READ_ONLY;
--			deve->lun_flags |= TRANSPORT_LUNFLAGS_READ_WRITE;
--		} else {
--			deve->lun_flags &= ~TRANSPORT_LUNFLAGS_READ_WRITE;
--			deve->lun_flags |= TRANSPORT_LUNFLAGS_READ_ONLY;
--		}
+-	lun = core_tpg_pre_dellun(tpg, unpacked_lun);
+-	if (IS_ERR(lun))
+-		return PTR_ERR(lun);
 -
-+		ret = core_transition_deve_to_explicit(lun, lun_acl, deve,
-+						       lun_access);
- 		goto out;
+-	core_tpg_post_dellun(tpg, lun);
+-
+-	pr_debug("%s_TPG[%u]_LUN[%u] - Deactivated %s Logical Unit from"
++	pr_debug("%s_TPG[%u]_LUN[%u] - Deactivating %s Logical Unit from"
+ 		" device object\n", tpg->se_tpg_tfo->get_fabric_name(),
+-		tpg->se_tpg_tfo->tpg_get_tag(tpg), unpacked_lun,
++		tpg->se_tpg_tfo->tpg_get_tag(tpg), lun->unpacked_lun,
+ 		tpg->se_tpg_tfo->get_fabric_name());
+ 
+-	return 0;
++	core_tpg_remove_lun(tpg, lun);
+ }
+ 
+ struct se_lun *core_get_lun_from_tpg(struct se_portal_group *tpg, u32 unpacked_lun)
+diff --git a/drivers/target/target_core_fabric_configfs.c b/drivers/target/target_core_fabric_configfs.c
+index 0955c948..811b2f4 100644
+--- a/drivers/target/target_core_fabric_configfs.c
++++ b/drivers/target/target_core_fabric_configfs.c
+@@ -827,7 +827,7 @@ static int target_fabric_port_unlink(
+ 		tf->tf_ops.fabric_pre_unlink(se_tpg, lun);
  	}
  
--	deve = kzalloc(sizeof(*deve), GFP_ATOMIC);
--	if (!deve) {
--		spin_unlock_irq(&nacl->device_list_lock);
--		return -ENOMEM;
-+	deve = core_alloc_se_dev_entry(lun, lun_acl, mapped_lun, lun_access, nacl);
-+	if (IS_ERR(deve)) {
-+		ret = PTR_ERR(deve);
-+		goto out;
+-	core_dev_del_lun(se_tpg, lun->unpacked_lun);
++	core_dev_del_lun(se_tpg, lun);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/target/target_core_internal.h b/drivers/target/target_core_internal.h
+index 463fddc..42ef4ab 100644
+--- a/drivers/target/target_core_internal.h
++++ b/drivers/target/target_core_internal.h
+@@ -46,7 +46,7 @@ int	se_dev_set_fabric_max_sectors(struct se_device *, u32);
+ int	se_dev_set_optimal_sectors(struct se_device *, u32);
+ int	se_dev_set_block_size(struct se_device *, u32);
+ struct se_lun *core_dev_add_lun(struct se_portal_group *, struct se_device *, u32);
+-int	core_dev_del_lun(struct se_portal_group *, u32);
++void	core_dev_del_lun(struct se_portal_group *, struct se_lun *);
+ struct se_lun *core_get_lun_from_tpg(struct se_portal_group *, u32);
+ struct se_lun_acl *core_dev_init_initiator_node_lun_acl(struct se_portal_group *,
+ 		struct se_node_acl *, u32, int *);
+@@ -82,8 +82,7 @@ void	core_tpg_wait_for_nacl_pr_ref(struct se_node_acl *);
+ struct se_lun *core_tpg_alloc_lun(struct se_portal_group *, u32);
+ int	core_tpg_add_lun(struct se_portal_group *, struct se_lun *,
+ 		u32, struct se_device *);
+-struct se_lun *core_tpg_pre_dellun(struct se_portal_group *, u32 unpacked_lun);
+-void core_tpg_post_dellun(struct se_portal_group *, struct se_lun *);
++void core_tpg_remove_lun(struct se_portal_group *, struct se_lun *);
+ 
+ /* target_core_transport.c */
+ extern struct kmem_cache *se_tmr_req_cache;
+diff --git a/drivers/target/target_core_tpg.c b/drivers/target/target_core_tpg.c
+index 321268d..5d2c774 100644
+--- a/drivers/target/target_core_tpg.c
++++ b/drivers/target/target_core_tpg.c
+@@ -298,7 +298,7 @@ void core_tpg_clear_object_luns(struct se_portal_group *tpg)
+ 			continue;
+ 
+ 		spin_unlock(&tpg->tpg_lun_lock);
+-		core_dev_del_lun(tpg, lun->unpacked_lun);
++		core_dev_del_lun(tpg, lun);
+ 		spin_lock(&tpg->tpg_lun_lock);
  	}
+ 	spin_unlock(&tpg->tpg_lun_lock);
+@@ -625,7 +625,7 @@ static void core_tpg_release_virtual_lun0(struct se_portal_group *se_tpg)
+ {
+ 	struct se_lun *lun = &se_tpg->tpg_virt_lun0;
  
--	nacl->device_list[mapped_lun] = deve;
--
--	atomic_set(&deve->ua_count, 0);
--	atomic_set(&deve->pr_ref_count, 0);
--	spin_lock_init(&deve->ua_lock);
--	INIT_LIST_HEAD(&deve->alua_port_list);
--	INIT_LIST_HEAD(&deve->ua_list);
--	deve->se_lun = lun;
--	deve->se_lun_acl = lun_acl;
--	deve->mapped_lun = mapped_lun;
--
--	if (lun_access & TRANSPORT_LUNFLAGS_READ_WRITE)
--		deve->lun_flags |= TRANSPORT_LUNFLAGS_READ_WRITE;
--	else
--		deve->lun_flags |= TRANSPORT_LUNFLAGS_READ_ONLY;
--
--	deve->creation_time = get_jiffies_64();
--	deve->attach_count++;
--
- 	spin_lock(&port->sep_alua_lock);
- 	list_add_tail(&deve->alua_port_list, &port->sep_alua_list);
- 	spin_unlock(&port->sep_alua_lock);
+-	core_tpg_post_dellun(se_tpg, lun);
++	core_tpg_remove_lun(se_tpg, lun);
+ }
  
-+	deve->attach_count++;
- out:
- 	spin_unlock(&nacl->device_list_lock);
+ int core_tpg_register(
+@@ -795,37 +795,7 @@ int core_tpg_add_lun(
+ 	return 0;
+ }
  
+-struct se_lun *core_tpg_pre_dellun(
+-	struct se_portal_group *tpg,
+-	u32 unpacked_lun)
+-{
+-	struct se_lun *lun;
+-
+-	if (unpacked_lun > (TRANSPORT_MAX_LUNS_PER_TPG-1)) {
+-		pr_err("%s LUN: %u exceeds TRANSPORT_MAX_LUNS_PER_TPG"
+-			"-1: %u for Target Portal Group: %u\n",
+-			tpg->se_tpg_tfo->get_fabric_name(), unpacked_lun,
+-			TRANSPORT_MAX_LUNS_PER_TPG-1,
+-			tpg->se_tpg_tfo->tpg_get_tag(tpg));
+-		return ERR_PTR(-EOVERFLOW);
+-	}
+-
+-	spin_lock(&tpg->tpg_lun_lock);
+-	lun = tpg->tpg_lun_list[unpacked_lun];
+-	if (lun->lun_status != TRANSPORT_LUN_STATUS_ACTIVE) {
+-		pr_err("%s Logical Unit Number: %u is not active on"
+-			" Target Portal Group: %u, ignoring request.\n",
+-			tpg->se_tpg_tfo->get_fabric_name(), unpacked_lun,
+-			tpg->se_tpg_tfo->tpg_get_tag(tpg));
+-		spin_unlock(&tpg->tpg_lun_lock);
+-		return ERR_PTR(-ENODEV);
+-	}
+-	spin_unlock(&tpg->tpg_lun_lock);
+-
+-	return lun;
+-}
+-
+-void core_tpg_post_dellun(
++void core_tpg_remove_lun(
+ 	struct se_portal_group *tpg,
+ 	struct se_lun *lun)
+ {
 -- 
 1.9.3
-
