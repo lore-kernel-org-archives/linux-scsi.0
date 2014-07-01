@@ -1,58 +1,94 @@
-From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Subject: RE: [PATCH] cleanup switch in scsi_adjust_queue_depth()
-Date: Tue, 1 Jul 2014 20:40:17 +0000
-Message-ID: <94D0CD8314A33A4D9D801C0FE68B402958B6CB07@G4W3202.americas.hpqcorp.net>
-References: <53AA0881.5000505@interlog.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3426.houston.hp.com ([15.201.208.54]:52196 "EHLO
-	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752100AbaGAUlh convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Jul 2014 16:41:37 -0400
-In-Reply-To: <53AA0881.5000505@interlog.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+From: Emil Goode <emilgoode@gmail.com>
+Subject: [PATCH] [SCSI] qla2xxx: Remove duplicate __iomem annotation
+Date: Wed,  2 Jul 2014 00:31:54 +0200
+Message-ID: <1404253914-24400-1-git-send-email-emilgoode@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: qla2xxx-upstream@qlogic.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, Emil Goode <emilgoode@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "dgilbert@interlog.com" <dgilbert@interlog.com>, SCSI development list <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>
 
+The device_reg_t type now has __iomem annotation.
 
+Sparse is warning about this:
+drivers/scsi/qla2xxx/qla_init.c:2040:22: warning: duplicate [noderef]
+drivers/scsi/qla2xxx/qla_iocb.c:477:22: warning: duplicate [noderef]
+drivers/scsi/qla2xxx/qla_iocb.c:1866:22: warning: duplicate [noderef]
+drivers/scsi/qla2xxx/qla_dbg.c:632:22: warning: duplicate [noderef]
+drivers/scsi/qla2xxx/qla_target.c:1435:22: warning: duplicate [noderef]
 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> owner@vger.kernel.org] On Behalf Of Douglas Gilbert
-> Sent: Tuesday, 24 June, 2014 6:24 PM
-> To: SCSI development list; Christoph Hellwig; James Bottomley
-> Subject: [PATCH] cleanup switch in scsi_adjust_queue_depth()
-> 
-> While checking what scsi_adjust_queue_depth() did I
-> thought its switch statement could be clearer.
-> 
-> ChangeLog:
->    - remove redundant assignment (to sdev->queue_depth)
->    - re-order cases (thus removing the fall-through)
-> 
-> Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+Introduced by commit:
+f73cb695d3eccd171f03ed194e72d67732b17487
+("[SCSI] qla2xxx: Add support for ISP2071.")
 
-I've run tests with tagged set to both 0 and MSG_SIMPLE_TAG 
-and they both work like before, so you may add:
-Reviewed-by: Robert Elliott <elliott@hp.com>
-Tested-by: Robert Elliott <elliott@hp.com>
-
-I did notice that include/scsi/scsi_tcq.h scsi_set_tag_type() 
-is another function with a switch statement with fallthroughs 
-setting these variables.  It doesn't have default: before 0: 
-or involve a print, so reordering is not as necessary.
-
-However, that function doesn't clear ordered_tags in the 
-MSG_SIMPLE_TAG case, which seems problematic if the device
-is ever changed from ordered to simple.  You might want to 
-address that in this patch too.
-
-
+Signed-off-by: Emil Goode <emilgoode@gmail.com>
 ---
-Rob Elliott    HP Server Storage
+ drivers/scsi/qla2xxx/qla_dbg.c    |    2 +-
+ drivers/scsi/qla2xxx/qla_init.c   |    2 +-
+ drivers/scsi/qla2xxx/qla_iocb.c   |    4 ++--
+ drivers/scsi/qla2xxx/qla_target.c |    2 +-
+ 4 files changed, 5 insertions(+), 5 deletions(-)
 
-
-
+diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
+index c72ee97b..47998b9 100644
+--- a/drivers/scsi/qla2xxx/qla_dbg.c
++++ b/drivers/scsi/qla2xxx/qla_dbg.c
+@@ -629,7 +629,7 @@ qla25xx_copy_mq(struct qla_hw_data *ha, void *ptr, uint32_t **last_chain)
+ 	uint32_t cnt, que_idx;
+ 	uint8_t que_cnt;
+ 	struct qla2xxx_mq_chain *mq = ptr;
+-	device_reg_t __iomem *reg;
++	device_reg_t *reg;
+ 
+ 	if (!ha->mqenable || IS_QLA83XX(ha) || IS_QLA27XX(ha))
+ 		return ptr;
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index e218441..8d4e368 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -2037,7 +2037,7 @@ void
+ qla24xx_config_rings(struct scsi_qla_host *vha)
+ {
+ 	struct qla_hw_data *ha = vha->hw;
+-	device_reg_t __iomem *reg = ISP_QUE_REG(ha, 0);
++	device_reg_t *reg = ISP_QUE_REG(ha, 0);
+ 	struct device_reg_2xxx __iomem *ioreg = &ha->iobase->isp;
+ 	struct qla_msix_entry *msix;
+ 	struct init_cb_24xx *icb;
+diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
+index 150529d..39ebf34 100644
+--- a/drivers/scsi/qla2xxx/qla_iocb.c
++++ b/drivers/scsi/qla2xxx/qla_iocb.c
+@@ -474,7 +474,7 @@ void
+ qla2x00_start_iocbs(struct scsi_qla_host *vha, struct req_que *req)
+ {
+ 	struct qla_hw_data *ha = vha->hw;
+-	device_reg_t __iomem *reg = ISP_QUE_REG(ha, req->id);
++	device_reg_t *reg = ISP_QUE_REG(ha, req->id);
+ 
+ 	if (IS_P3P_TYPE(ha)) {
+ 		qla82xx_start_iocbs(vha);
+@@ -1863,7 +1863,7 @@ qla2x00_alloc_iocbs(scsi_qla_host_t *vha, srb_t *sp)
+ {
+ 	struct qla_hw_data *ha = vha->hw;
+ 	struct req_que *req = ha->req_q_map[0];
+-	device_reg_t __iomem *reg = ISP_QUE_REG(ha, req->id);
++	device_reg_t *reg = ISP_QUE_REG(ha, req->id);
+ 	uint32_t index, handle;
+ 	request_t *pkt;
+ 	uint16_t cnt, req_cnt;
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index e632e14..6fc0702 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -1432,7 +1432,7 @@ static int qlt_check_reserve_free_req(struct scsi_qla_host *vha,
+ 	uint32_t req_cnt)
+ {
+ 	struct qla_hw_data *ha = vha->hw;
+-	device_reg_t __iomem *reg = ha->iobase;
++	device_reg_t *reg = ha->iobase;
+ 	uint32_t cnt;
+ 
+ 	if (vha->req->cnt < (req_cnt + 2)) {
+-- 
+1.7.10.4
