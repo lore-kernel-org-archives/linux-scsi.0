@@ -1,58 +1,58 @@
-From: whelkkahawai <boabankouagabf@gmail.com>
-Subject: Hello Dear
-Date: Tue, 1 Jul 2014 12:45:04 -0700
-Message-ID: <CAPVv4DXO18naHTVjqj=G0vdscvTUAV1yiDHaf8TdYmmd7uW2Nw__25272.5269333043$1404243922$gmane$org@mail.gmail.com>
-Reply-To: whelkkahawai@gmail.com
+From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
+Subject: RE: [PATCH] cleanup switch in scsi_adjust_queue_depth()
+Date: Tue, 1 Jul 2014 20:40:17 +0000
+Message-ID: <94D0CD8314A33A4D9D801C0FE68B402958B6CB07@G4W3202.americas.hpqcorp.net>
+References: <53AA0881.5000505@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qa0-f68.google.com ([209.85.216.68]:56544 "EHLO
-	mail-qa0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751561AbaGATpG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Jul 2014 15:45:06 -0400
-Received: by mail-qa0-f68.google.com with SMTP id v10so2751602qac.3
-        for <linux-scsi@vger.kernel.org>; Tue, 01 Jul 2014 12:45:05 -0700 (PDT)
+Received: from g4t3426.houston.hp.com ([15.201.208.54]:52196 "EHLO
+	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752100AbaGAUlh convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Jul 2014 16:41:37 -0400
+In-Reply-To: <53AA0881.5000505@interlog.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "dgilbert@interlog.com" <dgilbert@interlog.com>, SCSI development list <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>
 
-Hello,							
 
-I am Mr. Kahawai Whelk, from Burkina Faso in West African region. I
-work with the bank of Africa here in the nation. I am writing you from
-my office that which will be of an immense benefit to both of us. Inmy
-department, being the account manager I discovered an abandoned sum
-of $18 million USA Dollars (Eighteen million Us Dollars) in an account
-that belongs to one of the bank late foreign customers, a German
-citizen who unfortunately lost his life in a plane crash.
 
-The choice of contacting you is aroused from the geographical natureof
-where you live, particularly due to the senility of the transaction
-and the confidentiality herein. Now our bank has been waiting for any
-of the relatives to come-up for the claim but nobody has done that.
- I
-personally have been unsuccessful in locating the relatives for many
-years now, I seek your consent to present you as the next of kin /
-beneficiary to the deceased so that the proceeds of this account
-valued at 18 Million Dollars can be done and paid to you for both of
-us.
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+> owner@vger.kernel.org] On Behalf Of Douglas Gilbert
+> Sent: Tuesday, 24 June, 2014 6:24 PM
+> To: SCSI development list; Christoph Hellwig; James Bottomley
+> Subject: [PATCH] cleanup switch in scsi_adjust_queue_depth()
+> 
+> While checking what scsi_adjust_queue_depth() did I
+> thought its switch statement could be clearer.
+> 
+> ChangeLog:
+>    - remove redundant assignment (to sdev->queue_depth)
+>    - re-order cases (thus removing the fall-through)
+> 
+> Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 
-This will be disbursed or shared between the both of us in these
-percentages, 55% to me and 35% to you while 10% will be for expenses
-both parties might have incurred during the process of transferring. I
-have secured necessary information's and the certificate of deposit
-that can be used to back up this claim we are making.
+I've run tests with tagged set to both 0 and MSG_SIMPLE_TAG 
+and they both work like before, so you may add:
+Reviewed-by: Robert Elliott <elliott@hp.com>
+Tested-by: Robert Elliott <elliott@hp.com>
 
-All I require now is your honest Co-operation, Confidentiality and
-trust to enable us sees this transaction through. I guarantee you that
-this will be executed under a legitimate arrangement that will protect
-you from any breach of the law.Having gone through a methodical
-search, I decided tocontact   that you will find this proposal
-interesting. Please on your confirmation of this message and
-indicating your interest, I will furnish you with more and you can
-contact me through this my private E-mail address (
-kahawai.whelkk@gmail.com )
+I did notice that include/scsi/scsi_tcq.h scsi_set_tag_type() 
+is another function with a switch statement with fallthroughs 
+setting these variables.  It doesn't have default: before 0: 
+or involve a print, so reordering is not as necessary.
 
-Endeavour to let me know your decision rather than to keep me waiting
-or exposing me.
-Regards,
-Mr. Kahawai Whelk.
+However, that function doesn't clear ordered_tags in the 
+MSG_SIMPLE_TAG case, which seems problematic if the device
+is ever changed from ordered to simple.  You might want to 
+address that in this patch too.
+
+
+---
+Rob Elliott    HP Server Storage
+
+
+
