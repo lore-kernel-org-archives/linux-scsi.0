@@ -1,122 +1,143 @@
 From: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
-Subject: RE: [PATCH 4/4] pm8001: more fixes to honor return value
-Date: Wed, 2 Jul 2014 09:41:41 +0000
-Message-ID: <CE2C58F938F4C44EA74FFF880BAA7E5E1CD74563@BBYEXM02.pmc-sierra.internal>
-References: <1403795856-4300-4-git-send-email-thenzl@redhat.com>
+Subject: RE: [PATCH 3/4] pm8001: add a new spinlock to protect the CCB
+Date: Wed, 2 Jul 2014 09:42:15 +0000
+Message-ID: <CE2C58F938F4C44EA74FFF880BAA7E5E1CD7457F@BBYEXM02.pmc-sierra.internal>
+References: <1403795856-4300-3-git-send-email-thenzl@redhat.com>
+ <DB8BCD22E410A84DA91083F3479A3DB31CD56D32@BBYEXM02.pmc-sierra.internal>
+ <53AD45A2.1030600@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:39355 "EHLO
-	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751417AbaGBJlo convert rfc822-to-8bit
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:47939 "EHLO
+	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752008AbaGBJmS convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 2 Jul 2014 05:41:44 -0400
-In-Reply-To: <1403795856-4300-4-git-send-email-thenzl@redhat.com>
+	Wed, 2 Jul 2014 05:42:18 -0400
+In-Reply-To: <53AD45A2.1030600@redhat.com>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: Vasanthalakshmi Tharmarajan <Vasanthalakshmi.Tharmarajan@pmcs.com>, Viswas G <Viswas.G@pmcs.com>, "Jack Wang (xjtuwjp@gmail.com)" <xjtuwjp@gmail.com>
+To: Tomas Henzl <thenzl@redhat.com>, Viswas G <Viswas.G@pmcs.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: Vasanthalakshmi Tharmarajan <Vasanthalakshmi.Tharmarajan@pmcs.com>, "Jack Wang (xjtuwjp@gmail.com)" <xjtuwjp@gmail.com>
 
 
-On Thu, Jun 26, 2014 at 8:47 PM, Tomas Henzl <thenzl@redhat.com> wrote:
-> The driver ignores the return value in a lot of places, fix
-> it at least somewhere (and release the resources in such cases),
-> to avoid that bad things happen.
-> A memory leak is fixed too.
+
+On Fri, Jun 27, 2014 at 3:51 PM, Tomas Henzl <thenzl@redhat.com> wrote:
+> On 06/27/2014 08:09 AM, Viswas G wrote:
+>> HI Tomas,
+>>
+>> This lock is not needed as we are already protecting the tag 
+>> allocation and freeing with the pm8001_ha->lock. We are always acquiring this lock before calling pm8001_tag_alloc().
+>>
+>> We are allocating and freeing the tag in following paths,
+>>
+>> 1) Request/Response path : This we are protecting using pm8001_ha->lock.
+>> 2)Driver initialization : We are not using the lock here . As there only one will be running, we don't need a lock here.
+>>
+>> So there is no need of a specific lock for tag allocation.
 >
-> Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+> I looked at and tested the pm8001_ctl_bios_version_show. From this 
+> function the
+
+I agree. Instead of locking from multiple places where we call pm8001_tag_alloc, better way is to use this bitmap lock. Thanks for adding it.
 
 Thanks Tomas. Looks good
 Acked-by: Suresh Thiagarajan<Suresh.Thiagarajan@pmcs.com>
 
-> ---
->  drivers/scsi/pm8001/pm8001_ctl.c  |  5 ++++-
->  drivers/scsi/pm8001/pm8001_init.c | 22 ++++++++++++++++++++--
->  2 files changed, 24 insertions(+), 3 deletions(-)
+> pm8001_chip_get_nvmd_req is invoked and there is a new 'tag' allocated.
+> I have noticed your lock nowhere in the path, in addition I was able 
+> to trigger this - [  813.749060] pm80xx mpi_sata_completion 1991:task 
+> null [  813.758439] pm80xx mpi_sata_completion 1991:task null [  
+> 813.809356] pm80xx mpi_sata_completion 1991:task null [  813.819881] 
+> pm80xx mpi_sata_completion 1991:task null [  813.829086] pm80xx 
+> mpi_sata_completion 1991:task null [  844.376825] pm80xx 
+> pm8001_mpi_task_abort_resp 3776:task abort failed status 0x6 ,tag = 
+> 0x2, scp= 0x0 [  844.387057] pm80xx pm8001_mpi_task_abort_resp 
+> 3776:task abort failed status 0x6 ,tag = 0x2, scp= 0x0 [  844.397316] 
+> pm80xx pm8001_mpi_task_abort_resp 3776:task abort failed status 0x6 
+> ,tag = 0x2, scp= 0x0 [  844.406550] pm80xx pm8001_abort_task 1246:rc= 
+> 5 [  844.411142] pm80xx pm8001_query_task 1169::rc= 5 and the system became 'unstable'.
 >
-> diff --git a/drivers/scsi/pm8001/pm8001_ctl.c b/drivers/scsi/pm8001/pm8001_ctl.c
-> index fe5eee4..211ffd6 100644
-> --- a/drivers/scsi/pm8001/pm8001_ctl.c
-> +++ b/drivers/scsi/pm8001/pm8001_ctl.c
-> @@ -397,7 +397,10 @@ static ssize_t pm8001_ctl_bios_version_show(struct device *cdev,
->         payload.func_specific = kzalloc(4096, GFP_KERNEL);
->         if (!payload.func_specific)
->                 return -ENOMEM;
-> -       PM8001_CHIP_DISP->get_nvmd_req(pm8001_ha, &payload);
-> +       if (PM8001_CHIP_DISP->get_nvmd_req(pm8001_ha, &payload)) {
-> +               kfree(payload.func_specific);
-> +               return -ENOMEM;
-> +       }
->         wait_for_completion(&completion);
->         virt_addr = pm8001_ha->memoryMap.region[NVMD].virt_ptr;
->         for (bios_index = BIOSOFFSET; bios_index < BIOS_OFFSET_LIMIT;
-> diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-> index 3b485d4..9d02a01 100644
-> --- a/drivers/scsi/pm8001/pm8001_init.c
-> +++ b/drivers/scsi/pm8001/pm8001_init.c
-> @@ -622,6 +622,8 @@ static void pm8001_init_sas_add(struct pm8001_hba_info *pm8001_ha)
->         DECLARE_COMPLETION_ONSTACK(completion);
->         struct pm8001_ioctl_payload payload;
->         u16 deviceid;
-> +       int rc;
-> +
->         pci_read_config_word(pm8001_ha->pdev, PCI_DEVICE_ID, &deviceid);
->         pm8001_ha->nvmd_completion = &completion;
+> --tm
 >
-> @@ -639,7 +641,16 @@ static void pm8001_init_sas_add(struct pm8001_hba_info *pm8001_ha)
->         }
->         payload.offset = 0;
->         payload.func_specific = kzalloc(payload.length, GFP_KERNEL);
-> -       PM8001_CHIP_DISP->get_nvmd_req(pm8001_ha, &payload);
-> +       if (!payload.func_specific) {
-> +               PM8001_INIT_DBG(pm8001_ha, pm8001_printk("mem alloc fail\n"));
-> +               return;
-> +       }
-> +       rc = PM8001_CHIP_DISP->get_nvmd_req(pm8001_ha, &payload);
-> +       if (rc) {
-> +               kfree(payload.func_specific);
-> +               PM8001_INIT_DBG(pm8001_ha, pm8001_printk("nvmd failed\n"));
-> +               return;
-> +       }
->         wait_for_completion(&completion);
+>>
+>> Regards,
+>> Viswas G
+>>
+>> -----Original Message-----
+>> From: Tomas Henzl [mailto:thenzl@redhat.com]
+>> Sent: Thursday, June 26, 2014 8:48 PM
+>> To: linux-scsi@vger.kernel.org
+>> Cc: zzzAnand Kumar Santhanam(Nov-20-2013); Vasanthalakshmi 
+>> Tharmarajan; Suresh Thiagarajan; Viswas G; Tomas Henzl
+>> Subject: [PATCH 3/4] pm8001: add a new spinlock to protect the CCB
+>>
+>> Patch adds a new spinlock to protect the ccb management.
+>> It may happen that concurrent threads become the same tag value from the 'alloc' function', the spinlock prevents this situation.
+>>
+>> Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+>> ---
+>>  drivers/scsi/pm8001/pm8001_init.c | 1 +  
+>> drivers/scsi/pm8001/pm8001_sas.c  | 7 ++++++-  
+>> drivers/scsi/pm8001/pm8001_sas.h  | 1 +
+>>  3 files changed, 8 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/scsi/pm8001/pm8001_init.c 
+>> b/drivers/scsi/pm8001/pm8001_init.c
+>> index c4f31b21..56b61e5 100644
+>> --- a/drivers/scsi/pm8001/pm8001_init.c
+>> +++ b/drivers/scsi/pm8001/pm8001_init.c
+>> @@ -246,6 +246,7 @@ static int pm8001_alloc(struct pm8001_hba_info *pm8001_ha,  {
+>>       int i;
+>>       spin_lock_init(&pm8001_ha->lock);
+>> +     spin_lock_init(&pm8001_ha->bitmap_lock);
+>>       PM8001_INIT_DBG(pm8001_ha,
+>>               pm8001_printk("pm8001_alloc: PHY:%x\n",
+>>                               pm8001_ha->chip->n_phy)); diff --git 
+>> a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
+>> index be55859..34cea82 100644
+>> --- a/drivers/scsi/pm8001/pm8001_sas.c
+>> +++ b/drivers/scsi/pm8001/pm8001_sas.c
+>> @@ -77,11 +77,16 @@ inline int pm8001_tag_alloc(struct pm8001_hba_info *pm8001_ha, u32 *tag_out)  {
+>>       unsigned int tag;
+>>       void *bitmap = pm8001_ha->tags;
+>> +     unsigned long flags;
+>>
+>> +     spin_lock_irqsave(&pm8001_ha->bitmap_lock, flags);
+>>       tag = find_first_zero_bit(bitmap, pm8001_ha->tags_num);
+>> -     if (tag >= pm8001_ha->tags_num)
+>> +     if (tag >= pm8001_ha->tags_num) {
+>> +             spin_unlock_irqrestore(&pm8001_ha->bitmap_lock, flags);
+>>               return -SAS_QUEUE_FULL;
+>> +     }
+>>       set_bit(tag, bitmap);
+>> +     spin_unlock_irqrestore(&pm8001_ha->bitmap_lock, flags);
+>>       *tag_out = tag;
+>>       return 0;
+>>  }
+>> diff --git a/drivers/scsi/pm8001/pm8001_sas.h 
+>> b/drivers/scsi/pm8001/pm8001_sas.h
+>> index 14106ad..f6b2ac5 100644
+>> --- a/drivers/scsi/pm8001/pm8001_sas.h
+>> +++ b/drivers/scsi/pm8001/pm8001_sas.h
+>> @@ -475,6 +475,7 @@ struct pm8001_hba_info {
+>>       struct list_head        list;
+>>       unsigned long           flags;
+>>       spinlock_t              lock;/* host-wide lock */
+>> +     spinlock_t              bitmap_lock;
+>>       struct pci_dev          *pdev;/* our device */
+>>       struct device           *dev;
+>>       struct pm8001_hba_memspace io_mem[6];
+>> --
+>> 1.8.3.1
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-scsi" 
+>> in the body of a message to majordomo@vger.kernel.org More majordomo 
+>> info at  http://vger.kernel.org/majordomo-info.html
 >
->         for (i = 0, j = 0; i <= 7; i++, j++) {
-> @@ -662,6 +673,7 @@ static void pm8001_init_sas_add(struct pm8001_hba_info *pm8001_ha)
->                         pm8001_printk("phy %d sas_addr = %016llx\n", i,
->                         pm8001_ha->phy[i].dev_sas_addr));
->         }
-> +       kfree(payload.func_specific);
->  #else
->         for (i = 0; i < pm8001_ha->chip->n_phy; i++) {
->                 pm8001_ha->phy[i].dev_sas_addr = 0x50010c600047f9d0ULL;
-> @@ -685,6 +697,7 @@ static int pm8001_get_phy_settings_info(struct pm8001_hba_info *pm8001_ha)
->         /*OPTION ROM FLASH read for the SPC cards */
->         DECLARE_COMPLETION_ONSTACK(completion);
->         struct pm8001_ioctl_payload payload;
-> +       int rc;
->
->         pm8001_ha->nvmd_completion = &completion;
->         /* SAS ADDRESS read from flash / EEPROM */
-> @@ -695,7 +708,12 @@ static int pm8001_get_phy_settings_info(struct pm8001_hba_info *pm8001_ha)
->         if (!payload.func_specific)
->                 return -ENOMEM;
->         /* Read phy setting values from flash */
-> -       PM8001_CHIP_DISP->get_nvmd_req(pm8001_ha, &payload);
-> +       rc = PM8001_CHIP_DISP->get_nvmd_req(pm8001_ha, &payload);
-> +       if (rc) {
-> +               kfree(payload.func_specific);
-> +               PM8001_INIT_DBG(pm8001_ha, pm8001_printk("nvmd failed\n"));
-> +               return -ENOMEM;
-> +       }
->         wait_for_completion(&completion);
->         pm8001_set_phy_profile(pm8001_ha, sizeof(u8), payload.func_specific);
->         kfree(payload.func_specific);
 > --
-> 1.8.3.1
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" 
+> in the body of a message to majordomo@vger.kernel.org More majordomo 
+> info at  http://vger.kernel.org/majordomo-info.html
