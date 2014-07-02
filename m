@@ -1,19 +1,19 @@
-From: Alex Williamson <alex.williamson@redhat.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: Re: [PATCH 3.15 099/139] libiscsi, iser: Adjust data_length to
  include protection information
-Date: Wed, 02 Jul 2014 16:48:37 -0600
-Message-ID: <1404341317.1862.71.camel@ul30vt.home>
+Date: Wed, 02 Jul 2014 15:52:35 -0700
+Message-ID: <1404341555.16066.19.camel@dabdike>
 References: <20140628174605.352098823@linuxfoundation.org>
 	  <20140628174609.930049472@linuxfoundation.org>
 	 <1404339330.1862.69.camel@ul30vt.home> <53B48B37.4000608@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="ISO-8859-15"
 Content-Transfer-Encoding: 7bit
 Return-path: <stable-owner@vger.kernel.org>
 In-Reply-To: <53B48B37.4000608@cs.wisc.edu>
 Sender: stable-owner@vger.kernel.org
 To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-kernel@vger.kernel.org, stable@vger.kernel.org, Sagi Grimberg <sagig@mellanox.com>, Nicholas Bellinger <nab@linux-iscsi.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: Alex Williamson <alex.williamson@redhat.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-kernel@vger.kernel.org, stable@vger.kernel.org, Sagi Grimberg <sagig@mellanox.com>, Nicholas Bellinger <nab@linux-iscsi.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
 On Wed, 2014-07-02 at 17:44 -0500, Mike Christie wrote:
@@ -54,5 +54,15 @@ On Wed, 2014-07-02 at 17:44 -0500, Mike Christie wrote:
 > 
 > http://marc.info/?l=linux-kernel&m=140432482527273&w=2
 
-Thanks for the pointer.  It's curious why there was no objection to this
-going into stable if it's been known to be broken for a week.
+I assume it's this fix:
+
+commit 7bafc240e126c37f60b040fa429ae4a710b88ab5
+Author: Martin K. Petersen <martin.petersen@oracle.com>
+Date:   Tue Jun 24 16:59:35 2014 +0200
+
+    scsi: use the scsi data buffer length to extract transfer size
+ 
+In which case it's not marked for stable backport ... I assume it should
+be?
+
+James
