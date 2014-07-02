@@ -1,81 +1,90 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] scsi_debug: support scsi-mq, queues and locks
-Date: Wed, 2 Jul 2014 03:15:21 -0700
-Message-ID: <20140702101521.GA3275@infradead.org>
-References: <53B0F0C0.40907@interlog.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:55361 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751044AbaGBKPX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Jul 2014 06:15:23 -0400
-Content-Disposition: inline
-In-Reply-To: <53B0F0C0.40907@interlog.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Suman Tripathi <stripathi@apm.com>
+Subject: [PATCH v5 1/2] libahci: Implement the function ahci_restart_engine to restart the port dma engine.
+Date: Wed,  2 Jul 2014 15:45:07 +0530
+Message-ID: <1404296108-16233-2-git-send-email-stripathi@apm.com>
+References: <1404296108-16233-1-git-send-email-stripathi@apm.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1404296108-16233-1-git-send-email-stripathi@apm.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>, Loc Ho <lho@apm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dgilbert@interlog.com>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>, "Elliott, Robert (Server Storage)" <elliott@hp.com>, "Martin K. Petersen" <martin.petersen@ORACLE.COM>, Christoph Hellwig <hch@lst.de>
 
-Hi doug,
+This patch adds an function to restart the port dma engine.
+This patch also exports the function ahci_qc_issue. The subsequent
+patches will make use of them.
 
-> ChangeLog:
->   - add host_lock option whose default value is 0 which
->     removes the host_lock around all queued commands
+Signed-off-by: Loc Ho <lho@apm.com>
+Signed-off-by: Suman Tripathi <stripathi@apm.com>
+---
+ drivers/ata/ahci.h    |  3 ++-
+ drivers/ata/libahci.c | 16 ++++++++++++++--
+ 2 files changed, 16 insertions(+), 3 deletions(-)
 
-Any reason why we'd want to keep this?  You suggest below that the PI
-parts might need locking, but in that case we should keept it there
-undconditionally until Martin had a chance to verify it.
+diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+index af63c75..98e8839 100644
+--- a/drivers/ata/ahci.h
++++ b/drivers/ata/ahci.h
+@@ -369,9 +369,10 @@ int ahci_reset_controller(struct ata_host *host);
+ int ahci_do_softreset(struct ata_link *link, unsigned int *class,
+ 		      int pmp, unsigned long deadline,
+ 		      int (*check_ready)(struct ata_link *link));
+-
++unsigned int ahci_qc_issue(struct ata_queued_cmd *qc);
+ int ahci_stop_engine(struct ata_port *ap);
+ void ahci_start_engine(struct ata_port *ap);
++int ahci_restart_engine(struct ata_port *ap);
+ int ahci_check_ready(struct ata_link *link);
+ int ahci_kick_engine(struct ata_port *ap);
+ int ahci_port_resume(struct ata_port *ap);
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index b986145..1b86cf4 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -68,7 +68,6 @@ static ssize_t ahci_transmit_led_message(struct ata_port *ap, u32 state,
 
->   - accept delay=-1 (_hi_) or -2 which use a tasklet to invoke
->     the scsi_done callback into the mid-layer. The default
->     is still delay=1 which uses a timer to delay 1 jiffy
+ static int ahci_scr_read(struct ata_link *link, unsigned int sc_reg, u32 *val);
+ static int ahci_scr_write(struct ata_link *link, unsigned int sc_reg, u32 val);
+-static unsigned int ahci_qc_issue(struct ata_queued_cmd *qc);
+ static bool ahci_qc_fill_rtf(struct ata_queued_cmd *qc);
+ static int ahci_port_start(struct ata_port *ap);
+ static void ahci_port_stop(struct ata_port *ap);
+@@ -742,6 +741,18 @@ static int ahci_set_lpm(struct ata_link *link, enum ata_lpm_policy policy,
+ 	return 0;
+ }
 
-It might be worth to take a look at the null_blk driver for a few
-more completion variants.
++int ahci_restart_engine(struct ata_port *ap)
++{
++	struct ahci_host_priv *hpriv = ap->host->private_data;
++
++	ahci_stop_engine(ap);
++	ahci_start_fis_rx(ap);
++	hpriv->start_engine(ap);
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(ahci_restart_engine);
++
+ #ifdef CONFIG_PM
+ static void ahci_power_down(struct ata_port *ap)
+ {
+@@ -1940,7 +1951,7 @@ irqreturn_t ahci_interrupt(int irq, void *dev_instance)
+ }
+ EXPORT_SYMBOL_GPL(ahci_interrupt);
 
-> 
-> IMO the scsi-mq queue_depth handling doesn't break but does
-> not converge promptly (and in some cases seems to be steady
-> state unstable) in the face of TASK_SET_FULL statuses.
-> This can be seen with this sequence:
->   # cd /sys/bus/pseudo/drivers/scsi_debug
->   # echo 0x600 > opts
-> < then in another window 'tail -f /var/log/syslog'>
-> < then in yet another window run a fio test against scsi_debug>
->   # echo 200 > max_queue
-> < if the tail shows nothing, try writing a lower value into max_queue>
-> 
-> max_queue starts at 576. Depending on the fio test, the new
-> value written into max_queue needed to prompt the TSF trip
-> point will vary. You will now it when you see it :-)
+-static unsigned int ahci_qc_issue(struct ata_queued_cmd *qc)
++unsigned int ahci_qc_issue(struct ata_queued_cmd *qc)
+ {
+ 	struct ata_port *ap = qc->ap;
+ 	void __iomem *port_mmio = ahci_port_base(ap);
+@@ -1969,6 +1980,7 @@ static unsigned int ahci_qc_issue(struct ata_queued_cmd *qc)
 
-There's really nothing specific to blk-mq in the queue-full handling,
-so I'd be surprised if if it works that different.  What sort of
-behavior do you see with scsi_debug when not using blk-mq?
+ 	return 0;
+ }
++EXPORT_SYMBOL_GPL(ahci_qc_issue);
 
-What happens if you don't use blk-mq but the old host-wide tag
-implementation (e.g. add a call to scsi_init_shared_tag_map in the probe
-function)?
-
-
->  struct sdebug_queued_cmd {
-> -	int in_use;
-> -	struct timer_list cmnd_timer;
-> -	done_funct_t done_funct;
-> +	/* in_use flagged by a bit in queued_in_use_bm[] */
-> +	struct timer_list *cmnd_timerp;
-> +	struct tasklet_struct *tletp;
-
-Why not keep these allocated as part of the structure and use an union?
-
-
->  static struct sdebug_queued_cmd queued_arr[SCSI_DEBUG_CANQUEUE];
-> +static unsigned long queued_in_use_bm[SCSI_DEBUG_CANQUEUE_WORDS];
-
-Any chance you could move to use the cmd_size field in the host template
-instead of the statically allocated commands as suggested earlier?
-
-That would allow for lockless I/O completions, and probably submissions
-as well at least for the common case.
+ static bool ahci_qc_fill_rtf(struct ata_queued_cmd *qc)
+ {
+--
+1.8.2.1
 
