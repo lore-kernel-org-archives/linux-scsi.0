@@ -1,189 +1,186 @@
-From: Anil Gurumurthy <Anil.Gurumurthy@qlogic.com>
-Subject: RE: [PATCH 1/1] [SCSI] bfa: use ARRAY_SIZE instead of
- sizeof/sizeof[0]
-Date: Wed, 2 Jul 2014 05:16:15 +0000
-Message-ID: <20B1A3CBD98F3845B3F5F56D8597EF59F9B24F@avmb2.qlogic.org>
-References: <1404150162-7973-1-git-send-email-fabf@skynet.be>
+From: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
+Subject: RE: [PATCH 1/4] pm8001: clean bitmap management functions
+Date: Wed, 2 Jul 2014 09:41:04 +0000
+Message-ID: <CE2C58F938F4C44EA74FFF880BAA7E5E1CD7453F@BBYEXM02.pmc-sierra.internal>
+References: <1403795856-4300-1-git-send-email-thenzl@redhat.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_000_20B1A3CBD98F3845B3F5F56D8597EF59F9B24Favmb2qlogicorg_"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:44641 "EHLO
-	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753938AbaGBFQS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Jul 2014 01:16:18 -0400
-Received: from pps.filterd (m0045602.ppops.net [127.0.0.1])
-	by mx0a-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id s625GHJK007715
-	for <linux-scsi@vger.kernel.org>; Tue, 1 Jul 2014 22:16:17 -0700
-Received: from avcashub1.qlogic.com (avcashub1.qlogic.com [198.70.193.115])
-	by mx0a-0016ce01.pphosted.com with ESMTP id 1muf9p1vbx-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Tue, 01 Jul 2014 22:16:17 -0700
-In-Reply-To: <1404150162-7973-1-git-send-email-fabf@skynet.be>
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:47840 "EHLO
+	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751412AbaGBJlM convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 2 Jul 2014 05:41:12 -0400
+In-Reply-To: <1403795856-4300-1-git-send-email-thenzl@redhat.com>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Fabian Frederick <fabf@skynet.be>, linux-kernel <linux-kernel@vger.kernel.org>
-Cc: Sudarsana Kalluru <Sudarsana.Kalluru@qlogic.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi <linux-scsi@vger.kernel.org>
-
---_000_20B1A3CBD98F3845B3F5F56D8597EF59F9B24Favmb2qlogicorg_
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-
-Acked-by: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
+To: Tomas Henzl <thenzl@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: Vasanthalakshmi Tharmarajan <Vasanthalakshmi.Tharmarajan@pmcs.com>, Viswas G <Viswas.G@pmcs.com>, "Jack Wang (xjtuwjp@gmail.com)" <xjtuwjp@gmail.com>
 
 
------Original Message-----
-From: Fabian Frederick [mailto:fabf@skynet.be]
-Sent: 30 June 2014 23:13
-To: linux-kernel
-Cc: Fabian Frederick; Anil Gurumurthy; Sudarsana Kalluru; James E.J. Bottom=
-ley; linux-scsi
-Subject: [PATCH 1/1] [SCSI] bfa: use ARRAY_SIZE instead of sizeof/sizeof[0]
+On Thu, Jun 26, 2014 at 8:47 PM, Tomas Henzl <thenzl@redhat.com> wrote:
+> In the driver two different functions are used to free the same resource,
+> this patch makes the code easier to read. In addittion to that, some
+> minor optimisations were made too.
+>
+> Signed-off-by: Tomas Henzl <thenzl@redhat.com>
 
-Use macro definition
+Thanks Tomas. Looks good
+Acked-by: Suresh Thiagarajan<Suresh.Thiagarajan@pmcs.com>
 
-Cc: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
-Cc: Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org
-Signed-off-by: Fabian Frederick <fabf@skynet.be>
----
- drivers/scsi/bfa/bfa_fcs.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/bfa/bfa_fcs.c b/drivers/scsi/bfa/bfa_fcs.c index =
-a3ab5cc..0f19455 100644
---- a/drivers/scsi/bfa/bfa_fcs.c
-+++ b/drivers/scsi/bfa/bfa_fcs.c
-@@ -81,7 +81,7 @@ bfa_fcs_attach(struct bfa_fcs_s *fcs, struct bfa_s *bfa, =
-struct bfad_s *bfad,
-        bfa->fcs =3D BFA_TRUE;
-        fcbuild_init();
-
--       for (i =3D 0; i < sizeof(fcs_modules) / sizeof(fcs_modules[0]); i++=
-) {
-+       for (i =3D 0; i < ARRAY_SIZE(fcs_modules); i++) {
-                mod =3D &fcs_modules[i];
-                if (mod->attach)
-                        mod->attach(fcs);
-@@ -97,7 +97,7 @@ bfa_fcs_init(struct bfa_fcs_s *fcs)
-        int     i;
-        struct bfa_fcs_mod_s  *mod;
-
--       for (i =3D 0; i < sizeof(fcs_modules) / sizeof(fcs_modules[0]); i++=
-) {
-+       for (i =3D 0; i < ARRAY_SIZE(fcs_modules); i++) {
-                mod =3D &fcs_modules[i];
-                if (mod->modinit)
-                        mod->modinit(fcs);
-@@ -184,7 +184,7 @@ bfa_fcs_exit(struct bfa_fcs_s *fcs)
-
-        bfa_wc_init(&fcs->wc, bfa_fcs_exit_comp, fcs);
-
--       nmods =3D sizeof(fcs_modules) / sizeof(fcs_modules[0]);
-+       nmods =3D ARRAY_SIZE(fcs_modules);
-
-        for (i =3D 0; i < nmods; i++) {
-
---
-1.8.4.5
-
-
-________________________________
-
-This message and any attached documents contain information from QLogic Cor=
-poration or its wholly-owned subsidiaries that may be confidential. If you =
-are not the intended recipient, you may not read, copy, distribute, or use =
-this information. If you have received this transmission in error, please n=
-otify the sender immediately by reply e-mail and then delete this message.
-
---_000_20B1A3CBD98F3845B3F5F56D8597EF59F9B24Favmb2qlogicorg_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
-
-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
-J5Ap4q/TuPEDoFMjvQUdr2UuquUVQscgAB8AQgABAAAAIAAAAEEAbgBpAGwAIABHAHUAcgB1AG0A
-dQByAHQAaAB5AAAAHwBlAAEAAAA2AAAAQQBuAGkAbAAuAEcAdQByAHUAbQB1AHIAdABoAHkAQABx
-AGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfAGQAAQAAAAoAAABTAE0AVABQAAAAAAACAUEAAQAAAHgA
-AAAAAAAAgSsfpL6jEBmdbgDdAQ9UAgAAAIBBAG4AaQBsACAARwB1AHIAdQBtAHUAcgB0AGgAeQAA
-AFMATQBUAFAAAABBAG4AaQBsAC4ARwB1AHIAdQBtAHUAcgB0AGgAeQBAAHEAbABvAGcAaQBjAC4A
-YwBvAG0AAAAfAAJdAQAAADYAAABBAG4AaQBsAC4ARwB1AHIAdQBtAHUAcgB0AGgAeQBAAHEAbABv
-AGcAaQBjAC4AYwBvAG0AAAAAAB8A5V8BAAAAPgAAAHMAaQBwADoAYQBuAGkAbAAuAGcAdQByAHUA
-bQB1AHIAdABoAHkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfABoMAQAAACAAAABBAG4AaQBs
-ACAARwB1AHIAdQBtAHUAcgB0AGgAeQAAAB8AHwwBAAAANgAAAEEAbgBpAGwALgBHAHUAcgB1AG0A
-dQByAHQAaAB5AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwAeDAEAAAAKAAAAUwBNAFQAUAAA
-AAAAAgEZDAEAAAB4AAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAQQBuAGkAbAAgAEcAdQByAHUA
-bQB1AHIAdABoAHkAAABTAE0AVABQAAAAQQBuAGkAbAAuAEcAdQByAHUAbQB1AHIAdABoAHkAQABx
-AGwAbwBnAGkAYwAuAGMAbwBtAAAAHwABXQEAAAA2AAAAQQBuAGkAbAAuAEcAdQByAHUAbQB1AHIA
-dABoAHkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfAPg/AQAAACAAAABBAG4AaQBsACAARwB1
-AHIAdQBtAHUAcgB0AGgAeQAAAB8AI0ABAAAANgAAAEEAbgBpAGwALgBHAHUAcgB1AG0AdQByAHQA
-aAB5AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwAiQAEAAAAKAAAAUwBNAFQAUAAAAAAAAgH5
-PwEAAAB4AAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAQQBuAGkAbAAgAEcAdQByAHUAbQB1AHIA
-dABoAHkAAABTAE0AVABQAAAAQQBuAGkAbAAuAEcAdQByAHUAbQB1AHIAdABoAHkAQABxAGwAbwBn
-AGkAYwAuAGMAbwBtAAAAHwAJXQEAAAA2AAAAQQBuAGkAbAAuAEcAdQByAHUAbQB1AHIAdABoAHkA
-QABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfADFAAQAAAAIAAAAAAAAACwBAOgEAAAAfADBAAQAA
-AAIAAAAAAAAAHwAaAAEAAAASAAAASQBQAE0ALgBOAG8AdABlAAAAAAADAPE/CQQAAAsAQDoBAAAA
-AwD9P+QEAAACAQswAQAAABAAAADvPrZ4jpJoT7kUR3Of/l6/AwAXAAEAAABAADkAgHkcv7SVzwFA
-AAgwWHRqv7SVzwELACkAAAAAAAsAIwAAAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAHgAAAGEA
-YwBjAGUAcAB0AGwAYQBuAGcAdQBhAGcAZQAAAAAAAQAAAAwAAABlAG4ALQBVAFMAAAALAACACCAG
-AAAAAADAAAAAAAAARgAAAAAGhQAAAAAAAB8ANwABAAAAjgAAAFIARQA6ACAAWwBQAEEAVABDAEgA
-IAAxAC8AMQBdACAAWwBTAEMAUwBJAF0AIABiAGYAYQA6ACAAdQBzAGUAIABBAFIAUgBBAFkAXwBT
-AEkAWgBFACAAaQBuAHMAdABlAGEAZAAgAG8AZgAgAHMAaQB6AGUAbwBmAC8AcwBpAHoAZQBvAGYA
-WwAwAF0AAAAAAB8APQABAAAACgAAAFIARQA6ACAAAAAAAAMANgAAAAAAAwAuAAAAAAAfAEIQAQAA
-AGQAAAA8ADEANAAwADQAMQA1ADAAMQA2ADIALQA3ADkANwAzAC0AMQAtAGcAaQB0AC0AcwBlAG4A
-ZAAtAGUAbQBhAGkAbAAtAGYAYQBiAGYAQABzAGsAeQBuAGUAdAAuAGIAZQA+AAAAAgFxAAEAAAAb
-AAAAAQHPlIrsWYlPXIpLpU6wTn6//9sr35uMQEHwAB8AcAABAAAAhgAAAFsAUABBAFQAQwBIACAA
-MQAvADEAXQAgAFsAUwBDAFMASQBdACAAYgBmAGEAOgAgAHUAcwBlACAAQQBSAFIAQQBZAF8AUwBJ
-AFoARQAgAGkAbgBzAHQAZQBhAGQAIABvAGYAIABzAGkAegBlAG8AZgAvAHMAaQB6AGUAbwBmAFsA
-MABdAAAAAAAfADUQAQAAAHQAAAA8ADIAMABCADEAQQAzAEMAQgBEADkAOABGADMAOAA0ADUAQgAz
-AEYANQBGADUANgBEADgANQA5ADcARQBGADUAOQBGADkAQgAyADQARgBAAGEAdgBtAGIAMgAuAHEA
-bABvAGcAaQBjAC4AbwByAGcAPgAAAB8AORABAAAAZAAAADwAMQA0ADAANAAxADUAMAAxADYAMgAt
-ADcAOQA3ADMALQAxAC0AZwBpAHQALQBzAGUAbgBkAC0AZQBtAGEAaQBsAC0AZgBhAGIAZgBAAHMA
-awB5AG4AZQB0AC4AYgBlAD4AAAADAN4/n04AAAsAAIAIIAYAAAAAAMAAAAAAAABGAAAAAAOFAAAA
-AAAAAwAAgAggBgAAAAAAwAAAAAAAAEYAAAAAAYUAAAAAAAADAIAQ/////0AABzAYUN+9tJXPAQsA
-AgABAAAAAwAmAAAAAAALACsAAAAAAAIBRwABAAAALgAAAGM9VVM7YT0gO3A9UUxvZ2ljO2w9QVZN
-QjItMTQwNzAyMDUxNjE1Wi0yMzg4NgAAAAIBEDABAAAARgAAAAAAAACl9rpY+JScQJeq5kM6RFa/
-BwAgsaPL2Y84RbP19W2Fl+9ZAAAA9I0YAABnBDGMy3GiSKVd3se6CF95AEt6phb2AAAAAB8A+j8B
-AAAAIAAAAEEAbgBpAGwAIABHAHUAcgB1AG0AdQByAHQAaAB5AAAAAwAJWQEAAAADAACACCAGAAAA
-AADAAAAAAAAARgAAAAAQhQAAAAAAAAsAAIAIIAYAAAAAAMAAAAAAAABGAAAAAA6FAAAAAAAAAwAA
-gAggBgAAAAAAwAAAAAAAAEYAAAAAGIUAAAAAAAALAACACCAGAAAAAADAAAAAAAAARgAAAACChQAA
-AAAAAB8AAIAIIAYAAAAAAMAAAAAAAABGAAAAANiFAAABAAAAEgAAAEkAUABNAC4ATgBvAHQAZQAA
-AAAAAwANNP0/AAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAgAAAAeAAtAG0AcwAtAGgAYQBzAC0A
-YQB0AHQAYQBjAGgAAAABAAAAAgAAAAAAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAiAAAAeAAt
-AG8AcgBpAGcAaQBuAGEAdABpAG4AZwAtAGkAcAAAAAAAAQAAABgAAABbADEAMAAuADEALgA0AC4A
-MQAwAF0AAAC1xw==
-
---_000_20B1A3CBD98F3845B3F5F56D8597EF59F9B24Favmb2qlogicorg_--
+> ---
+>  drivers/scsi/pm8001/pm8001_hwi.c | 10 +++++-----
+>  drivers/scsi/pm8001/pm8001_sas.c | 31 +++++++------------------------
+>  drivers/scsi/pm8001/pm8001_sas.h |  1 -
+>  3 files changed, 12 insertions(+), 30 deletions(-)
+>
+> diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
+> index a97be01..9294379 100644
+> --- a/drivers/scsi/pm8001/pm8001_hwi.c
+> +++ b/drivers/scsi/pm8001/pm8001_hwi.c
+> @@ -3100,7 +3100,7 @@ void pm8001_mpi_set_dev_state_resp(struct pm8001_hba_info *pm8001_ha,
+>         complete(pm8001_dev->setds_completion);
+>         ccb->task = NULL;
+>         ccb->ccb_tag = 0xFFFFFFFF;
+> -       pm8001_ccb_free(pm8001_ha, tag);
+> +       pm8001_tag_free(pm8001_ha, tag);
+>  }
+>
+>  void pm8001_mpi_set_nvmd_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
+> @@ -3119,7 +3119,7 @@ void pm8001_mpi_set_nvmd_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
+>         }
+>         ccb->task = NULL;
+>         ccb->ccb_tag = 0xFFFFFFFF;
+> -       pm8001_ccb_free(pm8001_ha, tag);
+> +       pm8001_tag_free(pm8001_ha, tag);
+>  }
+>
+>  void
+> @@ -3181,7 +3181,7 @@ pm8001_mpi_get_nvmd_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
+>         complete(pm8001_ha->nvmd_completion);
+>         ccb->task = NULL;
+>         ccb->ccb_tag = 0xFFFFFFFF;
+> -       pm8001_ccb_free(pm8001_ha, tag);
+> +       pm8001_tag_free(pm8001_ha, tag);
+>  }
+>
+>  int pm8001_mpi_local_phy_ctl(struct pm8001_hba_info *pm8001_ha, void *piomb)
+> @@ -3588,7 +3588,7 @@ int pm8001_mpi_reg_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
+>         complete(pm8001_dev->dcompletion);
+>         ccb->task = NULL;
+>         ccb->ccb_tag = 0xFFFFFFFF;
+> -       pm8001_ccb_free(pm8001_ha, htag);
+> +       pm8001_tag_free(pm8001_ha, htag);
+>         return 0;
+>  }
+>
+> @@ -3672,7 +3672,7 @@ int pm8001_mpi_fw_flash_update_resp(struct pm8001_hba_info *pm8001_ha,
+>         complete(pm8001_ha->nvmd_completion);
+>         ccb->task = NULL;
+>         ccb->ccb_tag = 0xFFFFFFFF;
+> -       pm8001_ccb_free(pm8001_ha, tag);
+> +       pm8001_tag_free(pm8001_ha, tag);
+>         return 0;
+>  }
+>
+> diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
+> index 8a44bc9..be55859 100644
+> --- a/drivers/scsi/pm8001/pm8001_sas.c
+> +++ b/drivers/scsi/pm8001/pm8001_sas.c
+> @@ -58,25 +58,14 @@ static int pm8001_find_tag(struct sas_task *task, u32 *tag)
+>  }
+>
+>  /**
+> -  * pm8001_tag_clear - clear the tags bitmap
+> +  * pm8001_tag_free - free the no more needed tag
+>    * @pm8001_ha: our hba struct
+>    * @tag: the found tag associated with the task
+>    */
+> -static void pm8001_tag_clear(struct pm8001_hba_info *pm8001_ha, u32 tag)
+> -{
+> -       void *bitmap = pm8001_ha->tags;
+> -       clear_bit(tag, bitmap);
+> -}
+> -
+>  void pm8001_tag_free(struct pm8001_hba_info *pm8001_ha, u32 tag)
+>  {
+> -       pm8001_tag_clear(pm8001_ha, tag);
+> -}
+> -
+> -static void pm8001_tag_set(struct pm8001_hba_info *pm8001_ha, u32 tag)
+> -{
+>         void *bitmap = pm8001_ha->tags;
+> -       set_bit(tag, bitmap);
+> +       clear_bit(tag, bitmap);
+>  }
+>
+>  /**
+> @@ -86,14 +75,13 @@ static void pm8001_tag_set(struct pm8001_hba_info *pm8001_ha, u32 tag)
+>    */
+>  inline int pm8001_tag_alloc(struct pm8001_hba_info *pm8001_ha, u32 *tag_out)
+>  {
+> -       unsigned int index, tag;
+> +       unsigned int tag;
+>         void *bitmap = pm8001_ha->tags;
+>
+> -       index = find_first_zero_bit(bitmap, pm8001_ha->tags_num);
+> -       tag = index;
+> +       tag = find_first_zero_bit(bitmap, pm8001_ha->tags_num);
+>         if (tag >= pm8001_ha->tags_num)
+>                 return -SAS_QUEUE_FULL;
+> -       pm8001_tag_set(pm8001_ha, tag);
+> +       set_bit(tag, bitmap);
+>         *tag_out = tag;
+>         return 0;
+>  }
+> @@ -102,7 +90,7 @@ void pm8001_tag_init(struct pm8001_hba_info *pm8001_ha)
+>  {
+>         int i;
+>         for (i = 0; i < pm8001_ha->tags_num; ++i)
+> -               pm8001_tag_clear(pm8001_ha, i);
+> +               pm8001_tag_free(pm8001_ha, i);
+>  }
+>
+>   /**
+> @@ -501,11 +489,6 @@ int pm8001_queue_command(struct sas_task *task, const int num,
+>         return pm8001_task_exec(task, num, gfp_flags, 0, NULL);
+>  }
+>
+> -void pm8001_ccb_free(struct pm8001_hba_info *pm8001_ha, u32 ccb_idx)
+> -{
+> -       pm8001_tag_clear(pm8001_ha, ccb_idx);
+> -}
+> -
+>  /**
+>    * pm8001_ccb_task_free - free the sg for ssp and smp command, free the ccb.
+>    * @pm8001_ha: our hba card information
+> @@ -542,7 +525,7 @@ void pm8001_ccb_task_free(struct pm8001_hba_info *pm8001_ha,
+>         ccb->task = NULL;
+>         ccb->ccb_tag = 0xFFFFFFFF;
+>         ccb->open_retry = 0;
+> -       pm8001_ccb_free(pm8001_ha, ccb_idx);
+> +       pm8001_tag_free(pm8001_ha, ccb_idx);
+>  }
+>
+>   /**
+> diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
+> index 1ee06f2..14106ad 100644
+> --- a/drivers/scsi/pm8001/pm8001_sas.h
+> +++ b/drivers/scsi/pm8001/pm8001_sas.h
+> @@ -616,7 +616,6 @@ extern struct workqueue_struct *pm8001_wq;
+>  int pm8001_tag_alloc(struct pm8001_hba_info *pm8001_ha, u32 *tag_out);
+>  void pm8001_tag_init(struct pm8001_hba_info *pm8001_ha);
+>  u32 pm8001_get_ncq_tag(struct sas_task *task, u32 *tag);
+> -void pm8001_ccb_free(struct pm8001_hba_info *pm8001_ha, u32 ccb_idx);
+>  void pm8001_ccb_task_free(struct pm8001_hba_info *pm8001_ha,
+>         struct sas_task *task, struct pm8001_ccb_info *ccb, u32 ccb_idx);
+>  int pm8001_phy_control(struct asd_sas_phy *sas_phy, enum phy_func func,
+> --
+> 1.8.3.1
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
