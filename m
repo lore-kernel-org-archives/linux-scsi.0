@@ -1,117 +1,191 @@
-From: Suman Tripathi <stripathi@apm.com>
-Subject: [PATCH v5 2/2] ata: Fix the dma state machine lockup for the IDENTIFY DEVICE PIO mode command.
-Date: Wed,  2 Jul 2014 15:45:08 +0530
-Message-ID: <1404296108-16233-3-git-send-email-stripathi@apm.com>
-References: <1404296108-16233-1-git-send-email-stripathi@apm.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1404296108-16233-1-git-send-email-stripathi@apm.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>, Loc Ho <lho@apm.com>
+From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+Subject: Re: [PATCH 2/2] bnx2i, be2iscsi: fix custom stats length
+Date: Wed, 2 Jul 2014 11:46:13 +0000
+Message-ID: <3FC4AB8B47ECD546BCD4B361A64BEACD8C6BF0AC@avmb3.qlogic.org>
+References: <1404231878-3844-1-git-send-email-michaelc@cs.wisc.edu>
+ <1404231878-3844-3-git-send-email-michaelc@cs.wisc.edu>
+Mime-Version: 1.0
+Content-Type: multipart/mixed;
+	boundary="_000_3FC4AB8B47ECD546BCD4B361A64BEACD8C6BF0ACavmb3qlogicorg_"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:56853 "EHLO
+	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751535AbaGBLqP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Jul 2014 07:46:15 -0400
+Received: from pps.filterd (m0045602.ppops.net [127.0.0.1])
+	by mx0a-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id s62BkFER006441
+	for <linux-scsi@vger.kernel.org>; Wed, 2 Jul 2014 04:46:15 -0700
+Received: from avcashub1.qlogic.com (avcashub2.qlogic.com [198.70.193.116])
+	by mx0a-0016ce01.pphosted.com with ESMTP id 1muf9p27ar-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Wed, 02 Jul 2014 04:46:14 -0700
+In-Reply-To: <1404231878-3844-3-git-send-email-michaelc@cs.wisc.edu>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>, linux-scsi <linux-scsi@vger.kernel.org>
 
-This patch fixes the dma state machine lockup due to the processing
-of IDENTIFY DEVICE PIO mode command. The X-Gene AHCI controller
-has an errata in which it cannot clear the BSY bit after the PIO setup
-FIS. The dma state machine enters CMFatalErrorUpdate state and locks
-up. This patch also removes the dma restart workaround from the read_id
-function as the read_id function is only called by libata layer for
-ATA_INTERNAL commands. But for some cases eg: PORT MULTIPLIER
-and udev, the framework will enumerate using SCSI commands and it will
-not call read_id function.
+--_000_3FC4AB8B47ECD546BCD4B361A64BEACD8C6BF0ACavmb3qlogicorg_
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <98FF23FC6FBBF04FB0BABDAC93887671@qlogic.com>
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Loc Ho <lho@apm.com>
-Signed-off-by: Suman Tripathi <stripathi@apm.com>
----
- drivers/ata/ahci_xgene.c | 43 ++++++++++++++++++++++++++++++-------------
- 1 file changed, 30 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
-index 77c89bf..5b9bddf 100644
---- a/drivers/ata/ahci_xgene.c
-+++ b/drivers/ata/ahci_xgene.c
-@@ -78,6 +78,7 @@
- struct xgene_ahci_context {
- 	struct ahci_host_priv *hpriv;
- 	struct device *dev;
-+	u8 last_cmd[MAX_AHCI_CHN_PERCTR]; /* tracking the last command issued*/
- 	void __iomem *csr_core;		/* Core CSR address of IP */
- 	void __iomem *csr_diag;		/* Diag CSR address of IP */
- 	void __iomem *csr_axi;		/* AXI CSR address of IP */
-@@ -98,20 +99,45 @@ static int xgene_ahci_init_memram(struct xgene_ahci_context *ctx)
- }
 
- /**
-+ * xgene_ahci_qc_issue - Issue commands to the device
-+ * @qc: Command to issue
-+ *
-+ * Due to Hardware errata for IDENTIFY DEVICE command, the controller cannot
-+ * clear the BSY bit after receiving the PIO setup FIS. This results in the dma
-+ * state machine goes into the CMFatalErrorUpdate state and locks up. By
-+ * restarting the dma engine, it removes the controller out of lock up state.
-+ */
-+static unsigned int xgene_ahci_qc_issue(struct ata_queued_cmd *qc)
-+{
-+	struct ata_port *ap = qc->ap;
-+	struct ahci_host_priv *hpriv = ap->host->private_data;
-+	struct xgene_ahci_context *ctx = hpriv->plat_data;
-+	int rc = 0;
-+
-+	if (unlikely(ctx->last_cmd[ap->port_no] == ATA_CMD_ID_ATA))
-+		ahci_restart_engine(ap);
-+
-+	rc = ahci_qc_issue(qc);
-+
-+	/* Save the last command issued */
-+	ctx->last_cmd[ap->port_no] = qc->tf.command;
-+
-+	return rc;
-+}
-+
-+/**
-  * xgene_ahci_read_id - Read ID data from the specified device
-  * @dev: device
-  * @tf: proposed taskfile
-  * @id: data buffer
-  *
-  * This custom read ID function is required due to the fact that the HW
-- * does not support DEVSLP and the controller state machine may get stuck
-- * after processing the ID query command.
-+ * does not support DEVSLP.
-  */
- static unsigned int xgene_ahci_read_id(struct ata_device *dev,
- 				       struct ata_taskfile *tf, u16 *id)
- {
- 	u32 err_mask;
--	void __iomem *port_mmio = ahci_port_base(dev->link->ap);
+On 01/07/14 9:54 pm, "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu> wrote:
 
- 	err_mask = ata_do_dev_read_id(dev, tf, id);
- 	if (err_mask)
-@@ -133,16 +159,6 @@ static unsigned int xgene_ahci_read_id(struct ata_device *dev,
- 	 */
- 	id[ATA_ID_FEATURE_SUPP] &= ~(1 << 8);
+>From: Mike Christie <michaelc@cs.wisc.edu>
+>
+>The custom stats is an array with custom_length indicating the length
+>of the array. This patch fixes bnx2i and be2iscsi's setting of the
+>custom stats length. They both just have the one, eh_abort_cnt, so that
+>should
+>be in the first entry of the custom array and custom_length should then
+>be one.
+>
+>Reported-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+>Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+>Acked-by: Eddie Wai <eddie.wai@broadcom.com>
+>
+>---
+> drivers/scsi/be2iscsi/be_iscsi.c |    2 +-
+> drivers/scsi/bnx2i/bnx2i_iscsi.c |    7 +++----
+> 2 files changed, 4 insertions(+), 5 deletions(-)
+>
+>diff --git a/drivers/scsi/be2iscsi/be_iscsi.c
+>b/drivers/scsi/be2iscsi/be_iscsi.c
+>index fd284ff..8616281 100644
+>--- a/drivers/scsi/be2iscsi/be_iscsi.c
+>+++ b/drivers/scsi/be2iscsi/be_iscsi.c
+>@@ -914,7 +914,7 @@ void beiscsi_conn_get_stats(struct iscsi_cls_conn
+>*cls_conn,
+> 	stats->r2t_pdus =3D conn->r2t_pdus_cnt;
+> 	stats->digest_err =3D 0;
+> 	stats->timeout_err =3D 0;
+>-	stats->custom_length =3D 0;
+>+	stats->custom_length =3D 1;
+> 	strcpy(stats->custom[0].desc, "eh_abort_cnt");
+> 	stats->custom[0].value =3D conn->eh_abort_cnt;
+> }
+>diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c
+>b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+>index 166543f..9bd9b81 100644
+>--- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
+>+++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+>@@ -1643,12 +1643,11 @@ static void bnx2i_conn_get_stats(struct
+>iscsi_cls_conn *cls_conn,
+> 	stats->r2t_pdus =3D conn->r2t_pdus_cnt;
+> 	stats->tmfcmd_pdus =3D conn->tmfcmd_pdus_cnt;
+> 	stats->tmfrsp_pdus =3D conn->tmfrsp_pdus_cnt;
+>-	stats->custom_length =3D 3;
+>-	strcpy(stats->custom[2].desc, "eh_abort_cnt");
+>-	stats->custom[2].value =3D conn->eh_abort_cnt;
+> 	stats->digest_err =3D 0;
+> 	stats->timeout_err =3D 0;
+>-	stats->custom_length =3D 0;
+>+	strcpy(stats->custom[0].desc, "eh_abort_cnt");
+>+	stats->custom[0].value =3D conn->eh_abort_cnt;
+>+	stats->custom_length =3D 1;
+> }
+>=20
+>=20
+>--=20
+>1.7.1
 
--	/*
--	 * Due to HW errata, restart the port if no other command active.
--	 * Otherwise the controller may get stuck.
--	 */
--	if (!readl(port_mmio + PORT_CMD_ISSUE)) {
--		writel(PORT_CMD_FIS_RX, port_mmio + PORT_CMD);
--		readl(port_mmio + PORT_CMD);	/* Force a barrier */
--		writel(PORT_CMD_FIS_RX | PORT_CMD_START, port_mmio + PORT_CMD);
--		readl(port_mmio + PORT_CMD);	/* Force a barrier */
--	}
- 	return 0;
- }
 
-@@ -300,6 +316,7 @@ static struct ata_port_operations xgene_ahci_ops = {
- 	.host_stop = xgene_ahci_host_stop,
- 	.hardreset = xgene_ahci_hardreset,
- 	.read_id = xgene_ahci_read_id,
-+	.qc_issue = xgene_ahci_qc_issue,
- };
+Acked-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 
- static const struct ata_port_info xgene_ahci_port_info = {
---
-1.8.2.1
 
+
+--_000_3FC4AB8B47ECD546BCD4B361A64BEACD8C6BF0ACavmb3qlogicorg_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
+
+eJ8+IgkoAQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAADFCNDY0NUEw
+MjcyREYyNERCRTVCRjk2MDcxNzMwMjRFABYHAQ2ABAACAAAAAgACAAEFgAMADgAAAN4HBwACAAsA
+LgANAAMANwEBIIADAA4AAADeBwcAAgALAC4ADQADADcBAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
+YWlsLk5vdGUAMQgBBIABADkAAABSZTogW1BBVENIIDIvMl0gYm54MmksIGJlMmlzY3NpOiBmaXgg
+Y3VzdG9tIHN0YXRzIGxlbmd0aACcEgEDkAYAtBEAADUAAAACAX8AAQAAADwAAAA8M0ZDNEFCOEI0
+N0VDRDU0NkJDRDRCMzYxQTY0QkVBQ0Q4QzZCRjBBQ0Bhdm1iMy5xbG9naWMub3JnPgALAB8OAQAA
+AAIBCRABAAAA7wQAAOsEAAB1CwAATFpGdcYE9oFhAApmYmlkBAAAY2PAcGcxMjUyAP4DQ/B0ZXh0
+AfcCpAPjAgAEY2gKwHNldDAg7wdtAoMAUBFNMgqABrQCgJZ9CoAIyDsJYjE5DsC/CcMWcgoyFnEC
+gBViKgmwcwnwBJBhdAWyDlADYHOibwGAIEV4EcFuGDBdBlJ2BJAXtgIQcgDAdH0IUG4aMRAgBcAF
+oBtkZJogA1IgECIXslx2CJDkd2sLgGQ1HVME8AdADRdwMApxF/Jia21rBnMBkAAgIEJNX0LgRUdJ
+Tn0K/AHxC/JabAuAZQqBIaRPA6AwADEvMDcvMTQgCDk6NSMQcG0sIAwibQ5QEdBlbGNASGNzLgPx
+Yy4JgHUYIiA8I98k4T4gd0sDYBAgOiGcPkYDYTrlGMFrGeBDaAUQH2AIkE8lLyY0J3YndlRoGeBj
+bnUfYByhH2F0BCAEACAXA5EKwBhweSaQaXRo/SvFXx5wGcAtgR2xDlAYgP0LgGccwCuhLiQndhkw
+LzO1LQMuEkBoLKEKsHQRwAkccGl4B5Fibngy5mkswRxgYmUygATwAJD+JwQgEgEu8zBkJ3Yr2y4k
+XTEiZS1ABuAtgWor4SAvEdAaMC8zAiBlI6BlaOZfAaAJEV9jAjAjoBkgpy8xGIAndnNoCGBsCzD/
+J4Uy8C6BLzMx8BHwBUAJ8Px0ci1AMGUr1S0EMrItvF859C8yC5A6aDfRLiqeUoxlcAkRCYAtYnko
+MHpSDlBrCxEGADvwMrFx2x1gNxE8BRBCI18fYEKnmEBzcAWQO/B1bQ3gtmctcAdALhIAKodTRSD3
+GFBBoBkwZkGzKF8pbyp4ZkFCIEGVRWQN4BngVz8LcEgACYBKsSSAC3BAYskDYGFkBaBtLkwxKo9m
+LU2wJ3YgZAUQGjFz2i8zMi8y9k8xXzMjTGCIIHwgUJEyICtN3+9O5TJiUmRP/DdQ4FQgTbG/UQhQ
+0DHwHnAEIBmUZCOgLyMQC4ASAAAgaQIgcyj0KykjoDVOYCQgEhBWs9wtKSqeDeABICBNsEUx/SzA
+L05/T406V1nvWv8nhYcdsRAwHHBkMjg0ASBALi44NjE2X5Ax4iAekTY0NE05Wc9dfz9b51QhMkBh
+v2LPJ4VAQHVZYDkjACxUAWdkZyF2Pm8N0DLhMyM4oAIgbl/XGDA4kCxDKEPRdUTALJFZaPNsc2kj
+J3YqavYsh1EXDIIsNC0+cjI4kNZwJPAEID0b0m5tyDii/xYgbK9tsUURB5A4kASQBcD9bnAwb79t
+k0fQB4AIYHFvb02gbSotvHHKK3TvdfkxNXH/cg5geWoRd8lbMDxdLgEABPAjoTgqIin7eS96rXYH
+QApQbmc4Knzp/yBAWL9hn1KPW++C/4QPXxQVYCA2I1AzX9E5YmT/iKBgX2Fvhe9jj4pfi29muftg
+IIhQLA6QUOCQBIkAZyH/LEIOUGhVUuNpP2pCXpdqq74ga/9tD24fby9yfW0RsL9FAJdMmkmYr5m6
+EfBwmq/vngacO3TfdeozoA96P3tA/jJ7f3yNoJ+khH7vf/9wP/9xT5zfc2+mb6FPdp+jb3sv/6WP
+dx9+X6i/qci1L3hfgM4PAzC7fooRJ3YxLjcurwBQIashlUn4VkdAYQQgsUeAYXVkEdEtQDwdYOfA
+EUxgwGZAcQkARTAkwA9MeSGcFULEQAAfAEIAAQAAACAAAABWAGkAawBhAHMAIABDAGgAYQB1AGQA
+aABhAHIAeQAAAB8AZQABAAAANgAAAHYAaQBrAGEAcwAuAGMAaABhAHUAZABoAGEAcgB5AEAAcQBs
+AG8AZwBpAGMALgBjAG8AbQAAAAAAHwBkAAEAAAAKAAAAUwBNAFQAUAAAAAAAAgFBAAEAAAB4AAAA
+AAAAAIErH6S+oxAZnW4A3QEPVAIAAACAVgBpAGsAYQBzACAAQwBoAGEAdQBkAGgAYQByAHkAAABT
+AE0AVABQAAAAdgBpAGsAYQBzAC4AYwBoAGEAdQBkAGgAYQByAHkAQABxAGwAbwBnAGkAYwAuAGMA
+bwBtAAAAHwACXQEAAAA2AAAAdgBpAGsAYQBzAC4AYwBoAGEAdQBkAGgAYQByAHkAQABxAGwAbwBn
+AGkAYwAuAGMAbwBtAAAAAAAfAOVfAQAAAD4AAABzAGkAcAA6AHYAaQBrAGEAcwAuAGMAaABhAHUA
+ZABoAGEAcgB5AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwAaDAEAAAAgAAAAVgBpAGsAYQBz
+ACAAQwBoAGEAdQBkAGgAYQByAHkAAAAfAB8MAQAAADYAAAB2AGkAawBhAHMALgBjAGgAYQB1AGQA
+aABhAHIAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AHgwBAAAACgAAAFMATQBUAFAAAAAA
+AAIBGQwBAAAAeAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgFYAaQBrAGEAcwAgAEMAaABhAHUA
+ZABoAGEAcgB5AAAAUwBNAFQAUAAAAHYAaQBrAGEAcwAuAGMAaABhAHUAZABoAGEAcgB5AEAAcQBs
+AG8AZwBpAGMALgBjAG8AbQAAAB8AAV0BAAAANgAAAHYAaQBrAGEAcwAuAGMAaABhAHUAZABoAGEA
+cgB5AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwD4PwEAAAAgAAAAVgBpAGsAYQBzACAAQwBo
+AGEAdQBkAGgAYQByAHkAAAAfACNAAQAAADYAAAB2AGkAawBhAHMALgBjAGgAYQB1AGQAaABhAHIA
+eQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AIkABAAAACgAAAFMATQBUAFAAAAAAAAIB+T8B
+AAAAeAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgFYAaQBrAGEAcwAgAEMAaABhAHUAZABoAGEA
+cgB5AAAAUwBNAFQAUAAAAHYAaQBrAGEAcwAuAGMAaABhAHUAZABoAGEAcgB5AEAAcQBsAG8AZwBp
+AGMALgBjAG8AbQAAAB8ACV0BAAAANgAAAHYAaQBrAGEAcwAuAGMAaABhAHUAZABoAGEAcgB5AEAA
+cQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwAxQAEAAAACAAAAAAAAAAsAQDoBAAAAHwAwQAEAAAAC
+AAAAAAAAAB8AGgABAAAAEgAAAEkAUABNAC4ATgBvAHQAZQAAAAAAAwDxPwkEAAALAEA6AQAAAAMA
+/T/kBAAAAgELMAEAAAAQAAAAG0ZFoCct8k2+W/lgcXMCTgMAFwABAAAAQAA5AIDwZznrlc8BQAAI
+MD/viDnrlc8BCwAAgAggBgAAAAAAwAAAAAAAAEYAAAAAFIUAAAEAAAAfAACAhgMCAAAAAADAAAAA
+AAAARgEAAAAeAAAAYQBjAGMAZQBwAHQAbABhAG4AZwB1AGEAZwBlAAAAAAABAAAADAAAAGUAbgAt
+AFUAUwAAAAsAAIAIIAYAAAAAAMAAAAAAAABGAAAAAAaFAAAAAAAAHwA3AAEAAAByAAAAUgBlADoA
+IABbAFAAQQBUAEMASAAgADIALwAyAF0AIABiAG4AeAAyAGkALAAgAGIAZQAyAGkAcwBjAHMAaQA6
+ACAAZgBpAHgAIABjAHUAcwB0AG8AbQAgAHMAdABhAHQAcwAgAGwAZQBuAGcAdABoAAAAAAAfAD0A
+AQAAAAoAAABSAGUAOgAgAAAAAAADADYAAAAAAB8AQhABAAAAcAAAADwAMQA0ADAANAAyADMAMQA4
+ADcAOAAtADMAOAA0ADQALQAzAC0AZwBpAHQALQBzAGUAbgBkAC0AZQBtAGEAaQBsAC0AbQBpAGMA
+aABhAGUAbABjAEAAYwBzAC4AdwBpAHMAYwAuAGUAZAB1AD4AAAACAXEAAQAAABsAAAABAc+VSQhp
+yUiwJThyQri3+7Td2w4zm419aQAAHwBwAAEAAABqAAAAWwBQAEEAVABDAEgAIAAyAC8AMgBdACAA
+YgBuAHgAMgBpACwAIABiAGUAMgBpAHMAYwBzAGkAOgAgAGYAaQB4ACAAYwB1AHMAdABvAG0AIABz
+AHQAYQB0AHMAIABsAGUAbgBnAHQAaAAAAAAAHwA1EAEAAAB4AAAAPAAzAEYAQwA0AEEAQgA4AEIA
+NAA3AEUAQwBEADUANAA2AEIAQwBEADQAQgAzADYAMQBBADYANABCAEUAQQBDAEQAOABDADYAQgBG
+ADAAQQBDAEAAYQB2AG0AYgAzAC4AcQBsAG8AZwBpAGMALgBvAHIAZwA+AAAAHwA5EAEAAADgAAAA
+PAAxADQAMAA0ADIAMwAxADgANwA4AC0AMwA4ADQANAAtADEALQBnAGkAdAAtAHMAZQBuAGQALQBl
+AG0AYQBpAGwALQBtAGkAYwBoAGEAZQBsAGMAQABjAHMALgB3AGkAcwBjAC4AZQBkAHUAPgAgADwA
+MQA0ADAANAAyADMAMQA4ADcAOAAtADMAOAA0ADQALQAzAC0AZwBpAHQALQBzAGUAbgBkAC0AZQBt
+AGEAaQBsAC0AbQBpAGMAaABhAGUAbABjAEAAYwBzAC4AdwBpAHMAYwAuAGUAZAB1AD4AAAADAN4/
+n04AAEAABzCBLIQ565XPAQMAJgAAAAAAAgFHAAEAAAAuAAAAYz1VUzthPSA7cD1RTG9naWM7bD1B
+Vk1CMy0xNDA3MDIxMTQ2MTNaLTI2MjI3AAAAHwAVEAEAAABYAAAAOQA4AEYARgAyADMARgBDADYA
+RgBCAEIARgAwADQARgBCADAAQgBBAEIARABBAEMAOQAzADgAOAA3ADYANwAxAEAAcQBsAG8AZwBp
+AGMALgBjAG8AbQAAAAIBFDABAAAADAAAAI4AAACxXZ2JTwAAAB8A+j8BAAAAIAAAAFYAaQBrAGEA
+cwAgAEMAaABhAHUAZABoAGEAcgB5AAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAFgAAAHUAcwBl
+AHIALQBhAGcAZQBuAHQAAAAAAAEAAABGAAAATQBpAGMAcgBvAHMAbwBmAHQALQBNAGEAYwBPAHUA
+dABsAG8AbwBrAC8AMQA0AC4AMwAuADkALgAxADMAMQAwADMAMAAAAAAAHwAAgB+k6zOoei5Cvnt5
+4amOVLMBAAAAOAAAAEMAbwBuAHYAZQByAHMAYQB0AGkAbwBuAEkAbgBkAGUAeABUAHIAYQBjAGsA
+aQBuAGcARQB4AAAAAQAAAEABAABJAEkAPQAwADEAMAAxAEMARgA5ADUARQBCADMAOQA5AEUARABG
+ADEAOAA4AEQAOAA5ADgAQQBDADAANAA4AEEARgAxAEYARgA0ADAARQAwADAAOQBDADUAMAA3AEIA
+OwBTAEIATQBJAEQAPQAzADsAUwAxAD0APAAxADQAMAA0ADIAMwAxADgANwA4AC0AMwA4ADQANAAt
+ADMALQBnAGkAdAAtAHMAZQBuAGQALQBlAG0AYQBpAGwALQBtAGkAYwBoAGEAZQBsAGMAQABjAHMA
+LgB3AGkAcwBjAC4AZQBkAHUAPgA7AFYAZQByAHMAaQBvAG4APQBWAGUAcgBzAGkAbwBuACAAMQA0
+AC4AMgAgACgAQgB1AGkAbABkACAAMwA4ADcALgAwACkALAAgAFMAdABhAGcAZQA9AEgAMgAAAAMA
+DTT9PwAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAIAAAAHgALQBtAHMALQBoAGEAcwAtAGEAdAB0
+AGEAYwBoAAAAAQAAAAIAAAAAAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAIgAAAHgALQBvAHIA
+aQBnAGkAbgBhAHQAaQBuAGcALQBpAHAAAAAAAAEAAAAYAAAAWwAxADAALgAxAC4ANAAuADEAMABd
+AAAAkbE=
+
+--_000_3FC4AB8B47ECD546BCD4B361A64BEACD8C6BF0ACavmb3qlogicorg_--
