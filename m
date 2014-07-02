@@ -1,104 +1,52 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Kernel BUG() in block/blk-tag.c:89 causing panic.
-Date: Wed, 2 Jul 2014 12:00:43 -0700
-Message-ID: <20140702190043.GA10046@infradead.org>
-References: <CAE6A3M1UUJWL4ZoUsLdtSjaWb92kdB7MvzHVeAgA+3ewBRG=LA@mail.gmail.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 3.15 099/139] libiscsi, iser: Adjust data_length to include
+ protection information
+Date: Wed, 02 Jul 2014 17:44:07 -0500
+Message-ID: <53B48B37.4000608@cs.wisc.edu>
+References: <20140628174605.352098823@linuxfoundation.org>  <20140628174609.930049472@linuxfoundation.org> <1404339330.1862.69.camel@ul30vt.home>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:44804 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754536AbaGBTAo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Jul 2014 15:00:44 -0400
-Content-Disposition: inline
-In-Reply-To: <CAE6A3M1UUJWL4ZoUsLdtSjaWb92kdB7MvzHVeAgA+3ewBRG=LA@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <1404339330.1862.69.camel@ul30vt.home>
+Sender: stable-owner@vger.kernel.org
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-kernel@vger.kernel.org, stable@vger.kernel.org, Sagi Grimberg <sagig@mellanox.com>, Nicholas Bellinger <nab@linux-iscsi.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Saran Neti <sarannmr@gmail.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org
 
-Hi Saran,
+On 07/02/2014 05:15 PM, Alex Williamson wrote:
+> On Sat, 2014-06-28 at 10:47 -0700, Greg Kroah-Hartman wrote:
+>> > 3.15-stable review patch.  If anyone has any objections, please let me know.
+>> > 
+>> > ------------------
+>> > 
+>> > From: Sagi Grimberg <sagig@mellanox.com>
+>> > 
+>> > commit d77e65350f2d82dfa0557707d505711f5a43c8fd upstream.
+>> > 
+>> > In case protection information exists over the wire
+>> > iscsi header data length is required to include it.
+>> > Use protection information aware scsi helpers to set
+>> > the correct transfer length.
+>> > 
+>> > In order to avoid breakage, remove iser transfer length
+>> > checks for each task as they are not always true and
+>> > somewhat redundant anyway.
+>> > 
+>> > Signed-off-by: Sagi Grimberg <sagig@mellanox.com>
+>> > Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
+>> > Acked-by: Mike Christie <michaelc@cs.wisc.edu>
+>> > Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+>> > Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+>> > 
+>> > ---
+>> >  drivers/infiniband/ulp/iser/iser_initiator.c |   34 +++++++--------------------
+>> >  drivers/scsi/libiscsi.c                      |   18 +++++++-------
+>> >  2 files changed, 19 insertions(+), 33 deletions(-)
+> I'm a bit late to object, but this is causing a regression for me on
+> 3.15.3 and 3.16-rc.  Using an iscsi_tcp rootfs, I'm seeing the NULL
 
-can you please test the patch below?
 
----
-From: Christoph Hellwig <hch@lst.de>
-Subject: block: don't assume last put of shared tags is for the host
+A fix for this is in Christoph's tree. Here is the status of the patch.
 
-There is no inherent reason why the last put of a tag structure must be
-the one for the Scsi_Host, as device model objects can be held for
-arbitrary periods.  Merge blk_free_tags and __blk_free_tags into a single
-funtion that just release a references and get rid of the BUG() when the
-host reference wasn't the last.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-diff --git a/block/blk-tag.c b/block/blk-tag.c
-index 3f33d86..a185b86 100644
---- a/block/blk-tag.c
-+++ b/block/blk-tag.c
-@@ -27,18 +27,15 @@ struct request *blk_queue_find_tag(struct request_queue *q, int tag)
- EXPORT_SYMBOL(blk_queue_find_tag);
- 
- /**
-- * __blk_free_tags - release a given set of tag maintenance info
-+ * blk_free_tags - release a given set of tag maintenance info
-  * @bqt:	the tag map to free
-  *
-- * Tries to free the specified @bqt.  Returns true if it was
-- * actually freed and false if there are still references using it
-+ * Drop the reference count on @bqt and frees it when the last reference
-+ * is dropped.
-  */
--static int __blk_free_tags(struct blk_queue_tag *bqt)
-+void blk_free_tags(struct blk_queue_tag *bqt)
- {
--	int retval;
--
--	retval = atomic_dec_and_test(&bqt->refcnt);
--	if (retval) {
-+	if (atomic_dec_and_test(&bqt->refcnt)) {
- 		BUG_ON(find_first_bit(bqt->tag_map, bqt->max_depth) <
- 							bqt->max_depth);
- 
-@@ -50,9 +47,8 @@ static int __blk_free_tags(struct blk_queue_tag *bqt)
- 
- 		kfree(bqt);
- 	}
--
--	return retval;
- }
-+EXPORT_SYMBOL(blk_free_tags);
- 
- /**
-  * __blk_queue_free_tags - release tag maintenance info
-@@ -69,28 +65,13 @@ void __blk_queue_free_tags(struct request_queue *q)
- 	if (!bqt)
- 		return;
- 
--	__blk_free_tags(bqt);
-+	blk_free_tags(bqt);
- 
- 	q->queue_tags = NULL;
- 	queue_flag_clear_unlocked(QUEUE_FLAG_QUEUED, q);
- }
- 
- /**
-- * blk_free_tags - release a given set of tag maintenance info
-- * @bqt:	the tag map to free
-- *
-- * For externally managed @bqt frees the map.  Callers of this
-- * function must guarantee to have released all the queues that
-- * might have been using this tag map.
-- */
--void blk_free_tags(struct blk_queue_tag *bqt)
--{
--	if (unlikely(!__blk_free_tags(bqt)))
--		BUG();
--}
--EXPORT_SYMBOL(blk_free_tags);
--
--/**
-  * blk_queue_free_tags - release tag maintenance info
-  * @q:  the request queue for the device
-  *
+http://marc.info/?l=linux-kernel&m=140432482527273&w=2
