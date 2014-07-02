@@ -1,94 +1,189 @@
-From: Emil Goode <emilgoode@gmail.com>
-Subject: [PATCH] [SCSI] qla2xxx: Remove duplicate __iomem annotation
-Date: Wed,  2 Jul 2014 00:31:54 +0200
-Message-ID: <1404253914-24400-1-git-send-email-emilgoode@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: qla2xxx-upstream@qlogic.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, Emil Goode <emilgoode@gmail.com>
+From: Anil Gurumurthy <Anil.Gurumurthy@qlogic.com>
+Subject: RE: [PATCH 1/1] [SCSI] bfa: use ARRAY_SIZE instead of
+ sizeof/sizeof[0]
+Date: Wed, 2 Jul 2014 05:16:15 +0000
+Message-ID: <20B1A3CBD98F3845B3F5F56D8597EF59F9B24F@avmb2.qlogic.org>
+References: <1404150162-7973-1-git-send-email-fabf@skynet.be>
+Mime-Version: 1.0
+Content-Type: multipart/mixed;
+	boundary="_000_20B1A3CBD98F3845B3F5F56D8597EF59F9B24Favmb2qlogicorg_"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:44641 "EHLO
+	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753938AbaGBFQS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Jul 2014 01:16:18 -0400
+Received: from pps.filterd (m0045602.ppops.net [127.0.0.1])
+	by mx0a-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id s625GHJK007715
+	for <linux-scsi@vger.kernel.org>; Tue, 1 Jul 2014 22:16:17 -0700
+Received: from avcashub1.qlogic.com (avcashub1.qlogic.com [198.70.193.115])
+	by mx0a-0016ce01.pphosted.com with ESMTP id 1muf9p1vbx-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Tue, 01 Jul 2014 22:16:17 -0700
+In-Reply-To: <1404150162-7973-1-git-send-email-fabf@skynet.be>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Fabian Frederick <fabf@skynet.be>, linux-kernel <linux-kernel@vger.kernel.org>
+Cc: Sudarsana Kalluru <Sudarsana.Kalluru@qlogic.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-The device_reg_t type now has __iomem annotation.
+--_000_20B1A3CBD98F3845B3F5F56D8597EF59F9B24Favmb2qlogicorg_
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-Sparse is warning about this:
-drivers/scsi/qla2xxx/qla_init.c:2040:22: warning: duplicate [noderef]
-drivers/scsi/qla2xxx/qla_iocb.c:477:22: warning: duplicate [noderef]
-drivers/scsi/qla2xxx/qla_iocb.c:1866:22: warning: duplicate [noderef]
-drivers/scsi/qla2xxx/qla_dbg.c:632:22: warning: duplicate [noderef]
-drivers/scsi/qla2xxx/qla_target.c:1435:22: warning: duplicate [noderef]
+Acked-by: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
 
-Introduced by commit:
-f73cb695d3eccd171f03ed194e72d67732b17487
-("[SCSI] qla2xxx: Add support for ISP2071.")
 
-Signed-off-by: Emil Goode <emilgoode@gmail.com>
+-----Original Message-----
+From: Fabian Frederick [mailto:fabf@skynet.be]
+Sent: 30 June 2014 23:13
+To: linux-kernel
+Cc: Fabian Frederick; Anil Gurumurthy; Sudarsana Kalluru; James E.J. Bottom=
+ley; linux-scsi
+Subject: [PATCH 1/1] [SCSI] bfa: use ARRAY_SIZE instead of sizeof/sizeof[0]
+
+Use macro definition
+
+Cc: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
+Cc: Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org
+Signed-off-by: Fabian Frederick <fabf@skynet.be>
 ---
- drivers/scsi/qla2xxx/qla_dbg.c    |    2 +-
- drivers/scsi/qla2xxx/qla_init.c   |    2 +-
- drivers/scsi/qla2xxx/qla_iocb.c   |    4 ++--
- drivers/scsi/qla2xxx/qla_target.c |    2 +-
- 4 files changed, 5 insertions(+), 5 deletions(-)
+ drivers/scsi/bfa/bfa_fcs.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
-index c72ee97b..47998b9 100644
---- a/drivers/scsi/qla2xxx/qla_dbg.c
-+++ b/drivers/scsi/qla2xxx/qla_dbg.c
-@@ -629,7 +629,7 @@ qla25xx_copy_mq(struct qla_hw_data *ha, void *ptr, uint32_t **last_chain)
- 	uint32_t cnt, que_idx;
- 	uint8_t que_cnt;
- 	struct qla2xxx_mq_chain *mq = ptr;
--	device_reg_t __iomem *reg;
-+	device_reg_t *reg;
- 
- 	if (!ha->mqenable || IS_QLA83XX(ha) || IS_QLA27XX(ha))
- 		return ptr;
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index e218441..8d4e368 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -2037,7 +2037,7 @@ void
- qla24xx_config_rings(struct scsi_qla_host *vha)
- {
- 	struct qla_hw_data *ha = vha->hw;
--	device_reg_t __iomem *reg = ISP_QUE_REG(ha, 0);
-+	device_reg_t *reg = ISP_QUE_REG(ha, 0);
- 	struct device_reg_2xxx __iomem *ioreg = &ha->iobase->isp;
- 	struct qla_msix_entry *msix;
- 	struct init_cb_24xx *icb;
-diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
-index 150529d..39ebf34 100644
---- a/drivers/scsi/qla2xxx/qla_iocb.c
-+++ b/drivers/scsi/qla2xxx/qla_iocb.c
-@@ -474,7 +474,7 @@ void
- qla2x00_start_iocbs(struct scsi_qla_host *vha, struct req_que *req)
- {
- 	struct qla_hw_data *ha = vha->hw;
--	device_reg_t __iomem *reg = ISP_QUE_REG(ha, req->id);
-+	device_reg_t *reg = ISP_QUE_REG(ha, req->id);
- 
- 	if (IS_P3P_TYPE(ha)) {
- 		qla82xx_start_iocbs(vha);
-@@ -1863,7 +1863,7 @@ qla2x00_alloc_iocbs(scsi_qla_host_t *vha, srb_t *sp)
- {
- 	struct qla_hw_data *ha = vha->hw;
- 	struct req_que *req = ha->req_q_map[0];
--	device_reg_t __iomem *reg = ISP_QUE_REG(ha, req->id);
-+	device_reg_t *reg = ISP_QUE_REG(ha, req->id);
- 	uint32_t index, handle;
- 	request_t *pkt;
- 	uint16_t cnt, req_cnt;
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index e632e14..6fc0702 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -1432,7 +1432,7 @@ static int qlt_check_reserve_free_req(struct scsi_qla_host *vha,
- 	uint32_t req_cnt)
- {
- 	struct qla_hw_data *ha = vha->hw;
--	device_reg_t __iomem *reg = ha->iobase;
-+	device_reg_t *reg = ha->iobase;
- 	uint32_t cnt;
- 
- 	if (vha->req->cnt < (req_cnt + 2)) {
--- 
-1.7.10.4
+diff --git a/drivers/scsi/bfa/bfa_fcs.c b/drivers/scsi/bfa/bfa_fcs.c index =
+a3ab5cc..0f19455 100644
+--- a/drivers/scsi/bfa/bfa_fcs.c
++++ b/drivers/scsi/bfa/bfa_fcs.c
+@@ -81,7 +81,7 @@ bfa_fcs_attach(struct bfa_fcs_s *fcs, struct bfa_s *bfa, =
+struct bfad_s *bfad,
+        bfa->fcs =3D BFA_TRUE;
+        fcbuild_init();
+
+-       for (i =3D 0; i < sizeof(fcs_modules) / sizeof(fcs_modules[0]); i++=
+) {
++       for (i =3D 0; i < ARRAY_SIZE(fcs_modules); i++) {
+                mod =3D &fcs_modules[i];
+                if (mod->attach)
+                        mod->attach(fcs);
+@@ -97,7 +97,7 @@ bfa_fcs_init(struct bfa_fcs_s *fcs)
+        int     i;
+        struct bfa_fcs_mod_s  *mod;
+
+-       for (i =3D 0; i < sizeof(fcs_modules) / sizeof(fcs_modules[0]); i++=
+) {
++       for (i =3D 0; i < ARRAY_SIZE(fcs_modules); i++) {
+                mod =3D &fcs_modules[i];
+                if (mod->modinit)
+                        mod->modinit(fcs);
+@@ -184,7 +184,7 @@ bfa_fcs_exit(struct bfa_fcs_s *fcs)
+
+        bfa_wc_init(&fcs->wc, bfa_fcs_exit_comp, fcs);
+
+-       nmods =3D sizeof(fcs_modules) / sizeof(fcs_modules[0]);
++       nmods =3D ARRAY_SIZE(fcs_modules);
+
+        for (i =3D 0; i < nmods; i++) {
+
+--
+1.8.4.5
+
+
+________________________________
+
+This message and any attached documents contain information from QLogic Cor=
+poration or its wholly-owned subsidiaries that may be confidential. If you =
+are not the intended recipient, you may not read, copy, distribute, or use =
+this information. If you have received this transmission in error, please n=
+otify the sender immediately by reply e-mail and then delete this message.
+
+--_000_20B1A3CBD98F3845B3F5F56D8597EF59F9B24Favmb2qlogicorg_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
+
+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
+J5Ap4q/TuPEDoFMjvQUdr2UuquUVQscgAB8AQgABAAAAIAAAAEEAbgBpAGwAIABHAHUAcgB1AG0A
+dQByAHQAaAB5AAAAHwBlAAEAAAA2AAAAQQBuAGkAbAAuAEcAdQByAHUAbQB1AHIAdABoAHkAQABx
+AGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfAGQAAQAAAAoAAABTAE0AVABQAAAAAAACAUEAAQAAAHgA
+AAAAAAAAgSsfpL6jEBmdbgDdAQ9UAgAAAIBBAG4AaQBsACAARwB1AHIAdQBtAHUAcgB0AGgAeQAA
+AFMATQBUAFAAAABBAG4AaQBsAC4ARwB1AHIAdQBtAHUAcgB0AGgAeQBAAHEAbABvAGcAaQBjAC4A
+YwBvAG0AAAAfAAJdAQAAADYAAABBAG4AaQBsAC4ARwB1AHIAdQBtAHUAcgB0AGgAeQBAAHEAbABv
+AGcAaQBjAC4AYwBvAG0AAAAAAB8A5V8BAAAAPgAAAHMAaQBwADoAYQBuAGkAbAAuAGcAdQByAHUA
+bQB1AHIAdABoAHkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfABoMAQAAACAAAABBAG4AaQBs
+ACAARwB1AHIAdQBtAHUAcgB0AGgAeQAAAB8AHwwBAAAANgAAAEEAbgBpAGwALgBHAHUAcgB1AG0A
+dQByAHQAaAB5AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwAeDAEAAAAKAAAAUwBNAFQAUAAA
+AAAAAgEZDAEAAAB4AAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAQQBuAGkAbAAgAEcAdQByAHUA
+bQB1AHIAdABoAHkAAABTAE0AVABQAAAAQQBuAGkAbAAuAEcAdQByAHUAbQB1AHIAdABoAHkAQABx
+AGwAbwBnAGkAYwAuAGMAbwBtAAAAHwABXQEAAAA2AAAAQQBuAGkAbAAuAEcAdQByAHUAbQB1AHIA
+dABoAHkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfAPg/AQAAACAAAABBAG4AaQBsACAARwB1
+AHIAdQBtAHUAcgB0AGgAeQAAAB8AI0ABAAAANgAAAEEAbgBpAGwALgBHAHUAcgB1AG0AdQByAHQA
+aAB5AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwAiQAEAAAAKAAAAUwBNAFQAUAAAAAAAAgH5
+PwEAAAB4AAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAQQBuAGkAbAAgAEcAdQByAHUAbQB1AHIA
+dABoAHkAAABTAE0AVABQAAAAQQBuAGkAbAAuAEcAdQByAHUAbQB1AHIAdABoAHkAQABxAGwAbwBn
+AGkAYwAuAGMAbwBtAAAAHwAJXQEAAAA2AAAAQQBuAGkAbAAuAEcAdQByAHUAbQB1AHIAdABoAHkA
+QABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfADFAAQAAAAIAAAAAAAAACwBAOgEAAAAfADBAAQAA
+AAIAAAAAAAAAHwAaAAEAAAASAAAASQBQAE0ALgBOAG8AdABlAAAAAAADAPE/CQQAAAsAQDoBAAAA
+AwD9P+QEAAACAQswAQAAABAAAADvPrZ4jpJoT7kUR3Of/l6/AwAXAAEAAABAADkAgHkcv7SVzwFA
+AAgwWHRqv7SVzwELACkAAAAAAAsAIwAAAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAHgAAAGEA
+YwBjAGUAcAB0AGwAYQBuAGcAdQBhAGcAZQAAAAAAAQAAAAwAAABlAG4ALQBVAFMAAAALAACACCAG
+AAAAAADAAAAAAAAARgAAAAAGhQAAAAAAAB8ANwABAAAAjgAAAFIARQA6ACAAWwBQAEEAVABDAEgA
+IAAxAC8AMQBdACAAWwBTAEMAUwBJAF0AIABiAGYAYQA6ACAAdQBzAGUAIABBAFIAUgBBAFkAXwBT
+AEkAWgBFACAAaQBuAHMAdABlAGEAZAAgAG8AZgAgAHMAaQB6AGUAbwBmAC8AcwBpAHoAZQBvAGYA
+WwAwAF0AAAAAAB8APQABAAAACgAAAFIARQA6ACAAAAAAAAMANgAAAAAAAwAuAAAAAAAfAEIQAQAA
+AGQAAAA8ADEANAAwADQAMQA1ADAAMQA2ADIALQA3ADkANwAzAC0AMQAtAGcAaQB0AC0AcwBlAG4A
+ZAAtAGUAbQBhAGkAbAAtAGYAYQBiAGYAQABzAGsAeQBuAGUAdAAuAGIAZQA+AAAAAgFxAAEAAAAb
+AAAAAQHPlIrsWYlPXIpLpU6wTn6//9sr35uMQEHwAB8AcAABAAAAhgAAAFsAUABBAFQAQwBIACAA
+MQAvADEAXQAgAFsAUwBDAFMASQBdACAAYgBmAGEAOgAgAHUAcwBlACAAQQBSAFIAQQBZAF8AUwBJ
+AFoARQAgAGkAbgBzAHQAZQBhAGQAIABvAGYAIABzAGkAegBlAG8AZgAvAHMAaQB6AGUAbwBmAFsA
+MABdAAAAAAAfADUQAQAAAHQAAAA8ADIAMABCADEAQQAzAEMAQgBEADkAOABGADMAOAA0ADUAQgAz
+AEYANQBGADUANgBEADgANQA5ADcARQBGADUAOQBGADkAQgAyADQARgBAAGEAdgBtAGIAMgAuAHEA
+bABvAGcAaQBjAC4AbwByAGcAPgAAAB8AORABAAAAZAAAADwAMQA0ADAANAAxADUAMAAxADYAMgAt
+ADcAOQA3ADMALQAxAC0AZwBpAHQALQBzAGUAbgBkAC0AZQBtAGEAaQBsAC0AZgBhAGIAZgBAAHMA
+awB5AG4AZQB0AC4AYgBlAD4AAAADAN4/n04AAAsAAIAIIAYAAAAAAMAAAAAAAABGAAAAAAOFAAAA
+AAAAAwAAgAggBgAAAAAAwAAAAAAAAEYAAAAAAYUAAAAAAAADAIAQ/////0AABzAYUN+9tJXPAQsA
+AgABAAAAAwAmAAAAAAALACsAAAAAAAIBRwABAAAALgAAAGM9VVM7YT0gO3A9UUxvZ2ljO2w9QVZN
+QjItMTQwNzAyMDUxNjE1Wi0yMzg4NgAAAAIBEDABAAAARgAAAAAAAACl9rpY+JScQJeq5kM6RFa/
+BwAgsaPL2Y84RbP19W2Fl+9ZAAAA9I0YAABnBDGMy3GiSKVd3se6CF95AEt6phb2AAAAAB8A+j8B
+AAAAIAAAAEEAbgBpAGwAIABHAHUAcgB1AG0AdQByAHQAaAB5AAAAAwAJWQEAAAADAACACCAGAAAA
+AADAAAAAAAAARgAAAAAQhQAAAAAAAAsAAIAIIAYAAAAAAMAAAAAAAABGAAAAAA6FAAAAAAAAAwAA
+gAggBgAAAAAAwAAAAAAAAEYAAAAAGIUAAAAAAAALAACACCAGAAAAAADAAAAAAAAARgAAAACChQAA
+AAAAAB8AAIAIIAYAAAAAAMAAAAAAAABGAAAAANiFAAABAAAAEgAAAEkAUABNAC4ATgBvAHQAZQAA
+AAAAAwANNP0/AAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAgAAAAeAAtAG0AcwAtAGgAYQBzAC0A
+YQB0AHQAYQBjAGgAAAABAAAAAgAAAAAAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAiAAAAeAAt
+AG8AcgBpAGcAaQBuAGEAdABpAG4AZwAtAGkAcAAAAAAAAQAAABgAAABbADEAMAAuADEALgA0AC4A
+MQAwAF0AAAC1xw==
+
+--_000_20B1A3CBD98F3845B3F5F56D8597EF59F9B24Favmb2qlogicorg_--
