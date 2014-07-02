@@ -1,34 +1,117 @@
 From: Suman Tripathi <stripathi@apm.com>
-Subject: [PATCH v5 0/2] ata: Fix the dma state machine lockup for APM X-Gene SoC
-Date: Wed,  2 Jul 2014 15:45:06 +0530
-Message-ID: <1404296108-16233-1-git-send-email-stripathi@apm.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from denmail01-v4020.amcc.com ([192.195.68.30]:46552 "EHLO
-	denmail01.apm.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751566AbaGBKQi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Jul 2014 06:16:38 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Subject: [PATCH v5 2/2] ata: Fix the dma state machine lockup for the IDENTIFY DEVICE PIO mode command.
+Date: Wed,  2 Jul 2014 15:45:08 +0530
+Message-ID: <1404296108-16233-3-git-send-email-stripathi@apm.com>
+References: <1404296108-16233-1-git-send-email-stripathi@apm.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1404296108-16233-1-git-send-email-stripathi@apm.com>
+Sender: linux-ide-owner@vger.kernel.org
 To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
 Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>, Loc Ho <lho@apm.com>
+List-Id: linux-scsi@vger.kernel.org
 
-This patch addresses the dma state machine lockup for APM X-Gene SoC.
+This patch fixes the dma state machine lockup due to the processing
+of IDENTIFY DEVICE PIO mode command. The X-Gene AHCI controller
+has an errata in which it cannot clear the BSY bit after the PIO setup
+FIS. The dma state machine enters CMFatalErrorUpdate state and locks
+up. This patch also removes the dma restart workaround from the read_id
+function as the read_id function is only called by libata layer for
+ATA_INTERNAL commands. But for some cases eg: PORT MULTIPLIER
+and udev, the framework will enumerate using SCSI commands and it will
+not call read_id function.
 
 Signed-off-by: Loc Ho <lho@apm.com>
 Signed-off-by: Suman Tripathi <stripathi@apm.com>
 ---
-
-Suman Tripathi (2):
-  libahci: Implement the function ahci_restart_engine to restart the
-    port dma engine.
-  ata: Fix the dma state machine lockup for the IDENTIFY DEVICE PIO mode
-    command.
-
- drivers/ata/ahci.h       |  3 ++-
  drivers/ata/ahci_xgene.c | 43 ++++++++++++++++++++++++++++++-------------
- drivers/ata/libahci.c    | 16 ++++++++++++++--
- 3 files changed, 46 insertions(+), 16 deletions(-)
+ 1 file changed, 30 insertions(+), 13 deletions(-)
 
+diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
+index 77c89bf..5b9bddf 100644
+--- a/drivers/ata/ahci_xgene.c
++++ b/drivers/ata/ahci_xgene.c
+@@ -78,6 +78,7 @@
+ struct xgene_ahci_context {
+ 	struct ahci_host_priv *hpriv;
+ 	struct device *dev;
++	u8 last_cmd[MAX_AHCI_CHN_PERCTR]; /* tracking the last command issued*/
+ 	void __iomem *csr_core;		/* Core CSR address of IP */
+ 	void __iomem *csr_diag;		/* Diag CSR address of IP */
+ 	void __iomem *csr_axi;		/* AXI CSR address of IP */
+@@ -98,20 +99,45 @@ static int xgene_ahci_init_memram(struct xgene_ahci_context *ctx)
+ }
+
+ /**
++ * xgene_ahci_qc_issue - Issue commands to the device
++ * @qc: Command to issue
++ *
++ * Due to Hardware errata for IDENTIFY DEVICE command, the controller cannot
++ * clear the BSY bit after receiving the PIO setup FIS. This results in the dma
++ * state machine goes into the CMFatalErrorUpdate state and locks up. By
++ * restarting the dma engine, it removes the controller out of lock up state.
++ */
++static unsigned int xgene_ahci_qc_issue(struct ata_queued_cmd *qc)
++{
++	struct ata_port *ap = qc->ap;
++	struct ahci_host_priv *hpriv = ap->host->private_data;
++	struct xgene_ahci_context *ctx = hpriv->plat_data;
++	int rc = 0;
++
++	if (unlikely(ctx->last_cmd[ap->port_no] == ATA_CMD_ID_ATA))
++		ahci_restart_engine(ap);
++
++	rc = ahci_qc_issue(qc);
++
++	/* Save the last command issued */
++	ctx->last_cmd[ap->port_no] = qc->tf.command;
++
++	return rc;
++}
++
++/**
+  * xgene_ahci_read_id - Read ID data from the specified device
+  * @dev: device
+  * @tf: proposed taskfile
+  * @id: data buffer
+  *
+  * This custom read ID function is required due to the fact that the HW
+- * does not support DEVSLP and the controller state machine may get stuck
+- * after processing the ID query command.
++ * does not support DEVSLP.
+  */
+ static unsigned int xgene_ahci_read_id(struct ata_device *dev,
+ 				       struct ata_taskfile *tf, u16 *id)
+ {
+ 	u32 err_mask;
+-	void __iomem *port_mmio = ahci_port_base(dev->link->ap);
+
+ 	err_mask = ata_do_dev_read_id(dev, tf, id);
+ 	if (err_mask)
+@@ -133,16 +159,6 @@ static unsigned int xgene_ahci_read_id(struct ata_device *dev,
+ 	 */
+ 	id[ATA_ID_FEATURE_SUPP] &= ~(1 << 8);
+
+-	/*
+-	 * Due to HW errata, restart the port if no other command active.
+-	 * Otherwise the controller may get stuck.
+-	 */
+-	if (!readl(port_mmio + PORT_CMD_ISSUE)) {
+-		writel(PORT_CMD_FIS_RX, port_mmio + PORT_CMD);
+-		readl(port_mmio + PORT_CMD);	/* Force a barrier */
+-		writel(PORT_CMD_FIS_RX | PORT_CMD_START, port_mmio + PORT_CMD);
+-		readl(port_mmio + PORT_CMD);	/* Force a barrier */
+-	}
+ 	return 0;
+ }
+
+@@ -300,6 +316,7 @@ static struct ata_port_operations xgene_ahci_ops = {
+ 	.host_stop = xgene_ahci_host_stop,
+ 	.hardreset = xgene_ahci_hardreset,
+ 	.read_id = xgene_ahci_read_id,
++	.qc_issue = xgene_ahci_qc_issue,
+ };
+
+ static const struct ata_port_info xgene_ahci_port_info = {
 --
 1.8.2.1
 
