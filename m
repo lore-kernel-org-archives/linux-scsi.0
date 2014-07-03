@@ -1,23 +1,79 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 0/5] hpsa a few small updates for early July 2014
-Date: Thu, 3 Jul 2014 19:31:46 +0200
-Message-ID: <20140703173146.GA17266@lst.de>
-References: <20140703151534.22132.49663.stgit@beardog.cce.hp.com>
+From: Joe Lawrence <joe.lawrence@stratus.com>
+Subject: Re: [PATCH] drivers: message: fusion: Simplify rounding
+Date: Thu, 3 Jul 2014 13:49:29 -0400
+Message-ID: <alpine.DEB.2.02.1407031300280.9641@jlaw-desktop.mno.stratus.com>
+References: <1404219380-2712-1-git-send-email-linux@rasmusvillemoes.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:41694 "EHLO newverein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752467AbaGCRbu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 3 Jul 2014 13:31:50 -0400
-Content-Disposition: inline
-In-Reply-To: <20140703151534.22132.49663.stgit@beardog.cce.hp.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="US-ASCII"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1404219380-2712-1-git-send-email-linux@rasmusvillemoes.dk>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+Cc: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Cc: james.bottomley@parallels.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, stephenmcameron@gmail.com, joseph.t.handzik@hp.com, thenzl@redhat.com, michael.miller@canonical.com, elliott@hp.com, scott.teel@hp.com, hch@lst.de
 
-Thanks Stephen,
+ALIGN is certainly more readable to me.
 
-applied to the for 3.17 queue.
+Reviewed-by: Joe Lawrence <joe.lawrence@stratus.com>
 
+-- Joe
+
+On Tue, 1 Jul 2014, Rasmus Villemoes wrote:
+
+> Rounding up to a multiple of 4 should be done using the ALIGN
+> macro. As a bonus, this also makes the generated code smaller.
+> 
+> In GetIocFacts(), sz is assigned to a few lines below without being
+> read in the meantime, so it is ok that it doesn't end up with the same
+> value as facts->FWImageSize.
+> 
+> Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+> ---
+>  drivers/message/fusion/mptbase.c | 7 +------
+>  drivers/message/fusion/mptctl.c  | 7 +------
+>  2 files changed, 2 insertions(+), 12 deletions(-)
+> 
+> diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+> index ebc0af7..10b16a1 100644
+> --- a/drivers/message/fusion/mptbase.c
+> +++ b/drivers/message/fusion/mptbase.c
+> @@ -3175,12 +3175,7 @@ GetIocFacts(MPT_ADAPTER *ioc, int sleepFlag, int reason)
+>  			facts->FWImageSize = le32_to_cpu(facts->FWImageSize);
+>  		}
+>  
+> -		sz = facts->FWImageSize;
+> -		if ( sz & 0x01 )
+> -			sz += 1;
+> -		if ( sz & 0x02 )
+> -			sz += 2;
+> -		facts->FWImageSize = sz;
+> +		facts->FWImageSize = ALIGN(facts->FWImageSize, 4);
+>  
+>  		if (!facts->RequestFrameSize) {
+>  			/*  Something is wrong!  */
+> diff --git a/drivers/message/fusion/mptctl.c b/drivers/message/fusion/mptctl.c
+> index 8a050e8..1004392 100644
+> --- a/drivers/message/fusion/mptctl.c
+> +++ b/drivers/message/fusion/mptctl.c
+> @@ -1749,12 +1749,7 @@ mptctl_replace_fw (unsigned long arg)
+>  
+>  	/* Allocate memory for the new FW image
+>  	 */
+> -	newFwSize = karg.newImageSize;
+> -
+> -	if (newFwSize & 0x01)
+> -		newFwSize += 1;
+> -	if (newFwSize & 0x02)
+> -		newFwSize += 2;
+> +	newFwSize = ALIGN(karg.newImageSize, 4);
+>  
+>  	mpt_alloc_fw_memory(ioc, newFwSize);
+>  	if (ioc->cached_fw == NULL)
+> -- 
+> 1.9.2
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
