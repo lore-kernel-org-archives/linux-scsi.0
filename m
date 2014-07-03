@@ -1,56 +1,49 @@
-From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+From: Sagi Grimberg <sagig@dev.mellanox.co.il>
 Subject: Re: [PATCH 0/5] SRP initiator patches for kernel 3.17
-Date: Thu, 03 Jul 2014 16:19:04 +0200
-Message-ID: <53B56658.1080609@acm.org>
+Date: Thu, 03 Jul 2014 18:06:10 +0300
+Message-ID: <53B57162.2090802@dev.mellanox.co.il>
 References: <53B55E55.5040907@acm.org> <53B565EB.50301@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <53B565EB.50301-HInyCGIudOg@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Roland Dreier <roland-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: James Bottomley <jbottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, David Dillow <dave-i1Mk8JYDVaaSihdK6806/g@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:54535 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756065AbaGCPGR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Jul 2014 11:06:17 -0400
+Received: by mail-wi0-f181.google.com with SMTP id n3so2495356wiv.8
+        for <linux-scsi@vger.kernel.org>; Thu, 03 Jul 2014 08:06:16 -0700 (PDT)
+In-Reply-To: <53B565EB.50301@acm.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>, Roland Dreier <roland@kernel.org>
+Cc: James Bottomley <jbottomley@parallels.com>, Sagi Grimberg <sagig@mellanox.com>, Sebastian Parschauer <sebastian.riemer@profitbricks.com>, David Dillow <dave@thedillows.org>, linux-rdma <linux-rdma@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-(CC'ing linux-scsi)
+On 7/3/2014 5:17 PM, Bart Van Assche wrote:
+>> This patch series consists of the following five patches, of which three
+>> are bug fixes and two are performance optimizations:
+>>
+>> 0001-scsi_transport_srp-Fix-fast_io_fail_tmo-dev_loss_tmo.patch
+>> 0002-IB-srp-Fix-deadlock-between-host-removal-and-multipa.patch
+>> 0003-IB-srp-Fix-residual-handling.patch
+>> 0004-IB-srp-Use-P_Key-cache-for-P_Key-lookups.patch
+>> 0005-IB-srp-Optimize-completion-queue-polling.patch
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> .
+>>
 
-On 07/03/14 15:45, Bart Van Assche wrote:> If scsi_remove_host() is called while an rport is in the blocked
-> state then scsi_remove_host() will only finish if the rport is
-> unblocked from inside a timer function. Make sure that an rport
-> only enters the blocked state if a timer will be started that
-> will unblock it. This avoids that unloading the ib_srp kernel
-> module after having disconnected the initiator from the target
-> system results in a deadlock if both the fast_io_fail_tmo and
-> dev_loss_tmo parameters have been set to "off".
-> 
-> Signed-off-by: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-> Cc: James Bottomley <jbottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-> Cc: Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
-> Cc: Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>
-> Cc: David Dillow <dave-i1Mk8JYDVaaSihdK6806/g@public.gmane.org>
-> Cc: <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-> ---
->  drivers/scsi/scsi_transport_srp.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/scsi_transport_srp.c b/drivers/scsi/scsi_transport_srp.c
-> index 13e8983..a0c5bfd 100644
-> --- a/drivers/scsi/scsi_transport_srp.c
-> +++ b/drivers/scsi/scsi_transport_srp.c
-> @@ -473,7 +473,8 @@ static void __srp_start_tl_fail_timers(struct srp_rport *rport)
->  	if (delay > 0)
->  		queue_delayed_work(system_long_wq, &rport->reconnect_work,
->  				   1UL * delay * HZ);
-> -	if (srp_rport_set_state(rport, SRP_RPORT_BLOCKED) == 0) {
-> +	if ((fast_io_fail_tmo >= 0 || dev_loss_tmo >= 0) &&
-> +	    srp_rport_set_state(rport, SRP_RPORT_BLOCKED) == 0) {
->  		pr_debug("%s new state: %d\n", dev_name(&shost->shost_gendev),
->  			 rport->state);
->  		scsi_target_block(&shost->shost_gendev);
-> 
+Hey Bart,
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The series looks good,
+
+You can add to the series:
+Reviewed-by: Sagi Grimberg <sagig@mellanox.com>
+
+Specifically to patches #1, #4, #5 you can add:
+Tested-by: Sagi Grimberg <sagig@mellanox.com>
+
+Sagi.
