@@ -1,16 +1,22 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 4/5] hpsa: fix 6-byte READ/WRITE with 0 length data xfer
-Date: Thu, 03 Jul 2014 10:18:14 -0500
-Message-ID: <20140703151814.22132.2083.stgit@beardog.cce.hp.com>
+Subject: [PATCH 3/5] hpsa: make hpsa_init_one return -ENOMEM if allocation of
+	h->lockup_detected fails
+Date: Thu, 03 Jul 2014 10:18:08 -0500
+Message-ID: <20140703151808.22132.99138.stgit@beardog.cce.hp.com>
 References: <20140703151534.22132.49663.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3425.houston.hp.com ([15.201.208.53]:2417 "EHLO
-	g4t3425.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758265AbaGCPTG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Jul 2014 11:19:06 -0400
+Received: from g2t1383g.austin.hp.com ([15.217.136.92]:34701 "EHLO
+	g2t1383g.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758265AbaGCPTN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Jul 2014 11:19:13 -0400
+Received: from g5t1625.atlanta.hp.com (g5t1625.atlanta.hp.com [15.192.137.8])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by g2t1383g.austin.hp.com (Postfix) with ESMTPS id B3C6F1F19
+	for <linux-scsi@vger.kernel.org>; Thu,  3 Jul 2014 14:59:49 +0000 (UTC)
 In-Reply-To: <20140703151534.22132.49663.stgit@beardog.cce.hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,37 +25,26 @@ Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, stephenmcameron@gmai
 
 From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-a 6-byte READ/WRITE CDB with a 0 block data transfer really
-means a 256 block data transfer.  The RAID mapping code failed
-to handle this case.  For 10/12/16 byte READ/WRITEs, 0 just means
-no data should be transferred, and should not trigger BUG_ON.
-
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
-Reported-by: Robert Elliott <elliott@hp.com>
-Reviewed-by: Robert Elliott <elliott@hp.com>
+Reviewed-by: Joe Handzik <joseph.t.handzik@hp.com>
 ---
- drivers/scsi/hpsa.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+ drivers/scsi/hpsa.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 794d726..a97a7ff 100644
+index 08b34e9..794d726 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -3686,6 +3686,8 @@ static int hpsa_scsi_ioaccel_raid_map(struct ctlr_info *h,
- 			(((u64) cmd->cmnd[2]) << 8) |
- 			cmd->cmnd[3];
- 		block_cnt = cmd->cmnd[4];
-+		if (block_cnt == 0)
-+			block_cnt = 256;
- 		break;
- 	case WRITE_10:
- 		is_write = 1;
-@@ -3734,7 +3736,6 @@ static int hpsa_scsi_ioaccel_raid_map(struct ctlr_info *h,
- 	default:
- 		return IO_ACCEL_INELIGIBLE; /* process via normal I/O path */
- 	}
--	BUG_ON(block_cnt == 0);
- 	last_block = first_block + block_cnt - 1;
+@@ -6999,8 +6999,10 @@ reinit_after_soft_reset:
  
- 	/* check for write to non-RAID-0 */
+ 	/* Allocate and clear per-cpu variable lockup_detected */
+ 	h->lockup_detected = alloc_percpu(u32);
+-	if (!h->lockup_detected)
++	if (!h->lockup_detected) {
++		rc = -ENOMEM;
+ 		goto clean1;
++	}
+ 	set_lockup_detected_for_all_cpus(h, 0);
+ 
+ 	rc = hpsa_pci_init(h);
 
