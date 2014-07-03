@@ -1,22 +1,33 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] MAINTAINERS: Remove two ancient EATA sections
-Date: Thu, 3 Jul 2014 10:49:45 +0200
-Message-ID: <20140703084945.GA21822@infradead.org>
-References: <1403974442.9064.25.camel@joe-AO725>
+From: Sagi Grimberg <sagig@dev.mellanox.co.il>
+Subject: Re: [PATCH 01/14] block: Get rid of bdev_integrity_enabled()
+Date: Thu, 03 Jul 2014 12:18:56 +0300
+Message-ID: <53B52000.9060007@dev.mellanox.co.il>
+References: <1401334128-15499-1-git-send-email-martin.petersen@oracle.com> <1401334128-15499-2-git-send-email-martin.petersen@oracle.com> <20140611163148.GA28815@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1403974442.9064.25.camel@joe-AO725>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Joe Perches <joe@perches.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wg0-f42.google.com ([74.125.82.42]:56771 "EHLO
+	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756262AbaGCJS7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Jul 2014 05:18:59 -0400
+Received: by mail-wg0-f42.google.com with SMTP id z12so12107967wgg.1
+        for <linux-scsi@vger.kernel.org>; Thu, 03 Jul 2014 02:18:58 -0700 (PDT)
+In-Reply-To: <20140611163148.GA28815@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: axboe@fb.com, nab@daterainc.com, linux-scsi@vger.kernel.org
 
-On Sat, Jun 28, 2014 at 09:54:02AM -0700, Joe Perches wrote:
-> These haven't had a single ack by the listed maintainer
-> in all git history and the email addresses don't work.
-> 
-> And entry for Michael Neuffer is already in CREDITS.
+On 6/11/2014 7:31 PM, Christoph Hellwig wrote:
+> On Wed, May 28, 2014 at 11:28:35PM -0400, Martin K. Petersen wrote:
+>> bdev_integrity_enabled() is only used by bio_integrity_enabled().
+>> Combine these two functions.
+>>
+>> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+> Looks good,
+>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-Looks fine to me..
+Reviewed-by: Sagi Grimberg <sagig@mellanox.com>
+
