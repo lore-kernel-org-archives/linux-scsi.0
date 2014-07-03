@@ -1,54 +1,40 @@
-From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: Crash on WRITE SAME
-Date: Thu, 03 Jul 2014 10:33:59 +0300
-Message-ID: <53B50767.2010209@dev.mellanox.co.il>
-References: <alpine.LRH.2.02.1407021338550.20183@file01.intranet.prod.int.rdu2.redhat.com> <20140702181333.GA15792@infradead.org> <alpine.LRH.2.02.1407021423240.20183@file01.intranet.prod.int.rdu2.redhat.com> <20140702183607.GA19117@infradead.org>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 3/4] megaraid_sas: Fix LD/VF affiliation parsing
+Date: Thu, 3 Jul 2014 01:18:01 -0700
+Message-ID: <20140703081801.GA22818@infradead.org>
+References: <1404173998-24363-1-git-send-email-aradford@gmail.com>
+ <1404173998-24363-4-git-send-email-aradford@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140702183607.GA19117@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Mikulas Patocka <mpatocka@redhat.com>
-Cc: Sagi Grimberg <sagig@mellanox.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Mike Christie <michaelc@cs.wisc.edu>, Nicholas Bellinger <nab@linux-iscsi.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:55452 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752199AbaGCISB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Jul 2014 04:18:01 -0400
+Content-Disposition: inline
+In-Reply-To: <1404173998-24363-4-git-send-email-aradford@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Adam Radford <aradford@gmail.com>
+Cc: linux-scsi@vger.kernel.org, kashyap.desai@avagotech.com, sumit.saxena@avagotech.com, uday.lingala@avagotech.com
 
-On 7/2/2014 9:36 PM, Christoph Hellwig wrote:
-> On Wed, Jul 02, 2014 at 02:29:05PM -0400, Mikulas Patocka wrote:
->> And what about protection information for commands that transfer partial
->> sectors? (for example, UMAP transfers 24 bytes). Should
->> scsi_transfer_length return 24 or 32 in this case?
-> As far as I understand so far PI is only defined for READ/WRITE
-> commands.  But I'll defer to Martin who is a much better source for
-> information on this topic.
+On Mon, Jun 30, 2014 at 05:19:57PM -0700, Adam Radford wrote:
+> James/linux-scsi,
+> 
+> The following patch for megaraid_sas fixes the LD/VF affiliation policy parsing code to account for LD targetId's and Hidden LD's (not yet affiliated with any Virtual Functions).
 
-hch is correct, PI supported operations are (stated in SBC)
+Hi Adam,
 
-a) COMPARE AND WRITE;
-b) ORWRITE (16);
-c) ORWRITE (32);
-d) READ (10);
-e) READ (12);
-f) READ (16);
-g) READ (32);
-h) VERIFY (10);
-i) VERIFY (12);
-j) VERIFY (16);
-k) VERIFY (32);
-l) WRITE (10);
-m) WRITE (12);
-n) WRITE (16);
-o) WRITE (32);
-p) WRITE AND VERIFY (10);
-q) WRITE AND VERIFY (12);
-r) WRITE AND VERIFY (16);
-s) WRITE AND VERIFY (32);
-t) WRITE SAME (10);
-u) WRITE SAME (16);
-v) WRITE SAME (32);
-y) XDWRITEREAD (10);
-z) XDWRITEREAD (32);
-aa) XPWRITE (10); and
-ab) XPWRITE (32).
+this doesn't address Martins comment about removing the initial != 0
+case.  And while we're at it there basically is no significant shared
+code between the PlasmaFW111 and !PlasmaFW111, so split these into
+two different functions.  With those two levels of indentation removed
+the code might actually become readable, too.
 
-Sagi.
+Also please remove the "James/linux-scsi," address in the individual
+patches, that's something that should just go into the cover letter,
+and make sure to include all "Reviewed-by:" and "Acked-by:" tags when
+resending already reviewd patches.
+
+Thanks,
+	Christoph
