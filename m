@@ -1,64 +1,57 @@
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-Subject: Re: [PATCH] scsi: mpt2sas: mpt2sas_base.c: Fix for possible null
- pointer dereference
-Date: Thu, 3 Jul 2014 20:45:18 +0200
-Message-ID: <CAFo99gaJ1oyXjAmiWCXBitBUe-G6a+4eHxHPSnv5h-+We7zv3Q@mail.gmail.com>
-References: <1400429439-11184-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-	<20140528112628.GB11953@infradead.org>
-	<alpine.DEB.2.02.1407031331520.9641@jlaw-desktop.mno.stratus.com>
+From: adam radford <aradford@gmail.com>
+Subject: Re: [PATCH 3/4] megaraid_sas: Fix LD/VF affiliation parsing
+Date: Thu, 3 Jul 2014 16:17:59 -0700
+Message-ID: <CAHtARFFxzYPkMi=ePxbWpRUsTR3Om2rJ2b34-y31ZJg4evPQgg@mail.gmail.com>
+References: <1404173998-24363-1-git-send-email-aradford@gmail.com>
+	<1404173998-24363-4-git-send-email-aradford@gmail.com>
+	<20140703081801.GA22818@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oa0-f50.google.com ([209.85.219.50]:58377 "EHLO
-	mail-oa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753866AbaGCSpU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Jul 2014 14:45:20 -0400
-Received: by mail-oa0-f50.google.com with SMTP id n16so692521oag.37
-        for <linux-scsi@vger.kernel.org>; Thu, 03 Jul 2014 11:45:19 -0700 (PDT)
-In-Reply-To: <alpine.DEB.2.02.1407031331520.9641@jlaw-desktop.mno.stratus.com>
+Received: from mail-qa0-f43.google.com ([209.85.216.43]:54784 "EHLO
+	mail-qa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752275AbaGCXR7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Jul 2014 19:17:59 -0400
+Received: by mail-qa0-f43.google.com with SMTP id k15so762950qaq.16
+        for <linux-scsi@vger.kernel.org>; Thu, 03 Jul 2014 16:17:59 -0700 (PDT)
+In-Reply-To: <20140703081801.GA22818@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Joe Lawrence <joe.lawrence@stratus.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>, Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, support@lsi.com, "James E.J. Bottomley" <JBottomley@parallels.com>, DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, kashyap.desai@avagotech.com, sumit.saxena@avagotech.com, uday.lingala@avagotech.com
 
-2014-07-03 19:45 GMT+02:00 Joe Lawrence <joe.lawrence@stratus.com>:
-> On Wed, 28 May 2014, Christoph Hellwig wrote:
->
->> > -   ioc_status = le16_to_cpu(mpi_reply->IOCStatus) & MPI2_IOCSTATUS_MASK;
->> > +   if (mpi_reply) {
->> > +           ioc_status = le16_to_cpu(mpi_reply->IOCStatus) & MPI2_IOCSTATUS_MASK;
->> > +   }
->> >
->> >     if (ioc_status != MPI2_IOCSTATUS_SUCCESS)
->> >             ioc->port_enable_failed = 1;
+On Thu, Jul 3, 2014 at 1:18 AM, Christoph Hellwig <hch@infradead.org> wrote:
+> On Mon, Jun 30, 2014 at 05:19:57PM -0700, Adam Radford wrote:
+>> James/linux-scsi,
 >>
->> ioc_status isn't initialized without the reply and used here as well
->> as later in the function.  I think we'll need input from LSI or others
->> with the spec on what to do when we didn't get a reply.
+>> The following patch for megaraid_sas fixes the LD/VF affiliation policy parsing code to account for LD targetId's and Hidden LD's (not yet affiliated with any Virtual Functions).
 >
-> Any update on this?
+> Hi Adam,
 >
-> The mpt3 version checks for !mpi_reply and returns 1.  Which leads to
-> another question -- should mpt{2,3}sas_port_enable_done ever return 0 (as their
-> respective comments describe)?
+> this doesn't address Martins comment about removing the initial != 0
+> case.  And while we're at it there basically is no significant shared
+> code between the PlasmaFW111 and !PlasmaFW111, so split these into
+> two different functions.  With those two levels of indentation removed
+> the code might actually become readable, too.
 >
-> Regards,
+> Also please remove the "James/linux-scsi," address in the individual
+> patches, that's something that should just go into the cover letter,
+> and make sure to include all "Reviewed-by:" and "Acked-by:" tags when
+> resending already reviewd patches.
 >
-> -- Joe
+> Thanks,
+>         Christoph
 
+Christoph,
 
-Hi
+Thanks for your and Martin's feedback.
 
-Good questions Joe!
-And good someone else brought this up, because I guess it's not meant to me.
+Actually there is a missing call to megasas_get_ld_vf_affiliation()
+with initial = 1 that should be at the bottom of megasas_probe_one().
+This got dropped inadvertently during a manual merge.  I will add that
+and split the megasas_get_ld_vf_affiliation() function into 2
+functions (as you suggested) and resubmit the patch series while
+including all currently received "Reviewed-by" and "Acked-by" messages
+for the other patches and dropping the "James/linux-scsi" text.
 
-And it looks however now that I've done quite a few more patches that
-there should not have been any {}
-And then, it is perhaps good to sett a start value for ioc_status. My
-suggestion is:
-
-u16 ioc_status = MPI2_IOCSTATUS_OP_STATE_NOT_SUPPORTED;
-
-
-Kind regards
-Rickard Strandqvist
+-Adam
