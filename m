@@ -1,25 +1,38 @@
-From: scameron@beardog.cce.hp.com
-Subject: Re: [PATCH] [SCSI] hpsa: fix non-x86 builds
-Date: Thu, 3 Jul 2014 08:19:27 -0500
-Message-ID: <20140703131927.GG9147@beardog.cce.hp.com>
-References: <6003317.KPlAy1USkq@wuerfel> <20140626143445.GO25166@beardog.cce.hp.com> <20140703084348.GA16881@infradead.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 3.15 099/139] libiscsi, iser: Adjust data_length to
+ include protection information
+Date: Thu, 03 Jul 2014 06:54:05 -0700
+Message-ID: <1404395645.1949.2.camel@jarvis.lan>
+References: <20140628174605.352098823@linuxfoundation.org>
+	 <20140628174609.930049472@linuxfoundation.org>
+	 <1404339330.1862.69.camel@ul30vt.home> <53B48B37.4000608@cs.wisc.edu>
+	 <1404341555.16066.19.camel@dabdike> <20140703060548.GB17456@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20140703084348.GA16881@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20140703060548.GB17456@infradead.org>
+Sender: stable-owner@vger.kernel.org
 To: Christoph Hellwig <hch@infradead.org>
-Cc: Arnd Bergmann <arnd@arndb.de>, linux-scsi@vger.kernel.org, jbottomley@parallels.com, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, scameron@beardog.cce.hp.com
+Cc: Mike Christie <michaelc@cs.wisc.edu>, Alex Williamson <alex.williamson@redhat.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-kernel@vger.kernel.org, stable@vger.kernel.org, Sagi Grimberg <sagig@mellanox.com>, Nicholas Bellinger <nab@linux-iscsi.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Jul 03, 2014 at 01:43:48AM -0700, Christoph Hellwig wrote:
-> On Thu, Jun 26, 2014 at 09:34:45AM -0500, scameron@beardog.cce.hp.com wrote:
-> > Thanks.
+On Wed, 2014-07-02 at 23:05 -0700, Christoph Hellwig wrote:
+> On Wed, Jul 02, 2014 at 03:52:35PM -0700, James Bottomley wrote:
+> > In which case it's not marked for stable backport ... I assume it should
+> > be?
 > 
-> Do you plan to include this with the next hpsa update, or should I take
-> this as an ACK and apply it?
+> Only if the patch that regression went to stable, which it shouldn't,
 
-Take it as an ACK.  I should have been clearer.
+Well it did:
 
--- steve
+https://git.kernel.org/cgit/linux/kernel/git/stable/linux-stable.git/commit/drivers/scsi?h=linux-3.15.y&id=04423ddea30a7fb7232636eda8aed55ea5b972fe
+
+The stable process is a bit broken from my point of view since it
+doesn't copy linux-scsi on SCSI commits ... but this time even I didn't
+get a cc, so really no-one who knew there was a problem had a chance to
+comment.
+
+The choice is either request revert from stable or add fix.
+
+James
