@@ -1,32 +1,38 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3.15 099/139] libiscsi, iser: Adjust data_length to
- include protection information
-Date: Thu, 3 Jul 2014 09:33:10 -0700
-Message-ID: <20140703163310.GA21213@infradead.org>
-References: <20140628174605.352098823@linuxfoundation.org>
- <20140628174609.930049472@linuxfoundation.org>
- <1404339330.1862.69.camel@ul30vt.home>
- <53B48B37.4000608@cs.wisc.edu>
- <1404341555.16066.19.camel@dabdike>
- <20140703060548.GB17456@infradead.org>
- <1404395645.1949.2.camel@jarvis.lan>
- <20140703162748.GA24758@kroah.com>
+From: Steven Haber <steven@qumulo.com>
+Subject: Re: SCSI eats error from flush failure during hot plug
+Date: Thu, 3 Jul 2014 09:57:32 -0700
+Message-ID: <CAPK7rjdVM-Anw-uFc6RGCrwZko885vBGgbB+LehmuKF4r6nu5A@mail.gmail.com>
+References: <CAPK7rjcrBuQgoiAxZ9ZASAGugtyHTsHB3ssZegKtuzRdo9TMNQ@mail.gmail.com>
+	<20140626150208.GA14887@infradead.org>
+	<1403808734.6440.12.camel@dabdike>
+	<20140627075553.GB21799@infradead.org>
+	<CAPK7rjdpxAALA-oLZJ3wDBPc3kr5Nw4jLALLxEaT0zSiAOD+wg@mail.gmail.com>
+	<CAPK7rjcmujziT580t2O_dQnNPn8eyq7CTBxAgbqHYNobZCTxjQ@mail.gmail.com>
+	<20140701081510.GA14857@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20140703162748.GA24758@kroah.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Christoph Hellwig <hch@infradead.org>, Mike Christie <michaelc@cs.wisc.edu>, Alex Williamson <alex.williamson@redhat.com>, linux-kernel@vger.kernel.org, stable@vger.kernel.org, Sagi Grimberg <sagig@mellanox.com>, Nicholas Bellinger <nab@linux-iscsi.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ob0-f172.google.com ([209.85.214.172]:49193 "EHLO
+	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758075AbaGCQ5d (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Jul 2014 12:57:33 -0400
+Received: by mail-ob0-f172.google.com with SMTP id uy5so602280obc.3
+        for <linux-scsi@vger.kernel.org>; Thu, 03 Jul 2014 09:57:32 -0700 (PDT)
+In-Reply-To: <20140701081510.GA14857@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org
 
-On Thu, Jul 03, 2014 at 09:27:48AM -0700, Greg Kroah-Hartman wrote:
-> I copy everyone on the patch.  You were not on that patch as it doesn't
-> look like it went through your tree at all.
+Both patches work fine -- zero uncommitted writes over several hundred
+power cycles.
 
-It went through the target tree despite exclusive touching scsi
-initiator side code.  I'm still not sure how this happened, but we
-should take care to avoid this in the future.  In addition to this
-regression due to a complete lack of testing it also caused various
-merge issues.
+On Tue, Jul 1, 2014 at 1:15 AM, Christoph Hellwig <hch@infradead.org> wrote:
+> On Mon, Jun 30, 2014 at 11:45:31AM -0700, Steven Haber wrote:
+>> Our qual rig is having some woes. I'll let you know how the test works
+>> out after I finish resuscitating it.
+>
+> Might be worth to test that patch James send in reply then.  They should
+> have an identical effect and James seems to prefer the version testing
+> for the length.
+>
