@@ -1,38 +1,45 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 3.15 099/139] libiscsi, iser: Adjust data_length to
- include protection information
-Date: Thu, 03 Jul 2014 06:54:05 -0700
-Message-ID: <1404395645.1949.2.camel@jarvis.lan>
-References: <20140628174605.352098823@linuxfoundation.org>
-	 <20140628174609.930049472@linuxfoundation.org>
-	 <1404339330.1862.69.camel@ul30vt.home> <53B48B37.4000608@cs.wisc.edu>
-	 <1404341555.16066.19.camel@dabdike> <20140703060548.GB17456@infradead.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v5 1/2] libahci: Implement the function
+ ahci_restart_engine to restart the port dma engine.
+Date: Thu, 3 Jul 2014 10:03:35 -0400
+Message-ID: <20140703140335.GD16191@htj.dyndns.org>
+References: <1404296108-16233-1-git-send-email-stripathi@apm.com>
+ <1404296108-16233-2-git-send-email-stripathi@apm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20140703060548.GB17456@infradead.org>
-Sender: stable-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, Alex Williamson <alex.williamson@redhat.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-kernel@vger.kernel.org, stable@vger.kernel.org, Sagi Grimberg <sagig@mellanox.com>, Nicholas Bellinger <nab@linux-iscsi.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:54155 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932327AbaGCODj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Jul 2014 10:03:39 -0400
+Content-Disposition: inline
+In-Reply-To: <1404296108-16233-2-git-send-email-stripathi@apm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Suman Tripathi <stripathi@apm.com>
+Cc: olof@lixom.net, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>
 
-On Wed, 2014-07-02 at 23:05 -0700, Christoph Hellwig wrote:
-> On Wed, Jul 02, 2014 at 03:52:35PM -0700, James Bottomley wrote:
-> > In which case it's not marked for stable backport ... I assume it should
-> > be?
-> 
-> Only if the patch that regression went to stable, which it shouldn't,
+Hello,
 
-Well it did:
+On Wed, Jul 02, 2014 at 03:45:07PM +0530, Suman Tripathi wrote:
+> +int ahci_restart_engine(struct ata_port *ap)
+> +{
+> +	struct ahci_host_priv *hpriv = ap->host->private_data;
+> +
+> +	ahci_stop_engine(ap);
+> +	ahci_start_fis_rx(ap);
+> +	hpriv->start_engine(ap);
+> +
+> +	return 0;
+> +}
+> +EXPORT_SYMBOL_GPL(ahci_restart_engine);
 
-https://git.kernel.org/cgit/linux/kernel/git/stable/linux-stable.git/commit/drivers/scsi?h=linux-3.15.y&id=04423ddea30a7fb7232636eda8aed55ea5b972fe
+I don't get this function.  No other ahci needs it and it's not even
+contained libahci proper.  It calls back to the calling low level
+driver.  Why not just expose ahci_start_fis_rx() and implement the
+above in xgene?
 
-The stable process is a bit broken from my point of view since it
-doesn't copy linux-scsi on SCSI commits ... but this time even I didn't
-get a cc, so really no-one who knew there was a problem had a chance to
-comment.
+Thanks.
 
-The choice is either request revert from stable or add fix.
-
-James
+-- 
+tejun
