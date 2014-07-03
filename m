@@ -1,146 +1,175 @@
 From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [PATCH 09/14] block: Relocate integrity flags
-Date: Thu, 03 Jul 2014 13:03:15 +0300
-Message-ID: <53B52A63.9090603@dev.mellanox.co.il>
-References: <1401334128-15499-1-git-send-email-martin.petersen@oracle.com> <1401334128-15499-10-git-send-email-martin.petersen@oracle.com>
+Subject: Re: [PATCH 11/14] block: Don't merge requests if integrity flags
+ differ
+Date: Thu, 03 Jul 2014 13:06:11 +0300
+Message-ID: <53B52B13.2030603@dev.mellanox.co.il>
+References: <1401334128-15499-1-git-send-email-martin.petersen@oracle.com> <1401334128-15499-12-git-send-email-martin.petersen@oracle.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-we0-f175.google.com ([74.125.82.175]:43838 "EHLO
-	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030217AbaGCKDS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Jul 2014 06:03:18 -0400
-Received: by mail-we0-f175.google.com with SMTP id k48so12604306wev.20
-        for <linux-scsi@vger.kernel.org>; Thu, 03 Jul 2014 03:03:17 -0700 (PDT)
-In-Reply-To: <1401334128-15499-10-git-send-email-martin.petersen@oracle.com>
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:61220 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030808AbaGCKGY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Jul 2014 06:06:24 -0400
+Received: by mail-wi0-f170.google.com with SMTP id cc10so10339929wib.5
+        for <linux-scsi@vger.kernel.org>; Thu, 03 Jul 2014 03:06:23 -0700 (PDT)
+In-Reply-To: <1401334128-15499-12-git-send-email-martin.petersen@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>, axboe@fb.com, nab@daterainc.com, linux-scsi@vger.kernel.org
 
 On 5/29/2014 6:28 AM, Martin K. Petersen wrote:
-> Move flags affecting the integrity code out of the bio bi_flags and into
-> the block integrity payload.
+> We'd occasionally merge requests with conflicting integrity flags.
+> Introduce a merge helper which checks that the requests have compatible
+> integrity payloads.
 >
 > Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 > ---
->   block/bio-integrity.c     |  4 ++--
->   drivers/scsi/sd_dif.c     |  4 ++--
->   include/linux/bio.h       | 27 ++++++++++++++++++++++++++-
->   include/linux/blk_types.h |  6 ++----
->   4 files changed, 32 insertions(+), 9 deletions(-)
+>   block/blk-integrity.c  | 36 ++++++++++++++++++++++++++----------
+>   block/blk-merge.c      |  6 +++---
+>   include/linux/blkdev.h | 20 ++++++++++----------
+>   3 files changed, 39 insertions(+), 23 deletions(-)
 >
-> diff --git a/block/bio-integrity.c b/block/bio-integrity.c
-> index c91181e3d18d..877bce028766 100644
-> --- a/block/bio-integrity.c
-> +++ b/block/bio-integrity.c
-> @@ -98,7 +98,7 @@ void bio_integrity_free(struct bio *bio)
->   	struct bio_integrity_payload *bip = bio_integrity(bio);
->   	struct bio_set *bs = bio->bi_pool;
->   
-> -	if (bip->bip_owns_buf)
-> +	if (bip_get_flag(bip, BIP_BLOCK_INTEGRITY))
->   		kfree(page_address(bip->bip_vec->bv_page) +
->   		      bip->bip_vec->bv_offset);
->   
-> @@ -299,7 +299,7 @@ int bio_integrity_prep(struct bio *bio)
->   		return -EIO;
->   	}
->   
-> -	bip->bip_owns_buf = 1;
-> +	bip_set_flag(bip, BIP_BLOCK_INTEGRITY);
->   	bip->bip_iter.bi_size = len;
->   	bip_set_seed(bip, bio->bi_iter.bi_sector);
->   
-> diff --git a/drivers/scsi/sd_dif.c b/drivers/scsi/sd_dif.c
-> index 1d401f864fbe..95d5cb806f58 100644
-> --- a/drivers/scsi/sd_dif.c
-> +++ b/drivers/scsi/sd_dif.c
-> @@ -326,7 +326,7 @@ void sd_dif_prepare(struct request *rq, sector_t hw_sector,
->   		unsigned int j;
->   
->   		/* Already remapped? */
-> -		if (bio_flagged(bio, BIO_MAPPED_INTEGRITY))
-> +		if (bip_get_flag(bip, BIP_MAPPED_INTEGRITY))
->   			break;
->   
->   		virt = bip_get_seed(bip) & 0xffffffff;
-> @@ -347,7 +347,7 @@ void sd_dif_prepare(struct request *rq, sector_t hw_sector,
->   			kunmap_atomic(sdt);
->   		}
->   
-> -		bio->bi_flags |= (1 << BIO_MAPPED_INTEGRITY);
-> +		bip_set_flag(bip, BIP_MAPPED_INTEGRITY);
->   	}
+> diff --git a/block/blk-integrity.c b/block/blk-integrity.c
+> index 8cf87655152b..da608e73bdb1 100644
+> --- a/block/blk-integrity.c
+> +++ b/block/blk-integrity.c
+> @@ -186,37 +186,53 @@ int blk_integrity_compare(struct gendisk *gd1, struct gendisk *gd2)
 >   }
+>   EXPORT_SYMBOL(blk_integrity_compare);
 >   
-> diff --git a/include/linux/bio.h b/include/linux/bio.h
-> index 295545de8790..adc806325c36 100644
-> --- a/include/linux/bio.h
-> +++ b/include/linux/bio.h
-> @@ -296,7 +296,7 @@ struct bio_integrity_payload {
->   
->   	unsigned short		bip_slab;	/* slab the bip came from */
->   	unsigned short		bip_vcnt;	/* # of integrity bio_vecs */
-> -	unsigned		bip_owns_buf:1;	/* should free bip_buf */
-> +	unsigned short		bip_flags;	/* control flags */
->   
->   	struct work_struct	bip_work;	/* I/O completion */
->   
-> @@ -304,6 +304,31 @@ struct bio_integrity_payload {
->   	struct bio_vec		bip_inline_vecs[0];/* embedded bvec array */
->   };
->   
-> +enum bip_flags {
-> +	BIP_BLOCK_INTEGRITY = 0,/* block layer owns integrity data, not fs */
-> +	BIP_MAPPED_INTEGRITY,	/* integrity metadata has been remapped */
-> +	BIP_CTRL_NOCHECK,	/* disable controller integrity checking */
-> +	BIP_DISK_NOCHECK,	/* disable disk integrity checking */
-> +};
-> +
-> +static inline bool bip_get_flag(struct bio_integrity_payload *bip,
-> +	enum bip_flags flag)
-> +{
-> +	if (bip && bip->bip_flags & (1 << flag))
+> -int blk_integrity_merge_rq(struct request_queue *q, struct request *req,
+> -			   struct request *next)
+> +bool blk_integrity_merge_rq(struct request_queue *q, struct request *req,
+> +			    struct request *next)
+>   {
+> -	if (blk_integrity_rq(req) != blk_integrity_rq(next))
+> -		return -1;
+> +	if (blk_integrity_rq(req) == 0 && blk_integrity_rq(next) == 0)
 > +		return true;
 > +
-> +	return false;
-> +}
+> +	if (blk_integrity_rq(req) == 0 || blk_integrity_rq(next) == 0)
+> +		return false;
 > +
-> +static inline void bip_set_flag(struct bio_integrity_payload *bip,
-> +	enum bip_flags flag)
-> +{
-> +	if (!bip)
-> +		return;
-> +
-> +	bip->bip_flags |= (1 << flag);
-> +}
-> +
->   static inline sector_t bip_get_seed(struct bio_integrity_payload *bip)
->   {
->   	return bip->bip_iter.bi_sector;
-> diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-> index 9cce1fcd6793..b2e389a16534 100644
-> --- a/include/linux/blk_types.h
-> +++ b/include/linux/blk_types.h
-> @@ -120,10 +120,8 @@ struct bio {
->   #define BIO_USER_MAPPED 6	/* contains user pages */
->   #define BIO_EOPNOTSUPP	7	/* not supported */
->   #define BIO_NULL_MAPPED 8	/* contains invalid user pages */
-> -#define BIO_FS_INTEGRITY 9	/* fs owns integrity data, not block layer */
-> -#define BIO_QUIET	10	/* Make BIO Quiet */
-> -#define BIO_MAPPED_INTEGRITY 11/* integrity metadata has been remapped */
-> -#define BIO_SNAP_STABLE	12	/* bio data must be snapshotted during write */
-> +#define BIO_QUIET	9	/* Make BIO Quiet */
-> +#define BIO_SNAP_STABLE	10	/* bio data must be snapshotted during write */
+> +	if (bio_integrity(req->bio)->bip_flags !=
+> +	    bio_integrity(next->bio)->bip_flags)
+> +		return false;
 >   
->   /*
->    * Flags starting here get preserved by bio_reset() - this includes
+>   	if (req->nr_integrity_segments + next->nr_integrity_segments >
+>   	    q->limits.max_integrity_segments)
+> -		return -1;
+> +		return false;
+>   
+> -	return 0;
+> +	return true;
+>   }
+>   EXPORT_SYMBOL(blk_integrity_merge_rq);
+>   
+> -int blk_integrity_merge_bio(struct request_queue *q, struct request *req,
+> -			    struct bio *bio)
+> +bool blk_integrity_merge_bio(struct request_queue *q, struct request *req,
+> +			     struct bio *bio)
+>   {
+>   	int nr_integrity_segs;
+>   	struct bio *next = bio->bi_next;
+>   
+> +	if (blk_integrity_rq(req) == 0 && bio_integrity(bio) == NULL)
+> +		return true;
+> +
+> +	if (blk_integrity_rq(req) == 0 || bio_integrity(bio) == NULL)
+> +		return false;
+> +
+> +	if (bio_integrity(req->bio)->bip_flags != bio_integrity(bio)->bip_flags)
+> +		return false;
+> +
+>   	bio->bi_next = NULL;
+>   	nr_integrity_segs = blk_rq_count_integrity_sg(q, bio);
+>   	bio->bi_next = next;
+>   
+>   	if (req->nr_integrity_segments + nr_integrity_segs >
+>   	    q->limits.max_integrity_segments)
+> -		return -1;
+> +		return false;
+>   
+>   	req->nr_integrity_segments += nr_integrity_segs;
+>   
+> -	return 0;
+> +	return true;
+>   }
+>   EXPORT_SYMBOL(blk_integrity_merge_bio);
+>   
+> diff --git a/block/blk-merge.c b/block/blk-merge.c
+> index 6c583f9c5b65..21e38f407785 100644
+> --- a/block/blk-merge.c
+> +++ b/block/blk-merge.c
+> @@ -294,7 +294,7 @@ static inline int ll_new_hw_segment(struct request_queue *q,
+>   	if (req->nr_phys_segments + nr_phys_segs > queue_max_segments(q))
+>   		goto no_merge;
+>   
+> -	if (bio_integrity(bio) && blk_integrity_merge_bio(q, req, bio))
+> +	if (blk_integrity_merge_bio(q, req, bio) == false)
+>   		goto no_merge;
+>   
+>   	/*
+> @@ -391,7 +391,7 @@ static int ll_merge_requests_fn(struct request_queue *q, struct request *req,
+>   	if (total_phys_segments > queue_max_segments(q))
+>   		return 0;
+>   
+> -	if (blk_integrity_rq(req) && blk_integrity_merge_rq(q, req, next))
+> +	if (blk_integrity_merge_rq(q, req, next) == false)
+>   		return 0;
+>   
+>   	/* Merge is OK... */
+> @@ -569,7 +569,7 @@ bool blk_rq_merge_ok(struct request *rq, struct bio *bio)
+>   		return false;
+>   
+>   	/* only merge integrity protected bio into ditto rq */
+> -	if (bio_integrity(bio) != blk_integrity_rq(rq))
+> +	if (blk_integrity_merge_bio(rq->q, rq, bio) == false)
+>   		return false;
+>   
+>   	/* must be using the same buffer */
+> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+> index 9bf6f761f1ac..45cd70cda4e8 100644
+> --- a/include/linux/blkdev.h
+> +++ b/include/linux/blkdev.h
+> @@ -1467,10 +1467,10 @@ extern int blk_integrity_compare(struct gendisk *, struct gendisk *);
+>   extern int blk_rq_map_integrity_sg(struct request_queue *, struct bio *,
+>   				   struct scatterlist *);
+>   extern int blk_rq_count_integrity_sg(struct request_queue *, struct bio *);
+> -extern int blk_integrity_merge_rq(struct request_queue *, struct request *,
+> -				  struct request *);
+> -extern int blk_integrity_merge_bio(struct request_queue *, struct request *,
+> -				   struct bio *);
+> +extern bool blk_integrity_merge_rq(struct request_queue *, struct request *,
+> +				   struct request *);
+> +extern bool blk_integrity_merge_bio(struct request_queue *, struct request *,
+> +				    struct bio *);
+>   
+>   static inline
+>   struct blk_integrity *bdev_get_integrity(struct block_device *bdev)
+> @@ -1550,15 +1550,15 @@ static inline unsigned short queue_max_integrity_segments(struct request_queue *
+>   {
+>   	return 0;
+>   }
+> -static inline int blk_integrity_merge_rq(struct request_queue *rq,
+> -					 struct request *r1,
+> -					 struct request *r2)
+> +static inline bool blk_integrity_merge_rq(struct request_queue *rq,
+> +					  struct request *r1,
+> +					  struct request *r2)
+>   {
+>   	return 0;
+>   }
+> -static inline int blk_integrity_merge_bio(struct request_queue *rq,
+> -					  struct request *r,
+> -					  struct bio *b)
+> +static inline bool blk_integrity_merge_bio(struct request_queue *rq,
+> +					   struct request *r,
+> +					   struct bio *b)
+>   {
+>   	return 0;
+>   }
 
-Christoph had comments on this, but I'm fine with this either way.
-
-Other than that:
-
-Reviewed-by: Sagi Grimberg<sagig@mellanox.com>
-
-
+Reviewed-by: Sagi Grimberg <sagig@mellanox.com>
