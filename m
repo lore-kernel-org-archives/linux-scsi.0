@@ -1,49 +1,25 @@
-From: <vikas.chaudhary@qlogic.com>
-Subject: [PATCH 3/3] MAINTAINERS: Update maintainer list for bnx2i and bnx2fc
-Date: Thu, 3 Jul 2014 08:18:29 -0400
-Message-ID: <1404389909-15319-4-git-send-email-vikas.chaudhary@qlogic.com>
-References: <1404389909-15319-1-git-send-email-vikas.chaudhary@qlogic.com>
+From: scameron@beardog.cce.hp.com
+Subject: Re: [PATCH] [SCSI] hpsa: fix non-x86 builds
+Date: Thu, 3 Jul 2014 08:19:27 -0500
+Message-ID: <20140703131927.GG9147@beardog.cce.hp.com>
+References: <6003317.KPlAy1USkq@wuerfel> <20140626143445.GO25166@beardog.cce.hp.com> <20140703084348.GA16881@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:38864 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752782AbaGCMxJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Jul 2014 08:53:09 -0400
-In-Reply-To: <1404389909-15319-1-git-send-email-vikas.chaudhary@qlogic.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20140703084348.GA16881@infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Arnd Bergmann <arnd@arndb.de>, linux-scsi@vger.kernel.org, jbottomley@parallels.com, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, scameron@beardog.cce.hp.com
 List-Id: linux-scsi@vger.kernel.org
-To: jbottomley@parallels.com, michaelc@cs.wisc.edu, hch@infradead.org, linux-scsi@vger.kernel.org
-Cc: vikas.chaudhary@qlogic.com, giridhar.malavali@qlogic.com
 
-From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+On Thu, Jul 03, 2014 at 01:43:48AM -0700, Christoph Hellwig wrote:
+> On Thu, Jun 26, 2014 at 09:34:45AM -0500, scameron@beardog.cce.hp.com wrote:
+> > Thanks.
+> 
+> Do you plan to include this with the next hpsa update, or should I take
+> this as an ACK and apply it?
 
-Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-Acked-by: Eddie Wai <eddie.wai@broadcom.com>
----
- MAINTAINERS | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Take it as an ACK.  I should have been clearer.
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 2482eee..dec99fb 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -1943,13 +1943,13 @@ S:	Supported
- F:	drivers/net/wireless/brcm80211/
- 
- BROADCOM BNX2FC 10 GIGABIT FCOE DRIVER
--M:	Eddie Wai <eddie.wai@broadcom.com>
-+M:	QLogic-Storage-Upstream@qlogic.com
- L:	linux-scsi@vger.kernel.org
- S:	Supported
- F:	drivers/scsi/bnx2fc/
- 
- BROADCOM BNX2I 1/10 GIGABIT iSCSI DRIVER
--M:	Eddie Wai <eddie.wai@broadcom.com>
-+M:	QLogic-Storage-Upstream@qlogic.com
- L:	linux-scsi@vger.kernel.org
- S:	Supported
- F:	drivers/scsi/bnx2i/
--- 
-1.8.2.GIT
-
+-- steve
