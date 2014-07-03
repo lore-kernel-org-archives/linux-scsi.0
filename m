@@ -1,32 +1,22 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/4] pm8001: clean bitmap management functions
-Date: Thu, 3 Jul 2014 01:45:31 -0700
-Message-ID: <20140703084531.GA17324@infradead.org>
-References: <1403795856-4300-1-git-send-email-thenzl@redhat.com>
- <CE2C58F938F4C44EA74FFF880BAA7E5E1CD7453F@BBYEXM02.pmc-sierra.internal>
+Subject: Re: [PATCH] MAINTAINERS: Remove two ancient EATA sections
+Date: Thu, 3 Jul 2014 10:49:45 +0200
+Message-ID: <20140703084945.GA21822@infradead.org>
+References: <1403974442.9064.25.camel@joe-AO725>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:37240 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752078AbaGCIpd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Jul 2014 04:45:33 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <CE2C58F938F4C44EA74FFF880BAA7E5E1CD7453F@BBYEXM02.pmc-sierra.internal>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <1403974442.9064.25.camel@joe-AO725>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Joe Perches <joe@perches.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
-Cc: Tomas Henzl <thenzl@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Vasanthalakshmi Tharmarajan <Vasanthalakshmi.Tharmarajan@pmcs.com>, Viswas G <Viswas.G@pmcs.com>, "Jack Wang (xjtuwjp@gmail.com)" <xjtuwjp@gmail.com>
 
-Suresh,
+On Sat, Jun 28, 2014 at 09:54:02AM -0700, Joe Perches wrote:
+> These haven't had a single ack by the listed maintainer
+> in all git history and the email addresses don't work.
+> 
+> And entry for Michael Neuffer is already in CREDITS.
 
-do you maintain pm8001 for pmcs now?  There have been lots of pm8001
-patches on the list, many of them with reviews from various people
-including Jack.  I'd be really greatful if someone could collect them
-and resend them as a single coherent series.
-
-Also it the MAINTAINERS information for pm8001 isn't uptodate anymore
-please update it.
-
-Thanks,
-	Christoph
+Looks fine to me..
