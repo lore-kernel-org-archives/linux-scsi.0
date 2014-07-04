@@ -1,48 +1,42 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] scsi: break from queue depth adjusting loops when device
- found
-Date: Fri, 04 Jul 2014 12:53:00 +0200
-Message-ID: <53B6878C.502@suse.de>
-References: <20140703150557.21608.37072.stgit@beardog.cce.hp.com> <20140703171106.GA16788@lst.de>
+Subject: Re: tgt infrastructure removal
+Date: Fri, 04 Jul 2014 12:54:13 +0200
+Message-ID: <53B687D5.3080105@suse.de>
+References: <1397557614-21243-1-git-send-email-hch@lst.de> <20140704093643.GA21482@infradead.org> <53B67976.4030900@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1;
 	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:51860 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:51912 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751901AbaGDKxF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 4 Jul 2014 06:53:05 -0400
-In-Reply-To: <20140703171106.GA16788@lst.de>
+	id S1757696AbaGDKyR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 4 Jul 2014 06:54:17 -0400
+In-Reply-To: <53B67976.4030900@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Cc: james.bottomley@parallels.com, elliott@hp.com, stephenmcameron@gmail.com, linux-scsi@vger.kernel.org, Vasu Dev <vasu.dev@linux.intel.com>, Mike Christie <michaelc@cs.wisc.edu>
+To: Paolo Bonzini <pbonzini@redhat.com>, Christoph Hellwig <hch@infradead.org>, Christoph Hellwig <hch@lst.de>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Brian King <brking@linux.vnet.ibm.com>, Nathan Fontenot <nfont@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org
 
-On 07/03/2014 07:11 PM, Christoph Hellwig wrote:
-> On Thu, Jul 03, 2014 at 10:05:57AM -0500, Stephen M. Cameron wrote:
->> From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+On 07/04/2014 11:52 AM, Paolo Bonzini wrote:
+> Il 04/07/2014 11:36, Christoph Hellwig ha scritto:
+>> I got an older Ack from Tomo for the removal, and some sort of acks
+>> for the ibmvscsi target removal from Brian, Paolo and Nathan.
 >>
->> Don't loop through all the devices even after
->> finding the one we're looking for
+>> Can I get some formal reviews for the code removal patches (1-4) so =
+I
+>> can queue this up for 3.17?
 >
-> The comments in the code seem to indicate that we want to modify
-> the queue depth for all LUNs on a given target.
+> Not that there's much to review there. :)
 >
-> Ccing Mike and Vasu as they wrote this code.
+> Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
 >
-Indeed, that was the idea.
-This piece of code tries to keep track of the remote port queue=20
-depth, which isn't represented at all.
-Thing is, each remote target has a target queue depth which can hold=20
-only so many outstanding SCSI requests. If that is full it'll return=20
-BUSY for _all_ LUNs served from that port.
-And the very _next_ command after the one which filled the target=20
-queue will get the BUSY status.
-So we need to decrease the queue depth on _all_ LUNs here to avoid=20
-starvation of individual devices.
+And I checked with our partners which might have some interest in=20
+keeping it. Turns out they haven't.
 
-Hence I guess this is not the correct fix.
+So:
+
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
 Cheers,
 
