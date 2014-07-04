@@ -1,60 +1,54 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 2/2] ib_srp: 64bit LUN fixes
-Date: Fri, 04 Jul 2014 16:12:57 +0200
-Message-ID: <53B6B669.10704@suse.de>
-References: <1404474875-109997-1-git-send-email-hare@suse.de> <1404474875-109997-3-git-send-email-hare@suse.de> <53B69E97.4050901@acm.org> <53B6A5B4.2040807@suse.de> <20140704134835.GB12345@infradead.org>
+Subject: virtio_scsi LUN usage
+Date: Fri, 04 Jul 2014 16:29:00 +0200
+Message-ID: <53B6BA2C.80103@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1;
 	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:56108 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:56351 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752802AbaGDOM6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 4 Jul 2014 10:12:58 -0400
-In-Reply-To: <20140704134835.GB12345@infradead.org>
+	id S1751948AbaGDO3C (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 4 Jul 2014 10:29:02 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Bart Van Assche <bvanassche@acm.org>, James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org
+To: Paolo Bonzini <pbonzini@redhat.com>
+Cc: Stefan Hajnoczi <stefanha@redhat.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On 07/04/2014 03:48 PM, Christoph Hellwig wrote:
-> On Fri, Jul 04, 2014 at 03:01:40PM +0200, Hannes Reinecke wrote:
->> What I would like to do is to provide accessor functions for the scs=
-i lun;
->> I've started this already for the older SCSI parallel drivers (see m=
-y
->> earlier patch).
->> Once everything is moved over to accessors it should be trivial to m=
-ove from
->> the current scsilun_to_int representation in struct scsi_device to t=
-he
->> 'real' LUN.
->>
->> Adding another field would be bit of an overkill IMO, seeing that we=
- can
->> achieve the very same thing with a bit of code reshuffling.
->>
->> James, Christoph, what's your opinion on using accessors?
->> Would solve this issue nicely, and we can also use proper functions =
-for HBAs
->> only capable of handling 32bit LUNs.
->> Drawback is that we would need accessors also for this capable of ha=
-ndling
->> full 64bit LUNs, thus potentially incur some overhead there.
->
-> I think storing the struct scsi_lun in the scsi_device is the right w=
-ay
-> to go ahead.  Any "accessors" for 8 or 32-bit LUNs should be simply
-> enough by just ignoring bits in the array, so there's very little
-> performance overhead.
->
-> If we can get rid of the old scalar LUN field that would be great,
-> and given that we know the printk format fallout already it doesn't l=
-ook
-> like too much work.  Do you want to look into this?
->
-Already working on it.
+Hi Paolo,
+
+virtio_scsi has this:
+
+static void virtio_scsi_init_hdr(struct virtio_scsi_cmd_req *cmd,
+				 struct scsi_cmnd *sc)
+{
+	cmd->lun[0] =3D 1;
+	cmd->lun[1] =3D sc->device->id;
+	cmd->lun[2] =3D (sc->device->lun >> 8) | 0x40;
+	cmd->lun[3] =3D sc->device->lun & 0xff;
+	cmd->tag =3D (unsigned long)sc;
+	cmd->task_attr =3D VIRTIO_SCSI_S_SIMPLE;
+	cmd->prio =3D 0;
+	cmd->crn =3D 0;
+}
+
+As you might've seen I'm currently working on updating the SCSI=20
+stack to use 64-bit LUNs.
+So while virtio scsi is in principle capable of using 64-bit LUNs,=20
+this peculiar usage makes it impossible to actually _use_ 64-bit LUNs.
+Can't we get rid of this encoding and let the backend provide is=20
+with correct numbers?
+
+It should work if we were just to implement a REPORT_LUN intercept,=20
+which sets the correct top two bytes in the command ... with that we=20
+should be getting only the LUNs for a particular target, and could=20
+then just use the provided LUN numbers as-is.
+
+Long term I would prefer to have another 'target' field (preferably=20
+also 64bit wide), which could be used to specify the target=20
+directly. But that would require a spec change and feature flags=20
+yadda yadda...
 
 Cheers,
 
