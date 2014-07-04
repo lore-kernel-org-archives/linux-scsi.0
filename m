@@ -1,62 +1,35 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 2/2] ib_srp: 64bit LUN fixes
-Date: Fri, 04 Jul 2014 16:41:24 +0200
-Message-ID: <53B6BD14.5050606@suse.de>
-References: <1404474875-109997-1-git-send-email-hare@suse.de> <1404474875-109997-3-git-send-email-hare@suse.de> <53B69E97.4050901@acm.org> <53B6A5B4.2040807@suse.de> <20140704134835.GB12345@infradead.org> <53B6B669.10704@suse.de> <53B6BC72.6040204@acm.org>
+From: loody <miloody-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Some question about usb scsi storage driver
+Date: Fri, 4 Jul 2014 22:44:55 +0800
+Message-ID: <CANudz+sXH55BJDWf3zy18ERixQWDnqtfv7GHmHPsqqJG9EGyxg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:56474 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751948AbaGDOl0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 4 Jul 2014 10:41:26 -0400
-In-Reply-To: <53B6BC72.6040204@acm.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: "linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>, Christoph Hellwig <hch@infradead.org>
-Cc: James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org
 
-On 07/04/2014 04:38 PM, Bart Van Assche wrote:
-> On 07/04/14 16:12, Hannes Reinecke wrote:
->> On 07/04/2014 03:48 PM, Christoph Hellwig wrote:
->>> I think storing the struct scsi_lun in the scsi_device is the right=
- way
->>> to go ahead.  Any "accessors" for 8 or 32-bit LUNs should be simply
->>> enough by just ignoring bits in the array, so there's very little
->>> performance overhead.
->>>
->>> If we can get rid of the old scalar LUN field that would be great,
->>> and given that we know the printk format fallout already it doesn't=
- look
->>> like too much work.  Do you want to look into this?
->>
->> Already working on it.
->
-> That sounds great. Regarding the SRP initiator driver: if the "__be64
-> lun" declarations in <scsi/srp.h> are changed into "struct scsi_lun l=
-un"
-> then that allows to encode / decode LUNs inside the SRP initiator
-> without having to cast the address of these "lun" members into struct
-> scsi_lun *. In case you would prefer me to have a look into this, ple=
-ase
-> let me know.
->
-That would be perfect.
-Most of the HBAs supporting 64bit LUNs internally are already doing=20
-this.
+hi all:
+when I trace kernel driver source about usb scsi storage driver, I
+have below 2 questions:
+1. in sd.c -> static int sd_probe(struct device *dev)
+    we use below macro to get scsi_device.
+           struct scsi_device *sdp = to_scsi_device(dev);
 
-Cheers,
+    take usb for example, is usb storage driver allocate memory for
+scsi_device then calling sd_probe?
+    I am looking for usb_stor_probe1 and usb_stor_probe2 but not find
+where it is.
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+2. at the end of sd.c -> sd_probe, why we call async_schedule_domain like below
+      async_schedule_domain(sd_probe_async, sdkp, &scsi_sd_probe_domain);
+    to finish scsi device initialization?
+    Couldn't we put what sd_probe_async directly in sd_probe?
+    is there any benefit to do so?
+
+-- 
+Regards,
 --
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
