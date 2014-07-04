@@ -1,60 +1,49 @@
-From: Himangi Saraogi <himangi774@gmail.com>
-Subject: [PATCH] qla4xxx: Return -ENOMEM on memory allocation failure
-Date: Fri, 4 Jul 2014 23:57:56 +0530
-Message-ID: <20140704182756.GA9319@himangi-Dell>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH] scsi: break from queue depth adjusting loops when device
+ found
+Date: Fri, 04 Jul 2014 14:36:28 -0400
+Message-ID: <53B6F42C.7030607@interlog.com>
+References: <20140703150557.21608.37072.stgit@beardog.cce.hp.com> <20140703171106.GA16788@lst.de> <53B5910F.1080405@cs.wisc.edu>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:53064 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752914AbaGDS2F (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Jul 2014 14:28:05 -0400
-Content-Disposition: inline
+Received: from smtp.infotech.no ([82.134.31.41]:47884 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750992AbaGDSgl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 4 Jul 2014 14:36:41 -0400
+In-Reply-To: <53B5910F.1080405@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vikas Chaudhary <vikas.chaudhary@qlogic.com>, iscsi-driver@qlogic.com, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: julia.lawall@lip6.fr
+To: Mike Christie <michaelc@cs.wisc.edu>, Christoph Hellwig <hch@lst.de>
+Cc: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>, james.bottomley@parallels.com, elliott@hp.com, stephenmcameron@gmail.com, linux-scsi@vger.kernel.org, Vasu Dev <vasu.dev@linux.intel.com>, James Smart <James.Smart@Emulex.Com>
 
-In this code, 0 is returned on memory allocation failure, even though
-other failures return -ENOMEM or other similar values.
+On 14-07-03 01:21 PM, Mike Christie wrote:
+> On 07/03/2014 12:11 PM, Christoph Hellwig wrote:
+>> On Thu, Jul 03, 2014 at 10:05:57AM -0500, Stephen M. Cameron wrote:
+>>> From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+>>>
+>>> Don't loop through all the devices even after
+>>> finding the one we're looking for
+>>
+>> The comments in the code seem to indicate that we want to modify
+>> the queue depth for all LUNs on a given target.
+>>
+>> Ccing Mike and Vasu as they wrote this code.
+>>
+>
+> Ccing James Smart for more details.
+>
+> We copied this behavior from lpfc's SAM_STAT_TASK_SET_FULL handling
+> (look at around the 2.6.32 kernel for reference).
 
-A simplified version of the Coccinelle semantic match that finds this
-problem is as follows:
+Perhaps there should be a knob to control this, maybe within
+the scope of a host. I have one RAID controller that has a
+JBOD mode in which real disks are presented as LUs in the same
+target. Obviously the TSF (queue_type and other) capabilities
+of those real disks might differ.
 
-// <smpl>
-@@
-expression ret;
-expression x,e1,e2,e3;
-identifier alloc;
-@@
+Doug Gilbert
 
-ret = 0
-... when != ret = e1
-*x = alloc(...)
-... when != ret = e2
-if (x == NULL) { ... when != ret = e3
-  return ret;
-}
-// </smpl>
-
-Signed-off-by: Himangi Saraogi <himangi774@gmail.com>
-Acked-by: Julia Lawall <julia.lawall@lip6.fr>
----
- drivers/scsi/qla4xxx/ql4_os.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index c5d9564..72ba671 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -1050,6 +1050,7 @@ static int qla4xxx_get_host_stats(struct Scsi_Host *shost, char *buf, int len)
- 	if (!ql_iscsi_stats) {
- 		ql4_printk(KERN_ERR, ha,
- 			   "Unable to allocate memory for iscsi stats\n");
-+		ret = -ENOMEM;
- 		goto exit_host_stats;
- 	}
- 
--- 
-1.9.1
 
