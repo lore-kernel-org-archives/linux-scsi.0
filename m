@@ -1,49 +1,62 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH] scsi: break from queue depth adjusting loops when device
- found
-Date: Fri, 04 Jul 2014 14:36:28 -0400
-Message-ID: <53B6F42C.7030607@interlog.com>
-References: <20140703150557.21608.37072.stgit@beardog.cce.hp.com> <20140703171106.GA16788@lst.de> <53B5910F.1080405@cs.wisc.edu>
-Reply-To: dgilbert@interlog.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Fabian Frederick <fabf@skynet.be>
+Subject: [PATCH 1/1] aic79xx: replace kmalloc/memset 0 by kzalloc
+Date: Fri,  4 Jul 2014 20:42:04 +0200
+Message-ID: <1404499324-14284-1-git-send-email-fabf@skynet.be>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:47884 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750992AbaGDSgl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 4 Jul 2014 14:36:41 -0400
-In-Reply-To: <53B5910F.1080405@cs.wisc.edu>
+Received: from mailrelay004.isp.belgacom.be ([195.238.6.170]:7269 "EHLO
+	mailrelay004.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752670AbaGDSmK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Jul 2014 14:42:10 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>, Christoph Hellwig <hch@lst.de>
-Cc: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>, james.bottomley@parallels.com, elliott@hp.com, stephenmcameron@gmail.com, linux-scsi@vger.kernel.org, Vasu Dev <vasu.dev@linux.intel.com>, James Smart <James.Smart@Emulex.Com>
+To: linux-kernel@vger.kernel.org
+Cc: Fabian Frederick <fabf@skynet.be>, Hannes Reinecke <hare@suse.de>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
 
-On 14-07-03 01:21 PM, Mike Christie wrote:
-> On 07/03/2014 12:11 PM, Christoph Hellwig wrote:
->> On Thu, Jul 03, 2014 at 10:05:57AM -0500, Stephen M. Cameron wrote:
->>> From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
->>>
->>> Don't loop through all the devices even after
->>> finding the one we're looking for
->>
->> The comments in the code seem to indicate that we want to modify
->> the queue depth for all LUNs on a given target.
->>
->> Ccing Mike and Vasu as they wrote this code.
->>
->
-> Ccing James Smart for more details.
->
-> We copied this behavior from lpfc's SAM_STAT_TASK_SET_FULL handling
-> (look at around the 2.6.32 kernel for reference).
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org
+Signed-off-by: Fabian Frederick <fabf@skynet.be>
+---
+ drivers/scsi/aic7xxx/aic79xx_core.c | 3 +--
+ drivers/scsi/aic7xxx/aic79xx_osm.c  | 3 +--
+ 2 files changed, 2 insertions(+), 4 deletions(-)
 
-Perhaps there should be a knob to control this, maybe within
-the scope of a host. I have one RAID controller that has a
-JBOD mode in which real disks are presented as LUs in the same
-target. Obviously the TSF (queue_type and other) capabilities
-of those real disks might differ.
-
-Doug Gilbert
-
+diff --git a/drivers/scsi/aic7xxx/aic79xx_core.c b/drivers/scsi/aic7xxx/aic79xx_core.c
+index 0bcacf7..9ce383c 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_core.c
++++ b/drivers/scsi/aic7xxx/aic79xx_core.c
+@@ -10437,14 +10437,13 @@ ahd_handle_en_lun(struct ahd_softc *ahd, struct cam_sim *sim, union ccb *ccb)
+ 				return;
+ 			}
+ 		}
+-		lstate = kmalloc(sizeof(*lstate), GFP_ATOMIC);
++		lstate = kzalloc(sizeof(*lstate), GFP_ATOMIC);
+ 		if (lstate == NULL) {
+ 			xpt_print_path(ccb->ccb_h.path);
+ 			printk("Couldn't allocate lstate\n");
+ 			ccb->ccb_h.status = CAM_RESRC_UNAVAIL;
+ 			return;
+ 		}
+-		memset(lstate, 0, sizeof(*lstate));
+ 		status = xpt_create_path(&lstate->path, /*periph*/NULL,
+ 					 xpt_path_path_id(ccb->ccb_h.path),
+ 					 xpt_path_target_id(ccb->ccb_h.path),
+diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c b/drivers/scsi/aic7xxx/aic79xx_osm.c
+index 69d5c43..76b5fec 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_osm.c
++++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
+@@ -1325,10 +1325,9 @@ int
+ ahd_platform_alloc(struct ahd_softc *ahd, void *platform_arg)
+ {
+ 	ahd->platform_data =
+-	    kmalloc(sizeof(struct ahd_platform_data), GFP_ATOMIC);
++	    kzalloc(sizeof(struct ahd_platform_data), GFP_ATOMIC);
+ 	if (ahd->platform_data == NULL)
+ 		return (ENOMEM);
+-	memset(ahd->platform_data, 0, sizeof(struct ahd_platform_data));
+ 	ahd->platform_data->irq = AHD_LINUX_NOIRQ;
+ 	ahd_lockinit(ahd);
+ 	ahd->seltime = (aic79xx_seltime & 0x3) << 4;
+-- 
+1.9.1
 
