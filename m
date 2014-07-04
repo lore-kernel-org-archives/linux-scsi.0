@@ -1,83 +1,176 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 0/2] Fixed for 64bit LUNs
-Date: Fri,  4 Jul 2014 13:54:33 +0200
-Message-ID: <1404474875-109997-1-git-send-email-hare@suse.de>
+Subject: [PATCH 2/2] ib_srp: 64bit LUN fixes
+Date: Fri,  4 Jul 2014 13:54:35 +0200
+Message-ID: <1404474875-109997-3-git-send-email-hare@suse.de>
+References: <1404474875-109997-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:52862 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:52863 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752289AbaGDLyj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1752935AbaGDLyj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Fri, 4 Jul 2014 07:54:39 -0400
+In-Reply-To: <1404474875-109997-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Bart van Assche <bvanassche@acm.org>
 
-Hi Christoph,
+SRP is capable of handling 64bit LUNs, so as we now have proper
+support for it we can modify the driver to use the standard functions.
 
-here are some more fixes for 64bit LUNs, which should fix the latest
-built issues from Fengguang.
-Most notably I've introduced a new accessor 'sdev_scsi2lun' for those
-devices which are not capable of handling LUNs higher than 255.
-And I've removed the custom LUN handling code from ib_srp.
-
-Hannes Reinecke (2):
-  Use sdev_scsi2lun for SCSI parallel drivers
-  ib_srp: 64bit LUN fixes
-
- arch/ia64/hp/sim/simscsi.c            |  2 +-
+Cc: Bart van Assche <bvanassche@acm.org>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
  drivers/infiniband/ulp/srp/ib_srp.c   |  9 ++--
- drivers/infiniband/ulp/srpt/ib_srpt.c | 81 +--------------------------------
- drivers/scsi/53c700.c                 | 12 ++---
- drivers/scsi/BusLogic.c               |  2 +-
- drivers/scsi/NCR5380.c                | 32 ++++++-------
- drivers/scsi/NCR53c406a.c             |  2 +-
- drivers/scsi/a100u2w.c                |  4 +-
- drivers/scsi/advansys.c               | 16 +++----
- drivers/scsi/aha152x.c                | 13 +++---
- drivers/scsi/aha1542.c                |  4 +-
- drivers/scsi/aha1740.c                |  2 +-
- drivers/scsi/aic7xxx/aic79xx_osm.c    | 19 ++++----
- drivers/scsi/aic7xxx/aic79xx_proc.c   |  2 +-
- drivers/scsi/aic7xxx/aic7xxx_osm.c    | 23 +++++-----
- drivers/scsi/aic7xxx/aic7xxx_proc.c   |  2 +-
- drivers/scsi/arm/acornscsi.c          | 20 ++++----
- drivers/scsi/arm/fas216.c             | 15 +++---
- drivers/scsi/arm/queue.c              |  8 ++--
- drivers/scsi/atari_NCR5380.c          | 81 +++++++++++++++++----------------
- drivers/scsi/atp870u.c                |  2 +-
- drivers/scsi/bnx2fc/bnx2fc_io.c       |  4 +-
- drivers/scsi/ch.c                     | 16 +++----
- drivers/scsi/dc395x.c                 | 73 ++++++++++++++---------------
- drivers/scsi/eata.c                   |  4 +-
- drivers/scsi/eata_pio.c               |  2 +-
- drivers/scsi/esp_scsi.c               |  6 +--
- drivers/scsi/g_NCR5380.c              |  2 +-
- drivers/scsi/gdth.c                   |  4 +-
- drivers/scsi/hptiop.c                 |  6 +--
- drivers/scsi/in2000.c                 | 36 ++++++++-------
- drivers/scsi/initio.c                 |  4 +-
- drivers/scsi/megaraid.c               | 10 ++--
- drivers/scsi/mesh.c                   |  6 +--
- drivers/scsi/mvumi.c                  |  2 +-
- drivers/scsi/ncr53c8xx.c              | 33 +++++++-------
- drivers/scsi/nsp32.c                  | 14 +++---
- drivers/scsi/ps3rom.c                 |  2 +-
- drivers/scsi/qlogicpti.c              |  6 +--
- drivers/scsi/scsi.c                   |  2 +-
- drivers/scsi/stex.c                   |  2 +-
- drivers/scsi/sun3_NCR5380.c           | 86 +++++++++++++++++++----------------
- drivers/scsi/sym53c8xx_2/sym_glue.c   | 19 ++++----
- drivers/scsi/sym53c8xx_2/sym_hipd.c   | 10 ++--
- drivers/scsi/tmscsim.c                | 12 +++--
- drivers/scsi/u14-34f.c                |  6 +--
- drivers/scsi/ufs/ufshcd.c             |  4 +-
- drivers/scsi/ultrastor.c              |  2 +-
- drivers/scsi/wd33c93.c                | 35 ++++++++------
- drivers/scsi/wd7000.c                 |  3 +-
- drivers/staging/rts5208/rtsx.c        |  4 +-
- include/scsi/scsi_device.h            |  5 ++
- 52 files changed, 373 insertions(+), 398 deletions(-)
+ drivers/infiniband/ulp/srpt/ib_srpt.c | 81 +----------------------------------
+ 2 files changed, 7 insertions(+), 83 deletions(-)
 
+diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp/srp/ib_srp.c
+index e3c2c5b..eb55f25 100644
+--- a/drivers/infiniband/ulp/srp/ib_srp.c
++++ b/drivers/infiniband/ulp/srp/ib_srp.c
+@@ -1713,7 +1713,8 @@ static void srp_process_aer_req(struct srp_target_port *target,
+ 	s32 delta = be32_to_cpu(req->req_lim_delta);
+ 
+ 	shost_printk(KERN_ERR, target->scsi_host, PFX
+-		     "ignoring AER for LUN %llu\n", be64_to_cpu(req->lun));
++		     "ignoring AER for LUN %llu\n",
++		     scsilun_to_int((struct scsi_lun *)&req->lun));
+ 
+ 	if (srp_response_common(target, delta, &rsp, sizeof rsp))
+ 		shost_printk(KERN_ERR, target->scsi_host, PFX
+@@ -1887,7 +1888,7 @@ static int srp_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *scmnd)
+ 	memset(cmd, 0, sizeof *cmd);
+ 
+ 	cmd->opcode = SRP_CMD;
+-	cmd->lun    = cpu_to_be64((u64) scmnd->device->lun << 48);
++	int_to_scsilun(scmnd->device->lun, (struct scsi_lun *)&cmd->lun);
+ 	cmd->tag    = req->index;
+ 	memcpy(cmd->cdb, scmnd->cmnd, scmnd->cmd_len);
+ 
+@@ -2305,7 +2306,7 @@ srp_change_queue_depth(struct scsi_device *sdev, int qdepth, int reason)
+ }
+ 
+ static int srp_send_tsk_mgmt(struct srp_target_port *target,
+-			     u64 req_tag, unsigned int lun, u8 func)
++			     u64 req_tag, u64 lun, u8 func)
+ {
+ 	struct srp_rport *rport = target->rport;
+ 	struct ib_device *dev = target->srp_host->srp_dev->dev;
+@@ -2338,7 +2339,7 @@ static int srp_send_tsk_mgmt(struct srp_target_port *target,
+ 	memset(tsk_mgmt, 0, sizeof *tsk_mgmt);
+ 
+ 	tsk_mgmt->opcode 	= SRP_TSK_MGMT;
+-	tsk_mgmt->lun		= cpu_to_be64((u64) lun << 48);
++	int_to_scsilun(lun, (struct scsi_lun *)&tsk_mgmt->lun);
+ 	tsk_mgmt->tag		= req_tag | SRP_TAG_TSK_MGMT;
+ 	tsk_mgmt->tsk_mgmt_func = func;
+ 	tsk_mgmt->task_tag	= req_tag;
+diff --git a/drivers/infiniband/ulp/srpt/ib_srpt.c b/drivers/infiniband/ulp/srpt/ib_srpt.c
+index fe09f27..232c29a 100644
+--- a/drivers/infiniband/ulp/srpt/ib_srpt.c
++++ b/drivers/infiniband/ulp/srpt/ib_srpt.c
+@@ -1601,81 +1601,6 @@ static int srpt_build_tskmgmt_rsp(struct srpt_rdma_ch *ch,
+ 	return resp_len;
+ }
+ 
+-#define NO_SUCH_LUN ((uint64_t)-1LL)
+-
+-/*
+- * SCSI LUN addressing method. See also SAM-2 and the section about
+- * eight byte LUNs.
+- */
+-enum scsi_lun_addr_method {
+-	SCSI_LUN_ADDR_METHOD_PERIPHERAL   = 0,
+-	SCSI_LUN_ADDR_METHOD_FLAT         = 1,
+-	SCSI_LUN_ADDR_METHOD_LUN          = 2,
+-	SCSI_LUN_ADDR_METHOD_EXTENDED_LUN = 3,
+-};
+-
+-/*
+- * srpt_unpack_lun() - Convert from network LUN to linear LUN.
+- *
+- * Convert an 2-byte, 4-byte, 6-byte or 8-byte LUN structure in network byte
+- * order (big endian) to a linear LUN. Supports three LUN addressing methods:
+- * peripheral, flat and logical unit. See also SAM-2, section 4.9.4 (page 40).
+- */
+-static uint64_t srpt_unpack_lun(const uint8_t *lun, int len)
+-{
+-	uint64_t res = NO_SUCH_LUN;
+-	int addressing_method;
+-
+-	if (unlikely(len < 2)) {
+-		printk(KERN_ERR "Illegal LUN length %d, expected 2 bytes or "
+-		       "more", len);
+-		goto out;
+-	}
+-
+-	switch (len) {
+-	case 8:
+-		if ((*((__be64 *)lun) &
+-		     __constant_cpu_to_be64(0x0000FFFFFFFFFFFFLL)) != 0)
+-			goto out_err;
+-		break;
+-	case 4:
+-		if (*((__be16 *)&lun[2]) != 0)
+-			goto out_err;
+-		break;
+-	case 6:
+-		if (*((__be32 *)&lun[2]) != 0)
+-			goto out_err;
+-		break;
+-	case 2:
+-		break;
+-	default:
+-		goto out_err;
+-	}
+-
+-	addressing_method = (*lun) >> 6; /* highest two bits of byte 0 */
+-	switch (addressing_method) {
+-	case SCSI_LUN_ADDR_METHOD_PERIPHERAL:
+-	case SCSI_LUN_ADDR_METHOD_FLAT:
+-	case SCSI_LUN_ADDR_METHOD_LUN:
+-		res = *(lun + 1) | (((*lun) & 0x3f) << 8);
+-		break;
+-
+-	case SCSI_LUN_ADDR_METHOD_EXTENDED_LUN:
+-	default:
+-		printk(KERN_ERR "Unimplemented LUN addressing method %u",
+-		       addressing_method);
+-		break;
+-	}
+-
+-out:
+-	return res;
+-
+-out_err:
+-	printk(KERN_ERR "Support for multi-level LUNs has not yet been"
+-	       " implemented");
+-	goto out;
+-}
+-
+ static int srpt_check_stop_free(struct se_cmd *cmd)
+ {
+ 	struct srpt_send_ioctx *ioctx = container_of(cmd,
+@@ -1728,8 +1653,7 @@ static int srpt_handle_cmd(struct srpt_rdma_ch *ch,
+ 		goto send_sense;
+ 	}
+ 
+-	unpacked_lun = srpt_unpack_lun((uint8_t *)&srp_cmd->lun,
+-				       sizeof(srp_cmd->lun));
++	unpacked_lun = scsilun_to_int((struct scsi_lun *)&srp_cmd->lun);
+ 	rc = target_submit_cmd(cmd, ch->sess, srp_cmd->cdb,
+ 			&send_ioctx->sense_data[0], unpacked_lun, data_len,
+ 			MSG_SIMPLE_TAG, dir, TARGET_SCF_ACK_KREF);
+@@ -1840,8 +1764,7 @@ static void srpt_handle_tsk_mgmt(struct srpt_rdma_ch *ch,
+ 			TMR_TASK_MGMT_FUNCTION_NOT_SUPPORTED;
+ 		goto fail;
+ 	}
+-	unpacked_lun = srpt_unpack_lun((uint8_t *)&srp_tsk->lun,
+-				       sizeof(srp_tsk->lun));
++	unpacked_lun = scsilun_to_int((struct scsi_lun *)&srp_tsk->lun);
+ 
+ 	if (srp_tsk->tsk_mgmt_func == SRP_TSK_ABORT_TASK) {
+ 		rc = srpt_rx_mgmt_fn_tag(send_ioctx, srp_tsk->task_tag);
 -- 
 1.7.12.4
 
