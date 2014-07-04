@@ -1,32 +1,48 @@
-From: Maurizio Lombardi <mlombard-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
 Subject: Re: Some question about usb scsi storage driver
-Date: Fri, 04 Jul 2014 17:47:28 +0200
-Message-ID: <53B6CC90.4070805@redhat.com>
+Date: Fri, 4 Jul 2014 12:35:29 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1407041232230.6607-100000@netrider.rowland.org>
 References: <CANudz+sXH55BJDWf3zy18ERixQWDnqtfv7GHmHPsqqJG9EGyxg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 In-Reply-To: <CANudz+sXH55BJDWf3zy18ERixQWDnqtfv7GHmHPsqqJG9EGyxg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: loody <miloody-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: loody <miloody-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: "linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
+On Fri, 4 Jul 2014, loody wrote:
 
-
-On 07/04/2014 04:44 PM, loody wrote:
+> hi all:
+> when I trace kernel driver source about usb scsi storage driver, I
+> have below 2 questions:
+> 1. in sd.c -> static int sd_probe(struct device *dev)
+>     we use below macro to get scsi_device.
+>            struct scsi_device *sdp = to_scsi_device(dev);
 > 
+>     take usb for example, is usb storage driver allocate memory for
+> scsi_device then calling sd_probe?
+
+No.
+
+>     I am looking for usb_stor_probe1 and usb_stor_probe2 but not find
+> where it is.
+
+Because it's not there.  The memory is allocated by 
+drivers/scsi/scsi_scan.c:scsi_alloc_sdev().
+
 > 2. at the end of sd.c -> sd_probe, why we call async_schedule_domain like below
 >       async_schedule_domain(sd_probe_async, sdkp, &scsi_sd_probe_domain);
 >     to finish scsi device initialization?
 >     Couldn't we put what sd_probe_async directly in sd_probe?
 >     is there any benefit to do so?
 
-A possible explanation may be that sd_probe_async() calls sd_spinup_disk(), this function spins up the drive and
-may block for some seconds, so it is better to do that asynchronously.
+Like Maurizio said, the benefit is that the probe routine will return
+quickly so that other devices can be probed while the drive spins up.
 
-Regards,
-Maurizio Lombardi
+Alan Stern
+
 --
 To unsubscribe from this list: send the line "unsubscribe linux-usb" in
 the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
