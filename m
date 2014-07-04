@@ -1,53 +1,43 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: tgt infrastructure removal
-Date: Fri, 04 Jul 2014 12:54:13 +0200
-Message-ID: <53B687D5.3080105@suse.de>
-References: <1397557614-21243-1-git-send-email-hch@lst.de> <20140704093643.GA21482@infradead.org> <53B67976.4030900@redhat.com>
+From: loody <miloody@gmail.com>
+Subject: Re: how to firing device event when SD card inserting usb card reader
+Date: Fri, 4 Jul 2014 19:23:22 +0800
+Message-ID: <CANudz+tjtqA=OEWdBymec1U+b9vhcYt+ry=XM=XR7ZohVALLDg@mail.gmail.com>
+References: <CANudz+tSTQLOQpNx71+h+cCUnoEshiCyDe+e=9E_ajvoj3a8Dg@mail.gmail.com>
+	<Pine.LNX.4.44L0.1406261157000.953-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:51912 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757696AbaGDKyR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 4 Jul 2014 06:54:17 -0400
-In-Reply-To: <53B67976.4030900@redhat.com>
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:36481 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752289AbaGDLXY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Jul 2014 07:23:24 -0400
+In-Reply-To: <Pine.LNX.4.44L0.1406261157000.953-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Paolo Bonzini <pbonzini@redhat.com>, Christoph Hellwig <hch@infradead.org>, Christoph Hellwig <hch@lst.de>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Brian King <brking@linux.vnet.ibm.com>, Nathan Fontenot <nfont@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>, USB list <linux-usb@vger.kernel.org>
 
-On 07/04/2014 11:52 AM, Paolo Bonzini wrote:
-> Il 04/07/2014 11:36, Christoph Hellwig ha scritto:
->> I got an older Ack from Tomo for the removal, and some sort of acks
->> for the ibmvscsi target removal from Brian, Paolo and Nathan.
+hi Alan:
+
+2014-06-26 23:57 GMT+08:00 Alan Stern <stern@rowland.harvard.edu>:
+> On Thu, 26 Jun 2014, loody wrote:
+>
+>> hi all:
+>> I try below flow:
+>> 1. plug in usb card reader
+>> 2. wait 2 seconds
+>> 3. plug in SD card
 >>
->> Can I get some formal reviews for the code removal patches (1-4) so =
-I
->> can queue this up for 3.17?
+>> on ubuntu PC system, the udev can get SD plug in event
+>> but on my embedded system, there is no udev plug event when SD plug in.
+>>
+>> Is this issue related to media change command?
+>> if so, should I enable kernel config or do anything in user mode program?
+>>
+>> thanks for your help in advance,
 >
-> Not that there's much to review there. :)
->
-> Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
->
-And I checked with our partners which might have some interest in=20
-keeping it. Turns out they haven't.
+> What does usbmon show?
+after we enable CONFIG_SCSI_MULTI_LUN, we can udevent when SD plug in
+card reader.
 
-So:
-
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+appreciate your kind help,
