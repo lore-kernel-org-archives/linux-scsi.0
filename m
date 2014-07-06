@@ -1,123 +1,30 @@
 From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: [PATCH 1/2] virtio-scsi: replace target spinlock with seqcount
-Date: Sun,  6 Jul 2014 16:39:26 +0200
-Message-ID: <1404657567-17133-2-git-send-email-pbonzini@redhat.com>
-References: <1404657567-17133-1-git-send-email-pbonzini@redhat.com>
+Subject: [PATCH 0/2] virtio-scsi queue for 3.17
+Date: Sun,  6 Jul 2014 16:39:25 +0200
+Message-ID: <1404657567-17133-1-git-send-email-pbonzini@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1404657567-17133-1-git-send-email-pbonzini@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org, Ming Lei <ming.lei@canonical.com>
+Cc: linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Ming Lei <ming.lei@canonical.com>
+Christoph asked me to rebase the two virtio-scsi patches from
+http://thread.gmane.org/gmane.linux.kernel/1717796 that do not apply
+anymore, patch 2 and 6.
 
-The spinlock of tgt_lock is only for serializing read and write
-req_vq, one lockless seqcount is enough for the purpose.
+These are on top of his drivers-for-3.16 branch, more precisely commit
+8faeb529b2da (virtio-scsi: fix various bad behavior on aborted requests).
 
-On one 16core VM with vhost-scsi backend, the patch can improve
-IOPS with 3% on random read test.
+Paolo
 
-Signed-off-by: Ming Lei <ming.lei@canonical.com>
-[Add initialization in virtscsi_target_alloc. - Paolo]
-Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
----
- drivers/scsi/virtio_scsi.c | 42 +++++++++++++++++++++++++++++-------------
- 1 file changed, 29 insertions(+), 13 deletions(-)
+Ming Lei (1):
+  virtio-scsi: replace target spinlock with seqcount
 
-diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-index 308256b5e4cb..f67a872de14b 100644
---- a/drivers/scsi/virtio_scsi.c
-+++ b/drivers/scsi/virtio_scsi.c
-@@ -27,6 +27,7 @@
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_device.h>
- #include <scsi/scsi_cmnd.h>
-+#include <linux/seqlock.h>
- 
- #define VIRTIO_SCSI_MEMPOOL_SZ 64
- #define VIRTIO_SCSI_EVENT_LEN 8
-@@ -75,18 +76,16 @@ struct virtio_scsi_vq {
-  * queue, and also lets the driver optimize the IRQ affinity for the virtqueues
-  * (each virtqueue's affinity is set to the CPU that "owns" the queue).
-  *
-- * tgt_lock is held to serialize reading and writing req_vq. Reading req_vq
-- * could be done locklessly, but we do not do it yet.
-+ * tgt_seq is held to serialize reading and writing req_vq.
-  *
-  * Decrements of reqs are never concurrent with writes of req_vq: before the
-  * decrement reqs will be != 0; after the decrement the virtqueue completion
-  * routine will not use the req_vq so it can be changed by a new request.
-- * Thus they can happen outside the tgt_lock, provided of course we make reqs
-+ * Thus they can happen outside the tgt_seq, provided of course we make reqs
-  * an atomic_t.
-  */
- struct virtio_scsi_target_state {
--	/* This spinlock never held at the same time as vq_lock. */
--	spinlock_t tgt_lock;
-+	seqcount_t tgt_seq;
- 
- 	/* Count of outstanding requests. */
- 	atomic_t reqs;
-@@ -559,19 +558,33 @@ static struct virtio_scsi_vq *virtscsi_pick_vq(struct virtio_scsi *vscsi,
- 	unsigned long flags;
- 	u32 queue_num;
- 
--	spin_lock_irqsave(&tgt->tgt_lock, flags);
-+	local_irq_save(flags);
-+	if (atomic_inc_return(&tgt->reqs) > 1) {
-+		unsigned long seq;
-+
-+		do {
-+			seq = read_seqcount_begin(&tgt->tgt_seq);
-+			vq = tgt->req_vq;
-+		} while (read_seqcount_retry(&tgt->tgt_seq, seq));
-+	} else {
-+		/* no writes can be concurrent because of atomic_t */
-+		write_seqcount_begin(&tgt->tgt_seq);
-+
-+		/* keep previous req_vq if a reader just arrived */
-+		if (unlikely(atomic_read(&tgt->reqs) > 1)) {
-+			vq = tgt->req_vq;
-+			goto unlock;
-+		}
- 
--	if (atomic_inc_return(&tgt->reqs) > 1)
--		vq = tgt->req_vq;
--	else {
- 		queue_num = smp_processor_id();
- 		while (unlikely(queue_num >= vscsi->num_queues))
- 			queue_num -= vscsi->num_queues;
--
- 		tgt->req_vq = vq = &vscsi->req_vqs[queue_num];
-+ unlock:
-+		write_seqcount_end(&tgt->tgt_seq);
- 	}
-+	local_irq_restore(flags);
- 
--	spin_unlock_irqrestore(&tgt->tgt_lock, flags);
- 	return vq;
- }
- 
-@@ -667,14 +680,17 @@ static int virtscsi_abort(struct scsi_cmnd *sc)
- 
- static int virtscsi_target_alloc(struct scsi_target *starget)
- {
-+	struct Scsi_Host *sh = dev_to_shost(starget->dev.parent);
-+	struct virtio_scsi *vscsi = shost_priv(sh);
-+
- 	struct virtio_scsi_target_state *tgt =
- 				kmalloc(sizeof(*tgt), GFP_KERNEL);
- 	if (!tgt)
- 		return -ENOMEM;
- 
--	spin_lock_init(&tgt->tgt_lock);
-+	seqcount_init(&tgt->tgt_seq);
- 	atomic_set(&tgt->reqs, 0);
--	tgt->req_vq = NULL;
-+	tgt->req_vq = &vscsi->req_vqs[0];
- 
- 	starget->hostdata = tgt;
- 	return 0;
+Venkatesh Srinivas (1):
+  virtio-scsi: Implement change_queue_depth for virtscsi targets
+
+ drivers/scsi/virtio_scsi.c | 75 ++++++++++++++++++++++++++++++++++++++--------
+ 1 file changed, 62 insertions(+), 13 deletions(-)
+
 -- 
 1.8.3.1
