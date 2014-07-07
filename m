@@ -1,34 +1,39 @@
-From: Andy Grover <agrover@redhat.com>
-Subject: Re: [RFC 0/2] target: userspace pass-through backend
-Date: Mon, 07 Jul 2014 14:26:48 -0700
-Message-ID: <53BB1098.3070501@redhat.com>
-References: <1404241875-29164-1-git-send-email-agrover@redhat.com>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: [PATCH] ibmvfc: fix little endian issues
+Date: Mon, 07 Jul 2014 18:21:03 -0500
+Message-ID: <53BB2B5F.6080206@linux.vnet.ibm.com>
+References: <1403827435-29522-1-git-send-email-tyreld@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1404241875-29164-1-git-send-email-agrover@redhat.com>
-Sender: target-devel-owner@vger.kernel.org
-To: target-devel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org, hch@lst.de, nab@linux-iscsi.org, shli@kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e39.co.us.ibm.com ([32.97.110.160]:33314 "EHLO
+	e39.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751554AbaGGXV5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Jul 2014 19:21:57 -0400
+Received: from /spool/local
+	by e39.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
+	Mon, 7 Jul 2014 17:21:57 -0600
+In-Reply-To: <1403827435-29522-1-git-send-email-tyreld@linux.vnet.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, jbottomley@parallels.com, linuxppc-dev@ozlabs.org
 
-Hi, here's some additional beginning bits for the configuration and use 
-of this code:
+On 06/26/2014 07:03 PM, Tyrel Datwyler wrote:
+> Added big endian annotations to relevant data structure fields, and necessary
+> byte swappings to support little endian builds.
 
-Changes to targetcli-fb and rtslib-fb:
+Acked-by: Brian King <brking@linux.vnet.ibm.com>
 
-https://github.com/agrover/targetcli-fb/tree/userback
-https://github.com/agrover/rtslib-fb/tree/userback
+Thanks,
 
-An incredibly-crappy stand-in for the user process that will handle 
-requests:
+Brian
 
-https://github.com/agrover/test-userback
+-- 
+Brian King
+Power Linux I/O
+IBM Linux Technology Center
 
-I look forward to your feedback :)
 
-Thanks -- Regards -- Andy
-
-p.s. kernel changes are also available here:
-https://github.com/agrover/linux/tree/userback
