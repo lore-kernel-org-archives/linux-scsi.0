@@ -1,32 +1,63 @@
-From: David Laight <David.Laight-ZS65k/vG3HxXrIkS9f7CXA@public.gmane.org>
-Subject: RE: dummy scsi read or scsi command periodically for external USB
- Hard Disk
-Date: Mon, 7 Jul 2014 15:06:41 +0000
-Message-ID: <063D6719AE5E284EB5DD2968C1650D6D1726D887@AcuExch.aculab.com>
-References: <CANudz+sYkDthT9-xpt_hdqXHj+pSeTR5UcNmsPa4uP+YCvzSiw@mail.gmail.com>
-	<20140707092029.GA19630@localhost.localdomain>
- <CANudz+uUuhLdfkVSseXXHW6ugm126Q4Taau+s7wavAP=Z9=4XA@mail.gmail.com>
- <53BAB5DF.5090606@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <53BAB5DF.5090606-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Language: en-US
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: 'Lars Melin' <larsm17-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, loody <miloody-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "Bryn M. Reeves" <bmr-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: "linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: [PATCH 1/4] scsi: pm8001: fix a memory leak in nvmd_resp
+Date: Mon,  7 Jul 2014 17:19:58 +0200
+Message-ID: <1404746401-25229-1-git-send-email-thenzl@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:13930 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753118AbaGGPUY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 7 Jul 2014 11:20:24 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: xjtuwjp@gmail.com, Vasanthalakshmi.Tharmarajan@pmcs.com, Suresh.Thiagarajan@pmcs.com, Viswas.G@pmcs.com, Tomas Henzl <thenzl@redhat.com>
 
-RnJvbTogTGFycyBNZWxpbg0KLi4uDQo+IHNncmVhZCBpcyBub3QgaW5jbHVkZWQgaW4gQnVzeUJv
-eCBidXQgeW91IHNob3VsZCBoYXZlICJ0b3VjaCIuDQo+IENyZWF0ZSBhIGR1bW15IGZpbGUgb24g
-dGhlIGRpc2sgYW5kIGxldCBjcm9uIHRvdWNoIGl0IGV2ZXJ5IDQgbWludXRlcy4NCg0KWW91IGRv
-bid0IG5lZWQgJ3RvdWNoJyBhIHNoZWxsIHJlZGlyZWN0IGVnICI6ID5maWxlIiB3aWxsIGRvIG9w
-ZW4oLi4uLCBPX0NSRUFUfE9fVFJVTkMpLg0KSG93ZXZlciB0aGF0IHN0aWxsIG1pZ2h0IG5vdCBm
-b3JjZSBhbiBhY3R1YWwgZGlzYyBhY2Nlc3MuDQoNCkluIGFueSBjYXNlIHlvdSByZWFsbHkgb25s
-eSB3YW50IHRvIGRvIGEgcmVhZCwgZG9pbmcgYSB3cml0ZSB3aWxsIGtpbGwgdGhlIE5BTkQgbWVt
-b3J5Lg0KDQoJRGF2aWQNCg0K
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Instead of copying information to fw_control_context free it.
+
+The task is forgotten thus also the reference to fw_control_context
+and the completion thread takes the info from virt_ptr again.
+
+Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+---
+ drivers/scsi/pm8001/pm8001_hwi.c | 8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
+index cacb429..dc70791 100644
+--- a/drivers/scsi/pm8001/pm8001_hwi.c
++++ b/drivers/scsi/pm8001/pm8001_hwi.c
+@@ -3129,7 +3129,6 @@ void pm8001_mpi_set_nvmd_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ void
+ pm8001_mpi_get_nvmd_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ {
+-	struct fw_control_ex	*fw_control_context;
+ 	struct get_nvm_data_resp *pPayload =
+ 		(struct get_nvm_data_resp *)(piomb + 4);
+ 	u32 tag = le32_to_cpu(pPayload->tag);
+@@ -3138,7 +3137,6 @@ pm8001_mpi_get_nvmd_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ 	u32 ir_tds_bn_dps_das_nvm =
+ 		le32_to_cpu(pPayload->ir_tda_bn_dps_das_nvm);
+ 	void *virt_addr = pm8001_ha->memoryMap.region[NVMD].virt_ptr;
+-	fw_control_context = ccb->fw_control_context;
+ 
+ 	PM8001_MSG_DBG(pm8001_ha, pm8001_printk("Get nvm data complete!\n"));
+ 	if ((dlen_status & NVMD_STAT) != 0) {
+@@ -3179,13 +3177,11 @@ pm8001_mpi_get_nvmd_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ 			pm8001_printk("Get NVMD success, IR=0, dataLen=%d\n",
+ 			(dlen_status & NVMD_LEN) >> 24));
+ 	}
+-	memcpy(fw_control_context->usrAddr,
+-		pm8001_ha->memoryMap.region[NVMD].virt_ptr,
+-		fw_control_context->len);
+-	complete(pm8001_ha->nvmd_completion);
++	kfree(ccb->fw_control_context);
+ 	ccb->task = NULL;
+ 	ccb->ccb_tag = 0xFFFFFFFF;
+ 	pm8001_tag_free(pm8001_ha, tag);
++	complete(pm8001_ha->nvmd_completion);
+ }
+ 
+ int pm8001_mpi_local_phy_ctl(struct pm8001_hba_info *pm8001_ha, void *piomb)
+-- 
+1.8.3.1
+
