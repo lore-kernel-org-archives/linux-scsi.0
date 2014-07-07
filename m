@@ -1,56 +1,51 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 06/10] sd: don't use scsi_setup_blk_pc_cmnd for discard
-	requests
-Date: Mon, 7 Jul 2014 11:24:28 +0200
-Message-ID: <20140707092427.GA14476@lst.de>
-References: <1404048881-19526-1-git-send-email-hch@lst.de> <1404048881-19526-7-git-send-email-hch@lst.de> <94D0CD8314A33A4D9D801C0FE68B402958B8AD4C@G9W0745.americas.hpqcorp.net>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/2] Use sdev_scsi2lun for SCSI parallel drivers
+Date: Mon, 7 Jul 2014 02:37:46 -0700
+Message-ID: <20140707093746.GA12985@infradead.org>
+References: <1404474875-109997-1-git-send-email-hare@suse.de>
+ <1404474875-109997-2-git-send-email-hare@suse.de>
+ <20140704134437.GA12345@infradead.org>
+ <53B6B646.5080301@suse.de>
+ <20140705094147.GA18130@infradead.org>
+ <53BA524B.7060400@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:47184 "EHLO newverein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751409AbaGGJYc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 7 Jul 2014 05:24:32 -0400
+Received: from bombadil.infradead.org ([198.137.202.9]:60331 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751392AbaGGJhs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Jul 2014 05:37:48 -0400
 Content-Disposition: inline
-In-Reply-To: <94D0CD8314A33A4D9D801C0FE68B402958B8AD4C@G9W0745.americas.hpqcorp.net>
+In-Reply-To: <53BA524B.7060400@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org
 
-On Mon, Jul 07, 2014 at 12:01:53AM +0000, Elliott, Robert (Server Storage) wrote:
-> >  	nr_sectors >>= ilog2(sdp->sector_size) - 9;
-> > -	rq->timeout = SD_TIMEOUT;
-> > -
-> > -	memset(rq->cmd, 0, rq->cmd_len);
-> 
-> Is *cmd guaranteed to be zero at this point?
+On Mon, Jul 07, 2014 at 09:54:51AM +0200, Hannes Reinecke wrote:
+> 1) Isolate from any fallout due to the 64bit LUN changes. By introducing
+> accessors we are guaranteed that the drivers will only ever see LUN numbers
+> they are expecting.
 
-Yes, scsi_setup_fs_cmnd takes care of this before calling into the driver.
+I really don't see the point.  The LUNs have to be passed up from the
+driver anyway, so seeing anything unexpect just doesn't make sense.
+Furthermore if we really are worried about this we should have asserts
+that the higher bytes aren't set, and also take care of the even more
+limited LUN size for SCSI-2.
 
-> With scsi-mq.2 I've seen UNMAP CDBs with garbage in CDB bytes 
-> 2 to 5 (which causes a drive that checks reserved fields to
-> reject the command), which suggests there is a case in which 
-> that is not guaranteed.
+> 2) Using accessors allows us to eventually change the ->lun field to 'struct
+> scsi_lun', and call 'scsilun_to_int' only for display purposes. This will
+> address the objection by Bart for
+> ib_srp, but applies to other drivers as well.
 
-Indeed, we only do it up to the actual CDB length, which is due to:
+So, for any SAM based drivers struct scsi_lun is the wire format anyway,
+so those are easy.  For SCSI-2 and older we can just use scsilun_to_int
+and easily get the back the LUN that came over the wire.  Is it worth to
+micro optimize by not looking at the other fields?  I'd say no, but even
+if it is I'd rather see this as part of the series moving to embedding
+the scsi_lun.
 
-	sd: don't use rq->cmd_len before setting it up
-
-I had to add this because blk-mq doesn't initialize cmd_len, unlike the
-old path.
-
-Either we need to merge this series as well to take care of all this,
-or I should do a replacement for the above patch that just memsets up to
-BLK_MAX_CDB.
-
-> If so, then getting rid of the double memset is another 
-> benefit, and removing it from scsi_setup_fs_cmnd would
-> be good too.  Since that function is EXPORTED, does that
-> prevent removing its memset?
-
-We do need one of the memsets.  With this series I'm keeping the one
-in scsi_setup_fs_cmnd so that it's done in one single place, which
-seems preferable over having it duplicated in various spots.  At the
-end of the series scsi_setup_fs_cmnd ceases to be exported.
+FYI, I've merged your first set of fixes for the printk specifiers, but
+I've not merged anything fixing the other warnings that the build but
+sent reports for for now.
 
