@@ -1,49 +1,45 @@
-From: loody <miloody@gmail.com>
-Subject: Re: dummy scsi read or scsi command periodically for external USB
- Hard Disk
-Date: Mon, 7 Jul 2014 23:39:05 +0800
-Message-ID: <CANudz+uOS3VVyz6FcHoui8z678R6Xc0CQrdqFRdS5NyfCB59Zw@mail.gmail.com>
-References: <CANudz+sYkDthT9-xpt_hdqXHj+pSeTR5UcNmsPa4uP+YCvzSiw@mail.gmail.com>
-	<20140707092029.GA19630@localhost.localdomain>
-	<CANudz+uUuhLdfkVSseXXHW6ugm126Q4Taau+s7wavAP=Z9=4XA@mail.gmail.com>
-	<53BAB5DF.5090606@gmail.com>
-	<063D6719AE5E284EB5DD2968C1650D6D1726D887@AcuExch.aculab.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH] beiscsi: the custom_length field has been set to a wrong
+ value.
+Date: Mon, 07 Jul 2014 17:35:59 +0200
+Message-ID: <53BABE5F.8020006@redhat.com>
+References: <1403774186-4751-1-git-send-email-mlombard@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:40142 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751095AbaGGPjJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Jul 2014 11:39:09 -0400
-In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6D1726D887@AcuExch.aculab.com>
+Received: from mx1.redhat.com ([209.132.183.28]:26375 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751299AbaGGPnP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 7 Jul 2014 11:43:15 -0400
+In-Reply-To: <1403774186-4751-1-git-send-email-mlombard@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: David Laight <David.Laight@aculab.com>
-Cc: Lars Melin <larsm17@gmail.com>, "Bryn M. Reeves" <bmr@redhat.com>, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Maurizio Lombardi <mlombard@redhat.com>, jayamohan.kallickal@emulex.com
+Cc: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu, hch@infradead.org, JBottomley@parallels.com
 
-hi David:
-
-2014-07-07 23:06 GMT+08:00 David Laight <David.Laight@aculab.com>:
-> From: Lars Melin
-> ...
->> sgread is not included in BusyBox but you should have "touch".
->> Create a dummy file on the disk and let cron touch it every 4 minutes.
+On 06/26/2014 11:16 AM, Maurizio Lombardi wrote:
+> In the beiscsi_conn_get_stats() function, custom_length should be set
+> to 1 to take into account the "eh_abort_cnt" field at custom[0].
 >
-> You don't need 'touch' a shell redirect eg ": >file" will do open(..., O_CREAT|O_TRUNC).
-> However that still might not force an actual disc access.
+> Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
+> ---
+>  drivers/scsi/be2iscsi/be_iscsi.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 >
-> In any case you really only want to do a read, doing a write will kill the NAND memory.
+> diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
+> index fd284ff..8616281 100644
+> --- a/drivers/scsi/be2iscsi/be_iscsi.c
+> +++ b/drivers/scsi/be2iscsi/be_iscsi.c
+> @@ -914,7 +914,7 @@ void beiscsi_conn_get_stats(struct iscsi_cls_conn *cls_conn,
+>  	stats->r2t_pdus = conn->r2t_pdus_cnt;
+>  	stats->digest_err = 0;
+>  	stats->timeout_err = 0;
+> -	stats->custom_length = 0;
+> +	stats->custom_length = 1;
+>  	strcpy(stats->custom[0].desc, "eh_abort_cnt");
+>  	stats->custom[0].value = conn->eh_abort_cnt;
+>  }
 
-actually I have searched the scsi/usb layer for possible dummy read,
-even read sector 0 is fine, but in vain.
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 
-I found the read
-a. determined by VFS -> block layer,
-b. Block layer put it in queue
-c. call scsi pre-queue function to usb layer.
-
-That mean if I try to read sector from usb devices, I have to create a
-queue and follow above b) and c) rule.
-is there any already kernel API I can use?
-
-sincerely appreciate all yours help,
