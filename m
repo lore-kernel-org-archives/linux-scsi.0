@@ -1,138 +1,89 @@
 From: Suman Tripathi <stripathi@apm.com>
-Subject: [PATCH v6 2/2] ata: Fix the dma state machine lockup for the IDENTIFY DEVICE PIO mode command.
-Date: Mon,  7 Jul 2014 22:33:05 +0530
-Message-ID: <1404752585-915-3-git-send-email-stripathi@apm.com>
+Subject: [PATCH v6 1/2] libahci: Export some of the libahci functions.
+Date: Mon,  7 Jul 2014 22:33:04 +0530
+Message-ID: <1404752585-915-2-git-send-email-stripathi@apm.com>
 References: <1404752585-915-1-git-send-email-stripathi@apm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from denmail01-v4020.amcc.com ([192.195.68.30]:44669 "EHLO
+Received: from denmail01-v4020.amcc.com ([192.195.68.30]:44691 "EHLO
 	denmail01.apm.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751112AbaGGRJZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Jul 2014 13:09:25 -0400
+	with ESMTP id S1751112AbaGGRKX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Jul 2014 13:10:23 -0400
 In-Reply-To: <1404752585-915-1-git-send-email-stripathi@apm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
 Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>, Loc Ho <lho@apm.com>
 
-This patch fixes the dma state machine lockup due to the processing
-of IDENTIFY DEVICE PIO mode command. The X-Gene AHCI controller
-has an errata in which it cannot clear the BSY bit after the PIO setup
-FIS. The dma state machine enters CMFatalErrorUpdate state and locks
-up. This patch also removes the dma restart workaround from the read_id
-function as the read_id function is only called by libata layer for
-ATA_INTERNAL commands. But for some cases eg: PORT MULTIPLIER
-and udev, the framework will enumerate using SCSI commands and it will
-not call read_id function.
+This patch exports the function ahci_qc_issue and ahci_start_fis_rx.
+The subsequent patches will make use of them.
 
 Signed-off-by: Loc Ho <lho@apm.com>
 Signed-off-by: Suman Tripathi <stripathi@apm.com>
 ---
- drivers/ata/ahci_xgene.c | 60 +++++++++++++++++++++++++++++++++++++-----------
- 1 file changed, 47 insertions(+), 13 deletions(-)
+ drivers/ata/ahci.h    | 2 ++
+ drivers/ata/libahci.c | 7 ++++---
+ 2 files changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
-index 77c89bf..81c016a 100644
---- a/drivers/ata/ahci_xgene.c
-+++ b/drivers/ata/ahci_xgene.c
-@@ -78,6 +78,7 @@
- struct xgene_ahci_context {
- 	struct ahci_host_priv *hpriv;
- 	struct device *dev;
-+	u8 last_cmd[MAX_AHCI_CHN_PERCTR]; /* tracking the last command issued*/
- 	void __iomem *csr_core;		/* Core CSR address of IP */
- 	void __iomem *csr_diag;		/* Diag CSR address of IP */
- 	void __iomem *csr_axi;		/* AXI CSR address of IP */
-@@ -98,20 +99,62 @@ static int xgene_ahci_init_memram(struct xgene_ahci_context *ctx)
+diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+index af63c75..f4a9299 100644
+--- a/drivers/ata/ahci.h
++++ b/drivers/ata/ahci.h
+@@ -370,7 +370,9 @@ int ahci_do_softreset(struct ata_link *link, unsigned int *class,
+ 		      int pmp, unsigned long deadline,
+ 		      int (*check_ready)(struct ata_link *link));
+
++unsigned int ahci_qc_issue(struct ata_queued_cmd *qc);
+ int ahci_stop_engine(struct ata_port *ap);
++void ahci_start_fis_rx(struct ata_port *ap);
+ void ahci_start_engine(struct ata_port *ap);
+ int ahci_check_ready(struct ata_link *link);
+ int ahci_kick_engine(struct ata_port *ap);
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index b986145..e6dd89a 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -68,7 +68,6 @@ static ssize_t ahci_transmit_led_message(struct ata_port *ap, u32 state,
+
+ static int ahci_scr_read(struct ata_link *link, unsigned int sc_reg, u32 *val);
+ static int ahci_scr_write(struct ata_link *link, unsigned int sc_reg, u32 val);
+-static unsigned int ahci_qc_issue(struct ata_queued_cmd *qc);
+ static bool ahci_qc_fill_rtf(struct ata_queued_cmd *qc);
+ static int ahci_port_start(struct ata_port *ap);
+ static void ahci_port_stop(struct ata_port *ap);
+@@ -615,7 +614,7 @@ int ahci_stop_engine(struct ata_port *ap)
  }
+ EXPORT_SYMBOL_GPL(ahci_stop_engine);
 
- /**
-+ * xgene_ahci_restart_engine - Restart the dma engine.
-+ * @ap : ATA port of interest
-+ *
-+ * Restarts the dma engine inside the controller.
-+ */
-+static int xgene_ahci_restart_engine(struct ata_port *ap)
-+{
-+	struct ahci_host_priv *hpriv = ap->host->private_data;
-+
-+	ahci_stop_engine(ap);
-+	ahci_start_fis_rx(ap);
-+	hpriv->start_engine(ap);
-+
-+	return 0;
-+}
-+
-+/**
-+ * xgene_ahci_qc_issue - Issue commands to the device
-+ * @qc: Command to issue
-+ *
-+ * Due to Hardware errata for IDENTIFY DEVICE command, the controller cannot
-+ * clear the BSY bit after receiving the PIO setup FIS. This results in the dma
-+ * state machine goes into the CMFatalErrorUpdate state and locks up. By
-+ * restarting the dma engine, it removes the controller out of lock up state.
-+ */
-+static unsigned int xgene_ahci_qc_issue(struct ata_queued_cmd *qc)
-+{
-+	struct ata_port *ap = qc->ap;
-+	struct ahci_host_priv *hpriv = ap->host->private_data;
-+	struct xgene_ahci_context *ctx = hpriv->plat_data;
-+	int rc = 0;
-+
-+	if (unlikely(ctx->last_cmd[ap->port_no] == ATA_CMD_ID_ATA))
-+		xgene_ahci_restart_engine(ap);
-+
-+	rc = ahci_qc_issue(qc);
-+
-+	/* Save the last command issued */
-+	ctx->last_cmd[ap->port_no] = qc->tf.command;
-+
-+	return rc;
-+}
-+
-+/**
-  * xgene_ahci_read_id - Read ID data from the specified device
-  * @dev: device
-  * @tf: proposed taskfile
-  * @id: data buffer
-  *
-  * This custom read ID function is required due to the fact that the HW
-- * does not support DEVSLP and the controller state machine may get stuck
-- * after processing the ID query command.
-+ * does not support DEVSLP.
-  */
- static unsigned int xgene_ahci_read_id(struct ata_device *dev,
- 				       struct ata_taskfile *tf, u16 *id)
+-static void ahci_start_fis_rx(struct ata_port *ap)
++void ahci_start_fis_rx(struct ata_port *ap)
  {
- 	u32 err_mask;
--	void __iomem *port_mmio = ahci_port_base(dev->link->ap);
+ 	void __iomem *port_mmio = ahci_port_base(ap);
+ 	struct ahci_host_priv *hpriv = ap->host->private_data;
+@@ -641,6 +640,7 @@ static void ahci_start_fis_rx(struct ata_port *ap)
+ 	/* flush */
+ 	readl(port_mmio + PORT_CMD);
+ }
++EXPORT_SYMBOL_GPL(ahci_start_fis_rx);
 
- 	err_mask = ata_do_dev_read_id(dev, tf, id);
- 	if (err_mask)
-@@ -133,16 +176,6 @@ static unsigned int xgene_ahci_read_id(struct ata_device *dev,
- 	 */
- 	id[ATA_ID_FEATURE_SUPP] &= ~(1 << 8);
+ static int ahci_stop_fis_rx(struct ata_port *ap)
+ {
+@@ -1940,7 +1940,7 @@ irqreturn_t ahci_interrupt(int irq, void *dev_instance)
+ }
+ EXPORT_SYMBOL_GPL(ahci_interrupt);
 
--	/*
--	 * Due to HW errata, restart the port if no other command active.
--	 * Otherwise the controller may get stuck.
--	 */
--	if (!readl(port_mmio + PORT_CMD_ISSUE)) {
--		writel(PORT_CMD_FIS_RX, port_mmio + PORT_CMD);
--		readl(port_mmio + PORT_CMD);	/* Force a barrier */
--		writel(PORT_CMD_FIS_RX | PORT_CMD_START, port_mmio + PORT_CMD);
--		readl(port_mmio + PORT_CMD);	/* Force a barrier */
--	}
+-static unsigned int ahci_qc_issue(struct ata_queued_cmd *qc)
++unsigned int ahci_qc_issue(struct ata_queued_cmd *qc)
+ {
+ 	struct ata_port *ap = qc->ap;
+ 	void __iomem *port_mmio = ahci_port_base(ap);
+@@ -1969,6 +1969,7 @@ static unsigned int ahci_qc_issue(struct ata_queued_cmd *qc)
+
  	return 0;
  }
++EXPORT_SYMBOL_GPL(ahci_qc_issue);
 
-@@ -300,6 +333,7 @@ static struct ata_port_operations xgene_ahci_ops = {
- 	.host_stop = xgene_ahci_host_stop,
- 	.hardreset = xgene_ahci_hardreset,
- 	.read_id = xgene_ahci_read_id,
-+	.qc_issue = xgene_ahci_qc_issue,
- };
-
- static const struct ata_port_info xgene_ahci_port_info = {
+ static bool ahci_qc_fill_rtf(struct ata_queued_cmd *qc)
+ {
 --
 1.8.2.1
 
