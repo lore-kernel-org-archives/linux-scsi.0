@@ -1,60 +1,43 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 1/2] Use sdev_scsi2lun for SCSI parallel drivers
-Date: Mon, 07 Jul 2014 09:59:56 +0200
-Message-ID: <53BA537C.3010007@suse.de>
-References: <1404474875-109997-1-git-send-email-hare@suse.de> <1404474875-109997-2-git-send-email-hare@suse.de> <20140704134437.GA12345@infradead.org> <53B6B646.5080301@suse.de> <20140705094147.GA18130@infradead.org> <53BA524B.7060400@suse.de>
+From: "Bryn M. Reeves" <bmr@redhat.com>
+Subject: Re: dummy scsi read or scsi command periodically for external USB
+ Hard Disk
+Date: Mon, 7 Jul 2014 10:20:30 +0100
+Message-ID: <20140707092029.GA19630@localhost.localdomain>
+References: <CANudz+sYkDthT9-xpt_hdqXHj+pSeTR5UcNmsPa4uP+YCvzSiw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:54555 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:30869 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751128AbaGGH76 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 7 Jul 2014 03:59:58 -0400
-In-Reply-To: <53BA524B.7060400@suse.de>
+	id S1751383AbaGGJUe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 7 Jul 2014 05:20:34 -0400
+Content-Disposition: inline
+In-Reply-To: <CANudz+sYkDthT9-xpt_hdqXHj+pSeTR5UcNmsPa4uP+YCvzSiw@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org
+To: loody <miloody@gmail.com>
+Cc: "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On 07/07/2014 09:54 AM, Hannes Reinecke wrote:
-> On 07/05/2014 11:41 AM, Christoph Hellwig wrote:
->> On Fri, Jul 04, 2014 at 04:12:22PM +0200, Hannes Reinecke wrote:
->>>> So what would be set in the upper 48 bits for those drivers?  We
->>>> receive
->>>> the LUN over the wire to start with.
->>>>
->>> None. All these devices are physically incapable of receiving or
->>> sending
->>> LUNs more that a byte wide.
->>
->> So what problems does this patch fix then?
->>
-> The intention is twofold:
->
-> 1) Isolate from any fallout due to the 64bit LUN changes. By
-> introducing accessors we are guaranteed that the drivers will only
-> ever see LUN numbers they are expecting.
-> 2) Using accessors allows us to eventually change the ->lun field to
-> 'struct scsi_lun', and call 'scsilun_to_int' only for display
-> purposes. This will address the objection by Bart for
-> ib_srp, but applies to other drivers as well.
->
-Oh. And it addresses the build issues Fengguang has been seen during=20
-automated kernel builds.
-Of course.
+On Sun, Jul 06, 2014 at 01:18:03AM +0800, loody wrote:
+> hi all:
+>     we met a USB Hard Disk that will go to suspend if host stop
+> sending scsi command over 5mins.
+>     To save the IO, kernel will keep the file in page cache as much as
+> he can and under this circumstances, the scsi command may disappear
+> for a while longer enough to cause the device suspend.
+> 
+>     is there any kernel config or module parameter can do the dummy
+> read or scsi command periodically?
 
-Cheers,
+No but you could set up a simple cron job to call an sg3_utils command.
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+E.g. issue an sg_read for one sector to the device every 4m:
+
+  */4 * * * * sg_read count=1 if=/dev/<disk>
+
+You'll probably want to disable mail notification for the job or have
+it dropped or it'll get a bit noisy running that frequently.
+
+Regards,
+Bryn.
+
