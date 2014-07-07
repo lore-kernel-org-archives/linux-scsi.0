@@ -1,113 +1,45 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH] hpsa: refine the pci enble/disable handling
-Date: Mon, 07 Jul 2014 16:12:48 +0200
-Message-ID: <53BAAAE0.40605@redhat.com>
-References: <5399C75B.6020607@redhat.com>
+From: loody <miloody@gmail.com>
+Subject: Re: dummy scsi read or scsi command periodically for external USB
+ Hard Disk
+Date: Mon, 7 Jul 2014 22:37:47 +0800
+Message-ID: <CANudz+uUuhLdfkVSseXXHW6ugm126Q4Taau+s7wavAP=Z9=4XA@mail.gmail.com>
+References: <CANudz+sYkDthT9-xpt_hdqXHj+pSeTR5UcNmsPa4uP+YCvzSiw@mail.gmail.com>
+	<20140707092029.GA19630@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54652 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752933AbaGGOM6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 7 Jul 2014 10:12:58 -0400
-In-Reply-To: <5399C75B.6020607@redhat.com>
+Received: from mail-wi0-f182.google.com ([209.85.212.182]:45864 "EHLO
+	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753451AbaGGOh4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Jul 2014 10:37:56 -0400
+In-Reply-To: <20140707092029.GA19630@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
-Cc: stephenmcameron@gmail.com, michael.miller@canonical.com, "Handzik, Joe" <joseph.t.handzik@hp.com>
+To: "Bryn M. Reeves" <bmr@redhat.com>
+Cc: "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
-Steve, Joe,
-any chance you could review this patch and verify the sw reset case?
-Thanks, Tomas
+hi Bryn:
 
-On 06/12/2014 05:29 PM, Tomas Henzl wrote:
-> When a second(kdump) kernel starts and the hard reset method is used
-> the driver calls pci_disable_device without previously enabling it,
-> so the kernel shows a warning -
-> [   16.876248] WARNING: at drivers/pci/pci.c:1431 pci_disable_device+0x84/0x90()
-> [   16.882686] Device hpsa
-> disabling already-disabled device
-> ...
-> This patch fixes it, in addition to this I tried to balance also some other pairs
-> of enable/disable device in the driver.
-> Unfortunately I wasn't able to verify the functionality for the case of a sw reset,
-> because of a lack of proper hw.
+2014-07-07 17:20 GMT+08:00 Bryn M. Reeves <bmr@redhat.com>:
+> On Sun, Jul 06, 2014 at 01:18:03AM +0800, loody wrote:
+>> hi all:
+>>     we met a USB Hard Disk that will go to suspend if host stop
+>> sending scsi command over 5mins.
+>>     To save the IO, kernel will keep the file in page cache as much as
+>> he can and under this circumstances, the scsi command may disappear
+>> for a while longer enough to cause the device suspend.
+>>
+>>     is there any kernel config or module parameter can do the dummy
+>> read or scsi command periodically?
 >
-> Signed-off-by: Tomas Henzl <thenzl@redhat.com>
-> ---
-> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> index 5858600..67c41b9 100644
-> --- a/drivers/scsi/hpsa.c
-> +++ b/drivers/scsi/hpsa.c
-> @@ -5983,7 +5983,6 @@ static int hpsa_kdump_hard_reset_controller(struct pci_dev *pdev)
->  	/* Turn the board off.  This is so that later pci_restore_state()
->  	 * won't turn the board on before the rest of config space is ready.
->  	 */
-> -	pci_disable_device(pdev);
->  	pci_save_state(pdev);
->  
->  	/* find the first memory BAR, so we can find the cfg table */
-> @@ -6031,11 +6030,6 @@ static int hpsa_kdump_hard_reset_controller(struct pci_dev *pdev)
->  		goto unmap_cfgtable;
->  
->  	pci_restore_state(pdev);
-> -	rc = pci_enable_device(pdev);
-> -	if (rc) {
-> -		dev_warn(&pdev->dev, "failed to enable device.\n");
-> -		goto unmap_cfgtable;
-> -	}
->  	pci_write_config_word(pdev, 4, command_register);
->  
->  	/* Some devices (notably the HP Smart Array 5i Controller)
-> @@ -6548,6 +6542,12 @@ static int hpsa_init_reset_devices(struct pci_dev *pdev)
->  	if (!reset_devices)
->  		return 0;
->  
-> +	rc = pci_enable_device(pdev);
-> +	if (rc) {
-> +		dev_warn(&pdev->dev, "failed to enable device.\n");
-> +		return -ENODEV;
-> +	}
-> +
->  	/* Reset the controller with a PCI power-cycle or via doorbell */
->  	rc = hpsa_kdump_hard_reset_controller(pdev);
->  
-> @@ -6556,10 +6556,11 @@ static int hpsa_init_reset_devices(struct pci_dev *pdev)
->  	 * "performant mode".  Or, it might be 640x, which can't reset
->  	 * due to concerns about shared bbwc between 6402/6404 pair.
->  	 */
-> -	if (rc == -ENOTSUPP)
-> -		return rc; /* just try to do the kdump anyhow. */
-> -	if (rc)
-> -		return -ENODEV;
-> +	if (rc) {
-> +		if (rc != -ENOTSUPP) /* just try to do the kdump anyhow. */
-> +			rc = -ENODEV;
-> +		goto out_disable; 
-> +	}
->  
->  	/* Now try to get the controller to respond to a no-op */
->  	dev_warn(&pdev->dev, "Waiting for controller to respond to no-op\n");
-> @@ -6570,7 +6571,11 @@ static int hpsa_init_reset_devices(struct pci_dev *pdev)
->  			dev_warn(&pdev->dev, "no-op failed%s\n",
->  					(i < 11 ? "; re-trying" : ""));
->  	}
-> -	return 0;
-> +
-> +out_disable:
-> +
-> +	pci_disable_device(pdev);
-> +	return rc;
->  }
->  
->  static int hpsa_allocate_cmd_pool(struct ctlr_info *h)
-> @@ -6722,6 +6727,7 @@ static void hpsa_undo_allocations_after_kdump_soft_reset(struct ctlr_info *h)
->  		iounmap(h->transtable);
->  	if (h->cfgtable)
->  		iounmap(h->cfgtable);
-> +	pci_disable_device(h->pdev);
->  	pci_release_regions(h->pdev);
->  	kfree(h);
->  }
+> No but you could set up a simple cron job to call an sg3_utils command.
+>
+> E.g. issue an sg_read for one sector to the device every 4m:
+>
+>   */4 * * * * sg_read count=1 if=/dev/<disk>
+Since my target platform arm embedded system,
+does that mean I should include sg_read in my Busybox
+or
+cross-compile sg_read from sg3_utils?
 
+appreciate your kind help,
