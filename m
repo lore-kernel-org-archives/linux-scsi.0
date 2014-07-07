@@ -1,101 +1,50 @@
-From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Subject: RE: [PATCH 06/10] sd: don't use scsi_setup_blk_pc_cmnd for discard
- requests
-Date: Mon, 7 Jul 2014 02:01:47 +0000
-Message-ID: <94D0CD8314A33A4D9D801C0FE68B402958B8BE0E@G9W0745.americas.hpqcorp.net>
-References: <1404048881-19526-1-git-send-email-hch@lst.de>
- <1404048881-19526-7-git-send-email-hch@lst.de>
- <94D0CD8314A33A4D9D801C0FE68B402958B8AD4C@G9W0745.americas.hpqcorp.net>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 1/2] Use sdev_scsi2lun for SCSI parallel drivers
+Date: Mon, 07 Jul 2014 07:47:41 +0200
+Message-ID: <53BA347D.3020807@suse.de>
+References: <1404474875-109997-1-git-send-email-hare@suse.de> <1404474875-109997-2-git-send-email-hare@suse.de> <53B70404.9080303@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3427.houston.hp.com ([15.201.208.55]:45317 "EHLO
-	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752234AbaGGCCX convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Jul 2014 22:02:23 -0400
-In-Reply-To: <94D0CD8314A33A4D9D801C0FE68B402958B8AD4C@G9W0745.americas.hpqcorp.net>
-Content-Language: en-US
+Received: from cantor2.suse.de ([195.135.220.15]:53178 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751320AbaGGFro (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 7 Jul 2014 01:47:44 -0400
+In-Reply-To: <53B70404.9080303@interlog.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: dgilbert@interlog.com, James Bottomley <jbottomley@parallels.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
 
+On 07/04/2014 09:44 PM, Douglas Gilbert wrote:
+> On 14-07-04 07:54 AM, Hannes Reinecke wrote:
+>> SCSI-2 defines only up to 256 LUNs with a flat namespace.
+>
+> My SCSI-2 draft (revision 10b from August 1989) only has
+> 3 bit LUNs placed in byte 1 of the command block, in the top
+> 3 bits. There are also things called LUNTARs and LUNTRNs
+> at the message level.
+>
+> 8 bit LUNs do ring a distant bell, perhaps after SCSI-2?
+>
+Yeah, you're right. SCSI-2 defines a 3-byte LUN; starting with SCSI-3 i=
+t=20
+went to 64bit.
 
+I'll be renaming them to 'sdev_lun8'.
 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> owner@vger.kernel.org] On Behalf Of Elliott, Robert (Server Storage)
-> Sent: Sunday, 06 July, 2014 7:02 PM
-> To: Christoph Hellwig; James Bottomley
-> Cc: Martin K. Petersen; linux-scsi@vger.kernel.org
-> Subject: RE: [PATCH 06/10] sd: don't use scsi_setup_blk_pc_cmnd for discard
-> requests
-> 
-> 
-> 
-> > -----Original Message-----
-> > From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> > owner@vger.kernel.org] On Behalf Of Christoph Hellwig
-> > Sent: Sunday, 29 June, 2014 8:35 AM
-> > To: James Bottomley
-> > Cc: Martin K. Petersen; linux-scsi@vger.kernel.org
-> > Subject: [PATCH 06/10] sd: don't use scsi_setup_blk_pc_cmnd for discard
-> > requests
-> >
-> > Simplify handling of discard requests by setting up the command directly
-> > instead of initializing request fields and then calling
-> > scsi_setup_blk_pc_cmnd to propagate the information into the command.
-> >
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > ---
-> >  drivers/scsi/sd.c |   43 ++++++++++++++++++++++++-------------------
-> >  1 file changed, 24 insertions(+), 19 deletions(-)
-> >
-> > diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> > index 25f25dd..9737e78 100644
-> > --- a/drivers/scsi/sd.c
-> > +++ b/drivers/scsi/sd.c
-> > @@ -691,8 +691,10 @@ static void sd_config_discard(struct scsi_disk *sdkp,
-> > unsigned int mode)
-> >   * Will issue either UNMAP or WRITE SAME(16) depending on preference
-> >   * indicated by target device.
-> >   **/
-> > -static int sd_setup_discard_cmnd(struct scsi_device *sdp, struct request
-> > *rq)
-> > +static int sd_setup_discard_cmnd(struct scsi_cmnd *cmd)
-> >  {
-> > +	struct request *rq = cmd->request;
-> > +	struct scsi_device *sdp = cmd->device;
-> >  	struct scsi_disk *sdkp = scsi_disk(rq->rq_disk);
-> >  	sector_t sector = blk_rq_pos(rq);
-> >  	unsigned int nr_sectors = blk_rq_sectors(rq);
-> > @@ -704,9 +706,6 @@ static int sd_setup_discard_cmnd(struct scsi_device
-> *sdp,
-> > struct request *rq)
-> >
-> >  	sector >>= ilog2(sdp->sector_size) - 9;
-> >  	nr_sectors >>= ilog2(sdp->sector_size) - 9;
-> > -	rq->timeout = SD_TIMEOUT;
-> > -
-> > -	memset(rq->cmd, 0, rq->cmd_len);
-> 
-> Is *cmd guaranteed to be zero at this point?
-> 
-> With scsi-mq.2 I've seen UNMAP CDBs with garbage in CDB bytes
-> 2 to 5 (which causes a drive that checks reserved fields to
-> reject the command), which suggests there is a case in which
-> that is not guaranteed.
+Cheers,
 
-The problem in the existing sd_setup_discard_cmnd is that the 
-memset runs before rq->cmd_len is set, so it zeroes out no bytes.
-
-sd_setup_write_same_ doesn't have that issue.
-
----
-Rob Elliott    HP Server Storage
-
-
-
-
-
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
