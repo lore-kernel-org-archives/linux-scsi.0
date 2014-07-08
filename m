@@ -1,112 +1,55 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: scsi-mq V2
-Date: Tue, 8 Jul 2014 07:48:29 -0700
-Message-ID: <20140708144829.GA5539@infradead.org>
-References: <1403715121-1201-1-git-send-email-hch@lst.de>
+From: loody <miloody-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: dummy scsi read or scsi command periodically for external USB
+ Hard Disk
+Date: Tue, 8 Jul 2014 22:58:02 +0800
+Message-ID: <CANudz+uRd3tRfPN-Fqcj5sSW-xkRSN-gERBP7HhUY_s5gEALbg@mail.gmail.com>
+References: <CANudz+vS1t3wWbEU6UGGKP=bb3KEvFcpmX=M2+ZnC8bxY_tPjQ@mail.gmail.com>
+	<Pine.LNX.4.44L0.1407071258360.871-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1403715121-1201-1-git-send-email-hch@lst.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <axboe@kernel.dk>, Bart Van Assche <bvanassche@fusionio.com>, Robert Elliott <Elliott@hp.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <Pine.LNX.4.44L0.1407071258360.871-100000-IYeN2dnnYyZXsRXLowluHWD2FQJk+8+b@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Cc: "Bryn M. Reeves" <bmr-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Jun 25, 2014 at 06:51:47PM +0200, Christoph Hellwig wrote:
-> Changes from V1:
->  - rebased on top of the core-for-3.17 branch, most notable the
->    scsi logging changes
->  - fixed handling of cmd_list to prevent crashes for some heavy
->    workloads
->  - fixed incorrect handling of !target->can_queue
->  - avoid scheduling a workqueue on I/O completions when no queues
->    are congested
-> 
-> In addition to the patches in this thread there also is a git available at:
-> 
-> 	git://git.infradead.org/users/hch/scsi.git scsi-mq.2
+hi Alan:
+
+2014-07-08 1:02 GMT+08:00 Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>:
+> On Tue, 8 Jul 2014, loody wrote:
+>
+>> > An alternative is to write a positive value, such as 240000, to
+>> >
+>> >         /sys/block/sdX/events_poll_msecs
+>> >
+>> > where X is replaced with the proper drive letter.  (240000 ms = 240 s =
+>> > 4 m.)  I'm not sure this will work, but it's worth a try.
+>>
+>> I cannot find events_poll_msecs you mentioned in my system.
+>> Is this capability related to kernel version?
+>> ( my kernel version is 2.6.38.8 )
+>
+> Well, the in-kernel disk events mechanism was added in 2.6.38, but it
+> may not have been implemented for your type of drive.
+You are correct.
+i can see events_poll_msecs when I change my kernel to 3.8.0
+But the device still disconnect.
+I have some question.
+1. when I cat  /sys/block/sdX/events, I get the answer as media_change.
+    is there any events type we can choose, such as read capability or inquiry.
+>
+> Probably you don't actually need to do a read.  Simply opening the
+> device file ought to be sufficient.
+2. the open device you mean is like open(/dev/sda1)?
+
+thanks for all your kind help,
 
 
-I've pushed out a new scsi-mq.3 branch, which has been rebased on the
-latest core-for-3.17 tree + the "RFC: clean up command setup" series
-from June 29th.  Robert Elliot found a problem with not fully zeroed
-out UNMAP CDBs, which is fixed by the saner discard handling in that
-series.
 
-There is a new patch to factor the code from the above series for
-blk-mq use, which I've attached below.  Besides that the only changes
-are minor merge fixups in the main blk-mq usage patch.
-
----
->From f925c317c74849666d599926d8ad8f34ef99d5cf Mon Sep 17 00:00:00 2001
-From: Christoph Hellwig <hch@lst.de>
-Date: Tue, 8 Jul 2014 13:16:17 +0200
-Subject: scsi: add scsi_setup_cmnd helper
-
-Factor out command setup code that will be shared with the blk-mq code path.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/scsi/scsi_lib.c |   40 ++++++++++++++++++++++------------------
- 1 file changed, 22 insertions(+), 18 deletions(-)
-
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 116f541..61afae8 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1116,6 +1116,27 @@ static int scsi_setup_fs_cmnd(struct scsi_device *sdev, struct request *req)
- 	return scsi_cmd_to_driver(cmd)->init_command(cmd);
- }
- 
-+static int scsi_setup_cmnd(struct scsi_device *sdev, struct request *req)
-+{
-+	struct scsi_cmnd *cmd = req->special;
-+
-+	if (!blk_rq_bytes(req))
-+		cmd->sc_data_direction = DMA_NONE;
-+	else if (rq_data_dir(req) == WRITE)
-+		cmd->sc_data_direction = DMA_TO_DEVICE;
-+	else
-+		cmd->sc_data_direction = DMA_FROM_DEVICE;
-+
-+	switch (req->cmd_type) {
-+	case REQ_TYPE_FS:
-+		return scsi_setup_fs_cmnd(sdev, req);
-+	case REQ_TYPE_BLOCK_PC:
-+		return scsi_setup_blk_pc_cmnd(sdev, req);
-+	default:
-+		return BLKPREP_KILL;
-+	}
-+}
-+
- static int
- scsi_prep_state_check(struct scsi_device *sdev, struct request *req)
- {
-@@ -1219,24 +1240,7 @@ static int scsi_prep_fn(struct request_queue *q, struct request *req)
- 		goto out;
- 	}
- 
--	if (!blk_rq_bytes(req))
--		cmd->sc_data_direction = DMA_NONE;
--	else if (rq_data_dir(req) == WRITE)
--		cmd->sc_data_direction = DMA_TO_DEVICE;
--	else
--		cmd->sc_data_direction = DMA_FROM_DEVICE;
--
--	switch (req->cmd_type) {
--	case REQ_TYPE_FS:
--		ret = scsi_setup_fs_cmnd(sdev, req);
--		break;
--	case REQ_TYPE_BLOCK_PC:
--		ret = scsi_setup_blk_pc_cmnd(sdev, req);
--		break;
--	default:
--		ret = BLKPREP_KILL;
--	}
--
-+	ret = scsi_setup_cmnd(sdev, req);
- out:
- 	return scsi_prep_return(q, req, ret);
- }
 -- 
-1.7.10.4
+Regards,
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
