@@ -1,32 +1,46 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v6 0/2]  ata: Fix the dma state machine lockup for APM
- X-Gene SoC
-Date: Tue, 8 Jul 2014 11:46:35 -0400
-Message-ID: <20140708154635.GG4979@htj.dyndns.org>
-References: <1404752585-915-1-git-send-email-stripathi@apm.com>
+From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Subject: Re: dummy scsi read or scsi command periodically for external USB
+ Hard Disk
+Date: Tue, 8 Jul 2014 12:00:59 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1407081149280.1283-100000@iolanthe.rowland.org>
+References: <CANudz+uRd3tRfPN-Fqcj5sSW-xkRSN-gERBP7HhUY_s5gEALbg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qa0-f45.google.com ([209.85.216.45]:61334 "EHLO
-	mail-qa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753896AbaGHPqm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Jul 2014 11:46:42 -0400
-Content-Disposition: inline
-In-Reply-To: <1404752585-915-1-git-send-email-stripathi@apm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <CANudz+uRd3tRfPN-Fqcj5sSW-xkRSN-gERBP7HhUY_s5gEALbg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: loody <miloody-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: "Bryn M. Reeves" <bmr-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Suman Tripathi <stripathi@apm.com>
-Cc: olof@lixom.net, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>
 
-On Mon, Jul 07, 2014 at 10:33:03PM +0530, Suman Tripathi wrote:
-> This patch addresses the dma state machine lockup for APM X-Gene SoC.
-> 
-> Signed-off-by: Loc Ho <lho@apm.com>
-> Signed-off-by: Suman Tripathi <stripathi@apm.com>
+On Tue, 8 Jul 2014, loody wrote:
 
-Applied to libata/for-3.16-fixes.
+> You are correct.
+> i can see events_poll_msecs when I change my kernel to 3.8.0
+> But the device still disconnect.
+> I have some question.
+> 1. when I cat  /sys/block/sdX/events, I get the answer as media_change.
+>     is there any events type we can choose, such as read capability or inquiry.
 
-Thanks.
+The only other event type is eject_request.  But that applies to CD
+drives, not disk drives.
 
--- 
-tejun
+> > Probably you don't actually need to do a read.  Simply opening the
+> > device file ought to be sufficient.
+> 2. the open device you mean is like open(/dev/sda1)?
+
+Yes.  That will send a SCSI TEST UNIT READY command, the same as disk
+events polling.  You can use usbmon to verify this.
+
+However, maybe TEST UNIT READY won't work.  Your drive might need to 
+see a READ or WRITE command.  If that's the case then neither 
+events_poll_msecs nor a simple open() will help.
+
+Have you tried using hdparm with the -B or -S flag?
+
+Alan Stern
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
