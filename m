@@ -1,49 +1,44 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: scsi-mq V2
-Date: Wed, 09 Jul 2014 12:39:29 -0400
-Message-ID: <53BD7041.5010300@interlog.com>
-References: <1403715121-1201-1-git-send-email-hch@lst.de> <20140708144829.GA5539@infradead.org>
-Reply-To: dgilbert@interlog.com
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 08/14] scsi: convert device_busy to atomic_t
+Date: Wed, 09 Jul 2014 09:49:56 -0700
+Message-ID: <1404924596.2006.6.camel@jarvis.lan>
+References: <1403715121-1201-1-git-send-email-hch@lst.de>
+	 <1403715121-1201-9-git-send-email-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140708144829.GA5539@infradead.org>
+In-Reply-To: <1403715121-1201-9-git-send-email-hch@lst.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <axboe@kernel.dk>, Bart Van Assche <bvanassche@fusionio.com>, Robert Elliott <Elliott@hp.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, Bart Van Assche <bvanassche@fusionio.com>, Robert Elliott <Elliott@hp.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 14-07-08 10:48 AM, Christoph Hellwig wrote:
-> On Wed, Jun 25, 2014 at 06:51:47PM +0200, Christoph Hellwig wrote:
->> Changes from V1:
->>   - rebased on top of the core-for-3.17 branch, most notable the
->>     scsi logging changes
->>   - fixed handling of cmd_list to prevent crashes for some heavy
->>     workloads
->>   - fixed incorrect handling of !target->can_queue
->>   - avoid scheduling a workqueue on I/O completions when no queues
->>     are congested
->>
->> In addition to the patches in this thread there also is a git available at:
->>
->> 	git://git.infradead.org/users/hch/scsi.git scsi-mq.2
->
->
-> I've pushed out a new scsi-mq.3 branch, which has been rebased on the
-> latest core-for-3.17 tree + the "RFC: clean up command setup" series
-> from June 29th.  Robert Elliot found a problem with not fully zeroed
-> out UNMAP CDBs, which is fixed by the saner discard handling in that
-> series.
->
-> There is a new patch to factor the code from the above series for
-> blk-mq use, which I've attached below.  Besides that the only changes
-> are minor merge fixups in the main blk-mq usage patch.
+On Wed, 2014-06-25 at 18:51 +0200, Christoph Hellwig wrote:
+> Avoid taking the queue_lock to check the per-device queue limit.  Instead
+> we do an atomic_inc_return early on to grab our slot in the queue,
+> and if nessecary decrement it after finishing all checks.
+> 
+> Unlike the host and target busy counters this doesn't allow us to avoid the
+> queue_lock in the request_fn due to the way the interface works, but it'll
+> allow us to prepare for using the blk-mq code, which doesn't use the
+> queue_lock at all, and it at least avoids a queue_lock rountrip in
+> scsi_device_unbusy, which is still important given how busy the queue_lock
+> is.
 
-Be warned: both Rob Elliott and I can easily break
-the scsi-mq.3 branch. It seems as though a regression
-has slipped in. I notice that Christoph has added a
-new branch called "scsi-mq.3-no-rebase".
+Most of these patches look fine to me, but this one worries me largely
+because of the expense of atomics.
 
-For those interested, watch this space.
+As far as I can tell from the block MQ, we get one CPU thread per LUN.
+Doesn't this mean that we only need true atomics for variables that
+cross threads?  That does mean target and host, but shouldn't mean
+device, since device == LUN.  As long as we protect from local
+interrupts, we should be able to exclusively update all LUN local
+variables without having to change them to being atomic.
 
-Doug Gilbert
+This view depends on correct CPU steering of returning interrupts, since
+the LUN thread model only works if the same CPU handles issue and
+completion, but it looks like that works in MQ, even if it doesn't work
+in vanilla.
+
+James
