@@ -1,54 +1,39 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] fcoe: Reduce max_sectors to 1024
-Date: Wed, 09 Jul 2014 08:40:30 +0200
-Message-ID: <53BCE3DE.6000605@suse.de>
-References: <1404886581-3218-1-git-send-email-hare@suse.de> <20140709061838.GA28335@infradead.org>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 03/14] scsi: centralize command re-queueing in
+	scsi_dispatch_fn
+Date: Wed, 9 Jul 2014 08:40:22 +0200
+Message-ID: <20140709064022.GA29443@lst.de>
+References: <1403715121-1201-1-git-send-email-hch@lst.de> <1403715121-1201-4-git-send-email-hch@lst.de> <94D0CD8314A33A4D9D801C0FE68B402958B922D2@G9W0745.americas.hpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:37078 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751271AbaGIGkd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 9 Jul 2014 02:40:33 -0400
-In-Reply-To: <20140709061838.GA28335@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <94D0CD8314A33A4D9D801C0FE68B402958B922D2@G9W0745.americas.hpqcorp.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <axboe@kernel.dk>, Bart Van Assche <bvanassche@fusionio.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, Vasu Dev <vasu.dev@linux.intel.com>
 
-On 07/09/2014 08:18 AM, Christoph Hellwig wrote:
-> On Wed, Jul 09, 2014 at 08:16:21AM +0200, Hannes Reinecke wrote:
->> The DDP offload on ixgbe is only capable of handling requests up
->> to 1024 sectors. So we should be exposing this to avoid spurious
->> messages about 'not enough user buffers'.
+On Tue, Jul 08, 2014 at 08:51:30PM +0000, Elliott, Robert (Server Storage) wrote:
+> In scsi_lib.c, both scsi_done() and scsi_mq_done() always call
+> trace_scsi_dispatch_cmd_done(), so trace_scsi_dispatch_cmd_start()
+> should be called before scsi_done() is called.  That way the
+> trace will always have a submission to match each completion.
+> 
+> That means trace should be called before the sdev_state check 
+> (which calls scsi_done()).  
 >
-> Shouldn't the network driver be able to communicate it's offload
-> capabilities to the fcoe core?  I'd be happy to take this as an iteri=
-m
-> fix if there's a comment explaining it, but long-term it should be
-> driver specific.
->
-ixgbe can handle up to 256 sgl elements, but the maximum single I/O=20
-size is 256 pages. This translates into 1024 sectors.
+> I don't know about the scsi_device_blocked check (which just 
+> returns).  Should the trace record multiple submissions with 
+> one completion?  Maybe both trace_scsi_dispatch_cmd_start() 
+> and trace_scsi_dispatch_cmd_done() should both be called?
 
-And seeing that the 'fcoe' driver is effectively tied to ixgbe ATM I=20
-doubt it's worth investing in yet another callout here.
-Intel, can you clarify on i40e? Is it FCoE capable?
-If so it might be worth adding a configuration knob here.
-Unless i40e has the same limitations as ixgbe ...
+trace_scsi_dispatch_cmd_start is maybe a little misnamed as it traces
+the command submission to the driver.  So getting a done trace without
+this one sounds perfectly fine.  Adding another trace for an error
+before submission could be done if you care about pairing.  The *_BUSY
+returns don't fit this scheme at all.
 
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+But none of this really is in this patch.  Hannes has some plans to clean
+up the logging and tracing mess in scsi, and it might be a good idea
+to incorporate it there.
