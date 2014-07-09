@@ -1,214 +1,163 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 05/14] scsi: push host_lock down into scsi_{host,target}_queue_ready
-Date: Wed, 09 Jul 2014 13:14:35 +0200
-Message-ID: <53BD241B.1040806@suse.de>
-References: <1403715121-1201-1-git-send-email-hch@lst.de> <1403715121-1201-6-git-send-email-hch@lst.de>
+Subject: Re: [PATCH 06/14] scsi: convert target_busy to an atomic_t
+Date: Wed, 09 Jul 2014 13:15:39 +0200
+Message-ID: <53BD245B.1060709@suse.de>
+References: <1403715121-1201-1-git-send-email-hch@lst.de> <1403715121-1201-7-git-send-email-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1;
 	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1403715121-1201-6-git-send-email-hch@lst.de>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:41579 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752108AbaGILPl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 9 Jul 2014 07:15:41 -0400
+In-Reply-To: <1403715121-1201-7-git-send-email-hch@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>, James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: Jens Axboe <axboe@kernel.dk>, Bart Van Assche <bvanassche@fusionio.com>, Robert Elliott <Elliott@hp.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
 
 On 06/25/2014 06:51 PM, Christoph Hellwig wrote:
-> Prepare for not taking a host-wide lock in the dispatch path by pushi=
-ng
-> the lock down into the places that actually need it.  Note that this
-> patch is just a preparation step, as it will actually increase lock
-> roundtrips and thus decrease performance on its own.
+> Avoid taking the host-wide host_lock to check the per-target queue li=
+mit.
+> Instead we do an atomic_inc_return early on to grab our slot in the q=
+ueue,
+> and if nessecary decrement it after finishing all checks.
 >
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->   drivers/scsi/scsi_lib.c |   75 ++++++++++++++++++++++++------------=
+>   drivers/scsi/scsi_lib.c    |   52 ++++++++++++++++++++++++++-------=
 -----------
->   1 file changed, 39 insertions(+), 36 deletions(-)
+>   include/scsi/scsi_device.h |    4 ++--
+>   2 files changed, 33 insertions(+), 23 deletions(-)
 >
 > diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 6989b6f..18e6449 100644
+> index 18e6449..5e269d6 100644
 > --- a/drivers/scsi/scsi_lib.c
 > +++ b/drivers/scsi/scsi_lib.c
-> @@ -1300,18 +1300,18 @@ static inline int scsi_dev_queue_ready(struct=
- request_queue *q,
->   /*
->    * scsi_target_queue_ready: checks if there we can send commands to=
- target
->    * @sdev: scsi device on starget to check.
-> - *
-> - * Called with the host lock held.
->    */
->   static inline int scsi_target_queue_ready(struct Scsi_Host *shost,
+> @@ -294,7 +294,7 @@ void scsi_device_unbusy(struct scsi_device *sdev)
+>
+>   	spin_lock_irqsave(shost->host_lock, flags);
+>   	shost->host_busy--;
+> -	starget->target_busy--;
+> +	atomic_dec(&starget->target_busy);
+>   	if (unlikely(scsi_host_in_recovery(shost) &&
+>   		     (shost->host_failed || shost->host_eh_scheduled)))
+>   		scsi_eh_wakeup(shost);
+> @@ -361,7 +361,7 @@ static inline int scsi_device_is_busy(struct scsi=
+_device *sdev)
+>   static inline int scsi_target_is_busy(struct scsi_target *starget)
+>   {
+>   	return ((starget->can_queue > 0 &&
+> -		 starget->target_busy >=3D starget->can_queue) ||
+> +		 atomic_read(&starget->target_busy) >=3D starget->can_queue) ||
+>   		 starget->target_blocked);
+>   }
+>
+> @@ -1305,37 +1305,49 @@ static inline int scsi_target_queue_ready(str=
+uct Scsi_Host *shost,
 >   					   struct scsi_device *sdev)
 >   {
 >   	struct scsi_target *starget =3D scsi_target(sdev);
-> +	int ret =3D 0;
+> -	int ret =3D 0;
+> +	unsigned int busy;
 >
-> +	spin_lock_irq(shost->host_lock);
+> -	spin_lock_irq(shost->host_lock);
 >   	if (starget->single_lun) {
+> +		spin_lock_irq(shost->host_lock);
 >   		if (starget->starget_sdev_user &&
->   		    starget->starget_sdev_user !=3D sdev)
-> -			return 0;
-> +			goto out;
+> -		    starget->starget_sdev_user !=3D sdev)
+> -			goto out;
+> +		    starget->starget_sdev_user !=3D sdev) {
+> +			spin_unlock_irq(shost->host_lock);
+> +			return 0;
+> +		}
 >   		starget->starget_sdev_user =3D sdev;
+> +		spin_unlock_irq(shost->host_lock);
 >   	}
 >
-> @@ -1319,57 +1319,66 @@ static inline int scsi_target_queue_ready(str=
-uct Scsi_Host *shost,
+> -	if (starget->target_busy =3D=3D 0 && starget->target_blocked) {
+> +	busy =3D atomic_inc_return(&starget->target_busy) - 1;
+> +	if (busy =3D=3D 0 && starget->target_blocked) {
 >   		/*
 >   		 * unblock after target_blocked iterates to zero
 >   		 */
-> -		if (--starget->target_blocked =3D=3D 0) {
-> -			SCSI_LOG_MLQUEUE(3, starget_printk(KERN_INFO, starget,
-> -					 "unblocking target at zero depth\n"));
-> -		} else
-> -			return 0;
-> +		if (--starget->target_blocked !=3D 0)
-> +			goto out;
-> +
-> +		SCSI_LOG_MLQUEUE(3, starget_printk(KERN_INFO, starget,
-> +				 "unblocking target at zero depth\n"));
->   	}
->
->   	if (scsi_target_is_busy(starget)) {
->   		list_move_tail(&sdev->starved_entry, &shost->starved_list);
-> -		return 0;
-> +		goto out;
->   	}
->
-> -	return 1;
-> +	scsi_target(sdev)->target_busy++;
-> +	ret =3D 1;
-> +out:
-> +	spin_unlock_irq(shost->host_lock);
-> +	return ret;
->   }
->
->   /*
->    * scsi_host_queue_ready: if we can send requests to shost, return =
-1 else
->    * return 0. We must end up running the queue again whenever 0 is
->    * returned, else IO can hang.
-> - *
-> - * Called with host_lock held.
->    */
->   static inline int scsi_host_queue_ready(struct request_queue *q,
->   				   struct Scsi_Host *shost,
->   				   struct scsi_device *sdev)
->   {
-> +	int ret =3D 0;
-> +
-> +	spin_lock_irq(shost->host_lock);
-> +
->   	if (scsi_host_in_recovery(shost))
-> -		return 0;
-> +		goto out;
->   	if (shost->host_busy =3D=3D 0 && shost->host_blocked) {
->   		/*
->   		 * unblock after host_blocked iterates to zero
->   		 */
-> -		if (--shost->host_blocked =3D=3D 0) {
-> -			SCSI_LOG_MLQUEUE(3,
-> -				shost_printk(KERN_INFO, shost,
-> -					     "unblocking host at zero depth\n"));
-> -		} else {
-> -			return 0;
-> -		}
-> +		if (--shost->host_blocked !=3D 0)
-> +			goto out;
-> +
-> +		SCSI_LOG_MLQUEUE(3,
-> +			shost_printk(KERN_INFO, shost,
-> +				     "unblocking host at zero depth\n"));
->   	}
->   	if (scsi_host_is_busy(shost)) {
->   		if (list_empty(&sdev->starved_entry))
->   			list_add_tail(&sdev->starved_entry, &shost->starved_list);
-> -		return 0;
-> +		goto out;
->   	}
->
->   	/* We're OK to process the command, so we can't be starved */
->   	if (!list_empty(&sdev->starved_entry))
->   		list_del_init(&sdev->starved_entry);
->
-> -	return 1;
-> +	shost->host_busy++;
-> +	ret =3D 1;
-> +out:
-> +	spin_unlock_irq(shost->host_lock);
-> +	return ret;
->   }
->
->   /*
-> @@ -1550,7 +1559,7 @@ static void scsi_request_fn(struct request_queu=
-e *q)
->   			blk_start_request(req);
->   		sdev->device_busy++;
->
-> -		spin_unlock(q->queue_lock);
-> +		spin_unlock_irq(q->queue_lock);
->   		cmd =3D req->special;
->   		if (unlikely(cmd =3D=3D NULL)) {
->   			printk(KERN_CRIT "impossible request in %s.\n"
-> @@ -1560,7 +1569,6 @@ static void scsi_request_fn(struct request_queu=
-e *q)
->   			blk_dump_rq_flags(req, "foo");
->   			BUG();
->   		}
-> -		spin_lock(shost->host_lock);
->
->   		/*
->   		 * We hit this when the driver is using a host wide
-> @@ -1571,9 +1579,11 @@ static void scsi_request_fn(struct request_que=
-ue *q)
->   		 * a run when a tag is freed.
->   		 */
->   		if (blk_queue_tagged(q) && !blk_rq_tagged(req)) {
-> +			spin_lock_irq(shost->host_lock);
->   			if (list_empty(&sdev->starved_entry))
->   				list_add_tail(&sdev->starved_entry,
->   					      &shost->starved_list);
+> -		if (--starget->target_blocked !=3D 0)
+> -			goto out;
+> +		spin_lock_irq(shost->host_lock);
+> +		if (--starget->target_blocked !=3D 0) {
 > +			spin_unlock_irq(shost->host_lock);
->   			goto not_ready;
->   		}
+> +			goto out_dec;
+> +		}
+> +		spin_unlock_irq(shost->host_lock);
 >
-> @@ -1581,16 +1591,7 @@ static void scsi_request_fn(struct request_que=
-ue *q)
->   			goto not_ready;
+>   		SCSI_LOG_MLQUEUE(3, starget_printk(KERN_INFO, starget,
+>   				 "unblocking target at zero depth\n"));
+>   	}
 >
->   		if (!scsi_host_queue_ready(q, shost, sdev))
-> -			goto not_ready;
-> -
-> -		scsi_target(sdev)->target_busy++;
-> -		shost->host_busy++;
-> -
-> -		/*
-> -		 * XXX(hch): This is rather suboptimal, scsi_dispatch_cmd will
-> -		 *		take the lock again.
-> -		 */
-> -		spin_unlock_irq(shost->host_lock);
-> +			goto host_not_ready;
+> -	if (scsi_target_is_busy(starget)) {
+> -		list_move_tail(&sdev->starved_entry, &shost->starved_list);
+> -		goto out;
+> -	}
+> +	if (starget->can_queue > 0 && busy >=3D starget->can_queue)
+> +		goto starved;
+> +	if (starget->target_blocked)
+> +		goto starved;
 >
->   		/*
->   		 * Finally, initialize any error handling parameters, and set up
-> @@ -1613,9 +1614,11 @@ static void scsi_request_fn(struct request_que=
-ue *q)
+> -	scsi_target(sdev)->target_busy++;
+> -	ret =3D 1;
+> -out:
+> +	return 1;
+> +
+> +starved:
+> +	spin_lock_irq(shost->host_lock);
+> +	list_move_tail(&sdev->starved_entry, &shost->starved_list);
+>   	spin_unlock_irq(shost->host_lock);
+> -	return ret;
+> +out_dec:
+> +	atomic_dec(&starget->target_busy);
+> +	return 0;
+>   }
 >
+>   /*
+> @@ -1445,7 +1457,7 @@ static void scsi_kill_request(struct request *r=
+eq, struct request_queue *q)
+>   	spin_unlock(sdev->request_queue->queue_lock);
+>   	spin_lock(shost->host_lock);
+>   	shost->host_busy++;
+> -	starget->target_busy++;
+> +	atomic_inc(&starget->target_busy);
+>   	spin_unlock(shost->host_lock);
+>   	spin_lock(sdev->request_queue->queue_lock);
+>
+> @@ -1615,9 +1627,7 @@ static void scsi_request_fn(struct request_queu=
+e *q)
 >   	return;
 >
-> - not_ready:
-> + host_not_ready:
-> +	spin_lock_irq(shost->host_lock);
-> +	scsi_target(sdev)->target_busy--;
->   	spin_unlock_irq(shost->host_lock);
-> -
-> + not_ready:
+>    host_not_ready:
+> -	spin_lock_irq(shost->host_lock);
+> -	scsi_target(sdev)->target_busy--;
+> -	spin_unlock_irq(shost->host_lock);
+> +	atomic_dec(&scsi_target(sdev)->target_busy);
+>    not_ready:
 >   	/*
 >   	 * lock q, handle tag, requeue req, and decrement device_busy. We
->   	 * must return with queue_lock held.
+> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+> index 816e8a2..446f741 100644
+> --- a/include/scsi/scsi_device.h
+> +++ b/include/scsi/scsi_device.h
+> @@ -290,8 +290,8 @@ struct scsi_target {
+>   	unsigned int		expecting_lun_change:1;	/* A device has reported
+>   						 * a 3F/0E UA, other devices on
+>   						 * the same target will also. */
+> -	/* commands actually active on LLD. protected by host lock. */
+> -	unsigned int		target_busy;
+> +	/* commands actually active on LLD. */
+> +	atomic_t		target_busy;
+>   	/*
+>   	 * LLDs should set this in the slave_alloc host template callout.
+>   	 * If set to zero then there is not limit.
 >
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
@@ -220,3 +169,8 @@ Dr. Hannes Reinecke		      zSeries & Storage
 hare@suse.de			      +49 911 74053 688
 SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
 GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
