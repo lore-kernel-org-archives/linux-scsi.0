@@ -1,39 +1,52 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 03/14] scsi: centralize command re-queueing in
-	scsi_dispatch_fn
-Date: Wed, 9 Jul 2014 08:40:22 +0200
-Message-ID: <20140709064022.GA29443@lst.de>
-References: <1403715121-1201-1-git-send-email-hch@lst.de> <1403715121-1201-4-git-send-email-hch@lst.de> <94D0CD8314A33A4D9D801C0FE68B402958B922D2@G9W0745.americas.hpqcorp.net>
+From: Hans de Goede <hdegoede@redhat.com>
+Subject: Re: uas - kernel panic on drive connection
+Date: Wed, 09 Jul 2014 09:06:43 +0200
+Message-ID: <53BCEA03.30304@redhat.com>
+References: <20140704104028.2014aaf4@earthlink.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <94D0CD8314A33A4D9D801C0FE68B402958B922D2@G9W0745.americas.hpqcorp.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <axboe@kernel.dk>, Bart Van Assche <bvanassche@fusionio.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:37075 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751114AbaGIHGs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 9 Jul 2014 03:06:48 -0400
+In-Reply-To: <20140704104028.2014aaf4@earthlink.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jonathan.625266@earthlink.net
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, Jul 08, 2014 at 08:51:30PM +0000, Elliott, Robert (Server Storage) wrote:
-> In scsi_lib.c, both scsi_done() and scsi_mq_done() always call
-> trace_scsi_dispatch_cmd_done(), so trace_scsi_dispatch_cmd_start()
-> should be called before scsi_done() is called.  That way the
-> trace will always have a submission to match each completion.
-> 
-> That means trace should be called before the sdev_state check 
-> (which calls scsi_done()).  
+Hi, Jonathan
+
+Fri, 04 Jul 2014, Jonathan wrote:
+
+> Beginning with kernel 3.15.1, I am getting hard lockups every time I connect a
+> drive to my USB 3 HDD dock with ASMedia ASM1051E UASP compliant chipset. The
+> only way I am able work around this is to set the quirk to ignore uas for the
+> device. Here are the kernel messages during connection followed by a backtrace:
 >
-> I don't know about the scsi_device_blocked check (which just 
-> returns).  Should the trace record multiple submissions with 
-> one completion?  Maybe both trace_scsi_dispatch_cmd_start() 
-> and trace_scsi_dispatch_cmd_done() should both be called?
+> [  229.882190] usb 2-1: new SuperSpeed USB device number 3 using xhci_hcd
+> [  229.908001] usb-storage 2-1:1.0: USB Mass Storage device detected
+> [  229.908218] usb-storage 2-1:1.0: Quirks match for vid 174c pid 55aa: 400000
+> [  229.908349] scsi7 : usb-storage 2-1:1.0
+> [  230.912633] scsi 7:0:0:0: Direct-Access     ASMT     2105             0     PQ: 0 ANSI: 6
+> [  230.914818] sd 7:0:0:0: [sdc] Attached SCSI removable disk
+> [  289.680267] usb 2-1: USB disconnect, device number 3
+> [  319.599862] usb 2-1: new SuperSpeed USB device number 4 using xhci_hcd
+> [  319.626881] scsi8 : uas
+> [  319.628221] xhci_hcd 0000:02:00.0: ERROR Transfer event TRB DMA ptr not part  of current TD
+> [  320.029323] BUG: unable to handle kernel paging request at 0000000001000003
 
-trace_scsi_dispatch_cmd_start is maybe a little misnamed as it traces
-the command submission to the driver.  So getting a done trace without
-this one sounds perfectly fine.  Adding another trace for an error
-before submission could be done if you care about pairing.  The *_BUSY
-returns don't fit this scheme at all.
+This looks like something is going wrong in the XHCI code, likely something
+related to bulk-streams.
 
-But none of this really is in this patch.  Hannes has some plans to clean
-up the logging and tracing mess in scsi, and it might be a good idea
-to incorporate it there.
+I've a dock with an ASMedia ASM1053E chipset myself and that one works fine with both
+Nec and Intel XHCI controllers. What type of XHCI controller do you have ?
+
+Can you please do "lspci" on the machine in question and include the output in your
+next mail ?
+
+Regards,
+
+Hans
