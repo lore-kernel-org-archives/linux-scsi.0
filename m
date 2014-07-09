@@ -1,12 +1,12 @@
 From: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
-Subject: [PATCH 7/8][RESEND] pm8001: add a new spinlock to protect the CCB
-Date: Wed,  9 Jul 2014 17:21:01 +0530
-Message-ID: <1404906661-15841-1-git-send-email-Suresh.Thiagarajan@pmcs.com>
+Subject: [PATCH 8/8][RESEND] pm8001: more fixes to honor return value
+Date: Wed,  9 Jul 2014 17:21:11 +0530
+Message-ID: <1404906671-15874-1-git-send-email-Suresh.Thiagarajan@pmcs.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:49237 "EHLO
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:49297 "EHLO
 	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751978AbaGILv6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jul 2014 07:51:58 -0400
+	by vger.kernel.org with ESMTP id S1751978AbaGILwI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jul 2014 07:52:08 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
@@ -14,64 +14,95 @@ Cc: xjtuwjp@gmail.com, JBottomley@parallels.com, Suresh.Thiagarajan@pmcs.com, Vi
 
 From: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
 
-Patch adds a new spinlock to protect the ccb management.
-It may happen that concurrent threads become the same tag value
-from the 'alloc' function', the spinlock prevents this situation.
+The driver ignores the return value in a lot of places, fix
+it at least somewhere (and release the resources in such cases),
+to avoid that bad things happen.
+A memory leak is fixed too.
 
 Signed-off-by: Tomas Henzl <thenzl@redhat.com>
 Acked-by: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
 ---
- drivers/scsi/pm8001/pm8001_init.c |    1 +
- drivers/scsi/pm8001/pm8001_sas.c  |    7 ++++++-
- drivers/scsi/pm8001/pm8001_sas.h  |    1 +
- 3 files changed, 8 insertions(+), 1 deletions(-)
+ drivers/scsi/pm8001/pm8001_ctl.c  |    5 ++++-
+ drivers/scsi/pm8001/pm8001_init.c |   22 ++++++++++++++++++++--
+ 2 files changed, 24 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/scsi/pm8001/pm8001_ctl.c b/drivers/scsi/pm8001/pm8001_ctl.c
+index a368d77..ade62c8 100644
+--- a/drivers/scsi/pm8001/pm8001_ctl.c
++++ b/drivers/scsi/pm8001/pm8001_ctl.c
+@@ -397,7 +397,10 @@ static ssize_t pm8001_ctl_bios_version_show(struct device *cdev,
+ 	payload.func_specific = kzalloc(4096, GFP_KERNEL);
+ 	if (!payload.func_specific)
+ 		return -ENOMEM;
+-	PM8001_CHIP_DISP->get_nvmd_req(pm8001_ha, &payload);
++	if (PM8001_CHIP_DISP->get_nvmd_req(pm8001_ha, &payload)) {
++		kfree(payload.func_specific);
++		return -ENOMEM;
++	}
+ 	wait_for_completion(&completion);
+ 	virt_addr = pm8001_ha->memoryMap.region[NVMD].virt_ptr;
+ 	for (bios_index = BIOSOFFSET; bios_index < BIOS_OFFSET_LIMIT;
 diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-index aad060a..acef7d6 100644
+index acef7d6..236fba4 100644
 --- a/drivers/scsi/pm8001/pm8001_init.c
 +++ b/drivers/scsi/pm8001/pm8001_init.c
-@@ -246,6 +246,7 @@ static int pm8001_alloc(struct pm8001_hba_info *pm8001_ha,
- {
- 	int i;
- 	spin_lock_init(&pm8001_ha->lock);
-+	spin_lock_init(&pm8001_ha->bitmap_lock);
- 	PM8001_INIT_DBG(pm8001_ha,
- 		pm8001_printk("pm8001_alloc: PHY:%x\n",
- 				pm8001_ha->chip->n_phy));
-diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
-index be55859..34cea82 100644
---- a/drivers/scsi/pm8001/pm8001_sas.c
-+++ b/drivers/scsi/pm8001/pm8001_sas.c
-@@ -77,11 +77,16 @@ inline int pm8001_tag_alloc(struct pm8001_hba_info *pm8001_ha, u32 *tag_out)
- {
- 	unsigned int tag;
- 	void *bitmap = pm8001_ha->tags;
-+	unsigned long flags;
+@@ -622,6 +622,8 @@ static void pm8001_init_sas_add(struct pm8001_hba_info *pm8001_ha)
+ 	DECLARE_COMPLETION_ONSTACK(completion);
+ 	struct pm8001_ioctl_payload payload;
+ 	u16 deviceid;
++	int rc;
++
+ 	pci_read_config_word(pm8001_ha->pdev, PCI_DEVICE_ID, &deviceid);
+ 	pm8001_ha->nvmd_completion = &completion;
  
-+	spin_lock_irqsave(&pm8001_ha->bitmap_lock, flags);
- 	tag = find_first_zero_bit(bitmap, pm8001_ha->tags_num);
--	if (tag >= pm8001_ha->tags_num)
-+	if (tag >= pm8001_ha->tags_num) {
-+		spin_unlock_irqrestore(&pm8001_ha->bitmap_lock, flags);
- 		return -SAS_QUEUE_FULL;
+@@ -639,7 +641,16 @@ static void pm8001_init_sas_add(struct pm8001_hba_info *pm8001_ha)
+ 	}
+ 	payload.offset = 0;
+ 	payload.func_specific = kzalloc(payload.length, GFP_KERNEL);
+-	PM8001_CHIP_DISP->get_nvmd_req(pm8001_ha, &payload);
++	if (!payload.func_specific) {
++		PM8001_INIT_DBG(pm8001_ha, pm8001_printk("mem alloc fail\n"));
++		return;
 +	}
- 	set_bit(tag, bitmap);
-+	spin_unlock_irqrestore(&pm8001_ha->bitmap_lock, flags);
- 	*tag_out = tag;
- 	return 0;
- }
-diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
-index 14106ad..f6b2ac5 100644
---- a/drivers/scsi/pm8001/pm8001_sas.h
-+++ b/drivers/scsi/pm8001/pm8001_sas.h
-@@ -475,6 +475,7 @@ struct pm8001_hba_info {
- 	struct list_head	list;
- 	unsigned long		flags;
- 	spinlock_t		lock;/* host-wide lock */
-+	spinlock_t		bitmap_lock;
- 	struct pci_dev		*pdev;/* our device */
- 	struct device		*dev;
- 	struct pm8001_hba_memspace io_mem[6];
++	rc = PM8001_CHIP_DISP->get_nvmd_req(pm8001_ha, &payload);
++	if (rc) {
++		kfree(payload.func_specific);
++		PM8001_INIT_DBG(pm8001_ha, pm8001_printk("nvmd failed\n"));
++		return;
++	}
+ 	wait_for_completion(&completion);
+ 
+ 	for (i = 0, j = 0; i <= 7; i++, j++) {
+@@ -662,6 +673,7 @@ static void pm8001_init_sas_add(struct pm8001_hba_info *pm8001_ha)
+ 			pm8001_printk("phy %d sas_addr = %016llx\n", i,
+ 			pm8001_ha->phy[i].dev_sas_addr));
+ 	}
++	kfree(payload.func_specific);
+ #else
+ 	for (i = 0; i < pm8001_ha->chip->n_phy; i++) {
+ 		pm8001_ha->phy[i].dev_sas_addr = 0x50010c600047f9d0ULL;
+@@ -685,6 +697,7 @@ static int pm8001_get_phy_settings_info(struct pm8001_hba_info *pm8001_ha)
+ 	/*OPTION ROM FLASH read for the SPC cards */
+ 	DECLARE_COMPLETION_ONSTACK(completion);
+ 	struct pm8001_ioctl_payload payload;
++	int rc;
+ 
+ 	pm8001_ha->nvmd_completion = &completion;
+ 	/* SAS ADDRESS read from flash / EEPROM */
+@@ -695,7 +708,12 @@ static int pm8001_get_phy_settings_info(struct pm8001_hba_info *pm8001_ha)
+ 	if (!payload.func_specific)
+ 		return -ENOMEM;
+ 	/* Read phy setting values from flash */
+-	PM8001_CHIP_DISP->get_nvmd_req(pm8001_ha, &payload);
++	rc = PM8001_CHIP_DISP->get_nvmd_req(pm8001_ha, &payload);
++	if (rc) {
++		kfree(payload.func_specific);
++		PM8001_INIT_DBG(pm8001_ha, pm8001_printk("nvmd failed\n"));
++		return -ENOMEM;
++	}
+ 	wait_for_completion(&completion);
+ 	pm8001_set_phy_profile(pm8001_ha, sizeof(u8), payload.func_specific);
+ 	kfree(payload.func_specific);
 -- 
 1.7.1
 
