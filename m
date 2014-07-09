@@ -1,69 +1,84 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 1/1] Add defines for new FC port speeds.
-Date: Wed, 09 Jul 2014 12:47:44 +0200
-Message-ID: <53BD1DD0.4000105@suse.de>
-References: <814CB474615D9040840B5BA11313B6CB3D85763C@CMEXMB1.ad.emulex.com> <20140625105738.GA19049@infradead.org>
+Subject: Re: [PATCH V2] scsi_lib: removes ambiguous "Unhandled error code"
+ messages.
+Date: Wed, 09 Jul 2014 12:49:09 +0200
+Message-ID: <53BD1E25.8040807@suse.de>
+References: <1402042235-7246-1-git-send-email-mlombard@redhat.com> <20140625110632.GE19181@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1;
 	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:40989 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:41030 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751271AbaGIKrq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 9 Jul 2014 06:47:46 -0400
-In-Reply-To: <20140625105738.GA19049@infradead.org>
+	id S1755062AbaGIKtL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 9 Jul 2014 06:49:11 -0400
+In-Reply-To: <20140625110632.GE19181@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Dick Kennedy <Dick.Kennedy@Emulex.Com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>, Maurizio Lombardi <mlombard@redhat.com>
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 
-On 06/25/2014 12:57 PM, Christoph Hellwig wrote:
+On 06/25/2014 01:06 PM, Christoph Hellwig wrote:
 > Can I get another review for this one?
 >
-> On Fri, Jun 13, 2014 at 04:40:36PM +0000, Dick Kennedy wrote:
->> These speeds are to support the next generation of FCoE port speeds.
->> Signed-off-by: rkennedy@emulex.com
+> On Fri, Jun 06, 2014 at 10:10:35AM +0200, Maurizio Lombardi wrote:
+>> During IO with fabric faults, one generally sees several "Unhandled =
+error
+>> code" messages in the syslog as shown below:
+>>
+>> sd 4:0:6:2: [sdbw] Unhandled error code
+>> sd 4:0:6:2: [sdbw] Result: hostbyte=3DDID_NO_CONNECT driverbyte=3DDR=
+IVER_OK
+>> sd 4:0:6:2: [sdbw] CDB: Read(10): 28 00 00 00 00 00 00 00 08 00
+>> end_request: I/O error, dev sdbw, sector 0
+>>
+>> This comes from scsi_io_completion (in scsi_lib.c) while handling er=
+ror
+>> codes other than DID_RESET or not deferred sense keys i.e. this is
+>> actually handled by the SCSI mid layer. But what gets displayed here=
+ is
+>> "Unhandled error code" which is quite misleading as it indicates
+>> something that is not addressed by the mid layer.
+>>
+>> This patch removes "Unhandled error code" and replaces "Unhandled se=
+nse code"
+>> with "Failing command with sense code:".
+>>
+>>
+>> Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
 >> ---
->>   drivers/scsi/scsi_transport_fc.c |    4 ++++
->>   include/scsi/scsi_transport_fc.h |    4 ++++
->>   2 files changed, 8 insertions(+), 0 deletions(-)
+>>   drivers/scsi/scsi_lib.c | 6 ++----
+>>   1 file changed, 2 insertions(+), 4 deletions(-)
 >>
->> diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_tr=
-ansport_fc.c
->> index f80908f..454cc28 100644
->> --- a/drivers/scsi/scsi_transport_fc.c
->> +++ b/drivers/scsi/scsi_transport_fc.c
->> @@ -262,6 +262,10 @@ static const struct {
->>          { FC_PORTSPEED_8GBIT,           "8 Gbit" },
->>          { FC_PORTSPEED_16GBIT,          "16 Gbit" },
->>          { FC_PORTSPEED_32GBIT,          "32 Gbit" },
->> +       { FC_PORTSPEED_20GBIT,          "20 Gbit" },
->> +       { FC_PORTSPEED_40GBIT,          "40 Gbit" },
->> +       { FC_PORTSPEED_50GBIT,          "50 Gbit" },
->> +       { FC_PORTSPEED_100GBIT,         "100 Gbit" },
->>          { FC_PORTSPEED_NOT_NEGOTIATED,  "Not Negotiated" },
->>   };
->>   fc_bitfield_name_search(port_speed, fc_port_speed_names)
->> diff --git a/include/scsi/scsi_transport_fc.h b/include/scsi/scsi_tr=
-ansport_fc.h
->> index 8c79980..007a0bc 100644
->> --- a/include/scsi/scsi_transport_fc.h
->> +++ b/include/scsi/scsi_transport_fc.h
->> @@ -131,6 +131,10 @@ enum fc_vport_state {
->>   #define FC_PORTSPEED_8GBIT             0x10
->>   #define FC_PORTSPEED_16GBIT            0x20
->>   #define FC_PORTSPEED_32GBIT            0x40
->> +#define FC_PORTSPEED_20GBIT            0x80
->> +#define FC_PORTSPEED_40GBIT            0x100
->> +#define FC_PORTSPEED_50GBIT            0x200
->> +#define FC_PORTSPEED_100GBIT           0x400
->>   #define FC_PORTSPEED_NOT_NEGOTIATED    (1 << 15) /* Speed not esta=
-blished */
+>> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+>> index 9db097a..b3c25cd 100644
+>> --- a/drivers/scsi/scsi_lib.c
+>> +++ b/drivers/scsi/scsi_lib.c
+>> @@ -955,14 +955,12 @@ void scsi_io_completion(struct scsi_cmnd *cmd,=
+ unsigned int good_bytes)
+>>   			action =3D ACTION_FAIL;
+>>   			break;
+>>   		default:
+>> -			description =3D "Unhandled sense code";
+>> +			description =3D "Failing command with sense code:";
+>>   			action =3D ACTION_FAIL;
+>>   			break;
+>>   		}
+>> -	} else {
+>> -		description =3D "Unhandled error code";
+>> +	} else
+>>   		action =3D ACTION_FAIL;
+>> -	}
 >>
->>   /*
+>>   	if (action !=3D ACTION_FAIL &&
+>>   	    time_before(cmd->jiffies_at_alloc + wait_for, jiffies)) {
 >> --
->> 1.6.6
+>> Maurizio Lombardi
+>>
+Good to see it finally went in.
+We're carrying the same patch in our tree for ages as the original=20
+attempt to push it upstream failed.
 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
