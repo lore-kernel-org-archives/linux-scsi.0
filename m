@@ -1,65 +1,93 @@
-From: Jonathan <jonathan.625266@earthlink.net>
-Subject: Re: uas - kernel panic on drive connection
-Date: Wed, 9 Jul 2014 19:31:39 -0400
-Message-ID: <20140709193139.32049945@earthlink.net>
-References: <20140704104028.2014aaf4@earthlink.net>
-	<53BCEA03.30304@redhat.com>
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: [PATCH 1/8] Drivers: scsi: storvsc: Change the limits to reflect
+ the values on the host
+Date: Wed, 9 Jul 2014 23:39:42 +0000
+Message-ID: <70a32eae84164a60b6318246fcedfa55@BY2PR03MB299.namprd03.prod.outlook.com>
+References: <1404866789-26910-1-git-send-email-kys@microsoft.com>
+ <1404866812-26950-1-git-send-email-kys@microsoft.com>
+ <20140709083954.GA6012@infradead.org>
+ <e5e366a15a9f4a6fa1817b0f3b25a482@BY2PR03MB299.namprd03.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from elasmtp-curtail.atl.sa.earthlink.net ([209.86.89.64]:41086 "EHLO
-	elasmtp-curtail.atl.sa.earthlink.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753340AbaGIXbl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jul 2014 19:31:41 -0400
-In-Reply-To: <53BCEA03.30304@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <e5e366a15a9f4a6fa1817b0f3b25a482@BY2PR03MB299.namprd03.prod.outlook.com>
+Content-Language: en-US
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: driverdev-devel-bounces@linuxdriverproject.org
+To: KY Srinivasan <kys@microsoft.com>, Christoph Hellwig <hch@infradead.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jasowang@redhat.com" <jasowang@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "ohering@suse.com" <ohering@suse.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "apw@canonical.com" <apw@canonical.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Hans de Goede <hdegoede@redhat.com>
 
-Hans,
 
-Thanks for getting back to me. It looks like the USB 3.0 controller is an Etron.
 
-Here is the output from lspci:
-
-00:00.0 Host bridge: Intel Corporation 2nd Generation Core Processor Family DRAM Controller (rev 09)
-00:02.0 VGA compatible controller: Intel Corporation 2nd Generation Core Processor Family Integrated Graphics Controller (rev 09)
-00:16.0 Communication controller: Intel Corporation 6 Series/C200 Series Chipset Family MEI Controller #1 (rev 04)
-00:1a.0 USB controller: Intel Corporation 6 Series/C200 Series Chipset Family USB Enhanced Host Controller #2 (rev 05)
-00:1b.0 Audio device: Intel Corporation 6 Series/C200 Series Chipset Family High Definition Audio Controller (rev 05)
-00:1c.0 PCI bridge: Intel Corporation 6 Series/C200 Series Chipset Family PCI Express Root Port 1 (rev b5)
-00:1c.2 PCI bridge: Intel Corporation 6 Series/C200 Series Chipset Family PCI Express Root Port 3 (rev b5)
-00:1c.4 PCI bridge: Intel Corporation 82801 PCI Bridge (rev b5)
-00:1c.5 PCI bridge: Intel Corporation 6 Series/C200 Series Chipset Family PCI Express Root Port 6 (rev b5)
-00:1d.0 USB controller: Intel Corporation 6 Series/C200 Series Chipset Family USB Enhanced Host Controller #1 (rev 05)
-00:1f.0 ISA bridge: Intel Corporation Z68 Express Chipset Family LPC Controller (rev 05)
-00:1f.2 SATA controller: Intel Corporation 6 Series/C200 Series Chipset Family SATA AHCI Controller (rev 05)
-00:1f.3 SMBus: Intel Corporation 6 Series/C200 Series Chipset Family SMBus Controller (rev 05)
-01:00.0 Ethernet controller: Intel Corporation 82574L Gigabit Network Connection
-02:00.0 USB controller: Etron Technology, Inc. EJ168 USB 3.0 Host Controller (rev 01)
-03:00.0 PCI bridge: ASMedia Technology Inc. ASM1083/1085 PCIe to PCI Bridge (rev 01)
-04:00.0 FireWire (IEEE 1394): Texas Instruments TSB12LV26 IEEE-1394 Controller (Link)
-05:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller (rev 06)
-
-Best,
-
-Jonathan
-
-On Wed, 09 Jul 2014 09:06:43 +0200
-Hans de Goede <hdegoede@redhat.com> wrote:
-
+> -----Original Message-----
+> From: driverdev-devel-bounces@linuxdriverproject.org [mailto:driverdev-
+> devel-bounces@linuxdriverproject.org] On Behalf Of KY Srinivasan
+> Sent: Wednesday, July 9, 2014 1:07 PM
+> To: Christoph Hellwig
+> Cc: linux-scsi@vger.kernel.org; jasowang@redhat.com; linux-
+> kernel@vger.kernel.org; jbottomley@parallels.com; ohering@suse.com;
+> stable@vger.kernel.org; apw@canonical.com; devel@linuxdriverproject.org
+> Subject: RE: [PATCH 1/8] Drivers: scsi: storvsc: Change the limits to reflect the
+> values on the host
 > 
-> This looks like something is going wrong in the XHCI code, likely something
-> related to bulk-streams.
 > 
-> I've a dock with an ASMedia ASM1053E chipset myself and that one works fine with both
-> Nec and Intel XHCI controllers. What type of XHCI controller do you have ?
 > 
-> Can you please do "lspci" on the machine in question and include the output in your
-> next mail ?
+> > -----Original Message-----
+> > From: Christoph Hellwig [mailto:hch@infradead.org]
+> > Sent: Wednesday, July 9, 2014 1:40 AM
+> > To: KY Srinivasan
+> > Cc: linux-kernel@vger.kernel.org; devel@linuxdriverproject.org;
+> > ohering@suse.com; jbottomley@parallels.com; jasowang@redhat.com;
+> > apw@canonical.com; linux-scsi@vger.kernel.org; stable@vger.kernel.org
+> > Subject: Re: [PATCH 1/8] Drivers: scsi: storvsc: Change the limits to
+> > reflect the values on the host
+> >
+> > On Tue, Jul 08, 2014 at 05:46:45PM -0700, K. Y. Srinivasan wrote:
+> > > + * In Hyper-V, each port/path/target maps to 1 scsi host adapter.
+> >
+> > Does it still?  The STORVSC_FC_MAX_TARGETS define suggests otherwise.
 > 
-> Regards,
+> I will fix the comments and get rid of unnecessary comments.
 > 
-> Hans
+> >
+> > > -	.cmd_per_lun =		1,
+> > > +	.cmd_per_lun =		255,
+> >
+> > This looks like an unrelated change.
+> 
+> I will have a separate patch for this.
+> >
+> > > +		/* max # of devices per target */
+> > > +		host->max_lun = STORVSC_FC_MAX_LUNS_PER_TARGET;
+> > > +		/* max # of targets per channel */
+> > > +		host->max_id = STORVSC_FC_MAX_TARGETS;
+> > > +		/* max # of channels */
+> > > +		host->max_channel = STORVSC_FC_MAX_CHANNELS - 1;
+> >
+> > I don't think these comments add any value..
+> 
+> I will get rid of the comments.
+> 
+> >
+> > Also any reason you use off by one defines for max_channel, but not
+> > the others?
+> 
+> No particular reason; I will clean this up.
+
+On further examination max_channel is the maximum number of channels including channel 0. Thus the value set for
+max_channel is correct. max_id appears to indicate the limit. In scsi_scan_channel the loop control  is (id < max_id) and
+hence the value I have here is correct. max_lun is also used like max_id to indicate the limit. In scsi_sequential_lun_scan()
+the loop control is (lun < max_dev_lun) and hence I think the value I have here is fine.
+
+Regards,
+
+K. Y 
