@@ -1,31 +1,43 @@
-From: David Laight <David.Laight@ACULAB.COM>
-Subject: RE: dummy scsi read or scsi command periodically for external USB
- Hard Disk
-Date: Wed, 9 Jul 2014 08:37:18 +0000
-Message-ID: <063D6719AE5E284EB5DD2968C1650D6D1726EEFA@AcuExch.aculab.com>
-References: <CANudz+vNcLEJSX9L4FsPMMgJfp7rZxcryPcRmPs0-k5nB61dDg@mail.gmail.com>
-	<Pine.LNX.4.44L0.1407081524460.1283-100000@iolanthe.rowland.org>
- <CANudz+vdVQAJgz1YYN=yFQn+749XFbvi3Hqnd+n5zkM5FxuJtQ@mail.gmail.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/8] Drivers: scsi: storvsc: Change the limits to reflect
+ the values on the host
+Date: Wed, 9 Jul 2014 01:39:54 -0700
+Message-ID: <20140709083954.GA6012@infradead.org>
+References: <1404866789-26910-1-git-send-email-kys@microsoft.com>
+ <1404866812-26950-1-git-send-email-kys@microsoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0.aculab.com ([213.249.233.131]:54625 "HELO mx0.aculab.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751313AbaGIIit (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 9 Jul 2014 04:38:49 -0400
-Received: from mx0.aculab.com ([127.0.0.1])
- by localhost (mx0.aculab.com [127.0.0.1]) (amavisd-new, port 10024) with SMTP
- id 01288-02 for <linux-scsi@vger.kernel.org>;
- Wed,  9 Jul 2014 09:38:41 +0100 (BST)
-In-Reply-To: <CANudz+vdVQAJgz1YYN=yFQn+749XFbvi3Hqnd+n5zkM5FxuJtQ@mail.gmail.com>
-Content-Language: en-US
+Received: from bombadil.infradead.org ([198.137.202.9]:53483 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751635AbaGIIj4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jul 2014 04:39:56 -0400
+Content-Disposition: inline
+In-Reply-To: <1404866812-26950-1-git-send-email-kys@microsoft.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'loody' <miloody@gmail.com>, Alan Stern <stern@rowland.harvard.edu>
-Cc: "Bryn M. Reeves" <bmr@redhat.com>, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
+To: "K. Y. Srinivasan" <kys@microsoft.com>
+Cc: linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, jbottomley@parallels.com, jasowang@redhat.com, apw@canonical.com, linux-scsi@vger.kernel.org, stable@vger.kernel.org
 
-RnJvbTogbG9vZHkNCi4uLg0KPiBidXQgd2hhdCBpdCByZWFsbHkgZG8gaXMgcmVhZCBzZWN0b3Is
-IG5vdCBtZWRpYV9jaGFuZ2Ugb3IgdGVzdF91bml0X3JlYWR5Lg0KDQpNYXliZSBvbmUgb2YgdGhl
-IHByb2dyYW1zIHRoYXQgcmVhZHMgdGhlIG1iciBwYXJ0aXRpb24gdGFibGUgY2FuDQpiZSBwZXJz
-dWFkZWQgdG8gZG8gYSBkaXJlY3QgcmVhZD8NCg0KCURhdmlkDQoNCg==
+On Tue, Jul 08, 2014 at 05:46:45PM -0700, K. Y. Srinivasan wrote:
+> + * In Hyper-V, each port/path/target maps to 1 scsi host adapter.
+
+Does it still?  The STORVSC_FC_MAX_TARGETS define suggests otherwise.
+
+> -	.cmd_per_lun =		1,
+> +	.cmd_per_lun =		255,
+
+This looks like an unrelated change.
+
+> +		/* max # of devices per target */
+> +		host->max_lun = STORVSC_FC_MAX_LUNS_PER_TARGET;
+> +		/* max # of targets per channel */
+> +		host->max_id = STORVSC_FC_MAX_TARGETS;
+> +		/* max # of channels */
+> +		host->max_channel = STORVSC_FC_MAX_CHANNELS - 1;
+
+I don't think these comments add any value..
+
+Also any reason you use off by one defines for max_channel, but not the
+others?
+
