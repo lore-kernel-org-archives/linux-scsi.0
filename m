@@ -1,105 +1,78 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH 4/8] Drivers: scsi: storvsc: Filter WRITE_SAME_16
-Date: Wed, 9 Jul 2014 22:36:26 +0000
-Message-ID: <de81772c7f0c418ba6180ee634ca3ff7@BY2PR03MB299.namprd03.prod.outlook.com>
-References: <1404866789-26910-1-git-send-email-kys@microsoft.com>
-	 <1404866812-26950-1-git-send-email-kys@microsoft.com>
-	 <1404866812-26950-4-git-send-email-kys@microsoft.com>
-	 <20140709084300.GD6012@infradead.org>
-	 <a31a45eddb544024a7538458b98c3611@BY2PR03MB299.namprd03.prod.outlook.com>
-	 <1404935792.2184.5.camel@dabdike.int.hansenpartnership.com>
-	 <2f3ae589e6f149acbe4c5dd79f905971@BY2PR03MB299.namprd03.prod.outlook.com>
- <1404944843.2184.8.camel@dabdike.int.hansenpartnership.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: SCSI eats error from flush failure during hot plug
+Date: Wed, 09 Jul 2014 15:38:18 -0700
+Message-ID: <1404945498.2184.10.camel@dabdike.int.hansenpartnership.com>
+References: <CAPK7rjcrBuQgoiAxZ9ZASAGugtyHTsHB3ssZegKtuzRdo9TMNQ@mail.gmail.com>
+	 <20140626150208.GA14887@infradead.org> <1403808734.6440.12.camel@dabdike>
+	 <20140627075553.GB21799@infradead.org>
+	 <CAPK7rjdpxAALA-oLZJ3wDBPc3kr5Nw4jLALLxEaT0zSiAOD+wg@mail.gmail.com>
+	 <CAPK7rjcmujziT580t2O_dQnNPn8eyq7CTBxAgbqHYNobZCTxjQ@mail.gmail.com>
+	 <20140701081510.GA14857@infradead.org>
+	 <CAPK7rjdVM-Anw-uFc6RGCrwZko885vBGgbB+LehmuKF4r6nu5A@mail.gmail.com>
+	 <20140703171807.GA20300@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <1404944843.2184.8.camel@dabdike.int.hansenpartnership.com>
-Content-Language: en-US
-Sender: stable-owner@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "mkp@mkp.net" <mkp@mkp.net>, "hch@infradead.org" <hch@infradead.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "apw@canonical.com" <apw@canonical.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "ohering@suse.com" <ohering@suse.com>, "jasowang@redhat.com" <jasowang@redhat.com>
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:45130 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756618AbaGIWiW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jul 2014 18:38:22 -0400
+In-Reply-To: <20140703171807.GA20300@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Steven Haber <steven@qumulo.com>, linux-scsi@vger.kernel.org
 
-
-
-> -----Original Message-----
-> From: James Bottomley [mailto:jbottomley@parallels.com]
-> Sent: Wednesday, July 9, 2014 3:27 PM
-> To: KY Srinivasan
-> Cc: linux-kernel@vger.kernel.org; mkp@mkp.net; hch@infradead.org;
-> devel@linuxdriverproject.org; apw@canonical.com; stable@vger.kernel.org;
-> linux-scsi@vger.kernel.org; ohering@suse.com; jasowang@redhat.com
-> Subject: Re: [PATCH 4/8] Drivers: scsi: storvsc: Filter WRITE_SAME_16
+On Thu, 2014-07-03 at 10:18 -0700, Christoph Hellwig wrote:
+> On Thu, Jul 03, 2014 at 09:57:32AM -0700, Steven Haber wrote:
+> > Both patches work fine -- zero uncommitted writes over several hundred
+> > power cycles.
 > 
-> On Wed, 2014-07-09 at 21:14 +0000, KY Srinivasan wrote:
-> >
-> > > -----Original Message-----
-> > > From: James Bottomley [mailto:jbottomley@parallels.com]
-> > > Sent: Wednesday, July 9, 2014 12:57 PM
-> > > To: KY Srinivasan
-> > > Cc: linux-kernel@vger.kernel.org; hch@infradead.org;
-> > > devel@linuxdriverproject.org; apw@canonical.com;
-> > > stable@vger.kernel.org; linux-scsi@vger.kernel.org;
-> > > ohering@suse.com; jasowang@redhat.com
-> > > Subject: Re: [PATCH 4/8] Drivers: scsi: storvsc: Filter
-> > > WRITE_SAME_16
-> > >
-> > > On Wed, 2014-07-09 at 19:52 +0000, KY Srinivasan wrote:
-> > > >
-> > > > > -----Original Message-----
-> > > > > From: Christoph Hellwig [mailto:hch@infradead.org]
-> > > > > Sent: Wednesday, July 9, 2014 1:43 AM
-> > > > > To: KY Srinivasan
-> > > > > Cc: linux-kernel@vger.kernel.org; devel@linuxdriverproject.org;
-> > > > > ohering@suse.com; jbottomley@parallels.com;
-> jasowang@redhat.com;
-> > > > > apw@canonical.com; linux-scsi@vger.kernel.org;
-> > > > > stable@vger.kernel.org
-> > > > > Subject: Re: [PATCH 4/8] Drivers: scsi: storvsc: Filter
-> > > > > WRITE_SAME_16
-> > > > >
-> > > > > On Tue, Jul 08, 2014 at 05:46:48PM -0700, K. Y. Srinivasan wrote:
-> > > > > > Host does not handle WRITE_SAME_16; filter this command out.
-> > > > > > This patch is required to handle large devices (greater than 2 TB
-> disks).
-> > > > >
-> > > > > Storvsc already sets the no_write_same flag, where is the
-> > > > > command coming from?
-> > > >
-> > > > In spite of this flag,  I see WRITE_SAME_16 being issued when I
-> > > > format a device bigger than 2 TB; I tried both xfs and ext4.
-> > > > Windows hosts currently do not handle unsupported commands
-> > > > correctly - The information returned is not sufficient to effect recovery
-> in the Linux guest.
-> > > While this may be addressed in future hosts, this patch fixes the problem.
-> > >
-> > > What Christoph means is that this looks like a bug somewhere in SCSI
-> itself.
-> > > That means we need to find it and kill it, not add workarounds to
-> > > every driver that sets no_write_same ...
-> >
-> > James,
-> >
-> > I will try to isolate this issue in the SCSI stack. If it is ok with
-> > you guys, I would still want to filter WRITE_SAME_16 (as we currently
-> > do WRITE_SAME) in our driver since this would address the problem for a
-> large number of customers on our platform.
+> Thanks for the testing.
 > 
-> If we fix it at source, why would there be any need to filter?  That's the
-> reason the no_write_same flag was introduced.  If we can find and fix the
-> bug, it can go back into the stable trees as a bug fix, hence nothing should
-> ever emit write_same(10 or 16) and additional driver code is redundant (and
-> counter productive, since if this ever breaks again you're our best canary).
-> 
-> This looks like it might be the problem but Martin should confirm (I think the
-> problem comes to us from the RC16 code which unconditionally sets WS16).
+> Below is James' patch with a trivial comment fix and a proper changelog.
+> James, can I get your signoff for this one?  I'll throw it into the
+> core-for-3.16 tree then.
 
-Ok; I am concerned about older kernels that do not have no_write_same flag.
-I suppose I can work directly with these Distros and give them a choice: either implement
-the no_write_same flag or filter the command in our driver. I will not include this patch when
-I resubmit this patch-set.
+OK, here it is.  I tweaked the comment to be accurate.
 
-Thanks,
+James
 
-K. Y
+---
+
+>From 66aba46049037b55c5c77b45974a639f8f48b58b Mon Sep 17 00:00:00 2001
+From: James Bottomley <JBottomley@Parallels.com>
+Date: Thu, 3 Jul 2014 19:17:34 +0200
+Subject: [PATCH] [SCSI] handle flush errors properly
+
+Flush commands don't transfer data and thus need to be special cased
+in the I/O completion handler so that we can propagate errors to
+the block layer and filesystem.
+
+Reported-by: Steven Haber <steven@qumulo.com>
+Tested-by: Steven Haber <steven@qumulo.com>
+Cc: stable@vger.kernel.org
+Signed-off-by: James Bottomley <JBottomley@Parallels.com>
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index f7e3163..3f50dfc 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -733,6 +733,14 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 			scsi_next_command(cmd);
+ 			return;
+ 		}
++	} else if (blk_rq_bytes(req) == 0 && result && !sense_deferred) {
++		/*
++		 * Certain non BLOCK_PC requests are commands that don't
++		 * actually transfer anything (FLUSH), so cannot use
++		 * good_bytes != blk_rq_bytes(req) as the signal for an error.
++		 * This sets the error explicitly for the problem case.
++		 */
++		error = __scsi_error_from_host_byte(cmd, result);
+ 	}
+ 
+ 	/* no bidi support for !REQ_TYPE_BLOCK_PC yet */
+
+
