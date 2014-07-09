@@ -1,12 +1,12 @@
 From: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
-Subject: [PATCH 4/8][RESEND] pm8001: Fix potential null pointer dereference and memory leak.
-Date: Wed,  9 Jul 2014 17:20:32 +0530
-Message-ID: <1404906632-15766-1-git-send-email-Suresh.Thiagarajan@pmcs.com>
+Subject: [PATCH 5/8][RESEND] pm8001: clean bitmap management functions
+Date: Wed,  9 Jul 2014 17:20:40 +0530
+Message-ID: <1404906640-15791-1-git-send-email-Suresh.Thiagarajan@pmcs.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:49143 "EHLO
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:49204 "EHLO
 	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753955AbaGILv3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jul 2014 07:51:29 -0400
+	by vger.kernel.org with ESMTP id S1753955AbaGILvh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jul 2014 07:51:37 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
@@ -14,59 +14,159 @@ Cc: xjtuwjp@gmail.com, JBottomley@parallels.com, Suresh.Thiagarajan@pmcs.com, Vi
 
 From: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
 
-The pm8001_get_phy_settings_info() function does not check the
-kzalloc() return value and does not free the allocated memory.
+In the driver two different functions are used to free the same resource,
+this patch makes the code easier to read. In addittion to that, some
+minor optimisations were made too.
 
-Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
-Acked-by: Jack Wang <xjtuwjp@gmail.com>
+Signed-off-by: Tomas Henzl <thenzl@redhat.com>
 Acked-by: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
 ---
- drivers/scsi/pm8001/pm8001_init.c |   13 ++++++++++---
- 1 files changed, 10 insertions(+), 3 deletions(-)
+ drivers/scsi/pm8001/pm8001_hwi.c |   10 +++++-----
+ drivers/scsi/pm8001/pm8001_sas.c |   31 +++++++------------------------
+ drivers/scsi/pm8001/pm8001_sas.h |    1 -
+ 3 files changed, 12 insertions(+), 30 deletions(-)
 
-diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-index 86cf03a..aad060a 100644
---- a/drivers/scsi/pm8001/pm8001_init.c
-+++ b/drivers/scsi/pm8001/pm8001_init.c
-@@ -677,7 +677,7 @@ static void pm8001_init_sas_add(struct pm8001_hba_info *pm8001_ha)
-  * pm8001_get_phy_settings_info : Read phy setting values.
-  * @pm8001_ha : our hba.
-  */
--void pm8001_get_phy_settings_info(struct pm8001_hba_info *pm8001_ha)
-+static int pm8001_get_phy_settings_info(struct pm8001_hba_info *pm8001_ha)
- {
- 
- #ifdef PM8001_READ_VPD
-@@ -691,11 +691,15 @@ void pm8001_get_phy_settings_info(struct pm8001_hba_info *pm8001_ha)
- 	payload.offset = 0;
- 	payload.length = 4096;
- 	payload.func_specific = kzalloc(4096, GFP_KERNEL);
-+	if (!payload.func_specific)
-+		return -ENOMEM;
- 	/* Read phy setting values from flash */
- 	PM8001_CHIP_DISP->get_nvmd_req(pm8001_ha, &payload);
- 	wait_for_completion(&completion);
- 	pm8001_set_phy_profile(pm8001_ha, sizeof(u8), payload.func_specific);
-+	kfree(payload.func_specific);
- #endif
-+	return 0;
+diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
+index 721d059..b6fa852 100644
+--- a/drivers/scsi/pm8001/pm8001_hwi.c
++++ b/drivers/scsi/pm8001/pm8001_hwi.c
+@@ -3100,7 +3100,7 @@ void pm8001_mpi_set_dev_state_resp(struct pm8001_hba_info *pm8001_ha,
+ 	complete(pm8001_dev->setds_completion);
+ 	ccb->task = NULL;
+ 	ccb->ccb_tag = 0xFFFFFFFF;
+-	pm8001_ccb_free(pm8001_ha, tag);
++	pm8001_tag_free(pm8001_ha, tag);
  }
  
- #ifdef PM8001_USE_MSIX
-@@ -879,8 +883,11 @@ static int pm8001_pci_probe(struct pci_dev *pdev,
- 	pm8001_init_sas_add(pm8001_ha);
- 	/* phy setting support for motherboard controller */
- 	if (pdev->subsystem_vendor != PCI_VENDOR_ID_ADAPTEC2 &&
--		pdev->subsystem_vendor != 0)
--		pm8001_get_phy_settings_info(pm8001_ha);
-+		pdev->subsystem_vendor != 0) {
-+		rc = pm8001_get_phy_settings_info(pm8001_ha);
-+		if (rc)
-+			goto err_out_shost;
-+	}
- 	pm8001_post_sas_ha_init(shost, chip);
- 	rc = sas_register_ha(SHOST_TO_SAS_HA(shost));
- 	if (rc)
+ void pm8001_mpi_set_nvmd_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
+@@ -3119,7 +3119,7 @@ void pm8001_mpi_set_nvmd_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ 	}
+ 	ccb->task = NULL;
+ 	ccb->ccb_tag = 0xFFFFFFFF;
+-	pm8001_ccb_free(pm8001_ha, tag);
++	pm8001_tag_free(pm8001_ha, tag);
+ }
+ 
+ void
+@@ -3181,7 +3181,7 @@ pm8001_mpi_get_nvmd_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ 	complete(pm8001_ha->nvmd_completion);
+ 	ccb->task = NULL;
+ 	ccb->ccb_tag = 0xFFFFFFFF;
+-	pm8001_ccb_free(pm8001_ha, tag);
++	pm8001_tag_free(pm8001_ha, tag);
+ }
+ 
+ int pm8001_mpi_local_phy_ctl(struct pm8001_hba_info *pm8001_ha, void *piomb)
+@@ -3588,7 +3588,7 @@ int pm8001_mpi_reg_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ 	complete(pm8001_dev->dcompletion);
+ 	ccb->task = NULL;
+ 	ccb->ccb_tag = 0xFFFFFFFF;
+-	pm8001_ccb_free(pm8001_ha, htag);
++	pm8001_tag_free(pm8001_ha, htag);
+ 	return 0;
+ }
+ 
+@@ -3672,7 +3672,7 @@ int pm8001_mpi_fw_flash_update_resp(struct pm8001_hba_info *pm8001_ha,
+ 	complete(pm8001_ha->nvmd_completion);
+ 	ccb->task = NULL;
+ 	ccb->ccb_tag = 0xFFFFFFFF;
+-	pm8001_ccb_free(pm8001_ha, tag);
++	pm8001_tag_free(pm8001_ha, tag);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
+index 8a44bc9..be55859 100644
+--- a/drivers/scsi/pm8001/pm8001_sas.c
++++ b/drivers/scsi/pm8001/pm8001_sas.c
+@@ -58,25 +58,14 @@ static int pm8001_find_tag(struct sas_task *task, u32 *tag)
+ }
+ 
+ /**
+-  * pm8001_tag_clear - clear the tags bitmap
++  * pm8001_tag_free - free the no more needed tag
+   * @pm8001_ha: our hba struct
+   * @tag: the found tag associated with the task
+   */
+-static void pm8001_tag_clear(struct pm8001_hba_info *pm8001_ha, u32 tag)
+-{
+-	void *bitmap = pm8001_ha->tags;
+-	clear_bit(tag, bitmap);
+-}
+-
+ void pm8001_tag_free(struct pm8001_hba_info *pm8001_ha, u32 tag)
+ {
+-	pm8001_tag_clear(pm8001_ha, tag);
+-}
+-
+-static void pm8001_tag_set(struct pm8001_hba_info *pm8001_ha, u32 tag)
+-{
+ 	void *bitmap = pm8001_ha->tags;
+-	set_bit(tag, bitmap);
++	clear_bit(tag, bitmap);
+ }
+ 
+ /**
+@@ -86,14 +75,13 @@ static void pm8001_tag_set(struct pm8001_hba_info *pm8001_ha, u32 tag)
+   */
+ inline int pm8001_tag_alloc(struct pm8001_hba_info *pm8001_ha, u32 *tag_out)
+ {
+-	unsigned int index, tag;
++	unsigned int tag;
+ 	void *bitmap = pm8001_ha->tags;
+ 
+-	index = find_first_zero_bit(bitmap, pm8001_ha->tags_num);
+-	tag = index;
++	tag = find_first_zero_bit(bitmap, pm8001_ha->tags_num);
+ 	if (tag >= pm8001_ha->tags_num)
+ 		return -SAS_QUEUE_FULL;
+-	pm8001_tag_set(pm8001_ha, tag);
++	set_bit(tag, bitmap);
+ 	*tag_out = tag;
+ 	return 0;
+ }
+@@ -102,7 +90,7 @@ void pm8001_tag_init(struct pm8001_hba_info *pm8001_ha)
+ {
+ 	int i;
+ 	for (i = 0; i < pm8001_ha->tags_num; ++i)
+-		pm8001_tag_clear(pm8001_ha, i);
++		pm8001_tag_free(pm8001_ha, i);
+ }
+ 
+  /**
+@@ -501,11 +489,6 @@ int pm8001_queue_command(struct sas_task *task, const int num,
+ 	return pm8001_task_exec(task, num, gfp_flags, 0, NULL);
+ }
+ 
+-void pm8001_ccb_free(struct pm8001_hba_info *pm8001_ha, u32 ccb_idx)
+-{
+-	pm8001_tag_clear(pm8001_ha, ccb_idx);
+-}
+-
+ /**
+   * pm8001_ccb_task_free - free the sg for ssp and smp command, free the ccb.
+   * @pm8001_ha: our hba card information
+@@ -542,7 +525,7 @@ void pm8001_ccb_task_free(struct pm8001_hba_info *pm8001_ha,
+ 	ccb->task = NULL;
+ 	ccb->ccb_tag = 0xFFFFFFFF;
+ 	ccb->open_retry = 0;
+-	pm8001_ccb_free(pm8001_ha, ccb_idx);
++	pm8001_tag_free(pm8001_ha, ccb_idx);
+ }
+ 
+  /**
+diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
+index 1ee06f2..14106ad 100644
+--- a/drivers/scsi/pm8001/pm8001_sas.h
++++ b/drivers/scsi/pm8001/pm8001_sas.h
+@@ -616,7 +616,6 @@ extern struct workqueue_struct *pm8001_wq;
+ int pm8001_tag_alloc(struct pm8001_hba_info *pm8001_ha, u32 *tag_out);
+ void pm8001_tag_init(struct pm8001_hba_info *pm8001_ha);
+ u32 pm8001_get_ncq_tag(struct sas_task *task, u32 *tag);
+-void pm8001_ccb_free(struct pm8001_hba_info *pm8001_ha, u32 ccb_idx);
+ void pm8001_ccb_task_free(struct pm8001_hba_info *pm8001_ha,
+ 	struct sas_task *task, struct pm8001_ccb_info *ccb, u32 ccb_idx);
+ int pm8001_phy_control(struct asd_sas_phy *sas_phy, enum phy_func func,
 -- 
 1.7.1
 
