@@ -1,8 +1,7 @@
 From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-Subject: [PATCH v2 1/4] scsi_transport_srp: Fix fast_io_fail_tmo=dev_loss_tmo=off
- behavior
-Date: Wed, 09 Jul 2014 15:56:43 +0200
-Message-ID: <53BD4A1B.2020902@acm.org>
+Subject: [PATCH v2 3/4] IB/srp: Fix residual handling
+Date: Wed, 09 Jul 2014 15:57:51 +0200
+Message-ID: <53BD4A5F.6070708@acm.org>
 References: <53BD49E3.3090903@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
@@ -14,39 +13,43 @@ To: Roland Dreier <roland-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: James Bottomley <jbottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, David Dillow <dave-i1Mk8JYDVaaSihdK6806/g@public.gmane.org>, Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-If scsi_remove_host() is called while an rport is in the blocked
-state then scsi_remove_host() will only finish if the rport is
-unblocked from inside a timer function. Make sure that an rport
-only enters the blocked state if a timer will be started that
-will unblock it. This avoids that unloading the ib_srp kernel
-module after having disconnected the initiator from the target
-system results in a deadlock if both the fast_io_fail_tmo and
-dev_loss_tmo parameters have been set to "off".
+>From Documentation/scsi/scsi_mid_low_api.txt: "resid - an LLD should
+set this signed integer to the requested transfer length (i.e.
+'request_bufflen') less the number of bytes that are actually
+transferred." This means that resid > 0 in case of an underrun and
+also that resid < 0 in case of an overrun. Modify the SRP initiator
+code such that it matches this requirement.
 
 Signed-off-by: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
 Reviewed-by: Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
 Reviewed-by: David Dillow <dave-i1Mk8JYDVaaSihdK6806/g@public.gmane.org>
-Cc: James Bottomley <jbottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Cc: Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>
-Cc: <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 ---
- drivers/scsi/scsi_transport_srp.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/infiniband/ulp/srp/ib_srp.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/scsi_transport_srp.c b/drivers/scsi/scsi_transport_srp.c
-index 13e8983..a0c5bfd 100644
---- a/drivers/scsi/scsi_transport_srp.c
-+++ b/drivers/scsi/scsi_transport_srp.c
-@@ -473,7 +473,8 @@ static void __srp_start_tl_fail_timers(struct srp_rport *rport)
- 	if (delay > 0)
- 		queue_delayed_work(system_long_wq, &rport->reconnect_work,
- 				   1UL * delay * HZ);
--	if (srp_rport_set_state(rport, SRP_RPORT_BLOCKED) == 0) {
-+	if ((fast_io_fail_tmo >= 0 || dev_loss_tmo >= 0) &&
-+	    srp_rport_set_state(rport, SRP_RPORT_BLOCKED) == 0) {
- 		pr_debug("%s new state: %d\n", dev_name(&shost->shost_gendev),
- 			 rport->state);
- 		scsi_target_block(&shost->shost_gendev);
+diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp/srp/ib_srp.c
+index 8bcdde8..6894822 100644
+--- a/drivers/infiniband/ulp/srp/ib_srp.c
++++ b/drivers/infiniband/ulp/srp/ib_srp.c
+@@ -1644,10 +1644,14 @@ static void srp_process_rsp(struct srp_target_port *target, struct srp_rsp *rsp)
+ 				     SCSI_SENSE_BUFFERSIZE));
+ 		}
+ 
+-		if (rsp->flags & (SRP_RSP_FLAG_DOOVER | SRP_RSP_FLAG_DOUNDER))
+-			scsi_set_resid(scmnd, be32_to_cpu(rsp->data_out_res_cnt));
+-		else if (rsp->flags & (SRP_RSP_FLAG_DIOVER | SRP_RSP_FLAG_DIUNDER))
++		if (unlikely(rsp->flags & SRP_RSP_FLAG_DIUNDER))
+ 			scsi_set_resid(scmnd, be32_to_cpu(rsp->data_in_res_cnt));
++		else if (unlikely(rsp->flags & SRP_RSP_FLAG_DIOVER))
++			scsi_set_resid(scmnd, -be32_to_cpu(rsp->data_in_res_cnt));
++		else if (unlikely(rsp->flags & SRP_RSP_FLAG_DOUNDER))
++			scsi_set_resid(scmnd, be32_to_cpu(rsp->data_out_res_cnt));
++		else if (unlikely(rsp->flags & SRP_RSP_FLAG_DOOVER))
++			scsi_set_resid(scmnd, -be32_to_cpu(rsp->data_out_res_cnt));
+ 
+ 		srp_free_req(target, req, scmnd,
+ 			     be32_to_cpu(rsp->req_lim_delta));
 -- 
 1.8.4.5
 
