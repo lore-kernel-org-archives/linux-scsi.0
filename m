@@ -1,8 +1,7 @@
 From: "K. Y. Srinivasan" <kys@microsoft.com>
-Subject: [PATCH 8/8] drivers: scsi: storvsc: Correctly handle TEST_UNIT_READY
- failure
-Date: Tue,  8 Jul 2014 17:46:52 -0700
-Message-ID: <1404866812-26950-8-git-send-email-kys@microsoft.com>
+Subject: [PATCH 4/8] Drivers: scsi: storvsc: Filter WRITE_SAME_16
+Date: Tue,  8 Jul 2014 17:46:48 -0700
+Message-ID: <1404866812-26950-4-git-send-email-kys@microsoft.com>
 References: <1404866789-26910-1-git-send-email-kys@microsoft.com>
  <1404866812-26950-1-git-send-email-kys@microsoft.com>
 Mime-Version: 1.0
@@ -23,32 +22,26 @@ To: linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com
 Cc: stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On some Windows hosts on FC SANs, TEST_UNIT_READY can return SRB_STATUS_ERROR.
-Correctly handle this.
+Host does not handle WRITE_SAME_16; filter this command out. This patch
+is required to handle large devices (greater than 2 TB disks).
 
 Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
 Cc: <stable@vger.kernel.org>
 ---
- drivers/scsi/storvsc_drv.c |    7 +++++++
- 1 files changed, 7 insertions(+), 0 deletions(-)
+ drivers/scsi/storvsc_drv.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
 diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 6540fb6..9afdd6d 100644
+index d9d8051..428dbda 100644
 --- a/drivers/scsi/storvsc_drv.c
 +++ b/drivers/scsi/storvsc_drv.c
-@@ -1023,6 +1023,13 @@ static void storvsc_handle_error(struct vmscsi_request *vm_srb,
- 		case ATA_12:
- 			set_host_byte(scmnd, DID_PASSTHROUGH);
- 			break;
-+		/*
-+		 * On Some Windows hosts TEST_UNIT_READY command can return
-+		 * SRB_STATUS_ERROR, let the upper level code deal with it
-+		 * based on the sense information.
-+		 */
-+		case TEST_UNIT_READY:
-+			break;
- 		default:
- 			set_host_byte(scmnd, DID_TARGET_FAILURE);
- 		}
+@@ -1529,6 +1529,7 @@ static bool storvsc_scsi_cmd_ok(struct scsi_cmnd *scmnd)
+ 	switch (scsi_op) {
+ 	/* the host does not handle WRITE_SAME, log accident usage */
+ 	case WRITE_SAME:
++	case WRITE_SAME_16:
+ 	/*
+ 	 * smartd sends this command and the host does not handle
+ 	 * this. So, don't send it.
 -- 
 1.7.4.1
