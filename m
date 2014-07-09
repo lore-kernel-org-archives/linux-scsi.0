@@ -1,78 +1,65 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: SCSI eats error from flush failure during hot plug
-Date: Wed, 09 Jul 2014 15:38:18 -0700
-Message-ID: <1404945498.2184.10.camel@dabdike.int.hansenpartnership.com>
-References: <CAPK7rjcrBuQgoiAxZ9ZASAGugtyHTsHB3ssZegKtuzRdo9TMNQ@mail.gmail.com>
-	 <20140626150208.GA14887@infradead.org> <1403808734.6440.12.camel@dabdike>
-	 <20140627075553.GB21799@infradead.org>
-	 <CAPK7rjdpxAALA-oLZJ3wDBPc3kr5Nw4jLALLxEaT0zSiAOD+wg@mail.gmail.com>
-	 <CAPK7rjcmujziT580t2O_dQnNPn8eyq7CTBxAgbqHYNobZCTxjQ@mail.gmail.com>
-	 <20140701081510.GA14857@infradead.org>
-	 <CAPK7rjdVM-Anw-uFc6RGCrwZko885vBGgbB+LehmuKF4r6nu5A@mail.gmail.com>
-	 <20140703171807.GA20300@infradead.org>
+From: Jonathan <jonathan.625266@earthlink.net>
+Subject: Re: uas - kernel panic on drive connection
+Date: Wed, 9 Jul 2014 19:31:39 -0400
+Message-ID: <20140709193139.32049945@earthlink.net>
+References: <20140704104028.2014aaf4@earthlink.net>
+	<53BCEA03.30304@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:45130 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756618AbaGIWiW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jul 2014 18:38:22 -0400
-In-Reply-To: <20140703171807.GA20300@infradead.org>
+Received: from elasmtp-curtail.atl.sa.earthlink.net ([209.86.89.64]:41086 "EHLO
+	elasmtp-curtail.atl.sa.earthlink.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753340AbaGIXbl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jul 2014 19:31:41 -0400
+In-Reply-To: <53BCEA03.30304@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Steven Haber <steven@qumulo.com>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Hans de Goede <hdegoede@redhat.com>
 
-On Thu, 2014-07-03 at 10:18 -0700, Christoph Hellwig wrote:
-> On Thu, Jul 03, 2014 at 09:57:32AM -0700, Steven Haber wrote:
-> > Both patches work fine -- zero uncommitted writes over several hundred
-> > power cycles.
+Hans,
+
+Thanks for getting back to me. It looks like the USB 3.0 controller is an Etron.
+
+Here is the output from lspci:
+
+00:00.0 Host bridge: Intel Corporation 2nd Generation Core Processor Family DRAM Controller (rev 09)
+00:02.0 VGA compatible controller: Intel Corporation 2nd Generation Core Processor Family Integrated Graphics Controller (rev 09)
+00:16.0 Communication controller: Intel Corporation 6 Series/C200 Series Chipset Family MEI Controller #1 (rev 04)
+00:1a.0 USB controller: Intel Corporation 6 Series/C200 Series Chipset Family USB Enhanced Host Controller #2 (rev 05)
+00:1b.0 Audio device: Intel Corporation 6 Series/C200 Series Chipset Family High Definition Audio Controller (rev 05)
+00:1c.0 PCI bridge: Intel Corporation 6 Series/C200 Series Chipset Family PCI Express Root Port 1 (rev b5)
+00:1c.2 PCI bridge: Intel Corporation 6 Series/C200 Series Chipset Family PCI Express Root Port 3 (rev b5)
+00:1c.4 PCI bridge: Intel Corporation 82801 PCI Bridge (rev b5)
+00:1c.5 PCI bridge: Intel Corporation 6 Series/C200 Series Chipset Family PCI Express Root Port 6 (rev b5)
+00:1d.0 USB controller: Intel Corporation 6 Series/C200 Series Chipset Family USB Enhanced Host Controller #1 (rev 05)
+00:1f.0 ISA bridge: Intel Corporation Z68 Express Chipset Family LPC Controller (rev 05)
+00:1f.2 SATA controller: Intel Corporation 6 Series/C200 Series Chipset Family SATA AHCI Controller (rev 05)
+00:1f.3 SMBus: Intel Corporation 6 Series/C200 Series Chipset Family SMBus Controller (rev 05)
+01:00.0 Ethernet controller: Intel Corporation 82574L Gigabit Network Connection
+02:00.0 USB controller: Etron Technology, Inc. EJ168 USB 3.0 Host Controller (rev 01)
+03:00.0 PCI bridge: ASMedia Technology Inc. ASM1083/1085 PCIe to PCI Bridge (rev 01)
+04:00.0 FireWire (IEEE 1394): Texas Instruments TSB12LV26 IEEE-1394 Controller (Link)
+05:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller (rev 06)
+
+Best,
+
+Jonathan
+
+On Wed, 09 Jul 2014 09:06:43 +0200
+Hans de Goede <hdegoede@redhat.com> wrote:
+
 > 
-> Thanks for the testing.
+> This looks like something is going wrong in the XHCI code, likely something
+> related to bulk-streams.
 > 
-> Below is James' patch with a trivial comment fix and a proper changelog.
-> James, can I get your signoff for this one?  I'll throw it into the
-> core-for-3.16 tree then.
-
-OK, here it is.  I tweaked the comment to be accurate.
-
-James
-
----
-
->From 66aba46049037b55c5c77b45974a639f8f48b58b Mon Sep 17 00:00:00 2001
-From: James Bottomley <JBottomley@Parallels.com>
-Date: Thu, 3 Jul 2014 19:17:34 +0200
-Subject: [PATCH] [SCSI] handle flush errors properly
-
-Flush commands don't transfer data and thus need to be special cased
-in the I/O completion handler so that we can propagate errors to
-the block layer and filesystem.
-
-Reported-by: Steven Haber <steven@qumulo.com>
-Tested-by: Steven Haber <steven@qumulo.com>
-Cc: stable@vger.kernel.org
-Signed-off-by: James Bottomley <JBottomley@Parallels.com>
-
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index f7e3163..3f50dfc 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -733,6 +733,14 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
- 			scsi_next_command(cmd);
- 			return;
- 		}
-+	} else if (blk_rq_bytes(req) == 0 && result && !sense_deferred) {
-+		/*
-+		 * Certain non BLOCK_PC requests are commands that don't
-+		 * actually transfer anything (FLUSH), so cannot use
-+		 * good_bytes != blk_rq_bytes(req) as the signal for an error.
-+		 * This sets the error explicitly for the problem case.
-+		 */
-+		error = __scsi_error_from_host_byte(cmd, result);
- 	}
- 
- 	/* no bidi support for !REQ_TYPE_BLOCK_PC yet */
-
-
+> I've a dock with an ASMedia ASM1053E chipset myself and that one works fine with both
+> Nec and Intel XHCI controllers. What type of XHCI controller do you have ?
+> 
+> Can you please do "lspci" on the machine in question and include the output in your
+> next mail ?
+> 
+> Regards,
+> 
+> Hans
