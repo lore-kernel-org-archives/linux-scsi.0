@@ -1,12 +1,12 @@
 From: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
-Subject: [PATCH 1/8][RESEND] pm8001: Fix to remove null pointer checks that could never happen
-Date: Wed,  9 Jul 2014 17:19:38 +0530
-Message-ID: <1404906578-15676-1-git-send-email-Suresh.Thiagarajan@pmcs.com>
+Subject: [PATCH 2/8][RESEND] pm8001: Cleaning up uninitialized variables
+Date: Wed,  9 Jul 2014 17:20:10 +0530
+Message-ID: <1404906610-15716-1-git-send-email-Suresh.Thiagarajan@pmcs.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:41470 "EHLO
-	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751294AbaGILuf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jul 2014 07:50:35 -0400
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:49114 "EHLO
+	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754682AbaGILvH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jul 2014 07:51:07 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
@@ -14,27 +14,54 @@ Cc: xjtuwjp@gmail.com, JBottomley@parallels.com, Suresh.Thiagarajan@pmcs.com, Vi
 
 From: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
 
-Removal of null pointer checks that could never happen
+There is a risk that the variable will be used without being initialized.
+
+This was largely found by using a static code analysis program called cppche
 
 Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
 Acked-by: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
 ---
- drivers/scsi/pm8001/pm8001_hwi.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/scsi/pm8001/pm80xx_hwi.c |    6 ++----
+ 1 files changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-index a97be01..721d059 100644
---- a/drivers/scsi/pm8001/pm8001_hwi.c
-+++ b/drivers/scsi/pm8001/pm8001_hwi.c
-@@ -4398,7 +4398,7 @@ static int pm8001_chip_sata_req(struct pm8001_hba_info *pm8001_ha,
+diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
+index d70587f..add019b 100644
+--- a/drivers/scsi/pm8001/pm80xx_hwi.c
++++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+@@ -948,7 +948,7 @@ static int
+ pm80xx_get_encrypt_info(struct pm8001_hba_info *pm8001_ha)
+ {
+ 	u32 scratch3_value;
+-	int ret;
++	int ret = -1;
  
- 	/* Check for read log for failed drive and return */
- 	if (sata_cmd.sata_fis.command == 0x2f) {
--		if (pm8001_ha_dev && ((pm8001_ha_dev->id & NCQ_READ_LOG_FLAG) ||
-+		if (((pm8001_ha_dev->id & NCQ_READ_LOG_FLAG) ||
- 			(pm8001_ha_dev->id & NCQ_ABORT_ALL_FLAG) ||
- 			(pm8001_ha_dev->id & NCQ_2ND_RLE_FLAG))) {
- 			struct task_status_struct *ts;
+ 	/* Read encryption status from SCRATCH PAD 3 */
+ 	scratch3_value = pm8001_cr32(pm8001_ha, 0, MSGU_SCRATCH_PAD_3);
+@@ -982,7 +982,7 @@ pm80xx_get_encrypt_info(struct pm8001_hba_info *pm8001_ha)
+ 		pm8001_ha->encrypt_info.status = 0xFFFFFFFF;
+ 		pm8001_ha->encrypt_info.cipher_mode = 0;
+ 		pm8001_ha->encrypt_info.sec_mode = 0;
+-		return 0;
++		ret = 0;
+ 	} else if ((scratch3_value & SCRATCH_PAD3_ENC_MASK) ==
+ 				SCRATCH_PAD3_ENC_DIS_ERR) {
+ 		pm8001_ha->encrypt_info.status =
+@@ -1004,7 +1004,6 @@ pm80xx_get_encrypt_info(struct pm8001_hba_info *pm8001_ha)
+ 			scratch3_value, pm8001_ha->encrypt_info.cipher_mode,
+ 			pm8001_ha->encrypt_info.sec_mode,
+ 			pm8001_ha->encrypt_info.status));
+-		ret = -1;
+ 	} else if ((scratch3_value & SCRATCH_PAD3_ENC_MASK) ==
+ 				 SCRATCH_PAD3_ENC_ENA_ERR) {
+ 
+@@ -1028,7 +1027,6 @@ pm80xx_get_encrypt_info(struct pm8001_hba_info *pm8001_ha)
+ 			scratch3_value, pm8001_ha->encrypt_info.cipher_mode,
+ 			pm8001_ha->encrypt_info.sec_mode,
+ 			pm8001_ha->encrypt_info.status));
+-		ret = -1;
+ 	}
+ 	return ret;
+ }
 -- 
 1.7.1
 
