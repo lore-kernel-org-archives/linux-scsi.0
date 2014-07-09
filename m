@@ -1,52 +1,31 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: Re: uas - kernel panic on drive connection
-Date: Wed, 09 Jul 2014 09:06:43 +0200
-Message-ID: <53BCEA03.30304@redhat.com>
-References: <20140704104028.2014aaf4@earthlink.net>
+From: David Laight <David.Laight@ACULAB.COM>
+Subject: RE: dummy scsi read or scsi command periodically for external USB
+ Hard Disk
+Date: Wed, 9 Jul 2014 08:37:18 +0000
+Message-ID: <063D6719AE5E284EB5DD2968C1650D6D1726EEFA@AcuExch.aculab.com>
+References: <CANudz+vNcLEJSX9L4FsPMMgJfp7rZxcryPcRmPs0-k5nB61dDg@mail.gmail.com>
+	<Pine.LNX.4.44L0.1407081524460.1283-100000@iolanthe.rowland.org>
+ <CANudz+vdVQAJgz1YYN=yFQn+749XFbvi3Hqnd+n5zkM5FxuJtQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37075 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751114AbaGIHGs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 9 Jul 2014 03:06:48 -0400
-In-Reply-To: <20140704104028.2014aaf4@earthlink.net>
+Received: from mx0.aculab.com ([213.249.233.131]:54625 "HELO mx0.aculab.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1751313AbaGIIit (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 9 Jul 2014 04:38:49 -0400
+Received: from mx0.aculab.com ([127.0.0.1])
+ by localhost (mx0.aculab.com [127.0.0.1]) (amavisd-new, port 10024) with SMTP
+ id 01288-02 for <linux-scsi@vger.kernel.org>;
+ Wed,  9 Jul 2014 09:38:41 +0100 (BST)
+In-Reply-To: <CANudz+vdVQAJgz1YYN=yFQn+749XFbvi3Hqnd+n5zkM5FxuJtQ@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jonathan.625266@earthlink.net
-Cc: linux-scsi@vger.kernel.org
+To: 'loody' <miloody@gmail.com>, Alan Stern <stern@rowland.harvard.edu>
+Cc: "Bryn M. Reeves" <bmr@redhat.com>, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
-Hi, Jonathan
-
-Fri, 04 Jul 2014, Jonathan wrote:
-
-> Beginning with kernel 3.15.1, I am getting hard lockups every time I connect a
-> drive to my USB 3 HDD dock with ASMedia ASM1051E UASP compliant chipset. The
-> only way I am able work around this is to set the quirk to ignore uas for the
-> device. Here are the kernel messages during connection followed by a backtrace:
->
-> [  229.882190] usb 2-1: new SuperSpeed USB device number 3 using xhci_hcd
-> [  229.908001] usb-storage 2-1:1.0: USB Mass Storage device detected
-> [  229.908218] usb-storage 2-1:1.0: Quirks match for vid 174c pid 55aa: 400000
-> [  229.908349] scsi7 : usb-storage 2-1:1.0
-> [  230.912633] scsi 7:0:0:0: Direct-Access     ASMT     2105             0     PQ: 0 ANSI: 6
-> [  230.914818] sd 7:0:0:0: [sdc] Attached SCSI removable disk
-> [  289.680267] usb 2-1: USB disconnect, device number 3
-> [  319.599862] usb 2-1: new SuperSpeed USB device number 4 using xhci_hcd
-> [  319.626881] scsi8 : uas
-> [  319.628221] xhci_hcd 0000:02:00.0: ERROR Transfer event TRB DMA ptr not part  of current TD
-> [  320.029323] BUG: unable to handle kernel paging request at 0000000001000003
-
-This looks like something is going wrong in the XHCI code, likely something
-related to bulk-streams.
-
-I've a dock with an ASMedia ASM1053E chipset myself and that one works fine with both
-Nec and Intel XHCI controllers. What type of XHCI controller do you have ?
-
-Can you please do "lspci" on the machine in question and include the output in your
-next mail ?
-
-Regards,
-
-Hans
+RnJvbTogbG9vZHkNCi4uLg0KPiBidXQgd2hhdCBpdCByZWFsbHkgZG8gaXMgcmVhZCBzZWN0b3Is
+IG5vdCBtZWRpYV9jaGFuZ2Ugb3IgdGVzdF91bml0X3JlYWR5Lg0KDQpNYXliZSBvbmUgb2YgdGhl
+IHByb2dyYW1zIHRoYXQgcmVhZHMgdGhlIG1iciBwYXJ0aXRpb24gdGFibGUgY2FuDQpiZSBwZXJz
+dWFkZWQgdG8gZG8gYSBkaXJlY3QgcmVhZD8NCg0KCURhdmlkDQoNCg==
