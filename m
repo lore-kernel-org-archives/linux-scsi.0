@@ -1,44 +1,65 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 08/14] scsi: convert device_busy to atomic_t
-Date: Wed, 09 Jul 2014 09:49:56 -0700
-Message-ID: <1404924596.2006.6.camel@jarvis.lan>
-References: <1403715121-1201-1-git-send-email-hch@lst.de>
-	 <1403715121-1201-9-git-send-email-hch@lst.de>
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: [PATCH 8/8] drivers: scsi: storvsc: Correctly handle
+ TEST_UNIT_READY failure
+Date: Wed, 9 Jul 2014 18:35:47 +0000
+Message-ID: <67b90e6c79674f27979f42277dbb62e5@BY2PR03MB299.namprd03.prod.outlook.com>
+References: <1404866789-26910-1-git-send-email-kys@microsoft.com>
+ <1404866812-26950-1-git-send-email-kys@microsoft.com>
+ <1404866812-26950-8-git-send-email-kys@microsoft.com>
+ <20140709084644.GH6012@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1403715121-1201-9-git-send-email-hch@lst.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>, Bart Van Assche <bvanassche@fusionio.com>, Robert Elliott <Elliott@hp.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <20140709084644.GH6012@infradead.org>
+Content-Language: en-US
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: driverdev-devel-bounces@linuxdriverproject.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jasowang@redhat.com" <jasowang@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "ohering@suse.com" <ohering@suse.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "apw@canonical.com" <apw@canonical.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2014-06-25 at 18:51 +0200, Christoph Hellwig wrote:
-> Avoid taking the queue_lock to check the per-device queue limit.  Instead
-> we do an atomic_inc_return early on to grab our slot in the queue,
-> and if nessecary decrement it after finishing all checks.
+
+
+> -----Original Message-----
+> From: Christoph Hellwig [mailto:hch@infradead.org]
+> Sent: Wednesday, July 9, 2014 1:47 AM
+> To: KY Srinivasan
+> Cc: linux-kernel@vger.kernel.org; devel@linuxdriverproject.org;
+> ohering@suse.com; jbottomley@parallels.com; jasowang@redhat.com;
+> apw@canonical.com; linux-scsi@vger.kernel.org; stable@vger.kernel.org
+> Subject: Re: [PATCH 8/8] drivers: scsi: storvsc: Correctly handle
+> TEST_UNIT_READY failure
 > 
-> Unlike the host and target busy counters this doesn't allow us to avoid the
-> queue_lock in the request_fn due to the way the interface works, but it'll
-> allow us to prepare for using the blk-mq code, which doesn't use the
-> queue_lock at all, and it at least avoids a queue_lock rountrip in
-> scsi_device_unbusy, which is still important given how busy the queue_lock
-> is.
+> On Tue, Jul 08, 2014 at 05:46:52PM -0700, K. Y. Srinivasan wrote:
+> > --- a/drivers/scsi/storvsc_drv.c
+> > +++ b/drivers/scsi/storvsc_drv.c
+> > @@ -1023,6 +1023,13 @@ static void storvsc_handle_error(struct
+> vmscsi_request *vm_srb,
+> >  		case ATA_12:
+> >  			set_host_byte(scmnd, DID_PASSTHROUGH);
+> >  			break;
+> > +		/*
+> > +		 * On Some Windows hosts TEST_UNIT_READY command can
+> return
+> > +		 * SRB_STATUS_ERROR, let the upper level code deal with it
+> > +		 * based on the sense information.
+> > +		 */
+> > +		case TEST_UNIT_READY:
+> > +			break;
+> 
+> Don't we need to set an error in the command for the error handler to take
+> action?  Or is this propagated elsewhere?
 
-Most of these patches look fine to me, but this one worries me largely
-because of the expense of atomics.
+The host sets the appropriate scsi response and sense information that allows the upper-level scsi stack to appropriately recover. We are just making sure that we won't mark the target as failed which is what would happen in the absence of this patch since the host has set a very generic SRB error code that indicates failure.
 
-As far as I can tell from the block MQ, we get one CPU thread per LUN.
-Doesn't this mean that we only need true atomics for variables that
-cross threads?  That does mean target and host, but shouldn't mean
-device, since device == LUN.  As long as we protect from local
-interrupts, we should be able to exclusively update all LUN local
-variables without having to change them to being atomic.
+Regards,
 
-This view depends on correct CPU steering of returning interrupts, since
-the LUN thread model only works if the same CPU handles issue and
-completion, but it looks like that works in MQ, even if it doesn't work
-in vanilla.
-
-James
+K. Y
