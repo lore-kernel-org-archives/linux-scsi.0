@@ -1,32 +1,49 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 10/14] scsi: only maintain target_blocked if the driver
-	has a target queue limit
-Date: Wed, 9 Jul 2014 17:05:48 +0200
-Message-ID: <20140709150548.GB25257@lst.de>
-References: <1403715121-1201-1-git-send-email-hch@lst.de> <1403715121-1201-11-git-send-email-hch@lst.de> <53BD254D.4000806@suse.de>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: scsi-mq V2
+Date: Wed, 09 Jul 2014 12:39:29 -0400
+Message-ID: <53BD7041.5010300@interlog.com>
+References: <1403715121-1201-1-git-send-email-hch@lst.de> <20140708144829.GA5539@infradead.org>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <53BD254D.4000806@suse.de>
+In-Reply-To: <20140708144829.GA5539@infradead.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <axboe@kernel.dk>, Bart Van Assche <bvanassche@fusionio.com>, Robert Elliott <Elliott@hp.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <axboe@kernel.dk>, Bart Van Assche <bvanassche@fusionio.com>, Robert Elliott <Elliott@hp.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Jul 09, 2014 at 01:19:41PM +0200, Hannes Reinecke wrote:
->>    host_not_ready:
->> -	atomic_dec(&scsi_target(sdev)->target_busy);
->> +	if (scsi_target(sdev)->can_queue > 0)
->> +		atomic_dec(&scsi_target(sdev)->target_busy);
->>    not_ready:
->>   	/*
->>   	 * lock q, handle tag, requeue req, and decrement device_busy. We
+On 14-07-08 10:48 AM, Christoph Hellwig wrote:
+> On Wed, Jun 25, 2014 at 06:51:47PM +0200, Christoph Hellwig wrote:
+>> Changes from V1:
+>>   - rebased on top of the core-for-3.17 branch, most notable the
+>>     scsi logging changes
+>>   - fixed handling of cmd_list to prevent crashes for some heavy
+>>     workloads
+>>   - fixed incorrect handling of !target->can_queue
+>>   - avoid scheduling a workqueue on I/O completions when no queues
+>>     are congested
 >>
-> Hmm. 'can_queue' can be changed by the LLDD. Don't we need some sort of 
-> synchronization here?
+>> In addition to the patches in this thread there also is a git available at:
+>>
+>> 	git://git.infradead.org/users/hch/scsi.git scsi-mq.2
+>
+>
+> I've pushed out a new scsi-mq.3 branch, which has been rebased on the
+> latest core-for-3.17 tree + the "RFC: clean up command setup" series
+> from June 29th.  Robert Elliot found a problem with not fully zeroed
+> out UNMAP CDBs, which is fixed by the saner discard handling in that
+> series.
+>
+> There is a new patch to factor the code from the above series for
+> blk-mq use, which I've attached below.  Besides that the only changes
+> are minor merge fixups in the main blk-mq usage patch.
 
-While a few drivers change the host can_queue value at runtime none
-do for the target.  While I don't think driver should even change the
-host one even modification to the target one is perfectly fine as long
-as no driver drops it to zero.
+Be warned: both Rob Elliott and I can easily break
+the scsi-mq.3 branch. It seems as though a regression
+has slipped in. I notice that Christoph has added a
+new branch called "scsi-mq.3-no-rebase".
+
+For those interested, watch this space.
+
+Doug Gilbert
