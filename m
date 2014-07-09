@@ -1,89 +1,32 @@
-From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Subject: Re: dummy scsi read or scsi command periodically for external USB
- Hard Disk
-Date: Wed, 9 Jul 2014 10:25:09 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1407091022480.873-100000@iolanthe.rowland.org>
-References: <CANudz+tQ4pJFmLTRsHtL=VjuCg30Af+7CpK1qRQM5TwwShoQtA@mail.gmail.com>
+From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+Subject: [PATCH v2 0/4] SRP initiator patches for kernel 3.17
+Date: Wed, 09 Jul 2014 15:55:47 +0200
+Message-ID: <53BD49E3.3090903@acm.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CANudz+tQ4pJFmLTRsHtL=VjuCg30Af+7CpK1qRQM5TwwShoQtA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: loody <miloody-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: David Laight <David.Laight-JxhZ9S5GRejQT0dZR+AlfA@public.gmane.org>, "Bryn M. Reeves" <bmr-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Roland Dreier <roland-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: James Bottomley <jbottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, David Dillow <dave-i1Mk8JYDVaaSihdK6806/g@public.gmane.org>, Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 9 Jul 2014, loody wrote:
+This patch series consists of four patches of which three are bug fixes
+and one is a performance optimization.
 
-> hi all:
-> I try 2 methods today but there is no read command firing from usb
-> host to device
-> (I double check the existence of command by CATC protocol analyzer)
-> appreciate all your kind suggestion.
-> 
-> 1. use busybox like below command
-> dd if=/dev/sda1 of=/dev/null bs=512 count=1 conv=sync
-> my dd in busybox doesn't have iflags option
-> # ./busybox.new dd help
-> 
-> BusyBox v1.19.2 (2014-07-09 13:43:36 CST) multi-call binary.
-> Usage: dd [if=FILE] [of=FILE] [ibs=N] [obs=N] [bs=N] [count=N] [skip=N]
->         [seek=N] [conv=notrunc|noerror|sync|fsync]
-> Copy a file with converting and formatting
->         if=FILE         Read from FILE instead of stdin
->         of=FILE         Write to FILE instead of stdout
->         bs=N            Read and write N bytes at a time
->         ibs=N           Read N bytes at a time
->         obs=N           Write N bytes at a time
->         count=N         Copy only N input blocks
->         skip=N          Skip N input blocks
->         seek=N          Skip N output blocks
->         conv=notrunc    Don't truncate output file
->         conv=noerror    Continue after read errors
->         conv=sync       Pad blocks with zeros
->         conv=fsync      Physically write data out before finishing
-> 
-> 2. write c source file and open with O_DIRECT flag.
-> #include <stdio.h>
-> #include <stdlib.h>
-> #include <sys/types.h>
-> #include <sys/stat.h>
-> #include <fcntl.h>
-> 
-> char message[] = "/mnt/usb/4854344154343452/test.txt";
-> int main()
-> {
->    int fd;
->    char buffer[5];
->    int count = 0;
->    char *buf="1234567890";
->    if((fd=open(message,O_CREAT|O_TRUNC|O_RDWR|O_DIRECT, 0777))<0)
->    {
->        perror("open");
->        return -1;
->    }
->    printf("fd=%d\n", fd);
->    write(fd, buf, strlen(buf));
->    while(1){
->        lseek(fd,0,SEEK_SET);
->        sleep(3);
->        count = read(fd, buffer, 3);
->        printf("count=%d,%x,%x,%x\n", count,buffer[0],buffer[1],buffer[2]);
->    }
-> 
-> }
+Changes compared with v1:
+- Left out the fifth patch since there is no agreement about that
+  patch.
+- Added "unlikely(...)" around the tests for overflow / underflow flags
+  in the SRP_CMD response as proposed by Dave Dillow.
 
-You can do what you want by using the SCSI Generic API.  See the Linux 
-SCSI Generic (sg) HOWTO:
+The patches included in this series are:
 
-	http://tldp.org/HOWTO/SCSI-Generic-HOWTO/
-
-With the proper ioctl call, you can send a READ(10) command telling the 
-drive to read one block starting from block 0.
-
-Alan Stern
-
+0001-scsi_transport_srp-Fix-fast_io_fail_tmo-dev_loss_tmo.patch
+0002-IB-srp-Fix-deadlock-between-host-removal-and-multipa.patch
+0003-IB-srp-Fix-residual-handling.patch
+0004-IB-srp-Use-P_Key-cache-for-P_Key-lookups.patch
 --
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
 the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
