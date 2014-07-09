@@ -1,24 +1,32 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/8] Drivers: scsi: storvsc: Fix a bug in handling VMBUS
- protocol version
-Date: Wed, 9 Jul 2014 01:41:54 -0700
-Message-ID: <20140709084154.GC6012@infradead.org>
+Subject: Re: [PATCH 4/8] Drivers: scsi: storvsc: Filter WRITE_SAME_16
+Date: Wed, 9 Jul 2014 01:43:00 -0700
+Message-ID: <20140709084300.GD6012@infradead.org>
 References: <1404866789-26910-1-git-send-email-kys@microsoft.com>
  <1404866812-26950-1-git-send-email-kys@microsoft.com>
- <1404866812-26950-3-git-send-email-kys@microsoft.com>
+ <1404866812-26950-4-git-send-email-kys@microsoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <stable-owner@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
 Content-Disposition: inline
-In-Reply-To: <1404866812-26950-3-git-send-email-kys@microsoft.com>
-Sender: stable-owner@vger.kernel.org
+In-Reply-To: <1404866812-26950-4-git-send-email-kys@microsoft.com>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: driverdev-devel-bounces@linuxdriverproject.org
 To: "K. Y. Srinivasan" <kys@microsoft.com>
-Cc: linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, jbottomley@parallels.com, jasowang@redhat.com, apw@canonical.com, linux-scsi@vger.kernel.org, stable@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, jasowang@redhat.com, linux-kernel@vger.kernel.org, jbottomley@parallels.com, ohering@suse.com, stable@vger.kernel.org, apw@canonical.com, devel@linuxdriverproject.org
 List-Id: linux-scsi@vger.kernel.org
 
-> +	if ((vmbus_proto_version == VERSION_WS2008) ||
-> +	     (vmbus_proto_version == VERSION_WIN7)) {
+On Tue, Jul 08, 2014 at 05:46:48PM -0700, K. Y. Srinivasan wrote:
+> Host does not handle WRITE_SAME_16; filter this command out. This patch
+> is required to handle large devices (greater than 2 TB disks).
 
-This has superflous braces and doesn't use proper Linux indentation.
-
-But I think simply using a switch here might be cleaner anyway.
+Storvsc already sets the no_write_same flag, where is the command coming
+from?
