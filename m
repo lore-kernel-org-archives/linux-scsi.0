@@ -1,8 +1,8 @@
 From: "K. Y. Srinivasan" <kys@microsoft.com>
-Subject: [PATCH V2 3/8] Drivers: scsi: storvsc: Filter commands based on the
- storage protocol version
-Date: Wed,  9 Jul 2014 23:33:47 -0700
-Message-ID: <1404974032-5023-3-git-send-email-kys@microsoft.com>
+Subject: [PATCH V2 4/8] Drivers: scsi: storvsc: Fix a bug in handling VMBUS
+ protocol version
+Date: Wed,  9 Jul 2014 23:33:48 -0700
+Message-ID: <1404974032-5023-4-git-send-email-kys@microsoft.com>
 References: <1404974008-4984-1-git-send-email-kys@microsoft.com>
  <1404974032-5023-1-git-send-email-kys@microsoft.com>
 Mime-Version: 1.0
@@ -23,11 +23,10 @@ To: linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com
 Cc: stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Going forward it is possible that some of the commands that are not currently
-implemented will be implemented on future Windows hosts. Even if they are not
-implemented, we are told the host will corrrectly handle unsupported
-commands (by returning appropriate return code and sense information).
-Make command filtering depend on the host version.
+Based on the negotiated VMBUS protocol version, we adjust the size of the storage
+protocol messages. The two sizes we currently handle are pre-win8 and post-win8.
+In WS2012 R2, we are negotiating higher VMBUS protocol version than the win8
+version. Make adjustments to correctly handle this.
 
 In this version of the patch I have addressed comments from
 Christoph Hellwig <hch@infradead.org>
@@ -35,35 +34,42 @@ Christoph Hellwig <hch@infradead.org>
 Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
 Cc: <stable@vger.kernel.org>
 ---
- drivers/scsi/storvsc_drv.c |   16 +++++++++++++---
- 1 files changed, 13 insertions(+), 3 deletions(-)
+ drivers/scsi/storvsc_drv.c |   17 ++++++++++-------
+ 1 files changed, 10 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index cebcef7..8f8847e 100644
+index 8f8847e..7e8a642 100644
 --- a/drivers/scsi/storvsc_drv.c
 +++ b/drivers/scsi/storvsc_drv.c
-@@ -1553,9 +1553,19 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
- 	struct vmscsi_request *vm_srb;
- 	struct stor_mem_pools *memp = scmnd->device->hostdata;
+@@ -1752,19 +1752,22 @@ static int storvsc_probe(struct hv_device *device,
+ 	 * set state to properly communicate with the host.
+ 	 */
  
--	if (!storvsc_scsi_cmd_ok(scmnd)) {
--		scmnd->scsi_done(scmnd);
--		return 0;
-+	if (vmstor_current_major <= VMSTOR_WIN8_MAJOR) {
-+		/*
-+		 * On legacy hosts filter unimplemented commands.
-+		 * Future hosts are expected to correctly handle
-+		 * unsupported commands. Furthermore, it is
-+		 * possible that some of the currently
-+		 * unsupported commands maybe supported in
-+		 * future versions of the host.
-+		 */
-+		if (!storvsc_scsi_cmd_ok(scmnd)) {
-+			scmnd->scsi_done(scmnd);
-+			return 0;
-+		}
+-	if (vmbus_proto_version == VERSION_WIN8) {
+-		sense_buffer_size = POST_WIN7_STORVSC_SENSE_BUFFER_SIZE;
+-		vmscsi_size_delta = 0;
+-		vmstor_current_major = VMSTOR_WIN8_MAJOR;
+-		vmstor_current_minor = VMSTOR_WIN8_MINOR;
+-	} else {
++	switch (vmbus_proto_version) {
++	case VERSION_WS2008:
++	case VERSION_WIN7:
+ 		sense_buffer_size = PRE_WIN8_STORVSC_SENSE_BUFFER_SIZE;
+ 		vmscsi_size_delta = sizeof(struct vmscsi_win8_extension);
+ 		vmstor_current_major = VMSTOR_WIN7_MAJOR;
+ 		vmstor_current_minor = VMSTOR_WIN7_MINOR;
++		break;
++	default:
++		sense_buffer_size = POST_WIN7_STORVSC_SENSE_BUFFER_SIZE;
++		vmscsi_size_delta = 0;
++		vmstor_current_major = VMSTOR_WIN8_MAJOR;
++		vmstor_current_minor = VMSTOR_WIN8_MINOR;
++		break;
  	}
  
- 	request_size = sizeof(struct storvsc_cmd_request);
+-
+ 	if (dev_id->driver_data == SFC_GUID)
+ 		scsi_driver.can_queue = (STORVSC_MAX_IO_REQUESTS *
+ 					 STORVSC_FC_MAX_TARGETS);
 -- 
 1.7.4.1
