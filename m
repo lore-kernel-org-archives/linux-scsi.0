@@ -1,39 +1,37 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: scsi-mq V2
-Date: Thu, 10 Jul 2014 15:48:10 +0200
-Message-ID: <53BE999A.6060309@kernel.dk>
-References: <1403715121-1201-1-git-send-email-hch@lst.de> <20140708144829.GA5539@infradead.org> <53BD7041.5010300@interlog.com> <53BD9A24.7010203@kernel.dk> <94D0CD8314A33A4D9D801C0FE68B402958B9628B@G9W0745.americas.hpqcorp.net> <20140710062040.GB20146@infradead.org> <20140710133609.GO12478@kvack.org> <53BE97AD.9080306@kernel.dk> <20140710134439.GP12478@kvack.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140710134439.GP12478@kvack.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Benjamin LaHaise <bcrl@kvack.org>
-Cc: Christoph Hellwig <hch@infradead.org>, "Elliott, Robert (Server Storage)" <Elliott@hp.com>, "dgilbert@interlog.com" <dgilbert@interlog.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Bart Van Assche <bvanassche@fusionio.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+From: Suman Tripathi <stripathi@apm.com>
+Subject: [PATCH v2 0/3] ata: Fixes related to APM X-Gene SATA host controller driver.
+Date: Thu, 10 Jul 2014 19:19:14 +0530
+Message-ID: <1405000156-321-1-git-send-email-stripathi@apm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from denmail01-v4020.amcc.com ([192.195.68.30]:56593 "EHLO
+	denmail01.apm.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753251AbaGJNuV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Jul 2014 09:50:21 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>, Loc Ho <lho@apm.com>
 
-On 2014-07-10 15:44, Benjamin LaHaise wrote:
-> On Thu, Jul 10, 2014 at 03:39:57PM +0200, Jens Axboe wrote:
->> That's how fio always runs, it sets up the context with the exact queue
->> depth that it needs. Do we have a good enough understanding of other aio
->> use cases to say that this isn't the norm? I would expect it to be, it's
->> the way that the API would most obviously be used.
->
-> The problem with this approach is that it works very poorly with per cpu
-> reference counting's batching of references, which is pretty much a
-> requirement now that many core systems are the norm.  Allocating the bare
-> minimum is not the right thing to do today.  That said, the default limits
-> on the number of requests probably needs to be raised.
+This patch set contains a couple of fixes related to APM X-Gene SATA
+controller driver.
 
-Sorry, that's a complete cop-out. Then you handle this internally, 
-allocate a bigger pool and cap the limit if you need to. Look at the 
-API. You pass in the number of requests you will use. Do you expect 
-anyone to double up, just in case? Will never happen.
+v2 Change:
+  - Drop the Link down retry patch from this patch set.
 
-But all of this is side stepping the point that there's a real bug 
-reported here. The above could potentially explain the "it's using X 
-more CPU, or it's Y slower". The above is a softlock, it never completes.
+Signed-off-by: Loc Ho <lho@apm.com>
+Signed-off-by: Suman Tripathi <stripathi@apm.com>
+---
 
--- 
-Jens Axboe
+Suman Tripathi (2):
+  ata: Fix the watermark threshold for the APM X-Gene SATA host
+    controller driver.
+  arm64: Fix the APM X-Gene SoC SATA PHY clock DTS node csr-mask of the
+    SATA Host Controller 1.
+
+ arch/arm64/boot/dts/apm-storm.dtsi | 5 +----
+ drivers/ata/ahci_xgene.c           | 7 +++++++
+ 2 files changed, 8 insertions(+), 4 deletions(-)
+
+--
+1.8.2.1
+
