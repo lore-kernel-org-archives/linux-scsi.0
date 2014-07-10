@@ -1,14 +1,14 @@
 From: "K. Y. Srinivasan" <kys@microsoft.com>
-Subject: [PATCH V2 1/8] Drivers: scsi: storvsc: Change the limits to reflect
- the values on the host
-Date: Wed,  9 Jul 2014 23:33:45 -0700
-Message-ID: <1404974032-5023-1-git-send-email-kys@microsoft.com>
+Subject: [PATCH V2 7/8] drivers: scsi: storvsc: Set srb_flags in all cases
+Date: Wed,  9 Jul 2014 23:33:51 -0700
+Message-ID: <1404974032-5023-7-git-send-email-kys@microsoft.com>
 References: <1404974008-4984-1-git-send-email-kys@microsoft.com>
+ <1404974032-5023-1-git-send-email-kys@microsoft.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <1404974008-4984-1-git-send-email-kys@microsoft.com>
+In-Reply-To: <1404974032-5023-1-git-send-email-kys@microsoft.com>
 List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
  <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
 List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
@@ -22,99 +22,50 @@ To: linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com
 Cc: stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hyper-V hosts can support multiple targets and multiple channels and larger number of
-LUNs per target. Update the code to reflect this. With this patch we can correctly
-enumerate all the paths in a multi-path storage environment.
-
-In this version of the patch I have addressed comments from
-Christoph Hellwig <hch@infradead.org>
+Correctly set SRB flags for all valid I/O directions. Some IHV drivers on the
+Windows host require this.
 
 Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
 Cc: <stable@vger.kernel.org>
 ---
- drivers/scsi/storvsc_drv.c |   47 +++++++++++++++++++++++++++++---------------
- 1 files changed, 31 insertions(+), 16 deletions(-)
+ drivers/scsi/storvsc_drv.c |   12 +++++-------
+ 1 files changed, 5 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 9969fa1..8938b13 100644
+index 443a1c2..84b9b39 100644
 --- a/drivers/scsi/storvsc_drv.c
 +++ b/drivers/scsi/storvsc_drv.c
-@@ -330,17 +330,17 @@ static int storvsc_timeout = 180;
+@@ -1614,26 +1614,24 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
+ 	vm_srb = &cmd_request->vstor_packet.vm_srb;
+ 	vm_srb->win8_extension.time_out_value = 60;
  
- static void storvsc_on_channel_callback(void *context);
++	vm_srb->win8_extension.srb_flags |=
++		(SRB_FLAGS_QUEUE_ACTION_ENABLE |
++		SRB_FLAGS_DISABLE_SYNCH_TRANSFER);
  
--/*
-- * In Hyper-V, each port/path/target maps to 1 scsi host adapter.  In
-- * reality, the path/target is not used (ie always set to 0) so our
-- * scsi host adapter essentially has 1 bus with 1 target that contains
-- * up to 256 luns.
-- */
--#define STORVSC_MAX_LUNS_PER_TARGET			64
--#define STORVSC_MAX_TARGETS				1
--#define STORVSC_MAX_CHANNELS				1
-+#define STORVSC_MAX_LUNS_PER_TARGET			255
-+#define STORVSC_MAX_TARGETS				2
-+#define STORVSC_MAX_CHANNELS				8
- 
-+#define STORVSC_FC_MAX_LUNS_PER_TARGET			255
-+#define STORVSC_FC_MAX_TARGETS				128
-+#define STORVSC_FC_MAX_CHANNELS				8
- 
-+#define STORVSC_IDE_MAX_LUNS_PER_TARGET			64
-+#define STORVSC_IDE_MAX_TARGETS				1
-+#define STORVSC_IDE_MAX_CHANNELS			1
- 
- struct storvsc_cmd_request {
- 	struct list_head entry;
-@@ -1691,7 +1691,6 @@ static struct scsi_host_template scsi_driver = {
- 	.slave_destroy =	storvsc_device_destroy,
- 	.slave_configure =	storvsc_device_configure,
- 	.cmd_per_lun =		1,
--	/* 64 max_queue * 1 target */
- 	.can_queue =		STORVSC_MAX_IO_REQUESTS*STORVSC_MAX_TARGETS,
- 	.this_id =		-1,
- 	/* no use setting to 0 since ll_blk_rw reset it to 1 */
-@@ -1756,6 +1755,9 @@ static int storvsc_probe(struct hv_device *device,
+ 	/* Build the SRB */
+ 	switch (scmnd->sc_data_direction) {
+ 	case DMA_TO_DEVICE:
+ 		vm_srb->data_in = WRITE_TYPE;
+ 		vm_srb->win8_extension.srb_flags |= SRB_FLAGS_DATA_OUT;
+-		vm_srb->win8_extension.srb_flags |=
+-			(SRB_FLAGS_QUEUE_ACTION_ENABLE |
+-			SRB_FLAGS_DISABLE_SYNCH_TRANSFER);
+ 		break;
+ 	case DMA_FROM_DEVICE:
+ 		vm_srb->data_in = READ_TYPE;
+ 		vm_srb->win8_extension.srb_flags |= SRB_FLAGS_DATA_IN;
+-		vm_srb->win8_extension.srb_flags |=
+-			(SRB_FLAGS_QUEUE_ACTION_ENABLE |
+-			SRB_FLAGS_DISABLE_SYNCH_TRANSFER);
+ 		break;
+ 	default:
+ 		vm_srb->data_in = UNKNOWN_TYPE;
+-		vm_srb->win8_extension.srb_flags = 0;
++		vm_srb->win8_extension.srb_flags |= (SRB_FLAGS_DATA_IN |
++						     SRB_FLAGS_DATA_OUT);
+ 		break;
  	}
- 
- 
-+	if (dev_id->driver_data == SFC_GUID)
-+		scsi_driver.can_queue = (STORVSC_MAX_IO_REQUESTS *
-+					 STORVSC_FC_MAX_TARGETS);
- 	host = scsi_host_alloc(&scsi_driver,
- 			       sizeof(struct hv_host_device));
- 	if (!host)
-@@ -1789,12 +1791,25 @@ static int storvsc_probe(struct hv_device *device,
- 	host_dev->path = stor_device->path_id;
- 	host_dev->target = stor_device->target_id;
- 
--	/* max # of devices per target */
--	host->max_lun = STORVSC_MAX_LUNS_PER_TARGET;
--	/* max # of targets per channel */
--	host->max_id = STORVSC_MAX_TARGETS;
--	/* max # of channels */
--	host->max_channel = STORVSC_MAX_CHANNELS - 1;
-+	switch (dev_id->driver_data) {
-+	case SFC_GUID:
-+		host->max_lun = STORVSC_FC_MAX_LUNS_PER_TARGET;
-+		host->max_id = STORVSC_FC_MAX_TARGETS;
-+		host->max_channel = STORVSC_FC_MAX_CHANNELS - 1;
-+		break;
-+
-+	case SCSI_GUID:
-+		host->max_lun = STORVSC_MAX_LUNS_PER_TARGET;
-+		host->max_id = STORVSC_MAX_TARGETS;
-+		host->max_channel = STORVSC_MAX_CHANNELS - 1;
-+		break;
-+
-+	default:
-+		host->max_lun = STORVSC_IDE_MAX_LUNS_PER_TARGET;
-+		host->max_id = STORVSC_IDE_MAX_TARGETS;
-+		host->max_channel = STORVSC_IDE_MAX_CHANNELS - 1;
-+		break;
-+	}
- 	/* max cmd length */
- 	host->max_cmd_len = STORVSC_MAX_CMD_LEN;
  
 -- 
 1.7.4.1
