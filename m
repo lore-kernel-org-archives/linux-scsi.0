@@ -1,18 +1,23 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH V2 2/8] Drivers: scsi: storvsc: Set cmd_per_lun to reflect
- value supported by the Host
-Date: Thu, 10 Jul 2014 22:08:23 +0000
-Message-ID: <29c69dee7c6e4462a7d2913ae2b0b522@BY2PR03MB299.namprd03.prod.outlook.com>
-References: <1404974008-4984-1-git-send-email-kys@microsoft.com>
- <1404974032-5023-1-git-send-email-kys@microsoft.com>
- <1404974032-5023-2-git-send-email-kys@microsoft.com>
- <20140710102457.GA31692@infradead.org>
+From: James Bottomley <jbottomley@parallels.com>
+Subject: Re: [PATCH 4/8] Drivers: scsi: storvsc: Filter WRITE_SAME_16
+Date: Thu, 10 Jul 2014 22:12:46 +0000
+Message-ID: <1405030365.2851.2.camel@jarvis.lan>
+References: <1404866789-26910-1-git-send-email-kys@microsoft.com>
+ <1404866812-26950-1-git-send-email-kys@microsoft.com>
+ <1404866812-26950-4-git-send-email-kys@microsoft.com>
+ <20140709084300.GD6012@infradead.org>
+ <a31a45eddb544024a7538458b98c3611@BY2PR03MB299.namprd03.prod.outlook.com>
+ <1404935792.2184.5.camel@dabdike.int.hansenpartnership.com>
+ <2f3ae589e6f149acbe4c5dd79f905971@BY2PR03MB299.namprd03.prod.outlook.com>
+ <1404944843.2184.8.camel@dabdike.int.hansenpartnership.com>
+ <a51690cc47b1475ab9ca2d871cc97115@BY2PR03MB299.namprd03.prod.outlook.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <20140710102457.GA31692@infradead.org>
+In-Reply-To: <a51690cc47b1475ab9ca2d871cc97115@BY2PR03MB299.namprd03.prod.outlook.com>
 Content-Language: en-US
+Content-ID: <07553DE5B9811A41B231046AE692FFFB@sw.swsoft.com>
 List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
  <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
 List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
@@ -22,34 +27,93 @@ List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driver
  <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
 Errors-To: driverdev-devel-bounces@linuxdriverproject.org
 Sender: driverdev-devel-bounces@linuxdriverproject.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jasowang@redhat.com" <jasowang@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "ohering@suse.com" <ohering@suse.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "apw@canonical.com" <apw@canonical.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
+To: "kys@microsoft.com" <kys@microsoft.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jasowang@redhat.com" <jasowang@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "ohering@suse.com" <ohering@suse.com>, "hch@infradead.org" <hch@infradead.org>, "mkp@mkp.net" <mkp@mkp.net>, "apw@canonical.com" <apw@canonical.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
 List-Id: linux-scsi@vger.kernel.org
 
-
-
-> -----Original Message-----
-> From: Christoph Hellwig [mailto:hch@infradead.org]
-> Sent: Thursday, July 10, 2014 3:25 AM
-> To: KY Srinivasan
-> Cc: linux-kernel@vger.kernel.org; devel@linuxdriverproject.org;
-> ohering@suse.com; jbottomley@parallels.com; hch@infradead.org;
-> jasowang@redhat.com; apw@canonical.com; linux-scsi@vger.kernel.org;
-> stable@vger.kernel.org
-> Subject: Re: [PATCH V2 2/8] Drivers: scsi: storvsc: Set cmd_per_lun to reflect
-> value supported by the Host
+On Thu, 2014-07-10 at 21:02 +0000, KY Srinivasan wrote:
 > 
-> > -	.cmd_per_lun =		1,
-> > +	.cmd_per_lun =		255,
-> >  	.can_queue =
-> 	STORVSC_MAX_IO_REQUESTS*STORVSC_MAX_TARGETS,
+> > -----Original Message-----
+> > From: James Bottomley [mailto:jbottomley@parallels.com]
+> > Sent: Wednesday, July 9, 2014 3:27 PM
+> > To: KY Srinivasan
+> > Cc: linux-kernel@vger.kernel.org; mkp@mkp.net; hch@infradead.org;
+> > devel@linuxdriverproject.org; apw@canonical.com; stable@vger.kernel.org;
+> > linux-scsi@vger.kernel.org; ohering@suse.com; jasowang@redhat.com
+> > Subject: Re: [PATCH 4/8] Drivers: scsi: storvsc: Filter WRITE_SAME_16
+> > 
+> > On Wed, 2014-07-09 at 21:14 +0000, KY Srinivasan wrote:
+> > >
+> > > > -----Original Message-----
+> > > > From: James Bottomley [mailto:jbottomley@parallels.com]
+> > > > Sent: Wednesday, July 9, 2014 12:57 PM
+> > > > To: KY Srinivasan
+> > > > Cc: linux-kernel@vger.kernel.org; hch@infradead.org;
+> > > > devel@linuxdriverproject.org; apw@canonical.com;
+> > > > stable@vger.kernel.org; linux-scsi@vger.kernel.org;
+> > > > ohering@suse.com; jasowang@redhat.com
+> > > > Subject: Re: [PATCH 4/8] Drivers: scsi: storvsc: Filter
+> > > > WRITE_SAME_16
+> > > >
+> > > > On Wed, 2014-07-09 at 19:52 +0000, KY Srinivasan wrote:
+> > > > >
+> > > > > > -----Original Message-----
+> > > > > > From: Christoph Hellwig [mailto:hch@infradead.org]
+> > > > > > Sent: Wednesday, July 9, 2014 1:43 AM
+> > > > > > To: KY Srinivasan
+> > > > > > Cc: linux-kernel@vger.kernel.org; devel@linuxdriverproject.org;
+> > > > > > ohering@suse.com; jbottomley@parallels.com;
+> > jasowang@redhat.com;
+> > > > > > apw@canonical.com; linux-scsi@vger.kernel.org;
+> > > > > > stable@vger.kernel.org
+> > > > > > Subject: Re: [PATCH 4/8] Drivers: scsi: storvsc: Filter
+> > > > > > WRITE_SAME_16
+> > > > > >
+> > > > > > On Tue, Jul 08, 2014 at 05:46:48PM -0700, K. Y. Srinivasan wrote:
+> > > > > > > Host does not handle WRITE_SAME_16; filter this command out.
+> > > > > > > This patch is required to handle large devices (greater than 2 TB
+> > disks).
+> > > > > >
+> > > > > > Storvsc already sets the no_write_same flag, where is the
+> > > > > > command coming from?
+> > > > >
+> > > > > In spite of this flag,  I see WRITE_SAME_16 being issued when I
+> > > > > format a device bigger than 2 TB; I tried both xfs and ext4.
+> > > > > Windows hosts currently do not handle unsupported commands
+> > > > > correctly - The information returned is not sufficient to effect recovery
+> > in the Linux guest.
+> > > > While this may be addressed in future hosts, this patch fixes the problem.
+> > > >
+> > > > What Christoph means is that this looks like a bug somewhere in SCSI
+> > itself.
+> > > > That means we need to find it and kill it, not add workarounds to
+> > > > every driver that sets no_write_same ...
+> > >
+> > > James,
+> > >
+> > > I will try to isolate this issue in the SCSI stack. If it is ok with
+> > > you guys, I would still want to filter WRITE_SAME_16 (as we currently
+> > > do WRITE_SAME) in our driver since this would address the problem for a
+> > large number of customers on our platform.
+> > 
+> > If we fix it at source, why would there be any need to filter?  That's the
+> > reason the no_write_same flag was introduced.  If we can find and fix the
+> > bug, it can go back into the stable trees as a bug fix, hence nothing should
+> > ever emit write_same(10 or 16) and additional driver code is redundant (and
+> > counter productive, since if this ever breaks again you're our best canary).
+> > 
+> > This looks like it might be the problem but Martin should confirm (I think the
+> > problem comes to us from the RC16 code which unconditionally sets WS16).
+> > 
+> > James
 > 
-> slave_configure immediately adjusts this down to
-> STORVSC_MAX_IO_REQUESTS (250), any reson to start out with the magic
-> 255 here?
+> James,
+> 
+> This patch works for me; are you planning on committing this patch.
 
-The number 255 (set for cmd_per_lun) is what the host can support (I recently discovered this in an MSDN document). STORVSC_MAX_IO_REQUESTS is an implementation limitation in this driver.
+OK, if we go with this we can add your tested by.
 
-Regards,
+It's not going in until Martin takes a look because there may be a
+better way of doing this.
 
-K. Y
+James
