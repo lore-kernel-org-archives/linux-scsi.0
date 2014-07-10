@@ -1,8 +1,8 @@
 From: "K. Y. Srinivasan" <kys@microsoft.com>
-Subject: [PATCH V2 8/8] drivers: scsi: storvsc: Correctly handle
- TEST_UNIT_READY failure
-Date: Wed,  9 Jul 2014 23:33:52 -0700
-Message-ID: <1404974032-5023-8-git-send-email-kys@microsoft.com>
+Subject: [PATCH V2 5/8] Drivers: scsi: storvsc: Fix a bug in the handling of
+ SRB status flags
+Date: Wed,  9 Jul 2014 23:33:49 -0700
+Message-ID: <1404974032-5023-5-git-send-email-kys@microsoft.com>
 References: <1404974008-4984-1-git-send-email-kys@microsoft.com>
  <1404974032-5023-1-git-send-email-kys@microsoft.com>
 Mime-Version: 1.0
@@ -23,8 +23,7 @@ To: linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com
 Cc: stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On some Windows hosts on FC SANs, TEST_UNIT_READY can return SRB_STATUS_ERROR.
-Correctly handle this.
+SRB status can have additional information. Mask these out before processing SRB status.
 
 In this version of the patch I have addressed comments from
 Christoph Hellwig <hch@infradead.org>
@@ -32,26 +31,36 @@ Christoph Hellwig <hch@infradead.org>
 Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
 Cc: <stable@vger.kernel.org>
 ---
- drivers/scsi/storvsc_drv.c |    7 +++++++
- 1 files changed, 7 insertions(+), 0 deletions(-)
+ drivers/scsi/storvsc_drv.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
 diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 84b9b39..6fed0dd 100644
+index 7e8a642..7b99f38 100644
 --- a/drivers/scsi/storvsc_drv.c
 +++ b/drivers/scsi/storvsc_drv.c
-@@ -1020,6 +1020,13 @@ static void storvsc_handle_error(struct vmscsi_request *vm_srb,
- 		case ATA_12:
- 			set_host_byte(scmnd, DID_PASSTHROUGH);
- 			break;
-+		/*
-+		 * On Some Windows hosts TEST_UNIT_READY command can return
-+		 * SRB_STATUS_ERROR, let the upper level code deal with it
-+		 * based on the sense information.
-+		 */
-+		case TEST_UNIT_READY:
-+			break;
- 		default:
- 			set_host_byte(scmnd, DID_TARGET_FAILURE);
- 		}
+@@ -299,11 +299,14 @@ enum storvsc_request_type {
+  */
+ 
+ #define SRB_STATUS_AUTOSENSE_VALID	0x80
++#define SRB_STATUS_QUEUE_FROZEN		0x40
+ #define SRB_STATUS_INVALID_LUN	0x20
+ #define SRB_STATUS_SUCCESS	0x01
+ #define SRB_STATUS_ABORTED	0x02
+ #define SRB_STATUS_ERROR	0x04
+ 
++#define SRB_STATUS(status) \
++	(status & ~(SRB_STATUS_AUTOSENSE_VALID | SRB_STATUS_QUEUE_FROZEN))
+ /*
+  * This is the end of Protocol specific defines.
+  */
+@@ -1004,7 +1007,7 @@ static void storvsc_handle_error(struct vmscsi_request *vm_srb,
+ 	void (*process_err_fn)(struct work_struct *work);
+ 	bool do_work = false;
+ 
+-	switch (vm_srb->srb_status) {
++	switch (SRB_STATUS(vm_srb->srb_status)) {
+ 	case SRB_STATUS_ERROR:
+ 		/*
+ 		 * If there is an error; offline the device since all
 -- 
 1.7.4.1
