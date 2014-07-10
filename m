@@ -1,28 +1,32 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] fcoe: Reduce max_sectors to 1024
-Date: Wed, 9 Jul 2014 23:36:30 -0700
-Message-ID: <20140710063630.GA13276@infradead.org>
-References: <1404886581-3218-1-git-send-email-hare@suse.de>
- <20140709061838.GA28335@infradead.org>
- <53BCE3DE.6000605@suse.de>
- <1404932313.12914.36.camel@vfc0>
+Subject: Re: [PATCH 4/4] scsi: pm8001: fix pm8001_store_update_fw
+Date: Wed, 9 Jul 2014 23:43:01 -0700
+Message-ID: <20140710064301.GA18156@infradead.org>
+References: <1404746401-25229-4-git-send-email-thenzl@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:46842 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:46923 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750708AbaGJGgf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Jul 2014 02:36:35 -0400
+	with ESMTP id S1750733AbaGJGnC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Jul 2014 02:43:02 -0400
 Content-Disposition: inline
-In-Reply-To: <1404932313.12914.36.camel@vfc0>
+In-Reply-To: <1404746401-25229-4-git-send-email-thenzl@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vasu Dev <vasu.dev@linux.intel.com>
-Cc: Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@infradead.org>, James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, fcoe-devel@open-fcoe.org
+To: Tomas Henzl <thenzl@redhat.com>
+Cc: linux-scsi@vger.kernel.org, xjtuwjp@gmail.com, Vasanthalakshmi.Tharmarajan@pmcs.com, Suresh.Thiagarajan@pmcs.com, Viswas.G@pmcs.com
 
-Hannes, can you respin the patch with a comment explaining the limit?
+On Mon, Jul 07, 2014 at 05:20:01PM +0200, Tomas Henzl wrote:
+> The current implementation may mix the negative value returned
+> from pm8001_set_nvmd with with count. -(-ENOMEM) could be interpreted
+> as bytes programmed, this patch fixes it.
 
-> Does it limit IO size for pass through IO not through block layer ? 
+This still doesn;t look correct to me as err mixes up the driver
+internal FAIL_* codes with Linux error codes.  It seems like for the
+FAIL_* codes should only go into ->fw_status and the return value
+should be a proper Linux error code.
 
-The max_sectors limit also limits the size of passthrough requests.
+Funny fact: the FAIL_* / FLASH_IN_PROGRESS codes seems to be the same
+between aic94xx and pm8001.
 
