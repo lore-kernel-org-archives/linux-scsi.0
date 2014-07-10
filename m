@@ -1,76 +1,37 @@
 From: "K. Y. Srinivasan" <kys@microsoft.com>
-Subject: [PATCH V2 6/8] Drivers: scsi: storvsc: Implement an abort handler
-Date: Wed,  9 Jul 2014 23:33:50 -0700
-Message-ID: <1404974032-5023-6-git-send-email-kys@microsoft.com>
-References: <1404974008-4984-1-git-send-email-kys@microsoft.com>
- <1404974032-5023-1-git-send-email-kys@microsoft.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+Subject: [PATCH V2 2/8] Drivers: scsi: storvsc: Set cmd_per_lun to reflect value supported by the Host
+Date: Wed,  9 Jul 2014 23:41:54 -0700
+Message-ID: <1404974514-5111-1-git-send-email-kys@microsoft.com>
+References: <1404974032-5023-1-git-send-email-kys@microsoft.com>
+Return-path: <stable-owner@vger.kernel.org>
 In-Reply-To: <1404974032-5023-1-git-send-email-kys@microsoft.com>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: driverdev-devel-bounces@linuxdriverproject.org
+Sender: stable-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, jasowang@redhat.com, apw@canonical.com, linux-scsi@vger.kernel.org
+Cc: "K. Y. Srinivasan" <kys@microsoft.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Implement a simple abort handler. The host does not support "Abort"; just
-ensure that all inflight I/Os have been accounted for.
-
+Set cmd_per_lun to reflect value supported by the Host.
 In this version of the patch I have addressed comments from
 Christoph Hellwig <hch@infradead.org>
 
 Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
+Cc: <stable@vger.kernel.org>
 ---
- drivers/scsi/storvsc_drv.c |   22 ++++++++++++++++++++++
- 1 files changed, 22 insertions(+), 0 deletions(-)
+ drivers/scsi/storvsc_drv.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
 diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 7b99f38..443a1c2 100644
+index 8938b13..cebcef7 100644
 --- a/drivers/scsi/storvsc_drv.c
 +++ b/drivers/scsi/storvsc_drv.c
-@@ -1521,6 +1521,27 @@ static int storvsc_host_reset_handler(struct scsi_cmnd *scmnd)
- 	return SUCCESS;
- }
- 
-+static int storvsc_host_abort_handler(struct scsi_cmnd *scmnd)
-+{
-+	struct hv_host_device *host_dev = shost_priv(scmnd->device->host);
-+	struct hv_device *device = host_dev->dev;
-+
-+	struct storvsc_device *stor_device;
-+
-+
-+	stor_device = get_out_stor_device(device);
-+	if (!stor_device)
-+		return FAILED;
-+
-+	/*
-+	 * Just wait for all in flight I/O's to complete.
-+	 */
-+
-+	storvsc_wait_to_drain(stor_device);
-+
-+	return SUCCESS;
-+}
-+
- static bool storvsc_scsi_cmd_ok(struct scsi_cmnd *scmnd)
- {
- 	bool allowed = true;
-@@ -1700,6 +1721,7 @@ static struct scsi_host_template scsi_driver = {
- 	.bios_param =		storvsc_get_chs,
- 	.queuecommand =		storvsc_queuecommand,
- 	.eh_host_reset_handler =	storvsc_host_reset_handler,
-+	.eh_abort_handler =	storvsc_host_abort_handler,
+@@ -1690,7 +1690,7 @@ static struct scsi_host_template scsi_driver = {
  	.slave_alloc =		storvsc_device_alloc,
  	.slave_destroy =	storvsc_device_destroy,
  	.slave_configure =	storvsc_device_configure,
+-	.cmd_per_lun =		1,
++	.cmd_per_lun =		255,
+ 	.can_queue =		STORVSC_MAX_IO_REQUESTS*STORVSC_MAX_TARGETS,
+ 	.this_id =		-1,
+ 	/* no use setting to 0 since ll_blk_rw reset it to 1 */
 -- 
 1.7.4.1
