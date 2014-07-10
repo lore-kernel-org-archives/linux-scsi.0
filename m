@@ -1,27 +1,100 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: scsi-mq V2
-Date: Thu, 10 Jul 2014 09:14:38 -0700
-Message-ID: <20140710161438.GA30792@infradead.org>
-References: <1403715121-1201-1-git-send-email-hch@lst.de>
- <20140708144829.GA5539@infradead.org>
- <53BD7041.5010300@interlog.com>
- <53BD9A24.7010203@kernel.dk>
- <94D0CD8314A33A4D9D801C0FE68B402958B9628B@G9W0745.americas.hpqcorp.net>
- <20140710062040.GB20146@infradead.org>
- <94D0CD8314A33A4D9D801C0FE68B402958B96E3B@G9W0745.americas.hpqcorp.net>
- <20140710160422.GA13728@infradead.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [RFC PATCH] Let device drivers disable msi on shutdown
+Date: Thu, 10 Jul 2014 12:38:40 -0600
+Message-ID: <20140710183840.GA12663@google.com>
+References: <1403628537-16367-1-git-send-email-keith.busch@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-pci-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20140710160422.GA13728@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Cc: Jens Axboe <axboe@kernel.dk>, "dgilbert@interlog.com" <dgilbert@interlog.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Bart Van Assche <bvanassche@fusionio.com>, Benjamin LaHaise <bcrl@kvack.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+In-Reply-To: <1403628537-16367-1-git-send-email-keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
+To: Keith Busch <keith.busch@intel.com>
+Cc: linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org, Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>, Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Jul 10, 2014 at 09:04:22AM -0700, Christoph Hellwig wrote:
-> It's starting to look weird.  I'll prepare another two bisect branches
-> around some MM changes, which seems the only other possible candidate.
+[+cc LKML, Greg KH for driver core async shutdown question]
 
-I've pushed out scsi-mq.3-bisect-3 and scsi-mq.3-bisect-4 for you.
+On Tue, Jun 24, 2014 at 10:48:57AM -0600, Keith Busch wrote:
+> I'd like to do shutdowns asynchronously so I can shutdown multiple
+> devices in parallel, but the pci-driver disables interrupts after my
+> driver returns from its '.shutdown', though it needs to rely on these
+> interrupts in its asynchronously scheduled shutdown.
+> 
+> I tracked the reason for pci disabling msi to ...
+> 
+> | commit d52877c7b1afb8c37ebe17e2005040b79cb618b0
+> | Author: Yinghai Lu <yhlu.kernel.send@gmail.com>
+> | Date:   Wed Apr 23 14:58:09 2008 -0700
+> |
+> |     pci/irq: let pci_device_shutdown to call pci_msi_shutdown v2
+> 
+> ... because mptfusion doesn't disable msi in its shutdown path.
+> 
+> Any reason we can't let the drivers do this instead?
+
+I guess they *could*, but my general idea is that when we can do
+something in the core, we probably should, because then we're not
+depending on all the drivers to do the right thing.  So I would turn
+this around and say "we need a pretty good reason to move something
+out of the core and into the drivers."
+
+A lot of the issues in the shutdown path are related to getting the
+device to shut up so it doesn't cause problems with kexec.  So it does
+seem like a good idea to have pci_device_shutdown() disable MSI to
+remove one source of bothersome interrupts.
+
+> To provide context why I want to do this asynchronously, NVM-Express has
+> one PCI device per controller, of which there could be dozens in a system,
+> and each one may take many seconds (I've heard over ten in some cases)
+> to safely shutdown.
+
+I don't see anything in device_shutdown() that would wait for this
+sort of asynchronous shutdown to complete.  So how do we know it's
+finished before we turn off the power, reset, kexec, etc.?
+
+If we need to do asynchronous shutdown, it seems like we need some
+sort of driver core infrastructure to manage that.
+
+> In this patch, mptfusion was compile tested only; I didn't observe any
+> adverse affects from running the pci portion.
+> 
+> Signed-off-by: Keith Busch <keith.busch@intel.com>
+> Cc: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>
+> Cc: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  drivers/message/fusion/mptscsih.c |    3 +++
+>  drivers/pci/pci-driver.c          |    2 --
+>  2 files changed, 3 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mptscsih.c
+> index 2a1c6f2..3186e17 100644
+> --- a/drivers/message/fusion/mptscsih.c
+> +++ b/drivers/message/fusion/mptscsih.c
+> @@ -1215,6 +1215,9 @@ mptscsih_remove(struct pci_dev *pdev)
+>  void
+>  mptscsih_shutdown(struct pci_dev *pdev)
+>  {
+> +	MPT_ADAPTER *ioc = pci_get_drvdata(pdev);
+> +	if (ioc->msi_enable)
+> +		pci_disable_msi(pdev);
+>  }
+>  
+>  #ifdef CONFIG_PM
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index 3f8e3db..8079d98 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -453,8 +453,6 @@ static void pci_device_shutdown(struct device *dev)
+>  
+>  	if (drv && drv->shutdown)
+>  		drv->shutdown(pci_dev);
+> -	pci_msi_shutdown(pci_dev);
+> -	pci_msix_shutdown(pci_dev);
+>  
+>  #ifdef CONFIG_KEXEC
+>  	/*
+> -- 
+> 1.7.10.4
+> 
