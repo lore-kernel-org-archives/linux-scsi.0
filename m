@@ -1,58 +1,146 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: scsi-mq V2
-Date: Thu, 10 Jul 2014 22:06:52 +0200
-Message-ID: <53BEF25C.5030607@kernel.dk>
-References: <1403715121-1201-1-git-send-email-hch@lst.de>	<20140708144829.GA5539@infradead.org> <53BD7041.5010300@interlog.com>	<53BD9A24.7010203@kernel.dk>	<94D0CD8314A33A4D9D801C0FE68B402958B9628B@G9W0745.americas.hpqcorp.net>	<20140710062040.GB20146@infradead.org>	<20140710133609.GO12478@kvack.org>	<20140710135051.GA28227@infradead.org> <53BE9AB1.6090603@kernel.dk>	<94D0CD8314A33A4D9D801C0FE68B402958B96CF0@G9W0745.americas.hpqcorp.net>	<20140710144539.GU12478@kvack.org>	<x49k37l1c6p.fsf@segfault.boston.devel.redhat.com>	<53BEF0A8.7010608@kernel.dk> <x49r41tyo7l.fsf@segfault.boston.devel.redhat.com>
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: [PATCH 4/8] Drivers: scsi: storvsc: Filter WRITE_SAME_16
+Date: Thu, 10 Jul 2014 21:02:40 +0000
+Message-ID: <a51690cc47b1475ab9ca2d871cc97115@BY2PR03MB299.namprd03.prod.outlook.com>
+References: <1404866789-26910-1-git-send-email-kys@microsoft.com>
+ <1404866812-26950-1-git-send-email-kys@microsoft.com>
+ <1404866812-26950-4-git-send-email-kys@microsoft.com>
+ <20140709084300.GD6012@infradead.org>
+ <a31a45eddb544024a7538458b98c3611@BY2PR03MB299.namprd03.prod.outlook.com>
+ <1404935792.2184.5.camel@dabdike.int.hansenpartnership.com>
+ <2f3ae589e6f149acbe4c5dd79f905971@BY2PR03MB299.namprd03.prod.outlook.com>
+ <1404944843.2184.8.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-we0-f179.google.com ([74.125.82.179]:54042 "EHLO
-	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751224AbaGJUG4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Jul 2014 16:06:56 -0400
-Received: by mail-we0-f179.google.com with SMTP id w62so85586wes.24
-        for <linux-scsi@vger.kernel.org>; Thu, 10 Jul 2014 13:06:55 -0700 (PDT)
-In-Reply-To: <x49r41tyo7l.fsf@segfault.boston.devel.redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <1404944843.2184.8.camel@dabdike.int.hansenpartnership.com>
+Content-Language: en-US
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: driverdev-devel-bounces@linuxdriverproject.org
+To: James Bottomley <jbottomley@parallels.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jasowang@redhat.com" <jasowang@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "ohering@suse.com" <ohering@suse.com>, "hch@infradead.org" <hch@infradead.org>, "mkp@mkp.net" <mkp@mkp.net>, "apw@canonical.com" <apw@canonical.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Moyer <jmoyer@redhat.com>
-Cc: Benjamin LaHaise <bcrl@kvack.org>, "Elliott, Robert (Server Storage)" <Elliott@hp.com>, Christoph Hellwig <hch@infradead.org>, "dgilbert@interlog.com" <dgilbert@interlog.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Bart Van Assche <bvanassche@fusionio.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On 2014-07-10 22:05, Jeff Moyer wrote:
-> Jens Axboe <axboe@kernel.dk> writes:
->
->> On 2014-07-10 17:11, Jeff Moyer wrote:
->>> Benjamin LaHaise <bcrl@kvack.org> writes:
->>>
->>>>>
->>>>> [  186.339064] ioctx_alloc: nr_events=-2 aio_max_nr=65536
->>>>> [  186.339065] ioctx_alloc: nr_events=-2 aio_max_nr=65536
->>>>> [  186.339067] ioctx_alloc: nr_events=-2 aio_max_nr=65536
->>>>> [  186.339068] ioctx_alloc: nr_events=-2 aio_max_nr=65536
->>>>> [  186.339069] ioctx_alloc: nr_events=-2 aio_max_nr=65536
->>>>
->>>> Something is horribly wrong here.  There is no way that value for nr_events
->>>> should be passed in to ioctx_alloc().  This implies that userland is calling
->>>> io_setup() with an impossibly large value for nr_events.  Can you post the
->>>> actual diff for your fs/aio.c relative to linus' tree?
->>>>
->>>
->>> fio does exactly this!  it passes INT_MAX.
->>
->> That's correct, I had actually forgotten about this. It was a change
->> made a few years back, in correlation with the aio optimizations
->> posted then, basically telling aio to ignore that silly (and broken)
->> user ring.
->
-> I still don't see how you accomplish that.  Making it bigger doesn't get
-> rid of it.  ;-)
 
-See the patches from back then - INT_MAX basically just meant the same 
-as 0, but 0 could not be used because of the (silly) setup with the 
-wrappers around the syscalls. So INT_MAX was overloaded to mean "no ring 
-events, I don't care".
 
--- 
-Jens Axboe
+> -----Original Message-----
+> From: James Bottomley [mailto:jbottomley@parallels.com]
+> Sent: Wednesday, July 9, 2014 3:27 PM
+> To: KY Srinivasan
+> Cc: linux-kernel@vger.kernel.org; mkp@mkp.net; hch@infradead.org;
+> devel@linuxdriverproject.org; apw@canonical.com; stable@vger.kernel.org;
+> linux-scsi@vger.kernel.org; ohering@suse.com; jasowang@redhat.com
+> Subject: Re: [PATCH 4/8] Drivers: scsi: storvsc: Filter WRITE_SAME_16
+> 
+> On Wed, 2014-07-09 at 21:14 +0000, KY Srinivasan wrote:
+> >
+> > > -----Original Message-----
+> > > From: James Bottomley [mailto:jbottomley@parallels.com]
+> > > Sent: Wednesday, July 9, 2014 12:57 PM
+> > > To: KY Srinivasan
+> > > Cc: linux-kernel@vger.kernel.org; hch@infradead.org;
+> > > devel@linuxdriverproject.org; apw@canonical.com;
+> > > stable@vger.kernel.org; linux-scsi@vger.kernel.org;
+> > > ohering@suse.com; jasowang@redhat.com
+> > > Subject: Re: [PATCH 4/8] Drivers: scsi: storvsc: Filter
+> > > WRITE_SAME_16
+> > >
+> > > On Wed, 2014-07-09 at 19:52 +0000, KY Srinivasan wrote:
+> > > >
+> > > > > -----Original Message-----
+> > > > > From: Christoph Hellwig [mailto:hch@infradead.org]
+> > > > > Sent: Wednesday, July 9, 2014 1:43 AM
+> > > > > To: KY Srinivasan
+> > > > > Cc: linux-kernel@vger.kernel.org; devel@linuxdriverproject.org;
+> > > > > ohering@suse.com; jbottomley@parallels.com;
+> jasowang@redhat.com;
+> > > > > apw@canonical.com; linux-scsi@vger.kernel.org;
+> > > > > stable@vger.kernel.org
+> > > > > Subject: Re: [PATCH 4/8] Drivers: scsi: storvsc: Filter
+> > > > > WRITE_SAME_16
+> > > > >
+> > > > > On Tue, Jul 08, 2014 at 05:46:48PM -0700, K. Y. Srinivasan wrote:
+> > > > > > Host does not handle WRITE_SAME_16; filter this command out.
+> > > > > > This patch is required to handle large devices (greater than 2 TB
+> disks).
+> > > > >
+> > > > > Storvsc already sets the no_write_same flag, where is the
+> > > > > command coming from?
+> > > >
+> > > > In spite of this flag,  I see WRITE_SAME_16 being issued when I
+> > > > format a device bigger than 2 TB; I tried both xfs and ext4.
+> > > > Windows hosts currently do not handle unsupported commands
+> > > > correctly - The information returned is not sufficient to effect recovery
+> in the Linux guest.
+> > > While this may be addressed in future hosts, this patch fixes the problem.
+> > >
+> > > What Christoph means is that this looks like a bug somewhere in SCSI
+> itself.
+> > > That means we need to find it and kill it, not add workarounds to
+> > > every driver that sets no_write_same ...
+> >
+> > James,
+> >
+> > I will try to isolate this issue in the SCSI stack. If it is ok with
+> > you guys, I would still want to filter WRITE_SAME_16 (as we currently
+> > do WRITE_SAME) in our driver since this would address the problem for a
+> large number of customers on our platform.
+> 
+> If we fix it at source, why would there be any need to filter?  That's the
+> reason the no_write_same flag was introduced.  If we can find and fix the
+> bug, it can go back into the stable trees as a bug fix, hence nothing should
+> ever emit write_same(10 or 16) and additional driver code is redundant (and
+> counter productive, since if this ever breaks again you're our best canary).
+> 
+> This looks like it might be the problem but Martin should confirm (I think the
+> problem comes to us from the RC16 code which unconditionally sets WS16).
+> 
+> James
 
+James,
+
+This patch works for me; are you planning on committing this patch.
+
+Regards,
+
+K. Y
+> 
+> ---
+> 
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c index 6825eda..8353a4c
+> 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -634,6 +634,23 @@ static void sd_config_discard(struct scsi_disk *sdkp,
+> unsigned int mode)
+>  		max(sdkp->physical_block_size,
+>  		    sdkp->unmap_granularity * logical_block_size);
+> 
+> +	if (sdkp->device->host->no_write_same) {
+> +		switch(mode) {
+> +
+> +		case SD_LBP_WS16:
+> +		case SD_LBP_WS10:
+> +		case SD_LBP_ZERO:
+> +			/*
+> +			 * filter out all the WRITE SAME modes and map them
+> +			 * directly to UNMAP
+> +			 */
+> +			mode = SD_LBP_UNMAP;
+> +			/* fall through */
+> +		default:
+> +			/* everything else is OK */
+> +			break;
+> +		}
+> +	}
+>  	sdkp->provisioning_mode = mode;
+> 
+>  	switch (mode) {
