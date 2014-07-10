@@ -1,79 +1,52 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 79901] New: Extremely slow boot on Promise VTrak E610f due to
- sd_mod RSOC usage
-Date: Thu, 10 Jul 2014 13:23:57 +0000
-Message-ID: <bug-79901-11613@https.bugzilla.kernel.org/>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH 4/4] scsi: pm8001: fix pm8001_store_update_fw
+Date: Thu, 10 Jul 2014 15:30:32 +0200
+Message-ID: <53BE9578.3060902@redhat.com>
+References: <1404746401-25229-4-git-send-email-thenzl@redhat.com> <20140710064301.GA18156@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:43418 "EHLO mail.kernel.org"
+Received: from mx1.redhat.com ([209.132.183.28]:23015 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751205AbaGJNYC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Jul 2014 09:24:02 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 0A25920340
-	for <linux-scsi@vger.kernel.org>; Thu, 10 Jul 2014 13:24:00 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id 4328F202F0
-	for <linux-scsi@vger.kernel.org>; Thu, 10 Jul 2014 13:23:58 +0000 (UTC)
+	id S1753425AbaGJNbD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 10 Jul 2014 09:31:03 -0400
+In-Reply-To: <20140710064301.GA18156@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org, xjtuwjp@gmail.com, Vasanthalakshmi.Tharmarajan@pmcs.com, Suresh.Thiagarajan@pmcs.com, Viswas.G@pmcs.com
 
-https://bugzilla.kernel.org/show_bug.cgi?id=79901
+On 07/10/2014 08:43 AM, Christoph Hellwig wrote:
+> On Mon, Jul 07, 2014 at 05:20:01PM +0200, Tomas Henzl wrote:
+>> The current implementation may mix the negative value returned
+>> from pm8001_set_nvmd with with count. -(-ENOMEM) could be interpreted
+>> as bytes programmed, this patch fixes it.
+> This still doesn;t look correct to me as err mixes up the driver
+> internal FAIL_* codes with Linux error codes.  It seems like for the
+> FAIL_* codes should only go into ->fw_status and the return value
+> should be a proper Linux error code.
 
-            Bug ID: 79901
-           Summary: Extremely slow boot on Promise VTrak E610f due to
-                    sd_mod RSOC usage
-           Product: IO/Storage
-           Version: 2.5
-    Kernel Version: 3.14.7
-          Hardware: x86-64
-                OS: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: normal
-          Priority: P1
-         Component: SCSI
-          Assignee: linux-scsi@vger.kernel.org
-          Reporter: rraptorr@nails.eu.org
-        Regression: No
+And the fw_status might be later used to show error strings in pm8001_show_update_fw,
+if it is so it depends on the flash utility but it seems likely. 
 
-Recently I've started upgrading all of my machines to kernel 3.14 (from Debian
-wheezy backports to be precise). Mostly there were not problems, but I've
-stumbled upon weird behavior on Fibre Channel servers (QLogic cards inside HP
-blades) using Promise VTrak E610f arrays.
+>
+> Funny fact: the FAIL_* / FLASH_IN_PROGRESS codes seems to be the same
+> between aic94xx and pm8001.
 
-As soon as SCSI subsystem tries to detect partitions a lot of SCSI errors are
-reported. The system stalls (but initramfs is responsive) for about 20-30
-minutes (depending on number of arrays and LUNs). After that time, disk
-detection finishes and system continues booting as usual. Everything works
-perfectly afterwards.
+And similar story there too - asd_store_update_bios -...- asd_poll_flash(might return -ENOENT)
 
-I've spent some time fiddling with qla2xxx driver versions, SCSI scanning
-options and anything else I could think of. Finally, I was able to find
-culprit. The problem lies in sd_mod usage of scsi_report_opcode(). This
-function is used to determine if the disk supports WRITE SAME command. It does
-so by issuing REPORT SUPPORTED OPERATION CODES command. Unfortunately, it seems
-Promise VTrak E610f really, really does not like RSOC. As soon as RSOC is
-issued the array stalls for a while, then kernel tries to abort the command and
-finally it must reset the port. Fortunately the array starts working again
-after the reset. I've also verified this behavior with sg_opcodes utility.
+Maybe the flash utility ignores the return value or it has never happened.
+---------------------
 
-Commit that introduced RSOC usage in sd_mod:
-http://git.kernel.org/cgit/linux/kernel/git/stable/linux-stable.git/commit/?id=98dcc2946adbe4349ef1ef9b99873b912831edd4
-Removing it fixes the issue.
+I'll try to find what seems to be the most probable way and post it in few days.
+This patch is not related to the patches 1-3/4, so just wait with this one.
 
-I'm not sure what is the correct way to fix this as I'm not very familiar with
-SCSI spec. If RSOC support cannot be reliably determined then probably some
-kind of blacklist should be introduced.
+Thanks, Tomas
 
-As a workaround, I've modified qla2xxx driver to set 'no_write_same' flag.
-While not directly related it forces sd_mod not to issue RSOC and it is easier
-for me to ship Debian package with modified single driver (I'd prefer not to
-manage my own kernel packages).
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
--- 
-You are receiving this mail because:
-You are the assignee for the bug.
