@@ -1,35 +1,85 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 06/10] sd: don't use scsi_setup_blk_pc_cmnd for discard
-	requests
-Date: Fri, 11 Jul 2014 17:15:57 +0200
-Message-ID: <20140711151557.GB23254@lst.de>
-References: <1404048881-19526-1-git-send-email-hch@lst.de> <1404048881-19526-7-git-send-email-hch@lst.de> <53BFD7F0.5080703@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Andi Kleen <andi@firstfloor.org>
+Subject: [PATCH] scsi: Remove some false sharing in Scsi_Host / Scsi_Device
+Date: Fri, 11 Jul 2014 13:25:10 -0700
+Message-ID: <1405110310-3555-1-git-send-email-andi@firstfloor.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:60371 "EHLO newverein.lst.de"
+Received: from mga02.intel.com ([134.134.136.20]:50710 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752751AbaGKPP7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Jul 2014 11:15:59 -0400
-Content-Disposition: inline
-In-Reply-To: <53BFD7F0.5080703@suse.de>
+	id S1751587AbaGKUZQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Jul 2014 16:25:16 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Andi Kleen <ak@linux.intel.com>
 
-On Fri, Jul 11, 2014 at 02:26:24PM +0200, Hannes Reinecke wrote:
->>   	blk_add_request_payload(rq, page, len);
->> -	ret = scsi_setup_blk_pc_cmnd(sdp, rq);
->> +
->> +	cmd->transfersize = len;
->> +	cmd->allowed = rq->retries;
->> +
->> +	ret = scsi_init_io(cmd, GFP_ATOMIC);
->>   	rq->__data_len = nr_bytes;
->>
->>   out:
-> Ah. Here it's done properly.
+From: Andi Kleen <ak@linux.intel.com>
 
-blk_add_request_payload also sets up rq->__data_len..
+These data structures are accessed by different CPUs and have some
+fields which are mostly read only and others which are frequently
+written. Separate some common ones into separate cache line
+to minimize false sharing while submitting a command.
+
+This allows scsi_dispatch_cmd to do more work with shared clean
+cache lines.
+
+- Move the cmd_serial_number to the end before the host data
+- Separate write common fields from read mostly fields in
+the scsi device
+
+Signed-off-by: Andi Kleen <ak@linux.intel.com>
+---
+ include/scsi/scsi_device.h |  4 ++++
+ include/scsi/scsi_host.h   | 15 ++++++++++-----
+ 2 files changed, 14 insertions(+), 5 deletions(-)
+
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 5853c91..2064d47 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -98,6 +98,10 @@ struct scsi_device {
+ 
+ 	unsigned long last_queue_ramp_up;	/* last queue ramp up time */
+ 
++	/* Mostly read fields below. Move to own cache line to avoid false
++	 * sharing  */
++	char align1 __attribute__((aligned(SMP_CACHE_BYTES)));
++
+ 	unsigned int id, lun, channel;
+ 
+ 	unsigned int manufacturer;	/* Manufacturer of device, for using 
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index 94844fc..a9371b9 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -654,11 +654,7 @@ struct Scsi_Host {
+ 	short unsigned int sg_prot_tablesize;
+ 	short unsigned int max_sectors;
+ 	unsigned long dma_boundary;
+-	/* 
+-	 * Used to assign serial numbers to the cmds.
+-	 * Protected by the host lock.
+-	 */
+-	unsigned long cmd_serial_number;
++
+ 	
+ 	unsigned active_mode:2;
+ 	unsigned unchecked_isa_dma:1;
+@@ -761,6 +757,15 @@ struct Scsi_Host {
+ 	struct device *dma_dev;
+ 
+ 	/*
++	 * Used to assign serial numbers to the cmds.
++	 * Protected by the host lock.
++	 * Hot cache line, keep separate from read only fields.
++	 */
++	unsigned long cmd_serial_number
++		__attribute__((aligned(SMP_CACHE_BYTES)));
++	char pad[SMP_CACHE_BYTES - sizeof(unsigned long)];
++
++	/*
+ 	 * We should ensure that this is aligned, both for better performance
+ 	 * and also because some compilers (m68k) don't automatically force
+ 	 * alignment to a long boundary.
+-- 
+1.9.3
 
