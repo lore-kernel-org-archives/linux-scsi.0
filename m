@@ -1,47 +1,51 @@
-From: Fabio Estevam <festevam@gmail.com>
-Subject: [PATCH] scsi: arm: fas216: Use %llu to print 'u64' format
-Date: Thu, 10 Jul 2014 20:33:07 -0300
-Message-ID: <1405035187-27737-1-git-send-email-festevam@gmail.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-yh0-f47.google.com ([209.85.213.47]:36857 "EHLO
-	mail-yh0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751011AbaGJXd3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Jul 2014 19:33:29 -0400
-Received: by mail-yh0-f47.google.com with SMTP id v1so139694yhn.34
-        for <linux-scsi@vger.kernel.org>; Thu, 10 Jul 2014 16:33:29 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
+Subject: RE: scsi-mq V2
+Date: Fri, 11 Jul 2014 06:02:03 +0000
+Message-ID: <94D0CD8314A33A4D9D801C0FE68B402958B979E6@G9W0745.americas.hpqcorp.net>
+References: <1403715121-1201-1-git-send-email-hch@lst.de>
+	<20140708144829.GA5539@infradead.org> <53BD7041.5010300@interlog.com>
+	<53BD9A24.7010203@kernel.dk>
+	<94D0CD8314A33A4D9D801C0FE68B402958B9628B@G9W0745.americas.hpqcorp.net>
+	<20140710062040.GB20146@infradead.org>
+	<94D0CD8314A33A4D9D801C0FE68B402958B96E3B@G9W0745.americas.hpqcorp.net>
+	<20140710160422.GA13728@infradead.org>
+	<20140710161438.GA30792@infradead.org>
+	<94D0CD8314A33A4D9D801C0FE68B402958B971BB@G9W0745.americas.hpqcorp.net>
+ <x497g3l10x6.fsf@segfault.boston.devel.redhat.com>
+ <94D0CD8314A33A4D9D801C0FE68B402958B9742E@G9W0745.americas.hpqcorp.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <94D0CD8314A33A4D9D801C0FE68B402958B9742E@G9W0745.americas.hpqcorp.net>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Moyer <jmoyer@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>, "dgilbert@interlog.com" <dgilbert@interlog.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Bart Van Assche <bvanassche@fusionio.com>, Benjamin LaHaise <bcrl@kvack.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: JBottomley@parallels.com
-Cc: linux-scsi@vger.kernel.org, Fabio Estevam <fabio.estevam@freescale.com>
 
-From: Fabio Estevam <fabio.estevam@freescale.com>
 
-The following warning is seen when building for ARM:
 
-drivers/scsi/arm/fas216.c:3003:3: warning: format '%d' expects argument of type
-'int', but argument 4 has type 'u64' [-Wformat=]
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+> owner@vger.kernel.org] On Behalf Of Elliott, Robert (Server Storage)
+> 
+> I added some prints in aio_setup_ring and  ioctx_alloc and
+> rebooted.  This time it took much longer to hit the problem.  It
+> survived dozens of ^Cs.  Running a few minutes, though, IOPS
+> eventually dropped.  So, sometimes it happens immediately,
+> sometimes it takes time to develop.
+> 
+> I will rerun bisect-1 -2 and -3 for longer times to increase
+> confidence that they didn't just appear good.
 
-Use %llu to print 'u64' format.
+Allowing longer run times before declaring success, the problem 
+does appear in all of the bisect trees.  I just let fio
+continue to run for many minutes - no ^Cs necessary.
 
-Reported-by: Olof's autobuilder <build@lixom.net>
-Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
----
- drivers/scsi/arm/fas216.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/arm/fas216.c b/drivers/scsi/arm/fas216.c
-index b46a6f6..aeddd11 100644
---- a/drivers/scsi/arm/fas216.c
-+++ b/drivers/scsi/arm/fas216.c
-@@ -3000,7 +3000,7 @@ void fas216_print_devices(FAS216_Info *info, struct seq_file *m)
- 
- 	shost_for_each_device(scd, info->host) {
- 		dev = &info->device[scd->id];
--		seq_printf(m, "     %d/%d   ", scd->id, scd->lun);
-+		seq_printf(m, "     %d/%llu   ", scd->id, scd->lun);
- 		if (scd->tagged_supported)
- 			seq_printf(m, "%3sabled(%3d) ",
- 				     scd->simple_tags ? "en" : "dis",
--- 
-1.8.3.2
-
+no-rebase: good for > 45 minutes (I will leave that running for
+  8 more hours)
+bisect-1: bad
+bisect-2: bad
+bisect-3: bad
+bisect-4: bad
