@@ -1,7 +1,7 @@
-From: Hannes Reinecke <hare@suse.de>
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: [PATCH 6/8] Drivers: scsi: storvsc: Implement an abort handler
-Date: Fri, 11 Jul 2014 11:52:55 +0200
-Message-ID: <53BFB3F7.7010304@suse.de>
+Date: Fri, 11 Jul 2014 02:54:07 -0700
+Message-ID: <20140711095407.GA3503@infradead.org>
 References: <1404866789-26910-1-git-send-email-kys@microsoft.com>
  <1404866812-26950-1-git-send-email-kys@microsoft.com>
  <1404866812-26950-6-git-send-email-kys@microsoft.com>
@@ -9,11 +9,13 @@ References: <1404866789-26910-1-git-send-email-kys@microsoft.com>
  <9b76360fb30745d3941b6d56bdae268f@BY2PR03MB299.namprd03.prod.outlook.com>
  <20140710101320.GB1151@infradead.org>
  <f662b500fada4fbca75c55089d3f8ee4@BY2PR03MB299.namprd03.prod.outlook.com>
+ <53BFB3F7.7010304@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"; Format="flowed"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <f662b500fada4fbca75c55089d3f8ee4@BY2PR03MB299.namprd03.prod.outlook.com>
+Content-Disposition: inline
+In-Reply-To: <53BFB3F7.7010304@suse.de>
 List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
  <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
 List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
@@ -23,72 +25,11 @@ List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driver
  <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
 Errors-To: driverdev-devel-bounces@linuxdriverproject.org
 Sender: driverdev-devel-bounces@linuxdriverproject.org
-To: KY Srinivasan <kys@microsoft.com>, Christoph Hellwig <hch@infradead.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jasowang@redhat.com" <jasowang@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "ohering@suse.com" <ohering@suse.com>, "apw@canonical.com" <apw@canonical.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
+To: Hannes Reinecke <hare@suse.de>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jasowang@redhat.com" <jasowang@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "ohering@suse.com" <ohering@suse.com>, Christoph Hellwig <hch@infradead.org>, "apw@canonical.com" <apw@canonical.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 07/11/2014 12:26 AM, KY Srinivasan wrote:
->
->
->> -----Original Message-----
->> From: Christoph Hellwig [mailto:hch@infradead.org]
->> Sent: Thursday, July 10, 2014 3:13 AM
->> To: KY Srinivasan
->> Cc: Christoph Hellwig; linux-kernel@vger.kernel.org;
->> devel@linuxdriverproject.org; ohering@suse.com;
->> jbottomley@parallels.com; jasowang@redhat.com; apw@canonical.com;
->> linux-scsi@vger.kernel.org
->> Subject: Re: [PATCH 6/8] Drivers: scsi: storvsc: Implement an abort hand=
-ler
->>
->>
->> Note that you could increase the timeout and/or implement an
->> eh_timed_out handler that just returns BLK_EH_RESET_TIMER, but if the
->> completion takes too long the expectation is that a command will eventua=
-lly
->> finish instead of beeing delayed by an unmound amount.
->
-> I like this idea; I will implement a eh_timed_out_handler.
->
-Something like this should be sufficient:
+On Fri, Jul 11, 2014 at 11:52:55AM +0200, Hannes Reinecke wrote:
+> Something like this should be sufficient:
 
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index e71a0d7..630ae81 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -1468,6 +1468,12 @@ static int storvsc_get_chs(struct scsi_device =
-
-*sdev, stru
-ct block_device * bdev,
-         return 0;
-  }
-
-+static enum blk_eh_timer_return
-+storvsc_timed_out_handler(struct scsi_cmnd *scmd)
-+{
-+       return BLK_EH_RESET_TIMER;
-+}
-+
-  static int storvsc_host_reset_handler(struct scsi_cmnd *scmnd)
-  {
-         struct hv_host_device *host_dev =3D =
-
-shost_priv(scmnd->device->host);
-@@ -1687,6 +1693,7 @@ static struct scsi_host_template scsi_driver =3D {
-         .name =3D                 "storvsc_host_t",
-         .bios_param =3D           storvsc_get_chs,
-         .queuecommand =3D         storvsc_queuecommand,
-+       .eh_timed_out =3D         storvsc_timed_out_handler,
-         .eh_host_reset_handler =3D        storvsc_host_reset_handler,
-         .slave_alloc =3D          storvsc_device_alloc,
-         .slave_destroy =3D        storvsc_device_destroy,
-
-Cheers,
-
-Hannes
--- =
-
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+Right.  That plus a detailed comment explaining why it's there..
