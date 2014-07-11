@@ -1,30 +1,35 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 4/5] megaraid_sas: Add missing initial call to
- megasas_get_ld_vf_affiliation().
-Date: Fri, 11 Jul 2014 02:56:21 -0700
-Message-ID: <20140711095621.GB4216@infradead.org>
-References: <1404944278-11535-1-git-send-email-aradford@gmail.com>
- <1404944278-11535-5-git-send-email-aradford@gmail.com>
+From: Fabio Estevam <festevam@gmail.com>
+Subject: Re: [PATCH] scsi: arm: fas216: Use %llu to print 'u64' format
+Date: Fri, 11 Jul 2014 08:31:29 -0300
+Message-ID: <CAOMZO5BVmWocr8CaR5VaODpLcNH5-9sibwPDx9MCmmLtDg=Q=Q@mail.gmail.com>
+References: <1405035187-27737-1-git-send-email-festevam@gmail.com>
+	<20140711062302.GA12385@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:45283 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752467AbaGKJ4V (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Jul 2014 05:56:21 -0400
-Content-Disposition: inline
-In-Reply-To: <1404944278-11535-5-git-send-email-aradford@gmail.com>
+Received: from mail-lb0-f173.google.com ([209.85.217.173]:52351 "EHLO
+	mail-lb0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752267AbaGKLba (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Jul 2014 07:31:30 -0400
+Received: by mail-lb0-f173.google.com with SMTP id v6so528929lbi.18
+        for <linux-scsi@vger.kernel.org>; Fri, 11 Jul 2014 04:31:29 -0700 (PDT)
+In-Reply-To: <20140711062302.GA12385@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Adam Radford <aradford@gmail.com>
-Cc: linux-scsi@vger.kernel.org, uday.lingala@avagotech.com, kashyap.desai@avagotech.com, sumit.saxena@avagotech.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: JBottomley@parallels.com, linux-scsi@vger.kernel.org, Fabio Estevam <fabio.estevam@freescale.com>
 
-On Wed, Jul 09, 2014 at 03:17:57PM -0700, Adam Radford wrote:
-> The following patch for megaraid_sas adds a missing initial call to
-> megasas_get_ld_vf_affiliation() at the end of megasas_probe_one().
-> 
-> Signed-off-by: Adam Radford <aradford@gmail.com>
+Hi Christoph,
 
-Looks good,
+On Fri, Jul 11, 2014 at 3:23 AM, Christoph Hellwig <hch@infradead.org> wrote:
+> Thanks Fabio,
+>
+> this looks good to me.  Are there any other warnings you got from that
+> autobuilder?
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Yes, the build results for various ARM defconfigs are available at:
+http://lists.linaro.org/pipermail/kernel-build-reports/2014-July/004338.html
+
+Regards,
+
+Fabio Estevam
