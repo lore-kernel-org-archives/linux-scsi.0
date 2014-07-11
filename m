@@ -1,34 +1,47 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] scsi: arm: fas216: Use %llu to print 'u64' format
-Date: Thu, 10 Jul 2014 23:34:44 -0700
-Message-ID: <20140711063444.GA6945@infradead.org>
-References: <1405035187-27737-1-git-send-email-festevam@gmail.com>
- <20140711062302.GA12385@infradead.org>
- <53BF8479.9090109@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:40284 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750768AbaGKGer (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Jul 2014 02:34:47 -0400
-Content-Disposition: inline
-In-Reply-To: <53BF8479.9090109@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Jiang Liu <jiang.liu@linux.intel.com>
+Subject: [RFC Patch V1 18/30] mm, bnx2fc: Use cpu_to_mem()/numa_mem_id() to support memoryless node
+Date: Fri, 11 Jul 2014 15:37:35 +0800
+Message-ID: <1405064267-11678-19-git-send-email-jiang.liu@linux.intel.com>
+References: <1405064267-11678-1-git-send-email-jiang.liu@linux.intel.com>
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1405064267-11678-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: owner-linux-mm@kvack.org
+To: Andrew Morton <akpm@linux-foundation.org>, Mel Gorman <mgorman@suse.de>, David Rientjes <rientjes@google.com>, Mike Galbraith <umgwanakikbuti@gmail.com>, Peter Zijlstra <peterz@infradead.org>, "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>, Eddie Wai <eddie.wai@broadcom.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>, Tony Luck <tony.luck@intel.com>, linux-mm@kvack.org, linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Christoph Hellwig <hch@infradead.org>, Fabio Estevam <festevam@gmail.com>, JBottomley@parallels.com, linux-scsi@vger.kernel.org, Fabio Estevam <fabio.estevam@freescale.com>
 
-On Fri, Jul 11, 2014 at 08:30:17AM +0200, Hannes Reinecke wrote:
-> On 07/11/2014 08:23 AM, Christoph Hellwig wrote:
-> >Thanks Fabio,
-> >
-> >this looks good to me.  Are there any other warnings you got from that
-> >autobuilder?
-> >
-> It _should_ have been fixed with my latest patch for fixing the 64bit LUN
-> fallout. Christoph, have you applied it?
+When CONFIG_HAVE_MEMORYLESS_NODES is enabled, cpu_to_node()/numa_node_id()
+may return a node without memory, and later cause system failure/panic
+when calling kmalloc_node() and friends with returned node id.
+So use cpu_to_mem()/numa_mem_id() instead to get the nearest node with
+memory for the/current cpu.
 
-Looks like this is in, indeed.  Seems like that latest drivers-for-3.17
-update hasn't made it into James' for-next and thus linux-next, though.
+If CONFIG_HAVE_MEMORYLESS_NODES is disabled, cpu_to_mem()/numa_mem_id()
+is the same as cpu_to_node()/numa_node_id().
 
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+index 785d0d71781e..144534a51cbb 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+@@ -2453,7 +2453,7 @@ static void bnx2fc_percpu_thread_create(unsigned int cpu)
+ 	p = &per_cpu(bnx2fc_percpu, cpu);
+ 
+ 	thread = kthread_create_on_node(bnx2fc_percpu_io_thread,
+-					(void *)p, cpu_to_node(cpu),
++					(void *)p, cpu_to_mem(cpu),
+ 					"bnx2fc_thread/%d", cpu);
+ 	/* bind thread to the cpu */
+ 	if (likely(!IS_ERR(thread))) {
+-- 
+1.7.10.4
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
