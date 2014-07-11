@@ -1,7 +1,7 @@
 From: Jiang Liu <jiang.liu@linux.intel.com>
-Subject: [RFC Patch V1 18/30] mm, bnx2fc: Use cpu_to_mem()/numa_mem_id() to support memoryless node
-Date: Fri, 11 Jul 2014 15:37:35 +0800
-Message-ID: <1405064267-11678-19-git-send-email-jiang.liu@linux.intel.com>
+Subject: [RFC Patch V1 19/30] mm, bnx2i: Use cpu_to_mem()/numa_mem_id() to support memoryless node
+Date: Fri, 11 Jul 2014 15:37:36 +0800
+Message-ID: <1405064267-11678-20-git-send-email-jiang.liu@linux.intel.com>
 References: <1405064267-11678-1-git-send-email-jiang.liu@linux.intel.com>
 Return-path: <owner-linux-mm@kvack.org>
 In-Reply-To: <1405064267-11678-1-git-send-email-jiang.liu@linux.intel.com>
@@ -21,20 +21,20 @@ is the same as cpu_to_node()/numa_node_id().
 
 Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c |    2 +-
+ drivers/scsi/bnx2i/bnx2i_init.c |    2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-index 785d0d71781e..144534a51cbb 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-@@ -2453,7 +2453,7 @@ static void bnx2fc_percpu_thread_create(unsigned int cpu)
- 	p = &per_cpu(bnx2fc_percpu, cpu);
+diff --git a/drivers/scsi/bnx2i/bnx2i_init.c b/drivers/scsi/bnx2i/bnx2i_init.c
+index 80c03b452d61..f67a5a63134e 100644
+--- a/drivers/scsi/bnx2i/bnx2i_init.c
++++ b/drivers/scsi/bnx2i/bnx2i_init.c
+@@ -423,7 +423,7 @@ static void bnx2i_percpu_thread_create(unsigned int cpu)
+ 	p = &per_cpu(bnx2i_percpu, cpu);
  
- 	thread = kthread_create_on_node(bnx2fc_percpu_io_thread,
--					(void *)p, cpu_to_node(cpu),
-+					(void *)p, cpu_to_mem(cpu),
- 					"bnx2fc_thread/%d", cpu);
+ 	thread = kthread_create_on_node(bnx2i_percpu_io_thread, (void *)p,
+-					cpu_to_node(cpu),
++					cpu_to_mem(cpu),
+ 					"bnx2i_thread/%d", cpu);
  	/* bind thread to the cpu */
  	if (likely(!IS_ERR(thread))) {
 -- 
