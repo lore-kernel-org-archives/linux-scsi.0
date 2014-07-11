@@ -1,121 +1,69 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 09/10] sd: split sd_init_command
-Date: Fri, 11 Jul 2014 14:33:34 +0200
-Message-ID: <53BFD99E.3090501@suse.de>
-References: <1404048881-19526-1-git-send-email-hch@lst.de> <1404048881-19526-10-git-send-email-hch@lst.de>
+Subject: Re: [PATCH 10/10] scsi: mark scsi_setup_blk_pc_cmnd static
+Date: Fri, 11 Jul 2014 14:33:57 +0200
+Message-ID: <53BFD9B5.6080407@suse.de>
+References: <1404048881-19526-1-git-send-email-hch@lst.de> <1404048881-19526-11-git-send-email-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1;
 	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:54714 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:54722 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753191AbaGKMdg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Jul 2014 08:33:36 -0400
-In-Reply-To: <1404048881-19526-10-git-send-email-hch@lst.de>
+	id S1752099AbaGKMd7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Jul 2014 08:33:59 -0400
+In-Reply-To: <1404048881-19526-11-git-send-email-hch@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>, James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 
 On 06/29/2014 03:34 PM, Christoph Hellwig wrote:
-> Factor out a function to initialize regular read/write commands and l=
-eave
-> sd_init_command as a simple dispatcher to the different prepare routi=
-nes.
->
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->   drivers/scsi/sd.c |   58 ++++++++++++++++++++++++++----------------=
------------
->   1 file changed, 29 insertions(+), 29 deletions(-)
+>   drivers/scsi/scsi_lib.c    |    3 +--
+>   include/scsi/scsi_driver.h |    2 --
+>   2 files changed, 1 insertion(+), 4 deletions(-)
 >
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index 5f85102..ba756b1 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -877,21 +877,7 @@ static int sd_setup_flush_cmnd(struct scsi_cmnd =
-*cmd)
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index ea23860..f0a3ef1 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -1080,7 +1080,7 @@ static struct scsi_cmnd *scsi_get_cmd_from_req(=
+struct scsi_device *sdev,
+>   	return cmd;
+>   }
+>
+> -int scsi_setup_blk_pc_cmnd(struct scsi_device *sdev, struct request =
+*req)
+> +static int scsi_setup_blk_pc_cmnd(struct scsi_device *sdev, struct r=
+equest *req)
+>   {
+>   	struct scsi_cmnd *cmd =3D req->special;
+>
+> @@ -1105,7 +1105,6 @@ int scsi_setup_blk_pc_cmnd(struct scsi_device *=
+sdev, struct request *req)
+>   	cmd->allowed =3D req->retries;
 >   	return BLKPREP_OK;
 >   }
+> -EXPORT_SYMBOL(scsi_setup_blk_pc_cmnd);
 >
-> -static void sd_uninit_command(struct scsi_cmnd *SCpnt)
-> -{
-> -	struct request *rq =3D SCpnt->request;
-> -
-> -	if (rq->cmd_flags & REQ_DISCARD)
-> -		__free_page(rq->completion_data);
-> -
-> -	if (SCpnt->cmnd !=3D rq->cmd) {
-> -		mempool_free(SCpnt->cmnd, sd_cdb_pool);
-> -		SCpnt->cmnd =3D NULL;
-> -		SCpnt->cmd_len =3D 0;
-> -	}
-> -}
-> -
-> -static int sd_init_command(struct scsi_cmnd *SCpnt)
-> +static int sd_setup_read_write_cmnd(struct scsi_cmnd *SCpnt)
->   {
->   	struct request *rq =3D SCpnt->request;
->   	struct scsi_device *sdp =3D SCpnt->device;
-> @@ -903,20 +889,6 @@ static int sd_init_command(struct scsi_cmnd *SCp=
-nt)
->   	int ret, host_dif;
->   	unsigned char protect;
+>   /*
+>    * Setup a REQ_TYPE_FS command.  These are simple request from file=
+systems
+> diff --git a/include/scsi/scsi_driver.h b/include/scsi/scsi_driver.h
+> index 009d2ae..c2b7598 100644
+> --- a/include/scsi/scsi_driver.h
+> +++ b/include/scsi/scsi_driver.h
+> @@ -29,6 +29,4 @@ extern int scsi_register_interface(struct class_int=
+erface *);
+>   #define scsi_unregister_interface(intf) \
+>   	class_interface_unregister(intf)
 >
-> -	/*
-> -	 * Discard request come in as REQ_TYPE_FS but we turn them into
-> -	 * block PC requests to make life easier.
-> -	 */
-> -	if (rq->cmd_flags & REQ_DISCARD) {
-> -		ret =3D sd_setup_discard_cmnd(SCpnt);
-> -		goto out;
-> -	} else if (rq->cmd_flags & REQ_WRITE_SAME) {
-> -		ret =3D sd_setup_write_same_cmnd(SCpnt);
-> -		goto out;
-> -	} else if (rq->cmd_flags & REQ_FLUSH) {
-> -		ret =3D sd_setup_flush_cmnd(SCpnt);
-> -		goto out;
-> -	}
->   	ret =3D scsi_init_io(SCpnt, GFP_ATOMIC);
->   	if (ret !=3D BLKPREP_OK)
->   		goto out;
-> @@ -1148,6 +1120,34 @@ static int sd_init_command(struct scsi_cmnd *S=
-Cpnt)
->   	return ret;
->   }
->
-> +static int sd_init_command(struct scsi_cmnd *cmd)
-> +{
-> +	struct request *rq =3D cmd->request;
-> +
-> +	if (rq->cmd_flags & REQ_DISCARD)
-> +		return sd_setup_discard_cmnd(cmd);
-> +	else if (rq->cmd_flags & REQ_WRITE_SAME)
-> +		return sd_setup_write_same_cmnd(cmd);
-> +	else if (rq->cmd_flags & REQ_FLUSH)
-> +		return sd_setup_flush_cmnd(cmd);
-> +	else
-> +		return sd_setup_read_write_cmnd(cmd);
-> +}
-> +
-> +static void sd_uninit_command(struct scsi_cmnd *SCpnt)
-> +{
-> +	struct request *rq =3D SCpnt->request;
-> +
-> +	if (rq->cmd_flags & REQ_DISCARD)
-> +		__free_page(rq->completion_data);
-> +
-> +	if (SCpnt->cmnd !=3D rq->cmd) {
-> +		mempool_free(SCpnt->cmnd, sd_cdb_pool);
-> +		SCpnt->cmnd =3D NULL;
-> +		SCpnt->cmd_len =3D 0;
-> +	}
-> +}
-> +
->   /**
->    *	sd_open - open a scsi disk device
->    *	@inode: only i_rdev member may be used
+> -int scsi_setup_blk_pc_cmnd(struct scsi_device *sdev, struct request =
+*req);
+> -
+>   #endif /* _SCSI_SCSI_DRIVER_H */
 >
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
