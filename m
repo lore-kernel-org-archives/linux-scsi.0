@@ -1,59 +1,106 @@
-From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Subject: RE: mpt2sas stuck installing
-Date: Sat, 12 Jul 2014 03:13:07 +0000
-Message-ID: <94D0CD8314A33A4D9D801C0FE68B402958B9907B@G9W0745.americas.hpqcorp.net>
-References: <20140704013250.088477de@jlaw-desktop.mno.stratus.com>
- <53B649A6.60501@julianfamily.org>
- <alpine.DEB.2.02.1407072149190.10980@jlaw-desktop.mno.stratus.com>
- <53BDBB3A.5060906@julianfamily.org>
- <20140711225306.3ce78324@jlaw-desktop.mno.stratus.com>
+From: Arthur Marsh <arthur.marsh@internode.on.net>
+Subject: Re: eata - issue appeared in Linus git master in last 24-48 hours
+Date: Sat, 12 Jul 2014 14:43:39 +0930
+Message-ID: <53C0C403.1010503@internode.on.net>
+References: <dd468b-sj5.ln1@ppp14-2-48-242.lns21.adl2.internode.on.net> <20140711092006.GB26912@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140711225306.3ce78324@jlaw-desktop.mno.stratus.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Joe Lawrence <joe.lawrence@stratus.com>, Joe Julian <joe@julianfamily.org>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Joe Maloy <joe.maloy@avagotech.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:46940 "EHLO
+	ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751089AbaGLFNp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 12 Jul 2014 01:13:45 -0400
+In-Reply-To: <20140711092006.GB26912@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org
 
 
 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> owner@vger.kernel.org] On Behalf Of Joe Lawrence
-...
-> In your crash stack trace, the scsi error handler has issued a host
-> reset, but then crashed in mpt2sas_base_get_iocstate.  Reading through
-> _scsih_shutdown, I don't believe that the mpt2sas .shutdown path takes
-> any precaution before heading down mpt2sas_base_detach to free adapter
-> resources.  The ordinary .remove path looks similar, though it does
-> call sas_remove_host before freeing resources, *then* scsi_remove_host
-> and scsi_host_put.
-> 
-> I wonder if this ordering needs to be reversed (and added to
-> _scsih_shutdown) to properly de-register from the SCSI midlayer prior
-> to removing the controller instance.
-> 
-> Regards,
-> 
-> -- Joe
+Christoph Hellwig wrote, on 11/07/14 18:50:
+> On Mon, Jun 30, 2014 at 04:31:33AM +0930, Arthur Marsh wrote:
+>> Hi, I haven't had time to do a git bisect yet, but just saw this after
+>> rebuilding the kernel in the last day or so:
+>
+> It seems like some of the routines called during the driver
+> initialization may sleep while the driver_lock is held and irqs are
+> disabled.
+>
+> As eata2x_detect is only called during module load the lock seems
+> entirely pointless and should be removed, like in the patch below:
+>
+>
+> diff --git a/drivers/scsi/eata.c b/drivers/scsi/eata.c
+> index 03372cf..980898e 100644
+> --- a/drivers/scsi/eata.c
+> +++ b/drivers/scsi/eata.c
+> @@ -837,7 +837,6 @@ struct hostdata {
+>   static struct Scsi_Host *sh[MAX_BOARDS];
+>   static const char *driver_name = "EATA";
+>   static char sha[MAX_BOARDS];
+> -static DEFINE_SPINLOCK(driver_lock);
+>
+>   /* Initialize num_boards so that ihdlr can work while detect is in progress */
+>   static unsigned int num_boards = MAX_BOARDS;
+> @@ -1097,8 +1096,6 @@ static int port_detect(unsigned long port_base, unsigned int j,
+>   		goto fail;
+>   	}
+>
+> -	spin_lock_irq(&driver_lock);
+> -
+>   	if (do_dma(port_base, 0, READ_CONFIG_PIO)) {
+>   #if defined(DEBUG_DETECT)
+>   		printk("%s: detect, do_dma failed at 0x%03lx.\n", name,
+> @@ -1265,10 +1262,7 @@ static int port_detect(unsigned long port_base, unsigned int j,
+>   	}
+>   #endif
+>
+> -	spin_unlock_irq(&driver_lock);
+>   	sh[j] = shost = scsi_register(tpnt, sizeof(struct hostdata));
+> -	spin_lock_irq(&driver_lock);
+> -
+>   	if (shost == NULL) {
+>   		printk("%s: unable to register host, detaching.\n", name);
+>   		goto freedma;
+> @@ -1345,8 +1339,6 @@ static int port_detect(unsigned long port_base, unsigned int j,
+>   	else
+>   		sprintf(dma_name, "DMA %u", dma_channel);
+>
+> -	spin_unlock_irq(&driver_lock);
+> -
+>   	for (i = 0; i < shost->can_queue; i++)
+>   		ha->cp[i].cp_dma_addr = pci_map_single(ha->pdev,
+>   							  &ha->cp[i],
+> @@ -1439,7 +1431,6 @@ static int port_detect(unsigned long port_base, unsigned int j,
+>         freeirq:
+>   	free_irq(irq, &sha[j]);
+>         freelock:
+> -	spin_unlock_irq(&driver_lock);
+>   	release_region(port_base, REGION_SIZE);
+>         fail:
+>   	return 0;
+>
 
-Nagalakshmi was working on an mpt3sas patch for the scsi-mq tree 
-to do just that.  I don't recall if the patch has made it into the 
-scsi-mq tree yet. Apparently it's also needed for non-mq and mpt2sas.
+Thanks, I've rebuilt the kernel with this patch applied and running the 
+rebuilt kernel fine using a DPT 2044W SCSI adaptor:
 
-It is making this change:
->  	sas_remove_host(shost);
-> +	scsi_remove_host(shost);
->  	mpt3sas_base_detach(ioc);
->  	list_del(&ioc->list);
-> -	scsi_remove_host(shost);
->  	scsi_host_put(shost);
+$ lspci|grep DPT
+00:0c.0 SCSI storage controller: Adaptec (formerly DPT) SmartCache/Raid 
+I-IV Controller (rev 02)
 
-We are making a similar change in hpsa.  Doing so led to a general 
-protection fault, which unveiled that we also needed to change 
-cancel_delayed_work() calls to cancel_delayed_work_sync() to 
-ensure there are no worker functions still active after the 
-scsi_host structure is unregistered.
+
+$ dmesg|grep -i eata
+[    1.038968] EATA0: warning, DMA protocol support not asserted.
+[    1.039041] EATA0: IRQ 11 mapped to IO-APIC IRQ 16.
+[    1.040801] EATA/DMA 2.0x: Copyright (C) 1994-2003 Dario Ballabio.
+[    1.040861] EATA config options -> tm:1, lc:y, mq:16, rs:y, et:n, 
+ip:n, ep:n, pp:y.
+[    1.040922] EATA0: 2.0C, PCI 0x7410, IRQ 16, BMST, SG 122, MB 64.
+[    1.040973] EATA0: wide SCSI support enabled, max_id 16, max_lun 8.
+[    1.041025] EATA0: SCSI channel 0 enabled, host target ID 7.
+[    1.041095] scsi2 : EATA/DMA 2.0x rev. 8.10.00
+
+Arthur.
