@@ -1,44 +1,48 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH 7/8] drivers: scsi: storvsc: Set srb_flags in all cases
-Date: Fri, 11 Jul 2014 21:03:52 +0000
-Message-ID: <f7789b309ce84187b64760e3885f7cfa@BY2PR03MB299.namprd03.prod.outlook.com>
-References: <1404866789-26910-1-git-send-email-kys@microsoft.com>
- <1404866812-26950-1-git-send-email-kys@microsoft.com>
- <1404866812-26950-7-git-send-email-kys@microsoft.com>
- <20140710101849.GD1151@infradead.org>
+From: Jonathan <jonathan.625266@earthlink.net>
+Subject: Re: uas - kernel panic on drive connection
+Date: Fri, 11 Jul 2014 20:40:34 -0400
+Message-ID: <20140711204034.745d85a4@earthlink.net>
+References: <20140704104028.2014aaf4@earthlink.net>
+	<53BCEA03.30304@redhat.com>
+	<20140709193139.32049945@earthlink.net>
+	<53BFB01C.6020900@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140710101849.GD1151@infradead.org>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "jasowang@redhat.com" <jasowang@redhat.com>, "apw@canonical.com" <apw@canonical.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from elasmtp-dupuy.atl.sa.earthlink.net ([209.86.89.62]:42203 "EHLO
+	elasmtp-dupuy.atl.sa.earthlink.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752648AbaGLAkf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Jul 2014 20:40:35 -0400
+In-Reply-To: <53BFB01C.6020900@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Hans de Goede <hdegoede@redhat.com>
 
+Hans,
 
+Sure enough, the enclosure worked flawlessly with uas on a machine with an Intel xhci controller (2012 MacBook Air running Linux with kernel 3.15.3). I  look forward to learning your results with the Etron controller.
 
-> -----Original Message-----
-> From: Christoph Hellwig [mailto:hch@infradead.org]
-> Sent: Thursday, July 10, 2014 3:19 AM
-> To: KY Srinivasan
-> Cc: linux-kernel@vger.kernel.org; devel@linuxdriverproject.org;
-> ohering@suse.com; jbottomley@parallels.com; jasowang@redhat.com;
-> apw@canonical.com; linux-scsi@vger.kernel.org; stable@vger.kernel.org
-> Subject: Re: [PATCH 7/8] drivers: scsi: storvsc: Set srb_flags in all cases
+Best,
+
+Jonathan
+
+On Fri, 11 Jul 2014 11:36:28 +0200
+Hans de Goede <hdegoede@redhat.com> wrote:
+
+> Etron, that is the first time I've heard of them. So that is the 5th manufacturer
+> which is making xhci controllers now (the others are nec, intel, via and designware).
 > 
-> >  	default:
-> >  		vm_srb->data_in = UNKNOWN_TYPE;
-> > -		vm_srb->win8_extension.srb_flags = 0;
-> > +		vm_srb->win8_extension.srb_flags |=
-> (SRB_FLAGS_DATA_IN |
-> > +						     SRB_FLAGS_DATA_OUT);
+> I've managed to find a pci-e add-on card using the same Etron chipset as you have,
+> and I've ordered one, so that I can try and reproduce this problem. It will be
+> aprox. 3 weeks before I get it though.
 > 
-> This would usually be a command that doesn't transfer data (e.g.
-> TEST_UNIT_READY or SYNCHRONIZE_CACHE), do you really want to set the in
-> and out flags here?
-
-On the host, before they forward the command to the native driver stack, I am told they validate that the flags be correctly set because of some bugs in the Emulex driver.
-
-K. Y
+> In the mean time, can you try the usb disk enclosure on a machine with a nec or
+> intel xhci controller ? So that we can confirm that this is indeed a problem
+> specific to the Etron controller?
+> 
+> Regards,
+> 
+> Hans
