@@ -1,8 +1,8 @@
 From: "K. Y. Srinivasan" <kys@microsoft.com>
-Subject: [PATCH V3 4/7] Drivers: scsi: storvsc: Fix a bug in handling VMBUS
- protocol version
-Date: Sat, 12 Jul 2014 09:48:29 -0700
-Message-ID: <1405183712-23967-4-git-send-email-kys@microsoft.com>
+Subject: [PATCH V3 2/7] Drivers: scsi: storvsc: Set cmd_per_lun to reflect
+ value supported by the Host
+Date: Sat, 12 Jul 2014 09:48:27 -0700
+Message-ID: <1405183712-23967-2-git-send-email-kys@microsoft.com>
 References: <1405183684-23928-1-git-send-email-kys@microsoft.com>
  <1405183712-23967-1-git-send-email-kys@microsoft.com>
 Mime-Version: 1.0
@@ -23,53 +23,28 @@ To: jasowang@redhat.com, apw@canonical.com, linux-kernel@vger.kernel.org, devel@
 Cc: stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Based on the negotiated VMBUS protocol version, we adjust the size of the storage
-protocol messages. The two sizes we currently handle are pre-win8 and post-win8.
-In WS2012 R2, we are negotiating higher VMBUS protocol version than the win8
-version. Make adjustments to correctly handle this.
-
+Set cmd_per_lun to reflect value supported by the Host.
 In this version of the patch I have addressed comments from
 Christoph Hellwig <hch@infradead.org>
 
 Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
 Cc: <stable@vger.kernel.org>
 ---
- drivers/scsi/storvsc_drv.c |   17 ++++++++++-------
- 1 files changed, 10 insertions(+), 7 deletions(-)
+ drivers/scsi/storvsc_drv.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
 diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 8f8847e..7e8a642 100644
+index 8938b13..cebcef7 100644
 --- a/drivers/scsi/storvsc_drv.c
 +++ b/drivers/scsi/storvsc_drv.c
-@@ -1752,19 +1752,22 @@ static int storvsc_probe(struct hv_device *device,
- 	 * set state to properly communicate with the host.
- 	 */
- 
--	if (vmbus_proto_version == VERSION_WIN8) {
--		sense_buffer_size = POST_WIN7_STORVSC_SENSE_BUFFER_SIZE;
--		vmscsi_size_delta = 0;
--		vmstor_current_major = VMSTOR_WIN8_MAJOR;
--		vmstor_current_minor = VMSTOR_WIN8_MINOR;
--	} else {
-+	switch (vmbus_proto_version) {
-+	case VERSION_WS2008:
-+	case VERSION_WIN7:
- 		sense_buffer_size = PRE_WIN8_STORVSC_SENSE_BUFFER_SIZE;
- 		vmscsi_size_delta = sizeof(struct vmscsi_win8_extension);
- 		vmstor_current_major = VMSTOR_WIN7_MAJOR;
- 		vmstor_current_minor = VMSTOR_WIN7_MINOR;
-+		break;
-+	default:
-+		sense_buffer_size = POST_WIN7_STORVSC_SENSE_BUFFER_SIZE;
-+		vmscsi_size_delta = 0;
-+		vmstor_current_major = VMSTOR_WIN8_MAJOR;
-+		vmstor_current_minor = VMSTOR_WIN8_MINOR;
-+		break;
- 	}
- 
--
- 	if (dev_id->driver_data == SFC_GUID)
- 		scsi_driver.can_queue = (STORVSC_MAX_IO_REQUESTS *
- 					 STORVSC_FC_MAX_TARGETS);
+@@ -1690,7 +1690,7 @@ static struct scsi_host_template scsi_driver = {
+ 	.slave_alloc =		storvsc_device_alloc,
+ 	.slave_destroy =	storvsc_device_destroy,
+ 	.slave_configure =	storvsc_device_configure,
+-	.cmd_per_lun =		1,
++	.cmd_per_lun =		255,
+ 	.can_queue =		STORVSC_MAX_IO_REQUESTS*STORVSC_MAX_TARGETS,
+ 	.this_id =		-1,
+ 	/* no use setting to 0 since ll_blk_rw reset it to 1 */
 -- 
 1.7.4.1
