@@ -1,7 +1,8 @@
 From: "K. Y. Srinivasan" <kys@microsoft.com>
-Subject: [PATCH 6/7] drivers: scsi: storvsc: Set srb_flags in all cases
-Date: Sat, 12 Jul 2014 09:48:31 -0700
-Message-ID: <1405183712-23967-6-git-send-email-kys@microsoft.com>
+Subject: [PATCH V3 3/7] Drivers: scsi: storvsc: Filter commands based on the
+ storage protocol version
+Date: Sat, 12 Jul 2014 09:48:28 -0700
+Message-ID: <1405183712-23967-3-git-send-email-kys@microsoft.com>
 References: <1405183684-23928-1-git-send-email-kys@microsoft.com>
  <1405183712-23967-1-git-send-email-kys@microsoft.com>
 Mime-Version: 1.0
@@ -22,51 +23,47 @@ To: jasowang@redhat.com, apw@canonical.com, linux-kernel@vger.kernel.org, devel@
 Cc: stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Correctly set SRB flags for all valid I/O directions. Some IHV drivers on the
-Windows host require this. The host validates the command and SRB flags
-prior to passing the command down to native driver stack.
+Going forward it is possible that some of the commands that are not currently
+implemented will be implemented on future Windows hosts. Even if they are not
+implemented, we are told the host will corrrectly handle unsupported
+commands (by returning appropriate return code and sense information).
+Make command filtering depend on the host version.
+
+In this version of the patch I have addressed comments from
+Christoph Hellwig <hch@infradead.org>
 
 Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
 Cc: <stable@vger.kernel.org>
 ---
- drivers/scsi/storvsc_drv.c |   12 +++++-------
- 1 files changed, 5 insertions(+), 7 deletions(-)
+ drivers/scsi/storvsc_drv.c |   16 +++++++++++++---
+ 1 files changed, 13 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 3516761..9342ba4 100644
+index cebcef7..8f8847e 100644
 --- a/drivers/scsi/storvsc_drv.c
 +++ b/drivers/scsi/storvsc_drv.c
-@@ -1599,26 +1599,24 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
- 	vm_srb = &cmd_request->vstor_packet.vm_srb;
- 	vm_srb->win8_extension.time_out_value = 60;
+@@ -1553,9 +1553,19 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
+ 	struct vmscsi_request *vm_srb;
+ 	struct stor_mem_pools *memp = scmnd->device->hostdata;
  
-+	vm_srb->win8_extension.srb_flags |=
-+		(SRB_FLAGS_QUEUE_ACTION_ENABLE |
-+		SRB_FLAGS_DISABLE_SYNCH_TRANSFER);
- 
- 	/* Build the SRB */
- 	switch (scmnd->sc_data_direction) {
- 	case DMA_TO_DEVICE:
- 		vm_srb->data_in = WRITE_TYPE;
- 		vm_srb->win8_extension.srb_flags |= SRB_FLAGS_DATA_OUT;
--		vm_srb->win8_extension.srb_flags |=
--			(SRB_FLAGS_QUEUE_ACTION_ENABLE |
--			SRB_FLAGS_DISABLE_SYNCH_TRANSFER);
- 		break;
- 	case DMA_FROM_DEVICE:
- 		vm_srb->data_in = READ_TYPE;
- 		vm_srb->win8_extension.srb_flags |= SRB_FLAGS_DATA_IN;
--		vm_srb->win8_extension.srb_flags |=
--			(SRB_FLAGS_QUEUE_ACTION_ENABLE |
--			SRB_FLAGS_DISABLE_SYNCH_TRANSFER);
- 		break;
- 	default:
- 		vm_srb->data_in = UNKNOWN_TYPE;
--		vm_srb->win8_extension.srb_flags = 0;
-+		vm_srb->win8_extension.srb_flags |= (SRB_FLAGS_DATA_IN |
-+						     SRB_FLAGS_DATA_OUT);
- 		break;
+-	if (!storvsc_scsi_cmd_ok(scmnd)) {
+-		scmnd->scsi_done(scmnd);
+-		return 0;
++	if (vmstor_current_major <= VMSTOR_WIN8_MAJOR) {
++		/*
++		 * On legacy hosts filter unimplemented commands.
++		 * Future hosts are expected to correctly handle
++		 * unsupported commands. Furthermore, it is
++		 * possible that some of the currently
++		 * unsupported commands maybe supported in
++		 * future versions of the host.
++		 */
++		if (!storvsc_scsi_cmd_ok(scmnd)) {
++			scmnd->scsi_done(scmnd);
++			return 0;
++		}
  	}
  
+ 	request_size = sizeof(struct storvsc_cmd_request);
 -- 
 1.7.4.1
