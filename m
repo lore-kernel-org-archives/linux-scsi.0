@@ -1,8 +1,8 @@
 From: "K. Y. Srinivasan" <kys@microsoft.com>
-Subject: [PATCH V3 2/7] Drivers: scsi: storvsc: Set cmd_per_lun to reflect
- value supported by the Host
-Date: Sat, 12 Jul 2014 09:48:27 -0700
-Message-ID: <1405183712-23967-2-git-send-email-kys@microsoft.com>
+Subject: [PATCH 7/7] drivers: scsi: storvsc: Correctly handle TEST_UNIT_READY
+ failure
+Date: Sat, 12 Jul 2014 09:48:32 -0700
+Message-ID: <1405183712-23967-7-git-send-email-kys@microsoft.com>
 References: <1405183684-23928-1-git-send-email-kys@microsoft.com>
  <1405183712-23967-1-git-send-email-kys@microsoft.com>
 Mime-Version: 1.0
@@ -23,28 +23,36 @@ To: jasowang@redhat.com, apw@canonical.com, linux-kernel@vger.kernel.org, devel@
 Cc: stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Set cmd_per_lun to reflect value supported by the Host.
+On some Windows hosts on FC SANs, TEST_UNIT_READY can return SRB_STATUS_ERROR.
+Correctly handle this. Note that there is sufficient sense information to
+support scsi error handling even in this case.
+
 In this version of the patch I have addressed comments from
 Christoph Hellwig <hch@infradead.org>
 
 Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
 Cc: <stable@vger.kernel.org>
 ---
- drivers/scsi/storvsc_drv.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/scsi/storvsc_drv.c |    7 +++++++
+ 1 files changed, 7 insertions(+), 0 deletions(-)
 
 diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 8938b13..cebcef7 100644
+index 9342ba4..29d0329 100644
 --- a/drivers/scsi/storvsc_drv.c
 +++ b/drivers/scsi/storvsc_drv.c
-@@ -1690,7 +1690,7 @@ static struct scsi_host_template scsi_driver = {
- 	.slave_alloc =		storvsc_device_alloc,
- 	.slave_destroy =	storvsc_device_destroy,
- 	.slave_configure =	storvsc_device_configure,
--	.cmd_per_lun =		1,
-+	.cmd_per_lun =		255,
- 	.can_queue =		STORVSC_MAX_IO_REQUESTS*STORVSC_MAX_TARGETS,
- 	.this_id =		-1,
- 	/* no use setting to 0 since ll_blk_rw reset it to 1 */
+@@ -1018,6 +1018,13 @@ static void storvsc_handle_error(struct vmscsi_request *vm_srb,
+ 		case ATA_12:
+ 			set_host_byte(scmnd, DID_PASSTHROUGH);
+ 			break;
++		/*
++		 * On Some Windows hosts TEST_UNIT_READY command can return
++		 * SRB_STATUS_ERROR, let the upper level code deal with it
++		 * based on the sense information.
++		 */
++		case TEST_UNIT_READY:
++			break;
+ 		default:
+ 			set_host_byte(scmnd, DID_TARGET_FAILURE);
+ 		}
 -- 
 1.7.4.1
