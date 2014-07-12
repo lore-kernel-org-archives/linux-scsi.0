@@ -1,74 +1,59 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH 4/8] Drivers: scsi: storvsc: Filter WRITE_SAME_16
-Date: Sat, 12 Jul 2014 02:53:48 +0000
-Message-ID: <2f82b93e74bb472caaa142fecde86b82@BY2PR03MB299.namprd03.prod.outlook.com>
-References: <1404866789-26910-1-git-send-email-kys@microsoft.com>
-	<1404866812-26950-1-git-send-email-kys@microsoft.com>
-	<1404866812-26950-4-git-send-email-kys@microsoft.com>
-	<20140709084300.GD6012@infradead.org>
-	<a31a45eddb544024a7538458b98c3611@BY2PR03MB299.namprd03.prod.outlook.com>
-	<1404935792.2184.5.camel@dabdike.int.hansenpartnership.com>
-	<2f3ae589e6f149acbe4c5dd79f905971@BY2PR03MB299.namprd03.prod.outlook.com>
-	<1404944843.2184.8.camel@dabdike.int.hansenpartnership.com>
-	<20140711063216.GA20660@infradead.org> <yq1vbr42gzp.fsf@sermon.lab.mkp.net>
+From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
+Subject: RE: mpt2sas stuck installing
+Date: Sat, 12 Jul 2014 03:13:07 +0000
+Message-ID: <94D0CD8314A33A4D9D801C0FE68B402958B9907B@G9W0745.americas.hpqcorp.net>
+References: <20140704013250.088477de@jlaw-desktop.mno.stratus.com>
+ <53B649A6.60501@julianfamily.org>
+ <alpine.DEB.2.02.1407072149190.10980@jlaw-desktop.mno.stratus.com>
+ <53BDBB3A.5060906@julianfamily.org>
+ <20140711225306.3ce78324@jlaw-desktop.mno.stratus.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <yq1vbr42gzp.fsf@sermon.lab.mkp.net>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20140711225306.3ce78324@jlaw-desktop.mno.stratus.com>
 Content-Language: en-US
-Sender: stable-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, "hch@infradead.org" <hch@infradead.org>
-Cc: James Bottomley <jbottomley@parallels.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "apw@canonical.com" <apw@canonical.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "ohering@suse.com" <ohering@suse.com>, "jasowang@redhat.com" <jasowang@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Joe Lawrence <joe.lawrence@stratus.com>, Joe Julian <joe@julianfamily.org>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Joe Maloy <joe.maloy@avagotech.com>
 List-Id: linux-scsi@vger.kernel.org
 
 
 
 > -----Original Message-----
-> From: Martin K. Petersen [mailto:martin.petersen@oracle.com]
-> Sent: Friday, July 11, 2014 5:54 AM
-> To: hch@infradead.org
-> Cc: James Bottomley; KY Srinivasan; linux-kernel@vger.kernel.org;
-> devel@linuxdriverproject.org; apw@canonical.com; stable@vger.kernel.org;
-> linux-scsi@vger.kernel.org; ohering@suse.com; jasowang@redhat.com
-> Subject: Re: [PATCH 4/8] Drivers: scsi: storvsc: Filter WRITE_SAME_16
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+> owner@vger.kernel.org] On Behalf Of Joe Lawrence
+...
+> In your crash stack trace, the scsi error handler has issued a host
+> reset, but then crashed in mpt2sas_base_get_iocstate.  Reading through
+> _scsih_shutdown, I don't believe that the mpt2sas .shutdown path takes
+> any precaution before heading down mpt2sas_base_detach to free adapter
+> resources.  The ordinary .remove path looks similar, though it does
+> call sas_remove_host before freeing resources, *then* scsi_remove_host
+> and scsi_host_put.
 > 
-> >>>>> "hch" == hch@infradead org <hch@infradead.org> writes:
+> I wonder if this ordering needs to be reversed (and added to
+> _scsih_shutdown) to properly de-register from the SCSI midlayer prior
+> to removing the controller instance.
 > 
-> (Back from vacation: Bear with me while I'm catching up on two weeks of
-> linux-scsi stuff...)
+> Regards,
 > 
-> hch> I think the problem is a differnet one.  If we have the logical
-> hch> provisioning EVPD it configures what method to use, but if we don't
-> hch> have one we simply check for a max unmap blocks field, and if
-> hch> that's not present use WRITE SAME.
-> 
-> Yeah, that was done to accommodate the devices out there that predate the
-> LBP VPD. There sadly are several still. And it's hard to motivate people to
-> update their storage array firmware even when updates are readily available.
-> 
-> hch> The patch checks the no_write_same flag before doing that, for
-> hch> which we also have to do the write_same setup before the discard
-> hch> setup in sd_revalidate_disk.
-> 
-> The no_write_same was introduced to disable the REQ_WRITE_SAME use
-> case where we have no INQUIRY/READ CAPACITY/VPD flags to key off of to
-> determine whether it is safe to send the commands.
-> 
-> no_write_same does not preclude the REQ_DISCARD variants of
-> WRITE_SAME. Those are gated by the discard heuristics exclusively.
-> 
-> So first of all I'd like to know whether it's a WRITE SAME(16) or a WRITE
-> SAME(16) with the UNMAP bit set that's coming down.
-> 
-> hch> Ky: does hyperv support UNMAP?  If so any idea why it doesn't set
-> hch> the maximum unmap block count field in the EVPD?
-> 
-> We shouldn't be sending down WRITE SAME(16) with the UNMAP bit set
-> unless the device sets LBPME=1 in the READ CAPACITY(16) response.
-> 
-> So what does the storsvc report as its thin provisioning capabilities?
-Given that our current Host (ws2012 r2) advertises SPC-2 compliance, Linux does not even query this page. We support UNMAP.
-We just prototyped a host where we advertised SPC-3 compliance and Linux queries the EVPD page and does not use WRITE_SAME_16
+> -- Joe
 
-K. Y
+Nagalakshmi was working on an mpt3sas patch for the scsi-mq tree 
+to do just that.  I don't recall if the patch has made it into the 
+scsi-mq tree yet. Apparently it's also needed for non-mq and mpt2sas.
+
+It is making this change:
+>  	sas_remove_host(shost);
+> +	scsi_remove_host(shost);
+>  	mpt3sas_base_detach(ioc);
+>  	list_del(&ioc->list);
+> -	scsi_remove_host(shost);
+>  	scsi_host_put(shost);
+
+We are making a similar change in hpsa.  Doing so led to a general 
+protection fault, which unveiled that we also needed to change 
+cancel_delayed_work() calls to cancel_delayed_work_sync() to 
+ensure there are no worker functions still active after the 
+scsi_host structure is unregistered.
