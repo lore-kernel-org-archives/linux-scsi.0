@@ -1,70 +1,46 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [RESEND][PATCH 06/10][SCSI]mpt2sas: For >2TB volumes, DirectDrive support sends IO's with LBA bit 31 to IR FW instead of DirectDrive
-Date: Sun, 13 Jul 2014 11:27:52 -0400
-Message-ID: <yq1oawtxoqv.fsf@sermon.lab.mkp.net>
+From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
+Subject: RE: [RESEND][PATCH 06/10][SCSI]mpt2sas: For >2TB volumes,
+ DirectDrive support sends IO's with LBA bit 31 to IR FW instead of
+ DirectDrive
+Date: Sun, 13 Jul 2014 17:02:21 +0000
+Message-ID: <94D0CD8314A33A4D9D801C0FE68B402958BA02C2@G9W0745.americas.hpqcorp.net>
 References: <20140625103418.GA12939@avagotech.com>
+ <yq1oawtxoqv.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140625103418.GA12939@avagotech.com> (Sreekanth Reddy's message
-	of "Wed, 25 Jun 2014 16:04:18 +0530")
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Reddy, Sreekanth" <Sreekanth.Reddy@avagotech.com>
-Cc: jejb@kernel.org, JBottomley@Parallels.com, linux-scsi@vger.kernel.org, Sathya.Prakash@avagotech.com, Nagalakshmi.Nandigama@avagotech.com, linux-kernel@vger.kernel.org, hch@infradead.org, martin.petersen@oracle.com
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from g4t3426.houston.hp.com ([15.201.208.54]:32795 "EHLO
+	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753990AbaGMRCd convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 13 Jul 2014 13:02:33 -0400
+In-Reply-To: <yq1oawtxoqv.fsf@sermon.lab.mkp.net>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, "Reddy, Sreekanth" <Sreekanth.Reddy@avagotech.com>
+Cc: "jejb@kernel.org" <jejb@kernel.org>, "JBottomley@Parallels.com" <JBottomley@Parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Sathya.Prakash@avagotech.com" <Sathya.Prakash@avagotech.com>, "Nagalakshmi.Nandigama@avagotech.com" <Nagalakshmi.Nandigama@avagotech.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>
 
->>>>> "Sreekanth" == Reddy, Sreekanth <Sreekanth.Reddy@avagotech.com> writes:
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-index 6ae109b..4a0728a 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -3865,7 +3865,8 @@ _scsih_setup_direct_io(struct MPT2SAS_ADAPTER *ioc, struct scsi_cmnd *scmd,
- 	struct _raid_device *raid_device, Mpi2SCSIIORequest_t *mpi_request,
- 	u16 smid)
- {
--	u32 v_lba, p_lba, stripe_off, stripe_unit, column, io_size;
-+	u32 p_lba, stripe_off, stripe_unit, column, io_size;
-+	u64 v_lba;
- 	u32 stripe_sz, stripe_exp;
- 	u8 num_pds, *cdb_ptr, i;
- 	u8 cdb0 = scmd->cmnd[0];
-@@ -3882,12 +3883,17 @@ _scsih_setup_direct_io(struct MPT2SAS_ADAPTER *ioc, struct scsi_cmnd *scmd,
- 			| cdb_ptr[5])) {
- 			io_size = scsi_bufflen(scmd) >>
- 			    raid_device->block_exponent;
--			i = (cdb0 < READ_16) ? 2 : 6;
-+
- 			/* get virtual lba */
--			v_lba = be32_to_cpu(*(__be32 *)(&cdb_ptr[i]));
-+			if (cdb0 < READ_16)
-+				v_lba = be32_to_cpu(*(__be32 *)(&cdb_ptr[2]));
-+			else
-+				v_lba = be64_to_cpu(*(__be64 *)(&cdb_ptr[2]));
 
-Why aren't you using scsi_get_lba() instead of all this nasty CDB
-parsing?
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+> owner@vger.kernel.org] On Behalf Of Martin K. Petersen
 
-+
-+			i = (cdb0 < READ_16) ? 2 : 6;
 
-What about WRITE_16?  WRITE_16 > READ_16.
+...
+> Also, this is not touched by the patch, but you're then doing:
+> 
+>         (*(__be32 *)(&cdb_ptr[i])) = cpu_to_be32(p_lba);
+> 
+> What if this is a 6-byte READ/WRITE command? You'll end up exceeding the
+> size of the LBA field.
 
- 			if (((u64)v_lba + (u64)io_size - 1) <=
--			    (u32)raid_device->max_lba) {
-+				raid_device->max_lba) {
- 				stripe_sz = raid_device->stripe_sz;
- 				stripe_exp = raid_device->stripe_exponent;
- 				stripe_off = v_lba & (stripe_sz - 1);
+All this is inside:
+        if (cdb0 == READ_16 || cdb0 == READ_10 ||
+            cdb0 == WRITE_16 || cdb0 == WRITE_10) {
 
-Also, this is not touched by the patch, but you're then doing:
+so READ_6 and WRITE_6 and all their oddities are not a problem here.
 
-        (*(__be32 *)(&cdb_ptr[i])) = cpu_to_be32(p_lba);
 
-What if this is a 6-byte READ/WRITE command? You'll end up exceeding the
-size of the LBA field.
 
-What if you're using a 16-byte CDB and the target device LBA is > 2TB?
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
