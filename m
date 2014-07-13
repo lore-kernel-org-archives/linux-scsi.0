@@ -1,140 +1,111 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH 4/8] Drivers: scsi: storvsc: Filter WRITE_SAME_16
-Date: Sun, 13 Jul 2014 18:49:41 +0000
-Message-ID: <16476de4d4114eb18d4681132812744f@BY2PR03MB299.namprd03.prod.outlook.com>
-References: <1404866789-26910-1-git-send-email-kys@microsoft.com>
- <1404866812-26950-1-git-send-email-kys@microsoft.com>
- <1404866812-26950-4-git-send-email-kys@microsoft.com>
- <20140709084300.GD6012@infradead.org>
- <a31a45eddb544024a7538458b98c3611@BY2PR03MB299.namprd03.prod.outlook.com>
- <1404935792.2184.5.camel@dabdike.int.hansenpartnership.com>
- <2f3ae589e6f149acbe4c5dd79f905971@BY2PR03MB299.namprd03.prod.outlook.com>
- <1404944843.2184.8.camel@dabdike.int.hansenpartnership.com>
- <20140711063216.GA20660@infradead.org>
- <328b7a6174ef4dd8a54a7db5ac959834@BY2PR03MB299.namprd03.prod.outlook.com>
- <yq1a98d2z5x.fsf@sermon.lab.mkp.net>
+From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
+Subject: RE: [PATCH v2] scsi_debug: support scsi-mq, queues and locks
+Date: Sun, 13 Jul 2014 22:55:19 +0000
+Message-ID: <94D0CD8314A33A4D9D801C0FE68B402958BA045E@G9W0745.americas.hpqcorp.net>
+References: <53BAA104.6090207@interlog.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <yq1a98d2z5x.fsf@sermon.lab.mkp.net>
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from g4t3425.houston.hp.com ([15.201.208.53]:30214 "EHLO
+	g4t3425.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751043AbaGMW4d convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 13 Jul 2014 18:56:33 -0400
+In-Reply-To: <53BAA104.6090207@interlog.com>
 Content-Language: en-US
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: driverdev-devel-bounces@linuxdriverproject.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jasowang@redhat.com" <jasowang@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "ohering@suse.com" <ohering@suse.com>, "hch@infradead.org" <hch@infradead.org>, James Bottomley <jbottomley@parallels.com>, "apw@canonical.com" <apw@canonical.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "dgilbert@interlog.com" <dgilbert@interlog.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
 
 
 > -----Original Message-----
-> From: Martin K. Petersen [mailto:martin.petersen@oracle.com]
-> Sent: Sunday, July 13, 2014 5:59 AM
-> To: KY Srinivasan
-> Cc: hch@infradead.org; James Bottomley; linux-kernel@vger.kernel.org;
-> devel@linuxdriverproject.org; apw@canonical.com; stable@vger.kernel.org;
-> linux-scsi@vger.kernel.org; ohering@suse.com; jasowang@redhat.com
-> Subject: Re: [PATCH 4/8] Drivers: scsi: storvsc: Filter WRITE_SAME_16
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+> owner@vger.kernel.org] On Behalf Of Douglas Gilbert
+> Sent: Monday, 07 July, 2014 8:31 AM
+> To: SCSI development list
+> Subject: [PATCH v2] scsi_debug: support scsi-mq, queues and locks
 > 
-> >>>>> "KY" == KY Srinivasan <kys@microsoft.com> writes:
+> Resend, looks like the list does not like html attachments.
 > 
-> KY> Windows hosts do support UNMAP and set the field in the EVPD.
-> KY> However, since the host advertises SPC-2 compliance, Linux does not
-> KY> even query the VPD page.
 > 
-> >> If we want to enable UNMAP in this case I'd prefer a blacklist entry
-> >> than trying UNMAP despite the device not advertising it.
-> 
-> I agree with that. We could do something like the patch below.
-> 
-> However, I do think it's a good idea that you guys are looking into reporting
-> SPC-3.
+> This v2 patch is against Christoph's core-for-3.17 branch which
+> includes scsi-mq V2. Here is a link to a partially updated
+> version of the scsi_debug html page.
+>    http://sg.danny.cz/scsi/sdebug26.html
 
-Thanks Martin; this patch would address our present issues. I will get some testing done
-and report back.
+Reviewed-by: Robert Elliott <elliott@hp.com>
 
-Regards,
+A few minor concerns:
+1. In scsi_debug_abort, does num_aborts needs to be atomic - can 
+the SCSI midlayer have concurrent .eh_abort_handler calls 
+in progress?
 
-K. Y
-> 
-> 
-> SCSI: Add a blacklist flag which enables VPD page inquiries
-> 
-> Despite supporting modern SCSI features some storage devices continue to
-> claim conformance to an older version of the SPC spec. This is done for
-> compatibility with legacy operating systems.
-> 
-> Linux by default will not attempt to read VPD pages on devices that claim
-> SPC-2 or older. Introduce a blacklist flag that can be used to trigger VPD page
-> inquiries on devices that are known to support them.
-> 
-> Reported-by: KY Srinivasan <kys@microsoft.com>
-> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-> 
-> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c index
-> 4a6e4ba5a400..a5b1a224628a 100644
-> --- a/drivers/scsi/scsi_scan.c
-> +++ b/drivers/scsi/scsi_scan.c
-> @@ -949,7 +949,9 @@ static int scsi_add_lun(struct scsi_device *sdev,
-> unsigned char *inq_result,
-> 
->  	sdev->eh_timeout = SCSI_DEFAULT_EH_TIMEOUT;
-> 
-> -	if (*bflags & BLIST_SKIP_VPD_PAGES)
-> +	if (*bflags & BLIST_TRY_VPD_PAGES)
-> +		sdev->try_vpd_pages = 1;
-> +	else if (*bflags & BLIST_SKIP_VPD_PAGES)
->  		sdev->skip_vpd_pages = 1;
-> 
->  	transport_configure_device(&sdev->sdev_gendev);
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c index
-> 87566b51fcf7..31d32b9077ca 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -2701,6 +2701,11 @@ static void sd_read_write_same(struct scsi_disk
-> *sdkp, unsigned char *buffer)
-> 
->  static int sd_try_extended_inquiry(struct scsi_device *sdp)  {
-> +	/* Attempt VPD inquiry if the device blacklist explicitly calls
-> +	 * for it.
-> +	 */
-> +	if (sdp->try_vpd_pages)
-> +		return 1;
->  	/*
->  	 * Although VPD inquiries can go to SCSI-2 type devices,
->  	 * some USB ones crash on receiving them, and the pages diff --git
-> a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h index
-> 9aa38f7b303b..f579408620f0 100644
-> --- a/include/scsi/scsi_device.h
-> +++ b/include/scsi/scsi_device.h
-> @@ -155,6 +155,7 @@ struct scsi_device {
->  	unsigned skip_ms_page_8:1;	/* do not use MODE SENSE page 0x08
-> */
->  	unsigned skip_ms_page_3f:1;	/* do not use MODE SENSE page 0x3f
-> */
->  	unsigned skip_vpd_pages:1;	/* do not read VPD pages */
-> +	unsigned try_vpd_pages:1;	/* attempt to read VPD pages */
->  	unsigned use_192_bytes_for_3f:1; /* ask for 192 bytes from page
-> 0x3f */
->  	unsigned no_start_on_add:1;	/* do not issue start on add */
->  	unsigned allow_restart:1; /* issue START_UNIT in error handler */
-> diff --git a/include/scsi/scsi_devinfo.h b/include/scsi/scsi_devinfo.h index
-> 8670c04e199e..1fdd6fc5492b 100644
-> --- a/include/scsi/scsi_devinfo.h
-> +++ b/include/scsi/scsi_devinfo.h
-> @@ -34,4 +34,5 @@
->  #define BLIST_SKIP_VPD_PAGES	0x4000000 /* Ignore SBC-3 VPD pages
-> */
->  #define BLIST_SCSI3LUN		0x8000000 /* Scan more than 256
-> LUNs
->  					     for sequential scan */
-> +#define BLIST_TRY_VPD_PAGES	0x10000000 /* Attempt to read VPD
-> pages */
->  #endif
++static int scsi_debug_abort(struct scsi_cmnd *SCpnt)
++	++num_aborts;
+
+(I don't think this patch changes that from before...)
+
+2. Same question for:
+	num_dev_resets
+	num_target_resets
+	num_bus_resets
+	num_host_resets
+
+(I don't think this patch changes that from before...)
+
+3. schedule_resp includes this comment about the new TASK SET
+FULL injection code:
++	/* if (tsf) simulate device reporting SCSI status of TASK SET FULL.
++	 * Might override existing CHECK CONDITION. */
+
+If a TASK SET FULL is injected over a CHECK CONDITION/
+UNIT ATTENTION created by check_readiness():
++	k = find_first_bit(devip->uas_bm, SDEBUG_NUM_UAS);
+...
++		clear_bit(k, devip->uas_bm);
+
+then it looks like that unit attention is lost forever.
+
+
+4. In scsi_debug_show_info:
++		"num_tgts=%d, shared (ram) size=%d MB, opts=0x%x, "
+
+and the modparam string describing that variable:
+MODULE_PARM_DESC(dev_size_mb, "size in MB of ram shared by devs(def=8)");
+
+the units are really MiB, not MB.
+
+(I don't think this patch changes that from before...)
+
+
+5. For the UNMAP command, this modparam:
+	MODULE_PARM_DESC(lbprz, "unmapped blocks return 0 on read (def=1)");
+always causes unmap_region to zero out the blocks:
+                        if (scsi_debug_lbprz) {
+                                memset(fake_storep +
+                                       lba * scsi_debug_sector_size, 0,
+                                       scsi_debug_sector_size *
+                                       scsi_debug_unmap_granularity);
+                        }
+
+That doesn't recognize that unmap requests via UNMAP commands are just 
+hints/suggestions, not mandatory.  The same is true in ATA for the 
+DATA SET MANAGEMENT/TRIM command.
+
+Zeroing out is fine for when resp_write_same is the caller of 
+unmap_region and either NDOB=1 or the Data-Out Buffer contains all
+zeros - if WRITE SAME with UNMAP=1 doesn't cause an unmap, it 
+still writes all zeros to the blocks.
+
+When resp_unmap is the caller, though, there is no guarantee that
+the data will change.
+
+Maybe another modparam should be included to cause the driver
+to purposely ignore unmap requests?  That might help more people
+realize the danger in these commands.  (e.g., I think mdraid
+assumes UNMAP will result in zeros for RAID-5/6 volumes,
+which means parity will be calculated wrong if the drive
+doesn't really unmap).
+
+(I don't think this patch changes that from before...)
