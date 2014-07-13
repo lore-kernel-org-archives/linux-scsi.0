@@ -1,142 +1,30 @@
-From: Santosh Y <santoshsy@gmail.com>
-Subject: Re: [PATCH v2] ufs: fix DMA mask setting
-Date: Sun, 13 Jul 2014 18:31:08 +0530
-Message-ID: <CALMYJDs3j55hcjXgLCeiVsdZxcdFR0MCj=vp3yu1vHDLbMCY3w@mail.gmail.com>
-References: <1405254286-5068-1-git-send-email-akinobu.mita@gmail.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 01/10] scsi: move the nr_phys_segments assert into scsi_init_io
+Date: Sun, 13 Jul 2014 10:03:03 -0400
+Message-ID: <yq1pph91hm0.fsf@sermon.lab.mkp.net>
+References: <1404048881-19526-1-git-send-email-hch@lst.de>
+	<1404048881-19526-2-git-send-email-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ie0-f178.google.com ([209.85.223.178]:39982 "EHLO
-	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753442AbaGMNBj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 13 Jul 2014 09:01:39 -0400
-Received: by mail-ie0-f178.google.com with SMTP id tp5so2406112ieb.9
-        for <linux-scsi@vger.kernel.org>; Sun, 13 Jul 2014 06:01:38 -0700 (PDT)
-In-Reply-To: <1405254286-5068-1-git-send-email-akinobu.mita@gmail.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:41383 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753177AbaGMODO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 13 Jul 2014 10:03:14 -0400
+In-Reply-To: <1404048881-19526-2-git-send-email-hch@lst.de> (Christoph
+	Hellwig's message of "Sun, 29 Jun 2014 15:34:32 +0200")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Akinobu Mita <mita@fixstars.com>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 
-On Sun, Jul 13, 2014 at 5:54 PM, Akinobu Mita <akinobu.mita@gmail.com> wrote:
-> If the controller doesn't support 64-bit addressing mode, it must not
-> set the DMA mask to 64-bit.  But it's unconditionally trying to set to
-> 64-bit without checking 64-bit addressing support in the controller
-> capabilities.
->
-> It was correctly checked before commit 3b1d05807a9a68c6d0580e9248247a774a4d3be6
-> ("[SCSI] ufs: Segregate PCI Specific Code"), this aims to restores
-> the correct behaviour.
->
-> To achieve this in a generic way, firstly we should push down the DMA
-> mask setting routine ufshcd_set_dma_mask() from PCI glue driver to core
-> driver in order to do it for both PCI glue driver and Platform glue
-> driver.  Secondly, we should change pci_ DMA mapping API to dma_ DMA
-> mapping API because core driver is independent of glue drivers.
->
-> Signed-off-by: Akinobu Mita <mita@fixstars.com>
-> Cc: Sujit Reddy Thumma <sthumma@codeaurora.org>
-> Cc: Vinayak Holikatti <vinholikatti@gmail.com>
-> Cc: Santosh Y <santoshsy@gmail.com>
-> Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-> Cc: linux-scsi@vger.kernel.org
-> ---
-> * Change from v1
-> - use dma_set_mask_and_coherent() suggested by Santosh Y
->
->  drivers/scsi/ufs/ufshcd-pci.c | 26 --------------------------
->  drivers/scsi/ufs/ufshcd.c     | 22 ++++++++++++++++++++++
->  2 files changed, 22 insertions(+), 26 deletions(-)
->
-> diff --git a/drivers/scsi/ufs/ufshcd-pci.c b/drivers/scsi/ufs/ufshcd-pci.c
-> index 8b95312..c007a7a 100644
-> --- a/drivers/scsi/ufs/ufshcd-pci.c
-> +++ b/drivers/scsi/ufs/ufshcd-pci.c
-> @@ -135,26 +135,6 @@ static void ufshcd_pci_remove(struct pci_dev *pdev)
->  }
->
->  /**
-> - * ufshcd_set_dma_mask - Set dma mask based on the controller
-> - *                      addressing capability
-> - * @pdev: PCI device structure
-> - *
-> - * Returns 0 for success, non-zero for failure
-> - */
-> -static int ufshcd_set_dma_mask(struct pci_dev *pdev)
-> -{
-> -       int err;
-> -
-> -       if (!pci_set_dma_mask(pdev, DMA_BIT_MASK(64))
-> -               && !pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(64)))
-> -               return 0;
-> -       err = pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
-> -       if (!err)
-> -               err = pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32));
-> -       return err;
-> -}
-> -
-> -/**
->   * ufshcd_pci_probe - probe routine of the driver
->   * @pdev: pointer to PCI device handle
->   * @id: PCI device id
-> @@ -184,12 +164,6 @@ ufshcd_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
->
->         mmio_base = pcim_iomap_table(pdev)[0];
->
-> -       err = ufshcd_set_dma_mask(pdev);
-> -       if (err) {
-> -               dev_err(&pdev->dev, "set dma mask failed\n");
-> -               return err;
-> -       }
-> -
->         err = ufshcd_init(&pdev->dev, &hba, mmio_base, pdev->irq);
->         if (err) {
->                 dev_err(&pdev->dev, "Initialization failed\n");
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 0c28772..545dae4 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -3110,6 +3110,22 @@ void ufshcd_remove(struct ufs_hba *hba)
->  EXPORT_SYMBOL_GPL(ufshcd_remove);
->
->  /**
-> + * ufshcd_set_dma_mask - Set dma mask based on the controller
-> + *                      addressing capability
-> + * @hba: per adapter instance
-> + *
-> + * Returns 0 for success, non-zero for failure
-> + */
-> +static int ufshcd_set_dma_mask(struct ufs_hba *hba)
-> +{
-> +       if (hba->capabilities & MASK_64_ADDRESSING_SUPPORT) {
-> +               if (!dma_set_mask_and_coherent(hba->dev, DMA_BIT_MASK(64)))
-> +                       return 0;
-> +       }
-> +       return dma_set_mask_and_coherent(hba->dev, DMA_BIT_MASK(32));
-> +}
-> +
-> +/**
->   * ufshcd_init - Driver initialization routine
->   * @dev: pointer to device handle
->   * @hba_handle: driver private handle
-> @@ -3160,6 +3176,12 @@ int ufshcd_init(struct device *dev, struct ufs_hba **hba_handle,
->         /* Get Interrupt bit mask per version */
->         hba->intr_mask = ufshcd_get_intr_mask(hba);
->
-> +       err = ufshcd_set_dma_mask(hba);
-> +       if (err) {
-> +               dev_err(hba->dev, "set dma mask failed\n");
-> +               goto out_disable;
-> +       }
-> +
->         /* Allocate memory for host memory space */
->         err = ufshcd_memory_alloc(hba);
->         if (err) {
-> --
-> 1.9.1
->
+>>>>> "Christoph" == Christoph Hellwig <hch@lst.de> writes:
 
-Acked-by: Santosh Y <santoshsy@gmail.com>
+Christoph> scsi_init_io should only be called for requests that transfer
+Christoph> data, so move the assert that a request has segments from the
+Christoph> callers into scsi_init_io.
+
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 
 -- 
-~Santosh
+Martin K. Petersen	Oracle Linux Engineering
