@@ -1,132 +1,114 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: [PATCH v2] ufs: fix DMA mask setting
-Date: Sun, 13 Jul 2014 21:24:46 +0900
-Message-ID: <1405254286-5068-1-git-send-email-akinobu.mita@gmail.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pd0-f176.google.com ([209.85.192.176]:41701 "EHLO
-	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753411AbaGMMZD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 13 Jul 2014 08:25:03 -0400
-Received: by mail-pd0-f176.google.com with SMTP id ft15so3762165pdb.35
-        for <linux-scsi@vger.kernel.org>; Sun, 13 Jul 2014 05:25:01 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 4/8] Drivers: scsi: storvsc: Filter WRITE_SAME_16
+Date: Sun, 13 Jul 2014 08:58:34 -0400
+Message-ID: <yq1a98d2z5x.fsf@sermon.lab.mkp.net>
+References: <1404866789-26910-1-git-send-email-kys@microsoft.com>
+ <1404866812-26950-1-git-send-email-kys@microsoft.com>
+ <1404866812-26950-4-git-send-email-kys@microsoft.com>
+ <20140709084300.GD6012@infradead.org>
+ <a31a45eddb544024a7538458b98c3611@BY2PR03MB299.namprd03.prod.outlook.com>
+ <1404935792.2184.5.camel@dabdike.int.hansenpartnership.com>
+ <2f3ae589e6f149acbe4c5dd79f905971@BY2PR03MB299.namprd03.prod.outlook.com>
+ <1404944843.2184.8.camel@dabdike.int.hansenpartnership.com>
+ <20140711063216.GA20660@infradead.org>
+ <328b7a6174ef4dd8a54a7db5ac959834@BY2PR03MB299.namprd03.prod.outlook.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <328b7a6174ef4dd8a54a7db5ac959834@BY2PR03MB299.namprd03.prod.outlook.com>
+ (KY Srinivasan's message of "Sat, 12 Jul 2014 02:50:06 +0000")
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: driverdev-devel-bounces@linuxdriverproject.org
+To: KY Srinivasan <kys@microsoft.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jasowang@redhat.com" <jasowang@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "ohering@suse.com" <ohering@suse.com>, "hch@infradead.org" <hch@infradead.org>, James Bottomley <jbottomley@parallels.com>, "apw@canonical.com" <apw@canonical.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Akinobu Mita <akinobu.mita@gmail.com>, Akinobu Mita <mita@fixstars.com>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, Santosh Y <santoshsy@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
 
-If the controller doesn't support 64-bit addressing mode, it must not
-set the DMA mask to 64-bit.  But it's unconditionally trying to set to
-64-bit without checking 64-bit addressing support in the controller
-capabilities.
+>>>>> "KY" == KY Srinivasan <kys@microsoft.com> writes:
 
-It was correctly checked before commit 3b1d05807a9a68c6d0580e9248247a774a4d3be6
-("[SCSI] ufs: Segregate PCI Specific Code"), this aims to restores
-the correct behaviour.
-
-To achieve this in a generic way, firstly we should push down the DMA
-mask setting routine ufshcd_set_dma_mask() from PCI glue driver to core
-driver in order to do it for both PCI glue driver and Platform glue
-driver.  Secondly, we should change pci_ DMA mapping API to dma_ DMA
-mapping API because core driver is independent of glue drivers.
-
-Signed-off-by: Akinobu Mita <mita@fixstars.com>
-Cc: Sujit Reddy Thumma <sthumma@codeaurora.org>
-Cc: Vinayak Holikatti <vinholikatti@gmail.com>
-Cc: Santosh Y <santoshsy@gmail.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org
----
-* Change from v1
-- use dma_set_mask_and_coherent() suggested by Santosh Y
-
- drivers/scsi/ufs/ufshcd-pci.c | 26 --------------------------
- drivers/scsi/ufs/ufshcd.c     | 22 ++++++++++++++++++++++
- 2 files changed, 22 insertions(+), 26 deletions(-)
-
-diff --git a/drivers/scsi/ufs/ufshcd-pci.c b/drivers/scsi/ufs/ufshcd-pci.c
-index 8b95312..c007a7a 100644
---- a/drivers/scsi/ufs/ufshcd-pci.c
-+++ b/drivers/scsi/ufs/ufshcd-pci.c
-@@ -135,26 +135,6 @@ static void ufshcd_pci_remove(struct pci_dev *pdev)
- }
+KY> Windows hosts do support UNMAP and set the field in the
+KY> EVPD. However, since the host advertises SPC-2 compliance, Linux
+KY> does not even query the VPD page.
  
- /**
-- * ufshcd_set_dma_mask - Set dma mask based on the controller
-- *			 addressing capability
-- * @pdev: PCI device structure
-- *
-- * Returns 0 for success, non-zero for failure
-- */
--static int ufshcd_set_dma_mask(struct pci_dev *pdev)
--{
--	int err;
--
--	if (!pci_set_dma_mask(pdev, DMA_BIT_MASK(64))
--		&& !pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(64)))
--		return 0;
--	err = pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
--	if (!err)
--		err = pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32));
--	return err;
--}
--
--/**
-  * ufshcd_pci_probe - probe routine of the driver
-  * @pdev: pointer to PCI device handle
-  * @id: PCI device id
-@@ -184,12 +164,6 @@ ufshcd_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 
- 	mmio_base = pcim_iomap_table(pdev)[0];
- 
--	err = ufshcd_set_dma_mask(pdev);
--	if (err) {
--		dev_err(&pdev->dev, "set dma mask failed\n");
--		return err;
--	}
--
- 	err = ufshcd_init(&pdev->dev, &hba, mmio_base, pdev->irq);
- 	if (err) {
- 		dev_err(&pdev->dev, "Initialization failed\n");
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 0c28772..545dae4 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -3110,6 +3110,22 @@ void ufshcd_remove(struct ufs_hba *hba)
- EXPORT_SYMBOL_GPL(ufshcd_remove);
- 
- /**
-+ * ufshcd_set_dma_mask - Set dma mask based on the controller
-+ *			 addressing capability
-+ * @hba: per adapter instance
-+ *
-+ * Returns 0 for success, non-zero for failure
-+ */
-+static int ufshcd_set_dma_mask(struct ufs_hba *hba)
-+{
-+	if (hba->capabilities & MASK_64_ADDRESSING_SUPPORT) {
-+		if (!dma_set_mask_and_coherent(hba->dev, DMA_BIT_MASK(64)))
-+			return 0;
-+	}
-+	return dma_set_mask_and_coherent(hba->dev, DMA_BIT_MASK(32));
-+}
-+
-+/**
-  * ufshcd_init - Driver initialization routine
-  * @dev: pointer to device handle
-  * @hba_handle: driver private handle
-@@ -3160,6 +3176,12 @@ int ufshcd_init(struct device *dev, struct ufs_hba **hba_handle,
- 	/* Get Interrupt bit mask per version */
- 	hba->intr_mask = ufshcd_get_intr_mask(hba);
- 
-+	err = ufshcd_set_dma_mask(hba);
-+	if (err) {
-+		dev_err(hba->dev, "set dma mask failed\n");
-+		goto out_disable;
-+	}
-+
- 	/* Allocate memory for host memory space */
- 	err = ufshcd_memory_alloc(hba);
- 	if (err) {
--- 
-1.9.1
+>> If we want to enable UNMAP in this case I'd prefer a blacklist entry
+>> than trying UNMAP despite the device not advertising it.
 
+I agree with that. We could do something like the patch below.
+
+However, I do think it's a good idea that you guys are looking into
+reporting SPC-3.
+
+
+SCSI: Add a blacklist flag which enables VPD page inquiries
+
+Despite supporting modern SCSI features some storage devices continue to
+claim conformance to an older version of the SPC spec. This is done for
+compatibility with legacy operating systems.
+
+Linux by default will not attempt to read VPD pages on devices that
+claim SPC-2 or older. Introduce a blacklist flag that can be used to
+trigger VPD page inquiries on devices that are known to support them.
+
+Reported-by: KY Srinivasan <kys@microsoft.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 4a6e4ba5a400..a5b1a224628a 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -949,7 +949,9 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ 
+ 	sdev->eh_timeout = SCSI_DEFAULT_EH_TIMEOUT;
+ 
+-	if (*bflags & BLIST_SKIP_VPD_PAGES)
++	if (*bflags & BLIST_TRY_VPD_PAGES)
++		sdev->try_vpd_pages = 1;
++	else if (*bflags & BLIST_SKIP_VPD_PAGES)
+ 		sdev->skip_vpd_pages = 1;
+ 
+ 	transport_configure_device(&sdev->sdev_gendev);
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 87566b51fcf7..31d32b9077ca 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -2701,6 +2701,11 @@ static void sd_read_write_same(struct scsi_disk *sdkp, unsigned char *buffer)
+ 
+ static int sd_try_extended_inquiry(struct scsi_device *sdp)
+ {
++	/* Attempt VPD inquiry if the device blacklist explicitly calls
++	 * for it.
++	 */
++	if (sdp->try_vpd_pages)
++		return 1;
+ 	/*
+ 	 * Although VPD inquiries can go to SCSI-2 type devices,
+ 	 * some USB ones crash on receiving them, and the pages
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 9aa38f7b303b..f579408620f0 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -155,6 +155,7 @@ struct scsi_device {
+ 	unsigned skip_ms_page_8:1;	/* do not use MODE SENSE page 0x08 */
+ 	unsigned skip_ms_page_3f:1;	/* do not use MODE SENSE page 0x3f */
+ 	unsigned skip_vpd_pages:1;	/* do not read VPD pages */
++	unsigned try_vpd_pages:1;	/* attempt to read VPD pages */
+ 	unsigned use_192_bytes_for_3f:1; /* ask for 192 bytes from page 0x3f */
+ 	unsigned no_start_on_add:1;	/* do not issue start on add */
+ 	unsigned allow_restart:1; /* issue START_UNIT in error handler */
+diff --git a/include/scsi/scsi_devinfo.h b/include/scsi/scsi_devinfo.h
+index 8670c04e199e..1fdd6fc5492b 100644
+--- a/include/scsi/scsi_devinfo.h
++++ b/include/scsi/scsi_devinfo.h
+@@ -34,4 +34,5 @@
+ #define BLIST_SKIP_VPD_PAGES	0x4000000 /* Ignore SBC-3 VPD pages */
+ #define BLIST_SCSI3LUN		0x8000000 /* Scan more than 256 LUNs
+ 					     for sequential scan */
++#define BLIST_TRY_VPD_PAGES	0x10000000 /* Attempt to read VPD pages */
+ #endif
