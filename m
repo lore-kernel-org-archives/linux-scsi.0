@@ -1,29 +1,46 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 06/10] sd: don't use scsi_setup_blk_pc_cmnd for discard
-	requests
-Date: Sun, 13 Jul 2014 16:56:22 +0200
-Message-ID: <20140713145622.GA1831@lst.de>
-References: <1404048881-19526-1-git-send-email-hch@lst.de> <1404048881-19526-7-git-send-email-hch@lst.de> <yq14myl1g3q.fsf@sermon.lab.mkp.net> <53C29D45.8000301@interlog.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [RESEND][PATCH 02/10][SCSI]mpt2sas: MPI2 Rev Y (2.00.17) and Rev Z (2.00.18) specifications
+Date: Sun, 13 Jul 2014 10:58:06 -0400
+Message-ID: <yq1a98dz4ox.fsf@sermon.lab.mkp.net>
+References: <20140625103114.GA12896@avagotech.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:34918 "EHLO newverein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753735AbaGMO4Z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 13 Jul 2014 10:56:25 -0400
-Content-Disposition: inline
-In-Reply-To: <53C29D45.8000301@interlog.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:47442 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751962AbaGMO6k (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 13 Jul 2014 10:58:40 -0400
+In-Reply-To: <20140625103114.GA12896@avagotech.com> (Sreekanth Reddy's message
+	of "Wed, 25 Jun 2014 16:01:14 +0530")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dgilbert@interlog.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
+To: "Reddy, Sreekanth" <Sreekanth.Reddy@avagotech.com>
+Cc: jejb@kernel.org, JBottomley@Parallels.com, linux-scsi@vger.kernel.org, Sathya.Prakash@avagotech.com, Nagalakshmi.Nandigama@avagotech.com, linux-kernel@vger.kernel.org, hch@infradead.org, martin.petersen@oracle.com
 
-On Sun, Jul 13, 2014 at 10:52:53AM -0400, Douglas Gilbert wrote:
-> To make things clearer when referring to the WRITE SAME command
-> I would suggest "WRITE SAME(unmap)" for the case when its UNMAP
-> field is 1 (as I assume it is in this case).
+>>>>> "Sreekanth" == Reddy, Sreekanth <Sreekanth.Reddy@avagotech.com> writes:
 
-Actually it could be WRITE SAME (10) with or without unmap,
-or WRITE SAME (16) with unmap.  So just leaving it without qualifier here
-seems to be least confusing.
+Sreekanth> Below is the change set in MPI2 Rev Y specification and in
+Sreekanth> 2.00.17 header files
+Sreekanth> 1) Added SCSIStatusQualifier to SCSI IO Error Reply message.
+Sreekanth> 2) Added ATA Security Freeze Lock to IO Unit Page 1 Flags
+Sreekanth>    field.
 
+Sreekanth> Below is the change set in MPI2 Rev Z specification and in
+Sreekanth> 2.00.19 header files
+Sreekanth> 1) Added reserved fields to IO Unit Page 7 for future use.
+Sreekanth> 2) Added optional functionality to IOCInit Request so that
+Sreekanth>    the host may specify a separate base address for each
+Sreekanth>    Reply Descriptor Post Queue. IOC support for this is
+Sreekanth>    indicated using a new IOCCapabilities bit in the IOCFacts
+Sreekanth>    Reply.
+Sreekanth> 3) Added Toolbox Console Text Display Tool
+Sreekanth>    The host uses the Console Text Display Tool to send a
+Sreekanth>    string to IOC's Console using different console types (eg:
+Sreekanth>    UART serial terminal or Ethernet terminal).
+
+Sreekanth> The copyright in the mpi files is updated for year 2014
+
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
