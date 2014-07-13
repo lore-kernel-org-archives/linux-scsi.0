@@ -1,142 +1,99 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: [PATCH resend] ufs: fix DMA mask setting
-Date: Sun, 13 Jul 2014 09:44:31 +0900
-Message-ID: <1405212271-4037-1-git-send-email-akinobu.mita@gmail.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: sg_tst_async, scsi-mq testing
+Date: Sat, 12 Jul 2014 20:52:38 -0400
+Message-ID: <53C1D856.5040503@interlog.com>
+Reply-To: dgilbert@interlog.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:48760 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751020AbaGMAoq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 12 Jul 2014 20:44:46 -0400
-Received: by mail-pa0-f50.google.com with SMTP id bj1so3462219pad.9
-        for <linux-scsi@vger.kernel.org>; Sat, 12 Jul 2014 17:44:45 -0700 (PDT)
+Received: from smtp.infotech.no ([82.134.31.41]:55077 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751802AbaGMAwx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 12 Jul 2014 20:52:53 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Akinobu Mita <akinobu.mita@gmail.com>, Akinobu Mita <mita@fixstars.com>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, Santosh Y <santoshsy@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
+To: SCSI development list <linux-scsi@vger.kernel.org>
+Cc: "Elliott, Robert (Server Storage)" <elliott@hp.com>, Christoph Hellwig <hch@lst.de>
 
-If the controller doesn't support 64-bit addressing mode, it must not
-set the DMA mask to 64-bit.  But it's unconditionally trying to set to
-64-bit without checking 64-bit addressing support in the controller
-capabilities.
+scsi-mq testing has been temporarily sidelined by a
+problem with the command injection test harness: fio.
+To queue commands (e.g. to take advantage of SCSI
+task sets and SATA NCQ) fio uses libaio which is the
+focus of interest. Debugging is ongoing.
 
-It was correctly checked before commit 3b1d05807a9a68c6d0580e9248247a774a4d3be6
-("[SCSI] ufs: Segregate PCI Specific Code"), this aims to restores
-the correct behaviour.
+At a lower level the sg driver can be used to inject
+SCSI commands in an asynchronous fashion. These pass
+through the block layer (termed BLOCK_PC requests) and
+then through the scsi-mq code. So the path is similar
+to reads and writes issued by fio.
 
-To achieve this in a generic way, firstly we should push down the DMA
-mask setting routine ufshcd_set_dma_mask() from PCI glue driver to core
-driver in order to do it for both PCI glue driver and Platform glue
-driver.  Secondly, we should change pci_ DMA mapping API to dma_ DMA
-mapping API because core driver is independent of glue drivers.
+In the last few days I have added examples/sg_tst_async.cpp
+to my sg3_utils version 1.40 beta2 which can be found
+here: http://sg.danny.cz/sg/  [in the News section].
 
-Signed-off-by: Akinobu Mita <mita@fixstars.com>
-Cc: Sujit Reddy Thumma <sthumma@codeaurora.org>
-Cc: Vinayak Holikatti <vinholikatti@gmail.com>
-Cc: Santosh Y <santoshsy@gmail.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org
----
-This patch previously required a additional change which initializes
-dev->dma_mask for device-tree probed device.  But it is not required
-anymore, because of the commit 0589342c27944e50ebd7a54f5215002b6598b748
-("of: set dma_mask to point to coherent_dma_mask").
+sg_tst_async is a multi-threaded C++ program that opens
+up one sg file descriptor per thread. With each thread
+it can issue thousands of commands but to a depth of
+no more than 16 (a sg driver limit). Since multiple
+threads access the same device the number of threads
+acts as a queue depth multiply. In my testing this
+works fine up to 8 threads, thereafter the sg write()
+operation yields ENOMEM (from blk_get_request()). In
+theory setting to <sysfs_scsi_device>/queue/nr_queue
+to a value higher than its default of 128 should fix
+that (but it made things worse in my tests).
 
- drivers/scsi/ufs/ufshcd-pci.c | 26 --------------------------
- drivers/scsi/ufs/ufshcd.c     | 30 ++++++++++++++++++++++++++++++
- 2 files changed, 30 insertions(+), 26 deletions(-)
+sg_tst_async issues TEST UNIT READY(TUR), READ(16) or
+WRITE(16) commands. The latter two use a fixed LBA or
+a range of LBA from which a pseudo random LBA is chosen.
+[The seed is taken from /dev/urandom.] Using a LBA range
+of a whole SAS SSD, sg_tst_async yields a IOPS measurement
+on READs almost matching that of the manufacturer.
 
-diff --git a/drivers/scsi/ufs/ufshcd-pci.c b/drivers/scsi/ufs/ufshcd-pci.c
-index 8b95312..c007a7a 100644
---- a/drivers/scsi/ufs/ufshcd-pci.c
-+++ b/drivers/scsi/ufs/ufshcd-pci.c
-@@ -135,26 +135,6 @@ static void ufshcd_pci_remove(struct pci_dev *pdev)
- }
- 
- /**
-- * ufshcd_set_dma_mask - Set dma mask based on the controller
-- *			 addressing capability
-- * @pdev: PCI device structure
-- *
-- * Returns 0 for success, non-zero for failure
-- */
--static int ufshcd_set_dma_mask(struct pci_dev *pdev)
--{
--	int err;
--
--	if (!pci_set_dma_mask(pdev, DMA_BIT_MASK(64))
--		&& !pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(64)))
--		return 0;
--	err = pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
--	if (!err)
--		err = pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32));
--	return err;
--}
--
--/**
-  * ufshcd_pci_probe - probe routine of the driver
-  * @pdev: pointer to PCI device handle
-  * @id: PCI device id
-@@ -184,12 +164,6 @@ ufshcd_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 
- 	mmio_base = pcim_iomap_table(pdev)[0];
- 
--	err = ufshcd_set_dma_mask(pdev);
--	if (err) {
--		dev_err(&pdev->dev, "set dma mask failed\n");
--		return err;
--	}
--
- 	err = ufshcd_init(&pdev->dev, &hba, mmio_base, pdev->irq);
- 	if (err) {
- 		dev_err(&pdev->dev, "Initialization failed\n");
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 0c28772..1c4c226 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -3110,6 +3110,30 @@ void ufshcd_remove(struct ufs_hba *hba)
- EXPORT_SYMBOL_GPL(ufshcd_remove);
- 
- /**
-+ * ufshcd_set_dma_mask - Set dma mask based on the controller
-+ *			 addressing capability
-+ * @hba: per adapter instance
-+ *
-+ * Returns 0 for success, non-zero for failure
-+ */
-+static int ufshcd_set_dma_mask(struct ufs_hba *hba)
-+{
-+	int err;
-+
-+	if (hba->capabilities & MASK_64_ADDRESSING_SUPPORT) {
-+		if (!dma_set_mask(hba->dev, DMA_BIT_MASK(64))) {
-+			dma_set_coherent_mask(hba->dev, DMA_BIT_MASK(64));
-+			return 0;
-+		}
-+	}
-+	err = dma_set_mask(hba->dev, DMA_BIT_MASK(32));
-+	if (!err)
-+		dma_set_coherent_mask(hba->dev, DMA_BIT_MASK(32));
-+
-+	return err;
-+}
-+
-+/**
-  * ufshcd_init - Driver initialization routine
-  * @dev: pointer to device handle
-  * @hba_handle: driver private handle
-@@ -3160,6 +3184,12 @@ int ufshcd_init(struct device *dev, struct ufs_hba **hba_handle,
- 	/* Get Interrupt bit mask per version */
- 	hba->intr_mask = ufshcd_get_intr_mask(hba);
- 
-+	err = ufshcd_set_dma_mask(hba);
-+	if (err) {
-+		dev_err(hba->dev, "set dma mask failed\n");
-+		goto out_disable;
-+	}
-+
- 	/* Allocate memory for host memory space */
- 	err = ufshcd_memory_alloc(hba);
- 	if (err) {
--- 
-1.9.1
+The utility has been tested against a SAS SSD (LSI
+9300-4i HBA) and the scsi_debug driver. Two machines
+have been used, both running a kernel built from the
+original scsi-mq.3 branch without problems.
+
+
+The documentation is for now its usage message:
+
+Usage: sg_tst_async [-d] [-f] [-h] [-l <lba+>] [-n <n_per_thr>] [-N]
+                     [-q 0|1] [-Q 0|1|2] [-R] [-s <lb_sz>]
+                     [-t <num_thrs>] [-T] [-v] [-V] [-w <wait_ms>]
+                     [-W] <sg_disk_device>
+   where
+     -d                do direct_io (def: indirect)
+     -f                force: any sg device (def: only scsi_debug owned)
+                       WARNING: <lba> written to if '-W' given
+     -h                print this usage message then exit
+     -l <lba>          logical block to access (def: 1000)
+     -l <lba,hi_lba>    logical block range (inclusive)
+     -n <n_per_thr>    number of commands per thread (def: 1000)
+     -N                no data xfer (def: xfer on READ and WRITE)
+     -q 0|1            0: blk q_at_head; 1: q_at_tail
+     -Q 0|1|2          0: favour completions (smaller q), 1: medium,
+                       2: favour submissions (larger q, default)
+     -s <lb_sz>        logical block size (def: 512)
+     -R                do READs (def: TUR)
+     -t <num_thrs>     number of threads (def: 4)
+     -T                do TEST UNIT READYs (default is TURs)
+     -v                increase verbosity
+     -V                print version number then exit
+     -w <wait_ms>      >0: poll(<wait_ms>); =0: poll(0); (def: 10)
+     -W                do WRITEs (def: TUR)
+
+Multiple threads do READ(16), WRITE(16) or TEST UNIT READY (TUR) SCSI
+commands. Each thread has its own file descriptor and queues up to
+16 commands. One block is transferred by each READ and WRITE; zeros
+are written. If a logical block range is given, a uniform distribution
+generates a pseudo random sequence of LBAs.
+
+
+Doug Gilbert
+
+P.S. The '-w <wait_ms>' does not really do anything significant, just leave
+      it alone.
+
 
