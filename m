@@ -1,63 +1,132 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 7/7] drivers: scsi: storvsc: Correctly handle TEST_UNIT_READY
- failure
-Date: Mon, 14 Jul 2014 08:17:37 +0200
-Message-ID: <53C37601.7080008@suse.de>
-References: <1405183684-23928-1-git-send-email-kys@microsoft.com> <1405183712-23967-1-git-send-email-kys@microsoft.com> <1405183712-23967-7-git-send-email-kys@microsoft.com>
+From: "Reddy, Sreekanth" <Sreekanth.Reddy@avagotech.com>
+Subject: [PATCH v2] mpt2sas: delay scsi_add_host call to work with scsi-mq
+Date: Mon, 14 Jul 2014 12:00:49 +0530
+Message-ID: <20140714063049.GA16875@avagotech.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <1405183712-23967-7-git-send-email-kys@microsoft.com>
-Sender: stable-owner@vger.kernel.org
-To: "K. Y. Srinivasan" <kys@microsoft.com>, jasowang@redhat.com, apw@canonical.com, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org
-Cc: stable@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from [207.46.163.139] ([207.46.163.139]:18692 "EHLO
+	na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750892AbaGNGfv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 14 Jul 2014 02:35:51 -0400
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jejb@kernel.org, JBottomley@Parallels.com
+Cc: linux-scsi@vger.kernel.org, Sathya.Prakash@avagotech.com, Nagalakshmi.Nandigama@avagotech.com, sreekanth.reddy@avagotech.com, linux-kernel@vger.kernel.org, hch@infradead.org, martin.petersen@oracle.com
 
-On 07/12/2014 06:48 PM, K. Y. Srinivasan wrote:
-> On some Windows hosts on FC SANs, TEST_UNIT_READY can return SRB_STAT=
-US_ERROR.
-> Correctly handle this. Note that there is sufficient sense informatio=
-n to
-> support scsi error handling even in this case.
->
-> In this version of the patch I have addressed comments from
-> Christoph Hellwig <hch@infradead.org>
->
-> Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
-> Cc: <stable@vger.kernel.org>
-> ---
->   drivers/scsi/storvsc_drv.c |    7 +++++++
->   1 files changed, 7 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-> index 9342ba4..29d0329 100644
-> --- a/drivers/scsi/storvsc_drv.c
-> +++ b/drivers/scsi/storvsc_drv.c
-> @@ -1018,6 +1018,13 @@ static void storvsc_handle_error(struct vmscsi=
-_request *vm_srb,
->   		case ATA_12:
->   			set_host_byte(scmnd, DID_PASSTHROUGH);
->   			break;
-> +		/*
-> +		 * On Some Windows hosts TEST_UNIT_READY command can return
-> +		 * SRB_STATUS_ERROR, let the upper level code deal with it
-> +		 * based on the sense information.
-> +		 */
-> +		case TEST_UNIT_READY:
-> +			break;
->   		default:
->   			set_host_byte(scmnd, DID_TARGET_FAILURE);
->   		}
->
-Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-Cheers,
+In _scsih_probe, delay the call to scsi_add_host until the host has been
+fully set up.
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+Otherwise, the default .can_queue value of 1 causes scsi-mq to set the block
+layer request queue size to its minimum size, resulting in awful performance.
+
+In _scsih_probe error handling, call mpt3sas_base_detach rather than
+scsi_remove_host to properly clean up in reverse order.
+
+In _scsih_remove, call scsi_remove_host earlier to clean up in reverse order.
+
+Signed-off-by: Robert Elliott <elliott@hp.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@avagotech.com>
+Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
+---
+ drivers/scsi/mpt2sas/mpt2sas_base.c  |    2 +-
+ drivers/scsi/mpt2sas/mpt2sas_scsih.c |   25 ++++++++++++-------------
+ 2 files changed, 13 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
+index b4b391d..20e2ff8 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+@@ -281,7 +281,7 @@ mpt2sas_base_stop_watchdog(struct MPT2SAS_ADAPTER *ioc)
+ 	ioc->fault_reset_work_q = NULL;
+ 	spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
+ 	if (wq) {
+-		if (!cancel_delayed_work(&ioc->fault_reset_work))
++		if (!cancel_delayed_work_sync(&ioc->fault_reset_work))
+ 			flush_workqueue(wq);
+ 		destroy_workqueue(wq);
+ 	}
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+index ed8b6c1..53c4764 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+@@ -2906,11 +2906,10 @@ _scsih_fw_event_cleanup_queue(struct MPT2SAS_ADAPTER *ioc)
+ 		return;
+ 
+ 	list_for_each_entry_safe(fw_event, next, &ioc->fw_event_list, list) {
+-		if (cancel_delayed_work(&fw_event->delayed_work)) {
++		if (cancel_delayed_work_sync(&fw_event->delayed_work)) {
+ 			_scsih_fw_event_free(ioc, fw_event);
+ 			continue;
+ 		}
+-		fw_event->cancel_pending_work = 1;
+ 	}
+ }
+ 
+@@ -7514,7 +7513,7 @@ _firmware_event_work(struct work_struct *work)
+ 	struct MPT2SAS_ADAPTER *ioc = fw_event->ioc;
+ 
+ 	/* the queue is being flushed so ignore this event */
+-	if (ioc->remove_host || fw_event->cancel_pending_work ||
++	if (ioc->remove_host ||
+ 	    ioc->pci_error_recovery) {
+ 		_scsih_fw_event_free(ioc, fw_event);
+ 		return;
+@@ -7970,9 +7969,9 @@ _scsih_remove(struct pci_dev *pdev)
+ 	}
+ 
+ 	sas_remove_host(shost);
++	scsi_remove_host(shost);
+ 	mpt2sas_base_detach(ioc);
+ 	list_del(&ioc->list);
+-	scsi_remove_host(shost);
+ 	scsi_host_put(shost);
+ }
+ 
+@@ -8313,13 +8312,6 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		}
+ 	}
+ 
+-	if ((scsi_add_host(shost, &pdev->dev))) {
+-		printk(MPT2SAS_ERR_FMT "failure at %s:%d/%s()!\n",
+-		    ioc->name, __FILE__, __LINE__, __func__);
+-		list_del(&ioc->list);
+-		goto out_add_shost_fail;
+-	}
+-
+ 	/* register EEDP capabilities with SCSI layer */
+ 	if (prot_mask)
+ 		scsi_host_set_prot(shost, prot_mask);
+@@ -8361,16 +8353,23 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		}
+ 	} else
+ 		ioc->hide_drives = 0;
++
++	if ((scsi_add_host(shost, &pdev->dev))) {
++		printk(MPT2SAS_ERR_FMT "failure at %s:%d/%s()!\n",
++		    ioc->name, __FILE__, __LINE__, __func__);
++		goto out_add_shost_fail;
++	}
++
+ 	scsi_scan_host(shost);
+ 
+ 	return 0;
+ 
++ out_add_shost_fail:
++	mpt2sas_base_detach(ioc);
+  out_attach_fail:
+ 	destroy_workqueue(ioc->firmware_event_thread);
+  out_thread_fail:
+ 	list_del(&ioc->list);
+-	scsi_remove_host(shost);
+- out_add_shost_fail:
+ 	scsi_host_put(shost);
+ 	return -ENODEV;
+ }
+-- 
+1.7.1
+
