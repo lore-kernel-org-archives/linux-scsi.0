@@ -1,74 +1,42 @@
-From: Joe Lawrence <joe.lawrence@stratus.com>
-Subject: Re: mpt2sas stuck installing
-Date: Mon, 14 Jul 2014 14:10:00 -0400
-Message-ID: <20140714141000.232d5e14@jlaw-desktop.mno.stratus.com>
-References: <20140704013250.088477de@jlaw-desktop.mno.stratus.com>
-	<53B649A6.60501@julianfamily.org>
-	<alpine.DEB.2.02.1407072149190.10980@jlaw-desktop.mno.stratus.com>
-	<53BDBB3A.5060906@julianfamily.org>
-	<20140711225306.3ce78324@jlaw-desktop.mno.stratus.com>
-	<94D0CD8314A33A4D9D801C0FE68B402958B9907B@G9W0745.americas.hpqcorp.net>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: mpt2sas and mpt3sas merge (again)
+Date: Mon, 14 Jul 2014 17:34:06 -0400
+Message-ID: <yq1bnsry69d.fsf@sermon.lab.mkp.net>
+References: <20140714083547.GA6315@infradead.org> <53C3A170.1070101@suse.de>
+	<1405347425.2395.5.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from p02c12o141.mxlogic.net ([208.65.145.74]:33637 "EHLO
-	p02c12o141.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751754AbaGNSKI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Jul 2014 14:10:08 -0400
-In-Reply-To: <94D0CD8314A33A4D9D801C0FE68B402958B9907B@G9W0745.americas.hpqcorp.net>
+Received: from userp1040.oracle.com ([156.151.31.81]:26006 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756358AbaGNVeo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Jul 2014 17:34:44 -0400
+In-Reply-To: <1405347425.2395.5.camel@dabdike.int.hansenpartnership.com>
+	(James Bottomley's message of "Mon, 14 Jul 2014 07:17:05 -0700")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Cc: Joe Julian <joe@julianfamily.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Joe Maloy <joe.maloy@avagotech.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@infradead.org>, "Reddy, Sreekanth" <Sreekanth.Reddy@avagotech.com>, Sathya.Prakash@avagotech.com, Nagalakshmi.Nandigama@avagotech.com, linux-scsi@vger.kernel.org
 
-On Sat, 12 Jul 2014 03:13:07 +0000
-"Elliott, Robert (Server Storage)" <Elliott@hp.com> wrote:
+>>>>> "James" == James Bottomley <James.Bottomley@HansenPartnership.com> writes:
 
-> 
-> 
-> > -----Original Message-----
-> > From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> > owner@vger.kernel.org] On Behalf Of Joe Lawrence
-> ...
-> > In your crash stack trace, the scsi error handler has issued a host
-> > reset, but then crashed in mpt2sas_base_get_iocstate.  Reading through
-> > _scsih_shutdown, I don't believe that the mpt2sas .shutdown path takes
-> > any precaution before heading down mpt2sas_base_detach to free adapter
-> > resources.  The ordinary .remove path looks similar, though it does
-> > call sas_remove_host before freeing resources, *then* scsi_remove_host
-> > and scsi_host_put.
-> > 
-> > I wonder if this ordering needs to be reversed (and added to
-> > _scsih_shutdown) to properly de-register from the SCSI midlayer prior
-> > to removing the controller instance.
-> > 
-> > Regards,
-> > 
-> > -- Joe
-> 
-> Nagalakshmi was working on an mpt3sas patch for the scsi-mq tree 
-> to do just that.  I don't recall if the patch has made it into the 
-> scsi-mq tree yet. Apparently it's also needed for non-mq and mpt2sas.
-> 
-> It is making this change:
-> >  	sas_remove_host(shost);
-> > +	scsi_remove_host(shost);
-> >  	mpt3sas_base_detach(ioc);
-> >  	list_del(&ioc->list);
-> > -	scsi_remove_host(shost);
-> >  	scsi_host_put(shost);
-> 
-> We are making a similar change in hpsa.  Doing so led to a general 
-> protection fault, which unveiled that we also needed to change 
-> cancel_delayed_work() calls to cancel_delayed_work_sync() to 
-> ensure there are no worker functions still active after the 
-> scsi_host structure is unregistered.
+James> I support the concept, since I think everyone told LSI at the
+James> time that splitting the drivers would become a maintenance
+James> nightmare.
 
-It looks like Sreekanth posted those patches today -- the new ordering
-seems correct, but is there any reason why _scsih_shutdown skips
-{sas,scsi}_remove_host calls?
+And it is. I'd like to see these drivers merged as well.
 
-Regards,
+James> One of the big reasons we don't have a lot of leverage with them
+James> is that they always seem to slide updates around upstream via the
+James> distros (often, it has to be admitted the DKM route), so if Red
+James> Hat, SUSE, Oracle and Canonical can agree not to accept LSI
+James> updates until the driver is done this way, we'd have a lot more
+James> leverage.
 
--- Joe
+Unless it's a trivial bug fix Oracle won't take anything that's not
+accepted upstream. We are working with Avago/LSI to streamline their
+driver process to be a better fit for both upstream development and
+distro kernels.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
