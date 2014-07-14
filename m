@@ -1,30 +1,29 @@
-From: Paul Bolle <pebolle@tiscali.nl>
-Subject: scsi: SCSI_FC_TGT_ATTRS
-Date: Mon, 14 Jul 2014 10:29:04 +0200
-Message-ID: <1405326544.8281.17.camel@x220>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: mpt2sas and mpt3sas merge (again)
+Date: Mon, 14 Jul 2014 01:35:47 -0700
+Message-ID: <20140714083547.GA6315@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cpsmtpb-ews10.kpnxchange.com ([213.75.39.15]:58048 "EHLO
-	cpsmtpb-ews10.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750737AbaGNIeO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Jul 2014 04:34:14 -0400
+Received: from bombadil.infradead.org ([198.137.202.9]:55951 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750737AbaGNIfr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Jul 2014 04:35:47 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>, Christoph Hellwig <hch@lst.de>
-Cc: Paolo Bonzini <pbonzini@redhat.com>, Hannes Reinecke <hare@suse.de>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
+To: "Reddy, Sreekanth" <Sreekanth.Reddy@avagotech.com>, Sathya.Prakash@avagotech.com, Nagalakshmi.Nandigama@avagotech.com
+Cc: linux-scsi@vger.kernel.org
 
-0) Commit 73685a458f2e ("tgt: removal") landed in next-20140714. It
-states that "the CONFIG_SCSI_TGT, CONFIG_SCSI_SRP_TGT_ATTRS and
-CONFIG_SCSI_FC_TGT_ATTRS kbuild variable[s] [...] are no longer needed".
-It removed the Kconfig entry for SCSI_SRP_TGT_ATTRS, but it left the
-entries for SCSI_TGT and SCSI_FC_TGT_ATTRS untouched.
+Back when the mpt3sas driver was first posted I suggested that it should
+be merged into mpt2sas, but my proposal didn't get much traction.
 
-1) Both SCSI_TGT and SCSI_FC_TGT_ATTRS appear to be unused after that
-commit. Is a patch to remove their Kconfig entries queued somewhere?
+Illumos has now produced a shared driver and shown that the difference
+are basically limited to a different S/G list format [1], and a quick
+experiment on the Linux drivers confirms this mostly - the additional
+differences are various smaller workarounds for specific hardware
+revisions.
 
+I think we'd all be served much better with a merged driver.
 
-Paul Bolle
-
+[1] http://thread.gmane.org/gmane.os.illumos.devel/17341
