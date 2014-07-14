@@ -1,33 +1,31 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH V3 1/7] Drivers: scsi: storvsc: Change the limits to
- reflect the values on the host
-Date: Mon, 14 Jul 2014 01:30:47 -0700
-Message-ID: <20140714083047.GB22715@infradead.org>
-References: <1405183684-23928-1-git-send-email-kys@microsoft.com>
- <1405183712-23967-1-git-send-email-kys@microsoft.com>
- <53C37575.5030808@suse.de>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: scsi: SCSI_FC_TGT_ATTRS
+Date: Mon, 14 Jul 2014 10:31:54 +0200
+Message-ID: <20140714083154.GA21756@lst.de>
+References: <1405326544.8281.17.camel@x220>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <stable-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.211]:35969 "EHLO newverein.lst.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753861AbaGNIb7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 14 Jul 2014 04:31:59 -0400
 Content-Disposition: inline
-In-Reply-To: <53C37575.5030808@suse.de>
-Sender: stable-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "K. Y. Srinivasan" <kys@microsoft.com>, jasowang@redhat.com, apw@canonical.com, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org, stable@vger.kernel.org
+In-Reply-To: <1405326544.8281.17.camel@x220>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Paul Bolle <pebolle@tiscali.nl>
+Cc: Bart Van Assche <bvanassche@acm.org>, Christoph Hellwig <hch@lst.de>, Paolo Bonzini <pbonzini@redhat.com>, Hannes Reinecke <hare@suse.de>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
 
-On Mon, Jul 14, 2014 at 08:15:17AM +0200, Hannes Reinecke wrote:
-> Limiting max_lun to 255 will make the driver to _not_ respond to LUNs higher
-> than that; ie Well-known LUN won't work here.
-> Also the SCSI stack will be using REPORT LUNS anyway since you're
-> advertising SPC-2 compliance. So your driver runs into issues if Hyper-V
-> would ever return more than 256 LUNs with the REPORT LUN command or if any
-> of the LUNs has an addressing scheme other than
-> '0x00'.
-> I would suggest to raise this to the technical limit (ie the largest LUN
-> which the _protocol_ supports) and let REPORT LUNS deal with the actual
-> LUNs.
+On Mon, Jul 14, 2014 at 10:29:04AM +0200, Paul Bolle wrote:
+> 0) Commit 73685a458f2e ("tgt: removal") landed in next-20140714. It
+> states that "the CONFIG_SCSI_TGT, CONFIG_SCSI_SRP_TGT_ATTRS and
+> CONFIG_SCSI_FC_TGT_ATTRS kbuild variable[s] [...] are no longer needed".
+> It removed the Kconfig entry for SCSI_SRP_TGT_ATTRS, but it left the
+> entries for SCSI_TGT and SCSI_FC_TGT_ATTRS untouched.
+> 
+> 1) Both SCSI_TGT and SCSI_FC_TGT_ATTRS appear to be unused after that
+> commit. Is a patch to remove their Kconfig entries queued somewhere?
 
-I suspect hypverv doesn't support anything more.  For now I'd be
-inclined to just put it in ASAP and if your suggestion works out fix it
-up later, although I'll wait a bit for more review feedback.
+We missed those two options, feel free to send a patch.
+
