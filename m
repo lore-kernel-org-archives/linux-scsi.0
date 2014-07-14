@@ -1,15 +1,15 @@
 From: "Reddy, Sreekanth" <Sreekanth.Reddy@avagotech.com>
-Subject: [PATCH v2] mpt2sas: delay scsi_add_host call to work with scsi-mq
-Date: Mon, 14 Jul 2014 12:00:49 +0530
-Message-ID: <20140714063049.GA16875@avagotech.com>
+Subject: [PATCH v2] mpt3sas: delay scsi_add_host call to work with scsi-mq
+Date: Mon, 14 Jul 2014 12:01:35 +0530
+Message-ID: <20140714063135.GA16900@avagotech.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [207.46.163.139] ([207.46.163.139]:18692 "EHLO
+Received: from [207.46.163.139] ([207.46.163.139]:32881 "EHLO
 	na01-bn1-obe.outbound.protection.outlook.com"
 	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750892AbaGNGfv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Jul 2014 02:35:51 -0400
+	id S1750892AbaGNGgO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 14 Jul 2014 02:36:14 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -33,15 +33,15 @@ Signed-off-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@avagotech.com>
 Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 ---
- drivers/scsi/mpt2sas/mpt2sas_base.c  |    2 +-
- drivers/scsi/mpt2sas/mpt2sas_scsih.c |   25 ++++++++++++-------------
- 2 files changed, 13 insertions(+), 14 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.c  |    2 +-
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c |   26 ++++++++++++--------------
+ 2 files changed, 13 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-index b4b391d..20e2ff8 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -281,7 +281,7 @@ mpt2sas_base_stop_watchdog(struct MPT2SAS_ADAPTER *ioc)
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index cb5f879..b2817c7 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -266,7 +266,7 @@ mpt3sas_base_stop_watchdog(struct MPT3SAS_ADAPTER *ioc)
  	ioc->fault_reset_work_q = NULL;
  	spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
  	if (wq) {
@@ -50,11 +50,11 @@ index b4b391d..20e2ff8 100644
  			flush_workqueue(wq);
  		destroy_workqueue(wq);
  	}
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-index ed8b6c1..53c4764 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -2906,11 +2906,10 @@ _scsih_fw_event_cleanup_queue(struct MPT2SAS_ADAPTER *ioc)
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 21b50c1..7c830af 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -2586,11 +2586,10 @@ _scsih_fw_event_cleanup_queue(struct MPT3SAS_ADAPTER *ioc)
  		return;
  
  	list_for_each_entry_safe(fw_event, next, &ioc->fw_event_list, list) {
@@ -67,57 +67,56 @@ index ed8b6c1..53c4764 100644
  	}
  }
  
-@@ -7514,7 +7513,7 @@ _firmware_event_work(struct work_struct *work)
- 	struct MPT2SAS_ADAPTER *ioc = fw_event->ioc;
- 
+@@ -7077,7 +7076,7 @@ static void
+ _mpt3sas_fw_work(struct MPT3SAS_ADAPTER *ioc, struct fw_event_work *fw_event)
+ {
  	/* the queue is being flushed so ignore this event */
 -	if (ioc->remove_host || fw_event->cancel_pending_work ||
 +	if (ioc->remove_host ||
  	    ioc->pci_error_recovery) {
  		_scsih_fw_event_free(ioc, fw_event);
  		return;
-@@ -7970,9 +7969,9 @@ _scsih_remove(struct pci_dev *pdev)
+@@ -7482,9 +7481,9 @@ static void _scsih_remove(struct pci_dev *pdev)
  	}
  
  	sas_remove_host(shost);
 +	scsi_remove_host(shost);
- 	mpt2sas_base_detach(ioc);
+ 	mpt3sas_base_detach(ioc);
  	list_del(&ioc->list);
 -	scsi_remove_host(shost);
  	scsi_host_put(shost);
  }
  
-@@ -8313,13 +8312,6 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+@@ -7852,13 +7851,6 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
  		}
  	}
  
 -	if ((scsi_add_host(shost, &pdev->dev))) {
--		printk(MPT2SAS_ERR_FMT "failure at %s:%d/%s()!\n",
+-		pr_err(MPT3SAS_FMT "failure at %s:%d/%s()!\n",
 -		    ioc->name, __FILE__, __LINE__, __func__);
 -		list_del(&ioc->list);
 -		goto out_add_shost_fail;
 -	}
 -
  	/* register EEDP capabilities with SCSI layer */
- 	if (prot_mask)
+ 	if (prot_mask > 0)
  		scsi_host_set_prot(shost, prot_mask);
-@@ -8361,16 +8353,23 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 		}
- 	} else
- 		ioc->hide_drives = 0;
-+
+@@ -7886,15 +7878,21 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		    ioc->name, __FILE__, __LINE__, __func__);
+ 		goto out_attach_fail;
+ 	}
 +	if ((scsi_add_host(shost, &pdev->dev))) {
-+		printk(MPT2SAS_ERR_FMT "failure at %s:%d/%s()!\n",
++		pr_err(MPT3SAS_FMT "failure at %s:%d/%s()!\n",
 +		    ioc->name, __FILE__, __LINE__, __func__);
++		list_del(&ioc->list);
 +		goto out_add_shost_fail;
 +	}
 +
  	scsi_scan_host(shost);
- 
  	return 0;
- 
-+ out_add_shost_fail:
-+	mpt2sas_base_detach(ioc);
+-
++out_add_shost_fail:
++	mpt3sas_base_detach(ioc);
   out_attach_fail:
  	destroy_workqueue(ioc->firmware_event_thread);
   out_thread_fail:
