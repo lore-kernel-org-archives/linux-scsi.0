@@ -1,16 +1,15 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH V3 4/7] Drivers: scsi: storvsc: Fix a bug in handling
- VMBUS protocol version
-Date: Mon, 14 Jul 2014 08:16:38 +0200
-Message-ID: <53C375C6.8060703@suse.de>
+Subject: Re: [PATCH 5/7] Drivers: scsi: storvsc: Implement a timedout handler
+Date: Mon, 14 Jul 2014 08:16:55 +0200
+Message-ID: <53C375D7.5080608@suse.de>
 References: <1405183684-23928-1-git-send-email-kys@microsoft.com>
  <1405183712-23967-1-git-send-email-kys@microsoft.com>
- <1405183712-23967-4-git-send-email-kys@microsoft.com>
+ <1405183712-23967-5-git-send-email-kys@microsoft.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="iso-8859-1"; Format="flowed"
 Content-Transfer-Encoding: quoted-printable
 Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <1405183712-23967-4-git-send-email-kys@microsoft.com>
+In-Reply-To: <1405183712-23967-5-git-send-email-kys@microsoft.com>
 List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
  <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
 List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
@@ -25,57 +24,54 @@ Cc: stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 On 07/12/2014 06:48 PM, K. Y. Srinivasan wrote:
-> Based on the negotiated VMBUS protocol version, we adjust the size of the=
- storage
-> protocol messages. The two sizes we currently handle are pre-win8 and pos=
-t-win8.
-> In WS2012 R2, we are negotiating higher VMBUS protocol version than the w=
-in8
-> version. Make adjustments to correctly handle this.
+> On Azure, we have seen instances of unbounded I/O latencies. To deal with
+> this issue, implement handler that can reset the timeout. Note that the
+> host gaurantees that it will respond to each command that has been issued.
 >
-> In this version of the patch I have addressed comments from
-> Christoph Hellwig <hch@infradead.org>
 >
 > Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
 > Cc: <stable@vger.kernel.org>
 > ---
->   drivers/scsi/storvsc_drv.c |   17 ++++++++++-------
->   1 files changed, 10 insertions(+), 7 deletions(-)
+>   drivers/scsi/storvsc_drv.c |   10 ++++++++++
+>   1 files changed, 10 insertions(+), 0 deletions(-)
 >
 > diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-> index 8f8847e..7e8a642 100644
+> index 7e8a642..3516761 100644
 > --- a/drivers/scsi/storvsc_drv.c
 > +++ b/drivers/scsi/storvsc_drv.c
-> @@ -1752,19 +1752,22 @@ static int storvsc_probe(struct hv_device *device,
->   	 * set state to properly communicate with the host.
->   	 */
+> @@ -33,6 +33,7 @@
+>   #include <linux/device.h>
+>   #include <linux/hyperv.h>
+>   #include <linux/mempool.h>
+> +#include <linux/blkdev.h>
+>   #include <scsi/scsi.h>
+>   #include <scsi/scsi_cmnd.h>
+>   #include <scsi/scsi_host.h>
+> @@ -1518,6 +1519,14 @@ static int storvsc_host_reset_handler(struct scsi_=
+cmnd *scmnd)
+>   	return SUCCESS;
+>   }
 >
-> -	if (vmbus_proto_version =3D=3D VERSION_WIN8) {
-> -		sense_buffer_size =3D POST_WIN7_STORVSC_SENSE_BUFFER_SIZE;
-> -		vmscsi_size_delta =3D 0;
-> -		vmstor_current_major =3D VMSTOR_WIN8_MAJOR;
-> -		vmstor_current_minor =3D VMSTOR_WIN8_MINOR;
-> -	} else {
-> +	switch (vmbus_proto_version) {
-> +	case VERSION_WS2008:
-> +	case VERSION_WIN7:
->   		sense_buffer_size =3D PRE_WIN8_STORVSC_SENSE_BUFFER_SIZE;
->   		vmscsi_size_delta =3D sizeof(struct vmscsi_win8_extension);
->   		vmstor_current_major =3D VMSTOR_WIN7_MAJOR;
->   		vmstor_current_minor =3D VMSTOR_WIN7_MINOR;
-> +		break;
-> +	default:
-> +		sense_buffer_size =3D POST_WIN7_STORVSC_SENSE_BUFFER_SIZE;
-> +		vmscsi_size_delta =3D 0;
-> +		vmstor_current_major =3D VMSTOR_WIN8_MAJOR;
-> +		vmstor_current_minor =3D VMSTOR_WIN8_MINOR;
-> +		break;
->   	}
->
-> -
->   	if (dev_id->driver_data =3D=3D SFC_GUID)
->   		scsi_driver.can_queue =3D (STORVSC_MAX_IO_REQUESTS *
->   					 STORVSC_FC_MAX_TARGETS);
+> +static enum blk_eh_timer_return storvsc_timeout_handler(struct scsi_cmnd=
+ *scmnd)
+> +{
+> +	/*
+> +	 * The host will respond; ask for more time.
+> +	 */
+> +	return BLK_EH_RESET_TIMER;
+> +}
+> +
+>   static bool storvsc_scsi_cmd_ok(struct scsi_cmnd *scmnd)
+>   {
+>   	bool allowed =3D true;
+> @@ -1697,6 +1706,7 @@ static struct scsi_host_template scsi_driver =3D {
+>   	.bios_param =3D		storvsc_get_chs,
+>   	.queuecommand =3D		storvsc_queuecommand,
+>   	.eh_host_reset_handler =3D	storvsc_host_reset_handler,
+> +	.eh_timed_out =3D		storvsc_timeout_handler,
+>   	.slave_alloc =3D		storvsc_device_alloc,
+>   	.slave_destroy =3D	storvsc_device_destroy,
+>   	.slave_configure =3D	storvsc_device_configure,
 >
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
