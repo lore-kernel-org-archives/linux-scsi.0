@@ -1,34 +1,48 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [RESEND][PATCH 08/10][SCSI]mpt2sas: Get IOC_FACTS information using handshake protocol only after HBA card gets into READY or Operational state
-Date: Tue, 15 Jul 2014 13:58:57 -0400
-Message-ID: <yq1wqbetsf2.fsf@sermon.lab.mkp.net>
-References: <20140625103532.GA12953@avagotech.com>
+From: Mikulas Patocka <mpatocka@redhat.com>
+Subject: ANNOUNCE: SCSI XCOPY support for the kernel and device mapper
+Date: Tue, 15 Jul 2014 14:33:13 -0400 (EDT)
+Message-ID: <alpine.LRH.2.02.1407151359430.5499@file01.intranet.prod.int.rdu2.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140625103532.GA12953@avagotech.com> (Sreekanth Reddy's message
-	of "Wed, 25 Jun 2014 16:05:32 +0530")
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Reddy, Sreekanth" <Sreekanth.Reddy@avagotech.com>
-Cc: jejb@kernel.org, JBottomley@Parallels.com, linux-scsi@vger.kernel.org, Sathya.Prakash@avagotech.com, Nagalakshmi.Nandigama@avagotech.com, linux-kernel@vger.kernel.org, hch@infradead.org, martin.petersen@oracle.com
+To: "Alasdair G. Kergon" <agk@redhat.com>, Mike Snitzer <msnitzer@redhat.com>, Jonathan Brassow <jbrassow@redhat.com>, Edward Thornber <thornber@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>
+Cc: dm-devel@redhat.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "Sreekanth" == Reddy, Sreekanth <Sreekanth.Reddy@avagotech.com> writes:
+Hi
 
-Sreekanth> The driver would send IOC facts only if HBA is in operational
-Sreekanth> or ready state. If it is in fault state, a diagnostic reset
-Sreekanth> would be issued. It would wait for 10 seconds to exit out of
-Sreekanth> reset state. If the HBA continues to be in reset state, then
-Sreekanth> the HBA wouldn't be claimed by the driver.
+I annouce that I released the first version of a patch set that makes it 
+possible to use SCSI XCOPY offload for the block layer and device mapper.
 
-Your patch header describes what used to happen. What does the patched
-code do?
+The patchset is at 
+http://people.redhat.com/~mpatocka/patches/kernel/xcopy/series.html It 
+requires kernel version at least 3.16-rc4. It was tested on target-core 
+iSCSI implementation.
 
-Also, several of your patches move large functions around within the
-file. That makes it really hard to figure out what the actual code
-changes are. Please split changes like that in two: One patch that moves
-stuff around in bulk without any functional changes and a second that
-addresses the issue at hand. That makes reviewing much easier.
+It is based on Martin Petersen's work 
+https://git.kernel.org/cgit/linux/kernel/git/mkp/linux.git/commit/?h=xcopy&id=0bdeed274e16b3038a851552188512071974eea8, 
+but it is changed significantly so that it is possible to propagate XCOPY 
+bios through the device mapper stack.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+The basic architecture is this: in the function blkdev_issue_copy we 
+create two bios, one for read and one for write (with bi_rw READ|REQ_COPY 
+and WRITE|REQ_COPY). Both bios have a pointer to the same bio_copy 
+structure. These two bios travel independently through the device mapper 
+stack - each bio can go through different device mapper devices. When both 
+the bios reach the physical block device (in the function blk_queue_bio) 
+the bio pair is collected and a XCOPY request is allocated and sent to the 
+scsi disk driver.
+
+Note that because device mapper mapping can dynamically change, there no 
+guarantee that the XCOPY command succeeds. If it ends with an error, the 
+caller is supposed to perform the copying manually.
+
+The dm-kcopyd subsystem is modified to use the XCOPY command, so device 
+mapper targets that use it (mirror, snapshot, thin, cache) take advantage 
+of copy offload automatically.
+
+There is a new ioctl BLKCOPY that makes it possible to use copy offload 
+from userspace.
+
+Mikulas
