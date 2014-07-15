@@ -1,22 +1,25 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
 Subject: Re: [RESEND][PATCH 06/10][SCSI]mpt2sas: For >2TB volumes, DirectDrive support sends IO's with LBA bit 31 to IR FW instead of DirectDrive
-Date: Tue, 15 Jul 2014 10:00:32 -0400
-Message-ID: <yq1r41mwwlb.fsf@sermon.lab.mkp.net>
+Date: Tue, 15 Jul 2014 12:02:05 -0400
+Message-ID: <yq1fvi2wqyq.fsf@sermon.lab.mkp.net>
 References: <20140625103418.GA12939@avagotech.com>
 	<yq1oawtxoqv.fsf@sermon.lab.mkp.net>
 	<CAK=zhgosXeox35kVvuiTm8EZaD2-e_Lxz79uFFAP0c1cMJNbcg@mail.gmail.com>
 	<CAK=zhgq6bXRBapfBy+Nx5uFFLUuj1cH78x0RXCU1Vk8Y9NWheA@mail.gmail.com>
 	<yq1fvi3y736.fsf@sermon.lab.mkp.net>
 	<CAK=zhgrUWOS-pPjamF+z+AZZvdXz_JxyKgdTv6Zae0oLk=qQog@mail.gmail.com>
+	<yq1r41mwwlb.fsf@sermon.lab.mkp.net>
+	<CAK=zhgrE0QBgyyLTU0Jdq2cAbKbd=wY4zfMGo2ux9nWz9oBgiQ@mail.gmail.com>
+	<CAK=zhgpqcFu5WKLEOD9E=K9DURO9HEtXE8VDVpScLiZK+3JsAQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:28622 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:40805 "EHLO
 	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750899AbaGOOAk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Jul 2014 10:00:40 -0400
-In-Reply-To: <CAK=zhgrUWOS-pPjamF+z+AZZvdXz_JxyKgdTv6Zae0oLk=qQog@mail.gmail.com>
-	(Sreekanth Reddy's message of "Tue, 15 Jul 2014 18:18:37 +0530")
+	with ESMTP id S1751166AbaGOQCN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Jul 2014 12:02:13 -0400
+In-Reply-To: <CAK=zhgpqcFu5WKLEOD9E=K9DURO9HEtXE8VDVpScLiZK+3JsAQ@mail.gmail.com>
+	(Sreekanth Reddy's message of "Tue, 15 Jul 2014 21:24:52 +0530")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
@@ -24,26 +27,21 @@ Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Nagalakshmi Nandigama <na
 
 >>>>> "Sreekanth" == Sreekanth Reddy <sreekanth.reddy@avagotech.com> writes:
 
-Sreekanth> Also coming to first point i.e. the usage of scsi_get_lba()
-Sreekanth> API instead of parsing the CDB. During an experiment I
-Sreekanth> observe that when I use the 'sg_dd if=/dev/sg0 of=/dev/null
-Sreekanth> count=1' command for read operation then the output of this
-Sreekanth> API is all FFFF's i.e.  0xffffffff (i.e. LBA is 0xffffffff
-Sreekanth> instead of 0x00000000 for 32 bit LBA).
+Sreekanth> I have tried with this diff. And I still observe the invalid
+Sreekanth> LBA (i.e.  0xFFFFFFFF) with scsi_get_lba() API when I used
+Sreekanth> the sg_dd with input file specified as /dev/sg0.
 
-scsi_get_lba() returns a sector_t. I suspect it is all the type casting
-that is messing things up.
+Yeah, I now remember that scsi_get_lba() fails for PC commands.
 
->> p_lba is 32-bit but READ(16)/WRITE(16) take an 8-byte LBA. Your patch
->> addresses the v_lba being 64-bit but not p_lba.
+Sreekanth> Also below section of code will overwrite the CDB operation
+Sreekanth> code. and the final CDB has the some junk values.
 
-I now see that you have two almost identical code paths to deal with
-p_lba.
+Yep, already fixed that.
 
-How about something like this (untested):
+Please try the updated patch below.
 
 diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-index 5055f925d2cd..24efc83d8e11 100644
+index 5055f925d2cd..11617f6b8c60 100644
 --- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
 +++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
 @@ -55,6 +55,8 @@
@@ -55,7 +53,7 @@ index 5055f925d2cd..24efc83d8e11 100644
  #include "mpt2sas_base.h"
  
  MODULE_AUTHOR(MPT2SAS_AUTHOR);
-@@ -3857,85 +3859,41 @@ _scsih_setup_direct_io(struct MPT2SAS_ADAPTER *ioc, struct scsi_cmnd *scmd,
+@@ -3857,85 +3859,47 @@ _scsih_setup_direct_io(struct MPT2SAS_ADAPTER *ioc, struct scsi_cmnd *scmd,
  	struct _raid_device *raid_device, Mpi2SCSIIORequest_t *mpi_request,
  	u16 smid)
  {
@@ -144,6 +142,11 @@ index 5055f925d2cd..24efc83d8e11 100644
 +	    cmd != READ_16 && cmd != WRITE_16)
 +		return;
 +
++	if (cmd == READ_10 || cmd == WRITE_10)
++		v_lba = get_unaligned_be32(&mpi_request->CDB.CDB32[2]);
++	else
++		v_lba = get_unaligned_be64(&mpi_request->CDB.CDB32[2]);
++
 +	v_lba = scsi_get_lba(scmd);
 +	io_size = scsi_bufflen(scmd) >> raid_device->block_exponent;
 +
@@ -166,9 +169,10 @@ index 5055f925d2cd..24efc83d8e11 100644
 +	mpi_request->DevHandle = cpu_to_le16(raid_device->pd_handle[column]);
 +
 +	if (cmd == READ_10 || cmd == WRITE_10)
-+		put_unaligned_be32(lower_32_bits(p_lba), mpi_request->CDB.CDB32);
++		put_unaligned_be32(lower_32_bits(p_lba),
++				   &mpi_request->CDB.CDB32[2]);
 +	else
-+		put_unaligned_be64(p_lba, mpi_request->CDB.CDB32);
++		put_unaligned_be64(p_lba, &mpi_request->CDB.CDB32[2]);
 +
 +	_scsih_scsi_direct_io_set(ioc, smid, 1);
  }
