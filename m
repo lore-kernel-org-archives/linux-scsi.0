@@ -1,7 +1,7 @@
 From: Mikulas Patocka <mpatocka@redhat.com>
-Subject: [PATCH 13/15] dm kcopyd: support copy offload
-Date: Tue, 15 Jul 2014 15:43:19 -0400 (EDT)
-Message-ID: <alpine.LRH.2.02.1407151542580.14632@file01.intranet.prod.int.rdu2.redhat.com>
+Subject: [PATCH 12/15] dm kcopyd: introduce the function submit_job
+Date: Tue, 15 Jul 2014 15:42:51 -0400 (EDT)
+Message-ID: <alpine.LRH.2.02.1407151541350.14632@file01.intranet.prod.int.rdu2.redhat.com>
 References: <alpine.LRH.2.02.1407151531140.14632@file01.intranet.prod.int.rdu2.redhat.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
@@ -12,85 +12,49 @@ To: "Alasdair G. Kergon" <agk@redhat.com>, Mike Snitzer <msnitzer@redhat.com>, J
 Cc: dm-devel@redhat.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-This patch adds copy offload support to dm-kcopyd. If copy offload fails,
-copying is performed using dm-io, just like before.
-
-There is a module parameter "copy_offload" that can be set to enable or
-disable this feature. It can be used to test performance of copy offload.
+We move some code to a function submit_job. It is needed for the next
+patch that calls submit_job from another place.
 
 Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
 
 ---
- drivers/md/dm-kcopyd.c |   38 +++++++++++++++++++++++++++++++++++++-
- 1 file changed, 37 insertions(+), 1 deletion(-)
+ drivers/md/dm-kcopyd.c |   19 ++++++++++++-------
+ 1 file changed, 12 insertions(+), 7 deletions(-)
 
 Index: linux-3.16-rc5/drivers/md/dm-kcopyd.c
 ===================================================================
---- linux-3.16-rc5.orig/drivers/md/dm-kcopyd.c	2014-07-15 16:18:15.000000000 +0200
-+++ linux-3.16-rc5/drivers/md/dm-kcopyd.c	2014-07-15 19:20:34.000000000 +0200
-@@ -96,6 +96,9 @@ static DEFINE_SPINLOCK(throttle_spinlock
-  */
- #define MAX_SLEEPS			10
- 
-+static bool copy_offload = true;
-+module_param(copy_offload, bool, S_IRUGO | S_IWUSR);
-+
- static void io_job_start(struct dm_kcopyd_throttle *t)
- {
- 	unsigned throttle, now, difference;
-@@ -358,6 +361,8 @@ struct kcopyd_job {
- 	sector_t progress;
- 
- 	struct kcopyd_job *master_job;
-+
-+	struct work_struct copy_work;
- };
- 
- static struct kmem_cache *_job_cache;
-@@ -709,6 +714,31 @@ static void submit_job(struct kcopyd_job
+--- linux-3.16-rc5.orig/drivers/md/dm-kcopyd.c	2014-07-14 16:45:23.000000000 +0200
++++ linux-3.16-rc5/drivers/md/dm-kcopyd.c	2014-07-14 17:28:36.000000000 +0200
+@@ -698,6 +698,17 @@ static void split_job(struct kcopyd_job 
  	}
  }
  
-+static void copy_offload_work(struct work_struct *work)
++static void submit_job(struct kcopyd_job *job)
 +{
-+	struct kcopyd_job *job = container_of(work, struct kcopyd_job, copy_work);
-+	sector_t copied;
-+
-+	blkdev_issue_copy(job->source.bdev, job->source.sector,
-+			  job->dests[0].bdev, job->dests[0].sector,
-+			  job->source.count,
-+			  GFP_NOIO | __GFP_NORETRY | __GFP_NOMEMALLOC | __GFP_NOWARN,
-+			  NULL, NULL, &copied);
-+
-+	job->source.sector += copied;
-+	job->source.count -= copied;
-+	job->dests[0].sector += copied;
-+	job->dests[0].count -= copied;
-+
-+	submit_job(job);
-+}
-+
-+static void try_copy_offload(struct kcopyd_job *job)
-+{
-+	INIT_WORK(&job->copy_work, copy_offload_work);
-+	queue_work(job->kc->kcopyd_wq, &job->copy_work);
++	if (job->source.count <= SUB_JOB_SIZE)
++		dispatch_job(job);
++	else {
++		mutex_init(&job->lock);
++		job->progress = 0;
++		split_job(job);
++	}
 +}
 +
  int dm_kcopyd_copy(struct dm_kcopyd_client *kc, struct dm_io_region *from,
  		   unsigned int num_dests, struct dm_io_region *dests,
  		   unsigned int flags, dm_kcopyd_notify_fn fn, void *context)
-@@ -757,7 +787,13 @@ int dm_kcopyd_copy(struct dm_kcopyd_clie
+@@ -746,13 +757,7 @@ int dm_kcopyd_copy(struct dm_kcopyd_clie
  	job->context = context;
  	job->master_job = job;
  
--	submit_job(job);
-+	if (copy_offload && num_dests == 1 &&
-+	    bdev_copy_offload(job->source.bdev) &&
-+	    bdev_copy_offload(job->dests[0].bdev)) {
-+		try_copy_offload(job);
-+	} else {
-+		submit_job(job);
-+	}
+-	if (job->source.count <= SUB_JOB_SIZE)
+-		dispatch_job(job);
+-	else {
+-		mutex_init(&job->lock);
+-		job->progress = 0;
+-		split_job(job);
+-	}
++	submit_job(job);
  
  	return 0;
  }
