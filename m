@@ -1,63 +1,96 @@
 From: Mikulas Patocka <mpatocka@redhat.com>
-Subject: [PATCH 11/15] dm stripe: support copy
-Date: Tue, 15 Jul 2014 15:41:30 -0400 (EDT)
-Message-ID: <alpine.LRH.2.02.1407151541020.14632@file01.intranet.prod.int.rdu2.redhat.com>
+Subject: [PATCH 13/15] dm kcopyd: support copy offload
+Date: Tue, 15 Jul 2014 15:43:19 -0400 (EDT)
+Message-ID: <alpine.LRH.2.02.1407151542580.14632@file01.intranet.prod.int.rdu2.redhat.com>
 References: <alpine.LRH.2.02.1407151531140.14632@file01.intranet.prod.int.rdu2.redhat.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44304 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933168AbaGOTlz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Jul 2014 15:41:55 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <alpine.LRH.2.02.1407151531140.14632@file01.intranet.prod.int.rdu2.redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: "Alasdair G. Kergon" <agk@redhat.com>, Mike Snitzer <msnitzer@redhat.com>, Jonathan Brassow <jbrassow@redhat.com>, Edward Thornber <thornber@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@infradead.org>
 Cc: dm-devel@redhat.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-Support the copy operation for the stripe target.
+This patch adds copy offload support to dm-kcopyd. If copy offload fails,
+copying is performed using dm-io, just like before.
 
-In stripe_merge, we verify that the underlying device supports copy. If it
-doesn't, we can fail fast without any bio being contructed.
+There is a module parameter "copy_offload" that can be set to enable or
+disable this feature. It can be used to test performance of copy offload.
 
 Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
 
 ---
- drivers/md/dm-stripe.c |   11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
+ drivers/md/dm-kcopyd.c |   38 +++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 37 insertions(+), 1 deletion(-)
 
-Index: linux-3.16-rc4/drivers/md/dm-stripe.c
+Index: linux-3.16-rc5/drivers/md/dm-kcopyd.c
 ===================================================================
---- linux-3.16-rc4.orig/drivers/md/dm-stripe.c	2014-07-11 22:20:25.000000000 +0200
-+++ linux-3.16-rc4/drivers/md/dm-stripe.c	2014-07-11 22:23:54.000000000 +0200
-@@ -165,6 +165,7 @@ static int stripe_ctr(struct dm_target *
- 	ti->num_flush_bios = stripes;
- 	ti->num_discard_bios = stripes;
- 	ti->num_write_same_bios = stripes;
-+	ti->copy_supported = 1;
+--- linux-3.16-rc5.orig/drivers/md/dm-kcopyd.c	2014-07-15 16:18:15.000000000 +0200
++++ linux-3.16-rc5/drivers/md/dm-kcopyd.c	2014-07-15 19:20:34.000000000 +0200
+@@ -96,6 +96,9 @@ static DEFINE_SPINLOCK(throttle_spinlock
+  */
+ #define MAX_SLEEPS			10
  
- 	sc->chunk_size = chunk_size;
- 	if (chunk_size & (chunk_size - 1))
-@@ -416,11 +417,19 @@ static int stripe_merge(struct dm_target
- 	struct stripe_c *sc = ti->private;
- 	sector_t bvm_sector = bvm->bi_sector;
- 	uint32_t stripe;
-+	struct block_device *bdev;
- 	struct request_queue *q;
- 
- 	stripe_map_sector(sc, bvm_sector, &stripe, &bvm_sector);
- 
--	q = bdev_get_queue(sc->stripe[stripe].dev->bdev);
-+	bdev = sc->stripe[stripe].dev->bdev;
++static bool copy_offload = true;
++module_param(copy_offload, bool, S_IRUGO | S_IWUSR);
 +
-+	if (unlikely((bvm->bi_rw & REQ_COPY) != 0)) {
-+		if (!bdev_copy_offload(bdev))
-+			return 0;
+ static void io_job_start(struct dm_kcopyd_throttle *t)
+ {
+ 	unsigned throttle, now, difference;
+@@ -358,6 +361,8 @@ struct kcopyd_job {
+ 	sector_t progress;
+ 
+ 	struct kcopyd_job *master_job;
++
++	struct work_struct copy_work;
+ };
+ 
+ static struct kmem_cache *_job_cache;
+@@ -709,6 +714,31 @@ static void submit_job(struct kcopyd_job
+ 	}
+ }
+ 
++static void copy_offload_work(struct work_struct *work)
++{
++	struct kcopyd_job *job = container_of(work, struct kcopyd_job, copy_work);
++	sector_t copied;
++
++	blkdev_issue_copy(job->source.bdev, job->source.sector,
++			  job->dests[0].bdev, job->dests[0].sector,
++			  job->source.count,
++			  GFP_NOIO | __GFP_NORETRY | __GFP_NOMEMALLOC | __GFP_NOWARN,
++			  NULL, NULL, &copied);
++
++	job->source.sector += copied;
++	job->source.count -= copied;
++	job->dests[0].sector += copied;
++	job->dests[0].count -= copied;
++
++	submit_job(job);
++}
++
++static void try_copy_offload(struct kcopyd_job *job)
++{
++	INIT_WORK(&job->copy_work, copy_offload_work);
++	queue_work(job->kc->kcopyd_wq, &job->copy_work);
++}
++
+ int dm_kcopyd_copy(struct dm_kcopyd_client *kc, struct dm_io_region *from,
+ 		   unsigned int num_dests, struct dm_io_region *dests,
+ 		   unsigned int flags, dm_kcopyd_notify_fn fn, void *context)
+@@ -757,7 +787,13 @@ int dm_kcopyd_copy(struct dm_kcopyd_clie
+ 	job->context = context;
+ 	job->master_job = job;
+ 
+-	submit_job(job);
++	if (copy_offload && num_dests == 1 &&
++	    bdev_copy_offload(job->source.bdev) &&
++	    bdev_copy_offload(job->dests[0].bdev)) {
++		try_copy_offload(job);
++	} else {
++		submit_job(job);
 +	}
-+
-+	q = bdev_get_queue(bdev);
- 	if (!q->merge_bvec_fn)
- 		return max_size;
  
-
+ 	return 0;
+ }
