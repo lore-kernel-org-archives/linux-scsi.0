@@ -1,51 +1,39 @@
 From: Mikulas Patocka <mpatocka@redhat.com>
-Subject: Re: ANNOUNCE: SCSI XCOPY support for the kernel and device mapper
-Date: Tue, 15 Jul 2014 15:26:10 -0400 (EDT)
-Message-ID: <alpine.LRH.2.02.1407151523120.14632@file01.intranet.prod.int.rdu2.redhat.com>
-References: <alpine.LRH.2.02.1407151359430.5499@file01.intranet.prod.int.rdu2.redhat.com> <20140715185513.GA5331@infradead.org>
+Subject: [PATCH 0/15] SCSI XCOPY support for the kernel and device mapper
+Date: Tue, 15 Jul 2014 15:34:13 -0400 (EDT)
+Message-ID: <alpine.LRH.2.02.1407151531140.14632@file01.intranet.prod.int.rdu2.redhat.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51780 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933286AbaGOT0k (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Jul 2014 15:26:40 -0400
-In-Reply-To: <20140715185513.GA5331@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Alasdair G. Kergon" <agk@redhat.com>, Mike Snitzer <msnitzer@redhat.com>, Jonathan Brassow <jbrassow@redhat.com>, Edward Thornber <thornber@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@infradead.org>
+Cc: dm-devel@redhat.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "Alasdair G. Kergon" <agk@redhat.com>, Mike Snitzer <msnitzer@redhat.com>, Jonathan Brassow <jbrassow@redhat.com>, Edward Thornber <thornber@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, dm-devel@redhat.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
+This patch series makes it possible to use SCSI XCOPY offload for the 
+block layer and device mapper.
 
+It is based on Martin Petersen's work
+https://git.kernel.org/cgit/linux/kernel/git/mkp/linux.git/commit/?h=xcopy&id=0bdeed274e16b3038a851552188512071974eea8,
+but it is changed significantly so that it is possible to propagate XCOPY
+bios through the device mapper stack.
 
-On Tue, 15 Jul 2014, Christoph Hellwig wrote:
+The basic architecture is this: in the function blkdev_issue_copy we
+create two bios, one for read and one for write (with bi_rw READ|REQ_COPY
+and WRITE|REQ_COPY). Both bios have a pointer to the same bio_copy
+structure. These two bios travel independently through the device mapper
+stack - each bio can go through different device mapper devices. When both
+the bios reach the physical block device (in the function blk_queue_bio)
+the bio pair is collected and a XCOPY request is allocated and sent to the
+scsi disk driver.
 
-> On Tue, Jul 15, 2014 at 02:33:13PM -0400, Mikulas Patocka wrote:
-> > Hi
-> > 
-> > I annouce that I released the first version of a patch set that makes it 
-> > possible to use SCSI XCOPY offload for the block layer and device mapper.
-> > 
-> > The patchset is at 
-> > http://people.redhat.com/~mpatocka/patches/kernel/xcopy/series.html It 
-> > requires kernel version at least 3.16-rc4. It was tested on target-core 
-> > iSCSI implementation.
-> 
-> Can you send the series to the mainling list(s)?  That makes it a lot
-> easier to do a quick review.
+Note that because device mapper mapping can dynamically change, there no
+guarantee that the XCOPY command succeeds. If it ends with an error, the
+caller is supposed to perform the copying manually.
 
-I'll post them to the lists.
+The dm-kcopyd subsystem is modified to use the XCOPY command, so device
+mapper targets that use it (mirror, snapshot, thin, cache) take advantage
+of copy offload automatically.
 
-> > The dm-kcopyd subsystem is modified to use the XCOPY command, so device 
-> > mapper targets that use it (mirror, snapshot, thin, cache) take advantage 
-> > of copy offload automatically.
-> 
-> That sounds good, do you have any benchmarking data that shows the
-> advantage of using XCOPY?
-
-dm-mirror resynchronization is 4 times faster with XCOPY offload, but it 
-is just a benchmark on a network with iSCSI between two slow machines.
-
-I hope that we get some benchmarks on a real hardware.
-
-Mikulas
+There is a new ioctl BLKCOPY that makes it possible to use copy offload
+from userspace.
