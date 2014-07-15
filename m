@@ -1,48 +1,40 @@
-From: Mikulas Patocka <mpatocka@redhat.com>
-Subject: ANNOUNCE: SCSI XCOPY support for the kernel and device mapper
-Date: Tue, 15 Jul 2014 14:33:13 -0400 (EDT)
-Message-ID: <alpine.LRH.2.02.1407151359430.5499@file01.intranet.prod.int.rdu2.redhat.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: ANNOUNCE: SCSI XCOPY support for the kernel and device mapper
+Date: Tue, 15 Jul 2014 11:55:13 -0700
+Message-ID: <20140715185513.GA5331@infradead.org>
+References: <alpine.LRH.2.02.1407151359430.5499@file01.intranet.prod.int.rdu2.redhat.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Alasdair G. Kergon" <agk@redhat.com>, Mike Snitzer <msnitzer@redhat.com>, Jonathan Brassow <jbrassow@redhat.com>, Edward Thornber <thornber@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>
-Cc: dm-devel@redhat.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:41928 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932826AbaGOSzQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Jul 2014 14:55:16 -0400
+Content-Disposition: inline
+In-Reply-To: <alpine.LRH.2.02.1407151359430.5499@file01.intranet.prod.int.rdu2.redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mikulas Patocka <mpatocka@redhat.com>
+Cc: "Alasdair G. Kergon" <agk@redhat.com>, Mike Snitzer <msnitzer@redhat.com>, Jonathan Brassow <jbrassow@redhat.com>, Edward Thornber <thornber@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, dm-devel@redhat.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Hi
+On Tue, Jul 15, 2014 at 02:33:13PM -0400, Mikulas Patocka wrote:
+> Hi
+> 
+> I annouce that I released the first version of a patch set that makes it 
+> possible to use SCSI XCOPY offload for the block layer and device mapper.
+> 
+> The patchset is at 
+> http://people.redhat.com/~mpatocka/patches/kernel/xcopy/series.html It 
+> requires kernel version at least 3.16-rc4. It was tested on target-core 
+> iSCSI implementation.
 
-I annouce that I released the first version of a patch set that makes it 
-possible to use SCSI XCOPY offload for the block layer and device mapper.
+Can you send the series to the mainling list(s)?  That makes it a lot
+easier to do a quick review.
 
-The patchset is at 
-http://people.redhat.com/~mpatocka/patches/kernel/xcopy/series.html It 
-requires kernel version at least 3.16-rc4. It was tested on target-core 
-iSCSI implementation.
+> The dm-kcopyd subsystem is modified to use the XCOPY command, so device 
+> mapper targets that use it (mirror, snapshot, thin, cache) take advantage 
+> of copy offload automatically.
 
-It is based on Martin Petersen's work 
-https://git.kernel.org/cgit/linux/kernel/git/mkp/linux.git/commit/?h=xcopy&id=0bdeed274e16b3038a851552188512071974eea8, 
-but it is changed significantly so that it is possible to propagate XCOPY 
-bios through the device mapper stack.
+That sounds good, do you have any benchmarking data that shows the
+advantage of using XCOPY?
 
-The basic architecture is this: in the function blkdev_issue_copy we 
-create two bios, one for read and one for write (with bi_rw READ|REQ_COPY 
-and WRITE|REQ_COPY). Both bios have a pointer to the same bio_copy 
-structure. These two bios travel independently through the device mapper 
-stack - each bio can go through different device mapper devices. When both 
-the bios reach the physical block device (in the function blk_queue_bio) 
-the bio pair is collected and a XCOPY request is allocated and sent to the 
-scsi disk driver.
-
-Note that because device mapper mapping can dynamically change, there no 
-guarantee that the XCOPY command succeeds. If it ends with an error, the 
-caller is supposed to perform the copying manually.
-
-The dm-kcopyd subsystem is modified to use the XCOPY command, so device 
-mapper targets that use it (mirror, snapshot, thin, cache) take advantage 
-of copy offload automatically.
-
-There is a new ioctl BLKCOPY that makes it possible to use copy offload 
-from userspace.
-
-Mikulas
