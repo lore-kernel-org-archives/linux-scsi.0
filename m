@@ -1,120 +1,154 @@
 From: Mikulas Patocka <mpatocka@redhat.com>
-Subject: [PATCH 8/15] dm: introduce dm_ask_for_duplicate_bios
-Date: Tue, 15 Jul 2014 15:39:54 -0400 (EDT)
-Message-ID: <alpine.LRH.2.02.1407151539230.14632@file01.intranet.prod.int.rdu2.redhat.com>
+Subject: [PATCH 9/15] dm: implement copy
+Date: Tue, 15 Jul 2014 15:40:29 -0400 (EDT)
+Message-ID: <alpine.LRH.2.02.1407151539590.14632@file01.intranet.prod.int.rdu2.redhat.com>
 References: <alpine.LRH.2.02.1407151531140.14632@file01.intranet.prod.int.rdu2.redhat.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51120 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933003AbaGOTkW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Jul 2014 15:40:22 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <alpine.LRH.2.02.1407151531140.14632@file01.intranet.prod.int.rdu2.redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: "Alasdair G. Kergon" <agk@redhat.com>, Mike Snitzer <msnitzer@redhat.com>, Jonathan Brassow <jbrassow@redhat.com>, Edward Thornber <thornber@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@infradead.org>
 Cc: dm-devel@redhat.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-[ this isn't connected to XCOPY, but it is requires for the following
-device mapper patches to apply cleanly ]
+This patch implements basic copy support for device mapper core.
+Individual targets can enable copy support by setting ti->copy_supported.
 
-This function can be used if the target needs to receive another duplicate
-of the current bio.
+Device mapper device advertises copy support if at least one target
+supports copy and for this target, at least one underlying device supports
+copy.
 
 Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
 
 ---
- drivers/md/dm.c               |   24 +++++++++++++++++++-----
- include/linux/device-mapper.h |    2 ++
- 2 files changed, 21 insertions(+), 5 deletions(-)
+ drivers/md/dm-table.c         |    9 +++++++++
+ drivers/md/dm.c               |   42 +++++++++++++++++++++++++++++++++++++++---
+ include/linux/device-mapper.h |    5 +++++
+ 3 files changed, 53 insertions(+), 3 deletions(-)
 
 Index: linux-3.16-rc5/drivers/md/dm.c
 ===================================================================
---- linux-3.16-rc5.orig/drivers/md/dm.c	2014-07-14 16:25:29.000000000 +0200
-+++ linux-3.16-rc5/drivers/md/dm.c	2014-07-14 16:25:31.000000000 +0200
-@@ -1161,9 +1161,9 @@ EXPORT_SYMBOL_GPL(dm_set_target_max_io_l
-  *	 to make it empty)
-  * The target requires that region 3 is to be sent in the next bio.
-  *
-- * If the target wants to receive multiple copies of the bio (via num_*bios, etc),
-- * the partially processed part (the sum of regions 1+2) must be the same for all
-- * copies of the bio.
-+ * If the target wants to receive multiple copies of the bio with num_*_bios or
-+ * dm_ask_for_duplicate_bio, the partially processed part (the sum of regions
-+ * 1+2) must be the same for all copies of the bio.
-  */
- void dm_accept_partial_bio(struct bio *bio, unsigned n_sectors)
- {
-@@ -1177,6 +1177,17 @@ void dm_accept_partial_bio(struct bio *b
+--- linux-3.16-rc5.orig/drivers/md/dm.c	2014-07-14 16:26:24.000000000 +0200
++++ linux-3.16-rc5/drivers/md/dm.c	2014-07-14 16:41:15.000000000 +0200
+@@ -1403,6 +1403,31 @@ static int __send_write_same(struct clon
+ 	return __send_changing_extent_only(ci, get_num_write_same_bios, NULL);
  }
- EXPORT_SYMBOL_GPL(dm_accept_partial_bio);
  
-+/*
-+ * The target driver can call this function only from the map routine. The
-+ * target driver requests that the dm sends more duplicates of the current bio.
-+ */
-+void dm_ask_for_duplicate_bios(struct bio *bio, unsigned n_duplicates)
++static int __send_copy(struct clone_info *ci)
 +{
-+	struct dm_target_io *tio = container_of(bio, struct dm_target_io, clone);
-+	(*tio->num_bios) += n_duplicates;
-+}
-+EXPORT_SYMBOL_GPL(dm_ask_for_duplicate_bios);
++	struct dm_target *ti;
++	sector_t bound;
 +
- static void __map_bio(struct dm_target_io *tio)
- {
- 	int r;
-@@ -1267,12 +1278,14 @@ static struct dm_target_io *alloc_tio(st
++	ti = dm_table_find_target(ci->map, ci->sector);
++	if (!dm_target_is_valid(ti))
++		return -EIO;
++
++	if (!ti->copy_supported)
++		return -EOPNOTSUPP;
++
++	bound = max_io_len(ci->sector, ti);
++
++	if (unlikely(ci->sector_count > bound))
++		return -EOPNOTSUPP;
++
++	__clone_and_map_simple_bio(ci, ti, 0, NULL, NULL);
++
++	ci->sector += ci->sector_count;
++	ci->sector_count = 0;
++
++	return 0;
++}
++
+ /*
+  * Select the correct strategy for processing a non-flush bio.
+  */
+@@ -1416,6 +1441,8 @@ static int __split_and_process_non_flush
+ 		return __send_discard(ci);
+ 	else if (unlikely(bio->bi_rw & REQ_WRITE_SAME))
+ 		return __send_write_same(ci);
++	else if (unlikely(bio->bi_rw & REQ_COPY))
++		return __send_copy(ci);
  
- static void __clone_and_map_simple_bio(struct clone_info *ci,
- 				       struct dm_target *ti,
--				       unsigned target_bio_nr, unsigned *len)
-+				       unsigned target_bio_nr, unsigned *len,
-+				       unsigned *num_bios)
- {
- 	struct dm_target_io *tio = alloc_tio(ci, ti, ci->bio->bi_max_vecs, target_bio_nr);
- 	struct bio *clone = &tio->clone;
+ 	ti = dm_table_find_target(ci->map, ci->sector);
+ 	if (!dm_target_is_valid(ti))
+@@ -1500,6 +1527,11 @@ static int dm_merge_bvec(struct request_
+ 	if (!dm_target_is_valid(ti))
+ 		goto out;
  
- 	tio->len_ptr = len;
-+	tio->num_bios = num_bios;
- 
++	if (unlikely((bvm->bi_rw & REQ_COPY) != 0)) {
++		if (!ti->copy_supported)
++			goto out_ret_max_size;
++	}
++
  	/*
- 	 * Discard requests require the bio's inline iovecs be initialized.
-@@ -1292,7 +1305,7 @@ static void __send_duplicate_bios(struct
- 	unsigned target_bio_nr;
+ 	 * Find maximum amount of I/O that won't need splitting
+ 	 */
+@@ -1523,17 +1555,21 @@ static int dm_merge_bvec(struct request_
+ 	 * entries.  So always set max_size to 0, and the code below allows
+ 	 * just one page.
+ 	 */
+-	else if (queue_max_hw_sectors(q) <= PAGE_SIZE >> 9)
++	else if (likely(!(bvm->bi_rw & REQ_COPY)) &&
++		 queue_max_hw_sectors(q) <= PAGE_SIZE >> 9)
+ 		max_size = 0;
  
- 	for (target_bio_nr = 0; target_bio_nr < num_bios; target_bio_nr++)
--		__clone_and_map_simple_bio(ci, ti, target_bio_nr, len);
-+		__clone_and_map_simple_bio(ci, ti, target_bio_nr, len, &num_bios);
+ out:
+-	dm_put_live_table_fast(md);
+ 	/*
+ 	 * Always allow an entire first page
+ 	 */
+-	if (max_size <= biovec->bv_len && !(bvm->bi_size >> SECTOR_SHIFT))
++	if (likely(!(bvm->bi_rw & REQ_COPY)) &&
++	    max_size <= biovec->bv_len && !(bvm->bi_size >> SECTOR_SHIFT))
+ 		max_size = biovec->bv_len;
+ 
++out_ret_max_size:
++	dm_put_live_table_fast(md);
++
+ 	return max_size;
  }
  
- static int __send_empty_flush(struct clone_info *ci)
-@@ -1318,6 +1331,7 @@ static void __clone_and_map_data_bio(str
- 	for (target_bio_nr = 0; target_bio_nr < num_target_bios; target_bio_nr++) {
- 		tio = alloc_tio(ci, ti, 0, target_bio_nr);
- 		tio->len_ptr = len;
-+		tio->num_bios = &num_target_bios;
- 		clone_bio(tio, bio, sector, *len);
- 		__map_bio(tio);
- 	}
 Index: linux-3.16-rc5/include/linux/device-mapper.h
 ===================================================================
---- linux-3.16-rc5.orig/include/linux/device-mapper.h	2014-07-14 16:25:29.000000000 +0200
-+++ linux-3.16-rc5/include/linux/device-mapper.h	2014-07-14 16:25:31.000000000 +0200
-@@ -271,6 +271,7 @@ struct dm_target_io {
- 	struct dm_target *ti;
- 	unsigned target_bio_nr;
- 	unsigned *len_ptr;
-+	unsigned *num_bios;
- 	struct bio clone;
+--- linux-3.16-rc5.orig/include/linux/device-mapper.h	2014-07-14 16:26:24.000000000 +0200
++++ linux-3.16-rc5/include/linux/device-mapper.h	2014-07-14 16:41:15.000000000 +0200
+@@ -251,6 +251,11 @@ struct dm_target {
+ 	 * Set if this target does not return zeroes on discarded blocks.
+ 	 */
+ 	bool discard_zeroes_data_unsupported:1;
++
++	/*
++	 * Set if the target supports XCOPY.
++	 */
++	bool copy_supported:1;
  };
  
-@@ -382,6 +383,7 @@ struct gendisk *dm_disk(struct mapped_de
- int dm_suspended(struct dm_target *ti);
- int dm_noflush_suspending(struct dm_target *ti);
- void dm_accept_partial_bio(struct bio *bio, unsigned n_sectors);
-+void dm_ask_for_duplicate_bios(struct bio *bio, unsigned n_duplicates);
- union map_info *dm_get_rq_mapinfo(struct request *rq);
+ /* Each target can link one of these into the table */
+Index: linux-3.16-rc5/drivers/md/dm-table.c
+===================================================================
+--- linux-3.16-rc5.orig/drivers/md/dm-table.c	2014-07-14 16:26:25.000000000 +0200
++++ linux-3.16-rc5/drivers/md/dm-table.c	2014-07-14 16:41:15.000000000 +0200
+@@ -489,6 +489,11 @@ static int dm_set_device_limits(struct d
+ 		       q->limits.alignment_offset,
+ 		       (unsigned long long) start << SECTOR_SHIFT);
  
- struct queue_limits *dm_get_queue_limits(struct mapped_device *md);
-
++	if (ti->copy_supported)
++		limits->max_copy_sectors =
++			min_not_zero(limits->max_copy_sectors,
++				bdev_get_queue(bdev)->limits.max_copy_sectors);
++
+ 	/*
+ 	 * Check if merge fn is supported.
+ 	 * If not we'll force DM to use PAGE_SIZE or
+@@ -1298,6 +1303,10 @@ combine_limits:
+ 			       dm_device_name(table->md),
+ 			       (unsigned long long) ti->begin,
+ 			       (unsigned long long) ti->len);
++
++		limits->max_copy_sectors =
++					min_not_zero(limits->max_copy_sectors,
++					ti_limits.max_copy_sectors);
+ 	}
+ 
+ 	return validate_hardware_logical_block_alignment(table, limits);
