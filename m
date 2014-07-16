@@ -1,29 +1,25 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [RESEND][PATCH 08/10][SCSI]mpt2sas: Get IOC_FACTS information
- using handshake protocol only after HBA card gets into READY or Operational
- state
-Date: Wed, 16 Jul 2014 00:06:51 -0700
-Message-ID: <20140716070651.GA17886@infradead.org>
-References: <20140625103532.GA12953@avagotech.com>
- <yq1wqbetsf2.fsf@sermon.lab.mkp.net>
- <CAK=zhgoWvnXFdGqVevWJmLpDebb0fq9euYjxJE+EEGYqLoPrhw@mail.gmail.com>
+Subject: Re: [PATCH net-next 0/4] cxgb4i: Add ipv6 support
+Date: Wed, 16 Jul 2014 01:08:49 -0700
+Message-ID: <20140716080849.GA29924@infradead.org>
+References: <1405479353-2289-1-git-send-email-anish@chelsio.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:35080 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754504AbaGPIIv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Jul 2014 04:08:51 -0400
 Content-Disposition: inline
-In-Reply-To: <CAK=zhgoWvnXFdGqVevWJmLpDebb0fq9euYjxJE+EEGYqLoPrhw@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, jejb@kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, Sathya Prakash <Sathya.Prakash@avagotech.com>, Nagalakshmi Nandigama <Nagalakshmi.Nandigama@avagotech.com>, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+In-Reply-To: <1405479353-2289-1-git-send-email-anish@chelsio.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Anish Bhatt <anish@chelsio.com>
+Cc: netdev@vger.kernel.org, linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org, davem@davemloft.net, roland@purestorage.com, hch@infradead.org, michaelc@cs.wisc.edu, jbottomley@parallels.com, kxie@chelsio.com, leedom@chelsio.com, hariprasad@chelsio.com, swise@opengridcomputing.com
 
-On Wed, Jul 16, 2014 at 12:00:22PM +0530, Sreekanth Reddy wrote:
-> Next time onwards I will follow as per your suggestions while posting the
-> patches to upstream.
+Hi Anish,
 
-Btw, it would be good to resend the series with the various updates from
-Martin once he's done with the review.  That makes it a lot easier for
-me to pick it up.
+the scsi side changes looks fine to me.  Unless you have major updates
+to the scsi driver for 3.17 that could cause conflicts I'm fine with
+merging the whole series in through the networking tree.
 
-If you want to make my life even easier send the series using
-git-send-patch so that it's properly threaded.
