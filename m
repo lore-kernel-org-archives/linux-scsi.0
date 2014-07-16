@@ -1,13 +1,13 @@
 From: Alexander Gordeev <agordeev@redhat.com>
-Subject: [PATCH v2 RESEND 20/23] pmcraid: Use pci_enable_msix_range() instead of pci_enable_msix()
-Date: Wed, 16 Jul 2014 20:05:24 +0200
-Message-ID: <0d3b343a9a1e2146add1dcf51791c4e5914d5612.1405533479.git.agordeev@redhat.com>
+Subject: [PATCH v2 RESEND 21/23] qla2xxx: Use pci_enable_msix_range() instead of pci_enable_msix()
+Date: Wed, 16 Jul 2014 20:05:25 +0200
+Message-ID: <cf38d1596543fd61c099bc0b834c2ea7a11f8b28.1405533479.git.agordeev@redhat.com>
 References: <cover.1405533479.git.agordeev@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1405533479.git.agordeev@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>, Anil Ravindranath <anil_ravindranath@pmc-sierra.com>, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>, qla2xxx-upstream@qlogic.com, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 As result of deprecation of MSI-X/MSI enablement functions
@@ -17,39 +17,61 @@ new pci_enable_msi_range()  or pci_enable_msi_exact()
 and pci_enable_msix_range() or pci_enable_msix_exact()
 interfaces.
 
+Log message code 0x00c6 preserved, although it is reported
+after successful call to pci_enable_msix_range(), not before
+possibly unsuccessful call to pci_enable_msix(). Consumers
+of the error code should not notice the difference.
+
 Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
+Cc: qla2xxx-upstream@qlogic.com
 Cc: linux-scsi@vger.kernel.org
 Cc: linux-pci@vger.kernel.org
 ---
- drivers/scsi/pmcraid.c |   13 ++-----------
- 1 files changed, 2 insertions(+), 11 deletions(-)
+ drivers/scsi/qla2xxx/qla_isr.c |   27 +++++++++++----------------
+ 1 files changed, 11 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
-index c06af7f..6d0f208 100644
---- a/drivers/scsi/pmcraid.c
-+++ b/drivers/scsi/pmcraid.c
-@@ -4698,19 +4698,10 @@ pmcraid_register_interrupt_handler(struct pmcraid_instance *pinstance)
- 		for (i = 0; i < PMCRAID_NUM_MSIX_VECTORS; i++)
- 			entries[i].entry = i;
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index a56825c..52d420f 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -2923,27 +2923,22 @@ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
+ 	for (i = 0; i < ha->msix_count; i++)
+ 		entries[i].entry = i;
  
--		rc = pci_enable_msix(pdev, entries, num_hrrq);
--		if (rc < 0)
-+		num_hrrq = pci_enable_msix_range(pdev, entries, 1, num_hrrq);
-+		if (num_hrrq < 0)
- 			goto pmcraid_isr_legacy;
- 
--		/* Check how many MSIX vectors are allocated and register
--		 * msi-x handlers for each of them giving appropriate buffer
--		 */
--		if (rc > 0) {
--			num_hrrq = rc;
--			if (pci_enable_msix(pdev, entries, num_hrrq))
--				goto pmcraid_isr_legacy;
--		}
+-	ret = pci_enable_msix(ha->pdev, entries, ha->msix_count);
+-	if (ret) {
+-		if (ret < MIN_MSIX_COUNT)
+-			goto msix_failed;
 -
- 		for (i = 0; i < num_hrrq; i++) {
- 			pinstance->hrrq_vector[i].hrrq_id = i;
- 			pinstance->hrrq_vector[i].drv_inst = pinstance;
++	ret = pci_enable_msix_range(ha->pdev,
++				    entries, MIN_MSIX_COUNT, ha->msix_count);
++	if (ret < 0) {
++		ql_log(ql_log_fatal, vha, 0x00c7,
++		    "MSI-X: Failed to enable support, "
++		    "giving   up -- %d/%d.\n",
++		    ha->msix_count, ret);
++		goto msix_out;
++	} else if (ret < ha->msix_count) {
+ 		ql_log(ql_log_warn, vha, 0x00c6,
+ 		    "MSI-X: Failed to enable support "
+ 		    "-- %d/%d\n Retry with %d vectors.\n",
+ 		    ha->msix_count, ret, ret);
+-		ha->msix_count = ret;
+-		ret = pci_enable_msix(ha->pdev, entries, ha->msix_count);
+-		if (ret) {
+-msix_failed:
+-			ql_log(ql_log_fatal, vha, 0x00c7,
+-			    "MSI-X: Failed to enable support, "
+-			    "giving   up -- %d/%d.\n",
+-			    ha->msix_count, ret);
+-			goto msix_out;
+-		}
+-		ha->max_rsp_queues = ha->msix_count - 1;
+ 	}
++	ha->msix_count = ret;
++	ha->max_rsp_queues = ha->msix_count - 1;
+ 	ha->msix_entries = kzalloc(sizeof(struct qla_msix_entry) *
+ 				ha->msix_count, GFP_KERNEL);
+ 	if (!ha->msix_entries) {
 -- 
 1.7.7.6
