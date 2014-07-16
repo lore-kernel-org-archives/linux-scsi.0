@@ -1,18 +1,34 @@
-From: Alexander Gordeev <agordeev@redhat.com>
-Subject: [PATCH v2 RESEND 15/23] mpt2sas: Use pci_enable_msix_exact() instead of pci_enable_msix()
-Date: Wed, 16 Jul 2014 20:05:19 +0200
-Message-ID: <045986b7900c6b1703010675b590284e384b8207.1405533479.git.agordeev@redhat.com>
-References: <cover.1405533479.git.agordeev@redhat.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60048 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934902AbaGPSVd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 16 Jul 2014 14:21:33 -0400
-In-Reply-To: <cover.1405533479.git.agordeev@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Arvind Kumar <arvindkumar@vmware.com>
+Subject: RE: [PATCH v2 RESEND 23/23] vmw_pvscsi: Use pci_enable_msix_exact()
+ instead of pci_enable_msix()
+Date: Wed, 16 Jul 2014 18:23:23 +0000
+Message-ID: <9424d275bdc34133a03a68877ab253d0@EX13-MBX-025.vmware.com>
+References: <cover.1405533479.git.agordeev@redhat.com>,<c27a72eaa07631ca182bfdb71d0d3d7f9f280b26.1405533479.git.agordeev@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-pci-owner@vger.kernel.org>
+In-Reply-To: <c27a72eaa07631ca182bfdb71d0d3d7f9f280b26.1405533479.git.agordeev@redhat.com>
+Content-Language: en-US
+Sender: linux-pci-owner@vger.kernel.org
+To: Alexander Gordeev <agordeev@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Cc: "pv-drivers@vmware.com" <pv-drivers@vmware.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
+
+Hi Alexander,
+
+This looks fine to me.
+
+Acked-by: Arvind Kumar <arvindkumar@vmware.com>
+
+Thanks!
+Arvind
+________________________________________
+From: Alexander Gordeev <agordeev@redhat.com>
+Sent: Wednesday, July 16, 2014 11:05 AM
 To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>, Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>, Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, support@lsi.com, DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Cc: Alexander Gordeev; Arvind Kumar; pv-drivers@vmware.com; linux-scsi@vger.kernel.org; linux-pci@vger.kernel.org
+Subject: [PATCH v2 RESEND 23/23] vmw_pvscsi: Use pci_enable_msix_exact() instead of pci_enable_msix()
 
 As result of deprecation of MSI-X/MSI enablement functions
 pci_enable_msix() and pci_enable_msi_block() all drivers
@@ -22,34 +38,27 @@ and pci_enable_msix_range() or pci_enable_msix_exact()
 interfaces.
 
 Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>
-Cc: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
-Cc: support@lsi.com
-Cc: DL-MPTFusionLinux@lsi.com
+Cc: Arvind Kumar <arvindkumar@vmware.com>
+Cc: pv-drivers@vmware.com
 Cc: linux-scsi@vger.kernel.org
 Cc: linux-pci@vger.kernel.org
+Acked-by: Arvind Kumar <arvindkumar@vmware.com>
 ---
- drivers/scsi/mpt2sas/mpt2sas_base.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/vmw_pvscsi.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-index 8b88118..6aca369 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -1432,10 +1432,10 @@ _base_enable_msix(struct MPT2SAS_ADAPTER *ioc)
- 	for (i = 0, a = entries; i < ioc->reply_queue_count; i++, a++)
- 		a->entry = i;
- 
--	r = pci_enable_msix(ioc->pdev, entries, ioc->reply_queue_count);
-+	r = pci_enable_msix_exact(ioc->pdev, entries, ioc->reply_queue_count);
- 	if (r) {
--		dfailprintk(ioc, printk(MPT2SAS_INFO_FMT "pci_enable_msix "
--		    "failed (r=%d) !!!\n", ioc->name, r));
-+		dfailprintk(ioc, printk(MPT2SAS_INFO_FMT
-+		    "pci_enable_msix_exact failed (r=%d) !!!\n", ioc->name, r));
- 		kfree(entries);
- 		goto try_ioapic;
- 	}
--- 
+diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
+index c88e146..598f65e 100644
+--- a/drivers/scsi/vmw_pvscsi.c
++++ b/drivers/scsi/vmw_pvscsi.c
+@@ -1194,7 +1194,7 @@ static int pvscsi_setup_msix(const struct pvscsi_adapter *adapter,
+        struct msix_entry entry = { 0, PVSCSI_VECTOR_COMPLETION };
+        int ret;
+
+-       ret = pci_enable_msix(adapter->dev, &entry, 1);
++       ret = pci_enable_msix_exact(adapter->dev, &entry, 1);
+        if (ret)
+                return ret;
+
+--
 1.7.7.6
-
