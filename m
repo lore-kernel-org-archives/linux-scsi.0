@@ -1,49 +1,100 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH V3 1/7] Drivers: scsi: storvsc: Change the limits to
- reflect the values on the host
-Date: Wed, 16 Jul 2014 17:30:14 +0000
-Message-ID: <758c5a92ec504dd2a2d431ce3e9bd92b@BY2PR0301MB0711.namprd03.prod.outlook.com>
-References: <1405183684-23928-1-git-send-email-kys@microsoft.com>
- <1405183712-23967-1-git-send-email-kys@microsoft.com>
- <53C37575.5030808@suse.de> <20140714083047.GB22715@infradead.org>
- <53C39B91.4010000@suse.de>
- <e6f205c16ba2414ab5645977ac038e6c@BY2PR0301MB0711.namprd03.prod.outlook.com>
- <20140716172850.GA10159@infradead.org>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] iscsi_ibft: Print correct IPv6 netmask
+Date: Wed, 16 Jul 2014 10:34:23 -0700
+Message-ID: <20140716173423.GA20528@infradead.org>
+References: <1405521089-13993-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20140716172850.GA10159@infradead.org>
-Content-Language: en-US
-Sender: stable-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Hannes Reinecke <hare@suse.de>, "jasowang@redhat.com" <jasowang@redhat.com>, "apw@canonical.com" <apw@canonical.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1405521089-13993-1-git-send-email-hare@suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Mike Christie <michaelc@cs.wisc.edu>, Peter Jones <pjones@redhat.com>, Konrad Rzeszutek Wilk <konrad@kernel.org>, netdev@linux-kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+On Wed, Jul 16, 2014 at 04:31:29PM +0200, Hannes Reinecke wrote:
+> The iBFT table only specifies a prefix length, so we need to
+> check the given IP address to figure out whether the netmask
+> should be printed in IPv4 or IPv6 style.
 
+Ccing netdev - maybe someone over there might be able to think of a
+helper function that makes this look a little less arcane..
 
-> -----Original Message-----
-> From: Christoph Hellwig [mailto:hch@infradead.org]
-> Sent: Wednesday, July 16, 2014 10:29 AM
-> To: KY Srinivasan
-> Cc: Hannes Reinecke; jasowang@redhat.com; apw@canonical.com; linux-
-> kernel@vger.kernel.org; devel@linuxdriverproject.org; ohering@suse.com;
-> jbottomley@parallels.com; linux-scsi@vger.kernel.org;
-> stable@vger.kernel.org
-> Subject: Re: [PATCH V3 1/7] Drivers: scsi: storvsc: Change the limits to reflect
-> the values on the host
 > 
-> On Wed, Jul 16, 2014 at 05:26:48PM +0000, KY Srinivasan wrote:
-> > Christoph,
-> >
-> > Is this patch-set ready to be checked in. Let me know if you want me
-> > to make any further corrections.
+> Cc: Mike Christie <michaelc@cs.wisc.edu>
+> Cc: Peter Jones <pjones@redhat.com>
+> Cc: Konrad Rzeszutek Wilk <konrad@kernel.org>
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> ---
+>  drivers/firmware/iscsi_ibft.c | 35 ++++++++++++++++++++++++++++++++---
+>  1 file changed, 32 insertions(+), 3 deletions(-)
 > 
-> Hi Ky,
+> diff --git a/drivers/firmware/iscsi_ibft.c b/drivers/firmware/iscsi_ibft.c
+> index 071c2c9..7fddab9 100644
+> --- a/drivers/firmware/iscsi_ibft.c
+> +++ b/drivers/firmware/iscsi_ibft.c
+> @@ -212,6 +212,36 @@ static ssize_t sprintf_ipaddr(char *buf, u8 *ip)
+>  	return str - buf;
+>  }
+>  
+> +static ssize_t sprintf_netmask(char *buf, u8 *ip, unsigned int prefix_len)
+> +{
+> +	char *str = buf;
+> +
+> +	if (ip[0] == 0 && ip[1] == 0 && ip[2] == 0 && ip[3] == 0 &&
+> +	    ip[4] == 0 && ip[5] == 0 && ip[6] == 0 && ip[7] == 0 &&
+> +	    ip[8] == 0 && ip[9] == 0 && ip[10] == 0xff && ip[11] == 0xff) {
+> +		__be32 val;
+> +		/*
+> +		 * IPV4
+> +		 */
+> +		val = cpu_to_be32(~((1 << (32-prefix_len))-1));
+> +		str += sprintf(str, "%pI4", &val);
+> +	} else {
+> +		u8 netmask[16];
+> +		int o = prefix_len >> 3,
+> +		    b = prefix_len & 0x7;
+> +		/*
+> +		 * IPv6
+> +		 */
+> +		memset(netmask, 0, 16);
+> +		memset(netmask, 0xff, o);
+> +		if (b != 0)
+> +			netmask[o] = 0xff & (0xff00 >> b);
+> +		str += sprintf(buf, "%pI6", netmask);
+> +	}
+> +	str += sprintf(str, "\n");
+> +	return str - buf;
+> +}
+> +
+>  static ssize_t sprintf_string(char *str, int len, char *buf)
+>  {
+>  	return sprintf(str, "%.*s\n", len, buf);
+> @@ -288,7 +318,6 @@ static ssize_t ibft_attr_show_nic(void *data, int type, char *buf)
+>  	struct ibft_nic *nic = entry->nic;
+>  	void *ibft_loc = entry->header;
+>  	char *str = buf;
+> -	__be32 val;
+>  
+>  	if (!nic)
+>  		return 0;
+> @@ -304,8 +333,8 @@ static ssize_t ibft_attr_show_nic(void *data, int type, char *buf)
+>  		str += sprintf_ipaddr(str, nic->ip_addr);
+>  		break;
+>  	case ISCSI_BOOT_ETH_SUBNET_MASK:
+> -		val = cpu_to_be32(~((1 << (32-nic->subnet_mask_prefix))-1));
+> -		str += sprintf(str, "%pI4", &val);
+> +		str += sprintf_netmask(str, nic->ip_addr,
+> +				       nic->subnet_mask_prefix);
+>  		break;
+>  	case ISCSI_BOOT_ETH_ORIGIN:
+>  		str += sprintf(str, "%d\n", nic->origin);
+> -- 
+> 1.7.12.4
 > 
-> I've applied it locally, but I'm still waiting on reviews for two important core
-> fixes before pushing out the updated tree.
-
-Thank you.
-
-K. Y
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+---end quoted text---
