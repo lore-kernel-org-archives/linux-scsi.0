@@ -1,29 +1,84 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 13/14] scsi: add support for a blk-mq based I/O path.
-Date: Wed, 16 Jul 2014 13:16:02 +0200
-Message-ID: <20140716111602.GA20623@lst.de>
-References: <1403715121-1201-1-git-send-email-hch@lst.de> <1403715121-1201-14-git-send-email-hch@lst.de> <53C65E51.3090003@cs.wisc.edu>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] iscsi_ibft: Print correct IPv6 netmask
+Date: Wed, 16 Jul 2014 16:31:29 +0200
+Message-ID: <1405521089-13993-1-git-send-email-hare@suse.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <53C65E51.3090003@cs.wisc.edu>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <axboe@kernel.dk>, Bart Van Assche <bvanassche@fusionio.com>, Robert Elliott <Elliott@hp.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, Peter Jones <pjones@redhat.com>, Konrad Rzeszutek Wilk <konrad@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Jul 16, 2014 at 06:13:21AM -0500, Mike Christie wrote:
-> I see the request timer is started before calling queue_rq, but I could
-> not figure out what the cancel_delayed_work here is for exactly. It
-> seems if the request were to time out and the eh started while queue_rq
-> was running we could end up some nasty bugs like the requested requeued
-> twice.
-> 
-> Is the cancel_delayed_work call just to be safe or is supposed to be
-> handling a case where the abort_work could be queued at this time up due
-> to a request timing out while queue_rq is running? Is this case mq specific?
+The iBFT table only specifies a prefix length, so we need to
+check the given IP address to figure out whether the netmask
+should be printed in IPv4 or IPv6 style.
 
-It was cargo cult copy & paste from the old path.  I've merged a patch
-from Bart to remove it from the old code, so it should go away here as well,
-thanks for the reminder.
+Cc: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Peter Jones <pjones@redhat.com>
+Cc: Konrad Rzeszutek Wilk <konrad@kernel.org>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/firmware/iscsi_ibft.c | 35 ++++++++++++++++++++++++++++++++---
+ 1 file changed, 32 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/firmware/iscsi_ibft.c b/drivers/firmware/iscsi_ibft.c
+index 071c2c9..7fddab9 100644
+--- a/drivers/firmware/iscsi_ibft.c
++++ b/drivers/firmware/iscsi_ibft.c
+@@ -212,6 +212,36 @@ static ssize_t sprintf_ipaddr(char *buf, u8 *ip)
+ 	return str - buf;
+ }
+ 
++static ssize_t sprintf_netmask(char *buf, u8 *ip, unsigned int prefix_len)
++{
++	char *str = buf;
++
++	if (ip[0] == 0 && ip[1] == 0 && ip[2] == 0 && ip[3] == 0 &&
++	    ip[4] == 0 && ip[5] == 0 && ip[6] == 0 && ip[7] == 0 &&
++	    ip[8] == 0 && ip[9] == 0 && ip[10] == 0xff && ip[11] == 0xff) {
++		__be32 val;
++		/*
++		 * IPV4
++		 */
++		val = cpu_to_be32(~((1 << (32-prefix_len))-1));
++		str += sprintf(str, "%pI4", &val);
++	} else {
++		u8 netmask[16];
++		int o = prefix_len >> 3,
++		    b = prefix_len & 0x7;
++		/*
++		 * IPv6
++		 */
++		memset(netmask, 0, 16);
++		memset(netmask, 0xff, o);
++		if (b != 0)
++			netmask[o] = 0xff & (0xff00 >> b);
++		str += sprintf(buf, "%pI6", netmask);
++	}
++	str += sprintf(str, "\n");
++	return str - buf;
++}
++
+ static ssize_t sprintf_string(char *str, int len, char *buf)
+ {
+ 	return sprintf(str, "%.*s\n", len, buf);
+@@ -288,7 +318,6 @@ static ssize_t ibft_attr_show_nic(void *data, int type, char *buf)
+ 	struct ibft_nic *nic = entry->nic;
+ 	void *ibft_loc = entry->header;
+ 	char *str = buf;
+-	__be32 val;
+ 
+ 	if (!nic)
+ 		return 0;
+@@ -304,8 +333,8 @@ static ssize_t ibft_attr_show_nic(void *data, int type, char *buf)
+ 		str += sprintf_ipaddr(str, nic->ip_addr);
+ 		break;
+ 	case ISCSI_BOOT_ETH_SUBNET_MASK:
+-		val = cpu_to_be32(~((1 << (32-nic->subnet_mask_prefix))-1));
+-		str += sprintf(str, "%pI4", &val);
++		str += sprintf_netmask(str, nic->ip_addr,
++				       nic->subnet_mask_prefix);
+ 		break;
+ 	case ISCSI_BOOT_ETH_ORIGIN:
+ 		str += sprintf(str, "%d\n", nic->origin);
+-- 
+1.7.12.4
