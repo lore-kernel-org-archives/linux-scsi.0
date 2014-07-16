@@ -1,100 +1,60 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] iscsi_ibft: Print correct IPv6 netmask
-Date: Wed, 16 Jul 2014 10:34:23 -0700
-Message-ID: <20140716173423.GA20528@infradead.org>
-References: <1405521089-13993-1-git-send-email-hare@suse.de>
+From: "hch@infradead.org" <hch@infradead.org>
+Subject: Re: [PATCH 4/8] Drivers: scsi: storvsc: Filter WRITE_SAME_16
+Date: Wed, 16 Jul 2014 10:38:27 -0700
+Message-ID: <20140716173827.GB20528@infradead.org>
+References: <20140709084300.GD6012@infradead.org>
+ <a31a45eddb544024a7538458b98c3611@BY2PR03MB299.namprd03.prod.outlook.com>
+ <1404935792.2184.5.camel@dabdike.int.hansenpartnership.com>
+ <2f3ae589e6f149acbe4c5dd79f905971@BY2PR03MB299.namprd03.prod.outlook.com>
+ <1404944843.2184.8.camel@dabdike.int.hansenpartnership.com>
+ <20140711063216.GA20660@infradead.org>
+ <328b7a6174ef4dd8a54a7db5ac959834@BY2PR03MB299.namprd03.prod.outlook.com>
+ <yq1a98d2z5x.fsf@sermon.lab.mkp.net>
+ <20140716110111.GA7382@infradead.org>
+ <yq14myhtijx.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
 Content-Disposition: inline
-In-Reply-To: <1405521089-13993-1-git-send-email-hare@suse.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Mike Christie <michaelc@cs.wisc.edu>, Peter Jones <pjones@redhat.com>, Konrad Rzeszutek Wilk <konrad@kernel.org>, netdev@linux-kernel.org
+In-Reply-To: <yq14myhtijx.fsf@sermon.lab.mkp.net>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: driverdev-devel-bounces@linuxdriverproject.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jasowang@redhat.com" <jasowang@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, "ohering@suse.com" <ohering@suse.com>, "hch@infradead.org" <hch@infradead.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "apw@canonical.com" <apw@canonical.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Jul 16, 2014 at 04:31:29PM +0200, Hannes Reinecke wrote:
-> The iBFT table only specifies a prefix length, so we need to
-> check the given IP address to figure out whether the netmask
-> should be printed in IPv4 or IPv6 style.
+On Wed, Jul 16, 2014 at 11:44:18AM -0400, Martin K. Petersen wrote:
+> There are lots of devices out there that support WRITE SAME(10) or (16)
+> without the UNMAP bit. And there are devices that support WRITE SAME w/
+> UNMAP functionality but not "regular" WRITE SAME.
 
-Ccing netdev - maybe someone over there might be able to think of a
-helper function that makes this look a little less arcane..
+Oh, we actually have devices that support WRITE SAME with unmap, but not
+without?  That's defintively a little strange.
 
-> 
-> Cc: Mike Christie <michaelc@cs.wisc.edu>
-> Cc: Peter Jones <pjones@redhat.com>
-> Cc: Konrad Rzeszutek Wilk <konrad@kernel.org>
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> ---
->  drivers/firmware/iscsi_ibft.c | 35 ++++++++++++++++++++++++++++++++---
->  1 file changed, 32 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/firmware/iscsi_ibft.c b/drivers/firmware/iscsi_ibft.c
-> index 071c2c9..7fddab9 100644
-> --- a/drivers/firmware/iscsi_ibft.c
-> +++ b/drivers/firmware/iscsi_ibft.c
-> @@ -212,6 +212,36 @@ static ssize_t sprintf_ipaddr(char *buf, u8 *ip)
->  	return str - buf;
->  }
->  
-> +static ssize_t sprintf_netmask(char *buf, u8 *ip, unsigned int prefix_len)
-> +{
-> +	char *str = buf;
-> +
-> +	if (ip[0] == 0 && ip[1] == 0 && ip[2] == 0 && ip[3] == 0 &&
-> +	    ip[4] == 0 && ip[5] == 0 && ip[6] == 0 && ip[7] == 0 &&
-> +	    ip[8] == 0 && ip[9] == 0 && ip[10] == 0xff && ip[11] == 0xff) {
-> +		__be32 val;
-> +		/*
-> +		 * IPV4
-> +		 */
-> +		val = cpu_to_be32(~((1 << (32-prefix_len))-1));
-> +		str += sprintf(str, "%pI4", &val);
-> +	} else {
-> +		u8 netmask[16];
-> +		int o = prefix_len >> 3,
-> +		    b = prefix_len & 0x7;
-> +		/*
-> +		 * IPv6
-> +		 */
-> +		memset(netmask, 0, 16);
-> +		memset(netmask, 0xff, o);
-> +		if (b != 0)
-> +			netmask[o] = 0xff & (0xff00 >> b);
-> +		str += sprintf(buf, "%pI6", netmask);
-> +	}
-> +	str += sprintf(str, "\n");
-> +	return str - buf;
-> +}
-> +
->  static ssize_t sprintf_string(char *str, int len, char *buf)
->  {
->  	return sprintf(str, "%.*s\n", len, buf);
-> @@ -288,7 +318,6 @@ static ssize_t ibft_attr_show_nic(void *data, int type, char *buf)
->  	struct ibft_nic *nic = entry->nic;
->  	void *ibft_loc = entry->header;
->  	char *str = buf;
-> -	__be32 val;
->  
->  	if (!nic)
->  		return 0;
-> @@ -304,8 +333,8 @@ static ssize_t ibft_attr_show_nic(void *data, int type, char *buf)
->  		str += sprintf_ipaddr(str, nic->ip_addr);
->  		break;
->  	case ISCSI_BOOT_ETH_SUBNET_MASK:
-> -		val = cpu_to_be32(~((1 << (32-nic->subnet_mask_prefix))-1));
-> -		str += sprintf(str, "%pI4", &val);
-> +		str += sprintf_netmask(str, nic->ip_addr,
-> +				       nic->subnet_mask_prefix);
->  		break;
->  	case ISCSI_BOOT_ETH_ORIGIN:
->  		str += sprintf(str, "%d\n", nic->origin);
-> -- 
-> 1.7.12.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
----end quoted text---
+> no_write_same is there to prevent the REQ_WRITE_SAME use case (for which
+> we have really weak heuristics). Your patch overloads no_write_same so
+> it also governs a REQ_DISCARD use case.
+
+Yes, and it did this intentionally.  I really wouldn't expect devices
+to support WRITE SAME with UNMAP but blow up on a WRITE SAME without
+it (and not just simple fail it in an orderly way).
+
+> My proposed black list patch fixes the hyperv discard issue. So I don't
+> see why we'd need to overload no_write_same which was meant for an
+> entirely different purpose.
+
+It definitively seems odd to default to trying WRITE SAME for unmap
+for a device that explicitly tells us that it doesn't support WRITE
+SAME.
+
+Note that I'm not against your patch - I suspect forcing us to read
+EVPD pages even for devices that claim to be SPC-2 will come in useful
+in various scenarios.
