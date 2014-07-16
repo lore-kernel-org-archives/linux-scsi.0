@@ -1,64 +1,59 @@
-From: James Bottomley <jbottomley@parallels.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
 Subject: Re: [PATCH 4/8] Drivers: scsi: storvsc: Filter WRITE_SAME_16
-Date: Wed, 16 Jul 2014 14:53:47 +0000
-Message-ID: <1405522426.2225.10.camel@jarvis.lan>
+Date: Wed, 16 Jul 2014 11:44:18 -0400
+Message-ID: <yq14myhtijx.fsf@sermon.lab.mkp.net>
 References: <1404866812-26950-1-git-send-email-kys@microsoft.com>
-	 <1404866812-26950-4-git-send-email-kys@microsoft.com>
-	 <20140709084300.GD6012@infradead.org>
-	 <a31a45eddb544024a7538458b98c3611@BY2PR03MB299.namprd03.prod.outlook.com>
-	 <1404935792.2184.5.camel@dabdike.int.hansenpartnership.com>
-	 <2f3ae589e6f149acbe4c5dd79f905971@BY2PR03MB299.namprd03.prod.outlook.com>
-	 <1404944843.2184.8.camel@dabdike.int.hansenpartnership.com>
-	 <20140711063216.GA20660@infradead.org>
-	 <328b7a6174ef4dd8a54a7db5ac959834@BY2PR03MB299.namprd03.prod.outlook.com>
-	 <yq1a98d2z5x.fsf@sermon.lab.mkp.net> <20140716110111.GA7382@infradead.org>
+ <1404866812-26950-4-git-send-email-kys@microsoft.com>
+ <20140709084300.GD6012@infradead.org>
+ <a31a45eddb544024a7538458b98c3611@BY2PR03MB299.namprd03.prod.outlook.com>
+ <1404935792.2184.5.camel@dabdike.int.hansenpartnership.com>
+ <2f3ae589e6f149acbe4c5dd79f905971@BY2PR03MB299.namprd03.prod.outlook.com>
+ <1404944843.2184.8.camel@dabdike.int.hansenpartnership.com>
+ <20140711063216.GA20660@infradead.org>
+ <328b7a6174ef4dd8a54a7db5ac959834@BY2PR03MB299.namprd03.prod.outlook.com>
+ <yq1a98d2z5x.fsf@sermon.lab.mkp.net>
+ <20140716110111.GA7382@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20140716110111.GA7382@infradead.org>
-Content-Language: en-US
-Content-ID: <4631051B0E5CE84EBC23F9B11473E066@sw.swsoft.com>
-Sender: stable-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <20140716110111.GA7382@infradead.org> (hch@infradead.org's
+ message of "Wed, 16 Jul 2014 04:01:11 -0700")
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: driverdev-devel-bounces@linuxdriverproject.org
 To: "hch@infradead.org" <hch@infradead.org>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "apw@canonical.com" <apw@canonical.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "kys@microsoft.com" <kys@microsoft.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "ohering@suse.com" <ohering@suse.com>, "jasowang@redhat.com" <jasowang@redhat.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "jasowang@redhat.com" <jasowang@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, "ohering@suse.com" <ohering@suse.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "apw@canonical.com" <apw@canonical.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gV2VkLCAyMDE0LTA3LTE2IGF0IDA0OjAxIC0wNzAwLCBoY2hAaW5mcmFkZWFkLm9yZyB3cm90
-ZToNCj4gT24gU3VuLCBKdWwgMTMsIDIwMTQgYXQgMDg6NTg6MzRBTSAtMDQwMCwgTWFydGluIEsu
-IFBldGVyc2VuIHdyb3RlOg0KPiA+ID4+Pj4+ICJLWSIgPT0gS1kgU3Jpbml2YXNhbiA8a3lzQG1p
-Y3Jvc29mdC5jb20+IHdyaXRlczoNCj4gPiANCj4gPiBLWT4gV2luZG93cyBob3N0cyBkbyBzdXBw
-b3J0IFVOTUFQIGFuZCBzZXQgdGhlIGZpZWxkIGluIHRoZQ0KPiA+IEtZPiBFVlBELiBIb3dldmVy
-LCBzaW5jZSB0aGUgaG9zdCBhZHZlcnRpc2VzIFNQQy0yIGNvbXBsaWFuY2UsIExpbnV4DQo+ID4g
-S1k+IGRvZXMgbm90IGV2ZW4gcXVlcnkgdGhlIFZQRCBwYWdlLg0KPiA+ICANCj4gPiA+PiBJZiB3
-ZSB3YW50IHRvIGVuYWJsZSBVTk1BUCBpbiB0aGlzIGNhc2UgSSdkIHByZWZlciBhIGJsYWNrbGlz
-dCBlbnRyeQ0KPiA+ID4+IHRoYW4gdHJ5aW5nIFVOTUFQIGRlc3BpdGUgdGhlIGRldmljZSBub3Qg
-YWR2ZXJ0aXNpbmcgaXQuDQo+ID4gDQo+ID4gSSBhZ3JlZSB3aXRoIHRoYXQuIFdlIGNvdWxkIGRv
-IHNvbWV0aGluZyBsaWtlIHRoZSBwYXRjaCBiZWxvdy4NCj4gPiANCj4gPiBIb3dldmVyLCBJIGRv
-IHRoaW5rIGl0J3MgYSBnb29kIGlkZWEgdGhhdCB5b3UgZ3V5cyBhcmUgbG9va2luZyBpbnRvDQo+
-ID4gcmVwb3J0aW5nIFNQQy0zLg0KPiANCj4gS1kgbWVudGlvbmVkIHRoYXQgdGhleSBoYXZlIGEg
-cHJvdG90eXBlIGZvciB0aGF0IG5vdy4NCj4gDQo+IEJ0dywgSSBsb29rZWQgb3ZlciBzZC5jIGEg
-Yml0IG1vcmUsIGFuZCBJIHRoaW5rIEkgdW5kZXJzdGFuZCB3aHkgdGhleQ0KPiBnZXQgdGhlIFdS
-SVRFIFNBTUUgY29tbWFuZHMgbm93Og0KPiANCj4gcmVhZF9jYXBhY2l0eV8xNiBjYWxscyBzZF9j
-b25maWdfZGlzY2FyZChzZGtwLCBTRF9MQlBfV1MxNikgaWYgdGhlIExQQk1FDQo+IGJpdCBpcyBz
-ZXQuICBBdCBsZWFzdCBvbGRlciBTQkMgZHJhZnRzIGxlZnQgaXQgd2lkZSBvcGVuIGlmIGEgdGFy
-Z2V0DQo+IHN1cHBvcnRzIFdSSVRFIFNBTUUgd2l0aCBVTk1BUCBvciBVTk1BUCBpbiB0aGlzIGNh
-c2UuICBTbyBJIHRoaW5rIHdlJ2QNCj4gc3RpbGwgd2FudCBhIHBhdGNoIHRvIHVzZSBVTk1BUCBp
-bnN0ZWFkIG9mIFdSSVRFIFNBTUUgZm9yIHRoaXMgY2FzZSwNCj4gd2hpY2ggc2hvdWxkIGFsc28g
-Zml4IGh5cGVydi4gIEJlbG93IGlzIHRoZSBxdWljayBoYWNrIHZlcnNpb24gb2YgdGhhdA0KPiB0
-aGF0IGp1c3QgY2hlY2tzIHRoZSBob3N0IG5vX3dyaXRlX3NhbWUgZmxhZywgYXMgdGhlIG9uZSBv
-biB0aGUgZGV2aWNlDQo+IGlzbid0IHNldCB5ZXQgLSBJIGd1ZXNzIHdlIG5lZWQgdG8gcmVmYWN0
-b3Igc29tZSBvZiB0aGF0IGxvZ2ljLg0KPiANCj4gDQo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Nj
-c2kvc2QuYyBiL2RyaXZlcnMvc2NzaS9zZC5jDQo+IGluZGV4IDg3NTY2YjUuLjQ0ODBmZGYgMTAw
-NjQ0DQo+IC0tLSBhL2RyaXZlcnMvc2NzaS9zZC5jDQo+ICsrKyBiL2RyaXZlcnMvc2NzaS9zZC5j
-DQo+IEBAIC0yMDM1LDcgKzIwMzUsMTAgQEAgc3RhdGljIGludCByZWFkX2NhcGFjaXR5XzE2KHN0
-cnVjdCBzY3NpX2Rpc2sgKnNka3AsIHN0cnVjdCBzY3NpX2RldmljZSAqc2RwLA0KPiAgCQlpZiAo
-YnVmZmVyWzE0XSAmIDB4NDApIC8qIExCUFJaICovDQo+ICAJCQlzZGtwLT5sYnByeiA9IDE7DQo+
-ICANCj4gLQkJc2RfY29uZmlnX2Rpc2NhcmQoc2RrcCwgU0RfTEJQX1dTMTYpOw0KPiArCQlpZiAo
-c2RwLT5ob3N0LT5ub193cml0ZV9zYW1lKQ0KPiArCQkJc2RfY29uZmlnX2Rpc2NhcmQoc2RrcCwg
-U0RfTEJQX1VOTUFQKTsNCj4gKwkJZWxzZQ0KPiArCQkJc2RfY29uZmlnX2Rpc2NhcmQoc2RrcCwg
-U0RfTEJQX1dTMTYpOw0KDQpSaWdodCwgSSBhbHJlYWR5IHNhaWQgdGhpcyB3YXMgdGhlIHByb2Js
-ZW06IHRoYXQgd2FzIHRoZSByZWFzb24gZm9yIG15DQpwYXRjaC4gIEhvd2V2ZXIsIHRoZXJlIGFy
-ZSBhIGNvdXBsZSBvZiBvdGhlciBjYXNlcyAoaW5jbHVkaW5nIHRoZSAvc3lzDQplbnRyeSkgd2hp
-Y2ggaXMgd2h5IEkgcGF0Y2hlZCBzZF9jb25maWdfZGlzY2FyZCBpbnN0ZWFkLg0KDQpKYW1lcw0K
-DQo=
+>>>>> "hch" == hch@infradead org <hch@infradead.org> writes:
+
+hch> read_capacity_16 calls sd_config_discard(sdkp, SD_LBP_WS16) if the
+hch> LPBME bit is set.  At least older SBC drafts left it wide open if a
+hch> target supports WRITE SAME with UNMAP or UNMAP in this case.
+
+Correct.
+
+hch> So I think we'd still want a patch to use UNMAP instead of WRITE
+hch> SAME for this case, which should also fix hyperv. 
+
+There are lots of devices out there that support WRITE SAME(10) or (16)
+without the UNMAP bit. And there are devices that support WRITE SAME w/
+UNMAP functionality but not "regular" WRITE SAME.
+
+no_write_same is there to prevent the REQ_WRITE_SAME use case (for which
+we have really weak heuristics). Your patch overloads no_write_same so
+it also governs a REQ_DISCARD use case.
+
+My proposed black list patch fixes the hyperv discard issue. So I don't
+see why we'd need to overload no_write_same which was meant for an
+entirely different purpose.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
