@@ -1,84 +1,64 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH] iscsi_ibft: Print correct IPv6 netmask
-Date: Wed, 16 Jul 2014 16:31:29 +0200
-Message-ID: <1405521089-13993-1-git-send-email-hare@suse.de>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, Peter Jones <pjones@redhat.com>, Konrad Rzeszutek Wilk <konrad@kernel.org>
+From: James Bottomley <jbottomley@parallels.com>
+Subject: Re: [PATCH 4/8] Drivers: scsi: storvsc: Filter WRITE_SAME_16
+Date: Wed, 16 Jul 2014 14:53:47 +0000
+Message-ID: <1405522426.2225.10.camel@jarvis.lan>
+References: <1404866812-26950-1-git-send-email-kys@microsoft.com>
+	 <1404866812-26950-4-git-send-email-kys@microsoft.com>
+	 <20140709084300.GD6012@infradead.org>
+	 <a31a45eddb544024a7538458b98c3611@BY2PR03MB299.namprd03.prod.outlook.com>
+	 <1404935792.2184.5.camel@dabdike.int.hansenpartnership.com>
+	 <2f3ae589e6f149acbe4c5dd79f905971@BY2PR03MB299.namprd03.prod.outlook.com>
+	 <1404944843.2184.8.camel@dabdike.int.hansenpartnership.com>
+	 <20140711063216.GA20660@infradead.org>
+	 <328b7a6174ef4dd8a54a7db5ac959834@BY2PR03MB299.namprd03.prod.outlook.com>
+	 <yq1a98d2z5x.fsf@sermon.lab.mkp.net> <20140716110111.GA7382@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20140716110111.GA7382@infradead.org>
+Content-Language: en-US
+Content-ID: <4631051B0E5CE84EBC23F9B11473E066@sw.swsoft.com>
+Sender: stable-owner@vger.kernel.org
+To: "hch@infradead.org" <hch@infradead.org>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "apw@canonical.com" <apw@canonical.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "kys@microsoft.com" <kys@microsoft.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "ohering@suse.com" <ohering@suse.com>, "jasowang@redhat.com" <jasowang@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-The iBFT table only specifies a prefix length, so we need to
-check the given IP address to figure out whether the netmask
-should be printed in IPv4 or IPv6 style.
-
-Cc: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Peter Jones <pjones@redhat.com>
-Cc: Konrad Rzeszutek Wilk <konrad@kernel.org>
-Signed-off-by: Hannes Reinecke <hare@suse.de>
----
- drivers/firmware/iscsi_ibft.c | 35 ++++++++++++++++++++++++++++++++---
- 1 file changed, 32 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/firmware/iscsi_ibft.c b/drivers/firmware/iscsi_ibft.c
-index 071c2c9..7fddab9 100644
---- a/drivers/firmware/iscsi_ibft.c
-+++ b/drivers/firmware/iscsi_ibft.c
-@@ -212,6 +212,36 @@ static ssize_t sprintf_ipaddr(char *buf, u8 *ip)
- 	return str - buf;
- }
- 
-+static ssize_t sprintf_netmask(char *buf, u8 *ip, unsigned int prefix_len)
-+{
-+	char *str = buf;
-+
-+	if (ip[0] == 0 && ip[1] == 0 && ip[2] == 0 && ip[3] == 0 &&
-+	    ip[4] == 0 && ip[5] == 0 && ip[6] == 0 && ip[7] == 0 &&
-+	    ip[8] == 0 && ip[9] == 0 && ip[10] == 0xff && ip[11] == 0xff) {
-+		__be32 val;
-+		/*
-+		 * IPV4
-+		 */
-+		val = cpu_to_be32(~((1 << (32-prefix_len))-1));
-+		str += sprintf(str, "%pI4", &val);
-+	} else {
-+		u8 netmask[16];
-+		int o = prefix_len >> 3,
-+		    b = prefix_len & 0x7;
-+		/*
-+		 * IPv6
-+		 */
-+		memset(netmask, 0, 16);
-+		memset(netmask, 0xff, o);
-+		if (b != 0)
-+			netmask[o] = 0xff & (0xff00 >> b);
-+		str += sprintf(buf, "%pI6", netmask);
-+	}
-+	str += sprintf(str, "\n");
-+	return str - buf;
-+}
-+
- static ssize_t sprintf_string(char *str, int len, char *buf)
- {
- 	return sprintf(str, "%.*s\n", len, buf);
-@@ -288,7 +318,6 @@ static ssize_t ibft_attr_show_nic(void *data, int type, char *buf)
- 	struct ibft_nic *nic = entry->nic;
- 	void *ibft_loc = entry->header;
- 	char *str = buf;
--	__be32 val;
- 
- 	if (!nic)
- 		return 0;
-@@ -304,8 +333,8 @@ static ssize_t ibft_attr_show_nic(void *data, int type, char *buf)
- 		str += sprintf_ipaddr(str, nic->ip_addr);
- 		break;
- 	case ISCSI_BOOT_ETH_SUBNET_MASK:
--		val = cpu_to_be32(~((1 << (32-nic->subnet_mask_prefix))-1));
--		str += sprintf(str, "%pI4", &val);
-+		str += sprintf_netmask(str, nic->ip_addr,
-+				       nic->subnet_mask_prefix);
- 		break;
- 	case ISCSI_BOOT_ETH_ORIGIN:
- 		str += sprintf(str, "%d\n", nic->origin);
--- 
-1.7.12.4
+T24gV2VkLCAyMDE0LTA3LTE2IGF0IDA0OjAxIC0wNzAwLCBoY2hAaW5mcmFkZWFkLm9yZyB3cm90
+ZToNCj4gT24gU3VuLCBKdWwgMTMsIDIwMTQgYXQgMDg6NTg6MzRBTSAtMDQwMCwgTWFydGluIEsu
+IFBldGVyc2VuIHdyb3RlOg0KPiA+ID4+Pj4+ICJLWSIgPT0gS1kgU3Jpbml2YXNhbiA8a3lzQG1p
+Y3Jvc29mdC5jb20+IHdyaXRlczoNCj4gPiANCj4gPiBLWT4gV2luZG93cyBob3N0cyBkbyBzdXBw
+b3J0IFVOTUFQIGFuZCBzZXQgdGhlIGZpZWxkIGluIHRoZQ0KPiA+IEtZPiBFVlBELiBIb3dldmVy
+LCBzaW5jZSB0aGUgaG9zdCBhZHZlcnRpc2VzIFNQQy0yIGNvbXBsaWFuY2UsIExpbnV4DQo+ID4g
+S1k+IGRvZXMgbm90IGV2ZW4gcXVlcnkgdGhlIFZQRCBwYWdlLg0KPiA+ICANCj4gPiA+PiBJZiB3
+ZSB3YW50IHRvIGVuYWJsZSBVTk1BUCBpbiB0aGlzIGNhc2UgSSdkIHByZWZlciBhIGJsYWNrbGlz
+dCBlbnRyeQ0KPiA+ID4+IHRoYW4gdHJ5aW5nIFVOTUFQIGRlc3BpdGUgdGhlIGRldmljZSBub3Qg
+YWR2ZXJ0aXNpbmcgaXQuDQo+ID4gDQo+ID4gSSBhZ3JlZSB3aXRoIHRoYXQuIFdlIGNvdWxkIGRv
+IHNvbWV0aGluZyBsaWtlIHRoZSBwYXRjaCBiZWxvdy4NCj4gPiANCj4gPiBIb3dldmVyLCBJIGRv
+IHRoaW5rIGl0J3MgYSBnb29kIGlkZWEgdGhhdCB5b3UgZ3V5cyBhcmUgbG9va2luZyBpbnRvDQo+
+ID4gcmVwb3J0aW5nIFNQQy0zLg0KPiANCj4gS1kgbWVudGlvbmVkIHRoYXQgdGhleSBoYXZlIGEg
+cHJvdG90eXBlIGZvciB0aGF0IG5vdy4NCj4gDQo+IEJ0dywgSSBsb29rZWQgb3ZlciBzZC5jIGEg
+Yml0IG1vcmUsIGFuZCBJIHRoaW5rIEkgdW5kZXJzdGFuZCB3aHkgdGhleQ0KPiBnZXQgdGhlIFdS
+SVRFIFNBTUUgY29tbWFuZHMgbm93Og0KPiANCj4gcmVhZF9jYXBhY2l0eV8xNiBjYWxscyBzZF9j
+b25maWdfZGlzY2FyZChzZGtwLCBTRF9MQlBfV1MxNikgaWYgdGhlIExQQk1FDQo+IGJpdCBpcyBz
+ZXQuICBBdCBsZWFzdCBvbGRlciBTQkMgZHJhZnRzIGxlZnQgaXQgd2lkZSBvcGVuIGlmIGEgdGFy
+Z2V0DQo+IHN1cHBvcnRzIFdSSVRFIFNBTUUgd2l0aCBVTk1BUCBvciBVTk1BUCBpbiB0aGlzIGNh
+c2UuICBTbyBJIHRoaW5rIHdlJ2QNCj4gc3RpbGwgd2FudCBhIHBhdGNoIHRvIHVzZSBVTk1BUCBp
+bnN0ZWFkIG9mIFdSSVRFIFNBTUUgZm9yIHRoaXMgY2FzZSwNCj4gd2hpY2ggc2hvdWxkIGFsc28g
+Zml4IGh5cGVydi4gIEJlbG93IGlzIHRoZSBxdWljayBoYWNrIHZlcnNpb24gb2YgdGhhdA0KPiB0
+aGF0IGp1c3QgY2hlY2tzIHRoZSBob3N0IG5vX3dyaXRlX3NhbWUgZmxhZywgYXMgdGhlIG9uZSBv
+biB0aGUgZGV2aWNlDQo+IGlzbid0IHNldCB5ZXQgLSBJIGd1ZXNzIHdlIG5lZWQgdG8gcmVmYWN0
+b3Igc29tZSBvZiB0aGF0IGxvZ2ljLg0KPiANCj4gDQo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Nj
+c2kvc2QuYyBiL2RyaXZlcnMvc2NzaS9zZC5jDQo+IGluZGV4IDg3NTY2YjUuLjQ0ODBmZGYgMTAw
+NjQ0DQo+IC0tLSBhL2RyaXZlcnMvc2NzaS9zZC5jDQo+ICsrKyBiL2RyaXZlcnMvc2NzaS9zZC5j
+DQo+IEBAIC0yMDM1LDcgKzIwMzUsMTAgQEAgc3RhdGljIGludCByZWFkX2NhcGFjaXR5XzE2KHN0
+cnVjdCBzY3NpX2Rpc2sgKnNka3AsIHN0cnVjdCBzY3NpX2RldmljZSAqc2RwLA0KPiAgCQlpZiAo
+YnVmZmVyWzE0XSAmIDB4NDApIC8qIExCUFJaICovDQo+ICAJCQlzZGtwLT5sYnByeiA9IDE7DQo+
+ICANCj4gLQkJc2RfY29uZmlnX2Rpc2NhcmQoc2RrcCwgU0RfTEJQX1dTMTYpOw0KPiArCQlpZiAo
+c2RwLT5ob3N0LT5ub193cml0ZV9zYW1lKQ0KPiArCQkJc2RfY29uZmlnX2Rpc2NhcmQoc2RrcCwg
+U0RfTEJQX1VOTUFQKTsNCj4gKwkJZWxzZQ0KPiArCQkJc2RfY29uZmlnX2Rpc2NhcmQoc2RrcCwg
+U0RfTEJQX1dTMTYpOw0KDQpSaWdodCwgSSBhbHJlYWR5IHNhaWQgdGhpcyB3YXMgdGhlIHByb2Js
+ZW06IHRoYXQgd2FzIHRoZSByZWFzb24gZm9yIG15DQpwYXRjaC4gIEhvd2V2ZXIsIHRoZXJlIGFy
+ZSBhIGNvdXBsZSBvZiBvdGhlciBjYXNlcyAoaW5jbHVkaW5nIHRoZSAvc3lzDQplbnRyeSkgd2hp
+Y2ggaXMgd2h5IEkgcGF0Y2hlZCBzZF9jb25maWdfZGlzY2FyZCBpbnN0ZWFkLg0KDQpKYW1lcw0K
+DQo=
