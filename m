@@ -1,41 +1,70 @@
 From: Alexander Gordeev <agordeev@redhat.com>
-Subject: [PATCH v2 RESEND 08/23] hpsa: Fallback to MSI rather than to INTx if MSI-X failed
-Date: Wed, 16 Jul 2014 20:05:12 +0200
-Message-ID: <3ca64c251518a2db8810534b4e63ec696bcfeefd.1405533479.git.agordeev@redhat.com>
+Subject: [PATCH v2 RESEND 03/23] bfa: Cleanup bfad_setup_intr() function
+Date: Wed, 16 Jul 2014 20:05:07 +0200
+Message-ID: <20edfb7504d8b0a4c92ecc27300d9eb01d7bf36a.1405533479.git.agordeev@redhat.com>
 References: <cover.1405533479.git.agordeev@redhat.com>
-Return-path: <linux-pci-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:50117 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965526AbaGPStd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 16 Jul 2014 14:49:33 -0400
 In-Reply-To: <cover.1405533479.git.agordeev@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>, "Stephen M. Cameron" <scameron@beardog.cce.hp.com>, iss_storagedev@hp.com, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-
-Currently the driver falls back to INTx mode when MSI-X
-initialization failed. This is a suboptimal behaviour
-for chips that also support MSI. This update changes that
-behaviour and falls back to MSI mode in case MSI-X mode
-initialization failed.
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>, Anil Gurumurthy <agurumur@brocade.com>, Vijaya Mohan Guvva <vmohan@brocade.com>, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
 
 Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Cc: iss_storagedev@hp.com
+Cc: Anil Gurumurthy <agurumur@brocade.com>
+Cc: Vijaya Mohan Guvva <vmohan@brocade.com>
 Cc: linux-scsi@vger.kernel.org
 Cc: linux-pci@vger.kernel.org
+Acked-by: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
 ---
- drivers/scsi/hpsa.c |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+ drivers/scsi/bfa/bfad.c |   18 ++++++++----------
+ 1 files changed, 8 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 31184b3..648dec2 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -6177,7 +6177,6 @@ static void hpsa_interrupt_mode(struct ctlr_info *h)
- 			dev_warn(&h->pdev->dev, "MSI-X init failed %d\n",
- 			       err);
- 			h->msix_vector = 0;
--			goto default_int_mode;
- 		}
+diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
+index bb93180..c18279f 100644
+--- a/drivers/scsi/bfa/bfad.c
++++ b/drivers/scsi/bfa/bfad.c
+@@ -1219,7 +1219,7 @@ bfad_install_msix_handler(struct bfad_s *bfad)
+ int
+ bfad_setup_intr(struct bfad_s *bfad)
+ {
+-	int error = 0;
++	int error;
+ 	u32 mask = 0, i, num_bit = 0, max_bit = 0;
+ 	struct msix_entry msix_entries[MAX_MSIX_ENTRY];
+ 	struct pci_dev *pdev = bfad->pcidev;
+@@ -1279,20 +1279,18 @@ bfad_setup_intr(struct bfad_s *bfad)
+ 
+ 		bfad->bfad_flags |= BFAD_MSIX_ON;
+ 
+-		return error;
++		return 0;
  	}
- 	if (pci_find_capability(h->pdev, PCI_CAP_ID_MSI)) {
+ 
+ line_based:
+-	error = 0;
+-	if (request_irq
+-	    (bfad->pcidev->irq, (irq_handler_t) bfad_intx, BFAD_IRQ_FLAGS,
+-	     BFAD_DRIVER_NAME, bfad) != 0) {
+-		/* Enable interrupt handler failed */
+-		return 1;
+-	}
++	error = request_irq(bfad->pcidev->irq, (irq_handler_t)bfad_intx,
++			    BFAD_IRQ_FLAGS, BFAD_DRIVER_NAME, bfad);
++	if (error)
++		return error;
++
+ 	bfad->bfad_flags |= BFAD_INTX_ON;
+ 
+-	return error;
++	return 0;
+ }
+ 
+ void
 -- 
 1.7.7.6
+
