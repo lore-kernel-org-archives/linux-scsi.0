@@ -1,7 +1,8 @@
 From: Robert Elliott <elliott@hp.com>
-Subject: [PATCH 2/3] blk-mq: pass along blk_mq_alloc_tag_set return values
-Date: Thu, 17 Jul 2014 14:39:21 -0500
-Message-ID: <20140717193915.1924.24620.stgit@beardog.cce.hp.com>
+Subject: [PATCH 3/3] mpt3sas,
+	mpt2sas: fix scsi_add_host error handling problems in _scsih_probe
+Date: Thu, 17 Jul 2014 14:39:30 -0500
+Message-ID: <20140717193926.1924.21344.stgit@beardog.cce.hp.com>
 References: <20140717193707.1924.87867.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,115 +14,110 @@ To: axboe@kernel.dk, abhijit.mahajan@avagotech.com, kmo@datarainc.com, nagalaksh
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Two of the blk-mq based drivers do not pass back the return value
-from blk_mq_alloc_tag_set, instead just returning -ENOMEM.
+In _scsih_probe, propagate the return value from scsi_add_host.
+In mpt3sas, avoid calling list_del twice if that returns an
+error, which causes list_del corruption warnings if an error
+is returned.
 
-blk_mq_alloc_tag_set returns -EINVAL if the number of queues or
-queue depth is bad.  -ENOMEM implies that retrying after freeing some
-memory might be more successful, but that won't ever change
-in the -EINVAL cases.
-
-Change the null_blk and mtip32xx drivers to pass along
-the return value.
+Tested with blk-mq and scsi-mq patches to properly cleanup
+from and propagate blk_mq_init_rq_map errors.
 
 Signed-off-by: Robert Elliott <elliott@hp.com>
 ---
- drivers/block/mtip32xx/mtip32xx.c |    1 -
- drivers/block/null_blk.c          |   29 +++++++++++++++++++++--------
- 2 files changed, 21 insertions(+), 9 deletions(-)
+ drivers/scsi/mpt2sas/mpt2sas_scsih.c |    8 ++++++--
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c |    9 ++++++---
+ 2 files changed, 12 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/block/mtip32xx/mtip32xx.c b/drivers/block/mtip32xx/mtip32xx.c
-index 295f3af..af72232 100644
---- a/drivers/block/mtip32xx/mtip32xx.c
-+++ b/drivers/block/mtip32xx/mtip32xx.c
-@@ -3918,7 +3918,6 @@ skip_create_disk:
- 	if (rv) {
- 		dev_err(&dd->pdev->dev,
- 			"Unable to allocate request queue\n");
--		rv = -ENOMEM;
- 		goto block_queue_alloc_init_error;
- 	}
- 
-diff --git a/drivers/block/null_blk.c b/drivers/block/null_blk.c
-index a3b042c..00d469c 100644
---- a/drivers/block/null_blk.c
-+++ b/drivers/block/null_blk.c
-@@ -462,17 +462,21 @@ static int null_add_dev(void)
- 	struct gendisk *disk;
- 	struct nullb *nullb;
- 	sector_t size;
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+index 4f8a45f..7110e75 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+@@ -8123,6 +8123,7 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ {
+ 	struct MPT2SAS_ADAPTER *ioc;
+ 	struct Scsi_Host *shost;
 +	int rv;
  
- 	nullb = kzalloc_node(sizeof(*nullb), GFP_KERNEL, home_node);
--	if (!nullb)
-+	if (!nullb) {
-+		rv = -ENOMEM;
- 		goto out;
-+	}
+ 	shost = scsi_host_alloc(&scsih_driver_template,
+ 	    sizeof(struct MPT2SAS_ADAPTER));
+@@ -8218,6 +8219,7 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	if (!ioc->firmware_event_thread) {
+ 		printk(MPT2SAS_ERR_FMT "failure at %s:%d/%s()!\n",
+ 		    ioc->name, __FILE__, __LINE__, __func__);
++		rv = -ENODEV;
+ 		goto out_thread_fail;
+ 	}
  
- 	spin_lock_init(&nullb->lock);
+@@ -8225,6 +8227,7 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	if ((mpt2sas_base_attach(ioc))) {
+ 		printk(MPT2SAS_ERR_FMT "failure at %s:%d/%s()!\n",
+ 		    ioc->name, __FILE__, __LINE__, __func__);
++		rv = -ENODEV;
+ 		goto out_attach_fail;
+ 	}
  
- 	if (queue_mode == NULL_Q_MQ && use_per_node_hctx)
- 		submit_queues = nr_online_nodes;
+@@ -8242,7 +8245,8 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	} else
+ 		ioc->hide_drives = 0;
  
--	if (setup_queues(nullb))
-+	rv = setup_queues(nullb);
-+	if (rv)
- 		goto out_free_nullb;
- 
- 	if (queue_mode == NULL_Q_MQ) {
-@@ -484,22 +488,29 @@ static int null_add_dev(void)
- 		nullb->tag_set.flags = BLK_MQ_F_SHOULD_MERGE;
- 		nullb->tag_set.driver_data = nullb;
- 
--		if (blk_mq_alloc_tag_set(&nullb->tag_set))
-+		rv = blk_mq_alloc_tag_set(&nullb->tag_set);
-+		if (rv)
- 			goto out_cleanup_queues;
- 
- 		nullb->q = blk_mq_init_queue(&nullb->tag_set);
--		if (!nullb->q)
-+		if (!nullb->q) {
-+			rv = -ENOMEM;
- 			goto out_cleanup_tags;
-+		}
- 	} else if (queue_mode == NULL_Q_BIO) {
- 		nullb->q = blk_alloc_queue_node(GFP_KERNEL, home_node);
--		if (!nullb->q)
-+		if (!nullb->q) {
-+			rv = -ENOMEM;
- 			goto out_cleanup_queues;
-+		}
- 		blk_queue_make_request(nullb->q, null_queue_bio);
- 		init_driver_queues(nullb);
- 	} else {
- 		nullb->q = blk_init_queue_node(null_request_fn, &nullb->lock, home_node);
--		if (!nullb->q)
-+		if (!nullb->q) {
-+			rv = -ENOMEM;
- 			goto out_cleanup_queues;
-+		}
- 		blk_queue_prep_rq(nullb->q, null_rq_prep_fn);
- 		blk_queue_softirq_done(nullb->q, null_softirq_done_fn);
- 		init_driver_queues(nullb);
-@@ -509,8 +520,10 @@ static int null_add_dev(void)
- 	queue_flag_set_unlocked(QUEUE_FLAG_NONROT, nullb->q);
- 
- 	disk = nullb->disk = alloc_disk_node(1, home_node);
--	if (!disk)
-+	if (!disk) {
-+		rv = -ENOMEM;
- 		goto out_cleanup_blk_queue;
-+	}
- 
- 	mutex_lock(&lock);
- 	list_add_tail(&nullb->list, &nullb_list);
-@@ -544,7 +557,7 @@ out_cleanup_queues:
- out_free_nullb:
- 	kfree(nullb);
- out:
--	return -ENOMEM;
+-	if ((scsi_add_host(shost, &pdev->dev))) {
++	rv = scsi_add_host(shost, &pdev->dev);
++	if (rv) {
+ 		printk(MPT2SAS_ERR_FMT "failure at %s:%d/%s()!\n",
+ 		    ioc->name, __FILE__, __LINE__, __func__);
+ 		goto out_add_shost_fail;
+@@ -8259,7 +8263,7 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+  out_thread_fail:
+ 	list_del(&ioc->list);
+ 	scsi_host_put(shost);
+-	return -ENODEV;
 +	return rv;
  }
  
- static int __init null_init(void)
+ #ifdef CONFIG_PM
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index d2e95ff..07454f0 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -7727,6 +7727,7 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ {
+ 	struct MPT3SAS_ADAPTER *ioc;
+ 	struct Scsi_Host *shost;
++	int rv;
+ 
+ 	shost = scsi_host_alloc(&scsih_driver_template,
+ 	    sizeof(struct MPT3SAS_ADAPTER));
+@@ -7819,6 +7820,7 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	if (!ioc->firmware_event_thread) {
+ 		pr_err(MPT3SAS_FMT "failure at %s:%d/%s()!\n",
+ 		    ioc->name, __FILE__, __LINE__, __func__);
++		rv = -ENODEV;
+ 		goto out_thread_fail;
+ 	}
+ 
+@@ -7826,13 +7828,14 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	if ((mpt3sas_base_attach(ioc))) {
+ 		pr_err(MPT3SAS_FMT "failure at %s:%d/%s()!\n",
+ 		    ioc->name, __FILE__, __LINE__, __func__);
++		rv = -ENODEV;
+ 		goto out_attach_fail;
+ 	}
+ 
+-	if ((scsi_add_host(shost, &pdev->dev))) {
++	rv = scsi_add_host(shost, &pdev->dev);
++	if (rv) {
+ 		pr_err(MPT3SAS_FMT "failure at %s:%d/%s()!\n",
+ 		    ioc->name, __FILE__, __LINE__, __func__);
+-		list_del(&ioc->list);
+ 		goto out_add_shost_fail;
+ 	}
+ 
+@@ -7846,7 +7849,7 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+  out_thread_fail:
+ 	list_del(&ioc->list);
+ 	scsi_host_put(shost);
+-	return -ENODEV;
++	return rv;
+ }
+ 
+ #ifdef CONFIG_PM
