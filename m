@@ -1,39 +1,27 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: SCSI eats error from flush failure during hot plug
-Date: Thu, 17 Jul 2014 11:27:12 -0400
-Message-ID: <yq1r41kovjj.fsf@sermon.lab.mkp.net>
-References: <CAPK7rjcrBuQgoiAxZ9ZASAGugtyHTsHB3ssZegKtuzRdo9TMNQ@mail.gmail.com>
-	<20140626150208.GA14887@infradead.org>
-	<1403808734.6440.12.camel@dabdike>
-	<20140627075553.GB21799@infradead.org>
-	<CAPK7rjdpxAALA-oLZJ3wDBPc3kr5Nw4jLALLxEaT0zSiAOD+wg@mail.gmail.com>
-	<CAPK7rjcmujziT580t2O_dQnNPn8eyq7CTBxAgbqHYNobZCTxjQ@mail.gmail.com>
-	<20140701081510.GA14857@infradead.org>
-	<CAPK7rjdVM-Anw-uFc6RGCrwZko885vBGgbB+LehmuKF4r6nu5A@mail.gmail.com>
-	<20140703171807.GA20300@infradead.org>
-	<1404945498.2184.10.camel@dabdike.int.hansenpartnership.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 05/10] sd: don't use scsi_setup_blk_pc_cmnd for write
+ same requests
+Date: Thu, 17 Jul 2014 08:29:54 -0700
+Message-ID: <20140717152954.GA3146@infradead.org>
+References: <1404048881-19526-1-git-send-email-hch@lst.de>
+ <1404048881-19526-6-git-send-email-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:31435 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933540AbaGQP1q (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Jul 2014 11:27:46 -0400
-In-Reply-To: <1404945498.2184.10.camel@dabdike.int.hansenpartnership.com>
-	(James Bottomley's message of "Wed, 09 Jul 2014 15:38:18 -0700")
+Received: from bombadil.infradead.org ([198.137.202.9]:57108 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933145AbaGQP3z (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Jul 2014 11:29:55 -0400
+Received: from hch by bombadil.infradead.org with local (Exim 4.80.1 #2 (Red Hat Linux))
+	id 1X7nd4-0001bG-VG
+	for linux-scsi@vger.kernel.org; Thu, 17 Jul 2014 15:29:54 +0000
+Content-Disposition: inline
+In-Reply-To: <1404048881-19526-6-git-send-email-hch@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Steven Haber <steven@qumulo.com>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
->>>>> "James" == James Bottomley <James.Bottomley@HansenPartnership.com> writes:
->> Below is James' patch with a trivial comment fix and a proper
->> changelog.  James, can I get your signoff for this one?  I'll throw
->> it into the core-for-3.16 tree then.
+Can I get a second review in addition to the one from Martin for this
+one?  This is the last blocker for merging the series and pushing an
+updated branch out!
 
-James> OK, here it is.  I tweaked the comment to be accurate.
-
-Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
