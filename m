@@ -1,66 +1,74 @@
-From: Dr Ahmed Kabore <dr.ahkab2012@gmail.com>
-Subject: Business Proposal
-Date: Thu, 17 Jul 2014 12:22:08 +0200
-Message-ID: <CAM8OR6wdpqmWobZu2Ow1NQvGQ-AbA-kL1LOTB=J8f8iVS7K14Q@mail.gmail.com>
-Reply-To: ahmedk@barid.com
+From: Paul Bolle <pebolle@tiscali.nl>
+Subject: [PATCH] tgt: remove SCSI_TGT and SCSI_FC_TGT_ATTRS
+Date: Thu, 17 Jul 2014 12:42:39 +0200
+Message-ID: <1405593759.4808.43.camel@x220>
+References: <1405326544.8281.17.camel@x220> <20140714083154.GA21756@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wi0-f193.google.com ([209.85.212.193]:41990 "EHLO
-	mail-wi0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756556AbaGQKWP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Jul 2014 06:22:15 -0400
-Received: by mail-wi0-f193.google.com with SMTP id f8so897016wiw.8
-        for <linux-scsi@vger.kernel.org>; Thu, 17 Jul 2014 03:22:10 -0700 (PDT)
+Received: from cpsmtpb-ews10.kpnxchange.com ([213.75.39.15]:49308 "EHLO
+	cpsmtpb-ews10.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755488AbaGQKmm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 Jul 2014 06:42:42 -0400
+In-Reply-To: <20140714083154.GA21756@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Bart Van Assche <bvanassche@acm.org>, Christoph Hellwig <hch@lst.de>, Paolo Bonzini <pbonzini@redhat.com>, Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Dear Friend,
+The Kconfig symbols SCSI_TGT and SCSI_FC_TGT_ATTRS are unused since
+commit 73685a458f2e ("tgt: removal"). Setting them has no effect. Remove
+these symbols.
 
-I know that this message might meet you in utmost surprise. However,
-it's just my urgent need for foreign partner that made me to contact
-you for this transaction; I got your contact from the professional
-data base found in the internet Yahoo tourist search when I was
-searching for a foreign reliable partner. I assured of your capability
-and reliability to champion this business opportunity.
+Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
+---
+Tested by running "make oldconfig" on a Fedora 20 based .config.
+That .config has CONFIG_SCSI_TGT set to 'm' and CONFIG_SCSI_FC_TGT_ATTRS
+set to 'y'. This patch only makes both symbols disappear from
+the .config, which is what we want. Please shout if that's not enough
+testing in your opinion.
 
-I am (Dr Ahmed Kabore) a banker by profession from Benin Republic
-Cotonou in west Africa and currently holding the post of Audits and
-Account manager at the foreign remittance department, African
-development bank (A.D.B) I have the opportunity of transferring the
-left over sum of ($10.5 Million Dollars) that belongs to late Mr Rudi
-Harmanto, from Indonesia who died along with his entire family in the
-Asia Earth Quake (TSUNAMI, DISASTER IN INDONESIA / INDIA. 2004, and
-since then the fund has been in a suspense account.
+Note that the commit explanation references a linux-next commit ID. If
+that patch gets rebased before entering mainline that won't be a ID
+found in the mainline repository anymore!
 
-After my further investigation, I discovered that Mr Rudi Harmanto
-died with his next of kin and according to the laws and constitution
-guiding this banking institution, stated that after the expiration of
-(10) years, if no body or person comes for the claim as the next of
-kin, the fund will be channel into national treasury as unclaimed
-fund. Because of the static of this transaction I want you to stand as
-the next of kin so that our bank will accord you their recognition and
-have the fund transfer to your account.
+ drivers/scsi/Kconfig | 14 --------------
+ 1 file changed, 14 deletions(-)
 
-Hence, I am inviting you for a business deal where this money can be
-shared between us in the ratio of 50/50; I will not fail to bring to
-your notice that this transaction is hitch free if you can follow my
-instruction and also keep every thing as top secret until this fund
-transfer to your nominated bank that you are going to provide to the
-bank here so that I will come over to your country for sharing of the
-fund according to our percentage ratio Immediately the fund transfer
-into your account.
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index 1fa07e4221f7..18a3358eb1d4 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -40,13 +40,6 @@ config SCSI_DMA
+ 	bool
+ 	default n
+ 
+-config SCSI_TGT
+-	tristate "SCSI target support"
+-	depends on SCSI
+-	---help---
+-	  If you want to use SCSI target mode drivers enable this option.
+-	  If you choose M, the module will be called scsi_tgt.
+-
+ config SCSI_NETLINK
+ 	bool
+ 	default	n
+@@ -271,13 +264,6 @@ config SCSI_FC_ATTRS
+ 	  each attached FiberChannel device to sysfs, say Y.
+ 	  Otherwise, say N.
+ 
+-config SCSI_FC_TGT_ATTRS
+-	bool "SCSI target support for FiberChannel Transport Attributes"
+-	depends on SCSI_FC_ATTRS
+-	depends on SCSI_TGT = y || SCSI_TGT = SCSI_FC_ATTRS
+-	help
+-		If you want to use SCSI target mode drivers enable this option.
+-
+ config SCSI_ISCSI_ATTRS
+ 	tristate "iSCSI Transport Attributes"
+ 	depends on SCSI && NET
+-- 
+1.9.3
 
-However, further details of this transaction and the text of
-application form will be forwarded to you as soon as I receive your
-return mail. I am waiting for your immediate response as you receive
-this mail. Extend my sincere greetings to your entire family. God
-bless you and bye for now
-
-POST SCRITUM: You have to keep everything secret as to enable the
-transfer to move very smoothly in to the account you will prove to the
-bank. Please reply me through my private E-mail address:
-(ahmedk@barid.com)
-
-Yours Faithfully,
-Dr Ahmed Kabore
