@@ -1,35 +1,193 @@
-From: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
-Subject: Re: [PATCH net-next v2 0/4] cxgb4i: Add ipv6 support
-Date: Thu, 17 Jul 2014 16:06:28 -0700 (PDT)
-Message-ID: <20140717.160628.701122343847367968.davem@davemloft.net>
-References: <1405581498-28092-1-git-send-email-anish@chelsio.com>
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: [PATCH 1/1] [SCSI] Fix a bug in deriving the FLUSH_TIMEOUT from
+ the basic I/O timeout
+Date: Thu, 17 Jul 2014 23:53:33 +0000
+Message-ID: <13807d2cc8744ae1bc374f20d8f9caec@BY2PR0301MB0711.namprd03.prod.outlook.com>
+References: <1401899623-24194-1-git-send-email-kys@microsoft.com>
+ <1401901323.17510.23.camel@dabdike>
+ <d61f4b87a72544e4b0c1e1872a76f97b@BY2PR03MB299.namprd03.prod.outlook.com>
+ <53911A35.7010805@cs.wisc.edu>
+ <d9854e6ff97f4b0087dbe835a2a57c8f@BY2PR03MB299.namprd03.prod.outlook.com>
+ <5391F801.4010107@cs.wisc.edu>
+ <1402077167.2207.89.camel@dabdike.int.hansenpartnership.com>
+ <539206FA.1020001@kernel.dk>
+ <5b926a0a9f264edda91c7c2ab0acb7d1@BY2PR03MB299.namprd03.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1405581498-28092-1-git-send-email-anish-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: anish-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org
-Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, roland-BHEL68pLQRGGvPXPguhicg@public.gmane.org, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org, jbottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, kxie-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org, leedom-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org, hariprasad-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org, swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <5b926a0a9f264edda91c7c2ab0acb7d1@BY2PR03MB299.namprd03.prod.outlook.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: KY Srinivasan <kys@microsoft.com>, Jens Axboe <axboe@kernel.dk>, James Bottomley <jbottomley@parallels.com>, "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "jasowang@redhat.com" <jasowang@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "ohering@suse.com" <ohering@suse.com>, "hch@infradead.org" <hch@infradead.org>, "apw@canonical.com" <apw@canonical.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Anish Bhatt <anish-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
-Date: Thu, 17 Jul 2014 00:18:14 -0700
 
->    The following patchset add ipv6 support for the cxgb4i(iscsi) driver.
-> 
-> Patch 1 moves a define from the iw_cxgb4 to cxgb4 to prevent code duplication,
->  as it is used by cxgb4i and iw_cxgb4 both.
-> Patch 2 exports symbols needed by cxgb4i for ipv6 support from cxgb4.
-> Patch 3 & 4 deal with actual ipv6 code in libcxgbi/cxgb4i.
-> 
-> Submitting to net-next as changes were needed in cxgb4/iw_cxgb4, and submitting
-> to scsi separately would break compilation, cc-ing scsi & rdma.
-> 
-> v2 : Cleanup macro that prints ip addresses by using %pIS in patch 3
 
-Series applied, thanks.
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> -----Original Message-----
+> From: driverdev-devel-bounces@linuxdriverproject.org [mailto:driverdev-
+> devel-bounces@linuxdriverproject.org] On Behalf Of KY Srinivasan
+> Sent: Friday, June 20, 2014 2:37 PM
+> To: Jens Axboe; James Bottomley; michaelc@cs.wisc.edu
+> Cc: linux-scsi@vger.kernel.org; gregkh@linuxfoundation.org;
+> jasowang@redhat.com; linux-kernel@vger.kernel.org; ohering@suse.com;
+> hch@infradead.org; apw@canonical.com; devel@linuxdriverproject.org
+> Subject: RE: [PATCH 1/1] [SCSI] Fix a bug in deriving the FLUSH_TIMEOUT
+> from the basic I/O timeout
+> 
+> 
+> 
+> > -----Original Message-----
+> > From: Jens Axboe [mailto:axboe@kernel.dk]
+> > Sent: Friday, June 6, 2014 11:23 AM
+> > To: James Bottomley; michaelc@cs.wisc.edu
+> > Cc: linux-kernel@vger.kernel.org; hch@infradead.org;
+> > devel@linuxdriverproject.org; apw@canonical.com; KY Srinivasan; linux-
+> > scsi@vger.kernel.org; ohering@suse.com; gregkh@linuxfoundation.org;
+> > jasowang@redhat.com
+> > Subject: Re: [PATCH 1/1] [SCSI] Fix a bug in deriving the
+> > FLUSH_TIMEOUT from the basic I/O timeout
+> >
+> > On 2014-06-06 11:52, James Bottomley wrote:
+> > > On Fri, 2014-06-06 at 12:18 -0500, Mike Christie wrote:
+> > >> On 6/5/14, 9:53 PM, KY Srinivasan wrote:
+> > >>>
+> > >>>
+> > >>>> -----Original Message-----
+> > >>>> From: Mike Christie [mailto:michaelc@cs.wisc.edu]
+> > >>>> Sent: Thursday, June 5, 2014 6:33 PM
+> > >>>> To: KY Srinivasan
+> > >>>> Cc: James Bottomley; linux-kernel@vger.kernel.org;
+> > >>>> apw@canonical.com; devel@linuxdriverproject.org;
+> > hch@infradead.org;
+> > >>>> linux- scsi@vger.kernel.org; ohering@suse.com;
+> > >>>> gregkh@linuxfoundation.org; jasowang@redhat.com
+> > >>>> Subject: Re: [PATCH 1/1] [SCSI] Fix a bug in deriving the
+> > >>>> FLUSH_TIMEOUT from the basic I/O timeout
+> > >>>>
+> > >>>> On 06/04/2014 12:15 PM, KY Srinivasan wrote:
+> > >>>>>
+> > >>>>>
+> > >>>>>> -----Original Message-----
+> > >>>>>> From: James Bottomley [mailto:jbottomley@parallels.com]
+> > >>>>>> Sent: Wednesday, June 4, 2014 10:02 AM
+> > >>>>>> To: KY Srinivasan
+> > >>>>>> Cc: linux-kernel@vger.kernel.org; apw@canonical.com;
+> > >>>>>> devel@linuxdriverproject.org; hch@infradead.org; linux-
+> > >>>>>> scsi@vger.kernel.org; ohering@suse.com;
+> > >>>>>> gregkh@linuxfoundation.org; jasowang@redhat.com
+> > >>>>>> Subject: Re: [PATCH 1/1] [SCSI] Fix a bug in deriving the
+> > >>>>>> FLUSH_TIMEOUT from the basic I/O timeout
+> > >>>>>>
+> > >>>>>> On Wed, 2014-06-04 at 09:33 -0700, K. Y. Srinivasan wrote:
+> > >>>>>>> Commit ID: 7e660100d85af860e7ad763202fff717adcdaacd added
+> > code
+> > >>>>>>> to derive the FLUSH_TIMEOUT from the basic I/O timeout.
+> > However,
+> > >>>>>>> this patch did not use the basic I/O timeout of the device.
+> > >>>>>>> Fix this
+> > bug.
+> > >>>>>>>
+> > >>>>>>> Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
+> > >>>>>>> ---
+> > >>>>>>>    drivers/scsi/sd.c |    4 +++-
+> > >>>>>>>    1 files changed, 3 insertions(+), 1 deletions(-)
+> > >>>>>>>
+> > >>>>>>> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c index
+> > >>>>>>> e9689d5..54150b1 100644
+> > >>>>>>> --- a/drivers/scsi/sd.c
+> > >>>>>>> +++ b/drivers/scsi/sd.c
+> > >>>>>>> @@ -832,7 +832,9 @@ static int
+> > sd_setup_write_same_cmnd(struct
+> > >>>>>>> scsi_device *sdp, struct request *rq)
+> > >>>>>>>
+> > >>>>>>>    static int scsi_setup_flush_cmnd(struct scsi_device *sdp,
+> > >>>>>>> struct request *rq)  {
+> > >>>>>>> -	rq->timeout *= SD_FLUSH_TIMEOUT_MULTIPLIER;
+> > >>>>>>> +	int timeout = sdp->request_queue->rq_timeout;
+> > >>>>>>> +
+> > >>>>>>> +	rq->timeout = (timeout *
+> > SD_FLUSH_TIMEOUT_MULTIPLIER);
+> > >>>>>>
+> > >>>>>> Could you share where you found this to be a problem?  It looks
+> > >>>>>> like a bug in block because all inbound requests being prepared
+> > >>>>>> should have a timeout set, so block would be the place to fix it.
+> > >>>>>
+> > >>>>> Perhaps; what I found was that the value in rq->timeout was 0
+> > >>>>> coming into this function and thus multiplying obviously has no
+> effect.
+> > >>>>>
+> > >>>>
+> > >>>> I think you are right. We hit this problem because we are doing:
+> > >>>>
+> > >>>> scsi_request_fn -> blk_peek_request -> sd_prep_fn ->
+> > >>>> scsi_setup_flush_cmnd.
+> > >>>>
+> > >>>> At this time request->timeout is zero so the multiplication does
+> > >>>> nothing. See how sd_setup_write_same_cmnd will set the request-
+> > >timeout at this time.
+> > >>>>
+> > >>>> Then in scsi_request_fn we do:
+> > >>>>
+> > >>>> scsi_request_fn -> blk_start_request -> blk_add_timer.
+> > >>>>
+> > >>>> At this time it will set the request->timeout if something like
+> > >>>> req block pc users (like scsi_execute() or block/scsi_ioctl.c) or
+> > >>>> the write same code mentioned above have not set the timeout.
+> > >>>
+> > >>> I don't think this is a recent change. Prior to this commit, we
+> > >>> were setting the timeout value in this function; it just happened
+> > >>> to be a different constant unrelated to the I/O timeout.
+> > >>>
+> > >>
+> > >> Yeah, it looks like when 7e660100d85af860e7ad763202fff717adcdaacd
+> > >> was merged we were supposed to initialize it like in your patch in this
+> thread.
+> > >>
+> > >> I guess we could do your patch in this thread, or if we want the
+> > >> block layer to initialize the timeout before the prep_fn callout is
+> > >> called then we would need to have the blk-flush.c code to that when
+> > >> it sets up the request. If we do the latter, do we want the discard
+> > >> and write same code to initialize the request's timeout before the
+> > >> prep_fn callout is called too?
+> > >
+> > > I looked through the call chain; it seems to be intentional
+> > > behaviour on the part of block.  Just from an mq point of view, it
+> > > would make better code if we unconditionally initialised rq->timeout
+> > > early and allowed prep to modify it and then dumped the
+> > > if(!req->timeout) in blk_add_timer(), but it's a marginal if
+> > > condition that would compile to a conditional store on sensible
+> > > architectures, so losing the conditional probably isn't worth worrying
+> about.
+> > >
+> > > Cc'd Jens for his opinion with the block patch
+> >
+> > I just committed this one earlier today:
+> >
+> > http://git.kernel.dk/?p=linux-
+> > block.git;a=commit;h=f6be4fb4bcb396fc3b1c134b7863351972de081f
+> >
+> > since I ran into the same thing on nvme. Either approach is fine with
+> > me, as they both allow override of the timeout before insertion. But
+> > we've always done the rq->timeout = 0 init, so I think we should just
+> > reinstate that behavior.
+> 
+> James,
+> 
+> How is this being fixed now.
+> 
+> Regards,
+> 
+> K. Y
+
+I still see this problem. There was talk of fixing it elsewhere.
+
+Regards,
+
+K. Y
+> 
+> _______________________________________________
+> devel mailing list
+> devel@linuxdriverproject.org
+> http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel
