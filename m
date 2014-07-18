@@ -1,64 +1,41 @@
-From: poma <pomidorabelisima@gmail.com>
-Subject: Re: WARNING: CPU: 1 PID: 495 at mm/slab_common.c:69 kmem_cache_create+0x1a9/0x330()
-Date: Fri, 18 Jul 2014 22:16:15 +0200
-Message-ID: <53C9808F.5040906@gmail.com>
-References: <53C8DF7F.5060707@gmail.com> <53C8FD95.5020302@gmail.com>	 <20140718132104.GK27940@esperanza> <20140718141747.GA23272@lst.de>	 <53C97D34.5040707@gmail.com> <1405714046.30262.10.camel@dabdike.int.hansenpartnership.com>
+From: Dave Airlie <airlied@gmail.com>
+Subject: Re: [PATCH 0/25] Replace DEFINE_PCI_DEVICE_TABLE macro use
+Date: Sat, 19 Jul 2014 07:14:12 +1000
+Message-ID: <CAPM=9tzgWdnv7jc+xjsJUf0EcyGU+V7nFHzzQ16ui1eE0ihyQA@mail.gmail.com>
+References: <1405697232-11785-1-git-send-email-benoit.taine@lip6.fr>
+	<20140718162213.GC31114@tuxdriver.com>
+	<20140718164340.GA24960@kroah.com>
+	<1405702472.30262.1.camel@dabdike.int.hansenpartnership.com>
+	<20140718181759.GB2193@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1405714046.30262.10.camel@dabdike.int.hansenpartnership.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Christoph Hellwig <hch@lst.de>, Vladimir Davydov <vdavydov@parallels.com>, Linux Kernel list <linux-kernel@vger.kernel.org>, Christoph Lameter <cl@linux.com>, Mailing-List fedora-kernel <kernel@lists.fedoraproject.org>, Paolo Bonzini <pbonzini@redhat.com>, linux-scsi@vger.kernel.org
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+In-Reply-To: <20140718181759.GB2193@kroah.com>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: Greg KH <greg@kroah.com>
+Cc: linux-mips@linux-mips.org, Linux Fbdev development list <linux-fbdev@vger.kernel.org>, linux-pci@vger.kernel.org, dri-devel <dri-devel@lists.freedesktop.org>, virtualization@lists.linux-foundation.org, James Bottomley <James.Bottomley@hansenpartnership.com>, Benoit Taine <benoit.taine@lip6.fr>, ath5k-devel@venema.h4ckr.net, linux-acenic@sunsite.dk, Linux SCSI List <linux-scsi@vger.kernel.org>, users@rt2x00.serialmonkey.com, linux-rdma@vger.kernel.org, ath10k@lists.infradead.org, linux-hippi@sunsite.dk, industrypack-devel@lists.sourceforge.net, Linux Wireless List <linux-wireless@vger.kernel.org>, xen-devel@lists.xenproject.org, MPT-FusionLinux.pdl@avagotech.com, ath9k-devel@venema.h4ckr.net, wil6210@qca.qualcomm.com, linux-pcmcia@lists.infradead.org, "John W. Linville" <linville@tuxdriver.com>, linux-can@vger.kernel.org, platform-driver-x86@vger.kernel.org, Network
 List-Id: linux-scsi@vger.kernel.org
 
-On 18.07.2014 22:07, James Bottomley wrote:
-> On Fri, 2014-07-18 at 22:01 +0200, poma wrote:
->> On 18.07.2014 16:17, Christoph Hellwig wrote:
->>> On Fri, Jul 18, 2014 at 05:21:04PM +0400, Vladimir Davydov wrote:
->>>> Slab warns, because the name of the cache being created contains spaces.
->>>> The "bad" cache is created by scsi_get_host_cmd_pool. Its name
->>>> (pool->cmd_name) is initialized by scsi_alloc_host_cmd_pool as follows:
->>>>
->>>> 	pool->cmd_name = kasprintf(GFP_KERNEL, "%s_cmd", hostt->name);
->>>>
->>>> So, if hostt->name contains spaces, the cache name will also contain
->>>> spaces and we'll get the warning. And hostt->name can contain spaces,
->>>> e.g. virtscsi_host_template_single.name="Virtio SCSI HBA".
->>>
->>> Or might not even be present.  I'll send a patch to replace it with
->>> ->proc_name, which must not contain spaces and is generally shorter
->>> as well.
->>>
->>
->> Is this what you thought?
 >
-> No, he means this, if you want to try it.
->
-> James
->
-> ---
->
-> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-> index 88d46fe..eb07a9b 100644
-> --- a/drivers/scsi/scsi.c
-> +++ b/drivers/scsi/scsi.c
-> @@ -368,8 +368,8 @@ scsi_alloc_host_cmd_pool(struct Scsi_Host *shost)
->   	if (!pool)
->   		return NULL;
->
-> -	pool->cmd_name = kasprintf(GFP_KERNEL, "%s_cmd", hostt->name);
-> -	pool->sense_name = kasprintf(GFP_KERNEL, "%s_sense", hostt->name);
-> +	pool->cmd_name = kasprintf(GFP_KERNEL, "%s_cmd", hostt->proc_name);
-> +	pool->sense_name = kasprintf(GFP_KERNEL, "%s_sense", hostt->proc_name);
->   	if (!pool->cmd_name || !pool->sense_name) {
->   		scsi_free_host_cmd_pool(pool);
->   		return NULL;
->
->
+> We have almost 1000 more uses of the non-macro version than the "macro"
+> version in the kernel today:
+> $ git grep -w DEFINE_PCI_DEVICE_TABLE | wc -l
+> 262
+> $ git grep "const struct pci_device_id" | wc -l
+> 1254
 
-Man, I just now read it correctly - "So, if hostt->name contains spaces".
-Thanks.
+did you check for non-const ones? just to see if we have any of the
+broken case in the tree :-)
 
-I'll be back.
+as for consistency, pci_dev vs usb_device :-P
+
+Dave.
