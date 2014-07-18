@@ -1,33 +1,45 @@
-From: Mikulas Patocka <mpatocka@redhat.com>
-Subject: Re: [PATCH 1/15] block copy: initial XCOPY offload support
-Date: Fri, 18 Jul 2014 10:35:04 -0400 (EDT)
-Message-ID: <alpine.LRH.2.02.1407181034001.13630@file01.intranet.prod.int.rdu2.redhat.com>
-References: <alpine.LRH.2.02.1407151531140.14632@file01.intranet.prod.int.rdu2.redhat.com> <alpine.LRH.2.02.1407151534180.14632@file01.intranet.prod.int.rdu2.redhat.com> <53C91B1E.7060703@redhat.com>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+From: Ming Lei <ming.lei@canonical.com>
+Subject: [PATCH] virtio_scsi: check on resp->sense_len instead of 'sense_buffer'
+Date: Fri, 18 Jul 2014 22:57:17 +0800
+Message-ID: <1405695438-18485-1-git-send-email-ming.lei@canonical.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:30034 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762519AbaGROff (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Jul 2014 10:35:35 -0400
-In-Reply-To: <53C91B1E.7060703@redhat.com>
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:61453 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965730AbaGRO5k (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Jul 2014 10:57:40 -0400
+Received: by mail-pa0-f46.google.com with SMTP id lj1so5541305pab.5
+        for <linux-scsi@vger.kernel.org>; Fri, 18 Jul 2014 07:57:39 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>
-Cc: "Alasdair G. Kergon" <agk@redhat.com>, Mike Snitzer <msnitzer@redhat.com>, Jonathan Brassow <jbrassow@redhat.com>, Edward Thornber <thornber@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@infradead.org>, dm-devel@redhat.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>, Paolo Bonzini <pbonzini@redhat.com>
+Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@canonical.com>
 
+The 'sense_buffer' of 'struct scsi_cmnd' is always true, but
+resp->sense_len is only set if there is sense available.
 
+Signed-off-by: Ming Lei <ming.lei@canonical.com>
+---
+ drivers/scsi/virtio_scsi.c |    5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-On Fri, 18 Jul 2014, Tomas Henzl wrote:
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index eee1bc0..4d2d3b2 100644
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -194,11 +194,10 @@ static void virtscsi_complete_cmd(struct virtio_scsi *vscsi, void *buf)
+ 	}
+ 
+ 	WARN_ON(resp->sense_len > VIRTIO_SCSI_SENSE_SIZE);
+-	if (sc->sense_buffer) {
++	if (resp->sense_len) {
+ 		memcpy(sc->sense_buffer, resp->sense,
+ 		       min_t(u32, resp->sense_len, VIRTIO_SCSI_SENSE_SIZE));
+-		if (resp->sense_len)
+-			set_driver_byte(sc, DRIVER_SENSE);
++		set_driver_byte(sc, DRIVER_SENSE);
+ 	}
+ 
+ 	sc->scsi_done(sc);
+-- 
+1.7.9.5
 
-> > +	if (src_sector + nr_sects < src_sector ||
-> > +	    dst_sector + nr_sects < dst_sector)
-> > +		return -EINVAL;
-> 
-> Hi Mikulas,
-> this^ is meant as an overflow test or what is the reason?
-> Thanks, Tomas
-
-Yes. It is a test for overflow.
-
-Mikulas
