@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 06/14] scsi: convert target_busy to an atomic_t
-Date: Fri, 18 Jul 2014 12:13:05 +0200
-Message-ID: <1405678393-11497-7-git-send-email-hch@lst.de>
+Subject: [PATCH 05/14] scsi: push host_lock down into scsi_{host,target}_queue_ready
+Date: Fri, 18 Jul 2014 12:13:04 +0200
+Message-ID: <1405678393-11497-6-git-send-email-hch@lst.de>
 References: <1405678393-11497-1-git-send-email-hch@lst.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1405678393-11497-1-git-send-email-hch@lst.de>
@@ -10,9 +10,10 @@ To: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.ker
 Cc: Jens Axboe <axboe@kernel.dk>, Bart Van Assche <bvanassche@fusionio.com>, Mike Christie <michaelc@cs.wisc.edu>, "Martin K. Petersen" <martin.petersen@oracle.com>, Robert Elliott <Elliott@hp.com>, Webb Scales <webbnh@hp.com>, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Avoid taking the host-wide host_lock to check the per-target queue limit.
-Instead we do an atomic_inc_return early on to grab our slot in the queue,
-and if nessecary decrement it after finishing all checks.
+Prepare for not taking a host-wide lock in the dispatch path by pushing
+the lock down into the places that actually need it.  Note that this
+patch is just a preparation step, as it will actually increase lock
+roundtrips and thus decrease performance on its own.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
@@ -21,132 +22,181 @@ Acked-by: Jens Axboe <axboe@kernel.dk>
 Tested-by: Bart Van Assche <bvanassche@acm.org>
 Tested-by: Robert Elliott <elliott@hp.com>
 ---
- drivers/scsi/scsi_lib.c    | 53 ++++++++++++++++++++++++++++------------------
- include/scsi/scsi_device.h |  4 ++--
- 2 files changed, 34 insertions(+), 23 deletions(-)
+ drivers/scsi/scsi_lib.c | 75 +++++++++++++++++++++++++------------------------
+ 1 file changed, 39 insertions(+), 36 deletions(-)
 
 diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 112c737..0580711 100644
+index b832696..112c737 100644
 --- a/drivers/scsi/scsi_lib.c
 +++ b/drivers/scsi/scsi_lib.c
-@@ -294,7 +294,7 @@ void scsi_device_unbusy(struct scsi_device *sdev)
- 
- 	spin_lock_irqsave(shost->host_lock, flags);
- 	shost->host_busy--;
--	starget->target_busy--;
-+	atomic_dec(&starget->target_busy);
- 	if (unlikely(scsi_host_in_recovery(shost) &&
- 		     (shost->host_failed || shost->host_eh_scheduled)))
- 		scsi_eh_wakeup(shost);
-@@ -361,7 +361,7 @@ static inline int scsi_device_is_busy(struct scsi_device *sdev)
- static inline int scsi_target_is_busy(struct scsi_target *starget)
- {
- 	return ((starget->can_queue > 0 &&
--		 starget->target_busy >= starget->can_queue) ||
-+		 atomic_read(&starget->target_busy) >= starget->can_queue) ||
- 		 starget->target_blocked);
- }
- 
-@@ -1279,37 +1279,50 @@ static inline int scsi_target_queue_ready(struct Scsi_Host *shost,
+@@ -1274,18 +1274,18 @@ static inline int scsi_dev_queue_ready(struct request_queue *q,
+ /*
+  * scsi_target_queue_ready: checks if there we can send commands to target
+  * @sdev: scsi device on starget to check.
+- *
+- * Called with the host lock held.
+  */
+ static inline int scsi_target_queue_ready(struct Scsi_Host *shost,
  					   struct scsi_device *sdev)
  {
  	struct scsi_target *starget = scsi_target(sdev);
--	int ret = 0;
-+	unsigned int busy;
++	int ret = 0;
  
--	spin_lock_irq(shost->host_lock);
++	spin_lock_irq(shost->host_lock);
  	if (starget->single_lun) {
-+		spin_lock_irq(shost->host_lock);
  		if (starget->starget_sdev_user &&
--		    starget->starget_sdev_user != sdev)
--			goto out;
-+		    starget->starget_sdev_user != sdev) {
-+			spin_unlock_irq(shost->host_lock);
-+			return 0;
-+		}
+ 		    starget->starget_sdev_user != sdev)
+-			return 0;
++			goto out;
  		starget->starget_sdev_user = sdev;
-+		spin_unlock_irq(shost->host_lock);
  	}
  
--	if (starget->target_busy == 0 && starget->target_blocked) {
-+	busy = atomic_inc_return(&starget->target_busy) - 1;
-+	if (starget->target_blocked) {
-+		if (busy)
-+			goto starved;
-+
+@@ -1293,57 +1293,66 @@ static inline int scsi_target_queue_ready(struct Scsi_Host *shost,
  		/*
  		 * unblock after target_blocked iterates to zero
  		 */
--		if (--starget->target_blocked != 0)
--			goto out;
-+		spin_lock_irq(shost->host_lock);
-+		if (--starget->target_blocked != 0) {
-+			spin_unlock_irq(shost->host_lock);
-+			goto out_dec;
-+		}
-+		spin_unlock_irq(shost->host_lock);
- 
- 		SCSI_LOG_MLQUEUE(3, starget_printk(KERN_INFO, starget,
- 				 "unblocking target at zero depth\n"));
+-		if (--starget->target_blocked == 0) {
+-			SCSI_LOG_MLQUEUE(3, starget_printk(KERN_INFO, starget,
+-					 "unblocking target at zero depth\n"));
+-		} else
+-			return 0;
++		if (--starget->target_blocked != 0)
++			goto out;
++
++		SCSI_LOG_MLQUEUE(3, starget_printk(KERN_INFO, starget,
++				 "unblocking target at zero depth\n"));
  	}
  
--	if (scsi_target_is_busy(starget)) {
--		list_move_tail(&sdev->starved_entry, &shost->starved_list);
--		goto out;
--	}
-+	if (starget->can_queue > 0 && busy >= starget->can_queue)
-+		goto starved;
+ 	if (scsi_target_is_busy(starget)) {
+ 		list_move_tail(&sdev->starved_entry, &shost->starved_list);
+-		return 0;
++		goto out;
+ 	}
  
--	scsi_target(sdev)->target_busy++;
--	ret = 1;
--out:
-+	return 1;
-+
-+starved:
-+	spin_lock_irq(shost->host_lock);
-+	list_move_tail(&sdev->starved_entry, &shost->starved_list);
- 	spin_unlock_irq(shost->host_lock);
--	return ret;
-+out_dec:
-+	atomic_dec(&starget->target_busy);
-+	return 0;
+-	return 1;
++	scsi_target(sdev)->target_busy++;
++	ret = 1;
++out:
++	spin_unlock_irq(shost->host_lock);
++	return ret;
  }
  
  /*
-@@ -1419,7 +1432,7 @@ static void scsi_kill_request(struct request *req, struct request_queue *q)
- 	spin_unlock(sdev->request_queue->queue_lock);
- 	spin_lock(shost->host_lock);
- 	shost->host_busy++;
--	starget->target_busy++;
-+	atomic_inc(&starget->target_busy);
- 	spin_unlock(shost->host_lock);
- 	spin_lock(sdev->request_queue->queue_lock);
+  * scsi_host_queue_ready: if we can send requests to shost, return 1 else
+  * return 0. We must end up running the queue again whenever 0 is
+  * returned, else IO can hang.
+- *
+- * Called with host_lock held.
+  */
+ static inline int scsi_host_queue_ready(struct request_queue *q,
+ 				   struct Scsi_Host *shost,
+ 				   struct scsi_device *sdev)
+ {
++	int ret = 0;
++
++	spin_lock_irq(shost->host_lock);
++
+ 	if (scsi_host_in_recovery(shost))
+-		return 0;
++		goto out;
+ 	if (shost->host_busy == 0 && shost->host_blocked) {
+ 		/*
+ 		 * unblock after host_blocked iterates to zero
+ 		 */
+-		if (--shost->host_blocked == 0) {
+-			SCSI_LOG_MLQUEUE(3,
+-				shost_printk(KERN_INFO, shost,
+-					     "unblocking host at zero depth\n"));
+-		} else {
+-			return 0;
+-		}
++		if (--shost->host_blocked != 0)
++			goto out;
++
++		SCSI_LOG_MLQUEUE(3,
++			shost_printk(KERN_INFO, shost,
++				     "unblocking host at zero depth\n"));
+ 	}
+ 	if (scsi_host_is_busy(shost)) {
+ 		if (list_empty(&sdev->starved_entry))
+ 			list_add_tail(&sdev->starved_entry, &shost->starved_list);
+-		return 0;
++		goto out;
+ 	}
  
-@@ -1589,9 +1602,7 @@ static void scsi_request_fn(struct request_queue *q)
+ 	/* We're OK to process the command, so we can't be starved */
+ 	if (!list_empty(&sdev->starved_entry))
+ 		list_del_init(&sdev->starved_entry);
+ 
+-	return 1;
++	shost->host_busy++;
++	ret = 1;
++out:
++	spin_unlock_irq(shost->host_lock);
++	return ret;
+ }
+ 
+ /*
+@@ -1524,7 +1533,7 @@ static void scsi_request_fn(struct request_queue *q)
+ 			blk_start_request(req);
+ 		sdev->device_busy++;
+ 
+-		spin_unlock(q->queue_lock);
++		spin_unlock_irq(q->queue_lock);
+ 		cmd = req->special;
+ 		if (unlikely(cmd == NULL)) {
+ 			printk(KERN_CRIT "impossible request in %s.\n"
+@@ -1534,7 +1543,6 @@ static void scsi_request_fn(struct request_queue *q)
+ 			blk_dump_rq_flags(req, "foo");
+ 			BUG();
+ 		}
+-		spin_lock(shost->host_lock);
+ 
+ 		/*
+ 		 * We hit this when the driver is using a host wide
+@@ -1545,9 +1553,11 @@ static void scsi_request_fn(struct request_queue *q)
+ 		 * a run when a tag is freed.
+ 		 */
+ 		if (blk_queue_tagged(q) && !blk_rq_tagged(req)) {
++			spin_lock_irq(shost->host_lock);
+ 			if (list_empty(&sdev->starved_entry))
+ 				list_add_tail(&sdev->starved_entry,
+ 					      &shost->starved_list);
++			spin_unlock_irq(shost->host_lock);
+ 			goto not_ready;
+ 		}
+ 
+@@ -1555,16 +1565,7 @@ static void scsi_request_fn(struct request_queue *q)
+ 			goto not_ready;
+ 
+ 		if (!scsi_host_queue_ready(q, shost, sdev))
+-			goto not_ready;
+-
+-		scsi_target(sdev)->target_busy++;
+-		shost->host_busy++;
+-
+-		/*
+-		 * XXX(hch): This is rather suboptimal, scsi_dispatch_cmd will
+-		 *		take the lock again.
+-		 */
+-		spin_unlock_irq(shost->host_lock);
++			goto host_not_ready;
+ 
+ 		/*
+ 		 * Finally, initialize any error handling parameters, and set up
+@@ -1587,9 +1588,11 @@ static void scsi_request_fn(struct request_queue *q)
+ 
  	return;
  
-  host_not_ready:
--	spin_lock_irq(shost->host_lock);
--	scsi_target(sdev)->target_busy--;
--	spin_unlock_irq(shost->host_lock);
-+	atomic_dec(&scsi_target(sdev)->target_busy);
-  not_ready:
+- not_ready:
++ host_not_ready:
++	spin_lock_irq(shost->host_lock);
++	scsi_target(sdev)->target_busy--;
+ 	spin_unlock_irq(shost->host_lock);
+-
++ not_ready:
  	/*
  	 * lock q, handle tag, requeue req, and decrement device_busy. We
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index 9aa38f7..4e078b6 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -291,8 +291,8 @@ struct scsi_target {
- 	unsigned int		expecting_lun_change:1;	/* A device has reported
- 						 * a 3F/0E UA, other devices on
- 						 * the same target will also. */
--	/* commands actually active on LLD. protected by host lock. */
--	unsigned int		target_busy;
-+	/* commands actually active on LLD. */
-+	atomic_t		target_busy;
- 	/*
- 	 * LLDs should set this in the slave_alloc host template callout.
- 	 * If set to zero then there is not limit.
+ 	 * must return with queue_lock held.
 -- 
 1.9.1
