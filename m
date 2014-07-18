@@ -1,42 +1,46 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 1/3] scsi: update scsi_device_types
-Date: Fri, 18 Jul 2014 17:17:16 +0200
-Message-ID: <1405696638-23770-2-git-send-email-hch@lst.de>
-References: <1405696638-23770-1-git-send-email-hch@lst.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:45522 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761642AbaGRPPH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Jul 2014 11:15:07 -0400
-In-Reply-To: <1405696638-23770-1-git-send-email-hch@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Benoit Taine <benoit.taine@lip6.fr>
+Subject: [PATCH 0/25] Replace DEFINE_PCI_DEVICE_TABLE macro use
+Date: Fri, 18 Jul 2014 17:26:47 +0200
+Message-ID: <1405697232-11785-1-git-send-email-benoit.taine@lip6.fr>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: driverdev-devel-bounces@linuxdriverproject.org
+To: linux-pci@vger.kernel.org
+Cc: linux-mips@linux-mips.org, linux-fbdev@vger.kernel.org, linux-mmc@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-kernel@vger.kernel.org, benoit.taine@lip6.fr, ath5k-devel@venema.h4ckr.net, linux-acenic@sunsite.dk, linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org, ath10k@lists.infradead.org, linux-hippi@sunsite.dk, industrypack-devel@lists.sourceforge.net, xen-devel@lists.xenproject.org, MPT-FusionLinux.pdl@avagotech.com, virtualization@lists.linux-foundation.org, ath9k-devel@venema.h4ckr.net, wil6210@qca.qualcomm.com, linux-pcmcia@lists.infradead.org, linux-can@vger.kernel.org, platform-driver-x86@vger.kernel.org, netdev@vger.kernel.org, linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com, e1000-devel@lists.sourceforge.net, linux-crypto@vger.kernel.org, devel@linuxdriverproject.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Hannes Reinecke <hare@suse.de>
 
-Add two new device types, most importantly the zoned block device
-one.
+We should prefer `const struct pci_device_id` over
+`DEFINE_PCI_DEVICE_TABLE` to meet kernel coding style guidelines.
+This issue was reported by checkpatch.
 
-Split from an earlier patch by Hannes Reinecke.
+A simplified version of the semantic patch that makes this change is as
+follows (http://coccinelle.lip6.fr/):
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/scsi/scsi.c | 2 ++
- 1 file changed, 2 insertions(+)
+// <smpl>
 
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 013709f..33318f5 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -122,6 +122,8 @@ static const char *const scsi_device_types[] = {
- 	"Bridge controller",
- 	"Object storage   ",
- 	"Automation/Drive ",
-+	"Security Manager ",
-+	"Direct-Access-ZBC",
- };
- 
- /**
--- 
-1.9.1
+@@
+identifier i;
+declarer name DEFINE_PCI_DEVICE_TABLE;
+initializer z;
+@@
 
+- DEFINE_PCI_DEVICE_TABLE(i)
++ const struct pci_device_id i[]
+= z;
+
+// </smpl>
+
+I have 103 patches ready, and will only send a few for you to judge if
+it is useful enough, and to prevent from spamming too much.
+
+Thanks.
