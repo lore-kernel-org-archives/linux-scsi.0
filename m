@@ -1,60 +1,99 @@
-From: Joe Perches <joe@perches.com>
-Subject: Re: [PATCH 0/25] Replace DEFINE_PCI_DEVICE_TABLE macro use
-Date: Fri, 18 Jul 2014 11:05:39 -0700
-Message-ID: <1405706739.14358.68.camel@joe-AO725>
-References: <1405697232-11785-1-git-send-email-benoit.taine@lip6.fr>
-	 <20140718162213.GC31114@tuxdriver.com> <20140718164340.GA24960@kroah.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH 1/1] [SCSI] Fix a bug in deriving the FLUSH_TIMEOUT from
+ the basic I/O timeout
+Date: Fri, 18 Jul 2014 08:16:46 -1000
+Message-ID: <53C9648E.5040005@interlog.com>
+References: <1401899623-24194-1-git-send-email-kys@microsoft.com>	 <1401901323.17510.23.camel@dabdike>	 <d61f4b87a72544e4b0c1e1872a76f97b@BY2PR03MB299.namprd03.prod.outlook.com>	 <53911A35.7010805@cs.wisc.edu>	 <d9854e6ff97f4b0087dbe835a2a57c8f@BY2PR03MB299.namprd03.prod.outlook.com>	 <5391F801.4010107@cs.wisc.edu>	 <1402077167.2207.89.camel@dabdike.int.hansenpartnership.com>	 <539206FA.1020001@kernel.dk>	 <5b926a0a9f264edda91c7c2ab0acb7d1@BY2PR03MB299.namprd03.prod.outlook.com>	 <13807d2cc8744ae1bc374f20d8f9caec@BY2PR0301MB0711.namprd03.prod.outlook.com>	 <94D0CD8314A33A4D9D801C0FE68B402958BAC6DC@G9W0745.americas.hpqcorp.net>	 <1405697964.605.27.camel@jarvis.lan>	 <94D0CD8314A33A4D9D801C0FE68B402958BB2E3D@G9W0745.americas.hpqcorp.net> <1405705265.30262.6.camel@dabdike.int.hansenpartnershi
+ p.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-crypto-owner@vger.kernel.org>
-In-Reply-To: <20140718164340.GA24960@kroah.com>
-Sender: linux-crypto-owner@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>, Benoit Taine <benoit.taine@lip6.fr>, linux-mips@linux-mips.org, linux-fbdev@vger.kernel.org, linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-kernel@vger.kernel.org, ath5k-devel@venema.h4ckr.net, linux-acenic@sunsite.dk, linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org, ath10k@lists.infradead.org, linux-hippi@sunsite.dk, industrypack-devel@lists.sourceforge.net, linux-mmc@vger.kernel.org, MPT-FusionLinux.pdl@avagotech.com, virtualization@lists.linux-foundation.org, ath9k-devel@venema.h4ckr.net, wil6210@qca.qualcomm.com, linux-pcmcia@lists.infradead.org, linux-can@vger.kernel.org, xen-devel@lists.xenproject.org, platform-driver-x86@vger.kernel.org, netdev@vger.kernel.org, linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com, e1000-devel@lists.sourceforge.net, linux-crypto@vger.kernel.orgdeve
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1405705265.30262.6.camel@dabdike.int.hansenpartnership.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <jbottomley@parallels.com>, "Elliott@hp.com" <Elliott@hp.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "apw@canonical.com" <apw@canonical.com>, "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>, "kys@microsoft.com" <kys@microsoft.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "ohering@suse.com" <ohering@suse.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "jasowang@redhat.com" <jasowang@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, 2014-07-18 at 09:43 -0700, Greg KH wrote:
-> On Fri, Jul 18, 2014 at 12:22:13PM -0400, John W. Linville wrote:
-> > On Fri, Jul 18, 2014 at 05:26:47PM +0200, Benoit Taine wrote:
-> > > We should prefer `const struct pci_device_id` over
-> > > `DEFINE_PCI_DEVICE_TABLE` to meet kernel coding style guidelines.
-> > > This issue was reported by checkpatch.
-> >  scripts/checkpatch.pl | 4 ++--
-> > Honestly, I prefer the macro -- it stands-out more.  Maybe the style
-> > guidelines and/or checkpatch should change instead?
-> 
-> The macro is horrid, no other bus has this type of thing just to save a
-> few characters in typing, so why should PCI be "special" in this regard
-> anymore?
+On 14-07-18 07:41 AM, James Bottomley wrote:
+> On Fri, 2014-07-18 at 17:17 +0000, Elliott, Robert (Server Storage)
+> wrote:
+>>
+>>
+>>> From: James Bottomley [mailto:jbottomley@parallels.com]
+>>>
+>>> On Fri, 2014-07-18 at 00:51 +0000, Elliott, Robert (Server Storage)
+>>> wrote:
+>> ...
+>>>>
+>>>> Also, in both sd_setup_flush_cmnd and sd_sync_cache:
+>>>>        cmd->cmnd[0] = SYNCHRONIZE_CACHE;
+>>>>        cmd->cmd_len = 10;
+>>>>
+>>>> SYNCHRONIZE CACHE (16) should be favored over SYNCHRONIZE
+>>>> CACHE (10) unless SYNCHRONIZE CACHE (10) is not supported.
+>>
+>> (sorry - meant "unless ... 16 is not supported")
+>
+> Yes, I guessed that?
+>
+>>> For what reason.  We usually go for the safe alternatives, which is 10
+>>> byte commands because they have the widest testing and greatest level of
+>>> support.  We don't do range flushes currently, so there doesn't seem to
+>>> be a practical different.  If we did support range flushes, we'd likely
+>>> only use SC(16) on >2TB devices.
+>>>
+>>> James
+>>
+>> A goal of the simplified SCSI feature set idea is to drop all the
+>> short CDBs that have larger, more capable equivalents - don't carry
+>> READ 6/10/12/16 and SYNCHRONIZE CACHE 10/16, just keep the 16-byte
+>> versions.  With modern serial IU-based protocols, short CDBs don't
+>> save any transfer time.  This will simplify design and testing on
+>> both initiator and target sides. Competing command sets like NVMe
+>> rightly point out that SCSI has too much legacy baggage - all you
+>> need for IO is one READ, one WRITE, and one FLUSH command.
+>
+> But that's not relevant to us.  This is the problem of practical vs
+> standards approaches.  We have to support older and buggy devices.  Most
+> small USB storage sticks die if they see 16 byte CDB commands because
+> their interpreters.  The more "legacy baggage" the standards committee
+> dumps, the greater the number of heuristics OSs have to have to cope
+> with the plethora of odd devices.
+>
+>> That's why SBC-3 ended up with these warning notes for all the
+>> non-16 byte CDBs:
+>>
+>> 	NOTE 15 - Migration from the SYNCHRONIZE CACHE (10) command to
+>> 	the SYNCHRONIZE CACHE (16) command is recommended for all
+>> 	implementations.
+>>
+>> If the LBA field in SYNCHRONIZE CACHE went obsolete, then maybe
+>> SYNCHRONIZE CACHE (10) would be kept instead of (16), but that
+>> field is still present.  So, (16) is the likely survivor.
+>
+> OK, but look at it from our point of view:  The reply above justifies
+> why we prefer 10 byte CDBs over 16.  If the standards body ever did
+> remove SC(10) completely, then we'd have to have yet another heuristic
+> to recognise devices that don't support SC(10), but until that day,
+> using SC(10) alone works in all cases, so is the better path for the OS.
+>
+> If you could, please get the standards body to recognise that the more
+> command churn they introduce (in the name of rationalisation or
+> whatever), the more problems they introduce for Operating Systems and
+> the more likelihood (because of different people reading different
+> revisions of standards) that we end up with compliance bugs in devices.
 
-I think it doesn't matter much.
+ From the term: "feature sets" I'm guessing T10 will follow what T13
+does and have something like a VPD page with descriptors of feature
+sets supported. Each set has mandatory and optional commands,
+perhaps a similar categorization of mode and VPD pages as well. Such
+a "clean slate" for SCSI would make it simpler in the future, at
+least for what to put on the fast path. Perhaps some legacy
+support could be pushed to the user space.
 
-The PCI_DEVICE and PCI_VDEVICE macro uses are somewhat similar
-and are frequently used with PCI_DEVICE_TABLE, so there's some
-commonality there.
+For many technical areas "legacy" is a derogatory term, but
+not necessarily for storage!
 
-The checkpatch message could be made --strict/CHK instead of
-WARN so most people would never see it.
-
-Of course it could be removed altogether too.  I don't care.
----
-(suggested patch is for -next)
-
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/scripts/checkpatch.pl b/scripts/checkpatch.pl
-index dc72a9b..754fbf2 100755
---- a/scripts/checkpatch.pl
-+++ b/scripts/checkpatch.pl
-@@ -3018,8 +3018,8 @@ sub process {
- 
- # check for uses of DEFINE_PCI_DEVICE_TABLE
- 		if ($line =~ /\bDEFINE_PCI_DEVICE_TABLE\s*\(\s*(\w+)\s*\)\s*=/) {
--			if (WARN("DEFINE_PCI_DEVICE_TABLE",
--				 "Prefer struct pci_device_id over deprecated DEFINE_PCI_DEVICE_TABLE\n" . $herecurr) &&
-+			if (CHK("DEFINE_PCI_DEVICE_TABLE",
-+				"Prefer struct pci_device_id over deprecated DEFINE_PCI_DEVICE_TABLE\n" . $herecurr) &&
- 			    $fix) {
- 				$fixed[$fixlinenr] =~ s/\b(?:static\s+|)DEFINE_PCI_DEVICE_TABLE\s*\(\s*(\w+)\s*\)\s*=\s*/static const struct pci_device_id $1\[\] = /;
- 			}
+Doug Gilbert
