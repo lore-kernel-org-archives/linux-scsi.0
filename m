@@ -1,25 +1,14 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH 1/1] [SCSI] Fix a bug in deriving the FLUSH_TIMEOUT from
- the basic I/O timeout
-Date: Fri, 18 Jul 2014 16:44:14 +0000
-Message-ID: <2d43adebbc47441084d8e1284507a427@BY2PR0301MB0711.namprd03.prod.outlook.com>
-References: <1401899623-24194-1-git-send-email-kys@microsoft.com>
- <1401901323.17510.23.camel@dabdike>
- <d61f4b87a72544e4b0c1e1872a76f97b@BY2PR03MB299.namprd03.prod.outlook.com>
- <53911A35.7010805@cs.wisc.edu>
- <d9854e6ff97f4b0087dbe835a2a57c8f@BY2PR03MB299.namprd03.prod.outlook.com>
- <5391F801.4010107@cs.wisc.edu>
- <1402077167.2207.89.camel@dabdike.int.hansenpartnership.com>
- <539206FA.1020001@kernel.dk>
- <5b926a0a9f264edda91c7c2ab0acb7d1@BY2PR03MB299.namprd03.prod.outlook.com>
- <13807d2cc8744ae1bc374f20d8f9caec@BY2PR0301MB0711.namprd03.prod.outlook.com>
- <20140718151039.GA7425@infradead.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 0/25] Replace DEFINE_PCI_DEVICE_TABLE macro use
+Date: Fri, 18 Jul 2014 09:54:32 -0700
+Message-ID: <1405702472.30262.1.camel@dabdike.int.hansenpartnership.com>
+References: <1405697232-11785-1-git-send-email-benoit.taine@lip6.fr>
+ <20140718162213.GC31114@tuxdriver.com> <20140718164340.GA24960@kroah.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <20140718151039.GA7425@infradead.org>
-Content-Language: en-US
+In-Reply-To: <20140718164340.GA24960@kroah.com>
 List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
  <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
 List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
@@ -29,34 +18,40 @@ List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driver
  <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
 Errors-To: driverdev-devel-bounces@linuxdriverproject.org
 Sender: driverdev-devel-bounces@linuxdriverproject.org
-To: "Christoph Hellwig (hch@infradead.org)" <hch@infradead.org>
-Cc: Jens Axboe <axboe@kernel.dk>, "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "jasowang@redhat.com" <jasowang@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, "ohering@suse.com" <ohering@suse.com>, "apw@canonical.com" <apw@canonical.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
+To: Greg KH <greg@kroah.com>
+Cc: linux-mips@linux-mips.org, linux-fbdev@vger.kernel.org, linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org, virtualization@lists.linux-foundation.org, Benoit Taine <benoit.taine@lip6.fr>, ath5k-devel@venema.h4ckr.net, linux-acenic@sunsite.dk, linux-scsi@vger.kernel.org, users@rt2x00.serialmonkey.com, linux-rdma@vger.kernel.org, ath10k@lists.infradead.org, linux-hippi@sunsite.dk, industrypack-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org, xen-devel@lists.xenproject.org, MPT-FusionLinux.pdl@avagotech.com, ath9k-devel@venema.h4ckr.net, wil6210@qca.qualcomm.com, linux-pcmcia@lists.infradead.org, "John W. Linville" <linville@tuxdriver.com>, linux-can@vger.kernel.org, platform-driver-x86@vger.kernel.org, netdev@vger.kernel.org, linux-mmc@vger.kernel.org, linux-kernel@vger.kernel.org, e1000-devel@lists.sourceforge.net, linux-crypto@vger.kernel.orgdevel@l
 List-Id: linux-scsi@vger.kernel.org
 
-
-
-> -----Original Message-----
-> From: Christoph Hellwig (hch@infradead.org) [mailto:hch@infradead.org]
-> Sent: Friday, July 18, 2014 8:11 AM
-> To: KY Srinivasan
-> Cc: Jens Axboe; James Bottomley; michaelc@cs.wisc.edu; Christoph Hellwig
-> (hch@infradead.org); linux-scsi@vger.kernel.org;
-> gregkh@linuxfoundation.org; jasowang@redhat.com; linux-
-> kernel@vger.kernel.org; ohering@suse.com; apw@canonical.com;
-> devel@linuxdriverproject.org
-> Subject: Re: [PATCH 1/1] [SCSI] Fix a bug in deriving the FLUSH_TIMEOUT
-> from the basic I/O timeout
+On Fri, 2014-07-18 at 09:43 -0700, Greg KH wrote:
+> On Fri, Jul 18, 2014 at 12:22:13PM -0400, John W. Linville wrote:
+> > On Fri, Jul 18, 2014 at 05:26:47PM +0200, Benoit Taine wrote:
+> > > We should prefer `const struct pci_device_id` over
+> > > `DEFINE_PCI_DEVICE_TABLE` to meet kernel coding style guidelines.
+> > > This issue was reported by checkpatch.
+> > 
+> > Honestly, I prefer the macro -- it stands-out more.  Maybe the style
+> > guidelines and/or checkpatch should change instead?
 > 
-> On Thu, Jul 17, 2014 at 11:53:33PM +0000, KY Srinivasan wrote:
-> > I still see this problem. There was talk of fixing it elsewhere.
-> 
-> Well, what we have right not is entirely broken, given that the block layer
-> doesn't initialize ->timeout on TYPE_FS requeuests.
-> 
-> We either need to revert that initial commit or apply something like the
-> attached patch as a quick fix.
-I had sent this exact patch sometime back:
+> The macro is horrid, no other bus has this type of thing just to save a
+> few characters in typing
 
-http://www.spinics.net/lists/linux-scsi/msg75385.html
+OK, so this is the macro:
 
-K. Y
+#define DEFINE_PCI_DEVICE_TABLE(_table) \
+	const struct pci_device_id _table[]
+
+Could you explain what's so horrible?
+
+The reason it's useful today is that people forget the const (and
+sometimes the [] making it a true table instead of a pointer).  If you
+use the DEFINE_PCI_DEVICE_TABLE macro, the compile breaks if you use it
+wrongly (good) and you automatically get the correct annotations.
+
+> , so why should PCI be "special" in this regard
+> anymore?
+
+I think the PCI usage dwarfs most other bus types now, so you could turn
+the question around.  However, I don't think majority voting is a good
+guide to best practise; lets debate the merits for their own sake.
+
+James
