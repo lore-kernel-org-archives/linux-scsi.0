@@ -1,33 +1,79 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [ANNOUNCE] scsi patch queue tree updated
-Date: Fri, 18 Jul 2014 03:02:30 -0700
-Message-ID: <20140718100230.GA23521@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 01/14] scsi: add scsi_setup_cmnd helper
+Date: Fri, 18 Jul 2014 12:13:00 +0200
+Message-ID: <1405678393-11497-2-git-send-email-hch@lst.de>
+References: <1405678393-11497-1-git-send-email-hch@lst.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <1405678393-11497-1-git-send-email-hch@lst.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
+Cc: Jens Axboe <axboe@kernel.dk>, Bart Van Assche <bvanassche@fusionio.com>, Mike Christie <michaelc@cs.wisc.edu>, "Martin K. Petersen" <martin.petersen@oracle.com>, Robert Elliott <Elliott@hp.com>, Webb Scales <webbnh@hp.com>, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-I've pushed out new version of the for-3.17 core and drivers trees:
+Factor out command setup code that will be shared with the blk-mq code path.
 
-  git://git.infradead.org/users/hch/scsi-queue.git core-for-3.17
-  git://git.infradead.org/users/hch/scsi-queue.git drivers-for-3.17
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/scsi/scsi_lib.c | 40 ++++++++++++++++++++++------------------
+ 1 file changed, 22 insertions(+), 18 deletions(-)
 
-In the core tree the biggest update is the merge of the I/O path
-cleanups, in addition various individual patches were merged, and
-the a few fixes for the 64-bit LUN series were squashed into the
-patches.
-
-The drivers side gained various updates, but there's still lots of
-driver work on the list that needs more reviews.
-
-I did a rebase to Linus' latest tree to pick up the fix for the aio
-regression to help people doing IOPS testing.
-
-Note that I've also pushed out a core-for-3.16 tree with James' flush
-fix in case James wants to push this for 3.16 still; but this late
-in the release cycles it might be better to wait for 3.17 for this as
-well.
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 85cf0ef..04c3684 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1092,6 +1092,27 @@ static int scsi_setup_fs_cmnd(struct scsi_device *sdev, struct request *req)
+ 	return scsi_cmd_to_driver(cmd)->init_command(cmd);
+ }
+ 
++static int scsi_setup_cmnd(struct scsi_device *sdev, struct request *req)
++{
++	struct scsi_cmnd *cmd = req->special;
++
++	if (!blk_rq_bytes(req))
++		cmd->sc_data_direction = DMA_NONE;
++	else if (rq_data_dir(req) == WRITE)
++		cmd->sc_data_direction = DMA_TO_DEVICE;
++	else
++		cmd->sc_data_direction = DMA_FROM_DEVICE;
++
++	switch (req->cmd_type) {
++	case REQ_TYPE_FS:
++		return scsi_setup_fs_cmnd(sdev, req);
++	case REQ_TYPE_BLOCK_PC:
++		return scsi_setup_blk_pc_cmnd(sdev, req);
++	default:
++		return BLKPREP_KILL;
++	}
++}
++
+ static int
+ scsi_prep_state_check(struct scsi_device *sdev, struct request *req)
+ {
+@@ -1195,24 +1216,7 @@ static int scsi_prep_fn(struct request_queue *q, struct request *req)
+ 		goto out;
+ 	}
+ 
+-	if (!blk_rq_bytes(req))
+-		cmd->sc_data_direction = DMA_NONE;
+-	else if (rq_data_dir(req) == WRITE)
+-		cmd->sc_data_direction = DMA_TO_DEVICE;
+-	else
+-		cmd->sc_data_direction = DMA_FROM_DEVICE;
+-
+-	switch (req->cmd_type) {
+-	case REQ_TYPE_FS:
+-		ret = scsi_setup_fs_cmnd(sdev, req);
+-		break;
+-	case REQ_TYPE_BLOCK_PC:
+-		ret = scsi_setup_blk_pc_cmnd(sdev, req);
+-		break;
+-	default:
+-		ret = BLKPREP_KILL;
+-	}
+-
++	ret = scsi_setup_cmnd(sdev, req);
+ out:
+ 	return scsi_prep_return(q, req, ret);
+ }
+-- 
+1.9.1
