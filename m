@@ -1,70 +1,59 @@
-From: poma <pomidorabelisima-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: Re: WARNING: CPU: 1 PID: 495 at mm/slab_common.c:69
-	kmem_cache_create+0x1a9/0x330()
-Date: Fri, 18 Jul 2014 22:01:56 +0200
-Message-ID: <53C97D34.5040707@gmail.com>
+ kmem_cache_create+0x1a9/0x330()
+Date: Fri, 18 Jul 2014 13:07:26 -0700
+Message-ID: <1405714046.30262.10.camel@dabdike.int.hansenpartnership.com>
 References: <53C8DF7F.5060707@gmail.com> <53C8FD95.5020302@gmail.com>
-	<20140718132104.GK27940@esperanza> <20140718141747.GA23272@lst.de>
+	 <20140718132104.GK27940@esperanza> <20140718141747.GA23272@lst.de>
+	 <53C97D34.5040707@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
-Content-Transfer-Encoding: base64
-Return-path: <kernel-bounces-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org>
-In-Reply-To: <20140718141747.GA23272-jcswGhMUV9g@public.gmane.org>
-List-Unsubscribe: <https://admin.fedoraproject.org/mailman/options/kernel>,
-	<mailto:kernel-request-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.fedoraproject.org/pipermail/kernel/>
-List-Post: <mailto:kernel-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org>
-List-Help: <mailto:kernel-request-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org?subject=help>
-List-Subscribe: <https://admin.fedoraproject.org/mailman/listinfo/kernel>,
-	<mailto:kernel-request-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org?subject=subscribe>
-Sender: kernel-bounces-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org
-Errors-To: kernel-bounces-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org
-To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mailing-List fedora-kernel <kernel-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org>, Linux Kernel list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, James Bottomley <JBottomley-MU7nAjRaF3makBO8gow8eQ@public.gmane.org>, Paolo Bonzini <pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <53C97D34.5040707@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: poma <pomidorabelisima@gmail.com>
+Cc: Christoph Hellwig <hch@lst.de>, Vladimir Davydov <vdavydov@parallels.com>, Linux Kernel list <linux-kernel@vger.kernel.org>, Christoph Lameter <cl@linux.com>, Mailing-List fedora-kernel <kernel@lists.fedoraproject.org>, Paolo Bonzini <pbonzini@redhat.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-T24gMTguMDcuMjAxNCAxNjoxNywgQ2hyaXN0b3BoIEhlbGx3aWcgd3JvdGU6Cj4gT24gRnJpLCBK
-dWwgMTgsIDIwMTQgYXQgMDU6MjE6MDRQTSArMDQwMCwgVmxhZGltaXIgRGF2eWRvdiB3cm90ZToK
-Pj4gU2xhYiB3YXJucywgYmVjYXVzZSB0aGUgbmFtZSBvZiB0aGUgY2FjaGUgYmVpbmcgY3JlYXRl
-ZCBjb250YWlucyBzcGFjZXMuCj4+IFRoZSAiYmFkIiBjYWNoZSBpcyBjcmVhdGVkIGJ5IHNjc2lf
-Z2V0X2hvc3RfY21kX3Bvb2wuIEl0cyBuYW1lCj4+IChwb29sLT5jbWRfbmFtZSkgaXMgaW5pdGlh
-bGl6ZWQgYnkgc2NzaV9hbGxvY19ob3N0X2NtZF9wb29sIGFzIGZvbGxvd3M6Cj4+Cj4+IAlwb29s
-LT5jbWRfbmFtZSA9IGthc3ByaW50ZihHRlBfS0VSTkVMLCAiJXNfY21kIiwgaG9zdHQtPm5hbWUp
-Owo+Pgo+PiBTbywgaWYgaG9zdHQtPm5hbWUgY29udGFpbnMgc3BhY2VzLCB0aGUgY2FjaGUgbmFt
-ZSB3aWxsIGFsc28gY29udGFpbgo+PiBzcGFjZXMgYW5kIHdlJ2xsIGdldCB0aGUgd2FybmluZy4g
-QW5kIGhvc3R0LT5uYW1lIGNhbiBjb250YWluIHNwYWNlcywKPj4gZS5nLiB2aXJ0c2NzaV9ob3N0
-X3RlbXBsYXRlX3NpbmdsZS5uYW1lPSJWaXJ0aW8gU0NTSSBIQkEiLgo+Cj4gT3IgbWlnaHQgbm90
-IGV2ZW4gYmUgcHJlc2VudC4gIEknbGwgc2VuZCBhIHBhdGNoIHRvIHJlcGxhY2UgaXQgd2l0aAo+
-IC0+cHJvY19uYW1lLCB3aGljaCBtdXN0IG5vdCBjb250YWluIHNwYWNlcyBhbmQgaXMgZ2VuZXJh
-bGx5IHNob3J0ZXIKPiBhcyB3ZWxsLgo+CgpJcyB0aGlzIHdoYXQgeW91IHRob3VnaHQ/CkBAIC0x
-NDgsMjAgKzE0OCwyMCBAQAogIAlzdHJ1Y3Qga21lbV9jYWNoZQkqY21kX3NsYWI7CiAgCXN0cnVj
-dCBrbWVtX2NhY2hlCSpzZW5zZV9zbGFiOwogIAl1bnNpZ25lZCBpbnQJCXVzZXJzOwotCWNoYXIJ
-CQkqY21kX25hbWU7CisJY2hhcgkJCSpwcm9jX25hbWU7CiAgCWNoYXIJCQkqc2Vuc2VfbmFtZTsK
-ICAJdW5zaWduZWQgaW50CQlzbGFiX2ZsYWdzOwogIAlnZnBfdAkJCWdmcF9tYXNrOwogIH07CiAg
-CiAgc3RhdGljIHN0cnVjdCBzY3NpX2hvc3RfY21kX3Bvb2wgc2NzaV9jbWRfcG9vbCA9IHsKLQku
-Y21kX25hbWUJPSAic2NzaV9jbWRfY2FjaGUiLAorCS5wcm9jX25hbWUJPSAic2NzaV9jbWRfY2Fj
-aGUiLAogIAkuc2Vuc2VfbmFtZQk9ICJzY3NpX3NlbnNlX2NhY2hlIiwKICAJLnNsYWJfZmxhZ3MJ
-PSBTTEFCX0hXQ0FDSEVfQUxJR04sCiAgfTsKICAKICBzdGF0aWMgc3RydWN0IHNjc2lfaG9zdF9j
-bWRfcG9vbCBzY3NpX2NtZF9kbWFfcG9vbCA9IHsKLQkuY21kX25hbWUJPSAic2NzaV9jbWRfY2Fj
-aGUoRE1BKSIsCisJLnByb2NfbmFtZQk9ICJzY3NpX2NtZF9jYWNoZShETUEpIiwKICAJLnNlbnNl
-X25hbWUJPSAic2NzaV9zZW5zZV9jYWNoZShETUEpIiwKICAJLnNsYWJfZmxhZ3MJPSBTTEFCX0hX
-Q0FDSEVfQUxJR058U0xBQl9DQUNIRV9ETUEsCiAgCS5nZnBfbWFzawk9IF9fR0ZQX0RNQSwKQEAg
-LTM1NCw3ICszNTQsNyBAQAogIHNjc2lfZnJlZV9ob3N0X2NtZF9wb29sKHN0cnVjdCBzY3NpX2hv
-c3RfY21kX3Bvb2wgKnBvb2wpCiAgewogIAlrZnJlZShwb29sLT5zZW5zZV9uYW1lKTsKLQlrZnJl
-ZShwb29sLT5jbWRfbmFtZSk7CisJa2ZyZWUocG9vbC0+cHJvY19uYW1lKTsKICAJa2ZyZWUocG9v
-bCk7CiAgfQogIApAQCAtMzY4LDkgKzM2OCw5IEBACiAgCWlmICghcG9vbCkKICAJCXJldHVybiBO
-VUxMOwogIAotCXBvb2wtPmNtZF9uYW1lID0ga2FzcHJpbnRmKEdGUF9LRVJORUwsICIlc19jbWQi
-LCBob3N0dC0+bmFtZSk7CisJcG9vbC0+cHJvY19uYW1lID0ga2FzcHJpbnRmKEdGUF9LRVJORUws
-ICIlc19jbWQiLCBob3N0dC0+bmFtZSk7CiAgCXBvb2wtPnNlbnNlX25hbWUgPSBrYXNwcmludGYo
-R0ZQX0tFUk5FTCwgIiVzX3NlbnNlIiwgaG9zdHQtPm5hbWUpOwotCWlmICghcG9vbC0+Y21kX25h
-bWUgfHwgIXBvb2wtPnNlbnNlX25hbWUpIHsKKwlpZiAoIXBvb2wtPnByb2NfbmFtZSB8fCAhcG9v
-bC0+c2Vuc2VfbmFtZSkgewogIAkJc2NzaV9mcmVlX2hvc3RfY21kX3Bvb2wocG9vbCk7CiAgCQly
-ZXR1cm4gTlVMTDsKICAJfQpAQCAtNDAzLDcgKzQwMyw3IEBACiAgCX0KICAKICAJaWYgKCFwb29s
-LT51c2VycykgewotCQlwb29sLT5jbWRfc2xhYiA9IGttZW1fY2FjaGVfY3JlYXRlKHBvb2wtPmNt
-ZF9uYW1lLCBjbWRfc2l6ZSwgMCwKKwkJcG9vbC0+Y21kX3NsYWIgPSBrbWVtX2NhY2hlX2NyZWF0
-ZShwb29sLT5wcm9jX25hbWUsIGNtZF9zaXplLCAwLAogIAkJCQkJCSAgIHBvb2wtPnNsYWJfZmxh
-Z3MsIE5VTEwpOwogIAkJaWYgKCFwb29sLT5jbWRfc2xhYikKICAJCQlnb3RvIG91dF9mcmVlX3Bv
-b2w7CgoKaG93ZXZlciBhaW4ndCB3b3JraW4uCgoKcG9tYQoKCl9fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fCmtlcm5lbCBtYWlsaW5nIGxpc3QKa2VybmVsQGxp
-c3RzLmZlZG9yYXByb2plY3Qub3JnCmh0dHBzOi8vYWRtaW4uZmVkb3JhcHJvamVjdC5vcmcvbWFp
-bG1hbi9saXN0aW5mby9rZXJuZWw=
+On Fri, 2014-07-18 at 22:01 +0200, poma wrote:
+> On 18.07.2014 16:17, Christoph Hellwig wrote:
+> > On Fri, Jul 18, 2014 at 05:21:04PM +0400, Vladimir Davydov wrote:
+> >> Slab warns, because the name of the cache being created contains spaces.
+> >> The "bad" cache is created by scsi_get_host_cmd_pool. Its name
+> >> (pool->cmd_name) is initialized by scsi_alloc_host_cmd_pool as follows:
+> >>
+> >> 	pool->cmd_name = kasprintf(GFP_KERNEL, "%s_cmd", hostt->name);
+> >>
+> >> So, if hostt->name contains spaces, the cache name will also contain
+> >> spaces and we'll get the warning. And hostt->name can contain spaces,
+> >> e.g. virtscsi_host_template_single.name="Virtio SCSI HBA".
+> >
+> > Or might not even be present.  I'll send a patch to replace it with
+> > ->proc_name, which must not contain spaces and is generally shorter
+> > as well.
+> >
+> 
+> Is this what you thought?
+
+No, he means this, if you want to try it.
+
+James
+
+---
+
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 88d46fe..eb07a9b 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -368,8 +368,8 @@ scsi_alloc_host_cmd_pool(struct Scsi_Host *shost)
+ 	if (!pool)
+ 		return NULL;
+ 
+-	pool->cmd_name = kasprintf(GFP_KERNEL, "%s_cmd", hostt->name);
+-	pool->sense_name = kasprintf(GFP_KERNEL, "%s_sense", hostt->name);
++	pool->cmd_name = kasprintf(GFP_KERNEL, "%s_cmd", hostt->proc_name);
++	pool->sense_name = kasprintf(GFP_KERNEL, "%s_sense", hostt->proc_name);
+ 	if (!pool->cmd_name || !pool->sense_name) {
+ 		scsi_free_host_cmd_pool(pool);
+ 		return NULL;
