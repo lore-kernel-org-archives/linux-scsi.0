@@ -1,46 +1,64 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [PATCH 0/25] Replace DEFINE_PCI_DEVICE_TABLE macro use
-Date: Fri, 18 Jul 2014 14:27:00 -0700
-Message-ID: <20140718212700.GA12121@kroah.com>
-References: <1405697232-11785-1-git-send-email-benoit.taine@lip6.fr>
-	<20140718162213.GC31114@tuxdriver.com>
-	<20140718164340.GA24960@kroah.com>
-	<1405702472.30262.1.camel@dabdike.int.hansenpartnership.com>
-	<20140718181759.GB2193@kroah.com>
-	<CAPM=9tzgWdnv7jc+xjsJUf0EcyGU+V7nFHzzQ16ui1eE0ihyQA@mail.gmail.com>
+From: poma <pomidorabelisima-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: WARNING: CPU: 1 PID: 495 at mm/slab_common.c:69
+	kmem_cache_create+0x1a9/0x330()
+Date: Fri, 18 Jul 2014 23:32:51 +0200
+Message-ID: <53C99283.1010107@gmail.com>
+References: <53C8DF7F.5060707@gmail.com> <53C8FD95.5020302@gmail.com>	
+	<20140718132104.GK27940@esperanza>
+	<20140718141747.GA23272@lst.de>	 <53C97D34.5040707@gmail.com>
+	<1405714046.30262.10.camel@dabdike.int.hansenpartnership.com>
+	<53C9808F.5040906@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-Content-Disposition: inline
-In-Reply-To: <CAPM=9tzgWdnv7jc+xjsJUf0EcyGU+V7nFHzzQ16ui1eE0ihyQA@mail.gmail.com>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: Dave Airlie <airlied@gmail.com>
-Cc: linux-mips@linux-mips.org, Linux Fbdev development list <linux-fbdev@vger.kernel.org>, linux-pci@vger.kernel.org, dri-devel <dri-devel@lists.freedesktop.org>, virtualization@lists.linux-foundation.org, James Bottomley <James.Bottomley@hansenpartnership.com>, Benoit Taine <benoit.taine@lip6.fr>, ath5k-devel@venema.h4ckr.net, linux-acenic@sunsite.dk, Linux SCSI List <linux-scsi@vger.kernel.org>, users@rt2x00.serialmonkey.com, linux-rdma@vger.kernel.org, ath10k@lists.infradead.org, linux-hippi@sunsite.dk, industrypack-devel@lists.sourceforge.net, Linux Wireless List <linux-wireless@vger.kernel.org>, xen-devel@lists.xenproject.org, MPT-FusionLinux.pdl@avagotech.com, ath9k-devel@venema.h4ckr.net, wil6210@qca.qualcomm.com, linux-pcmcia@lists.infradead.org, "John W. Linville" <linville@tuxdriver.com>, linux-can@vger.kernel.org, platform-driver-x86@vger.kernel.org, Network
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Transfer-Encoding: base64
+Return-path: <kernel-bounces-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org>
+In-Reply-To: <53C9808F.5040906-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+List-Unsubscribe: <https://admin.fedoraproject.org/mailman/options/kernel>,
+	<mailto:kernel-request-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.fedoraproject.org/pipermail/kernel/>
+List-Post: <mailto:kernel-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org>
+List-Help: <mailto:kernel-request-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org?subject=help>
+List-Subscribe: <https://admin.fedoraproject.org/mailman/listinfo/kernel>,
+	<mailto:kernel-request-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org?subject=subscribe>
+Sender: kernel-bounces-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org
+Errors-To: kernel-bounces-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org
+To: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
+Cc: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mailing-List fedora-kernel <kernel-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org>, Linux Kernel list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Paolo Bonzini <pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, Jul 19, 2014 at 07:14:12AM +1000, Dave Airlie wrote:
-> >
-> > We have almost 1000 more uses of the non-macro version than the "macro"
-> > version in the kernel today:
-> > $ git grep -w DEFINE_PCI_DEVICE_TABLE | wc -l
-> > 262
-> > $ git grep "const struct pci_device_id" | wc -l
-> > 1254
-> 
-> did you check for non-const ones? just to see if we have any of the
-> broken case in the tree :-)
-
-I didn't :)
-
-> as for consistency, pci_dev vs usb_device :-P
-
-Read farther down the email...
+T24gMTguMDcuMjAxNCAyMjoxNiwgcG9tYSB3cm90ZToKPiBPbiAxOC4wNy4yMDE0IDIyOjA3LCBK
+YW1lcyBCb3R0b21sZXkgd3JvdGU6Cj4+IE9uIEZyaSwgMjAxNC0wNy0xOCBhdCAyMjowMSArMDIw
+MCwgcG9tYSB3cm90ZToKPj4+IE9uIDE4LjA3LjIwMTQgMTY6MTcsIENocmlzdG9waCBIZWxsd2ln
+IHdyb3RlOgo+Pj4+IE9uIEZyaSwgSnVsIDE4LCAyMDE0IGF0IDA1OjIxOjA0UE0gKzA0MDAsIFZs
+YWRpbWlyIERhdnlkb3Ygd3JvdGU6Cj4+Pj4+IFNsYWIgd2FybnMsIGJlY2F1c2UgdGhlIG5hbWUg
+b2YgdGhlIGNhY2hlIGJlaW5nIGNyZWF0ZWQgY29udGFpbnMgc3BhY2VzLgo+Pj4+PiBUaGUgImJh
+ZCIgY2FjaGUgaXMgY3JlYXRlZCBieSBzY3NpX2dldF9ob3N0X2NtZF9wb29sLiBJdHMgbmFtZQo+
+Pj4+PiAocG9vbC0+Y21kX25hbWUpIGlzIGluaXRpYWxpemVkIGJ5IHNjc2lfYWxsb2NfaG9zdF9j
+bWRfcG9vbCBhcyBmb2xsb3dzOgo+Pj4+Pgo+Pj4+PiAJcG9vbC0+Y21kX25hbWUgPSBrYXNwcmlu
+dGYoR0ZQX0tFUk5FTCwgIiVzX2NtZCIsIGhvc3R0LT5uYW1lKTsKPj4+Pj4KPj4+Pj4gU28sIGlm
+IGhvc3R0LT5uYW1lIGNvbnRhaW5zIHNwYWNlcywgdGhlIGNhY2hlIG5hbWUgd2lsbCBhbHNvIGNv
+bnRhaW4KPj4+Pj4gc3BhY2VzIGFuZCB3ZSdsbCBnZXQgdGhlIHdhcm5pbmcuIEFuZCBob3N0dC0+
+bmFtZSBjYW4gY29udGFpbiBzcGFjZXMsCj4+Pj4+IGUuZy4gdmlydHNjc2lfaG9zdF90ZW1wbGF0
+ZV9zaW5nbGUubmFtZT0iVmlydGlvIFNDU0kgSEJBIi4KPj4+Pgo+Pj4+IE9yIG1pZ2h0IG5vdCBl
+dmVuIGJlIHByZXNlbnQuICBJJ2xsIHNlbmQgYSBwYXRjaCB0byByZXBsYWNlIGl0IHdpdGgKPj4+
+PiAtPnByb2NfbmFtZSwgd2hpY2ggbXVzdCBub3QgY29udGFpbiBzcGFjZXMgYW5kIGlzIGdlbmVy
+YWxseSBzaG9ydGVyCj4+Pj4gYXMgd2VsbC4KPj4+Pgo+Pj4KPj4+IElzIHRoaXMgd2hhdCB5b3Ug
+dGhvdWdodD8KPj4KPj4gTm8sIGhlIG1lYW5zIHRoaXMsIGlmIHlvdSB3YW50IHRvIHRyeSBpdC4K
+Pj4KPj4gSmFtZXMKPj4KPj4gLS0tCj4+Cj4+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvc2Nz
+aS5jIGIvZHJpdmVycy9zY3NpL3Njc2kuYwo+PiBpbmRleCA4OGQ0NmZlLi5lYjA3YTliIDEwMDY0
+NAo+PiAtLS0gYS9kcml2ZXJzL3Njc2kvc2NzaS5jCj4+ICsrKyBiL2RyaXZlcnMvc2NzaS9zY3Np
+LmMKPj4gQEAgLTM2OCw4ICszNjgsOCBAQCBzY3NpX2FsbG9jX2hvc3RfY21kX3Bvb2woc3RydWN0
+IFNjc2lfSG9zdCAqc2hvc3QpCj4+ICAgIAlpZiAoIXBvb2wpCj4+ICAgIAkJcmV0dXJuIE5VTEw7
+Cj4+Cj4+IC0JcG9vbC0+Y21kX25hbWUgPSBrYXNwcmludGYoR0ZQX0tFUk5FTCwgIiVzX2NtZCIs
+IGhvc3R0LT5uYW1lKTsKPj4gLQlwb29sLT5zZW5zZV9uYW1lID0ga2FzcHJpbnRmKEdGUF9LRVJO
+RUwsICIlc19zZW5zZSIsIGhvc3R0LT5uYW1lKTsKPj4gKwlwb29sLT5jbWRfbmFtZSA9IGthc3By
+aW50ZihHRlBfS0VSTkVMLCAiJXNfY21kIiwgaG9zdHQtPnByb2NfbmFtZSk7Cj4+ICsJcG9vbC0+
+c2Vuc2VfbmFtZSA9IGthc3ByaW50ZihHRlBfS0VSTkVMLCAiJXNfc2Vuc2UiLCBob3N0dC0+cHJv
+Y19uYW1lKTsKPj4gICAgCWlmICghcG9vbC0+Y21kX25hbWUgfHwgIXBvb2wtPnNlbnNlX25hbWUp
+IHsKPj4gICAgCQlzY3NpX2ZyZWVfaG9zdF9jbWRfcG9vbChwb29sKTsKPj4gICAgCQlyZXR1cm4g
+TlVMTDsKPj4KPj4KPgo+IE1hbiwgSSBqdXN0IG5vdyByZWFkIGl0IGNvcnJlY3RseSAtICJTbywg
+aWYgaG9zdHQtPm5hbWUgY29udGFpbnMgc3BhY2VzIi4KPiBUaGFua3MuCj4KPiBJJ2xsIGJlIGJh
+Y2suCj4KClllYSwgSSBjYW4gY29uZmlybSBpdCB3b3JrcyEgOikKTm8gd2FybmluZ3MuCgoKcG9t
+YQoKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmtlcm5l
+bCBtYWlsaW5nIGxpc3QKa2VybmVsQGxpc3RzLmZlZG9yYXByb2plY3Qub3JnCmh0dHBzOi8vYWRt
+aW4uZmVkb3JhcHJvamVjdC5vcmcvbWFpbG1hbi9saXN0aW5mby9rZXJuZWw=
