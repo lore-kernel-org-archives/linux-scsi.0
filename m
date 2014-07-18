@@ -1,130 +1,78 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 04/14] scsi: set ->scsi_done before calling scsi_dispatch_cmd
-Date: Fri, 18 Jul 2014 12:13:03 +0200
-Message-ID: <1405678393-11497-5-git-send-email-hch@lst.de>
-References: <1405678393-11497-1-git-send-email-hch@lst.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:44246 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761055AbaGRKLI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Jul 2014 06:11:08 -0400
-In-Reply-To: <1405678393-11497-1-git-send-email-hch@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: [PATCH RFC 0/2] percpu_tags: Prototype implementation
+Date: Fri, 18 Jul 2014 12:20:56 +0200
+Message-ID: <cover.1405678629.git.agordeev@redhat.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>, linux-scsi@vger.kernel.org, qla2xxx-upstream@qlogic.com, Nicholas Bellinger <nab@daterainc.com>, Kent Overstreet <kmo@daterainc.com>, "Michael S. Tsirkin" <mst@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
-Cc: Jens Axboe <axboe@kernel.dk>, Bart Van Assche <bvanassche@fusionio.com>, Mike Christie <michaelc@cs.wisc.edu>, "Martin K. Petersen" <martin.petersen@oracle.com>, Robert Elliott <Elliott@hp.com>, Webb Scales <webbnh@hp.com>, linux-kernel@vger.kernel.org
 
-The blk-mq code path will set this to a different function, so make the
-code simpler by setting it up in a legacy-request specific place.
+Hello Gentleman,
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Webb Scales <webbnh@hp.com>
-Acked-by: Jens Axboe <axboe@kernel.dk>
-Tested-by: Bart Van Assche <bvanassche@acm.org>
-Tested-by: Robert Elliott <elliott@hp.com>
----
- drivers/scsi/scsi.c     | 23 +----------------------
- drivers/scsi/scsi_lib.c | 20 ++++++++++++++++++++
- 2 files changed, 21 insertions(+), 22 deletions(-)
+This is a development of "percpu_ida" library. I named it
+"percpu_tags" to simplify review, since most of "percpu_ida"
+code has gone and a diff would not be informative.
 
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 2396e89..6200a26 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -72,8 +72,6 @@
- #define CREATE_TRACE_POINTS
- #include <trace/events/scsi.h>
- 
--static void scsi_done(struct scsi_cmnd *cmd);
--
- /*
-  * Definitions and constants.
-  */
-@@ -693,8 +691,6 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
- 	}
- 
- 	trace_scsi_dispatch_cmd_start(cmd);
--
--	cmd->scsi_done = scsi_done;
- 	rtn = host->hostt->queuecommand(host, cmd);
- 	if (rtn) {
- 		trace_scsi_dispatch_cmd_error(cmd, rtn);
-@@ -708,28 +704,11 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
- 
- 	return rtn;
-  done:
--	scsi_done(cmd);
-+	cmd->scsi_done(cmd);
- 	return 0;
- }
- 
- /**
-- * scsi_done - Invoke completion on finished SCSI command.
-- * @cmd: The SCSI Command for which a low-level device driver (LLDD) gives
-- * ownership back to SCSI Core -- i.e. the LLDD has finished with it.
-- *
-- * Description: This function is the mid-level's (SCSI Core) interrupt routine,
-- * which regains ownership of the SCSI command (de facto) from a LLDD, and
-- * calls blk_complete_request() for further processing.
-- *
-- * This function is interrupt context safe.
-- */
--static void scsi_done(struct scsi_cmnd *cmd)
--{
--	trace_scsi_dispatch_cmd_done(cmd);
--	blk_complete_request(cmd->request);
--}
--
--/**
-  * scsi_finish_command - cleanup and pass command back to upper layer
-  * @cmd: the command
-  *
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index bf73427..b832696 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -29,6 +29,8 @@
- #include <scsi/scsi_eh.h>
- #include <scsi/scsi_host.h>
- 
-+#include <trace/events/scsi.h>
-+
- #include "scsi_priv.h"
- #include "scsi_logging.h"
- 
-@@ -1454,6 +1456,23 @@ static void scsi_softirq_done(struct request *rq)
- 	}
- }
- 
-+/**
-+ * scsi_done - Invoke completion on finished SCSI command.
-+ * @cmd: The SCSI Command for which a low-level device driver (LLDD) gives
-+ * ownership back to SCSI Core -- i.e. the LLDD has finished with it.
-+ *
-+ * Description: This function is the mid-level's (SCSI Core) interrupt routine,
-+ * which regains ownership of the SCSI command (de facto) from a LLDD, and
-+ * calls blk_complete_request() for further processing.
-+ *
-+ * This function is interrupt context safe.
-+ */
-+static void scsi_done(struct scsi_cmnd *cmd)
-+{
-+	trace_scsi_dispatch_cmd_done(cmd);
-+	blk_complete_request(cmd->request);
-+}
-+
- /*
-  * Function:    scsi_request_fn()
-  *
-@@ -1556,6 +1575,7 @@ static void scsi_request_fn(struct request_queue *q)
- 		/*
- 		 * Dispatch the command to the low-level driver.
- 		 */
-+		cmd->scsi_done = scsi_done;
- 		rtn = scsi_dispatch_cmd(cmd);
- 		if (rtn) {
- 			scsi_queue_insert(cmd, rtn);
+While the concept of per-cpu arrays is is preserved, the
+implementation is heavily reworked. The main objective is to
+improve the "percpu_ida" locking scheme.
+
+Here is the list of major differrences between "percpu_ida" and
+"percpu_tags":
+
+* The global freelist has gone. As result, CPUs do not compete
+  for the global lock.
+
+* Long-running operatons (scanning thru a cpumask) are executed
+  with local interrupts enabled;
+
+* percpu_ida::percpu_max_size limit is eliminated. Instead, the
+  limit is determined dynamically. Depending from how many CPUs
+  are requesting tags each CPU gets a fair share of the tag space;
+
+* A tag is attempted to return to the CPU it was allocated on. As
+  result, it is expected the locality of data associated with the
+  tag benefits;
+
+The code is largely raw and untested. The reason I am posting
+is the prototype implementation performs 2-3 times faster than
+"percpu_ida", so I would like to ensure if it worth going further
+with this approach or is there a no-go.
+
+The performance test is not decent, though. I used "fio" random
+read against a "null_blk" device sitting on top of "percpu_tags",
+which is not exactly how "percpu_ida" is used. This is another
+reason I am posting - an advice on how to properly test is very
+appreciated.
+
+The source code could be found at
+https://github.com/a-gordeev/linux.git	percpu_tags-v0
+
+Thanks!
+
+Cc: linux-scsi@vger.kernel.org
+Cc: qla2xxx-upstream@qlogic.com
+Cc: Nicholas Bellinger <nab@daterainc.com>
+Cc: Kent Overstreet <kmo@daterainc.com>
+Cc: "Michael S. Tsirkin" <mst@redhat.com>
+
+Alexander Gordeev (2):
+  percpu_tags: Prototype implementation
+  percpu_tags: Use percpu_tags instead of percpu_ida
+
+ drivers/scsi/qla2xxx/qla_target.c        |    6 +-
+ drivers/target/iscsi/iscsi_target_util.c |    6 +-
+ drivers/target/target_core_transport.c   |    4 +-
+ drivers/target/tcm_fc/tfc_cmd.c          |    8 +-
+ drivers/vhost/scsi.c                     |    6 +-
+ include/linux/percpu_tags.h              |   37 ++
+ include/target/target_core_base.h        |    4 +-
+ lib/Makefile                             |    2 +-
+ lib/percpu_tags.c                        |  556 ++++++++++++++++++++++++++++++
+ 9 files changed, 611 insertions(+), 18 deletions(-)
+ create mode 100644 include/linux/percpu_tags.h
+ create mode 100644 lib/percpu_tags.c
+
 -- 
-1.9.1
-
+1.7.7.6
