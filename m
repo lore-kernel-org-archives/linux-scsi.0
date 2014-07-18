@@ -1,99 +1,96 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH 1/1] [SCSI] Fix a bug in deriving the FLUSH_TIMEOUT from
- the basic I/O timeout
-Date: Fri, 18 Jul 2014 08:16:46 -1000
-Message-ID: <53C9648E.5040005@interlog.com>
-References: <1401899623-24194-1-git-send-email-kys@microsoft.com>	 <1401901323.17510.23.camel@dabdike>	 <d61f4b87a72544e4b0c1e1872a76f97b@BY2PR03MB299.namprd03.prod.outlook.com>	 <53911A35.7010805@cs.wisc.edu>	 <d9854e6ff97f4b0087dbe835a2a57c8f@BY2PR03MB299.namprd03.prod.outlook.com>	 <5391F801.4010107@cs.wisc.edu>	 <1402077167.2207.89.camel@dabdike.int.hansenpartnership.com>	 <539206FA.1020001@kernel.dk>	 <5b926a0a9f264edda91c7c2ab0acb7d1@BY2PR03MB299.namprd03.prod.outlook.com>	 <13807d2cc8744ae1bc374f20d8f9caec@BY2PR0301MB0711.namprd03.prod.outlook.com>	 <94D0CD8314A33A4D9D801C0FE68B402958BAC6DC@G9W0745.americas.hpqcorp.net>	 <1405697964.605.27.camel@jarvis.lan>	 <94D0CD8314A33A4D9D801C0FE68B402958BB2E3D@G9W0745.americas.hpqcorp.net> <1405705265.30262.6.camel@dabdike.int.hansenpartnershi
- p.com>
-Reply-To: dgilbert@interlog.com
+From: Greg KH <greg@kroah.com>
+Subject: Re: [PATCH 0/25] Replace DEFINE_PCI_DEVICE_TABLE macro use
+Date: Fri, 18 Jul 2014 11:17:59 -0700
+Message-ID: <20140718181759.GB2193@kroah.com>
+References: <1405697232-11785-1-git-send-email-benoit.taine@lip6.fr>
+ <20140718162213.GC31114@tuxdriver.com>
+ <20140718164340.GA24960@kroah.com>
+ <1405702472.30262.1.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1405705265.30262.6.camel@dabdike.int.hansenpartnership.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>, "Elliott@hp.com" <Elliott@hp.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "apw@canonical.com" <apw@canonical.com>, "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>, "kys@microsoft.com" <kys@microsoft.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "ohering@suse.com" <ohering@suse.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "jasowang@redhat.com" <jasowang@redhat.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <platform-driver-x86-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1405702472.30262.1.camel@dabdike.int.hansenpartnership.com>
+Sender: platform-driver-x86-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>, Benoit Taine <benoit.taine@lip6.fr>, linux-mips@linux-mips.org, linux-fbdev@vger.kernel.org, linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-kernel@vger.kernel.org, ath5k-devel@venema.h4ckr.net, linux-acenic@sunsite.dk, linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org, ath10k@lists.infradead.org, linux-hippi@sunsite.dk, industrypack-devel@lists.sourceforge.net, linux-mmc@vger.kernel.org, MPT-FusionLinux.pdl@avagotech.com, virtualization@lists.linux-foundation.org, ath9k-devel@venema.h4ckr.net, wil6210@qca.qualcomm.com, linux-pcmcia@lists.infradead.org, linux-can@vger.kernel.org, xen-devel@lists.xenproject.org, platform-driver-x86@vger.kernel.org, netdev@vger.kernel.org, linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com, e1000-devel@lists.sourceforge.net, linux-crypto@vger.kernel.orgdeve
 List-Id: linux-scsi@vger.kernel.org
 
-On 14-07-18 07:41 AM, James Bottomley wrote:
-> On Fri, 2014-07-18 at 17:17 +0000, Elliott, Robert (Server Storage)
-> wrote:
->>
->>
->>> From: James Bottomley [mailto:jbottomley@parallels.com]
->>>
->>> On Fri, 2014-07-18 at 00:51 +0000, Elliott, Robert (Server Storage)
->>> wrote:
->> ...
->>>>
->>>> Also, in both sd_setup_flush_cmnd and sd_sync_cache:
->>>>        cmd->cmnd[0] = SYNCHRONIZE_CACHE;
->>>>        cmd->cmd_len = 10;
->>>>
->>>> SYNCHRONIZE CACHE (16) should be favored over SYNCHRONIZE
->>>> CACHE (10) unless SYNCHRONIZE CACHE (10) is not supported.
->>
->> (sorry - meant "unless ... 16 is not supported")
->
-> Yes, I guessed that?
->
->>> For what reason.  We usually go for the safe alternatives, which is 10
->>> byte commands because they have the widest testing and greatest level of
->>> support.  We don't do range flushes currently, so there doesn't seem to
->>> be a practical different.  If we did support range flushes, we'd likely
->>> only use SC(16) on >2TB devices.
->>>
->>> James
->>
->> A goal of the simplified SCSI feature set idea is to drop all the
->> short CDBs that have larger, more capable equivalents - don't carry
->> READ 6/10/12/16 and SYNCHRONIZE CACHE 10/16, just keep the 16-byte
->> versions.  With modern serial IU-based protocols, short CDBs don't
->> save any transfer time.  This will simplify design and testing on
->> both initiator and target sides. Competing command sets like NVMe
->> rightly point out that SCSI has too much legacy baggage - all you
->> need for IO is one READ, one WRITE, and one FLUSH command.
->
-> But that's not relevant to us.  This is the problem of practical vs
-> standards approaches.  We have to support older and buggy devices.  Most
-> small USB storage sticks die if they see 16 byte CDB commands because
-> their interpreters.  The more "legacy baggage" the standards committee
-> dumps, the greater the number of heuristics OSs have to have to cope
-> with the plethora of odd devices.
->
->> That's why SBC-3 ended up with these warning notes for all the
->> non-16 byte CDBs:
->>
->> 	NOTE 15 - Migration from the SYNCHRONIZE CACHE (10) command to
->> 	the SYNCHRONIZE CACHE (16) command is recommended for all
->> 	implementations.
->>
->> If the LBA field in SYNCHRONIZE CACHE went obsolete, then maybe
->> SYNCHRONIZE CACHE (10) would be kept instead of (16), but that
->> field is still present.  So, (16) is the likely survivor.
->
-> OK, but look at it from our point of view:  The reply above justifies
-> why we prefer 10 byte CDBs over 16.  If the standards body ever did
-> remove SC(10) completely, then we'd have to have yet another heuristic
-> to recognise devices that don't support SC(10), but until that day,
-> using SC(10) alone works in all cases, so is the better path for the OS.
->
-> If you could, please get the standards body to recognise that the more
-> command churn they introduce (in the name of rationalisation or
-> whatever), the more problems they introduce for Operating Systems and
-> the more likelihood (because of different people reading different
-> revisions of standards) that we end up with compliance bugs in devices.
+On Fri, Jul 18, 2014 at 09:54:32AM -0700, James Bottomley wrote:
+> On Fri, 2014-07-18 at 09:43 -0700, Greg KH wrote:
+> > On Fri, Jul 18, 2014 at 12:22:13PM -0400, John W. Linville wrote:
+> > > On Fri, Jul 18, 2014 at 05:26:47PM +0200, Benoit Taine wrote:
+> > > > We should prefer `const struct pci_device_id` over
+> > > > `DEFINE_PCI_DEVICE_TABLE` to meet kernel coding style guidelines.
+> > > > This issue was reported by checkpatch.
+> > > 
+> > > Honestly, I prefer the macro -- it stands-out more.  Maybe the style
+> > > guidelines and/or checkpatch should change instead?
+> > 
+> > The macro is horrid, no other bus has this type of thing just to save a
+> > few characters in typing
+> 
+> OK, so this is the macro:
+> 
+> #define DEFINE_PCI_DEVICE_TABLE(_table) \
+> 	const struct pci_device_id _table[]
+> 
+> Could you explain what's so horrible?
+> 
+> The reason it's useful today is that people forget the const (and
+> sometimes the [] making it a true table instead of a pointer).  If you
+> use the DEFINE_PCI_DEVICE_TABLE macro, the compile breaks if you use it
+> wrongly (good) and you automatically get the correct annotations.
 
- From the term: "feature sets" I'm guessing T10 will follow what T13
-does and have something like a VPD page with descriptors of feature
-sets supported. Each set has mandatory and optional commands,
-perhaps a similar categorization of mode and VPD pages as well. Such
-a "clean slate" for SCSI would make it simpler in the future, at
-least for what to put on the fast path. Perhaps some legacy
-support could be pushed to the user space.
+We have almost 1000 more uses of the non-macro version than the "macro"
+version in the kernel today:
+$ git grep -w DEFINE_PCI_DEVICE_TABLE | wc -l
+262
+$ git grep "const struct pci_device_id" | wc -l
+1254
 
-For many technical areas "legacy" is a derogatory term, but
-not necessarily for storage!
+My big complaint is that we need to be consistant, either pick one or
+the other and stick to it.  As the macro is the least used, it's easiest
+to fix up, and it also is more consistant with all other kernel
+subsystems which do not have such a macro.
 
-Doug Gilbert
+As there is no need for the __init macro mess anymore, there's no real
+need for the DEFINE_PCI_DEVICE_TABLE macro either.  I think checkpatch
+will catch the use of non-const users for the id table already today, it
+catches lots of other uses like this already.
+
+> > , so why should PCI be "special" in this regard
+> > anymore?
+> 
+> I think the PCI usage dwarfs most other bus types now, so you could turn
+> the question around.  However, I don't think majority voting is a good
+> guide to best practise; lets debate the merits for their own sake.
+
+Not really "dwarf", USB is close with over 700 such structures:
+$ git grep "const struct usb_device_id" | wc -l
+725
+
+And i2c is almost just as big as PCI:
+$ git grep "const struct i2c_device_id" | wc -l
+1223
+
+So again, this macro is not consistent with the majority of PCI drivers,
+nor with any other type of "device id" declaration in the kernel, which
+is why I feel it should be removed.
+
+And finally, the PCI documentation itself says to not use this macro, so
+this isn't a "new" thing.  From Documentation/PCI/pci.txt:
+
+	The ID table is an array of struct pci_device_id entries ending with an
+	all-zero entry.  Definitions with static const are generally preferred.
+	Use of the deprecated macro DEFINE_PCI_DEVICE_TABLE should be avoided.
+
+That wording went into the file last December, when we last talked about
+this and everyone in that discussion agreed to remove the macro for the
+above reasons.
+
+Consistency matters.
+
+thanks,
+
+greg k-h
