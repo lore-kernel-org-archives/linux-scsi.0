@@ -1,31 +1,33 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 3/3] mpt3sas, mpt2sas: fix scsi_add_host error handling
-	problems in _scsih_probe
-Date: Fri, 18 Jul 2014 11:46:49 +0200
-Message-ID: <20140718094649.GC2121@lst.de>
-References: <20140717193707.1924.87867.stgit@beardog.cce.hp.com> <20140717193926.1924.21344.stgit@beardog.cce.hp.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [ANNOUNCE] scsi patch queue tree updated
+Date: Fri, 18 Jul 2014 03:02:30 -0700
+Message-ID: <20140718100230.GA23521@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20140717193926.1924.21344.stgit@beardog.cce.hp.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Robert Elliott <elliott@hp.com>
-Cc: axboe@kernel.dk, abhijit.mahajan@avagotech.com, kmo@datarainc.com, nagalakshmi.nandigama@avagotech.com, asamymuthupa@micron.com, snitzer@redhat.com, JBottomley@parallels.com, relliott@beardog.cce.hp.com, sreekanth.reddy@avagotech.com, praveen.krishnamoorthy@avagotech.com, agordeev@redhat.com, scameron@beardog.cce.hp.com, tom.leiming@gmail.com, sbradshaw@micron.com, hch@lst.de, m@bjorling.me, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Jul 17, 2014 at 02:39:30PM -0500, Robert Elliott wrote:
-> In _scsih_probe, propagate the return value from scsi_add_host.
-> In mpt3sas, avoid calling list_del twice if that returns an
-> error, which causes list_del corruption warnings if an error
-> is returned.
-> 
-> Tested with blk-mq and scsi-mq patches to properly cleanup
-> from and propagate blk_mq_init_rq_map errors.
-> 
-> Signed-off-by: Robert Elliott <elliott@hp.com>
+I've pushed out new version of the for-3.17 core and drivers trees:
 
-Looks good.  It would be even better if we'd have proper error values
-returned from mpt2/3sas_base_attach as well.
+  git://git.infradead.org/users/hch/scsi-queue.git core-for-3.17
+  git://git.infradead.org/users/hch/scsi-queue.git drivers-for-3.17
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+In the core tree the biggest update is the merge of the I/O path
+cleanups, in addition various individual patches were merged, and
+the a few fixes for the 64-bit LUN series were squashed into the
+patches.
+
+The drivers side gained various updates, but there's still lots of
+driver work on the list that needs more reviews.
+
+I did a rebase to Linus' latest tree to pick up the fix for the aio
+regression to help people doing IOPS testing.
+
+Note that I've also pushed out a core-for-3.16 tree with James' flush
+fix in case James wants to push this for 3.16 still; but this late
+in the release cycles it might be better to wait for 3.17 for this as
+well.
