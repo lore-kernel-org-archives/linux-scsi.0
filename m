@@ -1,42 +1,41 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH] virtio_scsi: check on resp->sense_len instead of 'sense_buffer'
-Date: Fri, 18 Jul 2014 17:00:02 +0200
-Message-ID: <53C93672.8030805@redhat.com>
-References: <1405695438-18485-1-git-send-email-ming.lei@canonical.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] SCSI: Add a blacklist flag which enables VPD page
+ inquiries
+Date: Fri, 18 Jul 2014 08:04:06 -0700
+Message-ID: <20140718150406.GA29709@infradead.org>
+References: <yq18unuwos2.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:18041 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761861AbaGRPAR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Jul 2014 11:00:17 -0400
-In-Reply-To: <1405695438-18485-1-git-send-email-ming.lei@canonical.com>
+Received: from bombadil.infradead.org ([198.137.202.9]:58225 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758210AbaGRPEH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Jul 2014 11:04:07 -0400
+Content-Disposition: inline
+In-Reply-To: <yq18unuwos2.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ming Lei <ming.lei@canonical.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, KY Srinivasan <kys@microsoft.com>
 
-Il 18/07/2014 16:57, Ming Lei ha scritto:
-> -	if (sc->sense_buffer) {
-> +	if (resp->sense_len) {
+On Tue, Jul 15, 2014 at 12:49:17PM -0400, Martin K. Petersen wrote:
+>     
+> Despite supporting modern SCSI features some storage devices continue to
+> claim conformance to an older version of the SPC spec. This is done for
+> compatibility with legacy operating systems.
+> 
+> Linux by default will not attempt to read VPD pages on devices that
+> claim SPC-2 or older. Introduce a blacklist flag that can be used to
+> trigger VPD page inquiries on devices that are known to support them.
+> 
+> Reported-by: KY Srinivasan <kys@microsoft.com>
+> Tested-by: KY Srinivasan <kys@microsoft.com>
+> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+> CC: <stable@vger.kernel.org>
 
-In the (unlikely) case that sc->sense_buffer == NULL, you'd pass a NULL
-to memcpy.
+Looks good,
 
-If you want, you can change this if to
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-	if (sc->sense_buffer && resp->sense_len)
-
-but frankly it seems like slightly pointless churn to me.
-
-Paolo
-
->  		memcpy(sc->sense_buffer, resp->sense,
->  		       min_t(u32, resp->sense_len, VIRTIO_SCSI_SENSE_SIZE));
-> -		if (resp->sense_len)
-> -			set_driver_byte(sc, DRIVER_SENSE);
-> +		set_driver_byte(sc, DRIVER_SENSE);
->  	}
-
+KY, can you send a hyperv patch that sets it to go along with this one?
 
