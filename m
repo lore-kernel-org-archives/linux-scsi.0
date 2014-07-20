@@ -1,46 +1,62 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 80711] New: SG_FLAG_LUN_INHIBIT is no longer implemented and
- there's not way to prevent the kernel from using the 2nd cdb byte for the LUN
-Date: Sun, 20 Jul 2014 00:37:39 +0000
-Message-ID: <bug-80711-11613@https.bugzilla.kernel.org/>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 1/2] block: cleanup error handling in sg_io
+Date: Sun, 20 Jul 2014 12:23:23 +0200
+Message-ID: <1405851804-29096-2-git-send-email-hch@lst.de>
+References: <1405851804-29096-1-git-send-email-hch@lst.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:58282 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752489AbaGTAhn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 19 Jul 2014 20:37:43 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 6C5CF20109
-	for <linux-scsi@vger.kernel.org>; Sun, 20 Jul 2014 00:37:42 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-	by mail.kernel.org (Postfix) with ESMTP id A205820120
-	for <linux-scsi@vger.kernel.org>; Sun, 20 Jul 2014 00:37:39 +0000 (UTC)
+Received: from casper.infradead.org ([85.118.1.10]:50463 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751212AbaGTKVM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 20 Jul 2014 06:21:12 -0400
+In-Reply-To: <1405851804-29096-1-git-send-email-hch@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=80711
+Make sure we always clean up through the out label and just have
+a single place to put the request.
 
-            Bug ID: 80711
-           Summary: SG_FLAG_LUN_INHIBIT is no longer implemented and
-                    there's not way to prevent the kernel from using the
-                    2nd cdb byte for the LUN
-           Product: IO/Storage
-           Version: 2.5
-    Kernel Version: 3.16-rc1
-          Hardware: All
-                OS: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: normal
-          Priority: P1
-         Component: SCSI
-          Assignee: linux-scsi@vger.kernel.org
-          Reporter: tiziano.bacocco@gmail.com
-        Regression: No
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ block/scsi_ioctl.c | 10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
 
+diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
+index 14695c6..c4e6633 100644
+--- a/block/scsi_ioctl.c
++++ b/block/scsi_ioctl.c
+@@ -272,7 +272,6 @@ static int blk_complete_sghdr_rq(struct request *rq, struct sg_io_hdr *hdr,
+ 	r = blk_rq_unmap_user(bio);
+ 	if (!ret)
+ 		ret = r;
+-	blk_put_request(rq);
+ 
+ 	return ret;
+ }
+@@ -312,10 +311,9 @@ static int sg_io(struct request_queue *q, struct gendisk *bd_disk,
+ 		return -ENOMEM;
+ 	blk_rq_set_block_pc(rq);
+ 
+-	if (blk_fill_sghdr_rq(q, rq, hdr, mode)) {
+-		blk_put_request(rq);
+-		return -EFAULT;
+-	}
++	ret = -EFAULT;
++	if (blk_fill_sghdr_rq(q, rq, hdr, mode))
++		goto out;
+ 
+ 	if (hdr->iovec_count) {
+ 		size_t iov_data_len;
+@@ -366,7 +364,7 @@ static int sg_io(struct request_queue *q, struct gendisk *bd_disk,
+ 
+ 	hdr->duration = jiffies_to_msecs(jiffies - start_time);
+ 
+-	return blk_complete_sghdr_rq(rq, hdr, bio);
++	ret = blk_complete_sghdr_rq(rq, hdr, bio);
+ out:
+ 	blk_put_request(rq);
+ 	return ret;
 -- 
-You are receiving this mail because:
-You are the assignee for the bug.
+1.9.1
+
