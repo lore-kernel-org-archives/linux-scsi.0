@@ -1,93 +1,64 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 3/4] libata-scsi: Update SATL for ZAC drives
-Date: Mon, 21 Jul 2014 10:27:20 +0200
-Message-ID: <1405931241-92015-4-git-send-email-hare@suse.de>
-References: <1405931241-92015-1-git-send-email-hare@suse.de>
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1405931241-92015-1-git-send-email-hare@suse.de>
-Sender: linux-ide-owner@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, James Bottomely <jbottomley@parallels.com>, Hannes Reinecke <hare@suse.de>, Tejun Heo <tj@kernel.org>
+Subject: [PATCHv2 0/4] Initial SMR drive support
+Date: Mon, 21 Jul 2014 10:27:17 +0200
+Message-ID: <1405931241-92015-1-git-send-email-hare@suse.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:44377 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752277AbaGUI1Z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 21 Jul 2014 04:27:25 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, James Bottomely <jbottomley@parallels.com>, Hannes Reinecke <hare@suse.de>
 
-ZAC (zoned-access command) drives translate into ZBC (Zoned block
-command) device type for SCSI. So implement the correct mappings
-into libata-scsi and update the SCSI command set versions.
+this is a first stab at implementing SMR support.
+The powers that be decided to call the ATA implementation
+'ZAC' (zoned access commands), and the SCSI implementation
+'ZBC' (zoned block commands).
 
-Cc: Tejun Heo <tj@kernel.org>
-Signed-off-by: Hannes Reinecke <hare@suse.de>
----
- drivers/ata/libata-scsi.c | 29 +++++++++++++++++++++++++++--
- 1 file changed, 27 insertions(+), 2 deletions(-)
+This is just basic enablement to get ZAC and ZBC drives
+handled correctly.
+The first three patches update the libata SATL to handle
+ZAC devices correctly, and the last patch updates the 'sd'
+to work correctly with ZBC devices.
+ZBC devices will _not_ be handled with the 'sd' driver
+automatically ss of now; however, the sd device can
+be bound manually to the device by using the sysfs
+'bind' attribute.
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index bea6e7f..500b721 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -1969,6 +1969,7 @@ static void ata_scsi_rbuf_fill(struct ata_scsi_args *args,
- static unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf)
- {
- 	const u8 versions[] = {
-+		0x00,
- 		0x60,	/* SAM-3 (no version claimed) */
- 
- 		0x03,
-@@ -1977,6 +1978,20 @@ static unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf)
- 		0x02,
- 		0x60	/* SPC-3 (no version claimed) */
- 	};
-+	const u8 versions_zbc[] = {
-+		0x00,
-+		0xA0,	/* SAM-5 (no version claimed) */
-+
-+		0x04,
-+		0xC0,	/* SBC-3 (no version claimed) */
-+
-+		0x04,
-+		0x60,	/* SPC-4 (no version claimed) */
-+
-+		0x60,
-+		0x20,   /* ZBC (no version claimed) */
-+	};
-+
- 	u8 hdr[] = {
- 		TYPE_DISK,
- 		0,
-@@ -1991,6 +2006,11 @@ static unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf)
- 	if (ata_id_removeable(args->id))
- 		hdr[1] |= (1 << 7);
- 
-+	if (args->dev->class == ATA_DEV_ZAC) {
-+		hdr[0] = TYPE_ZBC;
-+		hdr[2] = 0x6; /* ZBC is defined in SPC-4 */
-+	}
-+
- 	memcpy(rbuf, hdr, sizeof(hdr));
- 	memcpy(&rbuf[8], "ATA     ", 8);
- 	ata_id_string(args->id, &rbuf[16], ATA_ID_PROD, 16);
-@@ -2003,7 +2023,10 @@ static unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf)
- 	if (rbuf[32] == 0 || rbuf[32] == ' ')
- 		memcpy(&rbuf[32], "n/a ", 4);
- 
--	memcpy(rbuf + 59, versions, sizeof(versions));
-+	if (args->dev->class == ATA_DEV_ZAC)
-+		memcpy(rbuf + 58, versions_zbc, sizeof(versions_zbc));
-+	else
-+		memcpy(rbuf + 58, versions, sizeof(versions));
- 
- 	return 0;
- }
-@@ -2202,7 +2225,9 @@ static unsigned int ata_scsiop_inq_b1(struct ata_scsi_args *args, u8 *rbuf)
- 	rbuf[4] = media_rotation_rate >> 8;
- 	rbuf[5] = media_rotation_rate;
- 	rbuf[7] = form_factor;
--
-+	if (args->dev->class == ATA_DEV_ZAC)
-+		/* SBC-4 HAW_ZBC bit */
-+		rbuf[8] |= 0x10;
- 	return 0;
- }
- 
+None of the specific commands like 'report zones' or
+'reset write pointer' have been implemented yet as the
+actual format is still not finalized.
+
+This patch is made against the core-for-3.17 tree from hch.
+
+Hannes Reinecke (4):
+  libata: consolidate ata_dev_classify()
+  libata: Implement ATA_DEV_ZAC
+  libata-scsi: Update SATL for ZAC drives
+  sd: Handle ZBC drives correctly
+
+ drivers/ata/libahci.c               | 11 +++----
+ drivers/ata/libata-core.c           | 34 +++++++++++++-------
+ drivers/ata/libata-eh.c             |  7 +++--
+ drivers/ata/libata-scsi.c           | 34 +++++++++++++++++---
+ drivers/ata/libata-sff.c            |  2 +-
+ drivers/ata/libata-transport.c      |  1 +
+ drivers/ata/sata_fsl.c              | 11 +++----
+ drivers/ata/sata_inic162x.c         |  2 +-
+ drivers/ata/sata_sil24.c            |  2 +-
+ drivers/scsi/aic94xx/aic94xx_task.c | 10 +++---
+ drivers/scsi/isci/request.c         |  4 +--
+ drivers/scsi/libsas/sas_ata.c       | 63 +++++--------------------------------
+ drivers/scsi/mvsas/mv_sas.c         |  4 +--
+ drivers/scsi/pm8001/pm8001_hwi.c    |  2 +-
+ drivers/scsi/pm8001/pm80xx_hwi.c    |  2 +-
+ drivers/scsi/sd.c                   | 10 +++---
+ include/linux/libata.h              |  8 +++--
+ include/scsi/libsas.h               | 11 ++-----
+ 18 files changed, 103 insertions(+), 115 deletions(-)
+
 -- 
 1.7.12.4
 
