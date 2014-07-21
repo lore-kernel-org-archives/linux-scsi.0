@@ -1,24 +1,31 @@
 From: John Utz <John.Utz@wdc.com>
 Subject: RE: [PATCH 4/4] sd: Handle ZBC drives correctly
-Date: Mon, 21 Jul 2014 16:18:33 +0000
-Message-ID: <8A51900D08212F40B3DE22453052F69839C47278@wdscexmb02>
+Date: Mon, 21 Jul 2014 16:30:27 +0000
+Message-ID: <8A51900D08212F40B3DE22453052F69839C472F6@wdscexmb02>
 References: <1405931241-92015-1-git-send-email-hare@suse.de>
  <1405931241-92015-5-git-send-email-hare@suse.de>
- <20140721112904.GB15455@infradead.org>,<53CCFEBE.8080400@suse.de>
+ <20140721112904.GB15455@infradead.org>,<53CCFEBE.8080400@suse.de>,<8A51900D08212F40B3DE22453052F69839C47278@wdscexmb02>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wdmail01.wdc.com ([129.253.55.43]:59110 "EHLO wdmail01.wdc.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755184AbaGUQ2L convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Jul 2014 12:28:11 -0400
-In-Reply-To: <53CCFEBE.8080400@suse.de>
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <8A51900D08212F40B3DE22453052F69839C47278@wdscexmb02>
 Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@infradead.org>
 Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, James Bottomely <jbottomley@parallels.com>
+List-Id: linux-scsi@vger.kernel.org
+
+BAH! I get this ZBC/ZAC thing wrong still. mentally replace ATA with SC=
+SI in my comments below....
+________________________________________
+=46rom: linux-ide-owner@vger.kernel.org [linux-ide-owner@vger.kernel.or=
+g] on behalf of John Utz [John.Utz@wdc.com]
+Sent: Monday, July 21, 2014 9:18 AM
+To: Hannes Reinecke; Christoph Hellwig
+Cc: linux-ide@vger.kernel.org; linux-scsi@vger.kernel.org; James Bottom=
+ely
+Subject: RE: [PATCH 4/4] sd: Handle ZBC drives correctly
 
 If I read Hanne's patch correctly, he is checking for the ZBC signature=
  when the drives are probed.
@@ -79,7 +86,6 @@ To unsubscribe from this list: send the line "unsubscribe linux-ide" in
 the body of a message to majordomo@vger.kernel.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
 --
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
+To unsubscribe from this list: send the line "unsubscribe linux-ide" in
 the body of a message to majordomo@vger.kernel.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
