@@ -1,59 +1,93 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: uas: kernel BUG at block/blk-tag.c:89 is back again :|
-Date: Mon, 21 Jul 2014 10:17:25 +0200
-Message-ID: <53CCCC95.40204@kernel.dk>
-References: <53B2B4B2.8050100@redhat.com> <20140703060135.GA5292@infradead.org> <53B93FE3.8050607@redhat.com> <20140707101015.GB3544@infradead.org> <53BA95C0.3020607@redhat.com> <20140708095317.GA4306@infradead.org> <53BBBFC6.2030205@kernel.dk> <20140708095619.GA11196@infradead.org> <53BBC98C.4070004@kernel.dk> <53BBD51A.4070704@redhat.com> <53CCCC24.5050403@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:60069 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753561AbaGUIR2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Jul 2014 04:17:28 -0400
-Received: by mail-wg0-f42.google.com with SMTP id l18so5925496wgh.1
-        for <linux-scsi@vger.kernel.org>; Mon, 21 Jul 2014 01:17:26 -0700 (PDT)
-In-Reply-To: <53CCCC24.5050403@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 3/4] libata-scsi: Update SATL for ZAC drives
+Date: Mon, 21 Jul 2014 10:27:20 +0200
+Message-ID: <1405931241-92015-4-git-send-email-hare@suse.de>
+References: <1405931241-92015-1-git-send-email-hare@suse.de>
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1405931241-92015-1-git-send-email-hare@suse.de>
+Sender: linux-ide-owner@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, James Bottomely <jbottomley@parallels.com>, Hannes Reinecke <hare@suse.de>, Tejun Heo <tj@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Hans de Goede <hdegoede@redhat.com>, Christoph Hellwig <hch@infradead.org>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, Sarah Sharp <sarah.a.sharp@linux.intel.com>, linux-scsi@vger.kernel.org
 
-On 2014-07-21 10:15, Hans de Goede wrote:
-> Hi,
->
-> On 07/08/2014 01:25 PM, Hans de Goede wrote:
->> Hi,
->>
->> On 07/08/2014 12:35 PM, Jens Axboe wrote:
->>> On 2014-07-08 11:56, Christoph Hellwig wrote:
->>>> On Tue, Jul 08, 2014 at 11:54:14AM +0200, Jens Axboe wrote:
->>>>>> I've posted the patch in reply to another report and added Jens to the
->>>>>> Cc list.  As the block maintainer he need to review and merge it.
->>>>>
->>>>> Which patch is this?
->>>>
->>>> This one:
->>>>
->>>> ---
->>>> From: Christoph Hellwig <hch@lst.de>
->>>> Subject: block: don't assume last put of shared tags is for the host
->>>>
->>>> There is no inherent reason why the last put of a tag structure must be
->>>> the one for the Scsi_Host, as device model objects can be held for
->>>> arbitrary periods.  Merge blk_free_tags and __blk_free_tags into a single
->>>> funtion that just release a references and get rid of the BUG() when the
->>>> host reference wasn't the last.
->>>
->>> Thanks, applied. I don't think I was ever CC'ed on this one, though.
->>
->> Thanks, good to hear.
->
-> It seems this one has not made it into 3.16-rc6 somehow ?
+ZAC (zoned-access command) drives translate into ZBC (Zoned block
+command) device type for SCSI. So implement the correct mappings
+into libata-scsi and update the SCSI command set versions.
 
-It'll go out shortly, was on vacation last week. It is queued up in 
-for-linus.
+Cc: Tejun Heo <tj@kernel.org>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/ata/libata-scsi.c | 29 +++++++++++++++++++++++++++--
+ 1 file changed, 27 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index bea6e7f..500b721 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -1969,6 +1969,7 @@ static void ata_scsi_rbuf_fill(struct ata_scsi_args *args,
+ static unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf)
+ {
+ 	const u8 versions[] = {
++		0x00,
+ 		0x60,	/* SAM-3 (no version claimed) */
+ 
+ 		0x03,
+@@ -1977,6 +1978,20 @@ static unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf)
+ 		0x02,
+ 		0x60	/* SPC-3 (no version claimed) */
+ 	};
++	const u8 versions_zbc[] = {
++		0x00,
++		0xA0,	/* SAM-5 (no version claimed) */
++
++		0x04,
++		0xC0,	/* SBC-3 (no version claimed) */
++
++		0x04,
++		0x60,	/* SPC-4 (no version claimed) */
++
++		0x60,
++		0x20,   /* ZBC (no version claimed) */
++	};
++
+ 	u8 hdr[] = {
+ 		TYPE_DISK,
+ 		0,
+@@ -1991,6 +2006,11 @@ static unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf)
+ 	if (ata_id_removeable(args->id))
+ 		hdr[1] |= (1 << 7);
+ 
++	if (args->dev->class == ATA_DEV_ZAC) {
++		hdr[0] = TYPE_ZBC;
++		hdr[2] = 0x6; /* ZBC is defined in SPC-4 */
++	}
++
+ 	memcpy(rbuf, hdr, sizeof(hdr));
+ 	memcpy(&rbuf[8], "ATA     ", 8);
+ 	ata_id_string(args->id, &rbuf[16], ATA_ID_PROD, 16);
+@@ -2003,7 +2023,10 @@ static unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf)
+ 	if (rbuf[32] == 0 || rbuf[32] == ' ')
+ 		memcpy(&rbuf[32], "n/a ", 4);
+ 
+-	memcpy(rbuf + 59, versions, sizeof(versions));
++	if (args->dev->class == ATA_DEV_ZAC)
++		memcpy(rbuf + 58, versions_zbc, sizeof(versions_zbc));
++	else
++		memcpy(rbuf + 58, versions, sizeof(versions));
+ 
+ 	return 0;
+ }
+@@ -2202,7 +2225,9 @@ static unsigned int ata_scsiop_inq_b1(struct ata_scsi_args *args, u8 *rbuf)
+ 	rbuf[4] = media_rotation_rate >> 8;
+ 	rbuf[5] = media_rotation_rate;
+ 	rbuf[7] = form_factor;
+-
++	if (args->dev->class == ATA_DEV_ZAC)
++		/* SBC-4 HAW_ZBC bit */
++		rbuf[8] |= 0x10;
+ 	return 0;
+ }
+ 
 -- 
-Jens Axboe
+1.7.12.4
 
