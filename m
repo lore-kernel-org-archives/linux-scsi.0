@@ -1,42 +1,60 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 4/4] sd: Handle ZBC drives correctly
-Date: Mon, 21 Jul 2014 19:49:17 +0200
-Message-ID: <53CD529D.4050504@suse.de>
-References: <1405931241-92015-1-git-send-email-hare@suse.de> <1405931241-92015-5-git-send-email-hare@suse.de> <20140721112904.GB15455@infradead.org>,<53CCFEBE.8080400@suse.de> <8A51900D08212F40B3DE22453052F69839C47278@wdscexmb02>
+From: "K. Y. Srinivasan" <kys@microsoft.com>
+Subject: [PATCH 1/1] Drivers: scsi: storvsc: Add blist flags
+Date: Mon, 21 Jul 2014 16:06:01 -0700
+Message-ID: <1405983961-18782-1-git-send-email-kys@microsoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <8A51900D08212F40B3DE22453052F69839C47278@wdscexmb02>
-Sender: linux-ide-owner@vger.kernel.org
-To: John Utz <John.Utz@wdc.com>, Christoph Hellwig <hch@infradead.org>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, James Bottomely <jbottomley@parallels.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: driverdev-devel-bounces@linuxdriverproject.org
+To: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, apw@canonical.com, jasowang@redhat.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 07/21/2014 06:18 PM, John Utz wrote:
-> If I read Hanne's patch correctly, he is checking for the ZBC signatu=
-re
- > when the drives are probed.
->
-Yep.
+Add blist flags to permit the reading of the VPD pages even when
+the target may claim SPC-2 compliance. MSFT targets currently
+claim SPC-2 compliance while they implement post SPC-2 features.
+With this patch we can correctly handle WRITE_SAME_16 issues.
 
-> Thus, the only circumstance where adding zbc handling would lead to
- > unexpected bad behavior in sd would be if a ZBC drive reported itsel=
-f
- > as a standard ATA drive or an ATA drive reported itself as a ZBC dri=
-ve.
+Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
+---
+ drivers/scsi/storvsc_drv.c |   10 ++++++++++
+ 1 files changed, 10 insertions(+), 0 deletions(-)
 
-It's actually worse than that:
-Currently libata will happily attach to a ZAC device, and passing them=20
-on to the SCSI stack as a normal disk device.
-Which most definitely will lead to unexpected results :-)
-
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index 29d0329..15ba695 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -327,6 +327,8 @@ MODULE_PARM_DESC(storvsc_ringbuffer_size, "Ring buffer size (bytes)");
+  */
+ static int storvsc_timeout = 180;
+ 
++static int msft_blist_flags = BLIST_TRY_VPD_PAGES;
++
+ #define STORVSC_MAX_IO_REQUESTS				200
+ 
+ static void storvsc_on_channel_callback(void *context);
+@@ -1449,6 +1451,14 @@ static int storvsc_device_configure(struct scsi_device *sdevice)
+ 
+ 	sdevice->no_write_same = 1;
+ 
++	/*
++	 * Add blist flags to permit the reading of the VPD pages even when
++	 * the target may claim SPC-2 compliance. MSFT targets currently
++	 * claim SPC-2 compliance while they implement post SPC-2 features.
++	 * With this patch we can correctly handle WRITE_SAME_16 issues.
++	 */
++	sdevice->sdev_bflags |= msft_blist_flags;
++
+ 	return 0;
+ }
+ 
+-- 
+1.7.4.1
