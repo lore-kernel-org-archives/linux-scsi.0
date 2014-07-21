@@ -1,65 +1,77 @@
-From: Ben Hutchings <ben@decadent.org.uk>
-Subject: Re: [PATCH] [SCSI] hpsa: Fix driver support flag initialisation on
- !x86
-Date: Mon, 21 Jul 2014 01:43:14 +0100
-Message-ID: <1405903394.8631.25.camel@deadeye.wl.decadent.org.uk>
-References: <1405901357.8631.24.camel@deadeye.wl.decadent.org.uk>
-	 <20140721004202.GA29358@infradead.org>
+From: "K. Y. Srinivasan" <kys@microsoft.com>
+Subject: [PATCH 1/1] Drivers: scsi: storvsc: Add blist flags
+Date: Sun, 20 Jul 2014 20:33:42 -0700
+Message-ID: <1405913622-14266-1-git-send-email-kys@microsoft.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-IqGZ1Rvc334pdQGMYDH2"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:36725 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751553AbaGUAny (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 20 Jul 2014 20:43:54 -0400
-In-Reply-To: <20140721004202.GA29358@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: driverdev-devel-bounces@linuxdriverproject.org
+To: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, apw@canonical.com, jasowang@redhat.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
+Add blist flags to permit the reading of the VPD pages even when
+the target may claim SPC-2 compliance. MSFT targets currently
+claim SPC-2 compliance while they implement post SPC-2 features.
+With this patch we can correctly handle WRITE_SAME_16 issues.
 
---=-IqGZ1Rvc334pdQGMYDH2
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
+---
+ drivers/scsi/storvsc_drv.c |   13 +++++++++++++
+ 1 files changed, 13 insertions(+), 0 deletions(-)
 
-On Sun, 2014-07-20 at 17:42 -0700, Christoph Hellwig wrote:
-> On Mon, Jul 21, 2014 at 01:09:17AM +0100, Ben Hutchings wrote:
-> > On !x86 we currently don't read the existing support flags:
->=20
-> Arnd already sent this and I've included it in the for-3.17 queue.
-
-Thanks.
-
-Ben.
-
---=20
-Ben Hutchings
-Make three consecutive correct guesses and you will be considered an expert=
-.
-
---=-IqGZ1Rvc334pdQGMYDH2
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIVAwUAU8xiJ+e/yOyVhhEJAQrJBA//ZG0zPHBwPndi0DHpI0cG2Q6//PRUijFU
-l0Xvb2UfwvHFeibPkZY3RWpLdmzoXPTUaixf2g9y/iFiQDlV4xE1EuqkfEQM2WVD
-WnRq32dO//37FbCpopFVfjebcZQMJf8kepjOb4bh9r9dTvy/iYlRsSqMj/+8CQ7E
-t8QRFN4Va2JFdOAIXlfWBfJljz/tmUkzcyPvmUbOQoRUzmJS5YsGLV0z+Vr2l/+h
-IIhRPurnW1sXnaleV8eWL2vq0hVs5zytopw3/+dSepwxC+aX2gQEzBCrvrKqckjm
-M5kEQ2bnS4knNLMtgmpnRoT1cPfeV295Iuld8fRu3XIJMgC+eFmvhJEGHRdQk7oN
-Xm1YIt8r8otkbgqmewd/V16rK/9W+fSM6xsd6poCzXxroyzkNFgx2WqaSxOdHR20
-/ORuHZF6gLej58uINFa4dZu9vGOTgIRQpkDW81QbvGEYK5zipNOq9qqhVperDWp5
-rRGaay3r/5a0tEIl6l354HvjoFiMrqmjkCK11Jgi7CfZD2XTErIIQtnJ0wF2qK4E
-Xwu/UJZyt+1XfdS9rD+vOTY20mH9NAMUnFI2p1pQmn93iUwLP6rfrIKE1i409DTR
-5I8uD33s2c/ZQ3pxDemJASqnH3lK2fPEQGAK9OpCk6PJr5cjfgHpAXZorC2nQUCI
-1cIr8OT7d3g=
-=jZ5g
------END PGP SIGNATURE-----
-
---=-IqGZ1Rvc334pdQGMYDH2--
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index 29d0329..2a58dc4 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -42,6 +42,7 @@
+ #include <scsi/scsi_eh.h>
+ #include <scsi/scsi_devinfo.h>
+ #include <scsi/scsi_dbg.h>
++#include "scsi_priv.h"
+ 
+ /*
+  * All wire protocol details (storage protocol between the guest and the host)
+@@ -327,6 +328,8 @@ MODULE_PARM_DESC(storvsc_ringbuffer_size, "Ring buffer size (bytes)");
+  */
+ static int storvsc_timeout = 180;
+ 
++static int msft_blist_flags = BLIST_TRY_VPD_PAGES;
++
+ #define STORVSC_MAX_IO_REQUESTS				200
+ 
+ static void storvsc_on_channel_callback(void *context);
+@@ -1438,6 +1441,8 @@ static void storvsc_device_destroy(struct scsi_device *sdevice)
+ 
+ static int storvsc_device_configure(struct scsi_device *sdevice)
+ {
++	int blist_flags;
++
+ 	scsi_adjust_queue_depth(sdevice, MSG_SIMPLE_TAG,
+ 				STORVSC_MAX_IO_REQUESTS);
+ 
+@@ -1449,6 +1454,14 @@ static int storvsc_device_configure(struct scsi_device *sdevice)
+ 
+ 	sdevice->no_write_same = 1;
+ 
++	blist_flags = scsi_get_device_flags_keyed(sdevice, "Msft",
++						  "Virtual Disk",
++						  SCSI_DEVINFO_GLOBAL);
++
++	if (blist_flags != msft_blist_flags)
++		scsi_dev_info_list_add_keyed(1, "Msft", "Virtual Disk", NULL,
++					     msft_blist_flags,
++					     SCSI_DEVINFO_GLOBAL);
+ 	return 0;
+ }
+ 
+-- 
+1.7.4.1
