@@ -1,55 +1,56 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 4/4] sd: Handle ZBC drives correctly
-Date: Mon, 21 Jul 2014 13:51:26 +0200
-Message-ID: <53CCFEBE.8080400@suse.de>
-References: <1405931241-92015-1-git-send-email-hare@suse.de> <1405931241-92015-5-git-send-email-hare@suse.de> <20140721112904.GB15455@infradead.org>
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: [PATCH 1/1] Drivers: scsi: storvsc: Add blist flags
+Date: Mon, 21 Jul 2014 13:19:08 +0000
+Message-ID: <a496b63900874bd396e85a24505e383b@BY2PR0301MB0711.namprd03.prod.outlook.com>
+References: <1405913622-14266-1-git-send-email-kys@microsoft.com>
+ <20140721112704.GA15455@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20140721112904.GB15455@infradead.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <20140721112704.GA15455@infradead.org>
+Content-Language: en-US
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: driverdev-devel-bounces@linuxdriverproject.org
 To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James Bottomely <jbottomley@parallels.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "jasowang@redhat.com" <jasowang@redhat.com>, "ohering@suse.com" <ohering@suse.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "apw@canonical.com" <apw@canonical.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 07/21/2014 01:29 PM, Christoph Hellwig wrote:
-> On Mon, Jul 21, 2014 at 10:27:21AM +0200, Hannes Reinecke wrote:
->> ZBC drives are close to disk devices, so update sd.c to handle
->> ZBC drives correctly.
->
-> While the other patches all look fine with me I strongly disagree wit=
-h
-> this one.  Devices reporting the ZBC device type must have sequential
-> required zones, so they are _not_ anywhere close to disk devices,
-> and writes to them will cause errors that we aren't evenable able to
-> handle yet.
->
-> If it makes some sort of experiment easier for you we can add a way t=
-o
-> force ZBC devices to use sd.c conditionally.  Do you have a test devi=
-ce
-> that this works with?
->
-Yes, I have.
 
-I was actually considering implementing a module option for sd
-(eg attach_zbc) to allow zac/zbc devices to be attached to the sd=20
-driver.
-Which will be off per default, so your concern should be addressed.
 
-However, zbc devices _are_ similar to normal 'sd' devices; it's only=20
-that some commands might fail unexpectedly.
-But all the usual commands from sbc are supported, so I found it a=20
-bit odd having to implement my own device driver (which would be a=20
-clone of 'sd' anyway).
+> -----Original Message-----
+> From: Christoph Hellwig [mailto:hch@infradead.org]
+> Sent: Monday, July 21, 2014 4:27 AM
+> To: KY Srinivasan
+> Cc: gregkh@linuxfoundation.org; linux-kernel@vger.kernel.org;
+> devel@linuxdriverproject.org; ohering@suse.com; apw@canonical.com;
+> jasowang@redhat.com; jbottomley@parallels.com; hch@infradead.org;
+> linux-scsi@vger.kernel.org
+> Subject: Re: [PATCH 1/1] Drivers: scsi: storvsc: Add blist flags
+> 
+> On Sun, Jul 20, 2014 at 08:33:42PM -0700, K. Y. Srinivasan wrote:
+> > Add blist flags to permit the reading of the VPD pages even when the
+> > target may claim SPC-2 compliance. MSFT targets currently claim SPC-2
+> > compliance while they implement post SPC-2 features.
+> > With this patch we can correctly handle WRITE_SAME_16 issues.
+> >
+> > Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
+> 
+> This looks way to complicated - should be a single line added to your
+> slave_configure function, maybe plus a comment stating what you do in your
+> commit message:
+> 
+> 
+> 	sdev->sdev_bflags |= BLIST_TRY_VPD_PAGES;
 
-Cheers,
+Thanks Christoph. We can go with this. I will re-send the patch.
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+
+K. Y
