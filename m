@@ -1,107 +1,42 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH] SCSI: Add a blacklist flag which enables VPD page
- inquiries
-Date: Mon, 21 Jul 2014 17:28:39 +0000
-Message-ID: <742802e0bec545c38bf1068cb27e8ce4@BY2PR0301MB0711.namprd03.prod.outlook.com>
-References: <yq18unuwos2.fsf@sermon.lab.mkp.net>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 4/4] sd: Handle ZBC drives correctly
+Date: Mon, 21 Jul 2014 19:49:17 +0200
+Message-ID: <53CD529D.4050504@suse.de>
+References: <1405931241-92015-1-git-send-email-hare@suse.de> <1405931241-92015-5-git-send-email-hare@suse.de> <20140721112904.GB15455@infradead.org>,<53CCFEBE.8080400@suse.de> <8A51900D08212F40B3DE22453052F69839C47278@wdscexmb02>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2lp0205.outbound.protection.outlook.com ([207.46.163.205]:54527
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932320AbaGUR3B convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Jul 2014 13:29:01 -0400
-In-Reply-To: <yq18unuwos2.fsf@sermon.lab.mkp.net>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <8A51900D08212F40B3DE22453052F69839C47278@wdscexmb02>
+Sender: linux-ide-owner@vger.kernel.org
+To: John Utz <John.Utz@wdc.com>, Christoph Hellwig <hch@infradead.org>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, James Bottomely <jbottomley@parallels.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
+On 07/21/2014 06:18 PM, John Utz wrote:
+> If I read Hanne's patch correctly, he is checking for the ZBC signatu=
+re
+ > when the drives are probed.
+>
+Yep.
 
+> Thus, the only circumstance where adding zbc handling would lead to
+ > unexpected bad behavior in sd would be if a ZBC drive reported itsel=
+f
+ > as a standard ATA drive or an ATA drive reported itself as a ZBC dri=
+ve.
 
-> -----Original Message-----
-> From: Martin K. Petersen [mailto:martin.petersen@oracle.com]
-> Sent: Tuesday, July 15, 2014 9:49 AM
-> To: linux-scsi@vger.kernel.org
-> Cc: KY Srinivasan
-> Subject: [PATCH] SCSI: Add a blacklist flag which enables VPD page inquiries
-> 
-> 
-> Despite supporting modern SCSI features some storage devices continue to
-> claim conformance to an older version of the SPC spec. This is done for
-> compatibility with legacy operating systems.
-> 
-> Linux by default will not attempt to read VPD pages on devices that claim
-> SPC-2 or older. Introduce a blacklist flag that can be used to trigger VPD page
-> inquiries on devices that are known to support them.
-> 
-> Reported-by: KY Srinivasan <kys@microsoft.com>
-> Tested-by: KY Srinivasan <kys@microsoft.com>
+It's actually worse than that:
+Currently libata will happily attach to a ZAC device, and passing them=20
+on to the SCSI stack as a normal disk device.
+Which most definitely will lead to unexpected results :-)
 
-Reviewed-by: KY Srinivasan <kys@microsoft.com>
+Cheers,
 
-> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-> CC: <stable@vger.kernel.org>
-> 
-> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c index
-> 4a6e4ba5a400..a5b1a224628a 100644
-> --- a/drivers/scsi/scsi_scan.c
-> +++ b/drivers/scsi/scsi_scan.c
-> @@ -949,7 +949,9 @@ static int scsi_add_lun(struct scsi_device *sdev,
-> unsigned char *inq_result,
-> 
->  	sdev->eh_timeout = SCSI_DEFAULT_EH_TIMEOUT;
-> 
-> -	if (*bflags & BLIST_SKIP_VPD_PAGES)
-> +	if (*bflags & BLIST_TRY_VPD_PAGES)
-> +		sdev->try_vpd_pages = 1;
-> +	else if (*bflags & BLIST_SKIP_VPD_PAGES)
->  		sdev->skip_vpd_pages = 1;
-> 
->  	transport_configure_device(&sdev->sdev_gendev);
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c index
-> 87566b51fcf7..31d32b9077ca 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -2701,6 +2701,11 @@ static void sd_read_write_same(struct scsi_disk
-> *sdkp, unsigned char *buffer)
-> 
->  static int sd_try_extended_inquiry(struct scsi_device *sdp)  {
-> +	/* Attempt VPD inquiry if the device blacklist explicitly calls
-> +	 * for it.
-> +	 */
-> +	if (sdp->try_vpd_pages)
-> +		return 1;
->  	/*
->  	 * Although VPD inquiries can go to SCSI-2 type devices,
->  	 * some USB ones crash on receiving them, and the pages diff --git
-> a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h index
-> 9aa38f7b303b..f579408620f0 100644
-> --- a/include/scsi/scsi_device.h
-> +++ b/include/scsi/scsi_device.h
-> @@ -155,6 +155,7 @@ struct scsi_device {
->  	unsigned skip_ms_page_8:1;	/* do not use MODE SENSE page 0x08
-> */
->  	unsigned skip_ms_page_3f:1;	/* do not use MODE SENSE page 0x3f
-> */
->  	unsigned skip_vpd_pages:1;	/* do not read VPD pages */
-> +	unsigned try_vpd_pages:1;	/* attempt to read VPD pages */
->  	unsigned use_192_bytes_for_3f:1; /* ask for 192 bytes from page
-> 0x3f */
->  	unsigned no_start_on_add:1;	/* do not issue start on add */
->  	unsigned allow_restart:1; /* issue START_UNIT in error handler */
-> diff --git a/include/scsi/scsi_devinfo.h b/include/scsi/scsi_devinfo.h index
-> 8670c04e199e..1fdd6fc5492b 100644
-> --- a/include/scsi/scsi_devinfo.h
-> +++ b/include/scsi/scsi_devinfo.h
-> @@ -34,4 +34,5 @@
->  #define BLIST_SKIP_VPD_PAGES	0x4000000 /* Ignore SBC-3 VPD pages
-> */
->  #define BLIST_SCSI3LUN		0x8000000 /* Scan more than 256
-> LUNs
->  					     for sequential scan */
-> +#define BLIST_TRY_VPD_PAGES	0x10000000 /* Attempt to read VPD
-> pages */
->  #endif
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
