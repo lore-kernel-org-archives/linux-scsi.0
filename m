@@ -1,91 +1,107 @@
-From: John Utz <John.Utz@wdc.com>
-Subject: RE: [PATCH 4/4] sd: Handle ZBC drives correctly
-Date: Mon, 21 Jul 2014 16:30:27 +0000
-Message-ID: <8A51900D08212F40B3DE22453052F69839C472F6@wdscexmb02>
-References: <1405931241-92015-1-git-send-email-hare@suse.de>
- <1405931241-92015-5-git-send-email-hare@suse.de>
- <20140721112904.GB15455@infradead.org>,<53CCFEBE.8080400@suse.de>,<8A51900D08212F40B3DE22453052F69839C47278@wdscexmb02>
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: [PATCH] SCSI: Add a blacklist flag which enables VPD page
+ inquiries
+Date: Mon, 21 Jul 2014 17:28:39 +0000
+Message-ID: <742802e0bec545c38bf1068cb27e8ce4@BY2PR0301MB0711.namprd03.prod.outlook.com>
+References: <yq18unuwos2.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <8A51900D08212F40B3DE22453052F69839C47278@wdscexmb02>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bl2lp0205.outbound.protection.outlook.com ([207.46.163.205]:54527
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932320AbaGUR3B convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Jul 2014 13:29:01 -0400
+In-Reply-To: <yq18unuwos2.fsf@sermon.lab.mkp.net>
 Content-Language: en-US
-Sender: linux-ide-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@infradead.org>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, James Bottomely <jbottomley@parallels.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-BAH! I get this ZBC/ZAC thing wrong still. mentally replace ATA with SC=
-SI in my comments below....
-________________________________________
-=46rom: linux-ide-owner@vger.kernel.org [linux-ide-owner@vger.kernel.or=
-g] on behalf of John Utz [John.Utz@wdc.com]
-Sent: Monday, July 21, 2014 9:18 AM
-To: Hannes Reinecke; Christoph Hellwig
-Cc: linux-ide@vger.kernel.org; linux-scsi@vger.kernel.org; James Bottom=
-ely
-Subject: RE: [PATCH 4/4] sd: Handle ZBC drives correctly
 
-If I read Hanne's patch correctly, he is checking for the ZBC signature=
- when the drives are probed.
 
-Thus, the only circumstance where adding zbc handling would lead to une=
-xpected bad behavior in sd would be if a ZBC drive reported itself as a=
- standard ATA drive or an ATA drive reported itself as a ZBC drive.
-________________________________________
-=46rom: linux-ide-owner@vger.kernel.org [linux-ide-owner@vger.kernel.or=
-g] on behalf of Hannes Reinecke [hare@suse.de]
-Sent: Monday, July 21, 2014 4:51 AM
-To: Christoph Hellwig
-Cc: linux-ide@vger.kernel.org; linux-scsi@vger.kernel.org; James Bottom=
-ely
-Subject: Re: [PATCH 4/4] sd: Handle ZBC drives correctly
+> -----Original Message-----
+> From: Martin K. Petersen [mailto:martin.petersen@oracle.com]
+> Sent: Tuesday, July 15, 2014 9:49 AM
+> To: linux-scsi@vger.kernel.org
+> Cc: KY Srinivasan
+> Subject: [PATCH] SCSI: Add a blacklist flag which enables VPD page inquiries
+> 
+> 
+> Despite supporting modern SCSI features some storage devices continue to
+> claim conformance to an older version of the SPC spec. This is done for
+> compatibility with legacy operating systems.
+> 
+> Linux by default will not attempt to read VPD pages on devices that claim
+> SPC-2 or older. Introduce a blacklist flag that can be used to trigger VPD page
+> inquiries on devices that are known to support them.
+> 
+> Reported-by: KY Srinivasan <kys@microsoft.com>
+> Tested-by: KY Srinivasan <kys@microsoft.com>
 
-On 07/21/2014 01:29 PM, Christoph Hellwig wrote:
-> On Mon, Jul 21, 2014 at 10:27:21AM +0200, Hannes Reinecke wrote:
->> ZBC drives are close to disk devices, so update sd.c to handle
->> ZBC drives correctly.
->
-> While the other patches all look fine with me I strongly disagree wit=
-h
-> this one.  Devices reporting the ZBC device type must have sequential
-> required zones, so they are _not_ anywhere close to disk devices,
-> and writes to them will cause errors that we aren't evenable able to
-> handle yet.
->
-> If it makes some sort of experiment easier for you we can add a way t=
-o
-> force ZBC devices to use sd.c conditionally.  Do you have a test devi=
-ce
-> that this works with?
->
-Yes, I have.
+Reviewed-by: KY Srinivasan <kys@microsoft.com>
 
-I was actually considering implementing a module option for sd
-(eg attach_zbc) to allow zac/zbc devices to be attached to the sd
-driver.
-Which will be off per default, so your concern should be addressed.
-
-However, zbc devices _are_ similar to normal 'sd' devices; it's only
-that some commands might fail unexpectedly.
-But all the usual commands from sbc are supported, so I found it a
-bit odd having to implement my own device driver (which would be a
-clone of 'sd' anyway).
-
-Cheers,
-
-Hannes
---
-Dr. Hannes Reinecke                   zSeries & Storage
-hare@suse.de                          +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
---
-To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+> CC: <stable@vger.kernel.org>
+> 
+> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c index
+> 4a6e4ba5a400..a5b1a224628a 100644
+> --- a/drivers/scsi/scsi_scan.c
+> +++ b/drivers/scsi/scsi_scan.c
+> @@ -949,7 +949,9 @@ static int scsi_add_lun(struct scsi_device *sdev,
+> unsigned char *inq_result,
+> 
+>  	sdev->eh_timeout = SCSI_DEFAULT_EH_TIMEOUT;
+> 
+> -	if (*bflags & BLIST_SKIP_VPD_PAGES)
+> +	if (*bflags & BLIST_TRY_VPD_PAGES)
+> +		sdev->try_vpd_pages = 1;
+> +	else if (*bflags & BLIST_SKIP_VPD_PAGES)
+>  		sdev->skip_vpd_pages = 1;
+> 
+>  	transport_configure_device(&sdev->sdev_gendev);
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c index
+> 87566b51fcf7..31d32b9077ca 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -2701,6 +2701,11 @@ static void sd_read_write_same(struct scsi_disk
+> *sdkp, unsigned char *buffer)
+> 
+>  static int sd_try_extended_inquiry(struct scsi_device *sdp)  {
+> +	/* Attempt VPD inquiry if the device blacklist explicitly calls
+> +	 * for it.
+> +	 */
+> +	if (sdp->try_vpd_pages)
+> +		return 1;
+>  	/*
+>  	 * Although VPD inquiries can go to SCSI-2 type devices,
+>  	 * some USB ones crash on receiving them, and the pages diff --git
+> a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h index
+> 9aa38f7b303b..f579408620f0 100644
+> --- a/include/scsi/scsi_device.h
+> +++ b/include/scsi/scsi_device.h
+> @@ -155,6 +155,7 @@ struct scsi_device {
+>  	unsigned skip_ms_page_8:1;	/* do not use MODE SENSE page 0x08
+> */
+>  	unsigned skip_ms_page_3f:1;	/* do not use MODE SENSE page 0x3f
+> */
+>  	unsigned skip_vpd_pages:1;	/* do not read VPD pages */
+> +	unsigned try_vpd_pages:1;	/* attempt to read VPD pages */
+>  	unsigned use_192_bytes_for_3f:1; /* ask for 192 bytes from page
+> 0x3f */
+>  	unsigned no_start_on_add:1;	/* do not issue start on add */
+>  	unsigned allow_restart:1; /* issue START_UNIT in error handler */
+> diff --git a/include/scsi/scsi_devinfo.h b/include/scsi/scsi_devinfo.h index
+> 8670c04e199e..1fdd6fc5492b 100644
+> --- a/include/scsi/scsi_devinfo.h
+> +++ b/include/scsi/scsi_devinfo.h
+> @@ -34,4 +34,5 @@
+>  #define BLIST_SKIP_VPD_PAGES	0x4000000 /* Ignore SBC-3 VPD pages
+> */
+>  #define BLIST_SCSI3LUN		0x8000000 /* Scan more than 256
+> LUNs
+>  					     for sequential scan */
+> +#define BLIST_TRY_VPD_PAGES	0x10000000 /* Attempt to read VPD
+> pages */
+>  #endif
