@@ -1,56 +1,44 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH 1/1] Drivers: scsi: storvsc: Add blist flags
-Date: Mon, 21 Jul 2014 13:19:08 +0000
-Message-ID: <a496b63900874bd396e85a24505e383b@BY2PR0301MB0711.namprd03.prod.outlook.com>
-References: <1405913622-14266-1-git-send-email-kys@microsoft.com>
- <20140721112704.GA15455@infradead.org>
+From: Khalid Aziz <khalid@gonehiking.org>
+Subject: Re: [PATCH 2/25] BusLogic: Replace DEFINE_PCI_DEVICE_TABLE macro use
+Date: Mon, 21 Jul 2014 08:48:37 -0600
+Message-ID: <1405954117.6962.37.camel@rhapsody>
+References: <1405697232-11785-1-git-send-email-benoit.taine@lip6.fr>
+	 <1405697232-11785-3-git-send-email-benoit.taine@lip6.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <20140721112704.GA15455@infradead.org>
-Content-Language: en-US
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: driverdev-devel-bounces@linuxdriverproject.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "jasowang@redhat.com" <jasowang@redhat.com>, "ohering@suse.com" <ohering@suse.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "apw@canonical.com" <apw@canonical.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1405697232-11785-3-git-send-email-benoit.taine@lip6.fr>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Benoit Taine <benoit.taine@lip6.fr>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-
-
-> -----Original Message-----
-> From: Christoph Hellwig [mailto:hch@infradead.org]
-> Sent: Monday, July 21, 2014 4:27 AM
-> To: KY Srinivasan
-> Cc: gregkh@linuxfoundation.org; linux-kernel@vger.kernel.org;
-> devel@linuxdriverproject.org; ohering@suse.com; apw@canonical.com;
-> jasowang@redhat.com; jbottomley@parallels.com; hch@infradead.org;
-> linux-scsi@vger.kernel.org
-> Subject: Re: [PATCH 1/1] Drivers: scsi: storvsc: Add blist flags
+On Fri, 2014-07-18 at 17:26 +0200, Benoit Taine wrote:
+> We should prefer `struct pci_device_id` over `DEFINE_PCI_DEVICE_TABLE` to meet
+> kernel coding style guidelines. This issue was reported by checkpatch.
 > 
-> On Sun, Jul 20, 2014 at 08:33:42PM -0700, K. Y. Srinivasan wrote:
-> > Add blist flags to permit the reading of the VPD pages even when the
-> > target may claim SPC-2 compliance. MSFT targets currently claim SPC-2
-> > compliance while they implement post SPC-2 features.
-> > With this patch we can correctly handle WRITE_SAME_16 issues.
-> >
-> > Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
+> Signed-off-by: Benoit Taine <benoit.taine@lip6.fr>
 > 
-> This looks way to complicated - should be a single line added to your
-> slave_configure function, maybe plus a comment stating what you do in your
-> commit message:
+> ---
+> Tested by compilation without errors.
 > 
+>  drivers/scsi/BusLogic.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> 	sdev->sdev_bflags |= BLIST_TRY_VPD_PAGES;
+> diff --git a/drivers/scsi/BusLogic.c b/drivers/scsi/BusLogic.c
+> index 972f817..64c7514 100644
+> --- a/drivers/scsi/BusLogic.c
+> +++ b/drivers/scsi/BusLogic.c
+> @@ -3893,7 +3893,7 @@ __setup("BusLogic=", blogic_setup);
+>  	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+>  	{ }
+>  };*/
+> -static DEFINE_PCI_DEVICE_TABLE(blogic_pci_tbl) = {
+> +static const struct pci_device_id blogic_pci_tbl[] = {
+>  	{PCI_DEVICE(PCI_VENDOR_ID_BUSLOGIC, PCI_DEVICE_ID_BUSLOGIC_MULTIMASTER)},
+>  	{PCI_DEVICE(PCI_VENDOR_ID_BUSLOGIC, PCI_DEVICE_ID_BUSLOGIC_MULTIMASTER_NC)},
+>  	{PCI_DEVICE(PCI_VENDOR_ID_BUSLOGIC, PCI_DEVICE_ID_BUSLOGIC_FLASHPOINT)},
+> 
 
-Thanks Christoph. We can go with this. I will re-send the patch.
-
-
-K. Y
+Acked-by: Khalid Aziz <khalid@gonehiking.org>
