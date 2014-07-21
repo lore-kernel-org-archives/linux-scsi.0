@@ -1,47 +1,47 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 4/4] sd: Handle ZBC drives correctly
-Date: Mon, 21 Jul 2014 08:01:09 -0700
-Message-ID: <20140721150109.GB15433@infradead.org>
-References: <1405931241-92015-1-git-send-email-hare@suse.de>
- <1405931241-92015-5-git-send-email-hare@suse.de>
- <20140721112904.GB15455@infradead.org>
- <53CCFEBE.8080400@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: worley@alum.mit.edu (Dale R. Worley)
+Subject: Re: Write cache and surface error behaviour
+Date: Mon, 21 Jul 2014 10:55:31 -0400
+Message-ID: <201407211455.s6LEtVfJ001124@hobgoblin.ariadne.com>
+References: <53CC3A92.5000501@shiftmail.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:34516 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752518AbaGUPBJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Jul 2014 11:01:09 -0400
-Content-Disposition: inline
-In-Reply-To: <53CCFEBE.8080400@suse.de>
+Received: from qmta06.westchester.pa.mail.comcast.net ([76.96.62.56]:48971
+	"EHLO qmta06.westchester.pa.mail.comcast.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752518AbaGUPBi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 21 Jul 2014 11:01:38 -0400
+In-reply-to: <53CC3A92.5000501@shiftmail.org> (joystick@shiftmail.org)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James Bottomely <jbottomley@parallels.com>
+To: joystick <joystick@shiftmail.org>
+Cc: linux-scsi@vger.kernel.org
 
-On Mon, Jul 21, 2014 at 01:51:26PM +0200, Hannes Reinecke wrote:
-> Yes, I have.
+> From: joystick <joystick@shiftmail.org>
+> 
+> I don't really understand this disk cache thing.
+> Suppose a disk with write cache enabled of writeback type: Linux 
+> receives a write completed notification (a message from the disk) when 
+> the data has reached the cache of the disk. Correct? At that point it is 
+> not considered an in-flight I/O anymore. Correct?
+> So what happens when the disk tries to write it to the platter and 
+> discovers that there is a media error on that sector? (suppose 
+> relocation does not happen ; maybe sectors exhausted)
+> Does Linux receive the write error upon the next flush it issues? So the 
+> error is related to the flush? And what happens if Linux never issues 
+> such flush?
 
-How well does the SCSI layer recover when you write outside the write
-pointer?  ZBC defeinds new sense codes that we don't handle, so I'd
-expect we'd get long loops of unrecovered errors.
+I'm no expert...  But modern disks play a lot of games beneath the
+covers, including patching around bad blocks.  So in most cases, if
+the first write shows a media error, the controller will assign a
+replacement sector and write the data there.
 
-> I was actually considering implementing a module option for sd
-> (eg attach_zbc) to allow zac/zbc devices to be attached to the sd driver.
-> Which will be off per default, so your concern should be addressed.
+Of course the risks you discuss still exist.  My guess is that if
+people are really worried about their data, they don't use write-back
+caching.  I notice that the startup messages of my system talk of
+"writethrough" caching, which (IIRC) means that the kernel isn't told
+that the write is complete until the controller can guarantee the data
+is in non-volatile memory.
 
-That sounds fine to.
+In the end, the biggest risk is that the entire disk will suddenly
+become unreadable.
 
-> However, zbc devices _are_ similar to normal 'sd' devices; it's only that
-> some commands might fail unexpectedly.
-> But all the usual commands from sbc are supported, so I found it a bit odd
-> having to implement my own device driver (which would be a clone of 'sd'
-> anyway).
-
-They are similar in some ways and very different in others.  I
-defintively agree we should share as much code as possible, but I'm not
-sure exposing them as plain sd devices is a good idea.  I'm defintively
-fine with an optional attachment to sd to start playing around with
-different ways to make use of them.
-
+Dale
