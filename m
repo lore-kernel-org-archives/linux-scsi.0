@@ -1,34 +1,34 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/1] Drivers: scsi: storvsc: Add blist flags
-Date: Mon, 21 Jul 2014 04:27:04 -0700
-Message-ID: <20140721112704.GA15455@infradead.org>
-References: <1405913622-14266-1-git-send-email-kys@microsoft.com>
+Subject: Re: [PATCH 4/4] sd: Handle ZBC drives correctly
+Date: Mon, 21 Jul 2014 04:29:04 -0700
+Message-ID: <20140721112904.GB15455@infradead.org>
+References: <1405931241-92015-1-git-send-email-hare@suse.de>
+ <1405931241-92015-5-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:60136 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:60381 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754157AbaGUL1H (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Jul 2014 07:27:07 -0400
+	with ESMTP id S1754697AbaGUL3F (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Jul 2014 07:29:05 -0400
 Content-Disposition: inline
-In-Reply-To: <1405913622-14266-1-git-send-email-kys@microsoft.com>
+In-Reply-To: <1405931241-92015-5-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "K. Y. Srinivasan" <kys@microsoft.com>
-Cc: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, apw@canonical.com, jasowang@redhat.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, James Bottomely <jbottomley@parallels.com>
 
-On Sun, Jul 20, 2014 at 08:33:42PM -0700, K. Y. Srinivasan wrote:
-> Add blist flags to permit the reading of the VPD pages even when
-> the target may claim SPC-2 compliance. MSFT targets currently
-> claim SPC-2 compliance while they implement post SPC-2 features.
-> With this patch we can correctly handle WRITE_SAME_16 issues.
-> 
-> Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
+On Mon, Jul 21, 2014 at 10:27:21AM +0200, Hannes Reinecke wrote:
+> ZBC drives are close to disk devices, so update sd.c to handle
+> ZBC drives correctly.
 
-This looks way to complicated - should be a single line added to your
-slave_configure function, maybe plus a comment stating what you do
-in your commit message:
+While the other patches all look fine with me I strongly disagree with
+this one.  Devices reporting the ZBC device type must have sequential
+required zones, so they are _not_ anywhere close to disk devices,
+and writes to them will cause errors that we aren't evenable able to
+handle yet.
 
-
-	sdev->sdev_bflags |= BLIST_TRY_VPD_PAGES;
+If it makes some sort of experiment easier for you we can add a way to
+force ZBC devices to use sd.c conditionally.  Do you have a test device
+that this works with?
 
