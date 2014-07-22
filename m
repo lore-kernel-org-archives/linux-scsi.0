@@ -1,27 +1,28 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH V2 0/5] scsi: ufs: LU queue depth management
-Date: Tue, 22 Jul 2014 09:05:33 -0700
-Message-ID: <20140722160533.GA3345@infradead.org>
-References: <1406039030-14246-1-git-send-email-draviv@codeaurora.org>
+Subject: Re: [Bug 80711] SG_FLAG_LUN_INHIBIT is no longer implemented and
+ there's not way to prevent the kernel from using the 2nd cdb byte for the
+ LUN
+Date: Tue, 22 Jul 2014 09:13:27 -0700
+Message-ID: <20140722161327.GA21650@infradead.org>
+References: <bug-80711-11613@https.bugzilla.kernel.org/>
+ <bug-80711-11613-K93vbWd0lq@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:42059 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752205AbaGVQN1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Jul 2014 12:13:27 -0400
 Content-Disposition: inline
-In-Reply-To: <1406039030-14246-1-git-send-email-draviv@codeaurora.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: Dolev Raviv <draviv@codeaurora.org>
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, sthumma@codeaurora.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com
+In-Reply-To: <bug-80711-11613-K93vbWd0lq@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: bugzilla-daemon@bugzilla.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, Jul 22, 2014 at 05:23:45PM +0300, Dolev Raviv wrote:
-> New version to fix multiple 'sparse' warnings.
-> Add a driver wide fix to the endian 'sparse' warnings.
-> Some UFS devices don't support a LUN queue depth same as the device queue
-> depth. This requires reading the unit descriptor for extracting the LU's
-> queue depth.
+This is going in the wrong direction.  If your device doesn't like
+the LUN field in the CDB it misreports the standard compliance level.
 
-Can you please send just the sparse fixes against the tree at:
+We'll need to fix that root cause, probably by a black list entry
+instead of hacking around it in userspace.
 
-	http://git.infradead.org/users/hch/scsi-queue.git/shortlog/refs/heads/drivers-for-3.17
-
-which already has the previous version merged?  
