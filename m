@@ -1,59 +1,37 @@
 From: Dolev Raviv <draviv@codeaurora.org>
-Subject: [PATCH V2 2/5] scsi: ufs: fix endianness sparse warnings
-Date: Tue, 22 Jul 2014 17:23:47 +0300
-Message-ID: <1406039030-14246-3-git-send-email-draviv@codeaurora.org>
-References: <1406039030-14246-1-git-send-email-draviv@codeaurora.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:39198 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751695AbaGVOYQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Jul 2014 10:24:16 -0400
-In-Reply-To: <1406039030-14246-1-git-send-email-draviv@codeaurora.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Subject: [PATCH V2 0/5] scsi: ufs: LU queue depth management
+Date: Tue, 22 Jul 2014 17:23:45 +0300
+Message-ID: <1406039030-14246-1-git-send-email-draviv@codeaurora.org>
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
 Cc: linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, sthumma@codeaurora.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, Dolev Raviv <draviv@codeaurora.org>
+List-Id: linux-scsi@vger.kernel.org
 
-From: Sujit Reddy Thumma <sthumma@codeaurora.org>
+New version to fix multiple 'sparse' warnings.
+Add a driver wide fix to the endian 'sparse' warnings.
+Some UFS devices don't support a LUN queue depth same as the device queue
+depth. This requires reading the unit descriptor for extracting the LU's
+queue depth.
 
-Fix many warnings with incorrect endian assumptions
-which makes the code unportable to new architectures.
+Changes from V1:
+ - Add static modifier to ufshcd_query_descriptor function due to 'sparse'
+   warrning in [PATCH V1 1/4]
+ - Add new patch [PATCH V2 2/5] to deal with 'sparse' endian warnings
+ - Fix buf_len endian on [PATCH V1 2/4]
 
-The UFS specification defines the byte order as big-endian
-for UPIU structure and little-endian for the host controller
-transfer/task management descriptors.
+Dolev Raviv (1):
+  scsi: ufs: device query status and size check
+  scsi: ufs: query descriptor API
+  scsi: ufs: Logical Unit (LU) command queue depth
 
-Signed-off-by: Sujit Reddy Thumma <sthumma@codeaurora.org>
-Signed-off-by: Dolev Raviv <draviv@codeaurora.org>
----
- drivers/scsi/ufs/ufshcd.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Sujit Reddy Thumma (2):
+  scsi: ufs: fix endianness sparse warnings
+  scsi: ufs: Fix queue depth handling for best effort cases
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 694c8cc..514f65a 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -1325,7 +1325,7 @@ static int ufshcd_query_descriptor(struct ufs_hba *hba,
- 	ufshcd_init_query(hba, &request, &response, opcode, idn, index,
- 			selector);
- 	hba->dev_cmd.query.descriptor = desc_buf;
--	request->upiu_req.length = *buf_len;
-+	request->upiu_req.length = cpu_to_be16(*buf_len);
- 
- 	switch (opcode) {
- 	case UPIU_QUERY_OPCODE_WRITE_DESC:
-@@ -1351,7 +1351,7 @@ static int ufshcd_query_descriptor(struct ufs_hba *hba,
- 	}
- 
- 	hba->dev_cmd.query.descriptor = NULL;
--	*buf_len = response->upiu_res.length;
-+	*buf_len = be16_to_cpu(response->upiu_res.length);
- 
- out_unlock:
- 	mutex_unlock(&hba->dev_cmd.lock);
+ drivers/scsi/ufs/ufs.h    |  38 +++++-
+ drivers/scsi/ufs/ufshcd.c | 319 ++++++++++++++++++++++++++++++++--------------
+ 2 files changed, 262 insertions(+), 95 deletions(-)
+
 -- 
 1.8.5.2
-
---
-QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
-
