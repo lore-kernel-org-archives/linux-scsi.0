@@ -1,121 +1,176 @@
 From: Dolev Raviv <draviv@codeaurora.org>
-Subject: [PATCH V2 3/5] scsi: ufs: device query status and size check
-Date: Tue, 22 Jul 2014 17:23:48 +0300
-Message-ID: <1406039030-14246-4-git-send-email-draviv@codeaurora.org>
+Subject: [PATCH V2 5/5] scsi: ufs: Fix queue depth handling for best effort cases
+Date: Tue, 22 Jul 2014 17:23:50 +0300
+Message-ID: <1406039030-14246-6-git-send-email-draviv@codeaurora.org>
 References: <1406039030-14246-1-git-send-email-draviv@codeaurora.org>
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.11.231]:39227 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754488AbaGVOYY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Jul 2014 10:24:24 -0400
 In-Reply-To: <1406039030-14246-1-git-send-email-draviv@codeaurora.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, sthumma@codeaurora.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, Dolev Raviv <draviv@codeaurora.org>, Raviv Shvili <rshvili@codeaurora.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, sthumma@codeaurora.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, Dolev Raviv <draviv@codeaurora.org>
 
-Check query response status before copying the response.
-Add descriptor query response size check, before copying it to buffer.
+From: Sujit Reddy Thumma <sthumma@codeaurora.org>
 
+Some UFS devices may expose bLUQueueDepth field as zero indicating
+that the queue depth depends on the number of resources available
+for LUN at a particular instant to handle the outstanding transfer
+requests. Currently, when response for SCSI command is TASK_FULL
+the LLD decrements the queue depth but fails to increment when the
+resources are available. The scsi mid-layer handles the change in
+queue depth heuristically and offers simple interface with
+->change_queue_depth.
+
+Signed-off-by: Sujit Reddy Thumma <sthumma@codeaurora.org>
 Signed-off-by: Dolev Raviv <draviv@codeaurora.org>
-Signed-off-by: Raviv Shvili <rshvili@codeaurora.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 50 +++++++++++++++++++++++++++++++----------------
- 1 file changed, 33 insertions(+), 17 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 97 ++++++++++++++++++++---------------------------
+ 1 file changed, 42 insertions(+), 55 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 514f65a..d3b17cd 100644
+index 7ea4b4d..ff57965 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -446,30 +446,35 @@ static inline void ufshcd_copy_sense_data(struct ufshcd_lrb *lrbp)
-  * @lrb - pointer to local reference block
-  */
- static
--void ufshcd_copy_query_response(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
-+int ufshcd_copy_query_response(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
- {
- 	struct ufs_query_res *query_res = &hba->dev_cmd.query.response;
+@@ -1992,27 +1992,55 @@ static int ufshcd_slave_alloc(struct scsi_device *sdev)
  
--	/* Get the UPIU response */
--	query_res->response = ufshcd_get_rsp_upiu_result(lrbp->ucd_rsp_ptr) >>
--			UPIU_RSP_CODE_OFFSET;
--
- 	memcpy(&query_res->upiu_res, &lrbp->ucd_rsp_ptr->qr, QUERY_OSF_SIZE);
- 
--
- 	/* Get the descriptor */
- 	if (lrbp->ucd_rsp_ptr->qr.opcode == UPIU_QUERY_OPCODE_READ_DESC) {
- 		u8 *descp = (u8 *)lrbp->ucd_rsp_ptr +
- 				GENERAL_UPIU_REQUEST_SIZE;
--		u16 len;
-+		u16 resp_len;
-+		u16 buf_len;
- 
- 		/* data segment length */
--		len = be32_to_cpu(lrbp->ucd_rsp_ptr->header.dword_2) &
-+		resp_len = be32_to_cpu(lrbp->ucd_rsp_ptr->header.dword_2) &
- 						MASK_QUERY_DATA_SEG_LEN;
--
--		memcpy(hba->dev_cmd.query.descriptor, descp,
--				min_t(u16, len, QUERY_DESC_MAX_SIZE));
-+		buf_len = be16_to_cpu(
-+				hba->dev_cmd.query.request.upiu_req.length);
-+		if (likely(buf_len >= resp_len)) {
-+			memcpy(hba->dev_cmd.query.descriptor, descp, resp_len);
-+		} else {
-+			dev_warn(hba->dev,
-+				"%s: Response size is bigger than buffer",
-+				__func__);
-+			return -EINVAL;
-+		}
- 	}
+ 	/* allow SCSI layer to restart the device in case of errors */
+ 	sdev->allow_restart = 1;
 +
-+	return 0;
+ 	lun_qdepth = ufshcd_read_sdev_qdepth(hba, sdev);
+-	if (lun_qdepth == 0 || lun_qdepth > hba->nutrs) {
+-		dev_info(hba->dev, "%s, lun %d queue depth is %d\n", __func__,
+-				sdev->lun, lun_qdepth);
++	if (lun_qdepth <= 0)
++		/* eventually, we can figure out the real queue depth */
+ 		lun_qdepth = hba->nutrs;
+-	} else if (lun_qdepth < 0) {
+-		lun_qdepth = 1;
+-	}
++	else
++		lun_qdepth = min_t(int, lun_qdepth, hba->nutrs);
+ 
+-	/*
+-	 * Inform SCSI Midlayer that the LUN queue depth is same as the
+-	 * controller queue depth. If a LUN queue depth is less than the
+-	 * controller queue depth and if the LUN reports
+-	 * SAM_STAT_TASK_SET_FULL, the LUN queue depth will be adjusted
+-	 * with scsi_adjust_queue_depth.
+-	 */
++	dev_dbg(hba->dev, "%s: activate tcq with queue depth %d\n",
++			__func__, lun_qdepth);
+ 	scsi_activate_tcq(sdev, lun_qdepth);
++
+ 	return 0;
  }
  
  /**
-@@ -797,11 +802,9 @@ static void ufshcd_prepare_utp_query_req_upiu(struct ufs_hba *hba,
- 			QUERY_OSF_SIZE);
- 
- 	/* Copy the Descriptor */
--	if ((len > 0) && (query->request.upiu_req.opcode ==
--					UPIU_QUERY_OPCODE_WRITE_DESC)) {
--		memcpy(descp, query->descriptor,
--				min_t(u16, len, QUERY_DESC_MAX_SIZE));
--	}
-+	if (query->request.upiu_req.opcode == UPIU_QUERY_OPCODE_WRITE_DESC)
-+		memcpy(descp, query->descriptor, len);
-+
- }
- 
- static inline void ufshcd_prepare_utp_nop_upiu(struct ufshcd_lrb *lrbp)
-@@ -980,6 +983,17 @@ ufshcd_clear_cmd(struct ufs_hba *hba, int tag)
- 	return err;
- }
- 
-+static int
-+ufshcd_check_query_response(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
++ * ufshcd_change_queue_depth - change queue depth
++ * @sdev: pointer to SCSI device
++ * @depth: required depth to set
++ * @reason: reason for changing the depth
++ *
++ * Change queue depth according to the reason and make sure
++ * the max. limits are not crossed.
++ */
++int ufshcd_change_queue_depth(struct scsi_device *sdev, int depth, int reason)
 +{
-+	struct ufs_query_res *query_res = &hba->dev_cmd.query.response;
++	struct ufs_hba *hba = shost_priv(sdev->host);
 +
-+	/* Get the UPIU response */
-+	query_res->response = ufshcd_get_rsp_upiu_result(lrbp->ucd_rsp_ptr) >>
-+				UPIU_RSP_CODE_OFFSET;
-+	return query_res->response;
++	if (depth > hba->nutrs)
++		depth = hba->nutrs;
++
++	switch (reason) {
++	case SCSI_QDEPTH_DEFAULT:
++	case SCSI_QDEPTH_RAMP_UP:
++		if (!sdev->tagged_supported)
++			depth = 1;
++		scsi_adjust_queue_depth(sdev, scsi_get_tag_type(sdev), depth);
++		break;
++	case SCSI_QDEPTH_QFULL:
++		scsi_track_queue_full(sdev, depth);
++		break;
++	default:
++		return -EOPNOTSUPP;
++	}
++
++	return depth;
 +}
 +
++/**
+  * ufshcd_slave_destroy - remove SCSI device configurations
+  * @sdev: pointer to SCSI device
+  */
+@@ -2065,42 +2093,6 @@ static int ufshcd_task_req_compl(struct ufs_hba *hba, u32 index, u8 *resp)
+ }
+ 
  /**
-  * ufshcd_dev_cmd_completion() - handles device management command responses
-  * @hba: per adapter instance
-@@ -1002,7 +1016,9 @@ ufshcd_dev_cmd_completion(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
- 		}
+- * ufshcd_adjust_lun_qdepth - Update LUN queue depth if device responds with
+- *			      SAM_STAT_TASK_SET_FULL SCSI command status.
+- * @cmd: pointer to SCSI command
+- */
+-static void ufshcd_adjust_lun_qdepth(struct scsi_cmnd *cmd)
+-{
+-	struct ufs_hba *hba;
+-	int i;
+-	int lun_qdepth = 0;
+-
+-	hba = shost_priv(cmd->device->host);
+-
+-	/*
+-	 * LUN queue depth can be obtained by counting outstanding commands
+-	 * on the LUN.
+-	 */
+-	for (i = 0; i < hba->nutrs; i++) {
+-		if (test_bit(i, &hba->outstanding_reqs)) {
+-
+-			/*
+-			 * Check if the outstanding command belongs
+-			 * to the LUN which reported SAM_STAT_TASK_SET_FULL.
+-			 */
+-			if (cmd->device->lun == hba->lrb[i].lun)
+-				lun_qdepth++;
+-		}
+-	}
+-
+-	/*
+-	 * LUN queue depth will be total outstanding commands, except the
+-	 * command for which the LUN reported SAM_STAT_TASK_SET_FULL.
+-	 */
+-	scsi_adjust_queue_depth(cmd->device, MSG_SIMPLE_TAG, lun_qdepth - 1);
+-}
+-
+-/**
+  * ufshcd_scsi_cmd_status - Update SCSI command result based on SCSI status
+  * @lrb: pointer to local reference block of completed command
+  * @scsi_status: SCSI command status
+@@ -2121,12 +2113,6 @@ ufshcd_scsi_cmd_status(struct ufshcd_lrb *lrbp, int scsi_status)
+ 			  scsi_status;
  		break;
- 	case UPIU_TRANSACTION_QUERY_RSP:
--		ufshcd_copy_query_response(hba, lrbp);
-+		err = ufshcd_check_query_response(hba, lrbp);
-+		if (!err)
-+			err = ufshcd_copy_query_response(hba, lrbp);
- 		break;
- 	case UPIU_TRANSACTION_REJECT_UPIU:
- 		/* TODO: handle Reject UPIU Response */
+ 	case SAM_STAT_TASK_SET_FULL:
+-		/*
+-		 * If a LUN reports SAM_STAT_TASK_SET_FULL, then the LUN queue
+-		 * depth needs to be adjusted to the exact number of
+-		 * outstanding commands the LUN can handle at any given time.
+-		 */
+-		ufshcd_adjust_lun_qdepth(lrbp->cmd);
+ 	case SAM_STAT_BUSY:
+ 	case SAM_STAT_TASK_ABORTED:
+ 		ufshcd_copy_sense_data(lrbp);
+@@ -3157,6 +3143,7 @@ static struct scsi_host_template ufshcd_driver_template = {
+ 	.queuecommand		= ufshcd_queuecommand,
+ 	.slave_alloc		= ufshcd_slave_alloc,
+ 	.slave_destroy		= ufshcd_slave_destroy,
++	.change_queue_depth	= ufshcd_change_queue_depth,
+ 	.eh_abort_handler	= ufshcd_abort,
+ 	.eh_device_reset_handler = ufshcd_eh_device_reset_handler,
+ 	.eh_host_reset_handler   = ufshcd_eh_host_reset_handler,
 -- 
 1.8.5.2
 
 --
 QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+
