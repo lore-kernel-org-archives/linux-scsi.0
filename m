@@ -1,50 +1,87 @@
-From: Benoit Taine <benoit.taine@lip6.fr>
-Subject: Re: [PATCH 0/25] Replace DEFINE_PCI_DEVICE_TABLE macro use
-Date: Tue, 22 Jul 2014 19:12:43 +0200
-Message-ID: <20140722171242.GA742@lip6.fr>
-References: <1405697232-11785-1-git-send-email-benoit.taine@lip6.fr>
- <20140718162213.GC31114@tuxdriver.com>
- <20140718164340.GA24960@kroah.com>
- <1405702472.30262.1.camel@dabdike.int.hansenpartnership.com>
- <20140718181759.GB2193@kroah.com>
- <1405709421.30262.8.camel@dabdike.int.hansenpartnership.com>
- <CAErSpo7svKg0HiL=g8wWAHWUN3vs0UgCvVhvd84DM6nVDmT=FQ@mail.gmail.com>
+From: Webb Scales <webbnh@hp.com>
+Subject: Re: [PATCH 01/14] scsi: add scsi_setup_cmnd helper
+Date: Tue, 22 Jul 2014 13:20:30 -0400
+Message-ID: <53CE9D5E.3000607@hp.com>
+References: <1405678393-11497-1-git-send-email-hch@lst.de> <1405678393-11497-2-git-send-email-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-Content-Disposition: inline
-In-Reply-To: <CAErSpo7svKg0HiL=g8wWAHWUN3vs0UgCvVhvd84DM6nVDmT=FQ@mail.gmail.com>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: driverdev-devel-bounces@linuxdriverproject.org
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-mips@linux-mips.org" <linux-mips@linux-mips.org>, linux-fbdev@vger.kernel.org, DRI mailing list <dri-devel@lists.freedesktop.org>, virtualization@lists.linux-foundation.org, James Bottomley <James.Bottomley@hansenpartnership.com>, ath5k-devel@venema.h4ckr.net, linux-acenic@sunsite.dk, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, users@rt2x00.serialmonkey.com, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, Jingoo Han <jg1.han@samsung.com>, ath10k@lists.infradead.org, linux-hippi@sunsite.dk, industrypack-devel@lists.sourceforge.net, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, linux-wireless <linux-wireless@vger.kernel.org>, "xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>, MPT-FusionLinux.pdl@avagotech.com, ath9k-devel@venema.h4ckr.net, wil6210@qca.qualcomm.com, linux-pcmcia@lists.infradead.org, John W. Lin
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from g4t3425.houston.hp.com ([15.201.208.53]:43580 "EHLO
+	g4t3425.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755655AbaGVRUe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Jul 2014 13:20:34 -0400
+In-Reply-To: <1405678393-11497-2-git-send-email-hch@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
 
-T24gMjEvMDcvMjAxNCAxNzoxNiwgQmpvcm4gSGVsZ2FhcyB3cm90ZToKPiBbK2NjIEppbmdvb10K
-PiAKPiBPbiBGcmksIEp1bCAxOCwgMjAxNCBhdCAxMjo1MCBQTSwgSmFtZXMgQm90dG9tbGV5Cj4g
-PiBBbnl3YXksIGl0J3MgUENJIGNvZGUgLi4uIGxldCB0aGUgUENJIG1haW50YWluZXIgZGVjaWRl
-LiAgSG93ZXZlciwgaWYgaGUKPiA+IGRvZXMgd2FudCB0aGlzIGRvIGl0IGFzIG9uZSBiaWcgYmFu
-ZyBwYXRjaCB2aWEgZWl0aGVyIHRoZSBQQ0kgb3IgVHJpdmlhbAo+ID4gdHJlZSAobGF0dGVyIGJl
-Y2F1c2UgSmnFmcOtIGhhcyBleHBlcmllbmNlIGRvaW5nIHRoaXMsIGJ1dCB0aGUgZm9ybWVyCj4g
-PiBtaWdodCBiZSB1c2VmdWwgc28gdGhlIGRlY2lkZXIgZmVlbHMgdGhlIHBhaW4gLi4uKQo+IAo+
-IEkgZG9uJ3QgZmVlbCBzdHJvbmdseSBlaXRoZXIgd2F5LCBzbyBJIGd1ZXNzIEknbSBPSyB3aXRo
-IHRoaXMsIGFuZCBpbgo+IHRoZSBzcGlyaXQgb2YgZmVlbGluZyB0aGUgcGFpbiwgSSdtIHdpbGxp
-bmcgdG8gaGFuZGxlIGl0LiAgSmluZ29vCj4gcHJvcG9zZWQgc2ltaWxhciBwYXRjaGVzLCBzbyBp
-dCBtaWdodCBiZSBuaWNlIHRvIGdpdmUgaGltIHNvbWUgY3JlZGl0Lgo+IAo+IEJlbm9pdCwgaG93
-IGFib3V0IGlmIHlvdSB3YWl0IHVudGlsIGFib3V0IGhhbGYtd2F5IHRocm91Z2ggdGhlIG1lcmdl
-Cj4gd2luZG93IGFmdGVyIHYzLjE2IHJlbGVhc2VzLCBnZW5lcmF0ZSBhbiB1cC10by1kYXRlIHNp
-bmdsZSBwYXRjaCwgYW5kCj4gcG9zdCB0aGF0PyAgVGhlbiB3ZSBjYW4gdHJ5IHRvIGdldCBpdCBp
-biBiZWZvcmUgdjMuMTctcmMxIHRvIG1pbmltaXplCj4gbWVyZ2UgaGFzc2xlcy4KClN1cmUsIEkg
-d2lsbCBkbyB0aGlzLgoKLS0gCkJlbm/DrnQgVGFpbmUKTWFzdGVyIGN5Y2xlIGludGVybgpSZWdh
-bCBUZWFtLiBMSVA2Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fCmRldmVsIG1haWxpbmcgbGlzdApkZXZlbEBsaW51eGRyaXZlcnByb2plY3Qub3JnCmh0dHA6
-Ly9kcml2ZXJkZXYubGludXhkcml2ZXJwcm9qZWN0Lm9yZy9tYWlsbWFuL2xpc3RpbmZvL2RyaXZl
-cmRldi1kZXZlbAo=
+On 7/18/14 6:13 AM, Christoph Hellwig wrote:
+> Factor out command setup code that will be shared with the blk-mq code path.
+>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>   drivers/scsi/scsi_lib.c | 40 ++++++++++++++++++++++------------------
+>   1 file changed, 22 insertions(+), 18 deletions(-)
+>
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 85cf0ef..04c3684 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -1092,6 +1092,27 @@ static int scsi_setup_fs_cmnd(struct scsi_device *sdev, struct request *req)
+>   	return scsi_cmd_to_driver(cmd)->init_command(cmd);
+>   }
+>   
+> +static int scsi_setup_cmnd(struct scsi_device *sdev, struct request *req)
+> +{
+> +	struct scsi_cmnd *cmd = req->special;
+> +
+> +	if (!blk_rq_bytes(req))
+> +		cmd->sc_data_direction = DMA_NONE;
+> +	else if (rq_data_dir(req) == WRITE)
+> +		cmd->sc_data_direction = DMA_TO_DEVICE;
+> +	else
+> +		cmd->sc_data_direction = DMA_FROM_DEVICE;
+> +
+> +	switch (req->cmd_type) {
+> +	case REQ_TYPE_FS:
+> +		return scsi_setup_fs_cmnd(sdev, req);
+> +	case REQ_TYPE_BLOCK_PC:
+> +		return scsi_setup_blk_pc_cmnd(sdev, req);
+> +	default:
+> +		return BLKPREP_KILL;
+> +	}
+> +}
+> +
+>   static int
+>   scsi_prep_state_check(struct scsi_device *sdev, struct request *req)
+>   {
+> @@ -1195,24 +1216,7 @@ static int scsi_prep_fn(struct request_queue *q, struct request *req)
+>   		goto out;
+>   	}
+>   
+> -	if (!blk_rq_bytes(req))
+> -		cmd->sc_data_direction = DMA_NONE;
+> -	else if (rq_data_dir(req) == WRITE)
+> -		cmd->sc_data_direction = DMA_TO_DEVICE;
+> -	else
+> -		cmd->sc_data_direction = DMA_FROM_DEVICE;
+> -
+> -	switch (req->cmd_type) {
+> -	case REQ_TYPE_FS:
+> -		ret = scsi_setup_fs_cmnd(sdev, req);
+> -		break;
+> -	case REQ_TYPE_BLOCK_PC:
+> -		ret = scsi_setup_blk_pc_cmnd(sdev, req);
+> -		break;
+> -	default:
+> -		ret = BLKPREP_KILL;
+> -	}
+> -
+> +	ret = scsi_setup_cmnd(sdev, req);
+>   out:
+>   	return scsi_prep_return(q, req, ret);
+>   }
+
+Reviewed-by: Webb Scales <webbnh@hp.com>
+
