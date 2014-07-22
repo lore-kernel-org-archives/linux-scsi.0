@@ -1,42 +1,50 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 4/4] sd: Handle ZBC drives correctly
-Date: Tue, 22 Jul 2014 09:19:17 -0700
-Message-ID: <20140722161917.GA763@infradead.org>
-References: <1405931241-92015-1-git-send-email-hare@suse.de>
- <1405931241-92015-5-git-send-email-hare@suse.de>
- <20140721112904.GB15455@infradead.org>
- <53CCFEBE.8080400@suse.de>
- <8A51900D08212F40B3DE22453052F69839C47278@wdscexmb02>
+From: Benoit Taine <benoit.taine@lip6.fr>
+Subject: Re: [PATCH 0/25] Replace DEFINE_PCI_DEVICE_TABLE macro use
+Date: Tue, 22 Jul 2014 19:12:43 +0200
+Message-ID: <20140722171242.GA742@lip6.fr>
+References: <1405697232-11785-1-git-send-email-benoit.taine@lip6.fr>
+ <20140718162213.GC31114@tuxdriver.com>
+ <20140718164340.GA24960@kroah.com>
+ <1405702472.30262.1.camel@dabdike.int.hansenpartnership.com>
+ <20140718181759.GB2193@kroah.com>
+ <1405709421.30262.8.camel@dabdike.int.hansenpartnership.com>
+ <CAErSpo7svKg0HiL=g8wWAHWUN3vs0UgCvVhvd84DM6nVDmT=FQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:51115 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754293AbaGVQTT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Jul 2014 12:19:19 -0400
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
 Content-Disposition: inline
-In-Reply-To: <8A51900D08212F40B3DE22453052F69839C47278@wdscexmb02>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <CAErSpo7svKg0HiL=g8wWAHWUN3vs0UgCvVhvd84DM6nVDmT=FQ@mail.gmail.com>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: driverdev-devel-bounces@linuxdriverproject.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-mips@linux-mips.org" <linux-mips@linux-mips.org>, linux-fbdev@vger.kernel.org, DRI mailing list <dri-devel@lists.freedesktop.org>, virtualization@lists.linux-foundation.org, James Bottomley <James.Bottomley@hansenpartnership.com>, ath5k-devel@venema.h4ckr.net, linux-acenic@sunsite.dk, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, users@rt2x00.serialmonkey.com, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, Jingoo Han <jg1.han@samsung.com>, ath10k@lists.infradead.org, linux-hippi@sunsite.dk, industrypack-devel@lists.sourceforge.net, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, linux-wireless <linux-wireless@vger.kernel.org>, "xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>, MPT-FusionLinux.pdl@avagotech.com, ath9k-devel@venema.h4ckr.net, wil6210@qca.qualcomm.com, linux-pcmcia@lists.infradead.org, John W. Lin
 List-Id: linux-scsi@vger.kernel.org
-To: John Utz <John.Utz@wdc.com>
-Cc: Hannes Reinecke <hare@suse.de>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, James Bottomely <jbottomley@parallels.com>
 
-Hi John,
-
-I can't really comment much on the ATA side as I'm not overly uptodate
-on the ZAC spec.
-
-But a device with the 0x14 device type must have sequential required
-zones, which will generate new sense codes when writes outside the
-write pointer happens.  I'm very concerned about
-
- a) how the SCSI midlayer handles those sense codes
-
-and
-
- b) how we can communicate them to the user of the device, e.g. the
-    filesystem or user application
-
-Just attaching the device by default without a good solution for these
-seems dangerous to me.
-
+T24gMjEvMDcvMjAxNCAxNzoxNiwgQmpvcm4gSGVsZ2FhcyB3cm90ZToKPiBbK2NjIEppbmdvb10K
+PiAKPiBPbiBGcmksIEp1bCAxOCwgMjAxNCBhdCAxMjo1MCBQTSwgSmFtZXMgQm90dG9tbGV5Cj4g
+PiBBbnl3YXksIGl0J3MgUENJIGNvZGUgLi4uIGxldCB0aGUgUENJIG1haW50YWluZXIgZGVjaWRl
+LiAgSG93ZXZlciwgaWYgaGUKPiA+IGRvZXMgd2FudCB0aGlzIGRvIGl0IGFzIG9uZSBiaWcgYmFu
+ZyBwYXRjaCB2aWEgZWl0aGVyIHRoZSBQQ0kgb3IgVHJpdmlhbAo+ID4gdHJlZSAobGF0dGVyIGJl
+Y2F1c2UgSmnFmcOtIGhhcyBleHBlcmllbmNlIGRvaW5nIHRoaXMsIGJ1dCB0aGUgZm9ybWVyCj4g
+PiBtaWdodCBiZSB1c2VmdWwgc28gdGhlIGRlY2lkZXIgZmVlbHMgdGhlIHBhaW4gLi4uKQo+IAo+
+IEkgZG9uJ3QgZmVlbCBzdHJvbmdseSBlaXRoZXIgd2F5LCBzbyBJIGd1ZXNzIEknbSBPSyB3aXRo
+IHRoaXMsIGFuZCBpbgo+IHRoZSBzcGlyaXQgb2YgZmVlbGluZyB0aGUgcGFpbiwgSSdtIHdpbGxp
+bmcgdG8gaGFuZGxlIGl0LiAgSmluZ29vCj4gcHJvcG9zZWQgc2ltaWxhciBwYXRjaGVzLCBzbyBp
+dCBtaWdodCBiZSBuaWNlIHRvIGdpdmUgaGltIHNvbWUgY3JlZGl0Lgo+IAo+IEJlbm9pdCwgaG93
+IGFib3V0IGlmIHlvdSB3YWl0IHVudGlsIGFib3V0IGhhbGYtd2F5IHRocm91Z2ggdGhlIG1lcmdl
+Cj4gd2luZG93IGFmdGVyIHYzLjE2IHJlbGVhc2VzLCBnZW5lcmF0ZSBhbiB1cC10by1kYXRlIHNp
+bmdsZSBwYXRjaCwgYW5kCj4gcG9zdCB0aGF0PyAgVGhlbiB3ZSBjYW4gdHJ5IHRvIGdldCBpdCBp
+biBiZWZvcmUgdjMuMTctcmMxIHRvIG1pbmltaXplCj4gbWVyZ2UgaGFzc2xlcy4KClN1cmUsIEkg
+d2lsbCBkbyB0aGlzLgoKLS0gCkJlbm/DrnQgVGFpbmUKTWFzdGVyIGN5Y2xlIGludGVybgpSZWdh
+bCBUZWFtLiBMSVA2Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fCmRldmVsIG1haWxpbmcgbGlzdApkZXZlbEBsaW51eGRyaXZlcnByb2plY3Qub3JnCmh0dHA6
+Ly9kcml2ZXJkZXYubGludXhkcml2ZXJwcm9qZWN0Lm9yZy9tYWlsbWFuL2xpc3RpbmZvL2RyaXZl
+cmRldi1kZXZlbAo=
