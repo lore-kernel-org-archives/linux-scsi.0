@@ -1,45 +1,26 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: mpt2sas and mpt3sas merge (again)
-Date: Tue, 22 Jul 2014 21:39:08 -0400
-Message-ID: <yq14my8lupv.fsf@sermon.lab.mkp.net>
-References: <20140714083547.GA6315@infradead.org> <53C3A170.1070101@suse.de>
-	<1405347425.2395.5.camel@dabdike.int.hansenpartnership.com>
-	<yq1bnsry69d.fsf@sermon.lab.mkp.net>
-	<CAK=zhgoD9vVH0zCORTA2Mhu8Tf4m4VAih_hpig4PDdh-vgJmQg@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:42275 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751143AbaGWBjp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Jul 2014 21:39:45 -0400
-In-Reply-To: <CAK=zhgoD9vVH0zCORTA2Mhu8Tf4m4VAih_hpig4PDdh-vgJmQg@mail.gmail.com>
-	(Sreekanth Reddy's message of "Tue, 22 Jul 2014 12:03:48 +0530")
-Sender: linux-scsi-owner@vger.kernel.org
+From: Dolev Raviv <draviv@codeaurora.org>
+Subject: [PATCH 0/2] scsi: ufs: fix sparse tool warning in ufs driver
+Date: Wed, 23 Jul 2014 09:31:10 +0300
+Message-ID: <1406097072-18148-1-git-send-email-draviv@codeaurora.org>
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com, hch@infradead.org
+Cc: linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, sthumma@codeaurora.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, Dolev Raviv <draviv@codeaurora.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@infradead.org>, Sathya Prakash <Sathya.Prakash@avagotech.com>, Nagalakshmi Nandigama <Nagalakshmi.Nandigama@avagotech.com>, linux-scsi@vger.kernel.org
 
->>>>> "Sreekanth" == Sreekanth Reddy <sreekanth.reddy@avagotech.com> writes:
+Few fixes noted by the sparse tool:
+- make undeclared functions static
+- fix endianness sparse warnings
 
-Hey Sreekanth,
+Sujit Reddy Thumma (2):
+  scsi: ufs: make undeclared functions static
+  scsi: ufs: fix endianness sparse warnings
 
-Sreekanth> If we have single driver approach, making any changes in
-Sreekanth> driver require lots of regression and Q/A cycle so that
-Sreekanth> existing customer who are based on older controller does not
-Sreekanth> have any impact due some fixes/new features.
-
-Sreekanth> With all these HBA specific features, it is unmanageable to
-Sreekanth> have a common driver for SAS2 and SAS3 HBAs.
-
-But just as a counterexample to that: qla2xxx and lpfc are both capable
-of driving a wide range of chip generations and firmware interface
-versions with a single driver.
-
-The problem I have with the mpt2sas/mpt3sas split is that there are way
-more commonalities than there are differences. It is trivial to handle
-multiple scatterlist format and features in a single driver. You guys
-already do that in megaraid_sas.
+ drivers/scsi/ufs/ufshcd.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+1.8.5.2
+
+--
+QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
