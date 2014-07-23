@@ -1,69 +1,50 @@
-From: Dolev Raviv <draviv@codeaurora.org>
-Subject: [PATCH 2/2] scsi: ufs: fix endianness sparse warnings
-Date: Wed, 23 Jul 2014 09:31:12 +0300
-Message-ID: <1406097072-18148-3-git-send-email-draviv@codeaurora.org>
-References: <1406097072-18148-1-git-send-email-draviv@codeaurora.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:35608 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755816AbaGWGbh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Jul 2014 02:31:37 -0400
-In-Reply-To: <1406097072-18148-1-git-send-email-draviv@codeaurora.org>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Sitsofe Wheeler <sitsofe@gmail.com>
+Subject: Re: [PATCH 1/1] Drivers: scsi: storvsc: Add blist flags
+Date: Wed, 23 Jul 2014 11:04:48 +0100
+Message-ID: <20140723100448.GA2540@sucs.org>
+References: <1405983961-18782-1-git-send-email-kys@microsoft.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1405983961-18782-1-git-send-email-kys@microsoft.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "K. Y. Srinivasan" <kys@microsoft.com>
+Cc: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, apw@canonical.com, jasowang@redhat.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com, hch@infradead.org
-Cc: linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, sthumma@codeaurora.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, Dolev Raviv <draviv@codeaurora.org>
 
-From: Sujit Reddy Thumma <sthumma@codeaurora.org>
+On Mon, Jul 21, 2014 at 04:06:01PM -0700, K. Y. Srinivasan wrote:
+> Add blist flags to permit the reading of the VPD pages even when
+> the target may claim SPC-2 compliance. MSFT targets currently
+> claim SPC-2 compliance while they implement post SPC-2 features.
+> With this patch we can correctly handle WRITE_SAME_16 issues.
 
-Fix many warnings with incorrect endian assumptions
-which makes the code unportable to new architectures.
+OK I've just seen this as I was about to post a similar patch to get
+discard going on Hyper-V. Will your patches handle Hyper-V pass through devices
+that support discard? The SSD I have here reports the following in the Linux
+VM:
 
-The UFS specification defines the byte order as big-endian
-for UPIU structure and little-endian for the host controller
-transfer/task management descriptors.
+# sg_vpd -p lbpv  /dev/sdc
+Logical block provisioning VPD page (SBC):
+  Unmap command supported (LBPU): 1
+  Write same (16) with unmap bit supported (LBWS): 0
+  Write same (10) with unmap bit supported (LBWS10): 0
+  Logical block provisioning read zeros (LBPRZ): 0
+  Anchored LBAs supported (ANC_SUP): 1
+  Threshold exponent: 0
+  Descriptor present (DP): 0
+  Provisioning type: 0
 
-Signed-off-by: Sujit Reddy Thumma <sthumma@codeaurora.org>
-Signed-off-by: Dolev Raviv <draviv@codeaurora.org>
----
- drivers/scsi/ufs/ufshcd.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+# sg_readcap -l /dev/sdc
+Read Capacity results:
+   Protection: prot_en=0, p_type=0, p_i_exponent=0
+   Logical block provisioning: lbpme=0, lbprz=0
+   Last logical block address=234441647 (0xdf94baf), Number of logical blocks=234441648
+   Logical block length=512 bytes
+   Logical blocks per physical block exponent=0
+   Lowest aligned logical block address=0
+Hence:
+   Device size: 120034123776 bytes, 114473.5 MiB, 120.03 GB
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index a450407..ba27215 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -464,7 +464,8 @@ int ufshcd_copy_query_response(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
- 		/* data segment length */
- 		resp_len = be32_to_cpu(lrbp->ucd_rsp_ptr->header.dword_2) &
- 						MASK_QUERY_DATA_SEG_LEN;
--		buf_len = hba->dev_cmd.query.request.upiu_req.length;
-+		buf_len = be16_to_cpu(
-+				hba->dev_cmd.query.request.upiu_req.length);
- 		if (likely(buf_len >= resp_len)) {
- 			memcpy(hba->dev_cmd.query.descriptor, descp, resp_len);
- 		} else {
-@@ -1342,7 +1343,7 @@ static int ufshcd_query_descriptor(struct ufs_hba *hba,
- 	ufshcd_init_query(hba, &request, &response, opcode, idn, index,
- 			selector);
- 	hba->dev_cmd.query.descriptor = desc_buf;
--	request->upiu_req.length = *buf_len;
-+	request->upiu_req.length = cpu_to_be16(*buf_len);
- 
- 	switch (opcode) {
- 	case UPIU_QUERY_OPCODE_WRITE_DESC:
-@@ -1368,7 +1369,7 @@ static int ufshcd_query_descriptor(struct ufs_hba *hba,
- 	}
- 
- 	hba->dev_cmd.query.descriptor = NULL;
--	*buf_len = response->upiu_res.length;
-+	*buf_len = be16_to_cpu(response->upiu_res.length);
- 
- out_unlock:
- 	mutex_unlock(&hba->dev_cmd.lock);
 -- 
-1.8.5.2
-
---
-QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
-
+Sitsofe | http://sucs.org/~sits/
