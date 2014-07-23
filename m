@@ -1,51 +1,39 @@
-From: Sitsofe Wheeler <sitsofe@gmail.com>
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: [PATCH 1/1] Drivers: scsi: storvsc: Add blist flags
-Date: Wed, 23 Jul 2014 15:10:28 +0100
-Message-ID: <20140723141028.GA22724@sucs.org>
+Date: Wed, 23 Jul 2014 07:15:58 -0700
+Message-ID: <20140723141558.GA9705@infradead.org>
 References: <1405983961-18782-1-git-send-email-kys@microsoft.com>
+ <20140723141028.GA22724@sucs.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:38130 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751904AbaGWOQB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Jul 2014 10:16:01 -0400
 Content-Disposition: inline
-In-Reply-To: <1405983961-18782-1-git-send-email-kys@microsoft.com>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: driverdev-devel-bounces@linuxdriverproject.org
-To: "K. Y. Srinivasan" <kys@microsoft.com>
-Cc: linux-scsi@vger.kernel.org, gregkh@linuxfoundation.org, jasowang@redhat.com, ohering@suse.com, jbottomley@parallels.com, linux-kernel@vger.kernel.org, hch@infradead.org, apw@canonical.com, devel@linuxdriverproject.org
+In-Reply-To: <20140723141028.GA22724@sucs.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Sitsofe Wheeler <sitsofe@gmail.com>
+Cc: "K. Y. Srinivasan" <kys@microsoft.com>, gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, apw@canonical.com, jasowang@redhat.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org
 
-On Mon, Jul 21, 2014 at 04:06:01PM -0700, K. Y. Srinivasan wrote:
-> Add blist flags to permit the reading of the VPD pages even when
-> the target may claim SPC-2 compliance. MSFT targets currently
-> claim SPC-2 compliance while they implement post SPC-2 features.
-> With this patch we can correctly handle WRITE_SAME_16 issues.
-> 
->  static void storvsc_on_channel_callback(void *context);
-> @@ -1449,6 +1451,14 @@ static int storvsc_device_configure(struct scsi_device *sdevice)
->  
->  	sdevice->no_write_same = 1;
->  
-> +	/*
-> +	 * Add blist flags to permit the reading of the VPD pages even when
-> +	 * the target may claim SPC-2 compliance. MSFT targets currently
-> +	 * claim SPC-2 compliance while they implement post SPC-2 features.
-> +	 * With this patch we can correctly handle WRITE_SAME_16 issues.
-> +	 */
-> +	sdevice->sdev_bflags |= msft_blist_flags;
-> +
+On Wed, Jul 23, 2014 at 03:10:28PM +0100, Sitsofe Wheeler wrote:
+> I'm not sure this alone will work - won't sdev_bflags/bflags have
+> already been built at this point?
 
-I'm not sure this alone will work - won't sdev_bflags/bflags have
-already been built at this point? If the setting of this has to stay in
-this function why don't you (also) set sdevice->try_vpd_pages in a
-similar way to no_write_same?
+They've been built up, but we can still or new values into it.  It looks
+fine to me from review, but if you can test it on an actualy hypverv
+setup that would be valueable feedback.
 
--- 
-Sitsofe | http://sucs.org/~sits/
+> If the setting of this has to stay in
+> this function why don't you (also) set sdevice->try_vpd_pages in a
+> similar way to no_write_same?
+
+We could probably do that.  I don't actually like this whole split
+between the blacklist flags, and the bitfields.  I'll see if we can
+just get rid of those bitfields an always just use the blacklist
+flags directly, now that we have precedence of setting them in drivers
+and not just the table keyed by the inquiry data.  But that's a longer
+term project, this late in the 3.17 cycle I'd just like to merge
+something that gets discards on hyperv to work.
