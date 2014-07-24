@@ -1,45 +1,38 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2 3/3] [SCSI] Make LBP quirk skip lbpme checks tests
-Date: Thu, 24 Jul 2014 09:54:24 -0400
-Message-ID: <yq1iommkgkv.fsf@sermon.lab.mkp.net>
-References: <20140724122223.GA31798@sucs.org>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 79901] Extremely slow boot on Promise VTrak E610f due to sd_mod
+ RSOC usage
+Date: Thu, 24 Jul 2014 14:07:07 +0000
+Message-ID: <bug-79901-11613-LvEuXu4SmD@https.bugzilla.kernel.org/>
+References: <bug-79901-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <20140724122223.GA31798@sucs.org> (Sitsofe Wheeler's message of
- "Thu, 24 Jul 2014 13:22:23 +0100")
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: driverdev-devel-bounces@linuxdriverproject.org
-To: Sitsofe Wheeler <sitsofe@gmail.com>
-Cc: linux-scsi@vger.kernel.org, gregkh@linuxfoundation.org, jasowang@redhat.com, ohering@suse.com, jbottomley@parallels.com, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, apw@canonical.com, devel@linuxdriverproject.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.19.201]:43165 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758932AbaGXOHQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 24 Jul 2014 10:07:16 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id B7C94201EC
+	for <linux-scsi@vger.kernel.org>; Thu, 24 Jul 2014 14:07:15 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id 87527201E4
+	for <linux-scsi@vger.kernel.org>; Thu, 24 Jul 2014 14:07:08 +0000 (UTC)
+In-Reply-To: <bug-79901-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
->>>>> "Sitsofe" == Sitsofe Wheeler <sitsofe@gmail.com> writes:
+https://bugzilla.kernel.org/show_bug.cgi?id=79901
 
-Sitsofe> Fix incorrectly named variable.  Some block devices (such as
-Sitsofe> Hyper-V passthrough SSDs) support logical block provisioning
-Sitsofe> (e.g. via UNMAP) but don't set lbpme thus disabling discard. 
+--- Comment #1 from Janusz Dziemidowicz <rraptorr@nails.eu.org> ---
+Created attachment 144101
+  --> https://bugzilla.kernel.org/attachment.cgi?id=144101&action=edit
+Patch adding BLIST_NO_RSOC scsi scan flag
 
-The fix for an SSD that is known to support LBP but which does not claim
-support for it is to use:
-
-    echo unmap > /sys/class/scsi_disk/foo/provisioning_mode
-
-I'm very much against short-circuiting the LBP logic in a passthrough
-driver because then we might end up in the exact situation we were
-trying to avoid with this patch series. Namely sending down commands
-unsupported by the target device.
-
-This kind of thing really needs to be a sysadmin decision and can be
-handled with a udev rule.
+As discussed on the list, attached simple patch that blacklist RSOC on Promise
+VTrak E610f
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+You are receiving this mail because:
+You are the assignee for the bug.
