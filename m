@@ -1,86 +1,99 @@
-From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Subject: Re: mpt2sas and mpt3sas merge (again)
-Date: Thu, 24 Jul 2014 17:55:44 +0530
-Message-ID: <CAK=zhgqASRRVDYdSsQamjgeKrRVbO1d=WmATL+Gie70H5HQ7Wg@mail.gmail.com>
-References: <20140714083547.GA6315@infradead.org>
-	<53C3A170.1070101@suse.de>
-	<1405347425.2395.5.camel@dabdike.int.hansenpartnership.com>
-	<yq1bnsry69d.fsf@sermon.lab.mkp.net>
-	<CAK=zhgoD9vVH0zCORTA2Mhu8Tf4m4VAih_hpig4PDdh-vgJmQg@mail.gmail.com>
-	<yq14my8lupv.fsf@sermon.lab.mkp.net>
+From: Sitsofe Wheeler <sitsofe@gmail.com>
+Subject: Re: [PATCH 0/3] Enable discard on Hyper-V
+Date: Thu, 24 Jul 2014 13:37:03 +0100
+Message-ID: <20140724123703.GB31798@sucs.org>
+References: <1405983961-18782-1-git-send-email-kys@microsoft.com>
+ <20140723141028.GA22724@sucs.org>
+ <20140723141558.GA9705@infradead.org>
+ <20140723201341.GA10292@sucs.org> <20140724074739.GA15127@sucs.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og120.obsmtp.com ([64.18.2.18]:58552 "EHLO
-	exprod7og120.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757015AbaGXMZp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Jul 2014 08:25:45 -0400
-Received: by mail-qa0-f49.google.com with SMTP id dc16so2811387qab.22
-        for <linux-scsi@vger.kernel.org>; Thu, 24 Jul 2014 05:25:44 -0700 (PDT)
-In-Reply-To: <yq14my8lupv.fsf@sermon.lab.mkp.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+Content-Disposition: inline
+In-Reply-To: <20140724074739.GA15127@sucs.org>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: driverdev-devel-bounces@linuxdriverproject.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org, gregkh@linuxfoundation.org, jasowang@redhat.com, ohering@suse.com, jbottomley@parallels.com, linux-kernel@vger.kernel.org, apw@canonical.com, devel@linuxdriverproject.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@infradead.org>, Sathya Prakash <Sathya.Prakash@avagotech.com>, Nagalakshmi Nandigama <Nagalakshmi.Nandigama@avagotech.com>, linux-scsi@vger.kernel.org
 
-Hi Martin,
+On Thu, Jul 24, 2014 at 08:47:39AM +0100, Sitsofe Wheeler wrote:
+> On Wed, Jul 23, 2014 at 09:13:41PM +0100, Sitsofe Wheeler wrote:
+> > On Wed, Jul 23, 2014 at 07:15:58AM -0700, Christoph Hellwig wrote:
+> > > On Wed, Jul 23, 2014 at 03:10:28PM +0100, Sitsofe Wheeler wrote:
+> > > > I'm not sure this alone will work - won't sdev_bflags/bflags have
+> > > > already been built at this point?
+> > > 
+> > > They've been built up, but we can still or new values into it.  It looks
+> > > fine to me from review, but if you can test it on an actualy hypverv
+> > > setup that would be valueable feedback.
+> > 
+> > The previous patches didn't work for me with a Windows 2012 R2 host with a
+> > 3.16.0-rc6.x86_64-00076-g2f7d2ec-dirty guest. After applying
+> > 
+> > > term project, this late in the 3.17 cycle I'd just like to merge
+> > > something that gets discards on hyperv to work.
+> 
+> OK how about the following patches:
+> 
+> Sitsofe Wheeler (3):
+>   [SCSI] Add quirk for forcing logical block provisioning tests
+>   [SCSI] storvsc: Add Hyper-V logical block provisioning quirk
+>   [SCSI] Make LBP quirk skip lbpme checks
 
-megaraid driver was a single driver for both SAS2 and SAS3 controller
-because from day1 it was planned and developed that way.
-But it also certain cons
+With the updated "Make LBP quirk skip lbpme checks" the above patches
+enable discard on all Hyper-V disks (both VHDXs and passthrough SSDs) on
+Windows 2012 R2 running a Linux 3.16.0-rc6.x86_64-00076-g2f7d2ec-dirty
+guest.
 
--Sometimes, there may be different settings needs to be done for IO
-for different type of controllers. In IO path, adding PNP id based
-checks may degrade the performance
--Making any fix for one controller family may affect other controllers
-code path as well, so code review and unit testing of fix has to done
-for all supported controllers.
-e.g. in megaraid_sas driver, to maintain MFI controllers original
-design  untouched, we have to deal with many synchronization issues in
-MPT controllers design. If there is some workaround for older
-controllers in driver, it may be carried forward sometimes, even if
-that issue can be fixed for new controllers.
--In case of megaraid_sas, all application and management commands  are
-MFI frame based, so for legacy applications to work with MPT
-controllers(MPT frames), driver cannot post same MFI frame to firmware
-and has to internally allocate MPT frame corresponding to MFI frame,
-maintain the mapping of MFI to MPT frame and the send to firmware.
-Driver has to play as intermediate between apps and firmware, so
-driver has to do conversion.
+Adding back the debugging and looking at just the discard messages shows
+this:
 
-To overcome these kind of issues,  LSI has gone for separate drivers
-for mpt2sas and mpt3sas.
-In case of mpt2sas, mpt3sas drivers, the only con is maintenance of
-separate drivers. Our SAS2 HBA is almost entering deep maintenance
-mode. We will not be posting any more feature support patches for
-mpt2sas.  Whereas mpt3sas is at its initial baseline with a healthy
-road map ahead.
+sd 0:0:0:0: [sda] Discard mode: 2
+sd 0:0:0:0: [sda] Entering discard switch via LBP VPD
+sd 0:0:0:0: [sda] Discard mode: 1
+sd 0:0:0:0: [sda] Discard mode: 2
+sd 0:0:0:0: [sda] Entering discard switch via LBP VPD
+sd 0:0:0:0: [sda] Discard mode: 1
+sd 0:0:0:0: [sda] Discard mode: 2
+sd 0:0:0:0: [sda] Entering discard switch via LBP VPD
+sd 0:0:0:0: [sda] Discard mode: 1
+sd 1:0:0:3: [sdd] Discard mode: 2
+sd 1:0:0:1: [sdc] Entering discard switch with NO LBP VPD
+sd 1:0:0:1: [sdc] Discard mode: 1
+sd 1:0:0:3: [sdd] Entering discard switch via LBP VPD
+sd 1:0:0:3: [sdd] Discard mode: 1
+sd 1:0:0:0: [sdb] Discard mode: 2
+sd 1:0:0:3: [sdd] Discard mode: 2
+sd 1:0:0:1: [sdc] Entering discard switch with NO LBP VPD
+sd 1:0:0:1: [sdc] Discard mode: 1
+sd 1:0:0:3: [sdd] Entering discard switch via LBP VPD
+sd 1:0:0:3: [sdd] Discard mode: 1
+sd 1:0:0:1: [sdc] Entering discard switch with NO LBP VPD
+sd 1:0:0:1: [sdc] Discard mode: 1
+sd 1:0:0:0: [sdb] Entering discard switch via LBP VPD
+sd 1:0:0:0: [sdb] Discard mode: 1
+sd 1:0:0:3: [sdd] Discard mode: 2
+sd 1:0:0:0: [sdb] Discard mode: 2
+sd 1:0:0:0: [sdb] Entering discard switch via LBP VPD
+sd 1:0:0:0: [sdb] Discard mode: 1
+sd 1:0:0:0: [sdb] Discard mode: 2
+sd 1:0:0:0: [sdb] Entering discard switch via LBP VPD
+sd 1:0:0:0: [sdb] Discard mode: 1
+sd 1:0:0:3: [sdd] Entering discard switch via LBP VPD
+sd 1:0:0:3: [sdd] Discard mode: 1
 
-Regards,
-Sreekanth
+All devices eventually end up using discard mode 1 (SD_LBP_UNMAP) but
+it's a bit strange the VHDX devices (which set lbpme) flip back and
+forth between discard mode 1 and discard mode 2 (SD_LBP_WS16)...
 
-On Wed, Jul 23, 2014 at 7:09 AM, Martin K. Petersen
-<martin.petersen@oracle.com> wrote:
->>>>>> "Sreekanth" == Sreekanth Reddy <sreekanth.reddy@avagotech.com> writes:
->
-> Hey Sreekanth,
->
-> Sreekanth> If we have single driver approach, making any changes in
-> Sreekanth> driver require lots of regression and Q/A cycle so that
-> Sreekanth> existing customer who are based on older controller does not
-> Sreekanth> have any impact due some fixes/new features.
->
-> Sreekanth> With all these HBA specific features, it is unmanageable to
-> Sreekanth> have a common driver for SAS2 and SAS3 HBAs.
->
-> But just as a counterexample to that: qla2xxx and lpfc are both capable
-> of driving a wide range of chip generations and firmware interface
-> versions with a single driver.
->
-> The problem I have with the mpt2sas/mpt3sas split is that there are way
-> more commonalities than there are differences. It is trivial to handle
-> multiple scatterlist format and features in a single driver. You guys
-> already do that in megaraid_sas.
->
-> --
-> Martin K. Petersen      Oracle Linux Engineering
+-- 
+Sitsofe | http://sucs.org/~sits/
