@@ -1,85 +1,88 @@
-From: James Bottomley <jbottomley@parallels.com>
-Subject: Re: [PATCH 2/3] [SCSI] storvsc: Add Hyper-V logical block
- provisioning tests
-Date: Thu, 24 Jul 2014 14:09:11 +0000
-Message-ID: <1406210951.2040.5.camel@jarvis.lan>
-References: <1405983961-18782-1-git-send-email-kys@microsoft.com>
- <20140723141028.GA22724@sucs.org> <20140723141558.GA9705@infradead.org>
- <20140723201341.GA10292@sucs.org> <20140724074739.GA15127@sucs.org>
- <20140724075653.GC15127@sucs.org>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [Bug 79901] Extremely slow boot on Promise VTrak E610f due to
+ sd_mod RSOC usage
+Date: Thu, 24 Jul 2014 08:28:38 -0700
+Message-ID: <20140724152838.GA1533@infradead.org>
+References: <bug-79901-11613@https.bugzilla.kernel.org/>
+ <bug-79901-11613-LvEuXu4SmD@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <20140724075653.GC15127@sucs.org>
-Content-Language: en-US
-Content-ID: <4C0405326331634AB54A917409251B18@sw.swsoft.com>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: driverdev-devel-bounces@linuxdriverproject.org
-To: "sitsofe@gmail.com" <sitsofe@gmail.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "jasowang@redhat.com" <jasowang@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "ohering@suse.com" <ohering@suse.com>, "hch@infradead.org" <hch@infradead.org>, "apw@canonical.com" <apw@canonical.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:55742 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759338AbaGXP2j (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Jul 2014 11:28:39 -0400
+Content-Disposition: inline
+In-Reply-To: <bug-79901-11613-LvEuXu4SmD@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: rraptorr@nails.eu.org
+Cc: linux-scsi@vger.kernel.org
 
-On Thu, 2014-07-24 at 08:56 +0100, Sitsofe Wheeler wrote:
-> Microsoft Hyper-V targets currently only claim SPC-2 compliance / no
-> compliance indicated even though they implement post SPC-2 features
-> which means those features are not tested for. Add a blacklist flag to
-> Hyper-V devices that forces said testing.
+Thanks, this one looks good to me.  Can someone else give me a second
+review on the attached patch so I can merged it?
 
-This description is misleading: you don't force the test now, you force
-the driver to send unmap commands down to the device.
+---
+>From 95bc83fa0d6e9a6152cd6fce79ff87c0994e83ed Mon Sep 17 00:00:00 2001
+From: Janusz Dziemidowicz <rraptorr@nails.eu.org>
+Date: Thu, 24 Jul 2014 15:48:46 +0200
+Subject: [PATCH] Do not issue SCSI RSOC command to Promise Vtrak E610f
 
-> See https://lkml.org/lkml/2014/7/21/627 for the previous version of this
-> patch and https://lkml.org/lkml/2014/7/23/615 for example devices.
-> 
-> Original-patch-by: K. Y. Srinivasan <kys@microsoft.com>
-> Signed-off-by: Sitsofe Wheeler <sitsofe@yahoo.com>
-> ---
->  drivers/scsi/storvsc_drv.c | 10 +++-------
->  1 file changed, 3 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-> index 5ad2810..88b7173 100644
-> --- a/drivers/scsi/storvsc_drv.c
-> +++ b/drivers/scsi/storvsc_drv.c
-> @@ -326,8 +326,6 @@ MODULE_PARM_DESC(storvsc_ringbuffer_size, "Ring buffer size (bytes)");
->   */
->  static int storvsc_timeout = 180;
->  
-> -static int msft_blist_flags = BLIST_TRY_VPD_PAGES;
-> -
->  #define STORVSC_MAX_IO_REQUESTS				200
->  
->  static void storvsc_on_channel_callback(void *context);
-> @@ -1444,12 +1442,10 @@ static int storvsc_device_configure(struct scsi_device *sdevice)
->  	sdevice->no_write_same = 1;
->  
->  	/*
-> -	 * Add blist flags to permit the reading of the VPD pages even when
-> -	 * the target may claim SPC-2 compliance. MSFT targets currently
-> -	 * claim SPC-2 compliance while they implement post SPC-2 features.
-> -	 * With this patch we can correctly handle WRITE_SAME_16 issues.
-> +	 * Forcefully enable logical block provisioning testing.
->  	 */
-> -	sdevice->sdev_bflags |= msft_blist_flags;
-> +	sdevice->sdev_bflags |= BLIST_TRY_LBP;
-> +	sdevice->try_lbp = 1;
+Some devices don't like REPORT SUPPORTED OPERATION CODES and will
+simply timeout causing sd_mod init to take a very very long time.
+Introduce BLIST_NO_RSOC scsi scan flag, that stops RSOC from being
+issued. Add it to Promise Vtrak E610f entry in scsi scan
+blacklist. Fixes bug #79901 reported at
+https://bugzilla.kernel.org/show_bug.cgi?id=79901
 
-Really no way to this one.  You're forcing unmap support on every
-hyper-v device; including spinning rust pass through ones which won't
-support it.  The hyper-v storage interface has proven to be somewhat
-fragile, so it may explode when the device tries to send illegal command
-sense back.
+Fixes: 98dcc2946adb ("SCSI: sd: Update WRITE SAME heuristics")
 
-If you have a specific IDENTITY string for a faulty SSD that fails to
-report unmap support correctly, then we could quirk for that, but not
-everything attached to the hyper-v driver.
+Signed-off-by: Janusz Dziemidowicz <rraptorr@nails.eu.org>
+---
+ drivers/scsi/scsi_devinfo.c | 1 +
+ drivers/scsi/scsi_scan.c    | 6 ++++++
+ include/scsi/scsi_devinfo.h | 1 +
+ 3 files changed, 8 insertions(+)
 
-James
+diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+index f969aca..49014a1 100644
+--- a/drivers/scsi/scsi_devinfo.c
++++ b/drivers/scsi/scsi_devinfo.c
+@@ -222,6 +222,7 @@ static struct {
+ 	{"PIONEER", "CD-ROM DRM-602X", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+ 	{"PIONEER", "CD-ROM DRM-604X", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+ 	{"PIONEER", "CD-ROM DRM-624X", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
++	{"Promise", "VTrak E610f", NULL, BLIST_SPARSELUN | BLIST_NO_RSOC},
+ 	{"Promise", "", NULL, BLIST_SPARSELUN},
+ 	{"QUANTUM", "XP34301", "1071", BLIST_NOTQ},
+ 	{"REGAL", "CDC-4X", NULL, BLIST_MAX5LUN | BLIST_SINGLELUN},
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index e02b3aa..70919fc 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -922,6 +922,12 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ 	if (*bflags & BLIST_USE_10_BYTE_MS)
+ 		sdev->use_10_for_ms = 1;
+ 
++	/* some devices don't like REPORT SUPPORTED OPERATION CODES
++	 * and will simply timeout causing sd_mod init to take a very
++	 * very long time */
++	if (*bflags & BLIST_NO_RSOC)
++		sdev->no_report_opcodes = 1;
++
+ 	/* set the device running here so that slave configure
+ 	 * may do I/O */
+ 	ret = scsi_device_set_state(sdev, SDEV_RUNNING);
+diff --git a/include/scsi/scsi_devinfo.h b/include/scsi/scsi_devinfo.h
+index 447d2d7..1d5ba9e 100644
+--- a/include/scsi/scsi_devinfo.h
++++ b/include/scsi/scsi_devinfo.h
+@@ -32,4 +32,5 @@
+ #define BLIST_ATTACH_PQ3	0x1000000 /* Scan: Attach to PQ3 devices */
+ #define BLIST_NO_DIF		0x2000000 /* Disable T10 PI (DIF) */
+ #define BLIST_SKIP_VPD_PAGES	0x4000000 /* Ignore SBC-3 VPD pages */
++#define BLIST_NO_RSOC		0x8000000 /* don't try REPORT SUPPORTED OPERATION CODES */
+ #endif
+-- 
+1.9.3
+
