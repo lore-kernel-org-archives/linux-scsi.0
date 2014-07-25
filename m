@@ -1,46 +1,21 @@
-From: jgross@suse.com
-Subject: [PATCH V2 4/4] add xen pvscsi maintainer
-Date: Fri, 25 Jul 2014 13:37:33 +0200
-Message-ID: <1406288253-13293-5-git-send-email-jgross@suse.com>
-References: <1406288253-13293-1-git-send-email-jgross@suse.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:38846 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751841AbaGYLiP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 25 Jul 2014 07:38:15 -0400
-In-Reply-To: <1406288253-13293-1-git-send-email-jgross@suse.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 07/14] scsi: convert host_busy to atomic_t
+Date: Fri, 25 Jul 2014 13:38:41 +0200
+Message-ID: <20140725113841.GA3043@lst.de>
+References: <1405678393-11497-1-git-send-email-hch@lst.de> <1405678393-11497-8-git-send-email-hch@lst.de> <yq1lhrmkovo.fsf@sermon.lab.mkp.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <yq1lhrmkovo.fsf@sermon.lab.mkp.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Bart Van Assche <bvanassche@fusionio.com>, Mike Christie <michaelc@cs.wisc.edu>, Robert Elliott <Elliott@hp.com>, Webb Scales <webbnh@hp.com>, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jgross@suse.com, xen-devel@lists.xen.org, linux-scsi@vger.kernel.org, JBottomley@parallels.com, target-devel@vger.kernel.org, konrad.wilk@oracle.com
 
-From: Juergen Gross <jgross@suse.com>
+On Tue, Jul 22, 2014 at 12:18:19AM -0400, Martin K. Petersen wrote:
+> More nitpicking. In the two previous atomic conversion patches you kept
+> %hu for the atomic_t. Here it's %d.
 
-Add myself as maintainer for the Xen pvSCSI stuff.
-
-Signed-off-by: Juergen Gross <jgross@suse.com>
----
- MAINTAINERS | 8 ++++++++
- 1 file changed, 8 insertions(+)
-
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 86efa7e..53f84c3 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -10046,6 +10046,14 @@ S:	Supported
- F:	arch/x86/pci/*xen*
- F:	drivers/pci/*xen*
- 
-+XEN PVSCSI DRIVERS
-+M:	Juergen Gross <jgross@suse.com>
-+L:	xen-devel@lists.xenproject.org (moderated for non-subscribers)
-+S:	Supported
-+F:	drivers/scsi/xen-scsifront.c
-+F:	drivers/xen/xen-scsiback.c
-+F:	include/xen/interface/io/vscsiif.h
-+
- XEN SWIOTLB SUBSYSTEM
- M:	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
- L:	xen-devel@lists.xenproject.org (moderated for non-subscribers)
--- 
-1.8.4.5
-
+I'll fix it to use %d everywhere, given that's it's not an unsigned short
+anymore.
