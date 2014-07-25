@@ -1,17 +1,78 @@
-From: "Chis, Ioan" <Ioan.Chis@tc.gc.ca>
-Subject: Charity Code: 29Q118
-Date: Fri, 25 Jul 2014 02:28:10 -0400
-Message-ID: <A86DB7EC54752A4EBF9D5BA13DAD33C01BD98B2E66__45976.8685898327$1406269749$gmane$org@NCRMXMB04.tc.gc.ca>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+From: Maurizio Lombardi <mlombard@redhat.com>
+Subject: [PATCH] bnx2fc: do not add shared skbs to the fcoe_rx_list
+Date: Fri, 25 Jul 2014 10:02:52 +0200
+Message-ID: <1406275372-3983-1-git-send-email-mlombard@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.tc.gc.ca ([198.103.96.14]:53208 "EHLO tigger.tc.gc.ca"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1758382AbaGYG2f convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Jul 2014 02:28:35 -0400
-Content-Language: en-CA
+Received: from mx1.redhat.com ([209.132.183.28]:19855 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758856AbaGYIC5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 25 Jul 2014 04:02:57 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: QLogic-Storage-Upstream@qlogic.com
+Cc: linux-scsi@vger.kernel.org
 
-$1 Million USD. Has been donated to you kindly contact the donator Mr. Harry Black via personal email ( harryblack25@rogers.com<mailto:harryblack25@rogers.com> )
+In some cases, the fcoe_rx_list may contains multiple instances
+of the same skb (the so called "shared skbs").
+
+the bnx2fc_l2_rcv thread is a loop that extracts a skb from the list,
+modifies (and destroys) its content and the proceed to the next one.
+The problem is that if the skb is shared, the remaining instances will
+be corrupted.
+
+The solution is to use skb_share_check() before adding the skb to the
+fcoe_rx_list.
+
+[ 6286.808725] ------------[ cut here ]------------
+[ 6286.808729] WARNING: at include/scsi/fc_frame.h:173 bnx2fc_l2_rcv_thread+0x425/0x450 [bnx2fc]()
+[ 6286.808748] Modules linked in: bnx2x(-) mdio dm_service_time bnx2fc cnic uio fcoe libfcoe 8021q garp stp mrp libfc llc scsi_transport_fc scsi_tgt sg iTCO_wdt iTCO_vendor_support coretemp kvm_intel kvm crct10dif_pclmul crc32_pclmul crc32c_intel e1000e ghash_clmulni_intel aesni_intel lrw gf128mul glue_helper ablk_helper ptp cryptd hpilo serio_raw hpwdt lpc_ich pps_core ipmi_si pcspkr mfd_core ipmi_msghandler shpchp pcc_cpufreq mperf nfsd auth_rpcgss nfs_acl lockd sunrpc dm_multipath xfs libcrc32c ata_generic pata_acpi sd_mod crc_t10dif crct10dif_common mgag200 syscopyarea sysfillrect sysimgblt i2c_algo_bit ata_piix drm_kms_helper ttm drm libata i2c_core hpsa dm_mirror dm_region_hash dm_log dm_mod [last unloaded: mdio]
+[ 6286.808750] CPU: 3 PID: 1304 Comm: bnx2fc_l2_threa Not tainted 3.10.0-121.el7.x86_64 #1
+[ 6286.808750] Hardware name: HP ProLiant DL120 G7, BIOS J01 07/01/2013
+[ 6286.808752]  0000000000000000 000000000b36e715 ffff8800deba1e00 ffffffff815ec0ba
+[ 6286.808753]  ffff8800deba1e38 ffffffff8105dee1 ffffffffa05618c0 ffff8801e4c81888
+[ 6286.808754]  ffffe8ffff663868 ffff8801f402b180 ffff8801f56bc000 ffff8800deba1e48
+[ 6286.808754] Call Trace:
+[ 6286.808759]  [<ffffffff815ec0ba>] dump_stack+0x19/0x1b
+[ 6286.808762]  [<ffffffff8105dee1>] warn_slowpath_common+0x61/0x80
+[ 6286.808763]  [<ffffffff8105e00a>] warn_slowpath_null+0x1a/0x20
+[ 6286.808765]  [<ffffffffa054f415>] bnx2fc_l2_rcv_thread+0x425/0x450 [bnx2fc]
+[ 6286.808767]  [<ffffffffa054eff0>] ? bnx2fc_disable+0x90/0x90 [bnx2fc]
+[ 6286.808769]  [<ffffffff81085aef>] kthread+0xcf/0xe0
+[ 6286.808770]  [<ffffffff81085a20>] ? kthread_create_on_node+0x140/0x140
+[ 6286.808772]  [<ffffffff815fc76c>] ret_from_fork+0x7c/0xb0
+[ 6286.808773]  [<ffffffff81085a20>] ? kthread_create_on_node+0x140/0x140
+[ 6286.808774] ---[ end trace c6cdb939184ccb4e ]---
+
+Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
+---
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+index 785d0d7..a190ab6 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+@@ -411,6 +411,7 @@ static int bnx2fc_rcv(struct sk_buff *skb, struct net_device *dev,
+ 	struct fc_frame_header *fh;
+ 	struct fcoe_rcv_info *fr;
+ 	struct fcoe_percpu_s *bg;
++	struct sk_buff *tmp_skb;
+ 	unsigned short oxid;
+ 
+ 	interface = container_of(ptype, struct bnx2fc_interface,
+@@ -423,6 +424,12 @@ static int bnx2fc_rcv(struct sk_buff *skb, struct net_device *dev,
+ 		goto err;
+ 	}
+ 
++	tmp_skb = skb_share_check(skb, GFP_ATOMIC);
++	if (!tmp_skb)
++		goto err;
++
++	skb = tmp_skb;
++
+ 	if (unlikely(eth_hdr(skb)->h_proto != htons(ETH_P_FCOE))) {
+ 		printk(KERN_ERR PFX "bnx2fc_rcv: Wrong FC type frame\n");
+ 		goto err;
+-- 
+Maurizio Lombardi
+
