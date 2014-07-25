@@ -1,69 +1,146 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 4/5] [SCSI] Do not use platform_bus as a parent
-Date: Fri, 25 Jul 2014 07:46:56 -0700
-Message-ID: <1406299616.1789.13.camel@jarvis.lan>
-References: <1406298233-27876-1-git-send-email-pawel.moll@arm.com>
-	 <1406298233-27876-4-git-send-email-pawel.moll@arm.com>
+From: Chad Dupuis <chad.dupuis@qlogic.com>
+Subject: Re: [PATCH 5/6] qla2xxx: Prevent removal and board_disable race
+Date: Fri, 25 Jul 2014 11:23:02 -0400
+Message-ID: <alpine.OSX.2.00.1407251118340.1035@administrators-macbook-pro.local>
+References: <1403100139-1798-1-git-send-email-joe.lawrence@stratus.com> <1403100284-1872-1-git-send-email-joe.lawrence@stratus.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; format=flowed; charset="US-ASCII"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:49791 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751618AbaGYOrD (ORCPT
+Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:46610 "EHLO
+	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752507AbaGYPXO (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 25 Jul 2014 10:47:03 -0400
-In-Reply-To: <1406298233-27876-4-git-send-email-pawel.moll@arm.com>
+	Fri, 25 Jul 2014 11:23:14 -0400
+In-Reply-To: <1403100284-1872-1-git-send-email-joe.lawrence@stratus.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Pawel Moll <pawel.moll@arm.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Olof Johansson <olof@lixom.net>, Stephen Warren <swarren@wwwdotorg.org>, Catalin Marinas <Catalin.Marinas@arm.com>, paul@pwsan.com, Arnd Bergmann <arnd@arndb.de>, Peter De Schrijver <pdeschrijver@nvidia.com>, arm@kernel.org, linux-tegra@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Joe Lawrence <joe.lawrence@stratus.com>
+Cc: linux-scsi@vger.kernel.org, Giridhar Malavali <giridhar.malavali@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Don Zickus <dzickus@redhat.com>, Prarit Bhargava <prarit@redhat.com>, Bill Kuzeja <william.kuzeja@stratus.com>, Dave Bulkow <david.bulkow@stratus.com>
 
-On Fri, 2014-07-25 at 15:23 +0100, Pawel Moll wrote:
-> The host devices without a parent were "forcefully adopted"
-> by platform bus. This patch removes this assignment. In
-> effect the dev_dev may be NULL now, which means ISA.
-> 
-> Cc: James E.J. Bottomley <JBottomley@parallels.com>
-> Cc: linux-scsi@vger.kernel.org
-> Signed-off-by: Pawel Moll <pawel.moll@arm.com>
+
+
+On Wed, 18 Jun 2014, Joe Lawrence wrote:
+
+> Introduce mutual exclusion between the qla2xxx_remove_one PCI driver
+> callback and qla2x00_disable_board_on_pci_error, which is scheduled as
+> board_disable work by qla2x00_check_reg{32,16}_for_disconnect:
+>
+> * Leave the driver-specific data attached to the underlying PCI device
+> intact in qla2x00_disable_board_on_pci_error, so that qla2x00_remove_one
+> has enough breadcrumbs to determine that any board_disable work has been
+> completed.
+>
+> * In qla2xxx_remove_one, set a bit to prevent any subsequent
+> board_disable work from scheduling, then cancel and wait until pending
+> work has completed.
+>
+> * Reuse the PCI device enable count check in qla2x00_remove_one to
+> determine if board_disable has occured.  The original purpose of this
+> check was unnecessary since the driver remove function wasn't called
+> when the probe fails.
+>
+> Signed-off-by: Joe Lawrence <joe.lawrence@stratus.com>
 > ---
-> 
-> This patch is a part of effort to remove references to platform_bus
-> and make it static.
-> 
-> James, could you please have a look and advice if the change is
-> correct? Would you happen to know the "real reasons" behind
-> using the root platform_bus device a parent?
+> drivers/scsi/qla2xxx/qla_def.h |    1 +
+> drivers/scsi/qla2xxx/qla_isr.c |    3 ++-
+> drivers/scsi/qla2xxx/qla_os.c  |   31 +++++++++++++++++++------------
+> 3 files changed, 22 insertions(+), 13 deletions(-)
+>
+> diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+> index 1267b11..7c441c9 100644
+> --- a/drivers/scsi/qla2xxx/qla_def.h
+> +++ b/drivers/scsi/qla2xxx/qla_def.h
+> @@ -3404,6 +3404,7 @@ typedef struct scsi_qla_host {
+>
+> 	unsigned long	pci_flags;
+> #define PFLG_DISCONNECTED	0	/* PCI device removed */
+> +#define PFLG_DRIVER_REMOVING	1	/* PCI driver .remove */
+>
+> 	uint32_t	device_flags;
+> #define SWITCH_FOUND		BIT_0
+> diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+> index 2741ad8..ee5eef4 100644
+> --- a/drivers/scsi/qla2xxx/qla_isr.c
+> +++ b/drivers/scsi/qla2xxx/qla_isr.c
+> @@ -117,7 +117,8 @@ qla2x00_check_reg32_for_disconnect(scsi_qla_host_t *vha, uint32_t reg)
+> {
+> 	/* Check for PCI disconnection */
+> 	if (reg == 0xffffffff) {
+> -		if (!test_and_set_bit(PFLG_DISCONNECTED, &vha->pci_flags)) {
+> +		if (!test_and_set_bit(PFLG_DISCONNECTED, &vha->pci_flags) &&
+> +		    !test_bit(PFLG_DRIVER_REMOVING, &vha->pci_flags)) {
 
-Yes, for DMA purposes, the parent cannot now be NULL; we'll get a panic
-in the DMA transfers if it is.  A lot of the legacy ISA device on x86
-and I thought some ARM SOC devices don't pass in the parent device, so
-we hang them off a known parent.
+In our remove function we set a bit that we are unloading:
 
-You can grep for it; these are the devices that will begin to panic if
-you apply this patch:
+set_bit (UNLOADING, &base_vha->dpc_flags);
 
-arch/ia64/hp/sim/simscsi.c:     error = scsi_add_host(host, NULL);
-drivers/scsi/a2091.c:   error = scsi_add_host(instance, NULL);
-drivers/scsi/a3000.c:   error = scsi_add_host(instance, NULL);
-drivers/scsi/aha152x.c: if( scsi_add_host(shpnt, NULL) ) {
-drivers/scsi/gdth.c:    error = scsi_add_host(shp, NULL);
-drivers/scsi/gdth.c:    error = scsi_add_host(shp, NULL);
-drivers/scsi/gvp11.c:   error = scsi_add_host(instance, NULL);
-drivers/scsi/imm.c:     err = scsi_add_host(host, NULL);
-drivers/scsi/pcmcia/fdomain_stub.c:    if (scsi_add_host(host, NULL))
-drivers/scsi/pcmcia/nsp_cs.c:   ret = scsi_add_host (host, NULL);
-drivers/scsi/pcmcia/qlogic_stub.c:      if (scsi_add_host(shost, NULL))
-drivers/scsi/pcmcia/sym53c500_cs.c:     if (scsi_add_host(host, NULL))
-drivers/scsi/ppa.c:     err = scsi_add_host(host, NULL);
-drivers/scsi/qlogicfas.c:       if (scsi_add_host(hreg, NULL))
-drivers/scsi/scsi_module.c:             error = scsi_add_host(shost, NULL);
-drivers/scsi/sgiwd93.c: err = scsi_add_host(host, NULL);
+could this be used instead?
 
-Note I've picked up scsi_module, so anything that uses the SCSI module
-interface also has this problem.
+> 			/*
+> 			 * Schedule this (only once) on the default system
+> 			 * workqueue so that all the adapter workqueues and the
+> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+> index 39c9953..51cba37 100644
+> --- a/drivers/scsi/qla2xxx/qla_os.c
+> +++ b/drivers/scsi/qla2xxx/qla_os.c
+> @@ -3123,15 +3123,25 @@ qla2x00_remove_one(struct pci_dev *pdev)
+> 	scsi_qla_host_t *base_vha;
+> 	struct qla_hw_data  *ha;
+>
+> +	base_vha = pci_get_drvdata(pdev);
+> +	ha = base_vha->hw;
+> +
+> +	/* Indicate device removal to prevent future board_disable and wait
+> +	 * until any pending board_disable has completed. */
+> +	set_bit(PFLG_DRIVER_REMOVING, &base_vha->pci_flags);
+> +	cancel_work_sync(&ha->board_disable);
+> +
+> 	/*
+> -	 * If the PCI device is disabled that means that probe failed and any
+> -	 * resources should be have cleaned up on probe exit.
+> +	 * If the PCI device is disabled then there was a PCI-disconnect and
+> +	 * qla2x00_disable_board_on_pci_error has taken care of most of the
+> +	 * resources.
+> 	 */
+> -	if (!atomic_read(&pdev->enable_cnt))
+> +	if (!atomic_read(&pdev->enable_cnt)) {
 
-James
+Should we also add a check here that this is a disconnection before 
+freeing these structs?  The original intent of the check for 
+pdev->enable_cnt is to make sure we don't try to dereference an already 
+freed struct if probe failed.
 
-
+> +		scsi_host_put(base_vha->host);
+> +		kfree(ha);
+> +		pci_set_drvdata(pdev, NULL);
+> 		return;
+> -
+> -	base_vha = pci_get_drvdata(pdev);
+> -	ha = base_vha->hw;
+> +	}
+>
+> 	qla2x00_wait_for_hba_ready(base_vha);
+>
+> @@ -4791,18 +4801,15 @@ qla2x00_disable_board_on_pci_error(struct work_struct *work)
+> 	qla82xx_md_free(base_vha);
+> 	qla2x00_free_queues(ha);
+>
+> -	scsi_host_put(base_vha->host);
+> -
+> 	qla2x00_unmap_iobases(ha);
+>
+> 	pci_release_selected_regions(ha->pdev, ha->bars);
+> -	kfree(ha);
+> -	ha = NULL;
+> -
+> 	pci_disable_pcie_error_reporting(pdev);
+> 	pci_disable_device(pdev);
+> -	pci_set_drvdata(pdev, NULL);
+>
+> +	/*
+> +	 * Let qla2x00_remove_one cleanup qla_hw_data on device removal.
+> +	 */
+> }
+>
+> /**************************************************************************
+>
