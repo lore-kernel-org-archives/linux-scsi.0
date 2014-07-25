@@ -1,282 +1,328 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 02/14] block: Replace bi_integrity with bi_special
-Date: Fri, 25 Jul 2014 16:34:17 -0400
-Message-ID: <1406320469-29352-3-git-send-email-martin.petersen@oracle.com>
+Subject: [PATCH 05/14] block: Deprecate the use of the term sector in the context of block integrity
+Date: Fri, 25 Jul 2014 16:34:20 -0400
+Message-ID: <1406320469-29352-6-git-send-email-martin.petersen@oracle.com>
 References: <1406320469-29352-1-git-send-email-martin.petersen@oracle.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:38273 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753952AbaGYUdd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Jul 2014 16:33:33 -0400
-Received: from acsinet21.oracle.com (acsinet21.oracle.com [141.146.126.237])
-	by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id s6PKXVLe028108
+Received: from aserp1040.oracle.com ([141.146.126.69]:22774 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933588AbaGYUdj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Jul 2014 16:33:39 -0400
+Received: from ucsinet21.oracle.com (ucsinet21.oracle.com [156.151.31.93])
+	by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id s6PKXbJh030855
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <linux-scsi@vger.kernel.org>; Fri, 25 Jul 2014 20:33:32 GMT
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Jul 2014 20:33:38 GMT
 Received: from userz7021.oracle.com (userz7021.oracle.com [156.151.31.85])
-	by acsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id s6PKXUn9014200
+	by ucsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id s6PKXbYD003972
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=FAIL)
-	for <linux-scsi@vger.kernel.org>; Fri, 25 Jul 2014 20:33:31 GMT
-Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
-	by userz7021.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id s6PKXUfx003722
-	for <linux-scsi@vger.kernel.org>; Fri, 25 Jul 2014 20:33:30 GMT
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Jul 2014 20:33:37 GMT
+Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
+	by userz7021.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id s6PKXasT003956
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Jul 2014 20:33:37 GMT
 In-Reply-To: <1406320469-29352-1-git-send-email-martin.petersen@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 
-For commands like REQ_COPY we need a way to pass extra information along
-with each bio. Like integrity metadata this information must be
-available at the bottom of the stack so bi_private does not suffice.
+The protection interval is not necessarily tied to the logical block
+size of a block device. Stop using the terms "sector" and "sectors".
 
-Rename the existing bi_integrity field to bi_special and make it a union
-so we can have different bio extensions for each class of command.
-
-We previously used bi_integrity != NULL as a way to identify whether a
-bio had integrity metadata or not. Introduce a REQ_INTEGRITY to be the
-indicator now that bi_special can contain different things.
-
-In addition, bio_integrity(bio) will now return a pointer to the
-integrity payload (when applicable).
+Going forward we will use the term "seed" to describe the initial
+reference tag value for a given I/O. "Interval" will be used to describe
+the portion of the data buffer that a given piece of protection
+information is associated with.
 
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 ---
- Documentation/block/data-integrity.txt | 10 +++++-----
- block/bio-integrity.c                  | 19 ++++++++++---------
- drivers/scsi/sd_dif.c                  |  8 ++++----
- include/linux/bio.h                    | 11 +++++++++--
- include/linux/blk_types.h              |  8 ++++++--
- include/linux/blkdev.h                 |  7 ++-----
- 6 files changed, 36 insertions(+), 27 deletions(-)
+ block/bio-integrity.c  | 42 +++++++++++++++++++++---------------------
+ block/blk-integrity.c  | 10 +++++-----
+ drivers/scsi/sd_dif.c  | 46 +++++++++++++++++++++++-----------------------
+ include/linux/blkdev.h |  6 +++---
+ 4 files changed, 52 insertions(+), 52 deletions(-)
 
-diff --git a/Documentation/block/data-integrity.txt b/Documentation/block/data-integrity.txt
-index b4eacf48053c..4d4de8b09530 100644
---- a/Documentation/block/data-integrity.txt
-+++ b/Documentation/block/data-integrity.txt
-@@ -129,11 +129,11 @@ interface for this is being worked on.
- 4.1 BIO
- 
- The data integrity patches add a new field to struct bio when
--CONFIG_BLK_DEV_INTEGRITY is enabled.  bio->bi_integrity is a pointer
--to a struct bip which contains the bio integrity payload.  Essentially
--a bip is a trimmed down struct bio which holds a bio_vec containing
--the integrity metadata and the required housekeeping information (bvec
--pool, vector count, etc.)
-+CONFIG_BLK_DEV_INTEGRITY is enabled.  bio_integrity(bio) returns a
-+pointer to a struct bip which contains the bio integrity payload.
-+Essentially a bip is a trimmed down struct bio which holds a bio_vec
-+containing the integrity metadata and the required housekeeping
-+information (bvec pool, vector count, etc.)
- 
- A kernel subsystem can enable data integrity protection on a bio by
- calling bio_integrity_alloc(bio).  This will allocate and attach the
 diff --git a/block/bio-integrity.c b/block/bio-integrity.c
-index 6818c251e937..78d8312a6528 100644
+index cea93a9553d6..8c03c78281e9 100644
 --- a/block/bio-integrity.c
 +++ b/block/bio-integrity.c
-@@ -77,6 +77,7 @@ struct bio_integrity_payload *bio_integrity_alloc(struct bio *bio,
- 	bip->bip_slab = idx;
- 	bip->bip_bio = bio;
- 	bio->bi_integrity = bip;
-+	bio->bi_rw |= REQ_INTEGRITY;
+@@ -191,20 +191,20 @@ bool bio_integrity_enabled(struct bio *bio)
+ EXPORT_SYMBOL(bio_integrity_enabled);
  
- 	return bip;
- err:
-@@ -94,7 +95,7 @@ EXPORT_SYMBOL(bio_integrity_alloc);
+ /**
+- * bio_integrity_hw_sectors - Convert 512b sectors to hardware ditto
++ * bio_integrity_intervals - Return number of integrity intervals for a bio
+  * @bi:		blk_integrity profile for device
+- * @sectors:	Number of 512 sectors to convert
++ * @sectors:	Size of the bio in 512-byte sectors
+  *
+  * Description: The block layer calculates everything in 512 byte
+- * sectors but integrity metadata is done in terms of the hardware
+- * sector size of the storage device.  Convert the block layer sectors
+- * to physical sectors.
++ * sectors but integrity metadata is done in terms of the data integrity
++ * interval size of the storage device.  Convert the block layer sectors
++ * to the appropriate number of integrity intervals.
   */
- void bio_integrity_free(struct bio *bio)
+-static inline unsigned int bio_integrity_hw_sectors(struct blk_integrity *bi,
+-						    unsigned int sectors)
++static inline unsigned int bio_integrity_intervals(struct blk_integrity *bi,
++						   unsigned int sectors)
  {
--	struct bio_integrity_payload *bip = bio->bi_integrity;
-+	struct bio_integrity_payload *bip = bio_integrity(bio);
- 	struct bio_set *bs = bio->bi_pool;
+ 	/* At this point there are only 512b or 4096b DIF/EPP devices */
+-	if (bi->sector_size == 4096)
++	if (bi->interval == 4096)
+ 		return sectors >>= 3;
  
- 	if (bip->bip_owns_buf)
-@@ -134,7 +135,7 @@ static inline unsigned int bip_integrity_vecs(struct bio_integrity_payload *bip)
- int bio_integrity_add_page(struct bio *bio, struct page *page,
- 			   unsigned int len, unsigned int offset)
+ 	return sectors;
+@@ -213,7 +213,7 @@ static inline unsigned int bio_integrity_hw_sectors(struct blk_integrity *bi,
+ static inline unsigned int bio_integrity_bytes(struct blk_integrity *bi,
+ 					       unsigned int sectors)
  {
--	struct bio_integrity_payload *bip = bio->bi_integrity;
-+	struct bio_integrity_payload *bip = bio_integrity(bio);
- 	struct bio_vec *iv;
+-	return bio_integrity_hw_sectors(bi, sectors) * bi->tuple_size;
++	return bio_integrity_intervals(bi, sectors) * bi->tuple_size;
+ }
  
- 	if (bip->bip_vcnt >= bip_integrity_vecs(bip)) {
-@@ -235,7 +236,7 @@ EXPORT_SYMBOL(bio_integrity_tag_size);
- static int bio_integrity_tag(struct bio *bio, void *tag_buf, unsigned int len,
- 			     int set)
- {
--	struct bio_integrity_payload *bip = bio->bi_integrity;
-+	struct bio_integrity_payload *bip = bio_integrity(bio);
- 	struct blk_integrity *bi = bdev_get_integrity(bio->bi_bdev);
- 	unsigned int nr_sectors;
- 
-@@ -310,12 +311,12 @@ static int bio_integrity_generate_verify(struct bio *bio, int operate)
+ /**
+@@ -227,25 +227,25 @@ static int bio_integrity_generate_verify(struct bio *bio, int operate)
+ 	struct blk_integrity_exchg bix;
  	struct bio_vec *bv;
- 	sector_t sector;
- 	unsigned int sectors, ret = 0, i;
--	void *prot_buf = bio->bi_integrity->bip_buf;
-+	void *prot_buf = bio_integrity(bio)->bip_buf;
+ 	struct bio_integrity_payload *bip = bio_integrity(bio);
+-	sector_t sector;
+-	unsigned int sectors, ret = 0, i;
++	sector_t seed;
++	unsigned int intervals, ret = 0, i;
+ 	void *prot_buf = page_address(bip->bip_vec->bv_page) +
+ 		bip->bip_vec->bv_offset;
  
  	if (operate)
- 		sector = bio->bi_iter.bi_sector;
+-		sector = bio->bi_iter.bi_sector;
++		seed = bio->bi_iter.bi_sector;
  	else
--		sector = bio->bi_integrity->bip_iter.bi_sector;
-+		sector = bio_integrity(bio)->bip_iter.bi_sector;
+-		sector = bip->bip_iter.bi_sector;
++		seed = bip->bip_iter.bi_sector;
  
  	bix.disk_name = bio->bi_bdev->bd_disk->disk_name;
- 	bix.sector_size = bi->sector_size;
-@@ -511,7 +512,7 @@ static void bio_integrity_verify_fn(struct work_struct *work)
-  */
- void bio_integrity_endio(struct bio *bio, int error)
- {
--	struct bio_integrity_payload *bip = bio->bi_integrity;
-+	struct bio_integrity_payload *bip = bio_integrity(bio);
+-	bix.sector_size = bi->sector_size;
++	bix.interval = bi->interval;
  
- 	BUG_ON(bip->bip_bio != bio);
+ 	bio_for_each_segment_all(bv, bio, i) {
+ 		void *kaddr = kmap_atomic(bv->bv_page);
+ 		bix.data_buf = kaddr + bv->bv_offset;
+ 		bix.data_size = bv->bv_len;
+ 		bix.prot_buf = prot_buf;
+-		bix.sector = sector;
++		bix.seed = seed;
  
-@@ -542,7 +543,7 @@ EXPORT_SYMBOL(bio_integrity_endio);
-  */
- void bio_integrity_advance(struct bio *bio, unsigned int bytes_done)
- {
--	struct bio_integrity_payload *bip = bio->bi_integrity;
-+	struct bio_integrity_payload *bip = bio_integrity(bio);
- 	struct blk_integrity *bi = bdev_get_integrity(bio->bi_bdev);
- 	unsigned bytes = bio_integrity_bytes(bi, bytes_done >> 9);
+ 		if (operate)
+ 			bi->generate_fn(&bix);
+@@ -257,9 +257,9 @@ static int bio_integrity_generate_verify(struct bio *bio, int operate)
+ 			}
+ 		}
  
-@@ -564,7 +565,7 @@ EXPORT_SYMBOL(bio_integrity_advance);
- void bio_integrity_trim(struct bio *bio, unsigned int offset,
- 			unsigned int sectors)
- {
--	struct bio_integrity_payload *bip = bio->bi_integrity;
-+	struct bio_integrity_payload *bip = bio_integrity(bio);
- 	struct blk_integrity *bi = bdev_get_integrity(bio->bi_bdev);
+-		sectors = bv->bv_len / bi->sector_size;
+-		sector += sectors;
+-		prot_buf += sectors * bi->tuple_size;
++		intervals = bv->bv_len / bi->interval;
++		seed += intervals;
++		prot_buf += intervals * bi->tuple_size;
  
- 	bio_integrity_advance(bio, offset << 9);
-@@ -583,7 +584,7 @@ EXPORT_SYMBOL(bio_integrity_trim);
- int bio_integrity_clone(struct bio *bio, struct bio *bio_src,
- 			gfp_t gfp_mask)
- {
--	struct bio_integrity_payload *bip_src = bio_src->bi_integrity;
-+	struct bio_integrity_payload *bip_src = bio_integrity(bio_src);
- 	struct bio_integrity_payload *bip;
+ 		kunmap_atomic(kaddr);
+ 	}
+@@ -300,17 +300,17 @@ int bio_integrity_prep(struct bio *bio)
+ 	unsigned long start, end;
+ 	unsigned int len, nr_pages;
+ 	unsigned int bytes, offset, i;
+-	unsigned int sectors;
++	unsigned int intervals;
  
- 	BUG_ON(bip_src == NULL);
+ 	bi = bdev_get_integrity(bio->bi_bdev);
+ 	q = bdev_get_queue(bio->bi_bdev);
+ 	BUG_ON(bi == NULL);
+ 	BUG_ON(bio_integrity(bio));
+ 
+-	sectors = bio_integrity_hw_sectors(bi, bio_sectors(bio));
++	intervals = bio_integrity_intervals(bi, bio_sectors(bio));
+ 
+ 	/* Allocate kernel buffer for protection data */
+-	len = sectors * bi->tuple_size;
++	len = intervals * bi->tuple_size;
+ 	buf = kmalloc(len, GFP_NOIO | q->bounce_gfp);
+ 	if (unlikely(buf == NULL)) {
+ 		printk(KERN_ERR "could not allocate integrity buffer\n");
+diff --git a/block/blk-integrity.c b/block/blk-integrity.c
+index 7ac17160ab69..3a83a7d08177 100644
+--- a/block/blk-integrity.c
++++ b/block/blk-integrity.c
+@@ -154,10 +154,10 @@ int blk_integrity_compare(struct gendisk *gd1, struct gendisk *gd2)
+ 	if (!b1 || !b2)
+ 		return -1;
+ 
+-	if (b1->sector_size != b2->sector_size) {
+-		printk(KERN_ERR "%s: %s/%s sector sz %u != %u\n", __func__,
+-		       gd1->disk_name, gd2->disk_name,
+-		       b1->sector_size, b2->sector_size);
++	if (b1->interval != b2->interval) {
++		pr_err("%s: %s/%s protection interval %u != %u\n",
++		       __func__, gd1->disk_name, gd2->disk_name,
++		       b1->interval, b2->interval);
+ 		return -1;
+ 	}
+ 
+@@ -407,7 +407,7 @@ int blk_integrity_register(struct gendisk *disk, struct blk_integrity *template)
+ 		kobject_uevent(&bi->kobj, KOBJ_ADD);
+ 
+ 		bi->flags |= INTEGRITY_FLAG_READ | INTEGRITY_FLAG_WRITE;
+-		bi->sector_size = queue_logical_block_size(disk->queue);
++		bi->interval = queue_logical_block_size(disk->queue);
+ 		disk->integrity = bi;
+ 	} else
+ 		bi = disk->integrity;
 diff --git a/drivers/scsi/sd_dif.c b/drivers/scsi/sd_dif.c
-index a7a691d0af7d..29f0477a8708 100644
+index 38a7778631be..1600270a46e5 100644
 --- a/drivers/scsi/sd_dif.c
 +++ b/drivers/scsi/sd_dif.c
-@@ -383,9 +383,9 @@ void sd_dif_prepare(struct request *rq, sector_t hw_sector,
- 		if (bio_flagged(bio, BIO_MAPPED_INTEGRITY))
- 			break;
+@@ -57,16 +57,16 @@ static void sd_dif_type1_generate(struct blk_integrity_exchg *bix, csum_fn *fn)
+ {
+ 	void *buf = bix->data_buf;
+ 	struct sd_dif_tuple *sdt = bix->prot_buf;
+-	sector_t sector = bix->sector;
++	sector_t seed = bix->seed;
+ 	unsigned int i;
  
--		virt = bio->bi_integrity->bip_iter.bi_sector & 0xffffffff;
-+		virt = bio_integrity(bio)->bip_iter.bi_sector & 0xffffffff;
+-	for (i = 0 ; i < bix->data_size ; i += bix->sector_size, sdt++) {
+-		sdt->guard_tag = fn(buf, bix->sector_size);
+-		sdt->ref_tag = cpu_to_be32(sector & 0xffffffff);
++	for (i = 0 ; i < bix->data_size ; i += bix->interval, sdt++) {
++		sdt->guard_tag = fn(buf, bix->interval);
++		sdt->ref_tag = cpu_to_be32(seed & 0xffffffff);
+ 		sdt->app_tag = 0;
  
--		bip_for_each_vec(iv, bio->bi_integrity, iter) {
-+		bip_for_each_vec(iv, bio_integrity(bio), iter) {
- 			sdt = kmap_atomic(iv.bv_page)
- 				+ iv.bv_offset;
+-		buf += bix->sector_size;
+-		sector++;
++		buf += bix->interval;
++		seed++;
+ 	}
+ }
  
-@@ -434,9 +434,9 @@ void sd_dif_complete(struct scsi_cmnd *scmd, unsigned int good_bytes)
- 		struct bio_vec iv;
- 		struct bvec_iter iter;
+@@ -84,35 +84,35 @@ static int sd_dif_type1_verify(struct blk_integrity_exchg *bix, csum_fn *fn)
+ {
+ 	void *buf = bix->data_buf;
+ 	struct sd_dif_tuple *sdt = bix->prot_buf;
+-	sector_t sector = bix->sector;
++	sector_t seed = bix->seed;
+ 	unsigned int i;
+ 	__u16 csum;
  
--		virt = bio->bi_integrity->bip_iter.bi_sector & 0xffffffff;
-+		virt = bio_integrity(bio)->bip_iter.bi_sector & 0xffffffff;
+-	for (i = 0 ; i < bix->data_size ; i += bix->sector_size, sdt++) {
++	for (i = 0 ; i < bix->data_size ; i += bix->interval, sdt++) {
+ 		/* Unwritten sectors */
+ 		if (sdt->app_tag == 0xffff)
+ 			return 0;
  
--		bip_for_each_vec(iv, bio->bi_integrity, iter) {
-+		bip_for_each_vec(iv, bio_integrity(bio), iter) {
- 			sdt = kmap_atomic(iv.bv_page)
- 				+ iv.bv_offset;
+-		if (be32_to_cpu(sdt->ref_tag) != (sector & 0xffffffff)) {
++		if (be32_to_cpu(sdt->ref_tag) != (seed & 0xffffffff)) {
+ 			printk(KERN_ERR
+ 			       "%s: ref tag error on sector %lu (rcvd %u)\n",
+-			       bix->disk_name, (unsigned long)sector,
++			       bix->disk_name, (unsigned long)seed,
+ 			       be32_to_cpu(sdt->ref_tag));
+ 			return -EIO;
+ 		}
  
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index f11dd9efd3d9..1c608a0cbd8e 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -293,6 +293,15 @@ static inline unsigned bio_segments(struct bio *bio)
- #define bio_get(bio)	atomic_inc(&(bio)->bi_cnt)
+-		csum = fn(buf, bix->sector_size);
++		csum = fn(buf, bix->interval);
  
- #if defined(CONFIG_BLK_DEV_INTEGRITY)
-+
-+static inline struct bio_integrity_payload *bio_integrity(struct bio *bio)
-+{
-+	if (bio->bi_rw & REQ_INTEGRITY)
-+		return bio->bi_integrity;
-+
-+	return NULL;
-+}
-+
- /*
-  * bio integrity payload
-  */
-@@ -660,8 +669,6 @@ struct biovec_slab {
- 	for_each_bio(_bio)						\
- 		bip_for_each_vec(_bvl, _bio->bi_integrity, _iter)
+ 		if (sdt->guard_tag != csum) {
+ 			printk(KERN_ERR "%s: guard tag error on sector %lu " \
+ 			       "(rcvd %04x, data %04x)\n", bix->disk_name,
+-			       (unsigned long)sector,
++			       (unsigned long)seed,
+ 			       be16_to_cpu(sdt->guard_tag), be16_to_cpu(csum));
+ 			return -EIO;
+ 		}
  
--#define bio_integrity(bio) (bio->bi_integrity != NULL)
--
- extern struct bio_integrity_payload *bio_integrity_alloc(struct bio *, gfp_t, unsigned int);
- extern void bio_integrity_free(struct bio *);
- extern int bio_integrity_add_page(struct bio *, struct page *, unsigned int, unsigned int);
-diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-index 66c2167f04a9..0b7084f7c136 100644
---- a/include/linux/blk_types.h
-+++ b/include/linux/blk_types.h
-@@ -78,9 +78,11 @@ struct bio {
- 	struct io_context	*bi_ioc;
- 	struct cgroup_subsys_state *bi_css;
- #endif
-+	union {
- #if defined(CONFIG_BLK_DEV_INTEGRITY)
--	struct bio_integrity_payload *bi_integrity;  /* data integrity */
-+		struct bio_integrity_payload *bi_integrity; /* data integrity */
- #endif
-+	};
+-		buf += bix->sector_size;
+-		sector++;
++		buf += bix->interval;
++		seed++;
+ 	}
  
- 	unsigned short		bi_vcnt;	/* how many bio_vec's */
+ 	return 0;
+@@ -155,12 +155,12 @@ static void sd_dif_type3_generate(struct blk_integrity_exchg *bix, csum_fn *fn)
+ 	struct sd_dif_tuple *sdt = bix->prot_buf;
+ 	unsigned int i;
  
-@@ -162,6 +164,7 @@ enum rq_flag_bits {
- 	__REQ_WRITE_SAME,	/* write same block many times */
+-	for (i = 0 ; i < bix->data_size ; i += bix->sector_size, sdt++) {
+-		sdt->guard_tag = fn(buf, bix->sector_size);
++	for (i = 0 ; i < bix->data_size ; i += bix->interval, sdt++) {
++		sdt->guard_tag = fn(buf, bix->interval);
+ 		sdt->ref_tag = 0;
+ 		sdt->app_tag = 0;
  
- 	__REQ_NOIDLE,		/* don't anticipate more IO after this one */
-+	__REQ_INTEGRITY,	/* I/O includes block integrity payload */
- 	__REQ_FUA,		/* forced unit access */
- 	__REQ_FLUSH,		/* request for cache flush */
+-		buf += bix->sector_size;
++		buf += bix->interval;
+ 	}
+ }
  
-@@ -204,13 +207,14 @@ enum rq_flag_bits {
- #define REQ_DISCARD		(1ULL << __REQ_DISCARD)
- #define REQ_WRITE_SAME		(1ULL << __REQ_WRITE_SAME)
- #define REQ_NOIDLE		(1ULL << __REQ_NOIDLE)
-+#define REQ_INTEGRITY		(1ULL << __REQ_INTEGRITY)
+@@ -178,27 +178,27 @@ static int sd_dif_type3_verify(struct blk_integrity_exchg *bix, csum_fn *fn)
+ {
+ 	void *buf = bix->data_buf;
+ 	struct sd_dif_tuple *sdt = bix->prot_buf;
+-	sector_t sector = bix->sector;
++	sector_t seed = bix->seed;
+ 	unsigned int i;
+ 	__u16 csum;
  
- #define REQ_FAILFAST_MASK \
- 	(REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT | REQ_FAILFAST_DRIVER)
- #define REQ_COMMON_MASK \
- 	(REQ_WRITE | REQ_FAILFAST_MASK | REQ_SYNC | REQ_META | REQ_PRIO | \
- 	 REQ_DISCARD | REQ_WRITE_SAME | REQ_NOIDLE | REQ_FLUSH | REQ_FUA | \
--	 REQ_SECURE)
-+	 REQ_SECURE | REQ_INTEGRITY)
- #define REQ_CLONE_MASK		REQ_COMMON_MASK
+-	for (i = 0 ; i < bix->data_size ; i += bix->sector_size, sdt++) {
++	for (i = 0 ; i < bix->data_size ; i += bix->interval, sdt++) {
+ 		/* Unwritten sectors */
+ 		if (sdt->app_tag == 0xffff && sdt->ref_tag == 0xffffffff)
+ 			return 0;
  
- #define BIO_NO_ADVANCE_ITER_MASK	(REQ_DISCARD|REQ_WRITE_SAME)
+-		csum = fn(buf, bix->sector_size);
++		csum = fn(buf, bix->interval);
+ 
+ 		if (sdt->guard_tag != csum) {
+ 			printk(KERN_ERR "%s: guard tag error on sector %lu " \
+ 			       "(rcvd %04x, data %04x)\n", bix->disk_name,
+-			       (unsigned long)sector,
++			       (unsigned long)seed,
+ 			       be16_to_cpu(sdt->guard_tag), be16_to_cpu(csum));
+ 			return -EIO;
+ 		}
+ 
+-		buf += bix->sector_size;
+-		sector++;
++		buf += bix->interval;
++		seed++;
+ 	}
+ 
+ 	return 0;
 diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 8699bcf5f099..c462b5b0d67f 100644
+index 84a0fa90cdad..d097f945cf57 100644
 --- a/include/linux/blkdev.h
 +++ b/include/linux/blkdev.h
-@@ -1518,12 +1518,9 @@ static inline struct blk_integrity *blk_get_integrity(struct gendisk *disk)
- 	return disk->integrity;
- }
+@@ -1468,9 +1468,9 @@ static inline uint64_t rq_io_start_time_ns(struct request *req)
+ struct blk_integrity_exchg {
+ 	void			*prot_buf;
+ 	void			*data_buf;
+-	sector_t		sector;
++	sector_t		seed;
+ 	unsigned int		data_size;
+-	unsigned short		sector_size;
++	unsigned short		interval;
+ 	const char		*disk_name;
+ };
  
--static inline int blk_integrity_rq(struct request *rq)
-+static inline bool blk_integrity_rq(struct request *rq)
- {
--	if (rq->bio == NULL)
--		return 0;
--
--	return bio_integrity(rq->bio);
-+	return rq->cmd_flags & REQ_INTEGRITY;
- }
+@@ -1483,7 +1483,7 @@ struct blk_integrity {
  
- static inline void blk_queue_max_integrity_segments(struct request_queue *q,
+ 	unsigned short		flags;
+ 	unsigned short		tuple_size;
+-	unsigned short		sector_size;
++	unsigned short		interval;
+ 	unsigned short		tag_size;
+ 
+ 	const char		*name;
 -- 
 1.9.3
 
