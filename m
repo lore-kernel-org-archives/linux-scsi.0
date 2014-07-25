@@ -1,146 +1,70 @@
-From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: Re: [PATCH 5/6] qla2xxx: Prevent removal and board_disable race
-Date: Fri, 25 Jul 2014 11:23:02 -0400
-Message-ID: <alpine.OSX.2.00.1407251118340.1035@administrators-macbook-pro.local>
-References: <1403100139-1798-1-git-send-email-joe.lawrence@stratus.com> <1403100284-1872-1-git-send-email-joe.lawrence@stratus.com>
+From: Pawel Moll <pawel.moll@arm.com>
+Subject: Re: [PATCH 4/5] [SCSI] Do not use platform_bus as a parent
+Date: Fri, 25 Jul 2014 16:40:56 +0100
+Message-ID: <1406302856.17726.18.camel@hornet>
+References: <1406298233-27876-1-git-send-email-pawel.moll@arm.com>
+ <1406298233-27876-4-git-send-email-pawel.moll@arm.com>
+ <1406299616.1789.13.camel@jarvis.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; format=flowed; charset="US-ASCII"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:46610 "EHLO
-	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752507AbaGYPXO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 25 Jul 2014 11:23:14 -0400
-In-Reply-To: <1403100284-1872-1-git-send-email-joe.lawrence@stratus.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <1406299616.1789.13.camel@jarvis.lan>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: "paul@pwsan.com" <paul@pwsan.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>, Stephen Warren <swarren@wwwdotorg.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Peter De Schrijver <pdeschrijver@nvidia.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>, "arm@kernel.org" <arm@kernel.org>, Catalin Marinas <Catalin.Marinas@arm.com>, Olof Johansson <olof@lixom.net>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Joe Lawrence <joe.lawrence@stratus.com>
-Cc: linux-scsi@vger.kernel.org, Giridhar Malavali <giridhar.malavali@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Don Zickus <dzickus@redhat.com>, Prarit Bhargava <prarit@redhat.com>, Bill Kuzeja <william.kuzeja@stratus.com>, Dave Bulkow <david.bulkow@stratus.com>
 
-
-
-On Wed, 18 Jun 2014, Joe Lawrence wrote:
-
-> Introduce mutual exclusion between the qla2xxx_remove_one PCI driver
-> callback and qla2x00_disable_board_on_pci_error, which is scheduled as
-> board_disable work by qla2x00_check_reg{32,16}_for_disconnect:
->
-> * Leave the driver-specific data attached to the underlying PCI device
-> intact in qla2x00_disable_board_on_pci_error, so that qla2x00_remove_one
-> has enough breadcrumbs to determine that any board_disable work has been
-> completed.
->
-> * In qla2xxx_remove_one, set a bit to prevent any subsequent
-> board_disable work from scheduling, then cancel and wait until pending
-> work has completed.
->
-> * Reuse the PCI device enable count check in qla2x00_remove_one to
-> determine if board_disable has occured.  The original purpose of this
-> check was unnecessary since the driver remove function wasn't called
-> when the probe fails.
->
-> Signed-off-by: Joe Lawrence <joe.lawrence@stratus.com>
-> ---
-> drivers/scsi/qla2xxx/qla_def.h |    1 +
-> drivers/scsi/qla2xxx/qla_isr.c |    3 ++-
-> drivers/scsi/qla2xxx/qla_os.c  |   31 +++++++++++++++++++------------
-> 3 files changed, 22 insertions(+), 13 deletions(-)
->
-> diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-> index 1267b11..7c441c9 100644
-> --- a/drivers/scsi/qla2xxx/qla_def.h
-> +++ b/drivers/scsi/qla2xxx/qla_def.h
-> @@ -3404,6 +3404,7 @@ typedef struct scsi_qla_host {
->
-> 	unsigned long	pci_flags;
-> #define PFLG_DISCONNECTED	0	/* PCI device removed */
-> +#define PFLG_DRIVER_REMOVING	1	/* PCI driver .remove */
->
-> 	uint32_t	device_flags;
-> #define SWITCH_FOUND		BIT_0
-> diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-> index 2741ad8..ee5eef4 100644
-> --- a/drivers/scsi/qla2xxx/qla_isr.c
-> +++ b/drivers/scsi/qla2xxx/qla_isr.c
-> @@ -117,7 +117,8 @@ qla2x00_check_reg32_for_disconnect(scsi_qla_host_t *vha, uint32_t reg)
-> {
-> 	/* Check for PCI disconnection */
-> 	if (reg == 0xffffffff) {
-> -		if (!test_and_set_bit(PFLG_DISCONNECTED, &vha->pci_flags)) {
-> +		if (!test_and_set_bit(PFLG_DISCONNECTED, &vha->pci_flags) &&
-> +		    !test_bit(PFLG_DRIVER_REMOVING, &vha->pci_flags)) {
-
-In our remove function we set a bit that we are unloading:
-
-set_bit (UNLOADING, &base_vha->dpc_flags);
-
-could this be used instead?
-
-> 			/*
-> 			 * Schedule this (only once) on the default system
-> 			 * workqueue so that all the adapter workqueues and the
-> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-> index 39c9953..51cba37 100644
-> --- a/drivers/scsi/qla2xxx/qla_os.c
-> +++ b/drivers/scsi/qla2xxx/qla_os.c
-> @@ -3123,15 +3123,25 @@ qla2x00_remove_one(struct pci_dev *pdev)
-> 	scsi_qla_host_t *base_vha;
-> 	struct qla_hw_data  *ha;
->
-> +	base_vha = pci_get_drvdata(pdev);
-> +	ha = base_vha->hw;
-> +
-> +	/* Indicate device removal to prevent future board_disable and wait
-> +	 * until any pending board_disable has completed. */
-> +	set_bit(PFLG_DRIVER_REMOVING, &base_vha->pci_flags);
-> +	cancel_work_sync(&ha->board_disable);
-> +
-> 	/*
-> -	 * If the PCI device is disabled that means that probe failed and any
-> -	 * resources should be have cleaned up on probe exit.
-> +	 * If the PCI device is disabled then there was a PCI-disconnect and
-> +	 * qla2x00_disable_board_on_pci_error has taken care of most of the
-> +	 * resources.
-> 	 */
-> -	if (!atomic_read(&pdev->enable_cnt))
-> +	if (!atomic_read(&pdev->enable_cnt)) {
-
-Should we also add a check here that this is a disconnection before 
-freeing these structs?  The original intent of the check for 
-pdev->enable_cnt is to make sure we don't try to dereference an already 
-freed struct if probe failed.
-
-> +		scsi_host_put(base_vha->host);
-> +		kfree(ha);
-> +		pci_set_drvdata(pdev, NULL);
-> 		return;
-> -
-> -	base_vha = pci_get_drvdata(pdev);
-> -	ha = base_vha->hw;
-> +	}
->
-> 	qla2x00_wait_for_hba_ready(base_vha);
->
-> @@ -4791,18 +4801,15 @@ qla2x00_disable_board_on_pci_error(struct work_struct *work)
-> 	qla82xx_md_free(base_vha);
-> 	qla2x00_free_queues(ha);
->
-> -	scsi_host_put(base_vha->host);
-> -
-> 	qla2x00_unmap_iobases(ha);
->
-> 	pci_release_selected_regions(ha->pdev, ha->bars);
-> -	kfree(ha);
-> -	ha = NULL;
-> -
-> 	pci_disable_pcie_error_reporting(pdev);
-> 	pci_disable_device(pdev);
-> -	pci_set_drvdata(pdev, NULL);
->
-> +	/*
-> +	 * Let qla2x00_remove_one cleanup qla_hw_data on device removal.
-> +	 */
-> }
->
-> /**************************************************************************
->
+T24gRnJpLCAyMDE0LTA3LTI1IGF0IDE1OjQ2ICswMTAwLCBKYW1lcyBCb3R0b21sZXkgd3JvdGU6
+Cj4gT24gRnJpLCAyMDE0LTA3LTI1IGF0IDE1OjIzICswMTAwLCBQYXdlbCBNb2xsIHdyb3RlOgo+
+ID4gVGhlIGhvc3QgZGV2aWNlcyB3aXRob3V0IGEgcGFyZW50IHdlcmUgImZvcmNlZnVsbHkgYWRv
+cHRlZCIKPiA+IGJ5IHBsYXRmb3JtIGJ1cy4gVGhpcyBwYXRjaCByZW1vdmVzIHRoaXMgYXNzaWdu
+bWVudC4gSW4KPiA+IGVmZmVjdCB0aGUgZGV2X2RldiBtYXkgYmUgTlVMTCBub3csIHdoaWNoIG1l
+YW5zIElTQS4KPiA+IAo+ID4gQ2M6IEphbWVzIEUuSi4gQm90dG9tbGV5IDxKQm90dG9tbGV5QHBh
+cmFsbGVscy5jb20+Cj4gPiBDYzogbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmcKPiA+IFNpZ25l
+ZC1vZmYtYnk6IFBhd2VsIE1vbGwgPHBhd2VsLm1vbGxAYXJtLmNvbT4KPiA+IC0tLQo+ID4gCj4g
+PiBUaGlzIHBhdGNoIGlzIGEgcGFydCBvZiBlZmZvcnQgdG8gcmVtb3ZlIHJlZmVyZW5jZXMgdG8g
+cGxhdGZvcm1fYnVzCj4gPiBhbmQgbWFrZSBpdCBzdGF0aWMuCj4gPiAKPiA+IEphbWVzLCBjb3Vs
+ZCB5b3UgcGxlYXNlIGhhdmUgYSBsb29rIGFuZCBhZHZpY2UgaWYgdGhlIGNoYW5nZSBpcwo+ID4g
+Y29ycmVjdD8gV291bGQgeW91IGhhcHBlbiB0byBrbm93IHRoZSAicmVhbCByZWFzb25zIiBiZWhp
+bmQKPiA+IHVzaW5nIHRoZSByb290IHBsYXRmb3JtX2J1cyBkZXZpY2UgYSBwYXJlbnQ/Cj4gCj4g
+WWVzLCBmb3IgRE1BIHB1cnBvc2VzLCB0aGUgcGFyZW50IGNhbm5vdCBub3cgYmUgTlVMTDsgd2Un
+bGwgZ2V0IGEgcGFuaWMKPiBpbiB0aGUgRE1BIHRyYW5zZmVycyBpZiBpdCBpcy4gIAoKVGhhdCdz
+IHdoYXQgSSB0aG91Z2ggYXQgdGhlIGJlZ2lubmluZyBhcyB3ZWxsLCBidXQgdGhlbiBJIGNyYXds
+ZWQKdGhyb3VnaCBnZXRfZG1hX29wcyhzdHJ1Y3QgZGV2aWNlICpkZXYpIGFuZCBpdCBzZWVtcyB0
+aGF0IG9uIG1vc3QKYXJjaGl0ZWN0dXJlcyAoYWxsIGJ1dCB0d28sIGlmIEkgcmVtZW1iZXIgY29y
+cmVjdGx5KSBpdCB3aWxsIHJldHVybiBhCmRlZmF1bHQgc2V0IG9mIERNQSBvcHMgaWYgdGhlIGRl
+diA9PSBOVUxMLCBlZy4KCnN0YXRpYyBpbmxpbmUgc3RydWN0IGRtYV9tYXBfb3BzICpnZXRfZG1h
+X29wcyhzdHJ1Y3QgZGV2aWNlICpkZXYpCnsKI2lmbmRlZiBDT05GSUdfWDg2X0RFVl9ETUFfT1BT
+CiAgICAgICAgcmV0dXJuIGRtYV9vcHM7CiNlbHNlCiAgICAgICAgaWYgKHVubGlrZWx5KCFkZXYp
+IHx8ICFkZXYtPmFyY2hkYXRhLmRtYV9vcHMpCiAgICAgICAgICAgICAgICByZXR1cm4gZG1hX29w
+czsKICAgICAgICBlbHNlCiAgICAgICAgICAgICAgICByZXR1cm4gZGV2LT5hcmNoZGF0YS5kbWFf
+b3BzOwojZW5kaWYgCn0KCmluIGFyY2gveDg2L2luY2x1ZGUvYXNtL2RtYS1tYXBwaW5nLmguIE5v
+dywgdGhlcmUgc2VlbSB0byBiZSBvbmx5IGEKaGFuZGZ1bCBvZiBwbGFjZXMgd2hlcmUgZGV2X2Rt
+YSBpcyBkZXJlZmVyZW5jZWQ6IHNjc2lfZG1hX21hcCBhbmQKc2NzaV9kbWFfdW5tYXAgaW4gZHJp
+dmVycy9zY3NpL3Njc2lfbGliX2RtYS5jLCB3aGVyZSBhbGwgdGhlIGNhbGxzIHNlZW0KdG8gYmUg
+Ik5VTEwgcmVzaXN0YW50IiBhbmQgX19zY3NpX2FsbG9jX3F1ZXVlIGluIF9fc2NzaV9hbGxvY19x
+dWV1ZQp3aGljaCB3aWxsIG9vcHMgYXMgeW91IHNhaWQuCgpBbnl3YXksIGlmIHlvdSBhcmUgc2F5
+aW5nIHRoYXQgZGV2X2RtYSBtdXN0IG5vdCBiZSBOVUxMIGF0IGFueQpjaXJjdW1zdGFuY2VzLCBJ
+J2xsIGVpdGhlciBoYXZlIHRvIGZpbmQgc29tZSBraW5kIG9mIHJlcGxhY2VtZW50IGZvcgpwbGF0
+Zm9ybV9idXMgb3IgY29udmluY2UgR3JlZyB0aGF0IHBsYXRmb3JtX2J1cyBtdXN0IG5vdCBiZSBt
+YWRlCnN0YXRpYyA7LSkKCj4gQSBsb3Qgb2YgdGhlIGxlZ2FjeSBJU0EgZGV2aWNlIG9uIHg4Ngo+
+IGFuZCBJIHRob3VnaHQgc29tZSBBUk0gU09DIGRldmljZXMgZG9uJ3QgcGFzcyBpbiB0aGUgcGFy
+ZW50IGRldmljZSwgc28KPiB3ZSBoYW5nIHRoZW0gb2ZmIGEga25vd24gcGFyZW50LgoKVGhhdCdz
+IGFub3RoZXIgdGhpbmcgSSdtIG5vdCBzdXJlIC0gb25jZSBhc3NpZ25lZCwgaXMgdGhlIGRtYV9k
+ZXYKcmVsYXRlZCB0byB0aGUgcGFyZW50IGluIGFueSB3YXk/IEV2ZW4gbW9yZSAtIGlzIHRoZSBz
+aG9zdF9nZW5kZXYucGFyZW50CnVzZWQgYXQgYWxsPyBEb2Vzbid0IHNlZW0gdG8gYmUuIElmIGl0
+J3Mgb25seSBhYm91dCBhIHBsYWNlIGluIHRoZQpkZXZpY2UgbW9kZWwgaGllcmFyY2h5LCBsZWF2
+aW5nIHBhcmVudCBhcyBOVUxMIHdpbGwgbWFrZSBzdWNoIGRldmljZSBhCnZpcnR1YWwgb25lLCB3
+aGljaCBpdCBwcm9iYWJseSBzaG91bGQgYmUuLi4KClBhd2XFggoKCl9fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmxpbnV4LWFybS1rZXJuZWwgbWFpbGluZyBs
+aXN0CmxpbnV4LWFybS1rZXJuZWxAbGlzdHMuaW5mcmFkZWFkLm9yZwpodHRwOi8vbGlzdHMuaW5m
+cmFkZWFkLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2xpbnV4LWFybS1rZXJuZWwK
