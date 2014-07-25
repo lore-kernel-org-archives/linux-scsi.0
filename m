@@ -1,33 +1,271 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 12/14] scatterlist: allow chaining to preallocated chunks
-Date: Fri, 25 Jul 2014 15:15:04 -0400
-Message-ID: <yq1fvhpgshz.fsf@sermon.lab.mkp.net>
-References: <1405678393-11497-1-git-send-email-hch@lst.de>
-	<1405678393-11497-13-git-send-email-hch@lst.de>
+From: scameron@beardog.cce.hp.com
+Subject: [RFC] hpsa: work in progress "lockless monster" patches
+Date: Fri, 25 Jul 2014 14:28:59 -0500
+Message-ID: <20140725192859.GU14599@beardog.cce.hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1405678393-11497-13-git-send-email-hch@lst.de> (Christoph
-	Hellwig's message of "Fri, 18 Jul 2014 12:13:11 +0200")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Bart Van Assche <bvanassche@fusionio.com>, Mike Christie <michaelc@cs.wisc.edu>, "Martin K. Petersen" <martin.petersen@oracle.com>, Robert Elliott <Elliott@hp.com>, Webb Scales <webbnh@hp.com>, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from g4t3425.houston.hp.com ([15.201.208.53]:33670 "EHLO
+	g4t3425.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759715AbaGYT3x (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Jul 2014 15:29:53 -0400
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: jbottomley@parallels.com, martin.petersen@oracle.com, thenzl@redhat.com, hare@suse.de, hch@infradead.org, bvanassche@acm.org, axboe@kernel.dk, elliott@hp.com, scott.teel@hp.com, webbnh@hp.com, joseph.t.handzik@hp.com, justin.lindley@hp.com, scameron@beardog.cce.hp.com
 
->>>>> "Christoph" == Christoph Hellwig <hch@lst.de> writes:
 
-Christoph> Blk-mq drivers usually preallocate their S/G list as part of
-Christoph> the request, but if we want to support the very large S/G
-Christoph> lists currently supported by the SCSI code that would tie up
-Christoph> a lot of memory in the preallocated request pool.  Add
-Christoph> support to the scatterlist code so that it can initialize a
-Christoph> S/G list that uses a preallocated first chunks and
-Christoph> dynamically allocated additional chunks.  That way the
-Christoph> scsi-mq code can preallocate a first page worth of S/G
-Christoph> entries as part of the request, and dynamically extend the
-Christoph> S/G list when needed.
+hpsa: Work In Progress: "lockless monster" patches
 
-Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+To be clear, I am not suggesting that these patches be merged at this time.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+This patchset is vs. Christoph Hellwig's scsi-mq.4 branch which
+may be found here: git://git.infradead.org/users/hch/scsi.git
+
+We've been working for a long time on a patchset for hpsa to remove
+all the locks from the main i/o path in pursuit of high IOPS.  Some
+of that work is already upstream, but a lot more of it is not quite
+yet ready to be merged.  However, I think we've "gone dark" for a bit
+too long on this, and even though the patches aren't really ready to
+be merged just yet, I thought I should let other people who might be
+interested have a look anyway, as things are starting to be at least
+more stable than unstable.  Be warned though, there are still some
+problems, esp. around error recovery.
+
+That being said, with the right hardware (fast SAS SSDs, recent Smart
+Arrays e.g. P430, with up-to-date firmware, attached to recent disk enclosures)
+with these patches and the scsi-mq patches, it is possible to get around
+~970k IOPS from a single logical drive on a single controller.
+
+There are about 150 patches in this set.  Rather than bomb the list
+with that, here is a link to a tarball of the patches in the form of
+an stgit patch series:
+
+https://github.com/smcameron/hpsa-lockless-patches-work-in-progress/blob/master/hpsa-lockless-vs-hch-scsi-mq.4-2014-07-25-1415CDT.tar.bz2?raw=true
+
+In some cases, I have probably erred on the side of having too many too
+small patches, on the theory that it is easier to bake a cake than to 
+unbake a cake.  Before these are submitted "for reals", there will be
+some squashing of patches, along with other cleaning up.
+
+There are some patches in this set which are already upstream in
+James's tree which do not happen to be in Christoph's tree
+(most of which are named "*_sent_to_james").  There are also
+quite a few patches which are strictly for debugging and are not
+ever intended to be merged. 
+
+
+Here is a list of all the patches sorted by author:
+
+Arnd Bergmann (1):
+  [SCSI] hpsa: fix non-x86 builds
+
+Christoph Hellwig (1):
+  reserve block tags in scsi host
+
+Joe Handzik (9):
+  hpsa: add masked physical devices into h->dev[] array
+  hpsa: add hpsa_bmic_id_physical_device function
+  hpsa: get queue depth for physical devices
+  hpsa: use ioaccel2 path to submit IOs to physical drives in HBA mode.
+  hpsa: Get queue depth from identify physical bmic for physical disks.
+  hpsa: add ioaccel sg chaining for the ioaccel2 path
+  Set the phys_disk value for a CommandList structure that is
+    submitted. Squash
+  hpsa: unmap ioaccel2 commands before, not after adding to resubmit
+    workqueue
+  hpsa: add more ioaccel2 error handling, including underrun statuses.
+
+Nicholas Bellinger (1):
+  hpsa: Convert SCSI LLD ->queuecommand() for host_lock less operation
+
+Robert Elliott (44):
+  Change scsi.c scsi_log_completion() to print strings for QUEUED,
+  Set scsi_logging_level to be more verbose to get better messages
+  hpsa: do not unconditionally copy sense data
+  hpsa: optimize cmd_alloc function by remembering last allocation
+  From a154642aeed291c7cfe4b9ea9da932156030f7d1 Mon Sep 17 00:00:00
+    2001
+  hpsa: Clean up host, channel, target, lun prints
+  hpsa: do not check cmd_alloc return value - it cannnot return NULL
+  hpsa: return -1 rather than -ENOMEM in hpsa_get_raid_map if fill_cmd
+    fails
+  hpsa: return -ENOMEM not 1 from ioaccel2_alloc_cmds_and_bft on
+    allocation failure
+  hpsa: return -ENOMEM not 1 from hpsa_alloc_ioaccel_cmd_and_bft on
+    allocation failure
+  hpsa: return -ENOMEM not -EFAULT from hpsa_passthru_ioctl on kmalloc
+    failure
+  hpsa: pass error from pci_set_consistent_dma_mask intact from
+    hpsa_message
+  hpsa: detect and report failures changing controller transport modes
+  hpsa: add hpsa_disable_interrupt_mode
+  hpsa: rename free_irqs to hpsa_free_irqs and move before
+    hpsa_request_irq
+  hpsa: rename hpsa_request_irq to hpsa_request_irqs
+  hpsa: on failure of request_irq, free the irqs that we did get
+  hpsa: make hpsa_pci_init disable interrupts and pci_disable_device on
+    critical failures
+  hpsa: fix a string constant broken into two lines
+  hpsa: avoid unneccesary calls to resource freeing functions in
+    hpsa_init_one
+  hpsa: add hpsa_free_cfgtables function to undo what
+    hpsa_find_cfgtables does
+  hpsa: report failure to ioremap config table
+  hpsa: add hpsa_free_pci_init function
+  hpsa: clean up error handling in hpsa_pci_init
+  hpsa: make hpsa_remove_one use hpsa_pci_free_init
+  hpsa: rename hpsa_alloc_ioaccel_cmd_and_bft to
+    hpsa_alloc_ioaccel1_cmd_and_bft
+  hpsa: rename hpsa_allocate_cmd_pool to hpsa_alloc_cmd_pool
+  hpsa: rename ioaccel2_alloc_cmds_and_bft to
+    hpsa_alloc_ioaccel2_cmd_and_bft
+  hpsa: fix memory leak in hpsa_alloc_cmd_pool
+  hpsa: return status not void from hpsa_put_ctlr_into_performant_mode
+  hpsa: clean up error handling in hpsa_init_one
+  hpsa: report allocation failures while allocating SG chain blocks
+  hpsa: rename hpsa_allocate_sg_chain_blocks to
+    hpsa_alloc_sg_chain_blocks
+  hpsa: improve allocation failure messages from hpsa_init_one
+  hpsa: fix minor if-statement style issue in hpsa_init_one
+  hpsa: fix wrong indent level in hpsa_init_one
+  Add hpsa_free_performant_mode and call it from hpsa_init_one
+  hpsa: shorten the wait for the CISS doorbell mode change
+    acknowledgement
+  hpsa: clean up some error reporting output in abort handler
+  hpsa: try to detect controller lockup in abort handler
+  hpsa: Return DID_NO_CONNECT rather than DID_ERR on lockup
+  hpsa: check for lockup on all simple_cmd submissions
+  hpsa: Support 64-bit lun values in printks
+  hpsa: do not print ioaccel2 warning messages about unusual
+    completions.
+
+Stephen M. Cameron (95):
+  scsi: break from queue depth adjusting loops when device found
+  hpsa: remove online devices from offline device list
+  hpsa: fix bad -ENOMEM return value in hpsa_big_passthru_ioctl
+  hpsa: make hpsa_init_one return -ENOMEM if allocation of
+    h->lockup_detected fails
+  hpsa: fix 6-byte READ/WRITE with 0 length data xfer
+  hpsa: remove spin lock around command allocation
+  hpsa: use atomics for commands_outstanding instead of spin locks
+  hpsa: reserve some commands for use by driver
+  hpsa: get rid of cmd_special_alloc and cmd_special_free
+  hpsa: do not queue commands internally in driver
+  hpsa: remove unused interrupt handler code
+  hpsa: remove direct lookup bit from command tags
+  hpsa: fix race between abort handler and main i/o path
+  hpsa: allow lockup detector to be turned off
+  hpsa: do not request device rescan on every ioaccel path error
+  hpsa: factor out hpsa_ciss_submit function
+  hpsa: use workqueue to resubmit failed ioaccel commands
+  hpsa: use driver instead of system work queue for command
+    resubmission
+  hpsa: remove 'action required' phrasing
+  hpsa: Count passthru cmds with atomics, not a spin locked int
+  hpsa: remove unused fifo_full function
+  hpsa: slightly optimize SA5_performant_completed
+  hpsa: do not check for msi(x) in interrupt_pending
+  hpsa: fix fail_all_outstanding_cmds to use reference counting
+  hpsa: fix endianness issue with scatter gather elements
+  hpsa: get rid of type/attribute/direction bit field where possible
+  hpsa: do not use function pointers in fast path command submission
+  hpsa: do not wait for aborted commands to complete after abort
+  hpsa: fix hpsa_drain_accel_commands to use reference counting instead
+    of bitmap
+  hpsa: fix race when updating raid map data.
+  hpsa: allow commands to be completed on specified reply queue
+  hpsa: fix completion race in abort handler
+  hpsa: fix aborting of reused commands
+  hpsa: lay groundwork for handling driver initiated command timeouts
+  hpsa: do not free command twice in hpsa_get_raid_map
+  hpsa: do not send aborts to logical devices that do not support
+    aborts
+  hpsa: remember whether devices support aborts across rescans
+  hpsa: do not send two aborts with swizzled tags.
+  hpsa: decrement h->commands_outstanding in fail_all_outstanding_cmds
+  hpsa: flush work queue hpsa_wq in fail_all_outstanding_cmds
+  hpsa: use per controller not per driver work queue for command
+    resubmission
+  hpsa: fix allocation sizes for CISS_REPORT_LUNs commands
+  hpsa: always use extended report physical LUNs for physical devices
+  hpsa: prevent manually adding masked physical devices
+  hpsa: fix values for expose status
+  hpsa: avoid unnecessary io in hpsa_get_pdisk_of_ioaccel2()
+  hpsa: do not be so noisy about check conditions
+  hpsa: handle descriptor format sense data where needed
+  hpsa: print CDBs instead of kernel virtual addresses for uncommon
+    errors
+  hpsa: handle Command Status TMF function status
+  hpsa: do not use a void pointer for scsi_cmd field of struct
+    CommandList
+  hpsa: return FAILED from abort handler if controller locked up.
+  hpsa: if controller locked up return failed from device reset handler
+  hpsa: check for ctlr lockup after command allocation in main io path
+  hpsa: mark masked devices as masked in output
+  hpsa: limit number of concurrent abort requests
+  hpsa: separate lockup detection and device rescanning
+  hpsa: factor out hpsa_init_cmd function
+  hpsa: reinitialize commands on resubmitting failed ioaccel commands
+  hpsa: fully initialize commands once at driver load not every time
+  hpsa: change driver version to 3.4.6
+  hpsa: allow lockup detected to be viewed via sysfs
+  hpsa: do not ignore return value of hpsa_register_scsi
+  hpsa: DEBUG ONLY - allow triggering command resubmitting via sysfs
+  hpsa: try resubmitting down raid path on task set full
+  hpsa: factor out hpsa_ioaccel_submit function
+  hpsa: try resubmitting down ioaccelerated path on task set full
+  hpsa: honor queue depth of physical devices
+  hpsa: use cancel_delayed_work_sync where needed
+  hpsa: clean up queue depth getting code
+  hpsa: try to fix ioaccel command accounting code
+  hpsa: fix hpsa_figure_phys_disk_ptrs to handle layout_map_count other
+    than 1
+  hpsa: close race in ioaccel_cmds_out accounting
+  hpsa: guard against overflowing raid map array
+  hpsa: test ioaccel_cmds_out vs. queue depth earlier to avoid wasting
+    time
+  hpsa: DEBUG ONLY - fix missing atomic-dec of ioaccel_cmds_out in
+    debug command resubmission code
+  hpsa: fix missing atomic_dec of dev->ioaccel_cmds_out
+  hpsa: do not ack controller events on controllers that do not support
+    it
+  hpsa: fix code that updates h->dev[]->phys_disk[]
+  hpsa: remove bug-on that triggers in hba mode by mistake
+  hpsa: remove unused temp64 variable from hpsa_cmd_init
+  hpsa bump driver version again
+  hpsa break hpsa_free_irqs_and_disable_msix into two functions
+  separate hpsa_free_cmd_pool into three separate function
+  hpsa: fix missing return in hpsa_command_resubmit_worker
+  hpsa: fix command leaks in hpsa_resubmit_command_worker
+  hpsa: fix bad interpretations of hpsa_ioaccel_submit return value
+  hpsa: do not touch phys_disk[] for ioaccel enabled logical drives
+    during rescan
+  hpsa: add change_queue_type function
+  hpsa: make hpsa_change_queue_depth handle reason SCSI_QDEPTH_QFULL
+  hpsa: initialize queue depth of logical drives reasonably
+  hpsa: attempt to fix queue depth calculations for logical drives
+  hpsa: add support sending aborts to physical devices via the ioaccel2
+    path
+  hpsa: fix problem with abort support checking happening too early
+  hpsa: remove incorrect bug on in hpsa_scsi_ioaccel_raid_map
+
+Webb Scales (3):
+  Initialize reference counts to zero on initial command entry
+    allocation
+  hpsa: make hpsa_send_reset_as_abort_ioaccel2() use the specified
+    reply queue.
+  hpsa:  use block layer tag for command allocation
+
+ drivers/scsi/hpsa.c       | 3642 ++++++++++++++++++++++++++++-----------------
+ drivers/scsi/hpsa.h       |  103 +-
+ drivers/scsi/hpsa_cmd.h   |  222 +++-
+ drivers/scsi/scsi.c       |   64 +-
+ drivers/scsi/scsi_error.c |    2 +
+ drivers/scsi/scsi_lib.c   |    1 +
+ include/scsi/scsi_host.h  |    9 +
+ 7 files changed, 2561 insertions(+), 1482 deletions(-)
+
+-- steve
+
