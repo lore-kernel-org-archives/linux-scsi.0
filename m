@@ -1,76 +1,50 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH] [SCSI] Make scsi_transfer_length take a scsi_data_buffer argument
-Date: Fri, 25 Jul 2014 16:00:19 -0400
-Message-ID: <1406318419-7273-1-git-send-email-martin.petersen@oracle.com>
-References: <20140713113715.GA26031@infradead.org>
+Subject: Block/SCSI data integrity update v2
+Date: Fri, 25 Jul 2014 16:34:15 -0400
+Message-ID: <1406320469-29352-1-git-send-email-martin.petersen@oracle.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:23853 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:38258 "EHLO
 	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932145AbaGYT7p (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Jul 2014 15:59:45 -0400
-In-Reply-To: <20140713113715.GA26031@infradead.org>
+	with ESMTP id S1753877AbaGYUda (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Jul 2014 16:33:30 -0400
+Received: from acsinet22.oracle.com (acsinet22.oracle.com [141.146.126.238])
+	by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id s6PKXS6O028048
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Jul 2014 20:33:29 GMT
+Received: from userz7021.oracle.com (userz7021.oracle.com [156.151.31.85])
+	by acsinet22.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id s6PKXRLR019817
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=FAIL)
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Jul 2014 20:33:28 GMT
+Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
+	by userz7021.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id s6PKXRY4003604
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Jul 2014 20:33:27 GMT
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@infradead.org>
 
-For bidirectional commands we need to be able to distinguish between the
-in and out scsi_data_buffers when calculating the wire transfer length.
-Make scsi_transfer_length() take a scsi_data_buffer argument so the
-caller can choose which I/O direction the calculation should apply to.
+This is the data integrity patch series originally submitted for 3.16.
+It has been rebased on top of the current 3.17 SCSI queue tree. I
+believe I have addressed all the changes requested in the reviews. Aside
+from a code cleanup in the sd prot_op code there are no functional
+changes.
 
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Cc: Sagi Grimberg <sagig@mellanox.com>
-Cc: Christoph Hellwig <hch@infradead.org>
----
- drivers/scsi/libiscsi.c            | 2 +-
- drivers/target/loopback/tcm_loop.c | 2 +-
- include/scsi/scsi_cmnd.h           | 5 +++--
- 3 files changed, 5 insertions(+), 4 deletions(-)
+ - bi_special is now an anonymous union similar to how we do it in
+   struct request [02/14]
 
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index f2db82beb646..fdea8c1527d4 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -391,7 +391,7 @@ static int iscsi_prep_scsi_cmd_pdu(struct iscsi_task *task)
- 	if (scsi_get_prot_op(sc) != SCSI_PROT_NORMAL)
- 		task->protected = true;
- 
--	transfer_length = scsi_transfer_length(sc);
-+	transfer_length = scsi_transfer_length(sc, scsi_out(sc));
- 	hdr->data_length = cpu_to_be32(transfer_length);
- 	if (sc->sc_data_direction == DMA_TO_DEVICE) {
- 		struct iscsi_r2t_info *r2t = &task->unsol_r2t;
-diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
-index 340de9d92b15..c50453df555a 100644
---- a/drivers/target/loopback/tcm_loop.c
-+++ b/drivers/target/loopback/tcm_loop.c
-@@ -213,7 +213,7 @@ static void tcm_loop_submission_work(struct work_struct *work)
- 
- 	}
- 
--	transfer_length = scsi_transfer_length(sc);
-+	transfer_length = scsi_transfer_length(sc, scsi_out(sc));
- 	if (!scsi_prot_sg_count(sc) &&
- 	    scsi_get_prot_op(sc) != SCSI_PROT_NORMAL) {
- 		se_cmd->prot_pto = true;
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index 73f349044941..42e62cfff515 100644
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -313,9 +313,10 @@ static inline void set_driver_byte(struct scsi_cmnd *cmd, char status)
- 	cmd->result = (cmd->result & 0x00ffffff) | (status << 24);
- }
- 
--static inline unsigned scsi_transfer_length(struct scsi_cmnd *scmd)
-+static inline unsigned scsi_transfer_length(struct scsi_cmnd *scmd,
-+					    struct scsi_data_buffer *sdb)
- {
--	unsigned int xfer_len = scsi_out(scmd)->length;
-+	unsigned int xfer_len = sdb->length;
- 	unsigned int prot_op = scsi_get_prot_op(scmd);
- 	unsigned int sector_size = scmd->device->sector_size;
- 
+ - Split integrity calculation cleanup into a separate patch [06/14]
+
+ - The "disk" flag has been renamed "device_is_integrity_capable"
+   [09/14]
+
+ - Dropped bio integrity flag accessor functions [10/14]
+
+ - Augmented patch description for the integrity checksum flag [11/14]
+
+ - T10 library relocated to block/ [13/14]
+
+ - A couple of tweaks in the sd patch to make things work on top of the
+   current SCSI queue tree [14/14]
+
 -- 
-1.9.3
+Martin K. Petersen	Oracle Linux Engineering
 
