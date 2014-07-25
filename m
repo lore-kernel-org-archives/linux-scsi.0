@@ -1,382 +1,282 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 03/14] block: Remove integrity tagging functions
-Date: Fri, 25 Jul 2014 16:34:18 -0400
-Message-ID: <1406320469-29352-4-git-send-email-martin.petersen@oracle.com>
+Subject: [PATCH 02/14] block: Replace bi_integrity with bi_special
+Date: Fri, 25 Jul 2014 16:34:17 -0400
+Message-ID: <1406320469-29352-3-git-send-email-martin.petersen@oracle.com>
 References: <1406320469-29352-1-git-send-email-martin.petersen@oracle.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:38313 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:38273 "EHLO
 	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933583AbaGYUdi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Jul 2014 16:33:38 -0400
+	with ESMTP id S1753952AbaGYUdd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Jul 2014 16:33:33 -0400
 Received: from acsinet21.oracle.com (acsinet21.oracle.com [141.146.126.237])
-	by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id s6PKXbgK028166
+	by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id s6PKXVLe028108
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <linux-scsi@vger.kernel.org>; Fri, 25 Jul 2014 20:33:38 GMT
-Received: from userz7022.oracle.com (userz7022.oracle.com [156.151.31.86])
-	by acsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id s6PKXaBe014345
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Fri, 25 Jul 2014 20:33:37 GMT
-Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
-	by userz7022.oracle.com (8.14.5+Sun/8.14.4) with ESMTP id s6PKXYHn017088
-	for <linux-scsi@vger.kernel.org>; Fri, 25 Jul 2014 20:33:35 GMT
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Jul 2014 20:33:32 GMT
+Received: from userz7021.oracle.com (userz7021.oracle.com [156.151.31.85])
+	by acsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id s6PKXUn9014200
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=FAIL)
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Jul 2014 20:33:31 GMT
+Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
+	by userz7021.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id s6PKXUfx003722
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Jul 2014 20:33:30 GMT
 In-Reply-To: <1406320469-29352-1-git-send-email-martin.petersen@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 
-None of the filesystems appear interested in using the integrity tagging
-feature. Potentially because very few storage devices actually permit
-using the application tag space.
+For commands like REQ_COPY we need a way to pass extra information along
+with each bio. Like integrity metadata this information must be
+available at the bottom of the stack so bi_private does not suffice.
 
-Remove the tagging functions.
+Rename the existing bi_integrity field to bi_special and make it a union
+so we can have different bio extensions for each class of command.
+
+We previously used bi_integrity != NULL as a way to identify whether a
+bio had integrity metadata or not. Introduce a REQ_INTEGRITY to be the
+indicator now that bi_special can contain different things.
+
+In addition, bio_integrity(bio) will now return a pointer to the
+integrity payload (when applicable).
 
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- Documentation/block/data-integrity.txt | 34 ------------
- block/bio-integrity.c                  | 94 +---------------------------------
- block/blk-integrity.c                  |  2 -
- drivers/scsi/sd_dif.c                  | 65 -----------------------
- include/linux/bio.h                    |  3 --
- include/linux/blkdev.h                 |  4 --
- 6 files changed, 1 insertion(+), 201 deletions(-)
+ Documentation/block/data-integrity.txt | 10 +++++-----
+ block/bio-integrity.c                  | 19 ++++++++++---------
+ drivers/scsi/sd_dif.c                  |  8 ++++----
+ include/linux/bio.h                    | 11 +++++++++--
+ include/linux/blk_types.h              |  8 ++++++--
+ include/linux/blkdev.h                 |  7 ++-----
+ 6 files changed, 36 insertions(+), 27 deletions(-)
 
 diff --git a/Documentation/block/data-integrity.txt b/Documentation/block/data-integrity.txt
-index 4d4de8b09530..f56ec97f0d14 100644
+index b4eacf48053c..4d4de8b09530 100644
 --- a/Documentation/block/data-integrity.txt
 +++ b/Documentation/block/data-integrity.txt
-@@ -206,36 +206,6 @@ will require extra work due to the application tag.
-       bio_integrity_enabled() returned 1.
+@@ -129,11 +129,11 @@ interface for this is being worked on.
+ 4.1 BIO
  
+ The data integrity patches add a new field to struct bio when
+-CONFIG_BLK_DEV_INTEGRITY is enabled.  bio->bi_integrity is a pointer
+-to a struct bip which contains the bio integrity payload.  Essentially
+-a bip is a trimmed down struct bio which holds a bio_vec containing
+-the integrity metadata and the required housekeeping information (bvec
+-pool, vector count, etc.)
++CONFIG_BLK_DEV_INTEGRITY is enabled.  bio_integrity(bio) returns a
++pointer to a struct bip which contains the bio integrity payload.
++Essentially a bip is a trimmed down struct bio which holds a bio_vec
++containing the integrity metadata and the required housekeeping
++information (bvec pool, vector count, etc.)
  
--    int bio_integrity_tag_size(bio);
--
--      If the filesystem wants to use the application tag space it will
--      first have to find out how much storage space is available.
--      Because tag space is generally limited (usually 2 bytes per
--      sector regardless of sector size), the integrity framework
--      supports interleaving the information between the sectors in an
--      I/O.
--
--      Filesystems can call bio_integrity_tag_size(bio) to find out how
--      many bytes of storage are available for that particular bio.
--
--      Another option is bdev_get_tag_size(block_device) which will
--      return the number of available bytes per hardware sector.
--
--
--    int bio_integrity_set_tag(bio, void *tag_buf, len);
--
--      After a successful return from bio_integrity_prep(),
--      bio_integrity_set_tag() can be used to attach an opaque tag
--      buffer to a bio.  Obviously this only makes sense if the I/O is
--      a WRITE.
--
--
--    int bio_integrity_get_tag(bio, void *tag_buf, len);
--
--      Similarly, at READ I/O completion time the filesystem can
--      retrieve the tag buffer using bio_integrity_get_tag().
--
--
- 5.3 PASSING EXISTING INTEGRITY METADATA
- 
-     Filesystems that either generate their own integrity metadata or
-@@ -288,8 +258,6 @@ will require extra work due to the application tag.
-             .name                   = "STANDARDSBODY-TYPE-VARIANT-CSUM",
-             .generate_fn            = my_generate_fn,
-        	    .verify_fn              = my_verify_fn,
--       	    .get_tag_fn             = my_get_tag_fn,
--       	    .set_tag_fn             = my_set_tag_fn,
- 	    .tuple_size             = sizeof(struct my_tuple_size),
- 	    .tag_size               = <tag bytes per hw sector>,
-         };
-@@ -311,7 +279,5 @@ will require extra work due to the application tag.
-       are available per hardware sector.  For DIF this is either 2 or
-       0 depending on the value of the Control Mode Page ATO bit.
- 
--      See 6.2 for a description of get_tag_fn and set_tag_fn.
--
- ----------------------------------------------------------------------
- 2007-12-24 Martin K. Petersen <martin.petersen@oracle.com>
+ A kernel subsystem can enable data integrity protection on a bio by
+ calling bio_integrity_alloc(bio).  This will allocate and attach the
 diff --git a/block/bio-integrity.c b/block/bio-integrity.c
-index 78d8312a6528..2c4bbc0aaa93 100644
+index 6818c251e937..78d8312a6528 100644
 --- a/block/bio-integrity.c
 +++ b/block/bio-integrity.c
-@@ -216,90 +216,6 @@ static inline unsigned int bio_integrity_bytes(struct blk_integrity *bi,
- }
+@@ -77,6 +77,7 @@ struct bio_integrity_payload *bio_integrity_alloc(struct bio *bio,
+ 	bip->bip_slab = idx;
+ 	bip->bip_bio = bio;
+ 	bio->bi_integrity = bip;
++	bio->bi_rw |= REQ_INTEGRITY;
  
- /**
-- * bio_integrity_tag_size - Retrieve integrity tag space
-- * @bio:	bio to inspect
-- *
-- * Description: Returns the maximum number of tag bytes that can be
-- * attached to this bio. Filesystems can use this to determine how
-- * much metadata to attach to an I/O.
-- */
--unsigned int bio_integrity_tag_size(struct bio *bio)
--{
--	struct blk_integrity *bi = bdev_get_integrity(bio->bi_bdev);
--
--	BUG_ON(bio->bi_iter.bi_size == 0);
--
--	return bi->tag_size * (bio->bi_iter.bi_size / bi->sector_size);
--}
--EXPORT_SYMBOL(bio_integrity_tag_size);
--
--static int bio_integrity_tag(struct bio *bio, void *tag_buf, unsigned int len,
--			     int set)
--{
--	struct bio_integrity_payload *bip = bio_integrity(bio);
--	struct blk_integrity *bi = bdev_get_integrity(bio->bi_bdev);
--	unsigned int nr_sectors;
--
--	BUG_ON(bip->bip_buf == NULL);
--
--	if (bi->tag_size == 0)
--		return -1;
--
--	nr_sectors = bio_integrity_hw_sectors(bi,
--					DIV_ROUND_UP(len, bi->tag_size));
--
--	if (nr_sectors * bi->tuple_size > bip->bip_iter.bi_size) {
--		printk(KERN_ERR "%s: tag too big for bio: %u > %u\n", __func__,
--		       nr_sectors * bi->tuple_size, bip->bip_iter.bi_size);
--		return -1;
--	}
--
--	if (set)
--		bi->set_tag_fn(bip->bip_buf, tag_buf, nr_sectors);
--	else
--		bi->get_tag_fn(bip->bip_buf, tag_buf, nr_sectors);
--
--	return 0;
--}
--
--/**
-- * bio_integrity_set_tag - Attach a tag buffer to a bio
-- * @bio:	bio to attach buffer to
-- * @tag_buf:	Pointer to a buffer containing tag data
-- * @len:	Length of the included buffer
-- *
-- * Description: Use this function to tag a bio by leveraging the extra
-- * space provided by devices formatted with integrity protection.  The
-- * size of the integrity buffer must be <= to the size reported by
-- * bio_integrity_tag_size().
-- */
--int bio_integrity_set_tag(struct bio *bio, void *tag_buf, unsigned int len)
--{
--	BUG_ON(bio_data_dir(bio) != WRITE);
--
--	return bio_integrity_tag(bio, tag_buf, len, 1);
--}
--EXPORT_SYMBOL(bio_integrity_set_tag);
--
--/**
-- * bio_integrity_get_tag - Retrieve a tag buffer from a bio
-- * @bio:	bio to retrieve buffer from
-- * @tag_buf:	Pointer to a buffer for the tag data
-- * @len:	Length of the target buffer
-- *
-- * Description: Use this function to retrieve the tag buffer from a
-- * completed I/O. The size of the integrity buffer must be <= to the
-- * size reported by bio_integrity_tag_size().
-- */
--int bio_integrity_get_tag(struct bio *bio, void *tag_buf, unsigned int len)
--{
--	BUG_ON(bio_data_dir(bio) != READ);
--
--	return bio_integrity_tag(bio, tag_buf, len, 0);
--}
--EXPORT_SYMBOL(bio_integrity_get_tag);
--
--/**
-  * bio_integrity_generate_verify - Generate/verify integrity metadata for a bio
-  * @bio:	bio to generate/verify integrity metadata for
-  * @operate:	operate number, 1 for generate, 0 for verify
-@@ -361,14 +277,6 @@ static void bio_integrity_generate(struct bio *bio)
- 	bio_integrity_generate_verify(bio, 1);
- }
+ 	return bip;
+ err:
+@@ -94,7 +95,7 @@ EXPORT_SYMBOL(bio_integrity_alloc);
+  */
+ void bio_integrity_free(struct bio *bio)
+ {
+-	struct bio_integrity_payload *bip = bio->bi_integrity;
++	struct bio_integrity_payload *bip = bio_integrity(bio);
+ 	struct bio_set *bs = bio->bi_pool;
  
--static inline unsigned short blk_integrity_tuple_size(struct blk_integrity *bi)
--{
--	if (bi)
--		return bi->tuple_size;
--
--	return 0;
--}
--
- /**
-  * bio_integrity_prep - Prepare bio for integrity I/O
-  * @bio:	bio to prepare
-@@ -399,7 +307,7 @@ int bio_integrity_prep(struct bio *bio)
- 	sectors = bio_integrity_hw_sectors(bi, bio_sectors(bio));
+ 	if (bip->bip_owns_buf)
+@@ -134,7 +135,7 @@ static inline unsigned int bip_integrity_vecs(struct bio_integrity_payload *bip)
+ int bio_integrity_add_page(struct bio *bio, struct page *page,
+ 			   unsigned int len, unsigned int offset)
+ {
+-	struct bio_integrity_payload *bip = bio->bi_integrity;
++	struct bio_integrity_payload *bip = bio_integrity(bio);
+ 	struct bio_vec *iv;
  
- 	/* Allocate kernel buffer for protection data */
--	len = sectors * blk_integrity_tuple_size(bi);
-+	len = sectors * bi->tuple_size;
- 	buf = kmalloc(len, GFP_NOIO | q->bounce_gfp);
- 	if (unlikely(buf == NULL)) {
- 		printk(KERN_ERR "could not allocate integrity buffer\n");
-diff --git a/block/blk-integrity.c b/block/blk-integrity.c
-index 7fbab84399e6..7ac17160ab69 100644
---- a/block/blk-integrity.c
-+++ b/block/blk-integrity.c
-@@ -418,8 +418,6 @@ int blk_integrity_register(struct gendisk *disk, struct blk_integrity *template)
- 		bi->generate_fn = template->generate_fn;
- 		bi->verify_fn = template->verify_fn;
- 		bi->tuple_size = template->tuple_size;
--		bi->set_tag_fn = template->set_tag_fn;
--		bi->get_tag_fn = template->get_tag_fn;
- 		bi->tag_size = template->tag_size;
- 	} else
- 		bi->name = bi_unsupported_name;
+ 	if (bip->bip_vcnt >= bip_integrity_vecs(bip)) {
+@@ -235,7 +236,7 @@ EXPORT_SYMBOL(bio_integrity_tag_size);
+ static int bio_integrity_tag(struct bio *bio, void *tag_buf, unsigned int len,
+ 			     int set)
+ {
+-	struct bio_integrity_payload *bip = bio->bi_integrity;
++	struct bio_integrity_payload *bip = bio_integrity(bio);
+ 	struct blk_integrity *bi = bdev_get_integrity(bio->bi_bdev);
+ 	unsigned int nr_sectors;
+ 
+@@ -310,12 +311,12 @@ static int bio_integrity_generate_verify(struct bio *bio, int operate)
+ 	struct bio_vec *bv;
+ 	sector_t sector;
+ 	unsigned int sectors, ret = 0, i;
+-	void *prot_buf = bio->bi_integrity->bip_buf;
++	void *prot_buf = bio_integrity(bio)->bip_buf;
+ 
+ 	if (operate)
+ 		sector = bio->bi_iter.bi_sector;
+ 	else
+-		sector = bio->bi_integrity->bip_iter.bi_sector;
++		sector = bio_integrity(bio)->bip_iter.bi_sector;
+ 
+ 	bix.disk_name = bio->bi_bdev->bd_disk->disk_name;
+ 	bix.sector_size = bi->sector_size;
+@@ -511,7 +512,7 @@ static void bio_integrity_verify_fn(struct work_struct *work)
+  */
+ void bio_integrity_endio(struct bio *bio, int error)
+ {
+-	struct bio_integrity_payload *bip = bio->bi_integrity;
++	struct bio_integrity_payload *bip = bio_integrity(bio);
+ 
+ 	BUG_ON(bip->bip_bio != bio);
+ 
+@@ -542,7 +543,7 @@ EXPORT_SYMBOL(bio_integrity_endio);
+  */
+ void bio_integrity_advance(struct bio *bio, unsigned int bytes_done)
+ {
+-	struct bio_integrity_payload *bip = bio->bi_integrity;
++	struct bio_integrity_payload *bip = bio_integrity(bio);
+ 	struct blk_integrity *bi = bdev_get_integrity(bio->bi_bdev);
+ 	unsigned bytes = bio_integrity_bytes(bi, bytes_done >> 9);
+ 
+@@ -564,7 +565,7 @@ EXPORT_SYMBOL(bio_integrity_advance);
+ void bio_integrity_trim(struct bio *bio, unsigned int offset,
+ 			unsigned int sectors)
+ {
+-	struct bio_integrity_payload *bip = bio->bi_integrity;
++	struct bio_integrity_payload *bip = bio_integrity(bio);
+ 	struct blk_integrity *bi = bdev_get_integrity(bio->bi_bdev);
+ 
+ 	bio_integrity_advance(bio, offset << 9);
+@@ -583,7 +584,7 @@ EXPORT_SYMBOL(bio_integrity_trim);
+ int bio_integrity_clone(struct bio *bio, struct bio *bio_src,
+ 			gfp_t gfp_mask)
+ {
+-	struct bio_integrity_payload *bip_src = bio_src->bi_integrity;
++	struct bio_integrity_payload *bip_src = bio_integrity(bio_src);
+ 	struct bio_integrity_payload *bip;
+ 
+ 	BUG_ON(bip_src == NULL);
 diff --git a/drivers/scsi/sd_dif.c b/drivers/scsi/sd_dif.c
-index 29f0477a8708..38a7778631be 100644
+index a7a691d0af7d..29f0477a8708 100644
 --- a/drivers/scsi/sd_dif.c
 +++ b/drivers/scsi/sd_dif.c
-@@ -128,39 +128,10 @@ static int sd_dif_type1_verify_ip(struct blk_integrity_exchg *bix)
- 	return sd_dif_type1_verify(bix, sd_dif_ip_fn);
- }
+@@ -383,9 +383,9 @@ void sd_dif_prepare(struct request *rq, sector_t hw_sector,
+ 		if (bio_flagged(bio, BIO_MAPPED_INTEGRITY))
+ 			break;
  
--/*
-- * Functions for interleaving and deinterleaving application tags
-- */
--static void sd_dif_type1_set_tag(void *prot, void *tag_buf, unsigned int sectors)
--{
--	struct sd_dif_tuple *sdt = prot;
--	u8 *tag = tag_buf;
--	unsigned int i, j;
--
--	for (i = 0, j = 0 ; i < sectors ; i++, j += 2, sdt++) {
--		sdt->app_tag = tag[j] << 8 | tag[j+1];
--		BUG_ON(sdt->app_tag == 0xffff);
--	}
--}
--
--static void sd_dif_type1_get_tag(void *prot, void *tag_buf, unsigned int sectors)
--{
--	struct sd_dif_tuple *sdt = prot;
--	u8 *tag = tag_buf;
--	unsigned int i, j;
--
--	for (i = 0, j = 0 ; i < sectors ; i++, j += 2, sdt++) {
--		tag[j] = (sdt->app_tag & 0xff00) >> 8;
--		tag[j+1] = sdt->app_tag & 0xff;
--	}
--}
--
- static struct blk_integrity dif_type1_integrity_crc = {
- 	.name			= "T10-DIF-TYPE1-CRC",
- 	.generate_fn		= sd_dif_type1_generate_crc,
- 	.verify_fn		= sd_dif_type1_verify_crc,
--	.get_tag_fn		= sd_dif_type1_get_tag,
--	.set_tag_fn		= sd_dif_type1_set_tag,
- 	.tuple_size		= sizeof(struct sd_dif_tuple),
- 	.tag_size		= 0,
- };
-@@ -169,8 +140,6 @@ static struct blk_integrity dif_type1_integrity_ip = {
- 	.name			= "T10-DIF-TYPE1-IP",
- 	.generate_fn		= sd_dif_type1_generate_ip,
- 	.verify_fn		= sd_dif_type1_verify_ip,
--	.get_tag_fn		= sd_dif_type1_get_tag,
--	.set_tag_fn		= sd_dif_type1_set_tag,
- 	.tuple_size		= sizeof(struct sd_dif_tuple),
- 	.tag_size		= 0,
- };
-@@ -245,42 +214,10 @@ static int sd_dif_type3_verify_ip(struct blk_integrity_exchg *bix)
- 	return sd_dif_type3_verify(bix, sd_dif_ip_fn);
- }
+-		virt = bio->bi_integrity->bip_iter.bi_sector & 0xffffffff;
++		virt = bio_integrity(bio)->bip_iter.bi_sector & 0xffffffff;
  
--static void sd_dif_type3_set_tag(void *prot, void *tag_buf, unsigned int sectors)
--{
--	struct sd_dif_tuple *sdt = prot;
--	u8 *tag = tag_buf;
--	unsigned int i, j;
--
--	for (i = 0, j = 0 ; i < sectors ; i++, j += 6, sdt++) {
--		sdt->app_tag = tag[j] << 8 | tag[j+1];
--		sdt->ref_tag = tag[j+2] << 24 | tag[j+3] << 16 |
--			tag[j+4] << 8 | tag[j+5];
--	}
--}
--
--static void sd_dif_type3_get_tag(void *prot, void *tag_buf, unsigned int sectors)
--{
--	struct sd_dif_tuple *sdt = prot;
--	u8 *tag = tag_buf;
--	unsigned int i, j;
--
--	for (i = 0, j = 0 ; i < sectors ; i++, j += 2, sdt++) {
--		tag[j] = (sdt->app_tag & 0xff00) >> 8;
--		tag[j+1] = sdt->app_tag & 0xff;
--		tag[j+2] = (sdt->ref_tag & 0xff000000) >> 24;
--		tag[j+3] = (sdt->ref_tag & 0xff0000) >> 16;
--		tag[j+4] = (sdt->ref_tag & 0xff00) >> 8;
--		tag[j+5] = sdt->ref_tag & 0xff;
--		BUG_ON(sdt->app_tag == 0xffff || sdt->ref_tag == 0xffffffff);
--	}
--}
--
- static struct blk_integrity dif_type3_integrity_crc = {
- 	.name			= "T10-DIF-TYPE3-CRC",
- 	.generate_fn		= sd_dif_type3_generate_crc,
- 	.verify_fn		= sd_dif_type3_verify_crc,
--	.get_tag_fn		= sd_dif_type3_get_tag,
--	.set_tag_fn		= sd_dif_type3_set_tag,
- 	.tuple_size		= sizeof(struct sd_dif_tuple),
- 	.tag_size		= 0,
- };
-@@ -289,8 +226,6 @@ static struct blk_integrity dif_type3_integrity_ip = {
- 	.name			= "T10-DIF-TYPE3-IP",
- 	.generate_fn		= sd_dif_type3_generate_ip,
- 	.verify_fn		= sd_dif_type3_verify_ip,
--	.get_tag_fn		= sd_dif_type3_get_tag,
--	.set_tag_fn		= sd_dif_type3_set_tag,
- 	.tuple_size		= sizeof(struct sd_dif_tuple),
- 	.tag_size		= 0,
- };
+-		bip_for_each_vec(iv, bio->bi_integrity, iter) {
++		bip_for_each_vec(iv, bio_integrity(bio), iter) {
+ 			sdt = kmap_atomic(iv.bv_page)
+ 				+ iv.bv_offset;
+ 
+@@ -434,9 +434,9 @@ void sd_dif_complete(struct scsi_cmnd *scmd, unsigned int good_bytes)
+ 		struct bio_vec iv;
+ 		struct bvec_iter iter;
+ 
+-		virt = bio->bi_integrity->bip_iter.bi_sector & 0xffffffff;
++		virt = bio_integrity(bio)->bip_iter.bi_sector & 0xffffffff;
+ 
+-		bip_for_each_vec(iv, bio->bi_integrity, iter) {
++		bip_for_each_vec(iv, bio_integrity(bio), iter) {
+ 			sdt = kmap_atomic(iv.bv_page)
+ 				+ iv.bv_offset;
+ 
 diff --git a/include/linux/bio.h b/include/linux/bio.h
-index 1c608a0cbd8e..f8b09d7020ef 100644
+index f11dd9efd3d9..1c608a0cbd8e 100644
 --- a/include/linux/bio.h
 +++ b/include/linux/bio.h
-@@ -361,7 +361,6 @@ extern struct bio *bio_clone_fast(struct bio *, gfp_t, struct bio_set *);
- extern struct bio *bio_clone_bioset(struct bio *, gfp_t, struct bio_set *bs);
+@@ -293,6 +293,15 @@ static inline unsigned bio_segments(struct bio *bio)
+ #define bio_get(bio)	atomic_inc(&(bio)->bi_cnt)
  
- extern struct bio_set *fs_bio_set;
--unsigned int bio_integrity_tag_size(struct bio *bio);
+ #if defined(CONFIG_BLK_DEV_INTEGRITY)
++
++static inline struct bio_integrity_payload *bio_integrity(struct bio *bio)
++{
++	if (bio->bi_rw & REQ_INTEGRITY)
++		return bio->bi_integrity;
++
++	return NULL;
++}
++
+ /*
+  * bio integrity payload
+  */
+@@ -660,8 +669,6 @@ struct biovec_slab {
+ 	for_each_bio(_bio)						\
+ 		bip_for_each_vec(_bvl, _bio->bi_integrity, _iter)
  
- static inline struct bio *bio_alloc(gfp_t gfp_mask, unsigned int nr_iovecs)
- {
-@@ -673,8 +672,6 @@ extern struct bio_integrity_payload *bio_integrity_alloc(struct bio *, gfp_t, un
+-#define bio_integrity(bio) (bio->bi_integrity != NULL)
+-
+ extern struct bio_integrity_payload *bio_integrity_alloc(struct bio *, gfp_t, unsigned int);
  extern void bio_integrity_free(struct bio *);
  extern int bio_integrity_add_page(struct bio *, struct page *, unsigned int, unsigned int);
- extern bool bio_integrity_enabled(struct bio *bio);
--extern int bio_integrity_set_tag(struct bio *, void *, unsigned int);
--extern int bio_integrity_get_tag(struct bio *, void *, unsigned int);
- extern int bio_integrity_prep(struct bio *);
- extern void bio_integrity_endio(struct bio *, int);
- extern void bio_integrity_advance(struct bio *, unsigned int);
+diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+index 66c2167f04a9..0b7084f7c136 100644
+--- a/include/linux/blk_types.h
++++ b/include/linux/blk_types.h
+@@ -78,9 +78,11 @@ struct bio {
+ 	struct io_context	*bi_ioc;
+ 	struct cgroup_subsys_state *bi_css;
+ #endif
++	union {
+ #if defined(CONFIG_BLK_DEV_INTEGRITY)
+-	struct bio_integrity_payload *bi_integrity;  /* data integrity */
++		struct bio_integrity_payload *bi_integrity; /* data integrity */
+ #endif
++	};
+ 
+ 	unsigned short		bi_vcnt;	/* how many bio_vec's */
+ 
+@@ -162,6 +164,7 @@ enum rq_flag_bits {
+ 	__REQ_WRITE_SAME,	/* write same block many times */
+ 
+ 	__REQ_NOIDLE,		/* don't anticipate more IO after this one */
++	__REQ_INTEGRITY,	/* I/O includes block integrity payload */
+ 	__REQ_FUA,		/* forced unit access */
+ 	__REQ_FLUSH,		/* request for cache flush */
+ 
+@@ -204,13 +207,14 @@ enum rq_flag_bits {
+ #define REQ_DISCARD		(1ULL << __REQ_DISCARD)
+ #define REQ_WRITE_SAME		(1ULL << __REQ_WRITE_SAME)
+ #define REQ_NOIDLE		(1ULL << __REQ_NOIDLE)
++#define REQ_INTEGRITY		(1ULL << __REQ_INTEGRITY)
+ 
+ #define REQ_FAILFAST_MASK \
+ 	(REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT | REQ_FAILFAST_DRIVER)
+ #define REQ_COMMON_MASK \
+ 	(REQ_WRITE | REQ_FAILFAST_MASK | REQ_SYNC | REQ_META | REQ_PRIO | \
+ 	 REQ_DISCARD | REQ_WRITE_SAME | REQ_NOIDLE | REQ_FLUSH | REQ_FUA | \
+-	 REQ_SECURE)
++	 REQ_SECURE | REQ_INTEGRITY)
+ #define REQ_CLONE_MASK		REQ_COMMON_MASK
+ 
+ #define BIO_NO_ADVANCE_ITER_MASK	(REQ_DISCARD|REQ_WRITE_SAME)
 diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index c462b5b0d67f..84a0fa90cdad 100644
+index 8699bcf5f099..c462b5b0d67f 100644
 --- a/include/linux/blkdev.h
 +++ b/include/linux/blkdev.h
-@@ -1476,14 +1476,10 @@ struct blk_integrity_exchg {
+@@ -1518,12 +1518,9 @@ static inline struct blk_integrity *blk_get_integrity(struct gendisk *disk)
+ 	return disk->integrity;
+ }
  
- typedef void (integrity_gen_fn) (struct blk_integrity_exchg *);
- typedef int (integrity_vrfy_fn) (struct blk_integrity_exchg *);
--typedef void (integrity_set_tag_fn) (void *, void *, unsigned int);
--typedef void (integrity_get_tag_fn) (void *, void *, unsigned int);
+-static inline int blk_integrity_rq(struct request *rq)
++static inline bool blk_integrity_rq(struct request *rq)
+ {
+-	if (rq->bio == NULL)
+-		return 0;
+-
+-	return bio_integrity(rq->bio);
++	return rq->cmd_flags & REQ_INTEGRITY;
+ }
  
- struct blk_integrity {
- 	integrity_gen_fn	*generate_fn;
- 	integrity_vrfy_fn	*verify_fn;
--	integrity_set_tag_fn	*set_tag_fn;
--	integrity_get_tag_fn	*get_tag_fn;
- 
- 	unsigned short		flags;
- 	unsigned short		tuple_size;
+ static inline void blk_queue_max_integrity_segments(struct request_queue *q,
 -- 
 1.9.3
 
