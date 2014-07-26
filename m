@@ -1,42 +1,60 @@
-From: Juergen Gross <jgross@suse.com>
-Subject: Re: [PATCH V2 0/4] Add XEN pvSCSI support
-Date: Sat, 26 Jul 2014 09:28:55 +0200
-Message-ID: <53D358B7.6050706@suse.com>
-References: <1406288253-13293-1-git-send-email-jgross@suse.com> <20140725173833.GE11179@laptop.dumpdata.com>
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: Re: [PATCH v2 RESEND 05/23] csiostor: Remove superfluous call to
+ pci_disable_msix()
+Date: Sat, 26 Jul 2014 09:13:12 +0100
+Message-ID: <20140726081311.GC21129@agordeev.usersys.redhat.com>
+References: <cover.1405533479.git.agordeev@redhat.com>
+ <bd849e403573b161beb4dcfdb7d410f997c95562.1405533479.git.agordeev@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20140725173833.GE11179@laptop.dumpdata.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: xen-devel@lists.xen.org, linux-scsi@vger.kernel.org, JBottomley@parallels.com, target-devel@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-pci-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <bd849e403573b161beb4dcfdb7d410f997c95562.1405533479.git.agordeev@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Naresh Kumar Inna <naresh@chelsio.com>, Arvind Bhushan <arvindb@chelsio.com>, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 07/25/2014 07:38 PM, Konrad Rzeszutek Wilk wrote:
-> On Fri, Jul 25, 2014 at 01:37:29PM +0200, jgross@suse.com wrote:
->> This series adds XEN pvSCSI support. With pvSCSI it is possible to use physical
->> SCSI devices from a XEN domain.
->>
->> The support consists of a backend in the privileged Domain-0 doing the real
->> I/O and a frontend in the unprivileged domU passing I/O-requests to the backend.
->>
->
-> About the question that Christopher Hellwig asked - was that ever answered?
+On Wed, Jul 16, 2014 at 08:05:09PM +0200, Alexander Gordeev wrote:
+> There is no need to call pci_disable_msix() in case
+> the previous call to pci_enable_msix() failed
 
-Sure. That's the first item under "Changes in V2".
+Hi Naresh, Arvind,
 
->
->> The code is taken (and adapted) from the original pvSCSI implementation done
->> for Linux 2.6 in 2008 by Fujitsu.
->>
->> [PATCH V2 1/4] Add XEN pvSCSI protocol description
->> [PATCH V2 2/4] Introduce xen-scsifront module
->> [PATCH V2 3/4] Introduce XEN scsiback module
->> [PATCH V2 4/4] add xen pvscsi maintainer
->>
->> Changes in V2:
->> - use core target infrastructure by backend instead of pure SCSI passthrough
->> - add support for larger SG lists by putting them in grant page(s)
->> - add command abort capability
->
+Could you please review csiostor patches in this series?
+
+Thanks!
+
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> Cc: Naresh Kumar Inna <naresh@chelsio.com>
+> Cc: Arvind Bhushan <arvindb@chelsio.com>
+> Cc: linux-scsi@vger.kernel.org
+> Cc: linux-pci@vger.kernel.org
+> ---
+>  drivers/scsi/csiostor/csio_isr.c |    4 +---
+>  1 files changed, 1 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/scsi/csiostor/csio_isr.c b/drivers/scsi/csiostor/csio_isr.c
+> index 7ee9777..91ba91d 100644
+> --- a/drivers/scsi/csiostor/csio_isr.c
+> +++ b/drivers/scsi/csiostor/csio_isr.c
+> @@ -529,10 +529,8 @@ csio_enable_msix(struct csio_hw *hw)
+>  			csio_reduce_sqsets(hw, cnt - extra);
+>  		}
+>  	} else {
+> -		if (rv > 0) {
+> -			pci_disable_msix(hw->pdev);
+> +		if (rv > 0)
+>  			csio_info(hw, "Not using MSI-X, remainder:%d\n", rv);
+> -		}
+>  
+>  		kfree(entries);
+>  		return -ENOMEM;
+> -- 
+> 1.7.7.6
+> 
+
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
