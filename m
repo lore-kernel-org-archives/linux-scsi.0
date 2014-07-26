@@ -1,29 +1,35 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 06/14] block: Make protection interval calculation generic
-Date: Sat, 26 Jul 2014 08:26:59 -0700
-Message-ID: <20140726152659.GD1854@infradead.org>
-References: <1406320469-29352-1-git-send-email-martin.petersen@oracle.com>
- <1406320469-29352-7-git-send-email-martin.petersen@oracle.com>
+Subject: Re: [RFC] hpsa: work in progress "lockless monster" patches
+Date: Sat, 26 Jul 2014 08:32:32 -0700
+Message-ID: <20140726153232.GE1854@infradead.org>
+References: <20140725192859.GU14599@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:42126 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:43390 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751317AbaGZP07 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 26 Jul 2014 11:26:59 -0400
+	with ESMTP id S1751317AbaGZPce (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 26 Jul 2014 11:32:34 -0400
 Content-Disposition: inline
-In-Reply-To: <1406320469-29352-7-git-send-email-martin.petersen@oracle.com>
+In-Reply-To: <20140725192859.GU14599@beardog.cce.hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
+To: scameron@beardog.cce.hp.com
+Cc: linux-scsi@vger.kernel.org, jbottomley@parallels.com, martin.petersen@oracle.com, thenzl@redhat.com, hare@suse.de, hch@infradead.org, bvanassche@acm.org, axboe@kernel.dk, elliott@hp.com, scott.teel@hp.com, webbnh@hp.com, joseph.t.handzik@hp.com, justin.lindley@hp.com
 
-On Fri, Jul 25, 2014 at 04:34:21PM -0400, Martin K. Petersen wrote:
-> +	return sectors >> (ilog2(bi->interval) - 9);
+> Christoph Hellwig (1):
+>   reserve block tags in scsi host
 
-I was going to say this should be 'SECTOR_SHIFT', but that constant
-or variants of it are only defined locally in various subsystems..
+So you found this one useful.  This begs the question how we should
+move forward with it, as it will only work with the blk-mq path in
+it's current form.
 
-Looks good,
+I can see three ways:
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+ - we implement equivalent functionality in the old block tagging code
+   and make it available for any driver
+ - we require drivers specific workarounds for the !mq path
+ - we allow drivers to force the use of the blk-mq path if they want
+   to use advanced features like this.  This might become nessecary
+   anyway when we expose actual multiqueue support to LLDDs.
+
