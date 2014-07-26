@@ -1,51 +1,39 @@
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH 4/5] [SCSI] Do not use platform_bus as a parent
-Date: Sat, 26 Jul 2014 13:11:50 -0700
-Message-ID: <20140726201150.GA21870@kroah.com>
-References: <1406298233-27876-1-git-send-email-pawel.moll@arm.com>
- <1406298233-27876-4-git-send-email-pawel.moll@arm.com>
- <1406299616.1789.13.camel@jarvis.lan>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1406299616.1789.13.camel@jarvis.lan>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Pawel Moll <pawel.moll@arm.com>, Olof Johansson <olof@lixom.net>, Stephen Warren <swarren@wwwdotorg.org>, Catalin Marinas <Catalin.Marinas@arm.com>, paul@pwsan.com, Arnd Bergmann <arnd@arndb.de>, Peter De Schrijver <pdeschrijver@nvidia.com>, arm@kernel.org, linux-tegra@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Subject: [PATCH] scsi: scsi_tgt_if.c:  Cleaning up missing null-terminate in conjunction with strncpy
+Date: Sun, 27 Jul 2014 00:30:03 +0200
+Message-ID: <1406413803-7917-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:48896 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751863AbaGZW2i (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 26 Jul 2014 18:28:38 -0400
+Received: by mail-wi0-f176.google.com with SMTP id bs8so2644932wib.15
+        for <linux-scsi@vger.kernel.org>; Sat, 26 Jul 2014 15:28:37 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
+Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>, linux-kernel@vger.kernel.org
 
-On Fri, Jul 25, 2014 at 07:46:56AM -0700, James Bottomley wrote:
-> On Fri, 2014-07-25 at 15:23 +0100, Pawel Moll wrote:
-> > The host devices without a parent were "forcefully adopted"
-> > by platform bus. This patch removes this assignment. In
-> > effect the dev_dev may be NULL now, which means ISA.
-> > 
-> > Cc: James E.J. Bottomley <JBottomley@parallels.com>
-> > Cc: linux-scsi@vger.kernel.org
-> > Signed-off-by: Pawel Moll <pawel.moll@arm.com>
-> > ---
-> > 
-> > This patch is a part of effort to remove references to platform_bus
-> > and make it static.
-> > 
-> > James, could you please have a look and advice if the change is
-> > correct? Would you happen to know the "real reasons" behind
-> > using the root platform_bus device a parent?
-> 
-> Yes, for DMA purposes, the parent cannot now be NULL; we'll get a panic
-> in the DMA transfers if it is.  A lot of the legacy ISA device on x86
-> and I thought some ARM SOC devices don't pass in the parent device, so
-> we hang them off a known parent.
+If you are going to use memset before strncpy you must copy sizeof -1
 
-The "generic" platform bus device is not a "known parent".  I don't
-understand the difference between just setting the parent to be NULL,
-which will then have a "proper" parent pointer filled in by the driver
-core when the device is registered, or faking it out here.  What is the
-difference?
+Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+---
+ drivers/scsi/scsi_tgt_if.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-In the end, the device always ends up with a parent pointer, right?
+diff --git a/drivers/scsi/scsi_tgt_if.c b/drivers/scsi/scsi_tgt_if.c
+index 6209110..7dc98eb 100644
+--- a/drivers/scsi/scsi_tgt_if.c
++++ b/drivers/scsi/scsi_tgt_if.c
+@@ -190,7 +190,7 @@ int scsi_tgt_uspace_send_it_nexus_request(int host_no, u64 itn_id,
+ 	ev.p.it_nexus_req.itn_id = itn_id;
+ 	if (initiator_id)
+ 		strncpy(ev.p.it_nexus_req.initiator_id, initiator_id,
+-			sizeof(ev.p.it_nexus_req.initiator_id));
++			sizeof(ev.p.it_nexus_req.initiator_id) - 1);
+ 
+ 	dprintk("%d %x %llx\n", host_no, function, (unsigned long long)itn_id);
+ 
+-- 
+1.7.10.4
 
-thanks,
-
-greg k-h
