@@ -1,33 +1,43 @@
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-Subject: [PATCH] scsi: mpt3sas: mpt3sas_base.c:  Cleaning up missing null-terminate in conjunction with strncpy
-Date: Sat, 26 Jul 2014 18:49:43 +0200
-Message-ID: <1406393383-5475-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>
-Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH v2 3/3] [SCSI] Make LBP quirk skip lbpme checks tests
+Date: Sat, 26 Jul 2014 12:54:47 -0400
+Message-ID: <yq17g30dprc.fsf@sermon.lab.mkp.net>
+References: <20140724122223.GA31798@sucs.org>
+ <yq1iommkgkv.fsf@sermon.lab.mkp.net> <20140724153612.GA23648@sucs.org>
+ <yq1egxakb0z.fsf@sermon.lab.mkp.net>
+ <16fea5bb87ba47019527cee788e07a72@BY2PR0301MB0711.namprd03.prod.outlook.com>
+ <yq1wqb1gyw1.fsf@sermon.lab.mkp.net>
+ <e931486ef33b4e45bfebf2ab1b1b3037@BY2PR0301MB0711.namprd03.prod.outlook.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <e931486ef33b4e45bfebf2ab1b1b3037@BY2PR0301MB0711.namprd03.prod.outlook.com>
+ (KY Srinivasan's message of "Sat, 26 Jul 2014 13:44:08 +0000")
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: driverdev-devel-bounces@linuxdriverproject.org
+To: KY Srinivasan <kys@microsoft.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "jasowang@redhat.com" <jasowang@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "ohering@suse.com" <ohering@suse.com>, Christoph Hellwig <hch@infradead.org>, "apw@canonical.com" <apw@canonical.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, Sitsofe Wheeler <sitsofe@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Replacing strncpy with strlcpy to avoid strings that lacks null terminate.
-And removed unnecessary magic numbers.
+>>>>> "KY" == KY Srinivasan <kys@microsoft.com> writes:
 
-Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
----
- drivers/scsi/mpt3sas/mpt3sas_base.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+>> The LBP VPD page flags UNMAP as being supported. Do you actually
+>> support UNMAP to DSM TRIM SCSI-ATA translation?
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 0cf4f70..acc02eb 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -2233,7 +2233,7 @@ _base_display_ioc_capabilities(struct MPT3SAS_ADAPTER *ioc)
- 	u32 bios_version;
- 
- 	bios_version = le32_to_cpu(ioc->bios_pg3.BiosVersion);
--	strncpy(desc, ioc->manu_pg0.ChipName, 16);
-+	strlcpy(desc, ioc->manu_pg0.ChipName, sizeof(desc));
- 	pr_info(MPT3SAS_FMT "%s: FWVersion(%02d.%02d.%02d.%02d), "\
- 	   "ChipRevision(0x%02x), BiosVersion(%02d.%02d.%02d.%02d)\n",
- 	    ioc->name, desc,
+KY> I have been told by the Windows folks that this is done. I am trying
+KY> to get additional details.
+
+Great! I'd just like to have a reasonable level of confidence in what's
+happening down the stack before I entertain turning something on that's
+not being properly advertised.
+
 -- 
-1.7.10.4
+Martin K. Petersen	Oracle Linux Engineering
