@@ -1,21 +1,25 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH V2 3/4] Introduce XEN scsiback module
-Date: Sat, 26 Jul 2014 08:23:58 -0700
-Message-ID: <20140726152358.GA1854@infradead.org>
-References: <1406288253-13293-1-git-send-email-jgross@suse.com>
- <1406288253-13293-4-git-send-email-jgross@suse.com>
+Subject: Re: [PATCH 02/14] block: Replace bi_integrity with bi_special
+Date: Sat, 26 Jul 2014 08:24:52 -0700
+Message-ID: <20140726152452.GB1854@infradead.org>
+References: <1406320469-29352-1-git-send-email-martin.petersen@oracle.com>
+ <1406320469-29352-3-git-send-email-martin.petersen@oracle.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <target-devel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:40337 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751514AbaGZPYw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 26 Jul 2014 11:24:52 -0400
 Content-Disposition: inline
-In-Reply-To: <1406288253-13293-4-git-send-email-jgross@suse.com>
-Sender: target-devel-owner@vger.kernel.org
-To: jgross@suse.com
-Cc: xen-devel@lists.xen.org, linux-scsi@vger.kernel.org, JBottomley@parallels.com, target-devel@vger.kernel.org, konrad.wilk@oracle.com
+In-Reply-To: <1406320469-29352-3-git-send-email-martin.petersen@oracle.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
 
-Just a quick glance:
+Not sure what this buys us until other uses show up, but it looks
+fine to me:
 
- a) this should move to drivers/target with the other target code
- b) you're still having your own CDB emulation in there, the target code
-    should be taking care of all that.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+
