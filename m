@@ -1,39 +1,38 @@
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-Subject: [PATCH] scsi: scsi_tgt_if.c:  Cleaning up missing null-terminate in conjunction with strncpy
-Date: Sun, 27 Jul 2014 00:30:03 +0200
-Message-ID: <1406413803-7917-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH] usb-storage/SCSI: Add broken_fua blacklist flag
+Date: Sat, 26 Jul 2014 21:50:51 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1407262149370.20700-100000@netrider.rowland.org>
+References: <CAOaU5MZxg4eFsFO51fkCqx_HLAi=TcZKqdJ8RAOL4F+iU50RkA@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:48896 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751863AbaGZW2i (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 26 Jul 2014 18:28:38 -0400
-Received: by mail-wi0-f176.google.com with SMTP id bs8so2644932wib.15
-        for <linux-scsi@vger.kernel.org>; Sat, 26 Jul 2014 15:28:37 -0700 (PDT)
+Received: from netrider.rowland.org ([192.131.102.5]:57711 "HELO
+	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751315AbaG0Buw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 26 Jul 2014 21:50:52 -0400
+In-Reply-To: <CAOaU5MZxg4eFsFO51fkCqx_HLAi=TcZKqdJ8RAOL4F+iU50RkA@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
-Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>, linux-kernel@vger.kernel.org
+To: "Laszlo T." <tlacix@gmail.com>
+Cc: linux-scsi@vger.kernel.org
 
-If you are going to use memset before strncpy you must copy sizeof -1
+On Sat, 26 Jul 2014, Laszlo T. wrote:
 
-Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
----
- drivers/scsi/scsi_tgt_if.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> Hello,
+> 
+> First of all I've just subscribed the linux-scsi thread. I hope you
+> get my email the right way.
+> 
+> I have also problems with Jmicron JMS567 mobile rack.
+> 
+> I tried on different kernels:
+> 3.15.5
+> 3.16.rc6
+> the 'Invalid field in cdb' errors disappeared but still not ok.
 
-diff --git a/drivers/scsi/scsi_tgt_if.c b/drivers/scsi/scsi_tgt_if.c
-index 6209110..7dc98eb 100644
---- a/drivers/scsi/scsi_tgt_if.c
-+++ b/drivers/scsi/scsi_tgt_if.c
-@@ -190,7 +190,7 @@ int scsi_tgt_uspace_send_it_nexus_request(int host_no, u64 itn_id,
- 	ev.p.it_nexus_req.itn_id = itn_id;
- 	if (initiator_id)
- 		strncpy(ev.p.it_nexus_req.initiator_id, initiator_id,
--			sizeof(ev.p.it_nexus_req.initiator_id));
-+			sizeof(ev.p.it_nexus_req.initiator_id) - 1);
- 
- 	dprintk("%d %x %llx\n", host_no, function, (unsigned long long)itn_id);
- 
--- 
-1.7.10.4
+Since your device uses the uas driver, you might get more help on the 
+linux-usb mailing list.  (You don't have to subscribe to the list in 
+order to post to it.)
+
+Alan Stern
 
