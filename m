@@ -1,75 +1,59 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [RFC] hpsa: work in progress "lockless monster" patches
-Date: Sun, 27 Jul 2014 17:24:46 +0200
-Message-ID: <53D519BE.9000204@suse.de>
-References: <20140725192859.GU14599@beardog.cce.hp.com>
+Subject: Re: [PATCH] scsi: break from queue depth adjusting loops when device
+ found
+Date: Sun, 27 Jul 2014 17:36:35 +0200
+Message-ID: <53D51C83.3020502@suse.de>
+References: <20140703150557.21608.37072.stgit@beardog.cce.hp.com> <20140703171106.GA16788@lst.de> <53B6878C.502@suse.de> <94D0CD8314A33A4D9D801C0FE68B402958B86659@G9W0745.americas.hpqcorp.net> <20140726153612.GA6513@lst.de> <CADzpL0Rn+x6N=v123EBej_iZhTwmjMYZ4deeTeRG7_sxgXU9PQ@mail.gmail.com> <20140726161721.GA6743@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1;
 	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:37166 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:37256 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751745AbaG0PYv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 27 Jul 2014 11:24:51 -0400
-In-Reply-To: <20140725192859.GU14599@beardog.cce.hp.com>
+	id S1751676AbaG0Pgj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 27 Jul 2014 11:36:39 -0400
+In-Reply-To: <20140726161721.GA6743@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: scameron@beardog.cce.hp.com, linux-scsi@vger.kernel.org
-Cc: jbottomley@parallels.com, martin.petersen@oracle.com, thenzl@redhat.com, hch@infradead.org, bvanassche@acm.org, axboe@kernel.dk, elliott@hp.com, scott.teel@hp.com, webbnh@hp.com, joseph.t.handzik@hp.com, justin.lindley@hp.com
+To: Christoph Hellwig <hch@lst.de>, Stephen Cameron <stephenmcameron@gmail.com>
+Cc: "Elliott, Robert (Server Storage)" <Elliott@hp.com>, "Stephen M. Cameron" <scameron@beardog.cce.hp.com>, "james.bottomley@parallels.com" <james.bottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Vasu Dev <vasu.dev@linux.intel.com>, Mike Christie <michaelc@cs.wisc.edu>
 
-On 07/25/2014 09:28 PM, scameron@beardog.cce.hp.com wrote:
+On 07/26/2014 06:17 PM, Christoph Hellwig wrote:
+> On Sat, Jul 26, 2014 at 11:14:35AM -0500, Stephen Cameron wrote:
+>> Hmm, I forgot that that patch was in there, I wasn't trying to keep =
+pushing
+>> it along.  From the previous discussion, I got the impression I was =
+simply
+>> wrong, and that this patch wasn't needed, so I had meant to drop it,=
+ I just
+>> forgot to actually drop it.
 >
-> hpsa: Work In Progress: "lockless monster" patches
+> It's more complicated - as Robert indicated you're tenically right, a=
+lthough
+> in practice it's not what the existing users expect.  If you have som=
+e
+> cycles for it I'd love to at lest get the per-LUN and per-target
+> ramp up/down in ASAP.  We can then start looking into doing it even
+> better based on the target response later on.
 >
-> To be clear, I am not suggesting that these patches be merged at this=
- time.
->
-> This patchset is vs. Christoph Hellwig's scsi-mq.4 branch which
-> may be found here: git://git.infradead.org/users/hch/scsi.git
->
-> We've been working for a long time on a patchset for hpsa to remove
-> all the locks from the main i/o path in pursuit of high IOPS.  Some
-> of that work is already upstream, but a lot more of it is not quite
-> yet ready to be merged.  However, I think we've "gone dark" for a bit
-> too long on this, and even though the patches aren't really ready to
-> be merged just yet, I thought I should let other people who might be
-> interested have a look anyway, as things are starting to be at least
-> more stable than unstable.  Be warned though, there are still some
-> problems, esp. around error recovery.
->
-> That being said, with the right hardware (fast SAS SSDs, recent Smart
-> Arrays e.g. P430, with up-to-date firmware, attached to recent disk e=
-nclosures)
-> with these patches and the scsi-mq patches, it is possible to get aro=
-und
-> ~970k IOPS from a single logical drive on a single controller.
->
-> There are about 150 patches in this set.  Rather than bomb the list
-> with that, here is a link to a tarball of the patches in the form of
-> an stgit patch series:
->
-> https://github.com/smcameron/hpsa-lockless-patches-work-in-progress/b=
-lob/master/hpsa-lockless-vs-hch-scsi-mq.4-2014-07-25-1415CDT.tar.bz2?ra=
-w=3Dtrue
->
-> In some cases, I have probably erred on the side of having too many t=
-oo
-> small patches, on the theory that it is easier to bake a cake than to
-> unbake a cake.  Before these are submitted "for reals", there will be
-> some squashing of patches, along with other cleaning up.
->
-> There are some patches in this set which are already upstream in
-> James's tree which do not happen to be in Christoph's tree
-> (most of which are named "*_sent_to_james").  There are also
-> quite a few patches which are strictly for debugging and are not
-> ever intended to be merged.
->
-Hmm. While you're about to engage on a massive rewrite _and_ we're=20
-having 64bit LUN support now, what about getting rid of the weird=20
-internal LUN mapping? That way you would get rid of this LUN rescan=20
-thingie and the driver would look more sane.
-Plus the REPORT LUN command would actually return the correct data ...
+The current implementation is based on the needs of the FC HBAs, which=20
+would need a way to throttle I/O to avoid flooding a target port.
+The reason it was done per target is (from what I can tell) due to a=20
+specific implementation from a large vendor which is using a=20
+per-target-port request queue.
+And more often than not defaulting to SCSI-2 conformance to be 'legacy=20
+compatible'. So no way one could use any shiny new commands.
+
+Having said that it has been quite some time since it's been=20
+implemented, and it _might_ be that things have changed and we can get=20
+away with a per-LUN throttling. As I doubt we'll get information about=20
+this from the various storage vendors (at least not from those we've go=
+t=20
+issues with even today) we probably have to bite the bullet here and=20
+test things out.
+
+But hey, it's worth a shot anyway. So, storage vendors, speak up!
 
 Cheers,
 
