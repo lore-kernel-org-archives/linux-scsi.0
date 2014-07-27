@@ -1,67 +1,99 @@
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-Subject: [PATCH] scsi: qla4xxx: ql4_mbx.c:  Cleaning up missing null-terminate in conjunction with strncpy
-Date: Sun, 27 Jul 2014 16:57:42 +0200
-Message-ID: <1406473062-12509-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Vikas Chaudhary <vikas.chaudhary@qlogic.com>, iscsi-driver@qlogic.com
-Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH 4/5] [SCSI] Do not use platform_bus as a parent
+Date: Sun, 27 Jul 2014 08:07:20 -0700
+Message-ID: <20140727150720.GC1723@kroah.com>
+References: <1406298233-27876-1-git-send-email-pawel.moll@arm.com>
+ <1406298233-27876-4-git-send-email-pawel.moll@arm.com>
+ <1406299616.1789.13.camel@jarvis.lan>
+ <20140726201150.GA21870@kroah.com>
+ <1406433177.11069.3.camel@jarvis>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:39246 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751471AbaG0PHq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 27 Jul 2014 11:07:46 -0400
+Content-Disposition: inline
+In-Reply-To: <1406433177.11069.3.camel@jarvis>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Pawel Moll <pawel.moll@arm.com>, Olof Johansson <olof@lixom.net>, Stephen Warren <swarren@wwwdotorg.org>, Catalin Marinas <Catalin.Marinas@arm.com>, paul@pwsan.com, Arnd Bergmann <arnd@arndb.de>, Peter De Schrijver <pdeschrijver@nvidia.com>, arm@kernel.org, linux-tegra@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Replacing strncpy with strlcpy to avoid strings that lacks null terminate.
-And in some cases modified to copy one character less than the overall
-length, as the entire area is already zeroed.
+On Sun, Jul 27, 2014 at 07:52:57AM +0400, James Bottomley wrote:
+> On Sat, 2014-07-26 at 13:11 -0700, Greg Kroah-Hartman wrote:
+> > On Fri, Jul 25, 2014 at 07:46:56AM -0700, James Bottomley wrote:
+> > > On Fri, 2014-07-25 at 15:23 +0100, Pawel Moll wrote:
+> > > > The host devices without a parent were "forcefully adopted"
+> > > > by platform bus. This patch removes this assignment. In
+> > > > effect the dev_dev may be NULL now, which means ISA.
+> > > > 
+> > > > Cc: James E.J. Bottomley <JBottomley@parallels.com>
+> > > > Cc: linux-scsi@vger.kernel.org
+> > > > Signed-off-by: Pawel Moll <pawel.moll@arm.com>
+> > > > ---
+> > > > 
+> > > > This patch is a part of effort to remove references to platform_bus
+> > > > and make it static.
+> > > > 
+> > > > James, could you please have a look and advice if the change is
+> > > > correct? Would you happen to know the "real reasons" behind
+> > > > using the root platform_bus device a parent?
+> > > 
+> > > Yes, for DMA purposes, the parent cannot now be NULL; we'll get a panic
+> > > in the DMA transfers if it is.  A lot of the legacy ISA device on x86
+> > > and I thought some ARM SOC devices don't pass in the parent device, so
+> > > we hang them off a known parent.
+> > 
+> > The "generic" platform bus device is not a "known parent".  I don't
+> > understand the difference between just setting the parent to be NULL,
+> > which will then have a "proper" parent pointer filled in by the driver
+> > core when the device is registered, or faking it out here.  What is the
+> > difference?
+> 
+> If you set the parent to NULL, the host template dma_dev will end up
+> NULL as well and that will trigger a NULL deref panic in the dma segment
+> routines.
+>
+> If you want to remove platform_bus, we have to have a well known device
+> to set dma_dev to at scsi_host_add time.
 
-Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
----
- drivers/scsi/qla4xxx/ql4_mbx.c |   14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+Why not set the dma_dev after you call device_add()?  That way you will
+pick up the right parent no matter what.
 
-diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
-index 0a3312c..2b2756e 100644
---- a/drivers/scsi/qla4xxx/ql4_mbx.c
-+++ b/drivers/scsi/qla4xxx/ql4_mbx.c
-@@ -1620,8 +1620,8 @@ int qla4xxx_get_chap(struct scsi_qla_host *ha, char *username, char *password,
- 		goto exit_get_chap;
- 	}
+> > In the end, the device always ends up with a parent pointer, right?
+> 
+> The parent pointer isn't the problem ... assigning the correct dma
+> device is.
+
+Ah, ok, it's a scsi core thing, not a driver core thing, that's less
+confusing now.  For a "fallback" of a platform device, if you switch the
+lines around you should be fine, something like this patch perhaps:
+
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index 3cbb57a8b846..d8d3b294f5bc 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -218,16 +218,16 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
+ 		goto fail;
  
--	strncpy(password, chap_table->secret, QL4_CHAP_MAX_SECRET_LEN);
--	strncpy(username, chap_table->name, QL4_CHAP_MAX_NAME_LEN);
-+	strlcpy(password, chap_table->secret, QL4_CHAP_MAX_SECRET_LEN);
-+	strlcpy(username, chap_table->name, QL4_CHAP_MAX_NAME_LEN);
- 	chap_table->cookie = __constant_cpu_to_le16(CHAP_VALID_COOKIE);
+ 	if (!shost->shost_gendev.parent)
+-		shost->shost_gendev.parent = dev ? dev : &platform_bus;
+-	if (!dma_dev)
+-		dma_dev = shost->shost_gendev.parent;
+-
+-	shost->dma_dev = dma_dev;
++		shost->shost_gendev.parent = dev;
  
- exit_get_chap:
-@@ -1663,8 +1663,8 @@ int qla4xxx_set_chap(struct scsi_qla_host *ha, char *username, char *password,
- 	else
- 		chap_table->flags |= BIT_7; /* local */
- 	chap_table->secret_len = strlen(password);
--	strncpy(chap_table->secret, password, MAX_CHAP_SECRET_LEN);
--	strncpy(chap_table->name, username, MAX_CHAP_NAME_LEN);
-+	strncpy(chap_table->secret, password, MAX_CHAP_SECRET_LEN - 1);
-+	strncpy(chap_table->name, username, MAX_CHAP_NAME_LEN - 1);
- 	chap_table->cookie = __constant_cpu_to_le16(CHAP_VALID_COOKIE);
+ 	error = device_add(&shost->shost_gendev);
+ 	if (error)
+ 		goto out;
  
- 	if (is_qla40XX(ha)) {
-@@ -1742,8 +1742,8 @@ int qla4xxx_get_uni_chap_at_index(struct scsi_qla_host *ha, char *username,
- 		goto exit_unlock_uni_chap;
- 	}
- 
--	strncpy(password, chap_table->secret, MAX_CHAP_SECRET_LEN);
--	strncpy(username, chap_table->name, MAX_CHAP_NAME_LEN);
-+	strlcpy(password, chap_table->secret, MAX_CHAP_SECRET_LEN);
-+	strlcpy(username, chap_table->name, MAX_CHAP_NAME_LEN);
- 
- 	rval = QLA_SUCCESS;
- 
-@@ -2295,7 +2295,7 @@ int qla4_8xxx_set_param(struct scsi_qla_host *ha, int param)
- 	if (param == SET_DRVR_VERSION) {
- 		mbox_cmd[1] = SET_DRVR_VERSION;
- 		strncpy((char *)&mbox_cmd[2], QLA4XXX_DRIVER_VERSION,
--			MAX_DRVR_VER_LEN);
-+			MAX_DRVR_VER_LEN - 1);
- 	} else {
- 		ql4_printk(KERN_ERR, ha, "%s: invalid parameter 0x%x\n",
- 			   __func__, param);
--- 
-1.7.10.4
++	if (!dma_dev)
++		dma_dev = shost->shost_gendev.parent;
++	shost->dma_dev = dma_dev;
++
+ 	pm_runtime_set_active(&shost->shost_gendev);
+ 	pm_runtime_enable(&shost->shost_gendev);
+ 	device_enable_async_suspend(&shost->shost_gendev);
