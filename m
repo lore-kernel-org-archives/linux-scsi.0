@@ -1,141 +1,54 @@
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-Subject: [PATCH] scsi: bfa: bfa_fcs.c:  Cleaning up missing null-terminate in conjunction with strncpy strncat
-Date: Sun, 27 Jul 2014 18:44:12 +0200
-Message-ID: <1406479452-13568-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>
-Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: "Laszlo T." <tlacix@gmail.com>
+Subject: Re: [PATCH] usb-storage/SCSI: Add broken_fua blacklist flag
+Date: Sun, 27 Jul 2014 23:04:42 +0200
+Message-ID: <CAOaU5MaKVMqL3NUcZX9=4jBVFGvnGpdePRg_73ff-2doSwjTzA@mail.gmail.com>
+References: <CAOaU5MZxg4eFsFO51fkCqx_HLAi=TcZKqdJ8RAOL4F+iU50RkA@mail.gmail.com>
+	<Pine.LNX.4.44L0.1407262149370.20700-100000@netrider.rowland.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ig0-f173.google.com ([209.85.213.173]:59270 "EHLO
+	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752524AbaG0VEm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 27 Jul 2014 17:04:42 -0400
+Received: by mail-ig0-f173.google.com with SMTP id h18so2857069igc.12
+        for <linux-scsi@vger.kernel.org>; Sun, 27 Jul 2014 14:04:42 -0700 (PDT)
+In-Reply-To: <Pine.LNX.4.44L0.1407262149370.20700-100000@netrider.rowland.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: linux-scsi@vger.kernel.org
 
-Replacing strncp with strlcpy to avoid strings that lacks null terminate.
-And strncat with strlcat because of incorrect use,
-removed same the duplicated code.
+2014-07-27 3:50 GMT+02:00 Alan Stern <stern@rowland.harvard.edu>:
+> On Sat, 26 Jul 2014, Laszlo T. wrote:
+>
+>> Hello,
+>>
+>> First of all I've just subscribed the linux-scsi thread. I hope you
+>> get my email the right way.
+>>
+>> I have also problems with Jmicron JMS567 mobile rack.
+>>
+>> I tried on different kernels:
+>> 3.15.5
+>> 3.16.rc6
+>> the 'Invalid field in cdb' errors disappeared but still not ok.
+>
+> Since your device uses the uas driver, you might get more help on the
+> linux-usb mailing list.  (You don't have to subscribe to the list in
+> order to post to it.)
+>
+> Alan Stern
+>
 
-Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
----
- drivers/scsi/bfa/bfa_fcs.c |   80 ++++++++++++++++++--------------------------
- 1 file changed, 33 insertions(+), 47 deletions(-)
+Thank you, I will email them.
 
-diff --git a/drivers/scsi/bfa/bfa_fcs.c b/drivers/scsi/bfa/bfa_fcs.c
-index a3ab5cc..48112ee 100644
---- a/drivers/scsi/bfa/bfa_fcs.c
-+++ b/drivers/scsi/bfa/bfa_fcs.c
-@@ -831,52 +831,41 @@ bfa_fcs_fabric_psymb_init(struct bfa_fcs_fabric_s *fabric)
- 	bfa_ioc_get_adapter_model(&fabric->fcs->bfa->ioc, model);
- 
- 	/* Model name/number */
--	strncpy((char *)&port_cfg->sym_name, model,
--		BFA_FCS_PORT_SYMBNAME_MODEL_SZ);
--	strncat((char *)&port_cfg->sym_name, BFA_FCS_PORT_SYMBNAME_SEPARATOR,
--		sizeof(BFA_FCS_PORT_SYMBNAME_SEPARATOR));
-+	strlcpy((char *)&port_cfg->sym_name, model,
-+		BFA_SYMNAME_MAXLEN);
-+	strlcat((char *)&port_cfg->sym_name, BFA_FCS_PORT_SYMBNAME_SEPARATOR,
-+		BFA_SYMNAME_MAXLEN);
- 
- 	/* Driver Version */
--	strncat((char *)&port_cfg->sym_name, (char *)driver_info->version,
--		BFA_FCS_PORT_SYMBNAME_VERSION_SZ);
--	strncat((char *)&port_cfg->sym_name, BFA_FCS_PORT_SYMBNAME_SEPARATOR,
--		sizeof(BFA_FCS_PORT_SYMBNAME_SEPARATOR));
-+	strlcat((char *)&port_cfg->sym_name, (char *)driver_info->version,
-+		BFA_SYMNAME_MAXLEN);
-+	strlcat((char *)&port_cfg->sym_name, BFA_FCS_PORT_SYMBNAME_SEPARATOR,
-+		BFA_SYMNAME_MAXLEN);
- 
- 	/* Host machine name */
--	strncat((char *)&port_cfg->sym_name,
-+	strlcat((char *)&port_cfg->sym_name,
- 		(char *)driver_info->host_machine_name,
--		BFA_FCS_PORT_SYMBNAME_MACHINENAME_SZ);
--	strncat((char *)&port_cfg->sym_name, BFA_FCS_PORT_SYMBNAME_SEPARATOR,
--		sizeof(BFA_FCS_PORT_SYMBNAME_SEPARATOR));
-+		BFA_SYMNAME_MAXLEN);
-+	strlcat((char *)&port_cfg->sym_name, BFA_FCS_PORT_SYMBNAME_SEPARATOR,
-+		BFA_SYMNAME_MAXLEN);
- 
- 	/*
- 	 * Host OS Info :
- 	 * If OS Patch Info is not there, do not truncate any bytes from the
- 	 * OS name string and instead copy the entire OS info string (64 bytes).
- 	 */
-+	strlcat((char *)&port_cfg->sym_name,
-+		(char *)driver_info->host_os_name,
-+		BFA_SYMNAME_MAXLEN);
-+	strlcat((char *)&port_cfg->sym_name,
-+		BFA_FCS_PORT_SYMBNAME_SEPARATOR,
-+		BFA_SYMNAME_MAXLEN);
- 	if (driver_info->host_os_patch[0] == '\0') {
--		strncat((char *)&port_cfg->sym_name,
--			(char *)driver_info->host_os_name,
--			BFA_FCS_OS_STR_LEN);
--		strncat((char *)&port_cfg->sym_name,
--			BFA_FCS_PORT_SYMBNAME_SEPARATOR,
--			sizeof(BFA_FCS_PORT_SYMBNAME_SEPARATOR));
--	} else {
--		strncat((char *)&port_cfg->sym_name,
--			(char *)driver_info->host_os_name,
--			BFA_FCS_PORT_SYMBNAME_OSINFO_SZ);
--		strncat((char *)&port_cfg->sym_name,
--			BFA_FCS_PORT_SYMBNAME_SEPARATOR,
--			sizeof(BFA_FCS_PORT_SYMBNAME_SEPARATOR));
--
- 		/* Append host OS Patch Info */
--		strncat((char *)&port_cfg->sym_name,
-+		strlcat((char *)&port_cfg->sym_name,
- 			(char *)driver_info->host_os_patch,
--			BFA_FCS_PORT_SYMBNAME_OSPATCH_SZ);
-+			BFA_SYMNAME_MAXLEN);
- 	}
--
--	/* null terminate */
--	port_cfg->sym_name.symname[BFA_SYMNAME_MAXLEN - 1] = 0;
- }
- 
- /*
-@@ -892,29 +881,26 @@ bfa_fcs_fabric_nsymb_init(struct bfa_fcs_fabric_s *fabric)
- 	bfa_ioc_get_adapter_model(&fabric->fcs->bfa->ioc, model);
- 
- 	/* Model name/number */
--	strncpy((char *)&port_cfg->node_sym_name, model,
--		BFA_FCS_PORT_SYMBNAME_MODEL_SZ);
--	strncat((char *)&port_cfg->node_sym_name,
-+	strlcpy((char *)&port_cfg->node_sym_name, model,
-+			BFA_SYMNAME_MAXLEN);
-+	strlcat((char *)&port_cfg->node_sym_name,
- 			BFA_FCS_PORT_SYMBNAME_SEPARATOR,
--			sizeof(BFA_FCS_PORT_SYMBNAME_SEPARATOR));
-+			BFA_SYMNAME_MAXLEN);
- 
- 	/* Driver Version */
--	strncat((char *)&port_cfg->node_sym_name, (char *)driver_info->version,
--		BFA_FCS_PORT_SYMBNAME_VERSION_SZ);
--	strncat((char *)&port_cfg->node_sym_name,
-+	strlcat((char *)&port_cfg->node_sym_name, (char *)driver_info->version,
-+			BFA_SYMNAME_MAXLEN);
-+	strlcat((char *)&port_cfg->node_sym_name,
- 			BFA_FCS_PORT_SYMBNAME_SEPARATOR,
--			sizeof(BFA_FCS_PORT_SYMBNAME_SEPARATOR));
-+			BFA_SYMNAME_MAXLEN);
- 
- 	/* Host machine name */
--	strncat((char *)&port_cfg->node_sym_name,
--		(char *)driver_info->host_machine_name,
--		BFA_FCS_PORT_SYMBNAME_MACHINENAME_SZ);
--	strncat((char *)&port_cfg->node_sym_name,
-+	strlcat((char *)&port_cfg->node_sym_name,
-+			(char *)driver_info->host_machine_name,
-+			BFA_SYMNAME_MAXLEN);
-+	strlcat((char *)&port_cfg->node_sym_name,
- 			BFA_FCS_PORT_SYMBNAME_SEPARATOR,
--			sizeof(BFA_FCS_PORT_SYMBNAME_SEPARATOR));
--
--	/* null terminate */
--	port_cfg->node_sym_name.symname[BFA_SYMNAME_MAXLEN - 1] = 0;
-+			BFA_SYMNAME_MAXLEN);
- }
- 
- /*
--- 
-1.7.10.4
+In the meantime, is there any alternate solution to use this mobile rack?
+
+I tried to backlist the uas driver on 3.16.rc6 but in that case the
+/dev/sd* file wasn't created.
+and also tried to disable fua (libata fua=0) on 3.14 kernel, but I got
+the 'Invalid field in cdb' errors.
+
+Br,
+Laszlo
