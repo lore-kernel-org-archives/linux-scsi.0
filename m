@@ -1,38 +1,68 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH] usb-storage/SCSI: Add broken_fua blacklist flag
-Date: Sat, 26 Jul 2014 21:50:51 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1407262149370.20700-100000@netrider.rowland.org>
-References: <CAOaU5MZxg4eFsFO51fkCqx_HLAi=TcZKqdJ8RAOL4F+iU50RkA@mail.gmail.com>
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: [PATCH v2 3/3] [SCSI] Make LBP quirk skip lbpme checks tests
+Date: Sun, 27 Jul 2014 02:09:27 +0000
+Message-ID: <84e49b68e6e14d259b5edc2c76fa1f1b@BY2PR0301MB0711.namprd03.prod.outlook.com>
+References: <20140724122223.GA31798@sucs.org>
+ <yq1iommkgkv.fsf@sermon.lab.mkp.net> <20140724153612.GA23648@sucs.org>
+ <yq1egxakb0z.fsf@sermon.lab.mkp.net>
+ <16fea5bb87ba47019527cee788e07a72@BY2PR0301MB0711.namprd03.prod.outlook.com>
+ <yq1wqb1gyw1.fsf@sermon.lab.mkp.net>
+ <e931486ef33b4e45bfebf2ab1b1b3037@BY2PR0301MB0711.namprd03.prod.outlook.com>
+ <yq17g30dprc.fsf@sermon.lab.mkp.net>
+ <cc4a3fd5451242739929d266b88fa8fa@BY2PR0301MB0711.namprd03.prod.outlook.com>
+ <yq138dnexcn.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:57711 "HELO
-	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751315AbaG0Buw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 26 Jul 2014 21:50:52 -0400
-In-Reply-To: <CAOaU5MZxg4eFsFO51fkCqx_HLAi=TcZKqdJ8RAOL4F+iU50RkA@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <yq138dnexcn.fsf@sermon.lab.mkp.net>
+Content-Language: en-US
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: driverdev-devel-bounces@linuxdriverproject.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "jasowang@redhat.com" <jasowang@redhat.com>, "ohering@suse.com" <ohering@suse.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, "apw@canonical.com" <apw@canonical.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, Sitsofe Wheeler <sitsofe@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Laszlo T." <tlacix@gmail.com>
-Cc: linux-scsi@vger.kernel.org
 
-On Sat, 26 Jul 2014, Laszlo T. wrote:
 
-> Hello,
+
+> -----Original Message-----
+> From: Martin K. Petersen [mailto:martin.petersen@oracle.com]
+> Sent: Saturday, July 26, 2014 12:25 PM
+> To: KY Srinivasan
+> Cc: Martin K. Petersen; Sitsofe Wheeler; Christoph Hellwig;
+> gregkh@linuxfoundation.org; linux-kernel@vger.kernel.org;
+> devel@linuxdriverproject.org; ohering@suse.com; apw@canonical.com;
+> jasowang@redhat.com; jbottomley@parallels.com; linux-
+> scsi@vger.kernel.org
+> Subject: Re: [PATCH v2 3/3] [SCSI] Make LBP quirk skip lbpme checks tests
 > 
-> First of all I've just subscribed the linux-scsi thread. I hope you
-> get my email the right way.
+> >>>>> "KY" == KY Srinivasan <kys@microsoft.com> writes:
 > 
-> I have also problems with Jmicron JMS567 mobile rack.
+> >> Great! I'd just like to have a reasonable level of confidence in
+> >> what's happening down the stack before I entertain turning something
+> >> on that's not being properly advertised.
 > 
-> I tried on different kernels:
-> 3.15.5
-> 3.16.rc6
-> the 'Invalid field in cdb' errors disappeared but still not ok.
+> KY> As I look at the output of inquiry between Linux on Hyper-V and
+> KY> native Linux, is not specifying conformance level the main issue?
+> 
+> The main problem for this particular use case (aside from the issue we've
+> already addressed) is that the passthrough device (SATA SSD) has
+> LBPME=0 in the READ CAPACITY(16) response. The LBP VPD is correctly
+> provided with LBPU flag set but because LBPME is reported as disabled we
+> will not attempt to issue UNMAP commands to the device.
 
-Since your device uses the uas driver, you might get more help on the 
-linux-usb mailing list.  (You don't have to subscribe to the list in 
-order to post to it.)
+Oh; ok. I missed the read_capacity response.
 
-Alan Stern
+Thanks,
 
+K. Y
+> 
+> --
+> Martin K. Petersen	Oracle Linux Engineering
