@@ -1,69 +1,80 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH v2 3/3] [SCSI] Make LBP quirk skip lbpme checks tests
-Date: Mon, 28 Jul 2014 18:50:56 +0000
-Message-ID: <43306901b1dc4e5dbe014a431e0935ea@BY2PR0301MB0711.namprd03.prod.outlook.com>
-References: <20140724122223.GA31798@sucs.org>
-	<yq1iommkgkv.fsf@sermon.lab.mkp.net> <20140724153612.GA23648@sucs.org>
-	<yq1egxakb0z.fsf@sermon.lab.mkp.net>
-	<16fea5bb87ba47019527cee788e07a72@BY2PR0301MB0711.namprd03.prod.outlook.com>
-	<yq1wqb1gyw1.fsf@sermon.lab.mkp.net>
-	<e931486ef33b4e45bfebf2ab1b1b3037@BY2PR0301MB0711.namprd03.prod.outlook.com>
-	<yq17g30dprc.fsf@sermon.lab.mkp.net>
-	<cc4a3fd5451242739929d266b88fa8fa@BY2PR0301MB0711.namprd03.prod.outlook.com>
- <yq138dnexcn.fsf@sermon.lab.mkp.net>
+From: Greg KH <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH v2 2/4] driver core: enable drivers to use deferred probe
+ from init
+Date: Mon, 28 Jul 2014 11:55:38 -0700
+Message-ID: <20140728185538.GB17609@kroah.com>
+References: <1406572110-26823-1-git-send-email-mcgrof@do-not-panic.com>
+ <1406572110-26823-3-git-send-email-mcgrof@do-not-panic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn1blp0190.outbound.protection.outlook.com ([207.46.163.190]:2685
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751702AbaG1Su7 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Jul 2014 14:50:59 -0400
-In-Reply-To: <yq138dnexcn.fsf@sermon.lab.mkp.net>
-Content-Language: en-US
+Received: from mail.linuxfoundation.org ([140.211.169.12]:47909 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750960AbaG1S4H (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Jul 2014 14:56:07 -0400
+Content-Disposition: inline
+In-Reply-To: <1406572110-26823-3-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Sitsofe Wheeler <sitsofe@gmail.com>, Christoph Hellwig <hch@infradead.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "apw@canonical.com" <apw@canonical.com>, "jasowang@redhat.com" <jasowang@redhat.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: tiwai@suse.de, linux-kernel@vger.kernel.org, "Luis R. Rodriguez" <mcgrof@suse.com>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Joseph Salisbury <joseph.salisbury@canonical.com>, Kay Sievers <kay@vrfy.org>, One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Tim Gardner <tim.gardner@canonical.com>, Pierre Fersing <pierre-fersing@pierref.org>, Andrew Morton <akpm@linux-foundation.org>, Oleg Nesterov <oleg@redhat.com>, Benjamin Poirier <bpoirier@suse.de>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, Hariprasad S <hariprasad@chelsio.com>, Santosh Rastapur <santosh@chelsio.com>, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, netdev@vger.kernel.org
 
-
-
-> -----Original Message-----
-> From: Martin K. Petersen [mailto:martin.petersen@oracle.com]
-> Sent: Saturday, July 26, 2014 12:25 PM
-> To: KY Srinivasan
-> Cc: Martin K. Petersen; Sitsofe Wheeler; Christoph Hellwig;
-> gregkh@linuxfoundation.org; linux-kernel@vger.kernel.org;
-> devel@linuxdriverproject.org; ohering@suse.com; apw@canonical.com;
-> jasowang@redhat.com; jbottomley@parallels.com; linux-
-> scsi@vger.kernel.org
-> Subject: Re: [PATCH v2 3/3] [SCSI] Make LBP quirk skip lbpme checks tests
+On Mon, Jul 28, 2014 at 11:28:28AM -0700, Luis R. Rodriguez wrote:
+> From: "Luis R. Rodriguez" <mcgrof@suse.com>
 > 
-> >>>>> "KY" == KY Srinivasan <kys@microsoft.com> writes:
+> Tetsuo bisected and found that commit 786235ee "kthread: make
+> kthread_create() killable" modified kthread_create() to bail as
+> soon as SIGKILL is received. This is causing some issues with
+> some drivers and at times boot. Joseph then found that failures
+> occur as the systemd-udevd process sends SIGKILL to modprobe if
+> probe on a driver takes over 30 seconds.
+
+Because no driver should ever take that long for their probe function to
+return.  Why not fix those drivers?
+
+> When this happens probe will fail on any driver, its why booting on
+> some system will fail if the driver happens to be a storage related
+> driver. Some folks
+> have suggested fixing this by modifying kthread_create() to not
+> leave upon SIGKILL [3], upon review Oleg rejected this change and
+> the discussion was punted out to systemd to see if the default
+> timeout could be increased from 30 seconds to 120. The opinion of
+> the systemd maintainers is that the driver's behavior should
+> be fixed [4]. Linus seems to agree [5], however more recently even
+> networking drivers have been reported to fail on probe since just
+> writing the firmware to a device and kicking it can take easy over
+> 60 seconds [6]. Benjamim was able to trace the issues recently
+> reported on cxgb4 down to the same systemd-udevd 30 second timeout [6].
+
+Then use the async firmware interface, why is any driver taking longer
+than less than a second in their init function?
+
+> This is an alternative solution which enables drivers that are
+> known to take long to use deferred probe workqueue. This avoids
+> the 30 second timeout and lets us annotate drivers with long
+> init sequences.
 > 
-> >> Great! I'd just like to have a reasonable level of confidence in
-> >> what's happening down the stack before I entertain turning something
-> >> on that's not being properly advertised.
+> As drivers determine a component is not yet available and needs
+> to defer probe you'll be notified this happen upon init for each
+> device but now with a message such as:
 > 
-> KY> As I look at the output of inquiry between Linux on Hyper-V and
-> KY> native Linux, is not specifying conformance level the main issue?
+> pci 0000:03:00.0: Driver cxgb4 requests probe deferral on init
 > 
-> The main problem for this particular use case (aside from the issue we've
-> already addressed) is that the passthrough device (SATA SSD) has
-> LBPME=0 in the READ CAPACITY(16) response. The LBP VPD is correctly
-> provided with LBPU flag set but because LBPME is reported as disabled we
-> will not attempt to issue UNMAP commands to the device.
+> You should see one of these per struct device probed.
 
-Had a chance to chat with the Windows sscsi folks. Here is their response:
+I'm all for abusing kernel interfaces, but please, no, don't try to use
+the deferred init code to cover up for broken drivers.  Just fix them
+properly, we have the interfaces to handle it properly (i.e. async
+firmware loading), please use it.
 
-"At the time  thin-provisioning was defined, the discovery information was first proposed in READ CAPACITY 16 command. And then moved into the new dedicated VPD page - B2h. You can see the information reported in this VPD page is richer than READ CAPACITY 16 command. As this transition happened during we added the feature, Windows uses the newer method that based on VPD page B2h. It looks Linux tries to use both new and old method which is weird to me."
+And no PCI driver should ever need "deferred init" as the resources for
+such a device is already present in the system.  Now if userspace is up
+and running yet is a different issue, one that deferred init is not
+there for at all, sorry.
 
-Would it make sense for us to work  around this issue for Linux on Hyper-V (just use the VPD page instead of looking at the output of READ CAPACITY)?
+So, what drivers are having problems in their init sequence, and why
+aren't they using async firmware loading?
 
-Regards,
+thanks,
 
-K. Y
-> 
-> --
-> Martin K. Petersen	Oracle Linux Engineering
+greg k-h
