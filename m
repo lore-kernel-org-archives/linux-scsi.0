@@ -1,54 +1,46 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: [PATCH 4/5] ipr: Set scsi_level correctly for disk arrays
-Date: Mon, 28 Jul 2014 15:30:15 -0500
-Message-ID: <53D6B2D7.2090006@linux.vnet.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: worley@alum.mit.edu (Dale R. Worley)
+Subject: Re: Write cache and surface error behaviour
+Date: Mon, 28 Jul 2014 16:37:31 -0400
+Message-ID: <201407282037.s6SKbVku032675@hobgoblin.ariadne.com>
+References: <53CC3A92.5000501@shiftmail.org> <201407211455.s6LEtVfJ001124@hobgoblin.ariadne.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e9.ny.us.ibm.com ([32.97.182.139]:55212 "EHLO e9.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751902AbaG1UbJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 Jul 2014 16:31:09 -0400
-Received: from /spool/local
-	by e9.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
-	Mon, 28 Jul 2014 16:31:08 -0400
-Received: from b01cxnp23032.gho.pok.ibm.com (b01cxnp23032.gho.pok.ibm.com [9.57.198.27])
-	by d01dlp01.pok.ibm.com (Postfix) with ESMTP id 9FCB738C8039
-	for <linux-scsi@vger.kernel.org>; Mon, 28 Jul 2014 16:31:05 -0400 (EDT)
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by b01cxnp23032.gho.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s6SKV5h52818446
-	for <linux-scsi@vger.kernel.org>; Mon, 28 Jul 2014 20:31:05 GMT
-Received: from d01av04.pok.ibm.com (localhost [127.0.0.1])
-	by d01av04.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s6SKUuwP001722
-	for <linux-scsi@vger.kernel.org>; Mon, 28 Jul 2014 16:30:57 -0400
+Received: from qmta02.westchester.pa.mail.comcast.net ([76.96.62.24]:39984
+	"EHLO qmta02.westchester.pa.mail.comcast.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751915AbaG1Uhe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 28 Jul 2014 16:37:34 -0400
+In-reply-to: <201407211455.s6LEtVfJ001124@hobgoblin.ariadne.com>
+	(worley@alum.mit.edu)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Wendy Xiong <wenxiong@linux.vnet.ibm.com>
+To: joystick@shiftmail.org, linux-scsi@vger.kernel.org
 
+> From: joystick <joystick@shiftmail.org>
+> 
+> I don't really understand this disk cache thing.
+> Suppose a disk with write cache enabled of writeback type: Linux 
+> receives a write completed notification (a message from the disk) when 
+> the data has reached the cache of the disk. Correct? At that point it is 
+> not considered an in-flight I/O anymore. Correct?
+> So what happens when the disk tries to write it to the platter and 
+> discovers that there is a media error on that sector? (suppose 
+> relocation does not happen ; maybe sectors exhausted)
+> Does Linux receive the write error upon the next flush it issues? So the 
+> error is related to the flush? And what happens if Linux never issues 
+> such flush?
 
-Set the scsi_level correctly for disk arrays such
-that things like the rotational field get set
-properly by sd.c.
+Thinking about this some more, there's no particular reason for the
+kernel to use write-back caching in the disk, since the kernel itself
+maintains a write-back cache.  So the kernel can be quite patient
+about when the disk writes the block to the platters.  Given all the
+complexities of coordinating with a disk that is doing write-back
+caching, it seems like it would be easier for the kernel to tell the
+disk to write-through, that is, don't notify the kernel that the write
+is done until the data is actually on the platter.  Most of the time,
+the kernel can be patient about writing; the only time the kernel has
+to care is when an application forces synchronization on the disk I/O
+subsystem.  (I vaguely recall this is done only on close() or
+fsync().)  And when that happens, the kernel has to know the data is
+on the platter.
 
-Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
----
-
- drivers/scsi/ipr.c |    1 +
- 1 file changed, 1 insertion(+)
-
-diff -puN drivers/scsi/ipr.c~ipr_array_scsi_level drivers/scsi/ipr.c
---- linux/drivers/scsi/ipr.c~ipr_array_scsi_level	2014-07-23 17:07:00.785527453 -0500
-+++ linux-bjking1/drivers/scsi/ipr.c	2014-07-23 17:07:00.791527493 -0500
-@@ -4747,6 +4747,7 @@ static int ipr_slave_configure(struct sc
- 			sdev->no_uld_attach = 1;
- 		}
- 		if (ipr_is_vset_device(res)) {
-+			sdev->scsi_level = SCSI_SPC_3;
- 			blk_queue_rq_timeout(sdev->request_queue,
- 					     IPR_VSET_RW_TIMEOUT);
- 			blk_queue_max_hw_sectors(sdev->request_queue, IPR_VSET_MAX_SECTORS);
-_
-
+Dale
