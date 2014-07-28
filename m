@@ -1,38 +1,41 @@
-From: David Vrabel <david.vrabel@citrix.com>
-Subject: Re: [Xen-devel] [PATCH V2 1/4] Add XEN pvSCSI protocol description
-Date: Mon, 28 Jul 2014 15:28:25 +0100
-Message-ID: <53D65E09.5020901@citrix.com>
-References: <1406288253-13293-1-git-send-email-jgross@suse.com> <1406288253-13293-2-git-send-email-jgross@suse.com>
+From: Jeff Moyer <jmoyer@redhat.com>
+Subject: Re: [PATCH] block: bsg.c:  Cleaning up missing null-terminate in conjunction with strncpy
+Date: Mon, 28 Jul 2014 10:31:09 -0400
+Message-ID: <x49sillpnbm.fsf@segfault.boston.devel.redhat.com>
+References: <1406383665-1670-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp02.citrix.com ([66.165.176.63]:32011 "EHLO
-	SMTP02.CITRIX.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751365AbaG1O2j (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Jul 2014 10:28:39 -0400
-In-Reply-To: <1406288253-13293-2-git-send-email-jgross@suse.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1406383665-1670-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+	(Rickard Strandqvist's message of "Sat, 26 Jul 2014 16:07:45 +0200")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jgross@suse.com, xen-devel@lists.xen.org, linux-scsi@vger.kernel.org, JBottomley@parallels.com, target-devel@vger.kernel.org, konrad.wilk@oracle.com
 
-On 25/07/14 12:37, jgross@suse.com wrote:
-> From: Juergen Gross <jgross@suse.com>
-> 
-> Add the definition of pvSCSI protocol used between the pvSCSI frontend in a
-> XEN domU and the pvSCSI backend in a XEN driver domain (usually Dom0).
-> 
-> This header was originally provided by Fujitsu for XEN based on Linux 2.6.18.
-> Changes are:
-> - added comment
-> - adapt to Linux style guide
-> - add support for larger SG-lists by putting them in an own granted page
-> - remove stale definitions
+Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se> writes:
 
-This is a protocol extension and needs to be reviewed separately, and
-the Xen header needs updating as well.
+> Replacing strncpy with strlcpy to avoid strings that lacks null terminate.
+>
+> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+> ---
+>  block/bsg.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/block/bsg.c b/block/bsg.c
+> index ff46add..b2688c5 100644
+> --- a/block/bsg.c
+> +++ b/block/bsg.c
+> @@ -790,7 +790,7 @@ static struct bsg_device *bsg_add_device(struct inode *inode,
+>  	mutex_lock(&bsg_mutex);
+>  	hlist_add_head(&bd->dev_list, bsg_dev_idx_hash(iminor(inode)));
+>  
+> -	strncpy(bd->name, dev_name(rq->bsg_dev.class_dev), sizeof(bd->name) - 1);
+> +	strlcpy(bd->name, dev_name(rq->bsg_dev.class_dev), sizeof(bd->name));
+>  	dprintk("bound to <%s>, max queue %d\n",
+>  		format_dev_t(buf, inode->i_rdev), bd->max_queue);
 
-The documentation for this protocol is rather lacking.  In particular it
-is missing the connection states.
+NACK
 
-David
+The bsg data structure is allocated using kzalloc, so that last byte
+will be zero.
