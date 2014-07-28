@@ -1,54 +1,30 @@
-From: "Laszlo T." <tlacix@gmail.com>
-Subject: Re: [PATCH] usb-storage/SCSI: Add broken_fua blacklist flag
-Date: Sun, 27 Jul 2014 23:04:42 +0200
-Message-ID: <CAOaU5MaKVMqL3NUcZX9=4jBVFGvnGpdePRg_73ff-2doSwjTzA@mail.gmail.com>
-References: <CAOaU5MZxg4eFsFO51fkCqx_HLAi=TcZKqdJ8RAOL4F+iU50RkA@mail.gmail.com>
-	<Pine.LNX.4.44L0.1407262149370.20700-100000@netrider.rowland.org>
+From: =?ISO-8859-1?Q?J=FCrgen_Gro=DF?= <jgross@suse.com>
+Subject: Re: [Xen-devel] [PATCH V2 3/4] Introduce XEN scsiback module
+Date: Mon, 28 Jul 2014 05:35:34 +0200
+Message-ID: <53D5C506.7070505@suse.com>
+References: <1406288253-13293-1-git-send-email-jgross@suse.com>	<1406288253-13293-4-git-send-email-jgross@suse.com> <20140726152358.GA1854@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ig0-f173.google.com ([209.85.213.173]:59270 "EHLO
-	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752524AbaG0VEm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 27 Jul 2014 17:04:42 -0400
-Received: by mail-ig0-f173.google.com with SMTP id h18so2857069igc.12
-        for <linux-scsi@vger.kernel.org>; Sun, 27 Jul 2014 14:04:42 -0700 (PDT)
-In-Reply-To: <Pine.LNX.4.44L0.1407262149370.20700-100000@netrider.rowland.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <20140726152358.GA1854@infradead.org>
+Sender: target-devel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: target-devel@vger.kernel.org, JBottomley@parallels.com, linux-scsi@vger.kernel.org, xen-devel@lists.xen.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: linux-scsi@vger.kernel.org
 
-2014-07-27 3:50 GMT+02:00 Alan Stern <stern@rowland.harvard.edu>:
-> On Sat, 26 Jul 2014, Laszlo T. wrote:
+On 07/26/2014 05:23 PM, Christoph Hellwig wrote:
+> Just a quick glance:
 >
->> Hello,
->>
->> First of all I've just subscribed the linux-scsi thread. I hope you
->> get my email the right way.
->>
->> I have also problems with Jmicron JMS567 mobile rack.
->>
->> I tried on different kernels:
->> 3.15.5
->> 3.16.rc6
->> the 'Invalid field in cdb' errors disappeared but still not ok.
->
-> Since your device uses the uas driver, you might get more help on the
-> linux-usb mailing list.  (You don't have to subscribe to the list in
-> order to post to it.)
->
-> Alan Stern
->
+>   a) this should move to drivers/target with the other target code
 
-Thank you, I will email them.
+I don't mind. I just followed the example of drivers/vhost/vhost.c and
+thought the similar xen module should be located under drivers/xen.
 
-In the meantime, is there any alternate solution to use this mobile rack?
+>   b) you're still having your own CDB emulation in there, the target code
+>      should be taking care of all that.
 
-I tried to backlist the uas driver on 3.16.rc6 but in that case the
-/dev/sd* file wasn't created.
-and also tried to disable fua (libata fua=0) on 3.14 kernel, but I got
-the 'Invalid field in cdb' errors.
+Okay, I'll remove the CDB emulation.
 
-Br,
-Laszlo
+
+Juergen
