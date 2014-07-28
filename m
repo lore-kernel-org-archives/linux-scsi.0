@@ -1,53 +1,72 @@
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: Re: [PATCH v2 2/4] driver core: enable drivers to use deferred probe
- from init
-Date: Mon, 28 Jul 2014 12:48:32 -0700
-Message-ID: <CAB=NE6Xmi2zUCis22q+X8_AKRcwMrAtmx-aqSSvTB70Xjet6VQ@mail.gmail.com>
-References: <1406572110-26823-1-git-send-email-mcgrof@do-not-panic.com>
- <1406572110-26823-3-git-send-email-mcgrof@do-not-panic.com>
- <20140728185538.GB17609@kroah.com> <CAB=NE6VebcR7=UA1n0wNVLr5FFukzq6aW5CkeB3nf5FixV=3cA@mail.gmail.com>
+From: James Bottomley <jbottomley@parallels.com>
+Subject: Re: [PATCH v2 3/3] [SCSI] Make LBP quirk skip lbpme checks tests
+Date: Mon, 28 Jul 2014 20:02:53 +0000
+Message-ID: <1406577767.19418.11.camel@jarvis>
+References: <20140724122223.GA31798@sucs.org>
+ <yq1iommkgkv.fsf@sermon.lab.mkp.net> <20140724153612.GA23648@sucs.org>
+ <yq1egxakb0z.fsf@sermon.lab.mkp.net>
+ <16fea5bb87ba47019527cee788e07a72@BY2PR0301MB0711.namprd03.prod.outlook.com>
+ <yq1wqb1gyw1.fsf@sermon.lab.mkp.net>
+ <e931486ef33b4e45bfebf2ab1b1b3037@BY2PR0301MB0711.namprd03.prod.outlook.com>
+ <yq17g30dprc.fsf@sermon.lab.mkp.net>
+ <cc4a3fd5451242739929d266b88fa8fa@BY2PR0301MB0711.namprd03.prod.outlook.com>
+ <yq138dnexcn.fsf@sermon.lab.mkp.net>
+ <43306901b1dc4e5dbe014a431e0935ea@BY2PR0301MB0711.namprd03.prod.outlook.com>
+ <yq11tt5cnmx.fsf@sermon.lab.mkp.net>
+ <548c8b1bae75483aa47c9493b62dc04d@BY2PR0301MB0711.namprd03.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-la0-f53.google.com ([209.85.215.53]:43580 "EHLO
-	mail-la0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750825AbaG1Tsy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Jul 2014 15:48:54 -0400
-In-Reply-To: <CAB=NE6VebcR7=UA1n0wNVLr5FFukzq6aW5CkeB3nf5FixV=3cA@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <548c8b1bae75483aa47c9493b62dc04d@BY2PR0301MB0711.namprd03.prod.outlook.com>
+Content-Language: en-US
+Content-ID: <9A2EE9559860C149B091D38979129AA6@sw.swsoft.com>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: driverdev-devel-bounces@linuxdriverproject.org
+To: "kys@microsoft.com" <kys@microsoft.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "jasowang@redhat.com" <jasowang@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "ohering@suse.com" <ohering@suse.com>, "hch@infradead.org" <hch@infradead.org>, "apw@canonical.com" <apw@canonical.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "sitsofe@gmail.com" <sitsofe@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Greg KH <gregkh@linuxfoundation.org>, Santosh Rastapur <santosh@chelsio.com>, Hariprasad S <hariprasad@chelsio.com>
-Cc: Takashi Iwai <tiwai@suse.de>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Joseph Salisbury <joseph.salisbury@canonical.com>, Kay Sievers <kay@vrfy.org>, One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Tim Gardner <tim.gardner@canonical.com>, Pierre Fersing <pierre-fersing@pierref.org>, Andrew Morton <akpm@linux-foundation.org>, Oleg Nesterov <oleg@redhat.com>, Benjamin Poirier <bpoirier@suse.de>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, MPT-FusionLinux.pdl@avagotech.com, Linux SCSI List <linux-scsi@vger.kernel.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>
 
-On Mon, Jul 28, 2014 at 12:04 PM, Luis R. Rodriguez
-<mcgrof@do-not-panic.com> wrote:
-> On Mon, Jul 28, 2014 at 11:55 AM, Greg KH <gregkh@linuxfoundation.org> wrote:
->> So, what drivers are having problems in their init sequence, and why
->> aren't they using async firmware loading?
->
-> Fixing drivers is one thing, fixing drivers *now* because *now*
-> drivers are failing due to a regression is another thing and that's
-> what we have now so lets just be clear on that. The 30 second rule is
-> a major driver requirement change and it should not be taken slightly,
-> all of a sudden this is a new requirement but you won't know that
-> unless you're reading these threads or hit an issue. That's an issue
-> in itself.
->
-> The cxgb4: driver is an example where although I did propose patches
-> to use asynch firmware loading the entire registration of the
-> netdevice would need to be changed as well in order to get this right.
-> In short we have to scramble now to first identify drivers that have
-> long init sequences and then fix. There's an assumption that we can
-> easily fix drivers, this can take time. This series, although does
-> take advantage of a kernel interface for other uses, lets us identify
-> these drivers on the kernel ring buffer, so we can go and address
-> fixing them with time.
+On Mon, 2014-07-28 at 19:05 +0000, KY Srinivasan wrote:
+> 
+> > -----Original Message-----
+> > From: Martin K. Petersen [mailto:martin.petersen@oracle.com]
+> > Sent: Monday, July 28, 2014 12:03 PM
+> > To: KY Srinivasan
+> > Cc: Martin K. Petersen; Sitsofe Wheeler; Christoph Hellwig;
+> > gregkh@linuxfoundation.org; linux-kernel@vger.kernel.org;
+> > devel@linuxdriverproject.org; ohering@suse.com; apw@canonical.com;
+> > jasowang@redhat.com; jbottomley@parallels.com; linux-
+> > scsi@vger.kernel.org
+> > Subject: Re: [PATCH v2 3/3] [SCSI] Make LBP quirk skip lbpme checks tests
+> > 
+> > >>>>> "KY" == KY Srinivasan <kys@microsoft.com> writes:
+> > 
+> > KY,
+> > 
+> > KY> "At the time thin-provisioning was defined, the discovery
+> > KY> information was first proposed in READ CAPACITY 16 command. And
+> > then
+> > KY> moved into the new dedicated VPD page - B2h. You can see the
+> > KY> information reported in this VPD page is richer than READ CAPACITY
+> > KY> 16 command. As this transition happened during we added the feature,
+> > KY> Windows uses the newer method that based on VPD page B2h. It looks
+> > KY> Linux tries to use both new and old method which is weird to me."
+> > 
+> > The READ CAPACITY(16) response is not optional.
+> 
+> Ok; that settles the issue then. I will attempt to get it fixed on Windows.
 
-Another thing that came up during asynch firmware review / integration
-on cxgb4 was that it would not be the only thing that would need to be
-fixed, the driver also has a ton of ports and at least as per my
-review the proper fix would be to use platform regiister stuff. It is
-a major rewrite of the driver but an example of a driver that needs
-quite a bit of work to meet this new 30 second driver requirement.
+Like Martin says, this isn't optional either/or; it's mandatory to
+support the RC 16 bits.  If you don't want to get into playing the
+messenger between us and the windows guys on SCSI standards, we'd be
+happy to communicate directly, either by email or a phone meeting.
 
- Luis
+James
