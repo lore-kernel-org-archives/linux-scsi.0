@@ -1,180 +1,170 @@
-From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: Re: [PATCH 0/6] qla2xxx device removal fixups
-Date: Mon, 28 Jul 2014 14:26:34 -0400
-Message-ID: <alpine.OSX.2.00.1407281425400.2028@administrators-macbook-pro.local>
-References: <1403100139-1798-1-git-send-email-joe.lawrence@stratus.com>
-Mime-Version: 1.0
-Content-Type: text/plain; format=flowed; charset="US-ASCII"
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH v2 2/4] driver core: enable drivers to use deferred probe from init
+Date: Mon, 28 Jul 2014 11:28:28 -0700
+Message-ID: <1406572110-26823-3-git-send-email-mcgrof@do-not-panic.com>
+References: <1406572110-26823-1-git-send-email-mcgrof@do-not-panic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:59057 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750926AbaG1S0y (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 Jul 2014 14:26:54 -0400
-In-Reply-To: <1403100139-1798-1-git-send-email-joe.lawrence@stratus.com>
+Received: from mail-pd0-f172.google.com ([209.85.192.172]:50886 "EHLO
+	mail-pd0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751634AbaG1S2q (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Jul 2014 14:28:46 -0400
+In-Reply-To: <1406572110-26823-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Joe Lawrence <joe.lawrence@stratus.com>
-Cc: linux-scsi@vger.kernel.org, Giridhar Malavali <giridhar.malavali@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Don Zickus <dzickus@redhat.com>, Prarit Bhargava <prarit@redhat.com>, Bill Kuzeja <william.kuzeja@stratus.com>, Dave Bulkow <david.bulkow@stratus.com>
+To: gregkh@linuxfoundation.org
+Cc: tiwai@suse.de, linux-kernel@vger.kernel.org, "Luis R. Rodriguez" <mcgrof@suse.com>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Joseph Salisbury <joseph.salisbury@canonical.com>, Kay Sievers <kay@vrfy.org>, One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Tim Gardner <tim.gardner@canonical.com>, Pierre Fersing <pierre-fersing@pierref.org>, Andrew Morton <akpm@linux-foundation.org>, Oleg Nesterov <oleg@redhat.com>, Benjamin Poirier <bpoirier@suse.de>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, Hariprasad S <hariprasad@chelsio.com>, Santosh Rastapur <santosh@chelsio.com>, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, netdev@vger.kernel.org
 
-Ack the series.
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
 
-Acked-by: Chad Dupuis <chad.dupuis@qlogic.com>
+Tetsuo bisected and found that commit 786235ee "kthread: make
+kthread_create() killable" modified kthread_create() to bail as
+soon as SIGKILL is received. This is causing some issues with
+some drivers and at times boot. Joseph then found that failures
+occur as the systemd-udevd process sends SIGKILL to modprobe if
+probe on a driver takes over 30 seconds. When this happens probe
+will fail on any driver, its why booting on some system will fail
+if the driver happens to be a storage related driver. Some folks
+have suggested fixing this by modifying kthread_create() to not
+leave upon SIGKILL [3], upon review Oleg rejected this change and
+the discussion was punted out to systemd to see if the default
+timeout could be increased from 30 seconds to 120. The opinion of
+the systemd maintainers is that the driver's behavior should
+be fixed [4]. Linus seems to agree [5], however more recently even
+networking drivers have been reported to fail on probe since just
+writing the firmware to a device and kicking it can take easy over
+60 seconds [6]. Benjamim was able to trace the issues recently
+reported on cxgb4 down to the same systemd-udevd 30 second timeout [6].
 
-On Wed, 18 Jun 2014, Joe Lawrence wrote:
+This is an alternative solution which enables drivers that are
+known to take long to use deferred probe workqueue. This avoids
+the 30 second timeout and lets us annotate drivers with long
+init sequences.
 
-> Hi Chad, Giri, et al.
->
-> Stratus has been testing the upstream qla2xxx driver against surprise
-> device removal and has found a few minor issues along the way.  With
-> this patchset, results have been good.  Although the following changes
-> may be most interesting on a Stratus platform, they should be applicable
-> to general hotplug scenarios on other hardware.
->
-> The first two patches are independent from the others and can be
-> reviewed as such.  One fixes up a use-after-free and the other
-> consolidates some code.
->
-> The final four patches are more invasive and modify the scsi_qla_host
-> structure to avoid device removal race conditions.  These changes were
-> written to demonstrate the problem at hand and minimally fix them in
-> order to continue testing.  (For example, adding completely a new
-> pci_flags member to scsi_qla_host is probably overkill.)
->
-> We would welcome any feedback or questions about our testing.
->
-> Regards,
->
-> -- Joe
->
->
-> Joe Lawrence (6):
->
->  qla2xxx: Fix shost use-after-free on device removal
->
->    scsi_qla_host *base_vha is allocated as part of the Scsi_Host
->    private hostdata[] by qla2x00_create_host.  When the last reference
->    on the host is put by qla2x00_remove_one, it's released along with
->    any hostdata[], rendering base_vha unsafe to dereference.
->
->    To safely complete the adapter cleanup in qla2x00_remove_one,
->    use the scsi_qla_host_t *qla_hw_data pointer that is already in
->    hand.
->
->    To reproduce, set kernel boot option slub_debug=FZPU and remove
->    an adapter instance.
->
->
->  qla2xxx: Use qla2x00_clear_drv_active on probe failure
->
->    Clean up some duplicate code along the way.
->
->
->  qla2xxx: Collect PCI register checks and board_disable scheduling
->
->    PCI register read checks are performed throughout the driver to
->    detect disconnected hardware.  There is currently a function that
->    verifies 32-bit values and schedules board_removal if needed. Other
->    16-bit registers are checked and board_removal scheduling scattered
->    around the driver.
->
->    This change pulls all of these together such that a new 16-bit
->    register check function wrappers the existing 32-bit version and
->    centralizes the scheduling of board_disable work to a single
->    invocation.
->
->    The following patches depend upon this change.
->
->
->  qla2xxx: Schedule board_disable only once
->
->    In automated hot-plug device removal testing, occasionally
->    qla2x00_disable_board_on_pci_error would run twice.  I believe this
->    occurred by a second qla2x00_check_reg_for_disconnect scheduling
->    board_disable while the first instance was still running.
->
->    The easiest solution seemed to be adding a per-adapter flag that
->    could be test_and_set before scheduling board_disable.
->
->
->  qla2xxx: Prevent removal and board_disable race
->
->    This race was discovered through many iterations of automated PCI
->    hotplug.  The automated test inserts faults on the Stratus platform
->    to simulate device removal.  After removal, it re-adds the devices,
->    simulating PCI hotplug insertion.  Rinse, repeat.
->
->    The race occurs when a Stratus proprietary hotplug driver detects
->    that PCI devices have gone missing and calls into the kernel PCI
->    subsystem to remove them.  At nearly the same time, the qla2xxx
->    driver figures out the same issue and schedules a board_disable.  It
->    takes a few hundred device removals to hit, but it seemed that the
->    problem was that qla2x00_disable_board_on_pci_error started, then
->    qla2xxx_remove_one was invoked, so one of the two started touching
->    already freed resources.
->
->    Although the bug manifested on a Stratus platform running modified
->    drivers, the window for qla2xxx_remove_one to race
->    qla2x00_disable_board_on_pci_error is still present if running stock
->    kernel/drivers on commodity hardware.  It may be difficult to hit,
->    but one could theoretically invoke PCI device removal via sysfs (or
->    simply unload the qla2xxx driver) and for board_disable to run at
->    the same time.
->
->    The fix leaves the Scsi_Host intact during board_disable so that
->    qla2x00_remove_one can safely stop the main timer and
->    cancel_work_sync on any outstanding board_disable work.  A
->    PFLG_DRIVER_REMOVING bit is also set to prevent any other
->    board_disable instances from scheduling.  Once the asynchronous
->    players are out of the way, qla2x00_remove_one can move forward
->    cleaning up whatever remaining resources are still attached.
->
->    The PCI device enable count check in qla2x00_remove_one was
->    re-purposed to determine if board_disable had run.  Its original
->    intention to detect qla2x00_probe_one failure was invalid.  As long
->    as the driver .probe routine returns an -ERRNO, then its counterpart
->    .remove routine is *not* called.
->
->
->  qla2xxx: Prevent probe and board_disable race
->
->    An automated Stratus device removal test hotplug removes devices
->    shortly during/after their initialization.  The test inserts
->    devices, then proceeds to remove them at various 1, 2, 3, 4...
->    second intervals.  This test revealed two bugs:
->
->    1 - The struct isp_operations initialize_adapter callback is invoked
->    by qla2x00_probe_one before ha->board_disable is initialized. The
->    callback will eventually read PCI registers and potentially trigger
->    the disconnection check.  If the board_disable work structure hasn't
->    been initialized, an ugly WARN trace will be emitted. The call stack
->    looked something like:
->
->      qla2x00_probe_one
->        qla2x00_initialize_adapter
->          qla2xxx_get_flash_info
->            qla2xxx_get_flt_info
->              qla25xx_read_optrom_data
->                 qla2x00_dump_ram
->                   qla2x00_mailbox_command
->                     qla24xx_intr_handler
->                       qla2x00_check_reg_for_disconnect
->
->    2 - Races between the qla2x00_disable_board_on_pci_error and
->    qla2x00_probe_one. The latter was written before any asynchronous
->    device removals were introduced by commit f3ddac1 "qla2xxx: Disable
->    adapter when we encounter a PCI disconnect," and proceeds as if it
->    were the only game in town with respect to the underlying device.
->    Restore that assumption by preventing any board_disable scheduling
->    while qla2x00_probe_one is in flight.  Holding off this scheduling
->    prevents the race, as well as avoids bug #1.
->
-> drivers/scsi/qla2xxx/qla_def.h |    5 ++++
-> drivers/scsi/qla2xxx/qla_gbl.h |    3 +-
-> drivers/scsi/qla2xxx/qla_isr.c |   44 +++++++++++++++--------------
-> drivers/scsi/qla2xxx/qla_mr.c  |    2 +-
-> drivers/scsi/qla2xxx/qla_nx.c  |    6 ++--
-> drivers/scsi/qla2xxx/qla_os.c  |   60 ++++++++++++++++++----------------------
-> 6 files changed, 61 insertions(+), 59 deletions(-)
->
->
+As drivers determine a component is not yet available and needs
+to defer probe you'll be notified this happen upon init for each
+device but now with a message such as:
+
+pci 0000:03:00.0: Driver cxgb4 requests probe deferral on init
+
+You should see one of these per struct device probed.
+
+[0] https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1276705
+[1] https://bugs.launchpad.net/ubuntu/+source/systemd/+bug/1297248
+[2] http://lists.freedesktop.org/archives/systemd-devel/2014-March/018006.html
+[3] http://thread.gmane.org/gmane.linux.ubuntu.devel.kernel.general/39123
+[4] http://article.gmane.org/gmane.comp.sysutils.systemd.devel/17860
+[5] http://article.gmane.org/gmane.linux.kernel/1671333
+[6] https://bugzilla.novell.com/show_bug.cgi?id=877622
+
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Cc: Joseph Salisbury <joseph.salisbury@canonical.com>
+Cc: Kay Sievers <kay@vrfy.org>
+Cc: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
+Cc: Tim Gardner <tim.gardner@canonical.com>
+Cc: Pierre Fersing <pierre-fersing@pierref.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Oleg Nesterov <oleg@redhat.com>
+Cc: Benjamin Poirier <bpoirier@suse.de>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>
+Cc: Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>
+Cc: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+Cc: Abhijit Mahajan <abhijit.mahajan@avagotech.com>
+Cc: Hariprasad S <hariprasad@chelsio.com>
+Cc: Santosh Rastapur <santosh@chelsio.com>
+Cc: MPT-FusionLinux.pdl@avagotech.com
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
+---
+ drivers/base/dd.c      | 18 +++++++++++++++++-
+ include/linux/device.h |  7 +++++++
+ 2 files changed, 24 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/base/dd.c b/drivers/base/dd.c
+index 9947c2e..d59e4b5 100644
+--- a/drivers/base/dd.c
++++ b/drivers/base/dd.c
+@@ -159,6 +159,9 @@ static void driver_deferred_probe_add(struct device *dev)
+ 		list_add_tail(&dev->p->deferred_probe, &deferred_probe_pending_list);
+ 	}
+ 	mutex_unlock(&deferred_probe_mutex);
++
++	if (driver_deferred_probe_enable)
++		driver_deferred_probe_trigger();
+ }
+ 
+ void driver_deferred_probe_del(struct device *dev)
+@@ -374,6 +377,19 @@ void wait_for_device_probe(void)
+ }
+ EXPORT_SYMBOL_GPL(wait_for_device_probe);
+ 
++static int __driver_probe_device(struct device_driver *drv, struct device *dev)
++{
++	if (drv->delay_probe && !dev->init_delayed_probe) {
++		dev_info(dev, "Driver %s requests probe deferral on init\n",
++			 drv->name);
++		dev->init_delayed_probe = true;
++		driver_deferred_probe_add(dev);
++		return -EPROBE_DEFER;
++	}
++
++	return really_probe(dev, drv);
++}
++
+ /**
+  * driver_probe_device - attempt to bind device & driver together
+  * @drv: driver to bind a device to
+@@ -396,7 +412,7 @@ int driver_probe_device(struct device_driver *drv, struct device *dev)
+ 		 drv->bus->name, __func__, dev_name(dev), drv->name);
+ 
+ 	pm_runtime_barrier(dev);
+-	ret = really_probe(dev, drv);
++	ret = __driver_probe_device(drv, dev);
+ 	pm_request_idle(dev);
+ 
+ 	return ret;
+diff --git a/include/linux/device.h b/include/linux/device.h
+index af424ac..c317dfa 100644
+--- a/include/linux/device.h
++++ b/include/linux/device.h
+@@ -200,6 +200,9 @@ extern struct klist *bus_get_device_klist(struct bus_type *bus);
+  * @owner:	The module owner.
+  * @mod_name:	Used for built-in modules.
+  * @suppress_bind_attrs: Disables bind/unbind via sysfs.
++ * @delay_probe: this driver is requesting a deferred probe since
++ *	initialization. This can be desirable if its known the device probe
++ *	or initialization takes more than 30 seconds.
+  * @of_match_table: The open firmware table.
+  * @acpi_match_table: The ACPI match table.
+  * @probe:	Called to query the existence of a specific device,
+@@ -233,6 +236,7 @@ struct device_driver {
+ 	const char		*mod_name;	/* used for built-in modules */
+ 
+ 	bool suppress_bind_attrs;	/* disables bind/unbind via sysfs */
++	bool delay_probe;		/* requests deferred probe */
+ 
+ 	const struct of_device_id	*of_match_table;
+ 	const struct acpi_device_id	*acpi_match_table;
+@@ -715,6 +719,8 @@ struct acpi_dev_node {
+  *
+  * @offline_disabled: If set, the device is permanently online.
+  * @offline:	Set after successful invocation of bus type's .offline().
++ * @init_delayed_probe: lets the coore keep track if the device has already
++ * 	gone through a delayed probe upon init.
+  *
+  * At the lowest level, every device in a Linux system is represented by an
+  * instance of struct device. The device structure contains the information
+@@ -793,6 +799,7 @@ struct device {
+ 
+ 	bool			offline_disabled:1;
+ 	bool			offline:1;
++	bool			init_delayed_probe:1;
+ };
+ 
+ static inline struct device *kobj_to_dev(struct kobject *kobj)
+-- 
+2.0.1
+
