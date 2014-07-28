@@ -1,57 +1,69 @@
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-Subject: Re: [PATCH 1/3] driver core: enable drivers to use deferred probe
-	from init
-Date: Mon, 28 Jul 2014 20:48:58 +0200
-Message-ID: <20140728184858.GK21930@wotan.suse.de>
-References: <1406558067-25308-1-git-send-email-mcgrof@do-not-panic.com> <B5657A6538887040AD3A81F1008BEC63B06F9A@avmb3.qlogic.org> <20140728153811.GD21930@wotan.suse.de> <B5657A6538887040AD3A81F1008BEC63B06FCF@avmb3.qlogic.org> <B5657A6538887040AD3A81F1008BEC63B07066@avmb3.qlogic.org>
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: [PATCH v2 3/3] [SCSI] Make LBP quirk skip lbpme checks tests
+Date: Mon, 28 Jul 2014 18:50:56 +0000
+Message-ID: <43306901b1dc4e5dbe014a431e0935ea@BY2PR0301MB0711.namprd03.prod.outlook.com>
+References: <20140724122223.GA31798@sucs.org>
+	<yq1iommkgkv.fsf@sermon.lab.mkp.net> <20140724153612.GA23648@sucs.org>
+	<yq1egxakb0z.fsf@sermon.lab.mkp.net>
+	<16fea5bb87ba47019527cee788e07a72@BY2PR0301MB0711.namprd03.prod.outlook.com>
+	<yq1wqb1gyw1.fsf@sermon.lab.mkp.net>
+	<e931486ef33b4e45bfebf2ab1b1b3037@BY2PR0301MB0711.namprd03.prod.outlook.com>
+	<yq17g30dprc.fsf@sermon.lab.mkp.net>
+	<cc4a3fd5451242739929d266b88fa8fa@BY2PR0301MB0711.namprd03.prod.outlook.com>
+ <yq138dnexcn.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:58812 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751389AbaG1StE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 Jul 2014 14:49:04 -0400
-Content-Disposition: inline
-In-Reply-To: <B5657A6538887040AD3A81F1008BEC63B07066@avmb3.qlogic.org>
+Received: from mail-bn1blp0190.outbound.protection.outlook.com ([207.46.163.190]:2685
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751702AbaG1Su7 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Jul 2014 14:50:59 -0400
+In-Reply-To: <yq138dnexcn.fsf@sermon.lab.mkp.net>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Yuval Mintz <Yuval.Mintz@qlogic.com>
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, linux-kernel <linux-kernel@vger.kernel.org>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Joseph Salisbury <joseph.salisbury@canonical.com>, Kay Sievers <kay@vrfy.org>, One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Tim Gardner <tim.gardner@canonical.com>, Pierre Fersing <pierre-fersing@pierref.org>, Andrew Morton <akpm@linux-foundation.org>, Oleg Nesterov <oleg@redhat.com>, Benjamin Poirier <bpoirier@suse.de>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, Hariprasad S <hariprasad@chelsio.com>, Santosh Rastapur <santosh@chelsio.com>, "MPT-FusionLinux.pdl@avagotech.com" <MPT-Fusi>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Sitsofe Wheeler <sitsofe@gmail.com>, Christoph Hellwig <hch@infradead.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "apw@canonical.com" <apw@canonical.com>, "jasowang@redhat.com" <jasowang@redhat.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Mon, Jul 28, 2014 at 06:30:29PM +0000, Yuval Mintz wrote:
-> > On Mon, Jul 28, 2014 at 06:52:48PM +0200, Luis R. Rodriguez wrote:
-> > > On Mon, Jul 28, 2014 at 03:46:32PM +0000, Yuval Mintz wrote:
-> > > > Sorry for not being clear, but I didn't meant 'what guarantees that the device
-> > > > will be added to the deferred probe', but rather what guarantees that the
-> > > > deferred workqueue will be scheduled.
-> > > >
-> > > > To the best of my knowledge the deferring mechanism works only if one device
-> > > > is dependent upon another, e.g., for Multi-function devices where one device
-> > > > probe is dependent upon the others - which are soon-to-be probed.
-> > >
-> > > The workqueue will be kicked when driver_deferred_probe_trigger() gets
-> > > poked, we do that in the late_initcall(deferred_probe_initcall), it
-> > > also gets flushed there with a flush_workqueue(deferred_wq).
-> 
-> > But come to think of it that will work well for devices already plugged in
-> > so indeed I think that driver_deferred_probe_add() needs a check added
-> > for for if (!driver_deferred_probe_enable) then we have to
-> > driver_deferred_probe_trigger(). The driver_deferred_probe_enable is set
-> > to false upon init, but later on late init it gets set to true so with
-> > that check we'd  only generate the trigger after late init call.
-> 
-> > I can fold that in the v2.
-> 
-> >   Luis
-> 
-> But what about modules being added after the init-calls? If they try try to use this
-> mechanism, what guarantees they'll eventually get probed?
 
-bus_probe_device --> device_attach() -->
-	__device_attach() --> driver_probe_device() -->
-		__driver_probe_device() --> driver_deferred_probe_add()
 
-And with the new hunk I mentioned I'd add then we'd trigger the
-workqueue if its after late init. The change is in v2 series.
+> -----Original Message-----
+> From: Martin K. Petersen [mailto:martin.petersen@oracle.com]
+> Sent: Saturday, July 26, 2014 12:25 PM
+> To: KY Srinivasan
+> Cc: Martin K. Petersen; Sitsofe Wheeler; Christoph Hellwig;
+> gregkh@linuxfoundation.org; linux-kernel@vger.kernel.org;
+> devel@linuxdriverproject.org; ohering@suse.com; apw@canonical.com;
+> jasowang@redhat.com; jbottomley@parallels.com; linux-
+> scsi@vger.kernel.org
+> Subject: Re: [PATCH v2 3/3] [SCSI] Make LBP quirk skip lbpme checks tests
+> 
+> >>>>> "KY" == KY Srinivasan <kys@microsoft.com> writes:
+> 
+> >> Great! I'd just like to have a reasonable level of confidence in
+> >> what's happening down the stack before I entertain turning something
+> >> on that's not being properly advertised.
+> 
+> KY> As I look at the output of inquiry between Linux on Hyper-V and
+> KY> native Linux, is not specifying conformance level the main issue?
+> 
+> The main problem for this particular use case (aside from the issue we've
+> already addressed) is that the passthrough device (SATA SSD) has
+> LBPME=0 in the READ CAPACITY(16) response. The LBP VPD is correctly
+> provided with LBPU flag set but because LBPME is reported as disabled we
+> will not attempt to issue UNMAP commands to the device.
 
-  Luis
+Had a chance to chat with the Windows sscsi folks. Here is their response:
+
+"At the time  thin-provisioning was defined, the discovery information was first proposed in READ CAPACITY 16 command. And then moved into the new dedicated VPD page - B2h. You can see the information reported in this VPD page is richer than READ CAPACITY 16 command. As this transition happened during we added the feature, Windows uses the newer method that based on VPD page B2h. It looks Linux tries to use both new and old method which is weird to me."
+
+Would it make sense for us to work  around this issue for Linux on Hyper-V (just use the VPD page instead of looking at the output of READ CAPACITY)?
+
+Regards,
+
+K. Y
+> 
+> --
+> Martin K. Petersen	Oracle Linux Engineering
