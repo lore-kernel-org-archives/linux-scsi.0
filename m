@@ -1,48 +1,33 @@
-From: Juergen Gross <jgross@suse.com>
-Subject: Re: [Xen-devel] [PATCH V2 1/4] Add XEN pvSCSI protocol description
-Date: Tue, 29 Jul 2014 09:39:54 +0200
-Message-ID: <53D74FCA.1080007@suse.com>
-References: <1406288253-13293-1-git-send-email-jgross@suse.com>	<1406288253-13293-2-git-send-email-jgross@suse.com> <53D65E09.5020901@citrix.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v4 2/4] arm64: Remove the clock and PHY reference from the APM X-Gene SoC AHCI SATA Host controller dts node.
+Date: Tue, 29 Jul 2014 11:23:56 +0200
+Message-ID: <4479076.DG8ITD3De2@wuerfel>
+References: <1406616892-30273-1-git-send-email-stripathi@apm.com> <1406616892-30273-3-git-send-email-stripathi@apm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:37690 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751281AbaG2Hj5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Jul 2014 03:39:57 -0400
-In-Reply-To: <53D65E09.5020901@citrix.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1406616892-30273-3-git-send-email-stripathi@apm.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Suman Tripathi <stripathi@apm.com>
+Cc: olof@lixom.net, tj@kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: David Vrabel <david.vrabel@citrix.com>, xen-devel@lists.xen.org, linux-scsi@vger.kernel.org, JBottomley@parallels.com, target-devel@vger.kernel.org, konrad.wilk@oracle.com
 
-On 07/28/2014 04:28 PM, David Vrabel wrote:
-> On 25/07/14 12:37, jgross@suse.com wrote:
->> From: Juergen Gross <jgross@suse.com>
->>
->> Add the definition of pvSCSI protocol used between the pvSCSI frontend in a
->> XEN domU and the pvSCSI backend in a XEN driver domain (usually Dom0).
->>
->> This header was originally provided by Fujitsu for XEN based on Linux 2.6.18.
->> Changes are:
->> - added comment
->> - adapt to Linux style guide
->> - add support for larger SG-lists by putting them in an own granted page
->> - remove stale definitions
->
-> This is a protocol extension and needs to be reviewed separately, and
-> the Xen header needs updating as well.
+On Tuesday 29 July 2014 12:24:50 Suman Tripathi wrote:
+> This patch removes all clocks and PHY references from the APM X-Gene
+> SoC AHCI SATA host controller and PHY DTS nodes. The clock and PHY
+> are no longer needed as they are handled by the firmware. By removing
+> only the reference is not enough as any un-used clock entry will get
+> disabled by the clock framework.
+> 
+> Signed-off-by: Loc Ho <lho@apm.com>
+> Signed-off-by: Suman Tripathi <stripathi@apm.com>
+> 
 
-Sure. The review can start right now. Updating the Xen header will be
-done as soon as the drivers are accepted in Linux.
+This will break booting on older firmware versions I guess, and
+it does not confirm to the binding that lists the phy and clock
+properties as "required".
 
-> The documentation for this protocol is rather lacking.  In particular it
-> is missing the connection states.
+It doesn't sound like a good idea to apply it.
 
-Regarding documentation: I'll add some.
-
-Regarding the connection states: I'd rather move the description in
-blkif.h to xenbus.h than duplicating it in vscsiif.h. What do you think?
-
-
-Juergen
+	Arnd
