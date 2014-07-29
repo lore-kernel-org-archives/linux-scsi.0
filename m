@@ -1,75 +1,36 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH v2 3/3] [SCSI] Make LBP quirk skip lbpme checks tests
-Date: Tue, 29 Jul 2014 17:41:04 +0000
-Message-ID: <a445e81eb25f46918e85f51c631f6094@BY2PR0301MB0711.namprd03.prod.outlook.com>
-References: <20140724122223.GA31798@sucs.org>
-	 <yq1iommkgkv.fsf@sermon.lab.mkp.net> <20140724153612.GA23648@sucs.org>
-	 <yq1egxakb0z.fsf@sermon.lab.mkp.net>
-	 <16fea5bb87ba47019527cee788e07a72@BY2PR0301MB0711.namprd03.prod.outlook.com>
-	 <yq1wqb1gyw1.fsf@sermon.lab.mkp.net>
-	 <e931486ef33b4e45bfebf2ab1b1b3037@BY2PR0301MB0711.namprd03.prod.outlook.com>
-	 <yq17g30dprc.fsf@sermon.lab.mkp.net>
-	 <cc4a3fd5451242739929d266b88fa8fa@BY2PR0301MB0711.namprd03.prod.outlook.com>
-	 <yq138dnexcn.fsf@sermon.lab.mkp.net>
-	 <43306901b1dc4e5dbe014a431e0935ea@BY2PR0301MB0711.namprd03.prod.outlook.com>
-	 <yq11tt5cnmx.fsf@sermon.lab.mkp.net>
-	 <548c8b1bae75483aa47c9493b62dc04d@BY2PR0301MB0711.namprd03.prod.outlook.com>
- <1406577767.19418.11.camel@jarvis>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 79901] [BISECTED]Extremely slow boot on Promise VTrak E610f due
+ to sd_mod RSOC usage
+Date: Tue, 29 Jul 2014 19:07:51 +0000
+Message-ID: <bug-79901-11613-ViyKhyhm4Z@https.bugzilla.kernel.org/>
+References: <bug-79901-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn1blp0186.outbound.protection.outlook.com ([207.46.163.186]:15052
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750862AbaG2RlI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Jul 2014 13:41:08 -0400
-In-Reply-To: <1406577767.19418.11.camel@jarvis>
-Content-Language: en-US
+Received: from mail.kernel.org ([198.145.19.201]:40859 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751607AbaG2THy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Jul 2014 15:07:54 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 8645B2018E
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Jul 2014 19:07:53 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+	by mail.kernel.org (Postfix) with ESMTP id A995D20158
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Jul 2014 19:07:52 +0000 (UTC)
+In-Reply-To: <bug-79901-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "sitsofe@gmail.com" <sitsofe@gmail.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "apw@canonical.com" <apw@canonical.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "ohering@suse.com" <ohering@suse.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "jasowang@redhat.com" <jasowang@redhat.com>
+To: linux-scsi@vger.kernel.org
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSmFtZXMgQm90dG9tbGV5
-IFttYWlsdG86amJvdHRvbWxleUBwYXJhbGxlbHMuY29tXQ0KPiBTZW50OiBNb25kYXksIEp1bHkg
-MjgsIDIwMTQgMTowMyBQTQ0KPiBUbzogS1kgU3Jpbml2YXNhbg0KPiBDYzogbGludXgta2VybmVs
-QHZnZXIua2VybmVsLm9yZzsgaGNoQGluZnJhZGVhZC5vcmc7IHNpdHNvZmVAZ21haWwuY29tOw0K
-PiBkZXZlbEBsaW51eGRyaXZlcnByb2plY3Qub3JnOyBhcHdAY2Fub25pY2FsLmNvbTsNCj4gbWFy
-dGluLnBldGVyc2VuQG9yYWNsZS5jb207IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnOw0KPiBv
-aGVyaW5nQHN1c2UuY29tOyBncmVna2hAbGludXhmb3VuZGF0aW9uLm9yZzsgamFzb3dhbmdAcmVk
-aGF0LmNvbQ0KPiBTdWJqZWN0OiBSZTogW1BBVENIIHYyIDMvM10gW1NDU0ldIE1ha2UgTEJQIHF1
-aXJrIHNraXAgbGJwbWUgY2hlY2tzIHRlc3RzDQo+IA0KPiBPbiBNb24sIDIwMTQtMDctMjggYXQg
-MTk6MDUgKzAwMDAsIEtZIFNyaW5pdmFzYW4gd3JvdGU6DQo+ID4NCj4gPiA+IC0tLS0tT3JpZ2lu
-YWwgTWVzc2FnZS0tLS0tDQo+ID4gPiBGcm9tOiBNYXJ0aW4gSy4gUGV0ZXJzZW4gW21haWx0bzpt
-YXJ0aW4ucGV0ZXJzZW5Ab3JhY2xlLmNvbV0NCj4gPiA+IFNlbnQ6IE1vbmRheSwgSnVseSAyOCwg
-MjAxNCAxMjowMyBQTQ0KPiA+ID4gVG86IEtZIFNyaW5pdmFzYW4NCj4gPiA+IENjOiBNYXJ0aW4g
-Sy4gUGV0ZXJzZW47IFNpdHNvZmUgV2hlZWxlcjsgQ2hyaXN0b3BoIEhlbGx3aWc7DQo+ID4gPiBn
-cmVna2hAbGludXhmb3VuZGF0aW9uLm9yZzsgbGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZzsN
-Cj4gPiA+IGRldmVsQGxpbnV4ZHJpdmVycHJvamVjdC5vcmc7IG9oZXJpbmdAc3VzZS5jb207IGFw
-d0BjYW5vbmljYWwuY29tOw0KPiA+ID4gamFzb3dhbmdAcmVkaGF0LmNvbTsgamJvdHRvbWxleUBw
-YXJhbGxlbHMuY29tOyBsaW51eC0NCj4gPiA+IHNjc2lAdmdlci5rZXJuZWwub3JnDQo+ID4gPiBT
-dWJqZWN0OiBSZTogW1BBVENIIHYyIDMvM10gW1NDU0ldIE1ha2UgTEJQIHF1aXJrIHNraXAgbGJw
-bWUgY2hlY2tzDQo+ID4gPiB0ZXN0cw0KPiA+ID4NCj4gPiA+ID4+Pj4+ICJLWSIgPT0gS1kgU3Jp
-bml2YXNhbiA8a3lzQG1pY3Jvc29mdC5jb20+IHdyaXRlczoNCj4gPiA+DQo+ID4gPiBLWSwNCj4g
-PiA+DQo+ID4gPiBLWT4gIkF0IHRoZSB0aW1lIHRoaW4tcHJvdmlzaW9uaW5nIHdhcyBkZWZpbmVk
-LCB0aGUgZGlzY292ZXJ5DQo+ID4gPiBLWT4gaW5mb3JtYXRpb24gd2FzIGZpcnN0IHByb3Bvc2Vk
-IGluIFJFQUQgQ0FQQUNJVFkgMTYgY29tbWFuZC4gQW5kDQo+ID4gPiB0aGVuDQo+ID4gPiBLWT4g
-bW92ZWQgaW50byB0aGUgbmV3IGRlZGljYXRlZCBWUEQgcGFnZSAtIEIyaC4gWW91IGNhbiBzZWUg
-dGhlDQo+ID4gPiBLWT4gaW5mb3JtYXRpb24gcmVwb3J0ZWQgaW4gdGhpcyBWUEQgcGFnZSBpcyBy
-aWNoZXIgdGhhbiBSRUFEDQo+ID4gPiBLWT4gQ0FQQUNJVFkNCj4gPiA+IEtZPiAxNiBjb21tYW5k
-LiBBcyB0aGlzIHRyYW5zaXRpb24gaGFwcGVuZWQgZHVyaW5nIHdlIGFkZGVkIHRoZQ0KPiA+ID4g
-S1k+IGZlYXR1cmUsIFdpbmRvd3MgdXNlcyB0aGUgbmV3ZXIgbWV0aG9kIHRoYXQgYmFzZWQgb24g
-VlBEIHBhZ2UNCj4gPiA+IEtZPiBCMmguIEl0IGxvb2tzIExpbnV4IHRyaWVzIHRvIHVzZSBib3Ro
-IG5ldyBhbmQgb2xkIG1ldGhvZCB3aGljaCBpcw0KPiB3ZWlyZCB0byBtZS4iDQo+ID4gPg0KPiA+
-ID4gVGhlIFJFQUQgQ0FQQUNJVFkoMTYpIHJlc3BvbnNlIGlzIG5vdCBvcHRpb25hbC4NCj4gPg0K
-PiA+IE9rOyB0aGF0IHNldHRsZXMgdGhlIGlzc3VlIHRoZW4uIEkgd2lsbCBhdHRlbXB0IHRvIGdl
-dCBpdCBmaXhlZCBvbiBXaW5kb3dzLg0KPiANCj4gTGlrZSBNYXJ0aW4gc2F5cywgdGhpcyBpc24n
-dCBvcHRpb25hbCBlaXRoZXIvb3I7IGl0J3MgbWFuZGF0b3J5IHRvIHN1cHBvcnQgdGhlIFJDDQo+
-IDE2IGJpdHMuICBJZiB5b3UgZG9uJ3Qgd2FudCB0byBnZXQgaW50byBwbGF5aW5nIHRoZSBtZXNz
-ZW5nZXIgYmV0d2VlbiB1cyBhbmQNCj4gdGhlIHdpbmRvd3MgZ3V5cyBvbiBTQ1NJIHN0YW5kYXJk
-cywgd2UnZCBiZSBoYXBweSB0byBjb21tdW5pY2F0ZQ0KPiBkaXJlY3RseSwgZWl0aGVyIGJ5IGVt
-YWlsIG9yIGEgcGhvbmUgbWVldGluZy4NCg0KV2Ugd2lsbCBmaXggdGhpcyBidWcgaW4gdGhlIG5l
-eHQgcmVsZWFzZSBvZiBXaW5kb3dzOyB3ZSBhcmUgYWxzbyBsb29raW5nIGF0IGJhY2twb3J0aW5n
-IHRoZSBmaXggdG8gcHJpb3IgdmVyc2lvbnMgb2YgV2luZG93cy4NCg0KVGhhbmtzLA0KDQpLLiBZ
-DQoNCg==
+https://bugzilla.kernel.org/show_bug.cgi?id=79901
+
+--- Comment #3 from Janusz Dziemidowicz <rraptorr@nails.eu.org> ---
+I've read that document before creating the patch. Now, I've read it again. I
+must say I'm at a loss. In the patch attached to this bug entry I've already
+included Signed-off-by line.
+Can anyone point precisely what is wrong here?
+
+-- 
+You are receiving this mail because:
+You are the assignee for the bug.
