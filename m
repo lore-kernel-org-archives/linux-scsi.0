@@ -1,47 +1,57 @@
 From: Suman Tripathi <stripathi@apm.com>
-Subject: [PATCH v4 0/4]ata: Fixes related to APM X-Gene SATA host controller driver.
-Date: Tue, 29 Jul 2014 12:24:48 +0530
-Message-ID: <1406616892-30273-1-git-send-email-stripathi@apm.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
+Subject: [PATCH v4 1/4] ata: Fix the watermark threshold for the APM X-Gene SATA host controller driver.
+Date: Tue, 29 Jul 2014 12:24:49 +0530
+Message-ID: <1406616892-30273-2-git-send-email-stripathi@apm.com>
+References: <1406616892-30273-1-git-send-email-stripathi@apm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from denmail01-v4020.amcc.com ([192.195.68.30]:52611 "EHLO
+	denmail01.apm.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752093AbaG2Gzt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Jul 2014 02:55:49 -0400
+In-Reply-To: <1406616892-30273-1-git-send-email-stripathi@apm.com>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
 Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>, Loc Ho <lho@apm.com>
-List-Id: linux-scsi@vger.kernel.org
 
-This patch set contains a couple of fixes related to APM X-Gene SATA
-controller driver.
-
-v2 Change:
-   1. Drop the Link down retry patch from this patch set.
-
-v4 Change:
-   1. Drop the patch to fix the csr-mask in dts for PHY clock
-     node of SATA Host Controller 1.
-   2. Add the patch to correct the OOB tunning parameters for
-     the COMINIT/COMWAKE parameters.
-   3. Add the patch to remove the NCQ support from the APM
-     X-Gene AHCI SATA Host controller driver.
-   4. Add the patch to remove the clock and PHY reference nodes
-     from the APM X-Gene Host controller dts node.
+As per SATA IO specification, when Host sends HOLD, the device takes
+about 20DW latency to reply to HOLDA. In some case, device doesn't
+response to HOLDA over 20DW and causes FIFO goes into over flow
+condition. Due to this condition, device enumerations fails with
+those devices. This patch adjust the watermark FIFO by increasing
+the FIFO depth from 0x16(default) to 0x30 to address this issue.
 
 Signed-off-by: Loc Ho <lho@apm.com>
 Signed-off-by: Suman Tripathi <stripathi@apm.com>
 ---
+ drivers/ata/ahci_xgene.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-Suman Tripathi (4):
-  ata: Fix the watermark threshold for the APM X-Gene SATA host
-    controller driver.
-  arm64: Remove the clock and PHY reference from the APM X-Gene SoC AHCI
-    SATA Host controller dts node.
-  ata: Use correct OOB tunning parameters for APM X-Gene SoC AHCI SATA
-    Host controller driver.
-  ata: Removing NCQ support from the APM X-Gene SoC AHCI SATA Host
-    Controller driver.
+diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
+index 77c89bf..03b6b0f 100644
+--- a/drivers/ata/ahci_xgene.c
++++ b/drivers/ata/ahci_xgene.c
+@@ -67,6 +67,9 @@
+ #define PORTAXICFG			0x000000bc
+ #define PORTAXICFG_OUTTRANS_SET(dst, src) \
+ 		(((dst) & ~0x00f00000) | (((u32)(src) << 0x14) & 0x00f00000))
++#define PORTRANSCFG			0x000000c8
++#define PORTRANSCFG_RXWM_SET(dst, src)		\
++		(((dst) & ~0x0000007f) | (((u32)(src)) & 0x0000007f))
 
- arch/arm64/boot/dts/apm-storm.dtsi | 92 --------------------------------------
- drivers/ata/ahci_xgene.c           | 17 ++++---
- 2 files changed, 12 insertions(+), 97 deletions(-)
+ /* SATA host controller AXI CSR */
+ #define INT_SLV_TMOMASK			0x00000010
+@@ -176,6 +179,10 @@ static void xgene_ahci_set_phy_cfg(struct xgene_ahci_context *ctx, int channel)
+ 	val = PORTAXICFG_OUTTRANS_SET(val, 0xe); /* Set outstanding */
+ 	writel(val, mmio + PORTAXICFG);
+ 	readl(mmio + PORTAXICFG); /* Force a barrier */
++	/* Set the watermark threshold of the receive FIFO */
++	val = readl(mmio + PORTRANSCFG);
++	val = PORTRANSCFG_RXWM_SET(val, 0x30);
++	writel(val, mmio + PORTRANSCFG);
+ }
 
+ /**
 --
 1.8.2.1
 
