@@ -1,26 +1,25 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Block/SCSI data integrity update v2
-Date: Tue, 29 Jul 2014 05:29:25 -0700
-Message-ID: <20140729122925.GB15127@infradead.org>
-References: <1406320469-29352-1-git-send-email-martin.petersen@oracle.com>
+Subject: Re: [PATCH v2 RESEND 00/23] scsi: Use pci_enable_msix_range()
+ instead of pci_enable_msix()
+Date: Tue, 29 Jul 2014 05:38:53 -0700
+Message-ID: <20140729123853.GA23629@infradead.org>
+References: <cover.1405533479.git.agordeev@redhat.com>
+ <20140717202820.GA16924@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:42939 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751143AbaG2M31 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Jul 2014 08:29:27 -0400
+Return-path: <linux-pci-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1406320469-29352-1-git-send-email-martin.petersen@oracle.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <20140717202820.GA16924@infradead.org>
+Sender: linux-pci-owner@vger.kernel.org
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, iss_storagedev@hp.com, intel-linux-scu@intel.com, support@lsi.com, DL-MPTFusionLinux@lsi.com, qla2xxx-upstream@qlogic.com, iscsi-driver@qlogic.com, pv-drivers@vmware.com, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sagi Grimberg <sagig@mellanox.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
 
-Sami, can you review the remaining patches in the series so that it's
-ready to be included in the scsi tree once Jens decides he is fine with
-that?
+On Thu, Jul 17, 2014 at 01:28:20PM -0700, Christoph Hellwig wrote:
+> Can I get reviews for the patches still missing one, maybe from the
+> Distro folks?  I'd like to pull in the whole things in favor of cherry
+> picking the reviewed patches.
 
-Thanks,
-	Christoph
-
+I've applied those few patches that did get a review to the
+drivers-for-3.17 branch.   It still would be great if someone could help
+reviewing the others.
