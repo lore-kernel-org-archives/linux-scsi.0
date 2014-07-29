@@ -1,104 +1,93 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 4/4] sd: Optionally attach to ZBC devices
-Date: Tue, 29 Jul 2014 16:45:17 +0200
-Message-ID: <1406645117-53088-5-git-send-email-hare@suse.de>
+Subject: [PATCH 3/4] libata-scsi: Update SATL for ZAC drives
+Date: Tue, 29 Jul 2014 16:45:16 +0200
+Message-ID: <1406645117-53088-4-git-send-email-hare@suse.de>
 References: <1406645117-53088-1-git-send-email-hare@suse.de>
 Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <1406645117-53088-1-git-send-email-hare@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 To: Christoph Hellwig <hsh@infradead.org>
-Cc: James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Tejun Heo <tj@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-ZBC drives are close to disk devices, so sd.c is well
-suited as a testbed for ZBC devices.
-This patch introduces a module option 'attach_zbc' to
-sd which will make the sd driver accept ZBC
-devices as normal disk drives.
+ZAC (zoned-access command) drives translate into ZBC (Zoned block
+command) device type for SCSI. So implement the correct mappings
+into libata-scsi and update the SCSI command set versions.
 
+Cc: Tejun Heo <tj@kernel.org>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/sd.c | 25 +++++++++++++++++++------
- 1 file changed, 19 insertions(+), 6 deletions(-)
+ drivers/ata/libata-scsi.c | 29 +++++++++++++++++++++++++++--
+ 1 file changed, 27 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 377a520..f957a85 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -91,6 +91,13 @@ MODULE_ALIAS_BLOCKDEV_MAJOR(SCSI_DISK15_MAJOR);
- MODULE_ALIAS_SCSI_DEVICE(TYPE_DISK);
- MODULE_ALIAS_SCSI_DEVICE(TYPE_MOD);
- MODULE_ALIAS_SCSI_DEVICE(TYPE_RBC);
-+MODULE_ALIAS_SCSI_DEVICE(TYPE_ZBC);
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index bea6e7f..500b721 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -1969,6 +1969,7 @@ static void ata_scsi_rbuf_fill(struct ata_scsi_args *args,
+ static unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf)
+ {
+ 	const u8 versions[] = {
++		0x00,
+ 		0x60,	/* SAM-3 (no version claimed) */
+ 
+ 		0x03,
+@@ -1977,6 +1978,20 @@ static unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf)
+ 		0x02,
+ 		0x60	/* SPC-3 (no version claimed) */
+ 	};
++	const u8 versions_zbc[] = {
++		0x00,
++		0xA0,	/* SAM-5 (no version claimed) */
 +
-+static bool sd_attach_zbc;
++		0x04,
++		0xC0,	/* SBC-3 (no version claimed) */
 +
-+module_param_named(attach_zbc, sd_attach_zbc, bool, S_IRUGO|S_IWUSR);
-+MODULE_PARM_DESC(attach_zbc,
-+		  "Attach to ZBC devices (default=0)");
- 
- #if !defined(CONFIG_DEBUG_BLOCK_EXT_DEVT)
- #define SD_MINORS	16
-@@ -161,7 +168,7 @@ cache_type_store(struct device *dev, struct device_attribute *attr,
- 	static const char temp[] = "temporary ";
- 	int len;
- 
--	if (sdp->type != TYPE_DISK)
-+	if (sdp->type != TYPE_DISK && sdp->type != TYPE_ZBC)
- 		/* no cache control on RBC devices; theoretically they
- 		 * can do it, but there's probably so many exceptions
- 		 * it's not worth the risk */
-@@ -259,7 +266,7 @@ allow_restart_store(struct device *dev, struct device_attribute *attr,
- 	if (!capable(CAP_SYS_ADMIN))
- 		return -EACCES;
- 
--	if (sdp->type != TYPE_DISK)
-+	if (sdp->type != TYPE_DISK && sdp->type != TYPE_ZBC)
- 		return -EINVAL;
- 
- 	sdp->allow_restart = simple_strtoul(buf, NULL, 10);
-@@ -389,7 +396,7 @@ provisioning_mode_store(struct device *dev, struct device_attribute *attr,
- 	if (!capable(CAP_SYS_ADMIN))
- 		return -EACCES;
- 
--	if (sdp->type != TYPE_DISK)
-+	if (sdp->type != TYPE_DISK && sdp->type != TYPE_ZBC)
- 		return -EINVAL;
- 
- 	if (!strncmp(buf, lbp_mode[SD_LBP_UNMAP], 20))
-@@ -456,7 +463,7 @@ max_write_same_blocks_store(struct device *dev, struct device_attribute *attr,
- 	if (!capable(CAP_SYS_ADMIN))
- 		return -EACCES;
- 
--	if (sdp->type != TYPE_DISK)
-+	if (sdp->type != TYPE_DISK && sdp->type != TYPE_ZBC)
- 		return -EINVAL;
- 
- 	err = kstrtoul(buf, 10, &max);
-@@ -2537,7 +2544,7 @@ static void sd_read_app_tag_own(struct scsi_disk *sdkp, unsigned char *buffer)
- 	struct scsi_mode_data data;
- 	struct scsi_sense_hdr sshdr;
- 
--	if (sdp->type != TYPE_DISK)
-+	if (sdp->type != TYPE_DISK && sdp->type != TYPE_ZBC)
- 		return;
- 
- 	if (sdkp->protection_type == 0)
-@@ -2957,7 +2964,13 @@ static int sd_probe(struct device *dev)
- 	int error;
- 
- 	error = -ENODEV;
--	if (sdp->type != TYPE_DISK && sdp->type != TYPE_MOD && sdp->type != TYPE_RBC)
-+	if (sdp->type != TYPE_DISK &&
-+	    sdp->type != TYPE_MOD &&
-+	    sdp->type != TYPE_RBC &&
-+	    sdp->type != TYPE_ZBC)
-+		goto out;
++		0x04,
++		0x60,	/* SPC-4 (no version claimed) */
 +
-+	if (sdp->type == TYPE_ZBC && !sd_attach_zbc)
- 		goto out;
++		0x60,
++		0x20,   /* ZBC (no version claimed) */
++	};
++
+ 	u8 hdr[] = {
+ 		TYPE_DISK,
+ 		0,
+@@ -1991,6 +2006,11 @@ static unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf)
+ 	if (ata_id_removeable(args->id))
+ 		hdr[1] |= (1 << 7);
  
- 	SCSI_LOG_HLQUEUE(3, sdev_printk(KERN_INFO, sdp,
++	if (args->dev->class == ATA_DEV_ZAC) {
++		hdr[0] = TYPE_ZBC;
++		hdr[2] = 0x6; /* ZBC is defined in SPC-4 */
++	}
++
+ 	memcpy(rbuf, hdr, sizeof(hdr));
+ 	memcpy(&rbuf[8], "ATA     ", 8);
+ 	ata_id_string(args->id, &rbuf[16], ATA_ID_PROD, 16);
+@@ -2003,7 +2023,10 @@ static unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf)
+ 	if (rbuf[32] == 0 || rbuf[32] == ' ')
+ 		memcpy(&rbuf[32], "n/a ", 4);
+ 
+-	memcpy(rbuf + 59, versions, sizeof(versions));
++	if (args->dev->class == ATA_DEV_ZAC)
++		memcpy(rbuf + 58, versions_zbc, sizeof(versions_zbc));
++	else
++		memcpy(rbuf + 58, versions, sizeof(versions));
+ 
+ 	return 0;
+ }
+@@ -2202,7 +2225,9 @@ static unsigned int ata_scsiop_inq_b1(struct ata_scsi_args *args, u8 *rbuf)
+ 	rbuf[4] = media_rotation_rate >> 8;
+ 	rbuf[5] = media_rotation_rate;
+ 	rbuf[7] = form_factor;
+-
++	if (args->dev->class == ATA_DEV_ZAC)
++		/* SBC-4 HAW_ZBC bit */
++		rbuf[8] |= 0x10;
+ 	return 0;
+ }
+ 
 -- 
 1.7.12.4
 
