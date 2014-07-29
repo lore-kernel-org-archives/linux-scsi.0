@@ -1,57 +1,46 @@
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-Subject: Re: [PATCH] block: bsg.c: Cleaning up missing null-terminate in
- conjunction with strncpy
-Date: Tue, 29 Jul 2014 21:09:01 +0200
-Message-ID: <CAFo99gY_eKF3Pbqte+WXSWXDg3d=NkFEswWMivgCjYT5-0m_vw@mail.gmail.com>
-References: <1406383665-1670-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
- <x49sillpnbm.fsf@segfault.boston.devel.redhat.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH v2 3/3] [SCSI] Make LBP quirk skip lbpme checks tests
+Date: Tue, 29 Jul 2014 15:30:15 -0400
+Message-ID: <yq1bns8arp4.fsf@sermon.lab.mkp.net>
+References: <20140724122223.GA31798@sucs.org>
+ <yq1iommkgkv.fsf@sermon.lab.mkp.net> <20140724153612.GA23648@sucs.org>
+ <yq1egxakb0z.fsf@sermon.lab.mkp.net>
+ <16fea5bb87ba47019527cee788e07a72@BY2PR0301MB0711.namprd03.prod.outlook.com>
+ <yq1wqb1gyw1.fsf@sermon.lab.mkp.net>
+ <e931486ef33b4e45bfebf2ab1b1b3037@BY2PR0301MB0711.namprd03.prod.outlook.com>
+ <yq17g30dprc.fsf@sermon.lab.mkp.net>
+ <cc4a3fd5451242739929d266b88fa8fa@BY2PR0301MB0711.namprd03.prod.outlook.com>
+ <yq138dnexcn.fsf@sermon.lab.mkp.net>
+ <43306901b1dc4e5dbe014a431e0935ea@BY2PR0301MB0711.namprd03.prod.outlook.com>
+ <yq11tt5cnmx.fsf@sermon.lab.mkp.net>
+ <548c8b1bae75483aa47c9493b62dc04d@BY2PR0301MB0711.namprd03.prod.outlook.com>
+ <1406577767.19418.11.camel@jarvis>
+ <a445e81eb25f46918e85f51c631f6094@BY2PR0301MB0711.namprd03.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oa0-f50.google.com ([209.85.219.50]:46426 "EHLO
-	mail-oa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751465AbaG2TJW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Jul 2014 15:09:22 -0400
-Received: by mail-oa0-f50.google.com with SMTP id g18so128912oah.37
-        for <linux-scsi@vger.kernel.org>; Tue, 29 Jul 2014 12:09:21 -0700 (PDT)
-In-Reply-To: <x49sillpnbm.fsf@segfault.boston.devel.redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <a445e81eb25f46918e85f51c631f6094@BY2PR0301MB0711.namprd03.prod.outlook.com>
+ (KY Srinivasan's message of "Tue, 29 Jul 2014 17:41:04 +0000")
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: driverdev-devel-bounces@linuxdriverproject.org
+To: KY Srinivasan <kys@microsoft.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "jasowang@redhat.com" <jasowang@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, "ohering@suse.com" <ohering@suse.com>, "hch@infradead.org" <hch@infradead.org>, "apw@canonical.com" <apw@canonical.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "sitsofe@gmail.com" <sitsofe@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Moyer <jmoyer@redhat.com>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-2014-07-28 16:31 GMT+02:00 Jeff Moyer <jmoyer@redhat.com>:
-> Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se> writes:
->
->> Replacing strncpy with strlcpy to avoid strings that lacks null terminate.
->>
->> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
->> ---
->>  block/bsg.c |    2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/block/bsg.c b/block/bsg.c
->> index ff46add..b2688c5 100644
->> --- a/block/bsg.c
->> +++ b/block/bsg.c
->> @@ -790,7 +790,7 @@ static struct bsg_device *bsg_add_device(struct inode *inode,
->>       mutex_lock(&bsg_mutex);
->>       hlist_add_head(&bd->dev_list, bsg_dev_idx_hash(iminor(inode)));
->>
->> -     strncpy(bd->name, dev_name(rq->bsg_dev.class_dev), sizeof(bd->name) - 1);
->> +     strlcpy(bd->name, dev_name(rq->bsg_dev.class_dev), sizeof(bd->name));
->>       dprintk("bound to <%s>, max queue %d\n",
->>               format_dev_t(buf, inode->i_rdev), bd->max_queue);
->
-> NACK
->
-> The bsg data structure is allocated using kzalloc, so that last byte
-> will be zero.
+>>>>> "KY" == KY Srinivasan <kys@microsoft.com> writes:
 
-Hi
+KY> We will fix this bug in the next release of Windows; we are also
+KY> looking at backporting the fix to prior versions of Windows.
 
-Sorry.. I did not know bsg_alloc_device used kzalloc, right then
-everything should be ok.
+Excellent. Thanks for looking into this!
 
-Kind regards
-Rickard Strandqvist
+-- 
+Martin K. Petersen	Oracle Linux Engineering
