@@ -1,46 +1,44 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2 3/3] [SCSI] Make LBP quirk skip lbpme checks tests
-Date: Tue, 29 Jul 2014 15:30:15 -0400
-Message-ID: <yq1bns8arp4.fsf@sermon.lab.mkp.net>
-References: <20140724122223.GA31798@sucs.org>
- <yq1iommkgkv.fsf@sermon.lab.mkp.net> <20140724153612.GA23648@sucs.org>
- <yq1egxakb0z.fsf@sermon.lab.mkp.net>
- <16fea5bb87ba47019527cee788e07a72@BY2PR0301MB0711.namprd03.prod.outlook.com>
- <yq1wqb1gyw1.fsf@sermon.lab.mkp.net>
- <e931486ef33b4e45bfebf2ab1b1b3037@BY2PR0301MB0711.namprd03.prod.outlook.com>
- <yq17g30dprc.fsf@sermon.lab.mkp.net>
- <cc4a3fd5451242739929d266b88fa8fa@BY2PR0301MB0711.namprd03.prod.outlook.com>
- <yq138dnexcn.fsf@sermon.lab.mkp.net>
- <43306901b1dc4e5dbe014a431e0935ea@BY2PR0301MB0711.namprd03.prod.outlook.com>
- <yq11tt5cnmx.fsf@sermon.lab.mkp.net>
- <548c8b1bae75483aa47c9493b62dc04d@BY2PR0301MB0711.namprd03.prod.outlook.com>
- <1406577767.19418.11.camel@jarvis>
- <a445e81eb25f46918e85f51c631f6094@BY2PR0301MB0711.namprd03.prod.outlook.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 11646] QLA2xxx: Kernel deadlock on high load somewhere after
+ 2.6.20
+Date: Tue, 29 Jul 2014 19:59:54 +0000
+Message-ID: <bug-11646-11613-GEpTlm9cUh@https.bugzilla.kernel.org/>
+References: <bug-11646-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <a445e81eb25f46918e85f51c631f6094@BY2PR0301MB0711.namprd03.prod.outlook.com>
- (KY Srinivasan's message of "Tue, 29 Jul 2014 17:41:04 +0000")
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: driverdev-devel-bounces@linuxdriverproject.org
-To: KY Srinivasan <kys@microsoft.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "jasowang@redhat.com" <jasowang@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, "ohering@suse.com" <ohering@suse.com>, "hch@infradead.org" <hch@infradead.org>, "apw@canonical.com" <apw@canonical.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "sitsofe@gmail.com" <sitsofe@gmail.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.19.201]:42485 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751728AbaG2UAA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Jul 2014 16:00:00 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id C5AFC20142
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Jul 2014 19:59:59 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id 90FC4201BF
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Jul 2014 19:59:57 +0000 (UTC)
+In-Reply-To: <bug-11646-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
->>>>> "KY" == KY Srinivasan <kys@microsoft.com> writes:
+https://bugzilla.kernel.org/show_bug.cgi?id=11646
 
-KY> We will fix this bug in the next release of Windows; we are also
-KY> looking at backporting the fix to prior versions of Windows.
+Ravshan DM <mravshan@gmail.com> changed:
 
-Excellent. Thanks for looking into this!
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |mravshan@gmail.com
+
+--- Comment #38 from Ravshan DM <mravshan@gmail.com> ---
+I had this issue reproduced on my environment: 2.6.36.4 #848 SMP Thu Jul 17
+19:55:17 UTC 2014 x86_64 x86_64 x86_64 GNU/Linux
+
+It took time to figure out the root cause, which turned to be a bad SFP, once I
+replaced it, all on HBA qla2462, the FC switch recognized the FC port(s)
+immediately and all LUNs re-appeared on the host. I hope this info helps.
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+You are receiving this mail because:
+You are the assignee for the bug.
