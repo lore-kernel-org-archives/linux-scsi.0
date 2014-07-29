@@ -1,71 +1,34 @@
-From: Boaz Harrosh <openosd@gmail.com>
-Subject: Re: [RFD] brd.ko Never supported partitions should we remove the
- dead code ?
-Date: Tue, 29 Jul 2014 20:13:47 +0300
-Message-ID: <53D7D64B.5080504@gmail.com>
-References: <53D7CDDD.1000302@gmail.com> <20140729165603.GN6754@linux.intel.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 4/4] sd: Optionally attach to ZBC devices
+Date: Tue, 29 Jul 2014 10:14:14 -0700
+Message-ID: <20140729171414.GA1060@infradead.org>
+References: <1406645117-53088-1-git-send-email-hare@suse.de>
+ <1406645117-53088-5-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pd0-f171.google.com ([209.85.192.171]:55464 "EHLO
-	mail-pd0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751244AbaG2RNv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Jul 2014 13:13:51 -0400
-Received: by mail-pd0-f171.google.com with SMTP id z10so12003386pdj.30
-        for <linux-scsi@vger.kernel.org>; Tue, 29 Jul 2014 10:13:51 -0700 (PDT)
-In-Reply-To: <20140729165603.GN6754@linux.intel.com>
+Received: from bombadil.infradead.org ([198.137.202.9]:35177 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751244AbaG2ROP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Jul 2014 13:14:15 -0400
+Content-Disposition: inline
+In-Reply-To: <1406645117-53088-5-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <willy@linux.intel.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Ross Zwisler <ross.zwisler@linux.intel.com>
+To: Hannes Reinecke <hare@suse.de>
+Cc: Christoph Hellwig <hsh@infradead.org>, James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-On 07/29/2014 07:56 PM, Matthew Wilcox wrote:
-> On Tue, Jul 29, 2014 at 07:37:49PM +0300, Boaz Harrosh wrote:
->> But before we are running to fix this bug. Could we please do better and just remove the support for partitions
->> all together.
->> 	Since it *never* worked anyway, so probably no one needs it! Surly no one used it
+On Tue, Jul 29, 2014 at 04:45:17PM +0200, Hannes Reinecke wrote:
+> ZBC drives are close to disk devices, so sd.c is well
+> suited as a testbed for ZBC devices.
+> This patch introduces a module option 'attach_zbc' to
+> sd which will make the sd driver accept ZBC
+> devices as normal disk drives.
 > 
-> I fixed this in patch 4/22 of the v8 series.  The correct place to
-> handle partitioning is in the block layer, not the individual drivers
-> (nor the filesystems).
-> 
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
 
-Sir Mathew hi
+Looks reasonable to me.
 
-> @@ -378,10 +378,12 @@ static int brd_direct_access(struct block_device *bdev, sector_t sector,
->  
->  	if (!brd)
->  		return -ENODEV;
-> +	sector += get_start_sect(bdev);
->  	if (sector & (PAGE_SECTORS-1))
->  		return -EINVAL;
-> +/* Check is wrong here we need to check against bdev->bd_part->nr_sects */
->  	if (sector + PAGE_SECTORS > get_capacity(bdev->bd_disk))
->  		return -ERANGE;
->  	page = brd_insert_page(brd, sector);
->  	if (!page)
->  		return -ENOSPC;
-
-you mean you fixed the brd_direct_access() hunk by pointing all users to a wrapper
-that does the proper offsetting, sure.
-
-But that is not the main bug I was talking about, the main BUG is that partitions are
-not supported at all because of the clubber of *part in brd_probe()
-
-> @@ -558,7 +564,8 @@ static struct kobject *brd_probe(dev_t dev, int *part, void *data)
->  	kobj = brd ? get_disk(brd->brd_disk) : NULL;
->  	mutex_unlock(&brd_devices_mutex);
->  
-> -	*part = 0;
-> +//	Fix the partition BUG *part comes in correctly must not need to touch it
-> +// 	*part = 0;
->  	return kobj;
->  }
-
-And my point is that: No one uses partitions with brd, why should we not remove it
-all together, why fix it and keep it?
-
-Cheers
-Boaz
+I'd also really like a sysfs file that tells us if we're dealing
+with a host aware device, as those report as TYPE_SBC. 
 
