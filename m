@@ -1,7 +1,7 @@
 From: Julia Lawall <Julia.Lawall@lip6.fr>
-Subject: [PATCH 5/9] scsi: use correct structure type name in sizeof
-Date: Tue, 29 Jul 2014 17:16:47 +0200
-Message-ID: <1406647011-8543-6-git-send-email-Julia.Lawall@lip6.fr>
+Subject: [PATCH 7/9] scsi: use correct structure type name in sizeof
+Date: Tue, 29 Jul 2014 17:16:49 +0200
+Message-ID: <1406647011-8543-8-git-send-email-Julia.Lawall@lip6.fr>
 References: <1406647011-8543-1-git-send-email-Julia.Lawall@lip6.fr>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1406647011-8543-1-git-send-email-Julia.Lawall@lip6.fr>
@@ -22,19 +22,19 @@ semantic patch used can be found in message 0 of this patch series.
 Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
 
 ---
- drivers/scsi/eata.c |    2 +-
+ drivers/scsi/u14-34f.c |    2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/eata.c b/drivers/scsi/eata.c
-index 813dd5c..4caf221 100644
---- a/drivers/scsi/eata.c
-+++ b/drivers/scsi/eata.c
-@@ -811,7 +811,7 @@ struct mscp {
- 	struct sg_list *sglist;	/* pointer to the allocated SG list */
- };
+diff --git a/drivers/scsi/u14-34f.c b/drivers/scsi/u14-34f.c
+index 4e76fe8..617d72a 100644
+--- a/drivers/scsi/u14-34f.c
++++ b/drivers/scsi/u14-34f.c
+@@ -585,7 +585,7 @@ struct mscp {
+    struct sg_list *sglist; /* pointer to the allocated SG list */
+    };
  
 -#define CP_TAIL_SIZE (sizeof(struct sglist *) + sizeof(dma_addr_t))
 +#define CP_TAIL_SIZE (sizeof(struct sg_list *) + sizeof(dma_addr_t))
  
  struct hostdata {
- 	struct mscp cp[MAX_MAILBOXES];	/* Mailboxes for this board */
+    struct mscp cp[MAX_MAILBOXES];       /* Mailboxes for this board */
