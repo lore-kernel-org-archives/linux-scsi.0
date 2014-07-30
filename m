@@ -1,18 +1,18 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 1/4] iscsi class: fix get_host_stats error handling
-Date: Wed, 30 Jul 2014 14:50:55 +0200
-Message-ID: <53D8EA2F.8040505@suse.de>
-References: <1405198311-64449-1-git-send-email-michaelc@cs.wisc.edu> <1405198311-64449-2-git-send-email-michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 2/4] qla4xxx: fix get_host_stats error propagation
+Date: Wed, 30 Jul 2014 14:51:17 +0200
+Message-ID: <53D8EA45.30600@suse.de>
+References: <1405198311-64449-1-git-send-email-michaelc@cs.wisc.edu> <1405198311-64449-3-git-send-email-michaelc@cs.wisc.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1;
 	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:37732 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:37739 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753807AbaG3Mu6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Jul 2014 08:50:58 -0400
-In-Reply-To: <1405198311-64449-2-git-send-email-michaelc@cs.wisc.edu>
+	id S1752858AbaG3MvS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Jul 2014 08:51:18 -0400
+In-Reply-To: <1405198311-64449-3-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org
@@ -20,34 +20,42 @@ To: michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org
 On 07/12/2014 10:51 PM, michaelc@cs.wisc.edu wrote:
 > From: Mike Christie <michaelc@cs.wisc.edu>
 >
-> iscsi_get_host_stats was dropping the error code returned
-> by drivers like qla4xxx.
+> qla4xxx was not always returning -EXYZ error codes when
+> qla4xxx_get_host_stats failed.
 >
 > Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+> Acked-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+>
 > ---
->   drivers/scsi/scsi_transport_iscsi.c |    4 ++++
->   1 files changed, 4 insertions(+), 0 deletions(-)
+>   drivers/scsi/qla4xxx/ql4_os.c |    2 ++
+>   1 files changed, 2 insertions(+), 0 deletions(-)
 >
-> diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_=
-transport_iscsi.c
-> index b481e62..14bfa53 100644
-> --- a/drivers/scsi/scsi_transport_iscsi.c
-> +++ b/drivers/scsi/scsi_transport_iscsi.c
-> @@ -3467,6 +3467,10 @@ iscsi_get_host_stats(struct iscsi_transport *t=
-ransport, struct nlmsghdr *nlh)
->   		memset(buf, 0, host_stats_size);
+> diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4=
+_os.c
+> index c5d9564..b79b48c 100644
+> --- a/drivers/scsi/qla4xxx/ql4_os.c
+> +++ b/drivers/scsi/qla4xxx/ql4_os.c
+> @@ -1050,6 +1050,7 @@ static int qla4xxx_get_host_stats(struct Scsi_H=
+ost *shost, char *buf, int len)
+>   	if (!ql_iscsi_stats) {
+>   		ql4_printk(KERN_ERR, ha,
+>   			   "Unable to allocate memory for iscsi stats\n");
+> +		ret =3D -ENOMEM;
+>   		goto exit_host_stats;
+>   	}
 >
->   		err =3D transport->get_host_stats(shost, buf, host_stats_size);
-> +		if (err) {
-> +			kfree(skbhost_stats);
-> +			goto exit_host_stats;
-> +		}
+> @@ -1058,6 +1059,7 @@ static int qla4xxx_get_host_stats(struct Scsi_H=
+ost *shost, char *buf, int len)
+>   	if (ret !=3D QLA_SUCCESS) {
+>   		ql4_printk(KERN_ERR, ha,
+>   			   "Unable to retrieve iscsi stats\n");
+> +		ret =3D -EIO;
+>   		goto exit_host_stats;
+>   	}
+>   	host_stats->mactx_frames =3D le64_to_cpu(ql_iscsi_stats->mac_tx_fr=
+ames);
 >
->   		actual_size =3D nlmsg_total_size(sizeof(*ev) + host_stats_size);
->   		skb_trim(skbhost_stats, NLMSG_ALIGN(actual_size));
->
-What happens with the skbhost_stats allocated earlier? Shouldn't it=20
-be freed here, too?
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
 Cheers,
 
