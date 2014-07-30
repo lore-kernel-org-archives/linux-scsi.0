@@ -1,56 +1,202 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 3/4] libata-scsi: Update SATL for ZAC drives
-Date: Wed, 30 Jul 2014 08:18:43 +0200
-Message-ID: <53D88E43.40301@suse.de>
-References: <1406645117-53088-1-git-send-email-hare@suse.de> <1406645117-53088-4-git-send-email-hare@suse.de> <20140729171258.GB32713@infradead.org>
+From: Nilesh Javali <nilesh.javali@qlogic.com>
+Subject: RE: [PATCH] scsi: qla4xxx: ql4_os.c:  Cleaning up missing
+ null-terminate in conjunction with strncpy
+Date: Wed, 30 Jul 2014 06:25:44 +0000
+Message-ID: <058691E078642A44B7C96BB0B1DB4F2446C29A10@avmb2.qlogic.org>
+References: <1406386172-4142-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/mixed;
+	boundary="_000_058691E078642A44B7C96BB0B1DB4F2446C29A10avmb2qlogicorg_"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:58413 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751948AbaG3GSp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Jul 2014 02:18:45 -0400
-In-Reply-To: <20140729171258.GB32713@infradead.org>
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:46000 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751407AbaG3GZr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Jul 2014 02:25:47 -0400
+Received: from pps.filterd (m0000643.ppops.net [127.0.0.1])
+	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id s6U6OsWZ017207
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Jul 2014 23:25:46 -0700
+Received: from avcashub1.qlogic.com (avcashub3.qlogic.com [198.70.193.117])
+	by mx0b-0016ce01.pphosted.com with ESMTP id 1negur96ux-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Jul 2014 23:25:46 -0700
+In-Reply-To: <1406386172-4142-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>
+To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>, Vikas Chaudhary <vikas.chaudhary@qlogic.com>, Dept-Eng iSCSI Driver <Dept-iSCSIDriver@qlogic.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-On 07/29/2014 07:12 PM, Christoph Hellwig wrote:
-> On Tue, Jul 29, 2014 at 04:45:16PM +0200, Hannes Reinecke wrote:
->> ZAC (zoned-access command) drives translate into ZBC (Zoned block
->> command) device type for SCSI. So implement the correct mappings
->> into libata-scsi and update the SCSI command set versions.
->
-> This seems to both set the periphal type to ZBC and set the
-> HAW_ZBC bit, which is invalid for the version of ZBC spec I've seen.
->
-D'oh. You are correct, one should read the doc properly.
+--_000_058691E078642A44B7C96BB0B1DB4F2446C29A10avmb2qlogicorg_
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-> Doesn't ZAC also destinguish between host aware and host managed devi=
-ce
-> like ZBC does?
->
-Not as such. The spec I have only differentiates between CMR=20
-(conventional media recording) and SMR (shingled media recording)=20
-zones. And every SMR zone is a sequential write required zone.
-So the host aware device type with sequential write preferred zones=20
-is not supported.
+Acked-By: Nilesh Javali <nilesh.javali@qlogic.com>
 
-I'll be sending an updated patch with the correct bits set.
 
-Cheers,
+-----Original Message-----
+From: Rickard Strandqvist [mailto:rickard_strandqvist@spectrumdigital.se]=20
+Sent: Saturday, July 26, 2014 8:20 PM
+To: Vikas Chaudhary; Dept-Eng iSCSI Driver
+Cc: Rickard Strandqvist; James E.J. Bottomley; linux-scsi; linux-kernel
+Subject: [PATCH] scsi: qla4xxx: ql4_os.c: Cleaning up missing null-terminat=
+e in conjunction with strncpy
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+Replacing strncpy with strlcpy to avoid strings that lacks null terminate.
+
+Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+---
+ drivers/scsi/qla4xxx/ql4_os.c |   14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c =
+index 3202063..a07c53e 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -756,9 +756,9 @@ static int qla4xxx_get_chap_list(struct Scsi_Host *shos=
+t, uint16_t chap_tbl_idx,
+ 			continue;
+=20
+ 		chap_rec->chap_tbl_idx =3D i;
+-		strncpy(chap_rec->username, chap_table->name,
++		strlcpy(chap_rec->username, chap_table->name,
+ 			ISCSI_CHAP_AUTH_NAME_MAX_LEN);
+-		strncpy(chap_rec->password, chap_table->secret,
++		strlcpy(chap_rec->password, chap_table->secret,
+ 			QL4_CHAP_MAX_SECRET_LEN);
+ 		chap_rec->password_length =3D chap_table->secret_len;
+=20
+@@ -6027,8 +6027,8 @@ static int qla4xxx_get_bidi_chap(struct scsi_qla_host=
+ *ha, char *username,
+ 		if (!(chap_table->flags & BIT_6)) /* Not BIDI */
+ 			continue;
+=20
+-		strncpy(password, chap_table->secret, QL4_CHAP_MAX_SECRET_LEN);
+-		strncpy(username, chap_table->name, QL4_CHAP_MAX_NAME_LEN);
++		strlcpy(password, chap_table->secret, QL4_CHAP_MAX_SECRET_LEN);
++		strlcpy(username, chap_table->name, QL4_CHAP_MAX_NAME_LEN);
+ 		ret =3D 0;
+ 		break;
+ 	}
+@@ -6258,8 +6258,8 @@ static void qla4xxx_get_param_ddb(struct ddb_entry *d=
+db_entry,
+=20
+ 	tddb->tpgt =3D sess->tpgt;
+ 	tddb->port =3D conn->persistent_port;
+-	strncpy(tddb->iscsi_name, sess->targetname, ISCSI_NAME_SIZE);
+-	strncpy(tddb->ip_addr, conn->persistent_address, DDB_IPADDR_LEN);
++	strlcpy(tddb->iscsi_name, sess->targetname, ISCSI_NAME_SIZE);
++	strlcpy(tddb->ip_addr, conn->persistent_address, DDB_IPADDR_LEN);
+ }
+=20
+ static void qla4xxx_convert_param_ddb(struct dev_db_entry *fw_ddb_entry, @=
+@ -7764,7 +7764,7 @@ static int qla4xxx_sysfs_ddb_logout(struct iscsi_bus_f=
+lash_session *fnode_sess,
+ 		goto exit_ddb_logout;
+ 	}
+=20
+-	strncpy(flash_tddb->iscsi_name, fnode_sess->targetname,
++	strlcpy(flash_tddb->iscsi_name, fnode_sess->targetname,
+ 		ISCSI_NAME_SIZE);
+=20
+ 	if (!strncmp(fnode_sess->portal_type, PORTAL_TYPE_IPV6, 4))
 --
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+1.7.10.4
+
+
+--_000_058691E078642A44B7C96BB0B1DB4F2446C29A10avmb2qlogicorg_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
+
+eJ8+IhgSAQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAADUzRjk2MEE0
+ODA1ODQzNDRCRUQxMEQ5MDZCMzBEQkY4AB4HAQ2ABAACAAAAAgACAAEFgAMADgAAAN4HBwAeAAYA
+GQAsAAMAWAEBIIADAA4AAADeBwcAHgAGABkALAADAFgBAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
+YWlsLk5vdGUAMQgBBIABAGUAAABSRTogW1BBVENIXSBzY3NpOiBxbGE0eHh4OiBxbDRfb3MuYzog
+IENsZWFuaW5nIHVwIG1pc3NpbmcgbnVsbC10ZXJtaW5hdGUgaW4gY29uanVuY3Rpb24gd2l0aCBz
+dHJuY3B5ALcjAQOQBgCEEgAAQAAAAAIBfwABAAAAPAAAADwwNTg2OTFFMDc4NjQyQTQ0QjdDOTZC
+QjBCMURCNEYyNDQ2QzI5QTEwQGF2bWIyLnFsb2dpYy5vcmc+AAsAHw4BAAAAAgEJEAEAAABmBgAA
+YgYAAMoNAABMWkZ1Ab/162EACmZiaWQEAABjY8BwZzEyNTIA/gND8HRleHQB9wKkA+MCAARjaArA
+c2V0MCDvB20CgwBQEU0yCoAGtAKAln0KgAjIOwliMTkOwL8JwxZyCjIWcQKAFWIqCbBzCfAEkGF0
+BbIOUANgc6JvAYAgRXgRwW4YMF0GUnYEkBe2AhByAMB0fQhQbhoxECAFwAWgG2RkmiADUiAQIhey
+XHYIkOR3awuAZDUdUwTwB0ANF3AwCnEX8mJrbWsGcwGQACAgQk1fQuBFR0lOfQr8AfEL8RAgQWNr
+CYAtQnkOOgewAxAHkGggSmFidgdAaSA8AwEicS5SaiLDQHEJAGcOUC7xBaBtPlwi8BhQCoEk29ot
+JhJPBRAkQG4HQAXQuQeQc2EYMCYTJMVGA2G1IiBSDlBrCxEGAHQYcM0dwHEdYB9gIFsAwAMQbRiQ
+OgUQKKNfH2ApJ0DMc3AFkCkQdW0N4CRA6QGQbC4SAF0DMCTUBmAXAjAiIAYQdAhwZGF5AiwioHVs
+eSAyNoMuEAHQMTQgODohcRRQTSTFVCogIFZpSyiwBCBDEdB1ZBHReZA7IERlBTAtRRnAwCBpU0NT
+STEwBRDzGjEkxUNjKG8pcjEgIrChB4JFLkouH7BvAkCPA3AecDERJNF1eC0E8G8AkDXWIcAEoGUJ
+UCzVdQxiaiuhIiBbUEFUPENILKA2UiIgJBBhNOZ4OZA5MjRfGRAkcCIgHkMecABwC4AxsHVwII5t
+BAE60jYQbGwtG6E/O0AmsBAgMcADoBvhanWqbiuwaQIgIAPwdCKQ0yrBPTBweSTMUjFQC2BuYzrS
+PfU9l2xAIhiQIP0iwG8N0D3iOtEEID3AGIC/NeAA0B9QO7McwTw1LiTMHlMmgBhQIeAZMGYtYvci
+ETNPKZE8Kk8rXyxiJLZJJ4ggZDJDcy82Ui/HOVVLUToEIHwgTIAu4e4rTOQmE0n4MRxwIlEb0PUZ
+o2QuEDc8oRIAACA9YfBzKCspTyIBAB5wT7TcLSkkzA3gASAgJhAsIe1BUC9Kn0urYlLfS5wdsRkQ
+MCAzAdAB0DYzLoAuYTA3YzUzGeDxHpE2NDQlqFK/S30kxU9M4VS/Wk8k40BAUlA3+jUukDlM0F6E
+XkEfYT1Ql1aiBUA5VV8YMHRfEcGscF8i8B9gKEeBdSuwswYANmFfSBkQBUAqIoCLYmEuEHVf8TE2
+XwVAy2DzAlFfDdB4LEoWDITvZSQb0j1QNhBlFiBklmSdI2OkCXBjLT5juiA9XzHAZlYnoGVWPfUo
+Z/h1/0+BJrAHgC4QY7QBoB5waHD/bBNbNmoqQOJrL2w/bUlk/ApJMeJfOLBBUF9BAFVUSF9OQU1F
+AF9NQVhfTEVOvilpn2qvaHAKsAQQdwWw/08RcFoSAAUAEhBtf26Pdq/jd79xnyBRTDoAcxN0AsBT
+RUNSRVR0O2df93qZYTAJ8Gc9wWlge29g0BeBsWZeXkI2V0A3LDj/TNCE5V9fYGcNwmDjYYY2Uvpf
+OVFfYsJikBHQcDMFwI4qb7d/fwaQICghbwStcKVmC2BCESYfsEl/AMA2KSkgLyoHsDVQ5Y1BRDIQ
+Ki98n2WfZql9dQ8oes972n3ffu6Rjyj/b79wyJR8c7OVynkPkp+Tr/+Uv5qPeVuXr5i/mc+Kr3hR
+nWlRMKSPW9AJcGFrphvvAzAgQIRJDqA4hSOpRIXYD0FzYDoKsTSgX2RkYvthhqwxXy1BMQBikKzn
+ipjtp6p0rDFocHQOcKXCEgDvBBCvxKeMr4RwCRGCEgIg/m56oVxBKYEtQavACRGWC/91l6+EBABi
+EqGksFUKwGCxz6GkcrRzszIAWkWV/LTO9WEgYawwcqHhsr66gicBwS4QRERCX0k4gLyA/lKff3mI
+tV+2b7d/vW++e/+6b7t/vI+Oxqh2ZteqX2CBNxvlq89QYXasIK0HZnevrCKtxYXCXnA3WGAsT0CP
+XuDNhIXfYGNzeXMD0F/McyQhCGBhd780YqFgX7+M0SKAR3AnAT1izEBuBHH70jOKnyDQgEExEDAs
+MNAZ/6ePkK91edHkvt8ccNLnwDv/wi/Yb9l/2o/Tj8Efrj+Ld309822H8N5qsjIHQGOAeQNIUC4Q
+UE9SVEFMsF9UWVBz4MZAVi6RDjSNoCWnJMUxLjcuPR6QLliGJMUVQumQAAAfAEIAAQAAABwAAABO
+AGkAbABlAHMAaAAgAEoAYQB2AGEAbABpAAAAHwBlAAEAAAAyAAAAbgBpAGwAZQBzAGgALgBqAGEA
+dgBhAGwAaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AZAABAAAACgAAAFMATQBUAFAAAAAA
+AAIBQQABAAAAcAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgE4AaQBsAGUAcwBoACAASgBhAHYA
+YQBsAGkAAABTAE0AVABQAAAAbgBpAGwAZQBzAGgALgBqAGEAdgBhAGwAaQBAAHEAbABvAGcAaQBj
+AC4AYwBvAG0AAAAfAAJdAQAAADIAAABuAGkAbABlAHMAaAAuAGoAYQB2AGEAbABpAEAAcQBsAG8A
+ZwBpAGMALgBjAG8AbQAAAAAAHwDlXwEAAAA6AAAAcwBpAHAAOgBuAGkAbABlAHMAaAAuAGoAYQB2
+AGEAbABpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwAaDAEAAAAcAAAATgBpAGwAZQBzAGgA
+IABKAGEAdgBhAGwAaQAAAB8AHwwBAAAAMgAAAG4AaQBsAGUAcwBoAC4AagBhAHYAYQBsAGkAQABx
+AGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfAB4MAQAAAAoAAABTAE0AVABQAAAAAAACARkMAQAAAHAA
+AAAAAAAAgSsfpL6jEBmdbgDdAQ9UAgAAAIBOAGkAbABlAHMAaAAgAEoAYQB2AGEAbABpAAAAUwBN
+AFQAUAAAAG4AaQBsAGUAcwBoAC4AagBhAHYAYQBsAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAA
+HwABXQEAAAAyAAAAbgBpAGwAZQBzAGgALgBqAGEAdgBhAGwAaQBAAHEAbABvAGcAaQBjAC4AYwBv
+AG0AAAAAAB8A+D8BAAAAHAAAAE4AaQBsAGUAcwBoACAASgBhAHYAYQBsAGkAAAAfACNAAQAAADIA
+AABuAGkAbABlAHMAaAAuAGoAYQB2AGEAbABpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwAi
+QAEAAAAKAAAAUwBNAFQAUAAAAAAAAgH5PwEAAABwAAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACA
+TgBpAGwAZQBzAGgAIABKAGEAdgBhAGwAaQAAAFMATQBUAFAAAABuAGkAbABlAHMAaAAuAGoAYQB2
+AGEAbABpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8ACV0BAAAAMgAAAG4AaQBsAGUAcwBoAC4A
+agBhAHYAYQBsAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfADFAAQAAAAIAAAAAAAAACwBA
+OgEAAAAfADBAAQAAAAIAAAAAAAAAHwAaAAEAAAASAAAASQBQAE0ALgBOAG8AdABlAAAAAAADAPE/
+CQQAAAsAQDoBAAAAAwD9P+QEAAACAQswAQAAABAAAABT+WCkgFhDRL7RDZBrMNv4AwAXAAEAAABA
+ADkAAGSYF7+rzwFAAAgwDTTxF7+rzwELACkAAAAAAAsAIwAAAAAAHwAAgIYDAgAAAAAAwAAAAAAA
+AEYBAAAAHgAAAGEAYwBjAGUAcAB0AGwAYQBuAGcAdQBhAGcAZQAAAAAAAQAAAAwAAABlAG4ALQBV
+AFMAAAALAACACCAGAAAAAADAAAAAAAAARgAAAAAGhQAAAAAAAB8ANwABAAAAygAAAFIARQA6ACAA
+WwBQAEEAVABDAEgAXQAgAHMAYwBzAGkAOgAgAHEAbABhADQAeAB4AHgAOgAgAHEAbAA0AF8AbwBz
+AC4AYwA6ACAAIABDAGwAZQBhAG4AaQBuAGcAIAB1AHAAIABtAGkAcwBzAGkAbgBnACAAbgB1AGwA
+bAAtAHQAZQByAG0AaQBuAGEAdABlACAAaQBuACAAYwBvAG4AagB1AG4AYwB0AGkAbwBuACAAdwBp
+AHQAaAAgAHMAdAByAG4AYwBwAHkAAAAAAB8APQABAAAACgAAAFIARQA6ACAAAAAAAAMANgAAAAAA
+AwAuAAAAAAAfAEIQAQAAAJQAAAA8ADEANAAwADYAMwA4ADYAMQA3ADIALQA0ADEANAAyAC0AMQAt
+AGcAaQB0AC0AcwBlAG4AZAAtAGUAbQBhAGkAbAAtAHIAaQBjAGsAYQByAGQAXwBzAHQAcgBhAG4A
+ZABxAHYAaQBzAHQAQABzAHAAZQBjAHQAcgB1AG0AZABpAGcAaQB0AGEAbAAuAHMAZQA+AAAAAgFx
+AAEAAAAbAAAAAQHPqOCda15Wjn7IO0ixf7tMeEKI25u4LAlQAB8AcAABAAAAwgAAAFsAUABBAFQA
+QwBIAF0AIABzAGMAcwBpADoAIABxAGwAYQA0AHgAeAB4ADoAIABxAGwANABfAG8AcwAuAGMAOgAg
+ACAAQwBsAGUAYQBuAGkAbgBnACAAdQBwACAAbQBpAHMAcwBpAG4AZwAgAG4AdQBsAGwALQB0AGUA
+cgBtAGkAbgBhAHQAZQAgAGkAbgAgAGMAbwBuAGoAdQBuAGMAdABpAG8AbgAgAHcAaQB0AGgAIABz
+AHQAcgBuAGMAcAB5AAAAAAAfADUQAQAAAHgAAAA8ADAANQA4ADYAOQAxAEUAMAA3ADgANgA0ADIA
+QQA0ADQAQgA3AEMAOQA2AEIAQgAwAEIAMQBEAEIANABGADIANAA0ADYAQwAyADkAQQAxADAAQABh
+AHYAbQBiADIALgBxAGwAbwBnAGkAYwAuAG8AcgBnAD4AAAAfADkQAQAAAJQAAAA8ADEANAAwADYA
+MwA4ADYAMQA3ADIALQA0ADEANAAyAC0AMQAtAGcAaQB0AC0AcwBlAG4AZAAtAGUAbQBhAGkAbAAt
+AHIAaQBjAGsAYQByAGQAXwBzAHQAcgBhAG4AZABxAHYAaQBzAHQAQABzAHAAZQBjAHQAcgB1AG0A
+ZABpAGcAaQB0AGEAbAAuAHMAZQA+AAAAAwDeP59OAAALAACACCAGAAAAAADAAAAAAAAARgAAAAAD
+hQAAAAAAAAMAAIAIIAYAAAAAAMAAAAAAAABGAAAAAAGFAAAAAAAAAwCAEP////9AAAcwLbPaFr+r
+zwELAAIAAQAAAAMAJgAAAAAACwArAAAAAAACAUcAAQAAAC4AAABjPVVTO2E9IDtwPVFMb2dpYzts
+PUFWTUIyLTE0MDczMDA2MjU0NFotMzczMjgAAAACARAwAQAAAEYAAAAAAAAAgqc0rY6x/kS2Wxuo
+6bh73AcAzTs2Ijp7n0Cm/muqxOLaYQAAAGx4FQAAdI0nmS6jZkyYdyYbqJkFWwB0fThicAAAAAAf
+APo/AQAAABwAAABOAGkAbABlAHMAaAAgAEoAYQB2AGEAbABpAAAAAwAJWQEAAAADAACACCAGAAAA
+AADAAAAAAAAARgAAAAAQhQAAAAAAAAsAAIAIIAYAAAAAAMAAAAAAAABGAAAAAA6FAAAAAAAAAwAA
+gAggBgAAAAAAwAAAAAAAAEYAAAAAGIUAAAAAAAALAACACCAGAAAAAADAAAAAAAAARgAAAACChQAA
+AAAAAB8AAIAIIAYAAAAAAMAAAAAAAABGAAAAANiFAAABAAAAEgAAAEkAUABNAC4ATgBvAHQAZQAA
+AAAAAwANNP0/AAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAgAAAAeAAtAG0AcwAtAGgAYQBzAC0A
+YQB0AHQAYQBjAGgAAAABAAAAAgAAAAAAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAiAAAAeAAt
+AG8AcgBpAGcAaQBuAGEAdABpAG4AZwAtAGkAcAAAAAAAAQAAABgAAABbADEAMAAuADEALgA0AC4A
+MQAwAF0AAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAWAAAAZABpAHMAYwBsAGEAaQBtAGUAcgAA
+AAAAAQAAAA4AAABiAHkAcABhAHMAcwAAAAAAqTw=
+
+--_000_058691E078642A44B7C96BB0B1DB4F2446C29A10avmb2qlogicorg_--
