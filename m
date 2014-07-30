@@ -1,56 +1,56 @@
-From: Juergen Gross <jgross@suse.com>
-Subject: Re: [Xen-devel] [PATCH V2 2/4] Introduce xen-scsifront module
-Date: Wed, 30 Jul 2014 06:53:59 +0200
-Message-ID: <53D87A67.8050005@suse.com>
-References: <1406288253-13293-1-git-send-email-jgross@suse.com>	<1406288253-13293-3-git-send-email-jgross@suse.com>	<20140729135300.GA20415@infradead.org> <53D7B65C.8030701@suse.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 3/4] libata-scsi: Update SATL for ZAC drives
+Date: Wed, 30 Jul 2014 08:18:43 +0200
+Message-ID: <53D88E43.40301@suse.de>
+References: <1406645117-53088-1-git-send-email-hare@suse.de> <1406645117-53088-4-git-send-email-hare@suse.de> <20140729171258.GB32713@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <53D7B65C.8030701@suse.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, JBottomley@parallels.com, xen-devel@lists.xen.org
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:58413 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751948AbaG3GSp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Jul 2014 02:18:45 -0400
+In-Reply-To: <20140729171258.GB32713@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>
 
-On 07/29/2014 04:57 PM, Juergen Gross wrote:
-> On 07/29/2014 03:53 PM, Christoph Hellwig wrote:
-
->>> +        switch (op) {
->>> +        case VSCSIFRONT_OP_ADD_LUN:
->>> +            if (device_state == XenbusStateInitialised) {
->>> +                sdev = scsi_device_lookup(info->host, chn, tgt,
->>> +                              lun);
->>> +                if (sdev) {
->>> +                    dev_err(&dev->dev,
->>> +                        "Device already in use.\n");
->>> +                    scsi_device_put(sdev);
->>> +                    xenbus_printf(XBT_NIL, dev->nodename,
->>> +                              state_str, "%d",
->>> +                              XenbusStateClosed);
->>> +                } else {
->>> +                    scsi_add_device(info->host, chn, tgt,
->>> +                            lun);
->>> +                    xenbus_printf(XBT_NIL, dev->nodename,
->>> +                              state_str, "%d",
->>> +                              XenbusStateConnected);
->>> +                }
->>> +            }
->>> +            break;
->>
->> scsi_add_device handles an already existing device just fine, and unlike
->> this construct isn't racy.
+On 07/29/2014 07:12 PM, Christoph Hellwig wrote:
+> On Tue, Jul 29, 2014 at 04:45:16PM +0200, Hannes Reinecke wrote:
+>> ZAC (zoned-access command) drives translate into ZBC (Zoned block
+>> command) device type for SCSI. So implement the correct mappings
+>> into libata-scsi and update the SCSI command set versions.
 >
-> Okay. I'll change it.
+> This seems to both set the periphal type to ZBC and set the
+> HAW_ZBC bit, which is invalid for the version of ZBC spec I've seen.
+>
+D'oh. You are correct, one should read the doc properly.
 
-Hmm, I looked into scsi_add_device(). It seems as if the caller can't
-distinguish between a new created and an already existing device. Am I
-missing something?
+> Doesn't ZAC also destinguish between host aware and host managed devi=
+ce
+> like ZBC does?
+>
+Not as such. The spec I have only differentiates between CMR=20
+(conventional media recording) and SMR (shingled media recording)=20
+zones. And every SMR zone is a sequential write required zone.
+So the host aware device type with sequential write preferred zones=20
+is not supported.
 
-The race is not existing: scsi_add_device() (and scsi_remove_device()
-as well) for this scsi_host is called in scsifront_do_lun_hotplug()
-only, and this function is always called in the same thread (xenbus
-watch). A comment seems to be a good idea.
+I'll be sending an updated patch with the correct bits set.
 
+Cheers,
 
-Juergen
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
