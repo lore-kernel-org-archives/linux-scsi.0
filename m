@@ -1,41 +1,64 @@
-From: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
-Subject: RE: [PATCH 1/3] pm8001: fix pm8001_store_update_fw
-Date: Wed, 30 Jul 2014 12:22:01 +0000
-Message-ID: <CE2C58F938F4C44EA74FFF880BAA7E5E49DC87FD@BBYEXM02.pmc-sierra.internal>
-References: <1406721810-4591-1-git-send-email-Suresh.Thiagarajan@pmcs.com>
- <1406722208.4865.57.camel@jarvis>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 1/4] iscsi class: fix get_host_stats error handling
+Date: Wed, 30 Jul 2014 14:50:55 +0200
+Message-ID: <53D8EA2F.8040505@suse.de>
+References: <1405198311-64449-1-git-send-email-michaelc@cs.wisc.edu> <1405198311-64449-2-git-send-email-michaelc@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:35381 "EHLO
-	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753230AbaG3MVx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Jul 2014 08:21:53 -0400
-In-Reply-To: <1406722208.4865.57.camel@jarvis>
-Content-Language: en-US
+Received: from cantor2.suse.de ([195.135.220.15]:37732 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753807AbaG3Mu6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Jul 2014 08:50:58 -0400
+In-Reply-To: <1405198311-64449-2-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "xjtuwjp@gmail.com" <xjtuwjp@gmail.com>, "thenzl@redhat.com" <thenzl@redhat.com>, Viswas G <Viswas.G@pmcs.com>, "pmchba@pmcs.com" <pmchba@pmcs.com>
+To: michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org
 
-DQoNCk9uIFdlZCwgSnVsIDMwLCAyMDE0IGF0IDU6NDAgUE0sIEphbWVzIEJvdHRvbWxleSA8SmFt
-ZXMuQm90dG9tbGV5QGhhbnNlbnBhcnRuZXJzaGlwLmNvbT4gd3JvdGU6DQo+IE9uIFdlZCwgMjAx
-NC0wNy0zMCBhdCAxNzozMyArMDUzMCwgU3VyZXNoIFRoaWFnYXJhamFuIHdyb3RlOg0KPj4gRnJv
-bTogU3VyZXNoIFRoaWFnYXJhamFuIDxTdXJlc2guVGhpYWdhcmFqYW5AcG1jcy5jb20+DQo+Pg0K
-Pj4gVGhlIGN1cnJlbnQgaW1wbGVtZW50YXRpb24gbWF5IG1peCB0aGUgbmVnYXRpdmUgdmFsdWUg
-cmV0dXJuZWQNCj4+IGZyb20gcG04MDAxX3NldF9udm1kIHdpdGggd2l0aCBjb3VudC4gLSgtRU5P
-TUVNKSBjb3VsZCBiZSBpbnRlcnByZXRlZA0KPj4gYXMgYnl0ZXMgcHJvZ3JhbW1lZCwgdGhpcyBw
-YXRjaCBmaXhlcyBpdC4NCj4+DQo+PiBTaWduZWQtb2ZmLWJ5OiBUb21hcyBIZW56bCA8dGhlbnps
-QHJlZGhhdC5jb20+DQo+PiBTaWduZWQtb2ZmLWJ5OiBTdXJlc2ggVGhpYWdhcmFqYW4gPFN1cmVz
-aC5UaGlhZ2FyYWphbkBwbWNzLmNvbT4NCj4NCj4gVGhpcyBhdXRob3IgYW5kIHNpZ25vZmYgY2hh
-aW4gZG9lc24ndCBtYWtlIHNlbnNlLiAgSXMgdGhlIHBhdGNoIGZyb20NCj4gVG9tYXMgSGVuemw/
-ICBJbiB3aGljaCBjYXNlIHRoZSBGcm9tOiBmaWVsZCBpcyB3cm9uZzsgaXQgc2hvdWxkIHJlYWQN
-Cj4NCj4gRnJvbTogVG9tYXMgSGVuemwgPHRoZW56bEByZWRoYXQuY29tPg0KDQpZZXMuIFRoaXMg
-cGF0Y2ggaXMgZnJvbSBUb21hcy4gSSB3aWxsIGNvcnJlY3QgdGhlICJGcm9tIiBhbmQgc2VuZCBh
-Z2Fpbg0KDQotU3VyZXNoDQo+DQo+IEphbWVzDQo+DQo+DQo+IC0tDQo+IFRvIHVuc3Vic2NyaWJl
-IGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51eC1zY3NpIiBp
-bg0KPiB0aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVsLm9yZw0K
-PiBNb3JlIG1ham9yZG9tbyBpbmZvIGF0ICBodHRwOi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9t
-by1pbmZvLmh0bWwNCg==
+On 07/12/2014 10:51 PM, michaelc@cs.wisc.edu wrote:
+> From: Mike Christie <michaelc@cs.wisc.edu>
+>
+> iscsi_get_host_stats was dropping the error code returned
+> by drivers like qla4xxx.
+>
+> Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+> ---
+>   drivers/scsi/scsi_transport_iscsi.c |    4 ++++
+>   1 files changed, 4 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_=
+transport_iscsi.c
+> index b481e62..14bfa53 100644
+> --- a/drivers/scsi/scsi_transport_iscsi.c
+> +++ b/drivers/scsi/scsi_transport_iscsi.c
+> @@ -3467,6 +3467,10 @@ iscsi_get_host_stats(struct iscsi_transport *t=
+ransport, struct nlmsghdr *nlh)
+>   		memset(buf, 0, host_stats_size);
+>
+>   		err =3D transport->get_host_stats(shost, buf, host_stats_size);
+> +		if (err) {
+> +			kfree(skbhost_stats);
+> +			goto exit_host_stats;
+> +		}
+>
+>   		actual_size =3D nlmsg_total_size(sizeof(*ev) + host_stats_size);
+>   		skb_trim(skbhost_stats, NLMSG_ALIGN(actual_size));
+>
+What happens with the skbhost_stats allocated earlier? Shouldn't it=20
+be freed here, too?
+
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
