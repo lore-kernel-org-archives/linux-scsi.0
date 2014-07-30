@@ -1,63 +1,47 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH 4/4] scsi: pm8001: fix pm8001_store_update_fw
-Date: Wed, 30 Jul 2014 15:13:22 +0200
-Message-ID: <53D8EF72.7080208@redhat.com>
-References: <1404746401-25229-4-git-send-email-thenzl@redhat.com> <20140710064301.GA18156@infradead.org> <53BE9578.3060902@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
+Subject: [PATCH 2/3] pm8001: Fix erratic calculation in update_flash
+Date: Wed, 30 Jul 2014 18:44:24 +0530
+Message-ID: <1406726064-5875-1-git-send-email-Suresh.Thiagarajan@pmcs.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60457 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751059AbaG3NNs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Jul 2014 09:13:48 -0400
-In-Reply-To: <53BE9578.3060902@redhat.com>
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:47780 "EHLO
+	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751463AbaG3NPH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Jul 2014 09:15:07 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi@vger.kernel.org, xjtuwjp@gmail.com, Vasanthalakshmi.Tharmarajan@pmcs.com, Suresh.Thiagarajan@pmcs.com, Viswas.G@pmcs.com
+To: linux-scsi@vger.kernel.org
+Cc: xjtuwjp@gmail.com, JBottomley@parallels.com, thenzl@redhat.com, Suresh.Thiagarajan@pmcs.com, Viswas.G@pmcs.com, pmchba@pmcs.com
 
-On 07/10/2014 03:30 PM, Tomas Henzl wrote:
-> On 07/10/2014 08:43 AM, Christoph Hellwig wrote:
->> On Mon, Jul 07, 2014 at 05:20:01PM +0200, Tomas Henzl wrote:
->>> The current implementation may mix the negative value returned
->>> from pm8001_set_nvmd with with count. -(-ENOMEM) could be interpreted
->>> as bytes programmed, this patch fixes it.
->> This still doesn;t look correct to me as err mixes up the driver
->> internal FAIL_* codes with Linux error codes.  It seems like for the
->> FAIL_* codes should only go into ->fw_status and the return value
->> should be a proper Linux error code.
-> And the fw_status might be later used to show error strings in pm8001_show_update_fw,
-> if it is so it depends on the flash utility but it seems likely. 
->
->> Funny fact: the FAIL_* / FLASH_IN_PROGRESS codes seems to be the same
->> between aic94xx and pm8001.
-> And similar story there too - asd_store_update_bios -...- asd_poll_flash(might return -ENOENT)
->
-> Maybe the flash utility ignores the return value or it has never happened.
-> ---------------------
->
-> I'll try to find what seems to be the most probable way and post it in few days.
+From: Tomas Henzl <thenzl@redhat.com>
 
-Christoph,
-from few days it is three weeks and the patch has been just replaced
-by "[PATCH 1/3] pm8001: fix pm8001_store_update_fw" sent by Suresh,
-so you can drop this patch.
-(I've asked Suresh off-list to test it, I didn't want to brick my card by testing
-fw flashes.)
-Thanks,
-Tomas
+The loopcount is calculated by using some weird magic.
+Use instead a boring macro
 
-> This patch is not related to the patches 1-3/4, so just wait with this one.
->
-> Thanks, Tomas
->
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+Signed-off-by: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
+---
+ drivers/scsi/pm8001/pm8001_ctl.c |    7 ++-----
+ 1 files changed, 2 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/scsi/pm8001/pm8001_ctl.c b/drivers/scsi/pm8001/pm8001_ctl.c
+index 69aedea..7abbf28 100644
+--- a/drivers/scsi/pm8001/pm8001_ctl.c
++++ b/drivers/scsi/pm8001/pm8001_ctl.c
+@@ -585,11 +585,8 @@ static int pm8001_update_flash(struct pm8001_hba_info *pm8001_ha)
+ 		partitionSizeTmp =
+ 			*(u32 *)((u8 *)&image_hdr->image_length + sizeRead);
+ 		partitionSize = be32_to_cpu(partitionSizeTmp);
+-		loopcount = (partitionSize + HEADER_LEN)/IOCTL_BUF_SIZE;
+-		if (loopcount % IOCTL_BUF_SIZE)
+-			loopcount++;
+-		if (loopcount == 0)
+-			loopcount++;
++		loopcount = DIV_ROUND_UP(partitionSize + HEADER_LEN,
++					IOCTL_BUF_SIZE);
+ 		for (loopNumber = 0; loopNumber < loopcount; loopNumber++) {
+ 			payload = (struct pm8001_ioctl_payload *)ioctlbuffer;
+ 			payload->length = 1024*16;
+-- 
+1.7.1
 
