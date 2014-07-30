@@ -1,43 +1,62 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 4/4] sd: Optionally attach to ZBC devices
-Date: Wed, 30 Jul 2014 08:41:55 +0200
-Message-ID: <53D893B3.6020407@suse.de>
-References: <1406645117-53088-1-git-send-email-hare@suse.de> <1406645117-53088-5-git-send-email-hare@suse.de> <20140729171414.GA1060@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Subject: [PATCHv4 0/4] Initial SMR drive support
+Date: Wed, 30 Jul 2014 09:55:07 +0200
+Message-ID: <1406706911-79510-1-git-send-email-hare@suse.de>
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20140729171414.GA1060@infradead.org>
 Sender: linux-ide-owner@vger.kernel.org
 To: Christoph Hellwig <hch@infradead.org>
-Cc: Christoph Hellwig <hsh@infradead.org>, James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>, James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
-On 07/29/2014 07:14 PM, Christoph Hellwig wrote:
-> On Tue, Jul 29, 2014 at 04:45:17PM +0200, Hannes Reinecke wrote:
->> ZBC drives are close to disk devices, so sd.c is well
->> suited as a testbed for ZBC devices.
->> This patch introduces a module option 'attach_zbc' to
->> sd which will make the sd driver accept ZBC
->> devices as normal disk drives.
->>
->> Signed-off-by: Hannes Reinecke <hare@suse.de>
->
-> Looks reasonable to me.
->
-> I'd also really like a sysfs file that tells us if we're dealing
-> with a host aware device, as those report as TYPE_SBC.
->
-Yes, eventually. But can't we defer that to a next patchset?
-I'd really like to have this one in, as it makes dealing with ZAC=20
-devices _so much_ easier ...
+This is a first stab at implementing SMR support.
+The powers that be decided to call the ATA implementation
+'ZAC' (zoned access commands), and the SCSI implementation
+'ZBC' (zoned block commands).
 
-Cheers,
+This is just basic enablement to get ZAC and ZBC drives
+handled correctly.
+The first three patches update the libata SATL to handle
+ZAC devices correctly, and the last patch updates the 'sd'
+to work correctly with ZBC devices.
+The 'sd' driver will not automatically bind to ZBC
+devices; for testing purposes I have added a
+module parameter 'attach_zbc' to the 'sd' driver.
+This allows for easy testing of ZBC devices.
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+None of the specific commands like 'report zones' or
+'reset write pointer' have been implemented yet as the
+actual format is still not finalized.
+
+This patch is made against the core-for-3.17 tree from hch.
+Changes to v3:
+- Remove setting of HAW_ZBC flag
+
+Hannes Reinecke (4):
+  libata: consolidate ata_dev_classify()
+  libata: Implement ATA_DEV_ZAC
+  libata-scsi: Update SATL for ZAC drives
+  sd: Optionally attach to ZBC devices
+
+ drivers/ata/libahci.c               | 11 +++----
+ drivers/ata/libata-core.c           | 34 +++++++++++++-------
+ drivers/ata/libata-eh.c             |  7 +++--
+ drivers/ata/libata-scsi.c           | 30 ++++++++++++++++--
+ drivers/ata/libata-sff.c            |  2 +-
+ drivers/ata/libata-transport.c      |  1 +
+ drivers/ata/sata_fsl.c              | 11 +++----
+ drivers/ata/sata_inic162x.c         |  2 +-
+ drivers/ata/sata_sil24.c            |  2 +-
+ drivers/scsi/aic94xx/aic94xx_task.c | 10 +++---
+ drivers/scsi/isci/request.c         |  4 +--
+ drivers/scsi/libsas/sas_ata.c       | 63 +++++--------------------------------
+ drivers/scsi/mvsas/mv_sas.c         |  4 +--
+ drivers/scsi/pm8001/pm8001_hwi.c    |  2 +-
+ drivers/scsi/pm8001/pm80xx_hwi.c    |  2 +-
+ drivers/scsi/sd.c                   | 25 +++++++++++----
+ include/linux/libata.h              |  8 +++--
+ include/scsi/libsas.h               | 11 ++-----
+ 18 files changed, 114 insertions(+), 115 deletions(-)
+
+-- 
+1.7.12.4
+
